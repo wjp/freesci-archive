@@ -27,6 +27,7 @@
 
 #ifdef _WIN32
 #	include <windows.h>
+#   include <sci_win32.h>
 #endif
 
 int midi_mt32_poke(guint32 address, guint8 *data, unsigned int n);
@@ -507,12 +508,8 @@ int midi_mt32_sysex_delay()
   /* Under Win32, we won't get any sound, in any case... */
 #ifdef HAVE_USLEEP
   usleep(320 * 63); /* One MIDI byte is 320us, 320us * 63 > 20ms */
-#  else
-#    ifdef _WIN32
-  Sleep(((320 * 63) / 1000) + 1);
 #    else
   sleep(1);
-#  endif
 #endif
   return 0;
 }

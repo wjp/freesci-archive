@@ -899,10 +899,6 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (argc > 3) {
 		ylen = PARAM(arg+3) - ystart;
 		xlen = PARAM(arg+2) - xstart;
-		if (xlen > 1)
-			--xlen;
-		if (ylen > 1)
-			--ylen;
 	}
 
 	s->acc = gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart, ystart + 10, xlen, ylen), map);

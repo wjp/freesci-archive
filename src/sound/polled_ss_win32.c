@@ -33,6 +33,8 @@
 #include <engine.h>
 #include <soundserver.h>
 #include <sound.h>
+#include <sci_win32.h>
+
 
 #ifdef _WIN32
 
@@ -201,7 +203,7 @@ sound_win32p_get_event(state_t *s)
 		if (sound_eq_peek_event(&ev_queue))
 			event = sound_eq_retreive_event(&ev_queue);
 		else {
-			sci_sched_yield();
+			sleep(5);
 		}
 			
 	}
@@ -296,7 +298,7 @@ sound_win32p_get_command(GTimeVal *wait_tvp)
 		if (sound_eq_peek_event(&inqueue))
 			event = sound_eq_retreive_event(&inqueue);
 		else {
-			sci_sched_yield();
+			sleep(5);
 		}
 	}
 	__finally

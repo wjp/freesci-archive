@@ -236,7 +236,7 @@ int midiout_win32mci_close(void)
 
 int midiout_win32mci_flush(guint8 code)
 {
-	sleep(0);
+	sci_sched_yield();
     return 0;
 }
 

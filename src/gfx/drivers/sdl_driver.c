@@ -48,6 +48,7 @@
 #	include <SDL/SDL.h>
 #else
 #	include <SDL.h>
+#   include <sci_win32.h>
 #endif
 
 #ifndef SDL_DISABLE
@@ -1137,12 +1138,8 @@ sdl_usec_sleep(struct _gfx_driver *drv, long usecs)
 	ctime.tv_sec = 0;
 	ctime.tv_usec = usecs;
 
-#ifdef _MSC_VER
-	sci_sched_yield(); /* usleep on win32 doesn't really sleep, so let's give up the rest of the quantum to play nice with the sound thread */
-#else
 	usleep(usecs);  /* let's try this out instead, no? */
 	/*  select(0, NULL, NULL, NULL, &ctime); /* Sleep. */
-#endif
 
 	return GFX_OK;
 }

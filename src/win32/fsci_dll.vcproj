@@ -16,17 +16,26 @@
 			IntermediateDirectory=".\fsci_dll_Release"
 			ConfigurationType="2"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="FALSE">
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			WholeProgramOptimization="TRUE">
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="1"
+				Optimization="3"
+				GlobalOptimizations="TRUE"
 				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="TRUE"
+				FavorSizeOrSpeed="1"
+				OmitFramePointers="TRUE"
+				OptimizeForProcessor="2"
+				OptimizeForWindowsApplication="FALSE"
 				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
 				PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;WANT_CONSOLE"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
+				BufferSecurityCheck="TRUE"
 				EnableFunctionLevelLinking="TRUE"
-				UsePrecompiledHeader="2"
+				EnableEnhancedInstructionSet="0"
+				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\fsci_dll_Release/fsci_dll.pch"
 				AssemblerListingLocation=".\fsci_dll_Release/"
 				ObjectFile=".\fsci_dll_Release/"
@@ -232,7 +241,7 @@
 						Name="VCCLCompilerTool"
 						Optimization="1"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+						PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 						BrowseInformation="1"/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -241,7 +250,7 @@
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+						PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"/>
 				</FileConfiguration>
@@ -251,7 +260,7 @@
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+						PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"/>
 				</FileConfiguration>
@@ -267,750 +276,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\grammar.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\heap.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\kernel.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\kevent.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\kfile.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\kgraphics.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\klists.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\kmath.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\kmenu.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\kmovement.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\kpathing.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\kscripts.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\ksound.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\kstring.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\said.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\savegame.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\savegame.cfsml">
-				</File>
-				<File
-					RelativePath="..\engine\scriptdebug.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\simplesaid.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\engine\vm.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-			</Filter>
-			<Filter
-				Name="gfx"
-				Filter="">
-				<File
-					RelativePath="..\gfx\alpha_mvi_crossblit.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\gfx\antialias.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\gfx\font.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\gfx\gfx_console.c">
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1029,7 +295,750 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\grammar.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\heap.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\kernel.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\kevent.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\kfile.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\kgraphics.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\klists.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\kmath.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\kmenu.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\kmovement.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\kpathing.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\kscripts.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\ksound.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\kstring.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\said.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\savegame.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\savegame.cfsml">
+				</File>
+				<File
+					RelativePath="..\engine\scriptdebug.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\simplesaid.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\engine\vm.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+			</Filter>
+			<Filter
+				Name="gfx"
+				Filter="">
+				<File
+					RelativePath="..\gfx\alpha_mvi_crossblit.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\gfx\antialias.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\gfx\font.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\gfx\gfx_console.c">
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="1"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Purify|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1042,7 +1051,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1051,7 +1060,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1061,7 +1070,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1074,7 +1083,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1083,7 +1092,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1093,7 +1102,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1106,7 +1115,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1115,7 +1124,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1125,7 +1134,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1138,7 +1147,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1147,7 +1156,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1157,7 +1166,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1170,7 +1179,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1179,7 +1188,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1189,7 +1198,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1202,7 +1211,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1211,7 +1220,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1221,7 +1230,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1234,7 +1243,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1243,7 +1252,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1253,7 +1262,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1266,7 +1275,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1275,7 +1284,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1285,7 +1294,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1298,7 +1307,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1307,7 +1316,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1317,7 +1326,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1330,7 +1339,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1339,7 +1348,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1349,7 +1358,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1365,7 +1374,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="1"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BrowseInformation="1"/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1374,7 +1383,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1384,7 +1393,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1397,7 +1406,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="1"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BrowseInformation="1"/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1406,7 +1415,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1416,7 +1425,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1429,7 +1438,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="1"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BrowseInformation="1"/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1438,7 +1447,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1448,7 +1457,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1461,7 +1470,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="1"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BrowseInformation="1"/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1470,7 +1479,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1480,7 +1489,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1493,7 +1502,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="1"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BrowseInformation="1"/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1502,7 +1511,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1512,7 +1521,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1525,7 +1534,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="1"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BrowseInformation="1"/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1534,7 +1543,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1544,7 +1553,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1557,7 +1566,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="1"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BrowseInformation="1"/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1566,7 +1575,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1576,7 +1585,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1593,7 +1602,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="1"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BrowseInformation="1"/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1602,7 +1611,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1612,7 +1621,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1625,7 +1634,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="1"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BrowseInformation="1"/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1634,7 +1643,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1644,7 +1653,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1657,7 +1666,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="1"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BrowseInformation="1"/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1666,7 +1675,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1676,7 +1685,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1689,7 +1698,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="1"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BrowseInformation="1"/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1698,7 +1707,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1708,7 +1717,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1721,7 +1730,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="1"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BrowseInformation="1"/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1730,7 +1739,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1740,7 +1749,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1753,7 +1762,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="1"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BrowseInformation="1"/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1762,7 +1771,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1772,7 +1781,7 @@
 								Name="VCCLCompilerTool"
 								Optimization="0"
 								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+								PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 								BasicRuntimeChecks="3"
 								BrowseInformation="1"/>
 						</FileConfiguration>
@@ -1790,7 +1799,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1799,7 +1808,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1809,7 +1818,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1822,7 +1831,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1831,7 +1840,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1841,7 +1850,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1854,7 +1863,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1863,7 +1872,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1873,7 +1882,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1886,7 +1895,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1895,7 +1904,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1905,7 +1914,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1918,7 +1927,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1927,7 +1936,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1937,7 +1946,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1950,7 +1959,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1959,7 +1968,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1969,7 +1978,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -1982,7 +1991,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1991,7 +2000,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2001,7 +2010,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2014,7 +2023,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2023,7 +2032,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2033,7 +2042,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2046,7 +2055,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2055,7 +2064,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2065,7 +2074,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2078,7 +2087,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2087,7 +2096,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2097,7 +2106,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2110,7 +2119,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2119,7 +2128,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2129,7 +2138,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2142,7 +2151,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2151,7 +2160,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2161,7 +2170,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2174,7 +2183,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2183,7 +2192,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2193,7 +2202,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2206,7 +2215,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2215,7 +2224,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2225,7 +2234,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2238,7 +2247,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2247,7 +2256,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2257,7 +2266,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2274,7 +2283,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2283,7 +2292,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2293,7 +2302,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2306,7 +2315,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2315,7 +2324,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2325,7 +2334,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2338,7 +2347,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2347,7 +2356,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2357,7 +2366,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2370,7 +2379,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2379,7 +2388,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2389,7 +2398,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2402,7 +2411,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2411,7 +2420,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2421,7 +2430,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2434,7 +2443,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2443,7 +2452,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2453,7 +2462,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2466,7 +2475,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2475,7 +2484,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2485,7 +2494,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2498,7 +2507,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2507,7 +2516,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2517,7 +2526,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2530,7 +2539,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2539,7 +2548,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2549,7 +2558,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2562,7 +2571,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2571,7 +2580,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2581,7 +2590,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2594,7 +2603,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2603,7 +2612,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2613,7 +2622,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2626,7 +2635,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2635,7 +2644,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2645,7 +2654,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2658,7 +2667,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2667,7 +2676,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2677,7 +2686,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2690,7 +2699,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2699,7 +2708,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2709,7 +2718,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2722,7 +2731,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2731,7 +2740,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2741,7 +2750,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2754,7 +2763,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2763,7 +2772,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2773,7 +2782,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2789,7 +2798,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2798,7 +2807,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2808,7 +2817,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2821,7 +2830,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2830,7 +2839,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2840,7 +2849,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2853,7 +2862,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2862,7 +2871,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2872,7 +2881,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2885,7 +2894,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2894,7 +2903,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
@@ -2904,7 +2913,7 @@
 							Name="VCCLCompilerTool"
 							Optimization="0"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX;$(NoInherit)"
+							PreprocessorDefinitions="SATISFY_PURIFY;_DEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=__TIMESTAMP__;_WINDOWS;WIN32;_USRDLL;_CONSOLE;FREESCI_EXPORTS;X_DISPLAY_MISSING;HAVE_SDL;HAVE_MEMCHR;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;HAVE_DIRECTX"
 							BasicRuntimeChecks="3"
 							BrowseInformation="1"/>
 					</FileConfiguration>
