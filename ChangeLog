@@ -1,3 +1,7 @@
+2002-02-10  Solomon Peachy <pizza@shaftnet.org>
+	* src/sound/midi_adlib.c:  Fixed a VERY stupid bug.  Should
+        actually produce decent-sounding output now!
+
 2002-01-09  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/event_ss.c: Replaced exit on NULL MIDI commands with fixme
@@ -228,7 +232,6 @@
 	(kCanBeHere): No longer check against the dynviews, all views we should
 	check against are passed as parameters explicitly.
 
->>>>>>> 1.455
 2001-12-20  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/event_ss.c:

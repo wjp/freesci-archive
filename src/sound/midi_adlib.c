@@ -84,6 +84,7 @@ typedef struct _sci_adlib_def {
 
 static sbi_instr_data adlib_sbi[96];
 static guint8 instr[MIDI_CHANNELS];
+static guint8 pitch[MIDI_CHANNELS];
 static int polyphony[MIDI_CHANNELS];
 static int dev;
 static int free_voices = ADLIB_VOICES;
@@ -162,7 +163,7 @@ int adlib_stop_note(int chn, int note, int velocity)
   int i, op=255;
   
   for (i=0;i<ADLIB_VOICES && op==255;i++) {
-    //    if (oper_chn[i] == chn)
+    if (oper_chn[i] == chn)
       if (oper_note[i] == note)
 	op=i;
   }
@@ -195,10 +196,8 @@ int adlib_kill_one_note(int chn)
   }	/* No notes playing */
 
   for (i = 0; i < ADLIB_VOICES ; i++) {
-    /*
-      if (oper_chn[i] != chn)
+    if (oper_chn[i] != chn)
       continue;
-    */
     if (note_time[i] == 0)
       continue;
     if (time == 0) {
@@ -255,7 +254,7 @@ void adlib_start_note(int chn, int note, int velocity)
   free_voices--;
   
   SEQ_SET_PATCH(dev, free, instr[chn]);
-  //XXXX  SEQ_PITCHBEND(dev, free, bender);
+  //XXXX  SEQ_PITCHBEND(dev, free, pitch[chn]);
   SEQ_START_NOTE(dev, free, note, velocity);
   SEQ_DUMPBUF();
 }
@@ -279,6 +278,7 @@ int midi_adlib_open(guint8 *data_ptr, unsigned int data_length)
       make_sbi((adlib_def *)(data_ptr+2+(28 * i)), adlib_sbi[i]);
 
   memset(instr, 0, sizeof(instr));
+  memset(pitch, 0, sizeof(pitch));
  
   if ((seqfd=open("/dev/sequencer", O_WRONLY, 0))==-1) {
     perror("/dev/sequencer");
@@ -372,10 +372,10 @@ int midi_adlib_event(guint8 command, guint8 note, guint8 velocity)
   oper = command & 0xf0;
 
   switch (oper) {    
-  case 0x80:  /* noteon and noteoff */
-    return midi_adlib_noteon(channel, note, velocity);
-  case 0x90:
+  case 0x80:
     return midi_adlib_noteoff(channel, note, velocity);
+  case 0x90:  
+    return midi_adlib_noteon(channel, note, velocity);
   case 0xe0:    /* Pitch bend NYI */
     break;
   case 0xb0:    /* CC changes.  we ignore. */
@@ -429,7 +429,7 @@ midi_device_t midi_device_adlib = {
   &midi_adlib_allstop,
   &midi_adlib_volume,
   &midi_adlib_reverb,
-  003,		/* patch.001 */
+  003,		/* patch.003 */
   0x04,		/* playflag */
   1, 		/* play channel 9 -- rhythm ? */
   ADLIB_VOICES  /* Max polyphony */
