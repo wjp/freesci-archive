@@ -202,11 +202,14 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 
 	left = malloc_ncpy(entries - string_len - 1, string_len);
 
-	if (strncmp(left, MENU_HBAR_STRING, 3) == 0) {
-	  entrytype = MENU_TYPE_HBAR; /* Horizontal bar */
-	  free(left);
-	  left = NULL;
-	}
+	if (!strncmp(left, MENU_HBAR_STRING_1, strlen(MENU_HBAR_STRING_1))
+	    || !strncmp(left, MENU_HBAR_STRING_2, strlen(MENU_HBAR_STRING_2))
+	    || !strncmp(left, MENU_HBAR_STRING_3, strlen(MENU_HBAR_STRING_3)))
+	  {
+	    entrytype = MENU_TYPE_HBAR; /* Horizontal bar */
+	    free(left);
+	    left = NULL;
+	  }
 
 	c_width = _menubar_add_menu_item(menu, entrytype, left, NULL, font, 0, 0, 0,
 					 (entries - _heapbase) - string_len - 1);
@@ -443,8 +446,8 @@ status_bar_draw(state_t *s, char *text)
 {
   if (text) {
     draw_titlebar(s->pic, 0xf);
-    draw_text0(s->pic, &(s->titlebar_port), 1, 1,
-	       text, s->titlebar_port.font, 0);
+    draw_text0_without_newline(s->pic, &(s->titlebar_port), 1, 1,
+			       text, s->titlebar_port.font, 0);
   } else
     draw_titlebar(s->pic, 0);
 }

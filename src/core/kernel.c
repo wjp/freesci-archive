@@ -337,12 +337,25 @@ kRestartGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kGameIsRestarting(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+  CHECK_THIS_KERNEL_FUNCTION;
+
   s->acc = (s->restarting_flags & SCI_GAME_WAS_RESTARTED);
+
+  if (argc) {/* Only happens during replay */
+
+    if (PARAM(0)) /* Reset restarting flag */
+      s->restarting_flags &= ~SCI_GAME_WAS_RESTARTED;
+    else /* Set restarting flag */
+      s->restarting_flags |= SCI_GAME_WAS_RESTARTED;
+  }
+
 }
 
 void
 kHaveMouse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+  CHECK_THIS_KERNEL_FUNCTION;
+
   s->acc = s->have_mouse_flag;
 }
 

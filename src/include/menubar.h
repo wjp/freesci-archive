@@ -37,8 +37,10 @@ struct _state;
 /* This adds an "About FreeSCI" menu option to the first menu */
 
 
-#define MENU_HBAR_STRING "--!"
-/* The string used in SCI to determine an empty menu line */
+#define MENU_HBAR_STRING_1 "--!"
+#define MENU_HBAR_STRING_2 "-!"
+#define MENU_HBAR_STRING_3 "!--"
+/* These strings are used in SCI to determine an empty menu line */
 
 #define MENU_BORDER_SIZE 0
 /* The number of pixels added to the left and right to the text of a menu on the menu bar */

@@ -911,6 +911,19 @@ c_show_list(state_t *s)
 
 
 int
+c_mem_info(state_t *s)
+{
+  if (!s) {
+    sciprintf("Not in debug state!\n");
+    return 1;
+  }
+
+  heap_meminfo(s->_heap);
+  sciprintf("Heap: Free:%04x  Max:%04x\n", heap_meminfo(s->_heap) & 0xffff, heap_largest(s->_heap) & 0xffff);
+}
+
+
+int
 c_simkey(state_t *s)
 {
   _kdebug_cheap_event_hack = cmd_params[0].val;
@@ -1275,6 +1288,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       con_hook_command(c_refresh_screen, "refresh_screen", "", "Redraws the screen");
       con_hook_command(c_redraw_screen, "redraw_screen", "", "Reloads and redraws the screen");
       con_hook_command(c_show_list, "listinfo", "i", "Examines the list at the specified\n  heap address");
+      con_hook_command(c_mem_info, "meminfo", "", "Displays heap memory information");
       con_hook_command(c_debuglog, "debuglog", "s*", "Sets the debug log modes.\n  Possible parameters:\n"
 		       "  +x (sets debugging for x)\n  -x (unsets debugging for x)\n\nPossible values"
 		       " for x:\n  u: Unimpl'd/stubbed stuff\n  l: Lists and nodes\n  g: Graphics\n"

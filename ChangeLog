@@ -1,3 +1,20 @@
+2000-03-07  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/game.c: Fixed some heap corruptions
+
+	* src/core/vm.c (game_run): Added support for game restarts. First
+	restarts (used in KQ4 to enter the actual game) appear to work nicely,
+	normal restarts (F9) still need some fine tuning to prevent heap
+	corruption.
+	(PUT_HEAP): Added code to check for unaligned access
+
+	* src/graphics/font.c (_draw_text0): Fixed problem with KQ4 using
+	the newline character for the IV thingy in the title bar
+
+2000-03-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/scriptdebug.c (c_mem_info): Added meminfo command
+
 2000-02-13  Lars Skovlund  <lskovlun@image.dk>
 
 	* Fixed the menubar bug (?).

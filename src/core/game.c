@@ -44,7 +44,7 @@ extern int bp_flag;
 
 
 
-int
+static int
 _init_vocabulary(state_t *s) /* initialize vocabulary and related resources */
 {
   sciprintf("Initializing vocabulary\n");
@@ -74,7 +74,7 @@ _init_vocabulary(state_t *s) /* initialize vocabulary and related resources */
 }
 
 
-void
+static void
 _free_vocabulary(state_t *s)
 {
   sciprintf("Freeing vocabulary\n");
@@ -92,6 +92,98 @@ _free_vocabulary(state_t *s)
   s->selector_names = NULL;
   s->kernel_names = NULL;
   s->opcodes = NULL;
+}
+
+
+static int
+_init_graphics_input(state_t *s)
+{
+  resource_t *resource;
+  int i, font_nr;
+  sciprintf("Initializing graphics\n");
+
+  s->mouse_pointer = NULL; /* No mouse pointer */
+  s->mouse_pointer_nr = -1; /* No mouse pointer resource */
+  s->pointer_x = (320 / 2); /* With centered x coordinate */
+  s->pointer_y = 150; /* And an y coordinate somewhere down the screen */
+  s->last_pointer_x = 0;
+  s->last_pointer_y = 0;
+  s->last_pointer_size_x = 0;
+  s->last_pointer_size_y = 0; /* No previous pointer */
+
+  s->pic = alloc_empty_picture(SCI_RESOLUTION_320X200, SCI_COLORDEPTH_8BPP);
+  s->pic_not_valid = 1; /* Picture is invalid */
+  s->pic_is_new = 0;
+  s->pic_visible_map = 0; /* Other values only make sense for debugging */
+  s->pic_views_nr = s->dyn_views_nr = 0;
+  s->pic_views = 0; s->dyn_views = 0; /* No PicViews, no DynViews */
+
+  memset(s->ports, sizeof(s->ports), 0); /* Set to no ports */
+
+  s->wm_port.ymin = 10; s->wm_port.ymax = 199;
+  s->wm_port.xmin = 0; s->wm_port.xmax = 319;
+  s->wm_port.priority = 11;
+  s->ports[0] = &(s->wm_port); /* Window Manager port */
+
+  s->titlebar_port.ymin = 0; s->titlebar_port.ymax = 9;
+  s->titlebar_port.xmin = 0; s->titlebar_port.xmax = 319;
+  s->ports[1] = &(s->titlebar_port);
+
+  s->picture_port.ymin = 10; s->picture_port.ymax = 199;
+  s->picture_port.xmin = 0; s->picture_port.xmax = 319;
+  s->ports[2] = &(s->picture_port); /* Background picture port */
+
+  s->view_port = 0; /* Currently using the window manager port */
+
+  s->priority_first = 42; /* Priority zone 0 ends here */
+  s->priority_last = 200; /* The highest priority zone (15) starts here */
+
+  font_nr = -1;
+  do {
+    resource = findResource(sci_font, ++font_nr);
+  } while ((!resource) && (font_nr < 999));
+
+  if (!resource) {
+    sciprintf("No text font was found.\n");
+    return 1;
+  }
+  for (i = 0; i < 3; i++) {
+      s->ports[i]->font = resource->data; /* let all ports default to the 'system' font */
+      s->ports[i]->gray_text = 0;
+      s->ports[i]->font_nr = font_nr;
+      s->ports[i]->color = 0;
+      s->ports[i]->bgcolor = -1; /* All ports should be transparent */
+  }
+
+  return 0;
+}
+
+static void
+_free_graphics_input(state_t *s)
+{
+  int i;
+
+  sciprintf("Freeing graphics\n");
+
+  for (i = 3; i < MAX_PORTS; i++) /* Ports 0,1,2 are fixed */
+    if (s->ports[i]) {
+      g_free(s->ports[i]);
+      s->ports[i] = 0;
+    }
+
+  if (s->pic_views_nr)
+  {
+    g_free(s->pic_views);
+    s->pic_views = NULL;
+  }
+
+  if (s->dyn_views_nr)
+  {
+    g_free(s->dyn_views);
+    s->dyn_views = NULL;
+  }
+
+  free_picture(s->pic);
 }
 
 
@@ -195,6 +287,16 @@ script_init_engine(state_t *s, sci_version_t version)
   script_map_kernel(s);
   /* Maps the kernel functions */
 
+  if (_init_vocabulary(s)) return 1;
+
+  s->scripttable[0].heappos = 0; /* Mark script 0 as 'not installed' */
+  if (!script_instantiate(s, 0)) {
+    sciprintf("%s(): Could not instantiate script 0\n", __FUNCTION__);
+    return 1;
+  }
+
+  save_ff(s->_heap); /* Save heap state */
+
   return 0;
 }
 
@@ -215,35 +317,16 @@ script_free_engine(state_t *s)
 	  s->hunk[i].size = 0;
       }
 
-  for (i = 3; i < MAX_PORTS; i++) /* Ports 0,1,2 are fixed */
-    if (s->ports[i]) {
-      g_free(s->ports[i]);
-      s->ports[i] = 0;
-    }
-
-  if (s->pic_views_nr)
-  {
-    g_free(s->pic_views);
-    s->pic_views = NULL;
-  }
-  if (s->dyn_views_nr)
-  {
-    g_free(s->dyn_views);
-    s->dyn_views = NULL;
-  }
-
   /* Close all opened file handles */
   for (i = 1; i < s->file_handles_nr; i++)
     if (s->file_handles[i])
-    #ifndef _DOS
+#ifndef _DOS
       fclose(s->file_handles[i]);
-    #endif
+#endif
 
   g_free(s->file_handles);
 
   heap_del(s->_heap);
-
-  menubar_free(s->menubar);
 
   g_free(s->kfunct_table);
   s->kfunct_table = NULL;
@@ -272,12 +355,20 @@ game_init(state_t *s)
   resource_t *resource;
   int i, font_nr;
 
+  script0 = s->scripttable[0].heappos; /* Get script 0 position */
+
+  /* Initialize script table except for script 0 */
+  for (i = 1; i < 1000; i++)
+    s->scripttable[i].heappos = 0;
+
+  if (!script0) {
+    sciprintf("Game initialization requested, but script.000 not loaded\n");
+    return 1;
+  }
+
   s->synonyms = NULL;
   s->synonyms_nr = 0; /* No synonyms */
 
-  /* Initialize script table */
-  for (i = 0; i < 1000; i++)
-    s->scripttable[i].heappos = 0;
   /* Initialize hunk data */
   for (i = 0; i < MAX_HUNK_BLOCKS; i++)
     s->hunk[i].size = 0;
@@ -291,28 +382,19 @@ game_init(state_t *s)
     send_calls = g_new(calls_struct_t, send_calls_allocated = 16);
 
   if (!stack_handle) {
-    sciprintf("game_init(): Insufficient heap space for stack\n");
+    sciprintf("%s(): Insufficient heap space for stack\n", __FUNCTION__);
     return 1;
   }
 
   if (!parser_handle) {
-    sciprintf("script_init(): Insufficient heap space for parser word error block\n");
+    sciprintf("%s(): Insufficient heap space for parser word error block\n", __FUNCTION__);
     return 1;
   }
-
-  if (!(script0 = script_instantiate(s, 0))) {
-    sciprintf("script_init(): Could not instantiate script 0\n");
-    return 1;
-  }
-
-  save_ff(s->_heap); /* Save heap state */
 
   s->successor = NULL; /* No successor */
   s->status_bar_text = NULL; /* Status bar is blank */
 
   fprintf(stderr," Script 0 at %04x\n", script0);
-
-  if (_init_vocabulary(s)) return 1;
 
   s->restarting_flags = SCI_GAME_IS_NOT_RESTARTING;
 
@@ -325,49 +407,14 @@ game_init(state_t *s)
   s->file_handles = g_new0(FILE *, s->file_handles_nr);
   /* Allocate memory for file handles */
 
-  s->menubar = menubar_new(); /* Create menu bar */
-
   g_get_current_time(&(s->game_start_time)); /* Get start time */
   memcpy(&(s->last_wait_time), &(s->game_start_time), sizeof(GTimeVal));
   /* Use start time as last_wait_time */
 
-  s->mouse_pointer = NULL; /* No mouse pointer */
-  s->mouse_pointer_nr = -1; /* No mouse pointer resource */
-  s->pointer_x = (320 / 2); /* With centered x coordinate */
-  s->pointer_y = 150; /* And an y coordinate somewhere down the screen */
-  s->last_pointer_x = 0;
-  s->last_pointer_y = 0;
-  s->last_pointer_size_x = 0;
-  s->last_pointer_size_y = 0; /* No previous pointer */
+  if (_init_graphics_input(s))
+    return 1;
 
-  s->pic = alloc_empty_picture(SCI_RESOLUTION_320X200, SCI_COLORDEPTH_8BPP);
-  s->pic_not_valid = 1; /* Picture is invalid */
-  s->pic_is_new = 0;
-  s->pic_visible_map = 0; /* Other values only make sense for debugging */
   s->animation_delay = 500; /* Used in kAnimate for pic openings */
-
-  s->pic_views_nr = s->dyn_views_nr = 0;
-  s->pic_views = 0; s->dyn_views = 0; /* No PicViews, no DynViews */
-
-  memset(s->ports, sizeof(s->ports), 0); /* Set to no ports */
-
-  s->wm_port.ymin = 10; s->wm_port.ymax = 199;
-  s->wm_port.xmin = 0; s->wm_port.xmax = 319;
-  s->wm_port.priority = 11;
-  s->ports[0] = &(s->wm_port); /* Window Manager port */
-
-  s->titlebar_port.ymin = 0; s->titlebar_port.ymax = 9;
-  s->titlebar_port.xmin = 0; s->titlebar_port.xmax = 319;
-  s->ports[1] = &(s->titlebar_port);
-
-  s->picture_port.ymin = 10; s->picture_port.ymax = 199;
-  s->picture_port.xmin = 0; s->picture_port.xmax = 319;
-  s->ports[2] = &(s->picture_port); /* Background picture port */
-
-  s->view_port = 0; /* Currently using the window manager port */
-
-  s->priority_first = 42; /* Priority zone 0 ends here */
-  s->priority_last = 200; /* The highest priority zone (15) starts here */
 
   s->debug_mode = 0x0; /* Disable all debugging */
   s->onscreen_console = 0; /* No onscreen console unless explicitly requested */
@@ -376,23 +423,6 @@ game_init(state_t *s)
   s->have_bp = 0;
 
   srand(time(NULL)); /* Initialize random number generator */
-
-  font_nr = -1;
-  do {
-    resource = findResource(sci_font, ++font_nr);
-  } while ((!resource) && (font_nr < 999));
-
-  if (!resource) {
-    sciprintf("No text font was found.\n");
-    return 1;
-  }
-  for (i = 0; i < 3; i++) {
-      s->ports[i]->font = resource->data; /* let all ports default to the 'system' font */
-      s->ports[i]->gray_text = 0;
-      s->ports[i]->font_nr = font_nr;
-      s->ports[i]->color = 0;
-      s->ports[i]->bgcolor = -1; /* All ports should be transparent */
-  }
 
   memset(s->hunk, sizeof(s->hunk), 0); /* Sets hunk to be unused */
   memset(s->clone_list, sizeof(s->clone_list), 0); /* No clones */
@@ -407,7 +437,7 @@ game_init(state_t *s)
         game_obj -= 2; /* Adjust for alternative header */
 
   if (GET_HEAP(game_obj + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
-    sciprintf("script_init(): Game object is not at 0x%x\n", game_obj);
+    sciprintf("%s(): Game object is not at 0x%x\n", __FUNCTION__, game_obj);
     return 1;
   }
 
@@ -429,6 +459,8 @@ game_init(state_t *s)
   s->parser_nodes[0].type = PARSE_TREE_NODE_LEAF;
   s->parser_nodes[0].content.value = 0;
 
+  s->menubar = menubar_new(); /* Create menu bar */
+
   return 0;
 }
 
@@ -448,9 +480,6 @@ game_exit(state_t *s)
     s->synonyms = NULL;
     s->synonyms_nr = 0;
   }
-
-  sciprintf("Freeing graphics data...\n");
-  free_picture(s->pic);
 
   sciprintf("Freeing miscellaneous data...\n");
 
@@ -473,6 +502,8 @@ game_exit(state_t *s)
     g_free(send_calls);
     send_calls_allocated = 0;
   }
+
+  menubar_free(s->menubar);
 
   return 0;
 }

@@ -454,6 +454,7 @@ void draw_window(picture_t dest, port_t *port, char color, char priority,
 
 
 void draw_text0(picture_t dest, port_t *port, int x, int y, char *text, char *font, char color);
+void draw_text0_without_newline(picture_t dest, port_t *port, int x, int y, char *text, char *font, char color);
 void draw_text0_centered(picture_t dest, port_t *port, int x, int y,
 			 char *text, char *font, char color);
 /* Draws text in a specific font and color.

@@ -99,6 +99,7 @@ typedef struct
 #define SCI_GAME_IS_NOT_RESTARTING 0
 #define SCI_GAME_WAS_RESTARTED 1
 #define SCI_GAME_IS_RESTARTING_NOW 2
+#define SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE 4
 
 typedef struct _state
 {

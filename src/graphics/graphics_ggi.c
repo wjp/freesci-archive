@@ -126,7 +126,7 @@ ggi_visual_t openVisual()
     {320,200}, /* resolution */
     {320,200}, /* virtual */
     {0,0},     /* size in mm */
-    GT_PALETTE,   /* color depth: Prefer palette mode (better for console players) */
+    GT_AUTO,   /* Color depth */
     {GGI_AUTO,GGI_AUTO}}; /* font size */
   ggi_visual_t retval;
   if (!(retval = ggiOpen(NULL))) return NULL;

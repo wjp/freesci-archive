@@ -176,10 +176,28 @@ void getTextParams(char *text, char *font)
   lastheight += localmaxheight + 1;
 }
 
+static inline void
+_draw_text0(picture_t dest, port_t *port, int x, int y, char *text, char *font,
+	   char color, int with_newline);
+
+void
+draw_text0(picture_t dest, port_t *port, int x, int y, char *text, char *font,
+	   char color)
+{
+  _draw_text0(dest, port, x, y, text, font, color, 1);
+}
+
+void
+draw_text0_without_newline(picture_t dest, port_t *port, int x, int y, char *text, char *font,
+			   char color)
+{
+  _draw_text0(dest, port, x, y, text, font, color, 0);
+}
 
 
-void draw_text0(picture_t dest, port_t *port, int x, int y, char *text, char *font,
-		char color)
+static inline void
+_draw_text0(picture_t dest, port_t *port, int x, int y, char *text, char *font,
+	   char color, int with_newline)
 {
   unsigned char foo;
   short rowcounter = 0;
@@ -193,7 +211,7 @@ void draw_text0(picture_t dest, port_t *port, int x, int y, char *text, char *fo
 
   while ((foo= *(text++))) {
     if (foo != 0x0d)
-      if (foo == '\n') {
+      if (foo == '\n' && with_newline) {
 	y += rowheights[rowcounter++] + 1;
 	x = xhome + ((lastwidth - rowwidths[rowcounter]) >> 1);
       } else if (foo < maxchar) {

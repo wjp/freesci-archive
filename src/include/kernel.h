@@ -65,20 +65,39 @@ extern int _debug_step_running;
 
 #define GET_HEAP(address) ((((guint16)(address)) < HEAP_MIN)? \
 KERNEL_OOPS("Heap address space violation on read")  \
-: getInt16(s->heap + ((guint16)(address))))
+: getHeapInt16(s->heap, ((guint16)(address))))
 /* Reads a heap value if allowed */
 
 #define UGET_HEAP(address) ((((guint16)(address)) < HEAP_MIN)? \
 KERNEL_OOPS("Heap address space violation on read")  \
-: getUInt16(s->heap + ((guint16)(address))))
+: getHeapUInt16(s->heap, ((guint16)(address))))
 /* Reads a heap value if allowed */
 
 #define PUT_HEAP(address, value) { if (((guint16)(address)) < HEAP_MIN) \
 KERNEL_OOPS("Heap address space violation on write");        \
 else { s->heap[((guint16)(address))] = (value) &0xff;               \
- s->heap[((guint16)(address)) + 1] = ((value) >> 8) & 0xff;}}
+ s->heap[((guint16)(address)) + 1] = ((value) >> 8) & 0xff;}    \
+if (address & 1)                                                 \
+  sciprintf("Warning: Unaligned write to %04x\n", address & 0xffff); }
 /* Sets a heap value if allowed */
 
+static inline int
+getHeapInt16(unsigned char *base, int address)
+{
+  if (address & 1)
+    sciprintf("Warning: Unaligned read from %04\n", address & 0xffff);
+
+  return getInt16(base + address);
+}
+
+static inline unsigned int
+getHeapUInt16(unsigned char *base, int address)
+{
+  if (address & 1)
+    sciprintf("Warning: Unaligned unsigned read from %04\n", address & 0xffff);
+
+  return getUInt16(base + address);
+}
 
 
 /******************** Selector functionality ********************/

@@ -354,6 +354,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	    *target++ = ' '; /* Format into the text */
 
 	  while (*target++ = *tempsource++);
+
 	  target--; /* Step back on terminator */
 	  mode = 0;
 	}

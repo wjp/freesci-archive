@@ -330,10 +330,10 @@ graph_draw_selector_button(struct _state *s, port_t *port, int state,
 			   x, y, xl, yl, text, font, ALIGN_TEXT_CENTER);
 
   if ((state & SELECTOR_STATE_SELECTABLE) && (state & SELECTOR_STATE_SELECTED))
-    draw_frame(s->pic, port->xmin + x, port->ymin + y -1,
+    draw_frame(s->pic, port->xmin + x, port->ymin + y ,
 	       xl - 1, yl - 1, port->color, port->priority);
   else
-    draw_frame(s->pic, port->xmin + x, port->ymin + y -1,
+    draw_frame(s->pic, port->xmin + x, port->ymin + y ,
 	       xl - 1, yl - 1, port->bgcolor, port->priority);
 }
 
@@ -348,7 +348,7 @@ graph_draw_selector_text(struct _state *s, port_t *port, int state,
   memcpy(&oldport, port, sizeof(oldport)); /* Backup old port data */
 
   port->x = x;
-  port->y = y;
+  port->y = y + 1;
   port->font = font;
   port->gray_text = state & SELECTOR_STATE_DISABLED;
   port->alignment = alignment;
@@ -356,7 +356,7 @@ graph_draw_selector_text(struct _state *s, port_t *port, int state,
   text_draw(s->pic, port, text, xl);
 
   if (state & SELECTOR_STATE_FRAMED)
-    draw_frame(s->pic, port->xmin + x-1, port->ymin + y-2,
+    draw_frame(s->pic, port->xmin + x-1, port->ymin + y-1,
 	       xl + 1, yl + 1, port->color, port->priority);
 
   memcpy(port, &oldport, sizeof(oldport)); /* Restore old port data */
@@ -372,12 +372,12 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
   int textwidth;
   int textheight;
 
-  graph_fill_box_custom(s, x + port->xmin, y + port->ymin, xl, yl,
+  graph_fill_box_custom(s, x + port->xmin, y + port->ymin + 1, xl, yl,
 			port->bgcolor, -1, -1, 1); /* Clear box background */
 
 
   graph_draw_selector_text(s, port, state,
-			   x, y - 1, xl, yl, text, font, ALIGN_TEXT_LEFT);
+			   x, y, xl, yl, text, font, ALIGN_TEXT_LEFT);
 
   if (time(NULL) & 1) { /* Blink cursor in 1s intervals */
     strncpy(temp, text, cursor);
@@ -386,7 +386,7 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
     get_text_size(temp, font, -1, &textwidth, &textheight);
 
     if (cursor == strlen(text)) /* At end of text block? */
-      graph_fill_box_custom(s, x + port->xmin + textwidth, y+port->ymin,
+      graph_fill_box_custom(s, x + port->xmin + textwidth, y+port->ymin + 1,
 			    1, textheight, port->color, -1, -1, 1);
     /* Draw thin line */
     else { /* Single character */
@@ -399,7 +399,7 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
       temp[1] = 0; /* Isolate the "blinking" char */
 
       charwidth = get_text_width(temp, font);
-      graph_fill_box_custom(s, x + port->xmin + textwidth, y + port->ymin,
+      graph_fill_box_custom(s, x + port->xmin + textwidth, y + port->ymin + 1,
 			    charwidth, textheight, port->color, -1, -1, 1);
 
 
@@ -407,10 +407,10 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
       port->color = oldbgcol;
       port->bgcolor = -1;
       port->x += x + textwidth;
-      port->y += y;
+      port->y += y + 1;
       text_draw(s->pic, port, temp, xl);
       port->x -= x + textwidth;
-      port->y -= y;
+      port->y -= y + 1;
       port->color = oldcol;
       port->bgcolor = oldbgcol;
       port->font = oldfont;

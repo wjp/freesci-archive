@@ -93,18 +93,38 @@ get_class_address(state_t *s, int classnr)
 
 #define GET_HEAP(address) ((((guint16)(address)) < 800)? \
 script_error(s, __FILE__, __LINE__, "Heap address space violation on read")  \
-: getInt16(s->heap + ((guint16)(address))))
+: getHeapInt16(s->heap, ((guint16)(address))))
 /* Reads a heap value if allowed */
 
 #define UGET_HEAP(address) ((((guint16)(address)) < 800)? \
 script_error(s, __FILE__, __LINE__, "Heap address space violation on read")   \
-: getUInt16(s->heap + ((guint16)(address))))
+: getHeapUInt16(s->heap, ((guint16)(address))))
 /* Reads an unsigned heap value if allowed */
 
-#define PUT_HEAP(address, value) if (((guint16)(address)) < 800) \
+static inline int
+getHeapInt16(unsigned char *base, int address)
+{
+  if (address & 1)
+    sciprintf("Warning: Unaligned read from %04\n", address & 0xffff);
+
+  return getInt16(base + address);
+}
+
+static inline unsigned int
+getHeapUInt16(unsigned char *base, int address)
+{
+  if (address & 1)
+    sciprintf("Warning: Unaligned unsigned read from %04\n", address & 0xffff);
+
+  return getUInt16(base + address);
+}
+
+#define PUT_HEAP(address, value) { if (((guint16)(address)) < 800) \
 script_error(s, __FILE__, __LINE__, "Heap address space violation on write");        \
 else { s->heap[(guint16)(address)] = (value) &0xff;               \
- s->heap[((guint16)(address)) + 1] = ((value) >> 8) & 0xff;}
+ s->heap[((guint16)(address)) + 1] = ((value) >> 8) & 0xff;}     \
+if (address & 1)                                                 \
+  sciprintf("Warning: Unaligned write to %04x\n", address & 0xffff); }
 /* Sets a heap value if allowed */
 
 #define CLASS_ADDRESS(classnr) (((classnr < 0) || (classnr >= s->classtable_size)) ?              \
@@ -1084,7 +1104,7 @@ _lookup_selector_functions(state_t *s, heap_ptr obj, int selectorid, heap_ptr *a
   int methodselector_nr = GET_HEAP(methodselectors - 2); /* Number of methods is stored there */
   int i;
 
-  if (methodselectors < 800 || methodselectors > 0xffff) {
+  if (methodselectors < 800 || methodselectors > 0xffff || methodselector_nr > 0x1000) {
     sciprintf("Lookup selector functions: Method selector offset %04x of object at %04x is invalid\n",
 	      methodselectors, obj);
     script_debug_flag = script_error_flag = 1;
@@ -1417,19 +1437,24 @@ game_run(state_t **_s)
       s->execution_stack = NULL;
       s->execution_stack_pos = -1;
       s->execution_stack_pos_changed = 0;
-      restore_ff(s->_heap); /* Restore old heap state */
 
       game_exit(s);
+      restore_ff(s->_heap); /* Restore old heap state */
       game_init(s);
 
-      sciprintf(" Restarting game\n");
-      putInt16(s->heap + s->stack_base, s->selector_map.replay); /* Call the replay selector */
+      sciprintf(" Restarting game with ");
+      if (s->restarting_flags & SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE) {
+	sciprintf("replay()\n");
+	putInt16(s->heap + s->stack_base, s->selector_map.replay); /* Call the replay selector */
+      } else {
+	sciprintf("play()\n");
+	putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector */
+      }
       putInt16(s->heap + s->stack_base + 2, 0);
       send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
 
       script_abort_flag = 0;
-
-      s->restarting_flags = SCI_GAME_WAS_RESTARTED;
+      s->restarting_flags |= SCI_GAME_WAS_RESTARTED | SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE;
 
     } else
       
