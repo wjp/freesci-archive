@@ -1116,27 +1116,11 @@ nsrect_clip(state_t *s, int y, abs_rect_t retval, int priority)
 }
 
 inline abs_rect_t
-get_nsrect(state_t *s, heap_ptr object, byte clip)
+calculate_nsrect(state_t *s, int x, int y, int view, int loop, int cel)
 {
-	int x, y, z;
 	int xbase, ybase, xend, yend, xsize, ysize;
-	int view, loop, cel;
 	int xmod = 0, ymod = 0;
 	abs_rect_t retval = {0,0,0,0};
-
-	x = GET_SELECTOR(object, x);
-	y = GET_SELECTOR(object, y);
-
-	if (s->selector_map.z > -1)
-		z = GET_SELECTOR(object, z);
-	else
-		z = 0;
-
-	y -= z; /* Subtract z offset */
-
-	view = GET_SELECTOR(object, view);
-	loop = sign_extend_byte(GET_SELECTOR(object, loop));
-	cel = sign_extend_byte(GET_SELECTOR(object, cel));
 
 	if (gfxop_check_cel(s->gfx_state, view, &loop, &cel)) {
 		xsize = ysize = xmod = ymod = 0;
@@ -1159,6 +1143,32 @@ get_nsrect(state_t *s, heap_ptr object, byte clip)
 	retval.y = ybase;
 	retval.xend = xend;
 	retval.yend = yend;
+
+	return retval;
+}
+
+inline abs_rect_t
+get_nsrect(state_t *s, heap_ptr object, byte clip)
+{
+	int x, y, z;
+	int view, loop, cel;
+	abs_rect_t retval = {0,0,0,0};
+
+	x = GET_SELECTOR(object, x);
+	y = GET_SELECTOR(object, y);
+
+	if (s->selector_map.z > -1)
+		z = GET_SELECTOR(object, z);
+	else
+		z = 0;
+
+	y -= z; /* Subtract z offset */
+
+	view = GET_SELECTOR(object, view);
+	loop = sign_extend_byte(GET_SELECTOR(object, loop));
+	cel = sign_extend_byte(GET_SELECTOR(object, cel));
+
+	retval = calculate_nsrect(s, x, y, view, loop, cel);
 
 	if (clip) {
 		int priority = GET_SELECTOR(object, priority);
@@ -1534,29 +1544,16 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int funct_nr, int argc, i
 	int y = view->pos.y;
 	abs_rect_t abs_zone;
 /*	int has_nsrect = (view->ID <=0)? 0 : lookup_selector(s, view->ID, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;*/
-	abs_zone = nsrect_clip(s, y, get_nsrect(s, view->ID, 1), priority);
 
-
-#if 0
-	if (has_nsrect) {
-		int obj = view->ID;
-		abs_zone = get_nsrect(s, obj, 1);
-
-	} else if (!base_set) {
-		int width, height;
-		point_t offset;
-
-		GFX_ASSERT(gfxop_get_cel_parameters(s->gfx_state, view->view, view->loop, view->cel,
-						    &width, &height, &offset));
-
-		abs_zone.x = view->pos.x + offset.x - (width >> 1);
-		abs_zone.xend = abs_zone.x + width;
-		abs_zone.yend = view->pos.y + offset.y + 1;
-		abs_zone.y = abs_zone.yend - height;
-	} else {
+	if (view->ID > 0)
 		abs_zone = get_nsrect(s, view->ID, 1);
+	else {
+		abs_zone = nsrect_clip(s, view->pos.y,
+				       calculate_nsrect(s, view->pos.x, view->pos.y,
+							view->view, view->loop, view->cel),
+				       view->color.priority);
 	}
-#endif
+
 
 	if (!(view->signalp && (GET_HEAP(view->signalp) & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {
 		gfxw_box_t *box;
@@ -2155,12 +2152,13 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		control = PARAM(6);
 
 		widget = GFXW(gfxw_new_dyn_view(s->gfx_state, gfx_point(x,y+1 /* magic +1 */ ), 0, view, loop, cel,
-						priority, control, ALIGN_CENTER, ALIGN_BOTTOM, 0));
-		/*		draw_to_control_map(s, (gfxw_dyn_view_t *) widget, 1, funct_nr, argc, argp); */
+						priority, -1 /* No priority */ , ALIGN_CENTER, ALIGN_BOTTOM, 0));
 
 		if (!widget) {
 			SCIkwarn(SCIkERROR, "Attempt to single-add invalid picview (%d/%d/%d)\n", view, loop, cel);
 		} else {
+			widget->ID = -1;
+			draw_to_control_map(s, (gfxw_dyn_view_t *) widget, funct_nr, argc, argp);
 			ADD_TO_CURRENT_PICTURE_PORT(gfxw_picviewize_dynview((gfxw_dyn_view_t *) widget));
 		}
 
