@@ -1,3 +1,11 @@
+2003-01-15  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* README.DC: Updated to include information about Dreamcast
+	savegames.
+
+	* src/main.c: Added Ruediger Hanke and myself to the startup
+	copyright message.
+
 2003-01-14  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sound/midi_mt32gm.c: Fixed the mt32gm `no volume' issue.
