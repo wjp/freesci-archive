@@ -53,7 +53,7 @@
 
 #define MAX_HOMEDIR_SIZE 255
 
-#define FREESCI_SAVEGAME_VERSION 0
+#define FREESCI_SAVEGAME_VERSION 1
 
 #define FREESCI_GAMEDIR ".freesci"
 #define FREESCI_CONFFILE "config"
@@ -91,6 +91,8 @@ typedef struct
 typedef struct _state
 {
 	int savegame_version;
+
+	int widget_serial_counter; /* Used for savegames */ 
 
 	char *resource_dir; /* Directory the resource files are kept in */
 	char *work_dir; /* Directory the game metadata should be written to */
@@ -141,7 +143,7 @@ typedef struct _state
 	int pic_visible_map; /* The number of the map to display in update commands */
 	int pic_animate; /* The animation used by Animate() to display the picture */
 
-	gfxw_port_t *dyn_view_port; /* Port the dyn_views are valid for */
+	int dyn_views_list_serial; /* Used for save/restore */
 	gfxw_list_t *dyn_views; /* Pointers to pic and dynamic view lists */
 
 	int animation_delay; /* A delay factor for pic opening animations. Defaults to 500. */

@@ -1715,7 +1715,7 @@ _k_draw_view_list(state_t *s, gfxw_list_t *list, int flags)
 
 	gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) list->contents;
 
-	if (s->port != s->dyn_view_port)
+	if (s->port != s->dyn_views->parent)
 		return; /* Return if the pictures are meant for a different port */
 
 	while (widget) {
@@ -2010,8 +2010,6 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		s->dyn_views->tag(GFXW(s->dyn_views));
 
 	if (cast_list) {
-		s->dyn_view_port = s->port; /* The list is valid for view_port */
-
 		s->dyn_views->tag(GFXW(s->dyn_views));
 		_k_make_view_list(s, s->dyn_views, cast_list, (cycle? _K_MAKE_VIEW_LIST_CYCLE : 0)
 				  | _K_MAKE_VIEW_LIST_CALC_PRIORITY, funct_nr, argc, argp);

@@ -1,3 +1,11 @@
+2001-01-03  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/widgets.c (_gfxwop_container_draw_contents): Fixed
+	clipping bug introduced by yesterday's fixes
+
+	* src/gfx/gfx_resource.c: Fixed drawing to 24 or 32 bpp displays
+	on big endian machines
+
 2001-01-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/widgets.c (_gfxwop_container_add_dirty): Dirty rects are

@@ -76,16 +76,23 @@ gfxr_free_view(gfx_driver_t *driver, gfxr_view_t *view)
 #define SIZETYPE guint8
 #define FUNCNAME _gfx_xlate_pixmap_unfiltered_1
 #include "gfx_pixmap_scale.c"
+
 #define SIZETYPE guint16
 #define FUNCNAME _gfx_xlate_pixmap_unfiltered_2
 #include "gfx_pixmap_scale.c"
+
+#ifdef WORDS_BIGENDIAN
+# undef EXTRA_BYTE_OFFSET
+# define EXTRA_BYTE_OFFSET 1
+#endif /* WORDS_BIGENDIAN */
 #define SIZETYPE guint32
 #define FUNCNAME _gfx_xlate_pixmap_unfiltered_3
 #include "gfx_pixmap_scale.c"
 #ifdef WORDS_BIGENDIAN
 # undef EXTRA_BYTE_OFFSET
-# define EXTRA_BYTE_OFFSET 1
+# define EXTRA_BYTE_OFFSET 0
 #endif /* WORDS_BIGENDIAN */
+
 #define SIZETYPE guint32
 #define FUNCNAME _gfx_xlate_pixmap_unfiltered_4
 #include "gfx_pixmap_scale.c"

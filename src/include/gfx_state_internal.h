@@ -206,7 +206,6 @@ typedef struct _gfxw_port {
 
 	gfxw_list_t *decorations; /* optional window decorations- drawn before the contents */
 	gfxw_widget_t *port_bg; /* Port background widget or NULL */
-	struct _gfxw_port *next_port; /* Pointer to the next port in the port list */
 	gfx_color_t color, bgcolor;
 	int font_nr;
 	point_t draw_pos; /* Drawing position */

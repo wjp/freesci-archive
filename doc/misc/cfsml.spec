@@ -1,7 +1,7 @@
 The C File Storage Meta Language (CFSML)
 ----------------------------------------
 
-Specification of version 0.6
+Specification of version 0.7
 
 
 This documentation is provided WITHOUT WARRANTY of any kind.
@@ -105,7 +105,7 @@ Records and Arrays
 ------------------
 It is also possible to declare records, like this:
 
-RECORD [recordname] "C representation" {
+RECORD [recordname] "C representation" EXTENDS [super_record] {
 	[member #1];
 	[member #2];
 	...
@@ -150,6 +150,7 @@ Dynamic arrays will get the memory they requre allocated during restoration
 time.
 - MAXWRITE followed by a int-like variable member of the underlying record
 that is used to limit the number of elements to be written / read.
+- * is synonymous for "DYNAMIC 1".
 
 If the dynamic/static keyword is followed by a string instead of a numeric
 value, the length is assumed to be variable and equal to that string token
@@ -175,6 +176,34 @@ memsize (in that case, only memsize entries would be written).
 
 It is currently required that all elements inside the brackets must be
 declared before the record using them.
+
+
+Records built on top of other records
+-------------------------------------
+Sometimes, when doing OOish stuff, several separate types share a common
+ancestor that defines their contents. In C, this is typically facilitated
+by using some kind of macros; CFSML supports this via the EXTENDS keyword.
+Example:
+
+RECORD foo {
+    int x;
+    int y;
+}
+
+RECORD bar "extended_bar_t" EXTENDS foo {
+    int z;
+}
+
+The declaration of bar has the same semantics as the explicit
+
+RECORD bar "extended_bar_t" {
+    int x;
+    int y;
+    int z;
+}
+
+but, if foo is changed, bar need not be changed explicitly, making
+maintenance easier.
 
 
 Error reporting during file recovery
@@ -246,6 +275,9 @@ however, their chance of being accepted is much more likely with code
 to back them up.
 
 
+Changes since 0.6:
+- Added EXTENDS
+- Added "*"
 Changes since 0.5.1:
 - Added FIRSTTOKEN
 - Added LINECOUNTER
@@ -257,4 +289,5 @@ Changes since 0.4:
 
 The author can be contacted at jameson@linuxgames.com.
 
-  Christoph Reichenbach, 11/1999
+  Christoph Reichenbach, 01/2000
+

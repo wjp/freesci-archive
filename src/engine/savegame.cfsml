@@ -37,7 +37,6 @@
 # include <glib.h>
 #endif
 #include <ctype.h>
-#include <graphics_png.h>
 #ifdef HAVE_DIRENT_H
 #include <sys/types.h> /* Required by e.g. NetBSD */
 #include <dirent.h>
@@ -53,136 +52,136 @@
 */
 
 state_t *_global_save_state;
-/* Needed for graphical hunk writing. */
+/* Needed for some graphical stuff. */
 
 
 void
 write_heapptr(FILE *fh, heap_ptr *foo)
 {
-  fprintf(fh, "0x%04x", *foo);
+	fprintf(fh, "0x%04x", *foo);
 }
 
 int
 read_heapptr(FILE *fh, heap_ptr *foo, char *lastval, int *line, int *hiteof)
 {
-  *foo = strtol(lastval, NULL, 0);
-  return 0;
+	*foo = strtol(lastval, NULL, 0);
+	return 0;
 }
 
 void
 write_sci_version(FILE *fh, sci_version_t *foo)
 {
-  fprintf(fh, "%d.%03d.%03d", SCI_VERSION_MAJOR(*foo), SCI_VERSION_MINOR(*foo),
-	  SCI_VERSION_PATCHLEVEL(*foo));
+	fprintf(fh, "%d.%03d.%03d", SCI_VERSION_MAJOR(*foo), SCI_VERSION_MINOR(*foo),
+		SCI_VERSION_PATCHLEVEL(*foo));
 }
 
 int
 read_sci_version(FILE *fh, sci_version_t *foo, char *lastval, int *line, int *hiteof)
 {
-  *foo = version_parse(lastval);
-  return 0;
+	*foo = version_parse(lastval);
+	return 0;
 }
 
 void
 write_hunk_block(FILE *fh, hunk_block_t *foo)
 {
-  char filename[14] = "hunk.0";
-  int filenr = 0;
-  int hunkfile;
+	char filename[14] = "hunk.0";
+	int filenr = 0;
+	int hunkfile;
 
-  if (!foo->size) {
-    fputs("\\null\\", fh);
-    return; /* Don't write empty blocks */
-  }
+	if (!foo->size) {
+		fputs("\\null\\", fh);
+		return; /* Don't write empty blocks */
+	}
 
-  if (foo->type == HUNK_TYPE_GFXBUFFER) {
+	if (foo->type == HUNK_TYPE_GFXBUFFER) {
 
-    int handle = graph_png_save_box(_global_save_state, foo->data);
+		int handle = graph_png_save_box(_global_save_state, foo->data);
 
-    if (handle >= 0)
-      sprintf(filename, "buffer.%d", handle);
-    else
-      strcpy(filename, "\\ERROR\\"); /* Treat as empty */
+		if (handle >= 0)
+			sprintf(filename, "buffer.%d", handle);
+		else
+			strcpy(filename, "\\ERROR\\"); /* Treat as empty */
 
-  } else { /* Normal buffer */
+	} else { /* Normal buffer */
 
-    while ((hunkfile = open(filename, O_RDONLY)) > 0) {
-      close(hunkfile);
-      sprintf(filename + 5, "%d", ++filenr);
-    }
+		while ((hunkfile = open(filename, O_RDONLY)) > 0) {
+			close(hunkfile);
+			sprintf(filename + 5, "%d", ++filenr);
+		}
 
-    hunkfile = creat(filename, 0600);
-    assert (hunkfile > 0);
+		hunkfile = creat(filename, 0600);
+		assert (hunkfile > 0);
 
-    write(hunkfile, foo->data, foo->size);
+		write(hunkfile, foo->data, foo->size);
 
-    close(hunkfile);
-  }
+		close(hunkfile);
+	}
 
-  fputs(filename, fh);
+	fputs(filename, fh);
 }
 
 int
 read_hunk_block(FILE *fh, hunk_block_t *foo, char *lastval, int *line, int *hiteof)
 {
-  int hunkfile;
+	int hunkfile;
 
-  if (lastval[0] == '\\') { /* Nothing written? */
-    foo->size = 0;
-    return 0;
-  }
+	if (lastval[0] == '\\') { /* Nothing written? */
+		foo->size = 0;
+		return 0;
+	}
 
-  if (lastval[0] == 'b') { /* Graphical buffer */
-    int bufnum;
+	if (lastval[0] == 'b') { /* Graphical buffer */
+		int bufnum;
 
-    foo->type = HUNK_TYPE_GFXBUFFER;
+		foo->type = HUNK_TYPE_GFXBUFFER;
 
-    sscanf(lastval, "buffer.%d", &bufnum);
-    foo->data = graph_png_load_box(_global_save_state, bufnum, &(foo->size));
+		sscanf(lastval, "buffer.%d", &bufnum);
+		foo->data = graph_png_load_box(_global_save_state, bufnum, &(foo->size));
 
-    if (!foo->data)
-      return 1;
+		if (!foo->data)
+			return 1;
 
-  } else { /* Normal hunk */
+	} else { /* Normal hunk */
 
-    foo->type = HUNK_TYPE_ANY;
+		foo->type = HUNK_TYPE_ANY;
 
-    hunkfile = open(lastval, O_RDONLY);
+		hunkfile = open(lastval, O_RDONLY);
 
-    foo->size = lseek(hunkfile, 0, SEEK_END);
-    lseek(hunkfile, 0, SEEK_SET);
+		foo->size = lseek(hunkfile, 0, SEEK_END);
+		lseek(hunkfile, 0, SEEK_SET);
 
-    foo->data = (char *) xalloc(foo->size);
-    read(hunkfile, foo->data, foo->size);
-    close(hunkfile);
+		foo->data = (char *) xalloc(foo->size);
+		read(hunkfile, foo->data, foo->size);
+		close(hunkfile);
 
-    return 0;
-  }
+		return 0;
+	}
 
-  return 0;
+	return 0;
 }
 
 void
 write_PTN(FILE *fh, parse_tree_node_t *foo)
 {
-  if (foo->type == PARSE_TREE_NODE_LEAF)
-    fprintf(fh, "L%d", foo->content.value);
-  else
-    fprintf(fh, "B(%d,%d)", foo->content.branches[0], foo->content.branches[1]);
+	if (foo->type == PARSE_TREE_NODE_LEAF)
+		fprintf(fh, "L%d", foo->content.value);
+	else
+		fprintf(fh, "B(%d,%d)", foo->content.branches[0], foo->content.branches[1]);
 }
 
 int
 read_PTN(FILE *fh, parse_tree_node_t *foo, char *lastval, int *line, int *hiteof)
 {
-  if (lastval[0] == 'L') {
-    if (sscanf(lastval, "L %d", &(foo->content.value)) < 1)
-      return 1; /* Failed to parse everything */
-    return 0;
-  } else if (lastval[0] == 'B') {
-    if (sscanf(lastval, "B ( %hd , %hd )", &(foo->content.branches[0]), &(foo->content.branches[1])) < 2)
-      return 1; /* Failed to parse everything */
-    return 0;
-  } else return 1; /* failure to parse anything */
+	if (lastval[0] == 'L') {
+		if (sscanf(lastval, "L %d", &(foo->content.value)) < 1)
+			return 1; /* Failed to parse everything */
+		return 0;
+	} else if (lastval[0] == 'B') {
+		if (sscanf(lastval, "B ( %hd , %hd )", &(foo->content.branches[0]), &(foo->content.branches[1])) < 2)
+			return 1; /* Failed to parse everything */
+		return 0;
+	} else return 1; /* failure to parse anything */
 }
 
 
@@ -196,6 +195,15 @@ write_port_tp(FILE *fh, port_t **foo);
 int
 read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof);
 
+void
+write_any_widget(FILE *fh, gfxw_widget_t **widget);
+int
+read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int *hiteof);
+
+void
+write_pixmap_color(FILE *fh, gfx_pixmap_color_t **color);
+int
+read_pixmap_color(FILE *fh, gfx_pixmap_color_t **color, char *lastval, int *line, int *hiteof);
 
 
 %CFSML
@@ -212,205 +220,695 @@ TYPE parse_tree_node_t "parse_tree_node_t" USING write_PTN read_PTN;
 TYPE menubar_tp "menubar_t*" USING write_menubar_tp read_menubar_tp;
 TYPE port_tp "port_t*" USING write_port_tp read_port_tp;
 
+/* Widget subsystem */
+/*------------------*/
+TYPE any_widget_p "gfxw_widget_t*" USING write_any_widget read_any_widget;
+TYPE buffered_gfx_pixmap_color_t "gfxw_pixmap_color_t" USING write_pixmap_color read_pixmap_color;
+TYPE gfxw_widget_types_t "gfxw_widget_types_t" LIKE int;
+TYPE gfx_line_mode_t "gfx_line_mode_t" LIKE int;
+TYPE gfx_line_style_t "gfx_line_style_t" LIKE int;
+TYPE gfx_box_shade_t "gfx_box_shade_t" LIKE int;
+TYPE gfx_alignment_t "gfx_alignment_t" LIKE int;
+
+RECORD point_t {
+	int x;
+	int y;
+}
+
+RECORD rect_t EXTENDS point_t {
+	int xl;
+	int yl;
+}
+
+RECORD gfx_pixmap_color_t {
+	byte r;
+	byte g;
+	byte b;
+}
+
+RECORD gfx_color_t {
+	buffered_gfx_pixmap_color_t visual;
+	byte alpha;
+	byte priority;
+	byte control;
+	byte mask;
+}
+
+RECORD gfx_dirty_rect_t {
+	rect_t rect;
+	gfx_dirty_rect_t next[*];
+}
+
+
+RECORD gfxw_widget_t {
+	int magic;
+	int serial;
+	int flags;
+	gfxw_widget_types_t type;
+	rect_t bounds;
+	any_widget_p next;
+	int ID;
+}
+/* Handled externally: parent, visual */
+
+RECORD gfxw_box_t EXTENDS gfxw_widget_t {
+	gfx_color_t color1;
+	gfx_color_t color2;
+	gfx_box_shade_t shade_type;
+}
+
+RECORD gfxw_primitive_t EXTENDS gfxw_widget_t {
+	gfx_color_t color;
+	gfx_line_mode_t line_mode;
+	gfx_line_mode_t line_style;
+}
+
+RECORD gfxw_view_t EXTENDS gfxw_widget_t {
+	point_t pos;
+	gfx_color_t color;
+	int view;
+	int loop;
+	int cel;
+}
+
+RECORD gfxw_dyn_view_t EXTENDS gfxw_view_t {
+	rect_t draw_bounds;
+	int under_bitsp;
+	int signalp;
+	int under_bits;
+	int signal;
+	int z;
+}
+
+RECORD gfxw_text_t EXTENDS gfxw_widget_t {
+	int font_nr;
+	string text;
+	gfx_alignment_t halign;
+	gfx_alignment_t valign;
+	gfx_color_t color1;
+	gfx_color_t color2;
+	gfx_color_t bgcolor;
+	int text_flags;
+	int width;
+	int height;
+}
+/* Handled externally: text_handle */
+
+
+RECORD gfxw_container_t EXTENDS gfxw_widget_t {
+	rect_t zone;
+	gfx_dirty_rect_t dirty[*];
+	any_widget_p contents;
+}
+/* Handled externally: nextpp */
+
+TYPE gfxw_list_t "gfxw_list_t" LIKE gfxw_container_t;
+
+
+RECORD gfxw_visual_t EXTENDS gfxw_container_t {
+	int port_refs_nr;
+	int font_nr;
+}
+/* Handled externally: gfx_state, port_refs */
+
+RECORD gfxw_port_t EXTENDS gfxw_container_t {
+	any_widget_p decorations;
+	any_widget_p port_bg;
+	gfx_color_t color;
+	gfx_color_t bgcolor;
+	int font_nr;
+	point_t draw_pos;
+	int port_flags;
+	string title_text;
+	byte gray_text;
+}
+
+
+
+/*-------------------------*/
+/* End of widget subsystem */
 
 RECORD menu_item_t "menu_item_t" {
-  int type;
-  string keytext;
-  int keytext_size;
+	int type;
+	string keytext;
+	int keytext_size;
 
-  int flags;
-  byte said[STATIC MENU_SAID_SPEC_SIZE];
-  heap_ptr said_pos;
-  string text;
-  heap_ptr text_pos;
-  int modifiers;
-  int key;
-  int enabled;
-  int tag;
+	int flags;
+	byte said[STATIC MENU_SAID_SPEC_SIZE];
+	heap_ptr said_pos;
+	string text;
+	heap_ptr text_pos;
+	int modifiers;
+	int key;
+	int enabled;
+	int tag;
 }
 
 RECORD menu_t "menu_t" {
-  string title;
-  int title_width;
-  int width;
+	string title;
+	int title_width;
+	int width;
 
-  menu_item_t items[DYNAMIC items_nr];
+	menu_item_t items[DYNAMIC items_nr];
 }
 
 RECORD menubar_t "menubar_t" {
-  menu_t menus[DYNAMIC menus_nr];
+	menu_t menus[DYNAMIC menus_nr];
 }
 
 RECORD exec_stack_t "exec_stack_t" {
-  heap_ptr objp;
-  heap_ptr sendp;
-  heap_ptr pc;
-  heap_ptr sp;
-  int argc;
-  heap_ptr variables[STATIC 4];
-  int selector;
-  int origin;
-  heap_ptr type;
+	heap_ptr objp;
+	heap_ptr sendp;
+	heap_ptr pc;
+	heap_ptr sp;
+	int argc;
+	heap_ptr variables[STATIC 4];
+	int selector;
+	int origin;
+	heap_ptr type;
 }
 
 RECORD class_t "class_t" {
-  int script;
-  int class_offset;
+	int script;
+	int class_offset;
 }
 
 RECORD view_object_t {
-  heap_ptr obj;
-  heap_ptr signalp;
-  heap_ptr underBitsp;
-  int x;
-  int y;
-  int priority;
-  int view_nr;
-  int loop;
-  int cel;
-  int nsTop;
-  int nsLeft;
-  int nsRight;
-  int nsBottom;
-  int underBits;
+	heap_ptr obj;
+	heap_ptr signalp;
+	heap_ptr underBitsp;
+	int x;
+	int y;
+	int priority;
+	int view_nr;
+	int loop;
+	int cel;
+	int nsTop;
+	int nsLeft;
+	int nsRight;
+	int nsBottom;
+	int underBits;
 }
 
 
 RECORD script_t "script_t" {
-  heap_ptr heappos;
-  heap_ptr localvar_offset;
-  heap_ptr export_table_offset;
-  int lockers;
+	heap_ptr heappos;
+	heap_ptr localvar_offset;
+	heap_ptr export_table_offset;
+	int lockers;
 }
 
 RECORD port_t "port_t" {
-  gint16 ymin;
-  gint16 xmin;
-  gint16 ymax;
-  gint16 xmax;
+	gint16 ymin;
+	gint16 xmin;
+	gint16 ymax;
+	gint16 xmax;
 
-  heap_ptr title;
-  gint16 flags;
-  int alignment;
-  int x;
-  int y;
+	heap_ptr title;
+	gint16 flags;
+	int alignment;
+	int x;
+	int y;
 
-  int font_nr;
+	int font_nr;
 
-  gint16 priority;
-  gint16 bgcolor;
-  gint16 color;
+	gint16 priority;
+	gint16 bgcolor;
+	gint16 color;
 
-  byte gray_text;
-  int bg_handle;
+	byte gray_text;
+	int bg_handle;
 
-  int predecessor;
+	int predecessor;
 }
 
 
 RECORD synonym_t "synonym_t" {
-  int replaceant;
-  int replacement;
+	int replaceant;
+	int replacement;
 }
 
 
 RECORD state_t "state_t" {
-  int savegame_version;
+	int savegame_version;
 
-  byte restarting_flags;
-  byte have_mouse_flag;
-  byte pic_not_valid;
-  byte pic_is_new;
-  byte onscreen_console;
+	byte restarting_flags;
+	byte have_mouse_flag;
+	byte pic_not_valid;
+	byte pic_is_new;
+	byte onscreen_console;
 
-  int mouse_pointer_nr;
+	long game_time;
+	heap_ptr save_dir;
+	heap_ptr sound_object;
 
-  int debug_mode;
-  long game_time;
-  heap_ptr save_dir;
-  heap_ptr sound_object;
+	int mouse_pointer_nr;
 
-  int last_pointer_x;
-  int last_pointer_y;
-  int last_pointer_size_x;
-  int last_pointer_size_y;
+	int port_ID;
+	gfx_color_t ega_colors[STATIC 16]; /* They're constants */
 
-  int view_port;
-  port_tp ports[MAX_PORTS];
+	int dyn_views_list_serial;
 
-  int pic_visible_map;
-  int pic_animate;
+	any_widget_p visual;
 
-  int dyn_view_port;
+	int pic_visible_map;
+	int pic_animate;
 
-  view_object_t pic_views[DYNAMIC pic_views_nr];
-  view_object_t dyn_views[DYNAMIC dyn_views_nr];
+	int animation_delay;
 
-  int animation_delay;
+	hunk_block_t hunk[STATIC MAX_HUNK_BLOCKS];
 
-  hunk_block_t hunk[STATIC MAX_HUNK_BLOCKS];
+	menubar_tp menubar;
+	string status_bar_text;
 
-  menubar_tp menubar;
-  string status_bar_text;
+	int priority_first;
+	int priority_last;
 
-  int priority_first;
-  int priority_last;
+	byte version_lock_flag;
+	sci_version_t version;
+	sci_version_t max_version;
+	sci_version_t min_version;
 
-  byte version_lock_flag;
-  sci_version_t version;
-  sci_version_t max_version;
-  sci_version_t min_version;
+	exec_stack_t execution_stack[DYNAMIC execution_stack_size, MAXWRITE execution_stack_pos+1];
 
-  exec_stack_t execution_stack[DYNAMIC execution_stack_size, MAXWRITE execution_stack_pos+1];
+	gint16 acc;
+	gint16 amp_rest;
+	gint16 prev;
 
-  gint16 acc;
-  gint16 amp_rest;
-  gint16 prev;
+	heap_ptr stack_base;
+	heap_ptr stack_handle;
+	heap_ptr parser_base;
+	heap_ptr parser_event;
+	heap_ptr global_vars;
 
-  heap_ptr stack_base;
-  heap_ptr stack_handle;
-  heap_ptr parser_base;
-  heap_ptr parser_event;
-  heap_ptr global_vars;
+	int parser_lastmatch_word;
 
-  int parser_lastmatch_word;
+	parse_tree_node_t parser_nodes[STATIC VOCAB_TREE_NODES];
+	int parser_valid;
 
-  parse_tree_node_t parser_nodes[STATIC VOCAB_TREE_NODES];
-  int parser_valid;
+	synonym_t synonyms[DYNAMIC synonyms_nr];
 
-  synonym_t synonyms[DYNAMIC synonyms_nr];
+	heap_ptr game_obj;
 
-  heap_ptr game_obj;
+	class_t classtable[DYNAMIC classtable_size];
 
-  class_t classtable[DYNAMIC classtable_size];
+	script_t scripttable[STATIC 1000];
 
-  script_t scripttable[STATIC 1000];
+	heap_ptr clone_list[STATIC SCRIPT_MAX_CLONES];
 
-  heap_ptr clone_list[STATIC SCRIPT_MAX_CLONES];
+	int _heap->first_free;
+	int _heap->old_ff;
 
-  int _heap->first_free;
-  int _heap->old_ff;
-
-  POINTER _heap->base RELATIVETO _heap->start;
-  POINTER game_name RELATIVETO _heap->start;
-
+	POINTER _heap->base RELATIVETO _heap->start;
+	POINTER game_name RELATIVETO _heap->start;
 }
 
 %END CFSML
 
+struct {
+	gfxw_widget_types_t type;
+	char *name;
+} widget_string_names = {
+	{GFXW_BOX, "BOX"},
+	{GFXW_RECT, "PRIMITIVE"},
+	{GFXW_LINE, "PRIMITIVE"},
+	{GFXW_INVERSE_LINE, "PRIMITIVE"},
+	{GFXW_STATIC_VIEW, "VIEW"},
+	{GFXW_VIEW, "VIEW"},
+	{GFXW_DYNVIEW, "DYNVIEW"},
+	{GFXW_TEXT, "TEXT"},
+	{GFXW_SORTED_LIST, "LIST"},
+	{GFXW_LIST, "LIST"},
+	{GFXW_VISUAL, "VISUAL"},
+	{GFXW_PORT, "PORT"},
+	{GFXW_CONTAINER, "_CONTAINER"},
+	{GFXW_, "_WIDGET"},
+	{-1, NULL}
+}
+
+static char *
+stringify_widget_type(int type)
+{
+	int i = 0;
+	while (widget_string_names[i].type != type
+	       && widget_string_names[i].name)
+		i++;
+
+	return widget_string_names[i].name;
+}
+
+static gfxw_widget_types_t
+parse_widget_type(char *string) /* Rather slow, but WTF */
+{
+	int i = 0;
+	while (widget_string_names[i].name
+	       && strcmp(widget_string_names[i].name, string))
+		i++;
+
+	return widget_string_names[i].type;
+}
+
+void
+write_any_widget(FILE *fh, gfxw_widget_t **widget)
+{
+	char *type_name;
+
+	if (*widget == NULL) {
+		fputs("NULL", fh);
+		return;
+	}
+
+	type_name = stringify_widget_type((*widget)->type);
+	if (type_name)
+		fputs(type_name, fh);
+	else {
+		sciprintf("While writing widget: Encountered invalid widget type %d\n", 
+			  (*widget)->type);
+		fputs("NULL", fh);
+		return;
+	}
+
+	fputs(type_name, " {\n");
+
+	switch ((*widget)->type) {
+
+	case GFXW_BOX:
+		%CFSMLWRITE gfxw_box_t (**widget) INTO fh;
+		break;
+
+	case GFXW_RECT:
+	case GFXW_LINE:
+	case GFXW_INVERSE_LINE:
+		%CFSMLWRITE gfxw_primitive_t (**widget) INTO fh;
+		break;
+
+	case GFXW_VIEW:
+	case GFXW_STATIC_VIEW:
+		%CFSMLWRITE gfxw_view_t (**widget) INTO fh;
+		break;
+
+	case GFXW_DYNVIEW:
+		%CFSMLWRITE gfxw_dyn_view_t (**widget) INTO fh;
+		break;
+
+	case GFXW_TEXT:
+		%CFSMLWRITE gfxw_text_t (**widget) INTO fh;
+		break;
+
+
+	case GFXW_SORTED_LIST:
+	case GFXW_LIST:
+		%CFSMLWRITE gfxw_list_t (**widget) INTO fh;
+		break;
+
+	case GFXW_VISUAL:
+		%CFSMLWRITE gfxw_visual_t (**widget) INTO fh;
+		break;
+
+	case GFXW_PORT:
+		%CFSMLWRITE gfxw_port_t (**widget) INTO fh;
+		break;
+
+	case GFXW_:
+	case GFXW_CONTAINER:
+	default:
+		sciprintf("While writing widget: Invalid widget type while writing widget:\n");
+		(*widget)->print((*widget), 0);
+
+		if ((*widget)->type == GFXW_CONTAINER) {
+			fputs("CONTAINER{", fh);
+			%CFSMLWRITE gfxw_container_t (**widget) INTO fh;
+		} else {
+			fputs("WIDGET{", fh);
+			%CFSMLWRITE gfxw_widget_t (**widget) INTO fh;
+		}
+		break;
+	}
+	fputs("}\n", fh);
+}
+
+void
+_gfxw_set_ops_RECT(gfxw_widget_t *prim);
+void
+_gfxw_set_ops_LINE(gfxw_widget_t *prim);
+void
+_gfxw_set_ops_VIEW(gfxw_widget_t *view, char stat);
+void
+_gfxw_set_ops_DYNVIEW(gfxw_widget_t *widget);
+void
+_gfxw_set_ops_TEXT(gfxw_widget_t *widget);
+void
+_gfxw_set_ops_LIST(gfxw_container_t *widget, char sorted);
+void
+_gfxw_set_ops_VISUAL(gfxw_container_t *visual);
+void
+_gfxw_set_ops_PORT(gfxw_container_t *widget);
+
+
+void
+full_widget_tree_traversal(gfxw_widget_t *widget, gfxw_container_t *parent, gfxw_visual_t visual)
+{
+	if (!widget)
+		return;
+
+	widget->parent = parent;
+
+	if (GFXW_IS_VISUAL(widget)) {
+		visual = (gfxw_visual_t *) widget;
+		visual->gfx_state = _global_save_state->gfx_state;
+		visual->port_refs = calloc(sizeof(gfxw_port_t *), visual->port_refs_nr);
+	}
+
+	if (widget->next)
+		full_widget_tree_traversal(widget->next, parent, visual);
+
+	if (GFXW_IS_CONTAINER(widget)) {
+		gfxw_container_t *container = GFXWC(widget);
+
+		full_widget_tree_traversal(container->contents, container, visual);
+
+		if (!container->contents)
+			container->nextpp = &(container->next);
+		else {
+			gfxw_widget_t *next_seeker = container->contents;
+
+			while (next_seeker->next)
+				next_seeker = next_seeker->next;
+
+			container->nextpp = &(next_seeker->next);
+		}
+
+		if (GFXW_IS_PORT(container)) {
+			gfxw_port_t *port = (gfxw_port_t *) container;
+
+			full_widget_tree_traversal(port->decorations, container, visual);
+			full_widget_tree_traversal(port->port_bg, container, visual);
+
+			if (visual->port_refs_nr <= port->ID
+			    || 0 > port->ID)
+				sciprintf("Restored port with invalid ID #%d\n", port->ID);
+			else
+				visual->port_refs[port->ID] = port; /* List port globally */
+					  
+		}
+	}
+
+	switch (widget->type) {
+
+	case GFXW_BOX:
+		_gfxw_set_ops_BOX(widget);
+		break;
+
+	case GFXW_RECT:
+		_gfxw_set_ops_RECT(widget);
+		break;
+
+	case GFXW_LINE:
+	case GFXW_INVERSE_LINE:
+		_gfxw_set_ops_LINE(widget);
+		break;
+
+	case GFXW_VIEW:
+		_gfxw_set_ops_VIEW(widget, 0);
+		break;
+
+	case GFXW_STATIC_VIEW:
+		_gfxw_set_ops_VIEW(widget, 1);
+		break;
+
+	case GFXW_DYNVIEW:
+		_gfxw_set_ops_DYNVIEW(widget);
+		break;
+
+	case GFXW_TEXT:
+		((gfxw_text_t *) widget)->text_handle = NULL;
+		_gfxw_set_ops_TEXT(widget);
+		break;
+
+	case GFXW_LIST:
+		_gfxw_set_ops_LIST(GFXWC(widget), 0);
+		break;
+
+	case GFXW_SORTED_LIST:
+		_gfxw_set_ops_LIST(GFXWC(widget), 1);
+		if (widget->serial == _global_save_state->dyn_views_list_serial)
+			_global_save_state->dyn_views = (gfxw_list_t *) widget;
+		break;
+
+	case GFXW_VISUAL:
+		_gfxw_set_ops_VISUAL(GFXWC(widget));
+		break;
+
+	case GFXW_PORT:
+		_gfxw_set_ops_PORT(GFXWC(widget));
+		break;
+	}
+}
+
+int
+read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int *hiteof)
+{
+	gfxw_widget_type_t expected_type;
+	int nextchar;
+
+
+	if (!strcmp(lastval, "NULL")) {
+		*widget = NULL;
+		return;
+		/* That was easy */
+	}
+
+	expected_type = parse_widget_type(lastval);
+
+	if (expected_type == -1) {
+		sciprintf("Invalid widget type \"%s\" specified in line %d\n",
+			  lastval, *line);
+		return 1;
+	}
+
+	while ((nextchar = fgetc(fh)) != "{") {
+		if (nextchar == EOF)
+			return ((*hiteof = 1));
+
+		if (nextchar == '\n')
+			(*line)++;
+		else if (!iswhite(nextchar)) {
+			sciprintf("Invalid character encountered: '%c' (%02x) in line %d\n",
+				  nextchar, nextchar, *line);
+			return 1;
+		}
+	}
+
+	switch (expected_type) {
+
+	case GFXW_BOX:
+		*widget = malloc(sizeof(gfxw_box_t));
+		%CFSMLREAD gfxw_box_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		break;
+
+	case GFXW_RECT:
+	case GFXW_LINE:
+	case GFXW_INVERSE_LINE:
+		*widget = malloc(sizeof(gfxw_primitive_t));
+		%CFSMLREAD gfxw_primitive_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		break;
+
+	case GFXW_VIEW:
+	case GFXW_STATIC_VIEW:
+		*widget = malloc(sizeof(gfxw_view_t));
+		%CFSMLREAD gfxw_view_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		break;
+
+	case GFXW_DYNVIEW:
+		*widget = malloc(sizeof(gfxw_dyn_view_t));
+		%CFSMLREAD gfxw_dyn_view_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		break;
+
+	case GFXW_TEXT:
+		*widget = malloc(sizeof(gfxw_text_t));
+		%CFSMLREAD gfxw_text_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		break;
+
+
+	case GFXW_LIST:
+	case GFXW_SORTED_LIST:
+		*widget = malloc(sizeof(gfxw_list_t));
+		%CFSMLREAD gfxw_list_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		break;
+
+	case GFXW_VISUAL:
+		*widget = malloc(sizeof(gfxw_visual_t));
+		%CFSMLREAD gfxw_visual_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		full_widget_tree_traversal(*widget, NULL, NULL);
+		break;
+
+	case GFXW_PORT:
+		*widget = malloc(sizeof(gfxw_port_t));
+		%CFSMLREAD gfxw_port_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		break;
+
+	case GFXW_CONTAINER:
+		sciprintf("Warning: Restoring untyped widget container\n");
+		*widget = malloc(sizeof(gfxw_container_t));
+		%CFSMLREAD gfxw_container_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		break;
+
+	case GFXW_:
+		sciprintf("Warning: Restoring untyped widget\n");
+		*widget = malloc(sizeof(gfxw_widget_t));
+		%CFSMLREAD gfxw_widget_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		break;
+
+	}
+
+	while ((nextchar = fgetc(fh)) != "}") {
+		if (nextchar == EOF)
+			return ((*hiteof = 1));
+
+		if (nextchar == '\n')
+			(*line)++;
+		else if (!iswhite(nextchar)) {
+			sciprintf("Invalid character encountered: '%c' (%02x) in line %d\n",
+				  nextchar, nextchar, *line);
+			return 1;
+		}
+	}
+
+	return (*hiteof);
+}
+/* Identify, handle stuff listed as "handled externally" */
+
+void
+write_pixmap_color(FILE *fh, gfx_pixmap_color_t **color);
+{
+	%CFSMLWRITE gfx_pixmap_color_t (*color) INTO fh;
+}
+
+int
+read_pixmap_color(FILE *fh, gfx_pixmap_color_t **color, char *lastval, int *line, int *hiteof);
+{
+	%CFSMLREAD gfx_pixmap_color_t (*color) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+
+	if (_global_save_state->gfx_state->mode->palette)
+		if (gfx_alloc_color(_global_save_state->gfx_state->mode->palette, *color) < 0)
+			sciprintf("While restoring color index: Allocating color entry for (%02x,%02x,%02x) failed!\n",
+				  (*color)->r, (*color)->g, (*color)->b);
+
+	return *hiteof;
+}
 
 
 
 void
 write_menubar_tp(FILE *fh, menubar_t **foo)
 {
-  if (*foo) {
+	if (*foo) {
 
-    %CFSMLWRITE menubar_t (*foo) INTO fh;
+		%CFSMLWRITE menubar_t (*foo) INTO fh;
 
-  } else { /* Nothing to write */
-    fputs("\\null\\", fh);
-  }
+	} else { /* Nothing to write */
+		fputs("\\null\\", fh);
+	}
 }
 
 
@@ -418,50 +916,50 @@ int
 read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof)
 {
 
-  if (lastval[0] == '\\') {
-    *foo = NULL; /* No menu bar */
-  } else {
+	if (lastval[0] == '\\') {
+		*foo = NULL; /* No menu bar */
+	} else {
 
-    *foo = (menubar_t *) malloc(sizeof(menubar_t));
-    %CFSMLREAD menubar_t (*foo) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		*foo = (menubar_t *) malloc(sizeof(menubar_t));
+		%CFSMLREAD menubar_t (*foo) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
 
-  }
-  return *hiteof;
+	}
+	return *hiteof;
 }
 
 void
 write_port_tp(FILE *fh, port_t **foo)
 {
-  if (*foo) {
+	if (*foo) {
 
-    %CFSMLWRITE port_t (*foo) INTO fh;
+		%CFSMLWRITE port_t (*foo) INTO fh;
 
-  } else { /* Nothing to write */
-    fputs("\\null\\", fh);
-  }
+	} else { /* Nothing to write */
+		fputs("\\null\\", fh);
+	}
 }
 
 
 int
 read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof)
 {
-  resource_t *res;
+	resource_t *res;
 
-  if (lastval[0] == '\\') {
-    *foo = NULL; /* No port */
-  } else {
+	if (lastval[0] == '\\') {
+		*foo = NULL; /* No port */
+	} else {
 
-    *foo = (port_t *) malloc(sizeof(port_t));
-    %CFSMLREAD port_t (*foo) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		*foo = (port_t *) malloc(sizeof(port_t));
+		%CFSMLREAD port_t (*foo) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
 
-    res =  findResource(sci_font, (*foo)->font_nr);
-    if (res)
-      (*foo)->font = res->data;
-    else
-      (*foo)->font = NULL;
+		res =  findResource(sci_font, (*foo)->font_nr);
+		if (res)
+			(*foo)->font = res->data;
+		else
+			(*foo)->font = NULL;
 
-  }
-  return *hiteof;
+	}
+	return *hiteof;
 }
 
 
@@ -472,255 +970,261 @@ read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof)
 void
 _gamestate_unfrob(state_t *s)
 { /* Remnant of ancient times. May be restored to its full glory one day. */
-  s->heap = s->_heap->start;
+	s->heap = s->_heap->start;
 }
 
 
 int
 gamestate_save(state_t *s, char *dirname)
 {
-  FILE *fh;
-  DIR *dir;
-  struct dirent* dirent;
-  int fd;
+	FILE *fh;
+	DIR *dir;
+	struct dirent* dirent;
+	int fd;
 
-  _global_save_state = s;
-  s->savegame_version = FREESCI_SAVEGAME_VERSION;
+	_global_save_state = s;
+	s->savegame_version = FREESCI_SAVEGAME_VERSION;
+	s->dyn_views_list_serial = (s->dyn_views)? s->dyn_views->serial : -2;
 
-  if (s->execution_stack_base) {
-    sciprintf("Cannot save from below kernel function\n");
-    return 1;
-  }
+	if (s->execution_stack_base) {
+		sciprintf("Cannot save from below kernel function\n");
+		return 1;
+	}
 
-  scimkdir (dirname, 0700);
+	scimkdir (dirname, 0700);
 
-  if (chdir (dirname)) {
-    sciprintf("Could not enter directory '%s'\n", dirname);
-    return 1;
-  }
+	if (chdir (dirname)) {
+		sciprintf("Could not enter directory '%s'\n", dirname);
+		return 1;
+	}
 
-  dir = opendir(".");
-  while ((dir) && (dirent = readdir(dir)))
-    if (strcmp(dirent->d_name, "..") && strcmp(dirent->d_name, ".")) {
-      unlink(dirent->d_name); /* Delete all files in directory */
-  }
-  closedir(dir);
+	dir = opendir(".");
+	while ((dir) && (dirent = readdir(dir)))
+		if (strcmp(dirent->d_name, "..") && strcmp(dirent->d_name, ".")) {
+			unlink(dirent->d_name); /* Delete all files in directory */
+		}
+	closedir(dir);
 
-  if (s->sfx_driver) {
-    if ((s->sfx_driver->save)(s, dirname)) {
-      sciprintf("Saving failed for the sound subsystem\n");
-      chdir ("..");
-      return 1;
-    }
-  }
+	if (s->sfx_driver) {
+		if ((s->sfx_driver->save)(s, dirname)) {
+			sciprintf("Saving failed for the sound subsystem\n");
+			chdir ("..");
+			return 1;
+		}
+	}
 
-  fh = fopen("state", "w");
+	fh = fopen("state", "w");
 
-  /* Calculate the time spent with this game */
-  s->game_time = time(NULL) - s->game_start_time.tv_sec;
+	/* Calculate the time spent with this game */
+	s->game_time = time(NULL) - s->game_start_time.tv_sec;
 
-  %CFSMLWRITE state_t s INTO fh;
+	%CFSMLWRITE state_t s INTO fh;
 
-  fclose(fh);
+	fclose(fh);
 
-  _gamestate_unfrob(s);
+	_gamestate_unfrob(s);
 
-  fd = creat("heap", 0600);
-  write(fd, s->_heap->start, SCI_HEAP_SIZE);
-  close(fd);
+	fd = creat("heap", 0600);
+	write(fd, s->_heap->start, SCI_HEAP_SIZE);
+	close(fd);
 
-  png_save_pic(s->pic);
+	png_save_pic(s->pic);
 
-  chdir ("..");
-  return 0;
+	chdir ("..");
+	return 0;
 }
 
 
 state_t *
 gamestate_restore(state_t *s, char *dirname)
 {
-  FILE *fh;
-  int fd;
-  int i;
-  int read_eof = 0;
-  state_t *retval;
+	FILE *fh;
+	int fd;
+	int i;
+	int read_eof = 0;
+	state_t *retval;
 
-  _global_save_state = s;
+	_global_save_state = s;
 
-  if (chdir (dirname)) {
-    sciprintf("Game state '%s' does not exist\n", dirname);
-    return NULL;
-  }
+	if (chdir (dirname)) {
+		sciprintf("Game state '%s' does not exist\n", dirname);
+		return NULL;
+	}
 
-  if (s->sfx_driver) {
-    if ((s->sfx_driver->restore)(s, dirname)) {
-      sciprintf("Restoring failed for the sound subsystem\n");
-      return NULL;
-    }
-  }
+	if (s->sfx_driver) {
+		if ((s->sfx_driver->restore)(s, dirname)) {
+			sciprintf("Restoring failed for the sound subsystem\n");
+			return NULL;
+		}
+	}
 
-  retval = (state_t *) xalloc(sizeof(state_t));
-  retval->_heap = heap_new();
-  retval->savegame_version = -1;
+	retval = (state_t *) xalloc(sizeof(state_t));
+	retval->_heap = heap_new();
+	retval->savegame_version = -1;
 
-  fh = fopen("state", "r");
-  if (!fh) {
-    heap_del(retval->_heap);
-    free(retval);
-    return NULL;
-  }
+	fh = fopen("state", "r");
+	if (!fh) {
+		heap_del(retval->_heap);
+		free(retval);
+		return NULL;
+	}
 
-  retval->amp_rest = 0; /* Backwards compatibility */
+	retval->amp_rest = 0; /* Backwards compatibility */
+	retval->dyn_views = NULL;
 
-  %CFSMLREAD state_t retval FROM fh ERRVAR read_eof;
+	%CFSMLREAD state_t retval FROM fh ERRVAR read_eof;
 
-  fclose(fh);
+	retval->wm_port = gfxw_find_port(retval->visual, 0);
+	retval->titlebar_port = gfxw_find_port(retval->visual, 1);
+	retval->picture_port = gfxw_find_port(retval->visual, 2);
 
-  if ((retval->savegame_version < 0) || (retval->savegame_version > FREESCI_SAVEGAME_VERSION)) {
+	fclose(fh);
 
-    if (retval->savegame_version < 0)
-      sciprintf("Very old save game encountered- can't load\n");
-    else
-      sciprintf("Savegame version is %d- maximum supported is %0d\n", retval->savegame_version, FREESCI_SAVEGAME_VERSION);
+	if ((retval->savegame_version < FREESCI_SAVEGAME_VERSION) || (retval->savegame_version > FREESCI_SAVEGAME_VERSION)) {
 
-    chdir("..");
-    heap_del(retval->_heap);
-    free(retval);
-    return NULL;
-  }
+		if (retval->savegame_version < 0)
+			sciprintf("Old savegame version detected- can't load\n");
+		else
+			sciprintf("Savegame version is %d- maximum supported is %0d\n", retval->savegame_version, FREESCI_SAVEGAME_VERSION);
 
-  if (read_eof || ((fd = open("heap", O_RDONLY)) < 0)) {
-    if (read_eof)
-      sciprintf("Error while reading gamestate '%s'\n", dirname);
-    else
-      sciprintf("Heap file does not exist for game state '%s'\n", dirname);
-    chdir("..");
-    heap_del(retval->_heap);
-    free(retval);
-    return NULL;
-  }
+		chdir("..");
+		heap_del(retval->_heap);
+		free(retval);
+		return NULL;
+	}
 
-  read(fd, retval->_heap->start, SCI_HEAP_SIZE);
-  close(fd);
+	if (read_eof || ((fd = open("heap", O_RDONLY)) < 0)) {
+		if (read_eof)
+			sciprintf("Error while reading gamestate '%s'\n", dirname);
+		else
+			sciprintf("Heap file does not exist for game state '%s'\n", dirname);
+		chdir("..");
+		heap_del(retval->_heap);
+		free(retval);
+		return NULL;
+	}
 
-  if (png_load_pic(s->pic)) {
-    sciprintf("Picture data does not exist for game state '%s'\n", dirname);
-    chdir("..");
-    heap_del(retval->_heap);
-    free(retval);
-    return NULL;
-  }
+	read(fd, retval->_heap->start, SCI_HEAP_SIZE);
+	close(fd);
 
-  retval->pic = s->pic; /* Continue using that pic */
+	if (png_load_pic(s->pic)) {
+		sciprintf("Picture data does not exist for game state '%s'\n", dirname);
+		chdir("..");
+		heap_del(retval->_heap);
+		free(retval);
+		return NULL;
+	}
 
-  _gamestate_unfrob(retval);
+	retval->pic = s->pic; /* Continue using that pic */
 
-  /* Set exec stack base to zero */
-  retval->execution_stack_base = 0;
+	_gamestate_unfrob(retval);
 
-  /* Set the class table pointers to the script positions */
-  for (i = 0; i < retval->classtable_size; i++)
-    retval->classtable[i].scriptposp = &(retval->scripttable[retval->classtable[i].script].heappos);
+	/* Set exec stack base to zero */
+	retval->execution_stack_base = 0;
 
-  /* Set views in pic_views */
-  for (i = 0; i < retval->pic_views_nr; i++) {
-    resource_t *res = findResource(sci_view, retval->pic_views[i].view_nr);
-    retval->pic_views[i].view = (res? res->data : NULL);
-  }
+	/* Set the class table pointers to the script positions */
+	for (i = 0; i < retval->classtable_size; i++)
+		retval->classtable[i].scriptposp = &(retval->scripttable[retval->classtable[i].script].heappos);
 
-  /* Set views in dyn_views */
-  for (i = 0; i < retval->dyn_views_nr; i++) {
-    resource_t *res = findResource(sci_view, retval->dyn_views[i].view_nr);
-    retval->dyn_views[i].view = (res? res->data : NULL);
-  }
+	/* Set views in pic_views */
+	for (i = 0; i < retval->pic_views_nr; i++) {
+		resource_t *res = findResource(sci_view, retval->pic_views[i].view_nr);
+		retval->pic_views[i].view = (res? res->data : NULL);
+	}
 
-  /* Now set all standard ports */
-  memcpy(&(retval->wm_port), retval->ports[0], sizeof(port_t));
-  memcpy(&(retval->titlebar_port), retval->ports[1], sizeof(port_t));
-  memcpy(&(retval->picture_port), retval->ports[2], sizeof(port_t));
+	/* Set views in dyn_views */
+	for (i = 0; i < retval->dyn_views_nr; i++) {
+		resource_t *res = findResource(sci_view, retval->dyn_views[i].view_nr);
+		retval->dyn_views[i].view = (res? res->data : NULL);
+	}
 
-  for (i = 0; i < 3; i++)
-    free(retval->ports[i]); /* Free those ports... */
+	/* Now set all standard ports */
+	memcpy(&(retval->wm_port), retval->ports[0], sizeof(port_t));
+	memcpy(&(retval->titlebar_port), retval->ports[1], sizeof(port_t));
+	memcpy(&(retval->picture_port), retval->ports[2], sizeof(port_t));
 
-  /* ...and let them point to where they belong */
-  retval->ports[0] = &(retval->wm_port);
-  retval->ports[1] = &(retval->titlebar_port);
-  retval->ports[2] = &(retval->picture_port);
+	for (i = 0; i < 3; i++)
+		free(retval->ports[i]); /* Free those ports... */
 
-  /* Map port fonts */
-  for (i = 0; i < MAX_PORTS; i++)
-    if (retval->ports[i]) {
-      resource_t *resource = findResource(sci_font, retval->ports[i]->font_nr);
-      if (resource)
-	retval->ports[i]->font = resource->data;
-  }
+	/* ...and let them point to where they belong */
+	retval->ports[0] = &(retval->wm_port);
+	retval->ports[1] = &(retval->titlebar_port);
+	retval->ports[2] = &(retval->picture_port);
 
-  /* Now copy all current state information */
-  /* Graphics and input state: */
-  retval->gfx_driver = s->gfx_driver;
-  memcpy(&(retval->graphics), &(s->graphics), sizeof (s->graphics));
+	/* Map port fonts */
+	for (i = 0; i < MAX_PORTS; i++)
+		if (retval->ports[i]) {
+			resource_t *resource = findResource(sci_font, retval->ports[i]->font_nr);
+			if (resource)
+				retval->ports[i]->font = resource->data;
+		}
 
-  /* Sound state: */
-  retval->sfx_driver = s->sfx_driver;
-  memcpy(&(retval->sound_pipe_in[0]), &(s->sound_pipe_in[0]), sizeof(int[2]));
-  memcpy(&(retval->sound_pipe_out[0]), &(s->sound_pipe_out[0]), sizeof(int[2]));
-  memcpy(&(retval->sound_pipe_events[0]), &(s->sound_pipe_events[0]), sizeof(int[2]));
-  memcpy(&(retval->sound_pipe_debug[0]), &(s->sound_pipe_debug[0]), sizeof(int[2]));
+	/* Now copy all current state information */
+	/* Graphics and input state: */
+	retval->gfx_driver = s->gfx_driver;
+	memcpy(&(retval->graphics), &(s->graphics), sizeof (s->graphics));
 
-  /* Time state: */
-  g_get_current_time(&(retval->last_wait_time));
-  retval->game_start_time.tv_sec = time(NULL) - retval->game_time;
-  retval->game_start_time.tv_usec = 0;
+	/* Sound state: */
+	retval->sfx_driver = s->sfx_driver;
+	memcpy(&(retval->sound_pipe_in[0]), &(s->sound_pipe_in[0]), sizeof(int[2]));
+	memcpy(&(retval->sound_pipe_out[0]), &(s->sound_pipe_out[0]), sizeof(int[2]));
+	memcpy(&(retval->sound_pipe_events[0]), &(s->sound_pipe_events[0]), sizeof(int[2]));
+	memcpy(&(retval->sound_pipe_debug[0]), &(s->sound_pipe_debug[0]), sizeof(int[2]));
 
-  /* File IO state: */
-  retval->file_handles_nr = 2;
-  retval->file_handles = calloc(2, sizeof(FILE *));
+	/* Time state: */
+	g_get_current_time(&(retval->last_wait_time));
+	retval->game_start_time.tv_sec = time(NULL) - retval->game_time;
+	retval->game_start_time.tv_usec = 0;
 
-  /* static parser information: */
-  retval->parser_rules = s->parser_rules;
-  retval->parser_words_nr = s->parser_words_nr;
-  retval->parser_words = s->parser_words;
-  retval->parser_suffices_nr = s->parser_suffices_nr;
-  retval->parser_suffices = s->parser_suffices;
-  retval->parser_branches_nr = s->parser_branches_nr;
-  retval->parser_branches = s->parser_branches;
+	/* File IO state: */
+	retval->file_handles_nr = 2;
+	retval->file_handles = calloc(2, sizeof(FILE *));
 
-  /* static VM/Kernel information: */
-  retval->selector_names_nr = s->selector_names_nr;
-  retval->selector_names = s->selector_names;
-  retval->kernel_names_nr = s->kernel_names_nr;
-  retval->kernel_names = s->kernel_names;
-  retval->kfunct_table = s->kfunct_table;
-  retval->opcodes = s->opcodes;
+	/* static parser information: */
+	retval->parser_rules = s->parser_rules;
+	retval->parser_words_nr = s->parser_words_nr;
+	retval->parser_words = s->parser_words;
+	retval->parser_suffices_nr = s->parser_suffices_nr;
+	retval->parser_suffices = s->parser_suffices;
+	retval->parser_branches_nr = s->parser_branches_nr;
+	retval->parser_branches = s->parser_branches;
 
-  /* Mouse pointer */
-  retval->pointer_x = s->pointer_x;
-  retval->pointer_y = s->pointer_y;
-  if (retval->mouse_pointer_nr == -1)
-    retval->mouse_pointer = NULL;
-  else {
-    resource_t *resource = findResource(sci_cursor, retval->mouse_pointer_nr);
-    byte *data = (resource)? resource->data : NULL;
-    if (data)
-      retval->mouse_pointer = calc_mouse_cursor(data);
-    else {
-      retval->mouse_pointer = NULL;
-      retval->mouse_pointer_nr = -1;
-    }
-  }
+	/* static VM/Kernel information: */
+	retval->selector_names_nr = s->selector_names_nr;
+	retval->selector_names = s->selector_names;
+	retval->kernel_names_nr = s->kernel_names_nr;
+	retval->kernel_names = s->kernel_names;
+	retval->kfunct_table = s->kfunct_table;
+	retval->opcodes = s->opcodes;
 
-  memcpy(&(retval->selector_map), &(s->selector_map), sizeof(selector_map_t));
+	/* Mouse pointer */
+	retval->pointer_x = s->pointer_x;
+	retval->pointer_y = s->pointer_y;
+	if (retval->mouse_pointer_nr == -1)
+		retval->mouse_pointer = NULL;
+	else {
+		resource_t *resource = findResource(sci_cursor, retval->mouse_pointer_nr);
+		byte *data = (resource)? resource->data : NULL;
+		if (data)
+			retval->mouse_pointer = calc_mouse_cursor(data);
+		else {
+			retval->mouse_pointer = NULL;
+			retval->mouse_pointer_nr = -1;
+		}
+	}
 
-  /* Copy breakpoint information from current game instance */
-  retval->have_bp = s->have_bp;
-  retval->bp_list = s->bp_list;
+	memcpy(&(retval->selector_map), &(s->selector_map), sizeof(selector_map_t));
 
-  retval->resource_dir = s->resource_dir;
-  retval->work_dir = s->work_dir;
+	/* Copy breakpoint information from current game instance */
+	retval->have_bp = s->have_bp;
+	retval->bp_list = s->bp_list;
 
-  retval->successor = NULL;
+	retval->resource_dir = s->resource_dir;
+	retval->work_dir = s->work_dir;
 
-  chdir ("..");
+	retval->successor = NULL;
 
-  return retval;
+	chdir ("..");
+
+	return retval;
 }

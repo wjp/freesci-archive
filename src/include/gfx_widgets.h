@@ -395,7 +395,7 @@ gfxw_find_port(gfxw_visual_t *visual, int ID);
 ** Parmaeters: (gfxw_visual_t *) visual: The visual the port is to be retreived from
 **             (int) ID: The port's ID
 ** Returns   : (gfxw_port_t *) The requested port, or NULL if it didn't exist
-** This function is O(n).
+** This function is O(1).
 */
 
 gfxw_port_t *

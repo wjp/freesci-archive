@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # The C File Storage Meta Language "reference" implementation
 # This implementation is supposed to conform to version
-$version = "0.6.7";
+$version = "0.7.0";
 # of the spec. Please contact the maintainer if it doesn't.
 #
 # cfsml.pl Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
@@ -791,6 +791,12 @@ while (<STDIN>) {
 		  $member{'array'} = "dynamic";
 		  $parsepos++;
 
+		} elsif ($tokens[$parsepos] eq "*") {
+
+		  $member{'array'} = "dynamic";
+		  $member{'size'} = 1;
+		  $parsepos++;
+
 		} elsif ($tokens[$parsepos] eq "MAXWRITE") {
 
 		  $member{'maxwrite'} = $tokens[$parsepos + 1];
@@ -863,14 +869,36 @@ while (<STDIN>) {
 	    die "Attempt to re-define existing type $struct as a struct in input file (line $line)";
 	  }
 	  $types{$struct}{'type'} = $type_record;
-	  if ($tokens_nr < 3 or $tokens_nr > 4 or $tokens[$tokens_nr - 1] ne "{") {
+	  if ($tokens_nr < 3 or $tokens_nr > 6 or $tokens[$tokens_nr - 1] ne "{") {
 	    die "Invalid record declaration in input file (line $line)";
 	  }
 
-	  if ($tokens_nr == 4) { # Record declaration with explicit c type
-	    $types{$struct}{'ctype'} = $tokens[2];
-	  } else { # Record name is the same as the c type name
-	    $types{$struct}{'ctype'} = $struct;
+	  my $extoffset = 2;
+
+	  if ($tokens_nr > 3) {
+	      if ($tokens[2] ne "EXTENDS") { # Record declaration with explicit c type
+		  $types{$struct}{'ctype'} = $tokens[2];
+		  $extoffset = 3;
+	      } else { # Record name is the same as the c type name
+		  $types{$struct}{'ctype'} = $struct;
+	      }
+	  }
+
+	  if (($tokens_nr > $extoffset + 1) && ($extoffset + 1 <= $tokens_nr)) {
+	      if ($tokens[$extoffset] ne "EXTENDS") {
+		  die "Invalid or improper keyword \"$tokens[$extoffset]\" in input file (line $line)";
+	      }
+	      if ($extoffset + 2 >= $tokens_nr) {
+		  die "RECORD \"$struct\" extends on unspecified type in input file (line $line)";
+	      }
+	      my $ext_type = $tokens[$extoffset + 1];
+
+	      if (!($types{$ext_type}{type} eq $type_record)) {
+		  print "$types{$ext_type}{type}";
+		  die "RECORD \"$struct\" attempts to extend non-existing or non-record type \"$ext_type\" in input file (line $line)";
+	      }
+
+	      (@{$records{$struct}}) = (@{$records{$ext_type}}); # Copy type information from super type
 	  }
 
 	} else {
