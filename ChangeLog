@@ -1,3 +1,7 @@
+2000-04-14  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/core/graphics.c: Got rid of the KQ1 pic-related error messages
+
 2000-04-13  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/vocab.c: Fixed compile problem caused by a new array.

@@ -915,20 +915,20 @@ void draw_pic0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	  ptr += 2;
 	}
 	break;
-      case 0xfe: /* define palette */
+      case 0xfe: /* Misc. commands */
 	code = *(ptr++);
 	switch (code) {
-	  case 0:
+	  case 0: /* Define single palette entries */
 	    while ((code = *ptr) < 0xf0) {
 	      colors[code/40][code%40] = *(ptr+1);
 	      ptr += 2;
 	    }
 	    break;
-	  case 1:
+	  case 1: /* Define entire table */
 	    x = *(ptr++);
 	    for (y=0; y<40; y++) colors[x][y] = *(ptr++);
 	    break;
-	  case 2:	/* This and the following cases only apply for monochrome displays - L.S. */
+	  case 2:	/* Cases 2-6 only apply for monochrome displays - L.S. */
 	    ptr+=41; 
 	    break;
 	  case 3:	
@@ -940,7 +940,17 @@ void draw_pic0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	    ptr++;
 	    break;
 	  case 6:
-	    break;	   
+	    break;
+/* The following cases are SCI01 only */	    	   
+	  case 7: /* Draw an _embedded_ view in the picture */
+          	x = ((*ptr & 0xf0) << 4) | (0xff & ptr[1]);
+		y = ((*ptr & 0x0f) << 8) | (0xff & ptr[2]);
+		ptr=ptr+2+getInt16(ptr); /* Past the embedded view */
+		break;
+	  case 8: /* Sets priority values for the pic */
+	      ptr+=16;
+	      break;
+	      	        
 	  default:
 	    fprintf(stderr,"Unknown palette cmd %02x at %x\n", code, (int) ptr-(int) data);
 	    break;
