@@ -60,6 +60,7 @@ struct _state;
 /* Last version known not to do this: 0.000.502 */
 
 #define SCI_VERSION_FTU_NEW_GETTIME SCI_VERSION(0,000,629)
+/* These versions of SCI has a different set of subfunctions in GetTime() */
 
 #define SCI_VERSION_FTU_NEWER_DRAWPIC_PARAMETERS SCI_VERSION(0,000,502)
 /* Last version known not to do this: 0.000.435
@@ -67,14 +68,9 @@ struct _state;
 ** with the opposite default value (obviously)
 */
 
-#define SCI_VERSION_LTU_PRIORITY_OB1 SCI_VERSION(0,000,590)
-/* First version not to have this: 0.000.602
-** Old versions change the priority map one pixel earlier
-*/
-
-#define SCI_VERSION_LTU_PRIORITY_14_ZONES SCI_VERSION(0,000,490)
-/* Uses 14 zones from 42 to 179 instead of 15 zones from 42 to 190, with
-** the last zone being unused.
+#define SCI_VERSION_FTU_PRIORITY_14_ZONES SCI_VERSION(0,000,502)
+/* Last version known to do this: 0.000.490
+ * Uses 14 zones from 42 to 190 instead of 15 zones from 42 to 200.
 */
 
 

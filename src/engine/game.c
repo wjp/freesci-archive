@@ -164,7 +164,10 @@ _reset_graphics_input(state_t *s)
 	s->drop_views = NULL; /* And, consequently, no list for dropped views */
 
 	s->priority_first = 42; /* Priority zone 0 ends here */
-	s->priority_last = 200; /* The highest priority zone (15) starts here */
+
+	if (s->version <= SCI_VERSION_FTU_PRIORITY_14_ZONES)
+		s->priority_last = 200; else
+		s->priority_last = 190;
 
 	font_nr = -1;
 	do {

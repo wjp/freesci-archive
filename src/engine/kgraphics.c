@@ -147,11 +147,11 @@ reparentize_primary_widget_lists(state_t *s, gfxw_port_t *newport)
 	}
 }
 
-inline int
+int
 _find_view_priority(state_t *s, int y)
 {
-	if (s->version <= SCI_VERSION_LTU_PRIORITY_OB1)
-		++y;
+  /*        if (s->version <= SCI_VERSION_LTU_PRIORITY_OB1)
+	    ++y; */
 
 	if (s->pic_priority_table) { /* SCI01 priority table set? */
 		int j;
@@ -160,10 +160,12 @@ _find_view_priority(state_t *s, int y)
 				return j;
 		return 14; /* Maximum */
 	} else
-		if (s->version <= SCI_VERSION_LTU_PRIORITY_14_ZONES)
-			return SCI0_VIEW_PRIORITY_14_ZONES(y);
-		else
-			return SCI0_VIEW_PRIORITY(y);
+	{
+		if (s->version>SCI_VERSION_FTU_PRIORITY_14_ZONES)
+			return SCI0_VIEW_PRIORITY_14_ZONES(y); else
+				return SCI0_VIEW_PRIORITY(y);
+		
+	}
 }
 
 inline int
@@ -182,13 +184,13 @@ _find_priority_band(state_t *s, int nr)
 	else {
 		int retval;
 
-		if (s->version <= SCI_VERSION_LTU_PRIORITY_14_ZONES)
+		if (s->version > SCI_VERSION_FTU_PRIORITY_14_ZONES)
 			retval = SCI0_PRIORITY_BAND_FIRST_14_ZONES(nr);
 		else
 			retval = SCI0_PRIORITY_BAND_FIRST(nr);
 
-		if (s->version <= SCI_VERSION_LTU_PRIORITY_OB1)
-			--retval;
+		/*		if (s->version <= SCI_VERSION_LTU_PRIORITY_OB1)
+				--retval; */
 		return retval;
 	}
 }
@@ -996,8 +998,8 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	s->priority_first = 42;
 
-	if (s->version <= SCI_VERSION_LTU_PRIORITY_14_ZONES)
-		s->priority_last = 179;
+	if (s->version <= SCI_VERSION_FTU_PRIORITY_14_ZONES)
+		s->priority_last = 200;
 	else
 		s->priority_last = 190;
 

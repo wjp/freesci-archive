@@ -1,3 +1,10 @@
+2002-09-09  Lars Skovlund  <lskovlun@image.dk>
+
+	* Fixed the implementation of the priority formula.
+	* src/engine/game.c (_reset_graphics_input): CoordPri() now also works 
+	  before DrawPic() is called for the first time.
+	* src/engine/game.c (kFGets): Rolled back the file API changes from 07/22.
+
 2002-09-05  Solomon Peachy <pizza@shaftnet.org>
 	* src/sound/pcmout_alsa.c:    Trash the async callback model as
 	it didn't work correctly with X11.  (SIGIO collisions)  Switch
