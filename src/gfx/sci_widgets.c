@@ -132,7 +132,7 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 	gfx_state_t *state = s->gfx_state;
 	int shadow_offset = 2;
 	rect_t frame;
-	gfx_color_t black;
+	gfx_color_t black	= {0};
 	gfxw_port_t *win = gfxw_new_port(visual, s->port, area, color, bgcolor);
 	gfxw_list_t *decorations;
 
@@ -247,7 +247,7 @@ _sciw_add_text_to_list(gfxw_list_t *list, gfxw_port_t *port, rect_t zone, char *
 		       int font, gfx_alignment_t align, char framed, char inverse, int flags,
 		       char gray_text)
 {
-	gfx_color_t *color1, *color2, *bgcolor;
+	gfx_color_t *color1, *color2, *bgcolor	= {0};
 
 	if (inverse) {
 		color1 = color2 = &(port->bgcolor);
@@ -333,20 +333,20 @@ sciw_new_text_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int fo
 
 
 gfxw_list_t *
-sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, int cursor,
+sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, unsigned int cursor,
 		      char inverse)
 {
 	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y), 1), 0);
 	gfxw_text_t *text_handle;
-	int draw_cursor;
-	int foo;
+	long draw_cursor;
+	long foo;
 
 	gfxw_set_id(GFXW(list), ID);
 	zone.x = 0;
 	zone.y = 1;
 
 	sci_gettime(&foo, &draw_cursor);
-	draw_cursor = draw_cursor > 5-00000;
+	draw_cursor = draw_cursor > 500000;
 
 	if (!draw_cursor) {
 		text_handle = gfxw_new_text(port->visual->gfx_state, zone,
@@ -606,10 +606,10 @@ un_prioritize(gfx_color_t col)
 gfxw_widget_t *
 _make_menu_entry(menu_item_t *item, int offset, int width, gfxw_port_t *port, gfx_color_t color, gfx_color_t bgcolor, int ID, int gray)
 {
-	rect_t area = gfx_rect(MENU_BOX_LEFT_PADDING, 0, width - MENU_BOX_LEFT_PADDING, 10);
-	rect_t list_area = gfx_rect(port->zone.x, area.y + offset + port->zone.y, width, area.yl);
-	gfxw_list_t *list = (gfxw_list_t *) gfxw_set_id(GFXW(gfxw_new_list(list_area, 0)), ID);
-	gfx_color_t xcolor;
+	rect_t area		= gfx_rect(MENU_BOX_LEFT_PADDING, 0, width - MENU_BOX_LEFT_PADDING, 10);
+	rect_t list_area	= gfx_rect(port->zone.x, area.y + offset + port->zone.y, width, area.yl);
+	gfxw_list_t *list	= (gfxw_list_t *) gfxw_set_id(GFXW(gfxw_new_list(list_area, 0)), ID);
+	gfx_color_t xcolor	= {0};
 
 	color = un_prioritize(color);
 	bgcolor = un_prioritize(bgcolor);

@@ -32,6 +32,7 @@
 #include <fcntl.h>
 #include <windows.h>
 #include <mmsystem.h>
+#include <sci_memory.h>
 
 HMIDIOUT devicename;				/* global handle to midiOut device */
 MIDIHDR midioutput;					/* used by midiOut* */

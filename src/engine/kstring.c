@@ -439,6 +439,10 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
   arguments = sci_malloc(sizeof(int) * argc);
+#ifdef SATISFY_PURIFY
+  memset(arguments, 0, sizeof(int) * argc);
+#endif
+
   for (i = startarg; i < argc; i++)
     arguments[i-startarg] = UPARAM(i); /* Parameters are copied to prevent overwriting */
 

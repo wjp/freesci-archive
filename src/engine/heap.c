@@ -152,7 +152,7 @@ heap_ptr heap_allocate(heap_t* h, int size)
 	return 0;
 }
 
-void heap_free(heap_t* h, int m)
+void heap_free(heap_t* h, unsigned int m)
 {
 	int previous, next;
 	assert_in_range(m);

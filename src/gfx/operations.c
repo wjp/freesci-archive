@@ -725,7 +725,7 @@ int
 gfxop_set_color(gfx_state_t *state, gfx_color_t *color, int r, int g, int b, int a,
 		int priority, int control)
 {
-	gfx_pixmap_color_t pixmap_color;
+	gfx_pixmap_color_t pixmap_color = {0};
 	int error_code;
 	int mask = ((r >= 0 && g >= 0 && b >= 0) ? GFX_MASK_VISUAL : 0)
 		| ((priority >= 0)? GFX_MASK_PRIORITY : 0)
@@ -793,8 +793,8 @@ gfxop_set_system_color(gfx_state_t *state, gfx_color_t *color)
 int
 gfxop_free_color(gfx_state_t *state, gfx_color_t *color)
 {
-	gfx_palette_color_t *palette_color;
-	gfx_pixmap_color_t pixmap_color;
+	gfx_palette_color_t *palette_color	= {0};
+	gfx_pixmap_color_t pixmap_color		= {0};
 	int error_code;
 	BASIC_CHECKS(GFX_FATAL);
 
@@ -1135,7 +1135,7 @@ gfxop_draw_box(gfx_state_t *state, rect_t box, gfx_color_t color1, gfx_color_t c
 	float mod_offset = 0.0, mod_breadth = 1.0; /* 0.0 to 1.0: Color adjustment */
 	int driver_shade_type;
 	rect_t new_box;
-	gfx_color_t draw_color1, draw_color2;
+	gfx_color_t draw_color1, draw_color2	= {0};
 
 	BASIC_CHECKS(GFX_FATAL);
 	REMOVE_POINTER;
@@ -1343,9 +1343,10 @@ gfxop_disable_dirty_frames(gfx_state_t *state)
 static int
 _gfxop_full_pointer_refresh(gfx_state_t *state)
 {
-	rect_t pointer_bounds, old_pointer_bounds;
-	int new_x = state->driver->pointer_x;
-	int new_y = state->driver->pointer_y;
+	rect_t pointer_bounds		= {0};
+	rect_t old_pointer_bounds	= {0};
+	int new_x			= state->driver->pointer_x;
+	int new_y			= state->driver->pointer_y;
 
 	if (new_x != state->old_pointer_draw_pos.x
 	    || new_y != state->old_pointer_draw_pos.y) {
@@ -1399,8 +1400,9 @@ gfxop_usleep(gfx_state_t *state, long usecs)
 int
 _gfxop_set_pointer(gfx_state_t *state, gfx_pixmap_t *pxm)
 {
-	rect_t old_pointer_bounds, pointer_bounds;
-	int retval;
+	rect_t old_pointer_bounds = {0};
+	rect_t pointer_bounds = {0};
+	int retval = -1;
 	int draw_old;
 	int draw_new = 0;
 
@@ -1888,10 +1890,10 @@ gfxop_new_text(gfx_state_t *state, int font_nr, char *text, int maxwidth,
 	       gfx_color_t color1, gfx_color_t color2, gfx_color_t bg_color,
 	       int flags)
 {
-	gfx_text_handle_t *handle;
-	gfx_bitmap_font_t *font;
+	gfx_text_handle_t *handle			= {0};
+	gfx_bitmap_font_t *font				= {0};
 	int i;
-	gfx_pixmap_color_t pxm_col1, pxm_col2, pxm_colbg;
+	gfx_pixmap_color_t pxm_col1, pxm_col2, pxm_colbg= {0};
 	BASIC_CHECKS(NULL);
 
 	COL_XLATE(pxm_col1, color1);

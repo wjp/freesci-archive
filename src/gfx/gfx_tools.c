@@ -31,7 +31,7 @@
 /* set optimisations for Win32: */
 #ifdef _WIN32
 #  include <memory.h>
-#  pragma intrinsic( memcpy, memset )
+//#  pragma intrinsic( memcpy, memset )
 #endif
 
 
@@ -58,6 +58,9 @@ gfx_new_mode(int xfact, int yfact, int bytespp, unsigned int red_mask, unsigned 
 	     int blue_shift, int alpha_shift, int palette, int flags)
 {
 	gfx_mode_t *mode = sci_malloc(sizeof(gfx_mode_t));
+#ifdef SATISFY_PURIFY
+	memset(mode, 0, sizeof(gfx_mode_t));
+#endif
 
 	mode->xfact = xfact;
 	mode->yfact = yfact;
@@ -74,6 +77,9 @@ gfx_new_mode(int xfact, int yfact, int bytespp, unsigned int red_mask, unsigned 
 
 	if (palette) {
 		mode->palette = sci_malloc(sizeof(gfx_palette_t));
+#ifdef SATISFY_PURIFY
+		memset(mode->palette, 0, sizeof(gfx_palette_t));
+#endif
 		mode->palette->max_colors_nr = palette;
 		mode->palette->colors = sci_calloc(sizeof(gfx_palette_color_t), palette); /* Initialize with empty entries */
 	} else mode->palette = NULL;
@@ -121,6 +127,9 @@ gfx_pixmap_t *
 gfx_new_pixmap(int xl, int yl, int resid, int loop, int cel)
 {
 	gfx_pixmap_t *pxm = sci_malloc(sizeof(gfx_pixmap_t));
+#ifdef SATISFY_PURIFY
+	memset(pxm, 0, sizeof(gfx_pixmap_t));
+#endif
 
 	pxm->alpha_map = pxm->data = pxm->internal.info = pxm->colors = NULL;
 	pxm->internal.handle = 0;
@@ -198,6 +207,9 @@ gfx_pixmap_alloc_index_data(gfx_pixmap_t *pixmap)
 		size = 1;
 
 	pixmap->index_data = sci_malloc(size);
+#ifdef SATISFY_PURIFY
+	memset(pixmap->index_data, 0, size);
+#endif
 	return pixmap;
 }
 

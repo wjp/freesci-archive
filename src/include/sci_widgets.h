@@ -120,7 +120,7 @@ sciw_new_text_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int fo
 */
 
 gfxw_list_t *
-sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, int cursor,
+sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, unsigned int cursor,
 		      char inverse);
 /* Creates a new edit control list
 ** Parameters: (gfxw_port_t *) port: The port containing the color values to use

@@ -131,7 +131,7 @@ int decrypt1(guint8 *dest, guint8 *src, int length, int complength)
 				  if (destctr >= length)
 				    {
 #ifdef _SCI_DECOMPRESS_DEBUG
-				      printf ("decrypt1: Try to write sing byte beyound end of array!\n");
+				      printf ("decrypt1: Try to write single byte beyond end of array!\n");
 #endif
 				    } else
 					dest[destctr++] = token;
@@ -237,13 +237,16 @@ int decompress0(resource_t *result, int resh)
 	guint16 compressionMethod;
 	guint8 *buffer;
 
+#ifdef SATISFY_PURIFY
+	memset(result, 0, sizeof(resource_t));
+#endif
+
 	if (read(resh, &(result->id),2) != 2)
 		return SCI_ERROR_IO_ERROR;
 
 #ifdef WORDS_BIGENDIAN
 	result->id = GUINT16_SWAP_LE_BE_CONSTANT(result->id);
 #endif
-
 	result->number = result->id & 0x07ff;
 	result->type = result->id >> 11;
 

@@ -39,7 +39,7 @@ typedef struct
 {
 	byte* start;
 	byte* base;
-	int first_free;
+	unsigned int first_free;
 	int old_ff;
 } heap_t;
 
@@ -80,7 +80,7 @@ heap_allocate(heap_t* h, int size);
 */
 
 void
-heap_free(heap_t* h, int m);
+heap_free(heap_t* h, unsigned int m);
 /* Frees allocated heap memory.
 ** Parameters: (heap_t *) h: The heap to work with
 **             (int) m: The handle at which memory is to be unallocated

@@ -41,8 +41,9 @@ struct tokenlist {
 	gint16 next;
 } tokens[0x1004];
 
-static gint8 stak[0x1014], lastchar;
-static gint16 stakptr;
+static gint8 stak[0x1014] = {0};
+static gint8 lastchar = 0;
+static gint16 stakptr = 0;
 static guint16 numbits, bitstring, lastbits, decryptstart;
 static gint16 curtoken, endtoken;
 
@@ -167,6 +168,10 @@ int decompress01(resource_t *result, int resh)
 	guint16 compressedLength;
 	guint16 compressionMethod;
 	guint8 *buffer;
+
+#ifdef SATISFY_PURIFY
+	memset(result, 0, sizeof(resource_t));
+#endif
 
 	if (read(resh, &(result->id),2) != 2)
 		return SCI_ERROR_IO_ERROR;

@@ -752,8 +752,8 @@ list_savegames(state_t *s)
 int
 main(int argc, char** argv)
 {
-	config_entry_t *active_conf		= NULL;
-	config_entry_t *confs			= NULL;
+	config_entry_t *active_conf		= {0};
+	config_entry_t *confs			= {0};
 	cl_options_t cl_options;
 	int conf_entries			= -1; /* Number of config entries */
 	int conf_nr				= -1; /* Element of conf to use */
@@ -857,6 +857,8 @@ main(int argc, char** argv)
 
 	gamestate->resource_dir = resource_dir;
 	gamestate->work_dir = work_dir;
+	gamestate->sound_object = NULL;
+	gamestate->port_serial = 0;
 
 	if (!game_name)
 		game_name = (char *) gamestate->game_name;

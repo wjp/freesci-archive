@@ -104,7 +104,7 @@ typedef union {
   char *str;
 } cmd_param_t;
 
-extern int cmd_paramlength;
+extern unsigned int cmd_paramlength;
 /* The number of parameters passed to a function called from the parser */
 
 extern cmd_param_t *cmd_params;

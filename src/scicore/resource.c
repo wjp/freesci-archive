@@ -160,7 +160,7 @@ _addResource(struct singly_linked_resources_struct *base, resource_t *resource, 
 ** the other resource will be free()d and replaced by the new [resource].
 */
 {
-	struct singly_linked_resources_struct *seeker;
+	struct singly_linked_resources_struct *seeker	= {0};
 
 	if (!base->resource) {
 		base->resource = resource;
@@ -176,13 +176,21 @@ _addResource(struct singly_linked_resources_struct *base, resource_t *resource, 
 					free(seeker->resource);
 					seeker->resource = resource;
 					return;
-				} else seeker = 0;
-			} else seeker = seeker->next;
+				}
+				else 
+					seeker = 0;
+			} 
+			else {
+				seeker = seeker->next; 
+			}
 		}
 
 		if (seeker) {
 
 			seeker->next = sci_malloc(sizeof(struct singly_linked_resources_struct));
+#ifdef SATISFY_PURIFY
+			memset(seeker->next, 0, sizeof(struct singly_linked_resources_struct));
+#endif
 			seeker->next->resource = resource;
 			seeker->next->next = 0;
 			max_resource++;
@@ -202,11 +210,11 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 {
 	int resourceFile = 0;
 	int resourceFileCounter = 0;
-	resource_t *resource;
-	char filename[13];
-	int resourceCounter;
-	struct singly_linked_resources_struct *seeker;
-	struct singly_linked_resources_struct base;
+	resource_t *resource	= NULL;
+	char filename[13]		= {0};
+	int resourceCounter		= 0;
+	struct singly_linked_resources_struct *seeker	= {0};
+	struct singly_linked_resources_struct base	= {0};
 	int found_resfiles = 0;
 
 	base.next = 0;
@@ -216,6 +224,9 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 		if (resourceFileCounter > 0 && resourceFile > 0) {
 			int decomperr;
 			resource = sci_malloc(sizeof(resource_t));
+#ifdef SATISFY_PURIFY
+			memset(resource, 0, sizeof(resource_t));
+#endif
 			while (!(decomperr = (*decompress)(resource, resourceFile))) {
 
 				_addResource(&base, resource, 0);
@@ -279,6 +290,9 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 	else printf("Ignoring any patches.\n");
 
 	resource_map = sci_malloc(max_resource * sizeof(resource_t));
+#ifdef SATISFY_PURIFY
+	memset(resource_map, 0, max_resource * sizeof(resource_t));
+#endif
 
 	seeker = &base;
 
@@ -334,7 +348,7 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 		int restype = sci_invalid_resource;
 		int resnumber = -1;
 		int i;
-		int resname_len;
+		unsigned int resname_len;
 		char *endptr;
 
 		for (i = sci_view; i < sci_invalid_resource; i++)
@@ -387,6 +401,10 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 					} else {
 
 						newrsc = sci_malloc(sizeof(resource_t));
+#ifdef SATISFY_PURIFY
+						memset(newrsc, 0, sizeof(resource_t));
+#endif
+
 						newrsc->length = filestat.st_size - 2;
 						newrsc->id = restype << 11 | resnumber;
 						newrsc->number = resnumber;
@@ -394,6 +412,10 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 						newrsc->type = restype;
 
 						newrsc->data = sci_malloc(newrsc->length);
+#ifdef SATISFY_PURIFY
+						memset(newrsc->data, 0, newrsc->length);
+#endif
+
 						read(file, newrsc->data, newrsc->length);
 						close(file);
 

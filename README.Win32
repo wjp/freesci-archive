@@ -4,11 +4,9 @@ ABOUT
 -----
 
 The Win32 version of freesci is now almost at the same level of
-functionality as the Linux version. The main thing that is missing is decent
-MIDI support. Because of this, introductions of several games do not run
-automatically and may have to be interrupted by a keypress. Also,
-Hero's Quest 1 may not allow to you create a character for the
-same reason.
+functionality as the UNIX version. The major bugs are currently:
+fullscreen support causes gfx corruption, scaling > 3 causes gfx corruption,
+savegames aren't working properly. 
 
 
 BUILDING

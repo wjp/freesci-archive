@@ -58,12 +58,12 @@ typedef struct
 }
 cmd_var_t;
 
-int _cmd_command_mem = 0;
-int _cmd_command_count = 0;
+unsigned int _cmd_command_mem = 0;
+unsigned int _cmd_command_count = 0;
 cmd_command_t *_cmd_commands;
 
-int _cmd_var_mem = 0;
-int _cmd_var_count = 0;
+unsigned int _cmd_var_mem = 0;
+unsigned int _cmd_var_count = 0;
 cmd_var_t *_cmd_vars = 0;
 
 
@@ -80,7 +80,7 @@ int con_outputbuflen = 0;
 int con_outputlookback = 0;
 
 
-int cmd_paramlength;
+unsigned int cmd_paramlength;
 cmd_param_t *cmd_params;
 
 /********** dmalloc functions **********/
@@ -294,8 +294,8 @@ con_parse (state_t * s, char *command)
   {
     int cmdnum = -1;		/* command number */
     int onvar = 1;		/* currently working on a variable? */
-    int parammem = 0;
-    int i;
+    unsigned int parammem = 0;
+    unsigned int i;
     cdone = 0;
     pos = 0;
 
@@ -356,7 +356,7 @@ con_parse (state_t * s, char *command)
 	sciprintf ("%s: not found\n", cmd);
       else
       {
-	int minparams;
+	unsigned int minparams;
 
 	paramt = _cmd_commands[cmdnum].param;
 
@@ -453,7 +453,7 @@ int
 con_hook_command (int command (state_t *), char *name, char *param,
 		  char *description)
 {
-  int i;
+  unsigned int i;
 
   if (NULL == name)
   {
@@ -515,7 +515,7 @@ con_hook_command (int command (state_t *), char *name, char *param,
 int
 con_hook_int (int *pointer, char *name, char *description)
 {
-  int i;
+  unsigned int i;
 
   if (_cmd_var_mem == _cmd_var_count)
     _cmd_vars = sci_realloc(_cmd_vars,
@@ -552,7 +552,7 @@ sciprintf (char *fmt, ...)
 {
   va_list argp;
   size_t bufsize = 256;
-  int i;
+  unsigned int i;
   char *buf 	= (char *) sci_malloc (bufsize);
   char *mbuf	= NULL;
 
@@ -714,7 +714,7 @@ c_list (state_t * s)
     if (strcmp ("cmds", cmd_params[0].str) == 0)
     {
 
-      int i;
+      unsigned int i;
       for (i = 0; i < _cmd_command_count; i++)
 	sciprintf ("%s (%s)\n", _cmd_commands[i].name,
 		   _cmd_commands[i].param);
@@ -731,7 +731,7 @@ c_list (state_t * s)
     else if (strcmp ("vars", cmd_params[0].str) == 0)
     {
 
-      int i;
+      unsigned int i;
       for (i = 0; i < _cmd_var_count; i++)
 	sciprintf ("%s = %d\n", _cmd_vars[i].name, *(_cmd_vars[i].var.intp));
 
@@ -763,7 +763,7 @@ c_list (state_t * s)
 int
 c_man (state_t * s)
 {
-  int i;
+  unsigned int i;
   for (i = 0; i < _cmd_command_count; i++)
     if (strcmp (cmd_params[0].str, _cmd_commands[i].name) == 0)
     {
@@ -809,7 +809,7 @@ c_man (state_t * s)
 int
 c_set (state_t * s)
 {
-  int i;
+  unsigned int i;
 
   for (i = 0; i < _cmd_var_count; i++)
     if (strcmp (cmd_params[0].str, _cmd_vars[i].name) == 0)
@@ -821,7 +821,7 @@ c_set (state_t * s)
 int
 c_print (state_t * s)
 {
-  int i;
+  unsigned int i;
 
   for (i = 0; i < _cmd_var_count; i++)
     if (strcmp (cmd_params[0].str, _cmd_vars[i].name) == 0)

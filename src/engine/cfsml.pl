@@ -442,8 +442,10 @@ sub create_writer
     $ctype = $types{$type}{'ctype'};
 
     write_line_pp(__LINE__, 0);
-    print "static void\n_cfsml_write_$typename(FILE *fh, $ctype* save_struc)\n{";
-    print "\n  char *token;\n  int min, max, i;\n\n";
+    print "static void\n_cfsml_write_$typename(FILE *fh, $ctype* save_struc)\n{\n";
+    if ($types{$type}{'type'} eq $type_record) {
+        print "  int min, max, i;\n\n";
+    }
 
     if ($types{$type}{'type'} eq $type_integer) {
       print "  fprintf(fh, \"%li\", (long) *save_struc);\n";
@@ -453,7 +455,7 @@ sub create_writer
 	print "  if (!(*save_struc))\n";
 	print "    fprintf(fh, \"\\\\null\\\\\");";
 	print "  else {\n";
-	print "    token = _cfsml_mangle_string((char *) *save_struc);\n";
+	print "    char *token = _cfsml_mangle_string((char *) *save_struc);\n";
 	print "    fprintf(fh, \"\\\"%s\\\"\", token);\n";
 	print "    free(token);\n";
 	print "  }\n";
@@ -537,8 +539,10 @@ sub create_reader
     print "static int\n_cfsml_read_$typename";
     print "(FILE *fh, $ctype* save_struc, char *lastval, int *line, int *hiteof)\n{\n";
 
-    print "  char *token;\n  int min, max, i;\n";
-
+    print "  char *token;\n";
+    if ($types{$type}{'type'} eq $type_record) {
+      print "int min, max, i;\n";
+    }
     my $reladdress_nr = 0; # Number of relative addresses needed
     my $reladdress = 0; # Current relative address number
     my $reladdress_resolver = ""; # Relative addresses are resolved after the main while block
@@ -552,7 +556,7 @@ sub create_reader
       }
 
       if ($reladdress_nr) { # Allocate stack space for all relative addresses needed
-	print "  int reladdresses[$reladdress_nr];\n";
+	print "  int reladdresses[$reladdress_nr] = {0};\n";
       }
     }
 
@@ -668,6 +672,9 @@ sub create_reader
 
 	    print "         if (max) {\n";
 	    print "           save_struc->$name = ($n->{'type'} *) sci_malloc(max * sizeof($type));\n";
+	    print "#ifdef SATISFY_PURIFY\n";
+            print "           memset(save_struc->$name, 0, max * sizeof($type));\n";
+	    print "#endif\n";
 	    print "           _cfsml_register_pointer(save_struc->$name);\n";
 	    print "         }\n";
 	    print "         else\n";

@@ -43,7 +43,7 @@ static int widget_serial_number_counter = 0x10000; /* Avoid confusion with IDs *
 
 gfxw_widget_t *debug_widgets[GFXW_DEBUG_WIDGETS];
 int debug_widget_pos = 0;
-#define inline
+
 static void
 _gfxw_debug_add_widget(gfxw_widget_t *widget)
 {
@@ -94,7 +94,7 @@ indent(int indentation)
 static void
 _gfxw_print_widget(gfxw_widget_t *widget, int indentation)
 {
-	int i;
+	unsigned int i;
 	char flags_list[] = "VOCDTMI";
 
 	indent(indentation);
@@ -135,6 +135,10 @@ gfxw_widget_t *
 _gfxw_new_widget(int size, int type)
 {
 	gfxw_widget_t *widget = sci_malloc(size);
+#ifdef SATISFY_PURIFY
+	memset(widget, 0, size);
+#endif
+
 	widget->magic = GFXW_MAGIC_VALID;
 	widget->parent = NULL;
 	widget->visual = NULL;
@@ -1032,11 +1036,17 @@ gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, in
 	widget->widget_priority = priority;
 	widget->color.priority = priority;
 	widget->color.control = control;
+	widget->color.alpha = 0;
+	widget->color.visual.global_index = 0;
+	widget->color.visual.r = 0;
+	widget->color.visual.g = 0;
+	widget->color.visual.b = 0;
 	widget->view = view;
 	widget->loop = loop;
 	widget->cel = cel;
 	widget->sequence = sequence;
 	widget->force_precedence = 0;
+
 
 	if (halign == ALIGN_CENTER)
 		xalignmod = width >> 1;

@@ -30,10 +30,10 @@
 /* y on: suppress creation of frame pointers on stack */
 /* s off: disable minimize size code */
 #ifdef _WIN32
-#	pragma optimize( "s", off )
-#	pragma optimize( "gty", on )
+//#	pragma optimize( "s", off )
+//#	pragma optimize( "gty", on )
 #include <memory.h>
-#	pragma intrinsic( memcpy, memset )
+//#	pragma intrinsic( memcpy, memset )
 #endif
 
 #include <sci_memory.h>
@@ -1159,5 +1159,5 @@ gfx_driver_sdl = {
 /* reset to original optimisations for Win32: */
 /* (does not reset intrinsics) */
 #ifdef _WIN32
-#pragma optimize( "", on )
+//#pragma optimize( "", on )
 #endif

@@ -1,3 +1,74 @@
+2001-08-29  Matt Hargett  <matt@use.net>
+
+        * README.Win32: Update to reflect current sources.
+
+        * game.c (_reset_graphics_input):  Fixed purify warnings.
+
+        * kgraphics.c (_k_graph_rebuild_port_with_color): Ditto.
+
+        * (draw_to_control_map): Ditto.
+
+        * (kNewWindow): Ditto.
+
+        * vm.c (run_vm): Ditto.
+
+        * (script_detect_early_versions): Ditto.
+
+        * font.c (gfxr_draw_font): Ditto.
+
+        * gfx_tools.c (gfx_new_mode): Ditto.
+
+        * (gfx_new_pixmap): Ditto.
+
+        * (gfx_pixmap_alloc_index_data): Ditto.
+
+        * operations.c (gfxop_set_color): Ditto.
+
+        * (gfxop_free_color): Ditto.
+
+        * (gfxop_draw_box): Ditto.
+
+        * (_gfxop_full_pointer_refresh): Ditto.
+
+        * (gfxop_usleep): Ditto.
+
+        * sci_widgets.c (sciw_new_window): Ditto.
+
+        * (_sciw_add_text_to_list): Ditto.
+
+        * (sciw_new_edit_control): Ditto.
+
+        * sci_pal_1.c (gfxr_read_pal1): Ditto.
+
+        * decompress0.c (decompress0): Ditto.
+
+        * decompress01.c (decompress0): Ditto.
+
+        * decompress1.c (decompress1): Ditto.
+
+        * resource.c (_addResource): Ditto.
+
+        * soundserver.c (sci0_soundserver): Ditto.
+	
+        * widgets.c: Ditto. Eliminate signed/unsigned compiler warnings.
+        Eliminate redefinition of inline.
+
+        * console.h: Eliminate signed/unsigned compiler warning.
+
+        * console.c : Ditto.
+
+        * sdl_driver.c: Comment out VC++ pragmas for now.
+
+        * sci_view_0.c: Ditto.
+
+        * kstring.c (kFormat): Initialize arguments to prevent
+        uninitialized memory read.
+
+        * cfsml.pl: Try to declare variables only if they're going
+        to be used. (Eliminates a hundred warnings in VC++.)
+
+        * midiout_win32mci.c: Add include for sci_memory.h.
+	
 2001-09-10  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/sfx_save.cfsml: Fixed song_t structure definitions

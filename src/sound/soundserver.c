@@ -153,6 +153,10 @@ sci0_soundserver(int reverse_stereo)
 	for (i = 0; i < 16; i++)
 		playing_notes[i].playing = 0;
 
+#ifdef SATISFY_PURIFY
+	memset(playing_notes, 0, 16 * sizeof(playing_notes_t));
+#endif
+
 	memset(&suspend_time, 0, sizeof(GTimeVal));
 	memset(&wakeup_time, 0, sizeof(GTimeVal));
 	memset(&ctime, 0, sizeof(GTimeVal));

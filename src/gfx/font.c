@@ -323,6 +323,9 @@ gfxr_draw_font(gfx_bitmap_font_t *font, char *text, int characters,
 
 	pxm->colors_nr = !!fg0 + !!fg1 + !!bg;
 	pxm->colors = sci_malloc(sizeof(gfx_pixmap_color_t) * pxm->colors_nr);
+#ifdef SATISFY_PURIFY
+	memset(pxm->colors, 0, sizeof(gfx_pixmap_color_t) * pxm->colors_nr);
+#endif
 	pxm->flags |= GFX_PIXMAP_FLAG_PALETTE_ALLOCATED | GFX_PIXMAP_FLAG_DONT_UNALLOCATE_PALETTE;
 
 	i = 0;

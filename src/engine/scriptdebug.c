@@ -553,7 +553,7 @@ c_restore_game(state_t *s)
 int
 c_restart_game(state_t *s)
 {
-  int i;
+  unsigned int i;
 
   if (!s) {
     sciprintf("Not in debug state\n");
@@ -1191,7 +1191,7 @@ c_gfx_print_widget(state_t *s)
 	}
 
 	if (cmd_paramlength) {
-		int i;
+		unsigned int i;
 		for (i = 0; i < cmd_paramlength ; i++) {
 			int widget_nr = cmd_params[i].val;
 
@@ -1318,7 +1318,7 @@ c_gfx_draw_viewobj(state_t *s)
 {
 	heap_ptr pos = cmd_params[0].val;
 	int is_view;
-	int x, y, z, priority;
+	int x, y, priority;
 	int nsLeft, nsRight, nsBottom, nsTop;
 	int brLeft, brRight, brBottom, brTop;
 
@@ -1625,7 +1625,7 @@ set_debug_mode (struct _state *s, int mode, char *areas)
 int
 c_debuglog(state_t *s)
 {
-	int i;
+	unsigned int i;
 
 	if (!_debugstate_valid) {
 		sciprintf("Not in debug state\n");
@@ -1664,7 +1664,7 @@ c_debuglog(state_t *s)
 int
 c_gfx_debuglog(state_t *s)
 {
-	int i;
+	unsigned int i;
 	gfx_driver_t *drv = s->gfx_state->driver;
 	struct {
 		char *name;

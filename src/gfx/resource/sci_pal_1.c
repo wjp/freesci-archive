@@ -39,7 +39,7 @@ gfxr_read_pal1(int id, int *colors_nr, byte *resource, int size)
 {
 	int counter = 0;
 	int pos;
-	unsigned int colors[MAX_COLORS];
+	unsigned int colors[MAX_COLORS] = {0};
 	gfx_pixmap_color_t *retval;
 
 	if (size < PALETTE_START + 4) {
@@ -51,7 +51,6 @@ gfxr_read_pal1(int id, int *colors_nr, byte *resource, int size)
 	pos = PALETTE_START;
 
 	while (pos < size && resource[pos] == COLOR_OK && counter < MAX_COLORS) {
-		int i;
 		int color = resource[pos]
 			| (resource[pos + 1] << 8)
 			| (resource[pos + 2] << 16)
@@ -73,6 +72,9 @@ gfxr_read_pal1(int id, int *colors_nr, byte *resource, int size)
 	}
 
 	retval = sci_malloc(sizeof(gfx_pixmap_color_t) * counter);
+#ifdef SATISFY_PURIFY
+	memset(retval, 0, sizeof(gfx_pixmap_color_t) * counter);
+#endif
 
 	*colors_nr = counter;
 	fprintf(stderr,"c=%d\n", counter);

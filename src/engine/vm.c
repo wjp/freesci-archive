@@ -497,7 +497,7 @@ run_vm(state_t *s, int restoring)
 {
   gint16 temp, temp2;
   guint16 utemp, utemp2;
-  gint16 opparams[4]; /* opcode parameters */
+  gint16 opparams[4] = {0}; /* opcode parameters */
 
   int restadjust = s->amp_rest; /* &rest adjusts the parameter count by this value */
   /* Current execution data: */
@@ -1282,7 +1282,7 @@ lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
 void script_detect_early_versions(state_t *s)
 {
 	int c;
-	resource_t *script;
+	resource_t *script = {0};
 
 	for (c = 0; c < 1000; c++) {
 		if ((script = findResource(sci_script, c))) {

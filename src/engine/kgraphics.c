@@ -341,7 +341,6 @@ _k_graph_rebuild_port_with_color(state_t *s, gfx_color_t newbgcolor)
 void
 kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	gfx_color_t gfxcolor;
 	rect_t area;
 	gfxw_port_t *port = s->port;
 	int redraw_port = 0;
@@ -358,9 +357,9 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		s->acc = (sci_version < SCI_VERSION_1) ? 0x10 : 0x100; /* number of colors */
 		break;
 
-	case K_GRAPH_DRAW_LINE:
+	case K_GRAPH_DRAW_LINE: {
 
-		gfxcolor = graph_map_ega_color(s, PARAM(5) & 0xf, PARAM_OR_ALT(6, -1), PARAM_OR_ALT(7, -1));
+		gfx_color_t gfxcolor = graph_map_ega_color(s, PARAM(5) & 0xf, PARAM_OR_ALT(6, -1), PARAM_OR_ALT(7, -1));
 
 		SCIkdebug(SCIkGRAPHICS, "draw_line((%d, %d), (%d, %d), col=%d, p=%d, c=%d, mask=%d)\n",
 			  PARAM(2), PARAM(1), PARAM(4), PARAM(3), PARAM(5), PARAM_OR_ALT(6, -1), PARAM_OR_ALT(7, -1),
@@ -369,7 +368,8 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		redraw_port = 1;
 		ADD_TO_CURRENT_BG_WIDGETS(GFXW(gfxw_new_line(area, gfxcolor, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
 
-		break;
+	}
+	break;
 
 	case K_GRAPH_SAVE_BOX:
 
@@ -1471,7 +1471,7 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, i
 
 	if (!(view->signalp && (GET_HEAP(view->signalp) & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {
 		gfxw_box_t *box;
-		gfx_color_t color;
+		gfx_color_t color	= {0};
 
 		gfxop_set_color(s->gfx_state, &color, -1, -1, -1, -1, -1, 0xf);
 
@@ -2162,7 +2162,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	gfxw_port_t *window;
 	int x, y, xl, yl, flags;
-	gfx_color_t bgcolor;
+	gfx_color_t bgcolor	= {0};
 	int priority;
 
 	CHECK_THIS_KERNEL_FUNCTION;
@@ -2801,12 +2801,12 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int index = UPARAM(1);
 	int temp;
 	int save_under = 0;
-	gfx_color_t transparent;
+	gfx_color_t transparent	= {0};
 	char *text;
 	gfxw_port_t *port = (s->port)? s->port : s->picture_port;
 	int update_immediately = 1;
 
-	gfx_color_t *color0, *color1, *bg_color;
+	gfx_color_t *color0, *color1, *bg_color	= {0};
 	gfx_alignment_t halign = ALIGN_LEFT;
 	rect_t area = gfx_rect(port->draw_pos.x, port->draw_pos.y, 320, 200);
 	int gray = port->gray_text;
