@@ -704,7 +704,7 @@ c_list_words(state_t *s)
 
 	if (!words) {
 		sciprintf("No vocabulary.\n");
-		return 0;
+		return 1;
 	}
 
 	for (i = 0; i < words_nr; i++)
@@ -715,6 +715,7 @@ c_list_words(state_t *s)
 			  words[i]->word);
 
 	vocab_free_words(words, words_nr);
+	return 0;
 }
 
 int
@@ -729,7 +730,7 @@ c_list_suffices(state_t *s)
 
 	if (!suffices) {
 		sciprintf("No suffix vocabulary.\n");
-		return 0;
+		return 1;
 	}
 
 	for (i = 0; i < suffices_nr; i++) {
@@ -748,6 +749,7 @@ c_list_suffices(state_t *s)
 	}
 
 	vocab_free_suffices(s->resmgr, suffices, suffices_nr);
+	return 0;
 }
 
 

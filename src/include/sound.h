@@ -51,10 +51,10 @@
 
 typedef struct {
 
-  int handle; /* The handle which the data is for; 0 if it's system data */
+	int handle; /* The handle which the data is for; 0 if it's system data */
 
-  int signal; /* Description of value */
-  int value;
+	int signal; /* Description of value */
+	int value;
 
 } sound_event_t;
 
@@ -219,6 +219,6 @@ extern MIDI_map_t MIDI_mapping[128];
 extern int MIDI_mappings_nr; /* Number of MIDI mappings */
 
 
-extern int cmdlen[16];
+extern int MIDI_cmdlen[16]; /* Number of parameters for each MIDI operation */
 
 #endif /* _SCI_SOUND_H_ */

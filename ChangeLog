@@ -1,3 +1,13 @@
+2001-10-30  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/console.c (c_list_words): Return 0 on success, 1 on error
+	(same for list_suffices)
+
+2001-10-29  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* doc/sci.sgml: Added the missing funcselector offset, fixing a major
+	documentation bug
+
 2001-10-24  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/include/kernel.h (SCI0_VIEW_PRIORITY): Augmented by one to test

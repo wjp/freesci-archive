@@ -100,6 +100,80 @@ typedef struct {
 	byte notes[MAX_POLYPHONY]; /* -1 for notes not playing */
 } playing_notes_t;
 
+#define SI_STATE_UNINITIALIZED -1
+#define SI_STATE_DELTA_TIME 0 /* Now at a delta time */
+#define SI_STATE_COMMAND 1 /* Now at a MIDI operation */
+#define SI_STATE_FINISHED 2 /* End of song */
+
+
+#define SI_FINISHED -1 /* Song finished playing */
+#define SI_LOOP -2 /* Song just looped */
+#define SI_CUE -3 /* Found a song cue */
+
+
+typedef struct _song_iterator {
+
+	int flags[MIDI_CHANNELS]; /* Flags for each channel */
+	int polyphony[MIDI_CHANNELS]; /* # of simultaneous notes on each */
+	int instruments[MIDI_CHANNELS]; /* Instrument number for each channel */
+	int velocity[MIDI_CHANNELS]; /* Velocity for each channel (0 for "mute") */
+	int pressure[MIDI_CHANNELS]; /* Channel pressure (MIDI Dx command) */
+	int pitch[MIDI_CHANNELS]; /* Pitch wheel */
+	int channel_map[MIDI_CHANNELS]; /* Number of HW channels to use */
+	int reverb[MIDI_CHANNELS]; /* Reverb setting for the channel */
+
+	byte *data;
+	unsigned int size; /* Song size */
+	int offset; /* Current read offset in data */
+	int loop_offset; /* Loopback position */
+	int loops; /* Number of loops */
+
+	byte last_cmd; /* Last MIDI command, for 'running status' mode */
+
+	int state; /* SI_STATE_* */
+	int ccc; /* Cumulative cue counter, for those who need it */
+	byte resetflag; /* for 0x4C -- on DoSound StopSound, do we return to start? */
+
+	int (*read_next_command) (struct _song_iterator *self,
+				  byte *buf, int *buf_size);
+	/* Reads the next MIDI operation _or_ delta time
+	** Parameters: (song_iterator_t *) self
+	**             (byte *) buf: The buffer to write to (needs to be able to
+	**                           store at least 4 bytes)
+	**             (int *) buf_size: Number of bytes written to the buffer
+	**                     (equals the number of bytes that need to be passed
+	**                     to the lower layers)
+	** Returns   : (int) zero if a MIDI operation was written, SI_FINISHED
+	**                   if the song has finished playing, SI_LOOP if looping
+	**                   (after updating the loop variable), SI_CUE if we found
+	**                   a cue, or the number of ticks to wait before this
+	**                   function should be called next.
+	** If non-zero is returned, buf and buf_size are not written to, except
+	** with SI_CUE, where buf[0] will be set to contain the cue value.
+	*/
+
+	byte * (*check_pcm) (struct _song_iterator *self,
+			     int *size, int *sample_rate);
+	/* Checks for the presence of a pcm sample
+	** Parameters: (song_iterator_t *) self
+	**             (int *) size: Return variable for the sample size
+	**             (int *) sample_rate: Return variable for the sample rate
+	**                                  in (Hz)
+	** Returns   : (byte *) NULL if no sample was found, a pointer to the
+	**                      PCM data otherwise
+	** Only unsigned mono 8 bit PCMs (AFMT_U8) are supported ATM.
+	*/
+
+	void (*init) (struct _song_iterator *self);
+	/* Resets/initializes the sound iterator
+	** Parameters: (song_iterator_t *) self
+	** Returns   : (void)
+	*/
+
+	/* See songit_* for the constructor and non-virtual member functions */
+
+} song_iterator_t;
+
 typedef struct _song {
 
 	int flags[MIDI_CHANNELS]; /* Flags for each channel */
@@ -128,9 +202,12 @@ typedef struct _song {
 	int resetflag; /* for 0x4C -- on DoSound StopSound, do we return to start? */
 	word handle;  /* Handle for the game engine */
 
+	song_iterator_t *it;
+
 	struct _song *next; /* Next song or NULL if this is the last one */
 
 } song_t;
+
 
 
 typedef song_t **songlib_t;
@@ -190,6 +267,32 @@ sound_suspend(struct _state *s);
 void
 sound_resume(struct _state *s);
 /* Default implementation for resuming sound ouput after it was suspended */
+
+
+/********************************/
+/*-- Song iterator operations --*/
+/********************************/
+
+#define SCI_SONG_ITERATOR_TYPE_SCI0 0
+#define SCI_SONG_ITERATOR_TYPE_SCI1 1
+
+song_iterator_t *
+songit_new(byte *data, unsigned int size, int type);
+/* Constructs a new song iterator object
+** Parameters: (byte *) data: The song data to iterate over
+**             (unsigned int) size: Number of bytes in the song
+**             (int) type: One of the SCI_SONG_ITERATOR_TYPEs
+** Returns   : (song_iterator_t *) A newly allocated but uninitialized song
+**             iterator, or NULL if 'type' was invalid or unsupported
+*/
+
+void
+songit_free(song_iterator_t *it);
+/* Frees a song iterator and the song it wraps
+** Parameters: (song_iterator_t *) it: The song iterator to free
+** Returns   : (void)
+*/
+
 
 /* Song library commands: */
 

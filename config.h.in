@@ -53,6 +53,9 @@
 /* Define if you have the isblank function.  */
 #undef HAVE_ISBLANK
 
+/* Define if you have the memchr function.  */
+#undef HAVE_MEMCHR
+
 /* Define if you have the memfrob function.  */
 #undef HAVE_MEMFROB
 

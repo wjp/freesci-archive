@@ -2903,14 +2903,17 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	<simplelist>
 	  <member><literal>[00][01]</literal>: Magic number 0x1234</member>
 	  <member><literal>[02][03]</literal>: Local variable offset (filled in at run-time)</member>
-	  <member><literal>[04][05]</literal>: Number of variable selectors (= #vs)</member>
-	  <member><literal>[06][07]</literal>: The 'species' selector</member>
-	  <member><literal>[08][09]</literal>: The 'superClass' selector</member>
-	  <member><literal>[0a][0b]</literal>: The '--info--' selector</member>
-	  <member><literal>[0c][0d]</literal>: The 'name' selector (object/class name)</member>
-	  <member><literal>[0e]...</literal>: (#vs-4) more variable selectors</member>
-	  <member><literal>[06+ #vs*2][07+ #vs*2]</literal>: Number of function selectors</member>
-	  <member><literal>[08+ #vs*2]...</literal>: Function selector code pointers</member>
+	  <member><literal>[04][05]</literal>: Offset of the function selector list, relative to the first variable selector</member>
+	  <member><literal>[06][07]</literal>: Number of variable selectors (= #vs)</member>
+	  <member><literal>[08][09]</literal>: The 'species' selector</member>
+	  <member><literal>[0a][0b]</literal>: The 'superClass' selector</member>
+	  <member><literal>[0c][0d]</literal>: The '--info--' selector</member>
+	  <member><literal>[0e][0f]</literal>: The 'name' selector (object/class name)</member>
+	  <member><literal>[10]...</literal>: (#vs-4) more variable selectors</member>
+	  <member><literal>[08+ #vs*2][09+ #vs*2]</literal>: Number of function selectors (= #fs)</member>
+	  <member><literal>[0a+ #vs*2]...</literal>: Selector IDs for the functions</member>
+	  <member><literal>[08+ #vs*2 + #fs*2][09+ #vs*2 + #fs*2]</literal>zero</member>
+	  <member><literal>[0a+ #vs*2 + #fs*2]...</literal>: Function selector code pointers</member>
 	</simplelist>
 	For objects, the selectors are simply values for the selector IDs specified in their species
 	class (which is either present by its offset (in-memory) or class ID (in-script)- the same
@@ -2949,22 +2952,23 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
       </para>
       <sect3><title>Class segments</title>
       <para>
-	Classes look almost like objects:
+	Classes look similar to objects:
 	<simplelist>
 	  <member><literal>[00][01]</literal>: Magic number 0x1234</member>
 	  <member><literal>[02][03]</literal>: Local variable offset (filled in at run-time)</member>
-	  <member><literal>[04][05]</literal>: Number of variable selectors (= #vs)</member>
-	  <member><literal>[06][07]</literal>: The 'species' selector</member>
-	  <member><literal>[08][09]</literal>: The 'superClass' selector</member>
-	  <member><literal>[0a][0b]</literal>: The '--info--' selector</member>
-	  <member><literal>[0c][0d]</literal>: The 'name' selector (object/class name)</member>
-	  <member><literal>[0e]...</literal>: (#vs-4) more variable selectors</member>
-	  <member><literal>[06+ #vs*2][07+ #vs*2]</literal>: Selector ID of the first varselector (0)</member>
-	  <member><literal>[08+ #vs*2]...</literal>: Selector ID of the second etc. varselectors</member>
-	  <member><literal>[06+ #vs*4][07+ #vs*4]</literal>: Number of function selectors (#fs)</member>
-	  <member><literal>[08+ #vs*4]...</literal>: Function selector code pointers</member>
-	  <member><literal>[06+ #vs*4 + #fs*2][07+ #vs*4 + #fs*2]</literal>: 0</member>
-	  <member><literal>[08+ #vs*4 + #fs*2]...</literal>: Selector ID of the first etc. funcselectors</member>
+	  <member><literal>[04][05]</literal>: Offset of the function selector list, relative to the first variable selector</member>
+	  <member><literal>[06][07]</literal>: Number of variable selectors (= #vs)</member>
+	  <member><literal>[08][09]</literal>: The 'species' selector</member>
+	  <member><literal>[0a][0b]</literal>: The 'superClass' selector</member>
+	  <member><literal>[0c][0d]</literal>: The '--info--' selector</member>
+	  <member><literal>[0e][0f]</literal>: The 'name' selector (object/class name)</member>
+	  <member><literal>[10]...</literal>: (#vs-4) more variable selectors</member>
+	  <member><literal>[08+ #vs*2][09+ #vs*2]</literal>: Selector ID of the first varselector (0)</member>
+	  <member><literal>[0a+ #vs*2]...</literal>: Selector ID of the second etc. varselectors</member>
+	  <member><literal>[08+ #vs*4][09+ #vs*4]</literal>: Number of function selectors (#fs)</member>
+	  <member><literal>[0a+ #vs*4]...</literal>: Function selector code pointers</member>
+	  <member><literal>[08+ #vs*4 + #fs*2][09+ #vs*4 + #fs*2]</literal>: 0</member>
+	  <member><literal>[0a+ #vs*4 + #fs*2]...</literal>: Selector ID of the first etc. funcselectors</member>
 	</simplelist>
 	Simply put, they look like objects with each selector section followed by a list of selector IDs.
       </para>

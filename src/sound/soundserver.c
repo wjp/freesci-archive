@@ -32,6 +32,12 @@
 #include <soundserver.h>
 #include <midi_device.h>
 #include <sys/types.h>
+#ifdef HAVE_SYS_SOUNDCARD_H
+#  include <sys/stat.h>
+#  include <fcntl.h>
+#  include <sys/ioctl.h>
+#  include <sys/soundcard.h>
+#endif
 
 sound_server_t *global_sound_server = NULL;
 
@@ -307,13 +313,55 @@ sci0_soundserver(int reverse_stereo)
 						fprintf(ds, "Playing handle %04x\n", event.handle);
 #endif
 						if (modsong) {
-							midi_allstop();
-							modsong->status = SOUND_STATUS_PLAYING;
-							sound_queue_event(event.handle, SOUND_SIGNAL_PLAYING, 0);
-							newsong = modsong; /* Play this song */
-							memcpy(channel_instrument, channel_instrument_orig, sizeof(int)*16);
-							/* Reset instrument mappings from song defaults */
+#if 0
+#ifdef HAVE_SYS_SOUNDCARD_H
+					/* Temporary PCM support for testing */
+							byte *pcm = NULL;
+							int pcm_size, sample_rate;
 
+							if (modsong->it)
+								pcm = modsong->it->check_pcm(modsong->it, &pcm_size, &sample_rate);
+							else fprintf(stderr, "Song has no iterator: Cannot check for PCM!\n");
+
+							if (pcm) {
+								int fd;
+								int tmp;
+
+								fprintf(stderr,"SndSrv: Handle %04x: Playing PCM at %d Hz, %d bytes (%fs)\n",
+									event.handle, sample_rate, pcm_size,
+									(sample_rate)? ((pcm_size * 1.0) / (sample_rate * 1.0)) : 0);
+								fd = open("/dev/dsp", O_WRONLY);
+								if (!fd) {
+									perror("SndSrv: While opening /dev/dsp");
+								} else {
+									tmp = AFMT_U8;
+									if (ioctl(fd, SOUND_PCM_SETFMT, &tmp))
+										perror("SndSrv: While setting the PCM format on /dev/dsp\n");
+
+									tmp = sample_rate;
+									if (ioctl(fd, SOUND_PCM_WRITE_RATE, &tmp))
+										perror("SndServ: While setting the sample rate on /dev/dsp\n");
+
+									fprintf(stderr, "SndSrv: Sample rate set to %d Hz (requested %d Hz)\n",
+										tmp, sample_rate);
+
+									if (write(fd, pcm, pcm_size) < pcm_size)
+										perror("SndSrv: While writing to /dev/dsp\n");
+
+									close(fd);
+									fprintf(stderr, "SndSrv: Finished writing PCM to /dev/dsp\n");
+								}
+							} else
+#endif
+#endif
+							{
+								midi_allstop();
+								modsong->status = SOUND_STATUS_PLAYING;
+								sound_queue_event(event.handle, SOUND_SIGNAL_PLAYING, 0);
+								newsong = modsong; /* Play this song */
+								memcpy(channel_instrument, channel_instrument_orig, sizeof(int)*16);
+								/* Reset instrument mappings from song defaults */
+							}
 						} else {
 							fprintf(ds, "Attempt to play invalid handle %04x\n", event.handle);
 						}
@@ -695,14 +743,14 @@ sci0_soundserver(int reverse_stereo)
 			} else { /* Song running normally */
 				param = song->data[song->pos];
 
-				if (cmdlen[command >> 4] == 2)
+				if (MIDI_cmdlen[command >> 4] == 2)
 					param2 = song->data[song->pos + 1]; /* If the MIDI instruction
 									    ** takes two parameters, read
 									    ** second parameter  */
 				else
 					param2 = -1; /* Waste processor cycles otherwise */
 
-				song->pos += cmdlen[command >> 4];
+				song->pos += MIDI_cmdlen[command >> 4];
 
 				if (reverse_stereo
 				    && ((command & MIDI_CONTROL_CHANGE) == MIDI_CONTROL_CHANGE)
