@@ -332,7 +332,7 @@ kFGets(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int handle = UPARAM(2);
 
   fgets_wrapper(s, dest, maxsize, handle);
-  s->acc=UPARAM(0);
+  s->acc = strlen(dest);
 
 }
 

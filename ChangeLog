@@ -1,3 +1,16 @@
+2002-07-23  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/vm.c (script_instantiate): Explicit treatment for
+	"terminal" synonym entries
+
+2002-07-22  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* doc/sci-kernel.sgml: Docs updated wrt FGets(), as pointed out by
+	Brian Provinciano
+
+	* src/engine/kfile.c (kFGets): Now returns number of bytes read
+	(determined by strlen)
+
 2002-07-14  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/font.c (gfxr_font_calculate_size): Removed my own

@@ -117,7 +117,6 @@ yyerror(char *s)
 
 %}
 
-%debug
 %token WGROUP /* Word group */
 %token YY_COMMA     /* 0xf0 */
 %token YY_AMP       /* 0xf1 */
@@ -182,7 +181,7 @@ rightspec :	 YY_SLASH expr
 
 
 word :		 WGROUP
-			{ printf("Quux\n"); $$ = said_paren(said_value(0x141, said_value(0x153, said_terminal($1))), SAID_BRANCH_NULL); }
+			{ $$ = said_paren(said_value(0x141, said_value(0x153, said_terminal($1))), SAID_BRANCH_NULL); }
 		;
 
 

@@ -3814,7 +3814,7 @@ explained more thoroughly, errors corrected, etc. The first 23 instructions
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0x4a: send B framesize (2 bytes)</member>
+                <member>op 0x4a: send B framesize (2 bytes)</member> <!-- Brian: 0x4a is disallowed in SCI1 -->
                 <member>op 0x4b: send B framesize (2 bytes)</member>
               </simplelist>
               Send for one or more selectors. This is the most complex SCI operation (together with

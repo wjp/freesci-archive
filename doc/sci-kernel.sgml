@@ -1077,7 +1077,7 @@ the position remains unchanged.
                        <member><type/(word)/ handle: Handle of the file to read from</member>
                    </simplelist></para>
 		<para>
-			Returns: <type>(void)</type>
+			Returns: <type>(word)</type> The number of bytes actually read
 		</para><para>
 		</para>
 	</sect3>

@@ -1378,7 +1378,6 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 	*/
 
 	objlength = 0;
-
 	do {
 		pos += objlength; /* Step over the last checked object */
 
@@ -1390,7 +1389,11 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 
 		else if (objtype == sci_obj_synonyms) {
 			s->scripttable[script_nr].synonyms_offset = pos + 4; /* +4 is to step over the header */
-			s->scripttable[script_nr].synonyms_nr = (objlength - 4) / 4;
+			s->scripttable[script_nr].synonyms_nr = (objlength) / 4;
+			if (GET_HEAP(s->scripttable[script_nr].synonyms_offset + 
+				     ((s->scripttable[script_nr].synonyms_nr - 1) << 2)) < 0)
+				/* Adjust for "terminal" synonym entries */
+				--s->scripttable[script_nr].synonyms_nr;
 
 		} else if (objtype == sci_obj_class) {
 			heap_ptr classpos = pos - SCRIPT_OBJECT_MAGIC_OFFSET + 4/* Header */;
