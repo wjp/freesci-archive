@@ -8234,7 +8234,7 @@ the maps using the cast list created by Animate, whereas the ShowBits call
            </Sect2>
      </Sect1>
      <sect1 id = "freesci-savegames">
-        <title/Save games/
+        <title/Savegames/
         <para>
            FreeSCI attempts to store savegames portably; for this reason, most of the game data
            is saved as plain text, while the graphics are written to png<footnote>
@@ -8245,7 +8245,7 @@ the maps using the cast list created by Animate, whereas the ShowBits call
            <para>
              The general FreeSCI directory policy is simple: If there is a $HOME, use
              ~/.freesci/[game name]/ as your playground, if there is no home, use the current
-             working directory. Save games are true to that policy. Each save game has a directory
+             working directory. Savegames are true to that policy. Each save game has a directory
              associated with itself, and this directory is relative to the directory mentioned above.
              For example, if you execute "save_game frobnitz" in SQ3 on your *BSD box while
              your $HOME is set to /home/rogerw, the save game files would be written to
@@ -8353,8 +8353,421 @@ the maps using the cast list created by Animate, whereas the ShowBits call
            </sect3>
         </sect2>
      </sect1>
-     <Sect1>
-        <Title/Kernel hacking/
+
+     <sect1>
+       <title>The graphics subsystem</title>
+       <para>Christoph Reichenbach, April 2nd, 2000</para>
+       <para>
+	 Up until version 0.3.0, FreeSCI used a graphics subsystem which used per-pixel operations on
+	 three 320x200 8 bit buffers. This concept, while being simple to implement for driver writers,
+	 proved to have several disadvantages:
+	 <simplelist>
+	   <member>Non-native memory layout: Using a fixed 8bpp visual buffer meant that, for each
+	     update, all graphics would have to be translated to the graphics driver's native format,
+	     unless it already was running in 8bpp.</member>
+	   <member>No use of accellerated drawing functions: Many of the targetted graphics drivers
+	     supported hardware-accelerated drawing of rectangles or lines; this could not be taken
+	     advantage of, due to the per-pixel access</member>
+	   <member>Scalability moved to the drivers: Each driver would have to take care of
+	     magnifying the resulting picture by itself (if it wanted to support it at all), since
+	     the base buffer was at a fixed size.</member>
+	   <member>Manual graphics buffer access: This was in fact used in many places, making it
+	     hard to keep track of modifications, which, in turn, would have inhibited attempts to
+	     track modifications of the visual buffer. However, without those, either each drawing
+	     operation would have enforce an update, causing flickering in the general case, or
+	     the full screen would have to be re-drawn each time (which was what actually was done),
+	     resulting in major performance penalites, especially for remote displays.
+	   </member>
+	 </simplelist>
+	 Combined with some cases of code rot, these problems suggested a re-write of the complete
+	 graphics subsystem, and a more modular re-design in preparation for supporting later revisions
+	 of SCI (and, possibly, related engines such as AGI).
+       </para>
+       <para>
+	 This documentation section will describe the architecture and functionality of the new
+	 graphics subsystem, which has been in operation since FreeSCI 0.3.1. I will start by giving
+	 a general overview of the various components involved and how they interact, and then
+	 give a more detailed description of each of those components in sequence.
+       </para>
+       <sect2><title>Architecture</title>
+       <para>
+	 In extension of the architecture used up until FreeSCI 0.3.0, the new graphics subsystem now
+	 uses a total of six buffers:
+	 <informaltable frame="none">
+	   <tgroup cols="4">
+	     <thead>
+	       <row>
+		 <entry>Map Name</entry>
+		 <entry># of buffers</entry>
+		 <entry>scaled</entry>
+		 <entry>bpp</entry>
+	       </row>
+	     </thead>
+	     <tbody>
+	       <row>
+		 <entry>visual</entry>
+		 <entry>3</entry>
+		 <entry>yes</entry>
+		 <entry>determined by driver</entry>
+	       </row>
+	       <row>
+		 <entry>priority</entry>
+		 <entry>2</entry>
+		 <entry>yes</entry>
+		 <entry>8</entry>
+	       </row>
+	       <row>
+		 <entry>control</entry>
+		 <entry>1</entry>
+		 <entry>no</entry>
+		 <entry>8</entry>
+	       </row>
+	     </tbody>
+	   </tgroup>
+	 </informaltable>
+
+	 Of these, the visual and priority buffers have to be provided by the graphics driver, since
+	 they are relevant for display and may actually be present physically (since the priority map
+	 is nothing other than a Z buffer). The control map, a special buffer used by the interpreter
+	 to check whether moving objects hit obstacles on the screen or touch zones with special meanings,
+	 is only relevant for the interpreter and therefore handled one level above the graphics driver.
+       </para>
+       <para>
+	 I will refer to the level above as the "operational layer". This layer handles all of the primitive
+	 graphical operations. It performs clipping, keeps track of modified regions, and emulates functions
+	 required but not supported natively by the graphics driver.
+       </para>
+       <para>
+	 The operational layer is also responsible for the four pixmap operations, which draw background
+	 pictures, images, text, or mouse pointers. These pointers are only referred to by their respective
+	 ID numbers; they are retreived from the graphical resource manager. This graphical resource manager
+	 (GRM) is another separate subsystem- it retreives graphical resources in one of a set of standard
+	 formats, and translates them to the graphics driver's native format in one of several possible ways.
+	 It also receives hints from the operational layer to improve its caching strategy.
+       </para>
+       <para>
+	 Finally, above the operational layer, another layer is situated: This widget layer provides abstract
+	 descriptions of things on the screen as objects, so-called widgets. It provides the primary interface
+	 for the interpreter to interact with.
+       </para>
+       <sect2><title>Standard data types</title>
+       <para>
+	 There are a number of standard data types defined in <filename>src/include/gfx_system.h</filename> which
+	 are used all over the place in the graphics subsystem; therefore, they warrant some special attention
+	 in order to understand how it works. 
+       </para>
+       <sect3><title>point_t</title>
+         <para>
+	   This data type is nothing more than a tuple (<varname>x</varname>,<varname>y</varname>). It describes a coordinate on the screen; a one-line
+	   way to generate a <type>point_t</type> is to use the function <function>gfx_point(x,y)</function>.
+	 </para>
+       <sect3><title>rect_t</title>
+         <para>
+	   This type describes a rectangular area on the screen, as a four-tuple (<varname>x</varname>,<varname>y</varname>,<varname>xlen</varname>,
+	   <varname>ylen</varname>), where the point (<varname>x</varname>, <varname>y</varname>) describes the upper left point of the rectangle,
+	     whereas <varname>xlen</varname> and <varname>ylen</varname> are the number of pixels the rectangle extends to the right on the x and
+	     downwards on the y axis, respectively. A <type>rect_t</type> can be generated in-line by the function <function>gfx_rect(x,y,xl,yl)</function>.
+	 </para>
+	 <para>
+	   A number of functions are available to operate on <type>rect_t</type>s. These functions are 'pure' in the functional sense, meaning that
+	   they do not modify the original rectangle, but, rather, return a new one (of course, an optimizing compiler will make this a moot point
+	   from a performance perspective).
+	 </para>
+	 <sect4><title>gfx_rect_equals(rect_a, rect_b)</title>
+	   <para>
+	     This function is a predicate that returns non-zero iff <varname>rect_a</varname> describes the same rectangle as <varname>rect_b</varname>.
+	   </para>
+	 <sect4><title>gfx_rect_translate(rect, point)</title>
+	   <para>
+	     Returns a rectangle which equals <varname>rect</varname> translated (moved) by the (<varname>x</varname>, <varname>y</varname>) tuple
+	     described by the <varname>point</varname> parameter (i.e. <varname>point</varname> is interpreted as a relative coordinate).
+	   </para>
+	 <sect4><title>gfx_rect_subset(rect_a, rect_b)</title>
+	   <para>
+	     A predicate to determine whether all pixels contained in the area described by <varname>rect_a</varname> are also
+	     contained in the area described by <varname>rect_b</varname>. Reflexive and transitive.
+	   </para>
+	 <sect4><title>gfx_rects_overlap(rect_a, rect_b)</title>
+	   <para>
+	     A predicate to test whether there exists a pixel in the area described by <varname>rect_a</varname> which is
+	     contained in the area described by <varname>rect_b</varname>. Reflexive and symmetric.
+	   </para>
+	 <sect4><title>gfx_rects_merge(rect_a, rect_b)</title>
+	   <para>
+	     Returns the smallest rectangle containing both <varname>rect_a</varname> and <varname>rect_b</varname>.
+	   </para>
+       <sect3><title>gfx_pixmap_color_t</title>
+         <para>
+	   This structure describes a single color in a pixmap. It consists of 8 bit <varname>r</varname>, <varname>g</varname>, <varname>b</varname> values
+	   to describe a color; when used in a pixmap, it is part of a palette of <type>gfx_pixmap_color_t</type>s where the entry at index <varname>i</varname>
+	   describes the color of the respective color index <varname>i</varname> inside the pixmap.
+	 </para>
+	 <para>
+	   In palette mode, the <varname>global_index</varname> entry is used to store the color index entry of the global palette that
+	   correlates with the pixmap index (or <literal>GFX_COLOR_INDEX_UNMAPPED</literal> if this value has not been determined yet).
+	 </para>
+       <sect3><title>gfx_color_t</title>
+         <para>
+	   <type>gfx_color_t</type> structures contain color information for all three color maps.
+	   They consist of a <type>gfx_pixmap_color_t</type> structure, <varname>visual</varname>, which describes the effects of the
+	   color on the visual map, an <varname>alpha</varname> entry to describe the color's transparency (0 means 'opaque', 255 means
+	     'totally transparent', although graphics drivers may choose to slighly alter those meanings for performance considerations),
+	     <varname>priority</varname> and <varname>control</varname> values for the respective maps, and a <varname>mask</varname>
+	     to determine the maps affected.
+	 </para>
+	 <para>
+	   This mask is a bitwise-OR of the constants <literal>GFX_MASK_VISUAL</literal> (meaning "draw to the visual map"),
+	   <literal>GFX_MASK_PRIORITY</literal> ("draw to the priority map") and <literal>GFX_MASK_CONTROL</literal> (guess).
+	 </para>
+       <sect3><title>gfx_mode_t</title>
+         <para>
+	   The FreeSCI only supports a small subset of all possible graphics modes; specifically, it only supports modes where the integer
+	   value of each pixel can be stored in 8, 16, 24, or 32 bits. Color index mode is supported, but non-indexed mode has additional
+	   requirements: Each color aspect of red, green, and blue must be represented by a consecutive sub-vector 
+	   &lt;v<subscript>c</subscript>, v<subscript>c+1</subscript>, ... ,v<subscript>c+n-1</subscript>&gt; of the total color vector
+	   &lt;v<subscript>0</subscript>, v<subscript>1</subscript>, ... ,v<subscript>b-1</subscript>&gt;, where <varname>n</varname> and
+	   <varname>c</varname> are non-negative integers, and c+n &le; b holds. With v<subscript>b</subscript> being the most significant
+	     bit of the total bit vector, we also require that for each <varname>m</varname> where 0 &lt; m &lt; n the bit v<subscript>c+m</subscript>
+	     should, if set, increase brightness about twice as much as setting v<subscript>c+m-1</subscript> would. This allows us to
+	     represent each color aspect by means of an AND bitmask and an integer shift value.
+	 </para>
+	 <para>
+	   This, along with a global palette and the scaling factors, is the core of the <type>gfx_mode_t</type> data. It also contains
+	   a shift values and an AND bitmask for alpha values; if these values are set to non-zero by the graphics driver, alpha channel
+	   information will be written to the same block of data the color values are written to when pixmaps are calculated. If they
+	   are not set, a separate 8bpp alpha data block will be added to the pixmaps.
+	 </para>
+       <sect3><title>gfx_pixmap_t</title>
+         <para>
+	   The <type>gfx_pixmap_t</type> structure is another fundamental element of the graphics subsystem. It describes a single
+	   pixmap, such as a background picture, a cel, a mouse pointer, or a single line of text. It contains up to two references to
+	   the graphical data it describes: One unscaled block of color-indexed data (<varname>index_data</varname>, and another block
+	   scaled and in the graphics driver's native format (<varname>data</varname>).
+	 </para>
+	 <para>
+	   Each pixmap contains a local palette of <varname>colors_nr</varname> <type>gfx_pixmap_color_t</type> entries,
+	   called <varname>colors</varname>. This palette is allocated dynamically and may be NULL if no <varname>index_data</varname> block
+	   is present.
+	 </para>
+	 <para>
+	   Also, a tuple (<varname>xoffset</varname>, <varname>yoffset</varname>) describes the pixmap's 'hot spot'. This is a relative offset
+	   into the unscaled data; it is used to describe the point which drawing operations will refer to. This means that pixmap
+	   draw operations on this pixmap will cause it to be drawn <varname>xoffset</varname> pixels (unscaled) to the left of the coordinate
+	   specified.
+	 </para>
+	 <para>
+	   Next comes the unscaled pixmap data, called <varname>index_data</varname>, which occupies a size of <varname>index_xl</varname> *
+	   <varname>index_yl</varname> bytes. Each byte is either a reference into the palette, or <literal>GFX_COLOR_INDEX_TRANSPARENT</literal> (0xff),
+	     which means that it describes a transparent pixel, unless 256 colors are indeed present in the palette<footnote>
+	     <para>This may cause a problem for SCI1 support, which explicitly allows for 256 separate colors to be used alongside with transparency.
+	       Possible solutions include a separate transparency bitmap or increasing the number of bits per <varname>index_data</varname>
+	       entry to 16bpp.</para></footnote>
+	 </para>
+	 <para>
+	   The pointer <varname>data</varname>, unless NULL, points to a block of data allocated to contain the translated graphical data
+	   in the graphics driver's native format. The number of bytes per pixel equals the <varname>bytespp</varname> property of the
+	   <type>gfx_mode_t</type> structure it was allocated for, whereas its horizontal and vertical extensions are stored in the
+	   <varname>xl</varname> and <varname>yl</varname> properties. Unless the graphics mode indicated that it supports an alpha
+	     channel itself, a separate <varname>alpha_map</varname> is also provided, at 8bpp.
+	 </para>
+	 <para>
+	   Each pixmap also comes with a <varname>pixmap_internal</varname> block, which may be used by graphics drivers to store
+	   internal information (like pixmap repository handles).
+	 </para>
+	 <para>
+	   Finally, each pixmap comes with a set of <varname>flags</varname> with the following meanings:
+	   <itemizedlist>
+	     <listitem><para><literal>GFX_PIXMAP_FLAG_SCALED_INDEX</literal>: The pixmaps index data is already scaled; any algorithm for calculating
+	       <varname>data</varname> (and, possibly, <varname>alpha_map</varname>) therefore must not scale it again.</para></listitem>
+	     <listitem><para><literal>GFX_PIXMAP_FLAG_EXTERNAL_PALETTE</literal>: The palette supplied with the pixmap is stored externally, meaning
+	       that it must not be freed when the pixmap itself is freed</para></listitem>
+	     <listitem><para><literal>GFX_PIXMAP_FLAG_INSTALLED</literal>: The pixmap has been installed in the pixmap repository (used by the
+	       operational layer, although graphics drivers may choose to verify this if they don't trust that layer</para></listitem>
+	     <listitem><para><literal>GFX_PIXMAP_FLAG_PALETTE_ALLOCATED</literal>: (only relevant for color index mode) The pixmap's palette colors
+	       have been allocated in the internal palette listing and have been set appropriately in the palette</para></listitem>
+	     <listitem><para><literal>GFX_PIXMAP_FLAG_PALETTE_SET</literal>: (only relevant in color index mode) The pixmap's palette colors have been
+	       propagated to the graphics driver</para></listitem>
+	     <listitem><para><literal>GFX_PIXMAP_FLAG_DONT_UNALLOCATE_PALETTE</literal>: (only relevant in color index mode) Instructs the pixmap
+	       freeing operations not to free the palette colors allocated by the pixmap. This is used in cases where the palette is stored
+	       externally.</para></listitem>
+	   </itemizedlist>
+	 </para>
+	 <para>
+	   <filename>src/include/gfx_tools.h</filename> defines many functions for creating pixmaps, allocating index data blocks, copying pixmap
+	     regions etc.
+	 </para>
+       <sect3><title>gfx_bitmap_font_t</title>
+         <para>
+	   These structures provide a bitmap lookup table intended for up to 256 entries. In practice, they are used to store
+	   font data. There is little surprising about this structure, with the possible exception of the difference between the
+	   <varname>height</varname> and <varname>line_height</varname> variables: <varname>height</varname> describes the actual
+	     character size, whereas <varname>line_height</varname> only describes how many pixels the text rendering functions
+	     should leave in between text lines.
+	 </para>
+       </sect2>
+       <sect2><title>Graphics drivers</title>
+       <para>
+	 Every FreeSCI graphics driver provides an individual implementation for one specific target platform,
+	 such as the X Window System. In order to work correctly, it needs to implement the interface outlined
+	 in <filename>src/include/gfx_driver.h</filename> and list itself in <filename>src/include/gfx_drivers.h</filename>.
+	 Drivers have some freedom in determining which features they want to provide and which they want to have
+	 emulated. These features are determined by flags contained in its variable <varname>capabilities</varname>.
+       </para>
+       <para>
+	 Graphics drivers must provide at least five buffers: Both priority buffers, and the three visual buffers.
+	 They are grouped in three sets labelled the Front Buffer (only one visual buffer), the Back Buffer,
+	 and the Static Buffer (both containing both a priority and a visual buffer). Most graphical operations
+	 operate on the back buffer, with their results being propagated to the front buffer by means of explicit
+	 buffer operations<footnote><para>These operations operate on partial buffer contents and expect the back buffer's
+	 contents to be unmodified after the transfer. This is unlike the OpenGL back buffer concept.</para></footnote>.
+       </para>
+       <para>
+	 Driver implementations with limited or no hardware accelleration support, such as those operating on
+	 plain frame buffers, may use some shared functionality exported for their benefit. Those functions are listed
+	 in the appropriate function definitions below.
+       </para>
+       <para>
+	 Unless specified differently, each function must return <literal>GFX_OK</literal> on success, <literal>GFX_ERROR</literal>
+	 on failure, and <literal>GFX_FATAL</literal>
+	 if and only if a fatal and unrecoverable error occured, such as the target display being closed by external means. 
+       </para>
+       <para>
+	 Functions that receive color parameters must respect those parameters' mask values for <literal>GFX_MAP_MASK
+       <sect3>
+	 <title>I/O and debug functionality</title>
+	 <para>
+	   For basic input and output, the <function>GFXDEBUG()</function>, <function>GFXWARN()</function> and <function>GFXERROR()</function> macros defined in
+	   <filename>src/include/gfx_system.h</filename> can be used. Also, there is another variable, <varname>debug_flags</varname>
+	   defined for drivers; while it cannot be changed during runtime (yet), it may be used in combination with the
+	   various GFX_DEBUG_ constants to selectively enable and disable debugging for certain parts of the driver
+	   during development.
+	 </para>
+	 <para>
+	   For further debugging, the FreeSCI functions <function>sciprintf()</function> (a printf clone), <function>MEMTEST()</function>
+	   (tries to detect heap corruption), and <function>BREAKPOINT()</function> (Sets a debugger breakpoint on Alpha, ia32 and SPARC) may be used.
+	 </para>
+       <sect3>
+	<title>Initialization and shutdown functionality</title>
+	 <para>
+	   None of the functions defined in here are optional. They are called during startup or shutdown and need
+	   not be considered performance critical.
+	 </para>
+	 <sect4><title>set_parameter(attribute, value)</title>
+	   <para>
+	     This function is completely driver specific. Drivers may use it to allow external configuration of
+	     options not covered by the standard FreeSCI set of configuration options. It must be implemented
+	     to operate correctly both if <function>init()</function> has already been called and if it hasn't, although it may choose
+	     to ignore any options set afterwards.
+	   </para>
+	   <para>Documentation of this function's options is up to the graphics driver's maintainer.</para>
+	 <sect4><title>init_specific(xscale, yscale, bytespp)</title>
+	   <para>
+	     Initializes a graphics driver to a pre-determined mode, where <varname>xscale</varname> and <varname>yscale</varname>
+	     are the requested horizontal and vertical scaling factors (integers > 0), and <varname>bytespp</varname> is the number of bytes per
+	     pixel on the target display.
+	   </para>
+	   <para>
+	     The function may set a higher resolution, provided that no matching resolution is available. The <varname>mode</varname> structure
+	     (stored locally to the driver structure) must be set by this function if it succeeds; for this, the function
+	     <function>gfx_new_mode()</function>, defined in <filename>src/include/gfx_tools.h</filename>, may be used.
+	   </para>
+	   <para>
+	     <literal>GFX_OK</literal> must be returned iff the initialization succeeded; otherwise, <literal>GFX_ERROR</literal>
+	     must be reported, unless the graphics
+	     target is not (or no longer) able to provide any of the supported modes (e.g. if a required external module was not found,
+	     or if the driver detected during run-time that the target does not support any appropriate graphics mode).
+	   </para>
+	 <sect4 id="gfx-driver-init-specific"><title>init()</title>
+	   <para>
+	     This operation initializes the driver's default graphics mode. Determining this mode is up to the graphics
+	     driver; if its target platform has no means for determining an appropriate mode, it may choose to invoke
+	     init_specific() repeatedly with educated guesses. It must return one of <literal>GFX_OK</literal> or <literal>GFX_FATAL</literal>.
+	   </para>
+	   <para>See <xref linkend="gfx-driver-init-specific" /> for details.</para>
+	  <sect4><title>exit()</title>
+	    <para>
+	      Deinitializes the graphics driver, frees all resources allocated by it and just generally performs clean-up. This function
+	      must succeed (so it does not have a return value). It may use <function>gfx_free_mode()</function> (from <filename>src/include/gfx_tools.h</filename>)
+	      to free the data allocated in the <type>gfx_mode_t</type> structure.
+	    </para>
+	  </sect4>
+       </sect3>
+       <sect3>
+	<title>Primitive drawing operations</title>
+	 <para>
+	   "Primitive drawing operations" here are operations that draw primitives. FreeSCI uses only two graphics
+	   primitives: Lines and solid boxes, both of which are commonly provided by graphics libraries. 
+	   Both operations draw to the back buffer; they also must respect the priority aspect of the primary color used on them.
+	 </para>
+	 <sect4><title>draw_line(line, color, line_mode, line_style)</title>
+	   <para>
+	     Draws a single line. The <varname>line</varname> parameter describes the starting point and a relative coordinates
+	     of the line to draw in the specified <varname>color</varname>, whereas <varname>line_mode</varname> specifies the
+	     line mode to use. This value may be <literal>GFX_LINE_MODE_FAST</literal>, which means that the line's thickness
+	     is roughly about the average of the horizontal and vertical scaling factors. The other two values need not be
+	     supported (they should fall back to <literal>GFX_LINE_MODE_FAST</literal> if they're used'):
+	     <simplelist>
+	       <member><literal>GFX_LINE_MODE_FAST</literal>: Line thickness is averate of x and y scale factors</member>
+	       <member><literal>GFX_LINE_MODE_CORRECT</literal>: Lines are scaled separately for x and y and have correct widths there</member>
+	       <member><literal>GFX_LINE_MODE_THIN</literal>: Line has a width of 1</member>
+	     </simplelist>
+	   </para>
+	   <para>
+	     The other parameter, <varname>line_style</varname>, may be either of <varname>GFX_LINE_STYLE_NORMAL</varname> or
+	     <varname>GFX_LINE_STYLE_STIPPLED</varname>, although the latter is used iff the capability flag <literal>GFX_CAPABILITY_STIPPLED_LINES</literal>
+	     is set.
+	   </para>
+	   <para>
+	     This function must return GFX_OK or GFX_FATAL.
+	   </para>
+	 <sect4><title>draw_filled_rect(rect, color1, color2, shade_mode)</title>
+       </sect3>
+       <sect3>
+	<title>Pixmap operations</title>
+	 <para>
+	 </para>
+       </sect3>
+       <sect3>
+	<title>Buffer operations</title>
+	 <para>
+	 </para>
+       </sect3>
+       <sect3>
+	<title>The mouse pointer</title>
+	 <para>
+	 </para>
+       </sect3>
+       <sect3>
+	<title>Palette</title>
+	 <para>
+	 </para>
+       </sect3>
+       <sect3>
+	<title>Event management</title>
+	 <para>
+	 </para>
+       </sect3>
+       <sect3>
+	<title>Capability flag summary</title>
+	 <para>
+	 </para>
+       </sect3>
+       <sect2><title>The graphical resource manager (GRM)</title>
+       <para>
+       </para>
+       <sect2><title>The operational layer</title>
+       <para>
+       </para>
+       <sect2><title>FreeSCI graphical widgets</title>
+       <para>
+       </para>
+       <sect2><title>Interpreter interaction</title>
+       <para>
+       </para>
+     </sect1>
+
+     <sect1>
+        <title/Kernel hacking/
         <para>
            Kernel functions are the bridge between the abstract virtual machine, and the world of
            real programs. The VM may be able to solve RPN equations in the blink of an eye, but

@@ -485,8 +485,6 @@ AC_LANG_C
 AC_TRY_COMPILE([
 #include <sys/asoundlib.h>
 ], [
-void main(void)
-{
 /* ensure backward compatibility */
 #if !defined(SND_LIB_MAJOR) && defined(SOUNDLIB_VERSION_MAJOR)
 #define SND_LIB_MAJOR SOUNDLIB_VERSION_MAJOR
@@ -518,7 +516,6 @@ void main(void)
 #    endif
 #  endif
 exit(0);
-}
 ],
   [AC_MSG_RESULT(found.)],
   [AC_MSG_RESULT(not present.)

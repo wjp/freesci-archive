@@ -299,7 +299,6 @@ typedef struct { /* gfx_pixmap_t: Pixel map */
 	int xoffset, yoffset; /* x and y coordinates of the 'hot spot' (unscaled) */
 
 	/*** Index data ***/
-	int index_scaled; /* non zero <=> the index picture is already scaled to size */
 	int index_xl, index_yl; /* width and height of the indexed original image */
 	byte *index_data; /* Color-index data, or NULL if read from an
 			  ** external source

@@ -95,7 +95,7 @@ typedef struct _state
 	char *resource_dir; /* Directory the resource files are kept in */
 	char *work_dir; /* Directory the game metadata should be written to */
 
-	byte *game_name; /* Designation of the primary object (which inherits from Game) */
+	unsigned char *game_name; /* Designation of the primary object (which inherits from Game) */
 
 	/* Non-VM information */
 

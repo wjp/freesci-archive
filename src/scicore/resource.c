@@ -320,7 +320,7 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 		char *endptr;
 
 		for (i = sci_view; i < sci_invalid_resource; i++)
-			if (strncmp(Resource_Types[i], entry, strlen(Resource_Types[i])) == 0)
+			if (strncasecmp(Resource_Types[i], entry, strlen(Resource_Types[i])) == 0)
 				restype = i;
 
 		if (restype != sci_invalid_resource) {

@@ -290,7 +290,7 @@ resource_dir[[:blank:]]*"="[[:blank:]]*.+  if (cur_section) {
 }
 
 
-debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
+debug_mode[[:blank:]]*"="[::blank:]]*.+  {
         yytext = strchr(yytext, '=') + 1;
 
         while (isspace(*yytext))
@@ -299,9 +299,7 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 	strcpy (conf[cur_section].debug_mode, yytext);
 }
 
-
-[[:alnum:]]+"."[[:alnum:]_]+[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
-/* gfx driver parameters */
+[[:alnum:]]+"."[[:alnum:]]+[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
         char *p=yytext;
         char *p2;
 

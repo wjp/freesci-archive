@@ -1810,12 +1810,15 @@ _k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int nr, int funct_nr,
 	z = GET_SELECTOR(obj, z);
 
 	/* !-- nsRect used to be checked here! */
-
 	loop = oldloop = sign_extend_byte(GET_SELECTOR(obj, loop));
 	cel = oldcel = sign_extend_byte(GET_SELECTOR(obj, cel));
 
 	/* Clip loop and cel, write back if neccessary */
 	GFX_ASSERT(gfxop_check_cel(s->gfx_state, view_nr, &loop, &cel));
+	if (loop != oldloop)
+		loop = 0;
+	if (cel != oldcel)
+		cel = 0;
 
 	if (oldloop != loop)
 		PUT_SELECTOR(obj, loop, loop);

@@ -57,7 +57,7 @@
 
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
-#endif HAVE_GETOPT_H
+#endif /* HAVE_GETOPT_H */
 
 #ifdef HAVE_GETOPT_LONG
 #define EXPLAIN_OPTION(longopt, shortopt, description) "  " longopt "\t" shortopt "\t" description "\n"
@@ -90,9 +90,13 @@ check_features()
 	printf("Checking for MVI instruction-set extension: ");
 
 	helper = 0x100;
+#ifdef __DECC
+	helper = asm("amask %0, %v0", helper);
+#else
 	__asm__ ("amask %1, %0"
 		 : "=r"(axp_have_mvi)
 		 : "r"(helper));
+#endif
 
 	axp_have_mvi = !axp_have_mvi;
 
@@ -125,6 +129,7 @@ int
 c_die(state_t *s)
 {
 	exit(0); /* Die */
+	return 0; /* ;-P (fixes warning) */
 }
 
 
@@ -643,8 +648,10 @@ init_gfx(cl_options_t *cl_options, gfx_driver_t *driver)
 }
 
 
+typedef void *lookup_funct_t(char *name);
+
 static void *
-lookup_driver(void *lookup_func(char *name), void explain_func(void),
+lookup_driver(lookup_funct_t lookup_func, void explain_func(void),
 	      char *driver_class, char *driver_name)
 {
 	void *retval = lookup_func(driver_name);
@@ -769,15 +776,15 @@ main(int argc, char** argv)
 	** implicit casts, don't hesitate to typecast appropriately.  */
 	if (cl_options.gfx_driver_name)
 		gfx_driver = (gfx_driver_t *)
-			lookup_driver((void *)gfx_find_driver, list_graphics_drivers,
+			lookup_driver((lookup_funct_t *)gfx_find_driver, list_graphics_drivers,
 				      "graphics driver", cl_options.gfx_driver_name);
 
 	if (cl_options.midiout_driver_name)
-		midiout_driver = lookup_driver((void *)midiout_find_driver, list_midiout_drivers,
+		midiout_driver = lookup_driver((lookup_funct_t *)midiout_find_driver, list_midiout_drivers,
 					       "midiout driver", cl_options.midiout_driver_name);
 
 	if (cl_options.midi_device_name)
-		midi_device = lookup_driver((void *)midi_find_device, list_midi_devices,
+		midi_device = lookup_driver((lookup_funct_t *)midi_find_device, list_midi_devices,
 					    "MIDI device", cl_options.midi_device_name);
 
 	if (conf) {

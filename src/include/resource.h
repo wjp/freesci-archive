@@ -39,6 +39,9 @@
 #  include <config.h>
 #endif
 
+#ifdef __DECC
+#  include <c_asm.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>

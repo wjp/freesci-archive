@@ -31,20 +31,22 @@ if test x"$have_x" == xyes; then
 	AC_CHECK_XSHM
 fi
 
-AC_MSG_CHECKING(for Alpha hardware and gcc style __asm__)
+AC_MSG_CHECKING(for Alpha hardware and gcc or ccc style __asm__)
 AC_TRY_COMPILE([], [
-int main(int argc, char **argv)
-{
-	__asm__ ("zapnot \$31, \$31, \$31");
+#ifdef __DECC
+#  define my_asm(x) asm (x)
+#else
+#  define my_asm(x) __asm__ (x)
+#endif
+	my_asm("zapnot \$31, \$31, \$31");
 	return 0;
-}
 ], [
 	AC_MSG_RESULT(found.)
 	ev6_cpu="-mcpu=ev6"
 	AC_DEFINE(HAVE_ALPHA_EV6_SUPPORT)
 ],
 [
-	AC_MSG_RESULT(not present.)
+	AC_MSG_RESULT(not present.);
 	ev6_cpu=""
 ])
 AC_SUBST(ev6_cpu)
