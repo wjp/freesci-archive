@@ -625,7 +625,7 @@ _k_dirloop(heap_ptr obj, word angle, state_t *s, int funct_nr,
 	if (maxloops == GFX_ERROR) {
 		SCIkwarn(SCIkERROR, "Invalid view.%03d\n", view);
 		return;
-	} else if (maxloops < 4)
+	} else if ((loop>1)&&(maxloops < 4))
 		return;
 
 	PUT_SELECTOR(obj, loop, loop);
