@@ -288,3 +288,10 @@ Xiaojun Chen:
 engine/
 	seg_manager.c (most of it)
 	vm.c (script instantiation)
+
+
+Hugues Valois:
+main.c
+menu/
+	game_select_init.c
+	game_select_screen.c

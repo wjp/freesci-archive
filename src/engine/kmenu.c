@@ -147,9 +147,11 @@ struct {
 	 "\n\n"
 	 "George Reid\nFreeBSD package management"
 	 "\n\n"
-	 "Johannes Manhave\nDocument format translation"
+	 "Hugues Valois\nGame selection menu"
 	 ,0, 15},
 	{"Even more FreeSCI hackers & contributors",
+	 "Johannes Manhave\nDocument format translation"
+	 "\n\n"
 	 "Lars Skovlund\nProject mainenance, most documentation, bugfixes, SCI1 support"
 	 "\n\n"
 	 "Magnus Reftel\nHeap implementation, Python class viewer, bugfixes"
@@ -161,10 +163,10 @@ struct {
 	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements"
 	 "\n\n"
 	 "Rainer Canavan\nIRIX MIDI driver and bug fixes"
-	 "\n\n"
-	 "Rainer De Temple\nSCI research"
 	 ,0, 15},
 	{"Still more of them",
+	 "Rainer De Temple\nSCI research"
+	 "\n\n"
 	 "Ravi I.\nSCI0 sound resource specification"
 	 "\n\n"
 	 "Ruediger Hanke\nPort to the MorphOS platform"
@@ -176,10 +178,10 @@ struct {
 	 "Rink Springer\nPort to the DOS platform, several bug fixes"
 	 "\n\n"
 	 "Robey Pointer\nBug tracking system hosting"
-	 "\n\n"
-	 "Sergey Lapin\nPort of Carl's type 2 decompression code"
 	 ,0, 15},
-	{"And even more",
+	{"Is there no end to these contributors?",
+	 "Sergey Lapin\nPort of Carl's type 2 decompression code"
+	 "\n\n"
 	 "Solomon Peachy\nSDL ports and much of the sound subsystem"
 	 "\n\n"
 	 "Vyacheslav Dikonov\nConfig script improvements"

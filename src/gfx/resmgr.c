@@ -509,7 +509,7 @@ gfx_bitmap_font_t *
 gfxr_get_font(gfx_resstate_t *state, int nr, int scaled)
 {
 	int restype = GFX_RESOURCE_TYPE_FONT;
-	sbtree_t *tree = state->resource_trees[restype];
+	sbtree_t *tree = NULL;
 	gfx_resource_t *res = NULL;
 	int hash;
 
@@ -518,6 +518,7 @@ gfxr_get_font(gfx_resstate_t *state, int nr, int scaled)
 	else if (nr == GFX_FONT_BUILTIN_6x10)
 		return &gfxfont_6x10;
 
+	tree = state->resource_trees[restype];
 
 	hash = gfxr_interpreter_options_hash(restype, state->version,
 					     state->options, state->misc_payload, 0);

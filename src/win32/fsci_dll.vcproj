@@ -827,6 +827,12 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath="..\gfx\font-5x8.c">
+				</File>
+				<File
+					RelativePath="..\gfx\font-6x10.c">
+				</File>
+				<File
 					RelativePath="..\gfx\font.c">
 					<FileConfiguration
 						Name="Release|Win32">

@@ -20,7 +20,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/D VERSION=\&quot;0.3.3-devel\&quot;"
+				AdditionalOptions="/D VERSION=\&quot;0.6.2-devel\&quot;"
 				Optimization="1"
 				InlineFunctionExpansion="2"
 				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
@@ -252,6 +252,12 @@
 				RelativePath="..\config.l">
 			</File>
 			<File
+				RelativePath="..\menu\game_select_init.c">
+			</File>
+			<File
+				RelativePath="..\menu\game_select_screen.c">
+			</File>
+			<File
 				RelativePath="getopt.c">
 				<FileConfiguration
 					Name="Release|Win32">
@@ -359,6 +365,9 @@
 			</File>
 			<File
 				RelativePath="..\include\event.h">
+			</File>
+			<File
+				RelativePath="..\include\game_select.h">
 			</File>
 			<File
 				RelativePath="..\include\games.h">

@@ -1,3 +1,10 @@
+2004-04-24  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/tools/5x8.font: Font updates
+
+	* src/menu/*.c:
+	* src/include/game_selection.h: Added Hugues' game selection menu
+
 2004-04-08  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sound/fmopl.c: Declare inline functions the way we did

@@ -106,3 +106,24 @@ EXPORTS
   ;con_gfx_show
   script_free_breakpoints
   sci_getcwd
+  
+  gfx_pixmap_alloc_index_data
+  gfx_new_pixmap
+  gfxop_set_clip_zone
+  gfx_alloc_color
+  gfxr_interpreter_get_static_palette
+  sci_gettime
+  gfx_free_pixmap
+  gfx_xlate_pixmap
+  gfx_pixmap_alloc_data
+  gfxr_draw_font
+  gfxr_font_calculate_size
+  sci_finish_find
+  gfxr_get_font
+  gfxr_free_font
+  gfxr_read_font
+  sci_fd_size
+  
+  
+  
+  
