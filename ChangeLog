@@ -1,3 +1,8 @@
+2001-09-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/sfx_save.cfsml: Fixed song_t structure definitions
+	to take care of invalid pointer typecasts
+
 2001-09-08  Alex Angas  <wgd@internode.on.net>
 
 	* ./DEBUGGING.Win32: Removed.

@@ -62,6 +62,7 @@ typedef struct {
 %CFSML
 
 TYPE word "word" LIKE int
+TYPE long "long" LIKE int
 
 RECORD song_t "song_t" {
 
@@ -75,10 +76,10 @@ RECORD song_t "song_t" {
 	int size;
 	int pos;
 	int loopmark;
-	int fading;
+	long fading;
 
 	int reverb;
-	int maxfade;
+	long maxfade;
 	int resetflag;
 	int polyphony[STATIC MIDI_CHANNELS];
 

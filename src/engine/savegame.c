@@ -2829,7 +2829,7 @@ _cfsml_write_state_t(FILE *fh, state_t* save_struc)
     _cfsml_write_int(fh, &(save_struc->pic_animate));
     fprintf(fh, "\n");
   fprintf(fh, "animation_delay = ");
-    _cfsml_write_int(fh, &(save_struc->animation_delay));
+    _cfsml_write_long(fh, &(save_struc->animation_delay));
     fprintf(fh, "\n");
   fprintf(fh, "hunk = ");
     min = max = MAX_HUNK_BLOCKS;
@@ -3134,7 +3134,7 @@ _cfsml_read_state_t(FILE *fh, state_t* save_struc, char *lastval, int *line, int
       } else
       if (!strcmp(token, "animation_delay")) {
 #line 724 "savegame.cfsml"
-         if (_cfsml_read_int(fh, &(save_struc->animation_delay), value, line, hiteof))
+         if (_cfsml_read_long(fh, &(save_struc->animation_delay), value, line, hiteof))
             return CFSML_FAILURE;
       } else
       if (!strcmp(token, "hunk")) {

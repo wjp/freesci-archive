@@ -384,7 +384,7 @@ RECORD state_t "state_t" {
 	int pic_visible_map;
 	int pic_animate;
 
-	int animation_delay;
+	long animation_delay;
 
 	hunk_block_t hunk[STATIC MAX_HUNK_BLOCKS];
 
