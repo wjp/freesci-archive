@@ -584,6 +584,7 @@ void sci_midi_command(song_t *song, guint8 command,
 	}
 
       case 0xb0:  /* program control */
+      case 0xd0:  /* channel pressure */
       case 0xe0:  /* pitch bend */
 	midi_event(command, param, param2);
 	break;
