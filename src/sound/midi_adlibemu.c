@@ -178,8 +178,8 @@ int adlibemu_stop_note(int chn, int note, int velocity)
   }
 
   if (op==255) {
-    printf ("ADLIB: can't stop note: C%02x N%02x V%02x\n", chn, note, velocity);
 #ifdef DEBUG_ADLIB
+    printf ("ADLIB: can't stop note: C%02x N%02x V%02x\n", chn, note, velocity);
     printf ("C ");
     for (i = 0; i < ADLIB_VOICES ; i++ ) {
       printf ("%02x ", oper_chn[i]);
