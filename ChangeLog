@@ -1,5 +1,8 @@
 2002-11-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/vm.c (_obj_locate_varselector): Handled objects with
+	nameless properties
+
 	* src/engine/kgraphics.c (kDisplay): Bugfix in kDisplay
 
 	* src/engine/kstring.c (kFormat): Fixed formatting by porting it

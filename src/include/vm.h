@@ -149,6 +149,7 @@ typedef struct {
 typedef struct {
 	reg_t pos; /* Object offset within its script; for clones, this is their base */
 	int variables_nr;
+	int variable_names_nr; /* Number of variable names, may be less than variables_nr */
 	int methods_nr;
 	byte *base; /* Points to a buffer all relative references (code, strings) point to */
 	byte *base_obj; /* base + object offset within base */

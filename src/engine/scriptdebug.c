@@ -152,11 +152,11 @@ c_segtable(state_t *s)
 static void
 print_obj_head(state_t *s, object_t *obj)
 {
-	sciprintf(PREG" : %3d vars, %3d methods: %s\n",
+	sciprintf(PREG" %s : %3d vars, %3d methods\n",
 		  PRINT_REG(obj->pos),
+		  obj_get_name(s, obj->pos),
 		  obj->variables_nr,
-		  obj->methods_nr,
-		  obj_get_name(s, obj->pos));
+		  obj->methods_nr);
 }
 
 static void
@@ -2602,12 +2602,17 @@ objinfo(state_t *s, reg_t pos)
 	print_obj_head(s, obj);
 
 	sciprintf("  -- member variables:\n");
-	for (i = 0; i < obj->variables_nr; i++)
+	for (i = 0; i < obj->variables_nr; i++) {
 
-		sciprintf("    [%03x] %s = "PREG"\n",
-			  VM_OBJECT_GET_VARSELECTOR(obj, i),
-			  selector_name(s, VM_OBJECT_GET_VARSELECTOR(obj, i)),
-			  PRINT_REG(obj->variables[i]));
+		sciprintf("    ");
+		if (i < obj->variable_names_nr)
+			sciprintf("[%03x] %s = ", VM_OBJECT_GET_VARSELECTOR(obj, i),
+				selector_name(s, VM_OBJECT_GET_VARSELECTOR(obj, i)));
+		else
+			sciprintf("p#%x = ", i);
+
+		sciprintf(PREG"\n", PRINT_REG(obj->variables[i]));
+	}
 	sciprintf("  -- methods:\n");
 	for (i = 0; i < obj->methods_nr; i++) {
 		reg_t fptr = VM_OBJECT_READ_FUNCTION(obj, i);

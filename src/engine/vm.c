@@ -1547,7 +1547,7 @@ _obj_locate_varselector(object_t *obj, selector_t slc)
 {	/* Determines if obj explicitly defines slc as a varselector */
 	/* Returns -1 if not found */
 	
-	int varnum = obj->variables_nr;
+	int varnum = obj->variable_names_nr;
 	int selector_name_offset = varnum * 2 + SCRIPT_SELECTOR_OFFSET;
 	int i;
 	byte *buf = obj->base_obj + selector_name_offset;
@@ -1863,13 +1863,15 @@ script_instantiate(state_t *s, int script_nr)
 		case sci_obj_class:
 		{ /* object or class? */
 			object_t *obj = s->seg_manager.script_obj_init(&s->seg_manager, reg);
+			object_t *base_obj;
 
 			/* Instantiate the superclass, if neccessary */
 			obj->variables[SCRIPT_SPECIES_SELECTOR] =
 				INST_LOOKUP_CLASS(obj->variables[SCRIPT_SPECIES_SELECTOR].offset);
 
-			obj->base_obj
-				= obj_get(s, obj->variables[SCRIPT_SPECIES_SELECTOR])->base_obj;
+			base_obj = obj_get(s, obj->variables[SCRIPT_SPECIES_SELECTOR]);
+			obj->variable_names_nr = base_obj->variables_nr;
+			obj->base_obj = base_obj->base_obj;
 			/* Copy base from species class, as we need its selector IDs */ 
 
 			obj->variables[SCRIPT_SUPERCLASS_SELECTOR] =
