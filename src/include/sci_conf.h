@@ -53,6 +53,8 @@ typedef struct {
 	char *console_log; /* The file to which console output should be echoed */
 	char debug_mode [80]; /* Characters specifying areas for which debug output should be enabled */
 
+	int mouse; /* Whether the mouse should be active */
+
 } config_entry_t;
 
 

@@ -44,11 +44,11 @@
 typedef struct _gfx_options { /* gfx_options_t: Contains all user options to the rendering pipeline */
 	int buffer_pics_nr; /* Number of unused pics to buffer */
 
-	char correct_rendering; /* Whehter to render slow, but correct (rather than
+	int correct_rendering; /* Whether to render slow, but correct (rather than
 				** fast and almost correct) */
 
 	/* SCI0 pic resource options */
-	char pic0_unscaled; /* Don't draw scaled SCI0 pics */
+	int pic0_unscaled; /* Don't draw scaled SCI0 pics */
 
 	int pic0_dither_mode; /* Defined in gfx_resource.h */
 	int pic0_dither_pattern; /* Defined in gfx_resource.h */

@@ -1,3 +1,11 @@
+2001-01-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/resource/sci_resmgr.c (gfxr_interpreter_calculate_pic):
+	Fixed scaled pic drawing to use actual options
+
+	* src/main.c (main): Cleanup, new options and support for config.l
+	stuff was added
+
 2001-01-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/config.l: Added support for new config options (see README)

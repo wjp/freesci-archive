@@ -450,6 +450,16 @@ game_init(struct _state *s);
 ** Parameters: (state_t *) s: The state to operate on
 ** Returns   : (int): 0 on success, 1 if an error occured.
 ** This function must be run before script_run() is executed.
+** Graphics data is initialized iff s->gfx_state != NULL.
+*/
+
+int
+game_init_graphics(struct _state *s);
+/* Initializes the graphics part of an SCI game
+** Parameters: (state_t *) s: The state to initialize the graphics in
+** Returns   : (int) 0 on success, 1 if an error occured
+** This function may only be called if game_init() did not initialize
+** the graphics data.
 */
 
 

@@ -101,7 +101,7 @@ gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gf
 	if (need_unscaled)
 		gfxr_draw_pic0(unscaled_pic, flags, default_palette, res->length, res->data, &basic_style, res->id);
 
-	gfxr_draw_pic0(scaled_pic, flags, default_palette, res->length, res->data, &basic_style, res->id);
+	gfxr_draw_pic0(scaled_pic, flags, default_palette, res->length, res->data, &style, res->id);
 	if (need_unscaled)
 		gfxr_remove_artifacts_pic0(scaled_pic, unscaled_pic);
 

@@ -116,7 +116,7 @@ static name_value_pair brush_mode[] = {
 	{"ellipses", GFX_BRUSH_MODE_ELLIPSES},
 	{"rnd_ellipses", GFX_BRUSH_MODE_RANDOM_ELLIPSES},
 	{"rnd-ellipses", GFX_BRUSH_MODE_RANDOM_ELLIPSES},
-	{"random-ellipses", GFX_BRUSH_MODE_RANDOM_ELLIPSES},
+	{"random_ellipses", GFX_BRUSH_MODE_RANDOM_ELLIPSES},
 	{"random-ellipses", GFX_BRUSH_MODE_RANDOM_ELLIPSES},
 	{"morerandom", GFX_BRUSH_MODE_MORERANDOM},
 	{"more-random", GFX_BRUSH_MODE_MORERANDOM},
@@ -138,6 +138,7 @@ static name_value_pair line_mode[] = {
 DIGIT [0-9]
 PARAMTOKEN [[:alpha:]][[:alnum:]_]*
 SCIVERSION {DIGIT}"."{DIGIT}{3}"."{DIGIT}{3}
+NUMTOKEN {DIGIT}+
 
 %%
 
@@ -244,7 +245,16 @@ pic0_scaled[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
 		!_parse_name(yytext, yesno, "pic0 scaling", !conf[cur_section].gfx_options.pic0_unscaled);
 }
 
-pic_buffer_size[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
+mouse[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
+	yytext = strchr(yytext, '=') + 1;
+
+	while (isspace(*yytext))
+		yytext++;
+	conf[cur_section].mouse =
+		!_parse_name(yytext, yesno, "mouse", !conf[cur_section].mouse);
+}
+
+pic_buffer_size[[:blank:]]*"="[[:blank:]]*{NUMTOKEN} {
 	int val;
 	yytext = strchr(yytext, '=') + 1;
 
@@ -385,9 +395,11 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_options.text_xlate_filter = GFX_XLATE_FILTER_NONE;
 	conf->gfx_options.dirty_frames = GFXOP_DIRTY_FRAMES_CLUSTERS;
 
-	conf->version = 0;
-
 	conf->gfx_driver = gfx_drivers[0];
+
+	conf->mouse = 1;
+
+	conf->version = 0;
 
 	conf->console_log = NULL;
 	conf->debug_mode [0] = '\0';
@@ -498,7 +510,7 @@ _parse_name(char *name, name_value_pair *nvps, char *what, int oldval)
 	int i = 0;
 
 	while (nvps[i].name) {
-		if (0 == g_strcasecmp(name, valid_modes[i].name))
+		if (0 == g_strcasecmp(name, nvps[i].name))
 			return nvps[i].value;
 
 		i++;

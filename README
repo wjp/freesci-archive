@@ -99,24 +99,56 @@ Also, if a file called "config" exists in this directory, it will be read
 and parsed by the interpreter after the game has been loaded. At this
 time, the configuration file may contain:
 - Comments preceeded by a hash '#' sign
+
 - version = x.yyy.zzz: emulate SCI version x.yyy.zzz. The version number
   is sometimes printed on game discs, or can be found out by
   grepping your main executable for "0.000." (for SCI0 games). It is
   also displayed if the built-in debugger is activated in the Sierra SCI
   engine.
+
 - pic0_dither_mode = dither | flat | dither256: (only one of those three modes).
   dither: Draw in 16 colors, same as Sierra SCI.
   flat: Interpolate colors (256 colors). Improves some graphics.
   dither256: Dither in 256 colors. A compromise between dither and flat.
+
 - pic0_dither_pattern = scaled | 1
+  scaled: Dither in axb sized blocks, if x scale is a and y scale is b
+  1: Dither in 1x1 blocks (single pixels)
+
 - pic0_brush_mode = scaled | ellipses | random-ellipses | more-random
-- pic0_line_mode = correct | fast | fine
+  Affects how semi-random brushes (used mostly for dirt and foilage) are drawn:
+  scaled: Scale every semi-random pixel to a rectangular block
+  ellipses: Scale every semi-random pixel to a filled ellipse
+  random-ellipses: As ellipses, but slightly shift ellipse offset and size
+  more-random: Add more random pixels to the whole area
+
+- pic0_line_mode = correct | fine
+  correct: Draw lines appropriately scaled
+  fine: Don't scale lines (thin lines, may cause problems) 
+
 - dirty_strategy = 1 | clusters
+  The "dirty strategy" is the strategy used to collect modifications to the
+  screen content. Modifying this may affect performance on slow or networked
+  systems.
+  1: Collect everything in one dirty region
+  clusters: Cluster non-overlapping modified regions into a set of regions 
+
 - pic0_scaled = yes | no
+  Whether SCI0 background pics should be scaled (may look better) or not
+  (faster, looks more like the original games)
+
 - pic_buffer_size = #
+  Number of background pics to store in an LRU buffer. Increasing this value
+  will increase the amount of memory used, but may considerably speed up
+  changing back to rooms you visited not too long ago.
+
+- mouse = yes | no
+  Whether the interpreter should report to the game that it has a mouse.
+
 - [GAME_ID]: Commands following this line will only have an effect for
   the game with the specified game ID. (The game ID is printed during
   sciv startup, and is also used to create the save game directory).
+
 - resource_dir: Read the game's resource data from the specified location.
   Must not be used in the generic part of the config file.
 
