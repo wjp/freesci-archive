@@ -1,3 +1,16 @@
+2001-03-02  Solomon Peachy <pizza@shaftnet.org>
+
+        * src/sound/soundserver_null.c:  A cleaner way of handling the
+        playflag for the rhythm channel.  Sound server now returns 
+        polyphony in the SOUND_COMMAND_TEST call.  
+	[that makes twice a cvs commit has conflicted this out of
+         existence...]
+        * src/sound/midi_device.c
+          src/sound/midi_device.h
+          src/sound/midi_mt32.c:  Addition of a polyphony value to the  
+        midi_driver struct.  Cleaner debug output for midi events.      
+        Device specific in midi_mt32, rest is in midi_device.
+
 2001-03-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/soundserver_null.c (sound_null_server): Sound server now

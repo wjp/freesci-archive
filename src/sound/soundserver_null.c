@@ -301,7 +301,6 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 						int size, totalsize;
 						int received, left_of_block;
 
-
 						if (debugging)
 							fprintf(ds, "Receiving song for handle %04x: ", event.handle);
 
@@ -495,7 +494,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 						break;
 
 					case SOUND_COMMAND_TEST: {
-						int i = 42;
+						int i = midi_polyphony;
 
 						if (debugging)
 							fprintf(ds, "Received TEST signal. Responding...\n");
@@ -721,17 +720,17 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 						song->loopmark = song->pos;
 						fprintf(ds, "Loop mark set to %d for handle %04x\n", song->pos, song->handle);
 					} else if (param <= 127) {
-						fprintf(ds, "Absolute Cue?? %02x %02x at %d for handle %04x\n", command, param, song->pos, song->handle);
+					  if (debugging)
+					    fprintf(ds, "Absolute Cue?? %02x %02x at %d for handle %04x\n", command, param, song->pos, song->handle);
 						sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
 					}
 				} else {  /* just your regular midi event.. */
-					if ((((command & 0x0f) > 0) && ((command & 0x0f) < 9) &&
-					     (song->data[((command & 0x0f) << 1) + 2] & midi_mt32_sci0_channelmask)) ||
-					    (((command & 0x0F) == 9) && (song->data[((command & 0x0f) << 1) + 1] & 0x80)))
+				  if (song->flags[command & 0x0f] & midi_playflag) { 
 						if (param2 == -1)
 							midi_event2(command, param);
 						else
-							midi_event(command, param, param2);
+						  midi_event(command, param, param2);
+				  }
 				}
 			}
 

@@ -62,12 +62,14 @@ typedef struct _midi_device {
   unsigned short patchfile;
   guint8 playflag;
   guint8 playrhythm;
+  gint8 polyphony;
  
 } midi_device_t;
 
 #define midi_playflag (midi_device->playflag)
 #define midi_playrhythm (midi_device->playrhythm)
 #define midi_patchfile (midi_device->patchfile)
+#define midi_polyphony (midi_device->polyphony)
 
 extern midi_device_t *midi_device;
 

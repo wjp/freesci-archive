@@ -20,6 +20,7 @@
 #include <midi_device.h>
 
 midi_device_t *midi_device;
+int mididebug = 0;
 
 int midi_open (guint8 *data_ptr, unsigned int data_length) {
   return midi_device->open(data_ptr, data_length);
@@ -38,18 +39,26 @@ int midi_noteon(guint8 channel, guint8 note, guint8 velocity) {
 }
 
 int midi_event(guint8 command, guint8 param, guint8 param2) {
+  if (mididebug)
+    printf("MIDI: Event  %02x %02x %02x\n", command, param, param2);
   return midi_device->event(command, param, param2);
 }
 
 int midi_event2(guint8 command, guint8 param) {
+  if (mididebug)
+    printf("MIDI: Event  %02x %02x\n", command, param);
   return midi_device->event2(command, param);
 }
 
 int midi_volume(guint8 volume) {
+  if (mididebug)
+    printf("MIDI: Set volume to: %d\n", volume);
   return midi_device->volume(volume);
 }
 
 int midi_allstop(void) {
+  if (mididebug)
+    printf("MIDI: All notes off\n");
   return midi_device->allstop();
 }
 

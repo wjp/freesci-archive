@@ -33,7 +33,6 @@ int midi_mt32_patch001_type(guint8 *data, unsigned int length);
 int midi_mt32_patch001_type0_length(guint8 *data, unsigned int length);
 int midi_mt32_patch001_type1_length(guint8 *data, unsigned int length);
 int midi_mt32_sysex_delay();
-guint8 midi_mt32_sci0_channelmask = 1;
 
 static guint8 *data;
 static unsigned int length;
@@ -179,6 +178,7 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
 	data[block3] == 0xDC &&
 	data[block3 + 1] == 0xBA) {
       printf("MT-32: Writing Rhythm key map\n");
+      /*    XXXX Do we memcpy it over?  Do we care? */
       midi_mt32_poke(0x030110, data + block3 + 2, 256);  
       midi_mt32_sysex_delay();
       printf("MT-32: Writing Partial Reserve\n");
@@ -195,7 +195,7 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
     midi_mt32_sysex_delay();
     printf("MT-32: Setting up reverb levels\n");
     memcpy(mt32_reverb,data+ 0x4c, 3 * 11);
-    /*    midi_mt32_reverb(default_reverb);*/
+    /* midi_mt32_reverb(default_reverb); */
     /*    printf("MT-32: Setting default volume\n");
 	  midi_mt32_volume(data[0x3f]); */
     return 0;
@@ -239,7 +239,6 @@ int midi_mt32_close()
 int midi_mt32_volume(guint8 volume)
 {
   volume &= 0x7f; /* (make sure it's not over 127) */
-  printf("MT32: Set volume to: %d\n", volume);
   if (midi_mt32_poke(0x100016, &volume, 1) < 0)
     return -1;
 
@@ -303,7 +302,6 @@ int midi_mt32_event(guint8 command, guint8 note, guint8 velocity)
   buffer[1] = note;
   buffer[2] = velocity;
 
-  /*  printf("Midi Event  %02x %02x %02x\n", command, note, velocity); */
   return midiout_write_event(buffer, 3);
 
 }
@@ -315,8 +313,6 @@ int midi_mt32_event2(guint8 command, guint8 param)
   buffer[0] = command;
   buffer[1] = param;
 
-
-  /*  printf("Midi Event  %02x %02x\n", command, param); */
   return midiout_write_event(buffer, 2);
 }
 
@@ -455,5 +451,6 @@ midi_device_t midi_device_mt32 = {
   &midi_mt32_reverb,
   001,		/* patch.001 */
   0x01,		/* playflag */
-  1  		/* play channel 9 */
+  1, 		/* play channel 9 */
+  32		/* Max polyphony */
 };
