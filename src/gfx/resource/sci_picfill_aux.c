@@ -30,6 +30,7 @@
  *
  */
 
+#define CLIPMASK_HARD_BOUND 0x80 /* ensures that we don't re-fill filled stuff */
 
 static void
 AUXBUF_FILL_HELPER(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy,
@@ -38,9 +39,9 @@ AUXBUF_FILL_HELPER(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy,
 	int xl, xr;
 	int oldytotal = y * 320;
 #ifdef DRAW_SCALED
-	unsigned const char fillmask = 0x78;
+	unsigned const char fillmask = CLIPMASK_HARD_BOUND | 0x78;
 #else
-	unsigned const char fillmask = 0x4;
+	unsigned const char fillmask = CLIPMASK_HARD_BOUND | 0x84;
 #endif
 
 	do {
@@ -188,6 +189,8 @@ AUXBUF_FILL(gfxr_pic_t *pic, int x, int y, int clipmask, int control)
 		pic->aux_map[ytotal + xr] |= fillmask;
 	}
 
+	clipmask |= CLIPMASK_HARD_BOUND; /* Guarantee clipping */
+
 	if (control) /* Draw the same strip on the control map */
 		memset(pic->control_map->index_data + ytotal + xl, control, xr - xl + 1);
 
@@ -198,3 +201,5 @@ AUXBUF_FILL(gfxr_pic_t *pic, int x, int y, int clipmask, int control)
 		AUXBUF_FILL_HELPER(pic, xl, xr, y, +1, clipmask, control);
 }
 
+
+#undef CLIPMASK_HARD_BOUND

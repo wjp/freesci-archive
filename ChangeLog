@@ -1,3 +1,9 @@
+2005-01-26  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/resource/sci_picfill_aux.c (AUXBUF_FILL_HELPER): Added a
+	hard filling bound to ensure that no place is filled more than
+	once (backport from Glutton)
+
 2005-01-21  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/gfx/resource/sci_picfill.c (FILL_FUNCTION): Back-ported
