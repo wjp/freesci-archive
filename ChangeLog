@@ -1,3 +1,42 @@
+2001-04-01  Dmitry Jemerov <yole@spb.cityline.ru>
+
+	* src/scicore/old_objects.c, src/scicore/script.c,
+	  src/engine/scriptdebug.c, src/engine/vm.c, include/script.h:
+	  Brought back the once-lost changes (introduction of new opcode
+	  types Script_Local and Script_Temp).
+
+	* src/tools/scidisasm.c: Brought back the once-lost miscellaneous
+	  changes.
+
+	* src/scicore/console.c, src/include/console.h: New functions
+	  open_console_file and close_console_file. (Working with con_file
+	  across DLL boundaries didn't work right).
+
+	* src/tools/sciunpack.c: open_console_file and close_console_file
+	  are used instead of working directly with con_file.
+
+	* src/main.c: Ditto.
+
+	* src/win32/*.dsp: Updated project files.
+
+	* src/config.l: Modified the OPT_* macros to use the offsetof
+	  macro (ANSI compatible). The old macros didn't work with Visual
+	  C++.
+
+	* src/gfx/drivers/dd_driver.cpp, src/gfx/drivers/dd_driver_line.cpp:
+	  Renamed from *.c. Added check to force C++ compile.
+
+	* src/include/midiout.h: Disabled midiout_driver_unixraw under
+	  Win32.
+
+	* src/sound/midiout.c, src/include/midiout.h: Converted
+	  midiout_drivers to an extern defined only once (in midiout.c).
+
+	* src/sound/midi_device.c, src/include/midi_device.h: Ditto with
+	  midi_devices.
+
+	* Miscellaneous compile error and warning fixes.
+
 2001-03-28  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/drivers/xlib_driver.c (xlib_error_handler): Made x11_error
@@ -70,7 +109,7 @@
                   now 0x0000 is treated as "everything", or a regular
                   handle will also be good.  Also, restore insturment
                   set whenever the song changes.  And lastly, my last
-                  commit broke the sending of valid MIDI CC events.  
+                  commit broke the sending of valid MIDI CC events.
 
 2001-03-14  Christoph Reichenbach  <jameson@theta.darmstadt.gmd.de>
 
@@ -86,7 +125,7 @@
 	(nsrect_clip): Added function for priority line clipping
 	(collides_with): Function now collides against nsrects rather
 	than bases
-	
+
 	* configure.in: Added X11 MIT-SHM detection
 
 2001-03-12  Christoph Reichenbach  <jameson@linuxgames.com>
@@ -116,7 +155,7 @@
 				  Added midiout_flushes after sysex
                                     writes.
 	* src/sound/soundserver_null.c:  Now stops all notes on game
-                                           restores. 
+                                           restores.
  					 Fixes the volume setting on
 					   game restores.
 
@@ -176,7 +215,7 @@
         device upon restore)
 
 2001-03-10  Solomon Peachy <pizza@shaftnet.org>
-	
+
 	* src/sound/soundserver_null.c:  Restore instrument map &
                                          reverb status on game restore.
 	* src/sound/sfx_save.cfsml:  Added in new[er] song_t state,
@@ -215,7 +254,7 @@
 
 	* src/include/soundserver.h   : added SCI midi event defines
 	* src/sound/midi_mt32gm.c     : source cleanup.
-	* src/sound/soundserver_null.c: 
+	* src/sound/soundserver_null.c:
 		mute at end of fade.
 		treat 0x0000 as 'fade current'
 		treat SUSPEND as a switch (operates on paused songs)
@@ -248,7 +287,7 @@
 
 	* src/sound/midi_mt32gm.c
 
-	Now handles pitch bend (0xe0).  
+	Now handles pitch bend (0xe0).
 
 2001-03-04  Solomon Peachy <pizza@shaftnet.org>
 
@@ -268,7 +307,7 @@
 
 	Added in the "mt32gm" midi device.  Considered pre-alpha
         quality for now.  There's not currently any way to switch
-        devices at the moment.  
+        devices at the moment.
 
 2001-03-05  Christoph Reichenbach  <jameson@linuxgames.com>
 
@@ -301,7 +340,7 @@
 				   - sends default volume on init
 	* src/sound/soundserver_null:  Minor changes:
 		- reverb no longer set on every song load.
-		- allstop() moved from SONG_INIT to SONG_PLAY.	
+		- allstop() moved from SONG_INIT to SONG_PLAY.
 
 2001-03-03  Christoph Reichenbach  <jameson@linuxgames.com>
 
@@ -311,14 +350,14 @@
 2001-03-02  Solomon Peachy <pizza@shaftnet.org>
 
         * src/sound/soundserver_null.c:  A cleaner way of handling the
-        playflag for the rhythm channel.  Sound server now returns 
-        polyphony in the SOUND_COMMAND_TEST call.  
+        playflag for the rhythm channel.  Sound server now returns
+        polyphony in the SOUND_COMMAND_TEST call.
 	[that makes twice a cvs commit has conflicted this out of
          existence...]
         * src/sound/midi_device.c
           src/sound/midi_device.h
-          src/sound/midi_mt32.c:  Addition of a polyphony value to the  
-        midi_driver struct.  Cleaner debug output for midi events.      
+          src/sound/midi_mt32.c:  Addition of a polyphony value to the
+        midi_driver struct.  Cleaner debug output for midi events.
         Device specific in midi_mt32, rest is in midi_device.
 
 2001-03-02  Christoph Reichenbach  <jameson@linuxgames.com>
@@ -362,7 +401,7 @@
 	* src/include/soundserver.h:  Added a polyphony count for each
                                          channel
 
-	* src/sound/midi_mt32.c	
+	* src/sound/midi_mt32.c
 	  src/include/midi_mt32.h
 	  src/sound/soundserver_null.c:  Tracks polyphony
 					 Adheres to the 'play flag' per
@@ -421,13 +460,13 @@
           sound/Makefile.am:        New files added to build.
 	* include/sound.h:          Beginnings of sound driver.
 	* sound/soundserver_null.c: Tweaked debug output
-	* include/midi_mt32.h 
+	* include/midi_mt32.h
 	  sound/midi_mt32.c:        mt32 midi code
-	* include/midiout.h 
+	* include/midiout.h
 	  sound/midiout.c:          midiout framework & null driver
 
 	FreeSCI now has near-complete MT32 support!
-		
+
 	Basically, the midi "driver" just discards stuff instead of
         actual writes.  Only thing currently lacking is reverb.
 
@@ -551,7 +590,7 @@
           src/include/soundserver.h
 
 	Implemented midi event 0xb? 0x4c -- ResetOnLoop.
-	Fixed some logic problems handing midi eventx 0xb? and 
+	Fixed some logic problems handing midi eventx 0xb? and
 	 Absolute Cues.
 	Added some debug output to display non-trapped midi events.
         Some will be removed later when I print out the MIDI
@@ -667,7 +706,7 @@
 
 2001-01-18  Lars Skovlund  <lskovlun@image.dk>
 
-	* src/gfx/font.c (gfxr_font_calculate_size): Made font renderer 
+	* src/gfx/font.c (gfxr_font_calculate_size): Made font renderer
 	  accept NULL strings.
 
 2001-01-16  Solomon Peachy <pizza@shaftnet.org>
@@ -678,16 +717,16 @@
 
 	* src/sound/sound.c:  Implemented VOLUME and MUTE commands
 
-	* src/sound/soundserver_null.c:  Debug output on VOLUME & MUTE 
+	* src/sound/soundserver_null.c:  Debug output on VOLUME & MUTE
 
 2001-01-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kAnimate): Fixed pixmap freeing
-	
+
 	* src/scicore/resource.c: Fixed memory leak in resource management
 
 	* src/engine/grammar.c: Fixed memory leak when merging lists
-	
+
 	* src/scicore/console.c (con_init_dmalloc): Added console interface
 	to dmalloc
 
@@ -876,11 +915,11 @@
 
 2000-12-29  Lars Skovlund  <lskovlun@image.dk>
 
-	* src/gfx/resource/sci_pic_0.c (_gfxr_fill): Fixed another SQ3 intro 
+	* src/gfx/resource/sci_pic_0.c (_gfxr_fill): Fixed another SQ3 intro
 	  bug
 	* src/engine/kernel.c (kGetTime): Added new GetTime() semantics.
 	  Docs coming RSN.
-	
+
 2000-12-29  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c: Allowed dynviews and picviews to be relocated
@@ -1057,7 +1096,7 @@
 	* src/engine/kernel.c: Added (SCI01) Memory kernel call
 	* src/engine/kevent.c (kGetEvent): Added break-on-event support
 	* src/scicore/resource.c (loadResources): Fixed an autodetection problem
-	
+
 2000-08-07  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/said.y: Added support for 'word1 < [ word2 ]' in the
@@ -1085,7 +1124,7 @@
 
 	* src/engine/vm.c: superClass properties are now set to the address of
 	the super class even for static objects and classes
-	
+
 	* src/graphics/con_io.c (con_input): Fixed cursor key support for the
 	on-screen console
 
@@ -1202,7 +1241,7 @@
 
 2000-06-02  Lars Skovlund  <lskovlun@image.dk>
 
-	* src/engine/scriptdebug.c (disassemble): When disassembling property 
+	* src/engine/scriptdebug.c (disassemble): When disassembling property
 	  manipulation instructions ([aps]To[aps]), now displays the property
 	  name in addition to the property offset.
 	* src/engine/script.h: The opcode enum is now complete (I think).
@@ -2641,5 +2680,3 @@
 1999-04-03  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
 
 	* First public release.
-
-

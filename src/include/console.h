@@ -80,8 +80,11 @@ extern int con_cursor;
 /* cursor position on the input line */
 extern DLLEXTERN int con_passthrough;
 /* Echo all sciprintf() stuff to the text console */
-extern DLLEXTERN FILE *con_file;
-/* Echo all sciprintf() output to a text file */
+extern FILE *con_file;
+/* Echo all sciprintf() output to a text file. Note: clients of freesci.dll
+** should use open_console_file and close_console_file, rather than refer
+** directly to the con_file variable.
+*/
 
 /* Output buffer */
 extern char con_outputbuf[SCI_CONSOLE_OUTPUT_BUFFER][SCI_CONSOLE_LINE_WIDTH];
@@ -238,6 +241,21 @@ con_draw(struct _state *s, byte *backup);
 
 int
 sci_hexdump(byte *data, int length, int offsetplus);
+
+void
+open_console_file(char *filename);
+/* Opens the file to which the console output is echoed. If a file was opened
+** before, closes it.
+** Parameters: filename - name of the file
+** Returns   : (void)
+*/
+
+void
+close_console_file();
+/* Closes the console output file.
+** Parameters: (void)
+** Returns   : (void)
+*/
 
 /***************************************************************************/
 /* console commands */

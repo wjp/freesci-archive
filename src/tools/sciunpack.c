@@ -406,16 +406,18 @@ void unpack_resource(int stype, int snr, char *outfilename)
 		} else 
 #endif /* DRAW_GRAPHICS */
 		if ((stype == sci_script) && conversion) {
-			FILE *f;
-
 			sprintf (outfilename, "%03d.script", snr);
-			f=fopen (outfilename, "wt");
-			con_file=f;
+                        open_console_file (outfilename);
 			script_dissect(snr, NULL);
-			fclose (f);
+                        close_console_file();
 		} else {
 
-			int outf = creat(outfilename, CREAT_OPTIONS);
+// Visual C++ doesn't allow to specify O_BINARY with creat()
+#ifdef _MSC_VER	
+                        int outf = open(outfilename, _O_CREAT | _O_BINARY | _O_RDWR);
+#else
+                        int outf = creat(outfilename, CREAT_OPTIONS);
+#endif                        
 
 #ifdef HAVE_OBSTACK_H
 			if ((stype == sci_sound) && conversion) {

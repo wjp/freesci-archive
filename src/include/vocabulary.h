@@ -193,6 +193,8 @@ typedef struct {
 
 int* vocabulary_get_classes();
 
+int vocabulary_get_class_count();
+
 /**
  * Returns a null terminated array of selector names.
  */

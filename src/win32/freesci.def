@@ -7,9 +7,11 @@ EXPORTS
   resource_map DATA
   max_resource DATA
   vocabulary_get_classes
+  vocabulary_get_class_count
   vocabulary_get_knames
   vocabulary_free_knames
   vocabulary_get_opcodes
+  vocabulary_free_opcodes
   vocabulary_get_snames
   vocabulary_free_snames
   vocab_get_words
@@ -19,11 +21,12 @@ EXPORTS
 ;  con_init_gfx
   con_parse
   con_hook_command
-  con_file DATA
   con_passthrough DATA
 ;  con_visible_rows DATA
   sci_hexdump
   sciprintf
+  open_console_file
+  close_console_file
   formats DATA
 ;  sci_color_mode DATA
   sci_version DATA
@@ -55,24 +58,38 @@ EXPORTS
   SCI_Error_Types DATA
   SCI_Version_Types DATA
   Resource_Types DATA
-  getopt
-  getopt_long
-  optarg DATA
-  optind DATA
+  resource_type_suffixes DATA
 ;  g_strcasecmp
  ; g_free
   loadObjects
   printObject
+  makeMIDI0
+  mapMIDIInstruments
   using_history DATA
   add_history
   readline
-  
+  optind DATA
+  optarg DATA
+  getopt
+  getopt_long
+    
   gfxop_init
   gfxop_exit
   gfxop_init_default
   game_init_graphics
+  con_hook_int
+  
   gfx_find_driver
   gfx_get_driver_name
-  con_hook_int
-  mapMIDIInstruments
- 
+  gfx_crossblit_alpha_threshold DATA
+
+  midiout_find_driver
+  midiout_driver DATA
+  midiout_driver_null DATA
+  midiout_drivers DATA
+  midi_find_device
+  midi_device DATA
+  midi_devices DATA
+  midi_device_mt32 DATA
+  midi_device_mt32gm DATA
+   

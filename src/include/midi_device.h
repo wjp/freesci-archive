@@ -71,18 +71,14 @@ typedef struct _midi_device {
 #define midi_patchfile (midi_device->patchfile)
 #define midi_polyphony (midi_device->polyphony)
 
-extern midi_device_t *midi_device;
+extern DLLEXTERN midi_device_t *midi_device;
 
 /* existing drivers and methods for finding 'em. */
 
-extern midi_device_t midi_device_mt32;
-extern midi_device_t midi_device_mt32gm;
+extern DLLEXTERN midi_device_t midi_device_mt32;
+extern DLLEXTERN midi_device_t midi_device_mt32gm;
 
-static midi_device_t *midi_devices[] = {
-  &midi_device_mt32, 
-  &midi_device_mt32gm,
-  NULL
-};
+extern DLLEXTERN midi_device_t *midi_devices[];
 
 struct _midi_device *midi_find_device(char *name);
 

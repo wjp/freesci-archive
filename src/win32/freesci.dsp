@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\hermes\src" /I "..\..\..\libpng" /I "..\..\..\zlib" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "HAVE_OBSTACK_H" /D "HAVE_GETOPT_H" /D "HAVE_READLINE_READLINE_H" /D "HAVE_READLINE_HISTORY_H" /D "HAVE_LIBPNG" /D "FREESCI_EXPORTS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\hermes\src" /I "..\..\..\libpng" /I "..\..\..\zlib" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "HAVE_OBSTACK_H" /D "HAVE_GETOPT_H" /D "HAVE_READLINE_READLINE_H" /D "HAVE_READLINE_HISTORY_H" /D "HAVE_LIBPNG" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
@@ -69,7 +69,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\hermes\src" /I "..\..\..\libpng" /I "..\..\..\zlib" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "HAVE_OBSTACK_H" /D "HAVE_GETOPT_H" /D "HAVE_READLINE_READLINE_H" /D "HAVE_READLINE_HISTORY_H" /D "HAVE_LIBPNG" /D "FREESCI_EXPORTS" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\hermes\src" /I "..\..\..\libpng" /I "..\..\..\zlib" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "HAVE_OBSTACK_H" /D "HAVE_GETOPT_H" /D "HAVE_READLINE_READLINE_H" /D "HAVE_READLINE_HISTORY_H" /D "HAVE_LIBPNG" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
@@ -90,37 +90,12 @@ LINK32=link.exe
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
+# Begin Group "engine"
+
+# PROP Default_Filter ""
 # Begin Source File
 
 SOURCE=..\engine\cfsml.pl
-# End Source File
-# Begin Source File
-
-SOURCE=..\graphics\con_font.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\graphics\con_io.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\scicore\console.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\scicore\decompress0.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\scicore\decompress1.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\graphics\engine_graphics.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\graphics\font.c
 # End Source File
 # Begin Source File
 
@@ -132,31 +107,7 @@ SOURCE=..\engine\grammar.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\graphics\graphics.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\graphics\graphics_ddraw.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\graphics\graphics_ggi.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\graphics\graphics_png.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\engine\heap.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\graphics\input.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\graphics\input_ggi.c
 # End Source File
 # Begin Source File
 
@@ -200,26 +151,6 @@ SOURCE=..\engine\kstring.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\graphics\mcursor.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\graphics\menubar.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\sound\midi.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\scicore\old_objects.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\scicore\resource.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\engine\said.c
 # End Source File
 # Begin Source File
@@ -239,7 +170,7 @@ InputName=savegame
 
 "..\engine\savegame.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	cd $(InputDir) 
-	d:\perl\bin\perl cfsml.pl < $(InputName).cfsml > $(InputName).c 
+	"D:\Program Files\perl\bin\perl.exe" cfsml.pl < $(InputName).cfsml > $(InputName).c 
 	
 # End Custom Build
 
@@ -252,16 +183,12 @@ InputName=savegame
 
 "..\engine\savegame.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	cd $(InputDir) 
-	d:\perl\bin\perl cfsml.pl < $(InputName).cfsml > $(InputName).c 
+	"D:\Program Files\perl\bin\perl.exe" cfsml.pl < $(InputName).cfsml > $(InputName).c 
 	
 # End Custom Build
 
 !ENDIF 
 
-# End Source File
-# Begin Source File
-
-SOURCE=..\scicore\script.c
 # End Source File
 # Begin Source File
 
@@ -273,19 +200,162 @@ SOURCE=..\engine\simplesaid.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\sound.c
+SOURCE=..\engine\vm.c
+# End Source File
+# End Group
+# Begin Group "gfx"
+
+# PROP Default_Filter ""
+# Begin Group "resource"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\gfx\resource\sci_cursor_0.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\engine\state.c
+SOURCE=..\gfx\resource\sci_font.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\resource\sci_pal_1.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\resource\sci_pic_0.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\resource\sci_resmgr.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\resource\sci_view_0.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\resource\sci_view_1.c
+# End Source File
+# End Group
+# Begin Group "drivers"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\gfx\drivers\dd_driver.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\drivers\dd_driver.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\drivers\dd_driver_line.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\drivers\gfx_drivers.c
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=..\gfx\font.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\gfx_crossblit.c
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\gfx_line.c
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\gfx_pixmap_scale.c
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\gfx_resource.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\gfx_support.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\gfx_tools.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\menubar.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\operations.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\resmgr.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\sbtree.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\sci_widgets.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\widgets.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\wrapper.c
+# End Source File
+# End Group
+# Begin Group "scicore"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\scicore\console.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\scicore\decompress0.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\scicore\decompress01.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\scicore\decompress1.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\scicore\decompress11.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\scicore\old_objects.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\scicore\resource.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\scicore\script.c
 # End Source File
 # Begin Source File
 
 SOURCE=..\scicore\tools.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\engine\vm.c
 # End Source File
 # Begin Source File
 
@@ -295,10 +365,35 @@ SOURCE=..\scicore\vocab.c
 
 SOURCE=..\scicore\vocab_debug.c
 # End Source File
+# End Group
+# Begin Group "sound"
+
+# PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\graphics\window.c
+SOURCE=..\sound\midi_device.c
 # End Source File
+# Begin Source File
+
+SOURCE=..\sound\midi_mt32.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\sound\midi_mt32gm.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\sound\midiout.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\sound\oldmidi.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\sound\sound.c
+# End Source File
+# End Group
 # End Group
 # Begin Group "Libs"
 
@@ -514,19 +609,39 @@ SOURCE=..\include\engine.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\graphics.h
+SOURCE=..\include\gfx_driver.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\graphics_ddraw.h
+SOURCE=..\include\gfx_operations.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\graphics_ggi.h
+SOURCE=..\include\gfx_options.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\graphics_png.h
+SOURCE=..\include\gfx_resmgr.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\gfx_resource.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\gfx_state_internal.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\gfx_system.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\gfx_tools.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\gfx_widgets.h
 # End Source File
 # Begin Source File
 
@@ -546,6 +661,14 @@ SOURCE=..\include\menubar.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\include\midi_device.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\midiout.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\include\old_objects.h
 # End Source File
 # Begin Source File
@@ -554,7 +677,23 @@ SOURCE=..\include\resource.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\sci_conf.h
+SOURCE=..\include\sbtree.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\sci_graphics.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\sci_widgets.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\sciresource.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\scitypes.h
 # End Source File
 # Begin Source File
 

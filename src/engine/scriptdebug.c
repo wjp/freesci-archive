@@ -683,6 +683,7 @@ print_objname(state_t *s, heap_ptr pos, int address)
 
 	if (address)
 		sciprintf(" @%04x\n", pos);
+        return 0;
 }
 
 heap_ptr
@@ -725,6 +726,8 @@ disassemble(state_t *s, heap_ptr pos)
     case Script_Variable:
     case Script_Property:
     case Script_Global:
+    case Script_Local:
+    case Script_Temp:
     case Script_Param:
       if (opsize)
 	param_value = s->heap[retval++];

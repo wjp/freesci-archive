@@ -790,16 +790,16 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 #define GASEOUS_VIEW_MASK (_K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)
 
-inline abs_rect_t
+abs_rect_t
 set_base(struct _state *s, heap_ptr object);
 
-inline abs_rect_t
+abs_rect_t
 get_nsrect(struct _state *s, heap_ptr object, byte clip);
 
-static inline abs_rect_t
+static abs_rect_t
 nsrect_clip(state_t *s, int y, abs_rect_t retval, int priority);
 
-static inline int
+static int
 collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int funct_nr, int argc, heap_ptr argp)
 {
 	int other_signal = UGET_SELECTOR(other_obj, signal);
@@ -1143,7 +1143,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
 
-inline abs_rect_t
+abs_rect_t
 set_base(state_t *s, heap_ptr object)
 {
 	int x, y, original_y, z, ystep, xsize, ysize;

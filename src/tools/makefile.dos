@@ -36,4 +36,3 @@ vocabdump.exe:  vocabdump.o
 		
 classes.exe:	classes.o
 		gcc -g -o classes.exe classes.o ${LIBS} -lpng -lz
-

@@ -152,6 +152,13 @@ int* vocabulary_get_classes(int* count)
   return c;
 }
 
+int vocabulary_get_class_count()
+{
+  resource_t* r;
+  if((r=findResource(sci_vocab, 996))==0) return 0;
+  return r->length/4;
+}
+
 char** vocabulary_get_snames(int* pcount, sci_version_t version)
 {
   char** t;

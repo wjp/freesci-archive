@@ -51,7 +51,7 @@ int vocab_sort = DEFAULT_SORTING;
 int
 vocab_print(void)
 {
-	int i, b, words_nr, counter;
+	int b, words_nr, counter;
 	word_t **words, **tracker;
 
 	tracker = words = vocab_get_words(&words_nr);

@@ -27,6 +27,7 @@
 
 #include <assert.h>
 #include <math.h>
+#include <time.h>
 #include <gfx_resource.h>
 #include <gfx_tools.h>
 

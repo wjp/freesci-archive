@@ -457,7 +457,29 @@ sciprintf(char *fmt, ...)
 }
 
 
+void
+open_console_file(char *filename)
+{
+  if (con_file != NULL)
+    fclose (con_file);
 
+#ifdef WIN32
+  con_file=fopen (filename, "wt");
+#else
+  con_file=fopen (filename, "w");
+#endif
+}
+
+
+void
+close_console_file()
+{
+  if (con_file != NULL)
+  {
+    fclose (con_file);
+    con_file = NULL;
+  }
+}
 
 
 /***************************************************************************

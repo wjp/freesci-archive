@@ -37,11 +37,11 @@ typedef struct _midiout_driver {
   int (*midiout_flush)(void);
 } midiout_driver_t;
 
-extern midiout_driver_t *midiout_driver;
+extern DLLEXTERN midiout_driver_t *midiout_driver;
 
-extern midiout_driver_t midiout_driver_null;
+extern DLLEXTERN midiout_driver_t midiout_driver_null;
 
-#ifndef _DOS
+#if !defined(_DOS) && !defined(WIN32)
 extern midiout_driver_t midiout_driver_unixraw;
 #endif
 
@@ -49,16 +49,7 @@ extern midiout_driver_t midiout_driver_unixraw;
 extern midiout_driver_t midiout_driver_alsaraw;
 #endif
 
-static midiout_driver_t *midiout_drivers[] = {
-  &midiout_driver_null,
-#ifndef _DOS
-  &midiout_driver_unixraw,
-#endif
-#ifdef HAVE_ALSA
-  &midiout_driver_alsaraw,
-#endif
-  NULL
-};
+extern DLLEXTERN midiout_driver_t *midiout_drivers[];
 
 int midiout_open();
 int midiout_close();

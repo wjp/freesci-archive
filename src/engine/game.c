@@ -396,7 +396,6 @@ script_free_vm_memory(state_t *s)
 void
 script_free_engine(state_t *s)
 {
-	int i;
 	breakpoint_t *bp, *bp_next;
 
 	script_free_vm_memory(s);

@@ -18,6 +18,7 @@
 ***************************************************************************/
 
 #include <midi_device.h>
+#include <midiout.h>
 #include <sound.h>
 
 /* we reuse the mt32 open/close/etc */

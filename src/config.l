@@ -31,6 +31,7 @@
 #include <gfx_tools.h>
 #include <gfx_resource.h>
 #include <sci_conf.h>
+#include <stddef.h>
 
 #ifdef _MSC_VER
 #  include <ctype.h>
@@ -166,16 +167,16 @@ typedef struct {
 #define OPT_END                               {OPTION_TYPE_NONE, NULL, 0, 0, NULL, 0}
 /* Terminates */
 
-#define OPT_INT(NAME, VARNAME, MIN, MAX)      {OPTION_TYPE_INT, NAME, MIN, MAX, NULL, NULL, (char *)&(conf->VARNAME) - ((char *) conf)}
+#define OPT_INT(NAME, VARNAME, MIN, MAX)      {OPTION_TYPE_INT, NAME, MIN, MAX, NULL, NULL, offsetof (config_entry_t, VARNAME)}
 /* Read INT from the interval [MIN, MAX] */
 
-#define OPT_NVP(NAME, VARNAME, NVP)           {OPTION_TYPE_NVP, NAME, 0, 0, NVP, NULL, (char *)&(conf->VARNAME) - ((char *)conf)}
+#define OPT_NVP(NAME, VARNAME, NVP)           {OPTION_TYPE_NVP, NAME, 0, 0, NVP, NULL, offsetof (config_entry_t, VARNAME)}
 /* Read (name,value) pair from NVP */
 
-#define OPT_INVERSE_NVP(NAME, VARNAME, NVP)   {OPTION_TYPE_INVERSE_NVP, NAME, 0, 0, NVP, NULL, (char *)&(conf->VARNAME) - ((char *)conf)}
+#define OPT_INVERSE_NVP(NAME, VARNAME, NVP)   {OPTION_TYPE_INVERSE_NVP, NAME, 0, 0, NVP, NULL, offsetof (config_entry_t, VARNAME)}
 /* Read NVP and negate result */
 
-#define OPT_STATICREF(NAME, VARNAME, FUNCTN)  {OPTION_TYPE_STATICREF, NAME, 0, 0, NULL, FUNCTN, (char *)&(conf->VARNAME) - ((char *)conf)}
+#define OPT_STATICREF(NAME, VARNAME, FUNCTN)  {OPTION_TYPE_STATICREF, NAME, 0, 0, NULL, FUNCTN, offsetof (config_entry_t, VARNAME)}
 /* Call FUNCTN() with the specified value, store resulting NULL* */
 
 

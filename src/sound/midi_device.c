@@ -20,6 +20,13 @@
 #include <midi_device.h>
 
 midi_device_t *midi_device;
+
+midi_device_t *midi_devices[] = {
+  &midi_device_mt32, 
+  &midi_device_mt32gm,
+  NULL
+};
+
 int mididebug = 0;
 
 int midi_open (guint8 *data_ptr, unsigned int data_length) {

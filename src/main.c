@@ -321,7 +321,7 @@ list_midi_devices()
 
 
 /**********************************************************/
-/* Startup and config management                          */ 
+/* Startup and config management                          */
 /**********************************************************/
 
 typedef struct {
@@ -623,7 +623,7 @@ init_gfx(cl_options_t *cl_options, gfx_driver_t *driver)
 		if (cl_options->color_depth > 0) {
 			if (gfxop_init(gfx_state, cl_options->scale_x,
 				       cl_options->scale_y, cl_options->color_depth,
-				       gfx_options)) { 
+				       gfx_options)) {
 				fprintf(stderr,"Graphics initialization failed. Aborting...\n");
 				return 1;
 			}
@@ -638,8 +638,8 @@ init_gfx(cl_options_t *cl_options, gfx_driver_t *driver)
 				return 1;
 			}
 		}
-	  
-	} else if (gfxop_init_default(gfx_state, gfx_options)) { 
+
+	} else if (gfxop_init_default(gfx_state, gfx_options)) {
 		fprintf(stderr,"Graphics initialization failed. Aborting...\n");
 		return 1;
 	}
@@ -854,10 +854,8 @@ main(int argc, char** argv)
 		gamestate->sfx_driver->get_event(gamestate); /* Get init message */
 	}
 
-	if (conf[conf_nr].console_log) {
-		console_logfile = fopen (conf[conf_nr].console_log, "w");
-		con_file = console_logfile;
-	}
+	if (conf[conf_nr].console_log)
+		open_console_file (conf[conf_nr].console_log);
 	gamestate->animation_delay = conf[conf_nr].animation_delay;
 	gfx_crossblit_alpha_threshold = conf[conf_nr].alpha_threshold;
 
@@ -870,7 +868,7 @@ main(int argc, char** argv)
 		conf[conf_nr].mouse : cl_options.mouse;
 
 	game_run(&gamestate); /* Run the game */
-  
+
 
 	if (gamestate->sfx_driver)
 		gamestate->sfx_driver->exit(gamestate); /* Shutdown sound daemon first */
@@ -884,8 +882,7 @@ main(int argc, char** argv)
 	if (conf_entries >= 0)
 		config_free(&conf, conf_entries);
 
-	if (console_logfile)
-		fclose (console_logfile);
+	close_console_file();
 
 	chdir (startdir); /* ? */
 

@@ -28,7 +28,7 @@
 #include <engine.h>
 
 
-inline int
+int
 listp(state_t *s, heap_ptr address)
 {
 	int size = UGET_HEAP(address);

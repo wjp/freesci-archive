@@ -44,7 +44,6 @@
    memcpy(buffer + linewidth * y + x, &color, PIXELWIDTH);
 
 
-
 static inline
 void DRAWLINE_FUNC(byte *buffer, int linewidth, rect_t line, unsigned int color)
 {

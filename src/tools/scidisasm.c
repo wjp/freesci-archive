@@ -21,7 +21,7 @@
 
  Current Maintainer:
 
-    Dmitry Jemerov (DJ) [yole@nnz.ru]
+    Dmitry Jemerov (DJ) [yole@spb.cityline.ru]
 
  History:
 
@@ -53,6 +53,7 @@ static struct option options[] = {
   {"hexdump", no_argument, &hexdump, 1},
   {"opcode-size", no_argument, &opcode_size, 1},
   {"verbose", no_argument, &verbose, 1},
+  {"gamedir", required_argument, 0, 'd'},
   {0, 0, 0, 0}};
 #endif /* HAVE_GETOPT_LONG */
 
@@ -92,6 +93,7 @@ typedef struct disasm_state_s {
   int word_count;
 
   char **class_names;
+  int *class_selector_count;
   short **class_selectors;
   int class_count;
   int old_header;
@@ -136,11 +138,12 @@ int main(int argc, char** argv)
   int optindex = 0;
   int c;
   disasm_state_t disasm_state;
-
+  char *gamedir = NULL;
+  
 #ifdef HAVE_GETOPT_LONG
-  while ((c = getopt_long(argc, argv, "vhx", options, &optindex)) > -1) {
+  while ((c = getopt_long(argc, argv, "vhxd:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_H */
-  while ((c = getopt(argc, argv, "vhx")) > -1) {
+  while ((c = getopt(argc, argv, "vhxd:")) > -1) {
 #endif /* !HAVE_GETOPT_H */
       
       switch (c)
@@ -155,14 +158,20 @@ int main(int argc, char** argv)
 	case 'h':
 	  printf("Usage: scidisasm\n"
 		 "\nAvailable options:\n"
-		 " --version              Prints the version number\n"
-		 " --help        -h       Displays this help message\n"
-                 " --hexdump     -x       Hex dump all script resources\n"
-                 " --verbose              Print additional disassembly information\n"
-                 " --opcode-size          Print opcode size postfixes\n");
+		 " --version               Prints the version number\n"
+		 " --help        -h        Displays this help message\n"
+                 " --gamedir <dir> -d<dir> Read game resources from dir\n"
+                 " --hexdump     -x        Hex dump all script resources\n"
+                 " --verbose               Print additional disassembly information\n"
+                 " --opcode-size           Print opcode size postfixes\n");
 	  exit(0);
 	  
-	case 0: /* getopt_long already did this for us */
+        case 'd':
+          if (gamedir) free (gamedir);
+          gamedir=strdup (optarg);
+          break;
+          
+        case 0: /* getopt_long already did this for us */
 	case '?':
 	  /* getopt_long already printed an error message. */
 	  break;
@@ -172,8 +181,15 @@ int main(int argc, char** argv)
 	}
     }
 
+  if (gamedir)
+    if (chdir (gamedir))
+    {
+      printf ("Error changing to game directory '%s'\n", gamedir);
+      exit(1);
+    }
+    
   printf ("Loading resources...\n");
-  if ((i = loadResources(SCI_VERSION_AUTODETECT, 0))) {
+  if (i = loadResources(SCI_VERSION_AUTODETECT, 0)) {
     fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);
     return 1;
   }
@@ -189,15 +205,12 @@ int main(int argc, char** argv)
   for (i=0; i<max_resource; i++)
     if (resource_map[i].type == sci_script)
     {
-      FILE *f;
-
       sprintf (outfilename, "%03d.script", resource_map [i].number);
-      f=fopen (outfilename, "wt");
-      con_file=f;
+      open_console_file (outfilename);
       disassemble_script(&disasm_state, resource_map [i].number, 2);
-      fclose (f);
     }
     
+  close_console_file();
   disasm_free_state (&disasm_state);
     
   freeResources();
@@ -209,8 +222,6 @@ int main(int argc, char** argv)
 void
 disasm_init (disasm_state_t *d)
 {
-  int *classes;
-  
   d->snames = vocabulary_get_snames (&d->selector_count, SCI_ASSUME_VERSION);
   d->opcodes = vocabulary_get_opcodes();
   d->kernel_names = vocabulary_get_knames (&d->kernel_names_nr);
@@ -218,10 +229,11 @@ disasm_init (disasm_state_t *d)
   d->scripts = NULL;
   d->old_header = 0;
 
-  classes=vocabulary_get_classes (&d->class_count);
-  free (classes);
+  d->class_count = vocabulary_get_class_count();
   d->class_names = (char **) malloc (d->class_count * sizeof (char *));
   memset (d->class_names, 0, d->class_count * sizeof (char *));
+  d->class_selector_count = (int *) malloc (d->class_count * sizeof (int));
+  memset (d->class_selector_count, 0, d->class_count * sizeof (int));
   d->class_selectors = (short **) malloc (d->class_count * sizeof (short *));
   memset (d->class_selectors, 0, d->class_count * sizeof (short *));
 }
@@ -248,9 +260,10 @@ disasm_free_state (disasm_state_t *d)
   }
   free (d->class_names);
   free (d->class_selectors);
+  free (d->class_selector_count);
   
   vocabulary_free_snames (d->snames);
-  free (d->opcodes);
+  vocabulary_free_opcodes (d->opcodes);
   vocabulary_free_knames (d->kernel_names);
   vocab_free_words (d->words, d->word_count);
 }
@@ -512,6 +525,7 @@ script_dump_class(disasm_state_t *d, script_state_t *s,
       else
         d->class_names [species] = strdup (name);
       
+      d->class_selector_count [species] = selectors;
       d->class_selectors [species] = (short *) malloc (sizeof (short) * selectors);
     }
   }
@@ -754,6 +768,8 @@ script_disassemble_code(disasm_state_t *d, script_state_t *s,
       case Script_SVariable:
       case Script_Variable:
       case Script_Global:
+      case Script_Local:
+      case Script_Temp:
       case Script_Param:
       case Script_SRelative:
       case Script_Property:
@@ -801,6 +817,14 @@ script_disassemble_code(disasm_state_t *d, script_state_t *s,
             sciprintf (" global_%d", param_value);
             break;
 
+          case Script_Local:
+            sciprintf (" local_%d", param_value);
+            break;
+
+          case Script_Temp:
+            sciprintf (" temp_%d", param_value);
+            break;
+
           case Script_Param:
             sciprintf (" param_%d", param_value);
             break;
@@ -842,7 +866,7 @@ script_disassemble_code(disasm_state_t *d, script_state_t *s,
             break;
 
           case Script_Property:
-            if (cur_class != -1)
+            if (cur_class != -1 && param_value/2 < d->class_selector_count [cur_class])
             {
               sciprintf (" %s", get_selector_name (d, d->class_selectors [cur_class][param_value/2]));
               if (verbose) sciprintf ("[%x]", param_value);
@@ -954,8 +978,6 @@ disassemble_script_pass (disasm_state_t *d, script_state_t *s,
       sciprintf("Unsupported %d!\n", objtype);
       return;
     }
-
-    fflush (con_file);
   }
 
   sciprintf("Script ends without terminator\n");

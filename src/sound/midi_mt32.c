@@ -19,7 +19,9 @@
 ***************************************************************************/
 
 #include <stdio.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+  #include <unistd.h>
+#endif
 #include <string.h>
 #include <midi_device.h>
 #include <midiout.h>
@@ -482,8 +484,11 @@ int midi_mt32_patch001_type1_length(guint8 *data, unsigned int length)
 
 int midi_mt32_sysex_delay()
 {
-	usleep(320 * 63); /* One MIDI byte is 320us, 320us * 63 > 20ms */
-	return 0;
+  /* Under Win32, we won't get any sound, in any case... */
+#ifndef _WIN32
+  usleep(320 * 63); /* One MIDI byte is 320us, 320us * 63 > 20ms */
+#endif
+  return 0;
 }
 
 /* the driver struct */

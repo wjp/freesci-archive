@@ -28,7 +28,7 @@
 #include <gfx_tools.h>
 
 
-inline void
+void
 gfx_clip_box_basic(rect_t *box, int maxx, int maxy)
 {
 	if (box->x < 0)

@@ -22,6 +22,17 @@
 
 midiout_driver_t *midiout_driver = NULL;
 
+midiout_driver_t *midiout_drivers[] = {
+    &midiout_driver_null,
+#if !defined(_DOS) && !defined(WIN32)
+    &midiout_driver_unixraw,
+#endif
+#ifdef HAVE_ALSA
+    &midiout_driver_alsaraw,
+#endif
+    NULL
+};
+
 static unsigned char running_status = 0;
 
 int midiout_open()

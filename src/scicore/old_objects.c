@@ -149,6 +149,8 @@ static void printMethod(object* obj, int meth, int indent)
                                                 case Script_SRelative:
                                                 case Script_Property:
                                                 case Script_Global:
+                                                case Script_Local:
+                                                case Script_Temp:
                                                 case Script_Param:
 						{
 							printf("%04X ", args[j]);
@@ -334,6 +336,8 @@ static script_method* decode_method(byte* data)
             case Script_SRelative:
             case Script_Property:
             case Script_Global:
+            case Script_Local:
+            case Script_Temp:
             case Script_Param:
 	      {
 		if(size==1) *args[arg]=data[pos++];
