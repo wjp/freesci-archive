@@ -780,18 +780,13 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 } /* kBaseSetter */
 
 
-void
-kSetNowSeen(state_t *s, int funct_nr, int argc, heap_ptr argp)
+void _k_set_now_seen(state_t *s, heap_ptr object)
 {
   int x, y, z;
   int xbase, ybase, xend, yend, xsize, ysize;
   int view, loop, cell;
   int xmod = 0, ymod = 0;
-  resource_t *viewres;
-  heap_ptr object = PARAM(0);
-
-  CHECK_THIS_KERNEL_FUNCTION;
-  /*  SCIkdebug(SCIkWARNING, "Warning: Experimental kernel function SetNowSeen(%04x) invoked\n", object);*/
+  resource_t *viewres;  
 
   x = GET_SELECTOR(object, x);
   y = GET_SELECTOR(object, y);
@@ -826,6 +821,18 @@ kSetNowSeen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   PUT_SELECTOR(object, nsRight, xend);
   PUT_SELECTOR(object, nsTop, ybase);
   PUT_SELECTOR(object, nsBottom, yend);
+}
+
+
+void
+kSetNowSeen(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+
+  heap_ptr object = PARAM(0);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+  /*  SCIkdebug(SCIkWARNING, "Warning: Experimental kernel function SetNowSeen(%04x) invoked\n", object);*/
+  _k_set_now_seen(s, object);
 
 } /* kSetNowSeen */
 
@@ -1479,6 +1486,7 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int flags)
 	_k_clip_view(list[i].view, &(list[i].loop), &(list[i].cel));
 
 	SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", list[i].obj, signal);
+	_k_set_now_seen(s, list[i].obj);
 	draw_view0(s->pic, s->ports[s->view_port],
 		   list[i].x, list[i].y, list[i].priority, list[i].loop, list[i].cel,
 		   GRAPHICS_VIEW_CENTER_BASE | GRAPHICS_VIEW_USE_ADJUSTMENT, list[i].view);

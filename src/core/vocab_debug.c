@@ -323,16 +323,16 @@ static char** vocabulary_get_knames0(int* names)
 }
 
 /*NOTE: Untested*/
-static char** vocabulary_get_knames1()
+static char** vocabulary_get_knames1(int *count)
 {
-  char** t;
-  int size=128, used=0, pos=0;
+  char** t=NULL;
+  int size=64, used=0, pos=0;
   resource_t* r=findResource(sci_vocab, 999);
 
   while(pos<r->length)
     {
       int len;
-      if(used==size-1)
+      if ((used==size-1)||(!t))
 	{
 	  size*=2;
 	  t=g_realloc(t, size*sizeof(char*));
@@ -343,7 +343,8 @@ static char** vocabulary_get_knames1()
       used++;
       pos+=len+1;
     }
-  t[used]=0;
+  *count=used;
+  t=g_realloc(t, used*sizeof(char*));
   return t;
 }
 

@@ -1,3 +1,10 @@
+2000-04-16  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/core/vocab_debug.c (vocabulary_get_knames1): Fixed kernel names
+	  loading for Christmas Card 1990 (Season's Greetings)
+	* src/core/kgraphics.c (kAnimate): Fixed problem with the main menu
+	  in Hoyle's Book of Games.
+
 2000-04-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/scriptdebug.c (c_sim_parse): Implemented a 'simparse'
