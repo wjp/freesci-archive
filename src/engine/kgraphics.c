@@ -478,6 +478,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int movcnt = GET_SELECTOR(mover, b_movCnt);
   int bdelta = GET_SELECTOR(mover, b_incr);
   int axis = GET_SELECTOR(mover, b_xAxis);
+  int completed = 0;
 
   PUT_SELECTOR(mover, b_movCnt, movcnt + 1);
 
@@ -501,7 +502,8 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
       x = destx;
       y = desty;
 
-      PUT_SELECTOR(mover, completed, 1); /* Finish! */
+      if (s->selector_map.completed > -1)
+	PUT_SELECTOR(mover, completed, completed = 1); /* Finish! */
 
       SCIkdebug(SCIkBRESEN, "Finished mover %04x\n", mover);
     }
@@ -514,14 +516,15 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   invoke_selector(INV_SEL(client, canBeHere, 0), 0);
 
   if (s->acc) { /* Contains the return value */
-    s->acc = GET_SELECTOR(mover, completed);
+    s->acc = completed;
     return;
   } else {
     word signal = GET_SELECTOR(client, signal);
 
     PUT_SELECTOR(client, x, oldx);
     PUT_SELECTOR(client, y, oldy);
-    PUT_SELECTOR(mover, completed, 1);
+    if (s->selector_map.completed > -1)
+      PUT_SELECTOR(mover, completed, 1);
  
     PUT_SELECTOR(mover, x, oldx);
     PUT_SELECTOR(mover, y, oldy);    
@@ -767,7 +770,11 @@ _k_base_setter(state_t *s, heap_ptr object)
       
   x = GET_SELECTOR(object, x);
   original_y = y = GET_SELECTOR(object, y);
-  z = GET_SELECTOR(object, z);
+
+  if (s->selector_map.z > -1)
+    z = GET_SELECTOR(object, z);
+  else
+    z = 0;
 
   y -= z; /* Subtract z offset */
 
@@ -837,7 +844,11 @@ void _k_set_now_seen(state_t *s, heap_ptr object)
       
   x = GET_SELECTOR(object, x);
   y = GET_SELECTOR(object, y);
-  z = GET_SELECTOR(object, z);
+
+  if (s->selector_map.z > -1)
+    z = GET_SELECTOR(object, z);
+  else
+    z = 0;
 
   y -= z; /* Subtract z offset */
 
@@ -1420,6 +1431,12 @@ _k_invoke_view_list(state_t *s, heap_ptr list, int funct_nr, int argc, int argp)
 
 }
 
+
+static int _cmp_view_object(const void *obj1, const void *obj2) /* Used for qsort() later on */
+{
+  return (((view_object_t *)obj1)->y) - (((view_object_t *)obj2)->y);
+}
+
 view_object_t *
 _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_nr, int argc, int argp)
      /* Creates a view_list from a node list in heap space. Returns the list, stores the
@@ -1533,6 +1550,8 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
 
     node = UGET_HEAP(node + LIST_PREVIOUS_NODE); /* Next node */
   }
+
+  qsort(retval, *list_nr, sizeof(view_object_t), _cmp_view_object);
 
   return retval;
 }

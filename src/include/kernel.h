@@ -101,7 +101,8 @@ getHeapUInt16(unsigned char *base, int address)
 
 /******************** Selector functionality ********************/
 
-#define GET_SELECTOR(_object_, _selector_) read_selector(s, _object_, s->selector_map._selector_)
+#define GET_SELECTOR(_object_, _selector_) read_selector(s, _object_, s->selector_map._selector_, __FILE__, \
+							 __LINE__)
 /* Retrieves a selector from an object
 ** Parameters: (heap_ptr) object: The address of the object which the selector should be read from
 **             (selector_name) selector: The selector to read
@@ -112,7 +113,7 @@ getHeapUInt16(unsigned char *base, int address)
 
 
 #define UGET_SELECTOR(_object_, _selector_) \
- ((guint16) read_selector(s, _object_, s->selector_map._selector_))
+ ((guint16) read_selector(s, _object_, s->selector_map._selector_, __FILE__, __LINE__))
 /* Retrieves an unsigned selector value from an object
 ** Parameters: (heap_ptr) object: The address of the object which the selector should be read from
 **             (selector_name) selector: The selector to read
@@ -123,7 +124,7 @@ getHeapUInt16(unsigned char *base, int address)
 
 
 #define PUT_SELECTOR(_object_, _selector_, _value_)\
- write_selector(s, _object_, s->selector_map._selector_, _value_)
+ write_selector(s, _object_, s->selector_map._selector_, _value_, __FILE__, __LINE__)
 /* Writes a selector value to an object
 ** Parameters: (heap_ptr) object: The address of the object which the selector should be written to
 **             (selector_name) selector: The selector to read
@@ -135,7 +136,7 @@ getHeapUInt16(unsigned char *base, int address)
 
 
 #define INV_SEL(_object_, _selector_, _noinvalid_) \
-  s, ##_object_,  s->selector_map.##_selector_, ##_noinvalid_, funct_nr, argp, argc
+  s, ##_object_,  s->selector_map.##_selector_, ##_noinvalid_, funct_nr, argp, argc, __FILE__, __LINE__
 /* Kludge for use with incoke_selector(). Used for compatibility with compilers that can't
 ** handle vararg macros.
 */
@@ -143,12 +144,12 @@ getHeapUInt16(unsigned char *base, int address)
 
 /* functions used internally by macros */
 int
-read_selector(struct _state *s, heap_ptr object, int selector_id);
+read_selector(struct _state *s, heap_ptr object, int selector_id, char *fname, int line);
 void
-write_selector(struct _state *s, heap_ptr object, int selector_id, int value);
+write_selector(struct _state *s, heap_ptr object, int selector_id, int value, char *fname, int line);
 int
 invoke_selector(struct _state *s, heap_ptr object, int selector_id, int noinvalid, int kfunct,
-		heap_ptr k_argp, int k_argc, int argc, ...);
+		heap_ptr k_argp, int k_argc, char *fname, int line, int argc, ...);
 
 
 

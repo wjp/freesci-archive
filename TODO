@@ -1,9 +1,6 @@
 TODO for the next version:
 
-- Fix the remaining bugs
-- Re-implement pic resource drawing
-- Implement Menu system
-- Write more kernel functions
+- Fix the remaining bugs:
 - Implement the "missing half" of the parser (Said())
 
 

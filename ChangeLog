@@ -1,3 +1,14 @@
+2000-05-03  Christoph Reichenbach <jameson@linuxgames.com>
+
+	* src/engine/kscripts.c: Write/read attempt to invalid selectors
+	will now dump more debug info
+
+	* src/engine/kgraphics.c: Several fixes for games that don't have
+	the 'z' and 'completed' selectors
+
+	* src/engine/kgraphics.c (_k_make_view_list): View lists are now
+	sorted by 'y', fixing several priority bugs.
+
 2000-05-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kOnControl): Made OnControl cooperate with

@@ -29,7 +29,7 @@
 
 
 int
-read_selector(state_t *s, heap_ptr object, int selector_id)
+read_selector(state_t *s, heap_ptr object, int selector_id, char *file, int line)
 {
   heap_ptr address;
 
@@ -41,18 +41,19 @@ read_selector(state_t *s, heap_ptr object, int selector_id)
 
 
 void
-write_selector(state_t *s, heap_ptr object, int selector_id, int value)
+write_selector(state_t *s, heap_ptr object, int selector_id, int value, char *fname, int line)
 {
   heap_ptr address;
 
   if ((selector_id < 0) || (selector_id > s->selector_names_nr)) {
-    SCIkwarn(SCIkWARNING, "Attempt to write to invalid selector of object at %04x.\n", object);
+    SCIkwarn(SCIkWARNING, "Attempt to write to invalid selector %d of object at %04x (%s L%d).\n", selector_id,
+	     object, fname, line);
     return;
   }
 
   if (lookup_selector(s, object, selector_id, &address) != SELECTOR_VARIABLE)
-    SCIkwarn(SCIkWARNING, "Selector '%s' of object at %04x could not be written to\n",
-	     s->selector_names[selector_id], object);
+    SCIkwarn(SCIkWARNING, "Selector '%s' of object at %04x could not be written to (%s L%d)\n",
+	     s->selector_names[selector_id], object, fname, line);
   else
     PUT_HEAP(address, value);
 
@@ -62,7 +63,7 @@ write_selector(state_t *s, heap_ptr object, int selector_id, int value)
 int
 invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int kfunct,
 		heap_ptr k_argp, int k_argc, /* Kernel function argp/argc */
-		int argc, ...)
+		char *fname, int line, int argc, ...)
 {
   va_list argp;
   int i;
@@ -76,8 +77,8 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int
   PUT_HEAP(stackframe + 2, argc); /* The number of arguments */
 
   if (lookup_selector(s, object, selector_id, &address) != SELECTOR_METHOD) {
-    SCIkwarn(SCIkERROR, "Selector '%s' of object at %04x could not be invoked\n",
-	     s->selector_names[selector_id], object);
+    SCIkwarn(SCIkERROR, "Selector '%s' of object at %04x could not be invoked (%s L%d)\n",
+	     s->selector_names[selector_id], object, fname, line);
     if (noinvalid == 0)
       KERNEL_OOPS("Not recoverable: VM was halted\n");
     return 1;
