@@ -38,13 +38,12 @@
 #include <sound.h>
 #include <console.h>
 
-#ifdef HAVE_GETOPT_H
-
 #ifdef _MSC_VER
 #include <direct.h>
 #define extern __declspec(dllimport) extern
 #endif
 
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
 #endif /* HAVE_GETOPT_H */
 
@@ -71,7 +70,7 @@ static int with_header = 1;
 static int dissect = 0;
 static int color_mode = 0;
 
-#ifdef HAVE_GETOPT_H
+#ifdef HAVE_GETOPT_LONG
 static struct option options[] = {
   {"no-conversion", no_argument, &conversion, 0},
   {"version", no_argument, 0, 256},
@@ -88,7 +87,7 @@ static struct option options[] = {
   {"gamedir", required_argument, 0, 'd'},
   {0, 0, 0, 0}};
 
-#endif /* HAVE_GETOPT_H */
+#endif /* HAVE_GETOPT_LONG */
 
 
 void unpack_resource(int stype, int snr, char *outfilename);
@@ -105,11 +104,11 @@ int main(int argc, char** argv)
   int c;
   char *gamedir = NULL;
 
-#ifdef HAVE_GETOPT_H
+#ifdef HAVE_GETOPT_LONG
   while ((c = getopt_long(argc, argv, "vhlo:d:", options, &optindex)) > -1) {
-#else /* !HAVE_GETOPT_H */
+#else /* !HAVE_GETOPT_LONG */
   while ((c = getopt(argc, argv, "vhlo:d:")) > -1) {
-#endif /* !HAVE_GETOPT_H */
+#endif /* !HAVE_GETOPT_LONG */
       
       switch (c)
 	{
@@ -185,7 +184,7 @@ int main(int argc, char** argv)
       return 1;
     }
 
-    if (resourcenumber_string = (char *) strchr(resstring, '.')) {
+    if ((resourcenumber_string = (char *) strchr(resstring, '.'))) {
       *resourcenumber_string++ = 0;
     } else if (optind+1 == argc) {
       fprintf(stderr,"Resource number required\n");
@@ -207,7 +206,7 @@ int main(int argc, char** argv)
 	exit(1);
       }
 
-  if (i = loadResources(SCI_VERSION_AUTODETECT, 0)) {
+  if ((i = loadResources(SCI_VERSION_AUTODETECT, 0))) {
     fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);
     return 1;
   };
@@ -277,14 +276,14 @@ void unpack_resource(int stype, int snr, char *outfilename)
 
   if (verbose) printf("seeking %s.%03d...\n", Resource_Types[stype], snr);
 
-  if (found = findResource(stype, snr)) {
+  if ((found = findResource(stype, snr))) {
 
 #ifdef HAVE_LIBPNG
     if ((stype == sci_pic) && conversion) {
       int i;
       picture_t pic = alloc_empty_picture(SCI_RESOLUTION_320X200, SCI_COLORDEPTH_8BPP);
       draw_pic0(pic, 1, 0, found->data);
-      if (i = write_pic_png(outfilename, pic->maps[0])) {
+      if ((i = write_pic_png(outfilename, pic->maps[0]))) {
 	fprintf(stderr,"Writing the png failed (%d)\n",i);
       } else if (verbose) printf("Done.\n");
       free_picture(pic);

@@ -570,6 +570,7 @@ gint8 gm_rhythm_key;
 };
 
 
+void
 SCIsdebug(char *format, ...)
 {
   va_list list;
@@ -610,7 +611,7 @@ obstack_1grow(stackp, deltatime & 0x7F)
 
 #define SETUP_INSTRUMENT(channel, sci_instrument) \
 MIDI_TIMESTAMP(0); \
-obstack_1grow(stackp, 0xb0 | channel); \
+obstack_1grow(stackp, 0xb0 | (channel)); \
 obstack_1grow(stackp, 0x65); \
 obstack_1grow(stackp, 0x00); \
 MIDI_TIMESTAMP(0); \
@@ -659,7 +660,7 @@ makeMIDI0(const guint8 *src, int *size)
   guint32 pos; /* position in src */
   guint32 eventpos = 0x21;
   guint32 pending_delay = 0;
-  guint8 status, laststatus = 0;
+  guint8 status = 0, laststatus = 0;
   guint16 cue = 127;
   int EOT = 0; /* end of track reached */
   guint8 *result; /* Herein will be the final results */
@@ -711,7 +712,7 @@ makeMIDI0(const guint8 *src, int *size)
     
     if (status < 0xb0) {
     /* Note Off (8x), Note On (9x), Aftertouch (Ax) */
-      if (muteflags[status & 0x0f] == 0)
+      if (muteflags[status & 0x0f] == 0) {
 	if ((status & 0x0f) == 9) {
 	  if (MIDI_mapping[src[pos]].gm_rhythmkey >= 0) {
 	    /* if ((status & 0xf0) == 0x90) {
@@ -739,6 +740,7 @@ makeMIDI0(const guint8 *src, int *size)
 	};
       /* if ((status & 0xf0) == 0xa0)
 	 SCIsdebug("[%04x] !!! Aftertouch not supported by MT-32\n", pos - 1); */
+    }
       pos += 2;
     } else if (status < 0xc0) {
     /* Controller */
@@ -761,7 +763,7 @@ makeMIDI0(const guint8 *src, int *size)
 	  (src[pos] != 10) &&
 	  (src[pos] != 11) &&
 	  (src[pos] != 64) &&
-	  (src[pos] != 121))
+	  (src[pos] != 121)) {
 	if (src[pos] == 0x4b) {
 	  /* SCIsdebug("[%04x] Channel: %d, * Channel mapping: %d *\n", pos - 1, status & 0xf, src[pos + 1]); */
 	} else if (src[pos] == 0x4c) {
@@ -782,6 +784,7 @@ makeMIDI0(const guint8 *src, int *size)
 	} else
 	  SCIsdebug("[%04x] !!! Channel: %d, Controller: 0x%02x parameter:0x%02x, not supported by MT-32\n",
 		    pos - 1, status & 0xf, src[pos], src[pos + 1]);
+      }
       pos +=2;
     } else if (status < 0xd0) {
     /* Program (patch) Change */
@@ -801,11 +804,12 @@ makeMIDI0(const guint8 *src, int *size)
 	  muteflags[status & 0x0f] = 1;
 	};
       };
-      if (status == 0xcf)
+      if (status == 0xcf) {
 	if(src[pos] == 0x7f)
 	  SCIsdebug("[%04x] * Global, Set Loop Point [%04x] *\n", pos - 1, eventpos);
 	else
 	  SCIsdebug("[%04x] * Global, Set Signal to %d *\n", pos - 1, src[pos]);
+      }
       pos++;
     } else if (status < 0xe0) {
     /* Channel Pressure */

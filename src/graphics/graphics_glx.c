@@ -450,7 +450,7 @@ _glx_get_event(state_t *s, int eventmask, long wait_usec, sci_event_t *sci_event
       break;
 
       default:
-	fprintf(stderr,"%s: Received unhandled event %04x\n", __FUNCTION__, event.type);
+	fprintf(stderr,"_glx_get_event(): Received unhandled event %04x\n", event.type);
       }
 
     }

@@ -136,7 +136,6 @@ _vbuild(int id, int argc, ...)
 static parse_rule_t *
 _vcat(int id, parse_rule_t *a, parse_rule_t *b)
 {
-  int i;
   parse_rule_t *rule = malloc(sizeof(int) * (a->length + b->length + 4));
 
   rule->id = id;
@@ -154,7 +153,6 @@ _vcat(int id, parse_rule_t *a, parse_rule_t *b)
 static parse_rule_t *
 _vdup(parse_rule_t *a)
 {
-  int i;
   parse_rule_t *rule = malloc(sizeof(int) * (a->length + 4));
 
   rule->id = a->id;
@@ -450,11 +448,9 @@ _vocab_build_gnf(parse_tree_branch_t *branches, int branches_nr, int verbose)
   int ntrules_nr;
   parse_rule_list_t *ntlist = NULL;
   parse_rule_list_t *tlist, *new_tlist;
-  parse_rule_t *r1, *r2, *r3;
 
   for (i = 1; i < branches_nr; i++) { /* branch rule 0 is treated specially */
     parse_rule_t *rule = _vbuild_rule(branches + i);
-    //    vocab_print_rule(rule);sciprintf("\n");
     ntlist = _vocab_add_rule(ntlist, rule);
   }
 
@@ -490,7 +486,6 @@ _vocab_build_gnf(parse_tree_branch_t *branches, int branches_nr, int verbose)
     if (new_tlist)
       free(new_tlist);
 
-    //    tlist = new_tlist;
     new_tlist = new_new_tlist;
 
     termrules = _vocab_rule_list_length(new_new_tlist);
@@ -530,7 +525,7 @@ int
 vocab_build_parse_tree(parse_tree_node_t *nodes, result_word_t *words, int words_nr,
 		       parse_tree_branch_t *branch0, parse_rule_list_t *rules)
 {
-  vocab_gnf_parse(nodes, words, words_nr, branch0, rules, 0);
+  return vocab_gnf_parse(nodes, words, words_nr, branch0, rules, 0);
 }
 
 
@@ -542,7 +537,6 @@ _vbpt_pareno(parse_tree_node_t *nodes, int *pos, int base)
   nodes[++(*pos)].type = PARSE_TREE_NODE_BRANCH;
   nodes[*pos].content.branches[0] = 0;
   nodes[*pos].content.branches[1] = 0;
-  //  sciprintf("(");
   return *pos;
 }
 
@@ -555,7 +549,6 @@ _vbpt_parenc(parse_tree_node_t *nodes, int *pos, int paren)
   nodes[*pos].type = PARSE_TREE_NODE_BRANCH;
   nodes[*pos].content.branches[0] = 0;
   nodes[*pos].content.branches[1] = 0;
-  //  sciprintf(")");
   return *pos;
 }
 
@@ -571,7 +564,6 @@ _vbpt_append(parse_tree_node_t *nodes, int *pos, int base, int value)
   nodes[*pos].type = PARSE_TREE_NODE_BRANCH;
   nodes[*pos].content.branches[0] = 0;
   nodes[*pos].content.branches[1] = 0;
-  //  sciprintf("%03x ", value);
   return *pos;
 }
 
@@ -582,7 +574,6 @@ _vbpt_terminate(parse_tree_node_t *nodes, int *pos, int base, int value)
 {
   nodes[base].type = PARSE_TREE_NODE_LEAF;
   nodes[base].content.value = value;
-  //  sciprintf("%03x)", value);
   return *pos;
 }
 
@@ -710,7 +701,7 @@ vocab_gnf_parse(parse_tree_node_t *nodes, result_word_t *words, int words_nr,
     pos = 2;
 
     temp = _vbpt_append(nodes, &pos, 2, branch0->id);
-    //    _vbpt_write_subexpression(nodes, &pos, results[_vocab_rule_list_length(results)].rule, 0, temp);
+    /*    _vbpt_write_subexpression(nodes, &pos, results[_vocab_rule_list_length(results)].rule, 0, temp); */
     _vbpt_write_subexpression(nodes, &pos, results->rule, 0, temp);
   }
 

@@ -37,6 +37,16 @@
 
 #ifdef HAVE_SOCKETPAIR
 #include <sys/socket.h>
+
+#ifndef AF_LOCAL
+# ifdef AF_UNIX
+#  define AF_LOCAL AF_UNIX
+# else
+#  warn Neither AF_LOCAL nor AF_UNIX are defined!
+#  undef HAVE_SOCKETPAIR
+# endif
+#endif
+
 #endif /* HAVE_SOCKETPAIR */
 
 #include <signal.h>
@@ -124,7 +134,6 @@ sound_get_event(state_t *s)
   fd_set inpfds;
   int inplen;
   GTimeVal waittime = {0, 0};
-  GTimeVal waittime2 = {0, 0};
   char debug_buf[65];
   sound_event_t *event = xalloc(sizeof(sound_event_t));
 
@@ -242,7 +251,10 @@ sound_restore(state_t *s, char *dir)
 int
 sound_command(state_t *s, int command, int handle, int parameter)
 {
-  sound_event_t event = {handle, command, parameter};
+  sound_event_t event;
+  event.handle = handle;
+  event.signal = command;
+  event.value = parameter;
 
   switch (command) {
   case SOUND_COMMAND_INIT_SONG: {
@@ -307,6 +319,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
   }    
 
   default: sciprintf("Unknown sound command %d\n", command);
+    return 1;
   }
 
 }
@@ -340,10 +353,10 @@ song_sleep_time(GTimeVal *lastslept, int ticks)
 GTimeVal
 song_next_wakeup_time(GTimeVal *lastslept, int ticks)
 {
-  GTimeVal retval = {lastslept->tv_sec, lastslept->tv_usec};
+  GTimeVal retval;
 
-  retval.tv_sec += ticks / 60;
-  retval.tv_usec += (ticks % 60) * SOUND_TICK;
+  retval.tv_sec = lastslept->tv_sec + (ticks / 60);
+  retval.tv_usec = lastslept->tv_usec + ((ticks % 60) * SOUND_TICK);
 
   if (retval.tv_usec >= 1000000) {
     retval.tv_usec -= 1000000;
@@ -494,12 +507,8 @@ song_lib_resort(songlib_t songlib, song_t *song)
     while (seeker->next && (seeker->next != song))
       seeker = seeker->next;
 
-    if (seeker->next) {
-      song_t *oldnext = seeker->next;
-
+    if (seeker->next)
       seeker->next = seeker->next->next;
-
-    }
   }
 
   song_lib_add(songlib, song);

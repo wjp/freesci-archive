@@ -169,7 +169,7 @@ con_parse(state_t *s, char *command)
     cdone = 0;
     pos = 0;
 
-    //    cmd_params = _xrealloc(cmd_params, parammem);
+    /*    cmd_params = _xrealloc(cmd_params, parammem); */
     cmd_paramlength = 0;
 
     while (*cmd == ' ') cmd++;

@@ -208,9 +208,15 @@ debug_mode[[:blank:]]*"="[::blank:]]*.+  {
 %%
 
 int
+yywrap()
+{
+  return 1; /* no further input */
+}
+
+
+int
 config_init(config_entry_t **_conf, char *conffile)
 {
-  char *path;
   char *homedir = getenv("HOME");
   char *conf_path;
 

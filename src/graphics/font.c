@@ -64,7 +64,7 @@ get_text_width(char *text, byte *font)
   int maxwidth = 0;
   int localmaxwidth = 0;
 
-  while (foo = *text++) {
+  while ((foo = *text++)) {
     if ((foo == '\n') || (foo == 0x0d)) {
       if (localmaxwidth > maxwidth)
 	maxwidth = localmaxwidth;
@@ -98,7 +98,7 @@ get_text_size(char *text, byte *font, int max_allowed_width, int *width, int *he
   if (max_allowed_width < 0)
     max_allowed_width = 32768;
 
-  while (foo = *text++) {
+  while ((foo = *text++)) {
     if ((foo == '\n') || (foo == 0x0d)) {
 
       if (foo == '\n')
@@ -163,7 +163,7 @@ void getTextParams(char *text, char *font)
   maxchar = getInt16(font+2);
 
   while ((foo = *(text++))) {
-    if (foo != 0x0d)
+    if (foo != 0x0d) {
       if (foo == '\n') {
 	if (localmaxwidth > lastwidth) lastwidth = localmaxwidth;
 	rowheights[rowcounter] = localmaxheight;
@@ -175,10 +175,14 @@ void getTextParams(char *text, char *font)
 	guint16 quux = getInt16((guint8 *) font+6+(foo<<1));
 	guint8 *foopos = font + quux;
 	localmaxwidth += *foopos;
-	if (localmaxheight < *(foopos+1)) localmaxheight = *(foopos+1);
+	if (localmaxheight < *(foopos+1))
+	  localmaxheight = *(foopos+1);
       }
+    }
   }
-  if (localmaxwidth > lastwidth) lastwidth = localmaxwidth;
+  if (localmaxwidth > lastwidth)
+    lastwidth = localmaxwidth;
+
   rowheights[rowcounter] = localmaxheight;
   rowwidths[rowcounter++] = localmaxwidth;
   lastheight += localmaxheight + 1;
@@ -218,7 +222,7 @@ _draw_text0(picture_t dest, port_t *port, int x, int y, char *text, char *font,
   getTextParams(text, font);
 
   while ((foo= *(text++))) {
-    if (foo != 0x0d)
+    if (foo != 0x0d) {
       if (foo == '\n' && with_newline) {
 	y += rowheights[rowcounter++] + 1;
 	x = xhome + ((lastwidth - rowwidths[rowcounter]) >> 1);
@@ -267,6 +271,7 @@ _draw_text0(picture_t dest, port_t *port, int x, int y, char *text, char *font,
 	}
 	x += xl;
       }
+    }
   }
 }
 
@@ -368,7 +373,7 @@ text_draw(picture_t dest, port_t *port, char *text, int maxwidth)
   int maxchar = getInt16(port->font + FONT_MAXCHAR_OFFSET);
   int line_height = getInt16(port->font + FONT_FONTSIZE_OFFSET);
   int priority = port->priority;
-  int bgcolor = port->bgcolor;
+  /*  int bgcolor = port->bgcolor; */
 
   if (maxwidth < 0)
     maxwidth = port->xmax - port->x; /* Negative means unlimited */

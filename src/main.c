@@ -51,13 +51,12 @@
 
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif HAVE_GETOPT_H
 
+#ifdef HAVE_GETOPT_LONG
 #define EXPLAIN_OPTION(longopt, shortopt, description) "  " longopt "\t" shortopt "\t" description "\n"
-
 #else /* !HAVE_GETOPT_H */
-
 #define EXPLAIN_OPTION(longopt, shortopt, description) "  " shortopt "\t" description "\n"
-
 #endif /* !HAVE_GETOPT_H */
 
 
@@ -75,7 +74,6 @@
 /* Neither NetBSD nor Win32 have this function, although it's in POSIX 1b */
 #endif /* !HAVE_SCHED_YIELD */
 
-static int quit = 0;
 static state_t *gamestate; /* The main game state */
 
 static int _script_debug_flag = 0;
@@ -162,7 +160,7 @@ get_gets_input(void)
   return input;
 }
 
-#ifdef HAVE_GETOPT_H
+#ifdef HAVE_GETOPT_LONG
 static struct option options[] = {
   {"gamedir", required_argument, 0, 'd'},
   {"run", no_argument, &_script_debug_flag, 0 },
@@ -180,7 +178,7 @@ main(int argc, char** argv)
 {
   config_entry_t *conf = NULL;
   int conf_entries = -1; /* Number of config entries */
-  int conf_nr; /* Element of conf to use */
+  int conf_nr = -1; /* Element of conf to use */
   int i, c, errc;
   FILE *console_logfile = NULL;
   int optindex = 0;
@@ -191,11 +189,11 @@ main(int argc, char** argv)
 
   getcwd(startdir, PATH_MAX);
 
-#ifdef HAVE_GETOPT_H
+#ifdef HAVE_GETOPT_LONG
   while ((c = getopt_long(argc, argv, "vrhDd:V:g:", options, &optindex)) > -1)
-#else /* !HAVE_GETOPT_H */
+#else /* !HAVE_GETOPT_LONG */
   while ((c = getopt(argc, argv, "vrhDd:V:g:")) > -1)
-#endif /* !HAVE_GETOPT_H */
+#endif /* !HAVE_GETOPT_LONG */
   {
     switch (c)
     {

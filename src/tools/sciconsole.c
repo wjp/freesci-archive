@@ -40,11 +40,6 @@
 #endif /* HAVE_READLINE_READLINE_H */
 
 static int quit = 0;
-/*int sci_color_mode = 0; /* Required for linking */
-
-/*void
-graph_update_box(state_t *s, int x,int y,int z,int w)
-{}; *//* Dummy because of braindead library design */
 
 int
 c_quit(state_t *s)
@@ -56,7 +51,6 @@ c_quit(state_t *s)
 int
 main(int argc, char** argv)
 {
-  resource_t *resource;
   int i;
 
   printf("console.c Copyright (C) 1999 Christoph Reichenbach\n"
@@ -65,7 +59,7 @@ main(int argc, char** argv)
 	 "or any later version, at your option.\n"
 	 "It comes with ABSOLUTELY NO WARRANTY.\n");
 
-  if (i = loadResources(SCI_VERSION_AUTODETECT, 1)) {
+  if ((i = loadResources(SCI_VERSION_AUTODETECT, 1))) {
     fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);
     exit(-1);
   };
@@ -87,7 +81,6 @@ main(int argc, char** argv)
 
   while (!quit) {
     char *command;
-    int oldlength;
 
 #ifdef HAVE_READLINE_READLINE_H
     command = readline("$ ");

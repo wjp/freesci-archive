@@ -369,15 +369,15 @@ view0_base_modify(int loop, int cel, byte *data, int *xvar, int *yvar);
 ** Returns   : (int) 0 on success, 1 otherwise
 */
 
-void draw_box(picture_t dest, short x, short y, short xl, short yl, char color, char priority);
-void draw_frame(picture_t dest, short x, short y, short xl, short yl, char color, char priority,
+void draw_box(picture_t dest, int x, int y, int xl, int yl, int color, int priority);
+void draw_frame(picture_t dest, int x, int y, int xl, int yl, int color, int priority,
 		int stipple);
 /* Draws a simple box.
 ** Parameters: (picture_t) dest: The picture_t to draw to.
-**             (short) x,y: The coordinates to draw to.
-**             (short) xl,yl: The width and height of the box.
-**             (char) color: The color to draw with.
-**             (char) priority: The priority to fill the box with (it still overwrites anything)
+**             (int x int) x,y: The coordinates to draw to.
+**             (int x int) xl,yl: The width and height of the box.
+**             (int) color: The color to draw with.
+**             (int) priority: The priority to fill the box with (it still overwrites anything)
 **             (int) stipple: Whether to draw it stippled
 ** Returns   : (void)
 ** The box does not come with any fancy shading. Use drawWindow to do this.
@@ -460,16 +460,16 @@ draw_titlebar_section(picture_t dest, int start, int length, int color);
 */
 
 
-void draw_window(picture_t dest, port_t *port, char color, char priority,
-		 char *title, guint8 *titlefont, gint16 flags);
+void draw_window(picture_t dest, port_t *port, int color, int priority,
+		 char *title, guint8 *titlefont, int flags);
 /* Draws a window with the appropriate facilities
 ** Parameters: (picture_t) dest: The picture_t to draw to
 **             (port_t *) port: The port to draw to
-**             (short) color: The background color of the window
-**             (short) priority: The window's priority
+**             (int) color: The background color of the window
+**             (int) priority: The window's priority
 **             (char *) title: The title to draw (see flags)
 **             (char *) titlefont: The font which the title should be drawn with
-**             (gint16) flags: The window flags (see the beginning of this header file)
+**             (int) flags: The window flags (see the beginning of this header file)
 ** This function will draw a window; it is very similar to the kernel call NewWindow() in its
 ** functionality.
 */

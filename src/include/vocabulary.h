@@ -117,7 +117,7 @@ typedef struct {
   int first_special; /* first terminal or non-terminal */
   int specials_nr; /* number of terminals and non-terminals */
   int length;
-  int data[0]; /* actual data */
+  int data[1]; /* actual data (size 1 to avoid compiler warnings) */
 } parse_rule_t;
 
 

@@ -361,7 +361,7 @@ kSetJump(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int gy = PARAM(3);
   int t1 = 1;
   int t2;
-  int x;
+  int x = 0;
   int y = 0;
 
   CHECK_THIS_KERNEL_FUNCTION;
@@ -471,7 +471,6 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr mover = PARAM(0);
   heap_ptr client = GET_SELECTOR(mover, client);
-  heap_ptr cycler = GET_SELECTOR(client, cycler);
 
   int x = GET_SELECTOR(client, x);
   int y = GET_SELECTOR(client, y);
@@ -558,7 +557,6 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr obj = UPARAM(0);
   heap_ptr cliplist = UPARAM_OR_ALT(1, 0);
-  word retval;
   word signal;
 
   int x = GET_SELECTOR(obj, brLeft);
@@ -683,7 +681,6 @@ kNumCels(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr obj = PARAM(0);
   int loop = UGET_SELECTOR(obj, loop);
-  int maxloop;
   int view;
   resource_t *viewres = findResource(sci_view, view = GET_SELECTOR(obj, view));
 
@@ -996,7 +993,6 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	  int modifiers = GET_SELECTOR(event, modifiers);
 	  byte key = GET_SELECTOR(event, message);
 
-	  int font_nr = GET_SELECTOR(obj, font);
 	  char *text = s->heap + UGET_SELECTOR(obj, text);
 	  int textlen = strlen(text);
 
@@ -1217,7 +1213,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
     break;
 
   case K_CONTROL_CONTROL: {
-    char **entries_list;
+    char **entries_list = NULL;
     char *seeker;
     int entries_nr;
     int lsTop = GET_SELECTOR(obj, lsTop);
@@ -1369,7 +1365,6 @@ _k_view_list_free_backgrounds(state_t *s, view_object_t *list, int list_nr)
   for (i = 0; i < list_nr; i++)
     if (list[i].obj) {
     int handle = list[i].underBits;
-    int signal = GET_HEAP(list[i].signalp);
 
     if (handle)
       kfree(s, handle);
@@ -1410,7 +1405,6 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, view_object_t *list, i
      /* disposes all list members flagged for disposal; funct_nr is the invoking kfunction */
 {
   int i;
-  heap_ptr old_obj;
 
   for (i = 0; i < list_nr; i++)
     if (list[i].obj) {
@@ -1592,7 +1586,6 @@ void
 _k_view_list_dispose(state_t *s, view_object_t **list_ptr, int *list_nr_ptr)
      /* Unallocates all list element data, frees the list */
 {
-  int i;
   view_object_t *list = *list_ptr;
   if (!(*list_nr_ptr))
     return; /* Nothing to do :-( */
@@ -1618,7 +1611,7 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int flags)
      /* Draws list_nr members of list to s->pic. */
 {
   int i;
-  int argc = 0, argp, funct_nr = -1; /* Kludges to work around INV_SEL dependancies */
+  int argc = 0, argp = 0, funct_nr = -1; /* Kludges to work around INV_SEL dependancies */
 
   if (s->view_port != s->dyn_view_port)
     return; /* Return if the pictures are meant for a different port */
@@ -1780,7 +1773,6 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int x = PARAM(3);
   int y = PARAM(4);
   int priority = PARAM(5);
-  int maxloops, maxcels;
 
 
   CHECK_THIS_KERNEL_FUNCTION;

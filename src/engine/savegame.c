@@ -177,7 +177,7 @@ read_PTN(FILE *fh, parse_tree_node_t *foo, char *lastval, int *line, int *hiteof
       return 1; /* Failed to parse everything */
     return 0;
   } else if (lastval[0] == 'B') {
-    if (sscanf(lastval, "B ( %d , %d )", &(foo->content.branches[0]), &(foo->content.branches[1])) < 2)
+    if (sscanf(lastval, "B ( %hd , %hd )", &(foo->content.branches[0]), &(foo->content.branches[1])) < 2)
       return 1; /* Failed to parse everything */
     return 0;
   } else return 1; /* failure to parse anything */
@@ -227,7 +227,7 @@ _cfsml_mangle_string(char *s)
   char *target = (char *) g_malloc(1 + strlen(s) * 2); /* We will probably need less than that */
   char *writer = target;
 
-  while (c = *source++) {
+  while ((c = *source++)) {
 
     if (c < 32) { /* Special character? */
       *writer++ = '\\'; /* Escape... */

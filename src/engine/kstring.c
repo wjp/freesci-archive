@@ -164,7 +164,6 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
       PUT_SELECTOR(s->parser_event, claimed, 1);
 
   } else s->acc = 0;
-  //  s->acc = vocab_augment_trees(s, s->parser_nodes);
 #endif /* !SCI_SIMPLE_SAID_CODE */
 }
 
@@ -406,7 +405,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
   char xfer;
   int i;
   int startarg;
-  int str_leng; /* Used for stuff like "%13s" */
+  int str_leng = 0; /* Used for stuff like "%13s" */
 
   CHECK_THIS_KERNEL_FUNCTION;
 

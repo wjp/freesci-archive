@@ -548,7 +548,7 @@ c_restore_game(state_t *s)
     } else
       newstate->onscreen_console = 0;
 
-    /*    game_exit(s); /* Clear old state */
+    /*    game_exit(s); *//* Clear old state */
     return 0;
 
   } else {
@@ -566,7 +566,6 @@ c_restore_game(state_t *s)
 int
 c_restart_game(state_t *s)
 {
-  state_t *newstate;
   int i;
 
   if (!s) {
@@ -705,6 +704,10 @@ disassemble(state_t *s, heap_ptr pos)
       break;
 
     case Script_End: retval = 0;
+      break;
+
+    default:
+      sciprintf("Internal assertion failed in 'disassemble', %s, L%d\n", __FILE__, __LINE__);
 
     }
 
@@ -1136,7 +1139,7 @@ set_debug_mode (struct _state *s, int mode, char *areas)
   char frob;
 
   parser = areas;
-  while (frob = *parser) {
+  while ((frob = *parser)) {
     seeker = 0;
 
     if (frob == '*') { /* wildcard */
@@ -1170,7 +1173,6 @@ int
 c_debuglog(state_t *s)
 {
   int i;
-  char *parser;
 
   if (!_debugstate_valid) {
     sciprintf("Not in debug state\n");
@@ -1743,7 +1745,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       if ((event.buckybits & SCI_EVM_CTRL) && (event.data == '`')) /* UnConsole command? */
 	_debugstate_valid = 0;
       else
-	if (commandbuf = con_input(&event)) {
+	if ((commandbuf = con_input(&event))) {
 
 	  sciprintf(" >%s\n", commandbuf);
 

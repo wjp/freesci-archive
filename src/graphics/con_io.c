@@ -288,7 +288,6 @@ con_restore_screen(state_t *s, byte *backup)
 void
 con_draw(state_t *s, byte *backup)
 {
-  int blen = (con_visible_rows << 3) + 3;
   int inplines = 1 + strlen(_inpbuf) / SCI_CONSOLE_LINE_WIDTH;
   int outplines = con_visible_rows - inplines;
   int nextline, i;

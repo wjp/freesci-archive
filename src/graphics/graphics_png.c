@@ -196,7 +196,7 @@ png_load_buffer(picture_t pic, char *name,
   FILE *fil;
   char header[8];
   int i, bytespp, stepwidth;
-  byte *buf, *bufpos = NULL;
+  byte *buf = NULL, *bufpos = NULL;
   png_uint_32 _xoffset, _yoffset, width, height;
   png_color sci0_color_interpol[256];
 #if (PNG_LIBPNG_VER > 10003)

@@ -72,7 +72,7 @@ _cfsml_mangle_string(char *s)
   char *target = (char *) g_malloc(1 + strlen(s) * 2); /* We will probably need less than that */
   char *writer = target;
 
-  while (c = *source++) {
+  while ((c = *source++)) {
 
     if (c < 32) { /* Special character? */
       *writer++ = '\\'; /* Escape... */

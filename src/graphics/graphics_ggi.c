@@ -81,7 +81,6 @@ gfx_driver_t gfx_driver_libggi =
 void initColors(ggi_visual_t visual)
 {
   int i;
-  int map;
   int palette = 0; /* Using a palettized mode? */
   ggi_mode mode;
   ggi_color vcal[16];
@@ -157,12 +156,12 @@ ggi_visual_t openVisual()
 ggi_visual_t openDoubleVisual()
 {
   ggi_mode mode = {
-    1, // 1 frame
-    {640, 400}, // resolution
-    {640, 400}, // virtual
-    {0, 0},     // size in mm
-    GT_AUTO,   // color depth
-    {GGI_AUTO, GGI_AUTO}}; // font size
+    1, /* 1 frame */
+    {640, 400}, /* resolution */
+    {640, 400}, /* virtual */
+    {0, 0},     /* size in mm */
+    GT_AUTO,   /* color depth */
+    {GGI_AUTO, GGI_AUTO}}; /* font size */
   ggi_visual_t retval;
 
   if (!(retval = ggiOpen(NULL))) return NULL;
@@ -200,12 +199,12 @@ graphics_draw_region_ggi(ggi_visual_t vis, byte *data,
 			 int x, int y, int xl, int yl,
 			 mouse_pointer_t *pointer, int pointer_x, int pointer_y)
 {
-  int xc, yc, pos = 0;
+  int xc, yc;
   ggi_mode mode;
   int bytelen;
   int index, counter;
   int xend, yend;
-  int pointer_end_x, pointer_end_y;
+  int pointer_end_x = -1, pointer_end_y = -1;
   int pointer_x_affected = 0; /* set to 1 if the pointer has to be drawn at all */
 
   int write_bytelen = 4;      /* Byte length for writing */
@@ -285,7 +284,7 @@ graphics_draw_region_ggi(ggi_visual_t vis, byte *data,
   } /* if (pointer) */
 
   for (yc = y; yc < yend; yc++) {
-    int pointer_row;
+    int pointer_row = -1;
     counter = yc * SCI_SCREEN_WIDTH + x; /* Screen Position */
     index = -bytelen;
 

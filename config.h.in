@@ -20,6 +20,9 @@
 /* Define if you have the fork function.  */
 #undef HAVE_FORK
 
+/* Define if you have the getopt_long function.  */
+#undef HAVE_GETOPT_LONG
+
 /* Define if you have the memfrob function.  */
 #undef HAVE_MEMFROB
 

@@ -1,3 +1,8 @@
+2000-05-21  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/soundserver_null.c (verify_pid): Process aliveness testing
+	is now done with kill() instead of examining /proc
+
 2000-05-20  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kfile.c (update_savegame_indices): Added sorting for

@@ -72,7 +72,7 @@ void
 graph_update_box(struct _state *s, int x, int y, int xl, int yl)
 {
   int pos;
-  int i, _yl;
+  int _yl;
   CLIP_COORDS_AND_SIZE(x, y, xl, yl);
   if ((xl < 0) || (yl < 0))
     return;
@@ -94,7 +94,7 @@ graph_fill_box_custom(struct _state *s, int x, int y, int xl, int yl,
 		      int color, int priority, int control, int layers)
 {
   int pos = 0;
-  int i, _yl = yl;
+  int _yl = yl;
 
   if (priority < 0)
     priority = 16;
@@ -548,7 +548,7 @@ graph_png_save_box(state_t *s, byte *mem)
       FILE *fh;
 
       sprintf(filename, "buffer_%d.%d", i, layer);
-      if (fh = fopen(filename, "r")) {
+      if ((fh = fopen(filename, "r"))) {
 	fclose(fh);
 	exists = 1;
       }
@@ -597,12 +597,12 @@ graph_png_load_box(state_t *s, int handle, int *alloc_size)
     layer = 1 << i;
 
     sprintf(filename, "buffer_%d.%d", handle, layer);
-    if (tempfile = fopen(filename, "r")) {
+    if ((tempfile = fopen(filename, "r"))) {
 
       fclose(tempfile);
 
-      if (data[i] = png_load_buffer(s->pic, filename, &x, &y, /* Try to load */
-				    &xl, &yl, &(sizes[i]), (layer != 1))) {
+      if ((data[i] = png_load_buffer(s->pic, filename, &x, &y, /* Try to load */
+				    &xl, &yl, &(sizes[i]), (layer != 1)))) {
 	layers |= layer;
 	totalsize += sizes[i];
       }

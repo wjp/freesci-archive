@@ -1,4 +1,4 @@
-dnl aclocal.m4 generated automatically by aclocal 1.4a
+dnl aclocal.m4 generated automatically by aclocal 1.4
 
 dnl Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
@@ -128,7 +128,6 @@ AC_CHECK_LINK_PATH([ggiInit();],$_ac_ggi_libraries,["-lggi"],
 if test "$ac_ggi_includes" = no || test "$ac_ggi_libraries" = no; then
 
 	AC_MSG_RESULT([failed])
-	AC_MSG_WARN([ggi is required for graphics support!])
 	ac_ggi_libraries=""
 	ac_ggi_includes=""
 else
@@ -221,7 +220,7 @@ AC_ARG_WITH(png-libraries,
     [  _ac_png_libraries="-L$withval"
     ])
 
-LIBS="$LIBS -lm"
+LIBS="$LIBS -lpng -lm"
 AC_CHECK_INCLUDE_PATH([png.h],[$_ac_png_includes],[], ac_png_includes)
 AC_CHECK_LINK_PATH([png_info_init((png_infop)0);],$_ac_png_libraries,["-lpng"],
 		 [$ac_png_includes],[#include <png.h>], ac_png_libraries)
@@ -289,11 +288,11 @@ AC_DEFUN(AC_PATH_GLX,
 [
 AC_MSG_CHECKING([for glx])
 
-oldLDFLAGS=$LDFLAGS
 oldCFLAGS=$CFLAGS
+oldLIBS=$LIBS
 
 if test "$x_libraries"; then
-	LDFLAGS="$LDFLAGS -L$x_libraries"
+	ac_glx_libraries="$LDFLAGS -L$x_libraries"
 	CFLAGS="$CFLAGS -I$x_includes"
 fi
 
@@ -310,7 +309,8 @@ if test "$found_glx" = yes; then
 
 	found_glx=no
 
-	LDFLAGS="$LDFLAGS -lGL -lX11 -lXmu -lXi"
+	ac_glx_libraries="$ac_glx_libraries -lGL -lX11 -lXmu -lXi"
+	LIBS="$oldLIBS $ac_glx_libraries"
 	AC_TRY_LINK([#include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
@@ -326,17 +326,19 @@ if test "$found_glx" = yes; then
 	else
 
 		AC_MSG_RESULT([no])
-		LDFLAGS=$oldLDFLAGS
+		ac_glx_libraries=""
 		CFLAGS=$oldCFLAGS
 
 	fi
 else
 
 	AC_MSG_RESULT([no])
-	LDFLAGS=$oldLDFLAGS
+	ac_glx_libraries=""
 	CFLAGS=$oldCFLAGS
 
 fi
+
+LIBS="$oldLIBS"
 
 ])
 # Like AC_CONFIG_HEADER, but automatically create stamp file.
@@ -373,8 +375,6 @@ dnl AM_INIT_AUTOMAKE(package,version, [no-define])
 
 AC_DEFUN(AM_INIT_AUTOMAKE,
 [AC_REQUIRE([AC_PROG_INSTALL])
-dnl We require 2.13 because we rely on SHELL being computed by configure.
-AC_PREREQ([2.13])
 PACKAGE=[$1]
 AC_SUBST(PACKAGE)
 VERSION=[$2]

@@ -33,7 +33,6 @@
 
 int main(int argc, char** argv)
 {
-  resource_t *resource;
   char **names;
   opcode *opcodes;
   int i, count;

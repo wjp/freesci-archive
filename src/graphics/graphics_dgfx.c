@@ -249,7 +249,7 @@ dgfx_shutdown(state_t *s) {
 
 void
 dgfx_wait(state_t* s, long usec) {
-//    usleep(usec);
+  /*    usleep(usec); */
 }
 
 void

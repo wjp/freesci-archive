@@ -263,7 +263,7 @@ static script_method* decode_method(byte* data)
   script_method* m;
   int done=0;
   int pos=0;
-  static count=0;
+  static int count=0;
   
   count++;
 
@@ -473,7 +473,7 @@ static object* read_object(int script, int positions[1000])
 {
 	resource_t* r=findResource(sci_script, script);
 	unsigned char* raw;
-	int pos, length;
+	int pos;
 	object* obj;
 
 	printf("Searching for object in script %03d\n", script);
@@ -567,7 +567,7 @@ static object* read_class(int script, int positions[1000])
 {
 	resource_t* r=findResource(sci_script, script);
 	unsigned char* raw;
-	int pos, length;
+	int pos;
 	object* obj;
 
 	printf("Searching for class in script %03d\n", script);

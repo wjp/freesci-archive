@@ -137,13 +137,11 @@ _addResource(struct singly_linked_resources_struct *base, resource_t *resource, 
 */
 {
   struct singly_linked_resources_struct *seeker;
-  //  fprintf(stderr," >>base>>%p\n", base);
 
   if (!base->resource) { base->resource = resource; max_resource++; }
   else {
     seeker = base;
 
-    //  fprintf(stderr," >>>base>>%p\n", base);
     while (seeker && seeker->next) {
       if (seeker->resource->id == resource->id) {
 	if (priority) { /* replace the old resource */

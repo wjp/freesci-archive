@@ -503,6 +503,9 @@ run_vm(state_t *s, int restoring)
       case Script_SRelative:
         opparams[temp] = GET_OP_SIGNED_FLEX(); break;
 
+      default:
+	break; /* Required for some compilers */
+
       }
 
     switch (opnumber) {
@@ -634,7 +637,7 @@ run_vm(state_t *s, int restoring)
       break;
 
     case 0x1d: /* toss */
-      POP();
+      xs->sp -= 2;
       break;
 
     case 0x1e: /* dup */

@@ -29,7 +29,7 @@
 #include <engine.h>
 
 void
-draw_box(picture_t dest, short x, short y, short xl, short yl, char color, char priority)
+draw_box(picture_t dest, int x, int y, int xl, int yl, int color, int priority)
 {
   int c; /* counter */
   int startpos, pos;
@@ -79,7 +79,7 @@ fill_box(picture_t dest, int x, int y, int xl, int yl, int value, int map)
 
 
 void
-draw_frame(picture_t dest, short x, short y, short xl, short yl, char color, char priority,
+draw_frame(picture_t dest, int x, int y, int xl, int yl, int color, int priority,
 	   int stipple)
 {
   int c; /* counter */
@@ -163,8 +163,8 @@ draw_titlebar_section(picture_t dest, int start, int length, int color)
 }
 
 
-void draw_window(picture_t dest, port_t *port, char color, char priority,
-		 char *title, guint8 *titlefont, gint16 flags)
+void draw_window(picture_t dest, port_t *port, int color, int priority,
+		 char *title, guint8 *titlefont, int flags)
 {
   int x = port->xmin;
   int y = port->ymin;

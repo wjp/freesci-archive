@@ -45,7 +45,7 @@ static int hexdump = 0;
 static int opcode_size = 0;
 static int verbose = 0;
 
-#ifdef HAVE_GETOPT_H
+#ifdef HAVE_GETOPT_LONG
 static struct option options[] = {
   {"version", no_argument, 0, 256},
   {"help", no_argument, 0, 'h'},
@@ -53,7 +53,7 @@ static struct option options[] = {
   {"opcode-size", no_argument, &opcode_size, 1},
   {"verbose", no_argument, &verbose, 1},
   {0, 0, 0, 0}};
-#endif /* HAVE_GETOPT_H */
+#endif /* HAVE_GETOPT_LONG */
 
 #define SCI_ASSUME_VERSION SCI_VERSION_FTU_NEW_SCRIPT_HEADER
 
@@ -136,7 +136,7 @@ int main(int argc, char** argv)
   int c;
   disasm_state_t disasm_state;
 
-#ifdef HAVE_GETOPT_H
+#ifdef HAVE_GETOPT_LONG
   while ((c = getopt_long(argc, argv, "vhx", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_H */
   while ((c = getopt(argc, argv, "vhx")) > -1) {
@@ -172,7 +172,7 @@ int main(int argc, char** argv)
     }
 
   printf ("Loading resources...\n");
-  if (i = loadResources(SCI_VERSION_AUTODETECT, 0)) {
+  if ((i = loadResources(SCI_VERSION_AUTODETECT, 0))) {
     fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);
     return 1;
   }
@@ -414,7 +414,7 @@ script_dump_object(disasm_state_t *d, script_state_t *s,
   int species = getInt16(data + 8 + seeker);
   int superclass = getInt16(data + 10 + seeker);
   int namepos = getInt16(data + 14 + seeker);
-  int nameseeker, i = 0;
+  int i = 0;
   short sel;
   char *name;
   char buf [256];
@@ -492,7 +492,6 @@ script_dump_class(disasm_state_t *d, script_state_t *s,
   int species = getInt16(data + 8 + seeker);
   int superclass = getInt16(data + 10 + seeker);
   int namepos = getInt16(data + 14 + seeker);
-  int nameseeker;
   char *name;
   char buf [256];
   int i;
@@ -851,15 +850,19 @@ script_disassemble_code(disasm_state_t *d, script_state_t *s,
               sciprintf(opsize? " %02x" : " %04x", param_value);
 
             break;
-          }
-          break;
       
-      case Script_End: 
-        if (pass_no == 2) sciprintf ("\n");
-        //return;
+	  case Script_End: 
+	    if (pass_no == 2) sciprintf ("\n");
+	    break;
+    
+	  default:
+	    sciprintf("Unexpected opcode format %d\n", (formats[opcode][i]));
+          }
 
+      default:
     }
     if (pass_no == 2) sciprintf ("\n");
+	    
   }
  
 }

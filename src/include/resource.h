@@ -119,7 +119,7 @@ enum ResourceTypes {
   sci_sound, sci_memory, sci_vocab, sci_font,
   sci_cursor, sci_patch, sci_bitmap, sci_palette,
   sci_cdaudio, sci_audio, sci_sync, sci_message,
-  sci_map, sci_heap, sci_invalid_resource,
+  sci_map, sci_heap, sci_invalid_resource
 };
 
 #define sci0_last_resource sci_patch
@@ -172,12 +172,14 @@ gint16 getInt16(byte *d);
 #define getUInt16(d) (*((guint16 *)(d)))
 
 #endif /* !WORDS_BIGENDIAN */
-//gint16 getInt16(guint8* d);
-//#else
-//#define getInt16(d) (*((gint16 *)(d)))
-//#endif
-//#endif
-//#define getUInt16(_x_) ((guint16) getInt16(_x_))
+/*
+gint16 getInt16(guint8* d);
+#else
+#define getInt16(d) (*((gint16 *)(d)))
+#endif
+#endif
+#define getUInt16(_x_) ((guint16) getInt16(_x_))
+*/
 #endif
 /* Turns a little endian 16 bit value into a machine-dependant 16 bit value
 ** Parameters: d: Pointer to the memory position from which to read

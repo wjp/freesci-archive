@@ -71,8 +71,6 @@ sound_null_init(state_t *s)
 
   if (child_pid) { /* Parent process */
 
-    char target[1000];
-
     close(s->sound_pipe_in[0]);
     close(s->sound_pipe_out[1]);
     close(s->sound_pipe_events[1]);
@@ -161,19 +159,10 @@ song_lib_dump(songlib_t songlib, int line)
 }
 
 
-int
-verify_pid(int pid) /* Checks if the specified PID is registered in /proc */
+static int
+verify_pid(int pid) /* Checks if the specified PID is in use */
 {
-  char buffer[16];
-  DIR *dir;
-
-  sprintf(buffer, "/proc/%d", pid);
-  dir = opendir(buffer);
-  if (!dir)
-    return 1;
-
-  closedir(dir);
-  return 0;
+  return kill(pid, 0);
 }
 
 #define CHECK song_lib_dump(songlib, __LINE__)
@@ -227,7 +216,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
     while (ticks == 0) {
 
       int newcmd;
-      int param, param2;
+      int param, param2 = 0;
       int tempticks;
 
       gettimeofday((struct timeval *)&last_played, NULL);
@@ -422,7 +411,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	  case SOUND_COMMAND_DISPOSE_HANDLE:
 
 	    if (debugging)
-	      fprintf(ds, "Disposing handle %04x\n", event.value, event.handle);
+	      fprintf(ds, "Disposing handle %04x (value %04x)\n", event.handle, event.value);
 	    if (modsong) {
 	      int lastmode = song_lib_remove(songlib, event.handle);
 	      if (lastmode == SOUND_STATUS_PLAYING) {
@@ -437,7 +426,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	  case SOUND_COMMAND_STOP_HANDLE:
 
 	    if (debugging)
-	      fprintf(ds, "Stopping handle %04x\n", event.value, event.handle);
+	      fprintf(ds, "Stopping handle %04x (value %04x)\n", event.handle, event.value);
 	    if (modsong) {
 
 	      modsong->status = SOUND_STATUS_STOPPED;
@@ -451,7 +440,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	  case SOUND_COMMAND_SUSPEND_HANDLE:
 
 	    if (debugging)
-	      fprintf(ds, "Suspending handle %04x\n", event.value, event.handle);
+	      fprintf(ds, "Suspending handle %04x (value %04x)\n", event.handle, event.value);
 	    if (modsong) {
 
 	      modsong->status = SOUND_STATUS_SUSPENDED;
@@ -464,7 +453,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	  case SOUND_COMMAND_RESUME_HANDLE:
 
 	    if (debugging)
-	      fprintf(ds, "Resuming on handle %04x\n", event.value, event.handle);
+	      fprintf(ds, "Resuming on handle %04x (value %04x)\n", event.handle, event.value);
 	    if (modsong) {
 
 	      if (modsong->status == SOUND_STATUS_SUSPENDED) {
@@ -576,7 +565,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 					     &ccc, &usecs, &ticks, &fadeticks);
 
 	    last_played.tv_sec -= secs = (usecs - last_played.tv_usec) / 1000000;
-	    last_played.tv_usec - usecs + secs * 1000000;
+	    last_played.tv_usec -= (usecs + secs * 1000000);
 
 	    /* Return return value */
 	    write(fd_out, &success, sizeof(int));

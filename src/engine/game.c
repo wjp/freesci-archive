@@ -104,6 +104,12 @@ _free_vocabulary(state_t *s)
 static int
 _init_graphics_input(state_t *s)
 {
+  return ((s->pic = alloc_empty_picture(SCI_RESOLUTION_320X200, SCI_COLORDEPTH_8BPP)) == NULL);
+}
+
+static int
+_reset_graphics_input(state_t *s)
+{
   resource_t *resource;
   int i, font_nr;
   sciprintf("Initializing graphics\n");
@@ -117,7 +123,6 @@ _init_graphics_input(state_t *s)
   s->last_pointer_size_x = 0;
   s->last_pointer_size_y = 0; /* No previous pointer */
 
-  s->pic = alloc_empty_picture(SCI_RESOLUTION_320X200, SCI_COLORDEPTH_8BPP);
   s->pic_not_valid = 1; /* Picture is invalid */
   s->pic_is_new = 0;
   s->pic_visible_map = 0; /* Other values only make sense for debugging */
@@ -228,7 +233,7 @@ script_init_engine(state_t *s, sci_version_t version)
   s->classtable = g_new0(class_t, s->classtable_size);
 
   for (scriptnr = 0; scriptnr < 1000; scriptnr++) {
-    int objtype;
+    int objtype = 0;
     resource_t *script = findResource(sci_script, scriptnr);
 
     if (script) {
@@ -289,6 +294,9 @@ script_init_engine(state_t *s, sci_version_t version)
 
   s->_heap = heap_new();
   s->heap = s->_heap->start;
+
+  save_ff(s->_heap); /* Save heap state */
+
   s->acc = s->amp_rest = s->prev = 0;
 
   s->execution_stack = NULL;    /* Start without any execution stack */
@@ -317,6 +325,9 @@ script_init_engine(state_t *s, sci_version_t version)
   s->file_handles = g_new0(FILE *, s->file_handles_nr);
   /* Allocate memory for file handles */
   sciprintf("Engine initialized\n");
+
+  if (_init_graphics_input(s))
+    return 1;
 
   return 0;
 }
@@ -366,7 +377,10 @@ script_free_engine(state_t *s)
     g_free (bp);
     bp = bp_next;
   }
+
   s->bp_list = NULL;
+
+  _free_graphics_input(s);
 
 }
 
@@ -383,17 +397,12 @@ game_init(state_t *s)
   heap_ptr parser_handle;
   heap_ptr script0;
   heap_ptr game_obj; /* Address of the game object */
-  heap_ptr game_init; /* Address of the init() method */
-  heap_ptr functarea;
-  resource_t *resource;
-  int i, font_nr;
+  int i;
 
   if (!script_instantiate(s, 0, 0)) {
     sciprintf("game_init(): Could not instantiate script 0\n");
     return 1;
   }
-
-  save_ff(s->_heap); /* Save heap state */
 
   stack_handle = heap_allocate(s->_heap, VM_STACK_SIZE);
   parser_handle = heap_allocate(s->_heap, PARSE_HEAP_SIZE);
@@ -430,6 +439,9 @@ game_init(state_t *s)
     return 1;
   }
 
+  if (_reset_graphics_input(s))
+    return 1;
+
   s->successor = NULL; /* No successor */
   s->status_bar_text = NULL; /* Status bar is blank */
 
@@ -443,9 +455,6 @@ game_init(state_t *s)
   g_get_current_time(&(s->game_start_time)); /* Get start time */
   memcpy(&(s->last_wait_time), &(s->game_start_time), sizeof(GTimeVal));
   /* Use start time as last_wait_time */
-
-  if (_init_graphics_input(s))
-    return 1;
 
   s->animation_delay = 500; /* Used in kAnimate for pic openings */
 
