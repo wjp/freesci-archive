@@ -927,7 +927,6 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
 	gfxop_disable_dirty_frames(s->gfx_state);
-
 	s->old_screen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 10, 320, 190));
 
 	SCIkdebug(SCIkGRAPHICS,"Drawing pic.%03d\n", PARAM(0));

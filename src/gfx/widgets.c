@@ -28,7 +28,7 @@
 #include <sci_memory.h>
 #include <gfx_widgets.h>
 
-/*#define GFXW_DEBUG_DIRTY*/ /* Enable to debug dirty rectangle propagation (writes to stderr) */
+#undef GFXW_DEBUG_DIRTY /* Enable to debug dirty rectangle propagation (writes to stderr) */
 
 #ifdef GFXW_DEBUG_DIRTY
 #  define DDIRTY fprintf(stderr, "%s:%5d| ", __FILE__, __LINE__); fprintf
@@ -456,9 +456,6 @@ static int
 _gfxwop_box_superarea_of(gfxw_widget_t *widget, gfxw_widget_t *other)
 {
 	gfxw_box_t *box = (gfxw_box_t *) widget;
-
-	if ((box->color1.mask & (GFX_MASK_VISUAL | GFX_MASK_CONTROL)) != (GFX_MASK_VISUAL | GFX_MASK_CONTROL))
-		return 0;
 
 	if (box->color1.alpha)
 		return 0;
@@ -893,9 +890,9 @@ _gfxwop_pic_view_draw(gfxw_widget_t *widget, point_t pos)
 					 view->cel, _move_point(view->draw_bounds, pos),
 					 view->color));
 
-	GFX_ASSERT(gfxop_draw_cel(view->visual->gfx_state, view->view, view->loop,
-				  view->cel, _move_point(view->draw_bounds, pos),
-				  view->color));
+	GFX_ASSERT(gfxop_clear_box(view->visual->gfx_state,
+				   _move_rect(view->draw_bounds,
+					      pos)));
 
 	widget->draw = _gfxwop_draw_nop; /* No more drawing needs to be done */
 
@@ -1350,6 +1347,14 @@ recursively_free_dirty_rects(gfx_dirty_rect_t *dirty)
 
 int ti = 0;
 
+static inline int
+_gfxw_dirty_rect_overlaps_normal_rect(rect_t port_zone, rect_t bounds, rect_t dirty)
+{
+	bounds.x += port_zone.x;
+	bounds.y += port_zone.y;
+	return gfx_rects_overlap(bounds, dirty);
+}
+
 static int
 _gfxwop_container_draw_contents(gfxw_widget_t *widget, gfxw_widget_t *contents)
 {
@@ -1365,7 +1370,7 @@ _gfxwop_container_draw_contents(gfxw_widget_t *widget, gfxw_widget_t *contents)
 		gfxw_widget_t *seeker = contents;
 
 		while (seeker) {
-			if (gfx_rects_overlap(seeker->bounds, dirty->rect)) {
+			if (_gfxw_dirty_rect_overlaps_normal_rect(container->zone, seeker->bounds, dirty->rect)) {
 				if (GFXW_IS_CONTAINER(seeker)) {/* Propagate dirty rectangles /upwards/ */
 					DDIRTY(stderr,"container_draw_contents: propagate upwards (%d,%d,%d,%d ,0)\n", GFX_PRINT_RECT(dirty->rect));
 					((gfxw_container_t *)seeker)->add_dirty_abs((gfxw_container_t *)seeker, dirty->rect, 0);
@@ -1782,10 +1787,7 @@ _gfxwop_ordered_add(gfxw_container_t *container, gfxw_widget_t *widget, int comp
 	widget->next = *seekerp;
 	*seekerp = widget;
 
-	if (_parentize_widget(container, widget))
-		return 1;
-
-	return 0;
+	return _parentize_widget(container, widget);
 }
 
 static int
@@ -1834,6 +1836,7 @@ _gfxwop_visual_draw(gfxw_widget_t *widget, point_t pos)
 {
 	gfxw_visual_t *visual = (gfxw_visual_t *) widget;
 	gfx_dirty_rect_t *dirty = visual->dirty;
+	gfxw_widget_t *c_widget;
 	DRAW_ASSERT(widget, GFXW_VISUAL);
 
 	while (dirty) {
@@ -2090,13 +2093,25 @@ _gfxwop_port_add_dirty(gfxw_container_t *widget, rect_t dirty, int propagate)
 	DDIRTY(stderr,"Added dirty to ID %d\n", widget->ID);
 	DDIRTY(stderr, "dirty= (%d,%d,%d,%d) bounds (%d,%d,%d,%d)\n", dirty.x, dirty.x, dirty.xl, dirty.yl,
 	 widget->bounds.x, widget->bounds.y, widget->bounds.xl, widget->bounds.yl);
+#if 0
+	/* FIXME: This is a worthwhile optimization */
 	if (self->port_bg) {
 		gfxw_widget_t foo;
 
 		foo.bounds = dirty; /* Yeah, sub-elegant, I know */
-		if (self->port_bg->superarea_of(self->port_bg, &foo))
+		foo.bounds.x -= self->zone.x;
+		foo.bounds.y -= self->zone.y;
+		if (self->port_bg->superarea_of(self->port_bg, &foo)) {
+			gfxw_container_t *parent = self->parent;
+			while (parent) {
+				fprintf(stderr,"Dirtifying parent id %d\n", parent->ID);
+				parent->flags |= GFXW_FLAG_DIRTY;
+				parent = parent->parent;
+			}
 			return 0;
+		}
 	} /* else propagate to the parent, since we're not 'catching' the dirty rect */
+#endif
 
 	if (propagate)
 		if (self->parent) {

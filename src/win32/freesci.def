@@ -100,3 +100,5 @@ EXPORTS
   scir_find_resource
   scir_free_resource_manager
    
+  memtest
+  sci0_palette

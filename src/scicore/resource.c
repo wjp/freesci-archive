@@ -271,8 +271,6 @@ scir_new_resource_manager(char *dir, int version,
 		resmap_version = SCI_VERSION_0;
 	}
 
-	/* FIXME: Check for certain vocab files to determine
-	**        SCI version  */
 
 	/* ADDME: Try again with sci1_read_resource_map() */
 
@@ -299,9 +297,13 @@ scir_new_resource_manager(char *dir, int version,
 					       VOCAB_RESOURCE_SCI0_MAIN_VOCAB)) {
 				sciprintf("Resmgr: Detected SCI0\n");
 				version = SCI_VERSION_0;
-			} else {
+			} else if (scir_test_resource(mgr, sci_vocab,
+						      VOCAB_RESOURCE_SCI1_MAIN_VOCAB)) {
 				sciprintf("Resmgr: Detected SCI01\n");
-				version = SCI_VERSION_01;
+				if (scir_test_resource(mgr, sci_vocab, 912)) {
+					sciprintf("Resmgr: Running KQ1 or similar, using SCI0 resource encoding\n");
+					version = SCI_VERSION_0;
+				} else version = SCI_VERSION_01;
 			} break;
 
 		default:
@@ -392,10 +394,11 @@ _scir_load_resource(resource_mgr_t *mgr, resource_t *res)
 
 	lseek(fh, res->file_offset, SEEK_SET);
 
-	if (!decompressors[mgr->sci_version])
+	if (!decompressors[mgr->sci_version]) {
 		sciprintf("Resource manager's SCI version (%d) is invalid!\n",
 			  mgr->sci_version);
-	else {
+		exit(1);
+	} else {
 		int error =
 			decompressors[mgr->sci_version](res, fh);
 

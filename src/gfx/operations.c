@@ -1273,7 +1273,6 @@ gfxop_clear_box(gfx_state_t *state, rect_t box)
 	BASIC_CHECKS(GFX_FATAL);
 	REMOVE_POINTER;
 	_gfxop_add_dirty(state, box);
-
 	_gfxop_scale_rect(&box, state->driver->mode);
 
 	return _gfxop_buffer_propagate_box(state, box, GFX_BUFFER_BACK);
@@ -1333,6 +1332,7 @@ int
 gfxop_disable_dirty_frames(gfx_state_t *state)
 {
 	BASIC_CHECKS(GFX_ERROR);
+
 	state->disable_dirty = 1;
 
 	return GFX_OK;
@@ -1697,8 +1697,6 @@ _gfxop_draw_cel_buffer(gfx_state_t *state, int nr, int loop, int cel,
 		GFXWARN("Attempt to draw loop/cel %d/%d in invalid view %d\n", loop, cel, nr);
 		return GFX_ERROR;
 	}
-/*fprintf(stderr,"Drawing %d/%d/%d to (%d,%d) clip(%d,%d,%d,%d)\n",
-  nr, loop, cel, pos.x, pos.y, GFX_PRINT_RECT(state->clip_zone));*/
 	pxm = view->loops[loop].cels[cel];
 
 	old_x = pos.x -= pxm->xoffset;

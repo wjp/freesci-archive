@@ -260,8 +260,8 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	int red_shift, green_shift, blue_shift, alpha_shift;
 	int bytespp_physical;
 	unsigned int alpha_mask;
-	int xsize = xfact * 320;
-	int ysize = yfact * 200;
+	int xsize;
+	int ysize;
 	XSizeHints *size_hints;
 	XClassHint *class_hint;
         XImage *foo_image = NULL;
@@ -273,16 +273,29 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	flags = SCI_XLIB_INSERT_MODE;
 
-	if (xfact < 1 || yfact < 1 || bytespp < 1 || bytespp > 4) {
-		ERROR("Internal error: Attempt to open window w/ scale factors (%d,%d) and bpp=%d!\n",
-		      xfact, yfact, bytespp);
-	}
-
 	S->display = XOpenDisplay(NULL);
 
 	if (!S->display) {
 		ERROR("Could not open X connection!\n");
 		return GFX_FATAL;
+	}
+
+	default_screen = DefaultScreen(S->display);
+
+	if (xsize == -1 && ysize == -1) { /* Detect (used INTERNALLY!) */
+		xsize = 2;
+		if (DisplayWidth(S->display, default_screen) < 640
+		    || DisplayHeight(S->display, default_screen) < 400)
+			xsize = 1;
+
+		ysize = xsize;
+	}
+
+	xsize = xfact * 320;
+	ysize = yfact * 200;
+	if (xfact < 1 || yfact < 1 || bytespp < 1 || bytespp > 4) {
+		ERROR("Internal error: Attempt to open window w/ scale factors (%d,%d) and bpp=%d!\n",
+		      xfact, yfact, bytespp);
 	}
 
 #ifdef HAVE_MITSHM
@@ -297,8 +310,6 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	for (i = 0; i < 4; i++)
 	  S->shm[i] = NULL;
 #endif
-
-	default_screen = DefaultScreen(S->display);
 
 	while ((((bytespp > 1) && (vistype >= 4))
 		|| ((bytespp == 1) && (vistype == 3)))
@@ -621,7 +632,7 @@ xlib_init(struct _gfx_driver *drv)
 	int i;
 
 	for (i = 4; i > 0; i--)
-		if (!xlib_init_specific(drv, 2, 2, i))
+		if (!xlib_init_specific(drv, -1, -1, i))
 			return GFX_OK;
 
 	fprintf(stderr, "Could not find supported mode!\n");

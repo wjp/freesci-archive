@@ -150,7 +150,7 @@ int main(int argc, char** argv)
 	char *outfilename = 0;
 	int optindex = 0;
 	int c;
-	char *gamedir = NULL;
+	char *gamedir = sci_getcwd();
 
 #ifdef HAVE_GETOPT_LONG
 	while ((c = getopt_long(argc, argv, "WOVUvhLco:d:M:", options, &optindex)) > -1) {

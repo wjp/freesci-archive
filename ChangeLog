@@ -1,5 +1,25 @@
+2001-10-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/sfx_save.cfsml (soundsrv_restore_state): Fixed memory
+	leak when reading erroneous savegames
+
+	* src/scicore/resource.c (scir_new_resource_manager): Improved
+	resource detection to handle KQ1
+
+	* src/gfx/widgets.c (_gfxwop_container_draw_contents): Contained
+	widgets have relative coordinates, dirty rectangles have absolute
+	ones. Changed the function to reflect this.
+
 2001-09-30  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/gfx/drivers/xlib_driver.c (xlib_init_specific): Now
+	detects screen resolution and uses 1x1 mode if resolution
+	is too low
+
+	* src/engine/scriptdebug.c (c_gfx_propagate_rect): Added
+	gfx_propagate rect.
+	Improved redraw_screen.
+	
 	* src/gfx/resmgr.c (gfxr_add_to_pic): Added picadd
 	usage of endianness adjustments
 

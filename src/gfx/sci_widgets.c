@@ -160,11 +160,15 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 	decorations = gfxw_new_list(gfx_rect(frame.x, frame.y,
 					     frame.xl + 1 + shadow_offset, frame.yl + 1 + shadow_offset), 0);
 
-	if (!(flags & WINDOW_FLAG_TRANSPARENT))
+	if (!(flags & WINDOW_FLAG_TRANSPARENT)) {
 		/* Draw window background */
-		decorations->add((gfxw_container_t *) decorations, (gfxw_widget_t *)
-				 gfxw_new_box(state, gfx_rect(1, (flags & WINDOW_FLAG_TITLE)? 11 : 1, area.xl, area.yl),
-					      bgcolor, bgcolor, GFX_BOX_SHADE_FLAT));
+		win->port_bg = (gfxw_widget_t *) gfxw_new_box (state,
+							       gfx_rect(1, (flags & WINDOW_FLAG_TITLE)? 11 : 1,
+									area.xl, area.yl),
+							       bgcolor, bgcolor, GFX_BOX_SHADE_FLAT);
+		decorations->add((gfxw_container_t *) decorations, win->port_bg);
+		win->flags |= GFXW_FLAG_OPAQUE;
+	}
 
 	if (flags & WINDOW_FLAG_TITLE) {
 		/* Add window title */

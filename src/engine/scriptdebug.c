@@ -1017,7 +1017,8 @@ c_redraw_screen(state_t *s)
 
 	s->visual->draw(GFXW(s->visual), gfx_point(0,0));
 	gfxop_update_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
-	gfxop_usleep(s->gfx_state, 0);
+	gfxop_update(s->gfx_state);
+	gfxop_usleep(s->gfx_state, 10);
 
 	return 0;
 }
@@ -1305,6 +1306,37 @@ c_gfx_draw_rect(state_t *s)
 	gfxop_set_clip_zone(s->gfx_state, gfx_rect_fullscreen);
 	gfxop_fill_box(s->gfx_state, gfx_rect(cmd_params[0].val, cmd_params[1].val, cmd_params[2].val, cmd_params[3].val), s->ega_colors[col]);
 	gfxop_update(s->gfx_state);
+
+	return 0;
+}
+
+int
+c_gfx_propagate_rect(state_t *s)
+{
+	int map = cmd_params[4].val;
+	rect_t rect;
+
+	if (!s) {
+		sciprintf("Not in debug state!\n");
+		return 1;
+	}
+
+	if (map < 0 || map > 1)
+		map = 0;
+
+	gfxop_set_clip_zone(s->gfx_state, gfx_rect_fullscreen);
+
+	rect = gfx_rect(cmd_params[0].val,
+			cmd_params[1].val,
+			cmd_params[2].val,
+			cmd_params[3].val);
+
+	if (map == 1)
+		gfxop_clear_box(s->gfx_state, rect);
+	else
+		gfxop_update_box(s->gfx_state, rect);
+	gfxop_update(s->gfx_state);
+	gfxop_usleep(s->gfx_state, 10);
 
 	return 0;
 }
@@ -2637,6 +2669,12 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_gfx_fill_screen, "gfx_fill_screen", "i", "Fills the screen with one\n  of the EGA colors\n");
 			con_hook_command(c_gfx_draw_rect, "gfx_draw_rect", "iiiii", "Draws a rectangle to the screen\n  with one of the EGA colors\n\nUSAGE\n\n"
 					 "  gfx_draw_rect <x> <y> <xl> <yl> <color>");
+			con_hook_command(c_gfx_propagate_rect,
+					 "gfx_propagate_rect",
+					 "iiiii",
+					 "Propagates a lower gfx buffer to a\n"
+					 "  higher gfx buffer.\n\nUSAGE\n\n"
+					 "  gfx_propagate_rect <x> <y> <xl> <yl> <buf>\n");
 			con_hook_command(c_gfx_update_zone, "gfx_update_zone", "iiii", "Propagates a rectangular area from\n  the back buffer to the front buffer"
 					 "\n\nUSAGE\n\n"
 					 "  gfx_update_zone <x> <y> <xl> <yl>");

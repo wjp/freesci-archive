@@ -36,7 +36,7 @@
 #  include <windows.h>
 #  define sleep Sleep
 #endif
-#ifndef HAVE_FNMATCH
+#if !defined(HAVE_FNMATCH) && !defined(_MSC_VER)
 #  include <beos/fnmatch.h>
 #endif
 
