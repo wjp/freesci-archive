@@ -1,3 +1,9 @@
+2003-09-21  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sound/pcmout_alsa.c (pcmout_alsa_open), src/sound/pcmout_oss.c
+	(pcmout_oss_open): Removed pthread_detach() calls, because detached
+	threads cannot be joined.
+
 2003-08-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/scicore/tools.c (sci_gettime): Fixed a bug in the win32

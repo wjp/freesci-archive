@@ -122,7 +122,6 @@ static int pcmout_alsa_open(gint16 *b, guint16 rate, guint8 stereo)
 #endif
 
   pthread_create (&thread, NULL, sound_thread, NULL);
-  pthread_detach (thread);
 
   return 0;
 }

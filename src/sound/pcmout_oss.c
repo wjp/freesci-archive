@@ -110,7 +110,6 @@ static int pcmout_oss_open(gint16 *b, guint16 rate, guint8 stereo)
 	}
 
 	pthread_create (&thread, NULL, sound_thread, NULL);
-	pthread_detach (thread);
 	return 0;
 }
 
