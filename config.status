@@ -2,7 +2,7 @@
 # Generated automatically by configure.
 # Run this file to recreate the current configuration.
 # This directory was configured as follows,
-# on host starbase42:
+# on host bambus.sci-project.dk:
 #
 # ./configure 
 #
@@ -36,12 +36,12 @@ sed 's/%@/@@/; s/@%/@@/; s/%g$/@g/; /@g$/s/[\\&%]/\\&/g;
 /^[ 	]*VPATH[ 	]*=[^:]*$/d
 
 s%@SHELL@%/bin/sh%g
-s%@CFLAGS@%-g -O2 -I/usr/local/lib/glib/include -I/usr/local/include%g
+s%@CFLAGS@%-g -O2 -I/usr/lib/glib/include%g
 s%@CPPFLAGS@%%g
 s%@CXXFLAGS@%%g
 s%@FFLAGS@%%g
 s%@DEFS@%-DHAVE_CONFIG_H%g
-s%@LDFLAGS@%-lefence  -L/usr/local/lib -lglib%g
+s%@LDFLAGS@%-lefence  -L/usr/lib -lglib%g
 s%@LIBS@%%g
 s%@exec_prefix@%${prefix}%g
 s%@prefix@%/usr/local%g
@@ -75,19 +75,19 @@ s%@CPP@%gcc -E%g
 s%@ac_graphics_ggi_libfile@%graphics_ggi.c%g
 s%@ac_graphics_ggi_libobjects@%graphics_ggi.o%g
 s%@ac_ggi_includes@%-I/usr/local/include%g
-s%@ac_ggi_libraries@%-L/usr/local/lib -lggi -lgii -lgg%g
+s%@ac_ggi_libraries@%-L/usr/lib -lggi -lgii -lgg%g
 s%@ac_curses_includes@%-I/usr/include%g
 s%@ac_curses_libraries@%-L/usr/lib -lncurses%g
 s%@LEX@%flex%g
 s%@LEXLIB@%-lfl%g
 s%@LEX_OUTPUT_ROOT@%lex.yy%g
-s%@GLIB_CONFIG@%/usr/local/bin/glib-config%g
+s%@GLIB_CONFIG@%/usr/bin/glib-config%g
 s%@ac_glib_includes@%%g
 s%@ac_glib_libraries@%%g
-s%@GLIB_CFLAGS@%-I/usr/local/lib/glib/include -I/usr/local/include%g
-s%@GLIB_LIBS@%-L/usr/local/lib -lglib%g
-s%@ac_png_includes@%-I/usr/local/include%g
-s%@ac_png_libraries@%-L/usr/local/lib -lpng%g
+s%@GLIB_CFLAGS@%-I/usr/lib/glib/include%g
+s%@GLIB_LIBS@%-L/usr/lib -lglib%g
+s%@ac_png_includes@%-I/usr/include%g
+s%@ac_png_libraries@%-L/usr/lib -lpng%g
 
 CEOF
 

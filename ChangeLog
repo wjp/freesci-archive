@@ -1,3 +1,9 @@
+1999-11-22  Lars Skovlund <lskovlun@worldonline.dk>
+
+	* src/core/kernel.c (kDisplay): Fixed a bug in kDisplay which was the
+	  cause for the "blue buttons" in QFG1 (ports must be preserved across
+	  kernel calls!)
+
 1999-11-21  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/vocab.c (vocab_get_suffices): Fixed suffix reading, which

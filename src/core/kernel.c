@@ -3725,7 +3725,9 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
   char *text;
   resource_t *font_resource;
   port_t *port = s->ports[s->view_port];
+  port_t save;
 
+  save=*port;
   port->alignment = ALIGN_TEXT_LEFT;
 
   CHECK_THIS_KERNEL_FUNCTION;
@@ -3842,6 +3844,9 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
   if (!s->pic_not_valid) /* Refresh if drawn to valid picture */
     graph_update_box(s, port->xmin, port->ymin,
 		     port->xmax - port->xmin + 1, port->ymax - port->ymin + 1);
+
+  *port=save;
+
 }
 
 
