@@ -1,3 +1,8 @@
+1999-12-13  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/graphics/engine_graphics.c (graph_draw_selector_control):
+	Fixed selector control positioning
+
 1999-12-12  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kmenu.c (kMenuSelect): Added graphical menus

@@ -443,10 +443,10 @@ graph_draw_selector_control(struct _state *s, port_t *port, int state,
 			 int x, int y, int xl, int yl)
 {
   /* Draw outer frame: */
-  draw_frame(s->pic, x, y, xl, yl, port->color, port->priority);
+  draw_frame(s->pic, port->xmin+x, port->ymin+y, xl, yl, port->color, port->priority);
 
   /* Draw inner frame: */
-  draw_frame(s->pic, x, y + 10, xl, yl - 20, port->color, port->priority);
+  draw_frame(s->pic, port->xmin+x, port->ymin+y + 10, xl, yl - 20, port->color, port->priority);
 }
 
 
