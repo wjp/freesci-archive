@@ -44,6 +44,8 @@
 #  include <sched.h>
 #endif /* HAVE_SCHED_YIELD */
 
+#include <midiout.h>
+
 #ifdef _MSC_VER
 #define extern __declspec(dllimport) extern
 #endif
@@ -239,6 +241,7 @@ typedef struct {
 	sci_version_t version;
 	char *gfx_driver_name;
 	char *gamedir;
+        char *midiout_driver_name;
 } cl_options_t;
 
 #define ON 1
@@ -256,6 +259,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 		{"gamedir", required_argument, 0, 'd'},
 		{"sci-version", required_argument, 0, 'V'},
 		{"graphics", required_argument, 0, 'g'},
+		{"midi", required_argument, 0, 'M'},
 		{"version", no_argument, 0, 'v'},
 		{"help", no_argument, 0, 'h'},
 		{"scale-x", required_argument, 0, 'x'},
@@ -274,12 +278,13 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 	cl_options->script_debug_flag = 0;
 	cl_options->gfx_driver_name = NULL;
 	cl_options->gamedir = NULL;
+	cl_options->midiout_driver_name = NULL;
 	cl_options->mouse = ON;
 
 #ifdef HAVE_GETOPT_LONG
-	while ((c = getopt_long(argc, argv, "vrhmDd:V:g:x:y:c:", options, &optindex)) > -1) {
+	while ((c = getopt_long(argc, argv, "vrhmDd:V:g:x:y:c:M:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_LONG */
-	while ((c = getopt(argc, argv, "vrhmDd:V:g:x:y:c:")) > -1) {
+	while ((c = getopt(argc, argv, "vrhmDd:V:g:x:y:c:M:")) > -1) {
 #endif /* !HAVE_GETOPT_LONG */
 		switch (c) {
 
@@ -312,7 +317,11 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 				free(cl_options->gfx_driver_name);
 			cl_options->gfx_driver_name = strdup(optarg);
 			break;
-
+		case 'M':
+		        if (cl_options->midiout_driver_name)
+		            free(cl_options->midiout_driver_name);
+		        cl_options->midiout_driver_name = strdup(optarg);
+		        break;
 		case '?':
 			/* getopt_long already printed an error message. */
 			exit(1);
@@ -361,7 +370,15 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 				i++;
 			}
 			printf("\n");
-
+			printf("Supported midiout drivers: ");
+			i = 0;
+			while (midiout_drivers[i]) {
+			  if (i != 0)
+			    printf(", ");
+			  printf(midiout_drivers[i]->name);
+			  i++;
+			}
+			printf("\n");
 			exit(0);
 
 		case 'h':
@@ -379,6 +396,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 			       EXPLAIN_OPTION("--scale-y\t", "-y", "Set vertical scale factor")
 			       EXPLAIN_OPTION("--color-depth\t", "-c", "Specify color depth")
 			       EXPLAIN_OPTION("--disable-mouse", "-m", "Disable support for pointing device")
+			       EXPLAIN_OPTION("--midiout drv", "-mdrv", "use the 'drv' midiout driver")
 			       "\n"
 			       "The game name, if provided, must be equal to a game name as specified in the\n"
 			       "FreeSCI config file.\n"
@@ -507,6 +525,12 @@ init_gamestate(state_t *gamestate, sci_version_t version)
 	return 0;
 }
 
+static int 
+init_midi(cl_options_t *cl_options, midiout_driver_t *driver)
+{
+  midiout_driver = driver;
+}
+
 static int
 init_gfx(cl_options_t *cl_options, gfx_driver_t *driver)
 {
@@ -563,6 +587,7 @@ main(int argc, char** argv)
 	char resource_dir[PATH_MAX+1];
 	char work_dir[PATH_MAX+1];
 	char *gfx_driver_name = NULL;
+	char *midiout_driver_name = NULL;
 	char *game_name;
 	sci_version_t version = 0;
 	gfx_driver_t *gfx_driver = NULL;
@@ -575,7 +600,7 @@ main(int argc, char** argv)
 	printf("FreeSCI "VERSION" Copyright (C) 1999, 2000, 2001 Dmitry Jemerov,\n"
 	       " Christopher T. Lansdown, Sergey Lapin, Rickard Lind, Carl Muckenhoupt,\n"
 	       " Christoph Reichenbach, Magnus Reftel, Lars Skovlund, Rink Springer,\n"
-	       " Petr Vyhnak\n"
+	       " Petr Vyhnak, Solomon Peachy\n"
 	       "This program is free software. You can copy and/or modify it freely\n"
 	       "according to the terms of the GNU general public license, v2.0\n"
 	       "or any later version, at your option.\n"
@@ -652,6 +677,18 @@ main(int argc, char** argv)
 	if (cl_options.gfx_driver_name)
 		gfx_driver = gfx_find_driver(cl_options.gfx_driver_name);
 
+	if (cl_options.midiout_driver_name)
+		midiout_driver = midiout_find_driver(cl_options.midiout_driver_name);
+	if (!midiout_driver) {
+	  if (midiout_driver_name) {
+	    fprintf(stderr,"Failed to find midiout driver \"%s\"\n"
+		    "Please run 'sciv -v' to get a list of all "
+		    "available drivers.\n", midiout_driver_name);
+	    return 1;
+	  } else
+	    midiout_driver = midiout_drivers[0]; /* null driver */
+
+	}
 	if (conf) {
 		memcpy(gfx_options, &(conf->gfx_options), sizeof(gfx_options_t)); /* memcpy so that console works */
 		if (!gfx_driver)

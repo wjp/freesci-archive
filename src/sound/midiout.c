@@ -25,69 +25,78 @@
 #include "midiout_unixraw.h"
 */
 
-static int (*midiout_ptr_close)();
-static int (*midiout_ptr_write)(guint8 *, unsigned int);
+midiout_driver_t *midiout_driver = NULL;
 
 static unsigned char running_status = 0;
 
-int midiout_null_open()
-{
-  printf("Opened null sound device\n");
-
-  return 0;
-}
-
-int midiout_null_close()
-{
-  printf("Closed null sound device\n");
-
-  return 0;
-}
-
-int midiout_null_write(guint8 *buffer, unsigned int count)
-{
-  /*  printf("Got %d bytes to write to null device\n", count); */
-
-  return 0;
-}
-
 int midiout_open()
 {
-
-  midiout_ptr_close = midiout_null_close;
-  midiout_ptr_write = midiout_null_write;
-  return midiout_null_open();
-
-/*
-  midiout_ptr_close = midiout_alsaraw_close;
-  midiout_ptr_write = midiout_alsaraw_write;
-  return midiout_alsaraw_open(0, 0);
-/*
-  /*
-  midiout_ptr_close = midiout_unixraw_close;
-  midiout_ptr_write = midiout_unixraw_write;
-  return midiout_unixraw_open("/dev/midi00");
-  */
-
+  return midiout_driver->midiout_open();
 }
 
 int midiout_close()
 {
-  return midiout_ptr_close();
+  return midiout_driver->midiout_close();
 }
 
 int midiout_write_event(guint8 *buffer, unsigned int count)
 {
   if (buffer[0] == running_status)
-    return midiout_ptr_write(buffer + 1, count - 1);
+    return midiout_driver->midiout_write(buffer + 1, count +1);
   else {
     running_status = buffer[0];
-    return midiout_ptr_write(buffer, count);
+    return midiout_driver->midiout_write(buffer, count);
   }
 }
 
 int midiout_write_block(guint8 *buffer, unsigned int count)
 {
   running_status = 0;
-  return midiout_ptr_write(buffer, count);
+  return midiout_driver->midiout_write(buffer, count);
+}
+
+/* the midiout_null sound driver */
+
+int midiout_null_open()
+{
+  printf("Opened null sound device\n");
+  return 0;
+}
+
+int midiout_null_close()
+{
+  printf("Closed null sound device\n");
+  return 0;
+}
+
+int midiout_null_write(guint8 *buffer, unsigned int count)
+{
+
+  /*  printf("Got %d bytes to write to null device\n", count); */
+
+  return 0;
+}
+
+midiout_driver_t midiout_driver_null = {
+  "null",
+  "v0.01",
+  NULL,
+  &midiout_null_open,
+  &midiout_null_close,
+  &midiout_null_write
+};
+
+struct _midiout_driver *midiout_find_driver(char *name)
+{
+        int retval = 0;
+
+        if (!name) { /* Find default driver */
+	  return midiout_drivers[0];
+        }
+
+        while (midiout_drivers[retval] && 
+	       strcasecmp(name, midiout_drivers[retval]->name))
+                retval++;
+
+        return midiout_drivers[retval];
 }

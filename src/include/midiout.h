@@ -27,9 +27,37 @@
 
 #include <resource.h>
 
+typedef struct _midiout_driver {
+  char *name;
+  char *version;
+  int (*set_parameter)(struct _midiout_driver *drv, char *attribute, char *value);
+  int (*midiout_open)(void);
+  int (*midiout_close)(void);
+  int (*midiout_write)(guint8 *data, unsigned int);
+} midiout_driver_t;
+
+extern midiout_driver_t *midiout_driver;
+
+extern midiout_driver_t midiout_driver_null;
+
+#ifdef HAVE_ALSA
+extern midiout_driver_t midiout_driver_alsa;
+#endif
+
+static midiout_driver_t *midiout_drivers[] = {
+  &midiout_driver_null,
+#ifdef HAVE_ALSA
+  &midiout_driver_alsa,
+#endif
+  NULL
+};
+
 int midiout_open();
 int midiout_close();
 int midiout_write_event(guint8 *buffer, unsigned int count);
 int midiout_write_block(guint8 *buffer, unsigned int count);
 
+struct _midiout_driver *midiout_find_driver(char *name);
+
 #endif /* _MIDIOUT_H_ */
+
