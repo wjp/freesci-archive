@@ -1,3 +1,10 @@
+2001-01-25  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* doc/man/sciv.6: Updated man page for the 0.3.1 release
+
+	* src/engine/kevent.c (scancode): Added scancode converter
+	for cases where ALT-something is used
+
 2001-01-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/widgets.c (_gfxwop_ordered_add): Fixed adding items

@@ -1073,7 +1073,6 @@ int
 main(int argc, char **argv)
 {
 	gfx_driver_t *drv = NULL;
-	gfx_driver_t **drv_seeker = &(gfx_drivers[0]);
 	char c;
 
 	strcpy(tests, ALL_TESTS);
@@ -1116,14 +1115,14 @@ main(int argc, char **argv)
 
 		case 'l': {
 			int first = 1;
-			gfx_driver_t **seeker = &(gfx_drivers[0]);
+			int i = 0;
+
 			printf("Available graphics drivers: ");
-			while (*seeker) {
+			while (gfx_get_driver_name(i)) {
 				if (!first)
 					printf(", ");
 				first = 0;
-				printf("%s", (*seeker)->name);
-				++seeker;
+				printf("%s", gfx_get_driver_name(i++));
 			}
 			printf("\n");
 		} break;
@@ -1161,15 +1160,7 @@ main(int argc, char **argv)
 			return 1;
 		}
 
-	if (!driver)
-		drv = gfx_drivers[0];
-	else {
-		while (!drv && *drv_seeker) {
-			if (!strcmp(driver, (*drv_seeker)->name))
-				drv = *drv_seeker;
-			++drv_seeker;
-		}
-	}
+	drv = gfx_find_driver(driver);
 
 	if (drv) {
 		printf("Using graphics driver '%s'\n", drv->name);

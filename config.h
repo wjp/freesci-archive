@@ -9,7 +9,7 @@
 #define YYTEXT_POINTER 1
 
 #define PACKAGE "freesci"
-#define VERSION "0.3.0.devel"
+#define VERSION "0.3.0.frozen"
 #define HAVE_LIBGGI 1
 #define HAVE_LIBPNG 1
 #define HAVE_CURSES 1
@@ -19,7 +19,7 @@
 #define SIZEOF_INT 4
 
 /* The number of bytes in a long.  */
-#define SIZEOF_LONG 4
+#define SIZEOF_LONG 8
 
 /* The number of bytes in a short.  */
 #define SIZEOF_SHORT 2
@@ -82,8 +82,8 @@
 #define PACKAGE "freesci"
 
 /* Version number of package */
-#define VERSION "0.3.0.devel"
+#define VERSION "0.3.0.frozen"
 
 /* Define if using the dmalloc debugging malloc package */
-#define WITH_DMALLOC 1
+/* #undef WITH_DMALLOC */
 

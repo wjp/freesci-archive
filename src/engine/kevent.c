@@ -29,6 +29,39 @@
 
 int stop_on_event;
 
+#define SCANCODE_ROWS_NR 3
+
+struct {
+	int offset;
+	char *keys;
+} scancode_rows[SCANCODE_ROWS_NR] = {
+	{0x10, "QWERTYUIOP[]"},
+	{0x1e, "ASDFGHJKL;'\\"},
+	{0x2c, "ZXCVBNM,./"}
+};
+
+static int
+scancode(int ch) /* Calculates a PC keyboard scancode from a character */
+{
+	int row;
+	int c = toupper(ch);
+
+	for (row = 0; row < SCANCODE_ROWS_NR; row++) {
+		char *keys = scancode_rows[row].keys;
+		int offset = scancode_rows[row].offset;
+
+		while (*keys) {
+			if (*keys == c)
+				return offset << 8;
+
+			offset++;
+			keys++;
+		}
+	}
+
+	return ch; /* not found */
+}
+
 void
 kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
@@ -65,7 +98,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		{
 		case SCI_EVT_KEYBOARD: {
 			if ((e.buckybits & SCI_EVM_LSHIFT) && (e.buckybits & SCI_EVM_RSHIFT)
-			    && (e.data == '_')) {
+			    && (e.data == '-')) {
 
 				sciprintf("Debug mode activated\n");
 
@@ -85,6 +118,9 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 					s->visual->print(GFXW(s->visual), 0);
 
 			} else {
+
+				if (e.buckybits & SCI_EVM_ALT)
+					e.data = scancode(e.data); /* Scancodify if appropriate */
 
 				PUT_SELECTOR(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
 				s->acc=1;

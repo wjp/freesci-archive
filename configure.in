@@ -2,7 +2,7 @@
 AC_PREREQ(2.13)
 AC_INIT(acinclude.m4)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(freesci, 0.3.0.devel)
+AM_INIT_AUTOMAKE(freesci, 0.3.0.frozen)
 
 AC_PROG_CC
 AC_PROG_RANLIB
@@ -52,6 +52,7 @@ AC_C_PARAMETRIZED_BIGENDIAN
 AC_OUTPUT(Makefile    \
 	doc/Makefile \
         doc/misc/Makefile \
+        doc/man/Makefile \
 	src/Makefile  \
 	src/scicore/Makefile \
 	src/engine/Makefile \

@@ -374,9 +374,9 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 			       EXPLAIN_OPTION("--debug\t", "-D", "start up in debug mode")
 			       EXPLAIN_OPTION("--help\t", "-h", "display this help text and exit")
 			       EXPLAIN_OPTION("--graphics gfx", "-ggfx", "use the 'gfx' graphics driver")
-			       EXPLAIN_OPTION("--scale-x", "-x", "Set horizontal scale factor")
-			       EXPLAIN_OPTION("--scale-y", "-y", "Set vertical scale factor")
-			       EXPLAIN_OPTION("--color-depth", "-c", "Specify color depth")
+			       EXPLAIN_OPTION("--scale-x\t", "-x", "Set horizontal scale factor")
+			       EXPLAIN_OPTION("--scale-y\t", "-y", "Set vertical scale factor")
+			       EXPLAIN_OPTION("--color-depth\t", "-c", "Specify color depth")
 			       EXPLAIN_OPTION("--disable-mouse", "-m", "Disable support for pointing device")
 			       "\n"
 			       "The game name, if provided, must be equal to a game name as specified in the\n"
@@ -570,8 +570,9 @@ main(int argc, char** argv)
 	script_debug_flag = cl_options.script_debug_flag;
 
 	printf("FreeSCI "VERSION" Copyright (C) 1999, 2000, 2001 Dmitry Jemerov,\n"
-	       "Christopher T. Lansdown, Sergey Lapin, Rickard Lind, Carl Muckenhoupt,\n"
-	       " Christoph Reichenbach, Magnus Reftel, Lars Skovlund, Rink Springer\n"
+	       " Christopher T. Lansdown, Sergey Lapin, Rickard Lind, Carl Muckenhoupt,\n"
+	       " Christoph Reichenbach, Magnus Reftel, Lars Skovlund, Rink Springer,\n"
+	       " Petr Vyhnak\n"
 	       "This program is free software. You can copy and/or modify it freely\n"
 	       "according to the terms of the GNU general public license, v2.0\n"
 	       "or any later version, at your option.\n"

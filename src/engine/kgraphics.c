@@ -751,6 +751,9 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		PUT_SELECTOR(client, signal, (signal | _K_VIEW_SIG_FLAG_HIT_OBSTACLE));
 
+		if (s->selector_map.completed > -1)
+			PUT_SELECTOR(mover, completed, completed = 1); /* Finish! */
+
 		SCIkdebug(SCIkBRESEN, "Finished mover %04x by collision\n", mover);
 		s->acc = 1;
 	}
@@ -798,8 +801,8 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			if (other_obj != obj) { /* Clipping against yourself is not recommended */
 
 				int other_signal = GET_SELECTOR(other_obj, signal);
-				SCIkdebug(SCIkBRESEN, "OtherSignal=%04x, z=%04x\n", other_signal,
-					  (other_signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)));
+				SCIkdebug(SCIkBRESEN, "OtherSignal=%04x, z=%04x obj=%04x\n", other_signal,
+					  (other_signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)), other_obj);
 				if ((other_signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR | _K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_HIDDEN)) == 0) {
 					/* check whether the other object ignores actors */
 

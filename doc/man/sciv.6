@@ -1,8 +1,8 @@
-.TH sciv 6 "Sep 15, 2000" cvs20000914 FreeSCI
+.TH sciv 6 "Jan 25, 2001" 0.3.1 FreeSCI
 
 .SH NAME
 
-\- FreeSCI's main executable; this loads, links and runs SCI bytecode,
+\fBsciv\fR \- FreeSCI's main executable; this loads, links and runs SCI bytecode,
 such as Sierra's famous adventures games.
 
 .SH DESCRIPTION
@@ -22,6 +22,11 @@ You'll need to run sciv in order to play SCI games.
 [ --debug, -D ]
 [ --help, -h ]
 [ --graphics \fIgfx\fR, -g\fIgfx\fR ]
+[ --scale-x \fIxfact\fR, -x \fIxfact\fR ]
+[ --scale-y \fIyfact\fR, -y \fIyfact\fR ]
+[ --color-depth \fIbytespp\fR, -c \fIbytespp\fR ]
+[ --disable-mouse, -m ]
+\fIgame\fR
 
 .SH OPTIONS
 .TP
@@ -39,7 +44,7 @@ Acceptable version numbers are of the form \fBx.yyy.zzz\fR, where
 \fBx\fR is the major number, \fByyy\fR is the minor number and \fBzzz\fR
 the patch level.
 Note that currectly only SCI0 (major/minor=0/000) games are supported.
-.RS
+.BR
 Normally, the version will be autodetected from the game resource files.
 .TP
 .BR "--version, -v"
@@ -53,10 +58,28 @@ Display a short help text and exit.
 .TP
 .BR "--graphics \fIgfx\fR, -\fBg\fR\fIgfx\fR"
 With this option, you can specify which graphics driver is to be used. 
-Currently, the following drivers are recognised: \fBglx\fR, \fBggi\fR, 
-\fBddraw\fR and \fBdgfx\fR. Depending on your build configuration, not
-all of these may be available.
-
+In this release, only \fBggi\fR is supported.
+.TP
+.BR "--scale-x \fIxfact\fR, -\fBx\fR\fIxfact\fR"
+.BR "--scale-y \fIyfact\fR, -\fBy\fR\fIyfact\fR"
+These options allow to explicitly specify the horizontal and vertical
+scaling factors. The resulting size of the game window will be
+320*xfact x 200*yfact, plus any window decorations.
+.TP
+.BR "--color-depth \fIbytespp\fR, -\fBc\fR\fIbytespp\fR"
+This sets the number of bytes to use per pixel. Some visuals/graphics
+drivers support several color depths, so that auto-detection may not
+yield the desired effects.
+.TP
+.BR "--disable-mouse, -m"
+Many SCI games handle the mouse pointer differently if no mouse is
+present in the system. This option instructs the interpreter to
+tell the games that no mouse is present whenever they ask for one;
+the actual effect depends on the individual game.
+.TP
+.BR \fIgame\fR
+An identifier describing the game to start. This identifier (GAME_ID) must be
+declared in the configuration file.
 
 .SH CONFIG FILE
 .P
@@ -77,11 +100,47 @@ grepping your main executable for "0.000." (for SCI0 games). It is
 also displayed if the built-in debugger is activated in the Sierra SCI
 engine.
 .IP \-
-\fBcolor_mode = dither \fR|\fB flat \fR|\fB dither256\fR: (only one of 
+\fBpic0_dither_mode = dither \fR|\fB flat \fR|\fB dither256\fR: (only one of 
 those three modes).
 \fBdither\fR: Draw in 16 colors, same as Sierra SCI.
 \fBflat\fR: Interpolate colors (256 colors). Improves some graphics.
 \fBdither256\fR: Dither in 256 colors. A compromise between dither and flat.
+.IP \-
+\fBpic0_dither_pattern = scaled \fR|\fB 1\fR:
+\fBscaled\fR: Perform picture dithering to blocks with a width of the horizontal
+and a height of the vertical scaling factor
+\fB1\fR: Dither single pixels (same as scaled if the game is being run unscaled)
+.IP \-
+\fBpic0_brush_mode = scaled \fR|\fB ellipses \fR|\fB random-ellipses \fR|\fB more-random\fR:
+Affects how semi-random brushes (used mostly for dirt and foilage) are drawn in SCI0 background pictures:
+\fBscaled\fR: Scale every semi-random pixel to a rectangular block
+\fBellipses\fR: Scale every semi-random pixel to a filled ellipse
+\fBrandom-ellipses\fR: As ellipses, but slightly shift ellipse offset and size
+\fBmore-random\fR: Add more random pixels to the whole area
+.IP \-
+\fBpic0_line_mode = correct \fR|\fB fine\fR: Specify how lines are drawn when background
+pictures are rendered in SCI0:
+\fBcorrect\fR: Draw lines appropriately scaled
+\fBfine\fR: Don't scale lines (thin lines, may cause problems) 
+.IP \-
+\fBdirty_strategy = 1 \fR|\fB clusters\fR:
+The "dirty strategy" is the strategy used to collect modifications to the
+screen content. Modifying this may affect performance on slow or networked
+systems.
+\fB1\fR: Collect everything in one dirty region
+\fBclusters\fR: Cluster non-overlapping modified regions into a set of regions 
+.IP \-
+\fBpic0_scaled = yes \fR|\fB no\fR:
+Whether SCI0 background pics should be scaled (may look better) or not
+(faster, looks more like the original games)
+.IP \-
+\fBpic_buffer_size = #\fR:
+Number of background pics to store in an LRU buffer. Increasing this value
+will increase the amount of memory used, but may considerably speed up
+changing back to rooms you visited not too long ago.
+.IP \-
+\fBmouse = yes \fR|\fB no\fR:
+Specifies whether the interpreter should report to the game that it has a mouse.
 .IP \-
 \fB[GAME_ID]\fR: Commands following this line will only have an effect for
 the game with the specified game ID. (The game ID is printed during
@@ -89,6 +148,7 @@ sciv startup, and is also used to create the save game directory).
 .IP \-
 \fBresource_dir\fR: Read the game's resource data from the specified 
 location. Must not be used in the generic part of the config file.
+
 
 .SH SUPPORTED GAMES
 .P
@@ -112,34 +172,37 @@ Codename: Iceman
 .IP \-
 The Colonel's Bequest (*)
 .IP \-
-Conquest of Camelot (*)
+Conquest of Camelot
 .IP \-
 The Fun Seeker's Guide (from the SQ Collector's Series)
 .IP \-
-Hoyle's Book of Games (volume 1)
+Hoyle's Book of Games (volume 1) (**)
 .IP \-
-Hoyle's Book of Games (volume 2)
+Hoyle's Book of Games (volume 2) (**)
 .P
-(*) These games are known to have major graphical problems. Fixing them
-will require a re-design of the graphics engine.
+(*) There are still several graphical glitches in the Colonel's
+Bequest, but the game itself should work.
+.P
+(**) Due to differences between the way Sierra SCI and FreeSCI
+handle graphical widgets, these games may cause an accumulation
+of widgets in the widget subsystem, resulting in a slowdown and
+some increased memory usage. 
+
 
 
 .SH SEE ALSO
-.BR classes (6),
 .BR sciconsole (6),
-.BR listwords (6),
 .BR scidisasm (6),
 .BR sciunpack (6),
-.BR scriptdump (6),
-.BR vocabdump (6).
 
 
 .SH BUGS
 .P
-FreeSCI is incomplete. You will probably not be able to finish any SCI
-game with it for now (although there are reports of some games,
-especially Space Quest 3, to be working fine).  This release has the
-following limitations (plus some bugs):
+FreeSCI is incomplete. Space Quest 3 was reported to have been
+completed with an earlier version of the interpreter, but
+no success reports regarding other games have been filed yet.
+
+This release has the following limitations (plus some bugs):
 .IP \-
 Only SCI0 games are supported
 .IP \-
@@ -147,20 +210,20 @@ Sound is not supported yet
 .IP \-
 The SCI debug functions aren't fully supported (and probably never
 will be, since FreeSCI uses its own debug functions).
-.IP \-
-Graphics are slow, especially on displays not using 8bpp color index mode.  
 .P
 
 .SH AUTHORS
 .P
-FreeSCI is copyright (c) 1999,2000 by
+FreeSCI is copyright (c) 1999,2000,2001 by
 Christoph Reichenbach <\fIcreichen@rbg.informatik.tu-darmstadt.de\fR>,
 Carl Muckenhoupt <\fIcarl@wurb.com\fR>,
 Dmitry Jemerov <\fIyole@exch.nnz.spb.su\fR>, 
 Magnus Reftel <\fId96reftl@dtek.chalmers.se\fR>,
+Petr Vyhnak <\fIpvyhnak@attglobal.net\fR>,
 Sergey Lapin <\fIslapin@karelia.ru\fR>,
 Lars Skovlund <\fIlskovlun@image.dk\fR>,
 Rickard Lind <\fIrpl@dd.chalmers.se\fR> and
 Rink Springer <\fIrink@springer.cx\fR>.
 .P
-This man page was written by Bas Zoetekouw <\fIbas@debian.org\fR>.
+This man page was written by Bas Zoetekouw <\fIbas@debian.org\fR> and
+Christoph Reichenbach.
