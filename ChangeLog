@@ -1,5 +1,9 @@
 2003-01-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/dc/dc_save.c: Removed reference to dc_save.h.
+
+2003-01-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/main.c (init_directories): Set dreamcast work dir to "/ram".
 	(main): Retrieve mirrored files	on startup and save them on shutdown.
 	* src/dc/dc_save.c, src/dc/stdio.c, src/dc/vmu_pkg.c: Added to
