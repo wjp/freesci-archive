@@ -871,12 +871,6 @@ main(int argc, char** argv)
 		return 1;
 	}
 
-	if (game_init_graphics(gamestate)) { /* Init interpreter graphics */
-		fprintf(stderr,"Game initialization failed: Error in GFX subsystem. Aborting...\n");
-		return 1;
-	}
-
-
 	if (conf && conf[conf_nr].work_dir)
 		gamestate->work_dir = work_dir;
 
@@ -948,8 +942,15 @@ main(int argc, char** argv)
 		}
 	}
 
+
 	if (init_gfx(&cl_options, gfx_driver))
 		return 1;
+
+
+	if (game_init_graphics(gamestate)) { /* Init interpreter graphics */
+		fprintf(stderr,"Game initialization failed: Error in GFX subsystem. Aborting...\n");
+		return 1;
+	}
 
 	gamestate->sfx_driver = sfx_drivers[0];
 
