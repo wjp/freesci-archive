@@ -62,7 +62,7 @@ midi_mt32gm_print_instrument(FILE *file, int index)
 	MIDI_map_t *map = MIDI_mapping + index;
 
 	if (index < 0 || index >= MIDI_mappings_nr) {
-		fprintf(file, "Instr #%d: <invalid>\n");
+		fprintf(file, "Instr #%d: <invalid>\n", index);
 		return;
 	}
 
@@ -111,7 +111,7 @@ int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2)
 /*			xparam = CHAN(channel).gm_rhythmkey;*/
 			channel = RHYTHM_CHANNEL;
 		} else if (CHAN(channel).gm_instr == NOMAP)
-			return;
+			return 0;
 
 		volume = param2;
 		param2 = (volume * MIDI_mapping[param].volume * global_volume)

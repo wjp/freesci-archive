@@ -1,3 +1,7 @@
+2001-04-25  Matt Hargett  <matt@use.net>
+
+	* Fixed some format string problems reported by Insure++.
+
 2001-04-25  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/midi_mt32gm.c (midi_mt32gm_event): Fixed sound mappings

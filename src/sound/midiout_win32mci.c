@@ -74,8 +74,8 @@ int midiout_win32mci_open()
 		ret = midiOutGetDevCaps(loop, &devicecaps, sizeof(devicecaps));
 		if (MMSYSERR_NOERROR != ret)
 		{
-			fprintf(stderr, "Something went wrong querying device %d: %s\n",
-				loop, ret);
+			fprintf(stderr, "Something went wrong querying device %d: \n",
+				loop);
 			return -1;
 		}
 
@@ -100,8 +100,8 @@ int midiout_win32mci_open()
 	ret = midiOutOpen(&devicename, 1, 0, 0, CALLBACK_NULL);
 	if (MMSYSERR_NOERROR != ret)
 	{
-		fprintf(stderr, "Something went wrong opening device %d: %s\n",
-			loop, ret);
+		fprintf(stderr, "Something went wrong opening device %d: \n",
+			loop);
 		return -1;
 	}
 		else
@@ -119,7 +119,7 @@ int midiout_win32mci_close()
 	ret = midiOutClose(devicename);
 	if (MMSYSERR_NOERROR != ret)
 	{
-		fprintf(stderr, "Something went wrong closing the MIDI output device!: %s\n", ret);
+		fprintf(stderr, "Something went wrong closing the MIDI output device!\n");
 		return -1;
 	}
 
