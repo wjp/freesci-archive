@@ -47,7 +47,6 @@ typedef struct {
 	song_t *song; /* Active song, or start of active song chain */
 	int suspended; /* Whether we are suspended */
 
-	GTimeVal wakeup_time; /* Overrides delay for the topmost song */
 } sfx_state_t;
 
 /***********/
@@ -55,9 +54,10 @@ typedef struct {
 /***********/
 
 void
-sfx_init(sfx_state_t *self, resource_mgr_t *resmgr);
+sfx_init(sfx_state_t *self, resource_mgr_t *resmgr, int flags);
 /* Initializes the sound engine
 ** Parameters: (resource_mgr_t *) resmgr: Resource manager for initialization
+**             (int) flags: SFX_STATE_FLAG_*
 */
 
 void
@@ -76,6 +76,14 @@ sfx_poll(sfx_state_t *self, song_handle_t *handle, int *cue);
 /* Polls the sound server for cues etc.
 ** Returns   : (int) 0 if the cue queue is empty, SI_LOOP, SI_CUE, or SI_FINISHED otherwise
 **             (song_handle_t) *handle: The affected handle
+**             (int) *cue: The sound cue number (if SI_CUE), or the loop number (if SI_LOOP)
+*/
+
+int
+sfx_poll_specific(sfx_state_t *self, song_handle_t handle, int *cue);
+/* Polls the sound server for cues etc.
+** Parameters: (song_handle_t) handle: The handle to poll
+** Returns   : (int) 0 if the cue queue is empty, SI_LOOP, SI_CUE, or SI_FINISHED otherwise
 **             (int) *cue: The sound cue number (if SI_CUE), or the loop number (if SI_LOOP)
 */
 

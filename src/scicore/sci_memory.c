@@ -241,7 +241,7 @@ debug_win32_memory(int dbg_setting)
 
 #define REFCOUNT(p) (((guint32 *)p)[-2])
 
-#define TRACE_REFCOUNT
+#undef TRACE_REFCOUNT
 
 
 extern void *

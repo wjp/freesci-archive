@@ -51,6 +51,10 @@ typedef struct _song {
 	song_iterator_t *it;
 	long delay; /* Delay before accessing the iterator, in microseconds */
 
+	GTimeVal wakeup_time; /* Used by the sound core:
+			      ** Playing -> time at which 'delay' has elapsed
+			      ** Suspended/Waiting -> stopping time */
+
 	struct _song *next; /* Next song or NULL if this is the last one */
 	struct _song *next_playing; /* Next playing song; used by the
 				    ** core song system */

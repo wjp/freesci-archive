@@ -106,12 +106,19 @@ vocab_get_words_sci1(resource_mgr_t *resmgr, int *word_counter)
 
 		currentwordpos = resource->data[seeker++]; /* Parts of previous words may be re-used */
 
-		do {
+		c = 1;
+		while (seeker < resource->size
+		       && currentwordpos < 255
+		       && c) {
 			c = resource->data[seeker++];
 			currentword[currentwordpos++] = c;
-		} while (seeker < resource->size
-			 && currentwordpos < 255
-			 && c);
+		}
+		if (seeker == resource->size) {
+			int i;
+			fprintf(stderr, "SCI1: Vocabulary not usable, disabling.\n");
+			vocab_free_words(words, counter);
+			return NULL;
+		}
 
 		currentword[currentwordpos] = 0;
 
@@ -125,9 +132,8 @@ vocab_get_words_sci1(resource_mgr_t *resmgr, int *word_counter)
 		words[counter]->w_class = ((resource->data[seeker]) << 4) | ((c & 0xf0) >> 4);
 		words[counter]->group = (resource->data[seeker + 2]) | ((c & 0x0f) << 8);
 
-		++counter;
-
 		seeker += 3;
+		++counter;
 
 	}
 

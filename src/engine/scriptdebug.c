@@ -2546,7 +2546,8 @@ c_is_sample(state_t *s)
 		return 1;
 	}
 
-	songit = songit_new(song->data, song->size, SCI_SONG_ITERATOR_TYPE_SCI0);
+	songit = songit_new(song->data, song->size, SCI_SONG_ITERATOR_TYPE_SCI0,
+			    0xcaffe /* What do I care about the ID? */);
 
 	if (!songit) {
 		sciprintf("Error-- Could not convert to song iterator\n");

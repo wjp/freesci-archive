@@ -1,3 +1,20 @@
+2004-03-14  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/doc/sci.tex: Added a slightly revised version of Johannes
+	Manhave's initial translation of our docs into LaTeX
+
+	* src/scicore/vocab.c (vocab_get_words_sci1): Added better checks
+	for boundary conditions
+
+	* src/sfx/iterator.c
+	* src/sfx/core.c: Support for playing several songs at once
+
+	* src/sfx/iterator.c: Songs now explicitly deallocate channels
+	when they're finished, using MIDI 'controller' (Bx) command 7b
+
+	* src/sfx/softseq/SN76496.c
+	* src/sfx/softseq/pcspeaker.c: Added Support for MIDI Bx 7b
+
 2004-03-11  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/game.c (script_init_engine): Abort gracefully when
@@ -9,7 +26,7 @@
 
 	* src/engine/kevent.c (kGetEvent): In SCI1 games, don't report the
 	foolock modifiers.
-	
+
 2004-03-09  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/include/uinput.h: Remove SCI_EVT_NONBLOCK flag from

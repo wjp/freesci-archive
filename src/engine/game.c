@@ -237,7 +237,12 @@ _free_graphics_input(state_t *s)
 int
 game_init_sound(state_t *s)
 {
-	sfx_init(&s->sound, s->resmgr);
+	int flags = 0;
+
+	if (s->resmgr->sci_version >= SCI_VERSION_01)
+		flags |= SFX_STATE_FLAG_MULTIPLAY;
+
+	sfx_init(&s->sound, s->resmgr, flags);
 	return 0;
 }
 

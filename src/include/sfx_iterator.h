@@ -63,11 +63,15 @@
 #define SIMSG_SET_RHYTHM(x) _SIMSG_BASE,_SIMSG_BASEMSG_SET_RHYTHM,(x),0
 #define SIMSG_CLONE(x) _SIMSG_BASE,_SIMSG_BASEMSG_CLONE,(x),0
 #define SIMSG_ACK_MORPH _SIMSG_PLASTICWRAP,_SIMSG_PLASTICWRAP_ACK_MORPH,0,0
+#define SIMSG_STOP _SIMSG_BASE,_SIMSG_BASEMSG_STOP,0,0
 
 /* Message transmission macro: Takes song reference, message reference */
-#define SIMSG_SEND(o, m) songit_handle_message(&(o), songit_make_message(m))
+#define SIMSG_SEND(o, m) songit_handle_message(&(o), songit_make_message((o)->ID, m))
+
+typedef unsigned long songit_id_t;
 
 typedef struct {
+	songit_id_t ID;
 	unsigned int recipient; /* Type of iterator supposed to receive this */
 	unsigned int type;
 	unsigned int args[SONG_ITERATOR_MESSAGE_ARGUMENTS_NR];
@@ -75,6 +79,8 @@ typedef struct {
 
 
 #define INHERITS_SONG_ITERATOR \
+	songit_id_t ID;										  \
+	guint16 channel_mask;									  \
 	int (*next) (song_iterator_t *self, unsigned char *buf, int *buf_size);			  \
 	sfx_pcm_feed_t * (*get_pcm_feed) (song_iterator_t *s);					  \
 	song_iterator_t * (* handle_message)(song_iterator_t *self, song_iterator_message_t msg); \
@@ -87,6 +93,10 @@ typedef struct {
 #define SONGIT_MAX_LISTENERS 2
 
 typedef struct _song_iterator {
+
+	songit_id_t ID;
+	guint16 channel_mask; /* Bitmask of all channels this iterator will use */
+
 	int (*next) (struct _song_iterator *self,
 		     unsigned char *buf, int *result);
 	/* Reads the next MIDI operation _or_ delta time
@@ -193,8 +203,16 @@ song_iterator_remove_death_listener(song_iterator_t *it,
 #define IT_READER_MASK_LOOP	(1 << 2)
 #define IT_READER_MASK_CUE	(1 << 3)
 #define IT_READER_MASK_PCM	(1 << 4)
+#define IT_READER_MAY_FREE	(1 << 10) /* Free SI_FINISHED iterators */
+#define IT_READER_MAY_CLEAN	(1 << 11)
+	/* MAY_CLEAN: May instantiate cleanup iterators
+	** (use for players; this closes open channels at the end of a song) */
 
-#define IT_READER_MASK_ALL (~0)
+#define IT_READER_MASK_ALL (IT_READER_MASK_MIDI		\
+			    | IT_READER_MASK_DELAY	\
+			    | IT_READER_MASK_LOOP	\
+			    | IT_READER_MASK_CUE	\
+			    | IT_READER_MASK_PCM)
 
 int
 songit_next(song_iterator_t **it, unsigned char *buf, int *result, int mask);
@@ -216,20 +234,23 @@ songit_next(song_iterator_t **it, unsigned char *buf, int *result, int mask);
 */
 
 song_iterator_t *
-songit_new(unsigned char *data, unsigned int size, int type);
+songit_new(unsigned char *data, unsigned int size, int type, songit_id_t id);
 /* Constructs a new song iterator object
 ** Parameters: (byte *) data: The song data to iterate over
 **             (unsigned int) size: Number of bytes in the song
 **             (int) type: One of the SCI_SONG_ITERATOR_TYPEs
+**             (songit_id_t) id: An ID for addressing the song iterator
 ** Returns   : (song_iterator_t *) A newly allocated but uninitialized song
 **             iterator, or NULL if 'type' was invalid or unsupported
 */
 
 song_iterator_t *
-songit_new_tee(song_iterator_t *left, song_iterator_t *right);
+songit_new_tee(song_iterator_t *left, song_iterator_t *right, int may_destroy);
 /* Combines two iterators, returns the next event available from either
 ** Parameters: (song_iterator_t *) left: One of the iterators
 **             (song_iterator_t *) right: The other iterator
+**             (int) may_destroy: Whether completed song iterators may be
+**                                destroyed
 ** Returns   : (song_iterator_t *) A combined iterator, as suggested above
 */
 
@@ -242,9 +263,11 @@ songit_free(song_iterator_t *it);
 */
 
 song_iterator_message_t
-songit_make_message(int recipient, int type, int a1, int a2);
+songit_make_message(songit_id_t id,
+		    int recipient_class, int type, int a1, int a2);
 /* Create a song iterator message
-** Parameters: (int) recipient: Message recipient
+** Parameters: (songit_id_t) id: song ID the message is targetted to
+**             (int) recipient_class: Message recipient class
 **             (int) type: Message type
 **             (int x int) a1, a2: Arguments
 ** You should only use this with the SIMSG_* macros

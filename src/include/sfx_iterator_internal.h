@@ -29,26 +29,8 @@
 #define _SFX_ITERATOR_INTERNAL_
 
 #include <sfx_iterator.h>
+#include <sci_midi.h>
 
-#define MIDI_RHYTHM_CHANNEL 9
-
-/* Special SCI sound stuff */
-
-#define SCI_MIDI_TIME_EXPANSION_PREFIX 0xF8
-#define SCI_MIDI_TIME_EXPANSION_LENGTH 240
-
-#define SCI_MIDI_EOT 0xFC
-#define SCI_MIDI_SET_SIGNAL 0xCF
-#define SCI_MIDI_SET_POLYPHONY 0x4B
-#define SCI_MIDI_RESET_ON_SUSPEND 0x4C
-#define SCI_MIDI_SET_VELOCITY 0x4E
-#define SCI_MIDI_SET_REVERB 0x50
-#define SCI_MIDI_CUMULATIVE_CUE 0x60
-
-#define SCI_MIDI_SET_SIGNAL_LOOP 0x7F
-/* If this is the parameter of 0xCF, the loop point is set here */
-
-#define SCI_MIDI_CONTROLLER(status) ((status & 0xF0) == 0xB0)
 
 /* States */
 
@@ -155,6 +137,26 @@ typedef struct {
 
 #define PLAYMASK_NONE 0x0
 
+/*********************************/
+/*---------- Cleanup ------------*/
+/*********************************/
+
+
+song_iterator_t *
+new_cleanup_iterator(unsigned int channels);
+/* Creates a new song iterator with the purpose of sending notes-off channel commands
+** Parameters: (unsigned int) channels: Channel mask to send these commands for
+** Returns   : A song iterator with the aforementioned purpose
+*/
+
+int
+is_cleanup_iterator(song_iterator_t *it);
+/* Determines whether a given song iterator is a cleanup song iterator
+** Parameters: (song_iterator_t *) it: The iterator to check
+** Returns   : (int) 1 iff 'it' is a cleanup song iterator
+** No deep recursion/delegation is considered.
+*/
+
 
 /**********************************/
 /*--------- Fast Forward ---------*/
@@ -183,26 +185,32 @@ new_fast_forward_iterator(song_iterator_t *it, int delta);
 
 #define MAX_BUF_SIZE 4
 
-#define TEE_NONE 0
-/* Otherwise, we detail where the 'next' is from: */
-#define TEE_LEFT 1
-#define TEE_RIGHT 2
-#define TEE_IT(selector) (((selector) == TEE_LEFT)? it->left : it->right)
-#define TEE_NOTIT(selector) (((selector) == TEE_RIGHT)? it->left : it->right)
+#define TEE_LEFT 0
+#define TEE_RIGHT 1
+#define TEE_LEFT_ACTIVE  (1<<0)
+#define TEE_RIGHT_ACTIVE (1<<1)
+#define TEE_LEFT_READY  (1<<2) /* left result is ready */
+#define TEE_RIGHT_READY (1<<3) /* right result is ready */
+#define TEE_LEFT_PCM (1<<4)
+#define TEE_RIGHT_PCM (1<<5)
 
 typedef struct {
 	INHERITS_SONG_ITERATOR;
-	song_iterator_t *left;
-	song_iterator_t *right;
 
+	int status;
 
-	int active_left, active_right;
-	int has_next; /* If a 'next' result is cached */
-	int reported_pcm; /* Did someone report a PCM? */
+	int may_destroy; /* May destroy song iterators */
 
-	byte next_buf[MAX_BUF_SIZE];
-	int next_result;
-	int next_retval;
+	struct {
+		song_iterator_t *it;
+		byte buf[MAX_BUF_SIZE];
+		int result;
+		int retval;
+
+		byte channel_remap[MIDI_CHANNELS];
+		/* Remapping for channels */
+
+	} children[2];
 } tee_song_iterator_t;
 
 

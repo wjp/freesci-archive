@@ -100,7 +100,9 @@ play_song(song_iterator_t *it, GTimeVal *wakeup_time, int writeahead_time)
 
 		switch ((delay = songit_next(&(play_it),
 					     &(buf[0]), &result,
-					     IT_READER_MASK_ALL))) {
+					     IT_READER_MASK_ALL
+					     | IT_READER_MAY_FREE
+					     | IT_READER_MAY_CLEAN))) {
 
 		case SI_FINISHED:
 			play_it_done = 1;
@@ -201,13 +203,8 @@ rt_init(resource_mgr_t *resmgr, int expected_latency)
 }
 
 static int
-rt_set_iterator(song_iterator_t *it, GTimeVal start_time)
+rt_add_iterator(song_iterator_t *it, GTimeVal start_time)
 {
-	if (play_it) {
-		fprintf(stderr, __FILE__": set_iterator: Attempted while iterator was set!\n");
-		return SFX_ERROR;
-	}
-
 	if (seq->reset_timer) /* Restart timer counting if possible */
 		seq->reset_timer(start_time);
 
@@ -215,7 +212,7 @@ rt_set_iterator(song_iterator_t *it, GTimeVal start_time)
 	SIMSG_SEND(it, SIMSG_SET_RHYTHM(seq->play_rhythm));
 
 	play_last_time = start_time;
-	play_it = it;
+	play_it = sfx_iterator_combine(play_it, it);
 	play_it_done = 0;
 	play_moredelay = 0;
 
@@ -295,7 +292,7 @@ sfx_player_t sfx_player_realtime = {
 	"0.1",
 	&rt_set_option,
 	&rt_init,
-	&rt_set_iterator,
+	&rt_add_iterator,
 	&rt_fade_out,
 	&rt_stop,
 	&rt_send_iterator_message,

@@ -55,14 +55,16 @@ typedef struct {
 	*/
 
 	int
-	(*set_iterator)(song_iterator_t *it, GTimeVal start_time);
-	/* Sets an iterator for immediate playing
+	(*add_iterator)(song_iterator_t *it, GTimeVal start_time);
+	/* Adds an iterator to the song player
 	** Parameters: (songx_iterator_t *) it: The iterator to play
 	**             (GTimeVal) start_time: The time to assume as the
 	**                        time the first MIDI command executes at
 	** Returns   : (int) SFX_OK on success, SFX_ERROR on failure
-	** The iterator is for immediate use; it may be modified appropriately
-	** for player but need not be cloned
+	** The iterator should not be cloned (to avoid memory leaks) and
+	** may be modified according to the needs of the player.
+	** Implementors may use the 'sfx_iterator_combine()' function
+	** to add iterators onto their already existing iterators
 	*/
 
 	int
@@ -127,6 +129,17 @@ int
 sfx_get_player_polyphony(void);
 /* Determines the polyphony of the player in use
 ** Returns   : (int) Number of voices the active player can emit
+*/
+
+song_iterator_t *
+sfx_iterator_combine(song_iterator_t *it1, song_iterator_t *it2);
+/* Combines two song iterators into one
+** Parameters: (sfx_iterator_t *) it1: One of the two iterators, or NULL
+**             (sfx_iterator_t *) it2: The other iterator, or NULL
+** Returns   : (sfx_iterator_t *) A combined iterator
+** If a combined iterator is returned, it will be flagged to be allowed to
+** dispose of 'it1' and 'it2', where applicable. This means that this
+** call should be used by song players, but not by the core sound system
 */
 
 #endif /* !_SFX_PLAYER_H */

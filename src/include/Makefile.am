@@ -14,4 +14,4 @@ EXTRA_DIST = old_objects.h graphics_glx.h kernel.h event.h    \
 	sfx_engine.h vm_types.h seg_manager.h kernel_compat.h \
 	gfx_sci.h sfx_sequencer.h sfx_device.h sfx_adlib.h    \
 	sfx_timer.h sfx_player.h gfx_res_options.h	      \
-	sfx_audiobuf.h sfx_time.h sfx_softseq.h
+	sfx_audiobuf.h sfx_time.h sfx_softseq.h sci_midi.h

@@ -86,14 +86,14 @@
 
 
 static song_iterator_t *
-build_iterator(state_t *s, int song_nr, int type)
+build_iterator(state_t *s, int song_nr, int type, songit_id_t id)
 {
 	resource_t *song = scir_find_resource(s->resmgr, sci_sound, song_nr, 0);
 
 	if (!song)
 		return NULL;
 
-	return songit_new(song->data, song->size, type);
+	return songit_new(song->data, song->size, type, id);
 }
 
 
@@ -193,7 +193,8 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 		if (obj.segment) {
 			sfx_add_song(&s->sound,
 				     build_iterator(s, GET_SEL32V(obj, number),
-						    SCI_SONG_ITERATOR_TYPE_SCI0),
+						    SCI_SONG_ITERATOR_TYPE_SCI0,
+						    handle),
 				     0, handle);
 			PUT_SEL32V(obj, state, _K_SOUND_STATUS_INITIALIZED);
 		}
@@ -278,6 +279,13 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	case _K_SCI0_SOUND_FADE_HANDLE:
 		/*s->sound_server->command(s, SOUND_COMMAND_FADE_HANDLE, obj, 120);*/ /* Fade out in 2 secs */
+	/* FIXME: The next couple of lines actually STOP the handle, rather
+	** than fading it! */
+		if (obj.segment) {
+			sfx_song_set_status(&s->sound,
+					    handle, SOUND_STATUS_STOPPED);
+			PUT_SEL32V(obj, state, SOUND_STATUS_STOPPED);
+		}
 		break;
 
 	case _K_SCI0_SOUND_GET_POLYPHONY:
@@ -399,7 +407,8 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 		if (obj.segment) {
 			sfx_add_song(&s->sound,
 				     build_iterator(s, GET_SEL32V(obj, number),
-						    SCI_SONG_ITERATOR_TYPE_SCI1),
+						    SCI_SONG_ITERATOR_TYPE_SCI1,
+						    handle),
 				     0, handle);
 		}
 		break;
@@ -461,6 +470,13 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 	{
 		/* There are four parameters that control the fade here.
 		 * TODO: Figure out the exact semantics */
+
+	  /* FIXME: The next couple of lines actually STOP the song right away */
+		PUT_SEL32V(obj, signal, -1);
+		if (obj.segment) {
+			sfx_song_set_status(&s->sound,
+					    handle, SOUND_STATUS_STOPPED);
+		}
 		break;
 	}
 	case _K_SCI01_SOUND_UPDATE_CUES :
@@ -473,9 +489,7 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 		int cue;
 
 		while (result == SI_LOOP)
-		       result = sfx_poll(&s->sound, &handle, &cue);
-
-		obj = DEFROBNICATE_HANDLE(handle);
+		       result = sfx_poll_specific(&s->sound, handle, &cue);
 
 		switch (result) {
 
@@ -639,7 +653,8 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 		if (obj.segment) {
 			sfx_add_song(&s->sound,
 				     build_iterator(s, GET_SEL32V(obj, number),
-						    SCI_SONG_ITERATOR_TYPE_SCI1),
+						    SCI_SONG_ITERATOR_TYPE_SCI1,
+						    handle),
 				     0, handle);
 		}
 		break;
@@ -693,9 +708,7 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 		int cue;
 
 		while (result == SI_LOOP)
-		       result = sfx_poll(&s->sound, &handle, &cue);
-
-		obj = DEFROBNICATE_HANDLE(handle);
+		       result = sfx_poll_specific(&s->sound, handle, &cue);
 
 		switch (result) {
 

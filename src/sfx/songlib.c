@@ -87,6 +87,8 @@ song_new(song_handle_t handle, song_iterator_t *it, int priority)
 	retval->delay = 0;
 	retval->it = it;
 	retval->status = SOUND_STATUS_STOPPED;
+	retval->next_playing = NULL;
+	retval->next_stopping = NULL;
 
 	return retval;
 }
@@ -163,7 +165,7 @@ song_lib_find(songlib_t songlib, song_handle_t handle)
 song_t *
 song_lib_find_next_active(songlib_t songlib, song_t *other)
 {
-	song_t *seeker = other? other : *(songlib.lib);
+	song_t *seeker = other? other->next : *(songlib.lib);
 
 	while (seeker) {
 		if ((seeker->status == SOUND_STATUS_WAITING) ||
@@ -173,7 +175,7 @@ song_lib_find_next_active(songlib_t songlib, song_t *other)
 	}
 
 	/* Only return songs that have equal priority */
-	if (other && other->priority > seeker->priority)
+	if (other && seeker && other->priority > seeker->priority)
 		return NULL;
 
 	return seeker;

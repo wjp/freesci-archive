@@ -29,6 +29,7 @@
 /* Tandy/PCJr sequencer for FreeSCI */
 
 #include <sfx_softseq.h>
+#include <sci_midi.h>
 
 #define FREQUENCY 44100
 #define CHANNELS_NR 3
@@ -121,6 +122,12 @@ SN76496_event(sfx_softseq_t *self, byte command, int argc, byte *argv)
 			volumes[chan] = argv[1];
 		}
 		break;
+
+	case 0xb0:
+		if (argv[1] == SCI_MIDI_CHANNEL_NOTES_OFF)
+			notes[chan] = 0;
+		break;
+
 
 	default:
 #if DEBUG

@@ -29,6 +29,7 @@
 /* PC speaker software sequencer for FreeSCI */
 
 #include <sfx_softseq.h>
+#include <sci_midi.h>
 
 #define FREQUENCY 94020
 
@@ -78,6 +79,11 @@ sps_event(sfx_softseq_t *self, byte command, int argc, byte *argv)
 		} else
 			note = argv[0];
 		/* Ignore velocity otherwise; we just use the global one */
+		break;
+
+	case 0xb0:
+		if (argv[1] == SCI_MIDI_CHANNEL_NOTES_OFF)
+			note = 0;
 		break;
 
 	default:

@@ -99,25 +99,26 @@ pp_init(resource_mgr_t *resmgr, int expected_latency)
 }
 
 static int
-pp_set_iterator(song_iterator_t *it, GTimeVal start_time)
+pp_add_iterator(song_iterator_t *it, GTimeVal start_time)
 {
-	new_song = 1;
-	new_timestamp = sfx_new_timestamp(start_time.tv_sec,
-					  start_time.tv_usec,
-					  seq->pcm_conf.rate);
-	time_counter = 0;
-fprintf(stderr, "[play] Now running it %p\n", it);
-
-	if (play_it) {
-		fprintf(stderr, __FILE__": set_iterator: Attempted while iterator was set!\n");
-		return SFX_ERROR;
+	if (play_it == NULL) {
+		new_song = 1;
+		new_timestamp = sfx_new_timestamp(start_time.tv_sec,
+						  start_time.tv_usec,
+						  seq->pcm_conf.rate);
+		/* ASAP otherwise */
+		time_counter = 0;
 	}
+fprintf(stderr, "[play] Now running it %p\n", it);
 
 	SIMSG_SEND(it, SIMSG_SET_PLAYMASK(seq->playmask));
 	SIMSG_SEND(it, SIMSG_SET_RHYTHM(seq->play_rhythm));
-	play_it = it;
 
-	seq->allstop(seq);
+	if (play_it == NULL)
+		seq->allstop(seq);
+
+	play_it = sfx_iterator_combine(play_it, it);
+
 	seq->set_volume(seq, volume);
 
 	return SFX_OK;
@@ -212,7 +213,9 @@ ppf_poll(sfx_pcm_feed_t *self, byte *dest, int size)
 		while (time_counter <= TIME_INC) {
 			int next_stat = songit_next(&play_it,
 						    &(buf[0]), &buf_nr,
-						    IT_READER_MASK_ALL);
+						    IT_READER_MASK_ALL
+						    | IT_READER_MAY_FREE
+						    | IT_READER_MAY_CLEAN);
 
 			switch (next_stat) {
 			case SI_PCM:
@@ -285,7 +288,7 @@ sfx_player_t sfx_player_polled = {
 	"0.1",
 	&pp_set_option,
 	&pp_init,
-	&pp_set_iterator,
+	&pp_add_iterator,
 	&pp_fade_out,
 	&pp_stop,
 	&pp_send_iterator_message,
