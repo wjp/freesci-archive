@@ -94,6 +94,9 @@
  * Called if memory allocation fails.
  */
 #ifdef WITH_DMALLOC
+#	ifdef __unix__
+#		define DISABLE_SCI_MEMORY /* Use malloc() and friends */
+#	endif
 #define PANIC_MEMORY(size, filename, linenum, funcname, more_info)\
 	PANIC((stderr, "Memory allocation of %lu bytes failed\n"\
 		" [%s (%s) : %u]\n " #more_info "\n %s\n",\
@@ -257,9 +260,25 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 #	define sci_calloc calloc
 #	define sci_realloc realloc
 #	define sci_free free
-#	define sci_memdup memdup
 #	define sci_strdup strdup
 #	define sci_strndup strndup
+#	ifdef __GNUC__
+#		ifndef MALLOC_DEBUG
+#			define sci_memdup(src, size)\
+				_SCI_MEMDUP(src, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
+#		else
+#			define sci_memdup(src, size)\
+				_SCI_MEMDUP(src, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
+#		endif
+#	else
+#		ifndef MALLOC_DEBUG
+#			define sci_memdup(src, size)\
+				_SCI_MEMDUP(src, size, __FILE__, __LINE__, "", 0)
+#		else
+#			define sci_memdup(src, size)\
+				_SCI_MEMDUP(src, size, __FILE__, __LINE__, "", 1)
+#		endif
+#	endif
 #else
 
 #	ifdef __GNUC__

@@ -1,5 +1,10 @@
 2001-09-24  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* configure.in: Use savegame.c line numbers when building with dmalloc
+
+	* src/include/sci_memory.h (sci_strndup): Disabled SCI memory stuff
+	on UNIX with dmalloc
+
 	* src/scicore/vocab.c (vocab_get_suffices): Suffix vocabulary is now
 	locked in the resource manager during the entire game
 

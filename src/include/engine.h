@@ -47,7 +47,7 @@
 #include <kernel.h>
 #include <gfx_state_internal.h>
 
-#define FREESCI_SAVEGAME_VERSION 3
+#define FREESCI_SAVEGAME_VERSION 4
 
 #define FREESCI_GAMEDIR ".freesci"
 #define STRLEN_FREESCI_GAMEDIR 8
@@ -129,7 +129,7 @@ typedef struct _state
 	heap_ptr save_dir; /* Pointer to the allocated space for the save directory */
 	heap_ptr save_dir_copy; /* Last copy of the save dir */
 	int save_dir_edit_offset; /* For kEdit(): Display offset for editing the savedir */
-	char save_dir_copy_buf[MAX_SAVE_DIR_SIZE]; /* Temp savedir buffer for kEdit() */
+	char *save_dir_copy_buf; /* Temp savedir buffer for kEdit() */
 
 	heap_ptr sound_object; /* Some sort of object for sound management */
 

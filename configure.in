@@ -159,7 +159,7 @@ dnl AC_SUBST(ac_sdl_o)
 dnl AC_SUBST(ac_ggi_o)
 
 AC_CHECK_LIB(m, cos, [LIB_M="-lm"], [LIB_M=""])
-AC_CHECK_LIB(c, sprintf, [LIB_C="-lc"], [LIB_C=""])
+#AC_CHECK_LIB(c, sprintf, [LIB_C="-lc"], [LIB_C=""])
 LIBS="$LIBS $LIB_M"  # libc is added later, during the efence check
 
 AC_PATH_PNG
@@ -185,9 +185,13 @@ AC_ARG_WITH(E,
 	[CFLAGS="-E $CFLAGS"],
 	[])
 
+CFSML_FLAGS=""
+
 AM_WITH_DMALLOC
 AM_WITH_MALLOC_DEBUG
 AM_WITHOUT_MALLOC_CHECKS
+
+AC_SUBST(CFSML_FLAGS)
 
 RPM_VERSION=`echo $VERSION | sed 's/\-/_/'`
 AC_SUBST(RPM_VERSION)

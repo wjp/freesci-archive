@@ -766,6 +766,7 @@ AC_ARG_WITH(dmalloc,
   AC_DEFINE(WITH_DMALLOC,1,
             [Define if using the dmalloc debugging malloc package])
   LIBS="$LIBS -ldmallocth"
+  CFSML_FLAGS="-l"
   LDFLAGS="$LDFLAGS -g"
 else
   AC_MSG_RESULT(no)

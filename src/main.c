@@ -1103,6 +1103,7 @@ main(int argc, char** argv)
 
 	game_exit(gamestate);
 
+SCI_MEMTEST;
 	script_free_engine(gamestate); /* Uninitialize game state */
 
 	scir_free_resource_manager(resmgr);

@@ -343,7 +343,8 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->save_dir = heap_allocate(s->_heap, MAX_SAVE_DIR_SIZE);
 	s->save_dir_copy = 0xffff;
 	s->save_dir_edit_offset = 0;
-	s->save_dir_copy_buf[0] = 0;
+	s->save_dir_copy_buf = sci_malloc(MAX_SAVE_DIR_SIZE);
+	s->save_dir_copy_buf[0] = 0; /* Terminate string */
 
 	cwd = sci_getcwd();
 	if (strlen(cwd) > MAX_SAVE_DIR_SIZE)
@@ -405,6 +406,8 @@ script_free_vm_memory(state_t *s)
 	sciprintf("Freeing VM memory\n");
 
 	heap_free(s->_heap, s->save_dir);
+	sci_free(s->save_dir_copy_buf);
+	s->save_dir_copy_buf = NULL;
 
 	for (i = 0; i < MAX_HUNK_BLOCKS; i++)
 		if (s->hunk[i].size) {
