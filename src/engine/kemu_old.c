@@ -43,6 +43,10 @@ kFsciEmu(state_t *s, int funct_nr, int argc, reg_t *argv)
 		heap_ptr datap = argp + argc * 2; /* copied stuff goes here */
 		int i;
 
+		SCIkdebug(SCIkEMU, "Emulating kernel call %s[%x] w/ %d arguments at HP:%04x\n",
+			  s->kernel_names[funct_nr], funct_nr, argc,
+			  argp);
+
 		for (i = 0; i < argc; i++) {
 			int emu_value = datap; /* Value we'll pass to the function */
 			int data_occupied = 0;
@@ -53,7 +57,9 @@ kFsciEmu(state_t *s, int funct_nr, int argc, reg_t *argv)
 			} else /* numeric value */
 				emu_value = argv[i].offset;
 
-			PUT_HEAP(argp, argv[i].offset);
+			SCIkdebug(SCIkEMU, "   %3d: %04x\n", i, emu_value);
+
+			PUT_HEAP(argp, emu_value);
 			argp += 2;
 
 			datap += data_occupied; /* Step over last block we wrote */

@@ -94,6 +94,7 @@ validate_arithmetic(reg_t reg)
 	if (reg.segment) {
 		script_debug_flag = script_error_flag = 1;
 		sciprintf("Attempt to read arithmetic value from non-zero segment [%04x]\n", reg.segment);
+		BREAKPOINT();
 	}
 
 	return reg.offset;
@@ -714,10 +715,17 @@ run_vm(state_t *s, int restoring)
 			local_script = script_locate_by_segment(s, obj->pos.segment);
 			variables_seg[VAR_LOCAL] = local_script->locals_segment;
 
-			variables_base[VAR_LOCAL] = variables[VAR_LOCAL]
-				= local_script->locals_block->locals;
+			if (local_script->locals_block)
+				variables_base[VAR_LOCAL] = variables[VAR_LOCAL]
+					= local_script->locals_block->locals;
+			else
+				variables_base[VAR_LOCAL] = variables[VAR_LOCAL]
+					= NULL;
 #ifndef DISABLE_VALIDATIONS
-			variables_max[VAR_LOCAL] = local_script->locals_block->nr;
+			if (local_script->locals_block)
+				variables_max[VAR_LOCAL] = local_script->locals_block->nr;
+			else
+				variables_max[VAR_LOCAL] = 0;
 			variables_max[VAR_TEMP] = xs->sp - xs->fp;
 			variables_max[VAR_PARAM] = xs->argc + 1;
 #endif
@@ -1108,9 +1116,9 @@ run_vm(state_t *s, int restoring)
 				CORE_ERROR("VM", "Invalid superclass in object");
 			else {
 				s_temp = xs->sp;
-				xs->sp -= ((opparams[0] >> 1) + restadjust); /* Adjust stack */
+				xs->sp -= ((opparams[1] >> 1) + restadjust); /* Adjust stack */
 
-				xs_new = send_selector(s, xs->objp, r_temp, s_temp,
+				xs_new = send_selector(s, r_temp, xs->objp, s_temp,
 						       (int)(opparams[1]>>1) + (word)restadjust,
 						       xs->sp);
 
@@ -2052,7 +2060,7 @@ version_require_later_than(state_t *s, sci_version_t version)
 object_t *
 obj_get(state_t *s, reg_t offset)
 {
-	mem_obj_t *memobj = GET_OBJ_SEGMENT(s->seg_manager, offset.segment);
+	mem_obj_t *memobj = GET_OBJECT_SEGMENT(s->seg_manager, offset.segment);
 	object_t *obj = NULL;
 
 	if (memobj != NULL) {

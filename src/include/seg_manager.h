@@ -78,7 +78,7 @@ struct _mem_obj;
 		: NULL) /* Type does not match */					\
 	: NULL /* Invalid index */
 
-#define GET_OBJ_SEGMENT(mgr, index) ((index) >= 0 && (mgr).heap_size > index)?		\
+#define GET_OBJECT_SEGMENT(mgr, index) ((index) >= 0 && (mgr).heap_size > index)?	\
 		(((mgr).heap[index]->type == MEM_OBJ_SCRIPT				\
 		  || (mgr).heap[index]->type == MEM_OBJ_CLONES)? (mgr).heap[index]	\
 		: NULL) /* Type does not match */					\

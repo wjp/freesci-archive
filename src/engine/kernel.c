@@ -202,7 +202,8 @@ const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
 	"Said specs",
 	"File I/O",
 	"Time",
-	"Room numbers"
+	"Room numbers",
+	"FreeSCI 0.3.3 kernel emulation"
 };
 
 

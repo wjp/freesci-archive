@@ -1,35 +1,8 @@
 Problem:
 	VC++ 6.0 (SP5) + SDL
 
-
-[C] encoding:
-	[T] Trivial
-	[X] Complex
-	[n] (where n is a number) Ranking n in complexity
-	--- Done
-
-Dependancies: '.' means "dependancy has been resolved"
-
-[C] Code				DepID	Deps	Who
--------------------------------------------------------------
---- introduce reg_t			A		CR
---- fix registers			C	.	CR
---- fix stack				B	.	CR
---- fix script_t			D	.	CR
---- implement seg_mgr			E	.	X
---- fix script instantiation/uninst'n	E	.	X
---- implement script ID map		F		CR
---- fix vm					......	CR
---- fix send mechanism			G	.....	CR
---- new kernel function interface	H	.	CR
---- fix global kernel function table		.	CR
---- provide compat code f. old kfuncts		.....	CR
---- fix init code				......	CR
-[T] fix sound cues				..	CR
---- disable savegames					CR
-
 Next TODO:
-	* Add callb, calle
+	* [X] Add callb, calle
 	* Find out why all lockers are exactly 1, fix this erroneous
 	  situation
 	* Check "what's-all-this-then" warning in vm.c
@@ -39,6 +12,7 @@ Next TODO:
 	* Implement compat code
 	* Re-implement 'delete' and 'doit' calls in kgraphics
 	* Re-enable hunk allocation/reference/deallocation
+	* Add sound cues
 	* Fix remaining migration warnings
 	* Re-enable save_game, restore_game, check_savegame
 	* Re-enable quick-restore code

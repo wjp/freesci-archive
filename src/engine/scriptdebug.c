@@ -2122,7 +2122,7 @@ c_listclones(state_t *s)
 void
 set_debug_mode (struct _state *s, int mode, char *areas)
 {
-	char modechars[] = "ulgcmfbadspMSFtr"; /* Valid parameter chars */
+	char modechars[] = "ulgcmfbadspMSFtre"; /* Valid parameter chars */
 	char *parser;
 	int seeker;
 	char frob;
@@ -2162,11 +2162,6 @@ int
 c_debuglog(state_t *s)
 {
 	unsigned int i;
-
-	if (!_debugstate_valid) {
-		sciprintf("Not in debug state\n");
-		return 1;
-	}
 
 	if (cmd_paramlength == 0) {
 		for (i = 0; i < SCIk_DEBUG_MODES; i++)
@@ -3142,14 +3137,15 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_redraw_screen, "redraw_screen", "", "Redraws the screen");
 			con_hook_command(c_show_list, "listinfo", "i", "Examines the list at the specified\n  heap address");
 			con_hook_command(c_mem_info, "meminfo", "", "Displays heap memory information");
-			con_hook_command(c_debuglog, "debuglog", "s*", "Sets the debug log modes.\n  Possible parameters:\n"
+			con_hook_command(c_debuglog, "debuglog", "!s*", "Sets the debug log modes.\n  Possible parameters:\n"
 					 "  +x (sets debugging for x)\n  -x (unsets debugging for x)\n\nPossible values"
 					 " for x:\n  u: Unimpl'd/stubbed stuff\n  l: Lists and nodes\n  g: Graphics\n"
 					 "  c: Character handling\n  m: Memory management\n  f: Function call checks\n"
 					 "  b: Bresenham details\n  a: Audio\n  d: System gfx management\n  s: Base setter"
 					 "\n  p: Parser\n  M: The menu system\n  S: Said specs\n  F: File I/O\n  t: GetTime"
+					 "\n  e: 0.3.3 kernel emulation\n"
 					 "\n  r: Room numbers\n"
-					 "  *: Everything\n\n"
+					 "\n  *: Everything\n\n"
 					 "  If invoked withour parameters,\n  it will list all activated\n  debug options.\n\n"
 					 "SEE ALSO\n"
 					 "  gfx_debuglog\n");

@@ -62,6 +62,7 @@ extern const char *SCIk_Debug_Names[SCIk_DEBUG_MODES];
 #define SCIkFILE       s, __FILE__, __LINE__, 13
 #define SCIkTIME       s, __FILE__, __LINE__, 14
 #define SCIkROOM       s, __FILE__, __LINE__, 15
+#define SCIkEMU	       s, __FILE__, __LINE__, 16
 
 #define SCI_KERNEL_DEBUG
 
