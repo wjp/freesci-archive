@@ -746,7 +746,7 @@ xlib_exit(struct _gfx_driver *drv)
 		XCloseDisplay(S->display);
 		XSetErrorHandler((XErrorHandler) (S->old_error_handler));
 		sci_free(S);
-		S = NULL;
+		drv->state /* = S */ = NULL;
 		gfx_free_mode(drv->mode);
 	}
 }

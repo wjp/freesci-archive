@@ -934,7 +934,7 @@ gp32_exit(struct _gfx_driver *drv)
 		sci_free(S->priority[0]);
 		sci_free(S->priority[1]);
 		sci_free(S);
-		S = NULL;
+		drv->state /* = S */ = NULL;
 	}
 
 	gp_setFramebuffer((u16 *) FRAMEBUFFER, 1);

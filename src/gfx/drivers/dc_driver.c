@@ -1011,7 +1011,7 @@ dc_exit(struct _gfx_driver *drv)
 		sem_destroy(S->sem_event);
 		sem_destroy(S->sem_pointer);
 		sci_free(S);
-		S = NULL;
+		drv->state /* = S */ = NULL;
 	}
 }
 
