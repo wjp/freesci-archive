@@ -54,6 +54,7 @@ static int free_voices = ADLIB_VOICES;
 static long note_time[ADLIB_VOICES];
 static unsigned char oper_note[ADLIB_VOICES];
 static unsigned char oper_chn[ADLIB_VOICES];
+static int master_volume;
 
 #if 0
 void seqbuf_dump()
@@ -172,7 +173,9 @@ void adlib_start_note(int chn, int note, int velocity)
   oper_note[free] = note;
   note_time[free] = now.tv_sec * 1000000 + now.tv_usec;
   free_voices--;
-  
+
+  velocity = velocity * master_volume / 100; /* scale for master volume */
+
   SEQ_SET_PATCH(dev, free, instr[chn]);
   SEQ_START_NOTE(dev, free, note, velocity);
   SEQ_DUMPBUF();
@@ -246,14 +249,8 @@ int midi_adlib_close()
 
 int midi_adlib_volume(guint8 volume)
 {
-  /* XXX this is the wrong way to do this. */
-  int i;
-  volume &= 0x7f; /* (make sure it's not over 127) */
-  for (i = 0; i < MIDI_CHANNELS ; i++)
-    SEQ_CONTROL(dev, i, CTRL_MAIN_VOLUME, volume);
-  SEQ_DUMPBUF();    
+  master_volume = volume & 0x7f;
   return 0;
-
 }
 
 int midi_adlib_allstop(void) {

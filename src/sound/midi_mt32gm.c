@@ -125,9 +125,15 @@ int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2)
 			xparam = MIDI_mapping[param].gm_rhythmkey;
 
 		break;
+	case 0xd0:    /* aftertouch.  let it through */
 	case 0xe0:    /* Pitch bend -- needs scaling? */
+	        break;
 	case 0xb0:    /* CC changes.  let 'em through... */
-		break;
+#if 0
+	        if (param == 0x0a)  /* mt32 and gm pan reversed */
+	                param2 = 0xf7 - param2;
+#endif
+	        break;
 	default:
 		printf("MT32GM: Unknown event: %02x\n", command);
 
@@ -192,7 +198,7 @@ int midi_mt32gm_event2(guint8 command, guint8 param)
 int midi_mt32gm_volume(guint8 volume)
 {
   /* Universal SysEx */
-  guint8 buffer[8] = {0xf0, 0x7f, 0x7f, 0x04, 0x01, 0x00, 0x00, 0xf7};
+  guint8 buffer[8] = {0xf0, 0x7f, 0x7f, 0x04, 0x02, 0x00, 0x00, 0xf7};
   
   int value = volume * 0x4000 / 100;
   buffer[5] = volume & 0x7f;  /* bits 0-6 */

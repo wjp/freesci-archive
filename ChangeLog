@@ -1,3 +1,8 @@
+2002-01-15  Solomon Peachy <pizza@shaftnet.org>
+	* src/sound/midi_mt32gm.c:  Added aftertouch to midi event list.
+ 	* src/sound/midi_adlib.c, src/sound/midi_adlibemu.c:  Master
+        volume.
+
 2002-01-14  Solomon Peachy <pizza@shaftnet.org>
 	* src/include/midi_device.h, src/sound/fmopl.c,
 	  src/sound/midi_adlibemu.c:  12-channel adlib emulation!

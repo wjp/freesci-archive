@@ -72,6 +72,7 @@ static unsigned char oper_note[ADLIB_VOICES];
 static unsigned char oper_chn[ADLIB_VOICES];
 
 static FM_OPL *ym3812 = NULL;
+static int master_volume;
 
 /* initialise note/operator lists, etc. */
 void adlibemu_init_lists()
@@ -83,6 +84,7 @@ void adlibemu_init_lists()
     oper_chn[i] = 255;
   }
   free_voices = ADLIB_VOICES;
+  master_volume = 100;
 
   memset(instr, 0, sizeof(instr));
   memset(pitch, 0, sizeof(instr));
@@ -200,8 +202,7 @@ int adlibemu_start_note(int chn, int note, int velocity)
   int op, volume, inst = 0;
 
   if (velocity == 0) {
-    adlibemu_stop_note(chn, note, velocity);
-    return;
+    return adlibemu_stop_note(chn, note, velocity);
   }
 
   if (free_voices <= 0) {
@@ -212,8 +213,9 @@ int adlibemu_start_note(int chn, int note, int velocity)
       if (oper_chn[op] == 255)
 	break;
 
-  volume = velocity * vol[chn] / 128; /* Scale channel volume */
-  volume = my_midi_fm_vol_table[volume];
+  volume = velocity * vol[chn] / 128;     /* Scale channel volume */
+  volume = volume * master_volume / 100;  /* apply master volume */
+  volume = my_midi_fm_vol_table[volume];  /* scale logarithmically */
   
   inst = instr[chn];
 
@@ -234,7 +236,7 @@ int adlibemu_start_note(int chn, int note, int velocity)
   return 0;
 }
 
-int test_adlib () {
+void test_adlib () {
 
   int voice = 0;
 #if 0
@@ -314,7 +316,6 @@ int midi_adlibemu_volume(guint8 volume)
 {
   volume &= 0x7f; /* (make sure it's not over 127) */
 
-  printf("volume NYI %02x \n", volume);
   return 0;
 
 }
