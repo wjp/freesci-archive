@@ -57,7 +57,7 @@ int pcmout_close(void)
   int retval = pcmout_driver->pcmout_close();
 
   if (snd_buffer)
-    sci_free(snd_buffer);
+	  sci_free(snd_buffer);
 
   return retval;
 }
@@ -68,6 +68,10 @@ int synth_mixer (gint16* tmp_bk, int samples);
 int mix_sound(int count)
 {
 	int i;
+
+	if (count > BUFFER_SIZE)
+		count = BUFFER_SIZE;
+
 	i = synth_mixer(snd_buffer, count);
 
 	if (i <= 0)

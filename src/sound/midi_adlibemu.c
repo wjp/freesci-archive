@@ -464,7 +464,7 @@ int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
   int i;
 
   /* load up the patch.003 file, parse out the insturments */
-  if (data_length < 1344) {
+  if ((data_length < 1344) || (data_ptr == NULL)) {
     printf ("ADLIB: invalid patch.003");
     return -1;
   }
@@ -629,9 +629,6 @@ midi_device_t midi_device_adlibemu = {
 int synth_mixer (gint16 *buffer, int count)
 {
   gint16 *ptr = buffer;
-
-  if (count > BUFFER_SIZE)
-    count = BUFFER_SIZE;
 
   if (!buffer)
     return 0;

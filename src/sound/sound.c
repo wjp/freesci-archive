@@ -704,7 +704,7 @@ int init_midi_device (state_t *s) {
 	if (midi_patch == NULL) {
 		sciprintf(" Patch (%03d) could not be loaded. Initializing with defaults...\n", midi_patchfile);
 
-		if (midi_open(NULL, (unsigned int)-1) < 0) {
+		if (midi_open(NULL, 0) < 0) {
 			sciprintf(" The MIDI device failed to open cleanly.\n");
 			return -1;
 		}
