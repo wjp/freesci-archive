@@ -122,7 +122,7 @@ static struct {
   guint8 mode;
   guint8 time;
   guint8 level;
-} mt32_reverb[10];
+} mt32_reverb[11];
 
 unsigned short mt32_midi_patch = 001;
 
@@ -197,10 +197,9 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
     midi_mt32_sysex_delay();
     printf("MT-32: Setting up reverb levels\n");
     memcpy(mt32_reverb,data+ 0x4c, 3 * 11);
-    printf("MT-32: Setting default volume\n");
-    /*    midi_mt32_reverb(default_reverb); */
-    midi_mt32_volume(data[0x3f]);
-    midi_mt32_sysex_delay();
+    /*    midi_mt32_reverb(default_reverb);*/
+    /*    printf("MT-32: Setting default volume\n");
+	  midi_mt32_volume(data[0x3f]); */
     return 0;
   } else if (type == 1) {
     midi_mt32_write_block(data + 1155, (data[1154] << 8) + data[1153]);
@@ -231,8 +230,13 @@ int midi_mt32_close()
 
 int midi_mt32_volume(guint8 volume)
 {
+  volume &= 0x7f; /* (make sure it's not over 127) */
   printf("MT32: Set volume to: %d\n", volume);
-  return midi_mt32_poke(0x100016, &volume, 1);
+  if (midi_mt32_poke(0x100016, &volume, 1) < 0)
+    return -1;
+
+  midi_mt32_sysex_delay();
+  return 0;
 }
 
 int midi_mt32_allstop(void) 
@@ -248,6 +252,10 @@ int midi_mt32_reverb(short param)
 {
   if (param == -1)
     param = default_reverb;
+
+  printf("MT-32: Sending reverb # %d (%d, %d, %d)\n",param, mt32_reverb[param].mode,
+	 mt32_reverb[param].time,
+	 mt32_reverb[param].level);
 
   midi_mt32_poke(0x100001, &mt32_reverb[param].mode, 1);
   midi_mt32_sysex_delay();
@@ -285,9 +293,8 @@ int midi_mt32_event(guint8 command, guint8 note, guint8 velocity)
   buffer[2] = velocity;
 
   /*  printf("Midi Event  %02x %02x %02x\n", command, note, velocity); */
-  midiout_write_event(buffer, 3);
+  return midiout_write_event(buffer, 3);
 
-  return 0;
 }
 
 int midi_mt32_event2(guint8 command, guint8 param)
@@ -299,7 +306,7 @@ int midi_mt32_event2(guint8 command, guint8 param)
 
 
   /*  printf("Midi Event  %02x %02x\n", command, param); */
-  midiout_write_event(buffer, 2);
+  return midiout_write_event(buffer, 2);
 }
 
 int midi_mt32_poke(guint32 address, guint8 *data, unsigned int count)
@@ -319,7 +326,10 @@ int midi_mt32_poke(guint32 address, guint8 *data, unsigned int count)
   sysex_buffer[count + 8] = checksum & 0x7F;
   sysex_buffer[count + 9] = 0xF7;
 
-  return midiout_write_block(sysex_buffer, count + 10);
+  i = midiout_write_block(sysex_buffer, count + 10);
+  usleep(320 * count + 10);  /* need to delay on faster machines. */
+  return i;
+
 }
 
 int midi_mt32_poke_gather(guint32 address, guint8 *data1, unsigned int count1,

@@ -1,4 +1,17 @@
 2001-03-01  Solomon Peachy <pizza@shaftnet.org>
+	* sound/midi_mt32.c:  Fixed a overflow problem with reverb.
+	                      All sysex-generating events now
+                                 incorporate the necessary delays.
+                              Cleaned up return values.
+			      Added better debugging output.
+			      Added necessary delays to avoid mt32
+                              buffer overflows on sysex dumps.
+	* sound/midiout.c:    Fixed a D'oh! on midiout_write_event
+	* sound/midiout_unixraw.c:  Better debug output.
+	* sound/soundserver_null.c: Better debug output.
+				    Error checking on midi_writes
+
+2001-03-01  Solomon Peachy <pizza@shaftnet.org>
 
 	* include/midiout.h
 	  sound/Makefile.am

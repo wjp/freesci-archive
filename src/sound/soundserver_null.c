@@ -205,7 +205,8 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
   if (midi_patch == NULL)
     printf("gack!  That patch (%d) didn't load!\n", mt32_midi_patch);
 
-  midi_mt32_open(midi_patch->data, midi_patch->length);
+  if (midi_mt32_open(midi_patch->data, midi_patch->length) < 0)
+    printf("gack!  MT32 failed to open cleanly!\n");
 
   sound_eq_init(&queue);
 
@@ -323,6 +324,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    midi_mt32_event2(command, param);
 	  else
 	    midi_mt32_event(command, param, param2);
+	  
 	}
       }
 

@@ -21,6 +21,7 @@
 #include <midiout.h>
 
 #include <stdio.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -32,7 +33,7 @@ static char *devicename = "/dev/midi00";
 int midiout_unixraw_open()
 {
   if ((fd = open(devicename, O_WRONLY|O_SYNC)) < 0) {
-    fprintf(stderr, "Open failed (%i): %s\n", fd, devicename);
+    fprintf(stderr, "Open failed (%d): %s\n", fd, devicename);
     return -1;
   }
   return 0;
@@ -47,9 +48,15 @@ int midiout_unixraw_close()
 
 int midiout_unixraw_write(guint8 *buffer, unsigned int count)
 {
-  if (write(fd, buffer, count) != count)
-    return -1;
-  return 0;
+  int rval = 0;
+  /*  printf("writing %d (%d)-- %02x %02x %02x\n", count, fd, 
+      buffer[0], buffer[1], buffer[2]); */
+  rval = write(fd, buffer, count);
+  if (rval != count) {
+    printf("write error on fd %d: %d -- %d\n", fd, rval, errno);
+    rval = -1;
+  }
+  return rval;
 }
 
 midiout_driver_t midiout_driver_unixraw = {

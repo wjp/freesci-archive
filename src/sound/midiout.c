@@ -41,12 +41,14 @@ int midiout_close()
 
 int midiout_write_event(guint8 *buffer, unsigned int count)
 {
+
   if (buffer[0] == running_status)
-    return midiout_driver->midiout_write(buffer + 1, count +1);
+    return midiout_driver->midiout_write(buffer + 1, count -1);
   else {
-    running_status = buffer[0];
+  running_status = buffer[0]; 
     return midiout_driver->midiout_write(buffer, count);
-  }
+  } 
+
 }
 
 int midiout_write_block(guint8 *buffer, unsigned int count)
