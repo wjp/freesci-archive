@@ -506,7 +506,7 @@ write_hunk_block(FILE *fh, hunk_block_t *foo)
 
 	} else { /* Normal buffer */
 
-		while ((hunkfile = open(filename, O_RDONLY | O_BINARY)) > 0) {
+		while (IS_VALID_FD(hunkfile = open(filename, O_RDONLY | O_BINARY))) {
 			close(hunkfile);
 			sprintf(filename + 5, "%d", ++filenr);
 		}
@@ -519,7 +519,7 @@ write_hunk_block(FILE *fh, hunk_block_t *foo)
 		hunkfile = creat(filename, 0600);
 #endif
 
-		assert (hunkfile > 0);
+		assert (IS_VALID_FD(hunkfile));
 
 		write(hunkfile, foo->data, foo->size);
 
@@ -1161,7 +1161,7 @@ gamestate_restore(state_t *s, char *dirname)
 		return NULL;
 	}
 
-	if (read_eof || ((fd = open("heap", O_RDONLY | O_BINARY)) < 0)) {
+	if (read_eof || (!IS_VALID_FD(fd = open("heap", O_RDONLY | O_BINARY)))) {
 		if (read_eof)
 			sciprintf("Error while reading gamestate '%s'\n", dirname);
 		else

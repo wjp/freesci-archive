@@ -42,6 +42,8 @@
  **/
 
 
+#define IS_VALID_FD(a) ((a) != -1) /* Tests validity of a file descriptor */
+
 #ifdef _WIN32
 #  ifndef _Win32
 #    define _Win32

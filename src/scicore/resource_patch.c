@@ -94,7 +94,7 @@ sci0_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 				}
 
 				file = open(entry, O_RDONLY);
-				if (!file)
+				if (!IS_VALID_FD(file))
 					perror("""__FILE__"": (""__LINE__""): open()");
 				else {
 

@@ -1,3 +1,16 @@
+2002-09-16  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/include/resource.h (IS_VALID_FD): Macro added for portability.
+	  It's use is to check for an error return code of creat(), open() and
+	  sci_open().
+	* src/main.c, src/engine/kfile.c, src/engine/savegame.cfsml,
+	  src/scicore/resource.c, src/scicore/resource_map.c,
+	  src/scicore/resource_patch.c, src/scicore/tools.c,
+	  src/sfx/midiout_unixraw.c, src/sound/midi_adlib.c,
+	  src/sound/midiout_ossopl3.c, src/sound/midiout_ossseq.c,
+	  src/sound/midiout_unixraw.c, src/sound/polled_ss.c: Made use of the
+	  IS_VALID_FD() macro and fixed some minor bugs in error handling.
+
 2002-09-15  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/include/win32/sci_win32.h: New file (contains sleep() and

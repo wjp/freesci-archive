@@ -48,7 +48,7 @@ midiout_unixraw_set_parameter(struct _midiout_driver *drv, char *attribute, char
 
 int midiout_unixraw_open()
 {
-  if ((fd = open(devicename, O_WRONLY|O_SYNC)) < 0) {
+  if (!IS_VALID_FD(fd = open(devicename, O_WRONLY|O_SYNC))) {
     fprintf(stderr, "Open failed (%d): %s\n", fd, devicename);
     return -1;
   }

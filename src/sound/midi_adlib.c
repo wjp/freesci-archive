@@ -198,7 +198,7 @@ int midi_adlib_open(guint8 *data_ptr, unsigned int data_length)
 
   memset(instr, 0, sizeof(instr));
  
-  if ((seqfd=open("/dev/sequencer", O_WRONLY, 0))==-1) {
+  if (!IS_VALID_FD(seqfd=open("/dev/sequencer", O_WRONLY, 0))) {
     perror("/dev/sequencer");
     return(-1);
   }

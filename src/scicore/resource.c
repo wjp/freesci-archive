@@ -346,7 +346,7 @@ _scir_load_resource(resource_mgr_t *mgr, resource_t *res)
 
 	fh = open(filename, O_RDONLY | O_BINARY);
 
-	if (fh <= 0) {
+	if (!IS_VALID_FD(fh)) {
 		char *raiser = filename;
 		while (*raiser) {
 			*raiser = toupper(*raiser); /* Uppercasify */
@@ -356,7 +356,7 @@ _scir_load_resource(resource_mgr_t *mgr, resource_t *res)
 		fh = sci_open(filename, O_RDONLY|O_BINARY);
 	}    /* Try case-insensitively name */
 
-	if (fh <= 0) {
+	if (!IS_VALID_FD(fh)) {
 		sciprintf("Failed to open %s/%s!\n",
 			  mgr->resource_path, filename);
 		res->data = NULL;

@@ -240,7 +240,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 									event.handle, sample_rate, pcm_size,
 									(sample_rate)? ((pcm_size * 1.0) / (sample_rate * 1.0)) : 0);
 								fd = open("/dev/dsp", O_WRONLY);
-								if (!fd) {
+								if (!IS_VALID_FD(fd)) {
 									perror("SndSrv: While opening /dev/dsp");
 								} else {
 									tmp = AFMT_U8;

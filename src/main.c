@@ -837,7 +837,7 @@ guess_version()
   guint8 *buff;
   sci_version_t version = 0;
 
-  if ((fd = sci_open("resource.001", O_RDONLY|O_BINARY)) < 0)
+  if (!IS_VALID_FD(fd = sci_open("resource.001", O_RDONLY|O_BINARY)))
     return version;
 
   buff = sci_malloc(8192);

@@ -611,9 +611,6 @@ sci_open(char *fname, int flags)
 
 	sci_finish_find(&dir); /* Free memory */
 
-	if (file <= 0)
-		return -1;
-
 	return file;
 }
 

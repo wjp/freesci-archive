@@ -65,7 +65,7 @@ f_open_mirrored(state_t *s, char *fname)
 
 	chdir(s->resource_dir);
 	fd = sci_open(fname, O_RDONLY | O_BINARY);
-	if (fd < 0) {
+	if (!IS_VALID_FD(fd)) {
 		chdir(s->work_dir);
 		return NULL;
 	}
@@ -87,7 +87,7 @@ f_open_mirrored(state_t *s, char *fname)
 	fd = creat(fname, 0600);
 #endif
 
-	if (!fd && buf) {
+	if (!IS_VALID_FD(fd) && buf) {
 		free(buf);
 		sciprintf("kfile.c: f_open_mirrored(): Warning: Could not create '%s' in '%s' (%d bytes to copy)\n",
 			  fname, s->work_dir, fstate.st_size);
@@ -526,7 +526,7 @@ kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
   strcat(testpath, "freesci.foo");
   pathlen = strlen(testpath);
 
-  while ((fd = open(testpath, O_RDONLY)) > -1) {
+  while (IS_VALID_FD(fd = open(testpath, O_RDONLY))) {
     close(fd);
     if (testpath[pathlen - 2] == 'z') { /* Failed. */
       SCIkwarn(SCIkWARNING, "Failed to find non-existing file for free space test\n");
@@ -549,7 +549,7 @@ kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   fd = creat(testpath, 0600);
 
-  if (fd == -1) {
+  if (!IS_VALID_FD(fd)) {
     SCIkwarn(SCIkWARNING,"Could not test for disk space: %s\n", strerror(errno));
     SCIkwarn(SCIkWARNING,"Test path was '%s'\n", testpath);
     free(testpath);
@@ -743,7 +743,7 @@ update_savegame_indices(char *gfname)
 
 		if (!chdir(dirname)) {
 
-			if ((fd = sci_open(gfname, O_RDONLY)) >= 0) {
+			if (IS_VALID_FD(fd = sci_open(gfname, O_RDONLY))) {
 				_savegame_indices[_savegame_indices_nr].id = i;
 				_savegame_indices[_savegame_indices_nr++].timestamp = get_file_mtime(fd);
 				close(fd);

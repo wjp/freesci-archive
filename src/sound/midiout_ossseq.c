@@ -63,7 +63,7 @@ midiout_ossseq_set_parameter(struct _midiout_driver *drv, char *attribute, char 
 int midiout_ossseq_open()
 {
 	fd = open(sequencer_dev, O_WRONLY);
-	if (!fd) {
+	if (!IS_VALID_FD(fd)) {
 		fprintf(stderr,"While trying to open '%s':\n", sequencer_dev);
 		perror("Failed to open for sound output");
 		return -1;

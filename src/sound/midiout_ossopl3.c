@@ -182,7 +182,7 @@ int midiout_ossopl3_open()
 {
    int i, n;
 
-  if((seqfd = open(devicename, O_RDWR, 0)) == -1) {
+  if(!IS_VALID_FD(seqfd = open(devicename, O_RDWR, 0))) {
     sciprintf("Cannot open %s.", devicename);
     exit(-1);
   };
@@ -300,7 +300,7 @@ void loadfm()
 
     sbfd = open(buf, O_RDONLY, 0);
 
-    if (sbfd == -1)
+    if (!IS_VALID_FD(sbfd))
       {
 	 printf("Instruments definition files absent\n");
 	 exit(1);

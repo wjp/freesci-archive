@@ -66,7 +66,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 	byte buf[SCI0_RESMAP_ENTRIES_SIZE];
 	fd = sci_open(RESOURCE_MAP_FILENAME, O_RDONLY | O_BINARY);
 
-	if (!fd)
+	if (!IS_VALID_FD(fd))
 		return SCI_ERROR_RESMAP_NOT_FOUND;
 
 	if (fstat(fd, &fd_stat)) {
@@ -145,7 +145,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 		sprintf(filename_buf, "resource.%03d", max_resfile_nr);
 		fd = sci_open(filename_buf, O_RDONLY);
 
-		if (!fd) {
+		if (!IS_VALID_FD(fd)) {
 			_scir_free_resources(resources, resources_nr);
 			sciprintf("'%s' requested by resource.map, but not found\n", filename_buf);
 			return SCI_ERROR_INVALID_RESMAP_ENTRY;

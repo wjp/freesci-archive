@@ -30,7 +30,7 @@ static int fd;
 
 int midiout_unixraw_open(char *devicename)
 {
-  if ((fd = open(devicename, O_WRONLY|O_SYNC)) < 0) {
+  if (!IS_VALID_FD(fd = open(devicename, O_WRONLY|O_SYNC))) {
     fprintf(stderr, "Open failed (%i): %s\n", fd, devicename);
     return -1;
   }
