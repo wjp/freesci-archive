@@ -836,19 +836,11 @@ con_gfx_read(gfx_state_t *state)
 
 			default:
 				if (evt.data >= 31) {
-					if ((((evt.buckybits & (SCI_EVM_RSHIFT
-								| SCI_EVM_LSHIFT))
-					      && !(evt.buckybits & SCI_EVM_CAPSLOCK)))
-					    || ((!(evt.buckybits & (SCI_EVM_RSHIFT
-								    | SCI_EVM_LSHIFT))
-						 && (evt.buckybits & SCI_EVM_CAPSLOCK))))
-						evt.data = sci_toupper(evt.data);
-
 					memmove(con.input_text + con.cursor_position + 1,
 						con.input_text + con.cursor_position,
 						slen - con.cursor_position + 1);
 
-					con.input_text[con.cursor_position] = evt.data;
+					con.input_text[con.cursor_position] = evt.character;
 					++con.cursor_position;
 					++slen;
 					must_redraw = 1;

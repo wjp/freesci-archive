@@ -1,3 +1,7 @@
+2004-06-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+	* src/gfx/gfx_console.c (con_gfx_read): Backported changes needed
+	for new keyboard handling.
+
 2004-06-12  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/engine/kevent.c, src/gfx/operations.c,
