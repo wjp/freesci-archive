@@ -842,7 +842,7 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 
 			case ButtonRelease: {
 				sci_event->type = SCI_EVT_MOUSE_RELEASE;
-				sci_event->buckybits = S->buckystate;//event.xkey.state;
+				sci_event->buckybits = S->buckystate;
 				sci_event->data = x_button_xlate[event.xbutton.button];
 				return;
 			}

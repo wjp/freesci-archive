@@ -1,5 +1,8 @@
 2001-03-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sound/soundserver_null.c (sound_null_server): Sound server now
+	waits _before_ executing MIDI command rather than _after_ doing so.
+
 	* src/gfx/drivers/xlib_driver.c (x_get_event): Translated X mouse
 	button events appropriately
 
