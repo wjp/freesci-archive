@@ -1,5 +1,5 @@
-TODO for version 0.2.3:
+TODO for version 0.2.4:
 
+- Add a ggi visual and some graphics support to main.c
+- Write more kernel functions
 - Merge Magnus' Python class browser into the main tree
-- Use 'gamestate_t' everywhere to store the game state
-- Add a (dis)assembler/debugger tool for the command line

@@ -1,6 +1,6 @@
 Thanks for downloading this release of FreeSCI!
 
-This is an early development version. Please do not confuse this with a
+This is a development snapshot of FreeSCI. Please do not confuse it with a
 working SCI engine.
 
 The FreeSCI distribution currently consists of tools and libraries to allow
@@ -19,6 +19,50 @@ To build the package, type the following:
 
 configure
 make
+
+
+This will try to build several tools:
+src/tools/classes - lists all SCI classes
+src/tools/console - A command console for inspection of SCI data
+src/tools/sciunpack - A tool for unpacking and converting SCI resource data
+src/tools/scriptdump - disassembles all selector methods into SCI assembly
+src/tools/vocabdump - Displays kernel function and selector names (obsolete)
+src/demo/demo (requires GGI) - shows the graphical functions in action;
+                               this comes with a command console as well
+                               (press CTRL-` to activate it)
+src/sciv - The main executable; this loads, links and runs SCI bytecode.
+
+
+To run SCI bytecode, the following commands are available:
+
+ registers: Dump all register data
+
+ s <x>: Execute 1 (or "x") commands
+
+ heapdump [address] [size]: Dump "size" bytes from the heap, starting at
+ 	the supplied "address"
+
+ disasm [address] [count]: Disassemble "count" SCI operations, starting at
+ 	heap address "address".
+
+ scriptinfo: Show all loaded scripts and their heap addresses
+
+ heapobj [address]: Display information about the object at the specified
+ 	"address"
+
+ obj: Display information about the current base object
+
+ accobj: Display information about the object indexed by the accumulator
+
+ classtable: Show all loaded classes, the scripts they are stored in and their
+ 	heap addresses
+
+ bt: List the current execution stack
+
+ snk: Step until Next callK: Executes code until the next kernel call is
+ 	done.
+
+
 
 Required 'non-standard' libraries:
  * glib

@@ -37,17 +37,26 @@
 #include <console.h>
 #include <vm.h>
 
+#define MAX_HOMEDIR_SIZE 255
+
+#define FREESCI_GAMEDIR ".freesci"
+
+#define MAX_GAMEDIR_SIZE 32 /* Used for subdirectory inside of "~/.freesci/" */
 
 
 typedef struct _state
 {
+  char *game_name; /* Designation of the primary object (which inherits from Game) */
+
   /* Non-VM information */
 
   int restarting_flag; /* Flag used for restarting */
   int have_mouse_flag; /* Do we have a hardware pointing device? */
 
-  int pointer_nr; /* Mouse pointer number */
+  heap_ptr save_dir; /* Pointer to the allocated space for the save directory */
+
   int pounter_x, pointer_y; /* Mouse pointer coordinates */
+  byte* mouse_pointer; /* Pointer to the current mouse pointer or NULL if none has been selected */
 
   port_t *view; /* The currently active view */
 

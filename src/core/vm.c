@@ -29,7 +29,7 @@
 
 #include <script.h>
 #include <vm.h>
-
+#include <engine.h>
 
 
 
@@ -43,6 +43,7 @@ int script_step_counter = 0; /* Counts the number of executed steps */
 script_exec_stack_t script_exec_stack[SCRIPT_MAX_EXEC_STACK];
 
 extern int _debug_step_running; /* scriptdebug.c */
+extern int _debug_seeking; /* scriptdebug.c */
 
 int
 script_error(state_t *s, char *reason)
@@ -67,8 +68,8 @@ inline void putInt16(byte *addr, word value)
 
 
 /* Operating on the steck */
-#define PUSH(v) putInt16(s->heap + (sp += 2), (v))
-#define POP() ((gint16)(getInt16(s->heap + (sp-=2) + 2)))
+#define PUSH(v) putInt16(s->heap + (sp += 2) - 2, (v))
+#define POP() ((gint16)(getInt16(s->heap + (sp-=2))))
 
 /* Getting instruction parameters */
 #define GET_OP_BYTE() (s->heap[pc++])
@@ -93,10 +94,10 @@ else { s->heap[(guint16) address] = (value) &0xff;               \
 				0 /* Error condition */ : *(s->classtable[(classnr)].scriptposp)  \
 				+ s->classtable[(classnr)].class_offset)
 
-#define OBJ_SPECIES(address) GET_HEAP((address) + 0x8)
+#define OBJ_SPECIES(address) GET_HEAP((address) + SCRIPT_SPECIES_OFFSET)
 /* Returns an object's species */
 
-#define OBJ_SUPERCLASS(address) GET_HEAP((address) + 0xa)
+#define OBJ_SUPERCLASS(address) GET_HEAP((address) + SCRIPT_SUPERCLASS_OFFSET)
 /* Returns an object's superclass */
 
 #define OBJ_ISCLASS(address) (GET_HEAP((address) + SCRIPT_INFO_OFFSET) & SCRIPT_INFO_CLASS)
@@ -108,9 +109,24 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
 	       heap_ptr calling_obj, word argc, heap_ptr argp)
 {
 
-  heap_ptr tableaddress = s->scripttable[script].export_table_offset;
-  int exports_nr = GET_HEAP(tableaddress);
-  
+  heap_ptr tableaddress;
+  heap_ptr scriptpos;
+  int exports_nr;
+
+  if (s->scripttable[script].heappos == 0) /* Script not present yet? */
+      script_instantiate(s, script);
+
+  scriptpos = s->scripttable[script].heappos;
+  tableaddress = s->scripttable[script].export_table_offset;
+
+  if (tableaddress == 0) {
+    sciprintf("Error: Script 0x%x has no exports table; call[be] not possible\n", script);
+    script_error_flag = script_debug_flag = 1;
+    return;
+  }
+
+  exports_nr = GET_HEAP(tableaddress);
+
   tableaddress += 2; /* Points to the first actual function pointer */
   if (pubfunct >= exports_nr) {
     sciprintf("Request for invalid exported function 0x%x of script 0x%x\n", pubfunct, script);
@@ -118,47 +134,59 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
     return;
   }
 
-  execute(s, GET_HEAP(tableaddress + (pubfunct * 2)), sp, calling_obj, argc, argp, -1);
+  execute(s, scriptpos + GET_HEAP(tableaddress + (pubfunct * 2)), sp, calling_obj, argc, argp, -1);
 }
 
 void
-send_selector(state_t *s, heap_ptr send_obj, heap_ptr sp, word argc, heap_ptr argp)
+send_selector(state_t *s, heap_ptr send_obj, heap_ptr sp, int framesize, word restmod, heap_ptr argp)
 {
   heap_ptr lookupresult;
-  int selector = GET_HEAP(argp + 2);
+  int selector;
+  int argc;
 
-  if (GET_HEAP(send_obj) != SCRIPT_OBJECT_MAGIC_NUMBER) {
+  if (GET_HEAP(send_obj + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
     sciprintf("Send: No object at %04x!\n", send_obj);
     script_error_flag = script_debug_flag = 1;
     return;
   }
 
-  argp += 2;
- 
-  switch (lookup_selector(s, send_obj, selector, &lookupresult)) {
+  while (framesize > 0) {
 
-  case SELECTOR_NONE:
-    sciprintf("Send to invalid selector 0x%x of object at 0x%x\n", selector, send_obj);
-    script_error_flag = script_debug_flag = 1;
-    break;
+    selector = GET_HEAP(argp);
 
-  case SELECTOR_VARIABLE:
-    switch (GET_HEAP(argp + 2)) {
-    case 0: s->acc = GET_HEAP(lookupresult); break;
-    case 1: { /* Argument is supplied -> Selector should be set */
-      word temp = GET_HEAP(argp + 4);
-      PUT_HEAP(lookupresult, temp);
-    } break;
-    default:
-      sciprintf("Send error: Variable selector %04x in %04x called with %04x params\n",
-		selector, send_obj, GET_HEAP(argp + 2));
+    argp += 2;
+    argc = GET_HEAP(argp) + restmod;
+    restmod = 0; /* Only apply it to the first selector, hoping that this behaviour is right */
+
+    switch (lookup_selector(s, send_obj, selector, &lookupresult)) {
+
+    case SELECTOR_NONE:
+      sciprintf("Send to invalid selector 0x%x of object at 0x%x\n", selector, send_obj);
+      script_error_flag = script_debug_flag = 1;
+      break;
+
+    case SELECTOR_VARIABLE:
+      switch (argc) {
+      case 0: s->acc = GET_HEAP(lookupresult); break;
+      case 1: { /* Argument is supplied -> Selector should be set */
+	word temp = GET_HEAP(argp + 2);
+	PUT_HEAP(lookupresult, temp);
+      } break;
+      default:
+	sciprintf("Send error: Variable selector %04x in %04x called with %04x params\n",
+		  selector, send_obj, argc);
     }
-    break;
+      break;
 
-  case SELECTOR_METHOD:
-    execute(s, lookupresult, sp, send_obj, argc-1, argp + 2, selector);
-    break;
-  } /* switch(lookup_selector()) */
+    case SELECTOR_METHOD:
+      execute(s, lookupresult, sp, send_obj, argc, argp, selector);
+      break;
+    } /* switch(lookup_selector()) */
+
+
+    framesize -= (4 + argc * 2);
+    argp += argc * 2 + 2;
+  }
 }
 
 void
@@ -168,12 +196,13 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
   gint16 opparams[4]; /* Opcode parameters */
   heap_ptr pp = sp;
   int restadjust = 0; /* &rest adjusts the parameter count by this value */
-  heap_ptr local_vars = getInt16(s->heap + SCRIPT_LOCALVARPTR_OFFSET);
+  heap_ptr local_vars = getInt16(s->heap + objp + SCRIPT_LOCALVARPTR_OFFSET);
 
   heap_ptr variables[4] =
   { s->global_vars, local_vars, pp, argp }; /* Offsets of global, local, temp, and param variables */
 
   heap_ptr selector_offset = objp + SCRIPT_SELECTOR_OFFSET;
+
 
   /* Start entering debug information into call stack debug blocks */
   ++script_exec_stackpos;
@@ -357,55 +386,67 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       break;
 
     case 0x20: /* call */
-      execute(s, pc + opparams[0], sp, objp, getInt16(s->heap + (sp - opparams[1] - 2)) + restadjust,
-	      sp -= opparams[1], -1);
+      execute(s, pc + opparams[0], sp, objp, GET_HEAP(sp - opparams[1] - 2) + restadjust,
+	      sp - opparams[1] - 2, -1);
+      sp -= (opparams[1] + (restadjust * 2) + 2);
       restadjust = 0; /* Used up the &rest adjustment */
       break;
 
     case 0x21: /* callk */
-      sp -= (opparams[1] + 2);
+      sp -= (opparams[1] + 2 + (restadjust * 2));
 
       if (opparams[0] >= s->kernel_names_nr) {
+
 	sciprintf("Invalid kernel function 0x%x requested\n", opparams[0]);
 	script_debug_flag = script_error_flag = 1;
-      } else
+
+      } else {
 
 	s->kfunct_table[opparams[0]]
-	  (s, opparams[0], GET_HEAP(sp), sp + 2); /* Call kernel function */
+	  (s, opparams[0], GET_HEAP(sp) + restadjust, sp + 2); /* Call kernel function */
+	restadjust = 0;
+
+      }
 
       break;
 
     case 0x22: /* callb */
       execute_method(s, 0, opparams[0], sp, objp,
-		     getInt16(s->heap + (sp - opparams[1] - 2)) + restadjust, sp -= opparams[1]);
+		     GET_HEAP(sp - opparams[1] - 2) + restadjust, sp - opparams[1] - 2);
+      sp -= (opparams[1] + (restadjust * 2) + 2);
       restadjust = 0; /* Used up the &rest adjustment */
       break;
 
     case 0x23: /* calle */
       execute_method(s, opparams[0], opparams[1], sp, objp,
-		     getInt16(s->heap + (sp - opparams[2] - 2)) + restadjust, sp -= opparams[2]);
+		     GET_HEAP(sp - opparams[2] - 2) + restadjust, sp - opparams[2] - 2);
+      sp -= (opparams[1] + (restadjust * 2) + 2);
       restadjust = 0; /* Used up the &rest adjustment */
       break;
 
     case 0x24: /* ret */
       --script_exec_stackpos; /* Go back one exec stack level */
+      ++script_step_counter; /* We skip the final 'else', so this must be done here */
       return; /* Hard return */
       break;
 
     case 0x25: /* send */
-      send_selector(s, s->acc, sp, GET_HEAP(sp - temp + 4) + restadjust, sp - opparams[0]);
+      send_selector(s, s->acc, sp, opparams[0], restadjust, sp - opparams[0] - restadjust * 2);
+      sp -= (opparams[0] + (restadjust * 2)); /* Adjust stack */
       restadjust = 0;
-      sp -= opparams[0]; /* Adjust stack */
       break;
 
     case 0x28: /* class */
+      if (*(s->classtable[opparams[0]].scriptposp) == 0) /* Not yet loaded? */
+	script_instantiate(s, s->classtable[opparams[0]].script); /* Load it now */
+
       s->acc = CLASS_ADDRESS(opparams[0]);
       break;
 
     case 0x2a: /* self */
-      send_selector(s, objp, sp, GET_HEAP(sp - opparams[0] + 4) + restadjust, sp - opparams[0]);
+      send_selector(s, objp, sp, opparams[0], restadjust, sp - opparams[0] - restadjust * 2);
+      sp -= (opparams[0] + (restadjust * 2)); /* Adjust stack */
       restadjust = 0;
-      sp -= opparams[0]; /* Adjust stack */
       break;
 
     case 0x2b: /* super */
@@ -415,17 +456,18 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       else {
 	send_selector(s, *(s->classtable[opparams[0]].scriptposp)
 		      + s->classtable[opparams[0]].class_offset,
-		      sp, GET_HEAP(sp - opparams[1] + 4) + restadjust, sp - opparams[1]);
+		      sp, opparams[1], restadjust, sp - opparams[1] - restadjust * 2);
+	sp -= (opparams[1] + (restadjust * 2)); /* Adjust stack */
 	restadjust = 0;
-	sp -= opparams[1]; /* Adjust stack */
       }
 
       break;
 
     case 0x2c: /* &rest */
-      restadjust = temp = opparams[0] - 1; /* First argument (we start counting at 0) */
-      temp2 = argp + (opparams[0] << 1); /* Pointer to the first argument to &restore */
-      for (; temp < argc; temp++) {
+      temp = opparams[0]; /* First argument */
+      restadjust = argc - temp + 1; /* +1 because temp counts the paramcount while argc doesn't */
+      temp2 = argp + (temp << 1); /* Pointer to the first argument to &restore */
+      for (; temp <= argc; temp++) {
 	PUSH(getInt16(s->heap + temp2));
 	temp2 += 2;
       }
@@ -494,12 +536,11 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       break;
 
     case 0x39: /* lofsa */
-      s->acc = opparams[0] + old_pc - 5; /* See below for -8 explanation */
+      s->acc = opparams[0] + old_pc + SCRIPT_LOFS_MAGIC;
       break;
 
     case 0x3a: /* lofss */
-      PUSH(opparams[0] + old_pc - 5);
-      /* Sierra SCI aims 8 bytes ahead of FreeSCI for objects. -2 is magic. */
+      PUSH(opparams[0] + old_pc + SCRIPT_LOFS_MAGIC);
       break;
 
     case 0x3b: /* push0 */
@@ -515,7 +556,7 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       break;
 
     case 0x3e: /* pushSelf */
-      PUSH(objp + 8); /* Sierra SCI aims 8 bytes ahead of FreeSCI when pointing to objects */
+      PUSH(objp);
       break;
 
     case 0x40: /* lag */
@@ -600,7 +641,7 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       temp = variables[var_number] + (opparams[0] << 1);
       s->acc = GET_HEAP(temp);
       ++(s->acc);
-      GET_HEAP(temp);
+      PUT_HEAP(temp, s->acc);
       break;
 
     case 0x64: /* +sg */
@@ -691,6 +732,7 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
 
     if (script_error_flag) {
       _debug_step_running = 0; /* Stop multiple execution */
+      _debug_seeking = 0; /* Stop special seeks */
       pc = old_pc;
     }
     else script_step_counter++;
@@ -789,11 +831,15 @@ script_init_state(state_t *s)
 
 	if (objtype) { /* implies sci_obj_class */
 
+	  seeker -= SCRIPT_OBJECT_MAGIC_OFFSET; /* Adjust position; script home is base +8 bytes */
+
 	  classnr = getInt16(script->data + seeker + 4 + SCRIPT_SPECIES_OFFSET);
 
 	  s->classtable[classnr].class_offset = seeker + 4;
 	  s->classtable[classnr].script = scriptnr;
 	  s->classtable[classnr].scriptposp = &(s->scripttable[scriptnr].heappos);
+
+	  seeker += SCRIPT_OBJECT_MAGIC_OFFSET; /* Re-adjust position */
 
 	  seeker += getInt16(script->data + seeker + 2); /* Move to next */
 	}
@@ -888,11 +934,18 @@ script_instantiate(state_t *s, int script_nr)
 
     if ((objtype == sci_obj_object) || (objtype == sci_obj_class)) { /* object or class? */
       int i;
-      heap_ptr functarea = pos + GET_HEAP(pos + SCRIPT_FUNCTAREAPTR_OFFSET)
+      heap_ptr functarea;
+      int functions_nr;
+      int superclass;
+      heap_ptr name_addr;
+
+      pos -= SCRIPT_OBJECT_MAGIC_OFFSET; /* Get into home position */
+
+      functarea = pos + GET_HEAP(pos + SCRIPT_FUNCTAREAPTR_OFFSET)
 	+ SCRIPT_FUNCTAREAPTR_MAGIC;
-      int functions_nr = GET_HEAP(functarea - 2); /* Number of functions */
-      int superclass = OBJ_SUPERCLASS(pos); /* Get superclass */
-      heap_ptr name_addr = GET_HEAP(pos + SCRIPT_NAME_OFFSET);
+      functions_nr = GET_HEAP(functarea - 2); /* Number of functions */
+      superclass = OBJ_SUPERCLASS(pos); /* Get superclass */
+      name_addr = GET_HEAP(pos + SCRIPT_NAME_OFFSET);
 
       PUT_HEAP(pos + SCRIPT_NAME_OFFSET, name_addr + handle); /* Fix name address */
 
@@ -906,13 +959,14 @@ script_instantiate(state_t *s, int script_nr)
 
       for (i = 0; i < functions_nr * 2; i += 2) {
 	heap_ptr functpos = GET_HEAP(functarea + i);
-/*	fprintf(stderr,"FuncFix %04x -> %04x\n", functpos, functpos + handle); */
 	PUT_HEAP(functarea + i, functpos + handle); /* Adjust function pointer addresses */
       }
 
       if (superclass >= 0)
 	script_instantiate(s, s->classtable[superclass].script);
       /* Recurse to assure that the superclass is available */
+
+      pos += SCRIPT_OBJECT_MAGIC_OFFSET; /* Step back from home to base */
       
     } /* if object or class */
 
@@ -1007,6 +1061,9 @@ script_run(state_t *s)
 
   fprintf(stderr," Script 0 at %04x\n", script0);
 
+
+  s->restarting_flag = 0; /* We're not restarting here */
+
   s->stack_base = stack_handle + 2;
   s->global_vars = s->scripttable[0].localvar_offset;
   /* Global variables are script 0's local variables */
@@ -1023,23 +1080,35 @@ script_run(state_t *s)
   script_map_kernel(s);
   /* Maps the kernel functions */
 
-  game_obj = script0 + GET_HEAP(s->scripttable[0].export_table_offset + 2) - 8;
-  /* This is the magical formula to calculate the offset of the game object.
-  ** Explanation: The first entry in the export table of script 0 points to offset 8
-  ** relative to the game object. This is used here.
-  */
+  s->mouse_pointer = NULL; /* No mouse pointer */
+  s->save_dir = heap_allocate(s->_heap, MAX_HOMEDIR_SIZE + strlen(FREESCI_GAMEDIR)
+			      + MAX_GAMEDIR_SIZE + 4); /* +4 for the three slashes and trailing \0 */
+
+  game_obj = script0 + GET_HEAP(s->scripttable[0].export_table_offset + 2);
+  /* The first entry in the export table of script 0 points to the game object */
 
   fprintf(stderr," Game object at %04x\n", game_obj);
 
-  if (GET_HEAP(game_obj) != SCRIPT_OBJECT_MAGIC_NUMBER) {
+  if (GET_HEAP(game_obj + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
     sciprintf("script_run(): Game object is not at 0x%x\n", game_obj);
     return 1;
   }
 
-  sciprintf(" Calling Game::play()\n");
-  putInt16(s->heap + s->stack_base + 2, s->selector_map.play); /* Call the play selector... */
-  putInt16(s->heap + s->stack_base + 4, 0);                    /* ... with 0 arguments. */
-  send_selector(s, game_obj, s->stack_base + 6, 1, s->stack_base); /* Engage! */
+  s->game_name = s->heap + GET_HEAP(game_obj + SCRIPT_NAME_OFFSET);
+
+  sciprintf(" Game designation is \"%s\"\n", s->game_name);
+
+  if (strlen(s->game_name) >= MAX_GAMEDIR_SIZE) {
+
+    s->game_name[MAX_GAMEDIR_SIZE - 1] = 0; /* Fix length with brute force */
+    sciprintf(" Designation too long; was truncated to \"%s\"\n", s->game_name);
+
+  }
+  
+  sciprintf(" Calling %s::play()\n", s->game_name);
+  putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector... */
+  putInt16(s->heap + s->stack_base + 2, 0);                    /* ... with 0 arguments. */
+  send_selector(s, game_obj, s->stack_base + 2, 4, 0, s->stack_base); /* Engage! */
 
   sciprintf(" Game::play() finished.\n");
 
@@ -1055,6 +1124,7 @@ script_run(state_t *s)
   /* Make sure to segfault if any of those are dereferenced */
 
   heap_free(s->_heap, stack_handle);
+  heap_free(s->_heap, s->save_dir);
 
   return 0;
 }

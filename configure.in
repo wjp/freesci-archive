@@ -1,7 +1,7 @@
 
 AC_INIT(acinclude.m4)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(freesci, 0.2.3)
+AM_INIT_AUTOMAKE(freesci, 0.2.4)
 
 AC_PROG_CC
 AC_PROG_RANLIB

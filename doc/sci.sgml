@@ -1298,11 +1298,136 @@ redirected to the debug window port. Not a pretty sight.
 <Chapter>
  <Title/The SCI virtual machine/
   <sect1>
-  <Title/Fixme/
-  <para>
-   This section is severely lacking a good introduction.
-   [More to come]
-  </para>
+  <Title/Introduction/
+   <sect2>
+   <Title/Script resources and the VM/
+    <para>
+      Like any processor, the SCI virtual machine is useless without code to execute.
+      This code is provided by script resources, which constitute the logic behind any
+      SCI game.
+    </para><para>
+      In order to operate on the script resource, those first have to be loaded to the heap.
+      The heap is the only memory space that the VM can work on directly (with some restrictions); all
+      other memory spaces have to be used implicitly or explicitly by using kernel calls.
+      The heap also contains a stack, which is heavily used by SCI bytecode.
+    </para><para>
+      Each script resource may contain one or several of various script objects, listed
+      here<footnote><para/Other types are used as well, but they are addressed directly by the
+      SCI bytecode, so their meaning has not been thoroughly investigated yet/</footnote>:
+      <simplelist>
+       <member/Type 1: Object/
+       <member/Type 2: Code/
+       <member/Type 5: Strings/
+       <member/Type 6: Class/
+       <member/Type 7: Exports/
+       <member/Type 8: Pointers/
+       <member/Type 10: Local variables/
+      </simplelist>
+      </para><para>
+       The code blocks contain the SCI bytecode that actually gets executed. The export block
+       (of which there may be only one (or none at all)) contains script-relative pointers to
+       exported functions, which can be called by the SCI operations <function/calle/ and
+       <function/callb/. The local variables block, which stores one of the four variable types,
+       is used to share variables among the objects and classes of one script.
+      </para><para>
+       But the most important script members are Objects and Classes. As in the usual OOP terms,
+       Classes refer to object prototypes, and Objects are instantiated Classes. However, unlike
+       most OOP languages, SCI treats the base class very similar to objects, so that they may
+       actually get called by the SCI bytecode. Therefore, they also have their own space for
+       selectors (see below). Also, each object or class knows which class it inherits from and
+       which class it was instantiated from (in the case of objects).
+    </para>
+   </sect2>
+   <sect2>
+   <Title/Selectors/
+    <para>
+       Selectors are very important in SCI. They can be either methods or object/class-relative
+       variables, and this makes the interpretation of SCI operations like <function/send/
+       a bit tricky.
+    </para><para>
+       Each class comes with two two-dimensional tables. The first table contains selector values
+       and selector indices<footnote><para>Those can be used as an index into vocab.997, where
+       the selector names are stored as strings.</para></footnote> for each variable selector. The
+       second table contains selector indices and script-relative method offsets. Objects look
+       nearly identical, but they do not contain the list of selector indices for variable selectors,
+       since those can be looked up at the class they were instantiated from (their "species", which
+       happens to be one of the variable selectors).
+    </para><para>
+       Now, whenever a selector is sent for, the engine has to determine the right action to take.
+       FreeSCI first determines whether the selector is a variable selector, by looking for it in
+       the list of variable selector indices of the species class of the object that the
+       "<function/send/" was sent to (classes use their own class number as their species class)
+       <footnote><para/In practice, send looks up the heap position of the requested class in a
+       global class table./</footnote>. If it is, the selector value is either read (if no parameter
+       was provided to the <function/send/ call) or set (if one parameter was provided). If the
+       selector was not part of the variable selectors of the specified object, the object's methods
+       are checked for this selector index. If they don't contain the selector index, either, then
+       FreeSCI recurses into checking the method selectors of the object's superclasses. If it finds
+       the selector value there, it calls the heap address corresponding to the selector index.
+    </para>
+   </sect2>
+   <sect2>
+   <Title/Function invocation/
+    <para>
+       SCI provides three distinct ways for invocating a function<footnote><para/Of course, "manual"
+       invocation (using push and jump operations) could also be used, but there are no special
+       provisions for it, and it does not appear to be used in the existing SCI bytecode./</footnote>:
+       <simplelist>
+        <member>Calling exported functions (<function/calle/, <function/callb/)</member>
+        <member>Calling selector methods (<function/send/, <function/self/, <function/super/)></member>
+        <member>Calling PC-relative addresses (<function/call/)</member>
+       </simplelist>
+    </para><para>
+       Exported functions are called by providing a script number and an exported function number
+       (which is then looked up in the script's Type 7 block). They use the object they were called
+       from to look up local variables and selectors for <function/self/ and <function/super/.
+     </para><para>
+       Selector methods are called by providing an object and a selector index. The selector index
+       gets looked up in the object's selector tables, and, if it is used for a method, this method
+       gets invocated. The provided object is used for local references.
+     </para><para>
+       PC-relative calls only make sense inside scripts, since they jump to a position relative
+       to the <function/call/ opcode. The calling object is used for local references.
+    </para>
+   </sect2>
+   <sect2>
+   <Title/Variable types/
+    <para>
+       SCI bytecode can address four types of variables (not counting the variable selectors).
+       Those variable types are:
+       <variablelist>
+         <varlistentry>
+          <term/Local variables/
+           <listitem><para>
+              These are the variables stored in Type 10 script blocks. They are shared between
+              the objects and classes of each script.
+           </para></listitem>
+         </varlistentry>
+         <varlistentry>
+          <term/Global variables/
+           <listitem><para>
+              These variables are the local variables of script 0.
+           </para></listitem>
+         </varlistentry>
+         <varlistentry>
+          <term/Temporary variables/
+           <listitem><para>
+              Those variables are stored on the stack. They are relative to the stack frame of
+              the current method, so space for them must be allocated before they can be used.
+              This is commonly done by using the <function/link/ operation.
+           </para></listitem>
+         </varlistentry>
+         <varlistentry>
+          <term/Parameters/
+           <listitem><para>
+              Parameters are stored on the stack below the current stack frame, as they technically
+              belong to the calling function. They can be modified, if neccessary.
+              <footnote><para/Obviously, SCI uses a call-by-value model/</footnote>
+           </para></listitem>
+         </varlistentry>
+       </variablelist>
+    </para>
+   </sect2>
   </sect1>
   <sect1>
   <title/Interpreter initialization and the main execution loop/
@@ -1330,8 +1455,8 @@ Basically, the initialization proceeds as follows:
 <member/   Initialize the text parser (i.e. load the vocabulary files)/
 <member/   Initialize the music player/
 <member>   Save the machine state for restarting the game later on
-  <footnote><para/This is quite interesting, the KRestartGame kernel call is implemented
-  using a simple setjmp/longjmp pair./</footnote></member>
+  <footnote><para>This is quite interesting, the KRestartGame kernel call is implemented
+  using a simple setjmp/longjmp pair.</para></footnote></member>
 <member/   Allocate the PMachine stack on the heap./
 <member/   Get a pointer to the game object/
 <member/   And run, by executing the play or replay method./
@@ -1935,7 +2060,7 @@ with clockwise movement.
                  <programlisting/{see below, called with:}
                                  pp = sp - framesize/
               This operation starts a new execution loop at the beginning of script 0, public
-              method [<variable/dispindex/] (Each script comes with a dispatcher list (type 7) that
+              method [dispindex] (Each script comes with a dispatcher list (type 7) that
               identifies public methods).
 
            </para></listitem>
@@ -1948,7 +2073,7 @@ with clockwise movement.
                  <programlisting/{see below, called with:}
                                  pp = sp - framesize/
               This operation starts a new execution loop at the beginning of script
-              [<variable/script/]s public method [<variable/dispindex/]. The dispatcher list
+              [script]s public method [dispindex]. The dispatcher list
               (the script's type 7 object) is used to dereference the requested method.
 
            </para></listitem>
@@ -1961,7 +2086,6 @@ with clockwise movement.
               
 
            </para></listitem>
-Documentation is incomplete for these opcodes.
            <listitem><para>
               <simplelist>
                 <member>op 0x4a: send (? bytes)</member>
@@ -3312,6 +3436,22 @@ This function forces the interpreter to enter debug mode. It is equivalent
 to pressing LShift-RShift-PadMinus.
     </para>
   </sect3>
+
+
+	<sect3>
+	<Title/Kernel function 0x68: GetSaveDir()/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x68: GetSaveDir
+		</funcdef><paramdef></paramdef></funcprototype></funcsynopsis>
+		<para>
+			Returns: <type>HeapPtr</type>
+		</para><para>
+			This function returns the heap position allocated to store the string
+			representation of the save game directory. This heap space is
+			allocated automatically during startup.
+		</para>
+	</sect3>
+
  </sect2>
 </sect1>
 

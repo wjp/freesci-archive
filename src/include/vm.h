@@ -8,28 +8,29 @@
 #ifndef _SCI_VM_H
 #define _SCI_VM_H
 
-#define SCRIPT_SELECTOR_OFFSET 8
-/* Object-relative offset of the selector area inside a script */
-
-#define SCRIPT_LOCALVARPTR_OFFSET 2
-/* Object-relative offset of the pointer to the underlying script's local variables */
-
 #define SCRIPT_MAX_EXEC_STACK 256
 /* Maximum number of calls residing on the stack */
 
-#define SCRIPT_SELECTORCTR_OFFSET 6
+
+#define SCRIPT_SELECTOR_OFFSET 8 -8
+/* Object-relative offset of the selector area inside a script */
+
+#define SCRIPT_LOCALVARPTR_OFFSET 2 -8
+/* Object-relative offset of the pointer to the underlying script's local variables */
+
+#define SCRIPT_SELECTORCTR_OFFSET 6 -8
 /* Object-relative offset of the selector counter */
 
-#define SCRIPT_FUNCTAREAPTR_OFFSET 4
+#define SCRIPT_FUNCTAREAPTR_OFFSET 4 -8
 /* Object-relative offset of the offset of the function area */
 
-#define SCRIPT_FUNCTAREAPTR_MAGIC 8
+#define SCRIPT_FUNCTAREAPTR_MAGIC 8 -8
 /* Offset that has to be added to the function area pointer */
 
-#define SCRIPT_NAME_OFFSET 14
+#define SCRIPT_NAME_OFFSET 14 -8
 /* Offset of the name pointer */
 
-#define SCRIPT_INFO_OFFSET 12
+#define SCRIPT_INFO_OFFSET 12 -8
 /* Object-relative offset of the -info- selector */
 
 #define SCRIPT_INFO_CLASS 0x8000
@@ -37,9 +38,16 @@
 
 #define SCRIPT_OBJECT_MAGIC_NUMBER 0x1234
 /* Magical object identifier */
+#define SCRIPT_OBJECT_MAGIC_OFFSET -8
+/* Offset of this identifier */
 
-#define SCRIPT_SPECIES_OFFSET 8
+#define SCRIPT_SPECIES_OFFSET 8 -8
 /* Script-relative offset of the species ID */
+
+#define SCRIPT_SUPERCLASS_OFFSET 10 -8
+
+#define SCRIPT_LOFS_MAGIC 3
+/* Magic adjustment value for lofsa and lofss */
 
 
 #define SELECTOR_NONE 0
@@ -106,6 +114,9 @@ extern int script_exec_stackpos;
 
 extern int script_debug_flag;
 /* Set this to 1 to activate script debugging */
+
+extern int script_error_flag;
+/* Set to 1 to move pc back to last position, even though action is executed */
 
 extern int script_checkloads_flag;
 /* Displays the numbers of scripts when they are (un)loaded */

@@ -31,8 +31,9 @@
 #include <resource.h>
 #include <graphics.h>
 #include <sound.h>
+#include <engine.h>
 
-gamestate_t *con_gamestate = NULL;
+state_t *con_gamestate = NULL;
 
 typedef struct {
   int (* command)();

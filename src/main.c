@@ -100,6 +100,7 @@ main(int argc, char** argv)
 
 
   script_init_state(&gamestate); /* Initialize game state */
+  gamestate.have_mouse_flag = 0; /* Assume that no pointing device is present */
 
   script_run(&gamestate); /* Run the game */
 

@@ -1,3 +1,32 @@
+So you've decided to have a look at the 0.2.3 release of FreeSCI. It's
+been quite a while since the last public release, so we decided to come
+up with something bigger this time.
+The most noticeable change is the existance of a complete (that's what
+we hope, anyway) implementation of the SCI virtual machine. Now all that
+remains to be implemented are the 0x70 kernel functions to glue the VM
+and the graphics, sound, and input code together. Special thanks go out
+to Lars Skovlund (once again) for providing the information required to
+build this!
+Have a look at the README for a list of all currently available debugging
+commands (and feel free to add your own, even though script_debug.c is
+somewhat of a mess right now).
+Other news include the support of alternate base palettes for pic drawing
+(as used by EGA Quest for Glory for day/night pictures), a fixed sci opcode
+table in script.c, improvements in sound mapping, and support for ports
+(clipped rectangular sub-spaces of the game screen, used for windows and
+similar stuff).
+There have been substantial additions to the documentation as well, most
+of which were contributed by Lars.
+Concerning the next version: There are lots of small and simple kernel
+functions in SCI. If you want to help but don't have a lot of time at your
+hands, try to figure out what they do (e.g. by examining them with the built-in
+debugger of the original SCI engine (activate with LShift-Rshift-TabMinus))
+and either drop us a note or implement it yourself.
+
+
+
+--- 0.2.2: ---
+
 So this is the 0.2.2 release. Well, it's mostly a bug fix release, though
 a few things have been added. Most notably, Magnus Reftel was able to build
 a heap based on Lars Skovlund's specs (Lars built a heap as well, but we

@@ -1,5 +1,92 @@
+/***************************************************************************
+ kernel.c Copyright (C) 1999 Christoph Reichenbach, Magnus Reftel
+
+
+ This program may be modified and copied freely according to the terms of
+ the GNU general public license (GPL), as long as the above copyright
+ notice and the licensing information contained herein are preserved.
+
+ Please refer to www.gnu.org for licensing details.
+
+ This work is provided AS IS, without warranty of any kind, expressed or
+ implied, including but not limited to the warranties of merchantibility,
+ noninfringement, and fitness for a specific purpose. The author will not
+ be held liable for any damage caused by this work or derivatives of it.
+
+ By using this source code, you agree to the licensing terms as stated
+ above.
+
+
+ Please contact the maintainer for bug reports or inquiries.
+
+ Current Maintainer:
+
+    Christoph Reichenbach (CJR) [jameson@linuxgames.com]
+
+ History:
+
+   000000 - created (CJR)
+
+***************************************************************************/
+
 #include <script.h>
 #include <vm.h>
+#include <engine.h>
+
+
+#define SCI_KERNEL_DEBUG
+
+#ifdef SCI_KERNEL_DEBUG
+
+#ifdef __GNUC__
+#define SCIkdebug(format, param...) \
+        fprintf(stderr,"FSCI kernel (%s L%d): " format, __PRETTY_FUNCTION__, __LINE__, ## param);
+#else /* !__GNUC__ */
+#define SCIkdebug(format, param...) \
+        fprintf(stderr,"FSCI kernel (L%d): " format, __LINE__, ## param);
+#endif
+
+#else /* !SCI_KERNEL_DEBUG */
+
+#define SCIkdebug(format, param...)
+
+#endif /* !SCI_KERNEL_DEBUG */
+
+
+/******************** Resource Macros ********************/
+
+#define RESOURCE_ID(type, number) (number) | ((type) << 11)
+/* Returns the composite resource ID */
+
+#define RESOURCE_NUMBER(resid) ((resid) & 0x7ff)
+
+#define RESOURCE_TYPE(resid) ((resid) >> 11)
+
+
+/******************** Kernel Oops ********************/
+
+int
+kernel_oops(state_t *s, char *reason)
+{
+  sciprintf("Kernel Oops: %s\n", reason);
+  script_debug_flag = script_error_flag = 1;
+  return 0;
+}
+
+
+/******************** Heap macros ********************/
+
+#define GET_HEAP(address) ((((guint16)(address)) < 800)? \
+kernel_oops(s, "Heap address space violation on read")  \
+: getInt16(s->heap + ((guint16)(address))))
+/* Reads a heap value if allowed */
+
+#define PUT_HEAP(address, value) if (((guint16)(address)) < 800) \
+kernel_oops(s, "Heap address space violation on write");        \
+else { s->heap[(guint16) address] = (value) &0xff;               \
+ s->heap[((guint16)address) + 1] = ((value) >> 8) & 0xff;}
+/* Sets a heap value if allowed */
+
 
 
 
@@ -64,11 +151,240 @@ int kIsObject(state* s)
 #endif /* false */
 
 
-#define PARAM(x) getInt16(s->heap + argv + ((x)*2))
+#define PARAM(x) ((guint16) getInt16(s->heap + argp + ((x)*2)))
+
+
+/* kLoad(restype, resnr):
+** Loads an arbitrary resource of type 'restype' with resource numbber 'resnr'
+*/
+void
+kLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  s->acc = (PARAM(0) << 11) | PARAM(1); /* Return the resource identifier */
+  /* FIXME: Add support for sci_memory */
+}
+
+/* kUnload():
+** Unloads an arbitrary resource of type 'restype' with resource numbber 'resnr'
+*/
+void
+kUnLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  /* Do nothing */
+  /* FIXME: Add support for sci_memory */
+}
+
+
+/* kGameIsRestarting():
+** Returns the restarting_flag in acc
+*/
+void
+kGameIsRestarting(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  s->acc = s->restarting_flag;
+}
+
+
+/******************** Doubly linked lists ********************/
+
+
+#define LIST_FIRST_NODE 0
+#define LIST_PREVIOUS_NODE 0
+#define LIST_LAST_NODE 2
+#define LIST_NEXT_NODE 2
+#define LIST_NODE_KEY 4
+#define LIST_NODE_VALUE 6
+/* 'previous' and 'next' nodes for lists mean 'first' and 'last' node, respectively */
+
+void
+kNewList(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr listbase = heap_allocate(s->_heap, 4);
+
+  listbase += 2; /* Jump over heap header */
+
+  PUT_HEAP(listbase + LIST_FIRST_NODE, 0); /* No first node */
+  PUT_HEAP(listbase + LIST_LAST_NODE, 0); /* No last node */
+
+  s->acc = listbase; /* Return list base address */
+}
 
 
 void
-kstub(state_t *s, int funct_nr, int argc, heap_ptr argv)
+kNewNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr nodebase = heap_allocate(s->_heap, 8);
+  /*  SCIkdebug("argc=%d; args = (%04x %04x)\n", argc, PARAM(0), PARAM(1)); */
+
+  nodebase += 2; /* Jump over heap header */
+
+  PUT_HEAP(nodebase + LIST_PREVIOUS_NODE, 0);
+  PUT_HEAP(nodebase + LIST_NEXT_NODE, 0);
+  PUT_HEAP(nodebase + LIST_NODE_KEY, PARAM(0));
+
+  s->acc = nodebase; /* Return node base address */
+}
+
+
+void
+kAddToEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr listbase = PARAM(0);
+  heap_ptr nodebase = PARAM(1);
+  heap_ptr old_lastnode = GET_HEAP(listbase + LIST_LAST_NODE);
+
+  if (old_lastnode)
+    PUT_HEAP(old_lastnode + LIST_NEXT_NODE, nodebase);
+
+  PUT_HEAP(nodebase + LIST_PREVIOUS_NODE, old_lastnode);
+
+  PUT_HEAP(listbase + LIST_LAST_NODE, nodebase);
+
+  if (GET_HEAP(listbase + LIST_FIRST_NODE) == 0)
+    PUT_HEAP(listbase + LIST_FIRST_NODE, nodebase);
+  /* Set node to be the first and last node if it's the only node of the list */
+}
+
+
+void
+kAddToFront(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr listbase = PARAM(0);
+  heap_ptr nodebase = PARAM(1);
+  heap_ptr old_firstnode = GET_HEAP(listbase + LIST_FIRST_NODE);
+
+  if (old_firstnode)
+    PUT_HEAP(old_firstnode + LIST_PREVIOUS_NODE, nodebase);
+
+  PUT_HEAP(nodebase + LIST_NEXT_NODE, old_firstnode);
+
+  PUT_HEAP(listbase + LIST_FIRST_NODE, nodebase);
+
+  if (GET_HEAP(listbase + LIST_LAST_NODE) == 0)
+    PUT_HEAP(listbase + LIST_LAST_NODE, nodebase);
+  /* Set node to be the first and last node if it's the only node of the list */
+}
+
+
+void
+kFindKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr node;
+  word key = PARAM(1);
+
+  /*  SCIkdebug("argc=%d; args = (%04x %04x %04x)\n", argc, PARAM(0), PARAM(1), PARAM(2)); */
+
+  node = GET_HEAP(PARAM(0) + LIST_FIRST_NODE);
+
+  while (node && (GET_HEAP(node + LIST_NODE_KEY) != key))
+    node = GET_HEAP(node + LIST_NEXT_NODE);
+  /* Aborts if either the list ends (node == 0) or the key is found */
+
+  s->acc = node;
+}
+
+
+/*************************************************************/
+
+/* kGetCWD(address):
+** Writes the cwd to the supplied address and returns the address in acc.
+** This implementation tries to use a game-specific directory in the user's
+** home directory first.
+*/
+void
+kGetCWD(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  char *homedir = getenv("HOME");
+  char _cwd[256];
+  char *cwd = &(_cwd[0]);
+  char *savedir;
+  char *targetaddr = PARAM(0) + s->heap;
+
+  s->acc = PARAM(0);
+
+  if (!homedir) { /* We're probably not under UNIX if this happens */
+
+    if (!getcwd(cwd, 255)) 
+      cwd = "."; /* This might suffice */
+
+    memcpy(targetaddr, cwd, strlen(cwd) + 1);
+    return;
+  }
+
+  /* So we've got a home directory */
+
+  if (chdir(homedir)) {
+    fprintf(stderr,"Error: Could not enter home directory %s.\n", homedir);
+    perror("Reason");
+    exit(1); /* If we get here, something bad is happening */
+  }
+
+  if (strlen(homedir) > MAX_HOMEDIR_SIZE) {
+    fprintf(stderr, "Your home directory path is too long. Re-compile FreeSCI with "
+	    "MAX_HOMEDIR_SIZE set to at least %i and try again.\n", strlen(homedir));
+    exit(1);
+  }
+
+  memcpy(targetaddr, homedir, strlen(homedir));
+  targetaddr += strlen(homedir); /* Target end of string for concatenation */
+  *targetaddr++ = '/';
+  *(targetaddr + 1) = 0;
+
+  if (chdir(FREESCI_GAMEDIR))
+    if (mkdir(FREESCI_GAMEDIR, 0700)) {
+
+      fprintf(stderr,"Warning: Could not enter ~/"FREESCI_GAMEDIR"; save files"
+	      " will be written to ~/\n");
+
+      return;
+
+    }
+    else /* mkdir() succeeded */
+      chdir(FREESCI_GAMEDIR);
+
+  memcpy(targetaddr, FREESCI_GAMEDIR, strlen(FREESCI_GAMEDIR));
+  targetaddr += strlen(FREESCI_GAMEDIR);
+  *targetaddr++ = '/';
+  *targetaddr = 0;
+
+  if (chdir(s->game_name))
+    if (mkdir(s->game_name, 0700)) {
+
+      fprintf(stderr,"Warning: Could not enter ~/"FREESCI_GAMEDIR"/%s; "
+	      "save files will be written to ~/"FREESCI_GAMEDIR"\n", s->game_name);
+
+      return;
+    }
+    else /* mkdir() succeeded */
+      chdir(s->game_name);
+
+  memcpy(targetaddr, s->game_name, strlen(s->game_name));
+  targetaddr += strlen(s->game_name);
+  *targetaddr++ = '/';
+  *targetaddr++ = 0;
+
+}
+
+
+void
+kGetSaveDir(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  s->acc = s->save_dir + 2; /* +2 to step over heap block size */
+}
+
+
+void
+kSetCursor(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  if (PARAM(1))
+    s->mouse_pointer = findResource(sci_cursor, PARAM(0))->data;
+  else
+    s->mouse_pointer = 0;
+}
+
+
+void
+kstub(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int i;
 
@@ -82,11 +398,21 @@ kstub(state_t *s, int funct_nr, int argc, heap_ptr argv)
 }
 
 
-
 struct {
   char *functname; /* String representation of the kernel function as in script.999 */
   kfunct *kernel_function; /* The actual function */
 } kfunct_mappers[] = {
+  {"Load", kLoad},
+  {"UnLoad", kUnLoad},
+  {"GameIsRestarting", kGameIsRestarting },
+  {"NewList", kNewList },
+  {"GetSaveDir", kGetSaveDir },
+  {"GetCWD", kGetCWD },
+  {"SetCursor", kSetCursor },
+  {"FindKey", kFindKey },
+  {"NewNode", kNewNode },
+  {"AddToFront", kAddToFront },
+  {"AddToEnd", kAddToEnd },
   {0,0} /* Terminator */
 };
 

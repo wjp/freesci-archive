@@ -33,6 +33,10 @@
 int _debugstate_valid = 0; /* Set to 1 while script_debug is running */
 int _debug_step_running = 0; /* Set to >0 to allow multiple stepping */
 int _debug_commands_not_hooked = 1; /* Commands not hooked to the console yet? */
+int _debug_seeking = 0; /* Stepping forward until some special condition is met */
+
+#define _DEBUG_SEEK_NOTHING 0
+#define _DEBUG_SEEK_CALLK 1 /* Step forward until callk is found */
 
 state_t *_s;
 heap_ptr *_pc;
@@ -64,7 +68,7 @@ char *(*_debug_get_input)(void) = _debug_get_input_default;
 int
 c_debuginfo()
 {
-  sciprintf("pc=%04x acc=%04x o=%04x pp=%04x sp=%04x\n", *_pc & 0xffff, _s->acc & 0xffff,
+  sciprintf("pc=%04x acc=%04x o=%04x fp=%04x sp=%04x\n", *_pc & 0xffff, _s->acc & 0xffff,
 	    *_objp & 0xffff, *_pp & 0xffff, *_sp & 0xffff);
   sciprintf("prev=%x sbase=%04x globls=%04x &restmod=%x\n",
 	    _s->prev & 0xffff, _s->stack_base & 0xffff, _s->global_vars & 0xffff,
@@ -134,7 +138,7 @@ c_stack()
     return 1;
   }
 
-  for (i = cmd_params[0].val ; i >= 0; i--)
+  for (i = cmd_params[0].val ; i > 0; i--)
     sciprintf("[sp-%04x] = %04x\n", i * 2, 0xffff & getInt16(_s->heap + *_sp - i*2));
 
 }
@@ -176,7 +180,7 @@ disassemble(state_t *s, heap_ptr pos)
 
   opsize &= 1; /* byte if true, word if false */
 
-  sciprintf(" %s_%c", s->opcodes[opcode].name, opsize? 'B' : 'W');
+  sciprintf(" [%c] %s", opsize? 'B' : 'W', s->opcodes[opcode].name);
 
   while (formats[opcode][i])
 
@@ -201,7 +205,7 @@ disassemble(state_t *s, heap_ptr pos)
       }
 
       if (opcode == op_callk)
-	sciprintf(" %s(%x)", (param_value < s->kernel_names_nr)
+	sciprintf(" %s[%x]", (param_value < s->kernel_names_nr)
 		  ? s->kernel_names[param_value] : "<invalid>", param_value);
       else sciprintf(opsize? " %02x" : " %04x", param_value);
 
@@ -217,14 +221,30 @@ disassemble(state_t *s, heap_ptr pos)
   if (pos == *_pc) { /* Extra information if debugging the current opcode */
 
     if ((opcode == op_send) || (opcode == op_super) || (opcode == op_self)) {
-      int stackframe = s->heap[retval - 1];
-      word selector = getInt16(s->heap + *_sp + 2 - stackframe);
-      sciprintf("  %s(", (selector > s->selector_names_nr)? "<invalid>" : s->selector_names[selector]);
-      while ((stackframe -= 2) > 0) {
-	sciprintf("%04x", getInt16(s->heap + *_sp + 2 - stackframe));
-	if (stackframe > 2) sciprintf(", ");
-      }
-      sciprintf(")\n");
+      int stackframe = s->heap[retval - 1] + (*_restadjust * 2);
+      word selector;
+
+      while (stackframe > 0) {
+	int argc = getInt16(s->heap + *_sp - stackframe + 2);
+
+	selector = getInt16(s->heap + *_sp - stackframe);
+      
+	sciprintf("  %s(", (selector > s->selector_names_nr)
+		  ? "<invalid>" : s->selector_names[selector]);
+
+	while (argc--) {
+
+	  sciprintf("%04x", getInt16(s->heap + *_sp - stackframe));
+	  if (argc) sciprintf(", ");
+	  stackframe -= 2;
+
+	}
+
+	sciprintf(")\n");
+
+	stackframe -= 4;
+      } /* while (stackframe > 0) */
+
     } /* Send-like opcodes */
 
   } /* (heappos == *_pc) */
@@ -234,7 +254,7 @@ disassemble(state_t *s, heap_ptr pos)
 
 
 int
-c_backtrack()
+c_backtrace()
 {
   int i;
 
@@ -247,18 +267,27 @@ c_backtrack()
   for (i = 0; i <= script_exec_stackpos; i++) {
     script_exec_stack_t *call = &(script_exec_stack[i]);
     heap_ptr namepos = getInt16(_s->heap + *(call->objpp) + SCRIPT_NAME_OFFSET);
-    int paramc;
+    int paramc, totalparamc;
 
     sciprintf(" %x:  %s::%s(", i, _s->heap + namepos, (call->selector == -1)? "<call[be]?>":
 	      _s->selector_names[call->selector]);
 
-    for (paramc = 0; paramc < *(call->argcp); paramc++) {
+    totalparamc = *(call->argcp);
+
+    if (totalparamc > 16)
+      totalparamc = 16;
+
+    for (paramc = 1; paramc <= totalparamc; paramc++) {
       sciprintf("%04x", getInt16(_s->heap + *(call->argpp) + paramc * 2));
 
-      if (paramc + 1 < *(call->argcp))
+      if (paramc < *(call->argcp))
 	sciprintf(", ");
     }
-    sciprintf(")\n    obj@%04x pc=%04x sp=%04x pp=%04x\n", *(call->objpp), *(call->pcp),
+
+    if (*(call->argcp) > 16)
+      sciprintf("...");
+
+    sciprintf(")\n    obj@%04x pc=%04x sp=%04x fp=%04x\n", *(call->objpp), *(call->pcp),
 	      *(call->spp), *(call->ppp));
   }
 }
@@ -287,9 +316,15 @@ c_disasm()
 
 
 int
-c_heapobj()
+c_snk()
 {
-  heap_ptr pos = cmd_params[0].val;
+  _debug_seeking = _DEBUG_SEEK_CALLK;
+  _debugstate_valid = 0;
+}
+
+int
+objinfo(heap_ptr pos)
+{
   word type;
 
   if (!_debugstate_valid) {
@@ -302,12 +337,12 @@ c_heapobj()
     return 1;
   }
 
-  if ((getInt16(_s->heap + pos)) != SCRIPT_OBJECT_MAGIC_NUMBER) {
+  if ((getInt16(_s->heap + pos + SCRIPT_OBJECT_MAGIC_OFFSET)) != SCRIPT_OBJECT_MAGIC_NUMBER) {
     sciprintf("Not an object.\n");
     return 0;
   }
 
-  type = getInt16(_s->heap + pos - 4);
+  type = getInt16(_s->heap + pos + SCRIPT_OBJECT_MAGIC_OFFSET - 4);
 
   if (type == sci_obj_object)
     sciprintf("Object");
@@ -324,13 +359,15 @@ c_heapobj()
     byte* selectoroffset;
     byte* functIDoffset;
     byte* functoffset;
-    word species = getInt16(_s->heap + pos + 8);
-    word superclass = getInt16(_s->heap + pos + 10);
+    word localvarptr = getInt16(_s->heap + pos + SCRIPT_LOCALVARPTR_OFFSET);
+    word species = getInt16(_s->heap + pos + SCRIPT_SPECIES_OFFSET);
+    word superclass = getInt16(_s->heap + pos + SCRIPT_SUPERCLASS_OFFSET);
     word namepos = getInt16(_s->heap + pos + SCRIPT_NAME_OFFSET);
     int i;
 
     sciprintf(" %s\n", _s->heap + namepos);
     sciprintf("Species=%04x, Superclass=%04x\n", species, superclass);
+    sciprintf("Local variables @ 0x%04x\n", localvarptr);
     
     selectors = getInt16(_s->heap + pos + SCRIPT_SELECTORCTR_OFFSET);
 
@@ -376,11 +413,52 @@ c_heapobj()
       }
     } /* if function selectors are present */
   }
+  return 0;
+}
+
+int
+c_heapobj()
+{
+  return
+    objinfo(cmd_params[0].val);
+}
+
+int
+c_obj()
+{
+  return
+    objinfo(*_objp);
+}
+
+int
+c_accobj()
+{
+  return
+    objinfo(_s->acc);
 }
 
 void
 script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp, int *restadjust)
 {
+
+  if (_debug_seeking) { /* Are we looking for something special? */
+    int op = s->heap[*pc] >> 1;
+
+    switch (_debug_seeking) {
+
+
+    case _DEBUG_SEEK_CALLK: {
+      if (op != op_callk) return;
+      break;
+    }
+
+    } /* switch(_debug_seeking) */
+
+    _debug_seeking = _DEBUG_SEEK_NOTHING; /* OK, found whatever we were looking for */
+
+  } /* if (_debug_seeking) */
+
+
   _debugstate_valid = (_debug_step_running == 0);
 
   if (_debugstate_valid) {
@@ -409,10 +487,15 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 	      "USAGE\n\n  disasm [startaddr] <number of commands to disassemble>");
       cmdHook(c_scriptinfo, "scriptinfo", "", "Displays information about all\n  loaded scripts");
       cmdHook(c_heapobj, "heapobj", "i", "Displays information about an\n  object or class on the\n"
-	      "specified heap address.");
+	      "specified heap address.\n\nSEE ALSO\n\n  obj, accobj");
+      cmdHook(c_obj, "obj", "", "Displays information about the\n  currently active object/class.\n"
+	      "\n\nSEE ALSO\n\n  heapobj, accobj");
+      cmdHook(c_accobj, "accobj", "", "Displays information about an\n  object or class at the\n"
+	      "address indexed by acc.\n\nSEE ALSO\n\n  obj, heapobj");
       cmdHook(c_classtable, "classtable", "", "Lists all available classes");
       cmdHook(c_stack, "stack", "i", "Dumps the specified number of stack elements");
-      cmdHook(c_backtrack, "bt", "", "Dumps the send/self/super/call/calle/callb stack");
+      cmdHook(c_backtrace, "bt", "", "Dumps the send/self/super/call/calle/callb stack");
+      cmdHook(c_snk, "snk", "", "Steps forward until it hits the next\n  callk operation");
 
       cmdHookInt(&script_exec_stackpos, "script_exec_stackpos", "Position on the execution stack\n");
       cmdHookInt(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");

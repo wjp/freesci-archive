@@ -1,3 +1,15 @@
+1999-07-27  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/vm.c (execute_method): Fixed calle/callb madness and some
+	other bugs.
+
+1999-07-25  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kernel.c: Added new kernel functions.
+
+	* src/core/vm.c (execute): Fixed a bunch of bugs and added dynamic
+	class loading to the class opcode.
+
 1999-07-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/vm.c (script_run): Finished the VM. In Theory.
