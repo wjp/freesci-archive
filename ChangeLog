@@ -1,3 +1,15 @@
+2004-12-24  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/main.c, src/gfx/drivers/gfx_drivers.c, src/include/engine.h,
+	src/include/resource.h, src/include/scitypes.h, src/scicore/tools.c,
+	src/sound/midiout.c: Rudimentary GP32 port.
+
+	* src/dc/keyboard.c, src/dc/keyboard.h: Removed dreamcast-specific
+	types.
+
+	* src/config.l, src/config.c: Replaced "/" by G_DIR_SEPARATOR_S in
+	 several places.
+
 2004-10-17  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/gfx/drivers/sdl_driver.c: Applied Jim Alber's fix: Use XFACT,

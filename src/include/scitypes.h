@@ -34,6 +34,9 @@
 #ifdef _WIN32
 #  include <io.h>
 #endif
+#ifdef _GP32
+#  include "wrap.h"
+#endif
 
 #if defined(_WIN32) && defined(_MSC_VER)
 #  define TYPE_16 short
@@ -93,6 +96,10 @@ typedef struct {
 	struct _finddata_t fileinfo;
 #elif defined(_DREAMCAST)
 	file_t dir;
+	char *mask_copy;
+#elif defined(_GP32)
+	GPDIR *dir;
+	int total, cur;
 	char *mask_copy;
 #else
 	DIR *dir;

@@ -124,6 +124,10 @@
 #  define sleep(S) thd_sleep((S)*1000)
 #endif
 
+#ifdef _GP32
+#  include "wrap.h"
+#endif
+
 #ifdef __BEOS__
 #  include <kernel/OS.h>
 #  define usleep snooze
@@ -162,7 +166,7 @@
 #  define DLLEXTERN
 #endif
 
-#if _MSC_VER || _DOS
+#if _MSC_VER || _DOS || defined(_GP32)
 #  define G_DIR_SEPARATOR_S "\\"
 #else
 #  define G_DIR_SEPARATOR_S "/"
@@ -183,7 +187,7 @@
 #  undef HAVE_FORK
 #endif
 
-#if defined(__MORPHOS__) || defined(_DREAMCAST) || defined(_MSC_VER) || defined(ARM_WINCE) || defined(_WIN32)
+#if defined(__MORPHOS__) || defined(_DREAMCAST) || defined(_MSC_VER) || defined(ARM_WINCE) || defined(_WIN32) || defined(_GP32)
 #  ifndef PATH_MAX
 #    define PATH_MAX 255
 #  endif

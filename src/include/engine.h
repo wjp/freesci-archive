@@ -48,8 +48,13 @@
 
 #define FREESCI_SAVEGAME_VERSION 5
 
+#ifdef _GP32
+#define FREESCI_GAMEDIR "FREESCI"
+#define STRLEN_FREESCI_GAMEDIR 7
+#else
 #define FREESCI_GAMEDIR ".freesci"
 #define STRLEN_FREESCI_GAMEDIR 8
+#endif
 #define FREESCI_CONFFILE "config"
 #define FREESCI_SAVEDIR_PREFIX "save_"
 #define FREESCI_CONFFILE_DOS "freesci.cfg"

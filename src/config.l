@@ -341,7 +341,7 @@ QUOTED_NUMPARAMTOKEN "\"".*"\""
 	else {
 		char *tmp = sci_malloc(strlen(exported_conf_path) + 2 + strlen(conf[cur_section].name));
 		strcpy(tmp, exported_conf_path);
-		strcat(tmp, "/");
+		strcat(tmp, G_DIR_SEPARATOR_S);
 		strcat(tmp, conf[cur_section].name);
 
 		conf[cur_section].work_dir = tmp;
@@ -538,13 +538,13 @@ config_init(config_entry_t **_conf, char *conffile)
 			conf_path = sci_malloc(strlen(homedir) + 3 + strlen(FREESCI_GAMEDIR) + strlen(FREESCI_CONFFILE));
 			strcpy(conf_path, homedir);
 #ifndef __MORPHOS__
-			strcat(conf_path, "/");
+			strcat(conf_path, G_DIR_SEPARATOR_S);
 #endif
 			strcat(conf_path, FREESCI_GAMEDIR);
 
 			exported_conf_path = sci_strdup(conf_path);
 
-			strcat(conf_path, "/");
+			strcat(conf_path, G_DIR_SEPARATOR_S);
 			strcat(conf_path, FREESCI_CONFFILE);
 
 			dospath = 0; /* Use UN*X-style paths */

@@ -66,6 +66,10 @@ extern gfx_driver_t gfx_driver_dfb;
 #  ifdef _DREAMCAST
 extern gfx_driver_t gfx_driver_dc;
 #  endif
+
+#  ifdef _GP32
+extern gfx_driver_t gfx_driver_gp32;
+#  endif
 #endif
 
 extern gfx_driver_t gfx_driver_null;
@@ -83,6 +87,9 @@ static gfx_driver_t *gfx_drivers[] = {
 #  endif
 #  ifdef _DREAMCAST
 	&gfx_driver_dc,
+#  endif
+#  ifdef _GP32
+	&gfx_driver_gp32,
 #  endif
 #  ifndef X_DISPLAY_MISSING
 	&gfx_driver_xlib,

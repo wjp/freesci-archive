@@ -265,6 +265,17 @@ sci_gettime(long *seconds, long *useconds)
 	*seconds = s;
 	*useconds = m*1000;
 }
+#elif defined (_GP32)
+/* Warning: This function returns the amount of time that has passed since the
+** start of the program. FIXME: Use higher resolution timer.
+*/
+void
+sci_gettime(long *seconds, long *useconds)
+{
+	int ticks = gp_getRTC();
+	*seconds = ticks / 64;
+	*useconds = ticks % 64 * 15625;
+}
 #elif defined (ARM_WINCE) && (HAVE_SDL)
 /* Warning: This function returns the amount of time that has passed since the
 ** initialization of the SDL_Driver. A gettimeofday() function is available, but it is
@@ -446,7 +457,65 @@ sci_finish_find(sci_dir_t *dir)
 	}
 }
 
-#else /* !_WIN32 && !_DREAMCAST */
+#elif defined(_GP32)
+/******** Dir: GP32 CODE ********/
+
+void
+sci_init_dir(sci_dir_t *dir)   
+{
+	dir->dir = malloc(sizeof(GPDIR));
+	dir->total = 0;
+	dir->cur = 0;
+	dir->mask_copy = NULL;
+}
+
+char *
+sci_find_first(sci_dir_t *dir, char *mask)
+{
+	char cur_dir[PATH_MAX + 1];
+
+	getcwd(cur_dir, PATH_MAX + 1);
+
+	dir->total = smc_dir(cur_dir, dir->dir);
+
+	if (!dir->total) {
+		sciprintf("%s, L%d: smc_dir(""."", dir->dir) failed!\n", __FILE__, __LINE__);
+		return NULL;
+	}
+
+	dir->mask_copy = sci_strdup(mask);
+
+	return sci_find_next(dir);
+}
+
+char *
+sci_find_next(sci_dir_t *dir)
+{
+	while (dir->cur++ < dir->total) {
+		if (!fnmatch(dir->mask_copy, dir->dir->name[dir->cur - 1], 0))
+			return dir->dir->name[dir->cur - 1];
+	}
+
+	sci_finish_find(dir);
+	return NULL;
+}
+
+void
+sci_finish_find(sci_dir_t *dir)
+{
+	if (dir->dir) {
+		free(dir->dir);
+		dir->dir = NULL;
+	}
+	if (dir->mask_copy) {
+		free(dir->mask_copy);
+		dir->mask_copy = NULL;
+	}
+	dir->total = 0;
+	dir->cur = 0;
+}
+
+#else /* !_WIN32 && !_DREAMCAST && !_GP32*/
 /******** Dir: UNIX CODE ********/
 
 void
@@ -569,6 +638,8 @@ sci_get_homedir()
 	return getenv("HOME");
 #elif defined (_DREAMCAST)
 	return "/ram";
+#elif defined (_GP32)
+	return "dev0:\\GPMM";
 #elif defined(__MORPHOS__)
 	return "PROGDIR:";
 #elif defined(ARM_WINCE)
@@ -646,6 +717,13 @@ void
 sci_sched_yield()
 {
 	thd_pass();
+}
+
+#elif defined (_GP32)
+
+void
+sci_sched_yield()
+{
 }
 
 #else
@@ -774,6 +852,28 @@ sci_file_size(char *fname)
 	if (fd != 0) {
 		retval = sci_fd_size(fd);
 		fs_close(fd);
+	}
+	
+	return retval;
+}
+
+#elif defined(_GP32)
+
+int
+sci_fd_size(int fd)
+{
+	return smc_filesize(fd);
+}
+
+int
+sci_file_size(char *fname)
+{
+	int fd = open(fname, O_RDONLY);
+	int retval = -1;
+	
+	if (fd != -1) {
+		retval = sci_fd_size(fd);
+		close(fd);
 	}
 	
 	return retval;

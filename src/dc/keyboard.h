@@ -37,9 +37,9 @@
 #define KBD_UP 2
 #define KBD_DOWN 3
 
-void vkbd_init(uint16 *ptr, int line_pitch);
+void vkbd_init(guint16 *ptr, int line_pitch);
 /* Initialises the virtual keyboard
-** Parameters: (uint16 *) ptr: buffer where the keyboard is to be drawn.
+** Parameters: (guint16 *) ptr: buffer where the keyboard is to be drawn.
 **             (int) line_pitch: line pitch of buffer in bytes.
 ** Returns   : (void)
 */

@@ -37,7 +37,7 @@
 #define MARK_COLOUR 0xff00
 
 /* Pointer to buffer where keyboard is to be drawn. */
-static uint16 *ptr;
+static guint16 *ptr;
 /* Buffer line pitch in bytes. */
 static int pitch;
 
@@ -91,7 +91,7 @@ static int key_map[3][3][25] = {
 	};
 
 /* RGB565 palette used for keyboard images. */
-static uint16 kbd_pal[256] = {0xFFFF, 0x0000, 0x0000};
+static guint16 kbd_pal[256] = {0xFFFF, 0x0000, 0x0000};
 
 /* Keyboard images in 256-colour indexed mode. Based on images by
 ** A. Schiffler
@@ -4901,12 +4901,12 @@ static unsigned char kbd_img[3][320*40] = {
 	0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02}
 };
 
-static void colour_key(int row, int column, uint16 bgcol, uint16 fgcol)
+static void colour_key(int row, int column, guint16 bgcol, guint16 fgcol)
 /* Changes the colouring of a key (palette colours 0 and 1).
 ** Parameters: (int) row: row number of key to colour.
 **             (int) column: column number of key to colour.
-**             (uint16) bgcol: colour by which to replace palette colour 0.
-**             (uint16) fgcol: colour by which to replace palette colour 1.
+**             (guint16) bgcol: colour by which to replace palette colour 0.
+**             (guint16) fgcol: colour by which to replace palette colour 1.
 ** Returns   : (void)
 */
 {
@@ -5053,7 +5053,7 @@ int vkbd_get_key(int *data, int *buckyb)
 	return 1;
 }
 
-void vkbd_init(uint16 *p, int line_pitch)
+void vkbd_init(guint16 *p, int line_pitch)
 {
 	ptr = p;
 	pitch = line_pitch;

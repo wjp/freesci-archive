@@ -1,5 +1,5 @@
 
-#line 3 "lex.yy.c"
+#line 3 "config.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -940,7 +940,7 @@ parse_option(char *option, int optlen, char *value);
 char *
 crop_value(char *yytext);
 
-#line 944 "lex.yy.c"
+#line 944 "config.c"
 
 #define INITIAL 0
 
@@ -1094,7 +1094,7 @@ YY_DECL
 #line 298 "config.l"
 
 
-#line 1098 "lex.yy.c"
+#line 1096 "config.c"
 
 	if ( (yy_init) )
 		{
@@ -1224,7 +1224,7 @@ YY_RULE_SETUP
 	else {
 		char *tmp = sci_malloc(strlen(exported_conf_path) + 2 + strlen(conf[cur_section].name));
 		strcpy(tmp, exported_conf_path);
-		strcat(tmp, "/");
+		strcat(tmp, G_DIR_SEPARATOR_S);
 		strcat(tmp, conf[cur_section].name);
 
 		conf[cur_section].work_dir = tmp;
@@ -1364,7 +1364,7 @@ YY_RULE_SETUP
 #line 454 "config.l"
 ECHO;
 	YY_BREAK
-#line 1368 "lex.yy.c"
+#line 1366 "config.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2100,10 +2100,10 @@ YY_BUFFER_STATE yy_scan_buffer  (char * base, yy_size_t  size )
  * @note If you want to scan bytes that may contain NUL values, then use
  *       yy_scan_bytes() instead.
  */
-YY_BUFFER_STATE yy_scan_string (yyconst char * yy_str )
+YY_BUFFER_STATE yy_scan_string (yyconst char * str )
 {
     
-	return yy_scan_bytes(yy_str,strlen(yy_str) );
+	return yy_scan_bytes(str,strlen(str) );
 }
 
 /** Setup the input buffer state to scan the given bytes. The next call to yylex() will
@@ -2417,13 +2417,13 @@ config_init(config_entry_t **_conf, char *conffile)
 			conf_path = sci_malloc(strlen(homedir) + 3 + strlen(FREESCI_GAMEDIR) + strlen(FREESCI_CONFFILE));
 			strcpy(conf_path, homedir);
 #ifndef __MORPHOS__
-			strcat(conf_path, "/");
+			strcat(conf_path, G_DIR_SEPARATOR_S);
 #endif
 			strcat(conf_path, FREESCI_GAMEDIR);
 
 			exported_conf_path = sci_strdup(conf_path);
 
-			strcat(conf_path, "/");
+			strcat(conf_path, G_DIR_SEPARATOR_S);
 			strcat(conf_path, FREESCI_CONFFILE);
 
 			dospath = 0; /* Use UN*X-style paths */
