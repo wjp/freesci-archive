@@ -30,7 +30,7 @@
 ***************************************************************************/
 /* Resource library */
 
-
+#include <sci_memory.h>
 #include <sciresource.h>
 #include <assert.h>
 
