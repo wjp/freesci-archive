@@ -34,7 +34,11 @@
 #ifdef FREESCI_EXPORTS
 #define DLLEXTERN
 #else
+#ifdef _MSC_VER
 #define DLLEXTERN __declspec(dllimport)
+#else
+#define DLLEXTERN
+#endif
 #endif
 
 #include <resource.h>
