@@ -14,19 +14,46 @@ configure:915: checking whether the C compiler (gcc  ) works
 configure:931: gcc -o conftest    conftest.c  1>&5
 configure:957: checking whether the C compiler (gcc  ) is a cross-compiler
 configure:962: checking whether we are using GNU C
+configure:971: gcc -E conftest.c
 configure:990: checking whether gcc accepts -g
 configure:1024: checking for ranlib
 configure:1052: checking how to run the C preprocessor
+configure:1073: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1135: checking for sys/soundcard.h
+configure:1145: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1175: checking for obstack.h
+configure:1185: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1215: checking for dirent.h
+configure:1225: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1255: checking for unistd.h
+configure:1265: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1294: checking for pipe
+configure:1322: gcc -o conftest -g -O2   conftest.c  1>&5
 configure:1294: checking for socketpair
+configure:1322: gcc -o conftest -g -O2   conftest.c  1>&5
 configure:1294: checking for fork
+configure:1322: gcc -o conftest -g -O2   conftest.c  1>&5
 configure:1348: checking for ggi
 configure:1482: checking for glib-config
 configure:1517: checking for GLIB - version >= 1.2.0
 configure:1616: gcc -o conftest -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include   conftest.c -L/usr/local/lib -lglib  1>&5
 configure:1709: checking for libpng
 configure:1789: checking whether byte ordering is bigendian
+configure:1807: gcc -c -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include  conftest.c 1>&5
+configure:1822: gcc -c -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include  conftest.c 1>&5
+configure: In function `main':
+configure:1817: `not' undeclared (first use in this function)
+configure:1817: (Each undeclared identifier is reported only once
+configure:1817: for each function it appears in.)
+configure:1817: parse error before `big'
+configure: failed program was:
+#line 1811 "configure"
+#include "confdefs.h"
+#include <sys/types.h>
+#include <sys/param.h>
+int main() {
+
+#if BYTE_ORDER != BIG_ENDIAN
+ not big endian
+#endif
+; return 0; }

@@ -64,10 +64,10 @@ main(int argc, char** argv)
   };
   printf("SCI resources loaded.\n");
 
-  if (loadObjects()) {
+  /*  if (loadObjects()) {
     fprintf(stderr,"Could not load objects\n");
     sciprintf("Could not load objects\n");
-  }
+    }*/
 
   cmdHook(&c_quit, "quit", "", "console: Quits");
 

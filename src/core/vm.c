@@ -850,6 +850,7 @@ _lookup_selector_functions(state_t *s, heap_ptr obj, int selectorid, heap_ptr *a
   int methodselector_nr = GET_HEAP(methodselectors - 2); /* Number of methods is stored there */
   int i;
 
+  /*objinfo(s, obj); */
   for (i = 0; i < methodselector_nr * 2; i += 2)
     if (GET_HEAP(methodselectors + i) == selectorid) { /* Found it? */
       if (address)
@@ -865,6 +866,7 @@ _lookup_selector_functions(state_t *s, heap_ptr obj, int selectorid, heap_ptr *a
     return SELECTOR_NONE; /* No success. Trust on calling function to report error. */
 
   superclasspos = CLASS_ADDRESS(superclass);
+  /*fprintf(stderr,"superclass at %04x\n", superclasspos); */
 
   return
     _lookup_selector_functions(s, superclasspos, selectorid, address); /* Recurse to superclass */
@@ -896,6 +898,27 @@ lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
 }
 
 
+/* Detects early SCI versions by their different script header */
+script_detect_early_versions(state_t *s)
+{
+  int old_version = 0;
+  int c;
+  resource_t *script;
+
+  for (c = 0; c < 1000; c++) {
+    if (script = findResource(sci_script, c)) {
+
+      int id = getInt16(script->data);
+
+      if ((id == 0) || (id > 15)) {
+	version_require_earlier_than(s, SCI_VERSION_FTU_NEW_SCRIPT_HEADER);
+	return;
+      }
+    }
+  }
+
+}
+
 
 int
 script_init_state(state_t *s, sci_version_t version)
@@ -906,6 +929,13 @@ script_init_state(state_t *s, sci_version_t version)
   int classnr;
   int size;
   resource_t *script;
+  int magic_offset; /* For strange scripts in older SCI versions */
+
+  s->max_version = 0xfffffff; /* :-) */
+  s->min_version = 0; /* Set no real limits */
+  s->version = SCI_VERSION_DEFAULT_SCI0;
+
+  script_detect_early_versions(s);
 
   s->_heap = heap_new();
   s->heap = s->_heap->start;
@@ -913,10 +943,12 @@ script_init_state(state_t *s, sci_version_t version)
 
   s->global_vars = 0; /* Set during launch time */
 
-  if (!version)
-    s->version = SCI_VERSION_DEFAULT_SCI0;
-  else
+  if (!version) {
+    s->version_lock_flag = 0;
+  } else {
     s->version = version;
+    s->version_lock_flag = 1; /* Lock version */
+  }
 
   if (!vocab996)
     s->classtable_size = 20;
@@ -932,17 +964,15 @@ script_init_state(state_t *s, sci_version_t version)
     if (script) {
 
       size = getInt16(script->data);
-      if (size == script->length)
-	seeker = 2;
-      else if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-        seeker = 2;
+      if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+        magic_offset = seeker = 2;
       else
-	seeker = 0;
-
+	magic_offset = seeker = 0;
 
       do {
 
-	while ((objtype = getInt16(script->data + seeker)) && (objtype != sci_obj_class))
+	while ((objtype = getInt16(script->data + seeker)) && (objtype != sci_obj_class)
+	       && (seeker < script->length))
 	  seeker += getInt16(script->data + seeker + 2);
 
 	if (objtype) { /* implies sci_obj_class */
@@ -965,7 +995,7 @@ script_init_state(state_t *s, sci_version_t version)
 	    s->classtable_size = classnr + 1; /* Adjust maximum number of entries */
 	  }
 
-	  s->classtable[classnr].class_offset = seeker + 4;
+	  s->classtable[classnr].class_offset = seeker + 4 - magic_offset;
 	  s->classtable[classnr].script = scriptnr;
 	  s->classtable[classnr].scriptposp = &(s->scripttable[scriptnr].heappos);
 
@@ -998,7 +1028,8 @@ script_instantiate(state_t *s, int script_nr)
   heap_ptr pos;
   int objtype;
   unsigned int objlength;
-  heap_ptr handle;
+  heap_ptr script_basepos;
+  int magic_pos_adder; /* Usually 0; 2 for older SCI versions */
 
   if (!script) {
     sciprintf("Script 0x%x requested but not found\n", script_nr);
@@ -1011,34 +1042,35 @@ script_instantiate(state_t *s, int script_nr)
     return s->scripttable[script_nr].heappos;
   }
 
-  handle = heap_allocate(s->_heap, script->length);
+  script_basepos = heap_allocate(s->_heap, script->length);
 
-  if (!handle) {
+  if (!script_basepos) {
     sciprintf("Not enough heap space for script size 0x%x of script 0x%x\n",
 	      script->length, script_nr);
     script_debug_flag = script_error_flag = 1;
     return 0;
   }
 
-  handle += 2; /* Get beyond the type word */
-  if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-    handle += 2; /* Get beyond unknown word */
-
-  s->scripttable[script_nr].heappos = handle; /* Set heap position */
+  s->scripttable[script_nr].heappos = script_basepos + 2;
+  /* Set heap position (beyond the size word) */
   s->scripttable[script_nr].lockers = 1; /* Locked by one */
   s->scripttable[script_nr].export_table_offset = 0;
   s->scripttable[script_nr].localvar_offset = 0;
 
-  objlength = getInt16(script->data);
-  if (objlength != script->length)
-    memcpy(s->heap + handle, script->data, script->length); /* Copy the script */
-  else
-    memcpy(s->heap + handle, script->data + 2, script->length -2);
+  if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
+    memcpy(s->heap + script_basepos + 2, script->data + 2, script->length -2);
+    pos = script_basepos + 2;
+    magic_pos_adder = 2;
+  } else {
+    memcpy(s->heap + script_basepos + 2, script->data, script->length); /* Copy the script */
+    script_basepos += 2; 
+    magic_pos_adder = 0;
+    pos = script_basepos;
+  }
 
   /* Now do a first pass through the script objects to find the
   ** export table and local variable block 
   */
-  pos = handle;
 
   objlength = 0;
 
@@ -1058,7 +1090,7 @@ script_instantiate(state_t *s, int script_nr)
 
 
   /* And now a second pass to adjust objects and class pointers, and the general pointers */
-  pos = handle;
+  pos = script_basepos + magic_pos_adder;
 
   objlength = 0;
 
@@ -1094,7 +1126,7 @@ script_instantiate(state_t *s, int script_nr)
 
       for (i = 0; i < functions_nr * 2; i += 2) {
 	heap_ptr functpos = GET_HEAP(functarea + i);
-	PUT_HEAP(functarea + i, functpos + handle); /* Adjust function pointer addresses */
+	PUT_HEAP(functarea + i, functpos + script_basepos); /* Adjust function pointer addresses */
       }
 
       if (superclass >= 0)
@@ -1109,11 +1141,11 @@ script_instantiate(state_t *s, int script_nr)
       int i;
 
       for (i = 0; i < pointerc; i++) {
-	int new_address = ((guint16) GET_HEAP(pos + 2 + i*2)) + handle;
+	int new_address = ((guint16) GET_HEAP(pos + 2 + i*2)) + script_basepos;
 	int old_indexed_pointer;
 	PUT_HEAP(pos + 2 + i*2, new_address); /* Adjust pointers. Not sure if this is needed. */
 	old_indexed_pointer = ((guint16) GET_HEAP(new_address));
-	PUT_HEAP(new_address, old_indexed_pointer + handle);
+	PUT_HEAP(new_address, old_indexed_pointer + script_basepos);
 	/* Adjust indexed pointer. */
 
       } /* For all indexed pointers pointers */
@@ -1122,13 +1154,10 @@ script_instantiate(state_t *s, int script_nr)
 
     pos -= 4; /* Step back on header */
 
-    
-  } while (objtype != 0);
+  } while ((objtype != 0) && ((pos - script_basepos) < script->length - 2));
 
-  if (script_checkloads_flag)
-    sciprintf("Script 0x%x was loaded to %04x.\n", script_nr, handle);
-
-  return handle;
+  /*    if (script_nr == 0)   sci_hexdump(s->heap + script_basepos +2, script->length-2, script_basepos);*/
+  return s->scripttable[script_nr].heappos;
 
 }
 
@@ -1342,6 +1371,9 @@ game_init(state_t *s)
   game_obj = script0 + GET_HEAP(s->scripttable[0].export_table_offset + 2);
   /* The first entry in the export table of script 0 points to the game object */
 
+  if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+        game_obj -= 2; /* Adjust for alternative header */
+
   if (GET_HEAP(game_obj + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
     sciprintf("script_init(): Game object is not at 0x%x\n", game_obj);
     return 1;
@@ -1438,4 +1470,47 @@ game_exit(state_t *s)
   return 0;
 }
 
+
+void
+version_require_earlier_than(state_t *s, sci_version_t version)
+{
+  if (s->version_lock_flag)
+    return;
+
+  if (version <= s->min_version) {
+    sciprintf("Version autodetect conflict: Less than %d.%03d.%03d was requested, but "
+	      "%d.%03d.%03d is the current minimum\n",
+	      SCI_VERSION_MAJOR(version), SCI_VERSION_MINOR(version), SCI_VERSION_PATCHLEVEL(version),
+	      SCI_VERSION_MAJOR(s->min_version), SCI_VERSION_MINOR(s->min_version),
+	      SCI_VERSION_PATCHLEVEL(s->min_version));
+    return;
+  }
+  else if (version < s->max_version) {
+    s->max_version = version -1;
+    if (s->max_version < s->version)
+      s->version = s->max_version;
+  }
+}
+
+
+void
+version_require_later_than(state_t *s, sci_version_t version)
+{
+  if (s->version_lock_flag)
+    return;
+
+  if (version > s->max_version) {
+    sciprintf("Version autodetect conflict: More than %d.%03d.%03d was requested, but less than"
+	      "%d.%03d.%03d is required ATM\n",
+	      SCI_VERSION_MAJOR(version), SCI_VERSION_MINOR(version), SCI_VERSION_PATCHLEVEL(version),
+	      SCI_VERSION_MAJOR(s->max_version), SCI_VERSION_MINOR(s->max_version),
+	      SCI_VERSION_PATCHLEVEL(s->max_version));
+    return;
+  }
+  else if (version > s->min_version) {
+    s->min_version = version;
+    if (s->min_version > s->version)
+      s->version = s->min_version;
+  }
+}
 

@@ -758,26 +758,21 @@ c_simsoundcue(void)
 }
 
 int
-objinfo(heap_ptr pos)
+objinfo(state_t *s, heap_ptr pos)
 {
   word type;
-
-  if (!_debugstate_valid) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
 
   if ((pos < 4) || (pos > 0xfff0)) {
     sciprintf("Invalid address.\n");
     return 1;
   }
 
-  if ((getInt16(_s->heap + pos + SCRIPT_OBJECT_MAGIC_OFFSET)) != SCRIPT_OBJECT_MAGIC_NUMBER) {
+  if ((getInt16(s->heap + pos + SCRIPT_OBJECT_MAGIC_OFFSET)) != SCRIPT_OBJECT_MAGIC_NUMBER) {
     sciprintf("Not an object.\n");
     return 0;
   }
 
-  type = getInt16(_s->heap + pos + SCRIPT_INFO_OFFSET);
+  type = getInt16(s->heap + pos + SCRIPT_INFO_OFFSET);
 
   if (type & SCRIPT_INFO_CLONE)
     sciprintf("Clone");
@@ -796,32 +791,32 @@ objinfo(heap_ptr pos)
     byte* selectoroffset;
     byte* functIDoffset;
     byte* functoffset;
-    word localvarptr = getInt16(_s->heap + pos + SCRIPT_LOCALVARPTR_OFFSET);
-    word species = getInt16(_s->heap + pos + SCRIPT_SPECIES_OFFSET);
-    word superclass = getInt16(_s->heap + pos + SCRIPT_SUPERCLASS_OFFSET);
-    word namepos = getInt16(_s->heap + pos + SCRIPT_NAME_OFFSET);
+    word localvarptr = getInt16(s->heap + pos + SCRIPT_LOCALVARPTR_OFFSET);
+    word species = getInt16(s->heap + pos + SCRIPT_SPECIES_OFFSET);
+    word superclass = getInt16(s->heap + pos + SCRIPT_SUPERCLASS_OFFSET);
+    word namepos = getInt16(s->heap + pos + SCRIPT_NAME_OFFSET);
     int i;
 
-    sciprintf(" %s\n", _s->heap + namepos);
+    sciprintf(" %s\n", s->heap + namepos);
     sciprintf("Species=%04x, Superclass=%04x\n", species, superclass);
     sciprintf("Local variables @ 0x%04x\n", localvarptr);
     
-    selectors = getInt16(_s->heap + pos + SCRIPT_SELECTORCTR_OFFSET);
+    selectors = getInt16(s->heap + pos + SCRIPT_SELECTORCTR_OFFSET);
 
-    selectoroffset = _s->heap + pos + SCRIPT_SELECTOR_OFFSET;
+    selectoroffset = s->heap + pos + SCRIPT_SELECTOR_OFFSET;
 
     if (type & SCRIPT_INFO_CLASS)
       selectorIDoffset = selectoroffset + selectors * 2;
     else
       selectorIDoffset =
-	_s->heap
-	+ *(_s->classtable[species].scriptposp)
-	+ _s->classtable[species].class_offset
+	s->heap
+	+ *(s->classtable[species].scriptposp)
+	+ s->classtable[species].class_offset
 	+ SCRIPT_SELECTOR_OFFSET
 	+ selectors * 2;
 
-    functIDoffset = _s->heap + pos + SCRIPT_FUNCTAREAPTR_MAGIC
-      + getInt16(_s->heap + pos + SCRIPT_FUNCTAREAPTR_OFFSET);
+    functIDoffset = s->heap + pos + SCRIPT_FUNCTAREAPTR_MAGIC
+      + getInt16(s->heap + pos + SCRIPT_FUNCTAREAPTR_OFFSET);
 
     functions = getInt16(functIDoffset - 2);
 
@@ -833,7 +828,7 @@ objinfo(heap_ptr pos)
       for (i = 0; i < selectors; i++) {
 	word selectorID = selectorIDoffset? getInt16(selectorIDoffset + i*2) : i;
 
-	sciprintf("  %s[%04x] = %04x\n", selectorIDoffset? _s->selector_names[selectorID] : "<?>",
+	sciprintf("  %s[%04x] = %04x\n", selectorIDoffset? s->selector_names[selectorID] : "<?>",
 		  selectorID, 0xffff & getInt16(selectoroffset + i*2));
       }
     } /* if variable selectors are present */
@@ -845,7 +840,7 @@ objinfo(heap_ptr pos)
       for (i = 0; i < functions; i++) {
 	word selectorID = getInt16(functIDoffset + i*2);
 
-	sciprintf("  %s[%04x] at %04x\n", _s->selector_names[selectorID], selectorID,
+	sciprintf("  %s[%04x] at %04x\n", s->selector_names[selectorID], selectorID,
 		  0xffff & getInt16(functoffset + i*2));
       }
     } /* if function selectors are present */
@@ -857,21 +852,21 @@ int
 c_heapobj(void)
 {
   return
-    objinfo(cmd_params[0].val);
+    objinfo(_s, cmd_params[0].val);
 }
 
 int
 c_obj(void)
 {
   return
-    objinfo(*_objp);
+    objinfo(_s, *_objp);
 }
 
 int
 c_accobj(void)
 {
   return
-    objinfo(_s->acc);
+    objinfo(_s, _s->acc);
 }
 
 /*** Breakpoint commands ***/

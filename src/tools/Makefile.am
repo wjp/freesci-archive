@@ -7,5 +7,5 @@ scriptdump_SOURCES = scriptdump.c
 scriptdump_LDADD=-L../core -lscicore -L../console -lsciconsole 
 vocabdump_SOURCES = vocabdump.c
 classes_SOURCES = classes.c
-sciconsole_LDADD = -lc -lglib -lreadline -lcurses ../core/libscicore.a ../sound/libscisound.a ../console/libsciconsole.a @ac_png_libraries@ @ac_glib_libraries@ 
+sciconsole_LDADD = -lc -lglib -lreadline -lcurses ../sound/libscisound.a ../console/libsciconsole.a ../core/libscicore.a @ac_png_libraries@ @ac_glib_libraries@ 
 sciconsole_SOURCES = sciconsole.c

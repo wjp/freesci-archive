@@ -36,6 +36,10 @@ struct _state;
 #define SCI_VERSION(_major_, _minor_, _patchlevel_) (((_major_)<<20) | ((_minor_)<<10) | _patchlevel_)
 /* This allows version numbers to be compared directly */
 
+#define SCI_VERSION_MAJOR(_version_) ((_version_) >> 20)
+#define SCI_VERSION_MINOR(_version_) (((_version_) >> 10) & 0x7ff)
+#define SCI_VERSION_PATCHLEVEL(_version_) ((_version_) & 0x7ff)
+
 /* Version number guide:
 ** - Always use the version number of the first known version to have a special feature.
 ** - Don't assume that special feature changes are linked just because they appeared to change
@@ -69,7 +73,21 @@ struct _state;
 
 typedef int sci_version_t;
 
+struct _state;
 
+void
+version_require_earlier_than(struct _state *s, sci_version_t version);
+/* Function used in autodetection
+** Parameters: (state_t *) s: state_t containing the version
+**             (sci_version_t) version: The version that we're earlier than
+*/
+
+void
+version_require_later_than(struct _state *s, sci_version_t version);
+/* Function used in autodetection (read this function "version_require_later_than_or_equal_to")
+** Parameters: (state_t *) s: state_t containing the version
+**             (sci_version_t) version: The version that we're later than
+*/
 
 
 #endif /* !_SCI_VERSIONS_H_ */
