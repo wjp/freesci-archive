@@ -4,7 +4,7 @@
 
 # TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
 
-CFG=fsci_dll - Win32 Debug
+CFG=fsci_dll - Win32 Purify
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,12 +13,13 @@ CFG=fsci_dll - Win32 Debug
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "fsci_dll.mak" CFG="fsci_dll - Win32 Debug"
+!MESSAGE NMAKE /f "fsci_dll.mak" CFG="fsci_dll - Win32 Purify"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
 !MESSAGE "fsci_dll - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE "fsci_dll - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "fsci_dll - Win32 Purify" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE 
 
 # Begin Project
@@ -43,7 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FSCI_DLL_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /Zi /O1 /Ob2 /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "HAVE_DDRAW" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_STRING_H" /D "_CONSOLE" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D "NDEBUG" /FR /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /O1 /Ob2 /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_STRING_H" /D "_CONSOLE" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D "NDEBUG" /FR /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0xc09 /d "NDEBUG"
@@ -53,8 +54,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 msvcrt.lib ..\..\..\SDL\lib\SDL.lib ddraw.lib winmm.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib /nologo /dll /debug /machine:I386 /nodefaultlib:"libc.lib" /nodefaultlib:"libcmt.lib" /nodefaultlib:"libcd.lib" /nodefaultlib:"libcmtd.lib" /nodefaultlib:"msvcrtd.lib" /out:"..\..\bin\fsci.dll"
-# SUBTRACT LINK32 /profile /pdb:none /map
+# ADD LINK32 msvcrt.lib ..\..\..\SDL\lib\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib /nologo /dll /debug /machine:I386 /out:"..\..\bin\fsci.dll" /fixed:no
+# SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
 
@@ -70,7 +71,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FSCI_DLL_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /Gi /GR /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "_WINDOWS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /Gi /GR /GX /ZI /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "_WINDOWS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "DEBUG_SOUND_SERVER" /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0xc09 /d "_DEBUG"
@@ -80,7 +81,36 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 dsound.lib dxguid.lib dxerr8.lib msvcrtd.lib ..\..\..\SDL\lib\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ole32.lib /nologo /dll /pdb:none /map /debug /machine:I386 /nodefaultlib:"libc.lib" /nodefaultlib:"libcmt.lib" /nodefaultlib:"msvcrt.lib" /nodefaultlib:"libcd.lib" /nodefaultlib:"libcmtd.lib" /out:"Debug/fsci.dll"
+# ADD LINK32 dxguid.lib dxerr8.lib msvcrtd.lib ..\..\..\SDL\lib\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ole32.lib /nologo /dll /debug /machine:I386 /out:"Debug\fsci.dll" /pdbtype:sept
+# SUBTRACT LINK32 /pdb:none /map
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "fsci_dll___Win32_Purify"
+# PROP BASE Intermediate_Dir "fsci_dll___Win32_Purify"
+# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "Purify"
+# PROP Intermediate_Dir "fsci_dll_Purify"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /MDd /W3 /Gm /Gi /GR /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "_WINDOWS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "DEBUG_SOUND_SERVER" /D "SATISFY_PURIFY" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MD /W3 /Gm /Gi /GR /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "_WINDOWS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "SATISFY_PURIFY" /FR /YX /FD /GZ /c
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
+# ADD BASE RSC /l 0x409 /d "_DEBUG"
+# ADD RSC /l 0x409 /d "_DEBUG"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 dxguid.lib dxerr8.lib msvcrtd.lib ..\..\..\SDL\lib\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ole32.lib /nologo /dll /pdb:none /map /debug /machine:I386 /nodefaultlib:"libc.lib" /nodefaultlib:"libcmt.lib" /nodefaultlib:"msvcrt.lib" /nodefaultlib:"libcd.lib" /nodefaultlib:"libcmtd.lib" /out:"Purify/fsci.dll"
+# ADD LINK32 dxguid.lib dxerr8.lib msvcrt.lib ..\..\..\SDL\lib\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ole32.lib /nologo /dll /incremental:no /map /debug /machine:I386 /out:"Purify\fsci.dll" /fixed:no
+# SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
 
@@ -88,6 +118,7 @@ LINK32=link.exe
 
 # Name "fsci_dll - Win32 Release"
 # Name "fsci_dll - Win32 Debug"
+# Name "fsci_dll - Win32 Purify"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
@@ -245,17 +276,62 @@ SOURCE=..\gfx\font.c
 # Begin Source File
 
 SOURCE=..\gfx\gfx_crossblit.c
+
+!IF  "$(CFG)" == "fsci_dll - Win32 Release"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
 SOURCE=..\gfx\gfx_line.c
+
+!IF  "$(CFG)" == "fsci_dll - Win32 Release"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
 SOURCE=..\gfx\gfx_pixmap_scale.c
+
+!IF  "$(CFG)" == "fsci_dll - Win32 Release"
+
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -375,6 +451,11 @@ SOURCE=..\sound\event_ss.c
 
 # ADD CPP /W4
 
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# ADD BASE CPP /W4
+# ADD CPP /W3
+
 !ENDIF 
 
 # End Source File
@@ -388,36 +469,118 @@ SOURCE=..\sound\event_ss_win32.c
 
 # ADD CPP /W4
 
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# ADD BASE CPP /W4
+# ADD CPP /W3
+
 !ENDIF 
 
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\midi_adlib.c
+
+!IF  "$(CFG)" == "fsci_dll - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# ADD CPP /W3
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\midi_device.c
+
+!IF  "$(CFG)" == "fsci_dll - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# ADD CPP /W3
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\midi_mt32.c
+
+!IF  "$(CFG)" == "fsci_dll - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# ADD CPP /W3
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\midi_mt32gm.c
+
+!IF  "$(CFG)" == "fsci_dll - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# ADD CPP /W3
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\midiout.c
+
+!IF  "$(CFG)" == "fsci_dll - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# ADD CPP /W3
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\midiout_win32mci.c
+
+!IF  "$(CFG)" == "fsci_dll - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# ADD CPP /W3
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\oldmidi.c
+
+!IF  "$(CFG)" == "fsci_dll - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# ADD CPP /W3
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -428,6 +591,11 @@ SOURCE=..\sound\polled_ss.c
 !ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
 
 # ADD CPP /W4
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# ADD BASE CPP /W4
+# ADD CPP /W3
 
 !ENDIF 
 
@@ -442,6 +610,11 @@ SOURCE=..\sound\polled_ss_sdl.c
 
 # ADD CPP /W4
 
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# ADD BASE CPP /W4
+# ADD CPP /W3
+
 !ENDIF 
 
 # End Source File
@@ -454,6 +627,11 @@ SOURCE=..\sound\polled_ss_unix.c
 !ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
 
 # ADD CPP /W4
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# ADD BASE CPP /W4
+# ADD CPP /W3
 
 !ENDIF 
 
@@ -468,12 +646,30 @@ SOURCE=..\sound\polled_ss_win32.c
 
 # ADD CPP /W4
 
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# ADD BASE CPP /W4
+# ADD CPP /W3
+
 !ENDIF 
 
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\sfx_save.c
+
+!IF  "$(CFG)" == "fsci_dll - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
+
+# ADD CPP /W4
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# ADD CPP /W3
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -489,6 +685,11 @@ SOURCE=..\sound\sound.c
 
 # ADD CPP /W4
 
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# ADD BASE CPP /W4
+# ADD CPP /W3
+
 !ENDIF 
 
 # End Source File
@@ -501,6 +702,11 @@ SOURCE=..\sound\soundserver.c
 !ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
 
 # ADD CPP /W4
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+# ADD BASE CPP /W4
+# ADD CPP /W3
 
 !ENDIF 
 

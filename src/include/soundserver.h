@@ -159,10 +159,10 @@ typedef struct _song {
 	int size; /* Song size */
 	int pos;  /* Current position in song */
 	int loopmark; /* loop position */
-	long fading;   /* Ticks left until faded out, or -1 if not fading */
-	long maxfade;  /* Total ticks in the fade (used to calculate volume */
+	int fading;   /* Ticks left until faded out, or -1 if not fading */
+	int maxfade;  /* Total ticks in the fade (used to calculate volume */
 
-	short reverb;   /* current reverb setting */
+	int reverb;   /* current reverb setting */
 
 	byte *data;   /* dynamically allocated data */
 	int file_nr;  /* Temporarily used to save and restore song data */
@@ -172,7 +172,7 @@ typedef struct _song {
 	int status;   /* See above */
 
 	int resetflag; /* for 0x4C: does suspend reset song position? */
-	word handle;  /* Handle for the game engine */
+	unsigned int handle;  /* Handle for the game engine */
 
 	song_iterator_t *it;
 
@@ -304,7 +304,6 @@ song_lib_free(songlib_t songlib);
 ** Returns   : (void)
 */
 
-
 void
 song_lib_add(songlib_t songlib, song_t *song);
 /* Adds a song to a song library.
@@ -344,6 +343,14 @@ song_lib_resort(songlib_t songlib, song_t *song);
 **             (song_t *) song: The song to work on
 ** Returns   : (void)
 */
+
+int
+song_lib_count(songlib_t songlib);
+/* Counts the number of songs in a song library
+** Parameters: (songlib_t) songlib: The library to count
+** Returns   : (int) The number of songs
+*/
+
 
 GTimeVal
 song_sleep_time(GTimeVal *lastslept, long ticks);
@@ -542,21 +549,21 @@ extern DLLEXTERN sound_server_t *sound_servers[]; /* All available sound fx driv
 
 extern sound_server_t *global_sound_server; /* current soundserver */
 
+#define SOUND_SERVER_STATE_SAVED_MEMBERS \
+	songlib_t songlib;	/* sound server's song library */ \
+	song_t *current_song;	/* currently playing song */ \
+	unsigned int master_volume;	/* (stored as percentage) */ \
+	int sound_cue;	/* cumulative cue counter */
 
 typedef struct {
 	int suspended;	/* if sound server is suspended */
-	songlib_t songlib;	/* sound server's song library */
-	song_t *current_song;	/* currently playing song */
-	unsigned int ticks_to_wait;	/* before next midi operation */
-	guint8 master_volume;	/* (stored as percentage) */
 	sound_server_t *ss_driver;	/* driver currently being used for sound server */
+	int reverse_stereo;	/* reverse stereo setting */
 	playing_notes_t playing_notes[MIDI_CHANNELS];	/* keeps track of polyphony */
 	byte mute_channel[MIDI_CHANNELS];	/* which channels are muted */
-	int reverse_stereo;	/* reverse stereo setting */
-	int sound_cue;	/* cumulative cue counter */
 
-	/* note: only present in polled sound server and not currently used */
-	unsigned long usecs_to_sleep;
+	SOUND_SERVER_STATE_SAVED_MEMBERS
+
 } sound_server_state_t;
 
 
@@ -579,6 +586,14 @@ soundsrv_restore_state(FILE *debugstream, char *dir, sound_server_state_t *sss);
 ** Returns   : (int) 0 on success, 1 otherwise
 ** If restoring failed, an error message will be written to debugstream, and the
 ** variables pointed to in the parameter list will be left untouched.
+*/
+
+
+void
+_restore_midi_state(sound_server_state_t *ss_state);
+/* Restores some parts of the MIDI state
+** Parameters: (struct sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
 */
 
 
@@ -746,6 +761,14 @@ imap_set(unsigned int action, int instr, int value);
 ** Parameters: (int) action: What to do to the instrument mapping
 **             (int) instr: Instrument to change
 **             (int) value: Value to change to
+*/
+
+void
+change_song(song_t *new_song, sound_server_state_t *ss_state);
+/* Commands server to change a song handle
+** Parameters: (song_t *) new_song: The new song to change to
+**             (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
 */
 
 #ifdef DEBUG_SOUND_SERVER

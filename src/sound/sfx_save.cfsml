@@ -45,7 +45,21 @@
 #define O_BINARY 0
 #endif  /* !O_BINARY */
 
-#define SOUND_SAVEGAME_VERSION 1;
+#define SOUND_SAVEGAME_VERSION 2;
+
+
+typedef struct {
+
+	int sound_version;
+
+	int number_of_songs;
+	song_t *songs; /* All songs in order */
+	int active_song;
+
+	SOUND_SERVER_STATE_SAVED_MEMBERS	/* Defined in sound_server_state_t */
+
+} sound_lib_file_ver2_t;
+
 
 typedef struct {
 
@@ -62,7 +76,7 @@ typedef struct {
 	long ticks_to_wait; /* Ticks until the next sound command has to be interpreted */
 	long ticks_to_fade; /* Ticks until a fade-out is complete */
 
-} sound_lib_file_t;
+} sound_lib_file_ver1_t;
 
 
 
@@ -75,6 +89,7 @@ TYPE short "short" LIKE int
 RECORD song_t "song_t" {
 
 	int flags[STATIC MIDI_CHANNELS];
+	int polyphony[STATIC MIDI_CHANNELS];
 	int instruments[STATIC MIDI_CHANNELS];
 	int velocity[STATIC MIDI_CHANNELS];
 	int pressure[STATIC MIDI_CHANNELS];
@@ -84,22 +99,36 @@ RECORD song_t "song_t" {
 	int size;
 	int pos;
 	int loopmark;
-	long fading;
+	int fading;
+	int maxfade;
 
-	short reverb;
-	long maxfade;
-	int resetflag;
-	int polyphony[STATIC MIDI_CHANNELS];
+	int reverb;
 
 	int file_nr;
+
 	int priority;
 	int loops;
 	int status;
 
-	word handle;
+	int resetflag;
+	int handle;
+
 }
 
-RECORD sound_lib_file_t "sound_lib_file_t" {
+RECORD sound_lib_file_ver2_t "sound_lib_file_ver2_t" {
+
+	int sound_version;
+
+	song_t songs[DYNAMIC number_of_songs];
+
+	int active_song;
+
+	int master_volume;
+	int sound_cue;
+
+}
+
+RECORD sound_lib_file_ver1_t "sound_lib_file_ver1_t" {
 
 	int sound_version;
 
@@ -121,10 +150,11 @@ RECORD sound_lib_file_t "sound_lib_file_t" {
 int
 soundsrv_save_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
 {
-	sound_lib_file_t write_rec;
-	song_t *seeker;
-	int songctr = 0;
-	int curr_song_nr = -1;
+	sound_lib_file_ver2_t write_rec;
+	song_t *seeker;		/* song seeker */
+	int number_of_songs = 0;
+	int curr_songs_nr;	/* current song number */
+	int songctr;		/* song counter */
 	FILE *fh;
 
 	if (dir && chdir(dir)) {
@@ -132,41 +162,40 @@ soundsrv_save_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
 
 		cwd = getcwd(NULL, 0);
 		fprintf(debugstream, "Failed to enter '%s', cwd is '%s'\n", dir, cwd);
-		free(cwd);
+		sci_free(cwd);
 		return 1;
 	}
 
 	write_rec.sound_version = SOUND_SAVEGAME_VERSION;
 
-	write_rec.soundcue = sss->sound_cue;
-	write_rec.usecs_to_sleep = sss->usecs_to_sleep;
-	write_rec.ticks_to_wait = sss->ticks_to_wait;
-	write_rec.ticks_to_fade = 0;
 	write_rec.master_volume = sss->master_volume;
+	write_rec.sound_cue = sss->sound_cue;
 
 	/* Determine number of songs */
+	number_of_songs = song_lib_count(sss->songlib);
 	seeker = *sss->songlib;
-	while (seeker) {
 
+	for (curr_songs_nr = 0; curr_songs_nr < number_of_songs; curr_songs_nr++)
+	{
 		if (seeker == sss->current_song)
-			curr_song_nr = songctr;
+			break;
 
-		++songctr;
 		seeker = seeker->next;
 	}
 
-	write_rec.songs_nr = songctr;
-	write_rec.active_song = curr_song_nr;
+	write_rec.number_of_songs = number_of_songs;
+	write_rec.active_song = curr_songs_nr;
 
-	write_rec.songs = sci_malloc(sizeof(song_t) * songctr);
+	write_rec.songs = sci_malloc(sizeof(song_t) * number_of_songs);
+
 
 	/* Now memcpy those songs into a row and write their song data to a file */
-	songctr = -1;
+	songctr = 0;
 	seeker = *sss->songlib;
+
 	while (seeker) {
 		char filename[10];
 		FILE *fh;
-		++songctr;
 
 		memcpy(&(write_rec.songs[songctr]), seeker, sizeof(song_t));
 		write_rec.songs[songctr].file_nr = songctr;
@@ -178,7 +207,7 @@ soundsrv_save_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
 		if (!fh) {
 			fprintf(debugstream, "Error creating file: %s while creating '%s/%s'\n",
 			      strerror(errno), dir, filename);
-			free(write_rec.songs);
+			sci_free(write_rec.songs);
 			if (dir)
 				chdir ("..");
 			return 1;
@@ -186,32 +215,34 @@ soundsrv_save_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
 
 		if (fwrite(seeker->data, sizeof(byte), seeker->size, fh) < seeker->size) {
 			fprintf(debugstream, "Write error: Failed to write to '%s/%s'\n", dir, filename);
-			free(write_rec.songs);
+			sci_free(write_rec.songs);
 			if (dir)
 				chdir ("..");
 			return 1;
 		}
 		fclose(fh);
 
+		songctr++;
 		seeker = seeker->next;
 	}
 
 	fh = fopen("sound", "w" FO_TEXT);
 
-	%CFSMLWRITE sound_lib_file_t &write_rec INTO fh;
+	%CFSMLWRITE sound_lib_file_ver2_t &write_rec INTO fh;
 
 	fclose(fh);
 	fprintf(stderr,"Finished all writing.\n");
 
-	free(write_rec.songs);
+	sci_free(write_rec.songs);
 
 	if (dir)
 		chdir ("..");
+
 	return 0;
 }
 
 static void
-recover_version0(sound_lib_file_t *rec)
+recover_version0(sound_lib_file_ver1_t *rec)
 {
 	int i;
 
@@ -228,15 +259,181 @@ recover_version0(sound_lib_file_t *rec)
 	}
 }
 
+static int
+recover_version1(FILE *fh, sound_lib_file_ver1_t *rec,
+	sound_server_state_t *sss, FILE *ds)
+{
+	song_t *seeker, *next = NULL;
+	int i;
+	int error;
+
+	rec->songs = NULL;
+
+	/* Backwards capability crap */
+	rec->sound_version = 0;
+	rec->master_volume = sss->master_volume;
+
+	/* Read all the records */
+	%CFSMLREAD-ATOMIC sound_lib_file_ver1_t rec FROM fh ERRVAR error;
+	fclose(fh);
+
+	if (error) {
+		fprintf(ds, "Failed to parse file 'sound'\n");
+		return 1;
+	}
+
+	if (rec->sound_version == 0)
+		recover_version0(rec);
+
+	/* Read in each song's data */
+	for (i = 0; i < rec->songs_nr; i++) {
+		int size = rec->songs[i].size;
+		char filename[10];
+
+		sprintf(filename, "song.%d", rec->songs[i].file_nr);
+		fh = fopen(filename, "r" FO_BINARY);
+
+		if (!fh) {
+			fprintf(ds, "Opening %s failed: %s\n", filename, strerror(errno));
+			return 1;
+		}
+
+		rec->songs[i].data = (byte *) sci_malloc(size);
+		if (fread(rec->songs[i].data, sizeof(byte), size, fh) < size) {
+			int j;
+			for (j = 0; j < i; j++)
+				sci_free(rec->songs[i].data);
+			fprintf(ds, "Reading %d bytes from %s failed\n", size, filename);
+			return 1;
+		}
+
+		fclose(fh);
+	}
+
+
+	/* Everything is well, so free all songs to make way for the new ones */
+	song_lib_free(sss->songlib);
+	sss->current_song = NULL;
+
+	for (i = 0; i < rec->songs_nr; i++) {
+
+		next = sci_malloc(sizeof(song_t));
+		memcpy(next, &(rec->songs[i]), sizeof(song_t));
+		next->next = NULL;
+		if (i > 0)
+			seeker->next = next;
+
+		seeker = next;
+
+		if (i == 0)
+			*sss->songlib = seeker;
+
+		if (i == rec->active_song)
+			sss->current_song = seeker;
+	}
+
+	sss->sound_cue = rec->soundcue;
+	/* sss->usecs_to_sleep = rec->usecs_to_sleep; */
+	/* sss->ticks_to_wait = rec->ticks_to_wait; */
+	/* sss->ticks_to_fade = rec->ticks_to_fade; */
+	sss->master_volume = rec->master_volume;
+
+	if (rec->songs_nr)
+		sci_free(rec->songs);
+
+	return 0;
+}
+
+static int
+recover_version2(FILE *fh, sound_lib_file_ver2_t *rec,
+	sound_server_state_t *sss, FILE *ds)
+{
+	song_t *seeker, *next = NULL;
+	int i;
+	int error;
+
+	rec->songs = NULL;
+
+	/* Read all the records */
+	%CFSMLREAD-ATOMIC sound_lib_file_ver2_t rec FROM fh ERRVAR error;
+	fclose(fh);
+
+	if (error) {
+		fprintf(ds, "Failed to parse file 'sound'\n");
+		return 1;
+	}
+
+	/* Read in each song's data */
+	for (i = 0; i < rec->number_of_songs; i++) {
+		int song_data_size = rec->songs[i].size;
+		char filename[10];
+
+		sprintf(filename, "song.%d", rec->songs[i].file_nr);
+		fh = fopen(filename, "r" FO_BINARY);
+
+		if (!fh) {
+			fprintf(ds, "Opening %s failed: %s\n", filename, strerror(errno));
+			return 1;
+		}
+
+		rec->songs[i].data = (byte *) sci_malloc(song_data_size);
+		if (fread(rec->songs[i].data, sizeof(byte), song_data_size, fh) < song_data_size) {
+			int j;
+			for (j = 0; j < i; j++)
+				sci_free(rec->songs[i].data);
+			fprintf(ds, "Reading %d bytes from %s failed\n", song_data_size, filename);
+			return 1;
+		}
+
+		fclose(fh);
+	}
+
+
+	/* Everything is well, so free all songs to make way for the new ones */
+	song_lib_free(sss->songlib);
+	sss->current_song = NULL;
+
+	for (i = 0; i < rec->number_of_songs; i++) {
+
+		next = sci_malloc(sizeof(song_t));
+		memcpy(next, &(rec->songs[i]), sizeof(song_t));
+		next->next = NULL;
+		if (i > 0)
+			seeker->next = next;
+
+		seeker = next;
+
+		if (i == 0)
+			*sss->songlib = seeker;
+
+		if (i == rec->active_song)
+			sss->current_song = seeker;
+	}
+
+	if (song_lib_count(sss->songlib) != rec->number_of_songs)
+	{
+		fprintf(ds, "Number of songs read does not match number of songs saved\n");
+		return 1;
+	}
+
+	sss->sound_cue = rec->sound_cue;
+	sss->master_volume = rec->master_volume;
+
+	if (rec->number_of_songs)
+		sci_free(rec->songs);
+
+	return 0;
+}
+
+
 /* Sound state restore complement for the saving reference implementation */
 int
 soundsrv_restore_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
 {
 	FILE *fh;
-	sound_lib_file_t read_rec;
-	song_t *seeker, *next = NULL;
-	int error;
-	int i;
+	int ch = 0;
+	int sound_version;
+
 	if (dir && chdir(dir)) {
 		fprintf(debugstream, "Failed to enter '%s'\n", dir);
 		return 1;
@@ -247,92 +444,43 @@ soundsrv_restore_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
 	if (!fh) {
 		fprintf(debugstream, "'%s/sound' not found!\n", dir);
 		if (dir)
-	    chdir ("..");
+			chdir ("..");
 		return 1;
 	}
 
-	read_rec.songs = NULL;
+	/* find sound version */
+	while ( (ch < '0') || (ch > '9') )
+		ch = fgetc(fh);
+	ungetc(ch, fh);
 
-	/* Backwards capability crap */
-	read_rec.sound_version = 0;
-	read_rec.master_volume = sss->master_volume;
-	%CFSMLREAD-ATOMIC sound_lib_file_t &read_rec FROM fh ERRVAR error;
-
-	if (read_rec.sound_version == 0)
-		recover_version0(&read_rec);
-
-	if (error) {
-		if(read_rec.songs)
-			free(read_rec.songs);
-
+	if ( (fscanf(fh, "%d", &sound_version)) < 0 ) {
+		fprintf(debugstream, "Error reading saved game sound version!\n");
 		if (dir)
 			chdir ("..");
-		fprintf(debugstream, "Failed to parse '%s/sound'\n", dir);
 		return 1;
 	}
 
-	for (i = 0; i < read_rec.songs_nr; i++) {
-		int size = read_rec.songs[i].size;
-		char filename[10];
-		int fd;
+	rewind(fh);
 
-		sprintf(filename, "song.%d", read_rec.songs[i].file_nr);
-		fh = fopen(filename, "r" FO_BINARY);
+	if ( (sound_version == 0) || (sound_version == 1) ) {
+		sound_lib_file_ver1_t read_rec;
 
-		if (!fh) {
+		if (recover_version1(fh, &read_rec, sss, debugstream) != 0) {
 			if (dir)
 				chdir ("..");
-			fprintf(debugstream, "Opening %s/%s failed: %s\n", dir, filename, strerror(errno));
-			if(read_rec.songs)
-				free(read_rec.songs);
 			return 1;
 		}
 
-		read_rec.songs[i].data = (byte *) sci_malloc(size);
-		if (fread(read_rec.songs[i].data, sizeof(byte), size, fh) < size) {
-			int j;
-			for (j = 0; j < i; j++)
-				free(read_rec.songs[i].data);
+	} else if (sound_version == 2) {
+		sound_lib_file_ver2_t read_rec;
+
+		if (recover_version2(fh, &read_rec, sss, debugstream) != 0) {
 			if (dir)
 				chdir ("..");
-			fprintf(debugstream, "Reading %d bytes from %s/%s failed\n", size, dir, filename);
 			return 1;
 		}
 
-		fclose(fh);
 	}
-
-
-	song_lib_free(sss->songlib); /* Everything is well, so free all  songs */
-
-	sss->current_song = NULL;
-
-	for (i = 0; i < read_rec.songs_nr; i++) {
-
-		next = sci_malloc(sizeof(song_t));	
-		memcpy(next, &(read_rec.songs[i]), sizeof(song_t));
-		next->next = NULL;
-		if (i > 0)
-			seeker->next = next;
-
-		seeker = next;
-
-		if (i == 0)
-			*sss->songlib = seeker;
-
-		if (i == read_rec.active_song)
-			sss->current_song = seeker;
-	}
-
-	sss->sound_cue = read_rec.soundcue;
-	sss->usecs_to_sleep = read_rec.usecs_to_sleep;
-	sss->ticks_to_wait = read_rec.ticks_to_wait;
-	/* sss->ticks_to_fade = read_rec.ticks_to_fade; */
-	sss->master_volume = read_rec.master_volume;
-
-	if (read_rec.songs_nr)
-		free(read_rec.songs);
-
 	if (dir)
 	  chdir ("..");
 

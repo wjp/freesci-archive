@@ -191,7 +191,7 @@ typedef guint16 word;
 static inline gint16
 getInt16(byte *d)
 {
-  return *d | (d[1] << 8);
+	return (short)(*d | (d[1] << 8));
 }
 
 #define getUInt16(d) (guint16)(getInt16(d))

@@ -942,10 +942,10 @@ map_MIDI_instruments(resource_mgr_t *resmgr)
     }
     return 0;
   }
-
+/*
   if (!(logfile = fopen("freesci_instr", "a")))
     perror("While trying to open freesci_instr");
-
+*/
   memtimbres = *(patch1->data + 0x1EB);
   pos = 0x1EC + memtimbres * 0xF6;
 
@@ -1041,9 +1041,10 @@ map_MIDI_instruments(resource_mgr_t *resmgr)
     }
     SCIsdebug("MIDI mapping magic: MT-32 Rhythm Channel Note Map\n", memtimbres);
   }
-
+/*
   if (logfile)
     fclose(logfile);
+	*/
   return 0;
 }
 

@@ -231,6 +231,7 @@ void sci_gettime(long *seconds, long *useconds)
 	}
 
 	tm = timeGetTime();
+
 	if (TIMERR_NOERROR != timeEndPeriod(1))
 	{
 		fprintf(stderr, "timeEndPeriod(1) failed in sci_gettime\n");
@@ -293,13 +294,14 @@ sci_find_first(sci_dir_t *dir, char *mask)
 		{
 			case ENOENT:
 			{
+#ifdef _DEBUG
 				printf("_findfirst errno = ENOENT: no match\n");
 
 				if (mask)
 					printf(" in: %s\n", mask);
 				else
 					printf(" - searching in undefined directory\n");
-
+#endif
 				break;
 			}
 			case EINVAL:

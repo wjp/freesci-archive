@@ -2050,6 +2050,9 @@ config_init(config_entry_t **_conf, char *conffile)
 	int i;
 
 	conf = sci_malloc(sizeof(config_entry_t));
+#ifdef SATISFY_PURIFY
+	memset(conf, 0, sizeof(config_entry_t));
+#endif
 
 /**** Default config: */
 	conf->gfx_options.workarounds = 0;

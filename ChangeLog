@@ -1,3 +1,45 @@
+2001-12-16  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/sound/event_ss.c:
+	* src/sound/event_ss_win32.c: Added sound save and restore.
+
+	* src/sound/sfx_save.c:
+	* src/sound/sfx_save.cfsml: New save game version that works on both
+	types of sound servers. Still reads old saved games. No crashes yet.
+	Problems when restoring on occasions.
+
+	* src/sound/sound.c: Added song_lib_count().
+
+	* src/sound/soundserver.c: Clean ups, rearrangements, minor bug fixes.
+
+	* src/include/soundserver.h: Fixed some variable types and added some
+	function declarations.
+
+	* src/sound/polled_ss.c: Now uses functions defined in soundserver.c
+	for most sound commands.
+
+	* src/sound/polled_ss_win32.c: Minor synchronisation fixes.
+
+	* src/sound/oldmidi.c (map_MIDI_instruments): Commented out creation of
+	freesci_instr log file which does nothing.
+
+	* src/scicore/tools.c (sci_find_first): Commented out ENOENT error
+	except on debug builds.
+
+	* src/include/resource.h: Fixed type conversion warning.
+	
+	* src/config.c:
+	* src/config.l: Added SATISFY_PURIFY to fix UMC.
+
+	* src/win32/fsci_dll.dsp:
+	* src/win32/sciv.dsp: Added 'Purify' configuration. Removed HAVE_DDRAW
+	from Release builds.
+
+	* src/scicore/sci_memory.c: Fixed error that occurred with new Purify
+	configuration.
+	
+	* ./README.Win32: Added info on above configuration and sound problems.
+
 2001-12-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/polled_ss_unix.c (_sound_server_oops_handler): Print to
@@ -12,7 +54,7 @@
 	* src/config.l:
 	* src/config.c: Recreated with correct filename specified in #line
 	for easier debugging.
-	
+
 2001-12-12  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/include/sci_memory.h:
@@ -20,7 +62,7 @@
 	strdup, strndup, and free.
 
 	* src/main.c: Added a bit of commenting.
-	
+
 2001-12-12  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/main.c (main): Made 'free' conditional, could be NULL
@@ -31,28 +73,28 @@
 
 	* src/sound/polled_ss.c: Fixed wrong MIDI patches being used on
 	restore.
-	
+
 	* ./README:
 	* ./README.Unix:
 	* ./README.Win32: Moved platform-specific stuff to corresponding
 	README file.
-	
+
 2001-12-11  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/engine/cfsml.pl: Added more error messages.
-	
+
 	* src/include/resource.h:
 	* src/engine/savegame.cfsml:
 	* src/engine/savegame.c:
 	* src/sound/sfx_save.cfsml:
 	* src/sound/sfx_save.c: Now processes text files in text mode.
-	
+
 	* src/sound/polled_ss.c:
 	* src/sound/soundserver.c:
 	* src/include/soundserver.h: Made polled sound server use sound server
 	state struct. soundsrv_save_state() and soundsrv_restore_state() now
 	take this struct as a parameter.
-	
+
 	* src/win32/fsci_dll.dsp: Added resource_patch.c to project.
 
 2001-12-10  Christoph Reichenbach  <jameson@linuxgames.com>

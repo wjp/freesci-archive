@@ -174,12 +174,17 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct)
 void
 debug_win32_memory(int dbg_setting)
 {
-	int tmpFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
-
-#ifdef NDEBUG
+#if defined(NDEBUG)
 	fprintf(stderr,
-		"WARNING: Cannot debug Win32 memory when not in debug mode.\n");
-#endif
+		"WARNING: Cannot debug Win32 memory in release mode.\n");
+#elif defined(SATISFY_PURIFY)
+	fprintf(stderr,
+		"WARNING: Cannot debug Win32 memory in this mode.\n");
+#else
+
+	int tmpFlag;
+
+	tmpFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
 
 	if (dbg_setting > 0)
 		tmpFlag |= _CRTDBG_CHECK_ALWAYS_DF;
@@ -209,5 +214,6 @@ debug_win32_memory(int dbg_setting)
 
 	/* set new state for flag */
 	_CrtSetDbgFlag( tmpFlag );
+#endif
 }
 #endif

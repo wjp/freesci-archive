@@ -442,7 +442,6 @@ song_lib_remove(songlib_t songlib, word handle)
 	return retval;
 }
 
-
 void
 song_lib_resort(songlib_t songlib, song_t *song)
 {
@@ -459,6 +458,20 @@ song_lib_resort(songlib_t songlib, song_t *song)
 	}
 
 	song_lib_add(songlib, song);
+}
+
+int
+song_lib_count(songlib_t songlib)
+{
+	song_t *seeker = *songlib;
+	int retval = 0;
+
+	while (seeker) {
+		retval++;
+		seeker = seeker->next;
+	}
+
+	return retval;
 }
 
 

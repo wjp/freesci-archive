@@ -1,4 +1,4 @@
-Last updated 11 December 2001 by Alex Angas <wgd@internode.on.net>
+Last updated 16 December 2001 by Alex Angas <wgd@internode.on.net>
 
 ABOUT
 -----
@@ -7,8 +7,7 @@ The Win32 version of freesci is now almost at the same level of
 functionality as the UNIX version. The major bugs are currently:
  * fullscreen support causes gfx corruption
  * scaling > 3 causes gfx corruption
- * specifying the reverse_stereo variable in the config file causes crash
- * saved games sometimes cause a crash when restored
+ * 'slow' sound problems (see below)
 
 
 BUILDING
@@ -75,13 +74,18 @@ midiout.win32mci.device = x
 where x is the number of the device you wish to use.
 
 
-DEBUGGING
----------
+SOUND PROBLEMS
+--------------
 
-Have a read of 'How Do I... Topics: Debugging' in the MSDN docs. Don't have
-the MSDN library? Either use http://msdn.microsoft.com/ , or subscribe to the
-MSDN Library (see the MS Web site), or buy a cheap copy of Visual Basic
-Learning Edition which comes with the MSDN CDs. :-)
+There are currently timing problems when playing sound in games. This should
+be fixed soon after the 0.3.3 release and will be available by CVS. These can
+magically sort themselves out if you leave the game running for a while.
+
+Until this is fixed, you can try changing the default sound server at the
+command line by adding either the -Ssdl or -Swin32e switches. The SDL sound
+server will probably give the same performance as the default (Win32 polled)
+server. The Win32 event server will only give good performance on 1GHz+
+machines but should have better timing on these fast machines.
 
 
 CVS
@@ -98,9 +102,7 @@ How to set up WinCVS:
 
 1. Download WinCVS from http://www.wincvs.org/ and install.
 2. Run it, and under Admin / Preferences... enter this for CVSROOT:
-   anonymous@cs.alfred.edu:/home/cvs
-   (Note: you may need to enter the IP for cs.alfred.edu instead of its host
-   name if WinCVS can't find it.
+   anonymous@square.a-eskwadraat.nl:/var/cvs/freesci
 3. Go to Admin / Login... and leave the password blank.
 4. Go to Create / Checkout module... and enter freesci as module name.
 5. Once it's downloaded, go to Admin / Logout.
@@ -113,6 +115,21 @@ How to set up command-line CVS:
 2. Unzip it somewhere, go to the DOS prompt (or make a shortcut) and enter
    the command:
    cvs -d :pserver:anonymous@cs.alfred.edu:/home/cvs -z3 co freesci
+
+
+DEBUGGING
+---------
+
+Have a read of 'How Do I... Topics: Debugging' in the MSDN docs. Don't have
+the MSDN library? Either use http://msdn.microsoft.com/ , or subscribe to the
+MSDN Library (see the MS Web site), or buy a cheap copy of Visual Basic
+Learning Edition which comes with the MSDN CDs. :-)
+
+There are two configurations set up for FreeSCI debugging - 'Win32 - Debug'
+and 'Win32 - Purify'. The former is to allow you to use the VC++ debugger with
+all its features. The latter is for use with products such as Purify and
+Quantify, and provides these programs with the information they need to best
+run checks on FreeSCI.
 
 
 GET INVOLVED

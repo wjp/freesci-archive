@@ -50,6 +50,7 @@ extern sound_server_t sound_server_win32p;
 /* Deadlock prevention */
 static CRITICAL_SECTION ev_cs, in_cs;
 static CRITICAL_SECTION bulk_cs[2];
+static HANDLE sound_data_event, thread_created_event;
 
 static sci_queue_t bulk_queues[2];
 
@@ -59,15 +60,24 @@ static sound_eq_t ev_queue; /* The event queue */
 
 /* function called when sound server child thread begins */
 DWORD WINAPI
-win32_soundserver_init(LPVOID lpP)
+win32p_soundserver_init(LPVOID lpP)
 {
 	sound_server_state_t sss;
+#ifdef SATISFY_PURIFY
 	memset(&sss, 0, sizeof(sound_server_state_t));
+#endif
 
 #ifdef SSWIN_DEBUG
 	fprintf(stdout, "SSWIN_DEBUG: TID%u - CHILD thread ID, win32_soundserver_init()\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
+
+	/* signal that thread has finished init */
+	if (SetEvent(thread_created_event) == 0)
+	{
+		fprintf(debug_stream, "win32p_soundserver_init(): SetEvent(thread_created_event) failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
 
 	/* start the sound server */
 	sci0_polled_ss(reverse_stereo, &sss);
@@ -81,18 +91,20 @@ win32_soundserver_init(LPVOID lpP)
 }
 
 int
-sound_win32_init(state_t *s, int flags)
+sound_win32p_init(state_t *s, int flags)
 {
 	DWORD dwChildId;	/* child thread ID */
 	int i;				/* for enumerating over bulk queues */
 
 #ifdef SSWIN_DEBUG
-	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_init()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_init()\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
 
 	/* let app know what sound server we are running and yield to the scheduler */
 	global_sound_server = &sound_server_win32p;
+	debug_stream = stderr;
+
 	sci_sched_yield();
 
 	/* store a copy of the master thread id so we can use it with our mutices later */
@@ -115,24 +127,41 @@ sound_win32_init(state_t *s, int flags)
 	for (i = 0; i < 2; i++)
 		InitializeCriticalSection(&bulk_cs[i]);
 
-	debug_stream = stderr;
-
 	sound_eq_init(&inqueue);
 	sound_eq_init(&ev_queue);
 
+	/* create event that will signal when data is waiting */
+	sound_data_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+	/* create thread */
+	thread_created_event = CreateEvent(NULL, TRUE, FALSE, NULL);
+	if (thread_created_event == NULL)
+	{
+		fprintf(debug_stream, "sound_win32p_init(): CreateEvent(thread_created_event) for main failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
+
 	child_thread = CreateThread( NULL,		/* not inheritable */
 		                         0,			/* use default stack size */
-								 win32_soundserver_init,	/* callback function */
+								 win32p_soundserver_init,	/* callback function */
 								 0,			/* cb function parameter - should be s but fails on Win9x */
 								 0,			/* thread runs immediately */
 								 &dwChildId);	/* pointer to id of thread */
 	if (child_thread == NULL)
 	{
-		fprintf(debug_stream, "sound_win32_init(): CreateThread() failed, GetLastError() returned %u\n", GetLastError());
+		fprintf(debug_stream, "sound_win32p_init(): CreateThread() failed, GetLastError() returned %u\n", GetLastError());
 	}
 
+	/* wait until thread has finished initialising */
+	if (WaitForSingleObject(thread_created_event, INFINITE) != WAIT_OBJECT_0)
+	{
+		fprintf(debug_stream, "sound_win32p_init(): WaitForSingleObject() failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
+	CloseHandle(thread_created_event);
+
 #ifdef SSWIN_DEBUG
-	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_init() end\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_init() end\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
 
@@ -140,10 +169,10 @@ sound_win32_init(state_t *s, int flags)
 }
 
 int
-sound_win32_configure(state_t *s, char *option, char *value)
+sound_win32p_configure(state_t *s, char *option, char *value)
 {
 #ifdef SSWIN_DEBUG
-	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_configure()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_configure()\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
 
@@ -151,12 +180,12 @@ sound_win32_configure(state_t *s, char *option, char *value)
 }
 
 sound_event_t *
-sound_win32_get_event(state_t *s)
+sound_win32p_get_event(state_t *s)
 {
 	sound_event_t *event = NULL;
 
 #if (SSWIN_DEBUG == 1)
-	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_get_event()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_get_event()\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
 
@@ -179,12 +208,12 @@ sound_win32_get_event(state_t *s)
 
 #ifdef SSWIN_DEBUG
 	if (event)
-		fprintf(stdout, "SSWIN_DEBUG: sound_win32_get_event() got %04x %d %d\n", event->handle, event->signal, event->value);
+		fprintf(stdout, "SSWIN_DEBUG: sound_win32p_get_event() got %04x %d %d\n", event->handle, event->signal, event->value);
 	fflush(NULL);
 #endif
 #if (SSWIN_DEBUG == 1)
 	if (!event)
-		fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_get_event() no event\n", GetCurrentThreadId());
+		fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_get_event() no event\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
 
@@ -193,10 +222,10 @@ sound_win32_get_event(state_t *s)
 }
 
 void
-sound_win32_queue_event(unsigned int handle, unsigned int signal, long value)
+sound_win32p_queue_event(unsigned int handle, unsigned int signal, long value)
 {
 #if (SSWIN_DEBUG == 1)
-	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_queue_event()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_queue_event()\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
 
@@ -213,16 +242,16 @@ sound_win32_queue_event(unsigned int handle, unsigned int signal, long value)
 	}
 
 #ifdef SSWIN_DEBUG
-	fprintf(stdout, "SSWIN_DEBUG: sound_win32_queue_event() set %04x %d %d\n", handle, signal, value);
+	fprintf(stdout, "SSWIN_DEBUG: sound_win32p_queue_event() set %04x %d %d\n", handle, signal, value);
 	fflush(NULL);
 #endif
 }
 
 void
-sound_win32_queue_command(unsigned int handle, unsigned int signal, long value)
+sound_win32p_queue_command(unsigned int handle, unsigned int signal, long value)
 {
 #if (SSWIN_DEBUG == 1)
-	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_queue_command()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_queue_command()\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
 
@@ -239,18 +268,18 @@ sound_win32_queue_command(unsigned int handle, unsigned int signal, long value)
 	}
 
 #ifdef SSWIN_DEBUG
-	fprintf(stdout, "SSWIN_DEBUG: sound_win32_queue_command() set %04x %d %d\n", handle, signal, value);
+	fprintf(stdout, "SSWIN_DEBUG: sound_win32p_queue_command() set %04x %d %d\n", handle, signal, value);
 	fflush(NULL);
 #endif
 }
 
 sound_event_t *
-sound_win32_get_command(GTimeVal *wait_tvp)
+sound_win32p_get_command(GTimeVal *wait_tvp)
 {
 	sound_event_t *event = NULL;
 
 #if (SSWIN_DEBUG == 1)
-	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_get_command()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_get_command()\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
 
@@ -271,11 +300,11 @@ sound_win32_get_command(GTimeVal *wait_tvp)
 
 #ifdef SSWIN_DEBUG
 	if (event)
-		fprintf(stdout, "SSWIN_DEBUG: sound_win32_get_command() got %04x %d %d\n", event->handle, event->signal, event->value);
+		fprintf(stdout, "SSWIN_DEBUG: sound_win32p_get_command() got %04x %d %d\n", event->handle, event->signal, event->value);
 	fflush(NULL);
 #endif
 #if (SSWIN_DEBUG == 1)
-	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_get_command() end\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_get_command() end\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
 
@@ -284,13 +313,13 @@ sound_win32_get_command(GTimeVal *wait_tvp)
 }
 
 int
-sound_win32_get_data(byte **data_ptr, int *size)
+sound_win32p_get_data(byte **data_ptr, int *size)
 {
 	int index	= (GetCurrentThreadId() == master_thread_id);
 	void *data = NULL;
 
 #if (SSWIN_DEBUG == 1)
-	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_get_data()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_get_data()\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
 
@@ -298,7 +327,7 @@ sound_win32_get_data(byte **data_ptr, int *size)
 	{
 		EnterCriticalSection(&bulk_cs[index]);
 #if (SSWIN_DEBUG == 1)
-	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_get_data() entered critical section\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_get_data() entered critical section\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
 
@@ -307,7 +336,12 @@ sound_win32_get_data(byte **data_ptr, int *size)
 			/* no data */
 			LeaveCriticalSection(&bulk_cs[index]);
 
-			Sleep(1); /* take a nap */
+			/* wait for data */
+			if (WaitForSingleObject(sound_data_event, INFINITE) != WAIT_OBJECT_0)
+			{
+				fprintf(debug_stream, "sound_win32p_get_data(): WaitForSingleObject() failed, GetLastError() returned %u\n", GetLastError());
+				exit(-1);
+			}
 
 			/* re-enter critical section */
 			EnterCriticalSection(&bulk_cs[index]);
@@ -317,7 +351,7 @@ sound_win32_get_data(byte **data_ptr, int *size)
 	{
 		LeaveCriticalSection(&bulk_cs[index]);
 #if (SSWIN_DEBUG == 1)
-	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_get_data() left critical section\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_get_data() left critical section\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
 	}
@@ -325,7 +359,7 @@ sound_win32_get_data(byte **data_ptr, int *size)
 	*data_ptr = (byte *) data;
 
 #if (SSWIN_DEBUG == 1)
-	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_get_data() end\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_get_data() end\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
 
@@ -333,12 +367,12 @@ sound_win32_get_data(byte **data_ptr, int *size)
 }
 
 int
-sound_win32_send_data(byte *data_ptr, int maxsend)
+sound_win32p_send_data(byte *data_ptr, int maxsend)
 {
 	int index = 1 - (GetCurrentThreadId() == master_thread_id);
 
 #if (SSWIN_DEBUG == 1)
-	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_send_data(), queue %i\n", GetCurrentThreadId(), index);
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_send_data(), queue %i\n", GetCurrentThreadId(), index);
 	fflush(NULL);
 #endif
 
@@ -352,8 +386,15 @@ sound_win32_send_data(byte *data_ptr, int maxsend)
 		LeaveCriticalSection(&bulk_cs[index]);
 	}
 
+	/* signal event that data is waiting */
+	if (SetEvent(sound_data_event) == 0)
+	{
+		fprintf(debug_stream, "sound_win32p_send_data(): SetEvent() failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
+
 #if (SSWIN_DEBUG == 1)
-	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_send_data() end, queue %i\n", GetCurrentThreadId(), index);
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_send_data() end, queue %i\n", GetCurrentThreadId(), index);
 	fflush(NULL);
 #endif
 
@@ -361,12 +402,12 @@ sound_win32_send_data(byte *data_ptr, int maxsend)
 }
 
 void
-sound_win32_exit(state_t *s)
+sound_win32p_exit(state_t *s)
 {
 	int i;
 
 #ifdef SSWIN_DEBUG
-	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_exit()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_exit()\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
 
@@ -375,6 +416,7 @@ sound_win32_exit(state_t *s)
 	/* clean up */
 	WaitForSingleObject(child_thread, INFINITE);
 	CloseHandle(child_thread);
+	CloseHandle(sound_data_event);
 	DeleteCriticalSection(&in_cs);
 	DeleteCriticalSection(&ev_cs);
 
@@ -388,14 +430,14 @@ sound_win32_exit(state_t *s)
 }
 
 int
-sound_win32_save(state_t *s, char *dir)
+sound_win32p_save(state_t *s, char *dir)
 {
   int *success = NULL;
   int retval;
   int size;
 
 #ifdef SSWIN_DEBUG
-	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_save()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_save()\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
 
@@ -414,16 +456,16 @@ sound_server_t sound_server_win32p = {
 	"win32p",
 	"0.2",
 	0,
-	&sound_win32_init,
-	&sound_win32_configure,
-	&sound_win32_exit,
-	&sound_win32_get_event,
-	&sound_win32_queue_event,
-	&sound_win32_get_command,
-	&sound_win32_queue_command,
-	&sound_win32_get_data,
-	&sound_win32_send_data,
-	&sound_win32_save,
+	&sound_win32p_init,
+	&sound_win32p_configure,
+	&sound_win32p_exit,
+	&sound_win32p_get_event,
+	&sound_win32p_queue_event,
+	&sound_win32p_get_command,
+	&sound_win32p_queue_command,
+	&sound_win32p_get_data,
+	&sound_win32p_send_data,
+	&sound_win32p_save,
 	&sound_restore_default,
 	&sound_command_default,
 	&sound_suspend_default,

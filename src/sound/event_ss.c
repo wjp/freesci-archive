@@ -209,7 +209,7 @@ static void do_sound(sound_server_state_t *sss)
 			   sss->mute_channel[this_cmd.midi_cmd & 0xf] ))
 		{
 #ifdef DEBUG_SOUND_SERVER
-			fprintf(stdout, "MIDI (ess): %04x:\t0x%02x\t%u\t%u\n", this_cmd.pos_in_song, this_cmd.midi_cmd, this_cmd.param1, this_cmd.param2);
+			/* fprintf(stdout, "MIDI (ess): %04x:\t0x%02x\t%u\t%u\n", this_cmd.pos_in_song, this_cmd.midi_cmd, this_cmd.param1, this_cmd.param2); */
 #endif
 
 			sci_midi_command(debug_stream,
@@ -340,12 +340,40 @@ sci0_event_ss(sound_server_state_t *ss_state)
 			resume_all(ss_state);
 			break;
 
-		case SOUND_COMMAND_SAVE_STATE:
-			fprintf(debug_stream, "Saving sound server state not implemented yet\n");
+		case SOUND_COMMAND_SAVE_STATE: {
+				char *dirname;
+				int size;
+				int success;
+
+				global_sound_server->get_data((byte **)&dirname, &size);
+				success = soundsrv_save_state(debug_stream,
+					global_sound_server->flags & SOUNDSERVER_FLAG_SEPARATE_CWD ? dirname : NULL,
+					ss_state);
+
+				/* Return soundsrv_save_state()'s return value */
+				global_sound_server->send_data((byte *)&success, sizeof(int));
+				free(dirname);
+			}
 			break;
 
-		case SOUND_COMMAND_RESTORE_STATE:
-			fprintf(debug_stream, "Restoring sound server state not implemented yet\n");
+		case SOUND_COMMAND_RESTORE_STATE: {
+				char *dirname;
+				int len;
+				int success;
+
+				global_sound_server->get_data((byte **)&dirname, &len); /* see SAVE_STATE */
+
+				success = soundsrv_restore_state(debug_stream,
+					global_sound_server->flags & SOUNDSERVER_FLAG_SEPARATE_CWD ? dirname : NULL,
+					ss_state);
+
+				/* Return return value */
+				global_sound_server->send_data((byte *)&success, sizeof(int));
+				free(dirname);
+
+				_restore_midi_state(ss_state);
+				change_song(ss_state->current_song, ss_state);
+			}
 			break;
 
 		case SOUND_COMMAND_PRINT_SONG_INFO:

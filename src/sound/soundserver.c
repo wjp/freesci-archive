@@ -85,6 +85,67 @@ print_song_info(word song_handle, sound_server_state_t *ss_state)
 
 
 void
+_restore_midi_state(sound_server_state_t *ss_state)
+{
+	/* restore some MIDI device state (e.g. current instruments) */
+	if (ss_state->current_song) {
+		guint8 i;
+		midi_allstop();
+		midi_volume((guint8)ss_state->master_volume);
+		for (i = 0; i < MIDI_CHANNELS; i++) {
+			if (ss_state->current_song->instruments[i])
+				midi_event2((guint8)(0xc0 | i), (guint8)ss_state->current_song->instruments[i]);
+		}
+		midi_reverb((short)ss_state->current_song->reverb);
+	}
+}
+
+
+static int
+_sound_expect_answer(char *timeoutmessage, int def_value)
+{
+	int *success;
+	int retval;
+	int size;
+
+	global_sound_server->get_data((byte **)&success, &size);
+
+	retval = *success;
+	free(success);
+	return retval;
+
+}
+
+static int
+_sound_transmit_text_expect_anwer(state_t *s, char *text, int command, char *timeoutmessage)
+{
+	int count;
+
+	count = strlen(text) + 1;
+	global_sound_server->queue_command(0, command, count);
+	if (global_sound_server->send_data((unsigned char *)text, count) != count) {
+		fprintf(debug_stream, "_sound_transmit_text_expect_anwer():"
+			" sound_send_data returned < count\n");
+	}
+
+	return _sound_expect_answer(timeoutmessage, 1);
+}
+
+int
+sound_save_default(state_t *s, char *dir)
+{
+	return _sound_transmit_text_expect_anwer(s, dir, SOUND_COMMAND_SAVE_STATE,
+					   "Sound server timed out while saving\n");
+}
+
+int
+sound_restore_default(state_t *s, char *dir)
+{
+	return _sound_transmit_text_expect_anwer(s, dir, SOUND_COMMAND_RESTORE_STATE,
+					   "Sound server timed out while restoring\n");
+}
+
+void
 dump_song_pos(int i, song_t *song)
 {
 	char marks[2][2] = {" .", "|X"};
@@ -186,6 +247,10 @@ void
 change_song(song_t *new_song, sound_server_state_t *ss_state)
 {
 	guint8 i;
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(debug_stream, "Changing to song handle %04x\n", new_song->handle);
+#endif
+
 	if (new_song)
 	{
 		for (i = 0; i < MIDI_CHANNELS; i++) {
@@ -195,7 +260,7 @@ change_song(song_t *new_song, sound_server_state_t *ss_state)
 			ss_state->playing_notes[i].playing = 0;
 
 			if (new_song->instruments[i])
-				midi_event2((guint8)(0xc0 | i), new_song->instruments[i]);
+				midi_event2((guint8)(0xc0 | i), (guint8)new_song->instruments[i]);
 		}
 		ss_state->current_song = new_song;
 		ss_state->current_song->pos = 33;
@@ -299,126 +364,22 @@ play_handle(int priority, word song_handle, sound_server_state_t *ss_state)
 }
 
 void
-stop_handle(word song_handle, sound_server_state_t *ss_state)
+loop_handle(int loops, word song_handle, sound_server_state_t *ss_state)
 {
 	song_t *this_song;
 
 #ifdef DEBUG_SOUND_SERVER
-	fprintf(debug_stream, "Stopping handle %04x\n", song_handle);
+	fprintf(debug_stream, "Set loops for handle %04x to %i\n", song_handle, loops);
 #endif
 
 	this_song = song_lib_find(ss_state->songlib, song_handle);
 
 	if (this_song)
 	{
-		midi_allstop();
-		this_song->status = SOUND_STATUS_STOPPED;
-
-		if (this_song->resetflag)
-		{
-			/* reset song position */
-			this_song->pos = 33;
-			this_song->loopmark = 33;
-			this_song->resetflag = 0;
-		}
-
-		global_sound_server->queue_event(song_handle, SOUND_SIGNAL_LOOP, -1);
-
-		global_sound_server->queue_event(song_handle, SOUND_SIGNAL_FINISHED, 0);
+		this_song->loops = loops;
 
 	} else {
-		fprintf(debug_stream, "stop_handle(): Attempt to stop invalid sound handle %04x\n", song_handle);
-	}
-}
-
-void
-suspend_handle(word song_handle, sound_server_state_t *ss_state)
-{
-	song_t **seeker = ss_state->songlib;
-	/* used to search for suspended and waiting songs */
-
-	if (song_handle)
-	{
-		/* search for suspended handle */
-		while ((*seeker) && ((*seeker)->status != SOUND_STATUS_SUSPENDED))
-			(*seeker) = (*seeker)->next;
-
-		if (*seeker)
-		{
-			/* found a suspended handle */
-			(*seeker)->status = SOUND_STATUS_WAITING;	/* change to paused */
-#ifdef DEBUG_SOUND_SERVER
-			fprintf(debug_stream, "Unsuspending paused song\n");
-#endif
-
-		} else {
-			/* search for waiting handles */
-			while ((*seeker) && ((*seeker)->status != SOUND_STATUS_WAITING))
-			{
-				if ((*seeker)->status == SOUND_STATUS_SUSPENDED)
-					return;	/* ??? */
-				(*seeker) = (*seeker)->next;
-			}
-
-			if (*seeker)
-			{
-				/* found waiting song, so suspending */
-				(*seeker)->status = SOUND_STATUS_SUSPENDED;
-#ifdef DEBUG_SOUND_SERVER
-				fprintf(debug_stream, "Suspending paused song\n");
-#endif
-			}
-		}
-	}	/* else ignore */
-}
-
-void
-resume_handle(word song_handle, sound_server_state_t *ss_state)
-{
-	song_t *this_song;
-
-#ifdef DEBUG_SOUND_SERVER
-	fprintf(debug_stream, "Resuming handle %04x\n", song_handle);
-#endif
-
-	this_song = song_lib_find(ss_state->songlib, song_handle);
-
-	if (this_song)
-	{
-		if (this_song->status == SOUND_STATUS_SUSPENDED)
-		{
-			/* set this handle as ready and waiting */
-			this_song->status = SOUND_STATUS_WAITING;
-
-		} else {
-			fprintf(debug_stream, "Attempt to resume handle %04x not suspended\n",
-				song_handle);
-		}
-
-	} else {
-		fprintf(debug_stream, "resume_handle(): Attempt to resume invalid sound handle %04x\n", song_handle);
-	}
-}
-
-void
-renice_handle(int priority, word song_handle, sound_server_state_t *ss_state)
-{
-	song_t *this_song;
-
-#ifdef DEBUG_SOUND_SERVER
-	fprintf(debug_stream, "Renice handle %04x to priority %i\n", song_handle, priority);
-#endif
-
-	this_song = song_lib_find(ss_state->songlib, song_handle);
-
-	if (this_song)
-	{
-		/* set new priority and resort song cache accordingly */
-		this_song->priority = priority;
-		song_lib_resort(ss_state->songlib, this_song);
-
-	} else {
-		fprintf(debug_stream, "renice_handle(): Attempt to renice invalid sound handle %04x\n", song_handle);
+		fprintf(debug_stream, "loop_handle(): Attempt to set loops on invalid sound handle %04x\n", song_handle);
 	}
 }
 
@@ -428,7 +389,11 @@ fade_handle(int ticks, word song_handle, sound_server_state_t *ss_state)
 	song_t *this_song;
 
 #ifdef DEBUG_SOUND_SERVER
-	fprintf(debug_stream, "Fade handle %04x in %i ticks\n", song_handle, ticks);
+	fprintf(debug_stream, "Fade handle %04x in %i ticks", song_handle, ticks);
+	if (ss_state->current_song)
+		fprintf(debug_stream, " (currently playing is %04x)\n", ss_state->current_song->handle);
+	else
+		fprintf(debug_stream, " (no song currently playing)\n");
 #endif
 
 	this_song = song_lib_find(ss_state->songlib, song_handle);
@@ -455,22 +420,148 @@ fade_handle(int ticks, word song_handle, sound_server_state_t *ss_state)
 }
 
 void
-loop_handle(int loops, word song_handle, sound_server_state_t *ss_state)
+stop_handle(word song_handle, sound_server_state_t *ss_state)
 {
 	song_t *this_song;
 
 #ifdef DEBUG_SOUND_SERVER
-	fprintf(debug_stream, "Set loops for handle %04x to %i\n", song_handle, loops);
+	fprintf(debug_stream, "Stopping handle %04x", song_handle);
+	if (ss_state->current_song)
+		fprintf(debug_stream, " (currently playing is %04x)\n", ss_state->current_song->handle);
+	else
+		fprintf(debug_stream, " (no song currently playing)\n");
 #endif
 
 	this_song = song_lib_find(ss_state->songlib, song_handle);
 
 	if (this_song)
 	{
-		this_song->loops = loops;
+		this_song->status = SOUND_STATUS_STOPPED;
+
+		if (this_song->resetflag)
+		{
+			/* reset song position */
+			this_song->pos = 33;
+			this_song->loopmark = 33;
+			/* this_song->resetflag = 0; */
+		}
+
+		/* global_sound_server->queue_event(song_handle, SOUND_SIGNAL_LOOP, -1); */
+		global_sound_server->queue_event(song_handle, SOUND_SIGNAL_FINISHED, 0);
+
+		midi_allstop();
 
 	} else {
-		fprintf(debug_stream, "loop_handle(): Attempt to set loops on invalid sound handle %04x\n", song_handle);
+		fprintf(debug_stream, "stop_handle(): Attempt to stop invalid sound handle %04x\n", song_handle);
+	}
+}
+
+void
+suspend_handle(word song_handle, sound_server_state_t *ss_state)
+{
+	song_t *seeker = *ss_state->songlib;
+	/* used to search for suspended and waiting songs */
+
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(debug_stream, "Suspending handle %04x", song_handle);
+	if (ss_state->current_song)
+		fprintf(debug_stream, " (currently playing is %04x)\n", ss_state->current_song->handle);
+	else
+		fprintf(debug_stream, " (no song currently playing)\n");
+#endif
+
+	if (song_handle)
+	{
+		/* search for suspended handle */
+		while (seeker && (seeker->status != SOUND_STATUS_SUSPENDED))
+			seeker = seeker->next;
+
+		if (seeker)
+		{
+			/* found a suspended handle */
+			seeker->status = SOUND_STATUS_WAITING;	/* change to paused */
+#ifdef DEBUG_SOUND_SERVER
+			fprintf(debug_stream, "Unsuspending paused song\n");
+#endif
+
+		} else {
+			/* search for waiting handles */
+			while (seeker && (seeker->status != SOUND_STATUS_WAITING))
+			{
+				if (seeker->status == SOUND_STATUS_SUSPENDED)
+					return;	/* ??? */
+				seeker = seeker->next;
+			}
+
+			if (seeker)
+			{
+				/* found waiting song, so suspending */
+				seeker->status = SOUND_STATUS_SUSPENDED;
+#ifdef DEBUG_SOUND_SERVER
+				fprintf(debug_stream, "Suspending paused song\n");
+#endif
+			}
+		}
+	}	/* else ignore */
+}
+
+void
+resume_handle(word song_handle, sound_server_state_t *ss_state)
+{
+	song_t *this_song;
+
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(debug_stream, "Resuming handle %04x", song_handle);
+	if (ss_state->current_song)
+		fprintf(debug_stream, " (currently playing is %04x)\n", ss_state->current_song->handle);
+	else
+		fprintf(debug_stream, " (no song currently playing)\n");
+#endif
+
+	this_song = song_lib_find(ss_state->songlib, song_handle);
+
+	if (this_song)
+	{
+		if (this_song->status == SOUND_STATUS_SUSPENDED)
+		{
+			/* set this handle as ready and waiting */
+			this_song->status = SOUND_STATUS_WAITING;
+			global_sound_server->queue_event(song_handle, SOUND_SIGNAL_RESUMED, 0);
+
+		} else {
+			fprintf(debug_stream, "Attempt to resume handle %04x not suspended\n",
+				song_handle);
+		}
+#ifdef DEBUG_SOUND_SERVER
+	} else {
+		fprintf(debug_stream, "resume_handle(): Attempt to resume invalid sound handle %04x\n", song_handle);
+#endif
+	}
+}
+
+void
+renice_handle(int priority, word song_handle, sound_server_state_t *ss_state)
+{
+	song_t *this_song;
+
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(debug_stream, "Renice handle %04x to priority %i", song_handle);
+	if (ss_state->current_song)
+		fprintf(debug_stream, " (currently playing is %04x)\n", ss_state->current_song->handle);
+	else
+		fprintf(debug_stream, " (no song currently playing)\n");
+#endif
+
+	this_song = song_lib_find(ss_state->songlib, song_handle);
+
+	if (this_song)
+	{
+		/* set new priority and resort song cache accordingly */
+		this_song->priority = priority;
+		song_lib_resort(ss_state->songlib, this_song);
+
+	} else {
+		fprintf(debug_stream, "renice_handle(): Attempt to renice invalid sound handle %04x\n", song_handle);
 	}
 }
 
@@ -480,7 +571,11 @@ dispose_handle(word song_handle, sound_server_state_t *ss_state)
 	song_t *this_song;
 
 #ifdef DEBUG_SOUND_SERVER
-	fprintf(debug_stream, "Disposing handle %04x\n", song_handle);
+	fprintf(debug_stream, "Disposing handle %04x", song_handle);
+	if (ss_state->current_song)
+		fprintf(debug_stream, " (currently playing is %04x)\n", ss_state->current_song->handle);
+	else
+		fprintf(debug_stream, " (no song currently playing)\n");
 #endif
 
 	this_song = song_lib_find(ss_state->songlib, song_handle);
@@ -521,11 +616,15 @@ void
 set_master_volume(guint8 new_volume, sound_server_state_t *ss_state)
 {
 #ifdef DEBUG_SOUND_SERVER
-	fprintf(debug_stream, "Setting master volume to %i\n", new_volume);
+	fprintf(debug_stream, "Setting master volume to %i ", new_volume);
 #endif
 
 	ss_state->master_volume = (guint8)(new_volume * 100 / 15);	/* scale to % */
-	midi_volume(ss_state->master_volume);
+	midi_volume((guint8)ss_state->master_volume);
+
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(debug_stream, " (%u%%)\n", ss_state->master_volume);
+#endif
 }
 
 void
@@ -541,23 +640,23 @@ sound_check(int mid_polyphony, sound_server_state_t *ss_state)
 void
 stop_all(sound_server_state_t *ss_state)
 {
-	song_t **seeker = ss_state->songlib;
+	song_t *seeker = *ss_state->songlib;
 
 #ifdef DEBUG_SOUND_SERVER
 	fprintf(debug_stream, "Stopping all songs\n");
 #endif
 
 	/* FOREACH seeker IN ss_state->songlib */
-	while (*seeker)
+	while (seeker)
 	{
-		if ( ((*seeker)->status == SOUND_STATUS_WAITING) ||
-			 ((*seeker)->status == SOUND_STATUS_PLAYING) )
+		if ( (seeker->status == SOUND_STATUS_WAITING) ||
+			 (seeker->status == SOUND_STATUS_PLAYING) )
 		{
-			(*seeker)->status = SOUND_STATUS_STOPPED;	/* stop song */
+			seeker->status = SOUND_STATUS_STOPPED;	/* stop song */
 
-			global_sound_server->queue_event((*seeker)->handle, SOUND_SIGNAL_FINISHED, 0);
+			global_sound_server->queue_event(seeker->handle, SOUND_SIGNAL_FINISHED, 0);
 		}
-		(*seeker) = (*seeker)->next;
+		seeker = seeker->next;
 	}
 
 	change_song(NULL, ss_state);
@@ -567,9 +666,8 @@ stop_all(sound_server_state_t *ss_state)
 void
 suspend_all(sound_server_state_t *ss_state)
 {
-#if 0
-	/* store the time suspended at */
-	sci_get_current_time((GTimeVal *)&suspend_time);
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(debug_stream, "All sound suspended\n");
 #endif
 	ss_state->suspended = 1;
 }
@@ -577,32 +675,17 @@ suspend_all(sound_server_state_t *ss_state)
 void
 resume_all(sound_server_state_t *ss_state)
 {
-#if 0
-	GTimeVal *resume_time;
-
-	memset(&resume_time, 0, sizeof(GTimeVal));
-	sci_get_current_time((GTimeVal *)resume_time);
-
-	/* the following calculations ensure that, after resuming, we wait for the
-	 * exact (well, mostly) number of microseconds that we were supposed to
-	 * wait for before we were suspended */
-
-	/* modify last_played relative to suspend_time */
-	last_played_time.tv_sec += resume_time->tv_sec -
-		suspend_time.tv_sec - 1;
-	last_played_time.tv_usec += resume_time->tv_usec -
-		suspend_time.tv_usec + 1000000;
-
-	/* make sure that 0 <= tv_usec <= 999999 */
-	last_played_time.tv_sec -= last_played_time.tv_usec / 1000000;
-	last_played_time.tv_usec %= 1000000;
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(debug_stream, "All sound resumed\n");
 #endif
-
 	ss_state->suspended = 0;
 }
 
 void
 set_reverse_stereo(int rs, sound_server_state_t *ss_state)
 {
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(debug_stream, "Set reverse stereo to %i\n", rs);
+#endif
 	ss_state->reverse_stereo = rs;
 }

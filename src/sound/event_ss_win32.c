@@ -537,7 +537,19 @@ sound_win32e_exit(struct _state *s)
 int
 sound_win32e_save(struct _state *s, char *dir)
 {
-	return 0;
+	int retval;
+	int size;
+	int *success = NULL;
+
+	/* we ignore the dir */
+	global_sound_server->queue_command(0, SOUND_COMMAND_SAVE_STATE, 2);
+	global_sound_server->send_data((byte *) ".", 2);
+
+	global_sound_server->get_data((byte **) &success, &size);
+	retval = *success;
+	free(success);
+
+	return retval;
 }
 
 sound_server_t sound_server_win32e = {
