@@ -28,52 +28,38 @@
 ***************************************************************************/
 /* PC speaker software sequencer for FreeSCI */
 
-#include <sfx_sw_sequencer.h>
-#include <sfx_sequencer.h>
+#include <sfx_softseq.h>
 
 #define FREQUENCY 94020
-#define SAMPLE_BLOCK_SIZE (FREQUENCY / 60) /* Size for a block of samples comprising all needed for one tick */
-
-static gint16 sample_block[SAMPLE_BLOCK_SIZE];
+#define VOLUME_FACTOR 
 
 static int volume = 0x0600;
 static int note = 0; /* Current halftone, or 0 if off */
 static int freq_count = 0; 
 
-static sfx_pcm_config_t pcm_conf = {
-	FREQUENCY,
-	SFX_PCM_MONO,
-	SFX_PCM_FORMAT_S16_NATIVE
-};
-
-extern sfx_sequencer_t sfx_sequencer_sw_pcspeaker;
+extern sfx_softseq_t sfx_softseq_pcspeaker;
 /* Forward-declare the sequencer we are defining here */
 
 
 static int
-sps_set_option(char *name, char *value)
+sps_set_option(sfx_softseq_t *self, char *name, char *value)
 {
 	return SFX_ERROR;
 }
 
 static int
-sps_open(int patch_len, byte *patch, void *device)
+sps_init(sfx_softseq_t *self, byte *patch, int patch_len)
 {
-	sfx_init_sw_sequencer(&sfx_sequencer_sw_pcspeaker, 1, pcm_conf);
-	fprintf(stderr, "init-Chanlast = %p\n", PCM_SW_CHANNEL(&sfx_sequencer_sw_pcspeaker, 0)->last);
-
 	return SFX_OK;
 }
 
-static int
-sps_close(void)
+static void
+sps_exit(sfx_softseq_t *self)
 {
-	sfx_exit_sw_sequencer(&sfx_sequencer_sw_pcspeaker);
-	return SFX_OK;
 }
 
-static int
-sps_event(byte command, int argc, byte *argv)
+static void
+sps_event(sfx_softseq_t *self, byte command, int argc, byte *argv)
 {
 #if 0
 	fprintf(stderr, "Note [%02x : %02x %02x]\n", command,  argc?argv[0] : 0, (argc > 1)? argv[1] : 0);
@@ -101,8 +87,6 @@ sps_event(byte command, int argc, byte *argv)
 #endif
 		break; /* ignore */
 	}
-
-	return SFX_OK;
 }
 
 #define BASE_NOTE 129	/* A10 */
@@ -125,93 +109,63 @@ freq_table[12] = { /* A4 is 440Hz, halftone map is x |-> ** 2^(x/12) */
 };
 
 
-int
-sps_delay(int ticks)
+void
+sps_poll(sfx_softseq_t *self, byte *dest, int len)
 {
 	int halftone_delta = note - BASE_NOTE;
 	int oct_diff = ((halftone_delta + BASE_OCTAVE * 12) / 12) - BASE_OCTAVE;
 	int halftone_index = (halftone_delta + (12*100)) % 12 ;
 	int freq = (!note)? 0 : freq_table[halftone_index] / (1 << (-oct_diff));
+	gint16 *buf = (gint16 *) dest;
 
-	while (ticks--) {
-		int i;
-		for (i = 0; i < SAMPLE_BLOCK_SIZE; i++) {
-			if (note) {
-				freq_count += freq;
-				while (freq_count >= (FREQUENCY << 1))
-					freq_count -= (FREQUENCY << 1);
-
-				if (freq_count - freq < 0) {
-					/* Unclean rising edge */
-					int l = volume << 1;
-					sample_block[i] = -volume + (l*freq_count)/freq;
-				} else if (freq_count >= FREQUENCY
-					   && freq_count - freq < FREQUENCY) {
-					/* Unclean falling edge */
-					int l = volume << 1;
-					sample_block[i] = volume - (l*(freq_count - FREQUENCY))/freq;
-				} else {
-					if (freq_count < FREQUENCY)
-						sample_block[i] = volume;
-					else
-						sample_block[i] = -volume;
-				}
-			} else
-				sample_block[i] = 0;
-		}
-
-		sfx_audbuf_write(PCM_SW_CHANNEL(&sfx_sequencer_sw_pcspeaker, 0),
-				 (byte *) &(sample_block[0]), SAMPLE_BLOCK_SIZE);
-	}
-	return SFX_OK;
-}
-
-int
-sps_volume(guint8 new_volume)
-{
-	volume = new_volume << 7;
-	return SFX_OK;
-}
-
-int
-sps_reset_timer(GTimeVal ts)
-{
-	long secs, usecs;
 	int i;
+	for (i = 0; i < len; i++) {
+		if (note) {
+			freq_count += freq;
+			while (freq_count >= (FREQUENCY << 1))
+				freq_count -= (FREQUENCY << 1);
 
-	sci_gettime(&secs, &usecs);
+			if (freq_count - freq < 0) {
+				/* Unclean rising edge */
+				int l = volume << 1;
+				buf[i] = -volume + (l*freq_count)/freq;
+			} else if (freq_count >= FREQUENCY
+				   && freq_count - freq < FREQUENCY) {
+				/* Unclean falling edge */
+				int l = volume << 1;
+				buf[i] = volume - (l*(freq_count - FREQUENCY))/freq;
+			} else {
+				if (freq_count < FREQUENCY)
+					buf[i] = volume;
+				else
+					buf[i] = -volume;
+			}
+		} else
+			buf[i] = 0;
+	}
 
-	sfx_sw_sequencer_start_recording(&sfx_sequencer_sw_pcspeaker,
-					 ts);
-	/*n	sfx_audbuf_write_timestamp(PCM_SW_CHANNEL(&sfx_sequencer_sw_pcspeaker, 0),
-	  sfx_new_timestamp(secs, usecs, FREQUENCY));*/
-	return SFX_OK;
 }
 
-int
-sps_allstop(void)
+void
+sps_volume(sfx_softseq_t *self, int new_volume)
 {
-	note = 0;
-	return SFX_OK;
+	volume = new_volume << 4;
 }
 
-sfx_sequencer_t sfx_sequencer_sw_pcspeaker = {
-	"sw-pcspeaker",
-	"0.2",
-	SFX_DEVICE_NONE,
+
+sfx_softseq_t sfx_softseq_pcspeaker = {
+	"pc-speaker",
+	"0.3",
 	sps_set_option,
-	sps_open,
-	sps_close,
-	sps_event,
-	sps_delay,
-	sps_reset_timer,
-	sps_allstop,
+	sps_init,
+	sps_exit,
 	sps_volume,
+	sps_event,
+	sps_poll,
 	NULL,
 	SFX_SEQ_PATCHFILE_NONE,
 	0x20,  /* PC speaker channel only */
-	0,
+	0, /* No rhythm channel */
 	1, /* # of voices */
-	0,
-	NULL /* Initialised later */
+	{FREQUENCY, SFX_PCM_MONO, SFX_PCM_FORMAT_S16_NATIVE}
 };

@@ -26,21 +26,18 @@
 ***************************************************************************/
 
 #include <sfx_sequencer.h>
-
+#include <resource.h>
 
 #ifdef HAVE_SYS_SOUNDCARD_H
 extern sfx_sequencer_t sfx_sequencer_mt32;
 extern sfx_sequencer_t sfx_sequencer_oss_adlib;
 #endif
-extern sfx_sequencer_t sfx_sequencer_sw_pcspeaker;
-
 
 sfx_sequencer_t *sfx_sequencers[] = {
 #ifdef HAVE_SYS_SOUNDCARD_H
 	&sfx_sequencer_mt32,
 	&sfx_sequencer_oss_adlib,
 #endif
-	&sfx_sequencer_sw_pcspeaker,
 	NULL
 };
 

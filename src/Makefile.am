@@ -14,6 +14,7 @@ LDADD = engine/libsciengine.a gfx/libscigraphics.a \
 	sfx/device/libscisounddevice.a \
 	sfx/seq/libsciseq.a sfx/timer/libscitimer.a sfx/libscisoundlib.a \
 	sfx/pcm_device/libscipcm.a sfx/mixer/libscimixer.a \
+	sfx/softseq/libscisoftseq.a \
 	@ac_readline@ @ac_curses_libraries@ @ac_png_libraries@ -lm @SDL_LIBS@
 bin_PROGRAMS = freesci
 bin_SCRIPTS = sciv

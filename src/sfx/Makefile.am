@@ -1,4 +1,4 @@
-SUBDIRS = seq timer player device mixer pcm_device
+SUBDIRS = seq timer player device mixer pcm_device softseq
 INCLUDES = -I$(top_srcdir)/src/include
 noinst_LIBRARIES = libscisound.a libscisoundlib.a
 libscisound_a_SOURCES = iterator.c songlib.c core.c pcm-iterator.c

@@ -332,6 +332,7 @@ AC_CONFIG_FILES([Makefile    \
 	src/sfx/device/Makefile \
 	src/sfx/mixer/Makefile \
 	src/sfx/pcm_device/Makefile \
+	src/sfx/softseq/Makefile \
 	freesci.spec])
 
 AC_OUTPUT

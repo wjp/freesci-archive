@@ -29,7 +29,6 @@
 #include <sfx_core.h>
 #include <stdio.h>
 #include <sfx_device.h>
-#include <sfx_sw_sequencer.h>
 
 #define SFX_SEQ_PATCHFILE_NONE -1
 
@@ -126,9 +125,6 @@ typedef struct _sfx_sequencer {
 
 	int min_write_ahead_ms; /* Minimal write-ahead, in milliseconds */
 	/* Note that write-ahead is tuned automatically; this enforces a lower limit */
-
-	/* Optional data */
-	sfx_pcm_sw_seq_data_t *sw_seq_data; /* Software sequencer data-- NULL if unused */
 
 } sfx_sequencer_t;
 

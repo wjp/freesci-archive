@@ -366,8 +366,7 @@ sfx_sequencer_t sfx_sequencer_oss_adlib = {
 	0x04,		/* playflag */
 	0, 		/* do not play channel 9 */
 	ADLIB_VOICES,  /* Max polyphony */
-	0, /* Does not require any write-ahead by its own */
-	NULL
+	0 /* Does not require any write-ahead by its own */
 };
 
 #endif /* HAVE_SYS_SOUNDCARD_H */

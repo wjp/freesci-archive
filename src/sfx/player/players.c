@@ -28,8 +28,10 @@
 #include <sfx_player.h>
 
 extern sfx_player_t sfx_player_realtime;
+extern sfx_player_t sfx_player_polled;
 
 sfx_player_t *sfx_players[] = {
+	&sfx_player_polled,
 	&sfx_player_realtime,
 	NULL
 };
