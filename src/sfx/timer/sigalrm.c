@@ -53,8 +53,6 @@ sigalrm_set_option(char *name, char *value)
 static int
 sigalrm_init(void (*callback)(void *), void *data)
 {
-	struct itimerval itimer;
-
 	if (sig_callback) {
 		fprintf(stderr, "Error: Attempt to initialize sigalrm timer more than once\n");
 		return SFX_ERROR;
@@ -68,15 +66,24 @@ sigalrm_init(void (*callback)(void *), void *data)
 	sig_callback = callback;
 	sig_callback_data = data;
 
+	signal(SIGALRM, timer_handler);
+
+	return SFX_OK;
+}
+
+
+static int
+sigalrm_start()
+{
+	struct itimerval itimer;
+
 	itimer.it_value.tv_sec = 0;
 	itimer.it_value.tv_usec = 1000000/60;
 	itimer.it_interval = itimer.it_value;
 
-	signal(SIGALRM, timer_handler);
 	setitimer(ITIMER_REAL, &itimer, NULL);
-
 	return SFX_OK;
-}
+};
 
 static int
 sigalrm_stop()
@@ -105,6 +112,7 @@ sfx_timer_t sfx_timer_sigalrm = {
 	0,
 	&sigalrm_set_option,
 	&sigalrm_init,
+	&sigalrm_start,
 	&sigalrm_stop
 };
 

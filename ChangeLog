@@ -1,3 +1,10 @@
+2003-01-26  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sfx/player/realtime.c: Stop the timer when pausing
+
+	* src/include/sfx_timer.h: Separated timer initialization and
+	start to allow it to be stopped/resumed easily
+
 2003-01-18  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kernel.c: Changed the kernel signature for TextSize().

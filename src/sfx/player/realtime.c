@@ -155,7 +155,7 @@ rt_init(resource_mgr_t *resmgr)
 	}
 
 
-	if (timer->init(_rt_timer_callback, seq_res)) {
+	if (timer->init(_rt_timer_callback, seq_res) || timer->start()) {
 		fprintf(stderr, __FILE__": Timer failed to initialize\n");
 		seq->close();
 		return SFX_ERROR;
@@ -224,15 +224,14 @@ static int
 rt_pause()
 {
 	play_paused = 1;
-	seq->allstop();
-	return SFX_OK;
+	return (seq->allstop() || timer->stop());
 }
 
 static int
 rt_resume()
 {
 	play_paused = 0;
-	return SFX_OK;
+	return timer->start();
 }
 
 static int

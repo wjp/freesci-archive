@@ -52,6 +52,14 @@ typedef struct {
 	**                                   'data' must contain the next argument:
 	**             (void *) data: Must always be passed to the callback
 	** Returns   : (int) SFX_OK on success, SFX_ERROR on failure
+	** This does not start the timer yet, it just specifies and initializes it.
+	** This function is called exactly once (provided that the timer is used at all).
+	*/
+
+	int
+	(*start)();
+	/* Starts the timer
+	** Returns   : (int) SFX_OK on success, SFX_ERROR on failure
 	*/
 
 	int
