@@ -90,9 +90,9 @@ typedef struct {
 
   int flags;
   byte said[MENU_SAID_SPEC_SIZE]; /* Said spec for this item */
-  heap_ptr said_pos;
+  reg_t said_pos;
   char *text;
-  heap_ptr text_pos;
+  reg_t text_pos;
   int modifiers, key; /* Hotkey for this item */
   int enabled;
   int tag;
@@ -144,14 +144,14 @@ menubar_free(menubar_t *menubar);
 
 
 void
-menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entries, int font, byte *heapbase);
+menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entries, int font, reg_t entries_base);
 /* Adds a menu to the menubar.
 ** Parameters: (gfx_state_t *) state: The state the fonts are stored in
 **             (menubar_t *) menubar: The menubar to operate on
 **             (char *) title: The menu title
 **             (char *) entries: A string of menu entries
 **             (int) font: The font which is to be used for drawing
-**             (byte *) heapbase: Base address of the heap 'entries' is read from
+**             (reg_t) entries_base: Segmented VM address of the entries string
 ** Returns   : (void)
 ** The menu entries use the following special characters:
 ** '`' : Right justify the following part
@@ -167,7 +167,7 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 
 
 int
-menubar_set_attribute(struct _state *s, int menu, int item, int attribute, int value);
+menubar_set_attribute(struct _state *s, int menu, int item, int attribute, reg_t value);
 /* Sets the (currently unidentified) foo and bar values.
 ** Parameters: (state_t *) s: The current state
 **             (int) menu: The menu number to edit
@@ -178,7 +178,7 @@ menubar_set_attribute(struct _state *s, int menu, int item, int attribute, int v
 */
 
 
-int
+reg_t
 menubar_get_attribute(struct _state *s, int menu, int item, int attribute);
 /* Sets the (currently unidentified) foo and bar values.
 ** Parameters: (state_t *) s: The current state

@@ -106,7 +106,7 @@ menubar_free(menubar_t *menubar)
 
 int
 _menubar_add_menu_item(gfx_state_t *state, menu_t *menu, int type, char *left, char *right,
-		       int font, int key, int modifiers, int tag, heap_ptr text_pos)
+		       int font, int key, int modifiers, int tag, reg_t text_pos)
 /* Returns the total text size, plus MENU_BOX_CENTER_PADDING if (right != NULL) */
 {
 	menu_item_t *item;
@@ -155,15 +155,16 @@ _menubar_add_menu_item(gfx_state_t *state, menu_t *menu, int type, char *left, c
 }
 
 void
-menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entries, int font, byte *heapbase)
+menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entries, int font,
+		 reg_t entries_base)
 {
 	int i, add_freesci = 0;
 	menu_t *menu;
 	char tracker;
-	char *left = NULL, *right, *left_origin = NULL;
+	char *left = NULL, *right;
+	reg_t left_origin;
 	int string_len = 0;
 	int tag = 0, c_width, max_width = 0;
-	char *_heapbase = (char *) heapbase;
 	int height;
 
 	if (menubar->menus_nr == 0) {
@@ -183,6 +184,7 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 
 	do {
 		tracker = *entries++;
+		entries_base.offset++;
 
 		if (!left) { /* Left string not finished? */
 
@@ -195,6 +197,7 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 			if ((tracker == 0 && string_len > 0) || (tracker == '=') || (tracker == ':')) { /* End of entry */
 				int entrytype = MENU_TYPE_NORMAL;
 				char *inleft;
+				reg_t beginning;
 
 				if (!left)
 					left = sci_strndup(entries - string_len - 1, string_len);
@@ -212,8 +215,9 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 						left = NULL;
 					}
 
+				beginning = entries_base; beginning.offset -= string_len + 1;
 				c_width = _menubar_add_menu_item(state, menu, entrytype, left, NULL, font, 0, 0, tag,
-								 (heap_ptr)((entries - _heapbase) - string_len - 1));
+								 beginning);
 				if (c_width > max_width)
 					max_width = c_width;
 
@@ -223,7 +227,10 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 			} else if (tracker == '`') { /* Start of right string */
 
 				if (!left)
-					left = sci_strndup(left_origin = (entries - string_len - 1), string_len);
+				{
+					left_origin = entries_base; left_origin.offset -= string_len + 1;
+					left = sci_strndup(entries - string_len -1, string_len);
+				}
 				string_len = 0; /* Continue with the right string */
 
 			}
@@ -300,7 +307,7 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 					right[i] = 0; /* Cut off chars to the right */
 
 				c_width = _menubar_add_menu_item(state, menu, MENU_TYPE_NORMAL, left, right, font, key,
-								 modifiers, tag, (heap_ptr)(left_origin - _heapbase));
+								 modifiers, tag, left_origin);
 				tag = 0;
 				if (c_width > max_width)
 					max_width = c_width;
@@ -317,7 +324,7 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 	if (add_freesci) {
 
 		char *freesci_text = sci_strdup ("About FreeSCI");
-		c_width = _menubar_add_menu_item(state, menu, MENU_TYPE_NORMAL, freesci_text, NULL, font, 0, 0, 0, 0);
+		c_width = _menubar_add_menu_item(state, menu, MENU_TYPE_NORMAL, freesci_text, NULL, font, 0, 0, 0, NULL_REG);
 		if (c_width > max_width)
 			max_width = c_width;
 
@@ -344,7 +351,7 @@ menubar_match_key(menu_item_t *item, int message, int modifiers)
 }
 
 int
-menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int value)
+menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, reg_t value)
 {
 	menubar_t *menubar = s->menubar;
 	menu_item_t *item;
@@ -360,9 +367,9 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int v
 	switch (attribute) {
 
 	case MENU_ATTRIBUTE_SAID:
-		if (value) {
+		if (value.segment) {
 			item->said_pos = value;
-			memcpy(item->said, s->heap + value, MENU_SAID_SPEC_SIZE); /* Copy Said spec */
+			memcpy(item->said, kernel_dereference_bulk_pointer(s, value, 0), MENU_SAID_SPEC_SIZE); /* Copy Said spec */
 			item->flags |= MENU_ATTRIBUTE_FLAGS_SAID;
 
 		} else
@@ -372,8 +379,8 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int v
 
 	case MENU_ATTRIBUTE_TEXT:
 		free(item->text);
-		assert(value);
-		item->text = sci_strdup((char *) s->heap + value);
+		assert(value.segment);
+		item->text = sci_strdup(kernel_dereference_bulk_pointer(s, value, 0));
 		item->text_pos = value;
 		break;
 
@@ -381,12 +388,13 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int v
 		if (item->keytext)
 			free(item->keytext);
 
-		if (value) {
+		if (value.segment) {
 
-			item->key = value;
+			/* FIXME: What happens here if <value> is an extended key? Potential bug. LS */
+			item->key = value.offset;
 			item->modifiers = 0;
 			item->keytext = sci_malloc(2);
-			item->keytext[0] = value;
+			item->keytext[0] = value.offset;
 			item->keytext[1] = 0;
 			item->flags |= MENU_ATTRIBUTE_FLAGS_KEY;
 			if ((item->key >= 'A') && (item->key <= 'Z'))
@@ -402,11 +410,11 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int v
 		break;
 
 	case MENU_ATTRIBUTE_ENABLED:
-		item->enabled = value;
+		item->enabled = value.offset;
 		break;
 
 	case MENU_ATTRIBUTE_TAG:
-		item->tag = value;
+		item->tag = value.offset;
 		break;
 
 	default:
@@ -418,17 +426,17 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int v
 	return 0;
 }
 
-int
+reg_t
 menubar_get_attribute(state_t *s, int menu_nr, int item_nr, int attribute)
 {
 	menubar_t *menubar = s->menubar;
 	menu_item_t *item;
 
 	if ((menu_nr < 0) || (item_nr < 0))
-		return -1;
+		return make_reg(0, -1);
 
 	if ((menu_nr >= menubar->menus_nr) || (item_nr >= menubar->menus[menu_nr].items_nr))
-		return -1;
+		return make_reg(0, -1);
 
 	item = menubar->menus[menu_nr].items + item_nr;
 
@@ -440,18 +448,18 @@ menubar_get_attribute(state_t *s, int menu_nr, int item_nr, int attribute)
 		return item->text_pos;
 
 	case MENU_ATTRIBUTE_KEY:
-		return item->key;
+		return make_reg(0, item->key);
 
 	case MENU_ATTRIBUTE_ENABLED:
-		return item->enabled;
+		return make_reg(0, item->enabled);
 
 	case MENU_ATTRIBUTE_TAG:
-		return item->tag;
+		return make_reg(0, item->tag);
 
 	default:
 		sciprintf("Attempt to read invalid attribute from menu %d, item %d: 0x%04x\n",
 			  menu_nr, item_nr, attribute);
-		return -1;
+		return make_reg(0, -1);
 	}
 }
 

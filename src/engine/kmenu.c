@@ -30,32 +30,38 @@
 #include <sci_widgets.h>
 
 
-void
-kAddMenu(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kAddMenu(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	menubar_add_menu(s->gfx_state, s->menubar, (char *) (s->heap + UPARAM(0)),
-			 (char *) (s->heap + UPARAM(1)), s->titlebar_port->font_nr, s->heap);
+	char *name = kernel_dereference_bulk_pointer(s, argv[0], 0);
+	char *contents = kernel_dereference_bulk_pointer(s, argv[1], 0);
+
+	menubar_add_menu(s->gfx_state, s->menubar, name,
+			 contents, s->titlebar_port->font_nr, argv[1]);
+
+	return s->r_acc;
+
 }
 
 
-void
-kSetMenu(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kSetMenu(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int index = UPARAM(0);
+	int index = UKPV(0);
 	int i = 2;
 
 	while (i < argc) {
-		menubar_set_attribute(s, (index >> 8) - 1, (index & 0xff) - 1, PARAM(i - 1), UPARAM(i));
+		menubar_set_attribute(s, (index >> 8) - 1, (index & 0xff) - 1, UKPV(i - 1), argv[i]);
 		i += 2;
 	}
 }
 
-void
-kGetMenu(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kGetMenu(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int index = UPARAM(0);
+	int index = UKPV(0);
 
-	s->acc = menubar_get_attribute(s, (index >> 8) - 1, (index & 0xff) - 1, PARAM(1));
+	return menubar_get_attribute(s, (index >> 8) - 1, (index & 0xff) - 1, UKPV(1));
 }
 
 
@@ -88,17 +94,19 @@ kDrawStatus(state_t *s, int funct_nr, int argc, reg_t *argv)
 }
 
 
-void
-kDrawMenuBar(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kDrawMenuBar(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 
-	if (PARAM(0))
+	if (SKPV(0))
 		sciw_set_menubar(s, s->titlebar_port, s->menubar, -1);
 	else
 		sciw_set_status_bar(s, s->titlebar_port, NULL, 0, 0);
 
 	s->titlebar_port->draw(GFXW(s->titlebar_port), gfx_point(0, 0));
 	gfxop_update(s->gfx_state);
+
+	return s->r_acc;
 }
 
 
@@ -263,14 +271,15 @@ _menu_go_down(state_t *s, int menu_nr, int item_nr)
   gfxop_update(s->gfx_state);
 
 
-void
-kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kMenuSelect(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr event = UPARAM(0);
+	reg_t event = argv[0];
+	int pause_sound = UKPV_OR_ALT(1, 1); /* FIXME: Do this eventually */
 	int claimed = 0;
-	int type = GET_SELECTOR(event, type);
-	int message = GET_SELECTOR(event, message);
-	int modifiers = GET_SELECTOR(event, modifiers);
+	int type = GET_SEL32V(event, type);
+	int message = GET_SEL32V(event, message);
+	int modifiers = GET_SEL32V(event, modifiers);
 	int menu_nr = -1, item_nr;
 	menu_item_t *item;
 	int menu_mode = 0; /* Menu is active */
@@ -463,19 +472,19 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 
 	if (claimed) {
-		PUT_SELECTOR(event, claimed, 1);
+		PUT_SEL32(event, claimed, make_reg(0, 1));
 
 		if (menu_nr > -1) {
-			s->acc = ((menu_nr + 1) << 8) | (item_nr + 1);
+			s->r_acc = make_reg(0, ((menu_nr + 1) << 8) | (item_nr + 1));
 #ifdef MENU_FREESCI_BLATANT_PLUG
 			if (s->menubar->menus[menu_nr].items[item_nr].flags == MENU_FREESCI_BLATANT_PLUG)
 				about_freesci(s);
 #endif
 
 		} else
-			s->acc = 0;
+			s->r_acc = NULL_REG;
 
 		SCIkdebug(SCIkMENU, "Menu: Claim -> %04x\n", s->acc);
 	}
-	else s->acc = 0x0; /* Not claimed */
+	else s->r_acc = NULL_REG; /* Not claimed */
 }

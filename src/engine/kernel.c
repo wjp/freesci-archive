@@ -54,10 +54,6 @@ void kGetPort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetPort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kNewWindow(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDisposeWindow(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kDrawStatus(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kDrawMenuBar(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kAddMenu(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kSetMenu(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kCelWide(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kCelHigh(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetTime(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -99,8 +95,6 @@ void kDeviceInfo_Unix(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kRestartGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetSynonyms(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetEvent(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kGetMenu(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kMenuSelect(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kCheckFreeSpace(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kFlushResources(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetSaveFiles(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -139,6 +133,12 @@ reg_t kDisplay(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kGraph(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kFormat(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kDoSound(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kAddMenu(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kSetMenu(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kGetMenu(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kDrawStatus(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kDrawMenuBar(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kMenuSelect(struct _state *s, int funct_nr, int argc, reg_t *argv);
 
 reg_t kLoad(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kUnLoad(struct _state *s, int funct_nr, int argc, reg_t *argv);
@@ -211,9 +211,9 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*1d*/	{KF_OLD, "GlobalToLocal", {old:kGlobalToLocal}},
 /*1e*/	{KF_OLD, "LocalToGlobal", {old:kLocalToGlobal}},
 /*1f*/	{KF_OLD, "MapKeyToDir", {old:kMapKeyToDir}},
-/*20*/	{KF_OLD, "DrawMenuBar", {old:kDrawMenuBar}},
-/*21*/	{KF_OLD, "MenuSelect", {old:kMenuSelect}},
-/*22*/	{KF_OLD, "AddMenu", {old:kAddMenu}},
+/*20*/	{KF_NEW, "DrawMenuBar", {new:{kDrawMenuBar, "i"}}},
+/*21*/	{KF_NEW, "MenuSelect", {new:{kMenuSelect, "oi*"}}},
+/*22*/	{KF_NEW, "AddMenu", {new:{kAddMenu, "rr"}}},
 /*23*/	{KF_NEW, "DrawStatus", {new:{kDrawStatus, "Zri*"}}},
 /*24*/	{KF_NEW, "Parse", {new:{kParse, "ro"}}},
 /*25*/	{KF_NEW, "Said", {new:{kSaid, "Zr"}}},
@@ -274,8 +274,8 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*5c*/	{KF_NEW, "MemoryInfo", {new:{kMemoryInfo, "i"}}},
 /*5d*/	{KF_NONE, "StackUsage"},
 /*5e*/	{KF_NONE, "Profiler"},
-/*5f*/	{KF_OLD, "GetMenu", {old:kGetMenu}},
-/*60*/	{KF_OLD, "SetMenu", {old:kSetMenu}},
+/*5f*/	{KF_NEW, "GetMenu", {new:{kGetMenu, "i."}}},
+/*60*/	{KF_NEW, "SetMenu", {new:{kSetMenu, "i.*"}}},
 /*61*/	{KF_OLD, "GetSaveFiles", {old:kGetSaveFiles}},
 /*62*/	{KF_OLD, "GetCWD", {old:kGetCWD}},
 /*63*/	{KF_OLD, "CheckFreeSpace", {old:kCheckFreeSpace}},
