@@ -786,18 +786,22 @@ inline abs_rect_t
 set_base(struct _state *s, heap_ptr object);
 
 inline abs_rect_t
-get_nsrect(struct _state *s, heap_ptr object);
-
-inline abs_rect_t
-nsrect_clip(struct _state *s, abs_rect_t rect, int priority);
+get_nsrect(struct _state *s, heap_ptr object, byte clip);
 
 
 static inline int
 collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int funct_nr, int argc, heap_ptr argp)
 {
 	int other_signal = UGET_SELECTOR(other_obj, signal);
-	abs_rect_t other_area = nsrect_clip(s, get_nsrect(s, other_obj),
-					    UGET_SELECTOR(other_obj, priority));
+#ifdef FALSE
+	abs_rect_t other_area = get_nsrect(s, other_obj, 1);
+#else
+	abs_rect_t other_area;
+	other_area.x = UGET_SELECTOR(other_obj, nsLeft);
+	other_area.xend = UGET_SELECTOR(other_obj, nsRight);
+	other_area.y = UGET_SELECTOR(other_obj, nsTop);
+	other_area.yend = UGET_SELECTOR(other_obj, nsBottom);
+#endif
 
 	SCIkdebug(SCIkBRESEN, "OtherSignal=%04x, z=%04x obj=%04x\n", other_signal,
 		  (other_signal & GASEOUS_VIEW_MASK), other_obj);
@@ -835,8 +839,6 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	rect_t zone = gfx_rect(abs_zone.x + port->zone.x, abs_zone.y + port->zone.y,
 			       abs_zone.xend - abs_zone.x, abs_zone.yend - abs_zone.y);
 	word edgehit;
-
-	abs_zone = nsrect_clip(s, get_nsrect(s, obj), priority);
 
 	signal = UGET_SELECTOR(obj, signal);
 	SCIkdebug(SCIkBRESEN,"Checking collision: (%d,%d) to (%d,%d) ([%d..%d]x[%d..%d]), obj=%04x, sig=%04x, cliplist=%04x\n",
@@ -1009,7 +1011,7 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	s->acc = gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart, ystart + 10, xlen, ylen), map);
 
-	/* Apparently invalid
+	/* Apparently invalid */ /*
 	if (s->dyn_views) {
 		gfxw_dyn_view_t *view = (gfxw_dyn_view_t *) s->dyn_views->contents;
 		abs_rect_t rect;
@@ -1023,12 +1025,13 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			if (collides_with(s, rect, view->ID, funct_nr, argc, argp)) {
 				sciprintf("  (%d,%d,%d,%d) collides with obj at %04x\n",
 					  rect.x, rect.y, rect.xend, rect.yend, view->ID);
+
 				s->acc |= 0x8000;
 			} else
 				view = (gfxw_dyn_view_t *) view->next;
 		
 	}
-	*/
+				 */
 
 	/*  { */
 /*  		int x, y; */
@@ -1129,10 +1132,6 @@ set_base(state_t *s, heap_ptr object)
 	int xmod = 0, ymod = 0;
 	abs_rect_t retval;
 
-	if (lookup_selector(s, object, s->selector_map.brLeft, NULL)
-	    != SELECTOR_VARIABLE) 
-		return; /* non-fatal */
-
 	x = GET_SELECTOR(object, x);
 	original_y = y = GET_SELECTOR(object, y);
 
@@ -1160,7 +1159,7 @@ set_base(state_t *s, heap_ptr object)
 		ymod = offset.y;
 	}
 
-	xbase = x - xmod - (xsize >> 2);
+	xbase = x - xmod - (xsize >> 1);
 	xend = xbase + xsize;
 	yend = y /*- ymod*/ + 1;
 	ybase = yend - ystep;
@@ -1182,6 +1181,10 @@ _k_base_setter(state_t *s, heap_ptr object)
 {
 	abs_rect_t absrect = set_base(s, object);
 
+	if (lookup_selector(s, object, s->selector_map.brLeft, NULL)
+	    != SELECTOR_VARIABLE) 
+		return; /* non-fatal */
+
 	PUT_SELECTOR(object, brLeft, absrect.x);
 	PUT_SELECTOR(object, brRight, absrect.xend);
 	PUT_SELECTOR(object, brTop, absrect.y);
@@ -1202,7 +1205,7 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
 inline abs_rect_t
-get_nsrect(state_t *s, heap_ptr object)
+get_nsrect(state_t *s, heap_ptr object, byte clip)
 {
 	int x, y, z;
 	int xbase, ybase, xend, yend, xsize, ysize;
@@ -1210,9 +1213,6 @@ get_nsrect(state_t *s, heap_ptr object)
 	int xmod = 0, ymod = 0;
 	abs_rect_t retval = {0,0,0,0};
 
-	if (lookup_selector(s, object, s->selector_map.nsTop, NULL)
-	    != SELECTOR_VARIABLE) { return retval; } /* This isn't fatal */
-      
 	x = GET_SELECTOR(object, x);
 	y = GET_SELECTOR(object, y);
 
@@ -1249,13 +1249,29 @@ get_nsrect(state_t *s, heap_ptr object)
 	retval.xend = xend;
 	retval.yend = yend;
 
+	if (clip) {
+		int priority = GET_SELECTOR(object, priority);
+		int pri_top;
+
+		if (priority == -1)
+			priority = VIEW_PRIORITY(y);
+
+		pri_top = PRIORITY_BAND_FIRST(priority);
+
+		if (retval.y < pri_top)
+			retval.y = pri_top;
+
+		if (retval.yend < retval.y)
+			retval.y = retval.yend - 1;
+	}
+
 	return retval;
 }
 
 static void
 _k_set_now_seen(state_t *s, heap_ptr object)
 {
-	abs_rect_t absrect = get_nsrect(s, object);
+	abs_rect_t absrect = get_nsrect(s, object, 0);
 
 	if (lookup_selector(s, object, s->selector_map.nsTop, NULL)
 	    != SELECTOR_VARIABLE) { return; } /* This isn't fatal */
@@ -1277,22 +1293,6 @@ kSetNowSeen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	_k_set_now_seen(s, object);
 
 } /* kSetNowSeen */
-
-
-inline
-abs_rect_t nsrect_clip(state_t *s, abs_rect_t rect, int priority)
-{
-	int pri_top = PRIORITY_BAND_FIRST(priority);
-
-	if (rect.y < pri_top)
-		rect.y = pri_top;
-
-	if (rect.yend < rect.y)
-		rect.y = rect.yend - 1;
-
-	return rect;
-}
-
 
 
 
@@ -1585,7 +1585,7 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, i
 
 	if (has_nsrect) {
 		int obj = view->ID;
-		abs_zone = nsrect_clip(s, get_nsrect(s, obj), priority);
+		abs_zone = get_nsrect(s, obj, 1);
 
 	} else if (!base_set) {
 		int width, height;
@@ -1599,7 +1599,7 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, i
 		abs_zone.yend = view->pos.y + offset.y + 1;
 		abs_zone.y = abs_zone.yend - height;
 	} else {
-		abs_zone = nsrect_clip(s, get_nsrect(s, view->ID), priority);
+		abs_zone = get_nsrect(s, view->ID, 1);
 	}
 
 	if (!(view->signalp && (GET_HEAP(view->signalp) & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {

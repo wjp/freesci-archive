@@ -299,7 +299,9 @@ debug_mode[[:blank:]]*"="[::blank:]]*.+  {
 	strcpy (conf[cur_section].debug_mode, yytext);
 }
 
-[[:alnum:]]+"."[[:alnum:]]+[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
+
+[[:alnum:]]+"."[[:alnum:]_]+[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
+/* gfx driver parameters */
         char *p=yytext;
         char *p2;
 

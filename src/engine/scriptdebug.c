@@ -1708,11 +1708,16 @@ viewobjinfo(state_t *s, heap_ptr pos)
 	int lsLeft, lsRight, lsBottom, lsTop;
 	int brLeft, brRight, brBottom, brTop;
 	int i;
+	int have_rects = 0;
 	abs_rect_t nsrect, nsrect_clipped, brrect;
 
-	GETRECT(nsLeft, nsRight, nsBottom, nsTop);
-	GETRECT(lsLeft, lsRight, lsBottom, lsTop);
-	GETRECT(brLeft, brRight, brBottom, brTop);
+	if (lookup_selector(s, pos, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE) {
+		GETRECT(nsLeft, nsRight, nsBottom, nsTop);
+		GETRECT(lsLeft, lsRight, lsBottom, lsTop);
+		GETRECT(brLeft, brRight, brBottom, brTop);
+		have_rects = 1;
+	}
+
 	GETRECT(view, loop, signal, cel);
 
 	sciprintf("\n-- View information:\ncel %d/%d/%d at ", view, loop, cel);
@@ -1731,12 +1736,14 @@ viewobjinfo(state_t *s, heap_ptr pos)
 		sciprintf("Priority = %d (band starts at %d)\n\n",
 			  priority, PRIORITY_BAND_FIRST(priority));
 
-	sciprintf("nsRect: [%d..%d]x[%d..%d]\n", nsLeft, nsRight, nsTop, nsBottom);
-	sciprintf("lsRect: [%d..%d]x[%d..%d]\n", lsLeft, lsRight, lsTop, lsBottom);
-	sciprintf("brRect: [%d..%d]x[%d..%d]\n", brLeft, brRight, brTop, brBottom);
+	if (have_rects) {
+		sciprintf("nsRect: [%d..%d]x[%d..%d]\n", nsLeft, nsRight, nsTop, nsBottom);
+		sciprintf("lsRect: [%d..%d]x[%d..%d]\n", lsLeft, lsRight, lsTop, lsBottom);
+		sciprintf("brRect: [%d..%d]x[%d..%d]\n", brLeft, brRight, brTop, brBottom);
+	}
 
-	nsrect = get_nsrect(s, pos);
-	nsrect_clipped = nsrect_clip(s, nsrect, priority);
+	nsrect = get_nsrect(s, pos, 0);
+	nsrect_clipped = get_nsrect(s, pos, 1);
 	brrect = set_base(s, pos);
 	sciprintf("new nsRect: [%d..%d]x[%d..%d]\n", nsrect.x, nsrect.xend,
 		  nsrect.y, nsrect.yend);
@@ -1861,13 +1868,13 @@ objinfo(state_t *s, heap_ptr pos)
 		} /* if function selectors are present */
 	}
 	is_view =
-		(lookup_selector(s, pos, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE)
+		(lookup_selector(s, pos, s->selector_map.x, NULL) == SELECTOR_VARIABLE)
 		&&
-		(lookup_selector(s, pos, s->selector_map.lsBottom, NULL) == SELECTOR_VARIABLE)
+		(lookup_selector(s, pos, s->selector_map.y, NULL) == SELECTOR_VARIABLE)
 		&&
-		(lookup_selector(s, pos, s->selector_map.brBottom, NULL) == SELECTOR_VARIABLE)
+		(lookup_selector(s, pos, s->selector_map.signal, NULL) == SELECTOR_VARIABLE)
 		&&
-		(lookup_selector(s, pos, s->selector_map.signal, NULL) == SELECTOR_VARIABLE);
+		(lookup_selector(s, pos, s->selector_map.cel, NULL) == SELECTOR_VARIABLE);
 
 	if (is_view)
 		viewobjinfo(s, pos);

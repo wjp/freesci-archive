@@ -1,5 +1,13 @@
 2001-03-17  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/kgraphics.c (collides_with): Now reads nsrect directly
+	from object
+
+	* src/gfx/drivers/ggi_driver.c:
+	* src/gfx/drivers/xlib_driver.c: Added driver-specific config options
+	to swap CapsLock and the left Ctrl key (common setup on Sun keyboards,
+	and the configuration I personally prefer)
+
 	* src/engine/scriptdebug.c (viewobjinfo): Improved objinfo output
 
 	* src/engine/kgraphics.c (kEditControl): Fixed cursor keys, ALT keys,

@@ -45,6 +45,8 @@
 #define SCI_XLIB_PIXMAP_HANDLE_NORMAL 0
 #define SCI_XLIB_PIXMAP_HANDLE_GRABBED 1
 
+#define SCI_XLIB_SWAP_CTRL_CAPS (1 << 0)
+
 struct _xlib_state {
 	Display *display;
 	Window window;
@@ -60,6 +62,7 @@ struct _xlib_state {
 	void *old_error_handler;
 	Cursor mouse_cursor;
 	byte *pointer_data[2];
+	int flags;
         int used_bytespp; /* bytes actually used to display stuff, rather than bytes occupied in data space */
 };
 
@@ -163,10 +166,30 @@ xlib_error_handler(Display *display, XErrorEvent *error)
 	return 0;
 }
 
+static int
+string_truep(char *value)
+{
+	return (strcmp(value, "ok") ||
+		strcmp(value, "1") ||
+		strcmp(value, "true") ||
+		strcmp(value, "yes") ||
+		strcmp(value, "on"));
+}
 
 static int
 xlib_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 {
+	if (strcmp(attribute, "swap_ctrl_caps") ||
+	    strcmp(attribute, "swap_caps_ctrl")) {
+		if (string_truep(value))
+			S->flags |= SCI_XLIB_SWAP_CTRL_CAPS;
+		else
+			S->flags &= ~SCI_XLIB_SWAP_CTRL_CAPS;
+
+		return GFX_OK;
+	}
+
+
 	ERROR("Attempt to set xlib parameter \"%s\" to \"%s\"\n", attribute, value);
 	return GFX_ERROR;
 }
@@ -208,6 +231,8 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	if (!S)
 		S = malloc(sizeof(struct _xlib_state));
+
+	S->flags = 0;
 
 	if (xfact < 1 || yfact < 1 || bytespp < 1 || bytespp > 4) {
 		ERROR("Internal error: Attempt to open window w/ scale factors (%d,%d) and bpp=%d!\n",
@@ -899,6 +924,13 @@ x_map_key(gfx_driver_t *drv, int keycode)
 		return xkey;
 	if ((xkey >= '0') && (xkey <= '9'))
 		return xkey;
+
+	if (S->flags & SCI_XLIB_SWAP_CTRL_CAPS) {
+		switch (xkey) {
+		case XK_Control_L: xkey = XK_Caps_Lock; break;
+		case XK_Caps_Lock: xkey = XK_Control_L; break;
+		}
+	}
 
 	switch (xkey) {
 	case XK_BackSpace: return SCI_K_BACKSPACE;

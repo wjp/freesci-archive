@@ -289,21 +289,14 @@ set_base(struct _state *s, heap_ptr object);
 */
 
 abs_rect_t
-get_nsrect(struct _state *s, heap_ptr object);
+get_nsrect(struct _state *s, heap_ptr object, byte clip);
 /* Determines the now-seen rectangle of a view object
 ** Parameters: (state_t *) s: The state to use
 **             (heap_ptr) object: The object to check
+**             (byte) clip: Flag to determine wheter priority band
+**                          clipping should be performed
 ** Returns   : (abs_rect) The absolute rectangle describing the
 ** now-seen area.
-*/
-
-abs_rect_t
-nsrect_clip(struct _state *s, abs_rect_t rect, int priority);
-/* Clips a now-seen rectangle against a priority band
-** Parameters: (state_t *) s: The state to use
-**             (abs_rect_t) rect: The nsrect to clip
-**             (int) priority: The priority band to clip against
-** Returns   : (abs_rect_t) The clipped rectangle
 */
 
 void
