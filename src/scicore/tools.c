@@ -214,7 +214,7 @@ sci_gettime(long *seconds, long *useconds)
 	struct timeval tv;
 
 	assert(!gettimeofday(&tv, NULL));
-	*seconds = time(NULL);
+	*seconds = tv.tv_sec;
 	*useconds = tv.tv_usec;
 }
 #elif defined (_MSC_VER)
