@@ -90,8 +90,14 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
 	  case GIIK_Insert: s->buckybits^=SCI_EVM_INSERT; break;
 	  case GIIK_Enter: retval.data='\r'; break;
 	  case GIIUC_Tab: retval.data='\t'; break;
-	  case GIIK_Left: retval.data=75;
-	  case GIIK_Right: retval.data=77;
+	  case GIIK_Left: retval.data=SCI_K_LEFT;; break;
+	  case GIIK_Right: retval.data=SCI_K_RIGHT; break;
+	  case GIIK_Up: retval.data=SCI_K_UP; break;
+	  case GIIK_Down: retval.data=SCI_K_DOWN; break;
+	  case GIIK_Home: retval.data=SCI_K_HOME; break;
+	  case GIIK_End: retval.data=SCI_K_END; break;
+	  case GIIK_PageUp: retval.data=SCI_K_PGUP; break;
+	  case GIIK_PageDown: retval.data=SCI_K_PGDOWN; break;
 	    /*FIXME: Add all special keys in a sane way*/
 	  default:
 	    {
