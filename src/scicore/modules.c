@@ -25,6 +25,8 @@
 
 ***************************************************************************/
 
+#ifndef __BEOS__
+
 #include <sci_memory.h>
 #include <modules.h>
 #include <dlfcn.h>
@@ -145,4 +147,5 @@ sci_close_module(void *module, char *type, char *name)
 	}
 }
 
+#endif /* !__BEOS__ */
 

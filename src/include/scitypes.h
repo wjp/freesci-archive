@@ -41,6 +41,10 @@
 #  define TYPE_32 int
 #endif
 
+#if defined(__BEOS__)
+#  define TYPE_16 short
+#  define TYPE_32 int
+#endif
 
 #ifndef TYPE_8
 #  define TYPE_8 char /* Guaranteed by ISO */

@@ -399,6 +399,7 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int v
 			item->flags &= ~MENU_ATTRIBUTE_KEY;
 
 		}
+		break;
 
 	case MENU_ATTRIBUTE_ENABLED:
 		item->enabled = value;

@@ -18,9 +18,13 @@ AC_CHECK_HEADERS(unistd.h)
 AC_CHECK_HEADERS(fnmatch.h)
 AC_CHECK_HEADERS(getopt.h)
 AC_C_INLINE
-AC_CHECK_SIZEOF(short)
-AC_CHECK_SIZEOF(int)
-AC_CHECK_SIZEOF(long)
+
+if test "$cross_compiling" != "yes"; then
+  AC_CHECK_SIZEOF(short)
+  AC_CHECK_SIZEOF(int)
+  AC_CHECK_SIZEOF(long)
+fi
+
 AC_CHECK_FUNCS(pipe socketpair fork sched_yield memfrob ffs getopt_long isblank usleep)
 AM_PATH_ALSA(0.5.0, [AC_DEFINE(HAVE_ALSA)], [echo >/dev/null])
 AM_WITHOUT_SOUND

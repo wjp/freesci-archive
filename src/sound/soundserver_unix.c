@@ -62,7 +62,7 @@ static int x_fd_events = 0, x_fd_debug = 0;
 static pid_t ppid;
 
 
-#ifdef HAVE_FORK
+#ifdef HAVE_SYSV_IPC
 
 static int
 verify_pid(int pid) /* Checks if the specified PID is in use */

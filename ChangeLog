@@ -1,3 +1,7 @@
+2001-09-23  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* Applied Win32 patch from Claudio Matsuoka
+
 2001-09-22  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/drivers/sdl_driver.c (sdl_create_cursor_data): SDL pointer

@@ -58,6 +58,12 @@
 #  endif
 #endif
 
+#if defined(HAVE_FORK) && !defined(__BEOS__)
+#  define HAVE_SYSV_IPC
+#else
+#  undef HAVE_SYSV_IPC
+#endif
+
 #ifdef __DECC
 #  include <c_asm.h>
 #endif

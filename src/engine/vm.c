@@ -31,7 +31,7 @@
 #include <versions.h>
 #include <kdebug.h>
 
-#ifndef _WIN32
+#if !defined (_WIN32) && !defined (__BEOS__)
 #include <sys/resource.h>
 #endif
 

@@ -43,7 +43,7 @@
 #endif /* _WIN32 */
 #endif /* !HAVE_UNISTD_H */
 
-#ifdef HAVE_FORK
+#if defined HAVE_SYSV_IPC
 extern sound_server_t sound_server_unix;
 #endif
 
