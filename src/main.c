@@ -517,7 +517,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			break;
 
 		case 'c':
-			cl_options->color_depth = (atoi(optarg) +4) >> 3;
+			cl_options->color_depth = atoi(optarg);
 			break;
 
 		case 'm':
@@ -731,7 +731,7 @@ init_gfx(config_entry_t *conf, cl_options_t *cl_options, gfx_driver_t *driver, r
 			scale_y = conf->y_scale;
 
 		if (conf->color_depth)
-			color_depth = conf->color_depth >> 3; /* In there it's bpp */
+			color_depth = conf->color_depth; /* In there it's bpp */
 	}
 
 	gfx_state->driver = driver;
@@ -755,8 +755,15 @@ init_gfx(config_entry_t *conf, cl_options_t *cl_options, gfx_driver_t *driver, r
 	if (cl_options->color_depth > 0)
 		color_depth = cl_options->color_depth;
 
-	if (cl_options->color_depth > 0 && scale_x == 0)
+	if (color_depth > 0 && scale_x == 0)
 		scale_x = scale_y = 2; /* Some default setting */
+
+	fprintf(stderr, "cd-conf=%d, cd-cl=%d, cd=%d\n",
+		conf->color_depth, cl_options->color_depth, color_depth);
+
+	/* Convert to bytespp */
+	color_depth = (color_depth + 7) >> 3;
+	fprintf(stderr, "Checking byte depth %d\n", color_depth);
 
 	if (scale_x > 0) {
 

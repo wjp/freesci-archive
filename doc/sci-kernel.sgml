@@ -2295,7 +2295,7 @@ kfunct 0x52: OnControl
 <sect3><Title/Kernel function 0x54: DoBresen()/
 	<funcsynopsis><funcprototype><funcdef>
 		kfunct 0x55: DoBresen
-	</funcdef><paramdef></paramdef></funcprototype></funcsynopsis>
+	</funcdef><paramdef>HeapPtr mover</paramdef></funcprototype></funcsynopsis>
 	<para>
 		Returns: <type>(void)</type>
 	</para>
@@ -2303,7 +2303,8 @@ kfunct 0x52: OnControl
 		Executes the Bresenham algorithm on the values calculated by
 		InitBresen, and counts down the number of steps. It then
 		invokes CanBeHere() on the resulting coordinates, and sets
-		the new coordinates if it actually Can Be There.
+		the new coordinates if it actually Can Be There. Furthermore,
+it increases mover::b-movCnt, resetting it to 0 whenever it exceeds (is greater than) mover::client::moveSpeed afterwards.
 	</para></sect3>
 
 

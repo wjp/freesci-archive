@@ -1,4 +1,4 @@
-TODO for 0.3.4:
+TODO for 0.3.5:
 
 Primary goals:
 	* update calle, callk docs
@@ -20,5 +20,5 @@ Bonus goals:
 
 
 *: Normal goal
-+: If not met for 0.3.3, the goal will rise up one class
++: If not met for that release, the goal will rise up one class
 

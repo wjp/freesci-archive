@@ -338,6 +338,7 @@ int sound_sdl_command(state_t *s, unsigned int command, unsigned int handle,
   case SOUND_COMMAND_INIT_HANDLE: {
     resource_t *song_resource;
     song_t *modsong; 
+    byte *song_copy;
     
 #ifdef DEBUG_SOUND_SERVER
     fprintf(debug_stream, "Initialising song handle %04x: ", handle);
@@ -382,9 +383,12 @@ int sound_sdl_command(state_t *s, unsigned int command, unsigned int handle,
     }
     
     /* create a new song */
-    modsong = song_new(handle, song_resource->data, song_resource->size, value);
-    /* keep track of the resnum, so we can unlock it later */
-    modsong->shared = value;
+    song_copy = malloc(song_resource->size);
+    memcpy(song_copy, song_resource->data, song_resource->size);
+    modsong = song_new(handle, song_copy, song_resource->size, value);
+
+    /* Now unlock the resource, since we have a copy again */
+    scir_unlock_resource(s->resmgr, song_resource, sci_sound, value);
 
     /* If the hardware wants it, enable the rhythm channel */
     if (midi_playrhythm) 

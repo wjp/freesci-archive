@@ -1,3 +1,23 @@
+2002-12-31  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/resource_patch.c (sci0_read_resource_patches): Correctly
+	initialized alt_sources pointer
+
+	* src/main.c (init_gfx): Setting color depth in config file will
+	work even if scaling factors are not specified.
+
+	* src/sound/thread_ss_sdl.c (sound_sdl_command): Song initialization
+	now dups the memory block rather than relying on sharing. Still un-
+	fortunate that 
+
+2002-12-30  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/resource_patch.c (sci0_read_resource_patches): Initialize
+	altsource pointer correctly
+
+	* src/sound/thread_ss_sdl.c (sound_sdl_command): Make copy of song
+	data instead of using locked song resource
+
 2002-12-29  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/config.l: Increased alpha threshold (backport from glutton)

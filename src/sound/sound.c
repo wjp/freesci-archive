@@ -489,7 +489,7 @@ song_lib_remove(songlib_t songlib, word handle, resource_mgr_t *resmgr)
 		scir_unlock_resource(resmgr, 
 				     scir_find_resource(resmgr, sci_sound,
 							goner->shared, 0),
-				     goner->shared, sci_sound);
+				     sci_sound, goner->shared);
 
 	goner->data = NULL;
 	free(goner);

@@ -124,6 +124,7 @@ sci0_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 						newrsc->type = restype;
 						newrsc->file = SCI_RESOURCE_FILE_PATCH;
 						newrsc->file_offset = 2;
+						newrsc->alt_sources = NULL;
 
 #ifdef SATISFY_PURIFY
 						memset(newrsc->data, 0, newrsc->size);
