@@ -1,5 +1,18 @@
 TODO for 0.3.1:
 
-- Re-structure the graphics subsystem for performance
 - Implement sound servers that actually make some sound
 - Merge Magnus' Python class browser into the main tree
+
+GFX subsystem:
+
+- pic_0.c: Fix artifact removal to check surrounding pixels for occurences of
+	white before removing a white pixel
+- pic_0.c: Add SCI1 support (priority palettes and embedded views)
+- pal_1.c: Fix palettes not to compress colors (doing this is pointless and wrong)
+- operations.c: Remove the scroll offset (it's obsolete now)
+- operations.c: Add full support for state->visible_map
+- operations.c and operations.h: Add support for OnControl()
+- resmgr.c: Remove allocated picviews (all views requested in between get-pic and the
+	first update, but not re-requested during the second series of requests)
+- widgets.c: Add correct support for widget->ID variables during gfxw_add(), using
+	generic comparison/merge functions

@@ -1,0 +1,17 @@
+SUBDIRS = resource drivers
+INCLUDES = -I$(top_srcdir)/src/include @ac_glib_includes@ @ac_ggi_includes@ @ac_png_includes@
+EXTRA_DIST = TODO gfx_test.c
+LDADD = -lglib  $(LDADD_ALL)
+
+noinst_LIBRARIES = libscigraphics.a
+libscigraphics_a_LIBADD = drivers/libscidrivers.a resource/libsciresources.a
+EXTRA_libscigraphics_a_SOURCES = gfx_crossblit.c gfx_pixmap_scale.c
+libscigraphics_a_SOURCES = font.c  gfx_resource.c  gfx_support.c  gfx_tools.c  operations.c  resmgr.c  sbtree.c  widgets.c menubar.c sci_widgets.c
+
+check_PROGRAMS = gfx_test
+gfx_test_LDADD = libscigraphics.a drivers/libscidrivers.a @ac_glx_libraries@ @ac_ggi_libraries@ @ac_readline@ $(GLIB_LIBS) @ac_curses_libraries@ @ac_png_libraries@ -lm
+gfx_test_SOURCES = gfx_test.c
+
+
+
+

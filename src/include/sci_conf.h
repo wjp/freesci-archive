@@ -30,7 +30,7 @@
 #define _SCI_CONFIG_H_
 
 #include <versions.h>
-#include <graphics.h>
+#include <gfx_resource.h>
 
 typedef struct {
   char *option;

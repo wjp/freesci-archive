@@ -59,7 +59,9 @@ AC_OUTPUT(Makefile    \
 	src/Makefile  \
 	src/scicore/Makefile \
 	src/engine/Makefile \
-	src/graphics/Makefile \
+	src/gfx/Makefile \
+	src/gfx/drivers/Makefile \
+	src/gfx/resource/Makefile \
 	src/include/Makefile \
 	src/tools/Makefile \
 	src/win32/Makefile \

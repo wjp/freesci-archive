@@ -27,8 +27,11 @@
 
 %{
 #include <engine.h>
+#include <gfx_system.h>
+#include <gfx_tools.h>
+#include <gfx_resource.h>
+#include <gfx_drivers_list.h>
 #include <sci_conf.h>
-#include <graphics.h>
 #ifndef _DOS
 # include <glib.h>
 #endif
@@ -166,7 +169,7 @@ debug_mode[[:blank:]]*"="[::blank:]]*.+  {
 
   yytext = strchr(yytext, '.');
   *yytext++ = 0;
-  if (!strcasecmp (p, conf->gfx_driver->Name))
+  if (!strcasecmp (p, conf->gfx_driver->name))
   {
     int newcfg;
 
@@ -225,11 +228,13 @@ config_init(config_entry_t **_conf, char *conffile)
   conf = malloc(sizeof(config_entry_t));
 
 /**** Default config: */
-  conf->color_mode = SCI_COLOR_DITHER;
+#warning fixme
+  //  conf->color_mode = SCI_COLOR_DITHER;
 
   conf->version = 0;
 
-  conf->gfx_driver = graph_get_default_driver();
+#warning fixme
+  conf->gfx_driver = &gfx_driver_ggi;//graph_get_default_driver();
 
   conf->console_log = NULL;
   conf->debug_mode [0] = '\0';
@@ -337,6 +342,8 @@ config_free(config_entry_t **conf, int entries)
 static int
 _parse_color_mode(char *mode) /* Parses the color mode string */
 {
+#warning fixme!
+#if 0
   struct {
     char* name;
     int value;
@@ -360,7 +367,7 @@ _parse_color_mode(char *mode) /* Parses the color mode string */
 
     i++;
   }
-
+#endif
   printf("Invalid color mode %s\n", mode);
 
   return 0;
@@ -373,7 +380,7 @@ _parse_gfx_driver(char *driver_name)
   int i;
 
   for (i=0; gfx_drivers [i]; i++)
-    if (!strcasecmp (gfx_drivers [i]->Name, driver_name))
+    if (!strcasecmp (gfx_drivers[i]->name, driver_name))
       return gfx_drivers [i];
 
   /* not found - return default */

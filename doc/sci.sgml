@@ -2491,8 +2491,8 @@ explained more thoroughly, errors corrected, etc. The first 23 instructions
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0x50: class B function  (3 bytes)</member>
-                <member>op 0x51: class W function  (2 bytes)</member>
+                <member>op 0x50: class W function  (3 bytes)</member>
+                <member>op 0x51: class B function  (2 bytes)</member>
               </simplelist>
               Get class address.
               Sets the accumulator to the memory address of the specified <parameter/function/

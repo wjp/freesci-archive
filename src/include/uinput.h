@@ -29,7 +29,7 @@
 #ifndef _SCI_UINPUT_H
 #define _SCI_UINPUT_H
 
-#include <stdio.h>
+//#include <stdio.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

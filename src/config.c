@@ -509,8 +509,11 @@ char *yytext;
 ***************************************************************************/
 #line 29 "config.l"
 #include <engine.h>
+#include <gfx_system.h>
+#include <gfx_tools.h>
+#include <gfx_resource.h>
+#include <gfx_drivers_list.h>
 #include <sci_conf.h>
-#include <graphics.h>
 #ifndef _DOS
 # include <glib.h>
 #endif
@@ -536,7 +539,7 @@ static gfx_driver_t *
 _parse_gfx_driver(char *s); /* Parses a graphics driver */
 
 
-#line 540 "lex.yy.c"
+#line 543 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -687,10 +690,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 63 "config.l"
+#line 66 "config.l"
 
 
-#line 694 "lex.yy.c"
+#line 697 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -775,7 +778,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 65 "config.l"
+#line 68 "config.l"
 {
   ++yytext; /* Get over opening bracket */
 
@@ -818,7 +821,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 105 "config.l"
+#line 108 "config.l"
 {
   yytext = strchr(yytext, '=') + 1;
 
@@ -829,7 +832,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 113 "config.l"
+#line 116 "config.l"
 {
   yytext = strchr(yytext, '=') + 1;
 
@@ -841,7 +844,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 122 "config.l"
+#line 125 "config.l"
 {
   yytext = strchr (yytext, '=') + 1;
 
@@ -856,7 +859,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 134 "config.l"
+#line 137 "config.l"
 if (cur_section) {
   yytext = strchr(yytext, '=') + 1;
   while (isspace(*yytext))
@@ -869,7 +872,7 @@ if (cur_section) {
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 145 "config.l"
+#line 148 "config.l"
 {
   yytext = strchr(yytext, '=') + 1;
 
@@ -881,7 +884,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 154 "config.l"
+#line 157 "config.l"
 {
   yytext = strchr(yytext, '=') + 1;
 
@@ -893,14 +896,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 163 "config.l"
+#line 166 "config.l"
 {
   char *p=yytext;
   char *p2;
 
   yytext = strchr(yytext, '.');
   *yytext++ = 0;
-  if (!strcasecmp (p, conf->gfx_driver->Name))
+  if (!strcasecmp (p, conf->gfx_driver->name))
   {
     int newcfg;
 
@@ -937,25 +940,25 @@ case 9:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 204 "config.l"
+#line 207 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 206 "config.l"
+#line 209 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 208 "config.l"
+#line 211 "config.l"
 printf("Unrecognized option: %s\n", yytext);
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 210 "config.l"
+#line 213 "config.l"
 ECHO;
 	YY_BREAK
-#line 959 "lex.yy.c"
+#line 962 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1841,7 +1844,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 210 "config.l"
+#line 213 "config.l"
 
 
 int
@@ -1860,11 +1863,13 @@ config_init(config_entry_t **_conf, char *conffile)
   conf = malloc(sizeof(config_entry_t));
 
 /**** Default config: */
-  conf->color_mode = SCI_COLOR_DITHER;
+#warning fixme
+  //  conf->color_mode = SCI_COLOR_DITHER;
 
   conf->version = 0;
 
-  conf->gfx_driver = graph_get_default_driver();
+#warning fixme
+  conf->gfx_driver = &gfx_driver_ggi;//graph_get_default_driver();
 
   conf->console_log = NULL;
   conf->debug_mode [0] = '\0';
@@ -1972,6 +1977,8 @@ config_free(config_entry_t **conf, int entries)
 static int
 _parse_color_mode(char *mode) /* Parses the color mode string */
 {
+#warning fixme!
+#if 0
   struct {
     char* name;
     int value;
@@ -1995,7 +2002,7 @@ _parse_color_mode(char *mode) /* Parses the color mode string */
 
     i++;
   }
-
+#endif
   printf("Invalid color mode %s\n", mode);
 
   return 0;
@@ -2008,7 +2015,7 @@ _parse_gfx_driver(char *driver_name)
   int i;
 
   for (i=0; gfx_drivers [i]; i++)
-    if (!strcasecmp (gfx_drivers [i]->Name, driver_name))
+    if (!strcasecmp (gfx_drivers[i]->name, driver_name))
       return gfx_drivers [i];
 
   /* not found - return default */

@@ -33,7 +33,6 @@
 
 #include <resource.h>
 #include <heap.h>
-#include <graphics.h>
 #include <script.h>
 #include <vocabulary.h>
 #include <sound.h>
@@ -44,13 +43,7 @@
 #include <time.h>
 #include <versions.h>
 #include <kernel.h>
-#include <graphics.h>
-#ifdef HAVE_LIBGGI
-#include <ggi/ggi.h>
-#endif
-#ifdef HAVE_GLX
-#include <graphics_glx.h>
-#endif
+#include <gfx_state_internal.h>
 
 #ifdef _WIN32
 #define scimkdir(arg1,arg2) mkdir(arg1)
@@ -81,25 +74,13 @@
 
 #define MAX_HUNK_BLOCKS 256 /* Used for SCI "far memory"; only used for sci_memory in FreeSCI */
 
-#define MAX_PORTS 16 /* Maximum number of view ports */
-
 typedef struct
 {
-  int size;
-  int type; /* See above */
-  char *data;
+	int size;
+	int type; /* See above */
+	char *data;
 } hunk_block_t; /* Used to store dynamically allocated "far" memory */
 
-
-#ifdef HAVE_GLX
-typedef struct
-{
-  Display *glx_display;
-  Window glx_window;
-  GLXContext glx_context;
-  unsigned int width, height;
-} glx_state_t;
-#endif
 
 /* values for state_t.restarting_flag */
 #define SCI_GAME_IS_NOT_RESTARTING 0
@@ -109,157 +90,148 @@ typedef struct
 
 typedef struct _state
 {
-  int savegame_version;
+	int savegame_version;
 
-  char *resource_dir; /* Directory the resource files are kept in */
-  char *work_dir; /* Directory the game metadata should be written to */
+	char *resource_dir; /* Directory the resource files are kept in */
+	char *work_dir; /* Directory the game metadata should be written to */
 
-  byte *game_name; /* Designation of the primary object (which inherits from Game) */
+	byte *game_name; /* Designation of the primary object (which inherits from Game) */
 
-  /* Non-VM information */
+	/* Non-VM information */
 
-  gfx_driver_t *gfx_driver; /* Graphics driver */
+	gfx_state_t *gfx_state; /* Graphics state and driver */
+	gfx_pixmap_t *old_screen; /* Old screen content: Stored during kDrawPic() for kAnimate() */
 
-  union {
-#ifdef HAVE_LIBGGI
-    ggi_visual_t ggi_visual; /* for libggi */
-#endif /* HAVE_LIBGGI */
-#ifdef HAVE_GLX
-    glx_state_t *glx_state;
-#endif
-    int _dummy;
-  } graphics;
+	sfx_driver_t *sfx_driver; /* Sound driver */
 
-  sfx_driver_t *sfx_driver; /* Sound driver */
+	int sound_pipe_in[2];  /* Sound command pipeline: Engine => Sound server */
+	int sound_pipe_out[2]; /* Sound return value pipeline: Engine <= Sound server */
+	int sound_pipe_events[2]; /* Sound events returned by the server: Engine <= Sound server */
+	int sound_pipe_debug[2]; /* Text pipeline for debug data Engine: <= Sound server */
 
-  int sound_pipe_in[2];  /* Sound command pipeline: Engine => Sound server */
-  int sound_pipe_out[2]; /* Sound return value pipeline: Engine <= Sound server */
-  int sound_pipe_events[2]; /* Sound events returned by the server: Engine <= Sound server */
-  int sound_pipe_debug[2]; /* Text pipeline for debug data Engine: <= Sound server */
+	byte restarting_flags; /* Flags used for restarting */
+	byte have_mouse_flag;  /* Do we have a hardware pointing device? */
 
-  byte restarting_flags; /* Flags used for restarting */
-  byte have_mouse_flag;  /* Do we have a hardware pointing device? */
+	byte pic_not_valid; /* Is 0 if the background picture is "valid" */
+	byte pic_is_new;    /* Set to 1 if a picture has just been loaded */
+	byte onscreen_console;  /* Use the onscreen console for debugging */
+	byte *osc_backup; /* Backup of the pre-onscreen console screen data */
 
-  byte pic_not_valid; /* Is 0 if the background picture is "valid" */
-  byte pic_is_new;    /* Set to 1 if a picture has just been loaded */
-  byte onscreen_console;  /* Use the onscreen console for debugging */
-  byte *osc_backup; /* Backup of the pre-onscreen console screen data */
+	char *status_bar_text; /* Text on the status bar, or NULL if the title bar is blank */
 
-  char *status_bar_text; /* Text on the status bar, or NULL if the title bar is blank */
+	long game_time; /* Counted at 60 ticks per second, reset during start time */
 
-  long game_time; /* Counted at 60 ticks per second, reset during start time */
+	heap_ptr save_dir; /* Pointer to the allocated space for the save directory */
 
-  heap_ptr save_dir; /* Pointer to the allocated space for the save directory */
+	heap_ptr sound_object; /* Some sort of object for sound management */
 
-  heap_ptr sound_object; /* Some sort of object for sound management */
+	int last_pointer_x, last_pointer_y; /* Mouse pointer coordinates as last drawn */
+	int last_pointer_size_x, last_pointer_size_y; /* Mouse pointer size as last used */
+	int mouse_pointer_nr; /* Mouse pointer resource, or -1 if disabled */
 
-  int pointer_x, pointer_y; /* Mouse pointer coordinates */
-  int last_pointer_x, last_pointer_y; /* Mouse pointer coordinates as last drawn */
-  int last_pointer_size_x, last_pointer_size_y; /* Mouse pointer size as last used */
-  mouse_pointer_t *mouse_pointer; /* The current mouse pointer, or NULL if disabled */
-  int mouse_pointer_nr; /* Mouse pointer resource */
+	gfxw_port_t *port; /* The currently active port */
+	int port_ID; /* Only used for save/restore, equal to port->ID */
 
-  int view_port; /* The currently active view port */
-  port_t *ports[MAX_PORTS]; /* A list of all available ports */
+	gfx_color_t ega_colors[16]; /* The 16 EGA colors- for SCI0(1) */
 
-  port_t titlebar_port; /* Title bar viewport (0,0,9,319) */
-  port_t wm_port; /* window manager viewport and designated &heap[0] view (10,0,199,319) */
-  port_t picture_port; /* The background picture viewport (10,0,199,319) */
+	gfxw_visual_t *visual; /* A visual widget, containing all ports */
 
-  picture_t pic; /* The graphics storage thing */
-  int pic_visible_map; /* The number of the map to display in update commands */
-  int pic_animate; /* The animation used by Animate() to display the picture */
+	gfxw_port_t *titlebar_port; /* Title bar viewport (0,0,9,319) */
+	gfxw_port_t *wm_port; /* window manager viewport and designated &heap[0] view (10,0,199,319) */
+	gfxw_port_t *picture_port; /* The background picture viewport (10,0,199,319) */
 
-  int pic_views_nr, dyn_views_nr; /* Number of entries in the pic_views and dyn_views lists */
-  int dyn_view_port; /* Port the dyn_views are valid for */
-  view_object_t *pic_views, *dyn_views; /* Pointers to pic and dynamic view lists */
+	int pic_visible_map; /* The number of the map to display in update commands */
+	int pic_animate; /* The animation used by Animate() to display the picture */
 
-  int animation_delay; /* A delay factor for pic opening animations. Defaults to 500. */
+	int dyn_view_port; /* Port the dyn_views are valid for */
+	gfxw_list_t *pic_views, *dyn_views; /* Pointers to pic and dynamic view lists */
 
-  hunk_block_t hunk[MAX_HUNK_BLOCKS]; /* Hunk memory */
+	int animation_delay; /* A delay factor for pic opening animations. Defaults to 500. */
 
-  menubar_t *menubar; /* The menu bar */
+	hunk_block_t hunk[MAX_HUNK_BLOCKS]; /* Hunk memory */
 
-  int priority_first; /* The line where priority zone 0 ends */
-  int priority_last; /* The line where the highest priority zone starts */
+	menubar_t *menubar; /* The menu bar */
 
-  GTimeVal game_start_time; /* The time at which the interpreter was started */
-  GTimeVal last_wait_time; /* The last time the game invoked Wait() */
+	int priority_first; /* The line where priority zone 0 ends */
+	int priority_last; /* The line where the highest priority zone starts */
 
-  byte version_lock_flag; /* Set to 1 to disable any autodetection mechanisms */
-  sci_version_t version; /* The approximated patchlevel of the version to emulate */
-  sci_version_t max_version, min_version; /* Used for autodetect sanity checks */
+	GTimeVal game_start_time; /* The time at which the interpreter was started */
+	GTimeVal last_wait_time; /* The last time the game invoked Wait() */
 
-  int file_handles_nr; /* maximum numer of allowed file handles */
-  FILE **file_handles; /* Array of file handles. Dynamically increased if required. */
+	byte version_lock_flag; /* Set to 1 to disable any autodetection mechanisms */
+	sci_version_t version; /* The approximated patchlevel of the version to emulate */
+	sci_version_t max_version, min_version; /* Used for autodetect sanity checks */
 
-  /* VM Information */
+	int file_handles_nr; /* maximum numer of allowed file handles */
+	FILE **file_handles; /* Array of file handles. Dynamically increased if required. */
 
-  exec_stack_t *execution_stack; /* The execution stack */
-  int execution_stack_size;      /* Number of stack frames allocated */
-  int execution_stack_pos;       /* Position on the execution stack */
-  int execution_stack_base;      /* When called from kernel functions, the vm
-				 ** is re-started recursively on the same stack.
-				 ** This variable contains the stack base for the
-				 ** current vm.
-				 */
-  int execution_stack_pos_changed;   /* Set to 1 if the execution stack position
-				     ** should be re-evaluated by the vm
-				     */
+	/* VM Information */
 
-  heap_t *_heap; /* The heap structure */
-  byte *heap; /* The actual heap data (equal to _heap->start) */
-  gint16 acc; /* Accumulator */
-  gint16 amp_rest; /* &rest register (only used for save games) */
-  gint16 prev; /* previous comparison result */
+	exec_stack_t *execution_stack; /* The execution stack */
+	int execution_stack_size;      /* Number of stack frames allocated */
+	int execution_stack_pos;       /* Position on the execution stack */
+	int execution_stack_base;      /* When called from kernel functions, the vm
+				       ** is re-started recursively on the same stack.
+				       ** This variable contains the stack base for the
+				       ** current vm.
+				       */
+	int execution_stack_pos_changed;   /* Set to 1 if the execution stack position
+					   ** should be re-evaluated by the vm
+					   */
 
-  heap_ptr stack_base;   /* The base position of the stack; used for debugging */
-  heap_ptr stack_handle; /* The stack's heap handle */
-  heap_ptr parser_base;  /* A heap area used by the parser for error reporting */
-  heap_ptr parser_event; /* The event passed to Parse() and later used by Said() */
-  heap_ptr global_vars;  /* script 000 selectors */
+	heap_t *_heap; /* The heap structure */
+	byte *heap; /* The actual heap data (equal to _heap->start) */
+	gint16 acc; /* Accumulator */
+	gint16 amp_rest; /* &rest register (only used for save games) */
+	gint16 prev; /* previous comparison result */
 
-  int parser_lastmatch_word; /* Position of the input word the parser last matched on, or SAID_NO_MATCH */
+	heap_ptr stack_base;   /* The base position of the stack; used for debugging */
+	heap_ptr stack_handle; /* The stack's heap handle */
+	heap_ptr parser_base;  /* A heap area used by the parser for error reporting */
+	heap_ptr parser_event; /* The event passed to Parse() and later used by Said() */
+	heap_ptr global_vars;  /* script 000 selectors */
 
-  /* Debugger data: */
-  breakpoint_t *bp_list;   /* List of breakpoints */
-  int have_bp;  /* Bit mask specifying which types of breakpoints are used in bp_list */
-  int debug_mode; /* Contains flags for the various debug modes */
+	int parser_lastmatch_word; /* Position of the input word the parser last matched on, or SAID_NO_MATCH */
 
-  /* Parser data: */
-  word_t **parser_words;
-  int parser_words_nr;
-  suffix_t **parser_suffices;
-  int parser_suffices_nr;
-  parse_tree_branch_t *parser_branches;
-  parse_rule_list_t *parser_rules; /* GNF rules used in the parser algorithm */
-  int parser_branches_nr;
-  parse_tree_node_t parser_nodes[VOCAB_TREE_NODES]; /* The parse tree */
+	/* Debugger data: */
+	breakpoint_t *bp_list;   /* List of breakpoints */
+	int have_bp;  /* Bit mask specifying which types of breakpoints are used in bp_list */
+	int debug_mode; /* Contains flags for the various debug modes */
 
-  int parser_valid; /* If something has been correctly parsed */
+	/* Parser data: */
+	word_t **parser_words;
+	int parser_words_nr;
+	suffix_t **parser_suffices;
+	int parser_suffices_nr;
+	parse_tree_branch_t *parser_branches;
+	parse_rule_list_t *parser_rules; /* GNF rules used in the parser algorithm */
+	int parser_branches_nr;
+	parse_tree_node_t parser_nodes[VOCAB_TREE_NODES]; /* The parse tree */
 
-  synonym_t *synonyms; /* The list of synonyms */
-  int synonyms_nr;
+	int parser_valid; /* If something has been correctly parsed */
 
-  heap_ptr game_obj; /* Pointer to the game object */
+	synonym_t *synonyms; /* The list of synonyms */
+	int synonyms_nr;
 
-  int classtable_size; /* Number of classes in the table- for debugging */
-  class_t *classtable; /* Table of all classes */
-  script_t scripttable[1000]; /* Table of all scripts */
+	heap_ptr game_obj; /* Pointer to the game object */
 
-  heap_ptr clone_list[SCRIPT_MAX_CLONES];
+	int classtable_size; /* Number of classes in the table- for debugging */
+	class_t *classtable; /* Table of all classes */
+	script_t scripttable[1000]; /* Table of all scripts */
 
-  int selector_names_nr; /* Number of selector names */
-  char **selector_names; /* Zero-terminated selector name list */
-  int kernel_names_nr; /* Number of kernel function names */
-  char **kernel_names; /* List of kernel names */
-  kfunct **kfunct_table; /* Table of kernel functions */
+	heap_ptr clone_list[SCRIPT_MAX_CLONES];
 
-  opcode *opcodes;
+	int selector_names_nr; /* Number of selector names */
+	char **selector_names; /* Zero-terminated selector name list */
+	int kernel_names_nr; /* Number of kernel function names */
+	char **kernel_names; /* List of kernel names */
+	kfunct **kfunct_table; /* Table of kernel functions */
 
-  selector_map_t selector_map; /* Shortcut list for important selectors */
+	opcode *opcodes;
 
-  struct _state *successor; /* Successor of this state: Used for restoring */
+	selector_map_t selector_map; /* Shortcut list for important selectors */
+
+	struct _state *successor; /* Successor of this state: Used for restoring */
 
 } state_t;
 

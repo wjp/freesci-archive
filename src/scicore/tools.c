@@ -28,6 +28,7 @@
 
 #include <engine.h>
 #include <kdebug.h>
+#include <sys/time.h>
 
 #ifdef HAVE_MEMFROB
 void *memfrob(void *s, size_t n);
@@ -190,4 +191,14 @@ _SCIGNUkdebug(char *funcname, state_t *s, char *file, int line, int area, char *
   }
 }
 
+
+void
+sci_gettime(int *seconds, int *useconds)
+{
+        struct timeval tv;
+
+        assert(!gettimeofday(&tv, NULL));
+        *seconds = time(NULL);
+        *useconds = tv.tv_usec;
+}
 

@@ -177,14 +177,6 @@ getInt16(byte *d)
 
 #endif /* !WORDS_BIGENDIAN */
 #define getUInt16(d) (guint16)(getInt16(d))
-/*
-gint16 getInt16(guint8* d);
-#else
-#define getInt16(d) (*((gint16 *)(d)))
-#endif
-#endif
-#define getUInt16(_x_) ((guint16) getInt16(_x_))
-*/
 #endif
 /* Turns a little endian 16 bit value into a machine-dependant 16 bit value
 ** Parameters: d: Pointer to the memory position from which to read
@@ -273,6 +265,31 @@ memtest(char *location, ...);
 ** to provocate segmentation faults caused by dynamic allocation bugs
 ** in previous parts of the code.
 */
+
+void
+sci_gettime(int *seconds, int *useconds);
+/* Calculates the current time in seconds and microseconds
+** Parameters: (int *) seconds: Pointer to the variable the seconds part of the
+**                              current time will be stored in
+**             (int *) useconds: Pointer to the variable the microseconds part
+**                               of the current time will be stored in
+** Returns   : (void)
+** The resulting values must be relative to an arbitrary fixed point in time
+** (typically 01/01/1970 on *NIX systems).
+*/
+
+
+/* The following was stolen and adapted from glib.h, and is partially
+ * Copyright (C) 1995-1997  Peter Mattis, Spencer Kimball and Josh MacDonald
+ */
+#if defined (__i386__) && defined (__GNUC__) && __GNUC__ >= 2
+#define BREAKPOINT()          {__asm__ __volatile__ ("int $03"); }
+#elif defined (__alpha__) && defined (__GNUC__) && __GNUC__ >= 2
+#define BREAKPOINT()          {__asm__ __volatile__ ("bpt"); }
+#else   /* !__i386__ && !__alpha__ */
+#define BREAKPOINT() { fprintf(stderr, "Missed breakpoint in %s, line %d\n", __FILE__, __LINE__); exit(1); }
+#endif  /* __i386__ */
+
 
 #endif
 

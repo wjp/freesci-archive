@@ -45,22 +45,21 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
     s->acc=1;
     PUT_SELECTOR(obj, message, _kdebug_cheap_event_hack);
     PUT_SELECTOR(obj, modifiers, SCI_EVM_NUMLOCK); /*Numlock on*/
-    PUT_SELECTOR(obj, x, s->pointer_x);
-    PUT_SELECTOR(obj, y, s->pointer_y);
+    PUT_SELECTOR(obj, x, s->gfx_state->pointer_pos.x);
+    PUT_SELECTOR(obj, y, s->gfx_state->pointer_pos.y);
     _kdebug_cheap_event_hack = 0;
     return;
   }
   
-  oldx=s->pointer_x;
-  oldy=s->pointer_y;
-  e=getEvent(s);
+  oldx=s->gfx_state->pointer_pos.x;
+  oldy=s->gfx_state->pointer_pos.y;
+  e = gfxop_get_event(s->gfx_state);
 
   s->parser_event = 0; /* Invalidate parser event */
 
-  PUT_SELECTOR(obj, x, s->pointer_x);
-  PUT_SELECTOR(obj, y, s->pointer_y);
-  if((oldx!=s->pointer_x || oldy!=s->pointer_y) && s->have_mouse_flag)
-    s->gfx_driver->Redraw(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0, 0, 0, 0);
+  PUT_SELECTOR(obj, x, s->gfx_state->pointer_pos.x);
+  PUT_SELECTOR(obj, y, s->gfx_state->pointer_pos.y);
+  /*  gfxop_set_pointer_position(s->gfx_state, gfx_point(s->gfx_state->pointer_pos.x, s->gfx_state->pointer_pos.y)); */
   
   switch(e.type)
     {
@@ -160,8 +159,8 @@ kGlobalToLocal(state_t *s, int funct_nr, int argc, heap_ptr argp)
     int x = GET_SELECTOR(obj, x);
     int y = GET_SELECTOR(obj, y);
 
-    PUT_SELECTOR(obj, x, x - s->ports[s->view_port]->xmin);
-    PUT_SELECTOR(obj, y, y - s->ports[s->view_port]->ymin);
+    PUT_SELECTOR(obj, x, x - s->port->bounds.x);
+    PUT_SELECTOR(obj, y, y - s->port->bounds.y);
   }
 }
 
@@ -175,8 +174,8 @@ kLocalToGlobal(state_t *s, int funct_nr, int argc, heap_ptr argp)
     int x = GET_SELECTOR(obj, x);
     int y = GET_SELECTOR(obj, y);
 
-    PUT_SELECTOR(obj, x, x + s->ports[s->view_port]->xmin);
-    PUT_SELECTOR(obj, y, y + s->ports[s->view_port]->ymin);
+    PUT_SELECTOR(obj, x, x + s->port->bounds.x);
+    PUT_SELECTOR(obj, y, y + s->port->bounds.y);
   }
 }
 

@@ -26,6 +26,9 @@
 ***************************************************************************/
 
 #include <engine.h>
+#include <gfx_state.h>
+#include <sci_graphics.h>
+#include <sci_widgets.h>
 
 /* Graph subfunctions */
 #define K_GRAPH_GET_COLORS_NR 2
@@ -47,52 +50,50 @@
 #define K_CONTROL_CONTROL 6
 #define K_CONTROL_BOX 10
 
-inline void
-_k_clip_loop_cel(int *loop, int *cel, byte *data)
-/* clips loop (and cel if != NULL)
-** data must point to the view resource data block
-*/
+static inline void
+handle_gfx_error(int line, char *file)
 {
-  int maxloop = view0_loop_count(data) - 1;
-
-  if (*loop > maxloop)
-    *loop = maxloop;
-
-  if (cel) {
-    int maxcel = view0_cel_count(*loop, data) - 1;
-
-    if (*cel > maxcel)
-      *cel = maxcel;
-  }
+	exit(1); /* FIXME: Replace this with a longjmp() eventually */
 }
+
+#define GFX_ASSERT(x) { \
+	int val = (x); \
+	if (val) { \
+		if (val == GFX_ERROR) \
+			SCIkwarn(SCIkWARNING, "GFX subsystem returned error on \"" #x "\"!\n"); \
+		else {\
+                        SCIkwarn(SCIkERROR, "GFX subsystem fatal error condition on \"" #x "\"!\n"); \
+			handle_gfx_error(__LINE__, __FILE__); \
+	        } \
+        }\
+}
+
 
 void
 kSetCursor(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  free_mouse_cursor(s->mouse_pointer);
 
-  if (PARAM(1)) {
-    resource_t *resource = findResource(sci_cursor, PARAM(0));
-    byte *data = (resource)? resource->data : NULL;
-    if (data) {
-      s->mouse_pointer = calc_mouse_cursor(data);
-      s->mouse_pointer_nr = PARAM(0);
-    } else {
-      s->mouse_pointer = NULL;
-      s->mouse_pointer_nr = -1;
-    }
+	if (PARAM(1)) {
+		s->mouse_pointer_nr = PARAM(0);
+	} else 
+		s->mouse_pointer_nr = GFXOP_NO_POINTER;
 
-  } else
-    s->mouse_pointer = NULL;
+	GFX_ASSERT(gfxop_set_pointer_cursor(s->gfx_state, s->mouse_pointer_nr));
 
-  if (argc > 2) {
-    s->pointer_x = PARAM(2) + s->ports[s->view_port]->xmin;
-    s->pointer_y = PARAM(3) + s->ports[s->view_port]->ymin; /* Port-relative */
-  }
+	if (argc > 2) {
+		point_t newpos = gfx_point(PARAM(2) + s->port->bounds.x,
+					   PARAM(3) + s->port->bounds.y);
 
-  (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0); /* Update mouse pointer */
+		GFX_ASSERT(gfxop_set_pointer_position(s->gfx_state, newpos));
+	}
 }
 
+static inline void
+_ascertain_port_contents(gfxw_port_t *port)
+{
+	if (!port->contents)
+		port->contents = (gfxw_widget_t *) gfxw_new_list(port->bounds);
+}
 
 void
 kShow(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -117,9 +118,14 @@ void
 _k_redraw_box(state_t *s, int x1, int y1, int x2, int y2)
 {
   int i;
+#warning "_k_redraw_box: Fixme!"
+#if 0
+
   view_object_t *list = s->dyn_views;
-  
+
   sciprintf("Reanimating %d views\n", s->dyn_views_nr);
+
+
   for (i=0;i<s->dyn_views_nr;i++)
   {
     list[i].underBits=graph_save_box(s,
@@ -141,14 +147,18 @@ _k_redraw_box(state_t *s, int x1, int y1, int x2, int y2)
     graph_restore_box(s, list[i].underBits);
     list[i].underBits=0;
   }
+#endif
 }
+
+
 void
 kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int color, priority, special;
-  port_t *port = s->ports[s->view_port];
-
-  _k_dyn_view_list_prepare_change(s);
+  gfx_color_t gfxcolor;
+  rect_t area;
+  gfxw_port_t *port = s->port;
+  int redraw_port = 0;
 
   switch(PARAM(0)) {
 
@@ -156,41 +166,63 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     s->acc = (sci_version < SCI_VERSION_1) ? 0x10 : 0x100; /* number of colors */
     break;
-
+  
   case K_GRAPH_DRAW_LINE:
 
     color = PARAM(5);
     priority = PARAM(6);
     special = PARAM(7);
-    dither_line(s->pic, PARAM(2), PARAM(1) , PARAM(4), PARAM(3),
-		color, color, priority, special,
-		!(color & 0x80) | (!(priority & 0x80) << 1) | (!(special & 0x80) << 2));
+    area = gfx_rect(PARAM(2), PARAM(1) , PARAM(4), PARAM(3));
+  
+    gfxcolor = s->ega_colors[color];
+    gfxcolor.priority = priority;
+    gfxcolor.control = special;
+
+    gfxcolor.mask = !(color & 0x80) | (!(priority & 0x80) << 1) | (!(special & 0x80) << 2);
+
+    redraw_port = 1;
+    gfxw_add(s->gfx_state, (gfxw_container_t *) port,
+	     (gfxw_widget_t *) gfxw_new_line(area, gfxcolor, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL));
+		
     break;
 
   case K_GRAPH_SAVE_BOX:
 
+#warning "fixme!"
+#if 0
     s->acc = graph_save_box(s, PARAM(2), PARAM(1), PARAM(4), PARAM(3), PARAM(5));
+#endif
     break;
 
   case K_GRAPH_RESTORE_BOX:
 
+#warning "fixme!"
+#if 0
     graph_restore_box(s, PARAM(1));
+#endif
     break;
 
   case K_GRAPH_FILL_BOX_BACKGROUND:
 
+#warning "fixme!"
+#if 0
     graph_clear_box(s, port->xmin, port->ymin,
 		    port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
 		    port->bgcolor);
+    redraw_port = 1;
+#endif
     CHECK_THIS_KERNEL_FUNCTION;
     break;
 
   case K_GRAPH_FILL_BOX_FOREGROUND:
 
+#warning "fixme!"
+#if 0
     graph_clear_box(s, port->xmin, port->ymin,
 		    port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
 		    port->color);
     CHECK_THIS_KERNEL_FUNCTION;
+#endif
     break;
 
   case K_GRAPH_FILL_BOX_ANY: {
@@ -198,13 +230,16 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
     int x = PARAM(2);
     int y = PARAM(1);
 
+#warning "fixme!"
+#if 0
     SCIkdebug(SCIkGRAPHICS, "fill_box_any(%d, %d, %d, %d) map=%d (%d %d)\n",
 	      PARAM(1), PARAM(2), PARAM(3), PARAM(4), PARAM(5), PARAM(6), PARAM_OR_ALT(7, -1));
 
-    graph_fill_box_custom(s, x + s->ports[s->view_port]->xmin, y + s->ports[s->view_port]->ymin,
+    graph_fill_box_custom(s, x + s->port->xmin, y + s->port->ymin,
 			  PARAM(4)-x, PARAM(3)-y, PARAM(6), PARAM_OR_ALT(7, -1),
 			  PARAM_OR_ALT(8, -1), UPARAM(5));
     CHECK_THIS_KERNEL_FUNCTION;
+#endif
 
   }
   break;
@@ -214,11 +249,14 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
     int x = PARAM(2);
     int y = PARAM(1);
 
+#warning "fixme!"
+#if 0
     SCIkdebug(SCIkGRAPHICS, "update_box(%d, %d, %d, %d)\n",
 	      PARAM(1), PARAM(2), PARAM(3), PARAM(4));
 
     (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_BOX, x, y + 10, PARAM(4)-x+1, PARAM(3)-y+1);
     CHECK_THIS_KERNEL_FUNCTION;
+#endif
 
   }
   break;
@@ -227,12 +265,15 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     CHECK_THIS_KERNEL_FUNCTION;
 
+#warning "fixme!"
+#if 0
     SCIkdebug(SCIkGRAPHICS, "redraw_box(%d, %d, %d, %d)\n",
 	      PARAM(1), PARAM(2), PARAM(3), PARAM(4));
 
     if (!s->dyn_views_nr)
       graph_update_box(s, PARAM(2), PARAM(1), PARAM(4), PARAM(3)); else
       _k_redraw_box(s, PARAM(2), PARAM(1), PARAM(4), PARAM(3));
+#endif
       
   }
 
@@ -253,7 +294,8 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
     
   }
 
-  _k_dyn_view_list_accept_change(s);
+  gfxw_draw(s->gfx_state, (gfxw_widget_t *) port);
+  gfxop_update(s->gfx_state);
 }
 
 
@@ -261,11 +303,11 @@ void
 kTextSize(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int width, height;
-  heap_ptr heap_text = UPARAM(1);
+  int heap_text = UPARAM(1);
   char *text = s->heap + heap_text;
   heap_ptr dest = UPARAM(0);
   int maxwidth = PARAM_OR_ALT(3, 0);
-  resource_t *fontres = findResource(sci_font, UPARAM(2));
+  int font_nr = UPARAM(2);
 
   if (maxwidth < 0)
     maxwidth = 0;
@@ -279,12 +321,8 @@ kTextSize(state_t *s, int funct_nr, int argc, heap_ptr argp)
     return;
   }
 
-  if (!fontres) {
-    SCIkwarn(SCIkERROR, "font.%03d not found!\n", UPARAM(2));
-    return;
-  }
-
-  get_text_size(text, fontres->data, maxwidth? maxwidth : MAX_TEXT_WIDTH_MAGIC_VALUE, &width, &height);
+  GFX_ASSERT(gfxop_get_text_params(s->gfx_state, font_nr, text,
+				   maxwidth? maxwidth : MAX_TEXT_WIDTH_MAGIC_VALUE, &width, &height));
   SCIkdebug(SCIkSTRINGS, "GetTextSize '%s' -> %dx%d\n", text, width, height);
 
   PUT_HEAP(dest + 0, 0);
@@ -308,7 +346,7 @@ kWait(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   memcpy(&(s->last_wait_time), &time, sizeof(GTimeVal));
 
-  (*s->gfx_driver->Wait)(s, SleepTime * 1000000 / 60);
+  GFX_ASSERT(gfxop_usleep(s->gfx_state, SleepTime * 1000000 / 60));
 }
 
 
@@ -338,18 +376,11 @@ kDirLoop(state_t *s, int funct_nr, int argc, heap_ptr argp)
   word angle = UPARAM(1);
   int view = GET_SELECTOR(obj, view);
   int signal = UGET_SELECTOR(obj, signal);
-  resource_t *viewres = findResource(sci_view, view);
   int loop;
   int maxloops;
 
   if (signal & _K_VIEW_SIG_FLAG_DOESNT_TURN)
     return;
-
-  if (!viewres) {
-    SCIkwarn(SCIkERROR, "Invalid view.%03d\n", view);
-    PUT_SELECTOR(obj, loop, 0xffff); /* Invalid */
-    return;
-  }
 
   angle %= 360;
 
@@ -367,8 +398,13 @@ kDirLoop(state_t *s, int funct_nr, int argc, heap_ptr argp)
   else
     loop = 3;
 
-  maxloops = view0_loop_count(viewres->data);
+  maxloops = gfxop_lookup_view_get_loops(s->gfx_state, view);
 
+  if (maxloops == GFX_ERROR) {
+    SCIkwarn(SCIkERROR, "Invalid view.%03d\n", view);
+    PUT_SELECTOR(obj, loop, 0xffff); /* Invalid */
+    return;
+  } else
   if (loop >= maxloops) {
     SCIkwarn(SCIkWARNING, "With view.%03d: loop %d > maxloop %d\n", view, loop, maxloops);
     loop = 0;
@@ -578,7 +614,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr obj = UPARAM(0);
   heap_ptr cliplist = UPARAM_OR_ALT(1, 0);
-  port_t *port = s->ports[s->view_port];
+  gfxw_port_t *port = s->port;
   word signal;
 
   int x = GET_SELECTOR(obj, brLeft);
@@ -592,9 +628,11 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
   signal = GET_SELECTOR(obj, signal);
   SCIkdebug(SCIkBRESEN,"Checking collision: (%d,%d) to (%d,%d), obj=%04x, sig=%04x, cliplist=%04x\n",
       x, y, xend, yend, obj, signal, cliplist);
-
+#warning fixme!
+#if 0
   s->acc = !(((word)GET_SELECTOR(obj, illegalBits))
-	     & (edgehit = graph_on_control(s, x + port->xmin, y + port->ymin, xl-1, yl-1, SCI_MAP_CONTROL)));
+	     & (edgehit = graph_on_control(s, x + port->bounds.x, y + port->bounds.y, xl-1, yl-1, GFX_MASK_CONTROL)));
+#endif
   SCIkdebug(SCIkBRESEN, "edgehit = %04x\n", edgehit);
   if (s->acc == 0)
     return; /* Can'tBeHere */
@@ -630,7 +668,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	}
 
-		SCIkdebug(SCIkBRESEN, " (no)\n");
+	SCIkdebug(SCIkBRESEN, " (no)\n");
 
       } /* if (other_obj != obj) */
       node = GET_HEAP(node + LIST_NEXT_NODE); /* Move on */
@@ -648,33 +686,33 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kCelHigh(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  resource_t *viewres = findResource(sci_view, PARAM(0));
-  int result;
+	int view = PARAM(0);
+	int loop = PARAM(1);
+	int cel = PARAM(2);
+	int result;
+	int height, width;
+	point_t offset;
 
-  if (!viewres) {
-    SCIkwarn(SCIkERROR, "view.%d (0x%x) not found\n", PARAM(0), PARAM(0));
-    return;
-  }
-
-  s->acc = result = view0_cel_height(PARAM(1), PARAM(2), viewres->data);
-  if (result < 0)
-    SCIkwarn(SCIkERROR, "Invalid loop (%d) or cel (%d) in view.%d (0x%x)\n", PARAM(1), PARAM(2), PARAM(0), PARAM(0));
+	if (gfxop_get_cel_parameters(s->gfx_state, view, loop, cel, &width, &height, &offset))
+		SCIkwarn(SCIkERROR, "Invalid loop (%d) or cel (%d) in view.%d (0x%x), or view invalid\n", loop, cel, view, view);
+	else
+		s->acc = height;
 }
 
 void
 kCelWide(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  resource_t *viewres = findResource(sci_view, PARAM(0));
-  int result;
+	int view = PARAM(0);
+	int loop = PARAM(1);
+	int cel = PARAM(2);
+	int result;
+	int height, width;
+	point_t offset;
 
-  if (!viewres) {
-    SCIkwarn(SCIkERROR, "view.%d (0x%x) not found\n", PARAM(0), PARAM(0));
-    return;
-  }
-
-  s->acc = result = view0_cel_width(PARAM(1), PARAM(2), viewres->data);
-  if (result < 0)
-    SCIkwarn(SCIkERROR, "Invalid loop (%d) or cel (%d) in view.%d (0x%x)\n", PARAM(1), PARAM(2), PARAM(0), PARAM(0));
+	if (gfxop_get_cel_parameters(s->gfx_state, view, loop, cel, &width, &height, &offset))
+		SCIkwarn(SCIkERROR, "Invalid loop (%d) or cel (%d) in view.%d (0x%x), or view invalid\n", loop, cel, view, view);
+	else
+		s->acc = width;
 }
 
 
@@ -682,40 +720,42 @@ kCelWide(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kNumLoops(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr obj = PARAM(0);
-  int view;
-  resource_t *viewres = findResource(sci_view, view = GET_SELECTOR(obj, view));
+	heap_ptr obj = PARAM(0);
+	int view = GET_SELECTOR(obj, view);
+	int loops_nr = gfxop_lookup_view_get_loops(s->gfx_state, view);
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  if (!viewres) {
-    SCIkwarn(SCIkERROR, "view.%d (0x%x) not found\n", view, view);
-    return;
-  }
+	if (loops_nr < 0) {
+		SCIkwarn(SCIkERROR, "view.%d (0x%x) not found\n", view, view);
+		return;
+	}
 
-  s->acc = view0_loop_count(viewres->data);
-  SCIkdebug(SCIkGRAPHICS, "NumLoops(view.%d) = %d\n", view, s->acc);
+	s->acc = loops_nr;
+
+	SCIkdebug(SCIkGRAPHICS, "NumLoops(view.%d) = %d\n", view, s->acc);
 }
 
 
 void
 kNumCels(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr obj = PARAM(0);
-  int loop = UGET_SELECTOR(obj, loop);
-  int view;
-  resource_t *viewres = findResource(sci_view, view = GET_SELECTOR(obj, view));
+	heap_ptr obj = PARAM(0);
+	int loop = UGET_SELECTOR(obj, loop);
+	int view = GET_SELECTOR(obj, view);
+	int cel = 0xffff;
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  if (!viewres) {
-    SCIkwarn(SCIkERROR, "view.%d (0x%x) not found\n", PARAM(0), PARAM(0));
-    return;
-  }
+	if (gfxop_check_cel(s->gfx_state, view, &loop, &cel)) { /* OK, this is a hack and there's a
+							       ** real function to calculate cel numbers... */
+		SCIkwarn(SCIkERROR, "view.%d (0x%x) not found\n", PARAM(0), PARAM(0));
+		return;
+	}
 
-  _k_clip_loop_cel(&loop, NULL, viewres->data);
-  s->acc = view0_cel_count(loop, viewres->data);
-  SCIkdebug(SCIkGRAPHICS, "NumCels(view.%d, %d) = %d\n", view, loop, s->acc);
+	s->acc = cel + 1;
+
+	SCIkdebug(SCIkGRAPHICS, "NumCels(view.%d, %d) = %d\n", view, loop, s->acc);
 }
 
 void
@@ -745,8 +785,10 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
     if (ylen > 1)
     --ylen;
   }
-
+#warning fixme!
+#if 0
   s->acc = graph_on_control(s, xstart, ystart + 10, xlen, ylen, map);
+#endif
 }
 
 void
@@ -757,40 +799,46 @@ _k_view_list_dispose(state_t *s, view_object_t **list_ptr, int *list_nr_ptr);
 void
 kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  resource_t *resource = findResource(sci_pic, PARAM(0));
+  int pic_nr = PARAM(0);
+  int add_to_pic = 1;
   CHECK_THIS_KERNEL_FUNCTION;
 
-  if (resource) {
 
-    if (s->version < SCI_VERSION_FTU_NEWER_DRAWPIC_PARAMETERS) {
-      if (!PARAM_OR_ALT(2, 0)) {
-	clear_picture(s->pic, 15);
-	_k_view_list_dispose(s, &(s->dyn_views), &(s->dyn_views_nr));
-      }
-    } else
-      if (PARAM_OR_ALT(2, 1)) {
-	clear_picture(s->pic, 15);
-	_k_view_list_dispose(s, &(s->dyn_views), &(s->dyn_views_nr));
-      }
-
-    draw_pic0(s->pic, 1, PARAM_OR_ALT(3, 0), resource->data);
-
-    SCIkdebug(SCIkGRAPHICS,"Drawing pic.%03d\n", PARAM(0));
-
-    if (argc > 1)
-      s->pic_animate = PARAM(1); /* The animation used during kAnimate() later on */
-
-    s->priority_first = 42;
-    s->priority_last = 180;
-    s->pic_not_valid = 1;
-    s->pic_is_new = 1;
-
-    if (s->pic_views_nr)
-      g_free(s->pic_views);
-    s->pic_views_nr = 0;
-
+  if (s->version < SCI_VERSION_FTU_NEWER_DRAWPIC_PARAMETERS) {
+	  if (!PARAM_OR_ALT(2, 0))
+		  add_to_pic = 0;
   } else
-    SCIkwarn(SCIkERROR, "Request to draw non-existing pic.%03d\n", PARAM(0));
+	  if (PARAM_OR_ALT(2, 1))
+		  add_to_pic = 0;
+
+
+  gfxop_disable_dirty_frames(s->gfx_state);
+
+  s->old_screen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 10, 320, 190));
+
+  if (add_to_pic) {
+	  if (s->picture_port->contents) {
+		  gfxw_free(s->gfx_state, (gfxw_widget_t *) s->picture_port->contents);
+		  s->picture_port->contents = NULL;
+	  }
+	  GFX_ASSERT(gfxop_add_to_pic(s->gfx_state, pic_nr, 1, PARAM_OR_ALT(3, 0)));
+  } else {
+	  GFX_ASSERT(gfxop_new_pic(s->gfx_state, pic_nr, 1, PARAM_OR_ALT(3, 0)));
+  }
+
+  SCIkdebug(SCIkGRAPHICS,"Drawing pic.%03d\n", PARAM(0));
+
+  if (argc > 1)
+	  s->pic_animate = PARAM(1); /* The animation used during kAnimate() later on */
+
+  if (s->dyn_views) gfxw_free(s->gfx_state, (gfxw_widget_t *) s->dyn_views);
+  s->dyn_views = gfxw_new_list(s->picture_port->bounds);
+
+  s->priority_first = 42;
+  s->priority_last = 180;
+  s->pic_not_valid = 1;
+  s->pic_is_new = 1;
+
 }
 
 
@@ -803,7 +851,8 @@ _k_base_setter(state_t *s, heap_ptr object)
   int view, loop, cell;
   int xmod = 0, ymod = 0;
   resource_t *viewres;
-
+#warning fixme!
+#if 0
   if (lookup_selector(s, object, s->selector_map.brLeft, NULL)
       != SELECTOR_VARIABLE) 
     return; /* non-fatal */
@@ -856,8 +905,9 @@ _k_base_setter(state_t *s, heap_ptr object)
 
   if (s->debug_mode & (1 << SCIkBASESETTER_NR)) {
     graph_clear_box(s, xbase, ybase + 10, xend-xbase+1, yend-ybase+1, VIEW_PRIORITY(original_y));
-    (*s->gfx_driver->Wait)(s, 100000);
+    GFX_ASSERT(gfxop_usleep(s->gfx_state, 100000));
   }
+#endif
 }
 
 void
@@ -879,7 +929,8 @@ void _k_set_now_seen(state_t *s, heap_ptr object)
   int view, loop, cell;
   int xmod = 0, ymod = 0;
   resource_t *viewres;  
-
+#warning fixme!
+#if 0
   if (lookup_selector(s, object, s->selector_map.nsTop, NULL)
       != SELECTOR_VARIABLE) { return; } /* This isn't fatal */
       
@@ -920,6 +971,7 @@ void _k_set_now_seen(state_t *s, heap_ptr object)
   PUT_SELECTOR(object, nsRight, xend);
   PUT_SELECTOR(object, nsTop, ybase);
   PUT_SELECTOR(object, nsBottom, yend);
+#endif
 }
 
 
@@ -1007,13 +1059,16 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	  char *text = s->heap + UGET_SELECTOR(obj, text);
 	  int textlen = strlen(text);
 
-	  port_t *port = s->ports[s->view_port];
+	  gfxw_port_t *port = s->port;
 
 	  if (cursor > textlen)
 	    cursor = textlen;
 
-	  graph_fill_box_custom(s, x + port->xmin, y + port->ymin,
+#warning "fixme!"
+#if 0
+	  graph_fill_box_custom(s, x + port->bounds.x, y + port->bounds.y,
 				xl, yl, port->bgcolor, -1, 0, 1); /* Clear input box background */
+#endif
 
 	  /*	  fprintf(stderr,"EditControl: mod=%04x, key=%04x, maxlen=%04x, cursor=%04x\n",
 		  modifiers, key, max, cursor);*/
@@ -1143,6 +1198,8 @@ _k_clip_view(byte *view, int *loop, int *cel)
 static void
 _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 {
+#warning fixme!
+#if 0
   int x = GET_SELECTOR(obj, nsLeft);
   int y = GET_SELECTOR(obj, nsTop);
   int xl = GET_SELECTOR(obj, nsRight) - x + 1;
@@ -1162,8 +1219,8 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
   resource_t *view_res;
 
   if (inverse) { /* Ugly hack */
-    port_t *port = s->ports[s->view_port];
-    int foo = port->bgcolor;
+    gfxw_port_t *port = s->port;
+    gfx_color_t foo = port->bgcolor;
     port->bgcolor = port->color;
     port->color = foo;
   }
@@ -1178,7 +1235,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
       SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
       break;
     }
-    graph_draw_control_button(s, s->ports[s->view_port], state, x, y, xl, yl, text, font_res->data);
+    graph_draw_control_button(s, s->port, state, x, y, xl, yl, text, font_res->data);
     break;
 
   case K_CONTROL_TEXT:
@@ -1189,10 +1246,10 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
       SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
       break;
     }
-    graph_draw_control_text(s, s->ports[s->view_port], state & ~ SELECTOR_STATE_FRAMED,
+    graph_draw_control_text(s, s->port, state & ~ SELECTOR_STATE_FRAMED,
 			    x, y, 0, xl, yl, text, font_res->data,
 			    (s->version < SCI_VERSION_FTU_CENTERED_TEXT_AS_DEFAULT)
-			    ? ALIGN_TEXT_LEFT : ALIGN_TEXT_CENTER);
+			    ? ALIGN_LEFT : ALIGN_CENTER);
     break;
 
   case K_CONTROL_EDIT:
@@ -1206,7 +1263,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 
     cursor = GET_SELECTOR(obj, cursor);
 
-    graph_draw_control_edit(s, s->ports[s->view_port], state | SELECTOR_STATE_FRAMED, x, y, xl, yl, cursor,
+    graph_draw_control_edit(s, s->port, state | SELECTOR_STATE_FRAMED, x, y, xl, yl, cursor,
 			     text, font_res->data);
     break;
 
@@ -1219,7 +1276,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
       SCIkwarn(SCIkERROR, "View.%03d not found!\n", font_nr);
       break;
     }
-    graph_draw_control_icon(s, s->ports[s->view_port], state, x, y-1, xl, yl,
+    graph_draw_control_icon(s, s->port, state, x, y-1, xl, yl,
 			     view_res->data, loop, cel);
     break;
 
@@ -1260,7 +1317,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
       SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
       break;
     }
-    graph_draw_control_control(s, s->ports[s->view_port], state, x, y, xl, yl,
+    graph_draw_control_control(s, s->port, state, x, y, xl, yl,
 				entries_list, entries_nr, list_top, selection, font_res->data);
     if (entries_nr)
       free(entries_list);
@@ -1276,20 +1333,23 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
   }
 
   if (!s->pic_not_valid)
-    graph_update_port(s, s->ports[s->view_port]);
+    graph_update_port(s, s->port);
 
   if (inverse) {
-    port_t *port = s->ports[s->view_port];
-    int foo = port->bgcolor;
+    gfxw_port_t *port = s->port;
+    gfx_color_t foo = port->bgcolor;
     port->bgcolor = port->color;
     port->color = foo;
   }
+#endif
 }
 
 void
 _k_dyn_view_list_prepare_change(state_t *s)
      /* Removes all views in anticipation of a new window or text */
 {
+#warning fixme!
+#if 0
   view_object_t *list = s->dyn_views;
   int list_nr = s->dyn_views_nr;
   int i;
@@ -1318,12 +1378,15 @@ _k_dyn_view_list_prepare_change(state_t *s)
       }
     } /* if NOT (signal & _K_VIEW_SIG_FLAG_NO_UPDATE) */
   } /* For each list member */
+#endif
 }
 
 void
 _k_restore_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
      /* Restores the view backgrounds of list_nr members of list */
 {
+#warning fixme!
+#if 0
   int i;
 
   for (i = 0; i < list_nr; i++)
@@ -1364,6 +1427,7 @@ _k_restore_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
 
     } /* if NOT (signal & _K_VIEW_SIG_FLAG_NO_UPDATE) */
   } /* For each list member */
+#endif
 }
 
 void
@@ -1372,6 +1436,8 @@ _k_view_list_free_backgrounds(state_t *s, view_object_t *list, int list_nr)
 {
   int i;
 
+#warning fixme!
+#if 0
   SCIkdebug(SCIkMEM, "Freeing bglist: %d entries\n", list_nr);
   for (i = 0; i < list_nr; i++)
     if (list[i].obj) {
@@ -1382,12 +1448,15 @@ _k_view_list_free_backgrounds(state_t *s, view_object_t *list, int list_nr)
 
     PUT_HEAP(list[i].underBitsp, list[i].underBits = 0);
   }
+#endif
 }
 
 void
 _k_save_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
      /* Stores the view backgrounds of list_nr members of list in their underBits selectors */
 {
+#warning fixme!
+#if 0
   int i;
 
   for (i = 0; i < list_nr; i++)
@@ -1408,6 +1477,7 @@ _k_save_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
 
     PUT_HEAP(list[i].underBitsp, list[i].underBits = handle);
   }
+#endif
 }
 
 void
@@ -1415,6 +1485,8 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, view_object_t *list, i
 			  int funct_nr, int argc, int argp)
      /* disposes all list members flagged for disposal; funct_nr is the invoking kfunction */
 {
+#warning fixme!
+#if 0
   int i;
 
   for (i = 0; i < list_nr; i++)
@@ -1435,6 +1507,7 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, view_object_t *list, i
 		   " a delete funcselector\n", list[i].obj);
       }
   }
+#endif
 }
 
 
@@ -1489,6 +1562,8 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int func
      ** argc, argp, funct_nr should be the same as in the calling kernel function.
      */
 {
+#warning fixme!
+#if 0
   heap_ptr node;
   view_object_t *retval;
   int i;
@@ -1633,8 +1708,8 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int func
       if (!(retval[i].signalp && (GET_HEAP(retval[i].signalp) & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {
 	SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n", retval[i].nsLeft, top,
 		  retval[i].nsRight, bottom);
-	graph_fill_box_custom(s, left + s->ports[s->view_port]->xmin,
-			      top + s->ports[s->view_port]->ymin,
+	graph_fill_box_custom(s, left + s->port->xmin,
+			      top + s->port->ymin,
 			      right - left + 1,
 			      bottom - top + 1,
 			      0, 0, 15, 4); /* Fill control map rectangle */
@@ -1651,6 +1726,9 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int func
   qsort(retval, *list_nr, sizeof(view_object_t), _cmp_view_object);
 
   return retval;
+#else
+  return NULL; /* *** FIXME!!! *** */
+#endif
 }
 
 
@@ -1658,6 +1736,8 @@ void
 _k_view_list_dispose(state_t *s, view_object_t **list_ptr, int *list_nr_ptr)
      /* Unallocates all list element data, frees the list */
 {
+#warning fixme!
+#if 0
   view_object_t *list = *list_ptr;
   if (!(*list_nr_ptr))
     return; /* Nothing to do :-( */
@@ -1667,6 +1747,7 @@ _k_view_list_dispose(state_t *s, view_object_t **list_ptr, int *list_nr_ptr)
   g_free (list);
   *list_ptr = NULL;
   *list_nr_ptr = 0;
+#endif
 }
 
 
@@ -1682,6 +1763,8 @@ void
 _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int flags)
      /* Draws list_nr members of list to s->pic. */
 {
+#warning fixme!
+#if 0
   int i;
   int argc = 0, argp = 0, funct_nr = -1; /* Kludges to work around INV_SEL dependancies */
 
@@ -1708,7 +1791,7 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int flags)
 	SCIkdebug(SCIkGRAPHICS, "  to (%d,%d) v/l/c = (%d,%d,%d), pri=%d\n", list[i].x, list[i].y,
 		  list[i].view_nr, list[i].loop, list[i].cel, list[i].priority);
 
-	draw_view0(s->pic, s->ports[s->view_port],
+	draw_view0(s->pic, s->port,
 		   list[i].x, list[i].y, list[i].priority, list[i].loop, list[i].cel,
 		   GRAPHICS_VIEW_CENTER_BASE | GRAPHICS_VIEW_USE_ADJUSTMENT, list[i].view);
       }
@@ -1745,13 +1828,15 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int flags)
     } /* ...if we're drawing disposeables and this one is disposeable, or if we're drawing non-
       ** disposeables and this one isn't disposeable */
     } /* for (i = 0; i < list_nr; i++) */
-
+#endif
 }
 
 void
 _k_dyn_view_list_accept_change(state_t *s)
      /* Restores all views after backupping their new bgs */
 {
+#warning fixme!
+#if 0
   view_object_t *list = s->dyn_views;
   int list_nr = s->dyn_views_nr;
   int i;
@@ -1779,7 +1864,7 @@ _k_dyn_view_list_accept_change(state_t *s)
 		 GRAPHICS_VIEW_CENTER_BASE | GRAPHICS_VIEW_USE_ADJUSTMENT, list[i].view);
     }
   }
-
+#endif
 }
 
 
@@ -1789,6 +1874,8 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr list = PARAM(0);
   CHECK_THIS_KERNEL_FUNCTION;
 
+#warning fixme!
+#if 0
   if (s->pic_views_nr) {
     g_free(s->pic_views);
     s->pic_views = NULL;
@@ -1805,57 +1892,73 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
   _k_draw_view_list(s, s->pic_views, s->pic_views_nr, _K_DRAW_VIEW_LIST_NONDISPOSEABLE | _K_DRAW_VIEW_LIST_DISPOSEABLE);
   /* Draw relative to the bottom center */
   SCIkdebug(SCIkGRAPHICS, "Returning.\n");
+#endif
 }
 
 
 void
 kGetPort(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->acc = s->view_port;
+  s->acc = s->port->ID;
 }
 
 
 void
 kSetPort(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  unsigned int newport = PARAM(0);
+  unsigned int port_nr = PARAM(0);
+  gfxw_port_t *new_port;
 
   CHECK_THIS_KERNEL_FUNCTION;
-
-  graph_update_port(s, s->ports[s->view_port]); /* Update the port we're leaving */
-
-  if ((newport >= MAX_PORTS) || (s->ports[newport] == NULL)) {
-    SCIkwarn(SCIkERROR, "Invalid port %04x requested\n", newport);
-    return;
+  
+  new_port = gfxw_find_port(s->visual, port_nr);
+  
+  if (!new_port) {
+	  SCIkwarn(SCIkERROR, "Invalid port %04x requested\n", port_nr);
+	  return;
   }
 
-  s->view_port = newport;
+  gfxw_draw(s->gfx_state, (gfxw_widget_t *) s->port); /* Update the port we're leaving */
+  s->port = new_port;
 }
 
 
 void
 kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  resource_t *view = findResource(sci_view, PARAM(0));
-  int loop = PARAM(1);
-  int cel = PARAM(2);
-  int x = PARAM(3);
-  int y = PARAM(4);
-  int priority = PARAM_OR_ALT(5, -1);
+	int view = PARAM(0);
+	int loop = PARAM(1);
+	int cel = PARAM(2);
+	int x = PARAM(3);
+	int y = PARAM(4);
+	int priority = PARAM_OR_ALT(5, -1);
+	gfxw_view_t *new_view;
 
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  if (!view) {
-    SCIkwarn(SCIkERROR, "Attempt to draw non-existing view.%03n\n", PARAM(0));
-    return;
-  }
-  _k_clip_view(view->data, &loop, &cel);
+	if (!view) {
+		SCIkwarn(SCIkERROR, "Attempt to draw non-existing view.%03n\n", view);
+		return;
+	}
 
-  SCIkdebug(SCIkGRAPHICS, "DrawCel((%d,%d), (view.%d, %d, %d), p=%d)\n", x, y, PARAM(0), loop,
-	    cel, priority);
+	if (gfxop_check_cel(s->gfx_state, view, &loop, &cel)) {
+		SCIkwarn(SCIkERROR, "Attempt to draw non-existing view.%03n\n", view);
+		return;
+	}
 
-  draw_view0(s->pic, s->ports[s->view_port], x, y, priority, loop, cel, 0, view->data);
+	SCIkdebug(SCIkGRAPHICS, "DrawCel((%d,%d), (view.%d, %d, %d), p=%d)\n", x, y, view, loop,
+		  cel, priority);
+
+	new_view = gfxw_new_view(s->gfx_state, gfx_point(x, y), view, loop, cel, priority, -1,
+				 ALIGN_LEFT, ALIGN_TOP, GFXW_VIEW_FLAG_DONT_MODIFY_OFFSET);
+
+	_ascertain_port_contents(s->picture_port);
+
+	s->picture_port->contents =
+		(gfxw_widget_t *) gfxw_add_to_front((gfxw_container_t *) s->picture_port->contents, (gfxw_widget_t *) new_view);
+	gfxw_draw(s->gfx_state, (gfxw_widget_t *) s->picture_port->contents);
+
 }
 
 
@@ -1863,114 +1966,63 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  unsigned int goner = PARAM(0);
+  unsigned int goner_nr = PARAM(0);
+  gfxw_port_t *goner;
 
-  if ((goner >= MAX_PORTS) || (goner < 3) ||(s->ports[goner] == NULL)) {
-    SCIkwarn(SCIkERROR, "Removal of invalid window %04x requested\n", goner);
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  goner = gfxw_find_port(s->visual, goner_nr);
+
+  if ((goner_nr < 3) || (goner == NULL)) {
+    SCIkwarn(SCIkERROR, "Removal of invalid window %04x requested\n", goner_nr);
     return;
   }
 
-  if (goner == s->view_port) /* Are we killing the active port? */
-    s->view_port = s->ports[goner]->predecessor; /* Set predecessor as active port if so */
+  if (goner == s->port) /* Are we killing the active port? */
+    s->port = s->port->predecessor; /* Set predecessor as active port if so */
 
-  _k_dyn_view_list_prepare_change(s);
-  graph_restore_box(s, s->ports[goner]->bg_handle);
+  gfxw_remove_port(s->visual, goner);
 
-  _k_dyn_view_list_accept_change(s);
-
-  graph_update_port(s, s->ports[goner]);
-
-  g_free(s->ports[goner]);
-  s->ports[goner] = NULL; /* Mark as free */
+  gfxop_update(s->gfx_state);
 }
 
 
 void
 kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  unsigned int window = 3;
-  port_t *wnd;
-  int xlo, ylo;
+  gfxw_port_t *window;
+  int x, y, xl, yl, flags;
+  gfx_color_t bgcolor;
+  char *text;
+  int priority;
 
   CHECK_THIS_KERNEL_FUNCTION;
 
-  while ((window < MAX_PORTS) && (s->ports[window]))
-    ++window;
+  y = PARAM(0) + 10;
+  x = PARAM(1);
+  yl = PARAM(2) - y + 2;
+  xl = PARAM(3) - x + 1;
 
-  if (window == MAX_PORTS) {
-    KERNEL_OOPS("Out of window/port handles in kNewWindow! Increase MAX_PORTS in engine.h\n");
-    return;
-  }
+  if (x+xl > 319)
+    x -= ((x+xl) - 319);
 
-  graph_update_port(s, s->ports[s->view_port]); /* Update the port we're leaving */
+  flags = PARAM(5);
 
-  wnd = g_malloc0(sizeof(port_t));
+  bgcolor = s->ega_colors[PARAM_OR_ALT(8, 15)];
+  priority = PARAM_OR_ALT(6, -1);
+  bgcolor.mask = GFX_MASK_VISUAL | ((priority >= 0)? GFX_MASK_PRIORITY : 0);
+  bgcolor.priority = priority;
 
-  wnd->ymin = PARAM(0) + 10;
-  wnd->xmin = PARAM(1);
-  wnd->ymax = PARAM(2) + 10; /*  +10 because of the menu bar- SCI scripts don't count it */
-  wnd->xmax = PARAM(3) + 1;
-  wnd->title = PARAM(4);
-  wnd->flags = PARAM(5);
-  wnd->priority = PARAM(6);
-  wnd->color = PARAM_OR_ALT(7, 0);
-  wnd->bgcolor = PARAM_OR_ALT(8, 15);
-  wnd->font = s->titlebar_port.font; /* Default to 'system' font */
-  wnd->font_nr = s->titlebar_port.font_nr;
-  wnd->predecessor = s->view_port;
+  window = sciw_new_window(s, gfx_rect(x, y, xl, yl), s->titlebar_port->font_nr, 
+			s->ega_colors[PARAM_OR_ALT(7, 0)], bgcolor, s->titlebar_port->font_nr,
+			s->ega_colors[15], s->ega_colors[8], s->heap + UPARAM(4), flags);
 
-  wnd->alignment = ALIGN_TEXT_LEFT; /* FIXME?? */
+  gfxw_draw(s->gfx_state, (gfxw_widget_t *) window);
+  gfxop_update(s->gfx_state);
 
-  if (wnd->ymax > 199) {
-    int correction =  wnd->ymax - 199;
-    wnd->ymin -= correction;
-    wnd->ymax -= correction;
-  }
+  s->port = window; /* Set active port */
 
-  if (wnd->ymax > 319) {
-    int correction = wnd->xmax - 319;
-    wnd->xmin -= correction;
-    wnd->xmax -= correction;
-  }
-
-  if (wnd->priority == -1)
-    wnd->priority = 16; /* Max priority + 1*/
-
-  s->ports[window] = wnd;
-
-  xlo = wnd->xmin;
-  ylo = wnd->ymin - ((wnd->flags & WINDOW_FLAG_TITLE)? 10 : 0);
-  /* Windows with a title bar get positioned in a way ignoring the title bar. */
-
-  if (!(wnd->flags&WINDOW_FLAG_DONTDRAW))
-  {
-    _k_dyn_view_list_prepare_change(s);
-
-    wnd->bg_handle = graph_save_box(s, xlo, ylo, wnd->xmax - xlo + 1, wnd->ymax - ylo + 1, 3);
-
-    draw_window(s->pic, s->ports[window], wnd->bgcolor, wnd->priority,
-	        s->heap + wnd->title, s->titlebar_port.font , wnd->flags); /* Draw window */
-
-    _k_dyn_view_list_accept_change(s);
-
-  }
-
-  /* Now sanitize the port values */
-  if (wnd->xmin < 0)
-    wnd->xmin = 0;
-  if (wnd->xmax > 319)
-    wnd->xmax = 319;
-  if (wnd->ymin < 10)
-    wnd->ymin = 10;
-  if (wnd->ymax > 199)
-    wnd->ymax = 199;
-
-  if (!(wnd->flags&WINDOW_FLAG_DONTDRAW))
-    graph_update_port(s, wnd); /* Update viewscreen */
-
-  s->view_port = window; /* Set active port */
-
-  s->acc = window;
+  s->acc = window->ID;
 }
 
 
@@ -1998,6 +2050,10 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #define K_ANIMATE_OPEN_SIMPLE 100 /* No animation */
 
 
+#define GRAPH_BLANK_BOX(s, x, y, xl, yl, color) GFX_ASSERT(gfxop_fill_box(s->gfx_state, gfx_rect(x, y, xl, yl), s->ega_colors[color]));
+
+#define GRAPH_UPDATE_BOX(s, x, y, xl, yl) GFX_ASSERT(gfxop_draw_pixmap(s->gfx_state, newscreen, gfx_rect(x, (y) - 10, xl, yl), gfx_point(x, y)));
+
 void
 kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
      /* Animations are supposed to take a maximum of s->animation_delay milliseconds. */
@@ -2007,11 +2063,20 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr cast_list = UPARAM_OR_ALT(0, 0);
   int cycle = UPARAM_OR_ALT(1, 0);
   int open_animation = 0;
+  gfx_pixmap_t *oldscreen = NULL;
 
   CHECK_THIS_KERNEL_FUNCTION;
 
+  SCI_MEMTEST;
   process_sound_events(s); /* Take care of incoming events (kAnimate is called semi-regularly) */
 
+  open_animation = (s->pic_is_new) && (s->pic_not_valid);
+
+  if (open_animation)
+	  gfxop_clear_box(s->gfx_state, gfx_rect(0, 10, 320, 190)); /* Propagate pic */
+
+#warning fixme!
+#if 0
   if (!cast_list)
     _k_view_list_dispose(s, &(s->dyn_views), &(s->dyn_views_nr)); /* Clear dynviews list */
 
@@ -2041,260 +2106,293 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
     _k_view_list_dispose_loop(s, cast_list, s->dyn_views, s->dyn_views_nr, funct_nr, argc, argp);
   } /* if (cast_list) */
 
-  open_animation = (s->pic_is_new) && (s->pic_not_valid);
+#endif
 
   if (open_animation) {
+	  gfx_pixmap_t *newscreen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 10, 320, 190));
+
+	  if (!newscreen) {
+		  SCIkwarn(SCIkERROR, "Failed to allocate 'newscreen'!\n");
+		  return;
+	  }
+
+	  GFX_ASSERT(gfxop_draw_pixmap(s->gfx_state, s->old_screen, gfx_rect(0, 0, 320, 190), gfx_point(0, 10)));
+	  gfxop_update_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
+
+	  SCIkdebug(SCIkGRAPHICS, "Animating pic opening type %x\n", s->pic_animate);
+
+	  gfxop_enable_dirty_frames(s->gfx_state);
+
+	  switch(s->pic_animate) {
+	  case K_ANIMATE_BORDER_CLOSE_H_CENTER_OPEN_H :
+
+		  for (i = 0; i < 160; i++) {
+			  GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
+			  GRAPH_BLANK_BOX(s, 319-i, 10, 1, 190, 0);
+			  gfxop_update(s->gfx_state);
+			  gfxop_usleep(s->gfx_state, s->animation_delay);
+			  process_sound_events(s);
+		  }
+
+	  case K_ANIMATE_CENTER_OPEN_H :
+
+		  for (i = 159; i >= 0; i--) {
+			  GRAPH_UPDATE_BOX(s, i, 10, 1, 190);
+			  GRAPH_UPDATE_BOX(s, 319-i, 10, 1, 190);
+			  gfxop_update(s->gfx_state);
+			  gfxop_usleep(s->gfx_state, s->animation_delay);
+			  process_sound_events(s);
+		  }
+		  break;
+
+
+	  case K_ANIMATE_BORDER_CLOSE_V_CENTER_OPEN_V :
+
+		  for (i = 0; i < 95; i++) {
+			  GRAPH_BLANK_BOX(s, 0, i + 10, 320, 1, 0);
+			  GRAPH_BLANK_BOX(s, 0, 199 - i, 320, 1, 0);
+			  gfxop_update(s->gfx_state);
+			  gfxop_usleep(s->gfx_state, 2 * s->animation_delay);
+			  process_sound_events(s);
+		  }
+
+	  case K_ANIMATE_CENTER_OPEN_V :
+
+		  for (i = 94; i >= 0; i--) {
+			  GRAPH_UPDATE_BOX(s, 0, i + 10, 320, 1);
+			  GRAPH_UPDATE_BOX(s, 0, 199 - i, 320, 1);
+			  gfxop_update(s->gfx_state);
+			  gfxop_usleep(s->gfx_state, 2 * s->animation_delay);
+			  process_sound_events(s);
+		  }
+		  break;
+
+
+	  case K_ANIMATE_LEFT_CLOSE_RIGHT_OPEN :
+
+		  for(i = 0; i < 320; i++) {
+			  GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
+			  gfxop_update(s->gfx_state);
+			  gfxop_usleep(s->gfx_state, s->animation_delay / 2);
+			  process_sound_events(s);
+		  }
 
-    SCIkdebug(SCIkGRAPHICS, "Animating pic opening type %x\n", s->pic_animate);
+	  case K_ANIMATE_RIGHT_OPEN :
+		  for(i = 319; i >= 0; i--) {
+			  GRAPH_UPDATE_BOX(s, i, 10, 1, 190);
+			  gfxop_update(s->gfx_state);
+			  gfxop_usleep(s->gfx_state, s->animation_delay / 2);
+			  process_sound_events(s);
+		  }
+		  break;
 
-    switch(s->pic_animate) {
-    case K_ANIMATE_BORDER_CLOSE_H_CENTER_OPEN_H :
 
-      for (i = 0; i < 160; i++) {
-	graph_clear_box(s, i, 10, 1, 190, 0);
-	graph_clear_box(s, 319-i, 10, 1, 190, 0);
-	(*s->gfx_driver->Wait)(s, s->animation_delay);
-	process_sound_events(s);
-      }
+	  case K_ANIMATE_RIGHT_CLOSE_LEFT_OPEN :
 
-    case K_ANIMATE_CENTER_OPEN_H :
+		  for(i = 319; i >= 0; i--) {
+			  GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
+			  gfxop_update(s->gfx_state);
+			  gfxop_usleep(s->gfx_state, s->animation_delay / 2);
+			  process_sound_events(s);
+		  }
 
-      for (i = 159; i >= 0; i--) {
-	graph_update_box(s, i, 10, 1, 190);
-	graph_update_box(s, 319-i, 10, 1, 190);
-	(*s->gfx_driver->Wait)(s, s->animation_delay);
-	process_sound_events(s);
-      }
-      break;
+	  case K_ANIMATE_LEFT_OPEN :
 
+		  for(i = 0; i < 320; i++) {
+			  GRAPH_UPDATE_BOX(s, i, 10, 1, 190);
+			  gfxop_update(s->gfx_state);
+			  gfxop_usleep(s->gfx_state, s->animation_delay / 2);
+			  process_sound_events(s);
+		  }
+		  break;
 
-    case K_ANIMATE_BORDER_CLOSE_V_CENTER_OPEN_V :
 
-      for (i = 0; i < 95; i++) {
-	graph_clear_box(s, 0, i + 10, 320, 1, 0);
-	graph_clear_box(s, 0, 199 - i, 320, 1, 0);
-	(*s->gfx_driver->Wait)(s, 2 * s->animation_delay);
-	process_sound_events(s);
-      }
+	  case K_ANIMATE_TOP_CLOSE_BOTTOM_OPEN :
 
-    case K_ANIMATE_CENTER_OPEN_V :
+		  for (i = 10; i < 200; i++) {
+			  GRAPH_BLANK_BOX(s, 0, i, 320, 1, 0);
+			  gfxop_update(s->gfx_state);
+			  gfxop_usleep(s->gfx_state, s->animation_delay);
+			  process_sound_events(s);
+		  }
 
-      for (i = 94; i >= 0; i--) {
-	graph_update_box(s, 0, i + 10, 320, 1);
-	graph_update_box(s, 0, 199 - i, 320, 1);
-	(*s->gfx_driver->Wait)(s, 2 * s->animation_delay);
-	process_sound_events(s);
-      }
-      break;
+	  case K_ANIMATE_BOTTOM_OPEN :
 
+		  for (i = 199; i >= 10; i--) {
+			  GRAPH_UPDATE_BOX(s, 0, i, 320, 1);
+			  gfxop_update(s->gfx_state);
+			  gfxop_usleep(s->gfx_state, s->animation_delay);
+			  process_sound_events(s);
+		  }
+		  break;
 
-    case K_ANIMATE_LEFT_CLOSE_RIGHT_OPEN :
 
-      for(i = 0; i < 320; i++) {
-	graph_clear_box(s, i, 10, 1, 190, 0);
-	(*s->gfx_driver->Wait)(s, s->animation_delay / 2);
-	process_sound_events(s);
-      }
+	  case K_ANIMATE_BOTTOM_CLOSE_TOP_OPEN :
 
-    case K_ANIMATE_RIGHT_OPEN :
-      for(i = 319; i >= 0; i--) {
-	graph_update_box(s, i, 10, 1, 190);
-	(*s->gfx_driver->Wait)(s, s->animation_delay / 2);
-	process_sound_events(s);
-      }
-      break;
+		  for (i = 199; i >= 10; i--) {
+			  GRAPH_BLANK_BOX(s, 0, i, 320, 1, 0);
+			  gfxop_update(s->gfx_state);
+			  gfxop_usleep(s->gfx_state, s->animation_delay);
+			  process_sound_events(s);
+		  }
 
+	  case K_ANIMATE_TOP_OPEN :
 
-    case K_ANIMATE_RIGHT_CLOSE_LEFT_OPEN :
+		  for (i = 10; i < 200; i++) {
+			  GRAPH_UPDATE_BOX(s, 0, i, 320, 1);
+			  gfxop_update(s->gfx_state);
+			  gfxop_usleep(s->gfx_state, s->animation_delay);
+			  process_sound_events(s);
+		  }
+		  break;
 
-      for(i = 319; i >= 0; i--) {
-	graph_clear_box(s, i, 10, 1, 190, 0);
-	(*s->gfx_driver->Wait)(s, s->animation_delay / 2);
-	process_sound_events(s);
-      }
 
-    case K_ANIMATE_LEFT_OPEN :
+	  case K_ANIMATE_CENTER_CLOSE_F_BORDER_OPEN_F :
 
-      for(i = 0; i < 320; i++) {
-	graph_update_box(s, i, 10, 1, 190);
-	(*s->gfx_driver->Wait)(s, s->animation_delay / 2);
-	process_sound_events(s);
-      }
-      break;
+		  for (i = 31; i >= 0; i--) {
+			  int height = i * 3;
+			  int width = i * 5;
 
+			  GRAPH_BLANK_BOX(s, width, 10 + height, 5, 190 - 2*height, 0);
+			  GRAPH_BLANK_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height, 0);
+			  
+			  GRAPH_BLANK_BOX(s, width, 10 + height, 320 - 2*width, 3, 0);
+			  GRAPH_BLANK_BOX(s, width, 200 - 3 - height, 320 - 2*width, 3, 0);
 
-    case K_ANIMATE_TOP_CLOSE_BOTTOM_OPEN :
+			  gfxop_update(s->gfx_state);
+			  gfxop_usleep(s->gfx_state, 4 * s->animation_delay);
+			  process_sound_events(s);
+		  }
 
-      for (i = 10; i < 200; i++) {
-	graph_clear_box(s, 0, i, 320, 1, 0);
-	(*s->gfx_driver->Wait)(s, s->animation_delay);
-	process_sound_events(s);
-      }
+	  case K_ANIMATE_BORDER_OPEN_F :
 
-    case K_ANIMATE_BOTTOM_OPEN :
+		  for (i = 0; i < 32; i++) {
+			  int height = i * 3;
+			  int width = i * 5;
 
-      for (i = 199; i >= 10; i--) {
-	graph_update_box(s, 0, i, 320, 1);
-	(*s->gfx_driver->Wait)(s, s->animation_delay);
-	process_sound_events(s);
-      }
-      break;
+			  GRAPH_UPDATE_BOX(s, width, 10 + height, 5, 190 - 2*height);
+			  GRAPH_UPDATE_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height);
 
+			  GRAPH_UPDATE_BOX(s, width, 10 + height, 320 - 2*width, 3);
+			  GRAPH_UPDATE_BOX(s, width, 200 - 3 - height, 320 - 2*width, 3);
 
-    case K_ANIMATE_BOTTOM_CLOSE_TOP_OPEN :
+			  gfxop_update(s->gfx_state);
+			  gfxop_usleep(s->gfx_state, 4 * s->animation_delay);
+			  process_sound_events(s);
+		  }
 
-      for (i = 199; i >= 10; i--) {
-	graph_clear_box(s, 0, i, 320, 1, 0);
-	(*s->gfx_driver->Wait)(s, s->animation_delay);
-	process_sound_events(s);
-      }
+		  break;
 
-    case K_ANIMATE_TOP_OPEN :
 
-      for (i = 10; i < 200; i++) {
-	graph_update_box(s, 0, i, 320, 1);
-	(*s->gfx_driver->Wait)(s, s->animation_delay);
-	process_sound_events(s);
-      }
-      break;
+	  case K_ANIMATE_BORDER_CLOSE_F_CENTER_OPEN_F :
 
+		  for (i = 0; i < 32; i++) {
+			  int height = i * 3;
+			  int width = i * 5;
 
-    case K_ANIMATE_CENTER_CLOSE_F_BORDER_OPEN_F :
+			  GRAPH_BLANK_BOX(s, width, 10 + height, 5, 190 - 2*height, 0);
+			  GRAPH_BLANK_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height, 0);
 
-      for (i = 31; i >= 0; i--) {
-	int height = i * 3;
-	int width = i * 5;
+			  GRAPH_BLANK_BOX(s, width, 10 + height, 320 - 2*width, 4, 0);
+			  GRAPH_BLANK_BOX(s, width, 200 - 4 - height, 320 - 2*width, 4, 0);
 
-	graph_clear_box(s, width, 10 + height, 5, 190 - 2*height, 0);
-	graph_clear_box(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height, 0);
+			  gfxop_update(s->gfx_state);
+			  gfxop_usleep(s->gfx_state, 7 * s->animation_delay);
+			  process_sound_events(s);
+		  }
 
-	graph_clear_box(s, width, 10 + height, 320 - 2*width, 3, 0);
-	graph_clear_box(s, width, 200 - 3 - height, 320 - 2*width, 3, 0);
+	  case K_ANIMATE_CENTER_OPEN_F :
 
-	(*s->gfx_driver->Wait)(s, 4 * s->animation_delay);
-	process_sound_events(s);
-      }
+		  for (i = 31; i >= 0; i--) {
+			  int height = i * 3;
+			  int width = i * 5;
 
-    case K_ANIMATE_BORDER_OPEN_F :
+			  GRAPH_UPDATE_BOX(s, width, 10 + height, 5, 190 - 2*height);
+			  GRAPH_UPDATE_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height);
 
-      for (i = 0; i < 32; i++) {
-	int height = i * 3;
-	int width = i * 5;
+			  GRAPH_UPDATE_BOX(s, width, 10 + height, 320 - 2 * width, 3);
+			  GRAPH_UPDATE_BOX(s, width, 200 - 3 - height, 320 - 2 * width, 3);
 
-	graph_update_box(s, width, 10 + height, 5, 190 - 2*height);
-	graph_update_box(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height);
+			  gfxop_update(s->gfx_state);
+			  gfxop_usleep(s->gfx_state, 7 * s->animation_delay);
+			  process_sound_events(s);
+		  }
 
-	graph_update_box(s, width, 10 + height, 320 - 2*width, 3);
-	graph_update_box(s, width, 200 - 3 - height, 320 - 2*width, 3);
+		  break;
 
-	(*s->gfx_driver->Wait)(s, 4 * s->animation_delay);
-	process_sound_events(s);
-      }
 
-      break;
+	  case K_ANIMATE_CLOSE_CHECKERS_OPEN_CHECKERS :
 
+		  memset(checkers, 0, sizeof(checkers));
+		  remaining_checkers = 19 * 32;
 
-    case K_ANIMATE_BORDER_CLOSE_F_CENTER_OPEN_F :
+		  while (remaining_checkers) {
+			  int x, y, checker = 1 + (int) (1.0 * remaining_checkers*rand()/(RAND_MAX+1.0));
+			  i = -1;
 
-      for (i = 0; i < 32; i++) {
-	int height = i * 3;
-	int width = i * 5;
+			  while (checker)
+				  if (checkers[++i] == 0) --checker;
+			  checkers[i] = 1; /* Mark checker as used */
 
-	graph_clear_box(s, width, 10 + height, 5, 190 - 2*height, 0);
-	graph_clear_box(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height, 0);
+			  x = i % 32;
+			  y = i / 32;
 
-	graph_clear_box(s, width, 10 + height, 320 - 2*width, 4, 0);
-	graph_clear_box(s, width, 200 - 4 - height, 320 - 2*width, 4, 0);
+			  GRAPH_BLANK_BOX(s, x * 10, 10 + y * 10, 10, 10, 0);
+			  gfxop_update(s->gfx_state);
+			  if (remaining_checkers & 1) {
+				  gfxop_usleep(s->gfx_state, s->animation_delay / 4);
+			  }
 
-	(*s->gfx_driver->Wait)(s, 7 * s->animation_delay);
-	process_sound_events(s);
-      }
+			  --remaining_checkers;
+			  process_sound_events(s);
+		  }
 
-    case K_ANIMATE_CENTER_OPEN_F :
+	  case K_ANIMATE_OPEN_CHECKERS :
 
-      for (i = 31; i >= 0; i--) {
-	int height = i * 3;
-	int width = i * 5;
+		  memset(checkers, 0, sizeof(checkers));
+		  remaining_checkers = 19 * 32;
 
-	graph_update_box(s, width, 10 + height, 5, 190 - 2*height);
-	graph_update_box(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height);
+		  while (remaining_checkers) {
+			  int x, y, checker = 1 + (int) (1.0 * remaining_checkers * rand()/(RAND_MAX+1.0));
+			  i = -1;
 
-	graph_update_box(s, width, 10 + height, 320 - 2 * width, 3);
-	graph_update_box(s, width, 200 - 3 - height, 320 - 2 * width, 3);
+			  while (checker)
+				  if (checkers[++i] == 0) --checker;
+			  checkers[i] = 1; /* Mark checker as used */
 
-	(*s->gfx_driver->Wait)(s, 7 * s->animation_delay);
-	process_sound_events(s);
-      }
+			  x = i % 32;
+			  y = i / 32;
 
-      break;
+			  GRAPH_UPDATE_BOX(s, x * 10, 10 + y * 10, 10, 10);
 
+			  gfxop_update(s->gfx_state);
+			  if (remaining_checkers & 1) {
+				  gfxop_usleep(s->gfx_state, s->animation_delay / 4);
+			  }
 
-    case K_ANIMATE_CLOSE_CHECKERS_OPEN_CHECKERS :
+			  --remaining_checkers;
+			  process_sound_events(s);
+		  }
 
-      memset(checkers, 0, sizeof(checkers));
-      remaining_checkers = 19 * 32;
+		  break;
 
-      while (remaining_checkers) {
-	int x, y, checker = 1 + (int) (1.0 * remaining_checkers*rand()/(RAND_MAX+1.0));
-	i = -1;
 
-	while (checker)
-	  if (checkers[++i] == 0) --checker;
-	checkers[i] = 1; /* Mark checker as used */
+	  default:
+		  if (s->pic_animate != K_ANIMATE_OPEN_SIMPLE)
+			  SCIkwarn(SCIkWARNING, "Unknown opening animation 0x%02x\n", s->pic_animate);
 
-	x = i % 32;
-	y = i / 32;
+		  GRAPH_UPDATE_BOX(s, 0, 10, 320, 190);
+	  }
 
-	graph_clear_box(s, x * 10, 10 + y * 10, 10, 10, 0);
-        if (remaining_checkers & 1)
-	  s->gfx_driver->Wait(s, s->animation_delay / 4);
+	  s->pic_is_new = 0;
+	  s->pic_not_valid = 0;
+	  return;
 
-	--remaining_checkers;
-	process_sound_events(s);
-      }
 
-    case K_ANIMATE_OPEN_CHECKERS :
-
-      memset(checkers, 0, sizeof(checkers));
-      remaining_checkers = 19 * 32;
-
-      while (remaining_checkers) {
-	int x, y, checker = 1 + (int) (1.0 * remaining_checkers * rand()/(RAND_MAX+1.0));
-	i = -1;
-
-	while (checker)
-	  if (checkers[++i] == 0) --checker;
-	checkers[i] = 1; /* Mark checker as used */
-
-	x = i % 32;
-	y = i / 32;
-
-	graph_update_box(s, x * 10, 10 + y * 10, 10, 10);
-
-	if (remaining_checkers & 1)
-	  s->gfx_driver->Wait(s, s->animation_delay / 4);
-
-	--remaining_checkers;
-	process_sound_events(s);
-      }
-
-      break;
-
-
-    default:
-      if (s->pic_animate != K_ANIMATE_OPEN_SIMPLE)
-	SCIkwarn(SCIkWARNING, "Unknown opening animation 0x%02x\n", s->pic_animate);
-
-      graph_update_box(s, 0, 10, 320, 190);
-    }
-
-    s->pic_is_new = 0;
-    s->pic_not_valid = 0;
-    return;
-
-  } /* if ((cast_list == 0) && (!s->pic_not_valid)) */
-
-  graph_update_box(s, 0, 10, 320, 190); /* Just update and return */
+	  GFX_ASSERT(gfxop_free_pixmap(s->gfx_state, s->old_screen));
+	  GFX_ASSERT(gfxop_free_pixmap(s->gfx_state, newscreen));
+	  s->old_screen = NULL;
+  } /* if (open_animation) */
 
   s->pic_not_valid = 0;
 
@@ -2305,14 +2403,16 @@ kShakeScreen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int shakes = PARAM_OR_ALT(0, 1);
   int i;
-
+#warning fixme!
+#if 0
   for (i = 0; i < shakes; i++) {
     (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_ALL, 0, -10,0,0);
-    (*s->gfx_driver->Wait)(s, 15000);
+    gfxop_usleep(s->gfx_state, 15000);
     (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_ALL, 0, 10,0,0);
-    (*s->gfx_driver->Wait)(s, 15000);
+    gfxop_usleep(s->gfx_state, 15000);
   }
   (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_ALL, 0,0,0,0);
+#endif
 }
 
 #define K_DISPLAY_SET_COORDS 100
@@ -2330,6 +2430,8 @@ kShakeScreen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+#warning fixme!
+#if 0
   int argpt;
   int textp = UPARAM(0);
   int index = UPARAM(1);
@@ -2338,12 +2440,12 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int save_under = 0;
   char *text;
   resource_t *font_resource;
-  port_t *port = s->ports[s->view_port];
+  port_t *port = s->port;
   port_t save;
   int update_immediately = 1;
 
   save=*port;
-  port->alignment = ALIGN_TEXT_LEFT;
+  port->alignment = ALIGN_LEFT;
 
   CHECK_THIS_KERNEL_FUNCTION;
 
@@ -2470,7 +2572,7 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
   *port=save;
-
+#endif
 }
 
 

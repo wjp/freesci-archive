@@ -29,7 +29,8 @@
 #include <sound.h>
 #include <uinput.h>
 #include <console.h>
-#include <graphics.h>
+#include <gfx_operations.h>
+#include <gfx_drivers_list.h>
 #include <sci_conf.h>
 #include <kdebug.h>
 #include <sys/types.h>
@@ -77,7 +78,12 @@
 /* Neither NetBSD nor Win32 have this function, although it's in POSIX 1b */
 #endif /* !HAVE_SCHED_YIELD */
 
+static gfx_state_t static_gfx_state; /* see below */
+static gfx_options_t static_gfx_options; /* see below */
+
 static state_t *gamestate; /* The main game state */
+static gfx_state_t *gfx_state = &static_gfx_state; /* The graphics state */
+static gfx_options_t *gfx_options = &static_gfx_options; /* Graphics options */
 
 static int _script_debug_flag = 0;
 
@@ -237,6 +243,7 @@ static struct option options[] = {
 };
 #endif /* HAVE_GETOPT_H */
 
+
 int
 main(int argc, char** argv)
 {
@@ -252,6 +259,7 @@ main(int argc, char** argv)
   char work_dir[PATH_MAX+1];
   char *game_name;
   sci_version_t version = 0, cmd_version = 0;
+  gfx_driver_t *gfx_driver;
 
   getcwd(startdir, PATH_MAX);
 
@@ -310,7 +318,7 @@ main(int argc, char** argv)
 	if (i != 0)
 	  printf(", ");
 
-	printf(gfx_drivers[i]->Name);
+	printf(gfx_drivers[i]->name);
 
 	i++;
       }
@@ -406,6 +414,7 @@ main(int argc, char** argv)
     fprintf(stderr,"Error while loading resources: %s!\n", SCI_Error_Types[i]);
     exit(1);
   };
+
   printf("SCI resources loaded.\n");
 
   chdir (startdir);
@@ -413,14 +422,17 @@ main(int argc, char** argv)
   printf("Mapping instruments to General Midi\n");
   mapMIDIInstruments();
 
+#warning fixme!
+#if 0
   con_init();
   con_init_gfx();
+  con_visible_rows = 1; /* Fool the functions into believing that we *have* a display */
+#endif
 
   con_hook_command(&c_quit, "quit", "", "console: Quits gracefully");
   con_hook_command(&c_die, "die", "", "console: Quits ungracefully");
 
   con_passthrough = 1; /* enables all sciprintf data to be sent to stdout */
-  con_visible_rows = 1; /* Fool the functions into believing that we *have* a display */
   sciprintf("FreeSCI, version "VERSION"\n");
 
 #ifdef HAVE_READLINE_HISTORY_H
@@ -479,6 +491,19 @@ main(int argc, char** argv)
 
   gamestate->have_mouse_flag = 1; /* Assume that a pointing device is present */
 
+
+  /*--gfxinit----------*/
+  gfx_driver = &gfx_driver_ggi;
+  gfx_state->driver = gfx_driver;
+  gamestate->gfx_state = gfx_state;
+  gfx_state->version = sci_version;
+
+  if (gfxop_init_default(gfx_state, gfx_options)) { 
+	  fprintf(stderr,"Graphics initialization failed. Aborting...\n");
+	  exit(1);
+  };
+  /*------------*/
+
   if (game_init(gamestate)) { /* Initialize */
     fprintf(stderr,"Game initialization failed: Aborting...\n");
     return 1;
@@ -519,15 +544,14 @@ main(int argc, char** argv)
       gamestate->version = conf[conf_nr].version;
 
   if (conf) {
-    sci_color_mode = conf[conf_nr].color_mode;
-    gamestate->gfx_driver = conf[conf_nr].gfx_driver;
-  } else sci_color_mode = 0; /* Assume default */
+    gfx_driver = conf[conf_nr].gfx_driver;
+  };
 
   if (requested_gfx_driver) {
     int i = 0, j = -1;
 
     while ((j == -1) && gfx_drivers[i]) {
-      if (g_strcasecmp(gfx_drivers[i]->Name, requested_gfx_driver) == 0)
+      if (g_strcasecmp(gfx_drivers[i]->name, requested_gfx_driver) == 0)
 	j = i;
       i++;
     }
@@ -536,24 +560,32 @@ main(int argc, char** argv)
       fprintf(stderr,"Unsupported graphics subsystem: %s\n", requested_gfx_driver);
       return 1;
     }
-    else gamestate->gfx_driver = gfx_drivers[j];
+    else gfx_driver = gfx_drivers[j];
   }
 
-  if (!gamestate->gfx_driver)
-    gamestate->gfx_driver = gfx_drivers[0];
+  if (!gfx_driver)
+    gfx_driver = gfx_drivers[0];
 
-  if (!gamestate->gfx_driver) {
+  if (!gfx_driver) {
     fprintf(stderr,"No graphics driver found.\n");
     exit(1);
   }
+
+  gfx_options->dirty_frames = GFXOP_DIRTY_FRAMES_CLUSTERS;
+  gfx_options->pic0_dither_mode = GFXR_DITHER_MODE_D256;
 
   if (strlen (conf[conf_nr].debug_mode))
     set_debug_mode (gamestate, 1, conf[conf_nr].debug_mode);
 
   /* Now configure the graphics driver with the specified options */
   for (i = 0; i < conf[conf_nr].gfx_config_nr; i++)
-    (conf[conf_nr].gfx_driver->Configure)(conf[conf_nr].gfx_config[i].option,
-					  conf[conf_nr].gfx_config[i].value);
+	  if ((gfx_driver->set_parameter)(gfx_driver, conf[conf_nr].gfx_config[i].option,
+					  conf[conf_nr].gfx_config[i].value))
+		  {
+			  fprintf(stderr, "Fatal error occured in graphics driver while processing \"%s = %s\"\n",
+				  conf[conf_nr].gfx_config[i].option, conf[conf_nr].gfx_config[i].value);
+			  exit(1);
+		  }
 
   gamestate->sfx_driver = sfx_drivers[0];
 
@@ -571,12 +603,6 @@ main(int argc, char** argv)
     console_logfile = fopen (conf[conf_nr].console_log, "w");
     con_file = console_logfile;
   }
-
-  /* initialize graphics */
-  if (gamestate->gfx_driver->Initialize(gamestate, gamestate->pic)) { 
-    fprintf(stderr,"Graphics initialization failed. Aborting...\n");
-    exit(1);
-  };
 
   printf("Emulating SCI version %d.%03d.%03d\n",
 	 SCI_VERSION_MAJOR(gamestate->version),
@@ -609,7 +635,7 @@ main(int argc, char** argv)
   printf(" OK.\n");
 #endif
 
-  gamestate->gfx_driver->Shutdown(gamestate); /* Shutdown graphics */
+  gfxop_exit(gfx_state);
 
   free(gamestate);
 

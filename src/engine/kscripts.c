@@ -240,10 +240,6 @@ kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
     s->clone_list[i] = 0; /* un-log clone */
   else SCIkwarn(SCIkWARNING, "Could not remove log entry from clone at %04x\n", offset);
 
-  for (i = 0; i < s->dyn_views_nr; i++)
-    if (s->dyn_views[i].obj == offset) /* Is it in the dyn_view list? */
-      s->dyn_views[i].obj = 0; /* Remove it from there */
-
   offset += SCRIPT_OBJECT_MAGIC_OFFSET; /* Step back to beginning of object */
 
   heap_free(s->_heap, offset -2); /* -2 to step back on the heap block size indicator */

@@ -30,7 +30,6 @@
 #include <console.h>
 #ifdef SCI_CONSOLE
 #include <resource.h>
-#include <graphics.h>
 #include <sound.h>
 #include <script.h>
 

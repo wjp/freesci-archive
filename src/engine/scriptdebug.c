@@ -258,6 +258,8 @@ c_classtable(state_t *s)
 int
 c_viewinfo(state_t *s)
 {
+#warning fixme!
+#if 0
   resource_t *view = findResource(sci_view, cmd_params[0].val);
   int loops, i;
 
@@ -266,7 +268,7 @@ c_viewinfo(state_t *s)
   if (!view)
     sciprintf("does not exist.\n");
   else {
-    loops = view0_loop_count(view->data);
+    loops = gfx_view_loop_count(view->data);
 
     sciprintf("has %d loops:\n", loops);
 
@@ -284,7 +286,7 @@ c_viewinfo(state_t *s)
       }
     }
   }
-  
+#endif
   return 0;
 }
 
@@ -503,7 +505,8 @@ c_save_game(state_t *s)
       return 1;
     }
   }
-
+#warning fixme!
+#if 0
   if (s->onscreen_console)
     con_restore_screen(s, s->osc_backup);
 
@@ -514,6 +517,7 @@ c_save_game(state_t *s)
   if (s->onscreen_console) {
     s->osc_backup = con_backup_screen(s);
   }
+#endif
 
   return 0;
 }
@@ -528,14 +532,17 @@ c_restore_game(state_t *s)
     sciprintf("Not in debug state\n");
     return 1;
   }
-
+#warning fixme!
+#if 0
   if (s->onscreen_console)
     con_restore_screen(s, s->osc_backup);
+#endif
 
   newstate = gamestate_restore(s, cmd_params[0].str);
 
   if (newstate) {
-
+#warning fixme!
+#if 0
     s->successor = newstate; /* Set successor */
     graph_update_box(newstate, 0, 0, 320, 200); /* Redraw screen */
     sciprintf("Game '%s' was restored.\n", cmd_params[0].str);
@@ -549,14 +556,17 @@ c_restore_game(state_t *s)
       newstate->onscreen_console = 0;
 
     /*    game_exit(s); *//* Clear old state */
+#endif
     return 0;
 
   } else {
-
+#warning fixme!
+#if 0
     if (s->onscreen_console)
       s->osc_backup = con_backup_screen(s);
 
     sciprintf("Restoring gamestate '%s' failed.\n", cmd_params[0].str);
+#endif
     return 1;
   }
 
@@ -899,6 +909,8 @@ c_dumpnodes(state_t *s)
 int
 c_dynviews(state_t *s)
 {
+#warning fixme!
+#if 0
   int i;
   
   sciprintf("%d dynviews currently active:\n",s->dyn_views_nr);
@@ -907,17 +919,22 @@ c_dynviews(state_t *s)
     sciprintf("Object at %04x with underBits %04x\n",s->dyn_views[i].obj,
 						     s->dyn_views[i].underBits);
   }
+#endif
   return 0;
 }
 
 int
 c_picviews(state_t *s)
 {
+#warning fixme!
+#if 0
   int i;
   
   sciprintf("%d picviews currently active:\n",s->pic_views_nr);
   for (i=0;i<s->pic_views_nr;i++)
     sciprintf("Object at %04x\n", s->pic_views[i].obj);
+
+#endif
   return 0;
 }
 
@@ -1022,18 +1039,6 @@ c_backtrace(state_t *s)
 }
 
 int
-c_refresh_screen(state_t *s)
-{
-  if (!s) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
-
-  (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_ALL,0,0,0,0);
-  return 0;
-}
-
-int
 c_redraw_screen(state_t *s)
 {
   if (!_debugstate_valid) {
@@ -1041,7 +1046,7 @@ c_redraw_screen(state_t *s)
     return 1;
   }
 
-  graph_update_box(s, 0, 0, 320, 200);
+  gfxop_update_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
   return 0;
 }
 
@@ -1052,7 +1057,8 @@ c_visible_map(state_t *s)
     sciprintf("Not in debug state\n");
     return 1;
   }
-
+#warning fixme!
+#if 0
   if (s->onscreen_console)
     con_restore_screen(s, s->osc_backup);
 
@@ -1061,7 +1067,7 @@ c_visible_map(state_t *s)
   
   if (s->onscreen_console)
     s->osc_backup = con_backup_screen(s);
-
+#endif
   return 0;
 }
 
@@ -1069,6 +1075,8 @@ c_visible_map(state_t *s)
 int
 c_showfont(state_t *s)
 {
+#warning fixme!
+#if 0
   resource_t *font;
   port_t port;
   int characters;
@@ -1146,7 +1154,7 @@ c_showfont(state_t *s)
     con_restore_screen(s, s->osc_backup); /* Restore screen again... */
     s->osc_backup = con_backup_screen(s); /* ...grab for onscreen display removal */
   }
-
+#endif
   return 0;
 }
 
@@ -1863,8 +1871,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 		       " stack\n  level.");
       con_hook_command(c_resource_id, "resource_id", "i", "Identifies a resource number by\n"
 		       "  splitting it up in resource type\n  and resource number.");
-      con_hook_command(c_refresh_screen, "refresh_screen", "", "Redraws the screen");
-      con_hook_command(c_redraw_screen, "redraw_screen", "", "Reloads and redraws the screen");
+      con_hook_command(c_redraw_screen, "redraw_screen", "", "Redraws the screen");
       con_hook_command(c_show_list, "listinfo", "i", "Examines the list at the specified\n  heap address");
       con_hook_command(c_mem_info, "meminfo", "", "Displays heap memory information");
       con_hook_command(c_debuglog, "debuglog", "s*", "Sets the debug log modes.\n  Possible parameters:\n"
@@ -1935,15 +1942,16 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
   if (s->sfx_driver)
     (s->sfx_driver->suspend)(s);
 
+#warning fixme!
+#if 0
   if (s->onscreen_console) {
-
     s->osc_backup = con_backup_screen(s);
     con_visible_rows = 20;
 
     con_draw(s, s->osc_backup);
 
     while (_debugstate_valid) {
-      sci_event_t event = (s->gfx_driver->GetEvent(s));
+      sci_event_t event = (gfxop_get_event(s->gfx_state));
       int redraw_console = 0;
       char *commandbuf;
 
@@ -1983,7 +1991,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
     }
 
   }
-
+#endif
   /* Resume music playing */
   if (s->sfx_driver)
     (s->sfx_driver->resume)(s);

@@ -1,2 +1,2 @@
-EXTRA_DIST = old_objects.h graphics_glx.h kernel.h event.h soundserver.h kdebug.h sci_conf.h graphics.h graphics_ggi.h resource.h script.h vocabulary.h sound.h graphics_png.h uinput.h console.h script.h vm.h engine.h util.h heap.h menubar.h versions.h graphics_ddraw.h sci_dos.h graphics_dgfx.h
+EXTRA_DIST = old_objects.h graphics_glx.h kernel.h event.h soundserver.h kdebug.h sci_conf.h resource.h script.h vocabulary.h sound.h uinput.h console.h script.h vm.h engine.h util.h heap.h menubar.h versions.h sci_dos.h gfx_driver.h  gfx_drivers_list.h  gfx_operations.h  gfx_options.h  gfx_resmgr.h  gfx_resource.h  gfx_state.h  gfx_state_internal.h  gfx_system.h  gfx_tools.h sci_graphics.h sci_widgets.h
 INCLUDES = @ac_glib_includes@

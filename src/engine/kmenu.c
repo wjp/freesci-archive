@@ -26,13 +26,13 @@
 ***************************************************************************/
 
 #include <engine.h>
-
+#include <sci_widgets.h>
 
 
 void
 kAddMenu(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  menubar_add_menu(s->menubar, s->heap + UPARAM(0), s->heap + UPARAM(1), s->titlebar_port.font, s->heap);
+  menubar_add_menu(s->menubar, s->heap + UPARAM(0), s->heap + UPARAM(1), s->titlebar_port->font_nr, s->heap);
 }
 
 
@@ -66,9 +66,9 @@ kDrawStatus(state_t *s, int funct_nr, int argc, heap_ptr argp)
   if (text)
     s->status_bar_text = strdup(s->heap + text);
 
-  status_bar_draw(s, s->status_bar_text);
+  sciw_set_status_bar(s, s->titlebar_port, s->status_bar_text);
 
-  graph_update_box(s, 0, 0, 320, 10);
+  gfxop_update(s->gfx_state);
 }
 
 
@@ -77,16 +77,19 @@ kDrawMenuBar(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   CHECK_THIS_KERNEL_FUNCTION;
 
-  if (!s->titlebar_port.font) {
-    SCIkwarn(SCIkERROR, "No titlebar font is set: %d\n", s->titlebar_port.font_nr);
+  if (!s->titlebar_port->font_nr) {
+    SCIkwarn(SCIkERROR, "No titlebar font is set: %d\n", s->titlebar_port->font_nr);
   }
 
+#warning fixme!
+#if 0
   if (PARAM(0))
-    menubar_draw(s->pic, &(s->titlebar_port) ,s->menubar, -1, s->titlebar_port.font);
+    menubar_draw(s->pic, &(s->titlebar_port), s->menubar, -1, s->titlebar_port->font_nr);
   else
     draw_titlebar(s->pic, 0);
 
   graph_update_box(s, 0, 0, 320, 10);
+#endif
 }
 
 
@@ -125,6 +128,8 @@ struct {
 void
 about_freesci(state_t *s)
 {
+#warning fixme!
+#if 0
   int page;
   port_t port;
   byte *bodyfont, *titlefont;
@@ -194,6 +199,7 @@ about_freesci(state_t *s)
 		     port.ymax - port.ymin + 14);
     
   }
+#endif
 }
 
 
@@ -215,6 +221,8 @@ _menu_go_down(state_t *s, int menu_nr, int item_nr)
 void
 kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+#warning fixme!
+#if 0
   heap_ptr event = UPARAM(0);
   int claimed = 0;
   int type = GET_SELECTOR(event, type);
@@ -416,4 +424,6 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
     SCIkdebug(SCIkMENU, "Menu: Claim -> %04x\n", s->acc);
   }
   else s->acc = 0x0; /* Not claimed */
+#endif
+  s->acc = 0; /* *** FIXME!!! *** */
 }

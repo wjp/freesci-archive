@@ -29,7 +29,8 @@
 #ifndef _SCI_MENUBAR_H_
 #define _SCI_MENUBAR_H_
 
-#include <graphics.h>
+#include <gfx_operations.h>
+#include <gfx_state.h>
 
 struct _state;
 
@@ -155,12 +156,12 @@ menubar_free(menubar_t *menubar);
 
 
 void
-menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byte *heapbase);
+menubar_add_menu(menubar_t *menubar, char *title, char *entries, int font, byte *heapbase);
 /* Adds a menu to the menubar.
 ** Parameters: (menubar_t *) menubar: The menubar to operate on
 **             (char *) title: The menu title
 **             (char *) entries: A string of menu entries
-**             (byte *) font: The font which is to be used for drawing
+**             (int) font: The font which is to be used for drawing
 **             (byte *) heapbase: Base address of the heap 'entries' is read from
 ** Returns   : (void)
 ** The menu entries use the following special characters:
@@ -199,13 +200,13 @@ menubar_get_attribute(struct _state *s, int menu, int item, int attribute);
 */
 
 void
-menubar_draw(struct gfx_picture *pic, struct gfx_port *port, menubar_t *menubar, int activated, byte *font);
+menubar_draw(struct gfx_picture *pic, gfxw_port_t *port, menubar_t *menubar, int activated, int font_nr);
 /* Draws the menu bar
 ** Parameters: (picture_t *) pic: The picture to draw to
-**             (port_t *) port: The port to draw into
+**             (gfxw_port_t *) port: The port to draw into
 **             (menubar_t *) menubar: The menu bar to draw
 **             (int) activated: The number of the menu option to activate
-**             (byte *) font: The font to draw with
+**             (int) font_nr: The font to draw with
 ** Returns   : (void)
 ** Use an illegal value for "activated" (like -1) in order not to activate any
 ** entry.

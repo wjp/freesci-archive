@@ -98,11 +98,17 @@ _free_vocabulary(state_t *s)
   s->opcodes = NULL;
 }
 
+static int sci0_palette[16][3] = {
+  {0x00, 0x00, 0x00}, {0x00, 0x00, 0xaa}, {0x00, 0xaa, 0x00}, {0x00, 0xaa, 0xaa},
+  {0xaa, 0x00, 0x00}, {0xaa, 0x00, 0xaa}, {0xaa, 0x55, 0x00}, {0xaa, 0xaa, 0xaa},
+  {0x55, 0x55, 0x55}, {0x55, 0x55, 0xff}, {0x55, 0xff, 0x55}, {0x55, 0xff, 0xff},
+  {0xff, 0x55, 0x55}, {0xff, 0x55, 0xff}, {0xff, 0xff, 0x55}, {0xff, 0xff, 0xff}};
 
 static int
 _init_graphics_input(state_t *s)
 {
-  return ((s->pic = alloc_empty_picture(SCI_RESOLUTION_320X200, SCI_COLORDEPTH_8BPP)) == NULL);
+
+	return 0;
 }
 
 static int
@@ -110,12 +116,26 @@ _reset_graphics_input(state_t *s)
 {
   resource_t *resource;
   int i, font_nr;
+  gfx_color_t transparent;
   sciprintf("Initializing graphics\n");
 
-  s->mouse_pointer = NULL; /* No mouse pointer */
+  if (sci_version <= SCI_VERSION_01) {
+    int i;
+
+    for (i = 0; i < 16; i++)
+      if (gfxop_set_color(s->gfx_state, &(s->ega_colors[i]), sci0_palette[i][0],
+			  sci0_palette[i][1], sci0_palette[i][2], 0, -1, -1))
+	return 1;
+  } else
+    if (gfxop_set_color(s->gfx_state, &(s->ega_colors[0]), 0, 0, 0, 0, -1, -1)) return 1; /* We usually need black */
+
+  transparent.mask = 0;
+
+  gfxop_fill_box(s->gfx_state, gfx_rect(0, 0, 320, 200), s->ega_colors[0]); /* Fill screen black */
+  gfxop_update(s->gfx_state);
+
   s->mouse_pointer_nr = -1; /* No mouse pointer resource */
-  s->pointer_x = (320 / 2); /* With centered x coordinate */
-  s->pointer_y = 150; /* And an y coordinate somewhere down the screen */
+  gfxop_set_pointer_position(s->gfx_state, gfx_point(160, 150));
   s->last_pointer_x = 0;
   s->last_pointer_y = 0;
   s->last_pointer_size_x = 0;
@@ -124,25 +144,7 @@ _reset_graphics_input(state_t *s)
   s->pic_not_valid = 1; /* Picture is invalid */
   s->pic_is_new = 0;
   s->pic_visible_map = 0; /* Other values only make sense for debugging */
-  s->pic_views_nr = s->dyn_views_nr = 0;
-  s->pic_views = 0; s->dyn_views = 0; /* No PicViews, no DynViews */
-
-  memset(s->ports, sizeof(s->ports), 0); /* Set to no ports */
-
-  s->wm_port.ymin = 10; s->wm_port.ymax = 199;
-  s->wm_port.xmin = 0; s->wm_port.xmax = 319;
-  s->wm_port.priority = 11;
-  s->ports[0] = &(s->wm_port); /* Window Manager port */
-
-  s->titlebar_port.ymin = 0; s->titlebar_port.ymax = 9;
-  s->titlebar_port.xmin = 0; s->titlebar_port.xmax = 319;
-  s->ports[1] = &(s->titlebar_port);
-
-  s->picture_port.ymin = 10; s->picture_port.ymax = 199;
-  s->picture_port.xmin = 0; s->picture_port.xmax = 319;
-  s->ports[2] = &(s->picture_port); /* Background picture port */
-
-  s->view_port = 0; /* Currently using the window manager port */
+  s->pic_views = NULL; s->dyn_views = NULL; /* No PicViews, no DynViews */
 
   s->priority_first = 42; /* Priority zone 0 ends here */
   s->priority_last = 200; /* The highest priority zone (15) starts here */
@@ -156,14 +158,16 @@ _reset_graphics_input(state_t *s)
     sciprintf("No text font was found.\n");
     return 1;
   }
-  for (i = 0; i < 3; i++) {
-      s->ports[i]->font = resource->data; /* let all ports default to the 'system' font */
-      s->ports[i]->gray_text = 0;
-      s->ports[i]->font_nr = font_nr;
-      s->ports[i]->priority = -1;
-      s->ports[i]->color = 0;
-      s->ports[i]->bgcolor = -1; /* All ports should be transparent */
-  }
+
+  s->visual = gfxw_new_visual(s->gfx_state, font_nr);
+  s->wm_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
+  s->titlebar_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 10), s->ega_colors[0], transparent);
+  s->picture_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
+
+  s->port = s->wm_port; /* Currently using the window manager port */
+
+  s->titlebar_port->bgcolor.mask = GFX_MASK_PRIORITY;
+  s->titlebar_port->bgcolor.priority = 11; /* Standard priority for the titlebar port */
 
   return 0;
 }
@@ -175,25 +179,12 @@ _free_graphics_input(state_t *s)
 
   sciprintf("Freeing graphics\n");
 
-  for (i = 3; i < MAX_PORTS; i++) /* Ports 0,1,2 are fixed */
-    if (s->ports[i]) {
-      g_free(s->ports[i]);
-      s->ports[i] = 0;
-    }
+  gfxw_free(s->gfx_state, s->visual);
 
-  if (s->pic_views_nr)
-  {
-    g_free(s->pic_views);
-    s->pic_views = NULL;
-  }
-
-  if (s->dyn_views_nr)
-  {
-    g_free(s->dyn_views);
-    s->dyn_views = NULL;
-  }
-
-  free_picture(s->pic);
+  s->visual = NULL;
+  s->dyn_views = NULL;
+  s->pic_views = NULL;
+  s->port = NULL;
 }
 
 
@@ -422,8 +413,6 @@ game_init(state_t *s)
   /* Initialize hunk data */
   for (i = 0; i < MAX_HUNK_BLOCKS; i++)
     s->hunk[i].size = 0;
-  /* Initialize ports */
-  memset(s->ports, 0, sizeof(port_t *) * MAX_PORTS);
   /* Initialize clone list */
   memset(&(s->clone_list), 0, sizeof(heap_ptr) * SCRIPT_MAX_CLONES);
   /* Initialize send_calls buffer */
@@ -458,9 +447,10 @@ game_init(state_t *s)
   memcpy(&(s->last_wait_time), &(s->game_start_time), sizeof(GTimeVal));
   /* Use start time as last_wait_time */
 
-  s->animation_delay = 500; /* Used in kAnimate for pic openings */
+  s->animation_delay = 5000; /* Used in kAnimate for pic openings */
 
   s->debug_mode = 0x0; /* Disable all debugging */
+  s->debug_mode = 0x4;
   s->onscreen_console = 0; /* No onscreen console unless explicitly requested */
 
   srand(time(NULL)); /* Initialize random number generator */
