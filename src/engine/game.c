@@ -225,7 +225,7 @@ suggested_script(resource_t *res, int class)
 	if (class >= res->length >> 2)
 		return -1;
 
-	offset = 2 + class << 2;
+	offset = 2 + (class << 2);
 
 	return getInt16(res->data + offset);
 }
@@ -313,7 +313,7 @@ script_init_engine(state_t *s, sci_version_t version)
 					sugg_script = suggested_script(vocab996, classnr);
 
 					/* First, test whether the script hasn't been claimed, or if it's been claimed by the wrong script */
-					if (scriptnr == sugg_script || !s->classtable[classnr].scriptposp) {
+					if (sugg_script == -1 || scriptnr == sugg_script || !s->classtable[classnr].scriptposp) {
 						/* Now set the home script of the class */
 						s->classtable[classnr].class_offset = seeker + 4 - magic_offset;
 						s->classtable[classnr].script = scriptnr;

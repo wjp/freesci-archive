@@ -1011,6 +1011,20 @@ c_redraw_screen(state_t *s)
 	return 0;
 }
 
+
+int
+c_clear_screen(state_t *s)
+{
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	gfxop_clear_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
+	gfxop_update_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
+	return 0;
+}
+
 int
 c_visible_map(state_t *s)
 {
@@ -2251,6 +2265,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 					 " stack\n  level.");
 			con_hook_command(c_resource_id, "resource_id", "i", "Identifies a resource number by\n"
 					 "  splitting it up in resource type\n  and resource number.");
+			con_hook_command(c_clear_screen, "clear_screen", "", "Clears the screen, shows the\n  background pic and picviews");
 			con_hook_command(c_redraw_screen, "redraw_screen", "", "Redraws the screen");
 			con_hook_command(c_show_list, "listinfo", "i", "Examines the list at the specified\n  heap address");
 			con_hook_command(c_mem_info, "meminfo", "", "Displays heap memory information");

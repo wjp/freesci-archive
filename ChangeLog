@@ -1,4 +1,23 @@
+2001-04-07  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/soundserver_null.c (sci_midi_command): Fixed fade-outs
+	to be audible
+
+	* src/gfx/widgets.c (_gfxwop_dyn_view_compare_to): Fixed comparisons
+	for picview widgets
+
+	* src/engine/kgraphics.c (_k_view_list_dispose_loop): Dropped dynviews
+	are now picview widgets
+
+	* src/engine/scriptdebug.c (script_debug): Added clear_screen command
+
+	* src/engine/kgraphics.c (kAnimate): Fixed dropview list to be sorted
+	in all cases
+
 2001-04-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/game.c (suggested_script): Fixed script suggestion code
+	(D'Oh!)
 
 	* src/gfx/widgets.c (gfxw_new_dyn_view): z coordinate is subtracted
 	when drawing, leaving 'pos' unmodified

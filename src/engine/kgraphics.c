@@ -1760,7 +1760,7 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_dyn_view_t *widge
 						BREAKPOINT();
 					}
 
-					s->drop_views->add(GFXWC(s->drop_views), GFXW(widget));
+					s->drop_views->add(GFXWC(s->drop_views), GFXW(gfxw_picviewize_dynview(widget)));
 
 					draw_to_control_map(s, widget, 0, funct_nr, 0, argc, argp);
 					widget->draw_bounds.y += s->dyn_views->bounds.y - widget->parent->bounds.y;
@@ -2766,7 +2766,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			reparentize = 1;
 
 		if (s->drop_views->contents) {
-			s->drop_views = gfxw_new_list(s->dyn_views->bounds, 0);
+			s->drop_views = gfxw_new_list(s->dyn_views->bounds, GFXW_LIST_SORTED);
 			s->drop_views->flags |= GFXW_FLAG_IMMUNE_TO_SNAPSHOTS;
 			ADD_TO_CURRENT_PICTURE_PORT(s->drop_views);
 		} else {

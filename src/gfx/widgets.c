@@ -963,7 +963,7 @@ _gfxwop_dyn_view_compare_to(gfxw_widget_t *widget, gfxw_widget_t *other)
 {
 	int retval;
 	gfxw_dyn_view_t *wview = (gfxw_dyn_view_t *) widget, *oview;
-	if (other->type != GFXW_DYN_VIEW)
+	if (GFXW_IS_DYN_VIEW(other))
 		return 1;
 
 	oview = (gfxw_dyn_view_t *) other;

@@ -859,13 +859,16 @@ void sci_midi_command(song_t *song, guint8 command,
 	if (song->velocity[command & 0x0f])  /* do we ignore velocities? */
 	  param2 = song->velocity[command & 0x0f];
 
-	if (song->fading != -1) {           /* is the song fading? */
-	  if (song->maxfade == 0)
-	    song->maxfade = 1;
+	if (song->fading > 0) {
+		if (song->fading != -1) {           /* is the song fading? */
+			if (song->maxfade == 0)
+				song->maxfade = 1;
+			
+			param2 = (param2 * (song->fading)) / (song->maxfade);  /* scale the velocity */
+			/*	  printf("fading %d %d\n", song->fading, song->maxfade);*/
 
-	  param2 *= (song->fading) / (song->maxfade);  /* scale the velocity */
-	  /*	  printf("fading %d %d\n", song->fading, song->maxfade);*/
-	}
+		}
+	} else param2 = 0;
 
       case 0xb0:  /* program control */
       case 0xe0:  /* pitch bend */
