@@ -463,7 +463,7 @@ sci_get_homedir()
 {
 #ifdef _WIN32
 	return getenv("WINDIR");
-#elif defined(__unix__) || !defined(X_DISPLAY_MISSING) || defined (__BEOS__)
+#elif defined(__unix__) || !defined(X_DISPLAY_MISSING) || defined (__BEOS__) || defined(MACOSX)
 	return getenv("HOME");
 #else
 #  error Please add a $HOME policy for your platform!

@@ -1,3 +1,8 @@
+2002-02-04  Max Horn  <max@quendi.de>
+
+	* src/scicore/tools.c (sci_get_homedir): Fixed compilation on Mac OS X
+	when X-Window support is disabled
+
 2002-02-03  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kernel.c (kHaveMouse): Return -1 if we have a mouse
