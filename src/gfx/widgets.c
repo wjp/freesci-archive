@@ -1086,6 +1086,7 @@ _gfxwop_container_draw_contents(gfxw_widget_t *widget, gfxw_widget_t *contents)
 	gfxw_container_t *container = (gfxw_container_t *) widget;
 	gfx_dirty_rect_t *dirty = container->dirty;
 	gfx_state_t *gfx_state = (widget->visual)? widget->visual->gfx_state : ((gfxw_visual_t *) widget)->gfx_state;
+	int draw_ports;
 
 	if (!contents)
 		return 0;
@@ -1107,25 +1108,30 @@ _gfxwop_container_draw_contents(gfxw_widget_t *widget, gfxw_widget_t *contents)
 		dirty = dirty->next;
 	}
 
-	dirty = container->dirty;
 
-	while (dirty) {
-		gfxw_widget_t *seeker = contents;
+	/* The draw loop is executed twice: Once for normal data, and once for ports. */
+	for (draw_ports = 0; draw_ports < 2; draw_ports++) {
 
-		while (seeker) {
-			if (seeker->flags & GFXW_FLAG_DIRTY) {
-				GFX_ASSERT(gfxop_set_clip_zone(gfx_state, dirty->rect));
+		dirty = container->dirty;
+
+		while (dirty) {
+			gfxw_widget_t *seeker = contents;
+
+			while (seeker && (draw_ports || !GFXW_IS_PORT(seeker))) {
+				if (seeker->flags & GFXW_FLAG_DIRTY) {
+					GFX_ASSERT(gfxop_set_clip_zone(gfx_state, dirty->rect));
 				/* Clip zone must be reset after each element in case it's a container.
 				** Doing this is relatively cheap, though. */
-				seeker->draw(seeker, gfx_point(container->zone.x, container->zone.y));
+					seeker->draw(seeker, gfx_point(container->zone.x, container->zone.y));
 
-				if (!dirty->next)
-					seeker->flags &= ~GFXW_FLAG_DIRTY;
+					if (!dirty->next)
+						seeker->flags &= ~GFXW_FLAG_DIRTY;
+				}
+
+				seeker = seeker->next;
 			}
-
-			seeker = seeker->next;
+			dirty = dirty->next;
 		}
-		dirty = dirty->next;
 	}
 	/* Remember that the dirty rects should be freed afterwards! */
 

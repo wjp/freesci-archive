@@ -1,5 +1,13 @@
 2000-12-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/gfx/widgets.c (_gfxwop_container_draw_contents): Altered the
+	drawing algorithm to draw non-ports first, then ports.
+
+	* src/engine/kgraphics.c: Added BaseSetter and SetNowSeen
+	(kDrawCel): Changed cel drawing to draw to the current port
+
+	* src/gfx/sci_widgets.c (sciw_new_list_control): Added list controls
+
 	* src/gfx/widgets.c (_gfxwop_rect_draw): Fixed OB1 bug in rect
 	drawing (OB1x1, actually ;-)
 

@@ -529,6 +529,14 @@ gfxop_add_to_pic(gfx_state_t *state, int nr, int flags, int default_palette);
 
 
 int
+gfxop_get_font_height(gfx_state_t *state, int font_nr);
+/* Returns the fixed line height for one specified font
+** Parameters: (gfx_state_t *) state: The state to work on
+**             (int) font_nr: Number of the font to inspect
+** Returns   : (int) GFX_ERROR, GFX_FATAL, or the font line height
+*/
+
+int
 gfxop_get_text_params(gfx_state_t *state, int font_nr, char *text,
 		      int maxwidth, int *width, int *height);
 /* Calculates the width and height of a specified text in a specified font

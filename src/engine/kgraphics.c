@@ -870,132 +870,114 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 _k_base_setter(state_t *s, heap_ptr object)
 {
-  int x, y, original_y, z, ystep, xsize, ysize;
-  int xbase, ybase, xend, yend;
-  int view, loop, cell;
-  int xmod = 0, ymod = 0;
-  resource_t *viewres;
-#warning fixme!
-#if 0
-  if (lookup_selector(s, object, s->selector_map.brLeft, NULL)
-      != SELECTOR_VARIABLE) 
-    return; /* non-fatal */
-      
-  x = GET_SELECTOR(object, x);
-  original_y = y = GET_SELECTOR(object, y);
+	int x, y, original_y, z, ystep, xsize, ysize;
+	int xbase, ybase, xend, yend;
+	int view, loop, cel;
+	int xmod = 0, ymod = 0;
 
-  if (s->selector_map.z > -1)
-    z = GET_SELECTOR(object, z);
-  else
-    z = 0;
+	if (lookup_selector(s, object, s->selector_map.brLeft, NULL)
+	    != SELECTOR_VARIABLE) 
+		return; /* non-fatal */
 
-  y -= z; /* Subtract z offset */
+	x = GET_SELECTOR(object, x);
+	original_y = y = GET_SELECTOR(object, y);
 
-  ystep = GET_SELECTOR(object, yStep);
-  view = GET_SELECTOR(object, view);
-  loop = GET_SELECTOR(object, loop);
-  cell = GET_SELECTOR(object, cel);
+	if (s->selector_map.z > -1)
+		z = GET_SELECTOR(object, z);
+	else
+		z = 0;
 
-  viewres = findResource(sci_view, view);
+	y -= z; /* Subtract z offset */
 
-  if (!viewres)
-    xsize = ysize = 0;
-  else {
-    _k_clip_loop_cel(&loop, &cell, viewres->data);
-    xsize = view0_cel_width(loop, cell, viewres->data);
-    ysize = view0_cel_height(loop, cell, viewres->data);
-  }
+	ystep = GET_SELECTOR(object, yStep);
+	view = GET_SELECTOR(object, view);
+	loop = GET_SELECTOR(object, loop);
+	cel = GET_SELECTOR(object, cel);
 
+	if (gfxop_check_cel(s->gfx_state, view, &loop, &cel)) {
+		xsize = ysize = xmod = ymod = 0;
+	} else {
+		point_t offset = gfx_point(0, 0);
 
-  if ((xsize < 0) || (ysize < 0))
-    xsize = ysize = 0; /* Invalid view/loop */
-  else
-    view0_base_modify(loop, cell, viewres->data, &xmod, &ymod);
+		gfxop_get_cel_parameters(s->gfx_state, view, loop, cel,
+					 &xsize, &ysize, &offset);
 
-  xbase = x - xmod - (xsize) / 2;
-  xend = xbase + xsize;
-  yend = y /*- ymod*/ + 1;
-  ybase = yend - ystep;
+		xmod = offset.x;
+		ymod = offset.y;
+	}
 
-  SCIkdebug(SCIkBASESETTER, "(%d,%d)+/-(%d,%d), (%d x %d) -> (%d, %d) to (%d, %d)\n",
-	    x, y, xmod, ymod, xsize, ysize, xbase, ybase, xend, yend);
+	xbase = x - xmod - (xsize) / 2;
+	xend = xbase + xsize;
+	yend = y /*- ymod*/ + 1;
+	ybase = yend - ystep;
+
+	SCIkdebug(SCIkBASESETTER, "(%d,%d)+/-(%d,%d), (%d x %d) -> (%d, %d) to (%d, %d)\n",
+		  x, y, xmod, ymod, xsize, ysize, xbase, ybase, xend, yend);
   
-  PUT_SELECTOR(object, brLeft, xbase);
-  PUT_SELECTOR(object, brRight, xend);
-  PUT_SELECTOR(object, brTop, ybase);
-  PUT_SELECTOR(object, brBottom, yend);
+	PUT_SELECTOR(object, brLeft, xbase);
+	PUT_SELECTOR(object, brRight, xend);
+	PUT_SELECTOR(object, brTop, ybase);
+	PUT_SELECTOR(object, brBottom, yend);
 
-  
-
-  if (s->debug_mode & (1 << SCIkBASESETTER_NR)) {
-    graph_clear_box(s, xbase, ybase + 10, xend-xbase+1, yend-ybase+1, VIEW_PRIORITY(original_y));
-    GFX_ASSERT(gfxop_usleep(s->gfx_state, 100000));
-  }
-#endif
 }
 
 void
 kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr object = PARAM(0);
+	heap_ptr object = PARAM(0);
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  _k_base_setter(s, object);
+	_k_base_setter(s, object);
 
 } /* kBaseSetter */
 
 
 void _k_set_now_seen(state_t *s, heap_ptr object)
 {
-  int x, y, z;
-  int xbase, ybase, xend, yend, xsize, ysize;
-  int view, loop, cell;
-  int xmod = 0, ymod = 0;
-  resource_t *viewres;  
-#warning fixme!
-#if 0
-  if (lookup_selector(s, object, s->selector_map.nsTop, NULL)
-      != SELECTOR_VARIABLE) { return; } /* This isn't fatal */
+	int x, y, z;
+	int xbase, ybase, xend, yend, xsize, ysize;
+	int view, loop, cel;
+	int xmod = 0, ymod = 0;
+
+	if (lookup_selector(s, object, s->selector_map.nsTop, NULL)
+	    != SELECTOR_VARIABLE) { return; } /* This isn't fatal */
       
-  x = GET_SELECTOR(object, x);
-  y = GET_SELECTOR(object, y);
+	x = GET_SELECTOR(object, x);
+	y = GET_SELECTOR(object, y);
 
-  if (s->selector_map.z > -1)
-    z = GET_SELECTOR(object, z);
-  else
-    z = 0;
+	if (s->selector_map.z > -1)
+		z = GET_SELECTOR(object, z);
+	else
+		z = 0;
 
-  y -= z; /* Subtract z offset */
+	y -= z; /* Subtract z offset */
 
-  view = GET_SELECTOR(object, view);
-  loop = GET_SELECTOR(object, loop);
-  cell = GET_SELECTOR(object, cel);
+	view = GET_SELECTOR(object, view);
+	loop = GET_SELECTOR(object, loop);
+	cel = GET_SELECTOR(object, cel);
 
-  viewres = findResource(sci_view, view);
+	if (gfxop_check_cel(s->gfx_state, view, &loop, &cel)) {
+		xsize = ysize = xmod = ymod = 0;
+	} else {
+		point_t offset = gfx_point(0, 0);
 
-  if (!viewres)
-    xsize = ysize = 0;
-  else {
-    xsize = view0_cel_width(loop, cell, viewres->data);
-    ysize = view0_cel_height(loop, cell, viewres->data);
-  }
+		gfxop_get_cel_parameters(s->gfx_state, view, loop, cel,
+					 &xsize, &ysize, &offset);
 
-  if ((xsize < 0) || (ysize < 0))
-    xsize = ysize = 0; /* Invalid view/loop */
-  else
-    view0_base_modify(loop, cell, viewres->data, &xmod, &ymod);
+		xmod = offset.x;
+		ymod = offset.y;
+	}
 
-  xbase = x + xmod - (xsize >> 1);
-  xend = xbase + xsize;
-  yend = y + ymod + 1; /* +1: Magic modifier */
-  ybase = yend - ysize;
+	xbase = x + xmod - (xsize >> 1);
+	xend = xbase + xsize;
+	yend = y + ymod + 1; /* +1: Magic modifier */
+	ybase = yend - ysize;
 
-  PUT_SELECTOR(object, nsLeft, xbase);
-  PUT_SELECTOR(object, nsRight, xend);
-  PUT_SELECTOR(object, nsTop, ybase);
-  PUT_SELECTOR(object, nsBottom, yend);
-#endif
+	PUT_SELECTOR(object, nsLeft, xbase);
+	PUT_SELECTOR(object, nsRight, xend);
+	PUT_SELECTOR(object, nsTop, ybase);
+	PUT_SELECTOR(object, nsBottom, yend);
 }
 
 
@@ -1003,10 +985,10 @@ void
 kSetNowSeen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 
-  heap_ptr object = PARAM(0);
+	heap_ptr object = PARAM(0);
 
-  CHECK_THIS_KERNEL_FUNCTION;
-  _k_set_now_seen(s, object);
+	CHECK_THIS_KERNEL_FUNCTION;
+	_k_set_now_seen(s, object);
 
 } /* kSetNowSeen */
 
@@ -1020,26 +1002,26 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse);
 void
 kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr obj = UPARAM(0);
+	heap_ptr obj = UPARAM(0);
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  _k_dyn_view_list_prepare_change(s);
-  _k_draw_control(s, obj, 0);
-  _k_dyn_view_list_accept_change(s);
+	_k_dyn_view_list_prepare_change(s);
+	_k_draw_control(s, obj, 0);
+	_k_dyn_view_list_accept_change(s);
 }
 
 
 void
 kHiliteControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr obj = UPARAM(0);
+	heap_ptr obj = UPARAM(0);
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  _k_dyn_view_list_prepare_change(s);
-  _k_draw_control(s, obj, 1);
-  _k_dyn_view_list_accept_change(s);
+	_k_dyn_view_list_prepare_change(s);
+	_k_draw_control(s, obj, 1);
+	_k_dyn_view_list_accept_change(s);
 }
 
 
@@ -1060,144 +1042,130 @@ kHiliteControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr obj = UPARAM(0);
-  heap_ptr event = UPARAM(1);
+	heap_ptr obj = UPARAM(0);
+	heap_ptr event = UPARAM(1);
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  if (obj) {
-    word ct_type = GET_SELECTOR(obj, type);
-    switch (ct_type) {
+	if (obj) {
+		word ct_type = GET_SELECTOR(obj, type);
+		switch (ct_type) {
 
-    case K_CONTROL_EDIT:
-      if (event && (GET_SELECTOR(event, type) == SCI_EVT_KEYBOARD)) {
-	int x = GET_SELECTOR(obj, nsLeft);
-	  int y = GET_SELECTOR(obj, nsTop);
-	  int xl = GET_SELECTOR(obj, nsRight) - x + 1;
-	  int yl = GET_SELECTOR(obj, nsBottom) - y + 1;
-	  int max = GET_SELECTOR(obj, max);
-	  int cursor = GET_SELECTOR(obj, cursor);
-	  int modifiers = GET_SELECTOR(event, modifiers);
-	  byte key = GET_SELECTOR(event, message);
+		case K_CONTROL_EDIT:
+			if (event && (GET_SELECTOR(event, type) == SCI_EVT_KEYBOARD)) {
+				int x = GET_SELECTOR(obj, nsLeft);
+				int y = GET_SELECTOR(obj, nsTop);
+				int xl = GET_SELECTOR(obj, nsRight) - x + 1;
+				int yl = GET_SELECTOR(obj, nsBottom) - y + 1;
+				int max = GET_SELECTOR(obj, max);
+				int cursor = GET_SELECTOR(obj, cursor);
+				int modifiers = GET_SELECTOR(event, modifiers);
+				byte key = GET_SELECTOR(event, message);
 
-	  char *text = s->heap + UGET_SELECTOR(obj, text);
-	  int textlen = strlen(text);
+				char *text = s->heap + UGET_SELECTOR(obj, text);
+				int textlen = strlen(text);
 
-	  gfxw_port_t *port = s->port;
+				gfxw_port_t *port = s->port;
 
-	  if (cursor > textlen)
-	    cursor = textlen;
+				if (cursor > textlen)
+					cursor = textlen;
 
-#warning "fixme!"
-#if 0
-	  graph_fill_box_custom(s, x + port->bounds.x, y + port->bounds.y,
-				xl, yl, port->bgcolor, -1, 0, 1); /* Clear input box background */
-#endif
+				if (modifiers & SCI_EVM_CTRL) {
 
-	  /*	  fprintf(stderr,"EditControl: mod=%04x, key=%04x, maxlen=%04x, cursor=%04x\n",
-		  modifiers, key, max, cursor);*/
+					switch (tolower(key)) {
+					case 'a': cursor = 0; break;
+					case 'e': cursor = textlen; break;
+					case 'f': if (cursor < textlen) ++cursor; break;
+					case 'b': if (cursor > 0) --cursor; break;
+					case 'k': text[cursor] = 0; break; /* Terminate string */
+					case 'h': _K_EDIT_BACKSPACE; break;
+					case 'd': _K_EDIT_DELETE; break;
+					}
+					PUT_SELECTOR(event, claimed, 1);
 
-	  if (modifiers & SCI_EVM_CTRL) {
+				} else if (modifiers & SCI_EVM_ALT) { /* Ctrl has precedence over Alt */
 
-	    switch (tolower(key)) {
-	    case 'a': cursor = 0; break;
-	    case 'e': cursor = textlen; break;
-	    case 'f': if (cursor < textlen) ++cursor; break;
-	    case 'b': if (cursor > 0) --cursor; break;
-	    case 'k': text[cursor] = 0; break; /* Terminate string */
-	    case 'h': _K_EDIT_BACKSPACE; break;
-	    case 'd': _K_EDIT_DELETE; break;
-	    }
-	    PUT_SELECTOR(event, claimed, 1);
+					switch (tolower(key)) {
+					case 'f': while ((cursor < textlen) && (text[cursor++] != ' ')); break;
+					case 'b': while ((cursor > 0) && (text[--cursor - 1] != ' ')); break;
+					}
+					PUT_SELECTOR(event, claimed, 1);
 
-	  } else if (modifiers & SCI_EVM_ALT) { /* Ctrl has precedence over Alt */
+				} else if (key < 31) {
 
-	    switch (tolower(key)) {
-	    case 'f': while ((cursor < textlen) && (text[cursor++] != ' ')); break;
-	    case 'b': while ((cursor > 0) && (text[--cursor - 1] != ' ')); break;
-	    }
-	    PUT_SELECTOR(event, claimed, 1);
+					PUT_SELECTOR(event, claimed, 1);
 
-          } 
-          else if (key < 31) {
+					switch(key) {
+					case SCI_K_BACKSPACE: _K_EDIT_BACKSPACE; break;
+					default:
+						PUT_SELECTOR(event, claimed, 0);
+					}
 
-	    PUT_SELECTOR(event, claimed, 1);
+				} else if ((key >= SCI_K_HOME) && (key <= SCI_K_DELETE)) {
 
-	    switch(key) {
-	    case SCI_K_BACKSPACE: _K_EDIT_BACKSPACE; break;
-	    default:
-	      PUT_SELECTOR(event, claimed, 0);
-	    }
+					switch(key) {
+					case SCI_K_HOME: cursor = 0; break;
+					case SCI_K_END: cursor = textlen; break;
+					case SCI_K_RIGHT: if (cursor + 1 <= textlen) ++cursor; break;
+					case SCI_K_LEFT: if (cursor > 0) --cursor; break;
+					case SCI_K_DELETE: _K_EDIT_DELETE; break;
+					}
 
-	  } 
-
-          else if ((key >= SCI_K_HOME) && (key <= SCI_K_DELETE))
-          {
-            switch(key) {
-	    case SCI_K_HOME: cursor = 0; break;
-	    case SCI_K_END: cursor = textlen; break;
-	    case SCI_K_RIGHT: if (cursor + 1 <= textlen) ++cursor; break;
-	    case SCI_K_LEFT: if (cursor > 0) --cursor; break;
-	    case SCI_K_DELETE: _K_EDIT_DELETE; break;
-	    }
-	    PUT_SELECTOR(event, claimed, 1);
-          }
-          
-          else if ((key > 31) && (key < 128)) 
-          {
-            int inserting = (modifiers & SCI_EVM_INSERT);
+					PUT_SELECTOR(event, claimed, 1);
+				} else if ((key > 31) && (key < 128)) {
+					int inserting = (modifiers & SCI_EVM_INSERT);
             
-            if (modifiers & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT))
-	      key = toupper(key);
-            if (modifiers & SCI_EVM_CAPSLOCK)
-              key = toupper(key);
-            if (modifiers & ((SCI_EVM_RSHIFT | SCI_EVM_LSHIFT) & SCI_EVM_CAPSLOCK))
-              key = tolower(key);
-            modifiers &= ~(SCI_EVM_RSHIFT | SCI_EVM_LSHIFT | SCI_EVM_CAPSLOCK);
-           
-	    if (cursor == textlen) {
-	      if (textlen < max) {
-		text[cursor++] = key;
-		text[cursor] = 0; /* Terminate string */
-	      }
-	    } else if (inserting) {
-	      if (textlen < max) {
-		int i;
+					if (modifiers & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT))
+						key = toupper(key);
+					if (modifiers & SCI_EVM_CAPSLOCK)
+						key = toupper(key);
+					if (modifiers & ((SCI_EVM_RSHIFT | SCI_EVM_LSHIFT) & SCI_EVM_CAPSLOCK))
+						key = tolower(key);
+					modifiers &= ~(SCI_EVM_RSHIFT | SCI_EVM_LSHIFT | SCI_EVM_CAPSLOCK);
 
-		for (i = textlen + 2; i >= cursor; i--)
-		  text[i] = text[i - 1];
-		text[cursor++] = key;
+					if (cursor == textlen) {
+						if (textlen < max) {
+							text[cursor++] = key;
+							text[cursor] = 0; /* Terminate string */
+						}
+					} else if (inserting) {
+						if (textlen < max) {
+							int i;
 
-	      }
-	    } else { /* Overwriting */
-	      text[cursor++] = key;
-	    }
+							for (i = textlen + 2; i >= cursor; i--)
+								text[i] = text[i - 1];
+							text[cursor++] = key;
 
-	    PUT_SELECTOR(event, claimed, 1);
-	  }
+						}
+					} else { /* Overwriting */
+						text[cursor++] = key;
+					}
+
+					PUT_SELECTOR(event, claimed, 1);
+				}
           
-          PUT_SELECTOR(obj, cursor, cursor); /* Write back cursor position */
-      }
+				PUT_SELECTOR(obj, cursor, cursor); /* Write back cursor position */
+			}
 
-    case K_CONTROL_BOX:
-    case K_CONTROL_BUTTON:
-      if (event) PUT_SELECTOR(event, claimed, 1);
-      _k_draw_control(s, obj, 0);
-      s->acc = 0;
-      break;
+		case K_CONTROL_BOX:
+		case K_CONTROL_BUTTON:
+			if (event) PUT_SELECTOR(event, claimed, 1);
+			_k_draw_control(s, obj, 0);
+			s->acc = 0;
+			break;
 
-    case K_CONTROL_TEXT: {
-      int state = GET_SELECTOR(obj, state);
-      PUT_SELECTOR(obj, state, state | CONTROL_STATE_DITHER_FRAMED);
-      _k_draw_control(s, obj, 0);
-      PUT_SELECTOR(obj, state, state);
-    }
-    break;
+		case K_CONTROL_TEXT: {
+			int state = GET_SELECTOR(obj, state);
+			PUT_SELECTOR(obj, state, state | CONTROL_STATE_DITHER_FRAMED);
+			_k_draw_control(s, obj, 0);
+			PUT_SELECTOR(obj, state, state);
+		}
+		break;
 
-    default:
-      SCIkwarn(SCIkWARNING, "Attempt to edit control type %d\n", ct_type);
-    }
-  }
+		default:
+			SCIkwarn(SCIkWARNING, "Attempt to edit control type %d\n", ct_type);
+		}
+	}
 }
 
 
@@ -1935,12 +1903,7 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	new_view = gfxw_new_view(s->gfx_state, gfx_point(x, y), view, loop, cel, priority, -1,
 				 ALIGN_LEFT, ALIGN_TOP, GFXW_VIEW_FLAG_DONT_MODIFY_OFFSET);
 
-	_ascertain_port_contents(s->picture_port);
-
-	s->picture_port->add(GFXWC(s->picture_port), GFXW(new_view));
-
-	s->picture_port->draw(GFXW(s->picture_port), gfxw_point_zero);
-
+	ADD_TO_CURRENT_PORT(new_view);
 	FULL_REDRAW();
 }
 

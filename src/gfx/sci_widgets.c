@@ -30,6 +30,8 @@
 #include <sci_widgets.h>
 #include <engine.h>
 
+#define SCI_SPECIAL_CHAR_ARROW_UP 0x18
+#define SCI_SPECIAL_CHAR_ARROW_DOWN 0x19
 
 void
 sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text)
@@ -360,7 +362,24 @@ sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char 
 		      int entries_nr, int list_top, int selection, char inverse)
 {
 	gfxw_list_t *list = gfxw_new_list(_move_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
+	char arr_up[2], arr_down[2];
+	int i;
+	int font_height = gfxop_get_font_height(port->visual->gfx_state, font_nr);
+	int columns = (zone.yl - 20);
+
+	if (font_height <= 0) {
+		GFXERROR("Attempt to create list control with invalid font %d\n", font_nr);
+		list->free(GFXWC(list));
+		return NULL;
+	}
+
+	columns /= font_height;
+
 	gfxw_set_id(GFXW(list), ID);
+
+	arr_up[0] = SCI_SPECIAL_CHAR_ARROW_UP;
+	arr_down[0] = SCI_SPECIAL_CHAR_ARROW_DOWN;
+	arr_up[1] = arr_down[1] = 0;
 
 	zone.x = 0;
 	zone.y = 0;
@@ -371,6 +390,37 @@ sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char 
         list->add(GFXWC(list),
                   GFXW(gfxw_new_rect(gfx_rect(zone.x, zone.y + 10, zone.xl, zone.yl - 20),
 				     port->color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
+
+	zone.x = 1;
+	zone.y = 11;
+
+	for (i = list_top; columns-- && i < entries_nr; i++) {
+
+		if (i == selection)
+			list->add(GFXWC(list),
+				  GFXW(gfxw_new_text(port->visual->gfx_state, gfx_rect(zone.x, zone.y, zone.xl - 2, font_height),
+						     port->font_nr, entries_list[i], ALIGN_LEFT, ALIGN_TOP,
+						     port->color, port->color, port->bgcolor, GFXR_FONT_FLAG_NO_NEWLINES)));
+		else
+			list->add(GFXWC(list),
+				  GFXW(gfxw_new_text(port->visual->gfx_state, gfx_rect(zone.x, zone.y, zone.xl - 2, font_height),
+						     port->font_nr, entries_list[i], ALIGN_LEFT, ALIGN_TOP,
+						     port->bgcolor, port->bgcolor, port->color, GFXR_FONT_FLAG_NO_NEWLINES)));
+
+		zone.y += font_height;
+	}
+
+	/* Add up arrow */
+	list->add(GFXWC(list),
+		  GFXW(gfxw_new_text(port->visual->gfx_state, gfx_rect(1, 1, zone.xl-2, 8),
+				     port->font_nr, arr_up, ALIGN_CENTER, ALIGN_CENTER,
+				     port->color, port->color, port->bgcolor, 0)));
+
+	/* Add down arrow */
+	list->add(GFXWC(list),
+		  GFXW(gfxw_new_text(port->visual->gfx_state, gfx_rect(1, zone.yl-9, zone.xl-2, 8),
+				     port->font_nr, arr_down, ALIGN_CENTER, ALIGN_CENTER,
+				     port->color, port->color, port->bgcolor, 0)));
 
 	return list;
 }

@@ -1697,6 +1697,19 @@ gfxop_add_to_pic(gfx_state_t *state, int nr, int flags, int default_palette)
 
 
 int
+gfxop_get_font_height(gfx_state_t *state, int font_nr)
+{
+	gfx_bitmap_font_t *font;
+	BASIC_CHECKS(GFX_FATAL);
+
+	font = gfxr_get_font(state->resstate, font_nr, 0);
+	if (!font)
+		return GFX_ERROR;
+
+	return font->line_height;
+}
+
+int
 gfxop_get_text_params(gfx_state_t *state, int font_nr, char *text,
 		      int maxwidth, int *width, int *height)
 {
