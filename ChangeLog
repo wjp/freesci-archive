@@ -1,6 +1,7 @@
 1999-12-19  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/said.y (main): First implementation of the Said grammar
+	* Fixed said implementation
 
 1999-12-18  Christoph Reichenbach  <jameson@linuxgames.com>
 

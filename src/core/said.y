@@ -34,7 +34,7 @@
 #define MAX_SAID_TOKENS 32
 
 #define YYDEBUG 1
-#define SAID_DEBUG
+#undef SAID_DEBUG
 
 static char *said_parse_error;
 
@@ -70,16 +70,16 @@ said_top_branch(tree_t);
 %}
 
 %token WGROUP /* Word group */
-%token ',' YY_COMMA
-%token '&' YY_AMP
-%token '/' YY_SLASH
-%token '(' YY_PARENO
-%token ')' YY_PARENC
-%token '[' YY_BRACKETSO
-%token ']' YY_BRACKETSC
-%token '#' YY_HASH
-%left '<'  YY_LT
-%token '>' YY_GT
+%token YY_COMMA     /* 0xf0 */
+%token YY_AMP       /* 0xf1 */
+%token YY_SLASH     /* 0xf2 */
+%token YY_PARENO    /* 0xf3 */
+%token YY_PARENC    /* 0xf4 */
+%token YY_BRACKETSO /* 0xf5 */
+%token YY_BRACKETSC /* 0xf6 */
+%token YY_HASH      /* 0xf7 */
+%left YY_LT         /* 0xf8 */
+%token YY_GT        /* 0xf9 */
 
 %%
 
@@ -92,11 +92,11 @@ said_spec:	  Subexpression NestedBeforeA MoreAfter
 
 Subexpression:    /* empty */
 			{ $$ = SAID_BRANCH_NULL }
-		| Expression '<' Subexpression
+		| Expression YY_LT Subexpression
 			{ $$ = said_aug_branch(0x144, 0x14f, $1, $3) }
-		| Expression '<' Subexpression '<' Subexpression
+		| Expression YY_LT Subexpression YY_LT Subexpression
 			{ $$ = said_aug_branch(0x141, 0x144, $1, said_aug_branch(0x144, 0x14f, $3, $5)) }
-		| Expression '[' '<' Subexpression ']'
+		| Expression YY_BRACKETSO YY_LT Subexpression YY_BRACKETSC
 			{ $$ = said_aug_branch(0x152, 0x144, $1, $4) }
 		| Expression
 			{ $$ = $1 }
@@ -104,13 +104,13 @@ Subexpression:    /* empty */
 
 Expression:	  MainExp
 			{ $$ = $1 }
-		| MainExp ',' Expression
+		| MainExp YY_COMMA Expression
 			{ $$ = said_attach_branch($1, $3) }
 		;
 
-MainExp:	  '[' Subexpression ']'
+MainExp:	  YY_BRACKETSO Subexpression YY_BRACKETSC
 			{ $$ = said_aug_branch(0x152, 0x14c, $2, SAID_BRANCH_NULL) }
-		| '(' Subexpression ')'
+		| YY_PARENO Subexpression YY_PARENC
 			{ $$ = said_aug_branch(0x141, 0x14c, $2, SAID_BRANCH_NULL) }
 		| WGROUP
 			{ $$ = said_wgroup_branch($1) }
@@ -118,29 +118,29 @@ MainExp:	  '[' Subexpression ']'
 
 BeforeExpA:	  /* empty */
 			{ $$ = SAID_BRANCH_NULL }
-		| '/' Subexpression
+		| YY_SLASH Subexpression
 			{ $$ = $2 }
 		;
 
-BeforeExpB:	'/' Subexpression
+BeforeExpB:	YY_SLASH Subexpression
 			{ $$ = $2 }
 		;
 
 NestedBeforeA:	  BeforeExpA
 			{ $$ = said_aug_branch(0x142, 0x14a, $1, SAID_BRANCH_NULL) }
-		| '[' BeforeExpA ']'
+		| YY_BRACKETSO BeforeExpA YY_BRACKETSC
 			{ $$ = said_aug_branch(0x152, 0x142, $2, SAID_BRANCH_NULL) }
 		;
 
 NestedBeforeB:	  BeforeExpB
 			{ $$ = said_aug_branch(0x143, 0x14a, $1, SAID_BRANCH_NULL) }
-		| '[' BeforeExpB ']'
+		| YY_BRACKETSO BeforeExpB YY_BRACKETSC
 			{ $$ = said_aug_branch(0x152, 0x143, $2, SAID_BRANCH_NULL) }
 		;
 
 MoreAfter:	  /* empty */
 			{ $$ = SAID_BRANCH_NULL }
-		| '>'
+		| YY_GT
 			{ $$ = said_aug_branch(0x14b, SAID_LONG(SAID_GT), SAID_BRANCH_NULL, SAID_BRANCH_NULL) }
 		;
 
@@ -360,7 +360,7 @@ said(state_t *s, byte *spec)
 int
 main (int argc, char *argv)
 {
-  byte block[] = {0x01, 0x23, 0xff};
+  byte block[] = {0x01, 0x00, 0xf0, 0xf3, 0x01, 0x01, 0xf8, 0x01, 0x02, 0xf4, 0xf2, 0x01, 0x03, 0xff};
   state_t s;
   con_passthrough = 1;
 
