@@ -490,8 +490,8 @@ sdl_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
     newline.xl = line.xl;
     newline.yl = line.yl;
     
-    for (xc = -(xfact >> 1); xc <= ((xfact+1) >> 1); xc++)
-      for (yc = -(yfact >> 1); yc <= ((yfact+1) >> 1); yc++) {
+    for (xc = ; xc < xfact; xc++)
+      for (yc = ; yc < yfact; yc++) {
 	newline.x = line.x + xc;
 	newline.y = line.y + yc;
 	gfx_draw_line_pixmap_i(S->priority[0], newline, color.priority);

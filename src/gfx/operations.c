@@ -284,7 +284,7 @@ _gfxop_get_pointer_bounds(gfx_state_t *state, rect_t *rect)
 	gfx_pixmap_t *ppxm = state->mouse_pointer;
 
 	if (!ppxm)
-		return 0;
+		return 1;
 
 	rect->x = state->driver->pointer_x - ppxm->xoffset * (state->driver->mode->xfact);
 	rect->y = state->driver->pointer_y - ppxm->yoffset * (state->driver->mode->yfact);

@@ -1,5 +1,10 @@
 2001-07-27  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/gfx/drivers/sdl_driver.c (sdl_draw_line): Fixed bounds
+
+	* src/gfx/operations.c (_gfxop_get_pointer_bounds): Fixed return value
+	for !pxm case
+
 	* src/include/gfx_driver.h: Added FINE_LINE capability flag, changed
 	and clarified draw_line semantice for non-fine lines
 
