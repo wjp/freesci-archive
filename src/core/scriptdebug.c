@@ -933,7 +933,6 @@ objinfo(state_t *s, heap_ptr pos)
       + getUInt16(s->heap + pos + SCRIPT_FUNCTAREAPTR_OFFSET);
 
     functions = getInt16(functIDoffset - 2);
-    sciprintf("%d functions starting at pos(%04x) + %d + funcoffs(pos + %d)\n", functions, pos, SCRIPT_FUNCTAREAPTR_MAGIC, SCRIPT_FUNCTAREAPTR_OFFSET);
 
     functoffset = functIDoffset + 2 + functions * 2;
 

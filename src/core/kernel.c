@@ -858,12 +858,12 @@ kFindKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
-void
-kDeleteKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
+int
+_k_delete_key(state_t *s, heap_ptr list, heap_ptr key)
+     /* Removes the specified key from the specified heap list, returns 0 on success, 1 otherwise */
 {
-  heap_ptr list = UPARAM(0);
   heap_ptr node;
-  word key = UPARAM(1);
+
   SCIkdebug(SCIkNODES, "Removing key %04x from list %04x\n", key, list);
 
   node = UGET_HEAP(list + LIST_FIRST_NODE);
@@ -891,7 +891,17 @@ kDeleteKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     heap_free(s->_heap, node - 2);
 
+    return 0;
+
   } else SCIkdebug(SCIkNODES,"Removing key from list: FAILED\n");
+
+  return 1;
+}
+
+void
+kDeleteKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  _k_delete_key(s, UPARAM(0), UPARAM(1));
 }
 
 
@@ -2583,9 +2593,9 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
   if ((xsize < 0) || (ysize < 0))
     xsize = ysize = 0; /* Invalid view/loop */
 
-  xbase = x - (xsize - 1) / 2;
+  xbase = x - (xsize) / 2;
   xend = xbase + xsize -1;
-  yend = y;
+  yend = y - 1;
   ybase = yend - ystep;
 
   PUT_SELECTOR(object, brLeft, xbase);
@@ -2967,18 +2977,20 @@ _k_save_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
 }
 
 void
-_k_view_list_dispose_loop(state_t *s, view_object_t *list, int list_nr,
+_k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, view_object_t *list, int list_nr,
 			  int funct_nr, int argc, int argp)
      /* disposes all list members flagged for disposal; funct_nr is the invoking kfunction */
 {
   int i;
+  heap_ptr old_obj;
 
   for (i = 0; i < list_nr; i++)
     if (list[i].obj) {
-    if (UGET_HEAP(list[i].signalp) & _K_VIEW_SIG_FLAG_DISPOSE_ME)
-      if (invoke_selector(INV_SEL(list[i].obj, delete, 1), 0))
-	SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
-		 " a delete funcselector\n", list[i].obj);
+      if (UGET_HEAP(list[i].signalp) & _K_VIEW_SIG_FLAG_DISPOSE_ME) {
+	if (invoke_selector(INV_SEL(list[i].obj, delete, 1), 0))
+	  SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
+		   " a delete funcselector\n", list[i].obj);
+      }
   }
 }
 
@@ -3107,6 +3119,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
     s->pic_not_valid++; /* There ought to be some kind of check here... */
 
     i++; /* Next object in the list */
+
     node = UGET_HEAP(node + LIST_PREVIOUS_NODE); /* Next node */
   }
 
@@ -3466,7 +3479,8 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
     _k_restore_view_list_backgrounds(s, s->dyn_views, s->dyn_views_nr);
     _k_save_view_list_backgrounds(s, s->dyn_views, s->dyn_views_nr);
     _k_draw_view_list(s, s->dyn_views, s->dyn_views_nr, 1); /* Step 11 */
-    _k_view_list_dispose_loop(s, s->dyn_views, s->dyn_views_nr, funct_nr, argc, argp); /* Step 15 */
+    /* Step 15 */
+    _k_view_list_dispose_loop(s, cast_list, s->dyn_views, s->dyn_views_nr, funct_nr, argc, argp);
   } /* if (cast_list) */
 
   open_animation = (s->pic_is_new) && (s->pic_not_valid);
@@ -3731,11 +3745,11 @@ kShakeScreen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int shakes = PARAM_OR_ALT(0, 1);
   int i;
 
-  for (i = 0; i < shakes * 3; i++) {
+  for (i = 0; i < shakes; i++) {
     (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_ALL, 0, -10,0,0);
-    (*s->gfx_driver->Wait)(s, 25);
+    (*s->gfx_driver->Wait)(s, 15000);
     (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_ALL, 0, 10,0,0);
-    (*s->gfx_driver->Wait)(s, 25);
+    (*s->gfx_driver->Wait)(s, 15000);
   }
   (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_ALL, 0,0,0,0);
 }

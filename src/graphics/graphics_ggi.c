@@ -29,6 +29,11 @@
             included in "graphics.c" (CJR)
 
 ***************************************************************************/
+/* Like most of the graphics stuff, this is preliminary. There are some bad hacks
+** in here, and they will be taken care of when this thing gets its long-
+** deserved re-write.
+*/
+
 
 #include <config.h>
 #ifdef HAVE_LIBGGI
@@ -343,12 +348,12 @@ libggi_redraw(struct _state *s, int command, int x, int y, int xl, int yl)
 			       0, 0, 320, 200,
 			       s->mouse_pointer, s->pointer_x, s->pointer_y);
     else {
-      int lines_to_clear;
+      int lines_to_clear, line;
       int first_line_to_clear;
       int i;
 
       if (y < 0) {
-	graphics_draw_region_ggi(vis, s->pic->view,
+	graphics_draw_region_ggi(vis, s->pic->view + (320 * y),
 				 0, -y, 320, 200+y,
 				 s->mouse_pointer, s->pointer_x, s->pointer_y);
 	lines_to_clear = -y;
@@ -360,9 +365,14 @@ libggi_redraw(struct _state *s, int command, int x, int y, int xl, int yl)
 	lines_to_clear = y;
 	first_line_to_clear = 200 - y;
       }
+
+      line = first_line_to_clear;
+
       for (i = 0; i < lines_to_clear; i++) {
-	graphics_draw_region_ggi(vis, &(_null_rec[0]), 0, first_line_to_clear++, 320, 1,
+	graphics_draw_region_ggi(vis, &(_null_rec[0]) - (line*320), /* Adjust for y coordinate */
+				 0, line, 320, 1,
 				 s->mouse_pointer, s->pointer_x, s->pointer_y);
+	++line;
       }
     }
     break;

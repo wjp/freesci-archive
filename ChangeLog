@@ -1,3 +1,11 @@
+1999-11-26  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/graphics/graphics_ggi.c (libggi_redraw): Fixed GGI screen
+	shaking.
+
+	* src/core/kernel.c (kBaseSetter): Fixed the SQ3 bug where entering
+	the red starship tube would throw you back one screen to the left.
+
 1999-11-26  Dmitry Jemerov  <yole@nnz.ru>
 
 	* src/include/kdebug.h: Moved sci_debug_flags definition to kdebug.h
@@ -16,11 +24,14 @@
 
 1999-11-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
-	* src/core/kernel.c: Killed the bugs that caused background buffers
-	to run out and made QfG1 stop with the PC set to 0 in the main menu
-	sometimes. Yes, those two bugs were related- both were "missing
-	compatibility features" caused by the dynamic view list not being
-	cleared when DrawPic was called.
+	* src/console/console.c (sciprintf): Fixed sciprintf for result
+	strings longer than 255 bytes (the problem was caused by a difference
+	in vsnprintf behaviour between older glibc versions and glibc 2.1/
+	other libcs)
+
+	* src/core/kernel.c: Killed the bug that made QfG1 stop with the
+ 	PC set to 0 in the main menu sometimes. It was caused by the dynamic
+	view lists not being cleared automatically during DrawPic...
 
 1999-11-25  Christoph Reichenbach  <jameson@linuxgames.com>
 

@@ -206,7 +206,7 @@ sciprintf("Send to selector %04x (%s):", selector, s->selector_names[selector]);
     switch (lookup_selector(s, send_obj, selector, &lookupresult)) {
 
     case SELECTOR_NONE:
-      sciprintf("Send to invalid selector 0x%x of object at 0x%x\n", selector, send_obj);
+      sciprintf("Send to invalid selector 0x%x of object at 0x%x\n", 0xffff & selector, send_obj);
       script_error_flag = script_debug_flag = 1;
       --calls_nr;
       break;
@@ -1011,7 +1011,13 @@ _lookup_selector_functions(state_t *s, heap_ptr obj, int selectorid, heap_ptr *a
   int methodselector_nr = GET_HEAP(methodselectors - 2); /* Number of methods is stored there */
   int i;
 
-  /*objinfo(s, obj); */
+  if (methodselectors < 800 || methodselectors > 0xffff) {
+    sciprintf("Lookup selector functions: Method selector offset %04x of object at %04x is invalid\n",
+	      methodselectors, obj);
+    script_debug_flag = script_error_flag = 1;
+    return -1;
+  }
+
   for (i = 0; i < methodselector_nr * 2; i += 2)
     if (GET_HEAP(methodselectors + i) == selectorid) { /* Found it? */
       if (address)
