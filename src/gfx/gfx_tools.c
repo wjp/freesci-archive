@@ -30,8 +30,10 @@
 
 /* set optimisations for Win32: */
 #ifdef _WIN32
-#  include <memory.h>
-//#  pragma intrinsic( memcpy, memset )
+#	include <memory.h>
+#	ifndef SATISFY_PURIFY
+#		pragma intrinsic( memcpy, memset )
+#	endif
 #endif
 
 

@@ -1,3 +1,52 @@
+2001-09-15  Matt Hargett  <matt@use.net>
+
+        * main.c: Fix compiler warning(s).
+
+        * heap.c: Ditto.
+
+        * kgraphics.c: Ditto.
+
+        * kmath.c: Ditto.
+
+        * kstring.c: Ditto.
+
+        * scriptdebug.c: Ditto.
+
+        * vm.c: Ditto.
+
+        * console.c: Ditto.
+
+        * decompress01.c: Ditto.
+
+        * midi_mt32gm.c: Ditto.
+
+        * decompress0.c: Ditto. Remove misapplied SATISFY_PURIFY ifdef.
+
+        * gfx_crossblit.c: Change VC++ optimization pragmas to
+        be active ifndef SATISFY_PURIFY.
+
+        * sciunpack.c: Ditto.
+
+        * gfx_pixmap_scale.c: Ditto.
+
+        * gfx_tools.c: Ditto.
+
+        * sci_memory.c: Ditto.
+
+        * kmovement.c: Readability improvements.
+
+        * oldmidi.c: Ditto.
+
+        * resource_map.c: Open resource map as binary.
+
+        * freesci.def: Fix compilation on VC++.
+
+        * fsci_dll.dsp: Add new file. Define SATISFY_PURIFY by default.
+
+        * sciunpack.dsp: Fix compilation.
+
+        * freesci.dsw: Add sciunpack.dsp to workspace.
+
 2001-09-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kmovement.c (initialize_bresen): No longer initializes

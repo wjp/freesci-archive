@@ -78,7 +78,7 @@ kGetDistance(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int xrel = (int) (((float) PARAM(1) - PARAM_OR_ALT(3, 0))/cos(PARAM_OR_ALT(5, 0)* PI / 180.0)); /* This works because cos(0)==1 */
 	int yrel = PARAM(0) - PARAM_OR_ALT(2, 0); 
 
-	s->acc = sqrt((float) xrel*xrel + yrel*yrel);
+	s->acc = (gint16)sqrt((float) xrel*xrel + yrel*yrel);
 }
 
 void
@@ -109,7 +109,7 @@ kCosDiv(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	if ((cosval < 0.0001) && (cosval > 0.0001)) {
 		SCIkwarn(SCIkWARNING,"Attepted division by zero\n");
-		s->acc = 0x8000;
+		s->acc = (gint16)0x8000;
 	} else
 		s->acc = (gint16) (value/cosval);
 }
@@ -123,7 +123,7 @@ kSinDiv(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	if ((sinval < 0.0001) && (sinval > 0.0001)) {
 		SCIkwarn(SCIkWARNING,"Attepted division by zero\n");
-		s->acc = 0x8000;
+		s->acc = (gint16)0x8000;
 	} else
 		s->acc = (gint16) (value/sinval);
 }
@@ -137,7 +137,7 @@ kTimesTan(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	param -= 90;
 	if ((param % 90) == 0) {
 		SCIkwarn(SCIkWARNING, "Attempted tan(pi/2)");
-		s->acc = 0x8000;
+		s->acc = (gint16)0x8000;
 	} else
 		s->acc = (gint16) -(tan(param * PI / 180.0) * scale);
 }
@@ -150,7 +150,7 @@ kTimesCot(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	if ((param % 90) == 0) {
 		SCIkwarn(SCIkWARNING, "Attempted tan(pi/2)");
-		s->acc = 0x8000;
+		s->acc = (gint16)0x8000;
 	} else
 		s->acc = (gint16) (tan(param * PI / 180.0) * scale);
 }

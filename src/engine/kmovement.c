@@ -50,19 +50,21 @@ kSetJump(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	do {
 		t1++;
-		t2=t1*abs(dx)+dy;
-	} while (abs(2*t2)<abs(dx));
+		t2 = t1 * abs(dx) + dy;
+	} while (abs(2 * t2) < abs(dx));
 
 	SCIkdebug(SCIkBRESEN, "t1: %d, t2: %d\n", t1, t2);
  
 	if (t2) {
-		x=sqrt(abs((gy*dx*dx)/(2.0*t2)));
+		x=sqrt(abs((gy * dx * dx) / (2.0 * t2)));
 		if (t2 *dx < 0)
 			x = -x;
 	}
-	y=abs(t1*y);
-	if (dx>=0) y=-y;
-	if ((dy<0)&&(!y)) y=-sqrt(-2*gy*dy);
+	y = abs(t1 * y);
+	if (dx >= 0)
+		y=-y;
+	if ((dy < 0) && (!y))
+		y = -sqrt(-2 * gy * dy);
 
 	SCIkdebug(SCIkBRESEN, "SetJump for object at %x", object);
 	SCIkdebug(SCIkBRESEN, "xStep: %d, yStep: %d\n", x, y);

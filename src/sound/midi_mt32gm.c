@@ -121,7 +121,7 @@ int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2)
 			return 0;
 
 		volume = param2;
-		param2 = (volume * MIDI_mapping[param].volume * global_volume)
+		param2 = (byte)(volume * MIDI_mapping[param].volume * global_volume)
 			>> (7 + 4);
 
 		if (channel == RHYTHM_CHANNEL)

@@ -134,7 +134,7 @@ int decrypt1(guint8 *dest, guint8 *src, int length, int complength)
 				      printf ("decrypt1: Try to write single byte beyond end of array!\n");
 #endif
 				    } else
-					dest[destctr++] = token;
+					dest[destctr++] = (byte)token;
 				}
 
 			}
@@ -237,10 +237,6 @@ int decompress0(resource_t *result, int resh)
 	guint16 compressionMethod;
 	guint16 result_size;
 	guint8 *buffer;
-
-#ifdef SATISFY_PURIFY
-	memset(result, 0, sizeof(resource_t));
-#endif
 
 	if (read(resh, &(result->id),2) != 2)
 		return SCI_ERROR_IO_ERROR;

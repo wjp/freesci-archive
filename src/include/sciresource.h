@@ -139,7 +139,7 @@ typedef struct _resource_struct {
 	unsigned short type;
 	guint16 id; /* contains number and type */
 
-	int size;
+	unsigned int size;
 
 	unsigned int file_offset; /* Offset in file */
 	unsigned char file; /* Number of the resource file this resource is stored in */

@@ -1,11 +1,6 @@
 LIBRARY
 DESCRIPTION "FreeSCI"
 EXPORTS
-  loadResources
-  freeResources
-  findResource
-  resource_map DATA
-  max_resource DATA
   vocabulary_get_classes
   vocabulary_get_class_count
   vocabulary_get_knames
@@ -29,9 +24,8 @@ EXPORTS
   close_console_file
   formats DATA
 ;  sci_color_mode DATA
-  sci_version DATA
+;  sci_version DATA
 ;  makeMIDI0
-;  mapMIDIInstruments
   script_dissect
   set_debug_mode
   _debug_get_input DATA
@@ -55,23 +49,16 @@ EXPORTS
   game_init
   game_run
   game_exit
-  SCI_Error_Types DATA
-  SCI_Version_Types DATA
-  Resource_Types DATA
-  resource_type_suffixes DATA
-;  g_strcasecmp
- ; g_free
+;  SCI_Error_Types DATA
+;  SCI_Version_Types DATA
+;  Resource_Types DATA
+;  resource_type_suffixes DATA
   loadObjects
   printObject
   makeMIDI0
-  mapMIDIInstruments
+  map_MIDI_instruments
   ;using_history DATA
   ;add_history
-  ;readline
-  ;optind DATA
-  ;optarg DATA
-  ;getopt
-  ;getopt_long
     
   gfxop_init
   gfxop_exit
@@ -104,5 +91,12 @@ EXPORTS
   game_restore
   sci_find_next
   sci_sched_yield
+  sci_resource_type_suffixes
+  sci_resource_types
+  sci_version_types
 
+  sci0_read_resource_map
+  scir_new_resource_manager
+  scir_find_resource
+  scir_free_resource_manager
    

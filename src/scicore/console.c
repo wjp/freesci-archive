@@ -898,7 +898,7 @@ c_hexgrep (state_t * s)
   }
 
   for (i = 0; i < seeklen; i++)
-    seekstr[i] = cmd_params[i + 1].val;
+    seekstr[i] = (byte)cmd_params[i + 1].val;
 
   if (dot)
   {

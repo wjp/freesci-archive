@@ -175,7 +175,7 @@ c_heapdump(state_t *s)
 int
 c_sim_parse(state_t *s)
 {
-  int i;
+  unsigned int i;
   char *operators = ",&/()[]#<>";
 
   if (!_debugstate_valid) {
@@ -356,7 +356,7 @@ enum {
 };
 
 int
-_parse_getinp(int *i, int *nr)
+_parse_getinp(unsigned int *i, int *nr)
 {
   char *token;
 
@@ -1793,7 +1793,7 @@ c_dump_words(state_t *s)
 int
 c_show_list(state_t *s)
 {
-	heap_ptr list = cmd_params[0].val;
+	heap_ptr list = (guint16)cmd_params[0].val;
 	int size;
 
 	if (!s) {

@@ -384,7 +384,7 @@ kStrAt(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->acc = s->heap[address];
 
 	if (argc > 2)
-		s->heap[address]=UPARAM(2); /* Request to modify this char */
+		s->heap[address] = (byte)UPARAM(2); /* Request to modify this char */
 }
 
 
@@ -397,9 +397,9 @@ kReadNumber(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		source++; /* Skip whitespace */
 
 	if (*source == '$') /* SCI uses this for hex numbers */
-		s->acc = strtol(source + 1, NULL, 16); /* Hex */
+		s->acc = (gint16)strtol(source + 1, NULL, 16); /* Hex */
 	else
-		s->acc = strtol(source, NULL, 10); /* Force decimal */
+		s->acc = (gint16)strtol(source, NULL, 10); /* Force decimal */
 }
 
 

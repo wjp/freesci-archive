@@ -185,7 +185,7 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
   if (s->have_bp & BREAK_EXPORT)
   {
     breakpoint_t *bp;
-    gint32 bpaddress;
+    guint32 bpaddress;
 
     bpaddress = (script << 16 | pubfunct);
 

@@ -74,6 +74,11 @@ struct _state;
 ** word header.
 */
 
+#define SCI_VERSION_LTU_BASE_OB1 SCI_VERSION(0,000,256)
+/* First version version known not to have this bug: ?
+** When doing CanBeHere(), augment y offset by 1
+*/
+
 typedef int sci_version_t;
 
 struct _state;

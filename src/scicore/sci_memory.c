@@ -42,10 +42,10 @@
 
 #ifdef _WIN32
 #include <crtdbg.h>
-#	ifdef NDEBUG
-//#		pragma optimize( "s", off )
-//#		pragma optimize( "gty", on )
-//#		pragma intrinsic( memcpy, strlen )
+#	ifndef SATISFY_PURIFY
+#		pragma optimize( "s", off )
+#		pragma optimize( "gty", on )
+#		pragma intrinsic( memcpy, strlen )
 #	endif
 #endif
 

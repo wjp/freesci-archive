@@ -276,13 +276,13 @@ kPicNotValid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	CHECK_THIS_KERNEL_FUNCTION;
 	s->acc = s->pic_not_valid;
 	if (argc)
-		s->pic_not_valid = PARAM(0);
+		s->pic_not_valid = (byte)PARAM(0);
 }
 
 void
 _k_redraw_box(state_t *s, int x1, int y1, int x2, int y2)
 {
-WARNING( "_k_redraw_box: Fixme!")
+SCIkwarn(SCIkWARNING, "_k_redraw_box: Fixme!");
 #if 0
 	int i;
 
@@ -406,7 +406,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		gfx_color_t color = graph_map_ega_color(s, PARAM(6), PARAM_OR_ALT(7, -1), PARAM_OR_ALT(8, -1));
 
-		color.mask = UPARAM(5);
+		color.mask = (byte)UPARAM(5);
 
 		SCIkdebug(SCIkGRAPHICS, "fill_box_any((%d, %d), (%d, %d), col=%d, p=%d, c=%d, mask=%d)\n",
 			  PARAM(2), PARAM(1), PARAM(4), PARAM(3), PARAM(6), PARAM_OR_ALT(7, -1), PARAM_OR_ALT(8, -1),
@@ -1042,6 +1042,9 @@ _k_base_setter(state_t *s, heap_ptr object)
 	if (lookup_selector(s, object, s->selector_map.brLeft, NULL)
 	    != SELECTOR_VARIABLE)
 		return; /* non-fatal */
+
+	if (s->version <= SCI_VERSION_LTU_BASE_OB1)
+		--absrect.y; /* Compensate for early SCI OB1 'bug' */
 
 	PUT_SELECTOR(object, brLeft, absrect.x);
 	PUT_SELECTOR(object, brRight, absrect.xend);

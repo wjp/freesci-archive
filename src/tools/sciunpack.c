@@ -48,7 +48,11 @@
 #endif
 
 #ifdef HAVE_GETOPT_H
-#  include <getopt.h>
+#	ifndef _WIN32
+#		include <getopt.h>
+#	else
+#		include <win32/getopt.h>
+#	endif
 #endif /* HAVE_GETOPT_H */
 
 #ifdef DRAW_GRAPHICS

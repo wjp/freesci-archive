@@ -107,8 +107,8 @@ int heap_largest(heap_t* h)
 
 heap_ptr heap_allocate(heap_t* h, int size)
 {
-	int previous=h->first_free;
-	int current=previous;
+	unsigned int previous=h->first_free;
+	unsigned int current=previous;
 
 	if (!size) {
 		fprintf(stderr,"Warning: heap_alloc'd zero bytes!\n");
@@ -154,7 +154,7 @@ heap_ptr heap_allocate(heap_t* h, int size)
 
 void heap_free(heap_t* h, unsigned int m)
 {
-	int previous, next;
+	unsigned int previous, next;
 	assert_in_range(m);
 	previous=next=h->first_free;
 
