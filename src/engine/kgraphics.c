@@ -2722,6 +2722,16 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		_k_make_view_list(s, &(templist), cast_list, (cycle? _K_MAKE_VIEW_LIST_CYCLE : 0)
 				  | _K_MAKE_VIEW_LIST_CALC_PRIORITY, funct_nr, argc, argp);
 
+		/* Make sure that none of the doits() did something evil */
+		assert_primary_widget_lists(s);
+
+		if (!s->dyn_views->contents /* Only reparentize empty dynview list */
+		    && ((GFXWC(s->port) != GFXWC(s->dyn_views->parent)) /* If dynviews are on other port... */
+			|| (s->dyn_views->next))) /* ... or not on top of the view list */
+			reparentize_primary_widget_lists(s, s->port);
+		/* End of doit() recovery code */
+
+
 		if (s->pic_is_new) { /* Happens if DrawPic() is executed by a dynview (yes, that happens) */
 			kAnimate(s, funct_nr, argc, argp);
 			return;

@@ -836,10 +836,10 @@ main(int argc, char** argv)
 		set_debug_mode (gamestate, 1, conf[conf_nr].debug_mode);
 
 
-#if 0
+#if 1
 	{
 		int j;
-		for (j =0; j < 4; j++) {
+		for (j =0; j < conf_entries; j++) {
 			int i;
 			config_entry_t *c = conf + j;
 			fprintf(stderr, "[%s]\n", c->name);
