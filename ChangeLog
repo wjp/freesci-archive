@@ -1,3 +1,8 @@
+2000-01-28  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/core/ksound.c (kDoSound): kDoSound now returns immediately if we
+	  are running an SCI01 game.
+
 2000-01-25  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/soundserver_null.c (sound_null_server): Fixed misc. seg-

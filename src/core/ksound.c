@@ -124,6 +124,8 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   CHECK_THIS_KERNEL_FUNCTION;
 
+  if (SCI_VERSION_MAJOR(s->version) != 0) return; /* Can't do much else ATM */ 
+  
   if (s->debug_mode & (1 << SCIkSOUNDCHK_NR)) {
     int i;
 
