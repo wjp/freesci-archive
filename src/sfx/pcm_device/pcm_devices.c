@@ -18,7 +18,7 @@
 ***************************************************************************/
 
 #include <sfx_pcm.h>
-#include <string.h>
+#include <resource.h>
 
 #ifndef NO_PCMOUT
 #	ifdef HAVE_SDL

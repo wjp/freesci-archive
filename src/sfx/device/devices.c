@@ -35,7 +35,7 @@
 extern struct _midi_device sfx_device_midi_alsa;
 #endif
 
-#include <string.h>
+#include <resource.h>
 
 static struct _midi_device *devices_midi[] = {
 #ifdef HAVE_ALSA

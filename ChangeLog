@@ -1,5 +1,8 @@
 2004-01-01  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/scriptdebug.c (c_is_sample): Addsd 'is-sample'
+	console command
+
 	* src/sfx/mixer/soft.c (mix_compute_input_linear): Fixed an error
 	whereby an insufficient number of samples was requested from a PCM
 	feed

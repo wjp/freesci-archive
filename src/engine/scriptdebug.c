@@ -459,6 +459,7 @@ c_vr(state_t *s)
 	return 0;
 }
 
+
 int
 c_segkill(state_t *s)
 {
@@ -2530,6 +2531,44 @@ c_simkey(state_t *s)
   return 0;
 }
 
+static int
+c_is_sample(state_t *s)
+{
+	resource_t *song = scir_find_resource(s->resmgr,
+					      sci_sound, 
+					      cmd_params[0].val,
+					      0);
+	song_iterator_t *songit;
+	byte *data;
+	int len;
+	sfx_pcm_config_t format;
+
+	if (!song) {
+		sciprintf("Not a sound resource.\n");
+		return 1;
+	}
+
+	songit = songit_new(song->data, song->size, SCI_SONG_ITERATOR_TYPE_SCI0);
+
+	if (!songit) {
+		sciprintf("Error-- Could not convert to song iterator\n");
+		return 1;
+	}
+
+	if ((data = songit->get_pcm(songit, &len, &format))) {
+		sci_hexdump(data, len, 0);
+		sciprintf("\nIs sample (encoding %dHz/%s/%04x).\nSize:\t%d (0x%x)\n",
+			  format.rate, (format.stereo)?
+			  ((format.stereo == SFX_PCM_STEREO_LR)? "stereo-LR" : "stereo-RL") : "mono", format.format,
+			  len, len);
+	} else
+		sciprintf("Valid song, but not a sample.\n");
+
+	songit_free(songit);
+
+	return 0;
+}
+
 int
 c_simsoundcue(state_t *s)
 {
@@ -3254,6 +3293,10 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_shownode, "shownode", "!a",
 					 "Prints information about a list node\n"
 					 "  or list base.\n\n");
+			con_hook_command(c_is_sample, "is-sample", "i",
+					 "Tests whether a given sound resource\n"
+					 "  is a PCM sample, and displays infor-\n"
+					 "  mation on it if it is.\n\n");
 
 
 			con_hook_int(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");
