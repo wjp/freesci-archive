@@ -1,3 +1,17 @@
+2002-07-26  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kmovement.c (kDoBresen, initialize_bresen):
+	Re-disabled the earlier changes as they broke ego's cycler and
+	mover.
+	
+	* src/gfx/resource/sci_pic_0.c (_gfxr_fill): Used the original
+	drawable value for the call to _gfxr_auxbuf_fill(), since this
+	fixed PQ2 screen 15's control map.
+
+	* src/engine/kmovement.c (kDoBresen, initialize_bresen):
+	Re-enabled b_movCnt handlers for HQ1 ogre, since I couldn't find
+	out where they used to cause problems (if any)
+
 2002-07-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/vm.c (script_instantiate): Explicit treatment for

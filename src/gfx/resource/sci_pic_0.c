@@ -1561,7 +1561,10 @@ _gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int c
 	byte *bounds = NULL;
 	int legalcolor, legalmask;
 	int min_x, min_y, max_x, max_y;
+	int original_drawenable = drawenable; /* Backup, since we need the unmodified value
+					      ** for filling the aux and control map  */
 
+	/* Restrict drawenable not to restrict itself to zero */
 	if (pic->control_map->index_data[y_200 * 320 + x_320] != 0)
 		drawenable &= ~GFX_MASK_CONTROL;
 
@@ -1571,7 +1574,8 @@ _gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int c
 	if (priority == 0)
 		drawenable &= ~GFX_MASK_PRIORITY;
 
-	_gfxr_auxbuf_fill(pic, x_320, y_200, drawenable, (drawenable & GFX_MASK_CONTROL)? control : 0);
+	_gfxr_auxbuf_fill(pic, x_320, y_200, original_drawenable,
+			  (drawenable & GFX_MASK_CONTROL)? control : 0);
 	_gfxr_auxbuf_spread(pic, &min_x, &min_y, &max_x, &max_y);
 
 	if (_gfxr_find_fill_point(pic, min_x, min_y, max_x, max_y, x_320, y_200, color, drawenable, &x, &y)) {

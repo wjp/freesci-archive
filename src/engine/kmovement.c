@@ -134,7 +134,7 @@ initialize_bresen(state_t *s, int funct_nr, int argc, heap_ptr argp, heap_ptr mo
 	SCIkdebug(SCIkBRESEN, "    steps=%d, mv=(%d, %d), i1= %d, i2=%d\n",
 		  numsteps, deltax_step, deltay_step, i1, bdi*2);
 
-	/* PUT_SELECTOR(mover, b_movCnt, numsteps); */
+/*	PUT_SELECTOR(mover, b_movCnt, numsteps); *//* Needed for HQ1/Ogre? */
 	PUT_SELECTOR(mover, b_di, bdi);
 	PUT_SELECTOR(mover, b_i1, i1);
 	PUT_SELECTOR(mover, b_i2, bdi * 2);
@@ -195,7 +195,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 
 	PUT_SELECTOR(mover, b_di, bdi);
-	/*	PUT_SELECTOR(mover, b_movCnt, movcnt - 1); */
+/*	PUT_SELECTOR(mover, b_movCnt, movcnt - 1); *//* Needed for HQ1/Ogre? */
 
 	x += dx;
 	y += dy;
