@@ -47,6 +47,7 @@ extern int _debug_step_running; /* scriptdebug.c */
 extern int _debug_seeking; /* scriptdebug.c */
 
 
+
 calls_struct_t *send_calls = NULL;
 int send_calls_allocated = 0;
 int bp_flag = 0;
@@ -298,6 +299,8 @@ sciprintf(")\n");
       send_calls[send_calls_nr].argc = argc;
       send_calls[send_calls_nr].selector = selector;
       send_calls[send_calls_nr].type = EXEC_STACK_TYPE_CALL;
+      send_calls[send_calls_nr].sp = sp;
+      sp = CALL_SP_CARRY; /* Destroy sp, as it will be carried over */
 
       break;
     } /* switch(lookup_selector()) */
@@ -319,7 +322,7 @@ sciprintf(")\n");
 
     else
       retval =
-	add_exec_stack_entry(s, send_calls[send_calls_nr].address, sp, work_obj,
+	add_exec_stack_entry(s, send_calls[send_calls_nr].address, send_calls[send_calls_nr].sp, work_obj,
 			     send_calls[send_calls_nr].argc, send_calls[send_calls_nr].argp,
 			     send_calls[send_calls_nr].selector, send_obj, origin, 0);
 
@@ -715,9 +718,13 @@ run_vm(state_t *s, int restoring)
 
     case 0x24: /* ret */
       do {
+	heap_ptr old_sp = xs->sp;
+	heap_ptr old_fp = xs->variables[VAR_TEMP];
+
 	if (s->execution_stack_pos == s->execution_stack_base) { /* Have we reached the base? */
 
 	  s->execution_stack_base = old_execution_stack_base; /* Restore stack base */
+
 	  --(s->execution_stack_pos);
 
 	  s->amp_rest = restadjust; /* Update &rest */
@@ -736,6 +743,11 @@ run_vm(state_t *s, int restoring)
 	/* No we haven't, so let's do a soft return */
 	--(s->execution_stack_pos);
 	xs = s->execution_stack + s->execution_stack_pos;
+
+	if (xs->sp == CALL_SP_CARRY) { /* Used in sends to 'carry' the stack pointer */
+	  xs->sp = old_sp;
+	  xs->variables[VAR_TEMP] = old_fp;
+	}
 
       } while (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR);
       /* Iterate over all varselector accesses */

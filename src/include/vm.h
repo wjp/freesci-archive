@@ -64,6 +64,9 @@
 /* Magic adjustment value for lofsa and lofss */
 
 
+#define CALL_SP_CARRY 0 /* Stack pointer value: Use predecessor's value */
+
+
 #define SELECTOR_NONE 0
 #define SELECTOR_VARIABLE 1
 #define SELECTOR_METHOD 2
@@ -87,11 +90,12 @@ typedef struct
 
 /* This struct is used to buffer the list of send calls in send_selector() */
 typedef struct {
-    heap_ptr address;
-    heap_ptr argp;
-    int argc;
-    int selector;
-    heap_ptr type; /* Same as exec_stack_t.type */
+  heap_ptr address;
+  heap_ptr argp;
+  int argc;
+  int selector;
+  heap_ptr sp; /* Stack pointer */
+  heap_ptr type; /* Same as exec_stack_t.type */
 } calls_struct_t;
 
 

@@ -505,7 +505,7 @@ menubar_draw_menu(struct _state *s, int menu_nr, port_t *menu_port)
   xl = menu->width;
   yl = menu->items_nr * 10; /* Rather trivial ATM */
 
-  backup_handle = graph_save_box(s, x - 1, 10, xl + 5, yl + 1, SCI_MAP_VISUAL);
+  backup_handle = graph_save_box(s, x - 1, 10, xl + 5, yl + 1, SCI_MAP_VISUAL | SCI_MAP_PRIORITY);
   draw_frame(s->pic, x - 1, 10, xl + 5, yl + 1, 0x00, -1, 0);
   draw_box(s->pic, x, 10, xl + 3, yl, 0xff, -1);
 

@@ -981,9 +981,14 @@ c_backtrace(state_t *s)
 
     if (call->objp == 0)
       sciprintf(")\n");
-    else
-      sciprintf(")\n    obj@%04x pc=%04x sp=%04x fp=%04x\n", call->objp, call->pc,
-		call->sp, call->variables[VAR_TEMP]);
+    else {
+      if (call->sp != CALL_SP_CARRY)
+	sciprintf(")\n    obj@%04x pc=%04x sp=%04x fp=%04x\n", call->objp, call->pc,
+		  call->sp, call->variables[VAR_TEMP]);
+      else
+	sciprintf(")\n    obj@%04x pc=%04x sp:carry fp=%04x\n", call->objp, call->pc,
+		  call->variables[VAR_TEMP]);
+    }
   }
   return 0;
 }

@@ -1,3 +1,11 @@
+2000-06-09  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/graphics/menubar.c (menubar_draw_menu): Backing up the menu
+	ports now backs up the priority map
+
+	* src/engine/vm.c (run_vm): Fixed(?) support for successive linking
+	on multiple sends
+
 2000-06-08  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kfile.c (kFOpen): Added resource directory fallbacks
