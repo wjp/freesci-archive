@@ -323,6 +323,11 @@ song_new(word handle, byte *data, int size, int priority)
 	retval->priority = priority;
 	retval->size = size;
 	retval->next = NULL;
+	
+	if (global_sound_server->flags & SOUNDSERVER_FLAG_SHAREDMEM)
+		retval->shared = 1;
+	else
+		retval->shared = 0;
 
 	retval->pos = 33;
 	retval->loopmark = 33; /* The first 33 bytes are header data */
@@ -419,8 +424,11 @@ song_lib_find(songlib_t songlib, word handle)
 {
 	song_t *seeker = *songlib;
 
-	while (seeker && (seeker->handle != handle))
+	while (seeker) {
+		if (seeker->handle == handle)
+			break;
 		seeker = seeker->next;
+	}
 
 	return seeker;
 }
@@ -433,13 +441,14 @@ song_lib_find_active(songlib_t songlib, song_t *last_played_song)
 
 	if (last_played_song)
 		if (last_played_song->status == SOUND_STATUS_PLAYING)
-		{
 			return last_played_song; /* That one was easy... */
-		}
 
-	while (seeker && (seeker->status != SOUND_STATUS_WAITING)
-		 && (seeker->status != SOUND_STATUS_PLAYING))
+	while (seeker) {
+		if ((seeker->status == SOUND_STATUS_WAITING) ||
+		    (seeker->status == SOUND_STATUS_PLAYING))
+			break;
 		seeker = seeker->next;
+	}
 
 	return seeker;
 }
@@ -457,20 +466,23 @@ song_lib_remove(songlib_t songlib, word handle)
 		*songlib = goner->next;
 
 	else {
-			while ((goner->next) && (goner->next->handle != handle))
-	goner = goner->next;
+		while ((goner->next) && (goner->next->handle != handle))
+			goner = goner->next;
+		
+		if (goner->next) { /* Found him? */
+			song_t *oldnext = goner->next;
 
-			if (goner->next) {/* Found him? */
-	song_t *oldnext = goner->next;
-
-	goner->next = goner->next->next;
-	goner = oldnext;
-			} else return -1; /* No. */
-		}
+			goner->next = goner->next->next;
+			goner = oldnext;
+		} else return -1; /* No. */
+	}
 
 	retval = goner->status;
 
-	free(goner->data);
+	/* Don't free if we are sharing this resource. */
+	if (goner->shared == 0)
+		free(goner->data);
+	
 	free(goner);
 
 	return retval;
@@ -500,7 +512,7 @@ song_lib_count(songlib_t songlib)
 	song_t *seeker = *songlib;
 	int retval = 0;
 
-	while (seeker) {
+	while (seeker) {		
 		retval++;
 		seeker = seeker->next;
 	}

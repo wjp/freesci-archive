@@ -1430,6 +1430,8 @@ recover_version0(sound_lib_file_ver1_t *rec)
 		song->maxfade = 16;
 		song->resetflag = 0;
 
+		song->shared = 0;
+
 		for (j = 0; j < MIDI_CHANNELS; j++)
 			song->polyphony[j] = 1;
 	}
@@ -1480,7 +1482,7 @@ recover_version1(FILE *fh, sound_lib_file_ver1_t *rec,
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 299 "sfx_save.cfsml"
+#line 302 "sfx_save.cfsml"
 	fclose(fh);
 
 	if (error) {
@@ -1530,6 +1532,7 @@ recover_version1(FILE *fh, sound_lib_file_ver1_t *rec,
 		next = sci_malloc(sizeof(song_t));
 		memcpy(next, &(rec->songs[i]), sizeof(song_t));
 		next->next = NULL;
+		next->shared = 0;
 		if (i > 0)
 			seeker->next = next;
 
@@ -1538,6 +1541,7 @@ recover_version1(FILE *fh, sound_lib_file_ver1_t *rec,
 #endif
 
 		seeker = next;
+
 
 		if (i == 0)
 			*sss->songlib = seeker;
@@ -1611,7 +1615,7 @@ recover_version2(FILE *fh, sound_lib_file_ver2_t *rec,
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 400 "sfx_save.cfsml"
+#line 406 "sfx_save.cfsml"
 	fclose(fh);
 
 	if (error) {
@@ -1633,6 +1637,7 @@ recover_version2(FILE *fh, sound_lib_file_ver2_t *rec,
 		}
 
 		rec->songs[i].data = (byte *) sci_malloc(song_data_size);
+		rec->songs[i].shared = 0;
 		if (fread(rec->songs[i].data, sizeof(byte), song_data_size, fh) < song_data_size) {
 			int j;
 			for (j = 0; j < i; j++)

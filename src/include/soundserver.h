@@ -33,6 +33,7 @@
 #include <sound.h>
 #include <scitypes.h>
 
+/* #define DEBUG_SOUND_SERVER 1 */
 
 #define SOUND_SERVER_TIMEOUT 100000
 /* microseconds until SOUND_COMMAND_TEST fails */
@@ -165,8 +166,9 @@ typedef struct _song {
 	int file_nr;	/* used for saving */
 	song_iterator_t *it;
 
-	struct _song *next; /* Next song or NULL if this is the last one */
+	int shared;   /* zero if *data is not shared with anyone else */
 
+	struct _song *next; /* Next song or NULL if this is the last one */
 } song_t;
 
 
@@ -422,6 +424,10 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 
 /* Sound server has its own cwd (relative to the main program) */
 #define SOUNDSERVER_FLAG_SEPARATE_CWD (1 << 0)
+
+/* Soundserver operates within the same memory context as themain program.
+   Meaning we access the song data off the heap directly */
+#define SOUNDSERVER_FLAG_SHAREDMEM (1 << 1)
 
 #define SOUNDSERVER_INIT_FLAG_REVERSE_STEREO (1 << 0) /* Reverse pan control changes */
 
