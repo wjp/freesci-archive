@@ -27,7 +27,7 @@
 /* Reads data from a resource file and stores the result in memory */
 
 
-#include <resource.h>
+#include <sciresource.h>
 
 
 

@@ -29,7 +29,7 @@
 #include <engine.h>
 #include <console.h>
 #ifdef SCI_CONSOLE
-#include <resource.h>
+#include <sciresource.h>
 #include <sound.h>
 #include <script.h>
 

@@ -27,6 +27,7 @@
 /* Main vocabulary support functions and word lookup */
 
 
+#include <sciresource.h>
 #include <engine.h>
 #include <kernel.h>
 

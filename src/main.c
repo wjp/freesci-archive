@@ -25,6 +25,7 @@
 
 ***************************************************************************/
 
+#include <sciresource.h>
 #include <engine.h>
 #include <sound.h>
 #include <uinput.h>

@@ -1,3 +1,5 @@
+#include <sciresource.h>
+#include <engine.h>
 #include <console.h>
 #include <script.h>
 #include <vocabulary.h>
@@ -5,7 +7,6 @@
 #include <stdlib.h>
 #include <util.h>
 #include <vm.h>
-#include <engine.h>
 #include <assert.h>
 
 /* #define SCRIPT_DEBUG */

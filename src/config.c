@@ -2189,10 +2189,10 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_options.pic0_dither_pattern = GFXR_DITHER_PATTERN_SCALED;
 	conf->gfx_options.pic0_brush_mode = GFX_BRUSH_MODE_RANDOM_ELLIPSES;
 	conf->gfx_options.pic0_line_mode = GFX_LINE_MODE_CORRECT;
-	conf->gfx_options.cursor_xlate_filter = GFX_XLATE_FILTER_NONE;
-	conf->gfx_options.view_xlate_filter = GFX_XLATE_FILTER_NONE;
+	conf->gfx_options.cursor_xlate_filter = GFX_XLATE_FILTER_LINEAR;
+	conf->gfx_options.view_xlate_filter = GFX_XLATE_FILTER_LINEAR;
 	conf->gfx_options.pic_xlate_filter = GFX_XLATE_FILTER_NONE;
-	conf->gfx_options.text_xlate_filter = GFX_XLATE_FILTER_NONE;
+	conf->gfx_options.text_xlate_filter = GFX_XLATE_FILTER_LINEAR;
 	conf->gfx_options.dirty_frames = GFXOP_DIRTY_FRAMES_CLUSTERS;
 
 	conf->gfx_driver = gfx_find_driver(NULL);

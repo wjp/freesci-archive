@@ -26,6 +26,7 @@
 ***************************************************************************/
 /* String and parser handling */
 
+#include <sciresource.h>
 #include <engine.h>
 #include <vocabulary.h>
 

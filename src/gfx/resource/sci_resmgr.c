@@ -26,7 +26,7 @@
 /* The interpreter-specific part of the resource manager, for SCI */
 
 
-#include <resource.h>
+#include <sciresource.h>
 #include <gfx_widgets.h>
 #include <gfx_resmgr.h>
 #include <gfx_options.h>

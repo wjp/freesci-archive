@@ -1,5 +1,11 @@
 2001-02-21  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/gfx/gfx_support.c (ALPHA_FACTOR2): Added linear filter
+
+	* src/include/sciresource.h: Split resource.h in two
+
+	* src/include/gfx_operations.h: Removed scroll offset
+
 	* src/engine/kgraphics.c (kDoBresen): Movement counter in mover objects
 	is now increminated each time DoBresen() is run
 

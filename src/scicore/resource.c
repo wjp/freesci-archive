@@ -31,7 +31,7 @@
 /* Resource library */
 
 
-#include <resource.h>
+#include <sciresource.h>
 #include <assert.h>
 
 #include <sys/types.h>
@@ -107,6 +107,7 @@ static decomp_funct *decompressors[] = {
 	&decompress01,
 	&decompress1e,
 	&decompress1l,
+	&decompress11,
 	NULL
 };
 

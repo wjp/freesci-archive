@@ -27,7 +27,9 @@
 /* Reads data from a resource file and stores the result in memory */
 
 
-#include <resource.h>
+#include <sciresource.h>
+
+#define DDEBUG if (0) printf
 
 void decryptinit3();
 int decrypt3(guint8* dest, guint8* src, int length, int complength);

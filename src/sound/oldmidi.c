@@ -30,6 +30,7 @@
 ***************************************************************************/
 /* Turns a resource into a valid midi block */
 
+#include <sciresource.h>
 #include <engine.h>
 #include <sound.h>
 #include <stdarg.h>

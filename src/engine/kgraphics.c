@@ -25,6 +25,7 @@
 
 ***************************************************************************/
 
+#include <sciresource.h>
 #include <engine.h>
 #include <gfx_widgets.h>
 #include <sci_graphics.h>

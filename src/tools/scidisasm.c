@@ -30,9 +30,10 @@
 ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#  include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <sciresource.h>
 #include <engine.h>
 #include <console.h>
 #include <versions.h>

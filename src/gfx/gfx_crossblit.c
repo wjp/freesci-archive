@@ -37,7 +37,7 @@
 
 void FUNCTION_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per_src_line,
 		   int xl, int yl, byte *alpha, int bytes_per_alpha_line, int bytes_per_alpha_pixel,
-		   int alpha_test_mask
+		   int alpha_test_mask, int alpha_min, int alpha_max
 #ifdef USE_PRIORITY
 		   , byte *priority_buffer, int bytes_per_priority_line, int bytes_per_priority_pixel, int priority
 #endif /* USE_PRIORITY */
@@ -49,12 +49,13 @@ void FUNCTION_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per
 	for (y = 0; y < yl; y++) {
 		int pixel_offset = 0;
 		int alpha_offset = 0;
+		int alpha_test;
 #ifdef USE_PRIORITY
 		int priority_offset = 0;
 #endif /* USE_PRIORITY */
 
 		for (x = 0; x < alpha_end; x += bytes_per_alpha_pixel) {
-			if ((alpha_test_mask & alpha[x]) == 0)
+			if (((alpha_test = (alpha_test_mask & alpha[x])) < alpha_min) || (alpha_test < alpha_max) && ((x^y)&1))
 #ifdef USE_PRIORITY
 				if (priority_buffer[priority_offset] <= priority) {
 					priority_buffer[priority_offset] = priority;

@@ -35,6 +35,7 @@
 
 #include "sciunpack.h"
 
+#include <sciresource.h>
 #include <engine.h>
 #include <sound.h>
 #include <console.h>

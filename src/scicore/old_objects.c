@@ -1,3 +1,4 @@
+#include <sciresource.h>
 #include <console.h>
 #include <script.h>
 #include <vocabulary.h>

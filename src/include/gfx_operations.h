@@ -58,7 +58,6 @@ typedef struct {
 /* Unless individually stated otherwise, the following applies:
 ** All operations herein apply to the standard 320x200 coordinate system.
 ** All operations perform clipping relative to state->clip_zone.
-** All operations have to respect state->scroll_offset.
 */
 
 typedef enum {
@@ -91,9 +90,6 @@ typedef struct {
 	gfx_options_t *options;
 
 	point_t pointer_pos; /* Mouse pointer coordinates */
-
-	point_t scoll_offset; /* The scroll position. Used for a short time during some SCI01 transitions.
-			      ** Semantics are defined by each individual operation.  */
 
 	rect_t clip_zone_unscaled; /* The current UNSCALED clipping zone */
 	rect_t clip_zone; /* The current SCALED clipping zone; a cached scaled version of clip_zone_unscaled */

@@ -27,6 +27,7 @@
 /* Command console in text mode */
 
 
+#include <sciresource.h>
 #include <engine.h>
 #include <sound.h>
 #include <uinput.h>

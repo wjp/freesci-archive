@@ -4,7 +4,7 @@
 ** EXTRA_BYTE_OFFSET: Extra source byte offset for copying (used on big-endian machines in 24 bit mode)
 */
 
-#define EXTEND_COLOR(x) (((x) << 24) | ((x) << 16) | ((x) << 8) | (x))
+#define EXTEND_COLOR(x) (unsigned) ((((unsigned) x) << 24) | (((unsigned) x) << 16) | (((unsigned) x) << 8) | ((unsigned) x))
 #define PALETTE_MODE mode->palette
 
 void
@@ -83,6 +83,168 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 	}
 }
 
+
+/* linear filter: Macros (in reverse order) */
+
+#define X_CALC_INTENSITY_NORMAL (linecolor[i] >> 1) + (((othercolumn[i]*(255-column_valuator)) + (ctexel[i]*column_valuator)) >> 1)
+#define X_CALC_INTENSITY_CENTER (linecolor[i] >> 1) + (ctexel[i] << 7)
+
+#define WRITE_XPART(X_CALC_INTENSITY, DO_X_STEP) \
+				for (subx = 0; subx < xfact >> 1; subx++) { \
+                                        unsigned int intensity; \
+					wrcolor = 0; \
+					for (i = 0; i < 4; i++) { \
+if (0) fprintf(stderr,"%d:%08x, %08x, %08x\n", i, linecolor[i], othercolumn[i], ctexel[i]);\
+						intensity = X_CALC_INTENSITY; \
+						wrcolor |= (intensity >> shifts[i]) & masks[i]; \
+					} \
+                                        if (separate_alpha_map) \
+                                                *alpha_wrpos++ = intensity >> 24; \
+					wrcolor <<= (EXTRA_BYTE_OFFSET * 8); \
+					memcpy(wrpos, &wrcolor, COPY_BYTES); \
+					wrpos += COPY_BYTES; \
+					if (DO_X_STEP) \
+                                                column_valuator += column_step; \
+				} \
+                                if (DO_X_STEP) \
+				        column_step = -column_step
+/* End of macro definition */
+
+
+#define Y_CALC_INTENSITY_CENTER (ctexel[i] << 8)
+#define Y_CALC_INTENSITY_NORMAL (otherline[i]*(256-line_valuator)) + (ctexel[i]*line_valuator)
+
+#define WRITE_YPART(DO_Y_STEP, LINE_COLOR) \
+			for (suby = 0; suby < yfact >> 1; suby++) { \
+				unsigned int column_valuator = column_step? (column_step >> 1) : 256; \
+				unsigned int linecolor[4]; \
+				unsigned int othercolumn[4]; \
+				int i; \
+				SIZETYPE wrcolor; \
+				wrpos = sublinepos; \
+                                alpha_wrpos = alpha_sublinepos; \
+				for (i = 0; i < 4; i++) \
+					linecolor[i] = LINE_COLOR; \
+				/*-- left half --*/ \
+				MAKE_PIXEL((x == 0), othercolumn, ctexel, src[-1]); \
+				WRITE_XPART(X_CALC_INTENSITY_NORMAL, 1); \
+				column_valuator += column_step; \
+				/*-- center --*/ \
+				if (xfact & 1) { \
+					WRITE_XPART(X_CALC_INTENSITY_CENTER, 0); \
+				} \
+				/*-- right half --*/ \
+				MAKE_PIXEL((x+1 == pxm->index_xl), othercolumn, ctexel, src[+1]); \
+				WRITE_XPART(X_CALC_INTENSITY_NORMAL, 1); \
+				if (DO_Y_STEP) \
+                                        line_valuator += line_step; \
+				sublinepos += pxm->xl * bytespp; \
+				alpha_sublinepos += pxm->xl; \
+			} \
+			if (DO_Y_STEP) \
+			        line_step = -line_step
+/* End of macro definition */
+
+
+
+
+void
+FUNCNAME_LINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
+{
+	int xfact = mode->xfact;
+	int yfact = mode->yfact;
+	int line_step = (yfact < 2)? 0 : 256 / (yfact >> 1);
+	int column_step = (xfact < 2)? 0 : 256 / (xfact >> 1);
+	int bytespp = mode->bytespp;
+	byte *src = pxm->index_data;
+	byte *dest = pxm->data;
+	byte *alpha_dest = pxm->alpha_map;
+	int using_alpha = pxm->colors_nr < GFX_PIC_COLORS;
+	int separate_alpha_map = (!mode->alpha_mask) && using_alpha;
+	unsigned int masks[4], shifts[4], zero[3];
+	int x,y;
+
+	zero[0] = zero[1] = zero[2] = 0;
+
+	if (separate_alpha_map) {
+		masks[3] = 0;
+		shifts[3] = 24;
+	}
+
+        assert(bytespp == COPY_BYTES);
+	assert(!PALETTE_MODE);
+
+	masks[0] = mode->red_mask;
+	masks[1] = mode->green_mask;
+	masks[2] = mode->blue_mask;
+	masks[3] = mode->alpha_mask;
+	shifts[0] = mode->red_shift;
+	shifts[1] = mode->green_shift;
+	shifts[2] = mode->blue_shift;
+	shifts[3] = mode->alpha_shift;
+
+	if (separate_alpha_map && !alpha_dest)
+		alpha_dest = pxm->alpha_map = malloc(pxm->index_xl * xfact * pxm->index_yl * yfact);
+
+	for (y = 0; y < pxm->index_yl; y++) {
+		byte *linepos = dest;
+		byte *alpha_linepos = alpha_dest;
+
+		for (x = 0; x < pxm->index_xl; x++) {
+			unsigned int otherline[4]; /* the above line or the line below */
+			unsigned int ctexel[4]; /* Current texel */
+			int subx, suby;
+			int line_valuator = line_step? (line_step >> 1) : 256;
+			byte *wrpos, *alpha_wrpos;
+			byte *sublinepos = linepos;
+			byte *alpha_sublinepos = alpha_linepos;
+
+#define MAKE_PIXEL(cond, rec, other, nr) \
+			if ((cond) || (using_alpha && nr == 255)) { \
+				rec[0] = other[0]; \
+				rec[1] = other[1]; \
+				rec[2] = other[2]; \
+				rec[3] = 0xffffff; \
+			} else { \
+				rec[0] = EXTEND_COLOR(pxm->colors[nr].r) >> 8; \
+				rec[1] = EXTEND_COLOR(pxm->colors[nr].g) >> 8; \
+				rec[2] = EXTEND_COLOR(pxm->colors[nr].b) >> 8; \
+				rec[3] = 0; \
+			}
+
+			MAKE_PIXEL(0, ctexel, zero, *src);
+
+			/*-- Upper half --*/
+			MAKE_PIXEL((y == 0), otherline, ctexel, src[-pxm->index_xl]);
+			WRITE_YPART(1, Y_CALC_INTENSITY_NORMAL);
+
+			if (yfact & 1) {
+				WRITE_YPART(0, Y_CALC_INTENSITY_CENTER);
+			}
+
+			/*-- Lower half --*/
+			line_valuator += line_step;
+			MAKE_PIXEL((y+1 == pxm->index_yl), otherline, ctexel, src[pxm->index_xl]);
+			WRITE_YPART(1, Y_CALC_INTENSITY_NORMAL);
+
+			src++;
+			linepos += xfact * bytespp;
+			alpha_linepos += xfact;
+		}
+
+		dest += pxm->xl * yfact * bytespp;
+		alpha_dest += pxm->xl * yfact;
+	}
+}
+
+#undef WRITE_YPART
+#undef Y_CALC_INTENSITY_CENTER
+#undef Y_CALC_INTENSITY_NORMAL
+#undef WRITE_XPART
+#undef X_CALC_INTENSITY_CENTER
+#undef X_CALC_INTENSITY_NORMAL
+#undef MAKE_PIXEL
 #undef FUNCNAME
+#undef FUNCNAME_LINEAR
 #undef SIZETYPE
 #undef EXTEND_COLOR

@@ -45,14 +45,6 @@
 #include <kernel.h>
 #include <gfx_state_internal.h>
 
-#ifdef _WIN32
-#define scimkdir(arg1,arg2) mkdir(arg1)
-#else
-#define scimkdir(arg1,arg2) mkdir(arg1,arg2)
-#endif
-
-#define MAX_HOMEDIR_SIZE 255
-
 #define FREESCI_SAVEGAME_VERSION 1
 
 #define FREESCI_GAMEDIR ".freesci"

@@ -25,8 +25,8 @@
 
 ***************************************************************************/
 
+#include <sciresource.h>
 #include <stdarg.h>
-
 #include <engine.h>
 #include <sound.h>
 #include <scitypes.h>

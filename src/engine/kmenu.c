@@ -25,6 +25,7 @@
 
 ***************************************************************************/
 
+#include <sciresource.h>
 #include <engine.h>
 #include <sci_widgets.h>
 

@@ -33,7 +33,8 @@
 #include <gfx_driver.h>
 
 typedef enum {
-  GFX_XLATE_FILTER_NONE
+	GFX_XLATE_FILTER_NONE,
+	GFX_XLATE_FILTER_LINEAR
 } gfx_xlate_filter_t;
 
 
