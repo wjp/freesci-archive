@@ -335,7 +335,7 @@ song_new(word handle, byte *data, int size, int priority)
 	memset(retval->pitch, 0, sizeof(int) * MIDI_CHANNELS);
 	memset(retval->channel_map, 1, sizeof(int) * MIDI_CHANNELS);
 
-	for (i = 0; i < MIDI_CHANNELS; i++) {
+	for (i = 0; i < data[0]; i++) {
 		retval->polyphony[i] = data[1 + (i << 1)];
 		retval->flags[i] = data[2 + (i << 1)];
 	}
@@ -580,6 +580,7 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 			if (!param)
 				song->velocity[command & 0x0f] = 127;
 			break;
+		case 0x00: /* UNKNOWN NYI (happens in SQ3 on phleebut */
 		case 0x04: /* UNKNOWN NYI (happens in LSL2 gameshow) */
 		case 0x46: /* UNKNOWN NYI (happens in LSL3 binoculars) */
 		case 0x61: /* UNKNOWN NYI (special for adlib? Iceman) */

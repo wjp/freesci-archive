@@ -79,7 +79,7 @@ int midiout_flush(void)
 
 int midiout_null_open(void)
 {
-  printf("Opened null sound device\n");
+  printf("Opened null midiout device\n");
   return 0;
 }
 
