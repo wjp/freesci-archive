@@ -551,8 +551,11 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   if (s->acc == 0)
     return; /* Can'tBeHere */
-  if ((signal & _K_VIEW_SIG_FLAG_DONT_RESTORE)/* || (signal & _K_VIEW_SIG_FLAG_IGNORE_ACTOR)*/)
-    return; /* CanBeHere- it's either being disposed, or it ignores actors anyway */
+  if ((signal & _K_VIEW_SIG_FLAG_DONT_RESTORE) || (signal & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))
+  {
+    s->acc=signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE|_K_VIEW_SIG_FLAG_IGNORE_ACTOR); /* CanBeHere- it's either being disposed, or it ignores actors anyway */
+    return;
+  }
   if (cliplist) {
     heap_ptr node = GET_HEAP(cliplist + LIST_FIRST_NODE);
 
@@ -589,9 +592,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
   }
 
-  s->acc = graph_on_control(s, x, y + 10, xl, yl, 4);
-  if (!s->acc)
-    s->acc = 1; /* Should only happen near the picture border */
+  s->acc = 1;
   /* CanBeHere */
 }
 

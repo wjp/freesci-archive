@@ -1,3 +1,8 @@
+2000-04-25  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/core/kGraphics: Changed CanbeHere() yet again.
+	* src/core/scriptdebug.c: Added range checking for set_vismap
+
 2000-04-24  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kgraphics.c (kCanBeHere): CanBeHere now returns OnControl()
