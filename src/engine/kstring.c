@@ -568,6 +568,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 					str_leng = 0;
 					memmove(target - nrlen + delta, target - nrlen, nrlen);
 					memset(target - nrlen, ' ', delta);
+					target += delta;
 				}
 				CHECK_OVERFLOW1(target, 0);
 

@@ -1,3 +1,8 @@
+2003-01-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/engine/kstring.c (kFormat): When padding a decimal field,
+	adjust the target pointer accordingly.
+
 2003-01-13  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/drivers/gfx_drivers.c: Fixed auto-detection order not
