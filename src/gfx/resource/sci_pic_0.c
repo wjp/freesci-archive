@@ -771,6 +771,7 @@ _gfxr_auxplot_brush(gfxr_pic_t *pic, byte *buffer, int yoffset, int offset, int 
 
 			_gfxr_fill_ellipse(pic, buffer, line_width, x, y, pic->mode->xfact >> 1, pic->mode->yfact >> 1,
 					   color, ELLIPSE_SOLID);
+			srand(time(NULL)); /* Make sure we don't accidently forget to re-init the random number generator */
 		}
 		break;
 
@@ -783,6 +784,7 @@ _gfxr_auxplot_brush(gfxr_pic_t *pic, byte *buffer, int yoffset, int offset, int 
 					buffer[full_offset + xc] = color;
 			full_offset += line_width;
 		}
+		srand(time(NULL)); /* Make sure we don't accidently forget to re-init the random number generator */
 	}
 	break;
 	}

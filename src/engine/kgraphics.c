@@ -1610,6 +1610,7 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_dyn_view_t *widge
 		if (GFXW_IS_DYN_VIEW(widget) && (widget->ID != GFXW_NO_ID)) {
 			if ((signal = (UGET_HEAP(widget->signalp))) & _K_VIEW_SIG_FLAG_DISPOSE_ME) {
 				int tempid = widget->ID;
+				heap_ptr under_bits = 0;
 
 				if (widget->under_bitsp) { /* Is there a bg picture left to clean? */
 					word mem_handle = widget->under_bits = GET_HEAP(widget->under_bitsp);
@@ -1626,6 +1627,14 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_dyn_view_t *widge
 				if (_k_animate_ran) {
 					SCIkwarn(SCIkWARNING, "Object at %04x invoked kAnimate() during deletion!\n", tempid);
 					return dropped;
+				}
+
+				if (widget->under_bitsp)
+					under_bits = GET_HEAP(widget->under_bitsp);
+
+				if (under_bits) {
+					PUT_HEAP(widget->under_bitsp, 0);
+					graph_restore_box(s, under_bits);
 				}
 
 				SCIkdebug(SCIkGRAPHICS, "Freeing %04x with signal=%04x\n", widget->ID, signal);

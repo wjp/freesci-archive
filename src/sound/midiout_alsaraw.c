@@ -28,11 +28,30 @@
 #include <sys/asoundlib.h>
 
 #include <midiout.h>
+#if SND_LIB_VERSION > 0x000900
+#  define ALSA_09
+#endif
+
 
 static snd_rawmidi_t *handle;
 static int card = 0;
 static int device = 0;
 
+
+#ifdef ALSA_09
+int midiout_alsaraw_open()
+{
+  int err;
+  char devname[16];
+  sprintf(devname, "hw:%d,%d", card, device);
+
+  if ((err = snd_rawmidi_open(&handle, NULL, devname, O_WRONLY)) < 0) {
+    fprintf(stderr, "Open failed (%i): /dev/snd/midiC%iD%i\n", err, card, device);
+    return -1;
+  }
+  return 0;
+}
+#else
 int midiout_alsaraw_open()
 {
   int err;
@@ -43,6 +62,7 @@ int midiout_alsaraw_open()
   }
   return 0;
 }
+#endif /* ALSA prior to 0.9.0 */
 
 int midiout_alsaraw_close()
 {

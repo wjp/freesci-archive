@@ -1,3 +1,14 @@
+2001-03-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (_k_view_list_dispose_loop): dispose_loop
+	now restores under_bits where appropriate
+
+	* src/scicore/vocab.c (vocab_synonymize_tokens): Applied Patch by
+	Emmanuel Jeandel to fix synonymizing
+
+	* src/gfx/resource/sci_pic_0.c (_gfxr_auxplot_brush): Fixed random
+	numbers.
+
 2001-03-04  Solomon Peachy <pizza@shaftnet.org>
 	* README
 	  src/config.l

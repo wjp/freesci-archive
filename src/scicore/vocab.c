@@ -709,13 +709,13 @@ vocab_dump_parse_tree(char *tree_name, parse_tree_node_t *nodes)
 void
 vocab_synonymize_tokens(result_word_t *words, int words_nr, synonym_t *synonyms, int synonyms_nr)
 {
-  int i, sync;
+	int i, sync;
 
-  if (!synonyms || !synonyms_nr)
-    return; /* No synonyms: Nothing to check */
+	if (!synonyms || !synonyms_nr)
+		return; /* No synonyms: Nothing to check */
 
-  for (i = 0; i < words_nr; i++)
-    for(sync = 0; sync < synonyms_nr; sync++)
-      if (words[i].class == synonyms[sync].replaceant)
-	words[i].class = synonyms[sync].replacement;
+	for (i = 0; i < words_nr; i++)
+		for(sync = 0; sync < synonyms_nr; sync++)
+			if (words[i].group == synonyms[sync].replaceant)
+				words[i].group = synonyms[sync].replacement;
 }

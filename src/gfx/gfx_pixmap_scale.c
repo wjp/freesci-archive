@@ -250,24 +250,38 @@ FUNCNAME_LINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 /* Broken... */
 
 
+#define MAKE_PIXEL_TRILINEAR(cond, rec, other, nr) \
+			if ((cond) || (using_alpha && nr == 255)) { \
+				rec[0] = other[0]; \
+				rec[1] = other[1]; \
+				rec[2] = other[2]; \
+				rec[3] = 0xffff; \
+			} else { \
+				rec[0] = (EXTEND_COLOR(pxm->colors[nr].r) >> 16); \
+				rec[1] = (EXTEND_COLOR(pxm->colors[nr].g) >> 16); \
+				rec[2] = (EXTEND_COLOR(pxm->colors[nr].b) >> 16); \
+				rec[3] = 0; \
+			}
+
 void
 FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 {
 	int xfact = mode->xfact;
 	int yfact = mode->yfact;
-	int line_step = (yfact < 2)? 0 : 256 / (yfact & ~1);
-	int column_step = (xfact < 2)? 0 : 256 / (xfact & ~1);
+	int line_step = (yfact < 2)? 0 : 256 / yfact;
+	int column_step = (xfact < 2)? 0 : 256 / xfact;
 	int bytespp = mode->bytespp;
 	byte *src = pxm->index_data;
 	byte *dest = pxm->data;
 	byte *alpha_dest = pxm->alpha_map;
 	int using_alpha = pxm->colors_nr < GFX_PIC_COLORS;
 	int separate_alpha_map = (!mode->alpha_mask) && using_alpha;
-	unsigned int masks[4], shifts[4], zero[3];
-	int x,y;
-
-	zero[0] = 255;
-	zero[1] = zero[2] = 0;
+	unsigned int masks[4], shifts[4];
+	unsigned int pixels[4][4]; 
+	/* 0 1
+	** 2 3 */
+	unsigned int color[4];
+	int x,y,j;
 
 	if (separate_alpha_map) {
 		masks[3] = 0;
@@ -289,19 +303,55 @@ FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 	if (separate_alpha_map && !alpha_dest)
 		alpha_dest = pxm->alpha_map = malloc(pxm->index_xl * xfact * pxm->index_yl * yfact);
 
+
+	color[3] = 0xffffff;
+	for (y = 0; y < pxm->index_yl - 1; y++) {
+		int yc;
+		int xbit = 0;
+
+		MAKE_PIXEL_TRILINEAR(0, pixels[0], pixels[3], src[0]);
+		MAKE_PIXEL_TRILINEAR(0, pixels[2], pixels[3], src[pxm->index_xl]);
+		for (yc = 0; yc < yfact; yc++) {
+			for (x = 0; x < pxm->index_xl - 1; x++) {
+				int xc;
+
+				xbit ^= 1;
+				MAKE_PIXEL_TRILINEAR(0, pixels[xbit], pixels[3], src[1]);
+				MAKE_PIXEL_TRILINEAR(0, pixels[2+xbit], pixels[3], src[pxm->index_xl + 1]);
+
+				for (xc = 0; xc < xfact; xc++) {
+					SIZETYPE wrcolor;
+					int intensity;
+					int i;
+
+					intensity = (color[3] >> shifts[3]) & masks[3];
+					for (i = 0; i < 2; i++)
+						wrcolor |= (color[i] >> shifts[i]) & masks[i];
+
+                                        if (separate_alpha_map)
+                                                *alpha_dest++ = intensity >> 24;
+					else
+						wrcolor |= intensity;
+
+					wrcolor <<= (EXTRA_BYTE_OFFSET * 8);
+					memcpy(dest, &wrcolor, COPY_BYTES);
+					dest += COPY_BYTES;
+				}
+
+				src++;
+			}
+		}
+	}
+
 }
 
-
-#undef WRITE_XPART_TRILINEAR
-#undef WRITE_YPART_TRILINEAR
 #undef WRITE_YPART
 #undef Y_CALC_INTENSITY_CENTER
 #undef Y_CALC_INTENSITY_NORMAL
 #undef WRITE_XPART
 #undef X_CALC_INTENSITY_CENTER
 #undef X_CALC_INTENSITY_NORMAL
-#undef X_CALC_INTENSITY_CENTER_TRILINEAR
-#undef X_CALC_INTENSITY_NORMAL_TRILINEAR
+#undef MAKE_PIXEL_TRILINEAR
 #undef MAKE_PIXEL
 #undef FUNCNAME
 #undef FUNCNAME_LINEAR
