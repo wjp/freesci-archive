@@ -1,3 +1,37 @@
+Slightly more than half the time we needed from 0.3.0 to 0.3.1 has passed,
+and the list has been more active than ever. I guess the dry days of the
+gfx subsystem implementation period are pretty much over; but there's still
+much that needs or can be done- for graphics support, but particularly with
+regard to sound support. Yes, we have it- finally, you no longer have to
+start and stop Tom Lewandowski's Sierra Soundtrack mp3s manually while
+running FreeSCI. The new sound subsystem, planned and structurally
+implemented by Rickard Lind and finalized by Solomon Peachy (who also added
+a considerable amount of other features) was the last missing feature that
+separated FreeSCI from Sierra SCI (the SCI0 one, that is). However, our
+MT-32 to General MIDI mappings are still experimental, and there is no sound
+support for anything other than MT-32 or General MIDI- it's great for those
+of us who have an MT-32, but sound cards without sequencers are pretty
+common, so we will have to look into getting digital sound output working
+in future versions. Graphics have been improved a bit, too- trilinear
+filtering and background picture antialiasing, mostly.
+While the DOS port is now officially orphaned, Matt Hargett managed to get
+the Win32 port to build and run (with sound support), using Solomon's SDL
+graphics driver and sound server. This means that FreeSCI finally is
+available for Win32 again!
+While I would hope that this procedure works on BeOS, too, I don't think
+so with regard to MacOS- the SDL sound server uses pre-emptive multi-
+threading, which simply isn't present on MacOS. Oh well, we can't save all
+of the world with one release.
+Another nice feature is savegame quickloading: By specifying a savegame name
+(which is not identical to the name you entered in the F5 savegame menu;
+run 'sciv -l' to get a list of valid names) after the game name when starting
+the interpreter, you can now skip the intro and jump directly to whereever
+you left off.
+
+
+
+--- 0.3.1 ---
+
 Looking at the previous releases, it would appear that more and more time
 passes between them. However, more and more work gets done between them
 as well. Also, considering the current amount of traffic on the mailing

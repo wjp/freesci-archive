@@ -118,7 +118,7 @@ struct {
 	{"Still more FreeSCI hackers & contributors",
 	 "Lars Skovlund\nMost of the relevant documentation, several bugfixes\n\n"
 	 "Magnus Reftel\nHeap implementation, Python class viewer, bugfixes\n\n"
-	 "Matt Hargett\nClean-ups, bugfixes, Hardcore QA, Win32 stuff\n\n"
+	 "Matt Hargett\nClean-ups, bugfixes, Hardcore QA, Win32\n\n"
 	 "Paul David Doherty\nGame version information\n\n"
 	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements\n\n"
 	 "Rainer De Temple\nSCI research",

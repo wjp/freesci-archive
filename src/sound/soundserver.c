@@ -137,7 +137,7 @@ sci0_soundserver()
   songlib_t songlib = &_songp;   /* Song library */
   song_t *newsong, *song = NULL; /* The song we're playing */
   int master_volume = 0;  /* the master volume.. whee */
-  int debugging = 1;   /* Debugging enabled? */
+  int debugging = 0;   /* Debugging enabled? */
   int command = 0;
   int ccc = 127; /* cumulative cue counter */
   int suspended = 0; /* Used to suspend the sound server */

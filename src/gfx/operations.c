@@ -1750,7 +1750,7 @@ gfxop_new_pic(gfx_state_t *state, int nr, int flags, int default_palette)
 	}
 
 	state->pic_nr = nr;
-	GFXDEBUG("Setting new pic %d\n", nr);
+
 	return _gfxop_set_pic(state);
 }
 

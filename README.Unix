@@ -1,3 +1,12 @@
+Alpha notes
+-----------
+FreeSCI on Alpha has one special feature on systems with the MVI instruction
+set extension (provided by PCA56, EV6, EV67, and probably all later Alpha
+implementations): Using the xlib target in 32bpp mode (read up on the
+DefaultFbBpp option in your XF86Config file to find out how to enable this),
+you will now get real-time alpha blending.
+
+
 Solaris notes
 -------------
 Last updated 04-20-2001 by Matt Hargett <matt@use.net>

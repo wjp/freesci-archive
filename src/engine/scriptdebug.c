@@ -1010,6 +1010,7 @@ c_redraw_screen(state_t *s)
 
 	s->visual->draw(GFXW(s->visual), gfx_point(0,0));
 	gfxop_update_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
+	
 	return 0;
 }
 
@@ -1397,6 +1398,7 @@ c_gfx_flush_resources(state_t *s)
 	sciprintf("Flushing resources...\n");
 	s->visual->widfree(GFXW(s->visual));
 	gfxr_free_all_resources(s->gfx_state->driver, s->gfx_state->resstate);
+	s->visual = NULL;
 	return 0;
 }
 
@@ -2523,7 +2525,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_gfx_print_widget, "gfx_print_widget", "i*", "If called with no parameters, it\n  shows which widgets are active.\n"
 					 "  With parameters, it lists the\n  widget corresponding to the\n  numerical index specified (for\n  each parameter).");
 #endif
-			con_hook_command(c_gfx_flush_resources, "gfx_flush_resources", "", "Frees all dynamically allocated\n  resources\n");
+			con_hook_command(c_gfx_flush_resources, "gfx_free_widgets", "", "Frees all dynamically allocated\n  widgets (for memory profiling).\n");
 			con_hook_command(c_gfx_current_port, "gfx_current_port", "", "Determines the current port number");
 			con_hook_command(c_gfx_print_port, "gfx_print_port", "i*", "Displays all information about the\n  specified port,"
 					 " or the current port\n  if no port was specified.");

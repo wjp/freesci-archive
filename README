@@ -1,4 +1,4 @@
-Thanks for downloading the second alpha release of FreeSCI!
+Thanks for downloading the third alpha release of FreeSCI!
 
 FreeSCI is a portable interpreter for SCI games, such as the Space Quest
 series (starting with SQ3) or Leisure Suit Larry (2 and sequels); see
@@ -424,21 +424,23 @@ are hoping to resolve these issues at least partially before the next release.
 4 Platform support
 ==================
 
-Successful builds for the 0.3.1 release were reported for the following
+Successful builds for the 0.3.2 release were reported for the following
 platforms (in order of appearance):
 - Alpha EV67/Debian GNU/Linux/gcc		tested extensively
-- Sparc/Sun/Solaris/gcc				tested
-- Alpha EV6/Compaq/Tru64/cc			built, basic tests
-- Alpha EV6//FreeBSD/gcc			built, basic tests
-- IA64/GNU/Linux64/gcc				built, baisc tests
+- Alpha EV67/Debian GNU/Linux/ccc		tested
+- IA32/SuSE 6.3 Linux/gcc			tested
 - IA32/Windows 9x/NT/2k/Visual C++              tested
+- Sparc/Sun/Solaris/gcc				tested
 
+The following platforms used to be supported and are expected to work:
+- Alpha EV6/Compaq/Tru64/cc
+- Alpha EV6//FreeBSD/gcc
+- IA64/GNU/Linux64/gcc
 
-The following platforms used to be supported, but are no longer supported in this
-release for reasons given below:
+The following platform used to be supported, but no longer is:
 
 - ia32/DOS (no maintainer)
-	This port is not being maintained at the moment.
+	This port is orphaned.
 
 
 5 Notes
