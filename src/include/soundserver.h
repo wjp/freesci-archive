@@ -288,6 +288,14 @@ song_new(word handle, byte *data, int size, int priority);
 
 
 void
+song_lib_init(songlib_t *songlib);
+/* Initializes a static song library
+** Parameters: (songlib_t *) songlib: Pointer to the library
+**             to initialize
+** Returns   : (void)
+*/
+
+void
 song_lib_free(songlib_t songlib);
 /* Frees a song library
 ** Parameters: (songlib_t) songlib: The library to free
@@ -604,9 +612,10 @@ sound_server_find_driver(char *name);
 */
 
 sound_server_state_t *
-snd_new_server_state(void);
+snd_new_server_state(sound_server_t *srv);
 /* Creates a new sound server state structure
-** Parameters: (void)
+** Parameters: (sound_server_t *) srv: The sound server to set
+**                                as the state's server
 ** Returns   : (sound_server_state_t *)
 */
 
@@ -621,11 +630,10 @@ snd_free_server_state(sound_server_state_t *state);
 #define SND_SRV_PLAY_INDEF -1
 
 gint32
-snd_srv_play(sound_server_t *s, sound_server_state_t *state);
+snd_srv_play(sound_server_state_t *s);
 /* Determines whether a MIDI command should be processed and, if positive, does so
-** Parameters: (sound_server_t *) s: The sound server to operate with
-**             (sound_server_state_t *) state: Pointer to a structure storing
-**                                      internal state information
+** Parameters:(sound_server_state_t *) s: Pointer to a structure storing
+**                                     internal state information
 ** Returns   : (int32) The number of microseconds the server should wait before
 **                     calling this function again, or SND_SRV_PLAY_INDEF to wait
 **                     indefinitely.
@@ -637,10 +645,9 @@ snd_srv_play(sound_server_t *s, sound_server_state_t *state);
 */
 
 void
-snd_srv_process(sound_server_t *s, sound_server_state_t *state, sound_event_t cmd);
+snd_srv_process(sound_server_state_t *s, sound_event_t cmd);
 /* Processes a sound server command
-** Parameters: (sound_server_t *) s: The sound server
-**             (sound_server_state_t *) state: Sound server state
+** Parameters: (sound_server_state_t *) s: Sound server state
 **             (sound_event_t) cmd: The sound command to process
 ** Returns   : (void)
 ** This function must be invoked with 'cmd' filled out whenever a command was

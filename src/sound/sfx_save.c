@@ -464,7 +464,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -714,7 +714,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1121,7 +1121,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);

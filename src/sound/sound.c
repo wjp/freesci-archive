@@ -383,6 +383,12 @@ _sonfree_chain(song_t *song)
 
 
 void
+song_lib_init(songlib_t *songlib)
+{
+	*songlib = NULL;
+}
+
+void
 song_lib_free(songlib_t songlib)
 {
 	_sonfree_chain(*songlib);

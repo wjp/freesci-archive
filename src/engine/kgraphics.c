@@ -1678,7 +1678,7 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_dyn_view_t *widge
 				}
 
 				if (tempid) {
-					if (invoke_selector(INV_SEL(tempid, del, 1), 0))
+					if (invoke_selector(INV_SEL(tempid, delete, 1), 0))
 						SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
 							 " a delete funcselector\n", tempid);
 					if (_k_animate_ran) {

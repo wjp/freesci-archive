@@ -147,7 +147,6 @@ typedef struct {
 	int text, font; /* Used by controls */
 	int type, state; /* Used by contols as well */
 	int doit; /* Called (!) by the Animate() system call */
-	int del; /* Called by Animate() to dispose a view object */
 	int signal; /* Used by Animate() to control a view's behaviour */
 	int underBits; /* Used by the graphics subroutines to store backupped BG pic data */
 
@@ -190,6 +189,13 @@ typedef struct {
 
 	int caller; /* Used for DoBresen */
 
+#ifndef __cplusplus
+/* Compiling as C++ not really supported; let's hope you're only using this on an insignificant sub-part */
+	int delete; /* Called by Animate() to dispose a view object */
+#else
+/* Same size */
+	int _0_;
+#endif
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {

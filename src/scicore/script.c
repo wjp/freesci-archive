@@ -108,7 +108,7 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(type, "type");
   FIND_SELECTOR(state, "state");
   FIND_SELECTOR(doit, "doit");
-  FIND_SELECTOR(del, "delete");
+  FIND_SELECTOR(delete, "delete");
   FIND_SELECTOR(signal, "signal");
   FIND_SELECTOR(underBits, "underBits");
   FIND_SELECTOR(canBeHere, "canBeHere");

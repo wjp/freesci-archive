@@ -1,3 +1,22 @@
+2001-12-23  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/polled_ss.c (sci0_polled_ss): Re-implemented end-of song
+	handling (Reference: CVS from 2 months ago)
+
+2001-12-22  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/vm.h: Renamed del back to delete; don't
+	add it if compiling with __cplusplus and assume that
+	it's not really needed there
+
+2001-12-20  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kCanBeHere): Collision checks: Only check
+	up to brRight-1 and brBottom-1 (-> Bob Heitman).
+	(kCanBeHere): Only collide against the brRect of the target views
+	(_k_prepare_view_list): Now add the clipped nsRects of stop-updated
+	views to the control map
+
 2001-12-22  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/event_ss.c:
@@ -38,6 +57,7 @@
 	(kCanBeHere): No longer check against the dynviews, all views we should
 	check against are passed as parameters explicitly.
 
+>>>>>>> 1.455
 2001-12-20  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/event_ss.c:
