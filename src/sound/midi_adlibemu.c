@@ -32,8 +32,17 @@
 /* #define DEBUG_ADLIB */
 /* #define ADLIB_MONO */
 /* #define ADLIB_LINEAR_VOLUME */
+/* #define ADLIB_NO_SHIFT_VOLUME */ 
 
 /* portions shamelessly lifted from claudio's XMP */
+
+#define ADLIB_LEFT 0
+#define ADLIB_RIGHT 1
+
+/* #define OPL_INTERNAL_FREQ     3600000 */
+#define OPL_INTERNAL_FREQ    3579545
+
+static int ready = 0;
 
 static int register_base[11] = {
     0x20, 0x23, 0x40, 0x43,
@@ -76,9 +85,6 @@ static int free_voices = ADLIB_VOICES;
 static guint8 oper_note[ADLIB_VOICES];
 static guint8 oper_chn[ADLIB_VOICES];
 
-static FM_OPL *ym3812_L = NULL;
-static FM_OPL *ym3812_R = NULL;
-
 static guint8 adlib_reg_L[256];
 static guint8 adlib_reg_R[256];
 
@@ -104,15 +110,15 @@ void adlibemu_init_lists()
 static inline int opl_write_L (int a, int v)
 {
   adlib_reg_L[a] = v;
-  OPLWrite (ym3812_L, 0x388, a);
-  return OPLWrite (ym3812_L, 0x389, v);
+  YM3812Write(ADLIB_LEFT, 0x388, a);
+  return YM3812Write(ADLIB_LEFT, 0x389, v);
 }
 
 static inline int opl_write_R (int a, int v)
 {
   adlib_reg_R[a] = v;
-  OPLWrite (ym3812_R, 0x388, a);
-  return OPLWrite (ym3812_R, 0x389, v);
+  YM3812Write(ADLIB_RIGHT, 0x388, a);
+  return YM3812Write(ADLIB_RIGHT, 0x389, v);
 }
 
 static inline int opl_write(int a, int v)
@@ -154,7 +160,9 @@ void synth_setpatch (int voice, guint8 *data)
 
 void synth_setvolume_L (int voice, int volume)
 {
+#ifndef ADLIB_NO_SHIFT_VOLUME
   volume = volume >> 1;  /* adlib is 6-bit, midi is 7-bit */
+#endif
 
   /* algorithm-dependent; we may need to set both operators. */
   if (adlib_reg_L[register_base[10]+voice] & 1)
@@ -170,7 +178,9 @@ void synth_setvolume_L (int voice, int volume)
 
 void synth_setvolume_R (int voice, int volume)
 {
+#ifndef ADLIB_NO_SHIFT_VOLUME
   volume = volume >> 1;  /* adlib is 6-bit, midi is 7-bit */
+#endif
 
   /* now for the other side. */
   if (adlib_reg_R[register_base[10]+voice] & 1)
@@ -377,8 +387,13 @@ int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
     for (i = 48; i < 96; i++)
       make_sbi((adlib_def *)(data_ptr+2+(28 * i)), adlib_sbi[i]);
 
-  ym3812_L = OPLCreate (OPL_TYPE_YM3812, 3579545, pcmout_sample_rate);
-  ym3812_R = OPLCreate (OPL_TYPE_YM3812, 3579545, pcmout_sample_rate);
+  if (YM3812Init(ADLIB_LEFT, OPL_INTERNAL_FREQ, pcmout_sample_rate) ||
+      YM3812Init(ADLIB_RIGHT, OPL_INTERNAL_FREQ, pcmout_sample_rate)) {
+    printf ("ADLIB:  Emulator init failed!\n");
+    return -1;
+  }
+
+  ready = 1;
 
   // XXX register with pcm layer.
   return midi_adlibemu_reset();
@@ -387,13 +402,7 @@ int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
 
 int midi_adlibemu_close()
 {
-  FM_OPL *opl = ym3812_L;
-  ym3812_L = NULL;
-  OPLDestroy (opl);
-  opl = ym3812_R;
-  ym3812_R = NULL;
-  OPLDestroy (opl);
-
+  YM3812Shutdown();
   // XXX deregister with pcm layer.
   return 0;
 }
@@ -401,19 +410,20 @@ int midi_adlibemu_close()
 int midi_adlibemu_reset(void)
 {
   //  printf("AdlibEmu:  Reset\n");
-  if (ym3812_L == NULL)
-    return -1;
-  if (ym3812_R == NULL)
+  if (! ready)
     return -1;
 
   adlibemu_init_lists();
 
-  OPLResetChip (ym3812_L);
-  OPLResetChip (ym3812_R);
+  YM3812ResetChip(ADLIB_LEFT);
+  YM3812ResetChip(ADLIB_RIGHT);
 
   opl_write(0x01, 0x20);
   opl_write(0xBD, 0xc0);
 
+#ifdef DEBUG_ADLIB
+  printf("ADLIB: reset complete\n");
+#endif
   //  test_adlib();
   return 0;
 }
@@ -518,12 +528,10 @@ int synth_mixer (void* buffer, int count)
 
   if (!buffer)
     return;
-  if (!ym3812_L)
-    return;
-  if (!ym3812_R)  /* if either is uninitialized, bad things happen */
+  if (!ready)
     return;
 
-  YM3812UpdateOne (ym3812_L, databuf, count); 
+  YM3812UpdateOne (ADLIB_LEFT, databuf, count); 
 
   for (i = 0; i < count ; i++) {
     *ptr = databuf[i];
@@ -533,7 +541,7 @@ int synth_mixer (void* buffer, int count)
   ptr = buffer;
   ptr++;
 
-  YM3812UpdateOne (ym3812_R, databuf, count);
+  YM3812UpdateOne (ADLIB_RIGHT, databuf, count); 
   for (i = 0; i < count ; i++) {
     *ptr = databuf[i];
     ptr+=2;

@@ -37,17 +37,19 @@ static guint16 *buffer;
 static void fill_audio (void *udata, guint8 *stream, int len)
 {
   Uint32 p;
-  static Uint32 n = 0, s = 0;
-  
+  static Uint32 remain = 0, offset = 0;
+
+  // printf("%d %d %d\n", len, remain, offset);
+
   /* mix_sound returns FRAMES, 1 frame = 4 bytes */
-  memcpy (stream, (guint8 *) buffer + s, p = n);
-  for (n = 0, len -= p; n < len; p += n, len -= n) {
-    n = mix_sound(BUFFER_SIZE) << 2;
-    memcpy (stream + p, buffer, n);
+  memcpy (stream, (guint8 *) buffer + offset, p = remain);
+  for (remain = 0, len -= p; remain < len; p += remain, len -= remain) {
+    remain = mix_sound(BUFFER_SIZE) << 2;
+    memcpy (stream + p, buffer, remain);
   }
-  n = mix_sound (BUFFER_SIZE) << 2;
-  memcpy (stream + p, buffer, s = len);
-  n -= s;
+  remain = mix_sound (BUFFER_SIZE) << 2;
+  memcpy (stream + p, buffer, offset = len);
+  remain -= offset;
 }
 
 static int pcmout_sdl_open(guint16 *b, guint16 rate) {
