@@ -1398,6 +1398,11 @@ script_uninstantiate(state_t *s, int script_nr)
   /* Explanation: I'm starting to believe that this work is done by SCI itself. */
 
   s->scripttable[script_nr].heappos = 0;
+
+  if ((s->scripttable[script_nr].localvar_offset)&&
+      (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER))
+    heap_free(s->_heap, s->scripttable[script_nr].localvar_offset);
+    
   s->scripttable[script_nr].localvar_offset = 0;
   s->scripttable[script_nr].export_table_offset = 0;
 

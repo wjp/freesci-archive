@@ -212,6 +212,8 @@ kFGets(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   fgets(dest, maxsize, s->file_handles[handle]);
 
+  s->acc=UPARAM(0);
+
   SCIkdebug(SCIkFILE, "FGets'ed \"%s\"\n", dest);
 }
 
