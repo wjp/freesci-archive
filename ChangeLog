@@ -1,3 +1,10 @@
+2005-03-18  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/sfx/pcm_device/audiobuf.c: Moved reporting of buffer
+	underruns via sciprintf to writing thread
+	(sfx_audbuf_write): Improved (fixed?) thread safety of
+	sfx_audbuf_write()
+
 2005-02-19  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/include/seg_manager.h: Added a little additional

@@ -27,6 +27,14 @@
 
 #include <sfx_audiobuf.h>
 
+#define NO_BUFFER_UNDERRUN		0
+#define SAW_BUFFER_UNDERRUN		1
+#define REPORTED_BUFFER_UNDERRUN	2
+
+static int
+buffer_underrun_status = NO_BUFFER_UNDERRUN;
+
+
 static sfx_audio_buf_chunk_t *
 sfx_audbuf_alloc_chunk(void)
 {
@@ -102,6 +110,11 @@ sfx_audbuf_write(sfx_audio_buf_t *buf, unsigned char *src, int frames)
 		exit(1);
 	}
 
+	if (buffer_underrun_status == SAW_BUFFER_UNDERRUN) {
+		/* Print here to avoid threadsafeness issues */
+		sciprintf("[audiobuf] Buffer underrun\n");
+		buffer_underrun_status = REPORTED_BUFFER_UNDERRUN;
+	}
 
 	buf->frames_nr += frames;
 
@@ -126,10 +139,12 @@ sfx_audbuf_write(sfx_audio_buf_t *buf, unsigned char *src, int frames)
 			if (!buf->last->next) {
 				sfx_audio_buf_chunk_t *old = buf->last;
 				if (buf->unused) { /* Re-use old chunks */
+					sfx_audio_buf_chunk_t *buf_next_unused = buf->unused->next;
+					buf->unused->next = NULL;
+					buf->unused->used = 0;
+
 					buf->last->next = buf->unused;
-					buf->unused = buf->unused->next;
-					buf->last->next->next = NULL;
-					buf->last->next->used = 0;
+					buf->unused = buf_next_unused;
 				} else /* Allocate */
 					buf->last->next =
 						sfx_audbuf_alloc_chunk();
@@ -162,9 +177,6 @@ sfx_audbuf_write(sfx_audio_buf_t *buf, unsigned char *src, int frames)
 	/* Backup last frame, unless we're already filling from it */
 		memcpy(buf->last_frame, src - buf->framesize, buf->framesize);
 }
-
-static int
-reported_buffer_underrun = 0;
 
 int
 sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int frames)
@@ -237,9 +249,8 @@ sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int frames)
 			fprintf(stderr, "Underrun by %d frames at %d\n", frames,
 				buf->read_timestamp.frame_rate);
 			/* Buffer underrun! */
-			if (!reported_buffer_underrun) {
-				sciprintf("[audiobuf] Buffer underrun\n");
-				reported_buffer_underrun = 1;
+			if (!buffer_underrun_status == NO_BUFFER_UNDERRUN) {
+				buffer_underrun_status = SAW_BUFFER_UNDERRUN;
 			}
 			do {
 				memcpy(dest, buf->last_frame, buf->framesize);
