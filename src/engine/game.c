@@ -242,6 +242,7 @@ script_init_engine(state_t *s, sci_version_t version)
 	int classnr;
 	int size;
 	int magic_offset; /* For strange scripts in older SCI versions */
+	char *cwd;
 
 	s->max_version = SCI_VERSION(9,999,999); /* :-) */
 	s->min_version = 0; /* Set no real limits */
@@ -340,6 +341,14 @@ script_init_engine(state_t *s, sci_version_t version)
 
 	/* Allocate static buffer for savegame and CWD directories */
 	s->save_dir = heap_allocate(s->_heap, MAX_SAVE_DIR_SIZE);
+	cwd = sci_getcwd();
+	if (strlen(cwd) > MAX_SAVE_DIR_SIZE)
+		sciprintf("Warning: cwd '%s' is longer than the"
+			  " MAX_SAVE_DIR_SIZE %d\n",
+			  cwd, MAX_SAVE_DIR_SIZE);
+	else
+		strcpy(s->heap + s->save_dir + 2, cwd);
+	sci_free(cwd);
 
 	save_ff(s->_heap); /* Save heap state */
 

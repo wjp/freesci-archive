@@ -560,27 +560,36 @@ _k_dirloop(heap_ptr obj, word angle, state_t *s, int funct_nr,
 
 	angle %= 360;
 
-	if (angle < 45)
-		loop = 3;
-	else if (angle < 135)
-		loop = 0;
-	else if (angle < 225)
-		loop = 2;
-	else if (angle < 314)
-		loop = 1;
-	else
-		loop = 3;
+	if (s->version < SCI_VERSION_FTU_2ND_ANGLES) {
+		if (angle < 45)
+			loop = 3;
+		else if (angle < 135)
+			loop = 0;
+		else if (angle < 225)
+			loop = 2;
+		else if (angle < 314)
+			loop = 1;
+		else
+			loop = 3;
+	} else {
+		if (angle >= 330 || angle <= 30)
+			loop = 3;
+		else if (loop <= 150)
+			loop = 0;
+		else if (loop <= 210)
+			loop = 2;
+		else if (loop < 330)
+			loop = 1;
+		else loop = 0xffff;
+	}
 
 	maxloops = gfxop_lookup_view_get_loops(s->gfx_state, view);
 
 	if (maxloops == GFX_ERROR) {
 		SCIkwarn(SCIkERROR, "Invalid view.%03d\n", view);
-		PUT_SELECTOR(obj, loop, 0xffff); /* Invalid */
 		return;
-	} else if (loop >= maxloops) {
+	} else if (maxloops != 4)
 		return;
-		/* SCIkwarn(SCIkWARNING, "With view.%03d: loop %d > maxloop %d\n", view, loop, maxloops); */
-	}
 
 	PUT_SELECTOR(obj, loop, loop);
 }

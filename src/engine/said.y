@@ -200,6 +200,8 @@ wordset :	 word
 			{ $$ = said_attach_branch($1, $3) }
 		| wordset YY_COMMA YY_BRACKETSO wordset YY_BRACKETSC
 			{ $$ = said_attach_branch($1, $3) }
+		| wordset cwordrefset
+			{ $$ = said_attach_branch($1, $2) }
 		;
 
 

@@ -398,6 +398,45 @@ sci_finish_find(sci_dir_t *dir)
 /************* /Directory entities *************/
 
 
+int
+sci_mkpath(char *path)
+{
+        char *nextsep = NULL, *path_pos = path;
+
+        if (chdir(G_DIR_SEPARATOR_S)) { /* Go to root */
+                sciprintf("Error: Could not change to root directory '%s'!\n",
+			  G_DIR_SEPARATOR_S);
+                return -1;
+        }
+
+        do {
+                if (nextsep)
+                        *nextsep = G_DIR_SEPARATOR_S[0];
+                nextsep = strchr(path_pos, G_DIR_SEPARATOR_S[0]);
+
+                if (nextsep)
+                        *nextsep = 0;
+
+		if (*path_pos) { /* Unless we're at the first slash... */
+			if (chdir(path_pos)) {
+				if (scimkdir(path_pos, 0700) || chdir(path_pos)) {
+					sciprintf("Error: Could not create subdirectory '%s' in",
+						  path_pos);
+					*nextsep = G_DIR_SEPARATOR_S[0];
+					sciprintf(" '%s'!\n", path);
+					return -2;
+				}
+			}
+		}
+		path_pos = nextsep + 1;
+
+        } while (nextsep);
+
+        return 0;
+}
+
+
+
 char *
 sci_get_homedir()
 {

@@ -1,3 +1,16 @@
+2001-09-21  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/said.y: Updated grammar to support nested brackets
+
+	* src/engine/kgraphics.c (_k_dirloop): DirLoop() now doesn't write back
+	unless the object's view has exactly four loops
+
+	* src/engine/kfile.c (_chdir_savedir): Now creates the savedir if it's
+	no longer existing
+
+	* src/engine/game.c (script_init_engine): Added the sci_mkpath()
+	utility function
+
 2001-09-20  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kEditControl):

@@ -351,6 +351,14 @@ sci_get_homedir();
 **                      or NULL if there is no such thing.
 */
 
+int
+sci_mkpath(char *path);
+/* Asserts that the specified path is available
+** Parameters: (char *) path: Path to verify/create
+** Returns   : (int) 0 on success, <0 on error
+** This function will create any directories that couldn't be found
+*/
+
 void
 sci_sched_yield();
 /* Yields the running process/thread to the scheduler

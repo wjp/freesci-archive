@@ -6007,8 +6007,18 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->resmgr = s->resmgr;
 
 	if (retval->savegame_version < 3) {
+		char *cwd = sci_getcwd();
+
 		retval->save_dir = heap_allocate(retval->_heap, MAX_SAVE_DIR_SIZE);
 		/* Compensate for save_dir location change */
+		if (strlen(cwd) > MAX_SAVE_DIR_SIZE)
+			sciprintf("Warning: cwd '%s' is longer than the"
+				  " MAX_SAVE_DIR_SIZE %d\n",
+				  cwd, MAX_SAVE_DIR_SIZE);
+		else
+			strcpy(retval->heap + retval->save_dir + 2, cwd);
+		sci_free(cwd);
+		
 		retval->save_dir_copy = 0xffff;
 		retval->save_dir_edit_offset = 0;
 	}

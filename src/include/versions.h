@@ -79,6 +79,12 @@ struct _state;
 ** When doing CanBeHere(), augment y offset by 1
 */
 
+#define SCI_VERSION_FTU_2ND_ANGLES SCI_VERSION(0,000,572)
+/* Last version known not to use this: ?
+** Later versions assign 120 degrees to left & right , and 60 to up and down.
+** Earlier versions used an even 90 degree distribution.
+*/
+
 typedef int sci_version_t;
 
 struct _state;
