@@ -86,7 +86,7 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int
 
   va_start(argp, argc);
   for (i = 0; i < argc; i++) {
-    int j = va_arg(argp, heap_ptr);
+    int j = va_arg(argp, int);
     PUT_HEAP(stackframe + 4 + (2 * i), j); /* Write each argument */
   }
   va_end(argp);

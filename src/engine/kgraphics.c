@@ -885,7 +885,7 @@ void _k_set_now_seen(state_t *s, heap_ptr object)
   else
     view0_base_modify(loop, cell, viewres->data, &xmod, &ymod);
 
-  xbase = x + xmod - (xsize) >> 1;
+  xbase = x + xmod - (xsize >> 1);
   xend = xbase + xsize;
   yend = y + ymod + 1; /* +1: Magic modifier */
   ybase = yend - ysize;

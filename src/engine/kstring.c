@@ -292,7 +292,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       s->acc = 1;
       PUT_SELECTOR(event, claimed, 1);
-      invoke_selector(INV_SEL(s->game_obj, syntaxFail, 0), 2, s->parser_base, stringpos);
+      invoke_selector(INV_SEL(s->game_obj, syntaxFail, 0), 2, (int) s->parser_base, (int) stringpos);
       /* Issue warning */
 
       SCIkdebug(SCIkPARSER, "Tree building failed\n");
@@ -315,7 +315,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
       SCIkdebug(SCIkPARSER,"Word unknown: %s\n", error);
       /* Issue warning: */
 
-      invoke_selector(INV_SEL(s->game_obj, wordFail, 0), 2, s->parser_base, stringpos);
+      invoke_selector(INV_SEL(s->game_obj, wordFail, 0), 2, (int) s->parser_base, (int) stringpos);
       g_free(error);
       s->acc = 1; /* Tell them that it dind't work */
     }

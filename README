@@ -11,9 +11,6 @@ This release has the following limitations (plus some bugs):
   since we're using our own debug functions).
 - Sound is not supported yet
 - Graphics are slow, especially on displays not using 8bpp color index mode.
-- There are known graphical issues related to windows with underlying
-  animations, and text removal. These will be addressed by a re-implementation
-  of the graphics subsystem.
 
 It has the following improvements over Sierra SCI:
 - SCI0 background pictures can be rendered in 256 colors
@@ -21,6 +18,16 @@ It has the following improvements over Sierra SCI:
   Sierra SCI engine allowed (using the debugger functions)
 - Better debugger (we think :-)
 - readline-style editing is supported in edit controls
+
+
+Note that there are some known graphical issues related to windows popping
+up over animations, windows with decorated borders, and text removal. These
+problems will be addressed in an upcoming re-implementation of the graphics
+subsystem.
+
+This is ALPHA sofware. That means that there are lot of bugs, and some non-
+fundamental things (regarding graphics and sound support) have not been
+implemented yet.
 
 
 Please refer to 'NEWS' and the 'ChangeLog' for information about changes
