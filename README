@@ -306,6 +306,9 @@ The DirectFB driver does not support any options at this time.
 Determines the rendering mode to use. VRAM mode uses the framebuffer directly,
 while PVR mode renders a textured quad. Default is 'vram'. 
 
+- refresh_rate = 50Hz | 60Hz
+Determines whether a 50Hz or 60Hz refresh rate will be used. Default is 60Hz.
+
 2.1.1.7 NULL driver:
 --------------------
 The NULL driver does not support any options at this time.

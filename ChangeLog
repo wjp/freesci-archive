@@ -1,3 +1,13 @@
+2003-07-03  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* README, src/dc/gamemenu.c, src/dc/selectgame.c,
+	src/gfx/drivers/dc_driver.c: Added support for 50Hz refresh rate when
+	using PVR mode.
+
+	* src/dc/gamemenu.c: Added scrolling disclaimer.
+
+	* src/dc/options.h: Corrected a small typo.
+
 2003-07-03  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kevent.c (kGetEvent): Added support for NumLock

@@ -33,6 +33,17 @@
 #include <config.h>
 #endif
 
+static char copyright[] = "FreeSCI " VERSION " Copyright (C) 1999, 2000-2003"
+	" Alex Angas, Rainer Canavan, Ruediger Hanke, Matt Hargett,"
+	" Dmitry Jemerov, Christopher T. Lansdown, Sergey Lapin, Rickard Lind,"
+	" Carl Muckenhoupt, Walter van Niftrik, Solomon Peachy,"
+	" Christoph Reichenbach, Magnus Reftel, Lars Skovlund, Rink Springer"
+	" and Petr Vyhnak."
+	" This program is free software. You can copy and/or modify it freely"
+	" according to the terms of the GNU general public license, v2.0"
+	" or any later version, at your option."
+	" It comes with ABSOLUTELY NO WARRANTY.";
+
 static int mx = 320, my = 240;
 static int lmx[5] = {320, 320, 320, 320, 320},
 	lmy[5] = {240, 240, 240, 240, 240};
@@ -77,6 +88,12 @@ static void mouse_render()
 void choose_game() {
 	int fexit = 0;
 	
+	/* On PAL consoles without a VGA box, default to 50hz */
+	if ((flashrom_get_region() == FLASHROM_REGION_EUROPE) &&
+	  vid_check_cable()) {
+		vid_set_mode(DM_640x480_PAL_IL, PM_RGB565);
+	}
+
 	/* Do basic setup */
 	pvr_init_defaults();
 
@@ -105,7 +122,7 @@ void choose_game() {
 		/* Translucent list ********************************/
 
 		/* Top Banner */
-		draw_poly_box(0.0f, 10.0f, 640.0f, 20.0f+(24.0f*2.0f)+10.0f, 90.0f, 
+		draw_poly_box(0.0f, 10.0f, 640.0f, 20.0f+(24.0f*2.0f)+10.0f+28.0f, 90.0f, 
 			0.3f, 0.2f, 0.5f, 0.0f, 0.5f, 0.1f, 0.8f, 0.2f);
 		draw_poly_strf(308.0f - (8+sizeof(VERSION)-1)/2.0f*12.0f, 20.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 			"FreeSCI " VERSION);
@@ -118,6 +135,9 @@ void choose_game() {
 		/* Button info */
 		render_button_info();
 		
+		/* Copyright scroll */
+		render_scroll(2.0f, 76.0f, 100.0f, 1.0f, 0.7f, 0.7f, 1.0f, copyright);
+
 		/* Render the mouse if they move it.. it doesn't do anything
 		   but it's cool looking ^_^ */
 		mouse_render();

@@ -37,7 +37,7 @@ struct dc_option_t {
 #define NUM_DC_OPTIONS 1
 
 struct dc_option_t dc_options[NUM_DC_OPTIONS] = {
-/* 0 */		{ "Graphics Mode", "Frame Buffer\0PVR\0", 0 },
+/* 0 */		{ "Graphics Mode", "Frame Buffer\0PVR\0", 0 }
 };
 
 #endif  /* __OPTIONS_H */
