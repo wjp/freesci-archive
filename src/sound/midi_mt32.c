@@ -118,8 +118,8 @@ static gint8 rhythmkey_map[128] = {
 /* timbre, volume, panpot, reverb.  keys 24-87 (64 keys)*/
 static guint8 default_rhythm_keymap[256] = { /* MT-32 default */
   0x7f,0x64,7,1,  0x7f,0x64,7,1,  0x7f,0x64,7,1, 0x7f,0x64,7,1, /* 24-27 */
-  0x7f,0x64,7,1,  0x7f,0x64,7,1,  0x7f,0x64,7,1, 0x7f,0x64,7,1, 
-  0x7f,0x64,7,1,  0x7f,0x64,7,1,  0x7f,0x64,7,1, 0x40,0x64,7,1,  
+  0x7f,0x64,7,1,  0x7f,0x64,7,1,  0x7f,0x64,7,1, 0x7f,0x64,7,1,
+  0x7f,0x64,7,1,  0x7f,0x64,7,1,  0x7f,0x64,7,1, 0x40,0x64,7,1,
   0x40,0x64,7,1,  0x4a,0x64,6,1,  0x41,0x64,7,1, 0x4b,0x64,8,1,
   0x45,0x64,6,1,  0x44,0x64,11,1, 0x46,0x64,6,1, 0x44,0x64,11,1,
   0x5d,0x64,6,1,  0x43,0x64,8,1,  0x47,0x64,6,1, 0x43,0x64,8,1,
@@ -145,7 +145,7 @@ static guint8 default_partial_reserve[9] = {  /* MT-32 DEFAULT */
   gint8 keyshift;
   gint8 volume_adjust;
   guint8 velocity_map_index;
-  guint8 
+  guint8
 } channel[16]; */
 
 static struct {
@@ -158,7 +158,7 @@ static struct {
 /* send default rhythm map and reserve */
 int midi_mt32_defaults(guint8 volume, guint8 reverb) {
   printf("MT-32: Writing Default Rhythm key map\n");
-  midi_mt32_poke(0x030110, default_rhythm_keymap, 256);  
+  midi_mt32_poke(0x030110, default_rhythm_keymap, 256);
 
   printf("MT-32: Writing Default Partial Reserve\n");
   midi_mt32_poke(0x100004, default_partial_reserve, 9);
@@ -167,7 +167,7 @@ int midi_mt32_defaults(guint8 volume, guint8 reverb) {
     mt32_reverb[0].mode = 0;
     mt32_reverb[0].time = 5;
     mt32_reverb[0].level = 3;
-    default_reverb = 0;    
+    default_reverb = 0;
 
     printf("MT-32: Setting up default reverb levels\n");
     midi_mt32_reverb(default_reverb);
@@ -211,7 +211,7 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
 	data[block2] == 0xAB &&
 	data[block2 + 1] == 0xCD) {
       printf("MT-32: Writing Patches #33 - #64\n");
-      midi_mt32_poke_gather(0x050200, data + 363, 128, data + block2 + 2, 128);  
+      midi_mt32_poke_gather(0x050200, data + 363, 128, data + block2 + 2, 128);
       printf("MT-32: Writing Patches #65 - #96\n");
       midi_mt32_poke(0x050400, data + block2 + 130, 256);
       block3 = block2 + 386;
@@ -231,7 +231,7 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
 	data[block3] == 0xDC &&
 	data[block3 + 1] == 0xBA) {
       printf("MT-32: Writing Rhythm key map\n");
-      midi_mt32_poke(0x030110, data + block3 + 2, 256);  
+      midi_mt32_poke(0x030110, data + block3 + 2, 256);
       printf("MT-32: Writing Partial Reserve\n");
       midi_mt32_poke(0x100004, data + block3 + 258, 9);
     } else {
@@ -264,7 +264,7 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
     memcpy(rhythmkey_map, data + 384, 128);
 
     printf("MT-32: Setting up reverb levels\n");
-    default_reverb = data[0x3e]; 
+    default_reverb = data[0x3e];
     memcpy(mt32_reverb,data+ 0x4a, 3 * 11);
     midi_mt32_reverb(default_reverb);
 
@@ -300,11 +300,11 @@ int midi_mt32_volume(guint8 volume)
   return 0;
 }
 
-int midi_mt32_allstop(void) 
+int midi_mt32_allstop(void)
 {
   int i;
-  for (i = 0; i < 16; i++) 
-    midi_mt32_event(0xb0 | i, 0x7b, 0x00);
+  for (i = 0; i < 16; i++)
+    midi_mt32_event((guint8)(0xb0 | i), 0x7b, 0x00);
 
   return 0;
 }
@@ -386,7 +386,7 @@ int midi_mt32_poke(guint32 address, guint8 *data, unsigned int count)
 
   i = midiout_write_block(sysex_buffer, count + 10);
   midiout_flush();
-  midi_mt32_sysex_delay();  
+  midi_mt32_sysex_delay();
 
   return i;
 

@@ -1486,7 +1486,7 @@ c_disasm(state_t *s)
 		op_count = 1;
 
 	do {
-		vpc = disassemble(s, (unsigned short)vpc);
+		vpc = disassemble(s, (heap_ptr)vpc);
 	} while ((vpc > 0) && (vpc < 0xfff2) && (cmd_paramlength > 1) && (--op_count));
 	return 0;
 }
@@ -1893,7 +1893,7 @@ c_objs(state_t *s)
 
 				if (segment == sci_obj_object || segment == sci_obj_class)
 					print_objname_wrapper(print_objname
-							      (s, (unsigned short)(seeker - SCRIPT_OBJECT_MAGIC_OFFSET + 4)
+							      (s, (heap_ptr)(seeker - SCRIPT_OBJECT_MAGIC_OFFSET + 4)
 							       /* to compensate for the header */, 1));
 
 				seeker += size;
@@ -2249,7 +2249,7 @@ int
 c_heapobj(state_t *s)
 {
   return
-    objinfo(s, (unsigned short)cmd_params[0].val);
+    objinfo(s, (heap_ptr)cmd_params[0].val);
 }
 
 int

@@ -519,8 +519,8 @@ sdl_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 					newline.y, newline.xl, newline.yl, scolor, xsize, ysize);
 #endif
 
-				lineColor2(S->visual[1], newline.x, newline.y,
-					  newline.xl, newline.yl, scolor);
+				lineColor2(S->visual[1], (Sint16)newline.x, (Sint16)newline.y,
+					  (Sint16)newline.xl, (Sint16)newline.yl, scolor);
 			}
 	}
 

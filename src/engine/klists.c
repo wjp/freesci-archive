@@ -74,7 +74,7 @@ sane_listp(state_t *s, heap_ptr address)
   if (last==-1)
     return 0;
 
-  return sane_nodep(s, (unsigned short)seeker);
+  return sane_nodep(s, (heap_ptr)seeker);
 }
 
 void

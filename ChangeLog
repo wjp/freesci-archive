@@ -1,3 +1,20 @@
+2002-01-06  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/engine/kgraphics.c:
+	* src/engine/klists.c:
+	* src/engine/kscripts.c:
+	* src/engine/scriptdebug.c
+	* src/engine/vm.c:
+	* src/gfx/menubar.c:
+	* src/gfx/resource/sci_pic_0.c: Fixes to warnings fixes.
+
+	* src/gfx/drivers/sdl_driver.c:
+	* src/sound/midi_mt32.c:
+	* src/main.c:
+	* src/win32/fsci_dll.dsp: Warnings fixes.
+
+	* src/win32/sciv.dsp: Corrected version number.
+
 2002-01-04  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/main.c (main): Extended Copyright to 2002
@@ -18,7 +35,7 @@
 	* src/sound/event_ss.c:
 	* src/sound/event_ss_win32.c: Fixed do_sound() not being called due to
 	missed use of emap[].
-	
+
 2002-01-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/include/resource.h (BREAKPOINT): Changed 'bpt' on Alpha
@@ -34,22 +51,22 @@
 
 	* src/gfx/drivers/sdl_driver.c: Fixed calling Sleep() twice under
 	Win32.
-	
+
 	* src/include/engine.h: Explicitly declared millisecond sleep
 	resolution for Win32 (sleep).
-	
+
 	* src/include/resource.h:
 	* src/sound/midiout_win32mci.c:
 	* src/sound/polled_ss_sdl.c:
 	* src/scicore/tools.c: Altered sleep code to match above.
-	
+
 	* src/sound/event_ss.c: Clean-ups and warnings fixes.
-	
+
 	* src/sound/polled_ss.c: Included missed fixes to match 1 Nov polled
 	ss.
-	
+
 	* src/win32/fsci_dll.dsp:
-	* src/win32/sciv.dsp: Proper debugger support under Debug build, 
+	* src/win32/sciv.dsp: Proper debugger support under Debug build,
 	fixes to Purify build, warnings removals.
 
 2002-01-02  Alexander R Angas  <wgd@internode.on.net>
@@ -173,9 +190,9 @@
 	* src/sound/soundserver.c:
 	* src/include/soundserver.h: Added save_sound_state() and
 	restore_sound_state().
-	
+
 	* src/sound/event_ss_win32.c: Clean up.
-	
+
 	* src/sound/midi_device.c: Fixed tabulation.
 
 2001-12-21  Christoph Reichenbach  <jameson@linuxgames.com>

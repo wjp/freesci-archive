@@ -92,14 +92,15 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int
   va_end(argp);
 
   /* Write "kernel" call to the stack, for debugging: */
-  xstack =
-    add_exec_stack_entry(s, 0, 0, 0, k_argc, k_argp - 2, 0, 0, s->execution_stack_pos, 0);
+  xstack = add_exec_stack_entry(s, 0, 0, 0,
+	  k_argc, (heap_ptr)(k_argp - 2), 0, 0,
+	  s->execution_stack_pos, 0);
   xstack->selector = -42 - kfunct; /* Evil debugging hack to identify kernel function */
   xstack->type = EXEC_STACK_TYPE_KERNEL;
 
   /* Now commit the actual function: */
   xstack =
-    send_selector(s, object, object, stackframe + framesize, framesize, 0, stackframe);
+    send_selector(s, object, object, (heap_ptr)(stackframe + framesize), framesize, 0, stackframe);
 
   run_vm(s, 0); /* Start a new vm */
 
@@ -335,6 +336,6 @@ kRespondsTo(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int obj = PARAM(0);
   int selector = PARAM(1);
 
-  s->acc = (lookup_selector(s, (unsigned short)obj, selector, NULL) != SELECTOR_NONE);
+  s->acc = (lookup_selector(s, (heap_ptr)obj, selector, NULL) != SELECTOR_NONE);
 }
 

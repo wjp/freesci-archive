@@ -1470,8 +1470,9 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 
 		SCIkdebug(SCIkGRAPHICS, "drawing text %04x to %d,%d, mode=%d\n", obj, x, y, mode);
 
-		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_text_control(s->port, (int)obj, area, text, font_nr, mode,
-								!!(state & CONTROL_STATE_DITHER_FRAMED),
+		ADD_TO_CURRENT_BG_WIDGETS(
+			sciw_new_text_control(s->port, (int)obj, area, text, font_nr, mode,
+								(char)(!!(state & CONTROL_STATE_DITHER_FRAMED)),
 								(char)inverse));
 		break;
 
@@ -1481,7 +1482,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 		max = GET_SELECTOR(obj, max);
 		cursor = GET_SELECTOR(obj, cursor);
 
-		if (cursor > strlen(text))
+		if (cursor > (signed)strlen(text))
 			cursor = strlen(text);
 
 		if (text_offset == s->save_dir_copy)

@@ -1,5 +1,5 @@
 /***************************************************************************
- pic_0.c Copyright (C) 2000 Christoph Reichenbach
+ sci_pic_0.c Copyright (C) 2000 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -1841,11 +1841,11 @@ gfxr_remove_artifacts_pic0(gfxr_pic_t *dest, gfxr_pic_t *src)
 			for (sub_y = 0; sub_y < bound_y; sub_y++) {
 				for (sub_x = 0; sub_x < bound_x; sub_x++) {
 					check_and_remove_artifact(dest->visual_map->index_data + write_offset,
-								  src_visualp, 0xff,
-								  (unsigned char)x_320, x_320<319, y_200>10, y_200<199);
+								  src_visualp, (int)0xff,
+								  (byte)x_320, (byte)(x_320 < 319), (byte)(y_200 > 10), (byte)(y_200 < 199));
 					check_and_remove_artifact(dest->priority_map->index_data + write_offset,
 								  src_priorityp, 0,
-								  (unsigned char)x_320, x_320<319, y_200>10, y_200<199);
+								  (byte)x_320, (byte)(x_320 < 319), (byte)(y_200 > 10), (byte)(y_200 < 199));
 					++write_offset;
 				}
 				write_offset += scaled_line_size - bound_x;

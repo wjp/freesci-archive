@@ -444,232 +444,58 @@ SOURCE=..\scicore\vocab_debug.c
 # Begin Source File
 
 SOURCE=..\sound\event_ss.c
-
-!IF  "$(CFG)" == "fsci_dll - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
-
-# ADD CPP /W4
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
-
-# ADD BASE CPP /W4
-# ADD CPP /W3
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\event_ss_win32.c
-
-!IF  "$(CFG)" == "fsci_dll - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
-
-# ADD CPP /W4
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
-
-# ADD BASE CPP /W4
-# ADD CPP /W3
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\midi_adlib.c
-
-!IF  "$(CFG)" == "fsci_dll - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
-
-# ADD CPP /W3
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\midi_device.c
-
-!IF  "$(CFG)" == "fsci_dll - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
-
-# ADD CPP /W3
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\midi_mt32.c
-
-!IF  "$(CFG)" == "fsci_dll - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
-
-# ADD CPP /W3
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\midi_mt32gm.c
-
-!IF  "$(CFG)" == "fsci_dll - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
-
-# ADD CPP /W3
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\midiout.c
-
-!IF  "$(CFG)" == "fsci_dll - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
-
-# ADD CPP /W3
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\midiout_win32mci.c
-
-!IF  "$(CFG)" == "fsci_dll - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
-
-# ADD CPP /W3
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\oldmidi.c
-
-!IF  "$(CFG)" == "fsci_dll - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
-
-# ADD CPP /W3
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\polled_ss.c
-
-!IF  "$(CFG)" == "fsci_dll - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
-
-# ADD CPP /W4
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
-
-# ADD BASE CPP /W4
-# ADD CPP /W3
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\polled_ss_sdl.c
-
-!IF  "$(CFG)" == "fsci_dll - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
-
-# ADD CPP /W4
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
-
-# ADD BASE CPP /W4
-# ADD CPP /W3
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\polled_ss_unix.c
-
-!IF  "$(CFG)" == "fsci_dll - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
-
-# ADD CPP /W4
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
-
-# ADD BASE CPP /W4
-# ADD CPP /W3
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\polled_ss_win32.c
-
-!IF  "$(CFG)" == "fsci_dll - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
-
-# ADD CPP /W4
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
-
-# ADD BASE CPP /W4
-# ADD CPP /W3
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\sfx_save.c
-
-!IF  "$(CFG)" == "fsci_dll - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
-
-# ADD CPP /W4
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
-
-# ADD CPP /W3
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -678,38 +504,10 @@ SOURCE=..\sound\sfx_save.cfsml
 # Begin Source File
 
 SOURCE=..\sound\sound.c
-
-!IF  "$(CFG)" == "fsci_dll - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
-
-# ADD CPP /W4
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
-
-# ADD BASE CPP /W4
-# ADD CPP /W3
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=..\sound\soundserver.c
-
-!IF  "$(CFG)" == "fsci_dll - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
-
-# ADD CPP /W4
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
-
-# ADD BASE CPP /W4
-# ADD CPP /W3
-
-!ENDIF 
-
 # End Source File
 # End Group
 # Begin Source File
