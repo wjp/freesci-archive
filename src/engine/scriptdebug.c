@@ -1620,7 +1620,7 @@ c_listclones(state_t *s)
 void
 set_debug_mode (struct _state *s, int mode, char *areas)
 {
-	char modechars[] = "ulgcmfbadspMSFt"; /* Valid parameter chars */
+	char modechars[] = "ulgcmfbadspMSFtr"; /* Valid parameter chars */
 	char *parser;
 	int seeker;
 	char frob;
@@ -2547,7 +2547,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 					 " for x:\n  u: Unimpl'd/stubbed stuff\n  l: Lists and nodes\n  g: Graphics\n"
 					 "  c: Character handling\n  m: Memory management\n  f: Function call checks\n"
 					 "  b: Bresenham details\n  a: Audio\n  d: System gfx management\n  s: Base setter"
-					 "\n  p: Parser\n  M: The menu system\n  S: Said specs\n  F: File I/O\n  t: GetTime\n"
+					 "\n  p: Parser\n  M: The menu system\n  S: Said specs\n  F: File I/O\n  t: GetTime"
+					 "\n  r: Room numbers\n"
 					 "  *: Everything\n\n"
 					 "  If invoked withour parameters,\n  it will list all activated\n  debug options.\n\n"
 					 "SEE ALSO\n"

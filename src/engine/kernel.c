@@ -302,8 +302,9 @@ const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
 	"Parser",
 	"Menu handling",
 	"Said specs",
-	"File I/O"
-	"Time"
+	"File I/O",
+	"Time",
+	"Room numbers"
 };
 
 
@@ -471,6 +472,7 @@ void
 kFlushResources(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	/* Nothing to do */
+  SCIkdebug(SCIkROOM, "Entering room number %d\n", UPARAM(0));
 }
 
 void

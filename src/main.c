@@ -354,6 +354,7 @@ typedef struct {
 	int script_debug_flag;
 	int scale_x, scale_y, color_depth;
 	int mouse;
+        int show_rooms;
 	sci_version_t version;
 	char *gfx_driver_name;
 	char *gamedir;
@@ -391,6 +392,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 		{"color-depth", required_argument, 0, 'c'},
 		{"disable-mouse", no_argument, 0, 'm'},
 		{"list-savegames", no_argument, 0, 'l'},
+		{"show-rooms", no_argument, 0, 's'},
 		{0,0,0,0}
 	};
 
@@ -410,14 +412,18 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 	cl_options->mouse = ON;
 
 #ifdef HAVE_GETOPT_LONG
-	while ((c = getopt_long(argc, argv, "lvrhmDd:V:g:x:y:c:M:O:S:P:", options, &optindex)) > -1) {
+	while ((c = getopt_long(argc, argv, "lvrhmsDd:V:g:x:y:c:M:O:S:P:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_LONG */
-	while ((c = getopt(argc, argv, "lvrhmDd:V:g:x:y:c:M:O:S:P:")) > -1) {
+	while ((c = getopt(argc, argv, "lvrhmsDd:V:g:x:y:c:M:O:S:P:")) > -1) {
 #endif /* !HAVE_GETOPT_LONG */
 		switch (c) {
 
 		case 'r':
 			cl_options->script_debug_flag = 0;
+			break;
+
+		case 's':
+		        cl_options->show_rooms = 1;
 			break;
 
 		case 'D':
@@ -1102,6 +1108,9 @@ main(int argc, char** argv)
 	}
 	if (!sound_server)
 		sound_server = sound_server_find_driver(NULL);
+
+	if (cl_options.show_rooms)
+	  set_debug_mode(gamestate, 1, "r");
 
 	gamestate->sound_server = sound_server;
 

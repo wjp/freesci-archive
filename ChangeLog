@@ -1,3 +1,8 @@
+2002-01-14  Lars Skovlund  <lskovlun@image.dk>
+
+	* Now reports room numbers on the game console. This is controllable
+	using a debuglog flag and a command line switch.
+
 2002-01-13  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/scicore/console.c (open_console_file): Now screams if the
