@@ -1,0 +1,1634 @@
+<Chapter>
+  <Title/FreeSCI/
+     <Sect1>
+        <Title/Basic differences to Sierra's SCI/
+       <para>
+          Sierra's SCI engine, written back in the late 80s, was designed and built to be
+          fast and efficient. Some evil compromises were made (especially in the animation
+          cycle) that sacrificed cleanness for extra cycles. Also, it was designed to use only
+          a very limited amount of memory, which led to more compromises.
+       </para><para>
+          The primary design goal of FreeSCI, on the other hand, was Portability. Written in
+          the late 90s, memory constraints were practically nonexistant, since all game data
+          could easily be stored in memory<footnote><para>This is not true for the speech support
+          some of the later SCI1 and SCI32/SCIWin come with, of course. At the time of this writing,
+          SCI1 support is still non-existant, but later versions of FreeSCI will have to allow
+          for dynamical loading of cdaudio resources.</para></footnote>. Thus, resource loading
+          and hunk memory management is of no importance to FreeSCI. The kernel call "Load", which
+          is used to load a resource to hunk space, simply returns the resource identifier of the
+          resource it is supposed to load, as opposed to a pointer to a pointer to hunk memory.
+       </para><para>
+          Apart from that, FreeSCI simply abuses the fact that SCI was designed to be used by
+          various different graphics adapters and sound devices. The graphics and sound
+          commands each had to be interpreted by the currently active sound and graphics drivers,
+          and FreeSCI does nothing more than to interpret them in its own way.
+       </para><para>
+          Of course, FreeSCI has to accomodate for versions differences between different SCI builds.
+          These are generally minor issues (like the default alignment of text), but they have to
+          be taken care of in one single program, as opposed to several builds as in the case of
+          Sierra's SCI (some SCI games still ship with old versions of the interpreter, because they
+          assume default values that were changed later on).
+       </para><para>
+          Finally, there is the built-in debugger. Sierra SCI used a quick and efficient design, while
+          FreeSCI provides a Command-line interface to the debugger, and several additional commands.
+       </para>
+     </Sect1>
+     <Sect1>
+        <Title/The built-in debugger/
+           <sect2>
+              <Title/Concepts and basic functionality/
+              <para>
+                 The built-in debugger takes advantage of a built-in command interpreter (which
+                 is not to be confused with the SCI command interpreter). It's appearance is
+                 going to vary in between versions (at the time of this writing, it runs on the
+                 terminal FreeSCI was started on, in text mode; later versions will likely integrate
+                 the debugger to the graphics screen), but all versions of FreeSCI will come with
+                 a working debugger<footnote><para/That's what I hope, anyway./</footnote>. Consult the
+                 documentation of your specific release for details on how to invoke it, if it is not
+                 activated automatically.
+              </para><para>
+                 If activated, the debugger is called in between operation fetching and operation
+                 execution. It will show the command that is to be executed next, predicting the
+                 action done by send, super, and self calls where possible, and displaying any
+                 parameters to calling operations. It will also display the current register values
+                 and the number of operations that have been executed. It then waits for user input.
+              </para><para>
+                 In order to simply execute the next operation, execute the "<function/s/" command.
+                 This will do one step of execution. If you want to execute more than one command,
+                 invoke "<function/s [number-of-steps]/". Other ways to step forward are
+                 "<function/snk/" (Step until the Next Kernel function is invoked) and "function/sret/"
+                 (Step until the interpreter RETurns from this function).
+              </para><para>
+                 Speaking of functions, the FreeSCI interpreter also keeps a list of the call stack.
+                 This is similar to what the Sierra SCI interpreter provides as the "send stack", but
+                 it also includes call, calle and callb commands. Please note that callk commands are
+                 not included (some kernel functions actually call functions in user space). To
+                 display this list, invoke "<function/bt/". This function will list all calls on
+                 the stack, the parameters they carried, from where they were invoked, and the called
+                 object<footnote><para>This is note quite correct: The object listed is, in fact, the
+                 object which is used as the base object for execution. This only makes a difference
+                 if the <function/super/ operation is executed, but it may be confusing. Consider it
+                 a bug.</para></footnote> and selector (where applicable).
+              </para><para>
+                 Selectors are not only used for functions, of course, they are also used as
+                 variables. To inspect the selectors of the current object, use the "<function/obj/"
+                 operation. Sometimes you might want to inspect how a send operation influenced an
+                 object; do so by calling "<function/accobj/", which will show the selectors of the
+                 object indexed by the accumulator register (as used in sends).
+              </para><para>
+                 For a complete listing of debugging commands, refer to the next chapter.
+              </para>
+           </Sect2>
+           <Sect2>
+              <Title/Debugger commands/
+              <para>
+                 The FreeSCI built-in debugger provides the following commands:
+              </para>
+              <sect3><Title/accobj/
+                <para>
+                   The send operation requires a target object, which needs to be stored in the
+                   accumulator. This operation makes it possible to check if there is an object
+                   at the location indexed by acc, and, if it is, dump the type of object (Class,
+                   Object, or Clone), the object's name, and some other interesting stuff (selector
+                   names and values, funcselector names and addresses).
+                </para>
+              </sect3>
+              <sect3><title/bpdel (index)/
+                <para>
+                  Deletes a breakpoint from the specified index of the list of active breakpoints.
+                </para>
+              </sect3>
+	      <sect3><title>bpe (script, index)</title>
+	      <para>
+		Add a breakpoint terminating when the specified exported function of a script is called
+	      </para>
+	      </sect3>
+              <sect3><title/bplist/
+                <para>
+                  Lists all active breakpoints.
+                </para>
+              </sect3>
+              <sect3><title/bpx (method)/
+                <para>
+                  Adds a breakpoint to the specified method.
+                </para>
+              </sect3>
+              <sect3><Title/bt/
+                <para>
+                   Backtrace: Shows the execution stack, bundled with call parameters and selector
+                   names where appropriate.
+                </para>
+              </sect3>
+              <sect3><Title/classtable/
+                <para>
+                   One of the nice things about FreeSCI is that it doesn't hide its class table as
+                   Sierra SCI appears to do. With this command, you have the power to unravel the
+                   mysteries of classes and superclasses at your fingertips.
+                </para>
+              </sect3>
+              <sect3><Title/clonetable/
+                <para>
+                   FreeSCI doesn't take Clone()ing lightly. It carefully notes which clone was
+                   created and tracks its current position. This function allows you to find them
+                   all, and in the darkness bind them.
+                </para>
+              </sect3>
+              <sect3><title/debuglog [mode]/
+                <para>
+                   FreeSCI keeps an internal list of flags for specific areas of the game that
+                   should be watched more closely. The 'debuglog' command activates or deactivates
+                   debug output for each of those areas. Each area is described by a letter; to
+                   activate debugging for that area, use "debuglog +x", where x is the area you
+                   want to debug. "debuglog -x" deactivates debugging for that area. To activate or
+                   deactivate multiple areas, concatenate their single-letter descriptions. Run
+                   "debuglog" without parameters to get a listing of all active modes. The modes
+                   and describing letters are listed below.
+                    <simplelist>
+                     <member/a: The audio subsystem/
+                     <member/b: The Bresenham line algorithm functions/
+                     <member/c: Character and string handling/
+                     <member/d: System graphics display and management/
+                     <member/f: Function calls/
+		     <member/F: File IO/
+                     <member/g: Graphics/
+                     <member/l: List and node handling/
+                     <member/m: Memory management/
+                     <member/M: Menu system/
+                     <member/p: The command parser/
+                     <member/s: Base setter: Draws the bases of each actor as colored rectangles/
+		     <member/S: Said specs/
+		     <member/t: Time functions/
+                     <member/u: Unimplemented functionality/
+                     <member/*: Everything at once. Use with care./
+                   </simplelist>
+                </para>
+              </sect3>
+	      <sect3><title/die/
+		<para>
+		  Exits the interpreter ungracefully.
+		</para>
+	      </sect3>
+              <sect3><Title/disasm (address) [number]/
+                <para>
+                   The debugger is able to disassemble code parts on the fly. Just give it an
+                   <parameter/address/ to dissassemble (and a <parameter/number/ of commands to
+                   dump, if you're feeling bold enough to look at more than one of them
+                   simultaneously). Unfortunately, it can only do send prediction and parameter
+                   resolution if it is disassembling the PC.
+                </para>
+              </sect3>
+	      <sect3><title/dissectscript (script))/
+		<para>
+		  Dumps a script resource (with the specified number) and examines it. Lists classes,
+		  static objects, relocation tables, and all the other stuff contained in scripts.
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>dm_*</title>
+		<para>
+		  These are dmalloc utility functions. They are described in the
+		  dmalloc section below.
+	      </sect3>
+	      <sect3>
+		<title>draw_viewobj (object)</title>
+		<para>
+		  This operation draws the boundaries of the cel described by the
+		  indicated SCI object to the screen. The nsRect is drawn in green,
+		  the brRect in dark blue, and the position is marked by a small cross
+		  in the cel's priority, within a black box.
+		</para>
+	      </sect3>
+	      <sect3><title/dump (restype, resnr)/
+		<para>
+		  Displays a hex dump of the specified resource.
+		</para>
+	      </sect3>
+              <sect3><title/dumpnodes (index)/
+                <para>
+                  Lists up to <parameter/index/ nodes of the parse tree.
+                </para>
+              </sect3>
+	      <sect3><title>dumpwords</title>
+	      <para>
+		Lists all parser words
+	      </para>
+	      </sect3>
+	      <sect3><title>gfx_current_port</title>
+	      <para>
+		Prints the port ID of the current port.
+	      </para>
+	      </sect3>
+	      <sect3><title>gfx_draw_cel (view) (loop) (cel)</title>
+	      <para>
+		Draws a single cel to the center of the screen (augmented by the cel's delta-x and -y values). Depending on your
+		graphics driver, you may have to refresh the screen for this to become visible.
+	      </para>
+	      </sect3>
+	      <sect3><title>gfx_draw_rect (x) (y) (width) (height) (color)</title>
+	      <para>
+		Draws a single rectangle to the screen. The <literal>color</literal> parameter describes an EGA color (0-15) which
+		will be the rectagle's color'
+	      </para>
+	      </sect3>
+	      <sect3><title>gfx_drawpic (pic) [palette] [flags]</title>
+	      <para>
+		Renders a pic resource. The <emphasis>palette</emphasis> value specifies the pic's palette to use; if not specified, 0 will be assumed.
+		<emphasis>flags</emphasis> set any of the pic drawing flags used in the operational layer (see <xref linkend="fsci-gfx-op"/>).
+	      </para>
+	      </sect3>
+	      <sect3><title>gfx_fill_screen (color)</title>
+	      <para>
+		Fills the entire screen (visual back and front buffer) with an EGA color.
+	      </para>
+	      </sect3>
+	      <sect3><title>gfx_free_widgets</title>
+	      <para>
+		This will free the main visual widget and all widgets it contains. Since it essentially invalidates the structured
+		representation of the screen content, this will make the interpreter run into segfaults if you resume. It is intended
+		for memory profiling and heap testing.
+	      </para>
+	      </sect3>
+	      <sect3><title>gfx_print_dynviews</title>
+	      <para>
+		Prints the current dynview list. This list is generated by the Animate() kernel call and represents the visual state of
+		all dynamical images on the screen.
+		Documentation regarding the meaning of the widget descriptions can be found in <xref linkend="fsci-gfx-widgets-string">.
+	      </para>
+	      </sect3>
+	      <sect3><title>gfx_print_port [port]</title>
+	      <para>
+		Dumps the contents of the port specified (or, if omitted, the current port) to the output stream.
+		Documentation regarding the meaning of the widget descriptions can be found in <xref linkend="fsci-gfx-widgets-string">.
+	      </para>
+	      </sect3>
+	      <sect3><title>gfx_print_visual</title>
+	      <para>
+		Prints the visual widget, and, recursively, its contents; this widget is the root widget, therefore, the structured
+		representation of all graphical information will be print.
+		Documentation regarding the meaning of the widget descriptions can be found in <xref linkend="fsci-gfx-widgets-string">.
+	      </para>
+	      </sect3>
+	      <sect3><title>gfx_widget [widget]</title>
+	      <para>
+		(This function is only available if the interpreter was compiled with widget debugging enabled)
+	      </para>
+	      <para>
+		If the parameter is not specified, this will print a list of all used widget debug slots (each widget goes into
+		exactly one slot); if the parameter is specified, it is used as an index in the widget debug slot list, causing
+		the corresponding widget to be print.
+		Documentation regarding the meaning of the widget descriptions can be found in <xref linkend="fsci-gfx-widgets-string">.
+	      </para>
+	      </sect3>
+	      <sect3><title>gfx_priority [priority]</title>
+	      <para>
+		If no parameter is supplied, the start and end values of the priority line list will be print. Otherwise, this function
+		prints the first line of the specified priority region.
+	      </para>
+	      </sect3>
+	      <sect3><title>gfx_show_map [nr]</title>
+	      <para>
+		Draws one of the screen maps to the visual back buffer and updates the front buffer. The maps are numbered as follows:
+		<simplelist>
+		  <member>0: Visual buffer</member>
+		  <member>1: Priority buffer (z buffer)</member>
+		  <member>2: Control buffer</member>
+		</simplelist>
+		Buffers 1 and 2 will be rendered in EGA colors, with color values representing the associated priority/control values
+		(this is identical to Sierra SCI behaviour).
+	      </para>
+	      </sect3>
+	      <sect3><title>gfx_update_zone (x) (y) (width) (height)</title>
+	      <para>
+		Propagates a rectangle from the back buffer to the front buffer; the rectangle's origin and dimensions are passed as
+		parameters.
+	      </para>
+	      </sect3>
+	      <sect3><title/gnf/
+		<para>
+		  Lists the rules of the GNF grammar used internally in FreeSCI to parse input.
+		</para>
+	      </sect3>
+              <sect3><title/go/
+                <para>
+                  Deactivates debug mode and runs the game. Debug mode can be re-activated in the
+                  usual ways.
+                </para>
+              </sect3>
+              <sect3><Title/heapdump (address) (number)/
+                <para>
+                   Invoking this function will spit out <parameter/number/ bytes, starting at
+                   <parameter/address/.
+                </para>
+              </sect3>
+              <sect3><Title/heapdump_all/
+                <para>
+		  Prints all heap segments, including information whether they are allocated or not.
+                </para>
+              </sect3>
+              <sect3><Title/heapfree/
+                <para>
+                   Dumps a list of the free heap space (free, not gratis).
+                </para>
+              </sect3>
+              <sect3><Title/heapobj (address)/
+                <para>
+                   This is the same as <function/accobj/, but it can interpret any object on the
+                   heap. Note that the "home" address of objects (as used here) are 8 bytes into
+                   the object structure (which starts with the magic number 0x34 0x12), and points
+                   to the first (zeroeth?) selector.
+                </para>
+              </sect3>
+	      <sect3><title/hexgrep (resource, hex 2-tuples+)/
+		<para>
+		  Searches for a list of hexadecimal numbers inside a single resource (if specified
+		  like "script.042"), or in a set of resources (if specified like "pic").
+		</para>
+	      </sect3>
+	      <sect3><title/kernelnames/
+		<para>
+		  Lists all kernel function names
+		</para>
+	      </sect3>
+	      <sect3><title/list (string+)/
+		<para>
+		  If called without parameters, it lists all things it can list. Among these
+		  are:
+		  <simplelist>
+		    <member/vars: Global interpreter variables/
+		    <member/cmds: All available commands/
+		    <member/restypes: All resource types/
+		    <member/[restype]: All resources of that type/
+		  </simplelist>
+		</para>
+	      </sect3>
+	      <sect3><title/list_sentence_fragments/
+		<para>
+		  Lists all parser rules in their normal almost-CNF representation.
+		</para>
+	      </sect3>
+              <sect3><Title/listinfo (address)/
+                <para>
+                   So FreeSCI doesn't have an interactive list debugger as in Sierra SCI. But it has
+                   something better<footnote><para/Well, this is debatable./</footnote>: A list
+                   dumper, which lists all list elements, keys, and heap positions.
+                </para>
+              </sect3>
+	      <sect3><title/man (command)/
+		<para>
+		  Shows a short descriptive message to the command.
+		</para>
+	      </sect3>
+	      <sect3><title/meminfo/
+		<para>
+		  Prints information about heap and hunk memory allocation.
+		</para>
+	      </sect3>
+              <sect3><Title/obj/
+                <para>
+                   This is, in essence, the same function as <function/accobj/, but it checks the
+                   current base object as opposed to the object indexed by the accumulator.
+                </para>
+              </sect3>
+	      <sect3><title/objs/
+		<para>
+		  Lists all objects, classes, and clones that are currently on the stack. They are
+		  identified by their properties, and prefixed with an asterisk ('*') if they are clones,
+		  or a percent sign ('%') if they are classes.
+	      <sect3><title/parse (string)/
+		<para>
+		  Attempts to parse a single string, and displays the word groups, word classes
+		  and the resulting parse tree, if successful.
+		</para>
+	      </sect3>
+	      <sect3><title/print (variable)/
+		<para>
+		  Prints the contents of one global interpreter variable.
+		</para>
+	      </sect3>
+	      <sect3><title/quit/
+		<para>
+		  Exits the interpreter gracefully, by shutting down all resources manually.
+		</para>
+	      </sect3>
+              <sect3><Title/redraw_screen/
+                <para>
+                   This function retrieves the background picture, puts it on the foreground, and
+                   redraws everything. It's not inherently useful, though.
+                </para>
+              </sect3>
+              <sect3><Title/registers/
+                <para>
+                   This function will show the current values of the program counter, the
+                   accumulator, the frame pointer, the stack pointer, the prev register,
+                   and the &amp;rest modifier. It will also print the addresses of the current
+                   base object, of the global variables, and of the stack.
+                </para>
+              </sect3>
+              <sect3><Title/resource_id (number)/
+                <para>
+                   FreeSCI packs resource type and number into the usual resource id combination.
+                   Use this little helper function to unpack it.
+                </para>
+              </sect3>
+	      <sect3><title/restart [string]]/
+		<para>
+		  Forces a restart of the current game. The string parameter is meaningless now.
+		</para>
+	      </sect3>
+              <sect3><title/restore_game (name)/
+                <para>
+                  Tries to restore a game state from the specified directory. See <xref
+                  linkend="freesci-savegames"> for details about this.
+                </para>
+              </sect3>
+              <sect3><Title/s [number]/
+                <para>
+                   This function will execute <parameter/number/ steps, or one if number was not
+                   specified.
+                </para>
+              </sect3>
+              <sect3><title/save_game (name)/
+                <para>
+                  Saves the current game state to a directory with the specified <parameter/name/.
+                  The directory is created automatically; everything inside is deleted, and the
+                  game data is stored. See <xref linkend="freesci-savegames"> for details about this.
+                </para>
+              </sect3>
+	      <sect3><title/scripttable/
+		<para>
+		  Lists all scripts that have been loaded, their positions in memory, and the position
+		  of their local variables and exports.
+		</para>
+	      </sect3>
+	      <sect3><title>se</title>
+		<para>
+		  Steps forward until an SCI keyboard event is received.
+		</para>
+	      </sect3>
+	      <sect3><title/selectornames/
+		<para>
+		  Displays the names of all selectors.
+		</para>
+	      </sect3>
+	      <sect3><title/set (variable, int)/
+		<para>
+		  Sets the specified variable to a new value. Most commonly used to set color_mode.
+		</para>
+	      </sect3>
+              <sect3><Title/set_acc (number)/
+                <para>
+                   Frobbing the accumulator is not recommended, but it may be fun at times. Use this
+                   command to set your favourite register to an arbitrary value and watch things blow
+                   up.
+                </para>
+              </sect3>
+	      <sect3><title/set_parse_nodes/
+		<para>
+		  Sets the nodes of the parse tree, and shows the result in list representation.
+		  Useful to display information gathered from a certain hacked version of Sierra's SCI
+		  interpreter in a more readable fashion.
+		</para>
+	      </sect3>
+              <sect3><title/set_vismap (mapnr)/
+                <para>
+                  Sets the visual display map. Mapnr can be any of the following:
+                  <simplelist>
+                    <member/0: Visual map/
+                    <member/1: Priority map/
+                    <member/2: Control map/
+                    <member>4: Auxiliary map
+                        <footnote><para/Not really meaningful; only used while pic
+                                        resources are drawn./</footnote></member>
+                  </simplelist>
+		  This function is a no-op since FreeSCI 0.3.1.
+                </para>
+              </sect3>
+              <sect3><title/simkey (keynr)/
+                <para>
+                  Simulates a keypress of a key with the specified key number. Modifiers are
+                  not applied.
+                </para>
+              </sect3>
+	      <sect3><title/size (restype, resnr)/
+		<para>
+		  Displays the total byte size of one single resource.
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd ...</title>
+		<para>
+		  This executes a sound command. Due to the nature of pipelining
+		  between the sound server and the interpreter, it is possible that
+		  the result messages of those operations will not be print
+		  immediately, so you may have to issue a second command in order
+		  for the results of the first command to be displayed.
+		</para>
+		<para>
+		  Also, please note that after entering the debug console, the sound
+		  server is, by default, suspended, so you will have to issue an
+		  explicit <userinput>snd resume</userinput> to do anything useful.
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd stop</title>
+		<para>
+		  Suspends the sound server. This is the opposite of 'snd resume'.
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd resume</title>
+		<para>
+		  Resumes the sound server after it has been suspended.
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd play (song)</title>
+		<para>
+		  Instructs the sound server to play the indicated song with a handle
+		  of 42.
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd mute_channel (channel)</title>
+		<para>
+		  Mutes the indicated MIDI channel; events sent to this channel will be
+		  discarded before they reach the sound hardware.
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd unmute_channel (channel)</title>
+		<para>
+		  Undoes a previous 'mute_channel' command, or part of a previous 'snd mute'
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd mute</title>
+		<para>
+		  Mutes all channels (as per 'snd mute_channel')
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd unmute</title>
+		<para>
+		  Unmutes all channels (as per 'snd unmute_channel')
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd solo (channel)</title>
+		<para>
+		  Mutes all but one channel
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd printchannels</title>
+		<para>
+		  Lists all channels, and the instruments currently playing on them
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd printmaps</title>
+		<para>
+		  Prints the instrument names and all General MIDI mappings for
+		  the song currently playing. This operation will only work correctly
+		  if MT-32 to General MIDI translation is being performed.
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>sndmap ...</title>
+		<para>
+		  Executes sound mapping commands.
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd songid</title>
+		<para>
+		  Retreives the numerical ID of the song currently playing from the sound
+		  server. Songs started with 'snd play' have a song ID of 42.
+		</para>
+	      </sect3>
+              <sect3><Title/snk [number]/
+                <para>
+                   Another step command: Step until the interpreter hits a callk command. If you're
+                   hunting for a very specific kernel call, just add its number as a parameter.
+                   Syscall hunting has never been so easy.
+                </para>
+              </sect3>
+	      <sect3><title/so/
+		<para>
+		  "Steps over" one instruction, i.e. continues executing until that instruction
+		  has been completed (useful for send, call, and related functions)
+		</para>
+	      </sect3>
+              <sect3><Title/sret/
+                <para>
+                   Step until RETurning. If you're bored of the function you're debugging, just invoke
+                   this command. It will step forward until the current function returns.
+                </para>
+              </sect3>
+              <sect3><Title/stack (number)/
+                <para>
+                   Can't remember what you pushed on that stack, and in which order? This command
+                   will display as many stack elements as you want, starting at the TOS.
+                </para>
+              </sect3>
+	      <sect3><title/version/
+		<para>
+		  Displays the interpreter and SCI game versions
+		</para>
+	      </sect3>
+              <sect3><Title/viewinfo (number)/
+                <para>
+                   Examines the specified view resource and displays the number of loops it has,
+                   the number of cels for each loop, and the size for each cel.
+                </para>
+              </sect3>
+	      <sect3><title/vmvarlist/
+		<para>
+		  Lists the heap positions of the current global, local, parameter, and temporary
+		  variables.
+		</para>
+	      </sect3>
+	      <sect3><title/vmvars (type) (index) [value])/
+		<para>
+		  Reads or sets a global, local, temporary, or parameter value. Type must be any of
+		  'g', 'l', 'p', 't', to select global, local, parameter or temporary variables
+		  (respectively), while index represents the variable index. If value is not provided,
+		  that variable will be displayed; otherwise, it will be set to value.
+		</para>
+	      </sect3>
+           </Sect2>
+	   <sect2><title>Console interaction with dmalloc</title> 
+	     <para>
+	       The FreeSCI console proivdes an interface to the dmalloc memory debugger/profiler, if
+	       the interpreter was compiled with dmalloc support enabled. The following commands are
+	       provided:
+	     </para>
+	     <sect3><title>dm_log_heap</title>
+	       <para>
+		 Prints the current heap state into the dmalloc log file
+	       </para>
+	     </sect3>
+	     <sect3><title>dm_stats</title>
+	       <para>
+		 Prints memory usage statistics to the output file
+	       </para>
+	     </sect3>
+	     <sect3><title>dm_log_unfreed</title>
+	       <para>
+		 Lists unfreed pointers in the dmalloc output file
+	       </para>
+	     </sect3>
+	     <sect3><title>dm_verify (pointer)</title>
+	       <para>
+		 Verifies a pointer and prints the result to the dmalloc output file. Specifying 0 instead
+		 of a pointer will verify all pointers currently known to dmalloc.
+	       </para>
+	     </sect3>
+	     <sect3><title>dm_debug (mode)</title>
+	       <para>
+		 Sets the dmalloc debug flags (please refer to the dmalloc documentation for a description)
+	       </para>
+	     </sect3>
+	     <sect3><title>dm_mark</title>
+	       <para>
+		 Gets a mark describing the current heap situation (see also 'dm_chmark')
+	       </para>
+	     </sect3>
+	     <sect3><title>dm_chmark (mark)</title>
+	       <para>
+		 Compares a mark retreived by 'dm_mark' with the current heap situation, and prints the
+		 results to the dmalloc output file.
+	       </para>
+	     </sect3>
+	     <sect3><title>dm_print (output)</title>
+	       <para>
+		 Prints arbitrary output to the dmalloc output file
+	       </para>
+	     </sect3>
+	   </sect2>
+     </Sect1>
+     <sect1>
+       <title>Header files</title>
+       <para>
+	 This section explains what some of the header files are good for.
+       </para>
+       <sect2><title>Core headers</title>
+       <para>
+	 The following headers provide what should be considered core functionality:
+       </para>
+       <sect3><title>scitypes.h</title>
+       <para>
+	 This file, included from <literal>resource.h</literal>, provides some
+	 of the basic types used in FreeSCI, including some of the types used
+	 for specific functions, but also the gu?int(8|16|32) types, which
+	 provide (unsigned) types for 8, 16, and 32 bits.
+       </para>
+       <sect3><title>resource.h</title>
+       <para>
+	 The main OS abstraction header file; includes <literal>scitypes.h</literal>
+	 and provides functions for the following: Queues, memory checks, time
+	 inspection, directory traversion, case-insensitive file opening,
+	 the 'sciprintf()' function, which is the primary output function in
+	 FreeSCI, functions to retreive the user's home directory and the cwd,
+	 to create a complete path in the file system, yield to the scheduler
+	 (where possible) or trigger a breakpoint.
+       </para>
+       <sect3><title>sci_conf.h</title>
+       <para>
+	 In here, the configuration options (as parsed from the ~/.freesci/config file)
+	 are listed in a structure; includes function definitions for handling
+	 configuration.
+       </para>
+       <sect3><title>versions.h</title>
+       <para>
+	 Lists certain SCI versions and functions/macros to examine these versions.
+	 Some kernel functions have bugs or changed their behaviour in some
+	 versions of SCI; these version numbers should be listed in this file.
+       </para>
+       <sect3><title>sciresource.h</title>
+       <para>
+	 Provides definitions, strings, and functions for SCI resource management,
+	 including the resource manager function prototypes.
+       </para>
+       <sect3><title>sci_memory.h</title>
+       <para>
+	 Prototypes for the sci_alloc(), sci_free() etc. functions for memory
+	 management, plus the debug switches available for them.
+       </para>
+       <sect3><title>console.h</title>
+       <para>
+	 Prototypes for the SCI console, including functions to hook up SCI console
+	 functions and variables.
+       </para>
+       <sect3><title>sbtree.h</title>
+       <para>
+	 This header file is only used by the gfx subsystem right now. It
+	 provides statically generated binary trees.
+       </para>
+       <sect2><title>VM headers</title>
+       <para>
+	 The most central VM header file is
+	 <literal>engine.h</literal>, which contains the <type>state_t</type> structure
+	 and several global definitions
+	 related to savegame and general path management. This file includes
+	 a number of other headers, including the following core VM ones.
+       </para>
+       <sect3><title>script.h</title>
+       <para>
+	 Provides definitions for opcodes and script segment types
+       </para>
+       <sect3><title>vm.h</title>
+       <para>
+	 Definitions for handling objects on the heap, script and class objects,
+	 the selector map, execution stack and breakpoint typedefs, a few
+	 global variables for debugging the VM, functions for initializing
+	 and running it, for looking up selectors in an object, to save and
+	 load the game state and pretty much everything else that involves running
+	 SCI scripts.
+       </para>
+       <sect3><title>heap.h</title>
+       <para>
+	 Prototypes and definitions for FreeSCI's SCI heap implementation.
+       </para>
+       <sect3><title>vocabulary.h</title>
+       <para>
+	 This header file provides definitions and declares functions for
+	 decoding vocab resources, from parser rules to VM opcode names to
+	 selector names. It also lists explains the functions used for parsing.
+       </para>
+       <sect3><title>kdebug.h</title>
+       <para>
+	 Provides the SCIkdebug() and SCIkwarn() functions (and their arguments)
+	 for selectively debugging kernel functions.
+       </para>
+       <sect3><title>kernel.h</title>
+       <para>
+	 Provides GET_HEAP(), PUT_HEAP(), GET_SELECTOR() etc., also predicates to
+	 determine whether heap objects are lists and objects, and a generic
+	 text resource lookup function that distinguishes between heap text data
+	 and text resources. Also includes priority band information, view
+	 signals, and other definitions for kernel functions, plus a listing
+	 of all kernel functionality.
+       </para>
+       <sect3><title>menubar.h</title>
+       <para>
+	 In here, functions for handling menu bar objects are described, as
+	 are a number of constants and values that can be used to customize
+	 menu bar displaying. The menubar functions call some gfx functions,
+	 but are themselves called from the kernel's menubar handling functions.
+       </para>
+       <sect3><title>sci_graphics.h</title>
+       <para>
+	 Provides the SELECTOR_STATE and MAX_TEXT_WIDTH definitions for
+	 a number of graphical kernel functions.
+       </para>
+       <sect2><title>Graphics subsystem headers</title>
+       <para>
+	 The gfx subsystem's functionality is described in
+	 <xref linkend="freesci-gfx-subsystem"/>.
+	 Most of the header files it uses are prefixed with "gfx_".
+       </para>
+       <sect3><title>gfx_system.h</title>
+       <para>
+	 Provides debug functionality, the core data types (points, rectangles,
+	 pixmaps, etc), rectangle and point operations (inlined) and enums and
+	 definitions for more complex functions.
+       </para>
+       <sect3><title>uinput.h</title>
+       <para>
+	 Describes input events (type, modifiers, etc).
+       </para>
+       <sect3><title>gfx_driver.h</title>
+       <para>
+	 Documents the gfx_driver_t structure, and the functions and
+	 capability flags it can/must provide.
+       </para>
+       <sect3><title>gfx_options.h</title>
+       <para>
+	 This file covers configuration options that can be provided to the
+	 gfx subsystem's operational layer. It defines a structure that is also
+	 used by <literal>sci_conf.h</literal>.
+       </para>
+       <sect3><title>gfx_widgets.h</title>
+       <para>
+	 Describes graphical widgets and the functionality they provide,
+	 including constructors for each widget.
+       </para>
+       <sect3><title>gfx_state_internal.h</title>
+       <para>
+	 This file covers the "hidden" (non-public) part of graphical widgets
+	 and includes many gory details regarding their implementation.
+       </para>
+       <sect3><title>sci_widgets.h</title>
+       <para>
+	 Provides more complex widgets that are specific to the needs of SCI.
+       </para>
+       <sect3><title>gfx_tools.h</title>
+       <para>
+	 Provides utility functions, primarily for gfx driver writers, but
+	 also some functions used in the operational layer.
+       </para>
+       <sect3><title>gfx_resmgr.h</title>
+       <para>
+	 Describes the gfx subsystem's resource manager's functions, as used
+	 by the operational layer, and prototypes for functions implemented
+	 by the interpreter specific part.
+       </para>
+       <sect3><title>gfx_resource.h</title>
+       <para>
+	 Functions for operating on gfx resources in general, and also functions
+	 for loading/drawing particular resources.
+       </para>
+       <sect3><title>gfx_operations.h</title>
+       <para>
+	 Describes the operational layer of the gfx subsystem. Provides an extensive
+	 set of 2D graphics functionality.
+       </para>
+
+<!--
+       midi_device.h
+           midiout.h
+       sound.h
+            old_objects.h
+   soundserver.h
+gfx_operations.h
+-->
+       
+     </sect1>
+     <sect1 id = "freesci-savegames">
+        <title/Savegames/
+        <para>
+           FreeSCI attempts to store savegames portably; for this reason, most of the game data
+           is saved as plain text, while the graphics are written to png<footnote>
+           <para/Portable Network Graphics. A very portable graphics format with lossless compression,
+           a free reference implementation, and dozens of useful features./</footnote> files.
+        </para>
+        <sect2><Title/Savegame directory policy/
+           <para>
+             The general FreeSCI directory policy is simple: If there is a $HOME, use
+             ~/.freesci/[game name]/ as your playground, if there is no home, use the current
+             working directory. Savegames are true to that policy. Each save game has a directory
+             associated with itself, and this directory is relative to the directory mentioned above.
+             For example, if you execute "save_game frobnitz" in SQ3 on your *BSD box while
+             your $HOME is set to /home/rogerw, the save game files would be written to
+             /home/rogerw/.freesci/SQ3/frobnitz/.
+           </para>
+        </sect2>
+        <sect2><Title/Files/
+           <sect3><Title/state/
+             <para>
+               This is the main save file. It contains huge amounts of text data, which are
+               an almost-complete replication of the game internal state_t structure. The code
+               used to read and write this file is automatically generated by a script called
+               cfsml.pl, and it is believed to be rather flexible; i.e. you should be able to
+               insert blank lines, comment lines, (Using the hash ('#') sign), move assignements
+               around, and change values. The identifiers used in this file are identical to the
+               identifiers used in the c code.
+             </para>
+           </sect3>
+           <sect3><Title/heap/
+             <para>
+               This is a binary copy of the heap data. Heap data is internally structured to be
+               identical to SCI heap data (little endian, 16 bit), so it is portable to all platforms.
+             </para>
+           </sect3>
+           <sect3><Title/hunk*/
+             <para>
+               These files contain raw hunk data. SCI code may allocate raw hunk data, but
+               it can't do anything with it (except unallocate it again). It is unlikely that you
+               are going to encounter a hunk file in normal SCI code. This may change for later SCI
+               versions.
+             </para>
+           </sect3>
+	   <sect3><title>song.*</title>
+	   <para>
+	     Songs stored by the sound subsystem.
+	   </para>
+	 </sect3>
+	   <sect3><title>sound</title>
+	   <para>
+	     Contains the state of the sound subsystem. The syntax is identical to the used in the "state" file.
+	   </para>
+	 </sect3>
+	 <sect3><title>*.id</title>
+	 <para>
+	   Savegame name file for one SCI game. The file names are chosen by taking the game's "unique" identifier and
+	   appending a suffix of ".id". This file contains the savegame name in plain text.
+	 </sect2>
+	 <sect2><title>Obsolete files</title>
+	 <para>
+	   The following files were generated by earlier versions of FreeSCI, but are no longer used:
+	 <sect3><Title/*map.png/
+             <para>
+               The four maps of the main picture are stored in four separate png files:
+               <simplelist>
+                 <member/visual_map.png/
+                 <member/priority_map.png/
+                 <member/control_map.png/
+                 <member/auxiliary_map.png/
+               </simplelist>
+               The meanings of those files should be rather obvious.
+             </para>
+             <para>
+               visual_map.png contains regular palette or color information, so it is, in fact,
+               a screenshot of the game (the mouse pointer is not shown, since it is not stored
+               in the display maps). The other three png files each contain a greyscale gradient
+               palette.
+             </para>
+           </sect3>
+           <sect3><Title/buffer*/
+             <para>
+               These are png files containing the various graphical buffers used in the game.
+               buffer_x.1 is the visual buffer, buffer_x.2 is the priority buffer, and buffer_x.4
+               is the control buffer. Any combination of these three buffers is possible.
+             </para>
+             <para>
+               Control and priority buffers contain a grayscale gradient palette.
+             </para>
+           </sect3>
+	 </sect2>
+        <sect2><Title/Caveats/
+           <para>
+               FreeSCI's file saving and restoration functionality isn't perfect. Please be aware
+               of the following flaws and limitations before you dig out your flame thrower:
+           </para>
+           <sect3><Title/File handles/
+              <para>
+                Open file handles are NOT stored or loaded. If you try to save the game with
+                the built-in debugger while file handles are still open, you will be warned
+                about this and saving will abort, unless you preceed your save directory name
+                with an underscore ('_').
+              </para>
+           </sect3>
+           <sect3><Title/Kernel functions/
+              <para>
+                 SCI kernel functions are able to call the virtual machine. In practice, this
+                 means that you may have two or more vm function calls on your system stack;
+                 it is not easily possible to store the game state in this case. FreeSCI does not
+                 allow it, and, as far as I know, no Sierra SCI code ever tries to do that.
+              </para>
+              <para>
+                 To determine whether or not this applies to you, run
+                 "bt" in the debugger; the "base" number in the first line must be zero, or you won't
+                 be able to save the game (restoring should work, though).
+              </para>
+           </sect3>
+        </sect2>
+     </sect1>
+
+     <sect1 id="freesci-gfx-subsystem">
+       <title>The graphics subsystem</title>
+       <para>Christoph Reichenbach, April 2nd, 2000</para>
+       <para>
+	 Up until version 0.3.0, FreeSCI used a graphics subsystem which used per-pixel operations on
+	 three 320x200 8 bit buffers. This concept, while being simple to implement for driver writers,
+	 proved to have several disadvantages:
+	 <simplelist>
+	   <member>Non-native memory layout: Using a fixed 8bpp visual buffer meant that, for each
+	     update, all graphics would have to be translated to the graphics driver's native format,
+	     unless it already was running in 8bpp.</member>
+	   <member>No use of accellerated drawing functions: Many of the targetted graphics drivers
+	     supported hardware-accelerated drawing of rectangles or lines; this could not be taken
+	     advantage of, due to the per-pixel access</member>
+	   <member>Scalability moved to the drivers: Each driver would have to take care of
+	     magnifying the resulting picture by itself (if it wanted to support it at all), since
+	     the base buffer was at a fixed size.</member>
+	   <member>Manual graphics buffer access: This was in fact used in many places, making it
+	     hard to keep track of modifications, which, in turn, would have inhibited attempts to
+	     track modifications of the visual buffer. However, without those, either each drawing
+	     operation would have enforce an update, causing flickering in the general case, or
+	     the full screen would have to be re-drawn each time (which was what actually was done),
+	     resulting in major performance penalites, especially for remote displays.
+	   </member>
+	 </simplelist>
+	 Combined with some cases of code rot, these problems suggested a re-write of the complete
+	 graphics subsystem, and a more modular re-design in preparation for supporting later revisions
+	 of SCI (and, possibly, related engines such as AGI).
+       </para>
+       <para>
+	 This documentation section will describe the architecture and functionality of the new
+	 graphics subsystem, which has been in operation since FreeSCI 0.3.1. I will start by giving
+	 a general overview of the various components involved and how they interact, and then
+	 give a more detailed description of each of those components in sequence.
+       </para>
+       <sect2><title>Architecture</title>
+       <para>
+	 In extension of the architecture used up until FreeSCI 0.3.0, the new graphics subsystem now
+	 uses a total of six buffers:
+	 <informaltable frame="none">
+	   <tgroup cols="4">
+	     <thead>
+	       <row>
+		 <entry>Map Name</entry>
+		 <entry># of buffers</entry>
+		 <entry>scaled</entry>
+		 <entry>bpp</entry>
+	       </row>
+	     </thead>
+	     <tbody>
+	       <row>
+		 <entry>visual</entry>
+		 <entry>3</entry>
+		 <entry>yes</entry>
+		 <entry>determined by driver</entry>
+	       </row>
+	       <row>
+		 <entry>priority</entry>
+		 <entry>2</entry>
+		 <entry>yes</entry>
+		 <entry>8</entry>
+	       </row>
+	       <row>
+		 <entry>control</entry>
+		 <entry>1</entry>
+		 <entry>no</entry>
+		 <entry>8</entry>
+	       </row>
+	     </tbody>
+	   </tgroup>
+	 </informaltable>
+
+	 Of these, the visual and priority buffers have to be provided by the graphics driver, since
+	 they are relevant for display and may actually be present physically (since the priority map
+	 is nothing other than a Z buffer). The control map, a special buffer used by the interpreter
+	 to check whether moving objects hit obstacles on the screen or touch zones with special meanings,
+	 is only relevant for the interpreter and therefore handled one level above the graphics driver.
+       </para>
+       <para>
+	 I will refer to the level above as the "operational layer". This layer handles all of the primitive
+	 graphical operations. It performs clipping, keeps track of modified regions, and emulates functions
+	 required but not supported natively by the graphics driver.
+       </para>
+       <para>
+	 The operational layer is also responsible for the four pixmap operations, which draw background
+	 pictures, images, text, or mouse pointers. These pointers are only referred to by their respective
+	 ID numbers; they are retreived from the graphical resource manager. This graphical resource manager
+	 (GRM) is another separate subsystem- it retreives graphical resources in one of a set of standard
+	 formats, and translates them to the graphics driver's native format in one of several possible ways.
+	 It also receives hints from the operational layer to improve its caching strategy.
+       </para>
+       <para>
+	 Finally, above the operational layer, another layer is situated: This widget layer provides abstract
+	 descriptions of things on the screen as objects, so-called widgets. It provides the primary interface
+	 for the interpreter to interact with.
+       </para>
+     </sect2>
+     <sect2><title>Standard data types</title>
+     <para>
+       There are a number of standard data types defined in <filename>src/include/gfx_system.h</filename> which
+       are used all over the place in the graphics subsystem; therefore, they warrant some special attention
+       in order to understand how it works. 
+     </para>
+     <sect3><title>point_t</title>
+     <para>
+       This data type is nothing more than a tuple (<literal>x</literal>,<literal>y</literal>). It describes a coordinate on the screen; a one-line
+       way to generate a <type>point_t</type> is to use the function <function>gfx_point(x,y)</function>.
+     </para>
+     <sect3><title>rect_t</title>
+     <para>
+       This type describes a rectangular area on the screen, as a four-tuple (<literal>x</literal>,<literal>y</literal>,<literal>xlen</literal>,
+       <literal>ylen</literal>), where the point (<literal>x</literal>, <literal>y</literal>) describes the upper left point of the rectangle,
+	 whereas <literal>xlen</literal> and <literal>ylen</literal> are the number of pixels the rectangle extends to the right on the x and
+	 downwards on the y axis, respectively. A <type>rect_t</type> can be generated in-line by the function <function>gfx_rect(x,y,xl,yl)</function>.
+       </para>
+       <para>
+	 A number of functions are available to operate on <type>rect_t</type>s. These functions are 'pure' in the functional sense, meaning that
+	 they do not modify the original rectangle, but, rather, return a new one (of course, an optimizing compiler will make this a moot point
+	 from a performance perspective).
+       </para>
+       <sect4><title>gfx_rect_equals(rect_a, rect_b)</title>
+       <para>
+	 This function is a predicate that returns non-zero iff <literal>rect_a</literal> describes the same rectangle as <literal>rect_b</literal>.
+       </para>
+       <sect4><title>gfx_rect_translate(rect, point)</title>
+       <para>
+	 Returns a rectangle which equals <literal>rect</literal> translated (moved) by the (<literal>x</literal>, <literal>y</literal>) tuple
+	 described by the <literal>point</literal> parameter (i.e. <literal>point</literal> is interpreted as a relative coordinate).
+       </para>
+       <sect4><title>gfx_rect_subset(rect_a, rect_b)</title>
+       <para>
+	 A predicate to determine whether all pixels contained in the area described by <literal>rect_a</literal> are also
+	 contained in the area described by <literal>rect_b</literal>. Reflexive and transitive.
+       </para>
+       <sect4><title>gfx_rects_overlap(rect_a, rect_b)</title>
+       <para>
+	 A predicate to test whether there exists a pixel in the area described by <literal>rect_a</literal> which is
+	 contained in the area described by <literal>rect_b</literal>. Reflexive and symmetric.
+       </para>
+       <sect4><title>gfx_rects_merge(rect_a, rect_b)</title>
+       <para>
+	 Returns the smallest rectangle containing both <literal>rect_a</literal> and <literal>rect_b</literal>.
+       </para>
+       <sect3><title>gfx_pixmap_color_t</title>
+       <para>
+	 This structure describes a single color in a pixmap. It consists of 8 bit <literal>r</literal>, <literal>g</literal>, <literal>b</literal> values
+	 to describe a color; when used in a pixmap, it is part of a palette of <type>gfx_pixmap_color_t</type>s where the entry at index <literal>i</literal>
+	 describes the color of the respective color index <literal>i</literal> inside the pixmap.
+       </para>
+       <para>
+	 In palette mode, the <literal>global_index</literal> entry is used to store the color index entry of the global palette that
+	 correlates with the pixmap index (or <literal>GFX_COLOR_INDEX_UNMAPPED</literal> if this value has not been determined yet).
+       </para>
+       <sect3><title>gfx_color_t</title>
+       <para>
+	 <type>gfx_color_t</type> structures contain color information for all three color maps.
+	   They consist of a <type>gfx_pixmap_color_t</type> structure, <literal>visual</literal>, which describes the effects of the
+	   color on the visual map, an <literal>alpha</literal> entry to describe the color's transparency (0 means 'opaque', 255 means
+	   'totally transparent', although graphics drivers may choose to slighly alter those meanings for performance considerations),
+	   <literal>priority</literal> and <literal>control</literal> values for the respective maps, and a <literal>mask</literal>
+	   to determine the maps affected.
+	 </para>
+	 <para>
+	   This mask is a bitwise-OR of the constants <literal>GFX_MASK_VISUAL</literal> (meaning "draw to the visual map"),
+	   <literal>GFX_MASK_PRIORITY</literal> ("draw to the priority map") and <literal>GFX_MASK_CONTROL</literal> (guess).
+	   </para>
+	   <sect3><title>gfx_mode_t</title>
+	   <para>
+	     The FreeSCI only supports a small subset of all possible graphics modes; specifically, it only supports modes where the integer
+	     value of each pixel can be stored in 8, 16, 24, or 32 bits. Color index mode is supported, but non-indexed mode has additional
+	     requirements: Each color aspect of red, green, and blue must be represented by a consecutive sub-vector 
+	     &lt;v<subscript>c</subscript>, v<subscript>c+1</subscript>, ... ,v<subscript>c+n-1</subscript>&gt; of the total color vector
+	     &lt;v<subscript>0</subscript>, v<subscript>1</subscript>, ... ,v<subscript>b-1</subscript>&gt;, where <literal>n</literal> and
+	     <literal>c</literal> are non-negative integers, and c+n &le; b holds. With v<subscript>b</subscript> being the most significant
+	       bit of the total bit vector, we also require that for each <literal>m</literal> where 0 &lt; m &lt; n the bit v<subscript>c+m</subscript>
+	       should, if set, increase brightness about twice as much as setting v<subscript>c+m-1</subscript> would. This allows us to
+	       represent each color aspect by means of an AND bitmask and an integer shift value.
+	     </para>
+	     <para>
+	       This, along with a global palette and the scaling factors, is the core of the <type>gfx_mode_t</type> data. It also contains
+	       a shift values and an AND bitmask for alpha values; if these values are set to non-zero by the graphics driver, alpha channel
+	       information will be written to the same block of data the color values are written to when pixmaps are calculated. If they
+	       are not set, a separate 8bpp alpha data block will be added to the pixmaps.
+	     </para>
+	   <sect3><title>gfx_pixmap_t</title>
+	   <para>
+	     The <type>gfx_pixmap_t</type> structure is another fundamental element of the graphics subsystem. It describes a single
+	     pixmap, such as a background picture, a cel, a mouse pointer, or a single line of text. It contains up to two references to
+	     the graphical data it describes: One unscaled block of color-indexed data (<literal>index_data</literal>, and another block
+	     scaled and in the graphics driver's native format (<literal>data</literal>).
+	   </para>
+	   <para>
+	     Each pixmap contains a local palette of <literal>colors_nr</literal> <type>gfx_pixmap_color_t</type> entries,
+	     called <literal>colors</literal>. This palette is allocated dynamically and may be NULL if no <literal>index_data</literal> block
+	     is present.
+	   </para>
+	   <para>
+	     Also, a tuple (<literal>xoffset</literal>, <literal>yoffset</literal>) describes the pixmap's 'hot spot'. This is a relative offset
+	     into the unscaled data; it is used to describe the point which drawing operations will refer to. This means that pixmap
+	     draw operations on this pixmap will cause it to be drawn <literal>xoffset</literal> pixels (unscaled) to the left of the coordinate
+	     specified.
+	   </para>
+	   <para>
+	     Next comes the unscaled pixmap data, called <literal>index_data</literal>, which occupies a size of <literal>index_xl</literal> *
+	   <literal>index_yl</literal> bytes. Each byte is either a reference into the palette, or <literal>GFX_COLOR_INDEX_TRANSPARENT</literal> (0xff),
+	     which means that it describes a transparent pixel, unless 256 colors are indeed present in the palette<footnote>
+	     <para>This may cause a problem for SCI1 support, which explicitly allows for 256 separate colors to be used alongside with transparency.
+	       Possible solutions include a separate transparency bitmap or increasing the number of bits per <literal>index_data</literal>
+	       entry to 16bpp.</para></footnote>
+	     </para>
+	     <para>
+	       The pointer <literal>data</literal>, unless NULL, points to a block of data allocated to contain the translated graphical data
+	       in the graphics driver's native format. The number of bytes per pixel equals the <literal>bytespp</literal> property of the
+	       <type>gfx_mode_t</type> structure it was allocated for, whereas its horizontal and vertical extensions are stored in the
+	       <literal>xl</literal> and <literal>yl</literal> properties. Unless the graphics mode indicated that it supports an alpha
+	       channel itself, a separate <literal>alpha_map</literal> is also provided, at 8bpp.
+	     </para>
+	     <para>
+	       Each pixmap also comes with a <literal>pixmap_internal</literal> block, which may be used by graphics drivers to store
+	       internal information (like pixmap repository handles).
+	     </para>
+	     <para>
+	       Finally, each pixmap comes with a set of <literal>flags</literal> with the following meanings:
+	       <itemizedlist>
+		 <listitem><para><literal>GFX_PIXMAP_FLAG_SCALED_INDEX</literal>: The pixmaps index data is already scaled; any algorithm for calculating
+		   <literal>data</literal> (and, possibly, <literal>alpha_map</literal>) therefore must not scale it again.</para></listitem>
+		 <listitem><para><literal>GFX_PIXMAP_FLAG_EXTERNAL_PALETTE</literal>: The palette supplied with the pixmap is stored externally, meaning
+		   that it must not be freed when the pixmap itself is freed</para></listitem>
+	         <listitem><para><literal>GFX_PIXMAP_FLAG_INSTALLED</literal>: The pixmap has been installed in the pixmap repository (used by the
+		   operational layer, although graphics drivers may choose to verify this if they don't trust that layer</para></listitem>
+		 <listitem><para><literal>GFX_PIXMAP_FLAG_PALETTE_ALLOCATED</literal>: (only relevant for color index mode) The pixmap's palette colors
+		   have been allocated in the internal palette listing and have been set appropriately in the palette</para></listitem>
+		 <listitem><para><literal>GFX_PIXMAP_FLAG_PALETTE_SET</literal>: (only relevant in color index mode) The pixmap's palette colors have been
+		   propagated to the graphics driver</para></listitem>
+	         <listitem><para><literal>GFX_PIXMAP_FLAG_DONT_UNALLOCATE_PALETTE</literal>: (only relevant in color index mode) Instructs the pixmap
+		   freeing operations not to free the palette colors allocated by the pixmap. This is used in cases where the palette is stored
+		   externally.</para></listitem>
+	       </itemizedlist>
+	     </para>
+	     <para>
+	   <filename>src/include/gfx_tools.h</filename> defines many functions for creating pixmaps, allocating index data blocks, copying pixmap
+	     regions etc.
+	 </para>
+       <sect3><title>gfx_bitmap_font_t</title>
+         <para>
+	   These structures provide a bitmap lookup table intended for up to 256 entries. In practice, they are used to store
+	   font data. There is little surprising about this structure, with the possible exception of the difference between the
+	   <literal>height</literal> and <literal>line_height</literal> variables: <literal>height</literal> describes the actual
+	     character size, whereas <literal>line_height</literal> only describes how many pixels the text rendering functions
+	     should leave in between text lines.
+	 </para>
+       </sect2>
+       <sect2><title>Graphics drivers</title>
+       <para>
+	 Every FreeSCI graphics driver provides an individual implementation for one specific target platform,
+	 such as the X Window System. In order to work correctly, it needs to implement the interface outlined
+	 in <filename>src/include/gfx_driver.h</filename> and list itself in <filename>src/include/gfx_drivers.h</filename>.
+	 Drivers have some freedom in determining which features they want to provide and which they want to have
+	 emulated. These features are determined by flags contained in its variable <literal>capabilities</literal>.
+       </para>
+       <para>
+	 Graphics drivers must provide at least five buffers: Both priority buffers, and the three visual buffers.
+	 They are grouped in three sets labelled the Front Buffer (only one visual buffer), the Back Buffer,
+	 and the Static Buffer (both containing both a priority and a visual buffer). Most graphical operations
+	 operate on the back buffer, with their results being propagated to the front buffer by means of explicit
+	 buffer operations<footnote><para>These operations operate on partial buffer contents and expect the back buffer's
+	 contents to be unmodified after the transfer. This is unlike the OpenGL back buffer concept.</para></footnote>.
+       </para>
+       <para>
+	 Driver implementations with limited or no hardware accelleration support, such as those operating on
+	 plain frame buffers, may use some shared functionality exported for their benefit. Those functions are listed
+	 in the appropriate function definitions below.
+       </para>
+       <para>
+	 Unless specified differently, each function must return <literal>GFX_OK</literal> on success, <literal>GFX_ERROR</literal>
+	 on failure, and <literal>GFX_FATAL</literal>
+	 if and only if a fatal and unrecoverable error occured, such as the target display being closed by external means. 
+       </para>
+       <para>
+	 Functions that receive color parameters must respect those parameters' mask values for <literal>GFX_MAP_MASK</literal>.
+       </para>
+       <sect3>
+	 <title>I/O and debug functionality</title>
+	 <para>
+	   For basic input and output, the <function>GFXDEBUG()</function>, <function>GFXWARN()</function> and <function>GFXERROR()</function> macros defined in
+	   <filename>src/include/gfx_system.h</filename> can be used. Also, there is another variable, <literal>debug_flags</literal>
+	   defined for drivers; while it cannot be changed during runtime (yet), it may be used in combination with the
+	   various GFX_DEBUG_ constants to selectively enable and disable debugging for certain parts of the driver
+	   during development.
+	 </para>
+	 <para>
+	   For further debugging, the FreeSCI functions <function>sciprintf()</function> (a printf clone), <function>MEMTEST()</function>
+	   (tries to detect heap corruption), and <function>BREAKPOINT()</function> (Sets a debugger breakpoint on Alpha, ia32 and SPARC) may be used.
+	 </para>
+       <sect3>
+	<title>Initialization and shutdown functionality</title>
+	 <para>
+	   None of the functions defined in here are optional. They are called during startup or shutdown and need
+	   not be considered performance critical.
+	 </para>
+	 <sect4><title>set_parameter(attribute, value)</title>
+	   <para>
+	     This function is completely driver specific. Drivers may use it to allow external configuration of
+	     options not covered by the standard FreeSCI set of configuration options. It must be implemented
+	     to operate correctly both if <function>init()</function> has already been called and if it hasn't, although it may choose
+	     to ignore any options set afterwards.
+	   </para>
+	   <para>Documentation of this function's options is up to the graphics driver's maintainer.</para>
+	 <sect4><title>init_specific(xscale, yscale, bytespp)</title>
+	   <para>
+	     Initializes a graphics driver to a pre-determined mode, where <literal>xscale</literal> and <literal>yscale</literal>
+	     are the requested horizontal and vertical scaling factors (integers > 0), and <literal>bytespp</literal> is the number of bytes per
+	     pixel on the target display.
+	   </para>
+	   <para>
+	     The function may set a higher resolution, provided that no matching resolution is available. The <literal>mode</literal> structure
+	     (stored locally to the driver structure) must be set by this function if it succeeds; for this, the function
+	     <function>gfx_new_mode()</function>, defined in <filename>src/include/gfx_tools.h</filename>, may be used.
+	   </para>
+	   <para>
+	     <literal>GFX_OK</literal> must be returned iff the initialization succeeded; otherwise, <literal>GFX_ERROR</literal>
+	     must be reported, unless the graphics
+	     target is not (or no longer) able to provide any of the supported modes (e.g. if a required external module was not found,
+	     or if the driver detected during run-time that the target does not support any appropriate graphics mode).
+	   </para>
+	 <sect4 id="gfx-driver-init-specific"><title>init()</title>
+	   <para>
+	     This operation initializes the driver's default graphics mode. Determining this mode is up to the graphics
+	     driver; if its target platform has no means for determining an appropriate mode, it may choose to invoke
+	     init_specific() repeatedly with educated guesses. It must return one of <literal>GFX_OK</literal> or <literal>GFX_FATAL</literal>.
+	   </para>
+	   <para>See <xref linkend="gfx-driver-init-specific" /> for details.</para>
+	  <sect4><title>exit()</title>
+	    <para>
+	      Deinitializes the graphics driver, frees all resources allocated by it and just generally performs clean-up. This function
+	      must succeed (so it does not have a return value). It may use <function>gfx_free_mode()</function> (from <filename>src/include/gfx_tools.h</filename>)
+	      to free the data allocated in the <type>gfx_mode_t</type> structure.
+	    </para>
+	  </sect4>
+       </sect3>
+       <sect3>
+	<title>Primitive drawing operations</title>
+	 <para>
+	   "Primitive drawing operations" here are operations that draw primitives. FreeSCI uses only two graphics
+	   primitives: Lines and solid boxes, both of which are commonly provided by graphics libraries. 
+	   Both operations draw to the back buffer; they also must respect the priority aspect of the primary color used on them.
+	 </para>
+	 <sect4><title>draw_line(line, color, line_mode, line_style)</title>
+	   <para>
+	     Draws a single line. The <literal>line</literal> parameter describes the starting point and a relative coordinates
+	     of the line to draw in the specified <literal>color</literal>, whereas <literal>line_mode</literal> specifies the
+	     line mode to use. This value may be <literal>GFX_LINE_MODE_FAST</literal>, which means that the line's thickness
+	     is roughly about the average of the horizontal and vertical scaling factors. The other two values need not be
+	     supported (they should fall back to <literal>GFX_LINE_MODE_FAST</literal> if they're used'):
+	     <simplelist>
+	       <member><literal>GFX_LINE_MODE_FAST</literal>: Line thickness is averate of x and y scale factors</member>
+	       <member><literal>GFX_LINE_MODE_CORRECT</literal>: Lines are scaled separately for x and y and have correct widths there</member>
+	       <member><literal>GFX_LINE_MODE_THIN</literal>: Line has a width of 1</member>
+	     </simplelist>
+	   </para>
+	   <para>
+	     The other parameter, <literal>line_style</literal>, may be either of <literal>GFX_LINE_STYLE_NORMAL</literal> or
+	     <literal>GFX_LINE_STYLE_STIPPLED</literal>, although the latter is used iff the capability flag <literal>GFX_CAPABILITY_STIPPLED_LINES</literal>
+	     is set.
+	   </para>
+	   <para>
+	     This function must return GFX_OK or GFX_FATAL.
+	   </para>
+	 <sect4><title>draw_filled_rect(rect, color1, color2, shade_mode)</title>
+	   <para>
+	   </para>
+	 </sect4>
+       </sect3>
+       <sect3>
+	<title>Pixmap operations</title>
+	 <para>
+	 </para>
+       </sect3>
+       <sect3>
+	<title>Buffer operations</title>
+	 <para>
+	 </para>
+       </sect3>
+       <sect3>
+	<title>The mouse pointer</title>
+	 <para>
+	 </para>
+       </sect3>
+       <sect3>
+	<title>Palette</title>
+	 <para>
+	 </para>
+       </sect3>
+       <sect3>
+	<title>Event management</title>
+	 <para>
+	 </para>
+       </sect3>
+       <sect3>
+	<title>Capability flag summary</title>
+	 <para>
+	 </para>
+       </sect3>
+       <sect2><title>The graphical resource manager (GRM)</title>
+       <para>
+       </para>
+       <sect2 id="fsci-gfx-op"><title>The operational layer</title>
+       <para>
+       </para>
+       <sect2 id="fsci-gfx-widgets"><title>FreeSCI graphical widgets</title>
+       <para>
+       </para>
+       <sect3 id="fsci-gfx-widgets-string"><title>Printing widgets</title>
+       <para>
+	 By means of each widget's <function>print</function> method, its state can be written to
+	 the FreeSCI output stream. Output of the <emphasis>STATE</emphasis> is as follows:
+<blockquote><para>
+  <emphasis>STATE</emphasis> ::= <emphasis>VALIDITY</emphasis> "S"<emphasis>SERIAL</emphasis> <emphasis>ID</emphasis> [<emphasis>BOUNDS</emphasis>] <emphasis>FLAGS</emphasis> <emphasis>WIDGET-INFO</emphasis>
+
+  <emphasis>VALIDITY</emphasis> ::= "v" /* widget is valid */
+               | "NoVis" /* Valid, but does not have a visual- internal error, unless it's a visual itself */
+               | "INVALID" /* Widget was invalidated */
+               |  /* empty: Should never happen */
+
+  <emphasis>SERIAL</emphasis> ::=  <function>HEXNUMBER</function> /* The widget's unique serial number */
+
+  <emphasis>ID</emphasis> ::=  /* No ID */
+               | "#"<emphasis>HEXNUMBER</emphasis> /* ID assigned to the widget- typically an SCI heap address */
+
+  <emphasis>BOUNDS</emphasis> ::= (<emphasis>X-COORDINATE</emphasis>,<emphasis>Y-COORDINATE</emphasis>)(<emphasis>WIDTH</emphasis>,<emphasis>HEIGHT</emphasis>) /* Full extension of the graphics described by the widget */
+
+</para></blockquote>
+
+       The <emphasis>FLAGS</emphasis> are described by a sequence of characters;
+       their meanings are listed below:
+       <simplelist>
+	 <member>V: Widget is visible</member>
+	 <member>O: Widget is completely opaque, i.e. fully covers all area in its bounds</member>
+	 <member>C: Widget is a container</member>
+	 <member>D: Widget is "dirty", i.e. will be redrawn at the next update</member>
+	 <member>T: Widget has been tagged for clean-up</member>
+	 <member>M: The widget's ID is not considered to be unique</member>
+	 <member>I: Widget will not be freed if a snapshot is resored</member>
+       </simplelist>
+       The widget's ID will generally be considered to be unique within the container
+       it is appended to, unless the Multi-ID flag ('M') is set. Functionally, this
+       means that a widget <literal>w</literal> is appended to a list containing one
+       or more widgets with an ID identical to its own, it overwrites the first
+       widget with a matching ID, unless <literal>w</literal> itself has the
+       <emphasis>M</emphasis> flag set.
+       </para>
+       <para>
+	 The <emphasis>WIDGET-DESCRIPTION</emphasis> part of a widget starts
+	 with a string describing the widget's type; this is followed by widget-
+	 specific information.
+       </para>
+       </sect3>
+       <sect2><title>Interpreter interaction</title>
+       <para>
+       </para>
+     </sect1>
+
+     <sect1>
+        <title/Kernel hacking/
+        <para>
+           Kernel functions are the bridge between the abstract virtual machine, and the world of
+           real programs. The VM may be able to solve RPN equations in the blink of an eye, but
+           what good is this if it can't read input or produce output?<footnote><para/It could be used
+           to produce benchmarks./</footnote>
+        </para><para>
+           All of the kernel functions are stored in src/core/kernel.c. Since kernel function mapping
+           is done during runtime by string comparison, each kernel function and its name have to be
+           registered in the array kfunct_mappers[]. Note that each version of the SCI interpreter
+           (at least each pre-1.000.000 version) comes with one unidentified kernel function, which
+           is handled by <function/k_Unknown/.
+        </para>
+        <sect2>
+           <Title/Kernel basics/
+           <para>
+              Each kernel function is declared like this:
+              <programlisting>
+              void
+              kFooBar(state_t *s, int funct_nr, int argc, heap_ptr argp);
+              </programlisting>
+              So this is how you should start. The four parameters (think of them as the
+              Four Accessories of a kernel function) mean the following:
+              <simplelist>
+                <member/state_t *s: A pointer to the state you are operating on./
+                <member/int funct_nr: The number of this function. Mostly irrelevant./
+                <member/int argc: The number of arguments./
+                <member/heap_ptr argp: Heap pointer to the first argument./
+              </simplelist>
+              "s" contains a lot of important and interesting data. Have a look at src/include/engine.h
+              for a complete description. What you will probably need mostly will be the heap,
+              (s->heap), a unsigned char pointer, and the accumulator (s->acc), a word (guint16),
+              which is used to return values to the SCI program.
+           </para><para>
+              Some kernel functions don't even need to refer to the heap. However, most of them are
+              passed at least one, if not more parameters. This may sound shocking to you, but there
+              is an easy way to work around the neccessity of peeling them off the heap manually:
+              Use the PARAM macros. They are used as follows:
+              <simplelist>
+                <member/PARAM(x): Returns the value of the parameter x. Does not check for validity./
+                <member/UPARAM(x): Same as PARAM(x), but casts the parameter to be unsigned./
+                <member/PARAM_OR_ALT(x, y): Checks if PARAM(x) is valid and returns it, or returns
+                        y if PARAM(x) is invalid./
+                <member/UPARAM_OR_ALT(x, y): PARAM_OR_ALT(x, y) unsigned./ 
+              </simplelist>
+              Several kernel functions assume default values if a specific parameter is not present.
+              Use the U?PARAM_OR_ALT(x, y) macros to detect this case, and you'll rarely have to care
+              about using argc directly.
+           </para>
+        </sect2>
+        <sect2>
+           <Title/Hunk and heap/
+           <para>
+              Accessing the heap for both reading and writing is surprisingly important for the kernel,
+              especially when it has to deal with functions that would usually belong into user space,
+              like handling of doubly-linked lists. To ease this, three macros are available:
+              <simplelist>
+                 <member/GET_HEAP(x) - reads a signed SCI word (gint16) from heap address x/
+                 <member/UGET_HEAP(x) - reads an unsigned SCI word (guint16)/
+                 <member/PUT_HEAP(x, foo) - writes the value foo to the specified heap address/
+              </simplelist>
+           </para><para>
+              Some kernel functions, especially graphical kernel functions, additionally require
+              the usage of what Sierra referred to as "hunk space". This is dynamically allocated
+              memory; it can even be allocated and unallocated manually from SCI scripts by using
+              the Load() and UnLoad() system calls (this is the sci_memory resource). To allow usage
+              of this kind of memory, three functions have been provided:
+              <simplelist>
+                 <member/int kalloc(state_t *, space) - allocate space bytes and return a handle/
+                 <member/byte *kmem(state_t *, handle) - resolve a handle and return the memory
+                         address it points to/
+                 <member/int kfree(state_t *, handle) - unallocate memory associated with a handle.
+                         Returns 0 on success, 1 otherwise/
+              </simplelist>
+           </para>
+        </sect2>
+        <sect2>
+           <Title/Error handling and debugging/
+           <para>
+              Error handling and debugging probably are the most important aspects of program
+              writing. FreeSCI provides three macros for printing debug output:
+              <simplelist>
+                  <member/SCIkwarn(text, ...) - Print a warning message/
+                  <member/SCIkdebug(text, ...) - Print a debug message/
+                  <member/CHECK_THIS_KERNEL_FUNCTION - print the function name and parameters/
+              </simplelist>
+              The difference between SCIkwarn and SCIkdebug is that the latter can be easily
+              removed (by commenting out the #define SCI_KERNEL_DEBUG on or about line 39). In
+              practice this means that SCIkwarn should be used for warning or error messages in cases
+              where it is likely that the vm or the kernel function are doing something wrong;
+              e.g. if the program refers to a non-existant resource file, if a node list command
+              does not come with a pointer to a node list, or if the number of parameters is
+              insufficient. These messages are important and may point to misperceptions of details
+              of the SCI engine. SCIkdebug, on the other hand, is your every-day "flood me with
+              information until I'm blind" debug macro.
+           </para><para>
+              Sometimes it may happen that something goes wrong inside the kernel; e.g. a kernel
+              function runs out of memory handles, or an internal variable somehow was set to an
+              invalid value. In this case, <function/kernel_oops(state_t *, char *)/ should be used.
+              It prints an error message and halts the VM, which none of the macros does.
+           </para>
+        </sect2>
+        <sect2>
+           <Title/Selectors/
+           <para>
+              Selectors are very important for some of the kernel functions. BaseSetter(), Animate(),
+              Display(), GetEvent() and others take data from or write directly to selectors of
+              a specified object (passed as a parameter or retreived from a node list), or even
+              call object methods from kernel space<footnote><para/Yes, this is evil. Don't do this
+              at home, kids!/</footnote>
+              To prepare the usage of
+              selectors, a variable has do be declared (in src/include/vm.h, selector_map_t). This
+              variable will carry the numeric selector ID during run time. Now, the selector has to
+              be mapped- this is happens once during initialization, to save time. It is performed
+              by script_map_selectors(), which is located at the end of src/core/script.c (just use
+              the "FIND_SELECTOR" macro).
+           </para><para>
+              If everything went right, accessing selectors should be really easy now. Just use the
+              GET_SELECTOR(obj, selector) and PUT_SELECTOR(obj, selector, value) macros, where obj
+              is a heap_ptr pointing to the object you want to read from or write to, and selector
+              is the name of the selector to use.
+              <example><title/An example for PUT_SELECTOR and GET_SELECTOR/<programlisting>
+              void
+              kSwapXY(state_t *s, int funct_nr, int argc, heap_ptr argp)
+              {
+                int posx, posy;
+                heap_ptr obj = PARAM(0);
+
+                posx = GET_SELECTOR(obj, x);
+                posy = GET_SELECTOR(obj, y); /* x and y are defined in selector_map_t */
+
+                PUT_SELECTOR(obj, y, posx);
+                PUT_SELECTOR(obj, x, posy);
+              }
+              </programlisting></example>
+           </para><para>
+              Also, it may be neccessary to invoke an actual method. To do this, a varargs macro
+              has been provided: INVOKE_SELECTOR(obj, selector, argc...). In theory, this macro
+              can be used to set and read selectors as well (it would even handle multiple sends
+              correctly), but this is discouraged for the sake of clarity.
+           </para><para>
+              INVOKE_SELECTOR works very much like the other macros; it must be called directly
+              from a kernel function (or from any function supplying valid argc, argp and s).
+              <example><Title/An example for INVOKE_SELECTOR/<programlisting>
+                INVOKE_SELECTOR(obj, doit, 0); /* Call doit() without any parameters */
+                INVOKE_SELECTOR(s->game_obj, setCursor, 2, 999, 1);
+                                /* Call game_obj::setCursor(999, 1) */
+              </programlisting></example>
+           </para>
+        </sect2>
+     </Sect1>
+</Chapter>
+

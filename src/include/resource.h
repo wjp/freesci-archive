@@ -359,6 +359,13 @@ sci_mkpath(char *path);
 ** This function will create any directories that couldn't be found
 */
 
+#ifndef HAVE_FFS
+int sci_ffs(int _mask);
+#else
+#define sci_ffs ffs
+#endif
+
+
 void
 sci_sched_yield();
 /* Yields the running process/thread to the scheduler

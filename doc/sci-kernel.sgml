@@ -1,0 +1,2694 @@
+<!-- (set 'font-lock-maximum-size 1024000) C-x e this in EMACS to make it possible to fontify this buffer -->
+
+<sect2><Title/SCI0 Kernel functions/
+
+  <sect3>
+<Title/Kernel function 0x00: Load(word, word)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x00: Load
+    </funcdef><paramdef>
+word ResType, word ResNr</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(word)
+    </type>
+<parameter/ResType/: The resource type number | 0x80 (as in the patch files)
+    </member><member><type>
+(word)
+    </type>
+<parameter/ResNr/: The resource number
+    </member></simplelist></para><para>
+    Returns: <type>
+(&amp;FarPtr)
+    </type>:
+A <Type/HeapPtr/ pointing to an actual pointer on the heap.
+    </para><para>
+Loads a resource. The returned HeapPtr points to a special point on the heap
+where a pointer (32 bits) to the memory location of the specified resource
+is located. If the resource type equals sci_memory, the resource number is
+interpreted as a memory size instead; the specified number of bytes is allocated
+dynamically, and a handle returned.
+    </para>
+  </sect3>
+
+
+
+  <sect3>
+<Title/Kernel function 0x01: UnLoad(word, word)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x01: UnLoad
+    </funcdef><paramdef>
+word ResType, word ResNr</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(word)
+    </type>
+<parameter/ResType/: The resource type number | 0x80
+    </member><member><type>
+(word)
+    </type>
+<parameter/ResNr/: The resource number
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function unloads a resource identified by its ResType and ResNr, NOT by the HeapPtr
+it has been loaded to, except for sci_memory resources, where the parameters are the
+memory resource type and the handle.
+    </para>
+  </sect3>
+
+
+
+
+  <sect3>
+<Title/Kernel function 0x02:ScriptID(word, word)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x02: ScriptID
+    </funcdef><paramdef>
+word ScriptNr, word DispatchNr</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(word)
+    </type>
+<parameter/ScriptNr/: Number of the script to reference
+    </member><member><type>
+(word)
+    </type>
+<parameter/DispatchNr/: Number of the Dispatch entry inside the script to reference
+    </member></simplelist></para><para>
+    Returns: <type>
+(HeapPtr)
+    </type>:
+The address pointed to by the specified element of the dispatch/exports table (script block
+type #7)
+    </para><para>
+This function returns the address pointed to by an element of a script's dispatch table.
+    </para>
+  </sect3>
+
+
+
+
+  <sect3>
+<Title/Kernel function 0x03: DisposeScript(word ScriptNumber)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x03: DisposeScript
+    </funcdef><paramdef>
+word ScriptNumber</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(word)
+    </type>
+<parameter/ScriptNumber/
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+Disposes a script. Unloads it, removes its entries from the class table, and frees the
+associated heap memory.
+    </para>
+  </sect3>
+
+
+<sect3><Title/Kernel function 0x04: Clone(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x04:Clone
+    </funcdef><paramdef>
+HeapPtr object</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/object/: The object to clone
+    </member></simplelist></para><para>
+    Returns: <type>
+(HeapPtr)
+    </type>
+The address of the clone
+    </para><para>
+This function clones a Class or Object by copying it as a whole and mofifying the -info-
+selector so that it contains 1. Objects with -info- set to 0x8000 (Classes) are stripped of
+their selector name area, and both Objects and Classes are stripped of the function selector
+area.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x05: DisposeClone(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x05: DisposeClone
+    </funcdef><paramdef>
+HeapPtr clone</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/clone/: The clone to dispose
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+Frees all memory associated with a cloned object (as produced by Clone()).
+    </para>
+</sect3>
+
+
+<sect3><Title/Kernel function 0x06: IsObject(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x06: IsObject
+    </funcdef><paramdef>
+HeapPtr suspected_object</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/suspected_object/: The address of something that is suspected to be an object.
+    </member></simplelist></para><para>
+    Returns: <type>
+(int)
+    </type>
+1 if there is an object at the specified address, 0 if not.
+    </para><para>
+This function checks whether the supplied heap pointer is valid and returns 0 if not, then
+proceeds to testing whether an object is at the indexed heap position. If it is, 1 is returned,
+0 otherwise.
+    </para>
+</sect3>
+
+
+<sect3><Title/Kernel function 0x07: RespondsTo(?)/<para></para>
+</sect3>
+
+  <sect3 ID="KDrawPic">
+<Title/Kernel function 0x08: DrawPic(word[, word, word, word])/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x08: DrawPic
+    </funcdef><paramdef>
+word PicNr[, word Animation, word Flags, word DefaultPalette]</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(word)
+    </type>
+<parameter/PicNr/: The resource number of the picture to draw
+    </member><member><type>
+(word)
+    </type>
+<parameter/Animation/: One of the following animation modes:<msgtext>
+   <simplelist>
+<member/ -1: Display instantly/
+<member/  0: horizontally open from center/
+<member/  1: vertically open from center/
+<member/  2: open from right/
+<member/  3: open from left/
+<member/  4: open from bottom/
+<member/  5: open from top/
+<member/  6: open from edges to center/
+<member/  7: open from center to edges/
+<member/  8: open random checkboard/
+<member/  9: horizontally close to center, reopen from center/
+<member/ 10: vertically close to center, reopen from center/
+<member/ 11: close to right, reopen from right/
+<member/ 12: close to left,  reopen from left/
+<member/ 13: close to bottom, reopen from bottom/
+<member/ 14: close to top, reopen from top/
+<member/ 15: close from center to edges, reopen from edges to center/
+<member/ 16: close from edges to center, reopen from center to edges/
+<member/ 17: close random checkboard, reopen/
+   </simplelist></msgtext>
+  The animation is executed when kAnimate() (see <XREF LINKEND="KAnimate">) is invoked.
+  If not specified, it is assumed to be the same animation as last time.
+
+    </member><member><type>
+(word)
+    </type>
+<parameter/Flags/:<msgtext>
+     <simplelist>
+        <member><type/Bit 0/: Clear screen before drawing</member>
+        <member><type/Bit 1-f/: unknown, probably unused</member>
+     </simplelist></msgtext>If not specified, it defaults to 1.<msgtext>
+<note><para/Some interpreter versions older than 0.000.502 interpret this
+parameter inversely, and have 0 as a default./
+</note></msgtext>
+    </member><member><type>
+(word)
+    </type>
+<parameter/DefaultPalette/: The default palette number to use for drawing
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+The second parameter does not appear to affect anything. In QfG1, it appears
+to be set to 0x64 constantly.
+DefaultPalette is used to differentiate between day and night in QfG1. Palette
+1 is used for "night" pictures, Palette 0 for "day" pictures there.
+The picture is drawn to the background image (which is used for restauration of
+everything with the exception of the mouse pointer). To bring it to the
+foreground, Animate() must be used.
+    </para>
+  </sect3>
+
+  <sect3>
+<Title/Kernel function 0x09: Show()/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x09: Show
+    </funcdef><paramdef></paramdef></funcprototype></funcsynopsis><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+Sets the PicNotValid flag to 2.
+    </para>
+  </sect3>
+
+
+  <sect3>
+<Title/Kernel function 0x0a: PicNotValid([word])/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x0a: PicNotValid
+    </funcdef><paramdef>
+[(word) NewPicNotValid]</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member>[<type>
+(word)
+    </type>
+<parameter/NewPicNotValid/]: The new value of the "PicNotValid" flag.
+    </member></simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>:
+The previous value of the "PicNotValid" flag
+    </para><para>
+This sets the PicNotValid flag that determines whether or not the current
+background picture should be considered "valid" by the other kernel functions.
+    </para>
+  </sect3>
+
+
+  <sect3 ID="KAnimate">
+<Title/Kernel function 0x0b: Animate([DblList], [word])/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x0b: Animate
+    </funcdef><paramdef>
+[DblList ViewList], [word cycle]</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member>[<type>
+(DblList)
+    </type>
+<parameter/ViewList/]: List of views that are to be drawn on top of the background picture
+    </member><member><type>
+(word)
+    </type>
+&lt;unknown&gt;
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function draws a background picture plus some views to the foreground.
+If the background picture had not been drawn previously, it is animated with
+the animation style set during kDrawPic (see <XREF LINKEND="KDrawPic">).
+Drawing the views is a rather complex issue. Refer to <XREF LINKEND="LarsAnim">
+for its description.
+    </para>
+  </sect3>
+
+
+
+
+  <sect3>
+<Title/Kernel function 0x0c: SetNowSeen(DblList)/
+    <funcsynopsis><funcprototype><funcdef>
+?? kfunct 0x0c: SetNowSeen
+    </funcdef><paramdef>
+DblList ViewList</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(DblList)
+    </type>
+<parameter/ViewList/: List of affected views
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+    </para>
+  </sect3>
+
+<sect3><Title/Kernel function 0x0d: NumLoops(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x0d: NumLoops
+    </funcdef><paramdef>
+HeapPtr object</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/object/: The object which the view selector should be taken from
+    </member></simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The number of loops in the view
+    </para><para>
+This function looks up the view selector in the specified object, loads the
+view resource associated with it, and checks for the number of animation loops
+in the view.
+    </para>
+</sect3>
+
+<sect3><Title/Kernel function 0x0e: NumCels(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x0e: NumCels
+    </funcdef><paramdef>
+HeapPtr object</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+HeapPtr
+    </type>
+<parameter/object/: The object which the selectors should be taken from
+    </member></simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The number of cels in the loop
+    </para><para>
+This function looks up one specific loop in a specific view (both are taken
+from selectors with the same name from the object pointed to by the parameter)
+and returns the number of cels (animation frames) in it.
+    </para>
+</sect3>
+
+<sect3><Title/Kernel function 0x0f: CelWide(word view, word loop, word cel)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x0f: CelWide
+    </funcdef><paramdef>
+word view, word loop, word cel</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/view/: The view we're searching in
+<parameter/loop/: The loop the cel is contained in
+<parameter/cel/: The cel we're interested in
+    </member></simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The width of the cel identified by the tuple (view, loop, cel).
+    </para><para>
+    </para>
+</sect3>
+
+<sect3><Title/Kernel function 0x0f: CelWide(word view, word loop, word cel)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x10: CelHigh
+    </funcdef><paramdef>
+word view, word loop, word cel</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/view/: The view we're searching in
+<parameter/loop/: The loop the cel is contained in
+<parameter/cel/: The cel we're interested in
+    </member></simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The height of the cel identified by the tuple (view, loop, cel).
+    </para><para>
+    </para>
+</sect3>
+
+<sect3><Title/Kernel function 0x11: DrawCel(word, word, word, Point, word)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x11: DrawCel
+		</funcdef><paramdef>word view, word loop, word cel, Point pos, word priority</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ view: Number of the view resource to display</member>
+                       <member><type/(word)/ loop: Number of the loop in the view resource to display</member>
+                       <member><type/(word)/ cel: Number of the cel inside the loop to display</member>
+                       <member><type/(Point)/ pos: Position the cel should be drawn to</member>
+                       <member><type/(word)/ priority: Priority to draw the cel with</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Explicitly draws a cel, specified by the complete tuple (view, loop, cel), to
+			a specified position.
+			Invalid loop/cel values are assumed to be 0.
+		</para>
+	</sect3>
+
+<sect3><Title/Kernel function 0x12: AddToPic(DblList)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x12: AddToPic
+    </funcdef><paramdef>
+DblList picviews</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(DblList)
+    </type>
+<parameter/picviews/: A doubly linked list of PicViews, i.e. objects that are drawn statically onto
+the background picture
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function stores the list of PicViews for later use by the Animate() syscall.
+See <XREF LINKEND="KAnimate"> for more details.
+    </para>
+</sect3>
+
+<sect3 ID="KNewWindow"><Title/Kernel function 0x13: NewWindow(Rect, HeapPtr, word, word, word, word)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct NewWindow
+    </funcdef><paramdef>
+Rect Boundaries, HeapPtr Title, word Flags, word Priority, word FGColor, word BGColor</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(Rect)
+    </type>
+<parameter/Boundaries/: The bounding rectangle of the window
+    </member><member><type>
+(HeapPtr)
+    </type>
+<parameter/Title/: A pointer to the window title
+    </member><member><type>
+(word)
+    </type>
+<parameter/Flags/:<msgtext><simplelist>
+<member/bit 0 - transparency/
+<member/bit 1 - window does not have a frame/
+<member/bit 2 - the window has a title (starting 10 pixels above the minimum y position specified as the first element of <parameter/Boundaries/)/
+<member/bit 3-6 - unused/
+<member/bit 7 - don't draw anything/
+</simplelist>
+</msgtext>
+    </member><member><type>
+(word)
+    </type>
+<parameter/Priority/: The priority at which the window should be drawn, or -1 to force on-top drawing
+    </member><member><type>
+(word)
+    </type>
+<parameter/FGColor/: The foreground color for the window
+    </member><member><type>
+(word)
+    </type>
+<parameter/BGColor/: The background color
+    </member></simplelist></para><para>
+    Returns: <type>
+(HeapPtr)
+    </type>:
+The position of the window structure on the heap
+    </para><para>
+This function creates a window (see also <XREF LINKEND="LarsWindows">), sets
+this window as the active port, draws the window (if neccessary), and returns
+with the window's heap address.
+    </para>
+  </sect3>
+
+
+
+  <sect3 ID="KGetPort">
+<Title/Kernel function 0x14: GetPort()/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x14: GetPort
+    </funcdef><paramdef></paramdef></funcprototype></funcsynopsis><para>
+    Returns: <type>
+(HeapPtr)
+    </type>:
+A pointer to a record with the internal representation of the currently active port.
+    </para><para>
+Returns a heap pointer to a port structure.
+    </para>
+  </sect3>
+
+
+
+  <sect3 ID="KSetPort">
+<Title/Kernel function 0x15: SetPort()/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x15: SetPort
+    </funcdef><paramdef>
+HeapPtr NewPort</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/NewPort/: The new port to set
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This selects the new port which many kernel functions will draw to.
+</para><para>
+If 0 is passed, the window manager port is selected.
+The picture window is not accessible using this call. Only other kernel
+calls like KDrawPic may activate the picture window - and they always
+save the old port and restore it before they return.
+    </para>
+  </sect3>
+
+
+
+<sect3 ID="KDisposeWindow">
+<Title/Kernel function 0x16: DisposeWindow(HeapPtr Window)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x16: DisposeWindow
+    </funcdef><paramdef>
+HeapPtr Window</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/Window/: The heap address of the window to destroy
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+Destroys a window and frees the associated heap structure.
+    </para>
+  </sect3>
+
+
+
+<sect3 ID="KDrawControl"><Title/Kernel function 0x17: DrawControl(HeapPtr)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x17: DrawControl
+    </funcdef><paramdef>
+HeapPtr Control</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/Control/: The heap address of the Control to draw
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function draws a Control (see <XREF LINKEND="LarsWindows"> for details).
+Please note that the correct port must be selected beforehand.
+    </para>
+  </sect3>
+
+
+
+<sect3 ID="KHiliteControl"><Title/Kernel function 0x18: HiliteControl(HeapPtr)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x18: HiliteControl
+    </funcdef><paramdef>
+HeapPtr Control</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/Control/: The control to highlight
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function is used to highlight a control by drawing it with an inverted color
+scheme. It requires the correct port to be set beforehand.
+See <XREF LINKEND="LarsWindows"> for details on the windowing/Control system.
+    </para>
+  </sect3>
+
+
+
+<sect3 ID="KEditControl"><Title/Kernel function 0x19: EditControl(HeapPtr)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x19: EditControl
+    </funcdef><paramdef>
+HeapPtr Control, HeapPtr Event</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+<member><type>
+(HeapPtr)
+    </type>
+<parameter/Control/: A heap pointer to the Control to edit
+    </member>
+<member><type>
+(HeapPtr)
+    </type>
+<parameter/Event/: The event to interpret
+    </member>
+</simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function will apply the event provided to edit a type
+3 (Edit window) Control (see <XREF LINKEND="LarsWindows"> for a description
+of the control system). Normal keypresses are added to the area pointed to by
+Control::text, unless the total string length would be greater than
+Control::max. Cursor keys, backspace and a few other keys may be used to
+manipulate the control. In FreeSCI, some of the libreadline control keys can
+be used to edit and move the cursor as well.
+If it is called to edit a Control which is not of type
+3, it returns without error. Please note that the correct port (usually the
+window which the Control was drawn in) must be selected beforehand.
+    </para>
+  </sect3>
+
+
+
+<sect3><Title/Kernel function 0x1a: TextSize(HeapPtr, HeapPtr, word[, word])/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x1a: TextSize
+    </funcdef><paramdef>
+HeapPtr dest, HeapPtr src, word font[, word maxwidth]</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+    <member><type>
+(HeapPtr)</type>
+<parameter/dest/: The destination to write the rectangle to
+    </member>
+    <member><type>
+(HeapPtr)</type>
+<parameter/src/: A pointer to the string to analyze
+    </member>
+    <member><type>
+(word)</type>
+<parameter/font/: The number of the font resource to use for this check
+    </member>
+    <member><type>
+(word)</type>
+<parameter/maxwidth/: The maximum width to allow for the text (defaults to 192)
+    </member>
+    </simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function calculates the width and height the specified text will require to
+be displayed with the specified font and the specified maximum width. The result will
+be written to the (you guessed it) specified destination on the heap. The result is a
+rectangle structure: The first four bytes equal to zero, the next word is the height,
+and the last word is the width.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x1b: Display(String, word...)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x1b: Display
+    </funcdef><paramdef>
+String text, word commands...</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+    </type>
+(String)
+<parameter/text/: The text to work with
+</member><member><type/(word)/
+<parameter/commands.../: A sequence of commands with parameters:
+<msgtext><simplelist>
+<member/100: 2 params, (X,Y) coord of where to write on the port./
+<member/101: 1 param, -1, 0 or 1 (align right (-1), left (0) or center (1)/
+<member/102: 1 param, set the text color./
+<member/103: 1 param, set the background color (-1 to draw text with transparent
+background)/
+<member/104: 1 param, set the "gray text" flag (1 to draw disabled items)/
+<member/105: 1 param, (resource number) set the font/
+<member/106: 1 param, set the width of the text (the text wraps to fit in that width)/
+<member/107: no param, set the "save under" flag, to save a copy of the pixels before
+writing the text (the handle to the saved pixels is returned)/
+<member/108: 1 param, (handle to stored pixels) restore under.  With this command, the
+text and all other parameters are ignored./
+</simplelist></msgtext>
+</member></simplelist></para><para>
+    Returns: <type>
+(void) or (&amp;FarPtr)
+    </type>(see above)
+    </para><para>
+This function executes the specified commands, then draws the supplied text to the active
+port (unless command 108 was executed).
+    </para>
+</sect3>
+
+
+
+<sect3 ID="KGetEvent"><Title/Kernel function 0x1c: GetEvent(word, HeapPtr)/
+    <funcsynopsis><funcprototype><funcdef>
+       kfunct 0x1c: GetEvent
+    </funcdef><paramdef>
+       word Flags, HeapPtr Event</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member>
+        <type/(word)/
+           <parameter/Flags/: A bitfield:
+             <msgtext><simplelist>
+               <member/bit 0 - 14: Bit mask for the events to be returned./
+               <member/bit 15: Disable joystick polling/
+             </simplelist></msgtext>
+        </member><member>
+         <type/(HeapPtr)/
+           <parameter/Event/: An Object on the stack which the results are written to.
+        </member></simplelist>
+     </para><para>
+        Returns: <type/(word)/: <returnvalue/0/ if a null event was created,
+                 <returnvalue/1/ otherwise.
+        </para><para>     
+          This function fills an Event object with data from the event queue. The results
+          are written to the "type", "message" and "modifiers" selectors.
+          See <XREF LINKEND="LarsEvents"> for details.
+        </para>
+</sect3>
+
+
+<sect3 ID="KGlobalToLocal"><Title/Kernel function 0x1d: GlobalToLocal(HeapPtr Event)/
+   <funcsynopsis><funcprototype><funcdef>
+       kfunct 0x1d: GlobalToLocal
+     </funcdef><paramdef>
+         HeapPtr Event</paramdef>
+   </funcprototype></funcsynopsis><para><simplelist><member>
+      <type/(HeapPtr)/
+         <parameter/Event/: pointer to the Event object to convert
+       </member>
+   </simplelist></para>
+ <para>
+   Returns: <type/(void)/
+ </para><para>
+    This function converts a screen-relative event to a port-relative one, using the
+    currently active port.
+ </para>
+</sect3>
+
+
+<sect3 ID="KLocalToGlobal"><Title/Kernel function 0x1e: LocalToGlobal(HeapPtr Event)/
+   <funcsynopsis><funcprototype><funcdef>
+       kfunct 0x1e: LocalToGlobal
+     </funcdef><paramdef>
+         HeapPtr Event</paramdef>
+   </funcprototype></funcsynopsis><para><simplelist><member>
+      <type/(HeapPtr)/
+         <parameter/Event/: pointer to the Event object to convert
+       </member>
+   </simplelist></para>
+ <para>
+   Returns: <type/(void)/
+ </para><para>
+    This function converts a port-relative event to a screen-relative one, using the
+    currently active port.
+ </para>
+</sect3>
+
+
+
+<sect3 ID="KMapKeyToDir"><Title/Kernel function 0x1f: MapKeyToDir(HeapPtr Event)/
+    <funcsynopsis><funcprototype><funcdef>
+       kfunct 0x1f: MapKeyToDir
+      </funcdef><paramdef>
+        HeapPtr Event</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member>
+       <type/(HeapPtr)/
+          <parameter/Event/: pointer to the Event object to convert
+       </member>
+     </simplelist></para>
+   <para>
+     Returns: <type/(HeapPtr)/: A pointer to the converted object
+   </para><para>
+        This function converts a keyboard event to a movement event, if possible.
+        Otherwise, the function returns without error.
+        See <XREF LINKEND="LarsEvents"> for details.
+   </para>
+</sect3>
+
+
+
+
+<sect3><Title/Kernel function 0x20: DrawMenuBar(word)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x20: DrawMenuBar
+    </funcdef><paramdef>
+word mode</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(word)
+    </type>
+<parameter/mode/: 1 to draw, 0 to clear
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+Either draws or clears (overdraws with black) the menu bar.
+    </para>
+</sect3>
+
+
+	<sect3>
+	<Title/Kernel function 0x21: MenuSelect(HeapPtr[, word])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x21: MenuSelect
+		</funcdef><paramdef>HeapPtr event[, word flag]</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(HeapPtr)/ event: The event to interpret</member>
+                       <member><type/(word)/ flag: (unknown)</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type>
+                        The menu index of a selected option, -1 if no menu option was selected,
+                        or 0 if the event passed through all of the menu system's filters.
+		</para><para>
+                   This function interprets the event passed to it by running several checks.
+                   First, it tries to determine whether the menu system was activated by pressing
+                   the ESC key or clicking on the menu bar. In this case, the interpreter takes over
+                   and waits for the player to select a menu option. It then returns the menu option
+                   selected (menu number, starting at 1, in the upper 8 bits, item number, starting
+                   at 1 as well, in the lower part) or -1 if no active menu item was selected.
+                   In any case, the event is claimed.
+                   If the menu system was not activated by the event, it checks the event against
+                   the key commands or Said Blocks associated with each menu entry. If there is a match,
+                   the menu coordinate tuple is returned and the event is claimed, otherwise, 0 is returned.
+		</para>
+	</sect3>
+
+
+
+<sect3><Title/Kernel function 0x22: AddMenu(HeapPtr, HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x22: AddMenu
+    </funcdef><paramdef>
+HeapPtr title, HeapPtr content</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+    <member><type>
+(HeapPtr)
+    </type>
+<parameter/title/: The menu title
+    </member>
+    <member><type>
+(HeapPtr)
+    </type>
+<parameter/content/: The menu options
+    </member>
+    </simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function adds a menu to the menu bar. The menu title is passed in the first parameter,
+the second parameter contains a heap pointer to the menu entries. They are contained in one
+single string; the following special characters/character combinations are used:
+<simplelist>
+  <member/'`': Right justify the following text/
+  <member/':': Menu item separator/
+  <member/"--!": Seperation line: This menu item is just a separator/
+  <member/'#': Function key. This is replaced by an F for displaying/
+  <member/'^': Control key. This is replaced by \001 (CTRL) for displaying/
+</simplelist>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x23: DrawStatus(HeapPtr)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x23: DrawStatus
+    </funcdef><paramdef>
+HeapPtr text</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/text/: The text to draw
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+Draws the specified text to the title bar
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x24: Parse(HeapPtr, HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x24: Parse
+    </funcdef><paramdef>
+HeapPtr event, HeapPtr input</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+    <member><type>
+(HeapPtr)
+    </type>
+<parameter/event/: The event to generate
+    </member>
+    <member><type>
+(HeapPtr)
+    </type>
+<parameter/input/: The input line to parse
+    </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+1 on success, 0 otherwise
+    </para><para>
+This function parses the input line and generates a parse event (type 0x80).
+See <XREF LINKEND="LarsDMParser"> and <XREF LINKEND="LarsEvents"> for details.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x25: Said(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x:25: Said
+    </funcdef><paramdef>
+HeapPtr said_block</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(HeapPtr)</type>
+<parameter/said_block/: Pointer to a Said block
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+1 if the line last parsed meets the criteria of the supplied said_block,
+0 otherwise.
+    </para><para>
+This function is only invoked after Parse() was called, and works on output
+generated by this function.
+See <XREF LINKEND="LarsDMParser"> and <XREF LINKEND="LarsEvents"> for details.
+    </para>
+</sect3>
+
+<sect3 id="kfunct-set-synonyms"><Title/Kernel function 0x26: SetSynonyms(DblList)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x26: SetSynonyms 
+		</funcdef><paramdef>HeapPtr list</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(DblList)/ list: List of script objects to examine</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			This function sets the synonyms used by the parser. Synonyms are used to
+			replace specified word groups with other word groups. The list contains
+			a collection of script objects; all synonyms defined by the corresponding
+			script (which can be identified by evaluating the 'number' selector of the
+			script object) are added to the list of active synonyms.
+		</para>
+	</sect3>
+
+<sect3><Title/Kernel function 0x27: HaveMouse() /<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x27: HaveMouse
+    </funcdef><paramdef>
+</paramdef>
+    </funcprototype></funcsynopsis><para>
+    </para><para>
+    Returns: <type>
+(word)
+    </type>
+1 if a mouse is available, 0 if not.
+    </para><para>
+This function simply returns a flag containing the availability of a pointing device.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x28: SetCursor(word, word[, Point])/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x28: SetCursor
+    </funcdef><paramdef>
+word resource, word visible[, Point coordinates]</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(word)</type>
+<parameter/resource/: The cursor resource to use for drawing the mouse pointer
+  </member>
+  <member><type>
+(word)</type>
+<parameter/visible/: 1 if the mouse pointer should be visible, 0 if not
+  </member>
+  <member><type>
+(Point)</type>
+<parameter/coordinates/: The coordinates (relative to the wm-port) to move the mouse pointer to
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function can change the appearance and position of the mouse pointer. If no position is provided,
+the position remains unchanged.
+    </para>
+</sect3>
+
+<sect3><Title/Kernel function 0x29: FOpen(String, word)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x29: FOpen 
+		</funcdef><paramdef>String fname, word mode</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(String)/ fname: The file name</member>
+                       <member><type/(word)/ mode: The mode to open the file with</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word) a file handle on success, 0 on error</type>
+		</para><para>
+			Tries to open or create a file in the CWD with the specified file name.
+			The following modes are valid:
+			<simplelist>
+				<member/0: open or fail: Try to open file, abort if not possible/
+				<member/1: open or create: Try to open file, create it if it doesn't exist/
+				<member/2: create: Create the file, destroying any content it might have had/
+			</simplelist>
+		</para>
+	</sect3>
+
+<sect3><Title/Kernel function 0x2a: FPuts(word, String)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x2a: FPuts
+		</funcdef><paramdef>word filehandle, String data</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ filehandle: Handle of the file to write to</member>
+                       <member><type/(String)/ data: The string to write to the file</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Writes a zero-terminated string to a file
+		</para>
+	</sect3>
+
+<sect3><Title/Kernel function 0x2b: FGets(String, word, word)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x2b: FGets
+		</funcdef><paramdef>String dest, word maxsize, word handle</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(String)/ dest: Pointer to the destination buffer</member>
+                       <member><type/(word)/ maxsize: Maximum number of bytes to read</member>
+                       <member><type/(word)/ handle: Handle of the file to read from</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+		</para>
+	</sect3>
+
+<sect3><Title/Kernel function 0x2c: FClose(word)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x2c: FClose
+		</funcdef><paramdef>word filehandle</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ filehandle: Handle of the file to close</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Closes a previously opened file.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x2d: SaveGame(String, word, String, String)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x2d: SaveGame
+		</funcdef><paramdef>String game_id, word save_nr, String save_description, String version</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(String)/ game_id: The game object's ID string (e.g. "SQ3")</member>
+                       <member><type/(word)/ save_nr: "slot" the game is to be saved to</member>
+                       <member><type/(String)/ save_description: String description of the game</member>
+                       <member><type/(String)/ version: Stringified game version number</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type>
+			1 on success, 0 if an error occured while saving
+		</para><para>
+			This function saves the game state (heap, windows, call stack, view list,
+			sound state etc.) to the savegame with the numeric id <parameter/save_nr/
+			and the description <parameter/save_description/. <parameter/game_id/ and
+			<parameter/version/ are stored alongside, for verification when the game state
+			is restored.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x2e: RestoreGame(String, word, String)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x2e: RestoreGame
+		</funcdef><paramdef>String game_id, word save_nr, String version</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(String)/ game_id: The game object's ID string</member>
+                       <member><type/(word)/ save_nr: Number of the save game to restore</member>
+                       <member><type/(String)/ version: The game object's version number</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			This function restores a previously saved game. It should only
+			return if restoring failed.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x2f: RestartGame()/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x2f: RestartGame
+		</funcdef><paramdef></paramdef></funcprototype></funcsynopsis>
+                <para>
+			Returns: <type>never</type>
+		</para><para>
+			If this function is invoked, the following things happen:
+			<simplelist>
+				<member/The restarting flag is set/
+				<member/The menu bar structure is destroyed/
+				<member/All sounds are stopped/
+				<member/All scripts are removed from the script table/
+				<member/The heap status is reset, but the heap is not cleared/
+			</simplelist>
+			After this is done, the engine restarts at a certain point (see 
+			<xref linkend="LSExecLoop"/>), re-initializes the stack, and executes the
+			replay method of the game object.
+		</para>
+	</sect3>
+
+<sect3><Title/Kernel function 0x30: GameIsRestarting()/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x30: GameIsRestarting
+    </funcdef><paramdef>
+</paramdef>
+    </funcprototype></funcsynopsis><para>
+    </para><para>
+    Returns: <type>
+(word)
+    </type>
+1 if the game is restarting, 0 if not
+    </para><para>
+    </para>
+</sect3>
+
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(word, ...])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word action, ...</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ action: The sound command subfunction number</member>
+                   </simplelist></para>
+		<para>
+			Returns: (see below)
+		</para><para>
+			'action' may be one of the following:
+			<simplelist>
+				<member/0x0: INIT/
+				<member/0x1: PLAY/
+				<member/0x2: NOP/
+				<member/0x3: DISPOSE/
+				<member/0x4: SET_SOUND/
+				<member/0x5: STOP/
+				<member/0x6: SUSPEND/
+				<member/0x7: RESUME/
+				<member/0x8: VOLUME/
+				<member/0x9: UPDATE/
+				<member/0xa: FADE/
+				<member/0xb: CHECK_DRIVER/
+				<member/0xc: ALL_STOP/
+			</simplelist>
+			See individual descriptions below for more information.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(INIT, Object)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 0, Object sound_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 0: subfunction identifier</member>
+                       <member><type/(Object)/ sound_obj: The sound object affected</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Initializes the specified sound object. This will set the 'status' selector
+			of the object to 1 ('initialized'), and load the sound indicated by the
+			'number' selector into the sound driver.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(PLAY, Object)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 1, Object sound_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 1: The subfunction identifier</member>
+                       <member><type/(Object)/ sound_obj: The sound object affected</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Starts to play the song represented by the specified sound object. This will
+			also set the 'status' selector of the object to 2 ('playing').
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(NOP)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 2</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 2: The sound command subfunction number</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			No action appears to be associated with this subfunction call.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(DISPOSE, Object)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 3, Object sound_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 3: The sound command subfunction number</member>
+                       <member><type/(Object)/ sound_obj: The sound object affected</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Removes the song indexed by a sound object from the sound server song list
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(SET_SOUND, word)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 4, word state</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 4: The sound command subfunction number</member>
+                       <member><type/(word)/ state: 1 if sound should be active, 0 if it should be turned off</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word) 1 if currently active, 0 if currently muted.</type>
+		</para><para>
+			This function completely mutes or un-mutes the sound subsystem.  If called with no parameters, it returns the current status.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(STOP, Object)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 5, Object sound_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 5: The sound command subfunction number</member>
+                       <member><type/(Object)/ sound_obj: The sound object affected</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Stops playing the song represented by the specified sound object. This will
+			set the object's 'state' selector to 0 ('stopped').
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(SUSPEND, Object)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 6, Object sound_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 6: The sound command subfunction number</member>
+                       <member><type/(Object)/ sound_obj: The sound object affected</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Suspends the song associated with the specified sound object. Its state is buffered,
+			so that it can be resumed later on. The sound object's 'state' selector is set to
+			3 ('suspended').
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(RESUME, Object)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 7, Object sound_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 7: The sound command subfunction number</member>
+                       <member><type/(Object)/ sound_obj: The sound object affected</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Resumes a previously suspended song. The 'state' selector is set to 2 ('playing').
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(VOLUME[, word])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 8[, word volume]</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 8: The sound command subfunction number</member>
+                       <member><type/(word)/ volume: An optional volume parameter</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word) The currently set sound volume (0 to 0xf)</type>
+		</para><para>
+			This subfunction retrieves and returns the current sound volume. If a second
+			parameter is supplied the volume will be set to the value of this parameter.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(UPDATE, Object])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 9, Object sound_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 9: The sound command subfunction number</member>
+                       <member><type/(Object)/ sound_obj: The sound object affected</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Notifies the sound server that a sound object was modified. The song priority
+			and number of loops (stored in the 'priority' and 'loop' selectors, respectively)
+			are re-evaulated by the sound system.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(FADE, Object])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 0xa, Object sound_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 0xa: The sound command subfunction number</member>
+                       <member><type/(Object)/ sound_obj: The sound object affected</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Fades the specified song. Fading takes approximately two seconds. The song
+			status is set to 'stopped' (0) afterwards.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(CHECK_DRIVER)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 0xb</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 0xb: The sound command subfunction number</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type>
+			1 if the sound driver was installed successfully, 0 if not
+		</para><para>
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(ALL_STOP)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 0xc</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 0xc: The sound command subfunction number</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Stops all music and sound effects.
+		</para>
+	</sect3>
+
+
+<sect3><Title/Kernel function 0x32: NewList()/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x32: NewList
+    </funcdef><paramdef>
+</paramdef>
+    </funcprototype></funcsynopsis><para>
+    </para><para>
+    Returns: <type>
+(DblList)
+    </type>
+The address of a new node list on the heap
+    </para><para>
+This function allocates and initializes a node list containing no elements.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x33: DisposeList(DblList)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x33: DisposeList
+    </funcdef><paramdef>
+NodeList list</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(NodeList)</type>
+<parameter/list/: The list to dispose
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+Frees all memory associated to a list
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x34: NewNode(word, word)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x34: NewNode
+    </funcdef><paramdef>
+word value, word key</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(word)</type>
+<parameter/value/: The node value
+  </member>
+  <member><type>
+(word)</type>
+<parameter/key/: The node key (used for searching the list)
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(Node)
+    </type>
+A new node
+    </para><para>
+This function allocates a new node and initializes it with the key and value passed as parameters.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x35: FirstNode(DblList)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x35: FirstNode
+    </funcdef><paramdef>
+DblList list</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(DblList)</type>
+<parameter/list/: The list to examine
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(Node)
+    </type>
+The first node of the list, or 0 if the list is empty
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x36: LastNode(DblList)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x36: LastNode
+    </funcdef><paramdef>
+DblList list</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(DblList)</type>
+<parameter/list/: The list to examine
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(Node)
+    </type>
+The last node of the list, or 0 if the list is empty
+    </para><para>
+    </para>
+</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x37: EmptyList(DblList)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x37: EmptyList
+		</funcdef><paramdef>DblList list</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(DblList)/ list: The list to check</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(int)</type>
+                        1 if <parameter/list/ is an empty list, 0 if it isn't.
+		</para><para>
+		</para>
+	</sect3>
+
+
+<sect3><Title/Kernel function 0x38: NextNode(Node)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x38: NextNode
+    </funcdef><paramdef>
+Node node</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(Node)</type>
+<parameter/node/: The node whose succcessor is to be found
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(Node)
+    </type>
+The node following the supplied node, or 0 if none is available
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x39: PrevNode(Node)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x39: PrevNode
+    </funcdef><paramdef>
+Node node</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(Node)</type>
+<parameter/node/: The node whose predecessor is to be determined
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(Node)
+    </type>
+The supplied node's predecessor, or 0 if the node has no predecessor
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x3a: NodeValue(Node)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x3a: NodeValue
+    </funcdef><paramdef>
+Node node</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(Node)</type>
+<parameter/node/: The node whose value is to be determined
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The value associated with the specified node
+    </para><para>
+    </para>
+</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x3b: AddAfter(DblList, Node, Node)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x3b: AddAfter
+		</funcdef><paramdef>DblList list, Node ref_node, Node new_node</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(DblList)/ list: The list to insert into</member>
+                       <member><type/(Node)/ ref_node: The node in <parameter/list/ to insert after</member>
+                       <member><type/(Node)/ new_node: The node to insert</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+                       This function inserts <parameter/new_node/ into <parameter/list/ as the
+                       immediate successor of <parameter/ref_node/.
+		</para>
+	</sect3>
+
+
+<sect3><Title/Kernel function 0x3c: AddToFront(DblList, Node)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x3c: AddToFront
+    </funcdef><paramdef>
+DblList list, Node node</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(DblList)</type>
+<parameter/list/: The list the node is to be added to
+  </member>
+  <member><type>
+(Node)</type>
+<parameter/node/: The node to add
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function adds a node to the beginning of a doubly linked list.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x3d: AddToEnd(DblList, Node)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x3d: AddToEnd
+    </funcdef><paramdef>
+DblList list, Node node</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(DblList)</type>
+<parameter/list/: The list to add the node to
+  </member>
+  <member><type>
+(Node)</type>
+<parameter/node/: The node to add to the list
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function adds the specified node to the end of the specified list.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x3e: FindKey(DblList, word)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x3e: FindKey 
+    </funcdef><paramdef>
+DblList list, word key</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(DblList)</type>
+<parameter/list/: The list in which the key is to be sought
+  </member>
+  <member><type>
+(word)</type>
+<parameter/key/: The key to seek
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(Node)
+    </type>
+The node containing the key, or 0 if no node contains it
+    </para><para>
+This function searches for a specific key in the nodes of a doubly linked list.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x3f: DeleteKey(DblList, word)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x3f:
+    </funcdef><paramdef>
+DblList list, word key</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(DblList)</type>
+<parameter/list/: The list to examine
+  </member>
+  <member><type>
+(word)</type>
+<parameter/key/: The key to find
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function searches in the supplied list for the specified key and removes the
+node containing it, if any can be found.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x40: Random(word, word)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x40: Random
+    </funcdef><paramdef>
+word min, word max</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(word)</type>
+<parameter/min/: The minimum result
+  </member>
+  <member><type>
+(word)</type>
+<parameter/max/: The maximum result
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+A random number between min and max (inclusive)
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x41: Abs(word)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x41: Abs
+    </funcdef><paramdef>
+word value</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(word)</type>
+<parameter/value/: The value to absolutize
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The absolute value of the specified parameter
+    </para><para>
+This function interprets the supplied value as a signed value and returns its absolute
+value.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x42: Sqrt(word)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x42: Sqrt
+    </funcdef><paramdef>
+word value</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(word)</type>
+<parameter/value/: The value to draw the square root out of
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The square root of the supplied value
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x43: GetAngle(Point, Point)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x43: GetAngle
+    </funcdef><paramdef>
+Point origin, Point destination</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(Point)</type>
+<parameter/origin/: The point to look from
+  </member>
+  <member><type>
+(Point)</type>
+<parameter/destination/: The point to look to
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+A positive angle between the two points, relative to the screen coordinate axis.
+    </para><para>
+This function returns approximately the following value:
+-(180.0/PI * atan2(destination.y - origin.y, destination.x - origin.x)) + 180;
+Where atan2(double, double) is the libm function.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x44: GetDistance(Point, Point)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x44: GetDistance
+    </funcdef><paramdef>
+Point foo, Point bar</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(Point)</type>
+<parameter/foo/: A point in two-dimensional integer space
+  </member>
+  <member><type>
+(Point)</type>
+<parameter/bar/: Another two-dimensional integer point
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(int)
+    </type>
+The euklidian distance between the points foo and bar
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x45: Wait(word)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x45: Wait
+    </funcdef><paramdef>
+word ticks</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(word)</type>
+<parameter/ticks/: The number of game ticks (60 Hz beats) to wait
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The time passed in between the finish of the last Wait() syscall
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x46: GetTime([word])/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x46: GetTime
+    </funcdef><paramdef>
+word mode</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(wrod)</type>
+<parameter/mode/: If this parameter is supplied, the time of day is returned.
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+Either the time of day in seconds, or the elapsed number of ticks since the
+interpreter started.
+    </para><para>
+This function is somewhat strange, because it determines its behaviour not by
+the value of a parameter passed, but by its presence instead. Please note that the
+time of day in this case does not distinguish between am and pm.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x47: StrEnd(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x47: StrEnd
+    </funcdef><paramdef>
+HeapPtr string</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(HeapPtr)</type>
+<parameter/string/: The string whose terminator should be found
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(HeapPtr)
+    </type>
+The address of the null terminator of the indexed string
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x48: StrCat(HeapPtr, HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x48: StrCat
+    </funcdef><paramdef>
+HeapPtr dest, HeapPtr source</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(HeapPtr)</type>
+<parameter/dest/: The string whose end is appended to
+  </member>
+  <member><type>
+(HeapPtr)</type>
+<parameter/source/: The string to append
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(HeapPtr)
+    </type>
+dest
+    </para><para>
+This function concatenates two strings on the heap.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x49: StrCmp(HeapPtr, HeapPtr[, word])/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x49: StrCmp
+    </funcdef><paramdef>
+HeapPtr foo, HeapPtr bar[, word length]</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(HeapPtr)</type>
+<parameter/foo/: The one string to compare
+  </member>
+  <member><type>
+(HeapPtr)</type>
+<parameter/bar/: The other string to compare
+  </member>
+  <member><type>
+(int)</type>
+<parameter/width/: The maximum number of characters to compare
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+-1 if foo is less than bar, 0 if both are equal, 1 if foo is greater than bar
+    </para><para>
+This function simply encapsulates the libc <function/strcmp(char *, char *)/ and
+<function/strncmp(char *, char *, int)/ functions.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x4a: StrLen(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x4a: StrLen
+    </funcdef><paramdef>
+HeapPtr string</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(HeapPtr)</type>
+<parameter/string/: The string whose length should be calculated
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The length of the specified string.
+    </para><para>
+    </para>
+</sect3>
+
+
+
+	<sect3><Title/Kernel function 0x4b: StrCpy(HeapPtr, HeapPtr[, word])/<para></para>
+	    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x4b: StrCpy
+    </funcdef><paramdef>
+HeapPtr dest, HeapPtr src[, word length]</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(HeapPtr)</type>
+<parameter/dest/: The destination to copy the string to
+  </member>
+  <member><type>
+(HeapPtr)</type>
+<parameter/src/: The source from which the string is to be copied
+  </member>
+  <member><type>
+(word)</type>
+<parameter/length/: The maximum length of the string to copy
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(HeapPtr)
+    </type>
+dest
+    </para><para>
+Copies a string, plus the trailing \0 terminator. The length of the string may be reduced
+with the optional length parameter. This function simply encapsulates the libc
+<function/strcpy(char *, char *)/ and
+<function/strncpy(char *, char *, int)/ fucntions.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x4c: Format(HeapPtr, String,...)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x4c: Format
+    </funcdef><paramdef>
+HeapPtr dest, String format, parameters...</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(HeapPtr)</type>
+<parameter/dest/: The heap destination to write to
+  </member>
+  <member><type>
+(String)</type>
+<parameter/format/: The format to use
+  </member>
+  <member><type>
+(misc)</type>
+<parameter/parameters/: The values and strings to insert
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(HeapPtr)
+    </type>
+dest
+    </para><para>
+This syscall acts as a frontend to the libc <function/sprintf(char *, char *)/ function.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x4d: GetFarText(word, word, HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x4d: GetFarText
+    </funcdef><paramdef>
+word resnr, word stringnr, HeapPtr dest</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(word)</type>
+<parameter/resnr/: Number of the text resource to retreive the text from
+  </member>
+  <member><type>
+(word)</type>
+<parameter/stringnr/: Number of the string inside the resource to retreive
+  </member>
+  <member><type>
+(HeapPtr)</type>
+<parameter/dest/: The destination to write the text to
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(HeapPtr)
+    </type>
+dest
+    </para><para>
+Retreives a string from a text resource and puts it on the heap.
+    </para>
+</sect3>
+
+
+<sect3><Title/Kernel function 0x4e: ReadNumber(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x4e: ReadNumber
+    </funcdef><paramdef>
+HeapPtr src</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(HeapPtr)</type>
+<parameter/src/: The address of the string to interpret as a number
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The numeric value of the supplied string
+    </para><para>
+This function acts as a frontend to the libc <function/atoi(char *)/ function, with one exception:
+Numbers beginning with a '$' are interpreted as hexadecimal numbers.
+    </para>
+</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x4f: BaseSetter(HeapPtr)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x4f: BaseSetter
+		</funcdef><paramdef>HeapPtr view_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(HeapPtr)/ view_obj: The view object whose base is to be set</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+                        This method is used to set the bounding rectangle of a view. The bounding rectangle
+                        is specified by the set {brLeft, brRight, brTop, brBottom} of selectors, which indicate
+                        the window-relative boundary points of the object's bounding rectangle. The rectangle defined
+                        here is used for colission detection, among other things.
+                </para><para>
+                        The algorithm employed by FreeSCI to determine these values appears to be either identical or
+                        very close to the original algorithm; it depends several of the object's selectors (x, y, z,
+	        	ystep, view) the width and height of the view indicated by its (view, loop, cel) selectors, and
+			that view's horizontal and vertical pixel offset modifyers (xmod, ymod).
+			The algorithm works as follows:
+<programlisting>
+	brLeft := x - xmod - width / 2
+	brRight := brLeft + width
+	brBottom := y - z - ymod + 1
+	brTop := brBottom - ystep
+</programlisting>
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x50: DirLoop(HeapPtr, word)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x50: DirLoop
+		</funcdef><paramdef>HeapPtr object, word angle</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(HeapPtr)/ object: The object whose loop selector is to be set</member>
+                       <member><type/(word)/ angle: The angle which is to be used as a base to choose the loop angle</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			This function sets the loop selector of the specified object to a value implied by the 'angle' parameter,
+			according to the following table:
+			<informaltable>
+				<tgroup cols="2">
+					<thead>
+						<row><entry><parameter/angle/</entry><entry/loop value/</row>
+					</thead>
+					<tbody>
+						<row><entry/angle &lt; 45 || angle &gt;= 314/<entry/3/</row>
+						<row><entry/angle &gt;= 45 &amp;&amp; angle &lt; 135/<entry/0/</row>
+						<row><entry/angle &gt;= 135 &amp;&amp; angle &lt; 225/<entry/2/</row>
+						<row><entry/angle &gt;= 225 &amp;&amp; angle &lt; 314/<entry/1/</row>
+					</tbody>
+				</tgroup>
+			</informaltable>
+		</para>
+	</sect3>
+
+	<sect3><Title/Kernel function 0x51: CanBeHere(HeapPtr [, DblList])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x51: CanBeHere
+		</funcdef><paramdef>HeapPtr obj [, DblList clip_list]</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(HeapPtr)/ obj: The object to test</member>
+                       <member><type/(DblList)/ clip_list: An optional list of objects to test <parameter/obj/ against</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(int)</type>
+                        1 if <parameter/obj/ can be where it is, 0 if not.
+		</para><para>
+			This function first retreives <parameter/obj/'s signal and illegalBits
+			selectors, plus its brRect (boundary rectangle, consisting of brTop, brBottom,
+			brLeft and brRight). If either of the DONT_RESTORE or IGNORE_ACTOR flags is set,
+			the function returns 1, otherwise it proceeds with verifying that
+                       <simplelist>
+                           <member>illegalBits bitwise-AND the disjunction of all elements of { 2<superscript/n/ |
+					&exist; a pixel with the color value n inside the control map zone
+					delimited by obj's brRect} equals 0</member>
+			   <member>&not;&exist;pic,pic&isin;clip_list. (pic::signal &amp; (DONT_RESTORE | IGNORE_ACTOR)) = 0
+					&and; pic::brRect &cap; obj::brRect &ne; &empty;</member>
+                       </simplelist>
+			If both conditions are met, 1 is returned. Otherwise, 0 is returned.
+		</para>
+	</sect3>
+
+
+  <sect3 ID="KONCONTROL">
+         <title/Kernel function 0x52: OnControl(word, Point | Rect)/
+       <funcsynopsis><funcprototype><funcdef>
+kfunct 0x52: OnControl
+       </funcdef><paramdef>word map, Point|Rect area</paramdef>
+         </funcprototype></funcsynopsis>
+       <para><simplelist>
+          <member><type/(word)/ map: The map to check (bit 0: visual, bit 1: priority, bit 2: special)
+            </member>
+          <member><type/(Point) or (Rect)/ Area: The point or rectangle that is to be scanned</member>
+       </simplelist></para>
+       <para>
+         Returns: <type/(word)/ The resulting bitfield
+       </para>
+       <para>
+         This function scans the indicated point or area on the specified <parameter/map/, and sets
+         the bit corresponding to each color value found correspondingly. For example, if scanning
+         map 4 (special) would touch two areas, one with color value 1 and one with color value 10,
+         the resulting return value would be 0x0402 (binary 0000010000000010).
+         See also <xref linkend="LARSPICSANDMOVEMENT">.
+       </para>
+     </sect3>
+
+        <sect3>
+        <Title/Kernel function 0x53: InitBresen(HeapPtr [, word])/
+                <funcsynopsis><funcprototype><funcdef>
+                        kfunct 0x53: InitBresen
+                </funcdef><paramdef>HeapPtr mover, word step_factor</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(HeapPtr)/ mover: The mover object to initialize</member>
+                       <member><type/(word)/ step_factor: A factor to multiply the step size with (defaults to 1)</member>
+                   </simplelist></para>
+                <para>
+                        Returns: <type>(void)</type>
+                </para><para>
+		  Initializes a mover object for bresenham movement from the object's client's coordinates to the coordinates
+		  specified by its own pair of (x,y) selectors. To do this, it retreives the
+		  mover's client, and calculates the result values according to the algorithm
+		  for determining the initial values for iterative line drawing according to the Bresenham line algorithm:
+<programlisting>
+        client := mover::client
+        &delta;x := mover::x - client::x
+        &delta;y := mover::y - client::y
+
+        vx<subscript/max/ := client::xStep * step_factor
+        vy<subscript/max/ := client::yStep * step_factor
+
+        numsteps<subscript/x/ := |&delta;x / vx<subscript/max/|
+        numsteps<subscript/y/ := |&delta;y / vy<subscript/max/|
+
+        IF numsteps<subscript/x/ > numsteps<subscript/y/ THEN
+                numsteps := numsteps<subscript/x/
+                mover::b_xAxis := 1
+                &delta;<subscript/0/ := &delta;x
+                &delta;<subscript/1/ := &delta;y
+                s := client::yStep
+        ELSE
+                numsteps := numsteps<subscript/y/
+                mover::b_xAxis := 0
+                &delta;<subscript/1/ := &delta;x
+                &delta;<subscript/0/ := &delta;y
+                s := client::xStep
+        FI
+
+        mover::dx := &delta;x / numsteps
+        mover::dy := &delta;y / numsteps
+
+        mover::b_di := - |&delta;<subscript/0/|
+        mover::b_i1 := 2 * (|&delta;<subscript/1/| - |s * numsteps|) * |&delta;<subscript/0/|
+        mover::b_incr := &delta;<subscript/1/ / |&delta;<subscript/1/|
+        mover::b_i2 := mover::b_d1 * 2
+</programlisting>
+                </para>
+        </sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x54: DoBresen()/
+	<funcsynopsis><funcprototype><funcdef>
+		kfunct 0x55: DoBresen
+	</funcdef><paramdef></paramdef></funcprototype></funcsynopsis>
+	<para>
+		Returns: <type>(void)</type>
+	</para>
+	<para>
+		Executes the Bresenham algorithm on the values calculated by
+		InitBresen, and counts down the number of steps. It then
+		invokes CanBeHere() on the resulting coordinates, and sets
+		the new coordinates if it actually Can Be There.
+	</para></sect3>
+
+
+        <sect3>
+        <title/Kernel function 0x55: DoAvoider(HeapPtr)/
+                <funcsynopsis><funcprototype><funcdef>
+                        kfunct 0x55: DoAvoider
+                </funcdef><paramdef>HeapPtr avoider</paramdef></funcprototype></funcsynopsis>
+                <para>
+                        Returns: <type>(word)</type> New direction
+                </para><para>
+                        This function is a no-op in later SCI games, but is implemented
+		  in some or all pre-0.000.576 interpreters.
+                </para>
+        </sect3>
+
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x56: SetJump(?)/<para></para></sect3>
+
+  <sect3>
+<Title/Kernel function 0x57: SetDebug()/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x57: SetDebug
+    </funcdef><paramdef></paramdef></funcprototype></funcsynopsis><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function forces the interpreter to enter debug mode. It is equivalent
+to pressing LShift-RShift-PadMinus.
+    </para>
+  </sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x58: InspectObj(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x59: ShowSends(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x5a: ShowObjs(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x5b: ShowFree(?)/<para></para></sect3>
+
+	<sect3>
+	<Title/Kernel function 0x5c: MemoryInfo(word)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x5c: word mode
+		</funcdef><paramdef>word mode</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ mode: 0 to 4 (see below)</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type> The amount of free memory on the heap, in bytes
+		</para><para>
+		  This function returns the total amount of free memory on the heap if mode == 0.
+		  If mode equals 1, the total size of the largest chunk of heap memory is returned.
+		  In mode 2, the size of the largest available hunk memory block is returned, and
+		  mode 3 returns the total amount of free hunk memory, shiftet to the right by 4 bits.
+		  </para><para>
+		    Mode 4 was apparently introduced in SCI01 and reports the amount of free memory
+		    provided by DOS in paragraphs.
+		  </para>
+	</sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x5d: StackUsage(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x5e: Profiler(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x5f: GetMenu(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x60: SetMenu(?)/<para></para></sect3>
+
+	<sect3>
+	<Title/Kernel function 0x61: GetSaveFiles(String, String, HeapPtr*)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x61: GetSaveFiles
+		</funcdef><paramdef>String game_id, String strspace, HeapPtr *ptrs</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(String)/ game_id: The game ID as a string</member>
+                       <member><type/(String)/ strspace: The string which the result should be stored in</member>
+                       <member><type/(HeapPtr *)/ ptrs: The array of pointers which the string pointers are to be stored in</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type>
+                        The number of savegames for the specified game_id.
+		</para><para>
+                   Returns an array of strings describing the existing save games for game_id.
+                   The strings are put into strspace one by one, and heap pointers to each of
+                   them are put into the ptrs array.
+                   The number of saved games is returned in the accumulator.
+		</para>
+	</sect3>
+
+
+        <sect3>
+        <Title/Kernel function 0x62: GetCWD(HeapPtr)/
+                <funcsynopsis><funcprototype><funcdef>
+                        kfunct 0x62: GetCWD
+                </funcdef><paramdef>HeapPtr address</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(HeapPtr)/ address: The address to write to</member>
+                   </simplelist></para>
+                <para>
+                        Returns: <type/(HeapPtr)/ The supplied address
+                </para><para>
+                        This function retreives the current working directory (CWD) and stores
+                        its string representation at the location pointed to by the supplied
+                        parameter.
+                        <note><para>FreeSCI returns a sub-directory of the user's home directory,
+                          if applicable, instead of the cwd.</para></note>
+                </para>
+        </sect3>
+                
+
+	<sect3>
+	<Title/Kernel function 0x63: CheckFreeSpace(String)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x63: CheckFreeSpace
+		</funcdef><paramdef>String path</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(String)/ path: The path to examine</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type>
+                        1 if saving is possible, 0 otherwise
+		</para><para>
+                     Returns TRUE if there would be enough space left on the specified path to
+                     save the current game (but doesn't actually save).
+		</para>
+	</sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x64: ValidPath(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x65: CoordPri(?)/<para></para></sect3>
+
+	<sect3>
+	<Title/Kernel function 0x66: StrAt (String, word[, char])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x66: StrAt
+		</funcdef><paramdef>String src, word offset[, char replacement]</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(String)/ src: The string to read from</member>
+                       <member><type/(word)/ offset: The offset inside the string</member>
+                       <member><type/(char)/ replacement: An optional replacement value for the indexed character</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(char)</type>
+			The character requested
+		</para><para>
+			This function retreives a single character from a string. Optionally, if
+			<parameter/replacement/ is set, the source character will be replaced with
+			the specified <parameter/replacement/.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x67: DeviceInfo(word, String[, String])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x67: DeviceInfo
+		</funcdef><paramdef>word sub_function, String string1[, String string2]</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ sub_function: A numeric value from 0 to 3, inclusive. See below.</member>
+                       <member><type/(String)/ string1: See below.</member>
+                       <member><type/(String)/ string2: See below.</member>
+                   </simplelist></para>
+		<para>
+			Returns: See below
+		</para><para>
+                        Depending on the value of sub_function, this system call executes one of
+                        four defined actions:
+                        <simplelist>
+                          <member/0: GET_DEVICE/
+                          <member/1: GET_CURRENT_DEVICE/
+                          <member/2: PATHS_EQUAL/
+                          <member/3: IS_FLOPPY/
+                        </simplelist>
+                        See the specific function definitions below for more information.
+		</para>
+	</sect3>
+
+
+	<sect3>
+	<Title/Kernel function 0x67: DeviceInfo(GET_DEVICE, String, String)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x67: DeviceInfo
+		</funcdef><paramdef>word GET_DEVICE, String input, String output</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ GET_DEVICE: Constant sub-function identifier (0)</member>
+                       <member><type/(String)/ input: A path whose device identifier should be extracted</member>
+                       <member><type/(String)/ output: The destination of the device identifier</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(HeapPtr)</type>
+                        Points to the terminating zero character of output
+		</para><para>
+                   GET_DEVICE returns the drive/device on which "input" resides in output
+                   (and a pointer to the terminating NULL in the accumulator).
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x67: DeviceInfo(GET_CURRENT_DEVICE, String output)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x67: DeviceInfo
+		</funcdef><paramdef>word GET_CURRENT_DEVICE, String output</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ GET_CURRENT_DEVICE: Constant sub-function identifier (1)</member>
+                       <member><type/(String)/ output: The destination which the CWD device
+                            identifier should be written to.</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(HeapPtr)</type>
+                           Points to the terminating null character of output
+		</para><para>
+                       GET_CURRENT_DEVICE returns the drive/device that contains the current working
+                       directory (and a pointer to the terminating NULL in the accumulator)
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x67: DeviceInfo(PATHS_EQUAL, String path1, String path2)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x67: DeviceInfo
+		</funcdef><paramdef>word PATHS_EQUAL, String path1, String path2</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ PATHS_EQUAL: Constant sub-function identifier (2)</member>
+                       <member><type/(String)/ path1: First path to compare</member>
+                       <member><type/(String)/ path2: Second path to compare</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type>
+                        1 if path1 and path2 point to the same physical location, 0 otherwise.
+		</para><para>
+                    PATHS_EQUAL returns TRUE if the two supplied paths point to the same place.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x67: DeviceInfo(IS_FLOPPY, String path)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x67: DeviceInfo
+		</funcdef><paramdef>word IS_FLOPPY, String path</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ IS_FLOPPY: Constant sub-function identifier (3)</member>
+                       <member><type/(String)/ path:</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type>
+                        1 if <parameter/path/ is on a floppy disk, 0 otherwise
+		</para><para>
+                     PATHS_EQUAL returns TRUE if the two supplied paths point to the same place.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x68: GetSaveDir()/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x68: GetSaveDir
+		</funcdef><paramdef></paramdef></funcprototype></funcsynopsis>
+		<para>
+			Returns: <type>(String)</type>
+		</para><para>
+			This function returns the heap position allocated to store the string
+			representation of the save game directory. This heap space is
+			allocated automatically during startup.
+		</para>
+	</sect3>
+
+
+	<sect3>
+	<Title/Kernel function 0x69: CheckSaveGame(String, word[, String])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x69: CheckSaveGame
+		</funcdef><paramdef>String game_id, word game_nr[, String version]</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(String)/ game_id: The savegame ID string</member>
+                       <member><type/(word)/ game_nr: The savegame number</member>
+		 	<member><type/(String)/ version: An optional game version string</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type>
+                        1 if the savegame is loadable, 0 otherwise
+		</para><para>
+                      Returns TRUE if the specified save game is valid and loadable (i.e., not for
+                      another game/interpreter/version).
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x6a: ShakeScreen(word[, word])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x6a: ShakeScreen
+		</funcdef><paramdef>
+		  word times [, word direction]
+	</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ <parameter/times/: Number of times to shake the screen</member>
+                       <member><type/(word)/ <parameter/direction/: See below</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+		  If <parameter>direction</parameter> is not specified, it defaults to 1. It is a bitmask and defined as follows:
+		  <simplelist>
+		    <member>bit 0: Shake 10 pixels downwards</member>
+		    <member>bit 1: Shake to the right</member>
+		    <member>bit 2: Unknown, but used</member>
+		  </simplelist>
+		</para>
+	</sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x6b: FlushResources(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x6c: SinMult(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x6d: CosMult(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x6e: SinDiv(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x6f: CosDiv(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x70: Graph(?)/<para></para></sect3>
+
+
+	<sect3>
+	<Title/Kernel function 0x71: Joystick(word, word)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x71: Joystick
+		</funcdef><paramdef>word subfunction, word param</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ subfunction: Always 0x0c</member>
+                       <member><type/(word)/ param: Parameter for the subfunction, purpose unknown.</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+		</para>
+	</sect3>
+
+<!-- Template for kernel function entries (14 lines)
+	<sect3>
+	<Title/Kernel function 0x: ()/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x: 
+		</funcdef><paramdef></paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/()/ :</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>()</type>
+		</para><para>
+		</para>
+	</sect3>
+-->
+
+
+
+
+ </sect2>

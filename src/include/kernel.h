@@ -517,13 +517,4 @@ typedef struct {
 extern sci_kernel_function_t kfunct_mappers[];
 
 
-/******************** Portability kludges ********************/
-
-#ifndef HAVE_FFS
-int sci_ffs(int _mask);
-#else
-#define sci_ffs ffs
-#endif
-
-
 #endif /* _SCI_KERNEL_H_ */

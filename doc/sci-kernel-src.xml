@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+
+<!-- SCI kernel documentation
+Format:
+   <kernel-doc>
+       <function SCI0ID="ID number">Function name
+             <param>type name: Description</param>
+              ...
+             <param>type name: Description</param>
+             <retval>type: Description<retval>
+             <description>
+                 Function description
+             <description>
+       </function>
+       ...
+
+   </kernel-doc>
+
+In the 'description' tag, the following special tags are allowed:
+   <type>      to mark types
+   <slc>       to mark selectors
+   <literal>   to mark literals
+-->
+
+<kernel-doc>
+
+  <function SCI0ID="00">Load
+    <param>word res_type: The resource type number | 0x80 (as in the patch files)</param>
+    <param>word res_nr: The resource number</param>
+    <retval>&amp;far_ptr: A heap_ptr pointing to an
+      actual heap pointer</retval>
+    <description>
+      Loads a resource. The returned <type>HeapPtr</type> points to a special point on the heap
+      where a pointer (32 bits) to the memory location of the specified resource
+      is located. If the resource type equals sci_memory, the resource number is
+      interpreted as a memory size instead; the specified number of bytes is allocated
+      dynamically, and a handle returned.
+    </description>
+  </function>
+
+</kernel-doc>
