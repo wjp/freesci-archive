@@ -1332,29 +1332,135 @@ k_Unknown(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 }
 
+
+#define K_EV_RSHIFT	(1<<0)
+#define K_EV_LSHIFT	(1<<1)
+#define K_EV_CTRL	(1<<2)
+#define K_EV_ALT	(1<<3)
+#define K_EV_SCRLOCK	(1<<4)
+#define K_EV_NUMLOCK	(1<<5)
+#define K_EV_CAPSLOCK	(1<<6)
+#define K_EV_INSERT	(1<<7)
+
+#define K_EV_MOUSE_P	(1<<0)
+#define K_EV_MOUSE_R	(1<<1)
+#define K_EV_KEYBOARD	(1<<2)
+#define K_EV_JOYSTICK	(1<<6)
+
 void
 kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int mask = UPARAM(0);
   heap_ptr obj = UPARAM(1);
+  int keycode=-1;
 
   CHECK_THIS_KERNEL_FUNCTION;
   SCIkdebug(SCIkSTUB, "kGetEvent: Stub\n");
 
+  if (s->have_mouse_flag) {
+#if 0
+    s->pointer_x = /* whatever the new mouse pointer x coordinate is */
+      s->pointer_y = /* same for the y coordinate */
+#endif
+      s->gfx_driver->Redraw(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0);
+  } /* Don't move the pointer unless the game knows that a mouse is present */
+      
   PUT_SELECTOR(obj, x, s->pointer_x);
   PUT_SELECTOR(obj, y, s->pointer_y);
 
-  if (_kdebug_cheap_event_hack) { /* Simulated keypress event? */
-
-    PUT_SELECTOR(obj, type, 4); /* Keyboard event */
-    s->acc = 4;
-
-    PUT_SELECTOR(obj, message, _kdebug_cheap_event_hack); /* Key */
-    PUT_SELECTOR(obj, modifiers, 32); /* NumLock active */
+  /*If there's a simkey pending, and the game wants a keyboard event, use the
+   *simkey instead of a normal event*/
+  if (_kdebug_cheap_event_hack && (mask&K_EV_KEYBOARD)) {
+    keycode=_kdebug_cheap_event_hack;
     _kdebug_cheap_event_hack = 0;
-
-  } else
-    s->acc = 0; /* No event */
+  } else {
+    sci_event_t e=getEvent();
+    switch(e.type)
+      {
+      case SCI_EV_KEY:
+	{
+	  if(e.key>='a' && e.key<='z') keycode=97+e.key-'a';
+	  if(e.key>='0' && e.key<='9') keycode=48+e.key-'0';
+	  switch(e.key)
+	    {
+	    case '-':
+	    case '=':
+	    case '[':
+	    case ']':
+	    case ';':
+	    case '\'':
+	    case '`':
+	    case '\\':
+	    case ',':
+	    case '.':
+	    case '/':
+	    case '*': keycode=e.key;
+	    }
+	} break;
+      case SCI_EV_CTRL_KEY:
+	{
+	  switch(e.key)
+	    {
+	    case 'H': keycode=8; break;
+	    case 'I': keycode='\t'; break;
+	    case 'M': keycode='\r'; break;
+	      
+	    }
+	} break;
+	/*SCI_EV_ALT_KEY*/
+      case SCI_EV_SPECIAL_KEY:
+	{
+	  switch(e.key)
+	    {
+	    case SCI_K_ESC:	keycode=27; break;
+	    case SCI_K_END:	keycode=79; break;
+	    case SCI_K_DOWN:	keycode=80; break;
+	    case SCI_K_PGDOWN:	keycode=81; break;
+	    case SCI_K_LEFT:	keycode=75; break;
+	    case SCI_K_CENTER:	keycode=52; break; /*FIXME: this is wrong*/
+	    case SCI_K_RIGHT:	keycode=77; break;
+	    case SCI_K_HOME:	keycode=71; break;
+	    case SCI_K_UP:	keycode=72; break;
+	    case SCI_K_PGUP:	keycode=73; break;
+	    case SCI_K_INSERT:	keycode=82; break;
+	    case SCI_K_DELETE:	keycode=83; break;
+	    case SCI_K_F1:
+	    case SCI_K_F2:
+	    case SCI_K_F3:
+	    case SCI_K_F4:
+	    case SCI_K_F5:
+	    case SCI_K_F6:
+	    case SCI_K_F7:
+	    case SCI_K_F8:
+	    case SCI_K_F9:
+	    case SCI_K_F10:	keycode=59+e.key-SCI_K_F1; break;
+	    }
+	} break;
+      case SCI_EV_CLOCK:
+	{
+	  s->acc = 0; /* Not supported yet */
+	} break;
+      case SCI_EV_REDRAW:
+	{
+	  s->acc = 0; /* Not supported yet */
+	} break;
+      case SCI_EV_MOUSE_CLICK:
+	{
+	  s->acc = 0; /* Not supported yet */
+	} break;
+      default:
+	{
+	  s->acc = 0; /* Unknown event */
+	}
+      }
+    if(keycode!=-1 && mask&K_EV_KEYBOARD )
+      {
+	PUT_SELECTOR(obj, type, K_EV_KEYBOARD); /*Keyboard event*/
+	s->acc=1;
+	PUT_SELECTOR(obj, message, keycode);
+	PUT_SELECTOR(obj, modifiers, K_EV_NUMLOCK); /*Numlock on*/
+      }
+  }
 }
 
 void
