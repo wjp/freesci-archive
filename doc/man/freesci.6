@@ -1,8 +1,8 @@
-.TH sciv 6 "May 1st, 2001" 0.3.2 FreeSCI
+.TH freesci 6 "Jul 13th, 2001" 0.3.2a FreeSCI
 
 .SH NAME
 
-\fBsciv\fR \- FreeSCI's main executable; this loads, links and runs SCI bytecode,
+\fBfreesci\fR \- FreeSCI's main executable; this loads, links and runs SCI bytecode,
 such as Sierra's famous adventures games.
 
 .SH DESCRIPTION
@@ -10,11 +10,10 @@ FreeSCI is a portable interpreter for SCI games, such as the Space Quest
 series (starting with SQ3) or Leisure Suit Larry (2 and sequels); see
 below for a complete listing.
 .P
-\fBsciv\fR is the main executable which loads, links and runs SCI bytecode.
-You'll need to run sciv in order to play SCI games.
+\fBfreesci\fR is the main executable which loads, links and runs SCI bytecode.
 
 .SH SYNOPSIS
-.B sciv
+.B freesci
 [ --gamedir \fIdir\fR, -d\fIdir\fR ]
 [ --run, -r ]
 [ --sci-version \fIversion\fR, -V\fIversion\fR ]
@@ -44,7 +43,7 @@ been specified in the config file (see below).
 Do not start the debugger; only run the game (the default action).
 .TP
 .BR "--sci-version \fIversion\fR, -\fBV\fR\fIversion\fR"
-This option sets the SCI version for sciv to emulate. 
+This option sets the SCI version for freesci to emulate. 
 Acceptable version numbers are of the form \fBx.yyy.zzz\fR, where
 \fBx\fR is the major number, \fByyy\fR is the minor number and \fBzzz\fR
 the patch level.
@@ -131,7 +130,7 @@ Within the config file, comments must be preceeded by a hash '#' sign.
 .P
 Game-specific sections are marked by a text string like \fB[GAME_ID]\fR, where
 \fIGAME_ID\fR is an ID to use for the game. If the section also contains a
-\fBresource_dir\fR entry, the ID may be passed to \fIsciv\fR as a parameter to
+\fBresource_dir\fR entry, the ID may be passed to \fIfreesci\fR as a parameter to
 start the game by its name.
 .P
 The config file section before the first game-specific section is the global
