@@ -1,3 +1,18 @@
+Yet another version of FreeSCI has hit the streets, more than a year after
+its predecessor. This time with a totally redesigned sound system and
+partial support for SCI1.0. The new sound system includes support for digital
+samples, not only for SCI01 and SCI1, but also for SCI0 games which use
+them (primarily non-PC games, but the PC version of Space Quest 3 includes 
+a few left-over samples which aren't played with the original interpreter).
+None of these features are stable yet; but the sound system did improve a lot
+during the last few weeks before release, so I believe that the extra 3-week
+delay was warranted.
+
+
+
+
+-- 0.6.0 --
+
 This release was developed as part of Prof. Dr. Gary Nutt's course in Advanced
 Operating Systems at the University of Colorad at Boulder (USA). It contains
 many of the bug fixes found in the 0.3.4 release, but the most prominent

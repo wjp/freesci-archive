@@ -178,6 +178,10 @@ Currently, the configuration file may contain:
 - resource_dir: Read the game's resource data from the specified location.
   Must not be used in the generic part of the config file.
 
+- resource_version: Assume that the game's resource map has the specified
+  version number. The most interesting values are 3 and 5; Look at the
+  web page for specific instructions for a number of games.
+
 - view_filter = none | linear | trilinear
   Magnification filter for 'views', i.e. moving foreground (and, in some cases,
   non-moving background) images. 'none' means that they are translated into
