@@ -478,15 +478,13 @@ static gfx_pixmap_t **
 _con_render_text_multiline(gfx_state_t *state, char *text, int maxchars, int *nr)
 {
 	int pixmaps_allocd = 1;
-	int offset = 0, slen = strlen(text);
 	gfx_pixmap_t **retval = sci_malloc(sizeof(gfx_pixmap_t *) * pixmaps_allocd);
 	char *printbuf = sci_malloc(maxchars + 8);
 	int index = 0;
 	int overwrap = 0;
 
-	while (offset < slen) {
+	while (*text) {
 		int len = 0;
-		char *t = text + offset;
 
 		if (overwrap) {
 			len = 2;
@@ -495,18 +493,19 @@ _con_render_text_multiline(gfx_state_t *state, char *text, int maxchars, int *nr
 			overwrap = 0;
 		}
 
-		while (*t &&
-		       *t != '\n' && len < maxchars) {
-			if (*t != '\t')
-				printbuf[len++] = *t++;
+		while (*text &&
+		       *text != '\n' && len < maxchars) {
+			if (*text != '\t')
+				printbuf[len++] = *text;
 			else {
 				int tabwidth = 8 - (len & 7);
 				memset(printbuf + len, ' ', tabwidth);
 				len += tabwidth;
 			}
+			text++;
 		}
 
-		if (*t && (*t != '\n'))
+		if (*text && (*text != '\n'))
 			overwrap = 1;
 
 		if (index == pixmaps_allocd)
@@ -514,7 +513,7 @@ _con_render_text_multiline(gfx_state_t *state, char *text, int maxchars, int *nr
 
 		retval[index++] = _con_render_text(state, printbuf, len,
 						   &con.color_text, NULL);
-		offset += len + (1 - overwrap);
+		if (*text) text += (1 - overwrap);
 	}
 
 	*nr = index;

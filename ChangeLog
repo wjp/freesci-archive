@@ -1,3 +1,8 @@
+2003-03-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/gfx/gfx_console.c (_con_render_text_multiline): Fixed tabs and
+	wrapped lines.
+
 2003-03-27  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/gamemenu.c (game_menu_render): Fixed freeing a NULL pointer
