@@ -25,6 +25,17 @@
 
 ***************************************************************************/
 
+/* Attempt to guess version of Platform SDK which may not work */
+#ifdef _WIN32
+#	pragma message("IMPORTANT: You must be using a recent Platform and DirectX SDK")
+#	pragma message("for this build to be successful. Download MS SDKs from:")
+#	pragma message("www.microsoft.com/msdownload/platformsdk/sdkupdate")
+#	include <ntverp.h>
+#	if VER_PRODUCTBUILD < 2601
+#		error Please download and install more recent Platform and DirectX SDKs from http://www.microsoft.com/msdownload/platformsdk/sdkupdate
+#	endif
+#endif
+
 #include <sciresource.h>
 #include <engine.h>
 #include <versions.h>
@@ -33,15 +44,6 @@
 
 #if !defined (_WIN32) && !defined (__BEOS__)
 #include <sys/resource.h>
-#endif
-
-/* Attempt to guess version of Platform SDK which may not work */
-#ifdef _WIN32
-#	pragma message("IMPORTANT: You must be using a recent Platform and DirectX SDK for this build to be successful (from http://www.microsoft.com/msdownload/platformsdk/sdkupdate)")
-#	include <ntverp.h>
-#	if VER_PRODUCTBUILD < 2601
-#		error Please download and install more recent Platform and DirectX SDKs from http://www.microsoft.com/msdownload/platformsdk/sdkupdate
-#	endif
 #endif
 
 /* Structures and data from vm.c: */
