@@ -1,3 +1,9 @@
+2004-01-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sfx/pcm_device/alsa.c, src/sfx/pcm_device/pcm_devices.c,
+	src/sfx/pcm_device/Makefile.am: Added an alsa PCM driver based on
+	alsa-lib's pcm.c example.
+
 2004-01-01  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sfx/softseq/opl2.c (opl2_init): Forward-ported Solomon's

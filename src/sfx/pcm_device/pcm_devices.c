@@ -24,12 +24,18 @@
 #	ifdef HAVE_SDL
 extern sfx_pcm_device_t sfx_pcm_driver_sdl;
 #	endif
+#	ifdef HAVE_ALSA
+extern sfx_pcm_device_t sfx_pcm_driver_alsa;
+#	endif
 #endif
 
 sfx_pcm_device_t *pcmout_drivers[] = {
 #ifndef NO_PCMOUT
 #	ifdef HAVE_SDL
 		&sfx_pcm_driver_sdl,
+#	endif
+#	ifdef HAVE_ALSA
+		&sfx_pcm_driver_alsa,
 #	endif
 #endif
 	NULL
