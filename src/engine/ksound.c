@@ -73,7 +73,7 @@ process_sound_events(state_t *s) /* Get all sound events, apply their changes to
 
 				SCIkdebug(SCIkSOUND,"Received finished signal for %04x\n", obj);
 				PUT_SELECTOR(obj, state, _K_SOUND_STATUS_STOPPED);
-				PUT_SELECTOR(obj, loop, -1);
+				//PUT_SELECTOR(obj, loop, -1);
 				break;
 
 			case SOUND_SIGNAL_PLAYING:
@@ -158,14 +158,13 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (s->sfx_driver)
 		switch (command) {
 		case _K_SOUND_INIT:
-
 			s->sfx_driver->command(s, SOUND_COMMAND_INIT_SONG, obj, GET_SELECTOR(obj, number));
 			break;
 
 		case _K_SOUND_PLAY:
 
-			s->sfx_driver->command(s, SOUND_COMMAND_SET_LOOPS, obj, GET_SELECTOR(obj, loop));
 			s->sfx_driver->command(s, SOUND_COMMAND_PLAY_HANDLE, obj, 0);
+			s->sfx_driver->command(s, SOUND_COMMAND_SET_LOOPS, obj, GET_SELECTOR(obj, loop));
 			break;
 
 		case _K_SOUND_NOP:

@@ -1,3 +1,8 @@
+2001-03-03  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/soundserver_null.c (sound_null_server): The sound
+	server now only sets loops to -1 if the song ended "naturally".
+
 2001-03-02  Solomon Peachy <pizza@shaftnet.org>
 
         * src/sound/soundserver_null.c:  A cleaner way of handling the
