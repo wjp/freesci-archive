@@ -45,10 +45,10 @@ int cur_section=0; /* Size-1 and current section in conf */
 char *exported_conf_path; /* Path which the config file was found in */
 int dospath; /* Use dos-style paths? */
 
-int
+static int
 _parse_color_mode(char *s); /* Parses the color mode string */
 
-gfx_driver_t *
+static gfx_driver_t *
 _parse_gfx_driver(char *s); /* Parses a graphics driver */
 
 int

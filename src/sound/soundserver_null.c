@@ -36,10 +36,18 @@
 void
 sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug);
 
+void
+_sound_server_sigpipe_handler(int signal)
+{
+  fprintf(stderr,"Sound server process: Parent process is dead, terminating.\n");
+  _exit(0);
+}
+
 int
 sound_null_init(state_t *s)
 {
   int child_pid;
+  pid_t ppid;
   int fd_in[2], fd_out[2], fd_events[2], fd_debug[2];
 
   sound_init_pipes(s);
@@ -49,6 +57,7 @@ sound_null_init(state_t *s)
   memcpy(&fd_events, &(s->sound_pipe_events), sizeof(int)*2);
   memcpy(&fd_debug, &(s->sound_pipe_debug), sizeof(int)*2);
 
+  ppid = getpid(); /* Get process ID */
   child_pid = fork();
 
   if (child_pid < 0) {
@@ -74,7 +83,7 @@ sound_null_init(state_t *s)
     close(fd_events[0]);
     close(fd_debug[0]); /* Close pipes at the other end */
 
-    signal(SIGPIPE, SIG_DFL); /* Die on sigpipe */
+    signal(SIGPIPE, &_sound_server_sigpipe_handler); /* Die on sigpipe */
 
     sound_null_server(fd_in[0], fd_out[1], fd_events[1], fd_debug[1]); /* Run the sound server */
   }
@@ -540,7 +549,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 	  case SOUND_COMMAND_SHUTDOWN:
 	    fprintf(stderr,"Sound server: Received shutdown signal\n");
-	    exit(0);
+	    _exit(0);
 
 	  default:
 	    fprintf(ds, "Received invalid signal: %d\n", event.signal);
@@ -555,4 +564,5 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	     || ((wakeup_time.tv_sec == ctime.tv_sec)
 		 && (wakeup_time.tv_usec > ctime.tv_usec)));
   }
+  _exit(0); /* Exit gracefully without cleanup */
 }

@@ -309,10 +309,11 @@ main(int argc, char** argv)
       }
   }
 
-  if (chdir(conf[conf_nr].work_dir)) {
-    fprintf(stderr,"Error entering working directory '%s'\n", conf[conf_nr].work_dir);
-    exit(1);
-  }
+  if (conf && conf[conf_nr].work_dir)
+    if (chdir(conf[conf_nr].work_dir)) {
+      fprintf(stderr,"Error entering working directory '%s'\n", conf[conf_nr].work_dir);
+      exit(1);
+    }
 
   if (conf[conf_nr].version)
     gamestate->version = conf[conf_nr].version;
@@ -375,6 +376,12 @@ main(int argc, char** argv)
     fclose (console_logfile);
 
   chdir (startdir); /* ? */
+
+#ifdef HAVE_FORK
+  printf("Waiting for sound server to die...");
+  wait(NULL); /* Wait for sound server process to die, if neccessary */
+  printf(" OK.\n");
+#endif
 
   return 0;
 }

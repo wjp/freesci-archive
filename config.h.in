@@ -11,6 +11,7 @@
 #undef VERSION
 #undef HAVE_LIBGGI
 #undef HAVE_LIBPNG
+#undef HAVE_CURSES
 
 /* Define if you have the fork function.  */
 #undef HAVE_FORK

@@ -541,15 +541,21 @@ graph_png_load_box(state_t *s, int handle, int *alloc_size)
   int totalsize = 0;
 
   for (i = 0; i < 3; i++) {
+    FILE *tempfile;
+
     layer = 1 << i;
 
     sprintf(filename, "buffer_%d.%d", handle, layer);
+    if (tempfile = fopen(filename, "r")) {
+
+      fclose(tempfile);
 
       if (data[i] = png_load_buffer(s->pic, filename, &x, &y, /* Try to load */
 				    &xl, &yl, &(sizes[i]), (layer != 1))) {
 	layers |= layer;
 	totalsize += sizes[i];
       }
+    }
   }
 
   if (!layers) /* Nothing read */

@@ -65,7 +65,7 @@ else
 	AC_MSG_RESULT([found]);
 
 	ac_ggi_includes=-I"$ac_ggi_includes"
-	ac_ggi_libraries=-L"$ac_ggi_libraries -lggi -lgii"
+	ac_ggi_libraries=-L"$ac_ggi_libraries -lggi -lgii -lgg"
 	ac_graphics_ggi_libfile="graphics_ggi.c"
 	AC_SUBST(ac_graphics_ggi_libfile)
 	ac_graphics_ggi_libobjects="graphics_ggi.o"
@@ -74,6 +74,61 @@ else
 fi
 AC_SUBST(ac_ggi_includes)
 AC_SUBST(ac_ggi_libraries)
+])
+
+AC_DEFUN(AC_PATH_CURSES,
+[
+AC_MSG_CHECKING([for (n)curses])
+
+_ac_curses_includes="/usr/include /usr/local/include"
+_ac_curses_libraries="/usr/lib /usr/local/lib"
+
+
+AC_ARG_WITH(curses-dir,
+    [  --with-curses-dir           where the root of lib(n)curses is installed ],
+    [  _ac_curses_includes="$_ac_curses_includes $withval"/include
+       _ac_curses_libraries="$_ac_curses_libraries $withval"/lib
+    ])
+
+AC_ARG_WITH(curses-includes,
+    [  --with-curses-includes      where the (n)curses includes are. ],
+    [  
+       _ac_curses_includes="$_ac_curses_includes $withval"
+    ])
+AC_ARG_WITH(curses-libraries,
+    [  --with-curses-libraries     where the (n)curses library is installed.],
+    [  _ac_curses_libraries="$_ac_ggi_libraries $withval"
+    ])
+
+AC_FIND_FILE(curses.h,$_ac_curses_includes,ac_curses_includes)
+AC_FIND_FILE(libncurses.so,$_ac_curses_libraries,ac_curses_libraries)
+
+if test "$_ac_curses_includes" != NO; then
+
+	if test "$_ac_curses_libraries" = NO; then
+		AC_FIND_FILE(libcurses.so, $_ac_curses_libraries, ac_curses_libraries)
+		if test "$_ac_curses_libraries" != NO; then
+			AC_MSG_RESULT([libcurses found]);
+			ac_curses_libraries=-L"$ac_curses_libraries -lcurses"
+		fi
+	else
+		AC_MSG_RESULT([libncurses found])
+		ac_curses_libraries=-L"$ac_curses_libraries -lncurses"
+	fi
+fi
+
+
+if test "$ac_curses_includes" = NO || test "$ac_curses_libraries" = NO; then
+
+	AC_MSG_RESULT([failed])
+	ac_curses_libraries=""
+	ac_curses_includes=""
+else
+	ac_curses_includes="-I$ac_curses_includes"
+	AC_DEFINE(HAVE_CURSES)
+fi
+AC_SUBST(ac_curses_includes)
+AC_SUBST(ac_curses_libraries)
 ])
 
 AC_DEFUN(AC_PATH_PNG,

@@ -46,9 +46,9 @@ extern int _debug_step_running; /* scriptdebug.c */
 extern int _debug_seeking; /* scriptdebug.c */
 
 int
-script_error(state_t *s, char *reason)
+script_error(state_t *s, int line, char *reason)
 {
-  sciprintf("Script error: %s\n", reason);
+  sciprintf("Script error in line %d: %s\n", line, reason);
   script_debug_flag = script_error_flag = 1;
   return 0;
 }
@@ -85,17 +85,17 @@ get_class_address(state_t *s, int classnr)
 #define GET_OP_SIGNED_FLEX() ((opcode & 1)? GET_OP_SIGNED_BYTE() : GET_OP_SIGNED_WORD())
 
 #define GET_HEAP(address) ((((guint16)(address)) < 800)? \
-script_error(s, "Heap address space violation on read")  \
+script_error(s, __LINE__, "Heap address space violation on read")  \
 : getInt16(s->heap + ((guint16)(address))))
 /* Reads a heap value if allowed */
 
 #define UGET_HEAP(address) ((((guint16)(address)) < 800)? \
-script_error(s, "Heap address space violation on read")   \
+script_error(s, __LINE__, "Heap address space violation on read")   \
 : getUInt16(s->heap + ((guint16)(address))))
 /* Reads an unsigned heap value if allowed */
 
 #define PUT_HEAP(address, value) if (((guint16)(address)) < 800) \
-script_error(s, "Heap address space violation on write");        \
+script_error(s, __LINE__, "Heap address space violation on write");        \
 else { s->heap[(guint16) address] = (value) &0xff;               \
  s->heap[((guint16)address) + 1] = ((value) >> 8) & 0xff;}
 /* Sets a heap value if allowed */
@@ -192,7 +192,7 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
     argc = GET_HEAP(argp);
 
     if (argc > 512){ /* More arguments than the stack could possibly accomodate for */
-      script_error(s, "More than 512 arguments to function call\n");
+      script_error(s, __LINE__, "More than 512 arguments to function call\n");
       return NULL;
     }
 
@@ -431,16 +431,16 @@ run_vm(state_t *s, int restoring)
     opcode = GET_OP_BYTE(); /* Get opcode */
 
     if (xs->sp < s->stack_base)
-      script_error(s, "Absolute stack underflow");
+      script_error(s, __LINE__, "Absolute stack underflow");
 
     if (xs->sp < xs->variables[VAR_TEMP])
-      script_error(s, "Relative stack underflow");
+      script_error(s, __LINE__, "Relative stack underflow");
 
     if (xs->sp >= s->stack_base + VM_STACK_SIZE)
-      script_error(s, "Stack overflow");
+      script_error(s, __LINE__, "Stack overflow");
 
     if (xs->pc < 800)
-      script_error(s, "Program Counter gone astray");
+      script_error(s, __LINE__, "Program Counter gone astray");
 
     opnumber = opcode >> 1;
 
@@ -701,7 +701,7 @@ run_vm(state_t *s, int restoring)
 
     case 0x2b: /* super */
       if ((opparams[0] < 0) || (opparams[0] >= s->classtable_size))
-	script_error(s, "Invalid superclass in object");
+	script_error(s, __LINE__, "Invalid superclass in object");
       else {
 	xs_new = send_selector(s, *(s->classtable[opparams[0]].scriptposp)
 			       + s->classtable[opparams[0]].class_offset, xs->objp,
@@ -981,7 +981,7 @@ run_vm(state_t *s, int restoring)
       break;
 
     default:
-      script_error(s, "Illegal opcode");
+      script_error(s, __LINE__, "Illegal opcode");
 
     } /* switch(opcode >> 1) */
 

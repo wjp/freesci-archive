@@ -196,8 +196,13 @@ png_load_buffer(picture_t pic, char *name,
   char header[8];
   int i, bytespp, stepwidth;
   byte *buf, *bufpos = NULL;
-  png_uint_32 _xoffset, _yoffset, width, height, units;
+  png_uint_32 _xoffset, _yoffset, width, height;
   png_color sci0_color_interpol[256];
+#if (PNG_LIBPNG_VER > 10003)
+  png_charp units;
+#else
+  int units;
+#endif
 
   if (!(fil = fopen(name, "rb"))) {
     sciprintf("File opening failed while trying to access '%s': \n", name, strerror(errno));

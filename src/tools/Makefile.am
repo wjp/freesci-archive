@@ -1,4 +1,4 @@
-INCLUDES = -I$(top_srcdir)/src/include @ac_glib_includes@ @ac_ggi_includes@
+INCLUDES = -I$(top_srcdir)/src/include @ac_glib_includes@ @ac_ggi_includes@ $(GLIB_CFLAGS)
 LDADD = -lc ../core/libscicore.a
 bin_PROGRAMS = sciunpack scriptdump vocabdump classes sciconsole
 sciunpack_SOURCES = sciunpack.c
@@ -7,5 +7,5 @@ scriptdump_SOURCES = scriptdump.c
 scriptdump_LDADD=-L../core -lscicore -L../console -lsciconsole 
 vocabdump_SOURCES = vocabdump.c
 classes_SOURCES = classes.c
-sciconsole_LDADD = -lc -lglib -lreadline -lcurses ../sound/libscisound.a ../console/libsciconsole.a ../core/libscicore.a @ac_png_libraries@ @ac_glib_libraries@ 
+sciconsole_LDADD = -lc -lreadline ../sound/libscisound.a ../console/libsciconsole.a ../core/libscicore.a $(GLIB_LIBS) @ac_curses_libraries@ @ac_png_libraries@ @ac_glib_libraries@ 
 sciconsole_SOURCES = sciconsole.c

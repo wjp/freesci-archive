@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # The C File Storage Meta Language "reference" implementation
 # This implementation is supposed to conform to version
-$version = "0.6.4";
+$version = "0.6.5";
 # of the spec. Please contact the maintainer if it doesn't.
 #
 # cfsml.pl Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
@@ -545,7 +545,7 @@ sub create_reader
 
 	  if ($n->{'maxwrite'}) {
 	    my @xpr = lvaluize($expression = $n->{'maxwrite'});
-	    print "         foo->$xpr[0] = i $xpr[1] - 1; /* Set number of elements */\n";
+	    print "         foo->$xpr[0] = i $xpr[1]; /* Set number of elements */\n";
 	  }
 
 	}

@@ -1,66 +1,67 @@
 This file contains any messages produced by compilers while
 running configure, to aid debugging if configure makes a mistake.
 
-configure:577: checking for a BSD compatible install
-configure:630: checking whether build environment is sane
-configure:687: checking whether make sets ${MAKE}
-configure:733: checking for working aclocal
-configure:746: checking for working autoconf
-configure:759: checking for working automake
-configure:772: checking for working autoheader
-configure:785: checking for working makeinfo
-configure:802: checking for gcc
-configure:915: checking whether the C compiler (gcc  ) works
-configure:931: gcc -o conftest    conftest.c  1>&5
-configure:957: checking whether the C compiler (gcc  ) is a cross-compiler
-configure:962: checking whether we are using GNU C
-configure:971: gcc -E conftest.c
-configure:990: checking whether gcc accepts -g
-configure:1024: checking for ranlib
-configure:1052: checking how to run the C preprocessor
-configure:1073: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1135: checking for sys/soundcard.h
-configure:1145: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1175: checking for obstack.h
-configure:1185: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1215: checking for dirent.h
-configure:1225: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1255: checking for unistd.h
-configure:1265: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1295: checking for readline/readline.h
-configure:1305: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1335: checking for readline/history.h
-configure:1345: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1375: checking for getopt.h
-configure:1385: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1414: checking for pipe
-configure:1442: gcc -o conftest -g -O2   conftest.c  1>&5
-configure:1414: checking for socketpair
-configure:1442: gcc -o conftest -g -O2   conftest.c  1>&5
-configure:1414: checking for fork
-configure:1442: gcc -o conftest -g -O2   conftest.c  1>&5
-configure:1468: checking for ggi
-configure:1555: checking for flex
-configure:1588: checking for flex
-configure:1622: checking for yywrap in -lfl
-configure:1641: gcc -o conftest -g -O2   conftest.c -lfl   1>&5
-configure:1664: checking lex output file root
-configure:1685: checking whether yytext is a pointer
-configure:1704: gcc -o conftest -g -O2   conftest.c  -lfl 1>&5
-configure:1778: checking for glib-config
-configure:1813: checking for GLIB - version >= 1.2.0
-configure:1912: gcc -o conftest -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include   conftest.c -L/usr/local/lib -lglib  1>&5
-configure:2005: checking for libpng
-configure:2085: checking whether byte ordering is bigendian
-configure:2103: gcc -c -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include  conftest.c 1>&5
-configure:2118: gcc -c -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include  conftest.c 1>&5
+configure:583: checking for a BSD compatible install
+configure:636: checking whether build environment is sane
+configure:693: checking whether make sets ${MAKE}
+configure:739: checking for working aclocal
+configure:752: checking for working autoconf
+configure:765: checking for working automake
+configure:778: checking for working autoheader
+configure:791: checking for working makeinfo
+configure:808: checking for gcc
+configure:921: checking whether the C compiler (gcc  ) works
+configure:937: gcc -o conftest    conftest.c  1>&5
+configure:963: checking whether the C compiler (gcc  ) is a cross-compiler
+configure:968: checking whether we are using GNU C
+configure:977: gcc -E conftest.c
+configure:996: checking whether gcc accepts -g
+configure:1030: checking for ranlib
+configure:1058: checking how to run the C preprocessor
+configure:1079: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1141: checking for sys/soundcard.h
+configure:1151: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1181: checking for obstack.h
+configure:1191: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1221: checking for dirent.h
+configure:1231: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1261: checking for unistd.h
+configure:1271: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1301: checking for readline/readline.h
+configure:1311: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1341: checking for readline/history.h
+configure:1351: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1381: checking for getopt.h
+configure:1391: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1420: checking for pipe
+configure:1448: gcc -o conftest -g -O2   conftest.c  1>&5
+configure:1420: checking for socketpair
+configure:1448: gcc -o conftest -g -O2   conftest.c  1>&5
+configure:1420: checking for fork
+configure:1448: gcc -o conftest -g -O2   conftest.c  1>&5
+configure:1474: checking for ggi
+configure:1557: checking for (n)curses
+configure:1663: checking for flex
+configure:1696: checking for flex
+configure:1730: checking for yywrap in -lfl
+configure:1749: gcc -o conftest -g -O2   conftest.c -lfl   1>&5
+configure:1772: checking lex output file root
+configure:1793: checking whether yytext is a pointer
+configure:1812: gcc -o conftest -g -O2   conftest.c  -lfl 1>&5
+configure:1886: checking for glib-config
+configure:1921: checking for GLIB - version >= 1.2.0
+configure:2020: gcc -o conftest -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include   conftest.c -L/usr/local/lib -lglib  1>&5
+configure:2113: checking for libpng
+configure:2193: checking whether byte ordering is bigendian
+configure:2211: gcc -c -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include  conftest.c 1>&5
+configure:2226: gcc -c -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include  conftest.c 1>&5
 configure: In function `main':
-configure:2113: `not' undeclared (first use in this function)
-configure:2113: (Each undeclared identifier is reported only once
-configure:2113: for each function it appears in.)
-configure:2113: parse error before `big'
+configure:2221: `not' undeclared (first use in this function)
+configure:2221: (Each undeclared identifier is reported only once
+configure:2221: for each function it appears in.)
+configure:2221: parse error before `big'
 configure: failed program was:
-#line 2107 "configure"
+#line 2215 "configure"
 #include "confdefs.h"
 #include <sys/types.h>
 #include <sys/param.h>

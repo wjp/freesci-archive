@@ -337,7 +337,7 @@ RECORD state_t "state_t" {
   sci_version_t max_version;
   sci_version_t min_version;
 
-  exec_stack_t execution_stack[DYNAMIC execution_stack_size, MAXWRITE execution_stack_pos];
+  exec_stack_t execution_stack[DYNAMIC execution_stack_size, MAXWRITE execution_stack_pos+1];
 
   gint16 acc;
   gint16 prev;
