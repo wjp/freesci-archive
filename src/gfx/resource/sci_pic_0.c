@@ -2227,7 +2227,10 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 
 				pri_table = pic->internal;
 
-				for (i = 0; i < 16; i++)
+				pri_table[0] = 0;
+				pri_table[15] = 190;
+
+				for (i = 1; i < 15; i++)
 					pri_table[i] = resource[pos++];
 			}
 			break;
