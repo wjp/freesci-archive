@@ -1,3 +1,11 @@
+1999-08-19  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kernel.c: Fixed CanBeHere() according to Lars' specs.
+	Implemented DirLoop, CoordPri, PriCoord, ValidPath, RespondsTo,
+	FOpen, FPuts, FGets, FClose, TimesSin/SinMult, TimesCos/CosMult.
+	Fixed a stupid bug in CanBeHere() where an object could clip
+	against itself.
+
 1999-08-17  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kernel.c (kDrawCel): Added DrawCel.

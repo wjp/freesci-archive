@@ -124,6 +124,9 @@ typedef struct _state
   byte version_lock_flag; /* Set to 1 to disable any autodetection mechanisms */
   sci_version_t version; /* The approximated patchlevel of the version to emulate */
 
+  int file_handles_nr; /* Numer of allocated file handles */
+  FILE **file_handles; /* Array of file handles. Dynamically increased if required. */
+
   /* VM Information */
 
   heap_t *_heap; /* The heap structure */

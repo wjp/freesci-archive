@@ -196,6 +196,8 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid,
 
 
 #define GET_SELECTOR(_object_, _selector_) read_selector(s, _object_, s->selector_map._selector_)
+#define UGET_SELECTOR(_object_, _selector_) \
+ ((guint16) read_selector(s, _object_, s->selector_map._selector_))
 #define PUT_SELECTOR(_object_, _selector_, _value_)\
  write_selector(s, _object_, s->selector_map._selector_, _value_)
 
@@ -272,6 +274,66 @@ kfree(state_t *s, int handle)
   return 0;
 }
 
+
+char *
+_kernel_lookup_text(state_t *s, int address, int index)
+     /* Returns the string the script intended to address */
+{
+  char *seeker;
+  resource_t *textres;
+
+  if (address < 1000) {
+    int textlen;
+    int _index = index;
+    textres = findResource(sci_text, address);
+
+    if (!textres) {
+      SCIkwarn("text.%03d not found\n", address);
+      return NULL; /* Will probably segfault */
+    }
+
+    textlen = textres->length;
+    seeker = textres->data;
+
+    while (index--)
+      while ((textlen--) && (*seeker++));
+
+    if (textlen)
+      return seeker;
+    else {
+      SCIkwarn("Index %d out of bounds in text.%03d\n", _index, address);
+      return 0;
+    }
+
+  } else return s->heap + address;
+}
+
+
+/* Flags for the signal selector */
+#define _K_VIEW_SIG_FLAG_UPDATE_ENDED   0x0001
+#define _K_VIEW_SIG_FLAG_UPDATING       0x0002
+#define _K_VIEW_SIG_FLAG_NO_UPDATE      0x0004
+#define _K_VIEW_SIG_FLAG_HIDDEN         0x0008
+#define _K_VIEW_SIG_FLAG_FIX_PRI_ON     0x0010
+#define _K_VIEW_SIG_FLAG_UNKNOWN_5      0x0020
+#define _K_VIEW_SIG_FLAG_UNKNOWN_6      0x0040
+#define _K_VIEW_SIG_FLAG_DONT_RESTORE   0x0080
+#define _K_VIEW_SIG_FLAG_FROZEN         0x0100
+#define _K_VIEW_SIG_FLAG_IS_EXTRA       0x0200
+#define _K_VIEW_SIG_FLAG_HIT_OBSTACLE   0x0400
+#define _K_VIEW_SIG_FLAG_DOESNT_TURN    0x0800
+#define _K_VIEW_SIG_FLAG_NO_CYCLER      0x1000
+#define _K_VIEW_SIG_FLAG_IGNORE_HORIZON 0x2000
+#define _K_VIEW_SIG_FLAG_IGNORE_ACTOR   0x4000
+#define _K_VIEW_SIG_FLAG_DISPOSE_ME     0x8000
+
+
+
+
+
+/*****************************************/
+/************* Kernel functions **********/
+/*****************************************/
 
 /* kLoad(restype, resnr):
 ** Loads an arbitrary resource of type 'restype' with resource number 'resnr'
@@ -679,6 +741,108 @@ kDisposeList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 /*************************************************************/
+/************* File control *************/
+
+/* This assumes modern stream implementations. It may break on DOS. */
+
+#define _K_FILE_MODE_OPEN_OR_FAIL 0
+#define _K_FILE_MODE_OPEN_OR_CREATE 1
+#define _K_FILE_MODE_CREATE 2
+
+void
+kFOpen(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  char *filename = s->heap + PARAM(0);
+  int mode = PARAM(1);
+  int retval = 1; /* Ignore file_handles[0] */
+  FILE *file = NULL;
+
+  if ((mode == _K_FILE_MODE_OPEN_OR_FAIL) || (mode == _K_FILE_MODE_OPEN_OR_CREATE))
+    file = fopen(filename, "r+"); /* Attempt to open existing file */
+
+  if ((!file) && ((mode == _K_FILE_MODE_OPEN_OR_CREATE) || (mode == _K_FILE_MODE_CREATE)))
+    file = fopen(filename, "w+"); /* Attempt to create file */
+
+  if (!file) { /* Failed */
+    s->acc = 0;
+    return;
+  }
+
+  while (s->file_handles[retval] && (retval < s->file_handles_nr))
+    retval++;
+
+  if (retval == s->file_handles_nr) /* Hit size limit => Allocate more space */
+    s->file_handles = realloc(s->file_handles, sizeof(FILE *) * ++(s->file_handles_nr));
+
+  s->file_handles[retval] = file;
+
+  s->acc = retval;
+
+}
+
+void
+kFClose(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int handle = UPARAM(0);
+
+  if (handle == 0) {
+    SCIkwarn("Attempt to close file handle 0\n",0);
+    return;
+  }
+
+  if ((handle >= s->file_handles_nr) || (s->file_handles[handle] == NULL)) {
+    SCIkwarn("Attempt to close invalid/unused file handle %d\n", handle,0);
+    return;
+  }
+
+  fclose(s->file_handles[handle]);
+
+  s->file_handles[handle] = NULL;
+}
+
+
+void kFPuts(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int handle = UPARAM(0);
+  char *data = UPARAM(1) + s->heap;
+
+  if (handle == 0) {
+    SCIkwarn("Attempt to write to file handle 0\n",0);
+    return;
+  }
+
+  if ((handle >= s->file_handles_nr) || (s->file_handles[handle] == NULL)) {
+    SCIkwarn("Attempt to write to invalid/unused file handle %d\n", handle,0);
+    return;
+  }
+
+  fputs(data, s->file_handles[handle]);
+
+}
+
+void
+kFGets(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int handle = UPARAM(0);
+  char *dest = UPARAM(1) + s->heap;
+  int maxsize = UPARAM(2);
+
+  if (handle == 0) {
+    SCIkwarn("Attempt to read from file handle 0\n",0);
+    return;
+  }
+
+  if ((handle >= s->file_handles_nr) || (s->file_handles[handle] == NULL)) {
+    SCIkwarn("Attempt to read from invalid/unused file handle %d\n", handle,0);
+    return;
+  }
+
+  fgets(dest, maxsize, s->file_handles[handle]);
+
+}
+
+
+/*************************************************************/
 
 void
 kMemoryInfo(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -860,6 +1024,25 @@ kGetDistance(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int yrel = PARAM(0) - PARAM_OR_ALT(2, 0);
 
   s->acc = sqrt((float) xrel*xrel + yrel*yrel);
+}
+
+void
+kTimesSin(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int angle = PARAM(0);
+  int factor = PARAM(1);
+
+  s->acc = (int) (factor * 1.0 * sin(angle * PI / 180.0));
+}
+
+
+void
+kTimesCos(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int angle = PARAM(0);
+  int factor = PARAM(1);
+
+  s->acc = (int) (factor * 1.0 * cos(angle * PI / 180.0));
 }
 
 
@@ -1085,23 +1268,11 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int startarg;
 
 
-  if (position < 1000) { /* reading from a text resource */
-    resource = findResource(sci_text, position);
+  source = _kernel_lookup_text(s, position, index);
 
-    if (!resource) {
-      SCIkwarn("Could not find text.%03d\n", position);
-      return;
-    }
-
-    source = resource->data /* + index */;
-
-    while (index--)
-      while (*source++); /* Skip the first [index] entries */
-
+  if (position < 1000) {
     startarg = 3; /* First parameter to use for formatting */
-
   } else  { /* position >= 1000 */
-    source = s->heap;
     startarg = 2;
   }
 
@@ -1255,6 +1426,99 @@ kWait(state_t *s, int funct_nr, int argc, heap_ptr argp)
   memcpy(&(s->last_wait_time), &time, sizeof(struct timeval));
 }
 
+
+void
+kCoordPri(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int y = PARAM(0);
+
+  if (y < s->priority_first)
+    s->acc = 0;
+  else if (y > s->priority_last)
+    s->acc = 15;
+  else s->acc = ((y - s->priority_first) * 15) / (s->priority_last - s->priority_first);
+}
+
+
+void
+kPriCoord(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int priority = PARAM(0);
+
+  s->acc = s->priority_first + (priority * (s->priority_last - s->priority_first)) / 15;
+}
+
+
+void
+kValidPath(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  char *pathname = s->heap + UPARAM(0);
+
+  s->acc = !chdir(pathname); /* Try to go there. If it works, return 1, 0 otherwise. */
+}
+
+
+void
+kRespondsTo(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int obj = PARAM(0);
+  int selector = PARAM(1);
+
+  s->acc = (lookup_selector(s, obj, selector, NULL) != SELECTOR_NONE);
+}
+
+
+void
+kDirLoop(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr obj = PARAM(0);
+  word angle = UPARAM(1);
+  int view = GET_SELECTOR(obj, view);
+  int signal = UGET_SELECTOR(obj, signal);
+  resource_t *viewres = findResource(sci_view, view);
+  int loop;
+  int maxloops;
+
+  if (signal & _K_VIEW_SIG_FLAG_DOESNT_TURN)
+    return;
+
+  if (!viewres) {
+    SCIkwarn("Invalid view.%03d\n", view);
+    PUT_SELECTOR(obj, loop, 0xffff); /* Invalid */
+    return;
+  }
+
+  if (angle > 360) {
+    SCIkwarn("Invalid angle %d\n", angle);
+    PUT_SELECTOR(obj, loop, 0xffff);
+    return;
+  }
+
+  if (angle < 45)
+    loop = 3;
+  else
+    if (angle < 135)
+      loop = 0;
+  else
+    if (angle < 225)
+      loop = 2;
+  else
+    if (angle < 314)
+      loop = 1;
+  else
+    loop = 3;
+
+  maxloops = view0_loop_count(viewres->data);
+
+  if (loop >= maxloops) {
+    SCIkwarn("With view.%03d: loop %d > maxloop %d\n", loop, maxloops);
+    loop = -1;
+  }
+
+  PUT_SELECTOR(obj, loop, loop);
+}
+
+
 #define _K_BRESEN_AXIS_X 0
 #define _K_BRESEN_AXIS_Y 1
 
@@ -1366,13 +1630,55 @@ void
 kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr obj = PARAM(0);
+  heap_ptr cliplist = UPARAM_OR_ALT(1, 0);
+  word retval;
+  word signal;
+
   int x = GET_SELECTOR(obj, brLeft);
   int y = GET_SELECTOR(obj, brTop);
-  int xl = GET_SELECTOR(obj, brRight) - x + 1;
-  int yl = GET_SELECTOR(obj, brBottom) - y + 1;
+  int xend = GET_SELECTOR(obj, brRight);
+  int yend = GET_SELECTOR(obj, brBottom);
+  int xl = xend - x + 1;
+  int yl = yend - y + 1;
+
+  signal = GET_SELECTOR(obj, signal);
 
   s->acc = !(((word)GET_SELECTOR(obj, illegalBits))
 	     & graph_on_control(s, x, y, xl, yl, SCI_MAP_CONTROL));
+
+  if (s->acc == 0)
+    return; /* Can'tBeHere */
+  if ((signal & _K_VIEW_SIG_FLAG_DONT_RESTORE) || (signal & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))
+    return; /* CanBeHere- it's either being disposed, or it ignores actors anyway */
+  if (cliplist) {
+    heap_ptr node = GET_HEAP(cliplist + LIST_FIRST_NODE);
+
+    s->acc = 0; /* Assume that we Can'tBeHere... */
+
+    while (node) { /* Check each object in the list against our bounding rectangle */
+      heap_ptr other_obj = UGET_HEAP(node + LIST_NODE_VALUE);
+      if (other_obj != obj) { /* Clipping against yourself is not recommended */
+
+	int other_x = GET_SELECTOR(other_obj, brLeft);
+	int other_y = GET_SELECTOR(other_obj, brTop);
+	int other_xend = GET_SELECTOR(other_obj, brRight);
+	int other_yend = GET_SELECTOR(other_obj, brBottom);
+
+	if ((((other_x >= x) && (other_x <= xend)) /* Other's left boundary inside of our object? */
+	    || ((other_xend >= x) && (other_xend <= xend))) /* ...right boundary... ? */
+	    &&
+	    (((other_y >= y) && (other_y <= yend)) /* Other's top boundary inside of our object? */
+	    || ((other_yend >= y) && (other_yend <= yend)))) /* ...bottom boundary... ? */
+	  return;
+
+      } /* if (other_obj != obj) */
+      node = GET_HEAP(node + LIST_NEXT_NODE); /* Move on */
+    }
+  }
+
+fprintf(stderr,"Returning...\n");
+  s->acc = 1;
+  /* CanBeHere */
 }
 
 
@@ -1568,7 +1874,7 @@ kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int yl = GET_SELECTOR(obj, nsBottom) - y + 1;
 
   int font_nr = GET_SELECTOR(obj, font);
-  char *text = s->heap + GET_SELECTOR(obj, text);
+  char *text = s->heap + UGET_SELECTOR(obj, text);
   int view = GET_SELECTOR(obj, view);
   int cel = GET_SELECTOR(obj, cel);
   int loop = GET_SELECTOR(obj, loop);
@@ -1639,24 +1945,6 @@ kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
     graph_update_port(s, s->ports[s->view_port]);
 }
 
-/* Flags for the control selector */
-#define _K_PIC_FLAG_UPDATE_ENDED   0x0001
-#define _K_PIC_FLAG_UPDATING       0x0002
-#define _K_PIC_FLAG_NO_UPDATE      0x0004
-#define _K_PIC_FLAG_HIDDEN         0x0008
-#define _K_PIC_FLAG_FIX_PRI_ON     0x0010
-#define _K_PIC_FLAG_UNKNOWN_5      0x0020
-#define _K_PIC_FLAG_UNKNOWN_6      0x0040
-#define _K_PIC_FLAG_DONT_RESTORE   0x0080
-#define _K_PIC_FLAG_FROZEN         0x0100
-#define _K_PIC_FLAG_IS_EXTRA       0x0200
-#define _K_PIC_FLAG_HIT_OBSTACLE   0x0400
-#define _K_PIC_FLAG_DOESNT_TURN    0x0800
-#define _K_PIC_FLAG_NO_CYCLER      0x1000
-#define _K_PIC_FLAG_IGNORE_HORIZON 0x2000
-#define _K_PIC_FLAG_IGNORE_ACTOR   0x4000
-#define _K_PIC_FLAG_DISPOSE_ME     0x8000
-
 void
 _k_restore_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
      /* Restores the view backgrounds of list_nr members of list */
@@ -1667,15 +1955,16 @@ _k_restore_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
     word signal = GET_HEAP(list[i].signalp);
     fprintf(stderr,"Trying to restore with signal = %04x\n", signal);
 
-    if (signal & _K_PIC_FLAG_NO_UPDATE) {
+    if (signal & _K_VIEW_SIG_FLAG_NO_UPDATE) {
 
-      if (signal & _K_PIC_FLAG_UPDATE_ENDED)
-	PUT_HEAP(list[i].signalp, (signal & ~_K_PIC_FLAG_UPDATE_ENDED) | _K_PIC_FLAG_HIDDEN);
+      if (signal & _K_VIEW_SIG_FLAG_UPDATE_ENDED)
+	PUT_HEAP(list[i].signalp, (signal & ~_K_VIEW_SIG_FLAG_UPDATE_ENDED) |
+		 _K_VIEW_SIG_FLAG_HIDDEN);
 
       continue; /* Don't restore this view */
     } else {
 
-      if (list[i].underBitsp && !(signal & _K_PIC_FLAG_DONT_RESTORE)) {
+      if (list[i].underBitsp && !(signal & _K_VIEW_SIG_FLAG_DONT_RESTORE)) {
 	int under_bits = GET_HEAP(list[i].underBitsp);
 
 	if (under_bits) {
@@ -1685,12 +1974,13 @@ _k_restore_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
 	  PUT_HEAP(list[i].underBitsp, 0); /* Restore and mark as restored */
 	}
       }
-      signal &= ~_K_PIC_FLAG_UNKNOWN_6;
+      signal &= ~_K_VIEW_SIG_FLAG_UNKNOWN_6;
 
-      if (signal & _K_PIC_FLAG_UPDATING)
-	signal &= ~(_K_PIC_FLAG_UPDATING | _K_PIC_FLAG_NO_UPDATE); /* Clear those two flags */
+      if (signal & _K_VIEW_SIG_FLAG_UPDATING)
+	signal &= ~(_K_VIEW_SIG_FLAG_UPDATING |
+		    _K_VIEW_SIG_FLAG_NO_UPDATE); /* Clear those two flags */
 
-    } /* if NOT (signal & _K_PIC_FLAG_NO_UPDATE) */
+    } /* if NOT (signal & _K_VIEW_SIG_FLAG_NO_UPDATE) */
   } /* For each list member */
 }
 
@@ -1739,7 +2029,7 @@ _k_view_list_dispose_loop(state_t *s, view_object_t *list, int list_nr, int argc
   int i;
 
   for (i = 0; i < list_nr; i++) {
-    if (UGET_HEAP(list[i].signalp) & _K_PIC_FLAG_DISPOSE_ME)
+    if (UGET_HEAP(list[i].signalp) & _K_VIEW_SIG_FLAG_DISPOSE_ME)
       if (INVOKE_SELECTOR(list[i].obj, delete, 1, 0))
 	sciprintf("Object at %04x requested deletion, but does not have a delete funcselector\n",
 		  list[i].obj);
@@ -1783,7 +2073,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int argc, 
     resource_t *viewres = findResource(sci_view, view_nr);
 
     if (cycle)
-      if (!(GET_SELECTOR(obj, signal) & _K_PIC_FLAG_FROZEN))
+      if (!(GET_SELECTOR(obj, signal) & _K_VIEW_SIG_FLAG_FROZEN))
 	INVOKE_SELECTOR(obj, doit, 1, 0); /* Call obj::doit() if neccessary */
 
     retval[i].obj = obj;
@@ -1828,7 +2118,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int argc, 
       SCIkwarn("Object at %04x has no signal selector\n", obj);
     }
 
-    if (!(UGET_HEAP(retval[i].signalp) & _K_PIC_FLAG_FIX_PRI_ON)) { /* Calculate priority */
+    if (!(UGET_HEAP(retval[i].signalp) & _K_VIEW_SIG_FLAG_FIX_PRI_ON)) { /* Calculate priority */
       int _priority, y = retval[i].y;
       if (y < s->priority_first)
 	_priority = 0;
@@ -1865,7 +2155,8 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int use_signal)
     word signal = (use_signal)? GET_HEAP(list[i].signalp) : 0;
 
     /* Now, if we either don't use signal OR if signal allows us to draw, do so: */
-    if ((use_signal == 0) || (!(signal & _K_PIC_FLAG_NO_UPDATE) && !(signal & _K_PIC_FLAG_HIDDEN))) {
+    if ((use_signal == 0) || (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE) && 
+			      !(signal & _K_VIEW_SIG_FLAG_HIDDEN))) {
       draw_view0(s->pic, s->ports[s->view_port],
 		 list[i].x - view0_cel_width(list[i].loop, list[i].cel, list[i].view) / 2,
 		 list[i].y - view0_cel_height(list[i].loop, list[i].cel, list[i].view),
@@ -1873,13 +2164,14 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int use_signal)
     }
 
     if (use_signal) {
-      signal &= ~(_K_PIC_FLAG_UPDATE_ENDED | _K_PIC_FLAG_UPDATING |
-		   _K_PIC_FLAG_NO_UPDATE | _K_PIC_FLAG_UNKNOWN_6); /* Clear all of those flags */
+      signal &= ~(_K_VIEW_SIG_FLAG_UPDATE_ENDED | _K_VIEW_SIG_FLAG_UPDATING |
+		   _K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_UNKNOWN_6);
+      /* Clear all of those flags */
 
       PUT_HEAP(list[i].signalp, signal); /* Write the changes back */
     } else continue;
 
-    if (signal & _K_PIC_FLAG_IGNORE_ACTOR)
+    if (signal & _K_VIEW_SIG_FLAG_IGNORE_ACTOR)
       continue; /* I assume that this is used for PicViews as well, so no use_signal check */
     else { /* Yep, the continue doesn't really make sense. It's for clarification. */
       int yl, y = list[i].nsTop;
@@ -2356,8 +2648,9 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int argpt = 1;
+  int argpt;
   int textp = UPARAM(0);
+  int index = UPARAM(1);
   int width = -1;
   int save_under = 0;
   char *text;
@@ -2366,18 +2659,13 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   CHECK_THIS_KERNEL_FUNCTION;
 
-  if (textp < 1000) {
-    resource_t *res;
-    res = findResource(sci_text, textp);
 
-    if (!res) {
-      SCIkwarn("Invalid text resource: 0x%x\n", textp);
-      return;
-    }
+  text = _kernel_lookup_text(s, textp, index);
 
-    text = res->data + UPARAM(argpt++);
-  }
-  else text = s->heap + textp;
+  if (textp < 1000)
+    argpt = 2;
+  else
+    argpt = 1;
 
   while (argpt < argc) {
 
@@ -2563,6 +2851,19 @@ struct {
   {"DoBresen", kDoBresen },
   {"CanBeHere", kCanBeHere },
   {"DrawCel", kDrawCel },
+  {"DirLoop", kDirLoop },
+  {"CoordPri", kCoordPri },
+  {"PriCoord", kPriCoord },
+  {"ValidPath", kValidPath },
+  {"RespondsTo", kRespondsTo },
+  {"FOpen", kFOpen },
+  {"FPuts", kFPuts },
+  {"FGets", kFGets },
+  {"FClose", kFClose },
+  {"TimesSin", kTimesSin },
+  {"SinMult", kTimesSin },
+  {"TimesCos", kTimesCos },
+  {"CosMult", kTimesCos },
 
   /* Experimental functions */
   {"Wait", kWait },

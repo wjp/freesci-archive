@@ -6,7 +6,7 @@
 /* #undef WORDS_BIGENDIAN */
 
 #define PACKAGE "freesci"
-#define VERSION "0.2.4"
+#define VERSION "0.2.5"
 #define HAVE_LIBGGI 1
 #define HAVE_LIBPNG 1
 
@@ -20,5 +20,5 @@
 #define PACKAGE "freesci"
 
 /* Version number of package */
-#define VERSION "0.2.4"
+#define VERSION "0.2.5"
 

@@ -814,7 +814,8 @@ _lookup_selector_functions(state_t *s, heap_ptr obj, int selectorid, heap_ptr *a
 
   for (i = 0; i < methodselector_nr * 2; i += 2)
     if (GET_HEAP(methodselectors + i) == selectorid) { /* Found it? */
-      *address = GET_HEAP(methodselectors + i + 2 + (methodselector_nr * 2)); /* Get address */
+      if (address)
+	*address = GET_HEAP(methodselectors + i + 2 + (methodselector_nr * 2)); /* Get address */
       return SELECTOR_METHOD;
     }
 
@@ -846,7 +847,8 @@ lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
   for (i = 0; i < varselector_nr * 2; i += 2)
     if (GET_HEAP(heappos + SCRIPT_SELECTOR_OFFSET + varselector_nr * 2 + i) == selectorid)
       { /* Found it? */
-	*address = obj + SCRIPT_SELECTOR_OFFSET + i; /* Get object- relative address */
+	if (address)
+	  *address = obj + SCRIPT_SELECTOR_OFFSET + i; /* Get object- relative address */
 	return SELECTOR_VARIABLE; /* report success */
       }
 
@@ -1190,6 +1192,10 @@ game_init(state_t *s)
   script_map_selectors(s, &(s->selector_map));
   /* Maps a few special selectors for later use */
 
+  s->file_handles_nr = 5;
+  s->file_handles = calloc(s->file_handles_nr, sizeof(FILE *));
+  /* Allocate memory for file handles */
+
   script_map_kernel(s);
   /* Maps the kernel functions */
 
@@ -1298,11 +1304,19 @@ game_exit(state_t *s)
 {
   int i;
 
+  sciprintf("Freeing vocabulary...\n");
   vocabulary_free_snames(s->selector_names);
   vocabulary_free_knames(s->kernel_names);
   free(s->opcodes);
   free(s->kfunct_table);
 
+  s->selector_names = NULL;
+  s->kernel_names = NULL;
+  s->opcodes = NULL;
+  s->kfunct_table = NULL;
+  /* Make sure to segfault if any of those are dereferenced */
+
+  sciprintf("Freeing graphics data...\n");
   free_picture(s->pic);
 
   for (i = 0; i < MAX_HUNK_BLOCKS; i++)
@@ -1317,16 +1331,13 @@ game_exit(state_t *s)
       s->ports[i] = 0;
     }
 
-  s->selector_names = NULL;
-  s->kernel_names = NULL;
-  s->opcodes = NULL;
-  s->kfunct_table = NULL;
-  /* Make sure to segfault if any of those are dereferenced */
-
   if (s->pic_views)
     free(s->pic_views);
   if (s->dyn_views)
     free(s->dyn_views);
+
+  sciprintf("Freeing miscellaneous data...\n");
+  free(s->file_handles);
 
   menubar_free(s->menubar);
 
