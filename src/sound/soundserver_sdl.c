@@ -51,12 +51,11 @@ extern sound_server_t sound_server_sdl;
 sound_eq_t inqueue; /* The in-event queue */
 sound_eq_t queue; /* The event queue */
 
-int sdl_soundserver_init(void *args) {
-
-  state_t *s = (state_t *) args;
+int 
+sdl_soundserver_init(void *args) 
+{
   sci0_soundserver();
   return 0;
-
 }
 
 int
@@ -138,11 +137,12 @@ sound_sdl_get_command(GTimeVal *wait_tvp)
 {
 	sound_event_t *event = NULL;
 
-	SDL_LockMutex(in_mutex);
+	/* SDL_LockMutex(in_mutex); */
 	if (!sound_eq_peek_event(&inqueue)) {
-	  /*	  if(SDL_CondWaitTimeout(in_cond, in_mutex, 10)) */
+	  /*	  if(SDL_CondWaitTimeout(in_cond, in_mutex, 10))  */
 	    return NULL;
 	}
+	SDL_LockMutex(in_mutex);
 
 	event = sound_eq_retreive_event(&inqueue);
 
