@@ -212,6 +212,8 @@ kDisposeList(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 
 	s->seg_manager.free_list(&s->seg_manager, argv[0]);
+
+	return s->r_acc;
 }
 
 
@@ -223,7 +225,7 @@ _k_new_node(state_t *s, reg_t value, reg_t key)
 
 	if (!n) {
 		KERNEL_OOPS("Out of memory while creating a node");
-		return;
+		return NULL_REG;
 	}
 
 	n->pred = n->succ = NULL_REG;
@@ -529,7 +531,7 @@ kSort(state_t *s, int funct_nr, int argc, reg_t *argv)
 	node_t *node;
 
 	if (!input_size)
-		return;
+		return s->r_acc;
 
 	if (IS_NULL_REG(output_data))
 	{
@@ -575,4 +577,6 @@ kSort(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 
 	free(temparray);
+
+	return s->r_acc;
 }

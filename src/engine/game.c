@@ -132,7 +132,7 @@ _reset_graphics_input(state_t *s)
 {
 	resource_t *resource;
 	int font_nr;
-	gfx_color_t transparent	= {0};
+	gfx_color_t transparent;
 	sciprintf("Initializing graphics\n");
 
 	if (s->resmgr->sci_version <= SCI_VERSION_01) {
@@ -262,7 +262,6 @@ int
 script_init_engine(state_t *s, sci_version_t version)
 {
 	resource_t *vocab996 = scir_find_resource(s->resmgr, sci_vocab, 996, 1);
-	int i;
 	int scriptnr;
 	unsigned int seeker;
 	int classnr;
@@ -460,7 +459,7 @@ script_free_vm_memory(state_t *s)
 }
 
 extern void
-free_kfunct_table(state_t *s);
+free_kfunct_tables(state_t *s);
 /* From kernel.c */
 
 void
@@ -505,7 +504,6 @@ game_init(state_t *s)
 #  warning "Fixme: Use new VM instantiation code all over the place"
 #endif
 	reg_t game_obj; /* Address of the game object */
-	int i;
 	dstack_t *stack;
 
 	stack = s->seg_manager.allocate_stack(&s->seg_manager, VM_STACK_SIZE,
@@ -587,8 +585,6 @@ game_init(state_t *s)
 int
 game_exit(state_t *s)
 {
-	int i;
-
 	if (s->execution_stack) {
 		sci_free(s->execution_stack);
 	}

@@ -220,14 +220,16 @@ scir_new_resource_manager(char *dir, int version,
 			resource_error = 0;
 		}
 
-		if (!resource_error)
+		if (!resource_error) {
 			if (version == SCI_VERSION_01_VGA)
-			sci1_read_resource_patches(dir,
-						   &mgr->resources,
-						   &mgr->resources_nr); else
-			sci0_read_resource_patches(dir,
-						   &mgr->resources,
-						   &mgr->resources_nr);
+				sci1_read_resource_patches(dir,
+							   &mgr->resources,
+							   &mgr->resources_nr);
+			else
+				sci0_read_resource_patches(dir,
+							   &mgr->resources,
+							   &mgr->resources_nr);
+		}
 
 		resmap_version = SCI_VERSION_0;
 	}

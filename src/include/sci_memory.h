@@ -114,7 +114,7 @@
 #define INFO_MEMORY(alloc_statement, size, filename, linenum, funcname)\
 	fprintf(stderr, "ALLOC_MEM(%lu bytes) [%s (%s) : %u] "\
 		#alloc_statement "\n",\
-		size, filename, funcname, linenum);
+		(unsigned long) size, filename, funcname, linenum);
 
 
 #ifdef UNCHECKED_MALLOCS

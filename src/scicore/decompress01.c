@@ -242,14 +242,10 @@ byte *pic_reorder(byte *inbuffer, int dsize)
 	int view_start;
 	int cdata_size;
 	int i;
-	int pos, nextbyte;
 	byte *seeker = inbuffer;
 	byte *writer;
 	char viewdata[CEL_HEADER_SIZE];
-	char offsets[2*3];
-	char compbuffer[0x600];
 	byte *cdata, *cdata_start;
-	int index;
 	
 	writer = reorderBuffer=(byte *) malloc(dsize);
 
@@ -361,7 +357,7 @@ byte *view_reorder(byte *inbuffer, int dsize)
 	byte *writer = outbuffer;
 	byte *lh_ptr;
 	byte *rle_ptr,*pix_ptr;
-	int l, lb, c, celindex, lh_last;
+	int l, lb, c, celindex, lh_last = -1;
 	int chptr;
 	int w;
 	int *cc_lengths;
@@ -414,6 +410,10 @@ byte *view_reorder(byte *inbuffer, int dsize)
 	{
 		if (lh_mask & lb) /* The loop is _not_ present */
 		{
+			if (lh_last == -1) {
+				fprintf(stderr, "Error: While reordering view: Loop not present, but can't re-use last loop!\n");
+				lh_last = 0;
+			}
 			putInt16(lh_ptr, lh_last);
 			lh_ptr += 2;
 		} else
@@ -588,7 +588,7 @@ int decompress01(resource_t *result, int resh)
 		result->status = SCI_STATUS_ALLOCATED;
 		break;
 
-	case 1: /* LZW */
+	case 1: /* Some huffman encoding */
 		if (decrypt2(result->data, buffer, result->size, compressedLength)) {
 			free(result->data);
 			result->data = 0; /* So that we know that it didn't work */

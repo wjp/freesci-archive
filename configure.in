@@ -143,6 +143,7 @@ if test x"$have_x" = xyes; then
 	AC_CHECK_HEADER(X11/Xft/Xft.h, [HAVE_X11_XFT_XFT_H=1
 					AC_DEFINE(HAVE_X11_XFT_XFT_H)])
 	AC_CHECK_HEADERS(X11/extensions/Xrender.h, [X_LIBS="$XLIBS -lXrender -lXft"])
+	AC_CHECK_LIB(fontconfig, FcInit, [X_LIBS="$X_LIBS -lfontconfig"])
 	AC_CHECK_XSHM
 fi
 

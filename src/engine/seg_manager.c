@@ -244,12 +244,10 @@ void sm_destroy (seg_manager_t* self) {
 **             seg_id - allocated segment id
 */
 int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, int* seg_id) {
-	int i;
 	int seg;
 	char was_added;
 	mem_obj_t* mem;
 	resource_t *script;
-	void* temp;
 	script_t *scr;
 
 	seg = int_hash_map_check_value (self->id_seg_map, script_nr, 1, &was_added);

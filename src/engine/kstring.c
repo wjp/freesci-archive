@@ -30,10 +30,10 @@
 #include <engine.h>
 #include <vocabulary.h>
 
-#define CHECK_OVERFLOW1(pt, size) \
+#define CHECK_OVERFLOW1(pt, size, rv) \
 	if (((pt) - (str_base)) + (size) > maxsize) { \
 		SCIkwarn(SCIkERROR, "String expansion exceeded heap boundaries\n"); \
-		return;\
+		return rv;\
 	}
 
 char *
@@ -264,7 +264,7 @@ kParse(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	if (s->parser_valid == 2) {
 		sciprintf("Parsing skipped: Parser in simparse mode\n");
-		return;
+		return s->r_acc;
 	}
 
 	words = vocab_tokenize_string(string, &words_nr,
@@ -358,6 +358,7 @@ kStrCat(state_t *s, int funct_nr, int argc, reg_t *argv)
 	char *s2 = kernel_dereference_bulk_pointer(s, argv[1], 0);
 
 	strcat(s1, s2);
+	return argv[0];
 }
 
 reg_t
@@ -454,7 +455,6 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 	int *arguments;
 	reg_t dest = argv[0];
 	char *target = (char *) kernel_dereference_bulk_pointer(s, dest, 0);
-	char *tstart = target;
 	reg_t position = argv[1]; /* source */
 	int index = UKPV(2);
 	char *source;
@@ -490,7 +490,7 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 	while ((xfer = *source++)) {
 		if (xfer == '%') {
 			if (mode == 1) {
-				CHECK_OVERFLOW1(target, 2);
+				CHECK_OVERFLOW1(target, 2, NULL_REG);
 				*target++ = '%'; /* Literal % by using "%%" */
 				mode = 0;
 			} else {
@@ -526,7 +526,7 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 			} else
 				str_leng = 0;
 
-			CHECK_OVERFLOW1(target, str_leng + 1);
+			CHECK_OVERFLOW1(target, str_leng + 1, NULL_REG);
 
 			switch (xfer) {
 			case 's': { /* Copy string */
@@ -535,7 +535,7 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 								      arguments[paramindex + 1]);
 				int slen = strlen(tempsource);
 				int extralen = str_leng - slen;
-				CHECK_OVERFLOW1(target, extralen);
+				CHECK_OVERFLOW1(target, extralen, NULL_REG);
 
 				if (reg.segment) /* Heap address? */
 					paramindex++;
@@ -554,7 +554,7 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 				break;
 
 			case 'c': { /* insert character */
-				CHECK_OVERFLOW1(target, 2);
+				CHECK_OVERFLOW1(target, 2, NULL_REG);
 				if (align >= 0)
 					while (str_leng-- > 1)
 						*target++ = ' '; /* Format into the text */
@@ -579,7 +579,7 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 						arguments[paramindex] = (~0xffff) | arguments[paramindex];
 
 				target += sprintf(target, format_string, arguments[paramindex++]);
-				CHECK_OVERFLOW1(target, 0);
+				CHECK_OVERFLOW1(target, 0, NULL_REG);
 
 				unsigned_var = 0;
 
@@ -641,7 +641,7 @@ kGetFarText(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	if (!textres) {
 		SCIkwarn(SCIkERROR, "text.%d does not exist\n", UKPV(0));
-		return;
+		return NULL_REG;
 	}
 
 	seeker = (char *) textres->data;

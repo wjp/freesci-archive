@@ -71,6 +71,7 @@ kSetJump(state_t *s, int funct_nr, int argc, reg_t *argv)
 	PUT_SEL32V(object, xStep, x);
 	PUT_SEL32V(object, yStep, y);
 
+	return s->r_acc;
 }
 
 
@@ -298,14 +299,14 @@ kDoAvoider(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	if (!is_heap_object(s, avoider)) {
 		SCIkwarn(SCIkWARNING, "DoAvoider() where avoider %04x is not an object\n", avoider);
-		return;
+		return NULL_REG;
 	}
 
 	client = GET_SEL32(avoider, client);
 
 	if (!is_heap_object(s, client)) {
 		SCIkwarn(SCIkWARNING, "DoAvoider() where client %04x is not an object\n", client);
-		return;
+		return NULL_REG;
 	}
 
 	looper = GET_SEL32(client, looper);
@@ -316,7 +317,7 @@ kDoAvoider(state_t *s, int funct_nr, int argc, reg_t *argv)
 		if (mover.segment) {
 			SCIkwarn(SCIkWARNING, "DoAvoider() where mover %04x is not an object\n", mover);
 		}
-		return;
+		return s->r_acc;
 	}
 
 	destx = GET_SEL32V(mover, x);
@@ -327,17 +328,17 @@ kDoAvoider(state_t *s, int funct_nr, int argc, reg_t *argv)
 	if (invoke_selector(INV_SEL(mover, doit, 1) , 0)) {
 		SCIkwarn(SCIkERROR, "Mover %04x of avoider %04x"
 			 " doesn't have a doit() funcselector\n", mover, avoider);
-		return;
+		return NULL_REG;
 	}
 
 	mover = GET_SEL32(client, mover);
 	if (!mover.segment) /* Mover has been disposed? */
-		return; /* Return gracefully. */
+		return s->r_acc; /* Return gracefully. */
 
 	if (invoke_selector(INV_SEL(client, isBlocked, 1) , 0)) {
 		SCIkwarn(SCIkERROR, "Client %04x of avoider %04x doesn't"
 			 " have an isBlocked() funcselector\n", client, avoider);
-		return;
+		return NULL_REG;
 	}
 
 	dx = destx - GET_SEL32V(client, x);
@@ -370,7 +371,7 @@ kDoAvoider(state_t *s, int funct_nr, int argc, reg_t *argv)
 			if (invoke_selector(INV_SEL(client, canBeHere, 1) , 0)) {
 				SCIkwarn(SCIkERROR, "Client %04x of avoider %04x doesn't"
 					 " have a canBeHere() funcselector\n", client, avoider);
-				return;
+				return NULL_REG;
 			}
 
 			PUT_SEL32V(client, x, oldx);

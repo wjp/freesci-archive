@@ -475,7 +475,8 @@ reg_t
 kFlushResources(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	/* Nothing to do */
-  SCIkdebug(SCIkROOM, "Entering room number %d\n", UKPV(0));
+	SCIkdebug(SCIkROOM, "Entering room number %d\n", UKPV(0));
+	return s->r_acc;
 }
 
 reg_t
@@ -485,6 +486,7 @@ kSetDebug(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	script_debug_flag = 1; /* Enter debug mode */
 	_debug_seeking = _debug_step_running = 0;
+	return s->r_acc;
 }
 
 #define _K_NEW_GETTIME_TICKS 0
@@ -498,7 +500,7 @@ kGetTime(state_t *s, int funct_nr, int argc, reg_t *argv)
 	struct tm* loc_time;
 	GTimeVal time_prec;
 	time_t the_time;
-	int retval;
+	int retval = 0; /* Avoid spurious warning */
 
 	/* Reset optimization flags: If this function is called,
 	** the game may be waiting for a timeout  */

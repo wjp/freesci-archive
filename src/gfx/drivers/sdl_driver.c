@@ -935,6 +935,7 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
 		switch (skey) {
 		case SDLK_LCTRL: skey = SDLK_CAPSLOCK; break;
 		case SDLK_CAPSLOCK: skey = SDLK_LCTRL; break;
+		default: break;
 		}
 	}
 
@@ -1016,6 +1017,9 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
 			return '`';
 		else
 			return rkey;
+
+	default:
+		break;
 	}
 
 	sciprintf("Unknown SDL keysym: %04x (%d) \n", skey, rkey);

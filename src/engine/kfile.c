@@ -199,21 +199,21 @@ kFClose(state_t *s, int funct_nr, int argc, reg_t *argv)
   return s->r_acc;
 }
 
-void fputs_wrapper(state_t *s, int handle, char *data)
+void fputs_wrapper(state_t *s, int handle, int size, char *data)
 {
-  SCIkdebug(SCIkFILE, "FPuts'ing \"%s\" to handle %d\n", data, handle);
+	SCIkdebug(SCIkFILE, "FPuts'ing \"%s\" to handle %d\n", data, handle);
 
-  if (handle == 0) {
-    SCIkwarn(SCIkERROR, "Attempt to write to file handle 0\n");
-    return;
-  }
+	if (handle == 0) {
+		SCIkwarn(SCIkERROR, "Attempt to write to file handle 0\n");
+		return;
+	}
 
-  if ((handle >= s->file_handles_nr) || (s->file_handles[handle] == NULL)) {
-    SCIkwarn(SCIkERROR, "Attempt to write to invalid/unused file handle %d\n", handle);
-    return;
-  }
+	if ((handle >= s->file_handles_nr) || (s->file_handles[handle] == NULL)) {
+		SCIkwarn(SCIkERROR, "Attempt to write to invalid/unused file handle %d\n", handle);
+		return;
+	}
 
-  fputs(data, s->file_handles[handle]);
+	fwrite(data, 1, size, s->file_handles[handle]);
 }
 
 void fwrite_wrapper(state_t *s, int handle, char *data, int length)
@@ -236,11 +236,11 @@ void fwrite_wrapper(state_t *s, int handle, char *data, int length)
 
 reg_t kFPuts(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-  int handle = UKPV(0);
-  char *data = kernel_dereference_bulk_pointer(s, argv[1], 0);
+	int handle = UKPV(0);
+	char *data = kernel_dereference_bulk_pointer(s, argv[1], 0);
 
-  fputs_wrapper(s, handle, data);
-  return s->r_acc;
+	fputs_wrapper(s, handle, strlen(data) + 1, data);
+	return s->r_acc;
 }
 
 static void
@@ -377,60 +377,61 @@ kGetCWD(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-  char dir_buffer [MAX_PATH], dir_buffer2 [MAX_PATH];
-  int mode = UKPV(0);
+	char dir_buffer [MAX_PATH], dir_buffer2 [MAX_PATH];
+	int mode = UKPV(0);
 
 
-  switch(mode) {
+	switch(mode) {
 
-  case K_DEVICE_INFO_GET_DEVICE: {
-    char *input_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
-    char *output_s = kernel_dereference_bulk_pointer(s, argv[2], 0);
+	case K_DEVICE_INFO_GET_DEVICE: {
+		char *input_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
+		char *output_s = kernel_dereference_bulk_pointer(s, argv[2], 0);
 
-    GetFullPathName (input_s, sizeof (dir_buffer)-1, dir_buffer, NULL);
-    strncpy(output_s, dir_buffer, 2);
-    output_s [2] = 0;
-  }
-  break;
+		GetFullPathName (input_s, sizeof (dir_buffer)-1, dir_buffer, NULL);
+		strncpy(output_s, dir_buffer, 2);
+		output_s [2] = 0;
+	}
+		break;
 
-  case K_DEVICE_INFO_GET_CURRENT_DEVICE: {
-    char *output_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
+	case K_DEVICE_INFO_GET_CURRENT_DEVICE: {
+		char *output_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
 
-    _getcwd (dir_buffer, sizeof (dir_buffer)-1);
-    strncpy(output_s, dir_buffer, 2);
-    output_s [2] = 0;
-  }
-  break;
+		_getcwd (dir_buffer, sizeof (dir_buffer)-1);
+		strncpy(output_s, dir_buffer, 2);
+		output_s [2] = 0;
+	}
+		break;
 
-  case K_DEVICE_INFO_PATHS_EQUAL: {
-    char *path1_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
-    char *path2_s = kernel_dereference_bulk_pointer(s, argv[2], 0);
+	case K_DEVICE_INFO_PATHS_EQUAL: {
+		char *path1_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
+		char *path2_s = kernel_dereference_bulk_pointer(s, argv[2], 0);
 
-    GetFullPathName (path1_s, sizeof (dir_buffer)-1, dir_buffer, NULL);
-    GetFullPathName (path2_s, sizeof (dir_buffer2)-1, dir_buffer2, NULL);
+		GetFullPathName (path1_s, sizeof (dir_buffer)-1, dir_buffer, NULL);
+		GetFullPathName (path2_s, sizeof (dir_buffer2)-1, dir_buffer2, NULL);
 
 #ifdef _MSC_VER
-    return make_reg(0, !stricmp (path1_s, path2_s));
+		return make_reg(0, !stricmp (path1_s, path2_s));
 #else
-    return make_reg(0, !strcasecmp (path1_s, path2_s));
+		return make_reg(0, !strcasecmp (path1_s, path2_s));
 #endif
-  }
-  break;
+	}
+		break;
 
-  case K_DEVICE_INFO_IS_FLOPPY: {
-    char *input_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
+	case K_DEVICE_INFO_IS_FLOPPY: {
+		char *input_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
 
-    GetFullPathName (input_s, sizeof (dir_buffer)-1, dir_buffer, NULL);
-    dir_buffer [3] = 0;  /* leave X:\ */
+		GetFullPathName (input_s, sizeof (dir_buffer)-1, dir_buffer, NULL);
+		dir_buffer [3] = 0;  /* leave X:\ */
 
-    return make_reg(0, GetDriveType (dir_buffer) == DRIVE_REMOVABLE);
-  }
-  break;
+		return make_reg(0, GetDriveType (dir_buffer) == DRIVE_REMOVABLE);
+	}
+		break;
 
-  default: {
-    SCIkwarn(SCIkERROR, "Unknown DeviceInfo() sub-command: %d\n", mode);
-  }
-  }
+	default: {
+		SCIkwarn(SCIkERROR, "Unknown DeviceInfo() sub-command: %d\n", mode);
+	}
+	}
+	return s->r_acc;
 }
 
 #else /* !_WIN32 */
@@ -438,49 +439,51 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-  int mode = UKPV(0);
+	int mode = UKPV(0);
 
-  switch(mode) {
+	switch(mode) {
 
-  case K_DEVICE_INFO_GET_DEVICE: {
-    char *output_s = kernel_dereference_bulk_pointer(s, argv[2], 0);
+	case K_DEVICE_INFO_GET_DEVICE: {
+		char *output_s = kernel_dereference_bulk_pointer(s, argv[2], 0);
 
-    strcpy(output_s, "/");
-  }
-  break;
+		strcpy(output_s, "/");
+	}
+		break;
 
-  case K_DEVICE_INFO_GET_CURRENT_DEVICE: {
-    char *output_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
+	case K_DEVICE_INFO_GET_CURRENT_DEVICE: {
+		char *output_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
 
-    strcpy(output_s, "/");
-  }
-  break;
+		strcpy(output_s, "/");
+	}
+		break;
 
-  case K_DEVICE_INFO_PATHS_EQUAL: {
-    char *path1_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
-    char *path2_s = kernel_dereference_bulk_pointer(s, argv[2], 0);
+	case K_DEVICE_INFO_PATHS_EQUAL: {
+		char *path1_s = kernel_dereference_bulk_pointer(s, argv[1], 0);
+		char *path2_s = kernel_dereference_bulk_pointer(s, argv[2], 0);
 
 #ifndef HAVE_FNMATCH_H
 #ifndef _DOS
 #  warning "File matches will be unprecise!"
 #endif
-    return make_reg(0, !strcmp(path1_s, path2_s));
+		return make_reg(0, !strcmp(path1_s, path2_s));
 #else
-    return make_reg(0, fnmatch(path1_s, path2_s, FNM_PATHNAME) /* POSIX.2 */);
+		return make_reg(0, fnmatch(path1_s, path2_s, FNM_PATHNAME) /* POSIX.2 */);
 #endif
   }
-  break;
+		break;
 
-  case K_DEVICE_INFO_IS_FLOPPY: {
+	case K_DEVICE_INFO_IS_FLOPPY: {
 
-	  return NULL_REG; /* Never */
-  }
-  break;
+		return NULL_REG; /* Never */
+	}
+		break;
 
-  default: {
-    SCIkwarn(SCIkERROR, "Unknown DeviceInfo() sub-command: %d\n", mode);
-  }
-  }
+	default: {
+		SCIkwarn(SCIkERROR, "Unknown DeviceInfo() sub-command: %d\n", mode);
+	}
+	}
+
+	return s->r_acc;
 }
 
 #endif /* !_WIN32 */
@@ -723,7 +726,6 @@ static void
 update_savegame_indices(char *gfname)
 {
 	int i;
-	int gfname_len = strlen(gfname);
 
 	_savegame_indices_nr = 0;
 
@@ -1084,11 +1086,12 @@ kFileIO(state_t *s, int funct_nr, int argc, reg_t *argv)
     }
     case K_FILEIO_WRITE_STRING :
     {
-	char *buf = kernel_dereference_bulk_pointer(s, argv[1], 0);
 	int size = UKPV(2);
+	char *buf = kernel_dereference_bulk_pointer(s, argv[1], size);
 	int handle = UKPV(3);
 
-	fputs_wrapper(s, handle, buf);
+	if (buf)
+		fputs_wrapper(s, handle, size, buf);
 	break;
     }
     case K_FILEIO_SEEK :
@@ -1104,7 +1107,7 @@ kFileIO(state_t *s, int funct_nr, int argc, reg_t *argv)
     {
 	char *mask = kernel_dereference_bulk_pointer(s, argv[1], 0);
 	reg_t buf = argv[1];
-	int attr = UKPV(3); /* We won't use this, Win32 might, though... */
+	/* int attr = UKPV(3); */ /* We won't use this, Win32 might, though... */
 
 #ifndef _WIN32
 	if (strcmp(mask, "*.*")==0) strcpy(mask, "*"); /* For UNIX */

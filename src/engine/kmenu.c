@@ -54,6 +54,8 @@ kSetMenu(state_t *s, int funct_nr, int argc, reg_t *argv)
 		menubar_set_attribute(s, (index >> 8) - 1, (index & 0xff) - 1, UKPV(i - 1), argv[i]);
 		i += 2;
 	}
+
+	return s->r_acc;
 }
 
 reg_t
@@ -359,7 +361,7 @@ kMenuSelect(state_t *s, int funct_nr, int argc, reg_t *argv)
 			switch (event.type) {
 			case SCI_EVT_QUIT:
 				quit_vm();
-				return;
+				return NULL_REG;
 
 			case SCI_EVT_KEYBOARD:
 				switch (event.data) {

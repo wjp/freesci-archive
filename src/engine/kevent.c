@@ -198,9 +198,9 @@ kGetEvent(state_t *s, int funct_nr, int argc, reg_t *argv)
 				PUT_SEL32V(obj, type, e.type);
 				PUT_SEL32V(obj, message, 1);
 				PUT_SEL32V(obj, modifiers, e.buckybits|extra_bits);
-				s->r_acc=make_reg(0, 1);
+				s->r_acc = make_reg(0, 1);
 			}
-			return;
+			return s->r_acc;;
 		} break;
 
 		default: {
@@ -243,6 +243,8 @@ kMapKeyToDir(state_t *s, int funct_nr, int argc, reg_t *argv)
 			return make_reg(0, 1);
 		} else return NULL_REG;
 	}
+
+	return s->r_acc;
 }
 
 

@@ -191,6 +191,7 @@ con_hook_page(char *topic, char *body);
 /* Hooks a general information page to the manual page system
 ** Parameters: (char *) topic: The topic name
 **             (char *) body: The text body to assign to the topic
+** Returns   : (int) 0 on success
 */
 
 int

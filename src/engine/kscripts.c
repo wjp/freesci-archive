@@ -90,7 +90,7 @@ invoke_selector(state_t *s, reg_t object, int selector_id, int noinvalid, int kf
 		return 1;
 	}
 	if (slc_type == SELECTOR_VARIABLE) /* Swallow silently */
-		return;
+		return 0;
 
 	va_start(argp, argc);
 	for (i = 0; i < argc; i++) {
@@ -229,19 +229,18 @@ kDisposeClone(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	reg_t victim_addr = argv[0];
 	clone_t *victim_obj = obj_get(s, victim_addr);
-	int i;
 	word underBits;
 
 	if (!victim_obj) {
 		SCIkwarn(SCIkERROR, "Attempt to dispose non-class/object at "PREG"\n",
 			 PRINT_REG(victim_addr));
-		return;
+		return s->r_acc;
 	}
 
 	if (victim_obj->variables[SCRIPT_INFO_SELECTOR].offset != SCRIPT_INFO_CLONE) {
 		/*  SCIkwarn("Attempt to dispose something other than a clone at %04x\n", offset); */
 		/* SCI silently ignores this behaviour; some games actually depend on it */
-		return;
+		return s->r_acc;
 	}
 
 	underBits = GET_SEL32V(victim_addr, underBits);

@@ -330,10 +330,9 @@ kPicNotValid(state_t *s, int funct_nr, int argc, reg_t *argv)
 void
 _k_redraw_box(state_t *s, int x1, int y1, int x2, int y2)
 {
-	int i;
-
 	sciprintf("_k_redraw_box(): Unimplemented!\n");
 #if 0
+	int i;
 	view_object_t *list = s->dyn_views;
 
 	sciprintf("Reanimating views\n", s->dyn_views_nr);
@@ -642,6 +641,8 @@ reg_t
 kDirLoop(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	_k_dirloop(argv[0], UKPV(1), s, funct_nr, argc, argv);
+
+	return s->r_acc;
 }
 
 #define GASEOUS_VIEW_MASK_ACTIVE (_K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)
@@ -718,7 +719,6 @@ kCanBeHere(state_t *s, int funct_nr, int argc, reg_t * argv)
 	word signal;
 	int retval;
 
-	int priority = GET_SEL32SV(obj, priority);
 	abs_rect_t abs_zone;
 	rect_t zone;
 	word edgehit;
@@ -824,9 +824,10 @@ kCelHigh(state_t *s, int funct_nr, int argc, reg_t *argv)
 		SCIkwarn(SCIkWARNING, "CelHigh called with %d parameters!\n", argc);
 	}
 
-	if (gfxop_get_cel_parameters(s->gfx_state, view, loop, cel, &width, &height, &offset))
+	if (gfxop_get_cel_parameters(s->gfx_state, view, loop, cel, &width, &height, &offset)) {
 		SCIkwarn(SCIkERROR, "Invalid loop (%d) or cel (%d) in view.%d (0x%x), or view invalid\n", loop, cel, view, view);
-	else
+		return NULL_REG;
+	} else
 		return make_reg(0, height);
 }
 
@@ -843,9 +844,10 @@ kCelWide(state_t *s, int funct_nr, int argc, reg_t *argv)
 		SCIkwarn(SCIkWARNING, "CelHigh called with %d parameters!\n", argc);
 	}
 
-	if (gfxop_get_cel_parameters(s->gfx_state, view, loop, cel, &width, &height, &offset))
+	if (gfxop_get_cel_parameters(s->gfx_state, view, loop, cel, &width, &height, &offset)) {
 		SCIkwarn(SCIkERROR, "Invalid loop (%d) or cel (%d) in view.%d (0x%x), or view invalid\n", loop, cel, view, view);
-	else
+		return NULL_REG;
+	} else
 		return make_reg(0, width);
 }
 
@@ -859,7 +861,7 @@ kNumLoops(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	if (loops_nr < 0) {
 		SCIkwarn(SCIkERROR, "view.%d (0x%x) not found\n", view, view);
-		return;
+		return NULL_REG;
 	}
 
 	SCIkdebug(SCIkGRAPHICS, "NumLoops(view.%d) = %d\n", view, loops_nr);
@@ -880,7 +882,7 @@ kNumCels(state_t *s, int funct_nr, int argc, reg_t *argv)
 	if (gfxop_check_cel(s->gfx_state, view, &loop, &cel)) { /* OK, this is a hack and there's a
 							       ** real function to calculate cel numbers... */
 		SCIkwarn(SCIkERROR, "view.%d (0x%x) not found\n", view, view);
-		return;
+		return NULL_REG;
 	}
 
 	SCIkdebug(SCIkGRAPHICS, "NumCels(view.%d, %d) = %d\n", view, loop, cel+1);
@@ -1303,7 +1305,7 @@ kEditControl(state_t *s, int funct_nr, int argc, reg_t *argv)
 				if (!text) {
 					SCIkdebug(SCIkWARNING, "Could not draw control: "PREG" does not reference text!\n",
 						  PRINT_REG(text_pos));
-					return;
+					return s->r_acc;
 				}
 
 				if (REG_EQ(text_pos, s->save_dir_copy)) {
@@ -1563,8 +1565,6 @@ _k_draw_control(state_t *s, reg_t obj, int inverse)
 static inline void
 draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int funct_nr, int argc, reg_t *argp)
 {
-	int priority = view->color.priority;
-	int y = view->pos.y;
 	abs_rect_t abs_zone;
 	reg_t obj = make_reg(view->ID, view->subID);
 
@@ -1584,7 +1584,7 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int funct_nr, int argc, r
 
 	if (!(view->signalp && (((reg_t *)view->signalp)->offset & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {
 		gfxw_box_t *box;
-		gfx_color_t color	= {0};
+		gfx_color_t color;
 
 		gfxop_set_color(s->gfx_state, &color, -1, -1, -1, -1, -1, 0xf);
 
@@ -1786,7 +1786,6 @@ _k_make_dynview_obj(state_t *s, reg_t obj, int options, int nr, int funct_nr, in
 	short oldloop, oldcel;
 	int cel, loop, view_nr = GET_SEL32SV(obj, view);
 	int palette;
-	int has_nsrect = lookup_selector(s, obj, s->selector_map.nsBottom, NULL, NULL) == SELECTOR_VARIABLE;
 	int signal;
 	reg_t under_bits;
 	reg_t *under_bitsp, *signalp;
@@ -1922,7 +1921,7 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, list_t *list, int optio
 
 	while(widget) { /* Read back widget values */
 		if (widget->signalp)
-			widget->signal = widget->signal & _K_VIEW_SIG_FLAG_FREESCI_PRIVATE
+			widget->signal = (widget->signal & _K_VIEW_SIG_FLAG_FREESCI_PRIVATE)
 				| ((reg_t *)(widget->signalp))->offset;
 
 		widget = (gfxw_dyn_view_t *) widget->next;
@@ -2234,7 +2233,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 			if (list_ref.segment || list_ref.offset)
 				SCIkdebug(SCIkWARNING, "Attempt to AddToPic single non-list: "PREG"\n",
 					  PRINT_REG(list_ref));
-			return;
+			return s->r_acc;
 		}
 
 		pic_views = gfxw_new_list(s->picture_port->bounds, 1);
@@ -2251,6 +2250,8 @@ kAddToPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 		SCIkdebug(SCIkGRAPHICS, "Returning.\n");
 	}
 	reparentize_primary_widget_lists(s, s->port);
+
+	return s->r_acc;
 }
 
 
@@ -2271,7 +2272,7 @@ kSetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	if (!new_port) {
 		SCIkwarn(SCIkERROR, "Invalid port %04x requested\n", port_nr);
-		return;
+		return NULL_REG;
 	}
 
 	s->port->draw(GFXW(s->port), gfxw_point_zero); /* Update the port we're leaving */
@@ -2301,7 +2302,7 @@ kDrawCel(state_t *s, int funct_nr, int argc, reg_t *argv)
 	
 	if (gfxop_check_cel(s->gfx_state, view, &loop, &cel)) {
 		SCIkwarn(SCIkERROR, "Attempt to draw non-existing view.%03d\n", view);
-		return;
+		return s->r_acc;
 	}
 
 	SCIkdebug(SCIkGRAPHICS, "DrawCel((%d,%d), (view.%d, %d, %d), p=%d)\n", x, y, view, loop,
@@ -2326,7 +2327,7 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 	goner = gfxw_find_port(s->visual, goner_nr);
 	if ((goner_nr < 3) || (goner == NULL)) {
 		SCIkwarn(SCIkERROR, "Removal of invalid window %04x requested\n", goner_nr);
-		return;
+		return s->r_acc;
 	}
 
 	if (s->dyn_views && GFXWC(s->dyn_views->parent) == GFXWC(goner)) {
@@ -2355,7 +2356,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	gfxw_port_t *window;
 	int x, y, xl, yl, flags;
-	gfx_color_t bgcolor	= {0};
+	gfx_color_t bgcolor;
 	int priority;
 
 
@@ -2865,7 +2866,6 @@ kAnimate(state_t *s, int funct_nr, int argc, reg_t *argv)
 	reg_t cast_list_ref = KP_ALT(0, NULL_REG);
 	int cycle = (KP_ALT(1, NULL_REG)).offset;
 	list_t *cast_list = NULL;
-	int old_pnv = s->pic_not_valid; /* Backup old value */
 	int open_animation = 0;
 
 
@@ -2876,7 +2876,7 @@ kAnimate(state_t *s, int funct_nr, int argc, reg_t *argv)
 	if (cast_list_ref.segment) {
 		cast_list = LOOKUP_LIST(cast_list_ref);
 		if (!cast_list)
-			return;
+			return s->r_acc;
 	}
 
 
@@ -2908,7 +2908,7 @@ kAnimate(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 		if (s->pic_is_new) { /* Happens if DrawPic() is executed by a dynview (yes, that happens) */
 			kAnimate(s, funct_nr, argc, argv); /* Tail-recurse */
-			return;
+			return s->r_acc;
 		}
 
 		SCIkdebug(SCIkGRAPHICS, "Handling Dynviews (..step 9 inclusive):\n");
@@ -3034,7 +3034,7 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 	int index = KP_UINT(argv[1]);
 	int temp;
 	int save_under = 0;
-	gfx_color_t transparent	= {0};
+	gfx_color_t transparent;
 	char *text;
 	gfxw_port_t *port = (s->port)? s->port : s->picture_port;
 	int update_immediately = 1;
@@ -3137,7 +3137,7 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 			graph_restore_box(s, argv[argpt++]);
 			update_immediately = 1;
 			argpt++;
-			return;
+			return s->r_acc;
 
 		case K_DONT_UPDATE_IMMEDIATELY:
 
@@ -3148,7 +3148,7 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 		default:
 			SCIkdebug(SCIkGRAPHICS, "Unknown Display() command %x\n", UKPV(argpt-1));
-			return;
+			return NULL_REG;
 		}
 	}
 
@@ -3164,7 +3164,7 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	if (!text_handle) {
 		SCIkwarn(SCIkERROR, "Display: Failed to create text widget!\n");
-		return;
+		return NULL_REG;
 	}
 
 	if (save_under) {    /* Backup */

@@ -627,7 +627,7 @@ run_vm(state_t *s, int restoring)
 	seg_id_t variables_seg[4]; /* Same as above, contains segment IDs */
 #ifndef DISABLE_VALIDATIONS
 	int variables_max[4]; /* Max. values for all variables */
-	int code_buf_size;
+	int code_buf_size = 0 /* (Avoid spurious warning) */;
 #endif
 	int temp;
 	gint16 aux_acc; /* Auxiliary 16 bit accumulator */
@@ -639,13 +639,13 @@ run_vm(state_t *s, int restoring)
 					** by this value  */
 	/* Current execution data: */
 	exec_stack_t *xs = s->execution_stack + s->execution_stack_pos;
-	exec_stack_t *xs_new; /* Used during some operations */
+	exec_stack_t *xs_new = NULL /* (Avoid spurious warning) */; /* Used during some operations */
 	object_t *obj = obj_get(s, xs->objp);
 	script_t *local_script = script_locate_by_segment(s, xs->local_segment);
 	int old_execution_stack_base = s->execution_stack_base; /* Used to detect the
 								** stack bottom, for "physical"
 								** returns  */
-	byte *code_buf;
+	byte *code_buf = NULL /* (Avoid spurious warning) */;
 
 	if (!local_script) {
 		script_error(s, __FILE__, __LINE__, "Program Counter gone astray");
@@ -845,6 +845,7 @@ run_vm(state_t *s, int restoring)
 						sciprintf("Error: Attempt to add two pointers, stack="PREG" and acc="PREG"!\n",
 							  PRINT_REG(r_temp), PRINT_REG(s->r_acc));
 						script_debug_flag = script_error_flag = 1;
+						offset = 0;
 					} else {
 						r_ptr = s->r_acc; 
 						offset = r_temp.offset;
@@ -871,6 +872,7 @@ run_vm(state_t *s, int restoring)
 						sciprintf("Error: Attempt to subtract two pointers, stack="PREG" and acc="PREG"!\n",
 							  PRINT_REG(r_temp), PRINT_REG(s->r_acc));
 						script_debug_flag = script_error_flag = 1;
+						offset = 0;
 					} else {
 						r_ptr = s->r_acc; 
 						offset = r_temp.offset;
@@ -1715,6 +1717,17 @@ script_lookup_export(state_t *s, int script_nr, int export)
 	    && export >= 0)
 #endif
 		return make_reg(seg, getUInt16((byte *)(script->export_table + export)));
+#ifndef DISABLE_VALIDATIONS
+	else {
+		CORE_ERROR("EXPORTS", "Export invalid or script missing ");
+		if (!script)
+			sciprintf("(script.%03d missing)\n", script_nr);
+		else
+			sciprintf("(script.%03d: Sought export %d/%d)\n",
+				  script_nr, export, script->exports_nr);
+		return NULL_REG;
+	}
+#endif
 }
 
 #define INST_LOOKUP_CLASS(id) ((id == 0xffff)? NULL_REG : get_class_address(s, id, SCRIPT_GET_LOCK, reg))

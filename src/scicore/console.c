@@ -417,7 +417,7 @@ parse_reg_t(state_t *s, char *str, reg_t *dest, int addresses_only)
 		int times_found = 0;
 		char *str_objname;
 		char *str_suffix;
-		char suffchar;
+		char suffchar = 0; /* Supress spurious -Wall warning */
 		int i;
 		/* Parse obj by name */
 
@@ -456,7 +456,7 @@ parse_reg_t(state_t *s, char *str, reg_t *dest, int addresses_only)
 
 			while (idx < max_index) {
 				int valid = 1;
-				object_t *obj;
+				object_t *obj = NULL; /* Surpress spurious warning */
 				reg_t objpos;
 				objpos.segment = i;
 
@@ -721,6 +721,7 @@ con_parse (state_t *s, char *command)
 
 }
 
+/* (unused)
 static cmd_mm_entry_t *
 con_iterate_entry(int ID, int *counter)
 {
@@ -736,6 +737,7 @@ con_iterate_entry(int ID, int *counter)
 
 	return (cmd_mm_entry_t *) retval;
 }
+*/
 
 static cmd_mm_entry_t *
 con_alloc_page_entry(int ID)
@@ -769,6 +771,8 @@ con_hook_page(char *name, char *body)
 
 	page->name = name;
 	page->description = body;
+
+	return 0;
 }
 
 int
@@ -891,6 +895,8 @@ sciprintf (char *fmt, ...)
 		_con_string_callback(buf);
 	else
 		free(buf);
+
+	return 1;
 }
 
 void
@@ -1201,7 +1207,7 @@ c_man (state_t * s)
 		entry = cmd_mm_find(name, section - 1);
 	else
 		for (i = 0; i < CMD_MM_ENTRIES && !section; i++) {
-			if (entry = cmd_mm_find(name, i))
+			if ((entry = cmd_mm_find(name, i)))
 				section = i+1;
 		}
 

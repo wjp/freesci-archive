@@ -1,3 +1,10 @@
+2003-04-27  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* configure.in: Added libfontconfig to Xft configuration whenever
+	neccessary
+
+	* Misc. -Wall fixes all over the place
+
 2003-04-12  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/scicore/console.c: Added debugcmd type 'r'.
