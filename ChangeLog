@@ -1,3 +1,15 @@
+2000-05-28  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (_k_invoke_view_list): Implicit base
+	setting now occurs before the object in question is invoked.
+
+	* src/engine/kernel.c (kMemoryInfo): Fixed MemoryInfo to handle
+	parameters 2 (largest available hunk) and 3 (free hunk total).
+	For the time being, 0xffff is returned.
+
+	* src/engine/kstring.c (kFormat): Fixed Format to handle '%u'
+	(kSaid): All matches fail if Said() was successful previously
+
 2000-05-27  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* doc/sci.sgml: Various documentation updates

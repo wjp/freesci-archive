@@ -131,12 +131,15 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
     vocab_decypher_said_block(s, said_block);
   }
 
-#ifdef SCI_SIMPLE_SAID_CODE
-
   s->acc = 0;
 
   if (s->parser_lastmatch_word == SAID_FULL_MATCH)
     return; /* Matched before; we're not doing any more matching work today. */
+
+#ifdef SCI_SIMPLE_SAID_CODE
+
+  s->acc = 0;
+
 
   if ((new_lastmatch = vocab_match_simple(s, said_block)) != SAID_NO_MATCH) {
 
@@ -163,7 +166,9 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
     if (new_lastmatch != SAID_PARTIAL_MATCH)
       PUT_SELECTOR(s->parser_event, claimed, 1);
 
-  } else s->acc = 0;
+    s->parser_lastmatch_word = new_lastmatch;
+
+  } else s->parser_lastmatch_word = SAID_NO_MATCH;
 #endif /* !SCI_SIMPLE_SAID_CODE */
 }
 
@@ -406,6 +411,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int i;
   int startarg;
   int str_leng = 0; /* Used for stuff like "%13s" */
+  int unsigned_var = 0;
 
   CHECK_THIS_KERNEL_FUNCTION;
 
@@ -463,8 +469,16 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 	break;
 
+	case 'u': unsigned_var = 1;
 	case 'd': { /* Copy decimal */
-	  int templen = sprintf(target, "%d", arguments[paramindex++]);
+	  int templen;
+
+	  if (unsigned_var)
+	    templen = sprintf(target, "%u", arguments[paramindex++] & 0xffff);
+	  else
+	    templen = sprintf(target, "%d", arguments[paramindex++]);
+
+	  unsigned_var = 0;
 
 	  if (templen < str_leng) {
 	    int diff = str_leng - templen;

@@ -5244,13 +5244,15 @@ to pressing LShift-RShift-PadMinus.
 		</funcdef><paramdef>word mode</paramdef></funcprototype></funcsynopsis>
                 <para>
                    <simplelist>
-                       <member><type/(word)/ mode: 0 or 1 (see below)</member>
+                       <member><type/(word)/ mode: 0 to 3 (see below)</member>
                    </simplelist></para>
 		<para>
 			Returns: <type>(word)</type> The amount of free memory on the heap, in bytes
 		</para><para>
-                        This function returns the total amount of free memory on the heap if mode == 0.
-                        If mode equals 1, the total size of the largest chunk of heap memory is returned.
+		  This function returns the total amount of free memory on the heap if mode == 0.
+		  If mode equals 1, the total size of the largest chunk of heap memory is returned.
+		  In mode 2, the size of the largest available hunk memory block is returned, and
+		  mode 3 returns the total amount of free hunk memory, shiftet to the right by 4 bits.
 		</para>
 	</sect3>
 

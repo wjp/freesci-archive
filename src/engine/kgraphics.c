@@ -563,8 +563,8 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int y = GET_SELECTOR(obj, brTop);
   int xend = GET_SELECTOR(obj, brRight);
   int yend = GET_SELECTOR(obj, brBottom);
-  int xl = xend - x + 1;
-  int yl = yend - y + 1;
+  int xl = xend - x;
+  int yl = yend - y;
   word edgehit;
 
   signal = GET_SELECTOR(obj, signal);
@@ -720,7 +720,6 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
     xlen = PARAM(arg+2) - xstart;
   }
   s->acc = graph_on_control(s, xstart, ystart + 10, xlen, ylen, map);
-
 }
 
 void
@@ -814,18 +813,20 @@ _k_base_setter(state_t *s, heap_ptr object)
     view0_base_modify(loop, cell, viewres->data, &xmod, &ymod);
 
 
-  /*  fprintf(stderr,"(xm,ym)=(%d,%d)\n", xmod, ymod); */
-  
   xbase = x - xmod - (xsize) / 2;
   xend = xbase + xsize;
   yend = y - ymod + 1;
   ybase = yend - ystep;
 
+  SCIkdebug(SCIkBASESETTER, "(%d,%d)+/-(%d,%d), (%d x %d) -> (%d, %d) to (%d, %d)\n",
+	    x, y, xmod, ymod, xsize, ysize, xbase, xend, ybase, yend);
+  
   PUT_SELECTOR(object, brLeft, xbase);
   PUT_SELECTOR(object, brRight, xend);
   PUT_SELECTOR(object, brTop, ybase);
   PUT_SELECTOR(object, brBottom, yend);
 
+  
 
   if (s->debug_mode & (1 << SCIkBASESETTER_NR)) {
     graph_clear_box(s, xbase, ybase + 10, xend-xbase+1, yend-ybase+1, VIEW_PRIORITY(original_y));
@@ -1438,6 +1439,11 @@ _k_invoke_view_list(state_t *s, heap_ptr list, int funct_nr, int argc, int argp)
   while (node) {
     heap_ptr obj = UGET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
 
+    if (lookup_selector(s, obj, s->selector_map.baseSetter, NULL) == SELECTOR_METHOD)
+      invoke_selector(INV_SEL(obj, baseSetter, 1), 0); /* SCI-implemented base setter */
+    else
+      _k_base_setter(s, obj);
+
     if (!(GET_SELECTOR(obj, signal) & _K_VIEW_SIG_FLAG_FROZEN)) {
       word ubitsnew, ubitsold = GET_SELECTOR(obj, underBits);
       invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
@@ -1628,11 +1634,6 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int flags)
 	_k_clip_view(list[i].view, &(list[i].loop), &(list[i].cel));
 
 	_k_set_now_seen(s, list[i].obj);
-
-	if (lookup_selector(s, list[i].obj, s->selector_map.baseSetter, NULL) == SELECTOR_METHOD)
-	  invoke_selector(INV_SEL(list[i].obj, baseSetter, 1), 0); /* SCI-implemented base setter */
-	else
-	  _k_base_setter(s, list[i].obj);
 
 	SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", list[i].obj, signal);
 

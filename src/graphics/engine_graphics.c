@@ -508,6 +508,8 @@ graph_on_control(state_t *s, int x, int y, int xl, int yl, int _map)
   if ((xl <= 0) || (yl <= 0))
     return 0;
 
+  ++yl;
+
   for (map = 0; map < 3; map++)
     if (_map & (1 << map)) {
       int startindex = (s->pic->bytespl * y) + x * s->pic->bytespp;
