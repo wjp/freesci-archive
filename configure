@@ -4337,17 +4337,17 @@ if test x"$dlopen" = xyes; then
 	fi
 else
 	if test x"$fsci_ggi_driver" = xyes; then
-		fsci_ggi_st="ggi_driver.c"
+		fsci_ggi_st="ggi_driver.o"
 		LIBS="$LIBS $ac_ggi_libraries"
 	fi
 
 	if test x"$fsci_sdl_driver" = xyes; then
-		fsci_sdl_st="sdl_driver.c"
+		fsci_sdl_st="sdl_driver.o"
 		LIBS="$LIBS $SDL_LIBS"
 	fi
 
 	if test x"$fsci_xlib_driver" = xyes; then
-		fsci_xlib_st="xlib_driver.c"
+		fsci_xlib_st="xlib_driver.o"
 		LIBS="$LIBS $X_LIBS"
 	fi
 fi
