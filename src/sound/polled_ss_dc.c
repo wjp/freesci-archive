@@ -36,7 +36,6 @@
 #include <kos/cond.h>
 
 static kthread_t *child;
-static tid_t child_tid;
 static semaphore_t *out_mutex;
 static semaphore_t *in_mutex;
 static condvar_t *in_cond;
@@ -93,7 +92,6 @@ sound_dc_init(state_t *s, int flags)
 	sound_eq_init(&ev_queue);
 
 	child = thd_create((void *) dc_soundserver_init, s);
-	child_tid = child->tid;
 
 	return 0;
 }
@@ -200,7 +198,7 @@ sound_dc_exit(state_t *s)
 
 	/* clean up */
 	sciprintf("Waiting for soundserver thread to exit...\n");
-	while (thd_by_tid(child_tid));
+	thd_wait(child);
 	sciprintf("Soundserver thread exit ok\n");
 	sem_destroy(out_mutex);
 	sem_destroy(in_mutex);

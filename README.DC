@@ -1,0 +1,218 @@
+FreeSCI - Dreamcast
+
+
+Index
+-----
+
+1    Building FreeSCI
+2    Loading FreeSCI
+2.1  Loading over a serial link
+2.2  Loading over a network link
+2.3  Loading from a CD-R
+3    Game CD's
+3.1  Making a game CD
+4    Loading a SCI game
+5    Playing a SCI game
+6    Known issues (PLEASE READ!)
+6.1  Saving
+6.2  Sound
+7    Acknowledgements
+8    Trademark notice
+9    Get involved
+
+
+1    Building FreeSCI
+---------------------
+
+Building is done from within a UNIX environment (e.g. Linux or Cygwin).
+
+You will need the following:
+
+- GCC version 3.0.4 or later and binutils for both SH4 and ARM.
+- KallistiOS (KOS) version 1.1.9 or later. Available from
+  http://cadcdev.sourceforge.net. (Please refer to the KOS documentation for
+  instructions on how to set it up.)
+
+1) Execute your KOS environ script.
+2) Change to the src/dc directory of the FreeSCI distribution.
+3) Run `make'.
+
+This should result in a `freesci.bin' binary in the src/dc directory.
+
+
+2    Loading FreeSCI
+--------------------
+
+There are basically 3 ways to execute the FreeSCI binary on the Dreamcast.
+Loading the binary over a serial link, loading the binary over a network
+link or burning the executable on a CD-R.
+
+2.1  Loading over a serial link
+-------------------------------
+
+You will need:
+
+- A PC to Dreamcast serial cable.
+- dcload-serial. Available from
+  http://adk.napalm-x.com/dc/dcload-serial/index.html.
+
+1) Insert the dcload CD in your Dreamcast and turn it on. Wait for the
+   dcload utility to start.
+2) Run `dc-tool -x freesci.bin'. You may need additional paramaters to
+   change the baud rate and/or serial port that is used.
+
+2.2  Loading over a network link
+--------------------------------
+
+You will need:
+
+- A Dreamcast Broadband/LAN adapter to connect the Dreamcast to your PC.
+- dcload-ip. Available from http://adk.napalm-x.com/dc/dcload-ip/index.html.
+
+1) Insert the dcload CD in your Dreamcast and turn it on. Wait for the
+   dcload utility to start.
+2) Run `dc-tool -x freesci.bin'. You may need additional paramaters to
+   indicate the Dreamcast's ip address.
+
+2.3  Loading from a CD-R
+------------------------
+
+Burning the binary on a CD-R can be done in several ways. The method that's
+described here is only one of those ways and only works in a UNIX environment.
+This paragraph is based on a tutorial from Marcus Comstedt's website. If you
+need more detailed info, have a look at http://mc.pp.se/dc/.
+
+You will need:
+
+- 1ST_READ.BIN scrambler. Available from http://mc.pp.se/dc/sw.html.
+- IP creator. Available from http://mc.pp.se/dc/sw.html.
+- cdrtools. Available from http://www.fokus.gmd.de/research/cc/glone/
+  employees/joerg.schilling/private/cdrecord.html
+
+1) Run `cdrecord -scanbus' and remember the SCSI id of your CD recorder. The
+   remainder of this paragraph will assume a SCSI id of `0,0,0'. You should
+   substitute the actual id of your CD recorder for `0,0,0'.
+2) Create a 4 second audio track: `dd if=/dev/zero bs=2352 count=300
+   of=audio.raw'.
+3) Burn this track to a cd with cdrecord: `cdrecord dev=0,0,0 -multi -audio
+   audio.raw'.
+4) Run `cdrecord dev=0,0,0 -msinfo'. Remember the offset it returns. The
+   remainder of this paragraph will assume an offset of `0,11700'. You should
+   substitute the actual offset returned by cdrecord for `0,11700'.
+5) Use the 1ST_READ.BIN scrambler to scramble the freesci binary and create
+   a `1ST_READ.BIN' file: `scramble freesci.bin 1ST_READ.BIN'.
+6) Create an ISO image of `1ST_READ.BIN': `mkisofs -l -C 0,11700 -o
+   freesci.iso 1ST_READ.BIN'. *
+7) Use the IP Creator to create an `IP.BIN' file: `makeip ip.txt IP.BIN'.
+8) Dump this `IP.BIN' bootstrap into the ISO image: `( cat IP.BIN ; dd
+   if=freesci.iso bs=2048 skip=16 ) > data.raw'.
+9) Record the data track to the CD: `cdrecord dev=0,0,0 -xa1 data.raw'
+
+You should now have a selfbooting FreeSCI CD, just put it in your Dreamcast
+and turn it on.
+
+* If you also want to put games on this CD you should use the following
+  procedure instead:
+
+  1) Create a new directory somewhere on your harddisk. The remainder of
+     this paragraph assumes that it's called `newdir'. You should substitute
+     the actual directory you created for `newdir'.
+  2) Copy 1ST_READ.BIN to `newdir'.
+  3) Copy all the games into seperate subdirectories under `newdir'. You can
+     put those subdirectories anywhere you want, e.g. directly under `newdir'
+     or under another subdirectory called `GAMES'.
+  4) Create an ISO image of this directory structure: `mkisofs -l -C 0,11700
+     -o freesci.iso newdir'.
+
+
+3    Game CD's
+--------------
+
+FreeSCI supports almost any Mode 1 data CD containing SCI games, there are no
+requirements on directory layout. As a result of this, you can run games
+directly from Sierra collection CD's.
+
+3.1  Making a game CD
+---------------------
+
+You might want to create your own compilation of SCI games and burn it on a
+CD. Each game should have it's own subdirectory. Other than that, you can
+use any directory layout you like. The game CD's should be Mode 1 data CD's.
+
+
+4    Loading a SCI game
+-----------------------
+
+The FreeSCI game menu interface can only be used with a controller. After you
+have loaded FreeSCI, it will ask you to insert a game CD. Insert a game CD into
+your Dreamcast and press `A'. The CD will be scanned for SCI games, which may
+take a while depending on the number of files on the CD. You will be
+presented with a list of directories containing a SCI game. Please note that
+this list could also contain games which are currently not compatible with
+FreeSCI. Please refer to http://freesci.linuxgames.com for more info on
+which games should work and which won't.
+
+Use the directional pad to move the selection bar to the game you want to
+play. The R and L shoulder buttons can be used to move immediately to the
+next or previous page respectively, which might be useful if there are many
+games on the CD. Push the `A' button to start the currently selected game.
+
+If you accidently inserted the wrong game CD you can insert another one and
+press `Y'. This will cause the CD to be scanned and the list of games on
+that CD to be displayed.
+
+
+5    Playing a SCI game
+-----------------------
+
+FreeSCI supports the keyboard and mouse interfaces for SCI games. It's
+currently not possible to use the controller as a joystick. FreeSCI makes no
+requirements on a keyboard or mouse being present. However, all currently
+supported SCI games require a keyboard, while the mouse is optional. For
+further gameplay instructions, refer to your Sierra game manual.
+
+
+6    Known issues
+-----------------
+
+This section lists a number of known issues related specifically to the
+Dreamcast port.
+
+6.1  Saving
+-----------
+
+Saving games is currently not supported. This is ofcourse very inconvenient
+and renders the Dreamcast port practically useless. This issue is number one
+on the to do list for the Dreamcast port.
+
+6.2  Sound
+----------
+
+The sound is generated by an adlib emulator. The sound is generally
+acceptable but gets choppy when data is loaded from the CD. This issue is
+being looked into.
+
+
+7    Acknowledgements
+---------------------
+
+Thanks to Dan Potter for creating KOS, the development kit used to port
+FreeSCI to the Dreamcast.
+
+Thanks to Sega Corporation for creating the wonderful Dreamcast console.
+
+
+8    Trademark notice
+---------------------
+
+Sega and Dreamcast are registered trademarks of Sega Corporation.
+
+
+9    Get involved
+-----------------
+
+If you want to help out, check out the development page on the FreeSCI website
+for more information.
+
+The FreeSCI Team
+http://freesci.linuxgames.com

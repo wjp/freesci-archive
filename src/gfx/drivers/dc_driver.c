@@ -63,7 +63,7 @@ struct _dc_state {
 	int buckystate;
 	
 	/* Thread ID of the input thread */
-	tid_t thread;
+	kthread_t *thread;
 	
 	/* Flag to stop the input thread. (<>0 = run, 0 = stop) */
 	int run_thread;
@@ -517,8 +517,6 @@ dc_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 static int
 dc_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 {
-	kthread_t *thread;
-
 	sciprintf("Initialising video mode\n");
 
 	pvr_shutdown();
@@ -580,7 +578,7 @@ dc_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 			vidres = DM_320x240;
 			break;
 		case 2:
-			vidres = DM_640x480_PAL_IL;
+			vidres = DM_640x480;
 	}
 		
 	vid_set_mode(vidres, vidcol);
@@ -592,9 +590,7 @@ dc_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	
 	S->run_thread = 1;
 
-	thread = thd_create((void *) dc_input_thread, drv);
-
-	S->thread = thread->tid;
+	S->thread = thd_create((void *) dc_input_thread, drv);
 
 	S->first_event = NULL;
 	S->last_event = NULL;
@@ -627,7 +623,7 @@ dc_exit(struct _gfx_driver *drv)
 		sci_free(S->priority[1]);
 		sciprintf("Waiting for input thread to exit... ");
 		S->run_thread = 0;
-		while (thd_by_tid(S->thread));
+		thd_wait(S->thread);
 		sciprintf("ok\n");
 		sciprintf("Freeing semaphores\n");
 		sem_destroy(S->sem_event);
@@ -831,7 +827,7 @@ static int
 dc_usec_sleep(struct _gfx_driver *drv, long usecs)
 {
 	/* TODO: wake up on mouse move */
-	usleep(usecs);
+	thd_sleep(usecs/1000);
 	return GFX_OK;
 }
 

@@ -1,3 +1,15 @@
+2002-12-18  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/gfx/drivers/dc_driver.c (_dc_state, dc_init_specific,
+	dc_exit): Use proper way of detecting thread termination.
+	(dc_init_specific): Use generic screen mode names. (dc_usec_sleep):
+	Use thd_sleep() instead of usleep() which sleeps the whole system.
+	* src/sound/polled_ss_dc.c (sound_dc_init, sound_dc_exit): Use
+	proper way of detecting thread termination.
+
+	* README.DC, src/dc/Makefile, src/dc/config.h, src/dc/.cvsignore:
+	Files added to the repository.
+
 2002-12-17  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/config.l, src/config.c: Defined PATH_MAX for Dreamcast.
