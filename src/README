@@ -1,12 +1,9 @@
 Directory structure:
 
-console/ contains everything related to the command console
+scicore/ contains all files concerning resource management and (de)compression,
 
-core/ contains all files concerning resource management and (de)compression,
-as well as everything directly related to the VM and the text parser, such as
-handling for script and vocab resources.
-
-demo/ contains demo programs.
+engine/ contains the files directly related to the VM and the text parser, such
+as heap and state management and handling for script and vocab resources.
 
 graphics/ contains graphics and input management (since input handlers are
 usually bundled with graphics libraries) and stuff for specific graphics/

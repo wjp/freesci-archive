@@ -1,10 +1,4 @@
-TODO for the next version:
-
-- Fix the remaining bugs:
-- Implement the "missing half" of the parser (Said())
-
-
-TODO for 0.3.x:
+TODO for 0.3.1:
 
 - Re-structure the graphics subsystem for performance
 - Implement sound servers that actually make some sound

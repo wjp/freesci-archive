@@ -7,11 +7,8 @@ below for a complete (?) listing.
 FreeSCI is incomplete. You will not be able to finish any SCI game with it.
 This release has the following limitations (plus some bugs):
 - Only SCI0 games are supported
-- The parser is not yet implemented
-- Restarting the game does not work
-- The game menu is not supported yet
-- Several SCI kernel functions are missing
-- Not all keys are mapped/interpreted correctly
+- The SCI debug functions aren't fully supported (and probably never will be,
+  since we're using our own debug functions).
 - Sound is not supported yet
 - Graphics are slow, especially on displays not using 8bpp color index mode.
 
@@ -37,7 +34,10 @@ make
 
 This will try to build several tools:
 src/tools/classes - lists all SCI classes
-src/tools/console - A command console for inspection of SCI data
+src/tools/sciconsole - A command console for inspection of SCI data
+src/tools/listwords - Lists all words (except for suffix alternatives)
+		      understood by the game
+src/tools/scidisasm - Disassembles all script resources into .script files
 src/tools/sciunpack - A tool for unpacking and converting SCI resource data
 src/tools/scriptdump - disassembles all selector methods into SCI assembly
 src/tools/vocabdump - Displays kernel function and selector names (obsolete)
@@ -48,6 +48,8 @@ Required 'non-standard' libraries:
  * glib (ftp://ftp.gtk.org)
  * libpng (http://www.cdrom.com/pub/png)
  * GGI (ftp://ftp.ggi-project.org)
+	-or-
+ * Any OpenGL with glx implementation (strictly experimental!)
 
 libpng is a new requirement (it was previously listed as "not being
 neccessary", sorry for that).
@@ -141,6 +143,7 @@ level of interactivity:
 - Conquest of Camelot
 - The Fun Seeker's Guide (from the SQ Collector's Series)
 
+In theory, FreeSCI should be able to let you complete all of these.
 
 
 Platforms
@@ -150,10 +153,15 @@ Successful builds have been reported for the following platforms (in order of
 appearance):
 - i686-pc-linux-gnu
 - sparc-sun-solaris2.5
+- sgi-mips-irix6.2 (Indy R5000 using native cc, experimental)
+
+The following platforms used to be supported, but have not been tested for this
+release:
 - Alpha/Linux
 - ia32/Win32 (Visual C++)
 - ia32/FreeBSD
 - ia32/NetBSD
+- ia32/DOS
 
 
 

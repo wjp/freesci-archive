@@ -1,3 +1,28 @@
+Finally, 0.3.0 has been released! This release took particularly long,
+mostly because of a major break from january to early april. Anyway, it
+might be argued that it was worth it: This is the first release with
+a fully functional text parser, plus, we have fixed all major (and many
+minor) bugs, implemented the menu bar, added all missing kernel functions-
+except for debug functions that aren't really used by SCI games, and made
+sure in-game saving and restoring works. Also, Rink Springer has ported
+FreeSCI to ia32/DOS (the platform the original SCI runs on, for those who
+forgot).
+Also, an experimental glx target was written for platforms without libggi
+installed; using it, FreeSCI can now be made to compile (using the native
+cc) and run on mips/Irix systems, although this target and platform should
+still be considered experimental.
+As promised in the FAQ, 0.3.0 has all interpreter features required to run
+and complete SCI0 games. At least in theory; so far, no reports of games
+having been finished have arrived. We believe that what we have should be
+everything Sierra SCI had, though; maybe YOU can be the first person ever to
+finish an SCI adventure with FreeSCI!
+For the next releases, we will be re-implementing the graphics subsystem
+for more efficient graphics, and add sound support.
+
+
+
+--- 0.2.5 ---
+
 This release took somewhat longer than the previous ones; partially because
 of a 1.5 month break in the development cycle, but also because the
 daily CVS snapshots provided by Claudio Matsuoka invalidated the need to
