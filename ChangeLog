@@ -1,3 +1,10 @@
+2002-02-13  Solomon Peachy <pizza@shaftnet.org>
+
+	* README, src/config.c, src/config.l, src/main.c,
+          src/include/pcmout.h, src/include/sci_conf.h,
+	  src/sound/pcmout.c, src/sound/pcmout_sdl.c:
+        Sample rate is now configurable.  See README.
+
 2002-02-12  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/main.c (init_gfx): Don't ignore -c when -x or -y isn't used
