@@ -34,6 +34,8 @@
 #include <sound.h>
 #include <scitypes.h>
 
+#define MAX_POLYPHONY 16 /* Max number of notes per channel */
+
 #ifdef PIPE_BUF
 #  define SOUND_SERVER_XFER_SIZE PIPE_BUF
 #else
@@ -91,6 +93,12 @@
 /* "waiting" means "tagged for playing, but not active right now" */
 
 #define MIDI_CHANNELS 16
+
+typedef struct {
+	int polyphony;
+	int playing;
+	byte notes[MAX_POLYPHONY]; /* -1 for notes not playing */
+} playing_notes_t;
 
 typedef struct _song {
 
@@ -335,7 +343,7 @@ sound_eq_peek_event(sound_eq_t *queue);
 
 void sci_midi_command(song_t *song, guint8 command, guint8 param,
                       guint8 param2, 
-		      int *ccc, FILE *ds);
+		      int *ccc, FILE *ds, playing_notes_t *playing);
 /* performs a regular midi event in the song. */
 
 

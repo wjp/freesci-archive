@@ -37,6 +37,7 @@ sound_server_t *global_sound_server = NULL;
 
 int soundserver_dead = 0;
 
+#define POLYPHONY(song, channel) song->data[(channel << 1) + 1]
 
 static void
 sound_server_print_channels_any(FILE *ds, int *channel_instrument,
@@ -131,6 +132,7 @@ sci0_soundserver()
 {
   GTimeVal last_played, wakeup_time, ctime;
   byte mute_channel[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
+  playing_notes_t playing_notes[16];
   int channel_instrument_orig[16] = {-1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1};
   int channel_instrument[16];
   song_t *_songp = NULL;
@@ -141,7 +143,11 @@ sci0_soundserver()
   int command = 0;
   int ccc = 127; /* cumulative cue counter */
   int suspended = 0; /* Used to suspend the sound server */
+  int i;
   GTimeVal suspend_time; /* Time at which the sound server was suspended */
+
+  for (i = 0; i < 16; i++)
+	  playing_notes[i].playing = 0;
 
   memset(&suspend_time, 0, sizeof(GTimeVal));
   memset(&wakeup_time, 0, sizeof(GTimeVal));
@@ -604,6 +610,16 @@ sci0_soundserver()
     /*---------------*/
     /* Handle output */
     /*---------------*/
+
+    if (newsong != oldsong && newsong) {
+	    int i;
+	    for (i = 0; i < 16; i++) {
+		    playing_notes[i].polyphony = MAX(1, MIN(POLYPHONY(newsong, i), MAX_POLYPHONY));
+		    playing_notes[i].playing = 0;
+		    /* Lingering notes are usually intended */
+	    }
+    }
+
     
     if (song && song->data) {
       int newcmd;
@@ -654,7 +670,7 @@ sci0_soundserver()
 	if (!((command & 0xf0) == 0x90 && mute_channel[command & 0xf]))
 		/* Unless the channel is muted */
 		sci_midi_command(song, command, param, param2, 
-				 &ccc, ds);
+				 &ccc, ds, &(playing_notes[command & 0xf]));
 	
       }
       

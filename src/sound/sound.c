@@ -501,6 +501,42 @@ sound_eq_retreive_event(sound_eq_t *queue)
   else return NULL;
 }
 
+
+
+
+/** Two utility functions to modify playing note lists */
+
+static inline int
+add_note_playing(playing_notes_t *playing, int note)
+     /* Returns 0 or a note to suspend */
+{
+	int retval = 0;
+
+	if (playing->playing >= playing->polyphony) {
+		retval = playing->notes[0];
+		if (playing->polyphony > 1)
+			memcpy(playing->notes, &(playing->notes[1]), sizeof(byte) * (playing->polyphony - 1)); /* Yes, this sucks. */
+	} else playing->playing++;
+
+	playing->notes[playing->playing-1] = note;
+
+	return retval;
+}
+
+static inline void
+remove_note_playing(playing_notes_t *playing, int note)
+{
+	int i;
+
+	for (i = 0; i < playing->playing; i++)
+		if (playing->notes[i] == note) {
+			if (i < playing->polyphony)
+				memcpy(&(playing->notes[i]), &(playing->notes[i + 1]), (playing->polyphony - i));
+			playing->playing--;
+		}
+}
+
+
 /* process the actual midi events */
 
 int cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0};
@@ -509,7 +545,7 @@ int cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0};
 void sci_midi_command(song_t *song, guint8 command, 
 		      guint8 param, guint8 param2, 
 		      int *ccc,
-		      FILE *ds)
+		      FILE *ds, playing_notes_t *playing)
 {
   
   if (SCI_MIDI_CONTROLLER(command)) {
@@ -571,6 +607,24 @@ void sci_midi_command(song_t *song, guint8 command,
 	break;
       case 0x80:  /* note on */
       case 0x90:  /* note off */
+
+	      if (1 || (command & 0xf != RHYTHM_CHANNEL)) {
+		      if ((command & 0x90) == 0x80) {
+			      int retval;
+			      /* Register notes when playing: */
+
+			      retval = add_note_playing(playing, param);
+
+			      if (retval) { /* If we exceeded our polyphony */
+				      midi_event(command | 0x10, retval, 0);
+			      }
+		      } else {
+			      /* Unregister notes when muting: */
+			      midi_event(command & 0x80, param, param2);
+			      remove_note_playing(playing, param);
+		      }
+	      }
+
 	if (song->velocity[command & 0x0f])  /* do we ignore velocities? */
 	  param2 = song->velocity[command & 0x0f];
 

@@ -1,5 +1,13 @@
 2001-05-12  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/gfx/resource/sci_pic_0.c (gfxr_draw_pic0): Now yields to scheduler
+	after a certain amount of Fill operations
+
+	* src/engine/kgraphics.c (kDoBresen): Bresenham now counts down b-movCnt
+
+	* src/sound/sound.c (sci_midi_command): We now issue implicit note-offs
+	for sounds that have been playing too long.
+
 	* src/scicore/tools.c
 	* src/include/resource.h: Added sci_malloc(), sci_calloc(),
 	sci_realloc(), sci_free() global API functions

@@ -797,7 +797,7 @@ disassemble(state_t *s, heap_ptr pos)
 
     } else
 
-    if ((opcode == op_send) || (opcode == op_super) || (opcode == op_self)) {
+    if ((opcode == op_send) || (opcode == op_self)) {
       int restmod = *_restadjust;
       int stackframe = s->heap[retval - 1] + (restmod * 2);
       word selector;

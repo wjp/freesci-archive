@@ -41,6 +41,7 @@
 #define INTERCOL(a, b) ((int) sqrt((((3.3 * (a))*(a)) + ((1.7 * (b))*(b))) / 5.0))
 /* Macro for color interpolation */
 
+#define SCI_PIC0_MAX_FILL 30 /* Number of times to fill before yielding to scheduler */
 
 /* Default color maps */
 gfx_pixmap_color_t gfx_sci0_image_colors[GFX_SCI0_IMAGE_COLORS_NR] = {
@@ -799,7 +800,7 @@ _gfxr_auxplot_brush(gfxr_pic_t *pic, byte *buffer, int yoffset, int offset, int 
 static void
 _gfxr_plot_aux_pattern(gfxr_pic_t *pic, int x, int y, int size, int circle, int random,
 		       int mask, int color, int priority, int control,
-		       gfx_brush_mode_t brush_mode)
+		       gfx_brush_mode_t brush_mode, int map_nr)
 {
 	/* Plots an appropriate pattern to the aux buffer and the control buffer,
 	** if mask & GFX_MASK_CONTROL
@@ -846,6 +847,13 @@ _gfxr_plot_aux_pattern(gfxr_pic_t *pic, int x, int y, int size, int circle, int 
 	int yoffset = (y - size) * 320;
 	int i;
 	int random_index = 0;
+	gfx_pixmap_t *map;
+
+	switch (map_nr) {
+	case GFX_MASK_VISUAL: map = pic->visual_map; break;
+	case GFX_MASK_PRIORITY: map = pic->priority_map; break;
+	default: pic->control_map; break;
+	}
 
 	if (random >= 0)
 		random_index = random_offset[random];
@@ -866,10 +874,12 @@ _gfxr_plot_aux_pattern(gfxr_pic_t *pic, int x, int y, int size, int circle, int 
 
 		if (random == PLOT_AUX_PATTERN_NO_RANDOM) {
 
-			if (mask & GFX_MASK_CONTROL)
-				memset(pic->control_map->index_data + yoffset + offset + x, control, width);
-			for (j = x; j < x + width; j++)
-				pic->aux_map[yoffset + offset + j] |= mask;
+			if (mask & map_nr)
+				memset(map->index_data + yoffset + offset + x, control, width);
+
+			if (map_nr == GFX_MASK_CONTROL)
+				for (j = x; j < x + width; j++)
+					pic->aux_map[yoffset + offset + j] |= mask;
 
 		} else { /* Semi-Random! */
 			for (j = 0; j < width; j++) {
@@ -957,12 +967,12 @@ _gfxr_draw_pattern(gfxr_pic_t *pic, int x, int y, int color, int priority, int c
 		if (pattern_code & PATTERN_FLAG_USE_PATTERN) {
 			_gfxr_plot_aux_pattern(pic, x, y, pattern_size, 0, pattern_nr,
 					       drawenable, color, priority,
-					       control, brush_mode);
+					       control, brush_mode, GFX_MASK_CONTROL);
 		} else {
 
 			_gfxr_plot_aux_pattern(pic, x, y, pattern_size, 0,
 					       PLOT_AUX_PATTERN_NO_RANDOM,
-					       drawenable, 0, 0, control, 0);
+					       drawenable, 0, 0, control, 0, GFX_MASK_CONTROL);
 
 			if (drawenable & GFX_MASK_VISUAL)
 				gfx_draw_box_pixmap_i(pic->visual_map, boundaries, color);
@@ -978,22 +988,36 @@ _gfxr_draw_pattern(gfxr_pic_t *pic, int x, int y, int color, int priority, int c
 
 			_gfxr_plot_aux_pattern(pic, x, y, pattern_size, 1, pattern_nr,
 					       drawenable, color, priority,
-					       control, brush_mode);
+					       control, brush_mode, GFX_MASK_CONTROL);
 		} else {
 
 			_gfxr_plot_aux_pattern(pic, x, y, pattern_size, 1,
 					       PLOT_AUX_PATTERN_NO_RANDOM,
-					       drawenable, 0, 0, control, 0);
+					       drawenable, 0, 0, control, 0, GFX_MASK_CONTROL);
 
-			if (drawenable & GFX_MASK_VISUAL)
-				_gfxr_fill_ellipse(pic, pic->visual_map->index_data, 320 * pic->mode->xfact,
-						   scaled_x, scaled_y, xsize, ysize,
-						   color, ELLIPSE_SOLID);
+			if (pic->mode->xfact == 1 && pic->mode->yfact == 1) {
 
-			if (drawenable & GFX_MASK_PRIORITY)
-				_gfxr_fill_ellipse(pic, pic->priority_map->index_data, 320 * pic->mode->xfact,
-						   scaled_x, scaled_y, xsize, ysize,
-						   priority, ELLIPSE_SOLID);
+				if (drawenable & GFX_MASK_VISUAL)
+					_gfxr_plot_aux_pattern(pic, x, y, pattern_size, 1,
+							       PLOT_AUX_PATTERN_NO_RANDOM,
+							       drawenable, 0, 0, color, 0, GFX_MASK_VISUAL);
+
+				if (drawenable & GFX_MASK_PRIORITY)
+					_gfxr_plot_aux_pattern(pic, x, y, pattern_size, 1,
+							       PLOT_AUX_PATTERN_NO_RANDOM,
+							       drawenable, 0, 0, priority, 0, GFX_MASK_PRIORITY);
+			} else {
+
+				if (drawenable & GFX_MASK_VISUAL)
+					_gfxr_fill_ellipse(pic, pic->visual_map->index_data, 320 * pic->mode->xfact,
+							   scaled_x, scaled_y, xsize, ysize,
+							   color, ELLIPSE_SOLID);
+
+				if (drawenable & GFX_MASK_PRIORITY)
+					_gfxr_fill_ellipse(pic, pic->priority_map->index_data, 320 * pic->mode->xfact,
+							   scaled_x, scaled_y, xsize, ysize,
+							   priority, ELLIPSE_SOLID);
+			}
 		}
 	}
 }
@@ -1778,6 +1802,7 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 	int pal, index;
 	int temp;
 	int line_mode = style->line_mode;
+	int fill_count = 0;
 	byte op, opx;
 
 #ifdef GFXR_DEBUG_PIC0
@@ -1916,6 +1941,12 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 				p0printf("Abs coords %d,%d\n", x, y);
 				/*fprintf(stderr,"C=(%d,%d)\n", x, y + SCI_TITLEBAR_SIZE);*/
 				_gfxr_fill(pic, x, y + SCI_TITLEBAR_SIZE, (fill_normally)? color : 0, priority, control, drawenable);
+
+				if (fill_count++ > SCI_PIC0_MAX_FILL) {
+					sci_sched_yield();
+					fill_count = 0;
+				}
+
 #ifdef GFXR_DEBUG_PIC0
 				if (!fillmagc) {
 					int x,y;

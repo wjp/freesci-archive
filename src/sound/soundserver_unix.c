@@ -380,7 +380,7 @@ sound_unix_send_data(byte *data_ptr, int maxsend)
 	while (to_go) {
 		len = checked_write(fd, data_ptr, to_go);
 		if (len < 0) {
-			fprintf(stderr," Writing to the sound server failed!");
+			fprintf(stderr," Writing to the sound server failed!\n");
 			return 1;
 		}
 		to_go -= len;

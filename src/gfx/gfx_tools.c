@@ -412,8 +412,6 @@ gfx_pixmap_scale_index_data(gfx_pixmap_t *pixmap, gfx_mode_t *mode)
 	pixmap->index_xl = linewidth;
 	pixmap->index_yl *= yfact;
 
-	fprintf(stderr,"Created %dx%d size %d\n", pixmap->index_xl, pixmap->index_yl, linewidth * yfact * yl);
-
 	return pixmap;
 }
 

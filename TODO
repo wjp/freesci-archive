@@ -6,8 +6,6 @@ Primary goals:
 	* Add LRU resource manager
 	* Add graphical config file manager
 	* Add PCM output support and one driver to use it
-	* Add implicit note-offs dependant on the MIDI file's max number of
-	  notes
 	* Add reverse-stereo option
 
 Secondary goals:
