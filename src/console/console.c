@@ -176,23 +176,23 @@ consoleInput(sci_event_t *event)
       if (event->buckybits & SCI_EVM_CTRL) {
 	switch (event->data) {
 
-	case 'K':
+	case 'k':
 	  _inpbuf[con_cursor] = 0;
 	  break;
 
-	case 'A':
+	case 'a':
 	  con_cursor = 1;
 	  break;
 
-	case 'E':
+	case 'e':
 	  con_cursor = stl+1;
 	  break;
 
-	case 'B':
+	case 'b':
 	  if (con_cursor > 1) con_cursor--;
 	  break;
 
-	case 'P':
+	case 'p':
 	sci_evil_label_prevcommand:
 	if (_commandlookback == _commandbufpos)
 	  memcpy(&(_commandbuf[_commandbufpos]), con_input, SCI_CONSOLE_MAX_INPUT);
@@ -208,7 +208,7 @@ consoleInput(sci_event_t *event)
 	}
 	break;
 
-	case 'N':
+	case 'n':
 	sci_evil_label_nextcommand:
 	if ((z = _commandlookback + 1) == _commandbuflen + 1)
 	  z = 0;
@@ -221,11 +221,11 @@ consoleInput(sci_event_t *event)
 	}
 	break;
 
-	case 'F':
+	case 'f':
 	  if (con_cursor <= stl) con_cursor++;
 	  break;
 
-	case 'H':
+	case 'h':
 	sci_evil_label_backspace:
 	if (con_cursor > 1) {
 	  memmove(_inpbuf + con_cursor-1, _inpbuf + con_cursor,
@@ -234,14 +234,14 @@ consoleInput(sci_event_t *event)
 	}
 	break;
 
-	case 'D':
+	case 'd':
 	  if (con_cursor <= stl) {
 	    memmove(_inpbuf + con_cursor, _inpbuf + con_cursor +1,
 		    SCI_CONSOLE_MAX_INPUT - con_cursor- 1);
 	  }
 	  break;
 
-	case 'M': /* Enter */
+	case 'm': /* Enter */
 	sci_evil_label_enter:
 	memcpy(&(_commandbuf[z = _commandbufpos]), con_input, SCI_CONSOLE_MAX_INPUT);
 	++_commandbufpos;

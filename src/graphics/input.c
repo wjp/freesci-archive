@@ -35,7 +35,7 @@ long sci_redraw_time = SCI_INPUT_DEFAULT_REDRAWTIME;
 sci_event_t getEvent (state_t *s)
 {
   sci_event_t loop;
-  loop.type = SCI_EVT_CLOCK;
+  loop.type = SCI_EVT_NONE;
 
   if (s->gfx_driver->GetEvent)
     return s->gfx_driver->GetEvent(s);

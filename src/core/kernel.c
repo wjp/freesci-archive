@@ -1726,15 +1726,6 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	  PUT_SELECTOR(obj, modifiers, e.buckybits);
 	}
       } break;
-    case SCI_EVT_CLOCK:
-      {
-	s->acc = 0; /* Null event */
-	return;
-      } break;
-    case SCI_EVT_REDRAW:
-      {
-	s->acc = 0; /* Not supported yet */
-      } break;
     case SCI_EVT_MOUSE_RELEASE:
     case SCI_EVT_MOUSE_PRESS:
       {
@@ -1755,7 +1746,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
       } break;
     default:
       {
-	s->acc = 0; /* Unknown event */
+	s->acc = 0; /* Unknown or no event */
       }
     }
 }
@@ -2709,7 +2700,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	    case 'a': cursor = 0; break;
 	    case 'e': cursor = textlen; break;
 	    case 'f': if (cursor < textlen) ++cursor; break;
-	    case 'b': if (cursor > 1) --cursor; break;
+	    case 'b': if (cursor > 0) --cursor; break;
 	    case 'k': text[cursor] = 0; break; /* Terminate string */
 	    case 'h': _K_EDIT_BACKSPACE; break;
 	    case 'd': _K_EDIT_DELETE; break;
@@ -2751,7 +2742,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
           
           else if ((key > 31) && (key < 128)) 
           {
-            int inserting = modifiers & SCI_EVM_INSERT;
+            int inserting = (modifiers & SCI_EVM_INSERT);
             
             if (modifiers & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT))
 	      key = toupper(key);

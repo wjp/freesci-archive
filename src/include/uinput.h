@@ -49,13 +49,12 @@ typedef struct {
 } sci_event_t;
 
 /*Values for type*/
+#define SCI_EVT_NONE            0
 #define SCI_EVT_MOUSE_PRESS     (1<<0)
 #define SCI_EVT_MOUSE_RELEASE   (1<<1)
 #define SCI_EVT_KEYBOARD        (1<<2)
 #define SCI_EVT_JOYSTICK        (1<<6)
 /*Fake values for other events*/
-#define SCI_EVT_CLOCK           (1<<8)
-#define SCI_EVT_REDRAW          (1<<9)
 #define SCI_EVT_ERROR           (1<<10)
 
 

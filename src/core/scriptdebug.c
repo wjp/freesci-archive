@@ -39,6 +39,8 @@ int _debug_seek_level = 0; /* Used for seekers that want to check their exec sta
 int _debug_seek_special = 0; /* Used for special seeks */
 int sci_debug_flags = 0; /* Special flags */
 
+static char oldcommand[SCI_CONSOLE_MAX_INPUT + 1] = ""; /* Stores the last command executed */
+
 #define _DEBUG_SEEK_NOTHING 0
 #define _DEBUG_SEEK_CALLK 1 /* Step forward until callk is found */
 #define _DEBUG_SEEK_LEVEL_RET 2 /* Step forward until returned from this level */
@@ -1237,20 +1239,37 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
     s->osc_backup = con_backup_screen(s);
     con_visible_rows = 20;
 
+    con_draw(s, s->osc_backup);
+
     while (_debugstate_valid) {
       sci_event_t event = (s->gfx_driver->GetEvent(s));
+      int redraw_console = 0;
       char *commandbuf;
 
-      con_draw(s, s->osc_backup);
+      if ((event.type & SCI_EVT_KEYBOARD)
+	  || (s->pointer_x != s->last_pointer_x)
+	  || (s->pointer_y != s->last_pointer_y))
+	redraw_console = 1; /* Redraw on keypress or mouse movement */
 
       if ((event.buckybits & SCI_EVM_CTRL) && (event.data == '`')) /* UnConsole command? */
 	_debugstate_valid = 0;
       else
-      if (commandbuf = consoleInput(&event)) {
-	sciprintf(" >%s\n", commandbuf);
-	cmdParse(s, commandbuf);
-      }
+	if (commandbuf = consoleInput(&event)) {
 
+	  sciprintf(" >%s\n", commandbuf);
+
+	  if (strlen(commandbuf) == 0) /* Repeat old command? */
+	    strcpy(commandbuf, oldcommand);
+	  else /* No, a new valid command */
+	    strcpy(oldcommand, commandbuf);
+
+	  cmdParse(s, commandbuf);
+
+	  redraw_console = 1;
+	}
+
+      if (redraw_console)
+	con_draw(s, s->osc_backup);
     }
 
     con_restore_screen(s, s->osc_backup);

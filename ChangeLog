@@ -1,3 +1,18 @@
+1999-12-02  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/graphics/engine_graphics.c (graph_draw_selector_edit): Fixed
+	bug that might cause the wrong font to be used for the highlighted
+	letter in an "edit control".
+
+	* src/graphics/input_ggi.c (_sci_ggi_input_handler): Fixed
+	handling of CTRL keys
+
+	* src/core/scriptdebug.c (script_debug): Removed the number of
+	console redraws, fixed "repeat last entry" behaviour
+
+	* src/console/console.c: (consoleInput): Lower-cased all control
+	letters in order to re-enable CTRL keycodes for the onscreen console
+
 1999-12-01  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kernel.c (kDrawCel): Function fixed to behave correctly

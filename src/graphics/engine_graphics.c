@@ -393,6 +393,7 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
     else { /* Single character */
       int charwidth;
       int oldcol = port->color;
+      byte *oldfont = port->font;
 
       temp[0] = text[cursor];
       temp[1] = 0; /* Isolate the "blinking" char */
@@ -402,6 +403,7 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
 			    charwidth, textheight, port->color, -1, -1, 1);
 
 
+      port->font = font;
       port->color = port->bgcolor;
       port->x += x + textwidth;
       port->y += y;
@@ -409,6 +411,7 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
       port->x -= x + textwidth;
       port->y -= y;
       port->color = oldcol;
+      port->font = oldfont;
     }
 
 

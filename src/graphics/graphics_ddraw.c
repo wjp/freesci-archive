@@ -481,7 +481,7 @@ sci_event_t get_queue_event()
   {
     sci_event_t noevent;
     noevent.data = 0;
-    noevent.type = SCI_EVT_CLOCK;
+    noevent.type = SCI_EVT_NONE;
     noevent.buckybits = 0;
     return noevent;
   }
