@@ -39,6 +39,12 @@
 
 2002-09-15  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/include/beos/.cvsignore, desktop/.cvsignore,
+	  conf/.cvsignore: Files added to repository
+	* .cvsignore: Added stamp-h1 and autom4te.cache
+
+2002-09-15  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* aclocal.m4, config.h.in, configure: Files removed from repository.
 	* reconf: Removed first call to autoheader.
 	* .cvsignore: Added config.h.in.
