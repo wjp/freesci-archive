@@ -1,3 +1,8 @@
+
+2003-02-08  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kgraphics.c (kNewWindow): Fixed NULL pointer access.
+
 2003-02-08  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/scicore/resource*: Add support for SCI1 resource maps and patches.

@@ -2358,7 +2358,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 	window = sciw_new_window(s, gfx_rect(x, y, xl, yl), s->titlebar_port->font_nr,
 				 s->ega_colors[SKPV_OR_ALT(7, 0)], bgcolor, s->titlebar_port->font_nr,
 				 s->ega_colors[15], s->ega_colors[8], 
-				 kernel_dereference_bulk_pointer(s, argv[4], 0), 
+				 argv[4].segment ? kernel_dereference_bulk_pointer(s, argv[4], 0) : NULL, 
 				 flags);
 
 	ADD_TO_CURRENT_PORT(window);
