@@ -26,6 +26,7 @@
 ***************************************************************************/
 
 #include <sfx_sequencer.h>
+#include <resource.h>
 
 
 sfx_sequencer_t sfx_sequencer_mt32;

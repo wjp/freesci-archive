@@ -28,8 +28,6 @@
 #include <sci_memory.h>
 #include <sciresource.h>
 #include <resource.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
@@ -98,7 +96,7 @@ int sci1_parse_header(int fd, int *types)
 int
 sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 {
-	struct stat fd_stat;
+	int fsize;
 	int fd;
 	resource_t *resources;
 	int resources_nr;
@@ -112,12 +110,12 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 	if (!IS_VALID_FD(fd))
 		return SCI_ERROR_RESMAP_NOT_FOUND;
 
-	if (fstat(fd, &fd_stat)) {
-		perror("Error occured while trying to stat resource.map");
+	if ((fsize = sci_fd_size(fd)) < 0) {
+		perror("Error occured while trying to get filesize of resource.map");
 		return SCI_ERROR_RESMAP_NOT_FOUND;
 	}
 
-	resources_nr = fd_stat.st_size / SCI0_RESMAP_ENTRIES_SIZE;
+	resources_nr = fsize / SCI0_RESMAP_ENTRIES_SIZE;
 
 	resources = sci_calloc(resources_nr, sizeof(resource_t));
 	/* Sets valid default values for most entries */
@@ -209,7 +207,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 int
 sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 {
-	struct stat fd_stat;
+	int fsize;
 	int fd;
 	resource_t *resources;
 	int resources_nr;
@@ -229,12 +227,12 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 	if (!(ofs=header_size=sci1_parse_header(fd, types)))
 		return SCI_ERROR_INVALID_RESMAP_ENTRY;
 
-	if (fstat(fd, &fd_stat)) {
-		perror("Error occured while trying to stat resource.map");
+	if ((fsize = sci_fd_size(fd)) < 0) {
+		perror("Error occured while trying to get filesize of resource.map");
 		return SCI_ERROR_RESMAP_NOT_FOUND;
 	}
 
-	resources_nr = (fd_stat.st_size - header_size) / SCI1_RESMAP_ENTRIES_SIZE;
+	resources_nr = (fsize - header_size) / SCI1_RESMAP_ENTRIES_SIZE;
 
 	resources = sci_calloc(resources_nr, sizeof(resource_t));
 

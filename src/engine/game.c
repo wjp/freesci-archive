@@ -46,7 +46,7 @@
 #include <kdebug.h>
 #include <kernel_types.h>
 
-#if !defined (_WIN32) && !defined (__BEOS__)
+#if !defined (_WIN32) && !defined (__BEOS__) && !defined (_DREAMCAST)
 #include <sys/resource.h>
 #endif
 
@@ -495,7 +495,9 @@ script_free_engine(state_t *s)
 int
 game_init(state_t *s)
 {
-#warning "Fixme: Use new VM instantiation code all over the place"
+#ifdef __GNUC__
+#  warning "Fixme: Use new VM instantiation code all over the place"
+#endif
 	reg_t game_obj; /* Address of the game object */
 	int i;
 	dstack_t *stack;

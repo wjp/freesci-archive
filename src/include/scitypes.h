@@ -34,6 +34,9 @@
 #ifdef _WIN32
 #  include <io.h>
 #endif
+#ifdef _DREAMCAST
+#  include <stdio.h>
+#endif
 
 #if defined(_WIN32) && defined(_MSC_VER)
 #  define TYPE_16 short

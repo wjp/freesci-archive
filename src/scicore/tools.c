@@ -41,6 +41,8 @@
 
 #ifdef _DREAMCAST
 #  include <arch/timer.h>
+#  include <dc.h>
+#  include <kos/thread.h>
 #endif
 
 #ifdef HAVE_MEMFROB
@@ -528,18 +530,21 @@ char *
 sci_get_homedir()
 {
 #ifdef _WIN32
+	char *_path_buf = malloc(MAX_PATH);
 	char *dr = getenv("HOMEDRIVE");
 	char *path = getenv("HOMEPATH");
 
 	if (!dr || !path)
 		return getenv("WINDIR");
 
-	strncpy(_path_buf, path, 4);
-	strncat(_path_buf, dr, MAX_PATH - 4);
+	strncpy(_path_buf, dr, 4);
+	strncat(_path_buf, path, MAX_PATH - 4);
 
 	return _path_buf;
 #elif defined(__unix__) || !defined(X_DISPLAY_MISSING) || defined (__BEOS__) || defined(MACOSX)
 	return getenv("HOME");
+#elif defined(_DREAMCAST)
+	return "/ram";
 #else
 #  error Please add a $HOME policy for your platform!
 #endif
@@ -603,6 +608,14 @@ void
 sci_sched_yield()
 {
 	sched_yield();
+}
+
+#elif defined (_DREAMCAST)
+
+void
+sci_sched_yield()
+{
+	thd_pass();
 }
 
 #else
@@ -713,4 +726,44 @@ sci_getcwd()
 	return NULL;
 }
 
+#ifdef _DREAMCAST
 
+int
+sci_fd_size(int fd)
+{
+	return fs_total(fd);
+}
+
+int
+sci_file_size(char *fname)
+{
+	int fd = fs_open(fname, O_RDONLY);
+	int retval = -1;
+
+	if (fd != 0) {
+		retval = sci_fd_size(fd);
+		fs_close(fd);
+	}
+
+	return retval;
+}
+
+#else
+
+int
+sci_fd_size(int fd)
+{
+	struct stat fd_stat;
+	if (fstat(fd, &fd_stat)) return -1;
+	return fd_stat.st_size;
+}
+
+int
+sci_file_size(char *fname)
+{
+	struct stat fn_stat;
+	if (stat(fname, &fn_stat)) return -1;
+	return fn_stat.st_size;
+}
+
+#endif

@@ -4,10 +4,11 @@
 
 #include <engine.h>
 #include <console.h>
+#include <heap.h>
 
-#define assert_in_range(pos) assert(pos>=1000 && pos<=0xffff);
+#define assert_in_range(pos) assert(pos>=1000 && pos<=0xffff)
 
-static void set_size(heap_t* h, int block_pos, int size)
+static void set_size(heap_t *h, int block_pos, int size)
 {
 	assert_in_range(block_pos);
 	assert(size<=0xffff-1000);
@@ -38,7 +39,7 @@ static unsigned int get_next(heap_t* h, int block_pos)
 heap_t* heap_new()
 {
 	heap_t* h;
-	if((h= sci_malloc(sizeof(heap_t)))==0) return 0;
+	if((h= (heap_t*)sci_malloc(sizeof(heap_t)))==0) return 0;
 
 	if((h->start= sci_calloc(SCI_HEAP_SIZE, 1))==0)
 	{

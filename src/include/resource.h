@@ -100,12 +100,29 @@
 #  include <io.h>
 #  undef inline /* just to be sure it is not defined */
 #  define inline __inline
-#  define strcasecmp stricmp
-#  define strncasecmp strnicmp
+#  define strcasecmp _stricmp
+#  define strncasecmp _strnicmp
 #  define vsnprintf _vsnprintf
 #else /* !_WIN32 */
 #  define DLLEXTERN
 #endif /* !_WIN32 */
+
+#ifdef _DREAMCAST
+#  define strcasecmp stricmp
+#  define open fs_open
+#  define read fs_read
+#  define close fs_close 
+#  define chdir fs_chdir
+#  define lseek fs_seek
+#  define perror(S) fprintf(stderr, S)
+#  define unlink fs_unlink
+#  define write fs_write
+#  define mkdir(D,M) fs_mkdir(D)
+#  define creat(D,M) fs_open(D, O_WRONLY)
+#  define putchar(C) fputc(C, stdout)
+#  define getc(S) fgetc(S)  
+#  define sleep(S) thd_sleep((S)*1000)
+#endif
 
 #ifdef __BEOS__
 #  include <kernel/OS.h>
@@ -114,6 +131,7 @@
 
 #ifdef _MSC_VER
 #	include <sys/timeb.h>
+#   include <fcntl.h>
 #	include <windows.h>
 #endif
 
@@ -123,7 +141,9 @@
 #endif
 #include <errno.h>
 #include <sys/types.h>
-#include <sys/stat.h>
+#ifdef HAVE_SYS_STAT_H
+#  include <sys/stat.h>
+#endif
 #include <assert.h>
 #ifdef _DOS
 #  include <sci_dos.h>
@@ -401,6 +421,20 @@ sci_mkpath(char *path);
 ** Parameters: (char *) path: Path to verify/create
 ** Returns   : (int) 0 on success, <0 on error
 ** This function will create any directories that couldn't be found
+*/
+
+int
+sci_fd_size(int fd);
+/* Returns the filesize of an open file
+** Paramaters: (int) fd: File descriptor of open file
+** Returns   : (int) filesize of file pointed to by fd, -1 on error
+*/ 
+
+int
+sci_file_size(char *fname);
+/* Returns the filesize of a file
+** Parameters: (char *) fname: Name of file to get filesize of
+** Returns   : (int) filesize of the file, -1 on error
 */
 
 #ifndef HAVE_FFS

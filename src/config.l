@@ -42,6 +42,11 @@
 
 #endif
 
+#ifdef _DREAMCAST   
+#  include <dc.h>
+#  define PATH_MAX 255
+#endif
+
 config_entry_t *conf;
 int cur_section=0; /* Size-1 and current section in conf */
 char *exported_conf_path; /* Path which the config file was found in */

@@ -84,7 +84,9 @@ typedef struct {
 	int mouse; /* Whether the mouse should be active */
 	int reverse_stereo;
 
-#warning "Re-enable sound stuff"
+#ifdef __GNUC__
+#  warning "Re-enable sound stuff"
+#endif
 #if 0
 	midiout_driver_t *midiout_driver; /* the midiout method to use */
 	midi_device_t *midi_device; /* the midi device to use */

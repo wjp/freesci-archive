@@ -83,6 +83,12 @@
 #  include <windows.h>
 #endif
 
+#ifdef _DREAMCAST
+#  include <dc.h>
+#  include <selectgame.h>
+#  define PATH_MAX 255
+#endif
+
 #ifdef _MSC_VER
 #  define MSVC_FUNCTYPECAST_KLUDGE (void *)
 #else
@@ -204,7 +210,7 @@ init_directories(char *work_dir, char *game_id)
 
 #ifdef _WIN32
 		if (!getcwd(work_dir, PATH_MAX)) {
-			fprintf(stderr,"Cannot get the working directory!\n");
+			fprintf(stderr,"Cannot get the working directory: %s\n", work_dir);
 			return 1;
 		}
 #else /* Assume UNIX-ish environment */
@@ -244,6 +250,11 @@ init_directories(char *work_dir, char *game_id)
 		else /* mkdir() succeeded */
 			chdir(game_id);
 	}
+
+#ifdef _DREAMCAST 
+	/* Set dreamcast work dir to ramdisk */
+	fs_chdir("/ram");
+#endif
 
 	getcwd(work_dir, PATH_MAX);
 
@@ -427,6 +438,17 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 	cl_options->mouse = ON;
 	cl_options->res_version = SCI_VERSION_AUTODETECT;
 	cl_options->show_rooms = 0;
+#ifdef _DREAMCAST 
+
+	/* On the Dreamcast there is no command line, so we don't try to read
+	** any options and just set the savegame_name to NULL and return a
+	** game name of NULL.
+	*/
+
+	savegame_name = NULL;
+	return NULL;
+
+#else /* !_DREAMCAST */
 #ifdef HAVE_GETOPT_LONG
 	while ((c = getopt_long(argc, argv, "lvhmsDr:d:V:g:x:y:c:M:O:S:P:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_LONG */
@@ -587,6 +609,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 
 	return
 		argv[optind];
+#endif /* !_DREAMCAST */
 }
 
 
@@ -926,6 +949,9 @@ main(int argc, char** argv)
 	       "or any later version, at your option.\n"
 	       "It comes with ABSOLUTELY NO WARRANTY.\n");
 
+#ifdef _DREAMCAST
+	choose_game();
+#endif
 
 	if (game_name) {
 

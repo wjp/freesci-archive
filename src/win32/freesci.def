@@ -2,16 +2,6 @@ LIBRARY
 DESCRIPTION "FreeSCI"
 EXPORTS
 
-  pcmout_find_driver
-  pcmout_driver DATA
-  pcmout_drivers DATA
-  pcmout_open
-  pcmout_sample_rate DATA
-  pcmout_stereo DATA
-  mix_sound
-
-  soundserver_dead
-
   script_set_gamestate_save_dir
 
   usleep
@@ -69,8 +59,6 @@ EXPORTS
 ;  resource_type_suffixes DATA
   loadObjects
   printObject
-  makeMIDI0
-  map_MIDI_instruments
   ;using_history DATA
   ;add_history
   script_set_gamestate_save_dir
@@ -84,20 +72,6 @@ EXPORTS
   gfx_find_driver
   gfx_get_driver_name
   gfx_crossblit_alpha_threshold DATA
-
-  get_msg_value
-  midiout_find_driver
-  midiout_driver DATA
-  midiout_driver_null DATA
-  midiout_drivers DATA
-  midi_find_device
-  midi_device DATA
-  midi_devices DATA
-  midi_device_mt32 DATA
-  midi_device_mt32gm DATA
-  midiout_driver_win32mci
-  sound_server_find_driver
-  sound_servers
 
   test_savegame
   sci_open
@@ -124,3 +98,9 @@ EXPORTS
   _SCI_STRDUP
   _SCI_FREE
   sci01_priority_table_flags
+  game_init_sound
+  script_adjust_opcode_formats
+  con_gfx_init
+  con_gfx_read
+  con_gfx_show
+  

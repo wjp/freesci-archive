@@ -39,8 +39,8 @@
 #endif /* HAVE_FNMATCH_H */
 
 #ifdef _MSC_VER
-#include <direct.h>
-#include <ctype.h>
+#  include <direct.h>
+#  include <ctype.h>
 #endif
 
 #ifndef PI
