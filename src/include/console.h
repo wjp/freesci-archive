@@ -33,6 +33,7 @@
 #ifndef _SCI_CONSOLE_H_
 #define _SCI_CONSOLE_H_
 
+#include <sci_memory.h>
 #include <resource.h>
 
 #ifdef HAVE_CONFIG_H

@@ -36,6 +36,8 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#include <sci_memory.h>
+
 #define obstack_chunk_alloc malloc
 #define obstack_chunk_free free
 
@@ -57,7 +59,7 @@ typedef struct {
 
 struct _state;
 
-extern int soundserver_dead; 
+extern int soundserver_dead;
 /* Non-zero IFF the sound server died- set by sound.c, must also be
 ** set by non-fork()ed sound server implementations */
 
@@ -173,7 +175,7 @@ makeMIDI0(const guint8 *src, int *size, guint8 flag);
 **             size: points to an int which is set to contain the MIDI
 **                   block length.
 **             flag: The midi instrument's play flag.
-** Returns   : (guint8 *) The malloc()ed MIDI block, or NULL if conversion
+** Returns   : (guint8 *) The sci_malloc()ed MIDI block, or NULL if conversion
 **             failed.
 ** *FIXME*: Aborts in some cases if out of memory. This is OK while testing,
 ** but should be adjusted for the public release.

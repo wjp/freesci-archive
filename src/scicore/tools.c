@@ -119,7 +119,7 @@ int sci_ffs(int _mask)
     retval++;
     _mask >>= 1;
   }
-  
+
   return retval;
 }
 
@@ -221,7 +221,7 @@ sci_gettime(int *seconds, int *useconds)
 void sci_gettime(int *seconds, int *useconds)
 {
         DWORD tm;
-        
+
 	timeBeginPeriod(0);
 	if (TIMERR_NOERROR != timeBeginPeriod(1))
 	{
@@ -290,18 +290,18 @@ sci_find_first(sci_dir_t *dir, char *mask)
 			case ENOENT: 
 			{ 
 				printf("_findfirst errno = ENOENT: no match\n");
-				break; 
+				break;
 			}
-			case EINVAL: 
-			{ 
+			case EINVAL:
+			{
 				printf("_findfirst errno = EINVAL: invalid filename\n");
-				break; 
+				break;
 			}
 			default:
 				printf("_findfirst errno = unknown (%d)", errno);
 		}
 	}
-						 
+
 	return NULL;
 }
 
@@ -315,7 +315,7 @@ sci_find_next(sci_dir_t *dir)
                 _findclose(dir->search);
                 dir->search = -1;
                 return NULL;
-        } 
+        }
 
 		if (strcmp(dir->fileinfo.name, ".") == 0 ||
 			strcmp(dir->fileinfo.name, "..") == 0)
@@ -407,27 +407,6 @@ sci_get_homedir()
 #else
 #  error Please add a $HOME policy for your platform!
 #endif
-}
-
-
-void *
-sci_memdup(void *src, size_t size)
-{
-	void *rei; /* The clone */
-
-	if (size <= 0) {
-		fprintf(stderr,"Attempt to memdup %d bytes!\n", size);
-		BREAKPOINT();
-		return NULL; /* For archs where BREAKPOINT() fails */
-	}
-
-	rei = malloc(size);
-
-	if (!rei)
-		return NULL;
-
-	memcpy(rei, src, size);
-	return rei;
 }
 
 
@@ -578,44 +557,3 @@ sci_open(char *fname, int flags)
 
 	return file;
 }
-
-
-/*-- Safe memory allocation --*/
-
-#ifdef SCI_SAFE_ALLOC
-
-#  define SAFE_ALLOC_FUN(f)                                                    \
-{                                                                              \
-	int print = 1;                                                         \
-	void *retval = NULL;                                                   \
-                                                                               \
-	while (!retval) {                                                      \
-		retval = f;                                                    \
-                                                                               \
-		if (!retval) {                                                 \
-			if (print) {                                           \
-				fprintf(stderr,"Low on memory; waiting...\n"); \
-				print = 0;                                     \
-			}                                                      \
-			sleep(1);                                              \
-		}                                                              \
-	}                                                                      \
-                                                                               \
-	return retval;                                                         \
-}
-
-void *
-sci_malloc(size_t size)
-     SAFE_ALLOC_FUN(malloc(size))
-
-void *
-sci_calloc(size_t nmemb, size_t count)
-     SAFE_ALLOC_FUN(calloc(nmemb, count))
-
-void *
-sci_realloc(void *ptr, size_t size)
-     SAFE_ALLOC_FUN(realloc(ptr, size))
-
-#  undef SAFE_ALLOC_FUN
-
-#endif

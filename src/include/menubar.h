@@ -126,25 +126,6 @@ struct gfx_picture; /* forward declarations for graphics.h */
 
 /********** function definitions *********/
 
-char *
-malloc_cpy(char *source);
-/* Copies a string into a newly allocated memory part
-** Parameters: (char *) source: The source string
-** Returns   : (char *) The resulting copy, allocated with malloc().
-** To free this string, use the standard free() command.
-*/
-
-
-char *
-malloc_ncpy(char *source, size_t length);
-/* Copies a string into a newly allocated memory part, up to a certain length.
-** Parameters: (char *) source: The source string
-**             (int) length: The maximum length of the string (not conting a trailing \0).
-** Returns   : (char *) The resulting copy, allocated with malloc().
-** To free this string, use the standard free() command.
-*/
-
-
 menubar_t *
 menubar_new();
 /* Creates a new menubar struct

@@ -224,3 +224,8 @@ conf/
 
 Alexander R. Angas: <wgd@adelaide.on.net>
 Win32 optimizations and updates in many files
+memory function intermediate layer
+scicore/
+	sci_memory.c
+include/
+	sci_memory.h

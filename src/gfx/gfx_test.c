@@ -60,7 +60,7 @@ sci_gettime(int *seconds, int *useconds)
 #ifdef _WIN32
 	timeBeginPeriod(0);
 #endif
- 
+
          assert(!gettimeofday(&tv, NULL));
          *seconds = time(NULL);
          *useconds = tv.tv_usec;
@@ -164,14 +164,6 @@ arrdup(int *src, int count)
 {
 	int *retval = malloc(sizeof(int) * count);
 	memcpy(retval, src, sizeof(int) * count);
-	return retval;
-}
-
-byte *
-memdup(byte *src, int size)
-{
-	byte *retval = malloc(size);
-	memcpy(retval, src, size);
 	return retval;
 }
 
@@ -1078,8 +1070,8 @@ do_tests(char *conf)
 		test_f();
 }
 
-int 
-c_quit(void *S) 
+int
+c_quit(void *S)
 {
   exit(0);
 }

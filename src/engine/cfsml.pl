@@ -101,40 +101,19 @@ sub create_string_functions
     print <<'EOF';
 
 #include <stdarg.h> /* We need va_lists */
+#include <sci_memory.h>
 
 #ifdef CFSML_DEBUG_MALLOC
-static void
-_free(char *fln, char *fn, int lin, void *var)
-{
-    fprintf(stderr, "%s, %s, %d: Free %p\n", fln, fn, lin, var);
-    free(var);
-}
-static void *
-_malloc(char *fln, char *fn, int lin, int var)
-{
-    void *x = malloc(var);
-    fprintf(stderr, "%s, %s, %d: Malloc(%d)-> %p\n", fln, fn, lin, var, x);
-    return x;
-}
-static void*
-_calloc(char *fln, char *fn, int lin, int var)
-{
-    void *x = calloc(var, 1);
-    fprintf(stderr, "%s, %s, %d: Calloc(%d)-> %p\n", fln, fn, lin, var, x);
-    return x;
-}
-static void*
-_realloc(char *fln, char *fn, int lin, void *var, size_t si)
-{
-    void *x = realloc(var, si);
-    fprintf(stderr, "%s, %s, %d: Realloc(%d) %p->%p\n", fln, fn, lin, var, x);
-    return x;
-}
-
-#define free(var) _free(__FILE__, __FUNCTION__, __LINE__, var)
-#define malloc(var) _malloc(__FILE__, __FUNCTION__, __LINE__, var)
-#define calloc(var,z) _calloc(__FILE__, __FUNCTION__, __LINE__, var*z)
-#define realloc(var, si) _realloc(__FILE__, __FUNCTION__, __LINE__, var, si)
+/*
+#define free(p)        dbg_sci_free(p)
+#define malloc(s)      dbg_sci_malloc(s)
+#define calloc(n, s)   dbg_sci_calloc(n, s)
+#define realloc(p, s)  dbg_sci_realloc(p, s)
+*/
+#define free        dbg_sci_free
+#define malloc      dbg_sci_malloc
+#define calloc      dbg_sci_calloc
+#define realloc     dbg_sci_realloc
 #endif
 
 static void
@@ -205,7 +184,7 @@ _cfsml_get_current_refpointer()
 
 static void _cfsml_register_pointer(void *ptr)
 {
-    struct _cfsml_pointer_refstruct *newref = malloc(sizeof (struct _cfsml_pointer_refstruct));
+    struct _cfsml_pointer_refstruct *newref = sci_malloc(sizeof (struct _cfsml_pointer_refstruct));
     #ifdef CFSML_DEBUG_MALLOC
     SCI_MEMTEST;
     fprintf(stderr,"Registering ptrref %p [%p]\n", ptr, newref);
@@ -221,7 +200,7 @@ _cfsml_mangle_string(char *s)
 {
   char *source = s;
   char c;
-  char *target = (char *) malloc(1 + strlen(s) * 2); /* We will probably need less than that */
+  char *target = (char *) sci_malloc(1 + strlen(s) * 2); /* We will probably need less than that */
   char *writer = target;
 
   while ((c = *source++)) {
@@ -236,14 +215,14 @@ _cfsml_mangle_string(char *s)
   }
   *writer = 0; /* Terminate string */
 
-  return (char *) realloc(target, strlen(target) + 1);
+  return (char *) sci_realloc(target, strlen(target) + 1);
 }
 
 
 static char *
 _cfsml_unmangle_string(char *s)
 {
-  char *target = (char *) malloc(1 + strlen(s));
+  char *target = (char *) sci_malloc(1 + strlen(s));
   char *writer = target;
   char *source = s;
   char c;
@@ -258,7 +237,7 @@ _cfsml_unmangle_string(char *s)
   }
   *writer = 0; /* Terminate string */
 
-  return (char *) realloc(target, strlen(target) + 1);
+  return (char *) sci_realloc(target, strlen(target) + 1);
 }
 
 
@@ -269,7 +248,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
   int mem = 32;
   int pos = 0;
   int done = 0;
-  char *retval = (char *) malloc(mem);
+  char *retval = (char *) sci_malloc(mem);
 
   if (_cfsml_last_identifier_retreived) {
       free(_cfsml_last_identifier_retreived);
@@ -289,7 +268,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
   while (((c = fgetc(fd)) != EOF) && ((pos == 0) || (c != '\n')) && (c != '=')) {
 
      if (pos == mem - 1) /* Need more memory? */
-       retval = (char *) realloc(retval, mem *= 2);
+       retval = (char *) sci_realloc(retval, mem *= 2);
 
      if (!isspace(c)) {
         if (done) {
@@ -327,7 +306,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
   }
 
   if (pos == mem - 1) /* Need more memory? */
-     retval = (char *) realloc(retval, mem += 1);
+     retval = (char *) sci_realloc(retval, mem += 1);
 
   retval[pos] = 0; /* Terminate string */
 EOF
@@ -351,7 +330,7 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
   int c;
   int mem = 64;
   int pos = 0;
-  char *retval = (char *) malloc(mem);
+  char *retval = (char *) sci_malloc(mem);
 
   if (_cfsml_last_value_retreived) {
       free(_cfsml_last_value_retreived);
@@ -361,7 +340,7 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
   while (((c = fgetc(fd)) != EOF) && (c != '\n')) {
 
      if (pos == mem - 1) /* Need more memory? */
-       retval = (char *) realloc(retval, mem *= 2);
+       retval = (char *) sci_realloc(retval, mem *= 2);
 
      if (pos || (!isspace(c)))
         retval[pos++] = c;
@@ -384,7 +363,7 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
      ++(*line);
 
   if (pos == mem - 1) /* Need more memory? */
-    retval = (char *) realloc(retval, mem += 1);
+    retval = (char *) sci_realloc(retval, mem += 1);
 
   retval[pos] = 0; /* Terminate string */
 EOF2
@@ -397,7 +376,7 @@ EOF2
     $firstline += 4;
     write_line_pp($firstline, 0);
   print <<'EOF3';
-  return (_cfsml_last_value_retreived = (char *) realloc(retval, strlen(retval) + 1));
+  return (_cfsml_last_value_retreived = (char *) sci_realloc(retval, strlen(retval) + 1));
   /* Re-allocate; this value might be used for quite some while (if we are
   ** restoring a string)
   */
@@ -688,7 +667,7 @@ sub create_reader
 	    print "         }\n\n";
 
 	    print "         if (max) {\n";
-	    print "           save_struc->$name = ($n->{'type'} *) malloc(max * sizeof($type));\n";
+	    print "           save_struc->$name = ($n->{'type'} *) sci_malloc(max * sizeof($type));\n";
 	    print "           _cfsml_register_pointer(save_struc->$name);\n";
 	    print "         }\n";
 	    print "         else\n";
@@ -735,7 +714,7 @@ sub create_reader
 	elsif ($reference) {
 	    write_line_pp(__LINE__, 0);
 	    print "        if (strcmp(value, \"\\\\null\\\\\")) { /* null pointer? */\n";
-	    print "           save_struc->$name = malloc(sizeof ($type));\n";
+	    print "           save_struc->$name = sci_malloc(sizeof ($type));\n";
 	    print "           _cfsml_register_pointer(save_struc->$name);\n";
 	    print "           if ($reader(fh, save_struc->$name, value, line, hiteof))\n";
 	    print "              return CFSML_FAILURE;\n";

@@ -220,7 +220,7 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 #ifdef _SCI_RESOURCE_DEBUG
 				fprintf(stderr,"SCI Error: %s in '%s'!\n",
 					SCI_Error_Types[decomperr], filename);
-#endif	
+#endif
 				killlist(&base); /* Free resources */
 				max_resource = 0;
 				return decomperr;
@@ -406,10 +406,10 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 
 int resourcecmp (const void *first, const void *second)
 {
-	if (((resource_t *)first)->type == 
+	if (((resource_t *)first)->type ==
 	    ((resource_t *)second)->type)
-		return (((resource_t *)first)->number < 
-			((resource_t *)second)->number)? -1 : 
+		return (((resource_t *)first)->number <
+			((resource_t *)second)->number)? -1 :
 		!(((resource_t *)first)->number ==
 		  ((resource_t *)second)->number);
 	else
@@ -446,20 +446,3 @@ void freeResources()
 		return;
 	}
 }
-
-
-void *
-_XALLOC(size_t size, char *file, int line, char *funct)
-{
-	void *memblock;
-
-	if (!(memblock = malloc(size))) {
-		fprintf(stderr,"file %s %d (%s): XALLOC(%ld) failed.\n",
-			file, line, funct, (long) size);
-		exit(-1);
-	}
-
-	return memblock;
-}
-
-

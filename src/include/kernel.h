@@ -288,7 +288,7 @@ set_base(struct _state *s, heap_ptr object);
 ** Returns   : (abs_rect) The absolute base rectangle
 */
 
-abs_rect_t
+extern abs_rect_t
 get_nsrect(struct _state *s, heap_ptr object, byte clip);
 /* Determines the now-seen rectangle of a view object
 ** Parameters: (state_t *) s: The state to use

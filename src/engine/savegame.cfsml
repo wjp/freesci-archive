@@ -30,6 +30,7 @@
 ** savegame.cfsml. If this doesn't solve your problem, contact the maintainer.
 */
 
+#include <sci_memory.h>
 #include <gfx_operations.h>
 #include <engine.h>
 #include <assert.h>
@@ -489,8 +490,8 @@ read_hunk_block(FILE *fh, hunk_block_t *foo, char *lastval, int *line, int *hite
 	if (lastval[0] == HUNK_TYPE_GFX_SNAPSHOT_STRING[0]) { /* Graphical buffer */
 		foo->type = HUNK_TYPE_GFXBUFFER;
 		foo->size = sizeof(gfxw_snapshot_t);
-		foo->data = xalloc(sizeof (gfxw_snapshot_t *));
-		*((gfxw_snapshot_t **)foo->data) = xalloc(sizeof (gfxw_snapshot_t));
+		foo->data = sci_malloc(sizeof (gfxw_snapshot_t *));
+		*((gfxw_snapshot_t **)foo->data) = sci_malloc(sizeof (gfxw_snapshot_t));
 
 		%CFSMLREAD gfxw_snapshot_t (*(gfxw_snapshot_t**)(foo->data)) FROM fh ERRVAR *hiteof LINECOUNTER *line
 
@@ -505,7 +506,7 @@ read_hunk_block(FILE *fh, hunk_block_t *foo, char *lastval, int *line, int *hite
 		foo->size = lseek(hunkfile, 0, SEEK_END);
 		lseek(hunkfile, 0, SEEK_SET);
 
-		foo->data = (char *) xalloc(foo->size);
+		foo->data = (char *) sci_malloc(foo->size);
 		read(hunkfile, foo->data, foo->size);
 		close(hunkfile);
 
@@ -1062,7 +1063,7 @@ gamestate_restore(state_t *s, char *dirname)
 		}
 	}
 
-	retval = (state_t *) xalloc(sizeof(state_t));
+	retval = (state_t *) sci_malloc(sizeof(state_t));
 	retval->_heap = heap_new();
 	retval->savegame_version = -1;
 	_global_save_state = retval;

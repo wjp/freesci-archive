@@ -191,30 +191,7 @@ isblank(int foo)
 }
 #endif
 
-void *
-_XALLOC(size_t size, char *file, int line, char *funct);
-#ifdef __GNUC__
-#define xalloc(size) \
-        _XALLOC((size), __FILE__, __LINE__, __PRETTY_FUNCTION__)
-#else /* !__GNUC__ */
-#define xalloc(size) \
-        _XALLOC((size), __FILE__, __LINE__, "")
-#endif /* !__GNUC__ */
-/* Tries to allocate memory, prints an error message if not successful.
-** Parameters: size: Number of bytes to allocate
-** Returns   : (void *) The address of the allocated memory block
-*/
-
 #define SCI_MEMTEST memtest(__FILE__ ": line %d", __LINE__)
-
-void *
-sci_memdup(void *src, size_t size);
-/* Duplicates a chunk of memory
-** Parameters: (void *) src: Pointer to the data to duplicate
-**             (size_t) size: Number of bytes to duplicate
-** Returns   : (void *) An appropriately allocated duplicate, or NULL on error
-** Please try to avoid data duplication unless absolutely neccessary!
-*/
 
 /*-- queues --*/
 
@@ -368,52 +345,6 @@ sci_sched_yield();
 ** Parameters: (void)
 ** Returns   : after a while.
 */
-
-
-#ifdef SCI_SAFE_ALLOC
-
-void *
-sci_malloc(size_t size);
-/* Allocates the specified amount of memory
-** Parameters: (size_t) size: Amount of bytes to allocate
-** Returns   : (void *) A pointer to the allocated memory chunk
-** If not enough memory is available, this function suspends execution and
-** waits for it to become available again.
-*/
-
-void *
-sci_calloc(size_t nmemb, size_t count);
-/* Allocates nmemb*count bytes of zeroed-out memory
-** Parameters: (size_t, size_t) nmemb, count: Two factors describing the amount
-**                                            of memory
-** Returns   : (void *) A pointer to the allocated memory chunk
-** See 'scialloc()' for more information.
-*/
-
-void *
-sci_realloc(void *ptr, size_t size);
-/* Increases the size of an allocated memory chunk
-** Parameters: (void *) ptr: The original pointer
-**             (size_t) size: New size of the memory chunk
-** Returns   : (void *) A possibly new pointer, containing 'size'
-**             bytes of memory and everything contained in the original 'ptr'
-**             (possibly minus some trailing data if the new memory area is
-**             smaller than the old one).
-** See 'scialloc()' for more information.
-*/
-
-#else
-#  define sci_malloc(size) malloc(size)
-#  define sci_calloc(nmemb, size) calloc(nmemb, size)
-#  define sci_realloc(ptr, size) realloc(ptr size)
-#endif
-
-#define sci_free(ptr) free(ptr)
-/* Frees previously allocated memory chunks
-** Parameters: (void *) ptr: The pointer to free
-** Returns   : (void)
-*/
-
 
 /* The following was originally based on glib.h code, which was
  * Copyright (C) 1995-1997  Peter Mattis, Spencer Kimball and Josh MacDonald

@@ -15,4 +15,6 @@ Some tips on writing portable code for FreeSCI:
  - When you declare a function returning int, please make sure that it
    has a return statement in it. This is not an error in Visual C++, but
    it produces a warning that is very easy to avoid.
+ - Do not use the #warning pragma. This is a GNU extension not supported
+   by Visual C++.
 

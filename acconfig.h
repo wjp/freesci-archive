@@ -9,3 +9,4 @@
 #undef HAVE_MITSHM
 #undef HAVE_SDL
 #undef HAVE_DLOPEN
+#undef SCI_ALLOC

@@ -25,6 +25,7 @@
 
 ***************************************************************************/
 
+#include <sci_memory.h>
 #include <sciresource.h>
 #include <stdarg.h>
 #include <engine.h>
@@ -109,7 +110,7 @@ _sound_expect_answer(char *timeoutmessage, int def_value)
   int size;
 
   sound_get_data((byte **)&success,&size,sizeof(int));
-  
+
   retval = *success;
   free(success);
   return retval;
@@ -171,7 +172,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 				" returned < count\n");
 		}
 
-		
+
 		return 0;
 	}
 
@@ -217,15 +218,15 @@ sound_command(state_t *s, int command, int handle, int parameter)
 	case SOUND_COMMAND_GET_VOLUME:
 		if (s->sound_mute)
 			return s->sound_mute;
-		else 
+		else
 			return s->sound_volume;
-    
+
 		/* set the mute status */
 	case SOUND_COMMAND_SET_MUTE:
-		if (parameter == 0) { 
+		if (parameter == 0) {
 			s->sound_mute = s->sound_volume;
 			s->sound_volume = 0;
-		} else { 
+		} else {
 			if (s->sound_mute > 0)
 				s->sound_volume = s->sound_mute;
 			s->sound_mute = 0;
@@ -237,7 +238,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 		/* deliberate fallthrough */
 		/* return the mute status */
 	case SOUND_COMMAND_GET_MUTE:
-		if (s->sound_mute) 
+		if (s->sound_mute)
 			return 0;
 		else
 			return 1;
@@ -245,13 +246,13 @@ sound_command(state_t *s, int command, int handle, int parameter)
 	case SOUND_COMMAND_TEST: {
 	  int *retval = NULL;
 	  int len = 0;
-	  
+
 	  sound_queue_command(event.handle, event.signal, event.value);
 	  sound_get_data((byte **)&retval,&len,sizeof(int));
 	  len = *retval ;
 	  free(retval);
 	  return len; /* should be the polyphony */
-	}    
+	}
 
 	default: sciprintf("Unknown sound command %d\n", command);
 		return 1;
@@ -304,7 +305,7 @@ song_next_wakeup_time(GTimeVal *lastslept, int ticks)
 song_t *
 song_new(word handle, byte *data, int size, int priority)
 {
-  song_t *retval = xalloc(sizeof(song_t));
+  song_t *retval = sci_malloc(sizeof(song_t));
   unsigned int i;
 
   retval->data = data;
@@ -321,7 +322,7 @@ song_new(word handle, byte *data, int size, int priority)
 
   retval->reverb = 0;  /* what reverb setting to use */
   retval->resetflag = 0; /* don't reset position on SoundStop */
-  
+
   memset(retval->instruments, 0, sizeof(int) * MIDI_CHANNELS);
   memset(retval->velocity, 0, sizeof(int) * MIDI_CHANNELS);
   memset(retval->pressure, 0, sizeof(int) * MIDI_CHANNELS);
@@ -329,7 +330,7 @@ song_new(word handle, byte *data, int size, int priority)
   memset(retval->channel_map, 1, sizeof(int) * MIDI_CHANNELS);
 
   for (i = 0; i < MIDI_CHANNELS; i++) {
-    retval->polyphony[i] = data[1 + (i << 1)]; 
+    retval->polyphony[i] = data[1 + (i << 1)];
     retval->flags[i] = data[2 + (i << 1)];
   }
   return retval;
@@ -348,7 +349,7 @@ song_lib_add(songlib_t songlib, song_t *song)
 	return;
   }
 
-  if (*songlib == NULL) 
+  if (*songlib == NULL)
   {
     *songlib = song;
     song->next = NULL;
@@ -445,7 +446,7 @@ song_lib_remove(songlib_t songlib, word handle)
 
 void
 song_lib_resort(songlib_t songlib, song_t *song)
-{ 
+{
   if (*songlib == song)
     *songlib = song->next;
   else {
@@ -474,8 +475,8 @@ sound_eq_queue_event(sound_eq_t *queue, int handle, int signal, int value)
   sound_eq_node_t *node;
   sound_event_t *evt;
 
-  evt = xalloc(sizeof(sound_event_t));
-  node = xalloc(sizeof(sound_eq_node_t));
+  evt = sci_malloc(sizeof(sound_event_t));
+  node = sci_malloc(sizeof(sound_eq_node_t));
 
   evt->handle = handle;
   evt->signal = signal;
@@ -563,12 +564,12 @@ remove_note_playing(playing_notes_t *playing, int note)
 int cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0};
 /* Taken from playmidi */
 
-void sci_midi_command(song_t *song, guint8 command, 
-		      guint8 param, guint8 param2, 
+void sci_midi_command(song_t *song, guint8 command,
+		      guint8 param, guint8 param2,
 		      int *ccc,
 		      FILE *ds, playing_notes_t *playing)
 {
-  
+
   if (SCI_MIDI_CONTROLLER(command)) {
     switch (param) {
 
@@ -603,7 +604,7 @@ void sci_midi_command(song_t *song, guint8 command,
     case 0x40: /* hold */
     case 0x79: /* reset all */
       midi_event(command, param, param2);
-      break; 
+      break;
     default:
       fprintf(ds, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
       break;
@@ -617,10 +618,10 @@ void sci_midi_command(song_t *song, guint8 command,
       sound_queue_event(song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
     }
 
-  } else {  
+  } else {
     /* just your regular midi event.. */
 
-    if (song->flags[command & 0x0f] & midi_playflag) { 
+    if (song->flags[command & 0x0f] & midi_playflag) {
       switch (command & 0xf0) {
 
       case 0xc0:  /* program change */
@@ -653,10 +654,10 @@ void sci_midi_command(song_t *song, guint8 command,
 	if (song->fading != -1) {           /* is the song fading? */
 		if (song->maxfade == 0)
 			song->maxfade = 1;
-			
+
 		param2 = (param2 * (song->fading)) / (song->maxfade);  /* scale the velocity */
 		/*	  printf("fading %d %d\n", song->fading, song->maxfade);*/
-		
+
 	}
 
       case 0xb0:  /* program control */
@@ -668,7 +669,7 @@ void sci_midi_command(song_t *song, guint8 command,
 	fprintf(ds, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
       }
     }
-  }  
+  }
 }
 
 void
@@ -687,27 +688,27 @@ song_lib_dump(songlib_t songlib, int line)
 		fprintf(stderr,"\n");
 	} while (seeker);
 	fprintf(stderr,"\n");
-	    
+
 }
 
 int init_midi_device (state_t *s) {
 	resource_t *midi_patch;
 
 	midi_patch = findResource(9,midi_patchfile);
-  
+
 	if (midi_patch == NULL) {
 		sciprintf(" Patch (%03d) could not be loaded. Initializing with defaults...\n", midi_patchfile);
-    
+
 		if (midi_open(NULL, -1) < 0) {
 			sciprintf(" The MIDI device failed to open cleanly.\n");
 			return -1;
 		}
-    
+
 	} else if (midi_open(midi_patch->data, midi_patch->length) < 0) {
 		sciprintf(" The MIDI device failed to open cleanly.\n");
 		return -1;
 	}
-  
+
 	s->sound_volume = 0xc;
 	s->sound_mute = 0;
 

@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <sound.h>
 #include <soundserver.h>
+#include <sci_memory.h>
 
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -149,7 +150,7 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
   write_rec.songs_nr = songctr;
   write_rec.active_song = curr_song_nr;
 
-  write_rec.songs = malloc(sizeof(song_t) * songctr);
+  write_rec.songs = sci_malloc(sizeof(song_t) * songctr);
 
   /* Now memcpy those songs into a row and write their song data to a file */
   songctr = -1;
@@ -280,7 +281,7 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
 	    return 1;
     }
 
-    if (read(fd, read_rec.songs[i].data = (byte *) malloc(size), size) < size) {
+    if (read(fd, read_rec.songs[i].data = (byte *) sci_malloc(size), size) < size) {
       int j;
       for (j = 0; i < i; j++)
 	free(read_rec.songs[i].data);
@@ -300,7 +301,7 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
 
   for (i = 0; i < read_rec.songs_nr; i++) {
 
-    next = malloc(sizeof(song_t));	
+    next = sci_malloc(sizeof(song_t));	
     memcpy(next, &(read_rec.songs[i]), sizeof(song_t));
     next->next = NULL;
     if (i > 0)

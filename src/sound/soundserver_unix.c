@@ -1,5 +1,5 @@
 /***************************************************************************
- sounderver_unix.c Copyright (C) 1999 Christoph Reichenbach
+ soundserver_unix.c Copyright (C) 1999 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -159,7 +159,7 @@ sound_unix_init(state_t *s, int flags)
 
 	if (init_midi_device(s) < 0)
 	  return -1;
-	
+
 	child_pid = fork();
 
 	if (child_pid < 0) {
@@ -210,7 +210,7 @@ sound_unix_configure(state_t *s, char *option, char *value)
 	return 1; /* No options apply to this driver */
 }
 
-void 
+void
 sound_unix_queue_event(int handle, int signal, int value)
 {
 	sound_event_t event;
@@ -233,7 +233,7 @@ sound_unix_get_event(state_t *s)
 	int success;
 	GTimeVal waittime = {0, 0};
 	char debug_buf[65];
-	sound_event_t *event = xalloc(sizeof(sound_event_t));
+	sound_event_t *event = sci_malloc(sizeof(sound_event_t));
 
 	sound_unix_server_verify_ppid();
 
@@ -242,12 +242,12 @@ sound_unix_get_event(state_t *s)
 	FD_SET(x_fd_debug, &inpfds);
 	while ((select(x_fd_debug + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime)
 		&& (inplen = read(x_fd_debug, debug_buf, 64)) > 0)) {
-    
+
 		debug_buf[inplen] = 0; /* Terminate string */
 		sciprintf(debug_buf); /* Transfer debug output */
 		waittime.tv_sec = 0;
 		waittime.tv_usec = 0;
-    
+
 		FD_ZERO(&inpfds);
 		FD_SET(x_fd_debug, &inpfds);
 	}
@@ -257,20 +257,20 @@ sound_unix_get_event(state_t *s)
 
 	FD_ZERO(&inpfds);
 	FD_SET(x_fd_events, &inpfds);
-  
+
 	success = select(x_fd_events + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime);
-  
+
 	if (success && read(x_fd_events, event, sizeof(sound_event_t)) == sizeof(sound_event_t)) {
-    
+
 		return event;
-    
+
 	} else {
 		free(event);
 		return NULL;
 	}
 }
 
-void 
+void
 sound_unix_queue_command(int handle, int signal, int value)
 {
 	sound_event_t event;
@@ -296,11 +296,11 @@ sound_unix_get_command(GTimeVal *wait_tvp)
 
 	FD_ZERO(&input_fds);
 	FD_SET(x_fd_in, &input_fds);
-  
+
 	if(select(x_fd_in + 1, &input_fds, NULL, NULL,
 		  (struct timeval *)wait_tvp)) {
 
-		event = xalloc(sizeof(sound_event_t));
+		event = sci_malloc(sizeof(sound_event_t));
 		if (read(x_fd_in, event, sizeof(sound_event_t)) != sizeof(sound_event_t)) {
 			free(event);
 			event = NULL;
@@ -327,7 +327,7 @@ sound_unix_get_data(byte **data_ptr, int *size, int maxlen)
 	sound_unix_server_verify_ppid();
 
 	FD_ZERO(&fds);
-	FD_SET(fd, &fds); 
+	FD_SET(fd, &fds);
 
 	select(fd +1, &fds, NULL, NULL, (struct timeval *) &timeout);
 
@@ -340,13 +340,13 @@ sound_unix_get_data(byte **data_ptr, int *size, int maxlen)
 	fflush(stdout);
 
 	remaining_size = *size;
-	data_ptr_pos = *data_ptr = xalloc(*size);
+	data_ptr_pos = *data_ptr = sci_malloc(*size);
 
 	while (remaining_size) {
 		GTimeVal timeout = {0, SOUND_SERVER_TIMEOUT};
- 
+
 		FD_ZERO(&fds);
-		FD_SET(fd, &fds); 
+		FD_SET(fd, &fds);
 		select(fd +1, &fds, NULL, NULL, (struct timeval *) &timeout);
 
 		len = read(fd, data_ptr_pos, remaining_size);
@@ -369,7 +369,7 @@ sound_unix_get_data(byte **data_ptr, int *size, int maxlen)
 }
 
 int
-sound_unix_send_data(byte *data_ptr, int maxsend) 
+sound_unix_send_data(byte *data_ptr, int maxsend)
 {
 	int len;
 	int fd = x_fd_out;

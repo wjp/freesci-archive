@@ -1,3 +1,38 @@
+2001-08-18  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* configure.in: Added --with-alloc option to set SCI_ALLOC
+
+2001-08-15  Alex Angas  <wgd@adelaide.on.net>
+
+	* src/scicore/sci_memory.c, src/include/sci_memory.h: Library for safe
+	allocation of memory and accurate reporting of where calls fail.
+	Includes: sci_malloc(), sci_calloc(), sci_realloc(), sci_free(),
+	sci_memdup(), sci_strdup(), sci_strndup().
+
+	* src/scicore/tools.c, src/gfx/gfx_test.c, src/scicore/console.c,
+	src/include/resource.h, src/scicore/resource.c,	src/include/menubar.h:
+	Generally removed various parts and merged into the sci_memory library.
+
+	* src/gfx/menubar.c, src/engine/cfsml.pl, src/engine/savegame.cfsml,
+	src/include/console.h, src/gfx/menubar.c, src/sound/sfx_save.cfsml,
+	src/sound/sound.c, src/include/sound.h, src/sound/soundserver_sdl.c,
+	src/sound/soundserver_unix.c, src/sound/tools.c:
+	Removed	redundant code, merged some parts into sci_memory. These files
+	were changed to use the sci_memory library.
+
+	* src/scicore/Makefile.am: Now compiling sci_memory.c.
+
+	* src/win32/fsci_dll.dsp, src/win32/sciv.dsp: Now compiling
+	sci_memory.c.
+
+	* ./acinclude.m4, ./aclocal.m4: Corrected Web address for dmalloc
+	library.
+
+	* src/include/kernel.h (get_nsrect), src/include/sound.h: Fixed Win32
+	linkage problem.
+
+	* ./portable_howto.txt: Added message about not using #warning.
+	
 2001-08-13  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/drivers/xlib_driver.c (xlib_init): Added listing of

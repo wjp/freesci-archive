@@ -29,6 +29,7 @@
 ** used for any actual actions on behalf of the interpreter.
 */
 
+#include <sci_memory.h>
 #include <engine.h>
 #include <menubar.h>
 
@@ -66,27 +67,6 @@ __my_free(void *origin, char *function, int line)
 #define realloc(x,y) __my_realloc(x,y, __PRETTY_FUNCTION__, __LINE__)
 #define free(x) __my_free(x, __PRETTY_FUNCTION__, __LINE__)
 */
-
-char *
-malloc_cpy(char *source)
-{
-	char *tmp = malloc(strlen(source) + 1);
-
-	strcpy(tmp, source);
-	return tmp;
-}
-
-char *
-malloc_ncpy(char *source, size_t length)
-{
-	int rlen = MIN(strlen(source), length) + 1;
-	char *tmp = malloc(rlen);
-
-	strncpy(tmp, source, rlen);
-	tmp[rlen -1] = 0;
-
-	return tmp;
-}
 
 menubar_t *
 menubar_new()
@@ -197,7 +177,7 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 	menu = &(menubar->menus[menubar->menus_nr-1]);
 	memset(menu, 0, sizeof(menu_t));
 	menu->items_nr = 0;
-	menu->title = malloc_cpy(title);
+	menu->title = sci_strdup(title);
 
 	gfxop_get_text_params(state, font, menu->title, SIZE_INF, &(menu->title_width), &height);
 
@@ -208,7 +188,7 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 
 			if (tracker == '=') { /* Hit early-SCI tag assignment? */
 
-				left = malloc_ncpy(entries - string_len - 1, string_len);
+				left = sci_strndup(entries - string_len - 1, string_len);
 				tag = atoi(entries++);
 				tracker =  *entries++;
 			}
@@ -217,7 +197,7 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 				char *inleft;
 
 				if (!left)
-					left = malloc_ncpy(entries - string_len - 1, string_len);
+					left = sci_strndup(entries - string_len - 1, string_len);
 
 				inleft = left;
 				while (isspace(*inleft))
@@ -243,17 +223,17 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 			} else if (tracker == '`') { /* Start of right string */
 
 				if (!left)
-					left = malloc_ncpy(left_origin = (entries - string_len - 1), string_len);
+					left = sci_strndup(left_origin = (entries - string_len - 1), string_len);
 				string_len = 0; /* Continue with the right string */
 
-			} 
+			}
 			else string_len++; /* Nothing special */
 
 		} else { /* Left string finished => working on right string */
 			if ((tracker == ':') || (tracker == 0)) { /* End of entry */
 				int key, modifiers = 0;
 
-				right = malloc_ncpy(entries - string_len - 1, string_len);
+				right = sci_strndup(entries - string_len - 1, string_len);
 
 				if (right[0] == '#') {
 					right[0] = SCI_SPECIAL_CHAR_FUNCTION; /* Function key */
@@ -335,7 +315,7 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 
 #ifdef MENU_FREESCI_BLATANT_PLUG
 	if (add_freesci) {
-      
+
 		char *freesci_text = strdup ("About FreeSCI");
 		c_width = _menubar_add_menu_item(state, menu, MENU_TYPE_NORMAL, freesci_text, NULL, font, 0, 0, 0, 0);
 		if (c_width > max_width)
