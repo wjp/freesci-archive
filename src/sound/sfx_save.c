@@ -232,7 +232,7 @@ _cfsml_unmangle_string(char *s)
 static char *
 _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
 {
-  char c;
+  int c;
   int mem = 32;
   int pos = 0;
   int done = 0;
@@ -306,7 +306,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
 static char *
 _cfsml_get_value(FILE *fd, int *line, int *hiteof)
 {
-  char c;
+  int c;
   int mem = 64;
   int pos = 0;
   char *retval = (char *) malloc(mem);

@@ -190,7 +190,7 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 
 			decorations->add((gfxw_container_t *) decorations, (gfxw_widget_t *)
 					 gfxw_new_box(state, gfx_rect(shadow_offset + 1, frame.yl - 1,
-								      frame.xl - 3, shadow_offset),
+								      frame.xl - 4, shadow_offset),
 						      black, black, GFX_BOX_SHADE_FLAT));
 
 			decorations->add((gfxw_container_t *) decorations, (gfxw_widget_t *)
