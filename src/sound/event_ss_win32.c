@@ -96,7 +96,7 @@ timeout(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2
 	/* we want the next high performance timer to end 16.667 mseconds after the previous one.
 	 * right now, I'm trying 8.333ms because 16.667 sounds too slow for some reason.
 	 * The timer is definitely right, I think there is a deterministic amount of extra
-	 * latency introduced by using PostMessage, which goes into a queue.
+	 * latency introduced by using PostMessage, whi5ch goes into a queue.
 	 */
 	(__int64)end.QuadPart += (__int64)8333 * (__int64)freq.QuadPart / (__int64)1000000;
 
@@ -109,13 +109,19 @@ timeout(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2
 	 */
 	while ((__int64)now.QuadPart < (__int64)end.QuadPart) 
 	{ 
-		timeBeginPeriod(0); Sleep(1); timeEndPeriod(0);
 		QueryPerformanceCounter(&now); 
 	} 
 
-
 	if (PostMessage(sound_wnd, SOUND_COMMAND_DO_SOUND, 0, 0) == 0)
 		fprintf(debug_stream, "win32e_soundserver_init(): PostMessage(DO_SOUND) failed, GetLastError() returned %u\n", GetLastError());
+
+	/* start the next timer */
+	timeBeginPeriod(0);
+	time_keeper_id = timeSetEvent(6, 1, (LPTIMECALLBACK)timeout, 0, TIME_CALLBACK_FUNCTION);
+	timeEndPeriod(0);
+	if (time_keeper_id == NULL)
+		fprintf(debug_stream, "Timer start failed\n");
+
 }
 
 /* function called when sound server child thread begins */
@@ -332,7 +338,7 @@ sound_win32e_init(struct _state *s, int flags)
 	if (QueryPerformanceCounter (&end) == 0)
 		fprintf(debug_stream, "event_ss_win32.c: sound_win32e_init(): QueryPerformanceCounter() failed!\n");
 
-	time_keeper_id = timeSetEvent(6, 0, (LPTIMECALLBACK)timeout, 0, TIME_PERIODIC | TIME_CALLBACK_FUNCTION);
+	time_keeper_id = timeSetEvent(1, 1, (LPTIMECALLBACK)timeout, 0, TIME_CALLBACK_FUNCTION);
 	if (time_keeper_id == NULL)
 		fprintf(debug_stream, "Timer start failed\n");
 
