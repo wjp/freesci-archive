@@ -255,7 +255,7 @@ sci_get_current_time(GTimeVal *val)
 
 
 /************* Directory entities *************/
-#ifdef _WIN32
+#if defined(_WIN32) && defined(_MSC_VER)
 /******** Dir: Win32 CODE ********/
 
 void

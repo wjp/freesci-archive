@@ -40,6 +40,11 @@ else
 		AC_DEFINE(SIZEOF_LONG, 4)
 	;;
 
+	m68k*)
+		AC_DEFINE(SIZEOF_SHORT, 2)
+		AC_DEFINE(SIZEOF_LONG, 4)
+	;;
+
 
 	*)
 		echo "Your CPU type is $target_cpu."
