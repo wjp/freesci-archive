@@ -310,7 +310,7 @@ kDisposeScript(state_t *s, int funct_nr, int argc, reg_t *argv)
 	    int id = s->seg_manager.seg_get(&(s->seg_manager), script);
 	    
 	    if (s->execution_stack[s->execution_stack_pos].addr.pc.segment != id)
-		s->seg_manager.set_lockers(&(s->seg_manager), script, 1, SCRIPT_ID);
+		    s->seg_manager.set_lockers(&(s->seg_manager), 1, script, SCRIPT_ID);
 	}
 
 	script_uninstantiate(s, script);

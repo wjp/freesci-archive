@@ -183,12 +183,13 @@ gfxr_draw_view1(int id, byte *resource, int size)
 		return NULL;
 	}
 
+/*
 	for (i = 0; i < V1_MAGICS_NR; i++)
 		if (resource[V1_FIRST_MAGIC + i] != view_magics[i]) {
 			GFXWARN("View %04x: View magic #%d should be %02x but is %02x\n",
 				id, i, view_magics[i], resource[V1_FIRST_MAGIC + i]);
 		}
-
+*/
 	if (palette_offset > size) {
 		GFXERROR("Palette is outside of view %04x\n", id);
 		free(view);

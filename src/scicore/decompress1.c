@@ -415,28 +415,35 @@ int decompress1(resource_t *result, int resh, int early)
 		result->status = SCI_STATUS_ALLOCATED;
 		break;
 
-	case 3: /* Some sort of Huffman encoding */
-		if (decrypt4(result->data, buffer, result->size, compressedLength)) {
+	case 3: 
+		decryptinit3();
+		if (decrypt3(result->data, buffer, result->size, compressedLength)) {
 			free(result->data);
 			result->data = 0; /* So that we know that it didn't work */
 			result->status = SCI_STATUS_NOMALLOC;
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
+		result->data = view_reorder(result->data, result->size);
 		result->status = SCI_STATUS_ALLOCATED;
 		break;
 
-	case 4: /* NYI */
-		fprintf(stderr,"Resource %d.%s: Warning: compression type #%d not yet implemented\n",
-			result->number, sci_resource_type_suffixes[result->type], compressionMethod);
-		free(result->data);
-		result->data = NULL;
-		result->status = SCI_STATUS_NOMALLOC;
+	case 4:
+		decryptinit3();
+		if (decrypt3(result->data, buffer, result->size, compressedLength)) {
+			free(result->data);
+			result->data = 0; /* So that we know that it didn't work */
+			result->status = SCI_STATUS_NOMALLOC;
+			free(buffer);
+			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
+		}
+		result->data = pic_reorder(result->data, result->size);
+		result->status = SCI_STATUS_ALLOCATED;
 		break;
-
+		
 	default:
-		fprintf(stderr,"Resource %d.%s: Compression method SCI1/%hi not "
-			"supported!\n", result->number, sci_resource_type_suffixes[result->type],
+		fprintf(stderr,"Resource %s.%03hi: Compression method SCI1/%hi not "
+			"supported!\n", sci_resource_types[result->type], result->number,
 			compressionMethod);
 		free(result->data);
 		result->data = 0; /* So that we know that it didn't work */

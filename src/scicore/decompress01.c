@@ -161,7 +161,80 @@ enum {
 #define PAL_SIZE 1284
 #define CEL_HEADER_SIZE 7
 #define EXTRA_MAGIC_SIZE 15
-static 
+
+static
+void decode_rle(byte **rledata, byte **pixeldata, byte *outbuffer, int size)
+{
+	int pos = 0;
+	char nextbyte;
+	byte *rd = *rledata;
+	byte *ob = outbuffer;
+	byte *pd = *pixeldata;
+
+	while (pos < size)
+	{
+		nextbyte = *(rd++);
+		*(ob++) = nextbyte;
+		pos ++;
+		switch (nextbyte&0xC0)
+		{
+		case 0x40 :
+		case 0x00 :
+			memcpy(ob, pd, nextbyte);
+			pd +=nextbyte;
+			ob += nextbyte;
+			pos += nextbyte;
+			break;
+		case 0xC0 :
+			break;
+		case 0x80 :
+			nextbyte = *(pd++);
+			*(ob++) = nextbyte;
+			pos ++;
+			break;
+		}
+	}
+
+	*rledata = rd;
+	*pixeldata = pd;
+}
+
+/*
+ * Does the same this as above, only to determine the length of the compressed
+ * source data.
+ *
+ * Yes, this is inefficient.
+ */
+static
+int rle_size(byte *rledata, int dsize)
+{
+	int pos = 0;
+	char nextbyte;
+	int size = 0;
+	
+	while (pos < dsize)
+	{
+		nextbyte = *(rledata++);
+		pos ++;
+		size ++;
+		
+		switch (nextbyte&0xC0)
+		{
+		case 0x40 :
+		case 0x00 :
+			pos += nextbyte;
+			break;
+		case 0xC0 :
+			break;
+		case 0x80 :
+			pos ++;
+			break;
+		}
+	}
+
+	return size;
+}
+
 byte *pic_reorder(byte *inbuffer, int dsize)
 {
 	byte *reorderBuffer;
@@ -237,39 +310,170 @@ byte *pic_reorder(byte *inbuffer, int dsize)
 
 	*(writer++) = 0;
 	
-	pos = 0;
+	decode_rle(&seeker, &cdata, writer, view_size);
 	
-	while (pos < view_size)
-	{
-		nextbyte = *(seeker++);
-		*(writer++) = nextbyte;
-		pos ++;
-		switch (nextbyte&0xC0)
-		{
-		case 0x40 :
-		case 0x00 :
-			memcpy(writer, cdata, nextbyte);
-			cdata +=nextbyte;
-			writer += nextbyte;
-			pos += nextbyte;
-			break;
-		case 0xC0 :
-			break;
-		case 0x80 :
-			nextbyte = *(cdata++);
-			*(writer++) = nextbyte;
-			pos ++;
-			break;
-		}
-	}
-
 	free(cdata_start);
 	free(inbuffer);
 	return reorderBuffer;
 }
 
+#define VIEW_HEADER_COLORS_8BIT 0x80
+
+static
+void build_cel_headers(byte **seeker, byte **writer, int celindex, int *cc_lengths, int max)
+{
+	int c, w;
+	
+	for (c=0;c<max;c++)
+	{
+		w=getUInt16(*seeker);
+		putInt16(*writer, w); 
+		*seeker += 2; *writer += 2;
+		w=getUInt16(*seeker);
+		putInt16(*writer, w); 
+		*seeker += 2; *writer += 2;
+		w=getUInt16(*seeker);
+		putInt16(*writer, w); 
+		*seeker += 2; *writer += 2;
+		w=*((*seeker)++);
+		putInt16(*writer, w); /* Zero extension */
+		*writer += 2;
+
+		*writer += cc_lengths[celindex];
+		celindex ++;
+	}
+}
+
+
+
 byte *view_reorder(byte *inbuffer, int dsize)
 {
+	byte *cellengths;
+	int loopheaders;
+	int lh_present;
+	int lh_mask;
+	int pal_offset;
+	int cel_total;
+	int unknown;
+	byte *seeker = inbuffer;
+	char celcounts[100];
+	byte *outbuffer = (byte *) malloc(dsize);
+	byte *writer = outbuffer;
+	byte *lh_ptr;
+	byte *rle_ptr,*pix_ptr;
+	int l, lb, c, celindex, lh_last;
+	int chptr;
+	int w;
+	int *cc_lengths;
+	byte **cc_pos;
+	
+	/* Parse the main header */
+	cellengths = inbuffer+getUInt16(seeker)+2;
+	seeker += 2;
+	loopheaders = *(seeker++);
+	lh_present = *(seeker++);
+	lh_mask = getUInt16(seeker);
+	seeker += 2;
+	unknown = getUInt16(seeker);
+	seeker += 2;
+	pal_offset = getUInt16(seeker);
+	seeker += 2;
+	cel_total = getUInt16(seeker);
+	seeker += 2;
+
+	cc_pos = (byte **) malloc(sizeof(byte *)*cel_total);
+	cc_lengths = (int *) malloc(sizeof(int)*cel_total);
+	
+	for (c=0;c<cel_total;c++)
+		cc_lengths[c] = getUInt16(cellengths+2*c);
+	
+	*(writer++) = loopheaders;
+	*(writer++) = VIEW_HEADER_COLORS_8BIT;
+	putInt16(writer, lh_mask);
+	writer += 2;
+	putInt16(writer, unknown);
+	writer += 2;
+	putInt16(writer, pal_offset);
+	writer += 2;
+
+	lh_ptr = writer;
+	writer += 2*loopheaders; /* Make room for the loop offset table */
+
+	pix_ptr = writer;
+	
+	memcpy(celcounts, seeker, lh_present);
+	seeker += lh_present;
+
+	lb = 1;
+	celindex = 0;
+
+	rle_ptr = pix_ptr = cellengths + (2*cel_total);
+	w = 0;
+	
+	for (l=0;l<loopheaders;l++)
+	{
+		if (lh_mask & lb) /* The loop is _not_ present */
+		{
+			putInt16(lh_ptr, lh_last);
+			lh_ptr += 2;
+		} else
+		{
+			lh_last = writer-outbuffer;
+			putInt16(lh_ptr, lh_last);
+			lh_ptr += 2;
+			putInt16(writer, celcounts[w]);
+			writer += 2;
+			putInt16(writer, 0);
+			writer += 2;
+
+			/* Now, build the cel offset table */
+			chptr = (writer - outbuffer)+(2*celcounts[w]);
+
+			for (c=0;c<celcounts[w];c++)
+			{
+				putInt16(writer, chptr);
+				writer += 2;
+				cc_pos[celindex+c] = outbuffer + chptr;
+				chptr += 8 + getUInt16(cellengths+2*(celindex+c));
+			}
+
+			build_cel_headers(&seeker, &writer, celindex, cc_lengths, celcounts[w]);
+			
+			celindex += celcounts[w];
+			w++;
+		}
+
+		lb = lb << 1;	
+	}	
+
+	if (celindex < cel_total)
+	{
+		fprintf(stderr, "View decompression generated too few (%d / %d) headers!\n", celindex, cel_total);
+		return NULL;
+	}
+	
+	/* Figure out where the pixel data begins. */
+	for (c=0;c<cel_total;c++)
+		pix_ptr += rle_size(pix_ptr, cc_lengths[c]);
+
+	rle_ptr = cellengths + (2*cel_total);
+	for (c=0;c<cel_total;c++)
+		decode_rle(&rle_ptr, &pix_ptr, cc_pos[c]+8, cc_lengths[c]);
+
+	*(writer++) = 'P';
+	*(writer++) = 'A';
+	*(writer++) = 'L';
+	
+	for (c=0;c<256;c++)
+		*(writer++) = c;
+
+	seeker -= 4; /* The missing four. Don't ask why. */
+	memcpy(writer, seeker, 4*256);
+	
+	free(cc_pos);
+	free(cc_lengths);
+	free(inbuffer);
+	return outbuffer;	
 }
 
 guint32 gbits(int numbits,  guint8 * data, int dlen)
@@ -407,7 +611,7 @@ int decompress01(resource_t *result, int resh)
 		result->status = SCI_STATUS_ALLOCATED;
 		break;
 
-	case 3: /* Some sort of Huffman encoding */
+	case 3: 
 		decryptinit3();
 		if (decrypt3(result->data, buffer, result->size, compressedLength)) {
 			free(result->data);
@@ -416,7 +620,7 @@ int decompress01(resource_t *result, int resh)
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
-//		result->data = view_reorder(result->data, result->size);
+		result->data = view_reorder(result->data, result->size);
 		result->status = SCI_STATUS_ALLOCATED;
 		break;
 
@@ -432,7 +636,6 @@ int decompress01(resource_t *result, int resh)
 		result->data = pic_reorder(result->data, result->size);
 		result->status = SCI_STATUS_ALLOCATED;
 		break;
-		
 		
 	default:
 		fprintf(stderr,"Resource %s.%03hi: Compression method SCI1/%hi not "

@@ -1,5 +1,11 @@
 2003-03-25  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/scicore/decompress_01.c,
+	* src/scicore/decompress_1.c: Implemented view decompression.
+	* src/engine/kscripts.c (kDisposeScript): More script locking work.
+	
+2003-03-25  Lars Skovlund  <lskovlun@image.dk>
+
 	* src/scicore/decompress_01.c: Implemented pic decompression.
 
 2003-03-24  Lars Skovlund  <lskovlun@image.dk>

@@ -365,6 +365,11 @@ int decrypt4(guint8* dest, guint8* src, int length, int complength);
 /* DCL inflate- implemented in decompress1.c
 */
 
+byte *view_reorder(byte *inbuffer, int dsize);
+/* SCI1 style view compression */
+
+byte *pic_reorder(byte *inbuffer, int dsize);
+/* SCI1 style pic compression */
 
 /*--- Internal helper functions ---*/
 
