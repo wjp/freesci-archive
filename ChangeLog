@@ -1,6 +1,8 @@
 2001-09-24  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* configure.in: Use savegame.c line numbers when building with dmalloc
+	Guess type sizes by processor type on some target CPUs when
+	cross-compiling
 
 	* src/include/sci_memory.h (sci_strndup): Disabled SCI memory stuff
 	on UNIX with dmalloc

@@ -61,7 +61,7 @@ extern sound_server_t sound_server_dos;
 
 sound_server_t *sound_servers[] = {
 #ifndef NO_SOUND
-#  ifdef HAVE_FORK
+#  ifdef HAVE_SYSV_IPC
 	/* Assume that sound_null works on any box that has fork() */
 	&sound_server_unix,
 #  endif /* HAVE_FORK */

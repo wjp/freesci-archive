@@ -15,6 +15,9 @@
 
 #undef PACKAGE
 #undef VERSION
+#undef SIZEOF_SHORT
+#undef SIZEOF_INT
+#undef SIZEOF_LONG
 #undef HAVE_LIBGGI
 #undef HAVE_LIBPNG
 #undef HAVE_CURSES

@@ -32,6 +32,9 @@
 #include <sciresource.h>
 #include <midi_device.h>
 
+
+#ifdef HAVE_SYSV_IPC
+
 #include <signal.h>
 #include <sound.h>
 #include <sys/types.h>
@@ -61,8 +64,6 @@ static int x_fd_in = 0, x_fd_out = 0;
 static int x_fd_events = 0, x_fd_debug = 0;
 static pid_t ppid;
 
-
-#ifdef HAVE_SYSV_IPC
 
 static int
 verify_pid(int pid) /* Checks if the specified PID is in use */
@@ -117,8 +118,6 @@ _make_pipe(int fildes[2])
 #endif
   return 1; /* :-( */
 }
-
-#endif /* HAVE_FORK */
 
 extern sound_server_t sound_server_unix;
 
@@ -433,6 +432,5 @@ sound_server_t sound_server_unix = {
 /***** SOUND SERVER *****/
 /************************/
 
-
-
+#endif /* HAVE_SYSV_IPC */
 

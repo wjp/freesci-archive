@@ -22,10 +22,38 @@ AC_CHECK_HEADERS(getopt.h)
 AC_C_INLINE
 
 if test "$cross_compiling" != "yes"; then
-  AC_CHECK_SIZEOF(short)
-  AC_CHECK_SIZEOF(int)
-  AC_CHECK_SIZEOF(long)
+	AC_CHECK_SIZEOF(short)
+	AC_CHECK_SIZEOF(int)
+	AC_CHECK_SIZEOF(long)
+else
+	case "$target_cpu" in
+	alpha*)
+		AC_DEFINE(SIZEOF_SHORT, 2)
+		AC_DEFINE(SIZEOF_INT, 4)
+		AC_DEFINE(SIZEOF_LONG, 8)
+	;;
+
+
+	i*86*|powerpc)
+		AC_DEFINE(SIZEOF_SHORT, 2)
+		AC_DEFINE(SIZEOF_INT, 4)
+		AC_DEFINE(SIZEOF_LONG, 4)
+	;;
+
+
+	*)
+		echo "Your CPU type is $target_cpu."
+		AC_ERROR([
+			" There are no reliable default sizes for short,"
+			" int and long on your target processor known to us,"
+			" so we we cannot support cross-compiling for it."
+			" Please contact the FreeSCI development mailing list,"
+			" so that we can work this out..."])
+	;;
+
+	esac
 fi
+
 
 AC_CHECK_FUNCS(fnmatch pipe socketpair fork sched_yield memfrob ffs getopt_long isblank usleep)
 AM_PATH_ALSA(0.5.0, [AC_DEFINE(HAVE_ALSA)], [echo >/dev/null])
