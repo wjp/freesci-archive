@@ -35,13 +35,18 @@
 #include <stdarg.h>
 
 static struct {
-gint8 gm_instr;
-int keyshift;
-int finetune;
-int bender_range;
-gint8 gm_rhythmkey;
-int volume;
+  gint8 gm_instr;
+  int keyshift;
+  int finetune;
+  int bender_range;
+  gint8 gm_rhythmkey;
+  int volume;
 } MIDI_mapping[128];
+
+static struct {
+  guint8 group; /* 0=GroupA, 1=GroupB, 2=Memory, 3=Rhythm */
+  char *name;
+} MT32_patch[128];
 
 static char *GM_Instrument_Names[] = {
 
@@ -243,13 +248,13 @@ static char *GM_Percussion_Names[] = {
 #define RHYTHM -3
 
 static struct {
-char *name;
-gint8 gm_instr;
-gint8 gm_rhythm_key;
+  char *name;
+  gint8 gm_instr;
+  gint8 gm_rhythm_key;
 } MT32_PresetTimbreMaps[] = {
 /*000*/  {"AcouPiano1", 0, NOMAP},
 /*001*/  {"AcouPiano2", 1, NOMAP},
-/*002*/  {"AcouPiano3", 2, NOMAP},
+/*002*/  {"AcouPiano3", 0, NOMAP},
 /*003*/  {"ElecPiano1", 4, NOMAP},
 /*004*/  {"ElecPiano2", 5, NOMAP},
 /*005*/  {"ElecPiano3", 4, NOMAP},
@@ -336,7 +341,7 @@ gint8 gm_rhythm_key;
 /*086*/  {"Bassoon   ", 70, NOMAP},
 /*087*/  {"Harmonica ", 22, NOMAP},
 /*088*/  {"Trumpet 1 ", 56, NOMAP},
-/*089*/  {"Trumpet 2 ", 56, NOMAP}, /* QfG1 with 59 sound not as good as 56 */
+/*089*/  {"Trumpet 2 ", 56, NOMAP},
 /*090*/  {"Trombone 1", 57, NOMAP},
 /*091*/  {"Trombone 2", 57, NOMAP},
 /*092*/  {"Fr Horn 1 ", 60, NOMAP},
@@ -346,7 +351,7 @@ gint8 gm_rhythm_key;
 /*096*/  {"Brs Sect 2", 61, NOMAP},
 /*097*/  {"Vibe 1    ", 11, NOMAP},
 /*098*/  {"Vibe 2    ", 11, NOMAP},
-/*099*/  {"Syn Mallet", 12, NOMAP},
+/*099*/  {"Syn Mallet", 15, NOMAP},
 /*100*/  {"Wind Bell ", 88, NOMAP},
 /*101*/  {"Glock     ", 9, NOMAP},
 /*102*/  {"Tube Bell ", 14, NOMAP},
@@ -382,36 +387,36 @@ char *name;
 gint8 gm_instr;
 gint8 gm_rhythmkey;
 } MT32_RhythmTimbreMaps[] = {
-/*00*/  {"Acou BD", RHYTHM, 34},
-/*01*/  {"Acou SD", RHYTHM, 37},
-/*02*/  {"Acou Hi Tom", 117, 49},
-/*03*/  {"Acou Mid Tom", 117, 46},
-/*04*/  {"Acou Low Tom", 117, 40},
-/*05*/  {"Elec SD", RHYTHM, 39},
-/*06*/  {"Clsd Hi Hat", RHYTHM, 41},
-/*07*/  {"Open Hi Hat 1", RHYTHM, 45},
-/*08*/  {"Crash Cym", RHYTHM, 48},
-/*09*/  {"Ride Cym", RHYTHM, 50},
-/*10*/  {"Rim Shot", RHYTHM, 36},
-/*11*/  {"Hand Clap", RHYTHM, 38},
-/*12*/  {"Cowbell", RHYTHM, 55},
-/*13*/  {"Mt High Conga", RHYTHM, 61},
+/*00*/  {"Acou BD   ", RHYTHM, 34},
+/*01*/  {"Acou SD   ", RHYTHM, 37},
+/*02*/  {"Acou HiTom", 117, 49},
+/*03*/  {"AcouMidTom", 117, 46},
+/*04*/  {"AcouLowTom", 117, 40},
+/*05*/  {"Elec SD   ", RHYTHM, 39},
+/*06*/  {"Clsd HiHat", RHYTHM, 41},
+/*07*/  {"OpenHiHat1", RHYTHM, 45},
+/*08*/  {"Crash Cym ", RHYTHM, 48},
+/*09*/  {"Ride Cym  ", RHYTHM, 50},
+/*10*/  {"Rim Shot  ", RHYTHM, 36},
+/*11*/  {"Hand Clap ", RHYTHM, 38},
+/*12*/  {"Cowbell   ", RHYTHM, 55},
+/*13*/  {"Mt HiConga", RHYTHM, 61},
 /*14*/  {"High Conga", RHYTHM, 62},
-/*15*/  {"Low Conga", RHYTHM, 63},
-/*16*/  {"High Timbale", RHYTHM, 64},
-/*17*/  {"Low Timbale", RHYTHM, 65},
+/*15*/  {"Low Conga ", RHYTHM, 63},
+/*16*/  {"Hi Timbale", RHYTHM, 64},
+/*17*/  {"LowTimbale", RHYTHM, 65},
 /*18*/  {"High Bongo", RHYTHM, 59},
-/*19*/  {"Low Bongo", RHYTHM, 60},
+/*19*/  {"Low Bongo ", RHYTHM, 60},
 /*20*/  {"High Agogo", 113, 66},
-/*21*/  {"Low Agogo", 113, 67},
+/*21*/  {"Low Agogo ", 113, 67},
 /*22*/  {"Tambourine", RHYTHM, 53},
-/*23*/  {"Claves", RHYTHM, 74},
-/*24*/  {"Maracas", RHYTHM, 69},
-/*25*/  {"Smba Whis L", 78, 71},
-/*26*/  {"Smba Whis S", 78, 70},
-/*27*/  {"Cabasa", RHYTHM, 68},
-/*28*/  {"Quijada", RHYTHM, 72},
-/*29*/  {"Open Hi Hat 2", RHYTHM, 43}
+/*23*/  {"Claves    ", RHYTHM, 74},
+/*24*/  {"Maracas   ", RHYTHM, 69},
+/*25*/  {"SmbaWhis L", 78, 71},
+/*26*/  {"SmbaWhis S", 78, 70},
+/*27*/  {"Cabasa    ", RHYTHM, 68},
+/*28*/  {"Quijada   ", RHYTHM, 72},
+/*29*/  {"OpenHiHat2", RHYTHM, 43}
 };
 
 static gint8 MT32_PresetRhythmKeymap[] = {
@@ -438,9 +443,9 @@ NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP
    ??? - I'm clueless?
    R   - Rhythm... */
 static struct {
-char *name;
-gint8 gm_instr;
-gint8 gm_rhythm_key;
+  char *name;
+  gint8 gm_instr;
+  gint8 gm_rhythm_key;
 } MT32_MemoryTimbreMaps[] = {
 {"AccPnoKA2 ", 1, NOMAP},     /* ++ (KQ1) */
 {"Acou BD   ", RHYTHM, 34},   /* R (PQ2) */
@@ -453,6 +458,7 @@ gint8 gm_rhythm_key;
 {"BassPizzMS", 45, NOMAP},    /* ++ (HQ) */
 {"BassoonKA ", 70, NOMAP},    /* ++ (KQ1) */
 {"Bell    MS", 112, NOMAP},   /* ++ (iceMan) */
+{"Bells   MS", 112, NOMAP},   /* + (HQ) */
 {"Big Bell  ", 14, NOMAP},    /* + (CB) */
 {"Bird Tweet", 123, NOMAP},
 {"BrsSect MS", 61, NOMAP},    /* +++ (iceMan) */
@@ -460,18 +466,19 @@ gint8 gm_rhythm_key;
 {"Cabasa    ", RHYTHM, 68},   /* R (HBoG) */
 {"Calliope  ", 82, NOMAP},    /* +++ (HQ) */
 {"CelticHarp", 46, NOMAP},    /* ++ (CoC) */
-{"Chicago MS", 3, NOMAP},     /* ++ (iceMan) */
+{"Chicago MS", 1, NOMAP},     /* ++ (iceMan) */
 {"Chop      ", 117, NOMAP},
 {"Chorale MS", 52, NOMAP},    /* + (CoC) */
 {"ClarinetMS", 71, NOMAP},
 {"Claves    ", RHYTHM, 74},   /* R (PQ2) */
-{"Claw    MS", 117, NOMAP},    /* ? (HQ) */
+{"Claw    MS", 118, NOMAP},    /* + (HQ) */
 {"ClockBell ", 14, NOMAP},    /* + (CB) */
 {"ConcertCym", RHYTHM, 54},   /* R ? (KQ1) */
 {"Conga   MS", RHYTHM, 63},   /* R (HQ) */
 {"CoolPhone ", 124, NOMAP},   /* ++ (LSL3) */
 {"CracklesMS", 115, NOMAP}, /* ? (CoC, HQ) */
 {"CreakyD MS", NOMAP, NOMAP}, /* ??? (KQ1) */
+{"Cricket   ", 120, NOMAP}, /* ? (CB) */
 {"CrshCymbMS", RHYTHM, 56},   /* R +++ (iceMan) */
 {"CstlGateMS", NOMAP, NOMAP}, /* ? (HQ) */
 {"CymSwellMS", RHYTHM, 54},   /* R ? (CoC, HQ) */
@@ -489,6 +496,7 @@ gint8 gm_rhythm_key;
 {"Fantasy2MS", 99, NOMAP},    /* ++ (CoC, HQ) */
 {"Filter  MS", 95, NOMAP},    /* +++ (iceMan) */
 {"Filter2 MS", 95, NOMAP},    /* ++ (iceMan) */
+{"Flame2  MS", 121, NOMAP},   /* ? (HQ) */
 {"Flames  MS", 121, NOMAP},   /* ? (HQ) */
 {"Flute   MS", 73, NOMAP},    /* +++ (HQ) */
 {"FogHorn MS", 58, NOMAP},
@@ -502,14 +510,16 @@ gint8 gm_rhythm_key;
 {"Harpsi 1  ", 6, NOMAP},     /* + (HBoG) */
 {"Harpsi 2  ", 6, NOMAP},     /* +++ (CB) */
 {"Heart   MS", 116, NOMAP},   /* ? (iceMan) */
-{"Horse1  MS", NOMAP, NOMAP}, /* ? (CoC, HQ) */
-{"Horse2  MS", NOMAP, NOMAP}, /* ? (CoC, HQ) */
+{"Horse1  MS", 115, NOMAP},   /* ? (CoC, HQ) */
+{"Horse2  MS", 115, NOMAP},   /* ? (CoC, HQ) */
 {"InHale  MS", 121, NOMAP},   /* ++ (iceMan) */
+{"KNIFE     ", 120, NOMAP},   /* ? (LSL3) */
 {"KenBanjo  ", 105, NOMAP},   /* +++ (CB) */
 {"Kiss    MS", 25, NOMAP},    /* ++ (HQ) */
 {"KongHit   ", NOMAP, NOMAP}, /* ??? (KQ1) */
 {"Koto      ", 107, NOMAP},   /* +++ (PQ2) */
-{"Laser   MS", 103, NOMAP},   /* ?? (HQ) */
+{"Laser   MS", 81, NOMAP},    /* ?? (HQ) */
+{"Meeps   MS", 62, NOMAP},    /* ? (HQ) */
 {"MTrak   MS", 62, NOMAP},    /* ?? (iceMan) */
 {"MachGun MS", 127, NOMAP},   /* ? (iceMan) */
 {"OCEANSOUND", 122, NOMAP},   /* + (LSL3) */
@@ -522,6 +532,7 @@ gint8 gm_rhythm_key;
 {"PinkBassMS", 39, NOMAP},
 {"Pizz2     ", 45, NOMAP},    /* ++ (CB) */
 {"Portcullis", NOMAP, NOMAP}, /* ? (KQ1) */
+{"Raspbry MS", 81, NOMAP},    /* ? (HQ) */
 {"RatSqueek ", 72, NOMAP},    /* ? (CB, CoC) */
 {"Record78  ", NOMAP, NOMAP}, /* +++ (CB) */
 {"RecorderMS", 74, NOMAP},    /* +++ (CoC) */
@@ -547,7 +558,7 @@ gint8 gm_rhythm_key;
 {"Syn-Choir ", 91, NOMAP},
 {"Syn Brass4", 63, NOMAP},    /* ++ (PQ2) */
 {"SynBass MS", 38, NOMAP},
-{"SwmpBackgr", 88, NOMAP},    /* ?? (CB,HQ) */
+{"SwmpBackgr", 120, NOMAP},    /* ?? (CB,HQ) */
 {"T-Bone2 MS", 57, NOMAP},    /* +++ (HQ) */
 {"Taiko     ", 116, 34},      /* +++ (Coc) */
 {"Taiko Rim ", 118, 36},      /* +++ (LSL3) */
@@ -611,7 +622,7 @@ obstack_1grow(stackp, deltatime & 0x7F)
 
 #define SETUP_INSTRUMENT(channel, sci_instrument) \
 MIDI_TIMESTAMP(0); \
-obstack_1grow(stackp, 0xb0 | (channel)); \
+obstack_1grow(stackp, 0xb0 | channel); \
 obstack_1grow(stackp, 0x65); \
 obstack_1grow(stackp, 0x00); \
 MIDI_TIMESTAMP(0); \
@@ -620,7 +631,7 @@ obstack_1grow(stackp, 0x02); \
 MIDI_TIMESTAMP(0); \
 obstack_1grow(stackp, 0x06); \
 obstack_1grow(stackp, MIDI_mapping[sci_instrument].keyshift); \
-MIDI_TIMESTAMP(0); \
+/* MIDI_TIMESTAMP(0); \
 obstack_1grow(stackp, 0x65); \
 obstack_1grow(stackp, 0x00); \
 MIDI_TIMESTAMP(0); \
@@ -631,7 +642,7 @@ obstack_1grow(stackp, 0x06); \
 obstack_1grow(stackp, (MIDI_mapping[sci_instrument].finetune & 0x3FFF) >> 7); \
 MIDI_TIMESTAMP(0); \
 obstack_1grow(stackp, 0x26); \
-obstack_1grow(stackp, MIDI_mapping[sci_instrument].finetune & 0x7F); \
+obstack_1grow(stackp, MIDI_mapping[sci_instrument].finetune & 0x7F); */ \
 MIDI_TIMESTAMP(0); \
 obstack_1grow(stackp, 0x65); \
 obstack_1grow(stackp, 0x00); \
@@ -660,7 +671,7 @@ makeMIDI0(const guint8 *src, int *size)
   guint32 pos; /* position in src */
   guint32 eventpos = 0x21;
   guint32 pending_delay = 0;
-  guint8 status = 0, laststatus = 0;
+  guint8 status, laststatus = 0;
   guint16 cue = 127;
   int EOT = 0; /* end of track reached */
   guint8 *result; /* Herein will be the final results */
@@ -700,7 +711,7 @@ makeMIDI0(const guint8 *src, int *size)
       } else
 	SCIsdebug("[%04x] !!! Unknown instead of delta-time: 0x%02x\n", pos, src[pos]);
       pos++;
-    };
+    }
 
     pending_delay += src[pos];
     pos++;    
@@ -708,17 +719,17 @@ makeMIDI0(const guint8 *src, int *size)
     if (src[pos] & 0x80) {
       status = src[pos];
       pos++;
-    };
+    }
     
     if (status < 0xb0) {
     /* Note Off (8x), Note On (9x), Aftertouch (Ax) */
-      if (muteflags[status & 0x0f] == 0) {
+      if (muteflags[status & 0x0f] == 0)
 	if ((status & 0x0f) == 9) {
 	  if (MIDI_mapping[src[pos]].gm_rhythmkey >= 0) {
 	    /* if ((status & 0xf0) == 0x90) {
 	      SCIsdebug("[%04x] Rhythm Channel, SCI Note: %d", pos - 1, src[pos]);
 	      SCIsdebug(" => %s\n", GM_Percussion_Names[MIDI_mapping[src[pos]].gm_rhythmkey]);
-	      }; */
+	      } */
 	    MIDI_TIMESTAMP(pending_delay);
 	    pending_delay = 0;
 	    if (status != laststatus)
@@ -728,7 +739,7 @@ makeMIDI0(const guint8 *src, int *size)
 	    obstack_1grow(stackp, (MIDI_mapping[src[pos]].volume * src[pos + 1]) / 100);
 	    /* } else if ((status & 0xf0) == 0x90) {
 	       SCIsdebug("[%04x] Rhythm Channel, SCI Note: %d (mute)\n", pos - 1, src[pos]); */
-	  };
+	  }
 	} else {
 	  MIDI_TIMESTAMP(pending_delay);
 	  pending_delay = 0;
@@ -737,10 +748,9 @@ makeMIDI0(const guint8 *src, int *size)
 	  laststatus = status;
 	  obstack_1grow(stackp, src[pos]);
 	  obstack_1grow(stackp, src[pos + 1]);
-	};
+	}
       /* if ((status & 0xf0) == 0xa0)
 	 SCIsdebug("[%04x] !!! Aftertouch not supported by MT-32\n", pos - 1); */
-    }
       pos += 2;
     } else if (status < 0xc0) {
     /* Controller */
@@ -757,13 +767,13 @@ makeMIDI0(const guint8 *src, int *size)
 	laststatus = status;
 	obstack_1grow(stackp, src[pos]);
 	obstack_1grow(stackp, src[pos + 1]);
-      };
+      }
       if ((src[pos] != 1) &&
 	  (src[pos] != 7) &&
 	  (src[pos] != 10) &&
 	  (src[pos] != 11) &&
 	  (src[pos] != 64) &&
-	  (src[pos] != 121)) {
+	  (src[pos] != 121))
 	if (src[pos] == 0x4b) {
 	  /* SCIsdebug("[%04x] Channel: %d, * Channel mapping: %d *\n", pos - 1, status & 0xf, src[pos + 1]); */
 	} else if (src[pos] == 0x4c) {
@@ -782,15 +792,15 @@ makeMIDI0(const guint8 *src, int *size)
 	  cue += src[pos +1];
 	  SCIsdebug("[%04x] * Global, Cumulative Cue: +%d => %d *\n", pos - 1, src[pos + 1], cue);
 	} else
-	  SCIsdebug("[%04x] !!! Channel: %d, Controller: 0x%02x parameter:0x%02x, not supported by MT-32\n",
+	  SCIsdebug("[%04x] !!! Channel: %02d, Controller: 0x%02x parameter:0x%02x, not supported by MT-32\n",
 		    pos - 1, status & 0xf, src[pos], src[pos + 1]);
-      }
       pos +=2;
     } else if (status < 0xd0) {
     /* Program (patch) Change */
       if ((muteflags[status & 0xf] != 2) && ((status & 0xf) != 9)) {
 	if (MIDI_mapping[src[pos]].gm_instr >= 0) {
-          SCIsdebug("[%04x] Channel: %d, SCI Patch: %d", pos - 1, status & 0xf, src[pos]);
+          SCIsdebug("[%04x] Channel: %02d, SCI Patch: %02d, ", pos - 1, status & 0xf, src[pos]);
+	  SCIsdebug("%.10s", MT32_patch[src[pos]].name);
 	  SCIsdebug(" => %s\n", GM_Instrument_Names[MIDI_mapping[src[pos]].gm_instr]);
 	  MIDI_TIMESTAMP(pending_delay);
 	  pending_delay = 0;
@@ -800,16 +810,17 @@ makeMIDI0(const guint8 *src, int *size)
 	  laststatus = 0;
 	  muteflags[status & 0x0f] = 0;
         } else {
-	  SCIsdebug("[%04x] Channel: %d, SCI Patch: %d (mute)\n", pos - 1, status & 0xf, src[pos]);
+	  SCIsdebug("[%04x] Channel: %02d, SCI Patch: %02d, ", pos - 1, status & 0xf, src[pos]);
+	  SCIsdebug("%.10s", MT32_patch[src[pos]].name);
+	  SCIsdebug(" => * M U T E D *\n");
 	  muteflags[status & 0x0f] = 1;
-	};
-      };
-      if (status == 0xcf) {
+	}
+      }
+      if (status == 0xcf)
 	if(src[pos] == 0x7f)
 	  SCIsdebug("[%04x] * Global, Set Loop Point [%04x] *\n", pos - 1, eventpos);
 	else
 	  SCIsdebug("[%04x] * Global, Set Signal to %d *\n", pos - 1, src[pos]);
-      }
       pos++;
     } else if (status < 0xe0) {
     /* Channel Pressure */
@@ -820,7 +831,7 @@ makeMIDI0(const guint8 *src, int *size)
 	  obstack_1grow(stackp, status);
 	laststatus = status;
 	obstack_1grow(stackp, src[pos]);
-      };
+      }
       /* SCIsdebug("[%04x] !!! Channel Pressure not supported by MT-32\n", pos - 1, src[pos]); */
       pos++;
     } else if (status < 0xf0) {
@@ -833,7 +844,7 @@ makeMIDI0(const guint8 *src, int *size)
 	laststatus = status;
 	obstack_1grow(stackp, src[pos]);
 	obstack_1grow(stackp, src[pos + 1]);
-      };
+      }
       pos += 2;
     } else if (status == 0xfc) {
     /* End of Track */
@@ -845,8 +856,8 @@ makeMIDI0(const guint8 *src, int *size)
     } else {
       SCIsdebug("[%04x] !!! Illegal or unsupported MIDI extended instruction: %02x\n", pos - 1, status);
       return NULL;
-    };
-  };
+    }
+  }
 
   *size = obstack_object_size(stackp);
 
@@ -872,8 +883,8 @@ makeMIDI0(const guint8 *src, int *size)
 
 }
 
-#undef MIDI_TIMESTAMP
-#undef SETUP_INSTRUMENT
+#undef MIDI_TIMESTAMP(deltatime)
+#undef SETUP_INSTRUMENT(channel, sci_instrument)
 
 gint8
 _lookup_instrument(char *iname)
@@ -918,9 +929,10 @@ mapMIDIInstruments(void)
     MIDI_mapping[i].keyshift = 0x40;
     MIDI_mapping[i].finetune = 0x2000;
     MIDI_mapping[i].bender_range = 0x0c;
+    MT32_patch[i].name = MT32_PresetTimbreMaps[i].name;    
   }
 
-  for (i = 0; i < 80; i++) {
+  for (i = 0; i < 128; i++) {
     MIDI_mapping[i].gm_rhythmkey = MT32_PresetRhythmKeymap[i];
     MIDI_mapping[i].volume = 100;
   }
@@ -971,41 +983,50 @@ mapMIDIInstruments(void)
       finetune = *(patch1->data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2 + 3);
       bender_range = *(patch1->data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2 + 4);
       patchpointer = patch1->data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2; 
-    };
+    }
 
-    if ((patchpointer[0] == 0) &&
-        (patchpointer[1] == 0) &&
-	(patchpointer[2] == 0) &&
-	(patchpointer[3] == 0) &&
-	(patchpointer[4] == 0) &&
-	(patchpointer[5] == 0) &&
-	(patchpointer[6] == 0) &&
-	(patchpointer[7] == 0)) {
-      MIDI_mapping[i].gm_instr = NOMAP;
+    MT32_patch[i].group = group;
+
+    /*    if ((patchpointer[0] == 0) &&
+	  (patchpointer[1] == 0) &&
+	  (patchpointer[2] == 0) &&
+	  (patchpointer[3] == 0) &&
+	  (patchpointer[4] == 0) &&
+	  (patchpointer[5] == 0) &&
+	  (patchpointer[6] == 0) &&
+	  (patchpointer[7] == 0)) {
+	  MIDI_mapping[i].gm_instr = NOMAP; */
       /* SCIsdebug("Patch %d will be unmapped!\n", i); */
-    } else {
+    /*    } else { */
       switch (group) {
         case 0:
+	  MT32_patch[i].name = MT32_PresetTimbreMaps[number].name;
 	  MIDI_mapping[i].gm_instr = MT32_PresetTimbreMaps[number].gm_instr;
 	  break;
         case 1:
+	  MT32_patch[i].name = MT32_PresetTimbreMaps[number + 64].name; 
           MIDI_mapping[i].gm_instr = MT32_PresetTimbreMaps[number + 64].gm_instr;
 	  break;
         case 2:
+	  MT32_patch[i].name = patch1->data + 0x1EC + number * 0xF6;
 	  MIDI_mapping[i].gm_instr = _lookup_instrument(patch1->data + 0x1EC + number * 0xF6);
 	  /* SCIsdebug("Patch %d => %d\n",i, MIDI_mapping[i].gm_instr); */
 	  break;
         case 3:
+	  MT32_patch[i].name = MT32_RhythmTimbreMaps[number].name;
 	  MIDI_mapping[i].gm_instr = MT32_RhythmTimbreMaps[number].gm_instr;
 	  break;
         default:
 	  break;
-      };
+	  /*      } */
       MIDI_mapping[i].keyshift = 0x40 + ((int) (keyshift & 0x3F) - 24);
-      MIDI_mapping[i].finetune = 0x2000 + (((gint32) (finetune & 0x7F) - 50) << 11) / 25;
+      if (finetune != 50)
+	SCIsdebug("Patch %d, fintune %d\n", i, finetune-50);
+      /* MIDI_mapping[i].finetune = 0x2000 + (((gint32) (finetune & 0x7F) - 50) << 11) / 25; */
+      MIDI_mapping[i].finetune = 0x2000 + ((int) (finetune & 0x7F) - 50);
       MIDI_mapping[i].bender_range = (int) (bender_range & 0x1F);
-    };
-  };
+    }
+  }
 
   /*
   for (i = patches; i < 128; i++)
@@ -1024,9 +1045,9 @@ mapMIDIInstruments(void)
 	MIDI_mapping[i + 23].gm_rhythmkey = NOMAP;
       MIDI_mapping[i + 23].volume = *(patch1->data + pos + 4 * i + 3);
       /* SCIsdebug("%d => %d\n", i + 23, MIDI_mapping[i + 23].gm_rhythmkey); */
-    };
+    }
     SCIsdebug("MIDI mapping magic: MT-32 Rhythm Channel Note Map\n", memtimbres);
-  };
+  }
   
   if (logfile)
     fclose(logfile);

@@ -1,3 +1,7 @@
+2001-01-29  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/oldmidi.c: Cleanups and bug fixes by Rickard Lind
+
 2001-01-27  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/include/gfx_tools.h: Removed 'inline' in function declaration
