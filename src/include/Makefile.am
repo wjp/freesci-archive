@@ -8,4 +8,5 @@ EXTRA_DIST = old_objects.h graphics_glx.h kernel.h event.h    \
 	gfx_state_internal.h  gfx_system.h gfx_tools.h        \
 	sci_graphics.h sci_widgets.h scitypes.h sbtree.h      \
 	gfx_drivers_list.h sciresource.h midiout.h            \
-	midi_device.h modules.h sci_memory.h games.h
+	midi_device.h modules.h sci_memory.h games.h pcmout.h \
+	gfx_sci.h
