@@ -563,6 +563,10 @@ parse_name(char *name, name_value_pair* nvps, char *what, int oldval); /* Parses
 
 static void *
 parse_gfx_driver(char *s); /* Parses a graphics driver */
+static void *
+parse_midiout_driver(char *driver_name); /* parses a midiout driver */
+static void *
+parse_midi_device(char *driver_name); /* ditto */
 
 static name_value_pair valid_modes[] = {
 	{"default", GFXR_DITHER_MODE_D16},
@@ -699,6 +703,8 @@ standard_option standard_options[] = {
 	OPT_INT("alpha_threshold", alpha_threshold, 0, 255),
 	OPT_INT("animation_delay", animation_delay, 0, 1000000),
 	OPT_STATICREF("gfx_driver", gfx_driver, parse_gfx_driver),
+	OPT_STATICREF("midiout_driver", midiout_driver, parse_midiout_driver),
+	OPT_STATICREF("midi_device", midi_device, parse_midi_device),
 	OPT_END
 };
 
@@ -706,7 +712,7 @@ standard_option standard_options[] = {
 static void
 parse_option(char *option, int optlen, char *value);
 
-#line 710 "lex.yy.c"
+#line 716 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -854,13 +860,13 @@ YY_MALLOC_DECL
 YY_DECL
 	{
 	register yy_state_type yy_current_state;
-	register char *yy_cp, *yy_bp;
+	register char *yy_cp = NULL, *yy_bp = NULL;
 	register int yy_act;
 
-#line 210 "config.l"
+#line 216 "config.l"
 
 
-#line 864 "lex.yy.c"
+#line 870 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -945,7 +951,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 212 "config.l"
+#line 218 "config.l"
 {
 	++yytext; /* Get over opening bracket */
 
@@ -989,7 +995,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 254 "config.l"
+#line 260 "config.l"
 { /***** End of graphics *****/
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1002,7 +1008,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 264 "config.l"
+#line 270 "config.l"
 {
 	yytext = strchr (yytext, '=') + 1;
 
@@ -1017,7 +1023,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 276 "config.l"
+#line 282 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1030,7 +1036,7 @@ if (cur_section) {
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 287 "config.l"
+#line 293 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1042,7 +1048,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 296 "config.l"
+#line 302 "config.l"
 {
         char *p=yytext;
         char *p2;
@@ -1082,7 +1088,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 334 "config.l"
+#line 340 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
@@ -1104,16 +1110,16 @@ case 8:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 352 "config.l"
+#line 358 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 354 "config.l"
+#line 360 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 356 "config.l"
+#line 362 "config.l"
 {
         yy_delete_buffer( YY_CURRENT_BUFFER );
         yyterminate();
@@ -1121,15 +1127,15 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 361 "config.l"
+#line 367 "config.l"
 printf("Unrecognized option: '%s'\n", yytext);
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 363 "config.l"
+#line 369 "config.l"
 ECHO;
 	YY_BREAK
-#line 1133 "lex.yy.c"
+#line 1139 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2013,7 +2019,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 363 "config.l"
+#line 369 "config.l"
 
 
 int
@@ -2046,6 +2052,8 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_options.dirty_frames = GFXOP_DIRTY_FRAMES_CLUSTERS;
 
 	conf->gfx_driver = gfx_find_driver(NULL);
+        conf->midiout_driver = midiout_find_driver(NULL);
+        conf->midi_device = midi_find_device(NULL);
 
 	conf->mouse = 1;
 
@@ -2190,6 +2198,35 @@ parse_gfx_driver(char *driver_name)
 	printf ("Unknown graphics driver %s\n", driver_name);
 	return (void *) conf->gfx_driver;
 }
+
+static void *
+parse_midiout_driver(char *driver_name)
+{
+	midiout_driver_t *retval = midiout_find_driver(driver_name);
+
+	if (retval)
+		return (void *) retval;
+	/* not found - return default */
+
+	printf ("Unknown midiout driver %s\n", driver_name);
+	return (void *) conf->midiout_driver;
+}
+
+
+static void *
+parse_midi_device(char *driver_name)
+{
+	midi_device_t *retval = midi_find_device(driver_name);
+
+	if (retval)
+		return (void *) retval;
+	/* not found - return default */
+
+	printf ("Unknown MIDI device %s\n", driver_name);
+	return (void *) conf->midi_device;
+}
+
+
 
 
 static void

@@ -1,4 +1,20 @@
 2001-03-04  Solomon Peachy <pizza@shaftnet.org>
+	* README
+	  src/config.l
+	  src/config.c
+	  src/main.c
+	  src/include/sci_conf.h
+	  src/include/midi_device.h
+	  src/sound/soundserver_null.c
+
+	Added configfile and cmdline args for midiout and mididevice.
+	(see README and -h)
+
+	* src/sound/midi_mt32gm.c
+
+	Now handles pitch bend (0xe0).  
+
+2001-03-04  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/include/Makefile.am
 	  src/sound/midi_mt32.c

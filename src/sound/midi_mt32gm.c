@@ -56,6 +56,8 @@ int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2)
     } else {
       param = MIDI_mapping[param].gm_instr;
     }
+  } else if (oper == 0xe9) {
+    /* Pitch bend NYI */
   } else {
     printf("MT32GM: Unknown event: %02x\n", command);
   }

@@ -84,7 +84,7 @@ static midi_device_t *midi_devices[] = {
   NULL
 };
 
-struct _midiout_device *midiout_find_device(char *name);
+struct _midi_device *midi_find_device(char *name);
 
 #endif /* _MIDI_DEVICE_H_ */
 

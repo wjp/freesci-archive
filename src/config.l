@@ -56,6 +56,10 @@ parse_name(char *name, name_value_pair* nvps, char *what, int oldval); /* Parses
 
 static void *
 parse_gfx_driver(char *s); /* Parses a graphics driver */
+static void *
+parse_midiout_driver(char *driver_name); /* parses a midiout driver */
+static void *
+parse_midi_device(char *driver_name); /* ditto */
 
 static name_value_pair valid_modes[] = {
 	{"default", GFXR_DITHER_MODE_D16},
@@ -192,6 +196,8 @@ standard_option standard_options[] = {
 	OPT_INT("alpha_threshold", alpha_threshold, 0, 255),
 	OPT_INT("animation_delay", animation_delay, 0, 1000000),
 	OPT_STATICREF("gfx_driver", gfx_driver, parse_gfx_driver),
+	OPT_STATICREF("midiout_driver", midiout_driver, parse_midiout_driver),
+	OPT_STATICREF("midi_device", midi_device, parse_midi_device),
 	OPT_END
 };
 
@@ -392,6 +398,8 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_options.dirty_frames = GFXOP_DIRTY_FRAMES_CLUSTERS;
 
 	conf->gfx_driver = gfx_find_driver(NULL);
+        conf->midiout_driver = midiout_find_driver(NULL);
+        conf->midi_device = midi_find_device(NULL);
 
 	conf->mouse = 1;
 
@@ -536,6 +544,35 @@ parse_gfx_driver(char *driver_name)
 	printf ("Unknown graphics driver %s\n", driver_name);
 	return (void *) conf->gfx_driver;
 }
+
+static void *
+parse_midiout_driver(char *driver_name)
+{
+	midiout_driver_t *retval = midiout_find_driver(driver_name);
+
+	if (retval)
+		return (void *) retval;
+	/* not found - return default */
+
+	printf ("Unknown midiout driver %s\n", driver_name);
+	return (void *) conf->midiout_driver;
+}
+
+
+static void *
+parse_midi_device(char *driver_name)
+{
+	midi_device_t *retval = midi_find_device(driver_name);
+
+	if (retval)
+		return (void *) retval;
+	/* not found - return default */
+
+	printf ("Unknown MIDI device %s\n", driver_name);
+	return (void *) conf->midi_device;
+}
+
+
 
 
 static void

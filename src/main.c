@@ -44,8 +44,6 @@
 #  include <sched.h>
 #endif /* HAVE_SCHED_YIELD */
 
-#include <midiout.h>
-
 #ifdef _MSC_VER
 #define extern __declspec(dllimport) extern
 #endif
@@ -242,6 +240,7 @@ typedef struct {
 	char *gfx_driver_name;
 	char *gamedir;
         char *midiout_driver_name;
+        char *midi_device_name;
 } cl_options_t;
 
 #define ON 1
@@ -259,7 +258,8 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 		{"gamedir", required_argument, 0, 'd'},
 		{"sci-version", required_argument, 0, 'V'},
 		{"graphics", required_argument, 0, 'g'},
-		{"midi", required_argument, 0, 'M'},
+		{"midiout", required_argument, 0, 'O'},
+		{"mididevice", required_argument, 0, 'M'},
 		{"version", no_argument, 0, 'v'},
 		{"help", no_argument, 0, 'h'},
 		{"scale-x", required_argument, 0, 'x'},
@@ -279,12 +279,13 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 	cl_options->gfx_driver_name = NULL;
 	cl_options->gamedir = NULL;
 	cl_options->midiout_driver_name = NULL;
+	cl_options->midi_device_name = NULL;
 	cl_options->mouse = ON;
 
 #ifdef HAVE_GETOPT_LONG
-	while ((c = getopt_long(argc, argv, "vrhmDd:V:g:x:y:c:M:", options, &optindex)) > -1) {
+	while ((c = getopt_long(argc, argv, "vrhmDd:V:g:x:y:c:M:O:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_LONG */
-	while ((c = getopt(argc, argv, "vrhmDd:V:g:x:y:c:M:")) > -1) {
+	while ((c = getopt(argc, argv, "vrhmDd:V:g:x:y:c:M:O:")) > -1) {
 #endif /* !HAVE_GETOPT_LONG */
 		switch (c) {
 
@@ -317,10 +318,15 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 				free(cl_options->gfx_driver_name);
 			cl_options->gfx_driver_name = strdup(optarg);
 			break;
-		case 'M':
+		case 'O':
 		        if (cl_options->midiout_driver_name)
 		            free(cl_options->midiout_driver_name);
 		        cl_options->midiout_driver_name = strdup(optarg);
+		        break;
+		case 'M':
+		        if (cl_options->midi_device_name)
+		            free(cl_options->midi_device_name);
+		        cl_options->midi_device_name = strdup(optarg);
 		        break;
 		case '?':
 			/* getopt_long already printed an error message. */
@@ -379,6 +385,15 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 			  i++;
 			}
 			printf("\n");
+			printf("Supported midi 'devices': ");
+			i = 0;
+			while (midi_devices[i]) {
+			  if (i != 0)
+			    printf(", ");
+			  printf(midi_devices[i]->name);
+			  i++;
+			}
+			printf("\n");
 			exit(0);
 
 		case 'h':
@@ -396,7 +411,8 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 			       EXPLAIN_OPTION("--scale-y\t", "-y", "Set vertical scale factor")
 			       EXPLAIN_OPTION("--color-depth\t", "-c", "Specify color depth")
 			       EXPLAIN_OPTION("--disable-mouse", "-m", "Disable support for pointing device")
-			       EXPLAIN_OPTION("--midiout drv", "-mdrv", "use the 'drv' midiout driver")
+			       EXPLAIN_OPTION("--midiout drv\t", "-Odrv", "use the 'drv' midiout driver")
+			       EXPLAIN_OPTION("--mididevice drv", "-Mdrv", "use the 'drv' midi device (eg mt32 or adlib)")
 			       "\n"
 			       "The game name, if provided, must be equal to a game name as specified in the\n"
 			       "FreeSCI config file.\n"
@@ -525,12 +541,6 @@ init_gamestate(state_t *gamestate, sci_version_t version)
 	return 0;
 }
 
-static int 
-init_midi(cl_options_t *cl_options, midiout_driver_t *driver)
-{
-  midiout_driver = driver;
-}
-
 static int
 init_gfx(cl_options_t *cl_options, gfx_driver_t *driver)
 {
@@ -588,6 +598,7 @@ main(int argc, char** argv)
 	char work_dir[PATH_MAX+1];
 	char *gfx_driver_name = NULL;
 	char *midiout_driver_name = NULL;
+	char *midi_device_name = NULL;
 	char *game_name;
 	sci_version_t version = 0;
 	gfx_driver_t *gfx_driver = NULL;
@@ -685,14 +696,30 @@ main(int argc, char** argv)
 		    "Please run 'sciv -v' to get a list of all "
 		    "available drivers.\n", midiout_driver_name);
 	    return 1;
-	  } else
-	    midiout_driver = midiout_drivers[0]; /* null driver */
-
+	  } 
 	}
+	if (cl_options.midi_device_name)
+	  midi_device = midi_find_device(cl_options.midi_device_name);
+
+	if (!midi_device) {
+	  if (midi_device_name) {
+	    fprintf(stderr,"Failed to find midi device \"%s\"\n"
+		    "Please run 'sciv -v' to get a list of all "
+		    "available devices.\n", midi_device_name);
+	    return 1;
+	  } 
+	}
+
 	if (conf) {
 		memcpy(gfx_options, &(conf->gfx_options), sizeof(gfx_options_t)); /* memcpy so that console works */
 		if (!gfx_driver)
 			gfx_driver = conf[conf_nr].gfx_driver;
+
+		/* make sure we have sound drivers */
+		if (!midiout_driver)
+		  midiout_driver = conf[conf_nr].midiout_driver;
+		if (!midi_device)
+		  midi_device = conf[conf_nr].midi_device;
 	}
 
 	if (!gfx_driver) {

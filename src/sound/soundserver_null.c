@@ -199,8 +199,6 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	int ppid = getppid(); /* Get parent PID */
 
 	resource_t *midi_patch;
-
-	midi_device = midi_devices[0];
 	 
 	midi_patch = findResource(9,midi_patchfile);
 

@@ -31,6 +31,8 @@
 
 #include <versions.h>
 #include <gfx_options.h>
+#include <midiout.h>
+#include <midi_device.h>
 
 typedef struct {
 	char *option;
@@ -54,8 +56,10 @@ typedef struct {
 	int gfx_config_nr; /* Number of options */
 	char *console_log; /* The file to which console output should be echoed */
 	char debug_mode [80]; /* Characters specifying areas for which debug output should be enabled */
-
 	int mouse; /* Whether the mouse should be active */
+
+	midiout_driver_t *midiout_driver ; /* the midiout method to use */
+	midi_device_t *midi_device; /* the midi device to use */
 
 } config_entry_t;
 

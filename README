@@ -185,6 +185,16 @@ time, the configuration file may contain:
   factors.
   This does not have any effect when running unscaled.
 
+- midi_device:  The equivalent of what sound driver you select in a SCI
+  game.  For example, MT-32, Adlib, etc.  Currently, 'mt32' and 'mt32gm'
+  are the only options.  (the latter is a GM mapping of the MT32 driver)
+  If you have none of the above, leave it set to 'mt32' (default)
+
+- midiout_driver:  If you elected to use a "real" midi device (eg the
+  MT32 or a General MIDI synth), set this to 'unixraw' or 'alsaraw' if
+  you have it connected to your PC's MIDI port.  If you have no MIDI
+  devices, 'null' is also valid, and it sends all data to /dev/null.
+  Which is the default.  :)
 
 Example:
 ------------------------
