@@ -1,4 +1,15 @@
+2001-03-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kOnControl): OnControl now considers
+	dynviews
+
+	* src/gfx/alpha_mvi_crossblit.c: Fixed missing spilled register
+	entries in the MVI crossblitter
+
 2001-03-09  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/gfx_pixmap_scale.c (gfx_get_pixel_delta): Fixed bad
+	pixels in trilinear filtering
 
 	* src/engine/kmenu.c: Listed Emmanuel in the 'about' page
 

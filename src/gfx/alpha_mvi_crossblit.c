@@ -251,7 +251,6 @@ FUNCT_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per_src_lin
 		 "br 1b             \n"
 	 "3:\n\t"
 #ifdef PRIORITY
-		 //		 "bpt\n\t"
 		 "and $10, 7, $16        \n\t"
 		 "beq $16, 7f            \n\t"
 		 "and $11, $28, $11      \n\t"
@@ -300,6 +299,11 @@ FUNCT_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per_src_lin
 #ifdef PRIORITY
 		 , "r"(bytes_per_priority_line), "r"(priority_pos)
 #endif
+		 : "%0", "%1", "%2", "%3", "%4", "%5", "%6", "%7", "$16", "$17", "$18", "$19", "$20", "$21", "$24", "$25",
+#ifdef PRIORITY
+		 "%8", "%9", "$28", "$7", "$6",
+#endif
+		 "$8", "memory"
 		 );
 #endif
 }

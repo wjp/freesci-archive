@@ -985,6 +985,23 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	s->acc = gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart, ystart + 10, xlen, ylen), map);
 
+	if (s->dyn_views) {
+		gfxw_dyn_view_t *view = (gfxw_dyn_view_t *) s->dyn_views->contents;
+		abs_rect_t rect;
+
+		rect.x = xstart;
+		rect.y = ystart;
+		rect.xend = xstart + xlen;
+		rect.yend = ystart + ylen;
+
+		while (view && !s->acc & 0x8000)
+			if (collides_with(s, rect, view->ID, funct_nr, argc, argp))
+				s->acc |= 0x8000;
+			else
+				view = (gfxw_dyn_view_t *) view->next;
+		
+	}
+
 	/*  { */
 /*  		int x, y; */
 /*  		fprintf(stderr,"Area %d,%d %dx%d returned %04x\n", xstart, ystart + 10, xlen, ylen, s->acc); */
@@ -1327,12 +1344,6 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				} else if ((key > 31) && (key < 128)) {
 					int inserting = (modifiers & SCI_EVM_INSERT);
             
-					if (modifiers & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT))
-						key = toupper(key);
-					if (modifiers & SCI_EVM_CAPSLOCK)
-						key = toupper(key);
-					if (modifiers & ((SCI_EVM_RSHIFT | SCI_EVM_LSHIFT) & SCI_EVM_CAPSLOCK))
-						key = tolower(key);
 					modifiers &= ~(SCI_EVM_RSHIFT | SCI_EVM_LSHIFT | SCI_EVM_CAPSLOCK);
 
 					if (cursor == textlen) {
@@ -1774,19 +1785,19 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 		heap_ptr obj = GET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
 		gfxw_dyn_view_t *widget;
 
-		widget = _k_make_dynview_obj(s, obj, options, sequence_nr++, funct_nr, argc, argp);
+		if (options & _K_MAKE_VIEW_LIST_CYCLE) {
+			int signal = GET_SELECTOR(obj, signal);
 
-		if (widget) {
-			GFX_ASSERT((*widget_list)->add(GFXWC(*widget_list), GFXW(widget)));
+			if (!(signal & _K_VIEW_SIG_FLAG_FROZEN)) {
 
-			if (options & _K_MAKE_VIEW_LIST_CYCLE) {
-				if (!(widget->signal & _K_VIEW_SIG_FLAG_FROZEN))
-
-					SCIkdebug(SCIkGRAPHICS, "  invoking %04x::doit()\n", obj);
-					invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
+				SCIkdebug(SCIkGRAPHICS, "  invoking %04x::doit()\n", obj);
+				invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
 
 			}
 		}
+
+		widget = _k_make_dynview_obj(s, obj, options, sequence_nr++, funct_nr, argc, argp);
+		GFX_ASSERT((*widget_list)->add(GFXWC(*widget_list), GFXW(widget)));
 
 		node = UGET_HEAP(node + LIST_PREVIOUS_NODE); /* Next node */
 	}

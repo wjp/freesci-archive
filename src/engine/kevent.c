@@ -62,6 +62,33 @@ scancode(int ch) /* Calculates a PC keyboard scancode from a character */
 	return ch; /* not found */
 }
 
+static int
+sci_toupper(int c)
+{
+	char shifted_numbers[] = ")!@#$%^&*(";
+	c = toupper(c);
+
+	if (c >= 'A' && c <= 'Z')
+		return c;
+
+	if (c >= '0' && c <= '9')
+		return shifted_numbers[c-'0'];
+
+	switch (c) {
+	case '`': return '~';
+	case '-': return '_';
+	case '=': return '+';
+	case ';': return ':';
+	case '\'': return '"';
+	case '\\': return '|';
+	case ',': return '<';
+	case '.': return '>';
+	case '/': return '?';
+	}
+
+	return c; /* No match */
+}
+
 void
 kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
@@ -118,9 +145,13 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 					s->visual->print(GFXW(s->visual), 0);
 
 			} else {
-
 				if (e.buckybits & SCI_EVM_ALT)
 					e.data = scancode(e.data); /* Scancodify if appropriate */
+
+				if ((e.buckybits & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT)) && !(e.buckybits & SCI_EVM_CAPSLOCK))
+					e.data = sci_toupper(e.data);
+				if (!(e.buckybits & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT)) && (e.buckybits & SCI_EVM_CAPSLOCK))
+					e.data = sci_toupper(e.data);
 
 				PUT_SELECTOR(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
 				s->acc=1;

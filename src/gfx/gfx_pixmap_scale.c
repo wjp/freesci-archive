@@ -255,17 +255,19 @@ static inline void
 gfx_get_pixel_delta(unsigned int *color, int *delta, unsigned int *pixel0, unsigned int *pixel1)
 {
         int j;
+	int transp0 = pixel0[3] == 0xffffff;
+	int transp1 = pixel1[3] == 0xffffff;
 
-	if (pixel0[3] == 0xffffff && !pixel1[3]) { /* Transparent -> Opaque */
+	if (transp0 && !transp1) { /* Transparent -> Opaque */
 		memset(delta, 0, sizeof(int) * 3);
 		delta[3] = -(0xffff);
 		memcpy(color, pixel1, sizeof(int) * 3);
 		color[3] = 0xffffff;
-	} else if (!pixel0[3] && pixel1[3] == 0xffffff) { /* Opaque -> Transparent */
+	} else if (!transp0 && transp1) { /* Opaque -> Transparent */
 		memset(delta, 0, sizeof(int) * 3);
 		delta[3] = (0xffff);
 		memcpy(color, pixel0, sizeof(int) * 4);
-	} else if (pixel0[3] == 0xffffff && pixel1[3] == 0xffffff) { /* Transparent */
+	} else if (transp0 && transp1) { /* Transparent */
 		delta[3] = 0;
 		color[3] = 0xffffff;
 	} else { /* Opaque */
@@ -334,17 +336,20 @@ FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 	shifts[2] = mode->blue_shift;
 	shifts[3] = mode->alpha_shift;
 
+	if (!(pxm->index_xl && pxm->index_yl))
+		return; /* Duh. */
+
 	if (separate_alpha_map && !alpha_dest)
 		alpha_dest = pxm->alpha_map = malloc(pxm->index_xl * xfact * pxm->index_yl * yfact);
 
 	src -= pxm->index_xl + 1;
-//fprintf(stderr,"Scaling %dx%d", pxm->index_xl, pxm->index_yl);
+
 	for (y = 0; y <= pxm->index_yl; y++) {
 		byte *y_dest_backup = dest;
 		byte *y_alpha_dest_backup = alpha_dest;
 		int y_valuator = (y > 0)? 0 : 128;
 		int yc_count;
-//fprintf(stderr,"\nLine %d\n", y);
+
 
 		if (y == 0)
 			yc_count = yfact >> 1;
@@ -358,14 +363,13 @@ FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 
 		for (x = 0; x <= pxm->index_xl; x++) {
 			byte *x_dest_backup = dest;
-			byte *x_alpha_dest_backup = dest;
+			byte *x_alpha_dest_backup = alpha_dest;
 			int x_valuator = (x > 0)? 0 : 128;
 			int xc_count;
 			unsigned int leftcolor[4], rightcolor[4];
 			int leftdelta[4], rightdelta[4];
 			int xc, yc;
 
-//fprintf(stderr,"[%d]", x);
 			if (x == 0)
 				xc_count = xfact >> 1;
 			else if (x == pxm->index_xl)
@@ -389,43 +393,16 @@ FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 			gfx_apply_delta(leftcolor, leftdelta, y_valuator);
 			gfx_apply_delta(rightcolor, rightdelta, y_valuator);
 
-
-			/*
-			for (xc = 0; xc < 4; xc++) {
-				fprintf(stderr, "pixel[%d] = (",xc);
-				for (yc = 0; yc < 4; yc++) {
-					fprintf(stderr,"%08x",pixels[xc][yc]);
-					if (yc < 3)
-						fprintf(stderr,", ");
-				}
-				fprintf(stderr,")\n");
-			}
-
-			fprintf(stderr,"(%d,%d): [0..%d,0..%d]:\n", x, y, xc_count-1, yc_count-1);
-			fprintf(stderr,"   left: (%08x, %08x, %08x, %08x) + (%08x, %08x, %08x, %08x)*256\n",
-				leftcolor[0], leftcolor[1], leftcolor[2], leftcolor[3],
-				leftdelta[0], leftdelta[1], leftdelta[2], leftdelta[3]);
-			fprintf(stderr,"   right: (%08x, %08x, %08x, %08x) + (%08x, %08x, %08x, %08x)*256\n",
-				rightcolor[0], rightcolor[1], rightcolor[2], rightcolor[3],
-				rightdelta[0], rightdelta[1], rightdelta[2], rightdelta[3]);
-			fprintf(stderr," xval=%d\n", x_valuator);
-			fprintf(stderr," yval=%d\n", y_valuator);
-*/
-
 			for (yc = 0; yc < yc_count; yc++) {
 			        unsigned int color[4];
 				int delta[4];
 				int j;
 				byte *yc_dest_backup = dest;
-				byte *yc_alpha_dest_backup = dest;
+				byte *yc_alpha_dest_backup = alpha_dest;
 
 				gfx_get_pixel_delta(color, delta, leftcolor, rightcolor);
+
 				gfx_apply_delta(color, delta, x_valuator);
-				/*
-				fprintf(stderr,"   center: (%08x, %08x, %08x, %08x) + (%08x, %08x, %08x, %08x)*256\n",
-					color[0], color[1], color[2], color[3],
-					delta[0], delta[1], delta[2], delta[3]);
-				*/
 
 				for (xc = 0; xc < xc_count; xc++) {
 					SIZETYPE wrcolor;
@@ -433,37 +410,19 @@ FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 					int i;
 					wrcolor = 0;
 
-					/*
-					fprintf(stderr,"\t<%d,%d>: (%08x,%08x,%08x,%08x)\n", xc, yc,
-						color[0], color[1], color[2], color[3]);
-					fprintf(stderr,"\t\t(%08x >> %d) & %08x = ", color[3] << 8, shifts[3],masks[3]);
-					*/
-
-					intensity = ((color[3] << 8) >> shifts[3]) & masks[3];
-//					fprintf(stderr,"%08x\n", intensity);
 					for (i = 0; i < 3; i++)
 						wrcolor |= ((color[i] << 8) >> shifts[i]) & masks[i];
 
                                         if (separate_alpha_map) {
-//	fprintf(stderr,"ALPHA-WRITE %x:", alpha_dest - pxm->alpha_map);
-                                                *alpha_dest++ = intensity >> 24;
-//	fprintf(stderr,"ok\n");
+						*alpha_dest++ = color[3] >> 16;
 					} else
-						wrcolor |= intensity;
+						wrcolor |= ((color[3] << 8) >> shifts[3]) & masks[3];
 
 					wrcolor <<= (EXTRA_BYTE_OFFSET * 8);
-//	fprintf(stderr,"WRITE %x:", dest - pxm->data);
-//					wrcolor = 0x00ffffff;
-//					wrcolor &= ~masks[3];
-//					fprintf(stderr,"%d: -> %08x <-\n", __LINE__, wrcolor);
 
 					memcpy(dest, &wrcolor, COPY_BYTES);
-//		if (!(globbcount--)) return;
-//	fprintf(stderr,"ok\n");
 					dest += COPY_BYTES;
-//					fprintf(stderr,"\t  alpha: %08x + %08x (%d) * %d ->", color[3], delta[3], delta[3], column_step);
 					gfx_apply_delta(color, delta, column_step);
-//					fprintf(stderr,"%08x\n", color[3]);
 				}
 				gfx_apply_delta(leftcolor, leftdelta, line_step);
 				gfx_apply_delta(rightcolor, rightdelta, line_step);
