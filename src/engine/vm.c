@@ -53,6 +53,31 @@ calls_struct_t *send_calls = NULL;
 int send_calls_allocated = 0;
 int bp_flag = 0;
 
+void
+check_heap_corruption(state_t *s, char *file, int line)
+{
+	byte *heap = s->_heap->start;
+	int pos = s->_heap->first_free;
+
+	fprintf(stderr, "\033[1m%s, L%d\033[0m|", file, line);
+	while (pos != 0xffff) {
+		int size = getUInt16(heap + pos);
+		int next = getUInt16(heap + pos + 2);
+		fprintf(stderr,"%04x(%04x) : ", pos, size);
+
+		if (next < 1000 || next > 0xffff || size + pos > 0xffff) {
+			fprintf(stderr, "\n\033[1m\033[31mHeap corrupt!\033[0m\n");
+			fprintf(stderr, "Start = %04x, bad = %04x after %04x\n",
+				s->_heap->first_free, next, pos);
+			fprintf(stderr, "Totalsize = %x\n", size + pos);
+			return;
+		}
+		pos = next;
+	}
+	fprintf(stderr,"\n");
+}
+
+#define CHECK_HEAP check_heap_corruption(s, __FILE__, __LINE__);
 
 int
 script_error(state_t *s, char *file, int line, char *reason)
@@ -1300,7 +1325,9 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 		return s->scripttable[script_nr].heappos;
 	}
 
+/* fprintf(stderr,"Allocing %d(0x%x)\n", script->length, script->length); */
 	script_basepos = heap_allocate(s->_heap, script->length);
+
 
 	if (!script_basepos) { /* ALL YOUR SCRIPT BASE ARE BELONG TO US */
 		sciprintf("Not enough heap space for script size 0x%x of script 0x%x, has 0x%x\n",
@@ -1308,6 +1335,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 		script_debug_flag = script_error_flag = 1;
 		return 0;
 	}
+
 	recursive = 1;
 	s->scripttable[script_nr].heappos = script_basepos + 2;
 	/* Set heap position (beyond the size word) */
@@ -1319,11 +1347,20 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 
 	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
 		int locals_size = getUInt16(script->data)*2;
-		int locals = s->scripttable[script_nr].localvar_offset=heap_allocate(s->_heap,locals_size)+2;
-		memset(s->heap+locals,0,locals_size);
+		int locals = (locals_size)? heap_allocate(s->_heap,locals_size)+2 : 0;
+
+		s->scripttable[script_nr].localvar_offset = locals;
+
+		if (locals)
+			memset(s->heap+locals,0,locals_size);
 		/* Old script block */
 		/* There won't be a localvar block in this case */
-		memcpy(s->heap + script_basepos + 2, script->data + 2, script->length -2);
+/* HEAP CORRUPTOR! */		
+/*
+ fprintf(stderr,"script of size %d(+2) -> %04x\n", script->length, script_basepos);
+ fprintf(stderr,"   -- memcpying [%04x..%04x]\n", script_basepos + 2, script_basepos + script->length);
+*/
+                memcpy(s->heap + script_basepos + 2, script->data + 2, script->length -2);
 		pos = script_basepos + 2;
 		magic_pos_adder = 2;
 	} else {

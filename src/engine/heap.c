@@ -110,6 +110,11 @@ heap_ptr heap_allocate(heap_t* h, int size)
 	int previous=h->first_free;
 	int current=previous;
 
+	if (!size) {
+		fprintf(stderr,"Warning: heap_alloc'd zero bytes!\n");
+		size += 2;
+	}
+
 	size+=2+(size&1);
 
 	while(current<0xffff)

@@ -28,7 +28,6 @@
 #include <sciresource.h>
 #include <engine.h>
 
-
 int
 read_selector(state_t *s, heap_ptr object, int selector_id, char *file, int line)
 {
@@ -253,7 +252,6 @@ kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			s->bg_widgets->add(GFXWC(s->bg_widgets), widget);
 	}
 #endif
-
 
 	i = 0;
 	while ((i < SCRIPT_MAX_CLONES) && (s->clone_list[i] != offset)) i++;

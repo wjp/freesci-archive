@@ -72,7 +72,7 @@ fcaseopen(char *fname, char *mode)
 		BREAKPOINT();
 	}
 
-	while (name && !retval) 
+	while (name && !retval)
 	{
 		if (!strcasecmp(fname, name))
 			retval = fopen(name, mode);

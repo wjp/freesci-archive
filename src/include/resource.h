@@ -410,6 +410,10 @@ sci_realloc(void *ptr, size_t size);
 #  elif defined(_M_ALPHA)
 #    define BREAKPOINT()          { __asm { bpt } }
 #  endif /* !_M_IX86 && !_M_ALPHA */
+#elif defined (__DECC)
+#  if defined(__alpha__)
+#    define BREAKPOINT()          {asm ("bpt"); }
+#  endif /* !__i386__ && !__alpha__ */
 #endif
 #ifndef BREAKPOINT
 #  define BREAKPOINT() { fprintf(stderr, "Missed breakpoint in %s, line %d\n", __FILE__, __LINE__); exit(1); }

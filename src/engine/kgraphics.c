@@ -51,6 +51,7 @@
 #define K_CONTROL_CONTROL 6
 #define K_CONTROL_BOX 10
 
+
 #define ADD_TO_CURRENT_PORT(widget) \
   if (s->port) \
        s->port->add(GFXWC(s->port), GFXW(widget)); \
@@ -1549,52 +1550,68 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_dyn_view_t *widge
 				int tempid = widget->ID;
 				heap_ptr under_bits = 0;
 
+				if (!is_object(s, tempid)) {
+					SCIkwarn(SCIkERROR, "Non-object %04x present"
+						  " in view list during delete time\n",
+						  tempid);
+					tempid = 0;
+				} else
+
 				if (widget->under_bitsp) { /* Is there a bg picture left to clean? */
 					word mem_handle = widget->under_bits = GET_HEAP(widget->under_bitsp);
 
 					if (mem_handle) {
-						kfree(s, mem_handle);
-						PUT_HEAP(widget->under_bitsp, widget->under_bits = 0);
+						if (!kfree(s, mem_handle)) {
+							PUT_HEAP(widget->under_bitsp, widget->under_bits = 0);
+						} else {
+							SCIkwarn(SCIkWARNING,
+								 "Treating viewobj %04x"
+								 " as no longer"
+								 " present\n", tempid);
+							tempid = 0;
+						}
 					}
 				}
 
-				if (invoke_selector(INV_SEL(tempid, delete, 1), 0))
-					SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
-						 " a delete funcselector\n", tempid);
-				if (_k_animate_ran) {
-					SCIkwarn(SCIkWARNING, "Object at %04x invoked kAnimate() during deletion!\n", tempid);
-					return dropped;
-				}
-
-				if (widget->under_bitsp)
-					under_bits = GET_HEAP(widget->under_bitsp);
-
-				if (under_bits) {
-					PUT_HEAP(widget->under_bitsp, 0);
-					graph_restore_box(s, under_bits);
-				}
-
-				SCIkdebug(SCIkGRAPHICS, "Freeing %04x with signal=%04x\n", widget->ID, signal);
-
-				if (!(signal & _K_VIEW_SIG_FLAG_HIDDEN)) {
-					SCIkdebug(SCIkGRAPHICS, "Adding view at %04x to background\n", widget->ID);
-					if (!(gfxw_remove_id(widget->parent, widget->ID) == GFXW(widget))) {
-						SCIkwarn(SCIkERROR, "Attempt to remove view with ID %04x from list failed!\n", widget->ID);
-						BREAKPOINT();
+				if (tempid) {
+					if (invoke_selector(INV_SEL(tempid, delete, 1), 0))
+						SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
+							 " a delete funcselector\n", tempid);
+					if (_k_animate_ran) {
+						SCIkwarn(SCIkWARNING, "Object at %04x invoked kAnimate() during deletion!\n", tempid);
+						return dropped;
 					}
 
-					s->drop_views->add(GFXWC(s->drop_views), GFXW(gfxw_picviewize_dynview(widget)));
+					if (widget->under_bitsp)
+						under_bits = GET_HEAP(widget->under_bitsp);
 
-					draw_to_control_map(s, widget, 0, funct_nr, 0, argc, argp);
-					widget->draw_bounds.y += s->dyn_views->bounds.y - widget->parent->bounds.y;
-					widget->draw_bounds.x += s->dyn_views->bounds.x - widget->parent->bounds.x;
-					dropped = 1;
-				}
-				else {
-					SCIkdebug(SCIkGRAPHICS, "Deleting view at %04x\n", widget->ID);
-					widget->flags |= GFXW_FLAG_VISIBLE;
-					gfxw_annihilate(GFXW(widget));
-					return -1; /* restart: Done in Animate() */
+					if (under_bits) {
+						PUT_HEAP(widget->under_bitsp, 0);
+						graph_restore_box(s, under_bits);
+					}
+
+					SCIkdebug(SCIkGRAPHICS, "Freeing %04x with signal=%04x\n", widget->ID, signal);
+
+					if (!(signal & _K_VIEW_SIG_FLAG_HIDDEN)) {
+						SCIkdebug(SCIkGRAPHICS, "Adding view at %04x to background\n", widget->ID);
+						if (!(gfxw_remove_id(widget->parent, widget->ID) == GFXW(widget))) {
+							SCIkwarn(SCIkERROR, "Attempt to remove view with ID %04x from list failed!\n", widget->ID);
+							BREAKPOINT();
+						}
+
+						s->drop_views->add(GFXWC(s->drop_views), GFXW(gfxw_picviewize_dynview(widget)));
+
+						draw_to_control_map(s, widget, 0, funct_nr, 0, argc, argp);
+						widget->draw_bounds.y += s->dyn_views->bounds.y - widget->parent->bounds.y;
+						widget->draw_bounds.x += s->dyn_views->bounds.x - widget->parent->bounds.x;
+						dropped = 1;
+					}
+					else {
+						SCIkdebug(SCIkGRAPHICS, "Deleting view at %04x\n", widget->ID);
+						widget->flags |= GFXW_FLAG_VISIBLE;
+						gfxw_annihilate(GFXW(widget));
+						return -1; /* restart: Done in Animate() */
+					}
 				}
 			}
 		}

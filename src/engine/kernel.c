@@ -365,7 +365,7 @@ int
 kfree(state_t *s, int handle)
 {
 	if ((handle >> 11) != sci_memory) {
-		SCIkwarn(SCIkERROR, "Error: Attempt to kfree() non-handle\n");
+		SCIkwarn(SCIkERROR, "Attempt to kfree() non-handle (%04x)\n", handle);
 		return 1;
 	}
 
@@ -506,13 +506,13 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	{
 		fprintf(stderr, "timeBeginPeriod(1) failed in kGetTime!\n");
 	}
-#endif _WIN32
+#endif /* _WIN32 */
 	the_time = time(NULL);
 	loc_time = localtime(&the_time);
 
 #ifdef _WIN32
 	timeEndPeriod(1);
-#endif _WIN32
+#endif /* _WIN32 */
 
 	if (s->version<SCI_VERSION_FTU_NEW_GETTIME) { /* Use old semantics */
 		if (argc) { /* Get seconds since last am/pm switch */
