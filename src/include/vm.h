@@ -156,6 +156,11 @@ typedef struct {
 	reg_t *variables;
 } object_t;
 
+typedef struct {
+	reg_t pos;
+	int size;
+} code_block_t;
+
 #define VM_OBJECT_GET_VARSELECTOR(obj, i)  getUInt16(obj->base_obj + obj->variables_nr * 2 + i*2)
 #define VM_OBJECT_READ_PROPERTY(obj, i) (obj->variables[i])
 #define VM_OBJECT_GET_FUNCSELECTOR(obj, i) getUInt16((byte *) (obj->base_method + i))
@@ -190,6 +195,10 @@ typedef struct {
 	int locals_offset;
 	int locals_segment; /* The local variable segment */
 	local_variables_t *locals_block;
+
+	code_block_t *code;
+	int code_blocks_nr;
+	int code_blocks_allocated;
 } script_t;
 
 typedef struct {

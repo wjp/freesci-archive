@@ -52,6 +52,10 @@ void dbg_print( char* msg, int i ) {
 /*--------------------------*/
 /*-- forward declarations --*/
 /*--------------------------*/
+
+static void
+sm_set_export_width(struct _seg_manager_t *self, int flag);
+
 static object_t *
 sm_script_obj_init(seg_manager_t *self, reg_t obj_pos);
 
@@ -64,11 +68,14 @@ sm_script_initialize_locals_zero(seg_manager_t *self, seg_id_t seg, int count);
 static void
 sm_script_initialize_locals(seg_manager_t *self, reg_t location);
 
+static void
+sm_script_add_code_block(seg_manager_t *self, reg_t location);
+
 static byte *
 sm_get_synonyms(seg_manager_t *seg_manager, int id, int flag);
 
 static void
-sm_script_free_unused_objects(seg_manager_t *self, seg_id_t seg);
+sm_script_free_unused_objects(struct _seg_manager_t *self, seg_id_t seg);
 
 static dstack_t *
 sm_allocate_stack(seg_manager_t *self, int size, seg_id_t *segid);
@@ -147,6 +154,8 @@ void sm_init(seg_manager_t* self) {
 	self->nodes_seg_id = 0;
 	self->hunks_seg_id = 0;
 
+	self->exports_wide = 0;
+
 	/*  initialize the heap pointers*/
 	for (i = 0; i < self->heap_size; i++) {
 		self->heap[i] = NULL;
@@ -194,9 +203,11 @@ void sm_init(seg_manager_t* self) {
 	self->script_obj_init = sm_script_obj_init;
 	self->script_relocate = sm_script_relocate;
 	self->script_free_unused_objects = sm_script_free_unused_objects;
+	self->set_export_width = sm_set_export_width;
 
 	self->script_initialize_locals_zero = sm_script_initialize_locals_zero;
 	self->script_initialize_locals = sm_script_initialize_locals;
+	self->script_add_code_block = sm_script_add_code_block;
 
 	self->dereference = sm_dereference;
 
@@ -280,6 +291,10 @@ int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, in
 
 	scr->locals_offset = 0;
 	scr->locals_block = NULL;
+
+	scr->code = NULL;
+	scr->code_blocks_nr = 0;
+	scr->code_blocks_allocated = 0;
 
 	scr->nr = script_nr;
 
@@ -603,6 +618,11 @@ void sm_set_export_table_offset (struct _seg_manager_t* self, int offset, int ma
 	}
 };
 
+void sm_set_export_width(struct _seg_manager_t* self, int flag)
+{
+	self->exports_wide = flag;
+}
+
 guint16 *sm_get_export_table_offset (struct _seg_manager_t* self, int id, int flag, int *max)
 {
 	GET_SEGID();
@@ -656,7 +676,7 @@ void sm_set_variables (struct _seg_manager_t* self, reg_t reg, int obj_index, re
 };
 
 
-static inline int
+static /* inline */ int
 _relocate_block(reg_t *block, int block_location, int block_items, seg_id_t segment, int location)
 {
 	int rel = location - block_location;
@@ -680,7 +700,7 @@ _relocate_block(reg_t *block, int block_location, int block_items, seg_id_t segm
 	return 1;
 }
 
-static inline int
+static /* inline */ int
 _relocate_local(script_t *scr, seg_id_t segment, int location)
 {
 	if (scr->locals_block)
@@ -691,11 +711,35 @@ _relocate_local(script_t *scr, seg_id_t segment, int location)
 		return 0; /* No hands, no cookies */
 }
 
-static inline int
+static /* inline */ int
 _relocate_object(object_t *obj, seg_id_t segment, int location)
 {
 	return _relocate_block(obj->variables, obj->pos.offset, obj->variables_nr,
 			       segment, location);
+}
+
+static void
+sm_script_add_code_block(seg_manager_t *self, reg_t location)
+{
+	mem_obj_t *mobj = self->heap[location.segment];
+	script_t *scr;
+	int index;
+
+	VERIFY( !(location.segment >= self->heap_size || mobj->type != MEM_OBJ_SCRIPT),
+		"Attempt to add a code block to non-script\n" );
+
+	scr = &(mobj->data.script);
+
+	if (++scr->code_blocks_nr > scr->code_blocks_allocated)
+	{
+		scr->code_blocks_allocated += DEFAULT_OBJECTS_INCREMENT;
+		scr->code = sci_realloc(scr->code, scr->code_blocks_allocated *
+				sizeof(code_block_t));
+	}
+
+	index = scr->code_blocks_nr - 1;
+	scr->code[index].pos = location;
+	scr->code[index].size = getUInt16(scr->buf + location.offset - 2);
 }
 
 static void
@@ -720,6 +764,8 @@ sm_script_relocate(seg_manager_t *self, reg_t block)
 	for (i = 0; i < count; i++) {
 		int pos = getUInt16(scr->buf + block.offset + 2 + (i*2));
 
+		if (!pos) continue; /* FIXME: A hack pending investigation */
+
 		if (!_relocate_local(scr, block.segment, pos)) {
 			int k, done = 0;
 
@@ -728,10 +774,16 @@ sm_script_relocate(seg_manager_t *self, reg_t block)
 					done = 1;
 			}
 
+			for (k = 0; !done && k < scr->code_blocks_nr; k++) {
+				if (pos >= scr->code[k].pos.offset &&
+				    pos < scr->code[k].pos.offset+scr->code[k].size)
+					done = 1;
+			}
+
 			if (!done) {
 				sciprintf("While processing relocation block "PREG":\n",
 					  PRINT_REG(block));
-				sciprintf("Relocation failed for index %04x\n", pos);
+				sciprintf("Relocation failed for index %04x (%d/%d)\n", pos, i+1, count);
 				if (scr->locals_block)
 					sciprintf("- locals: %d at %04x\n",
 						  scr->locals_block->nr,
@@ -968,6 +1020,8 @@ guint16 sm_validate_export_func(struct _seg_manager_t* self, int pubfunct, int s
 		sciprintf( "pubfunct is invalid" );
 		return 0;
 	}
+
+	if (self->exports_wide) pubfunct *= 2;
 	offset = getUInt16( (byte*)(script->export_table + pubfunct) ); 
 	VERIFY ( offset < script->buf_size, "invalid export function pointer" );
 

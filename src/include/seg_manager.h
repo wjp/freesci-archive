@@ -99,6 +99,7 @@ typedef struct _seg_manager_t {
 	struct _mem_obj** heap;
 	int heap_size;		/* size of the heap */
 	int reserved_id;
+	int exports_wide;
 
 	seg_id_t clones_seg_id; /* ID of the (a) clones segment */
 	seg_id_t lists_seg_id; /* ID of the (a) list segment */
@@ -176,6 +177,15 @@ typedef struct _seg_manager_t {
 	** The corresponding object_t is stored within the relevant script.
 	*/
 
+	void (*script_add_code_block) (struct _seg_manager_t* self, reg_t location);
+	/* Informs the segment manager that a code block must be relocated
+	** Parameters: (reg_t) location: Start of block to relocate
+	*/
+
+	void (*set_export_width) (struct _seg_manager_t* self, int flag);
+        /* Tells the segment manager whether exports are wide (32-bit) or not.
+	   Parameters: (int) flag: 1 if exports are wide, 0 otherwise */
+
 	void (*script_relocate) (struct _seg_manager_t* self, reg_t block);
 	/* Processes a relocation block witin a script
 	** Parameters: (reg_t) obj_pos: Location (segment, offset) of the block
@@ -203,8 +213,7 @@ typedef struct _seg_manager_t {
 	** frees up some additional memory.
 	*/
 
-
-	byte *
+  	byte *
 	(*dereference)(struct _seg_manager_t *self, reg_t reg, int *size);
 	/* Dereferences a raw memory pointer
 	** Parameters: (reg_t) reg: The reference to dereference

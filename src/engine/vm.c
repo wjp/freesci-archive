@@ -249,6 +249,7 @@ execute_method(state_t *s, word script, word pubfunct, stack_ptr_t sp,
 	if (!s->seg_manager.isloaded (&s->seg_manager, script, SCRIPT_ID)) /* Script not present yet? */
 		script_instantiate(s, script);
 	seg = s->seg_manager.seg_get( &s->seg_manager, script );
+
 	temp = s->seg_manager.validate_export_func( &s->seg_manager, pubfunct, seg );
 	VERIFY( temp, "Invalid pubfunct in export table" );
 	if( !temp ) {
@@ -1295,7 +1296,10 @@ run_vm(state_t *s, int restoring)
 
 		case 0x39: /* lofsa */
 			s->r_acc.segment = xs->addr.pc.segment;
-			s->r_acc.offset = xs->addr.pc.offset + opparams[0];
+
+			if (s->version >= SCI_VERSION_FTU_LOFS_ABSOLUTE)
+				s->r_acc.offset = opparams[0]; else
+				s->r_acc.offset = xs->addr.pc.offset + opparams[0];
 #ifndef DISABLE_VALIDATIONS
 			if (s->r_acc.offset >= code_buf_size) {
 				sciprintf("VM: lofsa operation overflowed: "PREG" beyond end"
@@ -1856,6 +1860,9 @@ script_instantiate(state_t *s, int script_nr)
 		reg.offset += 4; /* Step over header */
 
 		switch (objtype) {
+		case sci_obj_code:
+			s->seg_manager.script_add_code_block(&s->seg_manager, reg);
+			break;
 		case sci_obj_object:
 		case sci_obj_class:
 		{ /* object or class? */

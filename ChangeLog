@@ -1,3 +1,11 @@
+2003-02-05  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/seg_manager.c: Added support for code relocation and
+	"wide" export tables.
+	* src/engine/vm.c: Added support for absolute lofs instructions.
+	* src/engine/kgraphics.c (kGraph): Now uses a different method of
+	distinguishing 16 and 256 color games.
+
 2003-02-03  Lars Skovlund  <lskovlun@image.dk>
 
 	* Ported kernel functions all over the place.

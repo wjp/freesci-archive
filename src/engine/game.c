@@ -409,6 +409,10 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->dirseeker_outbuffer = NULL_REG;
 	/* Those two are used by FileIO for FIND_FIRST, FIND_NEXT */
 
+	if (s->version >= SCI_VERSION_FTU_LOFS_ABSOLUTE) 
+		s->seg_manager.set_export_width(&s->seg_manager, 1); else
+			s->seg_manager.set_export_width(&s->seg_manager, 0);
+
 	sciprintf("Engine initialized\n");
 
 	if (_init_graphics_input(s))
