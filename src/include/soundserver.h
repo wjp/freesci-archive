@@ -144,6 +144,7 @@ typedef struct {
 
 extern sound_event_t sound_eq_eoq_event; /* An "end of queue" event */
 
+extern sound_eq_t queue; /* The event queue */
 
 int
 sound_init_pipes(struct _state *s);

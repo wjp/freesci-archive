@@ -256,5 +256,6 @@ typedef struct {
 
 extern MIDI_map_t MIDI_mapping[128];
 
+extern int cmdlen[16];
 
 #endif /* _SCI_SOUND_H_ */

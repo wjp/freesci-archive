@@ -31,6 +31,7 @@
 #include <sound.h>
 #include <scitypes.h>
 #include <soundserver.h>
+#include <midi_device.h>
 #include <sys/types.h>
 
 #ifdef HAVE_SOCKETPAIR
@@ -65,6 +66,7 @@ extern sfx_driver_t sound_dos;
 #endif
 
 sound_event_t sound_eq_eoq_event = {0, SOUND_SIGNAL_END_OF_QUEUE, 0};
+sound_eq_t queue; /* The event queue */
 
 int soundserver_dead = 0;
 
@@ -682,4 +684,114 @@ sound_eq_retreive_event(sound_eq_t *queue)
     return retval;
   }
   else return NULL;
+}
+
+/* process the actual midi events */
+
+int cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0};
+/* Taken from playmidi */
+
+void sci_midi_command(song_t *song, guint8 command, 
+		      guint8 param, guint8 param2, 
+		      int *ccc,
+		      FILE *ds)
+{
+  
+  if (SCI_MIDI_CONTROLLER(command)) {
+    switch (param) {
+
+    case SCI_MIDI_CUMULATIVE_CUE:
+      *ccc += param2;
+      sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, *ccc);
+      break;
+    case SCI_MIDI_RESET_ON_STOP:
+      song->resetflag = param2;
+      break;
+    case SCI_MIDI_SET_POLYPHONY:
+      song->polyphony[command & 0x0f] = param2;
+      break;
+    case SCI_MIDI_SET_REVERB:
+      song->reverb = param2;
+      midi_reverb(param2);
+      break;
+    case SCI_MIDI_SET_VELOCITY:
+      if (!param)
+	song->velocity[command & 0x0f] = 127;
+      break;
+    case 0x61: /* UNKNOWN NYI (special for adlib? */
+    case 0x73: /* UNKNOWN NYI (happens in Hoyle) */
+      break;
+    case 0x01: /* modulation */
+    case 0x07: /* volume */
+    case 0x0a: /* panpot */
+    case 0x0b: /* expression */
+    case 0x40: /* hold */
+    case 0x79: /* reset all */
+      midi_event(command, param, param2);
+      break; 
+    default:
+      fprintf(ds, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
+      break;
+    }
+
+  } else if (command == SCI_MIDI_SET_SIGNAL) {
+
+    if (param == SCI_MIDI_SET_SIGNAL_LOOP) {
+      song->loopmark = song->pos;
+    } else if (param <= 127) {
+      sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
+    }
+
+  } else {  
+    /* just your regular midi event.. */
+
+    if (song->flags[command & 0x0f] & midi_playflag) { 
+      switch (command & 0xf0) {
+
+      case 0xc0:  /* program change */
+	song->instruments[command & 0xf] = param;
+	midi_event2(command, param);
+	break;
+      case 0x80:  /* note on */
+      case 0x90:  /* note off */
+	if (song->velocity[command & 0x0f])  /* do we ignore velocities? */
+	  param2 = song->velocity[command & 0x0f];
+
+	if (song->fading != -1) {           /* is the song fading? */
+		if (song->maxfade == 0)
+			song->maxfade = 1;
+			
+		param2 = (param2 * (song->fading)) / (song->maxfade);  /* scale the velocity */
+		/*	  printf("fading %d %d\n", song->fading, song->maxfade);*/
+		
+	}
+
+      case 0xb0:  /* program control */
+      case 0xe0:  /* pitch bend */
+	midi_event(command, param, param2);
+	break;
+      default:
+	fprintf(ds, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
+      }
+    }
+  }  
+}
+
+void
+song_lib_dump(songlib_t songlib, int line)
+{
+	song_t *seeker = *songlib;
+
+	fprintf(stderr,"L%d:", line);
+	do {
+		fprintf(stderr,"    %p", seeker);
+
+		if (seeker) {
+			fprintf(stderr,"[%04x]->", seeker->handle);
+			seeker = seeker->next;
+		}
+		fprintf(stderr,"\n");
+	} while (seeker);
+	fprintf(stderr,"\n");
+	    
 }
