@@ -30,6 +30,8 @@
 static int fd;
 static char *devicename = "/dev/midi00";
 
+static int unixraw_lastwrote = 0;
+
 int midiout_unixraw_open()
 {
   if ((fd = open(devicename, O_WRONLY|O_SYNC)) < 0) {
@@ -49,6 +51,7 @@ int midiout_unixraw_close()
 int midiout_unixraw_flush()
 {
   /* opened with O_SYNC; already flushed.. */
+  usleep (320 * unixraw_lastwrote);  /* delay to make sure all was written */
   return 0;
 }
 
@@ -62,6 +65,7 @@ int midiout_unixraw_write(guint8 *buffer, unsigned int count)
     printf("write error on fd %d: %d -- %d\n", fd, rval, errno);
     rval = -1;
   }
+  unixraw_lastwrote = rval;
   return rval;
 }
 

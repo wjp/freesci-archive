@@ -152,11 +152,9 @@ static struct {
 int midi_mt32_defaults(guint8 volume, guint8 reverb) {
   printf("MT-32: Writing Default Rhythm key map\n");
   midi_mt32_poke(0x030110, default_rhythm_keymap, 256);  
-  midi_mt32_sysex_delay();  
 
   printf("MT-32: Writing Default Partial Reserve\n");
   midi_mt32_poke(0x100004, default_partial_reserve, 9);
-  midi_mt32_sysex_delay();
 
   if (reverb) {
     mt32_reverb[0].mode = 0;
@@ -196,28 +194,23 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
     /* Display MT-32 initialization message */
     printf("MT-32: Displaying Text: \"%.20s\"\n", data + 20);
     midi_mt32_poke(0x200000, data + 20, 20);
-    midi_mt32_sysex_delay();
 
     /* Write Patches (48 or 96) */
     memtimbres = data[491];
     block2 = (memtimbres * 246) + 492;
     printf("MT-32: Writing Patches #01 - #32\n");
     midi_mt32_poke(0x050000, data + 107, 256);
-    midi_mt32_sysex_delay();
     if ((length > block2) &&
 	data[block2] == 0xAB &&
 	data[block2 + 1] == 0xCD) {
       printf("MT-32: Writing Patches #33 - #64\n");
       midi_mt32_poke_gather(0x050200, data + 363, 128, data + block2 + 2, 128);  
-      midi_mt32_sysex_delay();
       printf("MT-32: Writing Patches #65 - #96\n");
       midi_mt32_poke(0x050400, data + block2 + 130, 256);
-      midi_mt32_sysex_delay();
       block3 = block2 + 386;
     } else {
       printf("MT-32: Writing Patches #33 - #48\n");
       midi_mt32_poke(0x050200, data + 363, 128);
-      midi_mt32_sysex_delay();
       block3 = block2;
     }
     /* Write Memory Timbres */
@@ -225,7 +218,6 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
       printf("MT-32: Writing Memory Timbre #%02d: \"%.10s\"\n",
 	     i + 1, data + 492 + i * 246);
       midi_mt32_poke(0x080000 + (i << 9), data + 492 + i * 246, 246);
-      midi_mt32_sysex_delay();
     }
     /* Write Rhythm key map and Partial Reserve */
     if ((length > block3) &&
@@ -233,21 +225,17 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
 	data[block3 + 1] == 0xBA) {
       printf("MT-32: Writing Rhythm key map\n");
       midi_mt32_poke(0x030110, data + block3 + 2, 256);  
-      midi_mt32_sysex_delay();
       printf("MT-32: Writing Partial Reserve\n");
       midi_mt32_poke(0x100004, data + block3 + 258, 9);
-      midi_mt32_sysex_delay();
     } else {
       midi_mt32_defaults(0,0);  /* send default keymap/reserve */
     }
     /* Display MT-32 initialization done message */
     printf("MT-32: Displaying Text: \"%.20s\"\n", data);
     midi_mt32_poke(0x200000, data, 20);
-    midi_mt32_sysex_delay();
     /* Write undocumented MT-32(?) SysEx */
     printf("MT-32: Writing {F0 41 10 16 12 52 00 0A 16 16 16 16 16 16 20 F7}\n");
     midi_mt32_poke(0x52000A, unknown_sysex, 6);
-    midi_mt32_sysex_delay();
     printf("MT-32: Setting up reverb levels\n");
     default_reverb = data[0x3e];
     memcpy(mt32_reverb,data+ 0x4a, 3 * 11);
@@ -258,7 +246,6 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
   } else if (type == 1) {
     printf("MT-32: Displaying Text: \"%.20s\"\n", data + 20);
     midi_mt32_poke(0x200000, data + 20, 20);
-    midi_mt32_sysex_delay();
     printf("MT-32: Loading SyEx bank\n");
     midi_mt32_write_block(data + 1155, (data[1154] << 8) + data[1153]);
     memcpy(patch_map, data, 128);
@@ -279,11 +266,9 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
 
     printf("MT-32: Displaying Text: \"%.20s\"\n", data);
     midi_mt32_poke(0x200000, data, 20);
-    midi_mt32_sysex_delay();
     return 0;
   } else if (type == 2) {
     midi_mt32_poke(0x200000, "   FreeSCI Rocks!  ", 20);
-    midi_mt32_sysex_delay();
     return midi_mt32_defaults(0x0c,1);  /* send defaults in absence of patch data */
   }
   return -1;
@@ -295,7 +280,6 @@ int midi_mt32_close()
   if (type == 0) {
     printf("MT-32: Displaying Text: \"%.20s\"\n", data + 40);
     midi_mt32_poke(0x200000, data + 40, 20);
-    midi_mt32_sysex_delay();
   }
   return midiout_close();
 }
@@ -306,7 +290,6 @@ int midi_mt32_volume(guint8 volume)
   if (midi_mt32_poke(0x100016, &volume, 1) < 0)
     return -1;
 
-  midi_mt32_sysex_delay();
   return 0;
 }
 
@@ -334,7 +317,6 @@ int midi_mt32_reverb(short param)
   buffer[1] = mt32_reverb[param].time;
   buffer[2] = mt32_reverb[param].level;
   midi_mt32_poke(0x100001, buffer, 3);
-  midi_mt32_sysex_delay();
 
   return 0;
 }
@@ -397,7 +379,8 @@ int midi_mt32_poke(guint32 address, guint8 *data, unsigned int count)
 
   i = midiout_write_block(sysex_buffer, count + 10);
   midiout_flush();
-  usleep(320 * count + 10);  /* need to delay on faster machines. */
+  midi_mt32_sysex_delay();  
+
   return i;
 
 }
@@ -424,7 +407,7 @@ int midi_mt32_poke_gather(guint32 address, guint8 *data1, unsigned int count1,
 
   i = midiout_write_block(sysex_buffer, count1 + count2 + 10);
   midiout_flush();
-  usleep(320 * (count1 +count2+ 10));  /* need to delay on faster machines. */
+  midi_mt32_sysex_delay();
   return i;
 }
 
