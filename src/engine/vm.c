@@ -57,6 +57,89 @@ calls_struct_t *send_calls = NULL;
 int send_calls_allocated = 0;
 int bp_flag = 0;
 
+/*-- validation functionality --*/
+
+#ifndef DISABLE_VALIDATIONS
+
+static inline stack_ptr_t
+validate_stack_addr(state_t *s, stack_ptr_t sp)
+{
+	if (sp >= s->stack_base && sp < s->stack_top)
+		return sp;
+
+	script_debug_flag = script_error_flag = 1;
+	sciprintf("Stack index %d out of valid range [%d..%d]\n", sp, 0, s->stack_size -1);
+	return 0;
+}
+
+static inline int
+validate_arithmetic(reg_t reg)
+{
+	if (reg.segment) {
+		script_debug_flag = script_error_flag = 1;
+		sciprintf("Attempt to read arithmetic value from non-zero segment [%04x]\n", reg.segment);
+	}
+
+	return reg.offset;
+}
+
+static inline int
+validate_variable(reg_t *r, int type, int max, int index, int line)
+{
+	char *names[4] = {"global", "local", "temp", "param"};
+
+	if (index < 0 || index >= max) {
+		script-debug_flag = script_error_flag = 1;
+		sciprintf("Attempt to read invalid %s variable %d ");
+		if (max == 0)
+			sciprintf("(variable type invalid)");
+		else
+			sciprintf("(out of range [%d..%d])", 0, max-1);
+		sciprintf(" in %s, line %d", __FILE__, __LINE__);
+		script_debug_flag = script_error_flag = 1;
+
+		return 1;
+	}
+
+	return 0;
+}
+
+static inline reg_t
+validate_read_var(reg_t *r, int type, int max, int index, int line)
+{
+	if (!validate_variable(r, type, max, index, line))
+		return r[index];
+	else
+		return make_reg(0, 0);
+}
+
+static inline void
+validate_write_var(reg_t *r, int type, int max, int index, int line, reg_t value)
+{
+	if (!validate_variable(r, type, max, index, line))
+		r[index] = value;
+}
+
+#else
+/*-- Non-validating alternatives -- */
+
+#  define validate_stack_addr(s, sp) sp
+#  define validate_arithmetic(r) ((r).offset)
+#  define validate_variable(r, t, m, i, l)
+#  define validate_read_var(r, t, m, i, l) ((r)[i])
+#  define validate_write_var(r, t, m, i, l, v) ((r)[i] = (v))
+
+#endif
+
+#define READ_VAR(type, index) validate_read_var(variables[type], type, variables_max[type], index, __LINE__);
+#define WRITE_VAR(type, index, value) validate_write_var(variables[type], type, variables_max[type], index, __LINE__, value);
+
+#define ACC_ARITHMETIC_L(op) make_reg(0, (op validate_arithmetic(s->r_acc)));
+#define ACC_AUX_LOAD() aux_acc = validate_arithmetic(s->r_acc);
+#define ACC_AUX_STORE() s->r_acc = make_reg(0, aux_acc);
+
+/*==--------------------------==*/
+
 void
 check_heap_corruption(state_t *s, char *file, int line)
 {
@@ -90,6 +173,7 @@ script_error(state_t *s, char *file, int line, char *reason)
   script_debug_flag = script_error_flag = 1;
   return 0;
 }
+
 
 static inline void
 putInt16(byte *addr, word value)
@@ -130,15 +214,19 @@ get_class_address(state_t *s, int classnr)
 }
 
 /* Operating on the stack */
-#define PUSH(v) putInt16(s->heap + (((xs->sp) += 2)) - 2, (v))
-#define POP() ((gint16)(getInt16(s->heap + ((xs->sp)-=2))))
+/* 16 bit: */
+#define PUSH(v) PUSH32(make_reg(0, v))
+#define POP() (validate_arithmetic(POP32()))
+/* 32 bit: */
+#define PUSH32(a) (*(validate_stack_addr(s, (xs->sp)++)) = (a))
+#define POP32() (*(validate_stack_addr(s, --(xs->sp))))
 
 /* Getting instruction parameters */
-#define GET_OP_BYTE() ((guint8) s->heap[(xs->pc)++])
-#define GET_OP_WORD() (getUInt16(s->heap + ((xs->pc) += 2) - 2))
+#define GET_OP_BYTE() ((guint8) code_buf[(pc_offset)++])
+#define GET_OP_WORD() (getUInt16(code_buf + ((pc_offset) += 2) - 2))
 #define GET_OP_FLEX() ((opcode & 1)? GET_OP_BYTE() : GET_OP_WORD())
-#define GET_OP_SIGNED_BYTE() ((gint8)(s->heap[(xs->pc)++]))
-#define GET_OP_SIGNED_WORD() ((getInt16(s->heap + ((xs->pc) += 2) - 2)))
+#define GET_OP_SIGNED_BYTE() ((gint8)(code_buf[(pc_offset)++]))
+#define GET_OP_SIGNED_WORD() ((getInt16(code_buf + ((pc_offset) += 2) - 2)))
 #define GET_OP_SIGNED_FLEX() ((opcode & 1)? GET_OP_SIGNED_BYTE() : GET_OP_SIGNED_WORD())
 
 #define CLASS_ADDRESS(classnr) (((classnr < 0) || (classnr >= s->classtable_size)) ?              \
@@ -216,8 +304,7 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
 //		     heap_ptr argp, int selector, heap_ptr sendp, int origin, int localvarp);
     add_exec_stack_entry(s, (heap_ptr)(scriptpos + GET_HEAP(tableaddress + (pubfunct * 2)) - magic_ofs),
 		sp, calling_obj, (int)argc, argp, -1, calling_obj, s->execution_stack_pos,
-		s->scripttable[script].heappos/*.localvar_offset -- changed to fix  VM compilation for
-						CSCI 5573 changes*/);
+		s->scripttable[script].localvar_offset);
 }
 
 
@@ -444,9 +531,11 @@ add_exec_stack_varselector(state_t *s, heap_ptr objp, int argc, heap_ptr argp, i
 
 
 exec_stack_t *
-add_exec_stack_entry(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr argp,
-		     int selector, heap_ptr sendp, int origin, int localvarp)
-/* Returns new TOS element */
+add_exec_stack_entry(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp,
+		     int argc,
+		     heap_ptr argp, int selector, heap_ptr sendp,
+		     int origin, int localvarp)
+/* Returns new TOS element for the execution stack*/
 {
   exec_stack_t *xstack = NULL;
 
@@ -523,725 +612,732 @@ vm_handle_fatal_error(state_t *s, int line, char *file)
 void
 run_vm(state_t *s, int restoring)
 {
-  gint16 temp, temp2;
-  guint16 utemp, utemp2;
-  gint16 opparams[4] = {0}; /* opcode parameters */
+	reg_t *variables[4]; /* global, local, temp, param, as immediate pointers */
+#ifndef DISABLE_VALIDATIONS
+	int variables_max[4]; /* Max. values for all variables */
+#endif
+	int temp;
+	gint16 aux_acc; /* Auxiliary 16 bit accumulator */
+//	gint16 temp, temp2;
+//	guint16 utemp, utemp2;
+//	gint16 opparams[4]; /* opcode parameters */
+//
+//  int restadjust = s->amp_rest; /* &rest adjusts the parameter count by this value */
+//  /* Current execution data: */
+	exec_stack_t *xs = s->execution_stack + s->execution_stack_pos;
+	exec_stack_t *xs_new; /* Used during some operations */
+	script_t *local_script = !!FIXME!!;
+	int pc_offset;
+	byte *code_buf;
 
-  int restadjust = s->amp_rest; /* &rest adjusts the parameter count by this value */
-  /* Current execution data: */
-  exec_stack_t *xs = s->execution_stack + s->execution_stack_pos;
-  exec_stack_t *xs_new; /* Used during some operations */
+	if (!local_script) {
+		script_error(s, __FILE__, __LINE__, "Program Counter gone astray");
+		return;
+	}
+	
+	pc_offset = xs->pc.offset;
+	code_buf = local_script->buf;
+//
+//  int old_execution_stack_base = s->execution_stack_base;
 
-  int old_execution_stack_base = s->execution_stack_base;
-
-  if (NULL == s)
-  {
-    sciprintf("vm.c: run_vm(): NULL passed for \"s\"\n");
-    return;
-  }
+	if (NULL == s) {
+		sciprintf("vm.c: run_vm(): NULL passed for \"s\"\n");
+		return;
+	}
 
 #ifdef HAVE_SETJMP_H
-  setjmp(vm_error_address);
-  jump_initialized = 1;
+	setjmp(vm_error_address);
+	jump_initialized = 1;
+#endif
+//
+//
+//  if (restoring) {
+//
+//
+//  } else {
+//
+//    s->execution_stack_base = s->execution_stack_pos;
+//
+//  }
+
+#ifndef DISABLE_VALIDATIONS
+	/* Initialize maximum variable count */
+	variables_max[VAR_GLOBAL] = s->script_000->locals_nr;
+	variables_max[VAR_LOCAL] = local_script->locals_nr;
+	variables_max[VAR_TEMP] = 0;
+	variables_max[VAR_PARAM] = xs->argc + 1;
 #endif
 
 
-  if (restoring) {
+	/* SCI code reads the zeroeth argument to determine argc */
+	WRITE_VAR(VAR_PARAM, 0, xs->argc);
 
 
-  } else {
+	while (1) {
+//    reg_t old_pc = xs->pc;
+//    stack_ptr_t old_sp = xs->sp;
+//    byte opcode, opnumber;
+//    int var_number; /* See description below */
+//
+//    if (s->execution_stack_pos_changed) {
+//      xs = s->execution_stack + s->execution_stack_pos;
+//      s->execution_stack_pos_changed = 0;
+//    }
+//
+		script_error_flag = 0; /* Set error condition to false */
 
-    s->execution_stack_base = s->execution_stack_pos;
+		if (script_abort_flag)
+			return; /* Emergency */
 
-  }
 
-  /* SCI code reads the zeroeth argument to determine argc */
-  PUT_HEAP(xs->variables[VAR_PARAM], xs->argc);
+		/* Debug if this has been requested: */
+		if (script_debug_flag || sci_debug_flags) {
+			script_debug(s, &(xs->pc), &(xs->sp), &(xs->variables[VAR_TEMP]),
+				     &(xs->objp), &restadjust, bp_flag);
+			bp_flag = 0;
+		}
 
-  while (1) {
-    heap_ptr old_pc = xs->pc;
-    heap_ptr old_sp = xs->sp;
-    byte opcode, opnumber;
-    int var_number; /* See description below */
+		opcode = GET_OP_BYTE(); /* Get opcode */
 
-    int z, zz=0;
-    for (z =0; z < MAX_HUNK_BLOCKS; z++) {
-	    if (s->hunk[z].size < 0) {
-		    fprintf(stderr,"Hunk %d is inconsistant!\n", z);
-		    break;
-	    }
-	    else if (s->hunk[z].size)
-		    zz++;
-    }
-    if (zz > 12) {
-      /*    fprintf(stderr, "%d hunk handles allocated!\n", zz); */
-    }
 
-    #ifdef _DOS
-#error "Fixme: Polling the sound server each step will make things FSICKINGLY slow!!!"
-    /* poll the sound server! (dos needs this because it's singletasking) */
-    if(s->sfx_driver) {
-        if(s->sfx_driver->poll) {
-            s->sfx_driver->poll();
-        }
-    }
-    #endif
+#ifndef DISABLE_VALIDATIONS
+		if (xs->sp < xs->variables[VAR_TEMP])
+			script_error(s, __FILE__, __LINE__, "Relative stack underflow");
 
-    if (s->execution_stack_pos_changed) {
-      xs = s->execution_stack + s->execution_stack_pos;
-      s->execution_stack_pos_changed = 0;
-    }
+		variables_max[VAR_TEMP] = xs->stack xs->variables[VAR_TEMP];
 
-    script_error_flag = 0; /* Set error condition to false */
+		if (pc_offset < 0 || pc_offset >= local_script->buf_size)
+			script_error(s, __FILE__, __LINE__, "Program Counter gone astray");
+#endif
 
-    if (script_abort_flag)
-      return; /* Emergency */
+		opnumber = opcode >> 1;
 
-    if (script_debug_flag || sci_debug_flags) {
-      script_debug(s, &(xs->pc), &(xs->sp), &(xs->variables[VAR_TEMP]),
-		   &(xs->objp), &restadjust, bp_flag);
-      bp_flag = 0;
-    }
-    /* Debug if this has been requested */
+		for (temp = 0; formats[opnumber][temp]; temp++) /* formats comes from script.c */
+			switch(formats[opnumber][temp]) {
 
-    opcode = GET_OP_BYTE(); /* Get opcode */
+			case Script_Byte: opparams[temp] = GET_OP_BYTE(); break;
+			case Script_SByte: opparams[temp] = GET_OP_SIGNED_BYTE(); break;
 
-    if (xs->sp < s->stack_base)
-      script_error(s, __FILE__, __LINE__, "Absolute stack underflow");
+			case Script_Word: opparams[temp] = GET_OP_WORD(); break;
+			case Script_SWord: opparams[temp] = GET_OP_SIGNED_WORD(); break;
 
-    if (xs->sp < xs->variables[VAR_TEMP])
-	  script_error(s, __FILE__, __LINE__, "Relative stack underflow");
+			case Script_Variable:
+			case Script_Property:
 
-    if (xs->sp >= s->stack_base + VM_STACK_SIZE)
-      script_error(s, __FILE__, __LINE__, "Stack overflow");
+			case Script_Local:
+			case Script_Temp:
+			case Script_Global:
+			case Script_Param:
+				opparams[temp] = GET_OP_FLEX(); break;
 
-    if (xs->pc < 800)
-      script_error(s, __FILE__, __LINE__, "Program Counter gone astray");
+			case Script_SVariable:
+			case Script_SRelative:
+				opparams[temp] = GET_OP_SIGNED_FLEX(); break;
 
-    opnumber = opcode >> 1;
-
-    for (temp = 0; formats[opnumber][temp]; temp++) /* formats comes from script.c */
-      switch(formats[opnumber][temp]) {
-
-      case Script_Byte: opparams[temp] = GET_OP_BYTE(); break;
-      case Script_SByte: opparams[temp] = GET_OP_SIGNED_BYTE(); break;
-
-      case Script_Word: opparams[temp] = GET_OP_WORD(); break;
-      case Script_SWord: opparams[temp] = GET_OP_SIGNED_WORD(); break;
-
-      case Script_Variable:
-      case Script_Property:
-
-      case Script_Local:
-      case Script_Temp:
-      case Script_Global:
-      case Script_Param:
-	      opparams[temp] = GET_OP_FLEX(); break;
-
-      case Script_SVariable:
-      case Script_SRelative:
-	      opparams[temp] = GET_OP_SIGNED_FLEX(); break;
-
-      case Script_None:
-      case Script_End:
-	      break;
-
-      case Script_Invalid:
-      default:
-	      sciprintf("opcode %02x: Invalid!", opcode);
-	      script_debug_flag = script_error_flag = 1;
-
-      }
-
-
-    switch (opnumber) {
-
-    case 0x00: /* bnot */
-      s->acc ^= 0xffff;
-      break;
-
-    case 0x01: /* add */
-      s->acc = POP() + s->acc;
-      break;
-
-    case 0x02: /* sub */
-      s->acc = POP() - s->acc;
-      break;
-
-    case 0x03: /* mul */
-      s->acc = POP() * s->acc;
-      break;
-
-    case 0x04: /* div */
-      s->acc = s->acc? POP() / s->acc : 0;
-      break;
-
-    case 0x05: /* mod */
-      s->acc = (s->acc > 0)? POP() % s->acc : 0;
-      break;
-
-    case 0x06: /* shr */
-      s->acc = ((guint16) POP()) >> s->acc;
-      break;
-
-    case 0x07: /* shl */
-      s->acc = ((guint16) POP()) << s->acc;
-      break;
-
-    case 0x08: /* xor */
-      s->acc = POP() ^ s->acc;
-      break;
-
-    case 0x09: /* and */
-      s->acc = POP() & s->acc;
-      break;
-
-    case 0x0a: /* or */
-      s->acc = POP() | s->acc;
-      break;
-
-    case 0x0b: /* neg */
-      s->acc = -(s->acc);
-      break;
-
-    case 0x0c: /* not */
-      s->acc = !s->acc;
-      break;
-
-    case 0x0d: /* eq? */
-      s->prev = s->acc;
-      s->acc = (POP() == s->acc);
-      break;
-
-    case 0x0e: /* ne? */
-      s->prev = s->acc;
-      s->acc = (POP() != s->acc);
-      break;
-
-    case 0x0f: /* gt? */
-      s->prev = s->acc;
-      s->acc = (POP() > s->acc);
-      break;
-
-    case 0x10: /* ge? */
-      s->prev = s->acc;
-      s->acc = (POP() >= s->acc);
-      break;
-
-    case 0x11: /* lt? */
-      s->prev = s->acc;
-      s->acc = (POP() < s->acc);
-      break;
-
-    case 0x12: /* le? */
-      s->prev = s->acc;
-      s->acc = (POP() <= s->acc);
-      break;
-
-    case 0x13: /* ugt? */
-      s->prev = s->acc;
-      s->acc = ((guint16)(POP()) > ((guint16)(s->acc)));
-      break;
-
-    case 0x14: /* uge? */
-      s->prev = s->acc;
-      s->acc = ((guint16)(POP()) >= ((guint16)(s->acc)));
-      break;
-
-    case 0x15: /* ult? */
-      s->prev = s->acc;
-      s->acc = ((guint16)(POP()) < ((guint16)(s->acc)));
-      break;
-
-    case 0x16: /* ule? */
-      s->prev = s->acc;
-      s->acc = ((guint16)(POP()) <= ((guint16)(s->acc)));
-      break;
-
-    case 0x17: /* bt */
-      if (s->acc) xs->pc += opparams[0];
-      break;
-
-    case 0x18: /* bnt */
-      if (!s->acc) xs->pc += opparams[0];
-      break;
-
-    case 0x19: /* jmp */
-      xs->pc += opparams[0];
-      break;
-
-    case 0x1a: /* ldi */
-      s->acc = opparams[0];
-      break;
-
-    case 0x1b: /* push */
-      PUSH(s->acc);
-      break;
-
-    case 0x1c: /* pushi */
-      PUSH(opparams[0]);
-      break;
-
-    case 0x1d: /* toss */
-      xs->sp -= 2;
-      break;
-
-    case 0x1e: /* dup */
-      temp = POP();
-      PUSH(temp);
-      PUSH(temp); /* Gets compiler-optimized (I hope) */
-      break;
-
-    case 0x1f: /* link */
-      xs->sp += (opparams[0]) << 1;
-      break;
-
-    case 0x20: /* call */
-      temp = opparams[1] + 2 + (restadjust*2);
-      temp2 = xs->sp;
-      xs->sp -= temp;
-      xs_new = add_exec_stack_entry(s, xs->pc + opparams[0], temp2, xs->objp,
-				    GET_HEAP(xs->sp) + restadjust,
-				    xs->sp, -1, xs->objp, s->execution_stack_pos, xs->variables[VAR_LOCAL]);
-      restadjust = 0; /* Used up the &rest adjustment */
-
-      xs = xs_new;
-      break;
-
-    case 0x21: /* callk */
-    xs->sp -= opparams[1]+2;
-    if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-    {
-      xs->sp -= restadjust * 2;
-      s->amp_rest = 0; /* We just used up the restadjust, remember? */
-    }
-      if (opparams[0] >= s->kernel_names_nr) {
-
-	sciprintf("Invalid kernel function 0x%x requested\n", opparams[0]);
-	script_debug_flag = script_error_flag = 1;
-
-      } else {
-
-	if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-	    s->kfunct_table[opparams[0]](s, opparams[0], GET_HEAP(xs->sp) + restadjust, xs->sp + 2); /* Call kernel function */ else
-	    s->kfunct_table[opparams[0]](s, opparams[0], GET_HEAP(xs->sp), xs->sp + 2); /* Call kernel function */
-
-	/* Calculate xs again: The kernel function might have spawned a new VM */
-	xs = s->execution_stack + s->execution_stack_pos;
-
-	if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-	  restadjust = s->amp_rest;
-
-      }
-
-      break;
-
-    case 0x22: /* callb */
-      temp = xs->sp;
-      xs->sp -= (opparams[1] + (restadjust * 2) + 2);
-      xs_new = execute_method(s, 0, opparams[0], temp, xs->objp,
-			      GET_HEAP(xs->sp) + restadjust,
-			      xs->sp);
-      restadjust = 0; /* Used up the &rest adjustment */
-
-      if (xs_new) xs = xs_new;   /* in case of error, keep old stack */
-      break;
-
-    case 0x23: /* calle */
-      temp = xs->sp;
-      xs->sp -= opparams[2] + 2 + (restadjust*2);
-
-      xs_new = execute_method(s, opparams[0], opparams[1], temp, xs->objp,
-			      GET_HEAP(xs->sp) + restadjust, xs->sp);
-      restadjust = 0; /* Used up the &rest adjustment */
-
-      if (xs_new)
-	xs = xs_new;   /* in case of error, keep old stack */
-      break;
-
-    case 0x24: /* ret */
-      do {
-	heap_ptr old_sp = xs->sp;
-	heap_ptr old_fp = xs->variables[VAR_TEMP];
-
-	if (s->execution_stack_pos == s->execution_stack_base) { /* Have we reached the base? */
-
-	  s->execution_stack_base = old_execution_stack_base; /* Restore stack base */
-
-	  --(s->execution_stack_pos);
-
-	  s->amp_rest = restadjust; /* Update &rest */
-	  return; /* Hard return */
-	}
-
-	if (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR) {
-	  /* varselector access? */
-	  if (s->execution_stack[s->execution_stack_pos].argc) { /* write? */
-	    word temp = GET_HEAP(s->execution_stack[s->execution_stack_pos].variables[VAR_PARAM] + 2);
-	    PUT_HEAP(s->execution_stack[s->execution_stack_pos].pc, temp);
-	  } else /* No, read */
-	    s->acc = GET_HEAP(s->execution_stack[s->execution_stack_pos].pc);
-	}
-
-	/* No we haven't, so let's do a soft return */
-	--(s->execution_stack_pos);
-	xs = s->execution_stack + s->execution_stack_pos;
-
-	if (xs->sp == CALL_SP_CARRY) { /* Used in sends to 'carry' the stack pointer */
-	  xs->sp = old_sp;
-	  xs->variables[VAR_TEMP] = old_fp;
-	}
-
-      } while (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR);
-      /* Iterate over all varselector accesses */
-
-      break;
-
-    case 0x25: /* send */
-      temp = xs->sp;
-      xs->sp -= (opparams[0] + (restadjust * 2)); /* Adjust stack */
-
-      xs_new = send_selector(s, s->acc, s->acc, temp, (int)opparams[0],
-			     (word)restadjust, xs->sp);
-
-      if (xs_new)
-	xs = xs_new;
-
-      restadjust = 0;
-
-      break;
-
-    case 0x28: /* class */
-      s->acc = CLASS_ADDRESS(opparams[0]);
-      break;
-
-    case 0x2a: /* self */
-      temp = xs->sp;
-      xs->sp -= (opparams[0] + (restadjust * 2)); /* Adjust stack */
-
-      xs_new = send_selector(s, xs->objp, xs->objp, temp,
-			     (int)opparams[0], (word)restadjust, xs->sp);
-
-      restadjust = 0;
-
-      if (xs_new) xs = xs_new;
-      break;
-
-    case 0x2b: /* super */
-      if ((opparams[0] < 0) || (opparams[0] >= s->classtable_size))
-	script_error(s, __FILE__, __LINE__, "Invalid superclass in object");
-      else {
-        int kludge;
-
-	temp = xs->sp;
-	xs->sp -= (opparams[1] + (restadjust * 2)); /* Adjust stack */
-        kludge = get_class_address(s, opparams[0]);
-	/* kludge necessary due to compiler bugs (egcs 2.91.66, at least) */
-	xs_new = send_selector(s, (heap_ptr)kludge, xs->objp, temp, (int)opparams[1], (word)restadjust, xs->sp);
-	restadjust = 0;
-
-	if (xs_new) xs = xs_new;
-      }
-
-      break;
-
-    case 0x2c: /* &rest */
-      utemp = opparams[0]; /* First argument */
-      restadjust = xs->argc - utemp + 1; /* +1 because utemp counts the paramcount while argc doesn't */
-      if (restadjust < 0)
-	restadjust = 0;
-      utemp2 = xs->variables[VAR_PARAM] + (utemp << 1);/* Pointer to the first argument to &restore */
-      for (; utemp <= xs->argc; utemp++) {
-	PUSH(getInt16(s->heap + utemp2));
-	utemp2 += 2;
-      }
-
-      break;
-
-    case 0x2d: /* lea */
-      utemp = opparams[0] >> 1;
-      var_number = utemp & 0x03; /* Get variable type */
-
-      utemp2 = xs->variables[var_number]; /* Get variable block offset */
-      if (utemp & 0x08)
-	utemp2 += (s->acc << 1); /* Add accumulator offset if requested */
-      s->acc = utemp2 + (opparams[1] << 1); /* Add index */
-      break;
-
-    case 0x2e: /* selfID */
-      s->acc = xs->objp;
-      break;
-
-    case 0x30: /* pprev */
-      PUSH(s->prev);
-      break;
-
-    case 0x31: /* pToa */
-      s->acc = GET_HEAP(xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0]);
-      break;
-
-    case 0x32: /* aTop */
-      PUT_HEAP(xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0], s->acc);
-      break;
-
-    case 0x33: /* pTos */
-      temp2 = GET_HEAP(xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0]);
-      PUSH(temp2);
-      break;
-
-    case 0x34: /* sTop */
-      temp = POP();
-      PUT_HEAP(xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0], temp);
-      break;
-
-    case 0x35: /* ipToa */
-      temp = xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0];
-      s->acc = GET_HEAP(temp);
-      ++(s->acc);
-      PUT_HEAP(temp, s->acc);
-      break;
-
-    case 0x36: /* dpToa */
-      temp = xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0];
-      s->acc = GET_HEAP(temp);
-      --(s->acc);
-      PUT_HEAP(temp, s->acc);
-      break;
-
-    case 0x37: /* ipTos */
-      temp2 = xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0];
-      temp = GET_HEAP(temp2);
-      PUT_HEAP(temp2, temp + 1);
-      break;
-
-    case 0x38: /* dpTos */
-      temp2 = xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0];
-      temp = GET_HEAP(temp2);
-      PUT_HEAP(temp2, temp - 1);
-      break;
-
-    case 0x39: /* lofsa */
-      s->acc = opparams[0] + xs->pc;
-      if (opparams[0]+xs->pc>=0xFFFE)
-      {
-        sciprintf("VM: lofsa operation overflowed: 0x%x + 0x%x=0x%x\n", opparams[0], xs->pc,
-	          opparams[0]+xs->pc);
-	script_error_flag = script_debug_flag = 1;
-      }
-      break;
-
-    case 0x3a: /* lofss */
-      PUSH(opparams[0] + xs->pc);
-      if (opparams[0]+xs->pc>=0xFFFE)
-      {
-        sciprintf("VM: lofss operation overflowed: %x + %x=%x\n", opparams[0], xs->pc,
-	          opparams[0]+xs->pc);
-	script_error_flag = script_debug_flag = 1;
-      }
-      break;
-
-    case 0x3b: /* push0 */
-      PUSH(0);
-      break;
-
-    case 0x3c: /* push1 */
-      PUSH(1);
-      break;
-
-    case 0x3d: /* push2 */
-      PUSH(2);
-      break;
-
-    case 0x3e: /* pushSelf */
-      PUSH(xs->objp);
-      break;
-
-    case 0x40: /* lag */
-    case 0x41: /* lal */
-    case 0x42: /* lat */
-    case 0x43: /* lap */
-      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      utemp = xs->variables[var_number] + (opparams[0] << 1);
-      s->acc = GET_HEAP(utemp);
-      break;
-
-    case 0x44: /* lsg */
-    case 0x45: /* lsl */
-    case 0x46: /* lst */
-    case 0x47: /* lsp */
-      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      utemp = xs->variables[var_number] + (opparams[0] << 1);
-      PUSH(GET_HEAP(utemp));
-      break;
-
-    case 0x48: /* lagi */
-    case 0x49: /* lali */
-    case 0x4a: /* lati */
-    case 0x4b: /* lapi */
-      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-      s->acc = GET_HEAP(utemp);
-      break;
-
-    case 0x4c: /* lsgi */
-    case 0x4d: /* lsli */
-    case 0x4e: /* lsti */
-    case 0x4f: /* lspi */
-      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-      PUSH(GET_HEAP(utemp));
-      break;
-
-    case 0x50: /* sag */
-    case 0x51: /* sal */
-    case 0x52: /* sat */
-    case 0x53: /* sap */
-      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      utemp = xs->variables[var_number] + (opparams[0] << 1);
-      PUT_HEAP(utemp, s->acc);
-      break;
-
-    case 0x54: /* ssg */
-    case 0x55: /* ssl */
-    case 0x56: /* sst */
-    case 0x57: /* ssp */
-      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      utemp = xs->variables[var_number] + (opparams[0] << 1);
-      utemp2 = POP();
-      PUT_HEAP(utemp, utemp2);
-      break;
-
-    case 0x58: /* sagi */
-    case 0x59: /* sali */
-    case 0x5a: /* sati */
-    case 0x5b: /* sapi */
-      utemp2 = POP();
-      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-      PUT_HEAP(utemp, utemp2);
-      s->acc = utemp2;
-      break;
-
-    case 0x5c: /* ssgi */
-    case 0x5d: /* ssli */
-    case 0x5e: /* ssti */
-    case 0x5f: /* sspi */
-      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-      utemp2 = POP();
-      PUT_HEAP(utemp, utemp2);
-      break;
-
-    case 0x60: /* +ag */
-    case 0x61: /* +al */
-    case 0x62: /* +at */
-    case 0x63: /* +ap */
-      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      utemp = xs->variables[var_number] + (opparams[0] << 1);
-      s->acc = GET_HEAP(utemp);
-      ++(s->acc);
-      PUT_HEAP(utemp, s->acc);
-      break;
-
-    case 0x64: /* +sg */
-    case 0x65: /* +sl */
-    case 0x66: /* +st */
-    case 0x67: /* +sp */
-      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      utemp = xs->variables[var_number] + (opparams[0] << 1);
-      utemp2 = GET_HEAP(utemp);
-      utemp2++;
-      PUT_HEAP(utemp, utemp2);
-      PUSH(utemp2);
-      break;
-
-    case 0x68: /* +agi */
-    case 0x69: /* +ali */
-    case 0x6a: /* +ati */
-    case 0x6b: /* +api */
-      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-      s->acc = GET_HEAP(utemp);
-      ++(s->acc);
-      PUT_HEAP(utemp, s->acc);
-      break;
-
-    case 0x6c: /* +sgi */
-    case 0x6d: /* +sli */
-    case 0x6e: /* +sti */
-    case 0x6f: /* +spi */
-      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-      utemp2 = GET_HEAP(utemp);
-      utemp2++;
-      PUT_HEAP(utemp, utemp2);
-      PUSH(utemp2);
-      break;
-
-    case 0x70: /* -ag */
-    case 0x71: /* -al */
-    case 0x72: /* -at */
-    case 0x73: /* -ap */
-      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      utemp = xs->variables[var_number] + (opparams[0] << 1);
-      s->acc = GET_HEAP(utemp);
-      --(s->acc);
-      PUT_HEAP(utemp, s->acc);
-      break;
-
-    case 0x74: /* -sg */
-    case 0x75: /* -sl */
-    case 0x76: /* -st */
-    case 0x77: /* -sp */
-      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      utemp = xs->variables[var_number] + (opparams[0] << 1);
-      utemp2 = GET_HEAP(utemp);
-      utemp2--;
-      PUT_HEAP(utemp, utemp2);
-      PUSH(utemp2);
-      break;
-
-    case 0x78: /* -agi */
-    case 0x79: /* -ali */
-    case 0x7a: /* -ati */
-    case 0x7b: /* -api */
-      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-      s->acc = GET_HEAP(utemp);
-      --(s->acc);
-      PUT_HEAP(utemp, s->acc);
-      break;
-
-    case 0x7c: /* -sgi */
-    case 0x7d: /* -sli */
-    case 0x7e: /* -sti */
-    case 0x7f: /* -spi */
-      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-      utemp2 = GET_HEAP(utemp);
-      utemp2--;
-      PUT_HEAP(utemp, utemp2);
-      PUSH(utemp2);
-      break;
-
-    default:
-      script_error(s, __FILE__, __LINE__, "Illegal opcode");
-
-    } /* switch(opcode >> 1) */
-
-    if (xs != s->execution_stack + s->execution_stack_pos) {
-      sciprintf("Error: xs is stale; last command was %02x\n", opnumber);
-    }
-
-    if (script_error_flag) {
-      _debug_step_running = 0; /* Stop multiple execution */
-      _debug_seeking = 0; /* Stop special seeks */
-      xs->pc = old_pc;
-      xs->sp = old_sp;
-    }
-    else script_step_counter++;
-
-  }
+			case Script_None:
+			case Script_End:
+				break;
+
+			case Script_Invalid:
+			default:
+				sciprintf("opcode %02x: Invalid!", opcode);
+				script_debug_flag = script_error_flag = 1;
+
+			}
+
+		switch (opnumber) {
+
+		case 0x00: /* bnot */
+			s->acc = ACC_ARITHMETIC_L (0xffff ^ /*acc*/);
+			break;
+
+		case 0x01: /* add */
+			s->acc = ACC_ARITHMETIC_L (POP() + /*acc*/)
+			break;
+
+		case 0x02: /* sub */
+			s->acc = ACC_ARITHMETIC_L (POP() - /*acc*/);
+			break;
+
+		case 0x03: /* mul */
+			s->acc = ACC_ARITHMETIC_L (POP() * /*acc*/);
+			break;
+
+		case 0x04: /* div */
+			ACC_AUX_LOAD();
+			aux_acc = aux_acc? POP() / aux_acc : 0;
+			ACC_AUX_STORE();
+			break;
+
+		case 0x05: /* mod */
+			ACC_AUX_LOAD();
+			aux_acc = (aux_acc > 0)? POP() % aux_acc : 0;
+			ACC_AUX_STORE();
+			break;
+
+		case 0x06: /* shr */
+			s->acc = ACC_ARITHMETIC_L(((guint16) POP()) >> /*acc*/);
+			break;
+
+		case 0x07: /* shl */
+			s->acc = ACC_ARITHMETIC_L(((guint16) POP()) << /*acc*/);
+			break;
+
+		case 0x08: /* xor */
+			s->acc = ACC_ARITHMETIC_L(POP() ^ /*acc*/);
+			break;
+
+		case 0x09: /* and */
+			s->acc = ACC_ARITHMETIC_L(POP() & /*acc*/);
+			break;
+
+		case 0x0a: /* or */
+			s->acc = ACC_ARITHMETIC_L(POP() | /*acc*/);
+			break;
+
+		case 0x0b: /* neg */
+			s->acc = ACC_ARITHMETIC_L(-/*acc*/);
+			break;
+
+		case 0x0c: /* not */
+			s->acc = ACC_ARITHMETIC_L(!/*acc*/);
+			break;
+
+		case 0x0d: /* eq? */
+			s->prev = s->acc;
+			s->acc = ACC_ARITHMETIC_L(POP() == /*acc*/);
+			break;
+
+		case 0x0e: /* ne? */
+			s->prev = s->acc;
+			s->acc = ACC_ARITHMETIC_L(POP() != /*acc*/);
+			break;
+
+		case 0x0f: /* gt? */
+			s->prev = s->acc;
+			s->acc = ACC_ARITHMETHIC_L(POP() > /*acc*/);
+			break;
+
+		case 0x10: /* ge? */
+			s->prev = s->acc;
+			s->acc = ACC_ARITHMETIC_L(POP() >= /*acc*/);
+			break;
+
+		case 0x11: /* lt? */
+			s->prev = s->acc;
+			s->acc = ACC_ARITHMETIC_L(POP() < /*acc*/);
+			break;
+
+		case 0x12: /* le? */
+			s->prev = s->acc;
+			s->acc = ACC_ARITHMETIC_L(POP() <= /*acc*/);
+			break;
+
+		case 0x13: /* ugt? */
+			s->prev = s->acc;
+			s->acc = ACC_ARITHMETIC_L((guint16)(POP()) > (guint16)/*acc*/);
+			break;
+
+		case 0x14: /* uge? */
+			s->prev = s->acc;
+			s->acc = ACC_ARITHMETIC_L((guint16)(POP()) >= (guint16)/*acc*/);
+			break;
+
+		case 0x15: /* ult? */
+			s->prev = s->acc;
+			s->acc = ACC_ARITHMETIC_L((guint16)(POP()) < (guint16)/*acc*/);
+			break;
+
+		case 0x16: /* ule? */
+			s->prev = s->acc;
+			s->acc = ACC_ARITHMETIC_L((guint16)(POP()) <= (guint16)/*acc*/);
+			break;
+
+		case 0x17: /* bt */
+			if (s->acc.offset || s->acc.segment) pc_offset += opparams[0];
+			break;
+
+		case 0x18: /* bnt */
+			if (!(s->acc.offset || s->acc.segment)) pc_offset += opparams[0];
+			break;
+
+		case 0x19: /* jmp */
+			xs->pc += opparams[0];
+			break;
+
+		case 0x1a: /* ldi */
+			s->acc = make_reg(0, opparams[0]);
+			break;
+
+		case 0x1b: /* push */
+			PUSH32(s->acc);
+			break;
+
+		case 0x1c: /* pushi */
+			PUSH(opparams[0]);
+			break;
+
+		case 0x1d: /* toss */
+			xs->sp--;
+			break;
+
+		case 0x1e: /* dup */
+			PUSH32(xs->sp[-1]);
+			break;
+
+		case 0x1f: /* link */
+			xs->sp += opparams[0];
+			break;
+
+		case 0x20: { /* call */
+			int argc = (opparams[1] >> 1) /* Given as offset, but we need count */
+				+ 1 + restadjust;
+			stack_ptr_t call_base = xs->sp - argc;
+
+			xs_new = add_exec_stack_entry(s, xs->pc + opparams[0], xs->sp, xs->objp,
+						      validate_arithmetic(*call_base) + restadjust,
+						      call_base, -1, xs->objp,
+						      s->execution_stack_pos, xs->variables[VAR_LOCAL]);
+			restadjust = 0; /* Used up the &rest adjustment */
+
+			xs = xs_new;
+			break;
+		}
+
+//    case 0x21: /* callk */
+//    xs->sp -= opparams[1]+2;
+//    if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+//    {
+//      xs->sp -= restadjust * 2;
+//      s->amp_rest = 0; /* We just used up the restadjust, remember? */
+//    }
+//      if (opparams[0] >= s->kernel_names_nr) {
+//
+//	sciprintf("Invalid kernel function 0x%x requested\n", opparams[0]);
+//	script_debug_flag = script_error_flag = 1;
+//
+//      } else {
+//
+//	if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+//	    s->kfunct_table[opparams[0]](s, opparams[0], GET_HEAP(xs->sp) + restadjust, xs->sp + 2); /* Call kernel function */ else
+//	    s->kfunct_table[opparams[0]](s, opparams[0], GET_HEAP(xs->sp), xs->sp + 2); /* Call kernel function */
+//
+//	/* Calculate xs again: The kernel function might have spawned a new VM */
+//	xs = s->execution_stack + s->execution_stack_pos;
+//
+//	if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+//	  restadjust = s->amp_rest;
+//
+//      }
+//
+//      break;
+//
+//    case 0x22: /* callb */
+//      temp = xs->sp;
+//      xs->sp -= (opparams[1] + (restadjust * 2) + 2);
+//      xs_new = execute_method(s, 0, opparams[0], temp, xs->objp,
+//			      GET_HEAP(xs->sp) + restadjust,
+//			      xs->sp);
+//      restadjust = 0; /* Used up the &rest adjustment */
+//
+//      if (xs_new) xs = xs_new;   /* in case of error, keep old stack */
+//      break;
+//
+//    case 0x23: /* calle */
+//      temp = xs->sp;
+//      xs->sp -= opparams[2] + 2 + (restadjust*2);
+//
+//      xs_new = execute_method(s, opparams[0], opparams[1], temp, xs->objp,
+//			      GET_HEAP(xs->sp) + restadjust, xs->sp);
+//      restadjust = 0; /* Used up the &rest adjustment */
+//
+//      if (xs_new)
+//	xs = xs_new;   /* in case of error, keep old stack */
+//      break;
+//
+//    case 0x24: /* ret */
+//      do {
+//	heap_ptr old_sp = xs->sp;
+//	heap_ptr old_fp = xs->variables[VAR_TEMP];
+//
+//	if (s->execution_stack_pos == s->execution_stack_base) { /* Have we reached the base? */
+//
+//	  s->execution_stack_base = old_execution_stack_base; /* Restore stack base */
+//
+//	  --(s->execution_stack_pos);
+//
+//	  s->amp_rest = restadjust; /* Update &rest */
+//	  return; /* Hard return */
+//	}
+//
+//	if (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR) {
+//	  /* varselector access? */
+//	  if (s->execution_stack[s->execution_stack_pos].argc) { /* write? */
+//	    word temp = GET_HEAP(s->execution_stack[s->execution_stack_pos].variables[VAR_PARAM] + 2);
+//	    PUT_HEAP(s->execution_stack[s->execution_stack_pos].pc, temp);
+//	  } else /* No, read */
+//	    s->acc = GET_HEAP(s->execution_stack[s->execution_stack_pos].pc);
+//	}
+//
+//	/* No we haven't, so let's do a soft return */
+//	--(s->execution_stack_pos);
+//	xs = s->execution_stack + s->execution_stack_pos;
+//
+//	if (xs->sp == CALL_SP_CARRY) { /* Used in sends to 'carry' the stack pointer */
+//	  xs->sp = old_sp;
+//	  xs->variables[VAR_TEMP] = old_fp;
+//	}
+//
+//      } while (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR);
+//      /* Iterate over all varselector accesses */
+//
+//      break;
+//
+//    case 0x25: /* send */
+//      temp = xs->sp;
+//      xs->sp -= (opparams[0] + (restadjust * 2)); /* Adjust stack */
+//
+//      xs_new = send_selector(s, s->acc, s->acc, temp, (int)opparams[0],
+//			     (word)restadjust, xs->sp);
+//
+//      if (xs_new)
+//	xs = xs_new;
+//
+//      restadjust = 0;
+//
+//      break;
+//
+//    case 0x28: /* class */
+//      s->acc = CLASS_ADDRESS(opparams[0]);
+//      break;
+//
+//    case 0x2a: /* self */
+//      temp = xs->sp;
+//      xs->sp -= (opparams[0] + (restadjust * 2)); /* Adjust stack */
+//
+//      xs_new = send_selector(s, xs->objp, xs->objp, temp,
+//			     (int)opparams[0], (word)restadjust, xs->sp);
+//
+//      restadjust = 0;
+//
+//      if (xs_new) xs = xs_new;
+//      break;
+//
+//    case 0x2b: /* super */
+//      if ((opparams[0] < 0) || (opparams[0] >= s->classtable_size))
+//	script_error(s, __FILE__, __LINE__, "Invalid superclass in object");
+//      else {
+//        int kludge;
+//
+//	temp = xs->sp;
+//	xs->sp -= (opparams[1] + (restadjust * 2)); /* Adjust stack */
+//        kludge = get_class_address(s, opparams[0]);
+//	/* kludge necessary due to compiler bugs (egcs 2.91.66, at least) */
+//	xs_new = send_selector(s, (heap_ptr)kludge, xs->objp, temp, (int)opparams[1], (word)restadjust, xs->sp);
+//	restadjust = 0;
+//
+//	if (xs_new) xs = xs_new;
+//      }
+//
+//      break;
+//
+//    case 0x2c: /* &rest */
+//      utemp = opparams[0]; /* First argument */
+//      restadjust = xs->argc - utemp + 1; /* +1 because utemp counts the paramcount while argc doesn't */
+//      if (restadjust < 0)
+//	restadjust = 0;
+//      utemp2 = xs->variables[VAR_PARAM] + (utemp << 1);/* Pointer to the first argument to &restore */
+//      for (; utemp <= xs->argc; utemp++) {
+//	PUSH(getInt16(s->heap + utemp2));
+//	utemp2 += 2;
+//      }
+//
+//      break;
+//
+//    case 0x2d: /* lea */
+//      utemp = opparams[0] >> 1;
+//      var_number = utemp & 0x03; /* Get variable type */
+//
+//      utemp2 = xs->variables[var_number]; /* Get variable block offset */
+//      if (utemp & 0x08)
+//	utemp2 += (s->acc << 1); /* Add accumulator offset if requested */
+//      s->acc = utemp2 + (opparams[1] << 1); /* Add index */
+//      break;
+//
+//    case 0x2e: /* selfID */
+//      s->acc = xs->objp;
+//      break;
+//
+//    case 0x30: /* pprev */
+//      PUSH(s->prev);
+//      break;
+//
+//    case 0x31: /* pToa */
+//      s->acc = GET_HEAP(xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0]);
+//      break;
+//
+//    case 0x32: /* aTop */
+//      PUT_HEAP(xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0], s->acc);
+//      break;
+//
+//    case 0x33: /* pTos */
+//      temp2 = GET_HEAP(xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0]);
+//      PUSH(temp2);
+//      break;
+//
+//    case 0x34: /* sTop */
+//      temp = POP();
+//      PUT_HEAP(xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0], temp);
+//      break;
+//
+//    case 0x35: /* ipToa */
+//      temp = xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0];
+//      s->acc = GET_HEAP(temp);
+//      ++(s->acc);
+//      PUT_HEAP(temp, s->acc);
+//      break;
+//
+//    case 0x36: /* dpToa */
+//      temp = xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0];
+//      s->acc = GET_HEAP(temp);
+//      --(s->acc);
+//      PUT_HEAP(temp, s->acc);
+//      break;
+//
+//    case 0x37: /* ipTos */
+//      temp2 = xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0];
+//      temp = GET_HEAP(temp2);
+//      PUT_HEAP(temp2, temp + 1);
+//      break;
+//
+//    case 0x38: /* dpTos */
+//      temp2 = xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0];
+//      temp = GET_HEAP(temp2);
+//      PUT_HEAP(temp2, temp - 1);
+//      break;
+//
+//    case 0x39: /* lofsa */
+//      s->acc = opparams[0] + xs->pc;
+//      if (opparams[0]+xs->pc>=0xFFFE)
+//      {
+//        sciprintf("VM: lofsa operation overflowed: 0x%x + 0x%x=0x%x\n", opparams[0], xs->pc,
+//	          opparams[0]+xs->pc);
+//	script_error_flag = script_debug_flag = 1;
+//      }
+//      break;
+//
+//    case 0x3a: /* lofss */
+//      PUSH(opparams[0] + xs->pc);
+//      if (opparams[0]+xs->pc>=0xFFFE)
+//      {
+//        sciprintf("VM: lofss operation overflowed: %x + %x=%x\n", opparams[0], xs->pc,
+//	          opparams[0]+xs->pc);
+//	script_error_flag = script_debug_flag = 1;
+//      }
+//      break;
+//
+//    case 0x3b: /* push0 */
+//      PUSH(0);
+//      break;
+//
+//    case 0x3c: /* push1 */
+//      PUSH(1);
+//      break;
+//
+//    case 0x3d: /* push2 */
+//      PUSH(2);
+//      break;
+//
+//    case 0x3e: /* pushSelf */
+//      PUSH(xs->objp);
+//      break;
+//
+//    case 0x40: /* lag */
+//    case 0x41: /* lal */
+//    case 0x42: /* lat */
+//    case 0x43: /* lap */
+//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
+//      utemp = xs->variables[var_number] + (opparams[0] << 1);
+//      s->acc = GET_HEAP(utemp);
+//      break;
+//
+//    case 0x44: /* lsg */
+//    case 0x45: /* lsl */
+//    case 0x46: /* lst */
+//    case 0x47: /* lsp */
+//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
+//      utemp = xs->variables[var_number] + (opparams[0] << 1);
+//      PUSH(GET_HEAP(utemp));
+//      break;
+//
+//    case 0x48: /* lagi */
+//    case 0x49: /* lali */
+//    case 0x4a: /* lati */
+//    case 0x4b: /* lapi */
+//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
+//      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
+//      s->acc = GET_HEAP(utemp);
+//      break;
+//
+//    case 0x4c: /* lsgi */
+//    case 0x4d: /* lsli */
+//    case 0x4e: /* lsti */
+//    case 0x4f: /* lspi */
+//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
+//      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
+//      PUSH(GET_HEAP(utemp));
+//      break;
+//
+//    case 0x50: /* sag */
+//    case 0x51: /* sal */
+//    case 0x52: /* sat */
+//    case 0x53: /* sap */
+//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
+//      utemp = xs->variables[var_number] + (opparams[0] << 1);
+//      PUT_HEAP(utemp, s->acc);
+//      break;
+//
+//    case 0x54: /* ssg */
+//    case 0x55: /* ssl */
+//    case 0x56: /* sst */
+//    case 0x57: /* ssp */
+//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
+//      utemp = xs->variables[var_number] + (opparams[0] << 1);
+//      utemp2 = POP();
+//      PUT_HEAP(utemp, utemp2);
+//      break;
+//
+//    case 0x58: /* sagi */
+//    case 0x59: /* sali */
+//    case 0x5a: /* sati */
+//    case 0x5b: /* sapi */
+//      utemp2 = POP();
+//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
+//      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
+//      PUT_HEAP(utemp, utemp2);
+//      s->acc = utemp2;
+//      break;
+//
+//    case 0x5c: /* ssgi */
+//    case 0x5d: /* ssli */
+//    case 0x5e: /* ssti */
+//    case 0x5f: /* sspi */
+//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
+//      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
+//      utemp2 = POP();
+//      PUT_HEAP(utemp, utemp2);
+//      break;
+//
+//    case 0x60: /* +ag */
+//    case 0x61: /* +al */
+//    case 0x62: /* +at */
+//    case 0x63: /* +ap */
+//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
+//      utemp = xs->variables[var_number] + (opparams[0] << 1);
+//      s->acc = GET_HEAP(utemp);
+//      ++(s->acc);
+//      PUT_HEAP(utemp, s->acc);
+//      break;
+//
+//    case 0x64: /* +sg */
+//    case 0x65: /* +sl */
+//    case 0x66: /* +st */
+//    case 0x67: /* +sp */
+//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
+//      utemp = xs->variables[var_number] + (opparams[0] << 1);
+//      utemp2 = GET_HEAP(utemp);
+//      utemp2++;
+//      PUT_HEAP(utemp, utemp2);
+//      PUSH(utemp2);
+//      break;
+//
+//    case 0x68: /* +agi */
+//    case 0x69: /* +ali */
+//    case 0x6a: /* +ati */
+//    case 0x6b: /* +api */
+//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
+//      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
+//      s->acc = GET_HEAP(utemp);
+//      ++(s->acc);
+//      PUT_HEAP(utemp, s->acc);
+//      break;
+//
+//    case 0x6c: /* +sgi */
+//    case 0x6d: /* +sli */
+//    case 0x6e: /* +sti */
+//    case 0x6f: /* +spi */
+//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
+//      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
+//      utemp2 = GET_HEAP(utemp);
+//      utemp2++;
+//      PUT_HEAP(utemp, utemp2);
+//      PUSH(utemp2);
+//      break;
+//
+//    case 0x70: /* -ag */
+//    case 0x71: /* -al */
+//    case 0x72: /* -at */
+//    case 0x73: /* -ap */
+//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
+//      utemp = xs->variables[var_number] + (opparams[0] << 1);
+//      s->acc = GET_HEAP(utemp);
+//      --(s->acc);
+//      PUT_HEAP(utemp, s->acc);
+//      break;
+//
+//    case 0x74: /* -sg */
+//    case 0x75: /* -sl */
+//    case 0x76: /* -st */
+//    case 0x77: /* -sp */
+//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
+//      utemp = xs->variables[var_number] + (opparams[0] << 1);
+//      utemp2 = GET_HEAP(utemp);
+//      utemp2--;
+//      PUT_HEAP(utemp, utemp2);
+//      PUSH(utemp2);
+//      break;
+//
+//    case 0x78: /* -agi */
+//    case 0x79: /* -ali */
+//    case 0x7a: /* -ati */
+//    case 0x7b: /* -api */
+//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
+//      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
+//      s->acc = GET_HEAP(utemp);
+//      --(s->acc);
+//      PUT_HEAP(utemp, s->acc);
+//      break;
+//
+//    case 0x7c: /* -sgi */
+//    case 0x7d: /* -sli */
+//    case 0x7e: /* -sti */
+//    case 0x7f: /* -spi */
+//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
+//      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
+//      utemp2 = GET_HEAP(utemp);
+//      utemp2--;
+//      PUT_HEAP(utemp, utemp2);
+//      PUSH(utemp2);
+//      break;
+//
+//    default:
+//      script_error(s, __FILE__, __LINE__, "Illegal opcode");
+//
+//    } /* switch(opcode >> 1) */
+//
+//    if (xs != s->execution_stack + s->execution_stack_pos) {
+//      sciprintf("Error: xs is stale; last command was %02x\n", opnumber);
+//    }
+//
+//    if (script_error_flag) {
+//      _debug_step_running = 0; /* Stop multiple execution */
+//      _debug_seeking = 0; /* Stop special seeks */
+//      xs->pc = old_pc;
+//      xs->sp = old_sp;
+//    }
+//    else script_step_counter++;
+//
+//  }
 }
 
 
@@ -1352,9 +1448,9 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 		return 0;
 	}
 
-	if (s->scripttable[script_nr].heappos) { /* Is it already loaded? */
-		s->scripttable[script_nr].lockers++; /* Required by another script */
-		return s->scripttable[script_nr].heappos;
+	if (s->seg_manager.isloaded (&s->seg_manager, script_nr)) { /* Is it already loaded? */
+		s->seg_manager.increment_lockers( &s->seg_manager, script_nr); /* Required by another script */
+		return s->scripttable[script_nr].heappos;	// later
 	}
 
 /* fprintf(stderr,"Allocing %d(0x%x)\n", script->size, script->size); */

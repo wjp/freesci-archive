@@ -277,6 +277,15 @@ AC_ARG_WITH(console,
 	 AC_DEFINE(WANT_CONSOLE)],
 	[])
 
+AC_ARG_WITH(forced-console,
+	[  --with-forced-console  Enforce usage of on-screen console on all gfx drivers],
+	[
+	 WANT_CONSOLE=64
+	 AC_DEFINE(WANT_CONSOLE)
+	 FORCE_CONSOLE=1
+	 AC_DEFINE(FORCE_CONSOLE)],
+	[])
+
 CFSML_FLAGS=""
 
 AM_WITH_DMALLOC
@@ -310,5 +319,6 @@ AC_CONFIG_FILES([Makefile    \
 	src/win32/Makefile \
 	src/sound/Makefile \
 	freesci.spec])
+
 AC_OUTPUT
 

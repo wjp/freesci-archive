@@ -13,10 +13,10 @@ Dependancies: '.' means "dependancy has been resolved"
 [C] Code				DepID	Deps	Who
 -------------------------------------------------------------
 --- introduce reg_t			A		CR
-[T] fix registers			C	.	
-[T] fix stack				B	.	
-[T] fix script_t			D	.	
-[X] implement seg_mgr			E	D	
+--- fix registers			C	.	CR
+--- fix stack				B	.	CR
+--- fix script_t			D	.	CR
+[X] implement seg_mgr			E	D	X
 [2] fix script instantiation/uninst'n	E	D	
 --- implement script ID map		F		CR
 [X] fix vm					.BCDEF	
@@ -33,3 +33,41 @@ Later TODO:
 	* Re-enable save_game, restore_game, check_savegame
 	* Re-enable quick-restore code
 	* Re-enable save_game and restore_game debug console commands
+
+
+
+NOTES:
+
+
+Reference counting for scripts
+==============================
+Two separate kinds of reference counts must be kept: The 'active' count and the
+'dependancy' count. A script must be available if either count is non-zero.
+
+Active count
+------------
+  The active count is either 0 or 1. It is set to 1 whenever script code
+instantiates the script (by doing a 'class' call, a 'calle', or a
+'callk ScriptID'). It is set to 0 whenever 'callk DisposeScript' is invoked
+upon it.
+
+Dependancy count
+----------------
+  This count gives the number of currently loaded/cloned objects and classes
+which, directly or indirectly, depend on this script. It is increased and
+decreased recursively upon object/class cloning, script instantiation and
+script uninstantiation.
+
+
+Encoding
+--------
+  Storing these in the same integer and identifying the active count with the
+LSB allows checking for whether the script has already been loaded with a
+single comparison. Operations for this are:
+
+-- Lock active		: refcount |= 1
+-- Unlock active	: refcount &= ~1;
+-- Add dependancy	: refcount += 2;
+-- Remove dependancy	: refcount -= 2;
+-- Check dependancy	: if (refcount) ...
+

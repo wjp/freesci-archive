@@ -72,14 +72,6 @@
 #define MAX_SAVE_DIR_SIZE MAX_HOMEDIR_SIZE + STRLEN_FREESCI_GAMEDIR + MAX_GAMEDIR_SIZE + 4
 /* +4 for the three slashes and trailing \0 */
 
-typedef struct
-{
-	int size;
-	int type; /* See above */
-	char *data;
-} hunk_block_t; /* Used to store dynamically allocated "far" memory */
-
-
 /* values for state_t.restarting_flag */
 #define SCI_GAME_IS_NOT_RESTARTING 0
 #define SCI_GAME_WAS_RESTARTED 1
@@ -161,7 +153,7 @@ typedef struct _state
 	long animation_delay; /* A delay factor for pic opening animations. Defaults to 500. */
 	int animation_granularity; /* Number of animation steps to perform betwen updates for transition animations */
 
-	hunk_block_t hunk[MAX_HUNK_BLOCKS]; /* Hunk memory */
+	seg_id_t hunk[MAX_HUNK_BLOCKS]; /* Hunk memory blocks */
 
 	menubar_t *menubar; /* The menu bar */
 
@@ -203,17 +195,23 @@ typedef struct _state
 					   ** should be re-evaluated by the vm
 					   */
 
+	/* 16 bit kernel compatibility crap */
 	heap_t *_heap; /* The heap structure */
 	byte *heap; /* The actual heap data (equal to _heap->start) */
-	gint16 acc; /* Accumulator */
-	gint16 amp_rest; /* &rest register (only used for save games) */
-	gint16 prev; /* previous comparison result */
+	gint16 acc;  /* 16 bit compatibility accumulator for old kernel functions */
 
-	heap_ptr stack_base;   /* The base position of the stack; used for debugging */
-	heap_ptr stack_handle; /* The stack's heap handle */
-	heap_ptr parser_base;  /* A heap area used by the parser for error reporting */
-	heap_ptr parser_event; /* The event passed to Parse() and later used by Said() */
-	heap_ptr global_vars;  /* script 000 selectors */
+	reg_t r_acc; /* Accumulator */
+	reg_t r_amp_rest; /* &rest register (only used for save games) */
+	reg_t r_prev; /* previous comparison result */
+
+	seg_id_t stack_segment; /* Heap area for the stack to use */
+	stack_ptr_t stack_base; /* Pointer to the least stack element */
+	stack_ptr_t stack_top; /* First invalid stack element */
+	stack_ptr_t stack; /* Pointer to the current stack location */
+
+	seg_id_t parser_segment;  /* A heap area used by the parser for error reporting */
+	reg_t parser_event; /* The event passed to Parse() and later used by Said() */
+	script_t *script_000;  /* script 000, e.g. for globals */
 
 	int parser_lastmatch_word; /* Position of the input word the parser last matched on, or SAID_NO_MATCH */
 

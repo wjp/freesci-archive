@@ -2846,14 +2846,19 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 
 	while (_debugstate_valid) {
 #ifdef WANT_CONSOLE
+#  ifndef FORCE_CONSOLE
 		if (!have_windowed) {
+#  endif
 			char *input;
 			con_gfx_show(s->gfx_state);
 			input = con_gfx_read(s->gfx_state);
 			con_gfx_hide(s->gfx_state);
 			con_parse(s, input);
+#  ifndef FORCE_CONSOLE
 		} else
-#else
+#  endif
+#endif
+#ifndef FORCE_CONSOLE
 			con_parse(s, _debug_get_input());
 #endif
 		sciprintf("\n");

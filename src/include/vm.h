@@ -31,6 +31,7 @@
 #include <heap.h>
 #include <vocabulary.h>
 #include <versions.h>
+#include <seg_manager.h>
 
 #ifndef _SCI_VM_H
 #define _SCI_VM_H
@@ -105,12 +106,26 @@
 #define SCI_REG_SIZE 16;
 #define SCI_SEG_SIZE 16;
 
+typedef int seg_id_t; /* Segment ID type */
+
 struct _state; /* engine.h */
 
 typedef struct {
-	int offset : SCI_REG_SIZE;
+	seg_id_t offset : SCI_REG_SIZE;
 	int segment: SCI_SEG_SIZE;
 } reg_t;
+
+typedef reg_t *stack_ptr_t; /* Stack pointer type */
+
+
+static inline reg_t
+make_reg(int offset, int segment)
+{
+	reg_t r;
+	r.offset = offset;
+	r.segment = segment;
+	return r;
+}
 
 
 typedef struct {
@@ -131,18 +146,29 @@ typedef struct {
 } calls_struct_t;
 
 
+typedef struct {
+	int variables_nr;
+	reg_t variables[1];
+} object_varselectors_t;
 
+#define VM_OBJECT_SET_INDEX(ptr, index) { ((byte *) (ptr))[0] = (index) & 0xff; ((byte *) (ptr))[1] = ((index) >> 8) & 0xff; }
+#define VM_OBJECT_GET_INDEX(ptr) (getUInt16(((byte *)(ptr)) + SCRIPT_LOCALVARPTR_OFFSET))
 
 typedef struct {
-	reg_t* locals;
-	char* buf;
+	char* buf; /* Static data buffer, or NULL if not used */
 
 	heap_ptr heappos; /* Script position on the heap or 0 if not yet loaded */
-	heap_ptr localvar_offset; /* Abs. offset of the local variable block or 0 if not present */
 	heap_ptr export_table_offset; /* Abs. offset of the export table or 0 if not present */
 	heap_ptr synonyms_offset; /* Abs. offset of the synonyms block  or 0 if not present*/
 	int synonyms_nr; /* Number of entries in the synonyms block */
 	int lockers; /* Number of classes and objects that require this script */
+
+	object_varselectors_t *objects; /* Table for objects, contains local variables */
+			/* Indexed by the value stored at SCRIPT_LOCALVARPTR_OFFSET, see VM_OBJECT_[GS]ET_INDEX() */
+	int objects_nr; /* Number of objects and classes */
+
+	reg_t *locals; /* Script-local variables */
+	int locals_nr; /* Number of these */
 } script_t;
 
 typedef struct {
@@ -224,12 +250,13 @@ typedef struct {
 	int frame;
 
 	int dataInc;
+	int size;
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {
 	heap_ptr obj;
 	heap_ptr signalp;    /* Used only indirectly */
-	heap_ptr underBitsp; /* The same goes for the handle storage */
+	reg_t *underBitsp; /* The same goes for the handle storage */
 	int underBits; /* Copy of the underbits: Needed for cleanup */
 
 	int x, y;
@@ -253,14 +280,14 @@ typedef struct {
 	heap_ptr objp;
 	heap_ptr sendp; /* Pointer to the object containing the invoked method */
 	heap_ptr pc; /* Not accurate for the TOS element */
-	heap_ptr sp; /* Not accurate for the TOS element */
+	stack_ptr_t sp; /* Stack pointer */
 	int argc;
 	heap_ptr variables[4]; /* variable base pointers: Global, Local, Temp, Param */
 	int selector; /* The selector which was used to call or -1 if not applicable */
 	int origin;   /* The stack frame position the call was made from, or -1 if it
 		      ** was the initial call.
 		      */
-	heap_ptr type; /* EXEC_STACK_TYPE* */
+	byte type; /* EXEC_STACK_TYPE* */
 
 } exec_stack_t;
 

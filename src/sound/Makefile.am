@@ -1,5 +1,5 @@
 INCLUDES = -I$(top_srcdir)/src/include
-CFLAGS = $(SDL_CFLAGS)
+AM_CFLAGS = $(SDL_CFLAGS)
 LDADD = -lc
 EXTRA_DIST = sfx_save.cfsml soundserver_dos.c
 noinst_LIBRARIES = libscisound.a

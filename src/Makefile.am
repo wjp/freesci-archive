@@ -1,7 +1,7 @@
 SUBDIRS = scicore engine include gfx sound tools win32
 EXTRA_DIST = README yywrap.c config.l python.tar.gz sciv
 INCLUDES = -I$(top_srcdir)/src/include
-CFLAGS = $(SDL_CFLAGS)
+AM_CFLAGS = $(SDL_CFLAGS)
 LDADD = engine/libsciengine.a gfx/libscigraphics.a \
 	gfx/resource/libsciresources.a gfx/drivers/libscidrivers.a \
 	sound/libscisound.a scicore/libscicore.a \

@@ -4880,7 +4880,7 @@ convenience/speed, and not really needed.
 		  To test what the player wanted to say, SCI compares T<subscript>&Pi;</subscript> with a second tree, T<subscript>&Sigma;</subscript>, which is built
 		  from a so-called Said spec. A Said spec is a variable-sized block in SCI memory which consists of a set of byte-sized operators and special tokens
 		  (stored in the range 0xf0 to 0xf9) and word groups (in big-endian notation, so that they don't conflict with the operators); it is terminated by
-		  the speial token 0xff. The meanings of the operators and special tokens are as follows:
+		  the special token 0xff. The meanings of the operators and special tokens are as follows:
 		  <informaltable frame="all">
 		    <tgroup cols="3">
 		      <thead>
