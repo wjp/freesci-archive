@@ -1,3 +1,8 @@
+2002-05-31  Lars Skovlund  <lskovlun@image.dk>
+
+	* sfx/enginf/kstring.c (kFormat): Fixed bug which caused literal %
+	to be printed incorrectly.
+
 2002-05-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/font.c (gfxr_draw_font): Signedness bug fix in strings:

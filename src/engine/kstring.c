@@ -473,8 +473,10 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	while ((xfer = *source++)) {
 		if (xfer == '%') {
-			if (mode == 1)
-				*target++ = '%'; /* Literal % by using "%%" */
+ 		       if (mode == 1) {
+		         *target++ = '%'; /* Literal % by using "%%" */
+			 mode = 0;
+		       }
 			else {
 				mode = 1;
 				str_leng = 0;
