@@ -256,6 +256,8 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 /*	  if (song->loops > 0)   SCI actually goes below -1 */
 		  --(song->loops);
 
+	  fprintf(ds, "looping back from %d to %d on handle %04x\n",
+		song->pos, song->loopmark, song->handle);
 	  song->pos = song->loopmark;
 	  sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_LOOP, song->loops);
 
@@ -294,10 +296,11 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	  
 	} else if (command == SCI_MIDI_SET_SIGNAL) {
 
-	  if (param == SCI_MIDI_SET_SIGNAL_LOOP)
+	  if (param == SCI_MIDI_SET_SIGNAL_LOOP) {
 	    song->loopmark = song->pos;
-	  else if (param <= 127) {
-	    fprintf(ds, "Absolute Cue?? %02x %02x for handle %04x\n", command, param, song->handle);
+	    fprintf(ds, "Loop mark set to %d for handle %04x\n", song->pos, song->handle);
+          } else if (param <= 127) {
+	    fprintf(ds, "Absolute Cue?? %02x %02x at %d for handle %04x\n", command, param, song->pos, song->handle);
 	    sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
 	  }
 	}
