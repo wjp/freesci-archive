@@ -79,6 +79,9 @@ win32p_soundserver_init(LPVOID lpP)
 		exit(-1);
 	}
 
+	/* Sierra SCI default volume (we think) */
+	sss.master_volume = 96;
+
 	/* start the sound server */
 	sci0_polled_ss(reverse_stereo, &sss);
 
