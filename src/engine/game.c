@@ -172,8 +172,10 @@ _reset_graphics_input(state_t *s)
 
   s->port = s->wm_port; /* Currently using the window manager port */
 
+#if 0
   s->titlebar_port->bgcolor.mask |= GFX_MASK_PRIORITY;
   s->titlebar_port->bgcolor.priority = 11; /* Standard priority for the titlebar port */
+#endif
 
   return 0;
 }

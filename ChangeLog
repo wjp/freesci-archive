@@ -1,3 +1,14 @@
+2001-01-02  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/sci_widgets.c (sciw_set_status_bar): Fixed memory
+	leak
+
+	* src/include/resource.h: Applied BREAKPOINT() patch VC++ by
+	Petr (and some other fixes)
+
+	* src/engine/kmenu.c (kMenuSelect): Fixed priority problems with
+	menu bar
+
 2001-01-01  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kmenu.c (kMenuSelect): Re-enabled MenuSelect().

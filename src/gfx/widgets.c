@@ -27,6 +27,12 @@
 
 #include <gfx_widgets.h>
 
+#ifdef GFXW_DEBUG_DIRTY
+#  define DDIRTY fprintf(stderr, "%s:%5d| ", __FILE__, __LINE__); fprintf
+#else
+#  define DDIRTY if (0) fprintf
+#endif
+
 #ifdef GFXW_DEBUG_WIDGETS
 
 #define MAX_SERIAL_NUMBER 0x7fffffff
@@ -311,8 +317,11 @@ _gfxwop_basic_set_visual(gfxw_widget_t *widget, gfxw_visual_t *visual)
 {
 	widget->visual = visual;
 
-	if (widget->parent)
+	if (widget->parent) {
+		DDIRTY(stderr,"basic_set_visual: DOWNWARDS rel(%d,%d,%d,%d, 1)\n",
+		       GFX_PRINT_RECT(widget->bounds));
 		widget->parent->add_dirty_rel(widget->parent, widget->bounds, 1);
+	}
 
 	return 0;
 }
@@ -378,6 +387,8 @@ static int
 _gfxwop_basic_free(gfxw_widget_t *widget)
 {
 	gfx_state_t *state = (widget->visual)? widget->visual->gfx_state : NULL;
+
+	DDIRTY(stderr, "BASIC-FREE: SomeAddDirty\n");
 
 	if (widget->parent) {
 		if (GFXW_IS_CONTAINER(widget))
@@ -626,7 +637,7 @@ _gfxwop_line_draw(gfxw_widget_t *widget, point_t pos)
 	linepos.yl--;
 
 	if (widget->type == GFXW_INVERSE_LINE) {
-		linepos.x + linepos.xl;
+		linepos.x += linepos.xl;
 		linepos.xl = -linepos.xl;
 	} else {
 		DRAW_ASSERT(widget, GFXW_LINE);
@@ -857,6 +868,7 @@ _gfxwop_dyn_view_print(gfxw_widget_t *widget, int indentation)
 		  (view->color.mask & GFX_MASK_CONTROL)? view->color.control : -1,
 		  view->signal, view->signalp);
 
+	return 0;
 }
 
 static int
@@ -1142,6 +1154,7 @@ gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignme
 static int
 _gfxwop_container_add_dirty_rel(gfxw_container_t *cont, rect_t rect, int propagate)
 {
+	DDIRTY(stderr, "->container_add_dirty_rel(%d,%d,%d,%d, %d)\n", GFX_PRINT_RECT(rect), propagate);
 	return cont->add_dirty_abs(cont, _move_rect(rect, gfx_point(cont->zone.x, cont->zone.y)), propagate);
 }
 
@@ -1264,8 +1277,10 @@ _gfxwop_container_draw_contents(gfxw_widget_t *widget, gfxw_widget_t *contents)
 
 		while (seeker) {
 			if (gfx_rects_overlap(seeker->bounds, dirty->rect)) {
-				if (GFXW_IS_CONTAINER(seeker)) /* Propagate dirty rectangles /upwards/ */
+				if (GFXW_IS_CONTAINER(seeker)) {/* Propagate dirty rectangles /upwards/ */
+					DDIRTY(stderr,"container_draw_contents: propagate upwards (%d,%d,%d,%d ,0)\n", GFX_PRINT_RECT(dirty->rect));
 					((gfxw_container_t *)seeker)->add_dirty_abs((gfxw_container_t *)seeker, dirty->rect, 0);
+				}
 
 				seeker->flags |= GFXW_FLAG_DIRTY;
 			}
@@ -1355,8 +1370,10 @@ _gfxwop_container_set_visual(gfxw_widget_t *widget, gfxw_visual_t *visual)
 	gfxw_container_t *container = (gfxw_container_t *) widget;
 
 	container->visual = visual;
-	if (widget->parent)
-	    widget->parent->add_dirty_abs(widget->parent, widget->bounds, 1);
+	if (widget->parent) {
+		DDIRTY(stderr,"set_visual::DOWNWARDS abs(%d,%d,%d,%d, 1)\n", widget->bounds);
+		widget->parent->add_dirty_abs(widget->parent, widget->bounds, 1);
+	}
 
 	return __gfxwop_container_set_visual_contents(container->contents, visual);
 }
@@ -1457,6 +1474,7 @@ _gfxwop_container_add_dirty(gfxw_container_t *container, rect_t dirty, int propa
 	if (_gfxop_clip(&dirty, container->bounds))
 		return 0;
 
+	DDIRTY(stderr, "Effectively adding dirty %d,%d,%d,%d %d to ID %d\n", GFX_PRINT_RECT(dirty), propagate, container->ID);
 	container->dirty = gfxdr_add_dirty(container->dirty, dirty, GFXW_DIRTY_STRATEGY);
 	return 0;
 }
@@ -1471,6 +1489,7 @@ _gfxwop_container_add(gfxw_container_t *container, gfxw_widget_t *widget)
 	if (_parentize_widget(container, widget))
 		return 1;
 
+	DDIRTY(stderr, "container_add: dirtify DOWNWARDS (%d,%d,%d,%d, 1)\n", GFX_PRINT_RECT(widget->bounds));
 	_gfxw_dirtify_container(container, widget);
 
 	*(container->nextpp) = widget;
@@ -1600,9 +1619,12 @@ _gfxwop_list_add_dirty(gfxw_container_t *container, rect_t dirty, int propagate)
 {
 	/* Lists add dirty boxes to both themselves and their parenting port/visual */
 
+	DDIRTY(stderr,"list_add_dirty %d,%d,%d,%d %d\n", GFX_PRINT_RECT(dirty), propagate);
 	if (propagate)
-		if (container->parent)
+		if (container->parent) {
+			DDIRTY(stderr, "->PROPAGATING\n");
 			container->parent->add_dirty_abs(container->parent, dirty, 1);
+		}
 
 	return _gfxwop_container_add_dirty(container, dirty, propagate);
 }
@@ -1803,6 +1825,7 @@ _visual_find_free_ID(gfxw_visual_t *visual)
 
 _gfxwop_add_dirty_rects(gfxw_container_t *dest, gfx_dirty_rect_t *src)
 {
+	DDIRTY(stderr, "Adding multiple dirty to #d\n", dest->ID);
 	if (src) {
 		dest->dirty = gfxdr_add_dirty(dest->dirty, src->rect, GFXW_DIRTY_STRATEGY);
 		_gfxwop_add_dirty_rects(dest, src->next);
@@ -1820,6 +1843,7 @@ _gfxwop_port_draw(gfxw_widget_t *widget, point_t pos)
 	DRAW_ASSERT(widget, GFXW_PORT);
 
 	if (port->decorations) {
+		DDIRTY(stderr, "Getting/applying deco dirty (multi)\n");
 		_gfxwop_add_dirty_rects(GFXWC(port->decorations), port->dirty);
 		if (port->decorations->draw(GFXW(port->decorations), gfxw_point_zero)) {
 			port->decorations->dirty = NULL;
@@ -1911,6 +1935,9 @@ _gfxwop_port_add_dirty(gfxw_container_t *widget, rect_t dirty, int propagate)
 	gfxw_port_t *self = (gfxw_port_t *) widget;
 	_gfxwop_container_add_dirty(widget, dirty, propagate);
 
+	DDIRTY(stderr,"Added dirty to ID %d\n", widget->ID);
+	DDIRTY(stderr, "dirty= (%d,%d,%d,%d) bounds (%d,%d,%d,%d)\n", dirty.x, dirty.x, dirty.xl, dirty.yl,
+	 widget->bounds.x, widget->bounds.y, widget->bounds.xl, widget->bounds.yl);
 	if (self->port_bg) {
 		gfxw_widget_t foo;
 
@@ -1920,8 +1947,10 @@ _gfxwop_port_add_dirty(gfxw_container_t *widget, rect_t dirty, int propagate)
 	} /* else propagate to the parent, since we're not 'catching' the dirty rect */
 
 	if (propagate)
-		if (self->parent)
+		if (self->parent) {
+			DDIRTY(stderr, "PROPAGATE\n");
 			return self->parent->add_dirty_abs(self->parent, dirty, 1);
+		}
 
 	return 0;
 }
@@ -2127,4 +2156,6 @@ gfxw_restore_snapshot(gfxw_visual_t *visual, gfxw_snapshot_t *snapshot)
 fprintf(stderr, "rest SNAPSHOT %08x (%d,%d) (%dx%d)\n", snapshot->serial, snapshot->area.x, snapshot->area.y,
 	snapshot->area.xl, snapshot->area.yl);
 	_gfxw_free_contents_appropriately(GFXWC(visual), snapshot);
+
+	return snapshot;
 }

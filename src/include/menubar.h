@@ -34,7 +34,7 @@
 
 struct _state;
 
-/*#define MENU_FREESCI_BLATANT_PLUG 0xfff0*/
+#define MENU_FREESCI_BLATANT_PLUG 0xfff0
 /* This adds an "About FreeSCI" menu option to the first menu */
 
 

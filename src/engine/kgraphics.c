@@ -1336,9 +1336,10 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 	case K_CONTROL_TEXT:
 
 		SCIkdebug(SCIkGRAPHICS, "drawing text %04x to %d,%d\n", obj, x, y);
+
 		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_text_control(s->port, obj, area, text, font_nr,
-							  (s->version < SCI_VERSION_FTU_CENTERED_TEXT_AS_DEFAULT)
-							  ? ALIGN_LEFT : ALIGN_CENTER, state & CONTROL_STATE_DITHER_FRAMED,
+							  ((s->version < SCI_VERSION_FTU_CENTERED_TEXT_AS_DEFAULT)?
+							  ALIGN_LEFT : ALIGN_CENTER), !!(state & CONTROL_STATE_DITHER_FRAMED),
 							  inverse));
 		break;
 

@@ -100,10 +100,10 @@ struct {
 	 "Chris Kehler\n\n"
 	 "Christoph Reichenbach\nProject & Website maintenance, UN*X code\n\n"
 	 "Christopher T. Lansdown\nCVS maintenance, Alpha compatibility fixes\n\n"
-	 "Claudio Matsuoka\nCVS snapshots, daily builds, bug reports\n\n",
+	 "Claudio Matsuoka\nCVS snapshots, daily builds, bug reports",
 	 0, 15},
 	{"More FreeSCI hackers and contributors",
-	 "Dark Minister\nSCI research (bytecode and parser)"
+	 "Dark Minister\nSCI research (bytecode and parser)\n\n"
 	 "Dmitry Jemerov\nPort to the Win32 platform, numerous bugfixes\n\n"
 	 "Francois-R Boyer\nMT-32 information and mapping code\n\n"
 	 "Lars Skovlund\nMost of the relevant documentation, several bugfixes\n\n"
@@ -111,7 +111,7 @@ struct {
 	 "Paul David Doherty\nGame version information",
 	 0, 15},
 	{"Still more FreeSCI hackers & contributors",
-	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, Many Win32 improvements\n\n"
+	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements\n\n"
 	 "Rainer De Temple\nSCI research\n\n"
 	 "Ravi I.\nSCI0 sound resource specification\n\n"
 	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research\n\n"
@@ -124,78 +124,76 @@ struct {
 void
 about_freesci(state_t *s)
 {
-WARNING( fixme!)
-#if 0
-  int page;
-  port_t port;
-  byte *bodyfont, *titlefont;
-  resource_t *bodyfont_res = NULL;
-  int i;
+	int page;
+	gfxw_port_t *port;
+	int bodyfont, titlefont;
+	resource_t *bodyfont_res = NULL;
+	int i;
 
-  port.alignment = ALIGN_TEXT_CENTER;
-  port.gray_text = 0;
-  port.x = 0;
-  port.y = 0;
-  titlefont = s->titlebar_port.font;
+	titlefont = s->titlebar_port->font_nr;
 
-  i = 999;
-  while (!bodyfont_res && (i > -1))
-    bodyfont_res = findResource(sci_font, i);
+	i = 999;
+	while (!bodyfont_res && (i > -1))
+		bodyfont_res = findResource(sci_font, i--);
 
-  if (i == -1)
-    return;
+	if (i == -1)
+		return;
 
-  port.font = bodyfont = bodyfont_res->data;
+	bodyfont = i+1;
+	for (page = 0; page < ABOUT_FREESCI_PAGES_NR; ++page) {
+		sci_event_t event;
+		int cont = 2;
+		int width, height, width2, foo;
 
-  for (page = 0; page < ABOUT_FREESCI_PAGES_NR; ++page) {
-    sci_event_t event;
-    int cont = 2;
-    int width, height, width2;
+		_about_freesci_pages[page].fgcolor = 0;
+		_about_freesci_pages[page].bgcolor = 15;
 
-    port.x = 1;
-    port.y = 5;
+		gfxop_get_text_params(s->gfx_state, bodyfont, _about_freesci_pages[page].body, 300, &width, &height);
+		gfxop_get_text_params(s->gfx_state, titlefont, _about_freesci_pages[page].title, 300, &width2, &foo);
 
-    port.color = _about_freesci_pages[page].fgcolor;
-    port.bgcolor = _about_freesci_pages[page].bgcolor;
+		width += 4;
+		width2 += 4;
+		height += 4;
 
-    get_text_size(_about_freesci_pages[page].body, bodyfont, 300, &width, &height);
-    width2 = get_text_width(_about_freesci_pages[page].title, titlefont);
+		if (width2 > width)
+			width = width2;
 
-    if (width2 > width)
-      width = width2;
+		port = sciw_new_window(s, gfx_rect(156 - (width >> 1), 164 - (width >> 1), width, height),
+				       bodyfont, s->ega_colors[_about_freesci_pages[page].fgcolor],
+				       s->ega_colors[_about_freesci_pages[page].bgcolor],
+				       titlefont, s->ega_colors[15], s->ega_colors[0],
+				       _about_freesci_pages[page].title, WINDOW_FLAG_TITLE);
 
-    port.xmin = 156 - width / 2;
-    port.xmax = 164 + width / 2;
-    port.ymin = 100 - height / 2;
-    port.ymax = 108 + height / 2;
+		port->add(GFXWC(port), GFXW(gfxw_new_text(s->gfx_state, gfx_rect(0,0,width,height), bodyfont, 
+							  _about_freesci_pages[page].body,
+							  ALIGN_CENTER, ALIGN_CENTER, port->color, port->color,
+							  port->bgcolor, 0)
+					    ));
 
-    port.bg_handle = graph_save_box(s, port.xmin, port.ymin - 10, port.xmax - port.xmin + 1,
-				    port.ymax - port.ymin + 11, SCI_MAP_VISUAL | SCI_MAP_PRIORITY);
+		s->visual->add(GFXWC(s->visual), GFXW(port));
 
-    draw_window(s->pic, &port, port.bgcolor, 16, _about_freesci_pages[page].title, titlefont,
-		WINDOW_FLAG_TITLE);
-    text_draw(s->pic, &port, _about_freesci_pages[page].body, port.xmax - port.xmin - 3);
-    graph_update_box(s, port.xmin - 2, port.ymin - 11, port.xmax - port.xmin + 5,
-		     port.ymax - port.ymin + 14);
+		port->add_dirty_abs(GFXWC(port), gfx_rect_fullscreen, 1);
+		s->visual->draw(GFXW(s->visual), gfx_point(0,0));
+		gfxop_update(s->gfx_state);
 
-    while (cont) {
-      event = getEvent(s);
+		while (cont) {
+			event = gfxop_get_event(s->gfx_state);
 
-      if (event.type == SCI_EVT_MOUSE_RELEASE || event.type == SCI_EVT_MOUSE_PRESS)
-	--cont;
+			if (event.type == SCI_EVT_MOUSE_RELEASE || event.type == SCI_EVT_MOUSE_PRESS)
+				--cont;
 
-      if (event.type == SCI_EVT_KEYBOARD)
-	cont = 0;
+			if (event.type == SCI_EVT_KEYBOARD)
+				cont = 0;
 
-      s->gfx_driver->Wait(s, 25000);
-    }
+			gfxop_usleep(s->gfx_state, 25000);
+		}
 
-    graph_restore_box(s, port.bg_handle);
-    graph_update_box(s, port.xmin - 2, port.ymin - 11, port.xmax - port.xmin + 5,
-		     port.ymax - port.ymin + 14);
+
+		port->free(GFXW(port));
+		s->visual->draw(GFXW(s->visual), gfx_point(0,0));
+		gfxop_update(s->gfx_state);
     
-  }
-#endif
+	}
 }
 
 
@@ -306,10 +304,6 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			case SCI_EVT_KEYBOARD:
 				switch (event.data) {
 
-				case SCI_K_F10:
-					s->visual->print(GFXWC(s->visual), 0);
-					break;
-
 				case SCI_K_ESC:
 					menu_mode = 0;
 					break;
@@ -373,11 +367,10 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				sciw_set_menubar(s, s->titlebar_port, s->menubar, menu_nr);
 
 				if (port)
-					gfxw_remove_port(s->visual, port);
-
+					port->free(GFXW(port));
 
 				port = sciw_new_menu(s, s->titlebar_port, s->menubar, menu_nr);
-				s->picture_port->add(GFXWC(s->picture_port), GFXW(port));
+				s->wm_port->add(GFXWC(s->wm_port), GFXW(port));
 
 				if (item_nr > -1)
 					old_item = -42; /* Enforce redraw in next step */
@@ -400,7 +393,7 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		} /* while (menu_mode) */
 
 		if (port) {
-			gfxw_remove_port(s->visual, port);
+			port->free(GFXW(port));
 			port = NULL;
 
 			sciw_set_status_bar(s, s->titlebar_port, s->status_bar_text);

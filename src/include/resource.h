@@ -254,6 +254,14 @@ int decompress1l(resource_t *result, int resh);
 **               encountered.
 */
 
+int decompress11(resource_t *result, int resh);
+/* Decrypts resource data and stores the result for SCI1.1-style compression.
+** Parameters : result: The resource_t the decompressed data is stored in.
+**              resh  : File handle of the resource file
+** Returns    : (int) 0 on success, one of SCI_ERROR_* if a problem was
+**               encountered.
+*/
+
 
 int decrypt2(guint8* dest, guint8* src, int length, int complength);
 /* Huffman token decryptor - defined in decompress0.c and used in decompress01.c
@@ -302,21 +310,22 @@ sciprintf(char *fmt, ...);
 /* The following was originally based on glib.h code, which was
  * Copyright (C) 1995-1997  Peter Mattis, Spencer Kimball and Josh MacDonald
  */
-#if defined (__i386__)
-#  if defined (__GNUC__) && __GNUC__ >= 2
+#if defined (__GNUC__) && __GNUC__ >= 2
+#  if defined (__i386__)
 #    define BREAKPOINT()          {__asm__ __volatile__ ("int $03"); }
-#  elif defined(_MSC_VER)
-#    define BREAKPOINT()          { __asm { int 03 } }
-#  endif /* !__GNUC__ && !_MSC_VER */
-#elif defined (__alpha__)
-#  if defined (__GNUC__) && __GNUC__ >= 2
+#  elif defined(__alpha__)
 #    define BREAKPOINT()          {__asm__ __volatile__ ("bpt"); }
-#  elif defined(_MSC_VER)
+#  endif /* !__i386__ && !__alpha__ */
+#elif defined (_MSC_VER)
+#  if defined (_M_IX86)
+#    define BREAKPOINT()          { __asm { int 03 } }
+#  elif defined(_M_ALPHA)
 #    define BREAKPOINT()          { __asm { bpt } }
-#  endif /* !__GNUC__ && !_MSC_VER */
-#else   /* !__i386__ && !__alpha__ */
+#  endif /* !_M_IX86 && !_M_ALPHA */
+#endif
+#ifndef BREAKPOINT
 #  define BREAKPOINT() { fprintf(stderr, "Missed breakpoint in %s, line %d\n", __FILE__, __LINE__); exit(1); }
-#endif  /* __i386__ */
+#endif  /* !BREAKPOINT() */
 
 #define WARNING(foo) {char i; i = 500;}
 

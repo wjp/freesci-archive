@@ -1013,13 +1013,14 @@ c_backtrace(state_t *s)
 int
 c_redraw_screen(state_t *s)
 {
-  if (!_debugstate_valid) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
 
-  gfxop_update_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
-  return 0;
+	s->visual->draw(GFXW(s->visual), gfx_point(0,0));
+	gfxop_update_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
+	return 0;
 }
 
 int

@@ -151,6 +151,7 @@ gfx_rect(int x, int y, int xl, int yl)
 	return rect;
 }
 
+#define GFX_PRINT_RECT(rect) (rect).x, (rect).y, (rect).xl, (rect).yl
 
 #define OVERLAP(a, b, z, zl) (a.z >= b.z || a.z < (b.z + b.zl))
 
