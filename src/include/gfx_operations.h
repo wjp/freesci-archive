@@ -79,10 +79,10 @@ typedef enum {
 } gfx_box_shade_t;
 
 
-struct _dirty_rect {
+typedef struct _dirty_rect {
 	rect_t rect;
 	struct _dirty_rect *next;
-};
+} gfx_dirty_rect_t;
 
 
 typedef struct {
@@ -617,6 +617,20 @@ gfxop_free_pixmap(gfx_state_t *state, gfx_pixmap_t *pxm);
 ** Parameters: (gfx_state_t *) state: The affected state
 **             (gfx_pixmap_t *) pxm: The pixmap to free
 ** Returns   : (int) GFX_OK, or GFX_ERROR if the state was invalid
+*/
+
+/******************************/
+/* Dirty rectangle operations */
+/******************************/
+
+gfx_dirty_rect_t *
+gfxdr_add_dirty(gfx_dirty_rect_t *base, rect_t box, int strategy);
+/* Adds a dirty rectangle to 'base' according to a strategy
+** Parameters: (gfx_dirty_rect_t *) base: The base rectangle to add to, or NULL
+**             (rect_t) box: The dirty frame to add
+**             (int) strategy: The dirty frame heuristic to use (see gfx_options.h)
+** Returns   : (gfx_dirty_rect_t *) an appropriate singly-linked dirty rectangle
+**                                  result cluster
 */
 
 #endif /* !_GFX_OPERATIONS_H_ */

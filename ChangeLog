@@ -1,3 +1,8 @@
+2000-11-24  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/widgets.c: Changed the widget system to a more OO-based
+	structure.
+
 2000-11-10  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/include/gfx_widgets.h: Renamed gfx_state.h to gfx_widgets.h

@@ -35,6 +35,9 @@
 ** of members (/SLOW/) */
 #define GFXW_DEBUG_WIDGETS 2048
 
+/* Our strategy for dirty rectangle management */
+#define GFXW_DIRTY_STRATEGY GFXOP_DIRTY_FRAMES_CLUSTERS
+
 /* Terminology
 **
 ** Two special terms are used in here: /equivalent/ and /clear/. Their meanings
@@ -60,85 +63,149 @@
 /* Fundamental widget operations */
 /*********************************/
 
-gfxw_widget_t *
-gfxw_draw(gfx_state_t *state, gfxw_widget_t *widget);
-/* Draws all dirty parts of the specified widgets (and its potential sub-widgets)
-** Parameters: (gfx_state_t *) state: The state the widgets should be drawn to
-**             (gfxw_widget_t *) widget: The widget to draw
-** Returns   : (gfxw_widget_t *) widget
-** This operation should usually be called on the root widget (if there is one), and
-** may be costly, since it requires all active widgets to be traversed. It's only
-** O(n), though.
-*/
 
-void
-gfxw_free(gfx_state_t *state, gfxw_widget_t *widget);
-/* Frees the specified widget, and all sub-widgets it might contain
-** Parameters: (gfx_state_t *) state: The state the widgets are to be /clear/ed from
-**             (gfxw_widget_t *) widget: The widget to free
-** Returns   : (void)
-** All freed widgets are /clear/ed as well.
-*/
+#define GFXW(foo) ((gfxw_widget_t *) foo)
+/* Typecast an arbitrary widget to gfxw_widget_t*. Might eventually be changed to do tests as well. */
 
-gfxw_widget_t *
-gfxw_tag(gfxw_widget_t *widget);
-/* Tags the widget and all possible sub-widgets it may contain
-** Parameters: (gfxw_widget_t *) widget: The widget to tag
-** Returns   : (gfxw_widget_t *) widget
-** Tagged widgets can only be untagged by being overwritten by /equivalent/ widgets.
-*/
+#define GFXWC(foo) ((gfxw_container_t *) foo)
+/* Typecasts a container widget to gfxw_container_widget_t *. */
 
-void
-gfxw_free_tagged(gfxw_widget_t *widget);
-/* Frees the widget (if it is tagged) and all tagged sub-widgets it contains
-** Parameters: (gfxw_widget_t *) widget: The root of the widget tree to check
-** Returns   : (void)
-** Note that freed widgets are removed from memory, but _not_ /clear/ed.
-** gfxw_tag() and gfxw_free_tagged() are typically used to handle display lists
-** of dynviews.
-*/
+static point_t gfxw_point_zero = {0, 0};
 
-gfxw_container_t *
-gfxw_add_to_front(gfxw_container_t *container, gfxw_widget_t *widget);
-/* Adds a widget to the top of a container
-** Parameters: (gfxw_container_t *) containner: The container the widget is added to
+/*********************/
+/* Widget operations */
+/*********************/
+
+/* These are for documentation purposes only. The actual declarations are in
+** gfx_state_internal.h.
+**
+**
+**
+** -- draw(gfxw_widget_t *self, point_t pos)
+** Draws the widget.
+** Parameters: (gfxw_widget_t *) self: self reference
+**             (point_t) pos: The position to draw to (added to the widget's
+**                            internal position)
+** Returns   : (int) 0
+** The widget is drawn iff it is flagged as dirty. Invoking this operation on
+** a container widget will recursively draw all of its contents.
+**
+**
+** -- free(gfxw_widget_t *self)
+** Frees all memory associated to the widget
+** Parameters: (gfxw_widget_t *) self: self reference
+** Returns   : (int) 0
+** The widget automatically removes itself from its owner, if it has one.
+** Invoking this operation on a container will recursively free all of its
+** contents.
+**
+**
+** -- tag(gfxw_widget_t *self)
+** Tags the specified widget
+** Parameters: (gfxw_widget_t *) self: self reference
+** Returns   : (int) 0
+** If invoked on a container widget, this will also tag all of the container's
+** contents (but not the contents' contents!)
+**
+**
+** -- print(gfxw_widget_t *self, int indentation)
+** Prints a string representation of the widget with sciprintf
+** Parameters: (gfxw_widget_t *) self: self reference
+**             (int) indentation: Number of double spaces to indent
+** Returns   ; (int) 0
+** Will recursively print all of the widget's contents if the widget contains
+** further sub-widgets
+**
+**
+** -- compare_to(gfxw_widget_t *self, gfxw_widget_t *other)
+** Compares two compareable widgets by their screen position
+** Parameters: (gfxw_widget_t *) self: self reference
+**             (gfxw_widget_t *) other: other widget
+** Returns   : (int) <0, 0, or >0 if other is, respectively, less than, equal
+**                   to, or greater than self
+** This comparison only applies to some widgets; compare_to(a,a)=0 is not
+** guaranteed. It may be used for sorting for all widgets.
+**
+**
+** -- equals(gfxw_widget_t *self, gfxw_widget_t *other)
+** Compares two compareable widgets for equality
+** Parameters: (gfxw_widget_t *) self: self reference
+**             (gfxw_widget_t *) other: other widget
+** Returns   : (int) 0 if the widgets are not equal, != 0 if they match
+** This operation checks whether two widgets describe the same graphical data.
+** It is used to determine whether a new widget should be discarded because it
+** describes the same graphical data as an old widget that has already been
+** drawn. For lists, it also checks whether all contents are in an identical
+** order.
+**
+**
+** -- superarea_of(gfxw_widget_t *self, gfxw_widget_t *other) 
+** Tests whether drawing self after other would reduce all traces of other
+** Parameters: (gfxw_widget_t *) self: self reference
+**             (gxfw_widget_t *) other: The widget to compare for containment
+** Returns   : (int) 1 if self is superarea_of other, 0 otherwise
+**
+**
+** -- set_visual(gfxw_widget_t *self)
+** Sets the visual for the widget
+** Parameters: (gfxw_widget_t *) self: self reference
+** Returns   : (int) 0
+** This function is called by container->add() and need not be invoked explicitly.
+** It also makes sure that dirty rectangles are passed to parent containers.
+**
+**
+**
+** **************************
+** ** Container operations **
+** **************************
+**
+**
+** -- free_tagged(gfxw_container_t *self)
+** Frees all tagged resources in the container
+** Parameters: (gfxw_container_t *) self: self reference
+** Returns   : (int) 0
+** The container itself is never freed in this way.
+**
+**
+** -- free_contents(gfxw_container_t *self)
+** Frees all resources contained in the container
+** Parameters: (gfxw_container_t *) self: self reference
+** Returns   : (int) 0
+**
+**
+** -- add_dirty_abs(gfxw_container_t *self, rect_t dirty)
+** Adds a dirty rectangle to the container's list of dirty rects
+** Parameters: (gfxw_container_t *) self: self reference
+**             (rect_t) dirty: The rectangular screen area that is to be flagged
+**                             as dirty, absolute to the screen
+** Returns   : (int) 0
+** Transparent containers will usually pass this value to their next ancestor,
+** because areas below them might have to be redrawn.
+** The dirty rectangle management strategy is defined in this file in
+** GFXW_DIRTY_STRATEGY.
+**
+**
+** -- add_dirty_rel(gfxw_container_t *self, rect_t dirty)
+** Adds a dirty rectangle to the container's list of dirty rects
+** Parameters: (gfxw_container_t *) self: self reference
+**             (rect_t) dirty: The rectangular screen area that is to be flagged
+**                             as dirty, relative to the widget
+** Returns   : (int) 0
+** Transparent containers will usually pass this value to their next ancestor,
+** because areas below them might have to be redrawn.
+** The dirty rectangle management strategy is defined in this file in
+** GFXW_DIRTY_STRATEGY.
+**
+**
+** -- add(gfxw_container_t *self, gfxw_widget_t *widget)
+** Adds a widget to the list of contained widgets
+** Parameters: (gfxw_container_t *) self: self reference
 **             (gfxw_widget_t *) widget: The widget to add
-** Returns   : (gfxw_container_t *) container
-** Widgets on top of a container will be drawn last, so they are potentially drawn on
-** top of other widgets
-** This function is O(1)
+** Returns   : (int) 0
+** Sorted lists sort their content into the list rather than adding it to the
+** end.
 */
 
-gfxw_container_t *
-gfxw_add_to_back(gfxw_container_t *container, gfxw_widget_t *widget);
-/* Adds a widget to the bottom of a contained
-** Parameters: (gfxw_container_t *) container: The container the widget is added to
-**             (gfxw_widget_t *) widget: The widget to add
-** Returns   : (gfxw_container_t *) container
-** This function is O(1)
-*/
-
-gfxw_container_t *
-gfxw_add(gfx_state_t *state, gfxw_container_t *container, gfxw_widget_t *widget);
-/* Adds a widget to a container widget
-** Parameters: (gfx_state_t *) state: The state to add to (needed for /clear/ing)
-**             (gfxw_container_t *) container: The container the widget is added to
-**             (gfxw_widget_t *) widget: The widget to add
-** Returns   : (gfxw_container_t *) container
-** If widget is /equivalent/ to one of the widgets in the container, it overwrites
-** the widget it is equivalent to rather than adding itself to the container. Overwriting
-** an equivalent widget /clear/s the original widget. If used as the exclusive insertion
-** method for one container, it guarantees that the contents of the container are sorted
-** (by INSERTION SORT, obviously).
-** This function is O(n)
-*/
-
-void
-gfxw_print(gfxw_widget_t *widget);
-/* Print a widget with sciprintf
-** Parameters: (gfxw_widget_t *) widget: The widget to print
-** Returns   : (void)
-*/
 
 /***************************/
 /* Basic widget generation */
@@ -248,10 +315,14 @@ gfxw_set_id(gfxw_widget_t *widget, int ID);
 
 /*-- Container types --*/
 
+#define GFXW_LIST_UNSORTED 0
+#define GFXW_LIST_SORTED 1
+
 gfxw_list_t *
-gfxw_new_list(rect_t area);
+gfxw_new_list(rect_t area, int sorted);
 /* Creates a new list widget
 ** Parameters: (rect_t) area: The area covered by the list (absolute position)
+**             (int) sorted: Whether the list should be a sorted list
 ** Returns   : (gfxw_list_t *) A newly allocated list widget
 ** List widgets are also referred to as Display Lists.
 */
@@ -281,14 +352,6 @@ gfxw_new_port(gfxw_visual_t *visual, gfxw_port_t *predecessor, rect_t area, gfx_
 */
 
 gfxw_port_t *
-gfxw_remove_port(gfxw_visual_t *visual, gfxw_port_t *port);
-/* Removes the toplevel port from a visual
-** Parameters: (gfxw_visual_t *) visual: The visual the port is to be removed from
-**             (gfxw_port_t *) port: The port to remove
-** Returns   : (gfxw_port_t *) port: The new active port, or NULL if no ports are left
-*/
-
-gfxw_port_t *
 gfxw_find_port(gfxw_visual_t *visual, int ID);
 /* Retrieves a port with the specified ID
 ** Parmaeters: (gfxw_visual_t *) visual: The visual the port is to be retreived from
@@ -297,5 +360,12 @@ gfxw_find_port(gfxw_visual_t *visual, int ID);
 ** This function is O(n).
 */
 
+gfxw_port_t *
+gfxw_remove_port(gfxw_visual_t *visual, gfxw_port_t *port);
+/* Removes a port from a visual
+** Parameters: (gfxw_visual_t *) visual: The visual the port should be removed from
+**             (gfxw_port_t *) port: The port to remove
+** Returns   : (gfxw_port_t *) port's parent port, or NULL if it had none
+*/
 
-#endif /* !_GFX_STATE_H_ */
+#endif /* !_GFX_WIDGETS_H_ */

@@ -171,7 +171,35 @@ gfx_rects_merge(rect_t a, rect_t b)
 #undef SUBMERGE_PARTIAL(a, b, z, zl)
 
 
+/* Subset predicate for rectangles
+** Parameters: (rect_t) a, b: The two rects to compare
+** Returns   : non-zero iff for each pixel p in a the following holds: p is in b.
+*/
+static inline int
+gfx_rect_subset(rect_t a, rect_t b)
+{
+	return ((a.x >= b.x) && (a.y >= b.y)
+		&& ((a.x + a.xl) <= (b.x + b.xl))
+		&& ((a.y + a.yl) <= (b.y + b.yl)));
+}
 
+/* Equality predicate for rects
+** Parameters: (rect_t) a, b
+** Returns   : (int) gfx_rect_subset(a,b) AND gfx_rect_subset(b,a)
+*/
+static inline int
+gfx_rect_equals(rect_t a, rect_t b)
+{
+	return (a.x == b.x
+		&& a.xl == b.xl
+		&& a.y == b.y
+		&& a.yl == b.yl);
+}
+
+
+
+
+/*** points ***/
 
 typedef struct {
 	int x, y;

@@ -21,7 +21,7 @@
 
  Current Maintainer:
 
-    Christoph Reichenbach (CJR) [jameson@linuxgames.com]
+    Christoph Reichenbach (CR) [jameson@linuxgames.com]
 
 ***************************************************************************/
 
@@ -49,6 +49,16 @@
 #define K_CONTROL_ICON 4
 #define K_CONTROL_CONTROL 6
 #define K_CONTROL_BOX 10
+
+#define ADD_TO_CURRENT_PORT(widget) \
+  if (s->port) \
+       s->port->add(GFXWC(s->port), GFXW(widget)); \
+  else \
+       s->visual->add(GFXWC(s->visual), GFXW(widget));
+
+#define FULL_REDRAW()\
+  if (s->visual) \
+       s->visual->draw(GFXW(s->visual), gfxw_point_zero);
 
 static inline void
 handle_gfx_error(int line, char *file)
@@ -92,7 +102,7 @@ static inline void
 _ascertain_port_contents(gfxw_port_t *port)
 {
 	if (!port->contents)
-		port->contents = (gfxw_widget_t *) gfxw_new_list(port->bounds);
+		port->contents = (gfxw_widget_t *) gfxw_new_list(port->bounds, 0);
 }
 
 void
@@ -181,8 +191,8 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
     gfxcolor.mask = !(color & 0x80) | (!(priority & 0x80) << 1) | (!(special & 0x80) << 2);
 
     redraw_port = 1;
-    gfxw_add(s->gfx_state, (gfxw_container_t *) port,
-	     (gfxw_widget_t *) gfxw_new_line(area, gfxcolor, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL));
+    port->add(GFXWC(port),
+	      (gfxw_widget_t *) gfxw_new_line(area, gfxcolor, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL));
 		
     break;
 
@@ -294,7 +304,7 @@ v		    port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
     
   }
 
-  gfxw_draw(s->gfx_state, (gfxw_widget_t *) port);
+  port->draw(GFXW(port), gfxw_point_zero);
   gfxop_update(s->gfx_state);
 }
 
@@ -818,7 +828,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   if (add_to_pic) {
 	  if (s->picture_port->contents) {
-		  gfxw_free(s->gfx_state, (gfxw_widget_t *) s->picture_port->contents);
+		  s->picture_port->free_contents(GFXWC(s->picture_port));
 		  s->picture_port->contents = NULL;
 	  }
 	  GFX_ASSERT(gfxop_add_to_pic(s->gfx_state, pic_nr, 1, PARAM_OR_ALT(3, 0)));
@@ -831,8 +841,9 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
   if (argc > 1)
 	  s->pic_animate = PARAM(1); /* The animation used during kAnimate() later on */
 
-  if (s->dyn_views) gfxw_free(s->gfx_state, (gfxw_widget_t *) s->dyn_views);
-  s->dyn_views = gfxw_new_list(s->picture_port->bounds);
+  if (s->dyn_views)
+	  s->dyn_views->free(GFXW(s->dyn_views));
+  s->dyn_views = gfxw_new_list(s->picture_port->bounds, GFXW_LIST_SORTED );
 
   s->priority_first = 42;
   s->priority_last = 180;
@@ -1918,7 +1929,7 @@ kSetPort(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	  return;
   }
 
-  gfxw_draw(s->gfx_state, (gfxw_widget_t *) s->port); /* Update the port we're leaving */
+  s->port->draw(GFXW(s->port), gfxw_point_zero); /* Update the port we're leaving */
   s->port = new_port;
 }
 
@@ -1955,10 +1966,11 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	_ascertain_port_contents(s->picture_port);
 
-	s->picture_port->contents =
-		(gfxw_widget_t *) gfxw_add_to_front((gfxw_container_t *) s->picture_port->contents, (gfxw_widget_t *) new_view);
-	gfxw_draw(s->gfx_state, (gfxw_widget_t *) s->picture_port->contents);
+	s->picture_port->add(GFXWC(s->picture_port), GFXW(new_view));
 
+	s->picture_port->draw(GFXW(s->picture_port), gfxw_point_zero);
+
+	FULL_REDRAW();
 }
 
 
@@ -1966,63 +1978,69 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  unsigned int goner_nr = PARAM(0);
-  gfxw_port_t *goner;
+	unsigned int goner_nr = PARAM(0);
+	gfxw_port_t *goner;
+	gfxw_port_t *pred;
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  goner = gfxw_find_port(s->visual, goner_nr);
+	goner = gfxw_find_port(s->visual, goner_nr);
 
-  if ((goner_nr < 3) || (goner == NULL)) {
-    SCIkwarn(SCIkERROR, "Removal of invalid window %04x requested\n", goner_nr);
-    return;
-  }
+	if ((goner_nr < 3) || (goner == NULL)) {
+		SCIkwarn(SCIkERROR, "Removal of invalid window %04x requested\n", goner_nr);
+		return;
+	}
 
-  if (goner == s->port) /* Are we killing the active port? */
-    s->port = s->port->predecessor; /* Set predecessor as active port if so */
+	pred = gfxw_remove_port(s->visual, goner);
 
-  gfxw_remove_port(s->visual, goner);
+	if (goner == s->port) /* Did we kill the active port? */
+		s->port = pred;
 
-  gfxop_update(s->gfx_state);
+	FULL_REDRAW();
+
+	gfxop_update(s->gfx_state);
 }
 
 
 void
 kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  gfxw_port_t *window;
-  int x, y, xl, yl, flags;
-  gfx_color_t bgcolor;
-  char *text;
-  int priority;
+	gfxw_port_t *window;
+	int x, y, xl, yl, flags;
+	gfx_color_t bgcolor;
+	char *text;
+	int priority;
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  y = PARAM(0) + 10;
-  x = PARAM(1);
-  yl = PARAM(2) - y + 2;
-  xl = PARAM(3) - x + 1;
+	y = PARAM(0) + 10;
+	x = PARAM(1);
+	yl = PARAM(2) - y + 2;
+	xl = PARAM(3) - x + 1;
 
-  if (x+xl > 319)
-    x -= ((x+xl) - 319);
+	if (x+xl > 319)
+		x -= ((x+xl) - 319);
 
-  flags = PARAM(5);
+	flags = PARAM(5);
 
-  bgcolor = s->ega_colors[PARAM_OR_ALT(8, 15)];
-  priority = PARAM_OR_ALT(6, -1);
-  bgcolor.mask = GFX_MASK_VISUAL | ((priority >= 0)? GFX_MASK_PRIORITY : 0);
-  bgcolor.priority = priority;
+	bgcolor = s->ega_colors[PARAM_OR_ALT(8, 15)];
+	priority = PARAM_OR_ALT(6, -1);
+	bgcolor.mask = GFX_MASK_VISUAL | ((priority >= 0)? GFX_MASK_PRIORITY : 0);
+	bgcolor.priority = priority;
 
-  window = sciw_new_window(s, gfx_rect(x, y, xl, yl), s->titlebar_port->font_nr, 
-			s->ega_colors[PARAM_OR_ALT(7, 0)], bgcolor, s->titlebar_port->font_nr,
-			s->ega_colors[15], s->ega_colors[8], s->heap + UPARAM(4), flags);
+	window = sciw_new_window(s, gfx_rect(x, y, xl, yl), s->titlebar_port->font_nr, 
+				 s->ega_colors[PARAM_OR_ALT(7, 0)], bgcolor, s->titlebar_port->font_nr,
+				 s->ega_colors[15], s->ega_colors[8], s->heap + UPARAM(4), flags);
 
-  gfxw_draw(s->gfx_state, (gfxw_widget_t *) window);
-  gfxop_update(s->gfx_state);
+	ADD_TO_CURRENT_PORT(window);
+	FULL_REDRAW();
 
-  s->port = window; /* Set active port */
+	window->draw(GFXW(window), gfxw_point_zero);
+	gfxop_update(s->gfx_state);
 
-  s->acc = window->ID;
+	s->port = window; /* Set active port */
+
+	s->acc = window->ID;
 }
 
 
@@ -2067,7 +2085,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   CHECK_THIS_KERNEL_FUNCTION;
 
-  SCI_MEMTEST;
+  /*  SCI_MEMTEST; */
   process_sound_events(s); /* Take care of incoming events (kAnimate is called semi-regularly) */
 
   open_animation = (s->pic_is_new) && (s->pic_not_valid);

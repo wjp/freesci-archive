@@ -2,6 +2,11 @@ TODO for 0.3.1:
 
 - Implement sound servers that actually make some sound
 - Merge Magnus' Python class browser into the main tree
+- docs: Update grammar section to mention 0x400 (special words) and add the
+  missing said() rule
+- fix invalid (but consistent) shifting for word classes (is w[0] << 4 | (w[1] & 0xf0) >> 4, but should be w[0] | w[1] << 4).
+- docs: Mention words with class set to zero (no word).
+
 
 GFX subsystem:
 

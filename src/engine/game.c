@@ -164,6 +164,13 @@ _reset_graphics_input(state_t *s)
   s->titlebar_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 10), s->ega_colors[0], transparent);
   s->picture_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
 
+  s->visual->add(GFXWC(s->visual), GFXW(s->wm_port));
+  s->visual->add(GFXWC(s->visual), GFXW(s->titlebar_port));
+  s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));
+  /* Add ports to visual */
+
+  s->visual->print(GFXW(s->visual), 0);
+
   s->port = s->wm_port; /* Currently using the window manager port */
 
   s->titlebar_port->bgcolor.mask = GFX_MASK_PRIORITY;
@@ -179,7 +186,7 @@ _free_graphics_input(state_t *s)
 
   sciprintf("Freeing graphics\n");
 
-  gfxw_free(s->gfx_state, (gfxw_widget_t *) s->visual);
+  s->visual->free(GFXW(s->visual));
 
   s->visual = NULL;
   s->dyn_views = NULL;

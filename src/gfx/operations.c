@@ -384,12 +384,10 @@ _rect_create(rect_t box)
 	return rect;
 }
 
-static void
-_gfxop_add_dirty(gfx_state_t *state, rect_t box)
-{
-	if (state->disable_dirty)
-		return;
 
+gfx_dirty_rect_t *
+gfxdr_add_dirty(gfx_dirty_rect_t *base, rect_t box, int strategy)
+{
 	if (box.xl < 0) {
 		box.x += box.xl;
 		box.xl = - box.xl;
@@ -401,19 +399,19 @@ _gfxop_add_dirty(gfx_state_t *state, rect_t box)
 	}
 
 	if (_gfxop_clip(&box, gfx_rect(0, 0, 320, 200)))
-		return;
+		return base;
 
-	switch (state->options->dirty_frames) {
+	switch (strategy) {
 
 	case GFXOP_DIRTY_FRAMES_ONE:
-		if (state->dirty_rects)
-			state->dirty_rects->rect = gfx_rects_merge(box, state->dirty_rects->rect);
+		if (base)
+			base->rect = gfx_rects_merge(box, base->rect);
 		else 
-			state->dirty_rects = _rect_create(box);
+			base = _rect_create(box);
 		break;
 
 	case GFXOP_DIRTY_FRAMES_CLUSTERS: {
-		struct _dirty_rect **rectp = &(state->dirty_rects);
+		struct _dirty_rect **rectp = &(base);
 
 		while (*rectp) {
 			if (gfx_rects_overlap((*rectp)->rect, box)) {
@@ -429,9 +427,20 @@ _gfxop_add_dirty(gfx_state_t *state, rect_t box)
 	} break;
 
 	default:
-		GFXERROR("Attempt to use invalid dirty frame mode %d!\nPlease refer to gfx_options.h.", state->options->dirty_frames);
+		GFXERROR("Attempt to use invalid dirty frame mode %d!\nPlease refer to gfx_options.h.", strategy);
 
 	}
+
+	return base;
+}
+
+static void
+_gfxop_add_dirty(gfx_state_t *state, rect_t box)
+{
+	if (state->disable_dirty)
+		return;
+
+	state->dirty_rects = gfxdr_add_dirty(state->dirty_rects, box, state->options->dirty_frames);
 }
 
 static inline void
