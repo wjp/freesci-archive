@@ -145,6 +145,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 
 		if (!fd) {
 			_scir_free_resources(resources, resources_nr);
+			sciprintf("'%s' requested by resource.map, but not found\n", filename_buf);
 			return SCI_ERROR_INVALID_RESMAP_ENTRY;
 		} else
 			close(fd);

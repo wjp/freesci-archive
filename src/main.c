@@ -41,6 +41,11 @@
 #  include <sys/wait.h>
 #endif
 
+#if defined(HAVE_SDL) && defined(MACOSX)
+#  include <SDL.h>
+/* On OS X, SDL must #define main to something else in order to function */
+#endif
+
 #ifdef _MSC_VER
 #define extern __declspec(dllimport) extern
 #include <win32/getopt.h>
