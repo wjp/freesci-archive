@@ -899,7 +899,7 @@ lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
 
 
 /* Detects early SCI versions by their different script header */
-script_detect_early_versions(state_t *s)
+void script_detect_early_versions(state_t *s)
 {
   int old_version = 0;
   int c;

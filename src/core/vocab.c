@@ -30,6 +30,8 @@
 #include <resource.h>
 #include <engine.h>
 
+#include <ctype.h>
+
 
 
 int
@@ -275,7 +277,7 @@ vocab_lookup_word(char *word, int word_len,
       int suff_index = suffices[i]->alt_suffix_length - word_len;
       /* Offset of the start of the suffix */
 
-      if (strncasecmp(suffices[i]->alt_suffix, word + suff_index,
+      if (g_strncasecmp(suffices[i]->alt_suffix, word + suff_index,
 		      suffices[i]->alt_suffix_length) == 0) { /* Suffix matched! */
 
 	strncpy(&(tempword->word[0]), word, word_len);

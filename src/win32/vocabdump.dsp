@@ -97,11 +97,11 @@ SOURCE=..\core\resource.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\tools\vocabdump.c
+SOURCE=..\core\vocab_debug.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\vocabulary.c
+SOURCE=..\tools\vocabdump.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -109,11 +109,7 @@ SOURCE=..\core\vocabulary.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=..\..\..\glib\glib.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\glib\glibconfig.h
+SOURCE=..\include\heap.h
 # End Source File
 # Begin Source File
 
@@ -124,9 +120,21 @@ SOURCE=..\include\resource.h
 SOURCE=..\include\vocabulary.h
 # End Source File
 # End Group
+# Begin Group "Libs"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\..\glib\glib.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\glib\glibconfig.h
+# End Source File
 # Begin Source File
 
 SOURCE="..\..\..\glib\glib-1.3.lib"
 # End Source File
+# End Group
 # End Target
 # End Project

@@ -123,8 +123,6 @@ cmdInit(void)
     cmdHook(&c_set, "set", "si", "Sets an int variable");
     cmdHook(&c_size, "size", "si", "Displays the size of a resource");
     cmdHook(&c_dump, "dump", "si", "HexDumps a resource");
-    cmdHook(&c_objinfo, "objinfo", "s*", "Displays information about an object");
-    cmdHook(&c_objmethods, "objmethods", "s*", "Disassembles all methods of an object");
     cmdHook(&c_hexgrep, "hexgrep", "shh*", "Searches some resources for a\n"
 	    "  particular sequence of bytes, re-\n  presented"
 	    " as hexadecimal numbers.\n\n"

@@ -401,6 +401,7 @@ c_dumpnodes(state_t *s)
 		s->parser_nodes[i].content.branches[1]);
   }
 
+  return 0;
 }
 
 

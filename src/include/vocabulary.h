@@ -1,6 +1,8 @@
 #ifndef VOCABULARY_H
 #define VOCABULARY_H
 
+#include <heap.h>
+
 /*#define VOCABULARY_DEBUG /**/
 
 #define SCRIPT_UNKNOWN_FUNCTION_STRING "[Unknown]"
@@ -219,6 +221,9 @@ vocab_dump_parse_tree(parse_tree_node_t *nodes);
 ** Parameters: (parse_tree_node_t *) nodes: The nodes containing the parse tree
 ** Returns   : (void)
 */
+
+void
+vocab_decypher_said_block(struct _state *s, heap_ptr addr);
 
 
 #endif

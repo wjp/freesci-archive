@@ -107,7 +107,7 @@ get_readline_input(void)
 char *
 get_gets_input(void)
 {
-  char input[1024];
+  static char input[1024];
 
   puts("> ");
   fgets(input, 1024, stdin);

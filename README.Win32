@@ -1,11 +1,7 @@
-The Win32 port of freesci is currently at an early stage.
-Specifically, only the command line tools (classes, sciconsole, sciunpack,
-scriptdump, and vocabdump) compile and work. The main program, sciv,
-builds, and probably works as good as freesci/linux, although it has no
-sound, cannot handle input and causes 100% CPU load. Anyway, I have
-watched the complete SQ3 introduction and it hasn't crashed in the
-process.
-
+The Win32 version of freesci is now almost at the same level of
+functionality as the Linux version. The main thing that is missing is MIDI
+support. Because of this, introductions of several games do not run
+automatically and have to be interrupted by a keypress.
 
 You will need the following libraries tools to build freesci for Win32:
  * Visual C++ 5.0 or 6.0. (The projects provided are for version 6.0.

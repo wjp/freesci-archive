@@ -125,7 +125,7 @@ SOURCE=..\sound\sound.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\vocabulary.c
+SOURCE=..\core\vocab_debug.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -133,27 +133,11 @@ SOURCE=..\core\vocabulary.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\chardefs.h"
-# End Source File
-# Begin Source File
-
-SOURCE=..\include\config.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\include\console.h
 # End Source File
 # Begin Source File
 
 SOURCE=..\include\engine.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\glib\glib.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\glib\glibconfig.h
 # End Source File
 # Begin Source File
 
@@ -165,15 +149,7 @@ SOURCE=..\include\heap.h
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\keymaps.h"
-# End Source File
-# Begin Source File
-
 SOURCE=..\include\menubar.h
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\include\obstack.h"
 # End Source File
 # Begin Source File
 
@@ -186,6 +162,10 @@ SOURCE=..\include\script.h
 # Begin Source File
 
 SOURCE=..\include\sound.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\soundserver.h
 # End Source File
 # Begin Source File
 
@@ -204,6 +184,9 @@ SOURCE=..\include\vm.h
 SOURCE=..\include\vocabulary.h
 # End Source File
 # End Group
+# Begin Group "Libs"
+
+# PROP Default_Filter ""
 # Begin Group "readline"
 
 # PROP Default_Filter ""
@@ -268,6 +251,10 @@ SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\xmalloc.c"
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\chardefs.h"
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\history.h"
 # End Source File
 # Begin Source File
@@ -290,7 +277,33 @@ SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\tilde.h"
 # End Group
 # Begin Source File
 
+SOURCE=..\..\..\glib\config.h
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\emacs_keymap.c"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\glib\glib.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\glib\glibconfig.h
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\keymaps.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\..\cygnus\cygwin-b20\src\include\obstack.h"
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\..\glib\glib-1.3.lib"
 # End Source File
+# End Group
 # End Target
 # End Project
