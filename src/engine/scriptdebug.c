@@ -2910,7 +2910,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 		p_pp = pp;
 		p_objp = objp;
 		p_restadjust = restadjust;
-		sciprintf("acc=%04x  ", s->acc & 0xffff);
+		sciprintf("%d: acc=%04x  ", script_step_counter, s->acc & 0xffff);
 		_debugstate_valid = 1;
 		disassemble(s, *pc, 0, 1);
 

@@ -21,7 +21,33 @@ mouse = yes | no
 {Specifies whether the interpreter
 should report to the game that it has a mouse.}
 
-pic0_dither_mode = dither | flat | dither256
+gfx_driver = sdl | ggi | xlib
+{With this option, you can  specify which  graphics 
+driver is to be used. In this release, sdl, ggi and
+ plain xlib are supported.}
+
+gfx.sdl.fullscreen = yes | no
+{Toggles the SDL graphics driver's fullscreen option.
+ Disabled by default.}
+
+gfx.sdl.swap_caps_ctrl = yes | no
+{This  option instructs the SDL driver to swap caps
+ lock and ctrl when reading input. Disabled by default.}
+
+gfx.ggi.swap_caps_ctrl = yes | no
+{This  option instructs the GGI driver to swap caps
+ lock and ctrl when reading input. Disabled by default.}
+
+gfx.xlib.swap_caps_ctrl = yes | no
+{This  option instructs the Xlib driver to swap caps
+ lock and ctrl when reading input. Disabled by default.}
+
+gfx.xlib.disable_shmem = yes | no
+{Can  be  used  to disable support for MIT Shm support
+ on the X11 Windowing System in cases where detection
+ fails.  This is off by default, enabling SHM support.}
+
+pic0_dither_mode = dither | dither256 | flat
 {dither: Draw in 16 colors, same as Sierra SCI.
 flat: Interpolate  colors
 (256  colors).  Improves some graphics.  dither256:
@@ -45,7 +71,7 @@ ellipse  random-ellipses: As ellipses, but slightly
 shift ellipse offset and size more-random: Add more
 random pixels to the whole area.}
 
-pic0_line_mode = correct | fine
+pic0_line_mode = correct | fine | half
 {Specify how
 lines are drawn when background pictures  are  rendered  
 in  SCI0:  correct: Draw lines appropriately
@@ -132,19 +158,19 @@ cause more to be drawn.  This value does not affect
 unfiltered images or images drawn with alpha blending.
   Default is 129.}
 
-midi_device = mt32 | mt32gm
+midi_device = mt32gm | mt32
 {Chooses the default MIDI device;  this
 can  be  either  "mt32"  for plain MT-32 output, or
 "mt32gm" to use FreeSCI's MT32 -> General MIDI mapping
  algorithm.  This defaults to mt32gm.}
 
-midiout_driver = alsaraw | unixraw | ossseq | win32mci
+midiout_driver = null | unixraw | alsaraw | ossseq
 {Selects  the output device to use.
 Available options are "alsaraw" (using  ALSA's  raw
 MIDI  output  devices), "unixraw" (using /dev/midistyle
  raw MIDI output devices), "ossseq"  (for  OSS
-sequencer devices) and "win32mci" on Win32 systems.
-The default on UNIXish systems is ossseq.}
+sequencer devices). The default on UNIXish systems 
+is ossseq.}
 
 sound_server = unix | sdl
 {This chooses one of the  asynchronous
@@ -154,3 +180,20 @@ implementations  of  this  mechanism are available:
 "unix", which forks off  a  separate  process,  and
 "sdl",  which  uses  libsdl's threading mechanisms.
 Defaults to 'unix', where available.}
+
+midiout.alsaraw.device = <text>
+{This specifies the ALSA card to use for raw MIDI 
+output; the default is 0.}
+
+midiout.unixraw.device = <text>
+{Specifies the ALSA device, relative to the card, 
+for  raw  MIDI output. It also defaults to 0.}
+
+midiout.ossseq.device = <text>
+{Sets  the  device  file  to  use for raw UNIX MIDI
+ output. This defaults to /dev/midi.}
+
+midiout.ossseq.recorder = <text>
+{Chooses a file the OSS sequencer should print debug
+ output to. This  is not particularly helpful for 
+everyday use, and disabled by default.}

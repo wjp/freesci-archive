@@ -523,12 +523,24 @@ sci_mkpath(char *path)
 }
 
 
+#ifdef _WIN32
+static _path_buf[MAX_PATH];
+#endif
 
 char *
 sci_get_homedir()
 {
 #ifdef _WIN32
-	return getenv("WINDIR");
+	char *dr = getenv("HOMEDRIVE");
+	char *path = getenv("HOMEPATH");
+
+	if (!dr || !path)
+		return getenv("WINDIR");
+
+	strncpy(_path_buf, path, 4);
+	strncat(_path_buf, dr, MAX_PATH - 4);
+
+	return _path_buf;
 #elif defined(__unix__) || !defined(X_DISPLAY_MISSING) || defined (__BEOS__) || defined(MACOSX)
 	return getenv("HOME");
 #else

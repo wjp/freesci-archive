@@ -228,8 +228,14 @@ win32/
 
 Rune Orsval: <u951663@daimi.au.dk>
 conf/
-	freesci-setup
-	config.template
+	freesci-setup (original)
+	config.template (original)
+
+
+Vyacheslav Dikonov: <sdiconov@mail.ru>
+conf/
+	freesci-setup (improvements)
+	config.template (improvements)
 
 
 Alexander R. Angas: <wgd@adelaide.on.net>

@@ -473,7 +473,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 fprintf(stderr, "--[Handle %04x ---- pos = %04x]\n", ss_state->current_song->handle,
 ss_state->current_song->pos);
 #endif
-
+ fprintf(stderr, "[SOUND] pos %d/%d\n", ss_state->current_song->pos, ss_state->current_song->size);
 			newcmd = ss_state->current_song->data[ss_state->current_song->pos]; /* Retreive MIDI command */
 
 			if (newcmd & 0x80) { /* Check for running status mode */
