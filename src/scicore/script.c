@@ -28,7 +28,7 @@ opcode_format formats[128][4]={
   /*1C*/
   {Script_SVariable, 0}, {Script_None}, {Script_None}, {Script_Variable, 0},
   /*20*/
-  {Script_SRelative, Script_SByte, 0}, {Script_SVariable, Script_SByte, 0}, {Script_SVariable, Script_SByte, 0}, {Script_Variable, Script_SVariable, Script_SByte, 0},
+  {Script_SRelative, Script_Byte, 0}, {Script_SVariable, Script_Byte, 0}, {Script_SVariable, Script_Byte, 0}, {Script_Variable, Script_SVariable, Script_Byte, 0},
   /*24 (24=ret)*/
   {Script_End}, {Script_SByte, 0}, {Script_Invalid}, {Script_Invalid},
   /*28*/

@@ -846,6 +846,40 @@ c_picviews(state_t *s)
   return 0;
 }
 
+  char *varnames[] = {"global", "local", "temp", "param"};
+  char *varabbrev = "gltp";
+
+int
+c_vmvarlist(state_t *s)
+{
+      exec_stack_t *stack = s->execution_stack+s->execution_stack_pos;
+      int i;
+      for (i=0;i<4;i++) 
+	sciprintf("%s vars at %04x\n", varnames[i], stack->variables[i]);
+      return 0;
+}
+ 
+int
+c_vmvars(state_t *s)
+{
+  exec_stack_t *stack = s->execution_stack+s->execution_stack_pos;
+  
+  switch(cmd_paramlength) {
+  case 2:
+    {
+      int vartype = strchr(varabbrev, *cmd_params[0].str)-varabbrev;
+      sciprintf("%s var %d == %d\n", varnames[vartype], cmd_params[1].val, GET_HEAP(stack->variables[vartype]+(cmd_params[1].val<<1)));
+      break;
+    }
+  case 3:
+    {
+      int vartype = strchr(varabbrev, *cmd_params[0].str)-varabbrev;
+      PUT_HEAP(stack->variables[vartype]+(cmd_params[1].val<<1),cmd_params[2].val);
+      break;
+    }
+  }
+  return 0;
+}
 int
 c_backtrace(state_t *s)
 {
@@ -1587,6 +1621,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       _debug_commands_not_hooked = 0;
 
       con_hook_command(c_debuginfo, "registers", "", "Displays all current register values");
+      con_hook_command(c_vmvars, "vmvars", "si*", "Displays or changes variables in the VM\n\nFirst parameter is either g(lobal), l(ocal), t(emp) or p(aram).\nSecond parameter is the var number\nThird parameter (if specified) is the value to set the variable to");
+      con_hook_command(c_vmvarlist, "vmvarlist", "", "Displays the addresses of variables in the VM");
       con_hook_command(c_step, "s", "i*", "Executes one or several operations\n\nEXAMPLES\n\n"
 		       "    s 4\n\n  Execute 4 commands\n\n    s\n\n  Execute next command");
       con_hook_command(c_stepover, "so", "", "Executes one operation skipping over sends");
