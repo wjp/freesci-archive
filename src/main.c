@@ -1142,13 +1142,9 @@ fprintf(stderr, "CONF # = %d\n", conf_nr);
 		return 1;
 	}
 
-	if (confs && active_conf->work_dir)
-		gamestate->work_dir = work_dir;
-
-
 	if (chdir(gamestate->work_dir)) {
 		fprintf(stderr,"Error entering working directory '%s'\n",
-			active_conf->work_dir);
+			gamestate->work_dir);
 		exit(1);
 	}
 

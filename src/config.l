@@ -335,21 +335,6 @@ QUOTED_NUMPARAMTOKEN "\"".*"\""
 
 	conf[cur_section].resource_dir = sci_strdup(".");
 
-#ifndef ARM_WINCE
-	if (dospath)
-		conf[cur_section].work_dir = sci_strdup(exported_conf_path);
-	else {
-		char *tmp = sci_malloc(strlen(exported_conf_path) + 2 + strlen(conf[cur_section].name));
-		strcpy(tmp, exported_conf_path);
-		strcat(tmp, G_DIR_SEPARATOR_S);
-		strcat(tmp, conf[cur_section].name);
-
-		conf[cur_section].work_dir = tmp;
-		scimkdir(tmp, 0700); /* Make sure that the directory exists. */
-		/* This will be checked later, for the current game. */
-	}
-#endif
-
 }
 
 
@@ -613,7 +598,6 @@ config_free(config_entry_t **conf, int entries)
 
 		if (i >= 1) {
 			sci_free((*conf)[i].name);
-			sci_free((*conf)[i].work_dir);
 			if ((*conf)[i].resource_dir)
 				sci_free((*conf)[i].resource_dir);
 			if ((*conf)[i].console_log)
@@ -966,7 +950,6 @@ configure_default(config_entry_t *conf)
 	conf->debug_mode [0] = '\0';
 	conf->name = NULL;
 	conf->resource_dir = NULL;
-	conf->work_dir = NULL;
 	conf->module_path = sci_strdup(SCI_DEFAULT_MODULE_PATH);
 
 	for (i = 0; i < FREESCI_DRIVER_SUBSYSTEMS_NR; i++)

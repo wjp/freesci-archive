@@ -1,3 +1,9 @@
+2005-01-02  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/include/sci_conf.h: Removed work_dir from config_entry_t, as
+	it can be replaced by gamestate->work_dir whereever it might
+	matter. Fixed the rest appropriately.
+
 2005-01-01  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* README.GP32: Refer to new newlib patch that implements

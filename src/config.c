@@ -1,5 +1,5 @@
 
-#line 3 "config.c"
+#line 3 "lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -940,7 +940,7 @@ parse_option(char *option, int optlen, char *value);
 char *
 crop_value(char *yytext);
 
-#line 944 "config.c"
+#line 944 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -1094,7 +1094,7 @@ YY_DECL
 #line 298 "config.l"
 
 
-#line 1096 "config.c"
+#line 1098 "lex.yy.c"
 
 	if ( (yy_init) )
 		{
@@ -1218,6 +1218,7 @@ YY_RULE_SETUP
 
 	conf[cur_section].resource_dir = sci_strdup(".");
 
+#if 0
 #ifndef ARM_WINCE
 	if (dospath)
 		conf[cur_section].work_dir = sci_strdup(exported_conf_path);
@@ -1232,12 +1233,13 @@ YY_RULE_SETUP
 		/* This will be checked later, for the current game. */
 	}
 #endif
+#endif
 
 }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 356 "config.l"
+#line 358 "config.l"
 {
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1250,7 +1252,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 366 "config.l"
+#line 368 "config.l"
 if (cur_section) {
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1264,7 +1266,7 @@ if (cur_section) {
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 377 "config.l"
+#line 379 "config.l"
 {
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1277,7 +1279,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 388 "config.l"
+#line 390 "config.l"
 {
 /* driver parameters */
 	char *subsys_name = yytext;
@@ -1310,7 +1312,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 419 "config.l"
+#line 421 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
@@ -1337,17 +1339,17 @@ case 7:
 (yy_c_buf_p) = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 442 "config.l"
+#line 444 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 444 "config.l"
+#line 446 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 446 "config.l"
+#line 448 "config.l"
 {
 
 	yy_delete_buffer(YY_CURRENT_BUFFER );
@@ -1356,15 +1358,15 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 452 "config.l"
+#line 454 "config.l"
 printf("Unrecognized option: '%s'\n", yytext);
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 454 "config.l"
+#line 456 "config.l"
 ECHO;
 	YY_BREAK
-#line 1366 "config.c"
+#line 1370 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2100,10 +2102,10 @@ YY_BUFFER_STATE yy_scan_buffer  (char * base, yy_size_t  size )
  * @note If you want to scan bytes that may contain NUL values, then use
  *       yy_scan_bytes() instead.
  */
-YY_BUFFER_STATE yy_scan_string (yyconst char * str )
+YY_BUFFER_STATE yy_scan_string (yyconst char * yy_str )
 {
     
-	return yy_scan_bytes(str,strlen(str) );
+	return yy_scan_bytes(yy_str,strlen(yy_str) );
 }
 
 /** Setup the input buffer state to scan the given bytes. The next call to yylex() will
@@ -2328,7 +2330,7 @@ void yyfree (void * ptr )
 #undef YY_DECL_IS_OURS
 #undef YY_DECL
 #endif
-#line 454 "config.l"
+#line 456 "config.l"
 
 
 
@@ -2492,7 +2494,9 @@ config_free(config_entry_t **conf, int entries)
 
 		if (i >= 1) {
 			sci_free((*conf)[i].name);
+#if 0
 			sci_free((*conf)[i].work_dir);
+#endif
 			if ((*conf)[i].resource_dir)
 				sci_free((*conf)[i].resource_dir);
 			if ((*conf)[i].console_log)
@@ -2845,7 +2849,9 @@ configure_default(config_entry_t *conf)
 	conf->debug_mode [0] = '\0';
 	conf->name = NULL;
 	conf->resource_dir = NULL;
+#if 0
 	conf->work_dir = NULL;
+#endif
 	conf->module_path = sci_strdup(SCI_DEFAULT_MODULE_PATH);
 
 	for (i = 0; i < FREESCI_DRIVER_SUBSYSTEMS_NR; i++)

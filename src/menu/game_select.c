@@ -218,9 +218,6 @@ game_select(state_t *gamestate,
 		return 1;
 	}
 
-	if (confs && confs->work_dir)
-		gamestate->work_dir = work_dir;
-
 	/* Now configure the graphics driver with the specified options */
 	{
 		driver_option_t *option = get_driver_options(confs, FREESCI_DRIVER_SUBSYSTEM_GFX, gfx_driver->name);
