@@ -42,7 +42,6 @@
 /* #define SSWIN_DEBUG 0 */
 
 sound_server_t sound_server_win32e;
-
 #define MAIN_CLASS_NAME "FreeSCI Main Receiving from Event SS"
 #define SOUND_CLASS_NAME "Event SS Receiving from FreeSCI Main"
 #define WINDOW_SUFFIX " (Window)"
@@ -56,8 +55,8 @@ static HANDLE child_thread;
 static HANDLE time_keeper, sound_data_event, thread_created_event;
 static UINT time_keeper_id;
 static DWORD sound_timer;
-__int64 freq;	/* number of ticks per usec in  high performance counters */
-long now, end;
+LARGE_INTEGER freq;	/* number of ticks per usec in  high performance counters */
+LARGE_INTEGER now, end;
 
 
 static state_t *gs;
@@ -93,30 +92,30 @@ SoundWndProc (HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam)
 void CALLBACK
 timeout(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
 {
-	__int64 mstimer;
 
-	/* we want the next high performance timer to end 16.667 mseconds after the previous one */
-	end = end + 16667; 
+	/* we want the next high performance timer to end 16.667 mseconds after the previous one.
+	 * right now, I'm trying 8.333ms because 16.667 sounds too slow for some reason.
+	 * The timer is definitely right, I think there is a deterministic amount of extra
+	 * latency introduced by using PostMessage, which goes into a queue.
+	 */
+	(__int64)end.QuadPart += (__int64)8333 * (__int64)freq.QuadPart / (__int64)1000000;
 
 	/* get the current high performance tick count */
-	QueryPerformanceCounter((LARGE_INTEGER *) &mstimer);
-
-	now = (long) (((__int64) (mstimer * .8)) % 0x0FFFFFFF); 
+	QueryPerformanceCounter(&now);
 
 	/* the end tick count is initially set before this callback is specified to timeSetEvent().
 	 * while the current tick count is less than the end tickcount, keep querying.
 	 * We do an initial query in case the callback happened late and we can't afford to query at all.
 	 */
-	while (now < end) {  
-		QueryPerformanceCounter((LARGE_INTEGER *) & mstimer); 
-		now = (long) (((__int64) (mstimer * .8)) % 0x0FFFFFFF); 
-		if ((end - now) > 10000)
-			timeBeginPeriod(1); Sleep(1); timeEndPeriod(1);
+	while ((__int64)now.QuadPart < (__int64)end.QuadPart) 
+	{ 
+		timeBeginPeriod(0); Sleep(1); timeEndPeriod(0);
+		QueryPerformanceCounter(&now); 
 	} 
+
 
 	if (PostMessage(sound_wnd, SOUND_COMMAND_DO_SOUND, 0, 0) == 0)
 		fprintf(debug_stream, "win32e_soundserver_init(): PostMessage(DO_SOUND) failed, GetLastError() returned %u\n", GetLastError());
-
 }
 
 /* function called when sound server child thread begins */
@@ -193,7 +192,6 @@ sound_win32e_init(struct _state *s, int flags)
 {
 	WNDCLASS wc;
 	DWORD dwChildId;	/* child thread ID */
-	__int64 mstimer;
 
 	/* let app know what sound server we are running and yield to the scheduler */
 	global_sound_server = &sound_server_win32e;
@@ -327,16 +325,14 @@ sound_win32e_init(struct _state *s, int flags)
 	}
 
 	/* first get the frequency of the timer on this machine */
-	if (QueryPerformanceFrequency((LARGE_INTEGER *) &freq) == 0)
+	if (QueryPerformanceFrequency(&freq) == 0)
 		fprintf(debug_stream, "event_ss_win32.c: sound_win32e_init(): QueryPerformanceFrequency() failed!\n");
 
-
 	/* then we get the initial ending timer */
-	if (QueryPerformanceCounter ((LARGE_INTEGER *) &mstimer) == 0)
+	if (QueryPerformanceCounter (&end) == 0)
 		fprintf(debug_stream, "event_ss_win32.c: sound_win32e_init(): QueryPerformanceCounter() failed!\n");
-	end = (long) (((__int64) (mstimer * .8)) % 0x0FFFFFFF); 
 
-	time_keeper_id = timeSetEvent(5, 0, (LPTIMECALLBACK)timeout, 0, TIME_PERIODIC | TIME_CALLBACK_FUNCTION);
+	time_keeper_id = timeSetEvent(6, 0, (LPTIMECALLBACK)timeout, 0, TIME_PERIODIC | TIME_CALLBACK_FUNCTION);
 	if (time_keeper_id == NULL)
 		fprintf(debug_stream, "Timer start failed\n");
 
@@ -443,8 +439,6 @@ sound_win32e_get_command(GTimeVal *wait_tvp)
 
 		return new_command_event;
 	}
-
-	Sleep(0);
 
 	return NULL;
 }

@@ -1087,6 +1087,8 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
 				sci_event->type = SCI_EVT_QUIT;
 				return;
 				break;
+			case SDL_VIDEOEXPOSE:
+				break;
 			default:
 				SDLERROR("Received unhandled SDL event %04x\n", event.type);
 			}
