@@ -36,17 +36,6 @@
 
 #define MAX_POLYPHONY 16 /* Max number of notes per channel */
 
-#ifdef PIPE_BUF
-#  define SOUND_SERVER_XFER_SIZE PIPE_BUF
-#else
-#  define SOUND_SERVER_XFER_SIZE 256 /* be _very_ conservative */
-#endif
-
-#define SOUND_SERVER_XFER_ABORT -1
-#define SOUND_SERVER_XFER_OK 0
-#define SOUND_SERVER_XFER_WAITING 1
-#define SOUND_SERVER_XFER_TIMEOUT -1000
-
 #define SOUND_SERVER_TIMEOUT 100000
 /* microseconds until SOUND_COMMAND_TEST fails */
 #define SOUND_TICK 1000000 / 60
@@ -54,7 +43,9 @@
 
 
 #define SCI_MIDI_EOT 0xfc
+#define SCI_MIDI_END_OF_TRACK SCI_MIDI_EOT
 /* End of track command */
+
 #define SCI_MIDI_CONTROLLER(status) ((status & 0xf0) == 0xb0)
 
 #define SCI_MIDI_SET_SIGNAL 0xcf
@@ -69,7 +60,6 @@
 
 #define SCI_MIDI_TIME_EXPANSION_PREFIX 0xf8
 #define SCI_MIDI_TIME_EXPANSION_LENGHT 240
-
 /* [RS] tsk tsk tsk */
 /* [CR] WTF? */
 #define SCI_MIDI_TIME_EXPANSION_LENGTH SCI_MIDI_TIME_EXPANSION_LENGHT
@@ -94,11 +84,13 @@
 
 #define MIDI_CHANNELS 16
 
+
 typedef struct {
 	int polyphony;
 	int playing;
 	byte notes[MAX_POLYPHONY]; /* -1 for notes not playing */
 } playing_notes_t;
+
 
 #define SI_STATE_UNINITIALIZED -1
 #define SI_STATE_DELTA_TIME 0 /* Now at a delta time */
@@ -109,7 +101,6 @@ typedef struct {
 #define SI_FINISHED -1 /* Song finished playing */
 #define SI_LOOP -2 /* Song just looped */
 #define SI_CUE -3 /* Found a song cue */
-
 
 typedef struct _song_iterator {
 
@@ -174,6 +165,7 @@ typedef struct _song_iterator {
 
 } song_iterator_t;
 
+
 typedef struct _song {
 
 	int flags[MIDI_CHANNELS]; /* Flags for each channel */
@@ -209,8 +201,8 @@ typedef struct _song {
 } song_t;
 
 
-
 typedef song_t **songlib_t;
+
 
 typedef struct _sound_event_queue_node {
 
@@ -231,22 +223,6 @@ extern sound_event_t sound_eq_eoq_event; /* An "end of queue" event */
 
 extern sound_eq_t queue; /* The event queue */
 
-int
-sound_init_pipes(struct _state *s);
-/* Initializes the data pipes
-** Parameters: (state_t *) s: Our state
-** Returns   : (int) 0 on success, 1 otherwise
-** This function initializes sound_pipe_in, sound_pipe_out and sound_pipe_debug,
-** which are used by the sfx default implementations for data transmission.
-** Also installs signal handles for SIGCHLD and SIGPIPE.
-*/
-
-int
-sound_map_instruments(struct _state *s);
-/* Maps instruments and transmits corresponding MIDI sequences to the sound server
-** Parameters: (state_t *) s: The state
-** Returns   : (int) 0 on success, 1 otherwise
-*/
 
 int
 sound_command(struct _state *s, int command, int handle, int parameter);
@@ -266,7 +242,7 @@ sound_suspend(struct _state *s);
 
 void
 sound_resume(struct _state *s);
-/* Default implementation for resuming sound ouput after it was suspended */
+/* Default implementation for resuming sound output after it was suspended */
 
 
 /********************************/
@@ -375,42 +351,6 @@ song_next_wakeup_time(GTimeVal *lastslept, long ticks);
 */
 
 
-int
-soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *curr_song,
-		    int soundcue, long usecs_to_sleep, long ticks_to_wait, long ticks_to_fade,
-		                int master_volume);
-/*·Stores the sound server state to a file
-** Parameters: (FILE *) debugstream: The stream which all errors are sent to
-**             (char *) dir: The name of the directory to enter and write to
-**             (songlib_t) songlib: The song library to write
-**             (song_t *) curr_song: Pointer to the currently active song
-**             (int) soundcute: Status of the sound cue variable
-**             (long) usecs_to_sleep: Milliseconds the sound server has to sleep before the next tick
-**             (long) ticks_to_wait: Ticks the sound server has to wait before the next event
-**             (long) ticks_to_fade: Number of ticks left for fading (if fading is attempted)
-** Returns   : (int) 0 on success, 1 otherwise
-*/
-
-
-int
-soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t **curr_song,
-		       int *soundcue, long *usecs_to_sleep, long *ticks_to_wait, long *ticks_to_fade,
-		       int *master_volume);
-/* Restores the sound state written to a directory
-** Parameters: (FILE *) debugstream: The stream to write all debug information to
-**             (char *) dir: The directory to enter and read from
-**             (songlib_t) songlib: The song library to overwrite (if successful)
-**             (song_t **) curr_song: The "currently active song" pointer to overwrite
-**             (int *) soundcue: The sound cue variable to set
-**             (long *) usecs_to_sleep: The "milliseconds left to sleep" variable to set
-**             (long *) ticks_to_wait: The "ticks left to wait" variable to set
-**             (long *) ticks_to_fade: The "number of ticks to fade" variable to set
-** Returns   : (int) 0 on success, 1 otherwise
-** If restoring failed, an error message will be written to debugstream, and the
-** variables pointed to in the parameter list will be left untouched.
-*/
-
-
 
 /**********************/
 /* SOUND EVENT QUEUES */
@@ -443,11 +383,24 @@ sound_eq_retreive_event(sound_eq_t *queue);
 
 sound_event_t *
 sound_eq_peek_event(sound_eq_t *queue);
+/* FIXME: Verify this is correct */
+/* Retreives the oldest event on the event queue without removing it from the queue.
+** Parameters: (sound_eq_t *) queue: The queue to retreive the event from
+** Returns   : (sound_event_t *): A pointer to the oldest event on the queue, or NULL of there is none
+** The return value must be free()d manually, if appropriate.
+*/
 
-void sci_midi_command(song_t *song, guint8 command, guint8 param,
-		                  guint8 param2,
-		      int *ccc, FILE *ds, playing_notes_t *playing);
-/* performs a regular midi event in the song. */
+void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 param,
+		guint8 param2, int *ccc, playing_notes_t *playing);
+/* Performs a regular midi event in the song.
+** Parameters: (FILE *) debugstream: The stream to write all debug information to
+**             (song_t *) song: The song to play the event from
+**             (guint8) command: MIDI command
+**             (guint8) param: MIDI command parameter 1
+**             (guint8) param2: MIDI command parameter 2
+**             (int *) ccc: Cumulative cue counter
+**             (playing_notes_t *) playing: Array of notes being played
+*/
 
 
 /* Sound server has its own cwd (relative to the main program) */
@@ -550,6 +503,60 @@ extern DLLEXTERN sound_server_t *sound_servers[]; /* All available sound fx driv
 
 extern sound_server_t *global_sound_server; /* current soundserver */
 
+
+typedef struct {
+	songlib_t songlib;
+	song_t *current_song;
+	unsigned int ticks_to_wait;	/* before next midi operation */
+	guint8 master_volume;	/* (stored as percentage) */
+	sound_server_t *ss_driver;	/* driver currently being used for sound server */
+	byte mute_channel[MIDI_CHANNELS];	/* which channels are muted (1 for mute, 0 unmuted) */
+	int suspended;	/* if sound server is suspended */
+	int reverse_stereo;	/* FIXME: not currently used correctly */
+
+	/* note: only present in polled sound server and not currently used */
+	unsigned long usecs_to_sleep;
+	unsigned int ticks_to_fade;
+	unsigned int sound_cue;	/* cumulative cue counter */
+} sound_server_state_t;
+
+
+int
+soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *curr_song,
+		    int soundcue, long usecs_to_sleep,
+			long ticks_to_wait, long ticks_to_fade, int master_volume);
+/* Stores the sound server state to a file
+** Parameters: (FILE *) debugstream: The stream which all errors are sent to
+**             (char *) dir: The name of the directory to enter and write to
+**             (songlib_t) songlib: The song library to write
+**             (song_t *) curr_song: Pointer to the currently active song
+**             (int) soundcue: Status of the sound cue variable
+**             (long) usecs_to_sleep: Milliseconds the sound server has to sleep before the next tick
+**             (long) ticks_to_wait: Ticks the sound server has to wait before the next event
+**             (long) ticks_to_fade: Now obsolete
+** Returns   : (int) 0 on success, 1 otherwise
+*/
+
+
+int
+soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t **curr_song,
+		       int *soundcue, long *usecs_to_sleep,
+			   long *ticks_to_wait, long *ticks_to_fade, int *master_volume);
+/* Restores the sound state written to a directory
+** Parameters: (FILE *) debugstream: The stream to write all debug information to
+**             (char *) dir: The directory to enter and read from
+**             (songlib_t) songlib: The song library to overwrite (if successful)
+**             (song_t **) curr_song: The "currently active song" pointer to overwrite
+**             (int *) soundcue: The sound cue variable to set
+**             (long *) usecs_to_sleep: The "milliseconds left to sleep" variable to set
+**             (long *) ticks_to_wait: The "ticks left to wait" variable to set
+**             (long *) ticks_to_fade: Now obsolete
+** Returns   : (int) 0 on success, 1 otherwise
+** If restoring failed, an error message will be written to debugstream, and the
+** variables pointed to in the parameter list will be left untouched.
+*/
+
+
 sound_server_t *
 sound_server_find_driver(char *name);
 /* Searches for a sound server
@@ -557,20 +564,12 @@ sound_server_find_driver(char *name);
 ** Returns   : (sound_server_t *): A pointer to the first matching driver
 */
 
-void
-sound_queue_event(int handle, int signal, int value);
+void sci0_soundserver(int reverse_stereo, sound_server_state_t *ss_state);
+/* Starts the sci0 sound server.
+*/
 
-void
-sound_queue_command(int handle, int signal, int value);
-
-int sound_send_data(byte *data_ptr, int maxsend);
-int sound_get_data(byte **data_ptr, int *size, int maxlen);
-
-sound_event_t *
-sound_get_command(GTimeVal *wait_tvp);
-
-void sci0_soundserver();
-
-FILE *ds;
+FILE *debug_stream;
+/* Where error messages are output to.
+*/
 
 #endif /* !_SCI_SOUND_SERVER_H_ */

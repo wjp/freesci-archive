@@ -26,8 +26,6 @@
 ***************************************************************************/
 /* Sound server using standard UNIX IPC */
 
-
-
 #include <engine.h>
 
 #ifdef HAVE_SYSV_IPC
@@ -76,7 +74,7 @@ static void
 sound_unix_server_verify_ppid()
 {
 	if (verify_pid(ppid)) {
-		fprintf(stderr,"FreeSCI Sound server: Parent process is dead, terminating\n");
+		fprintf(debug_stream,"FreeSCI Sound server: Parent process is dead, terminating\n");
 		_exit(1); /* Die semi-ungracefully */
 	}
 }
@@ -85,7 +83,7 @@ static int
 checked_write(int file, byte *buf, size_t size)
 {
 	if (!file) {
-		fprintf(stderr,"Soundserver UNIX: Attempt to use fd0 for write!\n");
+		fprintf(debug_stream,"Soundserver UNIX: Attempt to use fd0 for write!\n");
 		BREAKPOINT();
 	}
 	return write(file, buf, size);
@@ -96,13 +94,13 @@ void
 _sound_server_oops_handler(int signal)
 {
 	if (signal == SIGCHLD) {
-		fprintf(stderr, "Warning: Sound server died\n");
+		fprintf(debug_stream, "Warning: Sound server died\n");
 		soundserver_dead = 1;
 	} else if (signal == SIGPIPE) {
-		fprintf(stderr, "Warning: Connection to sound server was severed\n");
+		fprintf(debug_stream, "Warning: Connection to sound server was severed\n");
 		soundserver_dead = 1;
 	} else
-		fprintf(stderr,"Warning: Signal handler cant' handle signal %d\n", signal);
+		fprintf(debug_stream,"Warning: Signal handler cant' handle signal %d\n", signal);
 }
 
 int
@@ -131,7 +129,7 @@ _sound_confirm_death(int signal)
 void
 _sound_server_sigpipe_handler(int signal)
 {
-	fprintf(stderr,"Sound server process: Parent process is dead, terminating.\n");
+	fprintf(debug_stream,"Sound server process: Parent process is dead, terminating.\n");
 	_exit(0);
 }
 
@@ -148,7 +146,7 @@ sound_unix_init(state_t *s, int flags)
 	    || _make_pipe(fd_events)
 	    || _make_pipe(fd_debug))
 	  {
-	    fprintf(stderr, "Could not create IPC connection to server\n");
+	    fprintf(debug_stream, "Could not create IPC connection to server\n");
 	    return 1;
 	  }
 
@@ -163,7 +161,7 @@ sound_unix_init(state_t *s, int flags)
 	child_pid = fork();
 
 	if (child_pid < 0) {
-		fprintf(stderr,"UNIX Sound server init failed: fork() failed\n");
+		fprintf(debug_stream,"UNIX Sound server init failed: fork() failed\n");
 		/* If you get this message twice, something funny has happened :-> */
 
 		return 1; /* Forking failed */
@@ -183,6 +181,9 @@ sound_unix_init(state_t *s, int flags)
 
 	} else {/* Sound server */
 
+		sound_server_state_t sss;
+		memset(&sss, 0, sizeof(sound_server_state_t));
+
 		x_fd_in = fd_in[0];
 		x_fd_out = fd_out[1];
 		x_fd_events = fd_events[1];
@@ -194,10 +195,10 @@ sound_unix_init(state_t *s, int flags)
 		close(fd_debug[0]); /* Close pipes at the other end */
 
 		signal(SIGPIPE, &_sound_server_sigpipe_handler); /* Die on sigpipe */
-		ds = fdopen(x_fd_debug, "w"); /* We want to output text to it */
+		debug_stream = fdopen(x_fd_debug, "w"); /* We want to output text to it */
 		ppid = getppid(); /* Get parent PID */
 
-		sci0_soundserver(flags & SOUNDSERVER_INIT_FLAG_REVERSE_STEREO);
+		sci0_soundserver(flags & SOUNDSERVER_INIT_FLAG_REVERSE_STEREO, &sss);
 		_exit(0); /* quit */
 	}
 
@@ -279,7 +280,7 @@ sound_unix_queue_command(int handle, int signal, int value)
 	event.signal = signal;
 	event.value = value;
 	/*
-	fprintf(stderr, "SIG: writing %04x %d %d\n",
+	fprintf(debug_stream, "SIG: writing %04x %d %d\n",
 		event.handle, event.signal, event.value);
 	*/
 	checked_write(x_fd_out, (byte *)&event, sizeof(sound_event_t));
@@ -308,7 +309,7 @@ sound_unix_get_command(GTimeVal *wait_tvp)
 	}
 	/*
 	if (event)
-		fprintf(stderr, "SIG: reading %04x %d %d\n",
+		fprintf(debug_stream, "SIG: reading %04x %d %d\n",
 		       event->handle, event->signal, event->value);
 	*/
 	return event;
@@ -352,7 +353,7 @@ sound_unix_get_data(byte **data_ptr, int *size, int maxlen)
 		len = read(fd, data_ptr_pos, remaining_size);
 
 		if (len < 0) {
-			fprintf(stderr," Sound server UNIX: File transfer failed! Aborting...");
+			fprintf(debug_stream," Sound server UNIX: File transfer failed! Aborting...");
 			return 1;
 		}
 		/*
@@ -380,7 +381,7 @@ sound_unix_send_data(byte *data_ptr, int maxsend)
 	while (to_go) {
 		len = checked_write(fd, data_ptr, to_go);
 		if (len < 0) {
-			fprintf(stderr," Writing to the sound server failed!\n");
+			fprintf(debug_stream," Writing to the sound server failed!\n");
 			return 1;
 		}
 		to_go -= len;
@@ -434,4 +435,3 @@ sound_server_t sound_server_unix = {
 /************************/
 
 #endif /* HAVE_SYSV_IPC */
-

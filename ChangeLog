@@ -1,3 +1,16 @@
+2001-11-02  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/sound/sound.c:
+	* src/sound/soundserver.c:
+	* src/sound/soundserver_sdl.c:
+	* src/sound/soundserver_unix.c:
+	* src/sound/soundserver_win32.c:
+	* src/sound/soundserver.h: Code clean up and provision for storage of
+	sound server state.
+
+	* src/scicore/tools.c (sci_find_first): More debugging info for ENOENT
+	case.
+
 2001-10-30  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/scicore/console.c (c_list_words): Return 0 on success, 1 on error

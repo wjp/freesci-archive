@@ -41,41 +41,41 @@
 
 sound_server_t *global_sound_server = NULL;
 
-#define DEBUG_SOUND_SERVER
-
 int soundserver_dead = 0;
 
 #define POLYPHONY(song, channel) song->data[(channel << 1) + 1]
 
+#ifdef DEBUG_SOUND_SERVER
 static void
-sound_server_print_channels_any(FILE *ds, int *channel_instrument,
+sound_server_print_channels_any(FILE *debug_stream, int *channel_instrument,
 				byte *mute_channel, int flag)
 {
 	int i;
 
 	for (i = 0; i < 16; i++)
 		if (channel_instrument[i] >= 0) {
-			fprintf(ds, "#%d%s:", i+1, mute_channel[i]? " [MUTE]":"");
+			fprintf(debug_stream, "#%d%s:", i+1, mute_channel[i]? " [MUTE]":"");
 			if (flag)
-				midi_mt32gm_print_instrument(ds, channel_instrument[i]);
+				midi_mt32gm_print_instrument(debug_stream, channel_instrument[i]);
 			else
-				fprintf(ds, " Instrument %d\n", channel_instrument[i]);
+				fprintf(debug_stream, " Instrument %d\n", channel_instrument[i]);
 		}
 }
 
 static void
-sound_server_print_channels(FILE *ds, int *channel_instrument,
+sound_server_print_channels(FILE *debug_stream, int *channel_instrument,
 			    byte *mute_channel)
 {
-	sound_server_print_channels_any(ds, channel_instrument, mute_channel, 0);
+	sound_server_print_channels_any(debug_stream, channel_instrument, mute_channel, 0);
 }
 
 static void
-sound_server_print_mapped_channels(FILE *ds, int *channel_instrument,
+sound_server_print_mapped_channels(FILE *debug_stream, int *channel_instrument,
 				   byte *mute_channel)
 {
-	sound_server_print_channels_any(ds, channel_instrument, mute_channel, 1);
+	sound_server_print_channels_any(debug_stream, channel_instrument, mute_channel, 1);
 }
+#endif
 
 
 #define SOUNDSERVER_INSTRMAP_CHANGE(ELEMENT, VAL_MIN, VAL_MAX, ELEMENT_NAME) \
@@ -136,15 +136,17 @@ sound_server_change_instrmap(FILE *output, int action, int instr, int value)
 
 
 void
-sci0_soundserver(int reverse_stereo)
+sci0_soundserver(int reverse_stereo, sound_server_state_t *ss_state)
 {
 	GTimeVal last_played, /* Time the last note was played at */
 		wakeup_time, /* Time at which we stop waiting for events */
 		ctime; /* 'Current time' (temporary local usage */
 	byte mute_channel[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
 	playing_notes_t playing_notes[16];
+#ifdef DEBUG_SOUND_SERVER
 	int channel_instrument_orig[16] = {-1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1};
 	int channel_instrument[16];
+#endif
 	song_t *_songp = NULL;
 	songlib_t songlib = &_songp;   /* Song library */
 	song_t *newsong, *song = NULL; /* The song we're playing */
@@ -168,7 +170,7 @@ sci0_soundserver(int reverse_stereo)
 	memset(&ctime, 0, sizeof(GTimeVal));
 	sci_get_current_time(&last_played);
 
-	fprintf(ds, "Sound server initialized\n");
+	fprintf(debug_stream, "Sound server initialized\n");
 
 	/* sound server loop */
 	while (!soundserver_dead)
@@ -182,7 +184,7 @@ sci0_soundserver(int reverse_stereo)
 		song_t *oldsong = song;	/* Keep the last song we played referenced to check
 					** whether the song was changed later on  */
 		byte last_command = 0; /* Used for 'running' mode (see MIDI specs) */
-		fflush(ds); /* Flush debug stream */
+		fflush(debug_stream); /* Flush debug stream */
 
 		if (song && (song->fading == 0)) { /* Finished fading out the current song? */
 			printf("song %04x faded out \n", song->handle);
@@ -190,8 +192,8 @@ sci0_soundserver(int reverse_stereo)
 			midi_allstop();
 			song->pos = 33;
 			song->loopmark = 33; /* Reset position */
-			sound_queue_event(song->handle, SOUND_SIGNAL_LOOP, -1);
-			sound_queue_event(song->handle, SOUND_SIGNAL_FINISHED, 0);
+			global_sound_server->queue_event(song->handle, SOUND_SIGNAL_LOOP, -1);
+			global_sound_server->queue_event(song->handle, SOUND_SIGNAL_FINISHED, 0);
 
 		}
 
@@ -250,7 +252,7 @@ sci0_soundserver(int reverse_stereo)
 				}
 
 				/* check for command */
-				event_temp = sound_get_command(wait_tvp);
+				event_temp = global_sound_server->get_command(wait_tvp);
 				if (event_temp) { /* We've got mail! */
 					sound_event_t event = *event_temp;
 					/* Copy event we got, so we can resume without risking a memory leak
@@ -269,7 +271,7 @@ sci0_soundserver(int reverse_stereo)
 						int totalsize = 0;
 
 #ifdef DEBUG_SOUND_SERVER
-						fprintf(ds, "Receiving song for handle %04x: ", event.handle);
+						fprintf(debug_stream, "Receiving song for handle %04x: ", event.handle);
 #endif
 						if (modsong) { /* If the song already exists in cache... */
 							int lastmode = song_lib_remove(songlib, event.handle); /* remove it */
@@ -278,7 +280,7 @@ sci0_soundserver(int reverse_stereo)
 										      ** we'll have to reset the queue for
 										      ** song_lib_find_active().  */
 								/* Force song detection to start with the highest priority song */
-								sound_queue_event(event.handle, SOUND_SIGNAL_FINISHED, 0);
+								global_sound_server->queue_event(event.handle, SOUND_SIGNAL_FINISHED, 0);
 							}
 							if (modsong == song) /* Usually the same case as above, but not always.
 									     ** Reset the song (just been freed) so that we don't
@@ -286,9 +288,9 @@ sci0_soundserver(int reverse_stereo)
 								song = NULL;
 						}
 
-						sound_get_data(&data,&totalsize,sizeof(int));	/* Retreive song size */
+						global_sound_server->get_data(&data,&totalsize,sizeof(int));	/* Retreive song size */
 #ifdef DEBUG_SOUND_SERVER
-						fprintf(ds, "Song received.\n");
+						fprintf(debug_stream, "Song received.\n");
 #endif
 						modsong = song_new(event.handle, data, totalsize, event.value);	/* Create new song */
 
@@ -303,14 +305,14 @@ sci0_soundserver(int reverse_stereo)
 						/* midi_reverb(-1); */
 						/* midi_allstop(); */
 
-						sound_queue_event(event.handle, SOUND_SIGNAL_INITIALIZED, 0); /* Send back ACK */
+						global_sound_server->queue_event(event.handle, SOUND_SIGNAL_INITIALIZED, 0); /* Send back ACK */
 
 					}
 					break;
 
 					case SOUND_COMMAND_PLAY_HANDLE:
 #ifdef DEBUG_SOUND_SERVER
-						fprintf(ds, "Playing handle %04x\n", event.handle);
+						fprintf(debug_stream, "Playing handle %04x\n", event.handle);
 #endif
 						if (modsong) {
 #if 0
@@ -357,39 +359,41 @@ sci0_soundserver(int reverse_stereo)
 							{
 								midi_allstop();
 								modsong->status = SOUND_STATUS_PLAYING;
-								sound_queue_event(event.handle, SOUND_SIGNAL_PLAYING, 0);
+								global_sound_server->queue_event(event.handle, SOUND_SIGNAL_PLAYING, 0);
 								newsong = modsong; /* Play this song */
+#ifdef DEBUG_SOUND_SERVER
 								memcpy(channel_instrument, channel_instrument_orig, sizeof(int)*16);
 								/* Reset instrument mappings from song defaults */
+#endif
 							}
 						} else {
-							fprintf(ds, "Attempt to play invalid handle %04x\n", event.handle);
+							fprintf(debug_stream, "Attempt to play invalid handle %04x\n", event.handle);
 						}
 					break;
 
 					case SOUND_COMMAND_SET_LOOPS:
 #ifdef DEBUG_SOUND_SERVER
-						fprintf(ds, "Set loops to %d on handle %04x\n", event.value, event.handle);
+						fprintf(debug_stream, "Set loops to %d on handle %04x\n", event.value, event.handle);
 #endif
 						if (modsong)
 							modsong->loops = event.value;
 						else
-							fprintf(ds, "Attempt to set loops on invalid handle %04x\n", event.handle);
+							fprintf(debug_stream, "Attempt to set loops on invalid handle %04x\n", event.handle);
 					break;
 
 					case SOUND_COMMAND_DISPOSE_HANDLE:
 #ifdef DEBUG_SOUND_SERVER
-						fprintf(ds, "Disposing handle %04x (value %04x)\n", event.handle, event.value);
+						fprintf(debug_stream, "Disposing handle %04x (value %04x)\n", event.handle, event.value);
 #endif
 						if (modsong) {
 							int lastmode = song_lib_remove(songlib, event.handle);
 							if (lastmode == SOUND_STATUS_PLAYING) {
 								newsong = songlib[0]; /* Force song detection to start with the highest priority song */
-								sound_queue_event(event.handle, SOUND_SIGNAL_FINISHED, 0);
+								global_sound_server->queue_event(event.handle, SOUND_SIGNAL_FINISHED, 0);
 							}
 
 						} else {
-							fprintf(ds, "Attempt to dispose invalid handle %04x\n", event.handle);
+							fprintf(debug_stream, "Attempt to dispose invalid handle %04x\n", event.handle);
 						}
 
 						if (modsong == song) /* If we just deleted the current song, make sure we don't
@@ -400,7 +404,7 @@ sci0_soundserver(int reverse_stereo)
 
 					case SOUND_COMMAND_STOP_HANDLE:
 #ifdef DEBUG_SOUND_SERVER
-						fprintf(ds, "Stopping handle %04x (value %04x)\n", event.handle, event.value);
+						fprintf(debug_stream, "Stopping handle %04x (value %04x)\n", event.handle, event.value);
 #endif
 						if (modsong) {
 							midi_allstop();
@@ -409,10 +413,10 @@ sci0_soundserver(int reverse_stereo)
 								modsong->pos = 33;
 								modsong->loopmark = 33; /* Reset position */
 							}
-							sound_queue_event(event.handle, SOUND_SIGNAL_FINISHED, 0);
+							global_sound_server->queue_event(event.handle, SOUND_SIGNAL_FINISHED, 0);
 
 						} else {
-							fprintf(ds, "Attempt to stop invalid handle %04x\n", event.handle);
+							fprintf(debug_stream, "Attempt to stop invalid handle %04x\n", event.handle);
 						}
 
 						break;
@@ -426,7 +430,7 @@ sci0_soundserver(int reverse_stereo)
 							if (seeker) {
 								seeker->status = SOUND_STATUS_WAITING;
 #ifdef DEBUG_SOUND_SERVER
-		fprintf(ds, "Un-suspending paused song\n");
+		fprintf(debug_stream, "Un-suspending paused song\n");
 #endif
 							} else {
 								while (seeker && (seeker->status != SOUND_STATUS_WAITING)) {
@@ -436,22 +440,22 @@ sci0_soundserver(int reverse_stereo)
 								}
 								if (seeker) {
 									seeker->status = SOUND_STATUS_SUSPENDED;
-									fprintf(ds, "Suspending paused song\n");
+									fprintf(debug_stream, "Suspending paused song\n");
 								}
 							}
 						}
 	  /*
 
 	    if (debugging)
-	    fprintf(ds, "Suspending handle %04x (value %04x)\n", event.handle, event.value);
+	    fprintf(debug_stream, "Suspending handle %04x (value %04x)\n", event.handle, event.value);
 
 	    if (modsong) {
 
 	    modsong->status = SOUND_STATUS_SUSPENDED;
-	    sound_queue_event(event.handle, SOUND_SIGNAL_PAUSED, 0);
+	    global_sound_server->queue_event(event.handle, SOUND_SIGNAL_PAUSED, 0);
 
 	    } else
-	    fprintf(ds, "Attempt to suspend invalid handle %04x\n", event.handle);
+	    fprintf(debug_stream, "Attempt to suspend invalid handle %04x\n", event.handle);
 	  */ /* Old code. */
 
 					}
@@ -459,45 +463,45 @@ sci0_soundserver(int reverse_stereo)
 
 					case SOUND_COMMAND_RESUME_HANDLE:
 #ifdef DEBUG_SOUND_SERVER
-						fprintf(ds, "Resuming on handle %04x (value %04x)\n", event.handle, event.value);
+						fprintf(debug_stream, "Resuming on handle %04x (value %04x)\n", event.handle, event.value);
 #endif
 						if (modsong) {
 							if (modsong->status == SOUND_STATUS_SUSPENDED) {
 								modsong->status = SOUND_STATUS_WAITING;
-								sound_queue_event(event.handle, SOUND_SIGNAL_RESUMED, 0);
+								global_sound_server->queue_event(event.handle, SOUND_SIGNAL_RESUMED, 0);
 							} else {
-								fprintf(ds, "Attempt to resume handle %04x although not suspended\n", event.handle);
+								fprintf(debug_stream, "Attempt to resume handle %04x although not suspended\n", event.handle);
 							}
 						} else
-							fprintf(ds, "Attempt to resume invalid handle %04x\n", event.handle);
+							fprintf(debug_stream, "Attempt to resume invalid handle %04x\n", event.handle);
 					break;
 
 					case SOUND_COMMAND_SET_VOLUME:
 #ifdef DEBUG_SOUND_SERVER
-						fprintf(ds, "Set volume to %d\n", event.value);
+						fprintf(debug_stream, "Set volume to %d\n", event.value);
 #endif
 						master_volume = event.value * 100 / 15; /* scale to % */
 						midi_volume(master_volume);
 					break;
 
 					case SOUND_COMMAND_SET_MUTE:
-						fprintf(ds, "Called mute??? should never happen\n");
+						fprintf(debug_stream, "Called mute??? should never happen\n");
 					break;
 
 					case SOUND_COMMAND_RENICE_HANDLE:
 #ifdef DEBUG_SOUND_SERVER
-						fprintf(ds, "Renice to %d on handle %04x\n", event.value, event.handle);
+						fprintf(debug_stream, "Renice to %d on handle %04x\n", event.value, event.handle);
 #endif
 						if (modsong) {
 							modsong->priority = event.value;
 							song_lib_resort(songlib, modsong); /* Re-sort it according to the new priority */
 						} else
-							fprintf(ds, "Attempt to renice on invalid handle %04x\n", event.handle);
+							fprintf(debug_stream, "Attempt to renice on invalid handle %04x\n", event.handle);
 					break;
 
 					case SOUND_COMMAND_FADE_HANDLE:
 #ifdef DEBUG_SOUND_SERVER
-						fprintf(ds, "Fading %d on handle %04x\n", event.value, event.handle);
+						fprintf(debug_stream, "Fading %d on handle %04x\n", event.value, event.handle);
 #endif
 						if (event.handle == 0x0000) {
 							if (song) {
@@ -507,16 +511,16 @@ sci0_soundserver(int reverse_stereo)
 						} else if (modsong) {
 							modsong->fading = event.value;
 						} else
-							fprintf(ds, "Attempt to fade on invalid handle %04x\n", event.handle);
+							fprintf(debug_stream, "Attempt to fade on invalid handle %04x\n", event.handle);
 					break;
 
 					case SOUND_COMMAND_TEST: {
 						int i = midi_polyphony;
 #ifdef DEBUG_SOUND_SERVER
-						fprintf(ds, "Received TEST signal. Responding...\n");
+						fprintf(debug_stream, "Received TEST signal. Responding...\n");
 #endif
 
-						sound_send_data((byte *) &i, sizeof(int));
+						global_sound_server->send_data((byte *) &i, sizeof(int));
 					}
 					break;
 
@@ -531,18 +535,18 @@ sci0_soundserver(int reverse_stereo)
 						** Since we might be in a separate process, cwd must be set
 						** separately from the main process. That's why we need it here.
 						*/
-						sound_get_data((byte **)&dirname,&size,event.value);
+						global_sound_server->get_data((byte **)&dirname,&size,event.value);
 						sci_get_current_time(&currtime);
 						usecs = (currtime.tv_sec - last_played.tv_sec) * 1000000
 						         + (currtime.tv_usec - last_played.tv_usec);
 
-						success = soundsrv_save_state(ds,
+						success = soundsrv_save_state(debug_stream,
 						  global_sound_server->flags & SOUNDSERVER_FLAG_SEPARATE_CWD? dirname : NULL,
 						  songlib, newsong,
 						  ccc, usecs, ticks, 0, master_volume);
 
 						/* Return soundsrv_save_state()'s return value */
-						sound_send_data((byte *)&success, sizeof(int));
+						global_sound_server->send_data((byte *)&success, sizeof(int));
 						free(dirname);
 					}
 					break;
@@ -552,16 +556,18 @@ sci0_soundserver(int reverse_stereo)
 						int success;
 						long usecs, secs;
 						int len;
-						long fadeticks_obsolete; /* FIXME: Keeps API compatibility */
 
-						sound_get_data((byte **)&dirname, &len, event.value); /* see SAVE_STATE */
+						long fadeticks_obsolete;
+						/* FIXME: Needs to be removed from save games */
+
+						global_sound_server->get_data((byte **)&dirname, &len, event.value); /* see SAVE_STATE */
 
 						sci_get_current_time(&last_played); /* Get current time, store in last_played.
 										    ** We effectively reset the sound delay this
 										    ** way, which seems appropriate.
 										    */
 
-						success = soundsrv_restore_state(ds,
+						success = soundsrv_restore_state(debug_stream,
 						  global_sound_server->flags & SOUNDSERVER_FLAG_SEPARATE_CWD? dirname : NULL,
 						  songlib, &newsong,
 						  &ccc, &usecs, &ticks, &fadeticks_obsolete, &master_volume);
@@ -569,7 +575,7 @@ sci0_soundserver(int reverse_stereo)
 						last_played.tv_usec -= (usecs + secs * 1000000);
 
 						/* Return return value */
-						sound_send_data((byte *)&success, sizeof(int));
+						global_sound_server->send_data((byte *)&success, sizeof(int));
 						/* REPORT_STATUS(success); */
 
 						song = newsong;
@@ -592,20 +598,24 @@ sci0_soundserver(int reverse_stereo)
 
 					case SOUND_COMMAND_PRINT_SONGID: {
 						if (song)
-							fprintf(ds, "%04x", song->handle);
+							fprintf(debug_stream, "%04x", song->handle);
 						else
-							fprintf(ds, "No song is playing.");
+							fprintf(debug_stream, "No song is playing.");
 					}
 					break;
 
 					case SOUND_COMMAND_PRINT_CHANNELS:
-						sound_server_print_channels(ds, &(channel_instrument[0]),
+#ifdef DEBUG_SOUND_SERVER
+						sound_server_print_channels(debug_stream, &(channel_instrument[0]),
 						  &(mute_channel[0]));
+#endif
 						break;
 
 					case SOUND_COMMAND_PRINT_MAPPING:
-						sound_server_print_mapped_channels(ds, &(channel_instrument[0]),
+#ifdef DEBUG_SOUND_SERVER
+						sound_server_print_mapped_channels(debug_stream, &(channel_instrument[0]),
 						  &(mute_channel[0]));
+#endif
 						break;
 
 					case SOUND_COMMAND_INSTRMAP_SET_INSTRUMENT:
@@ -614,7 +624,7 @@ sci0_soundserver(int reverse_stereo)
 					case SOUND_COMMAND_INSTRMAP_SET_BENDER_RANGE:
 					case SOUND_COMMAND_INSTRMAP_SET_PERCUSSION:
 					case SOUND_COMMAND_INSTRMAP_SET_VOLUME:
-						sound_server_change_instrmap(ds, event.signal,
+						sound_server_change_instrmap(debug_stream, event.signal,
 						  event.handle, event.value);
 						break;
 
@@ -662,7 +672,7 @@ sci0_soundserver(int reverse_stereo)
 							|| (seeker->status == SOUND_STATUS_PLAYING)) {
 
 							    seeker->status = SOUND_STATUS_STOPPED; /* Stop song */
-							    sound_queue_event(seeker->handle, SOUND_SIGNAL_FINISHED, 0);
+							    global_sound_server->queue_event(seeker->handle, SOUND_SIGNAL_FINISHED, 0);
 							    /* Notify parent process that the song was stopped */
 							}
 							seeker = seeker->next;
@@ -682,7 +692,7 @@ sci0_soundserver(int reverse_stereo)
 						return;
 
 					default:
-						fprintf(ds, "Received invalid signal: %d\n", event.signal);
+						fprintf(debug_stream, "Received invalid signal: %d\n", event.signal);
 
 					}
 				}
@@ -722,19 +732,19 @@ sci0_soundserver(int reverse_stereo)
 			if (command == SCI_MIDI_EOT) { /* End of Track */
 				if ((--(song->loops) != 0) && song->loopmark) {
 #ifdef DEBUG_SOUND_SERVER
-					fprintf(ds, "looping back from %d to %d on handle %04x\n",
+					fprintf(debug_stream, "looping back from %d to %d on handle %04x\n",
 					        song->pos, song->loopmark, song->handle);
 #endif
 					song->pos = song->loopmark;
-					sound_queue_event(song->handle, SOUND_SIGNAL_LOOP, song->loops);
+					global_sound_server->queue_event(song->handle, SOUND_SIGNAL_LOOP, song->loops);
 
 				} else { /* Finished */
 
 					song->status = SOUND_STATUS_STOPPED; /* Song is stopped */
 					song->pos = 33;
 					song->loopmark = 33; /* Reset position */
-					sound_queue_event(song->handle, SOUND_SIGNAL_LOOP, -1);
-					sound_queue_event(song->handle, SOUND_SIGNAL_FINISHED, 0);
+					global_sound_server->queue_event(song->handle, SOUND_SIGNAL_LOOP, -1);
+					global_sound_server->queue_event(song->handle, SOUND_SIGNAL_FINISHED, 0);
 					ticks = 1; /* Wait one tick, then continue with next song */
 
 					midi_allstop();
@@ -756,14 +766,15 @@ sci0_soundserver(int reverse_stereo)
 				    && ((command & MIDI_CONTROL_CHANGE) == MIDI_CONTROL_CHANGE)
 				    && (param == MIDI_CC_PAN))
 					param2 = 0x7f - param2; /* Reverse stereo */
-
+#ifdef DEBUG_SOUND_SERVER
 				if ((command & 0xf0) == 0xc0) /* Change instrument */
 					channel_instrument[command & 0xf] = param;
+#endif
 
 				if (!((command & 0xf0) == 0x90 && mute_channel[command & 0xf]))
 					/* Unless the channel is muted */
-					sci_midi_command(song, command, param, param2,
-					                 &ccc, ds, &(playing_notes[command & 0xf]));
+					sci_midi_command(debug_stream, song, command, param, param2,
+					                 &ccc, &(playing_notes[command & 0xf]));
 			}
 
 			if (song->fading >= 0) { /* If the song is fading out... */
@@ -793,27 +804,4 @@ sci0_soundserver(int reverse_stereo)
 	}
 
 	/* implicitly quit */
-}
-
-void
-sound_queue_event(int handle, int signal, int value) {
-	global_sound_server->queue_event(handle, signal, value);
-}
-
-void
-sound_queue_command(int handle, int signal, int value) {
-	global_sound_server->queue_command(handle, signal, value);
-}
-
-sound_event_t *
-sound_get_command(GTimeVal *wait_tvp) {
-	return global_sound_server->get_command(wait_tvp);
-}
-
-int sound_send_data(byte *data_ptr, int maxsend) {
-	return global_sound_server->send_data(data_ptr, maxsend);
-}
-
-int sound_get_data(byte **data_ptr, int *size, int maxlen){
-	return global_sound_server->get_data(data_ptr, size, maxlen);
 }

@@ -395,6 +395,10 @@ SOURCE=..\sound\sfx_save.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\sound\sfx_save.cfsml
+# End Source File
+# Begin Source File
+
 SOURCE=..\sound\sound.c
 # End Source File
 # Begin Source File
@@ -465,6 +469,10 @@ SOURCE=..\include\gfx_resource.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\include\gfx_sci.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\include\gfx_state.h
 # End Source File
 # Begin Source File
@@ -490,14 +498,6 @@ SOURCE=..\include\graphics.h
 # Begin Source File
 
 SOURCE=..\include\graphics_ddraw.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\include\graphics_ggi.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\include\graphics_glx.h
 # End Source File
 # Begin Source File
 

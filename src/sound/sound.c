@@ -117,7 +117,7 @@ _sound_expect_answer(char *timeoutmessage, int def_value)
 	int retval;
 	int size;
 
-	sound_get_data((byte **)&success,&size,sizeof(int));
+	global_sound_server->get_data((byte **)&success,&size,sizeof(int));
 
 	retval = *success;
 	free(success);
@@ -132,8 +132,8 @@ _sound_transmit_text_expect_anwer(state_t *s, char *text, int command, char *tim
 
 	count = strlen(text) + 1;
 	sound_command(s, command, 0, count);
-	if (sound_send_data((unsigned char *)text, count) != count) {
-		fprintf(stderr, "_sound_transmit_text_expect_anwer():"
+	if (global_sound_server->send_data((unsigned char *)text, count) != count) {
+		fprintf(debug_stream, "_sound_transmit_text_expect_anwer():"
 			" sound_send_data returned < count\n");
 	}
 
@@ -175,9 +175,9 @@ sound_command(state_t *s, int command, int handle, int parameter)
 		}
 
 		len = song->size;
-		sound_queue_command(event.handle, event.signal, event.value);
-		if (sound_send_data(song->data, len) != len) {
-			fprintf(stderr, "sound_command(): sound_send_data"
+		global_sound_server->queue_command(event.handle, event.signal, event.value);
+		if (global_sound_server->send_data(song->data, len) != len) {
+			fprintf(debug_stream, "sound_command(): sound_send_data"
 				" returned < count\n");
 		}
 
@@ -211,7 +211,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 	case SOUND_COMMAND_INSTRMAP_SET_VOLUME:
 	case SOUND_COMMAND_MUTE_CHANNEL:
 	case SOUND_COMMAND_UNMUTE_CHANNEL:
-		sound_queue_command(event.handle, event.signal, event.value);
+		global_sound_server->queue_command(event.handle, event.signal, event.value);
 		return 0;
 
 		/* set the sound volume. */
@@ -220,7 +220,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 			s->sound_mute = parameter;
 		} else {
 			s->sound_volume = parameter;
-			sound_queue_command(event.handle, event.signal, event.value);
+			global_sound_server->queue_command(event.handle, event.signal, event.value);
 		}
 		/* deliberate fallthrough */
 	case SOUND_COMMAND_GET_VOLUME:
@@ -242,7 +242,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 		/* let's send a volume change across the wire */
 		event.signal = SOUND_COMMAND_SET_VOLUME;
 		event.value = s->sound_volume;
-		sound_queue_command(event.handle, event.signal, event.value);
+		global_sound_server->queue_command(event.handle, event.signal, event.value);
 		/* deliberate fallthrough */
 		/* return the mute status */
 	case SOUND_COMMAND_GET_MUTE:
@@ -255,8 +255,8 @@ sound_command(state_t *s, int command, int handle, int parameter)
 	  int *retval = NULL;
 	  int len = 0;
 
-	  sound_queue_command(event.handle, event.signal, event.value);
-	  sound_get_data((byte **)&retval,&len,sizeof(int));
+	  global_sound_server->queue_command(event.handle, event.signal, event.value);
+	  global_sound_server->get_data((byte **)&retval,&len,sizeof(int));
 	  len = *retval ;
 	  free(retval);
 	  return len; /* should be the polyphony */
@@ -576,10 +576,8 @@ remove_note_playing(playing_notes_t *playing, int note)
 int MIDI_cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0};
 /* Taken from playmidi */
 
-void sci_midi_command(song_t *song, guint8 command,
-		      guint8 param, guint8 param2,
-		      int *ccc,
-		      FILE *ds, playing_notes_t *playing)
+void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 param,
+		guint8 param2, int *ccc, playing_notes_t *playing)
 {
 
 	if (SCI_MIDI_CONTROLLER(command)) {
@@ -587,7 +585,7 @@ void sci_midi_command(song_t *song, guint8 command,
 
 		case SCI_MIDI_CUMULATIVE_CUE:
 			*ccc += param2;
-			sound_queue_event(song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, *ccc);
+			global_sound_server->queue_event(song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, *ccc);
 			break;
 		case SCI_MIDI_RESET_ON_STOP:
 			song->resetflag = param2;
@@ -618,7 +616,7 @@ void sci_midi_command(song_t *song, guint8 command,
 			midi_event(command, param, param2);
 			break;
 		default:
-			fprintf(ds, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
+			fprintf(debug_stream, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
 			break;
 		}
 
@@ -627,7 +625,7 @@ void sci_midi_command(song_t *song, guint8 command,
 		if (param == SCI_MIDI_SET_SIGNAL_LOOP) {
 			song->loopmark = song->pos;
 		} else if (param <= 127) {
-			sound_queue_event(song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
+			global_sound_server->queue_event(song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
 		}
 
 	} else {
@@ -679,7 +677,7 @@ void sci_midi_command(song_t *song, guint8 command,
 				midi_event(command, param, param2);
 				break;
 			default:
-				fprintf(ds, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
+				fprintf(debug_stream, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
 			}
 		}
 	}
@@ -690,17 +688,17 @@ song_lib_dump(songlib_t songlib, int line)
 {
 	song_t *seeker = *songlib;
 
-	fprintf(stderr,"L%d:", line);
+	fprintf(debug_stream,"L%d:", line);
 	do {
-		fprintf(stderr,"    %p", seeker);
+		fprintf(debug_stream,"    %p", seeker);
 
 		if (seeker) {
-			fprintf(stderr,"[%04x]->", seeker->handle);
+			fprintf(debug_stream,"[%04x]->", seeker->handle);
 			seeker = seeker->next;
 		}
-		fprintf(stderr,"\n");
+		fprintf(debug_stream,"\n");
 	} while (seeker);
-	fprintf(stderr,"\n");
+	fprintf(debug_stream,"\n");
 
 }
 

@@ -62,13 +62,16 @@ static sound_eq_t ev_queue; /* The event queue */
 DWORD WINAPI
 win32_soundserver_init(LPVOID lpP)
 {
+	sound_server_state_t sss;
+	memset(&sss, 0, sizeof(sound_server_state_t));
+
 #ifdef SSWIN_DEBUG
 	fprintf(stdout, "SSWIN_DEBUG: TID%u - CHILD thread ID, win32_soundserver_init()\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
 
 	/* start the sound server */
-	sci0_soundserver(reverse_stereo);
+	sci0_soundserver(reverse_stereo, &sss);
 
 #ifdef SSWIN_DEBUG
 	fprintf(stdout, "SSWIN_DEBUG: TID%u, win32_soundserver_init() end\n", GetCurrentThreadId());
@@ -113,7 +116,7 @@ sound_win32_init(state_t *s, int flags)
 	for (i = 0; i < 2; i++)
 		InitializeCriticalSection(&bulk_cs[i]);
 
-	ds = stderr;
+	debug_stream = stderr;
 
 	sound_eq_init(&inqueue);
 	sound_eq_init(&ev_queue);
@@ -126,7 +129,7 @@ sound_win32_init(state_t *s, int flags)
 								 &dwChildId);	/* pointer to id of thread */
 	if (child_thread == NULL)
 	{
-		fprintf(stderr, "sound_win32_init(): CreateThread() failed, GetLastError() returned %u\n", GetLastError());
+		fprintf(debug_stream, "sound_win32_init(): CreateThread() failed, GetLastError() returned %u\n", GetLastError());
 	}
 
 #ifdef SSWIN_DEBUG
@@ -393,9 +396,9 @@ sound_win32_save(state_t *s, char *dir)
 	/* we ignore the dir */
 
 	sound_command(s, SOUND_COMMAND_SAVE_STATE, 0, 2);
-	sound_send_data((byte *) ".", 2);
+	global_sound_server->send_data((byte *) ".", 2);
 
-	sound_get_data((byte **) &success, &size, sizeof(int));
+	global_sound_server->get_data((byte **) &success, &size, sizeof(int));
 	retval = *success;
 	free(success);
 	return retval;

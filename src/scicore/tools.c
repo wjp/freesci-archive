@@ -287,13 +287,19 @@ sci_find_first(sci_dir_t *dir, char *mask)
 
 		return dir->fileinfo.name;
 	}
-			 else
+	else
 	{
 		switch (errno)
 		{
 			case ENOENT:
 			{
 				printf("_findfirst errno = ENOENT: no match\n");
+
+				if (mask)
+					printf(" in: %s\n", mask);
+				else
+					printf(" - searching in undefined directory\n");
+
 				break;
 			}
 			case EINVAL:
