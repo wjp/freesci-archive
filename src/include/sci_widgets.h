@@ -46,6 +46,8 @@
 #define WINDOW_FLAG_DONTDRAW 0x80
 /* Don't draw anything */
 
+#define WINDOW_FLAG_NO_DROP_SHADOW 0x1000000
+
 
 /* Used in kgraphics to flag text surrounded by a dithered frame */
 #define CONTROL_STATE_DITHER_FRAMED 0x1000
@@ -82,6 +84,10 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 **             (int) flags: Any ORred combination of window flags
 ** Returns   : (gfxw_port_t *) A newly allocated port with the requested characteristics
 */
+
+/*---------------------*/
+/*** Control widgets ***/
+/*---------------------*/
 
 gfxw_list_t *
 sciw_new_button_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, char selected, char inverse, char gray);
@@ -156,6 +162,49 @@ sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char 
 ** Returns   : (gfxw_list_t *) An appropriate widget list
 */
 
-#endif /* _!SCI_WIDGETS_H_ */
+/*---------------------*/
+/*** Menubar widgets ***/
+/*---------------------*/
 
+void
+sciw_set_menubar(state_t *s, gfxw_port_t *status_bar, menubar_t *menubar, int selection);
+/* Draws the menu bar
+** Parameters: (state_t *) s: The state to operate on
+**             (gfxw_port_t *) status_bar: The status bar port to modify
+**             (menubar_t *) menubar: The menu bar to use
+**             (int) selection: Number of the menu to hightlight, or -1 for 'none'
+** Returns   : (void)
+*/
+
+gfxw_port_t *
+sciw_new_menu(state_t *s, gfxw_port_t *status_bar, menubar_t *menubar, int selection);
+/* Creates a menu port
+** Parameters: (state_t *) s: The state to operate on
+**             (gfxw_port_t *) status_bar: The status bar
+**             (menubar_t *) menubar: The menu bar to use
+**             (int) selection: Number of the menu to interpret
+** Returns   : (gfxw_port_t *) The result port
+*/
+
+gfxw_port_t *
+sciw_unselect_item(state_t *s, gfxw_port_t *menu_port, menu_t *menu, int selection);
+/* Unselects a previously selected item from a menu port
+** Parameters: (state_t *) s: The state to operate on
+**             (gfxw_port_t *) menu_port: The port modify
+**             (menu_t *) menu: The menu the menu port corresponds to
+**             (int) selection: Number of the menu entry to unselect, or -1 to do a NOP
+** Returns   : (gfxw_port_t *) The modified menu
+*/
+
+gfxw_port_t *
+sciw_select_item(state_t *s, gfxw_port_t *menu_port, menu_t *menu, int selection);
+/* Selects a menu item from a menu port
+** Parameters: (state_t *) s: The state to operate on
+**             (gfxw_port_t *) menu_port: The port modify
+**             (menu_t *) menu: The menu the menu port corresponds to
+**             (int) selection: Number of the menu entry to select, or -1 to do a NOP
+** Returns   : (gfxw_port_t *) The modified menu
+*/
+
+#endif /* _!SCI_WIDGETS_H_ */
 

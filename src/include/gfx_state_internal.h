@@ -1,5 +1,5 @@
 /***************************************************************************
- gfx_state_internal.h Copyright (C) 2000 Christoph Reichenbach
+ gfx_state_internal.h Copyright (C) 2000,01 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -40,6 +40,7 @@
 #define GFXW_FLAG_CONTAINER (1<<2)
 #define GFXW_FLAG_DIRTY (1<<3)
 #define GFXW_FLAG_TAGGED (1<<4)
+#define GFXW_FLAG_MULTI_ID (1<<5) /* Means that the ID used herein may be used more than once, i.e. is not unique */
 
 typedef struct {
 	int serial; /* The first serial number to kill */

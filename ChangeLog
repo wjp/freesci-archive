@@ -1,3 +1,15 @@
+2001-01-01  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kmenu.c (kMenuSelect): Re-enabled MenuSelect().
+
+	* src/gfx/widgets.c (_gfxw_container_id_equals): Added support for
+	MULTI_ID
+
+	* src/engine/kgraphics.c (kAddToPic): Dynviews are now moved behind
+	picviews in the draw list.
+	(kAddToPic): Implemented alternate AddToPic() invocation
+	(kShakeScreen): Fixed ShakeScreen to unclip the area it draws to
+
 2000-12-31  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kAnimate): Fixed usage of free_tagged()

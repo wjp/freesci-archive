@@ -1,5 +1,5 @@
 /***************************************************************************
- widgets.c Copyright (C) 2000 Christoph Reichenbach
+ widgets.c Copyright (C) 2000,01 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -86,7 +86,7 @@ static void
 _gfxw_print_widget(gfxw_widget_t *widget, int indentation)
 {
 	int i;
-	char flags_list[] = "VOCDT";
+	char flags_list[] = "VOCDTM";
 	gfxw_view_t *view = (gfxw_view_t *) widget;
 	gfxw_dyn_view_t *dyn_view = (gfxw_dyn_view_t *) widget;
 	gfxw_text_t *text = (gfxw_text_t *) widget;
@@ -1026,7 +1026,8 @@ _gfxwop_text_equals(gfxw_widget_t *widget, gfxw_widget_t *other)
 
 	otext = (gfxw_text_t *) other;
 
-	if (!gfx_rect_equals(wtext->bounds, otext->bounds))
+	if ((wtext->bounds.x != otext->bounds.x)
+	    || (wtext->bounds.y != otext->bounds.y))
 		return 0;
 
 	if (wtext->halign != otext->halign
@@ -1039,13 +1040,12 @@ _gfxwop_text_equals(gfxw_widget_t *widget, gfxw_widget_t *other)
 	if (wtext->font_nr != otext->font_nr)
 		return 0;
 
-	/*
-	if (!(_color_equals(wtext->color1, otext->color1)
+	/* if (!(_color_equals(wtext->color1, otext->color1)
 	      && _color_equals(wtext->color2, otext->color2)
 	      && _color_equals(wtext->bgcolor, otext->bgcolor)))
-		return 0;
+	      return 0; */
 
-	if (strcmp(wtext->text, otext->text))
+	/*	if (strcmp(wtext->text, otext->text))
 		return 0;
 	*/ /* This is a hack! */
 
@@ -1444,7 +1444,8 @@ _gfxw_container_id_equals(gfxw_container_t *container, gfxw_widget_t *widget)
 		(*seekerp)->flags &= ~GFXW_FLAG_TAGGED;
 		return 1;
 	} else {
-		(*seekerp)->free(*seekerp);
+		if (!(widget->flags & GFXW_FLAG_MULTI_ID))
+			(*seekerp)->free(*seekerp);
 		return 0;
 	}
 }

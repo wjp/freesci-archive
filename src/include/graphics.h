@@ -1,5 +1,5 @@
 /***************************************************************************
- graphics.h (C) 1999 Christoph Reichenbach, TU Darmstadt
+ graphics.h (C) 1999,2000,01 Christoph Reichenbach, TU Darmstadt
 
 
  This program may be modified and copied freely according to the terms of

@@ -1,5 +1,5 @@
 /***************************************************************************
- gfx_operations Copyright (C) 2000 Christoph Reichenbach
+ gfx_operations Copyright (C) 2000,01 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of

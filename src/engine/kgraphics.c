@@ -1,5 +1,5 @@
 /***************************************************************************
- kernel.c Copyright (C) 1999 Christoph Reichenbach
+ kgraphics.c Copyright (C) 1999,2000,01 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -405,7 +405,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		area.x += s->port->zone.x;
 		area.y += s->port->zone.y;
 
-		if (s->dyn_views && s->dyn_views->contents)
+		if (s->dyn_views && s->dyn_views->parent == GFXWC(s->port))
 			s->dyn_views->draw(GFXW(s->dyn_views), gfx_point(0, 0));
 		
 		gfxop_update_box(s->gfx_state, area);
@@ -786,7 +786,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				int other_signal = GET_SELECTOR(other_obj, signal);
 				SCIkdebug(SCIkBRESEN, "OtherSignal=%04x, z=%04x\n", other_signal,
 					  (other_signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)));
-				if ((other_signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR | _K_VIEW_SIG_FLAG_NO_UPDATE)) == 0) {
+				if ((other_signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR | _K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_HIDDEN)) == 0) {
 					/* check whether the other object ignores actors */
 
 					int other_x = GET_SELECTOR(other_obj, brLeft);
@@ -1497,11 +1497,147 @@ static int _cmp_view_object(const void *obj1, const void *obj2) /* Used for qsor
   return retval;
 }
 
+
 #define _K_MAKE_VIEW_LIST_CYCLE 1
 #define _K_MAKE_VIEW_LIST_CALC_PRIORITY 2
 #define _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP 4
 
-void
+static gfxw_dyn_view_t *
+_k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int funct_nr, int argc, int argp)
+{
+	short oldloop, oldcel;
+	int cel, loop, view_nr = GET_SELECTOR(obj, view);
+	int has_nsrect = lookup_selector(s, obj, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
+	int under_bits, signal;
+	heap_ptr under_bitsp, signalp;
+	point_t pos;
+	int z, priority, _priority;
+	gfxw_dyn_view_t *widget;
+
+	SCIkdebug(SCIkGRAPHICS, " - Adding %04x\n", obj);
+
+	obj = obj;
+
+	pos.x = GET_SELECTOR(obj, x);
+	pos.y = GET_SELECTOR(obj, y);
+
+	pos.y++; /* Sierra appears to do something like this */
+
+	z = GET_SELECTOR(obj, z);
+
+	/* !-- nsRect used to be checked here! */
+
+	loop = oldloop = GET_SELECTOR(obj, loop);
+	cel = oldcel = GET_SELECTOR(obj, cel);
+
+	/* Clip loop and cel, write back if neccessary */
+	GFX_ASSERT(gfxop_check_cel(s->gfx_state, view_nr, &loop, &cel));
+
+	if (oldloop != loop)
+		PUT_SELECTOR(obj, loop, loop);
+
+	if (oldcel != cel)
+		PUT_SELECTOR(obj, cel, cel);
+    
+	if (lookup_selector(s, obj, s->selector_map.underBits, &(under_bitsp))
+	    != SELECTOR_VARIABLE) {
+		under_bitsp = under_bits = 0;
+		SCIkdebug(SCIkGRAPHICS, "Object at %04x has no underBits\n", obj);
+	} else under_bits = GET_HEAP(under_bitsp);
+
+	if (lookup_selector(s, obj, s->selector_map.signal, &(signalp))
+	    != SELECTOR_VARIABLE) {
+		signal = signalp = 0;
+		SCIkdebug(SCIkGRAPHICS, "Object at %04x has no signal selector\n", obj);
+	} else {
+		SCIkdebug(SCIkGRAPHICS, "    with signal = %04x\n", UGET_HEAP(signalp));
+	}
+
+	_priority = VIEW_PRIORITY(pos.y);
+
+	if (has_nsrect
+	    && !(UGET_HEAP(signalp) & _K_VIEW_SIG_FLAG_FIX_PRI_ON)) { /* Calculate priority */
+
+		if (options & _K_MAKE_VIEW_LIST_CALC_PRIORITY)
+			PUT_SELECTOR(obj, priority, _priority);
+
+		priority = _priority;
+	} else /* DON'T calculate the priority */
+		priority = GET_SELECTOR(obj, priority);
+
+	if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP) {
+		int pri_top = PRIORITY_BAND_FIRST(_priority);
+		int top, bottom, right, left;
+
+		if (priority <= 0)
+			priority = _priority; /* Picviews always get their priority set */
+
+
+		if (has_nsrect) {
+			top = GET_SELECTOR(obj, nsTop);
+			bottom = GET_SELECTOR(obj, nsBottom);
+			left = GET_SELECTOR(obj, nsLeft);
+			right = GET_SELECTOR(obj, nsRight);
+		} else {
+			int width, height;
+			point_t offset;
+
+			GFX_ASSERT(gfxop_get_cel_parameters(s->gfx_state, view_nr, loop, cel,
+							    &width, &height, &offset));
+
+			left = pos.x + offset.x - (width >> 1);
+			right = left + width;
+			bottom = pos.y + offset.y + 1;
+			top = bottom - height;
+		}
+
+
+		if (top < pri_top)
+			top = pri_top;
+
+		if (bottom < top) {
+			int foo = top;
+			top = bottom;
+			bottom = foo;
+		}
+
+		if (!(signalp && (GET_HEAP(signalp) & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {
+			gfxw_box_t *box;
+			gfx_color_t color;
+
+			gfxop_set_color(s->gfx_state, &color, -1, -1, -1, -1, -1, 0xf);
+
+			SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n", left, top,
+				  right, bottom);
+
+			box = gfxw_new_box(s->gfx_state, gfx_rect(left, top, right - left + 1, bottom - top + 1),
+					   color, color, GFX_BOX_SHADE_FLAT);
+
+			assert_primary_widget_lists(s);
+
+			ADD_TO_CURRENT_PICTURE_PORT(box);
+		}
+	}
+
+	widget = gfxw_new_dyn_view(s->gfx_state, pos, z, view_nr, loop, cel,
+				   priority, -1, ALIGN_CENTER, ALIGN_BOTTOM);
+
+
+	if (widget) {
+
+		widget = (gfxw_dyn_view_t *) gfxw_set_id(GFXW(widget), obj);
+		widget = gfxw_dyn_view_set_params(widget, under_bits, under_bitsp, signal, signalp);
+
+		return widget;
+		/*    s->pic_not_valid++; *//* There ought to be some kind of check here... */
+	} else {
+		SCIkwarn(SCIkWARNING, "Could not generate dynview widget for %d/%d/%d\n", view_nr, loop, cel);
+		return NULL;
+	}
+}
+
+
+static void
 _k_make_view_list(state_t *s, gfxw_list_t *widget_list, heap_ptr list, int options, int funct_nr, int argc, int argp)
      /* Creates a view_list from a node list in heap space. Returns the list, stores the
      ** number of list entries in *list_nr. Calls doit for each entry if cycle is set.
@@ -1530,140 +1666,17 @@ _k_make_view_list(state_t *s, gfxw_list_t *widget_list, heap_ptr list, int optio
 
 	node = UGET_HEAP(list + LIST_LAST_NODE);
 	while (node) {
-		short oldloop, oldcel;
 		heap_ptr obj = GET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
-		int cel, loop, view_nr = GET_SELECTOR(obj, view);
-		int has_nsrect = lookup_selector(s, obj, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
-		int under_bits, signal;
-		heap_ptr under_bitsp, signalp;
-		point_t pos;
-		int z, priority, _priority;
 		gfxw_dyn_view_t *widget;
 
-		SCIkdebug(SCIkGRAPHICS, " - Adding %04x\n", obj);
-
-		obj = obj;
-
-		pos.x = GET_SELECTOR(obj, x);
-		pos.y = GET_SELECTOR(obj, y);
-
-		pos.y++; /* Sierra appears to do something like this */
-
-		z = GET_SELECTOR(obj, z);
-
-		/* !-- nsRect used to be checked here! */
-
-		loop = oldloop = GET_SELECTOR(obj, loop);
-		cel = oldcel = GET_SELECTOR(obj, cel);
-
-		/* Clip loop and cel, write back if neccessary */
-		GFX_ASSERT(gfxop_check_cel(s->gfx_state, view_nr, &loop, &cel));
-
-		if (oldloop != loop)
-			PUT_SELECTOR(obj, loop, loop);
-
-		if (oldcel != cel)
-			PUT_SELECTOR(obj, cel, cel);
-    
-		if (lookup_selector(s, obj, s->selector_map.underBits, &(under_bitsp))
-		    != SELECTOR_VARIABLE) {
-			under_bitsp = under_bits = 0;
-			SCIkdebug(SCIkGRAPHICS, "Object at %04x has no underBits\n", obj);
-		} else under_bits = GET_HEAP(under_bitsp);
-
-		if (lookup_selector(s, obj, s->selector_map.signal, &(signalp))
-		    != SELECTOR_VARIABLE) {
-			signal = signalp = 0;
-			SCIkdebug(SCIkGRAPHICS, "Object at %04x has no signal selector\n", obj);
-		} else {
-			SCIkdebug(SCIkGRAPHICS, "    with signal = %04x\n", UGET_HEAP(signalp));
-		}
-
-		_priority = VIEW_PRIORITY(pos.y);
-
-		if (has_nsrect
-		    && !(UGET_HEAP(signalp) & _K_VIEW_SIG_FLAG_FIX_PRI_ON)) { /* Calculate priority */
-
-			if (options & _K_MAKE_VIEW_LIST_CALC_PRIORITY)
-				PUT_SELECTOR(obj, priority, _priority);
-
-			priority = _priority;
-		} else /* DON'T calculate the priority */
-			priority = GET_SELECTOR(obj, priority);
-
-		if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP) {
-			int pri_top = PRIORITY_BAND_FIRST(_priority);
-			int top, bottom, right, left;
-
-			if (priority <= 0)
-				priority = _priority; /* Picviews always get their priority set */
-
-
-			if (has_nsrect) {
-				top = GET_SELECTOR(obj, nsTop);
-				bottom = GET_SELECTOR(obj, nsBottom);
-				left = GET_SELECTOR(obj, nsLeft);
-				right = GET_SELECTOR(obj, nsRight);
-			} else {
-				int width, height;
-				point_t offset;
-
-				GFX_ASSERT(gfxop_get_cel_parameters(s->gfx_state, view_nr, loop, cel,
-								    &width, &height, &offset));
-
-				left = pos.x + offset.x - (width >> 1);
-				right = left + width;
-				bottom = pos.y + offset.y + 1;
-				top = bottom - height;
-			}
-
-
-			if (top < pri_top)
-				top = pri_top;
-
-			if (bottom < top) {
-				int foo = top;
-				top = bottom;
-				bottom = foo;
-			}
-
-			if (!(signalp && (GET_HEAP(signalp) & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {
-				gfxw_box_t *box;
-				gfx_color_t color;
-
-				gfxop_set_color(s->gfx_state, &color, -1, -1, -1, -1, -1, 0xf);
-
-				SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n", left, top,
-					  right, bottom);
-
-				box = gfxw_new_box(s->gfx_state, gfx_rect(left, top, right - left + 1, bottom - top + 1),
-						   color, color, GFX_BOX_SHADE_FLAT);
-
-				assert_primary_widget_lists(s);
-
-				ADD_TO_CURRENT_PICTURE_PORT(box);
-			}
-		}
-
-		widget = gfxw_new_dyn_view(s->gfx_state, pos, z, view_nr, loop, cel,
-					   priority, -1, ALIGN_CENTER, ALIGN_BOTTOM);
-
+		widget = _k_make_dynview_obj(s, obj, options, funct_nr, argc, argp);
 
 		if (widget) {
-
-			widget = (gfxw_dyn_view_t *) gfxw_set_id(GFXW(widget), obj);
-			widget = gfxw_dyn_view_set_params(widget, under_bits, under_bitsp, signal, signalp);
-
 			GFX_ASSERT(widget_list->add(GFXWC(widget_list), GFXW(widget)));
-
-			/*    s->pic_not_valid++; *//* There ought to be some kind of check here... */
-		} else {
-			SCIkwarn(SCIkWARNING, "Could not generate dynview widget for %d/%d/%d\n", view_nr, loop, cel);
 		}
 
 		node = UGET_HEAP(node + LIST_PREVIOUS_NODE); /* Next node */
 	}
-
 }
 
 
@@ -1755,15 +1768,36 @@ _k_draw_view_list(state_t *s, gfxw_list_t *list, int flags)
 void
 kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	gfxw_list_t *pic_views = gfxw_new_list(s->picture_port->bounds, 0);
+	gfxw_list_t *pic_views;
 	heap_ptr list = PARAM(0);
 	CHECK_THIS_KERNEL_FUNCTION;
 
 	assert_primary_widget_lists(s);
 
 	if (argc > 1) {
-		SCIkwarn(SCIkWARNING, "FIXME: Need to implement alternative (old) semantics for AddToPic()\n");
+		int view, cel, loop, x, y, priority, control;
+		gfxw_widget_t *widget;
+
+		view = UPARAM(0);
+		cel = UPARAM(1);
+		loop = UPARAM(2);
+		x = PARAM(3);
+		y = PARAM(4);
+		priority = PARAM(5);
+		control = PARAM(6);
+		
+		widget = GFXW(gfxw_new_dyn_view(s->gfx_state, gfx_point(x,y), 0, view, loop, cel,
+						priority, control, ALIGN_CENTER, ALIGN_BOTTOM));
+
+		if (!widget) {
+			SCIkwarn(SCIkERROR, "Attempt to single-add invalid picview (%d/%d/%d)\n", view, loop, cel);
+		} else {
+			ADD_TO_CURRENT_PICTURE_PORT(widget);
+		}
+			
 	} else {
+
+		pic_views = gfxw_new_list(s->picture_port->bounds, 0);
 
 		SCIkdebug(SCIkGRAPHICS, "Preparing picview list...\n");
 		_k_make_view_list(s, pic_views, list, _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP, funct_nr, argc, argp);
@@ -1775,6 +1809,8 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		/* Draw relative to the bottom center */
 		SCIkdebug(SCIkGRAPHICS, "Returning.\n");
 	}
+
+	reparentize_primary_widget_lists(s, s->port); /* move dynviews behind picviews */
 }
 
 
@@ -1864,8 +1900,6 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (goner == s->port) /* Did we kill the active port? */
 		s->port = pred;
 
-	FULL_REDRAW();
-
 	gfxop_update(s->gfx_state);
 }
 
@@ -1897,8 +1931,6 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	priority = PARAM_OR_ALT(6, -1);
 	bgcolor.mask = GFX_MASK_VISUAL | ((priority >= 0)? GFX_MASK_PRIORITY : 0);
 	bgcolor.priority = priority;
-
-	SCI_MEMTEST;
 
 	SCIkdebug(SCIkGRAPHICS, "New window with params %d, %d, %d, %d\n", PARAM(0), PARAM(1), PARAM(2), PARAM(3));
 	window = sciw_new_window(s, gfx_rect(x, y, xl, yl), s->titlebar_port->font_nr, 
@@ -2303,16 +2335,18 @@ kShakeScreen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	gfx_pixmap_t *screen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 0, 320, 200));
 	int i;
 
-	fprintf(stderr, "Shaking %d times\n", shakes);
+	gfxop_set_clip_zone(s->gfx_state, gfx_rect_fullscreen);
 
 	for (i = 0; i < shakes; i++) {
 		gfxop_draw_box(s->gfx_state, gfx_rect(0, 190, 320, 10), s->ega_colors[0], s->ega_colors[0], GFX_BOX_SHADE_FLAT);
 		gfxop_draw_pixmap(s->gfx_state, screen, gfx_rect(0, 10, 320, 190), gfx_point(0, 0));
 		gfxop_update(s->gfx_state);
+		gfxop_usleep(s->gfx_state, 50000);
 
 		gfxop_draw_box(s->gfx_state, gfx_rect(0, 0, 320, 10), s->ega_colors[0], s->ega_colors[0], GFX_BOX_SHADE_FLAT);
 		gfxop_draw_pixmap(s->gfx_state, screen, gfx_rect(0, 0, 320, 190), gfx_point(0, 10));
 		gfxop_update(s->gfx_state);
+		gfxop_usleep(s->gfx_state, 50000);
 	}
 
 	gfxop_draw_pixmap(s->gfx_state, screen, gfx_rect(0, 0, 320, 200), gfx_point(0, 0));

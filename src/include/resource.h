@@ -1,5 +1,5 @@
 /***************************************************************************
- resource.h Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+ resource.h Copyright (C) 1999,2000,01 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of

@@ -162,7 +162,7 @@ _reset_graphics_input(state_t *s)
   s->visual = gfxw_new_visual(s->gfx_state, font_nr);
 
   s->wm_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
-  s->titlebar_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 10), s->ega_colors[0], transparent);
+  s->titlebar_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 10), s->ega_colors[0], s->ega_colors[15]);
   s->picture_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
 
   s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));
@@ -172,7 +172,7 @@ _reset_graphics_input(state_t *s)
 
   s->port = s->wm_port; /* Currently using the window manager port */
 
-  s->titlebar_port->bgcolor.mask = GFX_MASK_PRIORITY;
+  s->titlebar_port->bgcolor.mask |= GFX_MASK_PRIORITY;
   s->titlebar_port->bgcolor.priority = 11; /* Standard priority for the titlebar port */
 
   return 0;

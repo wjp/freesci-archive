@@ -1,5 +1,5 @@
 /***************************************************************************
- heap.h Copyright (C) 1999 Magnus Reftel, Christoph Reichenbach
+ heap.h Copyright (C) 1999,2000,01 Magnus Reftel, Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of

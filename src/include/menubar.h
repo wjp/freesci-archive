@@ -1,5 +1,5 @@
 /***************************************************************************
- menubar.h Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+ menubar.h Copyright (C) 1999,2000,01 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -34,7 +34,7 @@
 
 struct _state;
 
-#define MENU_FREESCI_BLATANT_PLUG 0xfff0
+/*#define MENU_FREESCI_BLATANT_PLUG 0xfff0*/
 /* This adds an "About FreeSCI" menu option to the first menu */
 
 
@@ -53,6 +53,8 @@ struct _state;
 /* Number of pixels to leave in between the left and the right centered text content in boxes
 ** that use right centered content
 */
+
+#define MENU_BAR_HEIGHT 10
 
 
 #define MENU_TYPE_NORMAL 0
@@ -156,9 +158,10 @@ menubar_free(menubar_t *menubar);
 
 
 void
-menubar_add_menu(menubar_t *menubar, char *title, char *entries, int font, byte *heapbase);
+menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entries, int font, byte *heapbase);
 /* Adds a menu to the menubar.
-** Parameters: (menubar_t *) menubar: The menubar to operate on
+** Parameters: (gfx_state_t *) state: The state the fonts are stored in
+**             (menubar_t *) menubar: The menubar to operate on
 **             (char *) title: The menu title
 **             (char *) entries: A string of menu entries
 **             (int) font: The font which is to be used for drawing
@@ -199,49 +202,6 @@ menubar_get_attribute(struct _state *s, int menu, int item, int attribute);
 ** Returns   : (int) The attribute value, or -1 on error
 */
 
-void
-menubar_draw(struct gfx_picture *pic, gfxw_port_t *port, menubar_t *menubar, int activated, int font_nr);
-/* Draws the menu bar
-** Parameters: (picture_t *) pic: The picture to draw to
-**             (gfxw_port_t *) port: The port to draw into
-**             (menubar_t *) menubar: The menu bar to draw
-**             (int) activated: The number of the menu option to activate
-**             (int) font_nr: The font to draw with
-** Returns   : (void)
-** Use an illegal value for "activated" (like -1) in order not to activate any
-** entry.
-*/
-
-void
-status_bar_draw(struct _state *s, char *text);
-/* Draws the menu bar
-** Parameters: (state_t *) s: The current state
-**             (char *) text: The text to draw
-** Returns   : (void)
-** If text is NULL, the title bar will be drawn all black.
-*/
-
-
-int
-menubar_draw_menu(struct _state *s, int menu, struct gfx_port *menu_port);
-/* Draws a complete menu
-** Parameters: (state_t *) s: The current state
-**             (int) menu: The menu to draw (starting at 0)
-**             (port_t *) menu_port: A port surrounding the menu background.
-** Returns   : (int) A hunk handle for use with graph_restore_box() to remove the menu
-** Menu port is filled in by this function.
-*/
-
-void
-menubar_draw_item(struct _state *s, struct gfx_port *port, int menu, int item, int active);
-/* Draws one menu item
-** Parameters: (state_t *) s: The current state
-**             (port_t *) port: The menu frame port (returned by menubar_draw_menu())
-**             (int) menu: The menu the item belongs to
-**             (int) item: The item number
-**             (int) active: Whether the item should be drawn as active
-** Returns   : (void)
-*/
 
 int
 menubar_item_valid(struct _state *s, int menu, int item);
@@ -253,7 +213,7 @@ menubar_item_valid(struct _state *s, int menu, int item);
 
 
 int
-menubar_map_pointer(struct _state *s, int *menu_nr, int *item_nr, struct gfx_port *port);
+menubar_map_pointer(struct _state *s, int *menu_nr, int *item_nr, gfxw_port_t *port);
 /* Maps the pointer position to a (menu,item) tuple.
 ** Parameters: (state_t *) s: The current state
 **             ((int *) x (int *)) (menu_nr, item_nr): Pointers to the current menu/item tuple
