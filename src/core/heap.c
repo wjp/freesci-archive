@@ -4,6 +4,8 @@
 #include <resource.h>
 #include <heap.h>
 
+/* #define HEAP_CLEAR_FREED_MEMORY */
+
 #define assert_in_range(pos) assert(pos>=800 && pos<=0xffff);
 
 static void putInt16(byte* dest, int src)
@@ -155,6 +157,9 @@ void heap_free(heap_t* h, int m)
 {
 	int previous, next;
 	assert_in_range(m);
+#ifdef HEAP_CLEAR_FREED_MEMORY
+	memset(h->start + m , get_size(h, m), 0);
+#endif /* HEAP_CLEAR_FREED_MEMORY */
 	previous=next=h->first_free;
 
 	/*Find the previous and next blocks*/

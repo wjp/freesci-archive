@@ -113,12 +113,12 @@ main(int argc, char** argv)
   }
   gamestate.have_mouse_flag = 0; /* Assume that no pointing device is present */
 
+  game_init(&gamestate); /* Initialize */
+
   if (graphOpen(&gamestate)) { /* initialize graphics */
     fprintf(stderr,"Graphics initialization failed. Aborting...\n");
     exit(1);
   };
-
-  game_init(&gamestate); /* Initialize */
 
   config_init(&conf, gamestate.game_name, NULL);
   gamestate.version = conf.version;

@@ -42,9 +42,13 @@
 
 #ifdef _WIN32
 #define scimkdir(arg1,arg2) mkdir(arg1)
+void MsgWait (int WaitTime);
+void Win32_usleep (long usec);
 #else
 #define scimkdir(arg1,arg2) mkdir(arg1,arg2)
 #endif
+
+
 
 #define SCI_KERNEL_DEBUG
 
@@ -79,6 +83,7 @@
 #define SCIkwarn _SCIkwarn
 
 #endif /* !__GNUC__ */
+
 
 /******************** Debug functions ********************/
 
@@ -125,6 +130,7 @@ _SCIGNUkdebug(char *funcname, state_t *s, int line, int area, char *format, ...)
       fprintf(stderr, "ERROR in %s ", funcname);
     else if (area == SCIkWARNING_NR)
       fprintf(stderr, "%s: Warning ", funcname);
+    else fprintf(stderr, funcname);
 
     fprintf(stderr, "(L%d): ", line);
 
@@ -178,7 +184,7 @@ else { s->heap[(guint16) address] = (value) &0xff;               \
 
 #ifdef SCI_KERNEL_DEBUG
 
-#define CHECK_THIS_KERNEL_FUNCTION if (s->debug_mode && (1 << SCIkFUNCCHK_NR)) {\
+#define CHECK_THIS_KERNEL_FUNCTION if (s->debug_mode & (1 << SCIkFUNCCHK_NR)) {\
   int i;\
   sciprintf("Kernel CHECK: %s[%x](", s->kernel_names[funct_nr], funct_nr); \
   for (i = 0; i < argc; i++) { \
@@ -496,6 +502,7 @@ kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr offset = PARAM(0);
   int i;
+  word underBits;
 
   if (GET_HEAP(offset + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
     SCIkwarn(SCIkERROR, "Attempt to dispose non-class/object at %04x\n", offset);
@@ -507,6 +514,10 @@ kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
     /* SCI silently ignores this behaviour; some games actually depend on this */
     return;
   }
+
+  underBits = GET_SELECTOR(offset, underBits);
+  if (underBits)
+    kfree(s, underBits); /* Views may dispose without cleaning up */
 
   i = 0;
   while ((i < SCRIPT_MAX_CLONES) && (s->clone_list[i] != offset)) i++;
@@ -610,9 +621,6 @@ void
 kNewList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr listbase = heap_allocate(s->_heap, 4);
-#ifdef SCI_KERNEL_NODES_DEBUG
-  CHECK_THIS_KERNEL_FUNCTION;
-#endif /* SCI_KERNEL_NODES_DEBUG */
 
   if (!listbase) {
     KERNEL_OOPS("Out of memory while creating a list");
@@ -634,9 +642,6 @@ void
 kNewNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr nodebase = heap_allocate(s->_heap, 8);
-#ifdef SCI_KERNEL_NODES_DEBUG
-  CHECK_THIS_KERNEL_FUNCTION;
-#endif /* SCI_KERNEL_NODES_DEBUG */
 
   if (!nodebase) {
     KERNEL_OOPS("Out of memory while creating a node");
@@ -662,9 +667,7 @@ kAddToEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr listbase = UPARAM(0);
   heap_ptr nodebase = UPARAM(1);
   heap_ptr old_lastnode = GET_HEAP(listbase + LIST_LAST_NODE);
-#ifdef SCI_KERNEL_NODES_DEBUG
-  CHECK_THIS_KERNEL_FUNCTION;
-#endif /* SCI_KERNEL_NODES_DEBUG */
+  SCIkdebug(SCIkNODES, "Adding node %04x to end of list %04x\n", nodebase, listbase);
 
   if (old_lastnode)
     PUT_HEAP(old_lastnode + LIST_NEXT_NODE, nodebase);
@@ -685,9 +688,7 @@ kAddToFront(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr listbase = UPARAM(0);
   heap_ptr nodebase = UPARAM(1);
   heap_ptr old_firstnode = GET_HEAP(listbase + LIST_FIRST_NODE);
-#ifdef SCI_KERNEL_NODES_DEBUG
-  CHECK_THIS_KERNEL_FUNCTION;
-#endif /* SCI_KERNEL_NODES_DEBUG */
+  SCIkdebug(SCIkNODES, "Adding node %04x to start of list %04x\n", nodebase, listbase);
 
   if (old_firstnode)
     PUT_HEAP(old_firstnode + LIST_PREVIOUS_NODE, nodebase);
@@ -707,16 +708,15 @@ kFindKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr node;
   word key = UPARAM(1);
-#ifdef SCI_KERNEL_NODES_DEBUG
-  CHECK_THIS_KERNEL_FUNCTION;
-#endif /* SCI_KERNEL_NODES_DEBUG */
+  SCIkdebug(SCIkNODES, "Looking for key %04x in list %04x\n", key, UPARAM(0));
 
-  node = GET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
+  node = UGET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
 
-  while (node && (GET_HEAP(node + LIST_NODE_KEY) != key))
-    node = GET_HEAP(node + LIST_NEXT_NODE);
+  while (node && (UGET_HEAP(node + LIST_NODE_KEY) != key))
+    node = UGET_HEAP(node + LIST_NEXT_NODE);
   /* Aborts if either the list ends (node == 0) or the key is found */
 
+  SCIkdebug(SCIkNODES, "Looking for key: Result is %04x\n", node);
   s->acc = node;
 }
 
@@ -727,9 +727,7 @@ kDeleteKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr list = UPARAM(0);
   heap_ptr node;
   word key = UPARAM(1);
-#ifdef SCI_KERNEL_NODES_DEBUG
-  CHECK_THIS_KERNEL_FUNCTION;
-#endif /* SCI_KERNEL_NODES_DEBUG */
+  SCIkdebug(SCIkNODES, "Removing key %04x from list %04x\n", key, list);
 
   node = UGET_HEAP(list + LIST_FIRST_NODE);
 
@@ -737,9 +735,12 @@ kDeleteKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
     node = GET_HEAP(node + LIST_NEXT_NODE);
   /* Aborts if either the list ends (node == 0) or the key is found */
 
+
   if (node) {
     heap_ptr prev_node = UGET_HEAP(node + LIST_PREVIOUS_NODE);
     heap_ptr next_node = UGET_HEAP(node + LIST_NEXT_NODE);
+
+    SCIkdebug(SCIkNODES,"Removing key from list: Succeeded at %04x\n", node);
 
     if (UGET_HEAP(list + LIST_FIRST_NODE) == node)
       PUT_HEAP(list + LIST_FIRST_NODE, next_node);
@@ -753,7 +754,7 @@ kDeleteKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     heap_free(s->_heap, node - 2);
 
-  }
+  } else SCIkdebug(SCIkNODES,"Removing key from list: FAILED\n");
 
 }
 
@@ -797,9 +798,14 @@ void
 kDisposeList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr address = PARAM(0) - 2; /* -2 to get the heap header */
-#ifdef SCI_KERNEL_NODES_DEBUG
-  CHECK_THIS_KERNEL_FUNCTION;
-#endif /* SCI_KERNEL_NODES_DEBUG */
+  heap_ptr node = GET_HEAP(address + 2 + LIST_FIRST_NODE);
+
+  while (node) { /* Free all nodes */
+    heap_ptr node_heapbase = node - 2;
+
+    node = GET_HEAP(node + LIST_NEXT_NODE); /* Next node */
+    heap_free(s->_heap, node_heapbase); /* Clear heap space of old node */
+  }
 
   if (GET_HEAP(address) != 6) {
     SCIkwarn(SCIkERROR, "Attempt to dispose non-list at %04x\n", address);
@@ -969,7 +975,7 @@ kGetCWD(state_t *s, int funct_nr, int argc, heap_ptr argp)
   if (chdir(FREESCI_GAMEDIR))
     if (scimkdir(FREESCI_GAMEDIR, 0700)) {
 
-      fprintf(stderr,"Warning: Could not enter ~/"FREESCI_GAMEDIR"; save files"
+      SCIkwarn(SCIkWARNING, "Warning: Could not enter ~/"FREESCI_GAMEDIR"; save files"
 	      " will be written to ~/\n");
 
       return;
@@ -1359,7 +1365,6 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
   while (xfer = *source++) {
-    fprintf(stderr,"%c\n", xfer);
     if (xfer == '%') {
       if (mode == 1)
 	*target++ = '%'; /* Literal % by using "%%" */
@@ -1431,7 +1436,6 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
   free(arguments);
 
   *target = 0; /* Terminate string */
-fprintf(stderr,"Format() = '%s'\n", abstarget);
   s->acc = dest; /* Return target addr */
 }
 
@@ -1531,6 +1535,7 @@ void
 kWait(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   GTimeVal time;
+  int SleepTime = PARAM(0);
 
   g_get_current_time (&time);
 
@@ -1538,6 +1543,12 @@ kWait(state_t *s, int funct_nr, int argc, heap_ptr argp)
     (time.tv_sec - s->last_wait_time.tv_sec) * 60;
 
   memcpy(&(s->last_wait_time), &time, sizeof(GTimeVal));
+
+#ifdef _WIN32
+  if (SleepTime)
+    MsgWait (SleepTime * 60 / 1000);
+#endif
+
 }
 
 
@@ -1653,6 +1664,7 @@ kInitBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int deltay_step = deltay / numsteps;
   int bdi;
 
+
   PUT_SELECTOR(mover, b_movCnt, 0);
   PUT_SELECTOR(mover, completed, 0);
 
@@ -1663,14 +1675,14 @@ kInitBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     PUT_SELECTOR(mover, b_xAxis, _K_BRESEN_AXIS_Y);
     PUT_SELECTOR(mover, b_incr, (deltay < 0)? -1 : 1);
-    PUT_SELECTOR(mover, b_i1, 2 * (abs(deltay) - abs(deltay_step * numsteps)) * numsteps);
+    PUT_SELECTOR(mover, b_i1, 2 * (abs(deltay) - abs(deltay_step * numsteps)) * abs(deltax_step));
     bdi = -abs(deltax);
 
   } else { /* Bresenham on x */
 
     PUT_SELECTOR(mover, b_xAxis, _K_BRESEN_AXIS_X);
     PUT_SELECTOR(mover, b_incr, (deltax < 0)? -1 : 1);
-    PUT_SELECTOR(mover, b_i1, 2 * (abs(deltax) - abs(deltax_step * numsteps)) * numsteps);
+    PUT_SELECTOR(mover, b_i1, 2 * (abs(deltax) - abs(deltax_step * numsteps)) * abs(deltay_step));
     bdi = -abs(deltay);
 
   }
@@ -1727,7 +1739,6 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   PUT_SELECTOR(client, x, x);
   PUT_SELECTOR(client, y, y);
 
-  /*INVOKE_SELECTOR(client, canBeHere, 0, 0);*/
   invoke_selector(INV_SEL(client, canBeHere, 0), 0);
 
   if (s->acc) /* Contains the return value */
@@ -1896,9 +1907,15 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
   if (resource) {
 
     if (s->version < SCI_VERSION_FTU_NEWER_DRAWPIC_PARAMETERS) {
-      if (!PARAM_OR_ALT(2, 0)) clear_picture(s->pic, 15);
+      if (!PARAM_OR_ALT(2, 0)) {
+	clear_picture(s->pic, 15);
+	_k_view_list_free_backgrounds(s, s->dyn_views, s->dyn_views_nr);
+      }
     } else
-      if (PARAM_OR_ALT(2, 1)) clear_picture(s->pic, 15);
+      if (PARAM_OR_ALT(2, 1)) {
+	clear_picture(s->pic, 15);
+	_k_view_list_free_backgrounds(s, s->dyn_views, s->dyn_views_nr);
+      }
 
     draw_pic0(s->pic, 1, PARAM_OR_ALT(3, 0), resource->data);
 
@@ -1908,7 +1925,6 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
     s->pic_not_valid = 1;
     s->pic_is_new = 1;
 
-    _k_view_list_free_backgrounds(s, s->dyn_views, s->dyn_views_nr);
 
   } else
     SCIkwarn(SCIkERROR, "Request to draw non-existing pic.%03d\n", PARAM(0));
@@ -2068,13 +2084,13 @@ _k_restore_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
 
   for (i = 0; i < list_nr; i++) {
     word signal = GET_HEAP(list[i].signalp);
-    fprintf(stderr,"Trying to restore with signal = %04x\n", signal);
+    SCIkdebug(SCIkGRAPHICS, "Trying to restore with signal = %04x\n", signal);
 
     if (signal & _K_VIEW_SIG_FLAG_NO_UPDATE) {
 
       if (signal & _K_VIEW_SIG_FLAG_UPDATE_ENDED)
 	PUT_HEAP(list[i].signalp, (signal & ~_K_VIEW_SIG_FLAG_UPDATE_ENDED) |
-		 _K_VIEW_SIG_FLAG_HIDDEN);
+		 _K_VIEW_SIG_FLAG_NO_UPDATE);
 
       continue; /* Don't restore this view */
     } else {
@@ -2084,6 +2100,7 @@ _k_restore_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
 
 	if (under_bits) {
 
+	  SCIkdebug(SCIkGRAPHICS, "Restoring BG for obj %04x with signal %04x\n", list[i].obj, signal);
 	  graph_restore_box(s, under_bits);
 
 	  PUT_HEAP(list[i].underBitsp, 0); /* Restore and mark as restored */
@@ -2107,6 +2124,7 @@ _k_view_list_free_backgrounds(state_t *s, view_object_t *list, int list_nr)
 
   for (i = 0; i < list_nr; i++) {
     int handle = GET_HEAP(list[i].underBitsp);
+    int signal = GET_HEAP(list[i].signalp);
 
     if (handle)
       kfree(s, handle);
@@ -2130,6 +2148,8 @@ _k_save_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
     if (GET_HEAP(list[i].underBitsp))
       continue; /* Don't overwrite an existing backup */
 
+    SCIkdebug(SCIkGRAPHICS, "Saving BG for obj %04x with signal %04x\n",
+	      list[i].obj, GET_HEAP(list[i].signalp));
     handle = view0_backup_background(s, list[i].x, list[i].y,
 				     list[i].loop, list[i].cel, list[i].view);
 
@@ -2145,11 +2165,28 @@ _k_view_list_dispose_loop(state_t *s, view_object_t *list, int list_nr, int argc
 
   for (i = 0; i < list_nr; i++) {
     if (UGET_HEAP(list[i].signalp) & _K_VIEW_SIG_FLAG_DISPOSE_ME)
-      /*if (INVOKE_SELECTOR(list[i].obj, delete, 1, 0))*/
       if (invoke_selector(INV_SEL(list[i].obj, delete, 1), 0))
 	SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
 		 " a delete funcselector\n", list[i].obj);
   }
+}
+
+
+void
+_k_invoke_view_list(state_t *s, heap_ptr list, int argc, int argp)
+     /* Invokes all elements of a view list. */
+{
+  heap_ptr node = GET_HEAP(list + LIST_FIRST_NODE);
+
+  while (node) {
+    heap_ptr obj = UGET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
+
+    if (!(GET_SELECTOR(obj, signal) & _K_VIEW_SIG_FLAG_FROZEN))
+      invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
+
+    node = UGET_HEAP(node + LIST_NEXT_NODE);
+  }
+
 }
 
 view_object_t *
@@ -2162,6 +2199,9 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int argc, 
   heap_ptr node = GET_HEAP(list + LIST_FIRST_NODE);
   view_object_t *retval;
   int i;
+
+  if (cycle)
+    _k_invoke_view_list(s, list, argc, argp); /* Invoke all objects if requested */
 
   *list_nr = 0;
 
@@ -2183,16 +2223,10 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int argc, 
   node = UGET_HEAP(list + LIST_FIRST_NODE); /* Start over */
 
   i = 0;
-sciprintf("Doing ");
   while (node) {
     heap_ptr obj = GET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
     int view_nr = GET_SELECTOR(obj, view);
     resource_t *viewres = findResource(sci_view, view_nr);
-
-    if (cycle)
-      if (!(GET_SELECTOR(obj, signal) & _K_VIEW_SIG_FLAG_FROZEN))
-	/*INVOKE_SELECTOR(obj, doit, 1, 0);*/
-        invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
 
     if (i == (*list_nr)) {
       (*list_nr)++;
@@ -2264,7 +2298,6 @@ sciprintf("Doing ");
     node = UGET_HEAP(node + LIST_NEXT_NODE); /* Next node */
   }
 
-sciprintf("\n");
   return retval;
 }
 
@@ -2282,6 +2315,7 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int use_signal)
     /* Now, if we either don't use signal OR if signal allows us to draw, do so: */
     if ((use_signal == 0) || (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE) &&
 			      !(signal & _K_VIEW_SIG_FLAG_HIDDEN))) {
+      SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", list[i].obj, signal);
       draw_view0(s->pic, s->ports[s->view_port],
 		 list[i].x - view0_cel_width(list[i].loop, list[i].cel, list[i].view) / 2,
 		 list[i].y - view0_cel_height(list[i].loop, list[i].cel, list[i].view),
@@ -2391,8 +2425,13 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
     return;
   }
 
+  /*  graph_restore_box(s, s->ports[goner]->bg_handle); /* Restore picture */
+
   free(s->ports[goner]);
   s->ports[goner] = NULL; /* Mark as free */
+
+  if (goner == s->view_port) /* Did we kill the active port? */
+    s->view_port = 0; /* Set wm_port as active port if so */
 }
 
 
@@ -2401,6 +2440,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   unsigned int window = 3;
   port_t *wnd;
+  int xlo, ylo;
 
   CHECK_THIS_KERNEL_FUNCTION;
 
@@ -2428,6 +2468,11 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   wnd->alignment = ALIGN_TEXT_LEFT; /* FIXME?? */
 
   s->ports[window] = wnd;
+
+  /*  xlo = wnd->x - 1;
+  ylo = wnd->y - (wnd->flags & WINDOW_FLAG_TITLE)? 11 : 1;
+
+  wnd->bg_handle = graph_save_box(s, xlo, ylo, wnd->xmax - xlo + 3, wnd->ymax - ylo + 3, 1);*/
 
   draw_window(s->pic, s->ports[window], wnd->bgcolor, wnd->priority,
 	     s->heap + wnd->title, s->titlebar_port.font , wnd->flags); /* Draw window */

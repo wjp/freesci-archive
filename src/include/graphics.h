@@ -81,6 +81,8 @@ typedef struct {
   byte *font; /* Font data */
   byte gray_text; /* Set to 1 to "gray out" text */
 
+  int bg_handle; /* Background picture handle for restoring */
+
 } port_t;
 
 

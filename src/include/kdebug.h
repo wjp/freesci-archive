@@ -26,13 +26,15 @@
 ***************************************************************************/
 /* Kernel debug defines */
 
-static const char *SCIk_Debug_Names[] = {
-  "Stub",
-  "Nodes",
+#define SCIk_DEBUG_MODES 6
+
+static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
+  "Stubs",
+  "Lists and nodes",
   "Graphics",
-  "String Handling",
+  "Character handling",
   "Memory management",
-  "Generic function checks",
+  "Function parameter checks",
 };
 /* The various debug areas */
 

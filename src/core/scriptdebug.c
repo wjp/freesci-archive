@@ -480,22 +480,82 @@ c_listclones(void)
   return 0;
 }
 
+
 int
-c_show_list(void)
+c_debuglog(void)
 {
-  heap_ptr list = cmd_params[0].val;
-  heap_ptr prevnode = 0, node;
-  int nodectr = 0;
+  int i;
+  char *parser;
+  char modechars[] = "ulgcmf"; /* Valid parameter chars */
 
   if (!_debugstate_valid) {
     sciprintf("Not in debug state\n");
     return 1;
   }
 
-  if (getInt16(_s->heap + list - 2) != 6) { /* List is hmalloc()'d to size 6 */
-    sciprintf("No list at %04x.\n", list);
-    return 1;
+  if (cmd_paramlength == 0) {
+    for (i = 0; i < SCIk_DEBUG_MODES; i++)
+      if (_s->debug_mode & (1 << i))
+	sciprintf(" Logging %s\n", SCIk_Debug_Names[i]);
+
+    return 0;
   }
+
+  for (i = 0; i < cmd_paramlength; i++) {
+    int mode;
+    int seeker;
+    char frob;
+
+    if (cmd_params[i].str[0] == '+')
+      mode = 1;
+    else
+      if (cmd_params[i].str[0] == '-')
+	mode = 0;
+      else {
+	sciprintf("Parameter '%s' should start with + or -\n", cmd_params[i].str);
+	return 1;
+      }
+
+    parser = cmd_params[i].str + 1;
+    while (frob = *parser) {
+      seeker = 0;
+
+      if (frob == '*') { /* wildcard */
+	if (mode) /* set all */
+	  _s->debug_mode = 0xffffffff;
+	else /* unset all */
+	  _s->debug_mode = 0;
+
+	parser++;
+	continue;
+      }
+
+      while (modechars[seeker] && (modechars[seeker] != frob))
+	seeker++;
+
+      if (modechars[seeker] == '\0') {
+	sciprintf("Invalid log mode parameter: %c\n", frob);
+	return 1;
+      }
+
+      if (mode) /* Set */
+	_s->debug_mode |= (1 << seeker);
+      else /* UnSet */
+	_s->debug_mode &= ~(1 << seeker);
+
+      parser++;
+    }
+  }
+
+  return 0;
+}
+
+
+int
+show_list(heap_ptr list)
+{
+  heap_ptr prevnode = 0, node;
+  int nodectr = 0;
 
   sciprintf("List at %04x:\n", list);
   node = getInt16(_s->heap + list );
@@ -517,6 +577,26 @@ c_show_list(void)
   else
     sciprintf("List is empty.\n");
   return 0;
+}
+
+
+int
+c_show_list(void)
+{
+  heap_ptr list = cmd_params[0].val;
+
+  if (!_debugstate_valid) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  if (getInt16(_s->heap + list - 2) != 6) { /* List is hmalloc()'d to size 6 */
+    sciprintf("No list at %04x.\n", list);
+    return 1;
+  }
+
+  return 
+    show_list(list);
 }
 
 
@@ -716,6 +796,11 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       cmdHook(c_refresh_screen, "refresh_screen", "", "Redraws the screen");
       cmdHook(c_redraw_screen, "redraw_screen", "", "Reloads and redraws the screen");
       cmdHook(c_show_list, "listinfo", "i", "Examines the list at the specified\n  heap address");
+      cmdHook(c_debuglog, "debuglog", "s*", "Sets the debug log modes.\n  Possible parameters:\n"
+	      "  +x (sets debugging for x)\n  -x (unsets debugging for x)\n\nPossible values for x:\n"
+	      "  u: Unimpl'd/stubbed stuff\n  l: Lists and nodes\n  g: Graphics\n  c: Character"
+	      " handling\n  m: Memory management\n  f: Function call checks\n  *: Everything\n\n"
+	      "  If invoked withour parameters,\n  it will list all activated\n  debug options.");
 
       cmdHookInt(&script_exec_stackpos, "script_exec_stackpos", "Position on the execution stack\n");
       cmdHookInt(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");

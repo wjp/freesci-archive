@@ -1242,7 +1242,7 @@ game_init(state_t *s)
   s->priority_first = 42; /* Priority zone 0 ends here */
   s->priority_last = 200; /* The highest priority zone (15) starts here */
 
-  s->debug_mode == 0xffffffff; /* Enable all debugging */
+  s->debug_mode = 0xffffffff; /* Enable all debugging */
 
   srand(time(NULL)); /* Initialize random number generator */
 

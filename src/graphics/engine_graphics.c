@@ -138,9 +138,9 @@ graph_restore_box(struct _state *s, int handle)
 
   /*#ifdef SCI_GRAPHICS_DEBUG_IMAGE_REPOSITORY */
   /*  draw_frame(s->pic, box->x, box->y, box->xl, box->yl, 0xee, -1);
-      graph_update_box(s, box->x, box->y, box->xl, box->yl); */
-  fprintf(stderr,"Restoring (%d, %d), size (%d, %d)\n", box->x, box->y, box->xl, box->yl);
-  /*#endif */
+      graph_update_box(s, box->x, box->y, box->xl, box->yl);
+    fprintf(stderr,"Restoring (%d, %d), size (%d, %d)\n", box->x, box->y, box->xl, box->yl);
+  #endif */
 
 
   if (!box) {
