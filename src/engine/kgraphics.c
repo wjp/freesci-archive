@@ -201,6 +201,7 @@ graph_restore_box(state_t *s, int handle)
 
 	gfxw_restore_snapshot(s->visual, *ptr);
 	free(*ptr);
+	*ptr = NULL;
 
 	kfree(s, handle);
 }

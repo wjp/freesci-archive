@@ -2228,7 +2228,7 @@ parse_option(char *option, int optlen, char *value)
 			return;
 		}
 
-		if (int_value < opt->max) {
+		if (int_value > opt->max) {
 			fprintf(stderr, "Option '%s' expects value <= %d; encountered '%s'\n", opt->name, opt->max, value);
 			return;
 		}

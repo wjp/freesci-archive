@@ -45,7 +45,7 @@ extern midiout_driver_t midiout_driver_unixraw;
 #endif
 
 #ifdef HAVE_ALSA
-extern midiout_driver_t midiout_driver_alsa;
+extern midiout_driver_t midiout_driver_alsaraw;
 #endif
 
 static midiout_driver_t *midiout_drivers[] = {
@@ -54,7 +54,7 @@ static midiout_driver_t *midiout_drivers[] = {
   &midiout_driver_unixraw,
 #endif
 #ifdef HAVE_ALSA
-  &midiout_driver_alsa,
+  &midiout_driver_alsaraw,
 #endif
   NULL
 };
