@@ -29,23 +29,19 @@
 #ifndef DONT_HAVE_SDL
 #include <gfx_tools.h>
 
+#include <sys/time.h>
 #include <SDL/SDL.h>
-
-#include <X11/Xlib.h>
-#include <X11/Xos.h>
-#include <X11/Xatom.h>
 
 #ifndef SDL_DISABLE
 #  define SDL_DISABLE 0
 #endif
 
-#define SCI_XLIB_PIXMAP_HANDLE_NORMAL 0
-#define SCI_XLIB_PIXMAP_HANDLE_GRABBED 1
+#define SCI_SDL_HANDLE_NORMAL 0
+#define SCI_SDL_HANDLE_GRABBED 1
 
-#define SCI_XLIB_SWAP_CTRL_CAPS (1 << 0)
+#define SCI_SDL_SWAP_CTRL_CAPS (1 << 0)
 
 int string_truep(char *value); 
-byte *xlib_create_cursor_data(gfx_driver_t *drv, gfx_pixmap_t *pointer, int mode);
 
 struct _sdl_state {
   int used_bytespp;
@@ -93,9 +89,9 @@ sdl_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
   if (strcmp(attribute, "swap_ctrl_caps") ||
       strcmp(attribute, "swap_caps_ctrl")) {
     if (string_truep(value))
-      S->flags |= SCI_XLIB_SWAP_CTRL_CAPS;
+      S->flags |= SCI_SDL_SWAP_CTRL_CAPS;
     else
-      S->flags &= ~SCI_XLIB_SWAP_CTRL_CAPS;
+      S->flags &= ~SCI_SDL_SWAP_CTRL_CAPS;
     
     return GFX_OK;
   }
@@ -154,6 +150,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   SDL_EventState(SDL_ACTIVEEVENT, SDL_IGNORE);
   SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
   SDL_EventState(SDL_VIDEORESIZE, SDL_IGNORE);
+  SDL_EventState(SDL_KEYUP, SDL_IGNORE);
 
   SDL_WM_SetCaption("FreeSCI", "freesci");
 
@@ -173,6 +170,13 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
     alpha_shift = S->primary->format->Ashift;
   }
 
+  printf("%04x %04x %04x %04x %d %d %d %d\n",
+	 S->primary->format->Rmask, 
+	 S->primary->format->Gmask,
+	 S->primary->format->Bmask, 
+	 S->primary->format->Amask,
+	 red_shift, green_shift, blue_shift, alpha_shift);
+  fflush(stdout);
   for (i = 0; i < 2; i++) {
     S->priority[i] = gfx_pixmap_alloc_index_data(gfx_new_pixmap(xsize, ysize, GFX_RESID_NONE, -i, -777));
     if (!S->priority[i]) {
@@ -222,7 +226,7 @@ sdl_init(struct _gfx_driver *drv)
   drv->debug_flags = 0xffffffff;
 
   if (SDL_Init(SDL_INIT_VIDEO)) {
-    DEBUGB("Failed to init SDL");
+    DEBUGB("Failed to init SDL\n");
     return GFX_FATAL;
   }
   SDL_EnableUNICODE(SDL_ENABLE);
@@ -244,7 +248,21 @@ sdl_exit(struct _gfx_driver *drv)
       gfx_free_pixmap(drv, S->priority[i]);
       S->priority[i] = NULL;
     }
-    /* XXXX write me */
+
+    for (i = 0; i < 3; i++) {
+      SDL_FreeSurface(S->visual[i]);
+      S->visual[i] = NULL;
+    }
+
+    SDL_FreeCursor(SDL_GetCursor());
+
+    for (i = 0; i < 2; i++)
+      if (S->pointer_data[i]) {
+	free(S->pointer_data[i]);
+	S->pointer_data[i] = NULL;
+      }
+
+
     
   }
   SDL_Quit();
@@ -268,6 +286,8 @@ sdl_map_color(gfx_driver_t *drv, gfx_color_t color)
 
 }
 
+
+/* This code shamelessly lifted from the SDL_gfxPrimitives package */
 static int lineColor(SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color)
 {
   int pixx, pixy;
@@ -452,7 +472,9 @@ sdl_register_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 						S->primary->format->Gmask,
 						S->primary->format->Bmask, 
 						S->primary->format->Amask);
-  
+
+  pxm->internal.handle = SCI_SDL_HANDLE_NORMAL;
+
   DEBUGPXM("Registered surface %d/%d/%d at %p (%dx%d)\n", pxm->ID, pxm->loop, pxm->cel,
 	   pxm->internal.info, pxm->xl, pxm->yl);
   return GFX_OK;
@@ -471,7 +493,8 @@ sdl_unregister_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 
   SDL_FreeSurface((SDL_Surface *) pxm->internal.info);
   pxm->internal.info = NULL;
-  free(pxm->data);
+  if (pxm->internal.handle != SCI_SDL_HANDLE_GRABBED)
+    free(pxm->data);
   pxm->data = NULL; 
   return GFX_OK;
 }
@@ -493,6 +516,9 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
     return GFX_ERROR;
   }
 
+  DEBUGU("Drawing %d (%d,%d)(%dx%d) to (%d,%d) on (%d)\n", pxm, src.x, src.y,
+	 src.xl, src.yl, dest.x, dest.y, bufnr);
+
   srect.x = src.x;
   srect.y = src.y;
   srect.w = src.xl;
@@ -502,16 +528,14 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
   drect.w = dest.xl;
   drect.h = dest.yl;
   
-  fflush(stdout);
-
-  if (pxm->internal.handle == SCI_XLIB_PIXMAP_HANDLE_GRABBED) {
+  if (pxm->internal.handle == SCI_SDL_HANDLE_GRABBED) {
     if (SDL_BlitSurface((SDL_Surface *)pxm->internal.info, &srect , 
-			S->visual[bufnr], &drect ))
+			S->visual[bufnr], &drect )) {
       ERROR("blt failed");
+      return GFX_ERROR;
+    }
     return GFX_OK;
   }
-
-  fflush(stdout);
 
   temp = SDL_CreateRGBSurface(SDL_SWSURFACE, drect.w, drect.h,
 			      S->used_bytespp << 3,
@@ -526,6 +550,8 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 
   drect.x = 0;
   drect.y = 0;
+  drect.w = dest.xl;
+  drect.h = dest.yl;
 
   if(SDL_BlitSurface(S->visual[bufnr], &srect, temp, &drect))
     ERROR("blt failed");
@@ -567,7 +593,7 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 
     pxm->xl = src.xl;
     pxm->yl = src.yl;
-    temp = SDL_CreateRGBSurface(SDL_SWSURFACE, src.x, src.y,
+    temp = SDL_CreateRGBSurface(SDL_SWSURFACE, src.xl, src.yl,
 				S->used_bytespp << 3,
 				S->primary->format->Rmask, 
 				S->primary->format->Gmask,
@@ -592,7 +618,7 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
       ERROR("grab_pixmap:  grab blit failed!\n");
 
     pxm->internal.info = temp;
-    pxm->internal.handle = SCI_XLIB_PIXMAP_HANDLE_GRABBED;
+    pxm->internal.handle = SCI_SDL_HANDLE_GRABBED;
     pxm->flags |= GFX_PIXMAP_FLAG_INSTALLED | GFX_PIXMAP_FLAG_EXTERNAL_PALETTE | GFX_PIXMAP_FLAG_PALETTE_SET;
     free(pxm->data);
     pxm->data = (byte *) temp->pixels;
@@ -622,10 +648,10 @@ sdl_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffe
   SDL_Rect srect, drect;
   
   if (src.x != dest.x || src.y != dest.y) {
-    DEBUGU("Updating %d (%d,%d)(%dx%d) to (%d,%d)\n", buffer, src.x, src.y,
-	   src.xl, src.yl, dest.x, dest.y);
+    DEBUGU("Updating %d (%d,%d)(%dx%d) to (%d,%d) on %d\n", buffer, src.x, src.y,
+	   src.xl, src.yl, dest.x, dest.y, data_dest);
   } else {
-    DEBUGU("Updating %d (%d,%d)(%dx%d)\n", buffer, src.x, src.y, src.xl, src.yl);
+    DEBUGU("Updating %d (%d,%d)(%dx%d) to %d\n", buffer, src.x, src.y, src.xl, src.yl, data_dest);
   }
 
   srect.x = src.x;
@@ -640,14 +666,21 @@ sdl_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffe
   if (SDL_BlitSurface(S->visual[data_source], &srect, 
 		      S->visual[data_dest], &drect))
     ERROR("surface update failed!\n");
-  
+
+  drect.x = dest.x;
+  drect.y = dest.y;
+  drect.w = src.xl;
+  drect.h = src.yl;
+
   if (buffer == GFX_BUFFER_BACK && (src.x == dest.x) && (src.y == dest.y))
     gfx_copy_pixmap_box_i(S->priority[0], S->priority[1], src);
   else {
     if (SDL_BlitSurface(S->visual[0], &srect, S->primary, &drect))
-      ERROR("surface update failed!\n");
+      ERROR("primary surface update failed!\n");
   }
-  
+
+  SDL_UpdateRect(S->visual[data_source], 0,0,0,0);
+  SDL_UpdateRect(S->visual[data_dest], 0,0,0,0);
   SDL_UpdateRect(S->primary, 0,0,0,0);
   return GFX_OK;
 }
@@ -684,17 +717,54 @@ sdl_set_palette(struct _gfx_driver *drv, int index, byte red, byte green, byte b
 
   /*** Mouse pointer operations ***/
 
+byte *
+sdl_create_cursor_rawdata(gfx_driver_t *drv, gfx_pixmap_t *pointer, int mode)
+{
+  int linewidth = (pointer->xl + 7) >> 3;
+  int lines = pointer->yl;
+  int xc, yc;
+  byte *data = calloc(linewidth, lines);
+  byte *linebase = data, *pos;
+  byte *src = pointer->index_data;
+  
+  for (yc = 0; yc < pointer->index_yl; yc++) {
+    int scalectr;
+    int bitc = 7;
+    pos = linebase;
+    
+    for (xc = 0; xc < pointer->index_xl; xc++) {
+      int draw = mode?
+	(*src == 0) : (*src < 255);
+      for (scalectr = 0; scalectr < XFACT; scalectr++) {
+	if (draw)
+	  *pos |= (1 << bitc);
+	bitc--;
+	if (bitc < 0) {
+	  bitc = 7;
+	  pos++;
+	}
+      }
+      src++;
+    }
+    for (scalectr = 1; scalectr < YFACT; scalectr++)
+      memcpy(linebase + linewidth * scalectr, linebase, linewidth);
+    linebase += linewidth * YFACT;
+  }
+  return data;
+}
+
+
 static SDL_Cursor
 *sdl_create_cursor_data(gfx_driver_t *drv, gfx_pixmap_t *pointer)
 {
   char *visual_data, *mask_data;
   
-  S->pointer_data[0] = visual_data = xlib_create_cursor_data(drv, pointer, 1);
-  S->pointer_data[1] = mask_data = xlib_create_cursor_data(drv, pointer, 0);
+  S->pointer_data[0] = visual_data = sdl_create_cursor_rawdata(drv, pointer, 1);
+  S->pointer_data[1] = mask_data = sdl_create_cursor_rawdata(drv, pointer, 0);
 
   return SDL_CreateCursor(visual_data, mask_data, 
-			  pointer->xl *XFACT, pointer->yl * YFACT,
-			  pointer->xoffset * XFACT, pointer->yoffset * YFACT);
+			  pointer->xl, pointer->yl,
+			  pointer->xoffset, pointer->yoffset);
   
 }
 
@@ -722,23 +792,6 @@ static int sdl_set_pointer (struct _gfx_driver *drv, gfx_pixmap_t *pointer)
   /*** Event management ***/
 
 int
-sdl_unmap_key(gfx_driver_t *drv, SDL_keysym keysym)
-{
-  SDLKey skey = keysym.sym;
-  int rkey = keysym.unicode;
-
-  if (S->flags & SCI_XLIB_SWAP_CTRL_CAPS) {
-    switch (skey) {
-    case SDLK_LCTRL: skey = SDLK_CAPSLOCK; break;
-    case SDLK_CAPSLOCK: skey = SDLK_LCTRL; break;
-    }
-  }
-
-  return 0;
-}
-
-
-int
 sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
 {
   SDLKey skey = keysym.sym;
@@ -750,7 +803,7 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
   if ((skey >= SDLK_0) && (skey <= SDLK_9))
     return rkey;
   
-  if (S->flags & SCI_XLIB_SWAP_CTRL_CAPS) {
+  if (S->flags & SCI_SDL_SWAP_CTRL_CAPS) {
     switch (skey) {
     case SDLK_LCTRL: skey = SDLK_CAPSLOCK; break;
     case SDLK_CAPSLOCK: skey = SDLK_LCTRL; break;
@@ -870,13 +923,9 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
 
 	sci_event->buckybits = S->buckystate;
 	sci_event->data = sdl_map_key(drv, event.key.keysym);
-	printf("...%04x (%d)\n",sci_event->data, sci_event->data);
 	if (sci_event->data) 
 	  return;
 	break; }
-      case SDL_KEYUP:
-	sdl_unmap_key(drv, event.key.keysym);
-	break;
       case SDL_MOUSEBUTTONDOWN:
 	sci_event->type = SCI_EVT_MOUSE_PRESS;
 	sci_event->buckybits = S->buckystate;
@@ -958,7 +1007,7 @@ gfx_driver_sdl = {
 	0, 0,
 	GFX_CAPABILITY_MOUSE_SUPPORT | GFX_CAPABILITY_MOUSE_POINTER |
 	GFX_CAPABILITY_PIXMAP_REGISTRY | GFX_CAPABILITY_PIXMAP_GRABBING,
-	0/*GFX_DEBUG_POINTER | GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC*/,
+	GFX_DEBUG_POINTER | GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC,
 	sdl_set_parameter,
 	sdl_init_specific,
 	sdl_init,
