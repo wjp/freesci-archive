@@ -857,28 +857,6 @@ sci_file_size(char *fname)
 	return retval;
 }
 
-#elif defined(_GP32)
-
-int
-sci_fd_size(int fd)
-{
-	return smc_filesize(fd);
-}
-
-int
-sci_file_size(char *fname)
-{
-	int fd = open(fname, O_RDONLY);
-	int retval = -1;
-	
-	if (fd != -1) {
-		retval = sci_fd_size(fd);
-		close(fd);
-	}
-	
-	return retval;
-}
-
 #else
 
 int

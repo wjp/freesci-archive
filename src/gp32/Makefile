@@ -52,6 +52,7 @@ OBJS =	$(FSCI_BASE)/src/engine/game.o \
 	$(FSCI_BASE)/src/gfx/sci_widgets.o \
 	$(FSCI_BASE)/src/gfx/widgets.o \
 	$(FSCI_BASE)/src/main.o \
+	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/menu/game_select.o \
 	$(FSCI_BASE)/src/menu/game_select_init.o \
 	$(FSCI_BASE)/src/menu/game_select_screen.o \
@@ -86,9 +87,7 @@ OBJS =	$(FSCI_BASE)/src/engine/game.o \
 	$(FSCI_BASE)/src/sound/soundserver.o \
 	$(FSCI_BASE)/src/gp32/wrap.o \
 	$(FSCI_BASE)/src/gp32/main.o \
-	$(FSCI_BASE)/src/gp32/config.o \
-	$(FSCI_BASE)/src/dc/keyboard.o \
-	$(FSCI_BASE)/src/dc/snprintf.o
+	$(FSCI_BASE)/src/dc/keyboard.o
 
 LIBS      = -L$(SDK_BASE)/lib -lmirkoSDK -lm
 CRT0      = $(SDK_BASE)/lib/crt0.S
@@ -109,8 +108,6 @@ $(PRG).elf: $(OBJS) crt0.o
 
 $(PRG).bin: $(PRG).elf
 	arm-elf-objcopy -O binary $(PRG).elf $(PRG).bin
-
-$(FSCI_BASE)/src/gp32/config.o: $(FSCI_BASE)/src/config.c
 
 crt0.o:	$(CRT0)
 	$(CC) -c -o crt0.o $(CRT0)

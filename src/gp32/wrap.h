@@ -35,36 +35,13 @@
 #undef byte
 #undef word
 #undef fopen
-
-#undef stdin
-#define stdin ((GPFILE *) 1)
-#undef stdout
-#define stdout ((GPFILE *) 2)
-#undef stderr
-#define stderr ((GPFILE *) 3)
-
-#define fopen gp_fopen
-#define fprintf gp_fprintf
-#define vfprintf gp_vfprintf
-#define fputs gp_fputs
-#define perror printf
-#undef getc
-#define getc gp_fgetc
-#define fgetc gp_fgetc
-#define ungetc gp_ungetc
-#define fgets gp_fgets
-#undef ferror
-#define ferror gp_ferror
-#undef clearerr
-#define clearerr gp_clearerr
-#undef getchar
-#undef putchar
-
-int gp_fgetc(GPFILE *stream);
-int gp_ferror(GPFILE *stream);
-void gp_clearerr(GPFILE *stream);
-int gp_fprintf(GPFILE *stream, const char *format, ...);
-char *gp_fgets(char *s, int size, GPFILE *stream);
+#undef fread
+#undef fwrite
+#undef fclose
+#undef ftell
+#undef rewind
+#undef fseek
+#undef FILE
 
 void usleep(unsigned long usec);
 
