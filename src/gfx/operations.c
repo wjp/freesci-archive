@@ -518,7 +518,8 @@ _gfxop_init_common(gfx_state_t *state, gfx_options_t *options, void *misc_payloa
 
 	if ((state->static_palette =
 	     gfxr_interpreter_get_palette(state->version,
-					  &(state->static_palette_entries))))
+					  &(state->static_palette_entries),
+					  misc_payload)))
 		_gfxop_alloc_colors(state, state->static_palette, state->static_palette_entries);
 
 	if (!((state->resstate = gfxr_new_resource_manager(state->version,
@@ -536,7 +537,8 @@ _gfxop_init_common(gfx_state_t *state, gfx_options_t *options, void *misc_payloa
 		if (!state->driver->capabilities & GFX_CAPABILITY_MOUSE_POINTER) {
 			GFXWARN("Graphics driver does not support drawing mouse pointers; disabling mouse input support.\n");
 			state->driver->capabilities &= ~GFX_CAPABILITY_MOUSE_SUPPORT;
-		} else if (gfxr_interpreter_needs_multicolored_pointers(state->version)
+		} else if (gfxr_interpreter_needs_multicolored_pointers
+			   (state->version, misc_payload)
 			   && !state->driver->capabilities & GFX_CAPABILITY_COLOR_MOUSE_POINTER) {
 			GFXWARN("Graphics driver only supports monochrome mouse pointers, but colored pointers are needed; disabling mouse input support.\n");
 			state->driver->capabilities &= ~GFX_CAPABILITY_MOUSE_SUPPORT;
@@ -1777,6 +1779,14 @@ _gfxop_set_pic(gfx_state_t *state)
 	_gfxop_install_pixmap(state->driver, pxm);
 	return state->driver->set_static_buffer(state->driver, pxm, state->pic->priority_map);
 }
+
+
+void *
+gfxop_get_pic_metainfo(gfx_state_t *state)
+{
+	return (state->pic)? state->pic->internal : NULL;
+}
+
 
 int
 gfxop_new_pic(gfx_state_t *state, int nr, int flags, int default_palette)

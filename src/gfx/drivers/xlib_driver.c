@@ -260,8 +260,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	int red_shift, green_shift, blue_shift, alpha_shift;
 	int bytespp_physical;
 	unsigned int alpha_mask;
-	int xsize;
-	int ysize;
+	int xsize, ysize;
 	XSizeHints *size_hints;
 	XClassHint *class_hint;
         XImage *foo_image = NULL;
@@ -282,13 +281,13 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	default_screen = DefaultScreen(S->display);
 
-	if (xsize == -1 && ysize == -1) { /* Detect (used INTERNALLY!) */
-		xsize = 2;
+	if (xfact == -1 && yfact == -1) { /* Detect (used INTERNALLY!) */
+		xfact = 2;
 		if (DisplayWidth(S->display, default_screen) < 640
 		    || DisplayHeight(S->display, default_screen) < 400)
-			xsize = 1;
+			xfact = 1;
 
-		ysize = xsize;
+		yfact = xfact;
 	}
 
 	xsize = xfact * 320;
@@ -296,6 +295,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	if (xfact < 1 || yfact < 1 || bytespp < 1 || bytespp > 4) {
 		ERROR("Internal error: Attempt to open window w/ scale factors (%d,%d) and bpp=%d!\n",
 		      xfact, yfact, bytespp);
+		BREAKPOINT();
 	}
 
 #ifdef HAVE_MITSHM

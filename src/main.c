@@ -582,6 +582,8 @@ init_console()
 		     "Alpha threshold for crossblitting\n");
 	con_hook_int(&sci0_palette, "sci0_palette",
 		     "SCI0 palette- 0: EGA, 1:AGI/Amiga, 2:Grayscale\n");
+	con_hook_int(&sci01_priority_table_flags, "sci01_priority_table_flags",
+		     "SCI01 priority table debugging flags: 1:Disable, 2:Print on change\n");
 
 	con_passthrough = 1; /* enables all sciprintf data to be sent to stdout */
 

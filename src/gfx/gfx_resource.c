@@ -414,6 +414,9 @@ gfxr_free_pic(gfx_driver_t *driver, gfxr_pic_t *pic)
 	pic->visual_map = NULL;
 	pic->priority_map = NULL;
 	pic->control_map = NULL;
+	if (pic->internal)
+		free(pic->internal);
+	pic->internal = NULL;
 	if (pic->undithered_buffer)
 		free(pic->undithered_buffer);
 	pic->undithered_buffer = 0;

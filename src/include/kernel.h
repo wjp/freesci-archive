@@ -265,14 +265,36 @@ kernel_oops(struct _state *s, char *file, int line, char *reason);
 
 
 
-/******************** Priority macros ********************/
+/******************** Priority macros/functions ********************/
 
-#define VIEW_PRIORITY(y) (((y) < s->priority_first)? 0 : (((y) > s->priority_last)? 14 : 1\
+struct _state;
+
+extern int sci01_priority_table_flags; /* 1: delete, 2: print */
+
+int
+_find_priority_band(struct _state *s, int band);
+/* Finds the position of the priority band specified
+** Parameters: (state_t *) s: State to search in
+**             (int) band: Band to look for
+** Returns   : (int) Offset at which the band starts
+*/
+
+int
+_find_view_priority(struct _state *s, int y);
+/* Does the opposite of _find_priority_band
+** Parameters: (state_t *) s: State
+**             (int) y: Coordinate to check
+** Returns   : (int) The priority band y belongs to
+*/
+
+#define SCI0_VIEW_PRIORITY(y) (((y) < s->priority_first)? 0 : (((y) > s->priority_last)? 14 : 1\
 	+ ((((y) - s->priority_first) * 13) / (s->priority_last - s->priority_first))))
 
-#define PRIORITY_BAND_FIRST(nr) ((((nr) == 0)? 0 :  \
+#define SCI0_PRIORITY_BAND_FIRST(nr) ((((nr) == 0)? 0 :  \
         ((s->priority_first) + (((nr)-1) * (s->priority_last - s->priority_first)) / 13)))
 
+#define VIEW_PRIORITY(y) _find_view_priority(s, y)
+#define PRIORITY_BAND_FIRST(nr) _find_priority_band(s, nr)
 
 
 

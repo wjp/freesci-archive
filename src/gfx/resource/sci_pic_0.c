@@ -171,6 +171,7 @@ gfxr_init_pic(gfx_mode_t *mode, int ID)
 
 	pic->undithered_buffer_size = pic->visual_map->index_xl * pic->visual_map->index_yl;
 	pic->undithered_buffer = NULL;
+	pic->internal = NULL;
 
 	return pic;
 }
@@ -1848,8 +1849,8 @@ gfxr_remove_artifacts_pic0(gfxr_pic_t *dest, gfxr_pic_t *src)
 
 
 void
-gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size, byte *resource,
-	       gfxr_pic0_params_t *style, int resid)
+gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size,
+	       byte *resource, gfxr_pic0_params_t *style, int resid)
 {
 	const int default_palette_table[GFXR_PIC0_PALETTE_SIZE] = {
 		0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
@@ -2207,11 +2208,20 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 				break;
 
 
-			case PIC_OPX_SET_PRIORITY_TABLE:
-				GFXWARN("Set priority table @%d\n", pos);
-				GFXWARN("-- not implemented- aborting --\n");
-				return;
-				break;
+			case PIC_OPX_SET_PRIORITY_TABLE: {
+				int i;
+				int *pri_table;
+
+				p0printf("Set priority table @%d\n", pos);
+				if (!pic->internal)
+					pic->internal = sci_malloc(16 * sizeof(int));
+
+				pri_table = pic->internal;
+
+				for (i = 0; i < 16; i++)
+					pri_table[i] = resource[pos++];
+			}
+			break;
 
 
 			default: sciprintf("%s L%d: Warning: Unknown opx %02x\n", __FILE__, __LINE__, op);

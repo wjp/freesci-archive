@@ -1,3 +1,14 @@
+2001-10-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kDrawPic): Added support for priority table
+
+	* src/gfx/resource/sci_pic_0.c (gfxr_draw_pic0) and operational layer:
+	pics now have 'internal' information that can be retreived from the
+	interpreter with gfxop_get_pic_metainfo().
+
+	* Improved passing of 'payload' (interpreter gfx config) info to the
+	interpreter gfx functions
+
 2001-10-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/midi_mt32.c (midi_mt32_sysex_delay): Fixed to use

@@ -58,7 +58,8 @@ gfxr_new_resource_manager(int version, gfx_options_t *options,
 	for (i = 0; i < GFX_RESOURCE_TYPES_NR; i++) {
 		sbtree_t *tree;
 		int entries_nr;
-		int *resources = gfxr_interpreter_get_resources(state, i, version, &entries_nr);
+		int *resources = gfxr_interpreter_get_resources(state, i, version,
+								&entries_nr, misc_payload);
 
 		if (!resources)
 			state->resource_trees[i] = NULL;
@@ -269,7 +270,8 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 	int restype = GFX_RESOURCE_TYPE_PIC;
 	sbtree_t *tree = state->resource_trees[restype];
 	gfx_resource_t *res = NULL;
-	int hash = gfxr_interpreter_options_hash(restype, state->version, state->options);
+	int hash = gfxr_interpreter_options_hash(restype, state->version,
+						 state->options, state->misc_payload);
         int must_post_process_pic = 0;
 	int need_unscaled =
 		(state->driver->mode->xfact != 1 || state->driver->mode->yfact != 1);
@@ -287,25 +289,37 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 
 		if (state->options->pic0_unscaled) {
 			need_unscaled = 0;
-			pic = gfxr_interpreter_init_pic(state->version, &mode_1x1_color_index, (restype << 16) | nr);
-		} else pic = gfxr_interpreter_init_pic(state->version, state->driver->mode, (restype << 16) | nr);
+			pic = gfxr_interpreter_init_pic(state->version,
+							&mode_1x1_color_index,
+							(restype << 16) | nr,
+							state->misc_payload);
+		} else pic = gfxr_interpreter_init_pic(state->version,
+						       state->driver->mode,
+						       (restype << 16) | nr,
+						       state->misc_payload);
 
 		if (!pic) {
 			GFXERROR("Failed to allocate scaled pic!\n");
 			return NULL;
 		}
 
-		gfxr_interpreter_clear_pic(state->version, pic);
+		gfxr_interpreter_clear_pic(state->version, pic, state->misc_payload);
 
 		if (need_unscaled) {
-			unscaled_pic = gfxr_interpreter_init_pic(state->version, &mode_1x1_color_index, (restype << 16) | nr);
+			unscaled_pic = gfxr_interpreter_init_pic(state->version,
+								 &mode_1x1_color_index,
+								 (restype << 16) | nr,
+								 state->misc_payload);
 			if (!unscaled_pic) {
 				GFXERROR("Failed to allocate unscaled pic!\n");
 				return NULL;
 			}
-			gfxr_interpreter_clear_pic(state->version, unscaled_pic);
+			gfxr_interpreter_clear_pic(state->version, unscaled_pic,
+						   state->misc_payload);
 		}
-		if (gfxr_interpreter_calculate_pic(state, pic, unscaled_pic, flags, default_palette, nr)) {
+		if (gfxr_interpreter_calculate_pic(state, pic, unscaled_pic, flags,
+						   default_palette, nr,
+						   state->misc_payload)) {
 			gfxr_free_pic(state->driver, pic);
 			if (unscaled_pic)
 				gfxr_free_pic(state->driver, unscaled_pic);
@@ -364,7 +378,9 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 	sbtree_t *tree = state->resource_trees[restype];
 	gfxr_pic_t *pic = NULL;
 	gfx_resource_t *res = NULL;
-	int hash = gfxr_interpreter_options_hash(restype, state->version, state->options);
+	int hash = gfxr_interpreter_options_hash(restype, state->version,
+						 state->options,
+						 state->misc_payload);
 	int need_unscaled = !(state->options->pic0_unscaled)
 		&& (state->driver->mode->xfact != 1 || state->driver->mode->yfact != 1);
 
@@ -392,7 +408,8 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 		res->lock_sequence_nr = state->options->buffer_pics_nr;
 
 		gfxr_interpreter_calculate_pic(state, res->scaled_data.pic, need_unscaled? res->unscaled_data.pic : NULL,
-				       flags, default_palette, new_nr);
+					       flags, default_palette, new_nr,
+					       state->misc_payload);
 	}
 
 	res->mode = MODE_INVALID; /* Invalidate */
@@ -413,7 +430,8 @@ gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel)
 	int restype = GFX_RESOURCE_TYPE_VIEW;
 	sbtree_t *tree = state->resource_trees[restype];
 	gfx_resource_t *res = NULL;
-	int hash = gfxr_interpreter_options_hash(restype, state->version, state->options);
+	int hash = gfxr_interpreter_options_hash(restype, state->version,
+						 state->options, state->misc_payload);
 	gfxr_view_t *view = NULL;
 	gfxr_loop_t *loop_data = NULL;
 	gfx_pixmap_t *cel_data = NULL;
@@ -424,7 +442,7 @@ gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel)
 	res = (gfx_resource_t *) sbtree_get(tree, nr);
 
 	if (!res || res->mode != hash) {
-		view = gfxr_interpreter_get_view(state, nr);
+		view = gfxr_interpreter_get_view(state, nr, state->misc_payload);
 
 		if (!view)
 			return NULL;
@@ -478,7 +496,8 @@ gfxr_get_font(gfx_resstate_t *state, int nr, int scaled)
 	int restype = GFX_RESOURCE_TYPE_FONT;
 	sbtree_t *tree = state->resource_trees[restype];
 	gfx_resource_t *res = NULL;
-	int hash = gfxr_interpreter_options_hash(restype, state->version, state->options);
+	int hash = gfxr_interpreter_options_hash(restype, state->version,
+						 state->options, state->misc_payload);
 
 	if (!tree)
 		return NULL;
@@ -486,7 +505,8 @@ gfxr_get_font(gfx_resstate_t *state, int nr, int scaled)
 	res = (gfx_resource_t *) sbtree_get(tree, nr);
 
 	if (!res || res->mode != hash) {
-		gfx_bitmap_font_t *font = gfxr_interpreter_get_font(state, nr);
+		gfx_bitmap_font_t *font = gfxr_interpreter_get_font(state, nr,
+								    state->misc_payload);
 
 		if (!font)
 			return NULL;
@@ -521,7 +541,8 @@ gfxr_get_cursor(gfx_resstate_t *state, int nr)
 	int restype = GFX_RESOURCE_TYPE_CURSOR;
 	sbtree_t *tree = state->resource_trees[restype];
 	gfx_resource_t *res = NULL;
-	int hash = gfxr_interpreter_options_hash(restype, state->version, state->options);
+	int hash = gfxr_interpreter_options_hash(restype, state->version,
+						 state->options, state->misc_payload);
 
 	if (!tree)
 		return NULL;
@@ -529,7 +550,8 @@ gfxr_get_cursor(gfx_resstate_t *state, int nr)
 	res = (gfx_resource_t *) sbtree_get(tree, nr);
 
 	if (!res || res->mode != hash) {
-		gfx_pixmap_t *cursor = gfxr_interpreter_get_cursor(state, nr);
+		gfx_pixmap_t *cursor = gfxr_interpreter_get_cursor(state, nr,
+								   state->misc_payload);
 
 		if (!cursor)
 			return NULL;

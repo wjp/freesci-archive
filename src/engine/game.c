@@ -106,6 +106,7 @@ _free_vocabulary(state_t *s)
 static int
 _init_graphics_input(state_t *s)
 {
+	s->pic_priority_table = NULL;
 	s->pics = NULL;
 	s->pics_nr = 0;
 	return 0;

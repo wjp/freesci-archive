@@ -122,6 +122,8 @@ typedef struct _state
 	byte onscreen_console;  /* Use the onscreen console for debugging */
 	byte *osc_backup; /* Backup of the pre-onscreen console screen data */
 
+	int *pic_priority_table; /* 16 entries with priorities or NULL if not present */
+
 	char *status_bar_text; /* Text on the status bar, or NULL if the title bar is blank */
 
 	long game_time; /* Counted at 60 ticks per second, reset during start time */

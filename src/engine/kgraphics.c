@@ -151,6 +151,36 @@ reparentize_primary_widget_lists(state_t *s, gfxw_port_t *newport)
 	}
 }
 
+inline int
+_find_view_priority(state_t *s, int y)
+{
+	if (s->pic_priority_table) { /* SCI01 priority table set? */
+		int j;
+		for (j = 0; j < 15; j++)
+			if (y < s->pic_priority_table[j])
+				return j;
+		return 15; /* Maximum */
+	} else
+		return SCI0_VIEW_PRIORITY(y);
+}
+
+inline int
+_find_priority_band(state_t *s, int nr)
+{
+	if (nr < 0 || nr > 14) {
+		if (nr == 15)
+			return 0xffff;
+		else {
+			SCIkwarn(SCIkWARNING, "Attempt to get priority band %d\n", nr);
+		}
+		return 0;
+	}
+	if (s->pic_priority_table) /* SCI01 priority table set? */
+		return s->pic_priority_table[nr];
+	else
+		return SCI0_PRIORITY_BAND_FIRST(nr);
+}
+
 int
 graph_save_box(state_t *s, rect_t area)
 {
@@ -916,6 +946,7 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 _k_view_list_free_backgrounds(state_t *s, view_object_t *list, int list_nr);
 
+int sci01_priority_table_flags = 0;
 
 void
 kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -970,6 +1001,20 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->visual->add(GFXWC(s->visual), GFXW(s->wm_port));
 
 	s->port = s->picture_port;
+
+	s->pic_priority_table = gfxop_get_pic_metainfo(s->gfx_state);
+
+	if (sci01_priority_table_flags & 0x2) {
+		if (s->pic_priority_table) {
+			int i;
+			fprintf(stderr,"---------------------------\nPriority table:\n");
+			for (i = 0; i < 16; i++)
+				fprintf(stderr,"\t%d:\t%d\n", i, s->pic_priority_table[i]);
+			fprintf(stderr,"---------------------------\n");
+		}
+	}
+	if (sci01_priority_table_flags & 0x1)
+		s->pic_priority_table = NULL; 
 
 	if (argc > 1)
 		s->pic_animate = PARAM(1); /* The animation used during kAnimate() later on */
