@@ -30,7 +30,6 @@
 #include <uinput.h>
 #include <console.h>
 #include <gfx_operations.h>
-#include <gfx_drivers_list.h>
 #include <sci_conf.h>
 #include <kdebug.h>
 #include <sys/types.h>
@@ -341,11 +340,11 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 			printf("Supported graphics drivers: ");
 
 			i = 0;
-			while (gfx_drivers[i]) {
+			while (gfx_get_driver_name(i)) {
 				if (i != 0)
 					printf(", ");
 
-				printf(gfx_drivers[i]->name);
+				printf(gfx_get_driver_name(i));
 
 				i++;
 			}
@@ -547,20 +546,6 @@ init_gfx(cl_options_t *cl_options, gfx_driver_t *driver)
 }
 
 
-static gfx_driver_t *
-find_gfx_driver(char *name)
-{
-	gfx_driver_t *retval = gfx_drivers[0];
-
-	if (!name)
-		return gfx_drivers[0];
-
-	while (retval && !strcasecmp(name, retval->name))
-		retval++;
-
-	return retval;
-}
-
 
 int
 main(int argc, char** argv)
@@ -666,7 +651,7 @@ main(int argc, char** argv)
 	}
 
 	if (!gfx_driver)
-		gfx_driver = find_gfx_driver(cl_options.gfx_driver_name);
+		gfx_driver = gfx_find_driver(cl_options.gfx_driver_name);
 
 	if (!gfx_driver) {
 		if (gfx_driver_name)

@@ -30,7 +30,6 @@
 #include <gfx_system.h>
 #include <gfx_tools.h>
 #include <gfx_resource.h>
-#include <gfx_drivers_list.h>
 #include <sci_conf.h>
 
 #ifdef _MSC_VER
@@ -398,7 +397,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_options.text_xlate_filter = GFX_XLATE_FILTER_NONE;
 	conf->gfx_options.dirty_frames = GFXOP_DIRTY_FRAMES_CLUSTERS;
 
-	conf->gfx_driver = gfx_drivers[0];
+	conf->gfx_driver = gfx_find_driver(NULL);
 
 	conf->mouse = 1;
 
@@ -533,11 +532,10 @@ static gfx_driver_t *
 _parse_gfx_driver(char *driver_name)
 {
 	int i;
+	gfx_driver_t *retval = gfx_find_driver(driver_name);
 
-	for (i=0; gfx_drivers [i]; i++)
-		if (!strcasecmp (gfx_drivers[i]->name, driver_name))
-			return gfx_drivers [i];
-
+	if (retval)
+		return retval;
 	/* not found - return default */
 
 	printf ("Unknown graphics driver %s\n", driver_name);

@@ -37,7 +37,6 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <string.h>
-#include <gfx_drivers_list.h>
 #include <gfx_resource.h>
 #include <gfx_tools.h>
 #include <gfx_operations.h>

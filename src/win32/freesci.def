@@ -16,19 +16,19 @@ EXPORTS
   vocab_free_words
   vocab_get_any_group_word
   con_init
-  con_init_gfx
+;  con_init_gfx
   con_parse
   con_hook_command
   con_file DATA
   con_passthrough DATA
-  con_visible_rows DATA
+;  con_visible_rows DATA
   sci_hexdump
   sciprintf
   formats DATA
-  sci_color_mode DATA
+;  sci_color_mode DATA
   sci_version DATA
-  makeMIDI0
-  mapMIDIInstruments
+;  makeMIDI0
+;  mapMIDIInstruments
   script_dissect
   set_debug_mode
   _debug_get_input DATA
@@ -37,12 +37,12 @@ EXPORTS
   _debugstate_valid DATA
   script_abort_flag DATA
   script_debug_flag DATA
-  alloc_empty_picture
-  free_picture
-  write_pic_png
-  draw_pic0
-  graph_get_default_driver
-  gfx_drivers DATA
+;  alloc_empty_picture
+;  free_picture
+;  write_pic_png
+;  draw_pic0
+;  graph_get_default_driver
+;  gfx_drivers DATA
   sfx_drivers DATA
   sci_ffs
   class_names DATA
@@ -59,12 +59,18 @@ EXPORTS
   getopt_long
   optarg DATA
   optind DATA
-  g_strcasecmp
-  g_free
+;  g_strcasecmp
+ ; g_free
   loadObjects
   printObject
   using_history DATA
   add_history
   readline
   
-  
+  gfxop_init
+  gfxop_exit
+  gfxop_init_default
+  game_init_graphics
+  con_hook_int
+  mapMIDIInstruments
+ 

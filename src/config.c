@@ -652,7 +652,6 @@ char *yytext;
 #include <gfx_system.h>
 #include <gfx_tools.h>
 #include <gfx_resource.h>
-#include <gfx_drivers_list.h>
 #include <sci_conf.h>
 
 #ifdef _MSC_VER
@@ -752,7 +751,7 @@ static name_value_pair line_mode[] = {
 	{0, 0}
 };
 
-#line 756 "lex.yy.c"
+#line 755 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -903,10 +902,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 140 "config.l"
+#line 139 "config.l"
 
 
-#line 910 "lex.yy.c"
+#line 909 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -991,7 +990,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 142 "config.l"
+#line 141 "config.l"
 {
 	++yytext; /* Get over opening bracket */
 
@@ -1035,7 +1034,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 183 "config.l"
+#line 182 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1047,7 +1046,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 192 "config.l"
+#line 191 "config.l"
 { /* Deprecated: For backward compatibility */
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1059,7 +1058,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 201 "config.l"
+#line 200 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1071,7 +1070,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 210 "config.l"
+#line 209 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1083,7 +1082,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 219 "config.l"
+#line 218 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1095,7 +1094,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 228 "config.l"
+#line 227 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1107,7 +1106,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 237 "config.l"
+#line 236 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1119,7 +1118,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 246 "config.l"
+#line 245 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1131,7 +1130,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 255 "config.l"
+#line 254 "config.l"
 {
 	int val;
 	yytext = strchr(yytext, '=') + 1;
@@ -1147,7 +1146,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 268 "config.l"
+#line 267 "config.l"
 { /***** End of graphics *****/
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1160,7 +1159,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 278 "config.l"
+#line 277 "config.l"
 {
 	yytext = strchr (yytext, '=') + 1;
 
@@ -1175,7 +1174,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 290 "config.l"
+#line 289 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1188,7 +1187,7 @@ if (cur_section) {
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 301 "config.l"
+#line 300 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1200,7 +1199,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 310 "config.l"
+#line 309 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1212,7 +1211,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 319 "config.l"
+#line 318 "config.l"
 {
         char *p=yytext;
         char *p2;
@@ -1255,16 +1254,16 @@ case 17:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 359 "config.l"
+#line 358 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 361 "config.l"
+#line 360 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 363 "config.l"
+#line 362 "config.l"
 {
         yy_delete_buffer( YY_CURRENT_BUFFER );
         yyterminate();
@@ -1272,15 +1271,15 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 368 "config.l"
+#line 367 "config.l"
 printf("Unrecognized option: %s\n", yytext);
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 370 "config.l"
+#line 369 "config.l"
 ECHO;
 	YY_BREAK
-#line 1284 "lex.yy.c"
+#line 1283 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2164,7 +2163,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 370 "config.l"
+#line 369 "config.l"
 
 
 int
@@ -2196,7 +2195,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_options.text_xlate_filter = GFX_XLATE_FILTER_NONE;
 	conf->gfx_options.dirty_frames = GFXOP_DIRTY_FRAMES_CLUSTERS;
 
-	conf->gfx_driver = gfx_drivers[0];
+	conf->gfx_driver = gfx_find_driver(NULL);
 
 	conf->mouse = 1;
 
@@ -2331,11 +2330,10 @@ static gfx_driver_t *
 _parse_gfx_driver(char *driver_name)
 {
 	int i;
+	gfx_driver_t *retval = gfx_find_driver(driver_name);
 
-	for (i=0; gfx_drivers [i]; i++)
-		if (!strcasecmp (gfx_drivers[i]->name, driver_name))
-			return gfx_drivers [i];
-
+	if (retval)
+		return retval;
 	/* not found - return default */
 
 	printf ("Unknown graphics driver %s\n", driver_name);

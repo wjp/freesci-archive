@@ -31,6 +31,7 @@
 #include <gfx_system.h>
 #include <uinput.h>
 
+
 typedef enum {
 	GFX_BUFFER_FRONT = 0,
 	GFX_BUFFER_BACK = 1,
@@ -373,6 +374,28 @@ typedef struct _gfx_driver { /* Graphics driver */
   void *state; /* Reserved for internal use */
 
 } gfx_driver_t;
+
+
+
+gfx_driver_t *
+gfx_find_driver(char *name);
+/* Attempts to match a graphics driver to a name
+** Parameters: (char *) name: The name of the graphics driver to look for
+**                            or NULL for the default driver
+** Returns   : (gfx_driver_t *) The resulting driver, or NULL if none
+**                              was found
+*/
+
+char *
+gfx_get_driver_name(int nr);
+/* Retreives the name of the driver with the specified number
+** Parameters: (int) nr: Number of the driver
+**             (char *) The driver's name
+** Note that this function only makes sense within a loop or if nr=0, since
+** the result value is valid iff nr >= 0 AND there does not exist an nr'
+** with 0 <= nr' < nr so that gfx_get_driver_name(nr') == NULL.
+*/
+
 
 
 #endif /* !_SCI_GFX_DRIVER_H_ */
