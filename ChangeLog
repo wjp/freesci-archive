@@ -1,3 +1,7 @@
+2001-05-20  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/modules.c: Generic fixes
+
 2001-05-19  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/scicore/modules.c: Added file

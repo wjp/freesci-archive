@@ -702,9 +702,10 @@ lookup_driver(lookup_funct_t lookup_func, void explain_func(void),
 
 	if (!retval) {
 		sciprintf("The %s you requested, '%s', is not available.\n"
-			  "Please choose one among the following: ",
+/*			  "Please choose one among the following: " */
+			  ,
 			  driver_class, driver_name);
-		explain_func();
+/*		explain_func();  */
 		exit(1);
 	}
 

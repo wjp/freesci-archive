@@ -84,24 +84,26 @@ sci_find_module(char *path, char *name, char *type, char *struct_prefix,
 		module = _sci_try_open_module(module_name, path_pos,
 					      struct_name, handle);
 
-		if (module->class_magic != magic) {
-			fprintf(stderr, "%s at %s is not a %s module, skipping...\n",
-				module_name, path_pos, type);
-			dlclose(*handle);
-			module = NULL;
-		} else if (module->class_version != version) {
-			fprintf(stderr, "%s at %s has %s module version %d,"
-				" expected %d- skipping...\n",
-				module_name, path_pos, type, module->class_version,
-				version);
-			dlclose(*handle);
-			module = NULL;
+		if (module) {
+			if (module->class_magic != magic) {
+				fprintf(stderr, "%s at %s is not a %s module, skipping...\n",
+					module_name, path_pos, type);
+				dlclose(*handle);
+				module = NULL;
+			} else if (module->class_version != version) {
+				fprintf(stderr, "%s at %s has %s module version %d,"
+					" expected %d- skipping...\n",
+					module_name, path_pos, type, module->class_version,
+					version);
+				dlclose(*handle);
+				module = NULL;
+			}
 		}
 
-		if (dir_end)
+		if (dir_end) {
 			*dir_end = path_separator;
-		else
 			path_pos = dir_end + 1;
+		}
 
 	} while (!module && dir_end);
 
