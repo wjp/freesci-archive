@@ -36,7 +36,7 @@ typedef struct _sci_game {
   char *name;
 } sci_game_t;
 
-#define SCI_GAMES_COUNT 22
+#define SCI_GAMES_COUNT 23
 
 sci_game_t sci_games[] = {
   { 0x01684e20, SCI_VERSION(0,000,685), "ARTHUR" },
