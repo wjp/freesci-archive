@@ -63,16 +63,16 @@ vocab_print(void)
 
 	while (counter--) {
 		printf("%s (class %03x, group %03x) ", &tracker[0]->word,
-		       tracker[0]->class, tracker[0]->group);
+		       tracker[0]->w_class, tracker[0]->group);
       
-		if ((tracker[0]->class>=0xf00)||
-		    (tracker[0]->class==0)) 
+		if ((tracker[0]->w_class>=0xf00)||
+		    (tracker[0]->w_class==0)) 
 			printf("anyword\n"); else
-				while (tracker[0]->class) {
-					b=sci_ffs(tracker[0]->class)-1;
-					tracker[0]->class&=~(1<<b);
+				while (tracker[0]->w_class) {
+					b=sci_ffs(tracker[0]->w_class)-1;
+					tracker[0]->w_class&=~(1<<b);
 					printf("%s", class_names[b]);
-					if (tracker[0]->class)
+					if (tracker[0]->w_class)
 						printf("|"); else
 							printf("\n");
 				}    

@@ -1676,6 +1676,7 @@ KSetPort(temp);    /* Reactivate the old port */
   </para>
   <para>
     <table frame="all">
+      <title></title>
       <tgroup cols="2">
 	<thead>
 	  <row>
@@ -1714,6 +1715,7 @@ KSetPort(temp);    /* Reactivate the old port */
     interpreter how far to move downwards when displaying a line of text. The
     characters referenced to starting at offset 6 are encoded as follows:
     <table frame="all">
+      <title></title>
       <tgroup cols="2">
 	<thead>
 	  <row>
@@ -2976,7 +2978,8 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
       <para>
 	External symbols are contained herein, the number of which is described by the first
 	(16 bit LE) value in the segment. All the values that follow point to addresses that
-	the program counter will jump to when a <literal>calle</literal> (see <xref linkend="op-calle" />)
+	the program counter will jump to when a <literal>calle</literal>
+	(see <xref linkend="op-calle">)
 	operation is invoked. An exception is script 0, entry 0, which points to the first object
 	whose 'play' method should be invoked during startup (a magical entry point like C's 'main())' function).
       </para>

@@ -1,3 +1,21 @@
+freesci (0.3.2a-4devel) unstable; urgency=low
+
+  * Upstream CVS update (not uploaded to debian)
+
+ -- Bas Zoetekouw <bas@debian.org>  Tue, 23 Oct 2001 14:53:41 +0200
+
+freesci (0.3.2a-4) unstable; urgency=low
+
+  * Added a correct build-depends on libsdl1.2-dev (>= 1.2.2-3.1)
+
+ -- Bas Zoetekouw <bas@debian.org>  Tue, 23 Oct 2001 14:53:41 +0200
+
+freesci (0.3.2a-3) unstable; urgency=low
+
+  * Now compiled against libsdl1.2debian (closes: #116521)
+
+ -- Bas Zoetekouw <bas@debian.org>  Tue, 23 Oct 2001 09:32:07 +0200
+
 freesci (0.3.2a-2) unstable; urgency=low
 
   * We are in upstream CVS now
@@ -6,6 +24,8 @@ freesci (0.3.2a-2) unstable; urgency=low
     platforms.
   * Added all appropriate libggi targets as dependencies.
   * Removed dependencies on zlib1g.
+  * Added a patch to make freesci build with gcc 3.0 (closes: #99039)
+  * Added a build-dependency on w3m (need to build the txt docs).
 
  -- Bas Zoetekouw <bas@debian.org>  Wed, 16 May 2001 10:34:59 +0200
 

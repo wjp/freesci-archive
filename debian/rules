@@ -25,13 +25,13 @@ build: build-stamp
 build-stamp:
 	dh_testdir
 
-	# build the binary
+	# build the binaries
 	./configure --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --libdir=\$${prefix}/lib/freesci --bindir=\$${prefix}/games
 	$(MAKE)
 
 	# build the docs
-	sgmltools -b html doc/sci.sgml 
-	sgmltools -b txt doc/sci.sgml 
+	cd doc && sgmltools -b html sci.sgml 
+	cd doc && sgmltools -b txt sci.sgml 
 
 	touch build-stamp
 
