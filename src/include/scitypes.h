@@ -41,6 +41,9 @@
 #ifdef _GP32
 #  include "wrap.h"
 #endif
+#ifdef _DREAMCAST
+#  include <kos/fs.h>
+#endif
 
 #if defined(_WIN32) && defined(_MSC_VER)
 #  define TYPE_16 short

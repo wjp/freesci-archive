@@ -1,3 +1,8 @@
+2005-02-14  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/include/scitypes.h: Added missing Dreamcast #include.
+	* src/dc/Makefile: Added versions.c to Dreamcast Makefile.
+
 2005-02-12  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/include/games.h: Listed a handful of games for the new

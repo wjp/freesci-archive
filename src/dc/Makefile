@@ -77,6 +77,7 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/scicore/sci_memory.o \
 	$(FSCI_BASE)/src/scicore/script.o \
 	$(FSCI_BASE)/src/scicore/tools.o \
+	$(FSCI_BASE)/src/scicore/versions.o \
 	$(FSCI_BASE)/src/scicore/vocab.o \
 	$(FSCI_BASE)/src/scicore/vocab_debug.o \
 	$(FSCI_BASE)/src/sound/fmopl.o \
