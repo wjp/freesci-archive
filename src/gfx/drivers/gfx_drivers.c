@@ -64,6 +64,8 @@ extern gfx_driver_t gfx_driver_dc;
 #  endif
 #endif
 
+extern gfx_driver_t gfx_driver_null;
+
 static gfx_driver_t *gfx_drivers[] = {
 #ifndef HAVE_DLOPEN
 #  ifndef X_DISPLAY_MISSING
@@ -85,6 +87,7 @@ static gfx_driver_t *gfx_drivers[] = {
 	&gfx_driver_dc,
 #  endif
 #endif
+	&gfx_driver_null,
 	NULL
 };
 

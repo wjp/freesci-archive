@@ -256,6 +256,7 @@ get_gets_input(void)
 
 	putchar('>');
 
+	fflush(NULL);
 	while (!strchr(input, '\n'))
 		fgets(input, 1024, stdin);
 
@@ -374,6 +375,8 @@ typedef struct {
 #define OFF 0
 #define DONTCARE -1
 
+static int use_readline = 1;
+
 static char *
 parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame_name)
 {
@@ -393,6 +396,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 		{"mididevice", required_argument, 0, 'M'},
 		{"version", no_argument, 0, 'v'},
 		{"help", no_argument, 0, 'h'},
+		{"disable-readline", no_argument, &use_readline, 0},
 		{"scale-x", required_argument, 0, 'x'},
 		{"scale-y", required_argument, 0, 'y'},
 		{"color-depth", required_argument, 0, 'c'},
@@ -619,16 +623,21 @@ init_console()
 		     "SCI01 priority table debugging flags: 1:Disable, 2:Print on change\n");
 
 	con_passthrough = 1; /* enables all sciprintf data to be sent to stdout */
+}
 
+static void
+init_console_input()
+{
 #ifdef HAVE_READLINE_HISTORY_H
 	using_history(); /* Activate history for readline */
 #endif /* HAVE_READLINE_HISTORY_H */
 
 #ifdef HAVE_READLINE_READLINE_H
-	_debug_get_input = get_readline_input; /* Use readline for debugging input */
-#else /* !HAVE_READLINE_READLINE_H */
-	_debug_get_input = get_gets_input; /* Use gets for debug input */
+	if (use_readline)
+		_debug_get_input = get_readline_input; /* Use readline for debugging input */
+	else
 #endif /* !HAVE_READLINE_READLINE_H */
+		_debug_get_input = get_gets_input; /* Use gets for debug input */
 }
 
 
@@ -896,6 +905,8 @@ main(int argc, char** argv)
 	init_console(); /* So we can get any output */
 
 	game_name = parse_arguments(argc, argv, &cl_options, &savegame_name);
+
+	init_console_input();
 
 	getcwd(startdir, PATH_MAX);
 	script_debug_flag = cl_options.script_debug_flag;

@@ -2530,6 +2530,357 @@ c_sci_version(state_t *s)
 	return 0;
 }
 
+#if 0
+#warning "ADLIB TEST!!"
+
+#include <stdio.h>
+#ifdef HAVE_UNISTD_H
+  #include <unistd.h>
+#endif
+#include <string.h>
+#include <midi_device.h>
+#include <midiout.h>
+#include <soundserver.h>
+
+#ifdef HAVE_SYS_SOUNDCARD_H
+
+#include <sys/ioctl.h>
+#include <sys/time.h>
+#include <sys/soundcard.h>
+
+SEQ_DEFINEBUF(2048);
+static int seqfd;
+
+static guint8 instr[MIDI_CHANNELS];
+static int dev;
+static int free_voices = ADLIB_VOICES;
+static long note_time[ADLIB_VOICES];
+static unsigned char oper_note[ADLIB_VOICES];
+static unsigned char oper_chn[ADLIB_VOICES];
+static song_iterator_t *songit = NULL;
+
+static int midi_adlib_event(guint8 command, guint8 note, guint8 velocity, guint32 delta);
+static int midi_adlib_event2(guint8 command, guint8 param, guint32 delta);
+void seqbuf_dump()
+{
+	if (songit) {
+		int writeme = 20;
+		while (--writeme) {
+			byte buf[4];
+			int written;
+			int res = songit->read_next_command(songit, buf, &written);
+
+			switch (res) {
+			case SI_LOOP: printf("SI:Loop!\n");
+				break;
+			case SI_FINISHED: printf("SI:Finished!\n");
+				exit(1);
+				break;
+			case SI_CUE: printf("SI:CUE(%d)\n", written);
+				break;
+			case 0:
+#if 0
+				memcpy(_seqbuf + _seqbufptr, buf, written);
+				_seqbufptr += written;
+#else
+				if (written == 2)
+					midi_adlib_event(buf[0], buf[1], 0, 0);
+				else if (written == 3)
+					midi_adlib_event(buf[0], buf[1], buf[2], 0);
+				else
+					fprintf(stderr, "%d written-- unsupported!\n",
+						written);
+#endif
+				break;
+
+			default: SEQ_DELTA_TIME(res);
+			}
+		}
+	}
+#if 1
+  if (_seqbufptr)
+    if (write(seqfd, _seqbuf, _seqbufptr) == -1) {
+      perror("ADLIB write ");
+      exit(-1);
+    }
+  _seqbufptr = 0;
+#endif
+	_seqbufptr = 0;
+}
+
+/* initialise note/operator lists, etc. */
+static void adlib_init_lists()
+{
+  int i;
+  for(i = 0 ; i < ADLIB_VOICES ; i++) {
+    oper_note[i] = 255;
+    oper_chn[i] = 255;
+    note_time[i] = 0;
+  }
+  free_voices = ADLIB_VOICES;
+}
+
+static int adlib_stop_note(int chn, int note, int velocity)
+{
+  int i, op=255;
+  
+  for (i=0;i<ADLIB_VOICES && op==255;i++) {
+    if (oper_chn[i] == chn)
+      if (oper_note[i] == note)
+	op=i;
+  }
+
+  if (op==255) {
+    printf ("can't stop.. chn %d %d %d\n", chn, note, velocity);
+    return 255;	/* not playing */
+  }
+  
+  SEQ_STOP_NOTE(dev, op, note, velocity);
+  SEQ_DUMPBUF();
+
+  oper_chn[op] = 255;
+  oper_note[op] = 255;
+  note_time[op] = 0;
+  
+  free_voices++;
+
+  return op;
+}
+
+static int adlib_kill_one_note(int chn)
+{
+  int oldest = 255, i = 255;
+  long time = 0;
+     
+  if (free_voices >= ADLIB_VOICES) {
+    printf("Free list empty but no notes playing\n"); 
+    return 255;
+  }	/* No notes playing */
+
+  for (i = 0; i < ADLIB_VOICES ; i++) {
+    if (oper_chn[i] != chn)
+      continue;
+    if (note_time[i] == 0)
+      continue;
+    if (time == 0) {
+      time = note_time[i];
+      oldest = i;
+      continue;
+    }
+    if (note_time[i] < time) {
+      time = note_time[i];
+      oldest = i;
+    }
+  }
+
+  printf("Killing chn %d, oper %d\n", chn, oldest);
+
+  if (oldest == 255) 
+    return 255;	/* Was already stopped. Why? */
+
+  SEQ_STOP_NOTE(dev, oldest, oper_note[oldest], 0);
+  SEQ_DUMPBUF();
+
+  oper_chn[oldest] = 255;
+  oper_note[oldest] = 255;
+  note_time[oldest] = 0;
+  free_voices++;
+
+  return oldest;
+}
+
+static void adlib_start_note(int chn, int note, int velocity)
+{
+  int free;    
+  struct timeval now;
+
+  if (velocity == 0) {
+    adlib_stop_note(chn, note, velocity);
+    return;
+  }
+
+  gettimeofday(&now, NULL);  
+
+  if (free_voices <= 0)
+    free = adlib_kill_one_note(chn);
+  else 
+    for (free = 0; free < ADLIB_VOICES ; free++)
+      if (oper_chn[free] == 255)
+	break;
+
+  printf("play operator %d/%d:  %d %d %d\n", free, free_voices, chn, note, velocity);
+
+  oper_chn[free] = chn;
+  oper_note[free] = note;
+  note_time[free] = now.tv_sec * 1000000 + now.tv_usec;
+  free_voices--;
+
+  SEQ_SET_PATCH(dev, free, instr[chn]);
+  SEQ_START_NOTE(dev, free, note, velocity);
+  SEQ_DUMPBUF();
+}
+
+static int midi_adlib_open(guint8 *data_ptr, unsigned int data_length)
+{
+  int nrdevs, i, n;
+  struct synth_info info;
+  struct sbi_instrument sbi;
+
+  if (data_length < 1344) {
+    printf ("invalid patch.003");
+    return -1;
+  }
+
+  for (i = 0; i < 48; i++) 
+    make_sbi((adlib_def *)(data_ptr+(28 * i)), adlib_sbi[i]);
+
+  if (data_length > 1344)
+    for (i = 48; i < 96; i++) 
+      make_sbi((adlib_def *)(data_ptr+2+(28 * i)), adlib_sbi[i]);
+
+  memset(instr, 0, sizeof(instr));
+ 
+  if (!IS_VALID_FD(seqfd=open("/dev/sequencer", O_WRONLY, 0))) {
+    perror("/dev/sequencer");
+    return(-1);
+  }
+  if (ioctl(seqfd, SNDCTL_SEQ_NRSYNTHS, &nrdevs) == -1) {
+    perror("/dev/sequencer");
+    return(-1);
+  }
+  for (i=0;i<nrdevs && dev==-1;i++) {
+    info.device = i;
+    if (ioctl(seqfd, SNDCTL_SYNTH_INFO, &info)==-1) {
+      perror("info: /dev/sequencer");
+      return(-1);
+    }
+    if (info.synth_type == SYNTH_TYPE_FM)
+      dev = i;
+  }
+  if (dev == -1) {
+    fprintf(stderr, "ADLIB: FM synthesizer not detected\n");
+    return(-1);
+  }
+
+  /*  free_voices = info.nr_voices; */
+  adlib_init_lists();
+
+  printf("ADLIB: Loading patches into synthesizer\n");
+  sbi.device = dev;
+  sbi.key = FM_PATCH;
+  for (i = 0; i < 96; i++) {
+    for (n = 0; n < 32; n++)
+      memcpy(sbi.operators, &adlib_sbi[i], sizeof(sbi_instr_data));
+    sbi.channel=i;
+    SEQ_WRPATCH(&sbi, sizeof(sbi));
+    SEQ_DUMPBUF();
+  }
+
+  return 0;
+}
+
+
+static int midi_adlib_close()
+{
+  SEQ_DUMPBUF();
+  return close(seqfd);
+}
+
+static int midi_adlib_allstop(void) {
+  int i;
+  for (i = 0; i < ADLIB_VOICES ; i++) {
+    if (oper_chn[i] == 255)
+      continue;
+    adlib_stop_note(oper_chn[i], oper_note[i], 0);
+  }
+  adlib_init_lists();
+  printf("end allstop\n");
+  return 0;
+}
+
+static int midi_adlib_reverb(short param)
+{
+  printf("reverb NYI %04x \n", param);
+  return 0;
+}
+
+static int midi_adlib_event(guint8 command, guint8 note, guint8 velocity, guint32 delta)
+{
+  guint8 channel, oper;
+
+  channel = command & 0x0f;
+  oper = command & 0xf0;
+
+  switch (oper) {    
+  case 0x80:
+    adlib_stop_note(channel, note, velocity);
+    return 0;
+  case 0x90:  
+    adlib_start_note(channel,note,velocity);
+    return 0;
+  case 0xe0:    /* Pitch bend needs scaling? */
+    SEQ_BENDER(dev, channel, ((note << 8) & velocity));
+    SEQ_DUMPBUF();
+    break;
+  case 0xb0:    /* CC changes.  we ignore. */
+    /* XXXX we need to parse out 0x07 volume, at least. */
+    return 0;
+  case 0xd0:    /* aftertouch */
+    SEQ_CHN_PRESSURE(dev, channel, note);
+    SEQ_DUMPBUF();    
+    return 0;
+  default:
+    printf("ADLIB: Unknown event %02x\n", command);
+    return 0;
+  }
+  
+  SEQ_DUMPBUF();
+  return 0;
+}
+
+static int midi_adlib_event2(guint8 command, guint8 param, guint32 delta)
+{
+  guint8 channel;
+  guint8 oper;
+  
+  channel = command & 0x0f;
+  oper = command & 0xf0;
+  switch (oper) {
+  case 0xc0: {  /* change instrument */
+    int inst = param;
+    instr[channel] = inst; /* XXXX offset? */
+    //    SEQ_SET_PATCH(dev, channel, inst);
+    //    SEQ_DUMPBUF();
+    return 0;
+  }
+  default:
+    printf("ADLIB: Unknown event %02x\n", command);
+  }
+
+  SEQ_DUMPBUF();
+  return 0;
+}
+
+#endif /* HAVE_SYS_SOUNDCARD_H */
+
+int
+c_adlibtest(state_t *s)
+{
+	resource_t *patch3 = scir_find_resource(s->resmgr, sci_patch, 3, 0);
+	resource_t *song_res = scir_find_resource(s->resmgr, sci_sound, 81, 0);
+
+	fprintf(stderr, "Songres has size %d\n", song_res->size);
+	songit = songit_new(song_res->data, song_res->size, SCI_SONG_ITERATOR_TYPE_SCI0);
+	if (!songit)
+		sciprintf("Song iterator is NULL!\n");
+	else {
+		songit->init(songit);
+		songit->loops = 99999;
+		midi_adlib_open(patch3->data, patch3->size);
+	}
+}
+#endif
+
 void
 script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp,
 	     int *restadjust, int bp)
@@ -2821,6 +3172,10 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_gfx_priority, "gfx_priority", "i*", "Prints information about priority\n  bands\nUSAGE\n\n  gfx_priority\n\n"
 					 "  will print the min and max values\n  for the priority bands\n\n  gfx_priority <val>\n\n  Print start of the priority\n"
 					 "  band for the specified\n  priority\n");
+#if 0
+#warning "Adlib test: REMOVE ME"
+			con_hook_command(c_adlibtest, "adlibtest", "", "adlib + song iterator test");
+#endif
 
 
 			con_hook_int(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");

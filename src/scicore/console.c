@@ -272,7 +272,7 @@ con_parse (state_t * s, char *command)
 	int done = 0;			/* are we done yet? */
 	int cdone = 0;		/* Done with the current command? */
 	char *paramt;			/* parameter types */
-	char *cmd = (char *) sci_strdup (command);
+	char *cmd = (command && command[0])? (char *) sci_strdup (command) : sci_strdup(" ");
 	char *_cmd = cmd;
 	int pos = 0;
 

@@ -187,11 +187,13 @@ vocab_get_words(resource_mgr_t *resmgr, int *word_counter)
 		c = resource->data[seeker + 1];
 		words[counter]->w_class = ((resource->data[seeker]) << 4) | ((c & 0xf0) >> 4);
 
+#if 0
 		if (c & 0xf0) {
 			fprintf(stderr,"Unexpected class mask-");
 			fprintf(stderr,"%s ", words[counter]->word);
 			fprintf(stderr, " class mask = %03x\n", (words[counter]->w_class));
 		}
+#endif
 		words[counter]->group = (resource->data[seeker + 2]) | ((c & 0x0f) << 8);
 
 		++counter;

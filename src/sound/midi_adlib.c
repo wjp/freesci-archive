@@ -39,13 +39,12 @@
 
 #if 0
 SEQ_DEFINEBUF(2048);
-static int seqfd;
 #else
 extern unsigned char _seqbuf[2048];
 extern int _seqbuflen;
 extern int _seqbufptr;
-extern int seqfd;
 #endif
+static int seqfd;
 
 static guint8 instr[MIDI_CHANNELS];
 static int dev;

@@ -136,22 +136,37 @@ _sci0_read_next_command(song_iterator_t *self, byte *buf, int *buf_size)
 
 		cmd = self->data[self->offset++];
 
-		if (!(cmd & 0x80)) {
+		if (!(cmd & 0x80))
 			/* 'Running status' mode */
-			buf[paramcount++] = cmd;
 			cmd = self->last_cmd;
-		}
 
+		buf[paramcount++] = cmd;
 		midi_op = cmd >> 4;
 		midi_channel = cmd & 0xf;
 		paramsleft = MIDI_cmdlen[midi_op];
+
+#if 0
+		fprintf(stderr, "[IT]: off=%d, cmd=%02x, takes %d args ",
+			self->offset - 1, cmd, paramsleft);
+		fprintf(stderr, "[%02x %02x <%02x> %02x %02x %02x]\n",
+			self->data[self->offset-3],
+			self->data[self->offset-2],
+			self->data[self->offset-1],
+			self->data[self->offset],
+			self->data[self->offset+1],
+			self->data[self->offset+2]);
+#endif
 
 		if (paramcount)
 			--paramsleft;
 
 		CHECK_FOR_END(paramsleft);
 		memcpy(buf + paramcount, self->data, paramsleft);
+		*buf_size = paramcount + paramsleft;
+
 		self->offset += paramsleft;
+
+		self->last_cmd = cmd;
 
 		if (cmd == SCI_MIDI_EOT) {
 			/* End of track? */
@@ -164,7 +179,7 @@ _sci0_read_next_command(song_iterator_t *self, byte *buf, int *buf_size)
 				return SI_FINISHED;
 			}
 
-		} else if ((cmd = SCI_MIDI_SET_SIGNAL)) {
+		} else if (cmd == SCI_MIDI_SET_SIGNAL) {
 			if (buf[1] == SCI_MIDI_SET_SIGNAL_LOOP) {
 				self->loop_offset = self->offset;
 				return /* Execute next command */
@@ -295,7 +310,7 @@ _sci0_check_pcm(song_iterator_t *self, int *size, int *sample_rate)
 			return NULL;
 		}
 	}
-fprintf(stderr,"Found PCM at offset %04x\n", offset);
+
 	*size = getInt16(self->data + offset + SCI0_PCM_SIZE_OFFSET);
 	*sample_rate = getInt16(self->data + offset + SCI0_PCM_SAMPLE_RATE_OFFSET);
 

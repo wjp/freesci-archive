@@ -130,6 +130,7 @@ _reset_graphics_input(state_t *s)
 	resource_t *resource;
 	int font_nr;
 	gfx_color_t transparent	= {0};
+
 	sciprintf("Initializing graphics\n");
 
 	if (s->resmgr->sci_version <= SCI_VERSION_01) {

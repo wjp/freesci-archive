@@ -1,3 +1,14 @@
+2002-11-08  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/song_iterator.c: Misc. bugfixes
+
+	* src/main.c (get_gets_input): Made explicit fflush
+
+2002-11-07  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/null_driver.c (null_grab_pixmap): Added trivial
+	'null' gfx driver for debugging
+
 2002-10-27  Lars Skovlund  <lskovlun@image.dk>
 
 	* Updated SCI01 sound resource docs
