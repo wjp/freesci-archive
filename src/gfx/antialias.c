@@ -41,6 +41,7 @@ antialiase_simple(gfx_pixmap_t *pixmap, int mask[], int shift_const, gfx_mode_t 
 	char *lastline_p = NULL;
 	char *data_p = (char *) pixmap->data;
 
+	shift_const,mask[0], mask[1], mask[2]);
 	lastline[0] = malloc(line_size);
 	lastline[1] = malloc(line_size);
 
@@ -77,29 +78,29 @@ antialiase_simple(gfx_pixmap_t *pixmap, int mask[], int shift_const, gfx_mode_t 
 
 						if (x > 0) {
 							memcpy(&reader, src - bytespp, bytespp);
-							accum += ((reader & mask[c]) >> shift_const) << 0;
+							accum += ((reader >> shift_const) & mask[c]) << 0;
 						}
 
 						memcpy(&reader, src, bytespp);
-						accum += ((reader & mask[c]) >> shift_const) << 1;
+						accum += ((reader >> shift_const) & mask[c]) << 1;
 
 						if (x+1 < pixmap->xl) {
 							memcpy(&reader, src + bytespp, bytespp);
-							accum += ((reader & mask[c]) >> shift_const) << 0;
+							accum += ((reader >> shift_const) & mask[c]) << 0;
 						}
 					}
 
 				if (x > 0)
-					accum += ((last_pixel & mask[c]) >> shift_const) << 1;
+					accum += ((last_pixel >> shift_const) & mask[c]) << 1;
 
 				memcpy(&reader, data_p, bytespp);
 				if (c == 2)
 					last_pixel = reader;
-				accum += ((reader & mask[c]) >> shift_const) << 2;
+				accum += ((reader >> shift_const) & mask[c]) << 2;
 
 				if (x+1 < pixmap->xl) {
 					memcpy(&reader, data_p + bytespp, bytespp);
-					accum += ((reader & mask[c]) >> shift_const) << 1;
+					accum += ((reader >> shift_const) & mask[c]) << 1;
 				}
 
 				switch (visimode) {
@@ -138,7 +139,7 @@ gfxr_antialiase(gfx_pixmap_t *pixmap, gfx_mode_t *mode, gfxr_antialiasing_t type
 	int shift_const = 0;
 
 #ifdef WORDS_BIGENDIAN
-	shift_const = sizeof(unsigned long) - (mode->bytespp << 3);
+	shift_const = (sizeof(unsigned long) - mode->bytespp) << 3;
 #endif /* WORDS_BIGENDIAN */
 
 	masks[0] = mode->red_mask;

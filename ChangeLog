@@ -1,3 +1,11 @@
+2001-04-30  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/gfx/resource/sci_pic_0.c (_gfxr_draw_subline): Added extra checks
+	for invalid lines
+
+	* src/gfx/antialias.c (gfxr_antialiase): Fixed antialiasing on BE
+	systems
+
 2001-04-29  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/soundserver.c (sci0_soundserver): SDL sound server now

@@ -1008,6 +1008,11 @@ _gfxr_draw_subline(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int
 	line.y = y;
 	line.xl = ex - x;
 	line.yl = ey - y;
+        if (ex >= pic->visual_map->index_xl || ey >= pic->visual_map->index_yl || x < 0 || y < 0) {
+                fprintf(stderr,"While drawing pic0: INVALID LINE %d,%d,%d,%d\n",
+                        GFX_PRINT_RECT(line));
+                return;
+        }
 
 	if (drawenable & GFX_MASK_VISUAL)
 		gfx_draw_line_pixmap_i(pic->visual_map, line, color);
