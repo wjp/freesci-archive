@@ -1,3 +1,9 @@
+2004-03-26  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sfx/iterator.c (_sci1_command_index): Return
+	COMMAND_INDEX_NONE if no channel was found. Handle this
+	correctly in SCI1 song iterators.
+
 2004-03-25  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sfx/mixer/soft.c (mix_compute_buf_len): Cap time
