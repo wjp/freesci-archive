@@ -696,8 +696,8 @@ sci0_thread_ss(int reverse_stereo, sound_server_state_t *ss_state)
 	guint8 param, param2 = 0;
 	
 #ifdef OUTPUT_SONG_CHANGES
-	fprintf(stderr, "--[Handle %04x ---- pos = %04x]\n", ss_state->current_song->handle,
-		ss_state->current_song->pos);
+	fprintf(stderr, "--[Handle %04x ---- pos = %04x]\n", current->handle,
+		current->pos);
 #endif
 	newcmd = current->data[current->pos]; /* Retreive MIDI command */
 	
@@ -758,13 +758,13 @@ sci0_thread_ss(int reverse_stereo, sound_server_state_t *ss_state)
 	  param = current->data[current->pos];
 
 	  if (MIDI_cmdlen[command >> 4] == 2)
-	    param2 = ss_state->current_song->data[ss_state->current_song->pos + 1]; /* If the MIDI instruction
+	    param2 = current->data[current->pos + 1]; /* If the MIDI instruction
 										    ** takes two parameters, read
 										    ** second parameter  */
 	  else
 	    param2 = 0; /* Waste processor cycles otherwise */
 
-	  ss_state->current_song->pos += MIDI_cmdlen[command >> 4];
+	  current->pos += MIDI_cmdlen[command >> 4];
 
 	  /* reverse the pan if necessary */
 	  if (reverse_stereo
