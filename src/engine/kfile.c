@@ -82,11 +82,11 @@ f_open_mirrored(state_t *s, char *fname)
 
 	/* Visual C++ doesn't allow to specify O_BINARY with creat() */
 #ifdef _MSC_VER
-	fd = open(fname, _O_CREAT | _O_BINARY | _O_RDWR);
+	fd = _open(fname, _O_CREAT | _O_BINARY | _O_RDWR, _S_IREAD | _S_IWRITE);
 #else
 	fd = creat(fname, 0600);
 #endif
-	
+
 	if (!fd && buf) {
 		free(buf);
 		sciprintf("kfile.c: f_open_mirrored(): Warning: Could not create '%s' in '%s' (%d bytes to copy)\n",
@@ -95,9 +95,13 @@ f_open_mirrored(state_t *s, char *fname)
 	}
 
 	if (fstate.st_size) {
-		if (write(fd, buf, fstate.st_size) < fstate.st_size)
-			sciprintf("kfile.c: f_open_mirrored(): Warning: Could not write all %ld bytes to '%s' in '%s'\n",
-				  (long)fstate.st_size, fname, s->work_dir);
+		int ret;
+		ret = write(fd, buf, fstate.st_size);
+		if (ret < fstate.st_size) {
+			sciprintf("kfile.c: f_open_mirrored(): Warning: Could not write all %ld bytes to '%s' in '%s' (only wrote %ld)\n",
+				  (long)fstate.st_size, fname, s->work_dir, ret);
+		}
+
 		free(buf);
 	}
 
