@@ -320,13 +320,13 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 				   IPC_CREAT | 0777);
 	  if (-1 == shminfo.shmid) {
 	    have_shmem = 0;
-	    printf("WARNING:  System does not support SysV IPC, disabling XSHM\n");
+	    ERROR("System does not support SysV IPC, disabling XSHM\n");
 	    foo_image = NULL;
 	  }
 	  
 	  shminfo.shmaddr = (char *) shmat(shminfo.shmid, 0, 0);
 	  if ((void *) -1 == shminfo.shmaddr) {
-	      printf("FATAL:  Could not attach shared memory segment\n");
+	      ERROR("Could not attach shared memory segment\n");
 	      if (foo_image)
 		XDestroyImage(foo_image);
 	      return GFX_FATAL;
@@ -341,6 +341,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	  if (x11_error) {
 	    have_shmem = 0;
+	    ERROR("System does not support Shared Pixmaps, disablinge\n");
 	    shmdt(shminfo.shmaddr);
 	    XDestroyImage(foo_image);
 	    foo_image = NULL;
@@ -374,29 +375,35 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 #ifdef HAVE_MITSHM
 	  void *old_handler;
 
-	  old_handler = XSetErrorHandler(xlib_error_handler);
-
-	  if ((S->shm[i] = malloc(sizeof(XShmSegmentInfo))) < 0) {
-	    printf("AIEEEE!  Malloc failed!\n");
-	    return GFX_FATAL;
+	  if (have_shmem && have_shmem != 2) {
+	    ERROR("Shared memory pixmaps not supported.  Reverting\n");
+	    have_shmem = 0;
 	  }
-	  memset(S->shm[i], 0, sizeof(XShmSegmentInfo));
+
 	  if (have_shmem) {
+	    old_handler = XSetErrorHandler(xlib_error_handler);
+
+	    if ((S->shm[i] = malloc(sizeof(XShmSegmentInfo))) < 0) {
+	      ERROR("AIEEEE!  Malloc failed!\n");
+	      return GFX_FATAL;
+	    }
+	    memset(S->shm[i], 0, sizeof(XShmSegmentInfo));
+
 	    S->shm[i]->shmid = shmget(IPC_PRIVATE, (xsize * ysize * bytespp),
 				      IPC_CREAT | IPC_EXCL | 0777);
 	    if (S->shm[i]->shmid == -1) {
 	      have_shmem = 0;
-	      printf("WARNING:  System does not support SysV IPC, disabling XSHM\n");
+	      ERROR("System does not support SysV IPC, disabling XSHM\n");
 	    }
 	    if (have_shmem) {
 	      S->shm[i]->shmaddr = (char *) shmat(S->shm[i]->shmid, 0, 0);
 	      if (S->shm[i]->shmaddr == (void *) -1) {
-		printf("FATAL:  Could not attach shared memory segment\n");
+		ERROR("Could not attach shared memory segment\n");
 		have_shmem = 0;
 	      }
 	    }
 	    if (!XShmAttach(S->display, S->shm[i])) {
-	      printf("ARGH!  Can't attach\n");
+	      ERROR("ARGH!  Can't attach shared memory segment\n");
 	      have_shmem = 0;
 	    }
 	    if (have_shmem) {	    
@@ -414,7 +421,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	    XSync(S->display, False);
 
 	    if (x11_error) {
-	      printf("GFX-XLIB:  Shared Memory Pixmaps not supported on this system!\n");
+	      ERROR("Shared Memory Pixmaps not supported on this system  Disabling!\n");
 	      have_shmem = 0;
 	      shmdt(S->shm[i]->shmaddr);
 	      free(S->shm[i]);
