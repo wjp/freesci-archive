@@ -709,6 +709,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 
 	PUT_SELECTOR(mover, b_di, bdi);
+	PUT_SELECTOR(mover, b_movCnt, movcnt + 1);
 
 	x += dx;
 	y += dy;
@@ -1838,7 +1839,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		/* Draw relative to the bottom center */
 		SCIkdebug(SCIkGRAPHICS, "Returning.\n");
 	}
-
+	reparentize_primary_widget_lists(s, s->port);
 }
 
 

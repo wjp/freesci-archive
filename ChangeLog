@@ -1,3 +1,13 @@
+2001-02-21  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kDoBresen): Movement counter in mover objects
+	is now increminated each time DoBresen() is run
+
+2001-02-20  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kAddToPic): Always reparentize dynview list
+	after AddToPic()
+
 2001-02-19  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/said.y (aug_find_words): Altered word finding to consider

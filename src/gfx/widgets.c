@@ -1007,6 +1007,8 @@ gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, in
 
 	_gfxw_set_ops_DYNVIEW(GFXW(widget));
 
+	widget->signalp = widget->signal = 0;
+
 	return widget;
 }
 

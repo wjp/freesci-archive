@@ -1473,7 +1473,7 @@ aug_find_words_recursively(parse_tree_node_t *tree, int startpos,
 				++(*base_words_nr);
 
 			}
-			if (refbranch) {
+			if (major == WORD_TYPE_REF/*refbranch*/) {
 				if ((*ref_words_nr) == maxwords) {
 					sciprintf("Out of reference words\n");
 					return; /* return gracefully */
@@ -1482,8 +1482,9 @@ aug_find_words_recursively(parse_tree_node_t *tree, int startpos,
 				ref_words[*ref_words_nr] = word; /* register word */
 				++(*ref_words_nr);
 
-			} else if (major != WORD_TYPE_SYNTACTIC_SUGAR && major != WORD_TYPE_BASE)
-				sciprintf("aug_find_words_recursively(): Unknown word type %03\n", major);
+			}
+			if (major != WORD_TYPE_SYNTACTIC_SUGAR && major != WORD_TYPE_BASE && major != WORD_TYPE_REF)
+				sciprintf("aug_find_words_recursively(): Unknown word type %03x\n", major);
     
 		} else /* Did NOT find a word group: Attempt to recurse */
 			aug_find_words_recursively(tree, pos, base_words, base_words_nr,
