@@ -60,6 +60,8 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/gfx/sci_widgets.o \
 	$(FSCI_BASE)/src/gfx/widgets.o \
 	$(FSCI_BASE)/src/main.o \
+	$(FSCI_BASE)/src/menu/game_select_init.o \
+	$(FSCI_BASE)/src/menu/game_select_screen.o \
 	$(FSCI_BASE)/src/scicore/console.o \
 	$(FSCI_BASE)/src/scicore/decompress0.o \
 	$(FSCI_BASE)/src/scicore/decompress01.o \

@@ -989,7 +989,9 @@ main(int argc, char** argv)
 	game_name = parse_arguments(argc, argv, &cl_options, &savegame_name);
 
 	/* remember where freesci executable is located */
+#ifndef _DREAMCAST
 	get_file_directory(freesci_dir, argv[0]);
+#endif
 
 	getcwd(startdir, PATH_MAX);
 	script_debug_flag = cl_options.script_debug_flag;
@@ -1004,15 +1006,15 @@ main(int argc, char** argv)
 	       "or any later version, at your option.\n"
 	       "It comes with ABSOLUTELY NO WARRANTY.\n");
 
-	conf_entries = config_init(&confs, commandline_config_file);
-
-	/* working directory was changed by config_init so restore it */
-	chdir(startdir);
-
 #ifdef _DREAMCAST
 	choose_game();
 	game_name = "game";
 #endif
+
+	conf_entries = config_init(&confs, commandline_config_file);
+
+	/* working directory was changed by config_init so restore it */
+	chdir(startdir);
 
 	if (game_name) {
 
