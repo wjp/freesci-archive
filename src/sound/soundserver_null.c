@@ -219,7 +219,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	while (1) {
 		GTimeVal wait_tv;
 		int ticks = 0; /* Ticks to next command */
-		int fadeticks = 0;
+		int fadeticks = 0;		
 		int old_songpos;
 
 		fflush(ds);
@@ -518,17 +518,17 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 						if (debugging)
 						  fprintf(ds, "Fading %d on handle %04x\n", event.value, event.handle);
-
 						/*
-						if (song) 
+						if (song) {
 						  song->fading = event.value;
+						  song->maxfade = event.value;
+						} 
 						*/
 
 						if (modsong) 
 						modsong->fading = event.value;
 						else
 						fprintf(ds, "Attempt to fade on invalid handle %04x\n", event.handle);
-
 						break;
 
 					case SOUND_COMMAND_TEST: {
@@ -809,23 +809,27 @@ void sci_midi_command(song_t *song, guint8 command,
 
   } else {  
     /* just your regular midi event.. */
-    
+
     if (song->flags[command & 0x0f] & midi_playflag) { 
       switch (command & 0xf0) {
 
       case 0xc0:  /* program change */
+	song->instruments[command & 0xf] = param;
 	midi_event2(command, param);
 	break;
       case 0x80:  /* note on */
       case 0x90:  /* note off */
-      /*
-      if ((song->fading != -1) && 
-	  ((command & 0xf0) == 0x90)) {
-	if (maxfade == 0)
-	  maxfade = 1;
-	param2 = param2 * fadeticks / maxfade;
-	printf("fading %d %d\n", fadeticks, maxfade);
-	} */
+	if (song->velocity[command & 0x0f])  /* do we ignore velocities? */
+	  param2 = song->velocity[command & 0x0f];
+
+	if (song->fading != -1) {           /* is the song fading? */
+	  if (song->maxfade == 0)
+	    song->maxfade = 1;
+
+	  param2 *= (song->fading) / (song->maxfade);  /* scale the velocity */
+	  printf("fading %d %d\n", song->fading, song->maxfade);
+	}
+
       case 0xb0:  /* program control */
       case 0xe0:  /* pitch bend */
 	midi_event(command, param, param2);
