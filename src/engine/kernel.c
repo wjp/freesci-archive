@@ -195,7 +195,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*10*/	{KF_NEW, "CelHigh", {kCelHigh, "iii"}},
 /*11*/	{KF_NEW, "DrawCel", {kDrawCel, "iiiiii*"}},
 /*12*/	{KF_NEW, "AddToPic", {kAddToPic, "Il*"}},
-/*13*/	{KF_NEW, "NewWindow", {kNewWindow, "iiiiZri*"}},
+/*13*/	{KF_NEW, "NewWindow", {kNewWindow, "iiiiZRi*"}},
 /*14*/	{KF_NEW, "GetPort", {kGetPort, ""}},
 /*15*/	{KF_NEW, "SetPort", {kSetPort, "ii*"}},
 /*16*/	{KF_NEW, "DisposeWindow", {kDisposeWindow, "ii*"}},

@@ -1,3 +1,10 @@
+2004-03-19  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/main.c (main): Actually obey a version setting when it
+	appears in a config file.
+	* src/engine/kgraphics.c (kNewWindow),
+	* src/engine/kernel.c: Workaround for extra arguments in PQ3.
+
 2004-03-18  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/game.c (script_init_engine): Add check for SCI1.0

@@ -979,8 +979,10 @@ main(int argc, char** argv)
 
 	if (cl_options.version)
 		version = cl_options.version;
-	else 
-		version = guess_version();
+	else
+	    if (active_conf && active_conf->version)
+		version = active_conf->version; else
+		    version = guess_version();
 
 	getcwd(resource_dir, PATH_MAX); /* Store resource directory */
 

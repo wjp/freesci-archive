@@ -2399,6 +2399,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 	int x, y, xl, yl, flags;
 	gfx_color_t bgcolor;
 	int priority;
+	int arg_ignore = argc == 13 ? 4 : 0;
 
 	y = SKPV(0);
 	x = SKPV(1);
@@ -2410,18 +2411,18 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 	if (x+xl > 319)
 		x -= ((x+xl) - 319);
 
-	flags = SKPV(5);
+	flags = SKPV(5+arg_ignore);
 
-	bgcolor = s->ega_colors[SKPV_OR_ALT(8, 15)];
-	priority = SKPV_OR_ALT(6, -1);
+	bgcolor = s->ega_colors[SKPV_OR_ALT(8+arg_ignore, 15)];
+	priority = SKPV_OR_ALT(6+arg_ignore, -1);
 	bgcolor.mask = GFX_MASK_VISUAL | ((priority >= 0)? GFX_MASK_PRIORITY : 0);
 	bgcolor.priority = priority;
 
 	SCIkdebug(SCIkGRAPHICS, "New window with params %d, %d, %d, %d\n", SKPV(0), SKPV(1), SKPV(2), SKPV(3));
 	window = sciw_new_window(s, gfx_rect(x, y, xl, yl), s->titlebar_port->font_nr,
-				 s->ega_colors[SKPV_OR_ALT(7, 0)], bgcolor, s->titlebar_port->font_nr,
+				 s->ega_colors[SKPV_OR_ALT(7+arg_ignore, 0)], bgcolor, s->titlebar_port->font_nr,
 				 s->ega_colors[15], s->ega_colors[8],
-				 argv[4].segment ? kernel_dereference_bulk_pointer(s, argv[4], 0) : NULL, 
+				 argv[4+arg_ignore].segment ? kernel_dereference_bulk_pointer(s, argv[4+arg_ignore], 0) : NULL,
 				 flags);
 
 	ADD_TO_CURRENT_PORT(window);
