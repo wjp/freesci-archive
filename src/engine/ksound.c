@@ -202,13 +202,19 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		}
 		break;
-		case _K_SOUND_VOLUME:
+		case _K_SOUND_VOLUME: {
 
 		        /* range from 0x0 to 0xf */
-		        /* parameter optional.  set to -1 if just query. */
+		        /* parameter optional. If present, set.*/
+		        int param = UPARAM_OR_ALT(1, -1);
 		        obj = UPARAM_OR_ALT(1, -1);
+
+		   if (param != -1)
 		        s->acc = s->sfx_driver->command(s, SOUND_COMMAND_SET_VOLUME, 0, obj);
-		        break;
+		   else
+		        s->acc = s->sfx_driver->command(s, SOUND_COMMAND_GET_VOLUME, 0, 0);
+		}
+		 break;
 
 		case _K_SOUND_UPDATE:
 

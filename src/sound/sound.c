@@ -344,16 +344,14 @@ sound_command(state_t *s, int command, int handle, int parameter)
 
     /* set the sound volume. */
   case SOUND_COMMAND_SET_VOLUME:
-    if (parameter != 0xffff) { /* only set if != -1 */
-      
-      if (s->sound_mute != 0) {  /* if we're muted, update the mute */
+      if (s->sound_mute) {  /* if we're muted, update the mute */
 	s->sound_mute = parameter;
       } else {
 	s->sound_volume = parameter;
 	write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
       }
-      return parameter;
-    }
+   /* deliberate fallthrough */
+  case SOUND_COMMAND_GET_VOLUME:
     if (s->sound_mute)
       return s->sound_mute;
     else 

@@ -160,7 +160,7 @@ extern DLLEXTERN sfx_driver_t *sfx_drivers[]; /* All available sound fx drivers,
 #define SOUND_COMMAND_RESUME_HANDLE 7
 /* Resumes sound playing for sound with the specified HANDLE. */
 #define SOUND_COMMAND_SET_VOLUME 8
-/* Sets the global sound volume to the specified level (0-255) */
+/* Sets the global sound volume to the specified level (0-15) */
 #define SOUND_COMMAND_RENICE_HANDLE 9
 /* Sets the priority of the sound playing under the HANDLE to PARAMETER */
 #define SOUND_COMMAND_FADE_HANDLE 10
@@ -188,6 +188,8 @@ extern DLLEXTERN sfx_driver_t *sfx_drivers[]; /* All available sound fx drivers,
 /* Request that the next event on the sound server should be transmitted */
 #define SOUND_COMMAND_GET_MUTE 18
 /* return the mute status of the system */
+#define SOUND_COMMAND_GET_VOLUME 19
+/* retrn the global sound volume */
 
 #define SOUND_SIGNAL_CUMULATIVE_CUE 0
 /* Request for the specified HANDLE's signal to be increased */
