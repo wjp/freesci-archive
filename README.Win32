@@ -9,7 +9,7 @@ functionality as the UNIX version. The major bugs are currently:
 
 New specifically to the Win32 version for this release is:
  * a DirectX 8.0a (or higher) driver, usable with the -gdirectx command line
-   option (more features to be added soon)
+   option (mouse support to be added soon)
 
 
 BUILDING
@@ -47,6 +47,13 @@ The project files assume the following directory structure:
 4. You should be good to go! Go buy a Sierra collector's pack at your favorite
    software store for $15-20 and copy the game directory on the CD to the
    FreeSCI bin directory.
+
+
+IMPORTANT NOTE: With this release, you may discover what appears to be a bug
+in Visual C++ 6.0. If you find that the linking of sciv produces LNK2001
+errors the first time you build, just build again (don't rebuild or clean
+first) and it should link OK. Any solutions discovered to this problem are
+most welcome!
 
 
 CONFIG
@@ -103,8 +110,7 @@ of DirectX 8.0a (for Win95) and higher. While the driver is only rendering 2D
 images, significant performance gains may be achieved by using a 3D graphics
 card with the driver.
 
-The DirectX driver does not yet support mouse input or picture scaling, and
-doesn't quite draw lines on the edges of menus correctly.
+The DirectX driver does not yet support mouse input.
 
 
 CVS

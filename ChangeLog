@@ -1,3 +1,12 @@
+2003-01-26  Alexander Angas  <wgd@internode.on.net>
+
+	* src/win32/fsci_dll.dsp:
+	* src/win32/sciv.dsp: Cleaned up project files and hopefully fixed
+	strange linker error.
+
+	* ./Readme.Win32: Update with info about strange linker error in case
+	it continues to happen.
+
 2003-01-25  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/dc_save.c (store_files): Dreamcast fixes: Fixed a file
@@ -13,7 +22,7 @@
 
 	* src/gfx/drivers/xlib_dirver.c (xlib_init_specific): Fixed
 	segfault.
-	
+
 2003-01-22  Alexander Angas  <wgd@internode.on.net>
 
 	* src/gfx/drivers/dx_driver.cpp: Added support for graphics scaling
