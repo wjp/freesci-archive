@@ -768,5 +768,6 @@ main(int argc, char** argv)
 #ifdef WITH_DMALLOC
 	dmalloc_log_unfreed();
 #endif
+	BREAKPOINT();
 	return 0;
 }

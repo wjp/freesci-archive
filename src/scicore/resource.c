@@ -37,10 +37,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifdef HAVE_DIRENT_H
-#include <dirent.h>
-#endif
-
 #ifndef O_BINARY
 #define O_BINARY 0
 /* Not defined on most systems */
@@ -310,11 +306,13 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
      ** in the process.
      */
 {
-	DIR *directory = opendir(".");
-	struct dirent *entry;
+	sci_dir_t dir;
+	char *entry;
 	int counter = 0;
 
-	while ((entry = readdir(directory))) {
+	sci_init_dir(&dir);
+	entry = sci_find_first(&dir, "*");
+	while (entry) {
 		int restype = sci_invalid_resource;
 		int resnumber = -1;
 		int i;
@@ -322,18 +320,18 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 		char *endptr;
 
 		for (i = sci_view; i < sci_invalid_resource; i++)
-			if (strncmp(Resource_Types[i], entry->d_name, strlen(Resource_Types[i])) == 0)
+			if (strncmp(Resource_Types[i], entry, strlen(Resource_Types[i])) == 0)
 				restype = i;
 
 		if (restype != sci_invalid_resource) {
 
 			resname_len = strlen(Resource_Types[restype]);
-			if (entry->d_name[resname_len] != '.')
+			if (entry[resname_len] != '.')
 				restype = sci_invalid_resource;
 			else {
-				resnumber = strtol(entry->d_name + 1 + resname_len,
+				resnumber = strtol(entry + 1 + resname_len,
 						   &endptr, 10); /* Get resource number */
-				if ((*endptr != '\0') || (resname_len+1 == strlen(entry->d_name)))
+				if ((*endptr != '\0') || (resname_len+1 == strlen(entry)))
 					restype = sci_invalid_resource;
 
 				if ((resnumber < 0) || (resnumber > 1000))
@@ -344,9 +342,9 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 		if (restype != sci_invalid_resource) {
 			struct stat filestat;
 
-			printf("Patching \"%s\": ", entry->d_name);
+			printf("Patching \"%s\": ", entry);
 
-			if (stat(entry->d_name, &filestat))
+			if (stat(entry, &filestat))
 				perror("""__FILE__"": (""__LINE__""): stat()");
 			else {
 				int file;
@@ -358,7 +356,7 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 					continue; /* next file */
 				}
 
-				file = open(entry->d_name, O_RDONLY);
+				file = open(entry, O_RDONLY);
 				if (!file)
 					perror("""__FILE__"": (""__LINE__""): open()");
 				else {
@@ -388,9 +386,10 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 				}
 			}
 		}
-  }
+		entry = sci_find_next(&dir);
+	}
 
-  return counter;
+	return counter;
 }
 
 
@@ -444,8 +443,8 @@ _XALLOC(size_t size, char *file, int line, char *funct)
 	void *memblock;
 
 	if (!(memblock = malloc(size))) {
-		fprintf(stderr,"file %s %d (%s): XALLOC(%d) failed.\n",
-			file, line, funct, size);
+		fprintf(stderr,"file %s %d (%s): XALLOC(%ld) failed.\n",
+			file, line, funct, (long) size);
 		exit(-1);
 	}
 

@@ -233,4 +233,104 @@ sci_get_current_time(GTimeVal *val)
 }
 
 
+/************* Directory entities *************/
+#ifdef _WIN32
+/******** Dir: Win32 CODE ********/
+
+void
+sci_init_dir(sci_dir_t *dir)
+{
+	dir->search = -1;
+}
+
+char *
+sci_find_first(sci_dir_t *dir, char *mask)
+{
+	dir->search = findfirst(mask, &(dir->fileinfo));
+
+	if (dir->search != -1)
+		return dir->fileinfo.name;
+	else
+		return NULL;
+}
+
+char *
+sci_find_next(sci_dir_t *dir)
+{
+	if (dir->search == -1)
+		return NULL;
+
+	if (_findnext(dir->search, &(dir->fileinfo)) < 0) {
+		_findclose(dir->fileinfo);
+		dir->search = -1;
+		return NULL;
+	} else return dir->fileinfo.name;
+}
+
+void
+sci_finish_find(sci_dir_t *dir)
+{
+        if(dir->search != -1) {
+                _findclose(dir->search);
+		dir->search = -1;
+	}
+}
+
+#else /* !_WIN32 */
+/******** Dir: UNIX CODE ********/
+
+void
+sci_init_dir(sci_dir_t *dir)
+{
+	dir->dir = NULL;
+	dir->mask_copy = NULL;
+}
+
+char *
+sci_find_first(sci_dir_t *dir, char *mask)
+{
+	if (dir->dir)
+		closedir(dir->dir);
+
+	if (!(dir->dir = opendir("."))) {
+		sciprintf("%s, L%d: opendir(\".\") failed!\n", __FILE__, __LINE__);
+		return NULL;
+	}
+
+	dir->mask_copy = strdup(mask);
+
+	return sci_find_next(dir);
+}
+
+char *
+sci_find_next(sci_dir_t *dir)
+{
+	struct dirent *match;
+
+	while ((match = readdir(dir->dir))) {
+		if (match->d_name[0] == '.')
+			continue;
+
+		if (!fnmatch(dir->mask_copy, match->d_name, FNM_PATHNAME))
+			return match->d_name;
+	}
+
+	sci_finish_find(dir);
+	return NULL;
+}
+
+void
+sci_finish_find(sci_dir_t *dir)
+{
+	if (dir->dir) {
+		closedir(dir->dir);
+		dir->dir = NULL;
+		free(dir->mask_copy);
+		dir->mask_copy = NULL;
+	}
+}
+
+#endif /* !_WIN32 */
+
+/************* /Directory entities *************/
 

@@ -88,9 +88,7 @@ _free_vocabulary(state_t *s)
 		vocab_free_words(s->parser_words, s->parser_words_nr);
 		vocab_free_suffices(s->parser_suffices, s->parser_suffices_nr);
 		vocab_free_branches(s->parser_branches);
-fprintf(stderr,"Allocd-rules pre %d\n", _allocd_rules);
 		vocab_free_rule_list(s->parser_rules);
-fprintf(stderr,"Allocd-rules post %d\n", _allocd_rules);
 	}
 
 	vocabulary_free_snames(s->selector_names);
@@ -332,6 +330,11 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->file_handles_nr = 5;
 	s->file_handles = calloc(sizeof(FILE *), s->file_handles_nr);
 	/* Allocate memory for file handles */
+
+	sci_init_dir(&(s->dirseeker));
+	s->dirseeker_outbuffer = 0;
+	/* Those two are used by FileIO for FIND_FIRST, FIND_NEXT */
+
 	sciprintf("Engine initialized\n");
 
 	if (_init_graphics_input(s))

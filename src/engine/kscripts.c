@@ -217,7 +217,7 @@ kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
     int selector = UPARAM(i);
     int value = UPARAM(i+1);
     
-    write_selector(s, new_offs, selector, value, __FUNCTION__, __LINE__);
+    write_selector(s, new_offs, selector, value, __FILE__, __LINE__);
   }
 }
 

@@ -855,94 +855,56 @@ kValidPath(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #define K_FILEIO_FIND_NEXT	9
 #define K_FILEIO_STAT		10
 
-#ifndef _WIN32
 
-DIR *search;
-char *mask_copy;
-heap_ptr outbuffer;
+char *
+write_filename_to_mem(state_t *s, heap_ptr address, char *string)
+{
+	if (string) {
+		memset(s->heap + address, 0, 12);
+		strncpy(s->heap + address, string, 11);
+	}
+
+	return string;
+}
 
 void
 next_file(state_t *s)
 {
-  struct dirent *match;
-  s->acc=0;
-  while ((match=readdir(search)))
-  {
-    if (match->d_name[0]=='.') continue;
-    if (!fnmatch(mask_copy, match->d_name, FNM_PATHNAME))
-    {
-	s->acc=outbuffer;
-	strcpy(s->heap + outbuffer, match->d_name);
-	return;
-    }
-  }
-  
-  free(mask_copy);
+	if (write_filename_to_mem(s, s->dirseeker_outbuffer,
+				  sci_find_next(&(s->dirseeker))))
+		s->acc = s->dirseeker_outbuffer;
+	else
+		s->acc = 0;
 }
+
 void
 first_file(state_t *s, char *dir, char *mask, heap_ptr buffer)
 {
-  if (search) closedir(search);
+	if (buffer == 0) {
+		sciprintf("Warning: first_file(state,\"%s\",\"%s\", 0) invoked!\n",
+			  dir, mask);
+		s->acc = 0;
+		return;
+	}
+
+	if (strcmp(dir, ".")) {
+		sciprintf("%s L%d: Non-local first_file: Not implemented yet\n",
+			  __FILE__, __LINE__);
+		s->acc = 0;
+		return;
+	}
+
+	if (s->dirseeker_outbuffer)
+		sci_finish_find(&(s->dirseeker));
   
-  if (!(search=opendir(dir)))
-  {
-    sciprintf("opendir(\"%s\") failed.\n", dir);
-    return;
-  }
+	s->dirseeker_outbuffer = buffer;
 
-  mask_copy=strdup(mask);
-  outbuffer=buffer;
-  
-  next_file(s);
+	if (write_filename_to_mem(s, s->dirseeker_outbuffer,
+				  sci_find_first(&(s->dirseeker), mask)))
+		s->acc = s->dirseeker_outbuffer;
+	else
+		s->acc = 0;
 }
-
-#else /* !_WIN32 */
-#endif
-
-
-#ifdef _WIN32
-
-/* WIN32 findfirst/findnext */
-long search = -1;
-struct _finddata_t fileinfo;
-heap_ptr outbuffer;
-
-void first_file(state_t *s, char *dir, char *mask, heap_ptr buffer)
-{
-        if(search != -1)
-                _findclose(search);
-
-        assert(strcmp(dir,".")==0); /* currently used unly for cur. dir. */
-        
-        search = _findfirst(mask,&fileinfo);
-        s->acc = 0;
-        if(search != -1)
-        {
-                s->acc=buffer;
-                strcpy(s->heap + buffer, fileinfo.name);
-                outbuffer = buffer;
-        }
-}
-
-void next_file(state_t *s)
-{
-        s->acc = 0;
-        if(search == -1)
-                return;
-
-        if(_findnext(search,&fileinfo)<0)
-        {
-                _findclose(search);
-                search = -1;
-                return;
-        }
-
-        s->acc = outbuffer;
-        strcpy(s->heap + outbuffer, fileinfo.name);
-}
-/* -------------------- */
-
-#endif
 
 void
 kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)

@@ -1,3 +1,13 @@
+2001-01-19  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/tools.c (sci_find_next): Implemented find_first/
+	find_next for Win32 and UNIX
+
+	* src/engine/kscripts.c (kClone): Fixed usage of write_selector
+	for ANSI C
+
+	* src/include/resource.h and scitypes.h: Fixed Win32 support
+
 2001-01-18  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/font.c (gfxr_font_calculate_size): Made font renderer 
@@ -15,6 +25,8 @@
 
 2001-01-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/kgraphics.c (kAnimate): Fixed pixmap freeing
+	
 	* src/scicore/resource.c: Fixed memory leak in resource management
 
 	* src/engine/grammar.c: Fixed memory leak when merging lists

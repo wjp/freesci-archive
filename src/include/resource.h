@@ -56,6 +56,10 @@
 
 #ifdef _WIN32
 #  include <io.h>
+#  undef inline /* just to be sure it is not defined */
+#  define inline __inline
+#  define strcasecmp stricmp
+#  define strcasecmp stricmp
 #else /* !_WIN32 */
 #  define DLLEXTERN
 #endif /* !_WIN32 */
@@ -326,6 +330,44 @@ sci_get_current_time(GTimeVal *val);
 /* GTimeVal version of sci_gettime()
 ** Parameters: (GTimeVal *) val: Pointer to the structure the values will be stored in
 ** Returns   : (void)
+*/
+
+void
+sci_init_dir(sci_dir_t *dirent);
+/* Initializes an sci directory search structure
+** Parameters: (sci_dir_t *) dirent: The entity to initialize
+** Returns   : (void)
+** The entity is initialized to "empty" values, meaning that it can be
+** used in subsequent sci_find_first/sci_find_next constructs. In no
+** event should this function be used upon a structure which has been
+** subjected to any of the other dirent calls.
+*/
+
+char *
+sci_find_first(sci_dir_t *dirent, char *mask);
+/* Finds the first file matching the specified file mask
+** Parameters: (sci_dir_t *) dirent: Pointer to an unused dirent structure
+**             (char *) mask: File mask to apply
+** Returns   : (char *) Name of the first matching file found, or NULL
+*/
+
+char *
+sci_find_next(sci_dir_t *dirent);
+/* Finds the next file specified by an sci_dir initialized by sci_find_first()
+** Parameters: (sci_dir_t *) dirent: Pointer to SCI dir entity
+** Returns   : (char *) Name of the next matching file, or NULL
+*/
+
+void
+sci_finish_find(sci_dir_t *dirent);
+/* Completes an 'sci_find_first/next' procedure
+** Parameters: (sci_dir_t *) dirent: Pointer to the dirent used
+** Returns   : (void)
+** In the operation sequences
+**   sci_init_dir(x); sci_finish_find(x);
+** and
+**   sci_finish_find(x); sci_finish_find(x);
+** the second operation is guaranteed to be a no-op.
 */
 
 int

@@ -28,6 +28,17 @@
 #ifndef SCI_TYPES
 #define SCI_TYPES
 
+#ifdef HAVE_DIRENT_H
+#  include <sys/types.h>
+#  include <dirent.h>
+#endif
+
+#if defined(WIN32) && defined(_MSC_VER)
+#  define TYPE_16 short
+#  define TYPE_32 int
+#endif
+
+
 #ifndef TYPE_8
 #  define TYPE_8 char /* Guaranteed by ISO */
 #endif
@@ -61,13 +72,23 @@ typedef unsigned TYPE_16 guint16;
 typedef TYPE_32 gint32;
 typedef unsigned TYPE_32 guint32;
 
+#undef TYPE_8
+#undef TYPE_16
+#undef TYPE_32
+
 typedef struct {
         long tv_sec;
         long tv_usec;
 } GTimeVal;
 
-#undef TYPE_8
-#undef TYPE_16
-#undef TYPE_32
+typedef struct {
+#ifdef _WIN32
+	long search;
+	struct _finddata_t fileinfo;
+#else
+	DIR *dir;
+	char *mask_copy;
+#endif
+} sci_dir_t; /* used by sci_find_first and friends */
 
 #endif /* !SCI_TYPES */

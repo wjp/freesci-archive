@@ -34,11 +34,6 @@
 #include <engine.h>
 #include <assert.h>
 #include <heap.h>
-#include <ctype.h>
-#ifdef HAVE_DIRENT_H
-#include <sys/types.h> /* Required by e.g. NetBSD */
-#include <dirent.h>
-#endif
 
 #ifdef _MSC_VER
 #include <direct.h>
@@ -917,8 +912,8 @@ int
 gamestate_save(state_t *s, char *dirname)
 {
 	FILE *fh;
-	DIR *dir;
-	struct dirent* dirent;
+	sci_dir_t dir;
+	char *filename;
 	int fd;
 
 	_global_save_state = s;
@@ -937,12 +932,14 @@ gamestate_save(state_t *s, char *dirname)
 		return 1;
 	}
 
-	dir = opendir(".");
-	while ((dir) && (dirent = readdir(dir)))
-		if (strcmp(dirent->d_name, "..") && strcmp(dirent->d_name, ".")) {
-			unlink(dirent->d_name); /* Delete all files in directory */
-		}
-	closedir(dir);
+	sci_init_dir(&dir);
+	filename = sci_find_first(&dir, "*");
+	while (filename) {
+		if (strcmp(filename, "..") && strcmp(filename, "."))
+			unlink(filename); /* Delete all files in directory */
+		filename = sci_find_next(&dir);
+	}
+	sci_finish_find(&dir);
 
 	if (s->sfx_driver) {
 		if ((s->sfx_driver->save)(s, dirname)) {

@@ -2320,12 +2320,13 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		}
 
 		s->pic_not_valid = 0;
-		return;
-
 
 		GFX_ASSERT(gfxop_free_pixmap(s->gfx_state, s->old_screen));
 		GFX_ASSERT(gfxop_free_pixmap(s->gfx_state, newscreen));
 		s->old_screen = NULL;
+
+		return;
+
 	} /* if (open_animation) */
 
 	FULL_REDRAW();
@@ -2355,6 +2356,7 @@ kShakeScreen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 
 	gfxop_draw_pixmap(s->gfx_state, screen, gfx_rect(0, 0, 320, 200), gfx_point(0, 0));
+	gfxop_free_pixmap(s->gfx_state, screen);
 	gfxop_update(s->gfx_state);
 }
 
