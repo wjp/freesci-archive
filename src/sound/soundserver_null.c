@@ -316,8 +316,8 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 								}
 							}
 
-							if (modsong == newsong)
-								newsong = NULL;
+							if (modsong == song)
+								song = NULL;
 
 							if (lastmode == SOUND_STATUS_PLAYING) {
 								newsong = songlib[0]; /* Force song detection to start with the highest priority song */
@@ -413,6 +413,10 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 						} else
 							fprintf(ds, "Attempt to dispose invalid handle %04x\n", event.handle);
+
+						if (modsong == song)
+							song = NULL;
+
 						break;
 
 					case SOUND_COMMAND_STOP_HANDLE:

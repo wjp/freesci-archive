@@ -2228,6 +2228,8 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #define K_ANIMATE_BORDER_CLOSE_F_CENTER_OPEN_F 16 /* close from edges to center, reopen from
 						  ** center to edges */
 #define K_ANIMATE_CLOSE_CHECKERS_OPEN_CHECKERS 17 /* close random checkboard, reopen */
+#define K_ANIMATE_SCROLL_LEFT 0x28
+#define K_ANIMATE_SCROLL_RIGHT 0x29
 
 #define K_ANIMATE_OPEN_SIMPLE 100 /* No animation */
 
