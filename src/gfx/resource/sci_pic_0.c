@@ -32,11 +32,10 @@
 #include <gfx_tools.h>
 
 #undef GFXR_DEBUG_PIC0 /* Enable to debug pic0 messages */
+#undef FILL_RECURSIVE_DEBUG /* Enable for verbose fill debugging */
 
 #define GFXR_PIC0_PALETTE_SIZE 40
 #define GFXR_PIC0_NUM_PALETTES 4
-
-#undef FILL_RECURSIVE_DEBUG /* Enable for verbose fill debugging */
 
 #define INTERCOL(a, b) ((int) sqrt((((3.3 * (a))*(a)) + ((1.7 * (b))*(b))) / 5.0))
 /* Macro for color interpolation */

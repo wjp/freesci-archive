@@ -1,5 +1,9 @@
 2005-01-15  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/gfx/resource/sci_picfill.c (FILL_FUNCTION): Removed some
+	magic of questionable correctness from pic filling code (fixes qg1
+	pic.095 visual map / unscaled)
+
 	* src/gfx/resource/sci_picfill_aux.c (AUXBUF_FILL): Made sure that
 	auxbuf filling is only used whenever the control map is involved,
 	and ensured that the bits set in the unscaled case can be (at
