@@ -18,7 +18,7 @@
 
 ***************************************************************************/
 
-#include "fake_glib.h"
+#include "glib.h"
 #include "midiout.h"
 #include "midiout_alsaraw.h"
 #include "midiout_unixraw.h"

@@ -18,7 +18,7 @@
 
 ***************************************************************************/
 
-#include "fake_glib.h"
+#include "glib.h"
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>

@@ -6,7 +6,7 @@
 #
 TARGET  :       scisound.a
 
-FILES   =       midi.o sfx_save.o sound.o soundserver_dos.o
+FILES   =       oldmidi.o sfx_save.o sound.o soundserver_dos.o
 		
 CC	= gcc
 CFLAGS	= -g -c -I../include -I../.. -D_DOS -DHAVE_UNISTD_H -DHAVE_LIBPNG

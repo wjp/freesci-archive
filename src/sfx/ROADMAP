@@ -4,10 +4,10 @@ Rickard Lind <rpl@dd.chalmers.se>, 2000-12-30
 
 Step 1:
 
-* rename "src/sound/midi.c" in freesci to "oldmidi.c" and still use it
+D rename "src/sound/midi.c" in freesci to "oldmidi.c" and still use it
 * move my "midi*" and "midiout*" to "src/sound"
-* change all "fake_glib.h" to the real thing
-
+D change all "glib.h" to the real thing
+	
 Step 2:
 
 * implement all note-playing, volume changing, reverb etc in "midi_mt32.*"

@@ -18,7 +18,7 @@
 
 ***************************************************************************/
 
-#include "fake_glib.h"
+#include "glib.h"
 #include <stdio.h>
 #include <sys/asoundlib.h>
 #include "midiout_alsaraw.h"
