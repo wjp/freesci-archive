@@ -165,6 +165,7 @@ static name_value_pair line_mode[] = {
 	{"correct", GFX_LINE_MODE_CORRECT},
 	{"normal", GFX_LINE_MODE_CORRECT},
 	{"fast", GFX_LINE_MODE_FAST},
+	{"half", GFX_LINE_MODE_FAST},
 	{"fine", GFX_LINE_MODE_FINE},
 	{"thin", GFX_LINE_MODE_FINE},
 	{0, 0}

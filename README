@@ -142,9 +142,11 @@ time, the configuration file may contain:
   random-ellipses: As ellipses, but slightly shift ellipse offset and size
   more-random: Add more random pixels to the whole area
 
-- pic0_line_mode = correct | fine
+- pic0_line_mode = correct | fine | half
   correct: Draw lines appropriately scaled
   fine: Don't scale lines (thin lines, may cause problems) 
+  half: Draw them at approximately half their correct width (only noticeable
+        with scaling factors from 3 upwards)
 
 - dirty_strategy = 1 | clusters
   The "dirty strategy" is the strategy used to collect modifications to the

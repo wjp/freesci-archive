@@ -1020,7 +1020,7 @@ _gfxr_draw_subline(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int
 
 static void
 _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int priority, int control,
-		int drawenable, int fine, int cmd)
+		int drawenable, int line_mode, int cmd)
 {
 	int scale_x = pic->mode->xfact;
 	int scale_y = pic->mode->yfact;
@@ -1082,15 +1082,11 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int pr
 	if (drawenable & GFX_MASK_PRIORITY)
 		p0printf(" pri:%x", priority);
 
-	if (fine) {  /* Adjust lines to extend over the full visual */
+	if (line_mode == GFX_LINE_MODE_FINE) {  /* Adjust lines to extend over the full visual */
 		x = (x * ((320 + 1) * scale_x - 1)) / (320 * scale_x);
 		y = (y * ((200 + 1) * scale_y - 1)) / (200 * scale_y);
 		ex = (ex * ((320 + 1) * scale_x - 1)) / (320 * scale_x);
 		ey = (ey * ((200 + 1) * scale_y - 1)) / (200 * scale_y);
-		/*	  y += scale_y >> 1;
-			  ey += scale_y >> 1;
-			  x += scale_x >> 1;
-			  ex += scale_x >> 1;*/
 
 		_gfxr_draw_subline(pic, x, y, ex, ey, color, priority, drawenable);
 	} else {
@@ -1108,20 +1104,35 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int pr
 				gfx_draw_box_pixmap_i(pic->priority_map, drawrect, priority);
 
 		} else {
+			int width = scale_x;
+			int height = scale_y;
+			int x_offset = 0;
+			int y_offset = 0;
 
-			for (xc = 0; xc < scale_x; xc++)
-				_gfxr_draw_subline(pic, x + xc, y, ex + xc, ey, color, priority, drawenable);
+			if (line_mode == GFX_LINE_MODE_FAST) {
+				width = (width + 1) >> 1;
+				height = (height + 1) >> 1;
+				x_offset = (width >> 1);
+				y_offset = (height >> 1);
+			}
 
-			if (scale_y > 0)
-				for (xc = 0; xc < scale_x; xc++)
-					_gfxr_draw_subline(pic, x + xc, y + scale_y - 1, ex + xc, ey + scale_y - 1, color, priority, drawenable);
+			for (xc = 0; xc < width; xc++)
+				_gfxr_draw_subline(pic, x + xc + x_offset, y + y_offset,
+						   ex + xc, ey, color, priority, drawenable);
 
-			if (scale_y > 1) {
-				for (yc = 1; yc < scale_y - 1; yc++)
-					_gfxr_draw_subline(pic, x, y + yc, ex, ey + yc, color, priority, drawenable);
-				if (scale_x > 0)
-					for (yc = 1; yc < scale_y - 1; yc++)
-						_gfxr_draw_subline(pic, x + scale_x - 1, y + yc, ex + scale_x - 1, ey + yc, color, priority, drawenable);
+			if (height > 0)
+				for (xc = 0; xc < width; xc++)
+					_gfxr_draw_subline(pic, x + xc + x_offset, y + height - 1 + y_offset,
+							   ex + xc, ey + height - 1, color, priority, drawenable);
+
+			if (height > 1) {
+				for (yc = 1; yc < height - 1; yc++)
+					_gfxr_draw_subline(pic, x + x_offset, y + yc + height,
+							   ex, ey + yc, color, priority, drawenable);
+				if (width > 0)
+					for (yc = 1; yc < height - 1; yc++)
+						_gfxr_draw_subline(pic, x + width - 1 + x_offset, y + yc + y_offset,
+								   ex + width - 1, ey + yc, color, priority, drawenable);
 			}
 		}
 	}
@@ -1731,7 +1742,7 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 	int oldx, oldy;
 	int pal, index;
 	int temp;
-	int line_mode = style->line_mode == GFX_LINE_MODE_FINE;
+	int line_mode = style->line_mode;
 	byte op, opx;
 
 #ifdef GFXR_DEBUG_PIC0

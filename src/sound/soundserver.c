@@ -39,6 +39,8 @@
 
 sound_server_t *global_sound_server = NULL;
 
+int soundserver_dead = 0;
+
 void
 sci0_soundserver()
 {
@@ -459,11 +461,6 @@ sci0_soundserver()
 
 	}
       }
-      /* XXXXX
-	if (verify_pid(ppid)) {
-	fprintf(stderr,"FreeSCI Sound server: Parent process is dead, terminating\n");
-	_exit(1); /* Die semi-ungracefully **
-    } */
 
       sci_get_current_time((GTimeVal *)&ctime);
       

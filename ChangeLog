@@ -1,5 +1,10 @@
 2001-04-22  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/gfx/resource/sci_pic_0.c (_gfxr_draw_line): Added 'half' line
+	mode
+
+	* src/sound/soundserver.c: Moved soundserver_dead into soundserver.c
+
 	* Added config option and -S parameter to select sound server
 
 	* src/include/soundserver.h: Renamed sfx_driver_t to sound_server_t

@@ -57,12 +57,24 @@
 
 #endif /* HAVE_SOCKETPAIR */
 
-int x_fd_in = 0, x_fd_out = 0;
-int x_fd_events = 0, x_fd_debug = 0;
+static int x_fd_in = 0, x_fd_out = 0;
+static int x_fd_events = 0, x_fd_debug = 0;
+static pid_t ppid;
 
-int soundserver_dead = 0;
 
 #ifdef HAVE_FORK
+
+static int
+checked_write(int file, byte *buf, size_t size)
+{
+	if (!file) {
+		fprintf(stderr,"Soundserver UNIX: Attempt to use fd0 for write!\n");
+		BREAKPOINT();
+	}
+	return write(file, buf, size);
+}
+
+
 void
 _sound_server_oops_handler(int signal)
 {
@@ -98,7 +110,7 @@ extern sound_server_t sound_server_unix;
 void
 _sound_confirm_death(int signal)
 {
-  printf("Sound server shut down\n");
+	printf("Sound server shut down\n");
 }
 
 void
@@ -112,7 +124,6 @@ int
 sound_unix_init(state_t *s)
 {
 	int child_pid;
-	pid_t ppid;
 	int fd_in[2], fd_out[2], fd_events[2], fd_debug[2];
 
 	global_sound_server = &sound_server_unix;
@@ -186,14 +197,20 @@ sound_unix_configure(state_t *s, char *option, char *value)
 void 
 sound_unix_queue_event(int handle, int signal, int value)
 {
-  sound_event_t event;
+	sound_event_t event;
 
-  event.handle = handle;
-  event.signal = signal;
-  event.value = value;
+	event.handle = handle;
+	event.signal = signal;
+	event.value = value;
 
-  write(x_fd_events, &event, sizeof(sound_event_t));
+	checked_write(x_fd_events, &event, sizeof(sound_event_t));
 
+}
+
+static int
+verify_pid(int pid) /* Checks if the specified PID is in use */
+{
+	return kill(pid, 0);
 }
 
 static int get_event_error_counter = 0;
@@ -201,126 +218,163 @@ static int get_event_error_counter = 0;
 sound_event_t *
 sound_unix_get_event(state_t *s)
 {
-  fd_set inpfds;
-  int inplen;
-  int success;
-  GTimeVal waittime = {0, 0};
-  char debug_buf[65];
-  sound_event_t *event = xalloc(sizeof(sound_event_t));
+	fd_set inpfds;
+	int inplen;
+	int success;
+	GTimeVal waittime = {0, 0};
+	char debug_buf[65];
+	sound_event_t *event = xalloc(sizeof(sound_event_t));
 
-  
-  FD_ZERO(&inpfds);
-  FD_SET(x_fd_debug, &inpfds);
-  while ((select(x_fd_debug + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime)
-	  && (inplen = read(x_fd_debug, debug_buf, 64)) > 0)) {
-    
-    debug_buf[inplen] = 0; /* Terminate string */
-    sciprintf(debug_buf); /* Transfer debug output */
-    waittime.tv_sec = 0;
-    waittime.tv_usec = 0;
-    
-    FD_ZERO(&inpfds);
-    FD_SET(x_fd_debug, &inpfds);
-    
-  }
-  
-  waittime.tv_sec = 0;
-  waittime.tv_usec = 0;
+  	if (verify_pid(ppid)) {
+		fprintf(stderr,"FreeSCI Sound server: Parent process is dead, terminating\n");
+		_exit(1); /* Die semi-ungracefully */
+	}
 
-  FD_ZERO(&inpfds);
-  FD_SET(x_fd_events, &inpfds);
-  
-  success = select(x_fd_events + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime);
-  
-  if (success && read(x_fd_events, event, sizeof(sound_event_t)) == sizeof(sound_event_t)) {
+
+	FD_ZERO(&inpfds);
+	FD_SET(x_fd_debug, &inpfds);
+	while ((select(x_fd_debug + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime)
+		&& (inplen = read(x_fd_debug, debug_buf, 64)) > 0)) {
     
-    return event;
+		debug_buf[inplen] = 0; /* Terminate string */
+		sciprintf(debug_buf); /* Transfer debug output */
+		waittime.tv_sec = 0;
+		waittime.tv_usec = 0;
     
-  } else {
-    free(event);
-    return NULL;
-  }
+		FD_ZERO(&inpfds);
+		FD_SET(x_fd_debug, &inpfds);
+	}
+
+	waittime.tv_sec = 0;
+	waittime.tv_usec = 0;
+
+	FD_ZERO(&inpfds);
+	FD_SET(x_fd_events, &inpfds);
+  
+	success = select(x_fd_events + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime);
+  
+	if (success && read(x_fd_events, event, sizeof(sound_event_t)) == sizeof(sound_event_t)) {
+    
+		return event;
+    
+	} else {
+		free(event);
+		return NULL;
+	}
 }
 
 void 
 sound_unix_queue_command(int handle, int signal, int value)
 {
-  sound_event_t event;
+	sound_event_t event;
 
-  event.handle = handle;
-  event.signal = signal;
-  event.value = value;
-  /*
-  printf("writing %04x %d %d\n", event.handle, event.signal, event.value);
-  */
-  write(x_fd_out, &event, sizeof(sound_event_t));
+	event.handle = handle;
+	event.signal = signal;
+	event.value = value;
+	/*
+	fprintf(stderr, "SIG: writing %04x %d %d\n",
+		event.handle, event.signal, event.value);
+	*/
+	checked_write(x_fd_out, &event, sizeof(sound_event_t));
 
 }
 
 sound_event_t *
 sound_unix_get_command(GTimeVal *wait_tvp)
 {
-  fd_set input_fds;
-  sound_event_t *event = NULL;
+	fd_set input_fds;
+	sound_event_t *event = NULL;
 
-  FD_ZERO(&input_fds);
-  FD_SET(x_fd_in, &input_fds);
+	FD_ZERO(&input_fds);
+	FD_SET(x_fd_in, &input_fds);
   
-  if(select(x_fd_in + 1, &input_fds, NULL, NULL, (struct timeval *)wait_tvp)) {
-    event = xalloc(sizeof(sound_event_t));
-    if (read(x_fd_in, event, sizeof(sound_event_t)) != sizeof(sound_event_t)) {
-      free(event);
-      event = NULL;
-    }
-  }
-  /*  if (event)
-      printf("reading %04x %d %d\n", event->handle, event->signal, event->value); */
-  return event;
+	if(select(x_fd_in + 1, &input_fds, NULL, NULL,
+		  (struct timeval *)wait_tvp)) {
+
+		event = xalloc(sizeof(sound_event_t));
+		if (read(x_fd_in, event, sizeof(sound_event_t)) != sizeof(sound_event_t)) {
+			free(event);
+			event = NULL;
+		}
+	}
+	/*
+	if (event)
+		fprintf(stderr, "SIG: reading %04x %d %d\n",
+		       event->handle, event->signal, event->value);
+	*/
+	return event;
 }
 
 int
 sound_unix_get_data(byte **data_ptr, int *size, int maxlen)
 {
-  int len = 0;
-  fd_set fds;
-  int fd = x_fd_in;
+	int len = 0;
+	fd_set fds;
+	int fd = x_fd_in;
+	int remaining_size;
+	byte *data_ptr_pos;
+	GTimeVal timeout = {0, SOUND_SERVER_TIMEOUT};
 
-  FD_ZERO(&fds);
-  FD_SET(fd, &fds); 
-  /*GTimeVal timeout = {0, SOUND_SERVER_TIMEOUT}; */
+	FD_ZERO(&fds);
+	FD_SET(fd, &fds); 
 
-  select(fd +1, &fds, NULL, NULL, NULL);
+	select(fd +1, &fds, NULL, NULL, (struct timeval *) &timeout);
 
-  if ((len = read(fd, size, sizeof(int))) < 0)
-    perror("...");
+	if ((len = read(fd, size, sizeof(int))) < 0) {
+		perror("...");
+		return 1;
+	}
 
-  printf("(%d), %d, %d to read\n", fd, len, *size);
-  fflush(stdout);
-  *data_ptr = xalloc(*size);
+	/* printf("(%d), %d, %d to read\n", fd, len, *size); */
+	fflush(stdout);
 
-  FD_ZERO(&fds);
-  FD_SET(fd, &fds); 
-  select(fd +1, &fds, NULL, NULL, NULL);
+	remaining_size = *size;
+	data_ptr_pos = *data_ptr = xalloc(*size);
 
-  /* XXXX need to add a read loop to wait */
+	while (remaining_size) {
+		GTimeVal timeout = {0, SOUND_SERVER_TIMEOUT};
  
-  len = read(fd, *data_ptr, *size);
-  printf("%d read\n", len);
-  fflush(stdout);
+		FD_ZERO(&fds);
+		FD_SET(fd, &fds); 
+		select(fd +1, &fds, NULL, NULL, (struct timeval *) &timeout);
+
+		len = read(fd, data_ptr_pos, remaining_size);
+
+		if (len < 0) {
+			fprintf(stderr," Sound server UNIX: File transfer failed! Aborting...");
+			return 1;
+		}
+		/*
+		printf("%d read at pos %p(%d), %d to go\n",
+		       len, data_ptr_pos, (data_ptr_pos - *data_ptr), remaining_size);
+		fflush(stdout);
+		*/
+
+		remaining_size -= len;
+		data_ptr_pos += len;
+	}
+
+	return 0;
 }
 
 int
 sound_unix_send_data(byte *data_ptr, int maxsend) 
 {
-  int len;
-  int fd = x_fd_out;
+	int len;
+	int fd = x_fd_out;
+	int to_go = maxsend;
 
-  len = write(fd, &maxsend, sizeof(int));
-  printf("%d wrote\n", len);  
-  fflush(stdout);
-  len = write(fd, data_ptr, maxsend);
-  printf("%d wrote of %d\n", len, maxsend);  
-  fflush(stdout);
+	len = checked_write(fd, &maxsend, sizeof(int));
+
+	while (to_go) {
+		len = checked_write(fd, data_ptr, to_go);
+		if (len < 0) {
+			fprintf(stderr," Writing to the sound server failed!");
+			return 1;
+		}
+		to_go -= len;
+	}
+	return 0;
 }
 
 void

@@ -106,7 +106,7 @@ _sound_expect_answer(char *timeoutmessage, int def_value)
   int retval;
   int size;
 
-  sound_get_data(&success,&size,sizeof(int));
+  sound_get_data((byte **)&success,&size,sizeof(int));
   
   retval = *success;
   free(success);
@@ -223,7 +223,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 	  int len = 0;
 	  
 	  sound_queue_command(event.handle, event.signal, event.value);
-	  sound_get_data(&retval,&len,sizeof(int));
+	  sound_get_data((byte **)&retval,&len,sizeof(int));
 	  len = *retval ;
 	  free(retval);
 	  return len; /* should be the polyphony */
@@ -601,27 +601,27 @@ song_lib_dump(songlib_t songlib, int line)
 }
 
 int init_midi_device (state_t *s) {
-  resource_t *midi_patch;
+	resource_t *midi_patch;
 
-  midi_patch = findResource(9,midi_patchfile);
+	midi_patch = findResource(9,midi_patchfile);
   
-  if (midi_patch == NULL) {
-    sciprintf("gack!  That patch (%03d) didn't load!\n", midi_patchfile);
+	if (midi_patch == NULL) {
+		sciprintf(" Patch (%03d) could not be loaded. Initializing with defaults...\n", midi_patchfile);
     
-    if (midi_open(NULL, -1) < 0) {
-      sciprintf("gack! The midi device failed to open cleanly!\n");
-      return -1;
-    }
+		if (midi_open(NULL, -1) < 0) {
+			sciprintf(" The MIDI device failed to open cleanly.\n");
+			return -1;
+		}
     
-  } else if (midi_open(midi_patch->data, midi_patch->length) < 0) {
-    sciprintf("gack! The midi device failed to open cleanly!\n");
-    return -1;
-  }
+	} else if (midi_open(midi_patch->data, midi_patch->length) < 0) {
+		sciprintf(" The MIDI device failed to open cleanly.\n");
+		return -1;
+	}
   
-  s->sound_volume = 0xc;
-  s->sound_mute = 0;
+	s->sound_volume = 0xc;
+	s->sound_mute = 0;
 
-  return 0;
+	return 0;
 }
 
 
