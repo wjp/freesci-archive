@@ -196,7 +196,8 @@ kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
   PUT_HEAP(new_offs + SCRIPT_FUNCTAREAPTR_OFFSET, functareaptr);
 
   species = GET_HEAP(new_offs + SCRIPT_SPECIES_OFFSET);
-  PUT_HEAP(new_offs + SCRIPT_SUPERCLASS_OFFSET, species);
+  /*  PUT_HEAP(new_offs + SCRIPT_SUPERCLASS_OFFSET, species); */
+  PUT_HEAP(new_offs + SCRIPT_SUPERCLASS_OFFSET, old_offs); /* Offset of the original class */
 
   s->acc = new_offs; /* return the object's address */
 

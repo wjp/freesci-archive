@@ -98,7 +98,7 @@ get_class_address(state_t *s, int classnr)
 #define GET_OP_SIGNED_FLEX() ((opcode & 1)? GET_OP_SIGNED_BYTE() : GET_OP_SIGNED_WORD())
 
 #define CLASS_ADDRESS(classnr) (((classnr < 0) || (classnr >= s->classtable_size)) ?              \
-				0 /* Error condition */ : get_class_address(s, classnr))
+				classnr /* parameter was parent object address */ : get_class_address(s, classnr))
 
 #define OBJ_SPECIES(address) GET_HEAP((address) + SCRIPT_SPECIES_OFFSET)
 /* Returns an object's species */
@@ -647,7 +647,7 @@ run_vm(state_t *s, int restoring)
       break;
 
     case 0x1f: /* link */
-      xs->sp += (opparams[0]) * 2;
+      xs->sp += (opparams[0]) << 1;
       break;
 
     case 0x20: /* call */
@@ -1422,7 +1422,6 @@ game_run(state_t **_s)
       game_exit(s);
       game_init(s);
 
-      sciprintf("play()\n");
       putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector */
 
       putInt16(s->heap + s->stack_base + 2, 0);

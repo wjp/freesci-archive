@@ -485,7 +485,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	    char *dest = target + str_leng - 1;
 
 	    while (templen--) {
-	      *dest = *(dest + diff);
+	      *dest = *(dest - diff);
 	      dest--;
 	    } /* Copy the number */
 

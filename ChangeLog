@@ -1,3 +1,16 @@
+2000-06-03  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kstring.c (kFormat): Fixed kFormat() support for
+	minimum widths for numbers
+
+	* src/engine/vm.c (_lookup_selector_functions): Cloned objects
+	didn't get their parent objects' selector functions checked. Fixed.
+
+	* src/engine/kgraphics.c (kCanBeHere): Altered CanBeHere to return
+	part of the object's signal selector or 1, and to scan one less line
+	(kTextSize): TextSize() now returns the maximum width instead of the
+	calculated width if the maximum width was specified
+
 2000-06-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kDoBresen): Removed explicit handling of

@@ -238,8 +238,11 @@ kTextSize(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr heap_text = UPARAM(1);
   char *text = s->heap + heap_text;
   heap_ptr dest = UPARAM(0);
-  int maxwidth = UPARAM_OR_ALT(3, 0);
+  int maxwidth = PARAM_OR_ALT(3, 0);
   resource_t *fontres = findResource(sci_font, UPARAM(2));
+
+  if (maxwidth < 0)
+    maxwidth = 0;
 
   if (!*text) { /* Empty text */
     PUT_HEAP(dest + 0, 0);
@@ -250,20 +253,17 @@ kTextSize(state_t *s, int funct_nr, int argc, heap_ptr argp)
     return;
   }
 
-  if (!maxwidth)
-    maxwidth = MAX_TEXT_WIDTH_MAGIC_VALUE;
-
   if (!fontres) {
     SCIkwarn(SCIkERROR, "font.%03d not found!\n", UPARAM(2));
     return;
   }
 
-  get_text_size(text, fontres->data, maxwidth, &width, &height);
+  get_text_size(text, fontres->data, maxwidth? maxwidth : MAX_TEXT_WIDTH_MAGIC_VALUE, &width, &height);
 
   PUT_HEAP(dest + 0, 0);
   PUT_HEAP(dest + 2, 0);
   PUT_HEAP(dest + 4, height);
-  PUT_HEAP(dest + 6, width); /* The reason for this is unknown to me */
+  PUT_HEAP(dest + 6, maxwidth? maxwidth : width);
 }
 
 
@@ -555,6 +555,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr obj = UPARAM(0);
   heap_ptr cliplist = UPARAM_OR_ALT(1, 0);
+  port_t *port = s->ports[s->view_port];
   word signal;
 
   int x = GET_SELECTOR(obj, brLeft);
@@ -570,15 +571,13 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
       x, y, xend, yend, obj, signal, cliplist);
 
   s->acc = !(((word)GET_SELECTOR(obj, illegalBits))
-	     & (edgehit = graph_on_control(s, x, y + 10, xl, yl, SCI_MAP_CONTROL)));
+	     & (edgehit = graph_on_control(s, x + port->xmin, y + port->ymin, xl, yl-1, SCI_MAP_CONTROL)));
   SCIkdebug(SCIkBRESEN, "edgehit = %04x\n", edgehit);
   if (s->acc == 0)
     return; /* Can'tBeHere */
-  if (signal & _K_VIEW_SIG_FLAG_DONT_RESTORE)/* || (signal & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))*/
-  {
-    s->acc=1;/*signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE|_K_VIEW_SIG_FLAG_IGNORE_ACTOR); /* CanBeHere- it's either being disposed, or it ignores actors anyway */
-    return;
-  }
+  if (signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | signal & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))
+    s->acc= signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE|_K_VIEW_SIG_FLAG_IGNORE_ACTOR); /* CanBeHere- it's either being disposed, or it ignores actors anyway */
+
   if (cliplist) {
     heap_ptr node = GET_HEAP(cliplist + LIST_FIRST_NODE);
 
@@ -590,7 +589,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	int other_signal = GET_SELECTOR(other_obj, signal);
 	SCIkdebug(SCIkBRESEN, "OtherSignal=%04x, z=%04x\n", other_signal, (other_signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)));
-	if ((other_signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)) == 0) {
+	if ((other_signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR | _K_VIEW_SIG_FLAG_NO_UPDATE)) == 0) {
 	  /* check whether the other object ignores actors */
 
 	  int other_x = GET_SELECTOR(other_obj, brLeft);
@@ -615,9 +614,11 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
   }
 
-  s->acc = edgehit;
-  /* CanBeHere */
-}
+  if (!s->acc)
+    s->acc = 1;
+  SCIkdebug(SCIkBRESEN, " -> %04x\n", s->acc);
+
+}  /* CanBeHere */
 
 
 
