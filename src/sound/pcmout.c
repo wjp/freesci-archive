@@ -42,12 +42,14 @@ pcmout_driver_t *pcmout_drivers[] = {
 
 static gint16 *snd_buffer = NULL;
 guint16 pcmout_sample_rate = 44100;
+guint8  pcmout_stereo = 1;
 
 int pcmout_open()
 {
 	snd_buffer = sci_calloc(4, BUFFER_SIZE);
 	memset(snd_buffer, 0x00, BUFFER_SIZE * 4);
-	return pcmout_driver->pcmout_open(snd_buffer, pcmout_sample_rate);
+	return pcmout_driver->pcmout_open(snd_buffer, pcmout_sample_rate,
+					  pcmout_stereo);
 }
 
 int pcmout_close(void)
@@ -76,7 +78,7 @@ int mix_sound(int count)
 
 /* the pcmout_null sound driver */
 
-int pcmout_null_open(gint16 *b, guint16 rate)
+int pcmout_null_open(gint16 *b, guint16 rate, guint8 stereo)
 {
 	printf("Opened null pcm device\n");
 	return 0;

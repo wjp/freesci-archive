@@ -34,7 +34,6 @@
 int midi_adlibemu_reset(void);
 
 //#define DEBUG_ADLIB
-//#define ADLIB_MONO
 #define SCI_VOLUME_SCALE
 
 /* portions shamelessly lifted from claudio's XMP */
@@ -389,13 +388,12 @@ int adlibemu_start_note(int chn, int note, int velocity)
   volume_R = velocity * vol[chn] / 127;
 
   /* Apply a pan */
-#ifndef ADLIB_MONO
-  if (pan[chn] > 0x3f)  /* pan right; so we scale the left down. */
-    volume_L = volume_L / 0x3f * (0x3f - (pan[chn] - 0x3f));
-  else if (pan[chn] < 0x3f) /* pan left; so we scale the right down.*/
-    volume_R = volume_R / 0x3f * (0x3f - (0x3f-pan[chn]));
-#endif 
-
+  if (pcmout_stereo) {
+    if (pan[chn] > 0x3f)  /* pan right; so we scale the left down. */
+      volume_L = volume_L / 0x3f * (0x3f - (pan[chn] - 0x3f));
+    else if (pan[chn] < 0x3f) /* pan left; so we scale the right down.*/
+      volume_R = volume_R / 0x3f * (0x3f - (0x3f-pan[chn]));
+  }
   inst = instr[chn];
 
   synth_setpatch(op, adlib_sbi[inst]);
@@ -640,8 +638,37 @@ int synth_mixer (gint16 *buffer, int count)
   if (!ready)
     return 0;
 
-  YM3812UpdateOne (ADLIB_LEFT, ptr, count, 1); 
-  YM3812UpdateOne (ADLIB_RIGHT, ptr+1, count, 1);   
+#if 0
+  {
+    static unsigned long remaining_delta = 0;
+    int samples;
+    int remaining = count;
+
+    while (remaining > 0) {
+      samples = remaining_delta * pcmout_sample_rate / 1000000;
+      samples = sci_min(samples, remaining);
+      if (samples) {
+        YM3812UpdateOne(ADLIB_LEFT, ptr, samples, 1);
+        YM3812UpdateOne(ADLIB_RIGHT, ptr+1, samples, 1);   
+      }
+      if (remaining > samples) {
+        remaining_delta = (remaining - samples) * 1000000 / pcmout_sample_rate;
+      } else {
+        song->play_next_note();
+        remaining_delta = song->get_next_delta();
+        song->advance();
+      }
+      remaining -= samples;
+    }
+  }
+#endif
+
+  if (pcmout_stereo) {
+    YM3812UpdateOne (ADLIB_LEFT, ptr, count, 1); 
+    YM3812UpdateOne (ADLIB_RIGHT, ptr+1, count, 1);   
+  } else {
+    YM3812UpdateOne (ADLIB_LEFT, ptr, count, 0); 
+  }
 
   return count;
 }

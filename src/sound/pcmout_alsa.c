@@ -53,8 +53,9 @@ static void *sound_thread (void *arg)
   pthread_exit(0);
 }
 
-static int pcmout_alsa_open(gint16 *b, guint16 rate) {
-  int channels = 2;
+static int pcmout_alsa_open(gint16 *b, guint16 rate, guint8 stereo) 
+{
+  int channels = (stereo) ? 2 : 1;
   int periods = 8;
   int err;
   snd_pcm_stream_t stream = SND_PCM_STREAM_PLAYBACK;

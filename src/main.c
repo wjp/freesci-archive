@@ -1140,6 +1140,7 @@ main(int argc, char** argv)
 	/* Configure the pcmout driver */
 	{
 	        pcmout_sample_rate = active_conf->pcmout_rate;
+	        pcmout_stereo = active_conf->pcmout_stereo;
 	}
 
 	/* Configure the midiout driver */
@@ -1195,7 +1196,6 @@ main(int argc, char** argv)
 		}
 		
 		gamestate->sound_server->get_event(gamestate); /* Get init message */
-
 		/* FIXME: memory allocated that is not freed */
 	}
 

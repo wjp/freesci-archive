@@ -93,6 +93,7 @@ typedef struct {
 	pcmout_driver_t *pcmout_driver; /* the pcm driver to use */
 	sound_server_t *sound_server; /* The sound server */
         guint16 pcmout_rate;  /* Sample rate */
+        guint8 pcmout_stereo;  /* Stereo? */
 
 	char *module_path; /* path to directories modules are loaded from */
 

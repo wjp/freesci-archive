@@ -57,7 +57,8 @@ static void *sound_thread (void *arg)
   pthread_exit(0);
 }
 
-static int pcmout_oss_open(gint16 *b, guint16 rate) {
+static int pcmout_oss_open(gint16 *b, guint16 rate, guint8 stereo) 
+{
   audio_buf_info info;
   int i;
 
@@ -78,7 +79,7 @@ static int pcmout_oss_open(gint16 *b, guint16 rate) {
 	  
   i = AFMT_S16_NE;  /* Use NATIVE endian format... */
   ioctl (oss_fd, SNDCTL_DSP_SETFMT, &i);
-  i = 1;
+  i = stereo;
   ioctl (oss_fd, SNDCTL_DSP_STEREO, &i);
   i = rate;
   ioctl (oss_fd, SNDCTL_DSP_SPEED, &i);

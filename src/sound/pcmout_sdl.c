@@ -52,7 +52,8 @@ static void fill_audio (void *udata, guint8 *stream, int len)
   remain -= offset;
 }
 
-static int pcmout_sdl_open(gint16 *b, guint16 rate) {
+static int pcmout_sdl_open(gint16 *b, guint16 rate, guint8 stereo) 
+{
   SDL_AudioSpec a;
   
   buffer = b;
@@ -68,7 +69,7 @@ static int pcmout_sdl_open(gint16 *b, guint16 rate) {
 #else
   a.format = AUDIO_S16LSB;
 #endif
-  a.channels = 2;
+  a.channels = (stereo)? 2 : 1;
   a.samples = BUFFER_SIZE * 2;
   a.callback = fill_audio;
   a.userdata = NULL;

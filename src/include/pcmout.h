@@ -31,7 +31,7 @@ typedef struct _pcmout_driver {
 	char *name;
 	char *version;
 	int (*set_parameter)(struct _pcmout_driver *drv, char *attribute, char *value);
-	int (*pcmout_open)(gint16 *b, guint16 rate);
+	int (*pcmout_open)(gint16 *b, guint16 rate, guint8 stereo);
 	int (*pcmout_close)(void);
 } pcmout_driver_t;
 
@@ -42,6 +42,7 @@ extern DLLEXTERN pcmout_driver_t *pcmout_driver;
 extern DLLEXTERN pcmout_driver_t pcmout_driver_null;
 
 extern DLLEXTERN guint16 pcmout_sample_rate;
+extern DLLEXTERN guint8 pcmout_stereo;
 
 #ifdef HAVE_SYS_SOUNDCARD_H
 extern pcmout_driver_t pcmout_driver_oss;

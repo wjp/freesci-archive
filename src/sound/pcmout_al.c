@@ -59,7 +59,7 @@ void* althreadplay(void* arg)
    pthread_exit(NULL);
 }
 
-static int pcmout_al_open(gint16 *b, guint16 rate) 
+static int pcmout_al_open(gint16 *b, guint16 rate, guint8 stereo) 
 {
    ALpv alparam;
    int  aldev, alitf;
@@ -73,7 +73,7 @@ static int pcmout_al_open(gint16 *b, guint16 rate)
    }
    alSetSampFmt(alconfig, AL_SAMPFMT_TWOSCOMP);
    alSetWidth(alconfig, AL_SAMPLE_16);
-   alSetChannels(alconfig, 2);
+   alSetChannels(alconfig, stereo+1);
 
    aldev=alGetResourceByName(AL_SYSTEM, "out.analog", AL_DEVICE_TYPE);
    if (!aldev) {

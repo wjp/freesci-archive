@@ -1,3 +1,11 @@
+2002-09-22  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/sound/pcmout_*, src/config.l, src/main.c,
+        src/include/sci_conf.h, src/include/pcmout.h: Add a run-time
+          toggle to operate in stereo or mono.
+	* src/sound/midi_adlibemu.c:  Add the guts of the
+          pcmout-timer-driven note playback loop.  #ifdef'ed out.
+
 2002-09-16  Solomon Peachy <pizza@shaftnet.org>
 
 	* AUTHORS, src/engine/kmenu.c:   Add my name for blame
