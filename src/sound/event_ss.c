@@ -40,7 +40,7 @@
 #define STANDARD_TIMER 0
 #define SCI_MIDI_TIME_TIMER 1
 
-static void do_sound(sound_server_state_t *sss)
+void do_sound(sound_server_state_t *sss)
 {
 	static midi_op_t cached_cmd;
 	/* cached MIDI command stored while waiting for ticks to == 0 */
@@ -243,9 +243,6 @@ sci0_event_ss(sound_server_state_t *ss_state)
 	/*** sound server loop ***/
 	for (;;)
 	{
-		/* process any waiting sound */
-		do_sound(ss_state);
-
 		/* check for new commands */
 		/* this must include some sort of waiting instruction so scheduling
 		** under Win32 will work correctly. it is assumed that the call to
@@ -253,16 +250,17 @@ sci0_event_ss(sound_server_state_t *ss_state)
 		** needs to be called every 16.6667 milliseconds).
 		*/
 		new_event = global_sound_server->get_command(NULL);
-		if (!new_event)
-		{
+
+		/* process any waiting sound */
+		do_sound(ss_state);
+
+		if (!new_event) {
 			continue;	/* no new commands */
 
 		} else if (new_event->signal == UNRECOGNISED_SOUND_SIGNAL) {
-			sci_free(new_event);	/* no new commands */
 			continue;
 
 		} else if (new_event->signal == SOUND_COMMAND_SHUTDOWN) {
-			sci_free(new_event);
 			break;		/* drop out of for loop */
 		}
 
@@ -352,7 +350,7 @@ sci0_event_ss(sound_server_state_t *ss_state)
 
 				/* Return soundsrv_save_state()'s return value */
 				global_sound_server->send_data((byte *)&success, sizeof(int));
-				free(dirname);
+				sci_free(dirname);
 			}
 			break;
 
@@ -369,7 +367,7 @@ sci0_event_ss(sound_server_state_t *ss_state)
 
 				/* Return return value */
 				global_sound_server->send_data((byte *)&success, sizeof(int));
-				free(dirname);
+				sci_free(dirname);
 
 				_restore_midi_state(ss_state);
 				change_song(ss_state->current_song, ss_state);
@@ -407,7 +405,6 @@ sci0_event_ss(sound_server_state_t *ss_state)
 		default:
 			fprintf(debug_stream, "sci0_event_ss(): Received unknown sound signal %i\n", new_event->signal);
 		}
-		sci_free(new_event);
 	}
 
 	/*** shut down server ***/

@@ -29,18 +29,18 @@
 
 ***************************************************************************/
 
+#ifdef _WIN32
+
 #include <sci_memory.h>
 #include <soundserver.h>
 #include <sound.h>
-
-#ifdef _WIN32
 
 #include <engine.h>
 #include <windows.h>
 #include <win32/messages.h>
 
 /* #define SSWIN_DEBUG 0 */
-/* #define NO_CALLBACK */
+/* #define NO_CALLBACK */ /* Win 98+ / Win2000+ only */
 
 sound_server_t sound_server_win32e;
 
@@ -62,6 +62,8 @@ static state_t *gs;
 
 static sci_queue_t data_queue;
 static CRITICAL_SECTION dq_cs;	/* synchronisation for data queue */
+
+static sound_event_t *new_command_event;
 
 
 LRESULT CALLBACK
@@ -97,8 +99,8 @@ timeout(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2
 DWORD WINAPI
 win32e_soundserver_init(LPVOID lpP)
 {
-	sound_server_state_t sss;
 	WNDCLASS wc;
+	sound_server_state_t sss;
 	memset(&sss, 0, sizeof(sound_server_state_t));
 
 #if (SSWIN_DEBUG == 1)
@@ -226,6 +228,8 @@ sound_win32e_init(struct _state *s, int flags)
 	InitializeCriticalSection(&dq_cs);
 	sci_init_queue(&data_queue);
 
+	new_command_event = (sound_event_t*)sci_malloc(sizeof(sound_event_t));
+
 	/* create event that will signal when data is waiting */
 	sound_data_event = CreateEvent(NULL, FALSE, FALSE, NULL);
 
@@ -306,6 +310,15 @@ sound_win32e_init(struct _state *s, int flags)
 	CloseHandle(thread_created_event);
 
 	/*** start timer ***/
+	{
+		TIMECAPS tc;
+		if (timeGetDevCaps(&tc, sizeof(TIMECAPS)) != TIMERR_NOERROR)
+		{
+		    // Error; application can't continue.
+		}
+		fprintf(debug_stream, "Multimedia timer supports resolution min: %u, max: %u\n", tc.wPeriodMin, tc.wPeriodMax);
+	}
+
 #ifdef NO_CALLBACK
 	time_keeper_id = timeSetEvent(16, 0, (LPTIMECALLBACK)time_keeper, NULL, TIME_PERIODIC | TIME_CALLBACK_EVENT_PULSE);
 #else
@@ -342,17 +355,17 @@ sound_win32e_get_event()
 	MSG msg; /* incoming message */
 	int i;
 
-	sound_event_t *event_temp = NULL;
+	sound_event_t *new_event_event = NULL;
 
 	if (PeekMessage(&msg, main_wnd, 0, 0, PM_REMOVE))
 	{
 #if (SSWIN_DEBUG == 1)
 	fprintf(debug_stream, "sound_win32e_get_event() got msg %i (time: %i) (TID: %i)\n", msg.message, msg.time, GetCurrentThreadId());
 #endif
-		event_temp = (sound_event_t*)sci_malloc(sizeof(sound_event_t));
-		event_temp->signal = UNRECOGNISED_SOUND_SIGNAL;
-		event_temp->handle = msg.wParam;
-		event_temp->value = msg.lParam;
+		new_event_event = (sound_event_t*)sci_malloc(sizeof(sound_event_t));
+		new_event_event->signal = UNRECOGNISED_SOUND_SIGNAL;
+		new_event_event->handle = msg.wParam;
+		new_event_event->value = msg.lParam;
 
 		/* pass on the message regardless */
 		TranslateMessage(&msg);
@@ -362,11 +375,11 @@ sound_win32e_get_event()
 		for (i = 0; i < sizeof(emap); i++)
 			if (emap[i] == msg.message)
 			{
-				event_temp->signal = i;
+				new_event_event->signal = i;
 				break;
 			}
 
-		return event_temp;
+		return new_event_event;
 	}
 
 	return NULL;
@@ -381,8 +394,6 @@ sound_win32e_get_command(GTimeVal *wait_tvp)
 	int i;
 	BOOL bRet;
 
-	sound_event_t *event_temp = NULL;
-
 #ifdef NO_CALLBACK
 	/* wait for timing semaphore */
 	if (WaitForSingleObject(time_keeper, INFINITE) != WAIT_OBJECT_0)
@@ -391,7 +402,8 @@ sound_win32e_get_command(GTimeVal *wait_tvp)
 		exit(-1);
 	}
 
-	if (PeekMessage( &msg, sound_wnd, 0, 0, PM_REMOVE ))
+	/* Win 98/Me, Win 2000/XP only */
+	if (PeekMessage( &msg, sound_wnd, 0, 0, PM_REMOVE | PM_QS_POSTMESSAGE ))
 	{
 #else
 	if( (bRet = GetMessage( &msg, sound_wnd, 0, 0 )) != 0)
@@ -406,10 +418,9 @@ sound_win32e_get_command(GTimeVal *wait_tvp)
 #if (SSWIN_DEBUG == 1)
 		fprintf(debug_stream, "sound_win32e_get_command() got msg %i (time: %i) (TID: %i)\n", msg.message, msg.time, GetCurrentThreadId());
 #endif
-		event_temp = (sound_event_t*)sci_malloc(sizeof(sound_event_t));
-		event_temp->signal = UNRECOGNISED_SOUND_SIGNAL;
-		event_temp->handle = msg.wParam;
-		event_temp->value = msg.lParam;
+		new_command_event->signal = UNRECOGNISED_SOUND_SIGNAL;
+		new_command_event->handle = msg.wParam;
+		new_command_event->value = msg.lParam;
 
 		/* pass on the message regardless */
 		TranslateMessage(&msg);
@@ -419,12 +430,11 @@ sound_win32e_get_command(GTimeVal *wait_tvp)
 		for (i = 0; i < sizeof(emap); i++)
 			if (emap[i] == msg.message)
 			{
-				event_temp->signal = i;
+				new_command_event->signal = i;
 				break;
 			}
 
-		/* messages not recognised by the server have a signal of 0 */
-		return event_temp;
+		return new_command_event;
 	}
 
 	return NULL;
@@ -532,6 +542,8 @@ sound_win32e_exit(struct _state *s)
 	DestroyWindow(main_wnd);
 	UnregisterClass(SOUND_CLASS_NAME, hi_sound);
 	UnregisterClass(MAIN_CLASS_NAME, hi_main);
+
+	sci_free(new_command_event);
 }
 
 int
@@ -547,7 +559,7 @@ sound_win32e_save(struct _state *s, char *dir)
 
 	global_sound_server->get_data((byte **) &success, &size);
 	retval = *success;
-	free(success);
+	sci_free(success);
 
 	return retval;
 }

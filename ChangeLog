@@ -1,3 +1,11 @@
+2001-12-17  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/sound/event_ss.c:
+	* src/sound/event_ss_win32.c: Removed excess mallocs.
+	
+	* src/fsci_dll.dsp:
+	* src/sciv.dsp: Fixed to work properly under Quantify.
+
 2001-12-16  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/event_ss.c:
