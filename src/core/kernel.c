@@ -419,6 +419,7 @@ _kernel_lookup_text(state_t *s, int address, int index)
 }
 
 
+
 /* Flags for the signal selector */
 #define _K_VIEW_SIG_FLAG_UPDATE_ENDED   0x0001
 #define _K_VIEW_SIG_FLAG_UPDATING       0x0002
@@ -449,6 +450,88 @@ _k_dyn_view_list_accept_change(state_t *s);
 
 #define PRIORITY_BAND_FIRST(nr) (((nr) == 0)? 0 :  \
         ((s->priority_first) + ((nr) * (s->priority_last - s->priority_first)) / 14))
+
+
+
+#define _K_SOUND_STATUS_STOPPED 0
+#define _K_SOUND_STATUS_INITIALIZED 1
+#define _K_SOUND_STATUS_PLAYING 2
+#define _K_SOUND_STATUS_PAUSED 3
+
+void
+process_sound_events(state_t *s) /* Get all sound events, apply their changes to the heap */
+{
+  sound_event_t *event;
+
+  if (s->sfx_driver == NULL)
+    return;
+
+  while (event = s->sfx_driver->get_event(s)) {
+    heap_ptr obj = event->handle;
+
+    switch (event->signal) {
+    case SOUND_SIGNAL_CUMULATIVE_CUE: {
+      int signal = GET_SELECTOR(obj, signal);
+      SCIkdebug(SCIkSOUND,"Received cumulative cue for %04x\n", obj);
+
+      PUT_SELECTOR(obj, signal, signal + 1);
+    }
+    break;
+
+    case SOUND_SIGNAL_LOOP:
+
+      SCIkdebug(SCIkSOUND,"Received loop signal for %04x\n", obj);
+      PUT_SELECTOR(obj, loop, event->value);
+      PUT_SELECTOR(obj, signal, -1);
+      break;
+
+    case SOUND_SIGNAL_FINISHED:
+
+      SCIkdebug(SCIkSOUND,"Received finished signal for %04x\n", obj);
+      PUT_SELECTOR(obj, state, _K_SOUND_STATUS_STOPPED);
+      PUT_SELECTOR(obj, loop, -1);
+      break;
+
+    case SOUND_SIGNAL_PLAYING:
+
+      SCIkdebug(SCIkSOUND,"Received playing signal for %04x\n", obj);
+      PUT_SELECTOR(obj, state, _K_SOUND_STATUS_PLAYING);
+      break;
+
+    case SOUND_SIGNAL_PAUSED:
+
+      SCIkdebug(SCIkSOUND,"Received pause signal for %04x\n", obj);
+      PUT_SELECTOR(obj, state, _K_SOUND_STATUS_PAUSED);
+      break;
+
+    case SOUND_SIGNAL_RESUMED:
+
+      SCIkdebug(SCIkSOUND,"Received resume signal for %04x\n", obj);
+      PUT_SELECTOR(obj, state, _K_SOUND_STATUS_PAUSED);
+      break;
+
+    case SOUND_SIGNAL_INITIALIZED:
+
+      PUT_SELECTOR(obj, state, _K_SOUND_STATUS_INITIALIZED);
+      SCIkdebug(SCIkSOUND,"Received init signal for %04x\n", obj);
+      break;
+
+    case SOUND_SIGNAL_ABSOLUTE_CUE:
+
+      SCIkdebug(SCIkSOUND,"Received absolute cue %d for %04x\n", event->value, obj);
+      PUT_SELECTOR(obj, signal, event->value);
+      break;
+
+    default:
+      SCIkwarn(SCIkERROR, "Unknown sound signal: %d\n", event->signal);
+    }
+
+    free(event);
+  }
+
+}
+
+
 
 /*****************************************/
 /************* Kernel functions **********/
@@ -1181,6 +1264,19 @@ kTimesCos(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
+#define _K_SOUND_INIT 0
+#define _K_SOUND_PLAY 1
+#define _K_SOUND_NOP 2
+#define _K_SOUND_DISPOSE 3
+#define _K_SOUND_SETON 4
+#define _K_SOUND_STOP 5
+#define _K_SOUND_SUSPEND 6
+#define _K_SOUND_RESUME 7
+#define _K_SOUND_VOLUME 8
+#define _K_SOUND_UPDATE 9
+#define _K_SOUND_FADE 10
+#define _K_SOUND_CHECK_DRIVER 11
+
 void
 kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
@@ -1188,7 +1284,6 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr obj = UPARAM_OR_ALT(1, 0);
 
   CHECK_THIS_KERNEL_FUNCTION;
-  SCIkdebug(SCIkSTUB, "kDoSound: Stub\n");
 
   if (s->debug_mode & (1 << SCIkSOUNDCHK_NR)) {
     int i;
@@ -1218,19 +1313,76 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
     sciprintf(")\n");
   }
 
-  if (obj > 1000) {
-    if (sci_version < SCI_VERSION_01)
-      PUT_SELECTOR(obj, state, 2); /* Set state to a magic value */
-    PUT_SELECTOR(obj, signal, -1);
-  }
 
-  switch (PARAM(0)) {
-  case 0x0: s->sound_object = PARAM(1); break;
-    /* Initialize and set sound object. Stores a heap_ptr to some special data in the sound
-    ** object's "handle" varselector.  */
-  case 0x8: s->acc = 0xc; break; /* Determine sound type? */
-  case 0xb: s->acc = 1; break; /* Check for sound? */
+  if (s->sfx_driver)
+    switch (command) {
+    case _K_SOUND_INIT:
+
+      s->sfx_driver->command(s, SOUND_COMMAND_INIT_SONG, obj, GET_SELECTOR(obj, number));
+      break;
+
+    case _K_SOUND_PLAY:
+
+      s->sfx_driver->command(s, SOUND_COMMAND_SET_LOOPS, obj, GET_SELECTOR(obj, loop));
+      s->sfx_driver->command(s, SOUND_COMMAND_PLAY_HANDLE, obj, 0);
+      break;
+
+    case _K_SOUND_NOP:
+
+      break;
+
+    case _K_SOUND_DISPOSE:
+
+      s->sfx_driver->command(s, SOUND_COMMAND_DISPOSE_HANDLE, obj, 0);
+      break;
+
+    case _K_SOUND_SETON:
+
+      s->sfx_driver->command(s, SOUND_COMMAND_SET_MUTE, obj, 0);
+      break;
+
+    case _K_SOUND_STOP:
+
+      s->sfx_driver->command(s, SOUND_COMMAND_STOP_HANDLE, obj, 0);
+      break;
+
+    case _K_SOUND_SUSPEND:
+
+      s->sfx_driver->command(s, SOUND_COMMAND_SUSPEND_HANDLE, obj, 0);
+      break;
+
+    case _K_SOUND_RESUME:
+
+      s->sfx_driver->command(s, SOUND_COMMAND_RESUME_HANDLE, obj, 0);
+      break;
+
+    case _K_SOUND_VOLUME:
+
+      s->acc = 0xc; /* FIXME */
+      break;
+
+    case _K_SOUND_UPDATE:
+
+      s->sfx_driver->command(s, SOUND_COMMAND_RENICE_HANDLE, obj, GET_SELECTOR(obj, priority));
+      s->sfx_driver->command(s, SOUND_COMMAND_SET_LOOPS, obj, GET_SELECTOR(obj, loop));
+      break;
+
+    case _K_SOUND_FADE:
+
+      s->sfx_driver->command(s, SOUND_COMMAND_FADE_HANDLE, obj, 120); /* Fade out in 2 secs */
+      break;
+
+    case _K_SOUND_CHECK_DRIVER:
+
+      s->acc = s->sfx_driver->command(s, SOUND_COMMAND_TEST, 0, 0);
+      break;
+
+    default:
+      SCIkwarn(SCIkWARNING, "Unhandled DoSound command: %x\n", command);
+
   }
+  process_sound_events(s); /* Take care of incoming events */
+
 }
 
 #define K_GRAPH_GET_COLORS_NR 2
@@ -1816,6 +1968,8 @@ kGetFarText(state_t *s, int funct_nr, int argc, heap_ptr argp)
   resource_t *textres = findResource(sci_text, PARAM(0));
   char *seeker;
   int counter = PARAM(1);
+
+  CHECK_THIS_KERNEL_FUNCTION;
 
   if (!textres) {
     SCIkwarn(SCIkERROR, "text.%d does not exist\n", PARAM(0));
@@ -2841,10 +2995,10 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   wnd = calloc(sizeof(port_t), 1);
 
-  wnd->ymin = PARAM(0) + 10;
-  wnd->xmin = PARAM(1);
-  wnd->ymax = PARAM(2) + 10; /*  +10 because of the menu bar- SCI scripts don't count it */
-  wnd->xmax = PARAM(3);
+  wnd->ymin = MAX(PARAM(0) + 10, 10);
+  wnd->xmin = MAX(PARAM(1), 1);
+  wnd->ymax = MIN(PARAM(2) + 10, 198); /*  +10 because of the menu bar- SCI scripts don't count it */
+  wnd->xmax = MIN(PARAM(3), 318);
   wnd->title = PARAM(4);
   wnd->flags = PARAM(5);
   wnd->priority = PARAM(6);
@@ -2949,6 +3103,8 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int open_animation = 0;
 
   CHECK_THIS_KERNEL_FUNCTION;
+
+  process_sound_events(s); /* Take care of incoming events (kAnimate is called semi-regularly) */
 
   if (s->dyn_views_nr) {
     free(s->dyn_views);

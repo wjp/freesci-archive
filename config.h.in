@@ -9,6 +9,9 @@
 #undef HAVE_LIBGGI
 #undef HAVE_LIBPNG
 
+/* Define if you have the fork function.  */
+#undef HAVE_FORK
+
 /* Define if you have the pipe function.  */
 #undef HAVE_PIPE
 

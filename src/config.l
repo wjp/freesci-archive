@@ -263,7 +263,7 @@ _parse_gfx_driver(char *driver_name)
   int i;
 
   for (i=0; gfx_drivers [i]; i++)
-    if (!strcmp (gfx_drivers [i]->Name, driver_name))
+    if (!strcasecmp (gfx_drivers [i]->Name, driver_name))
       return gfx_drivers [i];
 
   /* not found - return default */

@@ -121,10 +121,6 @@ cmdInit(void)
     cmdHook(&c_man, "man", "s", "Gives a short description of something");
     cmdHook(&c_print, "print", "s", "Prints an int variable");
     cmdHook(&c_set, "set", "si", "Sets an int variable");
-    cmdHook(&c_play, "play", "i", "Plays a sound resource");
-    cmdHook(&c_playloop, "playloop", "i", "Loops a sound resource");
-    cmdHook(&c_nosound, "nosound", "", "Stops all sound output");
-    cmdHook(&c_volume, "volume", "i", "Sets the sound volume (0..255)");
     cmdHook(&c_size, "size", "si", "Displays the size of a resource");
     cmdHook(&c_dump, "dump", "si", "HexDumps a resource");
     cmdHook(&c_objinfo, "objinfo", "s*", "Displays information about an object");
@@ -507,41 +503,6 @@ c_print(void)
   return 0;
 }
 
-int
-c_play(void)
-{
-  resource_t *resource = findResource(sci_sound, cmd_params[0].val);
-
-  if (resource == NULL) sciprintf("sound.%03d not found!\n", cmd_params[0].val);
-  else playSound(resource->data, SCI_SOUND_NOLOOP);
-  
-  return 0;
-}
-
-int
-c_playloop(void)
-{
-  resource_t *resource = findResource(sci_sound, cmd_params[0].val);
-
-  if (resource == NULL) sciprintf("sound.%03d not found!\n", cmd_params[0].val);
-  else playSound(resource->data, SCI_SOUND_LOOP);
-
-  return 0;
-}
-
-int
-c_nosound(void)
-{
-  stopSound();
-  return 0;
-}
-
-int
-c_volume(void)
-{
-  setSoundVolume(cmd_params[0].val);
-  return 0;
-}
 
 int
 c_size(void)

@@ -809,7 +809,7 @@ if (our_section) {
 
   yytext = strchr(yytext, '.');
   *yytext++ = 0;
-  if (!strcmp (p, conf->gfx_driver->Name))
+  if (!strcasecmp (p, conf->gfx_driver->Name))
   {
     p = yytext;
     yytext = strchr(yytext, '=');

@@ -213,10 +213,6 @@ int c_list(void); /* lists various types of things */
 int c_man(void); /* 'manual page' */
 int c_set(void); /* sets an int variable */
 int c_print(void); /* prints a variable */
-int c_play(void); /* plays a sound resource */
-int c_playloop(void); /* plays a sound resource looping */
-int c_nosound(void); /* stops sound output */
-int c_volume(void); /* sets the sound output volume */
 int c_size(void); /* displays the size of a resource */
 int c_dump(void); /* gives a hex dump of a resource */
 int c_objinfo(void); /* shows some info about one class */

@@ -37,12 +37,23 @@
 static int quit = 0;
 static state_t gamestate; /* The main game state */
 
-
+extern int _debugstate_valid;
+extern int _debug_seeking;
+extern int _debug_step_running;
 
 int
 c_quit(void)
 {
-  exit(0); /* Force exit */
+  script_abort_flag = 1; /* Terminate VM */
+  _debugstate_valid = 0;
+  _debug_seeking = 0;
+  _debug_step_running = 0;
+}
+
+int
+c_die(void)
+{
+  exit(0); /* Die */
 }
 
 
@@ -89,13 +100,11 @@ main(int argc, char** argv)
   };
   printf("SCI resources loaded.\n");
 
-  printf("Sound output interface: %s\n",
-	 SCI_sound_interfaces[initSound(SCI_SOUND_INTERFACE_AUTODETECT)]);
-
   printf("Mapping instruments to General Midi\n");
   mapMIDIInstruments();
 
-  cmdHook(&c_quit, "quit", "", "console: Quits");
+  cmdHook(&c_quit, "quit", "", "console: Quits gracefully");
+  cmdHook(&c_die, "die", "", "console: Quits ungracefully");
 
   con_passthrough = 1; /* enables all sciprintf data to be sent to stdout */
   con_visible_rows = 1; /* Fool the functions into believing that we *have* a display */
@@ -120,6 +129,12 @@ main(int argc, char** argv)
   sci_color_mode = conf.color_mode;
   gamestate.gfx_driver = conf.gfx_driver;
 
+  gamestate.sfx_driver = sfx_drivers[0];
+  
+  gamestate.sfx_driver->init(&gamestate);
+  sleep(1);
+  gamestate.sfx_driver->get_event(&gamestate); /* Get init message */
+
   if (conf.console_log)
   {
     console_logfile = fopen (conf.console_log, "w");
@@ -138,6 +153,9 @@ main(int argc, char** argv)
 	 gamestate.version & 0x3ff);
 
   game_run(&gamestate); /* Run the game */
+
+  gamestate.sfx_driver->exit(&gamestate); /* Shutdown sound daemon first */
+
   game_exit(&gamestate);
 
   (*gamestate.gfx_driver->Shutdown)(&gamestate); /* Close graphics */
@@ -145,6 +163,7 @@ main(int argc, char** argv)
   script_free_state(&gamestate); /* Uninitialize game state */
 
   freeResources();
+
 
   if (console_logfile)
     fclose (console_logfile);

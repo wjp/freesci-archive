@@ -808,6 +808,7 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(cue, "cue");
   FIND_SELECTOR(owner, "owner");
   FIND_SELECTOR(handle, "handle");
+  FIND_SELECTOR(number, "number");
 }
 
 int

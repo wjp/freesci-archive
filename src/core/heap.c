@@ -4,7 +4,7 @@
 #include <resource.h>
 #include <heap.h>
 
-#define assert_in_range(pos) assert(pos>=800 && pos<=0xffff);
+#define assert_in_range(pos) assert(pos>=1000 && pos<=0xffff);
 
 static void putInt16(byte* dest, int src)
 {
@@ -15,7 +15,7 @@ static void putInt16(byte* dest, int src)
 static void set_size(heap_t* h, int block_pos, int size)
 {
 	assert_in_range(block_pos);
-	assert(size<=0xffff-800);
+	assert(size<=0xffff-1000);
 	putInt16(h->start+block_pos, size);
 }
 
@@ -56,11 +56,11 @@ heap_t* heap_new()
 		return 0;
 	}
 
-	h->base=h->start+800;
-	h->first_free=800;
+	h->base=h->start+1000;
+	h->first_free=1000;
 	h->old_ff=-1;
-	set_size(h, 800, 0xffff-800);
-	set_next(h, 800, 0xffff);
+	set_size(h, 1000, 0xffff-1000);
+	set_next(h, 1000, 0xffff);
 
 	return h;
 }

@@ -80,6 +80,13 @@ typedef struct _state
     int _dummy;
   } graphics;
 
+  sfx_driver_t *sfx_driver; /* Sound driver */
+
+  int sound_pipe_in[2];  /* Sound command pipeline: Engine => Sound server */
+  int sound_pipe_out[2]; /* Sound return value pipeline: Engine <= Sound server */
+  int sound_pipe_events[2]; /* Sound events returned by the server: Engine <= Sound server */
+  int sound_pipe_debug[2]; /* Text pipeline for debug data Engine: <= Sound server */
+
   byte restarting_flag; /* Flag used for restarting */
   byte have_mouse_flag; /* Do we have a hardware pointing device? */
 

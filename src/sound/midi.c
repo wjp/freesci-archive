@@ -27,6 +27,8 @@
 /* Turns a resource into a valid midi block */
 
 #include <sound.h>
+#include <engine.h>
+#include <stdarg.h>
 
 #define SCI_SOUND_MIDI0_NOMAP
 #define MAX_MIDI_MAPS 4
@@ -54,6 +56,7 @@ gint8 MIDI_map_default[128] = {
 #endif /* !SCI_SOUND_MIDI0_NOMAP */
 /* The map above is obsolete.
 */
+
 
 
 static gint8 MIDI_map[MAX_MIDI_MAPS][128];
@@ -429,6 +432,16 @@ int gm_instr;
 };
 
 
+SCIsdebug(char *format, ...)
+{
+  va_list list;
+
+  va_start(list, format);
+  vfprintf(stderr, format, list);
+  va_end(list);
+}
+
+
 
 const char MIDI_Header[4] = "MThd";
 /* Starts every MIDI header */
@@ -542,12 +555,12 @@ makeMIDI0(const guint8 *src, int *size)
       case 0x2f: EOT = 1; /* End of Track */
 	commandlength += 2; /* FIXME: This assumes that src[pos+2] == 0 */
 	break;
-      default: SCIswarn("Illegal or unsupported MIDI meta instruction: FF %02x\n",
-			src[pos+1]);
+      default: SCIsdebug("Illegal or unsupported MIDI meta instruction: FF %02x\n",
+			 src[pos+1]);
       return NULL;
       }
     } else {
-      SCIswarn("Illegal or unsupported MIDI extended instruction: %02x\n", command);
+      SCIsdebug("Illegal or unsupported MIDI extended instruction: %02x\n", command);
       return NULL;
     }
 
@@ -569,7 +582,7 @@ makeMIDI0(const guint8 *src, int *size)
 	    pos, *size);
 
 
-  result = xalloc(*size);
+  result = malloc(*size);
   memcpy(result, obstack_finish(stackp), *size);
   obstack_free(stackp, NULL);
 
@@ -660,5 +673,12 @@ mapMIDIInstruments(void)
 
   if (logfile)
     fclose(logfile);
+  return 0;
+}
+
+
+int
+sound_map_instruments(state_t *s)
+{
   return 0;
 }

@@ -390,18 +390,22 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       break;
 
     case 0x13: /* ugt? */
+      s->prev = s->acc;
       s->acc = ((guint16)(POP()) > ((guint16)(s->acc)));
       break;
 
     case 0x14: /* uge? */
+      s->prev = s->acc;
       s->acc = ((guint16)(POP()) >= ((guint16)(s->acc)));
       break;
 
     case 0x15: /* ult? */
+      s->prev = s->acc;
       s->acc = ((guint16)(POP()) < ((guint16)(s->acc)));
       break;
 
     case 0x16: /* ule? */
+      s->prev = s->acc;
       s->acc = ((guint16)(POP()) <= ((guint16)(s->acc)));
       break;
 

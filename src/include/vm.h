@@ -132,6 +132,7 @@ typedef struct
 
   int owner, handle;
   int cue;
+  int number;
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {

@@ -32,112 +32,134 @@
 #ifndef _SCI_SOUND_H_
 #define _SCI_SOUND_H_
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
-#ifdef HAVE_GSI_GSI_INTERFACE_C
-#define HAVE_GSI
-/* This is somewhat shorter */
-#endif /* HAVE_GSI_GSI_INTERFACE_C */
-
-
-#define SCI_SOUND_DEBUG
-
-void _SCIsdebug(const char *format, ...);
-#ifdef SCI_SOUND_DEBUG
-#define SCIsdebug _SCIsdebug
-#else /* !SCI_SOUND_DEBUG */
-#define SCIsdebug 1 ? (void)0 : _SCIsdebug
-#endif /* !SCI_SOUND_DEBUG */
-
-/* [DJ] SCIswarn cannot be used with more than one parameter: Visual C++
-** doesn't support ... in macro parameter lists, and since __FILE__ is
-** used, I cannot circumvent it the same way as I did for SCIsdebug.
-** If needed, it is possible to define similar macros with any number
-** of parametes.
-*/
-
-#ifdef __GNUC__
-#define SCIswarn(format, param) \
-        fprintf(stderr, "FSCI sound: file %s %d (%s): " format, \
-		__FILE__, \
-		__LINE__, \
-		__PRETTY_FUNCTION__, \
-		## param);
-#else /* !__GNUC__ */
-#define SCIswarn(format, param) \
-        fprintf(stderr, "FSCI sound: file %s %d: " format, \
-		__FILE__, \
-		__LINE__, \
-		## param);
-#endif /* !__GNUC__ */
+#endif /* HAVE_CONFIG_H */
 
 #define obstack_chunk_alloc malloc
 #define obstack_chunk_free free
 
 #include <resource.h>
+
+#ifdef HAVE_OBSTACK_H
 #include <obstack.h>
+#endif /* HAVE_OBSTACK_H */
 
 
-#define SCI_SOUND_INTERFACE_NONE 0
-#define SCI_SOUND_INTERFACE_GSI 1
-#define SCI_SOUND_INTERFACE_LAST SCI_SOUND_INTERFACE_GSI
-#define SCI_SOUND_INTERFACE_AUTODETECT 42
+typedef struct {
 
-#define SCI_SOUND_LOOP 0
-#define SCI_SOUND_NOLOOP 1
+  int handle; /* The handle which the data is for; 0 if it's system data */
 
+  int signal; /* Description of value */
+  int value;
 
-extern int sci_sound_interface;
-/* Containts the current sound interface */
-
-static char *SCI_sound_interfaces[] = {
-  "No sound output",
-  "General Sound Interface (GSI)"
-};
-
-extern gint8 SCI0_snd2gm_map[128];
-/* Maps SCI0 sound resource MIDI instruments to gm instruments */
+} sound_event_t;
 
 
+struct _state;
 
-int
-initSound(int mode);
-/* Initializes the selected sound interface
-** Parameters: mode: An output method which should be used
-** Returns   : (int) The output method actually chosen
-** If a viable output method had already been selected, initSound() will
-** uninitialize it. It will also register an uninitialization function with
-** atexit().
-** The return value will always be equal either to mode or to
-** SCI_SOUND_INTERFACE_NONE, unless (mode == SCI_SOUND_INTERFACE_AUTODETECT).
+
+typedef struct {
+
+  char *name; /* Name of this particular driver */
+
+  int (*init)(struct _state *s);
+  /* Initializes the sounnd driver
+  ** Parameters: (state_t *) s: The state that we're going to play on
+  ** Returns   : (int) 0 if successful, 1 if failed
+  */
+
+  int (*configure)(struct _state *s, char *option, char *value);
+  /* Set a particular configuration option
+  ** Parameters: (state_t *) s: The state_t to operate on
+  **             (char *) option: The option to set
+  **             (char *) value: The value to set it to
+  ** Returns   : (int) 0 if "option" could be interpreted by the driver, regardless
+  **                   of whether value was correct, or 1 if the option does not apply
+  **                   to this particular driver.
+  */
+
+  void (*exit)(struct _state *s);
+  /* Stops playing sound, uninitializes the sound driver, and frees all associated memory.
+  ** Parameters: (state_t *) s: The state_t to operate on
+  ** Returns   : (void)
+  */
+
+  sound_event_t* (*get_event)(struct _state *s);
+  /* Synchronizes the sound driver with the rest of the world.
+  ** Parameters: (state_t *) s: The state_t to operate on (it's getting boring)
+  ** Returns   : (sound_event_t *) Pointer to a dynamically allocated sound_event_t structure
+  **                               containing the next event, or NULL if none is available
+  ** This function should be called at least 60 times per second. It will return finish, loop,
+  ** and cue events, which can be written directly to the sound objects.
+  */
+
+  int (*command)(struct _state *s, int command, int handle, int parameter);
+  /* Executes a sound command (one of SOUND_COMMAND_xxx).
+  ** Parameters: (state_t *) s: The current state
+  **             (int) command: The command to execute
+  **             (int) handle: The handle to execute it on, if available
+  **             (int) parameter: The function parameter
+  */
+
+} sfx_driver_t;
+
+
+extern sfx_driver_t *sfx_drivers[]; /* All available sound fx drivers, NULL-terminated */
+
+/* A word on priorities: A song is more important if its priority is higher.  */
+/* Another note: SysTicks are at 60 Hz, in case you didn't already know this. */
+/* Third note: Handles are actually set by the caller, so that they can directly
+** map to heap addresses.
 */
 
-
-int
-playSound(guint8 *data, int loop);
-/* Plays a sound resource
-** Parameters: data: Points to the resource data to play
-**             loop: One of SCI_SOUND_LOOP or SCI_SOUND_NOLOOP, to determine
-**             whether the sound should be looped or played only once.
-** Returns   : (int) 0 on success, 1 if playing failed
+#define SOUND_COMMAND_INIT_SONG 0
+/* Loads a song, priority specified as PARAMETER, under the specified HANDLE.
+** Followed by PARAMETER bytes containing the song.
 */
+#define SOUND_COMMAND_PLAY_HANDLE 1
+/* Plays the sound stored as the HANDLE at priority PARAMETER. */
+#define SOUND_COMMAND_SET_LOOPS 2
+/* Sets the amount of loops (PARAMETER) for the song at HANDLE to play. */
+#define SOUND_COMMAND_DISPOSE_HANDLE 3
+/* Disposes the song from the specified HANDLE. Stops playing if the song is active. */
+#define SOUND_COMMAND_SET_MUTE 4
+/* Mutes sound if PARAMETER is 0, unmutes if PARAMETER != 0. */
+#define SOUND_COMMAND_STOP_HANDLE 5
+/* Stops playing the song associated with the specified HANDLE. */
+#define SOUND_COMMAND_SUSPEND_HANDLE 6
+/* Suspends sound playing for sound with the specified HANDLE. */
+#define SOUND_COMMAND_RESUME_HANDLE 7
+/* Resumes sound playing for sound with the specified HANDLE. */
+#define SOUND_COMMAND_SET_VOLUME 8
+/* Sets the global sound volume to the specified level (0-255) */
+#define SOUND_COMMAND_RENICE_HANDLE 9
+/* Sets the priority of the sound playing under the HANDLE to PARAMETER */
+#define SOUND_COMMAND_FADE_HANDLE 10
+/* Fades the sound playing under HANDLE so that it will be finished in PARAMETER ticks */
+#define SOUND_COMMAND_TEST 11
+/* Returns 0 if sound playing works, 1 if it doesn't. */
 
 
-int
-setSoundVolume(int volume);
-/* Sets the sound output volume
-** Parameters: volume: A volume from 0 to 255, with 255 being the maximum
-** Returns   : (int) 0 on success, 1 if setting failed
-*/
+#define SOUND_SIGNAL_CUMULATIVE_CUE 0
+/* Request for the specified HANDLE's signal to be increased */
+#define SOUND_SIGNAL_LOOP 1
+/* Finished a loop: VALUE is the number of loops remaining for the HANDLEd sound */
+#define SOUND_SIGNAL_FINISHED 2
+/* HANDLE has finished playing and was removed from the sound list */
+#define SOUND_SIGNAL_PLAYING 3
+/* Playing HANDLE */
+#define SOUND_SIGNAL_PAUSED 4
+/* Pausing HANDLE */
+#define SOUND_SIGNAL_RESUMED 5
+/* Resuming HANDLE after it was paused */
+#define SOUND_SIGNAL_INITIALIZED 6
+/* HANDLE has been successfully initialized */
+#define SOUND_SIGNAL_ABSOLUTE_CUE 7
+/* Set the HANDLE's signal to a fixed VALUE */
 
 
-void
-stopSound(void);
-/* Tries to stop any sound currently being played
-** Parameters: void
-** Returns   : void
-*/
-
-
+#ifdef HAVE_OBSTACK_H
 guint8 *
 makeMIDI0(const guint8 *src, int *size);
 /* Turns a sound resource into a MIDI block.
@@ -149,6 +171,8 @@ makeMIDI0(const guint8 *src, int *size);
 ** *FIXME*: Aborts in some cases if out of memory. This is OK while testing,
 ** but should be adjusted for the public release.
 */
+#endif /* HAVE_OBSTACK_H */
+
 
 int
 mapMIDIInstruments(void);

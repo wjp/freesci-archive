@@ -19,11 +19,11 @@ configure:1024: checking for ranlib
 configure:1052: checking how to run the C preprocessor
 configure:1135: checking for sys/soundcard.h
 configure:1175: checking for obstack.h
-configure:1185: gcc -E  conftest.c >/dev/null 2>conftest.out
 configure:1215: checking for dirent.h
 configure:1255: checking for unistd.h
 configure:1294: checking for pipe
 configure:1294: checking for socketpair
+configure:1294: checking for fork
 configure:1348: checking for ggi
 configure:1482: checking for glib-config
 configure:1517: checking for GLIB - version >= 0.9.7

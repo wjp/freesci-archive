@@ -1287,7 +1287,7 @@ else
 fi
 done
 
-for ac_func in pipe socketpair
+for ac_func in pipe socketpair fork
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
 echo "configure:1294: checking for $ac_func" >&5

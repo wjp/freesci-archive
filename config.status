@@ -248,6 +248,9 @@ CEOF
   mv conftest.out conftest.in
 
   cat > conftest.frag <<CEOF
+${ac_dA}HAVE_FORK${ac_dB}HAVE_FORK${ac_dC}1${ac_dD}
+${ac_uA}HAVE_FORK${ac_uB}HAVE_FORK${ac_uC}1${ac_uD}
+${ac_eA}HAVE_FORK${ac_eB}HAVE_FORK${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_LIBGGI${ac_dB}HAVE_LIBGGI${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_LIBGGI${ac_uB}HAVE_LIBGGI${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_LIBGGI${ac_eB}HAVE_LIBGGI${ac_eC}1${ac_eD}
