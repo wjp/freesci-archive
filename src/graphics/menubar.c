@@ -93,7 +93,7 @@ menubar_free(menubar_t *menubar)
 
 int
 _menubar_add_menu_item(menu_t *menu, int type, char *left, char *right, byte *font, int key,
-		       int modifiers, heap_ptr text_pos)
+		       int modifiers, int tag, heap_ptr text_pos)
 /* Returns the total text size, plus MENU_BOX_CENTER_PADDING if (right != NULL) */
 {
   menu_item_t *item;
@@ -127,7 +127,7 @@ _menubar_add_menu_item(menu_t *menu, int type, char *left, char *right, byte *fo
   else total_left_size = item->keytext_size = 0;
 
   item->enabled = 1;
-  item->tag = 0;
+  item->tag = tag;
   item->text_pos = text_pos;
 
   return total_left_size + get_text_width(left, font);
@@ -141,7 +141,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
   char tracker;
   char *left = NULL, *right, *left_origin;
   int string_len = 0;
-  int c_width, max_width = 0;
+  int tag, c_width, max_width = 0;
   char *_heapbase = (char *) heapbase;
 
   if (menubar->menus_nr == 0) {
@@ -171,7 +171,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 	if (strcmp(left, MENU_HBAR_STRING) == 0)
 	  entrytype = MENU_TYPE_HBAR; /* Horizontal bar */
 
-	c_width = _menubar_add_menu_item(menu, entrytype, left, NULL, font, 0, 0,
+	c_width = _menubar_add_menu_item(menu, entrytype, left, NULL, font, 0, 0, 0,
 					 (entries - _heapbase) - string_len - 1);
 	if (c_width > max_width)
 	  max_width = c_width;
@@ -191,8 +191,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
       if ((tracker == ':') || (tracker == 0)) { /* End of entry */
 	int key, modifiers = 0;
 
-	right = malloc_ncpy(entries - string_len - 1, MIN(2, string_len));
-	/* Some entries have strange stuff added to the end */
+	right = malloc_ncpy(entries - string_len - 1, string_len);
 
 	if (right[0] == '#') {
 	  right[0] = 'F'; /* Function key */
@@ -207,11 +206,13 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 	  else
 	    key = right[0];
 
+	if (right[2]=='=') { tag=atoi(right+3); } else tag=0;	  
+
 	if ((key >= 'A') && (key <= 'Z'))
 	  key = key - 'A' + 'a'; /* Lowercase the key */
 
 	c_width = _menubar_add_menu_item(menu, MENU_TYPE_NORMAL, left, right, font, key,
-					 modifiers, left_origin - _heapbase);
+					 modifiers, tag, left_origin - _heapbase);
 	if (c_width > max_width)
 	  max_width = c_width;
 
@@ -227,7 +228,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
   if (add_freesci) {
       
     char *freesci_text=strdup ("About FreeSCI");
-    c_width = _menubar_add_menu_item(menu, MENU_TYPE_NORMAL, freesci_text, NULL, font, 0, 0, 0);
+    c_width = _menubar_add_menu_item(menu, MENU_TYPE_NORMAL, freesci_text, NULL, font, 0, 0, 0, 0);
     if (c_width > max_width)
       max_width = c_width;
 

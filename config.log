@@ -4,116 +4,81 @@ running configure, to aid debugging if configure makes a mistake.
 configure:589: checking for a BSD compatible install
 configure:642: checking whether build environment is sane
 configure:699: checking whether make sets ${MAKE}
-configure:746: checking for working aclocal
-configure:759: checking for working autoconf
-configure:772: checking for working automake
-configure:785: checking for working autoheader
-configure:798: checking for working makeinfo
-configure:815: checking for gcc
-configure:928: checking whether the C compiler (gcc  ) works
-configure:944: gcc -o conftest    conftest.c  1>&5
-configure:970: checking whether the C compiler (gcc  ) is a cross-compiler
-configure:975: checking whether we are using GNU C
-configure:984: gcc -E conftest.c
-configure:1003: checking whether gcc accepts -g
-configure:1037: checking for ranlib
-configure:1065: checking how to run the C preprocessor
-configure:1086: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1148: checking for sys/soundcard.h
-configure:1158: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1188: checking for obstack.h
-configure:1198: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1228: checking for dirent.h
-configure:1238: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1268: checking for unistd.h
-configure:1278: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1308: checking for fnmatch.h
-configure:1318: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1348: checking for readline/readline.h
-configure:1358: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1388: checking for readline/history.h
-configure:1398: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1428: checking for getopt.h
-configure:1438: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1467: checking for pipe
-configure:1495: gcc -o conftest -g -O2   conftest.c  1>&5
-configure:1467: checking for socketpair
-configure:1495: gcc -o conftest -g -O2   conftest.c  1>&5
-configure:1467: checking for fork
-configure:1495: gcc -o conftest -g -O2   conftest.c  1>&5
-configure:1467: checking for sched_yield
-configure:1495: gcc -o conftest -g -O2   conftest.c  1>&5
-configure:1467: checking for memfrob
-configure:1495: gcc -o conftest -g -O2   conftest.c  1>&5
-configure:1521: checking for ggi
-configure:1568: gcc -E   conftest.c >/dev/null 2>conftest.out
-configure:1610: gcc -o conftest -g -O2    -lgii -lgg   conftest.c  1>&5
-/tmp/ccnXGJVX.o: In function `main':
-/root/freesci/configure:1606: undefined reference to `ggiInit'
+configure:745: checking for working aclocal
+configure:758: checking for working autoconf
+configure:771: checking for working automake
+configure:784: checking for working autoheader
+configure:797: checking for working makeinfo
+configure:814: checking for gcc
+configure:927: checking whether the C compiler (gcc  ) works
+configure:943: gcc -o conftest    conftest.c  1>&5
+configure:969: checking whether the C compiler (gcc  ) is a cross-compiler
+configure:974: checking whether we are using GNU C
+configure:1002: checking whether gcc accepts -g
+configure:1036: checking for ranlib
+configure:1064: checking how to run the C preprocessor
+configure:1147: checking for sys/soundcard.h
+configure:1187: checking for obstack.h
+configure:1227: checking for dirent.h
+configure:1267: checking for unistd.h
+configure:1307: checking for fnmatch.h
+configure:1347: checking for readline/readline.h
+configure:1387: checking for readline/history.h
+configure:1427: checking for getopt.h
+configure:1466: checking for pipe
+configure:1466: checking for socketpair
+configure:1466: checking for fork
+configure:1466: checking for sched_yield
+configure:1466: checking for memfrob
+configure:1520: checking for ggi
+configure:1567: gcc -E   conftest.c >/dev/null 2>conftest.out
+configure:1609: gcc -o conftest -g -O2    -lgii -lgg   conftest.c  1>&5
+/tmp/ccmH1Ys4.o: In function `main':
+/root/freesci/configure:1605: undefined reference to `ggiInit'
 collect2: ld returned 1 exit status
 configure: failed program was:
-#line 1602 "configure"
+#line 1601 "configure"
 #include "confdefs.h"
 #include <ggi/ggi.h>
 #include <ggi/gii.h>
 int main() {
 ggiInit();
 ; return 0; }
-configure:1610: gcc -o conftest -g -O2  -lggi  -lgii -lgg   conftest.c  1>&5
-configure:1657: checking for (n)curses
-configure:1712: gcc -E   conftest.c >/dev/null 2>conftest.out
-configure:1753: gcc -o conftest -g -O2      conftest.c  1>&5
-/tmp/cc6cnjrk.o: In function `main':
-/root/freesci/configure:1749: undefined reference to `initscr'
+configure:1609: gcc -o conftest -g -O2  -lggi  -lgii -lgg   conftest.c  1>&5
+configure:1656: checking for (n)curses
+configure:1711: gcc -E   conftest.c >/dev/null 2>conftest.out
+configure:1752: gcc -o conftest -g -O2      conftest.c  1>&5
+/tmp/ccdOrAlI.o: In function `main':
+/root/freesci/configure:1748: undefined reference to `initscr'
 collect2: ld returned 1 exit status
 configure: failed program was:
-#line 1746 "configure"
+#line 1745 "configure"
 #include "confdefs.h"
 #include <curses.h>
 int main() {
 initscr();
 ; return 0; }
-configure:1753: gcc -o conftest -g -O2  -lncurses    conftest.c  1>&5
-configure:1800: checking for flex
-configure:1833: checking for flex
-configure:1867: checking for yywrap in -lfl
-configure:1886: gcc -o conftest -g -O2   conftest.c -lfl   1>&5
-configure:1909: checking lex output file root
-configure:1930: checking whether yytext is a pointer
-configure:1949: gcc -o conftest -g -O2   conftest.c  -lfl 1>&5
-configure:2023: checking for glib-config
-configure:2058: checking for GLIB - version >= 1.2.0
-configure:2157: gcc -o conftest -g -O2 -I/usr/lib/glib/include   conftest.c -L/usr/lib -lglib  1>&5
-configure:2250: checking for libpng
-configure:2298: gcc -E   conftest.c >/dev/null 2>conftest.out
-configure:2339: gcc -o conftest -g -O2 -I/usr/lib/glib/include      -L/usr/lib -lglib conftest.c  -lm 1>&5
-/tmp/cctUS4L4.o: In function `main':
-/root/freesci/configure:2335: undefined reference to `png_info_init'
+configure:1752: gcc -o conftest -g -O2  -lncurses    conftest.c  1>&5
+configure:1799: checking for flex
+configure:1832: checking for flex
+configure:1866: checking for yywrap in -lfl
+configure:1908: checking lex output file root
+configure:1929: checking whether yytext is a pointer
+configure:2022: checking for glib-config
+configure:2057: checking for GLIB - version >= 1.2.0
+configure:2156: gcc -o conftest -g -O2 -I/usr/lib/glib/include   conftest.c -L/usr/lib -lglib  1>&5
+configure:2249: checking for libpng
+configure:2297: gcc -E   conftest.c >/dev/null 2>conftest.out
+configure:2338: gcc -o conftest -g -O2 -I/usr/lib/glib/include      -L/usr/lib -lglib conftest.c  -lm 1>&5
+/tmp/ccPwwpNS.o: In function `main':
+/root/freesci/configure:2334: undefined reference to `png_info_init'
 collect2: ld returned 1 exit status
 configure: failed program was:
-#line 2332 "configure"
+#line 2331 "configure"
 #include "confdefs.h"
 #include <png.h>
 int main() {
 png_info_init((png_infop)0);
 ; return 0; }
-configure:2339: gcc -o conftest -g -O2 -I/usr/lib/glib/include  -lpng    -L/usr/lib -lglib conftest.c  -lm 1>&5
-configure:2403: checking whether byte ordering is bigendian
-configure:2421: gcc -c -g -O2 -I/usr/lib/glib/include  conftest.c 1>&5
-configure:2436: gcc -c -g -O2 -I/usr/lib/glib/include  conftest.c 1>&5
-configure: In function `main':
-configure:2431: `not' undeclared (first use in this function)
-configure:2431: (Each undeclared identifier is reported only once
-configure:2431: for each function it appears in.)
-configure:2431: parse error before `big'
-configure: failed program was:
-#line 2425 "configure"
-#include "confdefs.h"
-#include <sys/types.h>
-#include <sys/param.h>
-int main() {
-
-#if BYTE_ORDER != BIG_ENDIAN
- not big endian
-#endif
-; return 0; }
+configure:2338: gcc -o conftest -g -O2 -I/usr/lib/glib/include  -lpng    -L/usr/lib -lglib conftest.c  -lm 1>&5
+configure:2447: checking whether byte ordering is bigendian

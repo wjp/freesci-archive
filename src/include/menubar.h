@@ -158,6 +158,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 ** ':' : End of this entry
 ** '#' : Function key (replaced by 'F')
 ** '^' : Control key (replaced by \002, which looks like "CTRL")
+** '=' : Initial tag value
 ** and the special string "--!", which represents a horizontal bar in the menu.
 **
 ** If MENU_FREESCI_BLATANT_PLUG is defined, an additional option "About FreeSCI" will be
