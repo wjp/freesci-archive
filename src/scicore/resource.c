@@ -58,7 +58,7 @@ const char* SCI_Version_Types[] = {
 	"SCI WIN/32"
 };
 
-const int sci_max_resource_nr[] = {63353, 1000, 1000, 16384, 65535};
+const int sci_max_resource_nr[] = {65536, 1000, 1000, 1000, 8192};
 
 const char* SCI_Error_Types[] = {
 	"No error",
@@ -140,7 +140,7 @@ int loadResources(int version, int allow_patches)
 
 			} else return retval;
 		} else return 0;
-	} while (autodetect && sci_version < SCI_VERSION_LAST);
+	} while (autodetect && sci_version <= SCI_VERSION_LAST);
 
 	return SCI_ERROR_UNSUPPORTED_VERSION;
 }

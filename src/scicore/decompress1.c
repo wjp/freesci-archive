@@ -299,7 +299,7 @@ int decompress1(resource_t *result, int resh, int early)
 		result->number = result->id & 0x07ff;
 		result->type = result->id >> 11;
 
-		if ((result->number > 999) || (result->type > sci_invalid_resource))
+		if ((result->number >= sci_max_resource_nr[SCI_VERSION_1_EARLY]) || (result->type > sci_invalid_resource))
 			return SCI_ERROR_DECOMPRESSION_INSANE;
 	} else {
 		if (read(resh, &tempid, 1) != 1)
@@ -314,7 +314,7 @@ int decompress1(resource_t *result, int resh, int early)
 #ifdef WORDS_BIGENDIAN
 		result->number = GUINT16_SWAP_LE_BE_CONSTANT(result->number);
 #endif /* WORDS_BIGENDIAN */
-		if ((result->number > 8191) || (result->type > sci_invalid_resource))
+		if ((result->number >= sci_max_resource_nr[SCI_VERSION_1_LATE]) || (result->type > sci_invalid_resource))
 			return SCI_ERROR_DECOMPRESSION_INSANE;
 	}
 

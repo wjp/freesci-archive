@@ -470,7 +470,7 @@ a save game file.
   <row><entry/Conquest of the Longbow/<entry/?/<entry/1.000.168/</row>
   <row><entry/Leisure Suit Larry In The Land Of The Lounge Lizards/
              <entry/?/<entry/1.000.577/</row>
-  <row><entry/King's Quest V: Absence makes the heard go yonder (french)/
+  <row><entry/King's Quest V: Absence makes the heart go yonder (french)/
              <entry/?/<entry/1.000.784/</row>
   <row><entry/Space Qust 1: The Sarien Encounter (VGA remake)/<entry/?/<entry/T.A00.081/</row>
   <row><entry/Leisure Suit Larry 5: Passionate Patti Does A Little Undercover Work/
@@ -1544,7 +1544,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
      <Title/The SCI0 Sound Resource Format/
      <para> by <author><firstname/Ravi/<surname/I./</author>
      </para><para>
-	Revision 7, Jan. 7, 2000
+	Revision 8, Dec. 21, 2000
 	</para>
 	<sect2><Title/Preface/
 	<para>
@@ -1632,7 +1632,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	</variablelist>
 	</para><para>
 	   With such a diverse group of devices to support, Sierra put a lot of the
-	   work on the shoulders of the drivers. Functions for loding patch files,
+	   work on the shoulders of the drivers. Functions for loading patch files,
 	   handling events, pausing, etc. are all in the drivers. The interpreter
 	   calls them as needed but does not concern itself at all with how they
 	   get implemented.
@@ -1657,7 +1657,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	     </row></thead>
 	     <tbody>
 	      <row>
-	      <entry/    Roland MT-32      /<entry/  mt32    /<entry/   001   /<entry/   32   / <entry//
+	      <entry/    Roland MT-32      /<entry/  mt32    /<entry/   001   /<entry/   32   / <entry/01h/
 	     </row><row>
 	      <entry/        Adlib         /<entry/  adl     /<entry/   003   /<entry/   9    /<entry/04h/
 	     </row><row>
@@ -1686,7 +1686,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	              Blank fields are unknown, not unused.
 	   <simplelist>
 	            <member/*  when asked which patch to load, the PC and Tandy
-	                  speaker drivers return 0xFFFF, which is a signal
+	                  speaker drivers return FFFFh, which is a signal
 	                  that they do not use patches/
 	            <member/+  the Tandy drivers almost certainly use 10h for their
 	                  play flag, but this is unconfirmed so I'll leave
@@ -1719,14 +1719,8 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 		   This byte is only useful for non-MIDI synths which must know how many
 		   hardware channels each logical MIDI channel will need. This value is only
 		   an initial setting. Sound files can request changes to the mapping later
-		   with control changes.
-		</para><para>
-		   It's worth mentioning here that previous revisions of this specification
-		   said that some of the MIDI controls could be initialized using the first
-		   byte. I now believe this is a bug in the Adlib driver which happens when
-		   the value gets too large and causes overflows into other areas of memory.
-		   There should not be more requested channels than the device has hardware
-		   channels.
+		  with control changes. Requesting more hardware channels than are actually
+		  available can cause errors on some drivers.
 		</para><para>
 		   The second byte describes how the user's sound harware should treat the
 		   channel. It is the combination of bit flags which may be OR-ed together.
@@ -1735,6 +1729,10 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 		   driver decides which bit it will use as the play flag, and the table under
 		   Sound Devices lists the flag used by each driver. Drivers ignore the first
 		   byte (used to request hardware channels) on MIDI channels it won't play.
+		</para><para>
+		  There is an exception to the above. Channel 9 is the MIDI percussion
+		  channel. The MT-32 (and possibly other MIDI synths) always plays this
+		  channel, regardless of whether or not it is specifically flagged.
 		</para><para>
 		   Before the channel initialization is a byte which specifies whether the
 		   header holds information for 15 or 16 channels. A value of 0 means that
@@ -1767,13 +1765,18 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 		</para><para>
 		   Delta time is the number of ticks to wait after executing the previous
 		   event before executing this event. Standard MIDI stores this as a variable
-		   length value. In sound resources, it will generally be one byte and the
-		   most significant bit is in fact used as part of the value. In cases where
-		   a single byte cannot hold a high enough delta time, sound resources use
-		   0xF8 one or more times in a row. The 0xF8 byte causes a delay of 0xF0 (240
-		   decimal) ticks before continuing playback. The sequence F8 F8 78 FC waits
-		   600 ticks then stops the sequence because of the FCh status. There are 60
-		   ticks per second, which is about 16667 microseconds between ticks.
+		  length value. In sound resources, it will generally be one byte and the
+		  most significant bit is in fact used as part of the value. In cases where
+		  a single byte cannot hold a high enough delta time, sound resources use
+		  F8h one or more times in a row. The F8h byte causes a delay of F0h (240
+		  decimal) ticks before continuing playback. The sequence F8 F8 78 FC waits
+		  600 ticks then stops the sequence because of the FCh status. The fact that
+		  F8h waits F0h ticks makes me think that E9h is the largest technically
+		  accepted delta time, even though larger values will work. The only
+		  exception is the FCh status, which can be theoretically given without a
+		  preceding delta time value -- any cases where FCh is listed as a delta
+		  time, the sound should stop playing. Ticks occur at 60 Hz, which is about
+		  16667 microseconds between ticks.
 		</para><para>
 		   The status byte is basically a command. The most significant bit is always
 		   set. This feature is important because the status byte will not always be
@@ -1782,7 +1785,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 		   should repeat the last status used. This is known as running status mode
 		   and appears to get used relatively often.
 		</para><para>
-		   There generic form for a status byte is (in bits) 1xxxcccc - The lower
+		   The generic form for a status byte is (in bits) 1xxxcccc - The lower
 		   nibble designates which channel the message affects except when the upper
 		   nibble is 15. The upper nibble is the command, but as stated earlier, the
 		   most significant bit must be 1. That leaves space for 8 messages, most of
@@ -1855,6 +1858,12 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 		                        without regard for the velocity paramater while a
 		                        value of 1 will enable velocities./
 				</listitem></varlistentry>
+
+				<varlistentry><term/50h/<listitem><para>
+				  Reverb: I know little about this myself. Rickard Lind
+				  reports that it exists in the MT-32 driver and
+				  supports parameter values 0-10 (possibly 0-16?).
+				</para></listitem></varlistentry>
 
                			<varlistentry><term/60h/<listitem><para/
 					Cumulative cue: The interpreter can get cues from the
@@ -1935,6 +1944,16 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	</sect2><sect2><title/Revision history/
   <para>
   <variablelist>
+    <varlistentry><term/Revision 8 - Dec. 21, 2000/
+      <listitem><para><itemizedlist>
+	<listitem><para>Added suggested limit on delta time values</para></listitem>
+	<listitem><para> Fixed hex notation (sometimes listed NNh, sometimes 0xNN)</para></listitem>
+	<listitem><para> Removed notice about early revisions' mistake describing the header's
+	  channel mapping byte</para></listitem>
+	<listitem><para> Added note about control 50h (thanks to Rickard Lind)</para></listitem>
+	<listitem><para> Listed MT-32 play flag</para></listitem>
+	<listitem><para> Added notice about the special case of channel 9 to the header
+	  section</para></listitem>
    <varlistentry><term/Revision 7 - Jan. 7, 2000/
 	<listitem><para><itemizedlist>
 	      	<listitem><para/Added information about F8h delta times (thanks to Rickard Lind for

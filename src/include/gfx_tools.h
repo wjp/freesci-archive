@@ -137,6 +137,18 @@ gfx_draw_line_pixmap_i(gfx_pixmap_t *pxm, rect_t line, int color);
 */
 
 void
+gfx_draw_line_buffer(byte *buffer, int linewidth, int pixelwidth, rect_t line, unsigned int color);
+/* Draws a line to a linear pixel buffer
+** Parameters: (byte *) buffer: Pointer to the start of the buffer to draw to
+**             (int) linewidth: Number of bytes per pixel line in the buffer
+**             (int) pixelwidth: Number of bytes per pixel
+**             (rect_t) : Coordinates the line should be drawn to (must be clipped already)
+**             (unsigned int) color: The color to draw (only the lowest 8 * pixelwidth bits are relevant)
+** Returns   : (void)
+** This function assumes 1 <= pixelwidth <= 4
+*/
+
+void
 gfx_draw_box_pixmap_i(gfx_pixmap_t *pxm, rect_t box, int color);
 /* Draws a filled rectangular area to a pixmap's index buffer
 ** Parameters: (gfx_pixmap_t *) pxm: The pixmap to draw to

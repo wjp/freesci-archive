@@ -321,7 +321,7 @@ _gfxr_auxbuf_fill_helper(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy,
 		if (xl > old_xr) /* No fillable strip above the last one */
 			return;
 
-		if ((ytotal + xr) < 0) { fprintf(stderr,"AARGH-%d\n", __LINE__); exit(2); }
+		if ((ytotal + xl) < 0) { fprintf(stderr,"AARGH-%d\n", __LINE__); BREAKPOINT(); }
 
 		xr = xl;
 		while (xr < 320 && !(pic->aux_map[ytotal + xr] & clipmask)) {
@@ -385,8 +385,8 @@ _gfxr_auxbuf_fill_helper(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy,
 			}
 		}
 
-		if ((ytotal + xl) < 0) { fprintf(stderr,"AARGH-%d\n", __LINE__); exit(2); }
-		if ((ytotal + xr+1) > 64000) { fprintf(stderr,"AARGH-%d\n", __LINE__); exit(2); }
+		if ((ytotal + xl) < 0) { fprintf(stderr,"AARGH-%d\n", __LINE__); BREAKPOINT() }
+		if ((ytotal + xr+1) > 64000) { fprintf(stderr,"AARGH-%d\n", __LINE__); BREAKPOINT(); }
 
 		if (control)
 			memset(pic->control_map->index_data + ytotal + xl, control, xr-xl+1);

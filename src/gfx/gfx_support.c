@@ -31,80 +31,66 @@
 #include <gfx_system.h>
 #include <gfx_tools.h>
 
-#define LINEMACRO(startx, starty, deltalinear, deltanonlinear, linearvar, nonlinearvar, \
-                  linearend, nonlinearstart, linearmod, nonlinearmod) \
-   x = (startx); y = (starty); \
-   incrNE = ((deltalinear) > 0)? (deltalinear) : -(deltalinear); \
-   incrNE <<= 1; \
-   deltanonlinear <<= 1; \
-   incrE = ((deltanonlinear) > 0) ? -(deltanonlinear) : (deltanonlinear);  \
-   d = nonlinearstart-1;  \
-   while (linearvar != (linearend)) { \
-     buffer[linewidth * y + x] = color; \
-     linearvar += linearmod; \
-     if ((d+=incrE) < 0) { \
-       d += incrNE; \
-       nonlinearvar += nonlinearmod; \
-     }; \
-   }; \
-  buffer[linewidth * y + x] = color;
+
+#define DRAWLINE_FUNC _gfx_draw_line_buffer_1
+#define PIXELWIDTH 1
+#include "gfx_line.c"
+#undef PIXELWIDTH
+#undef DRAWLINE_FUNC
+
+#define DRAWLINE_FUNC _gfx_draw_line_buffer_2
+#define PIXELWIDTH 2
+#include "gfx_line.c"
+#undef PIXELWIDTH
+#undef DRAWLINE_FUNC
+
+#define DRAWLINE_FUNC _gfx_draw_line_buffer_3
+#define PIXELWIDTH 3
+#include "gfx_line.c"
+#undef PIXELWIDTH
+#undef DRAWLINE_FUNC
+
+#define DRAWLINE_FUNC _gfx_draw_line_buffer_4
+#define PIXELWIDTH 4
+#include "gfx_line.c"
+#undef PIXELWIDTH
+#undef DRAWLINE_FUNC
 
 inline void
-gfx_draw_line_buffer(byte *buffer, int linewidth, rect_t line, int color)
+gfx_draw_line_buffer(byte *buffer, int linewidth, int pixelwidth, rect_t line, unsigned int color)
 {
-  /*void dither_line(picture_t buffers, int curx, int cury, short x1, short y1,
-    int col1, int col2, int priority, int special, char drawenable)*/
+	switch (pixelwidth) {
 
-  int dx, dy, incrE, incrNE, d, finalx, finaly;
-  int x = line.x;
-  int y = line.y;
-  dx = line.xl;
-  dy = line.yl;
-  finalx = x + dx;
-  finaly = y + dy;
+	case 1:
+		_gfx_draw_line_buffer_1(buffer, linewidth, line, color);
+		return;
 
-  dx = abs(dx);
-  dy = abs(dy);
+	case 2:
+		_gfx_draw_line_buffer_2(buffer, linewidth, line, color);
+		return;
 
-  if (dx > dy) {
-    if (finalx < x) {
-      if (finaly < y) { /* llu == left-left-up */
-	LINEMACRO(x, y, dx, dy, x, y, finalx, dx, -1, -1);
-      } else {         /* lld */
-	LINEMACRO(x, y, dx, dy, x, y, finalx, dx, -1, 1);
-      }
-    } else { /* x1 >= x */
-      if (finaly < y) { /* rru */
-	LINEMACRO(x, y, dx, dy, x, y, finalx, dx, 1, -1);
-      } else {         /* rrd */
-	LINEMACRO(x, y, dx, dy, x, y, finalx, dx, 1, 1);
-      }
-    }
-  } else { /* dx <= dy */
-    if (finaly < y) {
-      if (finalx < x) { /* luu */
-	LINEMACRO(x, y, dy, dx, y, x, finaly, dy, -1, -1);
-      } else {         /* ruu */
-	LINEMACRO(x, y, dy, dx, y, x, finaly, dy, -1, 1);
-      }
-    } else { /* y1 >= y */
-      if (finalx < x) { /* ldd */
-	LINEMACRO(x, y, dy, dx, y, x, finaly, dy, 1, -1);
-      } else {         /* rdd */
-	LINEMACRO(x, y, dy, dx, y, x, finaly, dy, 1, 1);
-      }
-    }
-  }
+	case 3:
+		_gfx_draw_line_buffer_3(buffer, linewidth, line, color);
+		return;
+
+	case 4:
+		_gfx_draw_line_buffer_4(buffer, linewidth, line, color);
+		return;
+
+	default:
+		GFXERROR("pixelwidth=%d not supported!\n", pixelwidth);
+		return;
+
+	}
 }
 
-#undef LINEMACRO
 
 
 
 void
 gfx_draw_line_pixmap_i(gfx_pixmap_t *pxm, rect_t line, int color)
 {
-  gfx_draw_line_buffer(pxm->index_data, pxm->index_xl, line, color);
+  gfx_draw_line_buffer(pxm->index_data, pxm->index_xl, 1, line, color);
 }
 
 
