@@ -601,19 +601,21 @@ kDirLoop(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	_k_dirloop(UPARAM(0), UPARAM(1), s, funct_nr, argc, argp);
 }
 
-#define GASEOUS_VIEW_MASK (/*_K_VIEW_SIG_FLAG_NO_UPDATE |*/ _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)
+#define GASEOUS_VIEW_MASK_ACTIVE (_K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)
+#define GASEOUS_VIEW_MASK_PASSIVE (_K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)
 
 abs_rect_t
 set_base(struct _state *s, heap_ptr object);
 
-abs_rect_t
+inline abs_rect_t
 get_nsrect(struct _state *s, heap_ptr object, byte clip);
 
 static inline abs_rect_t
 nsrect_clip(state_t *s, int y, abs_rect_t retval, int priority);
 
 static int
-collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int use_nsrect, int funct_nr, int argc, heap_ptr argp)
+collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int use_nsrect, int view_mask, int funct_nr, int argc,
+	      heap_ptr argp)
 {
 	int other_signal = UGET_SELECTOR(other_obj, signal);
 	int other_priority = UGET_SELECTOR(other_obj, priority);
@@ -627,10 +629,14 @@ collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int use_nsrect, i
 		other_area.y = GET_SELECTOR(other_obj, nsTop);
 		other_area.yend = GET_SELECTOR(other_obj, nsBottom);
 #else
+#  if 1
+		other_area = get_nsrect(s, other_obj, 0);
+#  else
 		other_area.x = GET_SELECTOR(other_obj, lsLeft);
 		other_area.xend = GET_SELECTOR(other_obj, lsRight);
 		other_area.y = GET_SELECTOR(other_obj, lsTop);
 		other_area.yend = GET_SELECTOR(other_obj, lsBottom);
+#  endif
 #endif
 	} else {
 		other_area.x = GET_SELECTOR(other_obj, brLeft);
@@ -648,9 +654,9 @@ collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int use_nsrect, i
 		return 0; /* Out of scope */
 
 	SCIkdebug(SCIkBRESEN, "OtherSignal=%04x, z=%04x obj=%04x\n", other_signal,
-		  (other_signal & GASEOUS_VIEW_MASK), other_obj);
+		  (other_signal & view_mask), other_obj);
 
-	if ((other_signal & (GASEOUS_VIEW_MASK)) == 0) {
+	if ((other_signal & (view_mask)) == 0) {
 					/* check whether the other object ignores actors */
 
 		SCIkdebug(SCIkBRESEN, "  against (%d,%d) to (%d,%d)\n",
@@ -683,6 +689,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	abs_rect_t abs_zone;
 	rect_t zone;
 	word edgehit;
+	word illegal_bits;
 
 	abs_zone.x = GET_SELECTOR(obj, brLeft);
 	abs_zone.xend = GET_SELECTOR(obj, brRight);
@@ -697,7 +704,9 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		  GFX_PRINT_RECT(zone),
 		  abs_zone.x, abs_zone.xend, abs_zone.y, abs_zone.yend, obj, signal, cliplist);
 
-	s->acc = !(((word)GET_SELECTOR(obj, illegalBits))
+	illegal_bits = (word)GET_SELECTOR(obj, illegalBits);
+
+	s->acc = !(illegal_bits
 		   & (edgehit = gfxop_scan_bitmask(s->gfx_state, zone, GFX_MASK_CONTROL)));
 
 	SCIkdebug(SCIkBRESEN, "edgehit = %04x\n", edgehit);
@@ -709,22 +718,22 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->acc = 0;
 
 	/* Check against static places on the control map */
-WARNING("FIXME");
-	if (0 && s->dyn_views) {
+	if ((illegal_bits & 0x8000) /* If we are vulnerable to those views at all... */
+	    && s->dyn_views) {
 		gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) s->dyn_views->contents;
 
 		SCIkdebug(SCIkBRESEN, "Checking vs dynviews:\n");
 
 	        while (widget) {
 			if (widget->ID && widget->ID != obj)
-				if (collides_with(s, abs_zone, widget->ID, 1, funct_nr, argc, argp))
+				if (collides_with(s, abs_zone, widget->ID, 1, GASEOUS_VIEW_MASK_ACTIVE, funct_nr, argc, argp))
 					return;
 			widget = (gfxw_dyn_view_t *) widget->next;
 		}
 	}
 
-	if (signal & GASEOUS_VIEW_MASK) {
-		s->acc= signal & GASEOUS_VIEW_MASK; /* CanBeHere- it's either being disposed, or it ignores actors anyway */
+	if (signal & GASEOUS_VIEW_MASK_ACTIVE) {
+		s->acc = signal & GASEOUS_VIEW_MASK_ACTIVE; /* CanBeHere- it's either being disposed, or it ignores actors anyway */
 		SCIkdebug(SCIkBRESEN, " -> %04x\n", s->acc);
 		return; /* CanBeHere */
 	}
@@ -738,7 +747,7 @@ WARNING("FIXME");
 			heap_ptr other_obj = UGET_HEAP(node + LIST_NODE_VALUE);
 			if (other_obj != obj) { /* Clipping against yourself is not recommended */
 
-				if (collides_with(s, abs_zone, other_obj, 0, funct_nr, argc, argp)) {
+				if (collides_with(s, abs_zone, other_obj, 0, GASEOUS_VIEW_MASK_PASSIVE, funct_nr, argc, argp)) {
 					SCIkdebug(SCIkBRESEN, " -> %04x\n", s->acc);
 					return;
 				}

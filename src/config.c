@@ -159,7 +159,7 @@ struct yy_buffer_state
 	int yy_n_chars;
 
 	/* Whether we "own" the buffer - i.e., we know we created it,
-	 * and can realloc() it to grow it, and should sci_free() it to
+	 * and can realloc() it to grow it, and should free() it to
 	 * delete it.
 	 */
 	int yy_is_our_buffer;
@@ -1995,7 +1995,7 @@ static void *yy_flex_alloc( size )
 yy_size_t size;
 #endif
 	{
-	return (void *) sci_malloc( size );
+	return (void *) malloc( size );
 	}
 
 #ifdef YY_USE_PROTOS
@@ -2023,7 +2023,7 @@ static void yy_flex_free( ptr )
 void *ptr;
 #endif
 	{
-	sci_free( ptr );
+	free( ptr );
 	}
 
 #if YY_MAIN
@@ -2216,7 +2216,7 @@ config_free(config_entry_t **conf, int entries)
 		}
 	}
 
-	sci_free (*conf);
+	sci_free(*conf);
 }
 
 

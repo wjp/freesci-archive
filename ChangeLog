@@ -1,3 +1,17 @@
+2001-10-09  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/midi_mt32.c (midi_mt32_sysex_delay): Fixed to use
+	usleep()
+
+	* src/engine/kgraphics.c (kCanBeHere): Check against dynviews
+	iff (illegal_bits & 0x8000). Because this is how dynviews are
+	marked in Sierra SCI.
+
+2001-10-08  Alexander R Angas  <wgd@internode.on.net>
+
+        * src/win32/sciv.dsp, fsci_dll.dsp: Corrected to use the same run-time
+        library.
+
 2001-10-06  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/sfx_save.cfsml (soundsrv_restore_state): Fixed memory
