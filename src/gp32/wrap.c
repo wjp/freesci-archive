@@ -31,8 +31,6 @@
 #include <fcntl.h>
 #include "wrap.h"
 
-int freesci_main(int argc, char** argv);
-
 void
 usleep(unsigned long usec) {
 	int start = gp_getRTC();
@@ -55,10 +53,11 @@ creat(const char *pathname, mode_t mode)
 }
 
 void
-gp_print(char *msg)
+gp_print(char *msg, int mlen)
 /* Prints a string to the framebuffer and waits for a key. Formatting
 ** characters are ignored.
 ** Parameters: (char *) msg: The string to print.
+**             (int) mlen: The length of msg
 ** Returns   : (void)
 */
 {
@@ -66,12 +65,12 @@ gp_print(char *msg)
 
 	gp_clearFramebuffer16((unsigned short *) FRAMEBUFFER, 0xFFFF);
 
-	while ((len * 40 < strlen(msg)) && (len < 30)) {
-		int left = strlen(msg) - len * 40;
+	while ((len * 40 < mlen) && (len < 30)) {
+		int left = mlen - len * 40;
 		if (left > 40)
 			left = 40;
-		gp_drawString(0, len * 8, (left > 40 ? 40 : left), msg +
-		  (len * 40), 0xF800, (unsigned short *) FRAMEBUFFER);
+		gp_drawString(0, len * 8, left, msg + (len * 40), 0xF800,
+		              (unsigned short *) FRAMEBUFFER);
 		len++;
 	}
 
@@ -94,7 +93,7 @@ gp32_main()
 {
 	char *argv[] = { "freesci.fxe", NULL };
 
-	/* Set CPU speed 133Mhz. */
+	/* Set CPU speed to 133Mhz. */
 	gp_setCpuspeed(133);
 
 	/* Start realtime clock. */

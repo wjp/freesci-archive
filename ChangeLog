@@ -1,3 +1,9 @@
+2004-12-31  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* README.GP32: Updated.
+
+	* src/gp32/wrap.c, src/gp32/wrap.h: Slight reorganization.
+
 2004-12-30  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* README.GP32: Added to repository.

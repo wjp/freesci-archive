@@ -34,6 +34,9 @@
 #include <gp32.h>
 #undef byte
 #undef word
+#undef FILE
+#undef DIR
+#undef size_t
 #undef fopen
 #undef fread
 #undef fwrite
@@ -41,8 +44,14 @@
 #undef ftell
 #undef rewind
 #undef fseek
-#undef FILE
 
+/* Not present in newlib. */
 void usleep(unsigned long usec);
+
+/* Function declaration in mirkoSDK's header file contains a typo. */
+int smc_createdir(char *dirname);
+
+/* The renamed main() in main.c. */
+int freesci_main(int argc, char** argv);
 
 #endif /* WRAP_H */
