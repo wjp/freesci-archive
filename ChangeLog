@@ -1,3 +1,7 @@
+2003-01-14  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sound/midi_mt32gm.c: Fixed the mt32gm `no volume' issue.
+
 2003-01-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/engine/kstring.c (kFormat): When padding a decimal field,
