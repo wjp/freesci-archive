@@ -40,7 +40,6 @@
 #include <win32/messages.h>
 
 /* #define SSWIN_DEBUG 0 */
-/* #define NO_CALLBACK */ /* Win 98+ / Win2000+ only */
 
 sound_server_t sound_server_win32e;
 
@@ -150,12 +149,13 @@ win32e_soundserver_init(LPVOID lpP)
 	fprintf(debug_stream, "win32e_soundserver_init() sound_wnd %i, TID %i\n", sound_wnd, GetCurrentThreadId());
 #endif
 
-	/* signal that initialisation is done */
-	if (SetEvent(thread_created_event) == 0)
+	/* wait until thread has finished initialising */
+	if (WaitForSingleObject(thread_created_event, INFINITE) != WAIT_OBJECT_0)
 	{
-		fprintf(debug_stream, "win32e_soundserver_init(): SetEvent(thread_created_event) failed, GetLastError() returned %u\n", GetLastError());
+		fprintf(debug_stream, "sound_win32e_init(): WaitForSingleObject() failed, GetLastError() returned %u\n", GetLastError());
 		exit(-1);
 	}
+	CloseHandle(thread_created_event);
 
 	/*** start the sound server ***/
 	sci0_event_ss(&sss);
@@ -282,7 +282,7 @@ sound_win32e_init(struct _state *s, int flags)
 	}
 
 	/*** create thread ***/
-	thread_created_event = CreateEvent(NULL, TRUE, FALSE, NULL);
+	thread_created_event = CreateEvent(NULL, FALSE, FALSE, NULL);
 	if (thread_created_event == NULL)
 	{
 		fprintf(debug_stream, "sound_win32e_init(): CreateEvent(thread_created_event) for main failed, GetLastError() returned %u\n", GetLastError());
@@ -301,14 +301,6 @@ sound_win32e_init(struct _state *s, int flags)
 		exit(-1);
 	}
 
-	/* wait until thread has finished initialising */
-	if (WaitForSingleObject(thread_created_event, INFINITE) != WAIT_OBJECT_0)
-	{
-		fprintf(debug_stream, "sound_win32e_init(): WaitForSingleObject() failed, GetLastError() returned %u\n", GetLastError());
-		exit(-1);
-	}
-	CloseHandle(thread_created_event);
-
 	/*** start timer ***/
 	{
 		TIMECAPS tc;
@@ -316,11 +308,7 @@ sound_win32e_init(struct _state *s, int flags)
 			fprintf(debug_stream, "Multimedia timer supports resolution min: %u, max: %u\n", tc.wPeriodMin, tc.wPeriodMax);
 	}
 
-#ifdef NO_CALLBACK
-	time_keeper_id = timeSetEvent(16, 0, (LPTIMECALLBACK)time_keeper, NULL, TIME_PERIODIC | TIME_CALLBACK_EVENT_PULSE);
-#else
 	time_keeper_id = timeSetEvent(16, 0, (LPTIMECALLBACK)timeout, NULL, TIME_PERIODIC | TIME_CALLBACK_FUNCTION);
-#endif
 	if (time_keeper_id == NULL)
 		fprintf(debug_stream, "Timer start failed\n");
 
@@ -334,6 +322,13 @@ sound_win32e_init(struct _state *s, int flags)
 	}
 
 	fprintf(debug_stream, "Sound server win32e initialised\n");
+
+	/* signal that initialisation is done */
+	if (SetEvent(thread_created_event) == 0)
+	{
+		fprintf(debug_stream, "win32e_soundserver_init(): SetEvent(thread_created_event) failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
 
 	return 0;
 }
@@ -391,18 +386,6 @@ sound_win32e_get_command(GTimeVal *wait_tvp)
 	int i;
 	BOOL bRet;
 
-#ifdef NO_CALLBACK
-	/* wait for timing semaphore */
-	if (WaitForSingleObject(time_keeper, INFINITE) != WAIT_OBJECT_0)
-	{
-		fprintf(debug_stream, "sound_win32e_get_command(): WaitForSingleObject() failed, GetLastError() returned %u\n", GetLastError());
-		exit(-1);
-	}
-
-	/* Win 98/Me, Win 2000/XP only */
-	if (PeekMessage( &msg, sound_wnd, 0, 0, PM_REMOVE | PM_QS_POSTMESSAGE ))
-	{
-#else
 	if( (bRet = GetMessage( &msg, sound_wnd, 0, 0 )) != 0)
 	{
 		if (bRet == -1)
@@ -410,7 +393,6 @@ sound_win32e_get_command(GTimeVal *wait_tvp)
 			fprintf(debug_stream, "sound_win32e_get_command(): GetMessage() failed, GetLastError() returned %u\n", GetLastError());
 			exit(-1);
 		}
-#endif
 
 #if (SSWIN_DEBUG == 1)
 		fprintf(debug_stream, "sound_win32e_get_command() got msg %i (time: %i) (TID: %i)\n", msg.message, msg.time, GetCurrentThreadId());

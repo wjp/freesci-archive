@@ -177,7 +177,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 						int totalsize = 0;
 
 #ifdef DEBUG_SOUND_SERVER
-						fprintf(debug_stream, "Receiving song for handle %04x: ", event.handle);
+						fprintf(debug_stream, "Initialising song handle %04x: ", event.handle);
 #endif
 						if (modsong) { /* If the song already exists in cache... */
 							int lastmode = song_lib_remove(ss_state->songlib, (word)event.handle); /* remove it */
@@ -339,65 +339,33 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 						break;
 
 					case SOUND_COMMAND_SAVE_STATE: {
-						char *dirname;
-						int success;
-						int size;
 						GTimeVal currtime;
 
-						/* Retreive target directory from command stream.
-						** Since we might be in a separate process, cwd must be set
-						** separately from the main process. That's why we need it here.
-						*/
-						global_sound_server->get_data((byte **)&dirname, &size);
+						save_sound_state(ss_state);
+
 						sci_get_current_time(&currtime);
 						usecs_to_sleep = (currtime.tv_sec - last_played.tv_sec) * 1000000
 						         + (currtime.tv_usec - last_played.tv_usec);
 
-						success = soundsrv_save_state(debug_stream,
-							global_sound_server->flags & SOUNDSERVER_FLAG_SEPARATE_CWD? dirname : NULL,
-							ss_state);
-
-						/* Return soundsrv_save_state()'s return value */
-						global_sound_server->send_data((byte *)&success, sizeof(int));
-						free(dirname);
-
 						break;
 					}
 
-					case SOUND_COMMAND_RESTORE_STATE: {
-						char *dirname;
-						int success;
-						int len;
-
-						global_sound_server->get_data((byte **)&dirname, &len); /* see SAVE_STATE */
+					case SOUND_COMMAND_RESTORE_STATE:
+						restore_sound_state(ss_state);
 
 						sci_get_current_time(&last_played); /* Get current time, store in last_played.
 										    ** We effectively reset the sound delay this
 										    ** way, which seems appropriate.
 										    */
-
-						success = soundsrv_restore_state(debug_stream,
-										 global_sound_server->flags & SOUNDSERVER_FLAG_SEPARATE_CWD? dirname : NULL,
-										 ss_state);
 						/* Had to be lost in transition to restoring saved games from different sound server types
 						last_played.tv_sec -= secs = (usecs_to_sleep - last_played.tv_usec) / 1000000;
 						last_played.tv_usec -= (usecs_to_sleep + secs * 1000000);
 						*/
 
-						/* Return return value */
-						global_sound_server->send_data((byte *)&success, sizeof(int));
-
-						free(dirname);
-						/* restore some MIDI device state */
-						/* (see MIDI specs). Effectively sets current instruments etc. */
-						midi_allstop();
-						_restore_midi_state(ss_state);
-						change_song(ss_state->current_song, ss_state);
 						newsong = ss_state->current_song;
 						newsong->status = SOUND_STATUS_PLAYING;
 
 						break;
-					}
 
 					case SOUND_COMMAND_PRINT_SONG_INFO: {
 						if (ss_state->current_song)
@@ -518,7 +486,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 				} else { /* Finished */
 
 #ifdef DEBUG_SOUND_SERVER
-					fprintf(debug_stream, "finishining handle %04d\n", ss_state->current_song->handle);
+					fprintf(debug_stream, "Finishing handle %04d\n", ss_state->current_song->handle);
 #endif
 					global_sound_server->queue_command(ss_state->current_song->handle, SOUND_COMMAND_STOP_HANDLE, 0);
 					global_sound_server->queue_event(ss_state->current_song->handle, SOUND_SIGNAL_LOOP, -1);

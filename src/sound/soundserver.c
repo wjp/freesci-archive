@@ -700,3 +700,60 @@ set_reverse_stereo(int rs, sound_server_state_t *ss_state)
 #endif
 	ss_state->reverse_stereo = rs;
 }
+
+void
+save_sound_state(sound_server_state_t *ss_state)
+{
+	char *dirname;
+	int size;
+	int success;
+
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(debug_stream, "Saving sound state\n");
+#endif
+
+	/* Retreive target directory from command stream.
+	** Since we might be in a separate process, cwd must be set
+	** separately from the main process. That's why we need it here.
+	*/
+	global_sound_server->get_data((byte **)&dirname, &size);
+	success = soundsrv_save_state(debug_stream,
+		global_sound_server->flags & SOUNDSERVER_FLAG_SEPARATE_CWD ? dirname : NULL,
+		ss_state);
+
+	/* Return soundsrv_save_state()'s return value */
+	global_sound_server->send_data((byte *)&success, sizeof(int));
+	sci_free(dirname);
+}
+
+void
+restore_sound_state(sound_server_state_t *ss_state)
+{
+	char *dirname;
+	int len;
+	int success;
+
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(debug_stream, "Restoring sound state\n");
+#endif
+
+	change_song(NULL, ss_state);
+	global_sound_server->get_data((byte **)&dirname, &len);
+	midi_allstop();
+
+	success = soundsrv_restore_state(debug_stream,
+		global_sound_server->flags & SOUNDSERVER_FLAG_SEPARATE_CWD ? dirname : NULL,
+		ss_state);
+
+	/* Return return value */
+	global_sound_server->send_data((byte *)&success, sizeof(int));
+	sci_free(dirname);
+
+	midi_allstop();
+	_restore_midi_state(ss_state);
+	change_song(ss_state->current_song, ss_state);
+/*
+	if (ss_state->current_song)
+		ss_state->current_song->status = SOUND_STATUS_PLAYING;
+*/
+}

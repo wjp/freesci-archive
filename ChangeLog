@@ -1,3 +1,15 @@
+2001-12-22  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/sound/event_ss.c:
+	* src/sound/polled_ss.c:
+	* src/sound/soundserver.c:
+	* src/include/soundserver.h: Added save_sound_state() and
+	restore_sound_state().
+	
+	* src/sound/event_ss_win32.c: Clean up.
+	
+	* src/sound/midi_device.c: Fixed tabulation.
+
 2001-12-21  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/polled_ss_unix.c (_sound_server_suspension_handler):

@@ -399,42 +399,12 @@ sci0_event_ss(sound_server_state_t *ss_state)
 			resume_all(ss_state);
 			break;
 
-		case SOUND_COMMAND_SAVE_STATE: {
-				char *dirname;
-				int size;
-				int success;
-
-				global_sound_server->get_data((byte **)&dirname, &size);
-				success = soundsrv_save_state(debug_stream,
-					global_sound_server->flags & SOUNDSERVER_FLAG_SEPARATE_CWD ? dirname : NULL,
-					ss_state);
-
-				/* Return soundsrv_save_state()'s return value */
-				global_sound_server->send_data((byte *)&success, sizeof(int));
-				sci_free(dirname);
-			}
+		case SOUND_COMMAND_SAVE_STATE:
+			save_sound_state(ss_state);
 			break;
 
-		case SOUND_COMMAND_RESTORE_STATE: {
-				char *dirname;
-				int len;
-				int success;
-
-				global_sound_server->get_data((byte **)&dirname, &len); /* see SAVE_STATE */
-
-				success = soundsrv_restore_state(debug_stream,
-					global_sound_server->flags & SOUNDSERVER_FLAG_SEPARATE_CWD ? dirname : NULL,
-					ss_state);
-
-				/* Return return value */
-				global_sound_server->send_data((byte *)&success, sizeof(int));
-				sci_free(dirname);
-
-				_restore_midi_state(ss_state);
-				change_song(ss_state->current_song, ss_state);
-				if (ss_state->current_song)
-					ss_state->current_song->status = SOUND_STATUS_PLAYING;
-			}
+		case SOUND_COMMAND_RESTORE_STATE:
+			restore_sound_state(ss_state);
 			break;
 
 		case SOUND_COMMAND_PRINT_SONG_INFO:

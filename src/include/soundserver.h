@@ -801,6 +801,20 @@ change_song(song_t *new_song, sound_server_state_t *ss_state);
 ** Returns   : (void)
 */
 
+void
+save_sound_state(sound_server_state_t *ss_state);
+/* Saves current sound state
+** Parameters: (sound_server_state_t *) ss_state: State to save
+** Returns   : (void)
+*/
+
+void
+restore_sound_state(sound_server_state_t *ss_state);
+/* Restores current sound state
+** Parameters: (sound_server_state_t *) ss_state: State to restore into
+** Returns   : (void)
+*/
+
 #ifdef DEBUG_SOUND_SERVER
 extern int channel_instrument[16];
 void print_channels_any(int mapped, sound_server_state_t *ss_state);
