@@ -46,6 +46,12 @@ int midiout_unixraw_close()
   return 0;
 }
 
+int midiout_unixraw_flush()
+{
+  /* opened with O_SYNC; already flushed.. */
+  return 0;
+}
+
 int midiout_unixraw_write(guint8 *buffer, unsigned int count)
 {
   int rval = 0;
@@ -65,5 +71,6 @@ midiout_driver_t midiout_driver_unixraw = {
   NULL,
   &midiout_unixraw_open,
   &midiout_unixraw_close,
-  &midiout_unixraw_write
+  &midiout_unixraw_write,
+  &midiout_unixraw_flush
 };

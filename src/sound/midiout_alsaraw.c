@@ -65,6 +65,14 @@ int midiout_alsaraw_open()
 }
 #endif /* ALSA prior to 0.9.0 */
 
+int midiout_alsaraw_flush()
+{
+  if (snd_rawmidi_output_flush(handle) < 0)
+	 return -1;
+  return 0;
+
+}
+
 int midiout_alsaraw_close()
 {
 	if (snd_rawmidi_close(handle) < 0)
@@ -76,8 +84,6 @@ int midiout_alsaraw_write(guint8 *buffer, unsigned int count)
 {
 	if (snd_rawmidi_write(handle, buffer, count) != count)
 		return -1;
-	/*  if (snd_rawmidi_output_flush(handle) < 0)
-	    return -1;*/
 	return 0;
 }
 
@@ -87,7 +93,8 @@ midiout_driver_t midiout_driver_alsaraw = {
 	NULL,
 	&midiout_alsaraw_open,
 	&midiout_alsaraw_close,
-	&midiout_alsaraw_write
+	&midiout_alsaraw_write,
+	&midiout_alsaraw_flush
 };
 
 

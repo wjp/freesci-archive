@@ -24,10 +24,16 @@ midiout_driver_t *midiout_driver = NULL;
 
 static unsigned char running_status = 0;
 
+int midiout_flush()
+{
+  return midiout_driver->midiout_open();
+}
+
 int midiout_open()
 {
   return midiout_driver->midiout_open();
 }
+
 
 int midiout_close()
 {
@@ -60,6 +66,12 @@ int midiout_null_open()
   return 0;
 }
 
+int midiout_null_flush()
+{
+  return 0;
+}
+
+
 int midiout_null_close()
 {
   printf("Closed null sound device\n");
@@ -80,7 +92,8 @@ midiout_driver_t midiout_driver_null = {
   NULL,
   &midiout_null_open,
   &midiout_null_close,
-  &midiout_null_write
+  &midiout_null_write,
+  &midiout_null_flush
 };
 
 struct _midiout_driver *midiout_find_driver(char *name)

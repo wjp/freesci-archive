@@ -1,3 +1,18 @@
+2001-03-11  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/include/midiout.h
+	* src/sound/midiout.c
+	* src/sound/midiout_unixraw.c
+	* src/sound/midiout_alsaraw.c:  Added a midiout_flush API
+                                          function.
+	* src/sound/midi_mt32.c:  Incorporated Rickard's reverb patch.
+				  Added midiout_flushes after sysex
+                                    writes.
+	* src/sound/soundserver_null.c:  Now stops all notes on game
+                                           restores. 
+ 					 Fixes the volume setting on
+					   game restores.
+
 2001-03-11  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c: loop and cel selectors are now read

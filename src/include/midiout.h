@@ -34,6 +34,7 @@ typedef struct _midiout_driver {
   int (*midiout_open)(void);
   int (*midiout_close)(void);
   int (*midiout_write)(guint8 *data, unsigned int);
+  int (*midiout_flush)(void);
 } midiout_driver_t;
 
 extern midiout_driver_t *midiout_driver;
@@ -59,6 +60,7 @@ static midiout_driver_t *midiout_drivers[] = {
   NULL
 };
 
+int midiout_flush();
 int midiout_open();
 int midiout_close();
 int midiout_write_event(guint8 *buffer, unsigned int count);

@@ -206,7 +206,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	song_t *_songp = NULL;
 	songlib_t songlib = &_songp;   /* Song library */
 	song_t *newsong, *song = NULL; /* The song we're playing */
-	int master_volume = 0x0c;  /* the master volume.. whee */
+	int master_volume = 0;  /* the master volume.. whee */
 	int debugging = 1;   /* Debugging enabled? */
 	int command = 0;
 	int ccc = 127; /* cumulative cue counter */
@@ -500,8 +500,10 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 					case SOUND_COMMAND_SET_VOLUME:
 						if (debugging)
-							fprintf(ds, "Set volume to %d\n", event.value);
-						midi_volume(event.value * 100 / 15); /* scale to % */
+						  fprintf(ds, "Set volume to %d\n", event.value);
+						master_volume = event.value * 100 / 15; /* scale to % */
+						midi_volume(master_volume);
+
 						break;
 					case SOUND_COMMAND_SET_MUTE:
 						fprintf(ds, "Called mute??? should never happen\n");
@@ -612,11 +614,11 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 						REPORT_STATUS(success);
 
 						free(dirname);
-
-						/* restore the midi device state */
-						midi_volume(event.value * 100 / 15); /* scale to % */
-						if (newsong) {
+						/* restore some device state */
+						{
 						  int i;
+						  midi_allstop();
+						  midi_volume(master_volume);
 						  for (i = 0; i < MIDI_CHANNELS; i++) {
 						    if (newsong->instruments[i]) 
 						      midi_event2(0xc0 | i, newsong->instruments[i]);
@@ -765,10 +767,9 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 			}
 
 		}
-
-		if (song != newsong && song)
-			song->pos = old_songpos;
-
+		if ((song != newsong) && song)
+		  song->pos = old_songpos;
+	
 		song = newsong;
 	}
 	_exit(0); /* Exit gracefully without cleanup */
