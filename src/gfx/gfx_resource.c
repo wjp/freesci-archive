@@ -76,11 +76,15 @@ gfxr_free_view(gfx_driver_t *driver, gfxr_view_t *view)
 #define EXTRA_BYTE_OFFSET 0
 #define SIZETYPE guint8
 #define FUNCNAME _gfx_xlate_pixmap_unfiltered_1
+#define COPY_BYTES 1
 #include "gfx_pixmap_scale.c"
+#undef COPY_BYTES
 
 #define SIZETYPE guint16
 #define FUNCNAME _gfx_xlate_pixmap_unfiltered_2
+#define COPY_BYTES 2
 #include "gfx_pixmap_scale.c"
+#undef COPY_BYTES
 
 #ifdef WORDS_BIGENDIAN
 # undef EXTRA_BYTE_OFFSET
@@ -88,7 +92,9 @@ gfxr_free_view(gfx_driver_t *driver, gfxr_view_t *view)
 #endif /* WORDS_BIGENDIAN */
 #define SIZETYPE guint32
 #define FUNCNAME _gfx_xlate_pixmap_unfiltered_3
+#define COPY_BYTES 3
 #include "gfx_pixmap_scale.c"
+#undef COPY_BYTES
 #ifdef WORDS_BIGENDIAN
 # undef EXTRA_BYTE_OFFSET
 # define EXTRA_BYTE_OFFSET 0
@@ -96,7 +102,9 @@ gfxr_free_view(gfx_driver_t *driver, gfxr_view_t *view)
 
 #define SIZETYPE guint32
 #define FUNCNAME _gfx_xlate_pixmap_unfiltered_4
+#define COPY_BYTES 4
 #include "gfx_pixmap_scale.c"
+#undef COPY_BYTES
 #undef EXTRA_BYTE_OFFSET
 #undef SIZETYPE
 

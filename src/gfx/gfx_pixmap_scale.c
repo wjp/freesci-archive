@@ -25,12 +25,13 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 	int using_alpha = pxm->colors_nr < GFX_PIC_COLORS;
 	int separate_alpha_map = (!mode->alpha_mask) && using_alpha;
 
+        assert(bytespp == COPY_BYTES);
+
 	if (separate_alpha_map && !alpha_dest)
 		alpha_dest = pxm->alpha_map = malloc(pxm->index_xl * xfact * pxm->index_yl * yfact);
 
 	if (!separate_alpha_map)
 		result_colors[GFX_COLOR_INDEX_TRANSPARENT] = alpha_color;
-
 
 	/* Calculate all colors */
 	for (i = 0; i < pxm->colors_nr; i++) {
@@ -52,14 +53,14 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 
 		for (x = 0; x < pxm->index_xl; x++) {
 			int isalpha;
-			SIZETYPE col = result_colors[isalpha = *src++];
-
+                        byte temp[sizeof(SIZETYPE)*2];
+			SIZETYPE col = result_colors[isalpha = *src++] << (EXTRA_BYTE_OFFSET * 8);
 			isalpha = (isalpha == 255) && using_alpha;
 
 			/* O(n) loops. There is an O(ln(n)) algorithm for this, but its slower for small n (which we're optimizing for here) */
 			for (widthc = 0; widthc < xfact; widthc++) {
-				memcpy(dest, &col + EXTRA_BYTE_OFFSET, sizeof(SIZETYPE));
-				dest += sizeof(SIZETYPE);
+				memcpy(dest, &col, COPY_BYTES);
+				dest += COPY_BYTES;
 			}
 
 			if (separate_alpha_map) { /* Set separate alpha map */

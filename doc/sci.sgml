@@ -2511,11 +2511,11 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 				</listitem></varlistentry>
 
 				<varlistentry><term/4Ch/<listitem><para>
-					Reset on StopSound: An on/off switch where a value of
+					Reset on SUSPEND: An on/off switch where a value of
 		                        zero is off and a non-zero value is on. Note that
 		                        this is not the same as for standard MIDI control
 		                        switches. When this control is on, calling the sound
-		                        driver's StopSound subfunction will reset the sound
+		                        driver's SUSPEND subfunction will reset the sound
 		                        position to the beginning. The initial value is set
 		                        to off when a sound gets loaded.</para>
 				</listitem></varlistentry>

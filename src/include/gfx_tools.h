@@ -177,11 +177,16 @@ gfx_xlate_pixmap(gfx_pixmap_t *pxm, gfx_mode_t *mode, gfx_xlate_filter_t filter)
 */
 
 
+#define GFX_CROSSBLIT_FLAG_DATA_IS_HOMED (1<<0)
+/* Means that the first byte in the visual data refers to the
+** point corresponding to (dest.x, dest.y) */
+
 int
 gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 		     rect_t src_coords, rect_t dest_coords, byte *dest,
 		     int dest_line_width, byte *priority_dest,
-		     int priority_line_width, int priority_skip);
+		     int priority_line_width, int priority_skip,
+                     int flags);
 /* Transfers the non-transparent part of a pixmap to a linear pixel buffer
 ** Parameters: (gfx_mode_t *) mode: The graphics mode of the target buffer
 **             (gfx_pixmap_t *) pxm: The pixmap to transfer
@@ -198,6 +203,7 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 **             (int) priority_line_width: Byte offset of the first pixel in the
 **                                        second line of the priority buffer
 **             (int) priority_skip: Amount of bytes allocated by each priority value
+**             (int) flags: Any crossblit flags
 ** Returns   : (int) GFX_OK, or GFX_ERROR if the specified mode was invalid or unsupported
 ** A 'linear buffer' in this context means a data buffer containing an entire
 ** screen (visual or priority), with fixed offsets between each data row, and

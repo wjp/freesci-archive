@@ -314,7 +314,7 @@ typedef struct { /* gfx_pixmap_t: Pixel map */
 			 */
 
 	/*** Data reserved for gfx_driver use ***/
-	union pixmap_internal { /* Internal state management data for use by drivers */
+	struct pixmap_internal { /* Internal state management data for use by drivers */
 		int handle; /* initialized to 0 */
 		void *info; /* initialized to NULL */
 	} internal;

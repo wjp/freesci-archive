@@ -35,6 +35,10 @@
 #include <X11/Xatom.h>
 #include <X11/keysym.h>
 
+
+#define SCI_XLIB_PIXMAP_HANDLE_NORMAL 0
+#define SCI_XLIB_PIXMAP_HANDLE_GRABBED 1
+
 struct _xlib_state {
 	Display *display;
 	Window window;
@@ -46,6 +50,7 @@ struct _xlib_state {
 	int buckystate;
 	void *old_error_handler;
 	Cursor mouse_cursor;
+        int used_bytespp; /* bytes actually used to display stuff, rather than bytes occupied in data space */
 };
 
 #define S ((struct _xlib_state *)(drv->state))
@@ -166,6 +171,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	int xsize = xfact * 320;
 	int ysize = yfact * 200;
 	XSizeHints *size_hints;
+        XImage *foo_image;
 	int i;
 
 	if (!S)
@@ -188,6 +194,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	while ((((bytespp > 1) && (vistype >= 4))
 		|| ((bytespp == 1) && (vistype == 3)))
 	       && !XMatchVisualInfo(S->display, default_screen, bytespp << 3, vistype, &xvisinfo)) {
+          fprintf(stderr,"!vistype=%d\n", vistype);
 		vistype--;
 	}
 
@@ -205,7 +212,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 				xvisinfo.visual, AllocNone);
 
 	win_attr.event_mask = PointerMotionMask | StructureNotifyMask | ButtonPressMask
-		| ButtonReleaseMask | KeyPressMask | KeyReleaseMask;
+		| ButtonReleaseMask | KeyPressMask | KeyReleaseMask | ExposureMask;
 	win_attr.background_pixel = win_attr.border_pixel = 0;
 
 	S->window = XCreateWindow(S->display, RootWindow(S->display, default_screen),
@@ -234,13 +241,6 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		blue_shift = 32 - ffs((~xvisinfo.blue_mask >> 1) & (xvisinfo.blue_mask));
 	}
 
-	drv->mode = gfx_new_mode(xfact, yfact, bytespp,
-				 xvisinfo.red_mask, xvisinfo.green_mask, xvisinfo.blue_mask,
-				 0, /* alpha mask */
-				 red_shift, green_shift, blue_shift,
-				 0, /* alpha shift */
-				 (bytespp == 1)? xvisinfo.colormap_size : 0);
-
 	size_hints = XAllocSizeHints();
 	size_hints->base_width = size_hints->min_width = size_hints->max_width = xsize;
 	size_hints->base_height = size_hints->min_height = size_hints->max_height = ysize;
@@ -264,6 +264,21 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		S->visual[i] = XCreatePixmap(S->display, S->window, xsize, ysize, bytespp << 3);
 		XFillRectangle(S->display, S->visual[i], S->gc, 0, 0, xsize, ysize);
 	}
+
+        foo_image = XCreateImage(S->display, DefaultVisual(S->display, DefaultScreen(S->display)),
+                                 bytespp << 3, ZPixmap, 0, malloc(23), 2,
+                                 2, 8, 0);
+
+	drv->mode = gfx_new_mode(xfact, yfact, foo_image->bits_per_pixel >> 3,
+				 xvisinfo.red_mask, xvisinfo.green_mask, xvisinfo.blue_mask,
+				 0, /* alpha mask */
+				 red_shift, green_shift, blue_shift,
+				 0, /* alpha shift */
+				 (bytespp == 1)? xvisinfo.colormap_size : 0);
+
+        XDestroyImage(foo_image);
+        S->used_bytespp = bytespp;
+
 
 	S->old_error_handler = XSetErrorHandler(xlib_error_handler);
 
@@ -377,7 +392,7 @@ xlib_register_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 		return GFX_ERROR;
 	}
 	pxm->internal.info = XCreateImage(S->display, DefaultVisual(S->display, DefaultScreen(S->display)),
-					  drv->mode->bytespp << 3, ZPixmap, 0, pxm->data, pxm->xl,
+					  S->used_bytespp << 3, ZPixmap, 0, pxm->data, pxm->xl,
 					  pxm->yl, 8, 0);
 	DEBUGPXM("Registered pixmap %d/%d/%d at %p (%dx%d)\n", pxm->ID, pxm->loop, pxm->cel,
 		 pxm->internal.info, pxm->xl, pxm->yl);
@@ -415,6 +430,12 @@ xlib_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 		return GFX_ERROR;
 	}
 
+	if (pxm->internal.handle == SCI_XLIB_PIXMAP_HANDLE_GRABBED) {
+		XPutImage(S->display, S->visual[bufnr], S->gc, (XImage *) pxm->internal.info,
+			  src.x, src.y, dest.x, dest.y, dest.xl, dest.yl);
+		return GFX_OK;
+	}
+
 	tempimg = XGetImage(S->display, S->visual[bufnr], dest.x, dest.y,
 			    dest.xl, dest.yl, 0xffffffff, ZPixmap);
 
@@ -423,10 +444,11 @@ xlib_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 		return GFX_ERROR;
 	}
 
-	gfx_crossblit_pixmap(drv->mode, pxm, priority, src, gfx_rect(0, 0, dest.xl, dest.yl),
+	gfx_crossblit_pixmap(drv->mode, pxm, priority, src, dest,
 			     tempimg->data, tempimg->bytes_per_line,
 			     S->priority[pribufnr]->index_data,
-			     S->priority[pribufnr]->index_xl, 1);
+			     S->priority[pribufnr]->index_xl, 1,
+                             GFX_CROSSBLIT_FLAG_DATA_IS_HOMED);
 
 	XPutImage(S->display, S->visual[bufnr], S->gc, tempimg,
 		  0, 0, dest.x, dest.y, dest.xl, dest.yl);
@@ -458,8 +480,9 @@ xlib_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 
 		pxm->internal.info = XGetImage(S->display, S->visual[1], src.x, src.y,
 					       src.xl, src.yl, 0xffffffff, ZPixmap);
+		pxm->internal.handle = SCI_XLIB_PIXMAP_HANDLE_GRABBED;
 
-		pxm->flags |= GFX_PIXMAP_FLAG_INSTALLED;
+		pxm->flags |= GFX_PIXMAP_FLAG_INSTALLED | GFX_PIXMAP_FLAG_EXTERNAL_PALETTE | GFX_PIXMAP_FLAG_PALETTE_SET;
 		break;
 
 	case GFX_MASK_PRIORITY:
@@ -496,9 +519,19 @@ xlib_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buff
 
 	if (buffer == GFX_BUFFER_BACK && (src.x == dest.x) && (src.y == dest.y))
 		gfx_copy_pixmap_box_i(S->priority[0], S->priority[1], src);
-	else
+	else {
+		gfx_color_t col;
+		col.mask = GFX_MASK_VISUAL;
+		col.visual.r = 0xff;
+		col.visual.g = 0;
+		col.visual.b = 0;
+
+		/*src.xl = 640;
+		src.yl = 400;
+		src.x = src.y = dest.x = dest.y = 0;*/
 		XCopyArea(S->display, S->visual[0], S->window, S->gc,
 			  dest.x, dest.y, src.xl, src.yl, dest.x, dest.y);
+	}
 
 	return GFX_OK;
 }
@@ -506,6 +539,7 @@ xlib_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buff
 static int
 xlib_set_static_buffer(struct _gfx_driver *drv, gfx_pixmap_t *pic, gfx_pixmap_t *priority)
 {
+
 	if (!pic->internal.info) {
 		ERROR("Attempt to set static buffer with unregisterd pixmap!\n");
 		return GFX_ERROR;
@@ -513,6 +547,7 @@ xlib_set_static_buffer(struct _gfx_driver *drv, gfx_pixmap_t *pic, gfx_pixmap_t 
 
 	XPutImage(S->display, S->visual[2], S->gc, (XImage *) pic->internal.info,
 		  0, 0, 0, 0, 320 * XFACT, 200 * YFACT);
+
 	gfx_copy_pixmap_box_i(S->priority[1], priority, gfx_rect(0, 0, 320*XFACT, 200*YFACT));
 
 	return GFX_OK;
@@ -759,7 +794,7 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 	do {
 		int redraw_pointer_request = 0;
 
-		while (XCheckWindowEvent(display, window, eventmask, &event)) {
+		while (XCheckWindowEvent(display, window, eventmask | ExposureMask, &event)) {
 			switch (event.type) {
 
 			case KeyPress: {
@@ -797,6 +832,17 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 				drv->pointer_y = event.xmotion.y;
 			}
 			break;
+
+			case GraphicsExpose:
+			case Expose: {
+				XCopyArea(S->display, S->visual[0], S->window, S->gc,
+					  event.xexpose.x, event.xexpose.y, event.xexpose.width, event.xexpose.height,
+					  event.xexpose.x, event.xexpose.y);
+			}
+			break;
+
+			case NoExpose:
+				break;
 
 			default:
 				ERROR("Received unhandled X event %04x\n", event.type);
@@ -856,7 +902,7 @@ gfx_driver_xlib = {
 	0, 0,
 	GFX_CAPABILITY_STIPPLED_LINES | GFX_CAPABILITY_MOUSE_SUPPORT | GFX_CAPABILITY_MOUSE_POINTER |
 	GFX_CAPABILITY_PIXMAP_REGISTRY | GFX_CAPABILITY_PIXMAP_GRABBING,
-	GFX_DEBUG_POINTER | GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC,
+	0/*GFX_DEBUG_POINTER | GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC*/,
 	xlib_set_parameter,
 	xlib_init_specific,
 	xlib_init,

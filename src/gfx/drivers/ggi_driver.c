@@ -574,7 +574,7 @@ ggi_draw_pixmap(gfx_driver_t *drv, gfx_pixmap_t *pxm, int priority,
 
 	gfx_crossblit_pixmap(MODE, pxm, priority, src, dest, dbuf->write,
 			     dbuf->buffer.plb.stride,
-			     pri_map, MODE->xfact * 320, 1);
+			     pri_map, MODE->xfact * 320, 1, 0);
 
 	/*	ggiPutBox(vis, dest.x * MODE->xfact, dest.y * MODE->yfact, pxm->xl, pxm->yl, pxm->data); */
 

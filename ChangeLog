@@ -1,3 +1,8 @@
+2001-02-14  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/xlib_driver.c: Fixed most of the remaining issues
+	with the xlib driver
+
 2001-02-11  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/vm.c (send_selector): Added support for matching

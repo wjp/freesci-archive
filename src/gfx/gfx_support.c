@@ -197,7 +197,7 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 		     rect_t src_coords,
 		     rect_t dest_coords, byte *dest, int dest_line_width,
 		     byte *priority_dest, int priority_line_width,
-		     int priority_skip)
+		     int priority_skip, int flags)
 {
 	int maxx = 320 * mode->xfact;
 	int maxy = 200 * mode->yfact;
@@ -229,24 +229,26 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 	/* Set destination offsets */
 
 	/* Set x offsets */
-	dest += dest_coords.x * bpp;
+        if (!(flags & GFX_CROSSBLIT_FLAG_DATA_IS_HOMED))
+	        dest += dest_coords.x * bpp;
 	priority_pos += dest_coords.x * priority_skip;
 
 	/* Set y offsets */
-	dest += dest_coords.y * dest_line_width;
+        if (!(flags & GFX_CROSSBLIT_FLAG_DATA_IS_HOMED))
+	        dest += dest_coords.y * dest_line_width;
 	priority_pos += dest_coords.y * priority_line_width;
 
 	/* Set source offsets */
 	if (xoffset += src_coords.x) {
 		dest_coords.x = 0;
-		src += xoffset * bpp;
+                src += xoffset * bpp;
 		alpha += xoffset * bytes_per_alpha_pixel;
 	}
 
 
 	if (yoffset += src_coords.y) {
 		dest_coords.y = 0;
-		src += yoffset * bpp * pxm->xl;
+                src += yoffset * bpp * pxm->xl;
 		alpha += yoffset * bytes_per_alpha_line;
 	}
 
