@@ -535,6 +535,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			       EXPLAIN_OPTION("--pcmout drv\t", "-Pdrv", "use the 'drv' pcmout driver")
 			       EXPLAIN_OPTION("--sound-server srv", "-Ssrv", "Specifies the asynchronous sound server to use")
 			       EXPLAIN_OPTION("--list-savegames", "-l", "Lists all savegame IDs")
+			       EXPLAIN_OPTION("--show-rooms\t", "-s","Displays room numbers on the game console")
 			       "\n"
 			       "The game name, if provided, must be equal to a game name as specified in the\n"
 			       "FreeSCI config file.\n"
