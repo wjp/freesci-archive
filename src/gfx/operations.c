@@ -1736,7 +1736,7 @@ gfx_text_handle_t *
 gfxop_new_text(gfx_state_t *state, int font_nr, char *text, int maxwidth,
 	       gfx_alignment_t halign, gfx_alignment_t valign,
 	       gfx_color_t color1, gfx_color_t color2, gfx_color_t bg_color,
-	       int single_line)
+	       int flags)
 {
 	gfx_text_handle_t *handle;
 	gfx_bitmap_font_t *font;
@@ -1765,7 +1765,9 @@ gfxop_new_text(gfx_state_t *state, int font_nr, char *text, int maxwidth,
 	handle->lines =
 		gfxr_font_calculate_size(font, maxwidth, handle->text, &(handle->width), &(handle->height),
 					 &(handle->lines_nr),
-					 state->options->workarounds & GFX_WORKAROUND_WHITESPACE_COUNT);
+					 ((state->options->workarounds & GFX_WORKAROUND_WHITESPACE_COUNT)?
+					  GFXR_FONT_FLAG_COUNT_WHITESPACE : 0)
+					 | flags);
 
 	if (!handle->lines) {
 		free(handle->text);
@@ -1775,7 +1777,7 @@ gfxop_new_text(gfx_state_t *state, int font_nr, char *text, int maxwidth,
 	}
 
 
-	if (single_line) {
+	if (flags & GFXR_FONT_FLAG_NO_NEWLINES) {
 		handle->lines_nr = 1;
 		handle->lines->length = strlen(text);
 	}

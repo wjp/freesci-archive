@@ -287,7 +287,7 @@ gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, in
 gfxw_text_t *
 gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignment_t halign,
 	      gfx_alignment_t valign, gfx_color_t color1, gfx_color_t color2,
-	      gfx_color_t bgcolor, int single_line);
+	      gfx_color_t bgcolor, int flags);
 /* Creates a new text widget
 ** Parameters: (gfx_state_t *) state: The state the text is to be calculated from
 **             (rect_t) area: The area the text is to be confined to (the yl value is only
@@ -298,8 +298,7 @@ gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignme
 **             (gfx_color_t x gfx_color_t) color1, color2: Text foreground colors (if not equal,
 **                                                         The foreground is dithered between them)
 **             (gfx_color_t) bgcolor: Text background color
-**             (int) single_line: 0 if '\n's should be respected, non-zero if the text should
-**                                be forced into a single line
+**             (int) flags: GFXR_FONT_FLAGs, orred together (see gfx_resource.h)
 ** Returns   : (gfx_text_t *) The resulting text widget
 */
 

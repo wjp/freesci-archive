@@ -1243,7 +1243,9 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 	case K_CONTROL_BUTTON:
 
 		SCIkdebug(SCIkGRAPHICS, "drawing button %04x to %d,%d\n", obj, x, y);
-		ADD_TO_CURRENT_PORT(sciw_new_button_control(s->port, obj, area, text, font_nr, inverse));
+		ADD_TO_CURRENT_PORT(sciw_new_button_control(s->port, obj, area, text, font_nr,
+                                                            state & CONTROL_STATE_FRAMED,
+                                                            inverse, state & CONTROL_STATE_GRAY));
 		break;
 
 	case K_CONTROL_TEXT:
@@ -1319,21 +1321,9 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 			 type, obj, x, y, xl, yl);
 	}
 
-	sciprintf("------------------------------------------------------\n");
-	sciprintf("------------------------------------------------------\n");
-	sciprintf("------------------------------------------------------\n");
-	sciprintf("------------------------------------------------------\n");
-	sciprintf("------------------------------------------------------\n");
-	FULL_INSPECTION();
 	if (!s->pic_not_valid) {
 		FULL_REDRAW();
 	}
-	sciprintf("------------------------------------------------------\n");
-	sciprintf("------------------------------------------------------\n");
-	sciprintf("------------------------------------------------------\n");
-	sciprintf("------------------------------------------------------\n");
-	sciprintf("------------------------------------------------------\n");
-	FULL_INSPECTION();
 }
 
 void

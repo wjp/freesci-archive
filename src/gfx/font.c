@@ -185,14 +185,18 @@ gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
 		if (((foo == '\n') || (foo == 0x0d))
 		    && !(flags & GFXR_FONT_FLAG_NO_NEWLINES)) {
 
-			if (foo == '\n' && *text)
+			fragments[current_fragment-1].length = text - 1 - fragments[current_fragment-1].offset;
+
+			if (*text)
 				maxheight += lineheight;
+
+			if (foo == 0x0d && *text == '\n')
+				text++; /* Interpret DOS-style CR LF as single NL */
+
+			fragments[current_fragment++].offset = text;
 
 			if (localmaxwidth > maxwidth)
 				maxwidth = localmaxwidth;
-
-			fragments[current_fragment-1].length = text - 1 - fragments[current_fragment-1].offset;
-			fragments[current_fragment++].offset = text;
 
 			if (current_fragment == fragments_nr)
 				fragments = realloc(fragments, sizeof(text_fragment_t *) * (fragments_nr <<= 1));

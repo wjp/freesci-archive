@@ -176,14 +176,14 @@ _gfxw_unallocate_widget(gfx_state_t *state, gfxw_widget_t *widget)
 	if (GFXW_IS_TEXT(widget)) {
 		gfxw_text_t *text = (gfxw_text_t *) widget;
 
-		if (!state) {
-			GFXERROR("Attempt to free text without supplying mode to free it from!\n");
-			BREAKPOINT();
-		} else
-
 		if (text->text_handle) {
-			gfxop_free_text(state, text->text_handle);
-			text->text_handle = NULL;
+			if (!state) {
+				GFXERROR("Attempt to free text without supplying mode to free it from!\n");
+				BREAKPOINT();
+			} else {
+				gfxop_free_text(state, text->text_handle);
+				text->text_handle = NULL;
+			}
 		}
 	}
 
@@ -491,8 +491,8 @@ gfxw_new_box(gfx_state_t *state, rect_t area, gfx_color_t color1, gfx_color_t co
 	widget->flags |= GFXW_FLAG_VISIBLE;
 
 	if (color1.mask & GFX_MASK_VISUAL
-	    && (state->driver->mode->palette
-		|| (!color1.alpha && !color2.alpha)))
+	    && (state && (state->driver->mode->palette))
+		|| (!color1.alpha && !color2.alpha))
 		widget->flags |= GFXW_FLAG_OPAQUE;
 
 	_gfxw_set_ops(GFXW(widget), _gfxwop_box_draw,
@@ -554,7 +554,9 @@ _gfxwop_rect_draw(gfxw_widget_t *widget, point_t pos)
 	gfxw_primitive_t *rect = (gfxw_primitive_t *) widget;
 	DRAW_ASSERT(widget, GFXW_RECT);
 
-	GFX_ASSERT(gfxop_draw_rectangle(rect->visual->gfx_state, _move_rect(rect->bounds, pos),
+	GFX_ASSERT(gfxop_draw_rectangle(rect->visual->gfx_state,
+					gfx_rect(rect->bounds.x + pos.x, rect->bounds.y + pos.y,
+						 rect->bounds.xl - 1, rect->bounds.yl - 1),
 					rect->color, rect->line_mode, rect->line_style));
 
 	return 0;
@@ -572,6 +574,8 @@ gfxw_primitive_t *
 gfxw_new_rect(rect_t rect, gfx_color_t color, gfx_line_mode_t line_mode, gfx_line_style_t line_style)
 {
 	gfxw_primitive_t *prim = _gfxw_new_primitive(rect, color, line_mode, line_style, GFXW_RECT);
+	prim->bounds.xl++;
+	prim->bounds.yl++; /* Since it is actually one pixel bigger in each direction */
 
 	_gfxw_set_ops(GFXW(prim), _gfxwop_rect_draw,
 		      _gfxwop_basic_free,
@@ -666,7 +670,7 @@ _gfxw_new_simple_view(gfx_state_t *state, point_t pos, int view, int loop, int c
 	  widget->pos.x -= width;
 
 	if (valign == ALIGN_CENTER)
-	  widget->pos.y -= height >> 1;
+          widget->pos.y -= height >> 1;
 	else if (valign == ALIGN_BOTTOM)
 	  widget->pos.y -= height;
 
@@ -684,7 +688,7 @@ _gfxwop_view_draw(gfxw_widget_t *widget, point_t pos)
 	DRAW_ASSERT(widget, GFXW_VIEW);
 
 	GFX_ASSERT(gfxop_draw_cel(view->visual->gfx_state, view->view, view->loop,
-				  view->cel, _move_point(view->bounds, pos),
+				  view->cel, gfx_point(view->pos.x + pos.x, view->pos.y + pos.y),
 				  view->color));
 
 	return 0;
@@ -852,6 +856,14 @@ gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, in
 /*------------*/
 
 static int
+_gfxwop_text_free(gfxw_widget_t *widget)
+{
+	gfxw_text_t *text = (gfxw_text_t *) widget;
+	free(text->text);
+	return _gfxwop_basic_free(widget);
+}
+
+static int
 _gfxwop_text_draw(gfxw_widget_t *widget, point_t pos)
 {
 	gfxw_text_t *text = (gfxw_text_t *) widget;
@@ -871,7 +883,7 @@ _gfxwop_text_alloc_and_draw(gfxw_widget_t *widget, point_t pos)
 	text->text_handle =
 		gfxop_new_text(widget->visual->gfx_state, text->font_nr, text->text, text->bounds.xl,
 			       text->halign, text->valign, text->color1,
-			       text->color2, text->bgcolor, text->single_line);
+			       text->color2, text->bgcolor, text->text_flags);
 
 	text->draw = _gfxwop_text_draw;
 
@@ -904,7 +916,7 @@ _gfxwop_text_equals(gfxw_widget_t *widget, gfxw_widget_t *other)
 	    || wtext->valign != otext->valign)
 		return 0;
 
-	if (wtext->single_line != otext->single_line)
+	if (wtext->text_flags != otext->text_flags)
 		return 0;
 
 	if (!(_color_equals(wtext->color1, otext->color1)
@@ -922,7 +934,7 @@ _gfxwop_text_equals(gfxw_widget_t *widget, gfxw_widget_t *other)
 gfxw_text_t *
 gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignment_t halign,
 	      gfx_alignment_t valign, gfx_color_t color1, gfx_color_t color2,
-	      gfx_color_t bgcolor, int single_line)
+	      gfx_color_t bgcolor, int text_flags)
 {
 	gfxw_text_t *widget = (gfxw_text_t *)
 		_gfxw_new_widget(sizeof(gfxw_text_t), GFXW_TEXT);
@@ -930,19 +942,23 @@ gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignme
 	widget->bounds = area;
 
 	widget->font_nr = font;
-	widget->text = text;
+	widget->text = malloc(strlen(text) + 1);
 	widget->halign = halign;
 	widget->valign = valign;
 	widget->color1 = color1;
 	widget->color2 = color2;
 	widget->bgcolor = bgcolor;
-	widget->single_line = single_line;
+	widget->text_flags = text_flags;
 	widget->text_handle = NULL;
+
+	strcpy(widget->text, text);
+
+	gfxop_get_text_params(state, font, text, area.xl, &(widget->width), &(widget->height));
 
 	widget->flags |= GFXW_FLAG_VISIBLE;
 
 	_gfxw_set_ops(GFXW(widget), _gfxwop_text_alloc_and_draw,
-		      _gfxwop_basic_free,
+		      _gfxwop_text_free,
 		      _gfxwop_basic_tag,
 		      _gfxwop_text_print,
 		      _gfxwop_basic_compare_to,
@@ -1123,8 +1139,9 @@ _gfxwop_container_free(gfxw_widget_t *widget)
 	gfxw_widget_t *seeker = container->contents;
 
 	while (seeker) {
+		gfxw_widget_t *next = seeker->next;
 		seeker->free(seeker);
-		seeker = seeker->next;
+		seeker = next;
 	}
 
 	return _gfxwop_basic_free(widget);
@@ -1196,10 +1213,19 @@ _gfxwop_container_free_contents(gfxw_container_t *container)
 	return 0;
 }
 
+static void
+_gfxw_dirtify_container(gfxw_container_t *container, gfxw_widget_t *widget)
+{
+	if (GFXW_IS_CONTAINER(widget))
+		container->add_dirty_abs(GFXWC(container), widget->bounds, 1);
+	else
+		container->add_dirty_rel(GFXWC(container), widget->bounds, 1);
+}
+
 static int
 _gfxw_container_id_equals(gfxw_container_t *container, gfxw_widget_t *widget)
 {
-	gfxw_widget_t *seeker = container->contents;
+	gfxw_widget_t **seekerp = &(container->contents);
 
 	if (GFXW_IS_PORT(widget))
 		return 0; /* Don't match ports */
@@ -1207,15 +1233,21 @@ _gfxw_container_id_equals(gfxw_container_t *container, gfxw_widget_t *widget)
 	if (widget->ID == GFXW_NO_ID)
 		return 0;
 
-	while (seeker && seeker->ID != widget->ID)
-		seeker = seeker->next;
+	while (*seekerp && (*seekerp)->ID != widget->ID)
+		seekerp = &((*seekerp)->next);
 
-	if (!seeker)
+	if (!*seekerp)
 		return 0;
 
-	if (seeker->equals(seeker, widget)) {
+	if ((*seekerp)->equals(*seekerp, widget)) {
 		widget->free(widget);
-		seeker->flags &= ~GFXW_FLAG_DIRTY;
+		(*seekerp)->flags &= ~GFXW_FLAG_DIRTY;
+		return 1;
+	} else {
+		widget->next = (*seekerp)->next;
+		(*seekerp)->free(*seekerp);
+		*seekerp = widget;
+		_gfxw_dirtify_container(container, widget);
 		return 1;
 	}
 }
@@ -1240,24 +1272,21 @@ _gfxwop_container_add(gfxw_container_t *container, gfxw_widget_t *widget)
 		return 1;
 	}
 
-	if (_gfxw_container_id_equals(container, widget))
-		return 0;
-
-	if (GFXW_IS_CONTAINER(widget))
-		container->add_dirty_abs(GFXWC(container), widget->bounds, 1);
-	else
-		container->add_dirty_rel(GFXWC(container), widget->bounds, 1);
-
-	*(container->nextpp) = widget;
-	container->nextpp = &(widget->next);
-	widget->parent = GFXWC(container);
-
 	if (GFXW_IS_VISUAL(container))
 		widget->set_visual(widget, (gfxw_visual_t *) container);
 	else
 		if (container->visual)
 			widget->set_visual(widget, container->visual);
 			
+
+	if (_gfxw_container_id_equals(container, widget))
+		return 0;
+
+	_gfxw_dirtify_container(container, widget);
+
+	*(container->nextpp) = widget;
+	container->nextpp = &(widget->next);
+	widget->parent = GFXWC(container);
 
 	return 0;
 }
@@ -1365,7 +1394,7 @@ _gfxwop_list_equals(gfxw_widget_t *widget, gfxw_widget_t *other)
 
 	while (widget && other) {
 
-		if (!wlist->equals(widget, other))
+		if (!widget->equals(widget, other))
 			return 0;
 
 		widget = widget->next;
@@ -1761,3 +1790,12 @@ gfxw_find_port(gfxw_visual_t *visual, int ID)
 }
 
 
+/*** - other functions - ***/
+
+gfxw_widget_t *
+gfxw_set_id(gfxw_widget_t *widget, int ID)
+{
+	widget->ID = ID;
+	return widget;
+
+}

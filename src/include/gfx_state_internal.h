@@ -144,7 +144,8 @@ typedef struct {
 	char *text;
 	gfx_alignment_t halign, valign;
 	gfx_color_t color1, color2, bgcolor;
-	char single_line;
+	int text_flags;
+	int width, height; /* Real text width and height */
 	gfx_text_handle_t *text_handle;
 } gfxw_text_t;
 

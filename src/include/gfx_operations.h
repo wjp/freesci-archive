@@ -547,7 +547,7 @@ gfx_text_handle_t *
 gfxop_new_text(gfx_state_t *state, int font_nr, char *text, int maxwidth,
 	       gfx_alignment_t halign, gfx_alignment_t valign,
 	       gfx_color_t color1, gfx_color_t color2, gfx_color_t bg_color,
-	       int single_line);
+	       int flags);
 /* Generates a new text handle that can be used to draw any text
 ** Parameters: (gfx_state_t *) state: The state to use
 **             (int) font_nr: Font number to use for the calculation
@@ -558,9 +558,7 @@ gfxop_new_text(gfx_state_t *state, int font_nr, char *text, int maxwidth,
 **             (gfx_color_t x gfx_color_t) color1, color2: The text's foreground colors
 **                                         (the function will dither between those two)
 **             (gfx_color_t) bg_color: The background color
-**             (int) single_line: If zero, newlines will be interpreted as such;
-**                                otherwise, everything will be in a single line with
-**                                appropriate characters
+**             (int) flags: ORred GFXR_FONT_FLAGs
 ** Returns   : (gfx_text_handle_t *) A newly allocated gfx_text_handle_t, or
 **             NULL if font_nr was invalid
 ** The control and priority values for the text will be extracted from color1.

@@ -790,10 +790,10 @@ ggi_get_event(gfx_driver_t *drv)
 				case GIIK_AltR:
 				case GIIK_MetaL:
 				case GIIK_MetaR: buckybits |= SCI_EVM_ALT; break;
-				case GIIK_CapsLock: buckybits |= SCI_EVM_CAPSLOCK; break;
-				case GIIK_NumLock: buckybits^=SCI_EVM_NUMLOCK; break;
-				case GIIK_ScrollLock: buckybits^=SCI_EVM_SCRLOCK; break;
-				case GIIK_Insert: buckybits^=SCI_EVM_INSERT; break;
+				case GIIK_CapsLock: buckybits ^= SCI_EVM_CAPSLOCK; break;
+				case GIIK_NumLock: buckybits ^= SCI_EVM_NUMLOCK; break;
+				case GIIK_ScrollLock: buckybits ^= SCI_EVM_SCRLOCK; break;
+				case GIIK_Insert: buckybits ^= SCI_EVM_INSERT; break;
 				case GIIK_PEnter:
 				case GIIK_Enter: retval.data='\r'; break;
 				case GIIUC_Tab: retval.data='\t'; break;

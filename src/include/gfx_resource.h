@@ -156,11 +156,12 @@ gfxr_free_view(gfx_driver_t *driver, gfxr_view_t *view);
 /* SCI0, SCI01 and SCI1 all use the same font format. */
 
 /* SQ3 uses a somewhat different scheme for calculating text sizes: it counts
-** whitespace while calculating the text size.
-*/
-#define GFXR_FONT_FLAG_COUNT_WHITESPACE 1
+** whitespace while calculating the text size.  */
+#define GFXR_FONT_FLAG_COUNT_WHITESPACE (1<<0)
 /* Don't give newline characters special semantics */
-#define GFXR_FONT_FLAG_NO_NEWLINES 2
+#define GFXR_FONT_FLAG_NO_NEWLINES (1<<1)
+/* Interpret CR LF sequences as a single newline, rather than two of them */
+#define GFXR_FONT_FLAG_EAT_TRAILING_LF (1<<2)
 
 
 gfx_bitmap_font_t *

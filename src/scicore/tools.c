@@ -30,6 +30,7 @@
 #include <kdebug.h>
 #include <sys/time.h>
 
+
 #ifdef HAVE_MEMFROB
 void *memfrob(void *s, size_t n);
 #endif

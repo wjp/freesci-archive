@@ -66,7 +66,7 @@ sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text)
 						 s->ega_colors[0], GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL);
 		gfxw_text_t *textw = gfxw_new_text(state, gfx_rect(0, 0, status_bar->bounds.xl, status_bar->bounds.yl),
 						  status_bar->font_nr, text, ALIGN_LEFT, ALIGN_CENTER,
-						  s->ega_colors[0], s->ega_colors[0], s->ega_colors[0xf], 1);
+						  s->ega_colors[0], s->ega_colors[0], s->ega_colors[0xf], GFXR_FONT_FLAG_NO_NEWLINES);
 
 
 		list->add((gfxw_container_t *) list, (gfxw_widget_t *) bgbox);
@@ -82,10 +82,6 @@ sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text)
 
 	list->add(GFXWC(status_bar), GFXW(list));
 
-	SCI_MEMTEST;
-	sciprintf("vv---------------\n");
-	status_bar->print(GFXW(status_bar), 0);
-	sciprintf("^^---------------\n");
 	status_bar->draw(GFXW(status_bar), gfxw_point_zero);
 	gfxop_update(state);
 }
@@ -140,7 +136,7 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 		decorations->add((gfxw_container_t *) decorations, (gfxw_widget_t *)
 				 gfxw_new_text(state, title_rect, title_font, title,
 					       ALIGN_CENTER, ALIGN_CENTER, title_color, title_color,
-					       title_bgcolor, 1));
+					       title_bgcolor, GFXR_FONT_FLAG_NO_NEWLINES));
 	}
 
 	if (!(flags & WINDOW_FLAG_NOFRAME)) {
@@ -198,27 +194,16 @@ _move_rect(rect_t rect, point_t point)
 
 
 gfxw_list_t *
-sciw_new_button_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, char inverse)
+_sciw_add_text_to_list(gfxw_list_t *list, gfxw_port_t *port, rect_t zone, char *text,
+		       int font, gfx_alignment_t align, char framed, char inverse, int flags,
+		       char gray_text)
 {
-	gfxw_list_t *list = gfxw_new_list(_move_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
-	return list;
-}
-
-
-gfxw_list_t *
-sciw_new_text_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font,
-		      gfx_alignment_t align, char framed, char inverse)
-{
-	gfxw_list_t *list = gfxw_new_list(_move_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
 	gfx_color_t *color1, *color2, *bgcolor;
-
-	zone.x = 0;
-	zone.y = 0;
 
 	if (inverse) {
 		color1 = color2 = &(port->bgcolor);
 		bgcolor = &(port->color);
-	} else if (port->gray_text) {
+	} else if (gray_text) {
 		bgcolor = color1 = &(port->bgcolor);
 		color2 = &(port->color);
 	} else {
@@ -228,13 +213,56 @@ sciw_new_text_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int fo
 
 	list->add(GFXWC(list), GFXW(gfxw_new_text(port->visual->gfx_state, zone,
 						  font, text, align, ALIGN_TOP,
-						  *color1, *color2, *bgcolor, 0)));
+						  *color1, *color2, *bgcolor, flags)));
 	if (framed)
 		list->add(GFXWC(list),
 			  GFXW(gfxw_new_rect(zone, *color2, GFX_LINE_MODE_FINE,
 					     GFX_LINE_STYLE_STIPPLED)));
-	
 	return list;
+}
+
+gfxw_list_t *
+sciw_new_button_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, char selected, char inverse, char grayed_out)
+{
+        gfx_color_t *frame_col = (inverse)? &(port->bgcolor) : &(port->color);
+	gfxw_list_t *list = gfxw_new_list(_move_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
+
+	gfxw_set_id(GFXW(list), ID);
+
+	zone.x = 0;
+	zone.y = 0;
+
+        if (inverse)
+                list->add(GFXWC(list), GFXW(gfxw_new_box(NULL, gfx_rect(zone.x + 1, zone.y + 1, zone.xl - 2, zone.yl - 2),
+							 port->color, port->color, GFX_BOX_SHADE_FLAT)));
+
+        list = _sciw_add_text_to_list(list, port, gfx_rect(zone.x, zone.y + 2, zone.xl, zone.yl),
+				      text, font, ALIGN_CENTER, 0, inverse, GFXR_FONT_FLAG_EAT_TRAILING_LF, grayed_out);
+
+        list->add(GFXWC(list),
+                  GFXW(gfxw_new_rect(zone, *frame_col, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
+
+        if (selected)
+                list->add(GFXWC(list),
+                          GFXW(gfxw_new_rect(gfx_rect(zone.x + 1, zone.y + 1, zone.xl - 2, zone.yl - 2),
+                                             *frame_col, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
+
+	return list;
+}
+
+
+gfxw_list_t *
+sciw_new_text_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font,
+		      gfx_alignment_t align, char framed, char inverse)
+{
+	gfxw_list_t *list = gfxw_new_list(_move_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
+
+	gfxw_set_id(GFXW(list), ID);
+
+	zone.x = 0;
+	zone.y = 0;
+
+	return _sciw_add_text_to_list(list, port, zone, text, font, align, framed, inverse, 0, port->gray_text);
 }
 
 
@@ -243,6 +271,56 @@ sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int fo
 		      char inverse)
 {
 	gfxw_list_t *list = gfxw_new_list(_move_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
+	gfxw_text_t *text_handle;
+	char *textdup = malloc(strlen(text) + 1);
+
+	gfxw_set_id(GFXW(list), ID);
+	zone.x = 0;
+	zone.y = 1;
+
+	strncpy(textdup, text, cursor);
+
+	if (cursor <= strlen(text))
+		textdup[cursor] = 0; /* terminate */
+
+	if (cursor > 0) {
+		text_handle = gfxw_new_text(port->visual->gfx_state, zone,
+					    font, textdup, ALIGN_LEFT, ALIGN_TOP,
+					    port->color, port->color, port->bgcolor, GFXR_FONT_FLAG_NO_NEWLINES);
+
+		list->add(GFXWC(list), GFXW(text_handle));
+		zone.x += text_handle->width;
+	}
+
+	if (cursor < strlen(text)) {
+		textdup[0] = text[cursor];
+		textdup[1] = 0;
+		text_handle =  gfxw_new_text(port->visual->gfx_state, zone,
+					     font, textdup, ALIGN_LEFT, ALIGN_TOP,
+					     port->bgcolor, port->bgcolor, port->color, GFXR_FONT_FLAG_NO_NEWLINES);
+		list->add(GFXWC(list), GFXW(text_handle));
+		zone.x += text_handle->width;
+	};
+
+	if (cursor+1 < strlen(text)) {
+		text_handle = gfxw_new_text(port->visual->gfx_state, zone,
+					    font, text + cursor + 1, ALIGN_LEFT, ALIGN_TOP,
+					    port->color, port->color, port->bgcolor, GFXR_FONT_FLAG_NO_NEWLINES);
+		list->add(GFXWC(list), GFXW(text_handle));
+		zone.x += text_handle->width;
+	};
+
+	if (cursor == strlen(text))
+		list->add(GFXWC(list), GFXW(gfxw_new_line(gfx_rect(zone.x + 1, zone.y, 0, zone.yl - 1),
+							  port->color, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL)));
+
+
+	zone.x = zone.y = 0;
+
+        list->add(GFXWC(list),
+                  GFXW(gfxw_new_rect(zone, port->color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
+
+	free(textdup);
 	return list;
 }
 
@@ -252,6 +330,27 @@ sciw_new_icon_control(gfxw_port_t *port, int ID, rect_t zone, int view, int loop
 		      char frame, char inverse)
 {
 	gfxw_list_t *list = gfxw_new_list(_move_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
+	gfxw_widget_t *icon;
+	gfxw_set_id(GFXW(list), ID);
+
+	if (!port->visual) {
+		GFXERROR("Attempting to create icon control for virtual port!\n");
+		return NULL;
+	}
+
+	zone.x = 0;
+	zone.y = 0;
+
+	icon = GFXW(gfxw_new_view(port->visual->gfx_state, gfx_point(zone.x, zone.y), view, loop, cel, -1, -1,
+				  ALIGN_LEFT, ALIGN_TOP, GFXW_VIEW_FLAG_DONT_MODIFY_OFFSET));
+
+	if (!icon) {
+		GFXERROR("Attempt to create icon control with cel %d/%d/%d (invalid)\n", view, loop, cel);
+		return NULL;
+	}
+
+	list->add(GFXWC(list), icon);
+
 	return list;
 }
 
@@ -261,6 +360,18 @@ sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char 
 		      int entries_nr, int list_top, int selection, char inverse)
 {
 	gfxw_list_t *list = gfxw_new_list(_move_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
+	gfxw_set_id(GFXW(list), ID);
+
+	zone.x = 0;
+	zone.y = 0;
+
+        list->add(GFXWC(list),
+                  GFXW(gfxw_new_rect(zone, port->color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
+
+        list->add(GFXWC(list),
+                  GFXW(gfxw_new_rect(gfx_rect(zone.x, zone.y + 10, zone.xl, zone.yl - 20),
+				     port->color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
+
 	return list;
 }
 

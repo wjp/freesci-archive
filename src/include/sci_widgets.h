@@ -50,8 +50,10 @@
 /* Used in kgraphics to flag text surrounded by a dithered frame */
 #define CONTROL_STATE_DITHER_FRAMED 0x1000
 
+/* Used by the interpreter to flag buttons that are grayed out */
+#define CONTROL_STATE_GRAY 0x0004
 /* Used by the interpreter to flag some widgets to determine whether they should be surrounded by a frame */
-#define CONTROL_STATE_FRAMED 0x0002
+#define CONTROL_STATE_FRAMED 0x0008
 
 
 void
@@ -82,7 +84,7 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 */
 
 gfxw_list_t *
-sciw_new_button_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, char inverse);
+sciw_new_button_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, char selected, char inverse, char gray);
 /* Creates a new button control list
 ** Parameters: (gfxw_port_t *) port: The port containing the color values to use for the
 **                                   button (the button is /not/ appended to the port there)
@@ -90,7 +92,9 @@ sciw_new_button_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int 
 **             (rect_t) zone: The area occupied by the button
 **             (char *) text: The text to write into the button
 **             (int) font: The font to use for the button
+**             (char) selected: Whether the button should be marked as being selected by the keyboard focus
 **             (char) inverse: Whether to inverse the color scheme
+**             (char) gray: Whether the button should be grayed out
 ** Returns   : (gfxw_list_t *) The button
 */
 

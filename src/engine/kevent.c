@@ -32,93 +32,92 @@ int stop_on_event;
 void
 kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int mask = UPARAM(0);
-  heap_ptr obj = UPARAM(1);
-  sci_event_t e;
-  int oldx, oldy;
-  CHECK_THIS_KERNEL_FUNCTION;
+	int mask = UPARAM(0);
+	heap_ptr obj = UPARAM(1);
+	sci_event_t e;
+	int oldx, oldy;
+	CHECK_THIS_KERNEL_FUNCTION;
   
-  /*If there's a simkey pending, and the game wants a keyboard event, use the
-   *simkey instead of a normal event*/
-  if (_kdebug_cheap_event_hack && (mask & SCI_EVT_KEYBOARD)) {
-    PUT_SELECTOR(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
-    s->acc=1;
-    PUT_SELECTOR(obj, message, _kdebug_cheap_event_hack);
-    PUT_SELECTOR(obj, modifiers, SCI_EVM_NUMLOCK); /*Numlock on*/
-    PUT_SELECTOR(obj, x, s->gfx_state->pointer_pos.x);
-    PUT_SELECTOR(obj, y, s->gfx_state->pointer_pos.y);
-    _kdebug_cheap_event_hack = 0;
-    return;
-  }
-  
-  oldx=s->gfx_state->pointer_pos.x;
-  oldy=s->gfx_state->pointer_pos.y;
-  e = gfxop_get_event(s->gfx_state);
-
-  s->parser_event = 0; /* Invalidate parser event */
-
-  PUT_SELECTOR(obj, x, s->gfx_state->pointer_pos.x);
-  PUT_SELECTOR(obj, y, s->gfx_state->pointer_pos.y);
-  /*  gfxop_set_pointer_position(s->gfx_state, gfx_point(s->gfx_state->pointer_pos.x, s->gfx_state->pointer_pos.y)); */
-  
-  switch(e.type)
-    {
-    case SCI_EVT_KEYBOARD:
-      {
-	if ((e.buckybits & SCI_EVM_LSHIFT) && (e.buckybits & SCI_EVM_RSHIFT)
-	    && (e.data == '_')) {
-
-	  sciprintf("Debug mode activated\n");
-
-	  script_debug_flag = 1; /* Enter debug mode */
-	  _debug_seeking = _debug_step_running = 0;
-	  s->onscreen_console = 0;
-
-	} else
-
-	  if ((e.buckybits & SCI_EVM_CTRL) && (e.data == '`')) {
-
-	    script_debug_flag = 1; /* Enter debug mode */
-	    _debug_seeking = _debug_step_running = 0;
-	    s->onscreen_console = 1;
-
-	} else {
-
-	  PUT_SELECTOR(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
-	  s->acc=1;
-	  PUT_SELECTOR(obj, message, e.data);
-	  PUT_SELECTOR(obj, modifiers, e.buckybits);
+	/*If there's a simkey pending, and the game wants a keyboard event, use the
+	 *simkey instead of a normal event*/
+	if (_kdebug_cheap_event_hack && (mask & SCI_EVT_KEYBOARD)) {
+		PUT_SELECTOR(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
+		s->acc=1;
+		PUT_SELECTOR(obj, message, _kdebug_cheap_event_hack);
+		PUT_SELECTOR(obj, modifiers, SCI_EVM_NUMLOCK); /*Numlock on*/
+		PUT_SELECTOR(obj, x, s->gfx_state->pointer_pos.x);
+		PUT_SELECTOR(obj, y, s->gfx_state->pointer_pos.y);
+		_kdebug_cheap_event_hack = 0;
+		return;
 	}
-      } break;
-    case SCI_EVT_MOUSE_RELEASE:
-    case SCI_EVT_MOUSE_PRESS:
-      {
-	int extra_bits=0;
-	if(mask&e.type)
-          {
-            switch(e.data)
-	      {
-	      case 2: extra_bits=SCI_EVM_LSHIFT|SCI_EVM_RSHIFT; break;
-	      case 3: extra_bits=SCI_EVM_CTRL;
-	      }
-	    PUT_SELECTOR(obj, type, e.type);
-	    PUT_SELECTOR(obj, message, 1);
-	    PUT_SELECTOR(obj, modifiers, e.buckybits|extra_bits);
-	    s->acc=1;
-	  }
-	return;
-      } break;
-    default:
-      {
-	s->acc = 0; /* Unknown or no event */
-      }
-    }
+  
+	oldx=s->gfx_state->pointer_pos.x;
+	oldy=s->gfx_state->pointer_pos.y;
+	e = gfxop_get_event(s->gfx_state);
+
+	s->parser_event = 0; /* Invalidate parser event */
+
+	PUT_SELECTOR(obj, x, s->gfx_state->pointer_pos.x);
+	PUT_SELECTOR(obj, y, s->gfx_state->pointer_pos.y);
+	/*  gfxop_set_pointer_position(s->gfx_state, gfx_point(s->gfx_state->pointer_pos.x, s->gfx_state->pointer_pos.y)); */
+  
+	switch(e.type)
+		{
+		case SCI_EVT_KEYBOARD: {
+			if ((e.buckybits & SCI_EVM_LSHIFT) && (e.buckybits & SCI_EVM_RSHIFT)
+			    && (e.data == '_')) {
+
+				sciprintf("Debug mode activated\n");
+
+				script_debug_flag = 1; /* Enter debug mode */
+				_debug_seeking = _debug_step_running = 0;
+				s->onscreen_console = 0;
+
+			} else if ((e.buckybits & SCI_EVM_CTRL) && (e.data == '`')) {
+
+				script_debug_flag = 1; /* Enter debug mode */
+				_debug_seeking = _debug_step_running = 0;
+				s->onscreen_console = 1;
+
+			} else if ((e.buckybits & SCI_EVM_CTRL) && (e.data == '1')) {
+
+				if (s->visual)
+					s->visual->print(GFXW(s->visual), 0);
+
+			} else {
+
+				PUT_SELECTOR(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
+				s->acc=1;
+				PUT_SELECTOR(obj, message, e.data);
+				PUT_SELECTOR(obj, modifiers, e.buckybits);
+			}
+		} break;
+		case SCI_EVT_MOUSE_RELEASE:
+		case SCI_EVT_MOUSE_PRESS: {
+			int extra_bits=0;
+			if(mask&e.type)
+				{
+					switch(e.data) {
+					case 2: extra_bits=SCI_EVM_LSHIFT|SCI_EVM_RSHIFT; break;
+					case 3: extra_bits=SCI_EVM_CTRL;
+					}
+
+					PUT_SELECTOR(obj, type, e.type);
+					PUT_SELECTOR(obj, message, 1);
+					PUT_SELECTOR(obj, modifiers, e.buckybits|extra_bits);
+					s->acc=1;
+				}
+			return;
+		} break;
+		default: {
+			s->acc = 0; /* Unknown or no event */
+		}
+		}
     
-  if ((s->acc)&&(stop_on_event))
-  {
-    stop_on_event = 0;
-    script_debug_flag = 1;
-  }  
+	if ((s->acc)&&(stop_on_event)) {
+		stop_on_event = 0;
+		script_debug_flag = 1;
+	}  
 }
 
 void

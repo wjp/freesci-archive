@@ -1,3 +1,25 @@
+2000-12-02  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/widgets.c (_gfxwop_rect_draw): Fixed OB1 bug in rect
+	drawing (OB1x1, actually ;-)
+
+	* src/gfx/drivers/ggi_driver.c (ggi_get_event): Fixed long-standing
+	caps lock bug in the gii input driver
+
+	* src/gfx/sci_widgets.c (sciw_new_edit_control): Added support for
+	edit controls (and a few other controls)
+
+2000-12-01  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/operations.c (gfxop_draw_rectangle): Fixed minor display
+	problem
+
+	* src/gfx/sci_widgets.c (sciw_new_button_control): Added button
+	controls
+
+	* src/gfx/widgets.c (_gfxwop_view_draw): Views are now drawn to the
+	appropriate position
+
 2000-11-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* doc/sci.sgml: Added Petr's stuff, added a chapter about resource

@@ -165,8 +165,8 @@ _reset_graphics_input(state_t *s)
   s->picture_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
 
   s->visual->add(GFXWC(s->visual), GFXW(s->wm_port));
-  s->visual->add(GFXWC(s->visual), GFXW(s->titlebar_port));
   s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));
+  s->visual->add(GFXWC(s->visual), GFXW(s->titlebar_port));
   /* Add ports to visual */
 
   s->visual->print(GFXW(s->visual), 0);
