@@ -1,32 +1,28 @@
-/* GhettoPlay: an Ogg Vorbis browser and playback util
-   (c)2000-2002 Dan Potter
-   (c)2001 Thorsten Titze
-
-   Distributed as an example for libdream 0.7
-   Ported up to libdream 0.95
-   Ported up to KOS 1.1.x
-   Converted to OggVorbis
-
-   Historical note: this is _really_ 2.0. There was an internally
-   created Ghetto Play that I made to browse and test various S3Ms
-   with early versions of the player. It _really_ deserved the name
-   GHETTO Play =). This one, like Ghetto Pong, is a 2.0 that is more
-   like "Pimpin' Play" ;-). However, sticking with tradition...   
-   
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the KOS License.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   KOS License (README.KOS) for more details.
-
-   You should have received a copy of the KOS License along with this
-   program; if not, please visit Cryptic Allusion DCDev at:
-
-     http://dcdev.allusion.net/
-
-*/
+/*
+ * Copyright 2000, 2001, 2002
+ *         Dan Potter, Thorsten Titze. All rights reserved.
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of Cryptic Allusion nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHORS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
 
 /* Modified by Walter van Niftrik <w.f.b.w.v.niftrik@stud.tue.nl> */
 
@@ -37,11 +33,15 @@
 #include <config.h>
 #endif
 
-/* Render the mouse if they have one attached */
 static int mx = 320, my = 240;
 static int lmx[5] = {320, 320, 320, 320, 320},
 	lmy[5] = {240, 240, 240, 240, 240};
-void mouse_render() {
+static void mouse_render()
+/* Renders the mouse pointer.
+** Parameters: void.
+** Returns   : void.
+*/
+{
 	int i;
 	int atall = 0;
 	
@@ -74,10 +74,9 @@ void mouse_render() {
 	}
 }
 
-/* This function is called from main()  */
 void choose_game() {
 	int fexit = 0;
-
+	
 	/* Do basic setup */
 	pvr_init_defaults();
 
@@ -86,6 +85,10 @@ void choose_game() {
 
 	/* Setup background display */
 	bkg_setup();
+
+	init_menu_state();
+
+	load_option_list();
 
 	while (!fexit) {
 		pvr_wait_ready();
@@ -111,15 +114,10 @@ void choose_game() {
 
 		/* Game menu */
 		fexit = game_menu_render();
-		
-		/* File Information */
-		draw_poly_box(20.0f, 440.0f-96.0f+4, 640.0f-20.0f, 440.0f, 90.0f, 
-			0.3f, 0.2f, 0.5f, 0.0f, 0.5f, 0.1f, 0.8f, 0.2f);
-		
-		draw_poly_strf(30.0f,440.0f-96.0f+6+10.0f,100.0f,1.0f,1.0f,1.0f,1.0f,"D-PAD : Select game              L : Page up");
-		draw_poly_strf(30.0f,440.0f-96.0f+6+24.0f+10.0f,100.0f,1.0f,1.0f,1.0f,1.0f,"    A : Start game               R : Page down");
-		draw_poly_strf(30.0f,440.0f-96.0f+6+48.0f+10.0f,100.0f,1.0f,1.0f,1.0f,1.0f,"    Y : Rescan cd");
 
+		/* Button info */
+		render_button_info();
+		
 		/* Render the mouse if they move it.. it doesn't do anything
 		   but it's cool looking ^_^ */
 		mouse_render();
@@ -131,6 +129,8 @@ void choose_game() {
 		pvr_scene_finish();
 		
 	}
+	
+	dc_write_config_file("/ram/config");
 	
 	return;
 }

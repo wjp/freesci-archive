@@ -9,14 +9,11 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/dc/bsearch.o \
 	$(FSCI_BASE)/src/dc/dc.o \
 	$(FSCI_BASE)/src/dc/dc_save.o \
-	$(FSCI_BASE)/src/dc/fs_iso9660.o \
 	$(FSCI_BASE)/src/dc/gamemenu.o \
 	$(FSCI_BASE)/src/dc/selectgame.o \
 	$(FSCI_BASE)/src/dc/snd_stream.o \
 	$(FSCI_BASE)/src/dc/snprintf.o \
-	$(FSCI_BASE)/src/dc/stdio.o \
 	$(FSCI_BASE)/src/dc/texture.o \
-	$(FSCI_BASE)/src/dc/vmu_pkg.o \
 	$(FSCI_BASE)/src/engine/game.o \
 	$(FSCI_BASE)/src/engine/grammar.o \
 	$(FSCI_BASE)/src/engine/kernel.o \
@@ -52,6 +49,7 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/gfx/resource/sci_font.o \
 	$(FSCI_BASE)/src/gfx/resource/sci_pal_1.o \
 	$(FSCI_BASE)/src/gfx/resource/sci_pic_0.o \
+	$(FSCI_BASE)/src/gfx/resource/sci_pic_1.o \
 	$(FSCI_BASE)/src/gfx/resource/sci_resmgr.o \
 	$(FSCI_BASE)/src/gfx/resource/sci_view_0.o \
 	$(FSCI_BASE)/src/gfx/resource/sci_view_1.o \
@@ -108,3 +106,6 @@ $(ELF_TARGET): $(OBJS)
 
 $(BIN_TARGET): $(ELF_TARGET)
 	$(KOS_OBJCOPY) -O binary $(ELF_TARGET) $(BIN_TARGET)
+
+run: $(BIN_TARGET)
+	$(KOS_LOADER) $(BIN_TARGET)

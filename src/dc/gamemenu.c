@@ -1,66 +1,241 @@
-/* GhettoPlay: an S3M browser and playback util
-   (c)2000 Dan Potter
-
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the KOS License.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   KOS License (README.KOS) for more details.
-
-   You should have received a copy of the KOS License along with this
-   program; if not, please visit Cryptic Allusion DCDev at:
-
-     http://dcdev.allusion.net/
-
-*/
+/*
+ * Copyright 2000, 2001, 2002
+ *         Dan Potter. All rights reserved.
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of Cryptic Allusion nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHORS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
 
 /* Modified by Walter van Niftrik <w.f.b.w.v.niftrik@stud.tue.nl> */
 
 #include <string.h>
+#include <resource.h>
+#include <sci_memory.h>
 #include "gp.h"
+#include "options.h"
+#include "dc.h"
 
-/* Takes care of the game menu */
-
-
-/* Song menu choices */
+/* Game entries */
 typedef struct {
-	char	fn[16];
-	char	*dir;
-	int	size;
-} entry;
-typedef struct {
-	char	fn[64];
-	int	size;
-} lst_entry;
-char curdir[64] = "/";
-char playdir[64] = "/";
-char loadme[256] = "";
-char workstring[256] ="";
+	char	fn[256];	/* Game name */
+	char	dir[256];	/* Full directory path */
+} game;
 
-static entry entries[200];
-static int num_entries = 0, load_queued = 0;
-static int selected = 0, top = 0;
+/* Used to count the number of queued scenes. This is done to make sure that the
+** image on the screen is current before calling a function which will block
+** further scene rendering for a significant amount of time.
+*/
+static int load_queued = 0;
+/* Holds pointers to text strings describing the selected value of each option */
+static char* options_str[NUM_DC_OPTIONS];
+/* The index of the currently selected value of each option */
+static char options_nr[NUM_DC_OPTIONS];
+/* Array of games that were found */
+static game games[200];
+/* Number of games that were found */
+static int num_games = 0;
+/* games array index of the currently selected game */
+static int sel_game = 0;
+/* games array index of the game which is currently displayed first on the
+** screen.
+*/
+static int top_game = 0;
+/* Number of options */
+static int num_options;
+/* options_nr array index of the currently selected option */
+static int sel_option = 0;
+/* options_nr array index of the game which is currently displayed first on the
+** screen.
+*/
+static int top_option = 0;
 
+/* Pointers to properties of the currently displayed data, either games list or
+** options list.
+*/
+static int *num_entries = &num_games;
+static int *selected = &sel_game;
+static int *top = &top_game;
+
+/* Counts frames. Used for delay purposes in the controller code */
 static int framecnt = 0;
+/* Controls the color changes of the highlighting bar */
 static float throb = 0.2f, dthrob = 0.01f;
 
-static int menu_state = 0;
+/* Current state of menu:
+** 0: Drive lid open.
+** 1: Searching the CD for SCI games
+** 2: Displaying game list
+** 3: Running selected game
+** 4: Displaying option list
+** 5: Saving options to VMU
+** 6: Waiting for CD lid to open
+** 7: Waiting for Dreamcast to finish scanning the disc
+** 8: Drive empty.
+**
+** State changes: 0->{7}, 1->{2,6}, 2->{0,3,4}, 4->{2,5}, 5->{2}, 6->{0}
+**                7->{0,1,8}, 8->{0}
+*/
+static int menu_state;
 
-static void load_game_list(char *dir) {
+/* Flag which indicated whether the options have been altered */
+static int save_flag = 0;
+
+void init_menu_state()
+{
+	int status;
+	
+	cdrom_get_status(&status, NULL);
+	
+	if ((status == CD_STATUS_PAUSED) || (status == CD_STATUS_STANDBY))
+		menu_state = 1;
+	else
+		menu_state = 0;
+}
+
+static int load_options(char *infname, char *options)
+/* Loads the options from an option file and stores them in an array.
+** Parameters: (char *) infname: Full path and filename of the option file.
+**             (char *) options: Pointer to the option array.
+** Returns   : 0 on success, -1 on error.
+*/
+{
+	file_t inf;
+	uint8 *data;
+	vmu_pkg_t pkg;
+	int j;
+	if (!(inf = fs_open(infname, O_RDONLY))) {
+		sciprintf("%s, L%d: fs_open(\"%s\", O_RDONLY) failed!\n", __FILE__, __LINE__, infname);
+		return -1;
+	}
+	if (!(data = fs_mmap(inf))) {
+		sciprintf("%s, L%d: fs_mmap() failed!\n", __FILE__, __LINE__);
+		fs_close(inf);
+		return -1;
+	}
+	if (vmu_pkg_parse(data, &pkg) == -1) {
+		sciprintf("%s, L%d: vmu_pkg_parse() failed!\n", __FILE__, __LINE__);
+		sci_free(data);
+		fs_close(inf);
+		return -1;
+	}
+	for (j = 0; (j < NUM_DC_OPTIONS) && (j < pkg.data_len); j++)
+		options[j] = pkg.data[j];
+	
+	fs_close(inf);
+	return 0;
+}
+
+static int save_options(char *outfile, char *options)
+/* Saves the options from an array to an option file.
+** Parameters: (char *) outfname: Full path and filename of the option file.
+**             (char *) options: Pointer to the option array.
+** Returns   : 0 on success, -1 on error.
+*/
+{
+	file_t outf;
+	uint8 *pkg_out;
+	vmu_pkg_t pkg;
+	int pkg_size;
+	
+	strcpy(pkg.desc_short, "FreeSCI");
+	strcpy(pkg.desc_long, "Configuration");
+	strcpy(pkg.app_id, "FreeSCI");
+	pkg.icon_cnt = 0;
+	pkg.icon_anim_speed = 0;
+	pkg.eyecatch_type = VMUPKG_EC_NONE;
+	pkg.data = options_nr;
+	pkg.data_len = NUM_DC_OPTIONS;
+	if (vmu_pkg_build(&pkg, &pkg_out, &pkg_size) < 0) {
+		sciprintf("%s, L%d: vmu_pkg_build() failed!\n", __FILE__, __LINE__);
+		return -1;
+	}
+	if (!(outf = fs_open(outfile, O_WRONLY | O_TRUNC))) {
+		sciprintf("%s, L%d: fs_open(\"%s\", O_WRONLY | O_TRUNC) failed!\n", __FILE__, __LINE__, outfile);
+		return -1;
+	}
+	if (fs_write(outf, pkg_out, pkg_size) < pkg_size) {
+		sciprintf("%s, L%d: fs_write() failed!\n", __FILE__, __LINE__);
+		fs_close(outf);
+		return -1;
+	}
+	fs_close(outf);
+	return 0;
+}
+
+void load_option_list() {
+	int i;
+	char *vmu;
+                         
+	/* Load defaults */
+	for (i = 0; i < NUM_DC_OPTIONS; i++)
+		options_nr[i] = dc_options[i].def;
+
+	/* Overwrite with max. NUM_DC_OPTIONS from save file */
+	if ((vmu = dc_get_first_vmu())) {
+		char *fn = sci_malloc(strlen(vmu) + 9);
+		strcpy(fn, vmu);
+		strcat(fn, "/freesci");
+		if (load_options(fn, &options_nr[0]))
+			sciprintf("%s, L%d: Loading options from VMU failed!\n", __FILE__, __LINE__);
+		sci_free(fn);
+		sci_free(vmu);
+	}
+	else sciprintf("%s, L%d: No VMU found!\n", __FILE__, __LINE__);
+
+	/* Calculate strings */
+	for (i = 0; i < NUM_DC_OPTIONS; i++) {
+		int j;
+		options_str[i] = dc_options[i].values;
+		for (j = 0; (j < options_nr[i]) && (*options_str[i] != '\0')
+		  ; j++)
+			options_str[i] += strlen(options_str[i]) + 1;
+		if (*options_str[i] == '\0') {
+			options_nr[i] = dc_options[i].def;
+			options_str[i] = dc_options[i].values;
+			for (j = 0; j < options_nr[i]; j++)
+				options_str[i] += strlen(options_str[i]) + 1;
+		}
+	}
+
+	num_options = NUM_DC_OPTIONS;
+}
+
+static void load_game_list(char *dir)
+/* Scans a directory and it's subdirectories for SCI games and stores the name
+** and directory of each game.
+** Parameters: (char *) dir: Path of the directory tree to scan.
+** Returns   : void.
+*/
+{
 	file_t d;
 
 	d = fs_open(dir, O_RDONLY | O_DIR);
 	if (!d) return;
 	{
 		dirent_t *de;
-		while ((de = fs_readdir(d)) && num_entries < 200) {
+		while ((de = fs_readdir(d)) && num_games < 200) {
 			if (!stricmp(de->name, "resource.map")) {
-				strncpy(entries[num_entries].fn, dir, 255);
-				entries[num_entries].dir = strdup(dir);
-				entries[num_entries].size = 0;
-				num_entries++;
+				strncpy(games[num_games].fn, dir, 256);
+				strncpy(games[num_games].dir, dir, 256);
+				num_games++;
 			}
 			else if (de->size < 0) {
 				char *new_dir;
@@ -76,31 +251,69 @@ static void load_game_list(char *dir) {
 	fs_close(d);
 }
 
-/* Draws the game listing */
-static void draw_listing() {
+static void draw_options()
+/* Draws the options and their current values on the screen.
+** Parameters: void.
+** Returns   : void.
+*/
+{
 	float y = 92.0f;
 	int i, esel;
 
-	/* Draw all the game titles */	
-	for (i=0; i<10 && (top+i)<num_entries; i++) {
+	draw_poly_strf_ctr(y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f, "Options");
+
+	y += 2*24.0f;
+
+	/* Draw all the options */	
+	for (i=0; i<8 && (top_option+i)<NUM_DC_OPTIONS; i++) {
 		draw_poly_strf(32.0f, y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-			entries[top+i].fn);
+		  "%-20s %s", dc_options[top_option+i].name,
+		  options_str[top_option+i]);
 		y += 24.0f;
 	}
 	
-	if (menu_state == 2) {
 	/* Put a highlight bar under one of them */
-	esel = (selected - top);
-	draw_poly_box(31.0f, 92.0f+esel*24.0f - 1.0f,
-		609.0f, 92.0f+esel*24.0f + 25.0f, 95.0f,
+	esel = (sel_option - top_option);
+	draw_poly_box(31.0f, 92.0f+2*24.0f+esel*24.0f - 1.0f,
+		609.0f, 92.0f+2*24.0f+esel*24.0f + 25.0f, 95.0f,
 		throb, throb, 0.2f, 0.2f, throb, throb, 0.2f, 0.2f);
-	}
 }
 
-/* Handle controller input */
-static uint8 mcont = 0;
-void check_controller() {
-	static int up_moved = 0, down_moved = 0, a_pressed = 0, y_pressed = 0;
+static void draw_listing()
+/* Draws the game list on the screen.
+** Parameters: void.
+** Returns   : void.
+*/
+{
+	float y = 92.0f;
+	int i, esel;
+
+	draw_poly_strf_ctr(y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f, "Games");
+
+	y += 2*24.0f;
+
+	/* Draw all the game titles */	
+	for (i=0; i<8 && (top_game+i)<num_games; i++) {
+		draw_poly_strf(32.0f, y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			games[top_game+i].fn);
+		y += 24.0f;
+	}
+	
+	/* Put a highlight bar under one of them */
+	esel = (sel_game - top_game);
+	draw_poly_box(31.0f, 92.0f+2*24.0f+esel*24.0f - 1.0f,
+		609.0f, 92.0f+2*24.0f+esel*24.0f + 25.0f, 95.0f,
+		throb, throb, 0.2f, 0.2f, throb, throb, 0.2f, 0.2f);
+}
+
+static void check_controller()
+/* Checks controller imput and changes menu state accordingly.
+** Parameters: void.
+** Returns   : void.
+*/
+{
+	static int up_moved = 0, down_moved = 0, a_pressed = 0, b_pressed = 0;
+	static uint8 mcont = 0;
 	cont_cond_t cond;
 
 	if (!mcont) {
@@ -111,10 +324,10 @@ void check_controller() {
 
 	if (!(cond.buttons & CONT_DPAD_UP)) {
 		if ((framecnt - up_moved) > 10) {
-			if (selected > 0) {
-				selected--;
-				if (selected < top) {
-					top = selected;
+			if (*selected > 0) {
+				(*selected)--;
+				if (*selected < *top) {
+					*top = *selected;
 				}
 			}
 			up_moved = framecnt;
@@ -122,10 +335,10 @@ void check_controller() {
 	}
 	if (!(cond.buttons & CONT_DPAD_DOWN)) {
 		if ((framecnt - down_moved) > 10) {
-			if (selected < (num_entries - 1)) {
-				selected++;
-				if (selected >= (top+10)) {
-					top++;
+			if (*selected < (*num_entries - 1)) {
+				(*selected)++;
+				if (*selected >= (*top+8)) {
+					(*top)++;
 				}
 			}
 			down_moved = framecnt;
@@ -133,82 +346,112 @@ void check_controller() {
 	}
 	if (cond.ltrig > 0) {
 		if ((framecnt - up_moved) > 10) {
-			selected -= 10;
+			*selected -= 8;
 
-			if (selected < 0) selected = 0;
-			if (selected < top) top = selected;
+			if (*selected < 0) *selected = 0;
+			if (*selected < *top) *top = *selected;
 			up_moved = framecnt;
 		}
 	}
 	if (cond.rtrig > 0) {
 		if ((framecnt - down_moved) > 10) {
-			selected += 10;
-			if (selected > (num_entries - 1))
-				selected = num_entries - 1;
-			if (selected >= (top+10))
-				top = selected;
+			*selected += 8;
+			if (*selected > (*num_entries - 1))
+				*selected = *num_entries - 1;
+			if (*selected >= (*top+8))
+				*top = *selected;
 			down_moved = framecnt;
 		}
 	}
 
-	if (!(cond.buttons & CONT_Y)) {
-		if ((framecnt - y_pressed) > 10)
-		{
-			num_entries = 0;
-			selected = 0;
-			menu_state = 1;
-		}
-		y_pressed=framecnt;
-	}
-
 	if (!(cond.buttons & CONT_A)) {
-		if ((framecnt - a_pressed) > 10)
+		if ((framecnt - a_pressed) > 5)
 		{
-			if (menu_state == 0) menu_state = 1;
-			else if (!strcmp(entries[selected].fn, "Error!"))
+			if (menu_state == 2)
 			{
-				num_entries = 0;
-				menu_state = 1;
-			}
-			else
-			{
-				fs_chdir(entries[selected].dir);
+				fs_chdir(games[*selected].dir);
 				menu_state = 3;
+			}
+			else if (menu_state == 4)
+			{
+				options_str[sel_option] += strlen(options_str[sel_option]) + 1;
+				if (*options_str[sel_option] == '\0') {
+					options_str[sel_option] = dc_options[sel_option].values;
+					options_nr[sel_option] = 0;
+				}
+				else options_nr[sel_option]++;
+				save_flag = 1;
 			}
 		}
 		a_pressed = framecnt;
 	}
+
+	if (!(cond.buttons & CONT_B)) {
+		if ((framecnt - b_pressed) > 5) {
+			if (menu_state == 4) {
+				num_entries = &num_games;
+				top = &top_game;
+				selected = &sel_game;
+				if (save_flag)
+					menu_state = 5;
+				else menu_state = 2;
+			}
+			else {
+				num_entries = &num_options;
+				top = &top_option;
+				selected = &sel_option;
+				menu_state = 4;
+			}
+		}
+		b_pressed = framecnt;
+	}
 	return;
 }
 
-/* Check maple bus inputs */
-void check_inputs() {
-	check_controller();
+void render_button_info() {
+	draw_poly_box(20.0f, 440.0f-96.0f+4, 640.0f-20.0f, 440.0f, 90.0,
+		0.3f, 0.2f, 0.5f, 0.0f, 0.5f, 0.1f, 0.8f, 0.2f);
+	if ((menu_state != 4) && (menu_state != 5)) {       
+		draw_poly_strf(30.0f,440.0f-96.0f+6+10.0f,100.0f,1.0f,1.0f,1.0f,1.0f,"D-PAD : Select game              L : Page up");
+		draw_poly_strf(30.0f,440.0f-96.0f+6+24.0f+10.0f,100.0f,1.0f,1.0f,1.0f,1.0f,"    A : Start game               R : Page down");
+		draw_poly_strf(30.0f,440.0f-96.0f+6+48.0f+10.0f,100.0f,1.0f,1.0f,1.0f,1.0f,"                                 B : Options");
+	}
+	else {
+		draw_poly_strf(30.0f,440.0f-96.0f+6+10.0f,100.0f,1.0f,1.0f,1.0f,1.0f,"D-PAD : Select option            L : Page up");
+		draw_poly_strf(30.0f,440.0f-96.0f+6+24.0f+10.0f,100.0f,1.0f,1.0f,1.0f,1.0f,"    A : Change option            R : Page down");
+		draw_poly_strf(30.0f,440.0f-96.0f+6+48.0f+10.0f,100.0f,1.0f,1.0f,1.0f,1.0f,"                                 B : Back");
+	}
 }
 
-/* Main rendering of the game menu */
 int game_menu_render() {
 	/* Draw a background box */
 	draw_poly_box(30.0f, 80.0f, 610.0f, 440.0f-96.0f, 90.0f, 
 		0.2f, 0.8f, 0.5f, 0.0f, 0.2f, 0.8f, 0.8f, 0.2f);
 		
 	if (menu_state == 0) {
+		int status;
 		draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-			"Please insert a game cd and press A...");
+			"The drive lid is open.");
+		draw_poly_strf(32.0f, 92.0f+24.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			"Please insert a game cd.");
+		cdrom_get_status(&status, NULL);
+		if (status == CD_STATUS_BUSY) menu_state = 7;
+		return 0;
 	}
 
 	else if (menu_state == 1) {
 		if (load_queued < 4) {
 			draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-				"Scanning cd for SCI games...");
+				"Searching cd for SCI games...");
 			load_queued++;
 			return 0;
 		} else {
 			iso_ioctl(0,NULL,0);
 			load_game_list("/cd");
 			load_queued = 0;
-			if (num_entries == 0) menu_state = 0;
+			if (num_games == 0) menu_state = 6;
 			else menu_state = 2;
+			return 0;
 		}
 	}
 	
@@ -223,9 +466,84 @@ int game_menu_render() {
 		}
 	}
 
-	/* Draw the game listing */
-	draw_listing();
+	else if (menu_state == 4) {
+		/* Draw option menu */
+		draw_options();
+	}
+
+	else if (menu_state == 2) {
+		int status;
+		
+		cdrom_get_status(&status, NULL);
+		if (status == CD_STATUS_OPEN) {
+			*num_entries = 0;
+			*selected = 0;
+			menu_state = 0;
+			return 0;
+		}
+
+		/* Draw the game listing */
+		draw_listing();
+	}
 	
+	else if (menu_state == 5) {
+		if (load_queued < 4) {
+			draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+				"Saving options, please wait...");
+			load_queued++;
+		}
+		else {
+			char *vmu;
+			if ((vmu = dc_get_first_vmu())) {
+				char *fn = sci_malloc(strlen(vmu) + 9);
+				strcpy(fn, vmu);
+				strcat(fn, "/freesci");
+				if (save_options(fn, &options_nr[0]))
+					sciprintf("%s, L%d: Saving options to VMU failed!\n", __FILE__, __LINE__);
+				sci_free(fn);
+			}
+			else sciprintf("%s, L%d: No VMU found!\n", __FILE__, __LINE__);
+			sci_free(vmu);
+			save_flag = 0;
+			load_queued = 0;
+			menu_state = 2;
+		}
+		return 0;
+	}
+	
+	else if (menu_state == 6) {
+		int status;
+		draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			"No SCI games found!");
+		draw_poly_strf(32.0f, 92.0f+24.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			"Please insert a game cd.");
+		cdrom_get_status(&status, NULL);
+		if (status == CD_STATUS_OPEN) menu_state = 0;
+		return 0;
+	}
+
+	else if (menu_state == 7) {
+		int status;
+		draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			"Scanning cd...");
+		cdrom_get_status(&status, NULL);
+		if (status == CD_STATUS_PAUSED) menu_state = 1;
+		else if (status == CD_STATUS_NO_DISC) menu_state = 8;
+		else if (status == CD_STATUS_OPEN) menu_state = 0;
+		return 0;
+	}
+
+	else if (menu_state == 8) {
+		int status;
+		draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			"The drive is empty!");
+		draw_poly_strf(32.0f, 92.0f+24.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			"Please insert a game cd.");
+		cdrom_get_status(&status, NULL);
+		if (status == CD_STATUS_OPEN) menu_state = 0;
+		return 0;
+	}
+
 	/* Adjust the throbber */
 	throb += dthrob;
 	if (throb < 0.2f || throb > 0.8f) {
@@ -233,10 +551,26 @@ int game_menu_render() {
 		throb += dthrob;
 	}
 	
-	/* Check maple inputs */
-	check_inputs();
+	/* Check controller input */
+	check_controller();
 
 	framecnt++;
 
 	return 0;
+}
+
+int dc_write_config_file(char *fn) {
+	FILE *cfile;
+	if ((cfile = fopen(fn, "w"))) {
+		fputs("gfx.dc.render_mode = ", cfile);
+		if (options_nr[0] == 0) fputs("vram\n", cfile);
+		else fputs("pvr\n", cfile);
+		fputs("midi_device = adlibemu\n", cfile);
+		fputs("pcmout_stereo = 0\n", cfile);
+		fputs("pcmout_rate = 11025\n", cfile);
+		fclose(cfile);
+		return 0;
+	}
+	sciprintf("%s, L%d: fopen(\"%s\", \"w\") failed!\n", __FILE__, __LINE__, fn);
+	return -1;
 }

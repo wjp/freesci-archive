@@ -1,5 +1,5 @@
 /***************************************************************************
- dc_driver.c Copyright (C) 2002 Walter van Niftrik
+ dc_driver.c Copyright (C) 2002,2003 Walter van Niftrik
 
 
  This program may be modified and copied freely according to the terms of
@@ -30,6 +30,7 @@
 #include <dc/maple.h>
 #include <dc/maple/mouse.h>
 #include <dc/maple/keyboard.h>
+#include <dc/maple/controller.h>
 #include <dc/video.h>
 #include <dc/pvr.h>
 
@@ -44,11 +45,23 @@ struct dc_event_t {
 	struct dc_event_t *next;
 };
 
+#define SCI_DC_RENDER_PVR	(1 << 0)
+
+static int flags = 0;
+
 struct _dc_state {
 	/* 0 = static buffer, 1 = back buffer, 2 = front buffer */
+	/* Visual maps */
 	byte *visual[3];
+	/* Priority maps */
 	byte *priority[2];
-	
+	/* Line pitch of visual buffers */
+	int line_pitch[3];
+
+	/* PVR only */
+	/* Polygon header */
+	pvr_poly_hdr_t pvr_hdr;
+
 	/* Pointers to first and last event in the event queue */
 	struct dc_event_t *first_event;
 	struct dc_event_t *last_event;
@@ -65,7 +78,7 @@ struct _dc_state {
 	/* Thread ID of the input thread */
 	kthread_t *thread;
 	
-	/* Flag to stop the input thread. (<>0 = run, 0 = stop) */
+	/* Flag to stop the input thread. (!0 = run, 0 = stop) */
 	int run_thread;
 };
 
@@ -83,6 +96,127 @@ struct _dc_state {
 #define DC_KEY_SCRLOCK (1<<2)
 #define DC_KEY_INSERT (1<<3)
 
+static void
+pvr_init_gfx(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
+/* Initialises the graphics driver for PVR rendering mode
+** Parameters: (_gfx_driver *) drv: The driver to use
+**             (int) xfact, yfact: X and Y scaling factors. (xfact, yfact)
+**                     has to be either (1, 1) or (2, 2).
+**             (int) bytespp: The display depth in bytes per pixel. Must be 2.
+** Returns   : void
+*/
+{
+	pvr_poly_cxt_t cxt;
+
+	/* Initialize PVR to defaults and set background color to black */
+	vid_set_mode(DM_640x480, PM_RGB565);
+	pvr_init_defaults();
+	pvr_set_bg_color(0,0,0);
+
+	/* Allocate and initialize texture RAM */
+	S->visual[2] = pvr_mem_malloc(512*256*bytespp*xfact*yfact);
+	S->line_pitch[2] = 512*bytespp*xfact;
+	memset(S->visual[2], 0, 512*256*bytespp*xfact*yfact);
+
+	/* Create textured polygon context */
+	pvr_poly_cxt_txr(&cxt, PVR_LIST_OP_POLY, PVR_TXRFMT_RGB565 |
+		PVR_TXRFMT_NONTWIDDLED, 512*xfact, 256*yfact, S->visual[2], 0);
+
+	/* Create polygon header from context */
+	pvr_poly_compile(&(S->pvr_hdr), &cxt);
+}
+
+static void
+pvr_do_frame(struct _gfx_driver *drv)
+/* Renders a frame for PVR rendering mode
+** Parameters: (_gfx_driver *) drv: The driver to use
+** Returns   : void
+*/
+{
+	pvr_vertex_t vert;
+	
+	/* Wait until we can send another frame to the PVR */
+	pvr_wait_ready();
+	
+	/* Start a new scene */
+	pvr_scene_begin();
+
+	/* Start an opaque polygon list */
+	pvr_list_begin(PVR_LIST_OP_POLY);
+
+	/* Submit polygon header */
+	pvr_prim(&(S->pvr_hdr), sizeof(S->pvr_hdr));
+	
+	/* Create and submit vertices */
+	vert.flags = PVR_CMD_VERTEX;
+	vert.x = 0.0f;
+	vert.y = 614.0f;
+	vert.z = 1.0f;
+	vert.u = 0.0f;
+	vert.v = 1.0f;
+	vert.argb = PVR_PACK_COLOR(1.0f, 1.0f, 1.0f, 1.0f);
+	vert.oargb = 0;
+	pvr_prim(&vert, sizeof(vert));
+	
+	vert.y = 0.0f;
+	vert.v = 0.0f;
+	pvr_prim(&vert, sizeof(vert));
+	
+	vert.x = 1024.0f;
+	vert.y = 614.0f;
+	vert.u = 1.0f;
+	vert.v = 1.0f;
+	pvr_prim(&vert, sizeof(vert));
+	
+	vert.flags = PVR_CMD_VERTEX_EOL;
+	vert.y = 0.0f;
+	vert.v = 0.0f;
+	pvr_prim(&vert, sizeof(vert));
+	
+	/* End list and scene */
+	pvr_list_finish();
+	pvr_scene_finish();
+}
+
+static void
+vram_init_gfx(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
+/* Initialises the graphics driver for VRAM rendering mode
+** Parameters: (_gfx_driver *) drv: The driver to use
+**             (int) xfact, yfact: X and Y scaling factors. (xfact, yfact)
+**                     has to be either (1, 1) or (2, 2).
+**             (int) bytespp: The display depth in bytes per pixel. Must be
+**                     either 2 or 4.
+** Returns   : void
+*/
+{
+	int vidres = 0, vidcol = 0;
+
+	/* Center screen vertically */
+	S->visual[2] = (byte *) vram_s+320*xfact*20*yfact*bytespp;
+
+	S->line_pitch[2] = 320*xfact*bytespp;
+
+	memset(S->visual[2], 0, 320*xfact*240*yfact*bytespp);
+
+	switch(bytespp) {
+		case 2:
+			vidcol = PM_RGB565;
+			break;
+		case 4:
+			vidcol = PM_RGB888;
+	}
+
+	switch (xfact) {
+		case 1:
+			vidres = DM_320x240;
+			break;
+		case 2:
+			vidres = DM_640x480;
+	}
+		
+	vid_set_mode(vidres, vidcol);
+}
+
 static int
 dc_add_event(struct _gfx_driver *drv, sci_event_t *event)
 /* Adds an event to the end of an event queue
@@ -93,7 +227,7 @@ dc_add_event(struct _gfx_driver *drv, sci_event_t *event)
 {
 	struct dc_event_t *dc_event;
 	if (!(dc_event = sci_malloc(sizeof(dc_event)))) {
-		sciprintf("Error: Could not reserve memory for event\n");
+		printf("Error: Could not reserve memory for event\n");
 		return 0;
 	}
 	
@@ -175,6 +309,7 @@ dc_map_key(int *keystate, uint8 key)
 		case KBD_KEY_F8:		return SCI_K_F8;
 		case KBD_KEY_F9:		return SCI_K_F9;
 		case KBD_KEY_F10:		return SCI_K_F10;
+		case KBD_KEY_F12:		vid_screen_shot("/pc/tmp/freesci.raw");
 		case KBD_KEY_PAD_PLUS:		return '+';
 		case KBD_KEY_SLASH:
 		case KBD_KEY_PAD_DIVIDE:	return '/';
@@ -199,7 +334,7 @@ dc_map_key(int *keystate, uint8 key)
 						return 0;
 	}
 
-	sciprintf("Warning: Unmapped key: %02x\n", key);
+	printf("Warning: Unmapped key: %02x\n", key);
 	
 	return 0;
 }
@@ -221,20 +356,25 @@ dc_input_thread(struct _gfx_driver *drv)
 	int keystate = DC_KEY_INSERT;
 
 	while (S->run_thread) {
-		maple_device_t *kaddr, *maddr;
+		maple_device_t *kaddr = NULL, *maddr, *caddr;
 		mouse_state_t *mouse;
-		kbd_state_t *kbd;
+		kbd_state_t *kbd = 0;
+		cont_state_t *cont;
 		uint8 key;
 		int skeys;	
 		int bucky = 0;
 		sci_event_t event;
 
-		/* Sleep for 10ms */
-		thd_sleep(10);
+		if (!(flags & SCI_DC_RENDER_PVR))
+			/* Sleep for 10ms */
+			thd_sleep(10);
+		else
+			pvr_do_frame(drv);
 
 		/* Keyboard handling */
-		if ((kaddr = maple_enum_type(0, MAPLE_FUNC_KEYBOARD)) &&
-		  (kbd = maple_dev_status(kaddr))) {
+		/* Experimental workaround for the Mad Catz adapter problem */
+		if (!kaddr) kaddr = maple_enum_type(0, MAPLE_FUNC_KEYBOARD);
+		if (kaddr && (kbd = maple_dev_status(kaddr))) {
 			key = kbd->cond.keys[0];
 			skeys = kbd->shift_keys;
 		
@@ -277,6 +417,7 @@ dc_input_thread(struct _gfx_driver *drv)
 			}		
 			lastkey = key;
 		}
+		else kaddr = NULL;
 
 		/* Mouse handling */
 		if ((maddr = maple_enum_type(0, MAPLE_FUNC_MOUSE)) &&
@@ -326,8 +467,53 @@ dc_input_thread(struct _gfx_driver *drv)
 				mstate &= ~DC_MOUSE_RIGHT;
 			}
 		}
-		else drv->capabilities &= ~GFX_CAPABILITY_MOUSE_SUPPORT;
+		else if ((caddr = maple_enum_type(0, MAPLE_FUNC_CONTROLLER)) &&
+		  (cont = maple_dev_status(caddr))) {
+			/* Enable mouse support */
+			drv->capabilities |= GFX_CAPABILITY_MOUSE_SUPPORT;
+			
+			/* Semaphore prevents get_event() from accessing
+			** S->pointer_dx/dy while they are being updated
+			*/
+			sem_wait(S->sem_pointer);
+			S->pointer_dx += cont->joyx/20;
+			S->pointer_dy += cont->joyy/20;
+			sem_signal(S->sem_pointer);
 
+			if ((cont->buttons & CONT_X) &&
+			  !(mstate & DC_MOUSE_LEFT)) {
+				event.type = SCI_EVT_MOUSE_PRESS;
+				event.data = 1;
+				event.buckybits = bucky;
+				dc_add_event(drv, &event);
+				mstate |= DC_MOUSE_LEFT;
+			}
+			if ((cont->buttons & CONT_Y) &&
+			  !(mstate & DC_MOUSE_RIGHT)) {
+				event.type = SCI_EVT_MOUSE_PRESS;
+				event.data = 2;
+				event.buckybits = bucky;
+				dc_add_event(drv, &event);
+				mstate |= DC_MOUSE_RIGHT;
+			}
+			if (!(cont->buttons & CONT_X) &&
+			  (mstate & DC_MOUSE_LEFT)) {
+				event.type = SCI_EVT_MOUSE_RELEASE;
+				event.data = 1;
+				event.buckybits = bucky;
+				dc_add_event(drv, &event);
+				mstate &= ~DC_MOUSE_LEFT;
+			}
+			if (!(cont->buttons & CONT_Y) &&
+			  (mstate & DC_MOUSE_RIGHT)) {
+				event.type = SCI_EVT_MOUSE_RELEASE;
+				event.data = 2;
+				event.buckybits = bucky;
+				dc_add_event(drv, &event);
+				mstate &= ~DC_MOUSE_RIGHT;
+			}
+		}
+		else drv->capabilities &= ~GFX_CAPABILITY_MOUSE_SUPPORT;
 	}
 }
 
@@ -509,7 +695,18 @@ dc_copy_rect_buffer(byte *src, byte *dest, int srcline, int destline,
 static int
 dc_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 {
-	printf("Fatal error: Attribute '%s' does not exist\n", attribute);
+	if (!stricmp(attribute, "render_mode")) {
+		if (!stricmp(value, "vram")) {
+			flags &= ~SCI_DC_RENDER_PVR;
+			return GFX_OK;
+		}
+		else if (!stricmp(value, "pvr")) {
+			flags |= SCI_DC_RENDER_PVR;
+			return GFX_OK;
+		}
+	}
+	
+	sciprintf("Fatal error: Attribute '%s' does not exist\n", attribute);
 	return GFX_FATAL;
 }
 
@@ -517,6 +714,10 @@ dc_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 static int
 dc_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 {
+	int i;
+	int rmask = 0, gmask = 0, bmask = 0, rshift = 0, gshift = 0;
+	int bshift = 0;
+
 	sciprintf("Initialising video mode\n");
 
 	pvr_shutdown();
@@ -524,14 +725,20 @@ dc_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	if (!S)	S = sci_malloc(sizeof(struct _dc_state));
 	if (!S) return GFX_FATAL;
 	
-        if ((xfact != 1 && xfact != 2) || (bytespp != 2 && bytespp != 4) ||
-        	xfact != yfact) {
-		sciprintf("Error: Buffers with scale factors (%d,%d) and bpp=%d are not supported\n",
+	if ((flags & SCI_DC_RENDER_PVR) && ((xfact != 1 && xfact != 2)
+	  || bytespp != 2 || xfact != yfact)) {
+		sciprintf("Error: PVR rendering mode does not support "
+		  "buffers with scale factors (%d,%d) and bpp=%d\n",
 		  xfact, yfact, bytespp);
 		return GFX_ERROR;
 	}
-
-	int i;
+	else if ((xfact != 1 && xfact != 2) || (bytespp != 2 && bytespp != 4)
+	  || xfact != yfact) {
+		sciprintf("Error: VRAM rendering mode does not support "
+		  "buffers with scale factors (%d,%d) and bpp=%d\n",
+		  xfact, yfact, bytespp);
+		return GFX_ERROR;
+	}
 
 	for (i = 0; i < 2; i++) {
 		if (!(S->priority[i] = sci_malloc(320*xfact*200*yfact)) ||
@@ -541,21 +748,15 @@ dc_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		}
 	}	
 
-	/* Center screen vertically */
-	S->visual[2] = (byte *) vram_s+320*xfact*20*yfact*bytespp;
-
-	memset(S->visual[0], 0, 320*xfact*200*yfact*bytespp);
-	memset(S->visual[1], 0, 320*xfact*200*yfact*bytespp);
-	memset(S->visual[2], 0, 320*xfact*240*yfact*bytespp);
-	memset(S->priority[0], 0, 320*xfact*200*yfact);
-	memset(S->priority[1], 0, 320*xfact*200*yfact);
+	for (i = 0; i < 2; i++) {
+		S->line_pitch[i] = 320*xfact*bytespp;
+		memset(S->visual[i], 0, 320*xfact*200*yfact*bytespp);
+		memset(S->priority[i], 0, 320*xfact*200*yfact);
+	}
 
 	S->pointer_dx = 0;
 	S->pointer_dy = 0;
 	
-	int rmask = 0, gmask = 0, bmask = 0, rshift = 0, gshift = 0;
-	int bshift = 0, vidres = 0, vidcol = 0;
-		
 	switch(bytespp) {
 		case 2:	rmask = 0xF800;
 			gmask = 0x7E0;
@@ -563,7 +764,6 @@ dc_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 			rshift = 16;
 			gshift = 21;
 			bshift = 27;
-			vidcol = PM_RGB565;
 			break;
 		case 4:	rmask = 0xFF0000;
 			gmask = 0xFF00;
@@ -571,18 +771,12 @@ dc_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 			rshift = 8;
 			gshift = 16;
 			bshift = 24;
-			vidcol = PM_RGB888;
 	}
 
-	switch (xfact) {
-		case 1:
-			vidres = DM_320x240;
-			break;
-		case 2:
-			vidres = DM_640x480;
-	}
-		
-	vid_set_mode(vidres, vidcol);
+	if (!(flags & SCI_DC_RENDER_PVR))
+		vram_init_gfx(drv, xfact, yfact, bytespp);
+	else
+		pvr_init_gfx(drv, xfact, yfact, bytespp);
 
 	drv->mode = gfx_new_mode(xfact, yfact, bytespp, rmask, gmask, bmask, 0,
 	  rshift, gshift, bshift, 0, 0, 0);
@@ -688,7 +882,7 @@ dc_draw_filled_rect(struct _gfx_driver *drv, rect_t rect,
   gfx_color_t color1, gfx_color_t color2, gfx_rectangle_fill_t shade_mode)
 {
 	if (color1.mask & GFX_MASK_VISUAL)
-		dc_draw_filled_rect_buffer(S->visual[1], XFACT*320*BYTESPP,
+		dc_draw_filled_rect_buffer(S->visual[1], S->line_pitch[1],
 		  BYTESPP, rect, dc_get_color(drv, color1));
 	
 	if (color1.mask & GFX_MASK_PRIORITY)
@@ -719,7 +913,7 @@ dc_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 	int bufnr = (buffer == GFX_BUFFER_STATIC)? 0:1;
 	
 	return gfx_crossblit_pixmap(drv->mode, pxm, priority, src, dest,
-	  S->visual[bufnr], XFACT*BYTESPP*320, S->priority[bufnr], XFACT*320,
+	  S->visual[bufnr], S->line_pitch[bufnr], S->priority[bufnr], XFACT*320,
 	  1, 0);
 }	
 
@@ -730,7 +924,7 @@ dc_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 	switch (map) {
 		case GFX_MASK_VISUAL:
 			dc_copy_rect_buffer(S->visual[1], pxm->data,
-			  XFACT*320*BYTESPP, src.xl*BYTESPP, BYTESPP, src,
+			  S->line_pitch[1], src.xl*BYTESPP, BYTESPP, src,
 			  gfx_point(0, 0));
 			pxm->xl = src.xl;
 			pxm->yl = src.yl;
@@ -756,7 +950,7 @@ dc_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffer
 	int tbufnr = (buffer == GFX_BUFFER_BACK)? 1:2;
 
 	dc_copy_rect_buffer(S->visual[tbufnr-1], S->visual[tbufnr],
-	  XFACT*320*BYTESPP, XFACT*320*BYTESPP, BYTESPP, src, dest);
+	  S->line_pitch[tbufnr-1], S->line_pitch[tbufnr], BYTESPP, src, dest);
 		
 	if ((tbufnr == 1) && (src.x == dest.x) && (src.y == dest.y)) 
 		dc_copy_rect_buffer(S->priority[0], S->priority[1], XFACT*320,
@@ -828,14 +1022,15 @@ static int
 dc_usec_sleep(struct _gfx_driver *drv, long usecs)
 {
 	/* TODO: wake up on mouse move */
-	thd_sleep(usecs/1000);
+	int ms = usecs/1000;
+	if (ms) thd_sleep(ms);
 	return GFX_OK;
 }
 
 gfx_driver_t
 gfx_driver_dc = {
 	"dc",
-	"0.1",
+	"0.2",
 	SCI_GFX_DRIVER_MAGIC,
 	SCI_GFX_DRIVER_VERSION,
 	NULL,
