@@ -1,3 +1,13 @@
+2003-01-15  Alexander Angas  <wgd@internode.on.net>
+
+        * src/gfx/drivers/dx_driver.cpp: Fixed one memory leak
+        and removed some debugging code.
+
+        * src/win32/fsci_dll.dsp: Updated parameters to compile
+        DirectX driver in Release and Purify configurations.
+
+        * src/engine/kmenu.c: Updated contribution to project.
+
 2003-01-15  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* README.DC: Updated to include information about Dreamcast

@@ -26,7 +26,8 @@
 
    20020817 - DirectX 8.0a (Win95+) support.
    20030113 - Submitted to CVS.
-			- TODO: fix vertical line drawing
+   20030115 - Fixed: memory leak in dx_grab_pixmap()
+			- Fixed: vertical line drawing
 			- TODO: implement size factor
 			- TODO: implement mouse
 			- TODO: improve LockRect call for draw_filled_rect
@@ -276,7 +277,6 @@ InitD3D(struct _gfx_driver *drv)
 	}
 
 	// Set up pixmap vertex buffers.
-//	dx_state->pvNum = 4;
 	DODX((dx_state->g_pd3dDevice->CreateVertexBuffer( 4 * sizeof(PIXMAP_VERTEX),
 												0, D3DFVF_PIXMAP_VERTEX,
 												D3DPOOL_MANAGED,
@@ -459,13 +459,6 @@ dx_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 	HRESULT hr;
 	D3DLOCKED_RECT lockedRect;
 
-#ifdef CHECK_DIRECTX
-	assert(line.x >= 0);
-	assert(line.y >= 0);
-//	assert(line.xl >= 2);
-//	assert(line.yl >= 2);
-#endif
-
 	if (color.mask & GFX_MASK_VISUAL) {
 		// Calculate line size
 		int xf = (line_mode == GFX_LINE_MODE_FINE) ? 1 : dx_state->xfact;
@@ -489,22 +482,17 @@ dx_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 		DODX( (dx_state->visuals[BACK_VIS]->LockRect(0, &lockedRect, &r, 0)), dx_draw_line );
 		UINT *rectPtr = (UINT*)lockedRect.pBits;
 
-		if (r.left != r.right)
+		// Going along x axis
+		for (int y_pixel = r.top; y_pixel < (r.bottom * yf); y_pixel++)
 		{
-			// Going along x axis
-			for (int x_pixel = r.left; x_pixel < r.right; x_pixel++)
-				*rectPtr++ = lineColor;
-		
-		}
-		else
-		{
-			// Going along y axis
-			int dy = lockedRect.Pitch * line.xl;
-			for (int y_pixel = r.top; y_pixel < r.bottom; y_pixel++)
+			UINT *startLine = rectPtr;
+			for (int x_pixel = r.left; x_pixel < (r.right * xf); x_pixel++)
 			{
 				*rectPtr = lineColor;
-				rectPtr += dy + 1;
+				rectPtr++;
 			}
+			rectPtr = startLine;
+			rectPtr += dx_state->xsize;
 		}
 
 		DODX( (dx_state->visuals[BACK_VIS]->UnlockRect(0)), dx_draw_line );
@@ -535,16 +523,8 @@ dx_draw_filled_rect(struct _gfx_driver *drv, rect_t box,
 			   gfx_color_t color1, gfx_color_t color2,
 			   gfx_rectangle_fill_t shade_mode)
 {
-	HRESULT hr;
 	RECT rcDest;
 	byte *pri;
-
-#ifdef CHECK_DIRECTX
-	assert(box.x >= 0);
-	assert(box.y >= 0);
-//	assert(box.xl >= 2);
-//	assert(box.yl >= 2);
-#endif
 
 	rcDest.left   = box.x;
 	rcDest.top    = box.y;
@@ -553,11 +533,7 @@ dx_draw_filled_rect(struct _gfx_driver *drv, rect_t box,
 
 	if (color1.mask & GFX_MASK_VISUAL)
 	{
-		rect_t l = box;
-		int max_y = l.yl;
-		l.yl = 1;
-		for (; l.y < max_y; l.y++)
-			dx_draw_line(drv, l, color1, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL);
+		dx_draw_line(drv, box, color1, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL);
 	}
 
 	if (color1.mask & GFX_MASK_PRIORITY)
@@ -581,13 +557,6 @@ dx_register_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 {
 	HRESULT hr;
 
-#ifdef CHECK_DIRECTX
-	assert(!(pxm->internal.info));
-//	assert(pxm->xl >= 2);
-//	assert(pxm->yl >= 2);
-	assert(pxm->data);
-#endif
-
 	int i, xs;
 	byte *s, *d;
 	D3DLOCKED_RECT lockedRect;
@@ -609,16 +578,6 @@ dx_register_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 	DODX( (newTex->UnlockRect(0)), dx_register_pixmap );
 
 	pxm->internal.info = newTex;
-
-#ifdef CHECK_DIRECTX
-	assert(pxm->internal.info);
-#endif
-
-	/*
-	gfx_crossblit_pixmap(drv->mode, pxm, priority, src, dest,
-		(byte *)lockedRect.pBits, lockedRect.Pitch,
-		pri_map, drv->mode->xfact * 320, 1, 0);
-*/
 	pxm->internal.handle = SCI_DX_HANDLE_NORMAL;
 
 	return GFX_OK;
@@ -628,13 +587,9 @@ dx_register_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 static int
 dx_unregister_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 {
-#ifdef CHECK_DIRECTX
-	assert(pxm->internal.info);
-#endif
-
 	SAFE_RELEASE((LPDIRECT3DTEXTURE8) (pxm->internal.info));
 	pxm->internal.info = NULL;
-	
+
 	return GFX_OK;
 }
 
@@ -651,12 +606,6 @@ dx_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 	LPDIRECT3DSURFACE8 sbuf, dbuf;
 	D3DLOCKED_RECT lockedRect;
 	byte *pri_map = NULL;
-
-	// Error checking
-#ifdef CHECK_DIRECTX
-	assert(src.xl == dest.xl);
-	assert(src.yl == dest.yl);
-#endif
 
 	if (pxm->internal.handle == SCI_DX_HANDLE_GRABBED) {
 		// copy from pxm->internal.info to visual[bufnr]
@@ -708,8 +657,9 @@ dx_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 	DODX( (dstt->GetSurfaceLevel(0, &dbuf)), dx_draw_pixmap );
 	DODX( (dx_state->g_pd3dDevice->CopyRects(sbuf, &src2Rect, 1, dbuf, &dst2Point)), dx_draw_pixmap );
 
-
+	// Clean up
 	SAFE_RELEASE(temp);
+	temp = NULL;
 
 	return GFX_OK;
 }
@@ -754,6 +704,10 @@ dx_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 		pxm->internal.handle = SCI_DX_HANDLE_GRABBED;
 		pxm->flags |= GFX_PIXMAP_FLAG_INSTALLED | GFX_PIXMAP_FLAG_EXTERNAL_PALETTE | GFX_PIXMAP_FLAG_PALETTE_SET;
 
+		// Clean up
+		SAFE_RELEASE(temp);
+		temp = NULL;
+
 		break;
 	}
 
@@ -765,7 +719,7 @@ dx_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 		sciprintf("Attempt to grab pixmap from invalid map 0x%02x\n", map);
 		return GFX_ERROR;
 	}
-	
+
 	return GFX_OK;
 }
 
@@ -1013,7 +967,6 @@ ProcessMessages(struct _gfx_driver *drv)
 				break;
 
 			case WM_KEYDOWN:
-sciprintf("Key code: %u, 0x%X\n", msg.wParam, msg.wParam);
 				switch (msg.wParam)
 				{
 					MAP_KEY (VK_ESCAPE,		SCI_K_ESC);

@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FSCI_DLL_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /Zi /O1 /Ob2 /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D "NDEBUG" /D "HAVE_MEMCHR" /D PACKAGE=\"FreeSCI\" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "_WINDOWS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D VERSION=__TIMESTAMP__ /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /FR /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /O1 /Ob2 /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D "NDEBUG" /D "HAVE_MEMCHR" /D PACKAGE=\"FreeSCI\" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "_WINDOWS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D VERSION=__TIMESTAMP__ /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_DIRECTX" /FR /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0xc09 /d "NDEBUG"
@@ -99,7 +99,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /Gi /GR /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "_WINDOWS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "DEBUG_SOUND_SERVER" /D "SATISFY_PURIFY" /FR /YX /FD /GZ /c
-# ADD CPP /nologo /MT /W3 /GR /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D "_DEBUG" /D "SATISFY_PURIFY" /D PACKAGE=\"FreeSCI\" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "_WINDOWS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D VERSION=__TIMESTAMP__ /D "HAVE_MEMCHR" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MT /W3 /GR /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D "_DEBUG" /D "SATISFY_PURIFY" /D PACKAGE=\"FreeSCI\" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "_WINDOWS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D VERSION=__TIMESTAMP__ /D "HAVE_MEMCHR" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /D "HAVE_DIRECTX" /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -109,7 +109,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 dxguid.lib dxerr8.lib msvcrtd.lib ..\..\..\SDL\lib\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ole32.lib /nologo /dll /pdb:none /map /debug /machine:I386 /nodefaultlib:"libc.lib" /nodefaultlib:"libcmt.lib" /nodefaultlib:"msvcrt.lib" /nodefaultlib:"libcd.lib" /nodefaultlib:"libcmtd.lib" /out:"Purify/fsci.dll"
-# ADD LINK32 SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ole32.lib /nologo /dll /incremental:no /map:"Purify/fsci.map" /debug /machine:I386 /out:"Purify\fsci.dll" /fixed:no
+# ADD LINK32 SDL.lib d3d8.lib dxerr8.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ole32.lib /nologo /dll /incremental:no /map:"Purify/fsci.map" /debug /machine:I386 /out:"Purify\fsci.dll" /fixed:no
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
