@@ -588,6 +588,7 @@ void sci_midi_command(song_t *song, guint8 command,
       if (!param)
 	song->velocity[command & 0x0f] = 127;
       break;
+    case 0x04: /* UNKNOWN NYI (happens in LSL2 gameshow) */
     case 0x46: /* UNKNOWN NYI (happens in LSL3 binoculars) */
     case 0x61: /* UNKNOWN NYI (special for adlib? Iceman) */
     case 0x73: /* UNKNOWN NYI (happens in Hoyle) */
