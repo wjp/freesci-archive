@@ -47,11 +47,11 @@ static char oldcommand[SCI_CONSOLE_MAX_INPUT + 1] = ""; /* Stores the last comma
 #define _DEBUG_SEEK_SPECIAL_CALLK 3 /* Step forward until a /special/ callk is found */
 #define _DEBUG_SEEK_SO 5 /* Step forward until specified PC (after the send command) and stack depth */
 
-heap_ptr *_pc;
-heap_ptr *_sp;
-heap_ptr *_pp;
-heap_ptr *_objp;
-int *_restadjust;
+heap_ptr *p_pc;
+heap_ptr *p_sp;
+heap_ptr *p_pp;
+heap_ptr *p_objp;
+int *p_restadjust;
 
 int _kdebug_cheap_event_hack = 0;
 int _kdebug_cheap_soundcue_hack = -1;
@@ -82,11 +82,11 @@ char *(*_debug_get_input)(void) = _debug_get_input_default;
 int
 c_debuginfo(state_t *s)
 {
-  sciprintf("pc=%04x acc=%04x o=%04x fp=%04x sp=%04x\n", *_pc & 0xffff, s->acc & 0xffff,
-	    *_objp & 0xffff, *_pp & 0xffff, *_sp & 0xffff);
+  sciprintf("pc=%04x acc=%04x o=%04x fp=%04x sp=%04x\n", *p_pc & 0xffff, s->acc & 0xffff,
+	    *p_objp & 0xffff, *p_pp & 0xffff, *p_sp & 0xffff);
   sciprintf("prev=%x sbase=%04x globls=%04x &restmod=%x\n",
 	    s->prev & 0xffff, s->stack_base & 0xffff, s->global_vars & 0xffff,
-	    *_restadjust & 0xffff);
+	    *p_restadjust & 0xffff);
   return 0;
 }
 
@@ -112,7 +112,7 @@ c_stepover(state_t *s)
   }
 
   _debugstate_valid = 0;
-  opcode = s->heap [*_pc];
+  opcode = s->heap [*p_pc];
   opnumber = opcode >> 1;
   if (opnumber == 0x22 /* callb */ || opnumber == 0x23 /* calle */ ||
       opnumber == 0x25 /* send */ || opnumber == 0x2a /* self */ ||
@@ -124,21 +124,21 @@ c_stepover(state_t *s)
     switch (opcode)
     {
     case 0x46: /* calle W */
-      _debug_seek_special = *_pc + 5; break;
+      _debug_seek_special = *p_pc + 5; break;
 
     case 0x44: /* callb W */
     case 0x47: /* calle B */
     case 0x56: /* super W */
-      _debug_seek_special = *_pc + 4; break;
+      _debug_seek_special = *p_pc + 4; break;
 
     case 0x45: /* callb B */
     case 0x57: /* super B */
     case 0x4A: /* send W */
     case 0x54: /* self W */
-      _debug_seek_special = *_pc + 3; break;
+      _debug_seek_special = *p_pc + 3; break;
 
     default:
-      _debug_seek_special = *_pc + 2;
+      _debug_seek_special = *p_pc + 2;
     }
   }
 
@@ -500,7 +500,7 @@ c_save_game(state_t *s)
 		return 1;
 	}
 
-	s->amp_rest = *_restadjust;
+	s->amp_rest = *p_restadjust;
 
 	if (!omit_check) {
 		int result = 0;
@@ -595,7 +595,7 @@ c_stack(state_t *s)
   }
 
   for (i = cmd_params[0].val ; i > 0; i--)
-    sciprintf("[sp-%04x] = %04x\n", i * 2, 0xffff & getInt16(s->heap + *_sp - i*2));
+    sciprintf("[sp-%04x] = %04x\n", i * 2, 0xffff & getInt16(s->heap + *p_sp - i*2));
 
   return 0;
 }
@@ -764,7 +764,7 @@ disassemble(state_t *s, heap_ptr pos)
 
     }
 
-  if (pos == *_pc) /* Extra information if debugging the current opcode */
+  if (pos == *p_pc) /* Extra information if debugging the current opcode */
 
     if ((opcode == op_pTos)||(opcode == op_sTop)||
         (opcode == op_pToa)||(opcode == op_aTop)||
@@ -772,24 +772,24 @@ disassemble(state_t *s, heap_ptr pos)
 	(opcode == op_dpTos)||(opcode == op_ipTos))
     {
       int prop_ofs = s->heap[retval - 1];
-      int prop_id = prop_ofs_to_id(s, prop_ofs, *_objp & 0xffff);
+      int prop_id = prop_ofs_to_id(s, prop_ofs, *p_objp & 0xffff);
 
       sciprintf("	(%s)", selector_name(s, prop_id));
     }
 
   sciprintf("\n");
 
-  if (pos == *_pc) { /* Extra information if debugging the current opcode */
+  if (pos == *p_pc) { /* Extra information if debugging the current opcode */
 
     if (opcode == op_callk) {
-      int stackframe = s->heap[retval - 1] + (*_restadjust * 2);
-      int argc = getInt16(s->heap + *_sp - stackframe - 2);
+      int stackframe = s->heap[retval - 1] + (*p_restadjust * 2);
+      int argc = getInt16(s->heap + *p_sp - stackframe - 2);
       int i;
 
       sciprintf(" Kernel params: (");
 
       for (i = 0; i < argc; i++) {
-	sciprintf("%04x", getUInt16(s->heap + *_sp - stackframe + i*2));
+	sciprintf("%04x", getUInt16(s->heap + *p_sp - stackframe + i*2));
 	if (i+1 < argc)
 	  sciprintf(", ");
       }
@@ -798,13 +798,13 @@ disassemble(state_t *s, heap_ptr pos)
     } else
 
     if ((opcode == op_send) || (opcode == op_self)) {
-      int restmod = *_restadjust;
+      int restmod = *p_restadjust;
       int stackframe = s->heap[retval - 1] + (restmod * 2);
       word selector;
       heap_ptr selector_addr;
 
       while (stackframe > 0) {
-	int argc = getInt16(s->heap + *_sp - stackframe + 2);
+	int argc = getInt16(s->heap + *p_sp - stackframe + 2);
 	heap_ptr nameaddress = 0;
 	heap_ptr called_obj_addr;
 	char *name;
@@ -812,7 +812,7 @@ disassemble(state_t *s, heap_ptr pos)
 	if (opcode == op_send)
 	  called_obj_addr = s->acc;
 	else if (opcode == op_self)
-	  called_obj_addr = *_objp;
+	  called_obj_addr = *p_objp;
 	else { /* op_super */
 	  called_obj_addr = s->heap[retval - 2];
 
@@ -822,7 +822,7 @@ disassemble(state_t *s, heap_ptr pos)
 		  + s->classtable[called_obj_addr].class_offset;
 	}
 
-	selector = getInt16(s->heap + *_sp - stackframe);
+	selector = getInt16(s->heap + *p_sp - stackframe);
 
 	if (called_obj_addr > 100) /* If we are in valid heap space */
 	  if (getInt16(s->heap + called_obj_addr + SCRIPT_OBJECT_MAGIC_OFFSET)
@@ -855,7 +855,7 @@ disassemble(state_t *s, heap_ptr pos)
 
 	while (argc--) {
 
-	  sciprintf("%04x", 0xffff & getUInt16(s->heap + *_sp - stackframe + 4));
+	  sciprintf("%04x", 0xffff & getUInt16(s->heap + *p_sp - stackframe + 4));
 	  if (argc) sciprintf(", ");
 	  stackframe -= 2;
 
@@ -868,7 +868,7 @@ disassemble(state_t *s, heap_ptr pos)
 
     } /* Send-like opcodes */
 
-  } /* (heappos == *_pc) */
+  } /* (heappos == *p_pc) */
 
   return retval;
 }
@@ -1153,6 +1153,22 @@ c_gfx_print_dynviews(state_t *s)
 		sciprintf("No dynview list active.\n");
 	else
 		s->dyn_views->print(GFXW(s->dyn_views), 0);
+
+	return 0;
+}
+
+int
+c_gfx_print_dropviews(state_t *s)
+{
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	if (!s->drop_views)
+		sciprintf("No dropped dynview list active.\n");
+	else
+		s->drop_views->print(GFXW(s->drop_views), 0);
 
 	return 0;
 }
@@ -1474,7 +1490,7 @@ c_disasm(state_t *s)
 	}
 
 	if (vpc <= 0)
-		vpc = *_pc + vpc;
+		vpc = *p_pc + vpc;
 
 	if (cmd_paramlength > 1)
 		{
@@ -2256,7 +2272,7 @@ int
 c_obj(state_t *s)
 {
   return
-    objinfo(s, *_objp);
+    objinfo(s, *p_objp);
 }
 
 int
@@ -2442,11 +2458,11 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 	if (sci_debug_flags & _DEBUG_FLAG_LOGGING) {
 		int old_debugstate = _debugstate_valid;
 
-		_pc = pc;
-		_sp = sp;
-		_pp = pp;
-		_objp = objp;
-		_restadjust = restadjust;
+		p_pc = pc;
+		p_sp = sp;
+		p_pp = pp;
+		p_objp = objp;
+		p_restadjust = restadjust;
 		sciprintf("acc=%04x  ", s->acc & 0xffff);
 		_debugstate_valid = 1;
 		disassemble(s, *pc);
@@ -2491,11 +2507,11 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 	_debugstate_valid = (_debug_step_running == 0);
 
 	if (_debugstate_valid) {
-		_pc = pc;
-		_sp = sp;
-		_pp = pp;
-		_objp = objp;
-		_restadjust = restadjust;
+		p_pc = pc;
+		p_sp = sp;
+		p_pp = pp;
+		p_objp = objp;
+		p_restadjust = restadjust;
 
 		c_debuginfo(s);
 		sciprintf("Step #%d\n", script_step_counter);
@@ -2676,6 +2692,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 					 " or the current port\n  if no port was specified.");
 			con_hook_command(c_gfx_print_visual, "gfx_print_visual", "", "Displays all information about the\n  current widget state");
 			con_hook_command(c_gfx_print_dynviews, "gfx_print_dynviews", "", "Shows the dynview list");
+			con_hook_command(c_gfx_print_dropviews, "gfx_print_dropviews", "", "Shows the list of dropped\n  dynviews");
 			con_hook_command(c_gfx_drawpic, "gfx_drawpic", "ii*", "Draws a pic resource\n\nUSAGE\n  gfx_drawpic <nr> [<pal> [<fl>]]\n"
 					 "  where <nr> is the number of the pic resource\n  to draw\n  <pal> is the optional default\n  palette for the pic (0 is"
 					 "\n  assumed if not specified)\n  <fl> are any pic draw flags (default\n  is 1)");

@@ -100,17 +100,16 @@ int x11_error = 0;
 
 static int check_for_xshm(Display *display)
 {
-  int major, minor, ignore;
-  Bool pixmaps;
-  if (XQueryExtension(display, "MIT-SHM", &ignore, &ignore, &ignore)) {
-    if (XShmQueryVersion( display, &major, &minor, &pixmaps) == True) {
-      return (pixmaps == True) ? 2 : 1 ;
-    } else {
-      return 0;
-    }
-  }
-  return 0;
-
+	int major, minor, ignore;
+	Bool pixmaps;
+	if (XQueryExtension(display, "MIT-SHM", &ignore, &ignore, &ignore)) {
+		if (XShmQueryVersion( display, &major, &minor, &pixmaps) == True) {
+			return (pixmaps == True) ? 2 : 1 ;
+		} else {
+			return 0;
+		}
+	}
+	return 0;
 }
 #endif
 

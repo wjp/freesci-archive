@@ -1,3 +1,8 @@
+2002-03-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/scriptdebug.c: Renamed some variables to prevent clashes
+	with IRIX' libc
+
 2002-02-27  Alexander R Angas <wgd@internode.on.net>
 
 	* src/sound/buff_ss.c:
