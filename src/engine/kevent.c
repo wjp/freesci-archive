@@ -132,7 +132,6 @@ kGetEvent(state_t *s, int funct_nr, int argc, reg_t *argv)
 				PUT_SEL32V(obj, modifiers, e.buckybits|extra_bits);
 				s->r_acc = make_reg(0, 1);
 			}
-			return s->r_acc;;
 		} break;
 
 		default: {
