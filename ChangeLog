@@ -1,3 +1,12 @@
+2001-04-17  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/gfx/drivers/xlib_driver.c: added a 'disable-shmem' option.
+        * src/gfx/drivers/sdl_driver.c:  Added a 'fullscreen' option.
+
+	* src/gfx/drivers/ggi_driver.c:  (all three, actually)  fixed a
+              mis-use of strcmp in which the failure case was being
+              treated as the success case.
+
 2001-04-16  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/vm.c (script_instantiate): The class table is now

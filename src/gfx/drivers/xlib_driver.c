@@ -172,8 +172,8 @@ xlib_error_handler(Display *display, XErrorEvent *error)
 static int
 xlib_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 {
-	if (strcmp(attribute, "swap_ctrl_caps") ||
-	    strcmp(attribute, "swap_caps_ctrl")) {
+	if (!strncmp(attribute, "swap_ctrl_caps",17) ||
+	    !strncmp(attribute, "swap_caps_ctrl",17)) {
 		if (string_truep(value))
 			S->flags |= SCI_XLIB_SWAP_CTRL_CAPS;
 		else
@@ -182,6 +182,13 @@ xlib_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 		return GFX_OK;
 	}
 
+#ifdef HAVE_MITSHM
+	if (!strncmp(attribute, "disable_shmem", 14)) {
+	  if (string_truep(value))
+	    have_shmem = -1;
+	  return GFX_OK;
+	}
+#endif
 
 	ERROR("Attempt to set xlib parameter \"%s\" to \"%s\"\n", attribute, value);
 	return GFX_ERROR;
@@ -455,7 +462,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		XFreePixmap(S->display, S->visual[i]);
 		XShmDetach(S->display ,S->shm[i]);
 		XSync(S->display, False);
-		S->visual[i] = NULL;
+		S->visual[i] = 0;
 		x11_error = 0;
 		shmdt(S->shm[i]->shmaddr);
 		free(S->shm[i]);

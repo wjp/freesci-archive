@@ -104,8 +104,8 @@ ggi_set_param(gfx_driver_t *drv, char *attribute, char *value)
 {
 	gfx_ggi_struct_t *meta = (gfx_ggi_struct_t *) drv->state;
 
-	if (strcmp(attribute, "swap_ctrl_caps") ||
-	    strcmp(attribute, "swap_caps_ctrl")) {
+	if (!strcmp(attribute, "swap_ctrl_caps") ||
+	    !strcmp(attribute, "swap_caps_ctrl")) {
 		if (string_truep(value))
 			meta->flags |= SCI_GGI_SWAP_CTRL_CAPS;
 		else

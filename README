@@ -235,7 +235,15 @@ a Sun keyboard. Default is 'false'.
 --------------------
 - swap_caps_ctrl = true | false
 Same as for the GGI driver.
+- disable_shmem = true | false
+disables shmem x11 access, if compiled in.
 
+2.1.1.3 SDL driver:
+--------------------
+- swap_caps_ctrl = true | false
+Same as for the GGI driver.
+- fullscreen = true | false
+kinda self-explanatory, eh?  :)
 
 2.1.2 Midiout subsystem
 -----------------------

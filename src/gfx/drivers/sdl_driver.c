@@ -49,6 +49,7 @@
 #define SCI_SDL_HANDLE_GRABBED 1
 
 #define SCI_SDL_SWAP_CTRL_CAPS (1 << 0)
+#define SCI_SDL_FULLSCREEN (1 << 2)
 
 int string_truep(char *value); 
 
@@ -100,16 +101,25 @@ sdlerror(gfx_driver_t *drv, int line)
 static int
 sdl_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 {
-  if (strcmp(attribute, "swap_ctrl_caps") ||
-      strcmp(attribute, "swap_caps_ctrl")) {
+  if (!strncmp(attribute, "swap_ctrl_caps", 15) ||
+      !strncmp(attribute, "swap_caps_ctrl", 15)) {
     if (string_truep(value))
       S->flags |= SCI_SDL_SWAP_CTRL_CAPS;
     else
       S->flags &= ~SCI_SDL_SWAP_CTRL_CAPS;
-    
     return GFX_OK;
   }
+
+  if (!strncmp(attribute, "fullscreen", 11)) {
+    printf("fullscreen?\n");
+    if (string_truep(value))
+      S->flags |= SCI_SDL_FULLSCREEN;
+    else
+      S->flags &= ~SCI_SDL_FULLSCREEN;
   
+    return GFX_OK;
+  }
+
   ERROR("Attempt to set sdl parameter \"%s\" to \"%s\"\n", attribute, value);
   return GFX_ERROR;
 }
@@ -124,18 +134,21 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   
   if (!S)
     S = malloc(sizeof(struct _sdl_state));
-  
-  S->flags = 0;
-  
+    
   if (xfact < 1 || yfact < 1 || bytespp < 1 || bytespp > 4) {
     ERROR("Internal error: Attempt to open window w/ scale factors (%d,%d) and bpp=%d!\n",
 	  xfact, yfact, bytespp);
   }
 
   S->primary = NULL;
-  S->primary = SDL_SetVideoMode(xsize, ysize, bytespp << 3, 
-				SDL_HWSURFACE | SDL_SWSURFACE | 
-				SDL_HWPALETTE | SDL_DOUBLEBUF );
+
+  i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF;
+  if (S->flags & SCI_SDL_FULLSCREEN) {
+    i |= SDL_FULLSCREEN;
+    printf("foo..\n");
+  }
+
+  S->primary = SDL_SetVideoMode(xsize, ysize, bytespp << 3, i);
 
   if (!S->primary) {
     ERROR("Could not set up a primary SDL surface!\n");
@@ -273,7 +286,7 @@ sdl_init(struct _gfx_driver *drv)
   }
   SDL_EnableUNICODE(SDL_ENABLE);
 
-  depth = SDL_VideoModeOK(640,400, 32, SDL_HWSURFACE | SDL_SWSURFACE);
+  depth = SDL_VideoModeOK(640,400, 32, SDL_HWSURFACE | SDL_SWSURFACE );
   if (depth && (! sdl_init_specific(drv, 2, 2, depth >> 3 )))
     return GFX_OK;
 
