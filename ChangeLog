@@ -3,6 +3,8 @@
 	* src/gfx/resource/sci_pic_0.c (_gfxr_fill_recursive): Fixed write over
 	right border of picture
 	Fixed treatment of lines dithered with white to permit filling over
+	(_gfxr_plot_aux_pattern): Box patterns are drawn one pixel wider than
+	specified, as in Sierra SCI
 
 2001-09-17  Alex Angas  <wgd@internode.on.net>
 

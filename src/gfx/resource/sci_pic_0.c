@@ -867,12 +867,13 @@ _gfxr_plot_aux_pattern(gfxr_pic_t *pic, int x, int y, int size, int circle, int 
 
 	for (i = -size; i <= size; i++) {
 		int j;
+		int height;
 
 		if (circle) {
 			offset = circle_data[size][abs(i)];
-			width = (offset << 1) + 1;
+			height = width = (offset << 1) + 1;
 			offset = -offset;
-		}
+		} else height = width++;
 
 		if (random == PLOT_AUX_PATTERN_NO_RANDOM) {
 
@@ -884,7 +885,7 @@ _gfxr_plot_aux_pattern(gfxr_pic_t *pic, int x, int y, int size, int circle, int 
 					pic->aux_map[yoffset + offset + j] |= mask;
 
 		} else { /* Semi-Random! */
-			for (j = 0; j < width; j++) {
+			for (j = 0; j < height; j++) {
 				if (random_data[random_index >> 3] & (0x80 >> (random_index & 7))) {
 					/* The 'seemingly' random decision */
 					if (mask & GFX_MASK_CONTROL)
@@ -962,7 +963,7 @@ _gfxr_draw_pattern(gfxr_pic_t *pic, int x, int y, int color, int priority, int c
 		/* Rectangle */
 		boundaries.x = scaled_x - xsize;
 		boundaries.y = scaled_y - ysize;
-		boundaries.xl = (xsize << 1) + 1;
+		boundaries.xl = ((xsize + 1) << 1) + 1;
 		boundaries.yl = (ysize << 1) + 1;
 
 
