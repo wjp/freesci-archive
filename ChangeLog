@@ -1,5 +1,11 @@
 2005-01-01  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* README.GP32: Refer to new newlib patch that implements
+	_gettimeofday(). kGetTime uses time(), which in turn uses
+	_gettimeofday().
+
+2005-01-01  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/scicore/tools.c (sci_gettime): Fixed a GP32 bug.
 
 2004-12-31  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>

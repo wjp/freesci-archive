@@ -40,7 +40,7 @@ Create a temporary directory somewhere and download the following:
 binutils 2.15 (http://sources.redhat.com/binutils/)
 GCC 3.4.3 (http://gcc.gnu.org/)
 newlib 1.13.0 (http://sources.redhat.com/newlib/)
-newlib GP32 patch 0.1 (http://www.retrovg.com/gp32/)
+newlib GP32 patch 0.2 (http://www.retrovg.com/gp32/)
 
 Choose a directory where you want to install the toolchain, for example
 /usr/local/gp32. Make sure you have sufficient rights to write to this
@@ -70,7 +70,7 @@ Unpack GCC and newlib:
 
 Apply the GP32 newlib patch
 # cd newlib-1.13.0
-# patch -p1 < ../newlib-1.13.0-gp32-patch-0.1.diff
+# patch -p1 < ../newlib-1.13.0-gp32-patch-0.2.diff
 
 Modify the configure script to prevent libiberty from being built:
 # cd ../gcc-3.4.3
