@@ -1,3 +1,8 @@
+2001-12-26  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (_k_update_signals_in_view_list): Delete stop-
+	updatification flag upon position change
+
 2001-12-26  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/event_ss.c: Minor (potential) bug fixes.

@@ -1985,6 +1985,10 @@ _k_update_signals_in_view_list(gfxw_list_t *old_list, gfxw_list_t *new_list)
 			int carry = old_widget->signal & _K_VIEW_SIG_FLAG_FREESCI_STOPUPD;
 			/* Transfer 'stopupd' flag */
 
+			if ((new_widget->pos.x != old_widget->pos.x)
+			    || (new_widget->pos.y != old_widget->pos.y))
+				carry = 0;
+
 			old_widget->signal = new_widget->signal |= carry;
 		}
 
