@@ -986,7 +986,7 @@ x_map_key(gfx_driver_t *drv, int keycode)
 	case XK_Num_Lock:/* S->buckystate ^= SCI_EVM_NUMLOCK; return 0; */
 	case XK_Shift_L:/* S->buckystate |= SCI_EVM_LSHIFT; return 0; */
 	case XK_Shift_R:/* S->buckystate |= SCI_EVM_RSHIFT; return 0; */
-		break;
+		return 0;
 
 	
 	case XK_KP_Add: return '+';

@@ -516,6 +516,10 @@ kWait(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	memcpy(&(s->last_wait_time), &time, sizeof(GTimeVal));
 
+	/* Reset optimization flags: Game is playing along nicely anyway */
+	s->kernel_opt_flags &= ~(KERNEL_OPT_FLAG_GOT_EVENT
+				 | KERNEL_OPT_FLAG_GOT_2NDEVENT);
+
 	GFX_ASSERT(gfxop_usleep(s->gfx_state, SleepTime * 1000000 / 60));
 }
 
@@ -1936,7 +1940,7 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 
 		_k_set_now_seen(s, view->ID);
 		_priority = /*GET_SELECTOR(obj, y); */((view->pos.y));/**/
-		_priority = VIEW_PRIORITY(_priority);
+		_priority = VIEW_PRIORITY(_priority - 1);
 
 		if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP) { /* Picview */
 			priority = GET_SELECTOR(obj, priority);

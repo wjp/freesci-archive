@@ -514,6 +514,7 @@ _gfxr_auxbuf_spread(gfxr_pic_t *pic, int *min_x, int *min_y, int *max_x, int *ma
 				while (!done && i < old_intervals_nr) {
 					if (intervals[!ivi][i].xl > xr+1)
 						done = 1;
+#if 0
 					else if (intervals[!ivi][i].xr < xl-1) {
 						int o_xl = intervals[!ivi][i].xl;
 						int o_xr = intervals[!ivi][i].xr;
@@ -526,7 +527,9 @@ _gfxr_auxbuf_spread(gfxr_pic_t *pic, int *min_x, int *min_y, int *max_x, int *ma
 						}
 
 						old_intervals_start_offset = i;
-					} else {
+					}
+#endif
+					else {
 						int k = i;
 						int old_xl = intervals[!ivi][i].xl;
 						int dwidth_l = abs(old_xl - xl);
@@ -575,9 +578,10 @@ _gfxr_auxbuf_spread(gfxr_pic_t *pic, int *min_x, int *min_y, int *max_x, int *ma
 					}
 					i++;
 				}
-
+#if 0
 				if (!found_interval && y) /* No 'parent' interval? */
 					_gfxr_auxbuf_tag_line(pic, pos + xl - 320, xr - xl + 1);
+#endif
 
 				width = 0;
 			}
@@ -810,7 +814,7 @@ _gfxr_plot_aux_pattern(gfxr_pic_t *pic, int x, int y, int size, int circle, int 
 		{2, 2, 1},
 		{3, 3, 2, 1},
 		{4, 4, 4, 3, 1},
-		{1, 3, 4, 4, 5, 5},
+		{5, 5, 4, 4, 3, 1},
 		{6, 6, 6, 5, 5, 4, 2},
 		{7, 7, 7, 6, 6, 5, 4, 2}};
 
@@ -849,7 +853,7 @@ _gfxr_plot_aux_pattern(gfxr_pic_t *pic, int x, int y, int size, int circle, int 
 
 	if (!circle) {
 		offset = -size;
-		width = (size << 1) + 1;
+		width = (size << 1) + 2;
 	}
 
 	for (i = -size; i <= size; i++) {
@@ -1468,7 +1472,7 @@ _gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int c
 		legalcolor = 0;
 	} else legalcolor = 0;
 
-	if (bounds[ytotal + x] != legalcolor)
+	if (!bounds || bounds[ytotal + x] != legalcolor)
 		return;
 
 	if (bounds) {
@@ -1762,6 +1766,9 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			}
 
 			color = palette[pal][index];
+#ifdef GFXR_DEBUG_PIC0
+			color &= 0x77;
+#endif
 			p0printf("  color <- %02x [%d/%d]\n", color, pal, index);
 			drawenable |= GFX_MASK_VISUAL;
 			break;
@@ -1858,6 +1865,7 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			while (*(resource + pos) < PIC_OP_FIRST) {
 				/*fprintf(stderr,"####################\n"); */
 				GET_ABS_COORDS(x, y);
+				p0printf("Abs coords %d,%d\n", x, y);
 				/*fprintf(stderr,"C=(%d,%d)\n", x, y + SCI_TITLEBAR_SIZE);*/
 				_gfxr_fill(pic, x, y + SCI_TITLEBAR_SIZE, (fill_normally)? color : 0, priority, control, drawenable);
 #ifdef GFXR_DEBUG_PIC0

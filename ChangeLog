@@ -1,4 +1,12 @@
+2001-04-09  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/resource/sci_pic_0.c: Some improvements regarding pic
+	drawing bugs in HQ/QfG
+
 2001-04-08  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kevent.c (kGetEvent): Saved some processor time during
+	pointless event loops by explicitly waiting if they were detected
 
 	* src/gfx/drivers/sdl_driver.c (sdl_draw_line): Fixed lines
 

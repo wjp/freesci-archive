@@ -170,6 +170,8 @@ typedef struct _state
 	sci_version_t version; /* The approximated patchlevel of the version to emulate */
 	sci_version_t max_version, min_version; /* Used for autodetect sanity checks */
 
+	unsigned int kernel_opt_flags; /* Kernel optimization flags- used for performance tweaking */
+
 	/* Kernel File IO stuff */
 
 	int file_handles_nr; /* maximum numer of allowed file handles */

@@ -358,6 +358,11 @@ process_sound_events(struct _state *s); /* Get all sound events, apply their cha
 /* 'previous' and 'next' nodes for lists mean 'first' and 'last' node, respectively */
 
 
+/* Kernel optimization flags */
+#define KERNEL_OPT_FLAG_GOT_EVENT (1<<0)
+#define KERNEL_OPT_FLAG_GOT_2NDEVENT (1<<1)
+
+
 /******************** Kernel functions ********************/
 
 /* Generic description: */

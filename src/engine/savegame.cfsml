@@ -794,7 +794,6 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
 	case GFXW_BOX:
 		*widget = _gfxw_new_widget(sizeof(gfxw_box_t), expected_type);
 		%CFSMLREAD gfxw_box_t ((gfxw_box_t*)*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
-		(*widget)->type = expected_type;
 		break;
 
 	case GFXW_RECT:
@@ -802,14 +801,12 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
 	case GFXW_INVERSE_LINE:
 		*widget = _gfxw_new_widget(sizeof(gfxw_primitive_t), expected_type);
 		%CFSMLREAD gfxw_primitive_t ((gfxw_primitive_t*)*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
-		(*widget)->type = expected_type;
 		break;
 
 	case GFXW_VIEW:
 	case GFXW_STATIC_VIEW:
 		*widget = _gfxw_new_widget(sizeof(gfxw_view_t), expected_type);
 		%CFSMLREAD gfxw_view_t ((gfxw_view_t*)*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
-		(*widget)->type = expected_type;
 		break;
 
 	case GFXW_DYN_VIEW:
@@ -1188,6 +1185,7 @@ gamestate_restore(state_t *s, char *dirname)
 
 	retval->resource_dir = s->resource_dir;
 	retval->work_dir = s->work_dir;
+	retval->kernel_opt_flags = 0;
 
 	retval->successor = NULL;
 

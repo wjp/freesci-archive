@@ -98,6 +98,12 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	sci_event_t e;
 	int oldx, oldy;
 	CHECK_THIS_KERNEL_FUNCTION;
+
+	if (s->kernel_opt_flags & KERNEL_OPT_FLAG_GOT_2NDEVENT) {
+		/* Penalty time- too many requests to this function without
+		** waiting!  */
+		gfxop_usleep(s->gfx_state, 1000000 / 60);
+	}
   
 	/*If there's a simkey pending, and the game wants a keyboard event, use the
 	 *simkey instead of a normal event*/
@@ -121,6 +127,17 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	PUT_SELECTOR(obj, x, s->gfx_state->pointer_pos.x);
 	PUT_SELECTOR(obj, y, s->gfx_state->pointer_pos.y);
 	/*  gfxop_set_pointer_position(s->gfx_state, gfx_point(s->gfx_state->pointer_pos.x, s->gfx_state->pointer_pos.y)); */
+
+
+	if (e.type)
+		s->kernel_opt_flags &= ~(KERNEL_OPT_FLAG_GOT_EVENT
+					 | KERNEL_OPT_FLAG_GOT_2NDEVENT);
+	else {
+		if (s->kernel_opt_flags & KERNEL_OPT_FLAG_GOT_EVENT)
+			s->kernel_opt_flags |= KERNEL_OPT_FLAG_GOT_2NDEVENT;
+		else
+			s->kernel_opt_flags |= KERNEL_OPT_FLAG_GOT_EVENT;
+	}
   
 	switch(e.type)
 		{

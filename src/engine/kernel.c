@@ -490,6 +490,11 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	CHECK_THIS_KERNEL_FUNCTION;
 
+	/* Reset optimization flags: If this function is called,
+	** the game may be waiting for a timeout  */
+	s->kernel_opt_flags &= ~(KERNEL_OPT_FLAG_GOT_EVENT
+				 | KERNEL_OPT_FLAG_GOT_2NDEVENT);
+
 	the_time = time(NULL);
 	loc_time = localtime(&the_time);
 	if (s->version<SCI_VERSION_FTU_NEW_GETTIME) { /* Use old semantics */
