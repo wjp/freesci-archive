@@ -219,6 +219,23 @@ sound_sdl_exit(state_t *s)
 }
 
 
+int
+sound_sdl_save(state_t *s, char *dir)
+{
+  int *success;
+  int retval;
+  int size;
+  /* we ignore the dir */
+
+  sound_command(s, SOUND_COMMAND_SAVE_STATE, 0, 2);
+  sound_send_data(".", 2);
+
+  sound_get_data(&success, &size, sizeof(int));
+  retval = *success;
+  free(success);
+  return retval;
+}
+
 sfx_driver_t sound_sdl = {
 	"sdl",
 	&sound_sdl_init,
@@ -230,7 +247,7 @@ sfx_driver_t sound_sdl = {
 	&sound_sdl_queue_command,
 	&sound_sdl_get_data,
 	&sound_sdl_send_data,
-	&sound_save,
+	&sound_sdl_save,
 	&sound_restore,
 	&sound_command,
 	&sound_suspend,
