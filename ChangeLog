@@ -1,3 +1,9 @@
+2003-03-08  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sfx/seq/sequencers.c: Define sfx_sequencer_oss_adlib and
+	sfx_sequencer_mt32 as extern and only use sfx_sequencer_mt32 when
+	HAVE_SOUNDCARD_H is defined.
+
 2003-02-25  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/config.l, src/main.c: Added configuration option
