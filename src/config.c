@@ -481,7 +481,7 @@ static char *yy_last_accepting_cpos;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "./config.l"
+#line 1 "config.l"
 #define INITIAL 0
 /***************************************************************************
  config.l (C) 1999 Christoph Reichenbach, TU Darmstadt
@@ -509,7 +509,7 @@ char *yytext;
     Christoph Reichenbach (CJR) [jameson@linuxgames.com]
 
 ***************************************************************************/
-#line 29 "./config.l"
+#line 29 "config.l"
 #include <engine.h>
 #include <gfx_system.h>
 #include <gfx_tools.h>
@@ -894,7 +894,7 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 264 "./config.l"
+#line 264 "config.l"
 
 
 #line 901 "lex.yy.c"
@@ -982,7 +982,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 266 "./config.l"
+#line 266 "config.l"
 {
 	char *cleanup;
 	++yytext; /* Get over opening bracket */
@@ -1029,7 +1029,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 311 "./config.l"
+#line 311 "config.l"
 { /***** End of graphics *****/
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1042,7 +1042,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 321 "./config.l"
+#line 321 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1055,7 +1055,7 @@ if (cur_section) {
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 331 "./config.l"
+#line 331 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1067,7 +1067,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 341 "./config.l"
+#line 341 "config.l"
 {
 /* driver parameters */
         char *subsys_name = yytext;
@@ -1105,7 +1105,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 377 "./config.l"
+#line 377 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
@@ -1133,16 +1133,16 @@ case 7:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 401 "./config.l"
+#line 401 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 403 "./config.l"
+#line 403 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 405 "./config.l"
+#line 405 "config.l"
 {
         yy_delete_buffer( YY_CURRENT_BUFFER );
         yyterminate();
@@ -1150,12 +1150,12 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 410 "./config.l"
+#line 410 "config.l"
 printf("Unrecognized option: '%s'\n", yytext);
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 412 "./config.l"
+#line 412 "config.l"
 ECHO;
 	YY_BREAK
 #line 1162 "lex.yy.c"
@@ -2037,7 +2037,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 412 "./config.l"
+#line 412 "config.l"
 
 
 int

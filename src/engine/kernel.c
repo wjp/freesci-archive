@@ -437,7 +437,7 @@ kHaveMouse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	CHECK_THIS_KERNEL_FUNCTION;
 
-	s->acc = s->have_mouse_flag;
+	s->acc = s->have_mouse_flag? -1 : 0;
 }
 
 
