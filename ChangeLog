@@ -1,5 +1,9 @@
 2004-06-25  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/dc/Makefile: Remove config.h during 'make clean'.
+
+2004-06-25  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/dc/keyboard.c, src/dc/keyboard.h: Added to repository.
 	* src/dc/Makefile: Added keyboard.c to objects.
 	* src/dc/gfx/drivers/dc_driver.c: Added initial implementation

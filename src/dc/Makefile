@@ -101,7 +101,7 @@ KOS_LOCAL_CFLAGS := -I$(FSCI_BASE)/src/include -I$(FSCI_BASE)/src/dc \
 	-DWANT_CONSOLE -DYY_NEVER_INTERACTIVE
 
 clean: rm-elf rm-bin
-	-rm -f $(OBJS)
+	-rm -f $(OBJS) config.h
 
 rm-elf:
 	-rm -f $(ELF_TARGET)
