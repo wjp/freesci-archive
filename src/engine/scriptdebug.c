@@ -1268,6 +1268,8 @@ c_gfx_show_map(state_t *s)
 		return 1;
 	}
 
+	gfxop_set_clip_zone(s->gfx_state, gfx_rect_fullscreen);
+
 	switch (map) {
 	case 0:
 		s->visual->add_dirty_abs(GFXWC(s->visual), gfx_rect(0, 0, 320, 200), 0);
@@ -1293,252 +1295,295 @@ c_gfx_show_map(state_t *s)
 	return 0;
 }
 
+
+int
+c_gfx_draw_cel(state_t *s)
+{
+	int view = cmd_params[0].val;
+	int loop = cmd_params[1].val;
+	int cel = cmd_params[2].val;
+
+	if (!s) {
+		sciprintf("Not in debug state!\n");
+		return 1;
+	}
+
+	gfxop_set_clip_zone(s->gfx_state, gfx_rect_fullscreen);
+	gfxop_draw_cel(s->gfx_state, view, loop, cel, gfx_point(160, 100),
+		       s->ega_colors[0]);
+	gfxop_update(s->gfx_state);
+
+	return 0;
+}
+
+int
+c_gfx_fill_screen(state_t *s)
+{
+	int col = cmd_params[0].val;
+
+	if (!s) {
+		sciprintf("Not in debug state!\n");
+		return 1;
+	}
+
+	if (col < 0 || col > 15)
+		col = 0;
+
+	gfxop_set_clip_zone(s->gfx_state, gfx_rect_fullscreen);
+	gfxop_fill_box(s->gfx_state, gfx_rect_fullscreen, s->ega_colors[col]);
+	gfxop_update(s->gfx_state);
+
+	return 0;
+}
+
+
+
 int
 c_disasm(state_t *s)
 {
-  int vpc = cmd_params[0].val;
-  int op_count;
+	int vpc = cmd_params[0].val;
+	int op_count;
 
-  if (!_debugstate_valid) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
 
-  if (vpc <= 0)
-    vpc = *_pc + vpc;
+	if (vpc <= 0)
+		vpc = *_pc + vpc;
 
-  if (cmd_paramlength > 1)
-  {
-    if (cmd_params[1].val < 0)
-      return 0;
-    op_count = cmd_params[1].val;
-  }
-  else
-    op_count = 1;
+	if (cmd_paramlength > 1)
+		{
+			if (cmd_params[1].val < 0)
+				return 0;
+			op_count = cmd_params[1].val;
+		}
+	else
+		op_count = 1;
 
-  do {
-    vpc = disassemble(s, vpc);
-  } while ((vpc > 0) && (vpc < 0xfff2) && (cmd_paramlength > 1) && (--op_count));
-  return 0;
+	do {
+		vpc = disassemble(s, vpc);
+	} while ((vpc > 0) && (vpc < 0xfff2) && (cmd_paramlength > 1) && (--op_count));
+	return 0;
 }
 
 
 int
 c_snk(state_t *s)
 {
-  int callk_index;
-  char *endptr;
+	int callk_index;
+	char *endptr;
   
-  if (!_debugstate_valid) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
 
-  if (cmd_paramlength > 0) {
-    /* Try to convert the parameter to a number. If the conversion stops
-       before end of string, assume that the parameter is a function name
-       and scan the function table to find out the index. */
-    callk_index = strtoul (cmd_params [0].str, &endptr, 0);
-    if (*endptr != '\0')
-    {
-      int i;
-      
-      callk_index = -1;
-      for (i = 0; i < s->kernel_names_nr; i++)
-        if (!strcmp (cmd_params [0].str, s->kernel_names [i]))
-        {
-          callk_index = i;
-          break;
-        }
+	if (cmd_paramlength > 0) {
+		/* Try to convert the parameter to a number. If the conversion stops
+		   before end of string, assume that the parameter is a function name
+		   and scan the function table to find out the index. */
+		callk_index = strtoul (cmd_params [0].str, &endptr, 0);
+		if (*endptr != '\0')
+			{
+				int i;
 
-      if (callk_index == -1)
-      {
-        sciprintf ("Unknown kernel function '%s'\n", cmd_params [0].str);
-        return 1;
-      }
-    }
+				callk_index = -1;
+				for (i = 0; i < s->kernel_names_nr; i++)
+					if (!strcmp (cmd_params [0].str, s->kernel_names [i]))
+						{
+							callk_index = i;
+							break;
+						}
 
-    _debug_seeking = _DEBUG_SEEK_SPECIAL_CALLK;
-    _debug_seek_special = callk_index;
-    _debugstate_valid = 0;
-  } else {
-    _debug_seeking = _DEBUG_SEEK_CALLK;
-    _debugstate_valid = 0;
-  }
-  return 0;
+				if (callk_index == -1)
+					{
+						sciprintf ("Unknown kernel function '%s'\n", cmd_params [0].str);
+						return 1;
+					}
+			}
+
+		_debug_seeking = _DEBUG_SEEK_SPECIAL_CALLK;
+		_debug_seek_special = callk_index;
+		_debugstate_valid = 0;
+	} else {
+		_debug_seeking = _DEBUG_SEEK_CALLK;
+		_debugstate_valid = 0;
+	}
+	return 0;
 }
 
 
 int
 c_sret(state_t *s)
 {
-  _debug_seeking = _DEBUG_SEEK_LEVEL_RET;
-  _debug_seek_level = s->execution_stack_pos;
-  _debugstate_valid = 0;
-  return 0;
+	_debug_seeking = _DEBUG_SEEK_LEVEL_RET;
+	_debug_seek_level = s->execution_stack_pos;
+	_debugstate_valid = 0;
+	return 0;
 }
 
 int
 c_go(state_t *s)
 {
-  _debug_seeking = 0;
-  _debugstate_valid = 0;
-  script_debug_flag = 0;
-  return 0;
+	_debug_seeking = 0;
+	_debugstate_valid = 0;
+	script_debug_flag = 0;
+	return 0;
 }
 
 
 int
 c_set_acc(state_t *s)
 {
-  if (!_debugstate_valid) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
 
-  s->acc = cmd_params[0].val;
-  return 0;
+	s->acc = cmd_params[0].val;
+	return 0;
 }
 
 int
 c_resource_id(state_t *s)
 {
-  int id = cmd_params[0].val;
+	int id = cmd_params[0].val;
 
-  sciprintf("%s.%d (0x%x)\n", Resource_Types[id >> 11], id &0x7ff, id & 0x7ff);
-  return 0;
+	sciprintf("%s.%d (0x%x)\n", Resource_Types[id >> 11], id &0x7ff, id & 0x7ff);
+	return 0;
 }
 
 int
 c_heap_free(state_t *s)
 {
-  if (!_debugstate_valid) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
 
-  heap_dump_free(s->_heap);
-  return 0;
+	heap_dump_free(s->_heap);
+	return 0;
 }
 
 int
 c_listclones(state_t *s)
 {
-  int i, j = 0;
-  sciprintf("Listing all logged clones:\n");
-  for (i = 0; i < SCRIPT_MAX_CLONES; i++)
-    if (s->clone_list[i]) {
-      sciprintf("  Clone at %04x\n", s->clone_list[i]);
-      j++;
-    }
+	int i, j = 0;
+	sciprintf("Listing all logged clones:\n");
+	for (i = 0; i < SCRIPT_MAX_CLONES; i++)
+		if (s->clone_list[i]) {
+			sciprintf("  Clone at %04x\n", s->clone_list[i]);
+			j++;
+		}
 
-  sciprintf("Total of %d clones.\n", j);
-  return 0;
+	sciprintf("Total of %d clones.\n", j);
+	return 0;
 }
 
 void
 set_debug_mode (struct _state *s, int mode, char *areas)
 {
-  char modechars[] = "ulgcmfbadspMSFt"; /* Valid parameter chars */
-  char *parser;
-  int seeker;
-  char frob;
+	char modechars[] = "ulgcmfbadspMSFt"; /* Valid parameter chars */
+	char *parser;
+	int seeker;
+	char frob;
 
-  parser = areas;
-  while ((frob = *parser)) {
-    seeker = 0;
+	parser = areas;
+	while ((frob = *parser)) {
+		seeker = 0;
 
-    if (frob == '*') { /* wildcard */
-      if (mode) /* set all */
-	s->debug_mode = 0xffffffff;
-      else /* unset all */
-	s->debug_mode = 0;
+		if (frob == '*') { /* wildcard */
+			if (mode) /* set all */
+				s->debug_mode = 0xffffffff;
+			else /* unset all */
+				s->debug_mode = 0;
 
-      parser++;
-      continue;
-    }
+			parser++;
+			continue;
+		}
 
-    while (modechars[seeker] && (modechars[seeker] != frob))
-      seeker++;
+		while (modechars[seeker] && (modechars[seeker] != frob))
+			seeker++;
 
-    if (modechars[seeker] == '\0') {
-      sciprintf("Invalid log mode parameter: %c\n", frob);
-      return;
-    }
+		if (modechars[seeker] == '\0') {
+			sciprintf("Invalid log mode parameter: %c\n", frob);
+			return;
+		}
 
-    if (mode) /* Set */
-      s->debug_mode |= (1 << seeker);
-    else /* UnSet */
-      s->debug_mode &= ~(1 << seeker);
+		if (mode) /* Set */
+			s->debug_mode |= (1 << seeker);
+		else /* UnSet */
+			s->debug_mode &= ~(1 << seeker);
 
-    parser++;
-  }
+		parser++;
+	}
 }
 
 int
 c_debuglog(state_t *s)
 {
-  int i;
+	int i;
 
-  if (!_debugstate_valid) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
 
-  if (cmd_paramlength == 0) {
-    for (i = 0; i < SCIk_DEBUG_MODES; i++)
-      if (s->debug_mode & (1 << i))
-	sciprintf(" Logging %s\n", SCIk_Debug_Names[i]);
+	if (cmd_paramlength == 0) {
+		for (i = 0; i < SCIk_DEBUG_MODES; i++)
+			if (s->debug_mode & (1 << i))
+				sciprintf(" Logging %s\n", SCIk_Debug_Names[i]);
 
-    return 0;
-  }
+		return 0;
+	}
 
-  for (i = 0; i < cmd_paramlength; i++) {
-    int mode;
+	for (i = 0; i < cmd_paramlength; i++) {
+		int mode;
 
-    if (cmd_params[i].str[0] == '+')
-      mode = 1;
-    else
-      if (cmd_params[i].str[0] == '-')
-	mode = 0;
-      else {
-	sciprintf("Parameter '%s' should start with + or -\n", cmd_params[i].str);
-	return 1;
-      }
+		if (cmd_params[i].str[0] == '+')
+			mode = 1;
+		else
+			if (cmd_params[i].str[0] == '-')
+				mode = 0;
+			else {
+				sciprintf("Parameter '%s' should start with + or -\n", cmd_params[i].str);
+				return 1;
+			}
 
-    set_debug_mode(s, mode, cmd_params [i].str + 1);
-  }
+		set_debug_mode(s, mode, cmd_params [i].str + 1);
+	}
 
-  return 0;
+	return 0;
 }
 
 
 int
 show_list(state_t *s, heap_ptr list)
 {
-  heap_ptr prevnode = 0, node;
-  int nodectr = 0;
+	heap_ptr prevnode = 0, node;
+	int nodectr = 0;
 
-  sciprintf("List at %04x:\n", list);
-  node = getInt16(s->heap + list );
+	sciprintf("List at %04x:\n", list);
+	node = getInt16(s->heap + list );
 
-  while (node) {
-    nodectr++;
-    sciprintf(" - Node at %04x: Key=%04x Val=%04x\n",node,
-	      getUInt16(s->heap + node + 4),getUInt16(s->heap + node + 6));
-    prevnode = node;
-    node = getUInt16(s->heap + node + 2); /* Next node */
-  }
+	while (node) {
+		nodectr++;
+		sciprintf(" - Node at %04x: Key=%04x Val=%04x\n",node,
+			  getUInt16(s->heap + node + 4),getUInt16(s->heap + node + 6));
+		prevnode = node;
+		node = getUInt16(s->heap + node + 2); /* Next node */
+	}
 
-  if (prevnode != getUInt16(s->heap + list + 2)) /* Lastnode != registered lastnode? */
-    sciprintf("WARNING: List.LastNode %04x != last node %04x\n",
-	      getUInt16(s->heap + list + 2), prevnode);
+	if (prevnode != getUInt16(s->heap + list + 2)) /* Lastnode != registered lastnode? */
+		sciprintf("WARNING: List.LastNode %04x != last node %04x\n",
+			  getUInt16(s->heap + list + 2), prevnode);
 
-  if (nodectr)
-    sciprintf("%d registered nodes.\n", nodectr);
-  else
-    sciprintf("List is empty.\n");
-  return 0;
+	if (nodectr)
+		sciprintf("%d registered nodes.\n", nodectr);
+	else
+		sciprintf("List is empty.\n");
+	return 0;
 }
 
 
@@ -2078,6 +2123,10 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 					 "\n  removed from all non-operator\n  parameter tokens.\n"
 					 "\n  simparse without parameters\n  removes the entity.\n");
 #endif SCI_SIMPLE_SAID_CODE
+#ifdef GFXW_DEBUG_WIDGETS
+			con_hook_command(c_gfx_print_widget, "gfx_print_widget", "i*", "If called with no parameters, it\n  shows which widgets are active.\n"
+					 "  With parameters, it lists the\n  widget corresponding to the\n  numerical index specified (for\n  each parameter).");
+#endif
 			con_hook_command(c_gfx_current_port, "gfx_current_port", "", "Determines the current port number");
 			con_hook_command(c_gfx_print_port, "gfx_print_port", "i*", "Displays all information about the\n  specified port,"
 					 " or the current port\n  if no port was specified.");
@@ -2087,12 +2136,12 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 					 "  where <nr> is the number of the pic resource\n  to draw\n  <pal> is the optional default\n  palette for the pic (0 is"
 					 "\n  assumed if not specified)\n  <fl> are any pic draw flags (default\n  is 1)");
 			con_hook_command(c_dump_words, "dumpwords", "", "Lists all parser words");
-#ifdef GFXW_DEBUG_WIDGETS
-			con_hook_command(c_gfx_print_widget, "gfx_print_widget", "i*", "If called with no parameters, it\n  shows which widgets are active.\n"
-					 "  With parameters, it lists the\n  widget corresponding to the\n  numerical index specified (for\n  each parameter).");
-#endif
 			con_hook_command(c_gfx_show_map, "gfx_show_map", "i", "Shows one of the screen maps\n  Semantics of the int parameter:\n"
 					 "    0: visual map (back buffer)\n    1: priority map (back buf.)\n    2: control map (static buf.)");
+			con_hook_command(c_gfx_fill_screen, "gfx_fill_screen", "i", "Fills the screen with one\n  of the EGA colors\n");
+			con_hook_command(c_gfx_draw_cel, "gfx_draw_cel", "iii", "Draws a single view\n  cel to the center of the\n  screen\n\n"
+					 "USAGE\n  gfx_draw_cel <view> <loop> <cel>\n");
+
 
 			con_hook_int(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");
 			con_hook_int(&script_checkloads_flag, "script_checkloads_flag", "Set != 0 to display information\n"

@@ -957,6 +957,8 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	int pic_nr = PARAM(0);
 	int add_to_pic = 1;
+	gfx_color_t transparent = s->wm_port->bgcolor;
+
 	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (s->version < SCI_VERSION_FTU_NEWER_DRAWPIC_PARAMETERS) {
@@ -971,26 +973,24 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	s->old_screen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 10, 320, 190));
 
+	SCIkdebug(SCIkGRAPHICS,"Drawing pic.%03d\n", PARAM(0));
+
 	if (add_to_pic) {
 		GFX_ASSERT(gfxop_add_to_pic(s->gfx_state, pic_nr, 1, PARAM_OR_ALT(3, 0)));
 	} else {
-		gfx_color_t transparent = s->wm_port->bgcolor;
-
-		s->wm_port->free(GFXW(s->wm_port));
-		s->picture_port->free(GFXW(s->picture_port));
-
-		s->wm_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
-		s->picture_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
-
-		s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));
-		s->visual->add(GFXWC(s->visual), GFXW(s->wm_port));
-
-		s->port = s->wm_port;
-
 		GFX_ASSERT(gfxop_new_pic(s->gfx_state, pic_nr, 1, PARAM_OR_ALT(3, 0)));
 	}
 
-	SCIkdebug(SCIkGRAPHICS,"Drawing pic.%03d\n", PARAM(0));
+	s->wm_port->free(GFXW(s->wm_port));
+	s->picture_port->free(GFXW(s->picture_port));
+
+	s->wm_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
+	s->picture_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
+
+	s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));
+	s->visual->add(GFXWC(s->visual), GFXW(s->wm_port));
+
+	s->port = s->wm_port;
 
 	if (argc > 1)
 		s->pic_animate = PARAM(1); /* The animation used during kAnimate() later on */
@@ -1554,7 +1554,7 @@ _k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int funct_nr, int arg
 		SCIkdebug(SCIkGRAPHICS, "    with signal = %04x\n", UGET_HEAP(signalp));
 	}
 
-	_priority = VIEW_PRIORITY(pos.y);
+	_priority = VIEW_PRIORITY((pos.y - 1)); /* Accomodate difference between interpreter and gfx engine */
 
 	if (has_nsrect
 	    && !(UGET_HEAP(signalp) & _K_VIEW_SIG_FLAG_FIX_PRI_ON)) { /* Calculate priority */

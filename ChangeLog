@@ -1,5 +1,15 @@
 2001-01-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/gfx/widgets.c (_gfxwop_container_add_dirty): Dirty rects are
+	now stored in containers even if they're outside of the container's
+	bounds
+
+	* src/engine/kgraphics.c (_k_make_dynview_obj): Fixed priority bug
+	(kDrawPic): Cumulative DrawPic now frees dynview lists
+
+	* src/gfx/menubar.c (menubar_map_pointer): Fixed menu mouse
+	pointer support
+
 	* src/gfx/sci_widgets.c (sciw_set_status_bar): Fixed memory
 	leak
 

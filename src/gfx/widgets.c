@@ -27,6 +27,8 @@
 
 #include <gfx_widgets.h>
 
+/*#define GFXW_DEBUG_DIRTY*/ /* Enable to debug dirty rectangle propagation (writes to stderr) */
+
 #ifdef GFXW_DEBUG_DIRTY
 #  define DDIRTY fprintf(stderr, "%s:%5d| ", __FILE__, __LINE__); fprintf
 #else
@@ -45,7 +47,7 @@ static void
 _gfxw_debug_add_widget(gfxw_widget_t *widget)
 {
 	if (debug_widget_pos == GFXW_DEBUG_WIDGETS) {
-		GFXERROR("WIDGET DEBUG: Allocated the maximum of %d widgets- Aborting!\n", GFXW_DEBUG_WIDGETS);
+		GFXERROR("WIDGET DEBUG: Allocated the maximum number of %d widgets- Aborting!\n", GFXW_DEBUG_WIDGETS);
 		BREAKPOINT();
 	}
 	debug_widgets[debug_widget_pos++] = widget;
@@ -1471,8 +1473,12 @@ _gfxw_container_id_equals(gfxw_container_t *container, gfxw_widget_t *widget)
 static int
 _gfxwop_container_add_dirty(gfxw_container_t *container, rect_t dirty, int propagate)
 {
+#if 0
+	/* This code has been disabled because containers may contain sub-containers with
+	** bounds greater than their own. */
 	if (_gfxop_clip(&dirty, container->bounds))
 		return 0;
+#endif
 
 	DDIRTY(stderr, "Effectively adding dirty %d,%d,%d,%d %d to ID %d\n", GFX_PRINT_RECT(dirty), propagate, container->ID);
 	container->dirty = gfxdr_add_dirty(container->dirty, dirty, GFXW_DIRTY_STRATEGY);
@@ -1618,6 +1624,8 @@ static int
 _gfxwop_list_add_dirty(gfxw_container_t *container, rect_t dirty, int propagate)
 {
 	/* Lists add dirty boxes to both themselves and their parenting port/visual */
+
+	container->flags |= GFXW_FLAG_DIRTY;
 
 	DDIRTY(stderr,"list_add_dirty %d,%d,%d,%d %d\n", GFX_PRINT_RECT(dirty), propagate);
 	if (propagate)
@@ -1933,6 +1941,9 @@ static int
 _gfxwop_port_add_dirty(gfxw_container_t *widget, rect_t dirty, int propagate)
 {
 	gfxw_port_t *self = (gfxw_port_t *) widget;
+
+	self->flags |= GFXW_FLAG_DIRTY;
+
 	_gfxwop_container_add_dirty(widget, dirty, propagate);
 
 	DDIRTY(stderr,"Added dirty to ID %d\n", widget->ID);
@@ -2153,8 +2164,6 @@ _gfxw_free_contents_appropriately(gfxw_container_t *container, gfxw_snapshot_t *
 gfxw_snapshot_t *
 gfxw_restore_snapshot(gfxw_visual_t *visual, gfxw_snapshot_t *snapshot)
 {
-fprintf(stderr, "rest SNAPSHOT %08x (%d,%d) (%dx%d)\n", snapshot->serial, snapshot->area.x, snapshot->area.y,
-	snapshot->area.xl, snapshot->area.yl);
 	_gfxw_free_contents_appropriately(GFXWC(visual), snapshot);
 
 	return snapshot;

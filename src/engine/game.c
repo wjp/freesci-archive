@@ -136,10 +136,8 @@ _reset_graphics_input(state_t *s)
 
   s->mouse_pointer_nr = -1; /* No mouse pointer resource */
   gfxop_set_pointer_position(s->gfx_state, gfx_point(160, 150));
-  s->last_pointer_x = 0;
-  s->last_pointer_y = 0;
-  s->last_pointer_size_x = 0;
-  s->last_pointer_size_y = 0; /* No previous pointer */
+
+  s->mouse_pointer_nr = -1;
 
   s->pic_not_valid = 1; /* Picture is invalid */
   s->pic_is_new = 0;

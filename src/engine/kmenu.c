@@ -271,7 +271,7 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		}
 	}
 
-	if ((type == SCI_EVT_MOUSE_PRESS) && (s->last_pointer_y < 10)) {
+	if ((type == SCI_EVT_MOUSE_PRESS) && (s->gfx_state->pointer_pos.y < 10)) {
 		menu_mode = 1;
 		mouse_down = 1;
 	}
@@ -345,7 +345,7 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				break;
 
 			case SCI_EVT_MOUSE_RELEASE:
-				menu_mode = (s->last_pointer_y < 10);
+				menu_mode = (s->gfx_state->pointer_pos.y < 10);
 				claimed = !menu_mode && !menubar_map_pointer(s, &menu_nr, &item_nr, port);
 				mouse_down = 0;
 				break;

@@ -489,17 +489,17 @@ menubar_map_pointer(state_t *s, int *menu_nr, int *item_nr, gfxw_port_t *port)
 	menubar_t *menubar = s->menubar;
 	menu_t *menu;
 
-	if (s->last_pointer_y <= 10) { /* Re-evaulate menu */
+	if (s->gfx_state->pointer_pos.y <= 10) { /* Re-evaulate menu */
 		int x = MENU_LEFT_BORDER;
 		int i;
 
 		for (i = 0; i < menubar->menus_nr; i++) {
 			int newx = x + MENU_BORDER_SIZE * 2 + menubar->menus[i].title_width;
 
-			if (s->last_pointer_x < x)
+			if (s->gfx_state->pointer_pos.x < x)
 				return 0;
 
-			if (s->last_pointer_x < newx) {
+			if (s->gfx_state->pointer_pos.x < newx) {
 				*menu_nr = i;
 				*item_nr = -1;
 			}
@@ -510,7 +510,7 @@ menubar_map_pointer(state_t *s, int *menu_nr, int *item_nr, gfxw_port_t *port)
 		return 0;
 
 	} else {
-		int row = (s->last_pointer_y / 10) - 1;
+		int row = (s->gfx_state->pointer_pos.y / 10) - 1;
 
 		if ((*menu_nr < 0) || (*menu_nr >= menubar->menus_nr))
 			return 1; /* No menu */
@@ -520,7 +520,7 @@ menubar_map_pointer(state_t *s, int *menu_nr, int *item_nr, gfxw_port_t *port)
 		if (menu->items_nr <= row)
 			return 1;
 
-		if ((s->last_pointer_x < port->bounds.x) || (s->last_pointer_x > port->bounds.x + port->bounds.xl))
+		if ((s->gfx_state->pointer_pos.x < port->bounds.x) || (s->gfx_state->pointer_pos.x > port->bounds.x + port->bounds.xl))
 			return 1;
 
 		if (menubar_item_valid(s, *menu_nr, row))
@@ -530,5 +530,3 @@ menubar_map_pointer(state_t *s, int *menu_nr, int *item_nr, gfxw_port_t *port)
 	}
 
 }
-
-

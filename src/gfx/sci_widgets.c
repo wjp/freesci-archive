@@ -246,6 +246,9 @@ _sciw_add_text_to_list(gfxw_list_t *list, gfxw_port_t *port, rect_t zone, char *
 						  *color1, *color2, *bgcolor, flags)));
 
 
+	zone.xl--;
+	zone.yl -= 2;
+
 	if (framed) {
 		list->add(GFXWC(list),
 			  GFXW(gfxw_new_rect(zone, *color2, GFX_LINE_MODE_CORRECT,

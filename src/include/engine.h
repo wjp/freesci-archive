@@ -125,8 +125,6 @@ typedef struct _state
 
 	heap_ptr sound_object; /* Some sort of object for sound management */
 
-	int last_pointer_x, last_pointer_y; /* Mouse pointer coordinates as last drawn */
-	int last_pointer_size_x, last_pointer_size_y; /* Mouse pointer size as last used */
 	int mouse_pointer_nr; /* Mouse pointer resource, or -1 if disabled */
 
 	gfxw_port_t *port; /* The currently active port */

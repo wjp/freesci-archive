@@ -643,31 +643,31 @@ _savegame_index_struct_compare(const void *a, const void *b)
 static void
 update_savegame_indices(char *gfname)
 {
-  int i;
-  int gfname_len = strlen(gfname);
+	int i;
+	int gfname_len = strlen(gfname);
 
-  _savegame_indices_nr = 0;
+	_savegame_indices_nr = 0;
 
-  for (i = 0; i < MAX_SAVEGAME_NR; i++) {
-    char *dirname = _k_get_savedir_name(i);
-    char *gidf_name = malloc(gfname_len + 3 + strlen(dirname));
-    int fd;
+	for (i = 0; i < MAX_SAVEGAME_NR; i++) {
+		char *dirname = _k_get_savedir_name(i);
+		char *gidf_name = malloc(gfname_len + 3 + strlen(dirname));
+		int fd;
 
-    strcpy(gidf_name, dirname);
-    strcat(gidf_name, G_DIR_SEPARATOR_S);
-    strcat(gidf_name, gfname);
+		strcpy(gidf_name, dirname);
+		strcat(gidf_name, G_DIR_SEPARATOR_S);
+		strcat(gidf_name, gfname);
 
-    if ((fd = open(dirname, O_RDONLY)) > 0) {
-      _savegame_indices[_savegame_indices_nr].id = i;
-      _savegame_indices[_savegame_indices_nr++].timestamp = get_file_mtime(fd);
-      close(fd);
-    }
-    free(dirname);
-    free(gidf_name);
-  }
+		if ((fd = open(gidf_name, O_RDONLY)) > 0) {
+			_savegame_indices[_savegame_indices_nr].id = i;
+			_savegame_indices[_savegame_indices_nr++].timestamp = get_file_mtime(fd);
+			close(fd);
+		}
+		free(dirname);
+		free(gidf_name);
+	}
 
-  qsort(_savegame_indices, _savegame_indices_nr, sizeof(struct _savegame_index_struct),
-	_savegame_index_struct_compare);
+	qsort(_savegame_indices, _savegame_indices_nr, sizeof(struct _savegame_index_struct),
+	      _savegame_index_struct_compare);
 
 }
 
