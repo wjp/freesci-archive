@@ -127,8 +127,8 @@ void sm_init(seg_manager_t* self) {
 
 	self->id_seg_map = new_int_hash_map();
 	self->reserved_id = INVALID_SCRIPT_ID;
-	int_hash_map_check_value (self->id_seg_map, self->reserved_id, 1, NULL);	// reserver 0 for seg_id
-	self->reserved_id--;	// reserved_id runs in the reversed direction to make sure no one will use it.
+	int_hash_map_check_value (self->id_seg_map, self->reserved_id, 1, NULL);	/* reserve 0 for seg_id */
+	self->reserved_id--;	/* reserved_id runs in the reversed direction to make sure no one will use it. */
 	
 	self->heap_size = DEFAULT_SCRIPTS;
         self->heap = (mem_obj_t**) sci_calloc (self->heap_size, sizeof(mem_obj_t *));
@@ -142,7 +142,7 @@ void sm_init(seg_manager_t* self) {
 		self->heap[i] = NULL;
 	}
 
-	// function assignments
+	/* function assignments */
 	self->destroy = sm_destroy;
 
 	self->seg_get = sm_seg_get;
@@ -178,9 +178,6 @@ void sm_init(seg_manager_t* self) {
 	self->set_synonyms_nr = sm_set_synonyms_nr;
 	self->get_synonyms_nr = sm_get_synonyms_nr;
 
-	self->set_localvar_offset = sm_set_localvar_offset;
-	self->get_localvar_offset = sm_get_localvar_offset;
-	
 	self->validate_export_func = sm_validate_export_func;
 
 	self->set_variables = sm_set_variables;
@@ -200,7 +197,7 @@ void sm_init(seg_manager_t* self) {
 	self->free_node = sm_free_node;
 };
 
-// destroy the object, free the memorys if allocated before
+/* destroy the object, free the memorys if allocated before */
 void sm_destroy (seg_manager_t* self) {
 	int i;
 	/* free memory*/
@@ -234,17 +231,18 @@ int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, in
 		return 1;
 	}
 
-	// allocate the mem_obj_t
+	/* allocate the mem_obj_t */
 	mem = mem_obj_allocate(self, seg, script_nr, MEM_OBJ_SCRIPT);
 	if (!mem) {
 		sciprintf("%s, %d, Not enough memory, ", __FILE__, __LINE__ );
 		return 0;
 	}
 
-	// allocate the script.buf
+	/* allocate the script.buf */
 	script = scir_find_resource(s->resmgr, sci_script, script_nr, 0);
 	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
-		mem->data.script.buf_size = script->size + getUInt16(script->data)*2; // locals_size = getUInt16(script->data)*2;
+		mem->data.script.buf_size = script->size + getUInt16(script->data)*2; 
+		/* locals_size = getUInt16(script->data)*2; */
 	}
 	else {
 		mem->data.script.buf_size = script->size;
@@ -379,7 +377,7 @@ static void sm_free_script ( mem_obj_t* mem ) {
 	}
 };
 
-// memory operations
+/* memory operations */
 void sm_mset (seg_manager_t* self, int offset, int c, size_t n, int id, int flag) {
 	mem_obj_t* mem_obj;
 	GET_SEGID();
@@ -471,7 +469,7 @@ gint16 sm_get_heap (seg_manager_t* self, reg_t reg, mem_obj_enum mem_type ) {
 		sciprintf( "unknown mem obj type\n" );
 		break;
 	}
-	return 0;	// never get here
+	return 0;	/* never get here */
 }
 
 gint16 sm_get_heap2 (seg_manager_t* self, seg_id_t seg, int offset, mem_obj_enum mem_type ) {
@@ -500,15 +498,16 @@ void sm_put_heap (seg_manager_t* self, reg_t reg, gint16 value, mem_obj_enum mem
 	}
 };
 
-// return the seg if script_id is valid and in the map, else -1
+/* return the seg if script_id is valid and in the map, else -1 */
 int sm_seg_get (seg_manager_t* self, int script_id) {
 	return int_hash_map_check_value (self->id_seg_map, script_id, 0, NULL);
 };
 
-// validate the seg
-// return:
-//	0 - invalid seg
-//	1 - valid seg
+/* validate the seg
+** return:
+**	0 - invalid seg
+**	1 - valid seg
+*/
 int sm_check (seg_manager_t* self, int seg) {
 	if ( seg < 0 || seg >= self->heap_size ) {
 		return 0;
@@ -607,16 +606,6 @@ void sm_set_synonyms_nr (struct _seg_manager_t* self, int nr, int id, int flag) 
 int sm_get_synonyms_nr (struct _seg_manager_t* self, int id, int flag) {
 	GET_SEGID();
 	return self->heap[id]->data.script.synonyms_nr;
-};
-
-void sm_set_localvar_offset (struct _seg_manager_t* self, int offset, int id, int flag) {
-	GET_SEGID();
-	// self->heap[id]->data.script.localvar_offset = offset; ????
-};
-
-int sm_get_localvar_offset (struct _seg_manager_t* self, int id, int flag) {
-	GET_SEGID();
-	return 1; //self->heap[id]->data.script.localvar_offset; // ???? , we removed it!!!
 };
 
 int sm_get_heappos (struct _seg_manager_t* self, int id, int flag) {

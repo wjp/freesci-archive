@@ -155,9 +155,6 @@ typedef struct _seg_manager_t {
 	void (*set_synonyms_nr) (struct _seg_manager_t* self, int nr, int id, int flag);
 	int (*get_synonyms_nr) (struct _seg_manager_t* self, int id, int flag);
 
-	void (*set_localvar_offset) (struct _seg_manager_t* self, int offset, int id, int flag);
-	int (*get_localvar_offset) (struct _seg_manager_t* self, int id, int flag);
-	
 	void (*set_variables) (struct _seg_manager_t* self, reg_t reg, int obj_index, reg_t variable_reg, int variable_index );
 	
 	guint16 (*validate_export_func)(struct _seg_manager_t* self, int pubfunct, int seg );

@@ -1698,7 +1698,6 @@ script_instantiate(state_t *s, int script_nr)
 	s->seg_manager.set_export_table_offset( &s->seg_manager, 0, 0, reg.segment, SEG_ID );
 	s->seg_manager.set_synonyms_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
 	s->seg_manager.set_synonyms_nr( &s->seg_manager, 0, reg.segment, SEG_ID );
-	s->seg_manager.set_localvar_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
 
 	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
 		int locals_size = getUInt16(script->data)*2;
@@ -1868,7 +1867,7 @@ script_uninstantiate(state_t *s, int script_nr)
 		
 		objtype = SEG_GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
 		if( !objtype ) break;
-		objlength = SEG_GET_HEAP2(s, reg.segment, reg.offset + 2, MEM_OBJ_SCRIPT);  // use SEG_UGET_HEAP ??
+		objlength = SEG_GET_HEAP2(s, reg.segment, reg.offset + 2, MEM_OBJ_SCRIPT);  /* use SEG_UGET_HEAP ?? */
 
 		reg.offset += 4; /* Step over header */
 
