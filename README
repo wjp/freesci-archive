@@ -103,9 +103,9 @@ time, the configuration file may contain:
   flat: Interpolate colors (256 colors). Improves some graphics.
   dither256: Dither in 256 colors. A compromise between dither and flat.
 
-- pic0_dither_pattern = scaled | 1
+- pic0_dither_pattern = scaled | unscaled
   scaled: Dither in axb sized blocks, if x scale is a and y scale is b
-  1: Dither in 1x1 blocks (single pixels)
+  unscaled: Dither in 1x1 blocks (single pixels)
 
 - pic0_brush_mode = scaled | ellipses | random-ellipses | more-random
   Affects how semi-random brushes (used mostly for dirt and foilage) are drawn:

@@ -1,3 +1,8 @@
+2001-02-24  Solomon Peachy <pizza@shaftnet.org>
+
+	* README,
+	  doc/man/sciv.6:  fixed some documentation to reflect reality.
+
 2001-02-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kAnimate): Sped up pic transition animations
