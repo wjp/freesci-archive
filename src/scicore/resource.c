@@ -191,9 +191,12 @@ scir_new_resource_manager(char *dir, int version,
 					       &mgr->resources,
 					       &mgr->resources_nr);
 
-		if (resource_error >= SCI_ERROR_CRITICAL) {
+		if (resource_error >= SCI_ERROR_CRITICAL
+		    || resource_error == SCI_ERROR_RESMAP_NOT_FOUND) {
 			sciprintf("Resmgr: Error while loading resource map: %s\n",
 				  sci_error_types[resource_error]);
+			if (resource_error == SCI_ERROR_RESMAP_NOT_FOUND)
+				sciprintf("Running SCI games without a resource map is not supported ATM\n");
 			sci_free(mgr);
 			chdir(caller_cwd);
 			free(caller_cwd);

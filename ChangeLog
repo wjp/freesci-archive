@@ -1,3 +1,8 @@
+2002-01-30  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/resource.c (scir_new_resource_manager): Abort on error
+	if resource.map was not found
+
 2002-01-18  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/scicore/modules.c: Disabled completely
