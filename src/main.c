@@ -43,7 +43,14 @@
 
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
-#endif /* HAVE_GETOPT_H */
+
+#define EXPLAIN_OPTION(longopt, shortopt, description) "  " longopt "\t" shortopt "\t" description "\n"
+
+#else /* !HAVE_GETOPT_H */
+
+#define EXPLAIN_OPTION(longopt, shortopt, description) "  " shortopt "\t" description "\n"
+
+#endif /* !HAVE_GETOPT_H */
 
 
 #ifdef _WIN32
@@ -164,15 +171,19 @@ main(int argc, char** argv)
   getcwd(startdir, PATH_MAX);
 
 #ifdef HAVE_GETOPT_H
-  while ((c = getopt_long(argc, argv, "rhd:V:g:", options, &optindex)) > -1)
+  while ((c = getopt_long(argc, argv, "vrhDd:V:g:", options, &optindex)) > -1)
 #else /* !HAVE_GETOPT_H */
-  while ((c = getopt(argc, argv, "rhd:V:g:")) > -1)
+  while ((c = getopt(argc, argv, "vrhDd:V:g:")) > -1)
 #endif /* !HAVE_GETOPT_H */
   {
     switch (c)
     {
     case 'r':
       script_debug_flag = 0;
+      break;
+
+    case 'D':
+      script_debug_flag = 1;
       break;
 
     case 'd':
@@ -201,31 +212,13 @@ main(int argc, char** argv)
     case 0: /* getopt_long already did this for us */
     case '?':
       /* getopt_long already printed an error message. */
+      return 0;
       break;
 
     case 'v':
-      printf("%s\n", VERSION);
-      return 0;
-    
-    case 'h':
-      printf("Usage: sciv [options] [game name]\n"
-             "Run a Sierra SCI game.\n"
-             "\n"
-             "  --gamedir dir	-ddir	read game resources from dir\n"
-             "  --run		-r	do not start the debugger\n"
-             "  --sci-version	-Vver	set the version of sciv to emulate\n"
-             "  --version	-v	display version information and exit\n"
-	     "  --debug			Start up with the debugger enabled\n"
-             "  --help		-h	display this help text and exit\n"
-	     "  --graphics=gfx  -ggfx	Use the 'gfx' graphics driver\n"
-	     "\n"
-	     "The game name, if provided, must be equal to a game name as specified in the "
-	     "FreeSCI config file.\n"
-	     "It is overridden by --gamedir.\n"
-	     "\n"
-	     "This version of FreeSCI was compiled with support for the following graphics "
-	     "drivers:\n["
-             );
+      printf("This is FreeSCI, version %s\n", VERSION);
+      printf("Supported graphics drivers: ");
+
       i = 0;
       while (gfx_drivers[i]) {
 	if (i != 0)
@@ -235,8 +228,38 @@ main(int argc, char** argv)
 
 	i++;
       }
-      printf("]\n");
+      printf("\n");
+      printf("Supported sound drivers: ");
+      i = 0;
+      while (sfx_drivers[i]) {
+	if (i != 0)
+	  printf(", ");
 
+	printf(sfx_drivers[i]->name);
+
+	i++;
+      }
+      printf("\n");
+
+      return 0;
+    
+    case 'h':
+      printf("Usage: sciv [options] [game name]\n"
+             "Run a Sierra SCI game.\n"
+             "\n"
+	     EXPLAIN_OPTION("--gamedir dir\t", "-ddir", "read game resources from dir")
+	     EXPLAIN_OPTION("--run\t\t", "-r", "do not start the debugger")
+	     EXPLAIN_OPTION("--sci-version\t", "-Vver", "set the version for sciv to emulate")
+	     EXPLAIN_OPTION("--version\t", "ver", "display version number and exit")
+	     EXPLAIN_OPTION("--debug\t", "-D", "start up in debug mode")
+	     EXPLAIN_OPTION("--help\t", "-h", "display this help text and exit")
+	     EXPLAIN_OPTION("--graphics gfx", "-ggfx", "use the 'gfx' graphics driver")
+	     "\n"
+	     "The game name, if provided, must be equal to a game name as specified in the\n"
+	     "FreeSCI config file.\n"
+	     "It is overridden by --gamedir.\n"
+	     "\n"
+             );
       return 0;
 
     default:

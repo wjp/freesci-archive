@@ -247,7 +247,7 @@ AC_DEFUN(AC_C_PARAMETRIZED_BIGENDIAN,
 force_endian=no
 
 AC_ARG_WITH(endianness,
-	[  --with-endianness        whether big or little endianness should be used.],
+	[  --with-endianness=ARG    whether big or little endianness should be used.],
 	[
 		force_endian="$withval"
 	])
