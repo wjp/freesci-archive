@@ -112,7 +112,10 @@ invoke_selector(state_t *s, reg_t object, int selector_id, int noinvalid, int kf
 
 	xstack->sp += argc+2;
 	xstack->fp += argc+2;
+
 	run_vm(s, 0); /* Start a new vm */
+
+	--(s->execution_stack_pos); /* Get rid of the extra stack entry */
 
 	return 0;
 }
