@@ -49,6 +49,7 @@ typedef enum {
 #define GFX_CAPABILITY_MOUSE_SUPPORT (1<<7)
 #define GFX_CAPABILITY_POINTER_PIXMAP_REGISTRY (1<<8)
 #define GFX_CAPABILITY_FINE_LINES (1<<9)
+#define GFX_CAPABILITY_WINDOWED (1<<10)
 
 #define GFX_DEBUG_POINTER (1<<0)
 #define GFX_DEBUG_UPDATES (1<<1)
@@ -139,6 +140,8 @@ typedef struct _gfx_driver { /* Graphics driver */
 	**    available.
 	** GFX_CAPABILITY_FINE_LINES: Should be set IFF the driver supports drawing
 	**    fine (width 1) lines
+	** GFX_CAPABILITY_WINDOWED: Driver runs in a window and supports a debug
+	**    console running on stdin/stdout
 	*/
 
 	int debug_flags; /* Driver debug flags */

@@ -232,7 +232,7 @@ typedef struct {
 
 typedef struct {
 	heap_ptr objp;
-	heap_ptr sendp;
+	heap_ptr sendp; /* Pointer to the object containing the invoked method */
 	heap_ptr pc; /* Not accurate for the TOS element */
 	heap_ptr sp; /* Not accurate for the TOS element */
 	int argc;

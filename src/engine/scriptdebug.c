@@ -38,8 +38,6 @@ int _debug_seeking = 0; /* Stepping forward until some special condition is met 
 int _debug_seek_level = 0; /* Used for seekers that want to check their exec stack depth */
 int _debug_seek_special = 0; /* Used for special seeks */
 
-static char oldcommand[SCI_CONSOLE_MAX_INPUT + 1] = ""; /* Stores the last command executed */
-
 #define _DEBUG_SEEK_NOTHING 0
 #define _DEBUG_SEEK_CALLK 1 /* Step forward until callk is found */
 #define _DEBUG_SEEK_LEVEL_RET 2 /* Step forward until returned from this level */
@@ -277,7 +275,8 @@ c_viewinfo(state_t *s)
 	if (loops < 0)
 		sciprintf("does not exist.\n");
 	else {
-
+		/* con_can_handle_pixmap() */
+		/* con_insert_pixmap() */
 		sciprintf("has %d loops:\n", loops);
 
 		for (i = 0; i < loops; i++) {
@@ -2474,6 +2473,22 @@ void
 script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp,
 	     int *restadjust, int bp)
 {
+	int have_windowed = s->gfx_state->driver->capabilities & GFX_CAPABILITY_WINDOWED;
+	/* Do we support a separate console? */
+
+#ifndef WANT_CONSOLE
+	if (!have_windowed) {
+		script_debug_flag = sci_debug_flags = 0;
+		fprintf(stderr, "On-screen console disabled and driver claims not to support windowed mode.\n");
+		if (script_error_flag) {
+			fprintf(stderr, "Aborting...\n");
+			exit(1);
+		} else
+			fprintf(stderr, "Continuing...\n");
+		return;
+	}
+#endif
+
 
 	if (sci_debug_flags & _DEBUG_FLAG_LOGGING) {
 		int old_debugstate = _debugstate_valid;
@@ -2760,57 +2775,21 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 	if (s->sound_server)
 		(s->sound_server->suspend)(s);
 
-WARNING(fixme!)
-#if 0
-		if (s->onscreen_console) {
-			s->osc_backup = con_backup_screen(s);
-			con_visible_rows = 20;
-
-			con_draw(s, s->osc_backup);
-
-			while (_debugstate_valid) {
-				sci_event_t event = (gfxop_get_event(s->gfx_state));
-				int redraw_console = 0;
-				char *commandbuf;
-
-				if ((event.type & SCI_EVT_KEYBOARD)
-				    || (s->pointer_x != s->last_pointer_x)
-				    || (s->pointer_y != s->last_pointer_y))
-					redraw_console = 1; /* Redraw on keypress or mouse movement */
-
-				if ((event.buckybits & SCI_EVM_CTRL) && (event.data == '`')) /* UnConsole command? */
-					_debugstate_valid = 0;
-				else
-					if ((commandbuf = con_input(&event))) {
-
-						sciprintf(" >%s\n", commandbuf);
-
-						if (strlen(commandbuf) == 0) /* Repeat old command? */
-							strcpy(commandbuf, oldcommand);
-						else /* No, a new valid command */
-							strcpy(oldcommand, commandbuf);
-
-						con_parse(s, commandbuf);
-
-						redraw_console = 1;
-					}
-
-				if (redraw_console)
-					con_draw(s, s->osc_backup);
-			}
-
-			con_restore_screen(s, s->osc_backup);
-
-		} else {
+	while (_debugstate_valid) {
+#ifdef WANT_CONSOLE
+		if (!have_windowed) {
+			char *input;
+			con_gfx_show(s->gfx_state);
+			input = con_gfx_read(s->gfx_state);
+			con_gfx_hide(s->gfx_state);
+			con_parse(s, input);
+		} else
+#else
+			con_parse(s, _debug_get_input());
 #endif
+		sciprintf("\n");
+	}
 
-			while (_debugstate_valid) {
-				con_parse(s, _debug_get_input());
-				sciprintf("\n");
-			}
-#if 0
-		}
-#endif
 /* Resume music playing */
 	if (s->sound_server)
 		(s->sound_server->resume)(s);

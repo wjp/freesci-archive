@@ -46,39 +46,9 @@
 
 #include <uinput.h>
 #define SCI_CONSOLE
-
-#define SCI_CONSOLE_MAX_INPUT 157
-/* Max number of chars in the input rows+1 */
-#define SCI_CONSOLE_INPUT_BUFFER 80
-/* Command line history buffer size */
-
-#define SCI_CONSOLE_OUTPUT_BUFFER 2048
-/* Output buffer size in lines*/
-#define SCI_CONSOLE_LINE_WIDTH 40
-/* Width of the output line */
+#include <gfx_operations.h>
 
 
-#define SCI_CONSOLE_BGCOLOR 0x01
-/* Background color of the console */
-#define SCI_CONSOLE_BORDERCOLOR 0x08
-/* Color of the console border */
-#define SCI_CONSOLE_FGCOLOR 0x0f
-/* Foreground text color */
-#define SCI_CONSOLE_INPUTCOLOR 0x0e
-/* Color of input prompt and text */
-#define SCI_CONSOLE_CURSORCOLOR 0x04
-/* Color of the command line cursor */
-
-extern int con_display_row;
-/* Row displayed in the line closest to the bottom of the screen */
-extern int con_row_counter;
-/* Number of rows, >= con_display_row */
-extern DLLEXTERN int con_visible_rows;
-/* number of visible console rows */
-extern char *con_input_line;
-/* input line */
-extern int con_cursor;
-/* cursor position on the input line */
 extern DLLEXTERN int con_passthrough;
 /* Echo all sciprintf() stuff to the text console */
 extern FILE *con_file;
@@ -87,21 +57,11 @@ extern FILE *con_file;
 ** directly to the con_file variable.
 */
 
-/* Output buffer */
-extern char con_outputbuf[SCI_CONSOLE_OUTPUT_BUFFER][SCI_CONSOLE_LINE_WIDTH];
-extern int con_outputbufpos; /* buffer line */
-extern int con_outputbufcolumn;
-extern int con_outputbuflen;
-extern int con_outputlookback;
-
-
-
 struct _state; /* state_t later on */
-struct gfx_picture; /* later retreived from graphics.h */
 
 typedef union {
-  long val;
-  char *str;
+	long val;
+	char *str;
 } cmd_param_t;
 
 extern unsigned int cmd_paramlength;
@@ -116,33 +76,24 @@ extern struct _state *con_gamestate;
 
 /*** FUNCTION DEFINITIONS ***/
 
-
-char *
-con_input(sci_event_t *event);
-/* Handles an input event
-** Parameters: event: The event to handle
-** Returns   : (char *) Either NULL, or a pointer to the content of the
-**             command line
-** This function will handle input events in a way that will allow the
-** editing of the command line buffer. It will reset the command line to
-** an empty string and return its former contents if ENTER was pressed.
-** It will set the event to SCI_NO_EVENT if it was processed.
+void
+con_set_string_callback(void(*callback)(char *));
+/* Sets the console string callback
+** Parameters: (void -> char *) callback: The closure to invoke after
+**                              a string for sciprintf() has been generated
+** This sets a single callback function to be used after sciprintf()
+** is used.
 */
-
-
 
 void
-con_draw_string(struct gfx_picture *pic, int map, int row, int maxlen, char *string, int color);
-/* Draws a string to a specified row
-** Parameters: pic: The picture_t to draw to
-**             map: The map inside the picture_t to draw to
-**             row: The absolute row to draw to
-**             maxlen: The maximum length to draw (should be <= 40)
-**             string: The string to draw
-**             color: The color to draw the string in
-** Returns   : (void)
+con_set_pixmap_callback(void(*callback)(gfx_pixmap_t *));
+/* Sets the console pixmap callback
+** Parameters: (void -> gfx_pixmap_t *) callback: The closure to invoke after
+**                                      a pixmap has been provided to be
+**                                      published in the on-screen console
+** This sets a single callback function to be used after sciprintf()
+** is used.
 */
-
 
 void
 con_init(void);
@@ -151,14 +102,6 @@ con_init(void);
 ** Returns   : (void)
 ** This function will initialize hook up a few commands to the parser.
 ** It must be called before cmdParse() is used.
-*/
-
-void
-con_init_gfx(void);
-/* initializes the graphical part of the command parser
-** Parameters: (void)
-** Returns   : (void)
-** This function should be called in all console-using programs that use libscigraphics.
 */
 
 
@@ -201,6 +144,23 @@ con_hook_command(int command(struct _state *s), char *name, char *param, char *d
 ** as no element beyond strlen(cmd_params[x].str)+1 is accessed.
 */
 
+int
+con_can_handle_pixmaps();
+/* Determines whether the console supports pixmap inserts
+** Returns   : (int) non-zero iff pixmap inserts are supported
+*/
+
+int
+con_insert_pixmap(gfx_pixmap_t *pixmap);
+/* Inserts a pixmap into the console history buffer
+** Parameters: (gfx_pixmap_t *) pixmap: The pixmap to insert
+** Returns   : (int) 0 on success, non-zero if no receiver for
+**                   the pixmap could not be found
+** The pixmap must be unique; it is freed by the console on demand.
+** Use gfx_clone_pixmap() if neccessary.
+** If the pixmap could not be inserted, the called must destroy it
+*/
+
 
 int
 con_hook_int(int *pointer, char *name, char *description);
@@ -214,28 +174,29 @@ con_hook_int(int *pointer, char *name, char *description);
 */
 
 
-byte *
-con_backup_screen(struct _state *s);
-/* Backups the currently visible screen
-** Parameters: (state_t *) s: The state_t whose picture we're going to back up
-** Returns   : (byte *): The malloc'd backup
+void
+con_gfx_init();
+/* Initializes the gfx console
 */
 
-
 void
-con_restore_screen(struct _state *s, byte *backup);
-/* Restores a backupped screen
-** Parameters: (state_t *) s: The state_t we're restoring to
-**             (byte *) backup: The backup to restore
+con_gfx_show(gfx_state_t *state);
+/* Enters on-screen console mode
+** Parameters: (gfx_state_t *state): The graphics state to use for interaction
 ** Returns   : (void)
-** Frees the allocated data after restoring it
+*/
+
+char *
+con_gfx_read(gfx_state_t *state);
+/* Reads a single line from the on-screen console, if it is open
+** Parameters: (gfx_state_t *state): The graphics state to use for interaction
+** Returns   : (char *) The input, in a static buffer
 */
 
 void
-con_draw(struct _state *s, byte *backup);
-/* Draws the on-screen console
-** Parameters: (state_t *) s: The state_t to draw it on
-**             (byte *) backup: The data from which the original backup data may be taken
+con_gfx_hide(gfx_state_t *stae);
+/* Closes the on-screen console
+** Parameters: (gfx_state_t *state): The graphics state to use for interaction
 ** Returns   : (void)
 */
 

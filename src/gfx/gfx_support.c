@@ -217,6 +217,19 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 	int xoffset = (dest_coords.x < 0)? - dest_coords.x : 0;
 	int yoffset = (dest_coords.y < 0)? - dest_coords.y : 0;
 
+	if (src_coords.x + src_coords.xl > xl)
+		src_coords.xl = xl - src_coords.x;
+
+	if (src_coords.y + src_coords.yl > yl)
+		src_coords.yl = yl - src_coords.y;
+
+/** --???-- **/
+	if (src_coords.y > yl)
+		return GFX_OK;
+	if (src_coords.x > xl)
+		return GFX_OK;
+/** --???-- **/
+
 	if (dest_coords.x + xl >= maxx)
 		xl = maxx - dest_coords.x;
 	if (dest_coords.y + yl >= maxy)

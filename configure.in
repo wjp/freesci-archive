@@ -272,9 +272,9 @@ AC_ARG_WITH(E,
 	[])
 
 AC_ARG_WITH(console,
-	[  --with-console	  Allocate large startup buffer for console],
+	[  --with-console	  Build with on-screen console support],
 	[WANT_CONSOLE=64
-	 AC_SUBST(WANT_CONSOLE)],
+	 AC_DEFINE(WANT_CONSOLE)],
 	[])
 
 CFSML_FLAGS=""

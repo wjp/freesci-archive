@@ -41,7 +41,7 @@
 #include <directfb/directfb.h>
 #include <unistd.h>
 
-#define SCIDFB_DRIVER_VERSION "0.3"
+#define SCIDFB_DRIVER_VERSION "0.4"
 
 typedef struct _event_queue_struct {
 	sci_event_t evt;
@@ -343,6 +343,17 @@ scidfb_xlate_key(DFBInputDeviceKeyIdentifier key, int keysym)
 
 	switch (key) {
 
+	case DIKI_0: return '0';
+	case DIKI_1: return '1';
+	case DIKI_2: return '2';
+	case DIKI_3: return '3';
+	case DIKI_4: return '4';
+	case DIKI_5: return '5';
+	case DIKI_6: return '6';
+	case DIKI_7: return '7';
+	case DIKI_8: return '8';
+	case DIKI_9: return '9';
+
 	case DIKI_F1: return SCI_K_F1;
 	case DIKI_F2: return SCI_K_F2;
 	case DIKI_F3: return SCI_K_F3;
@@ -373,14 +384,14 @@ scidfb_xlate_key(DFBInputDeviceKeyIdentifier key, int keysym)
 	case DIKI_PAGE_UP: return SCI_K_PGDOWN;
 	case DIKI_PAGE_DOWN: return SCI_K_PGUP;
 
-	case DIKI_QUOTE_LEFT: return '\'';
+	case DIKI_QUOTE_LEFT: return '`';
 	case DIKI_MINUS_SIGN: return '-';
 	case DIKI_EQUALS_SIGN: return '=';
 	case DIKI_BRACKET_LEFT: return '[';
 	case DIKI_BRACKET_RIGHT: return ']';
 	case DIKI_BACKSLASH: return '\\';
 	case DIKI_SEMICOLON: return ';';
-	case DIKI_QUOTE_RIGHT: return '`';
+	case DIKI_QUOTE_RIGHT: return '\'';
 	case DIKI_COMMA: return ',';
 	case DIKI_SLASH: return '/';
 	case DIKI_PERIOD: return '.';

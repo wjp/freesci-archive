@@ -62,7 +62,7 @@ scancode(int ch) /* Calculates a PC keyboard scancode from a character */
 	return ch; /* not found */
 }
 
-static int
+int
 sci_toupper(int c)
 {
 	char shifted_numbers[] = ")!@#$%^&*(";
@@ -76,6 +76,8 @@ sci_toupper(int c)
 
 	switch (c) {
 	case SCI_K_TAB: return SCI_K_SHIFT_TAB;
+	case ']': return '}';
+	case '[': return '{';
 	case '`': return '~';
 	case '-': return '_';
 	case '=': return '+';

@@ -236,6 +236,7 @@ _gfxop_draw_pixmap(gfx_driver_t *driver, gfx_pixmap_t *pxm, int priority, int co
 {
 	int error;
 	rect_t clipped_dest = gfx_rect(dest.x, dest.y, dest.xl, dest.yl);
+
 	if (control >= 0)
 		_gfxop_draw_control(control_map, pxm, control,
 				    gfx_point(dest.x / driver->mode->xfact,

@@ -141,8 +141,6 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 	win->title_text = title;
 	win->port_flags = flags;
 
-	title_bgcolor.alpha = 0x40; /* Add a little transparency to titled text boxes */
-
 	win->flags |= GFXW_FLAG_IMMUNE_TO_SNAPSHOTS;
 
 	if (flags & WINDOW_FLAG_DONTDRAW)

@@ -595,10 +595,8 @@ read_config(char *game_name, config_entry_t **conf, int *conf_entries,
 static void
 init_console()
 {
-#if 0
-	con_init();
-	con_init_gfx();
-	con_visible_rows = 1; /* Fool the functions into believing that we *have* a display */
+#ifdef WANT_CONSOLE
+	con_gfx_init();
 #endif
 	con_hook_command(&c_quit, "quit", "", "console: Quits gracefully");
 	con_hook_command(&c_die, "die", "", "console: Quits ungracefully");

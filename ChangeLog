@@ -1,4 +1,24 @@
+2002-10-05  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/gfx_console.c: Added initial graphical console
+
+2002-10-03  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/directfb_driver.c (scidfb_xlate_key): Added support
+	for shifted nuber keys
+
+	* src/include/uinput.h: Made sci_toupper() public (also in
+	kevent.c)
+
 2002-10-01  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/sci_widgets.c (sciw_new_window): Removed alpha blending
+	effect because it did not work quite as intended (text background was
+	solid in most drivers, otherwise, alpha would have been added
+	cumulatively)
+
+	* src/tools/scipack.c: Initial, experimental SCI resource packer
+	program
 
 	* src/engine/game.c (suggested_script): Added support for vocab.996
 	not being present

@@ -110,4 +110,12 @@ scancode(int ch);
 ** Returns   : (int) a matching scancode number
 */
 
+int
+sci_toupper(int ch);
+/* Uppercasifies the character
+** Parameters: (int) ch: The character to capitalize
+** Returns   : (int) The capitalized version of the character
+** Also selects special symbols underlying the key
+*/
+
 #endif /* _SCI_UINPUT_H */
