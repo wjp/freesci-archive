@@ -275,8 +275,8 @@ FILL_FUNCTION(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, in
 		original_drawenable &= ~GFX_MASK_PRIORITY;
 	}
 
-	_gfxr_auxbuf_fill(pic, x_320, y_200, original_drawenable,
-			  (drawenable & GFX_MASK_CONTROL)? control : 0);
+	AUXBUF_FILL(pic, x_320, y_200, original_drawenable,
+		    (drawenable & GFX_MASK_CONTROL)? control : 0);
 
 #ifdef DRAW_SCALED
 	_gfxr_auxbuf_spread(pic, &min_x, &min_y, &max_x, &max_y);
@@ -312,6 +312,7 @@ FILL_FUNCTION(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, in
 		legalcolor = 0;
 		legalmask = 0xf;
 	} else {
+		bounds = NULL;
 		legalcolor = 0;
 		legalmask = 0xf;
 	}

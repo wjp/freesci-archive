@@ -287,11 +287,16 @@ AC_ARG_WITH(console,
 	[])
 
 AC_ARG_WITH(forced-console,
-	[  --with-forced-console  Enforce usage of on-screen console on all gfx drivers],
+	[  --with-forced-console   Enforce usage of on-screen console on all gfx drivers],
 	[
 	 AC_DEFINE([WANT_CONSOLE], [1], [Define to 1 if you want to build with on-screen console support.])
 	 AC_DEFINE([FORCE_CONSOLE], [1], [Define to 1 if you want to enforce usage of on-screen console on all gfx drivers.])],
 	[])
+
+AC_ARG_WITH(pic-scaling, [  --without-pic-scaling	  Disable support for scaled images])
+if test x"$with_pic_scaling" != xno; then
+	 AC_DEFINE([WITH_PIC_SCALING], [1], [Define to 1 if you want SCI0 pic resource scaling support.])
+fi
 
 CFSML_FLAGS=""
 

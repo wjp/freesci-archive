@@ -1,9 +1,31 @@
+2005-01-15  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/resource/sci_picfill_aux.c (AUXBUF_FILL): Made sure that
+	auxbuf filling is only used whenever the control map is involved,
+	and ensured that the bits set in the unscaled case can be (at
+	worst) the singleton set of bits marking the control map.
+
 2005-01-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gfx/drivers/gp32_driver.c, README.GP32: Added Chatboard
 	support.
 
 	* src/gp32/wrap.h: Added missing function.
+
+2005-01-06  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* configure.in: Added "--without-pic-scaling" option to allow
+	compilation without scaled pic support
+
+	* src/gfx/resource/sci_picfill.c: Separated out the flood fill
+	implementation for SCI0 pic resources and parameterised it a bit
+	so that the important special case where we don't use pic scaling
+	at all can be optimised a little better.
+
+2005-01-05  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/scicore/console.c (c_dm_log_heap): Removed function that is
+	no longer supported by libdmalloc.
 
 2005-01-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
@@ -39,6 +61,7 @@
 	* src/gp32/wrap.c: Changed names of functions for latest newlib
 	patch.
 
+>>>>>>> 1.682
 2005-01-02  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/include/sci_conf.h: Removed work_dir from config_entry_t, as
