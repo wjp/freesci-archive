@@ -375,8 +375,8 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 		{"version", no_argument, 0, 'v'},
 		{"help", no_argument, 0, 'h'},
 		{"scale-x", required_argument, 0, 'x'},
-		{"scale-y", no_argument, 0, 'y'},
-		{"color-depth", no_argument, 0, 'c'},
+		{"scale-y", required_argument, 0, 'y'},
+		{"color-depth", required_argument, 0, 'c'},
 		{"disable-mouse", no_argument, 0, 'm'},
 		{"list-savegames", no_argument, 0, 'l'},
 		{0,0,0,0}

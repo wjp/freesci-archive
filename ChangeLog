@@ -1,5 +1,8 @@
 2001-12-30  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/main.c (parse_arguments): Changed no_argument to
+	required_argument for --scale-y and --color-depth
+
 	* src/gfx/resource/sci_pic_0.c (_gfxr_plot_aux_pattern): Kicked out
 	some complete and utter crap that made the code look like I was drunk
 	when I wrote it (OK, some people drink intentionally to dumb down for
