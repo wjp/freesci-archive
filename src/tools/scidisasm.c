@@ -33,8 +33,7 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <resource.h>
-#include <script.h>
+#include <engine.h>
 #include <console.h>
 #include <versions.h>
 

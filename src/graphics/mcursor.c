@@ -26,6 +26,7 @@
 ***************************************************************************/
 /* Draws and calculates SCI01? mouse pointers. */
 
+#include <engine.h>
 #include <graphics.h>
 
 

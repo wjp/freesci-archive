@@ -30,8 +30,8 @@
 ***************************************************************************/
 /* Turns a resource into a valid midi block */
 
-#include <sound.h>
 #include <engine.h>
+#include <sound.h>
 #include <stdarg.h>
 
 static struct {

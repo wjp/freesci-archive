@@ -32,8 +32,7 @@
 #ifndef _SCI_GRAPHICS_H_
 #define _SCI_GRAPHICS_H_
 
-#include <resource.h>
-#include <vm.h>
+#include <engine.h>
 #include <uinput.h>
 
 
@@ -189,7 +188,7 @@ typedef struct
 
 } gfx_driver_t;
 
-extern gfx_driver_t *gfx_drivers[];
+extern DLLEXTERN gfx_driver_t *gfx_drivers[];
 
 #define SCI_COLOR_DITHER 0
 /* Standard mode */
@@ -245,7 +244,7 @@ extern gfx_driver_t *gfx_drivers[];
 #define SCI_SCREEN_HEIGHT 200
 
 
-extern int sci_color_mode;
+extern DLLEXTERN int sci_color_mode;
 /* sci_color_interpolate forces 16 color background pictures to be drawn
 ** with 256 interpolated colors instead of 16 dithered colors
 */

@@ -98,6 +98,6 @@ typedef enum { /* FIXME */
   op_lofss
 } sci_opcodes;
  
-extern opcode_format formats[128][4];
+extern DLLEXTERN opcode_format formats[128][4];
 
 #endif

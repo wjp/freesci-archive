@@ -25,14 +25,17 @@
 
 ***************************************************************************/
 
-#include <resource.h>
+#include <engine.h>
 #include <sound.h>
 #include <uinput.h>
 #include <console.h>
 #include <graphics.h>
 #include <sci_conf.h>
 #include <kdebug.h>
-#include <vm.h>
+
+#ifdef _MSC_VER
+#define extern __declspec(dllimport) extern
+#endif
 
 #ifdef HAVE_READLINE_READLINE_H
 #include <readline/readline.h>
@@ -71,9 +74,11 @@ static int quit = 0;
 static state_t *gamestate; /* The main game state */
 
 
-extern int _debugstate_valid;
-extern int _debug_seeking;
-extern int _debug_step_running;
+extern DLLEXTERN int _debugstate_valid;
+extern DLLEXTERN int _debug_seeking;
+extern DLLEXTERN int _debug_step_running;
+
+static int _script_debug_flag = 0;
 
 char *requested_gfx_driver = NULL;
 
@@ -147,12 +152,11 @@ get_gets_input(void)
   return input;
 }
 
-
 #ifdef HAVE_GETOPT_H
 static struct option options[] = {
   {"gamedir", required_argument, 0, 'd'},
-  {"run", no_argument, &script_debug_flag, 0 },
-  {"debug", no_argument, &script_debug_flag, 1 },
+  {"run", no_argument, &_script_debug_flag, 0 },
+  {"debug", no_argument, &_script_debug_flag, 1 },
   {"sci-version", required_argument, 0, 'V'},
   {"graphics", required_argument, 0, 'g'},
   {"version", no_argument, 0, 'v'},
@@ -275,6 +279,8 @@ main(int argc, char** argv)
       return 1;
     }
   }
+
+  script_debug_flag = _script_debug_flag;
 
   printf("FreeSCI "VERSION" Copyright (C) 1999, 2000 Dmitry Jemerov, Christopher T. Lansdown,\n"
      "Sergey Lapin, Rickard Lind, Carl Muckenhoupt, Christoph Reichenbach,\n"

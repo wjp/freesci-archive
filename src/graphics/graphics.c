@@ -47,8 +47,8 @@
 #endif
 #include "stdio.h"
 #include <stdarg.h>
-#include "graphics.h"
 #include <engine.h>
+#include <graphics.h>
 
 #ifdef HAVE_LIBGGI
 #include "graphics_ggi.h"

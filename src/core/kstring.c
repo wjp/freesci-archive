@@ -27,6 +27,7 @@
 /* String and parser handling */
 
 #include <kernel.h>
+#include <vocabulary.h>
 
 
 

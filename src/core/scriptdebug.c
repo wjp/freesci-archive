@@ -26,8 +26,7 @@
 ***************************************************************************/
 /* Script debugger functionality. Absolutely not threadsafe. */
 
-#include <resource.h>
-#include <vm.h>
+#include <engine.h>
 #include <console.h>
 #include <kdebug.h>
 

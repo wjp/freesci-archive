@@ -28,8 +28,6 @@
 #ifndef _SCI_KERNEL_H_
 #define _SCI_KERNEL_H_
 
-#include <script.h>
-#include <vm.h>
 #include <engine.h>
 #include <math.h>
 #include <ctype.h>
@@ -53,8 +51,8 @@
 extern int _kdebug_cheap_event_hack;
 extern int _kdebug_cheap_soundcue_hack;
 
-extern int _debug_seeking;
-extern int _debug_step_running;
+extern DLLEXTERN int _debug_seeking;
+extern DLLEXTERN int _debug_step_running;
 
 
 

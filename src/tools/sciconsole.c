@@ -27,7 +27,7 @@
 /* Command console in text mode */
 
 
-#include <resource.h>
+#include <engine.h>
 #include <sound.h>
 #include <uinput.h>
 #include <console.h>
@@ -80,7 +80,7 @@ main(int argc, char** argv)
 
   con_hook_command(&c_quit, "quit", "", "console: Quits");
 
-  con_passthrough = 1; /* enables all sciprintf data to be sent to stdout */
+  /*con_set_passthrough (1);*/ con_passthrough = 1;  /* enables all sciprintf data to be sent to stdout */
   sciprintf("FreeSCI, version "VERSION"\n");
 
 #ifdef HAVE_READLINE_HISTORY_H
@@ -96,6 +96,8 @@ main(int argc, char** argv)
 #else /* !HAVE_READLINE_READLINE_H */
     command = malloc(1024);
     fgets(command, 1023, stdin);
+    if (command [strlen (command)-1] == '\n')
+      command [strlen (command)-1] = 0;
 #endif /* !HAVE_READLINE_READLINE_H */
 
 #ifdef HAVE_READLINE_HISTORY_H

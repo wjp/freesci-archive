@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <resource.h>
+
+#include <engine.h>
 #include <vocabulary.h>
 
 int main(int argc, char** argv)
@@ -48,5 +49,6 @@ int main(int argc, char** argv)
 			sizes[classes[res]]--, altsizes[classes[res]]);
 	}
 
-	return 0;
+	freeResources();
+        return 0;
 }

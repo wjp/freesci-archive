@@ -1,8 +1,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <resource.h>
-#include <heap.h>
+
+#include <engine.h>
 #include <console.h>
 
 #define assert_in_range(pos) assert(pos>=1000 && pos<=0xffff);

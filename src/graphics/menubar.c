@@ -29,9 +29,8 @@
 ** used for any actual actions on behalf of the interpreter.
 */
 
-#include <resource.h>
-#include <menubar.h>
 #include <engine.h>
+#include <menubar.h>
 
 /*
 static int __active = 0;

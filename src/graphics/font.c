@@ -33,6 +33,7 @@
 ** down by Rainer De Temple.
 */
 
+#include <engine.h>
 #include "graphics.h"
 #include <console.h>
 

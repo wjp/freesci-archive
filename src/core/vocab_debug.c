@@ -4,8 +4,7 @@
 
 
 #include <string.h>
-#include <resource.h>
-#include <vocabulary.h>
+#include <engine.h>
 
 /* Default kernel name table */
 #define SCI0_KNAMES_DEFAULT_ENTRIES_NR 0x72

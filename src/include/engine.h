@@ -31,8 +31,15 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <graphics.h>
+#ifdef FREESCI_EXPORTS
+#define DLLEXTERN
+#else
+#define DLLEXTERN __declspec(dllimport)
+#endif
+
 #include <resource.h>
+#include <heap.h>
+#include <graphics.h>
 #include <script.h>
 #include <vocabulary.h>
 #include <sound.h>

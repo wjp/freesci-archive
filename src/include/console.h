@@ -72,15 +72,15 @@ extern int con_display_row;
 /* Row displayed in the line closest to the bottom of the screen */
 extern int con_row_counter;
 /* Number of rows, >= con_display_row */
-extern int con_visible_rows;
+extern DLLEXTERN int con_visible_rows;
 /* number of visible console rows */
 extern char *con_input_line;
 /* input line */
 extern int con_cursor;
 /* cursor position on the input line */
-extern int con_passthrough;
+extern DLLEXTERN int con_passthrough;
 /* Echo all sciprintf() stuff to the text console */
-extern FILE *con_file;
+extern DLLEXTERN FILE *con_file;
 /* Echo all sciprintf() output to a text file */
 
 /* Output buffer */
@@ -233,7 +233,6 @@ con_restore_screen(struct _state *s, byte *backup);
 ** Returns   : (void)
 ** Frees the allocated data after restoring it
 */
-
 
 void
 con_draw(struct _state *s, byte *backup);

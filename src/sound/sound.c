@@ -26,13 +26,14 @@
 ***************************************************************************/
 
 #include <stdarg.h>
+
+#include <engine.h>
 #include <sound.h>
 #ifndef _DOS
 #include <glib.h>
 #endif
 #include <soundserver.h>
 #include <sys/types.h>
-#include <engine.h>
 
 #ifdef HAVE_SOCKETPAIR
 #include <sys/socket.h>

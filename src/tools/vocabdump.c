@@ -29,8 +29,7 @@
 
 ***************************************************************************/
 
-#include <resource.h>
-#include <vocabulary.h>
+#include <engine.h>
 
 int main(int argc, char** argv)
 {

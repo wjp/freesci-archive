@@ -27,20 +27,13 @@
 
 
 #include <engine.h>
+#include <kdebug.h>
 
 
 
 #ifdef SCI_SIMPLE_SAID_CODE
 
-#ifdef SCI_SIMPLE_SAID_DEBUG
-#define SDEBUG(foo...) {\
-     sciprintf("%s, %s(L%d): ", __FILE__, __FUNCTION__, __LINE__); \
-     sciprintf(## foo);}
-#else
-#define SDEBUG(foo...)
-#endif
-
-static int current_pword;
+int current_pword;
 static int said_pos;
 static int refstart_pos, parse_pos;
 static parse_tree_node_t *words;
@@ -53,6 +46,8 @@ static heap_ptr addr;
 #define WORDP_MODE_NEXT 1
 #define WORDP_MODE_SEEK 2
 
+/* hack */
+#define s state
 
 static inline int /* Returns whether the specified word matches */
 word_p(int mode, int word)
@@ -66,7 +61,7 @@ word_p(int mode, int word)
     /*    SDEBUG("Word at %d = %03x\n", parse_pos, current_pword); */
     if (current_pword == word) {
       /*      ++matches; */
-      SDEBUG("wordp(%d, %03x) from %d -> 1\n", mode, word, oldpp);
+      SCIkdebug(SCIkSAID, "wordp(%d, %03x) from %d -> 1\n", mode, word, oldpp);
       return 1;
     }
 
@@ -75,7 +70,7 @@ word_p(int mode, int word)
   if (words[parse_pos << 1].type == -1)
     --parse_pos;
 
-  SDEBUG("wordp(%d, %03x) from %d -> 0\n", mode, word, oldpp);
+  SCIkdebug(SCIkSAID, "wordp(%d, %03x) from %d -> 0\n", mode, word, oldpp);
 
   return 0;
 }
@@ -87,7 +82,7 @@ end_p()
 {
   int val = (words[(parse_pos + 1) << 1 ].type == -1);
 
-  SDEBUG("endp(pp=%d) = %d\n", parse_pos, val);
+  SCIkdebug(SCIkSAID, "endp(pp=%d) = %d\n", parse_pos, val);
 
   return val;
 }
@@ -114,7 +109,7 @@ reference_p(int referenced_word_index, int word)
     seeker += 2;
   }
 
-  SDEBUG("%03x > pos[%d]  = %d  (start at %d)\n", word, referenced_word_index, val, refstart_pos);
+  SCIkdebug(SCIkSAID, "%03x > pos[%d]  = %d  (start at %d)\n", word, referenced_word_index, val, refstart_pos);
 
   return val;
 }
@@ -146,11 +141,6 @@ next_parse_token(int *token_is_op)
   return item;
 }
 
-#define SIMPLESAID_ERROR(foo...) {\
-     sciprintf("%s, %s(L%d): ", __FILE__, __FUNCTION__, __LINE__); \
-     sciprintf(## foo); \
-     return 0;}
-
 #define STATE_INITIAL 0
 #define STATE_OR 1
 #define STATE_SEEK 2
@@ -165,12 +155,12 @@ simplesaid(int terminator)
   int aspiring_refword = -1; /* in "a < b < c", c refers to b, and aspiring_refword will be b. */
   int truth = 1;
   int token_is_op;
-  SDEBUG("simplesaid(%02x)\n", terminator);
+  SCIkdebug(SCIkSAID, "simplesaid(%02x)\n", terminator);
 
   while (42) {
 
     int token = next_parse_token(&token_is_op);
-    SDEBUG("Got token %03x on truth %d\n", token, truth);
+    SCIkdebug(SCIkSAID, "Got token %03x on truth %d\n", token, truth);
 
     if (token_is_op && (token == terminator)) {
       //      SDEBUG("Terminator; returning %d\n", truth);
@@ -192,14 +182,16 @@ simplesaid(int terminator)
 	break;
 
       case SAID_PARENC:
-	SIMPLESAID_ERROR("')' without matching '('\n");
+	SCIkwarn(SCIkERROR, "')' without matching '('\n");
+        return 0;
 
       case SAID_PARENO:
 	truth &= simplesaid(SAID_PARENC);
 	break;
 
       case SAID_BRACKC:
-	SIMPLESAID_ERROR("']' without matching '['\n");
+	SCIkwarn(SCIkERROR, "']' without matching '['\n");
+        return 0;
 
       case SAID_BRACKO:
 	simplesaid(SAID_BRACKC);
@@ -215,10 +207,12 @@ simplesaid(int terminator)
 	return truth && follows_p();
 
       case SAID_TERM:
-	SIMPLESAID_ERROR("Unexpected end of spec\n");
+	SCIkwarn(SCIkERROR, "Unexpected end of spec\n");
+        return 0;
 
       default:
-	SIMPLESAID_ERROR("Syntax error: Unexpected token 0x%02x\n", token);
+	SCIkwarn(SCIkERROR, "Syntax error: Unexpected token 0x%02x\n", token);
+        return 0;
       } else {
 	int tempresult;
 
@@ -243,10 +237,11 @@ simplesaid(int terminator)
 	  break;
 
 	default:
-	  SIMPLESAID_ERROR("Invalid major state!\n");
+	  SCIkwarn(SCIkERROR, "Invalid major state!\n");
+          return 0;
 	}
 
-	SDEBUG("state=(%d,%d), truth = %d * %d\n", major_state, minor_state, truth, tempresult);
+	SCIkdebug(SCIkSAID, "state=(%d,%d), truth = %d * %d\n", major_state, minor_state, truth, tempresult);
 
 	if (minor_state == STATE_OR)
 	  truth |= tempresult;
@@ -258,6 +253,7 @@ simplesaid(int terminator)
   }
 }
 
+#undef s
 
 int
 vocab_simple_said_test(state_t *s, heap_ptr address)
@@ -266,14 +262,14 @@ vocab_simple_said_test(state_t *s, heap_ptr address)
   current_pword = 0;
   dontclaim = 0;
   said_pos = 0;
-  SDEBUG("lastmatch_word=%d\n", s->parser_lastmatch_word);
+  SCIkdebug(SCIkSAID, "lastmatch_word=%d\n", s->parser_lastmatch_word);
   parse_pos = (s->parser_lastmatch_word == SAID_NO_MATCH)? -1 : s->parser_lastmatch_word;
   refstart_pos = parse_pos;
   state = s;
   addr = address;
   words = s->parser_nodes;
   matched = simplesaid(SAID_TERM);
-  SDEBUG("Result: (matched,dontclaim)=(%d,%d)\n", matched, dontclaim);
+  SCIkdebug(SCIkSAID, "Result: (matched,dontclaim)=(%d,%d)\n", matched, dontclaim);
   if (!matched)
     return SAID_NO_MATCH;
 

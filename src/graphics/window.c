@@ -26,8 +26,7 @@
 ***************************************************************************/
 /* Provides SCI0 window drawing functions */
 
-#include <resource.h>
-#include <graphics.h>
+#include <engine.h>
 
 void
 draw_box(picture_t dest, short x, short y, short xl, short yl, char color, char priority)

@@ -28,7 +28,7 @@
 ** This is for SCI version 0 style compression.
 */
 
-#include "resource.h"
+#include <engine.h>
 
 //#define _SCI_DECOMPRESS_DEBUG
 

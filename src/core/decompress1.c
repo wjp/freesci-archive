@@ -27,7 +27,7 @@
 /* Reads data from a resource file and stores the result in memory */
 
 
-#include "resource.h"
+#include <engine.h>
 
 /***************************************************************************
 * The following code was originally created by Carl Muckenhoupt for his

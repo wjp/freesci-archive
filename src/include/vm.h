@@ -214,7 +214,7 @@ typedef struct _breakpoint {
 /* Break when an exported function is called. data contains script_no << 16 |
    export_no. */
 
-extern int script_debug_flag;
+extern DLLEXTERN int script_debug_flag;
 /* Set this to 1 to activate script debugging */
 
 extern int script_error_flag;
@@ -223,7 +223,7 @@ extern int script_error_flag;
 extern int script_checkloads_flag;
 /* Displays the numbers of scripts when they are (un)loaded */
 
-extern int script_abort_flag;
+extern DLLEXTERN int script_abort_flag;
 /* Set this to 1 to abort script execution immediately. Aborting will leave the
 ** debug exec stack intact.
 */
@@ -232,7 +232,7 @@ extern int script_step_counter;
 /* Number of steps executed */
 
 
-extern char *(*_debug_get_input)(void);
+extern DLLEXTERN char *(*_debug_get_input)(void);
 /* The function used to get input for debugging */
 
 

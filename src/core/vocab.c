@@ -27,8 +27,8 @@
 /* Main vocabulary support functions and word lookup */
 
 
-#include <resource.h>
 #include <engine.h>
+#include <kernel.h>
 
 #include <ctype.h>
 
@@ -422,6 +422,7 @@ static short _related_words[][2] = { /* 0 is backwards, 1 is forward */
   {0x000, 0x180} /* number */
 };
 
+int
 vocab_build_simple_parse_tree(parse_tree_node_t *nodes, result_word_t *words, int words_nr)
 {
   int i, length, pos = 0;
@@ -447,7 +448,7 @@ vocab_build_simple_parse_tree(parse_tree_node_t *nodes, result_word_t *words, in
     int type;
 
     pos = (i << 1);
-    type = ffs(nodes[pos].type);
+    type = sci_ffs(nodes[pos].type);
 
     if (type) {
       int found = -1;
@@ -500,6 +501,8 @@ vocab_build_simple_parse_tree(parse_tree_node_t *nodes, result_word_t *words, in
 #ifdef SCI_SIMPLE_SAID_DEBUG
   sciprintf("/Semantic references.\n");
 #endif
+
+  return 0;
 }
 #endif
 

@@ -136,7 +136,7 @@ typedef struct {
 } sfx_driver_t;
 
 
-extern sfx_driver_t *sfx_drivers[]; /* All available sound fx drivers, NULL-terminated */
+extern DLLEXTERN sfx_driver_t *sfx_drivers[]; /* All available sound fx drivers, NULL-terminated */
 
 /* A word on priorities: A song is more important if its priority is higher.  */
 /* Another note: SysTicks are at 60 Hz, in case you didn't already know this. */

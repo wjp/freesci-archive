@@ -26,12 +26,12 @@
 ***************************************************************************/
 /* hooks for debug commands (mainly for the sci console) */
 
+#include <engine.h>
 #include <console.h>
 #ifdef SCI_CONSOLE
 #include <resource.h>
 #include <graphics.h>
 #include <sound.h>
-#include <engine.h>
 #include <script.h>
 
 state_t *con_gamestate = NULL;
@@ -62,7 +62,7 @@ cmd_var_t *_cmd_vars = 0;
 
 
 int con_passthrough = 0;
-FILE *con_file;
+FILE *con_file = NULL;
 
 static int _lists_need_sorting = 0;
 
@@ -147,7 +147,6 @@ con_init(void)
     con_hook_int(&sci_version, "sci_version", "Interpreter version (see resource.h)");
   }
 }
-
 
 void
 con_parse(state_t *s, char *command)

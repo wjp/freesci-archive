@@ -29,7 +29,7 @@
 #ifndef _SCI_KDEBUG_H_
 #define _SCI_KDEBUG_H_
 
-#define SCIk_DEBUG_MODES 12
+#define SCIk_DEBUG_MODES 13
 
 static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
   "Stubs",
@@ -43,7 +43,8 @@ static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
   "System graphics driver",
   "Base setter results",
   "Parser",
-  "Menu handling"
+  "Menu handling",
+  "Said code"
 };
 /* The various debug areas */
 
@@ -70,6 +71,7 @@ static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
 #define SCIkBASESETTER s, __FILE__, __LINE__, SCIkBASESETTER_NR
 #define SCIkPARSER     s, __FILE__, __LINE__, SCIkPARSER_NR
 #define SCIkMENU       s, __FILE__, __LINE__, 11
+#define SCIkSAID       s, __FILE__, __LINE__, 12
 
 
 #define SCI_KERNEL_DEBUG

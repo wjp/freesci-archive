@@ -26,9 +26,9 @@
 ***************************************************************************/
 
 %{
+#include <engine.h>
 #include <sci_conf.h>
 #include <graphics.h>
-#include <engine.h>
 #include <glib.h>
 
 #ifdef _MSC_VER

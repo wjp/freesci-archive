@@ -66,7 +66,7 @@ typedef struct opcode_
 #define VOCAB_CLASS_IMPERATIVE_VERB 0x80
 #define VOCAB_CLASS_NUMBER 0x100
 
-extern char *class_names[]; /* Vocabulary class names */
+extern DLLEXTERN char *class_names[]; /* Vocabulary class names */
 
 #define VOCAB_CLASS_ANYWORD 0xff
 /* Anywords are ignored by the parser */
@@ -334,11 +334,11 @@ vocab_synonymize_tokens(result_word_t *words, int words_nr, synonym_t *synonyms,
 */
 
 
-#ifdef SIMPLE_SAID_CODE
+#ifdef SCI_SIMPLE_SAID_CODE
 int
-vocab_match_simple(state_t *s, heap_ptr addr);
+vocab_match_simple(struct _state *s, heap_ptr addr);
 int
-vocab_simple_said_test(state_t *s, heap_ptr addr);
+vocab_simple_said_test(struct _state *s, heap_ptr addr);
 /* Does a simple match between the specified Said spec and the parse tree
 ** Parameters: (state_t *) s: The state to use (include the parse tree)
 **             (heap_ptr) addr: Address of the Said spec

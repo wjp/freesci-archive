@@ -26,7 +26,8 @@
 ***************************************************************************/
 
 
-#include <resource.h>
+#include <engine.h>
+#include <kdebug.h>
 
 
 #ifdef WORDS_BIGENDIAN
@@ -98,4 +99,98 @@ memtest(char *where, ...)
 fprintf(stderr,"Memtest succeeded!\n");
 return 0;
 }
+
+int sci_ffs(int _mask)
+{
+  int retval = 0;
+
+  if (!_mask) return 0;
+  retval++;
+  while (! (_mask & 1))
+  {
+    retval++;
+    _mask >>= 1;
+  }
+  
+  return retval;
+}
+
+
+/******************** Debug functions ********************/
+
+void
+_SCIkvprintf(FILE *file, char *format, va_list args)
+{
+  vfprintf(file, format, args);
+  if (con_file) vfprintf(con_file, format, args);
+}
+
+void
+_SCIkprintf(FILE *file, char *format, ...)
+{
+  va_list args;
+
+  va_start(args, format);
+  _SCIkvprintf(file, format, args);
+  va_end (args);
+}
+
+
+void
+_SCIkwarn(state_t *s, char *file, int line, int area, char *format, ...)
+{
+  va_list args;
+
+  if (area == SCIkERROR_NR)
+    _SCIkprintf(stderr, "ERROR: ");
+  else
+    _SCIkprintf(stderr, "Warning: ");
+
+  va_start(args, format);
+  _SCIkvprintf(stderr, format, args);
+  va_end(args);
+  fflush(NULL);
+
+  if (sci_debug_flags & _DEBUG_FLAG_BREAK_ON_WARNINGS) script_debug_flag=1;
+}
+
+void
+_SCIkdebug(state_t *s, char *file, int line, int area, char *format, ...)
+{
+  va_list args;
+
+  if (s->debug_mode & (1 << area)) {
+    _SCIkprintf(stdout, " kernel: (%s L%d): ", file, line);
+    va_start(args, format);
+    _SCIkvprintf(stdout, format, args);
+    va_end(args);
+    fflush(NULL);
+  }
+}
+
+void
+_SCIGNUkdebug(char *funcname, state_t *s, char *file, int line, int area, char *format, ...)
+{
+  va_list xargs;
+  int error = ((area == SCIkWARNING_NR) || (area == SCIkERROR_NR));
+
+  if (error || (s->debug_mode & (1 << area))) { /* Is debugging enabled for this area? */
+
+    _SCIkprintf(stderr, "FSCI: ");
+
+    if (area == SCIkERROR_NR)
+      _SCIkprintf(stderr, "ERROR in %s ", funcname);
+    else if (area == SCIkWARNING_NR)
+      _SCIkprintf(stderr, "%s: Warning ", funcname);
+    else _SCIkprintf(stderr, funcname);
+
+    _SCIkprintf(stderr, "(%s L%d): ", file, line);
+
+    va_start(xargs, format);
+    _SCIkvprintf(stderr, format, xargs);
+    va_end(xargs);
+
+  }
+}
+
 

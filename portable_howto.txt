@@ -1,0 +1,18 @@
+Some tips on writing portable code for FreeSCI:
+
+ - Always provide prototypes for all external functions and variables
+   referenced from your code. Absence of a prototype causes a warning
+   in GNU, but it is an error in Visual C++.
+ - Do not use varargs macros. This is a GNU extension not supported by
+   Visual C++. For a way to replace varargs macros, see
+   src/include/kdebug.h.
+ - Do not use the __FUNCTION__ macro. This is a GNU extension not
+   supported by Visual C++.
+ - Do not use the mkdir() function, since it has a different number of
+   arguments on Unix and Win32. Use the scimkdir() macro instead.
+ - Do not use the ffs() function. It is not available in the Visual C++
+   runtime. Use the sci_ffs() macro instead.
+ - When you declare a function returning int, please make sure that it
+   has a return statement in it. This is not an error in Visual C++, but
+   it produces a warning that is very easy to avoid.
+

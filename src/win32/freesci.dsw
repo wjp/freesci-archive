@@ -27,6 +27,30 @@ Package=<4>
 
 ###############################################################################
 
+Project: "freesci"=.\freesci.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "listwords"=.\listwords.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "scidisasm"=.\scidisasm.dsp - Package Owner=<4>
 
 Package=<5>

@@ -33,12 +33,18 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <resource.h>
+#include <engine.h>
 #include <graphics.h>
 #include <sound.h>
 #include <console.h>
 
 #ifdef HAVE_GETOPT_H
+
+#ifdef _MSC_VER
+#include <direct.h>
+#define extern __declspec(dllimport) extern
+#endif
+
 #include <getopt.h>
 #endif /* HAVE_GETOPT_H */
 
@@ -63,6 +69,7 @@ static int list = 0;
 static int verbose = 0;
 static int with_header = 1;
 static int dissect = 0;
+static int color_mode = 0;
 
 #ifdef HAVE_GETOPT_H
 static struct option options[] = {
@@ -74,11 +81,13 @@ static struct option options[] = {
   {"list", no_argument, &list, 1},
   {"with-header", no_argument, &with_header, 1},
   {"without-header", no_argument, &with_header, 0},
-  {"palette-dither", no_argument, &sci_color_mode, SCI_COLOR_DITHER},
-  {"palette-interpolate", no_argument, &sci_color_mode, SCI_COLOR_INTERPOLATE},
-  {"palette-dither256", no_argument, &sci_color_mode, SCI_COLOR_DITHER256},
+  {"palette-dither", no_argument, &color_mode, SCI_COLOR_DITHER},
+  {"palette-interpolate", no_argument, &color_mode, SCI_COLOR_INTERPOLATE},
+  {"palette-dither256", no_argument, &color_mode, SCI_COLOR_DITHER256},
   {"dissect", no_argument, &dissect, 1},
+  {"gamedir", required_argument, 0, 'd'},
   {0, 0, 0, 0}};
+
 #endif /* HAVE_GETOPT_H */
 
 
@@ -94,11 +103,12 @@ int main(int argc, char** argv)
   char *outfilename = 0;
   int optindex = 0;
   int c;
+  char *gamedir = NULL;
 
 #ifdef HAVE_GETOPT_H
-  while ((c = getopt_long(argc, argv, "vhlo:", options, &optindex)) > -1) {
+  while ((c = getopt_long(argc, argv, "vhlo:d:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_H */
-  while ((c = getopt(argc, argv, "vhlo:")) > -1) {
+  while ((c = getopt(argc, argv, "vhlo:d:")) > -1) {
 #endif /* !HAVE_GETOPT_H */
       
       switch (c)
@@ -121,6 +131,7 @@ int main(int argc, char** argv)
 		 " --help        -h       Displays this help message\n"
 		 " --list        -l       List all resources\n"
 		 " --output-file -o       Selects output file\n"
+                 " --gamedir     -d       Read game resources from dir\n"
 		 " --with-header          Forces the SCI header to be written (default)\n"
                  " --without-header       Prevents the two SCI header bytes from being written\n"
 		 " --palette-dither       Forces colors in 16 color games to be dithered\n"
@@ -149,6 +160,11 @@ int main(int argc, char** argv)
 	  outfilename = optarg;
 	  break;
 
+        case 'd':
+          if (gamedir) free (gamedir);
+          gamedir = strdup (optarg);
+          break;
+
 	case 0: /* getopt_long already did this for us */
 	case '?':
 	  /* getopt_long already printed an error message. */
@@ -158,6 +174,8 @@ int main(int argc, char** argv)
 	  return -1;
 	}
     }
+
+  sci_color_mode = color_mode;
 
   if (!list) {
     char *resstring = argv[optind];
@@ -182,7 +200,12 @@ int main(int argc, char** argv)
     }
   } /* !list */
 
-
+  if (gamedir)
+    if (chdir (gamedir))
+      {
+	printf ("Error changing to game directory '%s'\n", gamedir);
+	exit(1);
+      }
 
   if (i = loadResources(SCI_VERSION_AUTODETECT, 0)) {
     fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);

@@ -33,10 +33,9 @@
 #ifdef HAVE_DDRAW
 
 #include <math.h>
+#include <engine.h>
 #include <graphics_ddraw.h>
 #include <uinput.h>
-#include <engine.h>
-#include <vm.h>
 #include <kdebug.h>
 
 #include <Hermes.h>

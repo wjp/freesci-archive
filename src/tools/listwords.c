@@ -1,5 +1,5 @@
 /***************************************************************************
- vocabdump.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+ listwords.c Copyright (C) 2000 Christoph Reichenbach, TU Darmstadt
 
 
  This program may be modified and copied freely according to the terms of
@@ -29,9 +29,8 @@
 
 ***************************************************************************/
 
-#include <resource.h>
-#include <vocabulary.h>
-#include <kernel.h> /* For sci_ffs */
+#include <engine.h>
+#include <kernel.h>
 
 #define SORT_METHOD_ALPHA 0
 #define SORT_METHOD_GROUP 1
@@ -45,9 +44,9 @@ _vocab_cmp_group(const void *word1, const void *word2)
 #define sw (* ((word_t **) word2))
   if (fw->group<sw->group)
     return -1;
-  if (fw->group==sw->group)
+  else if (fw->group==sw->group)
     return 0;
-  if (fw->group>sw->group)
+  else
     return 1;
 }
 

@@ -39,6 +39,7 @@ RSC=rc.exe
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "scidisasm_Release"
+# PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
 # ADD CPP /nologo /W3 /GX /O2 /I "..\win32\getopt" /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\libpng" /I "..\..\..\zlib" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_LIBPNG" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.6\" /D "HAVE_OBSTACK_H" /D "HAVE_GETOPT_H" /YX /FD /c
@@ -49,7 +50,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib Release/freesci.lib /nologo /subsystem:console /machine:I386
 
 !ELSEIF  "$(CFG)" == "scidisasm - Win32 Debug"
 
@@ -62,6 +63,7 @@ LINK32=link.exe
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "scidisasm_Debug"
+# PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
 # ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\win32" /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\libpng" /I "..\..\..\zlib" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_LIBPNG" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.6\" /D "HAVE_OBSTACK_H" /D "HAVE_GETOPT_H" /YX /FD /GZ /c
@@ -72,7 +74,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib Debug/freesci.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 
 !ENDIF 
 
@@ -85,35 +87,7 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\core\console.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\core\decompress0.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\core\decompress1.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\core\resource.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\tools\scidisasm.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\core\script.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\core\vocab.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\core\vocab_debug.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -133,6 +107,22 @@ SOURCE=..\include\engine.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\include\event.h
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\..\cygnus\cygwin-b20\src\include\getopt.h"
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\glib\glib.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\glib\glibconfig.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\include\graphics.h
 # End Source File
 # Begin Source File
@@ -145,7 +135,19 @@ SOURCE=..\include\heap.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\include\kdebug.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\kernel.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\include\menubar.h
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\..\cygnus\cygwin-b20\src\include\obstack.h"
 # End Source File
 # Begin Source File
 
@@ -174,66 +176,6 @@ SOURCE=..\include\vm.h
 # Begin Source File
 
 SOURCE=..\include\vocabulary.h
-# End Source File
-# End Group
-# Begin Group "Libs"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\libiberty\getopt.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\include\getopt.h"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\libiberty\getopt1.c"
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\glib\glib.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\glib\glibconfig.h
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\libiberty\obstack.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\include\obstack.h"
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\libpng\png.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\libpng\pngconf.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\zlib\zconf.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\zlib\zlib.h
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\glib\glib-1.3.lib"
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\libpng\libpng.lib
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\zlib\zlib.lib
 # End Source File
 # End Group
 # End Target

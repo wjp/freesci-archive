@@ -156,11 +156,11 @@ struct resource_struct {
 typedef struct resource_struct resource_t;
 
 
-extern int sci_version;
+extern DLLEXTERN int sci_version;
 /* The version we are currently working with */
 
-extern int max_resource;
-extern resource_t *resource_map;
+extern DLLEXTERN int max_resource;
+extern DLLEXTERN resource_t *resource_map;
 
 
 /**** FUNCTION DECLARATIONS ****/
@@ -225,8 +225,8 @@ void freeResources();
 ** Returns   : (void)
 */
 
-resource_t *findResource(unsigned short type,
-			 unsigned short number);
+resource_t * findResource(unsigned short type,
+                          unsigned short number);
 /* Searches for a resource with the specified resource type and number.
 ** Parameters: type: The resource type (one of ResourceTypes)
 **             number: The resource number (the "042" in "view.042")

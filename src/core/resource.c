@@ -31,6 +31,7 @@
 /* Resource library */
 
 
+#include <engine.h>
 #include <resource.h>
 #include <assert.h>
 

@@ -1,3 +1,15 @@
+2000-04-17  Dmitry Jemerov  <yole@nnz.ru>
+
+	* Updated project files.
+
+	* Converted freesci/Win32 to use dynamic linking. Made a lot of
+	little changes all over the place.
+
+	* src/tools/sciunpack.c: Brought back the changes lost because of
+	Rink Springer's DOS port.
+
+	* portable_howto.txt: New file.
+
 2000-04-17  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/vocab.c (vocab_lookup_word): Fixed several bugs in extended

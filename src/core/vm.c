@@ -27,8 +27,6 @@
 
 
 
-#include <script.h>
-#include <vm.h>
 #include <engine.h>
 #include <versions.h>
 #include <kdebug.h>

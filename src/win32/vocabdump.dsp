@@ -39,6 +39,7 @@ RSC=rc.exe
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "vocabdump_Release"
+# PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
 # ADD CPP /nologo /W3 /GX /O2 /I "..\include" /I "..\..\..\glib" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.6\" /YX /FD /c
@@ -49,7 +50,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib release/freesci.lib /nologo /subsystem:console /machine:I386
 
 !ELSEIF  "$(CFG)" == "vocabdump - Win32 Debug"
 
@@ -62,6 +63,7 @@ LINK32=link.exe
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "vocabdump_Debug"
+# PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
 # ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\include" /I "..\..\..\glib" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.6\" /YX /FD /GZ /c
@@ -72,7 +74,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib debug/freesci.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 
 !ENDIF 
 
@@ -85,22 +87,6 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\core\decompress0.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\core\decompress1.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\core\resource.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\core\vocab_debug.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\tools\vocabdump.c
 # End Source File
 # End Group
@@ -109,20 +95,12 @@ SOURCE=..\tools\vocabdump.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=..\include\heap.h
+SOURCE=..\include\console.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\resource.h
+SOURCE=..\include\engine.h
 # End Source File
-# Begin Source File
-
-SOURCE=..\include\vocabulary.h
-# End Source File
-# End Group
-# Begin Group "Libs"
-
-# PROP Default_Filter ""
 # Begin Source File
 
 SOURCE=..\..\..\glib\glib.h
@@ -133,7 +111,43 @@ SOURCE=..\..\..\glib\glibconfig.h
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\..\glib\glib-1.3.lib"
+SOURCE=..\include\graphics.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\heap.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\menubar.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\resource.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\script.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\sound.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\uinput.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\versions.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\vm.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\vocabulary.h
 # End Source File
 # End Group
 # End Target

@@ -507,12 +507,10 @@ char *yytext;
 
 ***************************************************************************/
 #line 29 "config.l"
+#include <engine.h>
 #include <sci_conf.h>
 #include <graphics.h>
-#include <engine.h>
-#ifndef _DOS
 #include <glib.h>
-#endif
 
 #ifdef _MSC_VER
 #include <ctype.h>
