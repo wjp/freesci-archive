@@ -216,7 +216,7 @@ _SCIkprintf(FILE *file, char *format, ...);
 
 #define SKPV(x) KP_SINT(argv[x])
 #define UKPV(x) KP_UINT(argv[x])
-#define SKPV_OR_ALT(x,a) KP_UINT(KP_ALT(x, make_reg(0, a)))
+#define SKPV_OR_ALT(x,a) KP_SINT(KP_ALT(x, make_reg(0, a)))
 #define UKPV_OR_ALT(x,a) KP_UINT(KP_ALT(x, make_reg(0, a)))
 
 reg_t *
