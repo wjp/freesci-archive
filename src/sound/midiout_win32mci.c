@@ -38,7 +38,6 @@
 #include <sci_memory.h>
 
 HMIDIOUT devicename;				/* global handle to midiOut device */
-MIDIHDR midioutput;					/* used to send midi data */
 int devicenum			= -1;		/* device number */
 
 
@@ -216,10 +215,6 @@ int midiout_win32mci_open(void)
 		fprintf(stderr, "Successfully opened MCI MIDI device #%02d\n",devicenum);
 	}
 
-	/* set up midihdr struct */
-	memset(&midioutput, 0, sizeof(midioutput));
-	midioutput.dwBytesRecorded	= 1;	/* number of events that will be sent */
-
 	return 0;
 }
 
@@ -246,43 +241,13 @@ int midiout_win32mci_flush(void)
 int midiout_win32mci_write(guint8 *buffer, unsigned int count)
 {
 	MMRESULT ret;
-	unsigned int midioutputsize;
-
-	/* first, we populate the fields of the MIDIHDR */
-	midioutput.lpData			= buffer;		/* pointer to a MIDI event stream */
-	midioutput.dwBufferLength	= count;		/* size of buffer */
-
-	midioutputsize = sizeof(midioutput);
-
-	/* then we pass the MIDIHDR here to have the rest of it initialized */
-	ret = midiOutPrepareHeader(devicename, &midioutput, midioutputsize);
-	if (ret != MMSYSERR_NOERROR)
-	{
-		fprintf(stderr, "midiOutPrepareHeader: ");
-		return(_win32mci_print_error(ret));
-	}
 
 	/* then we send MIDIHDR to be played */
-	ret = midiOutLongMsg(devicename, &midioutput, midioutputsize);
+	ret = midiOutShortMsg(devicename, *(DWORD*)buffer);
 	if (ret != MMSYSERR_NOERROR)
 	{
-		fprintf(stderr, "midiOutLongMsg: ");
+		fprintf(stderr, "midiOutShortMsg: ");
 		return(_win32mci_print_error(ret));
-	}
-
-	/* things can't get freed before they're done playing */
-	ret = midiOutUnprepareHeader(devicename, &midioutput, midioutputsize);
-	if (ret != MMSYSERR_NOERROR)
-	{
-		/* if it fails, it's probably because it's still playing */
-		Sleep(count);
-		ret = midiOutUnprepareHeader(devicename, &midioutput, midioutputsize);
-		/* if it still fails, it's probably something else */
-		if (ret != MMSYSERR_NOERROR)
-		{
-			printf("midiOutUnprepareHeader() failed: ");
-			return(_win32mci_print_error(ret));
-		}
 	}
 
   win32mci_lastwrote = count;
@@ -292,7 +257,7 @@ int midiout_win32mci_write(guint8 *buffer, unsigned int count)
 
 midiout_driver_t midiout_driver_win32mci = {
   "win32mci",
-  "0.1",
+  "0.2",
   &midiout_win32mci_set_parameter,
   &midiout_win32mci_open,
   &midiout_win32mci_close,
