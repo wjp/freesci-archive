@@ -646,13 +646,14 @@ main(int argc, char** argv)
 	if (!conf) /* Unless the configuration has been read... */
 		conf_nr = read_config(game_name, &conf, &conf_entries, &version);
 
+	if (cl_options.gfx_driver_name)
+		gfx_driver = gfx_find_driver(cl_options.gfx_driver_name);
+
 	if (conf) {
 		memcpy(gfx_options, &(conf->gfx_options), sizeof(gfx_options_t)); /* memcpy so that console works */
-		gfx_driver = conf[conf_nr].gfx_driver;
+		if (!gfx_driver)
+			gfx_driver = conf[conf_nr].gfx_driver;
 	}
-
-	if (!gfx_driver)
-		gfx_driver = gfx_find_driver(cl_options.gfx_driver_name);
 
 	if (!gfx_driver) {
 		if (gfx_driver_name)

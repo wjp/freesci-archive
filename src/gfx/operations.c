@@ -1404,10 +1404,10 @@ _gfxop_set_pointer(gfx_state_t *state, gfx_pixmap_t *pxm)
 					GFXERROR("Pixmap-registering a new mouse pointer failed!\n");
 					return retval;
 				}
-				draw_new = 0;
-				state->driver->set_pointer(state->driver, pxm);
-				state->mouse_pointer_in_hw = 1;
 			}
+			draw_new = 0;
+			state->driver->set_pointer(state->driver, pxm);
+			state->mouse_pointer_in_hw = 1;
 		} else {
 			draw_new = 1;
 			state->mouse_pointer_in_hw = 0;

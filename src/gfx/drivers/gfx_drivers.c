@@ -31,18 +31,26 @@
 #include <gfx_driver.h>
 
 #ifdef HAVE_LIBGGI
-extern gfx_driver_t *gfx_driver_ggi;
+extern gfx_driver_t gfx_driver_ggi;
+#endif
+
+
+#ifdef HAVE_X11_XLIB_H
+extern gfx_driver_t gfx_driver_xlib;
 #endif
 
 
 #ifdef HAVE_DDRAW
-extern gfx_driver_t *gfx_driver_dd;
+extern gfx_driver_t gfx_driver_dd;
 #endif
 
 
 static gfx_driver_t *gfx_drivers[] = {
 #ifdef HAVE_LIBGGI
   &gfx_driver_ggi,
+#endif
+#ifdef HAVE_X11_XLIB_H
+  &gfx_driver_xlib,
 #endif
 #ifdef HAVE_DDRAW
   &gfx_driver_dd,
@@ -53,15 +61,15 @@ static gfx_driver_t *gfx_drivers[] = {
 struct _gfx_driver *
 gfx_find_driver(char *name)
 {
-	gfx_driver_t *retval = gfx_drivers[0];
+	int retval = 0;
 
 	if (!name)
 		return gfx_drivers[0];
 
-	while (retval && !strcasecmp(name, retval->name))
+	while (gfx_drivers[retval] && strcasecmp(name, gfx_drivers[retval]->name))
 		retval++;
 
-	return retval;
+	return gfx_drivers[retval];
 }
 
 
