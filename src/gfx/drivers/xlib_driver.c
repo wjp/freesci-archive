@@ -364,7 +364,21 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 #ifdef HAVE_XM_MWMUTIL_H
 	motif_hints.flags = MWM_HINTS_DECORATIONS|MWM_HINTS_FUNCTIONS;
 	motif_hints.decorations = MWM_DECOR_BORDER|MWM_DECOR_TITLE|MWM_DECOR_MENU|MWM_DECOR_MINIMIZE;
-	motif_hints.functions=MWM_FUNC_MOVE|MWM_FUNC_MINIMIZE|MWM_FUNC_CLOSE|MWM_FUNC_QUIT_APP;
+	motif_hints.functions=0
+#ifdef MWM_FUNC_MOVE
+		| MWM_FUNC_MOVE
+#endif
+#ifdef MWM_FUNC_MINIMIZE
+		| MWM_FUNC_MINIMIZE
+#endif
+#ifdef MWM_FUNC_CLOSE
+		| MWM_FUNC_CLOSE
+#endif
+#ifdef MWM_FUNC_QUIT_APP
+		| MWM_FUNC_QUIT_APP
+#endif
+		;
+
 	prop = XInternAtom(S->display, "_MOTIF_WM_HINTS", True );
 	if (prop) {
 		proptype = prop;
