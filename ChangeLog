@@ -1,3 +1,8 @@
+2003-01-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* AUTHORS, THANKS, src/engine/kmenu.c: Added Ruediger Hanke and
+	myself to the authors list.
+
 2003-01-12  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/pcmout_oss.c (pcmout_oss_open): More verbose error

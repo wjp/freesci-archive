@@ -251,3 +251,24 @@ sound/
 	polled_ss_sdl.c (parts)
 include/
 	sci_memory.h
+
+
+Walter van Niftrik: <w.f.b.w.v.niftrik@stud.tue.nl>
+[Dreamcast fixes]
+dc/
+	dc.c
+	dc_save.c
+gfx/
+	drivers/
+		dc_driver.c
+sound/
+	pcmout_dc.c
+	polled_ss_dc.c
+
+
+Ruediger Hanke: <tomjoad@muenster.de>
+[MorphOS fixes]
+morphos/
+	morphos.c
+sound/
+	midiout_morphos.c
