@@ -1,3 +1,13 @@
+2000-12-11  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c: Implemented display lists
+
+	* src/gfx/widgets.c (gfxw_new_dyn_view): Fixed dynamic views somewhat
+
+2000-12-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/decompress1.c: Implemented DCL-EXPLODE
+
 2000-12-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/widgets.c (_gfxwop_container_draw_contents): Altered the

@@ -94,9 +94,12 @@ _gfxw_print_widget(gfxw_widget_t *widget, int indentation)
 
 	indent(indentation);
 
-	if (widget->magic == GFXW_MAGIC_VALID)
-		sciprintf("v ");
-	else if (widget->magic == GFXW_MAGIC_INVALID)
+	if (widget->magic == GFXW_MAGIC_VALID) {
+		if (widget->visual)
+			sciprintf("v ");
+		else
+			sciprintf("NoVis ");
+	} else if (widget->magic == GFXW_MAGIC_INVALID)
 		sciprintf("INVALID ");
 
 	if (widget->ID != GFXW_NO_ID)
@@ -328,9 +331,10 @@ _gfxw_remove_widget(gfxw_container_t *container, gfxw_widget_t *widget)
 
 	if (GFXW_IS_LIST(widget) && GFXW_IS_PORT(container)) {
 	        gfxw_port_t *port = (gfxw_port_t *) container;
-		if (port->decorations == (gfxw_list_t *) widget)
+		if (port->decorations == (gfxw_list_t *) widget) {
 			port->decorations = NULL;
-		return;
+			return;
+		}
 	}
 
 	while (*seekerp && *seekerp != widget)
@@ -355,6 +359,7 @@ static int
 _gfxwop_basic_free(gfxw_widget_t *widget)
 {
 	gfx_state_t *state = (widget->visual)? widget->visual->gfx_state : NULL;
+
 	if (widget->parent) {
 		if (GFXW_IS_CONTAINER(widget))
 			widget->parent->add_dirty_abs(widget->parent, widget->bounds, 1);
@@ -665,14 +670,14 @@ _gfxw_new_simple_view(gfx_state_t *state, point_t pos, int view, int loop, int c
 	widget->cel = cel;
 
 	if (halign == ALIGN_CENTER)
-	  widget->pos.x -= width >> 1;
+		widget->pos.x -= width >> 1;
 	else if (halign == ALIGN_RIGHT)
-	  widget->pos.x -= width;
+		widget->pos.x -= width;
 
 	if (valign == ALIGN_CENTER)
-          widget->pos.y -= height >> 1;
+		widget->pos.y -= height >> 1;
 	else if (valign == ALIGN_BOTTOM)
-	  widget->pos.y -= height;
+		widget->pos.y -= height;
 
 	widget->bounds = gfx_rect(widget->pos.x - offset.x, widget->pos.y - offset.y, width, height);
 
@@ -828,14 +833,46 @@ gfxw_dyn_view_t *
 gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, int cel, int priority, int control,
 		  gfx_alignment_t halign, gfx_alignment_t valign)
 {
-	gfxw_dyn_view_t *widget =
-		(gfxw_dyn_view_t *) _gfxw_new_simple_view(state, pos, view, loop, cel, priority, halign, valign,
-							  control, sizeof(gfxw_dyn_view_t),
-							  GFXW_DYN_VIEW);
-	if (!widget) {
-		GFXERROR("Invalid view widget (%d/%d/%d)!\n", view, loop, cel);
+	gfxw_dyn_view_t *widget;
+	int width, height;
+	point_t offset;
+
+	if (!state) {
+		GFXERROR("Attempt to create view widget with NULL state!\n");
 		return NULL;
 	}
+
+	if (gfxop_get_cel_parameters(state, view, loop, cel, &width, &height, &offset)) {
+		GFXERROR("Attempt to retreive cel parameters for (%d/%d/%d) failed (Maybe the values weren't checked beforehand?)\n",
+			 view, cel, loop);
+		return NULL;
+	}
+
+	widget = (gfxw_view_t *) _gfxw_new_widget(sizeof(gfxw_dyn_view_t), GFXW_DYN_VIEW);
+
+	widget->pos = pos;
+	widget->color.mask =
+		(priority < 0)? 0 : GFX_MASK_PRIORITY
+		| (control < 0)? 0 : GFX_MASK_CONTROL;
+	widget->color.priority = priority;
+	widget->color.control = control;
+	widget->view = view;
+	widget->loop = loop;
+	widget->cel = cel;
+
+	if (halign == ALIGN_CENTER)
+		offset.x += width >> 1;
+	else if (halign == ALIGN_RIGHT)
+		offset.x += width;
+
+	if (valign == ALIGN_CENTER)
+		offset.y += height >> 1;
+	else if (valign == ALIGN_BOTTOM)
+		offset.y += height;
+
+	widget->bounds = gfx_rect(widget->pos.x - offset.x, widget->pos.y - offset.y, width, height);
+
+	widget->flags |= GFXW_FLAG_VISIBLE;
 
 	widget->pos.y += z;
 	widget->z = z;
@@ -1193,15 +1230,16 @@ _gfxwop_container_set_visual(gfxw_widget_t *widget, gfxw_visual_t *visual)
 static int
 _gfxwop_container_free_tagged(gfxw_container_t *container)
 {
-	gfxw_widget_t *seeker = container->contents;
+	gfxw_widget_t **seekerp = &(container->contents);
 
-	while (seeker) {
-		gfxw_widget_t *next = seeker->next;
+	while (*seekerp) {
+		gfxw_widget_t *redshirt = *seekerp;
 
-		if (seeker->flags & GFXW_FLAG_TAGGED)
-			seeker->free(seeker);
-
-		seeker = next;
+		if (redshirt->flags & GFXW_FLAG_TAGGED) {
+			*seekerp = redshirt->next;
+			redshirt->free(redshirt); /* He's dead, Jim. */
+		} else
+			seekerp = &((*seekerp)->next);
 	}
 	return 0;
 }
@@ -1229,6 +1267,32 @@ _gfxw_dirtify_container(gfxw_container_t *container, gfxw_widget_t *widget)
 }
 
 static int
+_parentize_widget(gfxw_container_t *container, gfxw_widget_t *widget)
+{
+	if (widget->parent) {
+		GFXERROR("_gfxwop_container_add(): Attempt to give second parent node to widget!\nWidget:");
+		widget->print(GFXW(widget), 3);
+		sciprintf("\nContainer:");
+		container->print(GFXW(container), 3);
+
+		return 1;
+	}
+
+	widget->parent = GFXWC(container);
+
+	if (GFXW_IS_VISUAL(container))
+		widget->set_visual(widget, (gfxw_visual_t *) container);
+	else {
+		if (container->visual)
+			widget->set_visual(widget, container->visual);
+		else {
+			GFXWARN("Adding widget to container without a visual!");
+		}
+	}
+	return 0;
+}
+			
+static int
 _gfxw_container_id_equals(gfxw_container_t *container, gfxw_widget_t *widget)
 {
 	gfxw_widget_t **seekerp = &(container->contents);
@@ -1253,6 +1317,7 @@ _gfxw_container_id_equals(gfxw_container_t *container, gfxw_widget_t *widget)
 		widget->next = (*seekerp)->next;
 		(*seekerp)->free(*seekerp);
 		*seekerp = widget;
+		_parentize_widget(container, widget);
 		_gfxw_dirtify_container(container, widget);
 		return 1;
 	}
@@ -1266,24 +1331,12 @@ _gfxwop_container_add_dirty(gfxw_container_t *container, rect_t dirty, int propa
 	return 0;
 }
 
+
 static int
 _gfxwop_container_add(gfxw_container_t *container, gfxw_widget_t *widget)
 {
-	if (widget->parent) {
-		GFXERROR("_gfxwop_container_add(): Attempt to give second parent node to widget!\nWidget:");
-		widget->print(GFXW(widget), 3);
-		sciprintf("\nContainer:");
-		container->print(GFXW(container), 3);
-
+	if (_parentize_widget(container, widget))
 		return 1;
-	}
-
-	if (GFXW_IS_VISUAL(container))
-		widget->set_visual(widget, (gfxw_visual_t *) container);
-	else
-		if (container->visual)
-			widget->set_visual(widget, container->visual);
-			
 
 	if (_gfxw_container_id_equals(container, widget))
 		return 0;
@@ -1292,7 +1345,6 @@ _gfxwop_container_add(gfxw_container_t *container, gfxw_widget_t *widget)
 
 	*(container->nextpp) = widget;
 	container->nextpp = &(widget->next);
-	widget->parent = GFXWC(container);
 
 	return 0;
 }
@@ -1445,6 +1497,9 @@ _gfxwop_sorted_list_add(gfxw_container_t *container, gfxw_widget_t *widget)
 
 	widget->next = *seekerp;
 	*seekerp = widget;
+
+	if (_parentize_widget(container, widget))
+		return 1;
 
 	return 0;
 }
@@ -1804,4 +1859,18 @@ gfxw_set_id(gfxw_widget_t *widget, int ID)
 	widget->ID = ID;
 	return widget;
 
+}
+
+gfxw_dyn_view_t *
+gfxw_dyn_view_set_params(gfxw_dyn_view_t *widget, int under_bits, int under_bitsp, int signal, int signalp)
+{
+	if (!widget)
+		return NULL;
+
+	widget->under_bits = under_bits;
+	widget->under_bitsp = under_bitsp;
+	widget->signal = signal;
+	widget->signalp = signalp;
+
+	return widget;
 }

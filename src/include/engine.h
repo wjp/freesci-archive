@@ -143,7 +143,7 @@ typedef struct _state
 	int pic_visible_map; /* The number of the map to display in update commands */
 	int pic_animate; /* The animation used by Animate() to display the picture */
 
-	int dyn_view_port; /* Port the dyn_views are valid for */
+	gfxw_port_t *dyn_view_port; /* Port the dyn_views are valid for */
 	gfxw_list_t *pic_views, *dyn_views; /* Pointers to pic and dynamic view lists */
 
 	int animation_delay; /* A delay factor for pic opening animations. Defaults to 500. */

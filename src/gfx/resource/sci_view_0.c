@@ -43,12 +43,13 @@ gfxr_draw_cel0(int id, int loop, int cel, byte *resource, int size, gfxr_view_t 
 	int yhot = ((signed char *) resource)[5];
 	int color_key = resource[6];
 	int pos = 7;
-	int writepos = 0;
+	int writepos = mirrored? xl : 0;
 	int pixmap_size = xl * yl;
+	int line_base = 0;
 	gfx_pixmap_t *retval = gfx_pixmap_alloc_index_data(gfx_new_pixmap(xl, yl, id, loop, cel));
 	byte *dest = retval->index_data;
 
-	retval->xoffset = -xhot;
+	retval->xoffset = mirrored? xhot : -xhot;
 	retval->yoffset = -yhot;
 	retval->colors = view->colors;
 	retval->colors_nr = view->colors_nr;
@@ -60,22 +61,52 @@ gfxr_draw_cel0(int id, int loop, int cel, byte *resource, int size, gfxr_view_t 
 		return NULL;
 	}
 
-	while (writepos < pixmap_size && pos < size) {
-		int op = resource[pos++];
-		int count = op >> 4;
-		int color = op & 0xf;
+	if (mirrored) {
 
-		if (color == color_key)
-			color = GFX_COLOR_INDEX_TRANSPARENT;
+		while (yl && pos < size) {
+			int op = resource[pos++];
+			int count = op >> 4;
+			int color = op & 0xf;
+			if (color == color_key)
+				color = GFX_COLOR_INDEX_TRANSPARENT;
 
-		if (writepos + count > pixmap_size) {
-			GFXERROR("View %02x:(%d/%d) writes RLE data over its designated end at rel. offset 0x%04x\n", id, loop, cel, pos);
-			return NULL;
+			while (count) {
+				int pixels = writepos - line_base;
+
+				if (pixels > count)
+					pixels = count;
+
+				writepos -= pixels;
+				memset(dest + writepos, color, pixels);
+				count -= pixels;
+
+				if (writepos == line_base) {
+					yl--;
+					writepos += (xl << 1);
+					line_base += xl;
+				}
+			}
 		}
+	} else {
 
-		memset(dest + writepos, color, count);
-		writepos += count;
+		while (writepos < pixmap_size && pos < size) {
+			int op = resource[pos++];
+			int count = op >> 4;
+			int color = op & 0xf;
+
+			if (color == color_key)
+				color = GFX_COLOR_INDEX_TRANSPARENT;
+
+			if (writepos + count > pixmap_size) {
+				GFXERROR("View %02x:(%d/%d) writes RLE data over its designated end at rel. offset 0x%04x\n", id, loop, cel, pos);
+				return NULL;
+			}
+
+			memset(dest + writepos, color, count);
+			writepos += count;
+		}
 	}
+
 	return retval;
 }
 

@@ -72,12 +72,13 @@ handle_gfx_error(int line, char *file)
 }
 
 #define GFX_ASSERT(x) { \
-	int val = (x); \
+	int val = !!(x); \
 	if (val) { \
 		if (val == GFX_ERROR) \
 			SCIkwarn(SCIkWARNING, "GFX subsystem returned error on \"" #x "\"!\n"); \
 		else {\
                         SCIkwarn(SCIkERROR, "GFX subsystem fatal error condition on \"" #x "\"!\n"); \
+                        BREAKPOINT(); \
 			handle_gfx_error(__LINE__, __FILE__); \
 	        } \
         }\
@@ -234,7 +235,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #warning "fixme!"
 #if 0
     graph_clear_box(s, port->xmin, port->ymin,
-v		    port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
+		    port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
 		    port->color);
     CHECK_THIS_KERNEL_FUNCTION;
 #endif
@@ -317,33 +318,33 @@ v		    port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
 void
 kTextSize(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int width, height;
-  int heap_text = UPARAM(1);
-  char *text = s->heap + heap_text;
-  heap_ptr dest = UPARAM(0);
-  int maxwidth = PARAM_OR_ALT(3, 0);
-  int font_nr = UPARAM(2);
+	int width, height;
+	int heap_text = UPARAM(1);
+	char *text = s->heap + heap_text;
+	heap_ptr dest = UPARAM(0);
+	int maxwidth = PARAM_OR_ALT(3, 0);
+	int font_nr = UPARAM(2);
 
-  if (maxwidth < 0)
-    maxwidth = 0;
+	if (maxwidth < 0)
+		maxwidth = 0;
 
-  if (!*text) { /* Empty text */
-    PUT_HEAP(dest + 0, 0);
-    PUT_HEAP(dest + 2, 0);
-    PUT_HEAP(dest + 4, 0);
-    PUT_HEAP(dest + 6, 0);
+	if (!*text) { /* Empty text */
+		PUT_HEAP(dest + 0, 0);
+		PUT_HEAP(dest + 2, 0);
+		PUT_HEAP(dest + 4, 0);
+		PUT_HEAP(dest + 6, 0);
 
-    return;
-  }
+		return;
+	}
 
-  GFX_ASSERT(gfxop_get_text_params(s->gfx_state, font_nr, text,
-				   maxwidth? maxwidth : MAX_TEXT_WIDTH_MAGIC_VALUE, &width, &height));
-  SCIkdebug(SCIkSTRINGS, "GetTextSize '%s' -> %dx%d\n", text, width, height);
+	GFX_ASSERT(gfxop_get_text_params(s->gfx_state, font_nr, text,
+					 maxwidth? maxwidth : MAX_TEXT_WIDTH_MAGIC_VALUE, &width, &height));
+	SCIkdebug(SCIkSTRINGS, "GetTextSize '%s' -> %dx%d\n", text, width, height);
 
-  PUT_HEAP(dest + 0, 0);
-  PUT_HEAP(dest + 2, 0);
-  PUT_HEAP(dest + 4, height);
-  PUT_HEAP(dest + 6, maxwidth? maxwidth : width);
+	PUT_HEAP(dest + 0, 0);
+	PUT_HEAP(dest + 2, 0);
+	PUT_HEAP(dest + 4, height);
+	PUT_HEAP(dest + 6, maxwidth? maxwidth : width);
 }
 
 
@@ -351,35 +352,35 @@ kTextSize(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kWait(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  GTimeVal time;
-  int SleepTime = PARAM(0);
+	GTimeVal time;
+	int SleepTime = PARAM(0);
 
-  g_get_current_time (&time);
+	g_get_current_time (&time);
 
-  s-> acc = ((time.tv_usec - s->last_wait_time.tv_usec) * 60 / 1000000) +
-    (time.tv_sec - s->last_wait_time.tv_sec) * 60;
+	s-> acc = ((time.tv_usec - s->last_wait_time.tv_usec) * 60 / 1000000) +
+		(time.tv_sec - s->last_wait_time.tv_sec) * 60;
 
-  memcpy(&(s->last_wait_time), &time, sizeof(GTimeVal));
+	memcpy(&(s->last_wait_time), &time, sizeof(GTimeVal));
 
-  GFX_ASSERT(gfxop_usleep(s->gfx_state, SleepTime * 1000000 / 60));
+	GFX_ASSERT(gfxop_usleep(s->gfx_state, SleepTime * 1000000 / 60));
 }
 
 
 void
 kCoordPri(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int y = PARAM(0);
+	int y = PARAM(0);
 
-  s->acc = VIEW_PRIORITY(y);
+	s->acc = VIEW_PRIORITY(y);
 }
 
 
 void
 kPriCoord(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int priority = PARAM(0);
+	int priority = PARAM(0);
 
-  s->acc = PRIORITY_BAND_FIRST(priority);
+	s->acc = PRIORITY_BAND_FIRST(priority);
 }
 
 
@@ -387,86 +388,80 @@ kPriCoord(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kDirLoop(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr obj = PARAM(0);
-  word angle = UPARAM(1);
-  int view = GET_SELECTOR(obj, view);
-  int signal = UGET_SELECTOR(obj, signal);
-  int loop;
-  int maxloops;
+	heap_ptr obj = PARAM(0);
+	word angle = UPARAM(1);
+	int view = GET_SELECTOR(obj, view);
+	int signal = UGET_SELECTOR(obj, signal);
+	int loop;
+	int maxloops;
 
-  if (signal & _K_VIEW_SIG_FLAG_DOESNT_TURN)
-    return;
+	if (signal & _K_VIEW_SIG_FLAG_DOESNT_TURN)
+		return;
 
-  angle %= 360;
+	angle %= 360;
 
-  if (angle < 45)
-    loop = 3;
-  else
-    if (angle < 135)
-      loop = 0;
-  else
-    if (angle < 225)
-      loop = 2;
-  else
-    if (angle < 314)
-      loop = 1;
-  else
-    loop = 3;
+	if (angle < 45)
+		loop = 3;
+	else if (angle < 135)
+		loop = 0;
+	else if (angle < 225)
+		loop = 2;
+	else if (angle < 314)
+		loop = 1;
+	else
+		loop = 3;
 
-  maxloops = gfxop_lookup_view_get_loops(s->gfx_state, view);
+	maxloops = gfxop_lookup_view_get_loops(s->gfx_state, view);
 
-  if (maxloops == GFX_ERROR) {
-    SCIkwarn(SCIkERROR, "Invalid view.%03d\n", view);
-    PUT_SELECTOR(obj, loop, 0xffff); /* Invalid */
-    return;
-  } else
-  if (loop >= maxloops) {
-    SCIkwarn(SCIkWARNING, "With view.%03d: loop %d > maxloop %d\n", view, loop, maxloops);
-    loop = 0;
-  }
+	if (maxloops == GFX_ERROR) {
+		SCIkwarn(SCIkERROR, "Invalid view.%03d\n", view);
+		PUT_SELECTOR(obj, loop, 0xffff); /* Invalid */
+		return;
+	} else if (loop >= maxloops) {
+		SCIkwarn(SCIkWARNING, "With view.%03d: loop %d > maxloop %d\n", view, loop, maxloops);
+		loop = 0;
+	}
 
-  PUT_SELECTOR(obj, loop, loop);
+	PUT_SELECTOR(obj, loop, loop);
 }
 
 void
 kSetJump(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr object = UPARAM(0);
-  int dx = PARAM(1);
-  int dy = PARAM(2);
-  int gy = PARAM(3);
-  int t1 = 1;
-  int t2;
-  int x = 0;
-  int y = 0;
+	heap_ptr object = UPARAM(0);
+	int dx = PARAM(1);
+	int dy = PARAM(2);
+	int gy = PARAM(3);
+	int t1 = 1;
+	int t2;
+	int x = 0;
+	int y = 0;
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  if ((dx)&&(abs(dy)>dx)) t1=(2*abs(dy))/dx;
+	if ((dx)&&(abs(dy)>dx)) t1=(2*abs(dy))/dx;
   
-  SCIkdebug(SCIkBRESEN, "t1: %d\n", t1);
+	SCIkdebug(SCIkBRESEN, "t1: %d\n", t1);
 
-  t1--;
+	t1--;
 
-  do
-    {
-      t1++;
-      t2=t1*abs(dx)+dy;
-    }
-  while (abs(2*t2)<abs(dx));
+	do {
+		t1++;
+		t2=t1*abs(dx)+dy;
+	} while (abs(2*t2)<abs(dx));
 
-  SCIkdebug(SCIkBRESEN, "t1: %d, t2: %d\n", t1, t2);
+	SCIkdebug(SCIkBRESEN, "t1: %d, t2: %d\n", t1, t2);
  
-   if (t2) x=sqrt((gy*dx*dx)/(2*t2));
-  y=abs(t1*y);
-  if (dx>=0) y=-y;
-  if ((dy<0)&&(!y)) y=-sqrt(-2*gy*dy);
+	if (t2) x=sqrt((gy*dx*dx)/(2*t2));
+	y=abs(t1*y);
+	if (dx>=0) y=-y;
+	if ((dy<0)&&(!y)) y=-sqrt(-2*gy*dy);
 
-  SCIkdebug(SCIkBRESEN, "SetJump for object at %x", object);
-  SCIkdebug(SCIkBRESEN, "xStep: %d, yStep: %d\n", x, y);
+	SCIkdebug(SCIkBRESEN, "SetJump for object at %x", object);
+	SCIkdebug(SCIkBRESEN, "xStep: %d, yStep: %d\n", x, y);
 
-  PUT_SELECTOR(object, xStep, x);
-  PUT_SELECTOR(object, yStep, y);
+	PUT_SELECTOR(object, xStep, x);
+	PUT_SELECTOR(object, yStep, y);
 
 }
 
@@ -478,148 +473,148 @@ void
 initialize_bresen(state_t *s, int funct_nr, int argc, heap_ptr argp, heap_ptr mover, int step_factor,
 		  int deltax, int deltay)
 {
-  heap_ptr client = GET_SELECTOR(mover, client);
-  int stepx = GET_SELECTOR(client, xStep) * step_factor;
-  int stepy = GET_SELECTOR(client, yStep) * step_factor;
-  int numsteps_x = stepx? (abs(deltax) + stepx-1) / stepx : 0;
-  int numsteps_y = stepy? (abs(deltay) + stepy-1) / stepy : 0;
-  int bdi, i1;
-  int numsteps;
-  int deltax_step;
-  int deltay_step;
+	heap_ptr client = GET_SELECTOR(mover, client);
+	int stepx = GET_SELECTOR(client, xStep) * step_factor;
+	int stepy = GET_SELECTOR(client, yStep) * step_factor;
+	int numsteps_x = stepx? (abs(deltax) + stepx-1) / stepx : 0;
+	int numsteps_y = stepy? (abs(deltay) + stepy-1) / stepy : 0;
+	int bdi, i1;
+	int numsteps;
+	int deltax_step;
+	int deltay_step;
 
-  if (numsteps_x > numsteps_y) {
-    numsteps = numsteps_x;
-    deltax_step = (deltax < 0)? -stepx : stepx;
-    deltay_step = numsteps? deltay / numsteps : deltay;
-  } else { /* numsteps_x <= numsteps_y */
-    numsteps = numsteps_y;
-    deltay_step = (deltay < 0)? -stepy : stepy;
-    deltax_step = numsteps? deltax / numsteps : deltax;
-  }
+	if (numsteps_x > numsteps_y) {
+		numsteps = numsteps_x;
+		deltax_step = (deltax < 0)? -stepx : stepx;
+		deltay_step = numsteps? deltay / numsteps : deltay;
+	} else { /* numsteps_x <= numsteps_y */
+		numsteps = numsteps_y;
+		deltay_step = (deltay < 0)? -stepy : stepy;
+		deltax_step = numsteps? deltax / numsteps : deltax;
+	}
 
-  /*  if (abs(deltax) > abs(deltay)) {*/ /* Bresenham on y */
-  if (numsteps_y < numsteps_x) {
+	/*  if (abs(deltax) > abs(deltay)) {*/ /* Bresenham on y */
+	if (numsteps_y < numsteps_x) {
 
-    PUT_SELECTOR(mover, b_xAxis, _K_BRESEN_AXIS_Y);
-    PUT_SELECTOR(mover, b_incr, (deltay < 0)? -1 : 1);
-    i1 = 2 * (abs(deltay) - abs(deltay_step * numsteps)) * abs(deltax_step);
-    bdi = -abs(deltax);
+		PUT_SELECTOR(mover, b_xAxis, _K_BRESEN_AXIS_Y);
+		PUT_SELECTOR(mover, b_incr, (deltay < 0)? -1 : 1);
+		i1 = 2 * (abs(deltay) - abs(deltay_step * numsteps)) * abs(deltax_step);
+		bdi = -abs(deltax);
 
-  } else { /* Bresenham on x */
+	} else { /* Bresenham on x */
 
-    PUT_SELECTOR(mover, b_xAxis, _K_BRESEN_AXIS_X);
-    PUT_SELECTOR(mover, b_incr, (deltax < 0)? -1 : 1);
-    i1= 2 * (abs(deltax) - abs(deltax_step * numsteps)) * abs(deltay_step);
-    bdi = -abs(deltay);
+		PUT_SELECTOR(mover, b_xAxis, _K_BRESEN_AXIS_X);
+		PUT_SELECTOR(mover, b_incr, (deltax < 0)? -1 : 1);
+		i1= 2 * (abs(deltax) - abs(deltax_step * numsteps)) * abs(deltay_step);
+		bdi = -abs(deltay);
 
-  }
+	}
 
-  PUT_SELECTOR(mover, dx, deltax_step);
-  PUT_SELECTOR(mover, dy, deltay_step);
+	PUT_SELECTOR(mover, dx, deltax_step);
+	PUT_SELECTOR(mover, dy, deltay_step);
 
-  SCIkdebug(SCIkBRESEN, "Init bresen for mover %04x: d=(%d,%d)\n", mover, deltax, deltay);
-  SCIkdebug(SCIkBRESEN, "    steps=%d, mv=(%d, %d), i1= %d, i2=%d\n",
-	    numsteps, deltax_step, deltay_step, i1, bdi*2);
+	SCIkdebug(SCIkBRESEN, "Init bresen for mover %04x: d=(%d,%d)\n", mover, deltax, deltay);
+	SCIkdebug(SCIkBRESEN, "    steps=%d, mv=(%d, %d), i1= %d, i2=%d\n",
+		  numsteps, deltax_step, deltay_step, i1, bdi*2);
 
-  PUT_SELECTOR(mover, b_di, bdi);
-  PUT_SELECTOR(mover, b_i1, i1);
-  PUT_SELECTOR(mover, b_i2, bdi * 2);
+	PUT_SELECTOR(mover, b_di, bdi);
+	PUT_SELECTOR(mover, b_i1, i1);
+	PUT_SELECTOR(mover, b_i2, bdi * 2);
 
 }
 
 void
 kInitBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr mover = UPARAM(0);
-  heap_ptr client = GET_SELECTOR(mover, client);
+	heap_ptr mover = UPARAM(0);
+	heap_ptr client = GET_SELECTOR(mover, client);
 
-  int deltax = GET_SELECTOR(mover, x) - GET_SELECTOR(client, x);
-  int deltay = GET_SELECTOR(mover, y) - GET_SELECTOR(client, y);
-  initialize_bresen(s, funct_nr, argc, argp, mover, PARAM_OR_ALT(1, 1), deltax, deltay);
+	int deltax = GET_SELECTOR(mover, x) - GET_SELECTOR(client, x);
+	int deltay = GET_SELECTOR(mover, y) - GET_SELECTOR(client, y);
+	initialize_bresen(s, funct_nr, argc, argp, mover, PARAM_OR_ALT(1, 1), deltax, deltay);
 }
 
 
 void
 kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr mover = PARAM(0);
-  heap_ptr client = GET_SELECTOR(mover, client);
+	heap_ptr mover = PARAM(0);
+	heap_ptr client = GET_SELECTOR(mover, client);
 
-  int x = GET_SELECTOR(client, x);
-  int y = GET_SELECTOR(client, y);
-  int oldx, oldy, destx, desty, dx, dy, bdi, bi1, bi2, movcnt, bdelta, axis;
+	int x = GET_SELECTOR(client, x);
+	int y = GET_SELECTOR(client, y);
+	int oldx, oldy, destx, desty, dx, dy, bdi, bi1, bi2, movcnt, bdelta, axis;
 
-  int completed = 0;
+	int completed = 0;
 
-  oldx = x;
-  oldy = y;
-  destx = GET_SELECTOR(mover, x);
-  desty = GET_SELECTOR(mover, y);
-  dx = GET_SELECTOR(mover, dx);
-  dy = GET_SELECTOR(mover, dy);
-  bdi = GET_SELECTOR(mover, b_di);
-  bi1 = GET_SELECTOR(mover, b_i1);
-  bi2 = GET_SELECTOR(mover, b_i2);
-  movcnt = GET_SELECTOR(mover, b_movCnt);
-  bdelta = GET_SELECTOR(mover, b_incr);
-  axis = GET_SELECTOR(mover, b_xAxis);
+	oldx = x;
+	oldy = y;
+	destx = GET_SELECTOR(mover, x);
+	desty = GET_SELECTOR(mover, y);
+	dx = GET_SELECTOR(mover, dx);
+	dy = GET_SELECTOR(mover, dy);
+	bdi = GET_SELECTOR(mover, b_di);
+	bi1 = GET_SELECTOR(mover, b_i1);
+	bi2 = GET_SELECTOR(mover, b_i2);
+	movcnt = GET_SELECTOR(mover, b_movCnt);
+	bdelta = GET_SELECTOR(mover, b_incr);
+	axis = GET_SELECTOR(mover, b_xAxis);
 
-  if ((bdi += bi1) >= 0) {
-    bdi += bi2;
+	if ((bdi += bi1) >= 0) {
+		bdi += bi2;
 
-    if (axis == _K_BRESEN_AXIS_X)
-      dx += bdelta;
-    else
-      dy += bdelta;
-  }
+		if (axis == _K_BRESEN_AXIS_X)
+			dx += bdelta;
+		else
+			dy += bdelta;
+	}
 
-  PUT_SELECTOR(mover, b_di, bdi);
+	PUT_SELECTOR(mover, b_di, bdi);
 
-  x += dx;
-  y += dy;
+	x += dx;
+	y += dy;
 
 
-  if ((((x <= destx) && (oldx >= destx)) || ((x >= destx) && (oldx <= destx)))
-      && (((y <= desty) && (oldy >= desty)) || ((y >= desty) && (oldy <= desty))))
-    /* Whew... in short: If we have reached or passed our target position */
-    {
-      x = destx;
-      y = desty;
+	if ((((x <= destx) && (oldx >= destx)) || ((x >= destx) && (oldx <= destx)))
+	    && (((y <= desty) && (oldy >= desty)) || ((y >= desty) && (oldy <= desty))))
+		/* Whew... in short: If we have reached or passed our target position */
+		{
+			x = destx;
+			y = desty;
       
-      if (s->selector_map.completed > -1)
-	PUT_SELECTOR(mover, completed, completed = 1); /* Finish! */
+			if (s->selector_map.completed > -1)
+				PUT_SELECTOR(mover, completed, completed = 1); /* Finish! */
 
-      SCIkdebug(SCIkBRESEN, "Finished mover %04x\n", mover);
-    }
+			SCIkdebug(SCIkBRESEN, "Finished mover %04x\n", mover);
+		}
 
 
-  PUT_SELECTOR(client, x, x);
-  PUT_SELECTOR(client, y, y);
+	PUT_SELECTOR(client, x, x);
+	PUT_SELECTOR(client, y, y);
 
-  SCIkdebug(SCIkBRESEN, "New data: (x,y)=(%d,%d), di=%d\n", x, y, bdi);
+	SCIkdebug(SCIkBRESEN, "New data: (x,y)=(%d,%d), di=%d\n", x, y, bdi);
 
-  invoke_selector(INV_SEL(client, canBeHere, 0), 0);
+	invoke_selector(INV_SEL(client, canBeHere, 0), 0);
 
-  if (s->acc) { /* Contains the return value */
-    s->acc = completed;
-    return;
-  } else {
-    word signal = GET_SELECTOR(client, signal);
+	if (s->acc) { /* Contains the return value */
+		s->acc = completed;
+		return;
+	} else {
+		word signal = GET_SELECTOR(client, signal);
 
-    PUT_SELECTOR(client, x, oldx);
-    PUT_SELECTOR(client, y, oldy);
-    if (s->selector_map.completed > -1)
-      PUT_SELECTOR(mover, completed, 1);
+		PUT_SELECTOR(client, x, oldx);
+		PUT_SELECTOR(client, y, oldy);
+		if (s->selector_map.completed > -1)
+			PUT_SELECTOR(mover, completed, 1);
  
-    PUT_SELECTOR(mover, x, oldx);
-    PUT_SELECTOR(mover, y, oldy);    
+		PUT_SELECTOR(mover, x, oldx);
+		PUT_SELECTOR(mover, y, oldy);    
 
-    PUT_SELECTOR(client, signal, (signal | _K_VIEW_SIG_FLAG_HIT_OBSTACLE));
+		PUT_SELECTOR(client, signal, (signal | _K_VIEW_SIG_FLAG_HIT_OBSTACLE));
 
-    SCIkdebug(SCIkBRESEN, "Finished mover %04x by collision\n", mover);
-    s->acc = 1;
-  }
+		SCIkdebug(SCIkBRESEN, "Finished mover %04x by collision\n", mover);
+		s->acc = 1;
+	}
 
 }
 
@@ -627,72 +622,73 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr obj = UPARAM(0);
-  heap_ptr cliplist = UPARAM_OR_ALT(1, 0);
-  gfxw_port_t *port = s->port;
-  word signal;
+	heap_ptr obj = UPARAM(0);
+	heap_ptr cliplist = UPARAM_OR_ALT(1, 0);
+	gfxw_port_t *port = s->port;
+	word signal;
 
-  int x = GET_SELECTOR(obj, brLeft);
-  int y = GET_SELECTOR(obj, brTop);
-  int xend = GET_SELECTOR(obj, brRight);
-  int yend = GET_SELECTOR(obj, brBottom);
-  int xl = xend - x;
-  int yl = yend - y;
-  word edgehit;
+	int x = GET_SELECTOR(obj, brLeft);
+	int y = GET_SELECTOR(obj, brTop);
+	int xend = GET_SELECTOR(obj, brRight);
+	int yend = GET_SELECTOR(obj, brBottom);
+	int xl = xend - x;
+	int yl = yend - y;
+	word edgehit;
 
-  signal = GET_SELECTOR(obj, signal);
-  SCIkdebug(SCIkBRESEN,"Checking collision: (%d,%d) to (%d,%d), obj=%04x, sig=%04x, cliplist=%04x\n",
-      x, y, xend, yend, obj, signal, cliplist);
+	signal = GET_SELECTOR(obj, signal);
+	SCIkdebug(SCIkBRESEN,"Checking collision: (%d,%d) to (%d,%d), obj=%04x, sig=%04x, cliplist=%04x\n",
+		  x, y, xend, yend, obj, signal, cliplist);
 #warning fixme!
 #if 0
-  s->acc = !(((word)GET_SELECTOR(obj, illegalBits))
-	     & (edgehit = graph_on_control(s, x + port->bounds.x, y + port->bounds.y, xl-1, yl-1, GFX_MASK_CONTROL)));
+	s->acc = !(((word)GET_SELECTOR(obj, illegalBits))
+		   & (edgehit = graph_on_control(s, x + port->bounds.x, y + port->bounds.y, xl-1, yl-1, GFX_MASK_CONTROL)));
 #endif
-  SCIkdebug(SCIkBRESEN, "edgehit = %04x\n", edgehit);
-  if (s->acc == 0)
-    return; /* Can'tBeHere */
-  if (signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | signal & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))
-    s->acc= signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE|_K_VIEW_SIG_FLAG_IGNORE_ACTOR); /* CanBeHere- it's either being disposed, or it ignores actors anyway */
+	SCIkdebug(SCIkBRESEN, "edgehit = %04x\n", edgehit);
+	if (s->acc == 0)
+		return; /* Can'tBeHere */
+	if (signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | signal & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))
+		s->acc= signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE|_K_VIEW_SIG_FLAG_IGNORE_ACTOR); /* CanBeHere- it's either being disposed, or it ignores actors anyway */
 
-  if (cliplist) {
-    heap_ptr node = GET_HEAP(cliplist + LIST_FIRST_NODE);
+	if (cliplist) {
+		heap_ptr node = GET_HEAP(cliplist + LIST_FIRST_NODE);
 
-    s->acc = 0; /* Assume that we Can'tBeHere... */
+		s->acc = 0; /* Assume that we Can'tBeHere... */
 
-    while (node) { /* Check each object in the list against our bounding rectangle */
-      heap_ptr other_obj = UGET_HEAP(node + LIST_NODE_VALUE);
-      if (other_obj != obj) { /* Clipping against yourself is not recommended */
+		while (node) { /* Check each object in the list against our bounding rectangle */
+			heap_ptr other_obj = UGET_HEAP(node + LIST_NODE_VALUE);
+			if (other_obj != obj) { /* Clipping against yourself is not recommended */
 
-	int other_signal = GET_SELECTOR(other_obj, signal);
-	SCIkdebug(SCIkBRESEN, "OtherSignal=%04x, z=%04x\n", other_signal, (other_signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)));
-	if ((other_signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR | _K_VIEW_SIG_FLAG_NO_UPDATE)) == 0) {
-	  /* check whether the other object ignores actors */
+				int other_signal = GET_SELECTOR(other_obj, signal);
+				SCIkdebug(SCIkBRESEN, "OtherSignal=%04x, z=%04x\n", other_signal,
+					  (other_signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)));
+				if ((other_signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR | _K_VIEW_SIG_FLAG_NO_UPDATE)) == 0) {
+					/* check whether the other object ignores actors */
 
-	  int other_x = GET_SELECTOR(other_obj, brLeft);
-	  int other_y = GET_SELECTOR(other_obj, brTop);
-	  int other_xend = GET_SELECTOR(other_obj, brRight);
-	  int other_yend = GET_SELECTOR(other_obj, brBottom);
-	  SCIkdebug(SCIkBRESEN, "  against (%d,%d) to (%d, %d)\n",
-		    other_x, other_y, other_xend, other_yend);
+					int other_x = GET_SELECTOR(other_obj, brLeft);
+					int other_y = GET_SELECTOR(other_obj, brTop);
+					int other_xend = GET_SELECTOR(other_obj, brRight);
+					int other_yend = GET_SELECTOR(other_obj, brBottom);
+					SCIkdebug(SCIkBRESEN, "  against (%d,%d) to (%d, %d)\n",
+						  other_x, other_y, other_xend, other_yend);
 
 
-	  if (((other_xend > x) && (other_x <= xend)) /* [other_x, other_xend] intersects [x, xend]? */
-	      &&
-	      ((other_yend > y) && (other_y <= yend))) /* [other_y, other_yend] intersects [y, yend]? */
-	    return;
+					if (((other_xend > x) && (other_x <= xend)) /* [other_x, other_xend] intersects [x, xend]? */
+					    &&
+					    ((other_yend > y) && (other_y <= yend))) /* [other_y, other_yend] intersects [y, yend]? */
+						return;
 
+				}
+
+				SCIkdebug(SCIkBRESEN, " (no)\n");
+
+			} /* if (other_obj != obj) */
+			node = GET_HEAP(node + LIST_NEXT_NODE); /* Move on */
+		}
 	}
 
-	SCIkdebug(SCIkBRESEN, " (no)\n");
-
-      } /* if (other_obj != obj) */
-      node = GET_HEAP(node + LIST_NEXT_NODE); /* Move on */
-    }
-  }
-
-  if (!s->acc)
-    s->acc = 1;
-  SCIkdebug(SCIkBRESEN, " -> %04x\n", s->acc);
+	if (!s->acc)
+		s->acc = 1;
+	SCIkdebug(SCIkBRESEN, " -> %04x\n", s->acc);
 
 }  /* CanBeHere */
 
@@ -784,84 +780,88 @@ kNumCels(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int arg = 0;
-  int map, xstart, ystart;
-  int xlen = 1, ylen = 1;
+	int arg = 0;
+	int map, xstart, ystart;
+	int xlen = 1, ylen = 1;
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  if (argc == 2 || argc == 4)
-    map = 4;
-  else {
-    arg = 1;
-    map = PARAM(0);
-  }
+	if (argc == 2 || argc == 4)
+		map = 4;
+	else {
+		arg = 1;
+		map = PARAM(0);
+	}
 
-  ystart = PARAM(arg+1);
-  xstart = PARAM(arg);
+	ystart = PARAM(arg+1);
+	xstart = PARAM(arg);
 
-  if (argc > 3) {
-    ylen = PARAM(arg+3) - ystart;
-    xlen = PARAM(arg+2) - xstart;
-    if (xlen > 1)
-      --xlen;
-    if (ylen > 1)
-    --ylen;
-  }
+	if (argc > 3) {
+		ylen = PARAM(arg+3) - ystart;
+		xlen = PARAM(arg+2) - xstart;
+		if (xlen > 1)
+			--xlen;
+		if (ylen > 1)
+			--ylen;
+	}
 #warning fixme!
 #if 0
-  s->acc = graph_on_control(s, xstart, ystart + 10, xlen, ylen, map);
+	s->acc = graph_on_control(s, xstart, ystart + 10, xlen, ylen, map);
 #endif
 }
 
 void
 _k_view_list_free_backgrounds(state_t *s, view_object_t *list, int list_nr);
 void
-_k_view_list_dispose(state_t *s, view_object_t **list_ptr, int *list_nr_ptr);
+_k_view_list_dispose(state_t *s, gfxw_list_t **list_ptr);
 
 void
 kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int pic_nr = PARAM(0);
-  int add_to_pic = 1;
-  CHECK_THIS_KERNEL_FUNCTION;
+	int pic_nr = PARAM(0);
+	int add_to_pic = 1;
+	CHECK_THIS_KERNEL_FUNCTION;
 
 
-  if (s->version < SCI_VERSION_FTU_NEWER_DRAWPIC_PARAMETERS) {
-	  if (!PARAM_OR_ALT(2, 0))
-		  add_to_pic = 0;
-  } else
-	  if (PARAM_OR_ALT(2, 1))
-		  add_to_pic = 0;
+	if (s->version < SCI_VERSION_FTU_NEWER_DRAWPIC_PARAMETERS) {
+		if (!PARAM_OR_ALT(2, 0))
+			add_to_pic = 0;
+	} else
+		if (PARAM_OR_ALT(2, 1))
+			add_to_pic = 0;
 
 
-  gfxop_disable_dirty_frames(s->gfx_state);
+	gfxop_disable_dirty_frames(s->gfx_state);
 
-  s->old_screen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 10, 320, 190));
+	s->old_screen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 10, 320, 190));
 
-  if (add_to_pic) {
-	  if (s->picture_port->contents) {
-		  s->picture_port->free_contents(GFXWC(s->picture_port));
-		  s->picture_port->contents = NULL;
-	  }
-	  GFX_ASSERT(gfxop_add_to_pic(s->gfx_state, pic_nr, 1, PARAM_OR_ALT(3, 0)));
-  } else {
-	  GFX_ASSERT(gfxop_new_pic(s->gfx_state, pic_nr, 1, PARAM_OR_ALT(3, 0)));
-  }
+	if (add_to_pic) {
+		if (s->picture_port->contents) {
+			s->picture_port->free_contents(GFXWC(s->picture_port));
+			s->picture_port->contents = NULL;
+		}
+		GFX_ASSERT(gfxop_add_to_pic(s->gfx_state, pic_nr, 1, PARAM_OR_ALT(3, 0)));
+	} else {
+		GFX_ASSERT(gfxop_new_pic(s->gfx_state, pic_nr, 1, PARAM_OR_ALT(3, 0)));
+	}
 
-  SCIkdebug(SCIkGRAPHICS,"Drawing pic.%03d\n", PARAM(0));
+	SCIkdebug(SCIkGRAPHICS,"Drawing pic.%03d\n", PARAM(0));
 
-  if (argc > 1)
-	  s->pic_animate = PARAM(1); /* The animation used during kAnimate() later on */
+	if (argc > 1)
+		s->pic_animate = PARAM(1); /* The animation used during kAnimate() later on */
 
-  if (s->dyn_views)
-	  s->dyn_views->free(GFXW(s->dyn_views));
-  s->dyn_views = gfxw_new_list(s->picture_port->bounds, GFXW_LIST_SORTED );
+	if (s->dyn_views)
+		s->dyn_views->free(GFXW(s->dyn_views));
 
-  s->priority_first = 42;
-  s->priority_last = 180;
-  s->pic_not_valid = 1;
-  s->pic_is_new = 1;
+	if (s->pic_views)
+		s->pic_views->free(GFXW(s->pic_views));
+
+	s->dyn_views = s->pic_views = NULL;
+
+	s->priority_first = 42;
+	s->priority_last = 180;
+	s->pic_not_valid = 1;
+	s->pic_is_new = 1;
 
 }
 
@@ -1169,24 +1169,6 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
-static inline void
-_k_clip_view(byte *view, int *loop, int *cel)
-     /* Checks if *loop and *cel are valid; if they aren't, they're clipped to the highest possible
-     ** valid values.
-     */
-{
-  int maxloops, maxcels;
-
-  maxloops = view0_loop_count(view) - 1;
-  if (*loop > maxloops)
-    *loop = maxloops;
-
-  maxcels = view0_cel_count(*loop, view) - 1;
-  if (*cel >= maxcels)
-    *cel = maxcels;
-}
-
-
 static void
 _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 {
@@ -1431,33 +1413,34 @@ _k_save_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
 }
 
 void
-_k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, view_object_t *list, int list_nr,
+_k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 			  int funct_nr, int argc, int argp)
      /* disposes all list members flagged for disposal; funct_nr is the invoking kfunction */
 {
-#warning fixme!
-#if 0
-  int i;
+	int i;
+	gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) list->contents;
 
-  for (i = 0; i < list_nr; i++)
-    if (list[i].obj) {
-      if (UGET_HEAP(list[i].signalp) & _K_VIEW_SIG_FLAG_DISPOSE_ME) {
+	while (widget) {
+		if (GFXW_IS_DYN_VIEW(widget) && widget->ID) {
+			if (UGET_HEAP(widget->signalp) & _K_VIEW_SIG_FLAG_DISPOSE_ME) {
 
-	if (list[i].underBitsp) { /* Is there a bg picture left to clean? */
-	  word mem_handle = list[i].underBits = GET_HEAP(list[i].underBitsp);
+				if (widget->under_bitsp) { /* Is there a bg picture left to clean? */
+					word mem_handle = widget->under_bits = GET_HEAP(widget->under_bitsp);
 
-	  if (mem_handle) {
-	    kfree(s, mem_handle);
-	    PUT_HEAP(list[i].underBitsp, list[i].underBits = 0);
-	  }
+					if (mem_handle) {
+						kfree(s, mem_handle);
+						PUT_HEAP(widget->under_bitsp, widget->under_bits = 0);
+					}
+				}
+
+				if (invoke_selector(INV_SEL(widget->ID, delete, 1), 0))
+					SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
+						 " a delete funcselector\n", widget->ID);
+			}
+		}
+
+		widget = (gfxw_dyn_view_t *) widget->next;
 	}
-
-	if (invoke_selector(INV_SEL(list[i].obj, delete, 1), 0))
-	  SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
-		   " a delete funcselector\n", list[i].obj);
-      }
-  }
-#endif
 }
 
 
@@ -1465,29 +1448,28 @@ void
 _k_invoke_view_list(state_t *s, heap_ptr list, int funct_nr, int argc, int argp)
      /* Invokes all elements of a view list. funct_nr is the number of the calling funcion. */
 {
-  heap_ptr node = GET_HEAP(list + LIST_LAST_NODE);
+	heap_ptr node = GET_HEAP(list + LIST_LAST_NODE);
 
-  while (node) {
-    heap_ptr obj = UGET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
-    word signal = GET_SELECTOR(obj, signal);
+	while (node) {
+		heap_ptr obj = UGET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
+		word signal = GET_SELECTOR(obj, signal);
 
-    if (lookup_selector(s, obj, s->selector_map.baseSetter, NULL) == SELECTOR_METHOD)
-      invoke_selector(INV_SEL(obj, baseSetter, 1), 0); /* SCI-implemented base setter */
-    else
-      _k_base_setter(s, obj);
+		if (lookup_selector(s, obj, s->selector_map.baseSetter, NULL) == SELECTOR_METHOD)
+			invoke_selector(INV_SEL(obj, baseSetter, 1), 0); /* SCI-implemented base setter */
+		else
+			_k_base_setter(s, obj);
 
     
-    PUT_SELECTOR(obj, signal, signal | _K_VIEW_SIG_FLAG_UPDATING);
+		PUT_SELECTOR(obj, signal, signal | _K_VIEW_SIG_FLAG_UPDATING);
 
-    if (!(signal & _K_VIEW_SIG_FLAG_FROZEN)) {
-      word ubitsnew, ubitsold = GET_SELECTOR(obj, underBits);
-      invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
-      ubitsnew = GET_SELECTOR(obj, underBits);
-    }
+		if (!(signal & _K_VIEW_SIG_FLAG_FROZEN)) {
+			word ubitsnew, ubitsold = GET_SELECTOR(obj, underBits);
+			invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
+			ubitsnew = GET_SELECTOR(obj, underBits);
+		}
 
-    node = UGET_HEAP(node + LIST_PREVIOUS_NODE);
-  }
-
+		node = UGET_HEAP(node + LIST_PREVIOUS_NODE);
+	}
 }
 
 
@@ -1505,199 +1487,183 @@ static int _cmp_view_object(const void *obj1, const void *obj2) /* Used for qsor
 #define _K_MAKE_VIEW_LIST_CALC_PRIORITY 2
 #define _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP 4
 
-view_object_t *
-_k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int funct_nr, int argc, int argp)
+void
+_k_make_view_list(state_t *s, gfxw_list_t *widget_list, heap_ptr list, int options, int funct_nr, int argc, int argp)
      /* Creates a view_list from a node list in heap space. Returns the list, stores the
      ** number of list entries in *list_nr. Calls doit for each entry if cycle is set.
      ** argc, argp, funct_nr should be the same as in the calling kernel function.
      */
 {
-#warning fixme!
-#if 0
-  heap_ptr node;
-  view_object_t *retval;
-  int i;
+	heap_ptr node;
+	int i;
 
-  if (options & _K_MAKE_VIEW_LIST_CYCLE)
-    _k_invoke_view_list(s, list, funct_nr, argc, argp); /* Invoke all objects if requested */
+	if (!widget_list) {
+		SCIkwarn(SCIkERROR, "make_view_list with widget_list == ()\n");
+		BREAKPOINT();
+	};
 
-  node = GET_HEAP(list + LIST_LAST_NODE);
-  *list_nr = 0;
+	widget_list->tag(GFXW(widget_list));
 
-  SCIkdebug(SCIkGRAPHICS, "Making list from %04x\n", list);
+	if (options & _K_MAKE_VIEW_LIST_CYCLE)
+		_k_invoke_view_list(s, list, funct_nr, argc, argp); /* Invoke all objects if requested */
 
-  if (GET_HEAP(list - 2) != 0x6) { /* heap size check */
-    SCIkwarn(SCIkWARNING, "Attempt to draw non-list at %04x\n", list);
-    return NULL; /* Return an empty list */
-  }
+	node = GET_HEAP(list + LIST_LAST_NODE);
+  
+	SCIkdebug(SCIkGRAPHICS, "Making list from %04x\n", list);
 
-  while (node) {
-    (*list_nr)++;
-    node = UGET_HEAP(node + LIST_PREVIOUS_NODE);
-  } /* Counting the nodes */
+	if (GET_HEAP(list - 2) != 0x6) { /* heap size check */
+		SCIkwarn(SCIkWARNING, "Attempt to draw non-list at %04x\n", list);
+		return;
+	}
 
-  if (!(*list_nr))
-    return NULL; /* Empty */
+	node = UGET_HEAP(list + LIST_LAST_NODE);
+	while (node) {
+		short oldloop, oldcel;
+		heap_ptr obj = GET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
+		int cel, loop, view_nr = GET_SELECTOR(obj, view);
+		int has_nsrect = lookup_selector(s, obj, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
+		int under_bits, signal;
+		heap_ptr under_bitsp, signalp;
+		point_t pos;
+		int z, priority, _priority;
+		gfxw_dyn_view_t *widget;
 
-  retval = g_malloc(*list_nr * (sizeof(view_object_t))); /* Allocate the list */
+		SCIkdebug(SCIkGRAPHICS, " - Adding %04x\n", obj);
 
-  node = UGET_HEAP(list + LIST_LAST_NODE); /* Start over */
+		obj = obj;
 
-  i = 0;
-  while (node) {
-    short oldloop, oldcel;
-    heap_ptr obj = GET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
-    int view_nr = GET_SELECTOR(obj, view);
-    int has_nsrect = lookup_selector(s, obj, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
-    int _priority;
-    resource_t *viewres = findResource(sci_view, view_nr);
+		pos.x = GET_SELECTOR(obj, x);
+		pos.y = GET_SELECTOR(obj, y);
+		z = GET_SELECTOR(obj, z);
 
-    SCIkdebug(SCIkGRAPHICS, " - Adding %04x\n", obj);
+		/* !-- nsRect used to be checked here! */
 
-    if (i == (*list_nr)) {
-      (*list_nr)++;
-      retval = g_realloc(retval, *list_nr * sizeof(view_object_t));
-      /* This has been reported to happen */
-    }
+		loop = oldloop = GET_SELECTOR(obj, loop);
+		cel = oldcel = GET_SELECTOR(obj, cel);
 
-    retval[i].obj = obj;
+		/* Clip loop and cel, write back if neccessary */
+		GFX_ASSERT(gfxop_check_cel(s->gfx_state, view_nr, &loop, &cel));
 
-    retval[i].x = GET_SELECTOR(obj, x);
-    retval[i].y = (retval[i].real_y = GET_SELECTOR(obj, y)) - (retval[i].z = GET_SELECTOR(obj, z));
-    retval[i].index_nr = i;
+		if (oldloop != loop)
+			PUT_SELECTOR(obj, loop, loop);
 
-    if (has_nsrect) {
-      retval[i].nsLeft = GET_SELECTOR(obj, nsLeft);
-      retval[i].nsRight = GET_SELECTOR(obj, nsRight);
-      retval[i].nsTop = GET_SELECTOR(obj, nsTop);
-      retval[i].nsBottom = GET_SELECTOR(obj, nsBottom);
-    }
-
-    retval[i].loop = oldloop = GET_SELECTOR(obj, loop);
-    retval[i].cel = oldcel = GET_SELECTOR(obj, cel);
-
-    if (!viewres) {
-      SCIkwarn(SCIkERROR, "Attempt to draw invalid view.%03d!\n", view_nr);
-      retval[i].view = NULL;
-      retval[i].view_nr = 0;
-    } else {
-      retval[i].view = viewres->data;
-      retval[i].view_nr = view_nr;
-
-      /* Clip loop and cel, write back if neccessary */
-      oldloop = retval[i].loop;
-      oldcel = retval[i].cel;
-      _k_clip_loop_cel(&(retval[i].loop), &(retval[i].cel), retval[i].view);
-
-      if (oldloop != retval[i].loop)
-	PUT_SELECTOR(retval[i].obj, loop, retval[i].loop);
-
-      if (oldcel != retval[i].cel)
-	PUT_SELECTOR(retval[i].obj, cel, retval[i].cel);
+		if (oldcel != cel)
+			PUT_SELECTOR(obj, cel, cel);
     
-    }
+		if (lookup_selector(s, obj, s->selector_map.underBits, &(under_bitsp))
+		    != SELECTOR_VARIABLE) {
+			under_bitsp = under_bits = 0;
+			SCIkdebug(SCIkGRAPHICS, "Object at %04x has no underBits\n", obj);
+		} else under_bits = GET_HEAP(under_bitsp);
 
-    if (lookup_selector(s, obj, s->selector_map.underBits, &(retval[i].underBitsp))
-	!= SELECTOR_VARIABLE) {
-      retval[i].underBitsp = 0;
-      SCIkdebug(SCIkGRAPHICS, "Object at %04x has no underBits\n", obj);
-    } else retval[i].underBits = GET_HEAP(retval[i].underBitsp);
+		if (lookup_selector(s, obj, s->selector_map.signal, &(signalp))
+		    != SELECTOR_VARIABLE) {
+			signal = signalp = 0;
+			SCIkdebug(SCIkGRAPHICS, "Object at %04x has no signal selector\n", obj);
+		}
 
-    if (lookup_selector(s, obj, s->selector_map.signal, &(retval[i].signalp))
-	!= SELECTOR_VARIABLE) {
-      retval[i].signalp = 0;
-      SCIkdebug(SCIkGRAPHICS, "Object at %04x has no signal selector\n", obj);
-    }
+		_priority = VIEW_PRIORITY(pos.y);
 
-    _priority = VIEW_PRIORITY(retval[i].y);
+		if (has_nsrect
+		    && !(UGET_HEAP(signalp) & _K_VIEW_SIG_FLAG_FIX_PRI_ON)) { /* Calculate priority */
 
-    if (has_nsrect
-	&& !(UGET_HEAP(retval[i].signalp) & _K_VIEW_SIG_FLAG_FIX_PRI_ON)) { /* Calculate priority */
+			if (options & _K_MAKE_VIEW_LIST_CALC_PRIORITY)
+				PUT_SELECTOR(obj, priority, _priority);
 
-      if (options & _K_MAKE_VIEW_LIST_CALC_PRIORITY)
-	PUT_SELECTOR(obj, priority, _priority);
+			priority = _priority;
+		} else /* DON'T calculate the priority */
+			priority = GET_SELECTOR(obj, priority);
 
-      retval[i].priority = _priority;
-    } else /* DON'T calculate the priority */
-      retval[i].priority = GET_SELECTOR(obj, priority);
+		if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP) {
+			int pri_top = PRIORITY_BAND_FIRST(_priority);
+			int top, bottom, right, left;
 
-    if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP) {
-      int pri_top = PRIORITY_BAND_FIRST(_priority);
-      int top, bottom, right, left;
+			if (priority <= 0)
+				priority = _priority; /* Picviews always get their priority set */
 
-      if (retval[i].priority <= 0)
-	retval[i].priority = _priority; /* Picviews always get their priority set */
 
-      if (has_nsrect) {
-	top = retval[i].nsTop;
-	bottom = retval[i].nsBottom;
-	left = retval[i].nsLeft;
-	right = retval[i].nsRight;
-      } else {
-	int width, height, magicx = 0, magicy = 0;
+			if (has_nsrect) {
+				top = GET_SELECTOR(obj, nsTop);
+				bottom = GET_SELECTOR(obj, nsBottom);
+				left = GET_SELECTOR(obj, nsLeft);
+				right = GET_SELECTOR(obj, nsRight);
+			} else {
+				int width, height;
+				point_t offset;
 
-	width = view0_cel_width(retval[i].loop, retval[i].cel, retval[i].view);
-	height = view0_cel_height(retval[i].loop, retval[i].cel, retval[i].view);
-	view0_base_modify(retval[i].loop, retval[i].cel, retval[i].view, &magicx, &magicy);
+				GFX_ASSERT(gfxop_get_cel_parameters(s->gfx_state, view_nr, loop, cel,
+								    &width, &height, &offset));
 
-	left = retval[i].x + magicx - (width >> 1);
-	right = left + width;
-	bottom = retval[i].y + magicy + 1;
-	top = bottom - height;
-      }
+				left = pos.x + offset.x - (width >> 1);
+				right = left + width;
+				bottom = pos.y + offset.y + 1;
+				top = bottom - height;
+			}
 
-      if (top < pri_top)
-	top = pri_top;
 
-      if (bottom < top) {
-	int foo = top;
-	top = bottom;
-	bottom = foo;
-      }
+			if (top < pri_top)
+				top = pri_top;
 
-      if (!(retval[i].signalp && (GET_HEAP(retval[i].signalp) & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {
-	SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n", retval[i].nsLeft, top,
-		  retval[i].nsRight, bottom);
-	graph_fill_box_custom(s, left + s->port->xmin,
-			      top + s->port->ymin,
-			      right - left + 1,
-			      bottom - top + 1,
-			      0, 0, 15, 4); /* Fill control map rectangle */
-      }
-    }
+			if (bottom < top) {
+				int foo = top;
+				top = bottom;
+				bottom = foo;
+			}
 
-      /*    s->pic_not_valid++; *//* There ought to be some kind of check here... */
+			if (!(signalp && (GET_HEAP(signalp) & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {
+				gfxw_box_t *box;
+				gfx_color_t color;
 
-    i++; /* Next object in the list */
+				gfxop_set_color(s->gfx_state, &color, -1, -1, -1, -1, -1, 0xf);
 
-    node = UGET_HEAP(node + LIST_PREVIOUS_NODE); /* Next node */
-  }
+				SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n", left, top,
+					  right, bottom);
 
-  qsort(retval, *list_nr, sizeof(view_object_t), _cmp_view_object);
+				box = gfxw_new_box(s->gfx_state, gfx_rect(left, top, right - left + 1, bottom - top + 1),
+						   color, color, GFX_BOX_SHADE_FLAT);
 
-  return retval;
-#else
-  return NULL; /* *** FIXME!!! *** */
-#endif
+				s->picture_port->add(GFXWC(s->picture_port), GFXW(box));
+			}
+		}
+
+		widget = gfxw_new_dyn_view(s->gfx_state, pos, z, view_nr, loop, cel,
+					   priority, -1, ALIGN_CENTER, ALIGN_BOTTOM);
+
+		if (widget) {
+
+			widget = (gfxw_dyn_view_t *) gfxw_set_id(GFXW(widget), obj);
+			widget = gfxw_dyn_view_set_params(widget, under_bits, under_bitsp, signal, signalp);
+
+			GFX_ASSERT(widget_list->add(GFXWC(widget_list), GFXW(widget)));
+
+			/*    s->pic_not_valid++; *//* There ought to be some kind of check here... */
+		} else {
+			SCIkwarn(SCIkWARNING, "Could not generate dynview widget for %d/%d/%d\n", view_nr, loop, cel);
+		}
+
+		node = UGET_HEAP(node + LIST_PREVIOUS_NODE); /* Next node */
+	}
+
 }
 
 
 void
-_k_view_list_dispose(state_t *s, view_object_t **list_ptr, int *list_nr_ptr)
+_k_view_list_dispose(state_t *s, gfxw_list_t **list_ptr)
      /* Unallocates all list element data, frees the list */
 {
+	gfxw_list_t *list = *list_ptr;
+
+	if (!(*list_ptr))
+		return; /* Nothing to do :-( */
+
+fprintf(stderr,"Error: DISPOSING LIST!\n");
+BREAKPOINT();
+
 #warning fixme!
-#if 0
-  view_object_t *list = *list_ptr;
-  if (!(*list_nr_ptr))
-    return; /* Nothing to do :-( */
+  /*  _k_view_list_free_backgrounds(s, list, *list_nr_ptr);*/
 
-  _k_view_list_free_backgrounds(s, list, *list_nr_ptr);
-
-  g_free (list);
-  *list_ptr = NULL;
-  *list_nr_ptr = 0;
-#endif
+	list->free(GFXW(list));
+	*list_ptr = NULL;
 }
 
 
@@ -1710,75 +1676,55 @@ _k_view_list_dispose(state_t *s, view_object_t **list_ptr, int *list_nr_ptr)
 #define _K_DRAW_VIEW_LIST_NONDISPOSEABLE 4
 
 void
-_k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int flags)
+_k_draw_view_list(state_t *s, gfxw_list_t *list, int flags)
      /* Draws list_nr members of list to s->pic. */
 {
-#warning fixme!
-#if 0
-  int i;
-  int argc = 0, argp = 0, funct_nr = -1; /* Kludges to work around INV_SEL dependancies */
+	int i;
+	int argc = 0, argp = 0, funct_nr = -1; /* Kludges to work around INV_SEL dependancies */
 
-  if (s->view_port != s->dyn_view_port)
-    return; /* Return if the pictures are meant for a different port */
+	gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) list->contents;
 
-  for (i = 0; i < list_nr; i++) 
-    if (list[i].obj) {
-    word signal = (flags & _K_DRAW_VIEW_LIST_USE_SIGNAL)? GET_HEAP(list[i].signalp) : 0;
+	if (s->port != s->dyn_view_port)
+		return; /* Return if the pictures are meant for a different port */
 
-    if (!(flags & _K_DRAW_VIEW_LIST_USE_SIGNAL)
-	|| ((flags & _K_DRAW_VIEW_LIST_DISPOSEABLE) && (signal & _K_VIEW_SIG_FLAG_DISPOSE_ME))
-	|| ((flags & _K_DRAW_VIEW_LIST_NONDISPOSEABLE) && !(signal & _K_VIEW_SIG_FLAG_DISPOSE_ME))) {
+	while (widget) {
 
-      /* Now, if we either don't use signal OR if signal allows us to draw, do so: */
-      if (!(flags & _K_DRAW_VIEW_LIST_USE_SIGNAL) || (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE) &&
-						      !(signal & _K_VIEW_SIG_FLAG_HIDDEN))) {
+		if (GFXW_IS_DYN_VIEW(widget) && widget->ID) {
+			word signal = (flags & _K_DRAW_VIEW_LIST_USE_SIGNAL)? GET_HEAP(widget->signalp) : 0;
 
-	_k_clip_view(list[i].view, &(list[i].loop), &(list[i].cel));
+			if (!(flags & _K_DRAW_VIEW_LIST_USE_SIGNAL)
+			    || ((flags & _K_DRAW_VIEW_LIST_DISPOSEABLE) && (signal & _K_VIEW_SIG_FLAG_DISPOSE_ME))
+			    || ((flags & _K_DRAW_VIEW_LIST_NONDISPOSEABLE) && !(signal & _K_VIEW_SIG_FLAG_DISPOSE_ME))) {
 
-	_k_set_now_seen(s, list[i].obj);
+				/* Now, if we either don't use signal OR if signal allows us to draw, do so: */
+				if (!(flags & _K_DRAW_VIEW_LIST_USE_SIGNAL) || (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE) &&
+										!(signal & _K_VIEW_SIG_FLAG_HIDDEN))) {
 
-	SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", list[i].obj, signal);
-	SCIkdebug(SCIkGRAPHICS, "  to (%d,%d) v/l/c = (%d,%d,%d), pri=%d\n", list[i].x, list[i].y,
-		  list[i].view_nr, list[i].loop, list[i].cel, list[i].priority);
+					_k_set_now_seen(s, widget->ID);
 
-	draw_view0(s->pic, s->port,
-		   list[i].x, list[i].y, list[i].priority, list[i].loop, list[i].cel,
-		   GRAPHICS_VIEW_CENTER_BASE | GRAPHICS_VIEW_USE_ADJUSTMENT, list[i].view);
-      }
+					SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", widget->ID, signal);
+					SCIkdebug(SCIkGRAPHICS, "  to (%d,%d) v/l/c = (%d,%d,%d), pri=%d\n", widget->pos.x, widget->pos.y,
+						  widget->view, widget->loop, widget->cel, widget->color.priority);
 
-      if (flags & _K_DRAW_VIEW_LIST_USE_SIGNAL) {
-	signal &= ~(_K_VIEW_SIG_FLAG_UPDATE_ENDED | _K_VIEW_SIG_FLAG_UPDATING |
-		    _K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_UNKNOWN_6);
-	/* Clear all of those flags */
+				}
 
-	PUT_HEAP(list[i].signalp, signal); /* Write the changes back */
-      } else continue;
+				if (flags & _K_DRAW_VIEW_LIST_USE_SIGNAL) {
+					signal &= ~(_K_VIEW_SIG_FLAG_UPDATE_ENDED | _K_VIEW_SIG_FLAG_UPDATING |
+						    _K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_UNKNOWN_6);
+					/* Clear all of those flags */
 
-      if (signal & 0 & _K_VIEW_SIG_FLAG_IGNORE_ACTOR)
-	continue; /* I assume that this is used for PicViews as well, so no use_signal check */
-      else if (signal & 0 & _K_VIEW_SIG_FLAG_UNKNOWN_5) { /* Yep, the continue doesn't really make sense. It's for clarification. */
-	int brTop = GET_SELECTOR(list[i].obj, brTop);
-	int brBottom = GET_SELECTOR(list[i].obj, brBottom);
-	int brLeft = GET_SELECTOR(list[i].obj, brLeft);
-	int brRight = GET_SELECTOR(list[i].obj, brRight);
-	int yl, y = brTop;
-	int priority_band_start = PRIORITY_BAND_FIRST(list[i].priority);
-	/* Get start of priority band */
+					PUT_HEAP(widget->signalp, signal); /* Write the changes back */
+				} else continue;
 
-	if (priority_band_start > brTop)
-	  y = priority_band_start;
+			} /* ...if we're drawing disposeables and this one is disposeable, or if we're drawing non-
+			  ** disposeables and this one isn't disposeable */
+		}
 
-	yl = abs(y - brBottom);
+		widget = (gfxw_dyn_view_t *) widget->next;
+	} /* while (widget) */
+	widget = (gfxw_dyn_view_t *) widget->next;
 
-	fill_box(s->pic, brLeft, y + 10,
-		 brRight - brLeft, yl, 0xf, 2);
-	/* Fill the control map with solidity */
-
-      } /* NOT Ignoring the actor */
-    } /* ...if we're drawing disposeables and this one is disposeable, or if we're drawing non-
-      ** disposeables and this one isn't disposeable */
-    } /* for (i = 0; i < list_nr; i++) */
-#endif
+	FULL_REDRAW();
 }
 
 void
@@ -2015,343 +1961,340 @@ void
 kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
      /* Animations are supposed to take a maximum of s->animation_delay milliseconds. */
 {
-  int i, remaining_checkers;
-  char checkers[32 * 19];
-  heap_ptr cast_list = UPARAM_OR_ALT(0, 0);
-  int cycle = UPARAM_OR_ALT(1, 0);
-  int open_animation = 0;
-  gfx_pixmap_t *oldscreen = NULL;
+	int i, remaining_checkers;
+	char checkers[32 * 19];
+	heap_ptr cast_list = UPARAM_OR_ALT(0, 0);
+	int cycle = UPARAM_OR_ALT(1, 0);
+	int open_animation = 0;
+	gfx_pixmap_t *oldscreen = NULL;
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  /*  SCI_MEMTEST; */
-  process_sound_events(s); /* Take care of incoming events (kAnimate is called semi-regularly) */
+	/*  SCI_MEMTEST; */
+	process_sound_events(s); /* Take care of incoming events (kAnimate is called semi-regularly) */
 
-  open_animation = (s->pic_is_new) && (s->pic_not_valid);
+	open_animation = (s->pic_is_new) && (s->pic_not_valid);
 
-  if (open_animation)
-	  gfxop_clear_box(s->gfx_state, gfx_rect(0, 10, 320, 190)); /* Propagate pic */
-
-#warning fixme!
-#if 0
-  if (!cast_list)
-    _k_view_list_dispose(s, &(s->dyn_views), &(s->dyn_views_nr)); /* Clear dynviews list */
-
-  if (s->dyn_views_nr) {
-    g_free(s->dyn_views);
-    s->dyn_views_nr = 0; /* No more dynamic views */
-    s->dyn_views = NULL;
-  }
-
-  if (cast_list) {
-    s->dyn_view_port = s->view_port; /* The list is valid for view_port */
-
-    s->dyn_views = _k_make_view_list(s, cast_list, &(s->dyn_views_nr), (cycle? _K_MAKE_VIEW_LIST_CYCLE : 0)
-				     | _K_MAKE_VIEW_LIST_CALC_PRIORITY, funct_nr, argc, argp);
-    /* Initialize pictures- Steps 3-9 in Lars' V 0.1 list */
-
-    SCIkdebug(SCIkGRAPHICS, "Handling PicViews:\n");
-    if ((s->pic_not_valid) && (s->pic_views_nr))
-      _k_draw_view_list(s, s->pic_views, s->pic_views_nr, 0); /* Step 10 */
-    SCIkdebug(SCIkGRAPHICS, "Handling Dyn:\n");
-
-    _k_restore_view_list_backgrounds(s, s->dyn_views, s->dyn_views_nr);
-    _k_draw_view_list(s, s->dyn_views, s->dyn_views_nr, _K_DRAW_VIEW_LIST_DISPOSEABLE | _K_DRAW_VIEW_LIST_USE_SIGNAL);
-    _k_save_view_list_backgrounds(s, s->dyn_views, s->dyn_views_nr);
-    _k_draw_view_list(s, s->dyn_views, s->dyn_views_nr, _K_DRAW_VIEW_LIST_NONDISPOSEABLE | _K_DRAW_VIEW_LIST_USE_SIGNAL); /* Step 11 */
-    /* Step 15 */
-    _k_view_list_dispose_loop(s, cast_list, s->dyn_views, s->dyn_views_nr, funct_nr, argc, argp);
-  } /* if (cast_list) */
-
-#endif
-
-  if (open_animation) {
-	  gfx_pixmap_t *newscreen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 10, 320, 190));
-
-	  if (!newscreen) {
-		  SCIkwarn(SCIkERROR, "Failed to allocate 'newscreen'!\n");
-		  return;
-	  }
-
-	  GFX_ASSERT(gfxop_draw_pixmap(s->gfx_state, s->old_screen, gfx_rect(0, 0, 320, 190), gfx_point(0, 10)));
-	  gfxop_update_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
-
-	  SCIkdebug(SCIkGRAPHICS, "Animating pic opening type %x\n", s->pic_animate);
-
-	  gfxop_enable_dirty_frames(s->gfx_state);
-
-	  switch(s->pic_animate) {
-	  case K_ANIMATE_BORDER_CLOSE_H_CENTER_OPEN_H :
-
-		  for (i = 0; i < 160; i++) {
-			  GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
-			  GRAPH_BLANK_BOX(s, 319-i, 10, 1, 190, 0);
-			  gfxop_update(s->gfx_state);
-			  gfxop_usleep(s->gfx_state, s->animation_delay);
-			  process_sound_events(s);
-		  }
-
-	  case K_ANIMATE_CENTER_OPEN_H :
-
-		  for (i = 159; i >= 0; i--) {
-			  GRAPH_UPDATE_BOX(s, i, 10, 1, 190);
-			  GRAPH_UPDATE_BOX(s, 319-i, 10, 1, 190);
-			  gfxop_update(s->gfx_state);
-			  gfxop_usleep(s->gfx_state, s->animation_delay);
-			  process_sound_events(s);
-		  }
-		  break;
+	if (open_animation)
+		gfxop_clear_box(s->gfx_state, gfx_rect(0, 10, 320, 190)); /* Propagate pic */
 
 
-	  case K_ANIMATE_BORDER_CLOSE_V_CENTER_OPEN_V :
+	if (!s->dyn_views) {
+		s->dyn_views = gfxw_new_list(s->picture_port->bounds, GFXW_LIST_SORTED);
+		s->picture_port->add(GFXWC(s->picture_port), GFXW(s->dyn_views));
+	}
 
-		  for (i = 0; i < 95; i++) {
-			  GRAPH_BLANK_BOX(s, 0, i + 10, 320, 1, 0);
-			  GRAPH_BLANK_BOX(s, 0, 199 - i, 320, 1, 0);
-			  gfxop_update(s->gfx_state);
-			  gfxop_usleep(s->gfx_state, 2 * s->animation_delay);
-			  process_sound_events(s);
-		  }
+	if (!cast_list)
+		s->dyn_views->tag(GFXW(s->dyn_views));
 
-	  case K_ANIMATE_CENTER_OPEN_V :
+	if (cast_list) {
+		s->dyn_view_port = s->port; /* The list is valid for view_port */
 
-		  for (i = 94; i >= 0; i--) {
-			  GRAPH_UPDATE_BOX(s, 0, i + 10, 320, 1);
-			  GRAPH_UPDATE_BOX(s, 0, 199 - i, 320, 1);
-			  gfxop_update(s->gfx_state);
-			  gfxop_usleep(s->gfx_state, 2 * s->animation_delay);
-			  process_sound_events(s);
-		  }
-		  break;
+		_k_make_view_list(s, s->dyn_views, cast_list, (cycle? _K_MAKE_VIEW_LIST_CYCLE : 0)
+				  | _K_MAKE_VIEW_LIST_CALC_PRIORITY, funct_nr, argc, argp);
+		/* Initialize pictures- Steps 3-9 in Lars' V 0.1 list */
 
+		SCIkdebug(SCIkGRAPHICS, "Handling PicViews:\n");
+		/*		if (s->pic_not_valid)
+				_k_draw_view_list(s, s->pic_views, 0);*/ /* Step 10 */
+		SCIkdebug(SCIkGRAPHICS, "Handling Dyn:\n");
 
-	  case K_ANIMATE_LEFT_CLOSE_RIGHT_OPEN :
-
-		  for(i = 0; i < 320; i++) {
-			  GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
-			  gfxop_update(s->gfx_state);
-			  gfxop_usleep(s->gfx_state, s->animation_delay / 2);
-			  process_sound_events(s);
-		  }
-
-	  case K_ANIMATE_RIGHT_OPEN :
-		  for(i = 319; i >= 0; i--) {
-			  GRAPH_UPDATE_BOX(s, i, 10, 1, 190);
-			  gfxop_update(s->gfx_state);
-			  gfxop_usleep(s->gfx_state, s->animation_delay / 2);
-			  process_sound_events(s);
-		  }
-		  break;
+		/*		_k_restore_view_list_backgrounds(s, s->dyn_views, s->dyn_views_nr); */
+		_k_draw_view_list(s, s->dyn_views, _K_DRAW_VIEW_LIST_DISPOSEABLE | _K_DRAW_VIEW_LIST_USE_SIGNAL);
+		/*		_k_save_view_list_backgrounds(s, s->dyn_views, s->dyn_views_nr); */
+		_k_draw_view_list(s, s->dyn_views, _K_DRAW_VIEW_LIST_NONDISPOSEABLE | _K_DRAW_VIEW_LIST_USE_SIGNAL); /* Step 11 */
+		/* Step 15 */
+		_k_view_list_dispose_loop(s, cast_list, s->dyn_views, funct_nr, argc, argp);
+	} /* if (cast_list) */
 
 
-	  case K_ANIMATE_RIGHT_CLOSE_LEFT_OPEN :
+	if (open_animation) {
+		gfx_pixmap_t *newscreen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 10, 320, 190));
 
-		  for(i = 319; i >= 0; i--) {
-			  GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
-			  gfxop_update(s->gfx_state);
-			  gfxop_usleep(s->gfx_state, s->animation_delay / 2);
-			  process_sound_events(s);
-		  }
+		if (!newscreen) {
+			SCIkwarn(SCIkERROR, "Failed to allocate 'newscreen'!\n");
+			return;
+		}
 
-	  case K_ANIMATE_LEFT_OPEN :
+		GFX_ASSERT(gfxop_draw_pixmap(s->gfx_state, s->old_screen, gfx_rect(0, 0, 320, 190), gfx_point(0, 10)));
+		gfxop_update_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
 
-		  for(i = 0; i < 320; i++) {
-			  GRAPH_UPDATE_BOX(s, i, 10, 1, 190);
-			  gfxop_update(s->gfx_state);
-			  gfxop_usleep(s->gfx_state, s->animation_delay / 2);
-			  process_sound_events(s);
-		  }
-		  break;
+		SCIkdebug(SCIkGRAPHICS, "Animating pic opening type %x\n", s->pic_animate);
 
+		gfxop_enable_dirty_frames(s->gfx_state);
 
-	  case K_ANIMATE_TOP_CLOSE_BOTTOM_OPEN :
+		switch(s->pic_animate) {
+		case K_ANIMATE_BORDER_CLOSE_H_CENTER_OPEN_H :
 
-		  for (i = 10; i < 200; i++) {
-			  GRAPH_BLANK_BOX(s, 0, i, 320, 1, 0);
-			  gfxop_update(s->gfx_state);
-			  gfxop_usleep(s->gfx_state, s->animation_delay);
-			  process_sound_events(s);
-		  }
+			for (i = 0; i < 160; i++) {
+				GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
+				GRAPH_BLANK_BOX(s, 319-i, 10, 1, 190, 0);
+				gfxop_update(s->gfx_state);
+				gfxop_usleep(s->gfx_state, s->animation_delay);
+				process_sound_events(s);
+			}
 
-	  case K_ANIMATE_BOTTOM_OPEN :
+		case K_ANIMATE_CENTER_OPEN_H :
 
-		  for (i = 199; i >= 10; i--) {
-			  GRAPH_UPDATE_BOX(s, 0, i, 320, 1);
-			  gfxop_update(s->gfx_state);
-			  gfxop_usleep(s->gfx_state, s->animation_delay);
-			  process_sound_events(s);
-		  }
-		  break;
+			for (i = 159; i >= 0; i--) {
+				GRAPH_UPDATE_BOX(s, i, 10, 1, 190);
+				GRAPH_UPDATE_BOX(s, 319-i, 10, 1, 190);
+				gfxop_update(s->gfx_state);
+				gfxop_usleep(s->gfx_state, s->animation_delay);
+				process_sound_events(s);
+			}
+			break;
 
 
-	  case K_ANIMATE_BOTTOM_CLOSE_TOP_OPEN :
+		case K_ANIMATE_BORDER_CLOSE_V_CENTER_OPEN_V :
 
-		  for (i = 199; i >= 10; i--) {
-			  GRAPH_BLANK_BOX(s, 0, i, 320, 1, 0);
-			  gfxop_update(s->gfx_state);
-			  gfxop_usleep(s->gfx_state, s->animation_delay);
-			  process_sound_events(s);
-		  }
+			for (i = 0; i < 95; i++) {
+				GRAPH_BLANK_BOX(s, 0, i + 10, 320, 1, 0);
+				GRAPH_BLANK_BOX(s, 0, 199 - i, 320, 1, 0);
+				gfxop_update(s->gfx_state);
+				gfxop_usleep(s->gfx_state, 2 * s->animation_delay);
+				process_sound_events(s);
+			}
 
-	  case K_ANIMATE_TOP_OPEN :
+		case K_ANIMATE_CENTER_OPEN_V :
 
-		  for (i = 10; i < 200; i++) {
-			  GRAPH_UPDATE_BOX(s, 0, i, 320, 1);
-			  gfxop_update(s->gfx_state);
-			  gfxop_usleep(s->gfx_state, s->animation_delay);
-			  process_sound_events(s);
-		  }
-		  break;
+			for (i = 94; i >= 0; i--) {
+				GRAPH_UPDATE_BOX(s, 0, i + 10, 320, 1);
+				GRAPH_UPDATE_BOX(s, 0, 199 - i, 320, 1);
+				gfxop_update(s->gfx_state);
+				gfxop_usleep(s->gfx_state, 2 * s->animation_delay);
+				process_sound_events(s);
+			}
+			break;
 
 
-	  case K_ANIMATE_CENTER_CLOSE_F_BORDER_OPEN_F :
+		case K_ANIMATE_LEFT_CLOSE_RIGHT_OPEN :
 
-		  for (i = 31; i >= 0; i--) {
-			  int height = i * 3;
-			  int width = i * 5;
+			for(i = 0; i < 320; i++) {
+				GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
+				gfxop_update(s->gfx_state);
+				gfxop_usleep(s->gfx_state, s->animation_delay / 2);
+				process_sound_events(s);
+			}
 
-			  GRAPH_BLANK_BOX(s, width, 10 + height, 5, 190 - 2*height, 0);
-			  GRAPH_BLANK_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height, 0);
+		case K_ANIMATE_RIGHT_OPEN :
+			for(i = 319; i >= 0; i--) {
+				GRAPH_UPDATE_BOX(s, i, 10, 1, 190);
+				gfxop_update(s->gfx_state);
+				gfxop_usleep(s->gfx_state, s->animation_delay / 2);
+				process_sound_events(s);
+			}
+			break;
+
+
+		case K_ANIMATE_RIGHT_CLOSE_LEFT_OPEN :
+
+			for(i = 319; i >= 0; i--) {
+				GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
+				gfxop_update(s->gfx_state);
+				gfxop_usleep(s->gfx_state, s->animation_delay / 2);
+				process_sound_events(s);
+			}
+
+		case K_ANIMATE_LEFT_OPEN :
+
+			for(i = 0; i < 320; i++) {
+				GRAPH_UPDATE_BOX(s, i, 10, 1, 190);
+				gfxop_update(s->gfx_state);
+				gfxop_usleep(s->gfx_state, s->animation_delay / 2);
+				process_sound_events(s);
+			}
+			break;
+
+
+		case K_ANIMATE_TOP_CLOSE_BOTTOM_OPEN :
+
+			for (i = 10; i < 200; i++) {
+				GRAPH_BLANK_BOX(s, 0, i, 320, 1, 0);
+				gfxop_update(s->gfx_state);
+				gfxop_usleep(s->gfx_state, s->animation_delay);
+				process_sound_events(s);
+			}
+
+		case K_ANIMATE_BOTTOM_OPEN :
+
+			for (i = 199; i >= 10; i--) {
+				GRAPH_UPDATE_BOX(s, 0, i, 320, 1);
+				gfxop_update(s->gfx_state);
+				gfxop_usleep(s->gfx_state, s->animation_delay);
+				process_sound_events(s);
+			}
+			break;
+
+
+		case K_ANIMATE_BOTTOM_CLOSE_TOP_OPEN :
+
+			for (i = 199; i >= 10; i--) {
+				GRAPH_BLANK_BOX(s, 0, i, 320, 1, 0);
+				gfxop_update(s->gfx_state);
+				gfxop_usleep(s->gfx_state, s->animation_delay);
+				process_sound_events(s);
+			}
+
+		case K_ANIMATE_TOP_OPEN :
+
+			for (i = 10; i < 200; i++) {
+				GRAPH_UPDATE_BOX(s, 0, i, 320, 1);
+				gfxop_update(s->gfx_state);
+				gfxop_usleep(s->gfx_state, s->animation_delay);
+				process_sound_events(s);
+			}
+			break;
+
+
+		case K_ANIMATE_CENTER_CLOSE_F_BORDER_OPEN_F :
+
+			for (i = 31; i >= 0; i--) {
+				int height = i * 3;
+				int width = i * 5;
+
+				GRAPH_BLANK_BOX(s, width, 10 + height, 5, 190 - 2*height, 0);
+				GRAPH_BLANK_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height, 0);
 			  
-			  GRAPH_BLANK_BOX(s, width, 10 + height, 320 - 2*width, 3, 0);
-			  GRAPH_BLANK_BOX(s, width, 200 - 3 - height, 320 - 2*width, 3, 0);
+				GRAPH_BLANK_BOX(s, width, 10 + height, 320 - 2*width, 3, 0);
+				GRAPH_BLANK_BOX(s, width, 200 - 3 - height, 320 - 2*width, 3, 0);
 
-			  gfxop_update(s->gfx_state);
-			  gfxop_usleep(s->gfx_state, 4 * s->animation_delay);
-			  process_sound_events(s);
-		  }
+				gfxop_update(s->gfx_state);
+				gfxop_usleep(s->gfx_state, 4 * s->animation_delay);
+				process_sound_events(s);
+			}
 
-	  case K_ANIMATE_BORDER_OPEN_F :
+		case K_ANIMATE_BORDER_OPEN_F :
 
-		  for (i = 0; i < 32; i++) {
-			  int height = i * 3;
-			  int width = i * 5;
+			for (i = 0; i < 32; i++) {
+				int height = i * 3;
+				int width = i * 5;
 
-			  GRAPH_UPDATE_BOX(s, width, 10 + height, 5, 190 - 2*height);
-			  GRAPH_UPDATE_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height);
+				GRAPH_UPDATE_BOX(s, width, 10 + height, 5, 190 - 2*height);
+				GRAPH_UPDATE_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height);
 
-			  GRAPH_UPDATE_BOX(s, width, 10 + height, 320 - 2*width, 3);
-			  GRAPH_UPDATE_BOX(s, width, 200 - 3 - height, 320 - 2*width, 3);
+				GRAPH_UPDATE_BOX(s, width, 10 + height, 320 - 2*width, 3);
+				GRAPH_UPDATE_BOX(s, width, 200 - 3 - height, 320 - 2*width, 3);
 
-			  gfxop_update(s->gfx_state);
-			  gfxop_usleep(s->gfx_state, 4 * s->animation_delay);
-			  process_sound_events(s);
-		  }
+				gfxop_update(s->gfx_state);
+				gfxop_usleep(s->gfx_state, 4 * s->animation_delay);
+				process_sound_events(s);
+			}
 
-		  break;
-
-
-	  case K_ANIMATE_BORDER_CLOSE_F_CENTER_OPEN_F :
-
-		  for (i = 0; i < 32; i++) {
-			  int height = i * 3;
-			  int width = i * 5;
-
-			  GRAPH_BLANK_BOX(s, width, 10 + height, 5, 190 - 2*height, 0);
-			  GRAPH_BLANK_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height, 0);
-
-			  GRAPH_BLANK_BOX(s, width, 10 + height, 320 - 2*width, 4, 0);
-			  GRAPH_BLANK_BOX(s, width, 200 - 4 - height, 320 - 2*width, 4, 0);
-
-			  gfxop_update(s->gfx_state);
-			  gfxop_usleep(s->gfx_state, 7 * s->animation_delay);
-			  process_sound_events(s);
-		  }
-
-	  case K_ANIMATE_CENTER_OPEN_F :
-
-		  for (i = 31; i >= 0; i--) {
-			  int height = i * 3;
-			  int width = i * 5;
-
-			  GRAPH_UPDATE_BOX(s, width, 10 + height, 5, 190 - 2*height);
-			  GRAPH_UPDATE_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height);
-
-			  GRAPH_UPDATE_BOX(s, width, 10 + height, 320 - 2 * width, 3);
-			  GRAPH_UPDATE_BOX(s, width, 200 - 3 - height, 320 - 2 * width, 3);
-
-			  gfxop_update(s->gfx_state);
-			  gfxop_usleep(s->gfx_state, 7 * s->animation_delay);
-			  process_sound_events(s);
-		  }
-
-		  break;
+			break;
 
 
-	  case K_ANIMATE_CLOSE_CHECKERS_OPEN_CHECKERS :
+		case K_ANIMATE_BORDER_CLOSE_F_CENTER_OPEN_F :
 
-		  memset(checkers, 0, sizeof(checkers));
-		  remaining_checkers = 19 * 32;
+			for (i = 0; i < 32; i++) {
+				int height = i * 3;
+				int width = i * 5;
 
-		  while (remaining_checkers) {
-			  int x, y, checker = 1 + (int) (1.0 * remaining_checkers*rand()/(RAND_MAX+1.0));
-			  i = -1;
+				GRAPH_BLANK_BOX(s, width, 10 + height, 5, 190 - 2*height, 0);
+				GRAPH_BLANK_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height, 0);
 
-			  while (checker)
-				  if (checkers[++i] == 0) --checker;
-			  checkers[i] = 1; /* Mark checker as used */
+				GRAPH_BLANK_BOX(s, width, 10 + height, 320 - 2*width, 4, 0);
+				GRAPH_BLANK_BOX(s, width, 200 - 4 - height, 320 - 2*width, 4, 0);
 
-			  x = i % 32;
-			  y = i / 32;
+				gfxop_update(s->gfx_state);
+				gfxop_usleep(s->gfx_state, 7 * s->animation_delay);
+				process_sound_events(s);
+			}
 
-			  GRAPH_BLANK_BOX(s, x * 10, 10 + y * 10, 10, 10, 0);
-			  gfxop_update(s->gfx_state);
-			  if (remaining_checkers & 1) {
-				  gfxop_usleep(s->gfx_state, s->animation_delay / 4);
-			  }
+		case K_ANIMATE_CENTER_OPEN_F :
 
-			  --remaining_checkers;
-			  process_sound_events(s);
-		  }
+			for (i = 31; i >= 0; i--) {
+				int height = i * 3;
+				int width = i * 5;
 
-	  case K_ANIMATE_OPEN_CHECKERS :
+				GRAPH_UPDATE_BOX(s, width, 10 + height, 5, 190 - 2*height);
+				GRAPH_UPDATE_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height);
 
-		  memset(checkers, 0, sizeof(checkers));
-		  remaining_checkers = 19 * 32;
+				GRAPH_UPDATE_BOX(s, width, 10 + height, 320 - 2 * width, 3);
+				GRAPH_UPDATE_BOX(s, width, 200 - 3 - height, 320 - 2 * width, 3);
 
-		  while (remaining_checkers) {
-			  int x, y, checker = 1 + (int) (1.0 * remaining_checkers * rand()/(RAND_MAX+1.0));
-			  i = -1;
+				gfxop_update(s->gfx_state);
+				gfxop_usleep(s->gfx_state, 7 * s->animation_delay);
+				process_sound_events(s);
+			}
 
-			  while (checker)
-				  if (checkers[++i] == 0) --checker;
-			  checkers[i] = 1; /* Mark checker as used */
-
-			  x = i % 32;
-			  y = i / 32;
-
-			  GRAPH_UPDATE_BOX(s, x * 10, 10 + y * 10, 10, 10);
-
-			  gfxop_update(s->gfx_state);
-			  if (remaining_checkers & 1) {
-				  gfxop_usleep(s->gfx_state, s->animation_delay / 4);
-			  }
-
-			  --remaining_checkers;
-			  process_sound_events(s);
-		  }
-
-		  break;
+			break;
 
 
-	  default:
-		  if (s->pic_animate != K_ANIMATE_OPEN_SIMPLE)
-			  SCIkwarn(SCIkWARNING, "Unknown opening animation 0x%02x\n", s->pic_animate);
+		case K_ANIMATE_CLOSE_CHECKERS_OPEN_CHECKERS :
 
-		  GRAPH_UPDATE_BOX(s, 0, 10, 320, 190);
-	  }
+			memset(checkers, 0, sizeof(checkers));
+			remaining_checkers = 19 * 32;
 
-	  s->pic_is_new = 0;
-	  s->pic_not_valid = 0;
-	  return;
+			while (remaining_checkers) {
+				int x, y, checker = 1 + (int) (1.0 * remaining_checkers*rand()/(RAND_MAX+1.0));
+				i = -1;
+
+				while (checker)
+					if (checkers[++i] == 0) --checker;
+				checkers[i] = 1; /* Mark checker as used */
+
+				x = i % 32;
+				y = i / 32;
+
+				GRAPH_BLANK_BOX(s, x * 10, 10 + y * 10, 10, 10, 0);
+				gfxop_update(s->gfx_state);
+				if (remaining_checkers & 1) {
+					gfxop_usleep(s->gfx_state, s->animation_delay / 4);
+				}
+
+				--remaining_checkers;
+				process_sound_events(s);
+			}
+
+		case K_ANIMATE_OPEN_CHECKERS :
+
+			memset(checkers, 0, sizeof(checkers));
+			remaining_checkers = 19 * 32;
+
+			while (remaining_checkers) {
+				int x, y, checker = 1 + (int) (1.0 * remaining_checkers * rand()/(RAND_MAX+1.0));
+				i = -1;
+
+				while (checker)
+					if (checkers[++i] == 0) --checker;
+				checkers[i] = 1; /* Mark checker as used */
+
+				x = i % 32;
+				y = i / 32;
+
+				GRAPH_UPDATE_BOX(s, x * 10, 10 + y * 10, 10, 10);
+
+				gfxop_update(s->gfx_state);
+				if (remaining_checkers & 1) {
+					gfxop_usleep(s->gfx_state, s->animation_delay / 4);
+				}
+
+				--remaining_checkers;
+				process_sound_events(s);
+			}
+
+			break;
 
 
-	  GFX_ASSERT(gfxop_free_pixmap(s->gfx_state, s->old_screen));
-	  GFX_ASSERT(gfxop_free_pixmap(s->gfx_state, newscreen));
-	  s->old_screen = NULL;
-  } /* if (open_animation) */
+		default:
+			if (s->pic_animate != K_ANIMATE_OPEN_SIMPLE)
+				SCIkwarn(SCIkWARNING, "Unknown opening animation 0x%02x\n", s->pic_animate);
 
-  s->pic_not_valid = 0;
+			GRAPH_UPDATE_BOX(s, 0, 10, 320, 190);
+		}
+
+		s->pic_is_new = 0;
+		s->pic_not_valid = 0;
+		return;
+
+
+		GFX_ASSERT(gfxop_free_pixmap(s->gfx_state, s->old_screen));
+		GFX_ASSERT(gfxop_free_pixmap(s->gfx_state, newscreen));
+		s->old_screen = NULL;
+	} /* if (open_animation) */
+
+	s->pic_not_valid = 0;
 
 }
 

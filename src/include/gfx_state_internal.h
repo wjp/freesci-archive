@@ -132,6 +132,9 @@ typedef struct {
 #define GFXW_IS_DYN_VIEW(widget) ((widget)->type == GFXW_DYN_VIEW)
 typedef struct {
 	VIEW_COMMON
+	/* fixme: This code is specific to SCI */
+	int under_bitsp, signalp;
+	int under_bits, signal;
 	int z; /* The z coordinate: Added to y, but used for sorting */ 
 } gfxw_dyn_view_t;
 

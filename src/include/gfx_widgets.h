@@ -312,6 +312,14 @@ gfxw_set_id(gfxw_widget_t *widget, int ID);
 ** added to that container with gfxw_add().
 */
 
+gfxw_dyn_view_t *
+gfxw_dyn_view_set_params(gfxw_dyn_view_t *widget, int under_bits, int under_bitsp, int signal, int signalp);
+/* Initializes a dyn view's interpreter attributes
+** Parameters: (gfxw_dyn_view_t *) widget: The widget affected
+**             (int x int x int x int) under_bits, inder_bitsp, signal, signalp: Interpreter-dependant data
+** Returns   : (gfxw_dyn_view_t *) widget
+*/
+
 /*-- Container types --*/
 
 #define GFXW_LIST_UNSORTED 0

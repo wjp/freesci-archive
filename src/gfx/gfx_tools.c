@@ -177,12 +177,18 @@ GFXDEBUG("UNALLOCATING %d\n", pxm->colors_nr);
 gfx_pixmap_t *
 gfx_pixmap_alloc_index_data(gfx_pixmap_t *pixmap)
 {
+	int size;
+
 	if (pixmap->index_data) {
 		GFXWARN("Attempt to allocate pixmap index data twice!\n");
 		return pixmap;
 	}
-	/*GFXDEBUG("(pixmap %d %d): %dx%d\n", pixmap->ID, pixmap->loop, pixmap->index_xl, pixmap->index_yl);*/
-	pixmap->index_data = malloc(pixmap->index_xl * pixmap->index_yl);
+
+	size = pixmap->index_xl * pixmap->index_yl;
+	if (!size)
+		size = 1;
+
+	pixmap->index_data = malloc(size);
 	return pixmap;
 }
 
@@ -203,6 +209,8 @@ gfx_pixmap_free_index_data(gfx_pixmap_t *pixmap)
 gfx_pixmap_t *
 gfx_pixmap_alloc_data(gfx_pixmap_t *pixmap, gfx_mode_t *mode)
 {
+	int size;
+
 	if (pixmap->data) {
 		GFXWARN("Attempt to allocate pixmap data twice!\n");
 		return pixmap;
@@ -215,9 +223,12 @@ gfx_pixmap_alloc_data(gfx_pixmap_t *pixmap, gfx_mode_t *mode)
 		pixmap->xl = pixmap->index_xl * mode->xfact;
 		pixmap->yl = pixmap->index_yl * mode->yfact;
 	}
-	/*GFXDEBUG("(pixmap %d %d): %dx%d\n", pixmap->ID, pixmap->loop, pixmap->xl, pixmap->yl);*/
 
-	pixmap->data = malloc(pixmap->xl * pixmap->yl * mode->bytespp);
+	size = pixmap->xl * pixmap->yl * mode->bytespp;
+	if (!size)
+		size = 1;
+
+	pixmap->data = malloc(size);
 	return pixmap;
 }
 

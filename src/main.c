@@ -92,11 +92,11 @@ char *requested_gfx_driver = NULL;
 int
 c_quit(state_t *s)
 {
-  script_abort_flag = 1; /* Terminate VM */
-  _debugstate_valid = 0;
-  _debug_seeking = 0;
-  _debug_step_running = 0;
-  return 0;
+	script_abort_flag = 1; /* Terminate VM */
+	_debugstate_valid = 0;
+	_debug_seeking = 0;
+	_debug_step_running = 0;
+	return 0;
 }
 
 int
@@ -505,7 +505,7 @@ main(int argc, char** argv)
 	  exit(1);
   };
   */
-  if (gfxop_init(gfx_state, 2, 2, 4, gfx_options)) { 
+  if (gfxop_init(gfx_state, 3, 3, 4, gfx_options)) { 
 	  fprintf(stderr,"Graphics initialization failed. Aborting...\n");
 	  exit(1);
   };
