@@ -1,3 +1,11 @@
+2002-12-11  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/3dutils.c, src/dc/bkg.c, src/dc/gamemenu.c, src/dc/gp.h,
+	src/dc/mouse1.h, src/dc/selectgame.c, src/dc/selectgame.h,
+	src/dc/sintab.h, src/dc/texture.c: Added Dreamcast-specific game
+	selection menu. It's a modified version of Dan Potter's GhettoPlay
+	interface.
+
 2002-12-08  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sound/pcmout_dc.c, src/sound/pcmout.c: Added initial revision of
