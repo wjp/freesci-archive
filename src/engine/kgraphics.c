@@ -3038,7 +3038,7 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 		text = (char *) kernel_dereference_pointer(s, textp, 0);
 	} else {
 		argpt = 2;
-		text = kernel_lookup_text(s, textp.offset, index);
+		text = kernel_lookup_text(s, textp, index);
 	}
 
 	if (!text) {

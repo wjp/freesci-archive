@@ -1,5 +1,8 @@
 2002-11-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/gfx/sci_widgets.c (sciw_new_window): Moved titled windows down by
+	10 SCI pixels.
+
 	* src/engine/kemu_old.c (resolve_conflicts): Fixed kernel emulation
 	to handle overlapping memory chunks
 

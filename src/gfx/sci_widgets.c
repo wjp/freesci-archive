@@ -134,8 +134,13 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 	int shadow_offset = 2;
 	rect_t frame;
 	gfx_color_t black	= {0};
-	gfxw_port_t *win = gfxw_new_port(visual, s->port, area, color, bgcolor);
+	gfxw_port_t *win;
 	gfxw_list_t *decorations;
+
+	if (flags & WINDOW_FLAG_TITLE)
+		area.y += 10;
+
+	win = gfxw_new_port(visual, s->port, area, color, bgcolor);
 
 	win->font_nr = font;
 	win->title_text = title;
@@ -148,7 +153,6 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 
 	if (flags == (WINDOW_FLAG_TRANSPARENT | WINDOW_FLAG_NOFRAME))
 		return win; /* Fully transparent window */
-
 
 	if (flags & WINDOW_FLAG_TITLE)
 		frame = gfx_rect(area.x -1, area.y -11, area.xl + 2, area.yl + 12);

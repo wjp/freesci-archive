@@ -38,36 +38,38 @@
 	}
 
 char *
-kernel_lookup_text(state_t *s, int address, int index)
+kernel_lookup_text(state_t *s, reg_t address, int index)
      /* Returns the string the script intended to address */
 {
-  char *seeker;
-  resource_t *textres;
+	char *seeker;
+	resource_t *textres;
 
-  if (address < 1000) {
-    int textlen;
-    int _index = index;
-    textres = scir_find_resource(s->resmgr, sci_text, address, 0);
+	if (address.segment)
+		return (char *) kernel_dereference_pointer(s, address, 0);
+	else {
+		int textlen;
+		int _index = index;
+		textres = scir_find_resource(s->resmgr, sci_text, address.offset, 0);
 
-    if (!textres) {
-      SCIkwarn(SCIkERROR, "text.%03d not found\n", address);
-      return NULL; /* Will probably segfault */
-    }
+		if (!textres) {
+			SCIkwarn(SCIkERROR, "text.%03d not found\n", address);
+			return NULL; /* Will probably segfault */
+		}
 
-    textlen = textres->size;
-    seeker = (char *) textres->data;
+		textlen = textres->size;
+		seeker = (char *) textres->data;
 
-    while (index--)
-      while ((textlen--) && (*seeker++));
+		while (index--)
+			while ((textlen--) && (*seeker++));
 
-    if (textlen)
-      return seeker;
-    else {
-      SCIkwarn(SCIkERROR, "Index %d out of bounds in text.%03d\n", _index, address);
-      return 0;
-    }
+		if (textlen)
+			return seeker;
+		else {
+			SCIkwarn(SCIkERROR, "Index %d out of bounds in text.%03d\n", _index, address);
+			return 0;
+		}
 
-  } else return (char *) s->heap + address;
+	}
 }
 
 
@@ -446,13 +448,12 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 	int maxsize = 4096; /* Arbitrary... */
 
 
-	if (position.segment) {
-		source = (char *) kernel_dereference_pointer(s, position, 0);
+	if (position.segment)
 		startarg = 2;
-	} else {
+	else
 		startarg = 3; /* First parameter to use for formatting */
-		source = kernel_lookup_text(s, position.offset, index);
-	}
+
+	source = kernel_lookup_text(s, position, index);
 
 	SCIkdebug(SCIkSTRINGS, "Formatting \"%s\"\n", source);
 
@@ -508,12 +509,14 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 			switch (xfer) {
 			case 's': { /* Copy string */
-				char *tempsource = kernel_lookup_text(s, arguments[paramindex], arguments[paramindex + 1]);
+				reg_t reg = argv[startarg + paramindex];
+				char *tempsource = kernel_lookup_text(s, reg,
+								      arguments[paramindex + 1]);
 				int slen = strlen(tempsource);
 				int extralen = str_leng - slen;
 				CHECK_OVERFLOW1(target, extralen);
 
-				if (arguments[paramindex] > 1000) /* Heap address? */
+				if (reg.segment) /* Heap address? */
 					paramindex++;
 				else
 					paramindex += 2; /* No, text resource address */

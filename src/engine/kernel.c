@@ -255,7 +255,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*49*/	{KF_OLD, "StrCmp", {old:kStrCmp}},
 /*4a*/	{KF_OLD, "StrLen", {old:kStrLen}},
 /*4b*/	{KF_OLD, "StrCpy", {old:kStrCpy}},
-/*4c*/	{KF_NEW, "Format", {new:{kFormat, "r.i.*"}}},
+/*4c*/	{KF_NEW, "Format", {new:{kFormat, "r.*"}}},
 /*4d*/	{KF_OLD, "GetFarText", {old:kGetFarText}},
 /*4e*/	{KF_OLD, "ReadNumber", {old:kReadNumber}},
 /*4f*/	{KF_NEW, "BaseSetter", {new:{kBaseSetter, "o"}}},

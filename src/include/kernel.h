@@ -130,10 +130,10 @@ invoke_selector(struct _state *s, reg_t object, int selector_id, int noinvalid, 
 
 /******************** Text functionality ********************/
 char *
-kernel_lookup_text(struct _state *s, int address, int index);
+kernel_lookup_text(struct _state *s, reg_t address, int index);
 /* Looks up text referenced by scripts
 ** Parameters: (state_t *s): The current state
-**             (int) address: The address to look up
+**             (reg_t) address: The address to look up
 **             (int) index: The relative index
 ** Returns   : (char *): The referenced text, or NULL on error.
 ** SCI uses two values to reference to text: An address, and an index. The address
