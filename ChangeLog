@@ -1,3 +1,11 @@
+2002-06-09  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* tools.c (sci_gettime): Don't use extra call to time() to get
+	the current system time
+
+	* src/gfx/drivers/xlib_driver.c (x_get_event): Use XPending() and
+	XNextEvent() to prevent X11 event queue from clogging up
+
 2002-06-06  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/savegame.cfsml (read_PTN): Got rid of sscanf()

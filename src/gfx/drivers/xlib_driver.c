@@ -1244,6 +1244,8 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 	struct timeval ctime, timeout_time, sleep_time;
 	long usecs_to_sleep;
 
+	eventmask |= ExposureMask; /* Always check for this */
+
 	gettimeofday(&timeout_time, NULL);
 	timeout_time.tv_usec += wait_usec;
 
@@ -1252,80 +1254,89 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 	timeout_time.tv_usec %= 1000000;
 
 	do {
+		int hasnext_event = 1;
 		int redraw_pointer_request = 0;
 
-		while (XCheckWindowEvent(display, window, eventmask | ExposureMask, &event)) {
-			switch (event.type) {
+		while (hasnext_event) {
+			if (sci_event) { /* Capable of handling any event? */
+				hasnext_event = XPending(display);
+				if (hasnext_event)
+					XNextEvent(display, &event);
+			} else 
+				hasnext_event = XCheckWindowEvent(display, window, eventmask, &event);
 
-			case ReparentNotify:
-			case ConfigureNotify:
-			case MapNotify:
-			case UnmapNotify:
-				break;
+			if (hasnext_event) 
+				switch (event.type) {
 
-			case KeyPress: {
-				int modifiers = event.xkey.state;
-				sci_event->type = SCI_EVT_KEYBOARD;
+				    case ReparentNotify:
+				    case ConfigureNotify:
+				    case MapNotify:
+				    case UnmapNotify:
+					    break;
 
-				S->buckystate = ((flags & SCI_XLIB_INSERT_MODE)? SCI_EVM_INSERT : 0)
-					| (((modifiers & LockMask)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0)
-					   | ((modifiers & ControlMask)? SCI_EVM_CTRL : 0)
-					   | ((modifiers & (Mod1Mask | Mod4Mask))? SCI_EVM_ALT : 0)
-					   | ((modifiers & Mod2Mask)? SCI_EVM_NUMLOCK : 0)
-					   | ((modifiers & Mod5Mask)? SCI_EVM_SCRLOCK : 0))
-					^ ((modifiers & ShiftMask)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0);
+				    case KeyPress: {
+					    int modifiers = event.xkey.state;
+					    sci_event->type = SCI_EVT_KEYBOARD;
 
-				sci_event->buckybits = S->buckystate;
-				sci_event->data = x_map_key(drv, event.xkey.keycode);
+					    S->buckystate = ((flags & SCI_XLIB_INSERT_MODE)? SCI_EVM_INSERT : 0)
+						    | (((modifiers & LockMask)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0)
+						       | ((modifiers & ControlMask)? SCI_EVM_CTRL : 0)
+						       | ((modifiers & (Mod1Mask | Mod4Mask))? SCI_EVM_ALT : 0)
+						       | ((modifiers & Mod2Mask)? SCI_EVM_NUMLOCK : 0)
+						       | ((modifiers & Mod5Mask)? SCI_EVM_SCRLOCK : 0))
+						    ^ ((modifiers & ShiftMask)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0);
 
-				if (sci_event->data == SCI_K_INSERT)
-					flags ^= SCI_XLIB_INSERT_MODE;
+					    sci_event->buckybits = S->buckystate;
+					    sci_event->data = x_map_key(drv, event.xkey.keycode);
 
-				if (sci_event->data)
-					return;
+					    if (sci_event->data == SCI_K_INSERT)
+						    flags ^= SCI_XLIB_INSERT_MODE;
 
-				break;
-			}
+					    if (sci_event->data)
+						    return;
 
-			case KeyRelease:
-				/*x_unmap_key(drv, event.xkey.keycode);*/
-				break;
+					    break;
+				    }
 
-			case ButtonPress: {
-				sci_event->type = SCI_EVT_MOUSE_PRESS;
-				sci_event->buckybits = S->buckystate;
-				sci_event->data = x_button_xlate[event.xbutton.button];
-				return;
-			}
+				    case KeyRelease:
+					    /*x_unmap_key(drv, event.xkey.keycode);*/
+					    break;
 
-			case ButtonRelease: {
-				sci_event->type = SCI_EVT_MOUSE_RELEASE;
-				sci_event->buckybits = S->buckystate;
-				sci_event->data = x_button_xlate[event.xbutton.button];
-				return;
-			}
+				    case ButtonPress: {
+					    sci_event->type = SCI_EVT_MOUSE_PRESS;
+					    sci_event->buckybits = S->buckystate;
+					    sci_event->data = x_button_xlate[event.xbutton.button];
+					    return;
+				    }
 
-			case MotionNotify: {
+				    case ButtonRelease: {
+					    sci_event->type = SCI_EVT_MOUSE_RELEASE;
+					    sci_event->buckybits = S->buckystate;
+					    sci_event->data = x_button_xlate[event.xbutton.button];
+					    return;
+				    }
 
-				drv->pointer_x = event.xmotion.x;
-				drv->pointer_y = event.xmotion.y;
-			}
-			break;
+				    case MotionNotify: {
 
-			case GraphicsExpose:
-			case Expose: {
-				XCopyArea(S->display, S->visual[0], S->window, S->gc,
-					  event.xexpose.x, event.xexpose.y, event.xexpose.width, event.xexpose.height,
-					  event.xexpose.x, event.xexpose.y);
-			}
-			break;
+					    drv->pointer_x = event.xmotion.x;
+					    drv->pointer_y = event.xmotion.y;
+				    }
+					    break;
 
-			case NoExpose:
-				break;
+				    case GraphicsExpose:
+				    case Expose: {
+					    XCopyArea(S->display, S->visual[0], S->window, S->gc,
+						      event.xexpose.x, event.xexpose.y, event.xexpose.width, event.xexpose.height,
+						      event.xexpose.x, event.xexpose.y);
+				    }
+					    break;
 
-			default:
-				ERROR("Received unhandled X event %04x\n", event.type);
-			}
+				    case NoExpose:
+					    break;
+
+				    default:
+					    ERROR("Received unhandled X event %04x\n", event.type);
+				}
 		}
 
 		gettimeofday(&ctime, NULL);
@@ -1376,7 +1387,7 @@ xlib_usec_sleep(struct _gfx_driver *drv, long usecs)
 gfx_driver_t
 gfx_driver_xlib = {
 	"xlib",
-	"0.2",
+	"0.3",
 	SCI_GFX_DRIVER_MAGIC,
 	SCI_GFX_DRIVER_VERSION,
 	NULL,
