@@ -126,7 +126,7 @@ ggi_visual_t openVisual()
     {320,200}, /* resolution */
     {320,200}, /* virtual */
     {0,0},     /* size in mm */
-    GT_AUTO,   /* color depth */
+    GT_PALETTE,   /* color depth: Prefer palette mode (better for console players) */
     {GGI_AUTO,GGI_AUTO}}; /* font size */
   ggi_visual_t retval;
   if (!(retval = ggiOpen(NULL))) return NULL;
@@ -140,6 +140,10 @@ ggi_visual_t openVisual()
     initColors(retval);
     colors_uninitialized = 0;
   }
+
+  /* Clear screen */
+  ggiSetGCForeground(retval, egacol[0]);
+  ggiFillscreen(retval);
 
   ggiSetEventMask(retval, emKey | emPointer);
   _sci_ggi_double_visual = 0;

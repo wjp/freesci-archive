@@ -36,7 +36,7 @@
 #include <glib.h>
 #endif
 
-#define SOUND_SERVER_TIMEOUT 2000
+#define SOUND_SERVER_TIMEOUT 100000
 /* microseconds until SOUND_COMMAND_TEST fails */
 #define SOUND_TICK 1000000 / 60
 /* Approximately 16666 microseconds */

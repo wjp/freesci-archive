@@ -1,3 +1,14 @@
+2000-02-08  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* Added several fixes and improvements that had been lost (!)
+
+	* src/graphics/engine_graphics.c: Implemented additional checks.
+
+2000-02-07  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kstring.c (kParse): Fixed a guaranteed segfault if
+	vocab_tokenize_string() failed
+
 2000-01-30  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/core/kgraphics.c: Implemented SetJump().

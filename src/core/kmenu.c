@@ -90,6 +90,128 @@ kDrawMenuBar(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
+#define ABOUT_FREESCI_PAGES_NR 3
+
+struct {
+  char *title;
+  char *body;
+  int fgcolor, bgcolor;
+} _about_freesci_pages[ABOUT_FREESCI_PAGES_NR] = {
+  {"FreeSCI hackers and contributors",
+   "Carl Muckenhoupt\nSources to the SCI resource viewer tools that started it all\n\n"
+   "Chris Kehler\n\n"
+   "Christoph Reichenbach\nProject & Website maintenance, UN*X code\n\n"
+   "Christopher T. Lansdown\nCVS maintenance, Alpha compatibility fixes\n\n"
+   "Claudio Matsuoka\nCVS snapshots, daily builds\n\n"
+   "Dark Minister\nSCI research (bytecode and parser)",
+   0, 15},
+  {"More FreeSCI hackers and contributors",
+   "Dmitry Jemerov\nPort to the Win32 platform, numerous bugfixes\n\n"
+   "Francois-R Boyer\nMT-32 information and mapping code\n\n"
+   "Lars Skovlund\nMost of the relevant documentation, several bugfixes\n\n"
+   "Magnus Reftel\nHeap implementation, Python class viewer, bugfixes\n\n"
+   "Paul David Doherty\nGame version information",
+   0, 15},
+  {"Still more FreeSCI hackers & contributors",
+   "Rainer De Temple\nSCI research\n\n"
+   "Ravi I.\nSCI0 sound resource specification\n\n"
+   "Rickard Lind\nMT32->GM MIDI mapping magic, sound research\n\n"
+   "Rink Springer\nPort to the DOS platform, several bug fixes\n\n"
+   "Sergey Lapin\nPort of Carl's type 2 decompression code",
+   0, 15}
+};
+
+
+void
+about_freesci(state_t *s)
+{
+  int page;
+  port_t port;
+  byte *bodyfont, *titlefont;
+  resource_t *bodyfont_res = NULL;
+  int i;
+
+  port.alignment = ALIGN_TEXT_CENTER;
+  port.gray_text = 0;
+  port.x = 0;
+  port.y = 0;
+  titlefont = s->titlebar_port.font;
+
+  i = 999;
+  while (!bodyfont_res & i > -1)
+    bodyfont_res = findResource(sci_font, i);
+
+  if (i == -1)
+    return;
+
+  port.font = bodyfont = bodyfont_res->data;
+
+  for (page = 0; page < ABOUT_FREESCI_PAGES_NR; ++page) {
+    sci_event_t event;
+    int cont = 2;
+    int width, height, width2;
+
+    port.x = 1;
+    port.y = 5;
+
+    port.color = _about_freesci_pages[page].fgcolor;
+    port.bgcolor = _about_freesci_pages[page].bgcolor;
+
+    get_text_size(_about_freesci_pages[page].body, bodyfont, 300, &width, &height);
+    width2 = get_text_width(_about_freesci_pages[page].title, titlefont);
+
+    if (width2 > width)
+      width = width2;
+
+    port.xmin = 156 - width / 2;
+    port.xmax = 164 + width / 2;
+    port.ymin = 100 - height / 2;
+    port.ymax = 108 + height / 2;
+
+    port.bg_handle = graph_save_box(s, port.xmin, port.ymin - 10, port.xmax - port.xmin + 1,
+				    port.ymax - port.ymin + 11, SCI_MAP_VISUAL | SCI_MAP_PRIORITY);
+
+    draw_window(s->pic, &port, port.bgcolor, 16, _about_freesci_pages[page].title, titlefont,
+		WINDOW_FLAG_TITLE);
+    text_draw(s->pic, &port, _about_freesci_pages[page].body, port.xmax - port.xmin - 3);
+    graph_update_box(s, port.xmin - 2, port.ymin - 11, port.xmax - port.xmin + 5,
+		     port.ymax - port.ymin + 14);
+
+    while (cont) {
+      event = getEvent(s);
+
+      if (event.type == SCI_EVT_MOUSE_RELEASE || event.type == SCI_EVT_MOUSE_PRESS)
+	--cont;
+
+      if (event.type == SCI_EVT_KEYBOARD)
+	cont = 0;
+
+      s->gfx_driver->Wait(s, 25000);
+    }
+
+    graph_restore_box(s, port.bg_handle);
+    graph_update_box(s, port.xmin - 2, port.ymin - 11, port.xmax - port.xmin + 5,
+		     port.ymax - port.ymin + 14);
+    
+  }
+}
+
+
+static inline int
+_menu_go_down(state_t *s, int menu_nr, int item_nr)
+{
+  int seeker, max = s->menubar->menus[menu_nr].items_nr;
+  seeker = item_nr + 1;
+
+  while ((seeker < max) && !menubar_item_valid(s, menu_nr, seeker))
+    ++seeker;
+
+  if (seeker != max)
+    return seeker;
+  else return item_nr;
+}
+
+
 void
 kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
@@ -110,7 +232,7 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
     if (message == SCI_K_ESC)
       menu_mode = 1;
 
-    else {
+    else if (message) { /* Don't claim 0 keyboard event */
       SCIkdebug(SCIkMENU,"Menu: Got KBD event: %04x/%04x\n", message, modifiers);
     
       for (menuc = 0; menuc < s->menubar->menus_nr; menuc++)
@@ -184,7 +306,7 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	case SCI_K_LEFT:
 	  if (menu_nr > 0) {
 	    --menu_nr;
-	    item_nr = -1;
+	    item_nr = _menu_go_down(s, menu_nr, -1);
 	  }
 	  break;
 
@@ -192,6 +314,7 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	  if (menu_nr < (s->menubar->menus_nr - 1)) {
 	    ++menu_nr;
 	    item_nr = -1;
+	    item_nr = _menu_go_down(s, menu_nr, -1);
 	  }
 	  break;
 
@@ -204,14 +327,7 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	  break;
 
 	case SCI_K_DOWN: {
-	  int seeker, max = s->menubar->menus[menu_nr].items_nr;
-	  seeker = item_nr + 1;
-
-	  while ((seeker < max) && !menubar_item_valid(s, menu_nr, seeker))
-	    ++seeker;
-
-	  if (seeker != max)
-	    item_nr = seeker;
+	  item_nr = _menu_go_down(s, menu_nr, item_nr);
 	}
 	break;
 
@@ -269,8 +385,10 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     } /* while (menu_mode) */
 
-    if (backupped_port > -1)
+    if (backupped_port > -1) {
       graph_restore_box(s, backupped_port);
+      graph_update_port(s, &port);
+    }
 
     status_bar_draw(s, s->status_bar_text);
     graph_update_port(s, &(s->titlebar_port));
@@ -279,9 +397,13 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
   if (claimed) {
     PUT_SELECTOR(event, claimed, 1);
 
-    if (menu_nr > -1)
+    if (menu_nr > -1) {
       s->acc = ((menu_nr + 1) << 8) | (item_nr + 1);
-    else
+
+      if (s->menubar->menus[menu_nr].items[item_nr].flags == MENU_FREESCI_BLATANT_PLUG)
+	about_freesci(s);
+
+    } else
       s->acc = 0;
 
     SCIkdebug(SCIkMENU, "Menu: Claim -> %04x\n", s->acc);

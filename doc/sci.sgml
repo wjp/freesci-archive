@@ -1731,7 +1731,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
     </para>
    </sect2>
   </sect1>
-  <sect1>
+  <sect1 ID="LSExecLoop">
   <title/Interpreter initialization and the main execution loop/
   <para>
 By <author><firstname/Lars/<surname/Skovlund/</author>
@@ -2873,8 +2873,8 @@ little endian):
 
 <literal/02 00  80 00  0a 00/
 </para><para>
-
 before calling Load().
+
 </para><para>
 
 Return values are returned into the accumulator, unless stated otherwise.
@@ -3321,7 +3321,7 @@ View, loop, and cel number are retreived from the object passed as parameter.
     </para>
 </sect3>
 
-<sect3><Title/Kernel function 0x11: DrawCel(word, word, word, Point, word)/<para></para></sect3>
+<sect3><Title/Kernel function 0x11: DrawCel(word, word, word, Point, word)/
 		<funcsynopsis><funcprototype><funcdef>
 			kfunct 0x11: DrawCel
 		</funcdef><paramdef>word view, word loop, word cel, Point pos, word priority</paramdef></funcprototype></funcsynopsis>
@@ -3861,7 +3861,7 @@ See <XREF LINKEND="LarsDMParser"> and <XREF LINKEND="LarsEvents"> for details.
     </para>
 </sect3>
 
-<sect3><Title/Kernel function 0x26: SetSynonyms(DblList)/<para></para></sect3>
+<sect3><Title/Kernel function 0x26: SetSynonyms(DblList)/
 		<funcsynopsis><funcprototype><funcdef>
 			kfunct 0x26: SetSynonyms 
 		</funcdef><paramdef>HeapPtr list</paramdef></funcprototype></funcsynopsis>
@@ -3926,7 +3926,7 @@ the position remains unchanged.
     </para>
 </sect3>
 
-<sect3><Title/Kernel function 0x29: FOpen(String, word)/<para></para></sect3>
+<sect3><Title/Kernel function 0x29: FOpen(String, word)/
 		<funcsynopsis><funcprototype><funcdef>
 			kfunct 0x29: FOpen 
 		</funcdef><paramdef>String fname, word mode</paramdef></funcprototype></funcsynopsis>
@@ -3948,7 +3948,7 @@ the position remains unchanged.
 		</para>
 	</sect3>
 
-<sect3><Title/Kernel function 0x2a: FPuts(word, String)/<para></para></sect3>
+<sect3><Title/Kernel function 0x2a: FPuts(word, String)/
 		<funcsynopsis><funcprototype><funcdef>
 			kfunct 0x2a: FPuts
 		</funcdef><paramdef>word filehandle, String data</paramdef></funcprototype></funcsynopsis>
@@ -3964,7 +3964,7 @@ the position remains unchanged.
 		</para>
 	</sect3>
 
-<sect3><Title/Kernel function 0x2b: FGets(String, word, word)/<para></para></sect3>
+<sect3><Title/Kernel function 0x2b: FGets(String, word, word)/
 		<funcsynopsis><funcprototype><funcdef>
 			kfunct 0x2b: FGets
 		</funcdef><paramdef>String dest, word maxsize, word handle</paramdef></funcprototype></funcsynopsis>
@@ -3980,7 +3980,7 @@ the position remains unchanged.
 		</para>
 	</sect3>
 
-<sect3><Title/Kernel function 0x2c: FClose(word)/<para></para></sect3>
+<sect3><Title/Kernel function 0x2c: FClose(word)/
 		<funcsynopsis><funcprototype><funcdef>
 			kfunct 0x2c: FClose
 		</funcdef><paramdef>word filehandle</paramdef></funcprototype></funcsynopsis>
@@ -3995,14 +3995,70 @@ the position remains unchanged.
 		</para>
 	</sect3>
 
-<!-- fixme -->
-<sect3><Title/Kernel function 0x2d: SaveGame(?)/<para></para></sect3>
+	<sect3>
+	<Title/Kernel function 0x2d: SaveGame(String, word, String, String)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x2d: SaveGame
+		</funcdef><paramdef>String game_id, word save_nr, String save_description, String version</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(String)/ game_id: The game object's ID string (e.g. "SQ3")</member>
+                       <member><type/(word)/ save_nr: "slot" the game is to be saved to</member>
+                       <member><type/(String)/ save_description: String description of the game</member>
+                       <member><type/(String)/ version: Stringified game version number</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type>
+			1 on success, 0 if an error occured while saving
+		</para><para>
+			This function saves the game state (heap, windows, call stack, view list,
+			sound state etc.) to the savegame with the numeric id <parameter/save_nr/
+			and the description <parameter/save_description/. <parameter/game_id/ and
+			<parameter/version/ are stored alongside, for verification when the game state
+			is restored.
+		</para>
+	</sect3>
 
-<!-- fixme -->
-<sect3><Title/Kernel function 0x2e: RestoreGame(?)/<para></para></sect3>
+	<sect3>
+	<Title/Kernel function 0x2e: RestoreGame(String, word, String)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x2e: RestoreGame
+		</funcdef><paramdef>String game_id, word save_nr, String version</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(String)/ game_id: The game object's ID string</member>
+                       <member><type/(word)/ save_nr: Number of the save game to restore</member>
+                       <member><type/(String)/ version: The game object's version number</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			This function restores a previously saved game. In theory, it should only
+			return if restoring failed.
+		</para>
+	</sect3>
 
-<!-- fixme -->
-<sect3><Title/Kernel function 0x2f: RestartGame(?)/<para></para></sect3>
+	<sect3>
+	<Title/Kernel function 0x2f: RestartGame()/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x2f: RestartGame
+		</funcdef><paramdef></paramdef></funcprototype></funcsynopsis>
+                <para>
+			Returns: <type>never</type>
+		</para><para>
+			If this function is invoked, the following things happen:
+			<simplelist>
+				<member/The restarting flag is set/
+				<member/The menu bar structure is destroyed/
+				<member/All sounds are stopped/
+				<member/All scripts are removed from the script table/
+				<member/The heap status is reset, but the heap is not cleared/
+			</simplelist>
+			After this is done, the engine restarts at a certain point (see 
+			<xref linkend="LSExecLoop"/>), re-initializes the stack, and executes the
+			replay method of the game object.
+		</para>
+	</sect3>
 
 <sect3><Title/Kernel function 0x30: GameIsRestarting()/<para></para>
     <funcsynopsis><funcprototype><funcdef>
@@ -4020,8 +4076,265 @@ kfunct 0x30: GameIsRestarting
 </sect3>
 
 
-<!-- fixme -->
-<sect3><Title/Kernel function 0x31: DoSound(?)/<para></para></sect3>
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(word, ...])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word action, ...</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ action: The sound command subfunction number</member>
+                   </simplelist></para>
+		<para>
+			Returns: (see below)
+		</para><para>
+			'action' may be one of the following:
+			<simplelist>
+				<member/0x0: INIT/
+				<member/0x1: PLAY/
+				<member/0x2: NOP/
+				<member/0x3: DISPOSE/
+				<member/0x4: SET_SOUND/
+				<member/0x5: STOP/
+				<member/0x6: SUSPEND/
+				<member/0x7: RESUME/
+				<member/0x8: VOLUME/
+				<member/0x9: UPDATE/
+				<member/0xa: FADE/
+				<member/0xb: CHECK_DRIVER/
+				<member/0xc: ALL_STOP/
+			</simplelist>
+			See individual descriptions below for more information.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(INIT, Object)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 0, Object sound_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 0: subfunction identifier</member>
+                       <member><type/(Object)/ sound_obj: The sound object affected</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Initializes the specified sound object. This will set the 'status' selector
+			of the object to 1 ('initialized'), and load the sound indicated by the
+			'number' selector into the sound driver.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(PLAY, Object)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 1, Object sound_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 1: The subfunction identifier</member>
+                       <member><type/(Object)/ sound_obj: The sound object affected</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Starts to play the song represented by the specified sound object. This will
+			also set the 'status' selector of the object to 2 ('playing').
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(NOP)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 2</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 2: The sound command subfunction number</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			No action appears to be associated with this subfunction call.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(DISPOSE, Object)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 3, Object sound_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 3: The sound command subfunction number</member>
+                       <member><type/(Object)/ sound_obj: The sound object affected</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Removes the song indexed by a sound object from the sound server song list
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(SET_SOUND, word)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 4, word state</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 4: The sound command subfunction number</member>
+                       <member><type/(word)/ state: 1 if sound should be active, 0 if it should be turned off</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			This function completely mutes or un-mutes the sound subsystem.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(STOP, Object)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 5, Object sound_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 5: The sound command subfunction number</member>
+                       <member><type/(Object)/ sound_obj: The sound object affected</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Stops playing the song represented by the specified sound object. This will
+			set the object's 'state' selector to 0 ('stopped').
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(SUSPEND, Object)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 6, Object sound_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 6: The sound command subfunction number</member>
+                       <member><type/(Object)/ sound_obj: The sound object affected</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Suspends the song associated with the specified sound object. Its state is buffered,
+			so that it can be resumed later on. The sound object's 'state' selector is set to
+			3 ('suspended').
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(RESUME, Object)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 7, Object sound_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 7: The sound command subfunction number</member>
+                       <member><type/(Object)/ sound_obj: The sound object affected</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Resumes a previously suspended song. The 'state' selector is set to 2 ('playing').
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(VOLUME[, word])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 8[, word volume]</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 8: The sound command subfunction number</member>
+                       <member><type/(word)/ volume: An optional volume parameter</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word) The currently set sound volume (0 to 0xf)</type>
+		</para><para>
+			This subfunction retrieves and returns the current sound volume. If a second
+			parameter is supplied the volume will be set to the value of this parameter.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(UPDATE, Object])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 9, Object sound_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 9: The sound command subfunction number</member>
+                       <member><type/(Object)/ sound_obj: The sound object affected</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Notifies the sound server that a sound object was modified. The song priority
+			and number of loops (stored in the 'priority' and 'loop' selectors, respectively)
+			are re-evaulated by the sound system.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(FADE, Object])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 0xa, Object sound_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 0xa: The sound command subfunction number</member>
+                       <member><type/(Object)/ sound_obj: The sound object affected</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Fades the specified song. Fading takes approximately two seconds. The song
+			status is set to 'stopped' (0) afterwards.
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(CHECK_DRIVER)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 0xb</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 0xb: The sound command subfunction number</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type>
+			1 if the sound driver was installed successfully, 0 if not
+		</para><para>
+		</para>
+	</sect3>
+
+	<sect3>
+	<Title/Kernel function 0x31: DoSound(ALL_STOP)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x31: DoSound
+		</funcdef><paramdef>word 0xc</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ 0xc: The sound command subfunction number</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Stops all music and sound effects.
+		</para>
+	</sect3>
 
 
 <sect3><Title/Kernel function 0x32: NewList()/<para></para>
@@ -4834,8 +5147,26 @@ to pressing LShift-RShift-PadMinus.
 <!-- fixme -->
 <sect3><Title/Kernel function 0x65: CoordPri(?)/<para></para></sect3>
 
-<!-- fixme -->
-<sect3><Title/Kernel function 0x66: StrAt(?)/<para></para></sect3>
+	<sect3>
+	<Title/Kernel function 0x66: StrAt (String, word[, char])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x66: StrAt
+		</funcdef><paramdef>String src, word offset[, char replacement]</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(String)/ src: The string to read from</member>
+                       <member><type/(word)/ offset: The offset inside the string</member>
+                       <member><type/(char)/ replacement: An optional replacement value for the indexed character</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(char)</type>
+			The character requested
+		</para><para>
+			This function retreives a single character from a string. Optionally, if
+			<parameter/replacement/ is set, the source character will be replaced with
+			the specified <parameter/replacement/.
+		</para>
+	</sect3>
 
 	<sect3>
 	<Title/Kernel function 0x67: DeviceInfo(word, String[, String])/
@@ -4957,14 +5288,15 @@ to pressing LShift-RShift-PadMinus.
 
 
 	<sect3>
-	<Title/Kernel function 0x69: CheckSaveGame(String, word)/
+	<Title/Kernel function 0x69: CheckSaveGame(String, word[, String])/
 		<funcsynopsis><funcprototype><funcdef>
 			kfunct 0x69: CheckSaveGame
-		</funcdef><paramdef>String game_id, word game_nr</paramdef></funcprototype></funcsynopsis>
+		</funcdef><paramdef>String game_id, word game_nr[, String version]</paramdef></funcprototype></funcsynopsis>
                 <para>
                    <simplelist>
                        <member><type/(String)/ game_id: The savegame ID string</member>
                        <member><type/(word)/ game_nr: The savegame number</member>
+		 	<member><type/(String)/ version: An optional game version string</member>
                    </simplelist></para>
 		<para>
 			Returns: <type>(word)</type>

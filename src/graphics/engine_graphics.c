@@ -30,6 +30,16 @@
 #include <engine.h>
 #include <graphics_png.h>
 
+#define CLIP_COORDS_AND_SIZE(x, y, xl, yl) \
+  if (x < 0) \
+    { xl += x; x = 0; } \
+  if (y < 0) \
+    { yl += y; y = 0; } \
+  if (x + xl > 320) \
+    xl = 320 - x ; \
+  if (y + yl > 200) \
+    yl = 200 - y
+
 
 typedef struct {
   int x, y, xl, yl;
@@ -43,14 +53,19 @@ void
 graph_clear_box(struct _state *s, int x, int y, int xl, int yl, int color)
 {
   int pos = y * SCI_SCREEN_WIDTH + x;
-  int _yl = yl;
+  int _yl;
+
+  CLIP_COORDS_AND_SIZE(x, y, xl, yl);
+  if ((xl < 0) || (yl < 0))
+    return;
+
+  _yl = yl;
 
   while (_yl--) {
     memset(s->pic->view + pos, color, xl);
 
     pos += SCI_SCREEN_WIDTH;
   }
-
   (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_BOX, x, y, xl, yl);
 }
 
@@ -58,17 +73,13 @@ void
 graph_update_box(struct _state *s, int x, int y, int xl, int yl)
 {
   int pos = y * SCI_SCREEN_WIDTH + x;
-  int i, _yl = yl;
+  int i, _yl;
 
-  if (x < 0)
-    { xl += x; x = 0; }
-  if (y < 0)
-    { yl += y; y = 0; }
+  CLIP_COORDS_AND_SIZE(x, y, xl, yl);
+  if ((xl < 0) || (yl < 0))
+    return;
 
-  if (x + xl > 319)
-    xl = 320 - x ;
-  if (y + yl > 199)
-    yl = 200 - y ;
+  _yl = yl;
 
   while (_yl--) {
     memcpy(s->pic->view + pos, s->pic->maps[s->pic_visible_map] + pos, xl);
@@ -131,22 +142,7 @@ graph_save_box(struct _state *s, int x, int y, int xl, int yl, int layers)
   int i, map;
   int pos;
 
-  if (x < 0) {
-    xl += x;
-    x = 0;
-  }
-
-  if (y < 0) {
-    yl += y;
-    y = 0;
-  }
-
-  if (x + xl > 320)
-    xl = 320 - x;
-
-  if (y + yl > 200)
-    yl = 200 - y;
-
+  CLIP_COORDS_AND_SIZE(x, y, xl, yl);
   if ((xl < 0) || (yl < 0))
     return 0;
 

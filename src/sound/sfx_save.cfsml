@@ -193,7 +193,6 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
   song_t *seeker, *next = NULL;
   int error;
   int i;
-
   if (chdir(dir)) {
     fprintf(debugstream, "Failed to enter '%s'\n", dir);
     return 1;

@@ -158,11 +158,11 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				s->parser_suffices, s->parser_suffices_nr,
 				&error);
 
-  vocab_synonymize_tokens(words, words_nr, s->synonyms, s->synonyms_nr);
-
   if (words) {
 
     int syntax_fail = 0;
+
+    vocab_synonymize_tokens(words, words_nr, s->synonyms, s->synonyms_nr);
 
     s->acc = 1;
 

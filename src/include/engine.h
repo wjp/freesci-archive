@@ -55,10 +55,6 @@
 #define scimkdir(arg1,arg2) mkdir(arg1,arg2)
 #endif
 
-#ifdef _DOS
-#include <sci_dos.h>
-#endif
-
 #define MAX_HOMEDIR_SIZE 255
 
 #define FREESCI_GAMEDIR ".freesci"
@@ -69,6 +65,11 @@
 #define FREESCI_FILE_PRIORITY_MAP "priority_map.png"
 #define FREESCI_FILE_CONTROL_MAP "control_map.png"
 #define FREESCI_FILE_AUXILIARY_MAP "auxiliary_map.png"
+
+#define FREESCI_FILE_STATE "state"
+#define FREESCI_FILE_HEAP "heap"
+#define FREESCI_ID_SUFFIX ".id"
+/* Used for <gamename>.id files ("real" save games) */
 
 #define MAX_GAMEDIR_SIZE 32 /* Used for subdirectory inside of "~/.freesci/" */
 
@@ -219,6 +220,8 @@ typedef struct _state
   int parser_branches_nr;
   parse_tree_node_t parser_nodes[VOCAB_TREE_NODES]; /* The parse tree */
 
+  int parser_valid; /* If something has been correctly parsed */
+
   synonym_t *synonyms; /* The list of synonyms */
   int synonyms_nr;
 
@@ -226,8 +229,7 @@ typedef struct _state
 
   int classtable_size; /* Number of classes in the table- for debugging */
   class_t *classtable; /* Table of all classes */
-  script_t scripttable[SCI_SCRIPTS_NR]; /* Table of all scripts */
-  script_t init_scripttable[SCI_SCRIPTS_NR]; /* Script table right after initialization */
+  script_t scripttable[1000]; /* Table of all scripts */
 
   heap_ptr clone_list[SCRIPT_MAX_CLONES];
 
