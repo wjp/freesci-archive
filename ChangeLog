@@ -1,3 +1,7 @@
+2003-03-25  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/scicore/decompress_01.c: Implemented pic decompression.
+
 2003-03-24  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/resource/sci_pic_1.c: Added SCI1 pic decoder.

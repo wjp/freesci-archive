@@ -131,6 +131,146 @@ int decrypt3(guint8 *dest, guint8 *src, int length, int complength)
 	return 0;     /* [DJ] shut up compiler warning */
 }
 
+enum {
+	PIC_OP_SET_COLOR = 0xf0,
+	PIC_OP_DISABLE_VISUAL = 0xf1,
+	PIC_OP_SET_PRIORITY = 0xf2,
+	PIC_OP_DISABLE_PRIORITY = 0xf3,
+	PIC_OP_SHORT_PATTERNS = 0xf4,
+	PIC_OP_MEDIUM_LINES = 0xf5,
+	PIC_OP_LONG_LINES = 0xf6,
+	PIC_OP_SHORT_LINES = 0xf7,
+	PIC_OP_FILL = 0xf8,
+	PIC_OP_SET_PATTERN = 0xf9,
+	PIC_OP_ABSOLUTE_PATTERN = 0xfa,
+	PIC_OP_SET_CONTROL = 0xfb,
+	PIC_OP_DISABLE_CONTROL = 0xfc,
+	PIC_OP_MEDIUM_PATTERNS = 0xfd,
+	PIC_OP_OPX = 0xfe,
+	PIC_OP_TERMINATE = 0xff
+};
+
+enum {
+	PIC_OPX_SET_PALETTE_ENTRIES = 0,
+	PIC_OPX_EMBEDDED_VIEW = 1,
+	PIC_OPX_SET_PALETTE = 2,
+	PIC_OPX_PRIORITY_TABLE_EQDIST = 3,
+	PIC_OPX_PRIORITY_TABLE_EXPLICIT = 4
+};
+
+#define PAL_SIZE 1284
+#define CEL_HEADER_SIZE 7
+#define EXTRA_MAGIC_SIZE 15
+static 
+byte *pic_reorder(byte *inbuffer, int dsize)
+{
+	byte *reorderBuffer;
+	int view_size;
+	int view_start;
+	int cdata_size;
+	int i;
+	int pos, nextbyte;
+	byte *seeker = inbuffer;
+	byte *writer;
+	char viewdata[CEL_HEADER_SIZE];
+	char offsets[2*3];
+	char compbuffer[0x600];
+	byte *cdata, *cdata_start;
+	int index;
+	
+	writer = reorderBuffer=(byte *) malloc(dsize);
+
+	*(writer++) = PIC_OP_OPX;
+	*(writer++) = PIC_OPX_SET_PALETTE;
+
+	for (i=0;i<256;i++) /* Palette translation map */
+		*(writer++) = i;
+
+	putInt16(writer, 0); /* Palette stamp */
+	writer += 2;
+	putInt16(writer, 0);
+	writer += 2;
+
+	view_size = getUInt16(seeker);
+	seeker += 2;
+	view_start = getUInt16(seeker);
+	seeker += 2;
+	cdata_size = getUInt16(seeker);
+	seeker += 2;
+
+	memcpy(viewdata, seeker, sizeof(viewdata));
+	seeker += sizeof(viewdata);
+	
+	memcpy(writer, seeker, 4*256); /* Palette */
+	seeker += 4*256;
+	writer += 4*256;
+
+	if (view_start != PAL_SIZE + 2) /* +2 for the opcode */
+	{
+		memcpy(writer, seeker, view_start-PAL_SIZE-2);
+		seeker += view_start - PAL_SIZE - 2;
+		writer += view_start - PAL_SIZE - 2;
+	}
+
+	if (dsize != view_start+EXTRA_MAGIC_SIZE+view_size)
+	{
+		memcpy(reorderBuffer+view_size+view_start+EXTRA_MAGIC_SIZE, seeker, 
+		       dsize-view_size-view_start-EXTRA_MAGIC_SIZE);
+		seeker += dsize-view_size-view_start-EXTRA_MAGIC_SIZE;
+	}
+
+	cdata_start=cdata=(byte *) malloc(cdata_size);
+	memcpy(cdata, seeker, cdata_size);
+	seeker += cdata_size;
+	
+	writer = reorderBuffer + view_start;
+	*(writer++) = PIC_OP_OPX;
+	*(writer++) = PIC_OPX_EMBEDDED_VIEW;
+	*(writer++) = 0;
+	*(writer++) = 0;
+	*(writer++) = 0;
+	putInt16(writer, view_size + 8);
+	writer += 2;
+
+	memcpy(writer, viewdata, sizeof(viewdata));
+	writer += sizeof(viewdata);
+
+	*(writer++) = 0;
+	
+	pos = 0;
+	
+	while (pos < view_size)
+	{
+		nextbyte = *(seeker++);
+		*(writer++) = nextbyte;
+		pos ++;
+		switch (nextbyte&0xC0)
+		{
+		case 0x40 :
+		case 0x00 :
+			memcpy(writer, cdata, nextbyte);
+			cdata +=nextbyte;
+			writer += nextbyte;
+			pos += nextbyte;
+			break;
+		case 0xC0 :
+			break;
+		case 0x80 :
+			nextbyte = *(cdata++);
+			*(writer++) = nextbyte;
+			pos ++;
+			break;
+		}
+	}
+
+	free(cdata_start);
+	free(inbuffer);
+	return reorderBuffer;
+}
+
+byte *view_reorder(byte *inbuffer, int dsize)
+{
+}
 
 guint32 gbits(int numbits,  guint8 * data, int dlen)
 {
@@ -268,16 +408,32 @@ int decompress01(resource_t *result, int resh)
 		break;
 
 	case 3: /* Some sort of Huffman encoding */
-		if (decrypt2(result->data, buffer, result->size, compressedLength)) {
+		decryptinit3();
+		if (decrypt3(result->data, buffer, result->size, compressedLength)) {
 			free(result->data);
 			result->data = 0; /* So that we know that it didn't work */
 			result->status = SCI_STATUS_NOMALLOC;
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
+//		result->data = view_reorder(result->data, result->size);
 		result->status = SCI_STATUS_ALLOCATED;
 		break;
 
+	case 4:
+		decryptinit3();
+		if (decrypt3(result->data, buffer, result->size, compressedLength)) {
+			free(result->data);
+			result->data = 0; /* So that we know that it didn't work */
+			result->status = SCI_STATUS_NOMALLOC;
+			free(buffer);
+			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
+		}
+		result->data = pic_reorder(result->data, result->size);
+		result->status = SCI_STATUS_ALLOCATED;
+		break;
+		
+		
 	default:
 		fprintf(stderr,"Resource %s.%03hi: Compression method SCI1/%hi not "
 			"supported!\n", sci_resource_types[result->type], result->number,

@@ -1885,7 +1885,7 @@ gfxr_draw_pic1(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 				view->colors = pic->visual_map->colors;
 				view->colors_nr = pic->visual_map->colors_nr;
 
-				/*				gfx_xlate_pixmap(view, mode, GFX_XLATE_FILTER_NONE); */
+				gfx_xlate_pixmap(view, mode, GFX_XLATE_FILTER_NONE);
 
 				_gfx_crossblit_simple(pic->visual_map->index_data,
 						      view->index_data,
