@@ -273,7 +273,7 @@ static const short yycheck[] = {     2,
     10,    10,     0,     0,    10,     4,    10,    46
 };
 /* -*-C-*-  Note some compilers choke on comments on `#line' lines.  */
-#line 3 "/usr/share/bison/bison.simple"
+#line 3 "/usr/public//share/bison.simple"
 /* This file comes from bison-1.28.  */
 
 /* Skeleton output parser for bison,
@@ -487,7 +487,7 @@ __yy_memcpy (char *to, char *from, unsigned int count)
 #endif
 #endif
 
-#line 217 "/usr/share/bison/bison.simple"
+#line 217 "/usr/public//share/bison.simple"
 
 /* The user can define YYPARSE_PARAM as the name of an argument to be passed
    into yyparse.  The argument should have type void *.
@@ -945,7 +945,7 @@ case 32:
     break;}
 }
    /* the action file gets copied in in place of this dollarsign */
-#line 543 "/usr/share/bison/bison.simple"
+#line 543 "/usr/public//share/bison.simple"
 
   yyvsp -= yylen;
   yyssp -= yylen;
