@@ -189,7 +189,11 @@ sfx/
 	midiout.c (various changes)
 	midiout_alsaraw.c (various changes)
 	midiout_unixraw.c (various changes)
-
+sound/* 
+        [Lots of work all over the place]
+gfx/drivers
+	xlib_driver.c (added MIT-SHM)
+	sdl_driver.c (wrote it!)
 
 
 

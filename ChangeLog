@@ -1,3 +1,20 @@
+2001-04-05  Solomon Peachy <pizza@shaftnet.org>
+
+	AUTHORS
+	acconfig.h
+	acinclude.m4
+	aclocal.m4
+	config.h.in
+	configure
+	configure.in
+	src/Makefile.am
+	src/gfx/drivers/Makefile.am
+	src/gfx/drivers/sdl_driver.c
+	
+	* Added SDL support to the autoconf system
+	* a roughtly 50% complete SDL gfx target.  #ifdef'ed out for
+          now.
+
 2001-04-06  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/widgets.c (_gfxwop_pic_view_draw): Picviews are now drawn to
