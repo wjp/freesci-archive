@@ -1056,7 +1056,7 @@ c_visible_map(state_t *s)
   if (s->onscreen_console)
     con_restore_screen(s, s->osc_backup);
 
-  if (cmd_params[0].val<3) s->pic_visible_map = cmd_params[0].val;
+  if (cmd_params[0].val <= 3) s->pic_visible_map = cmd_params[0].val;
   c_redraw_screen(s);
   
   if (s->onscreen_console)
@@ -1979,3 +1979,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
   if (s->sfx_driver)
     (s->sfx_driver->resume)(s);
 }
+
+
+
+
+

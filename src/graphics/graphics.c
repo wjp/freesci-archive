@@ -125,6 +125,10 @@ graph_get_default_driver()
 #endif
 }
 
+
+#undef PIC_FILL_LIMIT  /* Define this to a number to abort after PIC_FILL_LIMIT fill operations */
+
+
 picture_t
 alloc_empty_picture(int resolution, int colordepth)
 {
@@ -763,7 +767,9 @@ void draw_pic0(picture_t dest, int flags, int defaultPalette, guint8 *data)
   guint8 code;
   short x, y;
   char drawenable = 3;
-
+#ifdef PIC_FILL_LIMIT
+  int foo = PIC_FILL_LIMIT;
+#endif
 
   ptr = data;
   if (data == 0) return;
@@ -866,6 +872,15 @@ void draw_pic0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	  while (*((guint8 *)ptr) < 0xf0) {
 	    x = ((*ptr & 0xf0) << 4) | (0xff & ptr[1]);
 	    y = ((*ptr & 0x0f) << 8) | (0xff & ptr[2]);
+#ifdef PIC_FILL_LIMIT
+ foo--;
+ if (!foo) {
+   fprintf(stderr, "Last draw to %d,%d, (%d,%d)p=%d,c=%d  en=%04x\n", x, y, col1, col2, priority, special, drawenable);
+   if (!((dest->maps[3][x+(y+10)*320] |= (dest->maps[3][x+(y+10)*320] << 4))))
+     dest->maps[3][x+(y+10)*320] |= 0xff;
+   return;
+ }
+#endif
 	    ditherfill(dest, x, y, col1, col2, priority, special, drawenable);
 	    ptr += 3;
 	  }

@@ -127,6 +127,7 @@ yyerror(char *s)
 %token YY_GT        /* 0xf9 */
 %token YY_BRACKETSO_LT /* special token used to imitate LR(2) behaviour */
 %token YY_BRACKETSO_SLASH /* special token used to imitate LR(2) behaviour */
+%token YY_LT_BRACKETSO /* special token used to imitate LR(2) behaviour */
 
 %%
 
@@ -221,6 +222,8 @@ wordrefset :	YY_LT word recref
 			{ $$ = said_aug_branch(0x144, 0x14f, $2, $3) }
 		| YY_LT wordset
 			{ $$ = said_aug_branch(0x144, 0x14f, $2, SAID_BRANCH_NULL) }
+		| YY_LT_BRACKETSO YY_BRACKETSO wordset YY_BRACKETSC
+			{ $$ = said_aug_branch(0x152, 0x144, said_aug_branch(0x144, 0x14f, $3, SAID_BRANCH_NULL), SAID_BRANCH_NULL) }
 		;
 
 
@@ -262,6 +265,9 @@ yylex(void)
 	  else
 	    if ((said_tokens[said_token] >> 8) == SAID_SLASH)
 	      retval = YY_BRACKETSO_SLASH;
+      } else if (retval == YY_LT && (said_tokens[said_token] >> 8) == SAID_BRACKO) {
+	retval = YY_LT_BRACKETSO;
+	fprintf(stderr,"YY_LT_BRACKETSO\n");
       }
     }
   }
@@ -881,7 +887,7 @@ said(state_t *s, byte *spec, int verbose)
 int
 main (int argc, char *argv)
 {
-  byte block[] = {0x01, 0x00, 0xf0, 0xf3, 0x01, 0x01, 0xf8, 0x01, 0x02, 0xf4, 0xf2, 0x01, 0x03, 0xff};
+  byte block[] = {0x01, 0x00, 0xf8, 0xf5, 0x02, 0x01, 0xf6, 0xf2, 0x02, 0x01, 0xf2, 0x01, 0x03, 0xff};
   state_t s;
   con_passthrough = 1;
 

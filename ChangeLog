@@ -1,3 +1,8 @@
+2000-08-07  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/said.y: Added support for 'word1 < [ word2 ]' in the
+	parser (same semantics as 'word1 [ < word2 ]')
+
 2000-06-25  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/include/resource.h (getInt16): Fixed getInt16() for some little
@@ -515,7 +520,7 @@
 
 2000-04-10  Christoph Reichenbach  <jameson@linuxgames.com>
 
-	* src/core/game.c (game_exit): Fixed restarting in KQ4 by resetting
+	* src/core/game.c (game_exit): Fixed restarting in KQ4"y resetting
 	the list of installed scripts
 
 	* doc/sci.sgml: Added BaseSetter(), MemInfo(), DirLoop() to the docs
