@@ -6,6 +6,15 @@
              Changed the flags for SDL's detection. HAVE_SDL is only
              defined when the version is great enough.
 
+	* configure, configure.in, src/include/sound.h,
+	  src/include/soundserver.h, src/sound/Makefile.am
+	  src/sound/sound.c, src/sound/soundserver_null.c,
+	  src/sound/soundserver_sdl.c:
+            Added a threaded soundserver.  This requires SDL 1.1.8 or
+            greater!  It's a work-in-progress, and is combined with a
+            gradual refactoring of the soundserver code to share the
+            same core.  Test the sound code HEAVILY.  :)
+
 2001-04-18  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/drivers/sdl_driver.c (sdl_fetch_event): Fixed 64 bit

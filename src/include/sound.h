@@ -94,6 +94,9 @@ typedef struct {
   ** and cue events, which can be written directly to the sound objects.
   */
 
+void (*queue_event)(int handle, int signal, int value);
+/* XXX write me */
+
   int (*save)(struct _state *s, char *name);
   /* Saves the sound system state to the directory /name/.
   ** Parameters: (state_t *) s: The current state
@@ -132,12 +135,13 @@ typedef struct {
 
 } sfx_driver_t;
 
-
 extern int soundserver_dead; /* Non-zero IFF the sound server died- set by sound.c, must also be
 			     ** set by non-fork()ed sound server implementations */
 
 
 extern DLLEXTERN sfx_driver_t *sfx_drivers[]; /* All available sound fx drivers, NULL-terminated */
+
+extern sfx_driver_t *soundserver; /* current soundserver */
 
 /* A word on priorities: A song is more important if its priority is higher.  */
 /* Another note: SysTicks are at 60 Hz, in case you didn't already know this. */
@@ -242,6 +246,9 @@ mapMIDIInstruments(void);
 ** If detection fails, the MIDI maps will default to 1:1 General MIDI mappings.
 */
 
+int
+init_midi_device(struct _state *s);
+/* sets up the midi device; loads the patch, etc. */
 
 extern char *GM_Instrument_Names[];
 
@@ -257,5 +264,7 @@ typedef struct {
 extern MIDI_map_t MIDI_mapping[128];
 
 extern int cmdlen[16];
+
+void sound_queue_event(int handle, int signal, int value);
 
 #endif /* _SCI_SOUND_H_ */

@@ -61,9 +61,15 @@
 extern sfx_driver_t sound_null;
 #endif
 
+#ifdef HAVE_SDL
+extern sfx_driver_t sound_sdl;
+#endif
+
 #ifdef _DOS
 extern sfx_driver_t sound_dos;
 #endif
+
+sfx_driver_t *soundserver;
 
 sound_event_t sound_eq_eoq_event = {0, SOUND_SIGNAL_END_OF_QUEUE, 0};
 sound_eq_t queue; /* The event queue */
@@ -71,17 +77,19 @@ sound_eq_t queue; /* The event queue */
 int soundserver_dead = 0;
 
 sfx_driver_t *sfx_drivers[] = {
+#ifdef HAVE_SDL
+  &sound_sdl,
+#endif
 #ifdef HAVE_FORK
   /* Assume that sound_null works on any box that has fork() */
   &sound_null,
 #endif /* HAVE_FORK */
+
 #ifdef _DOS
   &sound_dos,
 #endif
   NULL
 };
-
-
 
 #ifdef HAVE_FORK
 
@@ -130,73 +138,6 @@ sound_init_pipes(state_t *s)
   signal(SIGPIPE, &_sound_server_oops_handler);
 
   return 0;
-}
-
-static int get_event_error_counter = 0;
-
-sound_event_t *
-sound_get_event(state_t *s)
-{
-	fd_set inpfds;
-	int inplen;
-	int success;
-	GTimeVal waittime = {0, 0};
-	GTimeVal waittime2 = {0, SOUND_SERVER_TIMEOUT};
-	char debug_buf[65];
-	sound_event_t *event = xalloc(sizeof(sound_event_t));
-
-
-	FD_ZERO(&inpfds);
-	FD_SET(s->sound_pipe_debug[0], &inpfds);
-	while ((select(s->sound_pipe_debug[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime)
-		&& (inplen = read(s->sound_pipe_debug[0], debug_buf, 64)) > 0)) {
-
-		debug_buf[inplen] = 0; /* Terminate string */
-		sciprintf(debug_buf); /* Transfer debug output */
-		waittime.tv_sec = 0;
-		waittime.tv_usec = 0;
-
-		FD_ZERO(&inpfds);
-		FD_SET(s->sound_pipe_debug[0], &inpfds);
-
-	}
-
-	sound_command(s, SOUND_COMMAND_GET_NEXT_EVENT, 0, 0);
-
-	FD_ZERO(&inpfds);
-	FD_SET(s->sound_pipe_events[0], &inpfds);
-	success = select(s->sound_pipe_events[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime2);
-
-	if (success && read(s->sound_pipe_events[0], event, sizeof(sound_event_t)) == sizeof(sound_event_t)) {
-
-		if (event->signal == SOUND_SIGNAL_END_OF_QUEUE) {
-			free(event);
-			return NULL;
-		}
-      
-		return event;
-
-	} else {
-
-		if (!get_event_error_counter) {
-			if (success)
-				sciprintf("sound_get_event: Warning: sound event was crippled!\n");
-			else
-				sciprintf("sound_get_event: Warning: Sound server did not respond to get_event request\n");
-		}
-
-		if (get_event_error_counter == 100) {
-			sciprintf("sound_get_event: Sound server keeps on failing to respond. Looks like he's dead.\n");
-			get_event_error_counter = 101;
-		} else
-			get_event_error_counter++;
-
-
-		free(event);
-		return NULL;
-
-	}
-
 }
 
 void
@@ -702,7 +643,7 @@ void sci_midi_command(song_t *song, guint8 command,
 
     case SCI_MIDI_CUMULATIVE_CUE:
       *ccc += param2;
-      sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, *ccc);
+      sound_queue_event(song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, *ccc);
       break;
     case SCI_MIDI_RESET_ON_STOP:
       song->resetflag = param2;
@@ -739,7 +680,7 @@ void sci_midi_command(song_t *song, guint8 command,
     if (param == SCI_MIDI_SET_SIGNAL_LOOP) {
       song->loopmark = song->pos;
     } else if (param <= 127) {
-      sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
+      sound_queue_event(song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
     }
 
   } else {  
@@ -795,3 +736,35 @@ song_lib_dump(songlib_t songlib, int line)
 	fprintf(stderr,"\n");
 	    
 }
+
+int init_midi_device (state_t *s) {
+  resource_t *midi_patch;
+
+  midi_patch = findResource(9,midi_patchfile);
+  
+  if (midi_patch == NULL) {
+    sciprintf("gack!  That patch (%03d) didn't load!\n", midi_patchfile);
+    
+    if (midi_open(NULL, -1) < 0) {
+      sciprintf("gack! The midi device failed to open cleanly!\n");
+      return -1;
+    }
+    
+  } else if (midi_open(midi_patch->data, midi_patch->length) < 0) {
+    sciprintf("gack! The midi device failed to open cleanly!\n");
+    return -1;
+  }
+  
+  s->sound_volume = 0xc;
+  s->sound_mute = 0;
+
+  return 0;
+}
+
+void 
+sound_queue_event(int handle, int signal, int value) {
+  soundserver->queue_event(handle, signal, value);
+}
+
+
+

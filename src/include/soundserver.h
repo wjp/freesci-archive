@@ -163,10 +163,6 @@ sound_map_instruments(struct _state *s);
 ** Returns   : (int) 0 on success, 1 otherwise
 */
 
-sound_event_t*
-sound_get_event(struct _state *s);
-/* Default implementation for get_event from the sfx_driver_t structure. */
-
 int
 sound_command(struct _state *s, int command, int handle, int parameter);
 /* Default implementation for command from the sfx_driver_t structure. */

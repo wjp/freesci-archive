@@ -43,6 +43,8 @@
 #include <sciresource.h>
 #include <midi_device.h>
 
+sfx_driver_t sound_null;
+
 void
 sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug);
 
@@ -59,8 +61,8 @@ sound_null_init(state_t *s)
 	int child_pid;
 	pid_t ppid;
 	int fd_in[2], fd_out[2], fd_events[2], fd_debug[2];
-	resource_t *midi_patch;
-	 
+
+	soundserver = &sound_null;
 
 	sound_init_pipes(s);
 
@@ -70,24 +72,10 @@ sound_null_init(state_t *s)
 	memcpy(&fd_debug, &(s->sound_pipe_debug), sizeof(int)*2);
 
 	ppid = getpid(); /* Get process ID */
-	midi_patch = findResource(9,midi_patchfile);
 
-	if (midi_patch == NULL) {
-		sciprintf("gack!  That patch (%03d) didn't load!\n", midi_patchfile);
-
-		if (midi_open(NULL, -1) < 0) {
-		  sciprintf("gack! The midi device failed to open cleanly!\n");
-		  return -1;
-		}
-
-	} else if (midi_open(midi_patch->data, midi_patch->length) < 0) {
-		sciprintf("gack! The midi device failed to open cleanly!\n");
-		return -1;
-	}
-
-	s->sound_volume = 0xc;
-	s->sound_mute = 0;
-
+	if (init_midi_device(s) < 0)
+	  return -1;
+	
 	child_pid = fork();
 
 	if (child_pid < 0) {
@@ -125,17 +113,86 @@ sound_null_configure(state_t *s, char *option, char *value)
 	return 1; /* No options apply to this driver */
 }
 
+void 
+sound_null_queue_event(int handle, int signal, int value)
+{
+  sound_eq_queue_event(&queue, handle, signal, value);
+}
 
+static int get_event_error_counter = 0;
+
+sound_event_t *
+sound_null_get_event(state_t *s)
+{
+	fd_set inpfds;
+	int inplen;
+	int success;
+	GTimeVal waittime = {0, 0};
+	GTimeVal waittime2 = {0, SOUND_SERVER_TIMEOUT};
+	char debug_buf[65];
+	sound_event_t *event = xalloc(sizeof(sound_event_t));
+
+
+	FD_ZERO(&inpfds);
+	FD_SET(s->sound_pipe_debug[0], &inpfds);
+	while ((select(s->sound_pipe_debug[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime)
+		&& (inplen = read(s->sound_pipe_debug[0], debug_buf, 64)) > 0)) {
+
+		debug_buf[inplen] = 0; /* Terminate string */
+		sciprintf(debug_buf); /* Transfer debug output */
+		waittime.tv_sec = 0;
+		waittime.tv_usec = 0;
+
+		FD_ZERO(&inpfds);
+		FD_SET(s->sound_pipe_debug[0], &inpfds);
+
+	}
+
+	sound_command(s, SOUND_COMMAND_GET_NEXT_EVENT, 0, 0);
+
+	FD_ZERO(&inpfds);
+	FD_SET(s->sound_pipe_events[0], &inpfds);
+	success = select(s->sound_pipe_events[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime2);
+
+	if (success && read(s->sound_pipe_events[0], event, sizeof(sound_event_t)) == sizeof(sound_event_t)) {
+
+		if (event->signal == SOUND_SIGNAL_END_OF_QUEUE) {
+			free(event);
+			return NULL;
+		}
+      
+		return event;
+
+	} else {
+
+		if (!get_event_error_counter) {
+			if (success)
+				sciprintf("sound_get_event: Warning: sound event was crippled!\n");
+			else
+				sciprintf("sound_get_event: Warning: Sound server did not respond to get_event request\n");
+		}
+
+		if (get_event_error_counter == 100) {
+			sciprintf("sound_get_event: Sound server keeps on failing to respond. Looks like he's dead.\n");
+			get_event_error_counter = 101;
+		} else
+			get_event_error_counter++;
+
+
+		free(event);
+		return NULL;
+
+	}
+
+}
 
 sfx_driver_t sound_null = {
 	"null",
 	&sound_null_init,
 	&sound_null_configure,
-
-	/* Default implementations: */
-
 	&sound_exit,
-	&sound_get_event,
+	&sound_null_get_event,
+	&sound_null_queue_event,
 	&sound_save,
 	&sound_restore,
 	&sound_command,
@@ -160,9 +217,6 @@ _transmit_event(int fd, sound_eq_t *queue)
 	} else
 		write(fd, &sound_eq_eoq_event, sizeof(sound_event_t));
 }
-
-
-
 
 #define REPORT_STATUS(status) {int _repstat = status; write(fd_out, &_repstat, sizeof(int)); }
 
@@ -216,8 +270,8 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 			midi_allstop();
 			song->pos = 33;
 			song->loopmark = 33; /* Reset position */
-			sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_LOOP, -1);
-			sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_FINISHED, 0);
+			sound_queue_event(song->handle, SOUND_SIGNAL_LOOP, -1);
+			sound_queue_event(song->handle, SOUND_SIGNAL_FINISHED, 0);
 
 		}
 		song = song_lib_find_active(songlib, song);
@@ -295,7 +349,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 								int lastmode = song_lib_remove(songlib, event.handle);
 								if (lastmode == SOUND_STATUS_PLAYING) {
 									newsong = songlib[0]; /* Force song detection to start with the highest priority song */
-									sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_FINISHED, 0);
+									sound_queue_event(event.handle, SOUND_SIGNAL_FINISHED, 0);
 								}
 							}
 
@@ -304,7 +358,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 							if (lastmode == SOUND_STATUS_PLAYING) {
 								newsong = songlib[0]; /* Force song detection to start with the highest priority song */
-								sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_FINISHED, 0);
+								sound_queue_event(event.handle, SOUND_SIGNAL_FINISHED, 0);
 							}
 
 						}
@@ -355,7 +409,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 						/* midi_allstop(); */
 
 
-						sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_INITIALIZED, 0);
+						sound_queue_event(event.handle, SOUND_SIGNAL_INITIALIZED, 0);
 
 					}
 					break;
@@ -368,7 +422,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 						  midi_allstop();
 							modsong->status = SOUND_STATUS_PLAYING;
-							sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_PLAYING, 0);
+							sound_queue_event(event.handle, SOUND_SIGNAL_PLAYING, 0);
 							newsong = modsong; /* Play this song */
 
 						} else
@@ -393,7 +447,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 							int lastmode = song_lib_remove(songlib, event.handle);
 							if (lastmode == SOUND_STATUS_PLAYING) {
 								newsong = songlib[0]; /* Force song detection to start with the highest priority song */
-								sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_FINISHED, 0);
+								sound_queue_event(event.handle, SOUND_SIGNAL_FINISHED, 0);
 							}
 
 						} else
@@ -416,7 +470,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 							  modsong->pos = 33;
 							  modsong->loopmark = 33; /* Reset position */
 							}
-							sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_FINISHED, 0);
+							sound_queue_event(event.handle, SOUND_SIGNAL_FINISHED, 0);
 
 						} else
 							fprintf(ds, "Attempt to stop invalid handle %04x\n", event.handle);
@@ -454,7 +508,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 					    if (modsong) {
 					    
 					    modsong->status = SOUND_STATUS_SUSPENDED;
-					    sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_PAUSED, 0);
+					    sound_queue_event(event.handle, SOUND_SIGNAL_PAUSED, 0);
 					    
 					    } else
 					    fprintf(ds, "Attempt to suspend invalid handle %04x\n", event.handle);
@@ -472,7 +526,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 							if (modsong->status == SOUND_STATUS_SUSPENDED) {
 
 								modsong->status = SOUND_STATUS_WAITING;
-								sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_RESUMED, 0);
+								sound_queue_event(event.handle, SOUND_SIGNAL_RESUMED, 0);
 
 							} else
 								fprintf(ds, "Attempt to resume handle %04x although not suspended\n", event.handle);
@@ -652,7 +706,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 							    || (seeker->status == SOUND_STATUS_PLAYING)) {
 
 								seeker->status = SOUND_STATUS_STOPPED;
-								sound_eq_queue_event(&queue, seeker->handle, SOUND_SIGNAL_FINISHED, 0);
+								sound_queue_event(seeker->handle, SOUND_SIGNAL_FINISHED, 0);
 
 							}
 
@@ -711,15 +765,15 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 				        fprintf(ds, "looping back from %d to %d on handle %04x\n",
 						song->pos, song->loopmark, song->handle);
 				  song->pos = song->loopmark;
-				  sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_LOOP, song->loops);
+				  sound_queue_event(song->handle, SOUND_SIGNAL_LOOP, song->loops);
 
 				} else { /* Finished */
 
 					song->status = SOUND_STATUS_STOPPED;
 					song->pos = 33;
 					song->loopmark = 33; /* Reset position */
-					sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_LOOP, -1);
-					sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_FINISHED, 0);
+					sound_queue_event(song->handle, SOUND_SIGNAL_LOOP, -1);
+					sound_queue_event(song->handle, SOUND_SIGNAL_FINISHED, 0);
 					ticks = 1; /* Wait one tick, then continue with next song */
 
 					midi_allstop();
