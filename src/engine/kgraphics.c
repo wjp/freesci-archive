@@ -2064,22 +2064,11 @@ _k_redraw_view_list(state_t *s, gfxw_list_t *list)
 
 		/* step 1 of subalgorithm */
 		if (view->signal & _K_VIEW_SIG_FLAG_NO_UPDATE) {
-			if (view->signal & _K_VIEW_SIG_FLAG_REMOVE) {
-				if (view->signal & _K_VIEW_SIG_FLAG_FORCE_UPDATE) {
-					view->signal &= ~_K_VIEW_SIG_FLAG_FORCE_UPDATE;
-				}
-				else
-				{
-					if (view->signal & _K_VIEW_SIG_FLAG_UPDATED)
-						view->signal &= ~(_K_VIEW_SIG_FLAG_UPDATED | _K_VIEW_SIG_FLAG_NO_UPDATE);
-				}
+			if (view->signal & _K_VIEW_SIG_FLAG_FORCE_UPDATE)
+				view->signal &= ~_K_VIEW_SIG_FLAG_FORCE_UPDATE;
 
-			}
-			else
-			{
-				/* this step handled by the widget subsystem */
-			}
-
+			if (view->signal & _K_VIEW_SIG_FLAG_UPDATED)
+				view->signal &= ~(_K_VIEW_SIG_FLAG_UPDATED | _K_VIEW_SIG_FLAG_NO_UPDATE);
 		} else { /* NO_UPD is not set */
 			if (view->signal & _K_VIEW_SIG_FLAG_STOP_UPDATE) {
 				view->signal &= ~_K_VIEW_SIG_FLAG_STOP_UPDATE;
