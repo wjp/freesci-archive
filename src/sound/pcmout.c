@@ -32,7 +32,7 @@ pcmout_driver_t *pcmout_drivers[] = {
 #	ifdef HAVE_SDL
 		&pcmout_driver_sdl,
 #	endif
-#	ifdef HAVE_DMEDIA_AUDIO_H
+#	if defined(HAVE_DMEDIA_AUDIO_H) && defined(HAVE_PTHREADS)
 		&pcmout_driver_al,
 #	endif
 #	ifdef _DREAMCAST

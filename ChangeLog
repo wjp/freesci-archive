@@ -1,5 +1,12 @@
 2003-01-12  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sound/pcmout_oss.c (pcmout_oss_open): More verbose error
+	reporting, Abort-on-error policy (except for trying to set
+	stereo to "disabled" failing because sterero can't be set),
+	reset device before using it
+
+	* src/sound/pcmout.c: Made adlib pcm driver depend on pthreads
+
 	* src/gfx/drivers/directfb_driver.c (_scidfb_init_input): Ported to
 	new directfb API, improved checks
 

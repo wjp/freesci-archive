@@ -19,7 +19,7 @@
 
 #include <pcmout.h>
 
-#ifdef HAVE_ALSA
+#if defined(HAVE_ALSA) && defined(HAVE_PTHREADS)
 
 #include <alsa/asoundlib.h>
 

@@ -60,35 +60,58 @@ static void *sound_thread (void *arg)
 
 static int pcmout_oss_open(gint16 *b, guint16 rate, guint8 stereo) 
 {
-  audio_buf_info info;
-  int i;
+	audio_buf_info info;
+	int i;
 
-  buffer = b;
+	buffer = b;
   
-  if ((oss_fd = open (oss_device, O_WRONLY)) == -1) {
-    fprintf(stderr, "Can't open %s\n", oss_device);
-    return -1;
-  }
+	if ((oss_fd = open (oss_device, O_WRONLY)) == -1) {
+		fprintf(stderr, "Can't open %s\n", oss_device);
+		return -1;
+	}
 
-  i = (4 << 16 | 13);  /* ask for 4 fragments of 2^13 bytes each */
-  ioctl (oss_fd, SNDCTL_DSP_SETFRAGMENT, &i);
+	if (ioctl (oss_fd, SNDCTL_DSP_RESET)) {
+		fprintf(stderr, "[PCM-OSS] Failed to reset device\n");
+		return -1;
+	}
 
-  ioctl (oss_fd, SNDCTL_DSP_GETOSPACE, &info);
+	i = AFMT_S16_NE;  /* Use NATIVE endian format... */
+	if (ioctl (oss_fd, SNDCTL_DSP_SETFMT, &i)) {
+		fprintf(stderr, "[PCM-OSS] Failed to set device output format\n");
+		return -1;
+	}
 
-  printf ("Using %d fragments of %d bytes.\n", 
-	  info.fragstotal, info.fragsize);
+	i = (4 << 16 | 13);  /* ask for 4 fragments of 2^13 bytes each */
+	if (ioctl (oss_fd, SNDCTL_DSP_SETFRAGMENT, &i)) {
+		fprintf(stderr, "[PCM-OSS] Failed to set fragment size as requested\n");
+		return -1;
+	}
+
+	if (ioctl (oss_fd, SNDCTL_DSP_GETOSPACE, &info)) {
+		fprintf(stderr, "[PCM-OSS] Failed to a get fragment size\n");
+		return -1;
+	}
+
+	printf ("Using %d fragments of %d bytes.\n", 
+		info.fragstotal, info.fragsize);
 	  
-  i = AFMT_S16_NE;  /* Use NATIVE endian format... */
-  ioctl (oss_fd, SNDCTL_DSP_SETFMT, &i);
-  i = stereo;
-  ioctl (oss_fd, SNDCTL_DSP_STEREO, &i);
-  i = rate;
-  ioctl (oss_fd, SNDCTL_DSP_SPEED, &i);
+	i = rate;
+	if (ioctl (oss_fd, SNDCTL_DSP_SPEED, &i)) {
+		fprintf(stderr, "[PCM-OSS] Failed to set DSP output speed\n");
+		return -1;
+	}
 
-  pthread_create (&thread, NULL, sound_thread, NULL);
-  pthread_detach (thread);
+       	i = stereo;
+	if (ioctl (oss_fd, SNDCTL_DSP_STEREO, &i)) {
+		fprintf(stderr, "[PCM-OSS] Failed to set stereo to %d\n", stereo);
+		if (stereo)
+			return -1;
+	}
 
-  return 0;
+	pthread_create (&thread, NULL, sound_thread, NULL);
+	pthread_detach (thread);
+
+	return 0;
 }
 
 static int pcmout_oss_close() {
