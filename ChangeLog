@@ -1,3 +1,7 @@
+2001-09-26  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/midiout_win32mci.c: Stripped ^Ms, ifdef'd for Win32
+
 2001-09-25  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* Applied Claudio's CYGWIN patch

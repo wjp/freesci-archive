@@ -30,6 +30,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#ifdef _WIN32
+
 #include <windows.h>
 #include <mmsystem.h>
 #include <sci_memory.h>
@@ -216,3 +219,4 @@ midiout_driver_t midiout_driver_win32mci = {
   &midiout_win32mci_write,
   &midiout_win32mci_flush
 };
+#endif
