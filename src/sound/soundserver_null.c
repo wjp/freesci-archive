@@ -253,7 +253,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 	if ((song->loops) != 0) {
 
-	  if (song->loops > 0)
+/*	  if (song->loops > 0)   SCI actually goes below -1 */
 		  --(song->loops);
 
 	  song->pos = song->loopmark;

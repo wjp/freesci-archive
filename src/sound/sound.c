@@ -346,7 +346,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
   case SOUND_COMMAND_SET_VOLUME:
     if (parameter != 0xffff) { /* only set if != -1 */
       
-      if (s-sound_mute) {
+      if (s->sound_mute) {
 	s->sound_mute = parameter;
       } else {
 	s->sound_volume = parameter;
