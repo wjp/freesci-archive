@@ -1,5 +1,8 @@
 2004-03-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sfx/core.c (_update_multi_song): Stop, rather than suspend,
+	songs in multisong mode when they're no longer around
+
 	* src/sfx/iterator.c (_tee_read_next_command): When playing
 	multiple songs and subtacting one song's delay time from another,
 	make sure that we don't reach '0' (which has a different, special

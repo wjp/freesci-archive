@@ -39,7 +39,7 @@
 **     >= 3 -- fully detailed input and output analysis (once per frame and feed)
 */
 
-//#define DEBUG 0
+/*#define DEBUG 0*/
 
 #define MIN_DELTA_OBSERVATIONS 100 /* Number of times the mixer is called before it starts trying to improve latency */
 #define MAX_DELTA_OBSERVATIONS 1000000 /* Number of times the mixer is called before we assume we truly understand timing */
@@ -50,7 +50,7 @@ static int additional_frames = 2048; /* Additional frames to write ahead, into t
 
 static int mixer_lock = 0;
 
-//#define DEBUG_LOCKS
+/*#define DEBUG_LOCKS*/
 #ifdef DEBUG_LOCKS
 #  define DEBUG_ACQUIRE fprintf(stderr, "[ -LOCK -] ACKQ %d: %d\n", __LINE__, mixer_lock)
 #  define DEBUG_WAIT fprintf(stderr, "[ -LOCK -] WAIT %d: %d\n", __LINE__, mixer_lock);
@@ -606,8 +606,6 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result,
 		BREAKPOINT();
 	}
 
-//fprintf(stderr, " frames_nr = %d * (%d + %d/%d) = %d\n",
-//len, fs->spd.val, fs->spd.nom, fs->scount
 	if (fs->pending_review) {
 		int newmode = PCM_FEED_EMPTY; /* empty unless a get_timestamp() tells otherwise */
 

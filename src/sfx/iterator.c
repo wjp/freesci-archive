@@ -803,6 +803,7 @@ _sci1_song_init(sci1_song_iterator_t *self)
 		CHECK_FOR_END_ABSOLUTE(offset);
 	}
 
+#if 0
 	sciprintf("[iterator-1] (%p) DEBUG: detected %d channels\n",
 		  self, self->channels_nr);
 	{
@@ -812,6 +813,7 @@ _sci1_song_init(sci1_song_iterator_t *self)
 			sciprintf("%d ", self->polyphony[i]);
 		sciprintf("]\n");
 	}
+#endif
 
 	/* Now ensure that sapmle deltas are relative to the previous sample */
 	seeker = self->next_sample;
@@ -1055,10 +1057,6 @@ static struct _song_iterator *
 _sci1_handle_message(sci1_song_iterator_t *self,
 		     song_iterator_message_t msg)
 {
-	fprintf(stderr, "Processing message for %08lx in %08lx (%d)\n",
-		msg.ID, self->ID, msg.type);
-
-
 	if (msg.recipient == _SIMSG_BASE) { /* May extend this in the future */
 		switch (msg.type) {
 
@@ -1143,11 +1141,8 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 		}
 
 		case _SIMSG_BASEMSG_SET_LOOPS:
-			fprintf(stderr, "   ]===> Loop:%d for %08lx (am %08lx)\n",
-				msg.args[0], msg.ID, self->ID);
 			if (msg.ID == self->ID)
 				self->loops = (msg.args[0] > 32767)? 99 : 0;
-			fprintf(stderr, "   ]===> Set loops to %d\n", self->loops);
 			/* 99 is arbitrary, but we can't use '1' because of
 			** the way we're testing in the decoding section.  */
 			break;
@@ -1324,8 +1319,6 @@ new_fast_forward_iterator(song_iterator_t *capsit, int delta)
 {
 	fast_forward_song_iterator_t *it =
 		sci_malloc(sizeof(fast_forward_song_iterator_t));
-
-	fprintf(stderr, "[ff] Asked to forward %d\n", delta);
 
 	it->ID = 0;
 
@@ -1523,18 +1516,15 @@ _tee_handle_message(tee_song_iterator_t *self, song_iterator_message_t msg)
 
 		case _SIMSG_PLASTICWRAP_ACK_MORPH:
 			if (!(self->status & (TEE_LEFT_ACTIVE | TEE_RIGHT_ACTIVE))) {
-fprintf(stderr, "[tee-iterator] Transformation... FAILED!\n");
 				songit_free((song_iterator_t *) self);
 				return NULL;
 			} else if (!(self->status & TEE_LEFT_ACTIVE)) {
-fprintf(stderr, "[tee-iterator] Transforming... to RIGHT CHILD!\n");
 				if (self->may_destroy)
 					songit_free(self->children[TEE_LEFT].it);
 				old_it = self->children[TEE_RIGHT].it;
 				sci_free(self);
 				return old_it;
 			} else if (!(self->status & TEE_RIGHT_ACTIVE)) {
-fprintf(stderr, "[tee-iterator] Transforming... to LEFT CHILD!\n");
 				if (self->may_destroy)
 					songit_free(self->children[TEE_RIGHT].it);
 				old_it = self->children[TEE_LEFT].it;
@@ -1806,7 +1796,6 @@ songit_new(unsigned char *data, unsigned int size, int type, songit_id_t id)
 	it->death_listeners_nr = 0;
 
 	it->data = sci_refcount_memdup(data, size);
-fprintf(stderr, "** CREATING it %p: data at %p\n", it, it->data);
 	it->size = size;
 
 	it->init((song_iterator_t *) it);
