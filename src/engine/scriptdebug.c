@@ -297,6 +297,7 @@ _c_single_seg_info(state_t *s, mem_obj_t *mobj)
 
 	case MEM_OBJ_NODES: {
 		sciprintf("nodes (total %d)\n", mobj->data.nodes.entries_used);
+		break;
 	}
 
 	case MEM_OBJ_HUNK: {

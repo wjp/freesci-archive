@@ -1,4 +1,4 @@
-/***************************************************************************
+/**************************************************************************
  grammar.c Copyright (C) 2000 Christoph Reichenbach
 
 
@@ -461,6 +461,8 @@ _vocab_build_gnf(parse_tree_branch_t *branches, int branches_nr, int verbose)
 
 	for (i = 1; i < branches_nr; i++) { /* branch rule 0 is treated specially */
 		parse_rule_t *rule = _vbuild_rule(branches + i);
+
+		if (!rule) return NULL;
 		ntlist = _vocab_add_rule(ntlist, rule);
 	}
 

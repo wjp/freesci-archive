@@ -1,3 +1,8 @@
+2003-02-12  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/scriptdebug.c (_c_single_seg_info): Added missing break;
+	* src/engine/grammar.c (_vocab_build_gnf): Handle broken grammars (better)
+
 2003-02-09  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/game.c (_init_vocabulary): SCI1 games no longer load
