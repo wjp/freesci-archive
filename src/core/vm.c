@@ -32,7 +32,10 @@
 #include <engine.h>
 #include <versions.h>
 #include <kdebug.h>
+
+#ifndef _WIN32
 #include <sys/resource.h>
+#endif
 
 /* #define VM_DEBUG_SEND */
 
@@ -489,6 +492,8 @@ run_vm(state_t *s, int restoring)
       case Script_Variable: 
       case Script_Property:
       case Script_Global:
+      case Script_Local:
+      case Script_Temp:
       case Script_Param:
         opparams[temp] = GET_OP_FLEX(); break;
 

@@ -376,6 +376,8 @@ disassemble(state_t *s, heap_ptr pos)
     case Script_Variable:
     case Script_Property:
     case Script_Global:
+    case Script_Local:
+    case Script_Temp:
     case Script_Param:
       if (opsize)
 	param_value = s->heap[retval++];
@@ -1318,7 +1320,11 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 	redraw_console = 1; /* Redraw on keypress or mouse movement */
 
       if ((event.buckybits & SCI_EVM_CTRL) && (event.data == '`')) /* UnConsole command? */
+      {
 	_debugstate_valid = 0;
+        script_debug_flag = 0;
+        s->onscreen_console = 0;
+      }
       else
 	if (commandbuf = con_input(&event)) {
 

@@ -41,21 +41,9 @@
 #include <getopt.h>
 #endif /* HAVE_GETOPT_H */
 
-static int hexdump = 0;
-static int opcode_size = 0;
-static int verbose = 0;
-
-#ifdef HAVE_GETOPT_H
-static struct option options[] = {
-  {"version", no_argument, 0, 256},
-  {"help", no_argument, 0, 'h'},
-  {"hexdump", no_argument, &hexdump, 1},
-  {"opcode-size", no_argument, &opcode_size, 1},
-  {"verbose", no_argument, &verbose, 1},
-  {0, 0, 0, 0}};
-#endif /* HAVE_GETOPT_H */
-
-
+#ifdef _WIN32
+#include <direct.h>
+#endif
 
 typedef struct name_s {
   int offset;
@@ -91,6 +79,7 @@ typedef struct disasm_state_s {
   int word_count;
 
   char **class_names;
+  int *class_selector_count;
   short **class_selectors;
   int class_count;
   int old_header;
@@ -128,6 +117,23 @@ disasm_init (disasm_state_t *d);
 void
 disasm_free_state (disasm_state_t *d);
 
+
+static int hexdump = 0;
+static int opcode_size = 0;
+static int verbose = 0;
+
+#ifdef HAVE_GETOPT_H
+static struct option options[] = {
+  {"version", no_argument, 0, 256},
+  {"help", no_argument, 0, 'h'},
+  {"hexdump", no_argument, &hexdump, 1},
+  {"opcode-size", no_argument, &opcode_size, 1},
+  {"verbose", no_argument, &verbose, 1},
+  {"gamedir", required_argument, 0, 'd'},
+  {0, 0, 0, 0}};
+#endif /* HAVE_GETOPT_H */
+
+
 int main(int argc, char** argv)
 {
   int i;
@@ -135,11 +141,12 @@ int main(int argc, char** argv)
   int optindex = 0;
   int c;
   disasm_state_t disasm_state;
+  char *gamedir = NULL;
 
 #ifdef HAVE_GETOPT_H
-  while ((c = getopt_long(argc, argv, "vhx", options, &optindex)) > -1) {
+  while ((c = getopt_long(argc, argv, "vhxd:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_H */
-  while ((c = getopt(argc, argv, "vhx")) > -1) {
+  while ((c = getopt(argc, argv, "vhxd:")) > -1) {
 #endif /* !HAVE_GETOPT_H */
       
       switch (c)
@@ -154,12 +161,18 @@ int main(int argc, char** argv)
 	case 'h':
 	  printf("Usage: scidisasm\n"
 		 "\nAvailable options:\n"
-		 " --version              Prints the version number\n"
-		 " --help        -h       Displays this help message\n"
-                 " --hexdump     -x       Hex dump all script resources\n"
-                 " --verbose              Print additional disassembly information\n"
-                 " --opcode-size          Print opcode size postfixes\n");
+		 " --version               Prints the version number\n"
+		 " --help          -h      Displays this help message\n"
+                 " --gamedir <dir> -d<dir> Read game resources from dir\n"
+                 " --hexdump       -x      Hex dump all script resources\n"
+                 " --verbose               Print additional disassembly information\n"
+                 " --opcode-size           Print opcode size postfixes\n");
 	  exit(0);
+
+        case 'd':
+          if (gamedir) free (gamedir);
+          gamedir=strdup (optarg);
+          break;
 	  
 	case 0: /* getopt_long already did this for us */
 	case '?':
@@ -170,6 +183,13 @@ int main(int argc, char** argv)
 	  return -1;
 	}
     }
+
+  if (gamedir)
+    if (chdir (gamedir))
+      {
+	printf ("Error changing to game directory '%s'\n", gamedir);
+	exit(1);
+      }
 
   printf ("Loading resources...\n");
   if (i = loadResources(SCI_VERSION_AUTODETECT, 0)) {
@@ -221,6 +241,8 @@ disasm_init (disasm_state_t *d)
   g_free (classes);
   d->class_names = (char **) malloc (d->class_count * sizeof (char *));
   memset (d->class_names, 0, d->class_count * sizeof (char *));
+  d->class_selector_count = (int *) malloc (d->class_count * sizeof (int)),
+  memset (d->class_selector_count, 0, d->class_count * sizeof (int));
   d->class_selectors = (short **) malloc (d->class_count * sizeof (short *));
   memset (d->class_selectors, 0, d->class_count * sizeof (short *));
 }
@@ -247,6 +269,7 @@ disasm_free_state (disasm_state_t *d)
   }
   free (d->class_names);
   free (d->class_selectors);
+  free (d->class_selector_count);
   
   vocabulary_free_snames (d->snames);
   g_free (d->opcodes);
@@ -512,6 +535,7 @@ script_dump_class(disasm_state_t *d, script_state_t *s,
       else
         d->class_names [species] = strdup (name);
       
+      d->class_selector_count [species] = selectors;
       d->class_selectors [species] = (short *) malloc (sizeof (short) * selectors);
     }
   }
@@ -754,6 +778,8 @@ script_disassemble_code(disasm_state_t *d, script_state_t *s,
       case Script_SVariable:
       case Script_Variable:
       case Script_Global:
+      case Script_Local:
+      case Script_Temp:
       case Script_Param:
       case Script_SRelative:
       case Script_Property:
@@ -801,6 +827,14 @@ script_disassemble_code(disasm_state_t *d, script_state_t *s,
             sciprintf (" global_%d", param_value);
             break;
 
+          case Script_Local:
+            sciprintf (" local_%d", param_value);
+            break;
+
+          case Script_Temp:
+            sciprintf (" temp_%d", param_value);
+            break;
+
           case Script_Param:
             sciprintf (" param_%d", param_value);
             break;
@@ -842,7 +876,7 @@ script_disassemble_code(disasm_state_t *d, script_state_t *s,
             break;
 
           case Script_Property:
-            if (cur_class != -1)
+            if (cur_class != -1 && param_value/2 < d->class_selector_count [cur_class])
             {
               sciprintf (" %s", get_selector_name (d, d->class_selectors [cur_class][param_value/2]));
               if (verbose) sciprintf ("[%x]", param_value);

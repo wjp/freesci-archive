@@ -21,7 +21,7 @@
 
  Current Maintainer:
 
-    Christoph Reichenbach (CJR) [creichen@rbg.informatik.tu-darmstadt.de]
+    Dmitry Jemerov (DJ)  [yole@nnz.ru]
 
  History:
 
@@ -57,6 +57,7 @@ static HermesFormat *hfDest;
 static RGBQUAD color_table [256];
 
 static BOOL bFullscreen = FALSE, bActive = FALSE, bInitialized = FALSE;
+static BOOL bWinNT = FALSE;
 static int scale=1;
 
 /* FIXME: It would be cleaner to store the state pointer in a window word,
@@ -253,6 +254,7 @@ ddraw_init(state_t *s, struct _picture *pic)
   RECT rc;
   char buf [128];
   int32* pPal;
+  OSVERSIONINFO os_ver;
 
   _s = s;
   
@@ -261,6 +263,11 @@ ddraw_init(state_t *s, struct _picture *pic)
   else
     scale = 2;
 
+  os_ver.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
+  GetVersionEx (&os_ver);
+  if (os_ver.dwPlatformId == VER_PLATFORM_WIN32_NT)
+    bWinNT = TRUE;
+  
   /* Register window class */
   wc.style         = CS_HREDRAW | CS_VREDRAW;
   wc.lpfnWndProc   = WndProc;
@@ -502,9 +509,17 @@ void add_key_event (int data)
 {
   int buckybits = 0;
   
-  /* FIXME: If anyone cares, on Windows NT we can distinguish left and right shift */
-  if (GetAsyncKeyState (VK_SHIFT)) 
-    buckybits |= SCI_EVM_LSHIFT | SCI_EVM_RSHIFT;
+  if (bWinNT)
+  {
+    if (GetAsyncKeyState (VK_LSHIFT)) 
+      buckybits |= SCI_EVM_LSHIFT;
+    if (GetAsyncKeyState (VK_RSHIFT))
+      buckybits |= SCI_EVM_RSHIFT;
+  }
+  else {
+    if (GetAsyncKeyState (VK_SHIFT))
+      buckybits |= SCI_EVM_LSHIFT | SCI_EVM_RSHIFT;
+  }
   if (GetAsyncKeyState (VK_CONTROL)) 
     buckybits |= SCI_EVM_CTRL;
   if (GetAsyncKeyState (VK_MENU)) 
@@ -613,6 +628,10 @@ long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       }
       else if (wParam == 0xC0)  /* tilde key - used for invoking console */
         add_key_event ('`');
+      else if (wParam == 0xBD)
+        add_key_event ('-');
+      else if (wParam == 0xBB)
+        add_key_event ('=');
       else
         add_key_event (wParam);
     }

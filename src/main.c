@@ -442,6 +442,13 @@ main(int argc, char** argv)
   game_run(&gamestate); /* Run the game */
   
 
+  if (console_logfile)
+  {
+    fclose (console_logfile);
+    console_logfile = NULL;
+    con_file = NULL;
+  }
+
   if (gamestate->sfx_driver)
     gamestate->sfx_driver->exit(gamestate); /* Shutdown sound daemon first */
 
@@ -452,9 +459,6 @@ main(int argc, char** argv)
   freeResources();
 
   config_free(&conf, conf_entries);
-
-  if (console_logfile)
-    fclose (console_logfile);
 
   chdir (startdir); /* ? */
 

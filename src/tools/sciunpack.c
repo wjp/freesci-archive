@@ -47,6 +47,7 @@
 #endif /* HAVE_LIBPNG */
 
 #ifdef _MSC_VER
+#include <direct.h>
 /* [DJ] fchmod is not in Visual C++ RTL - and probably not needed,anyway */
 #define fchmod(file,mode)
 
@@ -72,6 +73,7 @@ static struct option options[] = {
   {"palette-interpolate", no_argument, &sci_color_mode, SCI_COLOR_INTERPOLATE},
   {"palette-dither256", no_argument, &sci_color_mode, SCI_COLOR_DITHER256},
   {"dissect", no_argument, &dissect, 1},
+  {"gamedir", required_argument, 0, 'd'},
   {0, 0, 0, 0}};
 #endif /* HAVE_GETOPT_H */
 
@@ -88,11 +90,12 @@ int main(int argc, char** argv)
   char *outfilename = 0;
   int optindex = 0;
   int c;
+  char *gamedir = NULL;
 
 #ifdef HAVE_GETOPT_H
-  while ((c = getopt_long(argc, argv, "vhlo:", options, &optindex)) > -1) {
+  while ((c = getopt_long(argc, argv, "vhlo:d:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_H */
-  while ((c = getopt(argc, argv, "vhlo:")) > -1) {
+  while ((c = getopt(argc, argv, "vhlo:d:")) > -1) {
 #endif /* !HAVE_GETOPT_H */
       
       switch (c)
@@ -115,6 +118,7 @@ int main(int argc, char** argv)
 		 " --help        -h       Displays this help message\n"
 		 " --list        -l       List all resources\n"
 		 " --output-file -o       Selects output file\n"
+                 " --gamedir     -d       Read game resources from dir\n"
 		 " --with-header          Forces the SCI header to be written (default)\n"
                  " --without-header       Prevents the two SCI header bytes from being written\n"
 		 " --palette-dither       Forces colors in 16 color games to be dithered\n"
@@ -142,6 +146,11 @@ int main(int argc, char** argv)
 	case 'o':
 	  outfilename = optarg;
 	  break;
+
+        case 'd':
+          if (gamedir) free (gamedir);
+          gamedir = strdup (optarg);
+          break;
 
 	case 0: /* getopt_long already did this for us */
 	case '?':
@@ -175,8 +184,13 @@ int main(int argc, char** argv)
       return 1;
     }
   } /* !list */
-
-
+  
+  if (gamedir)
+    if (chdir (gamedir))
+      {
+	printf ("Error changing to game directory '%s'\n", gamedir);
+	exit(1);
+      }
 
   if (i = loadResources(SCI_VERSION_AUTODETECT, 0)) {
     fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);

@@ -1,3 +1,37 @@
+1999-12-18  Dmitry Jemerov  <yole@nnz.ru>
+
+	* src/tools/scidisasm.c: New parameter --gamedir to specify directory
+	to load resources from.
+
+        * src/tools/sciunpack.c: Ditto.
+
+	* src/core/script.h, src/core/script.c: New opcode parameter types
+	Script_Local and Script_Temp.
+	* Updated references accordingly.
+
+	* src/include/uinput.h: Updated keycodes of special keys to match
+	actual DOS keycodes. Now the buttons in KQ1 intro screen work.
+	Hopefully nothing else is broken.
+
+	* src/include/uinput.h, src/graphics/input.c (map_keyboard_event):
+	New function.
+
+	* src/core/kgraphics.c (kEditControl): Updated and cleaned up
+	to use map_keyboard_event and support word-sized keycodes. Now
+	shifted number keys (!@#$ and so on) work correctly.
+
+	* src/core/scriptdebug.c (script_debug): The onscreen console can
+	now be hidden correctly.
+
+	* src/graphics/con_io.c (con_input): Updated and cleaned up
+	to use map_keyboard_event. Support for keys Space, Home, End.
+
+	* src/graphics/graphics_ddraw.c (WndProc): Support for keys - and
+	=.
+
+	* src/graphics/graphics_ddraw.c (add_key_event): Left and right
+	Shift keys are now distinguished under Windows NT.
+
 1999-12-17  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kfile.c (kGetSaveFiles): Implemented GetSaveFiles().

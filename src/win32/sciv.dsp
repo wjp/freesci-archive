@@ -91,10 +91,6 @@ SOURCE=..\core\cfsml.pl
 # End Source File
 # Begin Source File
 
-SOURCE=..\console\commands.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\graphics\con_font.c
 # End Source File
 # Begin Source File
@@ -358,6 +354,10 @@ SOURCE=..\include\heap.h
 # Begin Source File
 
 SOURCE=..\include\kdebug.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\kernel.h
 # End Source File
 # Begin Source File
 
