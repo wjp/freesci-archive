@@ -1267,6 +1267,33 @@ kTimesCos(state_t *s, int funct_nr, int argc, heap_ptr argp)
   s->acc = (int) (factor * 1.0 * cos(angle * PI / 180.0));
 }
 
+void
+kCosDiv(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int angle = PARAM(1);
+  int value = PARAM(0);
+  double cosval = cos(angle * PI / 180.0);
+
+  if ((cosval < 0.0001) && (cosval > 0.0001)) {
+    SCIkwarn(SCIkWARNING,"Attepted division by zero\n");
+    s->acc = 0x8000;
+  } else
+    s->acc = (gint16) (value/cosval);
+}
+
+void
+kSinDiv(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int angle = PARAM(1);
+  int value = PARAM(0);
+  double sinval = sin(angle * PI / 180.0);
+
+  if ((sinval < 0.0001) && (sinval > 0.0001)) {
+    SCIkwarn(SCIkWARNING,"Attepted division by zero\n");
+    s->acc = 0x8000;
+  } else
+    s->acc = (gint16) (value/sinval);
+}
 
 #define _K_SOUND_INIT 0
 #define _K_SOUND_PLAY 1
@@ -2402,8 +2429,8 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
   if ((xsize < 0) || (ysize < 0))
     xsize = ysize = 0; /* Invalid view/loop */
 
-  xbase = x - xsize / 2;
-  xend = xbase + xsize;
+  xbase = x - (xsize - 1) / 2;
+  xend = xbase + xsize -1;
   yend = y;
   ybase = yend - ystep;
 
@@ -3067,11 +3094,11 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
     return;
   }
 
-  _k_dyn_view_list_prepare_change(s);
-  graph_restore_box(s, s->ports[goner]->bg_handle);
-
   if (goner == s->view_port) /* Are we killing the active port? */
     s->view_port = 0; /* Set wm_port as active port if so */
+
+  _k_dyn_view_list_prepare_change(s);
+  graph_restore_box(s, s->ports[goner]->bg_handle);
 
   _k_dyn_view_list_accept_change(s);
 
@@ -3737,6 +3764,8 @@ struct {
   {"GlobalToLocal", kGlobalToLocal },
   {"LocalToGlobal", kLocalToGlobal },
   {"Wait", kWait },
+  {"CosDiv", kCosDiv },
+  {"SinDiv", kSinDiv },
 
   /* Experimental functions */
   {"Said", kSaid },

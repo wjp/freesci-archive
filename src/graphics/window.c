@@ -38,7 +38,7 @@ draw_box(picture_t dest, short x, short y, short xl, short yl, char color, char 
   if (x<0) x = 0;
   if (y<10) y = 10;
   if (x+xl>319) xl = 319-x;
-  if (y+yl>199) yl = 199-yl;
+  if (y+yl>199) yl = 199-y;
   if (xl<1) return;
   if (yl<1) return;
 
@@ -189,6 +189,7 @@ void draw_window(picture_t dest, port_t *port, char color, char priority,
     }
 
     if (!(flags & WINDOW_FLAG_NOFRAME)) {
+
       int xdrawpos = (x < 1)? 0 : x - 1;
       int xdrawlen = (x + xl + 2> 319)? 319 - x : xl + 2;
       int xshadelen = (x + xl + 3 > 319)? 319 - x : xl + 1;
