@@ -65,7 +65,7 @@ char *class_names[] =
 int
 _vocab_cmp_words(const void *word1, const void *word2)
 {
-  return strcasecmp((*((word_t **) word1))->word, (*((word_t **) word2))->word);
+	return strcasecmp((*((word_t **) word1))->word, (*((word_t **) word2))->word);
 }
 
 /* FIXME: Unify this with the SCI0 routine */
@@ -357,75 +357,82 @@ vocab_lookup_word(char *word, int word_len,
 		  word_t **words, int words_nr,
 		  suffix_t **suffices, int suffices_nr)
 {
-  word_t *tempword = malloc(sizeof(word_t) + word_len + 256);
-  /* 256: For suffices. Should suffice. */
-  word_t **dict_word;
-  result_word_t *retval;
-  char *tester;
-  int i;
-
-  strncpy(&(tempword->word[0]), word, word_len);
-  tempword->word[word_len] = 0;
-
-  retval = malloc(sizeof(result_word_t));
-
-  dict_word = bsearch(&tempword, words, words_nr, sizeof(word_t *), _vocab_cmp_words);
-
-  if (dict_word) {
-    free(tempword);
-
-    retval->class = (*dict_word)->class;
-    retval->group = (*dict_word)->group;
-
-    return retval;
-  }
-
-  /* Now try all suffices */
-  for (i = 0; i < suffices_nr; i++)
-    if (suffices[i]->alt_suffix_length <= word_len) {
-
-      int suff_index = word_len - suffices[i]->alt_suffix_length;
-      /* Offset of the start of the suffix */
-
-      if (strncasecmp(suffices[i]->alt_suffix, word + suff_index,
-			suffices[i]->alt_suffix_length) == 0) { /* Suffix matched! */
+	word_t *tempword = malloc(sizeof(word_t) + word_len + 256);
+	/* 256: For suffices. Should suffice. */
+	word_t **dict_word;
+	result_word_t *retval;
+	char *tester;
+	int i, word_len_tmp;
 
 	strncpy(&(tempword->word[0]), word, word_len);
-	tempword->word[suff_index] = 0; /* Terminate word at suffix start position... */
-	strncat(&(tempword->word[0]), suffices[i]->word_suffix, suffices[i]->word_suffix_length); /* ...and append "correct" suffix */
+	tempword->word[word_len] = 0;
+
+	word_len_tmp = word_len;
+	while (tester = strchr(tempword->word, '-'))
+		memmove(tester, tester + 1, (tempword->word + word_len_tmp--) - tester);
+
+	retval = malloc(sizeof(result_word_t));
 
 	dict_word = bsearch(&tempword, words, words_nr, sizeof(word_t *), _vocab_cmp_words);
 
-	if ((dict_word) && ((*dict_word)->class & suffices[i]->class_mask)) { /* Found it? */
-	  free(tempword);
+	if (dict_word) {
+		free(tempword);
 
-	  retval->class = suffices[i]->result_class; /* Use suffix class */
-	  retval->group = (*dict_word)->group;
+		retval->class = (*dict_word)->class;
+		retval->group = (*dict_word)->group;
 
-	  return retval;
+		return retval;
 	}
 
-      }
-    }
+	/* Now try all suffices */
+	for (i = 0; i < suffices_nr; i++)
+		if (suffices[i]->alt_suffix_length <= word_len) {
 
-  /* No match so far? Check if it's a number. */
+			int suff_index = word_len - suffices[i]->alt_suffix_length;
+				/* Offset of the start of the suffix */
 
-  strncpy(&(tempword->word[0]), word, word_len);
-  tempword->word[word_len] = 0;
+			if (strncasecmp(suffices[i]->alt_suffix, word + suff_index,
+					suffices[i]->alt_suffix_length) == 0) { /* Suffix matched! */
 
-  if ((strtol(&(tempword->word[0]), &tester, 10) >= 0)
-      && (*tester == '\0')) { /* Do we have a complete number here? */
-    free(tempword);
+				strncpy(&(tempword->word[0]), word, word_len);
+				tempword->word[suff_index] = 0; /* Terminate word at suffix start position... */
+				strncat(&(tempword->word[0]), suffices[i]->word_suffix, suffices[i]->word_suffix_length); /* ...and append "correct" suffix */
 
-    retval->group = VOCAB_MAGIC_NUMBER_GROUP;
-    retval->class = VOCAB_CLASS_NUMBER;
+				dict_word = bsearch(&tempword, words, words_nr, sizeof(word_t *), _vocab_cmp_words);
 
-    return(retval);
-  }
+				if ((dict_word) && ((*dict_word)->class & suffices[i]->class_mask)) { /* Found it? */
+					free(tempword);
 
-  free(tempword);
-  free(retval);
-  return NULL;
+					retval->class = suffices[i]->result_class; /* Use suffix class */
+					retval->group = (*dict_word)->group;
+
+					return retval;
+				}
+			}
+		}
+
+	/* No match so far? Check if it's a number. */
+
+	strncpy(&(tempword->word[0]), word, word_len);
+	tempword->word[word_len] = 0;
+
+	word_len_tmp = word_len;
+	while (tester = strchr(tempword->word, '-'))
+		memmove(tester, tester + 1, (tempword->word + word_len--) - tester);
+
+	if ((strtol(&(tempword->word[0]), &tester, 10) >= 0)
+	    && (*tester == '\0')) { /* Do we have a complete number here? */
+		free(tempword);
+
+		retval->group = VOCAB_MAGIC_NUMBER_GROUP;
+		retval->class = VOCAB_CLASS_NUMBER;
+
+		return(retval);
+	}
+
+	free(tempword);
+	free(retval);
+	return NULL;
 }
 
 
@@ -566,63 +573,66 @@ vocab_tokenize_string(char *sentence, int *result_nr,
 		      suffix_t **suffices, int suffices_nr,
 		      char **error)
 {
-  char *lastword = sentence;
-  int pos_in_sentence = 0;
-  char c;
-  int wordlen = 0;
-  result_word_t *retval = malloc(sizeof(result_word_t));
-  /* malloc'd size is always one result_word_t too big */
+	char *lastword = sentence;
+	int pos_in_sentence = 0;
+	char c;
+	int wordlen = 0;
+	result_word_t *retval = malloc(sizeof(result_word_t));
+	/* malloc'd size is always one result_word_t too big */
 
-  result_word_t *lookup_result;
+	result_word_t *lookup_result;
 
 
-  *result_nr = 0;
-  *error = NULL;
+	*result_nr = 0;
+	*error = NULL;
 
-  do {
+	do {
+	  
+		c = sentence[pos_in_sentence++];
 
-    c = sentence[pos_in_sentence++];
+		if (isalnum(c) || (c=='-' && wordlen))
+			++wordlen; /* Continue on this word */
+			/* Words may contain a '-', but may not
+			** start with one.  */
 
-    if (isalnum(c))
-      ++wordlen; /* Continue on this word */
+		else {
 
-    else {
+			if (wordlen) { /* Finished a word? */
 
-      if (wordlen) { /* Finished a word? */
+				lookup_result =
+					vocab_lookup_word(lastword, wordlen,
+							  words, words_nr,
+							  suffices, suffices_nr);
+				/* Look it up */
 
-	lookup_result = vocab_lookup_word(lastword, wordlen,
-					  words, words_nr,
-					  suffices, suffices_nr);
-	/* Look it up */
+				if (!lookup_result) { /* Not found? */
+					*error = calloc(wordlen + 1, 1);
+					strncpy(*error, lastword, wordlen); /* Set the offending word */
+					free(retval);
+					return NULL; /* And return with error */
+				}
 
-	if (!lookup_result) { /* Not found? */
-	  *error = calloc(wordlen + 1, 1);
-	  strncpy(*error, lastword, wordlen); /* Set the offending word */
-	  free(retval);
-	  return NULL; /* And return with error */
+				memcpy(retval + *result_nr, lookup_result, sizeof(result_word_t));
+				/* Copy into list */
+				++(*result_nr); /* Increase number of resulting words */
+				free(lookup_result);
+
+				retval = realloc(retval, sizeof(result_word_t) * (*result_nr + 1));
+
+			}
+
+			lastword = sentence + pos_in_sentence;
+			wordlen = 0;
+		}
+
+	} while (c); /* Until terminator is hit */
+
+	if (*result_nr == 0) {
+		free(retval);
+		return NULL;
 	}
 
-	memcpy(retval + *result_nr, lookup_result, sizeof(result_word_t));
-	/* Copy into list */
-	++(*result_nr); /* Increase number of resulting words */
-	free(lookup_result);
-
-	retval = realloc(retval, sizeof(result_word_t) * (*result_nr + 1));
-
-      }
-
-      lastword = sentence + pos_in_sentence;
-      wordlen = 0;
-    }
-
-  } while (c); /* Until terminator is hit */
-
-  if (*result_nr == 0) {
-    free(retval);
-    return NULL;
-  }
-
-  return retval;
+	return retval;
 }
 
 

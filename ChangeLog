@@ -1,8 +1,22 @@
+2001-07-14  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/vocab.c (vocab_lookup_word): Dashes in words are now
+	skipped when looking up the word
+
+	* src/include/vocabulary.h (VOCAB_MAGIC_NUMBER_GROUP): Changed to 0xffd
+
+	* src/gfx/drivers/Makefile.am Silenced some libtool warnings
+
 2001-07-14  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/sound/midi_adlib.c, src/include/midi_device.h,
           src/sound_midi_device.c, src/sound/Makefile.am:  Initial work
           on an adlib (/dev/sequencer for now) sound target.
+
+2001-07-13  Alex Angas  <wgd@adelaide.on.net>
+
+	* src/win32/win32_profiler.bat: Added this file.
+        See file for instructions on how to use.
 
 2001-07-13  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
 
@@ -13,6 +27,9 @@
 	is UNIX, to fix builds on some non-gcc UNIX compilers
 
 2001-07-12  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* configure.in: libreadline is now only checked for if libcurses was
+	found
 
 	* acinclude.m4 (CURSHEADER): Fixed (n)curses header file detection
 

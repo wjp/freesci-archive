@@ -75,7 +75,7 @@ extern DLLEXTERN char *class_names[]; /* Vocabulary class names */
 #define VOCAB_CLASS_ANYWORD 0xff
 /* Anywords are ignored by the parser */
 
-#define VOCAB_MAGIC_NUMBER_GROUP 0xffe
+#define VOCAB_MAGIC_NUMBER_GROUP 0xffd /* 0xffe ? */
 /* This word class is used for numbers */
 
 #define VOCAB_TREE_NODES 500

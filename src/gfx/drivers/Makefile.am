@@ -8,7 +8,7 @@ gfxdriver_LTLIBRARIES = @fsci_xlib_dl@ @fsci_ggi_dl@ @fsci_sdl_dl@
 
 noinst_LIBRARIES = libscidrivers.a
 #libscidrivers_a_SOURCES = 
-libscidrivers_a_OBJECTS = gfx_drivers.o @fsci_xlib_st@ @fsci_ggi_st@ @fsci_sdl_st@
+libscidrivers_a_SOURCES = gfx_drivers.c @fsci_xlib_st@ @fsci_ggi_st@ @fsci_sdl_st@
 
 
 xlib_driver_la_LDFLAGS = -rpath $(gfxdriverdir) -module -no-undefined \
