@@ -117,5 +117,11 @@ _SCIGNUkdebug(char *funcname, state_t *s, char *file, int line, int area, char *
 void
 set_debug_mode (struct _state *s, int mode, char *areas);
 
+extern int sci_debug_flags;
+
+/* Debug flags */
+#define _DEBUG_FLAG_LOGGING 1 /* Log each command executed */
+#define _DEBUG_FLAG_BREAK_ON_WARNINGS 2 /* Break on warnings */
+
 
 #endif

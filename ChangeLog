@@ -1,3 +1,19 @@
+1999-11-26  Dmitry Jemerov  <yole@nnz.ru>
+
+	* src/include/kdebug.h: Moved sci_debug_flags definition to kdebug.h
+	from scriptdebug.c.
+	* src/core/kernel.c: Support for new debug flag "break on
+	warnings" (0x02).
+
+	* src/core/kernel.c (kAnimate): Fixed attempt to free the
+	dyn_views list twice.
+
+	* config.l: conf.console_log is now allocated by strdup, to avoid
+	attempt to free the same buffer multiple times.
+
+	* src/core/scriptdebug.c (disassemble): When disassembling the jmp
+        instruction, the destination offset is also printed.
+
 1999-11-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kernel.c: Killed the bugs that caused background buffers

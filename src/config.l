@@ -99,6 +99,8 @@ SCIVERSION {DIGIT}"."{DIGIT}{3}"."{DIGIT}{3}
 
   /* ...and initialize it */
   memcpy(&(conf[cur_section]), &(conf[0]), sizeof(config_entry_t));
+  if (conf[0].console_log)
+    conf[cur_section].console_log = strdup (conf[0].console_log);
   /* Copy the gfx system init strings */
   if (conf[cur_section].gfx_config) {
     conf[cur_section].gfx_config = malloc(sizeof(gfx_option_t *) * conf[0].gfx_config_nr);

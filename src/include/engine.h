@@ -105,8 +105,6 @@ typedef struct _state
   byte onscreen_console;  /* Use the onscreen console for debugging */
   byte *osc_backup; /* Backup of the pre-onscreen console screen data */
 
-  int debug_mode; /* Contains flags for the various debug modes */
-
   long game_time; /* Counted at 60 ticks per second, reset during start time */
 
   heap_ptr save_dir; /* Pointer to the allocated space for the save directory */
@@ -177,6 +175,11 @@ typedef struct _state
   heap_ptr parser_base;  /* A heap area used by the parser for error reporting */
   heap_ptr global_vars;  /* script 000 selectors */
 
+  /* Debugger data: */
+  breakpoint_t *bp_list;   /* List of breakpoints */
+  int have_bp;  /* Bit mask specifying which types of breakpoints are used in bp_list */
+  int debug_mode; /* Contains flags for the various debug modes */
+
   /* Parser data: */
   word_t **parser_words;
   int parser_words_nr;
@@ -204,15 +207,11 @@ typedef struct _state
 
   selector_map_t selector_map; /* Shortcut list for important selectors */
 
-  breakpoint_t *bp_list;   /* List of breakpoints */
-  int have_bp;  /* Bit mask specifying which types of breakpoints are used in bp_list */
-
   struct _state *successor; /* Successor of this state: Used for restoring */
 
 } state_t;
 
 #define STATE_T_DEFINED
-
 
 int
 gamestate_save(state_t *s, char *dirname);

@@ -45,8 +45,6 @@ int sci_debug_flags = 0; /* Special flags */
 #define _DEBUG_SEEK_SPECIAL_CALLK 3 /* Step forward until a /special/ callk is found */
 #define _DEBUG_SEEK_SO 5 /* Step forward until specified PC (after the send command) and stack depth */
 
-#define _DEBUG_FLAG_LOGGING 1 /* Log each command executed */
-
 heap_ptr *_pc;
 heap_ptr *_sp;
 heap_ptr *_pp;
@@ -361,6 +359,8 @@ disassemble(state_t *s, heap_ptr pos)
       if (opcode == op_callk)
 	sciprintf(" %s[%x]", (param_value < s->kernel_names_nr)
 		  ? s->kernel_names[param_value] : "<invalid>", param_value);
+      else if (opcode == op_jmp)
+        sciprintf (opsize? " %02x  [%04x]" : " %04x  [%04x]", param_value, pos+(short) param_value);
       else sciprintf(opsize? " %02x" : " %04x", param_value);
 
       break;
@@ -957,7 +957,7 @@ objinfo(state_t *s, heap_ptr pos)
 
 	if (selectorID > s->selector_names_nr) {
 	  sciprintf("Invalid selector number: %04x!\n", selectorID);
-	  return;
+	  return 0;
 	}
 
 	sciprintf("  %s[%04x] at %04x\n", s->selector_names[selectorID], selectorID,
@@ -1217,7 +1217,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 		 "  when scripts are loaded or unloaded");
       cmdHookInt(&script_abort_flag, "script_abort_flag", "Set != 0 to abort execution\n");
       cmdHookInt(&script_step_counter, "script_step_counter", "# of executed SCI operations\n");
-      cmdHookInt(&sci_debug_flags, "debug_flags", "Debug flags:\n  0x0001: Log each command executed\n");
+      cmdHookInt(&sci_debug_flags, "debug_flags", "Debug flags:\n  0x0001: Log each command executed\n"
+                                   "  0x0002: Break on warnings\n");
 
     } /* If commands were not hooked up */
 

@@ -108,6 +108,8 @@ _SCIkwarn(state_t *s, char *file, int line, int area, char *format, ...)
   _SCIkvprintf(stderr, format, args);
   va_end(args);
   fflush(NULL);
+
+  if (sci_debug_flags & _DEBUG_FLAG_BREAK_ON_WARNINGS) script_debug_flag=1;
 }
 
 void
@@ -3447,6 +3449,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
   if (s->dyn_views_nr) {
     free(s->dyn_views);
     s->dyn_views_nr = 0; /* No more dynamic views */
+    s->dyn_views = NULL;
   }
 
   if (cast_list) {

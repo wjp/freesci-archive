@@ -31,9 +31,7 @@
 #include <vm.h>
 #include <engine.h>
 #include <versions.h>
-
-extern int sci_debug_flags; /* from scriptdebug.c */
-
+#include <kdebug.h>
 
 /* #define VM_DEBUG_SEND */
 
@@ -394,6 +392,7 @@ run_vm(state_t *s, int restoring)
     sprintf (method_name, "%s::%s",
       s->heap + getUInt16 (s->heap + xs->sendp + SCRIPT_NAME_OFFSET),
       s->selector_names [xs->selector]);
+    sciprintf ("Looking for breakpoint on %s\n", method_name);
 
     bp = s->bp_list;
     while (bp)
@@ -1209,9 +1208,15 @@ script_free_state(state_t *s)
     }
 
   if (s->pic_views_nr)
+  {
     free(s->pic_views);
+    s->pic_views = NULL;
+  }
   if (s->dyn_views_nr)
+  {
     free(s->dyn_views);
+    s->dyn_views = NULL;
+  }
 
   /* Close all opened file handles */
   for (i = 1; i < s->file_handles_nr; i++)
