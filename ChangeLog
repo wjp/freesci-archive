@@ -1,4 +1,19 @@
+2000-12-23  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/widgets.c (_gfxwop_dyn_view_draw): Fixed dynviews being
+	drawn to incorrect coordinates
+	(gfxw_remove_ID): Fixed some of the problems related to dynviews
+	being "forgotten"
+
+	* src/engine/game.c (_reset_graphics_input): Fixed problems with
+	text boxes being drawn under other widgets
+
+	* src/gfx/drivers/ggi_driver.c (ggi_update): Fixed priority buffer
+	propagation from the back buffer to the front buffer
+
 2000-12-22  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/widgets.c (gfxw_new_dyn_view): Fixed priority management
 
 	* src/gfx/gfx_line.c: Implemented line drawing for drivers that need
 	it

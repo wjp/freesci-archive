@@ -258,36 +258,40 @@ c_classtable(state_t *s)
 int
 c_viewinfo(state_t *s)
 {
-WARNING( fixme!)
-#if 0
-  resource_t *view = findResource(sci_view, cmd_params[0].val);
-  int loops, i;
+	int view = cmd_params[0].val;
+	int loops, i;
 
-  sciprintf("Resource view.%d ", cmd_params[0].val);
+	if (!s) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
 
-  if (!view)
-    sciprintf("does not exist.\n");
-  else {
-    loops = gfx_view_loop_count(view->data);
+	sciprintf("Resource view.%d ", view);
 
-    sciprintf("has %d loops:\n", loops);
+	loops = gfxop_lookup_view_get_loops(s->gfx_state, view);
 
-    for (i = 0; i < loops; i++) {
-      int j, cels;
+	if (loops < 0)
+		sciprintf("does not exist.\n");
+	else {
 
-      sciprintf("Loop %d: %d cels.\n", i, cels = view0_cel_count(i, view->data));
-      for (j = 0; j < cels; j++) {
-	int width = view0_cel_width(i, j, view->data);
-	int height = view0_cel_height(i, j, view->data);
-	int xmod = 0,ymod = 0;
+		sciprintf("has %d loops:\n", loops);
 
-	view0_base_modify(i, j, view->data, &xmod, &ymod);
-	sciprintf("   cel %d: size %dx%d, adj+(%d,%d)\n",j, width, height, xmod, ymod);
-      }
-    }
-  }
-#endif
-  return 0;
+		for (i = 0; i < loops; i++) {
+			int j, cels;
+
+			sciprintf("Loop %d: %d cels.\n", i, cels = gfxop_lookup_view_get_cels(s->gfx_state, view, i));
+			for (j = 0; j < cels; j++) {
+				int width;
+				int height;
+				point_t mod;
+
+				gfxop_get_cel_parameters(s->gfx_state, view, i, j, &width, &height, &mod);
+
+				sciprintf("   cel %d: size %dx%d, adj+(%d,%d)\n",j, width, height, mod.x, mod.y);
+			}
+		}
+	}
+	return 0;
 }
 
 int
@@ -906,38 +910,6 @@ c_dumpnodes(state_t *s)
   return 0;
 }
 
-int
-c_dynviews(state_t *s)
-{
-WARNING(fixme!)
-#if 0
-  int i;
-  
-  sciprintf("%d dynviews currently active:\n",s->dyn_views_nr);
-  for (i=0;i<s->dyn_views_nr;i++)
-  {
-    sciprintf("Object at %04x with underBits %04x\n",s->dyn_views[i].obj,
-						     s->dyn_views[i].underBits);
-  }
-#endif
-  return 0;
-}
-
-int
-c_picviews(state_t *s)
-{
-WARNING(fixme!)
-#if 0
-  int i;
-  
-  sciprintf("%d picviews currently active:\n",s->pic_views_nr);
-  for (i=0;i<s->pic_views_nr;i++)
-    sciprintf("Object at %04x\n", s->pic_views[i].obj);
-
-#endif
-  return 0;
-}
-
 static char *varnames[] = {"global", "local", "temp", "param"};
 static char *varabbrev = "gltp";
 
@@ -1245,6 +1217,21 @@ c_gfx_print_picviews(state_t *s)
 		sciprintf("No picview list active.\n");
 	else
 		s->pic_views->print(GFXW(s->pic_views), 0);
+
+	return 0;
+}
+
+c_gfx_print_bgwidgets(state_t *s)
+{
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	if (!s->bg_widgets)
+		sciprintf("No bgview list active.\n");
+	else
+		s->bg_widgets->print(GFXW(s->bg_widgets), 0);
 
 	return 0;
 }
@@ -2017,8 +2004,6 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_restart_game, "restart", "s*", "Restarts the game.\n\nUSAGE\n\n  restart [-r] [-p]"
 					 " [--play] [--replay]\n\n  There are two ways to restart an SCI\n  game:\n"
 					 "  play (-p) calls the game object's play()\n    method\n  replay (-r) calls the replay() method");
-			con_hook_command(c_dynviews, "dynviews", "", "Lists the currently active dynamic views");
-			con_hook_command(c_picviews, "picviews", "", "Lists the currently active picture views");
 			con_hook_command(c_viewinfo, "viewinfo", "i", "Displays the number of loops\n  and cels of each loop"
 					 " for the\n  specified view resource.\n\n  Output:\n    C(x): Check word type against x\n"
 					 "    WG(x): Check word group against mask x\n    FORCE(x): Force storage node x\n");
@@ -2048,6 +2033,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_gfx_print_visual, "gfx_print_visual", "", "Displays all information about the\n  current widget state");
 			con_hook_command(c_gfx_print_dynviews, "gfx_print_dynviews", "", "Shows the dynview list");
 			con_hook_command(c_gfx_print_picviews, "gfx_print_picviews", "", "Shows the picview list");
+			con_hook_command(c_gfx_print_bgwidgets, "gfx_print_bgwidgets", "", "Shows the background widget list");
 #ifdef GFXW_DEBUG_WIDGETS
 			con_hook_command(c_gfx_print_widget, "gfx_print_widget", "i*", "If called with no parameters, it\n  shows which widgets are active.\n"
 					 "  With parameters, it lists the\n  widget corresponding to the\n  numerical index specified (for\n  each parameter).");

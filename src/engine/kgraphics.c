@@ -837,7 +837,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		if (s->picture_port->contents) {
 			s->picture_port->free_contents(GFXWC(s->picture_port));
 			s->picture_port->contents = NULL;
-			s->dyn_views = s->pic_views = NULL;
+			s->dyn_views = s->pic_views = s->bg_widgets = NULL;
 		}
 		GFX_ASSERT(gfxop_add_to_pic(s->gfx_state, pic_nr, 1, PARAM_OR_ALT(3, 0)));
 	} else {
@@ -855,7 +855,10 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (s->pic_views)
 		s->pic_views->free(GFXW(s->pic_views));
 
-	s->dyn_views = s->pic_views = NULL;
+	if (s->bg_widgets)
+		s->bg_widgets->free(GFXW(s->bg_widgets));
+
+	s->dyn_views = s->pic_views = s->bg_widgets = NULL;
 
 	s->priority_first = 42;
 	s->priority_last = 180;
@@ -1420,7 +1423,7 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 	gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) list->contents;
 
 	while (widget) {
-		if (GFXW_IS_DYN_VIEW(widget) && widget->ID) {
+		if (GFXW_IS_DYN_VIEW(widget) && (widget->ID != GFXW_NO_ID)) {
 			if (UGET_HEAP(widget->signalp) & _K_VIEW_SIG_FLAG_DISPOSE_ME) {
 
 				if (widget->under_bitsp) { /* Is there a bg picture left to clean? */
@@ -1431,6 +1434,7 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 						PUT_HEAP(widget->under_bitsp, widget->under_bits = 0);
 					}
 				}
+
 
 				if (invoke_selector(INV_SEL(widget->ID, delete, 1), 0))
 					SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
@@ -1981,6 +1985,11 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (!s->dyn_views) {
 		s->dyn_views = gfxw_new_list(s->picture_port->bounds, GFXW_LIST_SORTED);
 		s->picture_port->add(GFXWC(s->picture_port), GFXW(s->dyn_views));
+	}
+
+	if (!s->bg_widgets) {
+		s->bg_widgets = gfxw_new_list(s->picture_port->bounds, GFXW_LIST);
+		s->picture_port->add(GFXWC(s->picture_port), GFXW(s->bg_widgets));
 	}
 
 	if (!cast_list)

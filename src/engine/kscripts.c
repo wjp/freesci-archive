@@ -214,35 +214,45 @@ kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr offset = PARAM(0);
-  int i;
-  word underBits;
+	heap_ptr offset = PARAM(0);
+	int i;
+	word underBits;
 
-  if (GET_HEAP(offset + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
-    SCIkwarn(SCIkERROR, "Attempt to dispose non-class/object at %04x\n", offset);
-    return;
-  }
+	if (GET_HEAP(offset + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
+		SCIkwarn(SCIkERROR, "Attempt to dispose non-class/object at %04x\n", offset);
+		return;
+	}
 
-  if (GET_HEAP(offset + SCRIPT_INFO_OFFSET) != SCRIPT_INFO_CLONE) {
-    /*  SCIkwarn("Attempt to dispose something other than a clone at %04x\n", offset); */
-    /* SCI silently ignores this behaviour; some games actually depend on this */
-    return;
-  }
+	if (GET_HEAP(offset + SCRIPT_INFO_OFFSET) != SCRIPT_INFO_CLONE) {
+		/*  SCIkwarn("Attempt to dispose something other than a clone at %04x\n", offset); */
+		/* SCI silently ignores this behaviour; some games actually depend on this */
+		return;
+	}
 
-  underBits = GET_SELECTOR(offset, underBits);
-  if (underBits) {
-    SCIkwarn(SCIkWARNING,"Clone %04x was cleared with underBits set\n", offset);
-  }
+	underBits = GET_SELECTOR(offset, underBits);
+	if (underBits) {
+		SCIkwarn(SCIkWARNING,"Clone %04x was cleared with underBits set\n", offset);
+	}
 
-  i = 0;
-  while ((i < SCRIPT_MAX_CLONES) && (s->clone_list[i] != offset)) i++;
-  if (i < SCRIPT_MAX_CLONES)
-    s->clone_list[i] = 0; /* un-log clone */
-  else SCIkwarn(SCIkWARNING, "Could not remove log entry from clone at %04x\n", offset);
+	if (s->dyn_views) {  /* Free any widget associated with the clone */
+		gfxw_widget_t *widget = gfxw_set_id(gfxw_remove_ID(s->dyn_views, offset), GFXW_NO_ID);
+WARNING("fixme???");
+fprintf(stderr,">>>>>>>>>> Removed widget with %04x\n", offset);
+s->dyn_views->print(GFXWC(s->dyn_views), 1);
+		if (widget && s->bg_widgets)
+			s->bg_widgets->add(GFXWC(s->bg_widgets), widget);
+	}
 
-  offset += SCRIPT_OBJECT_MAGIC_OFFSET; /* Step back to beginning of object */
 
-  heap_free(s->_heap, offset -2); /* -2 to step back on the heap block size indicator */
+	i = 0;
+	while ((i < SCRIPT_MAX_CLONES) && (s->clone_list[i] != offset)) i++;
+	if (i < SCRIPT_MAX_CLONES)
+		s->clone_list[i] = 0; /* un-log clone */
+	else SCIkwarn(SCIkWARNING, "Could not remove log entry from clone at %04x\n", offset);
+
+	offset += SCRIPT_OBJECT_MAGIC_OFFSET; /* Step back to beginning of object */
+
+	heap_free(s->_heap, offset -2); /* -2 to step back on the heap block size indicator */
 }
 
 

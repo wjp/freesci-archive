@@ -638,7 +638,7 @@ ggi_update(gfx_driver_t *drv, rect_t src, point_t dest, gfx_buffer_t buffer)
 		break;
 
 	case GFX_BUFFER_BACK:
-		if (src.x == dest.x * xw && src.y == dest.y * yw)
+		if (src.x == dest.x && src.y == dest.y)
 			gfx_copy_pixmap_box_i(STATE->priority_maps[GGI_BUFFER_BACK], STATE->priority_maps[GGI_BUFFER_STATIC], src);
 
 		if (STATE->frames > 1)

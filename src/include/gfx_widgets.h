@@ -310,7 +310,18 @@ gfxw_set_id(gfxw_widget_t *widget, int ID);
 ** Returns   : (gfxw_widget_t *) widget
 ** A widget ID is unique within the container it is stored in, if and only if it was
 ** added to that container with gfxw_add().
+** This function handles widget = NULL gracefully (by doing nothing and returning NULL).
 */
+
+gfxw_widget_t *
+gfxw_remove_ID(gfxw_container_t *container, int ID);
+/* Finds a widget with a specific ID in a container and removes it from there
+** Parameters: (gfxw_container_t *) container: The container to search in
+**             (int) ID: The ID to look for
+** Returns   : (gfxw_widget_t *) The resulting widget or NULL if no match was found
+** Search is non-recursive; widgets with IDs hidden in subcontainers will not be found.
+*/
+
 
 gfxw_dyn_view_t *
 gfxw_dyn_view_set_params(gfxw_dyn_view_t *widget, int under_bits, int under_bitsp, int signal, int signalp);

@@ -40,7 +40,6 @@ _gfxw_debug_add_widget(gfxw_widget_t *widget)
 		BREAKPOINT();
 	}
 	debug_widgets[debug_widget_pos++] = widget;
-	GFXDEBUG("Added widget: %d active\n", debug_widget_pos);
 }
 
 static void
@@ -65,7 +64,6 @@ _gfxw_debug_remove_widget(gfxw_widget_t *widget) {
 		GFXERROR("Attempted removal of unregistered widget!\n");
 		BREAKPOINT();
 	}
-	GFXDEBUG("Removed widget: %d active now\n", debug_widget_pos);
 }
 #else /* !GFXW_DEBUG_WIDGETS */
 #define _gfxw_debug_add_widget(a)
@@ -774,12 +772,21 @@ gfxw_new_view(gfx_state_t *state, point_t pos, int view_nr, int loop, int cel, i
 static int
 _gfxwop_dyn_view_draw(gfxw_widget_t *widget, point_t pos)
 {
-	gfxw_view_t *view = (gfxw_view_t *) widget;
+	gfxw_dyn_view_t *view = (gfxw_dyn_view_t *) widget;
 	DRAW_ASSERT(widget, GFXW_DYN_VIEW);
 
 	GFX_ASSERT(gfxop_draw_cel(view->visual->gfx_state, view->view, view->loop,
-				  view->cel, _move_point(view->bounds, pos),
+				  view->cel, _move_point(view->draw_bounds, pos),
 				  view->color));
+
+	/*
+	  gfx_color_t red; red.visual.r = 0xff; red.visual.g = red.visual.b = 0; red.mask = GFX_MASK_VISUAL;
+	  GFX_ASSERT(gfxop_draw_rectangle(view->visual->gfx_state,
+	  gfx_rect(view->bounds.x + pos.x, view->bounds.y + pos.y,
+	  view->bounds.xl - 1, view->bounds.yl - 1),
+	  red, 0, 0));
+	*/
+
 
 	return 0;
 }
@@ -836,6 +843,7 @@ gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, in
 {
 	gfxw_dyn_view_t *widget;
 	int width, height;
+	int xalignmod, yalignmod;
 	point_t offset;
 
 	if (!state) {
@@ -853,8 +861,8 @@ gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, in
 
 	widget->pos = pos;
 	widget->color.mask =
-		(priority < 0)? 0 : GFX_MASK_PRIORITY
-		| (control < 0)? 0 : GFX_MASK_CONTROL;
+		((priority < 0)? 0 : GFX_MASK_PRIORITY)
+		| ((control < 0)? 0 : GFX_MASK_CONTROL);
 	widget->color.priority = priority;
 	widget->color.control = control;
 	widget->view = view;
@@ -862,16 +870,23 @@ gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, in
 	widget->cel = cel;
 
 	if (halign == ALIGN_CENTER)
-		offset.x += width >> 1;
+		xalignmod = width >> 1;
 	else if (halign == ALIGN_RIGHT)
-		offset.x += width;
+		xalignmod = width;
+	else
+		xalignmod = 0;
 
 	if (valign == ALIGN_CENTER)
-		offset.y += height >> 1;
+		yalignmod = height >> 1;
 	else if (valign == ALIGN_BOTTOM)
-		offset.y += height;
+		yalignmod = height;
+	else
+		yalignmod = 0;
 
-	widget->bounds = gfx_rect(widget->pos.x - offset.x, widget->pos.y - offset.y, width, height);
+	widget->draw_bounds = gfx_rect(widget->pos.x - xalignmod,
+				       widget->pos.y - yalignmod, width, height);
+	widget->bounds = gfx_rect(widget->pos.x - offset.x - xalignmod,
+				  widget->pos.y - offset.y - yalignmod, width, height);
 
 	widget->flags |= GFXW_FLAG_VISIBLE;
 
@@ -1865,9 +1880,10 @@ gfxw_find_port(gfxw_visual_t *visual, int ID)
 gfxw_widget_t *
 gfxw_set_id(gfxw_widget_t *widget, int ID)
 {
-	widget->ID = ID;
-	return widget;
+	if (widget)
+		widget->ID = ID;
 
+	return widget;
 }
 
 gfxw_dyn_view_t *
@@ -1882,4 +1898,27 @@ gfxw_dyn_view_set_params(gfxw_dyn_view_t *widget, int under_bits, int under_bits
 	widget->signalp = signalp;
 
 	return widget;
+}
+
+gfxw_widget_t *
+gfxw_remove_ID(gfxw_container_t *container, int ID)
+{
+	gfxw_widget_t **wp = &(container->contents);
+
+	while (*wp) {
+		if ((*wp)->ID == ID) {
+			gfxw_widget_t *widget = *wp;
+
+			(*wp)->next = NULL;
+			(*wp)->parent = NULL;
+			(*wp)->visual = NULL;
+			*wp = (*wp)->next;
+
+			return widget;
+		}
+
+		wp = &((*wp)->next);
+	}
+
+	return NULL;
 }

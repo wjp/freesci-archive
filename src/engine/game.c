@@ -145,6 +145,7 @@ _reset_graphics_input(state_t *s)
   s->pic_is_new = 0;
   s->pic_visible_map = 0; /* Other values only make sense for debugging */
   s->pic_views = NULL; s->dyn_views = NULL; /* No PicViews, no DynViews */
+  s->bg_widgets = NULL; /* And no bg widgets either */
 
   s->priority_first = 42; /* Priority zone 0 ends here */
   s->priority_last = 200; /* The highest priority zone (15) starts here */
@@ -164,8 +165,8 @@ _reset_graphics_input(state_t *s)
   s->titlebar_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 10), s->ega_colors[0], transparent);
   s->picture_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
 
-  s->visual->add(GFXWC(s->visual), GFXW(s->wm_port));
   s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));
+  s->visual->add(GFXWC(s->visual), GFXW(s->wm_port));
   s->visual->add(GFXWC(s->visual), GFXW(s->titlebar_port));
   /* Add ports to visual */
 
@@ -191,6 +192,7 @@ _free_graphics_input(state_t *s)
   s->visual = NULL;
   s->dyn_views = NULL;
   s->pic_views = NULL;
+  s->bg_widgets = NULL;
   s->port = NULL;
 }
 

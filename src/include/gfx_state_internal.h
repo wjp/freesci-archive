@@ -133,6 +133,7 @@ typedef struct {
 typedef struct {
 	VIEW_COMMON;
 	/* fixme: This code is specific to SCI */
+        rect_t draw_bounds; /* The correct position to draw to */
 	int under_bitsp, signalp;
 	int under_bits, signal;
 	int z; /* The z coordinate: Added to y, but used for sorting */ 
