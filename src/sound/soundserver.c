@@ -84,23 +84,6 @@ print_song_info(word song_handle, sound_server_state_t *ss_state)
 #endif
 
 
-void
-_restore_midi_state(sound_server_state_t *ss_state)
-{
-	/* restore some MIDI device state (e.g. current instruments) */
-	if (ss_state->current_song) {
-		guint8 i;
-		midi_allstop();
-		midi_volume((guint8)ss_state->master_volume);
-		for (i = 0; i < MIDI_CHANNELS; i++) {
-			if (ss_state->current_song->instruments[i])
-				midi_event2((guint8)(0xc0 | i), (guint8)ss_state->current_song->instruments[i]);
-		}
-		midi_reverb((short)ss_state->current_song->reverb);
-	}
-}
-
-
 static int
 _sound_expect_answer(char *timeoutmessage, int def_value)
 {
@@ -188,6 +171,23 @@ dump_song(song_t *song)
 }
 
 
+void
+_restore_midi_state(sound_server_state_t *ss_state)
+{
+	/* restore some MIDI device state (e.g. current instruments) */
+	if (ss_state->current_song) {
+		guint8 i;
+		midi_allstop();
+		midi_volume((guint8)ss_state->master_volume);
+		for (i = 0; i < MIDI_CHANNELS; i++) {
+			if (ss_state->current_song->instruments[i])
+				midi_event2((guint8)(0xc0 | i), (guint8)ss_state->current_song->instruments[i]);
+		}
+		midi_reverb((short)ss_state->current_song->reverb);
+	}
+}
+
+
 #define SOUNDSERVER_IMAP_CHANGE(ELEMENT, VAL_MIN, VAL_MAX, ELEMENT_NAME) \
 		if (value >= (VAL_MIN) && value <= (VAL_MAX)) \
 			MIDI_mapping[instr].ELEMENT = value; \
@@ -271,11 +271,12 @@ change_song(song_t *new_song, sound_server_state_t *ss_state)
 	{
 		for (i = 0; i < MIDI_CHANNELS; i++) {
 			if (new_song->instruments[i])
-				midi_event2((guint8)(0xc0 | i), (guint8)new_song->instruments[i]);
+				midi_event2((guint8)(MIDI_INSTRUMENT_CHANGE | i),
+					(guint8)new_song->instruments[i]);
 		}
 
 		ss_state->current_song = new_song;
-		ss_state->current_song->pos = 33;
+		/* ss_state->current_song->pos = 33; */ /* ??? */
 
 	} else {
 		ss_state->current_song = NULL;
@@ -423,7 +424,7 @@ fade_handle(int ticks, word song_handle, sound_server_state_t *ss_state)
 
 	} else if (this_song) {
 		this_song->fading = ticks;
-		this_song->maxfade = ticks;
+		/* this_song->maxfade = ticks; */ /* ??? */
 
 	} else {
 		fprintf(debug_stream, "fade_handle(): Attempt to fade invalid sound handle %04x\n", song_handle);
@@ -447,6 +448,7 @@ stop_handle(word song_handle, sound_server_state_t *ss_state)
 
 	if (this_song)
 	{
+		midi_allstop();
 		this_song->status = SOUND_STATUS_STOPPED;
 
 		if (this_song->resetflag)
@@ -454,13 +456,11 @@ stop_handle(word song_handle, sound_server_state_t *ss_state)
 			/* reset song position */
 			this_song->pos = 33;
 			this_song->loopmark = 33;
-			this_song->resetflag = 0;
+			this_song->resetflag = 0;	/* ??? */
 		}
 
 		/* global_sound_server->queue_event(song_handle, SOUND_SIGNAL_LOOP, -1); */
 		global_sound_server->queue_event(song_handle, SOUND_SIGNAL_FINISHED, 0);
-
-		midi_allstop();
 
 	} else {
 		fprintf(debug_stream, "stop_handle(): Attempt to stop invalid sound handle %04x\n", song_handle);
@@ -749,16 +749,8 @@ restore_sound_state(sound_server_state_t *ss_state)
 	global_sound_server->send_data((byte *)&success, sizeof(int));
 	sci_free(dirname);
 
-	midi_allstop();
 	_restore_midi_state(ss_state);
 
-	/* fix sound volume restore bugs in KQ4 and ARTHUR */
 	if (ss_state->master_volume == 0)
 		set_master_volume(100, ss_state);
-
-	change_song(ss_state->current_song, ss_state);
-/*
-	if (ss_state->current_song)
-		ss_state->current_song->status = SOUND_STATUS_PLAYING;
-*/
 }

@@ -44,13 +44,12 @@
 #  include <sys/soundcard.h>
 #endif
 
-#define DEBUG_SOUND_SERVER
+/* #define OUTPUT_SONG_CHANGES */
+
 #ifdef DEBUG_SOUND_SERVER
 	int channel_instrument_orig[16] = {-1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1};
 	int channel_instrument[16];
 #endif
-
-#define debug_stream stderr
 
 void
 sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
@@ -60,6 +59,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 		ctime; /* 'Current time' (temporary local usage) */
 	song_t *newsong = NULL;
 	song_t *_songp = NULL;
+	guint8 song_change = 0;
 	GTimeVal suspend_time; /* Time at which the sound server was suspended */
 	unsigned int ticks_to_wait;	/* before next midi operation */
 	unsigned long usecs_to_sleep;
@@ -94,9 +94,8 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 #ifdef DEBUG_SOUND_SERVER
 				fprintf(debug_stream, "Song %04x faded out\n", ss_state->current_song->handle);
 #endif
-				ss_state->current_song->status = SOUND_STATUS_STOPPED;
-				global_sound_server->queue_command(ss_state->current_song->handle, SOUND_COMMAND_STOP_HANDLE, 0);
-				global_sound_server->queue_event(ss_state->current_song->handle, SOUND_SIGNAL_LOOP, -1);
+				stop_handle(ss_state->current_song->handle, ss_state);
+				loop_handle(-1, ss_state->current_song->handle, ss_state);
 			}
 
 		/* find the active song */
@@ -366,7 +365,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 						*/
 
 						newsong = ss_state->current_song;
-						newsong->status = SOUND_STATUS_PLAYING;
+						song_change = 1;
 
 						break;
 
@@ -468,7 +467,8 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 		if (ss_state->current_song && ss_state->current_song->data) { /* If we have a current song */
 			int newcmd;
 			guint8 param, param2 = 0;
-#ifdef DEBUG_SOUND_SERVER
+
+#ifdef OUTPUT_SONG_CHANGES
 fprintf(stderr, "--NEW--[Handle %04x ---- pos = %04x]\n", ss_state->current_song->handle,
 ss_state->current_song->pos);
 #endif
@@ -481,45 +481,41 @@ ss_state->current_song->pos);
 			} /* else we've got the 'running status' mode defined in the MIDI standard */
 
 			if (command == SCI_MIDI_EOT) { /* End of Track */
+#ifdef OUTPUT_SONG_CHANGES
 				fprintf(stderr,"==EOT: loops=%d, loopmark=%d\n",
 					ss_state->current_song->loops,
 					ss_state->current_song->loopmark);
+#endif
 				if ((--(ss_state->current_song->loops) != 0) && ss_state->current_song->loopmark) {
 #ifdef DEBUG_SOUND_SERVER
 					fprintf(debug_stream, "Looping back from %d to %d on handle %04x\n",
-					        ss_state->current_song->pos, ss_state->current_song->loopmark,
-						ss_state->current_song->handle);
+					        ss_state->current_song->pos, ss_state->current_song->loopmark, ss_state->current_song->handle);
 #endif
 					ss_state->current_song->pos = ss_state->current_song->loopmark;
-					global_sound_server->queue_event(ss_state->current_song->handle,
-									 SOUND_SIGNAL_LOOP, ss_state->current_song->loops);
+					global_sound_server->queue_event(ss_state->current_song->handle, SOUND_SIGNAL_LOOP, ss_state->current_song->loops);
 
 				} else { /* Finished */
 
 #ifdef DEBUG_SOUND_SERVER
-					fprintf(debug_stream, "Finishing handle %04x\n", ss_state->current_song->handle);
+					fprintf(debug_stream, "Finishing handle %04d\n", ss_state->current_song->handle);
 #endif
-					ss_state->current_song->status = SOUND_STATUS_STOPPED;
-					ss_state->current_song->pos
-						= ss_state->current_song->loopmark
-						= 33; /* Reset position */
-
-					global_sound_server->queue_event(ss_state->current_song->handle,
-									 SOUND_SIGNAL_FINISHED, 0);
-					global_sound_server->queue_event(ss_state->current_song->handle,
-									 SOUND_SIGNAL_LOOP, -1);
-
-					newsong = song_lib_find_active(ss_state->songlib, NULL);
-
-					if (newsong)
-						fprintf(stderr,"NEW song: %04x-%04x-%04x\n",
-							newsong->handle,
-							newsong->loops,
-							newsong->status);
-					else
-						fprintf(stderr, "NO new song!\n");
-
+					global_sound_server->queue_event(ss_state->current_song->handle, SOUND_SIGNAL_LOOP, -1);
+					stop_handle(ss_state->current_song->handle, ss_state);
 					ticks_to_wait = 1; /* Wait one tick, then continue with next song */
+
+#ifdef OUTPUT_SONG_CHANGES
+					{
+						song_t *debug_song = song_lib_find_active(ss_state->songlib, NULL);
+
+						if (debug_song)
+							fprintf(stderr, "NEW song: %04x-%04x-%04x\n",
+								debug_song->handle,
+								debug_song->loops,
+								debug_song->status);
+						else
+							fprintf(stderr, "NO new song!\n");
+					}
+#endif
 
 					midi_allstop();
 				}
@@ -572,13 +568,14 @@ ss_state->current_song->pos);
 
 		}
 
-		if (oldsong != newsong) { /* Song change! */
+		if (song_change || (newsong != oldsong)) {	/* song change */
+			song_change = 0;
 			if (newsong) {	/* New song is for real (not a NULL song) */
 				guint8 i;
 				for (i = 0; i < MIDI_CHANNELS; i++) {
 					if (newsong->instruments[i])
 						midi_event2((guint8)(MIDI_INSTRUMENT_CHANGE | i),
-							(unsigned char)newsong->instruments[i]);
+							(guint8)newsong->instruments[i]);
 				}
 			}
 			if (ss_state->current_song)	/* Muting active song: Un-play the last note/MIDI event */

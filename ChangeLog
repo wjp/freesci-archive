@@ -1,3 +1,12 @@
+2001-12-26  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/sound/event_ss.c: Minor (potential) bug fixes.
+
+	* src/sound/polled_ss.c:
+	* src/sound/soundserver.c: Revised polled sound server to match
+	behaviour from 1 November. Minor bug fixes. #define OUTPUT_SONG_CHANGES
+	for debugging info (and #undef DEBUG_SOUND_SERVER).
+
 2001-12-23  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/event_ss.c:

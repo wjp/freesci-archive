@@ -75,11 +75,7 @@ void do_sound(sound_server_state_t *sss)
 			sss->current_song->resetflag = 1;
 
 			/* stop this song */
-/*			sss->current_song->status = SOUND_STATUS_FADED_OUT;
-/*			midi_allstop();
-*/
-			global_sound_server->queue_command(
-				sss->current_song->handle, SOUND_COMMAND_STOP_HANDLE, 0);
+			stop_handle(sss->current_song->handle, sss);
 			global_sound_server->queue_event(
 				sss->current_song->handle, SOUND_SIGNAL_LOOP, -1);
 
@@ -255,8 +251,7 @@ void do_sound(sound_server_state_t *sss)
 #endif
 				sss->current_song->resetflag = 1;	/* reset song position */
 				sss->current_song->status = SOUND_STATUS_STOPPED;
-				global_sound_server->queue_command(
-					sss->current_song->handle, SOUND_COMMAND_STOP_HANDLE, 0);
+				stop_handle(sss->current_song->handle, sss);
 				global_sound_server->queue_event(
 					sss->current_song->handle, SOUND_SIGNAL_LOOP, -1);
 			}
