@@ -287,55 +287,49 @@ static unsigned char *
 _sci0_check_pcm(base_song_iterator_t *self, int *size, sfx_pcm_config_t *format)
 {
 	unsigned int offset;
+	int tries = 2;
+	int found_it = 0;
+	unsigned char *pcm_data;
+	offset = SCI0_MIDI_OFFSET;
+
 
 	if (self->data[0] != 2)
 		return NULL;
 	/* No such luck */
 
-	offset = (self->data[1 + 15*2] << 8) | self->data[1 + 15*2 + 1];
-	/* Big-endian encoding */
+	while ((tries--) && (offset < self->size) && (!found_it)) {
+		/* Search through the garbage manually */
+		unsigned char *fc = memchr(self->data + offset, SCI0_END_OF_SONG,
+					self->size - offset);
 
-	if (!offset) {
-		int tries = 2;
-		int found_it = 0;
-		offset = SCI0_MIDI_OFFSET;
-
-		while (tries-- && offset < self->size && !found_it) {
-			/* Search through the garbage manually */
-			unsigned char *fc = memchr(self->data + offset, SCI0_END_OF_SONG,
-					  self->size - offset);
-
-			if (!fc) {
-				fprintf(stderr, SIPFX "Warning: Playing unterminated song!\n");
-				return NULL;
-			}
-
-			offset = fc - self->data + 1;
-
-			if (_sci0_header_magic_p(self->data, offset, self->size))
-				found_it = 1;
-		}
-
-		if (!found_it) {
-			fprintf(stderr, SIPFX "Warning: Song indicates presence of PCM, but"
-				" none found (finally at offset %04x)\n", offset);
-
+		if (!fc) {
+			fprintf(stderr, SIPFX "Warning: Playing unterminated song!\n");
 			return NULL;
 		}
-	} else {
-		if (!_sci0_header_magic_p(self->data, offset, self->size)) {
-			fprintf(stderr, SIPFX "Warning: Song indicated presence of a PCM"
-				" but did not contain a PCM header!\n");
-			return NULL;
-		}
+
+		/* add one to move it past the END_OF_SONG marker */
+		offset = fc - self->data + 1;
+
+
+		if (_sci0_header_magic_p(self->data, offset, self->size))
+			found_it = 1;
 	}
 
-	*size = getInt16(self->data + offset + SCI0_PCM_SIZE_OFFSET);
+	if (!found_it) {
+		fprintf(stderr, SIPFX "Warning: Song indicates presence of PCM, but"
+			" none found (finally at offset %04x)\n", offset);
+
+		return NULL;
+	}
+
+	pcm_data = self->data + offset;
+
+	*size = getInt16(pcm_data + SCI0_PCM_SIZE_OFFSET);
 
 	/* Two of the format parameters are fixed by design: */
 	format->format = SFX_PCM_FORMAT_U8;
 	format->stereo = SFX_PCM_MONO;
-	format->rate = getInt16(self->data + offset + SCI0_PCM_SAMPLE_RATE_OFFSET);
+	format->rate = getInt16(pcm_data + SCI0_PCM_SAMPLE_RATE_OFFSET);
 
 	if (offset + SCI0_PCM_DATA_OFFSET + *size != self->size) {
 		int d = offset + SCI0_PCM_DATA_OFFSET + *size - self->size;
@@ -348,7 +342,7 @@ _sci0_check_pcm(base_song_iterator_t *self, int *size, sfx_pcm_config_t *format)
 			*size -= d; /* Fix this */
 	}
 
-	return self->data + SCI0_PCM_DATA_OFFSET;
+	return pcm_data + SCI0_PCM_DATA_OFFSET;
 }
 
 static song_iterator_t *

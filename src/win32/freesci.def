@@ -101,7 +101,7 @@ EXPORTS
   sci01_priority_table_flags
   game_init_sound
   script_adjust_opcode_formats
-;  con_gfx_init
+  con_gfx_init
   ;con_gfx_read
   ;con_gfx_show
   script_free_breakpoints

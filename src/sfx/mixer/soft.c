@@ -761,12 +761,15 @@ mix_process_linear(sfx_pcm_mixer_t *self)
 		start_timestamp = sfx_new_timestamp(sec, usec, self->dev->conf.rate);
 	}
 
-	if (P->outbuf && P->lastbuf_len) {
+	if ((P->outbuf) && (P->lastbuf_len)) {
 		sfx_timestamp_t ts;
-		if (P->have_outbuf_timestamp)
-			ts = sfx_timestamp_renormalise(P->outbuf_timestamp, self->dev->conf.rate);
+		int rv;
 
-		int rv = self->dev->output(self->dev, P->outbuf,
+		if (P->have_outbuf_timestamp) {
+			ts = sfx_timestamp_renormalise(P->outbuf_timestamp, self->dev->conf.rate);
+		}
+
+		rv = self->dev->output(self->dev, P->outbuf,
 					   P->lastbuf_len,
 					   (P->have_outbuf_timestamp)? &ts : NULL);
 

@@ -239,9 +239,6 @@ sci1_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 						newrsc->file = SCI_RESOURCE_FILE_PATCH;
 						newrsc->file_offset = 2;
 
-#ifdef SATISFY_PURIFY
-						memset(newrsc->data, 0, newrsc->size);
-#endif
 						_scir_add_altsource(newrsc, SCI_RESOURCE_FILE_PATCH, 2);
 
 						close(file);
