@@ -591,7 +591,7 @@ sm_set_synonyms_offset (struct _seg_manager_t* self, int offset, int id, id_flag
 		self->heap[id]->data.script.buf + offset;
 };
 
-static byte *
+byte *
 sm_get_synonyms(seg_manager_t *self, int id, id_flag flag)
 {
 	GET_SEGID();

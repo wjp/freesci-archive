@@ -201,33 +201,40 @@ kSetSynonyms(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	while (node) {
 		reg_t objpos = node->value;
+		int seg;
+		int synonyms_nr;
 
 		script = GET_SEL32V(objpos, number);
+		seg = sm_seg_get(&(s->seg_manager), script);
 
-		if (s->scripttable[script].synonyms_nr) {
+		if (seg >= 0) synonyms_nr = sm_get_synonyms_nr(&(s->seg_manager), seg, SEG_ID);
 
-			if (s->scripttable[script].synonyms) {
+		if (synonyms_nr) {
+			byte *synonyms;
+
+			synonyms = sm_get_synonyms(&(s->seg_manager), seg, SEG_ID);
+			if (synonyms) {
 				int i;
 				if (s->synonyms_nr)
 					s->synonyms = sci_realloc(s->synonyms,
-								  sizeof(synonym_t) * (s->synonyms_nr + s->scripttable[script].synonyms_nr));
+								  sizeof(synonym_t) * (s->synonyms_nr + synonyms_nr));
 				else
-					s->synonyms = sci_malloc(sizeof(synonym_t) * (s->scripttable[script].synonyms_nr));
+					s->synonyms = sci_malloc(sizeof(synonym_t) * synonyms_nr);
 
-				s->synonyms_nr +=  s->scripttable[script].synonyms_nr;
+				s->synonyms_nr +=  synonyms_nr;
 
 				SCIkdebug(SCIkPARSER, "Setting %d synonyms for script.%d\n",
-					  s->scripttable[script].synonyms_nr, script);
+					  synonyms_nr, script);
 
-				if (s->scripttable[script].synonyms_nr > 16384) {
-					SCIkwarn(SCIkERROR, "Heap corruption: script.%03d has %d synonyms!\n",
-						 script, s->scripttable[script].synonyms_nr);
-					s->scripttable[script].synonyms_nr = 0;
+				if (synonyms_nr > 16384) {
+					SCIkwarn(SCIkERROR, "Segtable corruption: script.%03d has %d synonyms!\n",
+						 script, synonyms_nr);
+					/* We used to reset the corrupted value here. I really don't think it's appropriate.
+					 * Lars */
 				} else
-
-					for (i = 0; i < s->scripttable[script].synonyms_nr; i++) {
-						s->synonyms[synpos].replaceant = getInt16(s->scripttable[script].synonyms + i * 4);
-						s->synonyms[synpos].replacement = getInt16(s->scripttable[script].synonyms + i * 4 + 2);
+					for (i = 0; i < synonyms_nr; i++) {
+						s->synonyms[synpos].replaceant = getInt16(synonyms + i * 4);
+						s->synonyms[synpos].replacement = getInt16(synonyms + i * 4 + 2);
 
 						synpos++;
 					}

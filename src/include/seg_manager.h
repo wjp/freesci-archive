@@ -221,6 +221,17 @@ sm_set_lockers(struct _seg_manager_t* self, int lockers, int id, id_flag flag);
 **				but less convenient.
 */ 
 
+byte *
+sm_get_synonyms (struct _seg_manager_t* self, int id, id_flag flag);
+/* Retrieves a pointer to the synonyms associated with the specified script
+** Parameters: (int) id: ID of the script or script segment to read from
+**             (id_flag) flag: Whether to address the script by script number (SCRIPT_ID) or
+**				by its segment (SEG_ID). SEG_ID is faster than SCRIPT_ID,
+**				but less convenient.
+** Returns   : (byte *) Pointer to the synonyms, in non-parsed format.
+** A dynamic failure is issued if the specified ID does not reference a proper script.
+*/
+
 int
 sm_get_synonyms_nr (struct _seg_manager_t* self, int id, id_flag flag);
 /* Retrieves the number of synonyms associated with the specified script
