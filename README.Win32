@@ -1,11 +1,14 @@
-Last updated 3 December 2001 by Alex Angas <wgd@internode.on.net>
+Last updated 11 December 2001 by Alex Angas <wgd@internode.on.net>
 
 ABOUT
 -----
 
 The Win32 version of freesci is now almost at the same level of
 functionality as the UNIX version. The major bugs are currently:
-fullscreen support causes gfx corruption, scaling > 3 causes gfx corruption. 
+ * fullscreen support causes gfx corruption
+ * scaling > 3 causes gfx corruption
+ * specifying the reverse_stereo variable in the config file causes crash
+ * saved games sometimes cause a crash when restored
 
 
 BUILDING

@@ -1,3 +1,62 @@
+Building FreeSCI
+----------------
+To build the package, type the following:
+
+0. ./configure
+
+1. make
+
+
+This will try to build several tools:
+src/tools/sciconsole - A command console for inspection of SCI data
+src/tools/scidisasm - Disassembles all script resources into .script files
+src/tools/sciunpack - A tool for unpacking and converting SCI resource data
+		      (now also contains the functionality of the old
+		       'classes', 'listwords', 'scriptdump' and 'vocabdump'
+		       tools)
+src/freesci - The main executable; this loads, links and runs SCI bytecode.
+
+For graphics, you will need at least one of the following:
+* An Xlib implementation for the X11 Windowing System,  as shipped with most
+  UNIX systems and VMS
+* libggi (http://www.ggi-project.org)
+* libsdl (http://www.libsdl.org)
+
+To install it on your system (globally), run 'make install'. You will need
+to have superuser privileges to do this, unless you specified a different
+installation prefix while running 'configure'.
+
+
+Bulding from CVS
+----------------
+If you are using a CVS snapshot instead of an official release, you will
+require the following utilities:
+
+* A C compiler (such as gcc)
+* lex or flex
+* GNU automake and autoconf
+* perl 5.x
+* make
+
+Instructions:
+
+0. Get the source tarball and unpack it.
+
+1. Go into the freesci directory and run the reconf script. (./reconf) 
+
+2. Run the configure script. (./configure)
+
+3. Run make. Be sure that /usr/ccs/bin is in your path AFTER /usr/local/bin 
+and everything else.
+
+
+Location of the .freesci directory
+----------------------------------
+On UNIX systems, a directory called .freesci is created in the home directory
+(see README for more details). The home directory is whatever is contained in your HOME
+environment variable.
+
+
 Alpha notes
 -----------
 FreeSCI on Alpha has one special feature on systems with the MVI instruction

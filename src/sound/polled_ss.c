@@ -415,8 +415,10 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 							} else {
 								fprintf(debug_stream, "Attempt to resume handle %04x although not suspended\n", event.handle);
 							}
+#ifdef DEBUG_SOUND_SERVER
 						} else {
 							fprintf(debug_stream, "Attempt to resume invalid handle %04x\n", event.handle);
+#endif
 						}
 
 						break;
@@ -533,7 +535,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 						free(dirname);
 						/* restore some MIDI device state */
 						/* (see MIDI specs). Effectively sets current instruments etc. */
-						if (newsong) {
+						if (ss_state->current_song) {
 							guint8 i;
 							midi_allstop();
 							midi_volume(ss_state->master_volume);

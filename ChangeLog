@@ -1,3 +1,13 @@
+2001-12-12  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/sound/polled_ss.c: Fixed wrong MIDI patches being used on
+	restore.
+	
+	* ./README:
+	* ./README.Unix:
+	* ./README.Win32: Moved platform-specific stuff to corresponding
+	README file.
+	
 2001-12-11  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/engine/cfsml.pl: Added more error messages.

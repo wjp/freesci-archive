@@ -22,8 +22,7 @@ It has the following improvements over Sierra SCI:
 - It's Free software :-)
 
 
-This is ALPHA sofware. That means that there still are lot of bugs. Also, sound
-support is still missing from this release.
+This is ALPHA sofware. That means that there still are lot of bugs.
 
 
 Please refer to 'NEWS' and the 'ChangeLog' for information about changes
@@ -37,72 +36,28 @@ README.Win32
 0 Building FreeSCI
 ==================
 
-To build the package, type the following:
-
-0. ./configure
-
-1. make
+Please see the platform-specific readme file applicable to your system for instructions on how to do this,
+or download a binary version.
 
 
-This will try to build several tools:
-src/tools/sciconsole - A command console for inspection of SCI data
-src/tools/scidisasm - Disassembles all script resources into .script files
-src/tools/sciunpack - A tool for unpacking and converting SCI resource data
-		      (now also contains the functionality of the old
-		       'classes', 'listwords', 'scriptdump' and 'vocabdump'
-		       tools)
-src/sciv - The main executable; this loads, links and runs SCI bytecode.
+1 Running FreeSCI
+=================
 
-For graphics, you will need at least one of the following:
-* An Xlib implementation for the X11 Windowing System,  as shipped with most
-  UNIX systems and VMS
-* libggi (http://www.ggi-project.org)
-* libsdl (http://www.libsdl.org)
-
-To install it on your system (globally), run 'make install'. You will need
-to have superuser privileges to do this, unless you specified a different
-installation prefix while running 'configure'.
-
-
-0.1 Bulding from CVS
---------------------
-If you are using a CVS snapshot instead of an official release, you will
-require the following utilities:
-
-* A C compiler (such as gcc)
-* lex or flex
-* GNU automake and autoconf
-* perl 5.x
-* make
-
-Instructions:
-
-0. Get the source tarball and unpack it.
-
-1. Go into the freesci directory and run the reconf script. (./reconf) 
-
-2. Run the configure script. (./configure)
-
-3. Run make. Be sure that /usr/ccs/bin is in your path AFTER /usr/local/bin 
-and everything else.
-
-
-1 Running it on UNIX-like OSses
-===============================
-
-After FreeSCI has been built, you should have all of the tools listed in
-section 0, and the main program (src/sciv). Usually, you will want to
+After you have a binary copy of FreeSCI (whether compiled yourself or
+downloaded), you should have a number of tools (depending on your operating
+system), and the main program (src/freesci). Usually, you will want to
 run the main program; there are three ways to run a game with FreeSCI
 now:
 
 a) You can enter the directory your game is contained in, and just start
-'sciv'. If no parameters are given, it will look for data files in the
-current working directory.
+'freesci'. If no parameters are given, it will look for data files in the
+current working directory. You need all of the resource files (and any
+resource patches) for an SCI0 game in your current working directory.
 
-b) Run 'sciv' with the -d parameter to specify the path to your resource
-file directory
+b) Run 'freesci' with the -d parameter to specify the path to your resource
+file directory.
 
-c) First build a configuration file, then run 'sciv' followed by one of
+c) First build a configuration file, then run 'freesci' followed by one of
 the game names described in the config file. The process of creating a
 config file is outlined in section 2.
 
@@ -117,12 +72,15 @@ configuration file (called 'config') for high-quality graphics.
 1.1 The built-in debugger
 -------------------------
 
-If a script error is encountered or you explicitly activate it, the built-
-in debugger will activate and execution of the game scripts will cease
-until resumed.
+To invoke the FreeSCI debugger, do one of these three things:
+- Start the interpreter with the -D command line option
+- press Ctrl-` (the Quake console key) and wait
+- As above, but press LShift-RShift-PadMinus instead
+
+The debugger will also activate if a script error is encountered. Once activated, execution of game scripts will cease until explicitly resumed.
 
 Here are two of the most simple commands:
-- 'quit'- Terminates execution of the interpretet
+- 'quit'- Terminates execution of the interpreter
 - 'go'- resumes execution of the game scripts
 
 For a list of all commands supported by the debugger, type "list cmds" at
@@ -134,16 +92,12 @@ command.
 2 Configuration
 ===============
 
-FreeSCI will create a directory called .freesci in your home directory (unless
-this directory already exists). If you run an SCI game, this game will
-create another directory inside the .freesci directory, to store
-its save games in (later on).
-(On UNIX systems, the home directory is whatever is contained in your HOME
-environment variable; on Win32 systems, it is the directory pointed to by
-the WINDIR environment variable.
-Also, if a file called "config" exists in this directory, it will be read
-and parsed by the interpreter after the game has been loaded; this file may be
-used to specify a variety of configuration options.
+FreeSCI will create a directory called .freesci in a platform-specific location
+(see the appropriate README file for further details).
+
+This directory stores FreeSCI data files such as saved games. If a file called
+'config' exists in this directory, it will be read and parsed by the interpreter
+after the game has been loaded. This file may be used to specify a variety of configuration options.
 
 Currently, the configuration file may contain:
 
@@ -378,7 +332,7 @@ This driver (ID 'win32mci') handles output to MCI MIDI Output devices in
 Windows 95/98/NT4/2000. 
 
 Options:
-- device: MCI Device number (as output my FreeSCI during initialization).
+- device: MCI Device number (as output by FreeSCI during initialization).
   This defaults to the last MCI MIDIout device found in the system, but
   can be set in the config file using "midiout.win32mci.device = x". 
 
@@ -448,29 +402,31 @@ In theory, FreeSCI should be able to let you complete all of these.
 
 (*) Due to differences between the way Sierra SCI and FreeSCI handle graphical
 widgets, Hoyle's Book of Games may consume a lot of memory rather quickly. We
-are hoping to resolve these issues at least partially before the next release.
+are hoping to resolve these issues at least partially very soon.
 
 
 4 Platform support
 ==================
 
-Successful builds for the 0.3.2 release were reported for the following
+Successful builds for the 0.3.3 release were reported for the following
 platforms (in order of appearance):
 - Alpha EV67/Debian GNU/Linux/gcc		tested extensively
 - Alpha EV67/Debian GNU/Linux/ccc		tested
 - IA32/SuSE 6.3 Linux/gcc			tested
-- IA32/Windows 9x/NT/2k/Visual C++              tested
+- IA32/Windows 9x and NT/Visual C++             tested extensively
 - Sparc/Sun/Solaris/gcc				tested
 - Alpha EV6/Compaq/Tru64/cc			built
 - Alpha EV6//FreeBSD/gcc			built
 - IA64/GNU/Linux64/gcc				built
 - IA32//FreeBSD/gcc				built
 - IA32//NetBSD/gcc				built
+- IA32/RedHat Linux 7.x/gcc                     tested
+- IA32/Mandrake Linux 7.x, 8.x/gcc              tested
 
 The following platform used to be supported, but no longer is:
 
 - ia32/DOS (no maintainer)
-	This port is orphaned.
+	This port is orphaned. Anyone interested please contact us.
 
 
 5 Notes
@@ -479,21 +435,19 @@ The following platform used to be supported, but no longer is:
 Please note that most of the documentation found in the doc/misc subdirectory
 is random information copied from the SCI Decoding Project homepage and
 from homepages of various of its members.
+
 Some of the source code contained in the doc/ directory, namely sd.c, sde.c,
 sdv.c, script.java and decrypt.c, was created by Carl Muckenhoupt who has
 given permission for it or parts of it to be ported and/or included in this
 distribution.
+
 Other source code, such as scr000.txt and scr_code.cpp, was copied from public
 sources without the knowledge of its authors.
 
-In order to do something useful, you need all of the resource files of any
-SCI0 game in your current working directory before running one of the programs
-from this package. These resource files and everything they contain are
-property and copyrighted by Sierra On-Line (which in turn is a registerd
+
+Sierra game resource files and everything they contain are property and copyrighted by Sierra On-Line (which in turn is a registerd
 trademark of Sierra On-Line, Inc.).
+
 Space Quest, Quest for Glory, King's Quest, Leisure Suit Larry, Police Quest,
 Codename: Iceman, Conquest of Camelot, and The Colonel's Bequest are registered
 trademarks of Sierra On-Line, Inc.
-
-
-
