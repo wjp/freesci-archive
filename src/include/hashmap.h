@@ -78,7 +78,7 @@ typedef struct {                                                            \
 	TYPE##_hash_map_node_t *holes; /* List of freed entries to minimize \
 				     ** memory operations and modifications \
 				     ** to base_value  */                   \
-} TYPE##_hash_map_t;
+} TYPE##_hash_map_t, *TYPE##_hash_map_ptr;							    
 
 
 #define DECLARE_FUNCTIONS(TYPE) \
@@ -91,14 +91,14 @@ new_##TYPE##_hash_map(void);                                                \
 */                                                                          \
                                                                             \
 void                                                                        \
-free_##TYPE##_hash_map(TYPE##_hash_map_t##*map);                            \
+free_##TYPE##_hash_map(TYPE##_hash_map_ptr map);                            \
 /* Frees the specified hash map                                             \
 ** Parameters: (TYPE##_hash_map_t *) map: The map to free                   \
 ** Returns   : (void)                                                       \
 */                                                                          \
                                                                             \
 int                                                                         \
-TYPE##_hash_map_check_value(TYPE##_hash_map_t##*map, TYPE value, char add, char *was_added);  \
+TYPE##_hash_map_check_value(TYPE##_hash_map_ptr map, TYPE value, char add, char *was_added);  \
 /* Checks whether a value is in the map, adds it if neccessary              \
 ** Parameters: (TYPE##_hash_map_t *) map: The map to look in/modify         \
 **             (TYPE) value: The value to check for/add                     \
@@ -112,7 +112,7 @@ TYPE##_hash_map_check_value(TYPE##_hash_map_t##*map, TYPE value, char add, char 
 */                                                                          \
                                                                             \
 int                                                                         \
-TYPE##_hash_map_remove_value(TYPE##_hash_map_t##*map, TYPE value);          \
+TYPE##_hash_map_remove_value(TYPE##_hash_map_ptr map, TYPE value);          \
 /* Removes a value from the hash map                                        \
 ** Parameters: (TYPE##_hash_map_t *) map: The map to remove from            \
 **             (TYPE) value: The value to remove                            \

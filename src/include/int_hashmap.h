@@ -48,16 +48,16 @@ DECLARE_FUNCTIONS(int)
 #endif
 
 /* see hashmap.h for descriptions of these functions */
-int_hash_map_t *
+int_hash_map_ptr
 new_int_hash_map(void);
 
 void
-free_int_hash_map(int_hash_map_t*);
+free_int_hash_map(int_hash_map_ptr);
 
 int
-int_hash_map_check_value(int_hash_map_t*, int value, char add_p, char *added);
+int_hash_map_check_value(int_hash_map_ptr, int value, char add_p, char *added);
 
 int
-int_hash_map_remove_value(int_hash_map_t*, int value);
+int_hash_map_remove_value(int_hash_map_ptr, int value);
 
 #endif /* _INT_HASHMAP_H_ */

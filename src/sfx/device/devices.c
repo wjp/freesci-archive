@@ -88,5 +88,7 @@ sfx_find_device(int type, char *name)
 		}
 
 		return dev;
-	}
+	};
+	
+	return NULL;
 }

@@ -408,7 +408,7 @@ kDoAvoider(state_t *s, int funct_nr, int argc, reg_t *argv)
 				SCIkwarn(SCIkERROR, "Looper %04x of avoider %04x doesn't"
 					 " have a doit() funcselector\n", looper, avoider);
 			} else return s->r_acc;
-		}
+		} else
 		/* No looper? Fall back to DirLoop */
 
 		_k_dirloop(client, (word)angle, s, funct_nr, argc, argv);

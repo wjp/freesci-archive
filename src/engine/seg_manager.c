@@ -1086,7 +1086,7 @@ DEFINE_HEAPENTRY(node, 32, 16);
 DEFINE_HEAPENTRY_WITH_CLEANUP(clone, 16, 4, _clone_cleanup);
 DEFINE_HEAPENTRY_WITH_CLEANUP(hunk, 4, 4, _hunk_cleanup);
 
-#define DEFINE_ALLOC_DEALLOC(TYPE, SEGTYPE) \
+#define DEFINE_ALLOC_DEALLOC(TYPE, SEGTYPE, PLURAL) \
 static TYPE##_t *										  \
 sm_alloc_##TYPE(seg_manager_t *self, reg_t *addr)						  \
 {												  \
@@ -1096,15 +1096,15 @@ sm_alloc_##TYPE(seg_manager_t *self, reg_t *addr)						  \
 												  \
 	if (!self->TYPE##s_seg_id) {								  \
 		mobj = alloc_nonscript_segment(self, SEGTYPE, &(self->TYPE##s_seg_id));		  \
-		init_##TYPE##_table(&(mobj->data.##TYPE##s));					  \
+		init_##TYPE##_table(&(mobj->data.PLURAL));					  \
 	} else											  \
 		mobj = self->heap[self->TYPE##s_seg_id];					  \
 												  \
-	table = &(mobj->data.##TYPE##s);							  \
+	table = &(mobj->data.PLURAL);								  \
 	offset = alloc_##TYPE##_entry(table);							  \
 												  \
 	*addr = make_reg(self->TYPE##s_seg_id, offset);						  \
-	return &(mobj->data.##TYPE##s.table[offset].entry);					  \
+	return &(mobj->data.PLURAL.table[offset].entry);					  \
 }												  \
 												  \
 static void											  \
@@ -1119,13 +1119,13 @@ sm_free_##TYPE(seg_manager_t *self, reg_t addr)							  \
 		return;										  \
 	}											  \
 												  \
-	free_##TYPE##_entry(&(mobj->data.##TYPE##s), addr.offset);				  \
+	free_##TYPE##_entry(&(mobj->data.PLURAL), addr.offset);					  \
 }
 
-DEFINE_ALLOC_DEALLOC(clone, MEM_OBJ_CLONES);
-DEFINE_ALLOC_DEALLOC(list, MEM_OBJ_LISTS);
-DEFINE_ALLOC_DEALLOC(node, MEM_OBJ_NODES);
-DEFINE_ALLOC_DEALLOC(hunk, MEM_OBJ_HUNK);
+DEFINE_ALLOC_DEALLOC(clone, MEM_OBJ_CLONES, clones);
+DEFINE_ALLOC_DEALLOC(list, MEM_OBJ_LISTS, lists);
+DEFINE_ALLOC_DEALLOC(node, MEM_OBJ_NODES, nodes);
+DEFINE_ALLOC_DEALLOC(hunk, MEM_OBJ_HUNK, hunks);
 
 
 
