@@ -114,10 +114,11 @@ invoke_selector16(struct _state *s, heap_ptr object, int selector_id, int noinva
 		stack_ptr_t k_argp, int k_argc, char *fname, int line, int argc, ...);
 
 
-int
+reg_t
 read_selector(struct _state *s,  reg_t object, selector_t selector_id, char *fname, int line);
 void
-write_selector(struct _state *s, reg_t object, selector_t selector_id, int value, char *fname, int line);
+write_selector(struct _state *s, reg_t object, selector_t selector_id, reg_t value,
+	       char *fname, int line);
 int
 invoke_selector(struct _state *s, reg_t object, int selector_id, int noinvalid, int kfunct,
 		stack_ptr_t k_argp, int k_argc, char *fname, int line, int argc, ...);
@@ -170,10 +171,10 @@ kernel_lookup_text(struct _state *s, int address, int index);
 
 
 int
-listp(struct _state *s, heap_ptr address);
+listp(struct _state *s, reg_t address);
 /* Determines whether the object at <address> is a list
 ** Parameters: (state_t *) s: The state to use
-**             (heap_ptr) address: The address to check
+**             (reg_t) address: The address to check
 ** Returns   : (int) 0 if not, non-zero if it is a list.
 */
 
@@ -210,6 +211,17 @@ _SCIkprintf(FILE *file, char *format, ...);
 #define KP_UINT(x) ((guint16) x.offset)
 #define KP_SINT(x) ((gint16) x.offset)
 
+reg_t *
+kernel_dereference_pointer(struct _state *s, reg_t pointer, int entries);
+/* Dereferences a heap pointer
+** Parameters: (state_t *) s: The state to operate on
+**             (reg_t ) pointer: The pointer to dereference
+**             (int) entries: The number of values expected (for checking)
+**                            (use 0 for strings)
+** Returns   : (reg_t *): A physical reference to the address pointed
+**                        to, or NULL on error or if not enugh entries
+**                        were available
+*/
 
 /******************** Resource Macros ********************/
 
@@ -346,15 +358,6 @@ process_sound_events(struct _state *s); /* Get all sound events, apply their cha
 #define _K_SOUND_STATUS_PLAYING 3
 
 
-/* List node addresses */
-#define LIST_FIRST_NODE 0
-#define LIST_PREVIOUS_NODE 0
-#define LIST_LAST_NODE 2
-#define LIST_NEXT_NODE 2
-#define LIST_NODE_KEY 4
-#define LIST_NODE_VALUE 6
-/* 'previous' and 'next' nodes for lists mean 'first' and 'last' node, respectively */
-
 
 /* Kernel optimization flags */
 #define KERNEL_OPT_FLAG_GOT_EVENT (1<<0)
@@ -385,13 +388,8 @@ typedef void kfunct_old(struct _state *s, int funct_nr, int argc, heap_ptr argv)
 void kLoad(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kUnLoad(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGameIsRestarting(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kNewList(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetCWD(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetCursor(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kFindKey(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kNewNode(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kAddToFront(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kAddToEnd(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kShow(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kPicNotValid(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kRandom(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -402,23 +400,15 @@ void kHaveMouse(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kJoystick(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetAngle(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetDistance(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kLastNode(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kFirstNode(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kNextNode(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kPrevNode(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kNodeValue(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kClone(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDisposeClone(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kScriptID(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kMemoryInfo(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDrawPic(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kDisposeList(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDisposeScript(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetPort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetPort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kNewWindow(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDisposeWindow(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kIsObject(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kFormat(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDrawStatus(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDrawMenuBar(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -430,7 +420,6 @@ void kCelHigh(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDisplay(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kAnimate(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetTime(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kDeleteKey(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kStrLen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetFarText(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kStrEnd(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -442,7 +431,6 @@ void kReadNumber(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDrawControl(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kNumCels(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kNumLoops(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kTextSize(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kInitBresen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDoBresen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kCanBeHere(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -451,7 +439,6 @@ void kDirLoop(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kCoordPri(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kPriCoord(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kValidPath(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kRespondsTo(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kFOpen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kFPuts(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kFGets(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -494,8 +481,6 @@ void kSetJump(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kCheckSaveGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSaveGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kRestoreGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kEmptyList(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kAddAfter(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetNowSeen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDoAvoider(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kFileIO(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -506,7 +491,25 @@ void kMemory(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 
 
 /* New kernel functions */
+reg_t kScriptID(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kIsObject(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kRespondsTo(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kNewList(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kDisposeList(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kNewNode(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kFirstNode(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kLastNode(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kEmptyList(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kNextNode(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kPrevNode(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kNodeValue(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kAddAfter(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kAddToFront(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kAddToEnd(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kFindKey(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kDeleteKey(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kGetSaveDir(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kTextSize(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t k_Unknown(struct _state *s, int funct_nr, int argc, reg_t *argv);
 
 /* The Unknown/Unnamed kernel function */

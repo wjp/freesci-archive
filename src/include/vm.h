@@ -210,7 +210,7 @@ typedef object_t clone_t;
 
 typedef struct {
 	reg_t pred, succ; /* Predecessor, successor */
-	reg_t name;
+	reg_t key;
 	reg_t value;
 } node_t; /* List nodes */
 

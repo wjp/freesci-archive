@@ -76,6 +76,14 @@ sm_allocate_stack(seg_manager_t *self, int size, seg_id_t *segid);
 static sys_strings_t *
 sm_allocate_sys_strings(seg_manager_t *self, seg_id_t *segid);
 
+static clone_t *sm_alloc_clone(seg_manager_t *self, reg_t *addr);
+static list_t *sm_alloc_list(seg_manager_t *self, reg_t *addr);
+static node_t *sm_alloc_node(seg_manager_t *self, reg_t *addr);
+
+static void sm_free_clone(seg_manager_t *self, reg_t addr);
+static void sm_free_list(seg_manager_t *self, reg_t addr);
+static void sm_free_node(seg_manager_t *self, reg_t addr);
+
 /***--------------------------***/
 /** end of forward declarations */
 /***--------------------------***/
@@ -118,6 +126,10 @@ void sm_init(seg_manager_t* self) {
 	
 	self->heap_size = DEFAULT_SCRIPTS;
         self->heap = (mem_obj_t**) sci_calloc (self->heap_size, sizeof(mem_obj_t *));
+
+	self->clones_seg_id = 0;
+	self->lists_seg_id = 0;
+	self->nodes_seg_id = 0;
 
 	/*  initialize the heap pointers*/
 	for (i = 0; i < self->heap_size; i++) {
@@ -173,6 +185,13 @@ void sm_init(seg_manager_t* self) {
 	self->script_initialize_locals_zero = sm_script_initialize_locals_zero;
 	self->script_initialize_locals = sm_script_initialize_locals;
 
+	self->alloc_clone = sm_alloc_clone;
+	self->alloc_list = sm_alloc_list;
+	self->alloc_node = sm_alloc_node;
+
+	self->free_clone = sm_free_clone;
+	self->free_list = sm_free_list;
+	self->free_node = sm_free_node;
 };
 
 // destroy the object, free the memorys if allocated before
@@ -515,13 +534,24 @@ void sm_set_lockers (seg_manager_t* self, int lockers, int id, int flag) {
 	self->heap[id]->data.script.lockers = lockers;
 };
 
-void sm_set_export_table_offset (struct _seg_manager_t* self, int offset, int id, int flag)
+void sm_set_export_table_offset (struct _seg_manager_t* self, int offset, int magic_offset,
+				 int id, int flag)
 {
 	script_t *scr = &(self->heap[id]->data.script);
+	int i;
+
 	GET_SEGID();
 	if (offset) {
 		scr->export_table = (guint16 *)(scr->buf + offset + 2);
 		scr->exports_nr = getUInt16((byte *)(scr->export_table - 1));
+		if (magic_offset) {
+			fprintf(stderr, "Adjusting for magic offset!!\n");
+			for (i = 0; i < scr->exports_nr; i++) {
+				int val = getUInt16((byte *) (scr->export_table + i));
+				val += magic_offset;
+				putInt16((byte *) (scr->export_table + i), val);
+			}
+		}
 	} else {
 		scr->export_table = NULL;
 		scr->exports_nr = 0;
@@ -915,3 +945,43 @@ _clone_cleanup(clone_t *clone)
 DEFINE_HEAPENTRY(list, 8, 4);
 DEFINE_HEAPENTRY(node, 32, 16);
 DEFINE_HEAPENTRY_WITH_CLEANUP(clone, 16, 4, _clone_cleanup);
+
+#define DEFINE_ALLOC_DEALLOC(TYPE, SEGTYPE) \
+static TYPE##_t *										  \
+sm_alloc_##TYPE(seg_manager_t *self, reg_t *addr)						  \
+{												  \
+	mem_obj_t *mobj;									  \
+	TYPE##_table_t *table;									  \
+	int offset;										  \
+												  \
+	if (!self->TYPE##s_seg_id) {								  \
+		mobj = alloc_nonscript_segment(self, SEGTYPE, &(self->TYPE##s_seg_id));		  \
+		init_##TYPE##_table(&(mobj->data.##TYPE##s));					  \
+	} else											  \
+		mobj = self->heap[self->TYPE##s_seg_id];					  \
+												  \
+	table = &(mobj->data.##TYPE##s);							  \
+	offset = alloc_##TYPE##_entry(table);							  \
+												  \
+	*addr = make_reg(self->TYPE##s_seg_id, offset);						  \
+	return &(mobj->data.##TYPE##s.table[offset].entry);					  \
+}												  \
+												  \
+static void											  \
+sm_free_##TYPE(seg_manager_t *self, reg_t addr)							  \
+{												  \
+	mem_obj_t *mobj = GET_SEGMENT(*self, addr.segment, SEGTYPE);				  \
+												  \
+	if (!mobj) {										  \
+		sciprintf("Attempt to free " #TYPE " from address "PREG				  \
+			  ": Invalid segment type\n",						  \
+			  PRINT_REG(addr));							  \
+		return;										  \
+	}											  \
+												  \
+	free_##TYPE##_entry(&(mobj->data.##TYPE##s), addr.offset);				  \
+}
+
+DEFINE_ALLOC_DEALLOC(clone, MEM_OBJ_CLONES);
+DEFINE_ALLOC_DEALLOC(list, MEM_OBJ_LISTS);
+DEFINE_ALLOC_DEALLOC(node, MEM_OBJ_NODES);

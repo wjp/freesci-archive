@@ -7,12 +7,6 @@
 
 #define assert_in_range(pos) assert(pos>=1000 && pos<=0xffff);
 
-static void putInt16(byte* dest, int src)
-{
-	dest[0]=(byte)src&0xff;
-	dest[1]=(byte)(src>>8)&0xff;
-}
-
 static void set_size(heap_t* h, int block_pos, int size)
 {
 	assert_in_range(block_pos);

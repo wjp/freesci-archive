@@ -33,6 +33,7 @@
 #include <kernel_compat.h>
 
 #include <gfx_operations.h>
+#include <kernel_types.h>
 
 
 
@@ -43,12 +44,12 @@
 sci_kernel_function_t kfunct_mappers[] = {
 /*00*/	{KF_OLD, "Load", {old:kLoad}},
 /*01*/	{KF_OLD, "UnLoad", {old:kUnLoad}},
-/*02*/	{KF_OLD, "ScriptID", {old:kScriptID}},
+/*02*/	{KF_NEW, "ScriptID", {new:{kScriptID, "ii*"}}},
 /*03*/	{KF_OLD, "DisposeScript", {old:kDisposeScript}},
 /*04*/	{KF_OLD, "Clone", {old:kClone}},
 /*05*/	{KF_OLD, "DisposeClone", {old:kDisposeClone}},
-/*06*/	{KF_OLD, "IsObject", {old:kIsObject}},
-/*07*/	{KF_OLD, "RespondsTo", {old:kRespondsTo}},
+/*06*/	{KF_NEW, "IsObject", {new:{kIsObject, "."}}},
+/*07*/	{KF_NEW, "RespondsTo", {new:{kRespondsTo, ".i"}}},
 /*08*/	{KF_OLD, "DrawPic", {old:kDrawPic}},
 /*09*/	{KF_OLD, "Show", {old:kShow}},
 /*0a*/	{KF_OLD, "PicNotValid", {old:kPicNotValid}},
@@ -67,7 +68,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*17*/	{KF_OLD, "DrawControl", {old:kDrawControl}},
 /*18*/	{KF_OLD, "HiliteControl", {old:kHiliteControl}},
 /*19*/	{KF_OLD, "EditControl", {old:kEditControl}},
-/*1a*/	{KF_OLD, "TextSize", {old:kTextSize}},
+/*1a*/	{KF_NEW, "TextSize", {new:{kTextSize, "rrii*"}}},
 /*1b*/	{KF_OLD, "Display", {old:kDisplay}},
 /*1c*/	{KF_OLD, "GetEvent", {old:kGetEvent}},
 /*1d*/	{KF_OLD, "GlobalToLocal", {old:kGlobalToLocal}},
@@ -91,23 +92,20 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*2f*/	{KF_OLD, "RestartGame", {old:kRestartGame}},
 /*30*/	{KF_OLD, "GameIsRestarting", {old:kGameIsRestarting}},
 /*31*/	{KF_OLD, "DoSound", {old:kDoSound}},
-
-/*32*/	{KF_OLD, "NewList", {old:kNewList}},
-/*33*/	{KF_OLD, "DisposeList", {old:kDisposeList}},
-/*34*/	{KF_OLD, "NewNode", {old:kNewNode}},
-/*35*/	{KF_OLD, "FirstNode", {old:kFirstNode}},
-/*36*/	{KF_OLD, "LastNode", {old:kLastNode}},
-/*37*/	{KF_OLD, "EmptyList", {old:kEmptyList}},
-/*38*/	{KF_OLD, "NextNode", {old:kNextNode}},
-/*39*/	{KF_OLD, "PrevNode", {old:kPrevNode}},
-/*3a*/	{KF_OLD, "NodeValue", {old:kNodeValue}},
-/*3b*/	{KF_OLD, "AddAfter", {old:kAddAfter}},
-/*3c*/	{KF_OLD, "AddToFront", {old:kAddToFront}},
-/*3d*/	{KF_OLD, "AddToEnd", {old:kAddToEnd}},
-/*3e*/	{KF_OLD, "FindKey", {old:kFindKey}},
-/*3f*/	{KF_OLD, "DeleteKey", {old:kDeleteKey}},
-/* and Sort */
-
+/*32*/	{KF_NEW, "NewList", {new:{kNewList, ""}}},
+/*33*/	{KF_NEW, "DisposeList", {new:{kDisposeList, "l"}}},
+/*34*/	{KF_NEW, "NewNode", {new:{kNewNode, ".."}}},
+/*35*/	{KF_NEW, "FirstNode", {new:{kFirstNode, "l"}}},
+/*36*/	{KF_NEW, "LastNode", {new:{kLastNode, "l"}}},
+/*37*/	{KF_NEW, "EmptyList", {new:{kEmptyList, "l"}}},
+/*38*/	{KF_NEW, "NextNode", {new:{kNextNode, "n"}}},
+/*39*/	{KF_NEW, "PrevNode", {new:{kPrevNode, "n"}}},
+/*3a*/	{KF_NEW, "NodeValue", {new:{kNodeValue, "n"}}},
+/*3b*/	{KF_NEW, "AddAfter", {new:{kAddAfter, "lnn"}}},
+/*3c*/	{KF_NEW, "AddToFront", {new:{kAddToFront, "ln"}}},
+/*3d*/	{KF_NEW, "AddToEnd", {new:{kAddToEnd, "ln"}}},
+/*3e*/	{KF_NEW, "FindKey", {new:{kFindKey, "l."}}},
+/*3f*/	{KF_NEW, "DeleteKey", {new:{kDeleteKey, "l."}}},
 /*40*/	{KF_OLD, "Random", {old:kRandom}},
 /*41*/	{KF_OLD, "Abs", {old:kAbs}},
 /*42*/	{KF_OLD, "Sqrt", {old:kSqrt}},
@@ -563,6 +561,89 @@ kNOP(state_t *s, int funct_nr, int argc, reg_t *argv)
 	return NULL_REG;
 }
 
+
+
+void
+kernel_compile_signature(char **s)
+{
+	char *src = *s;
+	char *result;
+	int ellipsis = 0;
+	char v;
+	int index = 0;
+
+	if (!src)
+		return; /* NULL signature: Nothing to do */
+
+	result = sci_malloc(strlen(*s) + 1);
+
+	while (*src) {
+		char c;
+		v = 0;
+
+		if (ellipsis) {
+			sciprintf("INTERNAL ERROR when compiling kernel"
+				  " function signature '%s': non-terminal ellipsis\n", *s,
+				  *src);
+			exit(1);
+		}
+
+		do {
+			char cc;
+			cc = c = *src++;
+			if (c >= 'A' || c <= 'Z')
+				cc = c | KSIG_SPEC_SUM_DONE;
+
+			switch (cc) {
+
+			case KSIG_SPEC_LIST:
+				v |= KSIG_LIST;
+				break;
+
+			case KSIG_SPEC_NODE:
+				v |= KSIG_NODE;
+				break;
+
+			case KSIG_SPEC_REF:
+				v |= KSIG_REF;
+				break;
+
+			case KSIG_SPEC_OBJECT:
+				v |= KSIG_OBJECT;
+				break;
+
+			case KSIG_SPEC_ARITHMETIC:
+				v |= KSIG_ARITHMETIC;
+				break;
+
+			case KSIG_SPEC_ANY:
+				v |= KSIG_ANY;
+				break;
+
+			case KSIG_SPEC_ELLIPSIS:
+				v |= KSIG_ELLIPSIS;
+				ellipsis = 1;
+				break;
+
+			default: {
+				sciprintf("INTERNAL ERROR when compiling kernel"
+					  " function signature '%s': (%02x) not understood (aka"
+					  " '%c')\n",
+					  *s, c, c);
+				exit(1);
+			}
+
+			}
+		} while (*src && (*src == '*' || (c < 'a' && c != '.')));
+
+		/* To handle sum types */
+		result[index++] = v;
+	}
+
+	result[index] = 0;
+	*s = result; /* Write back */
+}
+
 void
 script_map_kernel(state_t *s)
 {
@@ -602,11 +683,13 @@ script_map_kernel(state_t *s)
 			break;
 
 		case KF_NONE:
+			s->kfunct_table[functnr].signature = NULL;
 			++ignored;
 			break;
 
 		case KF_NEW:
 			s->kfunct_table[functnr] = kfunct_mappers[found].data.new;
+			kernel_compile_signature(&(s->kfunct_table[functnr].signature));
 			++mapped;
 			break;
 		}
@@ -621,4 +704,187 @@ script_map_kernel(state_t *s)
 		sciprintf(" and emulating %d", emulated);
 	sciprintf(".\n");
 
+}
+
+void
+free_kfunct_tables(state_t *s)
+{
+	int i;
+
+	for (i = 0; i < s->kernel_names_nr; i++)
+		if (s->kfunct_table[i].signature)
+			free(s->kfunct_table[i].signature);
+
+	sci_free(s->kfunct_table);
+	s->kfunct_table = NULL;
+
+	sci_free(s->kfunct_emu_table);
+	s->kfunct_emu_table = NULL;
+}
+
+int
+determine_reg_type(state_t *s, reg_t reg)
+{
+	mem_obj_t *mobj;
+
+	if (!reg.segment)
+		return KSIG_ARITHMETIC;
+
+	if ((reg.segment >= s->seg_manager.heap_size)
+	    || !s->seg_manager.heap[reg.segment])
+		return 0; /* Invalid */
+
+	mobj = s->seg_manager.heap[reg.segment];
+
+	switch (mobj->type) {
+
+	case MEM_OBJ_SCRIPT:
+		if (reg.offset <= mobj->data.script.buf_size
+		    && reg.offset >= -SCRIPT_OBJECT_MAGIC_OFFSET
+		    && RAW_IS_OBJECT(mobj->data.script.buf + reg.offset)) {
+			int idx = RAW_GET_CLASS_INDEX(mobj->data.script.buf + reg.offset);
+			if (idx >= 0 && idx < mobj->data.script.objects_nr)
+				return KSIG_OBJECT;
+			else
+				return KSIG_REF;
+		} else
+			return KSIG_REF;
+
+	case MEM_OBJ_CLONES:
+		if (ENTRY_IS_VALID(&(mobj->data.clones), reg.offset))
+			return KSIG_OBJECT;
+		else
+			return 0;
+
+	case MEM_OBJ_LOCALS:
+		if (reg.offset < mobj->data.locals.nr)
+			return KSIG_REF;
+		else
+			return 0;
+
+	case MEM_OBJ_STACK:
+		if (reg.offset < mobj->data.stack.nr)
+			return KSIG_REF;
+		else
+			return 0;
+
+	case MEM_OBJ_SYS_STRINGS:
+		if (reg.offset < SYS_STRINGS_MAX
+		    && mobj->data.sys_strings.strings[reg.offset].name)
+			return KSIG_REF;
+		else
+			return 0;
+
+	case MEM_OBJ_LISTS:
+		if (ENTRY_IS_VALID(&(mobj->data.lists), reg.offset))
+			return KSIG_LIST;
+		else
+			return 0;
+
+	case MEM_OBJ_NODES:
+		if (ENTRY_IS_VALID(&(mobj->data.nodes), reg.offset))
+			return KSIG_NODE;
+		else
+			return 0;
+
+	default:
+		return 0;
+
+	}
+}
+
+int
+kernel_matches_signature(state_t *s, char *sig, int argc, reg_t *argv)
+{
+	if (!sig)
+		return 1;
+
+	while (*sig && argc) {
+		int type = determine_reg_type(s, *argv);
+
+		if (!type) {
+			sciprintf("[KERN] Could not determine type of ref "PREG";"
+				  " failing signature check\n",
+				  PRINT_REG(*argv));
+			return 0;
+		}
+
+		if ((type & *sig) != type)
+			return 0;
+
+		if (!(*sig & KSIG_ELLIPSIS))
+			++sig;
+		++argv;
+		--argc;
+	}
+
+	if (argc)
+		return 0; /* Too many arguments */
+	else
+		return (*sig == 0 || (*sig & KSIG_ELLIPSIS));
+}
+
+reg_t *
+kernel_dereference_pointer(struct _state *s, reg_t pointer, int entries)
+{
+	mem_obj_t *mobj;
+	reg_t *base = NULL;
+	int count;
+
+	if (!pointer.segment
+	    || (pointer.segment >= s->seg_manager.heap_size)
+	    || !s->seg_manager.heap[pointer.segment]) {
+		return NULL; /* Invalid */
+		SCIkdebug(SCIkERROR, "Attempt to dereference invalid pointer "PREG"!",
+			  PRINT_REG(pointer));
+		return NULL;
+	}
+
+	mobj = s->seg_manager.heap[pointer.segment];
+
+	switch (mobj->type) {
+
+	case MEM_OBJ_SCRIPT:
+		if (entries || pointer.offset > mobj->data.script.buf_size) {
+			SCIkdebug(SCIkERROR, "Attempt to dereference invalid pointer "PREG
+				  " into script segment (script size=%d, space requested=%d)\n",
+				  PRINT_REG(pointer), mobj->data.script.buf_size, entries);
+			return NULL;
+		}
+		return (reg_t *) (mobj->data.script.buf + pointer.offset);
+		break;
+
+	case MEM_OBJ_LOCALS:
+		count = mobj->data.locals.nr;
+		base = mobj->data.locals.locals;
+		break;
+
+	case MEM_OBJ_STACK:
+		count = mobj->data.stack.nr;
+		base = mobj->data.stack.entries;
+		break;
+		
+	case MEM_OBJ_SYS_STRINGS:
+		if (pointer.offset < SYS_STRINGS_MAX
+		    && mobj->data.sys_strings.strings[pointer.offset].name)
+			return (reg_t *) (mobj->data.sys_strings.strings[pointer.offset].value);
+		else {
+			SCIkdebug(SCIkERROR, "Attempt to dereference invalid pointer "PREG"!",
+				  PRINT_REG(pointer));
+			return NULL;
+		}
+
+	default:
+		SCIkdebug(SCIkERROR, "Trying to dereference pointer "PREG" to inappropriate"
+			  " segment!",
+			  PRINT_REG(pointer));
+		return NULL;
+	}
+
+	if (pointer.offset + entries > count) {
+		SCIkdebug(SCIkERROR, "Trying to dereference pointer "PREG" beyond end of segment!",
+			  PRINT_REG(pointer));
+		return NULL;
+	} return
+		base + pointer.offset;
 }

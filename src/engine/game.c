@@ -45,6 +45,7 @@
 #include <kernel.h>
 #include <kdebug.h>
 #include <kernel_compat.h>
+#include <kernel_types.h>
 
 #if !defined (_WIN32) && !defined (__BEOS__)
 #include <sys/resource.h>
@@ -463,6 +464,10 @@ script_free_vm_memory(state_t *s)
 	   exception fault whenever you try to close a never-opened file */
 }
 
+extern void
+free_kfunct_table(state_t *s);
+/* From kernel.c */
+
 void
 script_free_engine(state_t *s)
 {
@@ -472,8 +477,7 @@ script_free_engine(state_t *s)
 
 	sciprintf("Freeing state-dependant data\n");
 
-	sci_free(s->kfunct_table);
-	s->kfunct_table = NULL;
+	free_kfunct_tables(s);
 
 	_free_vocabulary(s);
 

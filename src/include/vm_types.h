@@ -69,7 +69,7 @@ make_reg(int segment, int offset)
 }
 
 #define IS_NULL_REG(r) (!((r).offset || (r).segment))
-#define REG_EQ(a, b) (((a).offset = (b).offset) && ((a).segment == (b).segment))
+#define REG_EQ(a, b) (((a).offset == (b).offset) && ((a).segment == (b).segment))
 #define NULL_REG_INITIALIZER {0, 0}
 static reg_t NULL_REG = NULL_REG_INITIALIZER;
 

@@ -29,55 +29,38 @@
 #include <engine.h>
 #include <kernel_compat.h>
 
-int
-read_selector16(state_t *s, heap_ptr object, selector_t selector_id, char *file, int line)
-{
-#warning "Implement 16 bit selector reading"
-}
-
-int
+reg_t
 read_selector(state_t *s, reg_t object, selector_t selector_id, char *file, int line)
 {
-#warning "Re-enable selector reading"
-#if 0
-  heap_ptr address;
+	reg_t *address;
 
-  if (lookup_selector(s, object, selector_id, &address) != SELECTOR_VARIABLE)
-    return 0;
-  else
-    return GET_HEAP(address);
-#endif
+	if (lookup_selector(s, object, selector_id, &address, NULL) != SELECTOR_VARIABLE)
+		return NULL_REG;
+	else
+		return *address;
 }
 
 
 void
-write_selector16(state_t *s, heap_ptr object, selector_t selector_id,
-		 int value, char *fname, int line)
+write_selector(state_t *s, reg_t object, selector_t selector_id, reg_t value,
+	       char *fname, int line)
 {
-#warning "Implement 16 bit selector writing"
-}
+	reg_t *address;
 
-void
-write_selector(state_t *s, reg_t object, selector_t selector_id, int value, char *fname, int line)
-{
-#warning "Re-enable selector writing"
-#if 0
-  heap_ptr address;
+	if ((selector_id < 0) || (selector_id > s->selector_names_nr)) {
+		SCIkwarn(SCIkWARNING, "Attempt to write to invalid selector %d of"
+			 " object at "PREG" (%s L%d).\n", selector_id,
+			 PRINT_REG(object), fname, line);
+		return;
+	}
 
-  if ((selector_id < 0) || (selector_id > s->selector_names_nr)) {
-    SCIkwarn(SCIkWARNING, "Attempt to write to invalid selector %d of object at %04x (%s L%d).\n", selector_id,
-	     object, fname, line);
-    return;
-  }
+	if (lookup_selector(s, object, selector_id, &address, NULL) != SELECTOR_VARIABLE)
+		SCIkwarn(SCIkWARNING, "Selector '%s' of object at %04x could not be"
+			 " written to (%s L%d)\n",
+			 s->selector_names[selector_id], object, fname, line);
+	else
+		*address = value;
 
-  if (lookup_selector(s, object, selector_id, &address) != SELECTOR_VARIABLE)
-    SCIkwarn(SCIkWARNING, "Selector '%s' of object at %04x could not be written to (%s L%d)\n",
-	     s->selector_names[selector_id], object, fname, line);
-  else
-    PUT_HEAP(address, value);
-
-  /*  sciprintf("Selector '%s' is at %04x\n", s->selector_names[selector_id], address); */
-#endif
 }
 
 int
@@ -318,44 +301,32 @@ kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 /* kScriptID(script, index):
 ** Returns script dispatch address index in the supplied script
 */
-void
-kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kScriptID(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-#warning "Re-implement kScriptID()"
-#if 0
-  int script = PARAM(0);
-  int index = PARAM_OR_ALT(1,0);
-  int disp_size;
-  heap_ptr disp;
-  int magic_ofs;
+	int script = KP_UINT(argv[0]);
+	int index = KP_UINT(KP_ALT(1, NULL_REG));
 
-  if (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-    magic_ofs=2; else
-    magic_ofs=0;
+	seg_id_t scriptid = script_get_segment(s, script, SCRIPT_GET_LOAD);
+	script_t *scr;
 
-  if (argc == 1)
-    index = 0;
+	if (!scriptid)
+		return NULL_REG;
 
-  if (s->scripttable[script].heappos == 0)
-    script_instantiate(s, script); /* Instantiate script if neccessary */
+	scr = &(s->seg_manager.heap[scriptid]->data.script);
 
-  disp = s->scripttable[script].export_table_offset;
+	if (!scr->exports_nr) {
+		SCIkdebug(SCIkERROR, "Script 0x%x does not have a dispatch table\n", script);
+		return NULL_REG;
+	}
 
-  if (!disp) {
-    SCIkdebug(SCIkERROR, "Script 0x%x does not have a dispatch table\n", script);
-    s->acc = 0;
-    return;
-  }
+	if (index > scr->exports_nr) {
+		SCIkwarn(SCIkERROR, "Dispatch index too big: %d > %d\n",
+			 index, scr->exports_nr);
+		return NULL_REG;
+	}
 
-  disp_size = UGET_HEAP(disp);
-
-  if (index > disp_size-1) {
-    SCIkwarn(SCIkERROR, "Dispatch index too big: %d > %d\n", index, disp_size-1);
-    return;
-  }
-
-  s->acc = UGET_HEAP(disp + 2 + index*2) + s->scripttable[script].heappos - magic_ofs;
-#endif
+	return make_reg(scriptid, getUInt16((byte*)(scr->export_table + index)));
 }
 
 
@@ -371,26 +342,29 @@ kDisposeScript(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 }
 
-
-void
-kIsObject(state_t *s, int funct_nr, int argc, heap_ptr argp)
+static int
+is_heap_object(state_t *s, reg_t pos)
 {
-  heap_ptr address = UPARAM(0);
-  if (address == 0xffff) /* Treated specially */
-    s->acc = 0;
-  else
-    s->acc = is_object(s, UPARAM(0));
+#warning "Optimize me!"
+	return obj_get(s, pos) != NULL;
 }
 
-void
-kRespondsTo(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kIsObject(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-#warning "Re-implement kRespondsTo()"
-#if 0
-	int obj = PARAM(0);
-	int selector = PARAM(1);
+	if (argv[0].offset == 0xffff) /* Treated specially */
+		return NULL_REG;
+	else
+		s->acc = is_heap_object(s, argv[0]);
+}
 
-	s->acc = (lookup_selector(s, (heap_ptr)obj, selector, NULL) != SELECTOR_NONE);
-#endif
+reg_t
+kRespondsTo(state_t *s, int funct_nr, int argc, reg_t *argv)
+{
+	reg_t obj = argv[0];
+	int selector = KP_UINT(argv[1]);
+
+	return make_reg(0, is_heap_object(s, obj)
+			&& lookup_selector(s, obj, selector, NULL, NULL) != SELECTOR_NONE);
 }
 

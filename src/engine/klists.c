@@ -29,387 +29,461 @@
 #include <kernel_compat.h>
 
 
-int
-listp(state_t *s, heap_ptr address)
+#define LOOKUP_NODE(addr) lookup_node(s, (addr), __FILE__, __LINE__)
+
+static inline node_t *
+lookup_node(state_t *s, reg_t addr, char *file, int line)
 {
-	int size = UGET_HEAP(address);
-	return (size == 6 || size == 8 || size == 10);
-}
+	mem_obj_t *mobj = GET_SEGMENT(s->seg_manager, addr.segment, MEM_OBJ_NODES);
+	node_table_t *nt;
 
-int
-sane_nodep(state_t *s, heap_ptr address)
-{
-  int seeker = address;
-  int next;
-  int prev;
-  int rprev = 0;
-
-  while (1)
-  {
-    next=UGET_HEAP(seeker + LIST_NEXT_NODE);
-    prev=UGET_HEAP(seeker + LIST_PREVIOUS_NODE);
-    if ((rprev)&&(prev!=rprev))
-      return 0;
-    if (next==-1)
-      return 0;
-    rprev=seeker; seeker=next;
-    if (!seeker) break;
-  }
-
-  return 1;
-}
-
-int
-sane_listp(state_t *s, heap_ptr address)
-{
-  int last;
-  int seeker;
-
-  seeker=GET_HEAP(address + LIST_FIRST_NODE);
-  last=GET_HEAP(address + LIST_LAST_NODE);
-
-  if (!last) return 1;
-
-  if (seeker==-1)
-    return 0;
-  if (last==-1)
-    return 0;
-
-  return sane_nodep(s, (heap_ptr)seeker);
-}
-
-void
-kNewList(state_t *s, int funct_nr, int argc, heap_ptr argp)
-{
-	heap_ptr listbase = heap_allocate(s->_heap, 4);
-
-	if (!listbase) {
-		KERNEL_OOPS("Out of memory while creating a list");
-		return;
+	if (!mobj) {
+		sciprintf("%s, L%d: Attempt to use non-node "PREG" as list node",
+			  __FILE__, __LINE__, PRINT_REG(addr));
+		script_debug_flag = script_error_flag = 1;
+		return NULL;
 	}
 
-	listbase += 2; /* Jump over heap header */
+	nt = &(mobj->data.nodes);
 
-	PUT_HEAP(listbase + LIST_FIRST_NODE, 0); /* No first node */
-	PUT_HEAP(listbase + LIST_LAST_NODE, 0); /* No last node */
-
-	SCIkdebug(SCIkNODES, "New listbase at %04x\n", listbase);
-
-	s->acc = listbase; /* Return list base address */
-}
-
-void
-kDisposeList(state_t *s, int funct_nr, int argc, heap_ptr argp)
-{
-        heap_ptr address = PARAM(0) - 2; /* -2 to get the heap header */
-	heap_ptr node = UGET_HEAP(address + 2 + LIST_FIRST_NODE);
-
-	if (!sane_listp(s, UPARAM(0)))
-	  SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", UPARAM(0));
-
-	while (node) { /* Free all nodes */
-		heap_ptr node_heapbase = node - 2;
-
-		node = GET_HEAP(node + LIST_NEXT_NODE); /* Next node */
-		heap_free(s->_heap, node_heapbase); /* Clear heap space of old node */
+	if (!ENTRY_IS_VALID(nt, addr.offset)) {
+		sciprintf("%s, L%d: Attempt to use non-node "PREG" as list node",
+			  __FILE__, __LINE__, PRINT_REG(addr));
+		script_debug_flag = script_error_flag = 1;
+		return NULL;
 	}
 
-	if (!listp(s, address)) {
-		SCIkwarn(SCIkERROR,"Attempt to dispose non-list at %04x\n", address);
-	} else heap_free(s->_heap, address);
+	return &(nt->table[addr.offset].entry);
+}
+
+#define LOOKUP_LIST(addr) lookup_list(s, addr, __FILE__, __LINE__)
+
+static inline list_t *
+lookup_list(state_t *s, reg_t addr, char *file, int line)
+{
+	mem_obj_t *mobj = GET_SEGMENT(s->seg_manager, addr.segment, MEM_OBJ_LISTS);
+	list_table_t *lt;
+
+	if (!mobj) {
+		sciprintf("%s, L%d: Attempt to use non-list "PREG" as list",
+			  __FILE__, __LINE__, PRINT_REG(addr));
+		script_debug_flag = script_error_flag = 1;
+		return NULL;
+	}
+
+	lt = &(mobj->data.lists);
+
+	if (!ENTRY_IS_VALID(lt, addr.offset)) {
+		sciprintf("%s, L%d: Attempt to use non-list "PREG" as list",
+			  __FILE__, __LINE__, PRINT_REG(addr));
+		script_debug_flag = script_error_flag = 1;
+		return NULL;
+	}
+
+	return &(lt->table[addr.offset].entry);
+}
+
+int
+listp(state_t *s, reg_t addr)
+{
+	return (s->seg_manager.heap[addr.segment]->type == MEM_OBJ_LISTS
+		&& ENTRY_IS_VALID(&(s->seg_manager.heap[addr.segment]->data.lists), addr.offset));
+}
+
+#ifdef DISABLE_VALIDATIONS
+
+#define sane_nodep(a, b) 1
+#define sane_listp(a, b) 1
+
+#else
+
+static inline int
+sane_nodep(state_t *s, reg_t addr)
+{
+	int have_prev = 0;
+	reg_t prev;
+
+	do {
+		node_t *node = LOOKUP_NODE(addr);
+
+		if (!node)
+			return 0;
+
+		if ((have_prev)
+		    && !REG_EQ(node->pred, prev))
+			return 0;
+
+		prev = addr;
+		addr = node->succ;
+		have_prev = 1;
+
+	} while (!IS_NULL_REG(addr));
+
+	return 1;
 }
 
 
-inline heap_ptr
-_k_new_node(state_t *s, int value, int key)
+int
+sane_listp(state_t *s, reg_t addr)
 {
-	heap_ptr nodebase = heap_allocate(s->_heap, 8);
+	list_t *l = LOOKUP_LIST(addr);
+	int empties = 0;
 
-	if (!nodebase) {
+	if (IS_NULL_REG(l->first))
+		++empties;
+	if (IS_NULL_REG(l->last))
+		++empties;
+
+	/* Either none or both are set */
+
+	if (empties == 1)
+		return 1;
+
+	if (!empties) {
+		node_t *node_a, *node_z;
+
+		node_a = LOOKUP_NODE(l->first);
+		node_z = LOOKUP_NODE(l->last);
+
+		if (!node_a || !node_z)
+			return 0;
+
+		if (!IS_NULL_REG(node_a->pred))
+			return 0;
+
+		if (!IS_NULL_REG(node_z->succ))
+			return 0;
+
+		return sane_nodep(s, l->first);
+	}
+
+	return 1; /* Empty list is fine */
+}
+#endif
+
+
+reg_t
+kNewList(state_t *s, int funct_nr, int argc, reg_t *argv)
+{
+	reg_t listbase;
+	list_t *l;
+
+	l = s->seg_manager.alloc_list(&s->seg_manager, &listbase);
+	l->first = l->last = NULL_REG;
+	SCIkdebug(SCIkNODES, "New listbase at "PREG"\n", PRINT_REG(listbase));
+
+	return listbase; /* Return list base address */
+}
+
+reg_t
+kDisposeList(state_t *s, int funct_nr, int argc, reg_t *argv)
+{
+	list_t *l = LOOKUP_LIST(argv[0]);
+
+	if (!l) {
+		SCIkwarn(SCIkERROR, "Attempt to dispose non-list at "PREG"!\n",
+			 PRINT_REG(argv[0]));
+		return NULL_REG;
+	}
+
+	if (!sane_listp(s, argv[0]))
+		SCIkwarn(SCIkERROR,"List at "PREG" is not sane anymore!\n", PRINT_REG(argv[0]));
+
+	if (!IS_NULL_REG(l->first)) {
+		reg_t n_addr = l->first;
+
+		while (!IS_NULL_REG(n_addr)) { /* Free all nodes */
+			node_t *n = LOOKUP_NODE(n_addr);
+			s->seg_manager.free_node(&s->seg_manager, n_addr);
+			n_addr = n->succ;
+		} 
+	}
+
+	s->seg_manager.free_list(&s->seg_manager, argv[0]);
+}
+
+
+inline reg_t
+_k_new_node(state_t *s, reg_t value, reg_t key)
+{
+	reg_t nodebase;
+	node_t *n = s->seg_manager.alloc_node(&s->seg_manager, &nodebase);
+
+	if (!n) {
 		KERNEL_OOPS("Out of memory while creating a node");
 		return;
 	}
 
-	nodebase += 2; /* Jump over heap header */
-
-	PUT_HEAP(nodebase + LIST_PREVIOUS_NODE, 0);
-	PUT_HEAP(nodebase + LIST_NEXT_NODE, 0);
-	PUT_HEAP(nodebase + LIST_NODE_VALUE, value);
-	PUT_HEAP(nodebase + LIST_NODE_KEY, key);
+	n->pred = n->succ = NULL_REG;
+	n->key = key;
+	n->value = value;
 
 	return nodebase;
 }
 
-void
-kNewNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kNewNode(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	s->acc=_k_new_node(s, PARAM(0), PARAM(1));
+	s->r_acc = _k_new_node(s, argv[0], argv[1]);
 
-	SCIkdebug(SCIkNODES, "New nodebase at %04x\n", s->acc);
+	SCIkdebug(SCIkNODES, "New nodebase at "PREG"\n", PRINT_REG(s->r_acc));
+
+	return s->r_acc;
 }
 
 
 
-void
-kFirstNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kFirstNode(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr list = UPARAM(0);
+	list_t *l = LOOKUP_LIST(argv[0]);
 
-	if (list&&!sane_listp(s, list))
-		SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
+	if (l&&!sane_listp(s, argv[0]))
+		SCIkwarn(SCIkERROR,"List at "PREG" is not sane anymore!\n",
+			 PRINT_REG(argv[0]));
 
-	if (list)
-		s->acc = UGET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
+	if (l)
+		return l->first;
 	else
-		s->acc = 0;
+		return NULL_REG;
 }
 
-#warning "Fix list code (2)!"
-void
-kLastNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
+
+reg_t
+kLastNode(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-#if 0
-	heap_ptr list = UPARAM(0);
+	list_t *l = LOOKUP_LIST(argv[0]);
 
-	if (!sane_listp(s, list))
-	  SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
+	if (l&&!sane_listp(s, argv[0]))
+		SCIkwarn(SCIkERROR,"List at "PREG" is not sane anymore!\n",
+			 PRINT_REG(argv[0]));
 
-	if (list)
-		s->acc = UGET_HEAP(UPARAM(0) + LIST_LAST_NODE);
+	if (l)
+		return l->last;
 	else
-		s->acc = 0;
-#endif
+		return NULL_REG;
 }
 
 
-void
-kEmptyList(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kEmptyList(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr list = UPARAM(0);
+	list_t *l = LOOKUP_LIST(argv[0]);
 
+	if (!l || !sane_listp(s, argv[0]))
+		SCIkwarn(SCIkERROR,"List at "PREG" is invalid or not sane anymore!\n",
+			 PRINT_REG(argv[0]));
 
-	if (!sane_listp(s, list))
-		SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
-
-	if (list)
-		s->acc = !(GET_HEAP(UPARAM(0) + LIST_FIRST_NODE));
+	return make_reg(0, ((l)? IS_NULL_REG(l->first) : 0));
 }
 
 inline void
-_k_add_to_end(state_t *s, heap_ptr listbase, heap_ptr nodebase)
+_k_add_to_front(state_t *s, reg_t listbase, reg_t nodebase)
 {
-	heap_ptr old_lastnode = GET_HEAP(listbase + LIST_LAST_NODE);
+	list_t *l = LOOKUP_LIST(listbase);
+	node_t *new_n = LOOKUP_NODE(nodebase);
 
-	SCIkdebug(SCIkNODES, "Adding node %04x to end of list %04x\n", nodebase, listbase);
+	SCIkdebug(SCIkNODES, "Adding node "PREG" to end of list "PREG"\n",
+		  PRINT_REG(nodebase), PRINT_REG(listbase));
 
-	if (!sane_listp(s, listbase))
-	  SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", listbase);
+	if (!new_n)
+		SCIkwarn(SCIkERROR, "Attempt to add non-node ("PREG") to list at "PREG"\n",
+			 PRINT_REG(nodebase), PRINT_REG(listbase));
+	if (!l || !sane_listp(s, listbase))
+		SCIkwarn(SCIkERROR,"List at "PREG" is not sane anymore!\n", PRINT_REG(listbase));
 
+	new_n->succ = l->first;
+	new_n->pred = NULL_REG;
 	/* Set node to be the first and last node if it's the only node of the list */
-	if (old_lastnode)
-		PUT_HEAP(old_lastnode + LIST_NEXT_NODE, nodebase);
+	if (IS_NULL_REG(l->first))
+		l->last = nodebase;
+	else {
+		node_t *old_n = LOOKUP_NODE(l->first);
+		old_n->pred = nodebase;
+	}
+	l->first = nodebase;
+}
 
-	PUT_HEAP(nodebase + LIST_PREVIOUS_NODE, old_lastnode);
+inline void
+_k_add_to_end(state_t *s, reg_t listbase, reg_t nodebase)
+{
+	list_t *l = LOOKUP_LIST(listbase);
+	node_t *new_n = LOOKUP_NODE(nodebase);
 
-	PUT_HEAP(listbase + LIST_LAST_NODE, nodebase);
+	SCIkdebug(SCIkNODES, "Adding node "PREG" to end of list "PREG"\n",
+		  PRINT_REG(nodebase), PRINT_REG(listbase));
 
-	if (GET_HEAP(listbase + LIST_FIRST_NODE) == 0)
-		PUT_HEAP(listbase + LIST_FIRST_NODE, nodebase);
+	if (!new_n)
+		SCIkwarn(SCIkERROR, "Attempt to add non-node ("PREG") to list at "PREG"\n",
+			 PRINT_REG(nodebase), PRINT_REG(listbase));
+	if (!l || !sane_listp(s, listbase))
+		SCIkwarn(SCIkERROR,"List at "PREG" is not sane anymore!\n", PRINT_REG(listbase));
+
+	new_n->succ = NULL_REG;
+	new_n->pred = l->last;
+	/* Set node to be the first and last node if it's the only node of the list */
+	if (IS_NULL_REG(l->last))
+		l->first = nodebase;
+	else {
+		node_t *old_n = LOOKUP_NODE(l->last);
+		old_n->succ = nodebase;
+	}
+	l->last = nodebase;
 }
 
 
-void
-kNextNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kNextNode(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
+	node_t *n = LOOKUP_NODE(argv[0]);
+	if (!sane_nodep(s, argv[0]))
+		SCIkwarn(SCIkERROR,"List node at "PREG" is not sane anymore!\n",
+			 PRINT_REG(argv[0]));
 
-	if (!sane_nodep(s, UPARAM(0)))
-		SCIkwarn(SCIkERROR,"List node at %04x is not sane anymore!\n", PARAM(0));
-
-	s->acc = UGET_HEAP(UPARAM(0) + LIST_NEXT_NODE);
+	return n->succ;
 }
 
-void
-kPrevNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kPrevNode(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
+	node_t *n = LOOKUP_NODE(argv[0]);
+	if (!sane_nodep(s, argv[0]))
+		SCIkwarn(SCIkERROR,"List node at "PREG" is not sane anymore!\n",
+			 PRINT_REG(argv[0]));
 
-	if (!sane_nodep(s, UPARAM(0)))
-		SCIkwarn(SCIkERROR,"List node at %04x is not sane anymore!\n", PARAM(0));
-
-	s->acc = UGET_HEAP(UPARAM(0) + LIST_PREVIOUS_NODE);
+	return n->pred;
 }
 
 
-
-void
-kNodeValue(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kNodeValue(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int a;
+	node_t *n = LOOKUP_NODE(argv[0]);
+	if (!sane_nodep(s, argv[0]))
+		SCIkwarn(SCIkERROR,"List node at "PREG" is not sane!\n",
+			 PRINT_REG(argv[0]));
 
-	if (UPARAM(0)==0)
-	  {
-	    SCIkwarn(SCIkERROR, "NodeValue() on a NULL pointer attempted!\n");
-	    s->acc=0;
-	    return;
-	  }
-
-	if (!sane_nodep(s, UPARAM(0)))
-	  SCIkwarn(SCIkERROR,"List node at %04x is not sane anymore!\n", PARAM(0));
-
-	a = UPARAM(0) + LIST_NODE_VALUE;
-
-	s->acc=UGET_HEAP(a);
-
+	return n->value;
 }
 
-void
-kAddAfter(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kAddAfter(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr list = UPARAM(0);
-	heap_ptr firstnode = UPARAM(1);
-	heap_ptr newnode = UPARAM(2);
+	list_t *l = LOOKUP_LIST(argv[0]);
+	node_t *firstnode = IS_NULL_REG(argv[1])? NULL : LOOKUP_NODE(argv[1]);
+	node_t *newnode = LOOKUP_NODE(argv[2]);
 
-#warning "Fix list code (1)!"
-#if 0
+	if (!l || !sane_listp(s, argv[0]))
+		SCIkwarn(SCIkERROR,"List at "PREG" is not sane anymore!\n",
+			 PRINT_REG(argv[0]));
 
-	if (!sane_listp(s, list))
-		SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
+	if (!newnode) {
+		SCIkwarn(SCIkERROR,"New 'node' "PREG" is not a node!\n",
+			 argv[1], argv[2]);
+		return NULL_REG;
+	}
 
 	if (argc != 3) {
 		SCIkdebug(SCIkWARNING, "Aborting.\n");
-		return;
+		return NULL_REG;
 	}
 
 	if (firstnode) { /* We're really appending after */
+		reg_t oldnext = firstnode->succ;
 
-		heap_ptr oldnext = GET_HEAP(firstnode + LIST_NEXT_NODE);
-		PUT_HEAP(newnode + LIST_PREVIOUS_NODE, firstnode);
-		PUT_HEAP(firstnode + LIST_NEXT_NODE, newnode);
-		PUT_HEAP(newnode + LIST_NEXT_NODE, oldnext);
+		newnode->pred = argv[1];
+		firstnode->succ = argv[2];
+		newnode->succ = oldnext;
 
-		if (!oldnext) /* Appended after last node? */
-			PUT_HEAP(list + LIST_LAST_NODE, newnode) /* Set new node as last list node */
+		if (IS_NULL_REG(oldnext))  /* Appended after last node? */
+			/* Set new node as last list node */
+			l->last = argv[2];
 		else
-			PUT_HEAP(oldnext + LIST_PREVIOUS_NODE, newnode);
+			LOOKUP_NODE(oldnext)->pred = argv[2];
 
-	} else { /* Set as initial list node */
+		return s->r_acc;
 
-		heap_ptr nextnode = GET_HEAP(list + LIST_FIRST_NODE);
-		PUT_HEAP(newnode + LIST_NEXT_NODE, nextnode);
-		PUT_HEAP(list + LIST_FIRST_NODE, newnode);
-		if (!nextnode) /* List was empty? */
-			PUT_HEAP(list + LIST_LAST_NODE, newnode)
-		else
-			PUT_HEAP(nextnode + LIST_PREVIOUS_NODE, newnode);
+	} else { /* !firstnode */
+		/* Prepare call to AddToFront... */
+		argv[1] = argv[0];
+		return kAddToFront(s, funct_nr, 2, argv + 1);/* Set as initial list node */
 	}
-#endif
 }
 
-void
-kAddToFront(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kAddToFront(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr listbase = UPARAM(0);
-	heap_ptr nodebase = UPARAM(1);
-	heap_ptr old_firstnode = GET_HEAP(listbase + LIST_FIRST_NODE);
-	SCIkdebug(SCIkNODES, "Adding node %04x to start of list %04x\n", nodebase, listbase);
-
-	if (!sane_listp(s, listbase))
-	  SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", listbase);
-
-	if (old_firstnode)
-		PUT_HEAP(old_firstnode + LIST_PREVIOUS_NODE, nodebase);
-
-	PUT_HEAP(nodebase + LIST_NEXT_NODE, old_firstnode);
-
-	PUT_HEAP(listbase + LIST_FIRST_NODE, nodebase);
-
-	if (GET_HEAP(listbase + LIST_LAST_NODE) == 0)
-		PUT_HEAP(listbase + LIST_LAST_NODE, nodebase);
-	/* Set node to be the first and last node if it's the only node of the list */
+	_k_add_to_front(s, argv[0], argv[1]);
+	return s->r_acc;
 }
 
 
-void
-kAddToEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kAddToEnd(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr listbase = UPARAM(0);
-	heap_ptr nodebase = UPARAM(1);
-
-	_k_add_to_end(s, listbase, nodebase);
+	_k_add_to_end(s, argv[0], argv[1]);
+	return s->r_acc;
 }
 
 
-void
-kFindKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kFindKey(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr node;
-	word key = UPARAM(1);
-	SCIkdebug(SCIkNODES, "Looking for key %04x in list %04x\n", key, UPARAM(0));
+	reg_t node_pos;
+	reg_t key = argv[1];
+	reg_t list_pos = argv[0];
 
-	if (!sane_listp(s, PARAM(0)))
-	  SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", UPARAM(0));
+	SCIkdebug(SCIkNODES, "Looking for key "PREG" in list "PREG"\n",
+		  PRINT_REG(key), PRINT_REG(list_pos));
 
-	node = UGET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
+	if (!sane_listp(s, list_pos))
+		SCIkwarn(SCIkERROR,"List at "PREG" is not sane anymore!\n",
+			 PRINT_REG(list_pos));
 
-	SCIkdebug(SCIkNODES, "Node at %04x\n", node);
+	node_pos = LOOKUP_LIST(list_pos)->first;
 
-	while (node && (UGET_HEAP(node + LIST_NODE_KEY) != key)) {
-		node = UGET_HEAP(node + LIST_NEXT_NODE);
-		SCIkdebug(SCIkNODES, "NextNode at %04x\n", node);
+	SCIkdebug(SCIkNODES, "First node at "PREG"\n", PRINT_REG(node_pos));
+
+	while (!IS_NULL_REG(node_pos)) {
+		node_t *n = LOOKUP_NODE(node_pos);
+		if (REG_EQ(n->key, key)) {
+			SCIkdebug(SCIkNODES, " Found key at "PREG"\n", PRINT_REG(node_pos));
+			return node_pos;
+		}
+
+		node_pos = n->succ;
+		SCIkdebug(SCIkNODES, "NextNode at "PREG"\n", PRINT_REG(node_pos));
 	}
-	/* Aborts if either the list ends (node == 0) or the key is found */
 
-	SCIkdebug(SCIkNODES, "Looking for key: Result is %04x\n", node);
-	s->acc = node;
+	SCIkdebug(SCIkNODES, "Looking for key without success\n");
+	return NULL_REG;
 }
 
 
-int
-_k_delete_key(state_t *s, heap_ptr list, heap_ptr key)
-     /* Removes the specified key from the specified heap list, returns 0 on success, 1 otherwise */
+reg_t
+kDeleteKey(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr node;
+	reg_t node_pos = kFindKey(s, funct_nr, 2, argv);
+	node_t *n;
+	list_t *l = LOOKUP_LIST(argv[0]);
 
-	SCIkdebug(SCIkNODES, "Removing key %04x from list %04x\n", key, list);
+	if (IS_NULL_REG(node_pos))
+		return make_reg(0, 1);  /* Signal failure */
 
-	if (!sane_listp(s, list))
-	  SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
+	n = LOOKUP_NODE(node_pos);
+	if (REG_EQ(l->first, node_pos))
+		l->first = n->succ;
+	if (REG_EQ(l->last, node_pos))
+		l->last = n->pred;
 
-	node = UGET_HEAP(list + LIST_FIRST_NODE);
+	if (!IS_NULL_REG(n->pred))
+		LOOKUP_NODE(n->pred)->succ = n->succ;
+	if (!IS_NULL_REG(n->succ))
+		LOOKUP_NODE(n->succ)->pred = n->pred;
 
-	while (node && ((guint16) UGET_HEAP(node + LIST_NODE_KEY) != key))
-		node = GET_HEAP(node + LIST_NEXT_NODE);
-	/* Aborts if either the list ends (node == 0) or the key is found */
+	s->seg_manager.free_node(&s->seg_manager, node_pos);
 
-
-	if (node) {
-		heap_ptr prev_node = UGET_HEAP(node + LIST_PREVIOUS_NODE);
-		heap_ptr next_node = UGET_HEAP(node + LIST_NEXT_NODE);
-
-		SCIkdebug(SCIkNODES,"Removing key from list: Succeeded at %04x\n", node);
-
-		if (UGET_HEAP(list + LIST_FIRST_NODE) == node)
-			PUT_HEAP(list + LIST_FIRST_NODE, next_node);
-		if (UGET_HEAP(list + LIST_LAST_NODE) == node)
-			PUT_HEAP(list + LIST_LAST_NODE, prev_node);
-
-		if (next_node)
-			PUT_HEAP(next_node + LIST_PREVIOUS_NODE, prev_node);
-		if (prev_node)
-			PUT_HEAP(prev_node + LIST_NEXT_NODE, next_node);
-
-		heap_free(s->_heap, node - 2);
-
-		return 1;
-
-	} else SCIkdebug(SCIkNODES,"Removing key from list: FAILED\n");
-
-	return 0;
-}
-
-void
-kDeleteKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
-{
-	s->acc=_k_delete_key(s, UPARAM(0), UPARAM(1));
+	return NULL_REG; /* Signal success */
 }
 
 

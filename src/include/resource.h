@@ -215,6 +215,16 @@ getInt16(byte *d)
 ** getUInt16 returns the int unsigned.
 */
 
+static inline void
+putInt16(byte* dest, int src)
+{
+	dest[0]=(byte)src&0xff;
+	dest[1]=(byte)(src>>8)&0xff;
+}
+/* Converse of getInt16()
+** Parameters: (byte *) dest: The position to write to
+**             (int) src: value to write
+*/
 
 #ifndef HAVE_ISBLANK
 static inline int

@@ -75,12 +75,12 @@ typedef int mem_obj_enum;
 
 struct _mem_obj;
 
-#define GET_SEGMENT(mgr, index, rtype) ((index) >= 0 && (mgr).heap_size > index)?	\
+#define GET_SEGMENT(mgr, index, rtype) ((index) > 0 && (mgr).heap_size > index)?	\
 		(((mgr).heap[index]->type == rtype)? (mgr).heap[index]			\
 		: NULL) /* Type does not match */					\
 	: NULL /* Invalid index */
 
-#define GET_OBJECT_SEGMENT(mgr, index) ((index) >= 0 && (mgr).heap_size > index)?	\
+#define GET_OBJECT_SEGMENT(mgr, index) ((index) > 0 && (mgr).heap_size > index)?	\
 		(((mgr).heap[index]->type == MEM_OBJ_SCRIPT				\
 		  || (mgr).heap[index]->type == MEM_OBJ_CLONES)? (mgr).heap[index]	\
 		: NULL) /* Type does not match */					\
@@ -91,6 +91,10 @@ typedef struct _seg_manager_t {
 	struct _mem_obj** heap;
 	int heap_size;		// size of the heap
 	int reserved_id;
+
+	seg_id_t clones_seg_id; /* ID of the (a) clones segment */
+	seg_id_t lists_seg_id; /* ID of the (a) list segment */
+	seg_id_t nodes_seg_id; /* ID of the (a) node segment */
 
 	/* member methods */
 	void (*init) (struct _seg_manager_t* self);
@@ -139,7 +143,8 @@ typedef struct _seg_manager_t {
 
 	int (*get_heappos) (struct _seg_manager_t* self, int id, int flag);
 
-	void (*set_export_table_offset) (struct _seg_manager_t* self, int offset, int id, int flag);
+	void (*set_export_table_offset) (struct _seg_manager_t* self, int offset,
+					 int magic_offset, int id, int flag);
 	guint16 *(*get_export_table_offset) (struct _seg_manager_t* self, int id, int flag,
 					     int *max);
 
@@ -192,6 +197,17 @@ typedef struct _seg_manager_t {
 	** frees up some additional memory.
 	*/
 
+
+	/* Allocation/deallocation primitives for certain objects */
+	clone_t* (*alloc_clone)(struct _seg_manager_t *self, reg_t *addr);
+	list_t* (*alloc_list)(struct _seg_manager_t *self, reg_t *addr);
+	node_t* (*alloc_node)(struct _seg_manager_t *self, reg_t *addr);
+
+	void (*free_clone)(struct _seg_manager_t *self, reg_t addr);
+	void (*free_list)(struct _seg_manager_t *self, reg_t addr);
+	void (*free_node)(struct _seg_manager_t *self, reg_t addr);
+
+
 } seg_manager_t;
 
 // implementation of seg_manager method
@@ -236,7 +252,8 @@ void sm_set_lockers (seg_manager_t* self, int lockers, int id, int flag);
 
 int sm_get_heappos (struct _seg_manager_t* self, int id, int flag);	// return 0
 
-void sm_set_export_table_offset (struct _seg_manager_t* self, int offset, int id, int flag);
+void sm_set_export_table_offset (struct _seg_manager_t* self, int offset,
+				 int magic_offset, int id, int flag);
 guint16 *sm_get_export_table_offset (struct _seg_manager_t* self, int id, int flag, int *max);
 
 void sm_set_synonyms_offset (struct _seg_manager_t* self, int offset, int id, int flag);

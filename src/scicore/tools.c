@@ -1,5 +1,5 @@
 /***************************************************************************
- tools.c Copyright (C) 1999,2000,2001 Christoph Reichenbach
+ tools.c Copyright (C) 1999,2000,2001,2002 Christoph Reichenbach
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
@@ -703,3 +703,5 @@ sci_getcwd()
 	fprintf(stderr,"Could not determine current working directory!\n");
 	return NULL;
 }
+
+

@@ -29,6 +29,7 @@
 #include <engine.h>
 #include <versions.h>
 #include <kdebug.h>
+#include <kernel_types.h>
 
 #if !defined (_WIN32) && !defined (__BEOS__)
 #include <sys/resource.h>
@@ -247,11 +248,9 @@ get_class_address(state_t *s, int classnr, int lock)
 #define GET_OP_SIGNED_WORD() ((getInt16(code_buf + ((xs->addr.pc.offset) += 2) - 2)))
 #define GET_OP_SIGNED_FLEX() ((opcode & 1)? GET_OP_SIGNED_BYTE() : GET_OP_SIGNED_WORD())
 
-#define OBJ_SPECIES(address) SEG_GET_HEAP((address) + SCRIPT_SPECIES_OFFSET)
 #define OBJ_SPECIES(s, reg, mem) SEG_GET_HEAP2(s, reg.segment, reg.offset + SCRIPT_SPECIES_OFFSET, mem)
 /* Returns an object's species */
 
-#define OBJ_SUPERCLASS(address) SEG_GET_HEAP((address) + SCRIPT_SUPERCLASS_OFFSET)
 #define OBJ_SUPERCLASS(s, reg, mem) SEG_GET_HEAP2(s, reg.segment, reg.offset + SCRIPT_SUPERCLASS_OFFSET, mem)
 /* Returns an object's superclass */
 
@@ -263,20 +262,19 @@ get_class_address(state_t *s, int classnr, int lock)
 execute_method(state_t *s, word script, word pubfunct, stack_ptr_t sp,
 	       reg_t calling_obj, word argc, stack_ptr_t argp)
 {
-  int seg;
-  int magic_ofs;
-  guint16 temp;
+	int seg;
+	guint16 temp;
 
-  if (!s->seg_manager.isloaded (&s->seg_manager, script, SCRIPT_ID)) /* Script not present yet? */
-      script_instantiate(s, script);
-  seg = s->seg_manager.seg_get( &s->seg_manager, script );
-  temp = s->seg_manager.validate_export_func( &s->seg_manager, pubfunct, seg );
-  VERIFY( temp, "Invalid pubfunct in export table" );
-  if( !temp ) {
-  	sciprintf("Request for invalid exported function 0x%x of script 0x%x\n", pubfunct, script);
-	script_error_flag = script_debug_flag = 1;
-	return NULL;
-  }
+	if (!s->seg_manager.isloaded (&s->seg_manager, script, SCRIPT_ID)) /* Script not present yet? */
+		script_instantiate(s, script);
+	seg = s->seg_manager.seg_get( &s->seg_manager, script );
+	temp = s->seg_manager.validate_export_func( &s->seg_manager, pubfunct, seg );
+	VERIFY( temp, "Invalid pubfunct in export table" );
+	if( !temp ) {
+		sciprintf("Request for invalid exported function 0x%x of script 0x%x\n", pubfunct, script);
+		script_error_flag = script_debug_flag = 1;
+		return NULL;
+	}
 
 #warning "Re-enable execute_method debug"
 #if 0
@@ -303,13 +301,10 @@ execute_method(state_t *s, word script, word pubfunct, stack_ptr_t sp,
   }
 #endif
 
-  if (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-    magic_ofs=2; else
-    magic_ofs=0;
-
   return
-    add_exec_stack_entry(s, make_reg( seg, temp ),
-		 sp, calling_obj, (int)argc, argp, -1, calling_obj, s->execution_stack_pos);
+	  add_exec_stack_entry(s, make_reg( seg, temp ),
+			       sp, calling_obj, (int)argc, argp, -1, calling_obj,
+			       s->execution_stack_pos);
 }
 
 
@@ -369,15 +364,13 @@ send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
 			return NULL;
 		}
 
-#warning "Fix breakpoints in send"
-#if 0
 		/* Check if a breakpoint is set on this method */
 		if (s->have_bp & BREAK_SELECTOR) {
 			breakpoint_t *bp;
 			char method_name [256];
 
 			sprintf (method_name, "%s::%s",
-				 s->heap + getUInt16 (s->heap + send_obj + SCRIPT_NAME_OFFSET),
+				 obj_get_name(s, send_obj),
 				 s->selector_names [selector]);
 
 			bp = s->bp_list;
@@ -387,7 +380,8 @@ send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
 					cmplen = 256;
 
 				if (bp->type == BREAK_SELECTOR && !strncmp (bp->data.name, method_name, cmplen)) {
-					sciprintf ("Break on %s (in [%04x])\n", method_name, send_obj);
+					sciprintf ("Break on %s (in ["PREG"])\n", method_name,
+						   PRINT_REG(send_obj));
 					script_debug_flag = print_send_action = 1;
 					bp_flag = 1;
 					break;
@@ -395,10 +389,10 @@ send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
 				bp = bp->next;
 			}
 		}
-#endif
 
 #ifdef VM_DEBUG_SEND
-		sciprintf("Send to selector %04x (%s):", selector, s->selector_names[selector]);
+		sciprintf("Send to "PREG", selector %04x (%s):",
+			  PRINT_OBJ(send_obj), selector, s->selector_names[selector]);
 #endif /* VM_DEBUG_SEND */
 
 		if (++send_calls_nr == (send_calls_allocated - 1))
@@ -420,7 +414,7 @@ send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
 #ifdef VM_DEBUG_SEND
 			sciprintf("Varselector: ");
 			if (argc)
-				sciprintf("Write %04x\n", argp[1]);
+				sciprintf("Write "PREG"\n", PRINT_REG(argp[1]));
 			else
 				sciprintf("Read\n");
 #endif /* VM_DEBUG_SEND */
@@ -456,8 +450,8 @@ send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
 #ifdef STRICT_SEND
 			default:
 				--send_calls_nr;
-				sciprintf("Send error: Variable selector %04x in %04x called with %04x params\n",
-					  selector, send_obj, argc);
+				sciprintf("Send error: Variable selector %04x in "PREG" called with %04x params\n",
+					  selector, PRINT_REG(send_obj), argc);
 				script_debug_flag = 1; /* Enter debug mode */
 				_debug_seeking = _debug_step_running = 0;
 
@@ -585,14 +579,7 @@ static jmp_buf vm_error_address;
 
 
 #ifdef DISABLE_VALIDATONS
-#  define kernel_signature_check(a, b, c, d) 0
-#else
-static inline int
-kernel_signature_check(state_t *s, char *sig, int argc, reg_t *regs)
-{
-#warning "Add signature checks"
-	return 0; /* All's well */
-}
+#  define kernel_matches_signature(a, b, c, d) 1
 #endif
 
 
@@ -626,6 +613,7 @@ run_vm(state_t *s, int restoring)
 	seg_id_t variables_seg[4]; /* Same as above, contains segment IDs */
 #ifndef DISABLE_VALIDATIONS
 	int variables_max[4]; /* Max. values for all variables */
+	int code_buf_size;
 #endif
 	int temp;
 	gint16 aux_acc; /* Auxiliary 16 bit accumulator */
@@ -704,6 +692,7 @@ run_vm(state_t *s, int restoring)
 		old_pc_offset = xs->addr.pc.offset;
 
 		if (s->execution_stack_pos_changed) {
+			script_t *scr;
 			xs = s->execution_stack + s->execution_stack_pos;
 			s->execution_stack_pos_changed = 0;
 			obj = obj_get(s, xs->objp);
@@ -728,7 +717,11 @@ run_vm(state_t *s, int restoring)
 			variables[VAR_PARAM] = xs->variables_argp;
 			WRITE_VAR16(VAR_PARAM, 0, xs->argc);
 
-			code_buf = script_locate_by_segment(s, xs->addr.pc.segment)->buf;
+			scr = script_locate_by_segment(s, xs->addr.pc.segment);
+			code_buf = scr->buf;
+#ifndef DISABLE_VALIDATIONS
+			code_buf_size = scr->buf_size;
+#endif
 		}
 
 		script_error_flag = 0; /* Set error condition to false */
@@ -759,7 +752,7 @@ run_vm(state_t *s, int restoring)
 
 		variables_max[VAR_TEMP] = xs->sp - xs->fp;
 
-		if (xs->addr.pc.offset >= local_script->buf_size)
+		if (xs->addr.pc.offset >= code_buf_size)
 			script_error(s, "[VM] "__FILE__, __LINE__, "Program Counter gone astray");
 #endif
 
@@ -854,17 +847,23 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x0c: /* not */
-			s->r_acc = ACC_ARITHMETIC_L(!/*acc*/);
+			s->r_acc = make_reg(0, !s->r_acc.offset);
+			/* Must allow pointers to be negated, as this is used for
+			** checking whether objects exist  */
 			break;
 
 		case 0x0d: /* eq? */
 			s->r_prev = s->r_acc;
-			s->r_acc = ACC_ARITHMETIC_L(POP() == /*acc*/);
+			r_temp = POP32();
+			s->r_acc = make_reg(0, REG_EQ(r_temp, s->r_acc));
+			/* Explicitly allow pointers to be compared */
 			break;
 
 		case 0x0e: /* ne? */
 			s->r_prev = s->r_acc;
-			s->r_acc = ACC_ARITHMETIC_L(POP() != /*acc*/);
+			r_temp = POP32();
+			s->r_acc = make_reg(0, !REG_EQ(r_temp, s->r_acc));
+			/* Explicitly allow pointers to be compared */
 			break;
 
 		case 0x0f: /* gt? */
@@ -960,7 +959,7 @@ run_vm(state_t *s, int restoring)
 						      s->execution_stack_pos);
 			restadjust = 0; /* Used up the &rest adjustment */
 
-			s->execution_stack_pos_changed;
+			s->execution_stack_pos_changed = 1;
 			break;
 		}
 
@@ -983,10 +982,10 @@ run_vm(state_t *s, int restoring)
 					argc += restadjust;
 
 				if (s->kfunct_table[opparams[0]].signature
-				    && kernel_signature_check(s,
-							      s->kfunct_table[opparams[0]]
-							      .signature,
-							      argc, xs->sp + 1)) {
+				    && !kernel_matches_signature(s,
+								 s->kfunct_table[opparams[0]]
+								 .signature,
+								 argc, xs->sp + 1)) {
 					sciprintf("[VM] Invalid arguments to kernel call %x\n",
 						  opparams[0]);
 					script_debug_flag = script_error_flag = 1;
@@ -1065,6 +1064,7 @@ run_vm(state_t *s, int restoring)
 			} while (xs->type == EXEC_STACK_TYPE_VARSELECTOR);
 			/* Iterate over all varselector accesses */
 			s->execution_stack_pos_changed = 1;
+			xs_new = xs;
 
 			break;
 
@@ -1426,7 +1426,8 @@ run_vm(state_t *s, int restoring)
 
 #ifndef DISABLE_VALIDATIONS
 		if (xs != s->execution_stack + s->execution_stack_pos) {
-			sciprintf("Error: xs is stale; last command was %02x\n", opnumber);
+			sciprintf("Error: xs is stale (%d vs %d); last command was %02x\n",
+				  xs-s->execution_stack, s->execution_stack_pos, opnumber);
 		}
 #endif
 
@@ -1443,17 +1444,14 @@ run_vm(state_t *s, int restoring)
 
 
 static inline int
-_class_locate_varselector(object_t *obj, selector_t slc)
-{	/* Determines if obj is a class and explicitly defines slc as a varselector */
-	/* Returns -1 if not found, -2 if not a class, its index otherwise */
+_obj_locate_varselector(object_t *obj, selector_t slc)
+{	/* Determines if obj explicitly defines slc as a varselector */
+	/* Returns -1 if not found */
 	
 	int varnum = obj->variables_nr;
 	int selector_name_offset = varnum * 2 + SCRIPT_SELECTOR_OFFSET;
 	int i;
 	byte *buf = obj->base_obj + selector_name_offset;
-
-	if (!IS_CLASS(obj))
-		return -2; /* Not a class */
 
 	for (i = 0; i < varnum; i++)
 		if (getUInt16(buf + (i << 1)) == slc) /* Found it? */
@@ -1491,9 +1489,10 @@ _lookup_selector_function(state_t *s, int seg_id, object_t *obj, selector_t sele
 		index = _class_locate_funcselector(obj, selector_id);
 
 		if (index >= 0) {
-			*fptr = make_reg(seg_id, getUInt16((byte *)
-							   (obj->base_method + index
-							    + obj->methods_nr + 1)));
+			*fptr = make_reg(obj->pos.segment,
+					 getUInt16((byte *)
+						   (obj->base_method + index
+						    + obj->methods_nr + 1)));
 			return SELECTOR_METHOD;
 		} else {
 			seg_id = obj->variables[SCRIPT_SUPERCLASS_SELECTOR].segment;
@@ -1517,9 +1516,6 @@ lookup_selector(state_t *s, reg_t obj_location, selector_t selector_id, reg_t **
 		return SELECTOR_NONE;
 	}
 
-	/* At this point, def_seg and def_offset point to a script, but may
-	** still reference a static instance, so we must now look up their
-	** species.  */
 	if (IS_CLASS(obj))
 		species = obj;
 	else
@@ -1533,7 +1529,7 @@ lookup_selector(state_t *s, reg_t obj_location, selector_t selector_id, reg_t **
 		return SELECTOR_NONE;
 	}
 
-	index = _class_locate_varselector(obj, selector_id);
+	index = _obj_locate_varselector(obj, selector_id);
 
 	if (index >= 0) {
 		/* Found it as a variable */
@@ -1661,7 +1657,7 @@ script_instantiate(state_t *s, int script_nr)
 
 	/* Set heap position (beyond the size word) */
 	s->seg_manager.set_lockers( &s->seg_manager, 0, reg.segment, SEG_ID );
-	s->seg_manager.set_export_table_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
+	s->seg_manager.set_export_table_offset( &s->seg_manager, 0, 0, reg.segment, SEG_ID );
 	s->seg_manager.set_synonyms_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
 	s->seg_manager.set_synonyms_nr( &s->seg_manager, 0, reg.segment, SEG_ID );
 	s->seg_manager.set_localvar_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
@@ -1708,8 +1704,14 @@ script_instantiate(state_t *s, int script_nr)
 		data_base.offset += 4;
 
 		switch( objtype ) {
-		case sci_obj_exports:
-			s->seg_manager.set_export_table_offset( &s->seg_manager, reg.offset + 4, reg.segment, SEG_ID ); /* +4 is to step over the header */
+		case sci_obj_exports: {
+			int magic_offset = (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER)? 2 : 0;
+
+			s->seg_manager.set_export_table_offset( &s->seg_manager, reg.offset + 4
+								/* +4 is to step over the header */
+								, magic_offset, reg.segment,
+								SEG_ID );
+		}
 			break;
 
 		case sci_obj_synonyms:
@@ -2095,3 +2097,4 @@ quit_vm()
 	_debug_seeking = 0;
 	_debug_step_running = 0;
 }
+

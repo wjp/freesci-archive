@@ -31,6 +31,7 @@
 #include <kdebug.h>
 #include <vocabulary.h>
 #include <kernel_compat.h>
+#include <kernel_types.h>
 #ifdef HAVE_UNISTD_H
 /* Assume this is a sufficient precondition */
 #  include <signal.h>
@@ -164,27 +165,30 @@ print_list(state_t *s, list_t *l)
 
 	while (!IS_NULL_REG(pos)) {
 		node_t *node;
-		mem_obj_t *mobj = GET_SEGMENT(s->seg_manager, pos.segment, MEM_OBJ_LISTS);
+		mem_obj_t *mobj = GET_SEGMENT(s->seg_manager, pos.segment, MEM_OBJ_NODES);
 
 		if (!mobj || !ENTRY_IS_VALID(&(mobj->data.nodes), pos.offset)) {
-			sciprintf("   WARNING: "PREG": Doesn't contain list node!\n");
+			sciprintf("   WARNING: "PREG": Doesn't contain list node!\n",
+				  PRINT_REG(pos));
 			return;
 		}
 
 		node = &(mobj->data.nodes.table[pos.offset].entry);
 
 		sciprintf("\t"PREG"  : "PREG" -> "PREG"\n",
-			  PRINT_REG(pos), PRINT_REG(node->name), PRINT_REG(node->value));
+			  PRINT_REG(pos), PRINT_REG(node->key), PRINT_REG(node->value));
 
 		if (!REG_EQ(my_prev, node->pred))
-			sciprintf("   WARNING: current node gives "PREG" as predecessor!\n", PRINT_REG(node->pred));
+			sciprintf("   WARNING: current node gives "PREG" as predecessor!\n",
+				  PRINT_REG(node->pred));
 
 		my_prev = pos;
 		pos = node->succ;
 	}
 
 	if (!REG_EQ(my_prev, l->last))
-		sciprintf("   WARNING: Last node was expected to be "PREG"!\n", PRINT_REG(l->last));
+		sciprintf("   WARNING: Last node was expected to be "PREG", was "PREG"!\n",
+			  PRINT_REG(l->last), PRINT_REG(my_prev));
 	sciprintf("\t>\n");
 }
 
@@ -346,10 +350,10 @@ c_debuginfo(state_t *s)
 int
 c_step(state_t *s)
 {
-  _debugstate_valid = 0;
-  if (cmd_paramlength && (cmd_params[0].val > 0))
-    _debug_step_running = cmd_params[0].val;
-  return 0;
+	_debugstate_valid = 0;
+	if (cmd_paramlength && (cmd_params[0].val > 0))
+		_debug_step_running = cmd_params[0].val - 1;
+	return 0;
 }
 
 #warning "Re-implement con:so"
@@ -913,8 +917,8 @@ int prop_ofs_to_id(state_t *s, int prop_ofs, reg_t objp)
 		return -1;
 	}
 
-	selectoroffset = obj->base_obj + SCRIPT_SELECTOR_OFFSET + selectors * 2;
 	selectors = obj->variables_nr;
+	selectoroffset = ((byte *) (obj->base_obj)) + SCRIPT_SELECTOR_OFFSET + selectors * 2;
 
 	if (prop_ofs < 0 || (prop_ofs >> 1) >= selectors) {
 		sciprintf("Applied prop_ofs_to_id to invalid property offset %x (property #%d not"
@@ -1116,116 +1120,119 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 
 		}
 
-#warning "Re-enable extra disasm information"
-#if 0
-	if (pos == *p_pc) /* Extra information if debugging the current opcode */
+	if (REG_EQ(pos, *p_pc)) /* Extra information if debugging the current opcode */
 
 		if ((opcode == op_pTos)||(opcode == op_sTop)||
 		    (opcode == op_pToa)||(opcode == op_aTop)||
 		    (opcode == op_dpToa)||(opcode == op_ipToa)||
 		    (opcode == op_dpTos)||(opcode == op_ipTos)) {
-			int prop_ofs = s->heap[retval - 1];
-			int prop_id = prop_ofs_to_id(s, prop_ofs, *p_objp & 0xffff);
+			int prop_ofs = scr[pos.offset + 1];
+			int prop_id = prop_ofs_to_id(s, prop_ofs, *p_objp);
 
 			sciprintf("	(%s)", selector_name(s, prop_id));
 		}
-#endif
 
 	sciprintf("\n");
 
-#warning "Re-enable extra disasm information"
-#if 0
-	if (pos == *p_pc) { /* Extra information if debugging the current opcode */
+	if (REG_EQ(pos, *p_pc)) { /* Extra information if debugging the current opcode */
 
 		if (opcode == op_callk) {
-			int stackframe = s->heap[retval - 1] + (*p_restadjust * 2);
-			int argc = getInt16(s->heap + *p_sp - stackframe - 2);
+			int stackframe = (scr[pos.offset + 2] >> 1) + (*p_restadjust);
+			int argc = ((*p_sp)[- stackframe - 1]).offset;
 			int i;
 
 			sciprintf(" Kernel params: (");
 
 			for (i = 0; i < argc; i++) {
-				sciprintf("%04x", getUInt16(s->heap + *p_sp - stackframe + i*2));
+				sciprintf(PREG, PRINT_REG((*p_sp)[i - stackframe]));
 				if (i+1 < argc)
 					sciprintf(", ");
 			}
 			sciprintf(")\n");
 
-		} else
+		}
+#warning "Re-enable extra disasm information"
+#if 0
+ else if ((opcode == op_send) || (opcode == op_self)) {
+			int restmod = *p_restadjust;
+			int stackframe = (scr[pos.offset + 2] >> 1) + (*p_restadjust);
+			word selector;
+			heap_ptr selector_addr;
 
-			if ((opcode == op_send) || (opcode == op_self)) {
-				int restmod = *p_restadjust;
-				int stackframe = s->heap[retval - 1] + (restmod * 2);
-				word selector;
-				heap_ptr selector_addr;
+			while (stackframe > 0) {
+				int argc = (*p_sp)[- stackframe + 1].offset;
+				heap_ptr nameaddress = 0;
+				reg_t called_obj_addr;
+				char *name;
 
-				while (stackframe > 0) {
-					int argc = getInt16(s->heap + *p_sp - stackframe + 2);
-					heap_ptr nameaddress = 0;
-					heap_ptr called_obj_addr;
-					char *name;
+				if (opcode == op_send)
+					called_obj_addr = s->acc;
+				else if (opcode == op_self)
+					called_obj_addr = *p_objp;
+#if 0
+				else { /* op_super */
+					called_obj_addr = s->heap[retval - 2];
 
-					if (opcode == op_send)
-						called_obj_addr = s->acc;
-					else if (opcode == op_self)
-						called_obj_addr = *p_objp;
-					else { /* op_super */
-						called_obj_addr = s->heap[retval - 2];
-
-						called_obj_addr = (s->classtable[called_obj_addr].scriptposp)?
+					called_obj_addr = (s->classtable[called_obj_addr].scriptposp)?
 							0 :
-							*(s->classtable[called_obj_addr].scriptposp)
-							+ s->classtable[called_obj_addr].class_offset;
-					}
-
-					selector = getInt16(s->heap + *p_sp - stackframe);
-
-					if (called_obj_addr > 100) /* If we are in valid heap space */
-						if (getInt16(s->heap + called_obj_addr + SCRIPT_OBJECT_MAGIC_OFFSET)
-						    == SCRIPT_OBJECT_MAGIC_NUMBER)
-							nameaddress = getUInt16(s->heap + called_obj_addr + SCRIPT_NAME_OFFSET);
-
-					if (nameaddress)
-						name = (char *) s->heap + nameaddress;
-					else
-						name = "<invalid>";
-
-					sciprintf("  %s::%s[", name, (selector > s->selector_names_nr)
-						  ? "<invalid>" : selector_name(s,selector));
-
-					switch (lookup_selector(s, called_obj_addr, selector, &selector_addr)) {
-					case SELECTOR_METHOD:
-						sciprintf("FUNCT");
-						argc += restmod;
-						restmod = 0;
-						break;
-					case SELECTOR_VARIABLE:
-						sciprintf("VAR");
-						break;
-					case SELECTOR_NONE:
-						sciprintf("INVALID");
-						break;
-					}
-
-					sciprintf("](");
-
-					while (argc--) {
-
-						sciprintf("%04x", 0xffff & getUInt16(s->heap + *p_sp - stackframe + 4));
-						if (argc) sciprintf(", ");
-						stackframe -= 2;
-
-					}
-
-					sciprintf(")\n");
-
-					stackframe -= 4;
-				} /* while (stackframe > 0) */
-
-			} /* Send-like opcodes */
-
-	} /* (heappos == *p_pc) */
+						*(s->classtable[called_obj_addr].scriptposp)
+						+ s->classtable[called_obj_addr].class_offset;
+				}
 #endif
+
+				selector = *p_sp[- stackframe].offset;
+
+				if (called_obj_addr > 100) /* If we are in valid heap space */
+					if (getInt16(s->heap + called_obj_addr
+						     + SCRIPT_OBJECT_MAGIC_OFFSET)
+					    == SCRIPT_OBJECT_MAGIC_NUMBER)
+						nameaddress = getUInt16(s->heap + called_obj_addr
+									+ SCRIPT_NAME_OFFSET);
+
+				if (nameaddress)
+					name = (char *) s->heap + nameaddress;
+				else
+					name = "<invalid>";
+
+				sciprintf("  %s::%s[", name, (selector > s->selector_names_nr)
+					  ? "<invalid>" : selector_name(s,selector));
+
+				switch (lookup_selector(s, called_obj_addr, selector,
+							&selector_addr)) {
+				case SELECTOR_METHOD:
+					sciprintf("FUNCT");
+					argc += restmod;
+					restmod = 0;
+					break;
+				case SELECTOR_VARIABLE:
+					sciprintf("VAR");
+					break;
+				case SELECTOR_NONE:
+					sciprintf("INVALID");
+					break;
+				}
+
+				sciprintf("](");
+
+				while (argc--) {
+
+					sciprintf("%04x", 0xffff & getUInt16(s->heap + *p_sp - stackframe + 4));
+					if (argc) sciprintf(", ");
+					stackframe -= 2;
+						
+					}
+
+				sciprintf(")\n");
+
+				stackframe -= 4;
+			} /* while (stackframe > 0) */
+
+		} /* Send-like opcodes */
+
+#endif
+	} /* (heappos == *p_pc) */
+
+
 	return retval;
 }
 
@@ -2679,9 +2686,8 @@ viewobjinfo(state_t *s, heap_ptr pos)
 
 
 int
-c_vo(state_t *s)
+objinfo(state_t *s, reg_t pos)
 {
-	reg_t pos = cmd_params[0].reg;
 	object_t *obj = obj_get(s, pos);
 	int i;
 
@@ -2708,152 +2714,73 @@ c_vo(state_t *s)
 			  selector_name(s, VM_OBJECT_GET_FUNCSELECTOR(obj, i)),
 			  PRINT_REG(fptr));
 	}
-}
-
-int
-objinfo(state_t *s, reg_t pos)
-{
-#warning "Fix objinfo()"
-#if 0
-	word type;
-	int is_view;
-
-	if ((pos < 4) || (pos > 0xfff0)) {
-		sciprintf("Invalid address.\n");
-		return 1;
-	}
-
-	if ((getInt16(s->heap + pos + SCRIPT_OBJECT_MAGIC_OFFSET)) != SCRIPT_OBJECT_MAGIC_NUMBER) {
-		sciprintf("Not an object.\n");
-		return 0;
-	}
-
-	type = getInt16(s->heap + pos + SCRIPT_INFO_OFFSET);
-
-	if (type & SCRIPT_INFO_CLONE)
-		sciprintf("Clone");
-	else if (type & SCRIPT_INFO_CLASS)
-		sciprintf("Class");
-	else if (type == 0)
-		sciprintf("Object");
-	else
-		sciprintf("Weird object");
-
-	{
-		word selectors, functions;
-		byte* selectorIDoffset;
-		byte* selectoroffset;
-		byte* functIDoffset;
-		byte* functoffset;
-		word localvarptr = getInt16(s->heap + pos + SCRIPT_LOCALVARPTR_OFFSET);
-		word species = getInt16(s->heap + pos + SCRIPT_SPECIES_OFFSET);
-		word superclass = getInt16(s->heap + pos + SCRIPT_SUPERCLASS_OFFSET);
-		word namepos = getInt16(s->heap + pos + SCRIPT_NAME_OFFSET);
-		int i;
-
-		sciprintf(" %s\n", s->heap + namepos);
-		sciprintf("Species=%04x, Superclass=%04x\n", species, superclass);
-		sciprintf("Local variables @ 0x%04x\n", localvarptr);
-
-		selectors = getInt16(s->heap + pos + SCRIPT_SELECTORCTR_OFFSET);
-
-		selectoroffset = s->heap + pos + SCRIPT_SELECTOR_OFFSET;
-
-		if (type & SCRIPT_INFO_CLASS)
-			selectorIDoffset = selectoroffset + selectors * 2;
-		else
-			selectorIDoffset =
-				s->heap
-				+ LOOKUP_SPECIES(species)
-				+ SCRIPT_SELECTOR_OFFSET
-				+ selectors * 2;
-
-		functIDoffset = s->heap + pos + SCRIPT_FUNCTAREAPTR_MAGIC
-			+ getUInt16(s->heap + pos + SCRIPT_FUNCTAREAPTR_OFFSET);
-
-		functions = getInt16(functIDoffset - 2);
-
-		functoffset = functIDoffset + 2 + functions * 2;
-
-		if (selectors > 0) {
-			sciprintf("Variable selectors:\n");
-
-			for (i = 0; i < selectors; i++) {
-				word selectorID = selectorIDoffset? getInt16(selectorIDoffset + i*2) : i;
-				word value = 0xffff & getUInt16(selectoroffset + i*2);
-				int svalue = getInt16(selectoroffset + i*2);
-
-				sciprintf("  %s[%04x] = %04x ", selectorIDoffset?
-					  selector_name(s, selectorID) : "<?>",
-					  selectorID, value);
-				if (value < 0x1000 || (value > 0xf000))
-					sciprintf("(%d)", svalue);
-				else {
-					stack_ptr_t stackend =
-						s->execution_stack[s->execution_stack_pos].sp;
-
-					if (value > s->stack_base && value < stackend)
-						sciprintf("<stack addr>");
-					else if (listp(s, value))
-						sciprintf("<list>");
-					else print_objname(s, value, 0);
-				}
-				sciprintf("\n");
-			}
-		} /* if variable selectors are present */
-
-
-		if (functions > 0) {
-			sciprintf("Method selectors:\n");
-
-			for (i = 0; i < functions; i++) {
-				word selectorID = getInt16(functIDoffset + i*2);
-
-				if (selectorID > s->selector_names_nr) {
-					sciprintf("Invalid selector number: %04x!\n", selectorID);
-					return 0;
-				}
-
-				sciprintf("  %s[%04x] at %04x\n", s->selector_names[selectorID], selectorID,
-					  0xffff & getInt16(functoffset + i*2));
-			}
-		} /* if function selectors are present */
-	}
-	is_view =
-		(lookup_selector(s, pos, s->selector_map.x, NULL) == SELECTOR_VARIABLE)
-		&&
-		(lookup_selector(s, pos, s->selector_map.y, NULL) == SELECTOR_VARIABLE)
-		&&
-		(lookup_selector(s, pos, s->selector_map.signal, NULL) == SELECTOR_VARIABLE)
-		&&
-		(lookup_selector(s, pos, s->selector_map.cel, NULL) == SELECTOR_VARIABLE);
-
-	if (is_view)
-		viewobjinfo(s, pos);
-
 	return 0;
-#endif
 }
 
 int
-c_heapobj(state_t *s)
+c_vo(state_t *s)
 {
-	return
-		objinfo(s, cmd_params[0].reg);
+	return objinfo(s, cmd_params[0].reg);
 }
 
 int
 c_obj(state_t *s)
 {
-	return
-		objinfo(s, *p_objp);
+	return objinfo(s, *p_objp);
 }
 
 int
 c_accobj(state_t *s)
 {
-	return
-		objinfo(s, s->r_acc);
+	return objinfo(s, s->r_acc);
+}
+
+int
+c_shownode(state_t *s)
+{
+	reg_t addr = cmd_params[0].reg;
+	mem_obj_t *mobj = GET_SEGMENT(s->seg_manager, addr.segment, MEM_OBJ_LISTS);
+
+	if (mobj) {
+		list_table_t *lt = &(mobj->data.lists);
+		list_t *list;
+
+		if (!ENTRY_IS_VALID(lt, addr.offset)) {
+			sciprintf("Address does not contain a list\n");
+			return 1;
+		}
+
+		list = &(lt->table[addr.offset].entry);
+
+		sciprintf(PREG" : first x last = ("PREG", "PREG")\n",
+			  PRINT_REG(addr), PRINT_REG(list->first),
+			  PRINT_REG(list->last));
+	} else {
+		node_table_t *nt;
+		node_t *node;
+		mobj = GET_SEGMENT(s->seg_manager, addr.segment, MEM_OBJ_NODES);
+
+		if (!mobj) {
+			sciprintf("Segment #%04x is not a list or node segment\n", addr.segment);
+			return 1;
+		}
+
+		nt = &(mobj->data.nodes);
+
+		if (!ENTRY_IS_VALID(nt, addr.offset)) {
+			sciprintf("Address does not contain a node\n");
+			return 1;
+		}
+		node = &(nt->table[addr.offset].entry);
+
+		sciprintf(PREG" : prev x next = ("PREG", "PREG"); maps "PREG" -> "PREG"\n",
+			  PRINT_REG(addr),
+			  PRINT_REG(node->pred),
+			  PRINT_REG(node->succ),
+			  PRINT_REG(node->key),
+			  PRINT_REG(node->value));
+	}
+	return 0;
 }
 
 /*** Breakpoint commands ***/
@@ -3009,6 +2936,39 @@ c_se(state_t *s)
 }
 
 int
+c_type(state_t *s)
+{
+	int t = determine_reg_type(s, cmd_params[0].reg);
+
+	switch (t) {
+
+	case 0:
+		sciprintf("Invalid\n");
+		break;
+
+	case KSIG_LIST:
+		sciprintf("List\n");
+		break;
+
+	case KSIG_OBJECT:
+		sciprintf("Object\n");
+		break;
+
+	case KSIG_REF:
+		sciprintf("Reference\n");
+		break;
+
+	case KSIG_ARITHMETIC:
+		sciprintf("Arithmetic\n");
+		break;
+
+	default:
+		sciprintf("Erroneous unknown type %02x(%d decimal)\n", t, t);
+		
+	}
+}
+
+int
 c_statusbar(state_t *s)
 {
 	if (!s) {
@@ -3092,36 +3052,42 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 	}
 
 	if (_debug_seeking && !bp) { /* Are we looking for something special? */
-#warning "FIXME: Determine opcode correctly"
-		int op = 0/*s->heap[*pc] >> 1*/;
-		int paramb1 = 0/*s->heap[*pc + 1]*/; /* Careful with that ! */
+		mem_obj_t *memobj = GET_SEGMENT(s->seg_manager, pc->segment, MEM_OBJ_SCRIPT);
 
-		switch (_debug_seeking) {
+		if (memobj) {
+			script_t *scr = &(memobj->data.script);
+			byte *code_buf = scr->buf;
+			int code_buf_size = scr->buf_size;
+			int op = pc->offset >= code_buf_size? 0 : code_buf[pc->offset] >> 1;
+			int paramb1 = pc->offset + 1 >= code_buf_size? 0 : code_buf[pc->offset + 1];
 
-		case _DEBUG_SEEK_SPECIAL_CALLK:
-			if (paramb1 != _debug_seek_special)
-				return;
+			switch (_debug_seeking) {
 
-		case _DEBUG_SEEK_CALLK: {
-			if (op != op_callk) return;
-			break;
+			case _DEBUG_SEEK_SPECIAL_CALLK:
+				if (paramb1 != _debug_seek_special)
+					return;
+
+			case _DEBUG_SEEK_CALLK: {
+				if (op != op_callk) return;
+				break;
+			}
+
+			case _DEBUG_SEEK_LEVEL_RET: {
+				if ((op != op_ret) || (_debug_seek_level < s->execution_stack_pos)) return;
+				break;
+			}
+
+			case _DEBUG_SEEK_SO:
+				if (!REG_EQ(*pc,_debug_seek_reg) ||
+				    s->execution_stack_pos != _debug_seek_level)
+					return;
+				break;
+
+			} /* switch(_debug_seeking) */
+
+			_debug_seeking = _DEBUG_SEEK_NOTHING; /* OK, found whatever we
+							      ** were looking for   */
 		}
-
-		case _DEBUG_SEEK_LEVEL_RET: {
-			if ((op != op_ret) || (_debug_seek_level < s->execution_stack_pos)) return;
-			break;
-		}
-
-		case _DEBUG_SEEK_SO:
-			if (!REG_EQ(*pc,_debug_seek_reg) ||
-			    s->execution_stack_pos != _debug_seek_level)
-				return;
-			break;
-
-		} /* switch(_debug_seeking) */
-
-		_debug_seeking = _DEBUG_SEEK_NOTHING; /* OK, found whatever we were looking for */
-
 	} /* if (_debug_seeking) */
 
 
@@ -3175,12 +3141,10 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_scriptinfo, "scripttable", "", "Displays information about all\n  loaded scripts");
 #endif
 #warning "Make con:heapobj expect an 'a' type argument"
-			con_hook_command(c_heapobj, "heapobj", "i", "Displays information about an\n  object or class on the\n"
-					 "specified heap address.\n\nSEE ALSO\n\n  obj, accobj");
-			con_hook_command(c_obj, "obj", "", "Displays information about the\n  currently active object/class.\n"
-					 "\n\nSEE ALSO\n\n  heapobj, accobj");
-			con_hook_command(c_accobj, "accobj", "", "Displays information about an\n  object or class at the\n"
-					 "address indexed by acc.\n\nSEE ALSO\n\n  obj, heapobj");
+			con_hook_command(c_obj, "obj", "!", "Displays information about the\n  currently active object/class.\n"
+					 "\n\nSEE ALSO\n\n  vo.1, accobj.1");
+			con_hook_command(c_accobj, "accobj", "!", "Displays information about an\n  object or class at the\n"
+					 "address indexed by acc.\n\nSEE ALSO\n\n  obj.1, vo.1");
 			con_hook_command(c_classtable, "classtable", "", "Lists all available classes");
 			con_hook_command(c_stack, "stack", "i", "Dumps the specified number of stack elements");
 			con_hook_command(c_backtrace, "bt", "", "Dumps the send/self/super/call/calle/callb stack");
@@ -3386,7 +3350,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_vo, "vo", "!a",
 					 "Examines an object\n\n"
 					 "SEE ALSO\n\n"
-					 "  addresses.3");
+					 "  addresses.3, type.1");
 #ifdef HAVE_FORK
 			con_hook_command(c_codebug, "codebug", "!s",
 					 "Starts codebugging mode\n\nUSAGE\n\n"
@@ -3396,6 +3360,12 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "  send to this debugger will also be sent to\n"
 					 "  to the child process.\n\nSEE ALSO\n\n  codebugging.3");
 #endif
+			con_hook_command(c_type, "type", "!a",
+					 "Determines the type of a value\n\n"
+					 "SEE ALSO\n\n  addresses.3, vo.1");
+			con_hook_command(c_shownode, "shownode", "!a",
+					 "Prints information about a list node\n"
+					 "  or list base.\n\n");
 
 
 			con_hook_int(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");

@@ -1,3 +1,22 @@
+2002-11-11  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kemu_old.c (write_selector16): 16 bit selector
+	reading/writing added
+
+	* src/engine/kscripts.c (kScriptID): Re-implemented
+	(kIsObject): Re-implemented
+	(kRespondsTo): Re-implemented
+	(*_selector): Selector reading and writing re-implemented
+
+	* src/engine/kemu_old.c (kFsciEmu): Improved emulation code to handle
+	strings and objects
+
+	* src/include/kernel_types.h: Added kernel runtime typing information,
+	code to verify signatures
+
+	* src/engine/scriptdebug.c (c_type): Added test function for type
+	detection
+
 2002-11-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/vm.c (run_vm): Misc. bugfixes, particularly wrt calls

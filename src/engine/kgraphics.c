@@ -509,26 +509,24 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
-void
-kTextSize(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kTextSize(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	int width, height;
-	int heap_text = UPARAM(1);
-	char *text = (char *) s->heap + heap_text;
-	heap_ptr dest = UPARAM(0);
-	int maxwidth = PARAM_OR_ALT(3, 0);
-	int font_nr = UPARAM(2);
+	char *text = (char *) kernel_dereference_pointer(s, argv[1], 0);
+	reg_t *dest = kernel_dereference_pointer(s, argv[0], 4);
+	int maxwidth = KP_UINT(KP_ALT(3,  NULL_REG));
+	int font_nr = KP_UINT(argv[2]);
 
 	if (maxwidth < 0)
 		maxwidth = 0;
 
-	if (!*text) { /* Empty text */
-		PUT_HEAP(dest + 0, 0);
-		PUT_HEAP(dest + 2, 0);
-		PUT_HEAP(dest + 4, 0);
-		PUT_HEAP(dest + 6, 0);
+	dest[0] = dest[1] = NULL_REG;
 
-		return;
+	if (!*text || !text || !dest) { /* Empty text */
+		dest[2] = dest[3] = make_reg(0, 0);
+
+		return s->r_acc;
 	}
 
 	GFX_ASSERT(gfxop_get_text_params(s->gfx_state, font_nr, text,
@@ -536,10 +534,10 @@ kTextSize(state_t *s, int funct_nr, int argc, heap_ptr argp)
 					 &width, &height, 0));
 	SCIkdebug(SCIkSTRINGS, "GetTextSize '%s' -> %dx%d\n", text, width, height);
 
-	PUT_HEAP(dest + 0, 0);
-	PUT_HEAP(dest + 2, 0);
-	PUT_HEAP(dest + 4, height);
-	PUT_HEAP(dest + 6, maxwidth? maxwidth : width);
+	dest[2] = make_reg(0, height);
+	dest[3] = make_reg(0, maxwidth? maxwidth : width);
+
+	return s->r_acc;
 }
 
 
@@ -706,6 +704,8 @@ collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int use_nsrect, i
 void
 kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+#warning "Re-implement CanBeHere()"
+#if 0
 	heap_ptr obj = UPARAM(0);
 	heap_ptr cliplist = UPARAM_OR_ALT(1, 0);
 	gfxw_port_t *port = s->port;
@@ -792,7 +792,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (!s->acc)
 		s->acc = 1;
 	SCIkdebug(SCIkBRESEN, " -> %04x\n", s->acc);
-
+#endif
 }  /* CanBeHere */
 
 
@@ -1835,6 +1835,8 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
      ** argc, argp, funct_nr should be the same as in the calling kernel function.
      */
 {
+#warning "Re-implement view list generation" 
+#if 0
 	heap_ptr node;
 	int sequence_nr = 0;
 	gfxw_dyn_view_t *widget;
@@ -1849,10 +1851,13 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 
 	SCIkdebug(SCIkGRAPHICS, "Making list from %04x\n", list);
 
+#warning "Re-enable list check with reg_t (listp is still alive and kickin')"
+#if 0
 	if (!listp(s, (heap_ptr)(list - 2))) { /* heap size check */
 		SCIkwarn(SCIkWARNING, "Attempt to draw non-list at %04x\n", list);
 		return;
 	}
+#endif
 
 	node = UGET_HEAP(list + LIST_FIRST_NODE);
 	while (node) {
@@ -1896,6 +1901,7 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 
 		widget = (gfxw_dyn_view_t *) widget->next;
 	}
+#endif
 }
 
 
