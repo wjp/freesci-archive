@@ -37,7 +37,7 @@
 #include <gfx_tools.h>
 
 
-static gfx_pixmap_t *
+gfx_pixmap_t *
 gfxr_draw_cel0(int id, int loop, int cel, byte *resource, int size, gfxr_view_t *view, int mirrored)
 {
 	int xl = get_int_16(resource);
@@ -54,9 +54,17 @@ gfxr_draw_cel0(int id, int loop, int cel, byte *resource, int size, gfxr_view_t 
 
 	retval->xoffset = mirrored? xhot : -xhot;
 	retval->yoffset = -yhot;
-	retval->colors = view->colors;
-	retval->colors_nr = view->colors_nr;
-	retval->flags |= GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
+
+	if (view) {
+		retval->colors = view->colors;
+		retval->colors_nr = view->colors_nr;
+		retval->flags |= GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
+	} else
+	{
+		retval->colors = gfx_sci0_image_colors[sci0_palette];
+		retval->colors_nr = GFX_SCI0_IMAGE_COLORS_NR;
+		retval->flags |= GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
+	}
 
 	if (xl <= 0 || yl <= 0) {
 		gfx_free_pixmap(NULL, retval);
@@ -101,7 +109,7 @@ gfxr_draw_cel0(int id, int loop, int cel, byte *resource, int size, gfxr_view_t 
 			int count = op >> 4;
 			int color = op & 0xf;
 
-			if (view->flags & GFX_PIXMAP_FLAG_PALETTIZED)
+			if (view && (view->flags & GFX_PIXMAP_FLAG_PALETTIZED))
 				color = view->translation[color];
 
 			if (color == color_key)

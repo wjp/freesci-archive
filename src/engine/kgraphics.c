@@ -1410,6 +1410,7 @@ kEditControl(state_t *s, int funct_nr, int argc, reg_t *argv)
 				PUT_SEL32V(obj, cursor, cursor); /* Write back cursor position */
 			}
 
+		case K_CONTROL_ICON:
 		case K_CONTROL_BOX:
 		case K_CONTROL_BUTTON:
 			if (event.segment) PUT_SEL32V(event, claimed, 1);

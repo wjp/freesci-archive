@@ -2216,11 +2216,36 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 
 
 			case PIC_OPX_EMBEDDED_VIEW:
+			{
+				int posx, posy;
+				int bytesize;
+				byte *vismap = pic->visual_map->index_data;
+				int linewidth = 320;
+
+				gfx_pixmap_t *view;
+				byte *data;
+
+				GET_ABS_COORDS(posx, posy);
+				bytesize = (*(resource + pos))+(*(resource + pos + 1) << 8);
+				pos+=2;
+				view = gfxr_draw_cel0(-1,-1,-1, resource + pos, bytesize, NULL, 0);
+				pos+=bytesize;
+
+				_gfx_crossblit_simple(pic->visual_map->index_data,
+						      view->index_data,
+						      320, view->index_xl,
+						      view->index_xl,
+						      view->index_yl,
+						      1);
+
+				gfx_free_pixmap(NULL, view);
+/*
 				GFXWARN("Embedded view @%d\n", pos);
 				GFXWARN("-- not implemented- aborting --\n");
 				return;
-				break;
-
+*/
+			}
+			break;
 
 			case PIC_OPX_SET_PRIORITY_TABLE: {
 				int i;
@@ -2243,8 +2268,8 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 
 			default: sciprintf("%s L%d: Warning: Unknown opx %02x\n", __FILE__, __LINE__, op);
 				return;
-			}
-			break;
+		}
+		break;
 
 		case PIC_OP_TERMINATE:
 			p0printf("Terminator\n");

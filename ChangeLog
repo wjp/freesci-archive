@@ -1,3 +1,7 @@
+2003-02-13  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/gfx/resource/sci_pic_0.c: Added support for embedded views in pics.
+
 2003-02-12  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/scriptdebug.c (_c_single_seg_info): Added missing break;
