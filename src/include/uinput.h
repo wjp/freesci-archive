@@ -35,72 +35,59 @@
 #include <unistd.h>
 #endif
 
-
 #define SCI_INPUT_DEFAULT_CLOCKTIME 100000
 #define SCI_INPUT_DEFAULT_REDRAWTIME 30000
 
-typedef struct {
-  int x;
-  int y;
-  short button;
-} sci_mouseclick_t;
+/*Values for buckybits in gamestate_t*/
+#define SCI_EVM_RSHIFT          (1<<0)
+#define SCI_EVM_LSHIFT          (1<<1)
+#define SCI_EVM_CTRL            (1<<2)
+#define SCI_EVM_ALT             (1<<3)
+#define SCI_EVM_SCRLOCK         (1<<4)
+#define SCI_EVM_NUMLOCK         (1<<5)
+#define SCI_EVM_CAPSLOCK        (1<<6)
+#define SCI_EVM_INSERT          (1<<7)
 
-
 typedef struct {
-  unsigned char type;
-  char key;
+  int type;
+  int data;
 } sci_event_t;
 
-/* definitions for sci_keypress_t.type : */
-#define SCI_EV_KEY 0
-/* printable [key] */
-#define SCI_EV_CTRL_KEY 1
-/* CTRL-[key] */
-#define SCI_EV_ALT_KEY 2
-/* ALT-[key] */
-#define SCI_EV_SPECIAL_KEY 4
-/* One of the special keys described below */
-#define SCI_EV_CLOCK 5
-/* Loop timer overflow: The 'heart beat' of the game */
-#define SCI_EV_REDRAW 6
-/* Time to redraw the pointer */
-#define SCI_EV_MOUSE_CLICK 7
-/* Mouse click */
-#define SCI_EV_NOEVENT 127
-/* No event */
-
-/* Special keys: */
-#define SCI_K_ESC 0
-#define SCI_K_END 1
-#define SCI_K_DOWN 2
-#define SCI_K_PGDOWN 3
-#define SCI_K_LEFT 4
-#define SCI_K_CENTER 5
-#define SCI_K_RIGHT 6
-#define SCI_K_HOME 7
-#define SCI_K_UP 8
-#define SCI_K_PGUP 9
-#define SCI_K_INSERT 10
-#define SCI_K_DELETE 11
-#define SCI_K_F1 21
-#define SCI_K_F2 22
-#define SCI_K_F3 23
-#define SCI_K_F4 24
-#define SCI_K_F5 25
-#define SCI_K_F6 26
-#define SCI_K_F7 27
-#define SCI_K_F8 28
-#define SCI_K_F9 29
-#define SCI_K_F10 30
-#define SCI_K_PANEL 126
-/* Ctrl-` */
-#define SCI_K_DEBUG 127
-/* Ctrl-PadMinus */
-
-#define SCI_K_RETURN SCI_K_ENTER
-#define SCI_K_CONSOLE SCI_K_PANEL
+/*Values for type*/
+#define SCI_EVT_MOUSE_PRESS     (1<<0)
+#define SCI_EVT_MOUSE_RELEASE   (1<<1)
+#define SCI_EVT_KEYBOARD        (1<<2)
+#define SCI_EVT_JOYSTICK        (1<<6)
+/*Fake values for other events*/
+#define SCI_EVT_CLOCK           (1<<8)
+#define SCI_EVT_REDRAW          (1<<9)
+#define SCI_EVT_ERROR           (1<<10)
 
 
+/* Keycodes of special keys: */
+#define SCI_K_ESC 1
+#define SCI_K_END 79
+#define SCI_K_DOWN 80
+#define SCI_K_PGDOWN 81
+#define SCI_K_LEFT 75
+#define SCI_K_CENTER 53 /*Note: this is the same as '5'. Dunno what should be do
+ne here...*/
+#define SCI_K_RIGHT 77
+#define SCI_K_HOME 71
+#define SCI_K_UP 72
+#define SCI_K_PGUP 73
+#define SCI_K_INSERT 82
+#define SCI_K_DELETE 83
+#define SCI_K_F1 59
+#define SCI_K_F2 60
+#define SCI_K_F3 61
+#define SCI_K_F4 62
+#define SCI_K_F5 63
+#define SCI_K_F6 64
+#define SCI_K_F7 65
+#define SCI_K_F8 66
+#define SCI_K_F9 67
+#define SCI_K_F10 68
 
 /*extern sci_event_t (*_sci_input_handler)(void);*/
 /* The input handler for the main window */
@@ -115,15 +102,5 @@ extern long sci_clock_time;
 /* Time (in microseconds) in between two 'heart beats' */
 extern long sci_redraw_time;
 /* Time (in usecs) until the next SCI_EV_REDRAW can be sent */
-
-
-
-sci_event_t getEvent (struct _state *s);
-/* Returns the next SCI_EV_* event
-** Parameters: (struct state *) Current game state
-** Returns   : (sci_event_t) The next event, which may be any of the
-**             existing events.
-*/
-
 
 #endif /* _SCI_UINPUT_H */

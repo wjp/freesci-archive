@@ -144,18 +144,19 @@ consoleInput(sci_event_t *event)
   if (con_visible_rows <= 0) return NULL;
 
   switch (event->type) {
-
-  case SCI_EV_KEY :
+    
+  case SCI_EVT_KEYBOARD :
     if (stl < SCI_CONSOLE_MAX_INPUT) {
       memmove(_inpbuf + con_cursor, _inpbuf + con_cursor-1,
 	      SCI_CONSOLE_MAX_INPUT - con_cursor+1);
-      _inpbuf[con_cursor] = event->key;
+      _inpbuf[con_cursor] = event->data;
       con_cursor++;
     }
     _outputlookback = _outputbufpos;
     break;
 
-  case SCI_EV_CTRL_KEY:
+#if 0
+  case SCI_EVT_CTRL_KEY:
     switch (event->key) {
 
     case 'K':
@@ -295,11 +296,11 @@ consoleInput(sci_event_t *event)
     }
 
     if (z) break;
-
+#endif
   default:
     return NULL;
   }
-  event->type = SCI_EV_NOEVENT;
+  event->type = SCI_EVT_ERROR;
   return NULL;
 }
 

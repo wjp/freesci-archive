@@ -29,7 +29,10 @@
 #include <vm.h>
 #include <engine.h>
 #include <math.h>
+#include <ctype.h>
 #include <kdebug.h>
+#include <uinput.h>
+#include <event.h>
 
 #ifdef _MSC_VER
 #include <direct.h>
@@ -206,7 +209,7 @@ else { s->heap[(guint16) address] = (value) &0xff;               \
 #endif /* !SCI_KERNEL_DEBUG */
 
 #define PARAM(x) ((gint16) getInt16(s->heap + argp + ((x)*2)))
-#define UPARAM(x) ((guint16) getUInt16(s->heap + argp + ((x)*2)))
+#define UPARAM(x) ((guint16) getInt16(s->heap + argp + ((x)*2)))
 
 #define PARAM_OR_ALT(x, alt) ((x < argc)? PARAM(x) : (alt))
 #define UPARAM_OR_ALT(x, alt) ((x < argc)? UPARAM(x) : (alt))
@@ -449,7 +452,7 @@ process_sound_events(state_t *s) /* Get all sound events, apply their changes to
   if (s->sfx_driver == NULL)
     return;
 
-  while (event = s->sfx_driver->get_event(s)) {
+  while ((event = s->sfx_driver->get_event(s))) {
     heap_ptr obj = event->handle;
 
     switch (event->signal) {
@@ -699,7 +702,7 @@ kIsObject(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr offset = PARAM(0);
 
-  if (offset < 800)
+  if (offset < 100)
     s->acc = 0;
   else
     s->acc = (GET_HEAP(offset + SCRIPT_OBJECT_MAGIC_OFFSET) == SCRIPT_OBJECT_MAGIC_NUMBER);
@@ -951,7 +954,7 @@ kDisposeList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kFOpen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  char *filename = s->heap+UPARAM(0);
+  char *filename = s->heap + PARAM(0);
   int mode = PARAM(1);
   int retval = 1; /* Ignore file_handles[0] */
   FILE *file = NULL;
@@ -1482,167 +1485,80 @@ k_Unknown(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 }
 
-
-#define K_EV_RSHIFT	(1<<0)
-#define K_EV_LSHIFT	(1<<1)
-#define K_EV_CTRL	(1<<2)
-#define K_EV_ALT	(1<<3)
-#define K_EV_SCRLOCK	(1<<4)
-#define K_EV_NUMLOCK	(1<<5)
-#define K_EV_CAPSLOCK	(1<<6)
-#define K_EV_INSERT	(1<<7)
-
-#define K_EV_MOUSE_P	(1<<0)
-#define K_EV_MOUSE_R	(1<<1)
-#define K_EV_KEYBOARD	(1<<2)
-#define K_EV_JOYSTICK	(1<<6)
-
 void
 kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int mask = UPARAM(0);
   heap_ptr obj = UPARAM(1);
-  int keycode=-1;
-
+  sci_event_t e;
+  
   CHECK_THIS_KERNEL_FUNCTION;
   SCIkdebug(SCIkSTUB, "kGetEvent: Stub\n");
-
+  
+  /*If there is a mouse, and it has been moved, then the global pointer
+    position is updated, the pointer is redrawn, and the x and y selectors are
+    set to their new values*/
   if (s->have_mouse_flag) {
-    if(s->pointer_x!=sci_pointer_x)
-    {
-      s->pointer_x = sci_pointer_x;
-      if(s->pointer_y != sci_pointer_y)
+    if(s->pointer_x!=sci_pointer_x || s->pointer_y!=s->pointer_y)
       {
-        s->pointer_y = sci_pointer_y;
-        s->gfx_driver->Redraw(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0);
-      }
-    }
-  } /* Don't move the pointer unless the game knows that a mouse is present */
-      
-  PUT_SELECTOR(obj, x, s->pointer_x);
-  PUT_SELECTOR(obj, y, s->pointer_y);
-
-  /*If there's a simkey pending, and the game wants a keyboard event, use the
-   *simkey instead of a normal event*/
-  if (_kdebug_cheap_event_hack && (mask&K_EV_KEYBOARD)) {
-    keycode=_kdebug_cheap_event_hack;
-    _kdebug_cheap_event_hack = 0;
-  } else {
-    sci_event_t e=getEvent(s);
-    switch(e.type)
-      {
-      case SCI_EV_KEY:
-	{
-	  if(e.key>='a' && e.key<='z') keycode=97+e.key-'a';
-	  if(e.key>='0' && e.key<='9') keycode=48+e.key-'0';
-	  switch(e.key)
-	    {
-	    case '-':
-	    case '=':
-	    case '[':
-	    case ']':
-	    case ';':
-	    case '\'':
-	    case '`':
-	    case '\\':
-	    case ',':
-	    case '.':
-	    case '/':
-	    case '*': keycode=e.key;
-	    }
-	} break;
-      case SCI_EV_CTRL_KEY:
-	{
-	  switch(e.key)
-	    {
-	    case 'H': keycode=8; break;
-	    case 'I': keycode='\t'; break;
-	    case 'M': keycode='\r'; break;
-	      
-	    }
-	} break;
-	/*SCI_EV_ALT_KEY*/
-      case SCI_EV_SPECIAL_KEY:
-	{
-	  switch(e.key)
-	    {
-	    case SCI_K_ESC:	keycode=27; break;
-	    case SCI_K_END:	keycode=79; break;
-	    case SCI_K_DOWN:	keycode=80; break;
-	    case SCI_K_PGDOWN:	keycode=81; break;
-	    case SCI_K_LEFT:	keycode=75; break;
-	    case SCI_K_CENTER:	keycode=76; break;
-	    case SCI_K_RIGHT:	keycode=77; break;
-	    case SCI_K_HOME:	keycode=71; break;
-	    case SCI_K_UP:	keycode=72; break;
-	    case SCI_K_PGUP:	keycode=73; break;
-	    case SCI_K_INSERT:	keycode=82; break;
-	    case SCI_K_DELETE:	keycode=83; break;
-	    case SCI_K_F1:
-	    case SCI_K_F2:
-	    case SCI_K_F3:
-	    case SCI_K_F4:
-	    case SCI_K_F5:
-	    case SCI_K_F6:
-	    case SCI_K_F7:
-	    case SCI_K_F8:
-	    case SCI_K_F9:
-	    case SCI_K_F10:	keycode=59+e.key-SCI_K_F1; break;
-	    }
-	} break;
-      case SCI_EV_CLOCK:
-	{
-	  s->acc = 0; /* Null event */
-	  return;
-	} break;
-      case SCI_EV_REDRAW:
-	{
-	  s->acc = 0; /* Not supported yet */
-	} break;
-      case SCI_EV_MOUSE_CLICK:
-	{
-	  if(mask&K_EV_MOUSE_P)
-	  {
-	    switch(e.key)
-	    {
-	      case 1:
-	      {
-	        PUT_SELECTOR(obj, type, K_EV_MOUSE_P); /*LMB press event*/
-	        PUT_SELECTOR(obj, message, 1);
-	        PUT_SELECTOR(obj, modifiers, 0);
-	        s->acc = 1;
-	      } break;
-	      case 2:
-	      {
-	        PUT_SELECTOR(obj, type, K_EV_MOUSE_P); /*RMB press event*/
-	        PUT_SELECTOR(obj, message, 1);
-	        PUT_SELECTOR(obj, modifiers, K_EV_LSHIFT|K_EV_RSHIFT);
-	        s->acc = 1;
-	      } break;
-	      case 3:
-	      {
-	        PUT_SELECTOR(obj, type, K_EV_MOUSE_P); /*MMB press event*/
-	        PUT_SELECTOR(obj, message, 1);
-	        PUT_SELECTOR(obj, modifiers, K_EV_CTRL);
-	        s->acc = 1;
-	      } break;
-	    }
-	  }
-	  return;
-	} break;
-      default:
-	{
-	  s->acc = 0; /* Unknown event */
-	}
-      }
-    if(keycode!=-1 && mask&K_EV_KEYBOARD )
-      {
-	PUT_SELECTOR(obj, type, K_EV_KEYBOARD); /*Keyboard event*/
-	s->acc=1;
-	PUT_SELECTOR(obj, message, keycode);
-	PUT_SELECTOR(obj, modifiers, K_EV_NUMLOCK); /*Numlock on*/
+	s->pointer_x = sci_pointer_x;
+	s->pointer_y = sci_pointer_y;
+	s->gfx_driver->Redraw(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0);
+	PUT_SELECTOR(obj, x, s->pointer_x);
+	PUT_SELECTOR(obj, y, s->pointer_y);
       }
   }
+  
+  /*If there's a simkey pending, and the game wants a keyboard event, use the
+   *simkey instead of a normal event*/
+  if (_kdebug_cheap_event_hack && (mask&SCI_EVT_KEYBOARD)) {
+    PUT_SELECTOR(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
+    s->acc=1;
+    PUT_SELECTOR(obj, message, _kdebug_cheap_event_hack);
+    PUT_SELECTOR(obj, modifiers, SCI_EVM_NUMLOCK); /*Numlock on*/
+    _kdebug_cheap_event_hack = 0;
+    return;
+  }
+  
+
+  e=getEvent(s);
+  switch(e.type)
+    {
+    case SCI_EVT_KEYBOARD:
+      {
+        PUT_SELECTOR(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
+        s->acc=1;
+        PUT_SELECTOR(obj, message, e.data);
+        PUT_SELECTOR(obj, modifiers, s->buckybits);
+      } break;
+    case SCI_EVT_CLOCK:
+      {
+	s->acc = 0; /* Null event */
+	return;
+      } break;
+    case SCI_EVT_REDRAW:
+      {
+	s->acc = 0; /* Not supported yet */
+      } break;
+    case SCI_EVT_MOUSE_RELEASE:
+    case SCI_EVT_MOUSE_PRESS:
+      {
+	int extra_bits=0;
+	if(mask&e.type)
+          {
+            switch(e.data)
+	      {
+	      case 2: extra_bits=SCI_EVM_LSHIFT|SCI_EVM_RSHIFT; break;
+	      case 3: extra_bits=SCI_EVM_CTRL;
+	      }
+	    PUT_SELECTOR(obj, type, e.type);
+	    PUT_SELECTOR(obj, message, 1);
+	    PUT_SELECTOR(obj, modifiers, s->buckybits|extra_bits);
+	    s->acc=1;
+	  }
+      }
+    default: s->acc=0;
+    }
 }
 
 void
@@ -2358,28 +2274,14 @@ kNumCels(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  /* [DJ] in Police Quest 2 (0.000.395), OnControl has only 4 (2) parameters
-     and always works with the special map. We can autodetect it without
-     using versions.h.
-  */
-  int arg=0;
-
-  int map, xstart, ystart;
+  int map = PARAM(0);
+  int xstart = PARAM(2);
+  int ystart = PARAM(1);
   int xlen = 1, ylen = 1;
 
-  if (argc == 2 || argc == 4)
-    map = 4;
-  else {
-    map = PARAM(0);
-    arg = 1;
-  }
-
-  xstart = PARAM(arg+1);
-  ystart = PARAM(arg);
-
   if (argc > 3) {
-    xlen = PARAM(arg+3) - xstart + 1;
-    ylen = PARAM(arg+2) - ystart + 1;
+    xlen = PARAM(4) - xstart + 1;
+    ylen = PARAM(3) - ystart + 1;
   }
 
   s->acc = graph_on_control(s, xstart, ystart + 10, xlen, ylen, map);

@@ -33,77 +33,7 @@
 #include <uinput.h>
 #include <ggi/ggi.h>
 #include <ctype.h>
-
-
-static struct {
-  int keysym, keymod; /* Identifiers for the key/ key combo */
-  unsigned char type; /* Type of the key */
-  char key; /* The key to return */
-} _remap_keys[] = {
-  { GIIUC_Escape,       0,              SCI_EV_SPECIAL_KEY, SCI_K_ESC },
-  { GIIK_P1,            0,              SCI_EV_SPECIAL_KEY, SCI_K_END },
-  { GIIK_P2,            0,              SCI_EV_SPECIAL_KEY, SCI_K_DOWN },
-  { GIIK_P3,            0,              SCI_EV_SPECIAL_KEY, SCI_K_PGDOWN },
-  { GIIK_P4,            0,              SCI_EV_SPECIAL_KEY, SCI_K_LEFT },
-  { GIIK_P5,            0,              SCI_EV_SPECIAL_KEY, SCI_K_CENTER },
-  { GIIK_P6,            0,              SCI_EV_SPECIAL_KEY, SCI_K_RIGHT },
-  { GIIK_P7,            0,              SCI_EV_SPECIAL_KEY, SCI_K_HOME },
-  { GIIK_P8,            0,              SCI_EV_SPECIAL_KEY, SCI_K_UP },
-  { GIIK_P9,            0,              SCI_EV_SPECIAL_KEY, SCI_K_PGUP },
-  { GIIK_P0,            0,              SCI_EV_SPECIAL_KEY, SCI_K_INSERT },
-  { GIIK_PDecimal,      0,              SCI_EV_SPECIAL_KEY, SCI_K_DELETE },
-  { GIIK_End,           0,              SCI_EV_SPECIAL_KEY, SCI_K_END },
-  { GIIK_Down,          0,              SCI_EV_SPECIAL_KEY, SCI_K_DOWN },
-  { GIIK_PageDown,      0,              SCI_EV_SPECIAL_KEY, SCI_K_PGDOWN },
-  { GIIK_Left,          0,              SCI_EV_SPECIAL_KEY, SCI_K_LEFT },
-  { GIIK_Right,         0,              SCI_EV_SPECIAL_KEY, SCI_K_RIGHT },
-  { GIIK_Home,          0,              SCI_EV_SPECIAL_KEY, SCI_K_HOME },
-  { GIIK_Up,            0,              SCI_EV_SPECIAL_KEY, SCI_K_UP },
-  { GIIK_PageUp,        0,              SCI_EV_SPECIAL_KEY, SCI_K_PGUP },
-  { GIIK_Insert,        0,              SCI_EV_SPECIAL_KEY, SCI_K_INSERT },
-  { GIIK_Delete,        0,              SCI_EV_SPECIAL_KEY, SCI_K_DELETE },
-  { GIIK_F1,            0,              SCI_EV_SPECIAL_KEY, SCI_K_F1 },
-  { GIIK_F2,            0,              SCI_EV_SPECIAL_KEY, SCI_K_F2 },
-  { GIIK_F3,            0,              SCI_EV_SPECIAL_KEY, SCI_K_F3 },
-  { GIIK_F4,            0,              SCI_EV_SPECIAL_KEY, SCI_K_F4 },
-  { GIIK_F5,            0,              SCI_EV_SPECIAL_KEY, SCI_K_F5 },
-  { GIIK_F6,            0,              SCI_EV_SPECIAL_KEY, SCI_K_F6 },
-  { GIIK_F7,            0,              SCI_EV_SPECIAL_KEY, SCI_K_F7 },
-  { GIIK_F8,            0,              SCI_EV_SPECIAL_KEY, SCI_K_F8 },
-  { GIIK_F9,            0,              SCI_EV_SPECIAL_KEY, SCI_K_F9 },
-  { GIIK_F10,           0,              SCI_EV_SPECIAL_KEY, SCI_K_F10 },
-  { GIIUC_Grave,        GII_MOD_CTRL,   SCI_EV_SPECIAL_KEY, SCI_K_PANEL },
-  { GIIK_PMinus,        GII_MOD_CTRL,   SCI_EV_SPECIAL_KEY, SCI_K_DEBUG },
-  { GIIK_PMinus,        0,              SCI_EV_KEY,         '-' },
-  { GIIK_PPlus,         0,              SCI_EV_KEY,         '+' },
-  { GIIUC_BackSpace,    0,              SCI_EV_CTRL_KEY,    'H' },
-  { GIIUC_Tab,          0,              SCI_EV_CTRL_KEY,    'I' },
-  { GIIUC_Return,       0,              SCI_EV_CTRL_KEY,    'M' },
-  { GIIK_Enter,         0,              SCI_EV_CTRL_KEY,    'M' },
-  { GIIK_PEnter,        0,              SCI_EV_CTRL_KEY,    'M' },
-  { GIIUC_1,            GII_MOD_SHIFT,  SCI_EV_KEY,         '!' },
-  { GIIUC_2,            GII_MOD_SHIFT,  SCI_EV_KEY,         '@' },
-  { GIIUC_3,            GII_MOD_SHIFT,  SCI_EV_KEY,         '#' },
-  { GIIUC_4,            GII_MOD_SHIFT,  SCI_EV_KEY,         '$' },
-  { GIIUC_5,            GII_MOD_SHIFT,  SCI_EV_KEY,         '%' },
-  { GIIUC_6,            GII_MOD_SHIFT,  SCI_EV_KEY,         '^' },
-  { GIIUC_7,            GII_MOD_SHIFT,  SCI_EV_KEY,         '&' },
-  { GIIUC_8,            GII_MOD_SHIFT,  SCI_EV_KEY,         '*' },
-  { GIIUC_9,            GII_MOD_SHIFT,  SCI_EV_KEY,         '(' },
-  { GIIUC_0,            GII_MOD_SHIFT,  SCI_EV_KEY,         ')' },
-  { GIIUC_Minus,        GII_MOD_SHIFT,  SCI_EV_KEY,         '_' },
-  { GIIUC_Equal,        GII_MOD_SHIFT,  SCI_EV_KEY,         '+' },
-  { GIIUC_BracketLeft,  GII_MOD_SHIFT,  SCI_EV_KEY,         '{' },
-  { GIIUC_BracketRight, GII_MOD_SHIFT,  SCI_EV_KEY,         '}' },
-  { GIIUC_Semicolon,    GII_MOD_SHIFT,  SCI_EV_KEY,         ':' },
-  { GIIUC_Apostrophe,   GII_MOD_SHIFT,  SCI_EV_KEY,         '"' },
-  { GIIUC_BackSlash,    GII_MOD_SHIFT,  SCI_EV_KEY,         '|' },
-  { GIIUC_Comma,        GII_MOD_SHIFT,  SCI_EV_KEY,         '<' },
-  { GIIUC_Period,       GII_MOD_SHIFT,  SCI_EV_KEY,         '>' },
-  { GIIUC_Slash,        GII_MOD_SHIFT,  SCI_EV_KEY,         '?' },
-  { 0,0,0,0 }
-};
-
+#include <engine.h>
 
 struct timeval _sci_ggi_redraw_loopt, _sci_ggi_loopt;
 /* timer variables */
@@ -129,13 +59,12 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
   struct timeval temptime = {0,0};
   struct timeval curtime;
 
-  event_loop.type = SCI_EV_CLOCK;
-  event_redraw.type = SCI_EV_REDRAW;
+  event_loop.type = SCI_EVT_CLOCK;
+  event_redraw.type = SCI_EVT_REDRAW;
 
   while (1) {
 
     if (ggiEventPoll(_sci_ggi_last_visual, emAll, &temptime)) {
-      int mapseeker;
       ggi_event event;
       sci_event_t retval;
       
@@ -143,57 +72,66 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
       switch (event.any.type) {
       case evKeyPress:
       case evKeyRepeat:
-	mapseeker = 0;
-	while (_remap_keys[mapseeker].keysym) {
-	  if ((event.key.label == _remap_keys[mapseeker].keysym)
-	      && ((event.key.modifiers & _remap_keys[mapseeker].keymod)
-		  == _remap_keys[mapseeker].keymod)) {
-	    retval.type = _remap_keys[mapseeker].type;
-	    retval.key = _remap_keys[mapseeker].key;
-	    return retval;
+	retval.type = SCI_EVT_KEYBOARD;
+        retval.data=-1;
+        switch(event.key.label)
+	  {
+	  case GIIK_ShiftL: s->buckybits^=SCI_EVM_LSHIFT; break;
+	  case GIIK_ShiftR: s->buckybits^=SCI_EVM_RSHIFT; break;
+	  case GIIK_CtrlR:
+	  case GIIK_CtrlL: s->buckybits^=SCI_EVM_CTRL; break;
+	  case GIIK_AltL:
+	  case GIIK_AltR:
+	  case GIIK_MetaL:
+	  case GIIK_MetaR: s->buckybits^=SCI_EVM_ALT; break;
+	  case GIIK_CapsLock: s->buckybits^=SCI_EVM_CAPSLOCK; break;
+	  case GIIK_NumLock: s->buckybits^=SCI_EVM_NUMLOCK; break;
+	  case GIIK_ScrollLock: s->buckybits^=SCI_EVM_SCRLOCK; break;
+	  case GIIK_Insert: s->buckybits^=SCI_EVM_INSERT; break;
+	  case GIIK_Enter: retval.data='\r'; break;
+	  case GIIUC_Tab: retval.data='\t'; break;
+	  case GIIK_Left: retval.data=75;
+	  case GIIK_Right: retval.data=77;
+	    /*FIXME: Add all special keys in a sane way*/
+	  default:
+	    {
+	      if(event.key.sym>='a' && event.key.sym<='z')
+		retval.data=event.key.sym-'a'+97;
+	      if(event.key.sym>='A' && event.key.sym<='Z')
+		retval.data=event.key.sym-'A'+97;
+	      if(event.key.sym>='0' && event.key.sym<='9')
+		retval.data=event.key.sym-'0'+48;
+	    }
 	  }
-	  mapseeker++;
-	}
-
-	if (event.key.sym > 127) continue;
-	if ((event.key.sym < 31) && !(event.key.modifiers & GII_MOD_CTRL)) continue;
-	retval.type = SCI_EV_KEY;
-	retval.key = event.key.label;
-
-	//	fprintf(stderr,"%04x\n",event.key.modifiers);
-	if (GII_MOD_ALT & event.key.modifiers)
-	  retval.type = SCI_EV_ALT_KEY;
-	else
-	  if (GII_MOD_CTRL & event.key.modifiers)
-	    retval.type = SCI_EV_CTRL_KEY;
-	  else
-	    if (!(GII_MOD_SHIFT & event.key.modifiers))
-	      retval.key = event.key.sym;
-
-	return retval;
-
+        if(retval.data==-1) continue;
+        return retval;
+	
       case evPtrButtonPress:
-	retval.type = SCI_EV_MOUSE_CLICK;
-	retval.key = event.pbutton.button;
-	return retval;
+        retval.type = SCI_EVT_MOUSE_PRESS;
+        retval.data = event.pbutton.button;
+        return retval;
+	
+      case evPtrButtonRelease:
+        retval.type = SCI_EVT_MOUSE_RELEASE;
+        retval.data = event.pbutton.button;
+        return retval; 
       
       case evPtrAbsolute:
-      sci_pointer_x = event.pmove.x;
-      sci_pointer_y = event.pmove.y;
-      if (_sci_ggi_double_visual) {
-	sci_pointer_x >>= 1;
-	sci_pointer_y >>= 1;
-      }
-      continue;
-
+	sci_pointer_x = event.pmove.x;
+	sci_pointer_y = event.pmove.y;
+	if (_sci_ggi_double_visual) {
+	  sci_pointer_x >>= 1;
+	  sci_pointer_y >>= 1;
+	}
+	continue;
+	
       case evPtrRelative:
-      sci_pointer_x += event.pmove.x;
-      sci_pointer_y += event.pmove.y;
-      /* FIXME: This may make the pointer too fast on high res! */
-      continue;
+	sci_pointer_x += event.pmove.x;
+	sci_pointer_y += event.pmove.y;
+	/* FIXME: This may make the pointer too fast on high res! */
+	continue;
       }
     }
-
 
     gettimeofday(&curtime, NULL);
 
@@ -267,19 +205,18 @@ gii_input_t _sci_gii_input_device;
 
 
 
-sci_event_t _sci_gii_input_handler()
+sci_event_t _sci_gii_input_handler(state_t* s)
 {
   sci_event_t event_redraw, event_loop;
   struct timeval temptime = {0,0};
   struct timeval curtime;
 
-  event_loop.type = SCI_EV_CLOCK;
-  event_redraw.type = SCI_EV_REDRAW;
+  event_loop.type = SCI_EVT_CLOCK;
+  event_redraw.type = SCI_EVT_REDRAW;
 
   while (1) {
 
     if (giiEventPoll(_sci_gii_input_device, emAll, &temptime)) {
-      int mapseeker;
       gii_event event;
       sci_event_t retval;
       
@@ -287,54 +224,64 @@ sci_event_t _sci_gii_input_handler()
       switch (event.any.type) {
       case evKeyPress:
       case evKeyRepeat:
-	mapseeker = 0;
-	while (_remap_keys[mapseeker].keysym) {
-	  if ((event.key.label == _remap_keys[mapseeker].keysym)
-	      && ((event.key.modifiers & _remap_keys[mapseeker].keymod)
-		  == _remap_keys[mapseeker].keymod)) {
-	    retval.type = _remap_keys[mapseeker].type;
-	    retval.key = _remap_keys[mapseeker].key;
-	    return retval;
+	retval.type = SCI_EVT_KEYBOARD;
+        retval.data=-1;
+        switch(event.key.label)
+	  {
+	  case GIIK_ShiftL: s->buckybits^=SCI_EVM_LSHIFT; break;
+	  case GIIK_ShiftR: s->buckybits^=SCI_EVM_RSHIFT; break;
+	  case GIIK_CtrlR:
+	  case GIIK_CtrlL: s->buckybits^=SCI_EVM_CTRL; break;
+	  case GIIK_AltL:
+	  case GIIK_AltR:
+	  case GIIK_MetaL:
+	  case GIIK_MetaR: s->buckybits^=SCI_EVM_ALT; break;
+	  case GIIK_CapsLock: s->buckybits^=SCI_EVM_CAPSLOCK; break;
+	  case GIIK_NumLock: s->buckybits^=SCI_EVM_NUMLOCK; break;
+	  case GIIK_ScrollLock: s->buckybits^=SCI_EVM_SCRLOCK; break;
+	  case GIIK_Insert: s->buckybits^=SCI_EVM_INSERT; break;
+	  case GIIK_Enter: retval.data='\r'; break;
+	  case GIIUC_Tab: retval.data='\t'; break;
+	  case GIIK_Left: retval.data=75;
+	  case GIIK_Right: retval.data=77;
+	    /*FIXME: Add all special keys in a sane way*/
+	  default:
+	    {
+	      if(event.key.sym>='a' && event.key.sym<='z')
+		retval.data=event.key.sym-'a'+97;
+	      if(event.key.sym>='A' && event.key.sym<='Z')
+		retval.data=event.key.sym-'A'+97;
+	      if(event.key.sym>='0' && event.key.sym<='9')
+		retval.data=event.key.sym-'0'+48;
+	    }
 	  }
-	  mapseeker++;
-	}
-
-	if (event.key.sym > 127) continue;
-	if ((event.key.sym < 31) && !(event.key.modifiers & GII_MOD_CTRL)) continue;
-	retval.type = SCI_EV_KEY;
-	retval.key = event.key.label;
-
-	//	fprintf(stderr,"%04x\n",event.key.modifiers);
-	if (GII_MOD_ALT & event.key.modifiers)
-	  retval.type = SCI_EV_ALT_KEY;
-	else
-	  if (GII_MOD_CTRL & event.key.modifiers)
-	    retval.type = SCI_EV_CTRL_KEY;
-	  else
-	    if (!(GII_MOD_SHIFT & event.key.modifiers))
-	      retval.key = event.key.sym;
-
-	return retval;
-
+        if(retval.data==-1) continue;
+        return retval;
+	
       case evPtrButtonPress:
-	retval.type = SCI_EV_MOUSE_CLICK;
-	retval.key = event.pbutton.button;
-	return retval;
+        retval.type = SCI_EVT_MOUSE_PRESS;
+        retval.data = event.pbutton.button;
+        return retval;
+	
+      case evPtrButtonRelease:
+        retval.type = SCI_EVT_MOUSE_RELEASE;
+        retval.data = event.pbutton.button;
+        return retval; 
       
       case evPtrAbsolute:
-      sci_pointer_x = event.pmove.x;
-      sci_pointer_y = event.pmove.y;
-      if (_sci_ggi_double_visual) {
-	sci_pointer_x >>= 1;
-	sci_pointer_y >>= 1;
-      }
-      continue;
-
+	sci_pointer_x = event.pmove.x;
+	sci_pointer_y = event.pmove.y;
+	if (_sci_ggi_double_visual) {
+	  sci_pointer_x >>= 1;
+	  sci_pointer_y >>= 1;
+	}
+	continue;
+	
       case evPtrRelative:
-      sci_pointer_x += event.pmove.x;
-      sci_pointer_y += event.pmove.y;
-      /* FIXME: This may make the pointer too fast on high res! */
-      continue;
+	sci_pointer_x += event.pmove.x;
+	sci_pointer_y += event.pmove.y;
+	/* FIXME: This may make the pointer too fast on high res! */
+	continue;
       }
     }
 
@@ -399,7 +346,9 @@ void _sci_gii_input_cleanup()
 
 int initInputGII()
 {
+#if 0  
   if (_sci_input_handler) return 1; /* Input handler has already been installed! */
+#endif
 
   if (giiInit()) return 1;
 
@@ -416,7 +365,9 @@ int initInputGII()
   _sci_ggi_loopt = _sci_ggi_redraw_loopt;
   /* reset timers, leave them at current time to send redraw events ASAP */
 
+#if 0
   _sci_input_handler = &_sci_gii_input_handler;
+#endif
 
   return 0;
 }
