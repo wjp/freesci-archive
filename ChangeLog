@@ -1,6 +1,19 @@
+2002-09-23  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/sound/buff_ss.c:
+	* src/sound/buff_ss_win32.c:
+	* src/sound/midiout_win32_stream.c: Removed files.
+
+	* src/sound/midiout.c:
+	* src/sound/sound.c: Updated to reflect above changes.
+
+	* src/win32/freesci.def:
+	* src/win32/fsci_dll.dsp:
+	* src/config.c: Fixed Win32 build.
+
 2002-09-22  Solomon Peachy <pizza@shaftnet.org>
 
-	* src/sound/pcmout_alsa.c:  Remove unnedded variables.
+	* src/sound/pcmout_alsa.c:  Remove unneeded variables.
 	* src/sound/midi-mt32.c:  Fix the use of free()ed memory.
 	* src/sound/thread_ss_sdl.c:  Removed some redundant code.
 
@@ -11,7 +24,7 @@
 
 2002-09-22  Solomon Peachy <pizza@shaftnet.org>
 
-	* src/include/soundserver.h, src/sound/Makefile.am, 
+	* src/include/soundserver.h, src/sound/Makefile.am,
 	  src/sound/sfx_save.*, src/sound/sound.c,
 	  src/sound/thread_ss_sdl.c:  New threaded sound server.
 

@@ -37,7 +37,6 @@ midiout_driver_t *midiout_drivers[] = {
 #endif
 #ifdef _WIN32
 	&midiout_driver_win32mci,
-	&midiout_driver_win32mci_stream,
 #endif
 	&midiout_driver_null,
 	NULL

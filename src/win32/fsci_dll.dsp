@@ -443,14 +443,6 @@ SOURCE=..\scicore\vocab_debug.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\sound\buff_ss.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\sound\buff_ss_win32.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\sound\event_ss.c
 # End Source File
 # Begin Source File
@@ -491,10 +483,6 @@ SOURCE=..\sound\midiout_win32mci.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\midiout_win32mci_stream.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\sound\oldmidi.c
 # End Source File
 # Begin Source File
@@ -512,10 +500,17 @@ SOURCE=..\sound\polled_ss.c
 # Begin Source File
 
 SOURCE=..\sound\polled_ss_sdl.c
-# End Source File
-# Begin Source File
 
-SOURCE=..\sound\polled_ss_unix.c
+!IF  "$(CFG)" == "fsci_dll - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -540,6 +535,10 @@ SOURCE=..\sound\sound.c
 # Begin Source File
 
 SOURCE=..\sound\soundserver.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\sound\thread_ss_sdl.c
 # End Source File
 # End Group
 # Begin Source File

@@ -54,7 +54,6 @@ extern sound_server_t sound_server_sdl;
 #ifdef _WIN32
 extern sound_server_t sound_server_win32p;
 extern sound_server_t sound_server_win32e;
-extern sound_server_t sound_server_win32b;
 #endif
 
 #ifdef _DOS
@@ -71,7 +70,6 @@ sound_server_t *sound_servers[] = {
 #  ifdef _WIN32
 	&sound_server_win32p,
 	&sound_server_win32e,
-	&sound_server_win32b,
 #  endif
 
 #  ifdef HAVE_SDL
@@ -323,7 +321,7 @@ song_new(word handle, byte *data, int size, int priority)
 	retval->priority = priority;
 	retval->size = size;
 	retval->next = NULL;
-	
+
 	if (global_sound_server->flags & SOUNDSERVER_FLAG_SHAREDMEM)
 		retval->shared = 1;
 	else
@@ -468,7 +466,7 @@ song_lib_remove(songlib_t songlib, word handle)
 	else {
 		while ((goner->next) && (goner->next->handle != handle))
 			goner = goner->next;
-		
+
 		if (goner->next) { /* Found him? */
 			song_t *oldnext = goner->next;
 
@@ -482,7 +480,7 @@ song_lib_remove(songlib_t songlib, word handle)
 	/* Don't free if we are sharing this resource. */
 	if (goner->shared == 0)
 		free(goner->data);
-	
+
 	free(goner);
 
 	return retval;
@@ -512,7 +510,7 @@ song_lib_count(songlib_t songlib)
 	song_t *seeker = *songlib;
 	int retval = 0;
 
-	while (seeker) {		
+	while (seeker) {
 		retval++;
 		seeker = seeker->next;
 	}
@@ -730,7 +728,7 @@ unsigned int get_msg_value(char *msg)
 	if (!(strcasecmp(msg, "SOUND_COMMAND_SET_VOLUME")))
 		return SOUND_COMMAND_SET_VOLUME;
 
-	
+
 	fprintf(debug_stream, "ERROR: %s does not have an entry in get_msg_value(). "
 		"Please add one!\n", msg);
 	return 0;
