@@ -199,7 +199,7 @@ gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
 				maxwidth = localmaxwidth;
 
 			if (current_fragment == fragments_nr)
-				fragments = realloc(fragments, sizeof(text_fragment_t *) * (fragments_nr <<= 1));
+				fragments = realloc(fragments, sizeof(text_fragment_t) * (fragments_nr <<= 1));
 
 			localmaxwidth = 0;
 

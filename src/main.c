@@ -88,6 +88,9 @@ static gfx_state_t *gfx_state = &static_gfx_state; /* The graphics state */
 static gfx_options_t *gfx_options = &static_gfx_options; /* Graphics options */
 
 static int _script_debug_flag = 0;
+static int gfxmode_x = 0;
+static int gfxmode_y = 0;
+static int gfxmode_cd = 0;
 
 char *requested_gfx_driver = NULL;
 
@@ -241,6 +244,9 @@ static struct option options[] = {
   {"graphics", required_argument, 0, 'g'},
   {"version", no_argument, 0, 'v'},
   {"help", no_argument, 0, 'h'},
+  {"scale-x", required_argument, 0, 'x'},
+  {"scale-y", no_argument, 0, 'y'},
+  {"color-depth", no_argument, 0, 'c'},
   {0,0,0,0}
 };
 #endif /* HAVE_GETOPT_H */
@@ -266,9 +272,9 @@ main(int argc, char** argv)
   getcwd(startdir, PATH_MAX);
 
 #ifdef HAVE_GETOPT_LONG
-  while ((c = getopt_long(argc, argv, "vrhDd:V:g:", options, &optindex)) > -1)
+  while ((c = getopt_long(argc, argv, "vrhDd:V:g:x:y:c:", options, &optindex)) > -1)
 #else /* !HAVE_GETOPT_LONG */
-  while ((c = getopt(argc, argv, "vrhDd:V:g:")) > -1)
+  while ((c = getopt(argc, argv, "vrhDd:V:g:x:y:c:")) > -1)
 #endif /* !HAVE_GETOPT_LONG */
   {
     switch (c)
@@ -308,6 +314,18 @@ main(int argc, char** argv)
       /* getopt_long already printed an error message. */
       return 0;
 
+    case 'x':
+	    gfxmode_x = atoi(optarg);
+	    break;
+
+    case 'y':
+	    gfxmode_y = atoi(optarg);
+	    break;
+
+    case 'c':
+	    gfxmode_cd = atoi(optarg);
+	    break;
+
     case 0: /* getopt_long already did this for us */
       break;
 
@@ -338,7 +356,7 @@ main(int argc, char** argv)
       printf("\n");
 
       return 0;
-    
+
     case 'h':
       printf("Usage: sciv [options] [game name]\n"
              "Run a Sierra SCI game.\n"
@@ -350,6 +368,9 @@ main(int argc, char** argv)
 	     EXPLAIN_OPTION("--debug\t", "-D", "start up in debug mode")
 	     EXPLAIN_OPTION("--help\t", "-h", "display this help text and exit")
 	     EXPLAIN_OPTION("--graphics gfx", "-ggfx", "use the 'gfx' graphics driver")
+	     EXPLAIN_OPTION("--scale-x", "-x", "Set horizontal scale factor")
+	     EXPLAIN_OPTION("--scale-y", "-y", "Set vertical scale factor")
+	     EXPLAIN_OPTION("--color-depth", "-c", "Specify color depth")
 	     "\n"
 	     "The game name, if provided, must be equal to a game name as specified in the\n"
 	     "FreeSCI config file.\n"
@@ -500,17 +521,32 @@ WARNING(fixme!);
   gamestate->gfx_state = gfx_state;
   gfx_state->version = sci_version;
 
+  if (gfxmode_y > 0 && !gfxmode_x)
+	  gfxmode_x = gfxmode_y;
 
-  if (gfxop_init_default(gfx_state, gfx_options)) { 
+  if (gfxmode_x > 0) {
+	  if (gfxmode_y == 0)
+		  gfxmode_y = gfxmode_x;
+
+	  if (gfxmode_cd > 0) {
+		  if (gfxop_init(gfx_state, gfxmode_x, gfxmode_y, gfxmode_cd, gfx_options)) { 
+			  fprintf(stderr,"Graphics initialization failed. Aborting...\n");
+			  exit(1);
+		  }
+	  } else {
+		  gfxmode_cd = 4;
+		  while (gfxop_init(gfx_state, gfxmode_x, gfxmode_y, gfxmode_cd, gfx_options) && --gfxmode_cd);
+
+		  if (!gfxmode_cd) {
+			  fprintf(stderr,"Could not find a matching color depth. Aborting...\n");
+			  exit(1);
+		  }
+	  }
+	  
+  } else if (gfxop_init_default(gfx_state, gfx_options)) { 
 	  fprintf(stderr,"Graphics initialization failed. Aborting...\n");
 	  exit(1);
-  };
-  /*
-  if (gfxop_init(gfx_state, 2, 2, 4, gfx_options)) { 
-	  fprintf(stderr,"Graphics initialization failed. Aborting...\n");
-	  exit(1);
-  };*/
-  /*------------*/
+  }
 
   if (game_init(gamestate)) { /* Initialize */
     fprintf(stderr,"Game initialization failed: Aborting...\n");

@@ -353,9 +353,9 @@ typedef enum {/* Map masks */
 typedef enum {
 	ALIGN_RIGHT = -1,
 	ALIGN_TOP = -1,
-	ALIGN_CENTER = 0,
-	ALIGN_LEFT = 1,
-	ALIGN_BOTTOM = 1
+	ALIGN_CENTER = 1,
+	ALIGN_LEFT = 0,
+	ALIGN_BOTTOM = 0
 } gfx_alignment_t;
 
 

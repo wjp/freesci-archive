@@ -41,6 +41,10 @@
 #define GFXW_FLAG_DIRTY (1<<3)
 #define GFXW_FLAG_TAGGED (1<<4)
 
+typedef struct {
+	int serial; /* The first serial number to kill */
+	rect_t area;
+} gfxw_snapshot_t;
 
 typedef enum {
 	GFXW_, /* Base widget */
@@ -79,6 +83,7 @@ typedef int gfxw_bin_op(struct _gfxw_widget *, struct _gfxw_widget *);
 
 #define WIDGET_COMMON \
    int magic; /* Extra check after typecasting */ \
+   int serial; /* Serial number */ \
    int flags; /* Widget flags */ \
    gfxw_widget_types_t type; \
    rect_t bounds; /* Boundaries */ \
@@ -196,6 +201,7 @@ typedef struct _gfxw_visual {
 #define GFXW_IS_PORT(widget) ((widget)->type == GFXW_PORT)
 typedef struct _gfxw_port {
 	WIDGET_CONTAINER;
+
 	gfxw_list_t *decorations; /* optional window decorations- drawn before the contents */
 	gfxw_widget_t *port_bg; /* Port background widget or NULL */
 	struct _gfxw_port *next_port; /* Pointer to the next port in the port list */

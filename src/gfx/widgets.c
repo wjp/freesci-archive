@@ -29,6 +29,9 @@
 
 #ifdef GFXW_DEBUG_WIDGETS
 
+#define MAX_SERIAL_NUMBER 0x7fffffff
+static int widget_serial_number_counter = 0x10000; /* Avoid confusion with IDs */
+
 gfxw_widget_t *debug_widgets[GFXW_DEBUG_WIDGETS];
 int debug_widget_pos = 0;
 #define inline
@@ -101,8 +104,10 @@ _gfxw_print_widget(gfxw_widget_t *widget, int indentation)
 	} else if (widget->magic == GFXW_MAGIC_INVALID)
 		sciprintf("INVALID ");
 
+	sciprintf("S%08x", widget->serial);
+
 	if (widget->ID != GFXW_NO_ID)
-		sciprintf("#%08x ", widget->ID);
+		sciprintf("#%x ", widget->ID);
 
 	sciprintf("[(%d,%d)(%dx%d)]", widget->bounds.x, widget->bounds.y, widget->bounds.xl, widget->bounds.yl);
 
@@ -133,6 +138,9 @@ _gfxw_new_widget(int size, int type)
 	widget->bounds = gfx_rect(0, 0, 0, 0);
 	widget->flags = GFXW_FLAG_DIRTY;
 	widget->ID = GFXW_NO_ID;
+	widget->serial = widget_serial_number_counter++;
+
+	widget_serial_number_counter &= MAX_SERIAL_NUMBER;
 
 	widget->draw = NULL;
 	widget->free = NULL;
@@ -981,6 +989,7 @@ _gfxwop_text_equals(gfxw_widget_t *widget, gfxw_widget_t *other)
 	if (!gfx_rect_equals(wtext->bounds, otext->bounds))
 		return 0;
 
+	/*
 	if (wtext->halign != otext->halign
 	    || wtext->valign != otext->valign)
 		return 0;
@@ -995,10 +1004,17 @@ _gfxwop_text_equals(gfxw_widget_t *widget, gfxw_widget_t *other)
 
 	if (strcmp(wtext->text, otext->text))
 		return 0;
+	*/ /* This is a hack! */
 
 	return 1;
 }
 
+
+static int
+_gfxwop_text_compare_to(gfxw_widget_t *widget, gfxw_widget_t *other)
+{
+	return 1;
+}
 
 gfxw_text_t *
 gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignment_t halign,
@@ -1030,7 +1046,7 @@ gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignme
 		      _gfxwop_text_free,
 		      _gfxwop_basic_tag,
 		      _gfxwop_text_print,
-		      _gfxwop_basic_compare_to,
+		      _gfxwop_text_compare_to,
 		      _gfxwop_text_equals,
 		      _gfxwop_basic_superarea_of);
 
@@ -1526,8 +1542,15 @@ _gfxwop_sorted_list_add(gfxw_container_t *container, gfxw_widget_t *widget)
 	if (_gfxw_container_id_equals(container, widget))
 		return 0;
 
-	while (*seekerp && (widget->compare_to(widget, *seekerp) > 0))
+	while (*seekerp && (widget->compare_to(widget, *seekerp) > 0)) {
+		if (widget->equals(GFXW(widget), GFXW(*seekerp))) {
+			widget->next = (*seekerp)->next;
+			(*seekerp)->free(GFXW(*seekerp));
+			*seekerp = widget;
+			return (_parentize_widget(container, widget));
+		}
 		seekerp = &((*seekerp)->next);
+	}
 
 	widget->next = *seekerp;
 	*seekerp = widget;
@@ -1960,4 +1983,52 @@ gfxw_show_widget(gfxw_widget_t *widget)
 
 	return widget;
 }
+
+
+gfxw_snapshot_t *
+gfxw_make_snapshot(gfxw_visual_t *visual, rect_t area)
+{
+	gfxw_snapshot_t *retval = malloc(sizeof(gfxw_snapshot_t));
+
+	retval->serial = widget_serial_number_counter++;
+
+fprintf(stderr, "SNAPSHOT %08x\n", retval->serial);
+	retval->area = area;
+
+	return retval;
+}
+
+
+void
+_gfxw_free_contents_appropriately(gfxw_container_t *container, rect_t area, int free_above_eq, int free_below)
+{
+	gfxw_widget_t *widget = container->contents;
+
+	while (widget) {
+		gfxw_widget_t *next = widget->next;
+
+		if ((widget->serial >= free_above_eq
+		     || widget->serial < free_below)
+		    && gfx_rects_overlap(area, widget->bounds))
+			widget->free(widget);
+		else {
+			if (GFXW_IS_CONTAINER(widget))
+				_gfxw_free_contents_appropriately(GFXWC(widget), area, free_above_eq, free_below);
+		}
+
+		widget = next;
+	}
+}
+
+gfxw_snapshot_t *
+gfxw_restore_snapshot(gfxw_visual_t *visual, gfxw_snapshot_t *snapshot)
+{
+	_gfxw_free_contents_appropriately(GFXWC(visual), snapshot->area, snapshot->serial,
+					  (snapshot->serial < widget_serial_number_counter)?
+					  /* Treat overflow */
+					  0 : widget_serial_number_counter);
+
+}
+
+
 

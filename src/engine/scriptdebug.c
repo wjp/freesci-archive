@@ -1236,6 +1236,21 @@ c_gfx_print_bgwidgets(state_t *s)
 	return 0;
 }
 
+c_gfx_print_fgwidgets(state_t *s)
+{
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	if (!s->bg_widgets)
+		sciprintf("No fgview list active.\n");
+	else
+		s->bg_widgets->print(GFXW(s->fg_widgets), 0);
+
+	return 0;
+}
+
 #ifdef GFXW_DEBUG_WIDGETS
 extern gfxw_widget_t *debug_widgets[];
 extern int debug_widget_pos;
@@ -1446,7 +1461,7 @@ c_listclones(state_t *s)
 void
 set_debug_mode (struct _state *s, int mode, char *areas)
 {
-  char modechars[] = "ulgcmfbadspMSF"; /* Valid parameter chars */
+  char modechars[] = "ulgcmfbadspMSFt"; /* Valid parameter chars */
   char *parser;
   int seeker;
   char frob;
@@ -1548,6 +1563,30 @@ show_list(state_t *s, heap_ptr list)
   return 0;
 }
 
+
+int
+c_dump_words(state_t *s)
+{
+	int i;
+
+	if (!s) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	if (!s->parser_words) {
+		sciprintf("No words.\n");
+		return 0;
+	}
+
+	for (i = 0; i < s->parser_words_nr; i++) {
+		word_t *word = s->parser_words[i];
+		sciprintf("%s: C %03x G %03x\n", word->word, word->class, word->group);
+	}
+	sciprintf("%d words\n", s->parser_words_nr);
+
+	return 0;
+}
 
 int
 c_show_list(state_t *s)
@@ -2068,6 +2107,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_gfx_print_dynviews, "gfx_print_dynviews", "", "Shows the dynview list");
 			con_hook_command(c_gfx_print_picviews, "gfx_print_picviews", "", "Shows the picview list");
 			con_hook_command(c_gfx_print_bgwidgets, "gfx_print_bgwidgets", "", "Shows the background widget list");
+			con_hook_command(c_gfx_print_fgwidgets, "gfx_print_fgwidgets", "", "Shows the foreground widget list");
+			con_hook_command(c_dump_words, "dumpwords", "", "Lists all parser words");
 #ifdef GFXW_DEBUG_WIDGETS
 			con_hook_command(c_gfx_print_widget, "gfx_print_widget", "i*", "If called with no parameters, it\n  shows which widgets are active.\n"
 					 "  With parameters, it lists the\n  widget corresponding to the\n  numerical index specified (for\n  each parameter).");

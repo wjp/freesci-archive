@@ -303,7 +303,7 @@ gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignme
 **                                                         The foreground is dithered between them)
 **             (gfx_color_t) bgcolor: Text background color
 **             (int) flags: GFXR_FONT_FLAGs, orred together (see gfx_resource.h)
-** Returns   : (gfx_text_t *) The resulting text widget
+** Returns   : (gfxw_text_t *) The resulting text widget
 */
 
 gfxw_widget_t *
@@ -412,6 +412,27 @@ gfxw_remove_widget_from_container(gfxw_container_t *container, gfxw_widget_t *wi
 ** Parameters: (gfxw_container_t *) container: The container it should be removed from
 **             (gfxw_widget_t *) widget: The widget to remove
 ** Returns   : (void)
+*/
+
+gfxw_snapshot_t *
+gfxw_make_snapshot(gfxw_visual_t *visual, rect_t area);
+/* Makes a "snapshot" of a visual
+** Parameters: (gfxw_visual_t *) visual: The visual a snapshot is to be taken of
+**             (rect_t) area: The area a snapshot should be taken of
+** Returns   : (gfxw_snapshot_t *) The resulting, newly allocated snapshot
+** It's not really a full qualified snaphot, though. See gfxw_restore_snapshot
+** for a full discussion.
+** This operation also increases the global serial number counter by one.
+*/
+
+gfxw_snapshot_t *
+gfxw_restore_snapshot(gfxw_visual_t *visual, gfxw_snapshot_t *snapshot); 
+/* Restores a snapshot to a visual
+** Parameters: (gfxw_visual_t *) visual: The visual to operate on
+**             (gfxw_snapshot_t *) snapshot: The snapshot to restore
+** Returns   : (gfxw_snapshot_t *) snapshot (still needs to be freed)
+** The snapshot is not really restored; only more recent widgets touching
+** the snapshotted area are destroyed.
 */
 
 #endif /* !_GFX_WIDGETS_H_ */

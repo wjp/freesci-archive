@@ -62,6 +62,15 @@
   else \
        s->picture_port->add(GFXWC(s->picture_port), GFXW(widget));
 
+#define ADD_TO_CURRENT_FG_WIDGETS(widget) \
+       s->fg_widgets->add(GFXWC(s->fg_widgets), GFXW(widget));
+
+#define ADD_TO_CURRENT_BG_WIDGETS(widget) \
+  if (!s->port || s->port == s->wm_port) \
+       s->bg_widgets->add(GFXWC(s->bg_widgets), GFXW(widget)); \
+  else \
+       s->port->add(GFXWC(s->port), GFXW(widget));
+
 #define FULL_REDRAW()\
   if (s->visual) \
        s->visual->draw(GFXW(s->visual), gfxw_point_zero); \
@@ -106,18 +115,19 @@ assert_primary_widget_lists(state_t *s)
 	if (!s->dyn_views) {
 		rect_t bounds = s->picture_port->bounds;
 
-		bounds.y++; /* SCI draws dynviews one pixel below their coordinates */
-		bounds.yl--;
-
 		if (!s->pic_views) {
 			s->pic_views = gfxw_new_list(bounds, 0);
 			ADD_TO_CURRENT_PICTURE_PORT(s->pic_views);
 		}
 
 		ASSERT(!s->bg_widgets);
+		ASSERT(!s->fg_widgets);
 
 		s->bg_widgets = gfxw_new_list(s->picture_port->bounds, 0);
 		ADD_TO_CURRENT_PICTURE_PORT(s->bg_widgets);
+
+		s->fg_widgets = gfxw_new_list(s->picture_port->bounds, GFXW_LIST_SORTED);
+		ADD_TO_CURRENT_PICTURE_PORT(s->fg_widgets);
 
 		s->dyn_views = gfxw_new_list(bounds, GFXW_LIST_SORTED);
 		ADD_TO_CURRENT_PICTURE_PORT(s->dyn_views);
@@ -132,9 +142,38 @@ reparentize_primary_widget_lists(state_t *s, gfxw_port_t *newport)
 
 	gfxw_remove_widget_from_container(s->pic_views->parent, GFXW(s->pic_views));
 	gfxw_remove_widget_from_container(s->dyn_views->parent, GFXW(s->dyn_views));
+	gfxw_remove_widget_from_container(s->fg_widgets->parent, GFXW(s->fg_widgets));
 
+	newport->add(GFXWC(newport), GFXW(s->fg_widgets));
 	newport->add(GFXWC(newport), GFXW(s->pic_views));
 	newport->add(GFXWC(newport), GFXW(s->dyn_views));
+}
+
+int
+graph_save_box(state_t *s, rect_t area)
+{
+	int handle = kalloc(s, HUNK_TYPE_GFXBUFFER, sizeof(gfxw_snapshot_t *));
+	gfxw_snapshot_t **ptr = kmem(s, handle);
+
+	*ptr = gfxw_make_snapshot(s->visual, area);
+
+	return handle;
+}
+
+void
+graph_restore_box(state_t *s, int handle)
+{
+	gfxw_snapshot_t **ptr = kmem(s, handle);
+
+	if (!ptr) {
+		SCIkwarn(SCIkERROR, "Attempt to restore invalid snaphot with handle %04x!\n", handle);
+		return;
+	}
+
+	gfxw_restore_snapshot(s->visual, *ptr);
+	free(*ptr);
+
+	kfree(s, handle);
 }
 
 
@@ -223,148 +262,150 @@ WARNING( "_k_redraw_box: Fixme!")
 void
 kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int color, priority, special;
-  gfx_color_t gfxcolor;
-  rect_t area;
-  gfxw_port_t *port = s->port;
-  int redraw_port = 0;
+	int color, priority, special;
+	gfx_color_t gfxcolor;
+	rect_t area;
+	gfxw_port_t *port = s->port;
+	int redraw_port = 0;
 
-  switch(PARAM(0)) {
+	switch(PARAM(0)) {
 
-  case K_GRAPH_GET_COLORS_NR:
+	case K_GRAPH_GET_COLORS_NR:
 
-    s->acc = (sci_version < SCI_VERSION_1) ? 0x10 : 0x100; /* number of colors */
-    break;
+		s->acc = (sci_version < SCI_VERSION_1) ? 0x10 : 0x100; /* number of colors */
+		break;
   
-  case K_GRAPH_DRAW_LINE:
+	case K_GRAPH_DRAW_LINE:
 
-    color = PARAM(5);
-    priority = PARAM(6);
-    special = PARAM(7);
-    area = gfx_rect(PARAM(2), PARAM(1) , PARAM(4), PARAM(3));
+		color = PARAM(5);
+		priority = PARAM(6);
+		special = PARAM(7);
+		area = gfx_rect(PARAM(2), PARAM(1) , PARAM(4), PARAM(3));
+
+		area.xl = area.xl - area.x; /* Since the actual coordinates are absolute */
+		area.yl = area.yl - area.y;
   
-    gfxcolor = s->ega_colors[color];
-    gfxcolor.priority = priority;
-    gfxcolor.control = special;
+		gfxcolor = s->ega_colors[color];
+		gfxcolor.priority = priority;
+		gfxcolor.control = special;
 
-    gfxcolor.mask = !(color & 0x80) | (!(priority & 0x80) << 1) | (!(special & 0x80) << 2);
+		gfxcolor.mask = !(color & 0x80) | (!(priority & 0x80) << 1) | (!(special & 0x80) << 2);
 
-    redraw_port = 1;
-    port->add(GFXWC(port),
-	      (gfxw_widget_t *) gfxw_new_line(area, gfxcolor, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL));
+		redraw_port = 1;
+		ADD_TO_CURRENT_PICTURE_PORT(GFXW(gfxw_new_line(area, gfxcolor, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL)));
 		
-    break;
+		break;
 
-  case K_GRAPH_SAVE_BOX:
+	case K_GRAPH_SAVE_BOX:
 
 WARNING(fixme)
 #if 0
-    s->acc = graph_save_box(s, PARAM(2), PARAM(1), PARAM(4), PARAM(3), PARAM(5));
+		s->acc = graph_save_box(s, PARAM(2), PARAM(1), PARAM(4), PARAM(3), PARAM(5));
 #endif
-    break;
+		break;
 
-  case K_GRAPH_RESTORE_BOX:
+	case K_GRAPH_RESTORE_BOX:
 
 WARNING(fixme)
 #if 0
-    graph_restore_box(s, PARAM(1));
+		graph_restore_box(s, PARAM(1));
 #endif
-    break;
+	break;
 
-  case K_GRAPH_FILL_BOX_BACKGROUND:
+	case K_GRAPH_FILL_BOX_BACKGROUND:
 
 WARNING(fixme)
 #if 0
-    graph_clear_box(s, port->xmin, port->ymin,
-		    port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
-		    port->bgcolor);
-    redraw_port = 1;
+		graph_clear_box(s, port->xmin, port->ymin,
+				port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
+				port->bgcolor);
+		redraw_port = 1;
 #endif
-    CHECK_THIS_KERNEL_FUNCTION;
-    break;
+		CHECK_THIS_KERNEL_FUNCTION;
+		break;
 
-  case K_GRAPH_FILL_BOX_FOREGROUND:
+	case K_GRAPH_FILL_BOX_FOREGROUND:
 
-WARNING(fixme)
+WARNING(fixme);
 #if 0
-    graph_clear_box(s, port->xmin, port->ymin,
-		    port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
-		    port->color);
-    CHECK_THIS_KERNEL_FUNCTION;
+		graph_clear_box(s, port->xmin, port->ymin,
+				port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
+				port->color);
+		CHECK_THIS_KERNEL_FUNCTION;
 #endif
-    break;
+		break;
 
-  case K_GRAPH_FILL_BOX_ANY: {
+	case K_GRAPH_FILL_BOX_ANY: {
 
-    int x = PARAM(2);
-    int y = PARAM(1);
+		int x = PARAM(2);
+		int y = PARAM(1);
 
-WARNING(fixme)
+WARNING(fixme);
 #if 0
-    SCIkdebug(SCIkGRAPHICS, "fill_box_any(%d, %d, %d, %d) map=%d (%d %d)\n",
-	      PARAM(1), PARAM(2), PARAM(3), PARAM(4), PARAM(5), PARAM(6), PARAM_OR_ALT(7, -1));
+		SCIkdebug(SCIkGRAPHICS, "fill_box_any(%d, %d, %d, %d) map=%d (%d %d)\n",
+			  PARAM(1), PARAM(2), PARAM(3), PARAM(4), PARAM(5), PARAM(6), PARAM_OR_ALT(7, -1));
 
-    graph_fill_box_custom(s, x + s->port->xmin, y + s->port->ymin,
-			  PARAM(4)-x, PARAM(3)-y, PARAM(6), PARAM_OR_ALT(7, -1),
-			  PARAM_OR_ALT(8, -1), UPARAM(5));
-    CHECK_THIS_KERNEL_FUNCTION;
+		graph_fill_box_custom(s, x + s->port->xmin, y + s->port->ymin,
+				      PARAM(4)-x, PARAM(3)-y, PARAM(6), PARAM_OR_ALT(7, -1),
+				      PARAM_OR_ALT(8, -1), UPARAM(5));
+		CHECK_THIS_KERNEL_FUNCTION;
+#endif
+
+  }
+	break;
+
+	case K_GRAPH_UPDATE_BOX: {
+
+		int x = PARAM(2);
+		int y = PARAM(1);
+
+WARNING(fixme);
+#if 0
+		SCIkdebug(SCIkGRAPHICS, "update_box(%d, %d, %d, %d)\n",
+			  PARAM(1), PARAM(2), PARAM(3), PARAM(4));
+
+		(*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_BOX, x, y + 10, PARAM(4)-x+1, PARAM(3)-y+1);
+		CHECK_THIS_KERNEL_FUNCTION;
 #endif
 
   }
   break;
 
-  case K_GRAPH_UPDATE_BOX: {
+	case K_GRAPH_REDRAW_BOX: {
 
-    int x = PARAM(2);
-    int y = PARAM(1);
+		CHECK_THIS_KERNEL_FUNCTION;
 
-WARNING(fixme)
+		WARNING(fixme);
 #if 0
-    SCIkdebug(SCIkGRAPHICS, "update_box(%d, %d, %d, %d)\n",
-	      PARAM(1), PARAM(2), PARAM(3), PARAM(4));
+		SCIkdebug(SCIkGRAPHICS, "redraw_box(%d, %d, %d, %d)\n",
+			  PARAM(1), PARAM(2), PARAM(3), PARAM(4));
 
-    (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_BOX, x, y + 10, PARAM(4)-x+1, PARAM(3)-y+1);
-    CHECK_THIS_KERNEL_FUNCTION;
+		if (!s->dyn_views_nr)
+			graph_update_box(s, PARAM(2), PARAM(1), PARAM(4), PARAM(3)); else
+				_k_redraw_box(s, PARAM(2), PARAM(1), PARAM(4), PARAM(3));
 #endif
 
-  }
-  break;
+	}
 
-  case K_GRAPH_REDRAW_BOX: {
+	break;
 
-    CHECK_THIS_KERNEL_FUNCTION;
+	case K_GRAPH_ADJUST_PRIORITY:
 
-WARNING(fixme)
-#if 0
-    SCIkdebug(SCIkGRAPHICS, "redraw_box(%d, %d, %d, %d)\n",
-	      PARAM(1), PARAM(2), PARAM(3), PARAM(4));
+		fprintf(stderr,"ADJP(%d,%d)\n", PARAM(1), PARAM(2));
+		SCIkdebug(SCIkGRAPHICS, "adjust_priority(%d, %d)\n", PARAM(1), PARAM(2));
+		s->priority_first = PARAM(1) - 10;
+		s->priority_last = PARAM(2) - 10;
+		break;
 
-    if (!s->dyn_views_nr)
-      graph_update_box(s, PARAM(2), PARAM(1), PARAM(4), PARAM(3)); else
-      _k_redraw_box(s, PARAM(2), PARAM(1), PARAM(4), PARAM(3));
-#endif
-      
-  }
-
-  break;
-
-  case K_GRAPH_ADJUST_PRIORITY:
-
-    fprintf(stderr,"ADJP(%d,%d)\n", PARAM(1), PARAM(2));
-    SCIkdebug(SCIkGRAPHICS, "adjust_priority(%d, %d)\n", PARAM(1), PARAM(2));
-    s->priority_first = PARAM(1) - 10;
-    s->priority_last = PARAM(2) - 10;
-    break;
-
-  default:
+	default:
     
-    CHECK_THIS_KERNEL_FUNCTION;
-    SCIkdebug(SCIkSTUB, "Unhandled Graph() operation %04x\n", PARAM(0));
-    
-  }
+		CHECK_THIS_KERNEL_FUNCTION;
+		SCIkdebug(SCIkSTUB, "Unhandled Graph() operation %04x\n", PARAM(0));
 
-  port->draw(GFXW(port), gfxw_point_zero);
-  gfxop_update(s->gfx_state);
+	}
+
+	port->draw(GFXW(port), gfxw_point_zero);
+	gfxop_update(s->gfx_state);
 }
 
 
@@ -890,7 +931,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		if (s->picture_port->contents) {
 			s->picture_port->free_contents(GFXWC(s->picture_port));
 			s->picture_port->contents = NULL;
-			s->dyn_views = s->pic_views = s->bg_widgets = NULL;
+			s->dyn_views = s->pic_views = s->bg_widgets = s->fg_widgets = NULL;
 		}
 		GFX_ASSERT(gfxop_add_to_pic(s->gfx_state, pic_nr, 1, PARAM_OR_ALT(3, 0)));
 	} else {
@@ -911,7 +952,10 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (s->bg_widgets)
 		s->bg_widgets->free(GFXW(s->bg_widgets));
 
-	s->dyn_views = s->pic_views = s->bg_widgets = NULL;
+	if (s->fg_widgets)
+		s->fg_widgets->free(GFXW(s->fg_widgets));
+
+	s->dyn_views = s->pic_views = s->bg_widgets = s->fg_widgets = NULL;
 
 	s->priority_first = 42;
 	s->priority_last = 180;
@@ -1562,6 +1606,9 @@ _k_make_view_list(state_t *s, gfxw_list_t *widget_list, heap_ptr list, int optio
 
 		pos.x = GET_SELECTOR(obj, x);
 		pos.y = GET_SELECTOR(obj, y);
+
+		pos.y++; /* Sierra appears to do something like this */
+
 		z = GET_SELECTOR(obj, z);
 
 		/* !-- nsRect used to be checked here! */
@@ -1723,6 +1770,12 @@ _k_draw_view_list(state_t *s, gfxw_list_t *list, int flags)
 	while (widget) {
 		if (GFXW_IS_DYN_VIEW(widget) && widget->ID) {
 			word signal = (flags & _K_DRAW_VIEW_LIST_USE_SIGNAL)? GET_HEAP(widget->signalp) : 0;
+
+			if (signal & _K_VIEW_SIG_FLAG_HIDDEN)
+				gfxw_hide_widget(GFXW(widget));
+			else
+				gfxw_show_widget(GFXW(widget));
+
 			if (!(flags & _K_DRAW_VIEW_LIST_USE_SIGNAL)
 			    || ((flags & _K_DRAW_VIEW_LIST_DISPOSEABLE) && (signal & _K_VIEW_SIG_FLAG_DISPOSE_ME))
 			    || ((flags & _K_DRAW_VIEW_LIST_NONDISPOSEABLE) && !(signal & _K_VIEW_SIG_FLAG_DISPOSE_ME))) {
@@ -2341,145 +2394,164 @@ kShakeScreen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-WARNING(fixme)
-#if 0
-  int argpt;
-  int textp = UPARAM(0);
-  int index = UPARAM(1);
-  int width = -1;
-  int temp;
-  int save_under = 0;
-  char *text;
-  resource_t *font_resource;
-  port_t *port = s->port;
-  port_t save;
-  int update_immediately = 1;
+	int argpt;
+	int textp = UPARAM(0);
+	int index = UPARAM(1);
+	int temp;
+	int save_under = 0;
+	gfx_color_t transparent;
+	char *text;
+	gfxw_port_t *port = (s->port)? s->port : s->picture_port;
+	resource_t *font_resource;
+	int update_immediately = 1;
 
-  save=*port;
-  port->alignment = ALIGN_LEFT;
+	gfx_color_t *color0, *color1, *bg_color;
+	gfx_alignment_t halign = ALIGN_LEFT;
+	rect_t area = gfx_rect(port->draw_pos.x, port->draw_pos.y, 320, 200);
+	int gray = port->gray_text;
+	int font_nr = port->font_nr;
+	gfxw_text_t *text_handle;
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	transparent.mask = 0;
 
+	color0 = &(port->color);
+	bg_color = &(port->bgcolor);
 
-  text = kernel_lookup_text(s, textp, index);
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  if (textp < 1000)
-    argpt = 2;
-  else
-    argpt = 1;
+	text = kernel_lookup_text(s, textp, index);
 
-  while (argpt < argc) {
+	if (textp < 1000)
+		argpt = 2;
+	else
+		argpt = 1;
 
-    switch(PARAM(argpt++)) {
+	while (argpt < argc) {
 
-    case K_DISPLAY_SET_COORDS:
+		switch(PARAM(argpt++)) {
 
-      port->x = PARAM(argpt++);
-      port->y = PARAM(argpt++) + 1; /* ? */
-      SCIkdebug(SCIkGRAPHICS, "Display: set_coords(%d, %d)\n", port->x, port->y);
-      break;
+		case K_DISPLAY_SET_COORDS:
 
-    case K_DISPLAY_SET_ALIGNMENT:
+			area.x = PARAM(argpt++);
+			area.y = PARAM(argpt++);
+			SCIkdebug(SCIkGRAPHICS, "Display: set_coords(%d, %d)\n", area.x, area.y);
+			break;
 
-      port->alignment = PARAM(argpt++);
-      SCIkdebug(SCIkGRAPHICS, "Display: set_align(%d)\n", port->alignment);
-      break;
+		case K_DISPLAY_SET_ALIGNMENT:
 
-    case K_DISPLAY_SET_COLOR:
+			halign = PARAM(argpt++);
+			SCIkdebug(SCIkGRAPHICS, "Display: set_align(%d)\n", halign);
+			break;
 
-      port->color = PARAM(argpt++);
-      SCIkdebug(SCIkGRAPHICS, "Display: set_color(%d)\n", port->color);
-      break;
+		case K_DISPLAY_SET_COLOR:
 
-    case K_DISPLAY_SET_BGCOLOR:
+			temp = PARAM(argpt++);
+			SCIkdebug(SCIkGRAPHICS, "Display: set_color(%d)\n", temp);
+			if (temp >= 0 && temp <= 15)
+				color0 = &(s->ega_colors[temp]);
+			else if (temp == -1)
+				color0 = &transparent;
+			else
+				SCIkwarn(SCIkWARNING, "Display: Attempt to set invalid fg color %d\n", temp);
+			break;
 
-      port->bgcolor = PARAM(argpt++);
-      SCIkdebug(SCIkGRAPHICS, "Display: set_bg_color(%d)\n", port->bgcolor);
-      break;
+		case K_DISPLAY_SET_BGCOLOR:
 
-    case K_DISPLAY_SET_GRAYTEXT:
+			temp = PARAM(argpt++);
+			SCIkdebug(SCIkGRAPHICS, "Display: set_bg_color(%d)\n", temp);
+			if (temp >= 0 && temp <= 15)
+				bg_color = &(s->ega_colors[temp]);
+			else if (temp == -1)
+				bg_color = &transparent;
+			else
+				SCIkwarn(SCIkWARNING, "Display: Attempt to set invalid bg color %d\n", temp);
+			break;
 
-      port->gray_text = PARAM(argpt++);
-      SCIkdebug(SCIkGRAPHICS, "Display: set_graytext(%d)\n", port->gray_text);
-      break;
+		case K_DISPLAY_SET_GRAYTEXT:
 
-    case K_DISPLAY_SET_FONT:
+			gray = PARAM(argpt++);
+			SCIkdebug(SCIkGRAPHICS, "Display: set_graytext(%d)\n", gray);
+			break;
 
-      font_resource = findResource(sci_font, temp = PARAM(argpt++));
+		case K_DISPLAY_SET_FONT:
 
-      port->font_nr = temp;
+			font_nr = PARAM(argpt++);
 
-      if (font_resource)
-	port->font = font_resource->data;
-      else
-	port->font = NULL;
+			SCIkdebug(SCIkGRAPHICS, "Display: set_font(\"font.%03d\")\n", font_nr);
+			break;
 
-      SCIkdebug(SCIkGRAPHICS, "Display: set_font(\"font.%03d\")\n", PARAM(argpt - 1));
-      break;
+		case K_DISPLAY_WIDTH:
 
-    case K_DISPLAY_WIDTH:
+			area.xl = PARAM(argpt);
+			argpt++;
+			SCIkdebug(SCIkGRAPHICS, "Display: set_width(%d)\n", area.xl);
+			break;
 
-      width = PARAM(argpt);
-      argpt++;
-      SCIkdebug(SCIkGRAPHICS, "Display: set_width(%d)\n", width);
-      break;
+		case K_DISPLAY_SAVE_UNDER:
 
-    case K_DISPLAY_SAVE_UNDER:
+			save_under = 1;
+			SCIkdebug(SCIkGRAPHICS, "Display: set_save_under()\n");
+			break;
 
-      save_under = 1;
-      SCIkdebug(SCIkGRAPHICS, "Display: set_save_under()\n");
-      break;
+		case K_DISPLAY_RESTORE_UNDER:
 
-    case K_DISPLAY_RESTORE_UNDER:
+			SCIkdebug(SCIkGRAPHICS, "Display: restore_under(%04x)\n", UPARAM(argpt));
+			graph_restore_box(s, UPARAM(argpt));
+			update_immediately = 1;
+			argpt++;
+			return;
 
-      SCIkdebug(SCIkGRAPHICS, "Display: restore_under(%04x)\n", UPARAM(argpt));
-      graph_restore_box(s, UPARAM(argpt));
-      update_immediately = 1;
-      argpt++;
-      return;
-
-    case K_DONT_UPDATE_IMMEDIATELY:
+		case K_DONT_UPDATE_IMMEDIATELY:
     
-      update_immediately=0;
-      SCIkdebug(SCIkGRAPHICS, "Display: set_dont_update()\n");
-      argpt++;
-      break;
+			update_immediately=0;
+			SCIkdebug(SCIkGRAPHICS, "Display: set_dont_update()\n");
+			argpt++;
+			break;
       
-    default:
-      SCIkdebug(SCIkGRAPHICS, "Unknown Display() command %x\n", PARAM(argpt-1));
-      return;
-    }
-  }
+		default:
+			SCIkdebug(SCIkGRAPHICS, "Unknown Display() command %x\n", PARAM(argpt-1));
+			return;
+		}
+	}
 
-  if (save_under) {    /* Backup */
-    int _width, _height;
+	if (gray)
+		color1 = bg_color;
+	else
+		color1 = color0;
 
-    get_text_size(text, port->font, width, &_width, &_height);
-    _width = port->xmax - port->xmin; /* To avoid alignment calculations */
+	text_handle = gfxw_new_text(s->gfx_state, area, font_nr, text, halign,
+				    ALIGN_TOP, *color0, *color1, *bg_color, 0);
 
-    s->acc = graph_save_box(s, port->x + port->xmin, port->y + port->ymin, _width, _height, 3);
+	if (!text_handle) {
+		SCIkwarn(SCIkERROR, "Display: Failed to create text widget!\n");
+		return;
+	}
 
-    SCIkdebug(SCIkGRAPHICS, "Saving (%d, %d) size (%d, %d) as %04x\n",
-	      port->x + port->xmin, port->y + port->ymin, _width, _height, s->acc);
+	if (save_under) {    /* Backup */
+		rect_t save_area = text_handle->bounds;
+		save_area.x += port->bounds.x;
+		save_area.y += port->bounds.y;
 
-  }
+		s->acc = graph_save_box(s, save_area);
+		text_handle->serial++; /* This is evil! */
+
+		SCIkdebug(SCIkGRAPHICS, "Saving (%d, %d) size (%d, %d) as %04x\n",
+			  save_area.x, save_area.y, save_area.xl, save_area.yl, s->acc);
+
+	}
 
 
-  SCIkdebug(SCIkGRAPHICS, "Display: Commiting text '%s'\n", text);
+	SCIkdebug(SCIkGRAPHICS, "Display: Commiting text '%s'\n", text);
 
-  /*  if (s->view_port)
-      graph_fill_port(s, port, port->bgcolor); */ /* Only fill if we aren't writing to the main view */
+	assert_primary_widget_lists(s);
 
-  text_draw(s->pic, port, text, width);
+	ADD_TO_CURRENT_FG_WIDGETS(text_handle);
 
-  if ((!s->pic_not_valid)&&update_immediately) { /* Refresh if drawn to valid picture */
-    graph_update_box(s, port->xmin, port->ymin + 1,
-		     port->xmax - port->xmin + 1, port->ymax - port->ymin + 1);
-    SCIkdebug(SCIkGRAPHICS, "Refreshing display...\n");
-  }
-
-  *port=save;
-#endif
+	if ((!s->pic_not_valid)&&update_immediately) { /* Refresh if drawn to valid picture */
+		FULL_REDRAW();
+		SCIkdebug(SCIkGRAPHICS, "Refreshing display...\n");
+	}
 }
+
 
 

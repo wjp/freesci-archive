@@ -145,7 +145,7 @@ _reset_graphics_input(state_t *s)
   s->pic_is_new = 0;
   s->pic_visible_map = 0; /* Other values only make sense for debugging */
   s->pic_views = NULL; s->dyn_views = NULL; /* No PicViews, no DynViews */
-  s->bg_widgets = NULL; /* And no bg widgets either */
+  s->bg_widgets = s->fg_widgets = NULL; /* And no bg or fg widgets either */
 
   s->priority_first = 42; /* Priority zone 0 ends here */
   s->priority_last = 200; /* The highest priority zone (15) starts here */

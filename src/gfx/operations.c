@@ -128,7 +128,7 @@ _gfxop_grab_pixmap(gfx_state_t *state, gfx_pixmap_t **pxmp, int x, int y,
 	if (_gfxop_clip(zone, gfx_rect(0, 0,
 					320 * state->driver->mode->xfact,
 					200 * state->driver->mode->yfact)))
-		return 1;
+		return GFX_ERROR;
 
 	if (!*pxmp)
 		*pxmp = gfx_new_pixmap(unscaled_xl, unscaled_yl, GFX_RESID_NONE, 0, 0);
@@ -309,6 +309,11 @@ _gfxop_draw_pointer(gfx_state_t *state)
 		retval = _gfxop_grab_pixmap(state, &(state->mouse_pointer_bg), x, y,
 					    ppxm->xl, ppxm->yl, GFX_NO_PRIORITY,
 					    &(state->pointer_bg_zone));
+
+		if (retval == GFX_ERROR) {
+			state->mouse_pointer_bg = NULL;
+			return GFX_OK;
+		}
 
 		if (retval)
 			return retval;
@@ -1779,6 +1784,7 @@ gfxop_get_text_params(gfx_state_t *state, int font_nr, char *text,
 
 	textsplits = gfxr_font_calculate_size(font, maxwidth, text, width, height, &lines,
 					      state->options->workarounds & GFX_WORKAROUND_WHITESPACE_COUNT);
+
 
 	if (!textsplits) {
 		GFXERROR("Could not calculate text size!");

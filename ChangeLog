@@ -1,3 +1,23 @@
+2000-12-30  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kDisplay): Reimplemented Display
+
+	* src/engine/scriptdebug.c (c_dump_words): Added a command to dump all
+	words from vocab.000
+
+	* src/gfx/sci_widgets.c (sciw_new_edit_control): Added blinking to
+	edit controls
+
+2000-12-29  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kGraph): Line drawing now expects absolute
+	coordinates, like Sierra SCI
+	(_k_draw_view_list): Made view lists honor the HIDDEN view flag more
+	thoroughly
+
+	* src/gfx/operations.c (_gfxop_draw_pointer): Fixed inconsistency when
+	changing mouse pointer while off-screen
+
 2000-12-29  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/resource/sci_pic_0.c (_gfxr_fill): Fixed another SQ3 intro 

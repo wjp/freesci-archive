@@ -274,47 +274,62 @@ sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int fo
 {
 	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
 	gfxw_text_t *text_handle;
-	char *textdup = malloc(strlen(text) + 1);
+	int draw_cursor;
+	int foo;
 
 	gfxw_set_id(GFXW(list), ID);
 	zone.x = 0;
 	zone.y = 1;
 
-	strncpy(textdup, text, cursor);
+	sci_gettime(&foo, &draw_cursor);
+	draw_cursor = draw_cursor > 500000;
 
-	if (cursor <= strlen(text))
-		textdup[cursor] = 0; /* terminate */
-
-	if (cursor > 0) {
+	if (!draw_cursor) {
 		text_handle = gfxw_new_text(port->visual->gfx_state, zone,
-					    font, textdup, ALIGN_LEFT, ALIGN_TOP,
+					    font, text, ALIGN_LEFT, ALIGN_TOP,
 					    port->color, port->color, port->bgcolor, GFXR_FONT_FLAG_NO_NEWLINES);
 
 		list->add(GFXWC(list), GFXW(text_handle));
-		zone.x += text_handle->width;
-	}
+	} else {
+		char *textdup = malloc(strlen(text) + 1);
 
-	if (cursor < strlen(text)) {
-		textdup[0] = text[cursor];
-		textdup[1] = 0;
-		text_handle =  gfxw_new_text(port->visual->gfx_state, zone,
-					     font, textdup, ALIGN_LEFT, ALIGN_TOP,
-					     port->bgcolor, port->bgcolor, port->color, GFXR_FONT_FLAG_NO_NEWLINES);
-		list->add(GFXWC(list), GFXW(text_handle));
-		zone.x += text_handle->width;
-	};
+		strncpy(textdup, text, cursor);
 
-	if (cursor+1 < strlen(text)) {
-		text_handle = gfxw_new_text(port->visual->gfx_state, zone,
-					    font, text + cursor + 1, ALIGN_LEFT, ALIGN_TOP,
-					    port->color, port->color, port->bgcolor, GFXR_FONT_FLAG_NO_NEWLINES);
-		list->add(GFXWC(list), GFXW(text_handle));
-		zone.x += text_handle->width;
-	};
+		if (cursor <= strlen(text))
+			textdup[cursor] = 0; /* terminate */
 
-	if (cursor == strlen(text))
-		list->add(GFXWC(list), GFXW(gfxw_new_line(gfx_rect(zone.x + 1, zone.y, 0, zone.yl - 1),
+		if (cursor > 0) {
+			text_handle = gfxw_new_text(port->visual->gfx_state, zone,
+						    font, textdup, ALIGN_LEFT, ALIGN_TOP,
+						    port->color, port->color, port->bgcolor, GFXR_FONT_FLAG_NO_NEWLINES);
+
+			list->add(GFXWC(list), GFXW(text_handle));
+			zone.x += text_handle->width;
+		}
+
+		if (cursor < strlen(text)) {
+			textdup[0] = text[cursor];
+			textdup[1] = 0;
+			text_handle =  gfxw_new_text(port->visual->gfx_state, zone,
+						     font, textdup, ALIGN_LEFT, ALIGN_TOP,
+						     port->bgcolor, port->bgcolor, port->color, GFXR_FONT_FLAG_NO_NEWLINES);
+			list->add(GFXWC(list), GFXW(text_handle));
+			zone.x += text_handle->width;
+		};
+
+		if (cursor+1 < strlen(text)) {
+			text_handle = gfxw_new_text(port->visual->gfx_state, zone,
+						    font, text + cursor + 1, ALIGN_LEFT, ALIGN_TOP,
+						    port->color, port->color, port->bgcolor, GFXR_FONT_FLAG_NO_NEWLINES);
+			list->add(GFXWC(list), GFXW(text_handle));
+			zone.x += text_handle->width;
+		};
+
+		if (cursor == strlen(text))
+			list->add(GFXWC(list), GFXW(gfxw_new_line(gfx_rect(zone.x + 1, zone.y, 0, zone.yl - 1),
 							  port->color, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL)));
+		free(textdup);
+	}
 
 
 	zone.x = zone.y = 0;
@@ -322,7 +337,6 @@ sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int fo
         list->add(GFXWC(list),
                   GFXW(gfxw_new_rect(zone, port->color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
 
-	free(textdup);
 	return list;
 }
 

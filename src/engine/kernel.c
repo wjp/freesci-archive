@@ -299,6 +299,7 @@ const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
   "Menu handling",
   "Said specs",
   "File I/O"
+  "Time"
 };
 
 
@@ -492,12 +493,12 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
   {
     if (argc) { /* Get seconds since last am/pm switch */
       s->acc = loc_time->tm_sec + loc_time->tm_min * 60 + (loc_time->tm_hour % 12) * 3600;
-      sciprintf("GetTime(timeofday) returns %d\n", s->acc);
+      SCIkdebug(SCIkTIME, "GetTime(timeofday) returns %d\n", s->acc);
     } else { /* Get time since game started */
       g_get_current_time (&time_prec);
       s-> acc = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
 	         (time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
-      sciprintf("GetTime(elapsed) returns %d\n", s->acc);
+      SCIkdebug(SCIkTIME, "GetTime(elapsed) returns %d\n", s->acc);
     }
     } else {
 	int mode = UPARAM_OR_ALT(1, 0); /* The same strange method is still used for distinguishing
@@ -508,7 +509,7 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	    g_get_current_time (&time_prec);
 	    s-> acc = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
 	      (time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
-	    sciprintf("GetTime(elapsed) returns %d\n", s->acc);
+	    SCIkdebug(SCIkTIME, "GetTime(elapsed) returns %d\n", s->acc);
 	    break;
 	  }
 	case _K_NEW_GETTIME_TIME_12HOUR :
