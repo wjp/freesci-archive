@@ -231,7 +231,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*32*/	{KF_NEW, "NewList", {new:{kNewList, ""}}},
 /*33*/	{KF_NEW, "DisposeList", {new:{kDisposeList, "l"}}},
 /*34*/	{KF_NEW, "NewNode", {new:{kNewNode, ".."}}},
-/*35*/	{KF_NEW, "FirstNode", {new:{kFirstNode, "l"}}},
+/*35*/	{KF_NEW, "FirstNode", {new:{kFirstNode, "Zl"}}},
 /*36*/	{KF_NEW, "LastNode", {new:{kLastNode, "l"}}},
 /*37*/	{KF_NEW, "EmptyList", {new:{kEmptyList, "l"}}},
 /*38*/	{KF_NEW, "NextNode", {new:{kNextNode, "n"}}},
@@ -755,6 +755,10 @@ kernel_compile_signature(char **s)
 				v |= KSIG_ARITHMETIC;
 				break;
 
+			case KSIG_SPEC_NULL:
+				v |= KSIG_NULL;
+				break;
+
 			case KSIG_SPEC_ANY:
 				v |= KSIG_ANY;
 				break;
@@ -866,8 +870,11 @@ determine_reg_type(state_t *s, reg_t reg)
 {
 	mem_obj_t *mobj;
 
-	if (!reg.segment)
+	if (!reg.segment) {
+		if (!reg.offset)
+			return KSIG_ARITHMETIC | KSIG_NULL;
 		return KSIG_ARITHMETIC;
+	}
 
 	if ((reg.segment >= s->seg_manager.heap_size)
 	    || !s->seg_manager.heap[reg.segment])
@@ -948,7 +955,7 @@ kernel_matches_signature(state_t *s, char *sig, int argc, reg_t *argv)
 			return 0;
 		}
 
-		if ((type & *sig) != type)
+		if (!(type & *sig))
 			return 0;
 
 		if (!(*sig & KSIG_ELLIPSIS))

@@ -397,10 +397,6 @@ script_init_engine(state_t *s, sci_version_t version)
 
 	s->restarting_flags = SCI_GAME_IS_NOT_RESTARTING;
 
-
-	for (i = 0; i < 1000; i++)
-		s->scripttable[i].heappos = 0; /* Mark all scripts as 'not installed' */
-
 	s->bp_list = NULL; /* No breakpoints defined */
 	s->have_bp = 0;
 
@@ -614,14 +610,6 @@ game_exit(state_t *s)
 
 	sciprintf("Freeing miscellaneous data...\n");
 
-	/* HACK WARNING: This frees all scripts that were allocated prior to the stack, i.e. those
-	** that won't survive a stack restauration.
-	*/
-	for (i = 1; i < 1000; i++)
-#warning "Check if the following line needs an equivalent in the new system "
-/*		if (s->scripttable[i].heappos > s->stack_handle) */
-			s->scripttable[i].heappos = 0;
-
 #warning "Free parser segment here"
 	restore_ff(s->_heap); /* Restore former heap state */
 
@@ -630,9 +618,7 @@ game_exit(state_t *s)
 		send_calls_allocated = 0;
 	}
 
-	for (i = 0; i < 1000; i++)
-		/*  if (s->scripttable[i].heappos > s->_heap->old_ff)*/
-		s->scripttable[i].heappos = 0; /* Mark all non-high scripts as 'not installed', except for 0 */
+#warning "Free scripts here"
 
 	menubar_free(s->menubar);
 

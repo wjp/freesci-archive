@@ -1575,8 +1575,8 @@ _gfxw_container_id_equals(gfxw_container_t *container, gfxw_widget_t *widget)
 		return 0;
 
 	while (*seekerp
-	       && (*seekerp)->ID != widget->ID
-	       && (*seekerp)->subID != widget->subID)
+	       && ((*seekerp)->ID != widget->ID
+		   || (*seekerp)->subID != widget->subID))
 		seekerp = &((*seekerp)->next);
 
 	if (!*seekerp)

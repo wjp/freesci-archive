@@ -41,7 +41,7 @@ lookup_node(state_t *s, reg_t addr, char *file, int line)
 
 	mobj = GET_SEGMENT(s->seg_manager, addr.segment, MEM_OBJ_NODES);
 	if (!mobj) {
-		sciprintf("%s, L%d: Attempt to use non-node "PREG" as list node=n",
+		sciprintf("%s, L%d: Attempt to use non-node "PREG" as list node\n",
 			  __FILE__, __LINE__, PRINT_REG(addr));
 		script_debug_flag = script_error_flag = 1;
 		return NULL;
@@ -50,7 +50,7 @@ lookup_node(state_t *s, reg_t addr, char *file, int line)
 	nt = &(mobj->data.nodes);
 
 	if (!ENTRY_IS_VALID(nt, addr.offset)) {
-		sciprintf("%s, L%d: Attempt to use non-node "PREG" as list node",
+		sciprintf("%s, L%d: Attempt to use non-node "PREG" as list node\n",
 			  __FILE__, __LINE__, PRINT_REG(addr));
 		script_debug_flag = script_error_flag = 1;
 		return NULL;
@@ -59,16 +59,23 @@ lookup_node(state_t *s, reg_t addr, char *file, int line)
 	return &(nt->table[addr.offset].entry);
 }
 
-#define LOOKUP_LIST(addr) lookup_list(s, addr, __FILE__, __LINE__)
+#define LOOKUP_LIST(addr) _lookup_list(s, addr, __FILE__, __LINE__, 0)
+#define LOOKUP_NULL_LIST(addr) _lookup_list(s, addr, __FILE__, __LINE__, 1)
+
 
 inline list_t *
-lookup_list(state_t *s, reg_t addr, char *file, int line)
+_lookup_list(state_t *s, reg_t addr, char *file, int line, int may_be_null)
 {
-	mem_obj_t *mobj = GET_SEGMENT(s->seg_manager, addr.segment, MEM_OBJ_LISTS);
+	mem_obj_t *mobj;
 	list_table_t *lt;
 
+	if (may_be_null && !addr.segment && !addr.offset)
+		return NULL;
+
+	mobj = GET_SEGMENT(s->seg_manager, addr.segment, MEM_OBJ_LISTS);
+
 	if (!mobj) {
-		sciprintf("%s, L%d: Attempt to use non-list "PREG" as list",
+		sciprintf("%s, L%d: Attempt to use non-list "PREG" as list\n",
 			  __FILE__, __LINE__, PRINT_REG(addr));
 		script_debug_flag = script_error_flag = 1;
 		return NULL;
@@ -77,13 +84,19 @@ lookup_list(state_t *s, reg_t addr, char *file, int line)
 	lt = &(mobj->data.lists);
 
 	if (!ENTRY_IS_VALID(lt, addr.offset)) {
-		sciprintf("%s, L%d: Attempt to use non-list "PREG" as list",
+		sciprintf("%s, L%d: Attempt to use non-list "PREG" as list\n",
 			  __FILE__, __LINE__, PRINT_REG(addr));
 		script_debug_flag = script_error_flag = 1;
 		return NULL;
 	}
 
 	return &(lt->table[addr.offset].entry);
+}
+
+list_t *
+lookup_list(state_t *s, reg_t addr, char *file, int line)
+{
+	return _lookup_list(s, addr, file, line, 0);
 }
 
 int
@@ -238,9 +251,9 @@ kNewNode(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kFirstNode(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	list_t *l = LOOKUP_LIST(argv[0]);
+	list_t *l = LOOKUP_NULL_LIST(argv[0]);
 
-	if (l&&!sane_listp(s, argv[0]))
+	if (l && !sane_listp(s, argv[0]))
 		SCIkwarn(SCIkERROR,"List at "PREG" is not sane anymore!\n",
 			 PRINT_REG(argv[0]));
 

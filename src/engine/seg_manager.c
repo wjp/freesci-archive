@@ -76,6 +76,12 @@ sm_allocate_stack(seg_manager_t *self, int size, seg_id_t *segid);
 static sys_strings_t *
 sm_allocate_sys_strings(seg_manager_t *self, seg_id_t *segid);
 
+static void
+sm_free_script ( mem_obj_t* mem );
+
+static int
+_sm_deallocate (seg_manager_t* self, int seg);
+
 static clone_t *sm_alloc_clone(seg_manager_t *self, reg_t *addr);
 static list_t *sm_alloc_list(seg_manager_t *self, reg_t *addr);
 static node_t *sm_alloc_node(seg_manager_t *self, reg_t *addr);
@@ -142,7 +148,7 @@ void sm_init(seg_manager_t* self) {
 	self->seg_get = sm_seg_get;
 
 	self->allocate_script = sm_allocate_script;
-	self->deallocate = sm_deallocate;
+	self->deallocate_script = sm_deallocate_script;
 	self->update = sm_update;
 	self->isloaded = sm_isloaded;
 	self->mset = sm_mset;
@@ -199,23 +205,8 @@ void sm_destroy (seg_manager_t* self) {
 	int i;
 	/* free memory*/
 	for (i = 0; i < self->heap_size; i++) {
-		if (self->heap[i]) {
-			mem_obj_t* mem_obj = self->heap[i];
-			switch (mem_obj->type) {
-			case MEM_OBJ_SCRIPT:
-				sm_free( mem_obj );
-				break;
-			case MEM_OBJ_CLONES:
-				sciprintf( "destroy for clones haven't been implemented\n" );
-				sci_free (mem_obj);
-				break;
-			default:
-				sciprintf( "unknown mem obj type\n" );
-				sci_free (mem_obj);
-				break;
-			}
-			self->heap[i] = NULL;
-		}
+		if (self->heap[i])
+			_sm_deallocate(self, i);
 	}
 	sci_free (self->heap);
 	self->heap = NULL;
@@ -261,7 +252,7 @@ int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, in
 	mem->data.script.buf = (char*) sci_malloc (mem->data.script.buf_size);
 	dbg_print( "mem->data.script.buf ", mem->data.script.buf );
 	if (!mem->data.script.buf) {
-		sm_free( mem );
+		sm_free_script ( mem );
 		sciprintf("seg_manager.c: Not enough memory space for script size" );
 		mem->data.script.buf_size = 0;
 		return 0;
@@ -282,14 +273,44 @@ int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, in
 	return 1;
 };
 
-int sm_deallocate (seg_manager_t* self, struct _state *s, int script_nr) {
-	int seg = sm_seg_get( self, script_nr );
-	
+static int
+_sm_deallocate (seg_manager_t* self, int seg)
+{
+	mem_obj_t *mobj;
 	VERIFY ( sm_check (self, seg), "invalid seg id" );
 
-	sm_free ( self->heap[seg] );
+	mobj = self->heap[seg];
+	int_hash_map_remove_value( self->id_seg_map, mobj->segmgr_id );
+
+	switch (mobj->type) {
+
+	case MEM_OBJ_SCRIPT:
+		sm_free_script ( mobj );
+
+		mobj->data.script.buf = NULL;
+		if (mobj->data.script.locals_segment)
+			_sm_deallocate(self, mobj->data.script.locals_segment);
+		break;
+
+	case MEM_OBJ_LOCALS:
+		sci_free(mobj->data.locals.locals);
+		mobj->data.locals.locals = NULL;
+		break;
+
+	default:
+		fprintf(stderr, "Deallocating segment type %d not supported!\n",
+			mobj->type);
+		BREAKPOINT();
+	}
+
+	free(mobj);
 	self->heap[seg] = NULL;
-	int_hash_map_remove_value( self->id_seg_map, script_nr );
+}
+
+int sm_deallocate_script (seg_manager_t* self, struct _state *s, int script_nr) {
+	int seg = sm_seg_get( self, script_nr );
+
+	_sm_deallocate(self, seg);
 	return 1;
 };
 
@@ -335,10 +356,10 @@ void sm_object_init (object_t* object) {
 	object->variables = NULL;
 };
 
-void sm_free( mem_obj_t* mem ) {
+static void sm_free_script ( mem_obj_t* mem ) {
 	if( !mem ) return;
 	if( mem->data.script.buf ) {
-		free( mem->data.script.buf );
+		sci_free( mem->data.script.buf );
 		mem->data.script.buf = NULL;
 		mem->data.script.buf_size = 0;
 	}
@@ -356,7 +377,6 @@ void sm_free( mem_obj_t* mem ) {
 		mem->data.script.objects = NULL;
 		mem->data.script.objects_nr = 0;
 	}
-	free( mem );
 };
 
 // memory operations

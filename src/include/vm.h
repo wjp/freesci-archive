@@ -179,8 +179,6 @@ typedef struct {
 	size_t buf_size;
 
 	byte *synonyms; /* Synonyms block  or 0 if not present*/
-#warning "heappos is deprecated"
-	heap_ptr heappos;
 	guint16 *export_table; /* Abs. offset of the export table or 0 if not present */
 
 	int exports_nr; /* Number of entries in the exports table */

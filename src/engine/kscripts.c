@@ -203,6 +203,8 @@ kClone(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	/* Mark as clone */
 	clone_obj->variables[SCRIPT_INFO_SELECTOR].offset = SCRIPT_INFO_CLONE;
+	clone_obj->variables[SCRIPT_SPECIES_SELECTOR] = clone_obj->pos;
+	s->seg_manager.increment_lockers(&s->seg_manager, clone_obj->pos.segment, SEG_ID);
 
 	return clone_addr;
 }
@@ -243,6 +245,7 @@ kDisposeClone(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	sci_free(victim_obj->variables);
 	victim_obj->variables = NULL;
+	s->seg_manager.decrement_lockers(&s->seg_manager, victim_obj->pos.segment, SEG_ID);
 	s->seg_manager.free_clone(&s->seg_manager, victim_addr);
 
 	return s->r_acc;
@@ -287,6 +290,7 @@ kDisposeScript(state_t *s, int funct_nr, int argc, reg_t *argv)
 	int script = argv[0].offset;
 
 	script_uninstantiate(s, script);
+	s->execution_stack_pos_changed = 1;
 	return s->r_acc;
 }
 

@@ -1,7 +1,21 @@
 2002-11-19  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/klists.c (kFirstNode): Allowed swallowing NULL
+
+	* src/include/kernel_types.h (KSIG_NULL): Introduced "NULL" type for
+	arguments, to allow certain references to optionally be 0:0
+
+	* src/engine/kemu_old.c (recover_value): Fix to emulation: We used to
+	recover only half the selectors
+
+	* src/engine/vm.c (run_vm): Fixed erroneous fix to dup
+
+	* src/engine/kscripts.c (kClone): Lock and...
+	(kDisposeClone): Unlock script
+
 	* src/engine/vm.c (validate_property): Invalid property accesses (QG1)
 	turned into warnings
+	(get_class_address): Scripts are now locked correctly
 
 	* src/engine/kmovement.c (kInitBresen): Fixed default for step size
 	(kDoBresen): Fixed

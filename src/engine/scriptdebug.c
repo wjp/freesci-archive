@@ -2419,6 +2419,8 @@ c_mem_info(state_t *s)
 int
 c_objs(state_t *s)
 {
+#warning "Re-implement 'objs'"
+#if 0
 	int i;
 
 	if (!s) {
@@ -2448,6 +2450,7 @@ c_objs(state_t *s)
 		if (s->clone_list[i])
 			print_objname_wrapper(print_objname(s, s->clone_list[i], 1));
 
+#endif
 	return 0;
 }
 

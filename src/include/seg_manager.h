@@ -75,15 +75,16 @@ typedef int mem_obj_enum;
 
 struct _mem_obj;
 
-#define GET_SEGMENT(mgr, index, rtype) ((index) > 0 && (mgr).heap_size > index)?	\
-		(((mgr).heap[index]->type == rtype)? (mgr).heap[index]			\
-		: NULL) /* Type does not match */					\
+#define GET_SEGMENT(mgr, index, rtype) ((index) > 0 && (mgr).heap_size > index)?		\
+		(((mgr).heap[index] && (mgr).heap[index]->type == rtype)? (mgr).heap[index]	\
+		: NULL) /* Type does not match */						\
 	: NULL /* Invalid index */
 
-#define GET_OBJECT_SEGMENT(mgr, index) ((index) > 0 && (mgr).heap_size > index)?	\
-		(((mgr).heap[index]->type == MEM_OBJ_SCRIPT				\
-		  || (mgr).heap[index]->type == MEM_OBJ_CLONES)? (mgr).heap[index]	\
-		: NULL) /* Type does not match */					\
+#define GET_OBJECT_SEGMENT(mgr, index) ((index) > 0 && (mgr).heap_size > index)?		\
+		(((mgr).heap[index]								\
+                    && ((mgr).heap[index]->type == MEM_OBJ_SCRIPT				\
+		        || (mgr).heap[index]->type == MEM_OBJ_CLONES))? (mgr).heap[index]	\
+		: NULL) /* Type does not match */						\
 	: NULL /* Invalid index */
 
 typedef struct _seg_manager_t {
@@ -103,7 +104,7 @@ typedef struct _seg_manager_t {
 	int (*seg_get) (struct _seg_manager_t* self, int script_nr);
 
 	int (*allocate_script) (struct _seg_manager_t* self, struct _state *s, int script_nr, int* seg_id);
-	int (*deallocate) (struct _seg_manager_t* self, struct _state *s, int script_nr);
+	int (*deallocate_script) (struct _seg_manager_t* self, struct _state *s, int script_nr);
 	void (*update) (struct _seg_manager_t* self);
 
 	dstack_t * (*allocate_stack) (struct _seg_manager_t *self, int size, seg_id_t *segid);
@@ -227,7 +228,7 @@ int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, in
 **             1 - allocate successfully, seg_id contains the allocated seg_id
 */
 
-int sm_deallocate (seg_manager_t* self, struct _state *s, int script_nr);
+int sm_deallocate_script (seg_manager_t* self, struct _state *s, int script_nr);
 void sm_update (seg_manager_t* self);
 // memory operations
 void sm_object_init (object_t* object); 

@@ -39,6 +39,7 @@
 #define KSIG_SPEC_OBJECT 'o'
 #define KSIG_SPEC_REF 'r' /* Said Specs and strings */
 #define KSIG_SPEC_ARITHMETIC 'i'
+#define KSIG_SPEC_NULL 'z'
 #define KSIG_SPEC_ANY '.'
 #define KSIG_SPEC_ELLIPSIS '*' /* Arbitrarily more TYPED arguments */
 
@@ -55,6 +56,8 @@
 #define KSIG_OBJECT	0x04
 #define KSIG_REF	0x08
 #define KSIG_ARITHMETIC 0x10
+
+#define KSIG_NULL	0x40
 #define KSIG_ANY	0x7f
 #define KSIG_ELLIPSIS	0x80
 
@@ -73,7 +76,7 @@ determine_reg_type(state_t *s, reg_t reg);
 /* Determines the type of the object indicated by reg
 ** Parameters: (state_t *) s: The state to operate on
 **             (reg_t) reg: The register to check
-** Returns   : one of KSIG_* below KSIG_ANY, or 0 on error
+** Returns   : one of KSIG_* below KSIG_NULL, or 0 on error
 */
 
 #endif /* ! _FREESCI_KERNEL_TYPES_H_ */

@@ -227,7 +227,9 @@ get_class_address(state_t *s, int classnr, int lock)
 				script_error_flag = script_debug_flag = 1;
 				return NULL_REG;
 			}
-		}
+		} else
+			s->seg_manager.increment_lockers(&s->seg_manager, class->reg.segment, SEG_ID);
+
 		return class->reg;
 	}
 }
@@ -608,6 +610,8 @@ script_locate_by_segment(state_t *s, seg_id_t seg)
 	return NULL;
 }
 
+static byte _fake_return_buffer[2] = {op_ret << 1, op_ret << 1};
+
 void
 run_vm(state_t *s, int restoring)
 {
@@ -691,47 +695,57 @@ run_vm(state_t *s, int restoring)
 			script_t *scr;
 			xs = s->execution_stack + s->execution_stack_pos;
 			s->execution_stack_pos_changed = 0;
-			obj = obj_get(s, xs->objp);
-
-			if (!obj) {
-				SCIkdebug(SCIkWARNING, "Attempt to run on non-existant obj "PREG"\n", PRINT_REG(xs->objp));
-			}
-
-			local_script = script_locate_by_segment(s, xs->local_segment);
-			if (!local_script) {
-				SCIkdebug(SCIkERROR, "Could not find local script.%03d!\n", xs->local_segment);
-				script_debug_flag = script_error_flag = 1;
-			} else {
-				variables_seg[VAR_LOCAL] = local_script->locals_segment;
-
-				if (local_script->locals_block)
-					variables_base[VAR_LOCAL] = variables[VAR_LOCAL]
-						= local_script->locals_block->locals;
-				else
-					variables_base[VAR_LOCAL] = variables[VAR_LOCAL]
-						= NULL;
-#ifndef DISABLE_VALIDATIONS
-				if (local_script->locals_block)
-					variables_max[VAR_LOCAL] = local_script->locals_block->nr;
-				else
-					variables_max[VAR_LOCAL] = 0;
-				variables_max[VAR_TEMP] = xs->sp - xs->fp;
-				variables_max[VAR_PARAM] = xs->argc + 1;
-			}
-#endif
-			variables[VAR_TEMP] = xs->fp;
-			variables[VAR_PARAM] = xs->variables_argp;
 
 			scr = script_locate_by_segment(s, xs->addr.pc.segment);
-			if (scr) {
+			if (!scr) {
+				/* No script? Implicit return via fake instruction buffer */
+				SCIkdebug(SCIkWARNING, "Running on non-existant script in segment %x!\n", xs->addr.pc.segment);
+				code_buf = _fake_return_buffer;
+				code_buf_size = 2;
+				xs->addr.pc.offset = 1;
+
+				scr = NULL;
+				obj = NULL;
+			} else {
+				obj = obj_get(s, xs->objp);
 				code_buf = scr->buf;
 #ifndef DISABLE_VALIDATIONS
 				code_buf_size = scr->buf_size;
 #endif
-			} else {
-				SCIkdebug(SCIkERROR, "Could not find code script.%03d!\n", xs->addr.pc.segment);
-				script_debug_flag = script_error_flag = 1;
+				/*				if (!obj) {
+					SCIkdebug(SCIkWARNING, "Running with non-existant self= "PREG"\n", PRINT_REG(xs->objp));
+					}*/
+
+				local_script = script_locate_by_segment(s, xs->local_segment);
+				if (!local_script) {
+					SCIkdebug(SCIkWARNING, "Could not find local script from segment %x!\n", xs->local_segment);
+					local_script = NULL;
+					variables_base[VAR_LOCAL] = variables[VAR_LOCAL] = NULL;
+#ifndef DISABLE_VALIDATIONS
+					variables_max[VAR_LOCAL] = 0;
+#endif
+				} else {
+
+					variables_seg[VAR_LOCAL] = local_script->locals_segment;
+					if (local_script->locals_block)
+						variables_base[VAR_LOCAL] = variables[VAR_LOCAL]
+							= local_script->locals_block->locals;
+					else
+						variables_base[VAR_LOCAL] = variables[VAR_LOCAL]
+							= NULL;
+#ifndef DISABLE_VALIDATIONS
+					if (local_script->locals_block)
+						variables_max[VAR_LOCAL] = local_script->locals_block->nr;
+					else
+						variables_max[VAR_LOCAL] = 0;
+					variables_max[VAR_TEMP] = xs->sp - xs->fp;
+					variables_max[VAR_PARAM] = xs->argc + 1;
+				}
+#endif
+				variables[VAR_TEMP] = xs->fp;
+				variables[VAR_PARAM] = xs->variables_argp;
 			}
+
 		}
 
 		script_error_flag = 0; /* Set error condition to false */
@@ -754,8 +768,6 @@ run_vm(state_t *s, int restoring)
 			bp_flag = 0;
 		}
 
-		opcode = GET_OP_BYTE(); /* Get opcode */
-
 #ifndef DISABLE_VALIDATIONS
 		if (xs->sp < xs->fp)
 			script_error(s, "[VM] "__FILE__, __LINE__, "Stack underflow");
@@ -765,6 +777,8 @@ run_vm(state_t *s, int restoring)
 		if (xs->addr.pc.offset >= code_buf_size)
 			script_error(s, "[VM] "__FILE__, __LINE__, "Program Counter gone astray");
 #endif
+
+		opcode = GET_OP_BYTE(); /* Get opcode */
 
 		opnumber = opcode >> 1;
 
@@ -947,7 +961,8 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x1e: /* dup */
-			PUSH32(xs->sp[0]);
+			r_temp = xs->sp[-1];
+			PUSH32(r_temp);
 			break;
 
 		case 0x1f: /* link */
@@ -1170,6 +1185,7 @@ run_vm(state_t *s, int restoring)
 
 			r_temp.offset += opparams[1];  /* Add index */
 			/* That's the immediate address now */
+			s->r_acc = r_temp;
 			break;
 
 
@@ -1224,10 +1240,10 @@ run_vm(state_t *s, int restoring)
 			s->r_acc.segment = xs->addr.pc.segment;
 			s->r_acc.offset = xs->addr.pc.offset + opparams[0];
 #ifndef DISABLE_VALIDATIONS
-			if (s->r_acc.offset >= local_script->buf_size) {
+			if (s->r_acc.offset >= code_buf_size) {
 				sciprintf("VM: lofsa operation overflowed: "PREG" beyond end"
 					  " of script (at %04x)\n", PRINT_REG(s->r_acc),
-					  local_script->buf_size);
+					  code_buf_size);
 				script_error_flag = script_debug_flag = 1;
 			}
 #endif
@@ -1238,10 +1254,10 @@ run_vm(state_t *s, int restoring)
 			r_temp.segment = xs->addr.pc.segment;
 			r_temp.offset = xs->addr.pc.offset + opparams[0];
 #ifndef DISABLE_VALIDATIONS
-			if (r_temp.offset >= local_script->buf_size) {
+			if (r_temp.offset >= code_buf_size) {
 				sciprintf("VM: lofsa operation overflowed: "PREG" beyond end"
 					  " of script (at %04x)\n", PRINT_REG(r_temp),
-					  local_script->buf_size);
+					  code_buf_size);
 				script_error_flag = script_debug_flag = 1;
 			}
 #endif
@@ -1839,11 +1855,13 @@ script_uninstantiate(state_t *s, int script_nr)
 	/* Make a pass over the object in order uninstantiate all superclasses */
 	objlength = 0;
 
-	sciprintf("Unlocking script.0x%x\n", script_nr);
-	if( s->seg_manager.get_lockers( &s->seg_manager, reg.segment, SEG_ID) == 0 )
-		return; /* This can happen during recursion */
-
 	s->seg_manager.decrement_lockers( &s->seg_manager, reg.segment, SEG_ID);  /* One less locker */
+
+	sciprintf("Unlocking script.%03d\n", script_nr);
+	if( s->seg_manager.get_lockers( &s->seg_manager, reg.segment, SEG_ID) > 0 )
+		return;
+
+	sciprintf("DISPOSING script.%03d\n", script_nr);
 
 	do {
 		reg.offset += objlength; /* Step over the last checked object */
@@ -1884,7 +1902,7 @@ script_uninstantiate(state_t *s, int script_nr)
 
   /* Otherwise unload it completely */
   /* Explanation: I'm starting to believe that this work is done by SCI itself. */
-	s->seg_manager.deallocate( &s->seg_manager, s, script_nr );
+	s->seg_manager.deallocate_script( &s->seg_manager, s, script_nr );
 
 	if (script_checkloads_flag)
 		sciprintf("Unloaded script 0x%x.\n", script_nr);

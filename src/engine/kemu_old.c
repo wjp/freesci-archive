@@ -65,6 +65,9 @@ identify_value(state_t *s, reg_t reg, heap_ptr firstfree)
 	retval.length = 0;
 	retval.emudat_type = EMU_TYPE_VERBATIM; /* To allow error aborts */
 
+	if (type & KSIG_NULL)
+		type &= KSIG_ARITHMETIC;
+
 	switch (type) {
 
 	case KSIG_ARITHMETIC: /* trivial */
@@ -178,13 +181,16 @@ recover_value(state_t *s, emu_param_t *p)
 		return;
 
 	case EMU_TYPE_REGISTERS: {
-		int i, max = p->emudat_size >> 1;
+		int i, max = p->emudat_size;
 		for (i = 0; i < max; i++) {
-			int val = getUInt16(s->heap + p->emudat_location + (i << 1));
+			int val = GET_HEAP(p->emudat_location + (i << 1));
 			if (p->emu_data.regs[i].offset != val) {
-				SCIkdebug(SCIkEMU, "Recovering property #%d from %04x: 0:%04x\n",
-					  i, p->emudat_location + (1 << 1), val);
+				SCIkdebug(SCIkEMU, "	Recovering property #%d from %04x: 0:%04x\n",
+					  i, p->emudat_location + (i << 1), val);
 				p->emu_data.regs[i] = make_reg(0, val);
+			} else {
+				SCIkdebug(SCIkEMU, "	Property #%d from %04x is unchanged (%04x vs "PREG")\n",
+					  i, p->emudat_location + (i << 1), val, PRINT_REG(p->emu_data.regs[i]));
 			}
 			/* Don't overwrite unless something changed, to preserve pointers */
 		}
@@ -257,11 +263,11 @@ kFsciEmu(state_t *s, int _funct_nr, int argc, reg_t *argv)
 			datap += shadow_args[i].length; /* Step over last block we wrote */
 		}
 
-		for (i = 0; i < argc; i++)
-			recover_value(s, shadow_args + i);
 
 		s->kfunct_emu_table[funct_nr](s, funct_nr, argc, EMU_HEAP_START_ADDR);
 
+		for (i = 0; i < argc; i++)
+			recover_value(s, shadow_args + i);
 		free(shadow_args);
 		return make_reg(0, s->acc);
 	}
