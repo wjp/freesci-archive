@@ -715,6 +715,7 @@ main(int argc, char** argv)
 		console_logfile = fopen (conf[conf_nr].console_log, "w");
 		con_file = console_logfile;
 	}
+	gamestate->animation_delay = conf[conf_nr].animation_delay;
 
 	printf("Emulating SCI version %d.%03d.%03d\n",
 	       SCI_VERSION_MAJOR(gamestate->version),

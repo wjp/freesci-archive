@@ -308,6 +308,19 @@ pic_buffer_size[[:blank:]]*"="[[:blank:]]*{NUMTOKEN} {
 	} else conf[cur_section].gfx_options.buffer_pics_nr = val;
 }
 
+animation_delay[[:blank:]]*"="[[:blank:]]*{NUMTOKEN} {
+	int val;
+	yytext = strchr(yytext, '=') + 1;
+
+	while (isspace(*yytext))
+		yytext++;
+
+	val = atoi(yytext);
+	if (val < 0) {
+		printf("No negative values allowed for animation_delay\n");
+	} else conf[cur_section].animation_delay = val;
+}
+
 version[[:blank:]]*"="[[:blank:]]*{SCIVERSION} { /***** End of graphics *****/
 
 	yytext = strchr(yytext, '=') + 1;
@@ -447,6 +460,7 @@ config_init(config_entry_t **_conf, char *conffile)
 
 	conf->version = 0;
 
+	conf->animation_delay = 500;
 	conf->console_log = NULL;
 	conf->debug_mode [0] = '\0';
 	conf->name = NULL;

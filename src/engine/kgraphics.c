@@ -2012,12 +2012,320 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 #define GRAPH_UPDATE_BOX(s, x, y, xl, yl) GFX_ASSERT(gfxop_draw_pixmap(s->gfx_state, newscreen, gfx_rect(x, (y) - 10, xl, yl), gfx_point(x, y)));
 
+
+static void
+animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+	int i, remaining_checkers;
+	char checkers[32 * 19];
+
+	gfx_pixmap_t *newscreen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 10, 320, 190));
+
+	if (!newscreen) {
+		SCIkwarn(SCIkERROR, "Failed to allocate 'newscreen'!\n");
+		return;
+	}
+
+	GFX_ASSERT(gfxop_draw_pixmap(s->gfx_state, s->old_screen, gfx_rect(0, 0, 320, 190), gfx_point(0, 10)));
+	gfxop_update_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
+
+	SCIkdebug(SCIkGRAPHICS, "Animating pic opening type %x\n", s->pic_animate);
+
+	gfxop_enable_dirty_frames(s->gfx_state);
+
+	if (s->animation_delay < 1)
+		s->pic_animate = K_ANIMATE_OPEN_SIMPLE;
+
+	switch(s->pic_animate) {
+	case K_ANIMATE_BORDER_CLOSE_H_CENTER_OPEN_H :
+
+		for (i = 0; i < 160; i++) {
+			GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
+			gfxop_update(s->gfx_state);
+			GRAPH_BLANK_BOX(s, 319-i, 10, 1, 190, 0);
+			gfxop_update(s->gfx_state);
+			gfxop_usleep(s->gfx_state, s->animation_delay);
+			process_sound_events(s);
+		}
+
+	case K_ANIMATE_CENTER_OPEN_H :
+
+		for (i = 159; i >= 0; i--) {
+			GRAPH_UPDATE_BOX(s, i, 10, 1, 190);
+			gfxop_update(s->gfx_state);
+			GRAPH_UPDATE_BOX(s, 319-i, 10, 1, 190);
+			gfxop_update(s->gfx_state);
+			gfxop_usleep(s->gfx_state, s->animation_delay);
+			process_sound_events(s);
+		}
+		break;
+
+
+	case K_ANIMATE_BORDER_CLOSE_V_CENTER_OPEN_V :
+		
+		for (i = 0; i < 95; i++) {
+			GRAPH_BLANK_BOX(s, 0, i + 10, 320, 1, 0);
+			gfxop_update(s->gfx_state);
+			GRAPH_BLANK_BOX(s, 0, 199 - i, 320, 1, 0);
+			gfxop_update(s->gfx_state);
+			gfxop_usleep(s->gfx_state, 2 * s->animation_delay);
+			process_sound_events(s);
+		}
+
+	case K_ANIMATE_CENTER_OPEN_V :
+
+		for (i = 94; i >= 0; i--) {
+			GRAPH_UPDATE_BOX(s, 0, i + 10, 320, 1);
+			gfxop_update(s->gfx_state);
+			GRAPH_UPDATE_BOX(s, 0, 199 - i, 320, 1);
+			gfxop_update(s->gfx_state);
+			gfxop_usleep(s->gfx_state, 2 * s->animation_delay);
+			process_sound_events(s);
+		}
+		break;
+
+
+	case K_ANIMATE_LEFT_CLOSE_RIGHT_OPEN :
+
+		for(i = 0; i < 320; i++) {
+			GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
+			gfxop_update(s->gfx_state);
+			gfxop_usleep(s->gfx_state, s->animation_delay / 2);
+			process_sound_events(s);
+		}
+
+	case K_ANIMATE_RIGHT_OPEN :
+		for(i = 319; i >= 0; i--) {
+			GRAPH_UPDATE_BOX(s, i, 10, 1, 190);
+			gfxop_update(s->gfx_state);
+			gfxop_usleep(s->gfx_state, s->animation_delay / 2);
+			process_sound_events(s);
+		}
+		break;
+
+
+	case K_ANIMATE_RIGHT_CLOSE_LEFT_OPEN :
+
+		for(i = 319; i >= 0; i--) {
+			GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
+			gfxop_update(s->gfx_state);
+			gfxop_usleep(s->gfx_state, s->animation_delay / 2);
+			process_sound_events(s);
+		}
+
+	case K_ANIMATE_LEFT_OPEN :
+
+		for(i = 0; i < 320; i++) {
+			GRAPH_UPDATE_BOX(s, i, 10, 1, 190);
+			gfxop_update(s->gfx_state);
+			gfxop_usleep(s->gfx_state, s->animation_delay / 2);
+			process_sound_events(s);
+		}
+		break;
+
+
+	case K_ANIMATE_TOP_CLOSE_BOTTOM_OPEN :
+
+		for (i = 10; i < 200; i++) {
+			GRAPH_BLANK_BOX(s, 0, i, 320, 1, 0);
+			gfxop_update(s->gfx_state);
+			gfxop_usleep(s->gfx_state, s->animation_delay);
+			process_sound_events(s);
+		}
+
+	case K_ANIMATE_BOTTOM_OPEN :
+
+		for (i = 199; i >= 10; i--) {
+			GRAPH_UPDATE_BOX(s, 0, i, 320, 1);
+			gfxop_update(s->gfx_state);
+			gfxop_usleep(s->gfx_state, s->animation_delay);
+			process_sound_events(s);
+		}
+		break;
+
+
+	case K_ANIMATE_BOTTOM_CLOSE_TOP_OPEN :
+
+		for (i = 199; i >= 10; i--) {
+			GRAPH_BLANK_BOX(s, 0, i, 320, 1, 0);
+			gfxop_update(s->gfx_state);
+			gfxop_usleep(s->gfx_state, s->animation_delay);
+			process_sound_events(s);
+		}
+
+	case K_ANIMATE_TOP_OPEN :
+
+		for (i = 10; i < 200; i++) {
+			GRAPH_UPDATE_BOX(s, 0, i, 320, 1);
+			gfxop_update(s->gfx_state);
+			gfxop_usleep(s->gfx_state, s->animation_delay);
+			process_sound_events(s);
+		}
+		break;
+
+
+	case K_ANIMATE_CENTER_CLOSE_F_BORDER_OPEN_F :
+
+		for (i = 31; i >= 0; i--) {
+			int height = i * 3;
+			int width = i * 5;
+
+			GRAPH_BLANK_BOX(s, width, 10 + height, 5, 190 - 2*height, 0);
+			gfxop_update(s->gfx_state);
+			GRAPH_BLANK_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height, 0);
+			gfxop_update(s->gfx_state);
+
+			GRAPH_BLANK_BOX(s, width, 10 + height, 320 - 2*width, 3, 0);
+			gfxop_update(s->gfx_state);
+			GRAPH_BLANK_BOX(s, width, 200 - 3 - height, 320 - 2*width, 3, 0);
+			gfxop_update(s->gfx_state);
+
+			gfxop_usleep(s->gfx_state, 4 * s->animation_delay);
+			process_sound_events(s);
+		}
+
+	case K_ANIMATE_BORDER_OPEN_F :
+
+		for (i = 0; i < 32; i++) {
+			int height = i * 3;
+			int width = i * 5;
+
+			GRAPH_UPDATE_BOX(s, width, 10 + height, 5, 190 - 2*height);
+			gfxop_update(s->gfx_state);
+			GRAPH_UPDATE_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height);
+			gfxop_update(s->gfx_state);
+
+			GRAPH_UPDATE_BOX(s, width, 10 + height, 320 - 2*width, 3);
+			gfxop_update(s->gfx_state);
+			GRAPH_UPDATE_BOX(s, width, 200 - 3 - height, 320 - 2*width, 3);
+			gfxop_update(s->gfx_state);
+
+			gfxop_usleep(s->gfx_state, 4 * s->animation_delay);
+			process_sound_events(s);
+		}
+
+		break;
+
+
+	case K_ANIMATE_BORDER_CLOSE_F_CENTER_OPEN_F :
+
+		for (i = 0; i < 32; i++) {
+			int height = i * 3;
+			int width = i * 5;
+
+			GRAPH_BLANK_BOX(s, width, 10 + height, 5, 190 - 2*height, 0);
+			gfxop_update(s->gfx_state);
+			GRAPH_BLANK_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height, 0);
+			gfxop_update(s->gfx_state);
+
+			GRAPH_BLANK_BOX(s, width, 10 + height, 320 - 2*width, 4, 0);
+			gfxop_update(s->gfx_state);
+			GRAPH_BLANK_BOX(s, width, 200 - 4 - height, 320 - 2*width, 4, 0);
+			gfxop_update(s->gfx_state);
+
+			gfxop_usleep(s->gfx_state, 7 * s->animation_delay);
+			process_sound_events(s);
+		}
+
+	case K_ANIMATE_CENTER_OPEN_F :
+
+		for (i = 31; i >= 0; i--) {
+			int height = i * 3;
+			int width = i * 5;
+
+			GRAPH_UPDATE_BOX(s, width, 10 + height, 5, 190 - 2*height);
+			gfxop_update(s->gfx_state);
+			GRAPH_UPDATE_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height);
+			gfxop_update(s->gfx_state);
+
+			GRAPH_UPDATE_BOX(s, width, 10 + height, 320 - 2 * width, 3);
+			gfxop_update(s->gfx_state);
+			GRAPH_UPDATE_BOX(s, width, 200 - 3 - height, 320 - 2 * width, 3);
+			gfxop_update(s->gfx_state);
+
+			gfxop_usleep(s->gfx_state, 7 * s->animation_delay);
+			process_sound_events(s);
+		}
+
+		break;
+
+
+	case K_ANIMATE_CLOSE_CHECKERS_OPEN_CHECKERS :
+
+		memset(checkers, 0, sizeof(checkers));
+		remaining_checkers = 19 * 32;
+
+		while (remaining_checkers) {
+			int x, y, checker = 1 + (int) (1.0 * remaining_checkers*rand()/(RAND_MAX+1.0));
+			i = -1;
+
+			while (checker)
+				if (checkers[++i] == 0) --checker;
+			checkers[i] = 1; /* Mark checker as used */
+
+			x = i % 32;
+			y = i / 32;
+
+			GRAPH_BLANK_BOX(s, x * 10, 10 + y * 10, 10, 10, 0);
+			gfxop_update(s->gfx_state);
+			if (remaining_checkers & 1) {
+				gfxop_usleep(s->gfx_state, s->animation_delay / 4);
+			}
+
+			--remaining_checkers;
+			process_sound_events(s);
+		}
+
+	case K_ANIMATE_OPEN_CHECKERS :
+
+		memset(checkers, 0, sizeof(checkers));
+		remaining_checkers = 19 * 32;
+
+		while (remaining_checkers) {
+			int x, y, checker = 1 + (int) (1.0 * remaining_checkers * rand()/(RAND_MAX+1.0));
+			i = -1;
+
+			while (checker)
+				if (checkers[++i] == 0) --checker;
+			checkers[i] = 1; /* Mark checker as used */
+
+			x = i % 32;
+			y = i / 32;
+
+			GRAPH_UPDATE_BOX(s, x * 10, 10 + y * 10, 10, 10);
+
+			gfxop_update(s->gfx_state);
+			if (remaining_checkers & 1) {
+				gfxop_usleep(s->gfx_state, s->animation_delay / 4);
+			}
+
+			--remaining_checkers;
+			process_sound_events(s);
+		}
+
+		break;
+
+
+	default:
+		if (s->pic_animate != K_ANIMATE_OPEN_SIMPLE)
+			SCIkwarn(SCIkWARNING, "Unknown opening animation 0x%02x\n", s->pic_animate);
+
+		GRAPH_UPDATE_BOX(s, 0, 10, 320, 190);
+	}
+
+	s->pic_not_valid = 0;
+
+	GFX_ASSERT(gfxop_free_pixmap(s->gfx_state, s->old_screen));
+	GFX_ASSERT(gfxop_free_pixmap(s->gfx_state, newscreen));
+	s->old_screen = NULL;
+
+}
+
 void
 kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
      /* Animations are supposed to take a maximum of s->animation_delay milliseconds. */
 {
 	int i, remaining_checkers;
-	char checkers[32 * 19];
 	heap_ptr cast_list = UPARAM_OR_ALT(0, 0);
 	int cycle = UPARAM_OR_ALT(1, 0);
 	int open_animation = 0;
@@ -2088,289 +2396,8 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
 	if (open_animation) {
-		gfx_pixmap_t *newscreen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 10, 320, 190));
-
-		if (!newscreen) {
-			SCIkwarn(SCIkERROR, "Failed to allocate 'newscreen'!\n");
-			return;
-		}
-
-		GFX_ASSERT(gfxop_draw_pixmap(s->gfx_state, s->old_screen, gfx_rect(0, 0, 320, 190), gfx_point(0, 10)));
-		gfxop_update_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
-
-		SCIkdebug(SCIkGRAPHICS, "Animating pic opening type %x\n", s->pic_animate);
-
-		gfxop_enable_dirty_frames(s->gfx_state);
-
-		switch(s->pic_animate) {
-		case K_ANIMATE_BORDER_CLOSE_H_CENTER_OPEN_H :
-
-			for (i = 0; i < 160; i++) {
-				GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
-				GRAPH_BLANK_BOX(s, 319-i, 10, 1, 190, 0);
-				gfxop_update(s->gfx_state);
-				gfxop_usleep(s->gfx_state, s->animation_delay);
-				process_sound_events(s);
-			}
-
-		case K_ANIMATE_CENTER_OPEN_H :
-
-			for (i = 159; i >= 0; i--) {
-				GRAPH_UPDATE_BOX(s, i, 10, 1, 190);
-				GRAPH_UPDATE_BOX(s, 319-i, 10, 1, 190);
-				gfxop_update(s->gfx_state);
-				gfxop_usleep(s->gfx_state, s->animation_delay);
-				process_sound_events(s);
-			}
-			break;
-
-
-		case K_ANIMATE_BORDER_CLOSE_V_CENTER_OPEN_V :
-
-			for (i = 0; i < 95; i++) {
-				GRAPH_BLANK_BOX(s, 0, i + 10, 320, 1, 0);
-				GRAPH_BLANK_BOX(s, 0, 199 - i, 320, 1, 0);
-				gfxop_update(s->gfx_state);
-				gfxop_usleep(s->gfx_state, 2 * s->animation_delay);
-				process_sound_events(s);
-			}
-
-		case K_ANIMATE_CENTER_OPEN_V :
-
-			for (i = 94; i >= 0; i--) {
-				GRAPH_UPDATE_BOX(s, 0, i + 10, 320, 1);
-				GRAPH_UPDATE_BOX(s, 0, 199 - i, 320, 1);
-				gfxop_update(s->gfx_state);
-				gfxop_usleep(s->gfx_state, 2 * s->animation_delay);
-				process_sound_events(s);
-			}
-			break;
-
-
-		case K_ANIMATE_LEFT_CLOSE_RIGHT_OPEN :
-
-			for(i = 0; i < 320; i++) {
-				GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
-				gfxop_update(s->gfx_state);
-				gfxop_usleep(s->gfx_state, s->animation_delay / 2);
-				process_sound_events(s);
-			}
-
-		case K_ANIMATE_RIGHT_OPEN :
-			for(i = 319; i >= 0; i--) {
-				GRAPH_UPDATE_BOX(s, i, 10, 1, 190);
-				gfxop_update(s->gfx_state);
-				gfxop_usleep(s->gfx_state, s->animation_delay / 2);
-				process_sound_events(s);
-			}
-			break;
-
-
-		case K_ANIMATE_RIGHT_CLOSE_LEFT_OPEN :
-
-			for(i = 319; i >= 0; i--) {
-				GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
-				gfxop_update(s->gfx_state);
-				gfxop_usleep(s->gfx_state, s->animation_delay / 2);
-				process_sound_events(s);
-			}
-
-		case K_ANIMATE_LEFT_OPEN :
-
-			for(i = 0; i < 320; i++) {
-				GRAPH_UPDATE_BOX(s, i, 10, 1, 190);
-				gfxop_update(s->gfx_state);
-				gfxop_usleep(s->gfx_state, s->animation_delay / 2);
-				process_sound_events(s);
-			}
-			break;
-
-
-		case K_ANIMATE_TOP_CLOSE_BOTTOM_OPEN :
-
-			for (i = 10; i < 200; i++) {
-				GRAPH_BLANK_BOX(s, 0, i, 320, 1, 0);
-				gfxop_update(s->gfx_state);
-				gfxop_usleep(s->gfx_state, s->animation_delay);
-				process_sound_events(s);
-			}
-
-		case K_ANIMATE_BOTTOM_OPEN :
-
-			for (i = 199; i >= 10; i--) {
-				GRAPH_UPDATE_BOX(s, 0, i, 320, 1);
-				gfxop_update(s->gfx_state);
-				gfxop_usleep(s->gfx_state, s->animation_delay);
-				process_sound_events(s);
-			}
-			break;
-
-
-		case K_ANIMATE_BOTTOM_CLOSE_TOP_OPEN :
-
-			for (i = 199; i >= 10; i--) {
-				GRAPH_BLANK_BOX(s, 0, i, 320, 1, 0);
-				gfxop_update(s->gfx_state);
-				gfxop_usleep(s->gfx_state, s->animation_delay);
-				process_sound_events(s);
-			}
-
-		case K_ANIMATE_TOP_OPEN :
-
-			for (i = 10; i < 200; i++) {
-				GRAPH_UPDATE_BOX(s, 0, i, 320, 1);
-				gfxop_update(s->gfx_state);
-				gfxop_usleep(s->gfx_state, s->animation_delay);
-				process_sound_events(s);
-			}
-			break;
-
-
-		case K_ANIMATE_CENTER_CLOSE_F_BORDER_OPEN_F :
-
-			for (i = 31; i >= 0; i--) {
-				int height = i * 3;
-				int width = i * 5;
-
-				GRAPH_BLANK_BOX(s, width, 10 + height, 5, 190 - 2*height, 0);
-				GRAPH_BLANK_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height, 0);
-			  
-				GRAPH_BLANK_BOX(s, width, 10 + height, 320 - 2*width, 3, 0);
-				GRAPH_BLANK_BOX(s, width, 200 - 3 - height, 320 - 2*width, 3, 0);
-
-				gfxop_update(s->gfx_state);
-				gfxop_usleep(s->gfx_state, 4 * s->animation_delay);
-				process_sound_events(s);
-			}
-
-		case K_ANIMATE_BORDER_OPEN_F :
-
-			for (i = 0; i < 32; i++) {
-				int height = i * 3;
-				int width = i * 5;
-
-				GRAPH_UPDATE_BOX(s, width, 10 + height, 5, 190 - 2*height);
-				GRAPH_UPDATE_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height);
-
-				GRAPH_UPDATE_BOX(s, width, 10 + height, 320 - 2*width, 3);
-				GRAPH_UPDATE_BOX(s, width, 200 - 3 - height, 320 - 2*width, 3);
-
-				gfxop_update(s->gfx_state);
-				gfxop_usleep(s->gfx_state, 4 * s->animation_delay);
-				process_sound_events(s);
-			}
-
-			break;
-
-
-		case K_ANIMATE_BORDER_CLOSE_F_CENTER_OPEN_F :
-
-			for (i = 0; i < 32; i++) {
-				int height = i * 3;
-				int width = i * 5;
-
-				GRAPH_BLANK_BOX(s, width, 10 + height, 5, 190 - 2*height, 0);
-				GRAPH_BLANK_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height, 0);
-
-				GRAPH_BLANK_BOX(s, width, 10 + height, 320 - 2*width, 4, 0);
-				GRAPH_BLANK_BOX(s, width, 200 - 4 - height, 320 - 2*width, 4, 0);
-
-				gfxop_update(s->gfx_state);
-				gfxop_usleep(s->gfx_state, 7 * s->animation_delay);
-				process_sound_events(s);
-			}
-
-		case K_ANIMATE_CENTER_OPEN_F :
-
-			for (i = 31; i >= 0; i--) {
-				int height = i * 3;
-				int width = i * 5;
-
-				GRAPH_UPDATE_BOX(s, width, 10 + height, 5, 190 - 2*height);
-				GRAPH_UPDATE_BOX(s, 320 - 5 - width, 10 + height, 5, 190 - 2*height);
-
-				GRAPH_UPDATE_BOX(s, width, 10 + height, 320 - 2 * width, 3);
-				GRAPH_UPDATE_BOX(s, width, 200 - 3 - height, 320 - 2 * width, 3);
-
-				gfxop_update(s->gfx_state);
-				gfxop_usleep(s->gfx_state, 7 * s->animation_delay);
-				process_sound_events(s);
-			}
-
-			break;
-
-
-		case K_ANIMATE_CLOSE_CHECKERS_OPEN_CHECKERS :
-
-			memset(checkers, 0, sizeof(checkers));
-			remaining_checkers = 19 * 32;
-
-			while (remaining_checkers) {
-				int x, y, checker = 1 + (int) (1.0 * remaining_checkers*rand()/(RAND_MAX+1.0));
-				i = -1;
-
-				while (checker)
-					if (checkers[++i] == 0) --checker;
-				checkers[i] = 1; /* Mark checker as used */
-
-				x = i % 32;
-				y = i / 32;
-
-				GRAPH_BLANK_BOX(s, x * 10, 10 + y * 10, 10, 10, 0);
-				gfxop_update(s->gfx_state);
-				if (remaining_checkers & 1) {
-					gfxop_usleep(s->gfx_state, s->animation_delay / 4);
-				}
-
-				--remaining_checkers;
-				process_sound_events(s);
-			}
-
-		case K_ANIMATE_OPEN_CHECKERS :
-
-			memset(checkers, 0, sizeof(checkers));
-			remaining_checkers = 19 * 32;
-
-			while (remaining_checkers) {
-				int x, y, checker = 1 + (int) (1.0 * remaining_checkers * rand()/(RAND_MAX+1.0));
-				i = -1;
-
-				while (checker)
-					if (checkers[++i] == 0) --checker;
-				checkers[i] = 1; /* Mark checker as used */
-
-				x = i % 32;
-				y = i / 32;
-
-				GRAPH_UPDATE_BOX(s, x * 10, 10 + y * 10, 10, 10);
-
-				gfxop_update(s->gfx_state);
-				if (remaining_checkers & 1) {
-					gfxop_usleep(s->gfx_state, s->animation_delay / 4);
-				}
-
-				--remaining_checkers;
-				process_sound_events(s);
-			}
-
-			break;
-
-
-		default:
-			if (s->pic_animate != K_ANIMATE_OPEN_SIMPLE)
-				SCIkwarn(SCIkWARNING, "Unknown opening animation 0x%02x\n", s->pic_animate);
-
-			GRAPH_UPDATE_BOX(s, 0, 10, 320, 190);
-		}
-
-		s->pic_not_valid = 0;
-
-		GFX_ASSERT(gfxop_free_pixmap(s->gfx_state, s->old_screen));
-		GFX_ASSERT(gfxop_free_pixmap(s->gfx_state, newscreen));
-		s->old_screen = NULL;
-
+		animate_do_animation(s, funct_nr, argc, argp);
 		return;
-
 	} /* if (open_animation) */
 
 	FULL_REDRAW();

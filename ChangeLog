@@ -1,5 +1,12 @@
 2001-02-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/kgraphics.c (kAnimate): Sped up pic transition animations
+
+	* src/gfx/gfx_crossblit.c: Removed dithering from crossblitter
+
+	* src/gfx/drivers/xlib_driver.c (xlib_init_specific): Fixed index color
+	mode in the xlib driver
+
 	* src/gfx/widgets.c (_gfxwop_dyn_view_compare_to): Implemented
 	precedence forcing for dynviews
 

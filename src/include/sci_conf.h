@@ -44,6 +44,7 @@ typedef struct {
 
 	gfx_options_t gfx_options;
 
+	int animation_delay; /* Number of microseconds to wait between each pic transition animation cycle */
 	int unknown_count; /* The number of "unknown" kernel functions */ 
 	char *resource_dir; /* Resource directory */
 	char *work_dir;     /* Working directory (save games, additional graphics) */

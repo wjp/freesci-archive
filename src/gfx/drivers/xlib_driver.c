@@ -210,7 +210,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	S->colormap = win_attr.colormap =
 		XCreateColormap(S->display, RootWindow(S->display, default_screen),
-				xvisinfo.visual, AllocNone);
+				xvisinfo.visual, (bytespp == 1)? AllocAll : AllocNone);
 
 	win_attr.event_mask = PointerMotionMask | StructureNotifyMask | ButtonPressMask
 		| ButtonReleaseMask | KeyPressMask | KeyReleaseMask | ExposureMask;
