@@ -339,10 +339,15 @@ void sci_midi_command(song_t *song, guint8 command, guint8 param,
 /* performs a regular midi event in the song. */
 
 
+/* Sound server has its own cwd (relative to the main program) */
+#define SOUNDSERVER_FLAG_SEPARATE_CWD (1 << 0)
+
 typedef struct {
 
 	char *name; /* Name of this particular driver */
 	char *version; /* Driver's version number */
+
+	int flags;
 
 	int (*init)(struct _state *s);
 	/* Initializes the sounnd driver

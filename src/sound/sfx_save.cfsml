@@ -118,7 +118,7 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
   int curr_song_nr = -1;
   FILE *fh;
 
-  if (chdir(dir)) {
+  if (dir && chdir(dir)) {
     char *cwd;
 
     cwd = getcwd(NULL, 0);
@@ -170,14 +170,16 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
       fprintf(debugstream, "Error creating file: %s while creating '%s/%s'\n",
 	      strerror(errno), dir, filename);
       free(write_rec.songs);
-      chdir ("..");
+      if (dir)
+	      chdir ("..");
       return 1;
     }
 
     if (write(fd, seeker->data, seeker->size) < seeker->size) {
       fprintf(debugstream, "Write error: Failed to write to '%s/%s'\n", dir, filename);
       free(write_rec.songs);
-      chdir ("..");
+      if (dir)
+	      chdir ("..");
       return 1;
     }
     close(fd);
@@ -194,7 +196,8 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
 
   free(write_rec.songs);
 
-  chdir ("..");
+  if (dir)
+	  chdir ("..");
   return 0;
 }
 
@@ -226,7 +229,7 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
   song_t *seeker, *next = NULL;
   int error;
   int i;
-  if (chdir(dir)) {
+  if (dir && chdir(dir)) {
     fprintf(debugstream, "Failed to enter '%s'\n", dir);
     return 1;
   }
@@ -235,7 +238,8 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
 
   if (!fh) {
     fprintf(debugstream, "'%s/sound' not found!\n", dir);
-    chdir ("..");
+    if (dir)
+	    chdir ("..");
     return 1;
   }
 
@@ -253,7 +257,8 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
     if(read_rec.songs)
       free(read_rec.songs);
 
-    chdir ("..");
+    if (dir)
+	    chdir ("..");
     fprintf(debugstream, "Failed to parse '%s/sound'\n", dir);
     return 1;
   }
@@ -267,18 +272,20 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
     fd = open(filename, O_BINARY | O_RDONLY);
 
     if (fd == -1) {
-      chdir ("..");
-      fprintf(debugstream, "Opening %s/%s failed: %s\n", dir, filename, strerror(errno));
-      if(read_rec.songs)
-	free(read_rec.songs);
-      return 1;
+	    if (dir)
+		    chdir ("..");
+	    fprintf(debugstream, "Opening %s/%s failed: %s\n", dir, filename, strerror(errno));
+	    if(read_rec.songs)
+		    free(read_rec.songs);
+	    return 1;
     }
 
     if (read(fd, read_rec.songs[i].data = (byte *) malloc(size), size) < size) {
       int j;
       for (j = 0; i < i; j++)
 	free(read_rec.songs[i].data);
-      chdir ("..");
+      if (dir)
+	      chdir ("..");
       fprintf(debugstream, "Reading %d bytes from %s/%s failed\n", size, dir, filename);
       return 1;
     }
@@ -317,7 +324,8 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
   if (read_rec.songs_nr)
     free(read_rec.songs);
 
-  chdir ("..");
+  if (dir)
+	  chdir ("..");
 
   return 0;
 }

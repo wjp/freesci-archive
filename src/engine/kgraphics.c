@@ -812,10 +812,17 @@ collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int use_nsrect, i
 	abs_rect_t other_area;
 
 	if (use_nsrect) {
+#if 0
 		other_area.x = GET_SELECTOR(other_obj, nsLeft);
 		other_area.xend = GET_SELECTOR(other_obj, nsRight);
 		other_area.y = GET_SELECTOR(other_obj, nsTop);
 		other_area.yend = GET_SELECTOR(other_obj, nsBottom);
+#else
+		other_area.x = GET_SELECTOR(other_obj, lsLeft);
+		other_area.xend = GET_SELECTOR(other_obj, lsRight);
+		other_area.y = GET_SELECTOR(other_obj, lsTop);
+		other_area.yend = GET_SELECTOR(other_obj, lsBottom);
+#endif
 	} else {
 		other_area.x = GET_SELECTOR(other_obj, brLeft);
 		other_area.xend = GET_SELECTOR(other_obj, brRight);
@@ -887,7 +894,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	/* Check against static places on the control map */
 WARNING("FIXME");
-	if (0 && s->dyn_views) {
+	if (s->dyn_views) {
 		gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) s->dyn_views->contents;
 
 		SCIkdebug(SCIkBRESEN, "Checking vs dynviews:\n");

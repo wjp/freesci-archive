@@ -411,6 +411,7 @@ sound_unix_poll()
 sound_server_t sound_server_unix = {
 	"unix",
 	"0.1",
+	SOUNDSERVER_FLAG_SEPARATE_CWD,
 	&sound_unix_init,
 	&sound_unix_configure,
 	&sound_unix_exit,

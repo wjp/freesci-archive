@@ -93,7 +93,7 @@ kDrawMenuBar(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
-#define ABOUT_FREESCI_PAGES_NR 3
+#define ABOUT_FREESCI_PAGES_NR 4
 
 struct {
 	char *title;
@@ -105,23 +105,25 @@ struct {
 	 "Carl Muckenhoupt\nSources to the SCI resource viewer tools that started it all\n\n"
 	 "Chris Kehler\nMakefile enhancements\n"
 	 "Christoph Reichenbach\nProject & Website maintenance, UN*X code\n\n"
-	 "Christopher T. Lansdown\nCVS maintenance, Alpha compatibility fixes\n\n"
-	 "Claudio Matsuoka\nCVS snapshots, daily builds, bug reports\n\n"
-	 "Dark Minister\nSCI research (bytecode and parser)",
+	 "Christopher T. Lansdown\nCVS maintenance, Alpha compatibility fixes",
 	 0, 15},
 	{"More FreeSCI hackers and contributors",
+	 "Claudio Matsuoka\nCVS snapshots, daily builds, bug reports\n\n"
+	 "Dark Minister\nSCI research (bytecode and parser)\n\n"
 	 "Dmitry Jemerov\nPort to the Win32 platform, numerous bugfixes\n\n"
 	 "Emmanuel Jeandel\nBugfixes and bug reports\n\n"
 	 "Francois-R Boyer\nMT-32 information and mapping code\n\n"
-	 "George Reid\nFreeBSD package management\n\n"
-	 "Lars Skovlund\nMost of the relevant documentation, several bugfixes\n\n"
-	 "Magnus Reftel\nHeap implementation, Python class viewer, bugfixes\n\n"
-	 "Matt Hargett\nClean-ups, bugfixes, assertions, Win32 stuff",
+	 "George Reid\nFreeBSD package management",
 	 0, 15},
 	{"Still more FreeSCI hackers & contributors",
+	 "Lars Skovlund\nMost of the relevant documentation, several bugfixes\n\n"
+	 "Magnus Reftel\nHeap implementation, Python class viewer, bugfixes\n\n"
+	 "Matt Hargett\nClean-ups, bugfixes, assertions, Win32 stuff\n\n"
 	 "Paul David Doherty\nGame version information\n\n"
 	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements\n\n"
-	 "Rainer De Temple\nSCI research\n\n"
+	 "Rainer De Temple\nSCI research",
+	 0, 15},
+	{"There must be a nest somewhere...",
 	 "Ravi I.\nSCI0 sound resource specification\n\n"
 	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research\n\n"
 	 "Rink Springer\nPort to the DOS platform, several bug fixes\n\n"

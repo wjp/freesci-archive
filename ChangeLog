@@ -1,3 +1,14 @@
+2001-04-29  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/soundserver.c (sci0_soundserver): SDL sound server now
+	no longer uses chdir() commands (signalled by setting appropriate
+	server-specific flags)
+
+	* src/engine/kmenu.c: Increased number of about-pages to 4
+
+	* src/main.c (parse_arguments): Added -S to long options and option
+	explanations
+
 2001-04-27  Solomon Peachy <pizza@shaftnet.org>
 	
 	* src/engine/vm.c:  Added a workaround to a compiler bug that

@@ -371,6 +371,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 		{"sci-version", required_argument, 0, 'V'},
 		{"graphics", required_argument, 0, 'g'},
 		{"midiout", required_argument, 0, 'O'},
+		{"sound-server", required_argument, 0, 'S'},
 		{"mididevice", required_argument, 0, 'M'},
 		{"version", no_argument, 0, 'v'},
 		{"help", no_argument, 0, 'h'},
@@ -505,6 +506,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			       EXPLAIN_OPTION("--disable-mouse", "-m", "Disable support for pointing device")
 			       EXPLAIN_OPTION("--midiout drv\t", "-Odrv", "use the 'drv' midiout driver")
 			       EXPLAIN_OPTION("--mididevice drv", "-Mdrv", "use the 'drv' midi device (eg mt32 or adlib)")
+			       EXPLAIN_OPTION("--sound-server srv", "-Ssrv", "Specifies the asynchronous sound server to use")
 			       EXPLAIN_OPTION("--list-savegames", "-l", "Lists all savegame IDs")
 			       "\n"
 			       "The game name, if provided, must be equal to a game name as specified in the\n"

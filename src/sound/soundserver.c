@@ -452,7 +452,9 @@ sci0_soundserver()
 	    + (currtime.tv_usec - last_played.tv_usec);
 					  
 					  
-	  success = soundsrv_save_state(ds, dirname, songlib, newsong,
+	  success = soundsrv_save_state(ds, 
+					global_sound_server->flags & SOUNDSERVER_FLAG_SEPARATE_CWD? dirname : NULL,
+					songlib, newsong,
 					ccc, usecs, ticks, fadeticks, master_volume);
 	  /* Return soundsrv_save_state()'s return value */
 	  sound_send_data((byte *)&success, sizeof(int));
@@ -470,7 +472,9 @@ sci0_soundserver()
 
 	  sci_get_current_time(&last_played);
 
-	  success = soundsrv_restore_state(ds, dirname, songlib, &newsong,
+	  success = soundsrv_restore_state(ds,
+					   global_sound_server->flags & SOUNDSERVER_FLAG_SEPARATE_CWD? dirname : NULL,
+					   songlib, &newsong,
 					   &ccc, &usecs, &ticks, &fadeticks, &master_volume);
 	  last_played.tv_sec -= secs = (usecs - last_played.tv_usec) / 1000000;
 	  last_played.tv_usec -= (usecs + secs * 1000000);

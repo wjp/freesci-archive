@@ -251,6 +251,7 @@ sound_sdl_save(state_t *s, char *dir)
 sound_server_t sound_server_sdl = {
 	"sdl",
 	"0.1",
+	0,
 	&sound_sdl_init,
 	&sound_sdl_configure,
 	&sound_sdl_exit,
