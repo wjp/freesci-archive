@@ -506,10 +506,13 @@ main(int argc, char** argv)
   }
 
   if (conf && conf[conf_nr].work_dir)
-    if (chdir(conf[conf_nr].work_dir)) {
-      fprintf(stderr,"Error entering working directory '%s'\n", conf[conf_nr].work_dir);
-      exit(1);
-    }
+    gamestate->work_dir = work_dir;
+
+
+  if (chdir(gamestate->work_dir)) {
+    fprintf(stderr,"Error entering working directory '%s'\n", conf[conf_nr].work_dir);
+    exit(1);
+  }
 
   if (!gamestate->version_lock_flag)
     if (conf[conf_nr].version)

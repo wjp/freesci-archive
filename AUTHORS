@@ -98,7 +98,7 @@ python.tar.gz
 [Bug fixes]
 engine/
 	script.c
-	engine/heap.c
+	heap.c
 scicore/
 	vocabulary.c (parts)
 	old_objects.c

@@ -192,6 +192,7 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
   resource_t *resource;
   char filename[13];
   int resourceCounter;
+  int resource_files_read = 0;
   struct singly_linked_resources_struct *seeker;
   struct singly_linked_resources_struct base;
 
@@ -240,6 +241,9 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
       resourceFile = open(filename, O_RDONLY|O_BINARY);
     }    /* Try alternative valid file name */
 
+    if (resourceFile >0)
+      ++resource_files_read;
+
     resourceFileCounter++;
 #ifdef _SCI_RESOURCE_DEBUG
     if (resourceFile > 0) fprintf(stderr, "Reading %s...\n", filename);
@@ -247,7 +251,8 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 #endif
   } while ((resourceFile > 0) || (resourceFileCounter == 1));
 
-  if (resourceFileCounter == 2) return SCI_ERROR_NO_RESOURCE_FILES_FOUND;
+  if (!resource_files_read) 
+    return SCI_ERROR_NO_RESOURCE_FILES_FOUND;
 
 #ifdef _SCI_RESOURCE_DEBUG
   fprintf(stderr,"%i unique resources have been read.\n", max_resource);
