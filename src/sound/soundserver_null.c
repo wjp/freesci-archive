@@ -42,6 +42,7 @@
 
 #include <sciresource.h>
 #include <midi_device.h>
+#include <midi_mt32.h>
 
 void
 sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug);
@@ -268,13 +269,12 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 	if ((song->loops) != 0) {
 
-/*	  if (song->loops > 0)   SCI actually goes below -1 */
-		  --(song->loops);
+		--(song->loops);
 
-	  fprintf(ds, "looping back from %d to %d on handle %04x\n",
-		song->pos, song->loopmark, song->handle);
-	  song->pos = song->loopmark;
-	  sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_LOOP, song->loops);
+		fprintf(ds, "looping back from %d to %d on handle %04x\n",
+			song->pos, song->loopmark, song->handle);
+		song->pos = song->loopmark;
+		sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_LOOP, song->loops);
 
 	} else { /* Finished */
 
@@ -323,12 +323,13 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
 	  }
 	} else {  /* just your regular midi event.. */
-	  if (song->flags[command & 0x0f] & midi_playflag) { /* checkplay flag */
-	    if (param2 == -1)
-	      midi_event2(command, param);
-	    else
-	      midi_event(command, param, param2);
-	  } 
+		if ((((command & 0x0f) > 0) && ((command & 0x0f) < 9) &&
+		     (song->data[((command & 0x0f) << 1) + 2] & midi_mt32_sci0_channelmask)) ||
+		    (((command & 0x0F) == 9) && (song->data[((command & 0x0f) << 1) + 1] & 0x80)))
+			if (param2 == -1)
+				midi_event2(command, param);
+			else
+				midi_event(command, param, param2);
 	}
       }
 

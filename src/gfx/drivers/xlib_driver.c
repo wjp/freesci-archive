@@ -793,6 +793,7 @@ x_map_key(gfx_driver_t *drv, int keycode)
 void
 x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_event)
 {
+	int x_button_xlate[] = {0, 1, 3, 2, 4, 5};
 	XEvent event;
 	Window window = S->window;
 	Display *display = S->display;
@@ -834,15 +835,15 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 
 			case ButtonPress: {
 				sci_event->type = SCI_EVT_MOUSE_PRESS;
-				sci_event->buckybits = event.xkey.state;
-				sci_event->data = 0;
+				sci_event->buckybits = S->buckystate;
+				sci_event->data = x_button_xlate[event.xbutton.button];
 				return;
 			}
 
 			case ButtonRelease: {
 				sci_event->type = SCI_EVT_MOUSE_RELEASE;
-				sci_event->buckybits = event.xkey.state;
-				sci_event->data = 0;
+				sci_event->buckybits = S->buckystate;//event.xkey.state;
+				sci_event->data = x_button_xlate[event.xbutton.button];
 				return;
 			}
 

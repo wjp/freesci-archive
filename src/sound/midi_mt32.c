@@ -33,6 +33,7 @@ int midi_mt32_patch001_type(guint8 *data, unsigned int length);
 int midi_mt32_patch001_type0_length(guint8 *data, unsigned int length);
 int midi_mt32_patch001_type1_length(guint8 *data, unsigned int length);
 int midi_mt32_sysex_delay();
+guint8 midi_mt32_sci0_channelmask = 1;
 
 static guint8 *data;
 static unsigned int length;

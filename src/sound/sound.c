@@ -394,7 +394,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
     if (success) {
 
       read(s->sound_pipe_out[0], &dummy, sizeof(int)); /* Empty pipe */
-      return 1;
+      return 32;
 
     } else {
 

@@ -1,3 +1,14 @@
+2001-03-02  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/xlib_driver.c (x_get_event): Translated X mouse
+	button events appropriately
+
+	* src/sound/sound.c (sound_command): Successful sound tests now
+	return 32
+
+	* src/sound/soundserver_null.c (sound_null_server): Applied patch
+	by Rickard to improve sound server
+
 2001-03-02  Solomon Peachy <pizza@shaftnet.org>
 
 	* include/Makefile.am

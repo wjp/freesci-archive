@@ -44,4 +44,6 @@ int midi_mt32_poke_gather(guint32 address, guint8 *data1, unsigned int count1,
 
 int midi_mt32_write_block(guint8 *data, unsigned int count);
 
+extern guint8 midi_mt32_sci0_channelmask;
+
 #endif /* _MIDI_MT32_H_ */
