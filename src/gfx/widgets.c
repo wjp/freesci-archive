@@ -1182,22 +1182,14 @@ _gfxwop_container_free(gfxw_widget_t *widget)
 	gfxw_container_t *container = (gfxw_container_t *) widget;
 	gfxw_widget_t *seeker = container->contents;
 
-fprintf(stderr,"OK in %s line %d\n", __FILE__, __LINE__);
 	while (seeker) {
 		gfxw_widget_t *next = seeker->next;
-fprintf(stderr,"OK in %s line %d\n", __FILE__, __LINE__);
 		seeker->free(seeker);
-fprintf(stderr,"OK in %s line %d\n", __FILE__, __LINE__);
 		seeker = next;
-fprintf(stderr,"OK in %s line %d\n", __FILE__, __LINE__);
 	}
-fprintf(stderr,"OK in %s line %d\n", __FILE__, __LINE__);
 
-fprintf(stderr,"OK in %s line %d\n", __FILE__, __LINE__);
 	recursively_free_dirty_rects(container->dirty);
-fprintf(stderr,"OK in %s line %d\n", __FILE__, __LINE__);
 	container->dirty = NULL;
-fprintf(stderr,"OK in %s line %d\n", __FILE__, __LINE__);
 
 	return _gfxwop_basic_free(widget);
 }
