@@ -453,7 +453,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   PUT_SELECTOR(mover, b_movCnt, movcnt + 1);
 
-  if ((bdi += bi1) > 0) {
+  if ((bdi += bi1) >= 0) {
     bdi += bi2;
 
     if (axis == _K_BRESEN_AXIS_X)
@@ -481,6 +481,8 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   PUT_SELECTOR(client, x, x);
   PUT_SELECTOR(client, y, y);
 
+  SCIkdebug(SCIkBRESEN, "New data: (x,y)=(%d,%d), di=%d\n", x, y, bdi);
+
   invoke_selector(INV_SEL(client, canBeHere, 0), 0);
 
   if (s->acc) { /* Contains the return value */
@@ -498,7 +500,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     PUT_SELECTOR(client, signal, (signal | _K_VIEW_SIG_FLAG_HIT_OBSTACLE));
 
-    SCIkdebug(SCIkBRESEN, "Finished mover %04x\n", mover);
+    SCIkdebug(SCIkBRESEN, "Finished mover %04x by collision\n", mover);
     s->acc = 1;
   }
 
@@ -522,15 +524,15 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
   word edgehit;
 
   signal = GET_SELECTOR(obj, signal);
-  /*  SCIkdebug(SCIkBRESEN,"Checking collision: (%d,%d) to (%d,%d)\n",
-      x, y, xend, yend);*/
+  SCIkdebug(SCIkBRESEN,"Checking collision: (%d,%d) to (%d,%d), obj=%04x, sig=%04x, cliplist=%04x\n",
+      x, y, xend, yend, obj, signal, cliplist);
 
   s->acc = !(((word)GET_SELECTOR(obj, illegalBits))
 	     & (edgehit = graph_on_control(s, x, y + 10, xl, yl, SCI_MAP_CONTROL)));
 
   if (s->acc == 0)
     return; /* Can'tBeHere */
-  if ((signal & _K_VIEW_SIG_FLAG_DONT_RESTORE) || (signal & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))
+  if ((signal & _K_VIEW_SIG_FLAG_DONT_RESTORE)/* || (signal & _K_VIEW_SIG_FLAG_IGNORE_ACTOR)*/)
     return; /* CanBeHere- it's either being disposed, or it ignores actors anyway */
   if (cliplist) {
     heap_ptr node = GET_HEAP(cliplist + LIST_FIRST_NODE);
@@ -542,33 +544,26 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
       if (other_obj != obj) { /* Clipping against yourself is not recommended */
 
 	int other_signal = GET_SELECTOR(other_obj, signal);
-	if (signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR) == 0) {
+	SCIkdebug(SCIkBRESEN, "OtherSignal=%04x, z=%04x\n", other_signal, (other_signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)));
+	if ((other_signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)) == 0) {
 	  /* check whether the other object ignores actors */
 
 	  int other_x = GET_SELECTOR(other_obj, brLeft);
 	  int other_y = GET_SELECTOR(other_obj, brTop);
 	  int other_xend = GET_SELECTOR(other_obj, brRight);
 	  int other_yend = GET_SELECTOR(other_obj, brBottom);
-	  /*	SCIkdebug(SCIkBRESEN, "  against (%d,%d) to (%d, %d)\n",
-		other_x, other_y, other_xend, other_yend);*/
+	  SCIkdebug(SCIkBRESEN, "  against (%d,%d) to (%d, %d)\n",
+		    other_x, other_y, other_xend, other_yend);
 
 
-	  if ((((other_x >= x) && (other_x <= xend)) /* Other's left boundary inside of our object? */
-	       || ((other_xend >= x) && (other_xend <= xend))) /* ...right boundary... ? */
+	  if (((other_xend >= x) && (other_x <= xend)) /* [other_x, other_xend] intersects [x, xend]? */
 	      &&
-	      (((other_y >= y) && (other_y <= yend)) /* Other's top boundary inside of our object? */
-	       || ((other_yend >= y) && (other_yend <= yend)))) /* ...bottom boundary... ? */
+	      ((other_yend >= y) && (other_y <= yend))) /* [other_y, other_yend] intersects [y, yend]? */
 	    return;
 
-	  if (((other_x >= x) && (other_xend <= xend)
-	       && (other_y >= y) && (other_yend <= yend)) /* Other object inside this object? */
-	      ||
-	      ((other_x <= x) && (other_xend >= xend)
-	       && (other_y <= y) && (other_yend >= yend))) /* Other object surrounds this one? */
-	    return;
 	}
 
-	/*	SCIkdebug(SCIkBRESEN, " (no)\n");*/
+		SCIkdebug(SCIkBRESEN, " (no)\n");
 
       } /* if (other_obj != obj) */
       node = GET_HEAP(node + LIST_NEXT_NODE); /* Move on */
@@ -723,17 +718,15 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
+
 void
-kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
+_k_base_setter(state_t *s, heap_ptr object)
 {
   int x, y, original_y, z, ystep, xsize, ysize;
   int xbase, ybase, xend, yend;
   int view, loop, cell;
   int xmod = 0, ymod = 0;
   resource_t *viewres;
-  heap_ptr object = PARAM(0);
-
-  CHECK_THIS_KERNEL_FUNCTION;
 
   x = GET_SELECTOR(object, x);
   original_y = y = GET_SELECTOR(object, y);
@@ -774,10 +767,19 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
   if (s->debug_mode & (1 << SCIkBASESETTER_NR)) {
-    sciprintf("Offset: (%d,%d)\n", xmod, ymod);
     graph_clear_box(s, xbase, ybase + 10, xend-xbase+1, yend-ybase+1, VIEW_PRIORITY(original_y));
     (*s->gfx_driver->Wait)(s, 100000);
   }
+}
+
+void
+kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr object = PARAM(0);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  _k_base_setter(s, object);
 
 } /* kBaseSetter */
 
@@ -790,8 +792,8 @@ void _k_set_now_seen(state_t *s, heap_ptr object)
   int xmod = 0, ymod = 0;
   resource_t *viewres;  
 
-    if (lookup_selector(s, object, s->selector_map.nsTop, NULL)
-	!= SELECTOR_VARIABLE) { return; } /* This isn't fatal */
+  if (lookup_selector(s, object, s->selector_map.nsTop, NULL)
+      != SELECTOR_VARIABLE) { return; } /* This isn't fatal */
       
   x = GET_SELECTOR(object, x);
   y = GET_SELECTOR(object, y);
@@ -816,11 +818,29 @@ void _k_set_now_seen(state_t *s, heap_ptr object)
     xsize = ysize = 0; /* Invalid view/loop */
   else
     view0_base_modify(loop, cell, viewres->data, &xmod, &ymod);
-  
-  xbase = x - xmod - (xsize) / 2;
+
+  xbase = x + xmod - (xsize) / 2;
   xend = xbase + xsize;
-  yend = y - ymod;
+  yend = y + ymod + 1; /* +1: Magic modifier */
   ybase = yend - ysize;
+  /*  if (object == 0x756) {
+    int nsl, nsr, nst, nsb, brl, brr, brt, brb;
+    nsl = GET_SELECTOR(object, nsLeft);
+    nsr = GET_SELECTOR(object, nsRight);
+    nst = GET_SELECTOR(object, nsTop);
+    nsb = GET_SELECTOR(object, nsBottom);
+
+    brl = GET_SELECTOR(object, brLeft);
+    brr = GET_SELECTOR(object, brRight);
+    brt = GET_SELECTOR(object, brTop);
+    brb = GET_SELECTOR(object, brBottom);
+        if (nsl != xbase
+	|| nsr != xend
+	|| nst != ybase
+	|| nsb != yend)
+          fprintf(stderr,">>O@%04x (%d,%d,%d)+(%d,%d) (%dx%d) [(%d %d)(%d %d)] => [(%d %d)(%d %d)] {(%d %d)(%d %d)}\n",
+	    object, x, y, z, xmod, ymod, xsize, ysize, nsl, nsr, nst, nsb, xbase, xend, ybase, yend, brl, brr, brt, brb);
+  }*/
 
   PUT_SELECTOR(object, nsLeft, xbase);
   PUT_SELECTOR(object, nsRight, xend);
@@ -836,7 +856,6 @@ kSetNowSeen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr object = PARAM(0);
 
   CHECK_THIS_KERNEL_FUNCTION;
-  /*  SCIkdebug(SCIkWARNING, "Warning: Experimental kernel function SetNowSeen(%04x) invoked\n", object);*/
   _k_set_now_seen(s, object);
 
 } /* kSetNowSeen */
@@ -898,9 +917,11 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   if (obj) {
     word ct_type = GET_SELECTOR(obj, type);
-    if (ct_type) {
-      if ((ct_type == K_CONTROL_EDIT) && event && (GET_SELECTOR(event, type) == SCI_EVT_KEYBOARD)) {
-	  int x = GET_SELECTOR(obj, nsLeft);
+    switch (ct_type) {
+
+    case K_CONTROL_EDIT:
+      if (event && (GET_SELECTOR(event, type) == SCI_EVT_KEYBOARD)) {
+	int x = GET_SELECTOR(obj, nsLeft);
 	  int y = GET_SELECTOR(obj, nsTop);
 	  int xl = GET_SELECTOR(obj, nsRight) - x + 1;
 	  int yl = GET_SELECTOR(obj, nsBottom) - y + 1;
@@ -1006,8 +1027,15 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
           PUT_SELECTOR(obj, cursor, cursor); /* Write back cursor position */
       }
 
+    case K_CONTROL_SELECT_BOX:
+    case K_CONTROL_BUTTON:
       if (event) PUT_SELECTOR(event, claimed, 1);
       _k_draw_control(s, obj, 0);
+      s->acc = 0;
+      break;
+
+    default:
+      SCIkwarn(SCIkWARNING, "Attempt to edit control type %d\n", ct_type);
     }
   }
 }
@@ -1175,14 +1203,19 @@ _k_dyn_view_list_prepare_change(state_t *s)
   int list_nr = s->dyn_views_nr;
   int i;
 
-  for (i = 0; i < list_nr; i++) 
+  for (i = 0; i < list_nr; i++)
     if (list[i].obj) {
     word signal = GET_HEAP(list[i].signalp);
 
     if (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE)) {
 
       if (list[i].underBitsp && !(signal & _K_VIEW_SIG_FLAG_DONT_RESTORE)) {
-	int under_bits = list[i].underBits = GET_HEAP(list[i].underBitsp);
+	word under_bits = UGET_HEAP(list[i].underBitsp);
+	if (under_bits == 0xffff) {
+	  under_bits = list[i].underBits;
+	  SCIkwarn(SCIkWARNING, "underBits for obj %04x set to 0xffff, using older %04x instead\n", list[i].obj, under_bits);
+	} else
+	  list[i].underBits = under_bits;
 
 	if (under_bits) {
 
@@ -1217,7 +1250,12 @@ _k_restore_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
     } else {
 
       if (list[i].underBitsp && !(signal & _K_VIEW_SIG_FLAG_DONT_RESTORE)) {
-	int under_bits = list[i].underBits = GET_HEAP(list[i].underBitsp);
+	word under_bits = UGET_HEAP(list[i].underBitsp);
+	if (under_bits == 0xffff) {
+	  under_bits = list[i].underBits;
+	  SCIkwarn(SCIkWARNING, "underBits for obj %04x set to 0xffff, using older %04x instead\n", list[i].obj, under_bits);
+	} else
+	  list[i].underBits = under_bits;
 
 	if (under_bits) {
 
@@ -1472,6 +1510,7 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int flags)
      /* Draws list_nr members of list to s->pic. */
 {
   int i;
+  int argc = 0, argp, funct_nr = -1; /* Kludges to work around INV_SEL dependancies */
 
   if (s->view_port != s->dyn_view_port)
     return; /* Return if the pictures are meant for a different port */
@@ -1490,8 +1529,15 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int flags)
 
 	_k_clip_view(list[i].view, &(list[i].loop), &(list[i].cel));
 
-	SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", list[i].obj, signal);
 	_k_set_now_seen(s, list[i].obj);
+
+	if (lookup_selector(s, list[i].obj, s->selector_map.baseSetter, NULL) == SELECTOR_METHOD)
+	  invoke_selector(INV_SEL(list[i].obj, baseSetter, 1), 0); /* SCI-implemented base setter */
+	else
+	  _k_base_setter(s, list[i].obj);
+
+	SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", list[i].obj, signal);
+
 	draw_view0(s->pic, s->ports[s->view_port],
 		   list[i].x, list[i].y, list[i].priority, list[i].loop, list[i].cel,
 		   GRAPHICS_VIEW_CENTER_BASE | GRAPHICS_VIEW_USE_ADJUSTMENT, list[i].view);
@@ -1505,20 +1551,24 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int flags)
 	PUT_HEAP(list[i].signalp, signal); /* Write the changes back */
       } else continue;
 
-      if (signal & _K_VIEW_SIG_FLAG_IGNORE_ACTOR)
+      if (signal & 0 & _K_VIEW_SIG_FLAG_IGNORE_ACTOR)
 	continue; /* I assume that this is used for PicViews as well, so no use_signal check */
-      else { /* Yep, the continue doesn't really make sense. It's for clarification. */
-	int yl, y = list[i].nsTop;
+      else if (signal & 0 & _K_VIEW_SIG_FLAG_UNKNOWN_5) { /* Yep, the continue doesn't really make sense. It's for clarification. */
+	int brTop = GET_SELECTOR(list[i].obj, brTop);
+	int brBottom = GET_SELECTOR(list[i].obj, brBottom);
+	int brLeft = GET_SELECTOR(list[i].obj, brLeft);
+	int brRight = GET_SELECTOR(list[i].obj, brRight);
+	int yl, y = brTop;
 	int priority_band_start = PRIORITY_BAND_FIRST(list[i].priority);
 	/* Get start of priority band */
 
-	if (priority_band_start > y)
+	if (priority_band_start > brTop)
 	  y = priority_band_start;
 
-	yl = abs(y - list[i].nsBottom);
+	yl = abs(y - brBottom);
 
-	fill_box(s->pic, list[i].nsLeft, y,
-		 list[i].nsRight - list[i].nsLeft, yl, 0xf, 2);
+	fill_box(s->pic, brLeft, y + 10,
+		 brRight - brLeft, yl, 0xf, 2);
 	/* Fill the control map with solidity */
 
       } /* NOT Ignoring the actor */
@@ -1766,6 +1816,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 						  ** center to edges */
 #define K_ANIMATE_CLOSE_CHECKERS_OPEN_CHECKERS 17 /* close random checkboard, reopen */
 
+#define K_ANIMATE_OPEN_SIMPLE 100 /* No animation */
 
 
 void
@@ -2051,7 +2102,9 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
     default:
-      SCIkwarn(SCIkWARNING, "Unknown opening animation 0x%02x\n", s->pic_animate);
+      if (s->pic_animate != K_ANIMATE_OPEN_SIMPLE)
+	SCIkwarn(SCIkWARNING, "Unknown opening animation 0x%02x\n", s->pic_animate);
+
       graph_update_box(s, 0, 10, 320, 190);
     }
 

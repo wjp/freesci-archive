@@ -1,3 +1,21 @@
+2000-04-22  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kgraphics.c (kCanBeHere): Fixed several bugs in CanBeHere().
+
+	* src/core/scriptdebug.c (c_viewinfo): Minor fix to the viewinfo
+	console command
+
+	* src/core/kmath.c (kSinDiv): Fixed SinDiv and CosDiv to take their
+	parameters in the correct order
+
+	* src/core/simplesaid.c (simplesaid): Improved handling of bracketized
+	expressions
+
+2000-04-21  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/main.c (get_readline_input): Inputting C-D is now handled like
+	entering "quit" when not using the OSD.
+
 2000-04-19  Dmitry Jemerov  <yole@nnz.ru>
 
 	* Some more build fixes. Hopefully everything is stable now.

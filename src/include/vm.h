@@ -153,6 +153,8 @@ typedef struct
 
   int lsTop; /* Used by scroll list controls */
 
+  int baseSetter; /* Alternative baseSetter */
+
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {

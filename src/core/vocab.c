@@ -278,7 +278,6 @@ vocab_lookup_word(char *word, int word_len,
 
   strncpy(&(tempword->word[0]), word, word_len);
   tempword->word[word_len] = 0;
-  fprintf(stderr,"Looking for '%s'\n", tempword->word);
 
   retval = g_malloc(sizeof(result_word_t));
 

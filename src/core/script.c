@@ -142,6 +142,7 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(cycler, "cycler");
   FIND_SELECTOR(elements, "elements");
   FIND_SELECTOR(lsTop, "lsTop");
+  FIND_SELECTOR(baseSetter, "baseSetter");
 }
 
 int

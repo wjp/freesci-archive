@@ -101,6 +101,12 @@ char *
 get_readline_input(void)
 {
   char *input = readline("> ");
+
+  if (!input) { /* ^D */
+    c_quit(NULL);
+    return "";
+  }
+
   if (strlen(input) == 0) {
     free (input);
   } else {
@@ -130,6 +136,11 @@ get_gets_input(void)
 
   while (!strchr(input, '\n'))
     fgets(input, 1024, stdin);
+
+  if (!input) {
+    c_quit(NULL);
+    return "";
+  }
 
   if (strlen(input))
     if (input[strlen(input)-1] == '\n');

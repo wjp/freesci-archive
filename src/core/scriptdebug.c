@@ -270,7 +270,7 @@ c_viewinfo(state_t *s)
 
     sciprintf("has %d loops:\n", loops);
 
-    for (i = 0; i < loops-1; i++)
+    for (i = 0; i < loops; i++)
       sciprintf("Loop %d: %d cels.\n", i, view0_cel_count(i, view->data));
   }
   
@@ -366,15 +366,31 @@ int
 c_restart_game(state_t *s)
 {
   state_t *newstate;
+  int i;
 
   if (!s) {
     sciprintf("Not in debug state\n");
     return 1;
   }
 
+  for (i = 0; i < cmd_paramlength; i++) {
+    if ((strcmp(cmd_params[0].str, "-r") == 0)
+	|| (strcmp(cmd_params[0].str, "--replay") == 0))
+      s->restarting_flags |= SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE;
+    else
+      if ((strcmp(cmd_params[0].str, "-p") == 0)
+	  || (strcmp(cmd_params[0].str, "--play") == 0))
+	s->restarting_flags &= ~SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE;
+      else {
+	sciprintf("Invalid parameter '%s'\n", cmd_params[0].str);
+	return 1;
+      }
+  }
+
   sciprintf("Restarting\n");
 
   s->restarting_flags |= SCI_GAME_IS_RESTARTING_NOW;
+
   script_abort_flag = 1;
   _debugstate_valid = 0;
   return 0;
@@ -1404,7 +1420,9 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 		       "  from the parse node tree");
       con_hook_command(c_save_game, "save_game", "s", "Saves the current game state to\n  the hard disk");
       con_hook_command(c_restore_game, "restore_game", "s", "Restores a saved game from the\n  hard disk");
-      con_hook_command(c_restart_game, "restart", "", "Restarts the game");
+      con_hook_command(c_restart_game, "restart", "s*", "Restarts the game.\n\nUSAGE\n\n  restart [-r] [-p]"
+		       " [--play] [--replay]\n\n  There are two ways to restart an SCI\n  game:\n"
+		       "  play (-p) calls the game object's play()\n    method\n  replay (-r) calls the replay() method");
       con_hook_command(c_dynviews, "dynviews", "", "Lists the currently active dynamic views");
       con_hook_command(c_viewinfo, "viewinfo", "i", "Displays the number of loops\n  and cels of each loop"
 		       " for the\n  specified view resource.");

@@ -93,8 +93,8 @@ kTimesCos(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kCosDiv(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int angle = PARAM(1);
-  int value = PARAM(0);
+  int angle = PARAM(0);
+  int value = PARAM(1);
   double cosval = cos(angle * PI / 180.0);
 
   if ((cosval < 0.0001) && (cosval > 0.0001)) {
@@ -107,8 +107,8 @@ kCosDiv(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kSinDiv(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int angle = PARAM(1);
-  int value = PARAM(0);
+  int angle = PARAM(0);
+  int value = PARAM(1);
   double sinval = sin(angle * PI / 180.0);
 
   if ((sinval < 0.0001) && (sinval > 0.0001)) {

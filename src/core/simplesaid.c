@@ -33,7 +33,7 @@
 
 #ifdef SCI_SIMPLE_SAID_CODE
 
-int current_pword;
+static int current_pword;
 static int said_pos;
 static int refstart_pos, parse_pos;
 static parse_tree_node_t *words;
@@ -199,9 +199,13 @@ simplesaid(int terminator)
 	SCIkwarn(SCIkERROR, "']' without matching '['\n");
         return 0;
 
-      case SAID_BRACKO:
-	simplesaid(SAID_BRACKC);
+      case SAID_BRACKO: {
+	int parse_pos_old = parse_pos;
+	int recurse = simplesaid(SAID_BRACKC);
+	if (!recurse)
+	  parse_pos = parse_pos_old;
 	break;
+      }
 
       case SAID_LT:
 	if (aspiring_refword > -1) /* "a < b < c" */
@@ -276,6 +280,7 @@ vocab_simple_said_test(state_t *s, heap_ptr address)
   words = s->parser_nodes;
   matched = simplesaid(SAID_TERM);
   SCIkdebug(SCIkSAID, "Result: (matched,dontclaim)=(%d,%d)\n", matched, dontclaim);
+
   if (!matched)
     return SAID_NO_MATCH;
 
