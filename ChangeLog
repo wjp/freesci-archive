@@ -1,3 +1,17 @@
+1999-12-12  Dmitry Jemerov  <yole@nnz.ru>
+
+	* src/core/kfile.c (kDeviceInfo_Win32): Correct Win32
+	implementation.
+
+	* src/main.c (main): Specifying game name in the command line
+	didn't work; freesci aborted immediately. Fixed.
+
+	* src/graphics/graphics_ddraw.c (WndProc): The freesci window is
+	now repainted after being uncovered by another window.
+
+	* src/graphics/menubar.c (menubar_add_menu): Fixed major bug
+	causing incorrect menu construction.
+
 1999-12-11  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kmenu.c (kGetMenu): Added GetMenu().

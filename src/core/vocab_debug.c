@@ -186,9 +186,9 @@ vocabulary_free_snames(char **snames_list)
   int pos = 0;
 
   while (snames_list[pos])
-    free(snames_list[pos++]);
+    g_free(snames_list[pos++]);
 
-  free(snames_list);
+  g_free(snames_list);
 }
 
 opcode* vocabulary_get_opcodes()
@@ -347,6 +347,6 @@ char** vocabulary_get_knames(int* count)
 void vocabulary_free_knames(char** names)
 {
 	int i=0;
-	while(names[i]) free(names[i++]);
-	free(names);
+	while(names[i]) g_free(names[i++]);
+	g_free(names);
 }

@@ -1235,24 +1235,24 @@ script_free_state(state_t *s)
   sciprintf("Freeing state-dependant data\n");
   for (i = 0; i < MAX_HUNK_BLOCKS; i++)
       if (s->hunk[i].size) {
-	  free(s->hunk[i].data);
+	  g_free(s->hunk[i].data);
 	  s->hunk[i].size = 0;
       }
 
   for (i = 3; i < MAX_PORTS; i++) /* Ports 0,1,2 are fixed */
     if (s->ports[i]) {
-      free(s->ports[i]);
+      g_free(s->ports[i]);
       s->ports[i] = 0;
     }
 
   if (s->pic_views_nr)
   {
-    free(s->pic_views);
+    g_free(s->pic_views);
     s->pic_views = NULL;
   }
   if (s->dyn_views_nr)
   {
-    free(s->dyn_views);
+    g_free(s->dyn_views);
     s->dyn_views = NULL;
   }
 
@@ -1261,13 +1261,13 @@ script_free_state(state_t *s)
     if (s->file_handles[i])
       fclose(s->file_handles[i]);
 
-  free(s->file_handles);
+  g_free(s->file_handles);
 
   heap_del(s->_heap);
 
   menubar_free(s->menubar);
 
-  free(s->classtable);
+  g_free(s->classtable);
 }
 
 
@@ -1693,7 +1693,7 @@ game_run(state_t **_s)
 
     if (s->restarting_flags & SCI_GAME_IS_RESTARTING_NOW) { /* Restart was requested? */
 
-      free(s->execution_stack);
+      g_free(s->execution_stack);
       s->execution_stack = NULL;
       s->execution_stack_pos = -1;
       s->execution_stack_pos_changed = 0;
@@ -1731,13 +1731,13 @@ game_exit(state_t *s)
   breakpoint_t *bp, *bp_next;
 
   if (s->execution_stack)
-    free(s->execution_stack);
+    g_free(s->execution_stack);
 
   sciprintf("Freeing vocabulary...\n");
   vocabulary_free_snames(s->selector_names);
   vocabulary_free_knames(s->kernel_names);
-  free(s->opcodes);
-  free(s->kfunct_table);
+  g_free(s->opcodes);
+  g_free(s->kfunct_table);
 
   s->selector_names = NULL;
   s->kernel_names = NULL;
@@ -1765,8 +1765,8 @@ game_exit(state_t *s)
   while (bp)
   {
     bp_next = bp->next;
-    if (bp->type == BREAK_EXECUTE) free (bp->data);
-    free (bp);
+    if (bp->type == BREAK_EXECUTE) g_free (bp->data);
+    g_free (bp);
     bp = bp_next;
   }
   s->bp_list = NULL;

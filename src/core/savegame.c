@@ -277,7 +277,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
   while (isspace(c = fgetc(fd)) && (c != EOF));
   if (c == EOF) {
     _cfsml_error("Unexpected end of file at line %d\n", *line);
-    free(retval);
+    g_free(retval);
     *hiteof = 1;
     return NULL;
   }
@@ -292,7 +292,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
      if (!isspace(c)) {
         if (done) {
            _cfsml_error("Single word identifier expected at line %d\n", *line);
-           free(retval);
+           g_free(retval);
            return NULL;
         }
         retval[pos++] = c;
@@ -305,7 +305,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
 
   if (c == EOF) {
     _cfsml_error("Unexpected end of file at line %d\n", *line);
-    free(retval);
+    g_free(retval);
     *hiteof = 1;
     return NULL;
   }
@@ -320,7 +320,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
 
   if (pos == 0) {
     _cfsml_error("Missing identifier in assignment at line %d\n", *line);
-    free(retval);
+    g_free(retval);
     return NULL;
   }
 
@@ -359,7 +359,7 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
 
   if (pos == 0) {
     _cfsml_error("Missing value in assignment at line %d\n", *line);
-    free(retval);
+    g_free(retval);
     return NULL;
   }
 
@@ -831,7 +831,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           free(value);
+           g_free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -881,7 +881,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           free(value);
+           g_free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -917,7 +917,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           free(value);
+           g_free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -948,7 +948,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           free(value);
+           g_free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -1018,7 +1018,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           free(value);
+           g_free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -1080,7 +1080,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           free(value);
+           g_free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -1120,7 +1120,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           free(value);
+           g_free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -1146,7 +1146,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           free(value);
+           g_free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -1171,7 +1171,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           free(value);
+           g_free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -1211,7 +1211,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
           return CFSML_FAILURE;       }
      }
 
-    free (bar);
+    g_free (bar);
   } while (!closed); /* Until closing braces are hit */
   foo->_heap->base = foo->_heap->start + reladdresses[0];
   foo->game_name = foo->_heap->start + reladdresses[1];
@@ -1349,7 +1349,7 @@ _cfsml_read_view_object_t(FILE *fh, view_object_t* foo, char *lastval, int *line
           return CFSML_FAILURE;       }
      }
 
-    free (bar);
+    g_free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -1499,7 +1499,7 @@ _cfsml_read_menu_item_t(FILE *fh, menu_item_t* foo, char *lastval, int *line, in
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           free(value);
+           g_free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -1554,7 +1554,7 @@ _cfsml_read_menu_item_t(FILE *fh, menu_item_t* foo, char *lastval, int *line, in
           return CFSML_FAILURE;       }
      }
 
-    free (bar);
+    g_free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -1571,7 +1571,7 @@ _cfsml_write_string(FILE *fh, char ** foo)
     fprintf(fh, "\\null\\");  else {
     bar = _cfsml_mangle_string((char *) *foo);
     fprintf(fh, "\"%s\"", bar);
-    free(bar);
+    g_free(bar);
   }
 }
 
@@ -1777,7 +1777,7 @@ _cfsml_read_port_t(FILE *fh, port_t* foo, char *lastval, int *line, int *hiteof)
           return CFSML_FAILURE;       }
      }
 
-    free (bar);
+    g_free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -1865,7 +1865,7 @@ _cfsml_read_script_t(FILE *fh, script_t* foo, char *lastval, int *line, int *hit
           return CFSML_FAILURE;       }
      }
 
-    free (bar);
+    g_free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -1972,7 +1972,7 @@ _cfsml_read_menu_t(FILE *fh, menu_t* foo, char *lastval, int *line, int *hiteof)
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           free(value);
+           g_free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -1993,7 +1993,7 @@ _cfsml_read_menu_t(FILE *fh, menu_t* foo, char *lastval, int *line, int *hiteof)
           return CFSML_FAILURE;       }
      }
 
-    free (bar);
+    g_free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -2065,7 +2065,7 @@ _cfsml_read_class_t(FILE *fh, class_t* foo, char *lastval, int *line, int *hiteo
           return CFSML_FAILURE;       }
      }
 
-    free (bar);
+    g_free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -2237,7 +2237,7 @@ _cfsml_read_exec_stack_t(FILE *fh, exec_stack_t* foo, char *lastval, int *line, 
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           free(value);
+           g_free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -2272,7 +2272,7 @@ _cfsml_read_exec_stack_t(FILE *fh, exec_stack_t* foo, char *lastval, int *line, 
           return CFSML_FAILURE;       }
      }
 
-    free (bar);
+    g_free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -2355,7 +2355,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           free(value);
+           g_free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -2376,7 +2376,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
           return CFSML_FAILURE;       }
      }
 
-    free (bar);
+    g_free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -2601,7 +2601,7 @@ gamestate_restore(state_t *s, char *dirname)
     char *_cfsml_inp = _cfsml_get_identifier(fh, &(_cfsml_line_ctr), &_cfsml_eof, &dummy);
 
     _cfsml_error = _cfsml_read_state_t(fh, retval, _cfsml_inp, &(_cfsml_line_ctr), &_cfsml_eof);
-    free(_cfsml_inp);
+    g_free(_cfsml_inp);
     read_eof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */

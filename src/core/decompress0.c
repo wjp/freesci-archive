@@ -250,8 +250,8 @@ int decompress0(resource_t *result, int resh)
   result->data = g_malloc(result->length);
 
   if (read(resh, buffer, compressedLength) != compressedLength) {
-    free(result->data);
-    free(buffer);
+    g_free(result->data);
+    g_free(buffer);
     return SCI_ERROR_IO_ERROR;
   };
 
@@ -275,10 +275,10 @@ int decompress0(resource_t *result, int resh)
 
   case 1: /* LZW compression */
     if (decrypt1(result->data, buffer, result->length, compressedLength)) {
-      free(result->data);
+      g_free(result->data);
       result->data = 0; /* So that we know that it didn't work */
       result->status = SCI_STATUS_NOMALLOC;
-      free(buffer);
+      g_free(buffer);
       return SCI_ERROR_DECOMPRESSION_OVERFLOW;
     }
     result->status = SCI_STATUS_OK;
@@ -286,10 +286,10 @@ int decompress0(resource_t *result, int resh)
 
   case 2: /* Some sort of Huffman encoding */
     if (decrypt2(result->data, buffer, result->length, compressedLength)) {
-      free(result->data);
+      g_free(result->data);
       result->data = 0; /* So that we know that it didn't work */
       result->status = SCI_STATUS_NOMALLOC;
-      free(buffer);
+      g_free(buffer);
       return SCI_ERROR_DECOMPRESSION_OVERFLOW;
     }
     result->status = SCI_STATUS_OK;
@@ -299,14 +299,14 @@ int decompress0(resource_t *result, int resh)
     fprintf(stderr,"Resource %s.%03hi: Compression method %hi not "
 	    "supported!\n", Resource_Types[result->type], result->number,
 	    compressionMethod);
-    free(result->data);
+    g_free(result->data);
     result->data = 0; /* So that we know that it didn't work */
     result->status = SCI_STATUS_NOMALLOC;
-    free(buffer);
+    g_free(buffer);
     return SCI_ERROR_UNKNOWN_COMPRESSION;
   }
 
-  free(buffer);
+  g_free(buffer);
   return 0;
 }
 

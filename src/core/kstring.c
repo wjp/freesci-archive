@@ -119,7 +119,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			       s->parser_branches_nr))
       syntax_fail = 1; /* Building a tree failed */
 
-    free(words);
+    g_free(words);
 
     if (syntax_fail) {
 
@@ -146,7 +146,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
       /* Issue warning: */
 
       invoke_selector(INV_SEL(s->game_obj, wordFail, 0), 2, s->parser_base, stringpos);
-      free(error);
+      g_free(error);
       s->acc = 1; /* Tell them that it dind't work */
     }
   }
@@ -348,7 +348,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
   }
 
-  free(arguments);
+  g_free(arguments);
 
   *target = 0; /* Terminate string */
   s->acc = dest; /* Return target addr */

@@ -184,7 +184,8 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 	left = malloc_ncpy(left_origin = (entries - string_len - 1), string_len);
 	string_len = 0; /* Continue with the right string */
 
-      } string_len++; /* Nothing special */
+      } 
+      else string_len++; /* Nothing special */
 
     } else { /* Left string finished => working on right string */
       if ((tracker == ':') || (tracker == 0)) { /* End of entry */
@@ -214,8 +215,10 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 	if (c_width > max_width)
 	  max_width = c_width;
 
+        string_len = 0;
+        left = NULL;  /* Start over */
+
       } else string_len++; /* continuing entry */
-      if (string_len);
     } /* right string finished */
 
   } while (tracker);
@@ -223,7 +226,8 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 #ifdef MENU_FREESCI_BLATANT_PLUG
   if (add_freesci) {
       
-    c_width = _menubar_add_menu_item(menu, MENU_TYPE_NORMAL, "About FreeSCI", NULL, font, 0, 0, 0);
+    char *freesci_text=strdup ("About FreeSCI");
+    c_width = _menubar_add_menu_item(menu, MENU_TYPE_NORMAL, freesci_text, NULL, font, 0, 0, 0);
     if (c_width > max_width)
       max_width = c_width;
 

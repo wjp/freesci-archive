@@ -27,6 +27,11 @@
 
 #include <kernel.h>
 
+#ifdef WIN32
+#define PATH_MAX 255
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 
 /* This assumes modern stream implementations. It may break on DOS. */
 
@@ -216,6 +221,7 @@ kGetCWD(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+  char dir_buffer [MAX_PATH], dir_buffer2 [MAX_PATH];
   int mode = UPARAM(0);
 
   CHECK_THIS_KERNEL_FUNCTION;
@@ -231,7 +237,9 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, heap_ptr argp)
     SCIkASSERT(input >= HEAP_MIN);
     SCIkASSERT(output >= HEAP_MIN);
 
-    strncpy(output_s, input_s, 2);
+    GetFullPathName (input_s, sizeof (dir_buffer)-1, dir_buffer, NULL);
+    strncpy(output_s, dir_buffer, 2);
+    output_s [2] = 0;
   }
   break;
 
@@ -241,7 +249,9 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     SCIkASSERT(output >= HEAP_MIN);
 
-    strncpy(output_s, "C:"); /* FIXME */
+    _getcwd (dir_buffer, sizeof (dir_buffer)-1);
+    strncpy(output_s, dir_buffer, 2);
+    output_s [2] = 0;
   }
   break;
 
@@ -254,13 +264,21 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, heap_ptr argp)
     SCIkASSERT(path1 >= HEAP_MIN);
     SCIkASSERT(path2 >= HEAP_MIN);
 
-    s->acc = fnmatch(path1_s, path2_s, FNM_PATHNAME); /* POSIX.2 */
+    GetFullPathName (path1_s, sizeof (dir_buffer)-1, dir_buffer, NULL);
+    GetFullPathName (path2_s, sizeof (dir_buffer2)-1, dir_buffer2, NULL);
+    
+    s->acc = !stricmp (path1_s, path2_s);
   }
   break;
 
   case K_DEVICE_INFO_IS_FLOPPY: {
+    heap_ptr input = UPARAM(1);
+    char *input_s = s->heap + input;
 
-    s->acc = 0; /* Never? FIXME */
+    GetFullPathName (input_s, sizeof (dir_buffer)-1, dir_buffer, NULL);
+    dir_buffer [3] = 0;  /* leave X:\ */
+    
+    s->acc = (GetDriveType (dir_buffer) == DRIVE_REMOVABLE);
   }
   break;
 

@@ -303,7 +303,7 @@ kfree(state_t *s, int handle)
     return 1;
   }
 
-  free(s->hunk[handle].data);
+  g_free(s->hunk[handle].data);
   s->hunk[handle].size = 0;
 
   return 0;

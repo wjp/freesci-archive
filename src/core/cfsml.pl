@@ -122,7 +122,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
   while (isspace(c = fgetc(fd)) && (c != EOF));
   if (c == EOF) {
     _cfsml_error("Unexpected end of file at line %d\n", *line);
-    free(retval);
+    g_free(retval);
     *hiteof = 1;
     return NULL;
   }
@@ -137,7 +137,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
      if (!isspace(c)) {
         if (done) {
            _cfsml_error("Single word identifier expected at line %d\n", *line);
-           free(retval);
+           g_free(retval);
            return NULL;
         }
         retval[pos++] = c;
@@ -150,7 +150,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
 
   if (c == EOF) {
     _cfsml_error("Unexpected end of file at line %d\n", *line);
-    free(retval);
+    g_free(retval);
     *hiteof = 1;
     return NULL;
   }
@@ -165,7 +165,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
 
   if (pos == 0) {
     _cfsml_error("Missing identifier in assignment at line %d\n", *line);
-    free(retval);
+    g_free(retval);
     return NULL;
   }
 
@@ -211,7 +211,7 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
 
   if (pos == 0) {
     _cfsml_error("Missing value in assignment at line %d\n", *line);
-    free(retval);
+    g_free(retval);
     return NULL;
   }
 
@@ -308,7 +308,7 @@ sub create_writer
       print "  else {\n";
       print "    bar = _cfsml_mangle_string((char *) *foo);\n";
       print "    fprintf(fh, \"\\\"%s\\\"\", bar);\n";
-      print "    free(bar);\n";
+      print "    g_free(bar);\n";
       print "  }\n";
     }
     elsif ($types{$type}{'type'} eq $type_record) {
@@ -518,7 +518,7 @@ sub create_reader
 	  print "#line ", __LINE__, " \"cfsml.pl\"\n";
 	  print "         done = i = 0;\n";
 	  print "         do {\n";
-	  print "           free(value);\n";
+	  print "           g_free(value);\n";
 	  if ($type eq $type_record) {
 	    print "           if (!(value = _cfsml_get_value(fh, line, hiteof)))\n";
 	  } else {
@@ -565,7 +565,7 @@ sub create_reader
       print "       }\n";
       print "     }\n";
 
-      print "\n    free (bar);\n";
+      print "\n    g_free (bar);\n";
       print "  } while (!closed); /* Until closing braces are hit */\n";
 
       print $reladdress_resolver; # Resolves any relative addresses
@@ -643,7 +643,7 @@ sub insert_reader_code {
     " $types{$type}{'reader'}($fh, $datap, _cfsml_inp, &($linecounter), &_cfsml_eof);\n";
 
   if (!$firsttoken) {
-    print "    free(_cfsml_inp);\n";
+    print "    g_free(_cfsml_inp);\n";
   }
 
   if ($eofvar) {

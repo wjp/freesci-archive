@@ -111,9 +111,9 @@ vocab_free_words(word_t **words, int words_nr)
   int i;
 
   for (i = 0; i < words_nr; i++)
-    free(words[i]);
+    g_free(words[i]);
 
-  free(words);
+  g_free(words);
 }
 
 
@@ -199,7 +199,7 @@ void
 vocab_free_branches(parse_tree_branch_t *parser_branches)
 {
   if (parser_branches)
-    free(parser_branches);
+    g_free(parser_branches);
 }
 
 
@@ -261,7 +261,7 @@ vocab_lookup_word(char *word, int word_len,
   dict_word = bsearch(&tempword, words, words_nr, sizeof(word_t *), _vocab_cmp_words);
 
   if (dict_word) {
-    free(tempword);
+    g_free(tempword);
 
     retval->class = (*dict_word)->class;
     retval->group = (*dict_word)->group;
@@ -287,7 +287,7 @@ vocab_lookup_word(char *word, int word_len,
 	dict_word = bsearch(tempword, words, words_nr, sizeof(word_t *), _vocab_cmp_words);
 
 	if ((dict_word) && ((*dict_word)->class & suffices[i]->class_mask)) { /* Found it? */
-	  free(tempword);
+	  g_free(tempword);
 
 	  retval->class = suffices[i]->result_class; /* Use suffix class */
 	  retval->group = (*dict_word)->group;
@@ -305,7 +305,7 @@ vocab_lookup_word(char *word, int word_len,
 
   if ((strtol(&(tempword->word[0]), &tester, 10) >= 0)
       && (*tester == '\0')) { /* Do we have a complete number here? */
-    free(tempword);
+    g_free(tempword);
 
     retval->group = VOCAB_MAGIC_NUMBER_GROUP;
     retval->class = VOCAB_CLASS_NUMBER;
@@ -313,8 +313,8 @@ vocab_lookup_word(char *word, int word_len,
     return(retval);
   }
 
-  free(tempword);
-  free(retval);
+  g_free(tempword);
+  g_free(retval);
   return NULL;
 }
 
@@ -390,7 +390,7 @@ vocab_tokenize_string(char *sentence, int *result_nr,
 	if (!lookup_result) { /* Not found? */
 	  *error = g_malloc0(wordlen + 1);
 	  strncpy(*error, lastword, wordlen); /* Set the offending word */
-	  free(retval);
+	  g_free(retval);
 	  return NULL; /* And return with error */
 	}
 
@@ -409,7 +409,7 @@ vocab_tokenize_string(char *sentence, int *result_nr,
   } while (c); /* Until terminator is hit */
 
   if (*result_nr == 0) {
-    free(retval);
+    g_free(retval);
     return NULL;
   }
 

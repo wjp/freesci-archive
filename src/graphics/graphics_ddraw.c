@@ -56,7 +56,7 @@ static HermesFormat *hfDest;
 
 static RGBQUAD color_table [256];
 
-static BOOL bFullscreen = FALSE, bActive = FALSE;
+static BOOL bFullscreen = FALSE, bActive = FALSE, bInitialized = FALSE;
 static int scale=1;
 
 /* FIXME: It would be cleaner to store the state pointer in a window word,
@@ -383,6 +383,7 @@ ddraw_init(state_t *s, struct _picture *pic)
  
   /* Process initial messages */
   init_event_queue();
+  bInitialized = TRUE;
   process_messages();
 
   return 0;
@@ -542,6 +543,16 @@ long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   case WM_DESTROY:
     script_abort_flag = 1;
     PostQuitMessage (0);
+    break;
+
+  case WM_PAINT: 
+    if (bInitialized)
+    {
+      RECT rc;
+      GetUpdateRect (hWnd, &rc, FALSE);
+      ddraw_redraw (_s, GRAPHICS_CALLBACK_REDRAW_BOX, 
+        rc.left/scale, rc.top/scale, (rc.right-rc.left)/scale+1, (rc.bottom-rc.top)/scale+1);
+    }
     break;
 
     /* messages converted to SCI events */

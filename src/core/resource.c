@@ -116,8 +116,8 @@ _addResource(struct singly_linked_resources_struct *base, resource_t *resource, 
     while (seeker && seeker->next) {
       if (seeker->resource->id == resource->id) {
 	if (priority) { /* replace the old resource */
-	  free(seeker->resource->data);
-	  free(seeker->resource);
+	  g_free(seeker->resource->data);
+	  g_free(seeker->resource);
 	  seeker->resource = resource;
 	  return;
 	} else seeker = 0;
@@ -133,8 +133,8 @@ _addResource(struct singly_linked_resources_struct *base, resource_t *resource, 
 
     } else {
 
-      free(resource->data);
-      free(resource);
+      g_free(resource->data);
+      g_free(resource);
 
     }
   }
@@ -178,7 +178,7 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 
 	resource = g_malloc(sizeof(resource_t));
       }
-      free(resource);
+      g_free(resource);
       close(resourceFile);
       if (decomperr >= SCI_ERROR_CRITICAL) {
 #ifdef _SCI_RESOURCE_DEBUG
@@ -248,7 +248,7 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 void killlist(struct singly_linked_resources_struct *rs)
 {
   if (rs->next) killlist(rs->next);
-  free(rs->next);
+  g_free(rs->next);
 }
 
 
@@ -373,9 +373,9 @@ void freeResources()
     int i;
 
     for (i=0; i < max_resource; i++) {
-      if (!resource_map[i].status) free(resource_map[i].data);
+      if (!resource_map[i].status) g_free(resource_map[i].data);
     }
-    free(resource_map);
+    g_free(resource_map);
     return;
   }
 }

@@ -217,10 +217,11 @@ main(int argc, char** argv)
       requested_gfx_driver = strdup(optarg);
       break;
 
-    case 0: /* getopt_long already did this for us */
     case '?':
       /* getopt_long already printed an error message. */
       return 0;
+
+    case 0: /* getopt_long already did this for us */
       break;
 
     case 'v':

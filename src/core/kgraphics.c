@@ -657,7 +657,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
     s->pic_is_new = 1;
 
     if (s->pic_views_nr)
-      free(s->pic_views);
+      g_free(s->pic_views);
     s->pic_views_nr = 0;
 
   } else
@@ -1297,7 +1297,7 @@ _k_view_list_dispose(state_t *s, view_object_t **list_ptr, int *list_nr_ptr)
 
   _k_view_list_free_backgrounds(s, list, *list_nr_ptr);
 
-  free (list);
+  g_free (list);
   *list_ptr = NULL;
   *list_nr_ptr = 0;
 }
@@ -1400,7 +1400,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
   CHECK_THIS_KERNEL_FUNCTION;
 
   if (s->pic_views_nr) {
-    free(s->pic_views);
+    g_free(s->pic_views);
     s->pic_views = NULL;
   }
 
@@ -1494,7 +1494,7 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   graph_update_port(s, s->ports[goner]);
 
-  free(s->ports[goner]);
+  g_free(s->ports[goner]);
   s->ports[goner] = NULL; /* Mark as free */
 }
 
@@ -1609,7 +1609,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
   process_sound_events(s); /* Take care of incoming events (kAnimate is called semi-regularly) */
 
   if (s->dyn_views_nr) {
-    free(s->dyn_views);
+    g_free(s->dyn_views);
     s->dyn_views_nr = 0; /* No more dynamic views */
     s->dyn_views = NULL;
   }

@@ -206,6 +206,7 @@ c_viewinfo(state_t *s)
       sciprintf("Loop %d: %d cels.\n", i, view0_cel_count(i, view->data));
   }
   
+  return 0;
 }
 
 int
@@ -1093,8 +1094,8 @@ int c_bpdel(state_t *s)
   /* Delete it */
   bp_next = bp->next;
   type = bp->type;
-  if (type == BREAK_EXECUTE) free (bp->data);
-  free (bp);
+  if (type == BREAK_EXECUTE) g_free (bp->data);
+  g_free (bp);
   if (bp_prev)
     bp_prev->next = bp_next;
   else
