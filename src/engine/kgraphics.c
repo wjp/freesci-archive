@@ -1617,7 +1617,13 @@ _k_view_list_do_postdraw(state_t *s, gfxw_list_t *list)
 	while (widget) {
 		reg_t obj = make_reg(widget->ID, widget->subID);
 
-		if ((widget->signal & (_K_VIEW_SIG_FLAG_FREESCI_PRIVATE | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_NO_UPDATE)) == _K_VIEW_SIG_FLAG_FREESCI_PRIVATE) {
+		/*
+		 * this fixes a few problems, but doesn't match SSCI's logic.
+		 * The semantics of the private flag need to be verified before this can be uncommented.
+		 * Fixes bug #326 (CB1, ego falls down stairs)
+		 * if ((widget->signal & (_K_VIEW_SIG_FLAG_FREESCI_PRIVATE | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_NO_UPDATE)) == _K_VIEW_SIG_FLAG_FREESCI_PRIVATE) {
+		 */
+		if ((widget->signal & (_K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_NO_UPDATE)) == 0) {
 			int has_nsrect = lookup_selector(s, obj, s->selector_map.nsBottom, NULL, NULL) == SELECTOR_VARIABLE;
 
 			if (has_nsrect) {
@@ -1647,11 +1653,10 @@ _k_view_list_do_postdraw(state_t *s, gfxw_list_t *list)
 				widget->signal |= _K_VIEW_SIG_FLAG_REMOVE;
 		}
 #ifdef DEBUG_LSRECT
-		fprintf(stderr, "obj "PREG" has pflags %x\n", PRINT_REG(obj), (widget->signal & (_K_VIEW_SIG_FLAG_FREESCI_PRIVATE | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_NO_UPDATE)));
+		fprintf(stderr, "obj "PREG" has pflags %x\n", PRINT_REG(obj), (widget->signal & (_K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_NO_UPDATE)));
 #endif
 
 		if (widget->signalp) {
-			widget->signal &= ~_K_VIEW_SIG_FLAG_FREESCI_PRIVATE;
 			*((reg_t *)(widget->signalp)) = make_reg(0, widget->signal & 0xffff); /* Write back signal */
 		}
 
@@ -1926,8 +1931,7 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, list_t *list, int optio
 
 	while(widget) { /* Read back widget values */
 		if (widget->signalp)
-			widget->signal = (widget->signal & _K_VIEW_SIG_FLAG_FREESCI_PRIVATE)
-				| ((reg_t *)(widget->signalp))->offset;
+			widget->signal = ((reg_t *)(widget->signalp))->offset;
 
 		widget = (gfxw_dyn_view_t *) widget->next;
 	}
@@ -1985,33 +1989,38 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 
 
 		/* Extreme Pattern Matching ugliness ahead... */
-		if ((view->signal & _K_VIEW_SIG_FLAG_NO_UPDATE
-		     && (  /* Brainwashed by LISP */
-			 (view->signal & (_K_VIEW_SIG_FLAG_UPDATED | _K_VIEW_SIG_FLAG_FORCE_UPDATE))
-			 || (((view->signal & (_K_VIEW_SIG_FLAG_UPDATED | _K_VIEW_SIG_FLAG_FORCE_UPDATE)) == 0)
-			     && (((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_REMOVE)) == _K_VIEW_SIG_FLAG_REMOVE)
-				 || ((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)) == _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)
-				 || ((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE))
-				     == (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE))
-				 )
-			     )
-			 )
-		     )
-		    ||
-		    (!(view->signal & _K_VIEW_SIG_FLAG_NO_UPDATE)
-		     && (!!(view->signal & _K_VIEW_SIG_FLAG_STOP_UPDATE) ^ !!(view->signal & _K_VIEW_SIG_FLAG_ALWAYS_UPDATE))
-		     )
-		    ) {
-			view->signal |= _K_VIEW_SIG_FLAG_FREESCI_PRIVATE;
-			s->pic_not_valid++;
+ 		if (view->signal & _K_VIEW_SIG_FLAG_NO_UPDATE) {
+ 			if (((view->signal & (_K_VIEW_SIG_FLAG_UPDATED | _K_VIEW_SIG_FLAG_FORCE_UPDATE))) /* 9.1.1.1 */
+ 			    || ((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_REMOVE)) == _K_VIEW_SIG_FLAG_HIDDEN)
+ 			    || ((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_REMOVE)) == _K_VIEW_SIG_FLAG_REMOVE) /* 9.1.1.2 */
+ 			    || ((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)) == _K_VIEW_SIG_FLAG_ALWAYS_UPDATE) /* 9.1.1.3 */
+ 			    || ((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)) == (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE))) /* 9.1.1.4 */
+ 			{
+ 				s->pic_not_valid++;
+ 				view->signal &= ~_K_VIEW_SIG_FLAG_STOP_UPDATE;
+ 			}
+ 
+ 			else if (((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)) == 0)
+ 				|| ((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)) == (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_REMOVE))
+ 				|| ((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)) == (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE))
+ 				|| ((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)) == _K_VIEW_SIG_FLAG_HIDDEN))
+ 			{
+ 				view->signal &= ~_K_VIEW_SIG_FLAG_STOP_UPDATE;
+ 			}
 		}
+ 		else {
+ 			if (view->signal & _K_VIEW_SIG_FLAG_STOP_UPDATE) {
+ 				s->pic_not_valid++;
+ 				view->signal &= ~_K_VIEW_SIG_FLAG_FORCE_UPDATE;
+ 			}
+ 			else { /* if not STOP_UPDATE */
+ 				if (view->signal & _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)
+ 					s->pic_not_valid++;
+ 				view->signal &= ~_K_VIEW_SIG_FLAG_FORCE_UPDATE;
+ 			}
+ 		}
 
 		SCIkdebug(SCIkGRAPHICS, "  dv["PREG"]: signal %04x -> %04x\n", PRINT_REG(obj), oldsignal, view->signal);
-
-		if (view->signal & _K_VIEW_SIG_FLAG_NO_UPDATE)
-			view->signal &= ~_K_VIEW_SIG_FLAG_STOP_UPDATE;
-		else
-			view->signal &= ~_K_VIEW_SIG_FLAG_FORCE_UPDATE;
 
 		/* Never happens
 		if (view->signal & 0) {
@@ -2079,9 +2088,14 @@ _k_raise_topmost_in_view_list(state_t *s, gfxw_list_t *list, gfxw_dyn_view_t *vi
 	if (view) {
 		gfxw_dyn_view_t *next = (gfxw_dyn_view_t *) view->next;
 
+		/* step 11 */
 		if ((view->signal & (_K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)) == 0) {
 			SCIkdebug(SCIkGRAPHICS, "Forcing precedence 2 at ["PREG"] with %04x\n", PRINT_REG(make_reg(view->ID, view->subID)), view->signal);
 			view->force_precedence = 2;
+ 
+ 			if ((view->signal & (_K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_HIDDEN)) == _K_VIEW_SIG_FLAG_REMOVE) {
+ 				view->signal &= ~_K_VIEW_SIG_FLAG_REMOVE;
+ 			}
 		}
 
 		gfxw_remove_widget_from_container(view->parent, GFXW(view));
@@ -2106,8 +2120,11 @@ _k_redraw_view_list(state_t *s, gfxw_list_t *list)
 
 		SCIkdebug(SCIkGRAPHICS, "  dv["PREG"]: signal %04x\n", make_reg(view->ID, view->subID), view->signal);
 
+		/* step 1 of subalgorithm */
 		if (view->signal & _K_VIEW_SIG_FLAG_NO_UPDATE) {
-			view->signal &= ~_K_VIEW_SIG_FLAG_FORCE_UPDATE;
+			if (view->signal & _K_VIEW_SIG_FLAG_FORCE_UPDATE)
+				view->signal &= ~_K_VIEW_SIG_FLAG_FORCE_UPDATE;
+
 			if (view->signal & _K_VIEW_SIG_FLAG_UPDATED)
 				view->signal &= ~(_K_VIEW_SIG_FLAG_UPDATED | _K_VIEW_SIG_FLAG_NO_UPDATE);
 		} else { /* NO_UPD is not set */
@@ -2125,7 +2142,7 @@ _k_redraw_view_list(state_t *s, gfxw_list_t *list)
 
 		SCIkdebug(SCIkGRAPHICS, "    at substep 11/14: signal %04x\n", view->signal);
 
-		if (!(view->signal & _K_VIEW_SIG_FLAG_NO_UPDATE)) {
+		if (view->signal & _K_VIEW_SIG_FLAG_NO_UPDATE) {
 			if (view->signal & _K_VIEW_SIG_FLAG_HIDDEN)
 				view->signal |= _K_VIEW_SIG_FLAG_REMOVE;
 			else

@@ -355,7 +355,6 @@ lookup_list(struct _state *s, reg_t addr, char *file, int line);
 #define _K_VIEW_SIG_FLAG_IGNORE_ACTOR   0x4000
 #define _K_VIEW_SIG_FLAG_DISPOSE_ME     0x8000
 
-#define _K_VIEW_SIG_FLAG_FREESCI_PRIVATE 0x10000000
 #define _K_VIEW_SIG_FLAG_FREESCI_STOPUPD 0x20000000 /* View has been stop-updated */
 
 
