@@ -44,8 +44,7 @@ regular SCI list structure (see klists.c). Each element of the list is
 an object of class Polygon, with selectors points, size, and type
 being relevant to the algorithm. Points is a linear list of coordinate
 pairs _without_ a termination marker. Type indicates the polygon type,
-as detailed in US patent 5,287,446 (exact mapping of the constants to
-the listed types still unknown).
+as detailed in US patent 5,287,446 (constants given below).
 
 The polygon parameter to the query part is a single object of class
 Polygon.
@@ -65,6 +64,12 @@ expected to be closed and not to self-intersect.
  - direction inducing: blocking on edges except for vertices (leaving
              (enough room to pass through)
 */
+
+/* SCI-defined polygon types */
+#define POLY_TOTAL_ACCESS 0
+#define POLY_NEAREST_ACCESS 1
+#define POLY_BARRED_ACCESS 2
+#define POLY_CONTAINED_ACCESS 3
 
 reg_t
 kAvoidPath(state_t *s, int funct_nr, int argc, reg_t *argv)

@@ -1,3 +1,7 @@
+2005-01-11  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kpathing.c: Add polygon type constants.
+
 2005-01-06  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/gfx/resource/sci_pic_0.c (gfxr_init_pic): Explicitly unset
