@@ -1,3 +1,9 @@
+2004-08-01  Lars Skovlund  <lskovlun@image.dk>
+
+	* doc/scidoc.cls: New document class.
+
+	* doc/sci.tex: Add palette stuff and use the new document class.
+
 2004-07-31  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* doc/sci.tex (subsection{resource.map}): Updated resource.map
