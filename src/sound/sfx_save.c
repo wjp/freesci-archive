@@ -354,21 +354,9 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
 }
 #line 431 "sfx_save.cfsml"
 static void
-_cfsml_write_long(FILE *fh, long* save_struc);
+_cfsml_write_sound_lib_file_ver1_t(FILE *fh, sound_lib_file_ver1_t* save_struc);
 static int
-_cfsml_read_long(FILE *fh, long* save_struc, char *lastval, int *line, int *hiteof);
-
-#line 431 "sfx_save.cfsml"
-static void
-_cfsml_write_song_t(FILE *fh, song_t* save_struc);
-static int
-_cfsml_read_song_t(FILE *fh, song_t* save_struc, char *lastval, int *line, int *hiteof);
-
-#line 431 "sfx_save.cfsml"
-static void
-_cfsml_write_int(FILE *fh, int* save_struc);
-static int
-_cfsml_read_int(FILE *fh, int* save_struc, char *lastval, int *line, int *hiteof);
+_cfsml_read_sound_lib_file_ver1_t(FILE *fh, sound_lib_file_ver1_t* save_struc, char *lastval, int *line, int *hiteof);
 
 #line 431 "sfx_save.cfsml"
 static void
@@ -378,9 +366,21 @@ _cfsml_read_word(FILE *fh, word* save_struc, char *lastval, int *line, int *hite
 
 #line 431 "sfx_save.cfsml"
 static void
-_cfsml_write_sound_lib_file_ver1_t(FILE *fh, sound_lib_file_ver1_t* save_struc);
+_cfsml_write_int(FILE *fh, int* save_struc);
 static int
-_cfsml_read_sound_lib_file_ver1_t(FILE *fh, sound_lib_file_ver1_t* save_struc, char *lastval, int *line, int *hiteof);
+_cfsml_read_int(FILE *fh, int* save_struc, char *lastval, int *line, int *hiteof);
+
+#line 431 "sfx_save.cfsml"
+static void
+_cfsml_write_long(FILE *fh, long* save_struc);
+static int
+_cfsml_read_long(FILE *fh, long* save_struc, char *lastval, int *line, int *hiteof);
+
+#line 431 "sfx_save.cfsml"
+static void
+_cfsml_write_string(FILE *fh, char ** save_struc);
+static int
+_cfsml_read_string(FILE *fh, char ** save_struc, char *lastval, int *line, int *hiteof);
 
 #line 431 "sfx_save.cfsml"
 static void
@@ -390,9 +390,235 @@ _cfsml_read_sound_lib_file_ver2_t(FILE *fh, sound_lib_file_ver2_t* save_struc, c
 
 #line 431 "sfx_save.cfsml"
 static void
-_cfsml_write_string(FILE *fh, char ** save_struc);
+_cfsml_write_song_t(FILE *fh, song_t* save_struc);
 static int
-_cfsml_read_string(FILE *fh, char ** save_struc, char *lastval, int *line, int *hiteof);
+_cfsml_read_song_t(FILE *fh, song_t* save_struc, char *lastval, int *line, int *hiteof);
+
+#line 444 "sfx_save.cfsml"
+static void
+_cfsml_write_sound_lib_file_ver1_t(FILE *fh, sound_lib_file_ver1_t* save_struc)
+{
+  int min, max, i;
+
+#line 464 "sfx_save.cfsml"
+  fprintf(fh, "{\n");
+  fprintf(fh, "sound_version = ");
+    _cfsml_write_int(fh, &(save_struc->sound_version));
+    fprintf(fh, "\n");
+  fprintf(fh, "songs = ");
+    min = max = save_struc->songs_nr;
+    if (!save_struc->songs)
+       min = max = 0; /* Don't write if it points to NULL */
+#line 490 "sfx_save.cfsml"
+    fprintf(fh, "[%d][\n", max);
+    for (i = 0; i < min; i++) {
+      _cfsml_write_song_t(fh, &(save_struc->songs[i]));
+      fprintf(fh, "\n");
+    }
+    fprintf(fh, "]");
+    fprintf(fh, "\n");
+  fprintf(fh, "active_song = ");
+    _cfsml_write_int(fh, &(save_struc->active_song));
+    fprintf(fh, "\n");
+  fprintf(fh, "soundcue = ");
+    _cfsml_write_int(fh, &(save_struc->soundcue));
+    fprintf(fh, "\n");
+  fprintf(fh, "usecs_to_sleep = ");
+    _cfsml_write_long(fh, &(save_struc->usecs_to_sleep));
+    fprintf(fh, "\n");
+  fprintf(fh, "ticks_to_wait = ");
+    _cfsml_write_long(fh, &(save_struc->ticks_to_wait));
+    fprintf(fh, "\n");
+  fprintf(fh, "ticks_to_fade = ");
+    _cfsml_write_long(fh, &(save_struc->ticks_to_fade));
+    fprintf(fh, "\n");
+  fprintf(fh, "}");
+}
+
+#line 538 "sfx_save.cfsml"
+static int
+_cfsml_read_sound_lib_file_ver1_t(FILE *fh, sound_lib_file_ver1_t* save_struc, char *lastval, int *line, int *hiteof)
+{
+  char *token;
+int min, max, i;
+#line 599 "sfx_save.cfsml"
+  int assignment, closed, done;
+
+  if (strcmp(lastval, "{")) {
+     _cfsml_error("Reading record; expected opening braces in line %d, got \"%s\"\n",line, lastval);
+     return CFSML_FAILURE;
+  };
+  closed = 0;
+  do {
+    char *value;
+    token = _cfsml_get_identifier(fh, line, hiteof, &assignment);
+
+    if (!token) {
+       _cfsml_error("Expected token at line %d\n", *line);
+       return CFSML_FAILURE;
+    }
+    if (!assignment) {
+      if (!strcmp(token, "}")) 
+         closed = 1;
+      else {
+        _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
+        return CFSML_FAILURE;
+      }
+    } else {
+      value = "";
+      while (!value || !strcmp(value, ""))
+        value = _cfsml_get_value(fh, line, hiteof);
+      if (!value) {
+        _cfsml_error("Expected token at line %d\n", *line);
+        return CFSML_FAILURE;
+      }
+      if (!strcmp(token, "sound_version")) {
+#line 749 "sfx_save.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->sound_version), value, line, hiteof)) {
+            _cfsml_error("Token expected by _cfsml_read_int() for sound_version at line %d\n", *line);
+            return CFSML_FAILURE;
+         }
+      } else
+      if (!strcmp(token, "songs")) {
+#line 663 "sfx_save.cfsml"
+         if ((value[0] != '[') || (value[strlen(value) - 1] != '[')) {
+            _cfsml_error("Opening brackets expected at line %d\n", *line);
+            return CFSML_FAILURE;
+         }
+#line 673 "sfx_save.cfsml"
+         /* Prepare to restore dynamic array */
+         max = strtol(value + 1, NULL, 0);
+         if (max < 0) {
+            _cfsml_error("Invalid number of elements to allocate for dynamic array '%s' at line %d\n", token, *line);
+            return CFSML_FAILURE;
+         }
+
+         if (max) {
+           save_struc->songs = (song_t *) sci_malloc(max * sizeof(song_t));
+#ifdef SATISFY_PURIFY
+           memset(save_struc->songs, 0, max * sizeof(song_t));
+#endif
+           _cfsml_register_pointer(save_struc->songs);
+         }
+         else
+           save_struc->songs = NULL;
+#line 699 "sfx_save.cfsml"
+         done = i = 0;
+         do {
+           if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL))) {
+#line 707 "sfx_save.cfsml"
+              _cfsml_error("Token expected at line %d\n", *line);
+              return 1;
+           }
+           if (strcmp(value, "]")) {
+             if (i == max) {
+               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, token, *line);
+               return CFSML_FAILURE;
+             }
+             if (_cfsml_read_song_t(fh, &(save_struc->songs[i++]), value, line, hiteof)) {
+                _cfsml_error("Token expected by _cfsml_read_song_t() for songs[i++] at line %d\n", *line);
+                return CFSML_FAILURE;
+             }
+           } else done = 1;
+         } while (!done);
+         save_struc->songs_nr = max ; /* Set array size accordingly */
+      } else
+      if (!strcmp(token, "active_song")) {
+#line 749 "sfx_save.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->active_song), value, line, hiteof)) {
+            _cfsml_error("Token expected by _cfsml_read_int() for active_song at line %d\n", *line);
+            return CFSML_FAILURE;
+         }
+      } else
+      if (!strcmp(token, "soundcue")) {
+#line 749 "sfx_save.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->soundcue), value, line, hiteof)) {
+            _cfsml_error("Token expected by _cfsml_read_int() for soundcue at line %d\n", *line);
+            return CFSML_FAILURE;
+         }
+      } else
+      if (!strcmp(token, "usecs_to_sleep")) {
+#line 749 "sfx_save.cfsml"
+         if (_cfsml_read_long(fh, &(save_struc->usecs_to_sleep), value, line, hiteof)) {
+            _cfsml_error("Token expected by _cfsml_read_long() for usecs_to_sleep at line %d\n", *line);
+            return CFSML_FAILURE;
+         }
+      } else
+      if (!strcmp(token, "ticks_to_wait")) {
+#line 749 "sfx_save.cfsml"
+         if (_cfsml_read_long(fh, &(save_struc->ticks_to_wait), value, line, hiteof)) {
+            _cfsml_error("Token expected by _cfsml_read_long() for ticks_to_wait at line %d\n", *line);
+            return CFSML_FAILURE;
+         }
+      } else
+      if (!strcmp(token, "ticks_to_fade")) {
+#line 749 "sfx_save.cfsml"
+         if (_cfsml_read_long(fh, &(save_struc->ticks_to_fade), value, line, hiteof)) {
+            _cfsml_error("Token expected by _cfsml_read_long() for ticks_to_fade at line %d\n", *line);
+            return CFSML_FAILURE;
+         }
+      } else
+#line 758 "sfx_save.cfsml"
+       {
+          _cfsml_error("Assignment to invalid identifier '%s' in line %d\n", token, *line);
+          return CFSML_FAILURE;
+       }
+     }
+  } while (!closed); /* Until closing braces are hit */
+  return CFSML_SUCCESS;
+}
+
+#line 444 "sfx_save.cfsml"
+static void
+_cfsml_write_word(FILE *fh, word* save_struc)
+{
+  fprintf(fh, "%li", (long) *save_struc);
+}
+
+#line 538 "sfx_save.cfsml"
+static int
+_cfsml_read_word(FILE *fh, word* save_struc, char *lastval, int *line, int *hiteof)
+{
+  char *token;
+#line 564 "sfx_save.cfsml"
+
+  *save_struc = strtol(lastval, &token, 0);
+  if ( (*save_struc == 0) && (token == lastval) ) {
+     _cfsml_error("strtol failed at line %d\n", *line);
+     return CFSML_FAILURE;
+  }
+  if (*token != 0) {
+     _cfsml_error("Non-integer encountered while parsing int value at line %d\n", *line);
+     return CFSML_FAILURE;
+  }
+  return CFSML_SUCCESS;
+}
+
+#line 444 "sfx_save.cfsml"
+static void
+_cfsml_write_int(FILE *fh, int* save_struc)
+{
+  fprintf(fh, "%li", (long) *save_struc);
+}
+
+#line 538 "sfx_save.cfsml"
+static int
+_cfsml_read_int(FILE *fh, int* save_struc, char *lastval, int *line, int *hiteof)
+{
+  char *token;
+#line 564 "sfx_save.cfsml"
+
+  *save_struc = strtol(lastval, &token, 0);
+  if ( (*save_struc == 0) && (token == lastval) ) {
+     _cfsml_error("strtol failed at line %d\n", *line);
+     return CFSML_FAILURE;
+  }
+  if (*token != 0) {
+     _cfsml_error("Non-integer encountered while parsing int value at line %d\n", *line);
+     return CFSML_FAILURE;
+  }
+  return CFSML_SUCCESS;
+}
 
 #line 444 "sfx_save.cfsml"
 static void
@@ -417,6 +643,205 @@ _cfsml_read_long(FILE *fh, long* save_struc, char *lastval, int *line, int *hite
      _cfsml_error("Non-integer encountered while parsing int value at line %d\n", *line);
      return CFSML_FAILURE;
   }
+  return CFSML_SUCCESS;
+}
+
+#line 444 "sfx_save.cfsml"
+static void
+_cfsml_write_string(FILE *fh, char ** save_struc)
+{
+#line 454 "sfx_save.cfsml"
+  if (!(*save_struc))
+    fprintf(fh, "\\null\\");
+  else {
+    char *token = _cfsml_mangle_string((char *) *save_struc);
+    fprintf(fh, "\"%s\"", token);
+    free(token);
+  }
+}
+
+#line 538 "sfx_save.cfsml"
+static int
+_cfsml_read_string(FILE *fh, char ** save_struc, char *lastval, int *line, int *hiteof)
+{
+  char *token;
+#line 577 "sfx_save.cfsml"
+
+  if (strcmp(lastval, "\\null\\")) { /* null pointer? */
+    if (*lastval == '"') { /* Quoted string? */
+      int seeker = strlen(lastval);
+
+      while (lastval[seeker] != '"')
+        --seeker;
+
+      if (!seeker) { /* No matching double-quotes? */
+        _cfsml_error("Unbalanced quotes at line %d\n", *line);
+        return CFSML_FAILURE;
+      }
+
+      lastval[seeker] = 0; /* Terminate string at closing quotes... */
+      lastval++; /* ...and skip the opening quotes locally */
+    }
+    *save_struc = _cfsml_unmangle_string(lastval);
+    _cfsml_register_pointer(*save_struc);
+    return CFSML_SUCCESS;
+  } else {
+    *save_struc = NULL;
+    return CFSML_SUCCESS;
+  }
+}
+
+#line 444 "sfx_save.cfsml"
+static void
+_cfsml_write_sound_lib_file_ver2_t(FILE *fh, sound_lib_file_ver2_t* save_struc)
+{
+  int min, max, i;
+
+#line 464 "sfx_save.cfsml"
+  fprintf(fh, "{\n");
+  fprintf(fh, "sound_version = ");
+    _cfsml_write_int(fh, &(save_struc->sound_version));
+    fprintf(fh, "\n");
+  fprintf(fh, "songs = ");
+    min = max = save_struc->number_of_songs;
+    if (!save_struc->songs)
+       min = max = 0; /* Don't write if it points to NULL */
+#line 490 "sfx_save.cfsml"
+    fprintf(fh, "[%d][\n", max);
+    for (i = 0; i < min; i++) {
+      _cfsml_write_song_t(fh, &(save_struc->songs[i]));
+      fprintf(fh, "\n");
+    }
+    fprintf(fh, "]");
+    fprintf(fh, "\n");
+  fprintf(fh, "active_song = ");
+    _cfsml_write_int(fh, &(save_struc->active_song));
+    fprintf(fh, "\n");
+  fprintf(fh, "master_volume = ");
+    _cfsml_write_int(fh, &(save_struc->master_volume));
+    fprintf(fh, "\n");
+  fprintf(fh, "sound_cue = ");
+    _cfsml_write_int(fh, &(save_struc->sound_cue));
+    fprintf(fh, "\n");
+  fprintf(fh, "}");
+}
+
+#line 538 "sfx_save.cfsml"
+static int
+_cfsml_read_sound_lib_file_ver2_t(FILE *fh, sound_lib_file_ver2_t* save_struc, char *lastval, int *line, int *hiteof)
+{
+  char *token;
+int min, max, i;
+#line 599 "sfx_save.cfsml"
+  int assignment, closed, done;
+
+  if (strcmp(lastval, "{")) {
+     _cfsml_error("Reading record; expected opening braces in line %d, got \"%s\"\n",line, lastval);
+     return CFSML_FAILURE;
+  };
+  closed = 0;
+  do {
+    char *value;
+    token = _cfsml_get_identifier(fh, line, hiteof, &assignment);
+
+    if (!token) {
+       _cfsml_error("Expected token at line %d\n", *line);
+       return CFSML_FAILURE;
+    }
+    if (!assignment) {
+      if (!strcmp(token, "}")) 
+         closed = 1;
+      else {
+        _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
+        return CFSML_FAILURE;
+      }
+    } else {
+      value = "";
+      while (!value || !strcmp(value, ""))
+        value = _cfsml_get_value(fh, line, hiteof);
+      if (!value) {
+        _cfsml_error("Expected token at line %d\n", *line);
+        return CFSML_FAILURE;
+      }
+      if (!strcmp(token, "sound_version")) {
+#line 749 "sfx_save.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->sound_version), value, line, hiteof)) {
+            _cfsml_error("Token expected by _cfsml_read_int() for sound_version at line %d\n", *line);
+            return CFSML_FAILURE;
+         }
+      } else
+      if (!strcmp(token, "songs")) {
+#line 663 "sfx_save.cfsml"
+         if ((value[0] != '[') || (value[strlen(value) - 1] != '[')) {
+            _cfsml_error("Opening brackets expected at line %d\n", *line);
+            return CFSML_FAILURE;
+         }
+#line 673 "sfx_save.cfsml"
+         /* Prepare to restore dynamic array */
+         max = strtol(value + 1, NULL, 0);
+         if (max < 0) {
+            _cfsml_error("Invalid number of elements to allocate for dynamic array '%s' at line %d\n", token, *line);
+            return CFSML_FAILURE;
+         }
+
+         if (max) {
+           save_struc->songs = (song_t *) sci_malloc(max * sizeof(song_t));
+#ifdef SATISFY_PURIFY
+           memset(save_struc->songs, 0, max * sizeof(song_t));
+#endif
+           _cfsml_register_pointer(save_struc->songs);
+         }
+         else
+           save_struc->songs = NULL;
+#line 699 "sfx_save.cfsml"
+         done = i = 0;
+         do {
+           if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL))) {
+#line 707 "sfx_save.cfsml"
+              _cfsml_error("Token expected at line %d\n", *line);
+              return 1;
+           }
+           if (strcmp(value, "]")) {
+             if (i == max) {
+               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, token, *line);
+               return CFSML_FAILURE;
+             }
+             if (_cfsml_read_song_t(fh, &(save_struc->songs[i++]), value, line, hiteof)) {
+                _cfsml_error("Token expected by _cfsml_read_song_t() for songs[i++] at line %d\n", *line);
+                return CFSML_FAILURE;
+             }
+           } else done = 1;
+         } while (!done);
+         save_struc->number_of_songs = max ; /* Set array size accordingly */
+      } else
+      if (!strcmp(token, "active_song")) {
+#line 749 "sfx_save.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->active_song), value, line, hiteof)) {
+            _cfsml_error("Token expected by _cfsml_read_int() for active_song at line %d\n", *line);
+            return CFSML_FAILURE;
+         }
+      } else
+      if (!strcmp(token, "master_volume")) {
+#line 749 "sfx_save.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->master_volume), value, line, hiteof)) {
+            _cfsml_error("Token expected by _cfsml_read_int() for master_volume at line %d\n", *line);
+            return CFSML_FAILURE;
+         }
+      } else
+      if (!strcmp(token, "sound_cue")) {
+#line 749 "sfx_save.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->sound_cue), value, line, hiteof)) {
+            _cfsml_error("Token expected by _cfsml_read_int() for sound_cue at line %d\n", *line);
+            return CFSML_FAILURE;
+         }
+      } else
+#line 758 "sfx_save.cfsml"
+       {
+          _cfsml_error("Assignment to invalid identifier '%s' in line %d\n", token, *line);
+          return CFSML_FAILURE;
+       }
+     }
+  } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
 
@@ -862,431 +1287,6 @@ int min, max, i;
      }
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
-}
-
-#line 444 "sfx_save.cfsml"
-static void
-_cfsml_write_int(FILE *fh, int* save_struc)
-{
-  fprintf(fh, "%li", (long) *save_struc);
-}
-
-#line 538 "sfx_save.cfsml"
-static int
-_cfsml_read_int(FILE *fh, int* save_struc, char *lastval, int *line, int *hiteof)
-{
-  char *token;
-#line 564 "sfx_save.cfsml"
-
-  *save_struc = strtol(lastval, &token, 0);
-  if ( (*save_struc == 0) && (token == lastval) ) {
-     _cfsml_error("strtol failed at line %d\n", *line);
-     return CFSML_FAILURE;
-  }
-  if (*token != 0) {
-     _cfsml_error("Non-integer encountered while parsing int value at line %d\n", *line);
-     return CFSML_FAILURE;
-  }
-  return CFSML_SUCCESS;
-}
-
-#line 444 "sfx_save.cfsml"
-static void
-_cfsml_write_word(FILE *fh, word* save_struc)
-{
-  fprintf(fh, "%li", (long) *save_struc);
-}
-
-#line 538 "sfx_save.cfsml"
-static int
-_cfsml_read_word(FILE *fh, word* save_struc, char *lastval, int *line, int *hiteof)
-{
-  char *token;
-#line 564 "sfx_save.cfsml"
-
-  *save_struc = strtol(lastval, &token, 0);
-  if ( (*save_struc == 0) && (token == lastval) ) {
-     _cfsml_error("strtol failed at line %d\n", *line);
-     return CFSML_FAILURE;
-  }
-  if (*token != 0) {
-     _cfsml_error("Non-integer encountered while parsing int value at line %d\n", *line);
-     return CFSML_FAILURE;
-  }
-  return CFSML_SUCCESS;
-}
-
-#line 444 "sfx_save.cfsml"
-static void
-_cfsml_write_sound_lib_file_ver1_t(FILE *fh, sound_lib_file_ver1_t* save_struc)
-{
-  int min, max, i;
-
-#line 464 "sfx_save.cfsml"
-  fprintf(fh, "{\n");
-  fprintf(fh, "sound_version = ");
-    _cfsml_write_int(fh, &(save_struc->sound_version));
-    fprintf(fh, "\n");
-  fprintf(fh, "songs = ");
-    min = max = save_struc->songs_nr;
-    if (!save_struc->songs)
-       min = max = 0; /* Don't write if it points to NULL */
-#line 490 "sfx_save.cfsml"
-    fprintf(fh, "[%d][\n", max);
-    for (i = 0; i < min; i++) {
-      _cfsml_write_song_t(fh, &(save_struc->songs[i]));
-      fprintf(fh, "\n");
-    }
-    fprintf(fh, "]");
-    fprintf(fh, "\n");
-  fprintf(fh, "active_song = ");
-    _cfsml_write_int(fh, &(save_struc->active_song));
-    fprintf(fh, "\n");
-  fprintf(fh, "soundcue = ");
-    _cfsml_write_int(fh, &(save_struc->soundcue));
-    fprintf(fh, "\n");
-  fprintf(fh, "usecs_to_sleep = ");
-    _cfsml_write_long(fh, &(save_struc->usecs_to_sleep));
-    fprintf(fh, "\n");
-  fprintf(fh, "ticks_to_wait = ");
-    _cfsml_write_long(fh, &(save_struc->ticks_to_wait));
-    fprintf(fh, "\n");
-  fprintf(fh, "ticks_to_fade = ");
-    _cfsml_write_long(fh, &(save_struc->ticks_to_fade));
-    fprintf(fh, "\n");
-  fprintf(fh, "}");
-}
-
-#line 538 "sfx_save.cfsml"
-static int
-_cfsml_read_sound_lib_file_ver1_t(FILE *fh, sound_lib_file_ver1_t* save_struc, char *lastval, int *line, int *hiteof)
-{
-  char *token;
-int min, max, i;
-#line 599 "sfx_save.cfsml"
-  int assignment, closed, done;
-
-  if (strcmp(lastval, "{")) {
-     _cfsml_error("Reading record; expected opening braces in line %d, got \"%s\"\n",line, lastval);
-     return CFSML_FAILURE;
-  };
-  closed = 0;
-  do {
-    char *value;
-    token = _cfsml_get_identifier(fh, line, hiteof, &assignment);
-
-    if (!token) {
-       _cfsml_error("Expected token at line %d\n", *line);
-       return CFSML_FAILURE;
-    }
-    if (!assignment) {
-      if (!strcmp(token, "}")) 
-         closed = 1;
-      else {
-        _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
-        return CFSML_FAILURE;
-      }
-    } else {
-      value = "";
-      while (!value || !strcmp(value, ""))
-        value = _cfsml_get_value(fh, line, hiteof);
-      if (!value) {
-        _cfsml_error("Expected token at line %d\n", *line);
-        return CFSML_FAILURE;
-      }
-      if (!strcmp(token, "sound_version")) {
-#line 749 "sfx_save.cfsml"
-         if (_cfsml_read_int(fh, &(save_struc->sound_version), value, line, hiteof)) {
-            _cfsml_error("Token expected by _cfsml_read_int() for sound_version at line %d\n", *line);
-            return CFSML_FAILURE;
-         }
-      } else
-      if (!strcmp(token, "songs")) {
-#line 663 "sfx_save.cfsml"
-         if ((value[0] != '[') || (value[strlen(value) - 1] != '[')) {
-            _cfsml_error("Opening brackets expected at line %d\n", *line);
-            return CFSML_FAILURE;
-         }
-#line 673 "sfx_save.cfsml"
-         /* Prepare to restore dynamic array */
-         max = strtol(value + 1, NULL, 0);
-         if (max < 0) {
-            _cfsml_error("Invalid number of elements to allocate for dynamic array '%s' at line %d\n", token, *line);
-            return CFSML_FAILURE;
-         }
-
-         if (max) {
-           save_struc->songs = (song_t *) sci_malloc(max * sizeof(song_t));
-#ifdef SATISFY_PURIFY
-           memset(save_struc->songs, 0, max * sizeof(song_t));
-#endif
-           _cfsml_register_pointer(save_struc->songs);
-         }
-         else
-           save_struc->songs = NULL;
-#line 699 "sfx_save.cfsml"
-         done = i = 0;
-         do {
-           if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL))) {
-#line 707 "sfx_save.cfsml"
-              _cfsml_error("Token expected at line %d\n", *line);
-              return 1;
-           }
-           if (strcmp(value, "]")) {
-             if (i == max) {
-               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, token, *line);
-               return CFSML_FAILURE;
-             }
-             if (_cfsml_read_song_t(fh, &(save_struc->songs[i++]), value, line, hiteof)) {
-                _cfsml_error("Token expected by _cfsml_read_song_t() for songs[i++] at line %d\n", *line);
-                return CFSML_FAILURE;
-             }
-           } else done = 1;
-         } while (!done);
-         save_struc->songs_nr = max ; /* Set array size accordingly */
-      } else
-      if (!strcmp(token, "active_song")) {
-#line 749 "sfx_save.cfsml"
-         if (_cfsml_read_int(fh, &(save_struc->active_song), value, line, hiteof)) {
-            _cfsml_error("Token expected by _cfsml_read_int() for active_song at line %d\n", *line);
-            return CFSML_FAILURE;
-         }
-      } else
-      if (!strcmp(token, "soundcue")) {
-#line 749 "sfx_save.cfsml"
-         if (_cfsml_read_int(fh, &(save_struc->soundcue), value, line, hiteof)) {
-            _cfsml_error("Token expected by _cfsml_read_int() for soundcue at line %d\n", *line);
-            return CFSML_FAILURE;
-         }
-      } else
-      if (!strcmp(token, "usecs_to_sleep")) {
-#line 749 "sfx_save.cfsml"
-         if (_cfsml_read_long(fh, &(save_struc->usecs_to_sleep), value, line, hiteof)) {
-            _cfsml_error("Token expected by _cfsml_read_long() for usecs_to_sleep at line %d\n", *line);
-            return CFSML_FAILURE;
-         }
-      } else
-      if (!strcmp(token, "ticks_to_wait")) {
-#line 749 "sfx_save.cfsml"
-         if (_cfsml_read_long(fh, &(save_struc->ticks_to_wait), value, line, hiteof)) {
-            _cfsml_error("Token expected by _cfsml_read_long() for ticks_to_wait at line %d\n", *line);
-            return CFSML_FAILURE;
-         }
-      } else
-      if (!strcmp(token, "ticks_to_fade")) {
-#line 749 "sfx_save.cfsml"
-         if (_cfsml_read_long(fh, &(save_struc->ticks_to_fade), value, line, hiteof)) {
-            _cfsml_error("Token expected by _cfsml_read_long() for ticks_to_fade at line %d\n", *line);
-            return CFSML_FAILURE;
-         }
-      } else
-#line 758 "sfx_save.cfsml"
-       {
-          _cfsml_error("Assignment to invalid identifier '%s' in line %d\n", token, *line);
-          return CFSML_FAILURE;
-       }
-     }
-  } while (!closed); /* Until closing braces are hit */
-  return CFSML_SUCCESS;
-}
-
-#line 444 "sfx_save.cfsml"
-static void
-_cfsml_write_sound_lib_file_ver2_t(FILE *fh, sound_lib_file_ver2_t* save_struc)
-{
-  int min, max, i;
-
-#line 464 "sfx_save.cfsml"
-  fprintf(fh, "{\n");
-  fprintf(fh, "sound_version = ");
-    _cfsml_write_int(fh, &(save_struc->sound_version));
-    fprintf(fh, "\n");
-  fprintf(fh, "songs = ");
-    min = max = save_struc->number_of_songs;
-    if (!save_struc->songs)
-       min = max = 0; /* Don't write if it points to NULL */
-#line 490 "sfx_save.cfsml"
-    fprintf(fh, "[%d][\n", max);
-    for (i = 0; i < min; i++) {
-      _cfsml_write_song_t(fh, &(save_struc->songs[i]));
-      fprintf(fh, "\n");
-    }
-    fprintf(fh, "]");
-    fprintf(fh, "\n");
-  fprintf(fh, "active_song = ");
-    _cfsml_write_int(fh, &(save_struc->active_song));
-    fprintf(fh, "\n");
-  fprintf(fh, "master_volume = ");
-    _cfsml_write_int(fh, &(save_struc->master_volume));
-    fprintf(fh, "\n");
-  fprintf(fh, "sound_cue = ");
-    _cfsml_write_int(fh, &(save_struc->sound_cue));
-    fprintf(fh, "\n");
-  fprintf(fh, "}");
-}
-
-#line 538 "sfx_save.cfsml"
-static int
-_cfsml_read_sound_lib_file_ver2_t(FILE *fh, sound_lib_file_ver2_t* save_struc, char *lastval, int *line, int *hiteof)
-{
-  char *token;
-int min, max, i;
-#line 599 "sfx_save.cfsml"
-  int assignment, closed, done;
-
-  if (strcmp(lastval, "{")) {
-     _cfsml_error("Reading record; expected opening braces in line %d, got \"%s\"\n",line, lastval);
-     return CFSML_FAILURE;
-  };
-  closed = 0;
-  do {
-    char *value;
-    token = _cfsml_get_identifier(fh, line, hiteof, &assignment);
-
-    if (!token) {
-       _cfsml_error("Expected token at line %d\n", *line);
-       return CFSML_FAILURE;
-    }
-    if (!assignment) {
-      if (!strcmp(token, "}")) 
-         closed = 1;
-      else {
-        _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
-        return CFSML_FAILURE;
-      }
-    } else {
-      value = "";
-      while (!value || !strcmp(value, ""))
-        value = _cfsml_get_value(fh, line, hiteof);
-      if (!value) {
-        _cfsml_error("Expected token at line %d\n", *line);
-        return CFSML_FAILURE;
-      }
-      if (!strcmp(token, "sound_version")) {
-#line 749 "sfx_save.cfsml"
-         if (_cfsml_read_int(fh, &(save_struc->sound_version), value, line, hiteof)) {
-            _cfsml_error("Token expected by _cfsml_read_int() for sound_version at line %d\n", *line);
-            return CFSML_FAILURE;
-         }
-      } else
-      if (!strcmp(token, "songs")) {
-#line 663 "sfx_save.cfsml"
-         if ((value[0] != '[') || (value[strlen(value) - 1] != '[')) {
-            _cfsml_error("Opening brackets expected at line %d\n", *line);
-            return CFSML_FAILURE;
-         }
-#line 673 "sfx_save.cfsml"
-         /* Prepare to restore dynamic array */
-         max = strtol(value + 1, NULL, 0);
-         if (max < 0) {
-            _cfsml_error("Invalid number of elements to allocate for dynamic array '%s' at line %d\n", token, *line);
-            return CFSML_FAILURE;
-         }
-
-         if (max) {
-           save_struc->songs = (song_t *) sci_malloc(max * sizeof(song_t));
-#ifdef SATISFY_PURIFY
-           memset(save_struc->songs, 0, max * sizeof(song_t));
-#endif
-           _cfsml_register_pointer(save_struc->songs);
-         }
-         else
-           save_struc->songs = NULL;
-#line 699 "sfx_save.cfsml"
-         done = i = 0;
-         do {
-           if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL))) {
-#line 707 "sfx_save.cfsml"
-              _cfsml_error("Token expected at line %d\n", *line);
-              return 1;
-           }
-           if (strcmp(value, "]")) {
-             if (i == max) {
-               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, token, *line);
-               return CFSML_FAILURE;
-             }
-             if (_cfsml_read_song_t(fh, &(save_struc->songs[i++]), value, line, hiteof)) {
-                _cfsml_error("Token expected by _cfsml_read_song_t() for songs[i++] at line %d\n", *line);
-                return CFSML_FAILURE;
-             }
-           } else done = 1;
-         } while (!done);
-         save_struc->number_of_songs = max ; /* Set array size accordingly */
-      } else
-      if (!strcmp(token, "active_song")) {
-#line 749 "sfx_save.cfsml"
-         if (_cfsml_read_int(fh, &(save_struc->active_song), value, line, hiteof)) {
-            _cfsml_error("Token expected by _cfsml_read_int() for active_song at line %d\n", *line);
-            return CFSML_FAILURE;
-         }
-      } else
-      if (!strcmp(token, "master_volume")) {
-#line 749 "sfx_save.cfsml"
-         if (_cfsml_read_int(fh, &(save_struc->master_volume), value, line, hiteof)) {
-            _cfsml_error("Token expected by _cfsml_read_int() for master_volume at line %d\n", *line);
-            return CFSML_FAILURE;
-         }
-      } else
-      if (!strcmp(token, "sound_cue")) {
-#line 749 "sfx_save.cfsml"
-         if (_cfsml_read_int(fh, &(save_struc->sound_cue), value, line, hiteof)) {
-            _cfsml_error("Token expected by _cfsml_read_int() for sound_cue at line %d\n", *line);
-            return CFSML_FAILURE;
-         }
-      } else
-#line 758 "sfx_save.cfsml"
-       {
-          _cfsml_error("Assignment to invalid identifier '%s' in line %d\n", token, *line);
-          return CFSML_FAILURE;
-       }
-     }
-  } while (!closed); /* Until closing braces are hit */
-  return CFSML_SUCCESS;
-}
-
-#line 444 "sfx_save.cfsml"
-static void
-_cfsml_write_string(FILE *fh, char ** save_struc)
-{
-#line 454 "sfx_save.cfsml"
-  if (!(*save_struc))
-    fprintf(fh, "\\null\\");
-  else {
-    char *token = _cfsml_mangle_string((char *) *save_struc);
-    fprintf(fh, "\"%s\"", token);
-    free(token);
-  }
-}
-
-#line 538 "sfx_save.cfsml"
-static int
-_cfsml_read_string(FILE *fh, char ** save_struc, char *lastval, int *line, int *hiteof)
-{
-  char *token;
-#line 577 "sfx_save.cfsml"
-
-  if (strcmp(lastval, "\\null\\")) { /* null pointer? */
-    if (*lastval == '"') { /* Quoted string? */
-      int seeker = strlen(lastval);
-
-      while (lastval[seeker] != '"')
-        --seeker;
-
-      if (!seeker) { /* No matching double-quotes? */
-        _cfsml_error("Unbalanced quotes at line %d\n", *line);
-        return CFSML_FAILURE;
-      }
-
-      lastval[seeker] = 0; /* Terminate string at closing quotes... */
-      lastval++; /* ...and skip the opening quotes locally */
-    }
-    *save_struc = _cfsml_unmangle_string(lastval);
-    _cfsml_register_pointer(*save_struc);
-    return CFSML_SUCCESS;
-  } else {
-    *save_struc = NULL;
-    return CFSML_SUCCESS;
-  }
 }
 
 

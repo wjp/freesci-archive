@@ -35,11 +35,6 @@
 #include <assert.h>
 #include <vocabulary.h> /* For SCI version auto-detection */
 
-#include <sys/types.h>
-#ifdef HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif
-
 #include <ctype.h>
 
 #ifdef _WIN32

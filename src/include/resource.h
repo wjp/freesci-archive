@@ -192,6 +192,12 @@ typedef guint8 byte;
 typedef guint16 word;
 
 
+#include <sys/types.h>
+#include <fcntl.h>
+#ifdef HAVE_SYS_STAT_H
+#  include <sys/stat.h>
+#endif
+
 #define MAX_HOMEDIR_SIZE 255
 
 #ifdef _WIN32
