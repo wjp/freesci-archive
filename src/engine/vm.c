@@ -80,7 +80,7 @@ get_class_address(state_t *s, int classnr)
   if (NULL == s)
   {
     sciprintf("vm.c: get_class_address(): NULL passed for \"s\"\n");
-    return;
+    return 0;
   }
 
   if (!s->classtable[classnr].scriptposp) {

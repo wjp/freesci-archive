@@ -1,3 +1,24 @@
+2001-04-12  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/gfx_pixmap_scale.c: Added inverse Alpha support to all filters
+
+	* src/include/gfx_system.h (GFX_MODE_FLAG_REVERSE_ALPHA): Added gfx mode
+	flags for endianness swap and inverse alpha semantics
+
+	* src/gfx/drivers/sdl_driver.c: Fixed a bunch of warnings
+
+	* src/gfx/alpha_mvi_crossblit.c: Fixed alpha-blending crossblitter
+	for Compaq's ccc
+
+	* src/sound/soundserver_null.c (sound_null_server): Fixed segfault when
+	newsong was NULL
+
+2001-04-12  Matt Hargett  <matt@use.net>
+
+	* src/engine/vm.c:
+	* src/gfx/resmgr.c: Pointers inizialized to NULL on declaration
+	* src/win32/ : Corrected VC++ project files
+
 2001-04-11  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/resource/sci_pic_0.c (_gfxr_auxbuf_spread): Re-enabled more

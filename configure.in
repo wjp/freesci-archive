@@ -64,9 +64,11 @@ dnl 	AC_PATH_GLX
 dnl fi
 AC_SUBST(ac_glx_libraries)
 
+#AC_PATH_PNG
+AC_SUBST(ac_png_includes)
+AC_SUBST(ac_png_libraries)
 AM_PROG_LEX
 AC_PROG_YACC
-AC_PATH_PNG
 
 AC_ARG_WITH(efence,
 	[  --with-efence           link against libefence (for debugging)],

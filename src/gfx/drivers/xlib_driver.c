@@ -476,7 +476,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	drv->mode = gfx_new_mode(xfact, yfact, foo_image->bits_per_pixel >> 3,
 				 xvisinfo.red_mask, xvisinfo.green_mask, xvisinfo.blue_mask, alpha_mask,
 				 red_shift, green_shift, blue_shift, alpha_shift,
-				 (bytespp == 1)? xvisinfo.colormap_size : 0);
+				 (bytespp == 1)? xvisinfo.colormap_size : 0, 0);
 
 #ifdef HAVE_MITSHM
 	if (have_shmem) {

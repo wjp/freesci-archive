@@ -46,7 +46,7 @@ extern DLLEXTERN int gfx_crossblit_alpha_threshold; /* Crossblitting functions u
 gfx_mode_t *
 gfx_new_mode(int xfact, int yfact, int bytespp, unsigned int red_mask, unsigned int green_mask,
 	     unsigned int blue_mask, unsigned int alpha_mask, int red_shift, int green_shift,
-	     int blue_shift, int alpha_shift, int palette);
+	     int blue_shift, int alpha_shift, int palette, int flags);
 /* Allocates a new gfx_mode_t structure with the specified parameters
 ** Parameters: (int x int) xfact x yfact: Horizontal and vertical scaling factors
 **             (int) bytespp: Bytes per pixel
@@ -59,6 +59,7 @@ gfx_new_mode(int xfact, int yfact, int bytespp, unsigned int red_mask, unsigned 
 **             (int) blue_shift: Blue shift value
 **             (int) alpha_shift: Alpha shift value
 **             (int) palette: Number of palette colors, 0 if we're not in palette mode
+**             (int) flags: GFX_MODE_FLAG_* values ORred together, or just 0
 ** Returns   : (gfx_mode_t *) A newly allocated gfx_mode_t structure
 */
 

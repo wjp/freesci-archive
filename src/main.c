@@ -695,7 +695,7 @@ main(int argc, char** argv)
 	printf("FreeSCI "VERSION" Copyright (C) 1999, 2000, 2001 Dmitry Jemerov,\n"
 	       " Christopher T. Lansdown, Sergey Lapin, Rickard Lind, Carl Muckenhoupt,\n"
 	       " Christoph Reichenbach, Magnus Reftel, Lars Skovlund, Rink Springer,\n"
-	       " Petr Vyhnak, Solomon Peachy\n"
+	       " Petr Vyhnak, Solomon Peachy, Matt Hargett\n"
 	       "This program is free software. You can copy and/or modify it freely\n"
 	       "according to the terms of the GNU general public license, v2.0\n"
 	       "or any later version, at your option.\n"

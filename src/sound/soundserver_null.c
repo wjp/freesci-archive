@@ -624,7 +624,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 						free(dirname);
 						/* restore some device state */
-						{
+						if (newsong) {
 						  int i;
 						  midi_allstop();
 						  midi_volume(master_volume);

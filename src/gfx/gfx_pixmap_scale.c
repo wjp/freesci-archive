@@ -12,6 +12,7 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 {
 	SIZETYPE result_colors[GFX_PIC_COLORS];
 	SIZETYPE alpha_color = 0xffffffff & mode->alpha_mask;
+	SIZETYPE alpha_ormask = 0;
 	int xfact = (scale)? mode->xfact: 1;
 	int yfact = (scale)? mode->yfact: 1;
 	int widthc, heightc; /* Width duplication counter */
@@ -19,11 +20,18 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 	int bytespp = mode->bytespp;
 	int x, y;
 	int i;
+	byte byte_transparent = (mode->flags & GFX_MODE_FLAG_REVERSE_ALPHA)?  0 : 255;
+	byte byte_opaque = (mode->flags & GFX_MODE_FLAG_REVERSE_ALPHA)?  255 : 0;
 	byte *src = pxm->index_data;
 	byte *dest = pxm->data;
 	byte *alpha_dest = pxm->alpha_map;
 	int using_alpha = pxm->colors_nr < GFX_PIC_COLORS;
 	int separate_alpha_map = (!mode->alpha_mask) && using_alpha;
+
+	if (mode->flags & GFX_MODE_FLAG_REVERSE_ALPHA) {
+		alpha_ormask = alpha_color;
+		alpha_color = 0;
+	}
 
         assert(bytespp == COPY_BYTES);
 
@@ -43,6 +51,7 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 			col = mode->red_mask & ((EXTEND_COLOR(pxm->colors[i].r)) >> mode->red_shift);
 			col |= mode->green_mask & ((EXTEND_COLOR(pxm->colors[i].g)) >> mode->green_shift);
 			col |= mode->blue_mask & ((EXTEND_COLOR(pxm->colors[i].b)) >> mode->blue_shift);
+			col |= alpha_ormask;
 		}
 		result_colors[i] = col;
 	}
@@ -64,7 +73,7 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 			}
 
 			if (separate_alpha_map) { /* Set separate alpha map */
-				memset(alpha_dest, (isalpha)? 255 : 0, xfact);
+				memset(alpha_dest, (isalpha)? byte_transparent : byte_opaque, xfact);
 				alpha_dest += xfact;
 			}
 		}
@@ -95,10 +104,15 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 				for (subx = 0; subx < ((DO_X_STEP)? (xfact >> 1) : 1); subx++) { \
                                         unsigned int intensity; \
 					wrcolor = 0; \
-					for (i = 0; i < 4; i++) { \
+					for (i = 0; i < 3; i++) { \
 						intensity = X_CALC_INTENSITY; \
 						wrcolor |= (intensity >> shifts[i]) & masks[i]; \
 					} \
+					i = 3; \
+					intensity = X_CALC_INTENSITY; \
+					if (inverse_alpha) \
+                                                intensity = ~intensity; \
+                                        wrcolor |= (intensity >> shifts[i]) & masks[i]; \
                                         if (separate_alpha_map) \
                                                 *alpha_wrpos++ = intensity >> 24; \
 					wrcolor <<= (EXTRA_BYTE_OFFSET * 8); \
@@ -164,6 +178,7 @@ FUNCNAME_LINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 	int separate_alpha_map = (!mode->alpha_mask) && using_alpha;
 	unsigned int masks[4], shifts[4], zero[3];
 	int x,y;
+	byte inverse_alpha = mode->flags & GFX_MODE_FLAG_REVERSE_ALPHA;
 
 	zero[0] = 255;
 	zero[1] = zero[2] = 0;
@@ -300,6 +315,9 @@ gfx_apply_delta(unsigned int *color, int *delta, int factor)
 				rec[3] = 0; \
 			}
 //extern int globbcount;
+
+#define REVERSE_ALPHA(foo) ((inverse_alpha)? ~(foo) : (foo))
+
 void
 FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 {
@@ -318,6 +336,7 @@ FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 	/* 0 1
 	** 2 3 */
 	int x,y;
+	byte inverse_alpha = mode->flags & GFX_MODE_FLAG_REVERSE_ALPHA;
 
 	if (separate_alpha_map) {
 		masks[3] = 0;
@@ -413,10 +432,10 @@ FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 					for (i = 0; i < 3; i++)
 						wrcolor |= ((color[i] << 8) >> shifts[i]) & masks[i];
 
-                                        if (separate_alpha_map) {
-						*alpha_dest++ = color[3] >> 16;
+					if (separate_alpha_map) {
+						*alpha_dest++ = REVERSE_ALPHA(color[3] >> 16);
 					} else
-						wrcolor |= ((color[3] << 8) >> shifts[3]) & masks[3];
+						wrcolor |= REVERSE_ALPHA((color[3] << 8) >> shifts[3]) & masks[3];
 
 					wrcolor <<= (EXTRA_BYTE_OFFSET * 8);
 
@@ -442,6 +461,7 @@ FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 	}
 }
 
+#undef REVERSE_ALPHA
 #undef WRITE_YPART
 #undef Y_CALC_INTENSITY_CENTER
 #undef Y_CALC_INTENSITY_NORMAL

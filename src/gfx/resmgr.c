@@ -172,7 +172,7 @@ gfxr_free_all_resources(gfx_driver_t *driver, gfx_resstate_t *state)
 {
 	struct param_struct params;
 	int i;
-	sbtree_t *tree;
+	sbtree_t *tree = NULL;
 
 	for (i = 0; i < GFX_RESOURCE_TYPES_NR; i++)
 		if ((tree = state->resource_trees[i])) {
@@ -187,7 +187,7 @@ gfxr_free_resource_manager(gfx_driver_t *driver, gfx_resstate_t *state)
 {
 	struct param_struct params;
 	int i;
-	sbtree_t *tree;
+	sbtree_t *tree = NULL;
 
 	for (i = 0; i < GFX_RESOURCE_TYPES_NR; i++)
 		if ((tree = state->resource_trees[i])) {
@@ -261,7 +261,7 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 {
 	int restype = GFX_RESOURCE_TYPE_PIC;
 	sbtree_t *tree = state->resource_trees[restype];
-	gfx_resource_t *res;
+	gfx_resource_t *res = NULL;
 	int hash = gfxr_interpreter_options_hash(restype, state->version, state->options);
 	int need_unscaled = 
 		(state->driver->mode->xfact != 1 || state->driver->mode->yfact != 1);
@@ -336,7 +336,7 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 {
 	int restype = GFX_RESOURCE_TYPE_PIC;
 	sbtree_t *tree = state->resource_trees[restype];
-	gfx_resource_t *res;
+	gfx_resource_t *res = NULL;
 	int hash = gfxr_interpreter_options_hash(restype, state->version, state->options);
 	int need_unscaled = !(state->options->pic0_unscaled)
 		&& (state->driver->mode->xfact != 1 || state->driver->mode->yfact != 1);
@@ -379,11 +379,11 @@ gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel)
 {
 	int restype = GFX_RESOURCE_TYPE_VIEW;
 	sbtree_t *tree = state->resource_trees[restype];
-	gfx_resource_t *res;
+	gfx_resource_t *res = NULL;
 	int hash = gfxr_interpreter_options_hash(restype, state->version, state->options);
-	gfxr_view_t *view;
-	gfxr_loop_t *loop_data;
-	gfx_pixmap_t *cel_data;
+	gfxr_view_t *view = NULL;
+	gfxr_loop_t *loop_data = NULL;
+	gfx_pixmap_t *cel_data = NULL;
 
 	if (!tree)
 		return NULL;
@@ -442,7 +442,7 @@ gfxr_get_font(gfx_resstate_t *state, int nr, int scaled)
 {
 	int restype = GFX_RESOURCE_TYPE_FONT;
 	sbtree_t *tree = state->resource_trees[restype];
-	gfx_resource_t *res;
+	gfx_resource_t *res = NULL;
 	int hash = gfxr_interpreter_options_hash(restype, state->version, state->options);
 
 	if (!tree)
@@ -485,7 +485,7 @@ gfxr_get_cursor(gfx_resstate_t *state, int nr)
 {
 	int restype = GFX_RESOURCE_TYPE_CURSOR;
 	sbtree_t *tree = state->resource_trees[restype];
-	gfx_resource_t *res;
+	gfx_resource_t *res = NULL;
 	int hash = gfxr_interpreter_options_hash(restype, state->version, state->options);
 
 	if (!tree)

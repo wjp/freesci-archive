@@ -60,52 +60,73 @@ FUNCT_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per_src_lin
 	assert(!(((unsigned long) dest) & 3));
 	assert(bytes_per_alpha_pixel < 2);
 
+	yl++;
 	while (--yl) {
 		int x;
 		byte *dest_next = dest + bytes_per_dest_line;
 		byte *src_next = src + bytes_per_src_line;
+#ifdef PRIORITY
+		byte *pri_next = priority_pos + bytes_per_priority_line;
+#endif
 		asm ("ldl $31, 0($31)\n\t"
 		     "ldl $31, 0($31)\n\t"); /* Prefetch memory for next line */
 
 		if (((unsigned long)src) & 4)
 			data = *((unsigned int *) src);
 
-		for (x = xl-1; x > 0; x--) {
+		for (x = xl; x > 0; x--) {
 			unsigned long alpha;
 
 			if (!(((unsigned long)src) & 4))
 				data = *((unsigned long *) src);
 			alpha = (data & alpha_test_mask) >> alpha_shift;
 
-			if (alpha != 255) {
+			if (
+#ifdef PRIORITY
+			    (*priority_pos <= priority) &&
+#endif
+			    alpha != 255) {
 				unsigned long result;
 				unsigned long orig;
+				unsigned long unpkdata;
 
-				data = asm("unpkbw %0, %v0\n\t", data);
+				unpkdata = asm("unpkbw %0, %v0\n\t", data);
 
-				result = data * (255 - alpha);
+				result = unpkdata * (255 - alpha);
 
 				orig = *((unsigned int *) dest);
 
-				orig = ("unpkbw %0, %v0\n\t", orig);
+				orig = asm("unpkbw %0, %v0\n\t", orig);
 
 				result += orig * alpha;
 				src += 4;
 
-				result = ("pkwb %0, #v0\n\t", (result >> 8));
+				result >>= 8;
+
+				result = asm("pkwb %0, %v0\n\t", result);
 
 				data >>= 32;
 				*((unsigned int *) dest) = result;
+#ifdef PRIORITY
+				*priority_pos = priority;
+#endif
 				dest += 4;
 			} else {
 				data >>= 32;
 				src += 4;
 				dest += 4;
 			}
+
+#ifdef PRIORITY
+			priority_pos++;
+#endif
 		}
 
 		dest = dest_next;
 		src = src_next;
+#ifdef PRIORITY
+		priority_pos = pri_next;
+#endif
 	}
 #else
 	unsigned long real_alpha_shift = alpha_shift;

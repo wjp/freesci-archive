@@ -199,7 +199,7 @@ ggi_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 				 0, /* alpha mask */
 				 pixelformat->red_shift, pixelformat->green_shift, pixelformat->blue_shift,
 				 0, /* alpha shift */
-				 (bpp == 1)? 256 : 0);
+				 (bpp == 1)? 256 : 0, 0);
 	drv->state = meta;
 
 	meta->priority_maps[GGI_BUFFER_BACK] =
@@ -312,7 +312,7 @@ ggi_init(gfx_driver_t *drv)
 				 0, /* alpha mask */
 				 pixelformat->red_shift, pixelformat->green_shift, pixelformat->blue_shift,
 				 0, /* alpha shift */
-				 (GT_SCHEME(mode.graphtype) == GT_PALETTE)? (1 << GT_DEPTH(mode.graphtype)) : 0);
+				 (GT_SCHEME(mode.graphtype) == GT_PALETTE)? (1 << GT_DEPTH(mode.graphtype)) : 0, 0);
 
 	drv->state = meta;
 

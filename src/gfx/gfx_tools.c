@@ -48,7 +48,7 @@ gfx_clip_box_basic(rect_t *box, int maxx, int maxy)
 gfx_mode_t *
 gfx_new_mode(int xfact, int yfact, int bytespp, unsigned int red_mask, unsigned int green_mask,
 	     unsigned int blue_mask, unsigned int alpha_mask, int red_shift, int green_shift,
-	     int blue_shift, int alpha_shift, int palette)
+	     int blue_shift, int alpha_shift, int palette, int flags)
 {
 	gfx_mode_t *mode = malloc(sizeof(gfx_mode_t));
 
@@ -63,6 +63,7 @@ gfx_new_mode(int xfact, int yfact, int bytespp, unsigned int red_mask, unsigned 
 	mode->green_shift = green_shift;
 	mode->blue_shift = blue_shift;
 	mode->alpha_shift = alpha_shift;
+	mode->flags = flags;
 
 	if (palette) {
 		mode->palette = malloc(sizeof(gfx_palette_t));

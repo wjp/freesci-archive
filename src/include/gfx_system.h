@@ -83,10 +83,19 @@ typedef struct { /* gfx_palette_t: Palette description for color index modes */
 
 #define GFX_MODE_IS_UNSCALED(mode) (((mode)->xfact == 1) && ((mode)->yfact == 1))
 
+/* Reverse-endian: Target display has non-native endianness
+** (BE if local is LE or the other way 'round  */
+#define GFX_MODE_FLAG_REVERSE_ENDIAN (1<<0)
+/* Reverse Alpha: Alpha values 0 mean "transparent" if this is
+** enabled  */
+#define GFX_MODE_FLAG_REVERSE_ALPHA  (1<<1)
+
 typedef struct { /* gfx_mode_t: Graphics mode description */
 
 	int xfact, yfact; /* Horizontal and vertical scaling factors */
 	int bytespp; /* Bytes per pixel */
+
+	unsigned int flags; /* GFX_MODE_FLAG_* Flags- see above */
 
 	gfx_palette_t *palette; /* Palette or NULL to indicate non-palette mode.
 				** Palette (color-index) mode is only supported

@@ -223,7 +223,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 			   S->primary->format->Bmask, 
 			   S->primary->format->Amask,
 			   red_shift, green_shift, blue_shift, alpha_shift,
-			   (bytespp == 1)? 256 : 0);
+			   (bytespp == 1)? 256 : 0, GFX_MODE_FLAG_REVERSE_ALPHA);
   
   return GFX_OK;
 }
@@ -296,7 +296,7 @@ sdl_map_color(gfx_driver_t *drv, gfx_color_t color)
 
 
 /* This code shamelessly lifted from the SDL_gfxPrimitives package */
-static int lineColor(SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color)
+static void lineColor(SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color)
 {
   int pixx, pixy;
   int x,y;
@@ -772,7 +772,7 @@ sdl_create_cursor_rawdata(gfx_driver_t *drv, gfx_pixmap_t *pointer, int mode)
 static SDL_Cursor
 *sdl_create_cursor_data(gfx_driver_t *drv, gfx_pixmap_t *pointer)
 {
-  char *visual_data, *mask_data;
+  byte *visual_data, *mask_data;
   
   S->pointer_data[0] = visual_data = sdl_create_cursor_rawdata(drv, pointer, 1);
   S->pointer_data[1] = mask_data = sdl_create_cursor_rawdata(drv, pointer, 0);
