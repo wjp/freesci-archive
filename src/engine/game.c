@@ -350,6 +350,7 @@ script_init_engine(state_t *s, sci_version_t version)
 					sugg_script = suggested_script(vocab996, classnr);
 
 					/* First, test whether the script hasn't been claimed, or if it's been claimed by the wrong script */
+
 					if (sugg_script == -1 || scriptnr == sugg_script || !s->classtable[classnr].reg.segment)  {
 						/* Now set the home script of the class */
 						s->classtable[classnr].reg.offset = seeker + 4 - magic_offset;
@@ -590,8 +591,8 @@ game_init(state_t *s)
 #if 1
 	s->script_000->locals_nr = 100;
 	s->script_000->locals = calloc(sizeof(reg_t), s->script_000->locals_nr);;
-	s->game_obj = make_reg(0x42, getUInt16(s->script_000->buf + 4));
 #endif
+	s->game_obj = make_reg(s->script_000_segment, getUInt16(s->script_000->buf + 4));
 
 	/* Mark parse tree as unused */
 	s->parser_nodes[0].type = PARSE_TREE_NODE_LEAF;

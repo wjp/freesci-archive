@@ -1,3 +1,8 @@
+2002-11-02  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/vm.c (lookup_selector): Major cleanup, added a couple
+	of helpful auxiliary functions
+
 2002-10-29  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/vm.c (game_run): Implemented quick bootstrapping hack

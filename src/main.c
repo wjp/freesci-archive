@@ -964,8 +964,7 @@ main(int argc, char** argv)
 
 	sciprintf("FreeSCI, version "VERSION"\n");
 
-	gamestate = sci_malloc(sizeof(state_t));
-	memset(gamestate, 0, sizeof(state_t));
+	gamestate = sci_calloc(sizeof(state_t), 1);
 
 	if (init_gamestate(gamestate, resmgr, version))
 		return 1;

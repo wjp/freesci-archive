@@ -260,19 +260,20 @@ c_sim_parse(state_t *s)
 int
 c_classtable(state_t *s)
 {
-  int i;
-  heap_ptr spos; /* scriptpos */
+	int i;
 
-  if (!_debugstate_valid) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
 
-  sciprintf("Available classes:\n");
-  for (i = 0; i < s->classtable_size; i++)
-    if (s->classtable[i].scriptposp && (spos = *(s->classtable[i].scriptposp)))
-      sciprintf(" Class 0x%x at %04x (script 0x%x)\n", i, spos + s->classtable[i].class_offset,
-		s->classtable[i].script);
+	sciprintf("Available classes:\n");
+	for (i = 0; i < s->classtable_size; i++)
+		if (s->classtable[i].reg.segment)
+			sciprintf(" Class 0x%x at "PREG" (script 0x%x)\n",
+				  i,
+				  PRINT_REG(s->classtable[i].reg),
+				  s->classtable[i].script);
 
   return 0;
 }
@@ -665,6 +666,9 @@ char *selector_name(state_t *s, int selector)
 
 int prop_ofs_to_id(state_t *s, int prop_ofs, int objp)
 {
+	return -1;
+#warning "Re-implement prop_ofs_to_id"
+#if 0
 	word species = getInt16(s->heap + objp + SCRIPT_SPECIES_OFFSET);
 	word type = getInt16(s->heap + objp + SCRIPT_INFO_OFFSET);
 	byte *selectorIDoffset;
@@ -683,7 +687,7 @@ int prop_ofs_to_id(state_t *s, int prop_ofs, int objp)
 			+ selectors * 2;
 
 	return (getInt16(selectorIDoffset + prop_ofs));
-
+#endif
 }
 
 void
@@ -1070,74 +1074,75 @@ c_vmvars(state_t *s)
 }
 #endif
 
-#warning "Re-implement con:backtrace"
-#if 0
 int
 c_backtrace(state_t *s)
 {
-  int i;
+	int i;
 
-  if (!_debugstate_valid) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
 
-  sciprintf("Call stack (current base: %x):\n", s->execution_stack_base);
-  for (i = 0; i <= s->execution_stack_pos; i++) {
-    exec_stack_t *call = &(s->execution_stack[i]);
-    heap_ptr namepos;
-    int paramc, totalparamc;
+	sciprintf("Call stack (current base: 0x%x):\n", s->execution_stack_base);
+	for (i = 0; i <= s->execution_stack_pos; i++) {
+		exec_stack_t *call = &(s->execution_stack[i]);
+		char *objname = obj_get_name(s, call->sendp);
+		int paramc, totalparamc;
 
-    switch (call->type) {
+		switch (call->type) {
 
-    case EXEC_STACK_TYPE_CALL: {/* Normal function */
-      namepos = getInt16(s->heap + call->sendp + SCRIPT_NAME_OFFSET);
-      sciprintf(" %x:[%x]  %s::%s(", i, call->origin,
-		s->heap + namepos, (call->selector == -1)? "<call[be]?>":
-		selector_name(s,call->selector));
-    }
-    break;
+		case EXEC_STACK_TYPE_CALL: {/* Normal function */
+			sciprintf(" %x:[%x]  %s::%s(", i, call->origin,
+				  objname, (call->selector == -1)? "<call[be]?>":
+				  selector_name(s,call->selector));
+		}
+			break;
 
-    case EXEC_STACK_TYPE_KERNEL: /* Kernel function */
-      sciprintf(" %x:[%x]  k%s(", i, call->origin, s->kernel_names[-(call->selector)-42]);
-      break;
+		case EXEC_STACK_TYPE_KERNEL: /* Kernel function */
+			sciprintf(" %x:[%x]  k%s(", i, call->origin, s->kernel_names[-(call->selector)-42]);
+			break;
 
-    case EXEC_STACK_TYPE_VARSELECTOR:
-      namepos = getInt16(s->heap + call->sendp + SCRIPT_NAME_OFFSET);
-      sciprintf(" %x:[%x] vs%s %s::%s (", i, call->origin, (call->argc)? "write" : "read",
-		s->heap + namepos, s->selector_names[call->selector]);
-      break;
-    } /* switch */
+		case EXEC_STACK_TYPE_VARSELECTOR:
+			sciprintf(" %x:[%x] vs%s %s::%s (", i, call->origin, (call->argc)? "write" : "read",
+				  objname, s->selector_names[call->selector]);
+			break;
+		} /* switch */
 
-    totalparamc = call->argc;
+		totalparamc = call->argc;
 
-    if (totalparamc > 16)
-      totalparamc = 16;
+		if (totalparamc > 16)
+			totalparamc = 16;
 
-    for (paramc = 1; paramc <= totalparamc; paramc++) {
-      sciprintf("%04x", getUInt16(s->heap + call->variables[VAR_PARAM] + paramc * 2));
+		for (paramc = 1; paramc <= totalparamc; paramc++) {
+			sciprintf(PREG, call->variables_argp[paramc]);
 
-      if (paramc < call->argc)
-	sciprintf(", ");
-    }
+			if (paramc < call->argc)
+				sciprintf(", ");
+		}
 
-    if (call->argc > 16)
-      sciprintf("...");
+		if (call->argc > 16)
+			sciprintf("...");
 
-    if (call->objp == 0)
-      sciprintf(")\n");
-    else {
-      if (call->sp != CALL_SP_CARRY)
-	sciprintf(")\n    obj@%04x pc=%04x sp=%04x fp=%04x\n", call->objp, call->pc,
-		  call->sp, call->variables[VAR_TEMP]);
-      else
-	sciprintf(")\n    obj@%04x pc=%04x sp:carry fp=%04x\n", call->objp, call->pc,
-		  call->variables[VAR_TEMP]);
-    }
-  }
-  return 0;
+		sciprintf(")\n    obj@"PREG,
+			  PRINT_REG(call->objp));
+		if (call->type == EXEC_STACK_TYPE_CALL)
+			sciprintf(" pc="PREG,
+				  PRINT_REG(call->addr.pc));
+		else
+			sciprintf(" pc:none");
+
+		if (call->sp == CALL_SP_CARRY)
+			sciprintf(" sp:carry");
+		else
+			sciprintf(" sp="PSTK,
+				  PRINT_STK(call->sp));
+
+		sciprintf(" fp="PSTK,
+			  PRINT_STK(call->fp));
+	}
+	return 0;
 }
-#endif
 
 int
 c_redraw_screen(state_t *s)
@@ -2751,10 +2756,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "address indexed by acc.\n\nSEE ALSO\n\n  obj, heapobj");
 			con_hook_command(c_classtable, "classtable", "", "Lists all available classes");
 			con_hook_command(c_stack, "stack", "i", "Dumps the specified number of stack elements");
-#warning "Re-enable con:backtrace hook"
-#if 0
 			con_hook_command(c_backtrace, "bt", "", "Dumps the send/self/super/call/calle/callb stack");
-#endif
 			con_hook_command(c_snk, "snk", "s*", "Steps forward until it hits the next\n  callk operation.\n"
 					 "  If invoked with a parameter, it will\n  look for that specific callk.\n");
 			con_hook_command(c_se, "se", "", "Steps forward until an SCI event is received.\n");

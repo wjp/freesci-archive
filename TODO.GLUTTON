@@ -16,16 +16,16 @@ Dependancies: '.' means "dependancy has been resolved"
 --- fix registers			C	.	CR
 --- fix stack				B	.	CR
 --- fix script_t			D	.	CR
-[X] implement seg_mgr			E	D	X
-[2] fix script instantiation/uninst'n	E	D	X
+[X] implement seg_mgr			E	.	X
+[2] fix script instantiation/uninst'n	E	.	X
 --- implement script ID map		F		CR
-[X] fix vm					.BCDEF	
-[X] fix send mechanism			G	.BDEF	
+[X] fix vm					....E.	CR
+--- fix send mechanism			G	...E.	CR
 [5] new kernel function interface	H	.	
 [4] fix global kernel function table		.	
-[X] provide compat code f. old kfuncts		.BCDEH	
-[1] fix init code				.BDEFG	
-[T] fix sound cues				.D	CR
+[X] provide compat code f. old kfuncts		...E.	
+[1] fix init code				...E..	
+[T] fix sound cues				..	CR
 --- disable savegames					CR
 
 Relevant TODO:

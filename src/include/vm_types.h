@@ -36,10 +36,18 @@ typedef int seg_id_t; /* Segment ID type */
 
 struct _state; /* engine.h */
 
+#ifdef S_SPLINT_S
+/* Splint can't deal with packed notation */
 typedef struct {
-	seg_id_t segment: SCI_SEG_SIZE;
-	int offset : SCI_REG_SIZE;
+	seg_id_t segment;
+	int offset;
 } reg_t;
+#else
+typedef struct {
+	seg_id_t segment	: SCI_SEG_SIZE;
+	int offset		: SCI_REG_SIZE;
+} reg_t;
+#endif
 
 #define PREG "%04x:%04x"
 #define PRINT_REG(r) (0xffff) & (unsigned) (r).segment, (unsigned) (r).offset

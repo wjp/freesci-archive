@@ -56,10 +56,25 @@ extern int _debug_seeking; /* scriptdebug.c */
 calls_struct_t *send_calls = NULL;
 int send_calls_allocated = 0;
 int bp_flag = 0;
+static reg_t _dummy_register = NULL_REG_INITIALIZER;
 
 /*-- validation functionality --*/
 
 #ifndef DISABLE_VALIDATIONS
+
+static inline reg_t *
+validate_property(object_t *obj, int index)
+{
+	if (index < 0 || index >= obj->variables_nr) {
+		script_debug_flag = script_error_flag = 1;
+		sciprintf("Invalid property #%d (out of [0..%d] requested!", index,
+			  obj->variables_nr);
+
+		return &_dummy_register;
+	}
+
+	return obj->variables + index;
+}
 
 static inline stack_ptr_t
 validate_stack_addr(state_t *s, stack_ptr_t sp)
@@ -121,6 +136,8 @@ validate_write_var(reg_t *r, int type, int max, int index, int line, reg_t value
 		r[index] = value;
 }
 
+#  define ASSERT_ARITHMETIC(v) validate_arithmetic(v)
+
 #else
 /*-- Non-validating alternatives -- */
 
@@ -129,6 +146,8 @@ validate_write_var(reg_t *r, int type, int max, int index, int line, reg_t value
 #  define validate_variable(r, t, m, i, l)
 #  define validate_read_var(r, t, m, i, l) ((r)[i])
 #  define validate_write_var(r, t, m, i, l, v) ((r)[i] = (v))
+#  define validate_property(o, p) (&((o)->variables[p]))
+#  define ASSERT_ARITHMETIC(v)
 
 #endif
 
@@ -139,6 +158,8 @@ validate_write_var(reg_t *r, int type, int max, int index, int line, reg_t value
 #define ACC_ARITHMETIC_L(op) make_reg(0, (op validate_arithmetic(s->r_acc)))
 #define ACC_AUX_LOAD() aux_acc = validate_arithmetic(s->r_acc)
 #define ACC_AUX_STORE() s->r_acc = make_reg(0, aux_acc)
+
+#define OBJ_PROPERTY(o, p) (*validate_property(o, p))
 
 /*==--------------------------==*/
 
@@ -181,32 +202,32 @@ script_error(state_t *s, char *file, int line, char *reason)
 inline reg_t
 get_class_address(state_t *s, int classnr)
 {
-  reg_t reg = make_reg( 0, 0 );
-#warning fix getting class address
-  if (NULL == s)
-  {
-    sciprintf("vm.c: get_class_address(): NULL passed for \"s\"\n");
-    return reg;
-  }
+	class_t *class = s->classtable + classnr;
 
-#if 0
-  if (!s->classtable[classnr].scriptposp) {
-    sciprintf("Attempt to dereference class %x, which doesn't exist\n", classnr);
-    script_error_flag = script_debug_flag = 1;
-    return 0;
-  } else {
-#endif
-    reg = s->classtable[classnr].reg;
+	if (NULL == s) {
+		sciprintf("vm.c: get_class_address(): NULL passed for \"s\"\n");
+		return NULL_REG;
+	}
 
-    if (!reg.segment) {
-      script_instantiate(s, s->classtable[classnr].script, 1);
-    }
+	if (classnr < 0
+	    || s->classtable_size >= classnr
+	    || class->script < 0) {
+		sciprintf("Attempt to dereference class %x, which doesn't exist\n", classnr);
+		script_error_flag = script_debug_flag = 1;
+		return NULL_REG;
+	} else {
+		if (!class->reg.segment) {
+			script_instantiate(s, class->script, 1);
 
-    reg = s->classtable[classnr].reg;
-    reg.offset = s->classtable[classnr].class_offset;
-//  }
-
-   return reg;
+			if (!class->reg.segment) {
+				sciprintf("Trying to instantiate class %x by instantiating script 0x%x (%03d) failed;"
+					  " switching to baffled mode.\n", classnr, class->script);
+				script_error_flag = script_debug_flag = 1;
+				return NULL_REG;
+			}
+		}
+		return class->reg;
+	}
 }
 
 /* Operating on the stack */
@@ -224,9 +245,6 @@ get_class_address(state_t *s, int classnr)
 #define GET_OP_SIGNED_BYTE() ((gint8)(code_buf[(pc_offset)++]))
 #define GET_OP_SIGNED_WORD() ((getInt16(code_buf + ((pc_offset) += 2) - 2)))
 #define GET_OP_SIGNED_FLEX() ((opcode & 1)? GET_OP_SIGNED_BYTE() : GET_OP_SIGNED_WORD())
-
-#define CLASS_ADDRESS(classnr) (((classnr < 0) || (classnr >= s->classtable_size)) ?              \
-				classnr /* parameter was parent object address */ : get_class_address(s, classnr))
 
 #define OBJ_SPECIES(address) GET_HEAP((address) + SCRIPT_SPECIES_OFFSET)
 #define OBJ_SPECIES(s, reg, mem) GET_HEAP2(s, reg.segment, reg.offset + SCRIPT_SPECIES_OFFSET, mem)
@@ -590,14 +608,15 @@ void
 run_vm(state_t *s, int restoring)
 {
 	reg_t *variables[4]; /* global, local, temp, param, as immediate pointers */
+	reg_t *variables_base[4]; /* Used for referencing VM ops */
+	seg_id_t variables_seg[4]; /* Same as above, contains segment IDs */
 #ifndef DISABLE_VALIDATIONS
 	int variables_max[4]; /* Max. values for all variables */
 #endif
 	int temp;
 	gint16 aux_acc; /* Auxiliary 16 bit accumulator */
 	reg_t r_temp; /* Temporary register */
-//	gint16 temp, temp2;
-//	guint16 utemp, utemp2;
+	stack_ptr_t s_temp; /* Temporary stack pointer */
 	gint16 opparams[4]; /* opcode parameters */
 
 	unsigned int restadjust = s->r_amp_rest; /* &rest adjusts the parameter count
@@ -606,8 +625,10 @@ run_vm(state_t *s, int restoring)
 	exec_stack_t *xs = s->execution_stack + s->execution_stack_pos;
 	exec_stack_t *xs_new; /* Used during some operations */
 #warning "Hardwired to script.000"
+	object_t *obj = obj_get(s, xs->objp);
 	script_t *local_script = s->script_000;
 	int pc_offset;
+	int old_execution_stack_base = s->execution_stack_base; /* Used to detect the stack bottom, for "physical" returns */
 	byte *code_buf;
 
 	if (!local_script) {
@@ -617,7 +638,7 @@ run_vm(state_t *s, int restoring)
 	
 	pc_offset = xs->addr.pc.offset;
 	code_buf = local_script->buf;
-//
+
 //  int old_execution_stack_base = s->execution_stack_base;
 
 	if (NULL == s) {
@@ -644,16 +665,16 @@ run_vm(state_t *s, int restoring)
 	/* Initialize maximum variable count */
 	variables_max[VAR_GLOBAL] = s->script_000->locals_nr;
 	variables_max[VAR_LOCAL] = local_script->locals_nr;
-	variables_max[VAR_TEMP] = xs->sp - xs->fp;
-	variables_max[VAR_PARAM] = xs->argc + 1;
 #endif
 
+	variables_seg[VAR_GLOBAL] = s->script_000_segment;
+	variables_seg[VAR_LOCAL] = 
+	variables_seg[VAR_TEMP] = variables_seg[VAR_PARAM] = s->stack_segment;
+	variables_base[VAR_TEMP] = variables_base[VAR_PARAM] = s->stack_base;
 
 	/* SCI code reads the zeroeth argument to determine argc */
-	variables[VAR_GLOBAL] = s->script_000->locals;
-	variables[VAR_LOCAL] = local_script->locals;
-	variables[VAR_TEMP] = xs->fp;
-	variables[VAR_PARAM] = xs->variables_argp;
+	variables_base[VAR_GLOBAL] = variables[VAR_GLOBAL] = s->script_000->locals;
+
 
 #warning "Explicitly set argument count here again!"
 //	WRITE_VAR16(VAR_PARAM, 0, xs->argc);
@@ -666,12 +687,26 @@ run_vm(state_t *s, int restoring)
 		byte opnumber;
 		int var_type; /* See description below */
 		int var_number;
-//
-//    if (s->execution_stack_pos_changed) {
-//      xs = s->execution_stack + s->execution_stack_pos;
-//      s->execution_stack_pos_changed = 0;
-//    }
-//
+
+		if (s->execution_stack_pos_changed) {
+			xs = s->execution_stack + s->execution_stack_pos;
+			s->execution_stack_pos_changed = 0;
+#warning "Fixme: Determine local script and local segment ID!"
+			/* local_script */
+#warning "Fixme: Set    variables_seg[VAR_LOCAL] = the local segment ID!"
+#ifndef THAT_EVIL_BUG_HAS_BEEN_FIXED
+			variables_seg[VAR_LOCAL] = 0x42;
+#endif
+
+			variables_base[VAR_LOCAL] = variables[VAR_LOCAL] = local_script->locals;
+#ifndef DISABLE_VALIDATIONS
+			variables_max[VAR_TEMP] = xs->sp - xs->fp;
+			variables_max[VAR_PARAM] = xs->argc + 1;
+			variables[VAR_TEMP] = xs->fp;
+			variables[VAR_PARAM] = xs->variables_argp;
+#endif
+		}
+
 		script_error_flag = 0; /* Set error condition to false */
 
 		if (script_abort_flag)
@@ -924,7 +959,6 @@ run_vm(state_t *s, int restoring)
       }
 #endif
       fprintf(stderr, "Not implemented yet: callk\n");
-      exit(1);
 
       break;
 
@@ -951,117 +985,124 @@ run_vm(state_t *s, int restoring)
 //	xs = xs_new;   /* in case of error, keep old stack */
 //      break;
 //
-//    case 0x24: /* ret */
-//      do {
-//	heap_ptr old_sp = xs->sp;
-//	heap_ptr old_fp = xs->variables[VAR_TEMP];
-//
-//	if (s->execution_stack_pos == s->execution_stack_base) { /* Have we reached the base? */
-//
-//	  s->execution_stack_base = old_execution_stack_base; /* Restore stack base */
-//
-//	  --(s->execution_stack_pos);
-//
-//	  s->amp_rest = restadjust; /* Update &rest */
-//	  return; /* Hard return */
-//	}
-//
-//	if (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR) {
-//	  /* varselector access? */
-//	  if (s->execution_stack[s->execution_stack_pos].argc) { /* write? */
-//	    word temp = GET_HEAP(s->execution_stack[s->execution_stack_pos].variables[VAR_PARAM] + 2);
-#if 0
-      /* adjusted for GLUTTON usage */
-      *(s->execution_stack[s->execution_stack_pos].sp) = VALUE_TO_STORE;
-#endif
-//	  } else /* No, read */
-//	    s->acc = GET_HEAP(s->execution_stack[s->execution_stack_pos].pc);
-//	}
-//
-//	/* No we haven't, so let's do a soft return */
-//	--(s->execution_stack_pos);
-//	xs = s->execution_stack + s->execution_stack_pos;
-//
-//	if (xs->sp == CALL_SP_CARRY) { /* Used in sends to 'carry' the stack pointer */
-//	  xs->sp = old_sp;
-//	  xs->variables[VAR_TEMP] = old_fp;
-//	}
-//
-//      } while (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR);
-//      /* Iterate over all varselector accesses */
-//
-//      break;
-//
-//    case 0x25: /* send */
-//      temp = xs->sp;
-//      xs->sp -= (opparams[0] + (restadjust * 2)); /* Adjust stack */
-//
-//      xs_new = send_selector(s, s->acc, s->acc, temp, (int)(opparams[0]>>1) +
-//			     (word)restadjust, xs->sp);
-//
-//      if (xs_new)
-//	xs = xs_new;
-//
-//      restadjust = 0;
-//
-//      break;
-//
-//    case 0x28: /* class */
-//      s->acc = CLASS_ADDRESS(opparams[0]);
-//      break;
-//
-//    case 0x2a: /* self */
-//      temp = xs->sp;
-//      xs->sp -= (opparams[0] + (restadjust * 2)); /* Adjust stack */
-//
-//      xs_new = send_selector(s, xs->objp, xs->objp, (temp>>1) +
-//			     (int)opparams[0], (word)restadjust, xs->sp);
-//
-//      restadjust = 0;
-//
-//      if (xs_new) xs = xs_new;
-//      break;
-//
-//    case 0x2b: /* super */
-//      if ((opparams[0] < 0) || (opparams[0] >= s->classtable_size))
-//	script_error(s, __FILE__, __LINE__, "Invalid superclass in object");
-//      else {
-//        int kludge;
-//
-//	temp = xs->sp;
-//	xs->sp -= (opparams[1] + (restadjust * 2)); /* Adjust stack */
-//        kludge = get_class_address(s, opparams[0]);
-//	/* kludge necessary due to compiler bugs (egcs 2.91.66, at least) */
-//	xs_new = send_selector(s, (heap_ptr)kludge, xs->objp, temp, (int)(opparams[1] >> 1) + (word)restadjust, xs->sp);
-//	restadjust = 0;
-//
-//	if (xs_new) xs = xs_new;
-//      }
-//
-//      break;
-//
-//    case 0x2c: /* &rest */
-//      utemp = opparams[0]; /* First argument */
-//      restadjust = xs->argc - utemp + 1; /* +1 because utemp counts the paramcount while argc doesn't */
-//      if (restadjust < 0)
-//	restadjust = 0;
-//      utemp2 = xs->variables[VAR_PARAM] + (utemp << 1);/* Pointer to the first argument to &restore */
-//      for (; utemp <= xs->argc; utemp++) {
-//	PUSH(getInt16(s->heap + utemp2));
-//	utemp2 += 2;
-//      }
-//
-//      break;
-//
-//    case 0x2d: /* lea */
-//      utemp = opparams[0] >> 1;
-//      var_number = utemp & 0x03; /* Get variable type */
-//
-//      utemp2 = xs->variables[var_number]; /* Get variable block offset */
-//      if (utemp & 0x08)
-//	utemp2 += (s->acc << 1); /* Add accumulator offset if requested */
-//      s->acc = utemp2 + (opparams[1] << 1); /* Add index */
-//      break;
+		case 0x24: /* ret */
+			do {
+				stack_ptr_t old_sp = xs->sp;
+				stack_ptr_t old_fp = xs->fp;
+				exec_stack_t *old_xs = s->execution_stack + s->execution_stack_pos;
+
+				if (s->execution_stack_pos == s->execution_stack_base) { /* Have we reached the base? */
+					s->execution_stack_base = old_execution_stack_base; /* Restore stack base */
+
+					--(s->execution_stack_pos);
+
+					s->r_amp_rest = restadjust; /* Update &rest */
+					return; /* "Hard" return */
+				}
+
+				if (old_xs->type == EXEC_STACK_TYPE_VARSELECTOR) {
+					/* varselector access? */
+					if (old_xs->argc) /* write? */
+						*(old_xs->addr.varp) = old_xs->variables_argp[1];
+					else /* No, read */
+						s->r_acc = *(old_xs->addr.varp);
+				}
+
+				/* Not reached the base, so let's do a soft return */
+				--(s->execution_stack_pos);
+				xs = old_xs - 1;
+				s->execution_stack_pos_changed = 1;
+				xs = s->execution_stack + s->execution_stack_pos;
+
+				if (xs->sp == CALL_SP_CARRY) { /* Used in sends to 'carry' the stack pointer */
+					xs->sp = old_sp;
+					xs->fp = old_fp;
+				}
+
+			} while (xs->type == EXEC_STACK_TYPE_VARSELECTOR);
+			/* Iterate over all varselector accesses */
+
+			break;
+
+		case 0x25: /* send */
+			s_temp = xs->sp;
+			xs->sp -= ((opparams[0] >> 1) + restadjust); /* Adjust stack */
+
+			xs_new = send_selector(s, s->r_acc, s->r_acc, s_temp,
+					       (int)(opparams[0]>>1) + (word)restadjust,
+					       xs->sp);
+
+			if (xs_new)
+				xs = xs_new;
+
+			restadjust = 0;
+
+			break;
+
+		case 0x28: /* class */
+			s->r_acc = get_class_address(s, opparams[0]);
+			break;
+
+		case 0x2a: /* self */
+			s_temp = xs->sp;
+			xs->sp -= ((opparams[0] >> 1) + restadjust); /* Adjust stack */
+
+			xs_new = send_selector(s, xs->objp, xs->objp, s_temp,
+					       (int)(opparams[0]>>1) + (word)restadjust,
+					       xs->sp);
+
+			if (xs_new)
+				xs = xs_new;
+
+			restadjust = 0;
+			break;
+
+		case 0x2b: /* super */
+			r_temp = get_class_address(s, opparams[0]);
+
+			if (!r_temp.segment)
+				CORE_ERROR("VM", "Invalid superclass in object");
+			else {
+				s_temp = xs->sp;
+				xs->sp -= ((opparams[0] >> 1) + restadjust); /* Adjust stack */
+
+				xs_new = send_selector(s, xs->objp, r_temp, s_temp,
+						       (int)(opparams[1]>>1) + (word)restadjust,
+						       xs->sp);
+
+				if (xs_new)
+					xs = xs_new;
+
+				restadjust = 0;
+			}
+
+			break;
+
+		case 0x2c: /* &rest */
+			temp = (guint16) opparams[0]; /* First argument */
+			restadjust = xs->argc - temp + 1; /* +1 because temp counts the paramcount while argc doesn't */
+			if (restadjust < 0)
+				restadjust = 0;
+
+			for (; temp <= xs->argc; temp++)
+				PUSH32(xs->variables_argp[temp]);
+
+			break;
+
+		case 0x2d: /* lea */
+			temp = (guint16) opparams[0] >> 1;
+			var_number = temp & 0x03; /* Get variable type */
+
+			/* Get variable block offset */
+			r_temp.segment = variables_seg[var_number];
+			r_temp.offset = variables[var_number] - variables_base[var_number];
+
+			if (temp & 0x08)  /* Add accumulator offset if requested */
+				r_temp.offset += validate_arithmetic(s->r_acc);
+
+			r_temp.offset += opparams[1];  /* Add index */
+			break;
+
 
 		case 0x2e: /* selfID */
 			s->r_acc = xs->objp;
@@ -1071,70 +1112,73 @@ run_vm(state_t *s, int restoring)
 			PUSH32(s->r_prev);
 			break;
 
-//    case 0x31: /* pToa */
-//      s->acc = GET_HEAP(xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0]);
-//      break;
-//
-//    case 0x32: /* aTop */
-//      PUT_HEAP(xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0], s->acc);
-//      break;
-//
-//    case 0x33: /* pTos */
-//      temp2 = GET_HEAP(xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0]);
-//      PUSH(temp2);
-//      break;
-//
-//    case 0x34: /* sTop */
-//      temp = POP();
-//      PUT_HEAP(xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0], temp);
-//      break;
-//
-//    case 0x35: /* ipToa */
-//      temp = xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0];
-//      s->acc = GET_HEAP(temp);
-//      ++(s->acc);
-//      PUT_HEAP(temp, s->acc);
-//      break;
-//
-//    case 0x36: /* dpToa */
-//      temp = xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0];
-//      s->acc = GET_HEAP(temp);
-//      --(s->acc);
-//      PUT_HEAP(temp, s->acc);
-//      break;
-//
-//    case 0x37: /* ipTos */
-//      temp2 = xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0];
-//      temp = GET_HEAP(temp2);
-//      PUT_HEAP(temp2, temp + 1);
-//      break;
-//
-//    case 0x38: /* dpTos */
-//      temp2 = xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0];
-//      temp = GET_HEAP(temp2);
-//      PUT_HEAP(temp2, temp - 1);
-//      break;
-//
-//    case 0x39: /* lofsa */
-//      s->acc = opparams[0] + xs->pc;
-//      if (opparams[0]+xs->pc>=0xFFFE)
-//      {
-//        sciprintf("VM: lofsa operation overflowed: 0x%x + 0x%x=0x%x\n", opparams[0], xs->pc,
-//	          opparams[0]+xs->pc);
-//	script_error_flag = script_debug_flag = 1;
-//      }
-//      break;
-//
-//    case 0x3a: /* lofss */
-//      PUSH(opparams[0] + xs->pc);
-//      if (opparams[0]+xs->pc>=0xFFFE)
-//      {
-//        sciprintf("VM: lofss operation overflowed: %x + %x=%x\n", opparams[0], xs->pc,
-//	          opparams[0]+xs->pc);
-//	script_error_flag = script_debug_flag = 1;
-//      }
-//      break;
-//
+		case 0x31: /* pToa */
+			s->r_acc = OBJ_PROPERTY(obj, (opparams[0] >> 1));
+			break;
+
+		case 0x32: /* aTop */
+			OBJ_PROPERTY(obj, (opparams[0] >> 1)) = s->r_acc;
+			break;
+
+		case 0x33: /* pTos */
+			PUSH32(OBJ_PROPERTY(obj, opparams[0] >> 1));
+			break;
+
+		case 0x34: /* sTop */
+			OBJ_PROPERTY(obj, (opparams[0] >> 1)) = POP32();
+			break;
+
+		case 0x35: /* ipToa */
+			s->r_acc = OBJ_PROPERTY(obj, (opparams[0] >> 1));
+			s->r_acc = OBJ_PROPERTY(obj, (opparams[0] >> 1)) =
+				ACC_ARITHMETIC_L( 1 + /*acc*/);
+			break;
+
+		case 0x36: /* dpToa */
+			s->r_acc = OBJ_PROPERTY(obj, (opparams[0] >> 1));
+			s->r_acc = OBJ_PROPERTY(obj, (opparams[0] >> 1)) =
+				ACC_ARITHMETIC_L(-1 + /*acc*/);
+			break;
+
+		case 0x37: /* ipTos */
+			ASSERT_ARITHMETIC(OBJ_PROPERTY(obj, (opparams[0] >> 1)));
+			++OBJ_PROPERTY(obj, (opparams[0] >> 1)).offset;
+			break;
+
+		case 0x38: /* dpTos */
+			ASSERT_ARITHMETIC(OBJ_PROPERTY(obj, (opparams[0] >> 1)));
+			--OBJ_PROPERTY(obj, (opparams[0] >> 1)).offset;
+			break;
+
+
+		case 0x39: /* lofsa */
+			s->r_acc.segment = xs->addr.pc.segment;
+			s->r_acc.offset = pc_offset + opparams[0];
+#ifndef DISABLE_VALIDATIONS
+			if (s->r_acc.offset >= local_script->buf_size) {
+				sciprintf("VM: lofsa operation overflowed: "PREG" beyond end"
+					  " of script (at %04x)\n", PRINT_REG(s->r_acc),
+					  local_script->buf_size);
+				script_error_flag = script_debug_flag = 1;
+			}
+#endif
+			break;
+
+
+		case 0x3a: /* lofss */
+			r_temp.segment = xs->addr.pc.segment;
+			r_temp.offset = pc_offset + opparams[0];
+#ifndef DISABLE_VALIDATIONS
+			if (r_temp.offset >= local_script->buf_size) {
+				sciprintf("VM: lofsa operation overflowed: "PREG" beyond end"
+					  " of script (at %04x)\n", PRINT_REG(r_temp),
+					  local_script->buf_size);
+				script_error_flag = script_debug_flag = 1;
+			}
+#endif
+			PUSH32(r_temp);
+			break;
+
 		case 0x3b: /* push0 */
 			PUSH(0);
 			break;
@@ -1331,12 +1375,13 @@ run_vm(state_t *s, int restoring)
 
 		} /* switch(opcode >> 1) */
 
-#warning "Exec stack assertion: fixme"
-//
-//    if (xs != s->execution_stack + s->execution_stack_pos) {
-//      sciprintf("Error: xs is stale; last command was %02x\n", opnumber);
-//    }
-//
+
+#ifndef DISABLE_VALIDATIONS
+		if (xs != s->execution_stack + s->execution_stack_pos) {
+			sciprintf("Error: xs is stale; last command was %02x\n", opnumber);
+		}
+#endif
+
 		if (script_error_flag) {
 			_debug_step_running = 0; /* Stop multiple execution */
 			_debug_seeking = 0; /* Stop special seeks */
@@ -1349,162 +1394,103 @@ run_vm(state_t *s, int restoring)
 
 
 
-#define SELECTOR_CLASS_GET_INDEX(result, script, obj) \
-	(result) = CLASS_GET_INDEX( script, (obj).offset );			\
-	if ((result) < 0) {							\
-			CORE_ERROR("SLC-LU","Error while looking up class ID");	\
-			sciprintf("Address was "PREG"\n", PRINT_REG(obj));	\
-			return SELECTOR_NONE;					\
-	}
-
-
-int
-_lookup_selector_function(state_t *s, reg_t addr, selector_t selectorid, reg_t *fptr)
-{
-	reg_t species;
-	reg_t recursor;
-	mem_obj_t *script;
-	int func_nr;
-	int class_index;
-	int functarea_offset;
+static inline int
+_class_locate_varselector(object_t *obj, selector_t slc)
+{	/* Determines if obj is a class and explicitly defines slc as a varselector */
+	/* Returns -1 if not found, -2 if not a class, its index otherwise */
+	
+	int varnum = obj->variables_nr;
+	int selector_name_offset = varnum * 2 + SCRIPT_SELECTOR_OFFSET;
 	int i;
-	byte *buf;
+	byte *buf = obj->base_obj + selector_name_offset;
 
-	if (IS_NULL_REG(addr))
-		return SELECTOR_NONE; /* Not found */
+	if (!IS_CLASS(obj))
+		return -2; /* Not a class */
 
-	script = GET_SEGMENT(s->seg_manager, addr.segment, MEM_OBJ_SCRIPT);
+	for (i = 0; i < varnum; i++)
+		if (getUInt16(buf + (i << 1)) == slc) /* Found it? */
+			return i; /* report success */
 
-	if (!script) {
-		CORE_ERROR("[SLC-LU]", "FreeSCI internal sanity failure");
-		sciprintf("While looking up selector function: script not found ("PREG")", PRINT_REG(addr));
-		return SELECTOR_NONE;
-	}
-
-	SELECTOR_CLASS_GET_INDEX(class_index, script->data.script, addr);
-
-	functarea_offset = addr.offset + getUInt16(script->data.script.buf + addr.offset + SCRIPT_FUNCTAREAPTR_OFFSET);
-	buf = script->data.script.buf + functarea_offset;
-	func_nr = getUInt16(buf - 2); /* That's the location */
+	return -1; /* Failed */
+}
 
 
-	/* func_nr *2 (16 bit) *2 (selector IDs AND values) +2 (extra byte) */
-	if (func_nr * 4 + 2 + functarea_offset >= script->data.script.buf_size) {
-		CORE_ERROR("[SLC-LU]", "Object extends beyond class->buf boundaries");
-		sciprintf("Offending object index: %d (in "PREG")",
-			  class_index, PRINT_REG(species));
-		return SELECTOR_NONE;
-	}
+static inline int
+_class_locate_funcselector(object_t *obj, selector_t slc)
+{	/* Determines if obj is a class and explicitly defines slc as a funcselector */
+	/* Does NOT say anything about obj's superclasses, i.e. failure may be
+	** returned even if one of the superclasses defines the funcselector. */
+	int funcnum = obj->methods_nr;
+	int i;
+	guint16 *buf = obj->base_method + funcnum + 1; /* +1 because the first entry is constant 0 and boring */
+
+	for (i = 0; i < funcnum; i++)
+		if (getUInt16((byte *) (buf + i)) == slc) /* Found it? */
+			return i; /* report success */
+
+	return -1; /* Failed */
+}
 
 
-	for (i = 0; i < func_nr * 2; i += 2)
-		if (getUInt16(buf + i) == selectorid) { /* Found it? */
-			if (fptr) {
-				fptr->segment = addr.segment;
-				/* Now read the offset from the structure */
-				fptr->offset = getUInt16(buf + i + 2 + (func_nr >> 1));
-			}
-			return SELECTOR_VARIABLE; /* report success */
+static inline int
+_lookup_selector_function(state_t *s, int seg_id, object_t *obj, selector_t selector_id, reg_t *fptr)
+{
+	int index;
+
+	/* "recursive" lookup */
+
+	while (obj) {
+		index = _class_locate_funcselector(obj, selector_id);
+
+		if (index >= 0) {
+			*fptr = make_reg(seg_id, getUInt16((byte *) (obj->base_method + index)));
+			return SELECTOR_METHOD;
+		} else {
+			seg_id = obj->variables[SCRIPT_SUPERCLASS_SELECTOR].segment;
+			obj = obj_get(s, obj->variables[SCRIPT_SUPERCLASS_SELECTOR]);
 		}
+	}
 
-	recursor = script->data.script.objects[class_index].variables[SCRIPT_SPECIES_SELECTOR];
-	if (REG_EQ(species, addr))
-		species = script->data.script.objects[class_index].variables[SCRIPT_SUPERCLASS_SELECTOR];
-
-	return _lookup_selector_function(s, recursor, selectorid, fptr); /* tail-recurse */
+	return SELECTOR_NONE;
 }
 
 int
-lookup_selector(state_t *s, reg_t obj, selector_t selectorid, reg_t **vptr, reg_t *fptr)
+lookup_selector(state_t *s, reg_t obj_location, selector_t selector_id, reg_t **vptr, reg_t *fptr)
 {
-	mem_obj_t *val_seg = GET_SEGMENT(s->seg_manager, obj.segment, MEM_OBJ_SCRIPT | MEM_OBJ_CLONES);
-	object_t *values;
-	mem_obj_t *def_seg = NULL;
-	reg_t def_addr;
-	int class_index;
-	reg_t species;
-	mem_obj_t *species_seg = NULL;
-	byte *buf;
-	int varnum;
-	int i;
-	int selector_name_offset;
+	object_t *obj = obj_get(s, obj_location);
+	object_t *species;
+	int index;
 
-	if (!obj.segment) {
+	if (!obj) {
 		CORE_ERROR("SLC-LU", "Attempt to send to non-object or invalid script");
-		sciprintf("Address was "PREG"\n", PRINT_REG(obj));
+		sciprintf("Address was "PREG"\n", PRINT_REG(obj_location));
 		return SELECTOR_NONE;
 	}
-
-	if (val_seg->type == MEM_OBJ_SCRIPT) {
-		def_seg = val_seg;
-		def_addr = obj;
-		SELECTOR_CLASS_GET_INDEX(class_index, val_seg->data.script, obj);
-
-		values = def_seg->data.script.objects + class_index;
-
-	} else { /* cloned object */
-		clone_t* clone = val_seg->data.clones->clones + obj.offset;
-
-
-		if (obj.offset >= val_seg->data.clones->clones_nr || clone->origin.segment) {
-			CORE_ERROR("SLC-LU", "Attempt to send to invalid object ID in clone segment");
-			sciprintf("Address was "PREG"\n", PRINT_REG(obj));
-			return SELECTOR_NONE;
-		}
-		values = &(clone->props);
-
-		def_seg = GET_SEGMENT(s->seg_manager, clone->origin.segment, MEM_OBJ_SCRIPT);
-		def_addr = clone->origin;
-		if (!def_seg) {
-			CORE_ERROR("SLC-LU", "FreeSCI sanity error: Clone references incorrect address");
-			sciprintf("Original address was "PREG"\n", PRINT_REG(obj));
-			sciprintf("Clone origin address was "PREG"\n", PRINT_REG(clone->origin));
-			return SELECTOR_NONE;
-		}
-	}
-
 
 	/* At this point, def_seg and def_offset point to a script, but may
 	** still reference a static instance, so we must now look up their
 	** species.  */
-	SELECTOR_CLASS_GET_INDEX(class_index, def_seg->data.script, def_addr);
-	species = def_seg->data.script.objects[class_index].variables[SCRIPT_SPECIES_SELECTOR];
+	if (IS_CLASS(obj))
+		species = obj;
+	else
+		species = obj_get(s, obj->variables[SCRIPT_SPECIES_SELECTOR]);
 
-	species_seg = GET_SEGMENT(s->seg_manager, species.segment, MEM_OBJ_SCRIPT);
-	if (!species_seg) {
+
+	if (!obj) {
 		CORE_ERROR("SLC-LU", "Error while looking up Species class");
-		sciprintf("Original address was "PREG"\n", PRINT_REG(obj));
-		sciprintf("Species address was "PREG"\n", PRINT_REG(species));
+		sciprintf("Original address was "PREG"\n", PRINT_REG(obj_location));
+		sciprintf("Species address was "PREG"\n", PRINT_REG(obj->variables[SCRIPT_SPECIES_SELECTOR]));
 		return SELECTOR_NONE;
 	}
 
-	SELECTOR_CLASS_GET_INDEX(class_index, species_seg->data.script, species);
+	index = _class_locate_varselector(obj, selector_id);
 
-	/* Phew... we have it, folks! */
-
-	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-		selectorid &= ~1; /* Low bit in this case is read/write toggle */
-
-	varnum = species_seg->data.script.objects[class_index].variables_nr;
-	selector_name_offset = varnum * 2 + SCRIPT_SELECTOR_OFFSET;
-
-	if (varnum * 2 + species.offset +  selector_name_offset >= species_seg->data.script.buf_size) {
-		CORE_ERROR("SLC-LU", "Object extends beyond class->buf boundaries");
-		sciprintf("Offending object index: %d (in "PREG")",
-			  class_index, PRINT_REG(species));
-		return SELECTOR_NONE;
-	}
-
-	buf = species_seg->data.script.buf + species.offset + selector_name_offset;
-
-	for (i = 0; i < varnum*2; i += 2)
-		if (getUInt16(buf + i) == selectorid) { /* Found it? */
-				if (vptr)
-					*vptr = &(values->variables[i >> 1]); /* Get object- relative address */
-				return SELECTOR_VARIABLE; /* report success */
-			}
-	return
-		_lookup_selector_function(s, def_addr, selectorid, fptr);
+	if (index >= 0) {
+		/* Found it as a variable */
+		*vptr = obj->variables + index;
+		return SELECTOR_VARIABLE;
+	} return
+		_lookup_selector_function(s, obj_location.segment, obj, selector_id, fptr);
 
 }
 
@@ -1655,6 +1641,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 				script_debug_flag = script_error_flag = 1;
 				return 1;
 			}
+
 			s->classtable[species].script = script_nr;
 			s->classtable[species].reg = reg;
 			s->classtable[species].reg.offset = classpos - magic_pos_adder;
@@ -2016,6 +2003,42 @@ version_require_later_than(state_t *s, sci_version_t version)
       s->version = s->min_version;
   }
 }
+
+object_t *
+obj_get(state_t *s, reg_t offset)
+{
+	mem_obj_t *memobj = GET_SEGMENT(s->seg_manager, offset.segment, MEM_OBJ_SCRIPT | MEM_OBJ_CLONES);
+	object_t *obj = NULL;
+
+	if (memobj != NULL) {
+		if (memobj->type == MEM_OBJ_CLONES
+		    && memobj->data.clones->clones_nr > offset.offset
+		    && memobj->data.clones->clones[offset.offset].origin.segment)
+			obj = &(memobj->data.clones->clones[offset.offset].props);
+		else if (memobj->type == MEM_OBJ_SCRIPT)
+			if (offset.offset <= memobj->data.script.buf_size
+			    && offset.offset >= -SCRIPT_OBJECT_MAGIC_OFFSET
+			    && RAW_IS_OBJECT(memobj->data.script.buf + offset.offset)) {
+				int idx = RAW_GET_CLASS_INDEX(memobj->data.script.buf + offset.offset);
+				if (idx > 0 && idx < memobj->data.script.objects_nr)
+					obj = memobj->data.script.objects + idx;
+			}
+	}
+
+	return obj;
+}
+
+char *
+obj_get_name(struct _state *s, reg_t pos)
+{
+	object_t *obj = obj_get(s, pos);
+
+	if (!obj)
+		return "<no such object>";
+	return
+		obj->base + obj->variables[SCRIPT_NAME_SELECTOR].offset;
+}
+
 
 sci_version_t
 version_parse(char *vn)

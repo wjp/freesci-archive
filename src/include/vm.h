@@ -119,15 +119,14 @@
 #define HUNK_TYPE_GFXBUFFER 1 /* Graphical buffer */
 
 typedef struct {
-	int script; /* number of the script the class is in */
-	heap_ptr *scriptposp; /* Pointer to the script position entry in the script list */
-	int class_offset; /* script-relative position of the class */
-	reg_t reg;	// get rid of class_offset, scriptposp later !!!!
+	int script; /* number of the script the class is in, -1 for non-existing */
+	reg_t reg; /* offset; script-relative offset, segment: 0 if not instantiated */  
 } class_t;
 
-#define CLASS_GET_INDEX(scr, offset) (((offset) + SCRIPT_OBJECT_MAGIC_OFFSET < 0 || (offset) >= (scr).buf_size)?	\
-	-1 : ((getUInt16((scr).buf + (offset) + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER)?	\
-	-1 : getUInt16((scr).buf + (offset) + SCRIPT_OBJINDEX_OFFSET)))
+#define RAW_GET_CLASS_INDEX(datablock) (getUInt16(((byte *) datablock) + SCRIPT_OBJINDEX_OFFSET))
+#define RAW_IS_OBJECT(datablock) (getUInt16(((byte *) datablock) + SCRIPT_OBJECT_MAGIC_OFFSET) == SCRIPT_OBJECT_MAGIC_NUMBER)
+
+#define IS_CLASS(obj) (obj->variables[SCRIPT_INFO_SELECTOR].offset & SCRIPT_INFO_CLASS)
 
 /* This struct is used to buffer the list of send calls in send_selector() */
 typedef struct {
@@ -145,7 +144,10 @@ typedef struct {
 
 typedef struct {
 	int variables_nr;
-	byte *base_data; /* Pointer to the physical location of the underlying data in script_t */
+	int methods_nr;
+	byte *base; /* Points to a buffer all relative references (code, strings) point to */
+	byte *base_obj; /* base + object offset within base */
+	guint16 *base_method; /* Pointer to the method selector area for this object */
 	reg_t *variables;
 } object_t;
 
