@@ -670,6 +670,7 @@ test_savegame(state_t *s, char *savegame_id, char *savegame_name, int savegame_n
 void
 kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+#if 0
 	int savedir_nr = UPARAM(1);
 	char *buf = NULL;
 	char *workdir = _chdir_savedir(s);
@@ -694,6 +695,9 @@ kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	_chdir_restoredir(workdir);
 	free(buf);
+#else
+	s->acc = 0;
+#endif
 }
 
 
@@ -822,6 +826,7 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+#if 0
 	char *game_id = (char *) (UPARAM(0) + s->heap);
 	char *savegame_dir;
 	int savedir_nr = UPARAM(1);
@@ -900,12 +905,16 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 	free(game_id_file_name);
 	_chdir_restoredir(workdir);
+#else
+	s->acc = 0;
+#endif
 }
 
 
 void
 kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+#if 0
 	char *game_id = (char *) (UPARAM(0) + s->heap);
 	int savedir_nr = UPARAM(1);
 	char *workdir = _chdir_savedir(s);
@@ -945,6 +954,9 @@ kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 
 	_chdir_restoredir(workdir);
+#else
+	s->acc = -1;
+#endif
 }
 
 

@@ -103,8 +103,15 @@
 #define HUNK_TYPE_ANY 0
 #define HUNK_TYPE_GFXBUFFER 1 /* Graphical buffer */
 
+#define SCI_REG_SIZE 16;
+#define SCI_SEG_SIZE 16;
 
 struct _state; /* engine.h */
+
+typedef struct {
+	int offset : SCI_REG_SIZE;
+	int segment: SCI_SEG_SIZE;
+} reg_t;
 
 
 typedef struct {

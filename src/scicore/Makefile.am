@@ -1,8 +1,10 @@
 INCLUDES = -I$(top_srcdir)/src/include
 EXTRA_DIST = sci_dos.c treedef.1 treedef.2 treedef.3 hufftree.1 \
-			 hufftree.2 hufftree.3 huffmake.pl
+			 hufftree.2 hufftree.3 huffmake.pl      \
+			 hashmap.c
 noinst_LIBRARIES = libscicore.a
 libscicore_a_SOURCES = console.c tools.c resource.c decompress0.c     \
 		 decompress01.c decompress1.c decompress11.c script.c \
 		 vocab.c vocab_debug.c old_objects.c modules.c        \
-		 sci_memory.c resource_map.c resource_patch.c fnmatch.c
+		 sci_memory.c resource_map.c resource_patch.c         \
+		 fnmatch.c int_hashmap.c

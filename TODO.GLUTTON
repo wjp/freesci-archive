@@ -1,0 +1,35 @@
+Problem:
+	VC++ 6.0 (SP5) + SDL
+
+
+[C] encoding:
+	[T] Trivial
+	[X] Complex
+	[n] (where n is a number) Ranking n in complexity
+	--- Done
+
+Dependancies: '.' means "dependancy has been resolved"
+
+[C] Code				DepID	Deps	Who
+-------------------------------------------------------------
+--- introduce reg_t			A		CR
+[T] fix registers			C	.	
+[T] fix stack				B	.	
+[T] fix script_t			D	.	
+[X] implement seg_mgr			E	D	
+[2] fix script instantiation/uninst'n	E	D	
+--- implement script ID map		F		CR
+[X] fix vm					.BCDEF	
+[X] fix send mechanism			G	.BDEF	
+[5] new kernel function interface	H	.	
+[4] fix global kernel function table		.	
+[X] provide compat code f. old kfuncts		.BCDEH	
+[1] fix init code				.BDEFG	
+[T] fix sound cues				.D	CR
+--- disable savegames					CR
+
+
+Later TODO:
+	* Re-enable save_game, restore_game, check_savegame
+	* Re-enable quick-restore code
+	* Re-enable save_game and restore_game debug console commands

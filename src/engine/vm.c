@@ -1699,8 +1699,11 @@ game_restore(state_t **_s, char *game_name)
 	int debug_state = _debugstate_valid;
 
 	sciprintf("Restoring savegame '%s'...\n", game_name);
-
+	fprintf(stderr, "Quick-restore disabled until VM reconstruction is complete!");
+	return 0;
+#if 0
 	s = gamestate_restore(*_s, game_name);
+#endif
 
 	if (!s) {
 		sciprintf("Restoring gamestate '%s' failed.\n", game_name);

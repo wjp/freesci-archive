@@ -4,7 +4,7 @@
 # Created: 1993-05-16
 # Public domain
 
-# $Id: mkinstalldirs 4 1999-07-04 23:44:15Z raistlin $
+# $Id: mkinstalldirs 933 2002-10-13 00:53:03Z  $
 
 errstatus=0
 
