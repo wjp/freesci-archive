@@ -401,6 +401,19 @@ SOURCE=..\sound\soundserver.c
 
 SOURCE=..\sound\soundserver_sdl.c
 # End Source File
+# Begin Source File
+
+SOURCE=..\sound\soundserver_win32.c
+
+!IF  "$(CFG)" == "fsci_dll - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
+
+# ADD CPP /W4
+
+!ENDIF 
+
+# End Source File
 # End Group
 # End Group
 # Begin Group "Header Files"

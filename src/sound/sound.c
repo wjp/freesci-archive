@@ -51,6 +51,10 @@ extern sound_server_t sound_server_unix;
 extern sound_server_t sound_server_sdl;
 #endif
 
+#ifdef _WINDOWS
+extern sound_server_t sound_server_win32;
+#endif
+
 #ifdef _DOS
 extern sound_server_t sound_server_dos;
 #endif
@@ -61,6 +65,10 @@ sound_server_t *sound_servers[] = {
 	/* Assume that sound_null works on any box that has fork() */
 	&sound_server_unix,
 #  endif /* HAVE_FORK */
+
+#  ifdef _WINDOWS
+	&sound_server_win32,
+#  endif
 
 #  ifdef HAVE_SDL
 	&sound_server_sdl,
