@@ -339,8 +339,7 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->heap = s->_heap->start;
 
 	/* Allocate static buffer for savegame and CWD directories */
-	s->save_dir = heap_allocate(s->_heap, MAX_HOMEDIR_SIZE + strlen(FREESCI_GAMEDIR)
-				    + MAX_GAMEDIR_SIZE + 4); /* +4 for the three slashes and trailing \0 */
+	s->save_dir = heap_allocate(s->_heap, MAX_SAVE_DIR_SIZE);
 
 	save_ff(s->_heap); /* Save heap state */
 

@@ -917,9 +917,15 @@ kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kValidPath(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	char *pathname = (char *) s->heap + UPARAM(0);
+	heap_ptr offset = UPARAM(0);
+	char *pathname = (char *) s->heap + offset;
 	char cpath[PATH_MAX + 1];
 	getcwd(cpath, PATH_MAX + 1);
+
+	if (offset == s->save_dir_copy) {
+		pathname = s->save_dir_copy_buf;
+		SCIkdebug(SCIkFILE, "Magic: ValidPath(savedir_tmp)\n");
+	}
 
 	s->acc = !chdir(pathname); /* Try to go there. If it works, return 1, 0 otherwise. */
 

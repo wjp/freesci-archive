@@ -1193,6 +1193,20 @@ kHiliteControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
+void
+update_cursor_limits(int *display_offset, int *cursor, int max_displayed)
+{
+	if (*cursor < *display_offset + 4) {
+		if (*cursor < 8)
+			*display_offset = 0;
+		else
+			*display_offset = *cursor - 8;
+
+	} else if (*cursor - *display_offset > max_displayed - 8)
+		*display_offset = 12 + *cursor - max_displayed;
+
+}
+
 #define _K_EDIT_DELETE \
  if (cursor < textlen) { \
   memmove(text + cursor, text + cursor + 1, textlen - cursor +1); \
@@ -1221,13 +1235,25 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		case K_CONTROL_EDIT:
 			if (event && (GET_SELECTOR(event, type) == SCI_EVT_KEYBOARD)) {
-				int max = GET_SELECTOR(obj, max);
+				int max_displayed = GET_SELECTOR(obj, max);
+				int max = max_displayed;
 				int cursor = GET_SELECTOR(obj, cursor);
 				int modifiers = GET_SELECTOR(event, modifiers);
 				int key = GET_SELECTOR(event, message);
+				heap_ptr text_offset = UGET_SELECTOR(obj, text);
+				int display_offset = 0;
 
-				char *text = (char *) (s->heap + UGET_SELECTOR(obj, text));
-				int textlen = strlen(text);
+				char *text = (char *) (s->heap + text_offset);
+				int textlen;
+
+				if (text_offset == s->save_dir_copy) {
+					max = MAX_SAVE_DIR_SIZE - 1;
+					text = s->save_dir_copy_buf;
+					display_offset = s->save_dir_edit_offset;
+				}
+				textlen = strlen(text);
+
+				cursor += display_offset;
 
 				if (cursor > textlen)
 					cursor = textlen;
@@ -1310,6 +1336,13 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 						text[cursor++] = key;
 					}
 
+					update_cursor_limits(&display_offset, &cursor, max_displayed);
+
+					if (text_offset == s->save_dir_copy)
+						s->save_dir_edit_offset = display_offset;
+     
+					cursor -= display_offset;
+
 					PUT_SELECTOR(event, claimed, 1);
 				}
 
@@ -1348,7 +1381,8 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 	rect_t area = gfx_rect(x, y, xl, yl);
 
 	int font_nr = GET_SELECTOR(obj, font);
-	char *text = (char *) (s->heap + UGET_SELECTOR(obj, text));
+	heap_ptr text_offset = UGET_SELECTOR(obj, text);
+	char *text = (char *) (s->heap + text_offset);
 	int view = GET_SELECTOR(obj, view);
 	int cel = sign_extend_byte(GET_SELECTOR(obj, cel));
 	int loop = sign_extend_byte(GET_SELECTOR(obj, loop));
@@ -1357,6 +1391,12 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 	int type = GET_SELECTOR(obj, type);
 	int state = GET_SELECTOR(obj, state);
 	int cursor;
+	int max;
+
+	if (text_offset == s->save_dir_copy) {
+		SCIkdebug(SCIkGRAPHICS, "Displaying the save_dir copy\n");
+		text = s->save_dir_copy_buf + s->save_dir_edit_offset;
+	}
 
 	switch (type) {
 
@@ -1381,7 +1421,16 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 	case K_CONTROL_EDIT:
 		SCIkdebug(SCIkGRAPHICS, "drawing edit control %04x to %d,%d\n", obj, x, y);
 
+		max = GET_SELECTOR(obj, max);
 		cursor = GET_SELECTOR(obj, cursor);
+
+		if (cursor > strlen(text))
+			cursor = strlen(text);
+
+		if (text_offset == s->save_dir_copy)
+			update_cursor_limits(&s->save_dir_edit_offset, &cursor, max);
+
+		update_cursor_limits(&s->save_dir_edit_offset, &cursor, max);
 		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_edit_control(s->port, obj, area, text, font_nr, cursor, inverse));
 		break;
 

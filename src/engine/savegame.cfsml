@@ -367,6 +367,9 @@ RECORD state_t "state_t" {
 
 	long game_time;
 	heap_ptr save_dir;
+	heap_ptr save_dir_copy;
+	string save_dir_copy_buf;
+	int save_dir_edit_offset;
 	heap_ptr sound_object;
 
 	int sound_mute;
@@ -1230,9 +1233,10 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->resmgr = s->resmgr;
 
 	if (retval->savegame_version < 3) {
-		retval->save_dir = heap_allocate(retval->_heap, MAX_HOMEDIR_SIZE + strlen(FREESCI_GAMEDIR)
-						 + MAX_GAMEDIR_SIZE + 4); /* +4 for the three slashes and trailing \0 */
+		retval->save_dir = heap_allocate(retval->_heap, MAX_SAVE_DIR_SIZE);
 		/* Compensate for save_dir location change */
+		retval->save_dir_copy = 0xffff;
+		retval->save_dir_edit_offset = 0;
 	}
 
 	retval->successor = NULL;

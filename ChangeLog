@@ -1,3 +1,15 @@
+2001-09-20  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kEditControl):
+	* src/engine/kgraphics.c (_k_draw_control):
+	* src/engine/include/engine.h:
+	* src/engine/kstring.c: Due to a number of utterly evil hacks, SCI
+	games now support string lengths greater than the length displayed for
+	the savegame directory.
+
+	* src/sound/midi_mt32gm.c (midi_mt32gm_event): Fixed sound volume (broken
+	by invalid typecast), as reported by Matt
+
 2001-09-19  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/resource/sci_pic_0.c (_gfxr_fill_recursive): Fixed write over

@@ -50,6 +50,7 @@
 #define FREESCI_SAVEGAME_VERSION 3
 
 #define FREESCI_GAMEDIR ".freesci"
+#define STRLEN_FREESCI_GAMEDIR 8
 #define FREESCI_CONFFILE "config"
 #define FREESCI_SAVEDIR_PREFIX "save_"
 #define FREESCI_CONFFILE_DOS "freesci.cfg"
@@ -67,6 +68,9 @@
 #define MAX_SAVEGAME_NR 20 /* Maximum number of savegames */
 
 #define MAX_HUNK_BLOCKS 256 /* Used for SCI "far memory"; only used for sci_memory in FreeSCI */
+
+#define MAX_SAVE_DIR_SIZE MAX_HOMEDIR_SIZE + STRLEN_FREESCI_GAMEDIR + MAX_GAMEDIR_SIZE + 4
+/* +4 for the three slashes and trailing \0 */
 
 typedef struct
 {
@@ -123,6 +127,9 @@ typedef struct _state
 	long game_time; /* Counted at 60 ticks per second, reset during start time */
 
 	heap_ptr save_dir; /* Pointer to the allocated space for the save directory */
+	heap_ptr save_dir_copy; /* Last copy of the save dir */
+	int save_dir_edit_offset; /* For kEdit(): Display offset for editing the savedir */
+	char save_dir_copy_buf[MAX_SAVE_DIR_SIZE]; /* Temp savedir buffer for kEdit() */
 
 	heap_ptr sound_object; /* Some sort of object for sound management */
 
