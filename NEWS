@@ -1,3 +1,62 @@
+This release was developed as part of Prof. Dr. Gary Nutt's course in Advanced
+Operating Systems at the University of Colorad at Boulder (USA). It contains
+many of the bug fixes found in the 0.3.4 release, but the most prominent
+change is a complete re-write of the underlying virtual machine structure
+to support a much larger address space (please refer to the 'glutton' paper
+for technical details). However, these massive internal changes also mean
+that a lot of things were broken, particularly savegames (and some kernel
+functionality, apparently); we also took the opportunity for removing the
+sound subsystem. So, in summary, it can do much less than 0.3.4, but it does
+what it does much better ;-)
+  Seriously, this step was needed for us to support SCI01 and later games.
+Any development regarding support for later SCI games will therefore happen
+in this branch. Right now, it is for development and review only; any
+work on getting it to compile on non-Linux/gcc systems would be greatly
+appreciated (as would any other work on it, e.g. adding sound drivers for
+the new sound subsystem, of course)!
+  If you want to play SCI games, this is the wrong release-- it probably
+won't do anything useful. If, however, you're interested in aiding with
+FreeSCI development, you have come to exactly the right place-- this code
+needs work, and, moreover, it still has a couple of fun bugs to figure out
+(many of which are easy to discover by just comparing it to stable FreeSCI).
+
+On a final note, congratulations again to Xiaojun Chen (who contributed to
+this release in a significant way) for finishing his M.Sc.!
+
+
+
+--- 0.3.3 ---
+
+Keeping with the tradition, let's have a look at how long we took this time.
+7 months, approximately; that's a lot of time; about 1/150th of a person's
+average lifetime, time that could have been spent differently... ah, who
+am I fooling, we didn't spend _all_ of these 7 months hacking at the code
+(we need to sleep and eat, too, you know).
+But, back to the matters at hand. You want to know what changed and, to be
+honest, there are few large ones, but an unusually high amount of smaller
+bug fixes and polishments. Many long-standing bugs have been fixed or were
+replaced with more interesting ones. You will find that almost all SCI0
+adventure games have been completed now; many of them were still unbeatable
+in the previous release. Win32 users will see a particularly large
+difference- thanks to Alex Angas' and Matt Hargett's continued attempts,
+this platform now seems to have a sound server that is actually useable,
+meaning that you should now be able to get decent sound support there.
+FreeSCI has also been ported to BeOS by Claudio Matsuoka, and to Linux on
+the Compaq iPaq, by Greg Gilbert. Also, we now have an excellent graphical
+configuration tool that takes all the complexity from editing your
+~/.freesci/config by hand, contributed by Rune Orsval- if you're new to
+FreeSCI, this is probably exactly what you're looking for.
+On the feature front, we have implemented an LRU resource manager- this
+should help a lot with conserving memory, particularly for larger games-
+but the most noticeable change it introduces is a vastly accellerated game
+startup.
+Well, that's about it; I'll leave the list of smaller changes and bug
+fixes for you to discover on your own, it's too long to list it here anyway.
+
+
+
+--- 0.3.2 ---
+
 Slightly more than half the time we needed from 0.3.0 to 0.3.1 has passed,
 and the list has been more active than ever. I guess the dry days of the
 gfx subsystem implementation period are pretty much over; but there's still

@@ -1,24 +1,31 @@
-Thanks for downloading the fourth alpha release of FreeSCI!
+
+
+   			* * *  W A R N I N G  * * * 
+
+
+   This is an unstable, experimental development release of FreeSCI. You will
+   most likely NOT be able to finish any games with it. If you just want to
+   play SCI games (as opposed to aid development), please use the stable
+   release instead.
+
+
+
+
+
+
+
+Thanks for downloading this development release of FreeSCI!
 
 FreeSCI is a portable interpreter for SCI games, such as the Space Quest
 series (starting with SQ3) or Leisure Suit Larry (2 and sequels); see
 below for a complete (?) listing.
 
-FreeSCI is still incomplete. You should be able to finish some SCI games with
-it, though- the list of games below contains information about games that
-were completed.
 This release has the following limitations (plus some bugs):
-- Only SCI0 games are supported
+- Only SCI0 and SCI01 games are supported
 - The SCI debug functions aren't fully supported (and probably never will be,
   since we're using our own debug functions)
-
-It has the following improvements over Sierra SCI:
-- Support for various filters and extended drawing operations for graphics
-- saving and restoring the game state is possible from more places than the
-  Sierra SCI engine allowed (using the debugger functions)
-- Better debugger (we believe :-)
-- More portable
-- It's Free software :-)
+- Savegames are disabled
+- Sound output is limited to OSS on adlib
 
 
 This is ALPHA sofware. That means that there still are lot of bugs.

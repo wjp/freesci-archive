@@ -11,4 +11,6 @@ EXTRA_DIST = old_objects.h graphics_glx.h kernel.h event.h    \
 	midi_device.h modules.h sci_memory.h games.h          \
 	hashmap.h int_hashmap.h sys_strings.h heapmgr.h	      \
 	kernel_types.h sfx_iterator.h sfx_songlib.h           \
-	sfx_engine.h
+	sfx_engine.h vm_types.h seg_manager.h kernel_compat.h \
+	gfx_sci.h sfx_sequencer.h sfx_device.h sfx_adlib.h    \
+	sfx_timer.h sfx_player.h

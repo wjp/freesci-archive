@@ -26,6 +26,7 @@ gfx/
 	gfx_support.c
 	gfx_test.c
 	gfx_tools.c
+	gfx_console.c
 	menubar.c
 	operations.c
 	resmgr.c
@@ -35,6 +36,9 @@ gfx/
 	drivers/
 		gfx_drivers.c
 		ggi_driver.c
+		xlib_driver.c (parts)
+		directfb_driver.c
+		null_driver.c
 	resources/
 		sci_cursor_0.c
 		sci_font.c
@@ -195,7 +199,10 @@ sound/
 	midiout.c (various changes)
 	midiout_alsaraw.c (various changes)
 	midiout_unixraw.c (various changes)
-	pcmout
+	pcmout.c
+	pcmout_sdl.c
+	pcmout_oss.c
+	pcmout_alsa.c
 	polled_ss_sdl.c
 	soundserver.c (abstaction part)
 	midi_adlibemu.c
@@ -249,5 +256,35 @@ sound/
 	event_ss_win32.c
 	polled_ss.c (parts)
 	polled_ss_sdl.c (parts)
+gfx/
+	drivers/
+		dx_driver.c
 include/
 	sci_memory.h
+
+
+Walter van Niftrik: <w.f.b.w.v.niftrik@stud.tue.nl>
+[Dreamcast fixes]
+dc/
+	dc.c
+	dc_save.c
+gfx/
+	drivers/
+		dc_driver.c
+sound/
+	pcmout_dc.c
+	polled_ss_dc.c
+
+
+Ruediger Hanke: <tomjoad@muenster.de>
+[MorphOS fixes]
+morphos/
+	morphos.c
+sound/
+	midiout_morphos.c
+
+
+Xiaojun Chen:
+engine/
+	seg_manager.c (most of it)
+	vm.c (script instantiation)

@@ -1,6 +1,6 @@
 Summary: A portable interpreter for SCI games
 Name: freesci
-Version: 0.6.0_glutton-devel
+Version: 0.6.0
 Release: 1
 Group: Games/Adventure
 Copyright: GPL

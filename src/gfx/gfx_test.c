@@ -171,7 +171,7 @@ int test_fonts[TEST_FONTS_NR] = {0};
 int test_cursors[TEST_CURSORS_NR] = {0, 1};
 
 int
-gfxr_interpreter_options_hash(gfx_resource_types_t type, int version, gfx_options_t *options, void *internal)
+gfxr_interpreter_options_hash(gfx_resource_types_t type, int version, gfx_options_t *options, void *internal, int palette)
 {
 	return 0;
 }
@@ -366,7 +366,7 @@ gfx_pixmap_color_t view_colors[VIEW_COLORS_NR] = {
 };
 
 gfxr_view_t *
-gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal)
+gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal, int palette)
 {
 	gfxr_view_t *view;
 	gfxr_loop_t *loop;
@@ -942,7 +942,7 @@ test_e(void)
 
 	for (x = -20; x < 340; x++) {
 		clear_buffer();
-		gfxop_draw_cel(state, 0, 0, 0, gfx_point(x, 40), white);
+		gfxop_draw_cel(state, 0, 0, 0, gfx_point(x, 40), white, 0);
 		update();
 		gfxop_usleep(state, 10000);
 	}
@@ -950,10 +950,10 @@ test_e(void)
 	MESSAGE("E.2: Pic views\nFour pic views will now be added to\nthe static buffer");
 	waitkey();
 
-	gfxop_draw_cel_static(state, 0, 0, 1, gfx_point(50, 100), white24);
-	gfxop_draw_cel_static(state, 0, 0, 1, gfx_point(50, 20), white24);
-	gfxop_draw_cel_static(state, 0, 0, 1, gfx_point(220, 20), white16);
-	gfxop_draw_cel_static(state, 0, 0, 1, gfx_point(220, 100), white16);
+	gfxop_draw_cel_static(state, 0, 0, 1, gfx_point(50, 100), white24, 0);
+	gfxop_draw_cel_static(state, 0, 0, 1, gfx_point(50, 20), white24, 0);
+	gfxop_draw_cel_static(state, 0, 0, 1, gfx_point(220, 20), white16, 0);
+	gfxop_draw_cel_static(state, 0, 0, 1, gfx_point(220, 100), white16, 0);
 
 	update();
 	MESSAGE("E.2: Pic views\nThe pic views should NOT\nbe visible yet!\n");
@@ -969,8 +969,8 @@ test_e(void)
 
 	for (x = -20; x < 340; x++) {
 		clear_buffer();
-		gfxop_draw_cel(state, 0, 0, 2, gfx_point(x, 20), white8);
-		gfxop_draw_cel(state, 0, 0, 2, gfx_point(x, 100), white16);
+		gfxop_draw_cel(state, 0, 0, 2, gfx_point(x, 20), white8, 0);
+		gfxop_draw_cel(state, 0, 0, 2, gfx_point(x, 100), white16, 0);
 		update();
 		gfxop_usleep(state, 10000);
 	}
@@ -985,8 +985,8 @@ test_e(void)
 	for (x = -20; x < 340; x++) {
 		gfxop_clear_box(state, gfx_rect(x-9, 40-8, 17, 16));
 		gfxop_clear_box(state, gfx_rect(x-9, 70-8, 17, 16));
-		gfxop_draw_cel(state, 0, 0, 2, gfx_point(x, 40), white16);
-		gfxop_draw_cel(state, 0, 0, 2, gfx_point(x, 70), white16);
+		gfxop_draw_cel(state, 0, 0, 2, gfx_point(x, 40), white16, 0);
+		gfxop_draw_cel(state, 0, 0, 2, gfx_point(x, 70), white16, 0);
 		gfxop_update(state);
 		/*		gfxop_update_box(state, gfx_rect(x-1, 40, 17, 16)); */
 		/*		gfxop_update_box(state, gfx_rect(x-1, 70, 17, 16)); */
