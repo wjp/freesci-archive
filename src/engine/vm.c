@@ -1619,6 +1619,11 @@ lookup_selector(state_t *s, reg_t obj_location, selector_t selector_id, reg_t **
 	object_t *species;
 	int index;
 
+	/* Early SCI versions used the LSB in the selector ID as a read/write
+	** toggle, meaning that we must remove it for selector lookup.  */
+	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+		selector_id &= ~1;
+
 	if (!obj) {
 		CORE_ERROR("SLC-LU", "Attempt to send to non-object or invalid script");
 		sciprintf("Address was "PREG"\n", PRINT_REG(obj_location));
@@ -1775,27 +1780,28 @@ script_instantiate(state_t *s, int script_nr)
 
 	/* Set heap position (beyond the size word) */
 	s->seg_manager.set_lockers( &s->seg_manager, 1, reg.segment, SEG_ID );
-	s->seg_manager.set_export_table_offset( &s->seg_manager, 0, 0, reg.segment, SEG_ID );
+	s->seg_manager.set_export_table_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
 	s->seg_manager.set_synonyms_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
 	s->seg_manager.set_synonyms_nr( &s->seg_manager, 0, reg.segment, SEG_ID );
 
 	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
+		/*
 		int locals_size = getUInt16(script->data)*2;
 		int locals = (locals_size)? script->size : 0;
+		*/
+		int locals_nr = getUInt16(script->data);
 
 		/* Old script block */
 		/* There won't be a localvar block in this case */
-/* HEAP CORRUPTOR! */
-/*
- fprintf(stderr,"script of size %d(+2) -> %04x\n", script->size, script_basepos);
- fprintf(stderr,"   -- memcpying [%04x..%04x]\n", script_basepos + 2, script_basepos + script->size);
-*/
-		s->seg_manager.mcpy_in_out( &s->seg_manager, 0, script->data + 2, script->size - 2, reg.segment, SEG_ID);
-		magic_pos_adder = 2;
+		/* Instead, the script starts with a 16 bit int specifying the
+		** number of locals we need; these are then allocated and zeroed.  */
 
-		if (locals)
+		s->seg_manager.mcpy_in_out( &s->seg_manager, 0, script->data, script->size, reg.segment, SEG_ID);
+		magic_pos_adder = 2;  /* Step over the funny prefix */
+
+		if (locals_nr)
 			s->seg_manager.script_initialize_locals_zero( &s->seg_manager,
-								      reg.segment, locals);
+								      reg.segment, locals_nr);
 
 	} else {
 		s->seg_manager.mcpy_in_out( &s->seg_manager, 0, script->data, script->size, reg.segment, SEG_ID);
@@ -1808,30 +1814,31 @@ script_instantiate(state_t *s, int script_nr)
 
 	objlength = 0;
 	reg_tmp = reg;
+	reg.offset = magic_pos_adder;
+
 	do {
 		reg_t data_base;
+		reg_t addr;
 		reg.offset += objlength; /* Step over the last checked object */
 		objtype = SEG_GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
 		if( !objtype ) break;
-		reg_tmp.offset = reg.offset + 2;
-		objlength = SEG_GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT);
+
+		objlength = SEG_GET_HEAP(s, make_reg(reg.segment, reg.offset + 2), MEM_OBJ_SCRIPT);
 
 		data_base = reg;
 		data_base.offset += 4;
 
+		addr = data_base;
+
 		switch( objtype ) {
 		case sci_obj_exports: {
-			int magic_offset = (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER)? 2 : 0;
-
-			s->seg_manager.set_export_table_offset( &s->seg_manager, reg.offset + 4
-								/* +4 is to step over the header */
-								, magic_offset, reg.segment,
-								SEG_ID );
+			s->seg_manager.set_export_table_offset( &s->seg_manager, data_base.offset,
+								reg.segment, SEG_ID );
 		}
 			break;
 
 		case sci_obj_synonyms:
-			s->seg_manager.set_synonyms_offset( &s->seg_manager, reg.offset + 4, reg.segment, SEG_ID ); /* +4 is to step over the header */
+			s->seg_manager.set_synonyms_offset( &s->seg_manager, addr.offset, reg.segment, SEG_ID ); /* +4 is to step over the header */
 			s->seg_manager.set_synonyms_nr( &s->seg_manager, (objlength) / 4, reg.segment, SEG_ID );
 			break;
 
@@ -1839,11 +1846,10 @@ script_instantiate(state_t *s, int script_nr)
 			s->seg_manager.script_initialize_locals( &s->seg_manager, data_base);
 			break;
 
-		case sci_obj_class:
-			{
-			int classpos = reg.offset - SCRIPT_OBJECT_MAGIC_OFFSET + 4/* Header */;
+		case sci_obj_class: {
+			int classpos = addr.offset - SCRIPT_OBJECT_MAGIC_OFFSET;
 			int species;
-			reg_tmp.offset = reg.offset - SCRIPT_OBJECT_MAGIC_OFFSET + 4/* Header */;
+			reg_tmp.offset = addr.offset - SCRIPT_OBJECT_MAGIC_OFFSET;
 			species = OBJ_SPECIES(s, reg_tmp, MEM_OBJ_SCRIPT);
 			if (species < 0 || species >= s->classtable_size) {
 				sciprintf("Invalid species %d(0x%x) not in interval "
@@ -1855,8 +1861,10 @@ script_instantiate(state_t *s, int script_nr)
 			}
 
 			s->classtable[species].script = script_nr;
-			s->classtable[species].reg = reg;
-			s->classtable[species].reg.offset = classpos - magic_pos_adder;
+			s->classtable[species].reg = addr;
+			s->classtable[species].reg.offset = classpos;
+			/* Set technical class position-- into the block allocated for it */
+
 			}
 			break;
 
@@ -1864,29 +1872,32 @@ script_instantiate(state_t *s, int script_nr)
 			break;
 		}
 	} while (objtype != 0);
-
 	/* And now a second pass to adjust objects and class pointers, and the general pointers */
-	reg.offset = s->seg_manager.get_heappos( &s->seg_manager, reg.segment, SEG_ID) + magic_pos_adder;
 
 	objlength = 0;
-	reg.offset = 0;
+	reg.offset = magic_pos_adder; /* Reset counter */
+
 	do {
+		reg_t addr;
 		reg.offset += objlength; /* Step over the last checked object */
 		objtype = SEG_GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
 		if( !objtype ) break;
 		objlength = SEG_GET_HEAP2(s, reg.segment, reg.offset + 2, MEM_OBJ_SCRIPT);
 		reg.offset += 4; /* Step over header */
 
+		addr = reg;
+
 		switch (objtype) {
 		case sci_obj_code:
-			s->seg_manager.script_add_code_block(&s->seg_manager, reg);
+			s->seg_manager.script_add_code_block(&s->seg_manager, addr);
 			break;
 		case sci_obj_object:
 		case sci_obj_class:
 		{ /* object or class? */
-			object_t *obj = s->seg_manager.script_obj_init(&s->seg_manager, reg);
+			object_t *obj = s->seg_manager.script_obj_init(&s->seg_manager, addr);
 			object_t *base_obj;
 
+reg_t oldpos = obj->variables[SCRIPT_SPECIES_SELECTOR];
 			/* Instantiate the superclass, if neccessary */
 			obj->variables[SCRIPT_SPECIES_SELECTOR] =
 				INST_LOOKUP_CLASS(obj->variables[SCRIPT_SPECIES_SELECTOR].offset);
@@ -1902,7 +1913,7 @@ script_instantiate(state_t *s, int script_nr)
 		} /* if object or class */
 			break;
 		case sci_obj_pointers: /* A relocation table */
-			relocation = reg.offset;
+			relocation = addr.offset;
 			break;
 
 		default:
@@ -1925,7 +1936,7 @@ script_instantiate(state_t *s, int script_nr)
 void
 script_uninstantiate(state_t *s, int script_nr)
 {
-	reg_t reg = make_reg( 0, 0 );
+	reg_t reg = make_reg( 0, (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)? 2 : 0 );
 	int objtype, objlength;
 	int i;
 
@@ -2174,15 +2185,15 @@ obj_get(state_t *s, reg_t offset)
 		if (memobj->type == MEM_OBJ_CLONES
 		    && ENTRY_IS_VALID(&memobj->data.clones, offset.offset))
 			obj = &(memobj->data.clones.table[offset.offset].entry);
-		else if (memobj->type == MEM_OBJ_SCRIPT)
+		else if (memobj->type == MEM_OBJ_SCRIPT) {
 			if (offset.offset <= memobj->data.script.buf_size
 			    && offset.offset >= -SCRIPT_OBJECT_MAGIC_OFFSET
 			    && RAW_IS_OBJECT(memobj->data.script.buf + offset.offset)) {
 				int idx = RAW_GET_CLASS_INDEX(memobj->data.script.buf + offset.offset);
-
 				if (idx >= 0 && idx < memobj->data.script.objects_nr)
 					obj = memobj->data.script.objects + idx;
 			}
+		}
 	}
 
 	return obj;

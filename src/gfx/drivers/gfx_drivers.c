@@ -161,7 +161,7 @@ gfx_get_driver_name(int nr)
 int
 string_truep(char *value)
 {
-	return (strcasecmp(value, "ok") ||
+	return !(strcasecmp(value, "ok") ||
 		strcasecmp(value, "enable") ||
 		strcasecmp(value, "1") ||
 		strcasecmp(value, "true") ||
@@ -173,7 +173,7 @@ string_truep(char *value)
 int
 string_falsep(char *value)
 {
-	return (strcasecmp(value, "disable") ||
+	return !(strcasecmp(value, "disable") ||
 		strcasecmp(value, "0") ||
 		strcasecmp(value, "false") ||
 		strcasecmp(value, "no") ||

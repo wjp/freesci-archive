@@ -204,6 +204,14 @@ xlib_error_handler(Display *display, XErrorEvent *error)
 	return 0;
 }
 
+#define UPDATE_NLS_CAPABILITY 							\
+		if (flags & SCI_XLIB_NLS)					\
+			drv->capabilities |= GFX_CAPABILITY_KEYTRANSLATE;	\
+		else								\
+			drv->capabilities &= ~GFX_CAPABILITY_KEYTRANSLATE
+
+
+
 static int
 xlib_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 {
@@ -213,6 +221,7 @@ xlib_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 			flags |= SCI_XLIB_SWAP_CTRL_CAPS;
 		else
 			flags &= ~SCI_XLIB_SWAP_CTRL_CAPS;
+
 
 		return GFX_OK;
 	}
@@ -224,7 +233,10 @@ xlib_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 		else
 			flags &= ~SCI_XLIB_NLS;
 
+		UPDATE_NLS_CAPABILITY;
+
 		return GFX_OK;
+
 	}
 
 	if (!strncmp(attribute, "disable_shmem", 14)) {
@@ -286,6 +298,9 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 #endif
 
 	int i;
+
+
+	UPDATE_NLS_CAPABILITY;
 
 	if (!S)
 		S = sci_malloc(sizeof(struct _xlib_state));
@@ -1213,6 +1228,7 @@ x_map_key(gfx_driver_t *drv, XEvent *key_event, char *character)
 	case XK_Shift_R:/* S->buckystate |= SCI_EVM_RSHIFT; return 0; */
 		return 0;
 	default:
+		break;
 	}
 
 
@@ -1282,7 +1298,7 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 
 				    case KeyPress: {
 					    int modifiers = event.xkey.state;
-					    char ch;
+					    char ch = 0;
 					    sci_event->type = SCI_EVT_KEYBOARD;
 
 					    S->buckystate = ((flags & SCI_XLIB_INSERT_MODE)? SCI_EVM_INSERT : 0)
@@ -1296,7 +1312,6 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 					    sci_event->buckybits = S->buckystate;
 					    sci_event->data =
 						    x_map_key(drv, &event, &ch);
-
 
 					    if (ch)
 						    sci_event->character = ch;
@@ -1401,7 +1416,7 @@ xlib_usec_sleep(struct _gfx_driver *drv, long usecs)
 gfx_driver_t
 gfx_driver_xlib = {
 	"xlib",
-	"0.5",
+	"0.6",
 	SCI_GFX_DRIVER_MAGIC,
 	SCI_GFX_DRIVER_VERSION,
 	NULL,

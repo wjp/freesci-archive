@@ -551,9 +551,6 @@ game_init(state_t *s)
 	game_obj = script_lookup_export(s, 0, 0);
 	/* The first entry in the export table of script 0 points to the game object */
 
-	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-		game_obj.offset -= 2; /* Adjust for alternative header */
-
 	s->game_name = obj_get_name(s, game_obj);
 
 	if (!s->game_name) {

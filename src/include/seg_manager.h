@@ -154,7 +154,7 @@ typedef struct _seg_manager_t {
 	int (*get_heappos) (struct _seg_manager_t* self, int id, int flag);
 
 	void (*set_export_table_offset) (struct _seg_manager_t* self, int offset,
-					 int magic_offset, int id, int flag);
+					 int id, int flag);
 	guint16 *(*get_export_table_offset) (struct _seg_manager_t* self, int id, int flag,
 					     int *max);
 
@@ -279,7 +279,7 @@ void sm_set_lockers (seg_manager_t* self, int lockers, int id, int flag);
 int sm_get_heappos (struct _seg_manager_t* self, int id, int flag);	/* return 0 */
 
 void sm_set_export_table_offset (struct _seg_manager_t* self, int offset,
-				 int magic_offset, int id, int flag);
+				 int id, int flag);
 guint16 *sm_get_export_table_offset (struct _seg_manager_t* self, int id, int flag, int *max);
 
 void sm_set_synonyms_offset (struct _seg_manager_t* self, int offset, int id, int flag);

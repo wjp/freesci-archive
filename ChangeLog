@@ -1,3 +1,15 @@
+2003-08-22  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/xlib_driver.c (UPDATE_NLS_CAPABILITY): Fixed
+	configuration handling for NLS in xlib
+
+	* src/gfx/drivers/gfx_drivers.c (string_truep): Fixed semantics
+	not to return the inverse of what it was meant to do
+	(string_falsep): ditto
+
+	* src/engine/vm.c, seg_mgr.c: Removed various duplicate handlings
+	of old scripts (resulting in breakage).
+
 2003-07-30  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sfx/player/realtime.c (rt_set_iterator): Reset the output

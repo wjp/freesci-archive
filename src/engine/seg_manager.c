@@ -618,8 +618,7 @@ void sm_set_lockers (seg_manager_t* self, int lockers, int id, int flag) {
 	self->heap[id]->data.script.lockers = lockers;
 };
 
-void sm_set_export_table_offset (struct _seg_manager_t* self, int offset, int magic_offset,
-				 int id, int flag)
+void sm_set_export_table_offset (struct _seg_manager_t* self, int offset, int id, int flag)
 {
 	script_t *scr = &(self->heap[id]->data.script);
 	int i;
@@ -628,14 +627,6 @@ void sm_set_export_table_offset (struct _seg_manager_t* self, int offset, int ma
 	if (offset) {
 		scr->export_table = (guint16 *)(scr->buf + offset + 2);
 		scr->exports_nr = getUInt16((byte *)(scr->export_table - 1));
-		if (magic_offset) {
-			fprintf(stderr, "Adjusting for magic offset!!\n");
-			for (i = 0; i < scr->exports_nr; i++) {
-				int val = getUInt16((byte *) (scr->export_table + i));
-				val += magic_offset;
-				putInt16((byte *) (scr->export_table + i), val);
-			}
-		}
 	} else {
 		scr->export_table = NULL;
 		scr->exports_nr = 0;
@@ -787,7 +778,6 @@ sm_script_relocate(seg_manager_t *self, reg_t block)
 
 	for (i = 0; i < count; i++) {
 		int pos = getUInt16(scr->buf + block.offset + 2 + (i*2));
-
 		if (!pos) continue; /* FIXME: A hack pending investigation */
 
 		if (!_relocate_local(scr, block.segment, pos)) {
