@@ -472,7 +472,8 @@ kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp)
   fprintf(stderr,"exports at %04x\n", disp);
 
   if (!disp) {
-    SCIkwarn("Script 0x%x does not have a dispatch table\n", script);
+    SCIkdebug("Script 0x%x does not have a dispatch table\n", script);
+    s->acc = 0;
     return;
   }
 
@@ -1049,8 +1050,15 @@ kTimesCos(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+  heap_ptr obj = UPARAM_OR_ALT(1, 0);
+
   CHECK_THIS_KERNEL_FUNCTION;
   sciprintf("kDoSound: Stub\n");
+
+  if (obj > 1000) {
+    PUT_SELECTOR(obj, state, 2); /* Set state to a magic value */
+    PUT_SELECTOR(obj, prevSignal, -1);
+  }
 
   switch (PARAM(0)) {
   case 0x0: s->sound_object = PARAM(1); break;
@@ -1266,7 +1274,10 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
   char xfer;
   int i;
   int startarg;
+  int str_leng; /* Used for stuff like "%13s" */
+  char *abstarget = target;
 
+  CHECK_THIS_KERNEL_FUNCTION;
 
   source = _kernel_lookup_text(s, position, index);
 
@@ -1282,31 +1293,68 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
   while (xfer = *source++) {
+    fprintf(stderr,"%c\n", xfer);
     if (xfer == '%') {
       if (mode == 1)
 	*target++ = '%'; /* Literal % by using "%%" */
-      else mode = 1;
+      else {
+	mode = 1;
+	str_leng = 0;
+      }
     }
     else { /* xfer != '%' */
       if (mode == 1) {
 	switch (xfer) {
 	case 's': { /* Copy string */
-	  char *tempsource = ((char *) s->heap) + arguments[paramindex++];
+	  char *tempsource = _kernel_lookup_text(s, arguments[paramindex], arguments[paramindex + 1]);
+	  int extralen = str_leng - strlen(tempsource);
+
+	  if (arguments[paramindex] > 1000) /* Heap address? */
+	    paramindex++;
+	  else
+	    paramindex += 2; /* No, text resource address */
+
+	  while (extralen-- > 0)
+	    *target++ = ' '; /* Format into the text */
+
 	  while (*target++ = *tempsource++);
+	  target--; /* Step back on terminator */
+	  mode = 0;
 	}
 	break;
 	case 'd': { /* Copy decimal */
-	  target += sprintf(target, "%d", arguments[paramindex++]);
-	  paramindex++;
+	  int templen = sprintf(target, "%d", arguments[paramindex++]);
+
+	  if (templen < str_leng) {
+	    int diff = str_leng - templen;
+	    char *dest = target + str_leng - 1;
+
+	    while (templen--) {
+	      *dest = *(dest + diff);
+	      dest--;
+	    } /* Copy the number */
+
+	    while (diff--)
+	      *dest-- = ' '; /* And fill up with blanks */
+
+	    templen = str_leng;
+	  }
+
+	  target += templen;
+	  mode = 0;
 	}
 	break;
 	default:
-	  *target = '%';
-	  *target++;
-	  *target = xfer;
-	  *target++;
+	  if (isdigit(xfer))
+	    str_leng = (str_leng * 10) + (xfer - '0');
+	  else {
+	    *target = '%';
+	    *target++;
+	    *target = xfer;
+	    *target++;
+	    mode = 0;
+	  } /* if (!isdigit(xfer)) */
 	}
-	mode = 0;
       } else { /* mode != 1 */
 	*target = xfer;
 	*target++;
@@ -1317,7 +1365,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
   free(arguments);
 
   *target = 0; /* Terminate string */
-
+fprintf(stderr,"Format() = '%s'\n", abstarget);
   s->acc = dest; /* Return target addr */
 }
 
@@ -2067,6 +2115,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int argc, 
   node = UGET_HEAP(list + LIST_FIRST_NODE); /* Start over */
 
   i = 0;
+sciprintf("Doing ");
   while (node) {
     heap_ptr obj = GET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
     int view_nr = GET_SELECTOR(obj, view);
@@ -2075,6 +2124,13 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int argc, 
     if (cycle)
       if (!(GET_SELECTOR(obj, signal) & _K_VIEW_SIG_FLAG_FROZEN))
 	INVOKE_SELECTOR(obj, doit, 1, 0); /* Call obj::doit() if neccessary */
+
+sciprintf("%d/%d ", i, *list_nr);
+    if (i == (*list_nr)) {
+      (*list_nr)++;
+      retval = realloc(retval, *list_nr * sizeof(view_object_t));
+      /* This has been reported to happen */
+    }
 
     retval[i].obj = obj;
 
@@ -2140,6 +2196,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int argc, 
     node = UGET_HEAP(node + LIST_NEXT_NODE); /* Next node */
   }
 
+sciprintf("\n");
   return retval;
 }
 

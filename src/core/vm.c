@@ -949,7 +949,7 @@ script_instantiate(state_t *s, int script_nr)
 
   if (!script) {
     sciprintf("Script 0x%x requested but not found\n", script_nr);
-    script_debug_flag = script_error_flag = 1;
+    /*    script_debug_flag = script_error_flag = 1; */
     return 0;
   }
 

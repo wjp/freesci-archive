@@ -125,6 +125,8 @@ typedef struct
 
   int illegalBits; /* Used by CanBeHere */
   int dispose;
+
+  int prevSignal;
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {

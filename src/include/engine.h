@@ -51,7 +51,7 @@
 
 #define MAX_GAMEDIR_SIZE 32 /* Used for subdirectory inside of "~/.freesci/" */
 
-#define MAX_HUNK_BLOCKS 64 /* Used for SCI "far memory"; only used for sci_memory in FreeSCI */
+#define MAX_HUNK_BLOCKS 256 /* Used for SCI "far memory"; only used for sci_memory in FreeSCI */
 
 #define MAX_PORTS 16 /* Maximum number of view ports */
 
@@ -124,7 +124,7 @@ typedef struct _state
   byte version_lock_flag; /* Set to 1 to disable any autodetection mechanisms */
   sci_version_t version; /* The approximated patchlevel of the version to emulate */
 
-  int file_handles_nr; /* Numer of allocated file handles */
+  int file_handles_nr; /* maximum numer of allowed file handles */
   FILE **file_handles; /* Array of file handles. Dynamically increased if required. */
 
   /* VM Information */

@@ -802,4 +802,5 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(completed, "completed");
   FIND_SELECTOR(illegalBits, "illegalBits");
   FIND_SELECTOR(dispose, "dispose");
+  FIND_SELECTOR(prevSignal, "prevSignal");
 }
