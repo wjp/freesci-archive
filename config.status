@@ -41,7 +41,7 @@ s%@CPPFLAGS@%%g
 s%@CXXFLAGS@%%g
 s%@FFLAGS@%%g
 s%@DEFS@%-DHAVE_CONFIG_H%g
-s%@LDFLAGS@% -L/usr/local/lib -lglib%g
+s%@LDFLAGS@%-lefence  -L/usr/local/lib -lglib%g
 s%@LIBS@%%g
 s%@exec_prefix@%${prefix}%g
 s%@prefix@%/usr/local%g

@@ -114,7 +114,7 @@ c_stepover(state_t *s)
       opnumber == 0x2b /* super */) 
   {
     _debug_seeking = _DEBUG_SEEK_SO;
-    _debug_seek_level = script_exec_stackpos;
+    _debug_seek_level = s->execution_stack_pos;
     /* Store in _debug_seek_special the offset of the next command after send */
     switch (opcode)
     {
@@ -415,40 +415,52 @@ c_backtrace(state_t *s)
     return 1;
   }
 
-  sciprintf("Call stack:\n");
-  for (i = 0; i <= script_exec_stackpos; i++) {
-    script_exec_stack_t *call = &(script_exec_stack[i]);
+  sciprintf("Call stack (current base: %x):\n", s->execution_stack_base);
+  for (i = 0; i <= s->execution_stack_pos; i++) {
+    exec_stack_t *call = &(s->execution_stack[i]);
     heap_ptr namepos;
     int paramc, totalparamc;
 
-    if (call->selector >= -1) {/* Normal function */
-      namepos = getInt16(s->heap + *(call->sendpp) + SCRIPT_NAME_OFFSET);
-      sciprintf(" %x:  %s::%s(", i, s->heap + namepos, (call->selector == -1)? "<call[be]?>":
+    switch (call->type) {
+
+    case EXEC_STACK_TYPE_CALL: {/* Normal function */
+      namepos = getInt16(s->heap + call->sendp + SCRIPT_NAME_OFFSET);
+      sciprintf(" %x:[%x]  %s::%s(", i, call->origin,
+		s->heap + namepos, (call->selector == -1)? "<call[be]?>":
 		selector_name(s,call->selector));
     }
-    else /* Kernel function */
-      sciprintf(" %x:  k%s(", i, s->kernel_names[-(call->selector)-42]);
+    break;
 
-    totalparamc = *(call->argcp);
+    case EXEC_STACK_TYPE_KERNEL: /* Kernel function */
+      sciprintf(" %x:[%x]  k%s(", i, call->origin, s->kernel_names[-(call->selector)-42]);
+      break;
+
+    case EXEC_STACK_TYPE_VARSELECTOR:
+      sciprintf(" %x:[%x] vs%s: k%s(", i, call->origin, (call->argc)? "write" : "read",
+		s->kernel_names[-(call->selector)-42]);
+      break;
+    } /* switch */
+
+    totalparamc = call->argc;
 
     if (totalparamc > 16)
       totalparamc = 16;
 
     for (paramc = 1; paramc <= totalparamc; paramc++) {
-      sciprintf("%04x", getUInt16(s->heap + *(call->argpp) + paramc * 2));
+      sciprintf("%04x", getUInt16(s->heap + call->variables[VAR_PARAM] + paramc * 2));
 
-      if (paramc < *(call->argcp))
+      if (paramc < call->argc)
 	sciprintf(", ");
     }
 
-    if (*(call->argcp) > 16)
+    if (call->argc > 16)
       sciprintf("...");
 
-    if (call->objpp == NULL)
+    if (call->objp == 0)
       sciprintf(")\n");
     else
-      sciprintf(")\n    obj@%04x pc=%04x sp=%04x fp=%04x\n", *(call->objpp), *(call->pcp),
-		*(call->spp), *(call->ppp));
+      sciprintf(")\n    obj@%04x pc=%04x sp=%04x fp=%04x\n", call->objp, call->pc,
+		call->sp, call->variables[VAR_TEMP]);
   }
   return 0;
 }
@@ -569,7 +581,7 @@ int
 c_sret(state_t *s)
 {
   _debug_seeking = _DEBUG_SEEK_LEVEL_RET;
-  _debug_seek_level = script_exec_stackpos;
+  _debug_seek_level = s->execution_stack_pos;
   _debugstate_valid = 0;
   return 0;
 }
@@ -1014,12 +1026,12 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
     }
 
     case _DEBUG_SEEK_LEVEL_RET: {
-      if ((op != op_ret) || (_debug_seek_level < script_exec_stackpos)) return;
+      if ((op != op_ret) || (_debug_seek_level < s->execution_stack_pos)) return;
       break;
     }
 
     case _DEBUG_SEEK_SO:
-      if (*pc != _debug_seek_special || script_exec_stackpos != _debug_seek_level) return;
+      if (*pc != _debug_seek_special || s->execution_stack_pos != _debug_seek_level) return;
       break;
 
     } /* switch(_debug_seeking) */
@@ -1094,7 +1106,6 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       cmdHook(c_dumpnodes, "dumpnodes", "i", "shows the specified number of nodes\n"
 	      "  from the parse node tree");
 
-      cmdHookInt(&script_exec_stackpos, "script_exec_stackpos", "Position on the execution stack\n");
       cmdHookInt(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");
       cmdHookInt(&script_checkloads_flag, "script_checkloads_flag", "Set != 0 to display information\n"
 		 "  when scripts are loaded or unloaded");
@@ -1126,7 +1137,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       else
       if (commandbuf = consoleInput(&event)) {
 	cmdParse(s, commandbuf);
-	sciprintf("\n");
+	sciprintf(" >%s\n", s);
       }
 
     }

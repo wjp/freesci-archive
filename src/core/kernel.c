@@ -260,6 +260,8 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int
   int framesize = 4 + 2 * argc;
   heap_ptr address;
 
+  exec_stack_t *xstack; /* Execution stack */
+
   PUT_HEAP(stackframe, selector_id); /* The selector we want to call */
   PUT_HEAP(stackframe + 2, argc); /* The number of arguments */
 
@@ -271,23 +273,23 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int
     return 1;
   }
 
-  ++script_exec_stackpos;
-  script_exec_stack[script_exec_stackpos].objpp = 0;
-  script_exec_stack[script_exec_stackpos].pcp = 0;
-  script_exec_stack[script_exec_stackpos].spp = 0;
-  script_exec_stack[script_exec_stackpos].ppp = 0;
-  script_exec_stack[script_exec_stackpos].argcp = &argc;
-  script_exec_stack[script_exec_stackpos].argpp = &stackframe;
-  script_exec_stack[script_exec_stackpos].selector = -42-kfunct;
-
   va_start(argp, argc);
   for (i = 0; i < argc; i++)
     PUT_HEAP(stackframe + 4 + (2 * i), va_arg(argp, int)); /* Write each argument */
   va_end(argp);
 
-  send_selector(s, object, object, stackframe + framesize, framesize, argc, stackframe); /* Commit */
+  xstack = 
+    send_selector(s, object, object, stackframe + framesize, framesize, argc, stackframe); /* Commit */
+  xstack->selector = -42 - kfunct; /* Evil debugging hack to identify kernel function */
+  xstack->type = EXEC_STACK_TYPE_KERNEL;
 
-  --script_exec_stackpos;
+  /* Now commit the actual function: */
+  xstack = 
+    send_selector(s, object, object, stackframe + framesize, framesize, argc, stackframe);
+
+  run_vm(s); /* Start a new vm */
+
+  --(s->execution_stack_pos); /* Get rid of the extra stack entry */
 
   return 0;
 }
@@ -2561,6 +2563,7 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #define K_CONTROL_EDIT 3
 #define K_CONTROL_ICON 4
 #define K_CONTROL_CONTROL 6
+#define K_CONTROL_SELECT_BOX 10
 
 void
 _k_draw_control(state_t *s, heap_ptr obj);
@@ -2784,6 +2787,10 @@ _k_draw_control(state_t *s, heap_ptr obj)
   case K_CONTROL_CONTROL:
 
     graph_draw_selector_control(s, s->ports[s->view_port], state, x, y, xl, yl);
+    break;
+
+  case K_CONTROL_SELECT_BOX:
+
     break;
 
   default:
@@ -3676,7 +3683,7 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
     case K_DISPLAY_SET_COORDS:
 
       port->x = PARAM(argpt++);
-      port->y = PARAM(argpt++);
+      port->y = PARAM(argpt++) + 1; /* ? */
       SCIkdebug(SCIkGRAPHICS, "Display: set_coords(%d, %d)\n", port->x, port->y);
       break;
 

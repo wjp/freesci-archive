@@ -143,6 +143,15 @@ typedef struct _state
 
   /* VM Information */
 
+  exec_stack_t *execution_stack; /* The execution stack */
+  int execution_stack_size;      /* Number of stack frames allocated */
+  int execution_stack_pos;       /* Position on the execution stack */
+  int execution_stack_base;      /* When called from kernel functions, the vm
+				 ** is re-started recursively on the same stack.
+				 ** This variable contains the stack base for the
+				 ** current vm.
+				 */
+
   heap_t *_heap; /* The heap structure */
   byte *heap; /* The actual heap data (equal to _heap->start) */
   gint16 acc; /* Accumulator */

@@ -1,3 +1,11 @@
+1999-10-20  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/vm.c (run_vm): Re-implemented parts of the vm so that
+	a new vm is only started from kernel functions. The program stack
+	is now stored on a local stack (again, except for calls into user
+	space from kernel functions) which should make it possible to store
+	and load the game state under most conditions.
+
 1999-10-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/vocab_debug.c (vocabulary_get_knames0): Added handling for

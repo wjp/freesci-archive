@@ -154,16 +154,29 @@ typedef struct {
   int nsTop, nsLeft, nsRight, nsBottom;
 } view_object_t;
 
+#define VAR_GLOBAL 0
+#define VAR_LOCAL 1
+#define VAR_TEMP 2
+#define VAR_PARAM 3
+
+#define EXEC_STACK_TYPE_CALL 0
+#define EXEC_STACK_TYPE_KERNEL 1
+#define EXEC_STACK_TYPE_VARSELECTOR 2
+
 typedef struct {
-  heap_ptr *objpp;
-  heap_ptr *sendpp;
-  heap_ptr *pcp;
-  heap_ptr *spp;
-  heap_ptr *ppp;
-  int *argcp;
-  heap_ptr *argpp;
+  heap_ptr objp;
+  heap_ptr sendp;
+  heap_ptr pc; /* Not accurate for the TOS element */
+  heap_ptr sp; /* Not accurate for the TOS element */
+  int argc;
+  heap_ptr variables[4]; /* variable base pointers: Global, Local, Temp, Param */
   int selector; /* The selector which was used to call or -1 if not applicable */
-} script_exec_stack_t;
+  int origin;   /* The stack frame position the call was made from, or -1 if it
+		** was the initial call.
+		*/
+  heap_ptr type; /* EXEC_STACK_TYPE* */
+
+} exec_stack_t;
 
 typedef struct _breakpoint {
   int type;
@@ -174,12 +187,6 @@ typedef struct _breakpoint {
 #define BREAK_EXECUTE 1
 /* Break when selector is executed. data contains (char *) selector name
    (in the format Object::Method) */
-
-extern script_exec_stack_t script_exec_stack[];
-/* Pointers to values used for debugging purposes. */
-
-extern int script_exec_stackpos;
-/* current position inside the script_exec_stack */
 
 
 extern int script_debug_flag;
@@ -209,7 +216,7 @@ typedef int kernel_function(struct _state* s);
 extern kernel_function* kfuncs[];
 extern int max_instance;
 
-void
+inline exec_stack_t *
 execute_method(struct _state *s, word script, word pubfunct, heap_ptr sp, heap_ptr calling_obj,
 	       word argc, heap_ptr argp);
 /* Executes function pubfunct of the specified script.
@@ -219,16 +226,32 @@ execute_method(struct _state *s, word script, word pubfunct, heap_ptr sp, heap_p
 **             (heap_ptr) calling_obj: The heap address of the object which executed the call
 **             (word) argc: Number of arguments supplied
 **             (heap_ptr) argp: Pointer to the first supplied argument
+** Returns   : (exec_stack_t *): A pointer to the new exec stack TOS entry
 */
 
-void
+
+exec_stack_t *
 send_selector(struct _state *s, heap_ptr send_obj, heap_ptr work_obj,
 	      heap_ptr sp, int framesize, word restmod, heap_ptr argp);
+/* Executes a "send" or related operation to a selector
+** Parameters: (state_t *) s: The state_t to operate on
+**             (heap_ptr) send_obj: Heap address of the object to send to
+**             (heap_ptr) work_obj: Heap address of the object initiating the send
+**             (heap_ptr) sp: Stack pointer position
+**             (int) framesize: Size of the send as determined by the "send" operation
+**             (word) restmod: The &rest modifier, if set
+**             (heap_ptr) argp: Pointer to the beginning of the heap block containing the
+**                              data to be send. This area is a succession of one or more
+**                              sequences of [selector_number][argument_counter] and then
+**                              "argument_counter" word entries with the parameter values.
+** Returns   : (exec_stack_t *): A pointer to the new execution stack TOS entry
+*/
 
-void
-execute(struct _state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr argp,
-	int selector, heap_ptr sendp);
-/* Executes the code on s->heap[pc] until it hits a 'ret' command
+
+exec_stack_t *
+add_exec_stack_entry(struct _state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc,
+		     heap_ptr argp, int selector, heap_ptr sendp, int origin);
+/* Adds an entry to the top of the execution stack
 ** Parameters: (state_t *) s: The state with which to execute
 **             (heap_ptr) pc: The initial program counter
 **             (heap_ptr) sp: The initial stack pointer
@@ -236,11 +259,39 @@ execute(struct _state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, hea
 **             (int) argc: Number of parameters to call with
 **             (heap_ptr) argp: Heap pointer to the first parameter
 **             (int) selector: The selector over which it was called or -1 if n.a. For debugging.
-**             (heap_ptr) sendp: Pointer to the object to which the message was sent.
-**             Equal to objp for anything but super.
+**             (heap_ptr) sendp: Pointer to the object which the message was sent to.
+**                               Equal to objp for anything but super.
+**             (int) origin: Number of the execution stack element this entry was created by
+**                           (usually the current TOS number, except for multiple sends).
+** Returns   : (exec_stack_t *): A pointer to the new exec stack TOS entry
+*/
+
+
+exec_stack_t *
+add_exec_stack_varselector(struct _state *s, heap_ptr objp, int argc, heap_ptr argp, int selector,
+			   heap_ptr address, int origin);
+/* Adds one varselector access to the execution stack
+** Parameters: (state_t *) s: The state_t to use
+**             (heap_ptr) objp: Pointer to the object owning the selector
+**             (int) argc: 1 for writing, 0 for reading
+**             (heap_ptr) argp: Pointer to the address of the data to write -2
+**             (int) selector: Selector name
+**             (heap_ptr) address: Heap address of the selector
+**             (int) origin: Stack frame which the access originated from
+** Returns   : (exec_stack_t *): Pointer to the new exec-TOS element
+** This function is called from send_selector only.
+*/
+
+
+void
+vm_run(struct _state *s);
+/* Executes the code on s->heap[pc] until it hits a 'ret' operation while (stack_base == stack_pos)
+** Parameters: (state_t *) s: The state to use
+** Returns   : (void)
 ** This function will execute SCI bytecode. It requires s to be set up
 ** correctly.
 */
+
 
 void
 script_debug(struct _state *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp,

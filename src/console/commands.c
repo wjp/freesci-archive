@@ -472,10 +472,12 @@ c_man(state_t *s)
       sciprintf("\n\nDESCRIPTION:\n  %s\n",_cmd_commands[i].description);
     }
   for (i = 0; i < _cmd_var_count; i++)
-    if (strcmp(cmd_params[0].str, _cmd_vars[i].name) == 0)
-      sciprintf("-- VARIABLE: (int) %s\n\nDESCRIPTION:\n  %s\n",
-		_cmd_vars[i].name,
-		_cmd_vars[i].description);
+    if (strcmp(cmd_params[0].str, _cmd_vars[i].name) == 0) {
+      sciprintf("-- VARIABLE: (int) %s\n\nDESCRIPTION:\n  ",
+		_cmd_vars[i].name);
+      sciprintf(_cmd_vars[i].description);
+      sciprintf("\n");
+    }
   return 0;
 }
 

@@ -1902,7 +1902,7 @@ fi
 
 
 
-#LDFLAGS="-lefence $LDFLAGS"
+LDFLAGS="-lefence $LDFLAGS"
 
 echo $ac_n "checking whether byte ordering is bigendian""... $ac_c" 1>&6
 echo "configure:1909: checking whether byte ordering is bigendian" >&5

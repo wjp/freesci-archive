@@ -120,7 +120,7 @@ sound_get_event(state_t *s)
 
   FD_ZERO(&inpfds);
   FD_SET(s->sound_pipe_debug[0], &inpfds);
-  while ((select(s->sound_pipe_debug[0] + 1, &inpfds, NULL, NULL, &waittime)
+  while ((select(s->sound_pipe_debug[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime)
 	  && (inplen = read(s->sound_pipe_debug[0], debug_buf, 64)) > 0)) {
 
     debug_buf[inplen] = 0; /* Terminate string */
@@ -136,7 +136,7 @@ sound_get_event(state_t *s)
   FD_ZERO(&inpfds);
   FD_SET(s->sound_pipe_events[0], &inpfds);
 
-  if (select(s->sound_pipe_events[0] + 1, &inpfds, NULL, NULL, &waittime2)) {
+  if (select(s->sound_pipe_events[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime2)) {
 
       if (read(s->sound_pipe_events[0], event, sizeof(sound_event_t)) == sizeof(sound_event_t))
 	return event;
@@ -219,7 +219,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 
     FD_ZERO(&fds);
     FD_SET(s->sound_pipe_out[0], &fds);
-    success = select(s->sound_pipe_out[0]+1, &fds, NULL, NULL, &timeout);
+    success = select(s->sound_pipe_out[0]+1, &fds, NULL, NULL, (struct timeval *)&timeout);
 
     if (success) {
 
