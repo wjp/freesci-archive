@@ -382,7 +382,6 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 {PARAMTOKEN}[[:blank:]]*"="[[:blank:]]*({NUMPATHPARAMTOKEN}|{QUOTED_NUMPARAMTOKEN})[[:blank:]]* { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
-	char *foo;
 	int option_str_len;
 
 	while (isalnum(*value_str) || *value_str == '_')

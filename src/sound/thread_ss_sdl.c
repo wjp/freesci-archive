@@ -118,7 +118,7 @@ int sound_sdl_configure(state_t *s, char *option, char *value)
 }
 
 int sound_sdl_command(state_t *s, unsigned int command, unsigned int handle, 
-		      long value)
+		      guint8 value)
 {
   sound_server_state_t *ss_state = &sss;
 

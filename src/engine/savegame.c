@@ -65,7 +65,7 @@ write_heapptr(FILE *fh, heap_ptr *foo)
 int
 read_heapptr(FILE *fh, heap_ptr *foo, char *lastval, int *line, int *hiteof)
 {
-	*foo = strtol(lastval, NULL, 0);
+	*foo = (heap_ptr)strtol(lastval, NULL, 0);
 	return 0;
 }
 

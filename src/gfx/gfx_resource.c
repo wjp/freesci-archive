@@ -98,7 +98,7 @@ pixmap_endianness_reverse_2(byte *data, int area)
 
                 /* The next line will give warnings on 32 bit archs, but
                 ** that's OK.  */
-                temp = ((temp & 0xff00ff00ff00ff00l) >> 8)
+                temp = (unsigned long)((temp & 0xff00ff00ff00ff00l) >> 8)
                         | ((temp & 0x00ff00ff00ff00ffl) << 8);
 
                 memcpy(data, &temp, sl);
@@ -154,9 +154,9 @@ pixmap_endianness_reverse_4(byte *data, int area)
 
                 /* The next lines will give warnings on 32 bit archs, but
                 ** that's OK.  */
-                temp = ((temp & 0xffff0000ffff0000l) >> 16)
+                temp = (unsigned long)((temp & 0xffff0000ffff0000l) >> 16)
                         | ((temp & 0x0000ffff0000ffffl) << 16);
-                temp = ((temp & 0xff00ff00ff00ff00l) >> 8)
+                temp = (unsigned long)((temp & 0xff00ff00ff00ff00l) >> 8)
                         | ((temp & 0x00ff00ff00ff00ffl) << 8);
 
                 memcpy(data, &temp, sl);

@@ -96,7 +96,7 @@ typedef struct _song_iterator {
 	byte resetflag; /* for 0x4C -- on DoSound StopSound, do we return to start? */
 
 	int (*read_next_command) (struct _song_iterator *self,
-				  byte *buf, int *buf_size);
+				  byte *buf, unsigned int *buf_size);
 	/* Reads the next MIDI operation _or_ delta time
 	** Parameters: (song_iterator_t *) self
 	**             (byte *) buf: The buffer to write to (needs to be able to
@@ -114,7 +114,7 @@ typedef struct _song_iterator {
 	*/
 
 	byte * (*check_pcm) (struct _song_iterator *self,
-			     int *size, int *sample_rate);
+			     unsigned int *size, unsigned int *sample_rate);
 	/* Checks for the presence of a pcm sample
 	** Parameters: (song_iterator_t *) self
 	**             (int *) size: Return variable for the sample size
@@ -146,7 +146,7 @@ typedef struct _song {
 	int pitch[MIDI_CHANNELS]; /* Pitch wheel */
 	int channel_map[MIDI_CHANNELS]; /* Number of HW channels to use */
 
-	int size; /* Song size */
+	unsigned int size; /* Song size */
 	int pos;  /* Current position in song */
 	int loopmark; /* loop position */
 	int fading;   /* Ticks left until faded out, or -1 if not fading */
@@ -835,6 +835,13 @@ restore_sound_state(sound_server_state_t *ss_state);
 /* Restores current sound state
 ** Parameters: (sound_server_state_t *) ss_state: State to restore into
 ** Returns   : (void)
+*/
+
+int do_sound(sound_server_state_t *sss, int buff_ss);
+/* Executes main sound loop
+** Paramters: (sound_server_state_t *) sss: Global soundserver state
+**            (int) buff_ss: Indicates if notes fetched should be buffered or
+**                           be played immediately
 */
 
 #ifdef DEBUG_SOUND_SERVER

@@ -554,7 +554,7 @@ kWait(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	sci_get_current_time (&time);
 
-	s->acc = ((time.tv_usec - s->last_wait_time.tv_usec) * 60 / 1000000) +
+	s->acc = (guint16)((time.tv_usec - s->last_wait_time.tv_usec) * 60 / 1000000) +
 		(time.tv_sec - s->last_wait_time.tv_sec) * 60;
 
 	memcpy(&(s->last_wait_time), &time, sizeof(GTimeVal));

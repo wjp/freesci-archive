@@ -108,7 +108,7 @@ int do_sound(sound_server_state_t *sss, int buff_ss)
 			/* retrieve MIDI command */
 			this_cmd.delta_time = 0;
 
-			if (sss->current_song->pos >= sss->current_song->size) {
+			if (sss->current_song->pos >= (int)sss->current_song->size) {
 				fprintf(debug_stream, "Sound server: Error: Reached end of song while decoding prefix:\n");
 				dump_song(sss->current_song);
 				fprintf(debug_stream, "Suspending sound server\n");
@@ -397,7 +397,7 @@ dump_song(song_t *song)
 	if (!song)
 		fprintf(debug_stream, "NULL");
 	else {
-		int i;
+		unsigned int i;
 
 		fprintf(debug_stream, "size=%d, pos=0x%x, loopmark=0x%x, loops_left=%d\n",
 			song->size, song->pos, song->loopmark, song->loops);

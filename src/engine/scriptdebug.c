@@ -30,6 +30,11 @@
 #include <console.h>
 #include <kdebug.h>
 #include <vocabulary.h>
+#include <sci_widgets.h>
+
+#ifdef _MSC_VER
+#  include <sci_win32.h>
+#endif _MSC_VER
 
 int _debugstate_valid = 0; /* Set to 1 while script_debug is running */
 int _debug_step_running = 0; /* Set to >0 to allow multiple stepping */
@@ -1533,7 +1538,7 @@ c_disasm(state_t *s)
 	int op_count = 1;
 	int do_bwc = 0;
 	int do_bytes = 0;
-	int i;
+	unsigned int i;
 	int invalid = 0;
 
 	if (!_debugstate_valid) {

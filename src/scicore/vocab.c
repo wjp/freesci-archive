@@ -141,7 +141,7 @@ word_t **
 vocab_get_words(resource_mgr_t *resmgr, int *word_counter)
 {
 	int counter = 0;
-	int seeker;
+	unsigned int seeker;
 	word_t **words;
 
 	char currentword[256] = ""; /* They're not going to use words longer than 255 ;-) */

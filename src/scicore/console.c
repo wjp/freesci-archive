@@ -558,6 +558,8 @@ sciprintf (char *fmt, ...)
 	
 	if (_con_string_callback)
 		_con_string_callback(buf);
+
+	return 0;
 }
 
 void
@@ -943,7 +945,7 @@ c_hexgrep (state_t * s)
   for (; resnr <= resmax; resnr++)
     if ((script = scir_find_resource(s->resmgr, restype, resnr, 0)))
     {
-      int seeker = 0, seekerold = 0;
+      unsigned int seeker = 0, seekerold = 0;
       int comppos = 0;
       int output_script_name = 0;
 

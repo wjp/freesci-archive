@@ -36,6 +36,7 @@
 #include <soundserver.h>
 #include <midi_device.h>
 #include <sys/types.h>
+#include <pcmout.h>
 
 #define STANDARD_TIMER 0
 #define SCI_MIDI_TIME_TIMER 1

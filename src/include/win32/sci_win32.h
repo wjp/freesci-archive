@@ -1,4 +1,4 @@
-
+#include <windows.h>
 #ifdef _WIN32
 
 #	ifdef sleep
@@ -7,7 +7,7 @@
 
 #	define sleep(x) \
 	do { \
-		if (x == 0) { \
+		if (x < 5) { \
 			Sleep(0); \
 		} else { \
 			if (timeBeginPeriod(1) != TIMERR_NOERROR) \

@@ -527,7 +527,7 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			SCIkdebug(SCIkTIME, "GetTime(timeofday) returns %d\n", s->acc);
 		} else { /* Get time since game started */
 			sci_get_current_time (&time_prec);
-			s-> acc = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
+			s-> acc = (guint16)((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
 				(time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
 			SCIkdebug(SCIkTIME, "GetTime(elapsed) returns %d\n", s->acc);
 		}
@@ -537,7 +537,7 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		switch (mode) {
 		case _K_NEW_GETTIME_TICKS : {
 			sci_get_current_time (&time_prec);
-			s-> acc = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
+			s->acc = (guint16)((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
 				(time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
 			SCIkdebug(SCIkTIME, "GetTime(elapsed) returns %d\n", s->acc);
 			break;

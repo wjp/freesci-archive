@@ -86,7 +86,7 @@ _common_init(song_iterator_t *self)
 	}
 
 static int
-_sci0_read_next_command(song_iterator_t *self, byte *buf, int *buf_size)
+_sci0_read_next_command(song_iterator_t *self, byte *buf, unsigned int *buf_size)
 {
 	CHECK_FOR_END(0);
 

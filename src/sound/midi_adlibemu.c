@@ -588,9 +588,9 @@ int midi_adlibemu_event2(guint8 command, guint8 param, guint32 delta)
 
 int midi_adlibemu_volume(guint8 volume)
 {
-  guint16 i;
+  guint8 i;
 
-  i = (guint16)volume * 15 / 100;
+  i = (guint8)volume * 15 / 100;
 
   adlib_master=i;
 

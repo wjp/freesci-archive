@@ -118,7 +118,7 @@ int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2, guint32 delta
 			return 0;
 
 		volume = param2;
-		param2 = (volume * MIDI_mapping[param].volume) >> (7);
+		param2 = (guint8)(volume * MIDI_mapping[param].volume) >> (7);
 
 		if (channel == RHYTHM_CHANNEL)
 			xparam = MIDI_mapping[param].gm_rhythmkey;
