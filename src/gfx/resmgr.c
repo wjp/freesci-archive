@@ -271,7 +271,7 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 	sbtree_t *tree = state->resource_trees[restype];
 	gfx_resource_t *res = NULL;
 	int hash = gfxr_interpreter_options_hash(restype, state->version,
-						 state->options, state->misc_payload);
+						 state->options, state->misc_payload, 0);
         int must_post_process_pic = 0;
 	int need_unscaled =
 		(state->driver->mode->xfact != 1 || state->driver->mode->yfact != 1);
@@ -380,7 +380,7 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 	gfx_resource_t *res = NULL;
 	int hash = gfxr_interpreter_options_hash(restype, state->version,
 						 state->options,
-						 state->misc_payload);
+						 state->misc_payload, 0);
 	int need_unscaled = !(state->options->pic0_unscaled)
 		&& (state->driver->mode->xfact != 1 || state->driver->mode->yfact != 1);
 
@@ -425,13 +425,14 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 
 
 gfxr_view_t *
-gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel)
+gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel, int palette)
 {
 	int restype = GFX_RESOURCE_TYPE_VIEW;
 	sbtree_t *tree = state->resource_trees[restype];
 	gfx_resource_t *res = NULL;
 	int hash = gfxr_interpreter_options_hash(restype, state->version,
-						 state->options, state->misc_payload);
+						 state->options, state->misc_payload,
+						 palette);
 	gfxr_view_t *view = NULL;
 	gfxr_loop_t *loop_data = NULL;
 	gfx_pixmap_t *cel_data = NULL;
@@ -442,7 +443,7 @@ gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel)
 	res = (gfx_resource_t *) sbtree_get(tree, nr);
 
 	if (!res || res->mode != hash) {
-		view = gfxr_interpreter_get_view(state, nr, state->misc_payload);
+		view = gfxr_interpreter_get_view(state, nr, state->misc_payload, palette);
 
 		if (!view)
 			return NULL;
@@ -497,7 +498,7 @@ gfxr_get_font(gfx_resstate_t *state, int nr, int scaled)
 	sbtree_t *tree = state->resource_trees[restype];
 	gfx_resource_t *res = NULL;
 	int hash = gfxr_interpreter_options_hash(restype, state->version,
-						 state->options, state->misc_payload);
+						 state->options, state->misc_payload, 0);
 
 	if (!tree)
 		return NULL;
@@ -542,7 +543,7 @@ gfxr_get_cursor(gfx_resstate_t *state, int nr)
 	sbtree_t *tree = state->resource_trees[restype];
 	gfx_resource_t *res = NULL;
 	int hash = gfxr_interpreter_options_hash(restype, state->version,
-						 state->options, state->misc_payload);
+						 state->options, state->misc_payload, 0);
 
 	if (!tree)
 		return NULL;

@@ -287,6 +287,7 @@ gfx_rect_translate(rect_t rect, point_t offset)
 #define GFX_PIXMAP_FLAG_PALETTE_ALLOCATED (1<<3) /* Palette has been allocated */
 #define GFX_PIXMAP_FLAG_PALETTE_SET       (1<<4) /* Palette has been propagated to the driver */
 #define GFX_PIXMAP_FLAG_DONT_UNALLOCATE_PALETTE (1<<5) /* Used by text, which uses preallocated colors */
+#define GFX_PIXMAP_FLAG_PALETTIZED	  (1<<6) /* Indicates a palettized view */
 
 typedef struct { /* gfx_pixmap_t: Pixel map */
 

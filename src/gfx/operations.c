@@ -369,9 +369,9 @@ _gfxop_draw_pointer(gfx_state_t *state)
 }
 
 gfx_pixmap_t *
-_gfxr_get_cel(gfx_state_t *state, int nr, int *loop, int *cel)
+_gfxr_get_cel(gfx_state_t *state, int nr, int *loop, int *cel, int palette)
 {
-	gfxr_view_t *view = gfxr_get_view(state->resstate, nr, loop, cel);
+	gfxr_view_t *view = gfxr_get_view(state->resstate, nr, loop, cel, palette);
 	gfxr_loop_t *indexed_loop;
 
 	if (!view)
@@ -1545,7 +1545,8 @@ gfxop_set_pointer_view(gfx_state_t *state, int nr, int loop, int cel)
 
 	BASIC_CHECKS(GFX_FATAL);
 
-	new_pointer = _gfxr_get_cel(state, nr, &real_loop, &real_cel);
+	new_pointer = _gfxr_get_cel(state, nr, &real_loop, &real_cel,
+				    0); /* FIXME: For now, don't palettize pointers */
 
 
 	if (!state->mouse_pointer) {
@@ -1630,7 +1631,7 @@ gfxop_lookup_view_get_loops(gfx_state_t *state, int nr)
 
 	BASIC_CHECKS(GFX_ERROR);
 
-	view = gfxr_get_view(state->resstate, nr, &loop, &cel);
+	view = gfxr_get_view(state->resstate, nr, &loop, &cel, 0);
 
 	if (!view) {
 		GFXWARN("Attempt to retreive number of loops from invalid view %d\n", nr);
@@ -1649,7 +1650,7 @@ gfxop_lookup_view_get_cels(gfx_state_t *state, int nr, int loop)
 
 	BASIC_CHECKS(GFX_ERROR);
 
-	view = gfxr_get_view(state->resstate, nr, &real_loop, &cel);
+	view = gfxr_get_view(state->resstate, nr, &real_loop, &cel, 0);
 
 	if (!view) {
 		GFXWARN("Attempt to retreive number of cels from invalid view %d\n", nr);
@@ -1667,7 +1668,7 @@ gfxop_check_cel(gfx_state_t *state, int nr, int *loop, int *cel)
 {
         BASIC_CHECKS(GFX_ERROR);
 
-	if (!gfxr_get_view(state->resstate, nr, loop, cel)) {
+	if (!gfxr_get_view(state->resstate, nr, loop, cel, 0)) {
 		GFXWARN("Attempt to verify loop/cel values for invalid view %d\n", nr);
 		return GFX_ERROR;
 	}
@@ -1682,7 +1683,7 @@ gfxop_overflow_cel(gfx_state_t *state, int nr, int *loop, int *cel)
 	int cel_v = *cel;
         BASIC_CHECKS(GFX_ERROR);
 
-	if (!gfxr_get_view(state->resstate, nr, &loop_v, &cel_v)) {
+	if (!gfxr_get_view(state->resstate, nr, &loop_v, &cel_v, 0)) {
 		GFXWARN("Attempt to verify loop/cel values for invalid view %d\n", nr);
 		return GFX_ERROR;
 	}
@@ -1706,7 +1707,7 @@ gfxop_get_cel_parameters(gfx_state_t *state, int nr, int loop, int cel,
 	gfx_pixmap_t *pxm = NULL;
 	BASIC_CHECKS(GFX_ERROR);
 
-	if (!(view = gfxr_get_view(state->resstate, nr, &loop, &cel))) {
+	if (!(view = gfxr_get_view(state->resstate, nr, &loop, &cel, 0))) {
 		GFXWARN("Attempt to get cel parameters for invalid view %d\n", nr);
 		return GFX_ERROR;
 	}
@@ -1723,7 +1724,8 @@ gfxop_get_cel_parameters(gfx_state_t *state, int nr, int loop, int cel,
 
 static int
 _gfxop_draw_cel_buffer(gfx_state_t *state, int nr, int loop, int cel,
-		       point_t pos, gfx_color_t color, int static_buf)
+		       point_t pos, gfx_color_t color, int static_buf,
+		       int palette)
 {
 	int priority = (color.mask & GFX_MASK_PRIORITY)? color.priority : -1;
 	int control = (color.mask & GFX_MASK_CONTROL)? color.control : -1;
@@ -1732,7 +1734,7 @@ _gfxop_draw_cel_buffer(gfx_state_t *state, int nr, int loop, int cel,
 	int old_x, old_y;
 	BASIC_CHECKS(GFX_FATAL);
 
-	if (!(view = gfxr_get_view(state->resstate, nr, &loop, &cel))) {
+	if (!(view = gfxr_get_view(state->resstate, nr, &loop, &cel, palette))) {
 		GFXWARN("Attempt to draw loop/cel %d/%d in invalid view %d\n", loop, cel, nr);
 		return GFX_ERROR;
 	}
@@ -1757,22 +1759,23 @@ _gfxop_draw_cel_buffer(gfx_state_t *state, int nr, int loop, int cel,
 
 int
 gfxop_draw_cel(gfx_state_t *state, int nr, int loop, int cel, point_t pos,
-	       gfx_color_t color)
+	       gfx_color_t color, int palette)
 {
-	return _gfxop_draw_cel_buffer(state, nr, loop, cel, pos, color, 0);
+	return _gfxop_draw_cel_buffer(state, nr, loop, cel, pos, color, 0, palette);
 }
 
 
 int
 gfxop_draw_cel_static(gfx_state_t *state, int nr, int loop, int cel, point_t pos,
-		      gfx_color_t color)
+		      gfx_color_t color, int palette)
 {
 	int retval;
 	rect_t oldclip = state->clip_zone;
 
 	state->clip_zone = gfx_rect_fullscreen;
 	_gfxop_scale_rect(&(state->clip_zone), state->driver->mode);
-	retval = gfxop_draw_cel_static_clipped(state, nr, loop, cel, pos, color);
+	retval = gfxop_draw_cel_static_clipped(state, nr, loop, cel, pos, color,
+					       palette);
 	/* Except that the area it's clipped against is... unusual ;-) */
 	state->clip_zone = oldclip;
 
@@ -1782,9 +1785,9 @@ gfxop_draw_cel_static(gfx_state_t *state, int nr, int loop, int cel, point_t pos
 
 int
 gfxop_draw_cel_static_clipped(gfx_state_t *state, int nr, int loop, int cel,
-			      point_t pos, gfx_color_t color)
+			      point_t pos, gfx_color_t color, int palette)
 {
-	return _gfxop_draw_cel_buffer(state, nr, loop, cel, pos, color, 1);
+	return _gfxop_draw_cel_buffer(state, nr, loop, cel, pos, color, 1, palette);
 }
 
 

@@ -70,6 +70,10 @@ gfxr_draw_cel0(int id, int loop, int cel, byte *resource, int size, gfxr_view_t 
 			int op = resource[pos++];
 			int count = op >> 4;
 			int color = op & 0xf;
+
+			if (view->flags & GFX_PIXMAP_FLAG_PALETTIZED)
+				color = view->translation[color];
+
 			if (color == color_key)
 				color = GFX_COLOR_INDEX_TRANSPARENT;
 
@@ -96,6 +100,9 @@ gfxr_draw_cel0(int id, int loop, int cel, byte *resource, int size, gfxr_view_t 
 			int op = resource[pos++];
 			int count = op >> 4;
 			int color = op & 0xf;
+
+			if (view->flags & GFX_PIXMAP_FLAG_PALETTIZED)
+				color = view->translation[color];
 
 			if (color == color_key)
 				color = GFX_COLOR_INDEX_TRANSPARENT;
@@ -162,12 +169,13 @@ gfxr_draw_loop0(gfxr_loop_t *dest, int id, int loop, byte *resource, int offset,
 #define V0_MIRROR_LIST_OFFSET 2
 
 gfxr_view_t *
-gfxr_draw_view0(int id, byte *resource, int size)
+gfxr_draw_view0(int id, byte *resource, int size, int palette)
 {
 	int i;
 	gfxr_view_t *view;
 	int mirror_bitpos = 1;
 	int mirror_bytepos = V0_MIRROR_LIST_OFFSET;
+	int palette_ofs = get_int_16(resource + 6);
 
 	if (size < V0_FIRST_LOOP_OFFSET + 8) {
 		GFXERROR("Attempt to draw empty view %04x\n", id);
@@ -183,6 +191,16 @@ gfxr_draw_view0(int id, byte *resource, int size)
 	view->colors_nr = GFX_SCI0_IMAGE_COLORS_NR;
 	view->flags = GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
 	view->colors = gfx_sci0_image_colors[sci0_palette];
+
+	if (palette_ofs)
+	{
+		byte *paldata = resource + palette_ofs + (palette * GFX_SCI0_IMAGE_COLORS_NR);
+
+		for (i = 0; i < GFX_SCI0_IMAGE_COLORS_NR; i++)
+			view->translation[i] = *(paldata++);
+
+		view->flags |= GFX_PIXMAP_FLAG_PALETTIZED;
+	}
 
 	if (view->loops_nr * 2 + V0_FIRST_LOOP_OFFSET > size) {
 		GFXERROR("View %04x: Not enough space in resource to accomodate for the claimed %d loops\n", id, view->loops_nr);

@@ -776,7 +776,7 @@ _gfxwop_view_draw(gfxw_widget_t *widget, point_t pos)
 
 	GFX_ASSERT(gfxop_draw_cel(view->visual->gfx_state, view->view, view->loop,
 				  view->cel, gfx_point(view->pos.x + pos.x, view->pos.y + pos.y),
-				  view->color));
+				  view->color, view->palette));
 
 	return 0;
 }
@@ -789,7 +789,7 @@ _gfxwop_static_view_draw(gfxw_widget_t *widget, point_t pos)
 
 	GFX_ASSERT(gfxop_draw_cel_static(view->visual->gfx_state, view->view, view->loop,
 					 view->cel, _move_point(view->bounds, pos),
-					 view->color));
+					 view->color, view->palette));
 
 	return 0;
 }
@@ -866,7 +866,7 @@ _gfxwop_dyn_view_draw(gfxw_widget_t *widget, point_t pos)
 
 	GFX_ASSERT(gfxop_draw_cel(view->visual->gfx_state, view->view, view->loop,
 				  view->cel, _move_point(view->draw_bounds, pos),
-				  view->color));
+				  view->color, view->palette));
 
 	/*
 	  gfx_color_t red; red.visual.r = 0xff; red.visual.g = red.visual.b = 0; red.mask = GFX_MASK_VISUAL;
@@ -898,14 +898,14 @@ _gfxwop_pic_view_draw(gfxw_widget_t *widget, point_t pos)
 						 view->view, view->loop,
 						 view->cel,
 						 _move_point(view->draw_bounds, pos),
-						 view->color));
+						 view->color, view->palette));
 
 	/* Draw again on the back buffer */
 	GFX_ASSERT(gfxop_draw_cel(view->visual->gfx_state,
 				  view->view, view->loop,
 				  view->cel,
 				  _move_point(view->draw_bounds, pos),
-				  view->color));
+				  view->color, view->palette));
 
 
 	widget->draw = _gfxwop_draw_nop; /* No more drawing needs to be done */
@@ -1057,7 +1057,7 @@ gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, in
 	widget->cel = cel;
 	widget->sequence = sequence;
 	widget->force_precedence = 0;
-
+	widget->palette = 1;
 
 	if (halign == ALIGN_CENTER)
 		xalignmod = width >> 1;

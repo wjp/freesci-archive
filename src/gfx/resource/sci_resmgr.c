@@ -35,14 +35,14 @@
 int
 gfxr_interpreter_options_hash(gfx_resource_types_t type, int version,
 			      gfx_options_t *options,
-			      void *internal)
+			      void *internal, int palette)
 {
 	gfx_sci_options_t *sci_options = (gfx_sci_options_t *) internal;
 
 	switch (type) {
 
 	case GFX_RESOURCE_TYPE_VIEW:
-		return 0;
+		return palette;
 
 	case GFX_RESOURCE_TYPE_PIC:
 		if (version >= SCI_VERSION_1)
@@ -132,7 +132,7 @@ gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gf
 
 
 gfxr_view_t *
-gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal)
+gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal, int palette)
 {
 	resource_mgr_t *resmgr = (resource_mgr_t *) state->misc_payload;
 	resource_t *res = scir_find_resource(resmgr, sci_view, nr, 0);
@@ -146,7 +146,7 @@ gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal)
 		return NULL;
 	}
 
-	return gfxr_draw_view0(res->id, res->data, res->size);
+	return gfxr_draw_view0(res->id, res->data, res->size, palette);
 }
 
 

@@ -107,6 +107,8 @@ typedef struct {
 
 	int loops_nr;
 	gfxr_loop_t *loops;
+
+	int translation[GFX_SCI0_IMAGE_COLORS_NR];
 } gfxr_view_t;
 
 
@@ -288,11 +290,12 @@ gfxr_dither_pic0(gfxr_pic_t *pic, int mode, int pattern);
 */
 
 gfxr_view_t *
-gfxr_draw_view0(int id, byte *resource, int size);
+gfxr_draw_view0(int id, byte *resource, int size, int palette);
 /* Calculates an SCI0 view
 ** Parameters: (int) id: Resource ID of the view
 **             (byte *) resource: Pointer to the resource to read
 **             (int) size: Size of the resource
+**	       (int) palette: The palette to use
 ** Returns   : (gfxr_view_t *) The resulting view
 */
 

@@ -523,6 +523,7 @@ int
 c_viewinfo(state_t *s)
 {
 	int view = cmd_params[0].val;
+	int palette = cmd_params[1].val;
 	int loops, i;
 	gfxr_view_t *view_pixmaps = NULL;
 
@@ -550,7 +551,7 @@ c_viewinfo(state_t *s)
 
 				if (con_can_handle_pixmaps()) {
 					view_pixmaps = gfxr_get_view(s->gfx_state->resstate,
-								     view, &i, &j);
+								     view, &i, &j, palette);
 					con_insert_pixmap(gfx_clone_pixmap(view_pixmaps->loops[i].cels[j],
 									   s->gfx_state->driver->mode));
 				}
@@ -1796,7 +1797,7 @@ c_gfx_draw_cel(state_t *s)
 	int view = cmd_params[0].val;
 	int loop = cmd_params[1].val;
 	int cel = cmd_params[2].val;
-
+	int palette = cmd_params[3].val;
 	if (!s) {
 		sciprintf("Not in debug state!\n");
 		return 1;
@@ -1804,7 +1805,7 @@ c_gfx_draw_cel(state_t *s)
 
 	gfxop_set_clip_zone(s->gfx_state, gfx_rect_fullscreen);
 	gfxop_draw_cel(s->gfx_state, view, loop, cel, gfx_point(160, 100),
-		       s->ega_colors[0]);
+		       s->ega_colors[0], palette);
 	gfxop_update(s->gfx_state);
 
 	return 0;
@@ -3187,9 +3188,8 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "  play (-p) calls the game object's play()\n    method\n  replay (-r) calls the replay() method");
 #warning "Re-enable con:viewinfo"
 #if 0
-			con_hook_command(c_viewinfo, "viewinfo", "i", "Displays the number of loops\n  and cels of each loop"
-					 " for the\n  specified view resource.\n\n  Output:\n    C(x): Check word type against x\n"
-					 "    WG(x): Check word group against mask x\n    FORCE(x): Force storage node x\n");
+			con_hook_command(c_viewinfo, "viewinfo", "ii", "Displays the number of loops\n  and cels of each loop"
+					 " for the\n  specified view resource and palette.");
 #endif
 			con_hook_command(c_list_sentence_fragments, "list_sentence_fragments", "", "Lists all sentence fragments (which\n"
 					 "  are used to build Parse trees).");
@@ -3317,8 +3317,8 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_gfx_draw_viewobj, "draw_viewobj", "i", "Draws the nsRect and brRect of a\n  dynview object.\n\n  nsRect is green, brRect\n"
 					 "  is blue.\n");
 #endif
-			con_hook_command(c_gfx_draw_cel, "gfx_draw_cel", "iii", "Draws a single view\n  cel to the center of the\n  screen\n\n"
-					 "USAGE\n  gfx_draw_cel <view> <loop> <cel>\n");
+			con_hook_command(c_gfx_draw_cel, "gfx_draw_cel", "iiii", "Draws a single view\n  cel to the center of the\n  screen\n\n"
+					 "USAGE\n  gfx_draw_cel <view> <loop> <cel> <palette>\n");
 			con_hook_command(c_gfx_priority, "gfx_priority", "i*", "Prints information about priority\n  bands\nUSAGE\n\n  gfx_priority\n\n"
 					 "  will print the min and max values\n  for the priority bands\n\n  gfx_priority <val>\n\n  Print start of the priority\n"
 					 "  band for the specified\n  priority\n");

@@ -172,12 +172,13 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 */
 
 gfxr_view_t *
-gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel);
+gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel, int palette);
 /* Retreives a translated view cel
 ** Parameters: (gfx_resstate_t *) state: The resource state
 **             (int) nr: The view number
 **             (int *) loop: Pointer to a variable containing the loop number
 **             (int *) cel: Pointer to a variable containing the cel number
+**	       (int) palette: The palette to use
 ** Returns   : (gfx_view_t *) The relevant view, or NULL if nr was invalid
 ** loop and cel are given as pointers in order to allow the underlying variables to be
 ** modified if they are invalid (this is relevant for SCI version 0, where invalid
@@ -209,12 +210,13 @@ gfxr_get_cursor(gfx_resstate_t *state, int nr);
 
 int
 gfxr_interpreter_options_hash(gfx_resource_types_t type, int version,
-			      struct _gfx_options *options, void *internal);
+			      struct _gfx_options *options, void *internal, int palette);
 /* Calculates a unique hash value for the specified options/type setup
 ** Parameters: (gfx_resource_types_t) type: The type the hash is to be generated for
 **             (int) version: The interpreter type and version
 **             (gfx_options_t *) options: The options to hashify
 **             (void *) internal: Internal information provided by the interpreter
+**	       (int) palette: The palette to use (FIXME: should this be here?)
 ** Returns   : (int) A hash over the values of the options entries, covering entries iff
 **                   they are relevant for the specified type
 ** Covering more entries than relevant may slow down the system when options are changed,
@@ -278,7 +280,7 @@ gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gf
 */
 
 gfxr_view_t *
-gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal);
+gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal, int palette);
 /* Instructs the interpreter-specific code to calculate a view
 ** Parameters: (gfx_resstate_t *) state: The resource manager state
 **             (int) nr: The view resource number
