@@ -67,10 +67,10 @@ static inline reg_t *
 validate_property(object_t *obj, int index)
 {
 	if (index < 0 || index >= obj->variables_nr) {
-		script_debug_flag = script_error_flag = 1;
-		sciprintf("Invalid property #%d (out of [0..%d] requested!", index,
+		sciprintf("Invalid property #%d (out of [0..%d] requested!\n", index,
 			  obj->variables_nr);
 
+		_dummy_register = NULL_REG;
 		return &_dummy_register;
 	}
 

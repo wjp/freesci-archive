@@ -1,5 +1,8 @@
 2002-11-19  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/vm.c (validate_property): Invalid property accesses (QG1)
+	turned into warnings
+
 	* src/engine/kmovement.c (kInitBresen): Fixed default for step size
 	(kDoBresen): Fixed
 
