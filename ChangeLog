@@ -1,3 +1,12 @@
+2002-10-28  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/vm.c (lookup_selector): Initial new selector lookup
+	function
+
+	* src/include/vm.h: Misc. convenience macros for newer script
+	accessing
+	Also clone tables, appropriate mem_obj_t changes
+
 2002-10-25  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/include/vm_types.h: Added separate header for types used

@@ -1080,6 +1080,8 @@ set_base(state_t *s, heap_ptr object)
 void
 _k_base_setter(state_t *s, heap_ptr object)
 {
+#warning "Re-implement base setter"
+#if 0
 	abs_rect_t absrect = set_base(s, object);
 
 	if (lookup_selector(s, object, s->selector_map.brLeft, NULL)
@@ -1093,7 +1095,7 @@ _k_base_setter(state_t *s, heap_ptr object)
 	PUT_SELECTOR(object, brRight, absrect.xend);
 	PUT_SELECTOR(object, brTop, absrect.y);
 	PUT_SELECTOR(object, brBottom, absrect.yend);
-
+#endif
 }
 
 void
@@ -1193,6 +1195,8 @@ get_nsrect(state_t *s, heap_ptr object, byte clip)
 static void
 _k_set_now_seen(state_t *s, heap_ptr object)
 {
+#warning "Re-implement set-now-seen"
+#if 0
 	abs_rect_t absrect = get_nsrect(s, object, 0);
 
 	if (lookup_selector(s, object, s->selector_map.nsTop, NULL)
@@ -1202,6 +1206,7 @@ _k_set_now_seen(state_t *s, heap_ptr object)
 	PUT_SELECTOR(object, nsRight, absrect.xend);
 	PUT_SELECTOR(object, nsTop, absrect.y);
 	PUT_SELECTOR(object, nsBottom, absrect.yend);
+#endif
 }
 
 
@@ -1589,6 +1594,8 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int funct_nr, int argc, i
 static void
 _k_view_list_do_postdraw(state_t *s, gfxw_list_t *list)
 {
+#if 0
+#warning "Re-implement do_postdraw"
 	gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) list->contents;
 
 	while (widget) {
@@ -1633,6 +1640,7 @@ _k_view_list_do_postdraw(state_t *s, gfxw_list_t *list)
 
 		widget = (gfxw_dyn_view_t *) widget->next;
 	}
+#endif
 }
 
 static int _k_animate_ran = 0;
@@ -1743,6 +1751,8 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_dyn_view_t *widge
 static gfxw_dyn_view_t *
 _k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int nr, int funct_nr, int argc, int argp)
 {
+#warning "Re-implement make_dynview_obj()"
+#if 0
 	short oldloop, oldcel;
 	int cel, loop, view_nr = GET_SELECTOR(obj, view);
 	int has_nsrect = lookup_selector(s, obj, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
@@ -1814,6 +1824,7 @@ _k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int nr, int funct_nr,
 		SCIkwarn(SCIkWARNING, "Could not generate dynview widget for %d/%d/%d\n", view_nr, loop, cel);
 		return NULL;
 	}
+#endif
 }
 
 
@@ -1891,8 +1902,9 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 static void
 _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, int argc, heap_ptr argp)
 {
+#warning "Re-implement prepare-view-list"
+#if 0
 	gfxw_dyn_view_t *view = (gfxw_dyn_view_t *) list->contents;
-
 	while (view) {
 		heap_ptr obj = view->ID;
 		int priority, _priority;
@@ -1976,6 +1988,7 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 
 		view = (gfxw_dyn_view_t *) view->next;
 	}
+#endif
 }
 
 static void

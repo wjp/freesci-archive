@@ -382,9 +382,12 @@ kIsObject(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kRespondsTo(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int obj = PARAM(0);
-  int selector = PARAM(1);
+#warning "Re-implement kRespondsTo()"
+#if 0
+	int obj = PARAM(0);
+	int selector = PARAM(1);
 
-  s->acc = (lookup_selector(s, (heap_ptr)obj, selector, NULL) != SELECTOR_NONE);
+	s->acc = (lookup_selector(s, (heap_ptr)obj, selector, NULL) != SELECTOR_NONE);
+#endif
 }
 

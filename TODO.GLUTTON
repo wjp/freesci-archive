@@ -17,7 +17,7 @@ Dependancies: '.' means "dependancy has been resolved"
 --- fix stack				B	.	CR
 --- fix script_t			D	.	CR
 [X] implement seg_mgr			E	D	X
-[2] fix script instantiation/uninst'n	E	D	
+[2] fix script instantiation/uninst'n	E	D	X
 --- implement script ID map		F		CR
 [X] fix vm					.BCDEF	
 [X] fix send mechanism			G	.BDEF	

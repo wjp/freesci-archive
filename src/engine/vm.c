@@ -171,10 +171,12 @@ check_heap_corruption(state_t *s, char *file, int line)
 int
 script_error(state_t *s, char *file, int line, char *reason)
 {
-  sciprintf("Script error in file %s, line %d: %s\n", file, line, reason);
-  script_debug_flag = script_error_flag = 1;
-  return 0;
+	sciprintf("Script error in file %s, line %d: %s\n", file, line, reason);
+	script_debug_flag = script_error_flag = 1;
+	return 0;
 }
+#define CORE_ERROR(area, msg) script_error(s, "[" area "] " __FILE__, __LINE__, msg)
+
 
 inline heap_ptr
 get_class_address(state_t *s, int classnr)
@@ -602,6 +604,7 @@ run_vm(state_t *s, int restoring)
 	/* Current execution data: */
 	exec_stack_t *xs = s->execution_stack + s->execution_stack_pos;
 	exec_stack_t *xs_new; /* Used during some operations */
+#warning "Hardwired to script.000"
 	script_t *local_script = s->script_000;
 	int pc_offset;
 	byte *code_buf;
@@ -681,7 +684,6 @@ run_vm(state_t *s, int restoring)
 		}
 
 		opcode = GET_OP_BYTE(); /* Get opcode */
-
 
 #ifndef DISABLE_VALIDATIONS
 		if (xs->sp < xs->fp)
@@ -1343,74 +1345,164 @@ run_vm(state_t *s, int restoring)
 }
 
 
-int
-_lookup_selector_functions(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address, heap_ptr speciespos)
-{
-#warning "Re-implement selector lookup"
-#if 0
-	int superclass; /* Possibly required for recursion */
-	word superclasspos;
-	int methodselectors = obj + GET_HEAP(obj + SCRIPT_FUNCTAREAPTR_OFFSET)
-		+ SCRIPT_FUNCTAREAPTR_MAGIC;   /* First method selector */
-	int methodselector_nr = GET_HEAP(methodselectors - 2); /* Number of methods is stored there */
-	int i;
 
-	if (methodselectors < 800 || methodselectors > 0xffff || methodselector_nr > 0x1000) {
-		sciprintf("Lookup selector functions: Method selector offset %04x of object at %04x is invalid\n",
-			  methodselectors, obj);
-		script_debug_flag = script_error_flag = 1;
-		return -1;
+#define SELECTOR_CLASS_GET_INDEX(result, script, obj) \
+	(result) = CLASS_GET_INDEX( script, (obj).offset );			\
+	if ((result) < 0) {							\
+			CORE_ERROR("SLC-LU","Error while looking up class ID");	\
+			sciprintf("Address was "PREG"\n", PRINT_REG(obj));	\
+			return SELECTOR_NONE;					\
 	}
 
-	for (i = 0; i < methodselector_nr * 2; i += 2)
-		if (GET_HEAP(methodselectors + i) == selectorid) { /* Found it? */
-			if (address)
-				*address = GET_HEAP(methodselectors + i + 2 + (methodselector_nr * 2)); /* Get address */
-			return SELECTOR_METHOD;
-		}
-
-	/* If we got here, we didn't find it. */
-
-	superclass = OBJ_SUPERCLASS(obj);
-
-	if (superclass == -1)
-		return SELECTOR_NONE; /* No success. Trust on calling function to report error. */
-
-	superclasspos = (speciespos)? speciespos : (CLASS_ADDRESS(superclass));
-
-	return
-		_lookup_selector_functions(s, superclasspos, selectorid, address, 0); /* Recurse to superclass */
-#endif
-}
-
 
 int
-lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
+_lookup_selector_function(state_t *s, reg_t addr, selector_t selectorid, reg_t *fptr)
 {
-#warning "Re-implement selector lookup"
-#if 0
-	int species = OBJ_SPECIES(obj);
-	int heappos = CLASS_ADDRESS(species);
-	int varselector_nr = GET_HEAP(heappos + SCRIPT_SELECTORCTR_OFFSET);
-	int speciespos = 0; /* ALWAYS zero ATM... */
-	/* Number of variable selectors */
-
+	reg_t species;
+	reg_t recursor;
+	mem_obj_t *script;
+	int func_nr;
+	int class_index;
+	int functarea_offset;
 	int i;
+	byte *buf;
 
-	if (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-		selectorid&=~1; /* Low bit in this case is read/write toggle */
-	for (i = 0; i < varselector_nr * 2; i += 2)
-		if (GET_HEAP(heappos + SCRIPT_SELECTOR_OFFSET + varselector_nr * 2 + i) == selectorid)
-			{ /* Found it? */
-				if (address)
-					*address = obj + SCRIPT_SELECTOR_OFFSET + i; /* Get object- relative address */
+	if (IS_NULL_REG(addr))
+		return SELECTOR_NONE; /* Not found */
+
+	script = GET_SEGMENT(s->seg_manager, addr.segment, MEM_OBJ_SCRIPT);
+
+	if (!script) {
+		CORE_ERROR("[SLC-LU]", "FreeSCI internal sanity failure");
+		sciprintf("While looking up selector function: script not found ("PREG")", PRINT_REG(addr));
+		return SELECTOR_NONE;
+	}
+
+	SELECTOR_CLASS_GET_INDEX(class_index, script->data.script, addr);
+
+	functarea_offset = addr.offset + getUInt16(script->data.script.buf + addr.offset + SCRIPT_FUNCTAREAPTR_OFFSET);
+	buf = script->data.script.buf + functarea_offset;
+	func_nr = getUInt16(buf - 2); /* That's the location */
+
+
+	/* func_nr *2 (16 bit) *2 (selector IDs AND values) +2 (extra byte) */
+	if (func_nr * 4 + 2 + functarea_offset >= script->data.script.buf_size) {
+		CORE_ERROR("[SLC-LU]", "Object extends beyond class->buf boundaries");
+		sciprintf("Offending object index: %d (in "PREG")",
+			  class_index, PRINT_REG(species));
+		return SELECTOR_NONE;
+	}
+
+
+	for (i = 0; i < func_nr * 2; i += 2)
+		if (getUInt16(buf + i) == selectorid) { /* Found it? */
+			if (fptr) {
+				fptr->segment = addr.segment;
+				/* Now read the offset from the structure */
+				fptr->offset = getUInt16(buf + i + 2 + (func_nr >> 1));
+			}
+			return SELECTOR_VARIABLE; /* report success */
+		}
+
+	recursor = script->data.script.objects[class_index].variables[SCRIPT_SPECIES_SELECTOR];
+	if (REG_EQ(species, addr))
+		species = script->data.script.objects[class_index].variables[SCRIPT_SUPERCLASS_SELECTOR];
+
+	return _lookup_selector_function(s, recursor, selectorid, fptr); /* tail-recurse */
+}
+
+int
+lookup_selector(state_t *s, reg_t obj, selector_t selectorid, reg_t **vptr, reg_t *fptr)
+{
+	mem_obj_t *val_seg = GET_SEGMENT(s->seg_manager, obj.segment, MEM_OBJ_SCRIPT | MEM_OBJ_CLONES);
+	object_varselectors_t *values;
+	mem_obj_t *def_seg = NULL;
+	reg_t def_addr;
+	int class_index;
+	reg_t species;
+	mem_obj_t *species_seg = NULL;
+	byte *buf;
+	int varnum;
+	int i;
+	int selector_name_offset;
+
+	if (!obj.segment) {
+		CORE_ERROR("SLC-LU", "Attempt to send to non-object or invalid script");
+		sciprintf("Address was "PREG"\n", PRINT_REG(obj));
+		return SELECTOR_NONE;
+	}
+
+	if (val_seg->type == MEM_OBJ_SCRIPT) {
+		def_seg = val_seg;
+		def_addr = obj;
+		SELECTOR_CLASS_GET_INDEX(class_index, val_seg->data.script, obj);
+
+		values = def_seg->data.script.objects + class_index;
+
+	} else { /* cloned object */
+		clone_t* clone = val_seg->data.clones->clones + obj.offset;
+
+
+		if (obj.offset >= val_seg->data.clones->clones_nr || clone->origin.segment) {
+			CORE_ERROR("SLC-LU", "Attempt to send to invalid object ID in clone segment");
+			sciprintf("Address was "PREG"\n", PRINT_REG(obj));
+			return SELECTOR_NONE;
+		}
+		values = &(clone->props);
+
+		def_seg = GET_SEGMENT(s->seg_manager, clone->origin.segment, MEM_OBJ_SCRIPT);
+		def_addr = clone->origin;
+		if (!def_seg) {
+			CORE_ERROR("SLC-LU", "FreeSCI sanity error: Clone references incorrect address");
+			sciprintf("Original address was "PREG"\n", PRINT_REG(obj));
+			sciprintf("Clone origin address was "PREG"\n", PRINT_REG(clone->origin));
+			return SELECTOR_NONE;
+		}
+	}
+
+
+	/* At this point, def_seg and def_offset point to a script, but may
+	** still reference a static instance, so we must now look up their
+	** species.  */
+	SELECTOR_CLASS_GET_INDEX(class_index, def_seg->data.script, def_addr);
+	species = def_seg->data.script.objects[class_index].variables[SCRIPT_SPECIES_SELECTOR];
+
+	species_seg = GET_SEGMENT(s->seg_manager, species.segment, MEM_OBJ_SCRIPT);
+	if (!species_seg) {
+		CORE_ERROR("SLC-LU", "Error while looking up Species class");
+		sciprintf("Original address was "PREG"\n", PRINT_REG(obj));
+		sciprintf("Species address was "PREG"\n", PRINT_REG(species));
+		return SELECTOR_NONE;
+	}
+
+	SELECTOR_CLASS_GET_INDEX(class_index, species_seg->data.script, species);
+
+	/* Phew... we have it, folks! */
+
+	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+		selectorid &= ~1; /* Low bit in this case is read/write toggle */
+
+	varnum = species_seg->data.script.objects[class_index].variables_nr;
+	selector_name_offset = varnum * 2 + SCRIPT_SELECTOR_OFFSET;
+
+	if (varnum * 2 + species.offset +  selector_name_offset >= species_seg->data.script.buf_size) {
+		CORE_ERROR("SLC-LU", "Object extends beyond class->buf boundaries");
+		sciprintf("Offending object index: %d (in "PREG")",
+			  class_index, PRINT_REG(species));
+		return SELECTOR_NONE;
+	}
+
+	buf = species_seg->data.script.buf + species.offset + selector_name_offset;
+
+	for (i = 0; i < varnum*2; i += 2)
+		if (getUInt16(buf + i) == selectorid) { /* Found it? */
+				if (vptr)
+					*vptr = &(values->variables[i >> 1]); /* Get object- relative address */
 				return SELECTOR_VARIABLE; /* report success */
 			}
-
 	return
-		_lookup_selector_functions(s, obj, selectorid, address, (heap_ptr)speciespos);
-	/* Call recursive function selector seeker */
-#endif
+		_lookup_selector_function(s, def_addr, selectorid, fptr);
+
 }
 
 

@@ -56,6 +56,9 @@
 #define SCRIPT_LOCALVARPTR_OFFSET 2 -8
 /* Object-relative offset of the pointer to the underlying script's local variables */
 
+#define SCRIPT_OBJINDEX_OFFSET SCRIPT_LOCALVARPTR_OFFSET
+/* Re-use this space for the script index */
+
 #define SCRIPT_SELECTORCTR_OFFSET 6 -8
 /* Object-relative offset of the selector counter */
 
@@ -67,9 +70,11 @@
 
 #define SCRIPT_NAME_OFFSET 14 -8
 /* Offset of the name pointer */
+#define SCRIPT_NAME_SELECTOR 3
 
 #define SCRIPT_INFO_OFFSET 12 -8
 /* Object-relative offset of the -info- selector */
+#define SCRIPT_INFO_SELECTOR 2
 
 #define SCRIPT_INFO_CLONE 0x0001
 /* Flag fo the -info- selector */
@@ -85,8 +90,10 @@
 
 #define SCRIPT_SPECIES_OFFSET 8 -8
 /* Script-relative offset of the species ID */
+#define SCRIPT_SPECIES_SELECTOR 0
 
 #define SCRIPT_SUPERCLASS_OFFSET 10 -8
+#define SCRIPT_SUPERCLASS_SELECTOR 1
 
 #define SCRIPT_LOFS_MAGIC 3
 /* Magic adjustment value for lofsa and lofss */
@@ -110,6 +117,9 @@ typedef struct {
 	int class_offset; /* script-relative position of the class */
 } class_t;
 
+#define CLASS_GET_INDEX(scr, offset) (((offset) + SCRIPT_OBJECT_MAGIC_OFFSET < 0 || (offset) >= (scr).buf_size)?	\
+	-1 : ((getUInt16((scr).buf + (offset) + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER)?	\
+	-1 : getUInt16((scr).buf + (offset) + SCRIPT_OBJINDEX_OFFSET)))
 
 /* This struct is used to buffer the list of send calls in send_selector() */
 typedef struct {
@@ -149,10 +159,22 @@ typedef struct {
 } script_t;
 
 typedef struct {
+	reg_t origin; /* Used for empty offset tracking */
+	object_varselectors_t props;
+} clone_t;
+
+typedef struct {
+	int clones_nr;
+	int first_free_clone; /* Kept in a linked list using clones[idx].origin.offset */
+	clone_t *clones;
+} clone_table_t;
+
+typedef struct _mem_obj {
 	int type;
         int size;
 	union {
 		script_t script;
+		clone_table_t *clones;
 	} data;
 } mem_obj_t;
 
@@ -456,18 +478,20 @@ script_free_vm_memory(struct _state *s);
 
 
 int
-lookup_selector(struct _state *s, heap_ptr obj, int selectorid, heap_ptr *address);
+lookup_selector(struct _state *s, reg_t obj, selector_t selectorid, reg_t **vptr, reg_t *fptr);
 /* Looks up a selector and returns its type and value
 ** Parameters: (state_t *) s: The state_t to use
-**             (heap_ptr) obj: Address of the object to look the selector up in
-**             (int) selectorid: The selector to look up
-**             (heap_ptr *) address: A pointer to a variable which the result will be stored in
-** Returns   : (int) SELECTOR_NONE if the selector was not found in the object or its superclasses
+**             (reg_t) obj: Address of the object to look the selector up in
+**             (selector_t) selectorid: The selector to look up
+** Returns   : (int) SELECTOR_NONE if the selector was not found in the object or its superclasses.
 **                   SELECTOR_VARIABLE if the selector represents an object-relative variable
 **                   SELECTOR_METHOD if the selector represents a method
-** The result value stored in 'address' depends on the type of selector; variable selectors will
-** return pointers to the selector value (and NOT the actual value), method selectors will return
-** the heap address of the method the selector references to.
+**             (reg_t *) *vptr: A pointer to the storage space associated with the selector, if
+**                              it is a variable
+**             (reg_t) *fptr: A reference to the function described by that selector, if it is
+**                            a valid function selector.
+** *vptr is written to iff it is non-NULL and the selector indicates a property of the object.
+** *fptr is written to iff it is non-NULL and the selector indicates a member function of that object.
 */
 
 

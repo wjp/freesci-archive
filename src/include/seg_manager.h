@@ -48,18 +48,29 @@ typedef enum {
 } mem_obj_enum;
 
 
-// verify the the given condition is true, output the message if condition is false, and exit
-// Parameters:
-//   cond - condition to be verified
-//   msg  - the message to be printed if condition fails
-// return:
-//   none, terminate the program if fails   
+/* verify the the given condition is true, output the message if condition is false, and exit
+** Parameters:
+**   cond - condition to be verified
+**   msg  - the message to be printed if condition fails
+** return:
+**   none, terminate the program if fails
+*/
 void verify (int cond, const char* file, int line, const char* msg);
 
+#define MEM_OBJ_SCRIPT (1 << 0)
+#define MEM_OBJ_CLONES (1 << 1)
+
+
+struct _mem_obj;
+
+#define GET_SEGMENT(mgr, index, rtype) ((index) >= 0 && (mgr).heap_size > index)?	\
+		(((mgr).heap[index]->type & rtype)? (mgr).heap[index]			\
+		: NULL) /* Type does not match */					\
+	: NULL /* Invalid index */
 
 typedef struct _seg_manager_t {
 	int_hash_map_t* id_seg_map; // id - script id; seg - index of heap
-	mem_obj_t** heap;
+	struct _mem_obj** heap;
 	int heap_size;		// size of the heap
 
 	/* member methods */

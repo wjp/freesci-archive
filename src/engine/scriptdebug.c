@@ -1457,6 +1457,8 @@ bb = GET_SELECTOR(pos, bb);
 int
 c_gfx_draw_viewobj(state_t *s)
 {
+#warning "Re-implement con:gfx_draw_viewobj"
+#if 0
 	heap_ptr pos = (heap_ptr) (cmd_params[0].val);
 	int is_view;
 	int x, y, priority;
@@ -1531,6 +1533,7 @@ c_gfx_draw_viewobj(state_t *s)
 	gfxop_update(s->gfx_state);
 
 	return 0;
+#endif
 }
 
 
@@ -2159,6 +2162,8 @@ bb = GET_SELECTOR(pos, bb);
 static void
 viewobjinfo(state_t *s, heap_ptr pos)
 {
+#if 0
+#warning "Re-implement viewobjinfo"
 	char *signals[16] = {
 		"stop_update",
 		"updated",
@@ -2232,6 +2237,7 @@ viewobjinfo(state_t *s, heap_ptr pos)
 	for (i = 0; i < 16; i++)
 		if (signal & (1 << i))
 			sciprintf("  %04x: %s\n", 1 << i, signals[i]);
+#endif
 }
 
 #undef GETRECT
@@ -2748,6 +2754,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_go, "go", "", "Executes the script.\n");
 			con_hook_command(c_dumpnodes, "dumpnodes", "i", "shows the specified number of nodes\n"
 					 "  from the parse node tree");
+#warning "Re-enable savegames"
 #if 0
 			con_hook_command(c_save_game, "save_game", "s", "Saves the current game state to\n  the hard disk");
 			con_hook_command(c_restore_game, "restore_game", "s", "Restores a saved game from the\n  hard disk");
@@ -2755,9 +2762,12 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_restart_game, "restart", "s*", "Restarts the game.\n\nUSAGE\n\n  restart [-r] [-p]"
 					 " [--play] [--replay]\n\n  There are two ways to restart an SCI\n  game:\n"
 					 "  play (-p) calls the game object's play()\n    method\n  replay (-r) calls the replay() method");
+#warning "Re-enable con:viewinfo"
+#if 0
 			con_hook_command(c_viewinfo, "viewinfo", "i", "Displays the number of loops\n  and cels of each loop"
 					 " for the\n  specified view resource.\n\n  Output:\n    C(x): Check word type against x\n"
 					 "    WG(x): Check word group against mask x\n    FORCE(x): Force storage node x\n");
+#endif
 			con_hook_command(c_list_sentence_fragments, "list_sentence_fragments", "", "Lists all sentence fragments (which\n"
 					 "  are used to build Parse trees).");
 			con_hook_command(c_parse, "parse", "s", "Parses a sequence of words and prints\n  the resulting parse tree.\n"
@@ -2879,8 +2889,11 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_gfx_update_zone, "gfx_update_zone", "iiii", "Propagates a rectangular area from\n  the back buffer to the front buffer"
 					 "\n\nUSAGE\n\n"
 					 "  gfx_update_zone <x> <y> <xl> <yl>");
+#warning "Re-enable con:draw_viewobj"
+#if 0
 			con_hook_command(c_gfx_draw_viewobj, "draw_viewobj", "i", "Draws the nsRect and brRect of a\n  dynview object.\n\n  nsRect is green, brRect\n"
 					 "  is blue.\n");
+#endif
 			con_hook_command(c_gfx_draw_cel, "gfx_draw_cel", "iii", "Draws a single view\n  cel to the center of the\n  screen\n\n"
 					 "USAGE\n  gfx_draw_cel <view> <loop> <cel>\n");
 			con_hook_command(c_gfx_priority, "gfx_priority", "i*", "Prints information about priority\n  bands\nUSAGE\n\n  gfx_priority\n\n"
