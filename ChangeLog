@@ -1,3 +1,14 @@
+2002-02-13  Solomon Peachy <pizza@shaftnet.org>
+	* src/include/pcmout.h, src/sound/pcmout.c,
+          src/sound/polled_ss_unix.c, src/sound/polled_ss_sdl.c,
+	  src/sound/polled_ss_win32.c, src/main.c, src/config.c,
+          src/config.l, src/sound/Makefile.am, src/sound/pcmout_sdl.c:
+        Added the logistical framework for a pcm-out subsystem.
+	* src/sound/Makefile.am, src/sound/midi_adlibemu.c, 
+	  src/sound/midi_adlib.c, src/sound/midi_device.c,
+	  src/sound/fmopl.c, src/sound/fmopl.h:  Added an adlib emulator
+         midi device.  Still a work in progress.
+
 2002-01-13  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/engine/scriptdebug.c:
@@ -25,7 +36,7 @@
 	* src/engine/kgraphics.c (_k_update_signals_in_view_list): Changed
 	back to 0.3.3 behaviour.
 
-2002-02-10  Solomon Peachy <pizza@shaftnet.org>
+2002-02-09  Solomon Peachy <pizza@shaftnet.org>
 	* src/sound/midi_adlib.c:  Fixed a VERY stupid bug.  Should
         actually produce decent-sounding output now!
 

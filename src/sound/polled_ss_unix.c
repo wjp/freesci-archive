@@ -192,6 +192,9 @@ sound_unix_init(state_t *s, int flags)
 
 	ppid = getpid(); /* Get process ID */
 
+        if (pcmout_open() < 0)
+          return -1;
+
 	if (init_midi_device(s) < 0)
 	  return -1;
 

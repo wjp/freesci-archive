@@ -9,6 +9,7 @@
 #define YY_FLEX_MINOR_VERSION 5
 
 #include <stdio.h>
+#include <unistd.h>
 
 
 /* cfront 1.2 defines "c_plusplus" instead of "__cplusplus" */
@@ -22,7 +23,6 @@
 #ifdef __cplusplus
 
 #include <stdlib.h>
-#include <unistd.h>
 
 /* Use prototypes in function declarations. */
 #define YY_USE_PROTOS
@@ -542,6 +542,7 @@ struct {
 	void *(*check_driver)(char *name);
 } freesci_subsystems[FREESCI_DRIVER_SUBSYSTEMS_NR] = {
 	{"gfx", NULL},
+        {"pcm", parse_pcmout_driver},
 	{"midiout", parse_midiout_driver}
 };
 
@@ -719,6 +720,7 @@ standard_option standard_options[] = {
 	OPT_STATICREF("midiout_driver", midiout_driver, parse_midiout_driver),
 	OPT_STATICREF("midi_device", midi_device, parse_midi_device),
 	OPT_STATICREF("sound_server", sound_server, parse_sound_server),
+        OPT_STATICREF("pcmout_driver", pcmout_driver, parse_pcmout_driver),
 	OPT_STRING("console_log", console_log),
 	OPT_STRING("module_path", module_path),
 	OPT_STRING("gfx_driver", gfx_driver_name),
@@ -733,7 +735,7 @@ standard_option standard_options[] = {
 static void
 parse_option(char *option, int optlen, char *value);
 
-#line 737 "lex.yy.c"
+#line 739 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -881,13 +883,13 @@ YY_MALLOC_DECL
 YY_DECL
 	{
 	register yy_state_type yy_current_state;
-	register char *yy_cp, *yy_bp;
+	register char *yy_cp = NULL, *yy_bp = NULL;
 	register int yy_act;
 
-#line 262 "config.l"
+#line 264 "config.l"
 
 
-#line 891 "lex.yy.c"
+#line 893 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -972,7 +974,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 264 "config.l"
+#line 266 "config.l"
 {
 	char *cleanup;
 	++yytext; /* Get over opening bracket */
@@ -1019,7 +1021,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 309 "config.l"
+#line 311 "config.l"
 { /***** End of graphics *****/
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1032,7 +1034,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 319 "config.l"
+#line 321 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1045,7 +1047,7 @@ if (cur_section) {
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 329 "config.l"
+#line 331 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1057,7 +1059,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 339 "config.l"
+#line 341 "config.l"
 {
 /* driver parameters */
         char *subsys_name = yytext;
@@ -1095,7 +1097,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 375 "config.l"
+#line 377 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
@@ -1123,16 +1125,16 @@ case 7:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 399 "config.l"
+#line 401 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 401 "config.l"
+#line 403 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 403 "config.l"
+#line 405 "config.l"
 {
         yy_delete_buffer( YY_CURRENT_BUFFER );
         yyterminate();
@@ -1140,15 +1142,15 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 408 "config.l"
+#line 410 "config.l"
 printf("Unrecognized option: '%s'\n", yytext);
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 410 "config.l"
+#line 412 "config.l"
 ECHO;
 	YY_BREAK
-#line 1152 "lex.yy.c"
+#line 1154 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -1710,11 +1712,6 @@ YY_BUFFER_STATE b;
 	}
 
 
-#ifndef YY_ALWAYS_INTERACTIVE
-#ifndef YY_NEVER_INTERACTIVE
-extern int isatty YY_PROTO(( int ));
-#endif
-#endif
 
 #ifdef YY_USE_PROTOS
 void yy_init_buffer( YY_BUFFER_STATE b, FILE *file )
@@ -2032,7 +2029,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 410 "config.l"
+#line 412 "config.l"
 
 
 int
@@ -2071,6 +2068,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_options.pic0_antialiasing = GFXR_ANTIALIASING_NONE;
 
 	conf->gfx_driver_name = NULL;
+        conf->pcmout_driver = pcmout_find_driver(NULL);
         conf->midiout_driver = midiout_find_driver(NULL);
         conf->midi_device = midi_find_device(NULL);
 	conf->sound_server = sound_server_find_driver(NULL);
@@ -2280,7 +2278,18 @@ parse_midi_device(char *driver_name)
 	return (void *) conf->midi_device;
 }
 
+void *
+parse_pcmout_driver(char *driver_name)
+{
+	pcmout_driver_t *retval = pcmout_find_driver(driver_name);
 
+	if (retval)
+		return (void *) retval;
+	/* not found - return default */
+
+	printf ("Unknown pcmout driver %s\n", driver_name);
+	return (void *) conf->pcmout_driver;
+}
 
 
 static void

@@ -34,9 +34,9 @@ Xsed="sed -e s/^X//"
 if test "X${CDPATH+set}" = Xset; then CDPATH=:; export CDPATH; fi
 
 ### BEGIN LIBTOOL CONFIG
-# Libtool was configured as follows, on host starbase42:
+# Libtool was configured as follows, on host heatwave.shaftnet.org:
 #
-# CC="gcc-3.0" CFLAGS="-g -O2" CPPFLAGS="" \
+# CC="gcc" CFLAGS="-g -O2" CPPFLAGS="" \
 # LD="/usr/bin/ld" LDFLAGS="" LIBS="" \
 # NM="/usr/bin/nm -B" RANLIB="ranlib" LN_S="ln -s" \
 # DLLTOOL="" OBJDUMP="" AS="" \
@@ -71,7 +71,7 @@ echo="echo"
 AR="ar"
 
 # The default C compiler.
-CC="gcc-3.0"
+CC="gcc"
 
 # The linker used to build libraries.
 LD="/usr/bin/ld"

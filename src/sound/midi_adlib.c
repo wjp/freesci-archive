@@ -37,8 +37,6 @@
 #include <sys/time.h>
 #include <sys/soundcard.h>
 
-#define ADLIB_VOICES 9
-
 #if 0
 SEQ_DEFINEBUF(2048);
 static int seqfd;
@@ -49,38 +47,6 @@ extern int _seqbufptr;
 extern int seqfd;
 #endif
 
-typedef struct _sci_adlib_def {
-  guint8 keyscale1;       /* 0-3 !*/
-  guint8 freqmod1;        /* 0-15 !*/
-  guint8 feedback1;       /* 0-7 !*/
-  guint8 attackrate1;     /* 0-15 !*/
-  guint8 sustainvol1;     /* 0-15 !*/
-  guint8 envelope1;       /* t/f !*/
-  guint8 decayrate1;      /* 0-15 !*/
-  guint8 releaserate1;    /* 0-15 !*/
-  guint8 volume1;         /* 0-63 !*/
-  guint8 ampmod1;         /* t/f !*/
-  guint8 vibrato1;        /* t/f !*/
-  guint8 keybdscale1;     /* t/f !*/
-  guint8 algorithm1;      /* 0,1 REVERSED? */
-  guint8 keyscale2;       /* 0-3 !*/
-  guint8 freqmod2;        /* 0-15 !*/
-  guint8 feedback2;       /* 0-7 UNUSED? */
-  guint8 attackrate2;     /* 0-15 !*/
-  guint8 sustainvol2;     /* 0-15 !*/
-  guint8 envelope2;       /* t/f !*/
-  guint8 decayrate2;      /* 0-15 !*/
-  guint8 releaserate2;    /* 0-15 !*/
-  guint8 volume2;         /* 0-63 !*/
-  guint8 ampmod2;         /* t/f !*/
-  guint8 vibrato2;        /* t/f !*/
-  guint8 keybdscale2;     /* t/f !*/
-  guint8 algorithm2;      /* 0,1 UNUSED? */
-  guint8 waveform1;       /* 0-3 !*/
-  guint8 waveform2;       /* 0-3 !*/
-} adlib_def;
-
-static sbi_instr_data adlib_sbi[96];
 static guint8 instr[MIDI_CHANNELS];
 static int polyphony[MIDI_CHANNELS];
 static int dev;
@@ -100,49 +66,6 @@ void seqbuf_dump()
   _seqbufptr = 0;
 }
 #endif
-
-void make_sbi(adlib_def *one, guint8 *buffer)
-{
-  memset(buffer, 0, sizeof(sbi_instr_data));
-
-#if 0
- printf ("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x ", one->keyscale1, one->freqmod1, one->feedback1, one->attackrate1, one->sustainvol1, one->envelope1, one->decayrate1, one->releaserate1, one->volume1, one->ampmod1, one->vibrato1, one->keybdscale1, one->algorithm1, one->waveform1);
-
-  printf (" %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x ", one->keyscale2, one->freqmod2, one->feedback2, one->attackrate2, one->sustainvol2, one->envelope2, one->decayrate2, one->releaserate2, one->volume2, one->ampmod2, one->vibrato2, one->keybdscale2, one->algorithm2, one->waveform2);
-
-  printf("\n");
-#endif
-
-  buffer[0] |= ((one->ampmod1 & 0x1) << 7);
-  buffer[0] |= ((one->vibrato1 & 0x1) << 6);
-  buffer[0] |= ((one->envelope1 & 0x1) << 5);
-  buffer[0] |= ((one->keybdscale1 & 0x1) << 4);
-  buffer[0] |= (one->freqmod1 & 0xf);
-  buffer[1] |= ((one->ampmod2 & 0x1) << 7);
-  buffer[1] |= ((one->vibrato2 & 0x1) << 6);
-  buffer[1] |= ((one->envelope2 & 0x1) << 5);
-  buffer[1] |= ((one->keybdscale2 & 0x1) << 4);
-  buffer[1] |= (one->freqmod2 & 0xf);
-  buffer[2] |= ((one->keyscale1 & 0x3) << 6);
-  buffer[2] |= (one->volume1 & 0x3f);
-  buffer[3] |= ((one->keyscale2 & 0x3) << 6); 
-  buffer[3] |= (one->volume2 & 0x3f);
-  buffer[4] |= ((one->attackrate1 & 0xf) << 4);
-  buffer[4] |= (one->decayrate1 & 0xf);  
-  buffer[5] |= ((one->attackrate2 & 0xf) << 4);
-  buffer[5] |= (one->decayrate2 & 0xf);  
-  buffer[6] |= ((one->sustainvol1 & 0xf) << 4);
-  buffer[6] |= (one->releaserate1 & 0xf);
-  buffer[7] |= ((one->sustainvol2 & 0xf) << 4);
-  buffer[7] |= (one->releaserate2 & 0xf);
-  buffer[8] |= (one->waveform1 & 0x3);
-  buffer[9] |= (one->waveform2 & 0x3);
-
-  buffer[10] |= ((one->feedback1 & 0x7) << 1);
-  buffer[10] |= (1-(one->algorithm1 & 0x1));
-
-  return;
-}
 
 /* initialise note/operator lists, etc. */
 void adlib_init_lists()
@@ -323,6 +246,7 @@ int midi_adlib_close()
 
 int midi_adlib_volume(guint8 volume)
 {
+  /* XXX this is the wrong way to do this. */
   int i;
   volume &= 0x7f; /* (make sure it's not over 127) */
   for (i = 0; i < MIDI_CHANNELS ; i++)
@@ -368,6 +292,7 @@ int midi_adlib_event(guint8 command, guint8 note, guint8 velocity)
     SEQ_DUMPBUF();
     break;
   case 0xb0:    /* CC changes.  we ignore. */
+    /* XXXX we need to parse out 0x07 volume, at least. */
     return 0;
   case 0xd0:    /* aftertouch */
     SEQ_CHN_PRESSURE(dev, channel, note);

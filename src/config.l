@@ -58,6 +58,7 @@ struct {
 	void *(*check_driver)(char *name);
 } freesci_subsystems[FREESCI_DRIVER_SUBSYSTEMS_NR] = {
 	{"gfx", NULL},
+        {"pcm", parse_pcmout_driver},
 	{"midiout", parse_midiout_driver}
 };
 
@@ -235,6 +236,7 @@ standard_option standard_options[] = {
 	OPT_STATICREF("midiout_driver", midiout_driver, parse_midiout_driver),
 	OPT_STATICREF("midi_device", midi_device, parse_midi_device),
 	OPT_STATICREF("sound_server", sound_server, parse_sound_server),
+        OPT_STATICREF("pcmout_driver", pcmout_driver, parse_pcmout_driver),
 	OPT_STRING("console_log", console_log),
 	OPT_STRING("module_path", module_path),
 	OPT_STRING("gfx_driver", gfx_driver_name),
@@ -445,6 +447,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_options.pic0_antialiasing = GFXR_ANTIALIASING_NONE;
 
 	conf->gfx_driver_name = NULL;
+        conf->pcmout_driver = pcmout_find_driver(NULL);
         conf->midiout_driver = midiout_find_driver(NULL);
         conf->midi_device = midi_find_device(NULL);
 	conf->sound_server = sound_server_find_driver(NULL);
@@ -654,7 +657,18 @@ parse_midi_device(char *driver_name)
 	return (void *) conf->midi_device;
 }
 
+void *
+parse_pcmout_driver(char *driver_name)
+{
+	pcmout_driver_t *retval = pcmout_find_driver(driver_name);
 
+	if (retval)
+		return (void *) retval;
+	/* not found - return default */
+
+	printf ("Unknown pcmout driver %s\n", driver_name);
+	return (void *) conf->pcmout_driver;
+}
 
 
 static void

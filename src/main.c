@@ -292,6 +292,18 @@ list_graphics_drivers()
 	printf("\n");
 }
 
+static void
+list_pcmout_drivers()
+{
+	int i = 0;
+	while (pcmout_drivers[i]) {
+		if (i != 0)
+			printf(", ");
+		printf(pcmout_drivers[i]->name);
+		i++;
+	}
+	printf("\n");
+}
 
 static void
 list_midiout_drivers()
@@ -347,7 +359,8 @@ typedef struct {
 	char *gamedir;
         char *midiout_driver_name;
         char *midi_device_name;
-	char *sound_server_name;
+        char *sound_server_name;
+        char *pcmout_driver_name;
 } cl_options_t;
 
 #define ON 1
@@ -368,6 +381,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 		{"sci-version", required_argument, 0, 'V'},
 		{"graphics", required_argument, 0, 'g'},
 		{"midiout", required_argument, 0, 'O'},
+		{"pcmout", required_argument, 0, 'P'},
 		{"sound-server", required_argument, 0, 'S'},
 		{"mididevice", required_argument, 0, 'M'},
 		{"version", no_argument, 0, 'v'},
@@ -390,14 +404,15 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 	cl_options->gfx_driver_name = NULL;
 	cl_options->gamedir = NULL;
 	cl_options->midiout_driver_name = NULL;
+	cl_options->pcmout_driver_name = NULL;
 	cl_options->midi_device_name = NULL;
 	cl_options->sound_server_name = NULL;
 	cl_options->mouse = ON;
 
 #ifdef HAVE_GETOPT_LONG
-	while ((c = getopt_long(argc, argv, "lvrhmDd:V:g:x:y:c:M:O:S:", options, &optindex)) > -1) {
+	while ((c = getopt_long(argc, argv, "lvrhmDd:V:g:x:y:c:M:O:S:P:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_LONG */
-	while ((c = getopt(argc, argv, "lvrhmDd:V:g:x:y:c:M:O:S:")) > -1) {
+	while ((c = getopt(argc, argv, "lvrhmDd:V:g:x:y:c:M:O:S:P:")) > -1) {
 #endif /* !HAVE_GETOPT_LONG */
 		switch (c) {
 
@@ -434,6 +449,11 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 		        if (cl_options->midiout_driver_name)
 		            free(cl_options->midiout_driver_name);
 		        cl_options->midiout_driver_name = sci_strdup(optarg);
+		        break;
+		case 'P':
+		        if (cl_options->pcmout_driver_name)
+		            free(cl_options->pcmout_driver_name);
+		        cl_options->pcmout_driver_name = sci_strdup(optarg);
 		        break;
 		case 'M':
 		        if (cl_options->midi_device_name)
@@ -483,6 +503,9 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			printf("Supported midi 'devices': ");
 			list_midi_devices();
 
+			printf("Supported pcmout drivers: ");
+			list_pcmout_drivers();
+
 			printf("\n");
 			exit(0);
 
@@ -503,6 +526,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			       EXPLAIN_OPTION("--disable-mouse", "-m", "Disable support for pointing device")
 			       EXPLAIN_OPTION("--midiout drv\t", "-Odrv", "use the 'drv' midiout driver")
 			       EXPLAIN_OPTION("--mididevice drv", "-Mdrv", "use the 'drv' midi device (eg mt32 or adlib)")
+			       EXPLAIN_OPTION("--pcmout drv\t", "-Pdrv", "use the 'drv' pcmout driver")
 			       EXPLAIN_OPTION("--sound-server srv", "-Ssrv", "Specifies the asynchronous sound server to use")
 			       EXPLAIN_OPTION("--list-savegames", "-l", "Lists all savegame IDs")
 			       "\n"
@@ -803,6 +827,7 @@ main(int argc, char** argv)
 	char *gfx_driver_name			= NULL;
 	char *midiout_driver_name		= NULL;
 	char *midi_device_name			= NULL;
+	char *pcm_driver_name                   = NULL;
 	char *game_name	= NULL;
 	char *savegame_name = NULL;
 	sci_version_t version			= 0;
@@ -924,6 +949,11 @@ main(int argc, char** argv)
 		free(cl_options.gfx_driver_name);
 	} /* else it's still NULL */
 
+	if (cl_options.pcmout_driver_name)
+		pcmout_driver = old_lookup_driver((old_lookup_funct_t *)pcmout_find_driver,
+						   MSVC_FUNCTYPECAST_KLUDGE list_pcmout_drivers,
+						   "pcmout driver", cl_options.pcmout_driver_name);
+
 	if (cl_options.midiout_driver_name)
 	{
 		midiout_driver = old_lookup_driver((old_lookup_funct_t *)midiout_find_driver,
@@ -961,6 +991,8 @@ main(int argc, char** argv)
 			midiout_driver = active_conf->midiout_driver;
 		if (!midi_device)
 			midi_device = active_conf->midi_device;
+		if (!pcmout_driver)
+		  pcmout_driver = active_conf->pcmout_driver;
 	}
 
 	if (confs) {
@@ -1044,6 +1076,7 @@ main(int argc, char** argv)
 		}
 	}
 
+	/* Configure the pcmout driver XXXX */
 	/* Configure the midiout driver */
 	{
 		driver_option_t *option = get_driver_options(active_conf, FREESCI_DRIVER_SUBSYSTEM_MIDIOUT, midiout_driver->name);
@@ -1109,6 +1142,9 @@ main(int argc, char** argv)
 	       midiout_driver->name, midiout_driver->version);
 	printf("MIDI-device: Using the %s driver %s\n",
 	       midi_device->name, midi_device->version);
+	printf("PCM-out: Using the %s driver %s\n",
+	       pcmout_driver->name, pcmout_driver->version);
+
 	if (sound_server)
 		printf("Sound server: Using the %s sound server %s\n",
 		       sound_server->name, sound_server->version);

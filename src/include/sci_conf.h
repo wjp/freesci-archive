@@ -33,8 +33,9 @@
 #include <gfx_options.h>
 #include <midiout.h>
 #include <midi_device.h>
+#include <pcmout.h>
 
-#define FREESCI_DRIVER_SUBSYSTEMS_NR 2
+#define FREESCI_DRIVER_SUBSYSTEMS_NR 3
 
 #define FREESCI_DRIVER_SUBSYSTEM_GFX 0
 #define FREESCI_DRIVER_SUBSYSTEM_MIDIOUT 1
@@ -87,6 +88,8 @@ typedef struct {
 
 	midiout_driver_t *midiout_driver; /* the midiout method to use */
 	midi_device_t *midi_device; /* the midi device to use */
+	
+	pcmout_driver_t *pcmout_driver; /* the pcm driver to use */
 	sound_server_t *sound_server; /* The sound server */
 
 	char *module_path; /* path to directories modules are loaded from */
@@ -130,6 +133,13 @@ parse_midiout_driver(char *driver_name);
 
 void *
 parse_midi_device(char *driver_name);
+/* Parses a string and looks up an appropriate driver structure
+** Parameters: (char *) driver_name: Name of the driver to look up
+** Returns   : (void *) A matching driver, or NULL on failure
+*/
+
+void *
+parse_pcmout_driver(char *driver_name);
 /* Parses a string and looks up an appropriate driver structure
 ** Parameters: (char *) driver_name: Name of the driver to look up
 ** Returns   : (void *) A matching driver, or NULL on failure

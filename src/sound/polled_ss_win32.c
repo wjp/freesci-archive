@@ -113,6 +113,9 @@ sound_win32p_init(state_t *s, int flags)
 	fflush(NULL);
 #endif
 
+        if (pcmout_open() < 0)
+                return -1;
+
 	if (init_midi_device(s) < 0)
 		return -1;
 

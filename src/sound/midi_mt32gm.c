@@ -20,14 +20,12 @@
 #include <midi_device.h>
 #include <midiout.h>
 #include <sound.h>
-
 /* we reuse the mt32 open/close/etc */
 
 int midi_mt32_event(guint8 command, guint8 param, guint8 param2);
 int midi_mt32_event2(guint8 command, guint8 param);
 int midi_mt32_allstop(void);
-
-static int global_volume = 16;
+int midi_mt32_write_block(guint8 *data, unsigned int count);
 
 static int mt32gm_channel_map[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -121,14 +119,13 @@ int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2)
 			return 0;
 
 		volume = param2;
-		param2 = (volume * MIDI_mapping[param].volume * global_volume) >> (7 + 4);
+		param2 = (volume * MIDI_mapping[param].volume) >> (7);
 
 		if (channel == RHYTHM_CHANNEL)
 			xparam = MIDI_mapping[param].gm_rhythmkey;
 
 		break;
-	case 0xe0:    /* Pitch bend NYI */
-		break;
+	case 0xe0:    /* Pitch bend -- needs scaling? */
 	case 0xb0:    /* CC changes.  let 'em through... */
 		break;
 	default:
@@ -194,9 +191,14 @@ int midi_mt32gm_event2(guint8 command, guint8 param)
 
 int midi_mt32gm_volume(guint8 volume)
 {
-	int value = volume;
-	global_volume = (value * 16) / 100; /* Ouch! */
-	return 0;
+  /* Universal SysEx */
+  guint8 buffer[8] = {0xf0, 0x7f, 0x7f, 0x04, 0x01, 0x00, 0x00, 0xf7};
+  
+  int value = volume * 0x4000 / 100;
+  buffer[5] = volume & 0x7f;  /* bits 0-6 */
+  buffer[6] = (volume >> 7) & 0x7f; /* bits 7-13 */
+
+  return midi_mt32_write_block(buffer, 8);
 }
 
 int midi_mt32gm_reverb(short param)
