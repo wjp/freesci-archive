@@ -526,7 +526,7 @@ _gfxop_init_common(gfx_state_t *state, gfx_options_t *options)
 	state->mouse_pointer = state->mouse_pointer_bg = NULL;
 	state->mouse_pointer_visible = 0;
 	state->control_map = gfx_pixmap_alloc_index_data(gfx_new_pixmap(320, 200, GFX_RESID_NONE, 0, 0));
-	state->control_map->flags |= GFX_PIXMAP_FLAG_DONT_UNALLOCATE_PALETTE;
+	state->control_map->flags |= GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
 	state->options = options;
 	state->mouse_pointer_in_hw = 0;
 	state->disable_dirty = 0;

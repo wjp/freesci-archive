@@ -1,3 +1,18 @@
+2001-02-19  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/said.y (aug_find_words): Altered word finding to consider
+	base words in relative clauses as relative words, too
+
+	* src/gfx/widgets.c: Factorized equivalence relation between strings
+
+	* src/engine/kgraphics.c (_k_view_list_dispose_loop): Dropped views may
+	draw to the control map if flagged appropriately (like picviews)
+
+	* src/gfx/operations.c (_gfxop_init_common): Fixed invalid flag setting
+
+	* src/engine/kgraphics.c (_k_view_list_dispose_loop): Restart operation
+	after gfxw_annihilate()
+
 2001-02-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/drivers/xlib_driver.c (xlib_draw_line): Fixed typo

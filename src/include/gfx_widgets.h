@@ -139,6 +139,18 @@ static point_t gfxw_point_zero = {0, 0};
 ** order.
 **
 **
+** -- should_replace(gfxw_widget_t *self, gfxw_widget_t *other)
+** Compares two compareable widgets for equality
+** Parameters: (gfxw_widget_t *) self: self reference
+**             (gfxw_widget_t *) other: other widget
+** Returns   : (int) 0 if 'self' should be kept, != 0 if it should be replaced
+**             by the 'other'
+** When 'equals' returns true, this means that no new widget will be added.
+** However, in some cases newer widgets may contain information that should
+** cause the older widget to be removed nonetheless; this is indicated by this
+** function.
+**
+**
 ** -- superarea_of(gfxw_widget_t *self, gfxw_widget_t *other) 
 ** Tests whether drawing self after other would reduce all traces of other
 ** Parameters: (gfxw_widget_t *) self: self reference

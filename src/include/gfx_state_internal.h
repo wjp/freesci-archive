@@ -101,6 +101,7 @@ typedef int gfxw_bin_op(struct _gfxw_widget *, struct _gfxw_widget *);
    gfxw_op_int *print; /* Prints the widget's contents, using sciprintf. Second parameter is indentation. */ \
    gfxw_bin_op *compare_to; /* a.compare_to(a, b) returns <0 if a<b, =0 if a=b and >0 if a>b */ \
    gfxw_bin_op *equals; /* a equals b if both cause the same data to be displayed */ \
+   gfxw_bin_op *should_replace; /* (only if a equals b) Whether b should replace a even though they are equivalent */ \
    gfxw_bin_op *superarea_of; /* a superarea_of b <=> for each pixel of b there exists an opaque pixel in a at the same location */ \
    gfxw_visual_op *set_visual /* Sets the visual the widget belongs to */
 

@@ -445,35 +445,6 @@ _gfxr_auxbuf_fill(gfxr_pic_t *pic, int x, int y, int clipmask, int control)
 }
 
 
-static void
-_gfxr_auxbuf_spread_old(gfxr_pic_t *pic)
-{
-	unsigned char *auxbuf = pic->aux_map;
-	int x,y;
-
-	for (x = 0; x < 319; x++)
-		for (y = 0; y < 199; y++)
-			if (auxbuf[x + y*320] & 0x10)
-				auxbuf[x + y*320] |= 0x40;
-
-	/* Spread horizontally */
-	for (x = 1; x < 318; x++)
-		for (y = 0; y < 199; y++)
-			if ((auxbuf[x-1 + y*320] & 0x10)
-			    || (auxbuf[x+1 + y*320] & 0x10))
-				auxbuf[x + y*320] |= 0x40;
-
-	/* Spread vertically */
-	for (x = 0; x < 319; x++)
-		for (y = 1; y < 198; y++)
-			if ((auxbuf[x + (y-1)*320] & 0x10)
-			    || (auxbuf[x + (y+1)*320] & 0x10))
-				auxbuf[x + y*320] |= 0x40;
-
-	return;
-}
-
-
 static inline void
 _gfxr_auxbuf_tag_line(gfxr_pic_t *pic, int pos, int width)
 {
@@ -481,7 +452,6 @@ _gfxr_auxbuf_tag_line(gfxr_pic_t *pic, int pos, int width)
 	for (i = 0; i < width; i++)
 		pic->aux_map[i+pos] |= FRESH_PAINT;
 }
-
 
 
 static void
@@ -621,40 +591,6 @@ _gfxr_auxbuf_spread(gfxr_pic_t *pic, int *min_x, int *min_y, int *max_x, int *ma
 			*max_y = y;
 		}
 
-		for (j = 0; j < old_intervals_nr; j++)
-			if (!intervals[!ivi][j].tag) { /* stand-alone line */
-				int xl = intervals[!ivi][j].xl;
-				int xr = intervals[!ivi][j].xr;
-				int width = xr - xl + 1;
-#if 0
-				int length = width >> 1;
-				int xleft;
-
-				xleft = (length > xl)? xl : length;
-				_gfxr_auxbuf_tag_line(pic, pos - 320 + xl - xleft, xleft);
-
-				if (length + xr > 319)
-					length = 319 - xr;
-				_gfxr_auxbuf_tag_line(pic, pos - 320 + xr, length);
-				if (width == 1) {
-					int k, f = -1;
-
-					for (k = 0; k < intervals_nr && f == -1; k++)
-						if (intervals[ivi][k].xl < xl)
-							f = k;
-
-					if (f > -1)
-						memcpy(intervals[ivi] + f + 1, intervals[ivi] + f, sizeof (struct interval_struct) * (intervals_nr - f));
-					else f = intervals_nr;
-
-					memcpy(intervals[ivi] + f, intervals[!ivi] + j, sizeof (struct interval_struct));
-					pic->aux_map[pos - 320 + xl] |= FRESH_PAINT;
-	    
-					intervals_nr++;
-				}
-#endif
-			}
-
 		pos += 320;
 	}
 
@@ -665,6 +601,7 @@ _gfxr_auxbuf_spread(gfxr_pic_t *pic, int *min_x, int *min_y, int *max_x, int *ma
 	if (*max_y < 199)
 		(*max_y)++;
 }
+
 
 
 /*** Regular drawing operations ***/
@@ -705,7 +642,6 @@ enum {
 	PIC_OPX_EMBEDDED_VIEW,
 	PIC_OPX_SET_PRIORITY_TABLE
 };
-
 
 #ifdef GFXR_DEBUG_PIC0
 #define p0printf sciprintf

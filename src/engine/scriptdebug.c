@@ -1244,6 +1244,26 @@ c_gfx_fill_screen(state_t *s)
 	return 0;
 }
 
+int
+c_gfx_draw_rect(state_t *s)
+{
+	int col = cmd_params[4].val;
+
+	if (!s) {
+		sciprintf("Not in debug state!\n");
+		return 1;
+	}
+
+	if (col < 0 || col > 15)
+		col = 0;
+
+	gfxop_set_clip_zone(s->gfx_state, gfx_rect_fullscreen);
+	gfxop_fill_box(s->gfx_state, gfx_rect(cmd_params[0].val, cmd_params[1].val, cmd_params[2].val, cmd_params[3].val), s->ega_colors[col]);
+	gfxop_update(s->gfx_state);
+
+	return 0;
+}
+
 
 int
 c_gfx_flush_resources(state_t *s)
@@ -2078,6 +2098,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_gfx_show_map, "gfx_show_map", "i", "Shows one of the screen maps\n  Semantics of the int parameter:\n"
 					 "    0: visual map (back buffer)\n    1: priority map (back buf.)\n    2: control map (static buf.)");
 			con_hook_command(c_gfx_fill_screen, "gfx_fill_screen", "i", "Fills the screen with one\n  of the EGA colors\n");
+			con_hook_command(c_gfx_draw_rect, "gfx_draw_rect", "iiiii", "Draws a rectangle to the screen\n  with one of the EGA colors\n\nUSAGE\n\n"
+					 "  gfx_draw_rect <x> <y> <xl> <yl> <color>");
 			con_hook_command(c_gfx_draw_cel, "gfx_draw_cel", "iii", "Draws a single view\n  cel to the center of the\n  screen\n\n"
 					 "USAGE\n  gfx_draw_cel <view> <loop> <cel>\n");
 			con_hook_command(c_gfx_priority, "gfx_priority", "i*", "Prints information about priority\n  bands\nUSAGE\n\n  gfx_priority\n\n"

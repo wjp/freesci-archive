@@ -46,7 +46,7 @@
 #define AUGMENT_SENTENCE_MINOR_RECURSE 0x144
 
 
-  /*#define SCI_DEBUG_PARSE_TREE_AUGMENTATION *//* uncomment to debug parse tree augmentation */
+/*#define SCI_DEBUG_PARSE_TREE_AUGMENTATION *//* uncomment to debug parse tree augmentation */
 
 
 #ifdef SCI_DEBUG_PARSE_TREE_AUGMENTATION
@@ -1450,43 +1450,47 @@ static void
 aug_find_words_recursively(parse_tree_node_t *tree, int startpos,
 			   int *base_words, int *base_words_nr,
 			   int *ref_words, int *ref_words_nr,
-			   int maxwords)
+			   int maxwords, int refbranch)
      /* Finds and lists all base (141) and reference (144) words */
 {
-  int major, minor;
-  int word;
-  int pos = aug_get_first_child(tree, startpos, &major, &minor);
+	int major, minor;
+	int word;
+	int pos = aug_get_first_child(tree, startpos, &major, &minor);
 
-  while (pos) {
-    if ((word = aug_get_wgroup(tree, pos))) { /* found a word */
+	if (major == WORD_TYPE_REF)
+		refbranch = 1;
 
-      if (major == WORD_TYPE_BASE) {	
-	if ((*base_words_nr) == maxwords) {
-	  sciprintf("Out of regular words\n");
-	  return; /* return gracefully */
-	}
+	while (pos) {
+		if ((word = aug_get_wgroup(tree, pos))) { /* found a word */
 
-	base_words[*base_words_nr] = word; /* register word */
-	++(*base_words_nr);
+			if (major == WORD_TYPE_BASE) {	
+				if ((*base_words_nr) == maxwords) {
+					sciprintf("Out of regular words\n");
+					return; /* return gracefully */
+				}
 
-      } else if (major == WORD_TYPE_REF) {
-	if ((*ref_words_nr) == maxwords) {
-	  sciprintf("Out of reference words\n");
-	  return; /* return gracefully */
-	}
+				base_words[*base_words_nr] = word; /* register word */
+				++(*base_words_nr);
 
-	ref_words[*ref_words_nr] = word; /* register word */
-	++(*ref_words_nr);
+			}
+			if (refbranch) {
+				if ((*ref_words_nr) == maxwords) {
+					sciprintf("Out of reference words\n");
+					return; /* return gracefully */
+				}
 
-      } else if (major != WORD_TYPE_SYNTACTIC_SUGAR)
-	sciprintf("aug_find_words_recursively(): Unknown word type %03\n", major);
+				ref_words[*ref_words_nr] = word; /* register word */
+				++(*ref_words_nr);
+
+			} else if (major != WORD_TYPE_SYNTACTIC_SUGAR && major != WORD_TYPE_BASE)
+				sciprintf("aug_find_words_recursively(): Unknown word type %03\n", major);
     
-    } else /* Did NOT find a word group: Attempt to recurse */
-      aug_find_words_recursively(tree, pos, base_words, base_words_nr,
-				 ref_words, ref_words_nr, maxwords);
+		} else /* Did NOT find a word group: Attempt to recurse */
+			aug_find_words_recursively(tree, pos, base_words, base_words_nr,
+						   ref_words, ref_words_nr, maxwords, refbranch);
 
-    pos = aug_get_next_sibling(tree, pos, &major, &minor);
-  }
+		pos = aug_get_next_sibling(tree, pos, &major, &minor);
+	}
 }
 
 
@@ -1497,10 +1501,10 @@ aug_find_words(parse_tree_node_t *tree, int startpos,
 	       int maxwords)
      /* initializing wrapper for aug_find_words_recursively() */
 {
-  *base_words_nr = 0;
-  *ref_words_nr = 0;
+	*base_words_nr = 0;
+	*ref_words_nr = 0;
 
-  aug_find_words_recursively(tree, startpos, base_words, base_words_nr, ref_words, ref_words_nr, maxwords);
+	aug_find_words_recursively(tree, startpos, base_words, base_words_nr, ref_words, ref_words_nr, maxwords, 0);
 }
 
 
@@ -1508,13 +1512,13 @@ static inline int
 aug_contains_word(int *list, int length, int word)
 {
 	int i;
-	if (word == ANYWORD) {
+	if (word == ANYWORD)
 		return (length);
-	}
 
 	for (i = 0; i < length; i++)
 		if (list[i] == word)
 			return 1;
+
 	return 0;
 }
 
@@ -1576,7 +1580,7 @@ augment_match_expression_p(parse_tree_node_t *saidt, int augment_pos,
     while (cpos) {
       if (cminor == AUGMENT_SENTENCE_MINOR_MATCH_WORD) {
 	int word = aug_get_wgroup(saidt, cpos);
-	scidprintf("Looking for word %03x\n", word);
+	scidprintf("Looking for refword %03x\n", word);
 
 	if (aug_contains_word(ref_words, ref_words_nr, word))
 	  return 1;
@@ -1763,7 +1767,7 @@ augment_parse_nodes(parse_tree_node_t *parset, parse_tree_node_t *saidt)
 
 
 /*******************/
-/**** Baic code ****/
+/**** Main code ****/
 /*******************/
 
 int

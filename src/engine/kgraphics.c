@@ -1420,6 +1420,63 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 }
 
 
+static inline void
+draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, int funct_nr, int argc, int argp)
+{
+	int priority = view->color.priority; 
+	int pri_top = PRIORITY_BAND_FIRST(priority);
+	int top, bottom, right, left;
+	int has_nsrect = (view->ID <=0)? 0 : lookup_selector(s, view->ID, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
+
+	if (has_nsrect) {
+		int obj = view->ID;
+
+		top = GET_SELECTOR(obj, nsTop);
+		bottom = GET_SELECTOR(obj, nsBottom);
+		left = GET_SELECTOR(obj, nsLeft);
+		right = GET_SELECTOR(obj, nsRight);
+	} else {
+		int width, height;
+		point_t offset;
+
+		GFX_ASSERT(gfxop_get_cel_parameters(s->gfx_state, view->view, view->loop, view->cel,
+						    &width, &height, &offset));
+
+		left = view->pos.x + offset.x - (width >> 1);
+		right = left + width;
+		bottom = view->pos.y + offset.y + 1;
+		top = bottom - height;
+	}
+
+	if (top < pri_top && pri_top_management)
+		top = pri_top;
+
+	if (bottom < top) {
+		int foo = top;
+		top = bottom;
+		bottom = foo;
+	}
+
+	if (!(view->signalp && (GET_HEAP(view->signalp) & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {
+		gfxw_box_t *box;
+		gfx_color_t color;
+
+		gfxop_set_color(s->gfx_state, &color, -1, -1, -1, -1, -1, 0xf);
+
+		SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n", left, top,
+			  right, bottom);
+
+		box = gfxw_new_box(s->gfx_state, gfx_rect(left, top, right - left + 1, bottom - top + 1),
+				   color, color, GFX_BOX_SHADE_FLAT);
+
+		assert_primary_widget_lists(s);
+
+		ADD_TO_CURRENT_PICTURE_PORT(box);
+	}
+}
+
+static int _k_animate_ran = 0;
+
 int
 _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 			  int funct_nr, int argc, int argp)
@@ -1430,11 +1487,14 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 	int dropped = 0;
 	gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) list->contents;
 
+	_k_animate_ran = 0;
+
 	while (widget) {
 		gfxw_dyn_view_t *next = (gfxw_dyn_view_t *) widget->next;
 
 		if (GFXW_IS_DYN_VIEW(widget) && (widget->ID != GFXW_NO_ID)) {
 			if ((signal = (UGET_HEAP(widget->signalp))) & _K_VIEW_SIG_FLAG_DISPOSE_ME) {
+				int tempid = widget->ID;
 
 				if (widget->under_bitsp) { /* Is there a bg picture left to clean? */
 					word mem_handle = widget->under_bits = GET_HEAP(widget->under_bitsp);
@@ -1445,9 +1505,13 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 					}
 				}
 
-				if (invoke_selector(INV_SEL(widget->ID, delete, 1), 0))
+				if (invoke_selector(INV_SEL(tempid, delete, 1), 0))
 					SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
-						 " a delete funcselector\n", widget->ID);
+						 " a delete funcselector\n", tempid);
+				if (_k_animate_ran) {
+					SCIkwarn(SCIkWARNING, "Object at %04x invoked kAnimate() during deletion!\n", tempid);
+					return dropped;
+				}
 
 				SCIkdebug(SCIkGRAPHICS, "Freeing %04x with signal=%04x\n", widget->ID, signal);
 
@@ -1457,8 +1521,10 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 						SCIkwarn(SCIkERROR, "Attempt to remove view with ID %04x from list failed!\n", widget->ID);
 						BREAKPOINT();
 					}
+
 					ADD_TO_CURRENT_PICTURE_PORT(gfxw_set_id(GFXW(widget), GFXW_NO_ID));
 
+					draw_to_control_map(s, widget, 0, funct_nr, argc, argp);
 					widget->draw_bounds.y += s->dyn_views->bounds.y - widget->parent->bounds.y;
 					widget->draw_bounds.x += s->dyn_views->bounds.x - widget->parent->bounds.x;
 					dropped = 1;
@@ -1467,6 +1533,7 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 					SCIkdebug(SCIkGRAPHICS, "Deleting view at %04x\n", widget->ID);
 					widget->flags |= GFXW_FLAG_VISIBLE;
 					gfxw_annihilate(GFXW(widget));
+					next = (gfxw_dyn_view_t *) list->contents; /* Restart */
 				}
 			}
 		}
@@ -1572,68 +1639,19 @@ _k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int nr, int funct_nr,
 	} else /* DON'T calculate the priority */
 		priority = GET_SELECTOR(obj, priority);
 
-	if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP) {
-		int pri_top = PRIORITY_BAND_FIRST(_priority);
-		int top, bottom, right, left;
-
-		if (priority <= 0)
-			priority = _priority; /* Picviews always get their priority set */
-
-
-		if (has_nsrect) {
-			top = GET_SELECTOR(obj, nsTop);
-			bottom = GET_SELECTOR(obj, nsBottom);
-			left = GET_SELECTOR(obj, nsLeft);
-			right = GET_SELECTOR(obj, nsRight);
-		} else {
-			int width, height;
-			point_t offset;
-
-			GFX_ASSERT(gfxop_get_cel_parameters(s->gfx_state, view_nr, loop, cel,
-							    &width, &height, &offset));
-
-			left = pos.x + offset.x - (width >> 1);
-			right = left + width;
-			bottom = pos.y + offset.y + 1;
-			top = bottom - height;
-		}
-
-
-		if (top < pri_top)
-			top = pri_top;
-
-		if (bottom < top) {
-			int foo = top;
-			top = bottom;
-			bottom = foo;
-		}
-
-		if (!(signalp && (GET_HEAP(signalp) & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {
-			gfxw_box_t *box;
-			gfx_color_t color;
-
-			gfxop_set_color(s->gfx_state, &color, -1, -1, -1, -1, -1, 0xf);
-
-			SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n", left, top,
-				  right, bottom);
-
-			box = gfxw_new_box(s->gfx_state, gfx_rect(left, top, right - left + 1, bottom - top + 1),
-					   color, color, GFX_BOX_SHADE_FLAT);
-
-			assert_primary_widget_lists(s);
-
-			ADD_TO_CURRENT_PICTURE_PORT(box);
-		}
-	}
+	if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP && priority <= 0)
+		priority = _priority; /* Always for picviews */
 
 	widget = gfxw_new_dyn_view(s->gfx_state, pos, z, view_nr, loop, cel,
 				   priority, -1, ALIGN_CENTER, ALIGN_BOTTOM, nr);
-
 
 	if (widget) {
 
 		widget = (gfxw_dyn_view_t *) gfxw_set_id(GFXW(widget), obj);
 		widget = gfxw_dyn_view_set_params(widget, under_bits, under_bitsp, signal, signalp);
+
+		if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP)
+			draw_to_control_map(s, widget, 1, funct_nr, argc, argp);
 
 		return widget;
 		/*    s->pic_not_valid++; *//* There ought to be some kind of check here... */
@@ -1795,6 +1813,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		
 		widget = GFXW(gfxw_new_dyn_view(s->gfx_state, gfx_point(x,y), 0, view, loop, cel,
 						priority, control, ALIGN_CENTER, ALIGN_BOTTOM, 0));
+		draw_to_control_map(s, (gfxw_dyn_view_t *) widget, 1, funct_nr, argc, argp);
 
 		if (!widget) {
 			SCIkwarn(SCIkERROR, "Attempt to single-add invalid picview (%d/%d/%d)\n", view, loop, cel);
@@ -2005,6 +2024,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	process_sound_events(s); /* Take care of incoming events (kAnimate is called semi-regularly) */
 
+	_k_animate_ran = 1;
 	open_animation = (s->pic_is_new) && (s->pic_not_valid);
 	s->pic_is_new = 0;
 
