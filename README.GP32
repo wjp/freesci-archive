@@ -1,0 +1,210 @@
+FreeSCI - GP32
+
+Last update: 2004-12-30
+
+
+Index
+-----
+
+1      Building FreeSCI from source
+1.1    Installing the GCC toolchain
+1.1.1  Installing binutils
+1.1.2  Installing GCC and newlib
+1.1.3  Installing mirkoSDK
+1.2    Compiling FreeSCI
+2      Using FreeSCI
+2.1    The config file
+2.2    The controls
+2.2.1  Controlling the cursor keys
+2.2.2  Controlling the mouse
+2.2.3  The virtual keyboard
+3      Bugs and other known issues
+4      Get involved
+
+
+1     Building FreeSCI from source
+----------------------------------
+
+Building is done from within a UNIX environment (e.g. Linux or Cygwin). This
+chapter will describe how to setup the GP32 toolchain and build a FreeSCI
+binary from source. If you downloaded a prebuilt FreeSCI binary for GP32,
+proceed to chapter 2.
+
+1.1   Installing the toolchain
+------------------------------
+
+Create a temporary directory somewhere and download the following:
+
+binutils 2.15 (http://sources.redhat.com/binutils/)
+GCC 3.4.3 (http://gcc.gnu.org/)
+newlib 1.13.0 (http://sources.redhat.com/newlib/)
+
+Choose a directory where you want to install the toolchain, for example
+/usr/local/gp32. Make sure you have sufficient rights to write to this
+location (e.g. install as root).
+# prefix=/usr/local/gp32
+
+Add the bin directory to the PATH variable:
+# PATH=$PATH:$prefix/bin
+
+1.1.1  Installing binutils
+--------------------------
+
+Unpack, compile and install binutils:
+# tar jxfv binutils-2.15.tar.bz2
+# cd binutils-2.15
+# ./configure --target=arm-elf --prefix=$prefix
+# make
+# make install
+# cd ..
+
+1.1.2  Installing GCC and newlib
+--------------------------------
+
+Unpack GCC and newlib:
+# tar jxfv gcc-3.4.3.tar.bz2
+# tar zxfv newlib-1.13.0.tar.gz
+
+Modify the configure script to prevent libiberty from being built:
+# cd gcc-3.4.3
+# sed -i s/target-qthreads\"/target-qthreads\ target-libiberty\"/ ./configure
+
+Create a symlink to newlib:
+# ln -s ../newlib-1.13.0/newlib .
+
+Create a build directory and compile and install GCC and newlib:
+# mkdir build
+# cd build
+# ../configure --target=arm-elf --prefix=$prefix --with-cpu=arm9 \
+  --disable-threads --enable-languages=c,c++ --with-newlib \
+  --disable-multilib --with-gnu-ld --with-gnu-as \
+  --disable-newlib-supplied-syscalls
+# cflags="-s -mtune=arm920t -march=armv4t -marm -ffast-math -fshort-enums \
+  -mstructure-size-boundary=8 -O2"
+# make all \
+  CFLAGS_FOR_TARGET="-DTAG_CFLAGS_FOR_TARGET $cflags" \
+  CXXFLAGS_FOR_TARGET="-DTAG_CXXFLAGS_FOR_TARGET $cflags \
+  -fno-implicit-templates" \
+  LIBCFLAGS_FOR_TARGET="-DTAG_LIBCFLAGS_FOR_TARGET $cflags" \
+  LIBGCC2_CFLAGS="-DIN_GCC -DCROSS_COMPILE -DIN_LIBGCC2 \
+  -D__GCC_FLOAT_NOT_NEEDED -W -Wall -Wwrite-strings -Wstrict-prototypes \
+  -isystem ./include -Dinhibit_libc -fno-inline -DTAG_LIBGCC_FLAGS $cflags"
+# make install
+
+1.1.3  Installing mirkoSDK
+------------------------------------
+
+Download mirkoSDK 0.91
+(http://home.t-online.de/home/mirkoroller/gp32/) and extract it somewhere in
+your home directory:
+# tar zxfv mirkoSDK091.tar.gz
+
+1.2    Compiling FreeSCI
+------------------------
+
+Add the toolchain's bin directory (e.g. /usr/local/gp32/bin) to the PATH
+variable:
+# PATH=$PATH:/usr/local/gp32/bin
+
+Set SDK_BASE to the base directory of mirkoSDK
+(e.g. /home/joe/gp32_SDK):
+# SDK_BASE=/home/joe/gp32_SDK
+
+Change to the src/gp32 directory of the FreeSCI source distribution:
+# cd src/gp32
+
+Compile FreeSCI:
+# make
+
+
+2      Using FreeSCI
+--------------------
+
+On the GP32 FreeSCI basically works the same as on other platforms
+(see README). This chapter describes some of the differences. First of all,
+on GP32 the directory that FreeSCI uses for the config file and savegames is
+dev0:\gpmm\freesci. The games themselves can be located anywhere (but must
+each be in their own directory).
+
+2.1    The config file
+----------------------
+
+In order to use FreeSCI you'll have to create at least a minimal config file
+which tells FreeSCI where the games are located. This file must be
+UNIX-formatted! All good text editors (e.g. UltraEdit) should be able to save
+in this format. For general information about the config file, see README.
+Here's an example of a config file for two games:
+
+-------------->8--------------
+[lsl1]
+resource_dir = dev0:\gpmm\lsl1
+
+[sq3]
+resource_dir = dev0:\gpmm\sq3
+-------------->8--------------
+
+2.2    The controls
+-------------------
+
+There are three input modes, you can cycle between them with the START button.
+
+2.2.1  Controlling the cursor keys
+----------------------------------
+
+This mode is indicated by a 'K' in the lower-right corner of the screen.
+
+Directional pad - Cursor keys
+A               - Enter key
+B               - Escape key
+
+2.2.2  Controlling the mouse
+----------------------------
+
+This mode is indicated by an 'M' in the lower-right corner of the screen.
+
+Directional pad - Mouse cursor
+A               - Left mouse button
+B               - Right mouse button
+L               - Hold down to increase speed of mouse cursor.
+
+2.2.3  The virtual keyboard
+---------------------------
+
+This mode will present you with a full virtual keyboard in the bottom part of
+the screen.
+
+Directional pad - Select key
+A               - Press currently selected key
+
+
+3      Bugs and other known issues
+----------------------------------
+
+This chapter will present a list of currently known bugs and missing features
+that are specific to the GP32 port.
+
+3.1    Soundserver
+------------------
+
+A soundserver for GP32 hasn't been implemented yet. This causes games to
+malfunction in some places.
+
+3.2    Sound
+------------
+
+A PCM driver for GP32 hasn't been implemented yet.
+
+3.3    Chatboard
+----------------
+
+Chatboard support is currently broken.
+
+
+4      Get involved
+-------------------
+
+If you want to help out, check out the development page on the FreeSCI website
+for more information.
+
+The FreeSCI Team
+http://www.freesci.org

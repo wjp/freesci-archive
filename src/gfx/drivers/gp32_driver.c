@@ -324,14 +324,20 @@ input_handler(void)
 	}
 	if (options & GP32_OPTION_CHATBOARD) {
 		char c = gp_getChatboard();
-		if ((c == '\r') || ((c >= ' ') && (c <= '~'))) {
+		if (c > 0) {
 			event.type = SCI_EVT_KEYBOARD;
-			event.data = tolower(c);
 			event.buckybits = 0;
-			gp32_add_event(&event);
-		}
-		else {
-			sciprintf("Unknown Chatboard key %02x\n", c);
+			if (c == '\r') {
+				event.data = SCI_K_ENTER;
+				gp32_add_event(&event);
+			}
+			else if ((c >= ' ') && (c <= '~')) {
+				event.data = tolower(c);
+				gp32_add_event(&event);
+			}
+			else {
+				sciprintf("Unknown Chatboard key %02x\n", c);
+			}
 		}
 	}
 }

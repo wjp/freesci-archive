@@ -1,3 +1,10 @@
+2004-12-30  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* README.GP32: Added to repository.
+
+	* src/gfx/drivers/gp32_driver.c: Fixed a Chatboard bug.
+	Unfortunately it still doesn't seem to work.
+
 2004-12-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* README, src/gfx/drivers/gp32_driver.c: Added GP32 Chatboard
