@@ -1878,12 +1878,19 @@ _k_update_signals_in_view_list(gfxw_list_t *old_list, gfxw_list_t *new_list)
 		while (new_widget && new_widget->ID != old_widget->ID)
 			new_widget = (gfxw_dyn_view_t *) new_widget->next;
 
-		if (new_widget) {
+		if (new_widget)
 			old_widget->signal = new_widget->signal;
-			new_widget->flags &= ~GFXW_FLAG_IMMUNE_TO_SNAPSHOTS;
-		}
 
 		old_widget = (gfxw_dyn_view_t *) old_widget->next;
+	}
+}
+
+static void
+_k_view_list_kryptonize(gfxw_widget_t *v)
+{
+	if (v) {
+		v->flags &= ~GFXW_FLAG_IMMUNE_TO_SNAPSHOTS;
+		_k_view_list_kryptonize(v->next);
 	}
 }
 
@@ -2625,6 +2632,8 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		    && (GFXWC(s->port) == GFXWC(s->dyn_views->parent)) /* If dynviews are on the same port... */
 		    && (s->dyn_views->next)) /* ... and not on top of the view list...  */
 			reparentize_primary_widget_lists(s, s->port); /* ...then reparentize. */
+
+		_k_view_list_kryptonize(s->dyn_views->contents);
 	}
 
 	FULL_REDRAW();

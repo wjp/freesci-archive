@@ -1,3 +1,8 @@
+2001-02-28  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kAnimate): Make all dynviews invulnerable
+	wrt to annihilate() during Animate()
+
 2001-02-27  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (_k_make_dynview_obj): Made initial widgets
