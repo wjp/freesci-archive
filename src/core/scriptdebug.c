@@ -338,11 +338,16 @@ c_backtrace(void)
   sciprintf("Call stack:\n");
   for (i = 0; i <= script_exec_stackpos; i++) {
     script_exec_stack_t *call = &(script_exec_stack[i]);
-    heap_ptr namepos = getInt16(_s->heap + *(call->objpp) + SCRIPT_NAME_OFFSET);
+    heap_ptr namepos;
     int paramc, totalparamc;
 
-    sciprintf(" %x:  %s::%s(", i, _s->heap + namepos, (call->selector == -1)? "<call[be]?>":
-	      _s->selector_names[call->selector]);
+    if (call->selector >= -1) {/* Normal function */
+      namepos = getInt16(_s->heap + *(call->objpp) + SCRIPT_NAME_OFFSET);
+      sciprintf(" %x:  %s::%s(", i, _s->heap + namepos, (call->selector == -1)? "<call[be]?>":
+		_s->selector_names[call->selector]);
+    }
+    else /* Kernel function */
+      sciprintf(" %x:  k%s(", i, _s->kernel_names[-(call->selector)-42]);
 
     totalparamc = *(call->argcp);
 
@@ -359,8 +364,11 @@ c_backtrace(void)
     if (*(call->argcp) > 16)
       sciprintf("...");
 
-    sciprintf(")\n    obj@%04x pc=%04x sp=%04x fp=%04x\n", *(call->objpp), *(call->pcp),
-	      *(call->spp), *(call->ppp));
+    if (call->objpp == NULL)
+      sciprintf(")\n");
+    else
+      sciprintf(")\n    obj@%04x pc=%04x sp=%04x fp=%04x\n", *(call->objpp), *(call->pcp),
+		*(call->spp), *(call->ppp));
   }
   return 0;
 }
@@ -368,6 +376,11 @@ c_backtrace(void)
 int
 c_refresh_screen(void)
 {
+  if (!_debugstate_valid) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
   _s->graphics_callback(_s, GRAPHICS_CALLBACK_REDRAW_ALL,0,0,0,0);
   return 0;
 }
@@ -375,8 +388,24 @@ c_refresh_screen(void)
 int
 c_redraw_screen(void)
 {
+  if (!_debugstate_valid) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
   graph_update_box(_s, 0, 0, 320, 200);
   return 0;
+}
+
+int
+c_visible_map(void)
+{
+  if (!_debugstate_valid) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  _s->pic_visible_map = cmd_params[0].val;
 }
 
 int
@@ -801,6 +830,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 	      "  u: Unimpl'd/stubbed stuff\n  l: Lists and nodes\n  g: Graphics\n  c: Character"
 	      " handling\n  m: Memory management\n  f: Function call checks\n  *: Everything\n\n"
 	      "  If invoked withour parameters,\n  it will list all activated\n  debug options.");
+      cmdHook(c_visible_map, "set_vismap", "i", "Sets the visible map.\n  Default is 0 (visual).\n"
+	      "  Other useful values are:\n  1: Priority\n  2: Control\n  3: Auxiliary\n");
 
       cmdHookInt(&script_exec_stackpos, "script_exec_stackpos", "Position on the execution stack\n");
       cmdHookInt(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");

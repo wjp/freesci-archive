@@ -241,7 +241,7 @@ write_selector(state_t *s, heap_ptr object, int selector_id, int value)
 }
 
 int
-invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid,
+invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int kfunct,
 		heap_ptr stackframe, int argc, ...)
 {
   va_list argp;
@@ -260,6 +260,14 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid,
     return 1;
   }
 
+  ++script_exec_stackpos;
+  script_exec_stack[script_exec_stackpos].objpp = 0;
+  script_exec_stack[script_exec_stackpos].pcp = 0;
+  script_exec_stack[script_exec_stackpos].spp = 0;
+  script_exec_stack[script_exec_stackpos].ppp = 0;
+  script_exec_stack[script_exec_stackpos].argcp = &argc;
+  script_exec_stack[script_exec_stackpos].argpp = &stackframe;
+  script_exec_stack[script_exec_stackpos].selector = -42-kfunct;
 
   va_start(argp, argc);
   for (i = 0; i < argc; i++)
@@ -267,6 +275,8 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid,
   va_end(argp);
 
   send_selector(s, object, object, stackframe + framesize, framesize, argc, stackframe); /* Commit */
+
+  --script_exec_stackpos;
 
   return 0;
 }
@@ -285,7 +295,7 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid,
 */
 
 #define INV_SEL(_object_, _selector_, _noinvalid_) \
-  s, ##_object_,  s->selector_map.##_selector_, ##_noinvalid_, argp + (argc * 2)
+  s, ##_object_,  s->selector_map.##_selector_, ##_noinvalid_, funct_nr, argp + (argc * 2)
 
 
 /* Allocates a set amount of memory and returns a handle to it. */
@@ -356,7 +366,9 @@ kfree(state_t *s, int handle)
 void
 sci_usleep(long time)
 {
-  /* NOP- this will be replaced as soon as input management is in place */
+  struct timeval tv = {0, time};
+
+  select(0, NULL, NULL, NULL, &tv);
 }
 
 char *
@@ -453,7 +465,7 @@ kUnLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr old_offs = PARAM(0);
+  heap_ptr old_offs = UPARAM(0);
   heap_ptr new_offs;
   heap_ptr functareaptr;
   word species;
@@ -466,13 +478,23 @@ kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
     return;
   }
 
-  selectors = GET_HEAP(old_offs + SCRIPT_SELECTORCTR_OFFSET);
+  SCIkdebug(SCIkMEM, "Attempting to clone from %04x\n", old_offs);
+
+  selectors = UGET_HEAP(old_offs + SCRIPT_SELECTORCTR_OFFSET);
 
   object_size = 8 + 2 + (selectors * 2);
   /* 8: Pre-selector area; 2: Function area (zero overloaded methods) */
 
   new_offs = heap_allocate(s->_heap, object_size);
+
+  if (!new_offs) {
+    KERNEL_OOPS("Out of heap memory while cloning!\n");
+    return;
+  }
+
   new_offs += 2; /* Step over heap header */
+
+  SCIkdebug(SCIkMEM, "New clone at %04x, size %04x\n", new_offs, object_size);
 
   memcpy(s->heap + new_offs, s->heap + old_offs + SCRIPT_OBJECT_MAGIC_OFFSET, object_size);
   new_offs -= SCRIPT_OBJECT_MAGIC_OFFSET; /* Center new_offs on the first selector value */
@@ -896,9 +918,9 @@ void kFPuts(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kFGets(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int handle = UPARAM(0);
-  char *dest = UPARAM(1) + s->heap;
-  int maxsize = UPARAM(2);
+  char *dest = UPARAM(0) + s->heap;
+  int maxsize = UPARAM(1);
+  int handle = UPARAM(2);
 
   if (handle == 0) {
     SCIkwarn(SCIkERROR, "Attempt to read from file handle 0\n");
@@ -1041,6 +1063,8 @@ kSetCursor(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kShow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+  s->pic_visible_map = ffs(UPARAM_OR_ALT(0, 1)) - 1;
+
   CHECK_THIS_KERNEL_FUNCTION;
   s->pic_not_valid = 2;
 }
@@ -1335,9 +1359,9 @@ void
 kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int *arguments;
-  int dest = PARAM(0);
+  int dest = UPARAM(0);
   char *target = ((char *) s->heap) + dest;
-  int position = PARAM(1);
+  int position = UPARAM(1);
   int index = UPARAM(2);
   resource_t *resource;
   char *source;
@@ -1361,8 +1385,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   arguments = malloc(sizeof(int) * argc);
   for (i = startarg; i < argc; i++)
-    arguments[i-3] = UPARAM(i); /* Parameters are copied to prevent overwriting */
-
+    arguments[i-startarg] = UPARAM(i); /* Parameters are copied to prevent overwriting */
 
   while (xfer = *source++) {
     if (xfer == '%') {
@@ -1546,7 +1569,9 @@ kWait(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 #ifdef _WIN32
   if (SleepTime)
-    MsgWait (SleepTime * 60 / 1000);
+    MsgWait (SleepTime * 1000 / 60);
+#else
+  sci_usleep(SleepTime * 1000000 / 60);
 #endif
 
 }
@@ -1925,6 +1950,9 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
     s->pic_not_valid = 1;
     s->pic_is_new = 1;
 
+    if (s->pic_views_nr)
+      free(s->pic_views);
+    s->pic_views_nr = 0;
 
   } else
     SCIkwarn(SCIkERROR, "Request to draw non-existing pic.%03d\n", PARAM(0));
@@ -2077,6 +2105,34 @@ kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 void
+_k_dyn_view_list_prepare_change(state_t *s)
+     /* Removes all views in anticipation of a new window or text */
+{
+  view_object_t *list = s->dyn_views;
+  int list_nr = s->dyn_views_nr;
+  int i;
+
+  for (i = 0; i < list_nr; i++) {
+    word signal = GET_HEAP(list[i].signalp);
+
+    if (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE)) {
+
+      if (list[i].underBitsp && !(signal & _K_VIEW_SIG_FLAG_DONT_RESTORE)) {
+	int under_bits = GET_HEAP(list[i].underBitsp);
+
+	if (under_bits) {
+
+	  SCIkdebug(SCIkGRAPHICS, "Restoring BG for obj %04x with signal %04x\n", list[i].obj, signal);
+	  graph_restore_box(s, under_bits);
+
+	  PUT_HEAP(list[i].underBitsp, 0); /* Restore and mark as restored */
+	}
+      }
+    } /* if NOT (signal & _K_VIEW_SIG_FLAG_NO_UPDATE) */
+  } /* For each list member */
+}
+
+void
 _k_restore_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
      /* Restores the view backgrounds of list_nr members of list */
 {
@@ -2149,7 +2205,7 @@ _k_save_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
       continue; /* Don't overwrite an existing backup */
 
     SCIkdebug(SCIkGRAPHICS, "Saving BG for obj %04x with signal %04x\n",
-	      list[i].obj, GET_HEAP(list[i].signalp));
+	      list[i].obj, UGET_HEAP(list[i].signalp));
     handle = view0_backup_background(s, list[i].x, list[i].y,
 				     list[i].loop, list[i].cel, list[i].view);
 
@@ -2158,8 +2214,9 @@ _k_save_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
 }
 
 void
-_k_view_list_dispose_loop(state_t *s, view_object_t *list, int list_nr, int argc, int argp)
-     /* disposes all list members flagged for disposal */
+_k_view_list_dispose_loop(state_t *s, view_object_t *list, int list_nr,
+			  int funct_nr, int argc, int argp)
+     /* disposes all list members flagged for disposal; funct_nr is the invoking kfunction */
 {
   int i;
 
@@ -2173,8 +2230,8 @@ _k_view_list_dispose_loop(state_t *s, view_object_t *list, int list_nr, int argc
 
 
 void
-_k_invoke_view_list(state_t *s, heap_ptr list, int argc, int argp)
-     /* Invokes all elements of a view list. */
+_k_invoke_view_list(state_t *s, heap_ptr list, int funct_nr, int argc, int argp)
+     /* Invokes all elements of a view list. funct_nr is the number of the calling funcion. */
 {
   heap_ptr node = GET_HEAP(list + LIST_FIRST_NODE);
 
@@ -2190,20 +2247,23 @@ _k_invoke_view_list(state_t *s, heap_ptr list, int argc, int argp)
 }
 
 view_object_t *
-_k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int argc, int argp)
+_k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_nr, int argc, int argp)
      /* Creates a view_list from a node list in heap space. Returns the list, stores the
      ** number of list entries in *list_nr. Calls doit for each entry if cycle is set.
-     ** argc, argp should be the same as in the calling kernel function.
+     ** argc, argp, funct_nr should be the same as in the calling kernel function.
      */
 {
-  heap_ptr node = GET_HEAP(list + LIST_FIRST_NODE);
+  heap_ptr node;
   view_object_t *retval;
   int i;
 
   if (cycle)
-    _k_invoke_view_list(s, list, argc, argp); /* Invoke all objects if requested */
+    _k_invoke_view_list(s, list, funct_nr, argc, argp); /* Invoke all objects bif requested */
 
+  node = GET_HEAP(list + LIST_FIRST_NODE);
   *list_nr = 0;
+
+  SCIkdebug(SCIkGRAPHICS, "Making list from %04x\n", list);
 
   if (GET_HEAP(list - 2) != 0x6) { /* heap size check */
     SCIkwarn(SCIkWARNING, "Attempt to draw non-list at %04x\n", list);
@@ -2227,6 +2287,8 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int argc, 
     heap_ptr obj = GET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
     int view_nr = GET_SELECTOR(obj, view);
     resource_t *viewres = findResource(sci_view, view_nr);
+
+    SCIkdebug(SCIkGRAPHICS, " - Adding %04x\n", obj);
 
     if (i == (*list_nr)) {
       (*list_nr)++;
@@ -2352,6 +2414,31 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int use_signal)
 
 }
 
+void
+_k_dyn_view_list_accept_change(state_t *s)
+     /* Restores all views after backupping their new bgs */
+{
+  view_object_t *list = s->dyn_views;
+  int list_nr = s->dyn_views_nr;
+  int i;
+
+  _k_save_view_list_backgrounds(s, list, list_nr);
+
+  for (i = 0; i < list_nr; i++) {
+    word signal = GET_HEAP(list[i].signalp);
+
+    /* Now, if we either don't use signal OR if signal allows us to draw, do so: */
+    if ((!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE) && !(signal & _K_VIEW_SIG_FLAG_HIDDEN))) {
+      SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", list[i].obj, signal);
+      draw_view0(s->pic, s->ports[s->view_port],
+		 list[i].x - view0_cel_width(list[i].loop, list[i].cel, list[i].view) / 2,
+		 list[i].y - view0_cel_height(list[i].loop, list[i].cel, list[i].view),
+		 list[i].priority, list[i].loop, list[i].cel, list[i].view);
+    }
+  }
+
+}
+
 
 void
 kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -2363,7 +2450,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
     free(s->pic_views);
 
   SCIkdebug(SCIkGRAPHICS, "Preparing list...\n");
-  s->pic_views = _k_make_view_list(s, list, &(s->pic_views_nr), 0, argc, argp);
+  s->pic_views = _k_make_view_list(s, list, &(s->pic_views_nr), 0, funct_nr, argc, argp);
   /* Store pic views for later re-use */
 
   SCIkdebug(SCIkGRAPHICS, "Drawing list...\n");
@@ -2425,7 +2512,9 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
     return;
   }
 
-  /*  graph_restore_box(s, s->ports[goner]->bg_handle); /* Restore picture */
+  _k_dyn_view_list_prepare_change(s);
+  graph_restore_box(s, s->ports[goner]->bg_handle);
+  _k_dyn_view_list_accept_change(s);
 
   free(s->ports[goner]);
   s->ports[goner] = NULL; /* Mark as free */
@@ -2469,14 +2558,17 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   s->ports[window] = wnd;
 
-  /*  xlo = wnd->x - 1;
-  ylo = wnd->y - (wnd->flags & WINDOW_FLAG_TITLE)? 11 : 1;
+  xlo = wnd->xmin - 1;
+  ylo = wnd->ymin - (wnd->flags & WINDOW_FLAG_TITLE)? 11 : 1;
 
-  wnd->bg_handle = graph_save_box(s, xlo, ylo, wnd->xmax - xlo + 3, wnd->ymax - ylo + 3, 1);*/
+  _k_dyn_view_list_prepare_change(s);
+
+  wnd->bg_handle = graph_save_box(s, xlo, ylo, wnd->xmax - xlo + 3, wnd->ymax - ylo + 3, 3);
 
   draw_window(s->pic, s->ports[window], wnd->bgcolor, wnd->priority,
 	     s->heap + wnd->title, s->titlebar_port.font , wnd->flags); /* Draw window */
 
+  _k_dyn_view_list_accept_change(s);
 
   graph_update_port(s, wnd); /* Update viewscreen */
 
@@ -2555,16 +2647,18 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
   if (cast_list) {
-    s->dyn_views = _k_make_view_list(s, cast_list, &(s->dyn_views_nr), cycle, argc, argp);
+    s->dyn_views = _k_make_view_list(s, cast_list, &(s->dyn_views_nr), cycle, funct_nr, argc, argp);
     /* Initialize pictures- Steps 3-9 in Lars' V 0.1 list */
 
-    if (s->pic_not_valid)
+    SCIkdebug(SCIkGRAPHICS, "Handling PicViews:\n");
+    if ((s->pic_not_valid) && (s->pic_views_nr))
       _k_draw_view_list(s, s->pic_views, s->pic_views_nr, 0); /* Step 10 */
+    SCIkdebug(SCIkGRAPHICS, "Handling Dyn:\n");
 
     _k_restore_view_list_backgrounds(s, s->dyn_views, s->dyn_views_nr);
     _k_save_view_list_backgrounds(s, s->dyn_views, s->dyn_views_nr);
     _k_draw_view_list(s, s->dyn_views, s->dyn_views_nr, 1); /* Step 11 */
-    _k_view_list_dispose_loop(s, s->dyn_views, s->dyn_views_nr, argc, argp); /* Step 15 */
+    _k_view_list_dispose_loop(s, s->dyn_views, s->dyn_views_nr, funct_nr, argc, argp); /* Step 15 */
   } /* if (cast_list) */
 
   open_animation = (s->pic_is_new) && (s->pic_not_valid);
@@ -2579,7 +2673,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 0; i < 160; i++) {
 	graph_clear_box(s, i, 10, 1, 190, 0);
 	graph_clear_box(s, 319-i, 10, 1, 190, 0);
-	sci_usleep(3 * s->animation_delay);
+	sci_usleep(s->animation_delay);
       }
 
     case K_ANIMATE_CENTER_OPEN_H :
@@ -2587,7 +2681,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 159; i >= 0; i--) {
 	graph_update_box(s, i, 10, 1, 190);
 	graph_update_box(s, 319-i, 10, 1, 190);
-	sci_usleep(3 * s->animation_delay);
+	sci_usleep(s->animation_delay);
       }
       break;
 
@@ -2597,7 +2691,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 0; i < 95; i++) {
 	graph_clear_box(s, 0, i + 10, 320, 1, 0);
 	graph_clear_box(s, 0, 199 - i, 320, 1, 0);
-	sci_usleep(5 * s->animation_delay);
+	sci_usleep(2 * s->animation_delay);
       }
 
     case K_ANIMATE_CENTER_OPEN_V :
@@ -2605,7 +2699,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 94; i >= 0; i--) {
 	graph_update_box(s, 0, i + 10, 320, 1);
 	graph_update_box(s, 0, 199 - i, 320, 1);
-	sci_usleep(5 * s->animation_delay);
+	sci_usleep(2 * s->animation_delay);
       }
       break;
 
@@ -2614,13 +2708,13 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for(i = 0; i < 320; i++) {
 	graph_clear_box(s, i, 10, 1, 190, 0);
-	sci_usleep(s->animation_delay);
+	sci_usleep(s->animation_delay / 2);
       }
 
     case K_ANIMATE_RIGHT_OPEN :
       for(i = 319; i >= 0; i--) {
 	graph_update_box(s, i, 10, 1, 190);
-	sci_usleep(s->animation_delay);
+	sci_usleep(s->animation_delay / 2);
       }
       break;
 
@@ -2629,14 +2723,14 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for(i = 319; i >= 0; i--) {
 	graph_clear_box(s, i, 10, 1, 190, 0);
-	sci_usleep(s->animation_delay);
+	sci_usleep(s->animation_delay / 2);
       }
 
     case K_ANIMATE_LEFT_OPEN :
 
       for(i = 0; i < 320; i++) {
 	graph_update_box(s, i, 10, 1, 190);
-	sci_usleep(s->animation_delay);
+	sci_usleep(s->animation_delay / 2);
       }
       break;
 
@@ -2645,14 +2739,14 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for (i = 10; i < 200; i++) {
 	graph_clear_box(s, 0, i, 320, 1, 0);
-	sci_usleep(2 * s->animation_delay);
+	sci_usleep(s->animation_delay);
       }
 
     case K_ANIMATE_BOTTOM_OPEN :
 
       for (i = 199; i >= 10; i--) {
 	graph_update_box(s, 0, i, 320, 1);
-	sci_usleep(2 * s->animation_delay);
+	sci_usleep(s->animation_delay);
       }
       break;
 
@@ -2661,14 +2755,14 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for (i = 199; i >= 10; i--) {
 	graph_clear_box(s, 0, i, 320, 1, 0);
-	sci_usleep(2 * s->animation_delay);
+	sci_usleep(s->animation_delay);
       }
 
     case K_ANIMATE_TOP_OPEN :
 
       for (i = 10; i < 200; i++) {
 	graph_update_box(s, 0, i, 320, 1);
-	sci_usleep(2 * s->animation_delay);
+	sci_usleep(s->animation_delay);
       }
       break;
 
@@ -2685,7 +2779,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_clear_box(s, width, 10 + height, 320 - 2*width, 3, 0);
 	graph_clear_box(s, width, 200 - 3 - height, 320 - 2*width, 3, 0);
 
-	sci_usleep(7 * s->animation_delay);
+	sci_usleep(4 * s->animation_delay);
       }
 
     case K_ANIMATE_BORDER_OPEN_F :
@@ -2700,7 +2794,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_update_box(s, width, 10 + height, 320 - 2*width, 3);
 	graph_update_box(s, width, 200 - 3 - height, 320 - 2*width, 3);
 
-	sci_usleep(7 * s->animation_delay);
+	sci_usleep(4 * s->animation_delay);
       }
 
       break;
@@ -2756,7 +2850,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	y = i / 32;
 
 	graph_clear_box(s, x * 10, 10 + y * 10, 10, 10, 0);
-	sci_usleep(s->animation_delay / 2);
+	sci_usleep(s->animation_delay / 8);
 
 	--remaining_checkers;
       }
@@ -2778,7 +2872,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	y = i / 32;
 
 	graph_update_box(s, x * 10, 10 + y * 10, 10, 10);
-	sci_usleep(s->animation_delay / 2);
+	sci_usleep(s->animation_delay / 8);
 
 	--remaining_checkers;
       }
@@ -2825,6 +2919,8 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
   char *text;
   resource_t *font_resource;
   port_t *port = s->ports[s->view_port];
+
+  port->alignment = ALIGN_TEXT_LEFT;
 
   CHECK_THIS_KERNEL_FUNCTION;
 
@@ -2915,7 +3011,7 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
     get_text_size(text, port->font, width, &_width, &_height);
     _width = port->xmax - port->xmin; /* To avoid alignment calculations */
 
-    s->acc = graph_save_box(s, port->x + port->xmin, port->y + port->ymin, _width, _height, 1);
+    s->acc = graph_save_box(s, port->x + port->xmin, port->y + port->ymin, _width, _height, 3);
 
     SCIkdebug(SCIkGRAPHICS, "Saving (%d, %d) size (%d, %d)\n",
 	      port->x + port->xmin, port->y + port->ymin, _width, _height);
@@ -2925,10 +3021,14 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   SCIkdebug(SCIkGRAPHICS, "Display: Commiting\n");
 
+  _k_dyn_view_list_prepare_change(s);
+
   if (s->view_port)
     graph_fill_port(s, port, port->bgcolor);  /* Only fill if we aren't writing to the main view */
 
   text_draw(s->pic, port, text, width);
+
+  _k_dyn_view_list_accept_change(s);
 
   if (!s->pic_not_valid) /* Refresh if drawn to valid picture */
     graph_update_box(s, port->xmin, port->ymin,

@@ -1,4 +1,9 @@
 TODO for version 0.2.5:
 
 - Write more kernel functions
+
+TODO for later:
+
+- Check the healer's hut inside (QG1) and fix FILLBOUNDARY (graph.c)
+  until it works again WITHOUT breaking the LSL3 intro.
 - Merge Magnus' Python class browser into the main tree

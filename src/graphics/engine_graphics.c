@@ -160,7 +160,7 @@ graph_restore_box(struct _state *s, int handle)
 
 	pos += SCI_SCREEN_WIDTH;
 	src += box->xl;
-
+	
       }
     }
 

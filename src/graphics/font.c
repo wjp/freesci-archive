@@ -190,6 +190,7 @@ void draw_text0(picture_t dest, port_t *port, int x, int y, char *text, char *fo
   unsigned char foo;
   short rowcounter = 0;
   short xhome = x + port->xmin;
+  int priority = port->priority;
 
   x += port->xmin;
   y += port->ymin;
@@ -218,7 +219,10 @@ void draw_text0(picture_t dest, port_t *port, int x, int y, char *text, char *fo
 	  int poshome = pos;
 	  guint8 bitmask = *(foopos++);
 	  for (xc = 0; xc < xl; xc++) {
-	    if (bitmask & 0x80) dest->maps[0][pos] = color;
+	    if (bitmask & 0x80) {
+	      dest->maps[0][pos] = color;
+	      dest->maps[1][pos] = priority;
+	    }
 	    pos++;
 	    bitmask <<= 1;
 	  }
@@ -231,7 +235,10 @@ void draw_text0(picture_t dest, port_t *port, int x, int y, char *text, char *fo
 	  /* interestingly, this bitmask is big-endian */
 	  foopos += 2;
 	  for (xc = 0; xc < xl; xc++) {
-	    if (bitmask & 0x8000) dest->maps[0][pos] = color;
+	    if (bitmask & 0x8000) {
+	      dest->maps[0][pos] = color;
+	      dest->maps[1][pos] = priority;
+	    }
 	    bitmask <<= 1;
 	    pos++;
 	  }
@@ -245,7 +252,8 @@ void draw_text0(picture_t dest, port_t *port, int x, int y, char *text, char *fo
 
 
 int
-_text_draw_line(picture_t dest, int x, int y, char *text, int textlen, char *font, int color)
+_text_draw_line(picture_t dest, int x, int y, char *text, int textlen, char *font,
+		int c1, int c2, int priority)
      /* Draws one line of text and returns the maximum height encountered */
 {
   int line_height = 0;
@@ -274,7 +282,10 @@ _text_draw_line(picture_t dest, int x, int y, char *text, int textlen, char *fon
 	  int poshome = pos;
 	  guint8 bitmask = *(foopos++);
 	  for (xc = 0; xc < xl; xc++) {
-	    if (bitmask & 0x80) dest->maps[0][pos] = color;
+	    if (bitmask & 0x80) {
+	      dest->maps[0][pos] = (pos &1)? c1:c2;
+	      dest->maps[1][pos] = priority;
+	    }
 	    pos++;
 	    bitmask <<= 1;
 	  }
@@ -287,63 +298,10 @@ _text_draw_line(picture_t dest, int x, int y, char *text, int textlen, char *fon
 	  /* interestingly, this bitmask is big-endian */
 	  foopos += 2;
 	  for (xc = 0; xc < xl; xc++) {
-	    if (bitmask & 0x8000) dest->maps[0][pos] = color;
-	    bitmask <<= 1;
-	    pos++;
-	  }
-	  pos = poshome + SCI_SCREEN_WIDTH;
-	}
-      }
-      x += xl;
-    }
-
-  return line_height;
-}
-
-int
-_text_draw_gray_line(picture_t dest, int x, int y, char *text, int textlen, char *font, int c1, int c2)
-     /* Draws one line of text and returns the maximum height encountered */
-{
-  int line_height = 0;
-  char foo;
-  int maxchar = getInt16(font + FONT_MAXCHAR_OFFSET);
-
-  while ((foo= *(text++)) && (textlen--))
-    if (foo < maxchar) {
-      short xc;
-      short yc;
-      unsigned char xl, yl;
-      guint16 quux = getInt16((guint8 *) font+6+(foo<<1));
-
-      guint8 *foopos = font + quux;
-      int pos = x+ (y*SCI_SCREEN_WIDTH);
-
-      xl = *foopos;
-      yl = *(foopos+1);
-
-      if (yl > line_height)
-	line_height = yl;
-
-      foopos += 2;
-      if (xl < 9) /* 8 bit */
-	for (yc = 0; yc < yl; yc++) {
-	  int poshome = pos;
-	  guint8 bitmask = *(foopos++);
-	  for (xc = 0; xc < xl; xc++) {
-	    if (bitmask & 0x80) dest->maps[0][pos] = (pos &1)? c1:c2;
-	    pos++;
-	    bitmask <<= 1;
-	  }
-	  pos = poshome + SCI_SCREEN_WIDTH;
-	}
-      else { /* 16 bit */
-	for (yc = 0; yc < yl; yc++) {
-	  int poshome = pos;
-	  guint16 bitmask = *(foopos+1) | *foopos << 8;
-	  /* interestingly, this bitmask is big-endian */
-	  foopos += 2;
-	  for (xc = 0; xc < xl; xc++) {
-	    if (bitmask & 0x8000) dest->maps[0][pos] = (pos & 1)? c1:c2;
+	    if (bitmask & 0x8000) {
+	      dest->maps[0][pos] = (pos & 1)? c1:c2;
+	      dest->maps[1][pos] = priority;
+	    }
 	    bitmask <<= 1;
 	    pos++;
 	  }
@@ -370,6 +328,7 @@ text_draw(picture_t dest, port_t *port, char *text, int maxwidth)
   int last_breakpoint_width = 0;
   int maxchar = getInt16(port->font + FONT_MAXCHAR_OFFSET);
   int line_height = getInt16(port->font + FONT_FONTSIZE_OFFSET);
+  int priority = port->priority;
 
   if (maxwidth < 0)
     maxwidth = 32767; /* Negative means unlimited; 32767 does, too. */
@@ -409,12 +368,13 @@ text_draw(picture_t dest, port_t *port, char *text, int maxwidth)
 	  x += ((maxwidth - last_breakpoint_width) / 2);
 
 	if (port->gray_text)
-	  _text_draw_gray_line(dest, x, y, last_text_base, last_breakpoint,
-			       port->font, port->color | (port->color << 4),
-			       port->bgcolor | (port->color << 4));
+	  _text_draw_line(dest, x, y, last_text_base, last_breakpoint,
+			  port->font, port->color | (port->color << 4),
+			  port->bgcolor | (port->color << 4), priority);
 		  else
 	  _text_draw_line(dest, x, y, last_text_base, last_breakpoint,
-					port->font, port->color | (port->color << 4));
+			  port->font, port->color | (port->color << 4),
+			  port->color | (port->color << 4), priority);
 
 	y += line_height;
 

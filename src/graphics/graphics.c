@@ -256,14 +256,9 @@ void dither_line(picture_t buffers, int curx, int cury, short x1, short y1,
 
 int _fill_bgcol, _fill_bgcol1, _fill_bgcol2;
 
-/* #define FILLBOUNDARY(fx, fy) (drawenable & GETPIX(fx, fy, 3) && \
-			      !(drawenable&1 && GETPIX(fx, fy, 0)==15)) */
-/*#define FILLBOUNDARY(fx, fy) ((drawenable & (GETPIX((fx), (fy), 3))) && \
-                             !((drawenable & 1) && (GETPIX((fx), (fy), 0)==15) && \
-			     ((col1 != 15) && (col2 != 15))))*/
 #define FILLBOUNDARY(fx, fy) ((drawenable & (GETPIX((fx), (fy), 3))) && \
                              !((drawenable & 1) && (GETPIX((fx), (fy), 0)==0xff) && \
-			       ((col1 != 0xf) && (col2 != 0xf))))
+			       ((col1 != 0xf) && (col2 != 0xf)))) \
 
 
 void fillhelp(picture_t buffers, gint16 xstart, gint16 xend, gint16 y, gint16 direction,
@@ -308,7 +303,7 @@ void ditherfill(picture_t buffers, gint16 x, gint16 y,
 {
   gint16 xstart, xend, old_drawenable = drawenable;
 
-  if (GETPIX(x, y+2, 1) == priority) drawenable &= ~2;
+  /*  if (GETPIX(x, y+2, 1) == priority) drawenable &= ~2; */ /* FIXME ??? */
   if (GETPIX(x, y+2, 2) == special) drawenable &= ~4;
 
   if (FILLBOUNDARY(x, y+10)) return;

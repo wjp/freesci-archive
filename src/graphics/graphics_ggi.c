@@ -36,6 +36,7 @@
 #include <graphics_ggi.h>
 #include <uinput.h>
 #include <engine.h>
+#include <math.h>
 
 ggi_pixel egacol[256];
 char colors_uninitialized = 1;
@@ -63,6 +64,8 @@ void graphExit()
   ggiExit();
 }
 
+#define INTERCOL(a, b) ((int) sqrt((((3.5 * (a))*(a)) + ((1.5 * (b))*(b))) / 5.0))
+
 void initColors(ggi_visual_t visual)
 {
   int i;
@@ -84,16 +87,14 @@ void initColors(ggi_visual_t visual)
   }
   for (i=0; i< 256; i++) {
     ggi_color color;
-    color.r = (vcal[i & 0xf].r / 5)*3
-      + (vcal[i >> 4].r / 5)*2;
-    color.g = (vcal[i & 0xf].g / 5)*3
-      + (vcal[i >> 4].g / 5)*2;
-    color.b = (vcal[i & 0xf].b / 5)*3
-      + (vcal[i >> 4].b / 5)*2;
+    color.r = INTERCOL((vcal[i & 0xf].r), (vcal[i >> 4].r));
+    color.g = INTERCOL((vcal[i & 0xf].g), (vcal[i >> 4].g));
+    color.b = INTERCOL((vcal[i & 0xf].b), (vcal[i >> 4].b));
     egacol[i] = ggiMapColor(visual, &color);
   }
 }
 
+#undef INTERCOL(a, b)
 
 ggi_visual_t openVisual()
 {

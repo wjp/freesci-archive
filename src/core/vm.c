@@ -1227,6 +1227,7 @@ game_init(state_t *s)
 
   s->wm_port.ymin = 10; s->wm_port.ymax = 199;
   s->wm_port.xmin = 0; s->wm_port.xmax = 319;
+  s->wm_port.priority = 11;
   s->ports[0] = &(s->wm_port); /* Window Manager port */
 
   s->titlebar_port.ymin = 0; s->titlebar_port.ymax = 9;
