@@ -110,11 +110,9 @@ void synth_setpatch (int voice, guint8 *data)
 
   opl_write(0xBD, 0);
   
-  for (i = 0; i < 10; i++) {
-    printf("a %02x d %02x\n", register_base[i] + register_offset[voice], 
-	   data[i]);
+  for (i = 0; i < 10; i++)
     opl_write(register_base[i] + register_offset[voice], data[i]); 
-  }
+
   opl_write (register_base[10] + voice, data[10]);
 
   /* mute voice after patch change */
@@ -122,6 +120,7 @@ void synth_setpatch (int voice, guint8 *data)
 
   for (i = 0; i < 10; i++)
     printf("%02x ", adlib_reg[register_base[i]+register_offset[voice]]);
+    printf("%02x ", adlib_reg[register_base[10]+voice]);
 
 }
 
@@ -194,8 +193,7 @@ int adlibemu_stop_note(int chn, int note, int velocity)
 
 int adlibemu_start_note(int chn, int note, int velocity)
 {
-  int op = 0;
-  int volume;
+  int op, volume, inst = 0;
 
   if (velocity == 0) {
     adlibemu_stop_note(chn, note, velocity);
@@ -212,8 +210,13 @@ int adlibemu_start_note(int chn, int note, int velocity)
 
   volume = velocity * vol[chn] / 128; /* Scale channel volume */
   volume = my_midi_fm_vol_table[volume];
+  
+  if (chn == RHYTHM_CHANNEL)
+    inst = note;
+  else 
+    inst = instr[chn];
 
-  synth_setpatch(op, adlib_sbi[instr[chn]]);
+  synth_setpatch(op, adlib_sbi[inst]);
   synth_setvolume(op, volume);
   synth_setnote(op, note, pitch[chn]); 
 
@@ -221,7 +224,7 @@ int adlibemu_start_note(int chn, int note, int velocity)
   oper_note[op] = note;
   free_voices--;
 
-  printf("play voice %d/%d:  C%02x N%02x V%02x (%02x/%02x)\n", op+1, free_voices, chn, note, velocity, 
+  printf("play voice %d (%d rem):  C%02x N%02x V%02x/%02x P%02x (%02x/%02x)\n", op, free_voices, chn, note, velocity, volume, inst, 
 	 adlib_reg[register_base[2]+register_offset[op]] & 0x3f,
 	 adlib_reg[register_base[3]+register_offset[op]] & 0x3f);
 
@@ -229,20 +232,37 @@ int adlibemu_start_note(int chn, int note, int velocity)
 }
 
 int test_adlib () {
-  opl_write(0x20, 0x25);
-  opl_write(0x23, 0x21);
-  opl_write(0x40, 0x48);
-  opl_write(0x43, 0x48);
-  opl_write(0x60, 0xf0);
-  opl_write(0x63, 0xF2);
-  opl_write(0x80, 0xf0);
-  opl_write(0x83, 0xa5);
-  opl_write(0xe0, 0x00);
-  opl_write(0xe3, 0x00);
 
-  /* note on, test things out. */
-    opl_write(0xA0, 0xb0);
-    opl_write(0xB0, 0x35);
+#if 0
+  guint8 data[] = { 0x25, 0x21, 0x48, 0x48, 0xf0, 0xf2, 0xf0, 0xa5, 0x00, 0x00, 0x06 };
+#else
+  guint8 *data = adlib_sbi[0x0a];
+#endif
+
+#if 1
+  opl_write(0x20, data[0]);
+  opl_write(0x23, data[1]);
+  opl_write(0x40, data[2]);
+  opl_write(0x43, data[3]);
+  opl_write(0x60, data[4]);
+  opl_write(0x63, data[5]);
+  opl_write(0x80, data[6]);
+  opl_write(0x83, data[7]);
+  opl_write(0xe0, data[8]);
+  opl_write(0xe3, data[9]);
+  opl_write(0xc0, data[10]);
+#else
+  synth_setpatch(0, data);
+#endif
+
+#if 1
+  opl_write(0xA0, 0x57);
+  opl_write(0xB0, 0x2d);
+#else
+  synth_setvolume(0, 0x50);
+  synth_setnote(0, 0x30, 0);
+#endif
+
 }
 
 int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
@@ -255,7 +275,7 @@ int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
     return -1;
   }
 
-  for (i = 0; i < 48; i++) 
+  for (i = 0; i < 48; i++)
     make_sbi((adlib_def *)(data_ptr+(28 * i)), adlib_sbi[i]);
 
   if (data_length > 1344)
@@ -345,16 +365,13 @@ int midi_adlibemu_event2(guint8 command, guint8 param)
 {
   guint8 channel;
   guint8 oper;
-  int xparam = param;
   
   channel = command & 0x0f;
   oper = command & 0xf0;
   switch (oper) {
-  case 0xc0: {  /* change instrument */
-    int inst = param;
-    instr[channel] = inst;
+  case 0xc0:   /* change instrument */
+    instr[channel] = param;
     return 0;
-  }
   default:
     printf("ADLIB: Unknown event %02x\n", command);
   }
