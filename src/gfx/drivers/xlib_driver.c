@@ -1265,6 +1265,7 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 			} else 
 				hasnext_event = XCheckWindowEvent(display, window, eventmask, &event);
 
+			
 			if (hasnext_event) 
 				switch (event.type) {
 
