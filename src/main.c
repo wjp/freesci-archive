@@ -481,7 +481,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			exit(0);
 
 		case 'h':
-			printf("Usage: sciv [options] [game name] [savegame ID]\n"
+			printf("Usage: freesci [options] [game name] [savegame ID]\n"
 			       "Runs a Sierra SCI game.\n"
 			       "\n"
 			       EXPLAIN_OPTION("--gamedir dir\t", "-ddir", "read game resources from dir")
@@ -777,10 +777,10 @@ main(int argc, char** argv)
 	getcwd(startdir, PATH_MAX);
 	script_debug_flag = cl_options.script_debug_flag;
 
-	printf("FreeSCI "VERSION" Copyright (C) 1999, 2000, 2001 Dmitry Jemerov,\n"
-	       " Christopher T. Lansdown, Sergey Lapin, Rickard Lind, Carl Muckenhoupt,\n"
-	       " Christoph Reichenbach, Magnus Reftel, Lars Skovlund, Rink Springer,\n"
-	       " Petr Vyhnak, Solomon Peachy, Matt Hargett\n"
+	printf("FreeSCI %s Copyright (C) 1999, 2000, 2001\n", VERSION);
+	printf(" Dmitry Jemerov, Christopher T. Lansdown, Sergey Lapin, Rickard Lind,\n"
+		   " Carl Muckenhoupt, Christoph Reichenbach, Magnus Reftel, Lars Skovlund,\n"
+		   " Rink Springer, Petr Vyhnak, Solomon Peachy, Matt Hargett, Alex Angas\n"
 	       "This program is free software. You can copy and/or modify it freely\n"
 	       "according to the terms of the GNU general public license, v2.0\n"
 	       "or any later version, at your option.\n"

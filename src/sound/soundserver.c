@@ -274,8 +274,8 @@ sci0_soundserver()
 
 	  if (debugging)
 	    fprintf(ds, "Playing handle %04x\n", event.handle);
-	  if (modsong) {
 
+	  if (modsong) {
 	    midi_allstop();
 	    modsong->status = SOUND_STATUS_PLAYING;
 	    sound_queue_event(event.handle, SOUND_SIGNAL_PLAYING, 0);
@@ -593,6 +593,8 @@ sci0_soundserver()
 	case SOUND_COMMAND_SHUTDOWN:
 	  fprintf(stderr,"Sound server: Received shutdown signal\n");
 	  midi_close();
+	  song_lib_free(songlib);
+
 	  soundserver_dead = 1;
 	  return;
 
@@ -704,6 +706,7 @@ sci0_soundserver()
     
     song = newsong;
   }
+
   /* implicitly quit */
 }
 

@@ -556,6 +556,8 @@ sci_fopen(char *fname, char *mode)
 
 	if (name)
 		file = fopen(name, mode);
+	else if (strchr(mode, 'w'))
+		file = fopen(fname, mode);
 
 	sci_finish_find(&dir); /* Free memory */
 

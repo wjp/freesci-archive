@@ -4,6 +4,18 @@
 ** EXTRA_BYTE_OFFSET: Extra source byte offset for copying (used on big-endian machines in 24 bit mode)
 */
 
+/* set optimisations for Win32: */
+/* g on: enable global optimizations */
+/* t on: use fast code */
+/* y on: suppress creation of frame pointers on stack */
+/* s off: disable minimize size code */
+#ifdef _WIN32
+#  pragma optimize( "s", off )
+#  pragma optimize( "gty", on )
+#  include <memory.h>
+#  pragma intrinsic( memcpy, memset )
+#endif
+
 #define EXTEND_COLOR(x) (unsigned) ((((unsigned) x) << 24) | (((unsigned) x) << 16) | (((unsigned) x) << 8) | ((unsigned) x))
 #define PALETTE_MODE mode->palette
 
@@ -58,7 +70,7 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 
 	for (y = 0; y < pxm->index_yl; y++) {
 		byte *prev_dest = dest;
-		byte *prev_alpha_dest = alpha_dest; 
+		byte *prev_alpha_dest = alpha_dest;
 
 		for (x = 0; x < pxm->index_xl; x++) {
 			int isalpha;
@@ -331,7 +343,7 @@ FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 	int using_alpha = pxm->colors_nr < GFX_PIC_COLORS;
 	int separate_alpha_map = (!mode->alpha_mask) && using_alpha;
 	unsigned int masks[4], shifts[4];
-	unsigned int pixels[4][4]; 
+	unsigned int pixels[4][4];
 	/* 0 1
 	** 2 3 */
 	int x,y;
@@ -450,7 +462,7 @@ FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 			dest = x_dest_backup + xc_count * COPY_BYTES;
 			alpha_dest = x_alpha_dest_backup + xc_count;
 
-			if (x < pxm->index_xl) 
+			if (x < pxm->index_xl)
 			  src++;
 		}
 		dest = y_dest_backup + pxm->index_xl * xfact * yc_count * COPY_BYTES;
@@ -472,3 +484,9 @@ FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 #undef FUNCNAME_TRILINEAR
 #undef SIZETYPE
 #undef EXTEND_COLOR
+
+/* reset to original optimisations for Win32: */
+/* (does not reset intrinsics) */
+#ifdef _WIN32
+#  pragma optimize( "", on )
+#endif

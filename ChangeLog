@@ -1,4 +1,35 @@
+2001-08-04  Alex Angas  <wgd@adelaide.on.net>
+
+	* src/win32_profiler.bat: _Remove._ (already present in win32 dir).
+
+	* src/win32/fsci_dll.dsp: Changed to point to SDL 1.2.2.
+	Added kmovement.c to project source node.
+
+	* src/win32/sciv.dsp: Changed to point to SDL 1.2.2.
+
+	* src/gfx/gfx_crossblit.c: Added optimization pragmas that
+	improve performance under Win32.
+
+	* src/gfx/gfx_pixmap_scale.c: As for gfx_crossblit.c.
+
+	* src/gfx/gfx_tools.c: As for gfx_crossblit.c.
+
+	* src/gfx/resource/sci_view_0.c: As for gfx_crossblit.c.
+
+	* src/gfx/drivers/sdl_driver.c: As for gfx_crossblit.c.
+
+	* src/sound/soundserver.c (sci0_soundserver): Fixed memory leak where
+	songs were never freed.
+
+	* src/main.c (parse_arguments): Changed text 'sciv' to 'freesci'.
+
+	* src/main.c (main): Fixed text wrapping and output of FreeSCI
+	version number which did not work on Win32 (and maybe other platforms).
+	
 2001-08-04  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/tools.c (sci_fopen): Fixed usage of sci_fopen() to work
+	with "w" if destination file is not present
 
 	* src/gfx/operations.c: Line clipping now compensates for scaling
 

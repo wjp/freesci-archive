@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FSCI_DLL_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /Zi /O1 /Ob2 /I "..\..\..\SDL-1.2.1\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "HAVE_DDRAW" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_STRING_H" /D "_CONSOLE" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D "NDEBUG" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /O1 /Ob2 /I "..\..\..\SDL-1.2.2\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "HAVE_DDRAW" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_STRING_H" /D "_CONSOLE" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D "NDEBUG" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0xc09 /d "NDEBUG"
@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 ..\..\..\SDL-1.2.1\lib\SDL.lib ddraw.lib winmm.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib /nologo /dll /map:"..\..\bin\fsci.map" /debug /machine:I386 /out:"..\..\bin\fsci.dll"
+# ADD LINK32 ..\..\..\SDL-1.2.2\lib\SDL.lib ddraw.lib winmm.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib /nologo /dll /map:"..\..\bin\fsci.map" /debug /machine:I386 /out:"..\..\bin\fsci.dll"
 # SUBTRACT LINK32 /profile /pdb:none
 
 !ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
@@ -70,7 +70,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FSCI_DLL_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /Gi /GR /GX /ZI /Od /I "..\..\..\SDL-1.2.1\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "HAVE_DDRAW" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_STRING_H" /D "_CONSOLE" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /Gi /GR /GX /ZI /Od /I "..\..\..\SDL-1.2.2\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "HAVE_DDRAW" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_STRING_H" /D "_CONSOLE" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0xc09 /d "_DEBUG"
@@ -80,7 +80,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 ..\..\..\SDL-1.2.1\lib\SDL.lib ddraw.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib /nologo /dll /pdb:none /debug /machine:I386 /out:"Debug/fsci.dll"
+# ADD LINK32 ..\..\..\SDL-1.2.2\lib\SDL.lib ddraw.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib /nologo /dll /pdb:none /debug /machine:I386 /out:"Debug/fsci.dll"
 
 !ENDIF 
 
@@ -94,10 +94,6 @@ LINK32=link.exe
 # Begin Group "engine"
 
 # PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\engine\cfsml.pl
-# End Source File
 # Begin Source File
 
 SOURCE=..\engine\game.c
@@ -137,6 +133,10 @@ SOURCE=..\engine\kmath.c
 # Begin Source File
 
 SOURCE=..\engine\kmenu.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\engine\kmovement.c
 # End Source File
 # Begin Source File
 
@@ -472,6 +472,14 @@ SOURCE=..\include\graphics_ddraw.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\include\graphics_ggi.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\graphics_glx.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\include\graphics_png.h
 # End Source File
 # Begin Source File
@@ -520,6 +528,10 @@ SOURCE=..\include\sci_conf.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\include\sci_dos.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\include\sci_graphics.h
 # End Source File
 # Begin Source File
@@ -537,10 +549,6 @@ SOURCE=..\include\scitypes.h
 # Begin Source File
 
 SOURCE=..\include\script.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\gfx\drivers\SDL_gfxPrimitives.h
 # End Source File
 # Begin Source File
 

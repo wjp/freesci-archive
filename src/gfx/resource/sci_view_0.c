@@ -25,13 +25,16 @@
 
 ***************************************************************************/
 
+/* set optimisations for Win32: */
+#ifdef _WIN32
+#  include <memory.h>
+#  pragma intrinsic( memcpy, memset )
+#endif
+
 
 #include <gfx_system.h>
 #include <gfx_resource.h>
 #include <gfx_tools.h>
-
-
-
 
 
 static gfx_pixmap_t *

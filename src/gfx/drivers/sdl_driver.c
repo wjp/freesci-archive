@@ -24,6 +24,19 @@
 
 ***************************************************************************/
 
+/* set optimisations for Win32: */
+/* g on: enable global optimizations */
+/* t on: use fast code */
+/* y on: suppress creation of frame pointers on stack */
+/* s off: disable minimize size code */
+#ifdef _WIN32
+#  pragma optimize( "s", off )
+#  pragma optimize( "gty", on )
+#include <memory.h>
+#  pragma intrinsic( memcpy, memset )
+#endif
+
+
 #include <gfx_driver.h>
 #ifdef HAVE_SDL
 #include <gfx_tools.h>
@@ -48,7 +61,10 @@
 #define SCI_SDL_SWAP_CTRL_CAPS (1 << 0)
 #define SCI_SDL_FULLSCREEN (1 << 2)
 
-extern int string_truep(char *value); 
+static int
+sdl_usec_sleep(struct _gfx_driver *drv, int usecs);
+
+extern int string_truep(char *value);
 static int flags = 0;
 
 struct _sdl_state {
@@ -112,7 +128,7 @@ sdl_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
       flags |= SCI_SDL_FULLSCREEN;
     else
       flags &= ~SCI_SDL_FULLSCREEN;
-  
+
     return GFX_OK;
   }
 
@@ -128,12 +144,12 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   int ysize = yfact * 200;
 
   int i;
-  
+
   if (!S)
     S = malloc(sizeof(struct _sdl_state));
   if (!S)
     return GFX_FATAL;
-    
+
   if (xfact < 1 || yfact < 1 || bytespp < 1 || bytespp > 4) {
     SDLERROR("Internal error: Attempt to open window w/ scale factors (%d,%d) and bpp=%d!\n",
 	  xfact, yfact, bytespp);
@@ -165,10 +181,10 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
   S->used_bytespp = bytespp;
 
-  printf("Using primary SDL surface of %d,%d @%d bpp (%04x)\n",  
+  printf("Using primary SDL surface of %d,%d @%d bpp (%04x)\n",
 	 xsize, ysize, bytespp << 3, S->primary);
 
-  /*  if (S->primary->format->BytesPerPixel == 4) {    
+  /*  if (S->primary->format->BytesPerPixel == 4) {
     S->alpha_mask = 0xff000000;
     S->SDL_alpha_shift = 24;
     S->SDL_alpha_loss = 0;
@@ -186,7 +202,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
     S->colors[i].g = 0;
     S->colors[i].b = 0;
   }
-  if (bytespp == 1) 
+  if (bytespp == 1)
     SDL_SetColors(S->primary, S->colors, 0, 256);
 
   /* create an input event mask */
@@ -212,9 +228,9 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   }
 
   printf("%08x %08x %08x %08x %d/%d=%d %d/%d=%d %d/%d=%d %d/%d=%d\n",
-	 S->primary->format->Rmask, 
+	 S->primary->format->Rmask,
 	 S->primary->format->Gmask,
-	 S->primary->format->Bmask, 
+	 S->primary->format->Bmask,
 	 S->alpha_mask,
 	 /*	 S->primary->format->Amask,*/
 	 S->primary->format->Rshift,
@@ -243,15 +259,15 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   }
 
   /* create the visual buffers */
-  for (i = 0; i < 3; i++) { 
+  for (i = 0; i < 3; i++) {
     S->visual[i] = NULL;
     S->visual[i] = SDL_CreateRGBSurface(SDL_SRCALPHA,
 					/* SDL_HWSURFACE | SDL_SWSURFACE, */
-					xsize, ysize, 
-					bytespp << 3, 
-					S->primary->format->Rmask, 
+					xsize, ysize,
+					bytespp << 3,
+					S->primary->format->Rmask,
 					S->primary->format->Gmask,
-					S->primary->format->Bmask, 
+					S->primary->format->Bmask,
 					S->alpha_mask);
     if (S->visual[i] == NULL) {
       SDLERROR("Could not set up visual buffers!\n");
@@ -266,15 +282,15 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   }
 
   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
-  
+
   drv->mode = gfx_new_mode(xfact, yfact, bytespp,
-			   S->primary->format->Rmask, 
+			   S->primary->format->Rmask,
 			   S->primary->format->Gmask,
 			   S->primary->format->Bmask,
 			   S->alpha_mask,
 			   red_shift, green_shift, blue_shift, alpha_shift,
 			   (bytespp == 1)? 256 : 0, 0); /*GFX_MODE_FLAG_REVERSE_ALPHA);*/
-  
+
   return GFX_OK;
 }
 
@@ -325,7 +341,7 @@ sdl_exit(struct _gfx_driver *drv)
 	free(S->pointer_data[i]);
 	S->pointer_data[i] = NULL;
       }
-    
+
   }
   SDL_Quit();
 }
@@ -333,13 +349,13 @@ sdl_exit(struct _gfx_driver *drv)
 
   /*** Drawing operations ***/
 
-static Uint32 
+static Uint32
 sdl_map_color(gfx_driver_t *drv, gfx_color_t color)
 {
 
   if (drv->mode->palette)
     return color.visual.global_index;
-  
+
   return SDL_MapRGBA(S->visual[0]->format,
 		     color.visual.r,
 		     color.visual.g,
@@ -381,7 +397,7 @@ static void lineColor2(SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16
    case 1:
     for(; x < dx; x++, pixel += pixx) {
      *pixel = color;
-     y += dy; 
+     y += dy;
      if (y >= dx) {
       y -= dx; pixel += pixy;
      }
@@ -390,9 +406,9 @@ static void lineColor2(SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16
    case 2:
     for (; x < dx; x++, pixel += pixx) {
      *(Uint16*)pixel = color;
-     y += dy; 
+     y += dy;
      if (y >= dx) {
-      y -= dx; 
+      y -= dx;
       pixel += pixy;
      }
     }
@@ -408,19 +424,19 @@ static void lineColor2(SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16
       pixel[1] = (color >> 8) & 0xff;
       pixel[2] = (color >> 16) & 0xff;
      }
-     y += dy; 
+     y += dy;
      if (y >= dx) {
-      y -= dx; 
+      y -= dx;
       pixel += pixy;
      }
     }
    break;
-   case 4: 
+   case 4:
     for(; x < dx; x++, pixel += pixx) {
       *(Uint32*)pixel = color;
-      y += dy; 
+      y += dy;
       if (y >= dx) {
-       y -= dx; 
+       y -= dx;
        pixel += pixy;
      }
     }
@@ -440,7 +456,7 @@ sdl_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
   int yfact = (line_mode == GFX_LINE_MODE_FINE)? 1: YFACT;
   int xsize = S->visual[1]->w;
   int ysize = S->visual[1]->h;
-  
+
   if (color.mask & GFX_MASK_VISUAL) {
     int xc, yc;
     rect_t newline;
@@ -486,10 +502,10 @@ sdl_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
   if (color.mask & GFX_MASK_PRIORITY) {
     int xc, yc;
     rect_t newline;
-    
+
     newline.xl = line.xl;
     newline.yl = line.yl;
-    
+
     for (xc = 0; xc < xfact; xc++)
       for (yc = 0; yc < yfact; yc++) {
 	newline.x = line.x + xc;
@@ -516,14 +532,14 @@ sdl_draw_filled_rect(struct _gfx_driver *drv, rect_t rect,
     srect.y = rect.y;
     srect.w = rect.xl;
     srect.h = rect.yl;
-      
+
     if (SDL_FillRect(S->visual[1], &srect, color))
       SDLERROR("Can't fill rect");
   }
-  
+
   if (color1.mask & GFX_MASK_PRIORITY)
     gfx_draw_box_pixmap_i(S->priority[0], rect, color1.priority);
-  
+
   return GFX_OK;
 }
 
@@ -540,9 +556,9 @@ sdl_register_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
   pxm->internal.info = SDL_CreateRGBSurfaceFrom(pxm->data, pxm->xl, pxm->yl,
 						S->used_bytespp << 3,
 						S->used_bytespp * pxm->xl,
-						S->primary->format->Rmask, 
+						S->primary->format->Rmask,
 						S->primary->format->Gmask,
-						S->primary->format->Bmask, 
+						S->primary->format->Bmask,
 						S->alpha_mask);
 
   if (ALPHASURFACE)
@@ -560,7 +576,7 @@ sdl_unregister_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 {
   DEBUGPXM("Freeing surface %d/%d/%d at %p\n", pxm->ID, pxm->loop, pxm->cel,
 	   pxm->internal.info);
-  
+
   if (!pxm->internal.info) {
     SDLERROR("Attempt to unregister pixmap twice!\n");
     return GFX_ERROR;
@@ -570,7 +586,7 @@ sdl_unregister_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
   pxm->internal.info = NULL;
   if (pxm->internal.handle != SCI_SDL_HANDLE_GRABBED)
     free(pxm->data);
-  pxm->data = NULL; 
+  pxm->data = NULL;
   return GFX_OK;
 }
 
@@ -580,7 +596,7 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 {
   int bufnr = (buffer == GFX_BUFFER_STATIC)? 2:1;
   int pribufnr = bufnr -1;
-  
+
   SDL_Surface *temp;
   SDL_Rect srect;
   SDL_Rect drect;
@@ -602,9 +618,9 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 
   DEBUGU("Drawing %d (%d,%d)(%dx%d) onto (%d,%d)\n", pxm, srect.x, srect.y,
 	 srect.w, srect.h, drect.x, drect.y);
-  
+
   if (pxm->internal.handle == SCI_SDL_HANDLE_GRABBED) {
-    if (SDL_BlitSurface((SDL_Surface *)pxm->internal.info, &srect , 
+    if (SDL_BlitSurface((SDL_Surface *)pxm->internal.info, &srect ,
 			S->visual[bufnr], &drect )) {
       SDLERROR("blt failed");
       return GFX_ERROR;
@@ -614,9 +630,9 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 
   temp = SDL_CreateRGBSurface(SDL_SWSURFACE, drect.w, drect.h,
 			      S->used_bytespp << 3,
-			      S->primary->format->Rmask, 
+			      S->primary->format->Rmask,
 			      S->primary->format->Gmask,
-			      S->primary->format->Bmask, 
+			      S->primary->format->Bmask,
 			      S->alpha_mask);
 
   if (ALPHASURFACE)
@@ -625,7 +641,7 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
   if (!temp) {
     SDLERROR("Failed to allocate SDL surface");
     return GFX_ERROR;
-  }  
+  }
 
   srect.x = dest.x;
   srect.y = dest.y;
@@ -645,7 +661,7 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
   srect.y = 0;
   drect.x = dest.x;
   drect.y = dest.y;
-  
+
   if(SDL_BlitSurface(temp, &srect, S->visual[bufnr], &drect))
     SDLERROR("blt failed");
 
@@ -669,18 +685,18 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
     return GFX_ERROR;
   }
   switch (map) {
-    
+
   case GFX_MASK_VISUAL: {
     SDL_Rect srect, drect;
-    SDL_Surface *temp;    
+    SDL_Surface *temp;
 
     pxm->xl = src.xl;
     pxm->yl = src.yl;
     temp = SDL_CreateRGBSurface(SDL_SWSURFACE, src.xl, src.yl,
 				S->used_bytespp << 3,
-				S->primary->format->Rmask, 
+				S->primary->format->Rmask,
 				S->primary->format->Gmask,
-				S->primary->format->Bmask, 
+				S->primary->format->Bmask,
 				S->alpha_mask);
 
   if (ALPHASURFACE)
@@ -712,13 +728,13 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
     DEBUGPXM("Grabbed surface %p (%dx%d)(%dx%d)\n",
 	     pxm->internal.info, srect.x, srect.y, pxm->xl, pxm->yl);
 
-    break; 
+    break;
   }
-    
+
   case GFX_MASK_PRIORITY:
     SDLERROR("FIXME: priority map grab not implemented yet!\n");
     break;
-    
+
   default:
     SDLERROR("Attempt to grab pixmap from invalid map 0x%02x\n", map);
     return GFX_ERROR;
@@ -736,7 +752,7 @@ sdl_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffe
   int data_source = (buffer == GFX_BUFFER_BACK)? 2 : 1;
   int data_dest = data_source - 1;
   SDL_Rect srect, drect;
-  
+
   if (src.x != dest.x || src.y != dest.y) {
     DEBUGU("Updating %d (%d,%d)(%dx%d) to (%d,%d) on %d\n", buffer, src.x, src.y,
 	   src.xl, src.yl, dest.x, dest.y, data_dest);
@@ -755,11 +771,11 @@ sdl_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffe
 
   switch (buffer) {
   case GFX_BUFFER_BACK:
-    if (SDL_BlitSurface(S->visual[data_source], &srect, 
+    if (SDL_BlitSurface(S->visual[data_source], &srect,
 			S->visual[data_dest], &drect))
       SDLERROR("surface update failed!\n");
-    
-    if ((src.x == dest.x) && (src.y == dest.y)) 
+
+    if ((src.x == dest.x) && (src.y == dest.y))
       gfx_copy_pixmap_box_i(S->priority[0], S->priority[1], src);
     break;
   case GFX_BUFFER_FRONT:
@@ -783,7 +799,7 @@ sdl_set_static_buffer(struct _gfx_driver *drv, gfx_pixmap_t *pic, gfx_pixmap_t *
     SDLERROR("Attempt to set static buffer with unregisterd pixmap!\n");
     return GFX_ERROR;
   }
-  SDL_BlitSurface((SDL_Surface *)pic->internal.info, NULL, 
+  SDL_BlitSurface((SDL_Surface *)pic->internal.info, NULL,
 		  S->visual[2], NULL);
 
   gfx_copy_pixmap_box_i(S->priority[1], priority, gfx_rect(0, 0, 320*XFACT, 200*YFACT));
@@ -816,12 +832,12 @@ sdl_create_cursor_rawdata(gfx_driver_t *drv, gfx_pixmap_t *pointer, int mode)
   byte *data = calloc(linewidth, lines);
   byte *linebase = data, *pos;
   byte *src = pointer->index_data;
-  
+
   for (yc = 0; yc < pointer->index_yl; yc++) {
     int scalectr;
     int bitc = 7;
     pos = linebase;
-    
+
     for (xc = 0; xc < pointer->index_xl; xc++) {
       int draw = mode?
 	(*src == 0) : (*src < 255);
@@ -848,20 +864,20 @@ static SDL_Cursor
 *sdl_create_cursor_data(gfx_driver_t *drv, gfx_pixmap_t *pointer)
 {
   byte *visual_data, *mask_data;
-  
+
   S->pointer_data[0] = visual_data = sdl_create_cursor_rawdata(drv, pointer, 1);
   S->pointer_data[1] = mask_data = sdl_create_cursor_rawdata(drv, pointer, 0);
 
-  return SDL_CreateCursor(visual_data, mask_data, 
+  return SDL_CreateCursor(visual_data, mask_data,
 			  pointer->xl, pointer->yl,
 			  pointer->xoffset, pointer->yoffset);
-  
+
 }
 
 static int sdl_set_pointer (struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 {
   int i;
-  
+
   if (pointer == NULL)
     SDL_ShowCursor(SDL_DISABLE);
   else {
@@ -873,7 +889,7 @@ static int sdl_set_pointer (struct _gfx_driver *drv, gfx_pixmap_t *pointer)
     SDL_FreeCursor(SDL_GetCursor());
     SDL_SetCursor(sdl_create_cursor_data(drv, pointer));
     SDL_ShowCursor(SDL_ENABLE);
-  }  
+  }
 
   return 0;
 }
@@ -891,7 +907,7 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
 
   if ((skey >= SDLK_0) && (skey <= SDLK_9))
     return ('0' + (skey - SDLK_0));
-  
+
   if (flags & SCI_SDL_SWAP_CTRL_CAPS) {
     switch (skey) {
     case SDLK_LCTRL: skey = SDLK_CAPSLOCK; break;
@@ -926,7 +942,7 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
   case SDLK_UP: return SCI_K_UP;
   case SDLK_KP9:
   case SDLK_PAGEUP: return SCI_K_PGUP;
-    
+
   case SDLK_F1: return SCI_K_F1;
   case SDLK_F2: return SCI_K_F2;
   case SDLK_F3: return SCI_K_F3;
@@ -949,7 +965,7 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
   case SDLK_NUMLOCK:
   case SDLK_LSHIFT:
   case SDLK_RSHIFT:  return 0;
-    
+
   case SDLK_PLUS:
   case SDLK_KP_PLUS: return '+';
   case SDLK_SLASH:
@@ -969,14 +985,14 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
   case SDLK_LEFTBRACKET:
   case SDLK_RIGHTBRACKET:
   case SDLK_LESS:
-  case SDLK_GREATER: return rkey; 
+  case SDLK_GREATER: return rkey;
   case SDLK_SPACE: return ' ';
 
   case SDLK_BACKQUOTE:
     if (keysym.mod & KMOD_CTRL)
       return '`';
     else
-      return rkey;    
+      return rkey;
   }
 
   sciprintf("Unknown SDL keysym: %04x (%d) \n", skey, rkey);
@@ -992,16 +1008,16 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
   struct timeval ctime, timeout_time, sleep_time;
   int usecs_to_sleep;
   int time_sec, time_usec;
-  
+
   sci_gettime(&time_sec, &time_usec);
   timeout_time.tv_sec = time_sec;
   timeout_time.tv_usec = time_usec;
   timeout_time.tv_usec += wait_usec;
-  
+
   /* Calculate wait time */
   timeout_time.tv_sec += (timeout_time.tv_usec / 1000000);
   timeout_time.tv_usec %= 1000000;
-  
+
   do {
     int redraw_pointer_request = 0;
 
@@ -1011,7 +1027,7 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
       case SDL_KEYDOWN: {
 	int modifiers = event.key.keysym.mod;
 	sci_event->type = SCI_EVT_KEYBOARD;
-	
+
 	S->buckystate = (((modifiers & KMOD_CAPS)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0)
 			 | ((modifiers & KMOD_CTRL)? SCI_EVM_CTRL : 0)
 			 | ((modifiers & KMOD_ALT)? SCI_EVM_ALT : 0)
@@ -1021,7 +1037,7 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
 
 	sci_event->buckybits = S->buckystate;
 	sci_event->data = sdl_map_key(drv, event.key.keysym);
-	if (sci_event->data) 
+	if (sci_event->data)
 	  return;
 	break; }
       case SDL_MOUSEBUTTONDOWN:
@@ -1054,23 +1070,23 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
     sci_gettime(&time_sec, &time_usec);
     ctime.tv_sec = time_sec;
     ctime.tv_usec = time_usec;
-    
+
     usecs_to_sleep = (timeout_time.tv_sec > ctime.tv_sec)? 1000000 : 0;
     usecs_to_sleep += timeout_time.tv_usec - ctime.tv_usec;
     if (ctime.tv_sec > timeout_time.tv_sec) usecs_to_sleep = -1;
-        
+
     if (usecs_to_sleep > 0) {
       if (usecs_to_sleep > 10000)
 	usecs_to_sleep = 10000; /* Sleep for a maximum of 10 ms */
-      
+
       sleep_time.tv_usec = usecs_to_sleep;
       sleep_time.tv_sec = 0;
 
       sdl_usec_sleep(usecs_to_sleep);
     }
-    
+
   } while (usecs_to_sleep >= 0);
-  
+
   if (sci_event)
     sci_event->type = SCI_EVT_NONE; /* No event. */
 }
@@ -1091,7 +1107,7 @@ sdl_usec_sleep(struct _gfx_driver *drv, int usecs)
   struct timeval ctime;
   if (usecs > 10000)
     usecs = 10000;
-  
+
   ctime.tv_sec = 0;
   ctime.tv_usec = usecs;
 
@@ -1137,3 +1153,10 @@ gfx_driver_sdl = {
 };
 
 #endif /* HAVE_SDL */
+
+
+/* reset to original optimisations for Win32: */
+/* (does not reset intrinsics) */
+#ifdef _WIN32
+#pragma optimize( "", on )
+#endif

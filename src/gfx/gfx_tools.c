@@ -27,6 +27,12 @@
 
 #include <gfx_tools.h>
 
+/* set optimisations for Win32: */
+#ifdef _WIN32
+#  include <memory.h>
+#  pragma intrinsic( memcpy, memset )
+#endif
+
 
 void
 gfx_clip_box_basic(rect_t *box, int maxx, int maxy)
@@ -414,4 +420,3 @@ gfx_pixmap_scale_index_data(gfx_pixmap_t *pixmap, gfx_mode_t *mode)
 
 	return pixmap;
 }
-
