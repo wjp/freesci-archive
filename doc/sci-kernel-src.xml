@@ -17,9 +17,45 @@ Format:
    </kernel-doc>
 
 In the 'description' tag, the following special tags are allowed:
+   <arg>       to mark arguments (same as parameters, but in the description part)
    <type>      to mark types
    <slc>       to mark selectors
    <literal>   to mark literals
+
+
+   <list>
+     <li>item1</li>
+     <li>item2</li>
+     ...
+   </list>              for simple lists
+
+
+   <table cols="x">
+     <th>
+       <td>header1</td>
+       <td>header2</td>
+       ...
+     </th>
+     <tr>
+       <td>row1, col1</td>
+       <td>row1, col2</td>
+       ...
+     </tr>
+     <tr>
+       <td>row2, col1</td>
+       <td>row2, col2</td>
+       ...
+     </tr>
+     ...
+   </table>             for simple tables (the number of columns must be specified)
+
+
+   <programlisting>     for long program listings
+
+
+   TAGS MAY NOT BE OMITTED as in HTML.
+   The shortcut '<tag/body/', used in some SGML languages, is NOT allowed.
+   
 -->
 
 <kernel-doc>
@@ -30,7 +66,7 @@ In the 'description' tag, the following special tags are allowed:
     <retval>&amp;far_ptr: A heap_ptr pointing to an
       actual heap pointer</retval>
     <description>
-      Loads a resource. The returned <type>HeapPtr</type> points to a special point on the heap
+      Loads a resource. The returned <type>heap_ptr</type> points to a special point on the heap
       where a pointer (32 bits) to the memory location of the specified resource
       is located. If the resource type equals sci_memory, the resource number is
       interpreted as a memory size instead; the specified number of bytes is allocated
@@ -58,6 +94,15 @@ In the 'description' tag, the following special tags are allowed:
     <description>
       This function returns the address pointed to by an element of a script's
       dispatch table.
+    </description>
+  </function>
+
+  <function SCI0ID="3">DisposeScript
+    <param>word script_nr: Number of the script to dispose of</param>
+    <retval>void</retval>
+    <description>
+      Disposes a script. Unloads it, removes its entries from the class table, and frees the
+      associated heap memory.
     </description>
   </function>
 

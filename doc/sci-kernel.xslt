@@ -107,6 +107,12 @@
     </xsl:text>
 </xsl:template>
 
+<xsl:template match="arg" mode="full">
+    <parameter>
+      <xsl:apply-templates mode="full"/>
+    </parameter>
+</xsl:template>
+
 <xsl:template match="type" mode="full">
     <type>
       <xsl:apply-templates mode="full"/>
@@ -125,10 +131,55 @@
     </literal>
 </xsl:template>
 
+<xsl:template match="programlisting" mode="full">
+    <programlisting>
+      <xsl:apply-templates mode="full"/>
+    </programlisting>
+</xsl:template>
+
+<!-- Lists -->
+
+<xsl:template match="list" mode="full">
+    <simplelist>
+      <xsl:apply-templates mode="full"/>
+    </simplelist>
+</xsl:template>
+
+<xsl:template match="li" mode="full">
+    <member>
+      <xsl:apply-templates mode="full"/>
+    </member>
+</xsl:template>
+
+<!-- Tables -->
+
+<xsl:template match="table" mode="full">
+    <informaltable>
+      <tgroup>
+	<xsl:attribute name="cols">
+	  <xsl:value-of select="@cols"/>
+	</xsl:attribute>
+	<xsl:apply-templates mode="full"/>
+      </tgroup>
+    </informaltable>
+</xsl:template>
+
+<xsl:template match="th" mode="full">
+    <thead>
+      <xsl:apply-templates mode="full"/>
+    </thead>
+</xsl:template>
+
+<xsl:template match="tr" mode="full">
+    <row>
+      <xsl:apply-templates mode="full"/>
+    </row>
+</xsl:template>
+
+<xsl:template match="td" mode="full">
+    <entry>
+      <xsl:apply-templates mode="full"/>
+    </entry>
+</xsl:template>
+
 </xsl:stylesheet>
-
-
-
-
-
-
