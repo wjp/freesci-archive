@@ -1,3 +1,9 @@
+2002-09-15  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* aclocal.m4, config.h.in, configure: Files removed from repository.
+	* reconf: Removed first call to autoheader.
+	* .cvsignore: Added config.h.in.
+
 2002-09-14  Solomon Peachy <pizza@shaftnet.org>
 	* src/sound/pcmout_oss.c:  Added an OSS pcmout driver.
 	* src/sound/pcmout.c, src/sound/pcmout_sdl.c,
