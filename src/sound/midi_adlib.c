@@ -29,6 +29,7 @@
 #include <sys/ioctl.h>
 #include <sys/soundcard.h>
 
+SEQ_DEFINEBUF(1024);
 
 typedef struct _sci_adlib_def {
   guint8 keyscale;       /* 0-3 !*/
@@ -50,6 +51,17 @@ typedef struct _sci_adlib_def {
 static adlib_def adlib_sounds[96][2];
 static sbi_instr_data adlib_sbi[96];
 static guint8 instr[MIDI_CHANNELS];
+static int seqfd, dev;
+
+void seqbuf_dump()
+{
+  if (_seqbufptr)
+    if (write(seqfd, _seqbuf, _seqbufptr) == -1) {
+      perror("ADLIB write ");
+      exit(-1);
+    }
+  _seqbufptr = 0;
+}
 
 void make_sbi(adlib_def *one, adlib_def *two, guint8 *buffer)
 {
@@ -89,8 +101,9 @@ void make_sbi(adlib_def *one, adlib_def *two, guint8 *buffer)
 
 int midi_adlib_open(guint8 *data_ptr, unsigned int data_length)
 {
-  int fm, nrdevs, dev, i;
+  int nrdevs, i, n;
   struct synth_info info;
+  struct sbi_instrument sbi;
 
   data_ptr += 2; 
   data_length -=2;
@@ -101,17 +114,17 @@ int midi_adlib_open(guint8 *data_ptr, unsigned int data_length)
 
   memset(instr, 0, sizeof(instr));
  
-  if ((fm=open("/dev/sequencer", O_WRONLY, 0))==-1) {
+  if ((seqfd=open("/dev/sequencer", O_WRONLY, 0))==-1) {
     perror("/dev/sequencer");
     return(-1);
   }
-  if (ioctl(fm, SNDCTL_SEQ_NRSYNTHS, &nrdevs) == -1) {
+  if (ioctl(seqfd, SNDCTL_SEQ_NRSYNTHS, &nrdevs) == -1) {
     perror("/dev/sequencer");
     return(-1);
   }
   for (i=0;i<nrdevs && dev==-1;i++) {
     info.device = i;
-    if (ioctl(fm, SNDCTL_SYNTH_INFO, &info)==-1) {
+    if (ioctl(seqfd, SNDCTL_SYNTH_INFO, &info)==-1) {
       perror("info: /dev/sequencer");
       return(-1);
     }
@@ -123,16 +136,25 @@ int midi_adlib_open(guint8 *data_ptr, unsigned int data_length)
     return(-1);
   }
 
-  /* XXXX load up inst data into synth device */
+  printf("ADLIB: Loading patches into synthesizer");
+  sbi.device = dev;
+  sbi.key = FM_PATCH;
+  for (i = 0; i < 96; i++) {
+    for (n = 0; n < 32; n++)
+      memcpy(sbi.operators, &adlib_sbi[i], sizeof(sbi_instr_data));
+    sbi.channel=i;
+    SEQ_WRPATCH(&sbi, sizeof(sbi));
+  }
 
+  SEQ_DUMPBUF();
   return 0;
 }
 
 
 int midi_adlib_close()
 {
-  printf("close NYI\n");
-  return 0;
+  /* XXXX flush output?  signal sequencer anything? */
+  return close(seqfd);
 }
 
 int midi_adlib_volume(guint8 volume)
@@ -140,12 +162,11 @@ int midi_adlib_volume(guint8 volume)
   volume &= 0x7f; /* (make sure it's not over 127) */
 
   printf("volume NYI %02x \n", volume);
-  return 0;  printf("noteoff NYI\n");
+  return 0;
 
 }
 
-int midi_adlib_allstop(void) 
-{
+int midi_adlib_allstop(void) {
   printf("NYI\n");
   return 0;
 }
@@ -158,19 +179,46 @@ int midi_adlib_reverb(short param)
 
 int midi_adlib_noteoff(guint8 channel, guint8 note, guint8 velocity)
 {
+  SEQ_STOP_NOTE(dev, channel, note, velocity);
+
   printf("noteoff NYI %02x %02x %02x\n", channel, note, velocity);
+  SEQ_DUMPBUF();
   return 0;
 }
 
 int midi_adlib_noteon(guint8 channel, guint8 note, guint8 velocity)
 {
+  SEQ_START_NOTE(dev, channel, note, velocity);
+
   printf("noteon NYI %02x %02x %02x\n", channel, note, velocity);
   return 0;
+  SEQ_DUMPBUF();
 }
 
 int midi_adlib_event(guint8 command, guint8 note, guint8 velocity)
 {
-  printf("event NYI %02x %02x %02x\n", command, note, velocity);
+  guint8 channel, oper;
+
+  channel = command & 0x0f;
+  oper = command & 0xf0;
+
+  switch (oper) {    
+  case 0x80:  /* XXXX noteon and noteoff */
+    if (velocity != 0)
+      return midi_adlib_noteon(channel, note, velocity);
+  case 0x90:
+    return midi_adlib_noteoff(channel, note, velocity);
+  case 0xe0:    /* Pitch bend NYI */
+    break;
+  case 0xb0:    /* CC changes.  let 'em through... */
+    break;
+  default:
+    printf("ADLIB: Unknown event %02x\n", command);
+    return 0;
+  }
+  
+  printf("event NYI %02x %02x %02x\n", command, note, velocity); 
+  SEQ_DUMPBUF();
   return 0;
 }
 
@@ -191,7 +239,8 @@ int midi_adlib_event2(guint8 command, guint8 param)
   default:
     printf("ADLIB: Unknown event %02x\n", command);
   }
- 
+
+  SEQ_DUMPBUF();
   return 0;
 }
 
