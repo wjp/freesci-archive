@@ -543,6 +543,8 @@ sci_get_homedir()
 	return _path_buf;
 #elif defined(__unix__) || !defined(X_DISPLAY_MISSING) || defined (__BEOS__) || defined(MACOSX)
 	return getenv("HOME");
+#elif defined (_DREAMCAST)
+	return "/ram";
 #else
 #  error Please add a $HOME policy for your platform!
 #endif
@@ -606,6 +608,14 @@ void
 sci_sched_yield()
 {
 	sched_yield();
+}
+
+#elif defined (_DREAMCAST)
+
+void
+sci_sched_yield()
+{
+	thd_pass();
 }
 
 #else

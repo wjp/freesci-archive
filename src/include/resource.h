@@ -107,6 +107,18 @@
 #  define DLLEXTERN
 #endif /* !_WIN32 */
 
+#ifdef _DREAMCAST
+#  define strcasecmp stricmp
+#  define open fs_open
+#  define read fs_read
+#  define close fs_close
+#  define chdir fs_chdir
+#  define lseek fs_seek
+#  define perror(S) fprintf(stderr, S)
+#  define unlink fs_unlink
+#  define write fs_write
+#endif
+
 #ifdef __BEOS__
 #  include <kernel/OS.h>
 #  define usleep snooze
@@ -119,9 +131,13 @@
 
 
 #include <errno.h>
-#include <fcntl.h>
+#ifdef HAVE_FCNTL_H
+#  include <fcntl.h>
+#endif
 #include <sys/types.h>
-#include <sys/stat.h>
+#ifdef HAVE_SYS_STAT_H
+#  include <sys/stat.h>
+#endif
 #include <assert.h>
 #ifdef _DOS
 #  include <sci_dos.h>

@@ -62,7 +62,9 @@ extern pcmout_driver_t pcmout_driver_alsa;
 #ifdef HAVE_DMEDIA_AUDIO_H
 extern pcmout_driver_t pcmout_driver_al;
 #endif
-
+#ifdef _DREAMCAST
+extern pcmout_driver_t pcmout_driver_dc;
+#endif
  
 extern DLLEXTERN pcmout_driver_t *pcmout_drivers[];
 

@@ -1,3 +1,17 @@
+2002-12-16  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/include/pcmout.h: Added reference to Dreamcast pcmout driver.
+
+	* configure.in: Have configure check for existence of fcntl.h.
+	* src/include/resource.h: Added a number of defines for the
+	Dreamcast port. Added header file checks for fcntl.h and sys/stat.h.
+	* src/scicore/resource.c, src/scicore/resource_map.c: Added header file
+	checks for sys/stat.h.
+
+	* src/scicore/tools.c: Added a temporary Dreamcast implementation of
+	sci_get_homedir(). Added a Dreamcast implementation of
+	sci_sched_yield().
+
 2002-12-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gfx/drivers/dc_driver.c (dc_init_specific): Shutdown PVR
