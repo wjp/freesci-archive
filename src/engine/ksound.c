@@ -104,7 +104,7 @@ process_sound_events(state_t *s) /* Get all sound events, apply their changes to
 	song_handle_t handle;
 	int cue;
 
-	if (s->version>SCI_VERSION_FTU_DOSOUND_VARIANT_1)
+	if (s->version>=SCI_VERSION_FTU_DOSOUND_VARIANT_1)
 		return;
 	/* SCI01 and later explicitly poll for everything */
 

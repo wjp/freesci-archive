@@ -765,7 +765,7 @@ sm_script_relocate(seg_manager_t *self, reg_t block)
 	script_t *scr;
 	int count;
 	int i;
-
+	
 	VERIFY( !(block.segment >= self->heap_size || mobj->type != MEM_OBJ_SCRIPT),
 		"Attempt relocate non-script\n" );
 
@@ -777,7 +777,7 @@ sm_script_relocate(seg_manager_t *self, reg_t block)
 
 	count = getUInt16(scr->buf + block.offset);
 
-	for (i = 0; i < count; i++) {
+	for (i = 0; i <= count; i++) {
 		int pos = getUInt16(scr->buf + block.offset + 2 + (i*2));
 		if (!pos) continue; /* FIXME: A hack pending investigation */
 
