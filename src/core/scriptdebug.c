@@ -197,6 +197,8 @@ c_save_game(state_t *s)
     return 1;
   }
 
+  s->amp_rest = *_restadjust;
+
   if (!omit_check) {
     int result = 0;
     for (i = 0; i < s->file_handles_nr; i++)

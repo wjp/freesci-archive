@@ -50,6 +50,74 @@ done
 ])
 
 
+
+# AC_CHECK_INCLUDE_PATH(header.h, "-Ipath1 -Ipath2 -Ipath3", "#include <foo.h>"
+#                        result_var)
+# Tries to preprocess a file including header.h (and <foo.h>) while trying out "",
+# "-Ipath1", "-Ipath2" etc. as include paths. Writes the result to result_var
+# (any element of {"no", "-Ipath1", "-Ipath2", "-Ipath3"}
+AC_DEFUN(AC_CHECK_INCLUDE_PATH,
+[
+OLDCPPFLAGS="$CPPFLAGS"
+$4=no
+wasfound=no
+
+for i in "" $2;
+do
+	CPPFLAGS="$OLDCPPFLAGS $i"
+
+	AC_TRY_CPP([$3
+#include <$1>], [wasfound=$i])
+
+	if test "$wasfound" != no; then
+
+		$4=$wasfound
+		CPPFLAGS=$OLDCPPFLAGS
+		break
+	fi
+
+done
+
+CPPFLAGS=$OLDCPPFLAGS
+])
+
+
+
+# AC_CHECK_LINK_PATH("x_fork();", "-L/usr/lib -L/usr/foo/lib", "-lxyzzy -lgnuxyzzy",
+#                    "-lfoo", "#include <xfork.h>", result_var)
+# Checks for the function x_fork in -lxyzzy and -lgnuxyzzy, both of which are looked
+# for in the default link path, then /usr/lib, and /usr/foo/lib. To compile, xfork.h is
+# included, and libfoo is linked appropriately. The resulting valid -L/-l combination
+# would be stored in result_var. If none is found, result_var is set to "no".
+AC_DEFUN(AC_CHECK_LINK_PATH,
+[
+OLDCFLAGS=$CFLAGS
+$6=no
+wasfound=no
+
+for i in "" $2;
+do
+	for j in "" $3;
+	do
+		CFLAGS="$OLDCFLAGS $i $j $4"
+		AC_TRY_LINK([$5], [$1], [wasfound="$i $j"])
+
+		if test "$wasfound" != no; then
+
+			CFLAGS=$OLDCFLAGS
+			$6=$wasfound
+			break 2
+
+		fi
+	done
+done
+
+CFLAGS=$OLDCFLAGS
+])
+
+
+
+
 ##
 ## Customizing functions for libggi: Based on similar functions for qt
 ##
@@ -57,30 +125,32 @@ AC_DEFUN(AC_PATH_GGI,
 [
 AC_MSG_CHECKING([for ggi])
 
-_ac_ggi_includes="/usr/include /usr/local/include"
-_ac_ggi_libraries="/usr/lib /usr/local/lib /usr/local/ggi/lib"
+_ac_ggi_includes="-I/usr/include -I/usr/local/include"
+_ac_ggi_libraries="-L/usr/lib -L/usr/local/lib -L/usr/local/ggi/lib"
 
 
 AC_ARG_WITH(ggi-dir,
     [  --with-ggi-dir           where the root of ggi is installed ],
-    [  _ac_ggi_includes="$_ac_ggi_includes $withval"/include
-       _ac_ggi_libraries="$_ac_ggi_libraries $withval"/lib
+    [  _ac_ggi_includes="-I$withval"/include
+       _ac_ggi_libraries="-L$withval"/lib
     ])
 
 AC_ARG_WITH(ggi-includes,
     [  --with-ggi-includes      where the ggi includes are. ],
     [  
-       _ac_ggi_includes="$_ac_ggi_includes $withval"
+       _ac_ggi_includes="-I$withval"
     ])
 AC_ARG_WITH(ggi-libraries,
     [  --with-ggi-libraries     where the ggi library is installed.],
-    [  _ac_ggi_libraries="$_ac_ggi_libraries $withval"
+    [  _ac_ggi_libraries="-L$withval"
     ])
 
-AC_FIND_FILE(ggi/ggi.h,$_ac_ggi_includes,ac_ggi_includes)
-AC_FIND_FILE(libggi.so,$_ac_ggi_libraries,ac_ggi_libraries)
+AC_CHECK_INCLUDE_PATH([ggi/ggi.h],[$_ac_ggi_includes],[#include <ggi/gii.h>], ac_ggi_includes)
+AC_CHECK_LINK_PATH([ggiInit();],$_ac_ggi_libraries,["-lggi"],
+		 [$ac_ggi_includes -lgii -lgg],[#include <ggi/ggi.h>
+#include <ggi/gii.h>], ac_ggi_libraries)
 
-if test "$ac_ggi_includes" = NO || test "$ac_ggi_libraries" = NO; then
+if test "$ac_ggi_includes" = no || test "$ac_ggi_libraries" = no; then
 
 	AC_MSG_RESULT([failed])
 	AC_MSG_WARN([ggi is required for graphics support!])
@@ -89,17 +159,18 @@ if test "$ac_ggi_includes" = NO || test "$ac_ggi_libraries" = NO; then
 else
 	AC_MSG_RESULT([found]);
 
-	ac_ggi_includes=-I"$ac_ggi_includes"
-	ac_ggi_libraries=-L"$ac_ggi_libraries -lggi -lgii -lgg"
+	ac_ggi_libraries="$ac_ggi_libraries -lgii -lgg"
 	ac_graphics_ggi_libfile="graphics_ggi.c"
 	AC_SUBST(ac_graphics_ggi_libfile)
 	ac_graphics_ggi_libobjects="graphics_ggi.o"
 	AC_SUBST(ac_graphics_ggi_libobjects)
 	AC_DEFINE(HAVE_LIBGGI)
 fi
+
 AC_SUBST(ac_ggi_includes)
 AC_SUBST(ac_ggi_libraries)
 ])
+
 
 ##
 ## Searching for curses/ncurses: Based on similar functions for qt
@@ -108,53 +179,48 @@ AC_DEFUN(AC_PATH_CURSES,
 [
 AC_MSG_CHECKING([for (n)curses])
 
-_ac_curses_includes="/usr/include /usr/local/include"
-_ac_curses_libraries="/usr/lib /usr/local/lib"
+_ac_curses_includes="-I/usr/include -I/usr/local/include"
+_ac_curses_libraries="-L/usr/lib -L/usr/local/lib"
+_ac_curses_libnames="-lncurses -lcurses"
 
 
 AC_ARG_WITH(curses-dir,
     [  --with-curses-dir           where the root of lib(n)curses is installed ],
-    [  _ac_curses_includes="$_ac_curses_includes $withval"/include
-       _ac_curses_libraries="$_ac_curses_libraries $withval"/lib
+    [  _ac_curses_includes="-I$withval"/include
+       _ac_curses_libraries="-L$withval"/lib
     ])
 
 AC_ARG_WITH(curses-includes,
     [  --with-curses-includes      where the (n)curses includes are. ],
     [  
-       _ac_curses_includes="$_ac_curses_includes $withval"
+       _ac_curses_includes="-I$withval"
     ])
-AC_ARG_WITH(curses-libraries,
+AC_ARG_WITH(curses-library,
     [  --with-curses-libraries     where the (n)curses library is installed.],
-    [  _ac_curses_libraries="$_ac_ggi_libraries $withval"
+    [  _ac_curses_libraries="-L$withval"
+    ])
+AC_ARG_WITH(curses-libname,
+    [  --with-curses-libraries     whether to use curses or ncurses.],
+    [  _ac_curses_libnames="-l$withval"
     ])
 
-AC_FIND_FILE(curses.h,$_ac_curses_includes,ac_curses_includes)
-AC_FIND_FILE(libncurses.so,$_ac_curses_libraries,ac_curses_libraries)
+AC_CHECK_INCLUDE_PATH([curses.h],[$_ac_curses_includes],[], ac_curses_includes)
+AC_CHECK_LINK_PATH([initscr();],$_ac_curses_libraries,$_ac_curses_libnames,
+		 [$ac_curses_includes],[#include <curses.h>], ac_curses_libraries)
 
-if test "$ac_curses_includes" != NO; then
-
-	if test "$ac_curses_libraries" = NO; then
-		AC_FIND_FILE(libcurses.so, $_ac_curses_libraries, ac_curses_libraries)
-		if test "$ac_curses_libraries" != NO; then
-			AC_MSG_RESULT([libcurses found]);
-			ac_curses_libraries=-L"$ac_curses_libraries -lcurses"
-		fi
-	else
-		AC_MSG_RESULT([libncurses found])
-		ac_curses_libraries=-L"$ac_curses_libraries -lncurses"
-	fi
-fi
-
-
-if test "$ac_curses_includes" = NO || test "$ac_curses_libraries" = NO; then
+if test "$ac_curses_includes" = no || test "$ac_curses_libraries" = no; then
 
 	AC_MSG_RESULT([failed])
 	ac_curses_libraries=""
 	ac_curses_includes=""
+
 else
-	ac_curses_includes="-I$ac_curses_includes"
+
+	AC_MSG_RESULT([found $ac_curses_libraries]);
 	AC_DEFINE(HAVE_CURSES)
+
 fi
+
 AC_SUBST(ac_curses_includes)
 AC_SUBST(ac_curses_libraries)
 ])
@@ -167,85 +233,42 @@ AC_DEFUN(AC_PATH_PNG,
 AC_MSG_CHECKING([for libpng])
 ## libpng must be statically linked against libz for this to work... :-/
 
-_ac_png_includes="/usr/include /usr/local/include"
-_ac_png_libraries="/usr/lib /usr/local/lib"
+_ac_png_includes="-I/usr/include -I/usr/local/include"
+_ac_png_libraries="-L/usr/lib -L/usr/local/lib"
 
 
 AC_ARG_WITH(png-dir,
     [  --with-png-dir           where the root of png is installed ],
-    [  _ac_png_includes="$_ac_png_includes $withval"/include
-       _ac_png_libraries="$_ac_png_libraries $withval"/lib
+    [  _ac_png_includes="-I$withval"/include
+       _ac_png_libraries="-L$withval"/lib
     ])
 
 AC_ARG_WITH(png-includes,
     [  --with-png-includes      where the png includes are. ],
     [  
-       _ac_png_includes="$_ac_png_includes $withval"
+       _ac_png_includes="-I$withval"
     ])
 AC_ARG_WITH(png-libraries,
     [  --with-png-libraries     where the png library is installed.],
-    [  _ac_png_libraries="$_ac_png_libraries $withval"
+    [  _ac_png_libraries="-L$withval"
     ])
 
-AC_FIND_FILE(png.h,$_ac_png_includes,ac_png_includes)
-dnl Redhat 6 install libpng 1.0.3 in /usr/lib/libpng.2.1.0.3
-AC_FIND_FILE(libpng.so,$_ac_png_libraries,ac_png_libraries)
+AC_CHECK_INCLUDE_PATH([png.h],[$_ac_png_includes],[], ac_png_includes)
+AC_CHECK_LINK_PATH([png_info_init((png_infop)0);],$_ac_png_libraries,["-lpng"],
+		 [$ac_png_includes],[#include <png.h>], ac_png_libraries)
 
-if test "$ac_png_includes" = NO || test "$ac_png_libraries" = NO; then
+if test "$ac_png_includes" = no || test "$ac_png_libraries" = no; then
 
 	AC_MSG_RESULT([failed])
+	AC_MSG_ERROR([libpng is required to compile FreeSCI.])
 	ac_png_libraries=""
 	ac_png_includes=""
 else
 	AC_MSG_RESULT([found]);
-
-	ac_png_includes=-I"$ac_png_includes"
-	ac_png_libraries=-L"$ac_png_libraries -lpng"
 	AC_DEFINE(HAVE_LIBPNG)
 fi
 AC_SUBST(ac_png_includes)
 AC_SUBST(ac_png_libraries)
 ])
 
-
-##
-## Customizing functions for libglib: Based on similar functions for qt
-##
-AC_DEFUN(AC_PATH_GLIB,
-[
-AC_MSG_CHECKING([for glib])
-
-_ac_glib_includes="/usr/include /usr/local/include"
-_ac_glib_libraries="/usr/lib /usr/local/lib /usr/local/glib/lib"
-
-AC_ARG_WITH(glib-dir,
-    [  --with-glib-dir           where the root of glib is installed ],
-    [  _ac_glib_includes="$_ac_glib_includes $withval"/include
-       _ac_glib_libraries="$_ac_glib_libraries $withval"/lib
-    ])
-
-AC_ARG_WITH(glib-includes,
-    [  --with-glib-includes      where the glib includes are. ],
-    [  
-       _ac_glib_includes="$_ac_glib_includes $withval"
-    ])
-AC_ARG_WITH(glib-libraries,
-    [  --with-glib-libraries     where the glib library is installed.],
-    [  _ac_glib_libraries="$_ac_glib_libraries $withval"
-    ])
-AC_FIND_FILE(glib.h,$_ac_glib_includes,ac_glib_includes)
-AC_FIND_FILE(libglib.a,$_ac_glib_libraries,ac_glib_libraries)
-
-if test "$ac_glib_includes" = NO || test "$ac_glib_libraries" = NO; then
-	AC_MSG_RESULT([failed])
-	AC_MSG_ERROR([You must install glib to compile this package!])
-else
-	AC_MSG_RESULT([found]);
-
-	ac_glib_includes=-I"$ac_glib_includes"
-	ac_glib_libraries=-L"$ac_glib_libraries"
-	AC_SUBST(ac_glib_includes)
-	AC_SUBST(ac_glib_libraries)
-fi
-])
 

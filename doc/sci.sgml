@@ -4693,6 +4693,22 @@ to pressing LShift-RShift-PadMinus.
 	</sect3>
 
 
+	<sect3>
+	<Title/Kernel function 0x71: Joystick(word, word)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x71: Joystick
+		</funcdef><paramdef>word subfunction, word param</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ subfunction: Always 0x0c</member>
+                       <member><type/(word)/ param: Parameter for the subfunction, purpose unknown.</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+		</para>
+	</sect3>
+
 <!-- Template for kernel function entries (14 lines)
 	<sect3>
 	<Title/Kernel function 0x: ()/

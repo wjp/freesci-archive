@@ -364,7 +364,7 @@ run_vm(state_t *s, int restoring)
   int bp_flag = 0;
 
 
-  int restadjust = 0; /* &rest adjusts the parameter count by this value */
+  int restadjust = s->amp_rest; /* &rest adjusts the parameter count by this value */
   /* Current execution data: */
   exec_stack_t *xs = s->execution_stack + s->execution_stack_pos;
   exec_stack_t *xs_new; /* Used during some operations */
@@ -617,6 +617,7 @@ run_vm(state_t *s, int restoring)
 
     case 0x21: /* callk */
       xs->sp -= (opparams[1] + 2 + (restadjust * 2));
+      s->amp_rest = 0; /* We just used up the restadjust, remember? */
 
       if (opparams[0] >= s->kernel_names_nr) {
 
@@ -627,7 +628,8 @@ run_vm(state_t *s, int restoring)
 
 	s->kfunct_table[opparams[0]]
 	  (s, opparams[0], GET_HEAP(xs->sp) + restadjust, xs->sp + 2); /* Call kernel function */
-	restadjust = 0;
+
+	restadjust = s->amp_rest;
 
       }
 
@@ -659,6 +661,8 @@ run_vm(state_t *s, int restoring)
 
 	  s->execution_stack_base = old_execution_stack_base; /* Restore stack base */
 	  --(s->execution_stack_pos);
+
+	  s->amp_rest = restadjust; /* Update &rest */
 	  return; /* Hard return */
 	}
 
@@ -1117,7 +1121,7 @@ script_init_state(state_t *s, sci_version_t version)
 
   s->_heap = heap_new();
   s->heap = s->_heap->start;
-  s->acc = s->prev = 0;
+  s->acc = s->amp_rest = s->prev = 0;
 
   s->execution_stack = NULL;    /* Start without any execution stack */
   s->execution_stack_base = -1; /* No vm is running yet */

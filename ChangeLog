@@ -1,3 +1,26 @@
+1999-11-28  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/savegame.cfsml, src/main.c, configure.in: Tried to patch
+	headers to make things more portable for non-POSIX systems.
+
+1999-11-27  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kernel.c (_k_view_list_dispose_loop): Fixed the bug
+	(more like a missing feature) that caused the game to run out of
+	background buffers. At least I hope so.
+	(kFormat): Fixed the %c formatting bug that would cause a % to be
+	printed instead of the character immediately following the %c.
+	(kBaseSetter): BaseSetter now takes view offsets into consideration.
+	This doesn't affect SQ3, but might help with other games.
+
+	* src/include/engine.h (_state): Made sure that &rest is saved
+	correctly (this only helps with debugging, of course).
+
+	* acinclude.m4: Improved (?) the config maker scripts. Now,
+	instead of checking libraries by looking for files with corresponding
+	names, png, (n)curses and ggi are tried to link against; this should
+	help with cross-compiling.
+
 1999-11-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/graphics/graphics_ggi.c (libggi_redraw): Fixed GGI screen

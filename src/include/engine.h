@@ -45,6 +45,9 @@
 #ifdef HAVE_LIBGGI
 #include <ggi/ggi.h>
 #endif
+#ifdef HAVE_GLX
+#include <X11/Xlib.h>
+#endif
 
 #ifdef _WIN32
 #define scimkdir(arg1,arg2) mkdir(arg1)
@@ -86,7 +89,10 @@ typedef struct _state
   union {
 #ifdef HAVE_LIBGGI
     ggi_visual_t ggi_visual; /* for libggi */
-#endif    
+#endif /* HAVE_LIBGGI */
+#ifdef HAVE_GLX
+    Display *glx_display;
+#endif
     int _dummy;
   } graphics;
 
@@ -168,6 +174,7 @@ typedef struct _state
   heap_t *_heap; /* The heap structure */
   byte *heap; /* The actual heap data (equal to _heap->start) */
   gint16 acc; /* Accumulator */
+  gint16 amp_rest; /* &rest register (only used for save games) */
   gint16 prev; /* previous comparison result */
 
   heap_ptr stack_base;   /* The base position of the stack; used for debugging */

@@ -36,8 +36,10 @@
 #include <glib.h>
 #include <ctype.h>
 #include <graphics_png.h>
-#ifdef __unix__
+#ifdef HAVE_DIRENT_H
+#include <sys/types.h> /* Required by e.g. NetBSD */
 #include <dirent.h>
+#endif
 #endif
 
 #ifdef _MSC_VER
@@ -340,6 +342,7 @@ RECORD state_t "state_t" {
   exec_stack_t execution_stack[DYNAMIC execution_stack_size, MAXWRITE execution_stack_pos+1];
 
   gint16 acc;
+  gint16 amp_rest;
   gint16 prev;
 
   heap_ptr stack_base;
@@ -536,6 +539,8 @@ gamestate_restore(state_t *s, char *dirname)
     free(retval);
     return NULL;
   }
+
+  retval->amp_rest = 0; /* Backwards compatibility */
 
   %CFSMLREAD state_t retval FROM fh ERRVAR read_eof;
 

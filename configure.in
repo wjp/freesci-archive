@@ -12,7 +12,7 @@ AC_CHECK_HEADERS(unistd.h)
 AC_CHECK_HEADERS(readline/readline.h)
 AC_CHECK_HEADERS(readline/history.h)
 AC_CHECK_HEADERS(getopt.h)
-AC_CHECK_FUNCS(pipe socketpair fork)
+AC_CHECK_FUNCS(pipe socketpair fork sched_yield)
 AC_PATH_GGI
 AC_PATH_CURSES
 AM_PROG_LEX

@@ -69,7 +69,7 @@ uint8 _sci_xfer[640 * 4]; /* Transfer buffer for GGI */
 
 gfx_driver_t gfx_driver_libggi = 
 {
-  "libggi",
+  "ggi",
   libggi_init,
   libggi_shutdown,
   libggi_redraw,

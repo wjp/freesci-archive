@@ -55,6 +55,10 @@
 #include "graphics_ddraw.h"
 #endif
 
+#ifdef HAVE_GLX
+#include "graphics_glx.h"
+#endif
+
 #define DEBUG_DRAWPIC
 
 void _drawpicmsg(const char* format, ...)
@@ -84,6 +88,9 @@ gfx_driver_t *gfx_drivers[] =
 #endif
 #ifdef HAVE_DDRAW
   &gfx_driver_ddraw,
+#endif
+#ifdef HAVE_GLX
+  &gfx_driver_glx
 #endif
   NULL
 };

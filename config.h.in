@@ -19,6 +19,9 @@
 /* Define if you have the pipe function.  */
 #undef HAVE_PIPE
 
+/* Define if you have the sched_yield function.  */
+#undef HAVE_SCHED_YIELD
+
 /* Define if you have the socketpair function.  */
 #undef HAVE_SOCKETPAIR
 

@@ -1963,6 +1963,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	    *target++ = ' '; /* Format into the text */
 
 	  *target++ = arguments[paramindex++];
+	  mode = 0;
 	}
 	break;
 
@@ -2564,6 +2565,7 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int x, y, original_y, z, ystep, xsize, ysize;
   int xbase, ybase, xend, yend;
   int view, loop, cell;
+  int xmod = 0, ymod = 0;
   resource_t *viewres;
   heap_ptr object = PARAM(0);
 
@@ -2587,15 +2589,18 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
   else {
     xsize = view0_cel_width(loop, cell, viewres->data);
     ysize = view0_cel_height(loop, cell, viewres->data);
-    /*    view0_base_modify(loop,cell,viewres->data, &x, &y); */
   }
+
+  
 
   if ((xsize < 0) || (ysize < 0))
     xsize = ysize = 0; /* Invalid view/loop */
-
-  xbase = x - (xsize) / 2;
-  xend = xbase + xsize -1;
-  yend = y - 1;
+  else
+    view0_base_modify(loop, cell, viewres->data, &xmod, &ymod);
+  
+  xbase = x - xmod - (xsize) / 2;
+  xend = xbase + xsize;
+  yend = y - ymod + 1;
   ybase = yend - ystep;
 
   PUT_SELECTOR(object, brLeft, xbase);
@@ -2605,6 +2610,7 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
   if (s->debug_mode & (1 << SCIkBASESETTER_NR)) {
+    sciprintf("Offset: (%d,%d)\n", xmod, ymod);
     graph_clear_box(s, xbase, ybase + 10, xend-xbase+1, yend-ybase+1, VIEW_PRIORITY(original_y));
     (*s->gfx_driver->Wait)(s, 100000);
   }
@@ -2987,6 +2993,16 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, view_object_t *list, i
   for (i = 0; i < list_nr; i++)
     if (list[i].obj) {
       if (UGET_HEAP(list[i].signalp) & _K_VIEW_SIG_FLAG_DISPOSE_ME) {
+
+	if (list[i].underBitsp) { /* Is there a bg picture left to clean? */
+	  word mem_handle = GET_HEAP(list[i].underBitsp);
+
+	  if (mem_handle) {
+	    kfree(s, mem_handle);
+	    PUT_HEAP(list[i].underBitsp, 0);
+	  }
+	}
+
 	if (invoke_selector(INV_SEL(list[i].obj, delete, 1), 0))
 	  SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
 		   " a delete funcselector\n", list[i].obj);

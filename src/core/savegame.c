@@ -36,8 +36,10 @@
 #include <glib.h>
 #include <ctype.h>
 #include <graphics_png.h>
-#ifdef __unix__
+#ifdef HAVE_DIRENT_H
+#include <sys/types.h> /* Required by e.g. NetBSD */
 #include <dirent.h>
+#endif
 #endif
 
 #ifdef _MSC_VER
@@ -632,6 +634,9 @@ _cfsml_write_state_t(FILE *fh, state_t* foo)
   fprintf(fh, "acc = ");
     _cfsml_write_gint16(fh, &(foo->acc));
     fprintf(fh, "\n");
+  fprintf(fh, "amp_rest = ");
+    _cfsml_write_gint16(fh, &(foo->amp_rest));
+    fprintf(fh, "\n");
   fprintf(fh, "prev = ");
     _cfsml_write_gint16(fh, &(foo->prev));
     fprintf(fh, "\n");
@@ -1033,6 +1038,11 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
       if (!strcmp(bar, "acc")) {
 #line 553 "cfsml.pl"
          if (_cfsml_read_gint16(fh, &(foo->acc), value, line, hiteof))
+            return CFSML_FAILURE;
+      } else
+      if (!strcmp(bar, "amp_rest")) {
+#line 553 "cfsml.pl"
+         if (_cfsml_read_gint16(fh, &(foo->amp_rest), value, line, hiteof))
             return CFSML_FAILURE;
       } else
       if (!strcmp(bar, "prev")) {
@@ -2300,7 +2310,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
 
 /* Auto-generated CFSML declaration and function block ends here */
 /* Auto-generation performed by cfsml.pl 0.6.5 */
-#line 369 "CFSML input file"
+#line 372 "CFSML input file"
 
 
 
@@ -2314,7 +2324,7 @@ write_menubar_tp(FILE *fh, menubar_t **foo)
   _cfsml_write_menubar_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 379 "CFSML input file"
+#line 382 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2341,7 +2351,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 396 "CFSML input file"
+#line 399 "CFSML input file"
 
   }
   return *hiteof;
@@ -2357,7 +2367,7 @@ write_port_tp(FILE *fh, port_t **foo)
   _cfsml_write_port_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 407 "CFSML input file"
+#line 410 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2385,7 +2395,7 @@ read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof)
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 425 "CFSML input file"
+#line 428 "CFSML input file"
 
     res =  findResource(sci_font, (*foo)->font_nr);
     if (res)
@@ -2456,7 +2466,7 @@ gamestate_save(state_t *s, char *dirname)
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 491 "CFSML input file"
+#line 494 "CFSML input file"
 
   fclose(fh);
 
@@ -2506,6 +2516,8 @@ gamestate_restore(state_t *s, char *dirname)
     return NULL;
   }
 
+  retval->amp_rest = 0; /* Backwards compatibility */
+
 /* Auto-generated CFSML data reader code */
 #line 626 "cfsml.pl"
   {
@@ -2519,7 +2531,7 @@ gamestate_restore(state_t *s, char *dirname)
     read_eof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 541 "CFSML input file"
+#line 546 "CFSML input file"
 
   fclose(fh);
 

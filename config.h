@@ -20,6 +20,9 @@
 /* Define if you have the pipe function.  */
 #define HAVE_PIPE 1
 
+/* Define if you have the sched_yield function.  */
+#define HAVE_SCHED_YIELD 1
+
 /* Define if you have the socketpair function.  */
 #define HAVE_SOCKETPAIR 1
 

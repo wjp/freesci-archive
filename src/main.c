@@ -53,8 +53,12 @@
 #include <windows.h>
 #define sleep Sleep
 #define strcasecmp stricmp
-#define sched_yield()
 #endif
+
+#ifndef HAVE_SCHED_YIELD
+#define sched_yield() sleep(1)
+/* Neither NetBSD nor Win32 have this function, although it's in POSIX 1b */
+#endif /* !HAVE_SCHED_YIELD */
 
 static int quit = 0;
 static state_t *gamestate; /* The main game state */
