@@ -511,7 +511,10 @@ int synth_mixer (void* buffer, int count)
 {
   int i;
   guint16 *ptr = buffer;
-  guint16 *databuf = NULL;
+  static guint16 databuf[BUFFER_SIZE];
+
+  if (count > BUFFER_SIZE)
+    count = BUFFER_SIZE;
 
   if (!buffer)
     return;
@@ -520,10 +523,6 @@ int synth_mixer (void* buffer, int count)
   if (!ym3812_R)  /* if either is uninitialized, bad things happen */
     return;
 
-  databuf = sci_calloc(count, sizeof(guint16)); /* hold half. */
-  if (!databuf)
-    return;
-  
   YM3812UpdateOne (ym3812_L, databuf, count); 
 
   for (i = 0; i < count ; i++) {
@@ -539,8 +538,6 @@ int synth_mixer (void* buffer, int count)
     *ptr = databuf[i];
     ptr+=2;
   }
-
-  sci_free(databuf);
 
   return count;
 }
