@@ -1,3 +1,10 @@
+2001-03-01  Solomon Peachy <pizza@shaftnet.org>
+
+	* include/midiout.h
+	  sound/midiout.c:  Reworked the midiout architechure.  Now
+                            supports multiple midiout drivers.
+        * main.c:  Added midiout know-how to the cl parser.
+
 2001-02-28  Solomon Peachy <pizza@shaftnet.org>
 
 	* include/midi_mt32.h
