@@ -641,11 +641,17 @@ xlib_xdpy_info()
 	char *vis_classes[6] = {"StaticGray", "GrayScale", "StaticColor",
 			    "PseudoColor", "TrueColor", "DirectColor"};
 
+	if (!display) {
+		printf("No X11 server display found!\n");
+		return;
+	}
+
 	printf("Visuals provided by X11 server:\n");
 	visuals = XGetVisualInfo(display, VisualNoMask, &foo, &visuals_nr);
 
-	if (!visuals_nr) {
+	if (!visuals || !visuals_nr) {
 		printf("  None!\n");
+		return;
 	}
 
 	for (i = 0; i < visuals_nr; i++) {

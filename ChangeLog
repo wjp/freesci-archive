@@ -1,3 +1,12 @@
+2003-01-13  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/gfx_drivers.c: Fixed auto-detection order not
+	to start with xlib (which is detected separately) and to prefer
+	dfb over ggi.
+
+	* src/gfx/drivers/xlib_driver.c (xlib_xdpy_info): Fixed segfault
+	if used with DISPLAY not set
+
 2003-01-13  Alexander Angas  <wgd@internode.on.net>
 
 	* src/gfx/drivers/dx_driver.cpp: Fixed crash due to invalid rect

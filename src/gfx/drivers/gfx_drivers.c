@@ -71,13 +71,10 @@ extern gfx_driver_t gfx_driver_dc;
 extern gfx_driver_t gfx_driver_null;
 
 static gfx_driver_t *gfx_drivers[] = {
+	/* ORDER MATTERS! Drivers are picked on the order they appear in here.
+	** The only exception to this is xlib (which is auto-detected).
+	*/
 #ifndef HAVE_DLOPEN
-#  ifndef X_DISPLAY_MISSING
-	&gfx_driver_xlib,
-#  endif
-#  ifdef HAVE_SDL
-	&gfx_driver_sdl,
-#  endif
 #  ifdef HAVE_DIRECTX
 	&gfx_driver_dx,
 #  endif
@@ -92,6 +89,12 @@ static gfx_driver_t *gfx_drivers[] = {
 #  endif
 #  ifdef _DREAMCAST
 	&gfx_driver_dc,
+#  endif
+#  ifndef X_DISPLAY_MISSING
+	&gfx_driver_xlib,
+#  endif
+#  ifdef HAVE_SDL
+	&gfx_driver_sdl,
 #  endif
 #endif
 	&gfx_driver_null,
@@ -120,7 +123,12 @@ gfx_find_driver(char *path, char *name)
 			name = "xlib";
 		else
 #  endif
+#  ifdef HAVE_DIRECTFB
+			/* Prefer dfb over ggi */
+			name = "dfb";
+#  else
 			name = "ggi";
+#  endif
 #endif /* !_WIN32 */
 	}
 
