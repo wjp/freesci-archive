@@ -439,7 +439,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	      ERROR("ARGH!  Can't attach shared memory segment\n");
 	      have_shmem = 0;
 	    }
-	    /*	    shmctl(S->shm[i]->shmid, IPC_RMID, 0); */
+	    shmctl(S->shm[i]->shmid, IPC_RMID, 0);
 	  }
 
 	  if (have_shmem) {	    
