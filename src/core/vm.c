@@ -105,7 +105,7 @@ static inline int
 getHeapInt16(unsigned char *base, int address)
 {
   if (address & 1)
-    sciprintf("Warning: Unaligned read from %04\n", address & 0xffff);
+    sciprintf("Warning: Unaligned read from %04x\n", address & 0xffff);
 
   return getInt16(base + address);
 }
@@ -114,7 +114,7 @@ static inline unsigned int
 getHeapUInt16(unsigned char *base, int address)
 {
   if (address & 1)
-    sciprintf("Warning: Unaligned unsigned read from %04\n", address & 0xffff);
+    sciprintf("Warning: Unaligned unsigned read from %04x\n", address & 0xffff);
 
   return getUInt16(base + address);
 }
@@ -1442,6 +1442,8 @@ game_run(state_t **_s)
       restore_ff(s->_heap); /* Restore old heap state */
       game_init(s);
 
+      sciprintf(" Restarting flags=%02x\n", s->restarting_flags);
+
       sciprintf(" Restarting game with ");
       if (s->restarting_flags & SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE) {
 	sciprintf("replay()\n");
@@ -1454,7 +1456,7 @@ game_run(state_t **_s)
       send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
 
       script_abort_flag = 0;
-      s->restarting_flags |= SCI_GAME_WAS_RESTARTED | SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE;
+      s->restarting_flags = SCI_GAME_WAS_RESTARTED | SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE;
 
     } else
       

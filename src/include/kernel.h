@@ -85,7 +85,7 @@ static inline int
 getHeapInt16(unsigned char *base, int address)
 {
   if (address & 1)
-    sciprintf("Warning: Unaligned read from %04\n", address & 0xffff);
+    sciprintf("Warning: Unaligned read from %04x\n", address & 0xffff);
 
   return getInt16(base + address);
 }
@@ -94,7 +94,7 @@ static inline unsigned int
 getHeapUInt16(unsigned char *base, int address)
 {
   if (address & 1)
-    sciprintf("Warning: Unaligned unsigned read from %04\n", address & 0xffff);
+    sciprintf("Warning: Unaligned unsigned read from %04x\n", address & 0xffff);
 
   return getUInt16(base + address);
 }

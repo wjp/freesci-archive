@@ -32,6 +32,7 @@
 #include <signal.h>
 #include <sound.h>
 #include <sys/types.h>
+#include <dirent.h>
 
 void
 sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug);
@@ -158,6 +159,22 @@ song_lib_dump(songlib_t songlib, int line)
 	    
 }
 
+
+int
+verify_pid(int pid) /* Checks if the specified PID is registered in /proc */
+{
+  char buffer[16];
+  DIR *dir;
+
+  sprintf(buffer, "/proc/%d", pid);
+  dir = opendir(buffer);
+  if (!dir)
+    return 1;
+
+  closedir(dir);
+  return 0;
+}
+
 #define CHECK song_lib_dump(songlib, __LINE__)
 
 void
@@ -175,6 +192,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
   int suspended = 0; /* Used to suspend the sound server */
   GTimeVal suspend_time; /* Time at which the sound server was suspended */
   sound_eq_t queue; /* The event queue */
+  int ppid = getppid(); /* Get parent PID */
 
   sound_eq_init(&queue);
 
@@ -624,6 +642,11 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 	  }
 	}
+      }
+
+      if (verify_pid(ppid)) {
+	fprintf(stderr,"FreeSCI Sound server: Parent process is dead, terminating\n");
+	_exit(1); /* Die semi-ungracefully */
       }
 
       gettimeofday((struct timeval *)&ctime, NULL);

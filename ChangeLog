@@ -1,5 +1,12 @@
 2000-03-07  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/core/kernel.c (kGameIsRestarting): Fixed some problems with the
+	restarting flags being set incorrectly
+
+	* src/sound/soundserver_null.c: Sound server now checks for its parent
+	process several times per second. This should get rid of the problem
+	with sound server processes running amok after sciv dies.
+
 	* src/core/game.c: Fixed some heap corruptions
 
 	* src/core/vm.c (game_run): Added support for game restarts. First

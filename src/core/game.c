@@ -289,6 +289,8 @@ script_init_engine(state_t *s, sci_version_t version)
 
   if (_init_vocabulary(s)) return 1;
 
+  s->restarting_flags = SCI_GAME_IS_NOT_RESTARTING;
+
   s->scripttable[0].heappos = 0; /* Mark script 0 as 'not installed' */
   if (!script_instantiate(s, 0)) {
     sciprintf("%s(): Could not instantiate script 0\n", __FUNCTION__);
@@ -395,8 +397,6 @@ game_init(state_t *s)
   s->status_bar_text = NULL; /* Status bar is blank */
 
   fprintf(stderr," Script 0 at %04x\n", script0);
-
-  s->restarting_flags = SCI_GAME_IS_NOT_RESTARTING;
 
   s->stack_base = stack_handle + 2;
   s->parser_base = parser_handle + 2;
