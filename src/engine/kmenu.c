@@ -118,16 +118,17 @@ struct {
 	{"Still more FreeSCI hackers & contributors",
 	 "Lars Skovlund\nMost of the relevant documentation, several bugfixes\n\n"
 	 "Magnus Reftel\nHeap implementation, Python class viewer, bugfixes\n\n"
-	 "Matt Hargett\nClean-ups, bugfixes, assertions, Win32 stuff\n\n"
+	 "Matt Hargett\nClean-ups, bugfixes, Hardcore QA, Win32 stuff\n\n"
 	 "Paul David Doherty\nGame version information\n\n"
 	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements\n\n"
 	 "Rainer De Temple\nSCI research",
 	 0, 15},
-	{"There must be a nest somewhere...",
+	{"That's all folks!",
 	 "Ravi I.\nSCI0 sound resource specification\n\n"
 	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research\n\n"
 	 "Rink Springer\nPort to the DOS platform, several bug fixes\n\n"
-	 "Sergey Lapin\nPort of Carl's type 2 decompression code",
+	 "Sergey Lapin\nPort of Carl's type 2 decompression code\n\n"
+	 "\n\n Special Thanks\nto the linuxgames.com and telefragged.com crew\nfor hosting us",
 	 0, 15}
 };
 
@@ -169,7 +170,7 @@ about_freesci(state_t *s)
 		if (width2 > width)
 			width = width2;
 
-		port = sciw_new_window(s, gfx_rect(156 - (width >> 1), 164 - (width >> 1), width, height),
+		port = sciw_new_window(s, gfx_rect(156 - (width >> 1), 105 - (height >> 1), width, height),
 				       bodyfont, s->ega_colors[_about_freesci_pages[page].fgcolor],
 				       s->ega_colors[_about_freesci_pages[page].bgcolor],
 				       titlefont, s->ega_colors[15], s->ega_colors[0],

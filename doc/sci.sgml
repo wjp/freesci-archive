@@ -8269,7 +8269,7 @@ the maps using the cast list created by Animate, whereas the ShowBits call
 	      <sect3>
 		<title>sndmap ...</title>
 		<para>
-		  
+		  Executes sound mapping commands.
 		</para>
 	      </sect3>
 	      <sect3>

@@ -77,9 +77,9 @@ engine/
 	savegame.cfsml
 	cfsml.pl
 sound/
-	sound.c
-	soundserver_null.c
-	sfx_save.c
+	sound.c (most of it)
+	soundserver_unix.c (most of it)
+	sfx_save.cfsml
 	oldmidi.c (minor parts)
 tools/
 	sciunpack.c
@@ -95,15 +95,15 @@ config.l (parts)
 tools/
 	scidisasm.c
 win32/
-	classes.dsp
-	console.dsp
-	freesci.dsp
-	listwords.dsp
-	scidisasm.dsp
-	sciunpack.dsp
-	sciv.dsp
-	scriptdump.dsp
-	vocabdump.dsp
+	classes.dsp (original version)
+	console.dsp (original version)
+	freesci.dsp (original version)
+	listwords.dsp (original version)
+	scidisasm.dsp (original version)
+	sciunpack.dsp (original version)
+	sciv.dsp (original version)
+	scriptdump.dsp (original version)
+	vocabdump.dsp (original version)
 
 
 
@@ -184,21 +184,34 @@ scicore/
 
 
 Solomon Peachy: <pizza@shaftnet.org>
-sfx/
+sound/ 
 	midi_mt32.c (various changes)
 	midiout.c (various changes)
 	midiout_alsaraw.c (various changes)
 	midiout_unixraw.c (various changes)
-sound/ 
-        [Lots of work all over the place]
 	
-gfx/drivers
+gfx/drivers/
 	xlib_driver.c (added MIT-SHM)
-	sdl_driver.c (wrote it!)
+	sdl_driver.c
+	soundserver.c (abstaction part)
 
 
 
 Matt Hargett: <matt@use.net>
 [win32 fixes]
 [Bug fixes]
+[Hardcore QA]
 [Cleanups and assertions all over the place]
+sound/
+	midiout_win32mci.c
+win32/
+	classes.dsp (updates)
+	console.dsp (updates)
+	freesci.dsp (updates)
+	listwords.dsp (updates)
+	scidisasm.dsp (updates)
+	sciunpack.dsp (updates)
+	sciv.dsp (updates)
+	scriptdump.dsp (updates)
+	vocabdump.dsp (updates)
+

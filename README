@@ -107,6 +107,13 @@ the game names described in the config file. The process of creating a
 config file is outlined in section 2.
 
 
+Please note that the default options are rather spartanic; if your machine
+is sufficiently powerful, you might want to spice up your graphics. How
+this can be done is described in section 2; we also provide a reference
+configuration file (called 'config') for high-quality graphics.
+
+
+
 1.1 The built-in debugger
 -------------------------
 
