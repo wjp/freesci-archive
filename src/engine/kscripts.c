@@ -222,6 +222,9 @@ kClone(state_t *s, int funct_nr, int argc, reg_t *argv)
 }
 
 
+extern void
+_k_view_list_mark_free(state_t *s, reg_t off); /* kgraphics.c */
+
 reg_t
 kDisposeClone(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
@@ -259,6 +262,8 @@ kDisposeClone(state_t *s, int funct_nr, int argc, reg_t *argv)
 	victim_obj->variables = NULL;
 	s->seg_manager.decrement_lockers(&s->seg_manager, victim_obj->pos.segment, SEG_ID);
 	s->seg_manager.free_clone(&s->seg_manager, victim_addr);
+
+	_k_view_list_mark_free(s, victim_addr); /* Free on view list, if neccessary */ 
 
 	return s->r_acc;
 }

@@ -172,8 +172,11 @@ reg_t kFsciEmu(struct _state *s, int funct_nr, int argc, reg_t *argv);
 #define SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR 0x75
 /* kfunct_mappers below doubles for unknown kfunctions */
 
+#define DEFUN(nm, cname, sig) {KF_NEW, nm, {cname, sig}}
+#define NOFUN(nm) {KF_NONE, nm}
+
 sci_kernel_function_t kfunct_mappers[] = {
-/*00*/	{KF_NEW, "Load", {kLoad, "ii*"}},
+/*00*/	DEFUN("Load", kLoad, "ii*"),
 /*01*/	{KF_NEW, "UnLoad", {kUnLoad, "i."}},
 /*02*/	{KF_NEW, "ScriptID", {kScriptID,  "ii*"}},
 /*03*/	{KF_NEW, "DisposeScript", {kDisposeScript, "i"}},
@@ -261,7 +264,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*55*/	{KF_NEW, "DoAvoider", {kDoAvoider, "o"}},
 /*56*/	{KF_NEW, "SetJump", {kSetJump, "oiii"}},
 /*57*/	{KF_NEW, "SetDebug", {kSetDebug, "i*"}},
-/*58*/	{KF_NONE, "InspectObj"},
+/*58*/	NOFUN("InspectObj"),
 /*59*/	{KF_NONE, "ShowSends"},
 /*5a*/	{KF_NONE, "ShowObjs"},
 /*5b*/	{KF_NONE, "ShowFree"},
@@ -458,7 +461,7 @@ k_Unknown(state_t *s, int funct_nr, int argc, reg_t *argv)
 	} else switch(kfunct_mappers[funct_nr].type) {
 
 	case KF_NEW:
-		return kfunct_mappers[funct_nr].data.new.fun(s, funct_nr, argc, argv);
+		return kfunct_mappers[funct_nr].new.fun(s, funct_nr, argc, argv);
 
 	case KF_NONE:
 	default:
@@ -807,7 +810,7 @@ script_map_kernel(state_t *s)
 			break;
 
 		case KF_NEW:
-			s->kfunct_table[functnr] = kfunct_mappers[found].data.new;
+			s->kfunct_table[functnr] = kfunct_mappers[found].new;
 			kernel_compile_signature(&(s->kfunct_table[functnr].signature));
 			++mapped;
 			break;

@@ -1,3 +1,4 @@
+#undef HAVE_X11_XFT_XFT_H
 #undef PACKAGE
 #undef VERSION
 #undef SIZEOF_SHORT
