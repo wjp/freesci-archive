@@ -831,30 +831,44 @@ list_savegames(state_t *s)
 int 
 guess_version() 
 {
-  struct stat filestat;
+  int i, len = 0;
   int fd = -1;
-  off_t size = 0;
-  
-  if ((fd = sci_open("sciv.exe", O_RDONLY|O_BINARY)) < 0)
-    if ((fd = sci_open("sierra.exe", O_RDONLY|O_BINARY)) < 0)
-	return 0;
-  
-  if (fstat(fd, &filestat) < 0)
-    return 0;
-  
-  size = filestat.st_size;
-  
-  if (fd > 0)
-    close(fd);
-  
-  for (fd = 0 ; fd < SCI_GAMES_COUNT ; fd++) {
-    if (sci_games[fd].id == size) {
-      sciprintf("Detected interpreter version %d.%03d.%03d (%s)\n", SCI_VERSION_MAJOR(sci_games[fd].version), SCI_VERSION_MINOR(sci_games[fd].version), SCI_VERSION_PATCHLEVEL(sci_games[fd].version), sci_games[fd].name);
-      return sci_games[fd].version;
-    }
+  int crc = 0;
+  guint8 *buff;
+  sci_version_t version = 0;
+
+  if ((fd = sci_open("resource.001", O_RDONLY|O_BINARY)) < 0)
+    return version;
+
+  buff = sci_malloc(8192);
+
+  for (len = 1; len > 0; ) {
+    memset(buff, 0x00, 8192);
+    len = read(fd, buff, 8192);
+    for (i = 0; i < len; i++)
+      crc += *(buff + i);
   }
 
-  return 0;
+  for (i = 0 ; i < SCI_GAMES_COUNT ; i++) {
+    if (sci_games[i].id == crc) {
+      version = sci_games[i].version;
+      sciprintf("Detected game id: 0x%08x (%s) interpreter %d.%03d.%03d\n",
+		crc, sci_games[i].name,
+		SCI_VERSION_MAJOR(version), SCI_VERSION_MINOR(version), 
+		SCI_VERSION_PATCHLEVEL(version));
+      break;
+    }
+  }
+  if (i == SCI_GAMES_COUNT) {
+    sciprintf("Unrecognized game id: 0x%08x\n", crc);
+  }
+
+  if (fd > 0)
+    close(fd);
+
+  sci_free(buff);
+
+  return version;
 }
 
 int
@@ -913,11 +927,6 @@ main(int argc, char** argv)
 			}
 	}
 
-	if (cl_options.version)
-		version = cl_options.version;
-	else 
-	        version = guess_version();
-
 	if (cl_options.gamedir)
 	{
 		if (chdir(cl_options.gamedir)) {
@@ -926,6 +935,11 @@ main(int argc, char** argv)
 		}
 		free(cl_options.gamedir);
 	}
+
+	if (cl_options.version)
+		version = cl_options.version;
+	else 
+	        version = guess_version();
 
 	getcwd(resource_dir, PATH_MAX); /* Store resource directory */
 
