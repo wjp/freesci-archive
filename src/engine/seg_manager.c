@@ -32,15 +32,8 @@
 
 #define GET_SEGID() 	if (flag == SCRIPT_ID) \
 				id = sm_seg_get (self, id); \
-			verify ( sm_check (self, id), __FILE__, __LINE__, "invalid seg id" );
+			VERIFY ( sm_check (self, id), "invalid seg id" );
 
-
-void verify (int cond, const char* file, int line, const char* msg) {
-	if (cond)
-		return;
-	sciprintf( "%s, line, %d, %s", file, line, msg );
-	exit ( -1 );
-};
 
 void sm_init(seg_manager_t* self) {
 	int i;
@@ -54,6 +47,7 @@ void sm_init(seg_manager_t* self) {
 		self->heap[i] = NULL;
 	}
 
+	// function assignments
 	self->destroy = sm_destroy;
 
 	self->seg_get = sm_seg_get;
@@ -73,7 +67,7 @@ void sm_init(seg_manager_t* self) {
 	self->decrement_lockers = sm_decrement_lockers;
 	self->get_lockers = sm_get_lockers;
 	self->set_lockers = sm_set_lockers;
-	
+
 	self->get_heappos = sm_get_heappos;
 
 	self->set_export_table_offset = sm_set_export_table_offset;
@@ -81,7 +75,7 @@ void sm_init(seg_manager_t* self) {
 
 	self->set_synonyms_offset = sm_set_synonyms_offset;
 	self->get_synonyms_offset = sm_get_synonyms_offset;
-	
+
 	self->set_synonyms_nr = sm_set_synonyms_nr;
 	self->get_synonyms_nr = sm_get_synonyms_nr;
 
@@ -90,16 +84,28 @@ void sm_init(seg_manager_t* self) {
 
 };
 
+// destroy the object, free the memorys if allocated before
 void sm_destroy (seg_manager_t* self) {
 	int i;
 	/* free memory*/
 	for (i = 0; i < self->heap_size; i++) {
 		if (self->heap[i]) {
-			if (self->heap[i]->data.script.buf) {
-				free (self->heap[i]->data.script.buf);
-				self->heap[i]->data.script.buf = NULL;
+			mem_obj_t* mem_obj = self->heap[i];
+			switch (mem_obj->type) {
+			case MEM_OBJ_SCRIPT:
+				if (mem_obj->data.script.buf) {
+					free (mem_obj->data.script.buf);
+					mem_obj->data.script.buf = NULL;
+				}
+				break;
+			case MEM_OBJ_CLONES:
+				sciprintf( "destroy for clones haven't been implemented\n" );
+				break;
+			default:
+				sciprintf( "unknown mem obj type\n" );
+				break;
 			}
-			free (self->heap[i]);
+			free (mem_obj);
 			self->heap[i] = NULL;
 		}
 	}
@@ -107,7 +113,7 @@ void sm_destroy (seg_manager_t* self) {
 	self->heap = NULL;
 };
 
-/* allocate a memory from heap
+/* allocate a memory for script from heap
 ** Parameters: (state_t *) s: The state to operate on
 **             (int) script_nr: The script number to load
 ** Returns   : 0 - allocate failure
@@ -133,7 +139,7 @@ int sm_allocate (seg_manager_t* self, struct _state *s, int script_nr, int* seg_
 			return 0;
 		}
 		self->heap_size *= 2;
-		temp = realloc ((void*)self->heap, self->heap_size);
+		temp = realloc ((void*)self->heap, self->heap_size * sizeof( mem_obj_t* ) );
 		if (!temp) {
 			sciprintf("seg_manager.c: Not enough memory space for script size" );
 			return 0;
@@ -148,10 +154,10 @@ int sm_allocate (seg_manager_t* self, struct _state *s, int script_nr, int* seg_
 		return 0;
 	}
 
-	mem->type = SCRIPT_BUFFER;	// may need to handle non script buffer type at here
+	mem->type = MEM_OBJ_SCRIPT;	// may need to handle non script buffer type at here
 	mem->data.script.buf = NULL;
 	script = scir_find_resource(s->resmgr, sci_script, script_nr, 0);
-	
+
 	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
 		mem->data.script.buf_size = script->size + getUInt16(script->data)*2; // locals_size = getUInt16(script->data)*2;
 	}
@@ -159,7 +165,6 @@ int sm_allocate (seg_manager_t* self, struct _state *s, int script_nr, int* seg_
 		mem->data.script.buf_size = script->size;
 	}
         mem->data.script.buf = (char*) malloc (mem->data.script.buf_size);
-	
 	if (!mem->data.script.buf) {
 		sciprintf("seg_manager.c: Not enough memory space for script size" );
 		mem->data.script.buf_size = 0;
@@ -186,48 +191,115 @@ void sm_update (seg_manager_t* self) {
 
 // memory operations
 void sm_mset (seg_manager_t* self, int offset, int c, size_t n, int id, int flag) {
+	mem_obj_t* mem_obj;
 	GET_SEGID();
-	memset( self->heap[id] + offset, c, n );
+	mem_obj = self->heap[id];
+	switch (mem_obj->type) {
+	case MEM_OBJ_SCRIPT:
+		if (mem_obj->data.script.buf) {
+			memset( mem_obj->data.script.buf + offset, c, n );
+		}
+		break;
+	case MEM_OBJ_CLONES:
+		sciprintf( "memset for clones haven't been implemented\n" );
+		break;
+	default:
+		sciprintf( "unknown mem obj type\n" );
+		break;
+	}
 };
 
 void sm_mcpy_in_in (seg_manager_t* self, int dst, const int src, size_t n, int id, int flag) {
+	mem_obj_t* mem_obj;
 	GET_SEGID();
-	memcpy ( self->heap[id] + dst, self->heap[id] + src, n );
+	mem_obj = self->heap[id];
+	switch (mem_obj->type) {
+	case MEM_OBJ_SCRIPT:
+		if (mem_obj->data.script.buf) {
+			memcpy ( mem_obj->data.script.buf + dst, mem_obj->data.script.buf + src, n );
+		}
+		break;
+	case MEM_OBJ_CLONES:
+		sciprintf( "memcpy for clones haven't been implemented\n" );
+		break;
+	default:
+		sciprintf( "unknown mem obj type\n" );
+		break;
+	}
 };
 
 void sm_mcpy_in_out (seg_manager_t* self, int dst, const void* src, size_t n, int id, int flag) {
+	mem_obj_t* mem_obj;
 	GET_SEGID();
-	memcpy ( self->heap[id] + dst, src, n );
+	mem_obj = self->heap[id];
+	switch (mem_obj->type) {
+	case MEM_OBJ_SCRIPT:
+		if (mem_obj->data.script.buf) {
+			memcpy ( mem_obj->data.script.buf + dst, src, n );
+		}
+		break;
+	case MEM_OBJ_CLONES:
+		sciprintf( "memcpy for clones haven't been implemented\n" );
+		break;
+	default:
+		sciprintf( "unknown mem obj type\n" );
+		break;
+	}
 };
 void sm_mcpy_out_in (seg_manager_t* self, void* dst, const int src, size_t n, int id, int flag) {
+	mem_obj_t* mem_obj;
 	GET_SEGID();
-	memcpy ( dst, self->heap[id] + src, n );
+	mem_obj = self->heap[id];
+	switch (mem_obj->type) {
+	case MEM_OBJ_SCRIPT:
+		if (mem_obj->data.script.buf) {
+			memcpy ( dst, mem_obj->data.script.buf + src, n );
+		}
+		break;
+	case MEM_OBJ_CLONES:
+		sciprintf( "memcpy for clones haven't been implemented\n" );
+		break;
+	default:
+		sciprintf( "unknown mem obj type\n" );
+		break;
+	}
 };
 
-
 gint16 sm_get_heap (seg_manager_t* self, reg_t reg, mem_obj_enum mem_type ) {
+	mem_obj_t* mem_obj;
+	VERIFY( sm_check (self, reg.segment), "Invalid seg id" );
+	mem_obj = self->heap[reg.segment];
 	switch( mem_type ) {
-	case SCRIPT_BUFFER:
-		verify ( sm_check (self, reg.segment) && reg.offset + 1 < self->heap[reg.segment]->size , __FILE__, __LINE__, "invalid seg id, or offset" );
-		return ( self->heap[reg.segment]->data.script.buf[reg.offset] +
-		  self->heap[reg.segment]->data.script.buf[reg.offset + 1] << 8 );
+	case MEM_OBJ_SCRIPT:
+		VERIFY( reg.offset + 1 < mem_obj->data.script.buf_size, "invalid offset" );
+		return mem_obj->data.script.buf[reg.offset] +
+		     ( mem_obj->data.script.buf[reg.offset+1] << 8 );
+	case MEM_OBJ_CLONES:
+		sciprintf( "memcpy for clones haven't been implemented\n" );
+		break;
 	default:
-		sciprintf( "haven't implemented yet" );
-		exit( -1 );
+		sciprintf( "unknown mem obj type\n" );
+		break;
 	}
 	return 0;	// never get here
 }
 
 void sm_put_heap (seg_manager_t* self, reg_t reg, gint16 value, mem_obj_enum mem_type ) {
+	mem_obj_t* mem_obj;
+	VERIFY( sm_check (self, reg.segment), "Invalid seg id" );
+	mem_obj = self->heap[reg.segment];
 	switch( mem_type ) {
-	case SCRIPT_BUFFER:
-		verify ( sm_check (self, reg.segment) && reg.offset + 1 < self->heap[reg.segment]->size , __FILE__, __LINE__, "invalid seg id, or offset" );
-		self->heap[reg.segment]->data.script.buf[reg.offset] = value & 0xff;
-		self->heap[reg.segment]->data.script.buf[reg.offset + 1] = value >> 8;
+	case MEM_OBJ_SCRIPT:
+		VERIFY( reg.offset + 1 < mem_obj->data.script.buf_size, "invalid offset" );
+		mem_obj->data.script.buf[reg.offset] = value & 0xff;
+		mem_obj->data.script.buf[reg.offset + 1] = value >> 8;
+		break;
+	case MEM_OBJ_CLONES:
+		sciprintf( "memcpy for clones haven't been implemented\n" );
 		break;
 	default:
-		sciprintf( "haven't implemented yet" );
-		exit( -1 );
+		sciprintf( "unknown mem obj type\n" );
+		break;
 	}
 };
 
@@ -260,28 +332,28 @@ int sm_isloaded (seg_manager_t* self, int id, int flag) {
 void sm_increment_lockers (seg_manager_t* self, int id, int flag) {
 	if (flag == SCRIPT_ID)
 		id = sm_seg_get (self, id);
-	verify ( sm_check (self, id), __FILE__, __LINE__, "invalid seg id" );
+	VERIFY ( sm_check (self, id), "invalid seg id" );
 	self->heap[id]->data.script.lockers++;
 };
 
 void sm_decrement_lockers (seg_manager_t* self, int id, int flag) {
 	if (flag == SCRIPT_ID)
 		id = sm_seg_get (self, id);
-	verify ( sm_check (self, id), __FILE__, __LINE__, "invalid seg id" );
+	VERIFY ( sm_check (self, id), "invalid seg id" );
 	self->heap[id]->data.script.lockers--;
 };
 
 int sm_get_lockers (seg_manager_t* self, int id, int flag) {
 	if (flag == SCRIPT_ID)
 		id = sm_seg_get (self, id);
-	verify ( sm_check (self, id), __FILE__, __LINE__, "invalid seg id" );
+	VERIFY ( sm_check (self, id), "invalid seg id" );
 	return self->heap[id]->data.script.lockers;
 };
 
 void sm_set_lockers (seg_manager_t* self, int lockers, int id, int flag) {
 	if (flag == SCRIPT_ID)
 		id = sm_seg_get (self, id);
-	verify ( sm_check (self, id), __FILE__, __LINE__, "invalid seg id" );
+	VERIFY ( sm_check (self, id), "invalid seg id" );
 	self->heap[id]->data.script.lockers = lockers;
 };
 
@@ -302,8 +374,8 @@ void sm_set_synonyms_offset (struct _seg_manager_t* self, int offset, int id, in
 int sm_get_synonyms_offset (struct _seg_manager_t* self, int id, int flag) {
 	GET_SEGID();
 	return self->heap[id]->data.script.synonyms_offset;
-};	
-	
+};
+
 void sm_set_synonyms_nr (struct _seg_manager_t* self, int nr, int id, int flag) {
 	GET_SEGID();
 	self->heap[id]->data.script.synonyms_nr = nr;

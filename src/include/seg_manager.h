@@ -26,7 +26,7 @@
 ***************************************************************************/
 
 
-#ifndef _SCI_SEG_MANAGER_H
+#ifndef _SCI_SEG_MANAGER_H                                                                         mem_obj_enum
 #define _SCI_SEG_MANAGER_H
 
 #include <int_hashmap.h>
@@ -43,9 +43,6 @@ typedef enum {
 	SEG_ID,
 } id_flag;
 
-typedef enum {
-	SCRIPT_BUFFER,
-} mem_obj_enum;
 
 
 /* verify the the given condition is true, output the message if condition is false, and exit
@@ -55,11 +52,13 @@ typedef enum {
 ** return:
 **   none, terminate the program if fails
 */
-void verify (int cond, const char* file, int line, const char* msg);
+#define VERIFY( cond, msg ) if (cond) return; \
+	sciprintf( "%s, line, %d, %s", __FILE__, __LINE__, msg ); \
+	exit ( -1 );
 
 #define MEM_OBJ_SCRIPT (1 << 0)
 #define MEM_OBJ_CLONES (1 << 1)
-
+typedef int mem_obj_enum;
 
 struct _mem_obj;
 
@@ -76,13 +75,13 @@ typedef struct _seg_manager_t {
 	/* member methods */
 	void (*init) (struct _seg_manager_t* self);
 	void (*destroy) (struct _seg_manager_t* self);
-	
+
 	int (*seg_get) (struct _seg_manager_t* self, int script_nr);
 
 	int (*allocate) (struct _seg_manager_t* self, struct _state *s, int script_nr, int* seg_id);
 	int (*deallocate) (struct _seg_manager_t* self, struct _state *s, int script_nr);
 	void (*update) (struct _seg_manager_t* self);
-	
+
 	// memory operations
 	void (*mset) (struct _seg_manager_t* self, int offset, int c, size_t n, int id, int flag);	// memset
 	// dst - inside the seg_manager, its an offset, src - the same as dst; memcpy
@@ -91,7 +90,7 @@ typedef struct _seg_manager_t {
 	void (*mcpy_in_out) (struct _seg_manager_t* self, int dst, const void* src, size_t n, int id, int flag);
 	// dst - absolute address, outside seg_manager; src - inside the seg_manager, its an offset, memcpy
 	void (*mcpy_out_in) (struct _seg_manager_t* self, void* dst, const int src, size_t n, int id, int flag);
-	
+
 	gint16 (*get_heap) (struct _seg_manager_t* self, reg_t reg, mem_obj_enum mem_type );
 	void (*put_heap) (struct _seg_manager_t* self, reg_t reg, gint16 value, mem_obj_enum mem_type );
 
@@ -102,21 +101,21 @@ typedef struct _seg_manager_t {
 	void (*decrement_lockers) (struct _seg_manager_t* self, int id, int flag);
 	int (*get_lockers) (struct _seg_manager_t* self, int id, int flag);
 	void (*set_lockers) (struct _seg_manager_t* self, int lockers, int id, int flag);
-	
+
 	int (*get_heappos) (struct _seg_manager_t* self, int id, int flag);
 
 	void (*set_export_table_offset) (struct _seg_manager_t* self, int offset, int id, int flag);
 	int (*get_export_table_offset) (struct _seg_manager_t* self, int id, int flag);
 
 	void (*set_synonyms_offset) (struct _seg_manager_t* self, int offset, int id, int flag);
-	int (*get_synonyms_offset) (struct _seg_manager_t* self, int id, int flag);	
-	
+	int (*get_synonyms_offset) (struct _seg_manager_t* self, int id, int flag);
+
 	void (*set_synonyms_nr) (struct _seg_manager_t* self, int nr, int id, int flag);
 	int (*get_synonyms_nr) (struct _seg_manager_t* self, int id, int flag);
 
 	void (*set_localvar_offset) (struct _seg_manager_t* self, int offset, int id, int flag);
 	int (*get_localvar_offset) (struct _seg_manager_t* self, int id, int flag);
-	
+
 } seg_manager_t;
 
 // implementation of seg_manager method

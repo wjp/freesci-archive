@@ -1535,7 +1535,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 	reg_t reg_tmp;
 	int seg_id;
 	int magic_pos_adder; /* Usually 0; 2 for older SCI versions */
-	
+
 
 	if (!script) {
 		sciprintf("Script 0x%x requested but not found\n", script_nr);
@@ -1563,7 +1563,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 		return 0;
 	}
 	reg.segment = seg_id;
-	
+
 	script_basepos = s->seg_manager.get_heappos( &s->seg_manager, reg.segment, SEG_ID);	// this is zero
 
 	recursive = 1;
@@ -1573,7 +1573,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 	s->seg_manager.set_synonyms_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
 	s->seg_manager.set_synonyms_nr( &s->seg_manager, 0, reg.segment, SEG_ID );
 	s->seg_manager.set_localvar_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
-	
+
 	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
 		int locals_size = getUInt16(script->data)*2;
 		int locals = (locals_size)? script->size : 0;
@@ -1608,9 +1608,9 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 	do {
 		reg.offset += objlength; /* Step over the last checked object */
 
-		objtype = GET_HEAP(s, reg, SCRIPT_BUFFER);
+		objtype = GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
 		reg_tmp.offset = reg.offset + 2;
-		objlength = GET_HEAP(s, reg_tmp, SCRIPT_BUFFER);
+		objlength = GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT);
 
 		if (objtype == sci_obj_exports)
 			s->seg_manager.set_export_table_offset( &s->seg_manager, reg.offset + 4, reg.segment, SEG_ID ); /* +4 is to step over the header */
@@ -1620,8 +1620,8 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 			s->seg_manager.set_synonyms_nr( &s->seg_manager, (objlength) / 4, reg.segment, SEG_ID );
 			reg_tmp.offset = s->seg_manager.get_synonyms_offset( &s->seg_manager, reg.segment, SEG_ID ) +
 				     ((s->seg_manager.get_synonyms_nr( &s->seg_manager, reg.segment, SEG_ID )) << 2);
-				     
-			if (GET_HEAP(s, reg_tmp, SCRIPT_BUFFER) < 0)
+
+			if (GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT) < 0)
 				/* Adjust for "terminal" synonym entries */
 				s->seg_manager.set_synonyms_nr( &s->seg_manager, (objlength) / 4 - 1, reg.segment, SEG_ID );
 
@@ -1658,9 +1658,9 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 	do {
 		pos += objlength; /* Step over the last checked object */
 
-		objtype = GET_HEAP(s, reg, SCRIPT_BUFFER);
+		objtype = GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
 		reg_tmp.offset = reg.offset + 2;
-		objlength = GET_HEAP(s, reg_tmp, SCRIPT_BUFFER);
+		objlength = GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT);
 
 		reg.offset += 4; /* Step over header */
 
@@ -1674,10 +1674,10 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 			reg.offset -= SCRIPT_OBJECT_MAGIC_OFFSET; /* Get into home position */
 
 			reg_tmp.offset = reg.offset + SCRIPT_FUNCTAREAPTR_OFFSET;
-			functarea = reg.offset + GET_HEAP(s, reg_tmp, SCRIPT_BUFFER)
+			functarea = reg.offset + GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT)
 				+ SCRIPT_FUNCTAREAPTR_MAGIC;
 			reg_tmp.offset = functarea - 2;
-			functions_nr = GET_HEAP(s, reg_tmp, SCRIPT_BUFFER); /* Number of functions */
+			functions_nr = GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT); /* Number of functions */
 			superclass = 0;// OBJ_SUPERCLASS(reg.offset); /* Get superclass... */
 #warning fix OBJ_SUPERCLASS!!!
 			species = 0; //OBJ_SPECIES(reg.offset); /* ...and species */
@@ -1686,15 +1686,15 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 
 			/* This sets the local variable pointer: */
 			reg_tmp.offset = reg.offset + SCRIPT_LOCALVARPTR_OFFSET;
-			PUT_HEAP(s, reg_tmp, s->seg_manager.get_localvar_offset( &s->seg_manager, reg.segment, SEG_ID ), SCRIPT_BUFFER);
+			PUT_HEAP(s, reg_tmp, s->seg_manager.get_localvar_offset( &s->seg_manager, reg.segment, SEG_ID ), MEM_OBJ_SCRIPT);
 			/* Now set the superclass address: */
 			if (superclass > -1) {
 				reg_tmp.offset = reg.offset + SCRIPT_SUPERCLASS_OFFSET;
-				PUT_HEAP(s, reg_tmp, get_class_address(s, superclass), SCRIPT_BUFFER);
+				PUT_HEAP(s, reg_tmp, get_class_address(s, superclass), MEM_OBJ_SCRIPT);
 			}
-			
+
 			reg_tmp.offset = reg.offset + SCRIPT_SPECIES_OFFSET;
-			PUT_HEAP(s, reg_tmp, get_class_address(s, species), SCRIPT_BUFFER);
+			PUT_HEAP(s, reg_tmp, get_class_address(s, species), MEM_OBJ_SCRIPT);
 
 			functarea += 2 + functions_nr * 2;
 			/* Move over the selector IDs to the actual addresses */
@@ -1702,9 +1702,9 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 			for (i = 0; i < functions_nr * 2; i += 2) {
 				heap_ptr functpos;
 				reg_tmp.offset = functarea + i;
-				functpos = GET_HEAP(s, reg_tmp, SCRIPT_BUFFER);
+				functpos = GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT);
 				reg_tmp.offset = functarea + i;
-				PUT_HEAP(s, reg_tmp, functpos + script_basepos, SCRIPT_BUFFER); /* Adjust function pointer addresses */
+				PUT_HEAP(s, reg_tmp, functpos + script_basepos, MEM_OBJ_SCRIPT); /* Adjust function pointer addresses */
 			}
 
 			if ((superclass >= 0) && recursive)
@@ -1715,19 +1715,19 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 
 		} /* if object or class */
 		else if (objtype == sci_obj_pointers) { /* A relocation table */
-			int pointerc = GET_HEAP(s, reg, SCRIPT_BUFFER);
+			int pointerc = GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
 			int i;
 
 			for (i = 0; i < pointerc; i++) {
 				int new_address;
 				int old_indexed_pointer;
 				reg_tmp.offset = reg.offset + 2 + i*2;
-				new_address = ((guint16) GET_HEAP(s, reg_tmp, SCRIPT_BUFFER)) + script_basepos;
-				PUT_HEAP(s, reg_tmp, new_address, SCRIPT_BUFFER); /* Adjust pointers. Not sure if this is needed. */
+				new_address = ((guint16) GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT)) + script_basepos;
+				PUT_HEAP(s, reg_tmp, new_address, MEM_OBJ_SCRIPT); /* Adjust pointers. Not sure if this is needed. */
 				reg_tmp.offset = new_address;
-				old_indexed_pointer = ((guint16) GET_HEAP(s, reg_tmp, SCRIPT_BUFFER));
+				old_indexed_pointer = ((guint16) GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT));
 				reg_tmp.offset = new_address;
-				PUT_HEAP(s, reg_tmp, old_indexed_pointer + script_basepos, SCRIPT_BUFFER);
+				PUT_HEAP(s, reg_tmp, old_indexed_pointer + script_basepos, MEM_OBJ_SCRIPT);
 				/* Adjust indexed pointer. */
 
 			} /* For all indexed pointers pointers */
