@@ -97,9 +97,11 @@ typedef struct _gfx_res_conf {
 } gfx_res_conf_t;
 
 
+typedef gfx_res_conf_t *gfx_res_conf_p_t;
+
 typedef struct {
-	gfx_res_conf_t *assign[GFX_RESOURCE_TYPES_NR];
-	gfx_res_conf_t *mod[GFX_RESOURCE_TYPES_NR];
+	gfx_res_conf_p_t assign[GFX_RESOURCE_TYPES_NR];
+	gfx_res_conf_p_t mod[GFX_RESOURCE_TYPES_NR];
 } gfx_res_fullconf_t;
 
 
