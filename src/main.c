@@ -1198,8 +1198,6 @@ main(int argc, char** argv)
 
 	sci_free(gamestate);
 
-	other_libs_exit();
-
 #ifdef WITH_DMALLOC
 	fprintf(stderr,"--- Everything but the two console buffers should have been freed now ---\n");
 	dmalloc_log_unfreed();

@@ -31,14 +31,6 @@
 #include <kernel.h>
 #include <kdebug.h>
 
-#ifdef HAVE_SDL
-#ifndef _MSC_VER
-#include <SDL/SDL.h>
-#else 
-#include <SDL.h>
-#endif
-#endif
-
 #if !defined (_WIN32) && !defined (__BEOS__)
 #include <sys/resource.h>
 #endif
@@ -634,10 +626,3 @@ game_exit(state_t *s)
 	return 0;
 }
 
-void
-other_libs_exit()
-{
-#ifdef HAVE_SDL
-	SDL_Quit();
-#endif
-}
