@@ -164,7 +164,7 @@ _find_view_priority(state_t *s, int y)
 		for (j = 0; j < 15; j++)
 			if (y < s->pic_priority_table[j])
 				return j;
-		return 15; /* Maximum */
+		return 14; /* Maximum */
 	} else
 		return SCI0_VIEW_PRIORITY(y);
 }

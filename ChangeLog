@@ -1,3 +1,8 @@
+2002-08-01  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/kernel.h, src/engine/kgraphics.c (_find_view_priority):
+	Never yield more than 14.
+
 2002-07-30  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/engine/game.c: Win32 SDK checking should work now.

@@ -287,7 +287,7 @@ _find_view_priority(struct _state *s, int y);
 ** Returns   : (int) The priority band y belongs to
 */
 
-#define SCI0_VIEW_PRIORITY(y) (((y) < s->priority_first)? 0 : (((y) > s->priority_last)? 14 : 1\
+#define SCI0_VIEW_PRIORITY(y) (((y) < s->priority_first)? 0 : (((y) >= s->priority_last)? 14 : 1\
 	+ ((((y) - s->priority_first) * 14) / (s->priority_last - s->priority_first))))
 
 #define SCI0_PRIORITY_BAND_FIRST(nr) ((((nr) == 0)? 0 :  \
