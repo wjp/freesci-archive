@@ -123,10 +123,17 @@ get_readline_input(void)
 char *
 get_gets_input(void)
 {
-  static char input[1024];
+  static char input[1024] = "";
+  int seeker;
 
-  puts("> ");
-  fgets(input, 1024, stdin);
+  putchar('>');
+
+  while (!strchr(input, '\n'))
+    fgets(input, 1024, stdin);
+
+  if (strlen(input))
+    if (input[strlen(input)-1] == '\n');
+    input[strlen(input)-1] = 0; /* Remove trailing '\n' */
 
   if (strlen(input) == 0) {
     return old_input? old_input : "";
@@ -139,6 +146,7 @@ get_gets_input(void)
   strcpy(old_input, input);
   return input;
 }
+
 
 #ifdef HAVE_GETOPT_H
 static struct option options[] = {

@@ -1,5 +1,8 @@
 1999-12-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/main.c: Fixed char_gets_input() to handle fgets() being
+	interrupted by signals intercepted by GGI under Solaris.
+
 	* src/graphics/engine_graphics.c (graph_draw_selector_edit): Fixed
 	bug that might cause the wrong font to be used for the highlighted
 	letter in an "edit control".

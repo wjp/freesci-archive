@@ -169,8 +169,8 @@ extern resource_t *resource_map;
 
 #ifdef WORDS_BIGENDIAN
 
-#define getInt16(d) (gint16)GUINT16_SWAP_LE_BE(*((guint16 *)(d)))
-#define getUInt16(d) GUINT16_SWAP_LE_BE(*((guint16 *)(d)))
+gint16 getInt16(byte *d);
+#define getUInt16(d) (guint16)(getInt16(d))
 
 #else /* !WORDS_BIGENDIAN */
 
