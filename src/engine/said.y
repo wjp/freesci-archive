@@ -45,10 +45,11 @@
 
 #define AUGMENT_SENTENCE_PART_BRACKETS 0x152
 
-  /* Minor numbers */
+/* Minor numbers */
 #define AUGMENT_SENTENCE_MINOR_MATCH_PHRASE 0x14c
 #define AUGMENT_SENTENCE_MINOR_MATCH_WORD 0x153
 #define AUGMENT_SENTENCE_MINOR_RECURSE 0x144
+#define AUGMENT_SENTENCE_MINOR_PARENTHESES 0x14f
 
 
 /*#define SCI_DEBUG_PARSE_TREE_AUGMENTATION *//* uncomment to debug parse tree augmentation*/
@@ -60,7 +61,7 @@
 #define scidprintf if (0) sciprintf
 #endif
 
-#define YYDEBUG 1
+#undef YYDEBUG /*1*/
 #undef SAID_DEBUG
 
 static char *said_parse_error;
@@ -130,6 +131,7 @@ yyerror(char *s)
 %token YY_BRACKETSO_LT /* special token used to imitate LR(2) behaviour */
 %token YY_BRACKETSO_SLASH /* special token used to imitate LR(2) behaviour */
 %token YY_LT_BRACKETSO /* special token used to imitate LR(2) behaviour */
+%token YY_LT_PARENO /* special token used to imitate LR(2) behaviour */
 
 %%
 
@@ -224,6 +226,8 @@ cwordrefset :	 wordrefset
 
 wordrefset :	YY_LT word recref
 			{ $$ = said_aug_branch(0x144, 0x14f, $2, $3) }
+		| YY_LT_PARENO YY_PARENO wordset YY_PARENC
+			{ $$ = said_aug_branch(0x144, 0x14c, $3, SAID_BRANCH_NULL) }
 		| YY_LT wordset
 			{ $$ = said_aug_branch(0x144, 0x14f, $2, SAID_BRANCH_NULL) }
 		| YY_LT_BRACKETSO YY_BRACKETSO wordset YY_BRACKETSC
@@ -271,6 +275,8 @@ yylex(void)
 						retval = YY_BRACKETSO_SLASH;
 			} else if (retval == YY_LT && (said_tokens[said_token] >> 8) == SAID_BRACKO) {
 				retval = YY_LT_BRACKETSO;
+			} else if (retval == YY_LT && (said_tokens[said_token] >> 8) == SAID_PARENO) {
+				retval = YY_LT_PARENO;
 			}
 		}
 	}
@@ -550,13 +556,13 @@ aug_find_words_recursively(parse_tree_node_t *tree, int startpos,
 	int word;
 	int pos = aug_get_first_child(tree, startpos, &major, &minor);
 
-	if (major == WORD_TYPE_REF)
-		refbranch = 1;
+	/*	if (major == WORD_TYPE_REF)
+		refbranch = 1;*/
 
 	while (pos) {
 		if ((word = aug_get_wgroup(tree, pos))) { /* found a word */
-
-			if (major == WORD_TYPE_BASE) {	
+			sciprintf("Found word %03x in (%03x %03x\n", word, major, minor);
+			if (!refbranch && major == WORD_TYPE_BASE) {	
 				if ((*base_words_nr) == maxwords) {
 					sciprintf("Out of regular words\n");
 					return; /* return gracefully */
@@ -566,7 +572,7 @@ aug_find_words_recursively(parse_tree_node_t *tree, int startpos,
 				++(*base_words_nr);
 
 			}
-			if (major == WORD_TYPE_REF/*refbranch*/) {
+			if (major == WORD_TYPE_REF || refbranch) {
 				if ((*ref_words_nr) == maxwords) {
 					sciprintf("Out of reference words\n");
 					return; /* return gracefully */
@@ -581,7 +587,7 @@ aug_find_words_recursively(parse_tree_node_t *tree, int startpos,
     
 		} else /* Did NOT find a word group: Attempt to recurse */
 			aug_find_words_recursively(tree, pos, base_words, base_words_nr,
-						   ref_words, ref_words_nr, maxwords, refbranch);
+						   ref_words, ref_words_nr, maxwords, refbranch || major == WORD_TYPE_REF);
 
 		pos = aug_get_next_sibling(tree, pos, &major, &minor);
 	}
@@ -664,6 +670,19 @@ augment_match_expression_p(parse_tree_node_t *saidt, int augment_pos,
 								base_words, base_words_nr,
 								ref_words, ref_words_nr))
 					return 1;
+			} else if (cminor == AUGMENT_SENTENCE_MINOR_PARENTHESES) {
+				int gc_major, gc_minor;
+				int gchild = aug_get_first_child(saidt, cpos, &gc_major, &gc_minor);
+
+				while (gchild) {
+					if (augment_match_expression_p(saidt, cpos,
+								       parset, parse_basepos,
+								       major, minor,
+								       base_words, base_words_nr,
+								       ref_words, ref_words_nr))
+						return 1;
+					gchild = aug_get_next_sibling(saidt, gchild, &gc_major, &gc_minor);
+				}
 			} else sciprintf("augment_match_expression_p(): Unknown type 141 minor number %3x\n", cminor);
 
 			cpos = aug_get_next_sibling(saidt, cpos, &cmajor, &cminor);
@@ -685,6 +704,19 @@ augment_match_expression_p(parse_tree_node_t *saidt, int augment_pos,
 							       base_words, base_words_nr,
 							       ref_words, ref_words_nr))
 					return 1;
+			} else if (cminor == AUGMENT_SENTENCE_MINOR_PARENTHESES) {
+				int gc_major, gc_minor;
+				int gchild = aug_get_first_child(saidt, cpos, &gc_major, &gc_minor);
+
+				while (gchild) {
+					if (augment_match_expression_p(saidt, cpos,
+								       parset, parse_basepos,
+								       major, minor,
+								       base_words, base_words_nr,
+								       ref_words, ref_words_nr))
+						return 1;
+					gchild = aug_get_next_sibling(saidt, gchild, &gc_major, &gc_minor);
+				}
 			} else sciprintf("augment_match_expression_p(): Unknown type 144 minor number %3x\n", cminor);
 
 			cpos = aug_get_next_sibling(saidt, cpos, &cmajor, &cminor);

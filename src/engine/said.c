@@ -18,6 +18,7 @@
 #define	YY_BRACKETSO_LT	268
 #define	YY_BRACKETSO_SLASH	269
 #define	YY_LT_BRACKETSO	270
+#define	YY_LT_PARENO	271
 
 #line 28 "said.y"
 
@@ -40,10 +41,11 @@
 
 #define AUGMENT_SENTENCE_PART_BRACKETS 0x152
 
-  /* Minor numbers */
+/* Minor numbers */
 #define AUGMENT_SENTENCE_MINOR_MATCH_PHRASE 0x14c
 #define AUGMENT_SENTENCE_MINOR_MATCH_WORD 0x153
 #define AUGMENT_SENTENCE_MINOR_RECURSE 0x144
+#define AUGMENT_SENTENCE_MINOR_PARENTHESES 0x14f
 
 
 /*#define SCI_DEBUG_PARSE_TREE_AUGMENTATION *//* uncomment to debug parse tree augmentation*/
@@ -55,7 +57,7 @@
 #define scidprintf if (0) sciprintf
 #endif
 
-#define YYDEBUG 1
+#undef YYDEBUG /*1*/
 #undef SAID_DEBUG
 
 static char *said_parse_error;
@@ -122,11 +124,11 @@ yyerror(char *s)
 
 
 
-#define	YYFINAL		58
+#define	YYFINAL		62
 #define	YYFLAG		-32768
-#define	YYNTBASE	17
+#define	YYNTBASE	18
 
-#define YYTRANSLATE(x) ((unsigned)(x) <= 270 ? yytranslate[x] : 29)
+#define YYTRANSLATE(x) ((unsigned)(x) <= 271 ? yytranslate[x] : 30)
 
 static const char yytranslate[] = {     0,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -155,38 +157,40 @@ static const char yytranslate[] = {     0,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     1,     3,     4,     5,     6,
-     7,     8,     9,    10,    11,    12,    13,    14,    15,    16
+     7,     8,     9,    10,    11,    12,    13,    14,    15,    16,
+    17
 };
 
 #if YYDEBUG != 0
 static const short yyprhs[] = {     0,
      0,     3,     7,    12,    13,    15,    16,    18,    21,    26,
     28,    31,    36,    38,    40,    42,    46,    48,    52,    56,
-    62,    65,    67,    69,    71,    75,    80,    84,    87,    92,
-    96
+    62,    65,    67,    69,    71,    75,    80,    84,    89,    92,
+    97,   101
 };
 
-static const short yyrhs[] = {    19,
-    18,     0,    19,    20,    18,     0,    19,    20,    21,    18,
-     0,     0,    13,     0,     0,    25,     0,     6,    25,     0,
-    15,     6,    25,    10,     0,     6,     0,     6,    25,     0,
-    15,     6,    25,    10,     0,     6,     0,     3,     0,    24,
-     0,     9,    24,    10,     0,    22,     0,     7,    25,     8,
-     0,    24,     4,    24,     0,    24,     4,     9,    24,    10,
-     0,    23,    26,     0,    23,     0,    26,     0,    27,     0,
-    14,    27,    10,     0,    27,    14,    27,    10,     0,    12,
-    22,    28,     0,    12,    24,     0,    16,     9,    24,    10,
-     0,    12,    24,    28,     0,    12,    24,     0
+static const short yyrhs[] = {    20,
+    19,     0,    20,    21,    19,     0,    20,    21,    22,    19,
+     0,     0,    13,     0,     0,    26,     0,     6,    26,     0,
+    15,     6,    26,    10,     0,     6,     0,     6,    26,     0,
+    15,     6,    26,    10,     0,     6,     0,     3,     0,    25,
+     0,     9,    25,    10,     0,    23,     0,     7,    26,     8,
+     0,    25,     4,    25,     0,    25,     4,     9,    25,    10,
+     0,    24,    27,     0,    24,     0,    27,     0,    28,     0,
+    14,    28,    10,     0,    28,    14,    28,    10,     0,    12,
+    23,    29,     0,    17,     7,    25,     8,     0,    12,    25,
+     0,    16,     9,    25,    10,     0,    12,    25,    29,     0,
+    12,    25,     0
 };
 
 #endif
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-   136,   138,   140,   145,   147,   153,   155,   161,   163,   165,
-   171,   173,   175,   181,   186,   188,   193,   195,   197,   199,
-   205,   207,   209,   215,   217,   219,   225,   227,   229,   235,
-   237
+   138,   140,   142,   147,   149,   155,   157,   163,   165,   167,
+   173,   175,   177,   183,   188,   190,   195,   197,   199,   201,
+   207,   209,   211,   217,   219,   221,   227,   229,   231,   233,
+   239,   241
 };
 #endif
 
@@ -196,75 +200,77 @@ static const short yyrline[] = { 0,
 static const char * const yytname[] = {   "$","error","$undefined.","WGROUP",
 "YY_COMMA","YY_AMP","YY_SLASH","YY_PARENO","YY_PARENC","YY_BRACKETSO","YY_BRACKETSC",
 "YY_HASH","YY_LT","YY_GT","YY_BRACKETSO_LT","YY_BRACKETSO_SLASH","YY_LT_BRACKETSO",
-"saidspec","optcont","leftspec","midspec","rightspec","word","cwordset","wordset",
-"expr","cwordrefset","wordrefset","recref", NULL
+"YY_LT_PARENO","saidspec","optcont","leftspec","midspec","rightspec","word",
+"cwordset","wordset","expr","cwordrefset","wordrefset","recref", NULL
 };
 #endif
 
 static const short yyr1[] = {     0,
-    17,    17,    17,    18,    18,    19,    19,    20,    20,    20,
-    21,    21,    21,    22,    23,    23,    24,    24,    24,    24,
-    25,    25,    25,    26,    26,    26,    27,    27,    27,    28,
-    28
+    18,    18,    18,    19,    19,    20,    20,    21,    21,    21,
+    22,    22,    22,    23,    24,    24,    25,    25,    25,    25,
+    26,    26,    26,    27,    27,    27,    28,    28,    28,    28,
+    29,    29
 };
 
 static const short yyr2[] = {     0,
      2,     3,     4,     0,     1,     0,     1,     2,     4,     1,
      2,     4,     1,     1,     1,     3,     1,     3,     3,     5,
-     2,     1,     1,     1,     3,     4,     3,     2,     4,     3,
-     2
+     2,     1,     1,     1,     3,     4,     3,     4,     2,     4,
+     3,     2
 };
 
 static const short yydefact[] = {     6,
-    14,     0,     0,     0,     0,     0,     4,    17,    22,    15,
-     7,    23,    24,     0,     0,    17,    28,     0,     0,    10,
-     5,     0,     1,     4,    21,     0,     0,    18,    16,     0,
-    27,    25,     0,     8,     0,    13,     0,     2,     4,     0,
-    19,     0,    31,    29,     0,    11,     0,     3,     0,    26,
-    30,     9,     0,    20,    12,     0,     0,     0
+    14,     0,     0,     0,     0,     0,     0,     4,    17,    22,
+    15,     7,    23,    24,     0,     0,    17,    29,     0,     0,
+     0,    10,     5,     0,     1,     4,    21,     0,     0,    18,
+    16,     0,    27,    25,     0,     0,     8,     0,    13,     0,
+     2,     4,     0,    19,     0,    32,    30,    28,     0,    11,
+     0,     3,     0,    26,    31,     9,     0,    20,    12,     0,
+     0,     0
 };
 
-static const short yydefgoto[] = {    56,
-    23,     7,    24,    39,     8,     9,    10,    11,    12,    13,
-    31
+static const short yydefgoto[] = {    60,
+    25,     8,    26,    42,     9,    10,    11,    12,    13,    14,
+    33
 };
 
-static const short yypact[] = {    13,
--32768,    13,     6,     6,    34,     2,    -1,-32768,    -6,    17,
--32768,-32768,    10,    23,    37,    27,    17,    41,     6,    13,
--32768,    46,-32768,    22,-32768,    29,    34,-32768,-32768,     6,
--32768,-32768,    38,-32768,    13,    13,    47,-32768,    31,     6,
-    17,    44,     3,-32768,    45,-32768,    13,-32768,    39,-32768,
--32768,-32768,    48,-32768,-32768,    56,    57,-32768
+static const short yypact[] = {     0,
+-32768,     0,    49,    49,    34,     4,     8,    13,-32768,    -6,
+    20,-32768,-32768,    29,    45,    35,    19,    20,    47,    49,
+    49,     0,-32768,    53,-32768,    17,-32768,    31,    34,-32768,
+-32768,    49,-32768,-32768,    37,    50,-32768,     0,     0,    54,
+-32768,    42,    49,    20,    51,    23,-32768,-32768,    52,-32768,
+     0,-32768,    38,-32768,-32768,-32768,    55,-32768,-32768,    63,
+    64,-32768
 };
 
 static const short yypgoto[] = {-32768,
-   -22,-32768,-32768,-32768,    55,-32768,     0,    -2,    51,    -4,
-    18
+   -24,-32768,-32768,-32768,    62,-32768,     1,    -2,    57,    -4,
+    22
 };
 
 
-#define	YYLAST		61
+#define	YYLAST		68
 
 
-static const short yytable[] = {    14,
-    18,    38,    15,    17,    20,     4,    26,     5,     1,     6,
-    19,    21,     2,    22,    30,     1,    48,    34,    33,     2,
-    26,     3,    42,    27,     4,    41,     5,    36,     6,    43,
-    28,     1,    45,    46,    21,     2,    37,    40,    30,    49,
-    26,    26,    26,    21,    53,     4,    29,    44,    54,     6,
-    32,    35,    47,    50,    52,    57,    58,    55,    16,    25,
-    51
+static const short yytable[] = {    15,
+    19,    41,     1,    16,    18,     4,     2,     5,     3,     6,
+     7,     4,    20,     5,    21,     6,     7,    52,    22,    37,
+    35,    36,    39,    28,    45,    23,    28,    24,    44,    23,
+    32,    40,    46,     1,    32,    49,    50,     2,    28,    43,
+    28,    28,    29,    53,    31,     4,    47,    58,    57,     6,
+     7,     1,    30,    28,    23,     2,    34,    48,    38,    51,
+    54,    56,    61,    62,    59,    17,    27,    55
 };
 
 static const short yycheck[] = {     2,
-     5,    24,     3,     4,     6,    12,     4,    14,     3,    16,
-     9,    13,     7,    15,    12,     3,    39,    20,    19,     7,
-     4,     9,    27,    14,    12,    26,    14,     6,    16,    30,
-     8,     3,    35,    36,    13,     7,    15,     9,    12,    40,
-     4,     4,     4,    13,    47,    12,    10,    10,    10,    16,
-    10,     6,     6,    10,    10,     0,     0,    10,     4,     9,
-    43
+     5,    26,     3,     3,     4,    12,     7,    14,     9,    16,
+    17,    12,     9,    14,     7,    16,    17,    42,     6,    22,
+    20,    21,     6,     4,    29,    13,     4,    15,    28,    13,
+    12,    15,    32,     3,    12,    38,    39,     7,     4,     9,
+     4,     4,    14,    43,    10,    12,    10,    10,    51,    16,
+    17,     3,     8,     4,    13,     7,    10,     8,     6,     6,
+    10,    10,     0,     0,    10,     4,    10,    46
 };
 /* -*-C-*-  Note some compilers choke on comments on `#line' lines.  */
 #line 3 "/usr/share/bison/bison.simple"
@@ -810,127 +816,131 @@ yyreduce:
   switch (yyn) {
 
 case 1:
-#line 137 "said.y"
+#line 139 "said.y"
 { yyval = said_top_branch(said_attach_branch(yyvsp[-1], yyvsp[0])) ;
     break;}
 case 2:
-#line 139 "said.y"
+#line 141 "said.y"
 { yyval = said_top_branch(said_attach_branch(yyvsp[-2], said_attach_branch(yyvsp[-1], yyvsp[0]))) ;
     break;}
 case 3:
-#line 141 "said.y"
+#line 143 "said.y"
 { yyval = said_top_branch(said_attach_branch(yyvsp[-3], said_attach_branch(yyvsp[-2], said_attach_branch(yyvsp[-1], yyvsp[0])))) ;
     break;}
 case 4:
-#line 146 "said.y"
+#line 148 "said.y"
 { yyval = SAID_BRANCH_NULL ;
     break;}
 case 5:
-#line 148 "said.y"
+#line 150 "said.y"
 { yyval = said_paren(said_value(0x14b, said_value(0xf900, said_terminal(0xf900))), SAID_BRANCH_NULL) ;
     break;}
 case 6:
-#line 154 "said.y"
+#line 156 "said.y"
 { yyval = SAID_BRANCH_NULL ;
     break;}
 case 7:
-#line 156 "said.y"
+#line 158 "said.y"
 { yyval = said_paren(said_value(0x141, said_value(0x149, yyvsp[0])), SAID_BRANCH_NULL) ;
     break;}
 case 8:
-#line 162 "said.y"
+#line 164 "said.y"
 { yyval = said_aug_branch(0x142, 0x14a, yyvsp[0], SAID_BRANCH_NULL) ;
     break;}
 case 9:
-#line 164 "said.y"
+#line 166 "said.y"
 { yyval = said_aug_branch(0x152, 0x142, said_aug_branch(0x142, 0x14a, yyvsp[-1], SAID_BRANCH_NULL), SAID_BRANCH_NULL) ;
     break;}
 case 10:
-#line 166 "said.y"
+#line 168 "said.y"
 { yyval = SAID_BRANCH_NULL ;
     break;}
 case 11:
-#line 172 "said.y"
+#line 174 "said.y"
 { yyval = said_aug_branch(0x143, 0x14a, yyvsp[0], SAID_BRANCH_NULL) ;
     break;}
 case 12:
-#line 174 "said.y"
+#line 176 "said.y"
 { yyval = said_aug_branch(0x152, 0x143, said_aug_branch(0x143, 0x14a, yyvsp[-1], SAID_BRANCH_NULL), SAID_BRANCH_NULL) ;
     break;}
 case 13:
-#line 176 "said.y"
+#line 178 "said.y"
 { yyval = SAID_BRANCH_NULL ;
     break;}
 case 14:
-#line 182 "said.y"
+#line 184 "said.y"
 { yyval = said_paren(said_value(0x141, said_value(0x153, said_terminal(yyvsp[0]))), SAID_BRANCH_NULL) ;
     break;}
 case 15:
-#line 187 "said.y"
+#line 189 "said.y"
 { yyval = said_aug_branch(0x141, 0x14f, yyvsp[0], SAID_BRANCH_NULL) ;
     break;}
 case 16:
-#line 189 "said.y"
+#line 191 "said.y"
 { yyval = said_aug_branch(0x141, 0x14f, said_aug_branch(0x152, 0x14c, said_aug_branch(0x141, 0x14f, yyvsp[-1], SAID_BRANCH_NULL), SAID_BRANCH_NULL), SAID_BRANCH_NULL) ;
     break;}
 case 17:
-#line 194 "said.y"
+#line 196 "said.y"
 { yyval = yyvsp[0] ;
     break;}
 case 18:
-#line 196 "said.y"
+#line 198 "said.y"
 { yyval = said_aug_branch(0x141, 0x14c, yyvsp[-1], SAID_BRANCH_NULL) ;
     break;}
 case 19:
-#line 198 "said.y"
+#line 200 "said.y"
 { yyval = said_attach_branch(yyvsp[-2], yyvsp[0]) ;
     break;}
 case 20:
-#line 200 "said.y"
+#line 202 "said.y"
 { yyval = said_attach_branch(yyvsp[-4], yyvsp[-2]) ;
     break;}
 case 21:
-#line 206 "said.y"
+#line 208 "said.y"
 { yyval = said_attach_branch(yyvsp[-1], yyvsp[0]) ;
     break;}
 case 22:
-#line 208 "said.y"
-{ yyval = yyvsp[0] ;
-    break;}
-case 23:
 #line 210 "said.y"
 { yyval = yyvsp[0] ;
     break;}
+case 23:
+#line 212 "said.y"
+{ yyval = yyvsp[0] ;
+    break;}
 case 24:
-#line 216 "said.y"
+#line 218 "said.y"
 { yyval = yyvsp[0] ;
     break;}
 case 25:
-#line 218 "said.y"
+#line 220 "said.y"
 { yyval = said_aug_branch(0x152, 0x144, yyvsp[-1], SAID_BRANCH_NULL) ;
     break;}
 case 26:
-#line 220 "said.y"
+#line 222 "said.y"
 { yyval = said_attach_branch(yyvsp[-3], said_aug_branch(0x152, 0x144, yyvsp[-1], SAID_BRANCH_NULL)) ;
     break;}
 case 27:
-#line 226 "said.y"
+#line 228 "said.y"
 { yyval = said_aug_branch(0x144, 0x14f, yyvsp[-1], yyvsp[0]) ;
     break;}
 case 28:
-#line 228 "said.y"
-{ yyval = said_aug_branch(0x144, 0x14f, yyvsp[0], SAID_BRANCH_NULL) ;
+#line 230 "said.y"
+{ yyval = said_aug_branch(0x144, 0x14c, yyvsp[-1], SAID_BRANCH_NULL) ;
     break;}
 case 29:
-#line 230 "said.y"
-{ yyval = said_aug_branch(0x152, 0x144, said_aug_branch(0x144, 0x14f, yyvsp[-1], SAID_BRANCH_NULL), SAID_BRANCH_NULL) ;
+#line 232 "said.y"
+{ yyval = said_aug_branch(0x144, 0x14f, yyvsp[0], SAID_BRANCH_NULL) ;
     break;}
 case 30:
-#line 236 "said.y"
-{ yyval = said_aug_branch(0x141, 0x144, said_aug_branch(0x144, 0x14f, yyvsp[-1], SAID_BRANCH_NULL), yyvsp[0]) ;
+#line 234 "said.y"
+{ yyval = said_aug_branch(0x152, 0x144, said_aug_branch(0x144, 0x14f, yyvsp[-1], SAID_BRANCH_NULL), SAID_BRANCH_NULL) ;
     break;}
 case 31:
-#line 238 "said.y"
+#line 240 "said.y"
+{ yyval = said_aug_branch(0x141, 0x144, said_aug_branch(0x144, 0x14f, yyvsp[-1], SAID_BRANCH_NULL), yyvsp[0]) ;
+    break;}
+case 32:
+#line 242 "said.y"
 { yyval = said_aug_branch(0x141, 0x144, said_aug_branch(0x144, 0x14f, yyvsp[0], SAID_BRANCH_NULL), SAID_BRANCH_NULL) ;
     break;}
 }
@@ -1155,7 +1165,7 @@ yyerrhandle:
     }
   return 1;
 }
-#line 243 "said.y"
+#line 247 "said.y"
 
 
 
@@ -1187,6 +1197,8 @@ yylex(void)
 						retval = YY_BRACKETSO_SLASH;
 			} else if (retval == YY_LT && (said_tokens[said_token] >> 8) == SAID_BRACKO) {
 				retval = YY_LT_BRACKETSO;
+			} else if (retval == YY_LT && (said_tokens[said_token] >> 8) == SAID_PARENO) {
+				retval = YY_LT_PARENO;
 			}
 		}
 	}
@@ -1466,13 +1478,13 @@ aug_find_words_recursively(parse_tree_node_t *tree, int startpos,
 	int word;
 	int pos = aug_get_first_child(tree, startpos, &major, &minor);
 
-	if (major == WORD_TYPE_REF)
-		refbranch = 1;
+	/*	if (major == WORD_TYPE_REF)
+		refbranch = 1;*/
 
 	while (pos) {
 		if ((word = aug_get_wgroup(tree, pos))) { /* found a word */
-
-			if (major == WORD_TYPE_BASE) {	
+			sciprintf("Found word %03x in (%03x %03x\n", word, major, minor);
+			if (!refbranch && major == WORD_TYPE_BASE) {	
 				if ((*base_words_nr) == maxwords) {
 					sciprintf("Out of regular words\n");
 					return; /* return gracefully */
@@ -1482,7 +1494,7 @@ aug_find_words_recursively(parse_tree_node_t *tree, int startpos,
 				++(*base_words_nr);
 
 			}
-			if (major == WORD_TYPE_REF/*refbranch*/) {
+			if (major == WORD_TYPE_REF || refbranch) {
 				if ((*ref_words_nr) == maxwords) {
 					sciprintf("Out of reference words\n");
 					return; /* return gracefully */
@@ -1497,7 +1509,7 @@ aug_find_words_recursively(parse_tree_node_t *tree, int startpos,
     
 		} else /* Did NOT find a word group: Attempt to recurse */
 			aug_find_words_recursively(tree, pos, base_words, base_words_nr,
-						   ref_words, ref_words_nr, maxwords, refbranch);
+						   ref_words, ref_words_nr, maxwords, refbranch || major == WORD_TYPE_REF);
 
 		pos = aug_get_next_sibling(tree, pos, &major, &minor);
 	}
@@ -1580,6 +1592,19 @@ augment_match_expression_p(parse_tree_node_t *saidt, int augment_pos,
 								base_words, base_words_nr,
 								ref_words, ref_words_nr))
 					return 1;
+			} else if (cminor == AUGMENT_SENTENCE_MINOR_PARENTHESES) {
+				int gc_major, gc_minor;
+				int gchild = aug_get_first_child(saidt, cpos, &gc_major, &gc_minor);
+
+				while (gchild) {
+					if (augment_match_expression_p(saidt, cpos,
+								       parset, parse_basepos,
+								       major, minor,
+								       base_words, base_words_nr,
+								       ref_words, ref_words_nr))
+						return 1;
+					gchild = aug_get_next_sibling(saidt, gchild, &gc_major, &gc_minor);
+				}
 			} else sciprintf("augment_match_expression_p(): Unknown type 141 minor number %3x\n", cminor);
 
 			cpos = aug_get_next_sibling(saidt, cpos, &cmajor, &cminor);
@@ -1601,6 +1626,19 @@ augment_match_expression_p(parse_tree_node_t *saidt, int augment_pos,
 							       base_words, base_words_nr,
 							       ref_words, ref_words_nr))
 					return 1;
+			} else if (cminor == AUGMENT_SENTENCE_MINOR_PARENTHESES) {
+				int gc_major, gc_minor;
+				int gchild = aug_get_first_child(saidt, cpos, &gc_major, &gc_minor);
+
+				while (gchild) {
+					if (augment_match_expression_p(saidt, cpos,
+								       parset, parse_basepos,
+								       major, minor,
+								       base_words, base_words_nr,
+								       ref_words, ref_words_nr))
+						return 1;
+					gchild = aug_get_next_sibling(saidt, gchild, &gc_major, &gc_minor);
+				}
 			} else sciprintf("augment_match_expression_p(): Unknown type 144 minor number %3x\n", cminor);
 
 			cpos = aug_get_next_sibling(saidt, cpos, &cmajor, &cminor);

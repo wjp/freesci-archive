@@ -132,7 +132,7 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
     vocab_decypher_said_block(s, said_block);
   }
 
-  if ((!s->parser_event) || (GET_SELECTOR(s->parser_event, claimed))) {
+  if (!(s->parser_event) || (GET_SELECTOR(s->parser_event, claimed))) {
     s->acc = 0;
     return;
   }
@@ -158,6 +158,7 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
 #else /* !SCI_SIMPLE_SAID_CODE */
+
   if ((new_lastmatch = said(s, s->heap + said_block, (s->debug_mode & (1 << SCIkPARSER_NR))))
       != SAID_NO_MATCH) { /* Build and possibly display a parse tree */
 
@@ -166,8 +167,10 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     s->acc = 1;
 
-    if (new_lastmatch != SAID_PARTIAL_MATCH)
+    if (new_lastmatch != SAID_PARTIAL_MATCH) {
       PUT_SELECTOR(s->parser_event, claimed, 1);
+      s->parser_event = 0;
+    }
 
     s->parser_lastmatch_word = new_lastmatch;
 
@@ -300,6 +303,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     } else {
       s->parser_valid = 1;
+      PUT_SELECTOR(event, claimed, 0);
 #ifndef SCI_SIMPLE_SAID_CODE
       if (s->debug_mode & (1 << SCIkPARSER_NR))
 	vocab_dump_parse_tree("Parse-tree", s->parser_nodes);
