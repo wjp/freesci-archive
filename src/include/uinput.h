@@ -62,6 +62,7 @@ typedef struct {
 /* Keycodes of special keys: */
 #define SCI_K_ESC 1
 #define SCI_K_BACKSPACE 8
+#define SCI_K_ENTER 13
 #define SCI_K_END 79
 #define SCI_K_DOWN 80
 #define SCI_K_PGDOWN 81

@@ -37,15 +37,16 @@ int _debug_commands_not_hooked = 1; /* Commands not hooked to the console yet? *
 int _debug_seeking = 0; /* Stepping forward until some special condition is met */
 int _debug_seek_level = 0; /* Used for seekers that want to check their exec stack depth */
 int _debug_seek_special = 0; /* Used for special seeks */
+int _debug_flags = 0; /* Special flags */
 
 #define _DEBUG_SEEK_NOTHING 0
 #define _DEBUG_SEEK_CALLK 1 /* Step forward until callk is found */
 #define _DEBUG_SEEK_LEVEL_RET 2 /* Step forward until returned from this level */
 #define _DEBUG_SEEK_SPECIAL_CALLK 3 /* Step forward until a /special/ callk is found */
-#define _DEBUG_SEEK_LOGGING 4 /* Seek nothing special, but display code while executing */
 #define _DEBUG_SEEK_SO 5 /* Step forward until specified PC (after the send command) and stack depth */
 
-state_t *_s;
+#define _DEBUG_FLAG_LOGGING 1 /* Log each command executed */
+
 heap_ptr *_pc;
 heap_ptr *_sp;
 heap_ptr *_pp;
@@ -75,18 +76,18 @@ char *(*_debug_get_input)(void) = _debug_get_input_default;
 
 
 int
-c_debuginfo(void)
+c_debuginfo(state_t *s)
 {
-  sciprintf("pc=%04x acc=%04x o=%04x fp=%04x sp=%04x\n", *_pc & 0xffff, _s->acc & 0xffff,
+  sciprintf("pc=%04x acc=%04x o=%04x fp=%04x sp=%04x\n", *_pc & 0xffff, s->acc & 0xffff,
 	    *_objp & 0xffff, *_pp & 0xffff, *_sp & 0xffff);
   sciprintf("prev=%x sbase=%04x globls=%04x &restmod=%x\n",
-	    _s->prev & 0xffff, _s->stack_base & 0xffff, _s->global_vars & 0xffff,
+	    s->prev & 0xffff, s->stack_base & 0xffff, s->global_vars & 0xffff,
 	    *_restadjust & 0xffff);
   return 0;
 }
 
 int
-c_step(void)
+c_step(state_t *s)
 {
   _debugstate_valid = 0;
   if (cmd_paramlength && (cmd_params[0].val > 0))
@@ -96,7 +97,7 @@ c_step(void)
 
 
 int 
-c_stepover(void)
+c_stepover(state_t *s)
 {
   int opcode, opnumber;
   
@@ -106,7 +107,7 @@ c_stepover(void)
   }
 
   _debugstate_valid = 0;
-  opcode = _s->heap [*_pc];
+  opcode = s->heap [*_pc];
   opnumber = opcode >> 1;
   if (opnumber == 0x22 /* callb */ || opnumber == 0x23 /* calle */ || 
       opnumber == 0x25 /* send */ || opnumber == 0x2a /* self */ || 
@@ -140,7 +141,7 @@ c_stepover(void)
 }
 
 int
-c_heapdump(void)
+c_heapdump(state_t *s)
 {
   if (!_debugstate_valid) {
     sciprintf("Not in debug state\n");
@@ -161,13 +162,13 @@ c_heapdump(void)
     cmd_params[1].val = 0xffff - cmd_params[0].val;
   }
 
-  sci_hexdump(_s->heap + cmd_params[0].val, cmd_params[1].val, cmd_params[0].val);
+  sci_hexdump(s->heap + cmd_params[0].val, cmd_params[1].val, cmd_params[0].val);
   return 0;
 }
 
 
 int
-c_classtable(void)
+c_classtable(state_t *s)
 {
   int i;
   heap_ptr spos; /* scriptpos */
@@ -178,46 +179,46 @@ c_classtable(void)
   }
 
   sciprintf("Available classes:\n");
-  for (i = 0; i < _s->classtable_size; i++)
-    if (_s->classtable[i].scriptposp && (spos = *(_s->classtable[i].scriptposp)))
-      sciprintf(" Class 0x%x at %04x (script 0x%x)\n", i, spos + _s->classtable[i].class_offset,
-		_s->classtable[i].script);
+  for (i = 0; i < s->classtable_size; i++)
+    if (s->classtable[i].scriptposp && (spos = *(s->classtable[i].scriptposp)))
+      sciprintf(" Class 0x%x at %04x (script 0x%x)\n", i, spos + s->classtable[i].class_offset,
+		s->classtable[i].script);
 
   return 0;
 }
 
 int
-c_stack(void)
+c_stack(state_t *s)
 {
   int i;
 
-  if (!_debugstate_valid) {
+  if (!s) {
     sciprintf("Not in debug state\n");
     return 1;
   }
 
   for (i = cmd_params[0].val ; i > 0; i--)
-    sciprintf("[sp-%04x] = %04x\n", i * 2, 0xffff & getInt16(_s->heap + *_sp - i*2));
+    sciprintf("[sp-%04x] = %04x\n", i * 2, 0xffff & getInt16(s->heap + *_sp - i*2));
 
   return 0;
 }
 
 int
-c_scriptinfo(void)
+c_scriptinfo(state_t *s)
 {
   int i;
 
-  if (!_debugstate_valid) {
+  if (!s) {
     sciprintf("Not in debug state\n");
     return 1;
   }
 
   sciprintf("Available scripts:\n");
   for (i = 0; i < 1000; i++)
-    if (_s->scripttable[i].heappos)
+    if (s->scripttable[i].heappos)
       sciprintf("%03x at %04x, locals at %04x\n   exports at %04x, %d lockers\n",
-		i, _s->scripttable[i].heappos, _s->scripttable[i].localvar_offset,
-		_s->scripttable[i].export_table_offset, _s->scripttable[i].lockers);
+		i, s->scripttable[i].heappos, s->scripttable[i].localvar_offset,
+		s->scripttable[i].export_table_offset, s->scripttable[i].lockers);
 
   return 0;
 }
@@ -375,7 +376,7 @@ disassemble(state_t *s, heap_ptr pos)
 
 
 int
-c_backtrace(void)
+c_backtrace(state_t *s)
 {
   int i;
 
@@ -391,12 +392,12 @@ c_backtrace(void)
     int paramc, totalparamc;
 
     if (call->selector >= -1) {/* Normal function */
-      namepos = getInt16(_s->heap + *(call->sendpp) + SCRIPT_NAME_OFFSET);
-      sciprintf(" %x:  %s::%s(", i, _s->heap + namepos, (call->selector == -1)? "<call[be]?>":
-		_s->selector_names[call->selector]);
+      namepos = getInt16(s->heap + *(call->sendpp) + SCRIPT_NAME_OFFSET);
+      sciprintf(" %x:  %s::%s(", i, s->heap + namepos, (call->selector == -1)? "<call[be]?>":
+		s->selector_names[call->selector]);
     }
     else /* Kernel function */
-      sciprintf(" %x:  k%s(", i, _s->kernel_names[-(call->selector)-42]);
+      sciprintf(" %x:  k%s(", i, s->kernel_names[-(call->selector)-42]);
 
     totalparamc = *(call->argcp);
 
@@ -404,7 +405,7 @@ c_backtrace(void)
       totalparamc = 16;
 
     for (paramc = 1; paramc <= totalparamc; paramc++) {
-      sciprintf("%04x", getUInt16(_s->heap + *(call->argpp) + paramc * 2));
+      sciprintf("%04x", getUInt16(s->heap + *(call->argpp) + paramc * 2));
 
       if (paramc < *(call->argcp))
 	sciprintf(", ");
@@ -423,43 +424,43 @@ c_backtrace(void)
 }
 
 int
-c_refresh_screen(void)
+c_refresh_screen(state_t *s)
+{
+  if (!s) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_ALL,0,0,0,0);
+  return 0;
+}
+
+int
+c_redraw_screen(state_t *s)
 {
   if (!_debugstate_valid) {
     sciprintf("Not in debug state\n");
     return 1;
   }
 
-  (*_s->gfx_driver->Redraw)(_s, GRAPHICS_CALLBACK_REDRAW_ALL,0,0,0,0);
+  graph_update_box(s, 0, 0, 320, 200);
   return 0;
 }
 
 int
-c_redraw_screen(void)
+c_visible_map(state_t *s)
 {
-  if (!_debugstate_valid) {
+  if (!s) {
     sciprintf("Not in debug state\n");
     return 1;
   }
 
-  graph_update_box(_s, 0, 0, 320, 200);
+  s->pic_visible_map = cmd_params[0].val;
   return 0;
 }
 
 int
-c_visible_map(void)
-{
-  if (!_debugstate_valid) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
-
-  _s->pic_visible_map = cmd_params[0].val;
-  return 0;
-}
-
-int
-c_disasm(void)
+c_disasm(state_t *s)
 {
   int vpc = cmd_params[0].val;
   int op_count;
@@ -482,14 +483,14 @@ c_disasm(void)
     op_count = 1;
 
   do {
-    vpc = disassemble(_s, vpc);
+    vpc = disassemble(s, vpc);
   } while ((vpc > 0) && (vpc < 0xfff2) && (cmd_paramlength > 1) && (--op_count));
   return 0;
 }
 
 
 int
-c_snk(void)
+c_snk(state_t *s)
 {
   int callk_index;
   char *endptr;
@@ -509,8 +510,8 @@ c_snk(void)
       int i;
       
       callk_index = -1;
-      for (i = 0; i < _s->kernel_names_nr; i++)
-        if (!strcmp (cmd_params [0].str, _s->kernel_names [i]))
+      for (i = 0; i < s->kernel_names_nr; i++)
+        if (!strcmp (cmd_params [0].str, s->kernel_names [i]))
         {
           callk_index = i;
           break;
@@ -533,25 +534,9 @@ c_snk(void)
   return 0;
 }
 
-int
-c_slog(void)
-{
-  if (!_debugstate_valid) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
-
-  if (cmd_paramlength && (cmd_params[0].val > 0))
-    _debug_step_running = cmd_params[0].val;
-  else _debug_step_running = -1;
-
-  _debug_seeking = _DEBUG_SEEK_LOGGING;
-  _debugstate_valid = 0;
-  return 0;
-}
 
 int
-c_sret(void)
+c_sret(state_t *s)
 {
   _debug_seeking = _DEBUG_SEEK_LEVEL_RET;
   _debug_seek_level = script_exec_stackpos;
@@ -560,7 +545,7 @@ c_sret(void)
 }
 
 int
-c_go(void)
+c_go(state_t *s)
 {
   _debug_seeking = 0;
   _debugstate_valid = 0;
@@ -570,19 +555,19 @@ c_go(void)
 
 
 int
-c_set_acc(void)
+c_set_acc(state_t *s)
 {
   if (!_debugstate_valid) {
     sciprintf("Not in debug state\n");
     return 1;
   }
 
-  _s->acc = cmd_params[0].val;
+  s->acc = cmd_params[0].val;
   return 0;
 }
 
 int
-c_resource_id(void)
+c_resource_id(state_t *s)
 {
   int id = cmd_params[0].val;
 
@@ -591,25 +576,25 @@ c_resource_id(void)
 }
 
 int
-c_heap_free(void)
+c_heap_free(state_t *s)
 {
   if (!_debugstate_valid) {
     sciprintf("Not in debug state\n");
     return 1;
   }
 
-  heap_dump_free(_s->_heap);
+  heap_dump_free(s->_heap);
   return 0;
 }
 
 int
-c_listclones(void)
+c_listclones(state_t *s)
 {
   int i, j = 0;
   sciprintf("Listing all logged clones:\n");
   for (i = 0; i < SCRIPT_MAX_CLONES; i++)
-    if (_s->clone_list[i]) {
-      sciprintf("  Clone at %04x\n", _s->clone_list[i]);
+    if (s->clone_list[i]) {
+      sciprintf("  Clone at %04x\n", s->clone_list[i]);
       j++;
     }
 
@@ -657,7 +642,7 @@ set_debug_mode (struct _state *s, int mode, char *areas)
 }
 
 int
-c_debuglog(void)
+c_debuglog(state_t *s)
 {
   int i;
   char *parser;
@@ -669,7 +654,7 @@ c_debuglog(void)
 
   if (cmd_paramlength == 0) {
     for (i = 0; i < SCIk_DEBUG_MODES; i++)
-      if (_s->debug_mode & (1 << i))
+      if (s->debug_mode & (1 << i))
 	sciprintf(" Logging %s\n", SCIk_Debug_Names[i]);
 
     return 0;
@@ -688,7 +673,7 @@ c_debuglog(void)
 	return 1;
       }
 
-    set_debug_mode(_s, mode, cmd_params [i].str + 1);
+    set_debug_mode(s, mode, cmd_params [i].str + 1);
   }
 
   return 0;
@@ -696,25 +681,25 @@ c_debuglog(void)
 
 
 int
-show_list(heap_ptr list)
+show_list(state_t *s, heap_ptr list)
 {
   heap_ptr prevnode = 0, node;
   int nodectr = 0;
 
   sciprintf("List at %04x:\n", list);
-  node = getInt16(_s->heap + list );
+  node = getInt16(s->heap + list );
 
   while (node) {
     nodectr++;
     sciprintf(" - Node at %04x: Key=%04x Val=%04x\n",node,
-	      getUInt16(_s->heap + node + 4),getUInt16(_s->heap + node + 6));
+	      getUInt16(s->heap + node + 4),getUInt16(s->heap + node + 6));
     prevnode = node;
-    node = getUInt16(_s->heap + node + 2); /* Next node */
+    node = getUInt16(s->heap + node + 2); /* Next node */
   }
 
-  if (prevnode != getUInt16(_s->heap + list + 2)) /* Lastnode != registered lastnode? */
+  if (prevnode != getUInt16(s->heap + list + 2)) /* Lastnode != registered lastnode? */
     sciprintf("WARNING: List.LastNode %04x != last node %04x\n",
-	      getUInt16(_s->heap + list + 2), prevnode);
+	      getUInt16(s->heap + list + 2), prevnode);
 
   if (nodectr)
     sciprintf("%d registered nodes.\n", nodectr);
@@ -725,34 +710,34 @@ show_list(heap_ptr list)
 
 
 int
-c_show_list(void)
+c_show_list(state_t *s)
 {
   heap_ptr list = cmd_params[0].val;
 
-  if (!_debugstate_valid) {
+  if (!s) {
     sciprintf("Not in debug state\n");
     return 1;
   }
 
-  if (getInt16(_s->heap + list - 2) != 6) { /* List is hmalloc()'d to size 6 */
+  if (getInt16(s->heap + list - 2) != 6) { /* List is hmalloc()'d to size 6 */
     sciprintf("No list at %04x.\n", list);
     return 1;
   }
 
   return 
-    show_list(list);
+    show_list(s, list);
 }
 
 
 int
-c_simkey(void)
+c_simkey(state_t *s)
 {
   _kdebug_cheap_event_hack = cmd_params[0].val;
   return 0;
 }
 
 int
-c_simsoundcue(void)
+c_simsoundcue(state_t *s)
 {
   _kdebug_cheap_soundcue_hack = cmd_params[0].val;
   return 0;
@@ -850,30 +835,30 @@ objinfo(state_t *s, heap_ptr pos)
 }
 
 int
-c_heapobj(void)
+c_heapobj(state_t *s)
 {
   return
-    objinfo(_s, cmd_params[0].val);
+    objinfo(s, cmd_params[0].val);
 }
 
 int
-c_obj(void)
+c_obj(state_t *s)
 {
   return
-    objinfo(_s, *_objp);
+    objinfo(s, *_objp);
 }
 
 int
-c_accobj(void)
+c_accobj(state_t *s)
 {
   return
-    objinfo(_s, _s->acc);
+    objinfo(s, s->acc);
 }
 
 /*** Breakpoint commands ***/
 
 int
-c_bpx(void)
+c_bpx(state_t *s)
 {
   breakpoint_t *bp;
 
@@ -881,35 +866,35 @@ c_bpx(void)
      Thus, we can't check whether the command argument is a valid method name.
      A breakpoint set on an invalid method name will just never trigger. */
 
-  if (_s->bp_list)
+  if (s->bp_list)
   {
-    bp = _s->bp_list;
+    bp = s->bp_list;
     while (bp->next)
       bp = bp->next;
     bp->next = (breakpoint_t *) malloc (sizeof (breakpoint_t));
     bp = bp->next;
   }
   else {
-    _s->bp_list = (breakpoint_t *) malloc (sizeof (breakpoint_t));
-    bp = _s->bp_list;
+    s->bp_list = (breakpoint_t *) malloc (sizeof (breakpoint_t));
+    bp = s->bp_list;
   }
 
   bp->type = BREAK_EXECUTE;
   bp->data = malloc (strlen (cmd_params [0].str)+1);
   strcpy ((char *) bp->data, cmd_params [0].str);
   bp->next = NULL;
-  _s->have_bp |= BREAK_EXECUTE;
+  s->have_bp |= BREAK_EXECUTE;
 
   return 0;
 }
 
 int
-c_bplist(void)
+c_bplist(state_t *s)
 {
   breakpoint_t *bp;
   int i = 0;
 
-  bp = _s->bp_list;
+  bp = s->bp_list;
   while (bp)
   {
     sciprintf ("  #%i: ", i);
@@ -927,7 +912,7 @@ c_bplist(void)
   return 0;
 }
 
-int c_bpdel(void)
+int c_bpdel(state_t *s)
 {
   breakpoint_t *bp, *bp_next, *bp_prev;
   int i = 0, found = 0;
@@ -935,7 +920,7 @@ int c_bpdel(void)
 
   /* Find breakpoint with given index */
   bp_prev = NULL;
-  bp = _s->bp_list;
+  bp = s->bp_list;
   while (bp && i < cmd_params [0].val)
   {
     bp_prev = bp;
@@ -956,45 +941,38 @@ int c_bpdel(void)
   if (bp_prev)
     bp_prev->next = bp_next;
   else
-    _s->bp_list = bp_next;
+    s->bp_list = bp_next;
 
   /* Check if there are more breakpoints of the same type. If not, clear
-     the respective bit in _s->have_bp. */
-  for (bp = _s->bp_list; bp; bp=bp->next)
+     the respective bit in s->have_bp. */
+  for (bp = s->bp_list; bp; bp=bp->next)
     if (bp->type == type)
     {
       found = 1;
       break;
     }
 
-  if (!found) _s->have_bp &= ~type;
+  if (!found) s->have_bp &= ~type;
 
   return 0;
 }
 
 void
-script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp, int *restadjust, int bp)
+script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp,
+	     int *restadjust, int bp)
 {
+
+  if (_debug_flags & _DEBUG_FLAG_LOGGING) {
+    sciprintf("acc=%04x  ", s->acc & 0xffff);
+    _debugstate_valid = 1;
+    disassemble(s, *pc);
+  }
 
   if (_debug_seeking && !bp) { /* Are we looking for something special? */
     int op = s->heap[*pc] >> 1;
     int paramb1 = s->heap[*pc + 1]; /* Careful with that ! */
 
     switch (_debug_seeking) {
-
-    case _DEBUG_SEEK_LOGGING:
-      sciprintf("acc=%04x  ", _s->acc & 0xffff);
-      _debugstate_valid = 1;
-      disassemble(s, *pc);
-
-      if (_debug_step_running > 0)
-	_debug_step_running--;
-
-      if (_debug_step_running) {
-	_debugstate_valid = 0;
-	return;
-      }
-      break;
 
     case _DEBUG_SEEK_SPECIAL_CALLK:
       if (paramb1 != _debug_seek_special)
@@ -1024,14 +1002,13 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
   _debugstate_valid = (_debug_step_running == 0);
 
   if (_debugstate_valid) {
-    _s = s;
     _pc = pc;
     _sp = sp;
     _pp = pp;
     _objp = objp;
     _restadjust = restadjust;
 
-    c_debuginfo();
+    c_debuginfo(s);
     sciprintf("Step #%d\n", script_step_counter);
     disassemble(s, *pc);
 
@@ -1080,7 +1057,6 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       cmdHook(c_visible_map, "set_vismap", "i", "Sets the visible map.\n  Default is 0 (visual).\n"
 	      "  Other useful values are:\n  1: Priority\n  2: Control\n  3: Auxiliary\n");
       cmdHook(c_simkey, "simkey", "i", "Simulates a keypress with the\n  specified scancode.\n");
-      cmdHook(c_slog, "slog", "i*", "Step forward while printing\n  acc and the next instruction");
       cmdHook(c_bpx, "bpx", "s", "Sets a breakpoint on the execution of specified method.\n");
       cmdHook(c_bplist, "bplist", "", "Lists all breakpoints.\n");
       cmdHook(c_bpdel, "bpdel", "i", "Deletes a breakpoint with specified index.");
@@ -1092,6 +1068,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 		 "  when scripts are loaded or unloaded");
       cmdHookInt(&script_abort_flag, "script_abort_flag", "Set != 0 to abort execution\n");
       cmdHookInt(&script_step_counter, "script_step_counter", "# of executed SCI operations\n");
+      cmdHookInt(&_debug_flags, "debug_flags", "Debug flags:\n  0x0001: Log each command executed\n");
 
     } /* If commands were not hooked up */
 
@@ -1100,8 +1077,36 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
   if (_debug_step_running)
     _debug_step_running--;
 
-  while (_debugstate_valid) {
-    cmdParse(_debug_get_input());
-    sciprintf("\n");
+
+  if (s->onscreen_console) {
+
+    byte *backup = con_backup_screen(s);
+    con_visible_rows = 20;
+
+    while (_debugstate_valid) {
+      sci_event_t event = (s->gfx_driver->GetEvent(s));
+      char *commandbuf;
+
+      con_draw(s, backup);
+
+      if ((event.buckybits & SCI_EVM_CTRL) && (event.data == '`')) /* UnConsole command? */
+	_debugstate_valid = 0;
+      else
+      if (commandbuf = consoleInput(&event)) {
+	cmdParse(s, commandbuf);
+	sciprintf("\n");
+      }
+
+    }
+
+    con_restore_screen(s, backup);
+
+  } else {
+
+    while (_debugstate_valid) {
+      cmdParse(s, _debug_get_input());
+      sciprintf("\n");
+    }
+
   }
 }

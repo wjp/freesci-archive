@@ -53,7 +53,7 @@ extern int _debug_seeking;
 extern int _debug_step_running;
 
 int
-c_quit(void)
+c_quit(state_t *s)
 {
   script_abort_flag = 1; /* Terminate VM */
   _debugstate_valid = 0;
@@ -63,7 +63,7 @@ c_quit(void)
 }
 
 int
-c_die(void)
+c_die(state_t *s)
 {
   exit(0); /* Die */
 }

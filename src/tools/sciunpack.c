@@ -72,6 +72,10 @@ static struct option options[] = {
 
 void unpack_resource(int stype, int snr, char *outfilename);
 
+void
+graph_update_box(state_t *s, int x,int y,int z,int w)
+{}; /* Dummy because of braindead library design */
+
 int main(int argc, char** argv)
 {
   int i;

@@ -79,7 +79,7 @@ _display_obj_info(object *obj)
 }
 
 int
-c_objinfo()
+c_objinfo(state_t *s)
 {
   object *workobj = _find_object(cmd_paramlength);
 
@@ -92,7 +92,7 @@ c_objinfo()
 }
 
 int
-c_objmethods()
+c_objmethods(state_t *s)
 {
   object *workobj = _find_object(cmd_paramlength);
 

@@ -37,8 +37,12 @@
 static int quit = 0;
 int sci_color_mode = 0; /* Required for linking */
 
+void
+graph_update_box(state_t *s, int x,int y,int z,int w)
+{}; /* Dummy because of braindead library design */
+
 int
-c_quit(void)
+c_quit(state_t *s)
 {
   quit = 1;
   return 0;
@@ -86,7 +90,7 @@ main(int argc, char** argv)
     if (strlen(command))
       add_history(command);
 
-    cmdParse(command);
+    cmdParse(NULL, command);
 
     free(command);
   }

@@ -115,6 +115,8 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
 	  case GIIUC_Plus:
 	  case GIIK_PPlus: retval.data = '+'; break;
 
+	  case GIIUC_Grave: retval.data = '`'; break;
+
 	  case GIIK_ShiftL: buckybits |= SCI_EVM_LSHIFT; break;
 	  case GIIK_ShiftR: buckybits |= SCI_EVM_RSHIFT; break;
 	  case GIIK_CtrlR:

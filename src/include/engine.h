@@ -92,6 +92,7 @@ typedef struct _state
 
   byte pic_not_valid; /* Is 0 if the background picture is "valid" */
   byte pic_is_new;    /* Set to 1 if a picture has just been loaded */
+  byte onscreen_console;  /* Use the onscreen console for debugging */
 
   int debug_mode; /* Contains flags for the various debug modes */
 

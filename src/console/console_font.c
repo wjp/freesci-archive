@@ -37,10 +37,10 @@
 extern guint8 _font[];
 
 inline void
-drawChar(picture_t pic, int cpos, int col, guint8 character)
+drawChar(picture_t pic, int map, int cpos, int col, guint8 character)
 {
   int offset = character << 3;
-  unsigned char *homepos = pic->view + cpos;
+  unsigned char *homepos = pic->maps[map] + cpos;
   unsigned char *pos = homepos;
   int ylen = 0;
 
@@ -57,11 +57,11 @@ drawChar(picture_t pic, int cpos, int col, guint8 character)
 }
 
 void
-drawString(picture_t pic, int row, int maxlen, char *string, int color)
+drawString(picture_t pic, int map, int row, int maxlen, char *string, int color)
 {
   int pos = (row << 3) * 320;
   while ((*string) && (maxlen--)) {
-    drawChar(pic, pos, color, *string);
+    drawChar(pic, map, pos, color, *string);
     pos += 8;
     string++;
   }

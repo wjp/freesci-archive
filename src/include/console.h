@@ -81,6 +81,8 @@ extern FILE *con_file;
 
 
 
+struct _state; /* state_t later on */
+
 typedef union {
   long val;
   char *str;
@@ -120,20 +122,12 @@ consoleInput(sci_event_t *event);
 */
 
 
-void
-drawConsole(picture_t pic);
-/* Draws the SCI console
-** Parameters: pic: The picture_t to draw to
-** Returns   : (void)
-** This function evalates the con_* global variables to determine its
-** behaviour
-*/
-
 
 void
-drawString(picture_t pic, int row, int maxlen, char *string, int color);
+drawString(picture_t pic, int map, int row, int maxlen, char *string, int color);
 /* Draws a string to a specified row
 ** Parameters: pic: The picture_t to draw to
+**             map: The map inside the picture_t to draw to
 **             row: The absolute row to draw to
 **             maxlen: The maximum length to draw (should be <= 40)
 **             string: The string to draw
@@ -153,15 +147,16 @@ cmdInit(void);
 
 
 void
-cmdParse(char *command);
+cmdParse(struct _state *s, char *command);
 /* Parses a command and summons appropriate facilities to handle it
-** Parameters: command: The command to execute
+** Parameters: (state_t *) s: The state_t to use
+**             command: The command to execute
 ** Returns   : (void)
 */
 
 
 int
-cmdHook(int command(void), char *name, char *param, char *description);
+cmdHook(int command(struct _state *s), char *name, char *param, char *description);
 /* Adds a command to the parser's command list
 ** Parameters: command: The command to add
 **             name: The command's name
@@ -202,24 +197,52 @@ cmdHookInt(int *pointer, char *name, char *description);
 ** The internal list of int references is used by some of the basic commands.
 */
 
+
+byte *
+con_backup_screen(struct _state *s);
+/* Backups the currently visible screen
+** Parameters: (state_t *) s: The state_t whose picture we're going to back up
+** Returns   : (byte *): The malloc'd backup
+*/
+
+
+void
+con_restore_screen(struct _state *s, byte *backup);
+/* Restores a backupped screen
+** Parameters: (state_t *) s: The state_t we're restoring to
+**             (byte *) backup: The backup to restore
+** Returns   : (void)
+** Frees the allocated data after restoring it
+*/
+
+
+void
+con_draw(struct _state *s, byte *backup);
+/* Draws the on-screen console
+** Parameters: (state_t *) s: The state_t to draw it on
+**             (byte *) backup: The data from which the original backup data may be taken
+** Returns   : (void)
+*/
+
+
 int
 sci_hexdump(byte *data, int length, int offsetplus);
 
 /***************************************************************************/
 /* console commands */
 
-int c_version(void); /* displays the package and version number */
-int c_list(void); /* lists various types of things */
-int c_man(void); /* 'manual page' */
-int c_set(void); /* sets an int variable */
-int c_print(void); /* prints a variable */
-int c_size(void); /* displays the size of a resource */
-int c_dump(void); /* gives a hex dump of a resource */
-int c_objinfo(void); /* shows some info about one class */
-int c_objmethods(void); /* Disassembles all methods of a class */
-int c_hexgrep(void); /* Searches a string in one resource or resource class */
-int c_selectornames(void); /* Displays all selector names */
-int c_kernelnames(void); /* Displays all kernel function names */
-int c_dissectscript(void); /* Splits a script into objects and explains them */
+int c_version(struct _state *s); /* displays the package and version number */
+int c_list(struct _state *s); /* lists various types of things */
+int c_man(struct _state *s); /* 'manual page' */
+int c_set(struct _state *s); /* sets an int variable */
+int c_print(struct _state *s); /* prints a variable */
+int c_size(struct _state *s); /* displays the size of a resource */
+int c_dump(struct _state *s); /* gives a hex dump of a resource */
+int c_objinfo(struct _state *s); /* shows some info about one class */
+int c_objmethods(struct _state *s); /* Disassembles all methods of a class */
+int c_hexgrep(struct _state *s); /* Searches a string in one resource or resource class */
+int c_selectornames(struct _state *s); /* Displays all selector names */
+int c_kernelnames(struct _state *s); /* Displays all kernel function names */
+int c_dissectscript(struct _state *s); /* Splits a script into objects and explains them */
 
 #endif /* _SCI_CONSOLE_H_ */ 

@@ -74,7 +74,13 @@ gfx_driver_t gfx_driver_libggi =
 void initColors(ggi_visual_t visual)
 {
   int i;
+  int map;
+  int palette = 0; /* Using a palettized mode? */
+  ggi_mode mode;
   ggi_color vcal[16];
+
+  ggiGetMode(visual, &mode);
+  palette = (mode.graphtype & GT_PALETTE);
 
   for (i=0; i<16; i++) {
     vcal[i].r = (i & 0x04) ? 0xaaaa : 0;
@@ -95,7 +101,11 @@ void initColors(ggi_visual_t visual)
     color.r = INTERCOL((vcal[i & 0xf].r), (vcal[i >> 4].r));
     color.g = INTERCOL((vcal[i & 0xf].g), (vcal[i >> 4].g));
     color.b = INTERCOL((vcal[i & 0xf].b), (vcal[i >> 4].b));
-    egacol[i] = ggiMapColor(visual, &color);
+    if (palette) {
+      egacol[i] = i;
+      ggiSetPalette(visual, i, 1, &color);
+    } else
+      egacol[i] = ggiMapColor(visual, &color);
   }
 }
 

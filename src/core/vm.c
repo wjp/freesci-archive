@@ -36,7 +36,7 @@
 /* #define VM_DEBUG_SEND */
 
 
-int script_debug_flag = 1; /* Defaulting to debug mode */
+int script_debug_flag = 0; /* Defaulting to running mode */
 int script_abort_flag = 0; /* Set to 1 to abort execution */
 int script_exec_stackpos = -1; /* 0 means that one script is active */
 int script_error_flag = 0; /* Set to 1 if an error occured, reset each round by the VM */
@@ -1342,6 +1342,7 @@ game_init(state_t *s)
   s->priority_last = 200; /* The highest priority zone (15) starts here */
 
   s->debug_mode = 0x0; /* Disable all debugging */
+  s->onscreen_console = 0; /* No onscreen console unless explicitly requested */
 
   s->bp_list = NULL; /* No breakpoints defined */
   s->have_bp = 0;

@@ -137,12 +137,14 @@ cmdInit(void)
     cmdHookInt(&con_passthrough, "con_passthrough", "scicon->stdout passthrough");
     cmdHookInt(&sci_color_mode, "color_mode", "SCI0 picture resource draw mode (0..2)");
     cmdHookInt(&sci_version, "sci_version", "Interpreter version (see resource.h)");
+    cmdHookInt(&con_display_row, "con_display_row", "Number of rows to display for the"
+	       "\n  onscreen console");
   }
 }
 
 
 void
-cmdParse(char *command)
+cmdParse(state_t *s, char *command)
 {
   int escape = 0; /* escape next char? */
   int quote = 0; /* quoting? */
@@ -274,7 +276,7 @@ cmdParse(char *command)
 	  }
 
 	  if (carry == 1)
-	    _cmd_commands[cmdnum].command();
+	    _cmd_commands[cmdnum].command(s);
 	}
       }
     }
@@ -289,7 +291,7 @@ cmdParse(char *command)
 
 
 int
-cmdHook(int command(void), char *name, char *param, char *description)
+cmdHook(int command(state_t *), char *name, char *param, char *description)
 {
   int i;
 
@@ -389,7 +391,7 @@ int getResourceNumber(char *resid)
 }
 
 int
-c_version(void)
+c_version(state_t *s)
 {
   sciprintf(""PACKAGE", version "VERSION"\n");
   sciprintf("Running %s\n", SCI_Version_Types[sci_version]);
@@ -397,7 +399,7 @@ c_version(void)
 }
 
 int
-c_list(void)
+c_list(state_t *s)
 {
   if (_lists_need_sorting)
     cmdSortAll();
@@ -449,7 +451,7 @@ c_list(void)
 
 
 int
-c_man(void)
+c_man(state_t *s)
 {
   int i;
   for (i = 0; i < _cmd_command_count; i++)
@@ -480,7 +482,7 @@ c_man(void)
 }
 
 int
-c_set(void)
+c_set(state_t *s)
 {
   int i;
 
@@ -492,7 +494,7 @@ c_set(void)
 }
 
 int
-c_print(void)
+c_print(state_t *s)
 {
   int i;
 
@@ -505,7 +507,7 @@ c_print(void)
 
 
 int
-c_size(void)
+c_size(state_t *s)
 {
   int res = getResourceNumber(cmd_params[0].str);
   if (res == -1)
@@ -522,7 +524,7 @@ c_size(void)
 
 
 int
-c_dump(void)
+c_dump(state_t *s)
 {
   int res = getResourceNumber(cmd_params[0].str);
 
@@ -540,7 +542,7 @@ c_dump(void)
 
 
 int
-c_hexgrep(void)
+c_hexgrep(state_t *s)
 {
   int i, seeklen, resnr, restype, resmax;
   unsigned char *seekstr;
@@ -601,7 +603,7 @@ c_hexgrep(void)
 }
 
 
-int c_selectornames()
+int c_selectornames(state_t *s)
 {
   char **snames = vocabulary_get_snames();
   int seeker = 0;
@@ -621,7 +623,7 @@ int c_selectornames()
 }
 
 int
-c_kernelnames()
+c_kernelnames(state_t *s)
 {
   int knamectr;
   char **knames = vocabulary_get_knames(&knamectr);
@@ -641,7 +643,7 @@ c_kernelnames()
 }
 
 int
-c_dissectscript()
+c_dissectscript(state_t *s)
 {
   script_dissect(cmd_params [0].val);
   return 0;

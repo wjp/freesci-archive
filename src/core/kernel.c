@@ -1598,10 +1598,21 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
       {
 	if ((e.buckybits & SCI_EVM_LSHIFT) && (e.buckybits & SCI_EVM_RSHIFT)
 	    && (e.data == '-')) {
+
 	  sciprintf("Debug mode activated\n");
 
 	  script_debug_flag = 1; /* Enter debug mode */
 	  _debug_seeking = _debug_step_running = 0;
+	  s->onscreen_console = 0;
+
+	} else
+
+	  if ((e.buckybits & SCI_EVM_CTRL) && (e.data == '`')) {
+
+	    script_debug_flag = 1; /* Enter debug mode */
+	    _debug_seeking = _debug_step_running = 0;
+	    s->onscreen_console = 1;
+
 	} else {
 
 	  PUT_SELECTOR(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
