@@ -36,7 +36,7 @@ typedef struct _sci_game {
   char *name;
 } sci_game_t;
 
-#define SCI_GAMES_COUNT 23
+#define SCI_GAMES_COUNT 24
 
 sci_game_t sci_games[] = {
   { 0x01684e20, SCI_VERSION(0,000,685), "ARTHUR" },
@@ -54,7 +54,8 @@ sci_game_t sci_games[] = {
   { 0x009b0cd2, SCI_VERSION(0,000,566), "HQ" },
   { 0x02e5c05f, SCI_VERSION(0,000,629), "HQ" },
   { 0x0117a04f, SCI_VERSION(0,000,453), "SQ3" },
-  { 0x033bc19e, SCI_VERSION(0,000,453), "SQ3" }, /* v1.0 */
+  { 0x0117da25, SCI_VERSION(0,000,453), "SQ3" }, /* 1.0 U */
+  { 0x033bc19e, SCI_VERSION(0,000,453), "SQ3" }, /* 1.0 V */
   { 0x00cb0bf2, SCI_VERSION(0,000,453), "SQ3-Astro" },
   { 0x05a8efaf, SCI_VERSION(1,000,172), "Trial" }, /* unknown as yet v1.102 */
   { 0x05a71cde, SCI_VERSION(1,000,172), "Trial" }, /* unknown as yet */
