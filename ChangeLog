@@ -1,5 +1,8 @@
 2001-02-10  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/scriptdebug.c (disassemble): Fixed reported jump
+	target values
+
 	* src/gfx/menubar.c (menubar_add_menu): Search for beginning
 	of description string before checking for hbar
 
