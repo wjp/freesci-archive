@@ -40,33 +40,21 @@
 
 /* #define SSWIN_DEBUG */
 
-HANDLE child_thread;
-HANDLE out_mutex;
-HANDLE in_mutex;
+static HANDLE child_thread;
+static DWORD master_thread_id;
 
-DWORD master_thread_id;
-
-int reverse_stereo = 0;
+static int reverse_stereo = 0;
 
 extern sound_server_t sound_server_win32;
 
-/* Mutex names */
-LPCTSTR out_mutex_name = "SoundServerOutMutex";
-LPCTSTR in_mutex_name = "SoundServerInMutex";
-LPCTSTR bulk_mutex_name = "SoundServerBulkMutex";
+/* Deadlock prevention */
+static CRITICAL_SECTION ev_cs, in_cs;
+static CRITICAL_SECTION bulk_cs[2];
 
-HANDLE bulk_mutices[2];
-sci_queue_t bulk_queues[2];
+static sci_queue_t bulk_queues[2];
 
-const DWORD MUTEX_TIMEOUT = 5000L;
-
-/* Used for manipulating name of bulk mutex */
-int mutex_name_len;
-char *mutex_name_temp;
-char *dump;
-
-sound_eq_t inqueue; /* The in-event queue */
-sound_eq_t ev_queue; /* The event queue */
+static sound_eq_t inqueue; /* The in-event queue */
+static sound_eq_t ev_queue; /* The event queue */
 
 
 /* function called when sound server child thread begins */
@@ -74,11 +62,18 @@ DWORD WINAPI
 win32_soundserver_init(LPVOID lpP)
 {
 #ifdef SSWIN_DEBUG
-	fprintf(stderr, "SSWIN_DEBUG: TID%u - CHILD thread ID, win32_soundserver_init()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u - CHILD thread ID, win32_soundserver_init()\n", GetCurrentThreadId());
+	fflush(NULL);
 #endif
 
 	/* start the sound server */
 	sci0_soundserver(reverse_stereo);
+
+#ifdef SSWIN_DEBUG
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, win32_soundserver_init() end\n", GetCurrentThreadId());
+	fflush(NULL);
+#endif
+
 	return 0;
 }
 
@@ -89,7 +84,8 @@ sound_win32_init(state_t *s, int flags)
 	int i;				/* for enumerating over bulk queues */
 
 #ifdef SSWIN_DEBUG
-	fprintf(stderr, "SSWIN_DEBUG: TID%u, sound_win32_init()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_init()\n", GetCurrentThreadId());
+	fflush(NULL);
 #endif
 
 	/* let app know what sound server we are running and yield to the scheduler */
@@ -100,7 +96,8 @@ sound_win32_init(state_t *s, int flags)
 	master_thread_id = GetCurrentThreadId();
 
 #ifdef SSWIN_DEBUG
-	fprintf(stderr, "SSWIN_DEBUG: TID%u - MASTER thread ID\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u - MASTER thread ID\n", GetCurrentThreadId());
+	fflush(NULL);
 #endif
 
 	if (init_midi_device(s) < 0)
@@ -109,39 +106,11 @@ sound_win32_init(state_t *s, int flags)
 	if (flags & SOUNDSERVER_INIT_FLAG_REVERSE_STEREO)
 		reverse_stereo = 1;
 
-	/* create mutices and spawn thread */
-	out_mutex = CreateMutex(NULL,
-							FALSE,  /* no thread gets the mutex to start with */
-							out_mutex_name);
-	if (out_mutex == NULL)
-	{
-		fprintf(stderr, "sound_win32_init(): CreateMutex(%s) failed, GetLastError() returned %u\n", out_mutex_name, GetLastError());
-	}
-
-	in_mutex = CreateMutex(NULL, FALSE, in_mutex_name);
-	if (in_mutex == NULL)
-	{
-		fprintf(stderr, "sound_win32_init(): CreateMutex(%s) failed, GetLastError() returned %u\n", in_mutex_name, GetLastError());
-	}
-
-	/* set up name for bulk mutices and create them */
-	mutex_name_len = strlen(bulk_mutex_name) + 2; /* room for number and \0 */
-	mutex_name_temp = (char *) sci_malloc(mutex_name_len);
-	mutex_name_temp = strcpy(mutex_name_temp, bulk_mutex_name);
-	dump = (char *) sci_malloc(2);
-	for (i = 0; i < 2; i++) {
-		itoa(i, dump, 10);
-		strcat(mutex_name_temp, dump);
-
-		sci_init_queue(&(bulk_queues[i]));
-		bulk_mutices[i] = CreateMutex(NULL, FALSE, mutex_name_temp);
-		if (bulk_mutices[i] == NULL)
-		{
-			fprintf(stderr, "sound_win32_init(): CreateMutex(%s) failed, GetLastError() returned %u\n", mutex_name_temp, GetLastError());
-		}
-
-		mutex_name_temp[mutex_name_len - 2] = '\0'; /* overwrite number */
-	}
+	/* set up critical section variables */
+	InitializeCriticalSection(&ev_cs);
+	InitializeCriticalSection(&in_cs);
+	for (i = 0; i < 2; i++)
+		InitializeCriticalSection(&bulk_cs[i]);
 
 	ds = stderr;
 
@@ -159,6 +128,11 @@ sound_win32_init(state_t *s, int flags)
 		fprintf(stderr, "sound_win32_init(): CreateThread() failed, GetLastError() returned %u\n", GetLastError());
 	}
 
+#ifdef SSWIN_DEBUG
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_init() end\n", GetCurrentThreadId());
+	fflush(NULL);
+#endif
+
 	return 0;
 }
 
@@ -166,7 +140,8 @@ int
 sound_win32_configure(state_t *s, char *option, char *value)
 {
 #ifdef SSWIN_DEBUG
-	fprintf(stderr, "SSWIN_DEBUG: TID%u, sound_win32_configure()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_configure()\n", GetCurrentThreadId());
+	fflush(NULL);
 #endif
 
 	return 1; /* No options apply to this driver */
@@ -178,37 +153,36 @@ sound_win32_get_event(state_t *s)
 	sound_event_t *event = NULL;
 
 #ifdef SSWIN_DEBUG
-	fprintf(stderr, "SSWIN_DEBUG: TID%u, sound_win32_get_event()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_get_event()\n", GetCurrentThreadId());
+	fflush(NULL);
 #endif
 
-	if (WaitForSingleObject(out_mutex, MUTEX_TIMEOUT) != WAIT_OBJECT_0)
+	/* Request ownership of the critical section */
+	__try
 	{
-		fprintf(stderr, "sound_win32_get_event(): WaitForSingleObject(%s) failed, GetLastError() returned %u\n", out_mutex_name, GetLastError());
-		return NULL;
+		EnterCriticalSection(&ev_cs);
+
+		/* Access the shared resource */
+
+		/* Get event from queue if there is one */
+		if (sound_eq_peek_event(&ev_queue))
+			event = sound_eq_retreive_event(&ev_queue);
+	}
+	__finally
+	{
+		/* Release ownership of the critical section */
+		LeaveCriticalSection(&ev_cs);
 	}
 
-	if (!sound_eq_peek_event(&ev_queue))
-	{
-		if (ReleaseMutex(out_mutex) == 0)
-		{
-			fprintf(stderr, "sound_win32_get_event(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", out_mutex_name, GetLastError());
-		}
-
-		return NULL;
-	}
-
-	event = sound_eq_retreive_event(&ev_queue);
-
-	if (ReleaseMutex(out_mutex) == 0)
-	{
-		fprintf(stderr, "sound_win32_get_event(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", out_mutex_name, GetLastError());
-	}
-
-	/*
+#ifdef SSWIN_DEBUG
 	if (event)
-		printf("got %04x %d %d\n", event->handle, event->signal, event->value);
-	*/
+		fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_get_event() got %04x %d %d\n", event->handle, event->signal, event->value);
+	else
+		fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_get_event() no event\n", GetCurrentThreadId());
+	fflush(NULL);
+#endif
 
+	/* implicitly returns NULL if there was no event */
 	return event;
 }
 
@@ -216,44 +190,52 @@ void
 sound_win32_queue_event(int handle, int signal, int value)
 {
 #ifdef SSWIN_DEBUG
-	fprintf(stderr, "SSWIN_DEBUG: TID%u, sound_win32_queue_event()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_queue_event()\n", GetCurrentThreadId());
+	fflush(NULL);
 #endif
 
-	if (WaitForSingleObject(out_mutex, MUTEX_TIMEOUT) != WAIT_OBJECT_0)
+	__try
 	{
-		fprintf(stderr, "sound_win32_queue_event(): WaitForSingleObject(%s) failed, GetLastError() returned %u\n", out_mutex_name, GetLastError());
-		return;
+		EnterCriticalSection(&ev_cs);
+
+		/* Queue event */
+		sound_eq_queue_event(&ev_queue, handle, signal, value);
+	}
+	__finally
+	{
+		LeaveCriticalSection(&ev_cs);
 	}
 
-	sound_eq_queue_event(&ev_queue, handle, signal, value);
-
-	if (ReleaseMutex(out_mutex) == 0)
-	{
-		fprintf(stderr, "sound_win32_queue_event(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", out_mutex_name, GetLastError());
-	}
-
-	/*  printf("set %04x %d %d\n", handle, signal, value); */
+#ifdef SSWIN_DEBUG
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_queue_event() set %04x %d %d\n", handle, signal, value);
+	fflush(NULL);
+#endif
 }
 
 void
 sound_win32_queue_command(int handle, int signal, int value)
 {
 #ifdef SSWIN_DEBUG
-	fprintf(stderr, "SSWIN_DEBUG: TID%u, sound_win32_queue_command()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_queue_command()\n", GetCurrentThreadId());
+	fflush(NULL);
 #endif
 
-	if (WaitForSingleObject(in_mutex, MUTEX_TIMEOUT) != WAIT_OBJECT_0)
+	__try
 	{
-		fprintf(stderr, "sound_win32_queue_command(): WaitForSingleObject(%s) failed, GetLastError() returned %u\n", in_mutex_name, GetLastError());
-		return;
+		EnterCriticalSection(&in_cs);
+
+		/* Queue event */
+		sound_eq_queue_event(&inqueue, handle, signal, value);
+	}
+	__finally
+	{
+		LeaveCriticalSection(&in_cs);
 	}
 
-	sound_eq_queue_event(&inqueue, handle, signal, value);
-
-	if (ReleaseMutex(in_mutex) == 0)
-	{
-		fprintf(stderr, "sound_win32_queue_command(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", in_mutex_name, GetLastError());
-	}
+#ifdef SSWIN_DEBUG
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_queue_command() end\n", GetCurrentThreadId());
+	fflush(NULL);
+#endif
 }
 
 sound_event_t *
@@ -262,33 +244,32 @@ sound_win32_get_command(GTimeVal *wait_tvp)
 	sound_event_t *event = NULL;
 
 #ifdef SSWIN_DEBUG
-	fprintf(stderr, "SSWIN_DEBUG: TID%u, sound_win32_get_command()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_get_command()\n", GetCurrentThreadId());
+	fflush(NULL);
 #endif
 
-	if (WaitForSingleObject(in_mutex, MUTEX_TIMEOUT) != WAIT_OBJECT_0)
+	__try
 	{
-		fprintf(stderr, "sound_win32_get_command(): WaitForSingleObject(%s) failed, GetLastError() returned %u\n", in_mutex_name, GetLastError());
-		return NULL;
+		EnterCriticalSection(&in_cs);
+
+		/* Get event from queue if there is one */
+		if (sound_eq_peek_event(&inqueue))
+			event = sound_eq_retreive_event(&inqueue);
+		else
+			Sleep(1);
+		/* note: removed Sleep(1) from else case */
 	}
-
-	if (!sound_eq_peek_event(&inqueue)) {
-		Sleep(1);
-
-		if (ReleaseMutex(in_mutex) == 0)
-		{
-			fprintf(stderr, "sound_win32_get_command(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", in_mutex_name, GetLastError());
-		}
-
-		return NULL;
-	}
-
-	event = sound_eq_retreive_event(&inqueue);
-
-	if (ReleaseMutex(in_mutex) == 0)
+	__finally
 	{
-		fprintf(stderr, "sound_win32_get_command(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", in_mutex_name, GetLastError());
+		LeaveCriticalSection(&in_cs);
 	}
 
+#ifdef SSWIN_DEBUG
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_get_command() end\n", GetCurrentThreadId());
+	fflush(NULL);
+#endif
+
+	/* implicitly returns NULL if there was no event in the queue */
 	return event;
 }
 
@@ -299,44 +280,44 @@ sound_win32_get_data(byte **data_ptr, int *size, int maxlen)
 	void *data = NULL;
 
 #ifdef SSWIN_DEBUG
-	fprintf(stderr, "SSWIN_DEBUG: TID%u, sound_win32_get_data()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_get_data()\n", GetCurrentThreadId());
+	fflush(NULL);
 #endif
 
-	/* set up bulk mutex name */
-	itoa(index, dump, 10);
-	mutex_name_temp[mutex_name_len - 2] = '\0'; /* overwrite number there */
-	strcat(mutex_name_temp, dump);
-
-	if (WaitForSingleObject(bulk_mutices[index], MUTEX_TIMEOUT) != WAIT_OBJECT_0)
+	__try
 	{
-		fprintf(stderr, "sound_win32_get_data(): WaitForSingleObject(%s) failed, GetLastError() returned %u\n", mutex_name_temp, GetLastError());
-		return -1;
-	}
+		EnterCriticalSection(&bulk_cs[index]);
+#ifdef SSWIN_DEBUG
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_get_data() entered critical section\n", GetCurrentThreadId());
+	fflush(NULL);
+#endif
 
-	while (!(data = sci_get_from_queue(&(bulk_queues[index]), size)))
-	{
-		/* no data, so release the mutex */
-		if (ReleaseMutex(bulk_mutices[index]) == 0)
+		while (!(data = sci_get_from_queue(&(bulk_queues[index]), size)))
 		{
-			fprintf(stderr, "sound_win32_get_data(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", mutex_name_temp, GetLastError());
-		}
+			/* no data */
+			LeaveCriticalSection(&bulk_cs[index]);
 
-		Sleep(1); /* take a nap */
+			Sleep(1); /* take a nap */
 
-		/* then get it back again */
-		if (WaitForSingleObject(bulk_mutices[index], MUTEX_TIMEOUT) != WAIT_OBJECT_0)
-		{
-			fprintf(stderr, "sound_win32_get_data(): WaitForSingleObject(%s) failed, GetLastError() returned %u\n", mutex_name_temp, GetLastError());
-			return -1;
+			/* re-enter critical section */
+			EnterCriticalSection(&bulk_cs[index]);
 		}
 	}
-
-	if (ReleaseMutex(bulk_mutices[index]) == 0)
+	__finally
 	{
-		fprintf(stderr, "sound_win32_get_data(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", mutex_name_temp, GetLastError());
+		LeaveCriticalSection(&bulk_cs[index]);
+#ifdef SSWIN_DEBUG
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_get_data() left critical section\n", GetCurrentThreadId());
+	fflush(NULL);
+#endif
 	}
 
 	*data_ptr = (byte *) data;
+
+#ifdef SSWIN_DEBUG
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_get_data() end\n", GetCurrentThreadId());
+	fflush(NULL);
+#endif
 
 	return *size;
 }
@@ -347,26 +328,24 @@ sound_win32_send_data(byte *data_ptr, int maxsend)
 	int index = 1 - (GetCurrentThreadId() == master_thread_id);
 
 #ifdef SSWIN_DEBUG
-	fprintf(stderr, "SSWIN_DEBUG: TID%u, sound_win32_send_data()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_send_data(), queue %i\n", GetCurrentThreadId(), index);
+	fflush(NULL);
 #endif
 
-	/* set up bulk mutex name */
-	itoa(index, dump, 10);
-	mutex_name_temp[mutex_name_len - 2] = '\0'; /* overwrite number there */
-	strcat(mutex_name_temp, dump);
-
-	if (WaitForSingleObject(bulk_mutices[index], MUTEX_TIMEOUT) != WAIT_OBJECT_0)
+	__try
 	{
-		fprintf(stderr, "sound_win32_send_data(): WaitForSingleObject(%s) failed, GetLastError() returned %u\n", mutex_name_temp, GetLastError());
-		return -1;
+		EnterCriticalSection(&bulk_cs[index]);
+		sci_add_to_queue(&(bulk_queues[index]), sci_memdup(data_ptr, maxsend), maxsend);
+	}
+	__finally
+	{
+		LeaveCriticalSection(&bulk_cs[index]);
 	}
 
-	sci_add_to_queue(&(bulk_queues[index]), sci_memdup(data_ptr, maxsend), maxsend);
-
-	if (ReleaseMutex(bulk_mutices[index]) == 0)
-	{
-		fprintf(stderr, "sound_win32_send_data(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", mutex_name_temp, GetLastError());
-	}
+#ifdef SSWIN_DEBUG
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_send_data() end, queue %i\n", GetCurrentThreadId(), index);
+	fflush(NULL);
+#endif
 
 	return maxsend;
 }
@@ -377,7 +356,8 @@ sound_win32_exit(state_t *s)
 	int i;
 
 #ifdef SSWIN_DEBUG
-	fprintf(stderr, "SSWIN_DEBUG: TID%u, sound_win32_exit()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_exit()\n", GetCurrentThreadId());
+	fflush(NULL);
 #endif
 
 	sound_command(s, SOUND_COMMAND_SHUTDOWN, 0, 0); /* Kill server */
@@ -385,19 +365,16 @@ sound_win32_exit(state_t *s)
 	/* clean up */
 	WaitForSingleObject(child_thread, INFINITE);
 	CloseHandle(child_thread);
-	CloseHandle(out_mutex);
-	CloseHandle(in_mutex);
+	DeleteCriticalSection(&in_cs);
+	DeleteCriticalSection(&ev_cs);
 
 	for (i = 0; i < 2; i++) {
 		void *data = NULL;
-		CloseHandle(bulk_mutices[i]);
+		DeleteCriticalSection(&bulk_cs[i]);
 
 		while (data = sci_get_from_queue(&(bulk_queues[i]), NULL))
 			free(data); /* Flush queues */
 	}
-
-	free(mutex_name_temp);
-	free(dump);
 }
 
 int
@@ -408,7 +385,8 @@ sound_win32_save(state_t *s, char *dir)
   int size;
 
 #ifdef SSWIN_DEBUG
-	fprintf(stderr, "SSWIN_DEBUG: TID%u, sound_win32_save()\n", GetCurrentThreadId());
+	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32_save()\n", GetCurrentThreadId());
+	fflush(NULL);
 #endif
 
 	/* we ignore the dir */
@@ -424,7 +402,7 @@ sound_win32_save(state_t *s, char *dir)
 
 sound_server_t sound_server_win32 = {
 	"win32",
-	"0.1",
+	"0.2",
 	0,
 	&sound_win32_init,
 	&sound_win32_configure,

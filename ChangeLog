@@ -1,3 +1,8 @@
+2001-09-17  Alex Angas  <wgd@internode.on.net>
+
+        * src/sound/soundserver_win32.c: Changed use of mutexes to use of
+        Win32 CRITICAL_SECTIONs.
+
 2001-09-17  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/drivers/sdl_driver.c (sdl_init_specific): Disabled mouse pointer

@@ -62,12 +62,6 @@
 /* Define if you have the usleep function.  */
 #undef HAVE_USLEEP
 
-/* Define if you have the <X11/Xft/Xft.h> header file.  */
-#undef HAVE_X11_XFT_XFT_H
-
-/* Define if you have the <X11/extensions/Xrender.h> header file.  */
-#undef HAVE_X11_EXTENSIONS_XRENDER_H
-
 /* Define if you have the <dirent.h> header file.  */
 #undef HAVE_DIRENT_H
 
@@ -100,6 +94,12 @@
 
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
+
+/* Define if you have the <X11/extensions/Xrender.h> header file.  */
+#undef HAVE_X11_EXTENSIONS_XRENDER_H
+
+/* Define if you have the <X11/Xft/Xft.h> header file.  */
+#undef HAVE_X11_XFT_XFT_H
 
 /* Define if you have the asound library (-lasound).  */
 #undef HAVE_LIBASOUND
