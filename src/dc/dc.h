@@ -36,6 +36,11 @@
 #define EINTR 4
 #endif
 
+/* Constants missing from KOS's stdio.h */
+#ifndef _IOFBF
+#define _IOFBF 0
+#endif
+
 /* Functions implemented in dc_save.c */
 
 /* Returns a string with the VFS path to the first VMU.

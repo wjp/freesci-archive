@@ -117,7 +117,7 @@ rm-bin:
 
 config.h: config.h.in
 	cp config.h.in config.h
-	echo -e '\n#define VERSION "0.3.5-'`date +%Y%m%d`'"' >> config.h
+	echo -e '\n#define VERSION "0.3.4c-devel-'`date +%Y%m%d`'"' >> config.h
 
 $(ELF_TARGET): $(OBJS)
 	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(ELF_TARGET) $(KOS_START) \

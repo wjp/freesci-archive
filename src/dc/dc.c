@@ -114,3 +114,8 @@ int isatty(int desc)
 {
 	return 0;
 }
+
+int setvbuf(FILE *stream, char *buf, int mode, size_t size)
+{
+	return -1;
+}
