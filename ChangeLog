@@ -1,5 +1,13 @@
 2001-04-05  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/kgraphics.c (collides_with): Call to nsrect_clip now
+	passes the priority value instead of the signal (/D'Oh/)
+
+	* src/engine/savegame.cfsml: Fixed list saving in savegames
+
+	* src/engine/kgraphics.c (kAddToPic): "Single picview" case now reads
+	loop and cel from correct parameters
+
 	* src/scicore/console.c (sciprintf): Returns 'int' again to fix
 	compilation problems
 

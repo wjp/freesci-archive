@@ -788,7 +788,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 }
 
-#define GASEOUS_VIEW_MASK (_K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)
+#define GASEOUS_VIEW_MASK (/*_K_VIEW_SIG_FLAG_NO_UPDATE |*/ _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)
 
 abs_rect_t
 set_base(struct _state *s, heap_ptr object);
@@ -803,6 +803,7 @@ static int
 collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int funct_nr, int argc, heap_ptr argp)
 {
 	int other_signal = UGET_SELECTOR(other_obj, signal);
+	int other_priority = UGET_SELECTOR(other_obj, priority);
 	int y = GET_SELECTOR(other_obj, y);
 	abs_rect_t other_area;
 	other_area.x = UGET_SELECTOR(other_obj, nsLeft);
@@ -810,11 +811,11 @@ collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int funct_nr, int
 	other_area.y = UGET_SELECTOR(other_obj, nsTop);
 	other_area.yend = UGET_SELECTOR(other_obj, nsBottom);
 
-	other_area = nsrect_clip(s, y, other_area, other_signal);
+	other_area = nsrect_clip(s, y, other_area, other_priority);
 
 	SCIkdebug(SCIkBRESEN, "OtherSignal=%04x, z=%04x obj=%04x\n", other_signal,
 		  (other_signal & GASEOUS_VIEW_MASK), other_obj);
-	if ((other_signal & GASEOUS_VIEW_MASK) == 0) {
+	if ((other_signal & (GASEOUS_VIEW_MASK | _K_VIEW_SIG_FLAG_NO_UPDATE)) == 0) {
 					/* check whether the other object ignores actors */
 
 		SCIkdebug(SCIkBRESEN, "  against (%d,%d) to (%d,%d)\n",
@@ -848,14 +849,10 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	rect_t zone;
 	word edgehit;
 
-#ifdef FALSE
-	abs_zone = set_base(s, obj);
-#else
 	abs_zone.x = UGET_SELECTOR(obj, brLeft);
 	abs_zone.xend = UGET_SELECTOR(obj, brRight);
 	abs_zone.y = UGET_SELECTOR(obj, brTop);
 	abs_zone.yend = UGET_SELECTOR(obj, brBottom);
-#endif
 
 	zone = gfx_rect(abs_zone.x + port->zone.x, abs_zone.y + port->zone.y,
 			abs_zone.xend - abs_zone.x, abs_zone.yend - abs_zone.y);
@@ -1163,14 +1160,17 @@ set_base(state_t *s, heap_ptr object)
 	y -= z; /* Subtract z offset */
 
 	ystep = GET_SELECTOR(object, yStep);
+
+#if 0
 	if (s->selector_map.xStep > -1) {
 		int has_xstep = lookup_selector(s, object, s->selector_map.xStep, NULL) == SELECTOR_VARIABLE;
 		if (has_xstep) {
 			int xstep = GET_SELECTOR(object, xStep);
-			if (xstep > ystep)
-				ystep = xstep;
 		}
 	}
+#endif
+
+
 	view = GET_SELECTOR(object, view);
 	loop = sign_extend_byte(GET_SELECTOR(object, loop));
 	cel = sign_extend_byte(GET_SELECTOR(object, cel));
@@ -2162,8 +2162,8 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		gfxw_widget_t *widget;
 
 		view = UPARAM(0);
-		cel = UPARAM(1);
-		loop = UPARAM(2);
+		loop = UPARAM(1);
+		cel = UPARAM(2);
 		x = PARAM(3);
 		y = PARAM(4);
 		priority = PARAM(5);
@@ -2273,14 +2273,17 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	CHECK_THIS_KERNEL_FUNCTION;
 
 	goner = gfxw_find_port(s->visual, goner_nr);
-
 	if ((goner_nr < 3) || (goner == NULL)) {
 		SCIkwarn(SCIkERROR, "Removal of invalid window %04x requested\n", goner_nr);
 		return;
 	}
 
-	if (GFXWC(s->dyn_views->parent) == GFXWC(goner))
+	if (GFXWC(s->dyn_views->parent) == GFXWC(goner)) {
 		reparentize_primary_widget_lists(s, (gfxw_port_t *) goner->parent);
+	}
+
+	if (GFXWC(s->drop_views->parent) == GFXWC(goner))
+		s->drop_views = NULL; /* Kill it */
 
 	pred = gfxw_remove_port(s->visual, goner);
 
@@ -2288,10 +2291,9 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		s->port = pred;
 
 	s->port = gfxw_find_port(s->visual, goner_nr - 1);
-	if (!s->port) {
-		SCIkwarn(SCIkERROR, "Falling back to previous port %d failed! Using widget predecessor!\n", goner_nr - 1);
-		s->port = pred;
-	}
+
+	if (!s->port)
+		s->port = gfxw_find_default_port(s->visual);
 
 	gfxop_update(s->gfx_state);
 }

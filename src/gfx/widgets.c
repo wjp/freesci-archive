@@ -1969,7 +1969,7 @@ _gfxwop_port_free(gfxw_widget_t *widget)
 		if (visual->port_refs[ID] != port) {
 			GFXWARN("While freeing port %d: Port is at %p, but port list indicates %p!\n",
 				ID, port, visual->port_refs[ID]);
-	} else visual->port_refs[ID] = NULL;
+		} else visual->port_refs[ID] = NULL;
 
 	}
 
@@ -2131,6 +2131,22 @@ gfxw_find_port(gfxw_visual_t *visual, int ID)
 		return NULL;
 
 	return visual->port_refs[ID];
+}
+
+
+gfxw_port_t *
+gfxw_find_default_port(gfxw_visual_t *visual)
+{
+	int id = visual->port_refs_nr;
+
+	while (id--) {
+		gfxw_port_t *port = visual->port_refs[id];
+
+		if (port)
+			return port;
+	}
+
+	return NULL;
 }
 
 

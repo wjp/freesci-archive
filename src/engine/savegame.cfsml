@@ -300,7 +300,8 @@ RECORD gfxw_container_t EXTENDS gfxw_widget_t {
 }
 /* Handled externally: nextpp */
 
-TYPE gfxw_list_t "gfxw_list_t" LIKE gfxw_container_t;
+RECORD gfxw_list_t "gfxw_list_t" EXTENDS gfxw_container_t {
+}
 
 
 RECORD gfxw_visual_t EXTENDS gfxw_container_t {
