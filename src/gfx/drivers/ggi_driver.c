@@ -95,9 +95,9 @@ typedef struct {
 	gfx_pixmap_t *priority_maps[2];
 	ggi_visual_t priority_visuals[2]; /* Visuals for the maps */
 
-	int flags;
 } gfx_ggi_struct_t;
 
+int flags;
 
 static int
 ggi_set_param(gfx_driver_t *drv, char *attribute, char *value)
@@ -107,9 +107,9 @@ ggi_set_param(gfx_driver_t *drv, char *attribute, char *value)
 	if (!strcmp(attribute, "swap_ctrl_caps") ||
 	    !strcmp(attribute, "swap_caps_ctrl")) {
 		if (string_truep(value))
-			meta->flags |= SCI_GGI_SWAP_CTRL_CAPS;
+			flags |= SCI_GGI_SWAP_CTRL_CAPS;
 		else
-			meta->flags &= ~SCI_GGI_SWAP_CTRL_CAPS;
+			flags &= ~SCI_GGI_SWAP_CTRL_CAPS;
 
 		return GFX_OK;
 	}
@@ -226,7 +226,7 @@ ggi_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 	} else meta->static_buffer = NULL;
 
 	init_input_ggi();
-	meta->flags = 0;
+	flags = 0;
 	
 	return GFX_OK;
 }
@@ -340,7 +340,7 @@ ggi_init(gfx_driver_t *drv)
 	} else meta->static_buffer = NULL;
 
 	init_input_ggi();
-	meta->flags = 0;
+	flags = 0;
 
 	return GFX_OK;
 }
@@ -768,7 +768,7 @@ ggi_get_event(gfx_driver_t *drv)
       
 			ggiEventRead(VISUAL, &event, emAll);
 
-			if (meta->flags & SCI_GGI_SWAP_CTRL_CAPS
+			if (flags & SCI_GGI_SWAP_CTRL_CAPS
 			    && ((event.any.type == evKeyPress)
 				|| (event.any.type == evKeyRepeat)
 				|| (event.any.type == evKeyRelease))) {

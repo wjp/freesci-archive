@@ -31,9 +31,7 @@
 #ifndef _MSC_VER
 #	include <sys/time.h>
 #	include <SDL/SDL.h>
-#endif
-
-#ifdef _MSC_VER
+#else
 #	include <winsock2.h>
 #	include <SDL.h>
 #endif
@@ -52,6 +50,7 @@
 #define SCI_SDL_FULLSCREEN (1 << 2)
 
 int string_truep(char *value); 
+int flags;
 
 struct _sdl_state {
   int used_bytespp;
@@ -60,7 +59,6 @@ struct _sdl_state {
   SDL_Surface *visual[3];
   SDL_Surface *primary;
   int buckystate;
-  int flags;
   byte *pointer_data[2];
   int alpha_mask;
   int SDL_alpha_shift;
@@ -104,18 +102,17 @@ sdl_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
   if (!strncmp(attribute, "swap_ctrl_caps", 15) ||
       !strncmp(attribute, "swap_caps_ctrl", 15)) {
     if (string_truep(value))
-      S->flags |= SCI_SDL_SWAP_CTRL_CAPS;
+      flags |= SCI_SDL_SWAP_CTRL_CAPS;
     else
-      S->flags &= ~SCI_SDL_SWAP_CTRL_CAPS;
+      flags &= ~SCI_SDL_SWAP_CTRL_CAPS;
     return GFX_OK;
   }
 
   if (!strncmp(attribute, "fullscreen", 11)) {
-    printf("fullscreen?\n");
     if (string_truep(value))
-      S->flags |= SCI_SDL_FULLSCREEN;
+      flags |= SCI_SDL_FULLSCREEN;
     else
-      S->flags &= ~SCI_SDL_FULLSCREEN;
+      flags &= ~SCI_SDL_FULLSCREEN;
   
     return GFX_OK;
   }
@@ -143,9 +140,8 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   S->primary = NULL;
 
   i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF;
-  if (S->flags & SCI_SDL_FULLSCREEN) {
+  if (flags & SCI_SDL_FULLSCREEN) {
     i |= SDL_FULLSCREEN;
-    printf("foo..\n");
   }
 
   S->primary = SDL_SetVideoMode(xsize, ysize, bytespp << 3, i);
@@ -279,6 +275,7 @@ static int
 sdl_init(struct _gfx_driver *drv)
 {
   int depth = 0;
+  int i;
 
   if (SDL_Init(SDL_INIT_VIDEO)) {
     DEBUGB("Failed to init SDL\n");
@@ -286,7 +283,12 @@ sdl_init(struct _gfx_driver *drv)
   }
   SDL_EnableUNICODE(SDL_ENABLE);
 
-  depth = SDL_VideoModeOK(640,400, 32, SDL_HWSURFACE | SDL_SWSURFACE );
+  i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF;
+  if (flags & SCI_SDL_FULLSCREEN) {
+    i |= SDL_FULLSCREEN;
+  }
+
+  depth = SDL_VideoModeOK(640,400, 32, i);
   if (depth && (! sdl_init_specific(drv, 2, 2, depth >> 3 )))
     return GFX_OK;
 
@@ -867,7 +869,7 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
   if ((skey >= SDLK_0) && (skey <= SDLK_9))
     return ('0' + (skey - SDLK_0));
   
-  if (S->flags & SCI_SDL_SWAP_CTRL_CAPS) {
+  if (flags & SCI_SDL_SWAP_CTRL_CAPS) {
     switch (skey) {
     case SDLK_LCTRL: skey = SDLK_CAPSLOCK; break;
     case SDLK_CAPSLOCK: skey = SDLK_LCTRL; break;
