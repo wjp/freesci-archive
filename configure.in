@@ -114,7 +114,7 @@ if test x"$dlopen" = xyes; then
 else
 	if test x"$fsci_ggi_driver" = xyes; then
 		fsci_ggi_st="ggi_driver.o"
-#		LIBS="$LIBS $ac_ggi_libraries"
+		LIBS="$LIBS $ac_ggi_libraries"
 	fi
 
 	if test x"$fsci_sdl_driver" = xyes; then

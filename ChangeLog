@@ -1,3 +1,7 @@
+2001-05-30  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/main.c (main): Added Threading workaround for Win32
+
 2001-05-29  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/main.c (main): Added sound server sync by checking polyphony
