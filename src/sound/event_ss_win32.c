@@ -90,10 +90,7 @@ void CALLBACK
 timeout(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
 {
 	if (PostMessage(sound_wnd, SOUND_COMMAND_DO_SOUND, 0, 0) == 0)
-	{
-		fprintf(debug_stream, "win32e_soundserver_init(): GetModuleHandle() failed, GetLastError() returned %u\n", GetLastError());
-		exit(-1);
-	}
+		fprintf(debug_stream, "win32e_soundserver_init(): PostMessage(DO_SOUND) failed, GetLastError() returned %u\n", GetLastError());
 }
 
 /* function called when sound server child thread begins */
@@ -520,13 +517,13 @@ sound_win32e_exit(struct _state *s)
 	/* kill server */
 	global_sound_server->queue_command(0, SOUND_COMMAND_SHUTDOWN, 0);
 
+	/* kill timer */
+	timeKillEvent(time_keeper_id);
+
 	/* kill child thread */
 	WaitForSingleObject(child_thread, INFINITE);
 	CloseHandle(child_thread);
 	DeleteCriticalSection(&dq_cs);
-
-	/* kill timer */
-	timeKillEvent(time_keeper_id);
 
 	/* close handles */
 	CloseHandle(sound_data_event);

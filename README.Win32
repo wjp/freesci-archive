@@ -65,8 +65,11 @@ work properly. Also, fullscreen mode in SDL is currently not supported/working
 on Win32. Hopefully, both of these bugs will be fixed in an upcoming release.
 
 
-There is currently no way to change the default MIDI out device that FreeSCI
-chooses, but this should be fixed soon.
+To change the MIDI out device, add this line to your FreeSCI config file:
+
+midiout.win32mci.device = x
+
+where x is the number of the device you wish to use.
 
 
 DEBUGGING

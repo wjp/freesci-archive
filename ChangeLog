@@ -1,8 +1,36 @@
+2001-12-08  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/main.c (main): Fixed various memory leaks occurring with command
+	line option selection.
+
+	* src/include/engine.h:
+	* src/engine/game.c: Added other_libs_exit() so libraries can clean up
+	at the end of the program (for want of a better place to put it).
+
+	* src/sound/polled_ss.c:
+	* src/include/soundserver.h: Uses MIDI_CHANNELS #define with
+	playing_notes. Improved error messages.
+
+	* src/sound/sound.c (song_new): Made SATISFY_PURIFY permanent code.
+
+	* src/sound/soundserver.c: Improved error messages. Fixed
+	change_song(NULL) crash.
+
+	* src/sound/event_ss.c: Dumps song if reaches end of song prematurely.
+
+	* src/sound/event_ss_win32.c: Improved error messages.
+
+	* src/win32/freesci.def: Added other_libs_exit.
+
+	* src/win32/sciv.dsp:
+	* src/win32/fsci_dll.dsp: Generates map file on debug builds for
+	Purify.
+
 2001-12-07  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/sound.c:
 	* src/include/sound.h: Numbered #defines correctly.
-	
+
 	* src/sound/event_ss.c:
 	* src/include/win32/messages.h: Added SOUND_COMMAND_DO_SOUND for time
 	keeping and SOUND_COMMAND_REVERSE_STEREO messages.
@@ -12,7 +40,7 @@
 	for reverse stereo.
 
 	* ./README.Win32: Added note regarding MIDI device selection.
-	
+
 	* src/win32/fsci_dll.dsp: Added polled_ss_unix.c.
 
 2001-12-03  Alexander R Angas  <wgd@internode.on.net>

@@ -100,7 +100,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 	GTimeVal last_played, /* Time the last note was played at */
 		wakeup_time, /* Time at which we stop waiting for events */
 		ctime; /* 'Current time' (temporary local usage) */
-	playing_notes_t playing_notes[16];	/* keeps track of polyphony */
+	playing_notes_t playing_notes[MIDI_CHANNELS];	/* keeps track of polyphony */
 	byte mute_channel[MIDI_CHANNELS];	/* which channels are muted */
 	song_t *_songp = NULL;
 	songlib_t songlib = &_songp;   /* Song library */
@@ -112,7 +112,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 	int command = 0; /* MIDI operation */
 
 	/* initialise default values */
-	memset(playing_notes, 0, 16 * sizeof(playing_notes_t));
+	memset(playing_notes, 0, MIDI_CHANNELS * sizeof(playing_notes_t));
 	memset(mute_channel, MUTE_OFF, MIDI_CHANNELS * sizeof(byte));
 	memset(&suspend_time, 0, sizeof(GTimeVal));
 	memset(&wakeup_time, 0, sizeof(GTimeVal));
@@ -171,7 +171,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 			while ((tempticks = song->data[(song->pos)++]) == SCI_MIDI_TIME_EXPANSION_PREFIX) {
 				ticks += SCI_MIDI_TIME_EXPANSION_LENGTH;
 				if (song->pos >= song->size) {
-					fprintf(stderr, "Sound server: Error: Reached end of song while decoding prefix:\n");
+					fprintf(debug_stream, "Sound server: Error: Reached end of song while decoding prefix:\n");
 					dump_song(song);
 					song = NULL;
 				}
@@ -275,13 +275,13 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 
 							if (modsong->it)
 								pcm = modsong->it->check_pcm(modsong->it, &pcm_size, &sample_rate);
-							else fprintf(stderr, "Song has no iterator: Cannot check for PCM!\n");
+							else fprintf(debug_stream, "Song has no iterator: Cannot check for PCM!\n");
 
 							if (pcm) {
 								int fd;
 								int tmp;
 
-								fprintf(stderr,"SndSrv: Handle %04x: Playing PCM at %d Hz, %d bytes (%fs)\n",
+								fprintf(debug_stream,"SndSrv: Handle %04x: Playing PCM at %d Hz, %d bytes (%fs)\n",
 									event.handle, sample_rate, pcm_size,
 									(sample_rate)? ((pcm_size * 1.0) / (sample_rate * 1.0)) : 0);
 								fd = open("/dev/dsp", O_WRONLY);
@@ -296,14 +296,14 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 									if (ioctl(fd, SOUND_PCM_WRITE_RATE, &tmp))
 										perror("SndServ: While setting the sample rate on /dev/dsp\n");
 
-									fprintf(stderr, "SndSrv: Sample rate set to %d Hz (requested %d Hz)\n",
+									fprintf(debug_stream, "SndSrv: Sample rate set to %d Hz (requested %d Hz)\n",
 										tmp, sample_rate);
 
 									if (write(fd, pcm, pcm_size) < pcm_size)
 										perror("SndSrv: While writing to /dev/dsp\n");
 
 									close(fd);
-									fprintf(stderr, "SndSrv: Finished writing PCM to /dev/dsp\n");
+									fprintf(debug_stream, "SndSrv: Finished writing PCM to /dev/dsp\n");
 								}
 							} else {
 #endif
@@ -642,7 +642,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 					}
 
 					case SOUND_COMMAND_SHUTDOWN: {
-						fprintf(stderr,"Sound server: Received shutdown signal\n");
+						fprintf(debug_stream,"Sound server: Received shutdown signal\n");
 						midi_close();
 						song_lib_free(songlib);
 

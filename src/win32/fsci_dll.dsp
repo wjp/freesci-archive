@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FSCI_DLL_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /Zi /O1 /Ob2 /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "HAVE_DDRAW" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_STRING_H" /D "_CONSOLE" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D "NDEBUG" /D "SATISFY_PURIFY" /FR /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /O1 /Ob2 /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "HAVE_DDRAW" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_STRING_H" /D "_CONSOLE" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D "NDEBUG" /FR /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0xc09 /d "NDEBUG"
@@ -80,7 +80,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 dsound.lib dxguid.lib dxerr8.lib msvcrtd.lib ..\..\..\SDL\lib\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ole32.lib /nologo /dll /pdb:none /debug /machine:I386 /nodefaultlib:"libc.lib" /nodefaultlib:"libcmt.lib" /nodefaultlib:"msvcrt.lib" /nodefaultlib:"libcd.lib" /nodefaultlib:"libcmtd.lib" /out:"Debug/fsci.dll"
+# ADD LINK32 dsound.lib dxguid.lib dxerr8.lib msvcrtd.lib ..\..\..\SDL\lib\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ole32.lib /nologo /dll /pdb:none /map /debug /machine:I386 /nodefaultlib:"libc.lib" /nodefaultlib:"libcmt.lib" /nodefaultlib:"msvcrt.lib" /nodefaultlib:"libcd.lib" /nodefaultlib:"libcmtd.lib" /out:"Debug/fsci.dll"
 
 !ENDIF 
 
@@ -511,16 +511,20 @@ SOURCE=..\sound\soundserver.c
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\gfx\drivers\dd_driver.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\graphics_ddraw.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\include\win32\messages.h
 # End Source File
 # End Group
 # Begin Source File
 
 SOURCE=..\include\console.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\gfx\drivers\dd_driver.h
 # End Source File
 # Begin Source File
 
@@ -581,10 +585,6 @@ SOURCE=..\include\gfx_widgets.h
 # Begin Source File
 
 SOURCE=..\include\graphics.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\include\graphics_ddraw.h
 # End Source File
 # Begin Source File
 

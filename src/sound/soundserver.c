@@ -91,14 +91,14 @@ dump_song_pos(int i, song_t *song)
 	char mark = marks[i == song->loopmark][i == song->pos];
 
 	if ((i & 0xf) == 0)
-		fprintf(stderr, " %04x:\t", i);
-	fprintf(stderr, "%c%02x%c", mark, song->data[i], mark);
+		fprintf(debug_stream, " %04x:\t", i);
+	fprintf(debug_stream, "%c%02x%c", mark, song->data[i], mark);
 	if ((i & 0xf) == 0x7)
-		fprintf(stderr,"--");
+		fprintf(debug_stream,"--");
 	if ((i & 0xf) == 0x3 || (i & 0xf) == 0xb)
-		fprintf(stderr," ");
+		fprintf(debug_stream," ");
 	if ((i & 0xf) == 0xf)
-		fprintf(stderr,"\n");
+		fprintf(debug_stream,"\n");
 }
 
 void
@@ -106,23 +106,23 @@ dump_song(song_t *song)
 {
 	char *stati[] = {"stopped", "playing", "suspended", "waiting"};
 
-	fprintf(stderr, "song: ");
+	fprintf(debug_stream, "song: ");
 	if (!song)
-		fprintf(stderr, "NULL");
+		fprintf(debug_stream, "NULL");
 	else {
 		int i;
 
-		fprintf(stderr, "size=%d, pos=0x%x, loopmark=0x%x, loops_left=%d\n",
+		fprintf(debug_stream, "size=%d, pos=0x%x, loopmark=0x%x, loops_left=%d\n",
 			song->size, song->pos, song->loopmark, song->loops);
-		fprintf(stderr, " Current status: %d (%s), Handle is: 0x%04x\n",
+		fprintf(debug_stream, " Current status: %d (%s), Handle is: 0x%04x\n",
 			song->status,
 			(song->status >= 0 && song->status < 4)? stati[song->status] : "INVALID",
 			song->handle);
-		fprintf(stderr, "Mark descriptions: '.': Pos, '|': Loop mark, 'X': both\n");
+		fprintf(debug_stream, "Mark descriptions: '.': Pos, '|': Loop mark, 'X': both\n");
 
 		for (i = 0; i < song->size; i++)
 			dump_song_pos(i, song);
-		fprintf(stderr,"\n");
+		fprintf(debug_stream,"\n");
 	}
 }
 
@@ -152,7 +152,8 @@ imap_set(unsigned int action, int instr, int value)
 			    || value == RHYTHM)
 				MIDI_mapping[instr].gm_instr = (char)value;
 			else
-				fprintf(debug_stream, "Invalid instrument ID: %d\n", value);
+				fprintf(debug_stream,
+					"imap_set(): Invalid instrument ID: %d\n", value);
 
 	} else if (action == SOUND_COMMAND_IMAP_SET_KEYSHIFT) {
 			SOUNDSERVER_IMAP_CHANGE(keyshift, -128, 127,
@@ -175,17 +176,18 @@ imap_set(unsigned int action, int instr, int value)
 			    "instrument volume");
 
 	} else {
-			fprintf(debug_stream, "imap_set(): Internal error: "
-				"Invalid action %d!\n", action);
+			fprintf(debug_stream,
+				"imap_set(): Invalid instrument map sound command: %d\n",
+				action);
 	}
 }
 
 void
 change_song(song_t *new_song, sound_server_state_t *ss_state)
 {
+	guint8 i;
 	if (new_song)
 	{
-		guint8 i;
 		for (i = 0; i < MIDI_CHANNELS; i++) {
 			/* lingering notes are usually intended */
 			ss_state->playing_notes[i].polyphony = MAX(1, MIN(POLYPHONY(new_song, i),
@@ -195,9 +197,15 @@ change_song(song_t *new_song, sound_server_state_t *ss_state)
 			if (new_song->instruments[i])
 				midi_event2((guint8)(0xc0 | i), new_song->instruments[i]);
 		}
+		ss_state->current_song = new_song;
+		ss_state->current_song->pos = 33;
+
+	} else {
+		for (i = 0; i < MIDI_CHANNELS; i++)
+			ss_state->playing_notes[i].playing = 0;
+
+		ss_state->current_song = NULL;
 	}
-	ss_state->current_song = new_song;
-	ss_state->current_song->pos = 33;
 }
 
 void
@@ -216,8 +224,11 @@ init_handle(int priority, word song_handle, sound_server_state_t *ss_state)
 	fprintf(debug_stream, "Initialising song with handle %04x and priority %i\n", song_handle, priority);
 #endif
 
-	this_song = song_lib_find(ss_state->songlib, song_handle);
+	if (!song_handle)
+		fprintf(debug_stream, "init_handle(): Warning: Attempt to initialise NULL sound handle\n");
+
 	/* see if it's in the cache */
+	this_song = song_lib_find(ss_state->songlib, song_handle);
 
 	if (this_song)
 	{
@@ -283,7 +294,7 @@ play_handle(int priority, word song_handle, sound_server_state_t *ss_state)
 		change_song(this_song, ss_state);
 
 	} else {
-		fprintf(debug_stream, "Attempt to play invalid handle %04x\n", song_handle);
+		fprintf(debug_stream, "play_handle(): Attempt to play invalid sound handle %04x\n", song_handle);
 	}
 }
 
@@ -316,7 +327,7 @@ stop_handle(word song_handle, sound_server_state_t *ss_state)
 		global_sound_server->queue_event(song_handle, SOUND_SIGNAL_FINISHED, 0);
 
 	} else {
-		fprintf(debug_stream, "Attempt to stop invalid handle %04x\n", song_handle);
+		fprintf(debug_stream, "stop_handle(): Attempt to stop invalid sound handle %04x\n", song_handle);
 	}
 }
 
@@ -360,7 +371,7 @@ suspend_handle(word song_handle, sound_server_state_t *ss_state)
 		}
 
 	} else {
-		fprintf(debug_stream, "Attempt to suspend invalid handle %04x\n", song_handle);
+		fprintf(debug_stream, "suspend_handle(): Attempt to suspend invalid sound handle %04x\n", song_handle);
 	}
 }
 
@@ -386,6 +397,9 @@ resume_handle(word song_handle, sound_server_state_t *ss_state)
 			fprintf(debug_stream, "Attempt to resume handle %04x not suspended\n",
 				song_handle);
 		}
+
+	} else {
+		fprintf(debug_stream, "resume_handle(): Attempt to resume invalid sound handle %04x\n", song_handle);
 	}
 }
 
@@ -407,7 +421,7 @@ renice_handle(int priority, word song_handle, sound_server_state_t *ss_state)
 		song_lib_resort(ss_state->songlib, this_song);
 
 	} else {
-		fprintf(debug_stream, "Attempt to renice invalid handle %04x\n", song_handle);
+		fprintf(debug_stream, "renice_handle(): Attempt to renice invalid sound handle %04x\n", song_handle);
 	}
 }
 
@@ -439,7 +453,7 @@ fade_handle(int ticks, word song_handle, sound_server_state_t *ss_state)
 		this_song->maxfade = ticks;
 
 	} else {
-		fprintf(debug_stream, "Attempt to fade invalid handle %04x\n", song_handle);
+		fprintf(debug_stream, "fade_handle(): Attempt to fade invalid sound handle %04x\n", song_handle);
 	}
 }
 
@@ -459,7 +473,7 @@ loop_handle(int loops, word song_handle, sound_server_state_t *ss_state)
 		this_song->loops = loops;
 
 	} else {
-		fprintf(debug_stream, "Attempt to set loops on invalid handle %04x\n", song_handle);
+		fprintf(debug_stream, "loop_handle(): Attempt to set loops on invalid sound handle %04x\n", song_handle);
 	}
 }
 
@@ -486,7 +500,7 @@ dispose_handle(word song_handle, sound_server_state_t *ss_state)
 		}
 
 	} else {
-		fprintf(debug_stream, "Attempt to dispose invalid handle %04x\n", song_handle);
+		fprintf(debug_stream, "dispose_handle(): Attempt to dispose invalid sound handle %04x\n", song_handle);
 	}
 }
 
@@ -502,7 +516,7 @@ set_channel_mute(int channel, unsigned char mute_setting, sound_server_state_t *
 		ss_state->mute_channel[channel] = mute_setting;
 
 	} else {
-		fprintf(debug_stream, "Attempt to mute invalid channel %i\n", channel);
+		fprintf(debug_stream, "set_channel_mute(): Attempt to mute invalid sound channel %i\n", channel);
 	}
 }
 

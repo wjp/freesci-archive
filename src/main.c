@@ -849,10 +849,13 @@ main(int argc, char** argv)
 		version = cl_options.version;
 
 	if (cl_options.gamedir)
+	{
 		if (chdir(cl_options.gamedir)) {
 			printf ("Error changing to game directory '%s'\n", cl_options.gamedir);
 			exit(1);
 		}
+		free(cl_options.gamedir);
+	}
 
 	getcwd(resource_dir, PATH_MAX); /* Store resource directory */
 
@@ -877,7 +880,7 @@ main(int argc, char** argv)
 	sciprintf("FreeSCI, version "VERSION"\n");
 
 	gamestate = sci_malloc(sizeof(state_t));
-
+	memset(gamestate, 0, sizeof(state_t));
 
 	if (init_gamestate(gamestate, resmgr, version))
 		return 1;
@@ -913,21 +916,31 @@ main(int argc, char** argv)
 	/* gcc doesn't warn about (void *)s being typecast. If your compiler doesn't like these
 	** implicit casts, don't hesitate to typecast appropriately.  */
 	gfx_driver_name = cl_options.gfx_driver_name;
+	free(cl_options.gfx_driver_name);
 
 	if (cl_options.midiout_driver_name)
+	{
 		midiout_driver = old_lookup_driver((old_lookup_funct_t *)midiout_find_driver,
 						   MSVC_FUNCTYPECAST_KLUDGE list_midiout_drivers,
 						   "midiout driver", cl_options.midiout_driver_name);
+		free(cl_options.midiout_driver_name);
+	}
 
 	if (cl_options.midi_device_name)
+	{
 		midi_device = old_lookup_driver((old_lookup_funct_t *)midi_find_device,
 						MSVC_FUNCTYPECAST_KLUDGE list_midi_devices,
 						"MIDI device", cl_options.midi_device_name);
+		free(cl_options.midi_device_name);
+	}
 
 	if (cl_options.sound_server_name)
+	{
 		sound_server = old_lookup_driver((old_lookup_funct_t *)sound_server_find_driver,
 						 MSVC_FUNCTYPECAST_KLUDGE list_sound_servers,
 						 "sound server", cl_options.sound_server_name);
+		free(cl_options.sound_server_name);
+	}
 
 	if (confs) {
 		memcpy(gfx_options, &(active_conf->gfx_options), sizeof(gfx_options_t)); /* memcpy so that console works */
@@ -1122,9 +1135,12 @@ main(int argc, char** argv)
 	wait(NULL); /* Wait for sound server process to die, if neccessary */
 	printf(" OK.\n");
 #endif
-	sci_free(gamestate);
 
 	gfxop_exit(gfx_state);
+
+	sci_free(gamestate);
+
+	other_libs_exit();
 
 #ifdef WITH_DMALLOC
 	fprintf(stderr,"--- Everything but the two console buffers should have been freed now ---\n");

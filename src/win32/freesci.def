@@ -59,13 +59,13 @@ EXPORTS
   map_MIDI_instruments
   ;using_history DATA
   ;add_history
-    
+
   gfxop_init
   gfxop_exit
   gfxop_init_default
   game_init_graphics
   con_hook_int
-  
+
   gfx_find_driver
   gfx_get_driver_name
   gfx_crossblit_alpha_threshold DATA
@@ -95,6 +95,8 @@ EXPORTS
   sci_resource_type_suffixes
   sci_resource_types
   sci_version_types
+
+  other_libs_exit
 
   sci0_read_resource_map
   scir_new_resource_manager

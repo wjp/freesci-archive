@@ -550,7 +550,7 @@ typedef struct {
 	unsigned int ticks_to_wait;	/* before next midi operation */
 	guint8 master_volume;	/* (stored as percentage) */
 	sound_server_t *ss_driver;	/* driver currently being used for sound server */
-	playing_notes_t playing_notes[16];	/* keeps track of polyphony */
+	playing_notes_t playing_notes[MIDI_CHANNELS];	/* keeps track of polyphony */
 	byte mute_channel[MIDI_CHANNELS];	/* which channels are muted */
 	int reverse_stereo;	/* reverse stereo setting */
 

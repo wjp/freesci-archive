@@ -1,7 +1,6 @@
 /***************************************************************************
  engine.h Copyright (C) 1999,2000,01 Christoph Reichenbach
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -279,6 +278,11 @@ gamestate_restore(state_t *s, char *dirname);
 ** Parameters: (state_t *) s: An older state from the same game
 **             (char *) dirname: The subdirectory to restore from
 ** Returns   : (state_t *) NULL on failure, a pointer to a valid state_t otherwise
+*/
+
+void
+other_libs_exit();
+/* Called directly before FreeSCI ends to allow libraries to clean up
 */
 
 #endif /* !_SCI_ENGINE_H */
