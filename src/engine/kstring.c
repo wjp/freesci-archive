@@ -115,29 +115,26 @@ vocab_match_simple(state_t *s, heap_ptr addr)
 #endif /* SCI_SIMPLE_SAID_CODE */
 
 
-void
-kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kSaid(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-  heap_ptr said_block = UPARAM(0);
-  int new_lastmatch;
+	reg_t heap_said_block = argv[0];
+	byte *said_block = (byte *) kernel_dereference_pointer(s, heap_said_block, 0);
+	int new_lastmatch;
 
-  if (!said_block) { s->acc=0; return; }
+	if (!said_block) {
+		SCIkdebug(SCIkWARNING, "Said on non-string, pointer "PREG"\n", PRINT_REG(heap_said_block));
+		return NULL_REG;
+	}
 
-  if (argc != 1)
-    SCIkwarn(SCIkWARNING, "Said() called with %d parameters\n", argc);
+	if (s->debug_mode & (1 << SCIkPARSER_NR)) {
+		SCIkdebug(SCIkPARSER, "Said block:", 0);
+		vocab_decypher_said_block(s, said_block);
+	}
 
-  if (s->debug_mode & (1 << SCIkPARSER_NR)) {
-    SCIkdebug(SCIkPARSER, "Said block:", 0);
-    vocab_decypher_said_block(s, said_block);
-  }
-
-#warning "Re-enable selector access with better macros"
-#if 0
-  if (!IS_NULL_REG(s->parser_event) || (GET_SELECTOR(s->parser_event, claimed))) {
-    s->acc = 0;
-    return;
-  }
-#endif
+	if (IS_NULL_REG(s->parser_event) || (GET_SEL32V(s->parser_event, claimed))) {
+		return NULL_REG;
+	}
 
 #ifdef SCI_SIMPLE_SAID_CODE
 
@@ -160,27 +157,25 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
 #else /* !SCI_SIMPLE_SAID_CODE */
-  if ((new_lastmatch = said(s, s->heap + said_block, (s->debug_mode & (1 << SCIkPARSER_NR))))
-      != SAID_NO_MATCH) { /* Build and possibly display a parse tree */
+	if ((new_lastmatch = said(s, said_block, (s->debug_mode & (1 << SCIkPARSER_NR))))
+	    != SAID_NO_MATCH) { /* Build and possibly display a parse tree */
 
-    if (s->debug_mode & (1 << SCIkPARSER_NR))
-      sciprintf("Match.\n");
+		if (s->debug_mode & (1 << SCIkPARSER_NR))
+			sciprintf("Match.\n");
 
-    s->acc = 1;
+		s->r_acc = make_reg(0, 1);
 
-#warning "Re-enable selector write with new selector interface"
-#if 0
-    if (new_lastmatch != SAID_PARTIAL_MATCH)
-      PUT_SELECTOR(s->parser_event, claimed, 1);
-#endif
+		if (new_lastmatch != SAID_PARTIAL_MATCH)
+			PUT_SEL32V(s->parser_event, claimed, 1);
 
-    s->parser_lastmatch_word = new_lastmatch;
+		s->parser_lastmatch_word = new_lastmatch;
 
-  } else {
-    s->parser_lastmatch_word = SAID_NO_MATCH;
-    s->acc = 0;
-  }
+	} else {
+		s->parser_lastmatch_word = SAID_NO_MATCH;
+		return NULL_REG;
+	}
 #endif /* !SCI_SIMPLE_SAID_CODE */
+	return s->r_acc;
 }
 
 
@@ -251,101 +246,94 @@ kSetSynonyms(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
 
-void
-kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kParse(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-  int stringpos = UPARAM(0);
-  char *string = (char *) (s->heap + stringpos);
-  int words_nr;
-  char *error;
-  result_word_t *words;
-  heap_ptr event = UPARAM(1);
-#warning "Resolve reg_t setter via appropriate lookup"
-#if 0
-  s->parser_event = event;
-#endif
-  s->parser_lastmatch_word = SAID_NO_MATCH;
+	reg_t stringpos = argv[0];
+	char *string = (char *) kernel_dereference_pointer(s, stringpos, 0);
+	int words_nr;
+	char *error;
+	result_word_t *words;
+	reg_t event = argv[1];
 
-  if (s->parser_valid == 2) {
-    sciprintf("Parsing skipped: Parser in simparse mode\n");
-    return;
-  }
+	s->parser_event = event;
 
-  words = vocab_tokenize_string(string, &words_nr,
-				s->parser_words, s->parser_words_nr,
-				s->parser_suffices, s->parser_suffices_nr,
-				&error);
-  s->parser_valid = 0; /* not valid */
+	s->parser_lastmatch_word = SAID_NO_MATCH;
 
-  if (words) {
+	if (s->parser_valid == 2) {
+		sciprintf("Parsing skipped: Parser in simparse mode\n");
+		return;
+	}
 
-    int syntax_fail = 0;
+	words = vocab_tokenize_string(string, &words_nr,
+				      s->parser_words, s->parser_words_nr,
+				      s->parser_suffices, s->parser_suffices_nr,
+				      &error);
+	s->parser_valid = 0; /* not valid */
 
-    vocab_synonymize_tokens(words, words_nr, s->synonyms, s->synonyms_nr);
+	if (words) {
 
-    s->acc = 1;
+		int syntax_fail = 0;
 
-    if (s->debug_mode & (1 << SCIkPARSER_NR)) {
-      int i;
+		vocab_synonymize_tokens(words, words_nr, s->synonyms, s->synonyms_nr);
 
-      SCIkdebug(SCIkPARSER, "Parsed to the following blocks:\n", 0);
+		s->acc = 1;
 
-      for (i = 0; i < words_nr; i++)
-	SCIkdebug(SCIkPARSER, "   Type[%04x] Group[%04x]\n", words[i].w_class, words[i].group);
-    }
+		if (s->debug_mode & (1 << SCIkPARSER_NR)) {
+			int i;
 
-    if (vocab_build_parse_tree(&(s->parser_nodes[0]), words, words_nr, s->parser_branches,
-			       s->parser_rules))
-      syntax_fail = 1; /* Building a tree failed */
+			SCIkdebug(SCIkPARSER, "Parsed to the following blocks:\n", 0);
+
+			for (i = 0; i < words_nr; i++)
+				SCIkdebug(SCIkPARSER, "   Type[%04x] Group[%04x]\n", words[i].w_class, words[i].group);
+		}
+
+		if (vocab_build_parse_tree(&(s->parser_nodes[0]), words, words_nr, s->parser_branches,
+					   s->parser_rules))
+			syntax_fail = 1; /* Building a tree failed */
 
 #ifdef SCI_SIMPLE_SAID_CODE
-    vocab_build_simple_parse_tree(&(s->parser_nodes[0]), words, words_nr);
+		vocab_build_simple_parse_tree(&(s->parser_nodes[0]), words, words_nr);
 #endif /* SCI_SIMPLE_SAID_CODE */
 
-    free(words);
+		free(words);
 
-    if (syntax_fail) {
+		if (syntax_fail) {
 
-      s->acc = 1;
-      PUT_SELECTOR(event, claimed, 1);
-#warning "Re-enable selector invocation"
-#if 0
-      invoke_selector(INV_SEL(s->game_obj, syntaxFail, 0), 2, (int) s->parser_base, (int) stringpos);
-#endif
-      /* Issue warning */
+			s->acc = 1;
+			PUT_SEL32V(event, claimed, 1);
 
-      SCIkdebug(SCIkPARSER, "Tree building failed\n");
+			invoke_selector(INV_SEL(s->game_obj, syntaxFail, 0), 2, s->parser_base, stringpos);
+			/* Issue warning */
 
-    } else {
-      s->parser_valid = 1;
-      PUT_SELECTOR(event, claimed, 0);
+			SCIkdebug(SCIkPARSER, "Tree building failed\n");
+
+		} else {
+			s->parser_valid = 1;
+			PUT_SEL32V(event, claimed, 0);
 #ifndef SCI_SIMPLE_SAID_CODE
-      if (s->debug_mode & (1 << SCIkPARSER_NR))
-	vocab_dump_parse_tree("Parse-tree", s->parser_nodes);
+			if (s->debug_mode & (1 << SCIkPARSER_NR))
+				vocab_dump_parse_tree("Parse-tree", s->parser_nodes);
 #endif /* !SCI_SIMPLE_SAID_CODE */
-    }
+		}
 
-  } else {
+	} else {
 
-    s->acc = 0;
-    PUT_SELECTOR(event, claimed, 1);
-    if (error) {
+		s->r_acc = make_reg(0, 0);
+		PUT_SEL32V(event, claimed, 1);
+		if (error) {
+			char *pbase_str = (char *) kernel_dereference_pointer(s, s->parser_base, 0);
+			strcpy(pbase_str, error);
+			SCIkdebug(SCIkPARSER,"Word unknown: %s\n", error);
+			/* Issue warning: */
 
-#warning "Fix usage of parser_base"
-#if 0
-      strcpy((char *) s->heap + s->parser_base, error);
-#endif
-      SCIkdebug(SCIkPARSER,"Word unknown: %s\n", error);
-      /* Issue warning: */
+			invoke_selector(INV_SEL(s->game_obj, wordFail, 0), 2, s->parser_base, stringpos);
+			free(error);
+			return make_reg(0, 1); /* Tell them that it dind't work */
+		}
+	}
 
-#warning "Re-enable selector invocation"
-#if 0
-      invoke_selector(INV_SEL(s->game_obj, wordFail, 0), 2, (int) s->parser_base, (int) stringpos);
-#endif
-      free(error);
-      s->acc = 1; /* Tell them that it dind't work */
-    }
-  }
+	return s->r_acc;
 }
 
 
@@ -381,8 +369,8 @@ kStrCmp(state_t *s, int funct_nr, int argc, heap_ptr argp)
 reg_t
 kStrCpy(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	char *dest = kernel_dereference_pointer(s, argv[0], 0);
-	char *src = kernel_dereference_pointer(s, argv[1], 0);
+	char *dest = (char *) kernel_dereference_pointer(s, argv[0], 0);
+	char *src = (char *) kernel_dereference_pointer(s, argv[1], 0);
 
 	if (!dest) {
 		SCIkdebug(SCIkWARNING, "Attempt to strcpy TO invalid pointer "PREG"!\n",
@@ -407,7 +395,7 @@ kStrCpy(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kStrAt(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	char *dest = kernel_dereference_pointer(s, argv[0], 0);
+	char *dest = (char *) kernel_dereference_pointer(s, argv[0], 0);
 
 	if (!dest) {
 		SCIkdebug(SCIkWARNING, "Attempt to strat at invalid pointer "PREG"!\n",

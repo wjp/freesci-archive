@@ -1621,7 +1621,6 @@ lookup_selector(state_t *s, reg_t obj_location, selector_t selector_id, reg_t **
 
 	if (!obj) {
 		CORE_ERROR("SLC-LU", "Attempt to send to non-object or invalid script");
-		BREAKPOINT();
 		sciprintf("Address was "PREG"\n", PRINT_REG(obj_location));
 		return SELECTOR_NONE;
 	}
@@ -1915,7 +1914,8 @@ script_uninstantiate(state_t *s, int script_nr)
 {
 	reg_t reg = make_reg( 0, 0 );
 	int objtype, objlength;
-	
+	int i;
+
 	reg.segment = s->seg_manager.seg_get( &s->seg_manager, script_nr);
 	
 	if (!s->seg_manager.isloaded (&s->seg_manager, script_nr, SCRIPT_ID) || reg.segment <= 0 ) { /* Is it already loaded? */
@@ -1929,11 +1929,13 @@ script_uninstantiate(state_t *s, int script_nr)
 
 	s->seg_manager.decrement_lockers( &s->seg_manager, reg.segment, SEG_ID);  /* One less locker */
 
-	sciprintf("Unlocking script.%03d\n", script_nr);
 	if( s->seg_manager.get_lockers( &s->seg_manager, reg.segment, SEG_ID) > 0 )
 		return;
 
-	sciprintf("DISPOSING script.%03d\n", script_nr);
+	/* Free all classtable references to this script */
+	for (i = 0; i < s->classtable_size; i++)
+		if (s->classtable[i].reg.segment == reg.segment)
+			s->classtable[i].reg = NULL_REG;
 
 	do {
 		reg.offset += objlength; /* Step over the last checked object */

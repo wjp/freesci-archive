@@ -91,7 +91,6 @@ void kLocalToGlobal(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kWait(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kCosDiv(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSinDiv(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kParse(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kShakeScreen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 #ifdef _WIN32
 void kDeviceInfo_Win32(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -99,7 +98,6 @@ void kDeviceInfo_Win32(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDeviceInfo_Unix(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 #endif
 void kRestartGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kSaid(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetSynonyms(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetEvent(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetMenu(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -115,12 +113,14 @@ void kRestoreGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDoAvoider(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kFileIO(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kAvoidPath(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kLock(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kMemory(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 
 
 /* New kernel functions */
+reg_t kMemory(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kAvoidPath(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kParse(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kSaid(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kStrCpy(struct _state *s, int funct_nr, int argc, reg_t *argp);
 reg_t kStrAt(struct _state *s, int funct_nr, int argc, reg_t *argp);
 reg_t kEditControl(struct _state *s, int funct_nr, int argc, reg_t *argv);
@@ -215,8 +215,8 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*21*/	{KF_OLD, "MenuSelect", {old:kMenuSelect}},
 /*22*/	{KF_OLD, "AddMenu", {old:kAddMenu}},
 /*23*/	{KF_OLD, "DrawStatus", {old:kDrawStatus}},
-/*24*/	{KF_OLD, "Parse", {old:kParse}},
-/*25*/	{KF_OLD, "Said", {old:kSaid}},
+/*24*/	{KF_NEW, "Parse", {new:{kParse, "ro"}}},
+/*25*/	{KF_NEW, "Said", {new:{kSaid, "r"}}},
 /*26*/	{KF_OLD, "SetSynonyms", {old:kSetSynonyms}},
 /*27*/	{KF_OLD, "HaveMouse", {old:kHaveMouse}},
 /*28*/	{KF_OLD, "SetCursor", {old:kSetCursor}},
@@ -302,9 +302,9 @@ sci_kernel_function_t kfunct_mappers[] = {
 
   /* Experimental functions */
 /*74*/	{KF_OLD, "FileIO", {old:kFileIO}},
-/*(?)*/	{KF_OLD, "Memory", {old:kMemory}},
+/*(?)*/	{KF_NEW, "Memory", {new:{kMemory, "i.*"}}},
 /*(?)*/	{KF_OLD, "Sort", {old:kSort}},
-/*(?)*/	{KF_OLD, "AvoidPath", {old:kAvoidPath}},
+/*(?)*/	{KF_NEW, "AvoidPath", {new:{kAvoidPath, ".iiIO.*"}}},
 /*(?)*/	{KF_OLD, "Lock", {old:kLock}},
 
   /* Non-experimental Functions without a fixed ID */
@@ -583,57 +583,89 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #define	K_MEMORY_MEMCPY			4
 #define K_MEMORY_PEEK			5
 #define K_MEMORY_POKE			6
-void
-kMemory(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kMemory(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 
-	sciprintf("Warning: Memory(%d) invoked!\n", UPARAM(0));
-
-	switch (PARAM(0)) {
+	switch (UKPV(0)) {
 
 	case K_MEMORY_ALLOCATE_CRITICAL :
 
-  //		s->acc=heap_allocate(s->_heap, UPARAM(1))+2;
-		if (!s->acc)
-			{
-				SCIkwarn(SCIkERROR, "Critical heap allocation failed\n");
-				script_error_flag = script_debug_flag = 1;
-			}
+		s->r_acc = kalloc(s, "kMemory() critical", UKPV(1));
+
+		if (!s->r_acc.segment) {
+			SCIkwarn(SCIkERROR, "Critical heap allocation failed\n");
+			script_error_flag = script_debug_flag = 1;
+		}
+
+		return s->r_acc;
 		break;
 
 	case K_MEMORY_ALLOCATE_NONCRITICAL :
 
-  //		s->acc=heap_allocate(s->_heap, UPARAM(1))+2;
+		s->r_acc = kalloc(s, "kMemory() non-critical", UKPV(1));
 		break;
 
 	case K_MEMORY_FREE :
 
-  //		heap_free(s->_heap, UPARAM(1)-2);
+		kfree(s, argv[1]);
 		break;
 
-	case K_MEMORY_MEMCPY :
-		{
+	case K_MEMORY_MEMCPY : {
+		int size = UKPV(3);
+		char *dest = (char *) kernel_dereference_pointer(s, argv[1], size);
+		char *src = (char *) kernel_dereference_pointer(s, argv[2], size);
 
-  /*			int dest = UPARAM(1);
-			int src = UPARAM(2);
-			int n = UPARAM(3);
-
-			memcpy(s->heap + dest, s->heap + src, n);
-  */
-			break;
+		if (dest && src)
+			memcpy(dest, src, size);
+		else {
+			SCIkdebug(SCIkWARNING, "Warning: Could not execute kMemory:memcpy of %d bytes:\n", size);
+			if (!dest) {
+				SCIkdebug(SCIkWARNING, "  dest ptr ("PREG") invalid/memory region too small\n", PRINT_REG(argv[1]));
+			}
+			if (!src) {
+				SCIkdebug(SCIkWARNING, "  src ptr ("PREG") invalid/memory region too small\n", PRINT_REG(argv[2]));
+			}
 		}
 
-	case K_MEMORY_PEEK :
+		break;
+		}
 
-  //		s->acc=GET_HEAP(UPARAM(1));
+	case K_MEMORY_PEEK : {
+		char *ref = (char *) kernel_dereference_pointer(s, argv[1], 2);
+		if (ref)
+			return make_reg(0, getInt16(ref));
+		else {
+			SCIkdebug(SCIkERROR, "Attempt to poke invalid memory at "PREG"!\n",
+				  PRINT_REG(argv[1]));
+			return s->r_acc;
+		}
+	}
 		break;
 
-	case K_MEMORY_POKE :
+	case K_MEMORY_POKE : {
+		char *ref = (char *) kernel_dereference_pointer(s, argv[1], 2);
 
-  //		PUT_HEAP(UPARAM(1), UPARAM(2));
+		if (argv[1].segment) {
+			SCIkdebug(SCIkERROR, "Attempt to poke memory reference "PREG" to "PREG"!\n",
+				  PRINT_REG(argv[2]), PRINT_REG(argv[1]));
+			return s->r_acc;
+		}
+
+		if (!ref) {
+			SCIkdebug(SCIkERROR, "Attempt to poke invalid memory at "PREG"!\n",
+				  PRINT_REG(argv[1]));
+			return s->r_acc;
+		}
+
+		putInt16(ref, argv[2].offset);
+		return s->r_acc;
+	}
 		break;
 
 	}
+
+	return s->r_acc;
 }
 
 reg_t

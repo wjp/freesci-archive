@@ -31,10 +31,10 @@
 #define POLY_LAST_POINT 0x7777
 #define POLY_POINT_SIZE 4
 
-#define POLY_GET_POINT(p,i,x,y) x=GET_HEAP(p+i*POLY_POINT_SIZE); \
-                                y=GET_HEAP(p+2+i*POLY_POINT_SIZE);
-#define POLY_SET_POINT(p,i,x,y) PUT_HEAP(p+i*POLY_POINT_SIZE, x); \
-                                PUT_HEAP(p+2+i*POLY_POINT_SIZE, y);
+#define POLY_GET_POINT(p,i,x,y) x = getInt16(p+i*POLY_POINT_SIZE); \
+                                y = getInt16(p+2+i*POLY_POINT_SIZE);
+#define POLY_SET_POINT(p,i,x,y) putInt16(p+i*POLY_POINT_SIZE, x); \
+                                putInt16(p+2+i*POLY_POINT_SIZE, y);
 
 /* 
 
@@ -67,50 +67,44 @@ expected to be closed and not to self-intersect.
              (enough room to pass through)
 */
 
-void
-kAvoidPath(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kAvoidPath(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int startx = UPARAM(1);
-	int starty = UPARAM(2);
+	int startx = UKPV(1);
+	int starty = UKPV(2);
 
 	switch (argc) {
 	case 3 :
 	{
-		heap_ptr polygon = UPARAM(3);
+		reg_t polygon = argv[3];
 
-		s->acc = 0; /* Is (startx,starty) inside the polygon? */
+		return NULL_REG; /* Is (startx,starty) inside the polygon? */
 		break;
 	}		
 	case 6 :
 	case 7 :
 	{
-		int endx = UPARAM(3);
-		int endy = UPARAM(4);
-		heap_ptr poly_list = UPARAM(5);
-		heap_ptr poly_list_size = UPARAM(6);
-		int unknown = UPARAM_OR_ALT(7, 1);
-		heap_ptr output;
+		int endx = UKPV(3);
+		int endy = UKPV(4);
+		reg_t poly_list = argv[5];
+		int poly_list_size = UKPV(6);
+		int unknown = UKPV_OR_ALT(7, 1);
+		reg_t output;
+		byte *oref;
 
-		if (!poly_list)
-		{
-			/* Generate a straight line. */
-			output=heap_allocate(s->_heap, POLY_POINT_SIZE*3);
-
-			POLY_SET_POINT(output, 0, startx, starty);
-			POLY_SET_POINT(output, 1, endx, endy);
-			POLY_SET_POINT(output, 2, POLY_LAST_POINT, POLY_LAST_POINT);
-		} else
-		{
-			SCIkwarn(SCIkSTUB, "The polygon avoidance algorithm is not "
-			                   "implemented for non-trivial cases yet.\n"
-				           "A crash is imminent.\n");
-			output = 0; /* This will fail quickly and let
-				       people know when the need
-				       arises */ 
+		if (poly_list.segment) {
+			SCIkwarn(SCIkWARNING, "Fix me: Polygon avoidance algorithm needed!\n");
 		}
 
-		s->acc=output;
-		break;
+		/* Generate a straight line. */
+		output = kalloc(s, "AvoidPath: polyline", POLY_POINT_SIZE*3);
+		oref = kmem(s, output);
+
+		POLY_SET_POINT(oref, 0, startx, starty);
+		POLY_SET_POINT(oref, 1, endx, endy);
+		POLY_SET_POINT(oref, 2, POLY_LAST_POINT, POLY_LAST_POINT);
+
+		return output; /* Memory is freed by explicit calls to Memory */
 	}
 	}
 }

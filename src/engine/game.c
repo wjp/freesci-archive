@@ -383,7 +383,6 @@ script_init_engine(state_t *s, sci_version_t version)
 	/* Allocate static buffer for savegame and CWD directories */
 	sys_string_acquire(s->sys_strings, SYS_STRING_SAVEDIR, "savedir", MAX_SAVE_DIR_SIZE);
 
-	s->save_dir = heap_allocate(s->_heap, MAX_SAVE_DIR_SIZE);
 	s->save_dir_copy = make_reg(s->sys_strings_segment, SYS_STRING_SAVEDIR);
 	s->save_dir_edit_offset = 0;
 
@@ -445,8 +444,6 @@ script_free_vm_memory(state_t *s)
 	int i;
 
 	sciprintf("Freeing VM memory\n");
-	heap_free(s->_heap, s->save_dir);
-	sci_free(s->save_dir_copy_buf);
 	s->save_dir_copy_buf = NULL;
 
 	heap_del(s->_heap);
@@ -550,10 +547,8 @@ game_init(state_t *s)
 	s->status_bar_foreground = 0;
 	s->status_bar_background = 15;
 
-#warning "Initialize parser base to a segment of its own"
-#if 0
-	s->parser_base = parser_handle + 2;
-#endif
+	sys_string_acquire(s->sys_strings, SYS_STRING_PARSER_BASE, "parser-base", MAX_PARSER_BASE);
+	s->parser_base = make_reg(s->sys_strings_segment, SYS_STRING_PARSER_BASE);
 
 	sci_get_current_time(&(s->game_start_time)); /* Get start time */
 	memcpy(&(s->last_wait_time), &(s->game_start_time), sizeof(GTimeVal));

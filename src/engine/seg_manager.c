@@ -120,7 +120,7 @@ find_free_id(seg_manager_t *self, int *id)
 	return retval;
 }
 
-static inline mem_obj_t *
+static mem_obj_t *
 alloc_nonscript_segment(seg_manager_t *self, mem_obj_enum type, seg_id_t *segid)
 { /* Allocates a non-script segment */
 	int id;
@@ -338,6 +338,7 @@ mem_obj_allocate(seg_manager_t *self, seg_id_t segid, int hash_id, mem_obj_enum 
 
 	if (segid >= self->heap_size) {
 		void *temp;
+		int i, oldhs = self->heap_size;
 
 		if (segid >= self->heap_size * 2) {
 			sciprintf( "seg_manager.c: hash_map error or others??" );
@@ -350,6 +351,9 @@ mem_obj_allocate(seg_manager_t *self, seg_id_t segid, int hash_id, mem_obj_enum 
 			return NULL;
 		}
 		self->heap = (mem_obj_t**)  temp;
+
+		/* Clear pointers */
+		memset(self->heap + oldhs, 0, sizeof(mem_obj_t *) * (self->heap_size - oldhs));
 	}
 
 	mem->segmgr_id = hash_id;

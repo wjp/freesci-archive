@@ -230,43 +230,55 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	switch (command) {
 	case _K_SCI0_SOUND_INIT_HANDLE:
-		sfx_add_song(&s->sound,
-			     build_iterator(s, GET_SEL32V(obj, number)),
-			     0, handle);
-		PUT_SEL32V(obj, state, _K_SOUND_STATUS_INITIALIZED);
+		if (obj.segment) {
+			sfx_add_song(&s->sound,
+				     build_iterator(s, GET_SEL32V(obj, number)),
+				     0, handle);
+			PUT_SEL32V(obj, state, _K_SOUND_STATUS_INITIALIZED);
+		}
 		break;
 
 	case _K_SCI0_SOUND_PLAY_HANDLE:
-		sfx_song_set_status(&s->sound,
-				    handle, SOUND_STATUS_PLAYING);
-		sfx_song_set_loops(&s->sound,
-				   handle, GET_SEL32V(obj, loop));
-		PUT_SEL32V(obj, state, _K_SOUND_STATUS_PLAYING);
+		if (obj.segment) {
+			sfx_song_set_status(&s->sound,
+					    handle, SOUND_STATUS_PLAYING);
+			sfx_song_set_loops(&s->sound,
+					   handle, GET_SEL32V(obj, loop));
+			PUT_SEL32V(obj, state, _K_SOUND_STATUS_PLAYING);
+		}
 		break;
 
 	case _K_SCI0_SOUND_NOP:
 		break;
 
 	case _K_SCI0_SOUND_DISPOSE_HANDLE:
-		sfx_remove_song(&s->sound, handle);
+		if (obj.segment) {
+			sfx_remove_song(&s->sound, handle);
+		}
 		break;
 
 	case _K_SCI0_SOUND_STOP_HANDLE:
-		sfx_song_set_status(&s->sound,
-				    handle, SOUND_STATUS_STOPPED);
-		PUT_SEL32V(obj, state, SOUND_STATUS_STOPPED);
+		if (obj.segment) {
+			sfx_song_set_status(&s->sound,
+					    handle, SOUND_STATUS_STOPPED);
+			PUT_SEL32V(obj, state, SOUND_STATUS_STOPPED);
+		}
 		break;
 
 	case _K_SCI0_SOUND_SUSPEND_HANDLE:
-		sfx_song_set_status(&s->sound,
-				    handle, SOUND_STATUS_SUSPENDED);
-		PUT_SEL32V(obj, state, SOUND_STATUS_SUSPENDED);
+		if (obj.segment) {
+			sfx_song_set_status(&s->sound,
+					    handle, SOUND_STATUS_SUSPENDED);
+			PUT_SEL32V(obj, state, SOUND_STATUS_SUSPENDED);
+		}
 		break;
 
 	case _K_SCI0_SOUND_RESUME_HANDLE:
-		sfx_song_set_status(&s->sound,
-				    handle, SOUND_STATUS_PLAYING);
-		PUT_SEL32V(obj, state, SOUND_STATUS_PLAYING);
+		if (obj.segment) {
+			sfx_song_set_status(&s->sound,
+					    handle, SOUND_STATUS_PLAYING);
+			PUT_SEL32V(obj, state, SOUND_STATUS_PLAYING);
+		}
 		break;
 
 	case _K_SCI0_SOUND_MUTE_SOUND: {
@@ -296,10 +308,12 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 		break;
 
 	case _K_SCI0_SOUND_UPDATE_VOL_PRI:
-		sfx_song_set_loops(&s->sound,
-				   handle, GET_SEL32V(obj, loop));
-		sfx_song_renice(&s->sound,
-				handle, GET_SEL32V(obj, priority));
+		if (obj.segment) {
+			sfx_song_set_loops(&s->sound,
+					   handle, GET_SEL32V(obj, loop));
+			sfx_song_renice(&s->sound,
+					handle, GET_SEL32V(obj, priority));
+		}
 		break;
 
 	case _K_SCI0_SOUND_FADE_HANDLE:
