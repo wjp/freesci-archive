@@ -1,3 +1,14 @@
+2002-06-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/savegame.cfsml (read_PTN): Got rid of sscanf()
+	for portability
+
+	* src/scicore/tools.c (memtest): Got rid of vsprintf (which was
+	causing problems wrt portability)
+
+	* src/engine/kstring.c (kFormat): Added support for '-' and '0'
+	format string prefixes
+
 2002-05-31  Lars Skovlund  <lskovlun@image.dk>
 
 	* sfx/enginf/kstring.c (kFormat): Fixed bug which caused literal %

@@ -30,7 +30,11 @@
 #include <engine.h>
 #include <vocabulary.h>
 
-
+#define CHECK_OVERFLOW1(pt, size) \
+	if (((pt) - ((char *)s->heap)) + (size) > 0xffff) { \
+		SCIkwarn(SCIkERROR, "String expansion exceeded heap boundaries"); \
+		return;\
+	}
 
 char *
 kernel_lookup_text(state_t *s, int address, int index)
@@ -440,6 +444,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int *arguments;
 	int dest = UPARAM(0);
 	char *target = ((char *) s->heap) + dest;
+	char *tstart = target;
 	int position = UPARAM(1);
 	int index = UPARAM(2);
 	char *source;
@@ -473,38 +478,73 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	while ((xfer = *source++)) {
 		if (xfer == '%') {
- 		       if (mode == 1) {
-		         *target++ = '%'; /* Literal % by using "%%" */
-			 mode = 0;
-		       }
-			else {
+			if (mode == 1) {
+				CHECK_OVERFLOW1(target, 2);
+				*target++ = '%'; /* Literal % by using "%%" */
+				mode = 0;
+			} else {
 				mode = 1;
 				str_leng = 0;
 			}
-		} else { /* xfer != '%' */
-			if (mode == 1) switch (xfer) {
+		} else if (mode == 1) { /* xfer != '%' */
+			char fillchar = ' ';
+			int align = 0; /* -1: Left, +1: Right */
+
+			char *writestart = target; /* Start of the written string, used after the switch */
+
+			int writelength;
+
+			if (xfer && (isdigit(xfer) || xfer == '-')) {
+				char *destp;
+
+				if (xfer == '0')
+					fillchar = '0';
+
+				str_leng = strtol(source -1, &destp, 10);
+
+				if (destp > source)
+					source = destp;
+
+				if (str_leng < 0) {
+					align = -1;
+					str_leng = -str_leng;
+				} else
+					align = 0;
+
+				xfer = *source++;
+			} else
+				str_leng = 0;
+
+			CHECK_OVERFLOW1(target, str_leng + 1);
+
+			switch (xfer) {
 			case 's': { /* Copy string */
 				char *tempsource = kernel_lookup_text(s, arguments[paramindex], arguments[paramindex + 1]);
-				int extralen = str_leng - strlen(tempsource);
+				int slen = strlen(tempsource);
+				int extralen = str_leng - slen;
+				CHECK_OVERFLOW1(target, extralen);
 
 				if (arguments[paramindex] > 1000) /* Heap address? */
 					paramindex++;
 				else
 					paramindex += 2; /* No, text resource address */
 
-				while (extralen-- > 0)
-					*target++ = ' '; /* Format into the text */
+				if (align >= 0)
+					while (extralen-- > 0)
+						*target++ = ' '; /* Format into the text */
 
-				while ((*target++ = *tempsource++));
+				strcpy(target, tempsource);
+				target += slen;
 
-				target--; /* Step back on terminator */
 				mode = 0;
 			}
 				break;
 
 			case 'c': { /* insert character */
-				while (str_leng-- > 1)
-					*target++ = ' '; /* Format into the text */
+				CHECK_OVERFLOW1(target, 2);
+				if (align >= 0)
+					while (str_leng-- > 1)
+						*target++ = ' '; /* Format into the text */
 
 				*target++ = arguments[paramindex++];
 				mode = 0;
@@ -525,45 +565,40 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 						/* sign extend */
 						arguments[paramindex] = (~0xffff) | arguments[paramindex];
 
-				templen = sprintf(target, format_string, arguments[paramindex++]);
+				target += sprintf(target, format_string, arguments[paramindex++]);
+				CHECK_OVERFLOW1(target, 0);
 
 				unsigned_var = 0;
 
-				if (templen < str_leng) {
-					int diff = str_leng - templen;
-					char *dest = target + str_leng - 1;
-
-					while (templen--) {
-						*dest = *(dest - diff);
-						dest--;
-					} /* Copy the number */
-
-					while (diff--)
-						*dest-- = ' ';
-					/* And fill up with blanks */
-
-					templen = str_leng;
-				}
-
-				target += templen;
 				mode = 0;
 			}
 				break;
 			default:
-				if (isdigit(xfer))
-					str_leng = (str_leng * 10)
-						+ (xfer - '0');
-				else {
-					*target = '%';
-					target++;
-					*target = xfer;
-					target++;
-					mode = 0;
-				} /* if (!isdigit(xfer)) */
-			} else { /* mode != 1 */
+				*target = '%';
+				target++;
 				*target = xfer;
 				target++;
+				mode = 0;
 			}
+
+			if (align) {
+				int written = target - writestart;
+				int padding = str_leng - written;
+
+				if (padding) {
+					if (align > 0) {
+						memmove(writestart + padding,
+							writestart, padding);
+						memset(writestart, fillchar, padding);
+					} else {
+						memset(target, ' ', padding);
+						target += padding;
+					}
+				}
+			}
+		}else { /* mode != 1 */
+			*target = xfer;
+			target++;
 		}
 	}
 

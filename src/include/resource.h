@@ -217,7 +217,7 @@ isblank(int foo)
 }
 #endif
 
-#define SCI_MEMTEST memtest(__FILE__ ": line %d", __LINE__)
+#define SCI_MEMTEST memtest(__FILE__, __LINE__)
 
 /*-- queues --*/
 
@@ -261,9 +261,11 @@ sci_get_from_queue(sci_queue_t *queue, int *type);
 /* --- */
 
 int
-memtest(char *location, ...);
+memtest(char *file, int line);
 /* Allocates, manipulates, and frees some memory
-** Parameters: (char *) location,... : The location to print
+** Parameters: (char *) file: The file name to print when starting the
+**				tests
+**             (int) line: The line number to claim it was executed on
 ** Returns   : (int) 0
 ** This function calls malloc(), free(), and memfrob() or memset()
 ** to provocate segmentation faults caused by dynamic allocation bugs

@@ -96,12 +96,47 @@ int
 read_PTN(FILE *fh, parse_tree_node_t *foo, char *lastval, int *line, int *hiteof)
 {
 	if (lastval[0] == 'L') {
-		if (sscanf(lastval, "L %d", &(foo->content.value)) < 1)
-			return 1; /* Failed to parse everything */
+		char *c = lastval + 1;
+		char *strend;
+
+		while (*c && isspace(*c))
+			++c;
+
+		if (!*c)
+			return 1;
+
+		foo->content.value = strtol(c, &strend, 0);
+
+		return (strend == c); /* Error if nothing could be read */
+
 		return 0;
 	} else if (lastval[0] == 'B') {
-		if (sscanf(lastval, "B ( %hd , %hd )", &(foo->content.branches[0]), &(foo->content.branches[1])) < 2)
-			return 1; /* Failed to parse everything */
+		char *c = lastval + 1;
+		char *strend;
+
+		while (*c && isspace(*c)) ++c;
+		if (*c++ != '(') return 1;
+		while (*c && isspace(*c)) ++c;
+
+		foo->content.branches[0] = strtol(c, &strend, 0);
+		if (strend == c)
+			return 1;
+		c = strend;
+
+		while (*c && isspace(*c)) ++c;
+		if (*c++ != ',')
+			return 1;
+
+		while (*c && isspace(*c)) ++c;
+
+		foo->content.branches[1] = strtol(c, &strend, 0);
+		if (strend == c)
+			return 1;
+		c = strend;
+
+		while (*c && isspace(*c)) ++c;
+		if (*c++ != ')') return 1;
+
 		return 0;
 	} else return 1; /* failure to parse anything */
 }

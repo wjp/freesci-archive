@@ -51,18 +51,13 @@ int sci_debug_flags = 0; /* Special flags */
 #define MEMTEST_HARDNESS 31
 
 int
-memtest(char *where, ...)
+memtest(char *file, int line)
 {
 	va_list argp;
 	int i;
 	void *blocks[MEMTEST_HARDNESS + 1];
-	fprintf(stderr,"Memtesting ");
+	fprintf(stderr,"Memtesting in %s, L%d\n", file, line);
 
-	va_start(argp, where);
-	vfprintf(stderr, where, argp);
-	va_end(argp);
-
-	fprintf(stderr,"\n");
 	for (i = 0; i < MEMTEST_HARDNESS; i++) {
 		blocks[i] = sci_malloc(1 + i);
 #ifdef HAVE_MEMFROB

@@ -1051,7 +1051,6 @@ set_base(state_t *s, heap_ptr object)
 		if (cel != oldcel) {
 			cel = 0;
 			PUT_SELECTOR(object, cel, 0);
-			fprintf(stderr, "Resetting cel for %04x!\n", object);
 		}
 
 		gfxop_get_cel_parameters(s->gfx_state, view, loop, cel,
