@@ -1,7 +1,10 @@
-2004-03-01  Lars Skovlund  <lskovlun@image.dk>
+2004-03-03  Lars Skovlund  <lskovlun@image.dk>
 
-	* src/engine/kgraphics.c (kDrawCel): Always add the new cel to the
-	window manager port. 
+	* src/engine/kgraphics.c (kDisplay): Fix kernel signature to
+	handle the simplest case (Display "Foo"), and an argument
+	parsing bug which would bite in the same case.
+
+2004-03-01  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/config.l: Add configuration option 'pic_port_bounds'.
 	* src/engine/kgraphics.c (kSetPort): Add special logic to change

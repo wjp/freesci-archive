@@ -3068,7 +3068,7 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	int argpt;
 	reg_t textp = argv[0];
-	int index = KP_UINT(argv[1]);
+	int index = UKPV_OR_ALT(1, 0);
 	int temp;
 	int save_under = 0;
 	gfx_color_t transparent;
