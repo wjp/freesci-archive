@@ -1,3 +1,20 @@
+freesci (0.3.2a-2) unstable; urgency=low
+
+  * We are in upstream CVS now
+  * Added libsdl1.2-dev as a build dependency
+  * Changed architecture to any, since libsdl is available on all
+    platforms.
+  * Added all appropriate libggi targets as dependencies.
+  * Removed dependencies on zlib1g.
+
+ -- Bas Zoetekouw <bas@debian.org>  Wed, 16 May 2001 10:34:59 +0200
+
+freesci (0.3.2a-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Bas Zoetekouw <bas@debian.org>  Fri, 11 May 2001 12:08:56 +0200
+
 freesci (0.3.2-1) unstable; urgency=low
 
   * New upstream release
@@ -45,7 +62,7 @@ freesci (0.3.0.cvs20001212-1) unstable; urgency=low
    freesci (0.3.0.cvs20000914-2) unstable; urgency=low
 
   * Put my right email address in the control file (closes: #75650)
-  * FreeSCI won't work om m86k architectures, because libggi is not
+  * FreeSCI won't work om m68k architectures, because libggi is not
     available on this platform. I changed the Architecture-line in the
     control file accordingly. Thanks to Roman Hodek for pointing this
     out to me. (closes: #72403)

@@ -3,11 +3,11 @@ Section: games
 Priority: extra
 Maintainer: Bas Zoetekouw <bas@debian.org>
 Standards-Version: 3.5.2
-Build-Depends: debhelper (>=3.0.15),sgmltools-2, libggi2-dev, libncurses5-dev, libpng2-dev, libreadline4-dev (>=4.1), zlib1g-dev, flex, libasound1-dev
+Build-Depends: debhelper (>=3.0.15), sgmltools-2, libggi2-dev, libncurses5-dev, libpng2-dev, libreadline4-dev, zlib1g-dev, flex, libasound1-dev, libsdl1.2-dev
 
 Package: freesci
-Architecture: alpha arm i386 powerpc sparc
-Depends: ${shlibs:Depends}, libggi2, libggi-target-x, zlib1g
+Architecture: any
+Depends: ${shlibs:Depends}, libggi-target-x || libggi-target-aa || libggi-target-fbdev || libggi-target-svgalib
 Suggests: freesci-doc
 Description: a portable interpreter for SCI games like Space Quest 3
  FreeSCI is a portable interpreter for SCI games, such as the Space Quest
