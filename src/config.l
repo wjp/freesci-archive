@@ -245,7 +245,7 @@ parse_option(char *option, int optlen, char *value);
 %}
 
 DIGIT [0-9]
-PARAMTOKEN [[:alpha:]][[:alnum:]"."_\:\/-]*
+PARAMTOKEN [[:alnum:]"."_\:\/-]*
 SCIVERSION {DIGIT}"."{DIGIT}{3}"."{DIGIT}{3}
 NUMTOKEN {DIGIT}+
 NUMPARAMTOKEN {NUMTOKEN}|{PARAMTOKEN}
@@ -329,7 +329,7 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 }
 
 
-[[:alnum:]]+"."[[:alnum:]]+"."[[:alnum:]_]+[[:blank:]]*"="[[:blank:]]*{NUMPATHPARAMTOKEN}[[:blank:]]* {
+[[:alnum:]]+"."[[:alnum:]]+"."[[:alnum:]_]+[[:blank:]]*"="[[:blank:]]*{NUMPARAMTOKEN}[[:blank:]]* {
 /* driver parameters */
         char *subsys_name = yytext;
         char *driver_name;
@@ -366,7 +366,7 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 }
 
 
-{PARAMTOKEN}[[:blank:]]*"="[[:blank:]]*{NUMPARAMTOKEN}[[:blank:]]* { /* Normal config option */
+{PARAMTOKEN}[[:blank:]]*"="[[:blank:]]*{NUMPATHPARAMTOKEN}[[:blank:]]* { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
 	char *foo;

@@ -274,7 +274,7 @@ void
 kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int script = PARAM(0);
-  int index = PARAM(1);
+  int index = PARAM_OR_ALT(1,0);
   int disp_size;
   heap_ptr disp;
   int magic_ofs;

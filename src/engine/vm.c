@@ -765,8 +765,9 @@ run_vm(state_t *s, int restoring)
 
       } else {
 
-	s->kfunct_table[opparams[0]]
-	  (s, opparams[0], GET_HEAP(xs->sp) + restadjust, xs->sp + 2); /* Call kernel function */
+	if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+	    s->kfunct_table[opparams[0]](s, opparams[0], GET_HEAP(xs->sp) + restadjust, xs->sp + 2); /* Call kernel function */ else
+	    s->kfunct_table[opparams[0]](s, opparams[0], GET_HEAP(xs->sp), xs->sp + 2); /* Call kernel function */
 
 	/* Calculate xs again: The kernel function might have spawned a new VM */
 	xs = s->execution_stack + s->execution_stack_pos;
