@@ -20,7 +20,10 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <stdint.h> /* May break IA64 test-noansi-r */
+#ifndef _WIN32
+#  include <stdint.h> /* May break IA64 test-noansi-r */
+#endif _WIN32
+
 
 /* end standard C headers. */
 
@@ -1103,7 +1106,9 @@ purge_comments(char *comments);
  * down here because we want the user's section 1 to have been scanned first.
  * The user has a chance to override it with an option.
  */
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #endif
 
 #ifndef YY_EXTRA_TYPE
