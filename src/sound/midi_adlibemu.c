@@ -307,7 +307,11 @@ int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
 
 int midi_adlibemu_close()
 {
-  OPLDestroy (ym3812);
+  FM_OPL *opl = ym3812;
+
+  ym3812 = NULL;
+  OPLDestroy (opl);
+
   // XXX deregister with pcm layer.
   return 0;
 }

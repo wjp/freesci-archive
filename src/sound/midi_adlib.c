@@ -77,6 +77,7 @@ void adlib_init_lists()
     oper_chn[i] = 255;
     note_time[i] = 0;
   }
+  free_voices = ADLIB_VOICES;
 }
 
 int adlib_stop_note(int chn, int note, int velocity)
@@ -260,6 +261,7 @@ int midi_adlib_allstop(void) {
       continue;
     adlib_stop_note(oper_chn[i], oper_note[i], 0);
   }
+  adlib_init_lists();
   printf("end allstop\n");
   return 0;
 }
