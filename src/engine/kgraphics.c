@@ -2028,9 +2028,15 @@ _k_raise_topmost_in_view_list(state_t *s, gfxw_list_t *list, gfxw_dyn_view_t *vi
 	if (view) {
 		gfxw_dyn_view_t *next = (gfxw_dyn_view_t *) view->next;
 
+		/* step 11 */
 		if ((view->signal & (_K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)) == 0) {
 			SCIkdebug(SCIkGRAPHICS, "Forcing precedence 2 at [%04x] with %04x\n", view->ID, view->signal);
 			view->force_precedence = 2;
+
+			if ((view->signal & (_K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_HIDDEN)) == _K_VIEW_SIG_FLAG_REMOVE) {
+				view->signal &= (_K_VIEW_SIG_FLAG_STOP_UPDATE | _K_VIEW_SIG_FLAG_UPDATED | _K_VIEW_SIG_FLAG_NO_UPDATE 
+								| _K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_FIX_PRI_ON | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE | _K_VIEW_SIG_FLAG_FORCE_UPDATE); // 0x7f
+			}
 		}
 
 		gfxw_remove_widget_from_container(view->parent, GFXW(view));
