@@ -103,9 +103,6 @@ static void
 xldprintf(char *fmt, ...)
 {
 	va_list argp;
-#ifdef HAVE_MITSHM
-	x11_error = 1;
-#endif
 	fprintf(stderr,"GFX-XLIB %d:", debugline);
 	va_start(argp, fmt);
 	vfprintf(stderr, fmt, argp);
@@ -160,8 +157,9 @@ static int
 xlib_error_handler(Display *display, XErrorEvent *error)
 {
 	char errormsg[256];
+	x11_error = 1;
 	XGetErrorText(display, error->error_code, errormsg, 255);
-	ERROR("X11 error: %s\n", errormsg);
+	ERROR(" X11: %s\n", errormsg);
 	return 0;
 }
 
@@ -227,7 +225,8 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	if (!have_shmem) {
 	  have_shmem = check_for_xshm(S->display);
 	  if (have_shmem) {
-	    printf("Using the MIT-SHM extension (%d)\n", have_shmem);
+	    printf("Using the MIT-SHM extension (%d/%d)\n", have_shmem,
+		   XShmPixmapFormat(S->display));
 	  }
 	  memset(&shminfo, 0, sizeof(XShmSegmentInfo));
 	}
@@ -382,65 +381,66 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	    perror("reason");
 	    have_shmem = 0;
 	  }
-
+	  
 	  if (have_shmem) {
 	    old_handler = XSetErrorHandler(xlib_error_handler);
-
+	    
 	    if ((S->shm[i] = malloc(sizeof(XShmSegmentInfo))) == 0) {
 	      ERROR("AIEEEE!  Malloc failed!\n");
 	      return GFX_FATAL;
 	    }
 	    memset(S->shm[i], 0, sizeof(XShmSegmentInfo));
-
+	    
 	    S->shm[i]->shmid = shmget(IPC_PRIVATE, (xsize * ysize * bytespp),
-				      IPC_CREAT | IPC_EXCL | 0777);
+				      IPC_CREAT | IPC_EXCL | 0666);
+	    S->shm[i]->readOnly = False;
+	    
 	    if (S->shm[i]->shmid == -1) {
 	      have_shmem = 0;
 	      ERROR("System does not support SysV IPC, disabling XSHM\n");
 	      perror("reason");
 	    }
-	    if (have_shmem) {
-	      S->shm[i]->shmaddr = (char *) shmat(S->shm[i]->shmid, 0, 0);
-	      if (S->shm[i]->shmaddr == (void *) -1) {
-		ERROR("Could not attach shared memory segment\n");
-		perror("reason");
-		have_shmem = 0;
-	      }
+	  }
+	  if (have_shmem) {
+	    S->shm[i]->shmaddr = (char *) shmat(S->shm[i]->shmid, 0, 0);
+	    if (S->shm[i]->shmaddr == (void *) -1) {
+	      ERROR("Could not attach shared memory segment\n");
+	      perror("reason");
+	      have_shmem = 0;
 	    }
+	  }
+	  if (have_shmem) {
 	    if (!XShmAttach(S->display, S->shm[i])) {
 	      ERROR("ARGH!  Can't attach shared memory segment\n");
 	      have_shmem = 0;
 	    }
-	    if (have_shmem) {	    
-	      S->visual[i] = XShmCreatePixmap(S->display, S->window, 
-					      S->shm[i]->shmaddr,
-					      S->shm[i], xsize, ysize, 
-					      bytespp << 3);
-	      S->shm[i]->readOnly = False;
-	    }
-	    if (!S->visual[i]) {
-	      free(S->shm[i]);
-	      have_shmem = 0;
-	    }
-
-	    XSync(S->display, False);
-
-	    if (x11_error) {
-	      ERROR("Shared Memory Pixmaps not supported on this system  Disabling!\n");
-	      have_shmem = 0;
-	      shmdt(S->shm[i]->shmaddr);
-	      free(S->shm[i]);
-	      XFreePixmap(S->display, S->visual[i]);
-	      x11_error = 0;
-	    }
-
 	    shmctl(S->shm[i]->shmid, IPC_RMID, 0);
-	    XSetErrorHandler(old_handler);
 	  }
+	  if (have_shmem) {	    
+	    S->visual[i] = XShmCreatePixmap(S->display, S->window, 
+					    S->shm[i]->shmaddr,
+					    S->shm[i], xsize, ysize, 
+					    bytespp << 3);
+	    XSync(S->display, False);
+	    
+	    if (x11_error || !S->visual[i]) {
+	      ERROR("Shared Memory Pixmaps not supported on this system. Disabling!\n");
+		have_shmem = 0;
+		XFreePixmap(S->display, S->visual[i]);
+		XShmDetach(S->display ,S->shm[i]);
+		S->visual[i] = 0;
+		x11_error = 0;
+		shmdt(S->shm[i]->shmaddr);
+		free(S->shm[i]);
+	    }
+
+	  }
+	  XSetErrorHandler(old_handler);
+	  
 	  if (!have_shmem)
 #endif
 	    S->visual[i] = XCreatePixmap(S->display, S->window, xsize, ysize, bytespp << 3);
-
+	  
 	  XFillRectangle(S->display, S->visual[i], S->gc, 0, 0, xsize, ysize);
 	}
 
