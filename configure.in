@@ -34,5 +34,4 @@ AC_OUTPUT(Makefile    \
 	src/include/Makefile \
 	src/tools/Makefile \
 	src/console/Makefile \
-	src/sound/Makefile \
-	src/demo/Makefile)
+	src/sound/Makefile)

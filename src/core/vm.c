@@ -284,6 +284,9 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
     if (sp < fp)
       script_error(s, "Relative stack underflow");
 
+    if (sp >= s->stack_base + VM_STACK_SIZE)
+      script_error(s, "Stack overflow");
+
     if (pc < 800)
       script_error(s, "Program Counter gone astray");
 
@@ -1146,7 +1149,7 @@ script_uninstantiate(state_t *s, int script_nr)
 int
 game_init(state_t *s)
 {
-  heap_ptr stack_handle = heap_allocate(s->_heap, 0x1000);
+  heap_ptr stack_handle = heap_allocate(s->_heap, VM_STACK_SIZE);
   heap_ptr script0;
   heap_ptr game_obj; /* Address of the game object */
   heap_ptr game_init; /* Address of the init() method */
@@ -1155,12 +1158,12 @@ game_init(state_t *s)
   int i;
 
   if (!stack_handle) {
-    sciprintf("script_run(): Insufficient heap space for stack\n");
+    sciprintf("script_init(): Insufficient heap space for stack\n");
     return 1;
   }
 
   if (!(script0 = script_instantiate(s, 0))) {
-    sciprintf("script_run(): Could not instantiate script 0\n");
+    sciprintf("script_init(): Could not instantiate script 0\n");
     return 1;
   }
 
@@ -1200,12 +1203,14 @@ game_init(state_t *s)
   s->last_pointer_size_x = 0;
   s->last_pointer_size_y = 0; /* No previous pointer */
 
-  s->back_pic = allocEmptyPicture();
-  s->bgpic = allocEmptyPicture();
-  s->pic = allocEmptyPicture();
-  s->pic_not_valid = 0; /* Picture is valid (cough) */
-  s->pic_layer = 0; /* Other values only make sense for debugging */
+  s->pic = alloc_empty_picture(SCI_RESOLUTION_320X200, SCI_COLORDEPTH_8BPP);
+  s->pic_not_valid = 1; /* Picture is invalid */
+  s->pic_is_new = 0;
+  s->pic_visible_map = 0; /* Other values only make sense for debugging */
   s->animation_delay = 500; /* Used in kAnimate for pic openings */
+
+  s->pic_views_nr = s->dyn_views_nr = 0;
+  s->pic_views = 0; s->dyn_views = 0; /* No PicViews, no DynViews */
 
   memset(s->ports, sizeof(s->ports), 0); /* Set to no ports */
 
@@ -1253,7 +1258,7 @@ game_init(state_t *s)
   /* The first entry in the export table of script 0 points to the game object */
 
   if (GET_HEAP(game_obj + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
-    sciprintf("script_run(): Game object is not at 0x%x\n", game_obj);
+    sciprintf("script_init(): Game object is not at 0x%x\n", game_obj);
     return 1;
   }
 
@@ -1292,9 +1297,7 @@ game_exit(state_t *s)
   free(s->opcodes);
   free(s->kfunct_table);
 
-  freePicture(s->back_pic);
-  freePicture(s->bgpic);
-  freePicture(s->pic);
+  free_picture(s->pic);
 
   for (i = 0; i < MAX_HUNK_BLOCKS; i++)
       if (s->hunk[i].size) {
@@ -1313,6 +1316,11 @@ game_exit(state_t *s)
   s->opcodes = NULL;
   s->kfunct_table = NULL;
   /* Make sure to segfault if any of those are dereferenced */
+
+  if (s->pic_views)
+    free(s->pic_views);
+  if (s->dyn_views)
+    free(s->dyn_views);
 
   menubar_free(s->menubar);
 

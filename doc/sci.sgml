@@ -5375,13 +5375,10 @@ the maps using the cast list created by Animate, whereas the ShowBits call
            <para>
               Selectors are very important for some of the kernel functions. BaseSetter(), Animate(),
               Display(), GetEvent() and others take data from or write directly to selectors of
-              a specified object (passed as a parameter or retreived from a node list). Selector
-              support is not complete as of this writing (there still is no easy way to call a function
-              selector<footnote><para/Some of you may run amok when they read this- calling user space
-              functions from kernel space should not be handled so lightly, I agree. Still, that's The
-              Way Sierra Used To Do Things (TWSUTDT); and, from a performace point of view, it does
-              make some sense./</footnote>, which is done by Parse() and Animate()), but there already
-              are facilities to ease reading and writing of selectors. To prepare the usage of
+              a specified object (passed as a parameter or retreived from a node list), or even
+              call object methods from kernel space<footnote><para/Yes, this is evil. Don't do this
+              at home, kids!/</footnote>
+              To prepare the usage of
               selectors, a variable has do be declared (in src/include/vm.h, selector_map_t). This
               variable will carry the numeric selector ID during run time. Now, the selector has to
               be mapped- this is happens once during initialization, to save time. It is performed
@@ -5391,8 +5388,8 @@ the maps using the cast list created by Animate, whereas the ShowBits call
               If everything went right, accessing selectors should be really easy now. Just use the
               GET_SELECTOR(obj, selector) and PUT_SELECTOR(obj, selector, value) macros, where obj
               is a heap_ptr pointing to the object you want to read from or write to, and selector
-              is the name of the selector to use. Example:
-              <programlisting>
+              is the name of the selector to use.
+              <example><title/An example for PUT_SELECTOR and GET_SELECTOR/<programlisting>
               void
               kSwapXY(state_t *s, int funct_nr, int argc, heap_ptr argp)
               {
@@ -5405,7 +5402,20 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                 PUT_SELECTOR(obj, y, posx);
                 PUT_SELECTOR(obj, x, posy);
               }
-              </programlisting>
+              </programlisting></example>
+           </para><para>
+              Also, it may be neccessary to invoke an actual method. To do this, a varargs macro
+              has been provided: INVOKE_SELECTOR(obj, selector, argc...). In theory, this macro
+              can be used to set and read selectors as well (it would even handle multiple sends
+              correctly), but this is discouraged for the sake of clarity.
+           </para><para>
+              INVOKE_SELECTOR works very much like the other macros; it must be called directly
+              from a kernel function (or from any function supplying valid argc, argp and s).
+              <example><Title/An example for INVOKE_SELECTOR/<programlisting>
+                INVOKE_SELECTOR(obj, doit, 0); /* Call doit() without any parameters */
+                INVOKE_SELECTOR(s->game_obj, setCursor, 2, 999, 1);
+                                /* Call game_obj::setCursor(999, 1) */
+              </programlisting></example>
            </para>
         </sect2>
      </Sect1>

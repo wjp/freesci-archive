@@ -45,40 +45,72 @@
 
 int sci_color_mode = SCI_COLOR_DITHER;
 
-picture_t allocEmptyPicture()
+picture_t
+alloc_empty_picture(int resolution, int colordepth)
 {
-  picture_t retval = malloc(sizeof(gint8 *) * 4);
   int i;
+
+  picture_t retval = malloc(sizeof(struct _picture));
+
+  switch (resolution) {
+
+  case SCI_RESOLUTION_320X200:
+
+    retval->xres = 320;
+    retval->yres = 200;
+    retval->xfact = 1;
+    retval->yfact = 1;
+    break;
+
+  case SCI_RESOLUTION_640X400:
+
+    retval->xres = 640;
+    retval->yres = 400;
+    retval->xfact = 2;
+    retval->yfact = 2;
+    break;
+
+  default:
+    return NULL;
+  }
+
+  retval->bytespp = colordepth;
+
   for (i=0; i<4; i++)
-    retval[i] = calloc(320,200);
+    retval->maps[i] = calloc(retval->xres, retval->yres * colordepth);
+  retval->view = calloc(retval->xres, retval->yres * colordepth);
+
+  retval->size = retval->xres * retval->yres * colordepth;
+  retval->bytespl = retval->xres * colordepth;
+  retval->view_size = retval->bytespl * retval->yfact * 190;
+  retval->view_offs = retval->bytespl * retval->yfact * 10;
+
   return retval;
 }
 
-void freePicture(picture_t picture)
+void free_picture(picture_t picture)
 {
   int i;
+
+  g_free(picture->view);
+
   for (i=0; i<4; i++)
-    g_free(picture[i]);
+    g_free(picture->maps[i]);
+
   g_free(picture);
 }
 
-void copyPicture(picture_t dest, picture_t src)
-{
-  int i;
-  for (i=0; i<4; i++)
-    memcpy(dest[i], src[i], 64000);
-}
-
-
-void clearPicture(picture_t pic, int fgcol)
+void clear_picture(picture_t pic, int fgcol)
 {
   int i;
 
-  memset(pic[0], 0, 320 * 10); /* Title bar */
-  memset(pic[0]+ (320 * 10), fgcol, 320 * 190);
+  if (pic->bytespp == 1)
+    fgcol |= fgcol << 4;
+
+  memset(pic->maps[0] + pic->view_offs, fgcol, pic->view_size);
 
   for (i=1; i<4; i++)
-    memset(pic[i], 0, 64000);
+    memset(pic->maps[i], 0, pic->size);
 }
 
 /***************************************************************************/
@@ -99,20 +131,16 @@ inline void putpix(picture_t buffers, int x, int y, short color, short screen,
   pos = (y+10) * 320 + x;
 
   switch(screen) {
-  case 0: buffers[0][pos] = color; break;
-  case 1: buffers[1][pos] = priority; break;
-  case 2: buffers[2][pos] = special; break;
-  case 3: buffers[3][pos] |= drawenable; break;
+  case 0: buffers->maps[0][pos] = color | (color << 4); break;
+  case 1: buffers->maps[1][pos] = priority; break;
+  case 2: buffers->maps[2][pos] = special; break;
+  case 3: buffers->maps[3][pos] |= drawenable; break;
   }
 }
 
-#ifdef SCI_GRAPHICS_ALLOW_256
-#define GETPIX(x, y, screen)  (buffers[(screen)][(x)+((y)*320)] \
+#define GETPIX(x, y, screen)  (buffers->maps[(screen)][(x)+((y)*320)] \
 			       & ((sci_color_mode && (screen == 1))? \
 			       0xf : 0xff))
-#else /* !SCI_GRAPHICS_ALLOW_256 */
-#define GETPIX(x, y, screen)  (buffers[(screen)][(x)+((y)*320)])
-#endif /* !SCI_GRAPHICS_ALLOW_256 */
 
 inline void plot(picture_t buffers, int x, int y,
 		 int col1, int col2, int priority, int special,  char drawenable)
@@ -121,21 +149,17 @@ inline void plot(picture_t buffers, int x, int y,
 
   pos = (y+10) * 320 + x;
 
-#ifdef SCI_GRAPHICS_ALLOW_256
   if (sci_color_mode == SCI_COLOR_INTERPOLATE) {
-    if (drawenable & 1) buffers[0][pos] = ((col1-col2)&0xf)<<4 | col2;
+    if (drawenable & 1) buffers->maps[0][pos] = (col1 << 4) | col2;
   } else if (sci_color_mode == SCI_COLOR_DITHER256) {
-    if (drawenable & 1) buffers[0][pos] = ((x^y)&1)? ((col1-col2)&0xf)<<4 | col2
-			  : (((col2-col1)&0xf))<<4 | col1;
+    if (drawenable & 1) buffers->maps[0][pos] = ((x^y)&1)? (col1 << 4) | col2
+			  : (col2 << 4) | col1;
   } else
-    if (drawenable & 1) buffers[0][pos] = ((x^y)&1)? col1 : col2;
-#else /* !SCI_GRAPHICS_ALLOW_256 */
-  if (drawenable & 1) buffers[0][pos] = ((x^y)&1)? col1 : col2;
-#endif /* !SCI_GRAPHICS_ALLOW_256 */
+    if (drawenable & 1) buffers->maps[0][pos] = ((x^y)&1)? (col1 | (col1 << 4)) : (col2 | (col2 << 4));
 
-  if (drawenable & 2) buffers[1][pos] = priority;
-  if (drawenable & 4) buffers[2][pos] = special;
-  buffers[3][pos] |= drawenable;
+  if (drawenable & 2) buffers->maps[1][pos] = priority;
+  if (drawenable & 4) buffers->maps[2][pos] = special;
+  buffers->maps[3][pos] |= drawenable;
 
 }
 
@@ -215,8 +239,8 @@ int _fill_bgcol, _fill_bgcol1, _fill_bgcol2;
                              !((drawenable & 1) && (GETPIX((fx), (fy), 0)==15) && \
 			     ((col1 != 15) && (col2 != 15))))*/
 #define FILLBOUNDARY(fx, fy) ((drawenable & (GETPIX((fx), (fy), 3))) && \
-                             !((drawenable & 1) && (GETPIX((fx), (fy), 0)==15) && \
-			       ((col1 != 15) && (col2 != 15))))
+                             !((drawenable & 1) && (GETPIX((fx), (fy), 0)==0xff) && \
+			       ((col1 != 0xf) && (col2 != 0xf))))
 
 
 void fillhelp(picture_t buffers, gint16 xstart, gint16 xend, gint16 y, gint16 direction,
@@ -400,6 +424,8 @@ view0_cel_height(int loop, int cel, byte *data)
   return getInt16(data + addr + 2);
 }
 
+
+
 int
 view0_loop_count(byte *data)
 {
@@ -419,7 +445,7 @@ view0_cel_count(int loop, byte *data)
   return getInt16(data + lookup);
 }
 
-int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
+int draw_view0(picture_t dest, port_t *port, int xp, int yp, short _priority,
 	      short group, short index, guint8 *data)
 {
   gint8 *dataptr,*lookup;
@@ -433,6 +459,8 @@ int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
   int col1, col2, priority, special;
 
   group++; index++; /* Both start at 0, but we need them to start at 1 */
+
+  yp++; /* Magic */
 
   if (port) {
     clipmaxy = port->ymax - port->ymin;
@@ -522,7 +550,7 @@ int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
 
       homepos = port->xmin + (reverse? maxx-1 : x) + (y + port->ymin) * 320;
 
-      /* Clip left boundary (right boundary if reverse */
+      /* Clip left boundary (right boundary if reversed */
       while (y < maxy) {
 	int pos;
 	int i = blindleft;
@@ -537,6 +565,7 @@ int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
 	  }
 	}
 	color = *dataptr & 0xf;
+	color = SCI_MAP_EGA_COLOR(dest, color);
 
 	pos = homepos;
 	homepos += 320;
@@ -546,12 +575,13 @@ int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
 	    if (rep == 0) {
 	      dataptr++;
 	      color = *dataptr & 0xf;
+	      color = SCI_MAP_EGA_COLOR(dest, color); /* Prepare for the FreeSCI palette */
 	      if (!(rep = (*dataptr >> 4) & 0xf)) return 0;
 	    }
 
-	    if ((color != transparency) && (dest[1][pos] <= _priority)) {
-	      dest[0][pos]= color;
-	      dest[1][pos]= _priority;
+	    if (((color & 0xf) != transparency) && (dest->maps[1][pos] <= _priority)) {
+	      dest->maps[0][pos]= color;
+	      dest->maps[1][pos]= _priority;
 	    }
 
 	    rep--;
@@ -562,12 +592,13 @@ int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
 	    if (rep == 0) {
 	      dataptr++;
 	      color = *dataptr & 0xf;
+	      color = SCI_MAP_EGA_COLOR(dest, color); /* FreeSCI palette preparation */
 	      if (!(rep = (*dataptr >> 4) & 0xf)) return 0;
 	    }
 
-	    if ((color != transparency) && (dest[1][pos] <= _priority)) {
-	      dest[0][pos]= color;
-	      dest[1][pos]= _priority;
+	    if (((color & 0xf) != transparency) && (dest->maps[1][pos] <= _priority)) {
+	      dest->maps[0][pos]= color;
+	      dest->maps[1][pos]= _priority;
 	    }
 
 	    rep--;
@@ -597,7 +628,7 @@ int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
   return 0;
 }
 
-void drawPicture0(picture_t dest, int flags, int defaultPalette, guint8 *data)
+void draw_pic0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 {
   gint8 *ptr;
   static gint8 startcolors[40] =

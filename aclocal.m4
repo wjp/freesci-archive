@@ -1,4 +1,4 @@
-dnl aclocal.m4 generated automatically by aclocal 1.4a
+dnl aclocal.m4 generated automatically by aclocal 1.4
 
 dnl Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
@@ -66,8 +66,6 @@ else
 
 	ac_ggi_includes=-I"$ac_ggi_includes"
 	ac_ggi_libraries=-L"$ac_ggi_libraries -lggi -lgii"
-	ac_moresubdirs="demo"
-	AC_SUBST(ac_moresubdirs)
 	ac_graphics_ggi_libfile="graphics_ggi.c"
 	AC_SUBST(ac_graphics_ggi_libfile)
 	ac_graphics_ggi_libobjects="graphics_ggi.o"
@@ -195,8 +193,6 @@ dnl AM_INIT_AUTOMAKE(package,version, [no-define])
 
 AC_DEFUN(AM_INIT_AUTOMAKE,
 [AC_REQUIRE([AC_PROG_INSTALL])
-dnl We require 2.13 because we rely on SHELL being computed by configure.
-AC_PREREQ([2.13])
 PACKAGE=[$1]
 AC_SUBST(PACKAGE)
 VERSION=[$2]

@@ -1,5 +1,4 @@
-TODO for version 0.2.4:
+TODO for version 0.2.5:
 
-- Add a ggi visual and some graphics support to main.c
 - Write more kernel functions
 - Merge Magnus' Python class browser into the main tree

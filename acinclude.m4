@@ -91,8 +91,6 @@ else
 
 	ac_ggi_includes=-I"$ac_ggi_includes"
 	ac_ggi_libraries=-L"$ac_ggi_libraries -lggi -lgii"
-	ac_moresubdirs="demo"
-	AC_SUBST(ac_moresubdirs)
 	ac_graphics_ggi_libfile="graphics_ggi.c"
 	AC_SUBST(ac_graphics_ggi_libfile)
 	ac_graphics_ggi_libobjects="graphics_ggi.o"

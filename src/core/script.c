@@ -783,4 +783,20 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(type, "type");
   FIND_SELECTOR(state, "state");
   FIND_SELECTOR(doit, "doit");
+  FIND_SELECTOR(delete, "delete");
+  FIND_SELECTOR(signal, "signal");
+  FIND_SELECTOR(underBits, "underBits");
+  FIND_SELECTOR(canBeHere, "canBeHere");
+  FIND_SELECTOR(client, "client");
+  FIND_SELECTOR(dx, "dx");
+  FIND_SELECTOR(dy, "dy");
+  FIND_SELECTOR(xStep, "xStep");
+  FIND_SELECTOR(yStep, "yStep");
+  FIND_SELECTOR(b_movCnt, "b-movCnt");
+  FIND_SELECTOR(b_i1, "b-i1");
+  FIND_SELECTOR(b_i2, "b-i2");
+  FIND_SELECTOR(b_di, "b-di");
+  FIND_SELECTOR(b_xAxis, "b-xAxis");
+  FIND_SELECTOR(b_incr, "b_incr");
+  FIND_SELECTOR(completed, "completed");
 }

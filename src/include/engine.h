@@ -75,15 +75,14 @@ typedef struct _state
 #ifdef HAVE_LIBGGI
     ggi_visual_t ggi_visual; /* for libggi */
 #endif    
-    int dummy;
+    int _dummy;
   } graphics;
 
   byte restarting_flag; /* Flag used for restarting */
   byte have_mouse_flag; /* Do we have a hardware pointing device? */
 
   byte pic_not_valid; /* Is 0 if the background picture is "valid" */
-
-  byte pic_layer; /* The picture layer (or "map") to be drawn */
+  byte pic_is_new;    /* Set to 1 if a picture has just been loaded */
 
   long game_time; /* Counted at 60 ticks per second, reset during start time */
 
@@ -103,12 +102,14 @@ typedef struct _state
   port_t wm_port; /* window manager viewport and designated &heap[0] view (10,0,199,319) */
   port_t picture_port; /* The background picture viewport (10,0,199,319) */
 
-  picture_t back_pic; /* ONLY the background picture as drawn by DrawPic */
-  picture_t bgpic; /* The background picture buffer, includes views */
-  picture_t pic; /* The foreground picture- practically the same as the viewscreen */
+  picture_t pic; /* The graphics storage thing */
+  int pic_visible_map; /* The number of the map to display in update commands */
   int pic_animate; /* The animation used by Animate() to display the picture */
 
-  int animation_delay; /* A delay factor for pic opening animations. Defaults to 1000. */
+  int pic_views_nr, dyn_views_nr; /* Number of entries in the pic_views and dyn_views lists */
+  view_object_t *pic_views, *dyn_views; /* Pointers to pic and dynamic view lists */
+
+  int animation_delay; /* A delay factor for pic opening animations. Defaults to 500. */
 
   hunk_block_t hunk[MAX_HUNK_BLOCKS]; /* Hunk memory */
 

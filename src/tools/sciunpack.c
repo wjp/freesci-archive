@@ -208,12 +208,12 @@ int main(int argc, char** argv)
 #ifdef HAVE_LIBPNG
     if ((stype == sci_pic) && conversion) {
       int i;
-      picture_t pic = allocEmptyPicture();
-      drawPicture0(pic, 1, 0, found->data);
-      if (i = write_pic_png(outfilename, pic[0])) {
+      picture_t pic = alloc_empty_picture(SCI_RESOLUTION_320X200, SCI_COLORDEPTH_8BPP);
+      draw_pic0(pic, 1, 0, found->data);
+      if (i = write_pic_png(outfilename, pic->maps[0])) {
 	fprintf(stderr,"Writing the png failed (%d)\n",i);
       } else if (verbose) printf("Done.\n");
-      freePicture(pic);
+      free_picture(pic);
     } else 
 #endif /* HAVE_LIBPNG */
       {

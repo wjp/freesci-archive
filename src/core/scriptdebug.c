@@ -365,8 +365,7 @@ c_refresh_screen()
 int
 c_redraw_screen()
 {
-  memcpy(_s->pic[0], _s->bgpic[0], 320*200);
-  _s->graphics_callback(_s, GRAPHICS_CALLBACK_REDRAW_ALL,0,0,0,0);
+  graph_update_box(_s, 0, 0, 320, 200);
 }
 
 int
@@ -676,7 +675,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 	      "  0x1200");
       cmdHook(c_disasm, "disasm", "ii*", "Disassembles one or more commands\n\n"
 	      "USAGE\n\n  disasm [startaddr] <number of commands to disassemble>");
-      cmdHook(c_scriptinfo, "scriptinfo", "", "Displays information about all\n  loaded scripts");
+      cmdHook(c_scriptinfo, "scripttable", "", "Displays information about all\n  loaded scripts");
       cmdHook(c_heapobj, "heapobj", "i", "Displays information about an\n  object or class on the\n"
 	      "specified heap address.\n\nSEE ALSO\n\n  obj, accobj");
       cmdHook(c_obj, "obj", "", "Displays information about the\n  currently active object/class.\n"
@@ -688,7 +687,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       cmdHook(c_backtrace, "bt", "", "Dumps the send/self/super/call/calle/callb stack");
       cmdHook(c_snk, "snk", "i*", "Steps forward until it hits the next\n  callk operation.\n"
 	      "  If invoked with a parameter, it will\n  look for that specific callk.\n");
-      cmdHook(c_listclones, "listclones", "", "Lists all registered clones");
+      cmdHook(c_listclones, "clonetable", "", "Lists all registered clones");
       cmdHook(c_set_acc, "set_acc", "i", "Sets the accumulator");
       cmdHook(c_heap_free, "heapfree", "", "Shows the free heap");
       cmdHook(c_sret, "sret", "", "Steps forward until ret is called\n  on the current execution stack"
@@ -697,7 +696,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 	      "  splitting it up in resource type\n  and resource number.");
       cmdHook(c_refresh_screen, "refresh_screen", "", "Redraws the screen");
       cmdHook(c_redraw_screen, "redraw_screen", "", "Reloads and redraws the screen");
-      cmdHook(c_show_list, "show_list", "i", "Examines the specified heap address");
+      cmdHook(c_show_list, "listinfo", "i", "Examines the list at the specified\n  heap address");
 
       cmdHookInt(&script_exec_stackpos, "script_exec_stackpos", "Position on the execution stack\n");
       cmdHookInt(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");

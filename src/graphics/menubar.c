@@ -230,7 +230,7 @@ menubar_draw(picture_t pic, port_t *port, menubar_t *menubar, int activated, byt
   int x = MENU_LEFT_BORDER;
   int nr = 0; /* Menu number */
 
-  draw_titlebar(pic, 15);
+  draw_titlebar(pic, 0xf);
 
   for (; nr < menubar->menus_nr; nr++) {
     int text_x = x + MENU_BORDER_SIZE;
@@ -239,7 +239,7 @@ menubar_draw(picture_t pic, port_t *port, menubar_t *menubar, int activated, byt
     if (nr == activated)
       draw_titlebar_section(pic, x, xlength, 0);
 
-    drawText0(pic, port, text_x, 1, menubar->menus[nr].title, font, (nr == activated)? 15:0);
+    draw_text0(pic, port, text_x, 1, menubar->menus[nr].title, font, (nr == activated)? 0xf:0);
 
     x += xlength;
   }

@@ -45,7 +45,7 @@ graph_clear_box(struct _state *s, int x, int y, int xl, int yl, int color)
   int _yl = yl;
 
   while (_yl--) {
-    memset(s->pic[0] + pos, color, xl);
+    memset(s->pic->view + pos, color, xl);
 
     pos += SCI_SCREEN_WIDTH;
   }
@@ -61,9 +61,7 @@ graph_update_box(struct _state *s, int x, int y, int xl, int yl)
   int i, _yl = yl;
 
   while (_yl--) {
-    for (i=0; i < 3; i++)
-      memcpy(s->pic[i] + pos, s->bgpic[i] + pos, xl);
-
+    memcpy(s->pic->view + pos, s->pic->maps[s->pic_visible_map] + pos, xl);
     pos += SCI_SCREEN_WIDTH;
   }
 
@@ -91,7 +89,7 @@ graph_save_box(struct _state *s, int x, int y, int xl, int yl, int layers)
       pos = x + y * SCI_SCREEN_WIDTH;
 
       for (i = yl; i > 0; i--) {
-	memcpy(dest, s->bgpic[map] + pos, xl);
+	memcpy(dest, s->pic->maps[map] + pos, xl);
 
 	pos += SCI_SCREEN_WIDTH;
 	dest += xl;
@@ -114,6 +112,14 @@ graph_restore_box(struct _state *s, int handle)
     return; /* Assume that the caller knew that this wouldn't work */
 
   box = (_graph_memrect_t *) kmem(s, handle);
+
+  /*#ifdef SCI_GRAPHICS_DEBUG_IMAGE_REPOSITORY */
+  /*  draw_frame(s->pic, box->x, box->y, box->xl, box->yl, 0xee, -1);
+      graph_update_box(s, box->x, box->y, box->xl, box->yl); */
+  fprintf(stderr,"Restoring (%d, %d), size (%d, %d)\n", box->x, box->y, box->xl, box->yl);
+  /*#endif */
+
+
   if (!box) {
     sciprintf("graph_restore_box: Warning: Could not restore handle %04x\n", handle);
     return;
@@ -127,7 +133,7 @@ graph_restore_box(struct _state *s, int handle)
       pos = box->x + box->y * SCI_SCREEN_WIDTH;
 
       for (i = box->yl; i > 0; i--) {
-	memcpy(s->bgpic[map] + pos, src, box->xl);
+	memcpy(s->pic->maps[map] + pos, src, box->xl);
 
 	pos += SCI_SCREEN_WIDTH;
 	src += box->xl;
@@ -135,8 +141,72 @@ graph_restore_box(struct _state *s, int handle)
       }
     }
 
-  s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_BOX, box->x, box->y, box->xl, box->yl);
   kfree(s, handle);
+}
+
+int
+view0_backup_background(state_t *s, int x, int y, int loop, int cel, byte *data)
+{
+  int loops_nr = getInt16(data);
+  int lookup, cels_nr;
+  int addr;
+  int width, height;
+  int reverse = (getInt16(data+2)>>loop) & 1;
+
+  port_t *port = s->ports[s->view_port];
+
+  if ((loop >= loops_nr) || (loop < 0))
+    return -1;
+
+  lookup = getInt16(data+8+(loop<<1));
+  cels_nr = getInt16(data + lookup);
+
+  if ((cel < 0) || (cel >= cels_nr))
+    return -1;
+
+  lookup += 4 + (cel << 1);
+
+  addr = getInt16(data + lookup);
+
+  width = getInt16(data + addr);
+  height = getInt16(data + addr + 2);
+
+  /* x,y are relative to the bottom center, so: */
+  y -= height;
+  x -= width / 2;
+
+  y++; /* Magic */
+
+  /* Now add the relative picture offsets: */
+  if (reverse)
+    x -= ((gint8 *)data)[addr + 4];
+  else
+    x += ((gint8 *)data)[addr + 4];
+
+  y += (gint8)data[addr + 5];
+
+  /* Move to port-relative position */
+  x += port->xmin;
+  y += port->ymin;
+
+  /* Clip: */
+  if (x < port->xmin) {
+    width += (x - port->xmin);
+    x = port->xmin;
+  }
+  if (y < port->ymin) {
+    height += (y - port->ymin);
+    y = port->ymin;
+  }
+  if (y + height >= port->ymax)
+    height = 1 + port->ymax - y;
+  if (x + width >= port->xmax)
+    width = 1 + port->xmax - x;
+
+  if ((width <= 0) || (height <= 0))
+    return 0; /* What a waste of time! */
+
+    return graph_save_box(s, x, y, width, height, 0x7); /* Store all layers, return handle */
 }
 
 
@@ -150,8 +220,11 @@ graph_fill_port(struct _state *s, port_t *port, int color)
   if (color < 0)
     return;
 
+  if (s->pic->bytespp == 1)
+    color |= color << 4; /* Extend color */
+
   while (_yl--) {
-    memset(s->bgpic[0] + pos, color, port->xmax - port->xmin + 1);
+    memset(s->pic->maps[0] + pos, color, port->xmax - port->xmin + 1);
     pos += SCI_SCREEN_WIDTH;
   }
 }
@@ -179,19 +252,9 @@ graph_draw_selector_button(struct _state *s, port_t *port, int state,
   graph_draw_selector_text(s, port, state, x, y, xl, yl, text, font, ALIGN_TEXT_CENTER);
 
   if ((state & SELECTOR_STATE_SELECTABLE) && (state & SELECTOR_STATE_SELECTED))
-    draw_frame(s->bgpic, port->xmin + x, port->ymin + y,
+    draw_frame(s->pic, port->xmin + x, port->ymin + y,
 	       xl - 1, yl - 1, port->color, port->priority);
 
-}
-
-
-void
-graph_restore_back_pic(struct _state *s)
-{
-  int i;
-
-  for (i = 0; i < 3; i++)
-    memcpy(s->bgpic[i] + 320 * 10, s->back_pic[i] + 320 * 10, 64000 - (320 * 10));
 }
 
 
@@ -210,10 +273,10 @@ graph_draw_selector_text(struct _state *s, port_t *port, int state,
   port->gray_text = state & SELECTOR_STATE_DISABLED;
   port->alignment = alignment;
 
-  text_draw(s->bgpic, port, text, xl);
+  text_draw(s->pic, port, text, xl);
 
   if (state & SELECTOR_STATE_FRAMED)
-    draw_frame(s->bgpic, port->xmin + x-1, port->ymin + y-1,
+    draw_frame(s->pic, port->xmin + x-1, port->ymin + y-1,
 	       xl + 1, yl + 1, port->color, port->priority);
 
   memcpy(port, &oldport, sizeof(oldport)); /* Restore old port data */
@@ -234,7 +297,7 @@ graph_draw_selector_icon(struct _state *s, port_t *port, int state,
 			 int x, int y, int xl, int yl,
 			 byte *data, int loop, int cel)
 {
-  drawView0(s->bgpic, port, x, y, 16, loop, cel, data);
+  draw_view0(s->pic, port, x, y, 16, loop, cel, data);
 }
 
 
@@ -243,8 +306,8 @@ graph_draw_selector_control(struct _state *s, port_t *port, int state,
 			 int x, int y, int xl, int yl)
 {
   /* Draw outer frame: */
-  draw_frame(s->bgpic, x, y, xl, yl, port->color, port->priority);
+  draw_frame(s->pic, x, y, xl, yl, port->color, port->priority);
 
   /* Draw inner frame: */
-  draw_frame(s->bgpic, x, y + 10, xl, yl - 20, port->color, port->priority);
+  draw_frame(s->pic, x, y + 10, xl, yl - 20, port->color, port->priority);
 }

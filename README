@@ -15,6 +15,9 @@ reports.
 Please refer to 'NEWS' and the 'ChangeLog' for information about changes
 in this and previous versions.
 
+Building FreeSCI
+----------------
+
 To build the package, type the following:
 
 configure
@@ -27,48 +30,13 @@ src/tools/console - A command console for inspection of SCI data
 src/tools/sciunpack - A tool for unpacking and converting SCI resource data
 src/tools/scriptdump - disassembles all selector methods into SCI assembly
 src/tools/vocabdump - Displays kernel function and selector names (obsolete)
-src/demo/demo (requires GGI) - shows the graphical functions in action;
-                               this comes with a command console as well
-                               (press CTRL-` to activate it)
 src/sciv - The main executable; this loads, links and runs SCI bytecode.
-
-
-To run SCI bytecode, the following commands are available:
-
- registers: Dump all register data
-
- s <x>: Execute 1 (or "x") commands
-
- heapdump [address] [size]: Dump "size" bytes from the heap, starting at
- 	the supplied "address"
-
- disasm [address] [count]: Disassemble "count" SCI operations, starting at
- 	heap address "address".
-
- scriptinfo: Show all loaded scripts and their heap addresses
-
- heapobj [address]: Display information about the object at the specified
- 	"address"
-
- obj: Display information about the current base object
-
- accobj: Display information about the object indexed by the accumulator
-
- classtable: Show all loaded classes, the scripts they are stored in and their
- 	heap addresses
-
- bt: List the current execution stack
-
- snk: Step until Next callK: Executes code until the next kernel call is
- 	done.
-
 
 
 Required 'non-standard' libraries:
  * glib
+ * GGI (http://www.ggi-project.org)
 
-GGI (http://www.ggi-project.org) is required for the demos, and generally
-for graphics display.
 
 GSI (http://www.xs4all.nl/~whs/gsi/gsi.html) is required for sound support.
 The sound stuff should build without it, though; of course, only MIDI data
@@ -77,6 +45,82 @@ The sound stuff should build without it, though; of course, only MIDI data
 libpng (http://www.cdrom.com/pub/png/) is required if you want to be able to
 store images as .png files. It will not become a necessity for the complete
 FreeSCI engine.
+
+
+
+Running it
+----------
+
+To run FreeSCI, execute 'sciv' while you are in a directory containing
+Sierra resource files (resource.000, resource.001, etc). This will open
+a ggi visual, and wait for input on the console you started it from
+(Therefore, you should only run it under X).
+At the moment, FreeSCI only supports SCI0 games, up to and including
+Quest for Glory 2.
+You will start up in the built-in debugger. Execute "sret" to let the
+vm run until it finishes or crashes, and watch things move (or break,
+depending on the game you're testing).
+For further debug commands, refer to the documentation file, doc/sci.sgml,
+written for the docbook DTD. If you don't have sgml tools to convert the
+file, you can either have a look at the docbook sources, or examine the
+documentation section on the FreeSCI home page.
+
+For a list of all commands supported by the debugger (it supports the debug
+commands listed in the documentation, plus the default command line commands
+like "play" to convert and play music over the gsi sound server), type
+"list cmds" on the debugger command line. Use "man command" to learn about
+the specified command.
+
+
+Configuration
+-------------
+
+FreeSCI will create a directory called .freesci in your home directory (unless
+this directory already exists). If you run an SCI game, this game will
+create another directory inside the .freesci directory, to store
+its save games in (later on).
+Also, if a file called "config" exists in this directory, it will be read
+and parsed by the interpreter after the game has been loaded. At this
+time, the configuration file may contain:
+- Comments preceeded by a hash '#' sign
+- version = x.yyy.zzz: emulate SCI version x.yyy.zzz. The version number
+  is sometimes printed on game discs, or can be found out by
+  grepping your main executable for "0.000." (for SCI0 games). It is
+  also displayed if the built-in debugger is activated in the Sierra SCI
+  engine.
+- color_mode = dither | flat | dither256: (only one of those three modes).
+  dither: Draw in 16 colors, same as Sierra SCI.
+  flat: Interpolate colors (256 colors). Improves some graphics.
+  dither256: Dither in 256 colors. A compromise between dither and flat.
+- [GAME_ID]: Commands following this line will only have an effect for
+  the game with the specified game ID. (The game ID is printed during
+  sciv startup, and is also used to create the save game directory).
+
+Example:
+------------------------
+# FreeSCI config file
+
+version = 0.000.685
+color_mode = flat
+
+# default to interpolated color mode and interpreter version 0.000.685
+
+[Glory]
+
+color_mode = dither256
+# Quest for glory looks better in that mode
+
+[SQ3]
+
+version = 0.000.453
+# This SQ3 version is ancient
+-----------------------
+
+
+
+Notes
+-----
+
 
 Successful builds have been reported for the following platforms:
 - i686-pc-linux-gnu

@@ -36,15 +36,28 @@
 #include <vm.h>
 
 
-#define SCI_GRAPHICS_ALLOW_256
-/* Allows 256 color modes */
+struct _picture {
 
-#define _DEBUG_VISUALS
-/* Use this define only if multiple visuals are available for your
-** target, e.g. under X.
-*/
+  guint8 *view;    /* The currently visible picture */
+  guint8 *maps[4]; /* Background picture: View, Priority, Control, and Auxiliary */
 
-typedef guint8** picture_t;
+  int xres, yres;  /* Horizontal and vertical size of the maps */
+  int bytespp;     /* Bytes per pixel */
+  int bytespl;     /* Bytes per line */
+  int view_offs;   /* Offset of the first pixel below the title bar */
+
+  int size;        /* Total pic size (of one map) */
+  int view_size;   /* Total pic size not counting the title bar */
+
+  int ega_colors[16]; /* The 16 EGA colors- this must be filled in by the
+		      ** graphics implementation.
+		      */
+
+  /* Translation stuff: */
+  int xfact, yfact; /* Factors for calculating coordinates */
+};
+
+typedef struct _picture* picture_t;
 /* Used for storing "picture" resources (the background images). These
 ** have four layers: the actual screen buffer, a priority buffer (essentially
 ** a simple z buffer), a 'special' buffer (defining, among other things,
@@ -77,6 +90,18 @@ typedef struct {
   byte *bitmap; /* Actual bitmap data */
   int color_key; /* The color used for transparency in the bitmap */
 } mouse_pointer_t;
+
+
+#define SCI_RESOLUTION_320X200 0
+#define SCI_RESOLUTION_640X400 1
+/* The two resolutions that should be supported */
+
+#define SCI_COLORDEPTH_8BPP 1
+#define SCI_COLORDEPTH_16BPP 2
+/* The two color depths that should be supported */
+
+#define SCI_MAP_EGA_COLOR(pic, col) (pic->bytespp == 1)? (col | (col << 4)) : pic->ega_colors[col]
+/* Macro for color mapping */
 
 
 /****************************** GRAPHICS CALLBACK FUNCTION ******************************/
@@ -154,27 +179,20 @@ extern int sci_color_mode;
 
 /*** FUNCTION DECLARATIONS ***/
 
-picture_t allocEmptyPicture();
+picture_t alloc_empty_picture(int resolution, int colordepth);
 /* Creates an initialized but empty picture buffer.
-** Paramters: void
-** Returns  : (picture_t) An empty picture.
+** Paramters: (int) resolution: One of the SCI_RESOLUTION macros to determine the internal resolution
+**            (int) colordepth: The number of bytes per pixel
+** Returns  : (picture_t) An empty picture or NULL if any of the parameters was invalid
 */
 
-void freePicture(picture_t picture);
+void free_picture(picture_t picture);
 /* Deallocates all memory associated by the specified picture_t.
 ** Parameters: (picture_t) picture: The picture to deallocate.
 ** Returns   : (void)
 */
 
-void copyPicture(picture_t dest, picture_t src);
-/* Copies the content of a picture.
-** Parameters: (picture_t) dest: An INITIALIZED picture which the data is to
-**                                be copied to.
-**             (picture_t) src: The picture which should be duplicated.
-** Returns   : (void)
-*/
-
-void drawPicture0(picture_t dest, int flags, int defaultPalette, guint8* data);
+void draw_pic0(picture_t dest, int flags, int defaultPalette, guint8* data);
 /* Draws a picture resource to a picture_t buffer.
 ** Parameters: (picture_t) dest: The initialized picture buffer to draw to.
 **             (int) flags: The picture flags. Currently, only bit 0 is used;
@@ -189,7 +207,7 @@ void drawPicture0(picture_t dest, int flags, int defaultPalette, guint8* data);
 ** some animation.
 */
 
-void clearPicture(picture_t pic, int fgcol);
+void clear_picture(picture_t pic, int fgcol);
 /* Clears a picture
 ** Parameters: (picture_t) pic: The picture to clear
 **             (int) fgcol: The foreground color to use for screen 0
@@ -200,7 +218,7 @@ void clearPicture(picture_t pic, int fgcol);
 ** to be drawn ontop of an already existing picture.
 */
 
-int drawView0(picture_t dest, port_t *port, int x, int y, short priority,
+int draw_view0(picture_t dest, port_t *port, int x, int y, short priority,
 	      short group, short index, guint8 *data);
 /* Draws a specified element of a view resource to a picture.
 ** Parameters: (picture_t) dest: The picture_t to draw to.
@@ -255,13 +273,6 @@ view0_cel_count(int loop, byte *data);
 ** Returns   : (int) The number of cels in that loop
 */
 
-void
-graph_restore_back_pic(struct _state *s);
-/* Restores the last-drawn picture to the background picture
-** Parameters: (state_t *) s: Pointer to the state_t to operate on
-** Returns   : (void)
-*/
-
 
 void draw_box(picture_t dest, short x, short y, short xl, short yl, char color, char priority);
 void draw_frame(picture_t dest, short x, short y, short xl, short yl, char color, char priority);
@@ -276,6 +287,16 @@ void draw_frame(picture_t dest, short x, short y, short xl, short yl, char color
 ** draw_frame does the same as draw_box, except that it doesn't fill the box.
 */
 
+
+void
+fill_box(picture_t dest, int x, int y, int xl, int yl, int value, int map);
+/* Fills a box in the picture on the specified map with the specified value
+** Parameters: (picture_t) dest: The picture_t to write to
+**             (int) x,y: The upper left point of the box
+**             (int) xl,yl: The box's horizontal and vertical extension
+**             (int) value: The value to fill it with
+**             (int) map: The map on which the value is to be filled in
+*/
 
 void dither_line(picture_t dest, int x1, int y1, short x2, short y2,
 		 int col1, int col2, int priority, int special, char drawenable);
@@ -335,8 +356,8 @@ draw_titlebar_section(picture_t dest, int start, int length, int color);
 */
 
 
-void drawWindow(picture_t dest, port_t *port, char color, char priority,
-		char *title, guint8 *titlefont, gint16 flags);
+void draw_window(picture_t dest, port_t *port, char color, char priority,
+		 char *title, guint8 *titlefont, gint16 flags);
 /* Draws a window with the appropriate facilities
 ** Parameters: (picture_t) dest: The picture_t to draw to
 **             (port_t *) port: The port to draw to
@@ -350,8 +371,9 @@ void drawWindow(picture_t dest, port_t *port, char color, char priority,
 */
 
 
-void drawText0(picture_t dest, port_t *port, int x, int y, char *text, char *font, char color);
-void drawTextCentered0(picture_t dest, port_t *port, int x, int y, char *text, char *font, char color);
+void draw_text0(picture_t dest, port_t *port, int x, int y, char *text, char *font, char color);
+void draw_text0_centered(picture_t dest, port_t *port, int x, int y,
+			 char *text, char *font, char color);
 /* Draws text in a specific font and color.
 ** Parameters: (picture_t) dest: The picture_t to draw to.
 **             (port_t *) port: The port to draw to.
@@ -375,15 +397,6 @@ text_draw(picture_t dest, port_t *port, char *text, int maxwidth);
 ** Returns   : (void)
 */
 
-void drawMouseCursor(picture_t target, int x, int y, guint8 *cursor);
-/* DEPRECATED
-** Draws a mouse cursor
-** Parameters: target: The picture_t to draw to
-**             (x,y): The coordinates to draw to (are clipped to valid values)
-**             cursor: The cursor data to draw
-** This function currently uses SCI0 cursor drawing for everything.
-*/
-
 
 mouse_pointer_t *
 calc_mouse_cursor(byte *data);
@@ -402,19 +415,6 @@ free_mouse_cursor(mouse_pointer_t *pointer);
 ** A simple function to free all memory allocated with the specified pointer.
 */
 
-int
-open_visual_ggi(struct _state *s);
-/* Opens a ggi visual and sets all callbacks to ggi-specific functions
-** Parameter: (state_t *) s: Pointer to the affected state_t
-** Returns  : (int) 0 on success, 1 otherwise
-*/
-
-void
-close_visual_ggi(struct _state *s);
-/* Closes a ggi visual on a state_t
-** Parameter: (state_t *) s: Pointer to the affected state_t
-** Returns  : (void)
-*/
 
 /***************************************************************/
 /* Implementation-independant graphics operations for state_ts */
@@ -472,6 +472,18 @@ graph_restore_box(struct _state *s, int handle);
 ** Parameters: (state_t *) s: The state_t to operate on
 **             (int) handle: The handle of the box to restore
 ** Returns     (void)
+*/
+
+int
+view0_backup_background(struct _state *s, int x, int y, int loop, int cel, byte *data);
+/* Backs up the background that would be overwritten if the specified picture was drawn
+** Parameters: (state_t *) s: The state_t to operate on
+**             (int) x,y: The intended position to draw the view to
+**             (int) loop, cel: The picture inside the view resource
+**             (byte *) data: The view resource
+** Returns   : (int): A handle that may be used with graph_restore_box
+** This function allocates kernel memory (via graph_save_box()/kalloc()) to store the view. All
+** three relevant layers are saved.
 */
 
 void
@@ -558,6 +570,5 @@ graph_draw_selector_control(struct _state *s, port_t *port, int state,
 **             (int) xl,yl: Height and width of the selector in question
 ** Returns   : (void)
 */
-
 
 #endif

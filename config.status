@@ -2,7 +2,7 @@
 # Generated automatically by configure.
 # Run this file to recreate the current configuration.
 # This directory was configured as follows,
-# on host towerhs.alfred.edu:
+# on host starbase42:
 #
 # ./configure 
 #
@@ -28,7 +28,7 @@ done
 ac_given_srcdir=.
 ac_given_INSTALL="/usr/bin/install -c"
 
-trap 'rm -fr Makefile    	doc/Makefile         doc/misc/Makefile 	src/Makefile  	src/core/Makefile 	src/graphics/Makefile 	src/include/Makefile 	src/tools/Makefile 	src/console/Makefile 	src/sound/Makefile 	src/demo/Makefile config.h conftest*; exit 1' 1 2 15
+trap 'rm -fr Makefile    	doc/Makefile         doc/misc/Makefile 	src/Makefile  	src/core/Makefile 	src/graphics/Makefile 	src/include/Makefile 	src/tools/Makefile 	src/console/Makefile 	src/sound/Makefile config.h conftest*; exit 1' 1 2 15
 
 # Protect against being on the right side of a sed subst in config.status.
 sed 's/%@/@@/; s/@%/@@/; s/%g$/@g/; /@g$/s/[\\&%]/\\&/g;
@@ -36,12 +36,12 @@ sed 's/%@/@@/; s/@%/@@/; s/%g$/@g/; /@g$/s/[\\&%]/\\&/g;
 /^[ 	]*VPATH[ 	]*=[^:]*$/d
 
 s%@SHELL@%/bin/sh%g
-s%@CFLAGS@%-g -O2 -I/usr/lib/glib/include%g
+s%@CFLAGS@%-g -O2 -I/usr/local/lib/glib/include -I/usr/local/include%g
 s%@CPPFLAGS@%%g
 s%@CXXFLAGS@%%g
 s%@FFLAGS@%%g
 s%@DEFS@%-DHAVE_CONFIG_H%g
-s%@LDFLAGS@% -L/usr/lib -lglib%g
+s%@LDFLAGS@% -L/usr/local/lib -lglib%g
 s%@LIBS@%%g
 s%@exec_prefix@%${prefix}%g
 s%@prefix@%/usr/local%g
@@ -72,18 +72,17 @@ s%@SET_MAKE@%%g
 s%@CC@%gcc%g
 s%@RANLIB@%ranlib%g
 s%@CPP@%gcc -E%g
-s%@ac_moresubdirs@%demo%g
 s%@ac_graphics_ggi_libfile@%graphics_ggi.c%g
 s%@ac_graphics_ggi_libobjects@%graphics_ggi.o%g
 s%@ac_ggi_includes@%-I/usr/local/include%g
 s%@ac_ggi_libraries@%-L/usr/local/lib -lggi -lgii%g
-s%@GLIB_CONFIG@%/usr/bin/glib-config%g
+s%@GLIB_CONFIG@%/usr/local/bin/glib-config%g
 s%@ac_glib_includes@%%g
 s%@ac_glib_libraries@%%g
-s%@GLIB_CFLAGS@%-I/usr/lib/glib/include%g
-s%@GLIB_LIBS@%-L/usr/lib -lglib%g
-s%@ac_png_includes@%%g
-s%@ac_png_libraries@%%g
+s%@GLIB_CFLAGS@%-I/usr/local/lib/glib/include -I/usr/local/include%g
+s%@GLIB_LIBS@%-L/usr/local/lib -lglib%g
+s%@ac_png_includes@%-I/usr/local/include%g
+s%@ac_png_libraries@%-L/usr/lib -lpng%g
 
 CEOF
 
@@ -119,7 +118,7 @@ if test -z "$ac_sed_cmds"; then
   ac_sed_cmds=cat
 fi
 
-CONFIG_FILES=${CONFIG_FILES-"Makefile    	doc/Makefile         doc/misc/Makefile 	src/Makefile  	src/core/Makefile 	src/graphics/Makefile 	src/include/Makefile 	src/tools/Makefile 	src/console/Makefile 	src/sound/Makefile 	src/demo/Makefile"}
+CONFIG_FILES=${CONFIG_FILES-"Makefile    	doc/Makefile         doc/misc/Makefile 	src/Makefile  	src/core/Makefile 	src/graphics/Makefile 	src/include/Makefile 	src/tools/Makefile 	src/console/Makefile 	src/sound/Makefile"}
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
   # Support "outfile[:infile[:infile...]]", defaulting infile="outfile.in".
   case "$ac_file" in
@@ -219,18 +218,24 @@ ${ac_eA}PACKAGE${ac_eB}PACKAGE${ac_eC}"freesci"${ac_eD}
 ${ac_dA}VERSION${ac_dB}VERSION${ac_dC}"0.2.4"${ac_dD}
 ${ac_uA}VERSION${ac_uB}VERSION${ac_uC}"0.2.4"${ac_uD}
 ${ac_eA}VERSION${ac_eB}VERSION${ac_eC}"0.2.4"${ac_eD}
+${ac_dA}HAVE_GSI_GSI_INTERFACE_C${ac_dB}HAVE_GSI_GSI_INTERFACE_C${ac_dC}1${ac_dD}
+${ac_uA}HAVE_GSI_GSI_INTERFACE_C${ac_uB}HAVE_GSI_GSI_INTERFACE_C${ac_uC}1${ac_uD}
+${ac_eA}HAVE_GSI_GSI_INTERFACE_C${ac_eB}HAVE_GSI_GSI_INTERFACE_C${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_SYS_SOUNDCARD_H${ac_dB}HAVE_SYS_SOUNDCARD_H${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_SYS_SOUNDCARD_H${ac_uB}HAVE_SYS_SOUNDCARD_H${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_SYS_SOUNDCARD_H${ac_eB}HAVE_SYS_SOUNDCARD_H${ac_eC}1${ac_eD}
-${ac_dA}HAVE_LIBGGI${ac_dB}HAVE_LIBGGI${ac_dC}1${ac_dD}
-${ac_uA}HAVE_LIBGGI${ac_uB}HAVE_LIBGGI${ac_uC}1${ac_uD}
-${ac_eA}HAVE_LIBGGI${ac_eB}HAVE_LIBGGI${ac_eC}1${ac_eD}
 CEOF
   sed -f conftest.frag conftest.in > conftest.out
   rm -f conftest.in
   mv conftest.out conftest.in
 
   cat > conftest.frag <<CEOF
+${ac_dA}HAVE_LIBGGI${ac_dB}HAVE_LIBGGI${ac_dC}1${ac_dD}
+${ac_uA}HAVE_LIBGGI${ac_uB}HAVE_LIBGGI${ac_uC}1${ac_uD}
+${ac_eA}HAVE_LIBGGI${ac_eB}HAVE_LIBGGI${ac_eC}1${ac_eD}
+${ac_dA}HAVE_LIBPNG${ac_dB}HAVE_LIBPNG${ac_dC}1${ac_dD}
+${ac_uA}HAVE_LIBPNG${ac_uB}HAVE_LIBPNG${ac_uC}1${ac_uD}
+${ac_eA}HAVE_LIBPNG${ac_eB}HAVE_LIBPNG${ac_eC}1${ac_eD}
 s%^[ 	]*#[ 	]*undef[ 	][ 	]*[a-zA-Z_][a-zA-Z_0-9]*%/* & */%
 CEOF
   sed -f conftest.frag conftest.in > conftest.out

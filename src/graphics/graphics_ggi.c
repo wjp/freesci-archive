@@ -37,11 +37,7 @@
 #include <uinput.h>
 #include <engine.h>
 
-#ifdef SCI_GRAPHICS_ALLOW_256
 ggi_pixel egacol[256];
-#else /* !SCI_GRAPHICS_ALLOW_256 */
-ggi_pixel egacol[16];
-#endif /* !SCI_GRAPHICS_ALLOW_256 */
 char colors_uninitialized = 1;
 
 ggi_visual_t sci_default_visual;
@@ -58,7 +54,6 @@ void initInputGGI();
 uint8 _sci_xfer[640 * 4]; /* Transfer buffer for GGI */
 
 
-#ifdef SCI_GRAPHICS_ALLOW_256
 void initColors(ggi_visual_t visual)
 {
   int i;
@@ -81,40 +76,14 @@ void initColors(ggi_visual_t visual)
   for (i=0; i< 256; i++) {
     ggi_color color;
     color.r = (vcal[i & 0xf].r / 5)*3
-      + (vcal[((i & 0xf)+(i >> 4)) & 0xf].r / 5)*2;
+      + (vcal[i >> 4].r / 5)*2;
     color.g = (vcal[i & 0xf].g / 5)*3
-      + (vcal[((i & 0xf)+(i >> 4)) & 0xf].g / 5)*2;
+      + (vcal[i >> 4].g / 5)*2;
     color.b = (vcal[i & 0xf].b / 5)*3
-      + (vcal[((i & 0xf)+(i >> 4)) & 0xf].b / 5)*2;
+      + (vcal[i >> 4].b / 5)*2;
     egacol[i] = ggiMapColor(visual, &color);
   }
 }
-#else /* !SCI_GRAPHICS_ALLOW_256 */
-void initColors(ggi_visual_t visual)
-{
-  int i;
-
-  for (i=0; i<16; i++) {
-    ggi_color vcal;
-    vcal.r = (i & 0x04) ? 0xaaaa : 0;
-    vcal.g = (i & 0x02) ? 0xaaaa : 0;
-    vcal.b = (i & 0x01) ? 0xaaaa : 0;
-    if (i & 0x08) {
-      vcal.r += 0x5555;
-      vcal.g += 0x5555;
-      vcal.b += 0x5555;
-    }
-    vcal.a = 0;
-    if (i == 6) { /* Special exception for brown */
-      vcal.g >>= 1;
-    }
-    egacol[i] = ggiMapColor(visual, &vcal);
-  }
-}
-#endif /* !SCI_GRAPHICS_ALLOW_256 */
-
-
-
 
 
 ggi_visual_t openVisual()
@@ -305,20 +274,20 @@ graphics_callback_ggi(struct _state *s, int command, int x, int y, int xl, int y
 
   switch (command) {
   case GRAPHICS_CALLBACK_REDRAW_ALL:
-    graphics_draw_region_ggi(vis, s->pic[s->pic_layer],
+    graphics_draw_region_ggi(vis, s->pic->view,
 			     0, 0, 320, 200,
 			     s->mouse_pointer, s->pointer_x, s->pointer_y);
     break;
   case GRAPHICS_CALLBACK_REDRAW_BOX:
-    graphics_draw_region_ggi(vis, s->pic[s->pic_layer], /* Draw box */
+    graphics_draw_region_ggi(vis, s->pic->view, /* Draw box */
 			     x, y, xl, yl,
 			     s->mouse_pointer, s->pointer_x, s->pointer_y);
     break;
   case GRAPHICS_CALLBACK_REDRAW_POINTER:
-    graphics_draw_region_ggi(vis, s->pic[s->pic_layer], /* Draw new pointer */
+    graphics_draw_region_ggi(vis, s->pic->view, /* Draw new pointer */
 			     mp_x, mp_y, mp_size_x, mp_size_y,
 			     s->mouse_pointer, s->pointer_x, s->pointer_y);
-    graphics_draw_region_ggi(vis, s->pic[s->pic_layer], /* Remove old pointer */
+    graphics_draw_region_ggi(vis, s->pic->view, /* Remove old pointer */
 			     s->last_pointer_x,s->last_pointer_y,
 			     s->last_pointer_size_x, s->last_pointer_size_y,
 			     s->mouse_pointer, s->pointer_x, s->pointer_y);
@@ -335,61 +304,6 @@ default:
 }
 
 
-void displayPicture(ggi_visual_t visual, picture_t pic, short layer)
-{
-  int x,y,pos = 0;
-  ggi_mode mode;
-  int bytelen;
-  int index;
-  int counter = 0;
-
-  ggiGetMode(visual, &mode);
-
-  if (mode.visible.x >= 640) { /* You want a double visual */
-    displayPictureDouble(visual, pic, layer);
-    return;
-  }
-
-  bytelen = GT_SIZE(mode.graphtype) >> 3; /* at least 8 bits! */
-
-  for (y=0; y<200; y++) {
-    index = -bytelen;
-
-    for (x=0; x<320; x++)
-      *(uint32 *)&(_sci_xfer[index += bytelen]) = *(uint32 *)&(egacol[pic[layer][counter++]]);
-
-    ggiPutHLine(visual, 0, y, 320, _sci_xfer);
-  }
-}
-
-
-void displayPictureDouble(ggi_visual_t visual, picture_t pic, short layer)
-{
-  int x,y,pos = 0;
-  ggi_mode mode;
-  int bytelen;
-  int index;
-  int counter = 0;
-
-  ggiGetMode(visual, &mode);
-
-  bytelen = GT_SIZE(mode.graphtype) >> 3; /* at least 8 bits! */
-
-  for (y=0; y<400; y+=2) {
-    uint32 bvar;
-
-    index = -bytelen;
-
-    for (x=0; x<320; x++) {
-      bvar = *(uint32 *)&(egacol[pic[layer][counter++]]);
-      *(uint32 *)&(_sci_xfer[index += bytelen]) = bvar;
-      *(uint32 *)&(_sci_xfer[index += bytelen]) = bvar;
-    }
-
-    ggiPutHLine(visual, 0, y, 640, _sci_xfer);
-    ggiPutHLine(visual, 0, y+1, 640, _sci_xfer);
-  }
-}
 
 int
 open_visual_ggi(state_t *s)

@@ -8,6 +8,9 @@
 #ifndef _SCI_VM_H
 #define _SCI_VM_H
 
+#define VM_STACK_SIZE 0x1000
+/* Number of bytes to be allocated for the stack */
+
 #define SCRIPT_MAX_EXEC_STACK 256
 /* Maximum number of calls residing on the stack */
 #define SCRIPT_MAX_CLASSTABLE_SIZE 256
@@ -105,12 +108,33 @@ typedef struct
   int view, loop, cel; /* Description of a specific image */
   int brLeft, brRight, brTop, brBottom; /* Bounding Rectangle */
   int xStep, yStep; /* BR adjustments */
-  int nsLeft, nsRight, nsTop, nsBottom; /* Control boundaries */
+  int nsLeft, nsRight, nsTop, nsBottom; /* View boundaries */
   int text, font; /* Used by controls */
   int type, state; /* Used by contols as well */
   int doit; /* Called (!) by the Animate() system call */
+  int delete; /* Called by Animate() to dispose a view object */
+  int signal; /* Used by Animate() to control a view's behaviour */
+  int underBits; /* Used by the graphics subroutines to store backupped BG pic data */
+
+  /* The following selectors are used by the Bresenham syscalls: */
+  int canBeHere; /* Checks for movement validity */
+  int client; /* The object that wants to be moved */
+  int dx, dy; /* Deltas */
+  int b_movCnt, b_i1, b_i2, b_di, b_xAxis, b_incr; /* Various Bresenham vars */
+  int completed;
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
+typedef struct {
+  heap_ptr obj;
+  heap_ptr signalp;    /* Used only indirectly */
+  heap_ptr underBitsp; /* The same goes for the handle storage */
+
+  int x, y;
+  int priority;
+  byte *view;
+  int loop, cel;
+  int nsTop, nsLeft, nsRight, nsBottom;
+} view_object_t;
 
 typedef struct {
   heap_ptr *objpp;

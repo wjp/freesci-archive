@@ -170,17 +170,17 @@ void getTextParams(char *text, char *font)
 }
 
 
-void drawTextCentered0(picture_t dest, port_t *port, int x, int y, char *text, char *font,
-		  char color)
+void draw_text0_centered(picture_t dest, port_t *port, int x, int y, char *text, char *font,
+			 char color)
 {
   getTextParams(text, font);
-  drawText0(dest, port,
-	    x + ((port->xmax - port->xmin - rowwidths[0]) >> 1),
-	    y, text, font, color);
+  draw_text0(dest, port,
+	     x + ((port->xmax - port->xmin - rowwidths[0]) >> 1),
+	     y, text, font, color);
 }
 
-void drawText0(picture_t dest, port_t *port, int x, int y, char *text, char *font,
-		  char color)
+void draw_text0(picture_t dest, port_t *port, int x, int y, char *text, char *font,
+		char color)
 {
   unsigned char foo;
   short rowcounter = 0;
@@ -213,7 +213,7 @@ void drawText0(picture_t dest, port_t *port, int x, int y, char *text, char *fon
 	  int poshome = pos;
 	  guint8 bitmask = *(foopos++);
 	  for (xc = 0; xc < xl; xc++) {
-	    if (bitmask & 0x80) dest[0][pos] = color;
+	    if (bitmask & 0x80) dest->maps[0][pos] = color;
 	    pos++;
 	    bitmask <<= 1;
 	  }
@@ -226,7 +226,7 @@ void drawText0(picture_t dest, port_t *port, int x, int y, char *text, char *fon
 	  /* interestingly, this bitmask is big-endian */
 	  foopos += 2;
 	  for (xc = 0; xc < xl; xc++) {
-	    if (bitmask & 0x8000) dest[0][pos] = color;
+	    if (bitmask & 0x8000) dest->maps[0][pos] = color;
 	    bitmask <<= 1;
 	    pos++;
 	  }
@@ -269,7 +269,7 @@ _text_draw_line(picture_t dest, int x, int y, char *text, int textlen, char *fon
 	  int poshome = pos;
 	  guint8 bitmask = *(foopos++);
 	  for (xc = 0; xc < xl; xc++) {
-	    if (bitmask & 0x80) dest[0][pos] = color;
+	    if (bitmask & 0x80) dest->maps[0][pos] = color;
 	    pos++;
 	    bitmask <<= 1;
 	  }
@@ -282,7 +282,7 @@ _text_draw_line(picture_t dest, int x, int y, char *text, int textlen, char *fon
 	  /* interestingly, this bitmask is big-endian */
 	  foopos += 2;
 	  for (xc = 0; xc < xl; xc++) {
-	    if (bitmask & 0x8000) dest[0][pos] = color;
+	    if (bitmask & 0x8000) dest->maps[0][pos] = color;
 	    bitmask <<= 1;
 	    pos++;
 	  }
@@ -325,7 +325,7 @@ _text_draw_gray_line(picture_t dest, int x, int y, char *text, int textlen, char
 	  int poshome = pos;
 	  guint8 bitmask = *(foopos++);
 	  for (xc = 0; xc < xl; xc++) {
-	    if (bitmask & 0x80) dest[0][pos] = (pos &1)? c1:c2;
+	    if (bitmask & 0x80) dest->maps[0][pos] = (pos &1)? c1:c2;
 	    pos++;
 	    bitmask <<= 1;
 	  }
@@ -338,7 +338,7 @@ _text_draw_gray_line(picture_t dest, int x, int y, char *text, int textlen, char
 	  /* interestingly, this bitmask is big-endian */
 	  foopos += 2;
 	  for (xc = 0; xc < xl; xc++) {
-	    if (bitmask & 0x8000) dest[0][pos] = (pos & 1)? c1:c2;
+	    if (bitmask & 0x8000) dest->maps[0][pos] = (pos & 1)? c1:c2;
 	    bitmask <<= 1;
 	    pos++;
 	  }
@@ -405,10 +405,11 @@ text_draw(picture_t dest, port_t *port, char *text, int maxwidth)
 
 	if (port->gray_text)
 	  _text_draw_gray_line(dest, x, y, last_text_base, last_breakpoint,
-					     port->font, port->color, port->bgcolor);
+			       port->font, port->color | (port->color << 4),
+			       port->bgcolor | (port->color << 4));
 		  else
 	  _text_draw_line(dest, x, y, last_text_base, last_breakpoint,
-					port->font, port->color);
+					port->font, port->color | (port->color << 4));
 
 	y += line_height;
 

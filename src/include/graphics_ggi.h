@@ -48,61 +48,19 @@ extern int sci_default_visual_size;
 /* The default visual's size. Not used by the library itself */
 
 
-ggi_visual_t
-openVisual();
-/* Creates a 320x200 GGI visual.
-** Parameters: (void)
-** Returns   : (ggi_visual_t) The visual, or NULL if opening failed.
-** This will also initialize the internal EGA color lookup table, if this has
-** not already been done. Beware: If you are displaying to several visuals
-** with a different color layout, this will only work properly for the first
-** one.
-** It will also install an input handler for the visual, if no input handler
-** has been added yet.
-*/
-
-ggi_visual_t
-openDoubleVisual();
-/* Creates a 640x400 GGI visual.
-** Parameters: (void)
-** Returns   : (ggi_visual_t) The visual, or NULL if opening failed.
-** This will also initialize the internal EGA color lookup table, if this has
-** not already been done. Beware: If you are displaying to several visuals
-** with a different color layout, this will only work properly for the first
-** one.
-** It will also install an input handler for the visual, if no input handler
-** has been added yet.
+int
+open_visual_ggi(struct _state *s);
+/* Opens a ggi visual and sets all callbacks to ggi-specific functions
+** Parameter: (state_t *) s: Pointer to the affected state_t
+** Returns  : (int) 0 on success, 1 otherwise
 */
 
 void
-closeVisual(ggi_visual_t visual);
-/* Closes a GGI visual.
-** Parameters: (ggi_visual_t) visual: The visual to close.
-** Returns   : (void)
+close_visual_ggi(struct _state *s);
+/* Closes a ggi visual on a state_t
+** Parameter: (state_t *) s: Pointer to the affected state_t
+** Returns  : (void)
 */
-
-void
-displayPicture(ggi_visual_t visual, picture_t pic, short layer);
-/* Displays a picture on a GGI visual.
-** Parameters: (ggi_visual_t) visual: The visual to draw to.
-**             (picture_t) pic: The picture to draw.
-**             (short) layer: The layer of pic to draw.
-** Returns   : (void)
-*/
-
-
-void
-displayPictureDouble(ggi_visual_t visual, picture_t pic, short layer);
-/* deprecated */
-/* Displays a double-sized picture on a GGI visual.
-** Parameters: (ggi_visual_t) visual: The visual to draw to.
-**             (picture_t) pic: The picture to draw.
-**             (short) layer: The layer or pic to draw.
-** Returns   : (void)
-** This should obviously only be used with double-sized GGI visuals.
-*/
-
-
 
 
 int

@@ -3,20 +3,18 @@ Authors of FreeSCI:
 
 
 Carl Muckenhoupt: [carl@wurb.com]
-most of graphics/graphics.c
-important parts of core/decompress.c
+parts of graphics/graphics.c core/decompress0.c core/decompress1.c
 
 Magnus Reftel: [d96reftl@dtek.chalmers.se]
-core/script.c core/vocabulary.c core/heap.c tools/disasm.c core/script.c tools/classes.c
-parts of core/kernel.c
+core/script.c core/vocabulary.c core/heap.c tools/disasm.c tools/classes.c
 Everything from python.tar.gz
 
 Sergey Lapin: [slapin@karelia.ru]
 parts of core/decompress1.c
 
 Christoph Reichenbach: [creichen@rbg.informatik.tu-darmstadt.de]
-graphics/graphics_*.c graphics/font.c graphics/mcursor.c core/resource.c core/vm.c demo/*.c tools/sciunpack.c sound/*.c  console/*.c tools/console.c graphics/input*.c graphics/window.c
-most of core/kernel.c
+graphics/graphics_*.c graphics/font.c graphics/mcursor.c core/resource.c core/vm.c demo/*.c tools/sciunpack.c sound/*.c  console/*.c tools/console.c graphics/input*.c graphics/window.c graphics/engine_graphics.c main.c config.l
+core/kernel.c
 parts of core/decompress.c
-minor parts of graphics/graphics.c
+parts of graphics/graphics.c
 

@@ -1,3 +1,25 @@
+0.2.4 has arrived, and we're still not finished ;-)
+Seriosly, though, this is the first release of FreeSCI that displays and
+animates graphics according to the directions given by SCI scripts
+(at least it works for some games).
+Since input support has not yet been implemented, games that require
+interaction early on (like QfG or LSL2) don't show very much yet; other
+games, like SQ3, already animate some of their graphics.
+We have implemented more than half of the SCI kernel functionality since
+the last release, fixed countless bugs, and prepared sound and graphics
+for the next millenium. Well, for the next release, at least.
+During the rewrite of the graphics system, the demo program was broken
+in such a way that it made no sense to support it any further in the current
+form. It is not part of this distribution, and is unlikely to return in
+later releases, since most of its functionality are provided by the main
+executable as well; the missing features (displaying arbitrary pic and view
+resources) might return in an independant pic viewer later on.
+
+
+
+
+--- 0.2.3: ---
+
 So you've decided to have a look at the 0.2.3 release of FreeSCI. It's
 been quite a while since the last public release, so we decided to come
 up with something bigger this time.

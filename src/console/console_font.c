@@ -40,7 +40,7 @@ inline void
 drawChar(picture_t pic, int cpos, int col, guint8 character)
 {
   int offset = character << 3;
-  unsigned char *homepos = pic[0] + cpos;
+  unsigned char *homepos = pic->view + cpos;
   unsigned char *pos = homepos;
   int ylen = 0;
 
