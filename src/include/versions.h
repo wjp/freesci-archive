@@ -37,8 +37,8 @@ struct _state;
 /* This allows version numbers to be compared directly */
 
 #define SCI_VERSION_MAJOR(_version_) ((_version_) >> 20)
-#define SCI_VERSION_MINOR(_version_) (((_version_) >> 10) & 0x7ff)
-#define SCI_VERSION_PATCHLEVEL(_version_) ((_version_) & 0x7ff)
+#define SCI_VERSION_MINOR(_version_) (((_version_) >> 10) & 0x3ff)
+#define SCI_VERSION_PATCHLEVEL(_version_) ((_version_) & 0x3ff)
 
 /* Version number guide:
 ** - Always use the version number of the first known version to have a special feature.

@@ -1,3 +1,10 @@
+2000-06-06  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kernel.c (kRestartGame): Restarting would trash the
+	  save_dir string. Fixed.
+       * src/include/versions.h: Fixed strange-looking SCI01 version numbers
+           (1.1024.072)
+
 2000-06-05  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/scicore/console.c (sciprintf): Fixed support for classic libc
