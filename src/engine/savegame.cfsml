@@ -39,6 +39,8 @@
 #include <direct.h>
 #endif
 
+#define HUNK_TYPE_GFX_SNAPSHOT_STRING "g"
+
 /* Missing:
 ** - SFXdriver
 ** - File input/output state (this is likely not to happen)
@@ -73,73 +75,6 @@ int
 read_sci_version(FILE *fh, sci_version_t *foo, char *lastval, int *line, int *hiteof)
 {
 	*foo = version_parse(lastval);
-	return 0;
-}
-
-void
-write_hunk_block(FILE *fh, hunk_block_t *foo)
-{
-	char filename[14] = "hunk.0";
-	int filenr = 0;
-	int hunkfile;
-
-	if (!foo->size) {
-		fputs("\\null\\", fh);
-		return; /* Don't write empty blocks */
-	}
-
-	if (foo->type == HUNK_TYPE_GFXBUFFER) {
-
-		strcpy(filename, "\\ERROR\\"); /* Treat as empty */
-
-	} else { /* Normal buffer */
-
-		while ((hunkfile = open(filename, O_RDONLY)) > 0) {
-			close(hunkfile);
-			sprintf(filename + 5, "%d", ++filenr);
-		}
-
-		hunkfile = creat(filename, 0600);
-		assert (hunkfile > 0);
-
-		write(hunkfile, foo->data, foo->size);
-
-		close(hunkfile);
-	}
-
-	fputs(filename, fh);
-}
-
-int
-read_hunk_block(FILE *fh, hunk_block_t *foo, char *lastval, int *line, int *hiteof)
-{
-	int hunkfile;
-
-	if (lastval[0] == '\\') { /* Nothing written? */
-		foo->size = 0;
-		return 0;
-	}
-
-	if (lastval[0] == 'b') { /* Graphical buffer */
-
-		return 1;
-
-	} else { /* Normal hunk */
-
-		foo->type = HUNK_TYPE_ANY;
-
-		hunkfile = open(lastval, O_RDONLY);
-
-		foo->size = lseek(hunkfile, 0, SEEK_END);
-		lseek(hunkfile, 0, SEEK_SET);
-
-		foo->data = (char *) xalloc(foo->size);
-		read(hunkfile, foo->data, foo->size);
-		close(hunkfile);
-
-		return 0;
-	}
-
 	return 0;
 }
 
@@ -323,6 +258,11 @@ RECORD gfxw_port_t EXTENDS gfxw_container_t {
 }
 
 
+RECORD gfxw_snapshot_t "gfxw_snapshot_t" {
+	int serial;
+	rect_t area;
+}
+
 
 /*-------------------------*/
 /* End of widget subsystem */
@@ -494,6 +434,75 @@ RECORD state_t "state_t" {
 }
 
 %END CFSML
+
+void
+write_hunk_block(FILE *fh, hunk_block_t *foo)
+{
+	char filename[14] = "hunk.0";
+	int filenr = 0;
+	int hunkfile;
+
+	if (!foo->size) {
+		fputs("\\null\\", fh);
+		return; /* Don't write empty blocks */
+	}
+
+	if (foo->type == HUNK_TYPE_GFXBUFFER) {
+
+		fputs(HUNK_TYPE_GFX_SNAPSHOT_STRING, fh);
+		%CFSMLWRITE gfxw_snapshot_t ((gfxw_snapshot_t*)foo->data) INTO fh;
+		return;
+
+	} else { /* Normal buffer */
+
+		while ((hunkfile = open(filename, O_RDONLY)) > 0) {
+			close(hunkfile);
+			sprintf(filename + 5, "%d", ++filenr);
+		}
+
+		hunkfile = creat(filename, 0600);
+		assert (hunkfile > 0);
+
+		write(hunkfile, foo->data, foo->size);
+
+		close(hunkfile);
+	}
+
+	fputs(filename, fh);
+}
+
+int
+read_hunk_block(FILE *fh, hunk_block_t *foo, char *lastval, int *line, int *hiteof)
+{
+	int hunkfile;
+
+	if (lastval[0] == '\\') { /* Nothing written? */
+		foo->size = 0;
+		return 0;
+	}
+
+	if (lastval[0] == HUNK_TYPE_GFX_SNAPSHOT_STRING[0]) { /* Graphical buffer */
+		%CFSMLREAD gfxw_snapshot_t ((gfxw_snapshot_t*)foo->data) FROM fh ERRVAR *hiteof LINECOUNTER *line
+		return 1;
+
+	} else { /* Normal hunk */
+
+		foo->type = HUNK_TYPE_ANY;
+
+		hunkfile = open(lastval, O_RDONLY);
+
+		foo->size = lseek(hunkfile, 0, SEEK_END);
+		lseek(hunkfile, 0, SEEK_SET);
+
+		foo->data = (char *) xalloc(foo->size);
+		read(hunkfile, foo->data, foo->size);
+		close(hunkfile);
+
+		return 0;
+	}
+
+	return 0;
+}
 
 struct {
 	gfxw_widget_types_t type;

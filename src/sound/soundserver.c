@@ -353,7 +353,6 @@ sci0_soundserver()
 	  int usecs;
 	  int size;
 	  GTimeVal currtime;
-
 	  sound_get_data((byte **)&dirname,&size,event.value);
 	  sci_get_current_time(&currtime);
 	  usecs = (currtime.tv_sec - last_played.tv_sec) * 1000000
@@ -362,7 +361,6 @@ sci0_soundserver()
 					  
 	  success = soundsrv_save_state(ds, dirname, songlib, newsong,
 					ccc, usecs, ticks, fadeticks, master_volume);
-
 	  /* Return soundsrv_save_state()'s return value */
 	  sound_send_data((byte *)&success, sizeof(int));
 	  free(dirname);

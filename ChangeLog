@@ -1,5 +1,7 @@
 2001-04-21  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sound/soundserver_sdl.c (sound_sdl_get_command): Fixed segfault
+
 	* src/sound/soundserver*.c: Removed warnings
 
 2001-04-21  Matt Hargett  <matt@use.net>

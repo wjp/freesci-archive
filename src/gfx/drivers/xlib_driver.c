@@ -670,7 +670,6 @@ xlib_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 	}
 	fflush(stdout);
 	if (pxm->internal.handle == SCI_XLIB_PIXMAP_HANDLE_GRABBED) {
-		fprintf(stderr, "    == Drawing grabbed %d %d\n", dest.y, dest.yl);
 		XPutImage(S->display, S->visual[bufnr], S->gc, (XImage *) pxm->internal.info,
 			  src.x, src.y, dest.x, dest.y, dest.xl, dest.yl);
 		return GFX_OK;

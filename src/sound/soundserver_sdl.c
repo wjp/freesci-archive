@@ -135,22 +135,22 @@ sound_sdl_queue_command(int handle, int signal, int value)
 sound_event_t *
 sound_sdl_get_command(GTimeVal *wait_tvp)
 {
-  sound_event_t *event = NULL;
+	sound_event_t *event = NULL;
 
-  if (!sound_eq_peek_event(&inqueue)) {
-    usleep(wait_tvp->tv_usec);
-    return NULL;
-  }
-    SDL_LockMutex(in_mutex);
+	if (!sound_eq_peek_event(&inqueue)) {
+		/*    usleep(wait_tvp->tv_usec); */
+		return NULL;
+	}
+	SDL_LockMutex(in_mutex);
 
-  event = sound_eq_retreive_event(&inqueue);
+	event = sound_eq_retreive_event(&inqueue);
 
-  SDL_UnlockMutex(in_mutex);
+	SDL_UnlockMutex(in_mutex);
 
-  return event;
+	return event;
 }
 
-void
+int
 sound_sdl_get_data(byte **data_ptr, int *size, int maxlen)
 {
   /* we ignore maxlen */
@@ -163,9 +163,10 @@ sound_sdl_get_data(byte **data_ptr, int *size, int maxlen)
 
   SDL_UnlockMutex(data_mutex);
   SDL_CondSignal(dataout_cond);
+  return *size;
 }
 
-void
+int
 sound_sdl_send_data(byte *data_ptr, int maxsend) 
 {
   while(sound_data != NULL) 
@@ -177,6 +178,7 @@ sound_sdl_send_data(byte *data_ptr, int maxsend)
   printf(" %d bytes ",maxsend);
   SDL_UnlockMutex(data_mutex);
   SDL_CondSignal(datain_cond);
+  return maxsend;
 }
 
 void 
