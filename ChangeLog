@@ -1,3 +1,9 @@
+2003-03-08  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/vm.c: Forward port of VM fixes from the main branch.
+	* src/engine/kmath.c (kAbs): Work around a hack in Hoyle1.
+	* src/engine/kgraphics.c (kTextSize): Really accept NULL pointers.
+
 2003-03-08  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sfx/seq/sequencers.c: Define sfx_sequencer_oss_adlib and

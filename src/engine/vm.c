@@ -1288,12 +1288,14 @@ run_vm(state_t *s, int restoring)
 
 		case 0x37: /* ipTos */
 			ASSERT_ARITHMETIC(OBJ_PROPERTY(obj, (opparams[0] >> 1)));
-			++OBJ_PROPERTY(obj, (opparams[0] >> 1)).offset;
+			temp = ++OBJ_PROPERTY(obj, (opparams[0] >> 1)).offset;
+			PUSH(temp);
 			break;
 
 		case 0x38: /* dpTos */
 			ASSERT_ARITHMETIC(OBJ_PROPERTY(obj, (opparams[0] >> 1)));
-			--OBJ_PROPERTY(obj, (opparams[0] >> 1)).offset;
+			temp = --OBJ_PROPERTY(obj, (opparams[0] >> 1)).offset;
+			PUSH(temp);
 			break;
 
 

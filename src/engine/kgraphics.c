@@ -518,7 +518,7 @@ reg_t
 kTextSize(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	int width, height;
-	char *text = (char *) kernel_dereference_bulk_pointer(s, argv[1], 0);
+	char *text = argv[1].segment ? (char *) kernel_dereference_bulk_pointer(s, argv[1], 0) : NULL;
 	reg_t *dest = kernel_dereference_reg_pointer(s, argv[0], 4);
 	int maxwidth = KP_UINT(KP_ALT(3,  NULL_REG));
 	int font_nr = KP_UINT(argv[2]);
@@ -528,7 +528,7 @@ kTextSize(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	dest[0] = dest[1] = NULL_REG;
 
-	if (!*text || !text || !dest) { /* Empty text */
+	if (!text || !*text || !dest) { /* Empty text */
 		dest[2] = dest[3] = make_reg(0, 0);
 
 		SCIkdebug(SCIkSTRINGS, "GetTextSize: Empty string\n");
