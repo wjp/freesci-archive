@@ -43,18 +43,15 @@ static void async_callback(snd_async_handler_t *ahandler)
   if ((avail = snd_pcm_avail_update(handle)) < 0) {
     printf("ALSA: Buffer underrun\n");
     snd_pcm_prepare(handle);
+    avail = snd_pcm_avail_update(handle);
   }
 
-  while (avail >= BUFFER_SIZE) {
-    count = mix_sound();
-    //  printf("XXXX Fill buffer, count: %d avail: %d\n", count, avail);
+  while ((avail > 0) && (avail > BUFFER_SIZE/2)) {
+    count = mix_sound( (avail > BUFFER_SIZE)? BUFFER_SIZE : avail);
+    printf("XXXX Fill buffer, count: %d avail: %d\n", count, avail);
     if ((err = snd_pcm_writei(handle, buffer, BUFFER_SIZE)) < 0) {
       printf("ALSA: Write error: %s\n", snd_strerror(err));
       return;
-    }
-
-    if (err != BUFFER_SIZE) {
-      printf("ALSA: Write error: written %i expected %li\n", err, BUFFER_SIZE);
     }
     avail = snd_pcm_avail_update(handle);
   }
@@ -62,7 +59,7 @@ static void async_callback(snd_async_handler_t *ahandler)
 
 static int pcmout_alsa_open(guint16 *b, guint16 rate) {
   int channels = 2;
-  int periods = 6;
+  int periods = 4;
   snd_async_handler_t *ahandler;
   int err, count;
 
@@ -71,6 +68,7 @@ static int pcmout_alsa_open(guint16 *b, guint16 rate) {
   snd_pcm_hw_params_alloca(&hwparams);
   snd_pcm_sw_params_alloca(&swparams);
 
+  // SND_PCM_ASYNC
   if ((err = snd_pcm_open(&pcm_handle, alsa_device, SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
     printf("ALSA: Playback open error: %s\n", snd_strerror(err));
     return -1;
@@ -106,7 +104,7 @@ static int pcmout_alsa_open(guint16 *b, guint16 rate) {
     return -1;
   }
 
-  if (snd_pcm_hw_params_set_buffer_size(pcm_handle, hwparams, (BUFFER_SIZE * periods)) < 0) {
+  if (snd_pcm_hw_params_set_buffer_size(pcm_handle, hwparams, BUFFER_SIZE*periods) < 0) {
     printf("ALSA: Error setting buffersize.\n");
     return -1;
   }
@@ -128,10 +126,11 @@ static int pcmout_alsa_open(guint16 *b, guint16 rate) {
     return -1;
   }
 
-  if ((err = snd_pcm_sw_params_set_start_threshold(pcm_handle, swparams, BUFFER_SIZE*4)) < 0) {
+  if ((err = snd_pcm_sw_params_set_start_threshold(pcm_handle, swparams, BUFFER_SIZE*2)) < 0) {
     printf("Unable to set start threshold mode for playback\n");
     return -1;
   }
+
 
   if ((err = snd_pcm_sw_params_set_avail_min(pcm_handle, swparams, BUFFER_SIZE)) < 0) {
     printf("Unable to set avail min for playback\n");
@@ -143,13 +142,18 @@ static int pcmout_alsa_open(guint16 *b, guint16 rate) {
     return -1;
   }
 
-  for (count = 0 ; count < 8 ; count++) {
+  for (count = 0 ; count < periods ; count++) {
     if ((err = snd_pcm_writei(pcm_handle, buffer, BUFFER_SIZE)) < 0) {
-      printf("ALSA: Initial write error\n");
+      printf("ALSA: Initial write error %d: %s\n", count, snd_strerror(err));
       return -1;
     }
   }
-
+  /*
+  if ((err = snd_pcm_start(pcm_handle)) < 0) {
+    printf("ALSA: Unable to start device\n");
+    return -1;
+  }
+  */
   return 0;
 }
 

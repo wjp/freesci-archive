@@ -42,10 +42,10 @@ static void fill_audio (void *udata, guint8 *stream, int len)
   /* mix_sound returns FRAMES, 1 frame = 4 bytes */
   memcpy (stream, (guint8 *) buffer + s, p = n);
   for (n = 0, len -= p; n < len; p += n, len -= n) {
-    n = mix_sound() << 2;
+    n = mix_sound(BUFFER_SIZE) << 2;
     memcpy (stream + p, buffer, n);
   }
-  n = mix_sound () << 2;
+  n = mix_sound (BUFFER_SIZE) << 2;
   memcpy (stream + p, buffer, s = len);
   n -= s;
 }

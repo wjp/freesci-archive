@@ -90,8 +90,8 @@ struct _state;
 ** Earlier versions used an even 90 degree distribution.
 */
 
-#define SCI_VERSION_RESUME_SUSPENDED_SONG SCI_VERSION(0,000,572)
-/* First version (LSL3) known to use the different song resumption 
+#define SCI_VERSION_RESUME_SUSPENDED_SONG SCI_VERSION(0,000,490)
+/* First version (PQ2-new) known to use the different song resumption 
    mechanism -- When a new song is initialized, we store its state and
    resume it when the new one finishes.  Older versions completely
    clobbered the old songs.

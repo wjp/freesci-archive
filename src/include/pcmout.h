@@ -35,7 +35,7 @@ typedef struct _pcmout_driver {
 	int (*pcmout_close)(void);
 } pcmout_driver_t;
 
-#define BUFFER_SIZE 2048  
+#define BUFFER_SIZE 1024
 
 extern DLLEXTERN pcmout_driver_t *pcmout_driver;
 
@@ -54,7 +54,7 @@ extern DLLEXTERN pcmout_driver_t *pcmout_drivers[];
 
 int pcmout_open();
 int pcmout_close();
-int mix_sound();
+int mix_sound(int count);
 void pcmout_disable(void);
 /* Disables PCM output by setting the 'null' driver
 ** Returns   : (void)

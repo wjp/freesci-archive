@@ -31,8 +31,9 @@
 
 /* #define DEBUG_ADLIB */
 /* #define ADLIB_MONO */
+/* #define ADLIB_LINEAR_VOLUME */
 
-/* shamelessly lifted from claudio's XMP */
+/* portions shamelessly lifted from claudio's XMP */
 
 static int register_base[11] = {
     0x20, 0x23, 0x40, 0x43,
@@ -289,8 +290,10 @@ int adlibemu_start_note(int chn, int note, int velocity)
     volume_R = volume_R / 0x3f * (0x3f - (0x3f-pan[chn]));
 #endif 
 
+#ifndef ADLIB_LINEAR_VOLUME
   volume_R = my_midi_fm_vol_table[volume_R];  /* scale logarithmically */
   volume_L = my_midi_fm_vol_table[volume_L];  /* scale logarithmically */
+#endif
 
   inst = instr[chn];
 
@@ -504,19 +507,21 @@ midi_device_t midi_device_adlibemu = {
 /* count is # of FRAMES, not bytes.
    We assume 16-bit stereo frames (ie 4 bytes)
 */
-void synth_mixer (void* buffer, int count)
+int synth_mixer (void* buffer, int count)
 {
   int i;
   guint16 *ptr = buffer;
-  guint16 *databuf = sci_malloc(count * sizeof(guint16)); // hold half.
+  guint16 *databuf = NULL;
 
-  if (!databuf)
-    return;
   if (!buffer)
     return;
   if (!ym3812_L)
     return;
   if (!ym3812_R)  /* if either is uninitialized, bad things happen */
+    return;
+
+  databuf = sci_calloc(count, sizeof(guint16)); /* hold half. */
+  if (!databuf)
     return;
   
   YM3812UpdateOne (ym3812_L, databuf, count); 
@@ -536,4 +541,6 @@ void synth_mixer (void* buffer, int count)
   }
 
   sci_free(databuf);
+
+  return count;
 }

@@ -33,7 +33,7 @@ pcmout_driver_t *pcmout_drivers[] = {
 };
 
 static guint16 *snd_buffer = NULL;
-guint16 pcmout_sample_rate = 22050;
+guint16 pcmout_sample_rate = 44100;
 
 int pcmout_open()
 {
@@ -52,15 +52,12 @@ int pcmout_close(void)
   return retval;
 }
 
-void synth_mixer (void* tmp_bk, int samples);
+int synth_mixer (void* tmp_bk, int samples);
 
 /* returns # of frames, not bytes */
-int mix_sound()
+int mix_sound(int count)
 {
-
-	synth_mixer(snd_buffer, BUFFER_SIZE);
-
-	return BUFFER_SIZE;
+	return synth_mixer(snd_buffer, count);
 }
 
 /* the pcmout_null sound driver */
