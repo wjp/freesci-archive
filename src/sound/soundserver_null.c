@@ -277,14 +277,22 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 	song->pos += cmdlen[command >> 4];
 
-	if (SCI_MIDI_CONTROLLER(command) && (param == SCI_MIDI_CUMULATIVE_CUE))
-	  sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, ccc += param2);
-	else if (command == SCI_MIDI_SET_SIGNAL) {
+	if (SCI_MIDI_CONTROLLER(command)) { 
+	  if (param == SCI_MIDI_CUMULATIVE_CUE)
+	    sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, ccc += param2);
+	  else if (param == SCI_MIDI_RESET_ON_STOP) {
+	    song->resetflag = param2;
+	    fprintf(ds, "Event 0x4c Reset on Stop set to %d for handle %04x\n", param2, song->handle);
+	  } else if ((param == 0x4B)||(param == 0x4E)||(param == 0x50))
+	    fprintf(ds, "Nonhandled MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
+	} else if (command == SCI_MIDI_SET_SIGNAL) {
 
 	  if (param == SCI_MIDI_SET_SIGNAL_LOOP)
 	    song->loopmark = song->pos;
-	  else
+	  else if (param <= 127) {
+	    fprintf(ds, "Absolute Cue?? %02x %02x for handle %04x\n", command, param, song->handle);
 	    sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
+	  }
 	}
       }
 
@@ -452,7 +460,8 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    if (modsong) {
 
 	      modsong->status = SOUND_STATUS_STOPPED;
-	      modsong->pos = modsong->loopmark = 33; /* Reset position */
+	      if (modsong->resetflag) /* only reset if we are supposed to. */
+		modsong->pos = modsong->loopmark = 33; /* Reset position */
 	      sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_FINISHED, 0);
 
 	    } else

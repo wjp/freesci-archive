@@ -55,7 +55,7 @@
 /* End of track command */
 #define SCI_MIDI_CONTROLLER(status) ((status & 0xf0) == 0xb0)
 #define SCI_MIDI_CUMULATIVE_CUE 0x60
-
+#define SCI_MIDI_RESET_ON_STOP 0x4c
 #define SCI_MIDI_SET_SIGNAL 0xcf
 
 #define SCI_MIDI_SET_SIGNAL_LOOP 0x7f
@@ -109,6 +109,7 @@ typedef struct _song {
   int loops;    /* Loops left to do */
   int status;   /* See above */
 
+  int resetflag; /* for 0x4C -- on DoSound StopSound, do we return to start? */
   word handle;  /* Handle for the game engine */
 
   struct _song *next; /* Next song or NULL if this is the last one */

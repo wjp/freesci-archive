@@ -467,6 +467,8 @@ song_new(word handle, byte *data, int size, int priority)
   retval->loops = 0; /* No fancy additional loops */
   retval->status = SOUND_STATUS_STOPPED;
 
+  retval->resetflag = 0; /* don't reset position on SoundStop */
+  
   memset(retval->instruments, 0, sizeof(int) * MIDI_CHANNELS);
   memset(retval->velocity, 0, sizeof(int) * MIDI_CHANNELS);
   memset(retval->pressure, 0, sizeof(int) * MIDI_CHANNELS);

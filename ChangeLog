@@ -1,3 +1,16 @@
+2001-02-14  Solomon Peachy <pizza@shaftnet.org>
+
+        * src/sound/soundserver_null.c
+          src/sound/sound.c
+          src/include/soundserver.h
+
+	Implemented midi event 0xb? 0x4c -- ResetOnLoop.
+	Fixed some logic problems handing midi eventx 0xb? and 
+	 Absolute Cues.
+	Added some debug output to display non-trapped midi events.
+        Some will be removed later when I print out the MIDI
+        implementation charts for the MT32.
+
 2001-02-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/drivers/xlib_driver.c: Fixed most of the remaining issues
