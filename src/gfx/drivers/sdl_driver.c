@@ -1140,10 +1140,10 @@ sdl_usec_sleep(struct _gfx_driver *drv, long usecs)
 
 #ifdef _MSC_VER
 	sci_sched_yield(); /* usleep on win32 doesn't really sleep, so let's give up the rest of the quantum to play nice with the sound thread */
-#endif
-
+#else
 	usleep(usecs);  /* let's try this out instead, no? */
 	/*  select(0, NULL, NULL, NULL, &ctime); /* Sleep. */
+#endif
 
 	return GFX_OK;
 }

@@ -26,16 +26,17 @@
 
 #include <midiout.h>
 
+#ifdef _WIN32
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#ifdef _WIN32
-
 #include <windows.h>
 #include <mmsystem.h>
 #include <sci_memory.h>
+#include <engine.h>
 
 MIDIHDR midioutput;
 HMIDIOUT devicename;				/* global handle to midiOut device */
@@ -235,10 +236,7 @@ int midiout_win32mci_close(void)
 
 int midiout_win32mci_flush(void)
 {
-    timeBeginPeriod(1);
-    Sleep(1);
-    Sleep(0);
-    timeEndPeriod(1);
+	sleep(0);
     return 0;
 }
 

@@ -34,7 +34,6 @@
 #ifdef _MSC_VER
 #  include <sys/timeb.h>
 #  include <windows.h>
-#  define sleep(x) timeBeginPeriod(1); Sleep(x); Sleep(0); timeEndPeriod(1);
 #endif
 #if !defined(HAVE_FNMATCH) && !defined(_MSC_VER)
 #  include <beos/fnmatch.h>

@@ -201,7 +201,7 @@ sound_sdl_get_command(GTimeVal *wait_tvp)
 
   if (!sound_eq_peek_event(&inqueue)) {
 #ifdef _MSC_VER
-    Sleep(1);
+    sleep(1);
 #else
     usleep(0);
 #endif

@@ -1,5 +1,27 @@
 2002-01-02  Alexander R Angas  <wgd@internode.on.net>
 
+	* src/gfx/drivers/sdl_driver.c: Fixed calling Sleep() twice under
+	Win32.
+	
+	* src/include/engine.h: Explicitly declared millisecond sleep
+	resolution for Win32 (sleep).
+	
+	* src/include/resource.h:
+	* src/sound/midiout_win32mci.c:
+	* src/sound/polled_ss_sdl.c:
+	* src/scicore/tools.c: Altered sleep code to match above.
+	
+	* src/sound/event_ss.c: Clean-ups and warnings fixes.
+	
+	* src/sound/polled_ss.c: Included missed fixes to match 1 Nov polled
+	ss.
+	
+	* src/win32/fsci_dll.dsp:
+	* src/win32/sciv.dsp: Proper debugger support under Debug build, 
+	fixes to Purify build, warnings removals.
+
+2002-01-02  Alexander R Angas  <wgd@internode.on.net>
+
 	* src/main.c:
 	* src/engine/kgraphics.c:
 	* src/engine/klists.c:

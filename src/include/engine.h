@@ -46,6 +46,25 @@
 #include <kernel.h>
 #include <gfx_state_internal.h>
 
+#ifdef _WIN32
+#	ifdef sleep
+#		undef sleep
+#	endif
+
+#	define sleep(x) \
+	do { \
+		if (x == 0) { \
+			Sleep(0); \
+		} else { \
+			if (timeBeginPeriod(1) != TIMERR_NOERROR) \
+				fprintf(stderr, "timeBeginPeriod(1) failed\n"); \
+			Sleep(x); \
+			if (timeEndPeriod(1) != TIMERR_NOERROR) \
+				fprintf(stderr, "timeEndPeriod(1) failed\n"); \
+		} \
+	} while (0);
+#endif
+
 #define FREESCI_SAVEGAME_VERSION 4
 
 #define FREESCI_GAMEDIR ".freesci"

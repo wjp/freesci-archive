@@ -55,11 +55,7 @@ void do_sound(sound_server_state_t *sss)
 		return;
 
 	/* find the active song */
-#ifdef NO_TELEPHONE_BOX_BUG
-	sss->current_song = song_lib_find(sss->songlib, sss->current_song);
-#else
 	sss->current_song = song_lib_find_active(sss->songlib, sss->current_song);
-#endif
 
 	if (sss->current_song && (sss->current_song->status == SOUND_STATUS_PLAYING))	/* have an active song */
 	{
@@ -75,7 +71,7 @@ void do_sound(sound_server_state_t *sss)
 			sss->current_song->resetflag = 1;
 
 			/* stop this song */
-			stop_handle(sss->current_song->handle, sss);
+			stop_handle((word)sss->current_song->handle, sss);
 			global_sound_server->queue_event(
 				sss->current_song->handle, SOUND_SIGNAL_LOOP, -1);
 
@@ -250,8 +246,7 @@ void do_sound(sound_server_state_t *sss)
 					        sss->current_song->handle);
 #endif
 				sss->current_song->resetflag = 1;	/* reset song position */
-				sss->current_song->status = SOUND_STATUS_STOPPED;
-				stop_handle(sss->current_song->handle, sss);
+				stop_handle((word)sss->current_song->handle, sss);
 				global_sound_server->queue_event(
 					sss->current_song->handle, SOUND_SIGNAL_LOOP, -1);
 			}
@@ -307,22 +302,18 @@ sci0_event_ss(sound_server_state_t *ss_state)
 		new_event = global_sound_server->get_command(NULL);
 
 		/* process any waiting sound */
-		do_sound(ss_state);
-
-#if 0	/* this code is not called due to the use of GetMessage() in the driver */
-		if (!new_event) {
-			continue;	/* no new commands */
-#endif
-
-		if (new_event->signal == UNRECOGNISED_SOUND_SIGNAL) {
+		if (new_event->signal == UNRECOGNISED_SOUND_SIGNAL)
 			continue;
 
-		} else if (new_event->signal == SOUND_COMMAND_SHUTDOWN) {
+		if (new_event->signal == SOUND_COMMAND_SHUTDOWN)
 			break;		/* drop out of for loop */
-		}
 
 		switch (new_event->signal)
 		{
+		case SOUND_COMMAND_DO_SOUND:
+			do_sound();
+			break;
+
 		case SOUND_COMMAND_INIT_HANDLE:
 			init_handle((int)new_event->value, (word)new_event->handle, ss_state);
 			break;
@@ -406,7 +397,7 @@ sci0_event_ss(sound_server_state_t *ss_state)
 		case SOUND_COMMAND_PRINT_SONG_INFO:
 #ifdef DEBUG_SOUND_SERVER
 			if ((int)new_event->value == 0)
-				print_song_info(ss_state->current_song->handle, ss_state);
+				print_song_info((word)ss_state->current_song->handle, ss_state);
 			else
 				print_song_info((word)new_event->handle, ss_state);
 #endif

@@ -101,7 +101,6 @@
 #ifdef _MSC_VER
 #	include <sys/timeb.h>
 #	include <windows.h>
-#	define sleep(x) timeBeginPeriod(0); Sleep(x); timeEndPeriod(0);
 #endif
 
 
