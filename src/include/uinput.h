@@ -69,7 +69,7 @@ typedef struct {
 #define SCI_EVT_NONBLOCK	(1<<15)
 /* The QUIT event may be used to signal an external 'quit' command being
 ** issued to the gfx driver.  */
-#define SCI_EVT_ANY             0xffff
+#define SCI_EVT_ANY             0x7fff
 
 
 

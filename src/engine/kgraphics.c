@@ -914,7 +914,7 @@ kOnControl(state_t *s, int funct_nr, int argc, reg_t *argv)
 		xlen = SKPV(arg+2) - xstart;
 	}
 
-	return make_reg(0, gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart, ystart + 10, xlen, ylen), map));
+	return make_reg(0, gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart, ystart + s->picture_port->bounds.y, xlen, ylen), map));
 }
 
 void

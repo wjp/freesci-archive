@@ -1,3 +1,10 @@
+2004-03-09  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/include/uinput.h: Remove SCI_EVT_NONBLOCK flag from
+	SCI_EVT_ANY mask.
+	* src/engine/kgraphics.c (kOnControl): Cope with nonstandard port
+	sizes.
+
 2004-03-06  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kDisplay): Now uses default colour
