@@ -33,8 +33,13 @@
 #include <engine.h>
 #include <assert.h>
 #include <heap.h>
-#include <dirent.h>
+#include <glib.h>
+#include <ctype.h>
+#include <graphics_png.h>
 
+#ifdef _MSC_VER
+#include <direct.h>
+#endif
 
 /* Missing:
 ** - SFXdriver
@@ -328,7 +333,7 @@ RECORD state_t "state_t" {
   sci_version_t version;
   sci_version_t max_version;
   sci_version_t min_version;
- 
+
   exec_stack_t execution_stack[DYNAMIC execution_stack_size, MAXWRITE execution_stack_pos];
 
   gint16 acc;
@@ -355,7 +360,7 @@ RECORD state_t "state_t" {
   POINTER _heap->base RELATIVETO _heap->start;
   POINTER game_name RELATIVETO _heap->start;
 
-} 
+}
 
 %END CFSML
 
@@ -447,7 +452,7 @@ gamestate_save(state_t *s, char *dirname)
 
   _global_save_state = s;
 
-  mkdir (dirname, 0700);
+  scimkdir (dirname, 0700);
 
   if (s->execution_stack_base) {
     sciprintf("Cannot save from below kernel function\n");
@@ -460,7 +465,7 @@ gamestate_save(state_t *s, char *dirname)
   }
 
   dir = opendir(".");
-  while ((dir) && (dirent = readdir(dir))) 
+  while ((dir) && (dirent = readdir(dir)))
     if (strcmp(dirent->d_name, "..") && strcmp(dirent->d_name, ".")) {
       unlink(dirent->d_name); /* Delete all files in directory */
   }
@@ -601,7 +606,7 @@ gamestate_restore(state_t *s, char *dirname)
   retval->game_start_time.tv_sec = time(NULL) - retval->game_time;
   retval->game_start_time.tv_usec = 0;
 
-  /* File IO state: */ 
+  /* File IO state: */
   retval->file_handles_nr = 2;
   retval->file_handles = calloc(2, sizeof(FILE *));
 

@@ -33,8 +33,13 @@
 #include <engine.h>
 #include <assert.h>
 #include <heap.h>
-#include <dirent.h>
+#include <glib.h>
+#include <ctype.h>
+#include <graphics_png.h>
 
+#ifdef _MSC_VER
+#include <direct.h>
+#endif
 
 /* Missing:
 ** - SFXdriver
@@ -610,7 +615,7 @@ _cfsml_write_state_t(FILE *fh, state_t* foo)
   fprintf(fh, "execution_stack = ");
     min = max = foo->execution_stack_size;
     if (foo->execution_stack_pos < min)
-       min = foo->execution_stack_pos + 1;
+       min = foo->execution_stack_pos;
     if (!foo->execution_stack)
        min = max = 0; /* Don't write if it points to NULL */
 #line 341 "cfsml.pl"
@@ -2291,7 +2296,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
 
 
 /* Auto-generated CFSML declaration and function block ends here */
-/* Auto-generation performed by cfsml.pl 0.6.3 */
+/* Auto-generation performed by cfsml.pl 0.6.2 */
 
 
 
@@ -2304,10 +2309,9 @@ write_menubar_tp(FILE *fh, menubar_t **foo)
 #line 661 "cfsml.pl"
 /* Auto-generated CFSML data writer code */
   _cfsml_write_menubar_t(fh, (*foo));
-  fprintf(fh, "
-");
+  fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 371 "CFSML input file"
+#line 376 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2334,7 +2338,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 388 "CFSML input file"
+#line 393 "CFSML input file"
 
   }
   return *hiteof;
@@ -2348,10 +2352,9 @@ write_port_tp(FILE *fh, port_t **foo)
 #line 661 "cfsml.pl"
 /* Auto-generated CFSML data writer code */
   _cfsml_write_port_t(fh, (*foo));
-  fprintf(fh, "
-");
+  fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 399 "CFSML input file"
+#line 404 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2379,7 +2382,7 @@ read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof)
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 417 "CFSML input file"
+#line 422 "CFSML input file"
 
     res =  findResource(sci_font, (*foo)->font_nr);
     if (res)
@@ -2413,7 +2416,7 @@ gamestate_save(state_t *s, char *dirname)
 
   _global_save_state = s;
 
-  mkdir (dirname, 0700);
+  scimkdir (dirname, 0700);
 
   if (s->execution_stack_base) {
     sciprintf("Cannot save from below kernel function\n");
@@ -2426,7 +2429,7 @@ gamestate_save(state_t *s, char *dirname)
   }
 
   dir = opendir(".");
-  while ((dir) && (dirent = readdir(dir))) 
+  while ((dir) && (dirent = readdir(dir)))
     if (strcmp(dirent->d_name, "..") && strcmp(dirent->d_name, ".")) {
       unlink(dirent->d_name); /* Delete all files in directory */
   }
@@ -2440,10 +2443,9 @@ gamestate_save(state_t *s, char *dirname)
 #line 661 "cfsml.pl"
 /* Auto-generated CFSML data writer code */
   _cfsml_write_state_t(fh, s);
-  fprintf(fh, "
-");
+  fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 475 "CFSML input file"
+#line 480 "CFSML input file"
 
   fclose(fh);
 
@@ -2499,7 +2501,7 @@ gamestate_restore(state_t *s, char *dirname)
     read_eof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 518 "CFSML input file"
+#line 523 "CFSML input file"
 
   fclose(fh);
 
@@ -2586,7 +2588,7 @@ gamestate_restore(state_t *s, char *dirname)
   retval->game_start_time.tv_sec = time(NULL) - retval->game_time;
   retval->game_start_time.tv_usec = 0;
 
-  /* File IO state: */ 
+  /* File IO state: */
   retval->file_handles_nr = 2;
   retval->file_handles = calloc(2, sizeof(FILE *));
 

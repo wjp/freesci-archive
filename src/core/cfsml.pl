@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # The C File Storage Meta Language "reference" implementation
-# This implementation is supposed to conform to version 
+# This implementation is supposed to conform to version
 $version = "0.6.2";
 # of the spec. Please contact the maintainer if it doesn't.
 #
@@ -285,8 +285,8 @@ sub create_declaration
       print "void\n$types{$type}{'writer'}(FILE *fh, $ctype* foo);\n";
       print "int\n$types{$type}{'reader'}(FILE *fh, $ctype* foo, char *lastval,".
 	" int *line, int *hiteof);\n\n";
-    }; 
-    
+    };
+
   }
 
 sub create_writer
@@ -514,7 +514,7 @@ sub create_reader
 	    print "         /* Prepare to restore static array */\n";
 	    print "         max = $size;\n";
 	  }
-	  
+	
 	  print "#line ", __LINE__, " \"cfsml.pl\"\n";
 	  print "         done = i = 0;\n";
 	  print "         do {\n";
@@ -661,7 +661,7 @@ sub insert_writer_code {
   print "#line ", __LINE__, " \"cfsml.pl\"\n";
   print "/* Auto-generated CFSML data writer code */\n";
   print "  $types{$type}{'writer'}($fh, $datap);\n";
-  print "  fprintf($fh, \"\n\");\n";
+  print "  fprintf($fh, \"\\n\");\n";
   print "/* End of auto-generated CFSML data writer code */\n";
 }
 
@@ -900,7 +900,7 @@ while (<STDIN>) {
       my $mylinecounter = 0;
 
       my $idcounter = 5;
-	  
+	
       while ($idcounter < $tokens_nr) {
 	if ($tokens[$idcounter] eq "ERRVAR" and $tokens_nr >= $idcounter + 2) {
 	  $myeofvar = $tokens[$idcounter + 1];

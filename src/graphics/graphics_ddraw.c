@@ -285,7 +285,7 @@ ddraw_init(state_t *s, struct _picture *pic)
     0,
     "freesci.WndClass",
     buf,
-    bFullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW,
+    bFullscreen ? WS_POPUP : (WS_OVERLAPPED | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU),
     0,
     0,
     rc.right-rc.left,
@@ -599,6 +599,8 @@ long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             MAP_KEY (VK_NUMPAD9, SCI_K_PGUP);
           }
       }
+      else if (wParam == 0xC0)  /* tilde key - used for invoking console */
+        add_key_event ('`');
       else
         add_key_event (wParam);
     }

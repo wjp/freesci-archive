@@ -89,10 +89,6 @@ SOURCE=..\console\commands.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\console\commands_scr.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\console\console.c
 # End Source File
 # Begin Source File

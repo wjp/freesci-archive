@@ -36,19 +36,14 @@
 #include <direct.h>
 
 #define strcasecmp stricmp
+#define PATH_MAX 255
 
 #endif
 
 config_entry_t *conf;
 int cur_section=0; /* Size-1 and current section in conf */
 char *exported_conf_path; /* Path which the config file was found in */
-int dospath; /* Use dos-style paths? */ 
-
-#ifdef _WIN32
-#define scimkdir(arg1,arg2) mkdir(arg1)
-#else
-#define scimkdir(arg1,arg2) mkdir(arg1,arg2)
-#endif
+int dospath; /* Use dos-style paths? */
 
 int
 _parse_color_mode(char *s); /* Parses the color mode string */
@@ -82,6 +77,7 @@ fprintf(stderr,"Memtesting %s!\n", where);
   for (i = 0; i < 31; i++)
     free(blocks[i]);
 fprintf(stderr,"Memtest succeeded!\n");
+return 0;
 }
 
 
@@ -156,7 +152,7 @@ console_log[[:blank:]]*"="[[:blank:]]*.+  {
     yytext++;
 
   if (conf[cur_section].console_log)
-    free (conf->console_log);
+    free (conf[cur_section].console_log);
   conf[cur_section].console_log = (char *) malloc (strlen (yytext)+1);
   strcpy (conf[cur_section].console_log, yytext);
 }
@@ -285,14 +281,14 @@ config_init(config_entry_t **_conf, char *conffile)
       /* So we've got a home directory */
       if (chdir(homedir)) {
 	fprintf(stderr,"Warning: Could not enter home directory!\n");
-	return;
+	return 1;
       }
 
       if (chdir(FREESCI_GAMEDIR))
 	if (scimkdir(FREESCI_GAMEDIR, 0700)) {
 
 	  fprintf(stderr,"Warning: Could not enter/create ~/"FREESCI_GAMEDIR"\n");
-	  return;
+	  return 1;
 	}
 
       conf_path = malloc(strlen(homedir) + 3 + strlen(FREESCI_GAMEDIR) + strlen(FREESCI_CONFFILE));
@@ -358,7 +354,7 @@ config_free(config_entry_t **conf, int entries)
 }
 
 
-int
+static int
 _parse_color_mode(char *mode) /* Parses the color mode string */
 {
   struct {
@@ -390,7 +386,7 @@ _parse_color_mode(char *mode) /* Parses the color mode string */
 }
 
 
-gfx_driver_t *
+static gfx_driver_t *
 _parse_gfx_driver(char *driver_name)
 {
   int i;

@@ -131,7 +131,7 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
   if (tableaddress == 0) {
     sciprintf("Error: Script 0x%x has no exports table; call[be] not possible\n", script);
     script_error_flag = script_debug_flag = 1;
-    return;
+    return NULL;
   }
 
   exports_nr = GET_HEAP(tableaddress);
@@ -140,7 +140,7 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
   if (pubfunct >= exports_nr) {
     sciprintf("Request for invalid exported function 0x%x of script 0x%x\n", pubfunct, script);
     script_error_flag = script_debug_flag = 1;
-    return;
+    return NULL;
   }
 
   return 
@@ -182,7 +182,7 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
   if (GET_HEAP(send_obj + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
     sciprintf("Send: No object at %04x!\n", send_obj);
     script_error_flag = script_debug_flag = 1;
-    return;
+    return NULL;
   }
 
   while (framesize > 0) {
@@ -194,7 +194,7 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
 
     if (argc > 512){ /* More arguments than the stack could possibly accomodate for */
       script_error(s, "More than 512 arguments to function call\n");
-      return;
+      return NULL;
     }
 
 #ifdef VM_DEBUG_SEND
@@ -637,7 +637,7 @@ run_vm(state_t *s, int restoring)
       xs->sp -= (opparams[1] + (restadjust * 2) + 2);
       restadjust = 0; /* Used up the &rest adjustment */
 
-      xs = xs_new;
+      if (xs_new) xs = xs_new;   /* in case of error, keep old stack */
       break;
 
     case 0x23: /* calle */
@@ -647,7 +647,7 @@ run_vm(state_t *s, int restoring)
       xs->sp -= temp;
       restadjust = 0; /* Used up the &rest adjustment */
 
-      xs = xs_new;
+      if (xs_new) xs = xs_new;   /* in case of error, keep old stack */
       break;
 
     case 0x24: /* ret */
@@ -683,7 +683,7 @@ run_vm(state_t *s, int restoring)
       xs->sp -= (opparams[0] + (restadjust * 2)); /* Adjust stack */
       restadjust = 0;
 
-      xs = xs_new;
+      if (xs_new) xs = xs_new;
       break;
 
     case 0x28: /* class */
@@ -697,7 +697,7 @@ run_vm(state_t *s, int restoring)
       xs->sp -= (opparams[0] + (restadjust * 2)); /* Adjust stack */
       restadjust = 0;
 
-      xs = xs_new;
+      if (xs_new) xs = xs_new;
       break;
 
     case 0x2b: /* super */
@@ -710,7 +710,7 @@ run_vm(state_t *s, int restoring)
 	xs->sp -= (opparams[1] + (restadjust * 2)); /* Adjust stack */
 	restadjust = 0;
 
-	xs = xs_new;
+	if (xs_new) xs = xs_new;
       }
 
       break;

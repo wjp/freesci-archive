@@ -53,8 +53,6 @@ extern int _debug_step_running;
 
 #ifdef _WIN32
 
-#define scimkdir(arg1,arg2) mkdir(arg1)
-
 int sci_ffs(int _mask)
 {
   int retval = 0;
@@ -72,7 +70,6 @@ int sci_ffs(int _mask)
 
 #else
 
-#define scimkdir(arg1,arg2) mkdir(arg1,arg2)
 #define sci_ffs ffs
 
 #endif
@@ -2639,11 +2636,6 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	  /*	  fprintf(stderr,"EditControl: mod=%04x, key=%04x, maxlen=%04x, cursor=%04x\n",
 		  modifiers, key, max, cursor);*/
 
-	  if (modifiers & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT | SCI_EVM_CAPSLOCK)) {
-	    modifiers &= ~(SCI_EVM_RSHIFT | SCI_EVM_LSHIFT | SCI_EVM_CAPSLOCK);
-	    key = toupper(key);
-	  }
-
 	  if (modifiers & SCI_EVM_CTRL) {
 
 	    switch (tolower(key)) {
@@ -2665,53 +2657,65 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	    }
 	    PUT_SELECTOR(event, claimed, 1);
 
-	  } else if (modifiers & SCI_EVM_NUMLOCK) { /* Used for cursor keys (?) */
-
-	    switch(key) {
-	    case SCI_K_HOME: cursor = 0; break;
-	    case SCI_K_END: cursor = textlen; break;
-	    case SCI_K_RIGHT: if (cursor + 1 < textlen) ++cursor; break;
-	    case SCI_K_LEFT: if (cursor > 1) --cursor; break;
-	    }
-	    PUT_SELECTOR(event, claimed, 1);
-
-	  } else if (key < 31) {
+          } 
+          else if (key < 31) {
 
 	    PUT_SELECTOR(event, claimed, 1);
 
 	    switch(key) {
 	    case SCI_K_BACKSPACE: _K_EDIT_BACKSPACE; break;
-	    case SCI_K_DELETE: _K_EDIT_DELETE; break;
 	    default:
 	      PUT_SELECTOR(event, claimed, 0);
 	    }
 
-	  } if ((key > 31) && (key < 128)) {
-	      int inserting = modifiers & SCI_EVM_INSERT;
+	  } 
 
-	      if (cursor == textlen) {
-		if (textlen < max) {
-		  text[cursor++] = key;
-		  text[cursor] = 0; /* Terminate string */
-		}
-	      } else if (inserting) {
-		if (textlen < max) {
-		  int i;
-
-		  for (i = textlen + 2; i >= cursor; i--)
-		    text[i] = text[i - 1];
-		  text[cursor++] = key;
-
-		}
-	      } else { /* Overwriting */
+          else if ((key >= SCI_K_HOME) && (key <= SCI_K_DELETE))
+          {
+            switch(key) {
+	    case SCI_K_HOME: cursor = 0; break;
+	    case SCI_K_END: cursor = textlen; break;
+	    case SCI_K_RIGHT: if (cursor + 1 <= textlen) ++cursor; break;
+	    case SCI_K_LEFT: if (cursor > 0) --cursor; break;
+	    case SCI_K_DELETE: _K_EDIT_DELETE; break;
+	    }
+	    PUT_SELECTOR(event, claimed, 1);
+          }
+          
+          else if ((key > 31) && (key < 128)) 
+          {
+            int inserting = modifiers & SCI_EVM_INSERT;
+            
+            if (modifiers & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT))
+	      key = toupper(key);
+            if (modifiers & SCI_EVM_CAPSLOCK)
+              key = toupper(key);
+            if (modifiers & ((SCI_EVM_RSHIFT | SCI_EVM_LSHIFT) & SCI_EVM_CAPSLOCK))
+              key = tolower(key);
+            modifiers &= ~(SCI_EVM_RSHIFT | SCI_EVM_LSHIFT | SCI_EVM_CAPSLOCK);
+           
+	    if (cursor == textlen) {
+	      if (textlen < max) {
 		text[cursor++] = key;
+		text[cursor] = 0; /* Terminate string */
 	      }
+	    } else if (inserting) {
+	      if (textlen < max) {
+		int i;
 
-	      PUT_SELECTOR(event, claimed, 1);
+		for (i = textlen + 2; i >= cursor; i--)
+		  text[i] = text[i - 1];
+		text[cursor++] = key;
 
-	      PUT_SELECTOR(obj, cursor, cursor); /* Write back cursor position */
+	      }
+	    } else { /* Overwriting */
+	      text[cursor++] = key;
 	    }
 
+	    PUT_SELECTOR(event, claimed, 1);
+	  }
+          
+          PUT_SELECTOR(obj, cursor, cursor); /* Write back cursor position */
       }
 
       if (event) PUT_SELECTOR(event, claimed, 1);

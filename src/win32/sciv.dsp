@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\hermes\src" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.5\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "HAVE_OBSTACK_H" /D "HAVE_GETOPT_H" /D "HAVE_READLINE_READLINE_H" /D "HAVE_READLINE_HISTORY_H" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\hermes\src" /I "..\..\..\libpng" /I "..\..\..\zlib" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.5\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "HAVE_OBSTACK_H" /D "HAVE_GETOPT_H" /D "HAVE_READLINE_READLINE_H" /D "HAVE_READLINE_HISTORY_H" /D "HAVE_LIBPNG" /YX /FD /c
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
 # ADD RSC /l 0x419 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -66,7 +66,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\hermes\src" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.5\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "HAVE_OBSTACK_H" /D "HAVE_GETOPT_H" /D "HAVE_READLINE_READLINE_H" /D "HAVE_READLINE_HISTORY_H" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\hermes\src" /I "..\..\..\libpng" /I "..\..\..\zlib" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.5\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "HAVE_OBSTACK_H" /D "HAVE_GETOPT_H" /D "HAVE_READLINE_READLINE_H" /D "HAVE_READLINE_HISTORY_H" /D "HAVE_LIBPNG" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
 # ADD RSC /l 0x419 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -87,6 +87,10 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=..\core\cfsml.pl
+# End Source File
+# Begin Source File
+
 SOURCE=..\console\commands.c
 # End Source File
 # Begin Source File
@@ -98,6 +102,18 @@ SOURCE=..\config.c
 SOURCE=..\config.l
 
 !IF  "$(CFG)" == "sciv - Win32 Release"
+
+# Begin Custom Build
+ProjDir=.
+InputPath=..\config.l
+InputName=config
+
+"..\config.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	cd $(ProjDir) 
+	cd .. 
+	flex -o$(InputName).c $(InputName).l 
+	
+# End Custom Build
 
 !ELSEIF  "$(CFG)" == "sciv - Win32 Debug"
 
@@ -151,15 +167,11 @@ SOURCE=..\graphics\graphics_ddraw.c
 # Begin Source File
 
 SOURCE=..\graphics\graphics_ggi.c
-
-!IF  "$(CFG)" == "sciv - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "sciv - Win32 Debug"
-
 # PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
 
-!ENDIF 
-
+SOURCE=..\graphics\graphics_png.c
 # End Source File
 # Begin Source File
 
@@ -172,15 +184,7 @@ SOURCE=..\graphics\input.c
 # Begin Source File
 
 SOURCE=..\graphics\input_ggi.c
-
-!IF  "$(CFG)" == "sciv - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "sciv - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -205,6 +209,47 @@ SOURCE=..\sound\midi.c
 # Begin Source File
 
 SOURCE=..\core\resource.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\core\savegame.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\core\savegame.cfsml
+
+!IF  "$(CFG)" == "sciv - Win32 Release"
+
+USERDEP__SAVEG="..\core\cfsml.pl"	
+# Begin Custom Build
+ProjDir=.
+InputPath=..\core\savegame.cfsml
+InputName=savegame
+
+"savegame.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	cd $(ProjDir) 
+	cd ..\core 
+	d:\perl\bin\perl cfsml.pl < $(InputName).cfsml > $(InputName).c 
+	
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "sciv - Win32 Debug"
+
+USERDEP__SAVEG="..\core\cfsml.pl"	
+# Begin Custom Build
+ProjDir=.
+InputPath=..\core\savegame.cfsml
+InputName=savegame
+
+"savegame.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	cd $(ProjDir) 
+	cd ..\core 
+	d:\perl\bin\perl cfsml.pl < $(InputName).cfsml > $(InputName).c 
+	
+# End Custom Build
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -261,6 +306,10 @@ SOURCE=..\include\graphics_ddraw.h
 # Begin Source File
 
 SOURCE=..\include\graphics_ggi.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\graphics_png.h
 # End Source File
 # Begin Source File
 
@@ -392,11 +441,32 @@ SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\tilde.h"
 # End Group
 # Begin Source File
 
+SOURCE=D:\VStudio\VC98\Include\BASETSD.H
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\chardefs.h"
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\glib\config.h
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\emacs_keymap.c"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\event.h
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\..\..\cygnus\cygwin-b20\src\libiberty\getopt.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\..\cygnus\cygwin-b20\src\include\getopt.h"
 # End Source File
 # Begin Source File
 
@@ -456,7 +526,23 @@ SOURCE="..\..\..\..\cygnus\cygwin-b20\src\include\obstack.h"
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\libpng\png.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\libpng\pngconf.h
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\readline.h"
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\zlib\zconf.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\zlib\zlib.h
 # End Source File
 # Begin Source File
 
@@ -465,6 +551,14 @@ SOURCE="..\..\..\glib\glib-1.3.lib"
 # Begin Source File
 
 SOURCE=..\..\..\Hermes\src\Release\Hermes.lib
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\libpng\libpng.lib
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\zlib\zlib.lib
 # End Source File
 # End Group
 # End Target

@@ -1,3 +1,21 @@
+1999-11-14  Dmitry Jemerov  <yole@exch.nnz.spb.su>
+
+	* Fixed Visual C++ build problems all around the code.
+
+	* src/graphics/engine_graphics.c (graph_draw_selector_edit):
+	Fixed memory corruption that occurred when a 0 length string was
+	passed in the text parameter. Fixed drawing cursor not in the
+	end of text string.
+
+	* src/core/kernel.c (kOnControl): Fixed several keyboard handling
+	problems.
+
+	* src/graphics/graphics_ddraw.c (WndProc): The tilde key is now
+	handled correctly.
+
+	* src/graphics/graphics_ddraw.c (ddraw_init): Fixed window style.
+
+
 1999-11-12  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/cfsml.pl: Fixed a bug that would cause the number of

@@ -359,7 +359,7 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
 			 int x, int y, int xl, int yl, int cursor,
 			 char *text, byte *font)
 {
-  char *temp = malloc(strlen(text) +1);
+  char *temp = malloc(strlen(text) +2);
   int textwidth;
   int textheight;
 
@@ -384,7 +384,7 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
       int charwidth;
       int oldcol = port->color;
 
-      temp[0] = temp[cursor];
+      temp[0] = text[cursor];
       temp[1] = 0; /* Isolate the "blinking" char */
 
       charwidth = get_text_width(temp, font);

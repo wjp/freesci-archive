@@ -48,10 +48,12 @@
 
 #ifdef _WIN32
 #include <direct.h>
+#define PATH_MAX 255
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #define sleep Sleep
 #define strcasecmp stricmp
+#define sched_yield()
 #endif
 
 static int quit = 0;
@@ -253,6 +255,7 @@ main(int argc, char** argv)
 	exit(1);
       }
 
+  printf ("Loading resources...\n");
   if (i = loadResources(SCI_VERSION_AUTODETECT, 1)) {
     fprintf(stderr,"Error while loading resources: %s!\n", SCI_Error_Types[i]);
     exit(1);
