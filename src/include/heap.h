@@ -115,4 +115,11 @@ heap_dump_free(heap_t *h);
 ** Returns   : (void)
 */
 
+void
+heap_dump_all(heap_t *h);
+/* Dumps all allocated/unallocated zones on the heap
+** Parameters: (heap_t *) h: The heap to check
+** Returns   : (void)
+*/
+
 #endif /* !_SCI_HEAP_H */

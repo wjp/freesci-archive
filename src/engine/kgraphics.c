@@ -113,6 +113,7 @@ assert_primary_widget_lists(state_t *s)
 		rect_t bounds = s->picture_port->bounds;
 
 		s->dyn_views = gfxw_new_list(bounds, GFXW_LIST_SORTED);
+		s->dyn_views->flags |= GFXW_FLAG_IMMUNE_TO_SNAPSHOTS;
 		ADD_TO_CURRENT_PICTURE_PORT(s->dyn_views);
 	}
 }
@@ -1428,7 +1429,7 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 		gfxw_dyn_view_t *next = (gfxw_dyn_view_t *) widget->next;
 
 		if (GFXW_IS_DYN_VIEW(widget) && (widget->ID != GFXW_NO_ID)) {
-			if (signal = (UGET_HEAP(widget->signalp)) & _K_VIEW_SIG_FLAG_DISPOSE_ME) {
+			if ((signal = (UGET_HEAP(widget->signalp))) & _K_VIEW_SIG_FLAG_DISPOSE_ME) {
 
 				if (widget->under_bitsp) { /* Is there a bg picture left to clean? */
 					word mem_handle = widget->under_bits = GET_HEAP(widget->under_bitsp);
@@ -1445,12 +1446,12 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 
 				SCIkdebug(SCIkGRAPHICS, "Freeing %04x with signal=%04x\n", widget->ID, signal);
 
-				if (!(gfxw_remove_id(list, widget->ID) == GFXW(widget))) {
-					SCIkwarn(SCIkERROR, "Attempt to remove view with ID %04x from list failed!\n", widget->ID);
-					BREAKPOINT();
-				}
 				if (!(signal & _K_VIEW_SIG_FLAG_HIDDEN)) {
 					SCIkdebug(SCIkGRAPHICS, "Adding view at %04x to background\n", widget->ID);
+					if (!(gfxw_remove_id(list, widget->ID) == GFXW(widget))) {
+						SCIkwarn(SCIkERROR, "Attempt to remove view with ID %04x from list failed!\n", widget->ID);
+						BREAKPOINT();
+					}
 					ADD_TO_CURRENT_PICTURE_PORT(gfxw_set_id(GFXW(widget), GFXW_NO_ID));
 
 					widget->draw_bounds.y += s->dyn_views->bounds.y - widget->parent->bounds.y;
@@ -1458,7 +1459,8 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 				}
 				else {
 					SCIkdebug(SCIkGRAPHICS, "Deleting view at %04x\n", widget->ID);
-					widget->widfree(GFXW(widget));
+					widget->flags |= GFXW_FLAG_VISIBLE;
+					gfxw_annihilate(widget);
 				}
 			}
 		}
@@ -1499,7 +1501,7 @@ _k_invoke_view_list(state_t *s, heap_ptr list, int funct_nr, int argc, int argp)
 #define _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP 4
 
 static gfxw_dyn_view_t *
-_k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int funct_nr, int argc, int argp)
+_k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int nr, int funct_nr, int argc, int argp)
 {
 	short oldloop, oldcel;
 	int cel, loop, view_nr = GET_SELECTOR(obj, view);
@@ -1617,7 +1619,7 @@ _k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int funct_nr, int arg
 	}
 
 	widget = gfxw_new_dyn_view(s->gfx_state, pos, z, view_nr, loop, cel,
-				   priority, -1, ALIGN_CENTER, ALIGN_BOTTOM);
+				   priority, -1, ALIGN_CENTER, ALIGN_BOTTOM, nr);
 
 
 	if (widget) {
@@ -1642,6 +1644,7 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
      */
 {
 	heap_ptr node;
+	int sequence_nr = 0;
 
 	if (!*widget_list) {
 		SCIkwarn(SCIkERROR, "make_view_list with widget_list == ()\n");
@@ -1668,7 +1671,7 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 		heap_ptr obj = GET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
 		gfxw_dyn_view_t *widget;
 
-		widget = _k_make_dynview_obj(s, obj, options, funct_nr, argc, argp);
+		widget = _k_make_dynview_obj(s, obj, options, sequence_nr++, funct_nr, argc, argp);
 
 		if (widget) {
 			GFX_ASSERT((*widget_list)->add(GFXWC(*widget_list), GFXW(widget)));
@@ -1784,7 +1787,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		control = PARAM(6);
 		
 		widget = GFXW(gfxw_new_dyn_view(s->gfx_state, gfx_point(x,y), 0, view, loop, cel,
-						priority, control, ALIGN_CENTER, ALIGN_BOTTOM));
+						priority, control, ALIGN_CENTER, ALIGN_BOTTOM, 0));
 
 		if (!widget) {
 			SCIkwarn(SCIkERROR, "Attempt to single-add invalid picview (%d/%d/%d)\n", view, loop, cel);

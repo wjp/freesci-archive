@@ -146,6 +146,7 @@ typedef struct {
 	int under_bitsp, signalp;
 	int under_bits, signal;
 	int z; /* The z coordinate: Added to y, but used for sorting */ 
+	int sequence; /* Sequence number: For sorting */
 } gfxw_dyn_view_t;
 
 

@@ -1477,6 +1477,18 @@ c_heap_free(state_t *s)
 }
 
 int
+c_heap_dump_all(state_t *s)
+{
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	heap_dump_all(s->_heap);
+	return 0;
+}
+
+int
 c_listclones(state_t *s)
 {
 	int i, j = 0;
@@ -2080,6 +2092,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_listclones, "clonetable", "", "Lists all registered clones");
 			con_hook_command(c_set_acc, "set_acc", "i", "Sets the accumulator");
 			con_hook_command(c_heap_free, "heapfree", "", "Shows the free heap");
+			con_hook_command(c_heap_dump_all, "heapdump_all", "", "Shows allocated/free zones on the\n  heap");
 			con_hook_command(c_sret, "sret", "", "Steps forward until ret is called\n  on the current execution"
 					 " stack\n  level.");
 			con_hook_command(c_resource_id, "resource_id", "i", "Identifies a resource number by\n"

@@ -273,7 +273,8 @@ gfxw_new_view(gfx_state_t *state, point_t pos, int view, int loop, int cel, int 
 
 gfxw_dyn_view_t *
 gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, int cel,
-		  int priority, int control, gfx_alignment_t halign, gfx_alignment_t valign);
+		  int priority, int control, gfx_alignment_t halign, gfx_alignment_t valign,
+		  int sequence);
 /* Creates a new dyn view
 ** Parameters: (gfx_state_t *) state: The graphics state
 **             (point_t) pos: The position to place the dynamic view at
@@ -283,6 +284,8 @@ gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, in
 **             (int) control: The value to write to the control map, or -1 for none
 **             (gfx_alignment_t x gfx_alignment_t) halign, valign: Horizontal and vertical
 **                                                                 cel alignment
+**             (int) sequence: Sequence number: When sorting dynviews, this number is
+**                             considered last for sorting (ascending order)
 ** Returns   : (gfxw_cel_t *) A newly allocated cel according to the specs
 ** Dynamic views are non-pic views with a unique global identifyer. This allows for drawing
 ** optimizations when they move or change shape.

@@ -57,46 +57,46 @@ static struct _savegame_index_struct {
 static FILE *
 f_open_mirrored(state_t *s, char *fname)
 {
-  int fd;
-  char *buf = NULL;
-  struct stat fstate;
+	int fd;
+	char *buf = NULL;
+	struct stat fstate;
 
-  chdir(s->resource_dir);
-  fd = open(fname, O_RDONLY | O_BINARY);
-  if (!fd) {
-    chdir(s->work_dir);
-    return NULL;
-  }
+	chdir(s->resource_dir);
+	fd = open(fname, O_RDONLY | O_BINARY);
+	if (!fd) {
+		chdir(s->work_dir);
+		return NULL;
+	}
 
-  fstat(fd, &fstate);
-  if (fstate.st_size) {
-    buf = malloc(fstate.st_size);
-    read(fd, buf, fstate.st_size);
-  }
+	fstat(fd, &fstate);
+	if (fstate.st_size) {
+		buf = malloc(fstate.st_size);
+		read(fd, buf, fstate.st_size);
+	}
 
-  close(fd);
+	close(fd);
 
-  chdir(s->work_dir);
+	chdir(s->work_dir);
 
-  fd = creat(fname, 0600);
+	fd = creat(fname, 0600);
 
-  if (!fd && buf) {
-    free(buf);
-    sciprintf("kfile.c: f_open_mirrored(): Warning: Could not create '%s' in '%s' (%d bytes to copy)\n",
-	      fname, s->work_dir, fstate.st_size);
-    return NULL;
-  }
+	if (!fd && buf) {
+		free(buf);
+		sciprintf("kfile.c: f_open_mirrored(): Warning: Could not create '%s' in '%s' (%d bytes to copy)\n",
+			  fname, s->work_dir, fstate.st_size);
+		return NULL;
+	}
 
-  if (fstate.st_size) {
-    if (write(fd, buf, fstate.st_size) < fstate.st_size)
-      sciprintf("kfile.c: f_open_mirrored(): Warning: Could not write all %d bytes to '%s' in '%s'\n",
-		fstate.st_size, fname, s->work_dir);
-    free(buf);
-  }
+	if (fstate.st_size) {
+		if (write(fd, buf, fstate.st_size) < fstate.st_size)
+			sciprintf("kfile.c: f_open_mirrored(): Warning: Could not write all %ld bytes to '%s' in '%s'\n",
+				  (long)fstate.st_size, fname, s->work_dir);
+		free(buf);
+	}
 
-  close(fd);
+	close(fd);
 
-  return fopen(fname, "r+");
+	return fopen(fname, "r+");
 }
 
 

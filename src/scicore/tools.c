@@ -209,14 +209,18 @@ sci_gettime(int *seconds, int *useconds)
         *useconds = tv.tv_usec;
 }
 #elif defined (_MSC_VER)
+
+WARNING(Incorrect)
+/* Warning: This function only retrieves the amount of mseconds since the start of
+** the Win32 kernel; it does /not/ provide the number of seconds since the epoch!
+** There are no known cases where this causes problems, though.  */
 void sci_gettime(int *seconds, int *useconds)
 {
-
-        struct _timeb tv;
-
-	_ftime(&tv);
-	*seconds = time(NULL);
-	*useconds = tv.millitm*1000;
+        unsigned long tm,__stdcall timeGetTime(void);
+        
+        tm = timeGetTime();
+        *seconds = tm/1000;
+        *useconds = tm*1000;
 }
 #else
 #  error "You need to provide a microsecond resolution sci_gettime implementation for your platform!"

@@ -1,4 +1,18 @@
+2001-01-22  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/widgets.c (gfxw_annihilate): Disposing dynviews now
+	also disposes graphics drawn over them
+
+	* src/scicore/tools.c (sci_gettime): Petr's alternate sci_gettime
+	for Win32 was added
+
+	* src/engine/scriptdebug.c (c_heap_dump_all): Added heapdump_all
+	command to debug memory lossage in Hoyle
+
 2001-01-21  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/resource/sci_view_0.c (gfxr_draw_view0): Allocating 0
+	loops changed to allocate /some/ memory
 
 	* src/engine/game.c, src/engine/cfsml.pl, src/engine/savegame.cfsml:
 	Fixed various (all?) memory leaks

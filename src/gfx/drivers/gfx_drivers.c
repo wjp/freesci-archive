@@ -34,9 +34,18 @@
 extern gfx_driver_t *gfx_driver_ggi;
 #endif
 
+
+#ifdef HAVE_DDRAW
+extern gfx_driver_t *gfx_driver_dd;
+#endif
+
+
 static gfx_driver_t *gfx_drivers[] = {
 #ifdef HAVE_LIBGGI
   &gfx_driver_ggi,
+#endif
+#ifdef HAVE_DDRAW
+  &gfx_driver_dd,
 #endif
   NULL
 };

@@ -187,7 +187,7 @@ gfxr_draw_view0(int id, byte *resource, int size)
 		return NULL;
 	}
 
-	view->loops = malloc(sizeof (gfxr_loop_t) * view->loops_nr);
+	view->loops = malloc(sizeof (gfxr_loop_t) * ((view->loops_nr)? view->loops_nr : 1)); /* Alloc 1 if no loop */
 
 	for (i = 0; i < view->loops_nr; i++) {
 		int error_token = 0;

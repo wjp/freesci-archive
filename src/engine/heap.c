@@ -76,15 +76,15 @@ void heap_del(heap_t* h)
 
 int heap_meminfo(heap_t* h)
 {
-  heap_ptr current = h->first_free;
-  int total = 0;
+	heap_ptr current = h->first_free;
+	int total = 0;
 
-  while (current != 0xffff) {
-    total += get_size(h, current);
-    current = get_next(h, current);
-  }
+	while (current != 0xffff) {
+		total += get_size(h, current);
+		current = get_next(h, current);
+	}
 
-  return total;
+	return total;
 }
 
 
@@ -237,17 +237,33 @@ void restore_ff(heap_t* h)
 
 void heap_dump_free(heap_t *h)
 {
-  int freedomseeker;
+	int freedomseeker;
 
-  printf("\tfirst_free= %#x (oldff= %#x)\n\tFree Blocks:\n", h->first_free, h->old_ff);
+	printf("\tfirst_free= %#x (oldff= %#x)\n\tFree Blocks:\n", h->first_free, h->old_ff);
 
-  freedomseeker = h->first_free;
-  while (freedomseeker != 0xffff) {
-    printf("\t   %#04x: size: %#04x\n", freedomseeker, get_size(h, freedomseeker));
-    freedomseeker = get_next(h, freedomseeker);
-  }
+	freedomseeker = h->first_free;
+	while (freedomseeker != 0xffff) {
+		printf("\t   %#04x: size: %#04x\n", freedomseeker, get_size(h, freedomseeker));
+		freedomseeker = get_next(h, freedomseeker);
+	}
 }
 
+void heap_dump_all(heap_t *h)
+{
+	int seeker = 1000;
+	int free_seeker = h->first_free;
+
+	while (seeker < 0xffff) {
+		int is_free = (seeker == free_seeker);
+		int size = get_size(h, seeker);
+
+		if (is_free)
+			free_seeker = get_next(h, free_seeker);
+
+		printf("%04x\t%d\t%s\n", seeker, size, is_free? "FREE": "");
+		seeker += size;
+	}
+}
 
 /*
 

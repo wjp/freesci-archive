@@ -870,7 +870,8 @@ _gfxwop_dyn_view_print(gfxw_widget_t *widget, int indentation)
 	_gfxw_print_widget(widget, indentation);
 
 	sciprintf("DYNVIEW");
-	sciprintf(" z=%d (%d/%d/%d)@(%d,%d)[p:%d,c:%d]; sig[%04x@%04x]", view->z, view->view, view->loop, view->cel, view->pos.x, view->pos.y,
+	sciprintf(" z=%d seq=%d (%d/%d/%d)@(%d,%d)[p:%d,c:%d]; sig[%04x@%04x]", view->z, 
+		  view->sequence, view->view, view->loop, view->cel, view->pos.x, view->pos.y,
 		  (view->color.mask & GFX_MASK_PRIORITY)? view->color.priority : -1,
 		  (view->color.mask & GFX_MASK_CONTROL)? view->color.control : -1,
 		  view->signal, view->signalp);
@@ -916,7 +917,12 @@ _gfxwop_dyn_view_compare_to(gfxw_widget_t *widget, gfxw_widget_t *other)
 	retval = wview->pos.y - oview->pos.y;
 	if (retval)
 		return retval;
-	return (wview->z - oview->z);
+
+	retval = (wview->z - oview->z);
+	if (retval)
+		return retval;
+
+	return -(wview->sequence - oview->sequence);
 }
 
 
@@ -934,7 +940,7 @@ _gfxw_set_ops_DYNVIEW(gfxw_widget_t *widget)
 
 gfxw_dyn_view_t *
 gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, int cel, int priority, int control,
-		  gfx_alignment_t halign, gfx_alignment_t valign)
+		  gfx_alignment_t halign, gfx_alignment_t valign, int sequence)
 {
 	gfxw_dyn_view_t *widget;
 	int width, height;
@@ -964,6 +970,7 @@ gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, in
 	widget->view = view;
 	widget->loop = loop;
 	widget->cel = cel;
+	widget->sequence = sequence;
 
 	if (halign == ALIGN_CENTER)
 		xalignmod = width >> 1;
@@ -1652,6 +1659,7 @@ _gfxwop_sorted_list_add(gfxw_container_t *container, gfxw_widget_t *widget)
 		widget->print(GFXW(widget), 3);
 		sciprintf("\nList:");
 		container->print(GFXW(container), 3);
+		BREAKPOINT();
 
 		return 1;
 	}
@@ -2189,7 +2197,7 @@ _gfxw_free_contents_appropriately(gfxw_container_t *container, gfxw_snapshot_t *
 		gfxw_widget_t *next = widget->next;
 
 		if (gfxw_widget_matches_snapshot(snapshot, widget) && !(widget->flags & GFXW_FLAG_IMMUNE_TO_SNAPSHOTS)
-		    && (priority == MAGIC_FREE_NUMBER || priority <= widget->widget_priority)) {
+		    && (priority == MAGIC_FREE_NUMBER || priority <= widget->widget_priority || widget->widget_priority == -1)) {
 			widget->widfree(widget);
 		} else {
 			if (GFXW_IS_CONTAINER(widget))
@@ -2217,18 +2225,18 @@ gfxw_annihilate(gfxw_widget_t *widget)
 
 	gfxw_snapshot_t snapshot;
 	if (!GFXW_IS_CONTAINER(widget) && widget->parent && visual && (widget->flags & GFXW_FLAG_VISIBLE)) {
-		snapshot.serial = widget->serial;
+		snapshot.serial = 0;
 		snapshot.area = widget->bounds;
 		snapshot.area.x += widget->parent->zone.x;
 		snapshot.area.y += widget->parent->zone.y;
 		free_overdrawn = 1;
 		widget_priority = widget->widget_priority;
+		sciprintf("WP=%d\n", widget_priority);
 	}
 
 	widget->widfree(GFXW(widget));
 
-	return;
-
 	if (free_overdrawn)
 		_gfxw_free_contents_appropriately(GFXWC(visual), &snapshot, widget_priority);
 }
+
