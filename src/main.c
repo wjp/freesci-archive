@@ -202,12 +202,10 @@ init_directories(char *work_dir, char *game_id)
 			fprintf(stderr,"Cannot get the working directory!\n");
 			return 1;
 		}
-#elif defined(__unix__)
+#else /* Assume UNIX-ish environment */
 		fprintf(stderr,"Error: Could not enter home directory %s.\n", homedir);
 		perror("Reason");
 		return 1; /* If we get here, something really bad is happening */
-#else
-#  error Please add a $HOME policy for your platform!
 #endif
 	}
 

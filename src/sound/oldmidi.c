@@ -601,7 +601,7 @@ const char MIDI_Track[4] = "MTrk";
 /* Starts every MIDI track */
 
 
-const char MIDI_NOP[4] = {0xff, 0x01, 0x01, 0x00};
+const unsigned char MIDI_NOP[4] = {0xff, 0x01, 0x01, 0x00};
 /* text command with length 1 */
 
 #define MIDI_TIMESTAMP(deltatime) \

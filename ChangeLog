@@ -1,3 +1,11 @@
+2001-07-13  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* configure.in: Added check for 'inline'
+
+	* src/main.c (init_directories): 
+	* src/scicore/tools.c (sci_get_homedir): Now assumes that any non-Win32
+	is UNIX, to fix builds on some non-gcc UNIX compilers
+
 2001-07-12  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* acinclude.m4 (CURSHEADER): Fixed (n)curses header file detection

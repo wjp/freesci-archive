@@ -43,12 +43,12 @@
 /* #define DRAW_GRAPHICS */
 
 #ifdef _MSC_VER
-#include <direct.h>
-#define extern __declspec(dllimport) extern
+#  include <direct.h>
+#  define extern __declspec(dllimport) extern
 #endif
 
 #ifdef HAVE_GETOPT_H
-#include <getopt.h>
+#  include <getopt.h>
 #endif /* HAVE_GETOPT_H */
 
 #ifdef DRAW_GRAPHICS
@@ -59,20 +59,20 @@
 
 #ifdef _MSC_VER
 /* [DJ] fchmod is not in Visual C++ RTL - and probably not needed,anyway */
-#define fchmod(file,mode)
-#define CREAT_OPTIONS O_BINARY
+#  define fchmod(file,mode)
+#  define CREAT_OPTIONS O_BINARY
 
 #endif
 
 #ifdef _DOS
 /* [RS] (see comment above, but read MS-DOS instead of Visual C++ RTL) */
-#define fchmod(file,mode)
-#define CREAT_OPTIONS O_BINARY
+#  define fchmod(file,mode)
+#  define CREAT_OPTIONS O_BINARY
 
 #endif
 
-#ifdef __unix__
-#define CREAT_OPTIONS 0x640
+#ifndef CREAT_OPTIONS
+#  define CREAT_OPTIONS 0x640
 #endif
 
 

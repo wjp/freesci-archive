@@ -34,13 +34,13 @@ Xsed="sed -e s/^X//"
 if test "X${CDPATH+set}" = Xset; then CDPATH=:; export CDPATH; fi
 
 ### BEGIN LIBTOOL CONFIG
-# Libtool was configured as follows, on host ultra13:
+# Libtool was configured as follows, on host ultra16:
 #
-# CC="gcc" CFLAGS="-g -O2" CPPFLAGS="" \
+# CC="cc" CFLAGS="-g" CPPFLAGS="" \
 # LD="/usr/ccs/bin/ld" LDFLAGS="" LIBS="" \
-# NM="/usr/ccs/bin/nm -p" RANLIB="ranlib" LN_S="ln -s" \
+# NM="/a/ultra12/discl/public/bin/sparc-sun-solaris/gnu//nm -B" RANLIB="ranlib" LN_S="ln -s" \
 # DLLTOOL="" OBJDUMP="" AS="" \
-#   ./ltconfig --cache-file=./config.cache --with-gcc --enable-dlopen --no-verify ./ltmain.sh sparc-sun-solaris2.7
+#   ./ltconfig --cache-file=./config.cache --enable-dlopen ./ltmain.sh sparc-sun-solaris2.7
 #
 # Compiler and other test output produced by ltconfig, useful for
 # debugging ltconfig, is in ./config.log if it exists.
@@ -65,13 +65,13 @@ host_alias=sparc-sun-solaris2.7
 host=sparc-sun-solaris2.7
 
 # An echo program that does not interpret backslashes.
-echo="/usr/ucb/echo"
+echo="echo"
 
 # The archiver.
 AR="ar"
 
 # The default C compiler.
-CC="gcc"
+CC="cc"
 
 # The linker used to build libraries.
 LD="/usr/ccs/bin/ld"
@@ -80,7 +80,7 @@ LD="/usr/ccs/bin/ld"
 LN_S="ln -s"
 
 # A BSD-compatible nm program.
-NM="/usr/ccs/bin/nm -p"
+NM="/a/ultra12/discl/public/bin/sparc-sun-solaris/gnu//nm -B"
 
 # Used on cygwin: DLL creation program.
 DLLTOOL="dlltool"
@@ -111,13 +111,13 @@ libext="a"
 exeext=""
 
 # Additional compiler flags for building library objects.
-pic_flag=" -fPIC"
+pic_flag=" -KPIC"
 
 # Does compiler simultaneously support -c and -o options?
 compiler_c_o="yes"
 
 # Can we write directly to a .lo ?
-compiler_o_lo="yes"
+compiler_o_lo="no"
 
 # Must we lock files when doing compilation ?
 need_locks="no"
@@ -138,10 +138,10 @@ dlopen_self=yes
 dlopen_self_static=no
 
 # Compiler flag to prevent dynamic linking.
-link_static_flag="-static"
+link_static_flag="-Bstatic"
 
 # Compiler flag to turn off builtin functions.
-no_builtin_flag=" -fno-builtin -fno-rtti -fno-exceptions"
+no_builtin_flag=""
 
 # Compiler flag to allow reflexive dlopens.
 export_dynamic_flag_spec=""
@@ -200,7 +200,7 @@ finish_cmds=""
 finish_eval=""
 
 # Take the output of nm and produce a listing of raw symbols and C names.
-global_symbol_pipe="sed -n -e 's/^.*[ 	]\\([BDT]\\)[ 	][ 	]*\\(\\)\\([_A-Za-z][_A-Za-z0-9]*\\)\$/\\1 \\2\\3 \\3/p'"
+global_symbol_pipe="sed -n -e 's/^.*[ 	]\\([ABCDGISTW]\\)[ 	][ 	]*\\(\\)\\([_A-Za-z][_A-Za-z0-9]*\\)\$/\\1 \\2\\3 \\3/p'"
 
 # Transform the output of nm in a proper C declaration
 global_symbol_to_cdecl="sed -n -e 's/^. .* \\(.*\\)\$/extern char \\1;/p'"

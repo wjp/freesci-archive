@@ -20,6 +20,7 @@ AC_CHECK_HEADERS(readline/readline.h, [	ac_readline="-lreadline" ], [ ac_readlin
 AC_SUBST(ac_readline)
 AC_CHECK_HEADERS(readline/history.h)
 AC_CHECK_HEADERS(getopt.h)
+AC_C_INLINE
 AC_CHECK_SIZEOF(short)
 AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
@@ -59,6 +60,10 @@ AC_TRY_COMPILE([], [
 #else
 #  define my_asm(x) __asm__ (x)
 #endif
+#ifndef __alpha__
+#error "Not on Alpha"
+#endif
+
 	my_asm("zapnot \$31, \$31, \$31");
 	return 0;
 ], [

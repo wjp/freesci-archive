@@ -121,7 +121,7 @@ _sound_transmit_text_expect_anwer(state_t *s, char *text, int command, char *tim
 
 	count = strlen(text) + 1;
 	sound_command(s, command, 0, count);
-	if (sound_send_data(text, count) != count) {
+	if (sound_send_data((unsigned char *)text, count) != count) {
 		fprintf(stderr, "_sound_transmit_text_expect_anwer():"
 			" sound_send_data returned < count\n");
 	}

@@ -132,7 +132,6 @@ int decrypt1(guint8 *dest, guint8 *src, int length, int complength)
 #ifdef _SCI_DECOMPRESS_DEBUG
 				      printf ("decrypt1: Try to write sing byte beyound end of array!\n"); 
 #endif
-				      //May be it sould throw decompression SCI_ERROR_DECOMPRESSION_INSANE
 				    } else
 					dest[destctr++] = token;
 				}
