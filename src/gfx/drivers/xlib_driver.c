@@ -357,40 +357,41 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	    ERROR("System does not support SysV IPC, disabling XSHM\n");
 	    perror("reason");
 	    foo_image = NULL;
-	  }
+	  } else {
 	  
-	  shminfo.shmaddr = (char *) shmat(shminfo.shmid, 0, 0);
-	  if ((void *) -1 == shminfo.shmaddr) {
-	      ERROR("Could not attach shared memory segment\n");
-	      perror("reason");
-	      if (foo_image)
-		XDestroyImage(foo_image);
-	      return GFX_FATAL;
-	  }
+		  shminfo.shmaddr = (char *) shmat(shminfo.shmid, 0, 0);
+		  if ((void *) -1 == shminfo.shmaddr) {
+			  ERROR("Could not attach shared memory segment\n");
+			  perror("reason");
+			  if (foo_image)
+				  XDestroyImage(foo_image);
+			  return GFX_FATAL;
+		  }
 	  
-	  foo_image->data = shminfo.shmaddr;
-	  shminfo.readOnly = False;
+		  foo_image->data = shminfo.shmaddr;
+		  shminfo.readOnly = False;
 	  
-	  XShmAttach(S->display, &shminfo);
-	  XSync(S->display, False);
-	  shmctl(shminfo.shmid, IPC_RMID, 0);
+		  XShmAttach(S->display, &shminfo);
+		  XSync(S->display, False);
+		  shmctl(shminfo.shmid, IPC_RMID, 0);
 
-	  if (x11_error) {
-	    have_shmem = 0;
-	    ERROR("System does not support Shared XImages, disabling\n");
-	    shmdt(shminfo.shmaddr);
-	    XDestroyImage(foo_image);
-	    foo_image = NULL;
-	    x11_error = 0;
+		  if (x11_error) {
+			  have_shmem = 0;
+			  ERROR("System does not support Shared XImages, disabling\n");
+			  shmdt(shminfo.shmaddr);
+			  XDestroyImage(foo_image);
+			  foo_image = NULL;
+			  x11_error = 0;
+		  }
+		  XSetErrorHandler(old_handler);
 	  }
-	  XSetErrorHandler(old_handler);
 	}
 
 #endif	   
 
 
 	alpha_mask = xvisinfo.red_mask | xvisinfo.green_mask | xvisinfo.blue_mask;
-	if (foo_image->bits_per_pixel == 32 && (!(alpha_mask & 0xff000000) || !(alpha_mask & 0xff))) {
+	if (bytespp_physical == 32 && (!(alpha_mask & 0xff000000) || !(alpha_mask & 0xff))) {
 		if (alpha_mask & 0xff) {
 			alpha_mask = 0xff000000;
 			alpha_shift = 0;
