@@ -1,5 +1,13 @@
 2001-08-04  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sound/soundserver.c (sci0_soundserver): Reversed stereo,
+	if requested
+
+	* src/include/gfx_system.h (gfx_rects_overlap): fixed
+	(function always returned true)
+
+	* src/config.l: Added reverse_stereo option
+
 	* src/gfx/operations.c (_gfxop_remove_pointer): Removing the
 	pointer now updates the operational layer's pointer position
 

@@ -282,6 +282,10 @@ Currently, the configuration file may contain:
   in. Directories are separated with the platform's default directory
   separator (':' on UNIX) and are searched in order of appearance.
   Default is '/usr/local/lib:/usr/lib'.
+  --- module support is currently disabled ---
+
+- reverse_stereo: Whether stereo sound output should reverse its output
+  channels
 
 
 2.1 Driver-specific options

@@ -350,6 +350,8 @@ void sci_midi_command(song_t *song, guint8 command, guint8 param,
 /* Sound server has its own cwd (relative to the main program) */
 #define SOUNDSERVER_FLAG_SEPARATE_CWD (1 << 0)
 
+#define SOUNDSERVER_INIT_FLAG_REVERSE_STEREO (1 << 0) /* Reverse pan control changes */
+
 typedef struct {
 
 	char *name; /* Name of this particular driver */
@@ -357,9 +359,10 @@ typedef struct {
 
 	int flags;
 
-	int (*init)(struct _state *s);
-	/* Initializes the sounnd driver
+	int (*init)(struct _state *s, int flags);
+	/* Initializes the sound driver
 	** Parameters: (state_t *) s: The state that we're going to play on
+	**             (int) flags: Any SOUNDSERVER_INIT_FLAG combination
 	** Returns   : (int) 0 if successful, 1 if failed
 	*/
 

@@ -1010,7 +1010,10 @@ main(int argc, char** argv)
 
 	if (gamestate->sound_server) {
 		int poly;
-		if (gamestate->sound_server->init(gamestate)) {
+		if (gamestate->sound_server->
+		    init(gamestate, (active_conf->reverse_stereo)?
+			 SOUNDSERVER_INIT_FLAG_REVERSE_STEREO : 0)) {
+
 			fprintf(stderr,"Sound server initialization failed- aborting.\n");
 			return 1;
 		}

@@ -429,10 +429,6 @@ gfxdr_add_dirty(gfx_dirty_rect_t *base, rect_t box, int strategy)
 	if (_gfxop_clip(&box, gfx_rect(0, 0, 320, 200)))
 		return base;
 
-#ifdef DEBUG_DIRTY
-fprintf(stderr,"++ [%d,%d][%d,%d] S%d (%d,%d)\n", box.x, box.x+box.xl, box.y, box.y+box.yl, strategy, GFXOP_DIRTY_FRAMES_ONE, GFXOP_DIRTY_FRAMES_CLUSTERS);
-#endif
-
 	switch (strategy) {
 
 	case GFXOP_DIRTY_FRAMES_ONE:

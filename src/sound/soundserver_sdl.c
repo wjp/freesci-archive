@@ -41,6 +41,7 @@ static SDL_cond *in_cond;
 static Uint32 master;
 
 
+static int sdl_reverse_stereo = 0;
 static int sound_data_size = 0;
 
 extern sound_server_t sound_server_sdl;
@@ -56,12 +57,12 @@ static sound_eq_t ev_queue; /* The event queue */
 int 
 sdl_soundserver_init(void *args) 
 {
-  sci0_soundserver();
+  sci0_soundserver(sdl_reverse_stereo);
   return 0;
 }
 
 int
-sound_sdl_init(state_t *s)
+sound_sdl_init(state_t *s, int flags)
 {
   int i;
 
@@ -79,6 +80,8 @@ sound_sdl_init(state_t *s)
   if (init_midi_device(s) < 0)
     return -1;
 
+  if (flags & SOUNDSERVER_INIT_FLAG_REVERSE_STEREO)
+	  sdl_reverse_stereo = 1;
 
   /* spawn thread */
 

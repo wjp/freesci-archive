@@ -128,7 +128,7 @@ sound_server_change_instrmap(FILE *output, int action, int instr, int value)
 
 
 void
-sci0_soundserver()
+sci0_soundserver(int reverse_stereo)
 {
   GTimeVal last_played, wakeup_time, ctime;
   byte mute_channel[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
@@ -668,6 +668,11 @@ sci0_soundserver()
 	  param2 = -1;
 	
 	song->pos += cmdlen[command >> 4];
+
+	if (reverse_stereo
+	    && ((command & MIDI_CONTROL_CHANGE) == MIDI_CONTROL_CHANGE)
+	    && (param == MIDI_CC_PAN))
+		param2 = 0x7f - param2; /* Reverse stereo */
 
 	if ((command & 0xf0) == 0xc0) /* Change instrument */
 		channel_instrument[command & 0xf] = param;

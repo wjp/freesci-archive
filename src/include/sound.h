@@ -160,6 +160,11 @@ extern int soundserver_dead;
 /* All sound signals have been transmitted. */
 
 
+/* MIDI defines */
+#define MIDI_CONTROL_CHANGE 0xb0
+#define MIDI_CC_PAN 10
+
+
 #ifdef HAVE_OBSTACK_H
 guint8 *
 makeMIDI0(const guint8 *src, int *size, guint8 flag);

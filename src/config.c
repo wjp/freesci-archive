@@ -709,6 +709,7 @@ standard_option standard_options[] = {
 	OPT_NVP("view_filter", gfx_options.view_xlate_filter, filter_mode),
 	OPT_NVP("cursor_filter", gfx_options.cursor_xlate_filter, filter_mode),
 	OPT_NVP("mouse", mouse, yesno),
+	OPT_NVP("reverse_stereo", reverse_stereo, yesno),
 	OPT_INT("pic_buffer_size", gfx_options.buffer_pics_nr, 0, 4096),
 	OPT_INT("alpha_threshold", alpha_threshold, 0, 255),
 	OPT_INT("animation_delay", animation_delay, 0, 1000000),
@@ -726,7 +727,7 @@ standard_option standard_options[] = {
 static void
 parse_option(char *option, int optlen, char *value);
 
-#line 730 "lex.yy.c"
+#line 731 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -877,10 +878,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 255 "config.l"
+#line 256 "config.l"
 
 
-#line 884 "lex.yy.c"
+#line 885 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -965,7 +966,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 257 "config.l"
+#line 258 "config.l"
 {
 	char *cleanup;
 	++yytext; /* Get over opening bracket */
@@ -1012,7 +1013,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 302 "config.l"
+#line 303 "config.l"
 { /***** End of graphics *****/
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1025,7 +1026,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 312 "config.l"
+#line 313 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1038,7 +1039,7 @@ if (cur_section) {
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 322 "config.l"
+#line 323 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1050,7 +1051,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 332 "config.l"
+#line 333 "config.l"
 {
 /* driver parameters */
         char *subsys_name = yytext;
@@ -1089,7 +1090,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 369 "config.l"
+#line 370 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
@@ -1117,16 +1118,16 @@ case 7:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 393 "config.l"
+#line 394 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 395 "config.l"
+#line 396 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 397 "config.l"
+#line 398 "config.l"
 {
         yy_delete_buffer( YY_CURRENT_BUFFER );
         yyterminate();
@@ -1134,15 +1135,15 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 402 "config.l"
+#line 403 "config.l"
 printf("Unrecognized option: '%s'\n", yytext);
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 404 "config.l"
+#line 405 "config.l"
 ECHO;
 	YY_BREAK
-#line 1146 "lex.yy.c"
+#line 1147 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2026,7 +2027,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 404 "config.l"
+#line 405 "config.l"
 
 
 int
@@ -2067,6 +2068,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->sound_server = sound_server_find_driver(NULL);
 
 	conf->mouse = 1;
+	conf->reverse_stereo = 0;
 
 	conf->version = 0;
 

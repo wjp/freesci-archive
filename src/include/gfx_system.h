@@ -162,7 +162,7 @@ gfx_rect(int x, int y, int xl, int yl)
 
 #define GFX_PRINT_RECT(rect) (rect).x, (rect).y, (rect).xl, (rect).yl
 
-#define OVERLAP(a, b, z, zl) (a.z >= b.z || a.z < (b.z + b.zl))
+#define OVERLAP(a, b, z, zl) (a.z >= b.z && a.z < (b.z + b.zl))
 
 /* Determines whether two rects overlap
 ** Parameters: (rect_t x rect_t) a,b: The two rect_ts to check for overlap
@@ -171,7 +171,8 @@ gfx_rect(int x, int y, int xl, int yl)
 static inline int
 gfx_rects_overlap(rect_t a, rect_t b)
 {
-	return OVERLAP(a, b, x, xl) || OVERLAP(a, b, y, yl) || OVERLAP(b, a, x, xl) || OVERLAP(b, a, y, yl);
+	return (OVERLAP(a, b, x, xl) || OVERLAP(b, a, x, xl))
+		&& (OVERLAP(a, b, y, yl) || OVERLAP(b, a, y, yl));
 }
 
 #undef OVERLAP

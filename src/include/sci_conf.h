@@ -75,7 +75,8 @@ typedef struct {
 	char *gfx_driver_name; /* The graphics driver to use */
 	char *console_log; /* The file to which console output should be echoed */
 	char debug_mode [80]; /* Characters specifying areas for which debug output should be enabled */
-	int mouse; /* Whether the mouse should be active */
+	byte mouse; /* Whether the mouse should be active */
+	byte reverse_stereo;
 
 	midiout_driver_t *midiout_driver ; /* the midiout method to use */
 	midi_device_t *midi_device; /* the midi device to use */

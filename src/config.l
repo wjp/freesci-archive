@@ -225,6 +225,7 @@ standard_option standard_options[] = {
 	OPT_NVP("view_filter", gfx_options.view_xlate_filter, filter_mode),
 	OPT_NVP("cursor_filter", gfx_options.cursor_xlate_filter, filter_mode),
 	OPT_NVP("mouse", mouse, yesno),
+	OPT_NVP("reverse_stereo", reverse_stereo, yesno),
 	OPT_INT("pic_buffer_size", gfx_options.buffer_pics_nr, 0, 4096),
 	OPT_INT("alpha_threshold", alpha_threshold, 0, 255),
 	OPT_INT("animation_delay", animation_delay, 0, 1000000),
@@ -441,6 +442,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->sound_server = sound_server_find_driver(NULL);
 
 	conf->mouse = 1;
+	conf->reverse_stereo = 0;
 
 	conf->version = 0;
 

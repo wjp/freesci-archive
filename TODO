@@ -4,7 +4,6 @@ Primary goals:
 	* Fix DoBresen in the CB1 intros
 	* Add LRU resource manager
 	* Add PCM output support and one driver to use it
-	* Add reverse-stereo option
 
 Secondary goals:
 	+ Re-implement on-screen console

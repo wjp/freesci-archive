@@ -127,9 +127,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	PUT_SELECTOR(obj, x, s->gfx_state->pointer_pos.x);
 	PUT_SELECTOR(obj, y, s->gfx_state->pointer_pos.y);
-fprintf(stderr,"->Pointer(%d,%d)\n",
-	s->gfx_state->pointer_pos.x,
-	s->gfx_state->pointer_pos.x);
+
 	/*  gfxop_set_pointer_position(s->gfx_state, gfx_point(s->gfx_state->pointer_pos.x, s->gfx_state->pointer_pos.y)); */
 
 

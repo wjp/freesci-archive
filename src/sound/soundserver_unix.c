@@ -136,7 +136,7 @@ _sound_server_sigpipe_handler(int signal)
 }
 
 int
-sound_unix_init(state_t *s)
+sound_unix_init(state_t *s, int flags)
 {
 	int child_pid;
 	int fd_in[2], fd_out[2], fd_events[2], fd_debug[2];
@@ -197,7 +197,7 @@ sound_unix_init(state_t *s)
 		ds = fdopen(x_fd_debug, "w"); /* We want to output text to it */
 		ppid = getppid(); /* Get parent PID */
 
-		sci0_soundserver();
+		sci0_soundserver(flags & SOUNDSERVER_INIT_FLAG_REVERSE_STEREO);
 		_exit(0); /* quit */
 	}
 
