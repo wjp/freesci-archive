@@ -100,7 +100,7 @@ sfx_audbuf_write(sfx_audio_buf_t *buf, unsigned char *src, int framesize,
 
 		if (buf->last->used == SFX_AUDIO_BUF_SIZE) {
 			if (!buf->last->next) {
-				if (0 && buf->unused) { /* Re-use old chunks */
+				if (buf->unused) { /* Re-use old chunks */
 					buf->last->next = buf->unused;
 					buf->unused = buf->unused->next;
 					buf->last->next->next = NULL;

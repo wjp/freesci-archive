@@ -142,7 +142,7 @@ sps_delay(int ticks)
 					/* Unclean rising edge */
 					int l = volume << 1;
 					sample_block[i] = -volume + (l*freq_count)/freq;
-				} else if (freq_count > FREQUENCY
+				} else if (freq_count >= FREQUENCY
 					   && freq_count - freq < FREQUENCY) {
 					/* Unclean falling edge */
 					int l = volume << 1;
@@ -155,6 +155,25 @@ sps_delay(int ticks)
 				}
 			} else
 				sample_block[i] = 0;
+		}
+
+		if (note) {
+			int lastval = 0;
+			int valcount = 0;
+			int i;
+			for (i = 0; i < SAMPLE_BLOCK_SIZE; i++) {
+				if (lastval != sample_block[i]) {
+					if (valcount) {
+						if (valcount > 1)
+							fprintf(stderr, "%dx[%d] ", valcount, lastval);
+						else
+							fprintf(stderr, "[%d] ", lastval);
+					}
+					lastval = sample_block[i];
+					valcount = 1;
+				} else ++valcount;
+			}
+			fprintf(stderr, "\n");
 		}
 
 		sfx_audbuf_write(&(PCM_SW_CHANNEL(&sfx_sequencer_sw_pcspeaker, 0)),

@@ -45,6 +45,15 @@ static sfx_timer_t *timer = NULL;
 
 #define MILLION 1000000
 
+int
+sfx_get_player_polyphony()
+{
+	if (player)
+		return player->polyphony;
+	else
+		return 0;
+}
+
 static long
 time_minus(GTimeVal t1, GTimeVal t2)
 {

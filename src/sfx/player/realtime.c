@@ -34,6 +34,8 @@
 
 static sfx_sequencer_t *seq;
 
+extern sfx_player_t sfx_player_realtime;
+
 /* Playing mechanism */
 
 static inline GTimeVal
@@ -163,6 +165,8 @@ rt_init(resource_mgr_t *resmgr, int expected_latency)
 		return SFX_ERROR;
 	}
 
+	sfx_player_realtime.polyphony = seq->polyphony;
+
 	if (seq->patchfile != SFX_SEQ_PATCHFILE_NONE) {
 		res = scir_find_resource(resmgr, sci_patch, seq->patchfile, 0);
 		if (!res) {
@@ -288,5 +292,6 @@ sfx_player_t sfx_player_realtime = {
 	&rt_pause,
 	&rt_resume,
 	&rt_exit,
-	&rt_timer_callback
+	&rt_timer_callback,
+	0 /* polyphony */
 };

@@ -112,6 +112,8 @@ typedef struct {
 	** used to emit sound.
 	*/
 
+	int polyphony; /* Number of voices that can play simultaneously */
+
 } sfx_player_t;
 
 sfx_player_t *
@@ -119,6 +121,12 @@ sfx_find_player(char *name);
 /* Looks up a player by name or finds the default player
 ** Parameters: (char *) name: Name of the player to look up, or NULL for dedault
 ** Returns   : (sfx_player_t *) The player requested, or NULL if none was found
+*/
+
+int
+sfx_get_player_polyphony();
+/* Determines the polyphony of the player in use
+** Returns   : (int) Number of voices the active player can emit
 */
 
 #endif /* !_SFX_PLAYER_H */

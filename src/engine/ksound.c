@@ -321,7 +321,7 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 		break;
 
 	case _K_SCI0_SOUND_GET_POLYPHONY:
-		s->r_acc = make_reg(0, 1);
+		s->r_acc = make_reg(0, sfx_get_player_polyphony());
 		/*s->acc = s->sound_server->command(s, SOUND_COMMAND_TEST, 0, 0);*/
 		break;
 

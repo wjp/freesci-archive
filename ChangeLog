@@ -1,5 +1,14 @@
 2003-12-25  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sfx/seq/soft-pcspeaker.c (sps_delay): OB1 bug in PCM
+	sequencing fixed
+
+	* src/engine/ksound.c (kDoSound_SCI0): Use the polyphony of the
+	active player, instead of a default value
+
+	* src/sfx/pcm_device/audiobuf.c (sfx_audbuf_write): Removed debug
+	code that would prevent the re-use of older audio buffers
+
 	* src/sfx/pcm_device: Committed PCM subsystem, fixed various
 	mixer bugs, fixed up core.c to initialise PCM subsystem
 	
