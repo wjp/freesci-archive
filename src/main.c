@@ -297,6 +297,8 @@ main(int argc, char** argv)
     return 1;
   }
 
+  if (!game_name)
+    game_name = gamestate->game_name;
 
   if (!conf) { /* Unless the configuration has been read... */
     conf_entries = config_init(&conf, NULL);

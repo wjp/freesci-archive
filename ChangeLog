@@ -1,3 +1,13 @@
+1999-11-21  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/vocab.c (vocab_get_suffices): Fixed suffix reading, which
+	simply didn't work
+
+1999-11-20  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/main.c (main): Fixed a cause for segfaults that would strike
+	if sciv was started without a game name to use
+
 1999-11-18  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kernel.c (kDoBresen): Killed another bresenham bug

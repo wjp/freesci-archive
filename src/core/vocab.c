@@ -148,7 +148,7 @@ vocab_get_suffices(int *suffices_nr)
 
   suffices = malloc(sizeof(suffix_t *));
 
-  while ((seeker < resource->length) && (resource->data[seeker] = '*')) {
+  while ((seeker < resource->length-1) && (resource->data[seeker + 1] != 0xff)) {
 
     char *alt_suffix = resource->data + seeker + 1;
     int alt_len = strlen(alt_suffix);
@@ -174,7 +174,7 @@ vocab_get_suffices(int *suffices_nr)
     seeker += word_len + 2; /* Hit end of string */
     suffices[counter]->result_class = getInt16(resource->data + seeker);
 
-    seeker += 2; /* Next entry */
+    seeker += 4; /* Next entry */
 
     ++counter;
 

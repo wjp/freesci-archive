@@ -325,6 +325,129 @@ like Palettes, scaled bitmap images and several new compression algorithms.
 </para>
 </sect1>
 
+<sect1><title/Sierra SCI games/
+  <para>
+     <author><firstname/Paul David/<surname/Doherty/</author>
+  </para>
+   <sect2><title/SCI0 games/
+      <para>
+        <informaltable frame="all">
+            <tgroup cols="3">
+               <thead>
+                 <row>
+                  <entry/Game name/
+                  <entry/Game ID/
+                  <entry/Version numbers/
+                 </row>
+               </thead>
+               <tbody>
+  <row><entry/Season's Greetings (1988)/<entry/DEMO/<entry/0.000.294/</row>
+  <row><entry/Leisure Suit Larry Goes Looking For Love (In Several Wrong Places)/
+             <entry/LSL2/<entry/0.000.343, 0.000.409/</row>
+  <row><entry/Police Quest 2: The Vengeance/<entry/PQ2/<entry/0.000.395, 0.000.490/</row>
+  <row><entry/Space Quest 3: The Pirates of Pestulon/<entry/SQ3/<entry/0.000.453, 0.000.685/</row>
+  <row><entry/King's Quest IV: The Perils of Rosella/<entry/KQ4/<entry/0.000.502/</row>
+  <row><entry/Fun Seeker's Guide/<entry/emc/<entry/0.000.506/</row>
+  <row><entry/Hoyle's Book of Games 1/<entry/?/<entry/0.000.530/</row>
+  <row><entry/Hero's Quest: So you want to be a hero/<entry/HQ/<entry/0.000.566/</row>
+  <row><entry/Leisure Suit Larry 3: Passionate Patti In Pursuit Of The Pulsating Pectorals!/
+             <entry/LSL3/<entry/0.000.572/</row>
+  <row><entry/Quest for Glory I: So you want to be a hero/<entry/Glory/<entry/0.000.629/</row>
+  <row><entry/The Colonel's Bequest/<entry/CB1/<entry/0.000.631/</row>
+  <row><entry/Codename: Iceman/<entry/iceMan/<entry/0.000.668, 0.000.685/</row>
+  <row><entry/Conquest of Camelot/<entry/ARTHUR/<entry/0.000.685/</row>
+               </tbody>
+           </tgroup>
+         </informaltable>
+     </para>
+    </sect2>
+
+   <sect2><title/SCI01 games/
+      <para>
+        <informaltable frame="all">
+            <tgroup cols="3">
+               <thead>
+                 <row>
+                  <entry/Game name/
+                  <entry/Game ID/
+                  <entry/Version numbers/
+                 </row>
+               </thead>
+               <tbody>
+  <row><entry/King's Quest I: Quest for the crown (SCI remake)/<entry/KQ1/<entry/S.old.010/</row>
+  <row><entry/Quest for Glory II: Trial by fire/<entry/Trial/<entry/1.000.072/</row>
+  <row><entry/[Christmas greeting card 1990]/<entry/?/<entry/1.000.172, 1.000.174/</row>
+               </tbody>
+           </tgroup>
+         </informaltable>
+     </para>
+    </sect2>
+
+
+   <sect2><title/SCI1.0 games/
+      <para>
+        <informaltable frame="all">
+            <tgroup cols="3">
+               <thead>
+                 <row>
+                  <entry/Game name/
+                  <entry/Game ID/
+                  <entry/Version numbers/
+                 </row>
+               </thead>
+               <tbody>
+  <row><entry/Jones in the fast lane (VGA version)/<entry/?/<entry/x.yyy.zzz/</row>
+  <row><entry/Conquest of the Longbow/<entry/?/<entry/1.000.168/</row>
+  <row><entry/Leisure Suit Larry In The Land Of The Lounge Lizards/
+             <entry/?/<entry/1.000.577/</row>
+  <row><entry/King's Quest V: Absence makes the heard go yonder (french)/
+             <entry/?/<entry/1.000.784/</row>
+  <row><entry/Space Qust 1: The Sarien Encounter (VGA remake)/<entry/?/<entry/T.A00.081/</row>
+  <row><entry/Leisure Suit Larry 5: Passionate Patti Does A Little Undercover Work/
+             <entry/?/<entry/T.A00.169/</row>
+  <row><entry/Police Quest 3: The Kindred/<entry/?/<entry/T.A00.178/</row>
+               </tbody>
+           </tgroup>
+         </informaltable>
+     </para>
+    </sect2>
+
+   <sect2><title/SCI1.1 games/
+      <para>
+        <informaltable frame="all">
+            <tgroup cols="3">
+               <thead>
+                 <row>
+                  <entry/Game name/
+                  <entry/Game ID/
+                  <entry/Version numbers/
+                 </row>
+               </thead>
+               <tbody>
+  <row><entry/Police Quest 1: The Death Angel (VGA remake)/<entry/?/<entry/1.001.029/</row>
+  <row><entry/Quest for Glory III: Wages of War (aka Seekers of the Lost City)/
+             <entry/?/<entry/1.001.050/</row>
+  <row><entry/King's Quest VI: To heir is human (german version)/<entry/?/<entry/1.001.054/</row>
+  <row><entry/[Christmas greeting card 1992]/<entry/?/<entry/1.001.055/</row>
+  <row><entry/Space Quest IV: Roger Wilco and the Time Rippers/<entry/?/<entry/1.001.064/</row>
+  <row><entry/Space Quest V: The Next Mutation/<entry/?/<entry/1.001.068/</row>
+  <row><entry/Freddy Pharkas: Frontier Pharmacist (demo)/<entry/?/<entry/1.001.069/</row>
+  <row><entry/Laura Bow and the Dagger of Amon Ra/<entry/?/<entry/1.001.072/</row>
+  <row><entry/Leisure Suit Larry 6/<entry/?/<entry/1.001.113/</row>
+  <row><entry/Quest for Glory 1: So you want to be a hero (VGA remake)/<entry/?/<entry/L.rry.021/</row>
+  <row><entry/Quest for Glory 3: Der Lohn des Krieges (german version)/
+              <entry/?/<entry/L.rry.083/</row>
+  <row><entry/Freddy Pharkas, Frontier Pharmacist/<entry/?/<entry/1.cfs.081/</row>
+  <row><entry/King's Quest VI: To heir is human/<entry/?/<entry/1.cfs.158/</row>
+               </tbody>
+           </tgroup>
+         </informaltable>
+     </para>
+    </sect2>
+
+</sect1>
+
+
  </Chapter>
 
  <Chapter>
