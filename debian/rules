@@ -8,30 +8,38 @@
 #export DH_VERBOSE=1
 
 # This is the debhelper compatability version to use.
-export DH_COMPAT=1
+export DH_COMPAT=3
 
 # This has to be exported to make some magic below work.
 export DH_OPTIONS
 
 # check to see if we want debugging symbols compiled in
 ifneq (,$(findstring debug,$(DEB_BUILD_OPTIONS)))
-CFLAGS = -g -O2
+CFLAGS = -g -O3 -ffast-math
 else
-CFLAGS = -O2
+CFLAGS = -O3 -ffast-math
 endif
 export CFLAGS
 
 build: build-stamp
 build-stamp:
 	dh_testdir
+	
+	aclocal
+	autoconf
+	automake 
 
 	# build the binaries
-	./configure --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --libdir=\$${prefix}/lib/freesci --bindir=\$${prefix}/games
+	./configure --prefix=/usr \
+	            --mandir=\$${prefix}/share/man \
+		    --infodir=\$${prefix}/share/info \
+		    --libdir=\$${prefix}/lib/freesci \
+		    --bindir=\$${prefix}/games
 	$(MAKE)
 
 	# build the docs
 	cd doc && sgmltools -b html sci.sgml 
-	cd doc && sgmltools -b txt sci.sgml 
+	cd doc && sgmltools -b lynx sci.sgml 
 
 	touch build-stamp
 
@@ -53,8 +61,8 @@ install: build
 	dh_clean -k
 	dh_installdirs
 
-	# install binary into debian/tmp
-	$(MAKE) install prefix=`pwd`/debian/tmp/usr
+	# install binary into debian/freesci
+	$(MAKE) install prefix=`pwd`/debian/freesci/usr
 
 	mkdir -p -m 0755   debian/freesci-doc/usr/share/doc/freesci-doc
 	cp -a doc/misc/    debian/freesci-doc/usr/share/doc/freesci-doc/
@@ -68,9 +76,12 @@ binary-indep: build install
 	dh_testdir
 	dh_testroot
 	dh_installdocs
-	ln -s freesci-tools.6.gz debian/tmp/usr/share/man/man6/sciunpack.6.gz
-	ln -s freesci-tools.6.gz debian/tmp/usr/share/man/man6/sciconsole.6.gz
-	ln -s freesci-tools.6.gz debian/tmp/usr/share/man/man6/scidisasm.6.gz
+	ln -s freesci-tools.6.gz \
+	  debian/freesci/usr/share/man/man6/sciunpack.6.gz
+	ln -s freesci-tools.6.gz \
+	  debian/freesci/usr/share/man/man6/sciconsole.6.gz
+	ln -s freesci-tools.6.gz \
+	  debian/freesci/usr/share/man/man6/scidisasm.6.gz
 	dh_installchangelogs ChangeLog
 	dh_link
 	dh_compress

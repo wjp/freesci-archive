@@ -1,8 +1,36 @@
-freesci (0.3.2a-4devel) unstable; urgency=low
+freesci (0.3.3.devel-1) unstable; urgency=low
 
-  * Upstream CVS update (not uploaded to debian)
+  * Upstream CVS version (not uploaded to Debian) 
 
- -- Bas Zoetekouw <bas@debian.org>  Tue, 23 Oct 2001 14:53:41 +0200
+ -- Bas Zoetekouw <bas@debian.org>  Sat,  5 Jan 2002 14:31:37 +0100
+
+freesci (0.3.3-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Bas Zoetekouw <bas@debian.org>  Sat,  5 Jan 2002 14:25:24 +0100
+
+freesci (0.3.2a.devel-2) unstable; urgency=low
+
+  * Changed build-dep from sgmltools-2 to sgmltools-lite
+
+ -- Bas Zoetekouw <bas@debian.org>  Mon, 31 Dec 2001 12:06:02 +0100
+
+freesci (0.3.2a.devel-1) unstable; urgency=medium
+
+  * New upstream release (release candidate)
+
+ -- Bas Zoetekouw <bas@debian.org>  Sun, 30 Dec 2001 09:59:40 +0100
+
+freesci (0.3.2a-5) unstable; urgency=low
+
+  * Changed build-dependency on w3m (which is preventing hppa builds 
+    to be done) to lynx.
+  * sgmltools now uses lynx target to build txt docs.
+  * Rebuilt against woody libs.
+  * Set DH_COMPAT to 3
+
+ -- Bas Zoetekouw <bas@debian.org>  Wed,  5 Dec 2001 10:25:52 +0100
 
 freesci (0.3.2a-4) unstable; urgency=low
 
