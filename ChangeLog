@@ -1,3 +1,12 @@
+2001-09-03  Alex Angas  <wgd@internode.on.net>
+
+	* src/sound/soundserver_win32.c: New Win32 sound server.
+	
+	* src/sound/sound.c: Added support for Win32 sound server.
+	
+	* src/sound/soundserver_sdl.c: Fixed some minor errors with locking
+	and unlocking mutices.
+
 2001-08-25  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/include/sci_memory.h: Fixed for C99 inline semantics
