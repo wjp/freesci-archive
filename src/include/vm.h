@@ -205,6 +205,7 @@ typedef struct {
 	int frame;
 
 	int dataInc;
+	int size;
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {

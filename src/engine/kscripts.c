@@ -138,6 +138,26 @@ kLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 }
 
+void
+kLock(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+	int restype = UPARAM(0);
+	int resnr = UPARAM(1);
+	int state = UPARAM(2);
+	resource_t *which;
+
+	switch (state)
+	{
+	case 1 :
+		scir_find_resource(s->resmgr, restype, resnr, 1);
+		break;
+	case 0 :
+		which = scir_find_resource(s->resmgr, restype, resnr, 0);
+		scir_unlock_resource(s->resmgr, which, resnr, restype);
+		break;
+	}
+}
+
 /* kUnload():
 ** Unloads an arbitrary resource of type 'restype' with resource numbber 'resnr'
 */

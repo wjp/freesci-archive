@@ -98,8 +98,8 @@ kNewList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
-void
-kNewNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
+inline heap_ptr
+_k_new_node(state_t *s, int value, int key)
 {
 	heap_ptr nodebase = heap_allocate(s->_heap, 8);
 
@@ -112,26 +112,32 @@ kNewNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	PUT_HEAP(nodebase + LIST_PREVIOUS_NODE, 0);
 	PUT_HEAP(nodebase + LIST_NEXT_NODE, 0);
-	PUT_HEAP(nodebase + LIST_NODE_VALUE, PARAM(0));
-	PUT_HEAP(nodebase + LIST_NODE_KEY, PARAM(1));
+	PUT_HEAP(nodebase + LIST_NODE_VALUE, value);
+	PUT_HEAP(nodebase + LIST_NODE_KEY, key);
 
-	SCIkdebug(SCIkNODES, "New nodebase at %04x\n", nodebase);
+	return nodebase;
+}
 
-	s->acc = nodebase; /* Return node base address */
+void
+kNewNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+	s->acc=_k_new_node(s, PARAM(0), PARAM(1));
+
+	SCIkdebug(SCIkNODES, "New nodebase at %04x\n", s->acc);
 }
 
 
-void
-kAddToEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
+inline void
+_k_add_to_end(state_t *s, heap_ptr listbase, heap_ptr nodebase)
 {
-	heap_ptr listbase = UPARAM(0);
-	heap_ptr nodebase = UPARAM(1);
 	heap_ptr old_lastnode = GET_HEAP(listbase + LIST_LAST_NODE);
+
 	SCIkdebug(SCIkNODES, "Adding node %04x to end of list %04x\n", nodebase, listbase);
 
 	if (!sane_listp(s, listbase))
 	  SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", listbase);
 
+	/* Set node to be the first and last node if it's the only node of the list */
 	if (old_lastnode)
 		PUT_HEAP(old_lastnode + LIST_NEXT_NODE, nodebase);
 
@@ -141,7 +147,14 @@ kAddToEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	if (GET_HEAP(listbase + LIST_FIRST_NODE) == 0)
 		PUT_HEAP(listbase + LIST_FIRST_NODE, nodebase);
-	/* Set node to be the first and last node if it's the only node of the list */
+}
+void
+kAddToEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+	heap_ptr listbase = UPARAM(0);
+	heap_ptr nodebase = UPARAM(1);
+
+	_k_add_to_end(s, listbase, nodebase);
 }
 
 
@@ -394,3 +407,58 @@ kDisposeList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	} else heap_free(s->_heap, address);
 }
 
+typedef struct
+{
+	int key, value;
+	int order;
+} sort_temp_t;
+
+void
+kSort(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+	heap_ptr source = UPARAM(0);
+	heap_ptr dest = UPARAM(1);
+	heap_ptr order_func = UPARAM(2);
+
+	int input_size = UGET_SELECTOR(source, size);
+	heap_ptr input_data = UGET_SELECTOR(source, elements);
+	heap_ptr output_data = UGET_SELECTOR(dest, elements);
+
+	heap_ptr node;
+	int i = 0, j, ordval;
+	sort_temp_t *temparray = (sort_temp_t *) 
+		malloc(sizeof(sort_temp_t)*input_size);
+
+	if (input_size)
+		return;
+
+	PUT_SELECTOR(dest, size, input_size);
+
+	node = UGET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
+
+	while (node)
+	{
+		ordval=invoke_selector(INV_SEL(order_func, doit, 0), 1, UGET_HEAP(node + LIST_NODE_VALUE));
+
+		j=i-1;
+		while (j>0)
+		{
+			if (ordval>temparray[j].order)
+				break;
+			j--;
+		}
+		temparray[j+1].key=UGET_HEAP(node + LIST_NODE_KEY);
+		temparray[j+1].value=UGET_HEAP(node + LIST_NODE_VALUE);
+		temparray[j+1].order=ordval;
+		i++;
+		node=UGET_HEAP(node + LIST_NEXT_NODE);
+	}
+
+	for (i=0;i<input_size;i++)
+	{
+		node = _k_new_node(s, temparray[i].key,
+				   temparray[i].value);
+		_k_add_to_end(s, output_data, node);
+	}
+
+}

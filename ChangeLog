@@ -1,3 +1,9 @@
+2002-10-19  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kpathing.c: New file.
+	* src/engine/klists.c (kSort): New kernel call. Not guaranteed to work.
+	* src/engine/kscrits.c (kLock): New kernel call.
+	
 2002-10-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/include/scitypes.h (sci_dir_t): Added Dreamcast definition.

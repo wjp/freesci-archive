@@ -151,10 +151,12 @@ sci_kernel_function_t kfunct_mappers[] = {
 	{"TimesCot", kTimesCot },
 	{"Said", kSaid },
 	{"DoAvoider", kDoAvoider },
-
   /* Experimental functions */
 	{"FileIO", kFileIO },
 	{"Memory", kMemory },
+	{"Sort", kSort },
+	{"AvoidPath", kAvoidPath },
+	{"Lock", kLock },
   /* Special and NOP stuff */
 	{SCRIPT_UNKNOWN_FUNCTION_STRING, k_Unknown },
 	{0,0} /* Terminator */

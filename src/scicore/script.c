@@ -162,6 +162,7 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(sec, "sec");
   FIND_SELECTOR(frame, "frame");
   FIND_SELECTOR(dataInc, "dataInc");
+  FIND_SELECTOR(size, "size");
 }
 
 int
