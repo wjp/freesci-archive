@@ -638,6 +638,32 @@ char *selector_name(state_t *s, int selector)
   return s->selector_names[selector];
 }
 
+int prop_ofs_to_id(state_t *s, int prop_ofs, int objp)
+{
+    word species = getInt16(s->heap + objp + SCRIPT_SPECIES_OFFSET);
+    word superclass = getInt16(s->heap + objp + SCRIPT_SUPERCLASS_OFFSET);
+    word type = getInt16(s->heap + objp + SCRIPT_INFO_OFFSET);
+    int i;
+    byte *selectorIDoffset;
+
+    int selectors = getInt16(s->heap + objp + SCRIPT_SELECTORCTR_OFFSET);
+
+    byte *selectoroffset = (byte *) s->heap + objp + SCRIPT_SELECTOR_OFFSET;
+
+    if (type & SCRIPT_INFO_CLASS)
+      selectorIDoffset = selectoroffset + selectors * 2;
+    else
+      selectorIDoffset =
+	s->heap
+	+ *(s->classtable[species].scriptposp)
+	+ s->classtable[species].class_offset
+	+ SCRIPT_SELECTOR_OFFSET
+	+ selectors * 2;
+
+      return (getInt16(selectorIDoffset + prop_ofs));
+
+}  
+
 heap_ptr
 disassemble(state_t *s, heap_ptr pos)
 /* Disassembles one command from the heap, returns address of next command or 0 if a ret was
@@ -711,7 +737,19 @@ disassemble(state_t *s, heap_ptr pos)
 
     }
 
-  
+  if (pos == *_pc) /* Extra information if debugging the current opcode */
+
+    if ((opcode == op_pTos)||(opcode == op_sTop)||
+        (opcode == op_pToa)||(opcode == op_aTop)||
+	(opcode == op_dpToa)||(opcode == op_ipToa)||
+	(opcode == op_dpTos)||(opcode == op_ipTos))
+    {
+      int prop_ofs = s->heap[retval - 1];
+      int prop_id = prop_ofs_to_id(s, prop_ofs, *_objp & 0xffff);
+      
+      sciprintf("	(%s)", selector_name(s, prop_id));
+    }
+
   sciprintf("\n");
 
   if (pos == *_pc) { /* Extra information if debugging the current opcode */

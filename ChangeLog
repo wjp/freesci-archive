@@ -1,3 +1,10 @@
+2000-06-02  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/scriptdebug.c (disassemble): When disassembling property 
+	  manipulation instructions ([aps]To[aps]), now displays the property
+	  name in addition to the property offset.
+	* src/engine/script.h: The opcode enum is now complete (I think).
+
 2000-06-01  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/klists.c (kDeleteKey): Now returns a result
