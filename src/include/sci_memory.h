@@ -252,135 +252,146 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 
 /********** macro definitions for routines **********/
 
-#ifdef __GNUC__
-#	ifndef MALLOC_DEBUG
-#		define sci_malloc(size)\
-			_SCI_MALLOC(size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
-#	else
-#		define sci_malloc(size)\
-			_SCI_MALLOC(size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
-#	endif
+#ifdef DISABLE_SCI_MEMORY
+#	define sci_malloc malloc
+#	define sci_calloc calloc
+#	define sci_realloc realloc
+#	define sci_free free
+#	define sci_memdup memdup
+#	define sci_strdup strdup
+#	define sci_strndup strndup
 #else
-#	ifndef MALLOC_DEBUG
-#		define sci_malloc(size)\
-			_SCI_MALLOC(size, __FILE__, __LINE__, "", 0)
+
+#	ifdef __GNUC__
+#		ifndef MALLOC_DEBUG
+#			define sci_malloc(size)\
+				_SCI_MALLOC(size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
+#		else
+#			define sci_malloc(size)\
+				_SCI_MALLOC(size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
+#		endif
 #	else
-#		define sci_malloc(size)\
-			_SCI_MALLOC(size, __FILE__, __LINE__, "", 1)
+#		ifndef MALLOC_DEBUG
+#			define sci_malloc(size)\
+				_SCI_MALLOC(size, __FILE__, __LINE__, "", 0)
+#		else
+#			define sci_malloc(size)\
+				_SCI_MALLOC(size, __FILE__, __LINE__, "", 1)
+#		endif
 #	endif
-#endif
 
 
-#ifdef __GNUC__
-#	ifndef MALLOC_DEBUG
-#		define sci_calloc(num, count)\
-			_SCI_CALLOC(num, count, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
+#	ifdef __GNUC__
+#		ifndef MALLOC_DEBUG
+#			define sci_calloc(num, count)\
+				_SCI_CALLOC(num, count, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
+#		else
+#			define sci_calloc(num, count)\
+				_SCI_CALLOC(num, count, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
+#		endif
 #	else
-#		define sci_calloc(num, count)\
-			_SCI_CALLOC(num, count, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
+#		ifndef MALLOC_DEBUG
+#			define sci_calloc(num, count)\
+				_SCI_CALLOC(num, count, __FILE__, __LINE__, "", 0)
+#		else
+#			define sci_calloc(num, count)\
+				_SCI_CALLOC(num, count, __FILE__, __LINE__, "", 1)
+#		endif
 #	endif
-#else
-#	ifndef MALLOC_DEBUG
-#		define sci_calloc(num, count)\
-			_SCI_CALLOC(num, count, __FILE__, __LINE__, "", 0)
-#	else
-#		define sci_calloc(num, count)\
-			_SCI_CALLOC(num, count, __FILE__, __LINE__, "", 1)
-#	endif
-#endif
 
 
-#ifdef __GNUC__
-#	ifndef MALLOC_DEBUG
-#		define sci_realloc(ptr, size)\
-			_SCI_REALLOC(ptr, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
+#	ifdef __GNUC__
+#		ifndef MALLOC_DEBUG
+#			define sci_realloc(ptr, size)\
+				_SCI_REALLOC(ptr, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
+#		else
+#			define sci_realloc(ptr, size)\
+				_SCI_REALLOC(ptr, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
+#		endif
 #	else
-#		define sci_realloc(ptr, size)\
-			_SCI_REALLOC(ptr, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
+#		ifndef MALLOC_DEBUG
+#			define sci_realloc(ptr, size)\
+				_SCI_REALLOC(ptr, size, __FILE__, __LINE__, "", 0)
+#		else
+#			define sci_realloc(ptr, size)\
+				_SCI_REALLOC(ptr, size, __FILE__, __LINE__, "", 1)
+#		endif
 #	endif
-#else
-#	ifndef MALLOC_DEBUG
-#		define sci_realloc(ptr, size)\
-			_SCI_REALLOC(ptr, size, __FILE__, __LINE__, "", 0)
-#	else
-#		define sci_realloc(ptr, size)\
-			_SCI_REALLOC(ptr, size, __FILE__, __LINE__, "", 1)
-#	endif
-#endif
 
 
-#ifdef __GNUC__
-#	ifndef MALLOC_DEBUG
-#		define sci_free(ptr)\
-			_SCI_FREE(ptr, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
+#	ifdef __GNUC__
+#		ifndef MALLOC_DEBUG
+#			define sci_free(ptr)\
+				_SCI_FREE(ptr, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
+#		else
+#			define sci_free(ptr)\
+				_SCI_FREE(ptr, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
+#		endif
 #	else
-#		define sci_free(ptr)\
-			_SCI_FREE(ptr, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
+#		ifndef MALLOC_DEBUG
+#			define sci_free(ptr)\
+				_SCI_FREE(ptr, __FILE__, __LINE__, "", 0)
+#		else
+#			define sci_free(ptr)\
+				_SCI_FREE(ptr, __FILE__, __LINE__, "", 1)
+#		endif
 #	endif
-#else
-#	ifndef MALLOC_DEBUG
-#		define sci_free(ptr)\
-			_SCI_FREE(ptr, __FILE__, __LINE__, "", 0)
-#	else
-#		define sci_free(ptr)\
-			_SCI_FREE(ptr, __FILE__, __LINE__, "", 1)
-#	endif
-#endif
 
 
-#ifdef __GNUC__
-#	ifndef MALLOC_DEBUG
-#		define sci_memdup(src, size)\
-			_SCI_MEMDUP(src, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
+#	ifdef __GNUC__
+#		ifndef MALLOC_DEBUG
+#			define sci_memdup(src, size)\
+				_SCI_MEMDUP(src, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
+#		else
+#			define sci_memdup(src, size)\
+				_SCI_MEMDUP(src, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
+#		endif
 #	else
-#		define sci_memdup(src, size)\
-			_SCI_MEMDUP(src, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
+#		ifndef MALLOC_DEBUG
+#			define sci_memdup(src, size)\
+				_SCI_MEMDUP(src, size, __FILE__, __LINE__, "", 0)
+#		else
+#			define sci_memdup(src, size)\
+				_SCI_MEMDUP(src, size, __FILE__, __LINE__, "", 1)
+#		endif
 #	endif
-#else
-#	ifndef MALLOC_DEBUG
-#		define sci_memdup(src, size)\
-			_SCI_MEMDUP(src, size, __FILE__, __LINE__, "", 0)
-#	else
-#		define sci_memdup(src, size)\
-			_SCI_MEMDUP(src, size, __FILE__, __LINE__, "", 1)
-#	endif
-#endif
 
 
-#ifdef __GNUC__
-#	ifndef MALLOC_DEBUG
-#		define sci_strdup(src)\
-			_SCI_STRDUP(src, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
+#	ifdef __GNUC__
+#		ifndef MALLOC_DEBUG
+#			define sci_strdup(src)\
+				_SCI_STRDUP(src, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
+#		else
+#			define sci_strdup(src)\
+				_SCI_STRDUP(src, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
+#		endif
 #	else
-#		define sci_strdup(src)\
-			_SCI_STRDUP(src, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
+#		ifndef MALLOC_DEBUG
+#			define sci_strdup(src)\
+				_SCI_STRDUP(src, __FILE__, __LINE__, "", 0)
+#		else
+#			define sci_strdup(src)\
+				_SCI_STRDUP(src, __FILE__, __LINE__, "", 1)
+#		endif
 #	endif
-#else
-#	ifndef MALLOC_DEBUG
-#		define sci_strdup(src)\
-			_SCI_STRDUP(src, __FILE__, __LINE__, "", 0)
-#	else
-#		define sci_strdup(src)\
-			_SCI_STRDUP(src, __FILE__, __LINE__, "", 1)
-#	endif
-#endif
 
 
-#ifdef __GNUC__
-#	ifndef MALLOC_DEBUG
-#		define sci_strndup(src, length)\
-			_SCI_STRNDUP(src, length, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
+#	ifdef __GNUC__
+#		ifndef MALLOC_DEBUG
+#			define sci_strndup(src, length)\
+				_SCI_STRNDUP(src, length, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
+#		else
+#			define sci_strndup(src, length)\
+				_SCI_STRNDUP(src, length, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
+#		endif
 #	else
-#		define sci_strndup(src, length)\
-			_SCI_STRNDUP(src, length, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
-#	endif
-#else
-#	ifndef MALLOC_DEBUG
-#		define sci_strndup(src, length)\
-			_SCI_STRNDUP(src, length, __FILE__, __LINE__, "", 0)
-#	else
-#		define sci_strndup(src, length)\
-			_SCI_STRNDUP(src, length, __FILE__, __LINE__, "", 1)
+#		ifndef MALLOC_DEBUG
+#			define sci_strndup(src, length)\
+				_SCI_STRNDUP(src, length, __FILE__, __LINE__, "", 0)
+#		else
+#			define sci_strndup(src, length)\
+				_SCI_STRNDUP(src, length, __FILE__, __LINE__, "", 1)
+#		endif
 #	endif
 #endif
 

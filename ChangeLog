@@ -1,5 +1,13 @@
 2001-09-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/said.y: Undid fix for SQ3 problem
+
+	* src/scicore/resource.c (_scir_free_altsources): Fixed memory leak
+
+	* src/config.l: Added new options scale, scale_x, scale_y, color_depth
+
+	* src/include/sci_memory.h: Added DISABLE_SCI_MEMORY flag
+
 	* src/gfx/drivers/sdl_driver.c (sdl_init_specific): Only disable mouse
 	movement events if we're not emulating the pointer (Thanks, Matt)
 	Fall back to emulation on BeOS

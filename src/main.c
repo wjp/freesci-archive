@@ -638,33 +638,61 @@ init_gamestate(state_t *gamestate, resource_mgr_t *resmgr, sci_version_t version
 }
 
 static int
-init_gfx(cl_options_t *cl_options, gfx_driver_t *driver, resource_mgr_t *resmgr)
+init_gfx(config_entry_t *conf, cl_options_t *cl_options, gfx_driver_t *driver, resource_mgr_t *resmgr)
 {
+	int scale_x = 0, scale_y = 0, color_depth = 0;
+
+	if (conf) {
+		if (conf->scale)
+			scale_x = scale_y = conf->scale;
+
+		if (conf->x_scale)
+			scale_x = conf->x_scale;
+
+		if (conf->y_scale)
+			scale_y = conf->y_scale;
+
+		if (conf->color_depth)
+			color_depth = conf->color_depth >> 3; /* In there it's bpp */
+	}
+
 	gfx_state->driver = driver;
 	gamestate->gfx_state = gfx_state;
 	gfx_state->version = resmgr->sci_version;
 
-	if (cl_options->scale_y > 0 && !cl_options->scale_x)
-		cl_options->scale_x = cl_options->scale_y;
-
 	if (cl_options->scale_x > 0) {
-		if (cl_options->scale_y == 0)
-		  cl_options->scale_y = cl_options->scale_x;
+		scale_x = cl_options->scale_x;
 
-		if (cl_options->color_depth > 0) {
-			if (gfxop_init(gfx_state, cl_options->scale_x,
-				       cl_options->scale_y, cl_options->color_depth,
+		if (!scale_y)
+			scale_y = cl_options->scale_x;
+	}
+
+	if (cl_options->scale_y > 0) {
+		scale_y = cl_options->scale_y;
+
+		if (!scale_x)
+			scale_x = cl_options->scale_y;
+	}
+
+	if (cl_options->color_depth > 0)
+		color_depth = cl_options->color_depth;
+
+	if (scale_x > 0) {
+
+		if (color_depth > 0) {
+			if (gfxop_init(gfx_state, scale_x,
+				       scale_y, color_depth,
 				       gfx_options, resmgr)) {
 				fprintf(stderr,"Graphics initialization failed. Aborting...\n");
 				return 1;
 			}
 		} else {
-			cl_options->color_depth = 4;
-			while (gfxop_init(gfx_state, cl_options->scale_x,
-					  cl_options->scale_y, cl_options->color_depth,
-					  gfx_options, resmgr) && --cl_options->color_depth);
+			color_depth = 4;
+			while (gfxop_init(gfx_state, scale_x,
+					  scale_y, color_depth,
+					  gfx_options, resmgr) && --color_depth);
 
-			if (!cl_options->color_depth) {
+			if (!color_depth) {
 				fprintf(stderr,"Could not find a matching color depth. Aborting...\n");
 				return 1;
 			}
@@ -1001,7 +1029,7 @@ main(int argc, char** argv)
 	}
 
 
-	if (init_gfx(&cl_options, gfx_driver, resmgr))
+	if (init_gfx(active_conf, &cl_options, gfx_driver, resmgr))
 		return 1;
 
 
@@ -1091,6 +1119,7 @@ main(int argc, char** argv)
 	gfxop_exit(gfx_state);
 
 #ifdef WITH_DMALLOC
+	fprintf(stderr,"--- Everything but the two console buffers should have been freed now ---\n");
 	dmalloc_log_unfreed();
 	BREAKPOINT();
 #endif

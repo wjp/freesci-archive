@@ -200,8 +200,6 @@ wordset :	 word
 			{ $$ = said_attach_branch($1, $3) }
 		| wordset YY_COMMA YY_BRACKETSO wordset YY_BRACKETSC
 			{ $$ = said_attach_branch($1, $3) }
-		| wordset cwordrefset
-			{ $$ = said_attach_branch($1, $2) }
 		;
 
 
@@ -722,7 +720,8 @@ augment_match_expression_p(parse_tree_node_t *saidt, int augment_pos,
 						return 1;
 					gchild = aug_get_next_sibling(saidt, gchild, &gc_major, &gc_minor);
 				}
-			} else sciprintf("augment_match_expression_p(): Unknown type 144 minor number %3x\n", cminor);
+			} else
+				sciprintf("augment_match_expression_p(): Unknown type 144 minor number %3x\n", cminor);
 
 			cpos = aug_get_next_sibling(saidt, cpos, &cmajor, &cminor);
 

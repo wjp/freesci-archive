@@ -238,6 +238,10 @@ standard_option standard_options[] = {
 	OPT_STRING("console_log", console_log),
 	OPT_STRING("module_path", module_path),
 	OPT_STRING("gfx_driver", gfx_driver_name),
+	OPT_INT("scale_x", x_scale, 1, 256),
+	OPT_INT("scale_y", y_scale, 1, 256),
+	OPT_INT("scale", scale, 1, 256),
+	OPT_INT("color_depth", color_depth, 8, 32),
 	OPT_END
 };
 
@@ -442,6 +446,11 @@ config_init(config_entry_t **_conf, char *conffile)
         conf->midiout_driver = midiout_find_driver(NULL);
         conf->midi_device = midi_find_device(NULL);
 	conf->sound_server = sound_server_find_driver(NULL);
+
+	conf->x_scale = 0;
+	conf->y_scale = 0;
+	conf->scale = 0;
+	conf->color_depth = 0;
 
 	conf->mouse = 1;
 	conf->reverse_stereo = 0;

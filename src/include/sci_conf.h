@@ -66,6 +66,8 @@ typedef struct {
 
 	subsystem_options_t *driver_options[FREESCI_DRIVER_SUBSYSTEMS_NR];
 
+	int x_scale, y_scale, scale, color_depth; /* GFX subsystem initialization values */
+
 	long animation_delay; /* Number of microseconds to wait between each pic transition animation cycle */
 	int animation_granularity; /* Granularity for pic transition animations */
 	int alpha_threshold; /* Crossblitting alpha threshold */

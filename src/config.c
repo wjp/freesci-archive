@@ -722,6 +722,10 @@ standard_option standard_options[] = {
 	OPT_STRING("console_log", console_log),
 	OPT_STRING("module_path", module_path),
 	OPT_STRING("gfx_driver", gfx_driver_name),
+	OPT_INT("scale_x", x_scale, 1, 256),
+	OPT_INT("scale_y", y_scale, 1, 256),
+	OPT_INT("scale", scale, 1, 256),
+	OPT_INT("color_depth", color_depth, 8, 32),
 	OPT_END
 };
 
@@ -729,7 +733,7 @@ standard_option standard_options[] = {
 static void
 parse_option(char *option, int optlen, char *value);
 
-#line 733 "lex.yy.c"
+#line 737 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -880,10 +884,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 258 "config.l"
+#line 262 "config.l"
 
 
-#line 887 "lex.yy.c"
+#line 891 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -968,7 +972,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 260 "config.l"
+#line 264 "config.l"
 {
 	char *cleanup;
 	++yytext; /* Get over opening bracket */
@@ -1015,7 +1019,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 305 "config.l"
+#line 309 "config.l"
 { /***** End of graphics *****/
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1028,7 +1032,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 315 "config.l"
+#line 319 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1041,7 +1045,7 @@ if (cur_section) {
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 325 "config.l"
+#line 329 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1053,7 +1057,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 335 "config.l"
+#line 339 "config.l"
 {
 /* driver parameters */
         char *subsys_name = yytext;
@@ -1092,7 +1096,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 372 "config.l"
+#line 376 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
@@ -1120,16 +1124,16 @@ case 7:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 396 "config.l"
+#line 400 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 398 "config.l"
+#line 402 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 400 "config.l"
+#line 404 "config.l"
 {
         yy_delete_buffer( YY_CURRENT_BUFFER );
         yyterminate();
@@ -1137,15 +1141,15 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 405 "config.l"
+#line 409 "config.l"
 printf("Unrecognized option: '%s'\n", yytext);
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 407 "config.l"
+#line 411 "config.l"
 ECHO;
 	YY_BREAK
-#line 1149 "lex.yy.c"
+#line 1153 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2029,7 +2033,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 407 "config.l"
+#line 411 "config.l"
 
 
 int
@@ -2068,6 +2072,11 @@ config_init(config_entry_t **_conf, char *conffile)
         conf->midiout_driver = midiout_find_driver(NULL);
         conf->midi_device = midi_find_device(NULL);
 	conf->sound_server = sound_server_find_driver(NULL);
+
+	conf->x_scale = 0;
+	conf->y_scale = 0;
+	conf->scale = 0;
+	conf->color_depth = 0;
 
 	conf->mouse = 1;
 	conf->reverse_stereo = 0;

@@ -327,12 +327,23 @@ _scir_free_resource_sources(resource_source_t *rss)
 }
 
 void
+_scir_free_altsources(resource_source_t *dynressrc)
+{
+	if (dynressrc) {
+		_scir_free_altsources(dynressrc->next);
+		free(dynressrc);
+	}
+}
+
+void
 _scir_free_resources(resource_t *resources, int resources_nr)
 {
 	int i;
 
 	for (i = 0; i < resources_nr; i++) {
 		resource_t *res = resources + i;
+
+		_scir_free_altsources(res->alt_sources);
 
 		if (res->status != SCI_STATUS_NOMALLOC)
 			sci_free(res->data);

@@ -287,6 +287,17 @@ Currently, the configuration file may contain:
 - reverse_stereo: Whether stereo sound output should reverse its output
   channels
 
+- scale_x: A positive non-zero integer (default depends on the gfx driver)
+  that sets the horizontal scaling factor for whichever gfx driver you
+  use.
+
+- scale_y: Like scale_x, just for the vertical axis.
+
+- scale: Like scale_x, but affects both the horizontal and the vertical axis.
+  This scale is overridden by the others.
+
+- color_depth: The color depth (in bits per pixel) to use
+
 
 2.1 Driver-specific options
 ---------------------------
