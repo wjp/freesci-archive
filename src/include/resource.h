@@ -111,8 +111,8 @@
 /* The last supported SCI version */
 
 extern DLLEXTERN const char* SCI_Error_Types[];
-extern const char* SCI_Version_Types[];
-extern const char* Resource_Types[];
+extern DLLEXTERN const char* SCI_Version_Types[];
+extern DLLEXTERN const char* Resource_Types[];
 
 enum ResourceTypes {
   sci_view=0, sci_pic, sci_script, sci_text,

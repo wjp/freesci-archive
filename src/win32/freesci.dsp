@@ -93,24 +93,6 @@ LINK32=link.exe
 # Begin Source File
 
 SOURCE=..\engine\cfsml.pl
-
-!IF  "$(CFG)" == "freesci - Win32 Release"
-
-# Begin Custom Build
-InputDir=\Src\freesci\src\engine
-InputPath=..\engine\cfsml.pl
-InputName=cfsml
-
-"..\engine\savegame.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	cd $(InputDir) 
-	d:\perl\bin\perl cfsml.pl < $(InputName).cfsml > $(InputName).c 
-	
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "freesci - Win32 Debug"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 

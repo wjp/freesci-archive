@@ -180,7 +180,7 @@ init_directories(char *work_dir, char *game_id)
       fprintf(stderr,"Warning: Could not enter ~/"FREESCI_GAMEDIR"/%s; "
 	      "save files will be written to ~/"FREESCI_GAMEDIR"\n", game_id);
 
-      return;
+      return 0;
     }
     else /* mkdir() succeeded */
       chdir(game_id);
