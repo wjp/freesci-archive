@@ -1,5 +1,5 @@
 /***************************************************************************
- midi_adlib.c Copyright (C) 2001 Solomon Peachy
+ midi_adlibemu.c Copyright (C) 2002 Solomon Peachy
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
@@ -113,24 +113,23 @@ void synth_setpatch (int voice, guint8 *data)
     opl_write (ym3812, register_base[i] + register_offset[i % 2][voice], data[i]); 
   opl_write (ym3812, register_base[10] + voice, data[10]);
 
-  /*
-  x = opl_read (ym3812, 0xb0 + voice);
-  opl_write (ym3812, 0xb0 + voice, x & ~0x20);
-  */
+  /* mute voice after patch change */
+  opl_write (ym3812, 0xb0 + voice, adlib_reg[0xb0+voice] & 0xdf);
 }
 
 void synth_setvolume (int voice, int volume)
 {
   volume = volume >> 1;  /* adlib is 6-bit, midi is 7-bit */
-
-  if ((adlib_reg[register_base[10]+voice]&1)==1) /* algorithm-dependent */
+  
+  /* algorithm-dependent; we may need to set both operators. */
+  if (adlib_reg[register_base[10]+voice] & 1)
     opl_write(ym3812, register_base[2]+register_offset[0][voice], 
 	      ((63-volume) | 
 	       (adlib_reg[register_base[2]+register_offset[0][voice]]&0xc0)));
   
-  opl_write(ym3812, register_base[2]+register_offset[0][voice],
+  opl_write(ym3812, register_base[3]+register_offset[1][voice],
 	    ((63-volume) |
-	     (adlib_reg[register_base[2]+register_offset[1][voice]]&0xc0)));
+	     (adlib_reg[register_base[3]+register_offset[1][voice]]&0xc0)));
 
 }
 
@@ -164,11 +163,11 @@ int adlibemu_stop_note(int chn, int note, int velocity)
   }
 
   if (op==255) {
-    printf ("can't stop.. chn %d %d %d\n", chn, note, velocity);
-    return 255;	/* not playing */
+    /* printf ("can't stop.. chn %d %d %d\n", chn, note, velocity); */
+    return -1; /* that note isn't playing.. */
   }
 
-  opl_write(ym3812, 0xb0+op,(adlib_reg[0xb0+op]&(255-32))
+  opl_write(ym3812, 0xb0+op,(adlib_reg[0xb0+op] & 0xdf)
 );
 
   /*   synth_setnote(op, note, pitch[chn]);  */
@@ -208,7 +207,7 @@ int adlibemu_start_note(int chn, int note, int velocity)
 
   printf("play operator %d/%d:  C%02x N%02x V%02x (%02x/%02x)\n", op, free_voices, chn, note, velocity, 
 	 adlib_reg[register_base[2]+register_offset[0][op]],
-	 adlib_reg[register_base[2]+register_offset[1][op]]);
+	 adlib_reg[register_base[3]+register_offset[1][op]]);
 
   oper_chn[op] = chn;
   oper_note[op] = note;
@@ -235,14 +234,11 @@ int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
     for (i = 48; i < 96; i++) 
       make_sbi((adlib_def *)(data_ptr+2+(28 * i)), adlib_sbi[i]);
 
-  adlibemu_init_lists();
-
   ym3812 = OPLCreate (OPL_TYPE_YM3812, 3579545, 44100);
 
   // XXX register with pcm layer.
 
-  return ym3812 != NULL;
-
+  return midi_adlibemu_reset();
 }
 
 
@@ -262,9 +258,14 @@ int midi_adlibemu_volume(guint8 volume)
 
 }
 
-int midi_adlibemu_allstop(void) {
-  OPLResetChip (ym3812);
+int midi_adlibemu_reset(void) {
+  if (ym3812 == NULL)
+    return -1;
+
   adlibemu_init_lists();
+  OPLResetChip (ym3812);
+  opl_write(ym3812, 0x01, 0x20);
+  opl_write(ym3812, 0xBD, 0xc0);
   return 0;
 }
 
@@ -340,7 +341,7 @@ midi_device_t midi_device_adlibemu = {
   &midi_adlibemu_close,
   &midi_adlibemu_event,
   &midi_adlibemu_event2,
-  &midi_adlibemu_allstop,
+  &midi_adlibemu_reset,
   &midi_adlibemu_volume,
   &midi_adlibemu_reverb,
   003,		/* patch.003 */
