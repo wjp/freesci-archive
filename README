@@ -29,8 +29,8 @@ support is still missing from this release.
 Please refer to 'NEWS' and the 'ChangeLog' for information about changes
 in this and previous versions.
 
-Building FreeSCI
-----------------
+0 Building FreeSCI
+==================
 
 To build the package, type the following:
 
@@ -56,8 +56,8 @@ Note that the graphics driver part of the game has been designed to be
 modular, so the dependancy on GGI is likely to be temporary.
 
 
-Running it under UNIX-like OSses
---------------------------------
+1 Running it on UNIX-like OSses
+===============================
 
 To run FreeSCI, execute 'sciv' while you are in a directory containing
 Sierra resource files (resource.000, resource.001, etc), or set up a
@@ -79,8 +79,8 @@ the debugger command line. Use "man <command>" to learn about the specified
 command.
 
 
-Configuration
--------------
+2 Configuration
+===============
 
 FreeSCI will create a directory called .freesci in your home directory (unless
 this directory already exists). If you run an SCI game, this game will
@@ -196,7 +196,39 @@ time, the configuration file may contain:
   devices, 'null' is also valid, and it sends all data to /dev/null.
   Which is the default.  :)
 
-Example:
+
+2.1 Driver-specific options
+---------------------------
+Graphics and sound drivers may have additional options specific to them.
+Driver-specific options are set by writing
+
+	<driver>.<option> = <value>
+
+For example, you would use
+
+	ggi.swap_caps_ctrl = true
+
+to activate the GGI driver's feature for swapping CapsLock and the left Ctrl
+key.
+
+All driver-specific options are listed here:
+
+2.1.1 GGI driver:
+-----------------
+- swap_caps_ctrl = true | false
+Determines whether to swap the meanings of the CapsLock and the left Ctrl
+key (relative to a PC-style keyboard layout). The resulting layout resembles
+a Sun keyboard. Default is 'false'.
+
+
+2.1.2 Xlib driver:
+------------------
+- swap_caps_ctrl = true | false
+Same as for the GGi driver.
+
+
+
+2.2 Config file example:
 ------------------------
 # FreeSCI config file
 
@@ -219,41 +251,40 @@ resource_dir = /home/bob/stuff/misc/other/games/more/sierra/old/sq/3
 -----------------------
 
 
-Potentially supported games
----------------------------
+3 Potentially supported games
+=============================
 
 The following games have been tested with FreeSCI and are known to work to some
 extent:
-- Hero's Quest / Quest for Glory 1
++ Hero's Quest / Quest for Glory 1
+  (Completed by Emmanuel Jeandel with a post- 0.3.1 development snapshot)
 + Space Quest 3
-  completed by Ben Esacove with a post- 0.3.0 development snapshot of FreeSCI
+  (completed by Ben Esacove with a post- 0.3.0 development snapshot)
 - King's Quest 4
 - Leisure Suit Larry 2
-- Leisure Suit Larry 3
++ Leisure Suit Larry 3
+  (Completed by Christina Mengert and Micheal Solberg with a post- 0.3.1
+   development snapshot)
 - Police Quest 2
 - Codename: Iceman
-- The Colonel's Bequest (*)
+- The Colonel's Bequest
 - Conquest of Camelot
 - The Fun Seeker's Guide (from the SQ Collector's Series)
-- Hoyle's Book of Games (volume 1) (**)
+- Hoyle's Book of Games (volume 1) (*)
 - Hoyle's Book of Games (volume 2)
 
 In theory, FreeSCI should be able to let you complete all of these.
 
-(*) There are still lots of known issues with The Colonel's Bequest. These are
-being worked on. However, they are mostly graphical- the game itself should be
-playable.
-
-(**) Due to differences between the way Sierra SCI and FreeSCI handle graphical
+(*) Due to differences between the way Sierra SCI and FreeSCI handle graphical
 widgets, Hoyle's Book of Games may consume a lot of memory rather quickly. We
 are hoping to resolve these issues at least partially before the next release.
 
 
-Platforms
----------
+4 Platform support
+==================
 
-Successful builds for this release were reported for the following platforms (in
-order of appearance):
+Successful builds for the 0.3.1 release were reported for the following
+platforms (in order of appearance):
 - Alpha EV67/Debian GNU/Linux/gcc		tested extensively
 - Sparc/Sun/Solaris/gcc				tested
 - Alpha EV6/Compaq/Tru64/cc			built, basic tests
@@ -278,8 +309,8 @@ release for reasons given below:
 
 
 
-Notes
------
+5 Notes
+=======
 
 Please note that most of the documentation found in the doc/misc subdirectory
 is random information copied from the SCI Decoding Project homepage and
@@ -299,4 +330,6 @@ trademark of Sierra On-Line, Inc.).
 Space Quest, Quest for Glory, King's Quest, Leisure Suit Larry, Police Quest,
 Codename: Iceman, Conquest of Camelot, and The Colonel's Bequest are registered
 trademarks of Sierra On-Line, Inc.
+
+
 

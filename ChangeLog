@@ -1,3 +1,7 @@
+2001-03-19  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* doc/man/sciv.6: Minor updates
+
 2001-03-18  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/sound/soundserver_null.c:  Fixed a dangling else on the

@@ -26,6 +26,8 @@ You'll need to run sciv in order to play SCI games.
 [ --scale-y \fIyfact\fR, -y \fIyfact\fR ]
 [ --color-depth \fIbytespp\fR, -c \fIbytespp\fR ]
 [ --disable-mouse, -m ]
+[ --midiout \fIsfx\fR, -O\fsfx\fR ]
+[ --mididevice \fIdevice\fR, -M\fIdevice\fR ]
 \fIgame\fR
 
 .SH OPTIONS
@@ -58,7 +60,7 @@ Display a short help text and exit.
 .TP
 .BR "--graphics \fIgfx\fR, -\fBg\fR\fIgfx\fR"
 With this option, you can specify which graphics driver is to be used. 
-In this release, only \fBggi\fR is supported.
+In this release, \fBggi\fR and plain \fBxlib\fR are supported.
 .TP
 .BR "--scale-x \fIxfact\fR, -\fBx\fR\fIxfact\fR"
 .BR "--scale-y \fIyfact\fR, -\fBy\fR\fIyfact\fR"
@@ -76,6 +78,16 @@ Many SCI games handle the mouse pointer differently if no mouse is
 present in the system. This option instructs the interpreter to
 tell the games that no mouse is present whenever they ask for one;
 the actual effect depends on the individual game.
+.TP
+.BR "--midiout, -O"
+This is the output driver or interface to use. Currently, 'unixraw',
+'alsaraw', and 'null' may be available on your system; the latter being the
+default.
+.TP
+.BR "--mididevice, -M"
+SCI was designed to support a variety of physical output devices. FreeSCI
+currently only supports one of them, the Rolant MT-32 ('mt32', the default),
+but it also offers an MT-32 to General MIDI translation layer ('mt32gm').
 .TP
 .BR \fIgame\fR
 An identifier describing the game to start. This identifier (GAME_ID) must be
@@ -171,20 +183,17 @@ Police Quest 2
 .IP \-
 Codename: Iceman
 .IP \-
-The Colonel's Bequest (*)
+The Colonel's Bequest
 .IP \-
 Conquest of Camelot
 .IP \-
 The Fun Seeker's Guide (from the SQ Collector's Series)
 .IP \-
-Hoyle's Book of Games (volume 1) (**)
+Hoyle's Book of Games (volume 1) (*)
 .IP \-
-Hoyle's Book of Games (volume 2) (**)
+Hoyle's Book of Games (volume 2) (*)
 .P
-(*) There are still several graphical glitches in the Colonel's
-Bequest, but the game itself should work.
-.P
-(**) Due to differences between the way Sierra SCI and FreeSCI
+(*) Due to differences between the way Sierra SCI and FreeSCI
 handle graphical widgets, these games may cause an accumulation
 of widgets in the widget subsystem, resulting in a slowdown and
 some increased memory usage. 
@@ -199,9 +208,7 @@ some increased memory usage.
 
 .SH BUGS
 .P
-FreeSCI is incomplete. Space Quest 3 was reported to have been
-completed with an earlier version of the interpreter, but
-no success reports regarding other games have been filed yet.
+--- update me ---
 
 This release has the following limitations (plus some bugs):
 .IP \-

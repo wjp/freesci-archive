@@ -2,7 +2,6 @@ TODO for 0.3.2:
 
 Primary goals:
 	* Win32 port
-	* Implement sound servers that actually make some sound
 
 Secondary goals:
 	+ Fix DoAvoider
