@@ -101,7 +101,6 @@ int resourcecmp(const void *first, const void *second);
 
 typedef int decomp_funct(resource_t *result, int resh);
 
-//static (int *)(resource_t *result, int resh) decompressors[] = {
 static decomp_funct *decompressors[] = {
 	NULL,
 	&decompress0,

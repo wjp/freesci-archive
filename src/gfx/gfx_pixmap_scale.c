@@ -315,7 +315,6 @@ gfx_apply_delta(unsigned int *color, int *delta, int factor)
 				rec[2] = (EXTEND_COLOR(pxm->colors[nr].b) >> 8); \
 				rec[3] = 0; \
 			}
-//extern int globbcount;
 
 #define REVERSE_ALPHA(foo) ((inverse_alpha)? ~(foo) : (foo))
 

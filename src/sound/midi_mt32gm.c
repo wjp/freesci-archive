@@ -29,6 +29,10 @@ int midi_mt32_allstop(void);
 
 static int global_volume = 16;
 
+static int mt32gm_channel_map[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+#define CHAN(x) MIDI_mapping[mt32gm_channel_map[x]]
+
 /* gm mapping of mt-32 */
 int midi_mt32gm_open(guint8 *data_ptr, unsigned int data_length)
 {
@@ -102,11 +106,20 @@ int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2)
 	switch (oper) {
 	case 0x90:
 	case 0x80:  /* noteon and noteoff */
+
+		if (CHAN(channel).gm_instr == RHYTHM) {
+/*			xparam = CHAN(channel).gm_rhythmkey;*/
+			channel = RHYTHM_CHANNEL;
+		} else if (CHAN(channel).gm_instr == NOMAP)
+			return;
+
 		volume = param2;
 		param2 = (volume * MIDI_mapping[param].volume * global_volume)
 			>> (7 + 4);
+
 		if (channel == RHYTHM_CHANNEL)
 			xparam = MIDI_mapping[param].gm_rhythmkey;
+
 		break;
 	case 0xe0:    /* Pitch bend NYI */
 		break;
@@ -120,7 +133,7 @@ int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2)
 	if (xparam < 0)
 		return 0;
 
-	return midi_mt32_event(command, xparam, param2);
+	return midi_mt32_event(oper | channel, xparam, param2);
 }
 
 int midi_mt32gm_event2(guint8 command, guint8 param)
@@ -134,6 +147,9 @@ int midi_mt32gm_event2(guint8 command, guint8 param)
 	switch (oper) {
 	case 0xc0: {  /* change instrument */
 		int instr = param;
+
+		mt32gm_channel_map[channel] = param;
+
 		if (channel == RHYTHM_CHANNEL)
 			xparam = MIDI_mapping[param].gm_rhythmkey;
 		else {

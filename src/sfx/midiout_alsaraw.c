@@ -47,7 +47,5 @@ int midiout_alsaraw_write(guint8 *buffer, unsigned int count)
 {
   if (snd_rawmidi_write(handle, buffer, count) != count)
     return -1;
-  //  if (snd_rawmidi_output_flush(handle) < 0)
-  //    return -1;
   return 0;
 }

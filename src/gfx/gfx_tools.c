@@ -384,8 +384,6 @@ gfx_pixmap_scale_index_data(gfx_pixmap_t *pixmap, gfx_mode_t *mode)
 	linewidth = xfact * xl;
 	initial_new = new = malloc(linewidth * yfact * yl);
 
-//	memset(new, 12, linewidth * yfact * yl);
-
 	for (yc = 0; yc < yl; yc++) {
 
 		linestart = new;

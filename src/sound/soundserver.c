@@ -100,22 +100,22 @@ sound_server_change_instrmap(FILE *output, int action, int instr, int value)
 		break;
 
 	case SOUND_COMMAND_INSTRMAP_SET_FINETUNE:
-		SOUNDSERVER_INSTRMAP_CHANGE(gm_instr, -32768, 32767,
+		SOUNDSERVER_INSTRMAP_CHANGE(finetune, -32768, 32767,
 					    "finetune value");
 		break;
 
 	case SOUND_COMMAND_INSTRMAP_SET_BENDER_RANGE:
-		SOUNDSERVER_INSTRMAP_CHANGE(gm_instr, -128, 127,
+		SOUNDSERVER_INSTRMAP_CHANGE(bender_range, -128, 127,
 					    "bender range");
 		break;
 
 	case SOUND_COMMAND_INSTRMAP_SET_PERCUSSION:
-		SOUNDSERVER_INSTRMAP_CHANGE(gm_instr, 0, 79,
+		SOUNDSERVER_INSTRMAP_CHANGE(gm_rhythmkey, 0, 79,
 					    "percussion instrument");
 		break;
 
 	case SOUND_COMMAND_INSTRMAP_SET_VOLUME:
-		SOUNDSERVER_INSTRMAP_CHANGE(gm_instr, 0, 100,
+		SOUNDSERVER_INSTRMAP_CHANGE(volume, 0, 100,
 					    "instrument volume");
 		break;
 

@@ -210,7 +210,7 @@ sci_gettime(int *seconds, int *useconds)
 }
 #elif defined (_MSC_VER)
 
-//WARNING(Incorrect)
+/*WARNING(Incorrect)*/
 /* Warning: This function only retrieves the amount of mseconds since the start of
 ** the Win32 kernel; it does /not/ provide the number of seconds since the epoch!
 ** There are no known cases where this causes problems, though.  */

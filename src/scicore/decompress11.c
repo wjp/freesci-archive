@@ -159,8 +159,8 @@ int decompress11(resource_t *result, int resh)
 		free(result->data);
 		result->data = NULL; /* So that we know that it didn't work */
 		result->status = SCI_STATUS_NOMALLOC;
-		//    free(buffer);
-		//    return SCI_ERROR_UNKNOWN_COMPRESSION;
+		free(buffer);
+		return SCI_ERROR_UNKNOWN_COMPRESSION;
 	}
 
   free(buffer);

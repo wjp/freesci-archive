@@ -412,7 +412,7 @@ void unpack_resource(int stype, int snr, char *outfilename)
                         close_console_file();
 		} else {
 
-// Visual C++ doesn't allow to specify O_BINARY with creat()
+/* Visual C++ doesn't allow to specify O_BINARY with creat() */
 #ifdef _MSC_VER	
                         int outf = open(outfilename, _O_CREAT | _O_BINARY | _O_RDWR);
 #else

@@ -541,7 +541,6 @@ _gfxr_auxbuf_spread(gfxr_pic_t *pic, int *min_x, int *min_y, int *max_x, int *ma
 							++k;
 							intervals[!ivi][i].tag = 1;
 						}
-						//intervals[ivi][intervals_nr - 1].tag = 1;
 
 						old_xr = intervals[!ivi][k].xr;
 						dwidth_r = abs(old_xr - xr);
@@ -1393,7 +1392,6 @@ _gfxr_find_fill_point(gfxr_pic_t *pic, int min_x, int min_y, int max_x, int max_
 	*x = x_320 * pic->mode->xfact;
 	*y = y_200 * pic->mode->yfact;
 
-	//fprintf(stderr,"FIND_FILL_POINT(%d,%d) s(%d,%d)\n", mid_x, mid_y, size_x, size_y);
 	if (size_x < 0 || size_y < 0)
 		return 0;
 
@@ -1407,15 +1405,12 @@ _gfxr_find_fill_point(gfxr_pic_t *pic, int min_x, int min_y, int max_x, int max_
 
 	TEST_POINT(x_320, y_200); /* Most likely candidate */
 	TEST_POINT(mid_x, mid_y); /* Second most likely candidate */
-	//fprintf(stderr,"max_size = %d\n", max_size);
-	/* Now check all surrounding rectangles */
+
 	for (size = 1; size <= max_size; size++) {
 		int i;
-		//fprintf(stderr,"Seek size %d (%d,%d)\n", size, mid_x, mid_y);
 
 		if (size <= size_y) {
 			int limited_size = (size > size_x)? size_x : size;
-			//fprintf(stderr,"x in [%d,%d] on lines %d,%d\n", mid_x - limited_size, mid_x + limited_size, mid_y - size, mid_y + size);
 
 			for (i = mid_x - limited_size; i <= mid_x + limited_size; i++) {
 				TEST_POINT(i, mid_y - size);
@@ -1425,7 +1420,6 @@ _gfxr_find_fill_point(gfxr_pic_t *pic, int min_x, int min_y, int max_x, int max_
 
 		if (size <= size_x) {
 			int limited_size = (size - 1 > size_y)? size_y : size - 1;
-			//fprintf(stderr,"y in [%d,%d] on columns %d,%d\n", mid_y - limited_size, mid_y + limited_size, mid_x - size, mid_x + size);
 
 			for (i = mid_y - limited_size; i <= mid_y + limited_size; i++) {
 				TEST_POINT(mid_x - size, i);
