@@ -63,11 +63,11 @@ typedef struct {
 
 
 /* Keycodes of special keys: */
-#define SCI_K_ESC 27
-#define SCI_K_BACKSPACE 8
-#define SCI_K_ENTER 13
-#define SCI_K_TAB '\t'
-#define SCI_K_SHIFT_TAB (0xf << 8)
+#define SCI_K_ESC		27
+#define SCI_K_BACKSPACE	8
+#define SCI_K_ENTER		13
+#define SCI_K_TAB		'\t'
+#define SCI_K_SHIFT_TAB	(0xf << 8)
 
 #define SCI_K_END (79 << 8)
 #define SCI_K_DOWN (80 << 8)
@@ -91,6 +91,12 @@ typedef struct {
 #define SCI_K_F8 (66<<8)
 #define SCI_K_F9 (67<<8)
 #define SCI_K_F10 (68<<8)
+
+#define SCI_K_PLUS		'+'
+#define SCI_K_MINUS		'-'
+#define SCI_K_MULTIPLY	'*'
+#define SCI_K_DIVIDE	'/'
+#define SCI_K_EQUALS	'='
 
 /*Values for buckybits */
 #define SCI_EVM_RSHIFT          (1<<0)

@@ -71,7 +71,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FSCI_DLL_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /GR /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D "_DEBUG" /D "DEBUG_SOUND_SERVER" /D PACKAGE=\"FreeSCI\" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "_WINDOWS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D VERSION=__TIMESTAMP__ /D "HAVE_MEMCHR" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /GR /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D "_DEBUG" /D "DEBUG_SOUND_SERVER" /D PACKAGE=\"FreeSCI\" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "_WINDOWS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D VERSION=__TIMESTAMP__ /D "HAVE_MEMCHR" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /D "HAVE_DIRECTX" /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0xc09 /d "_DEBUG"
@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ole32.lib /nologo /dll /incremental:no /debug /machine:I386 /out:"Debug\fsci.dll" /pdbtype:sept /fixed:no
+# ADD LINK32 SDL.lib d3d8.lib dxerr8.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ole32.lib /nologo /dll /incremental:no /debug /machine:I386 /out:"Debug\fsci.dll" /pdbtype:sept /fixed:no
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "fsci_dll - Win32 Purify"
@@ -255,6 +255,10 @@ SOURCE=..\gfx\drivers\dd_driver.cpp
 # Begin Source File
 
 SOURCE=..\gfx\drivers\dd_driver_line.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\gfx\drivers\dx_driver.cpp
 # End Source File
 # Begin Source File
 

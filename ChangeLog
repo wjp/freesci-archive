@@ -1,3 +1,11 @@
+2003-01-13  Alexander Angas  <wgd@internode.on.net>
+
+	* src/gfx/drivers/gfx_drivers.c:
+	* src/include/uinput.h:
+	* src/win32/fsci_dll.dsp:
+	* src/gfx/drivers/dx_driver.cpp: Added DirectX 8.0a driver and
+	support.
+
 2003-01-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* AUTHORS, THANKS, src/engine/kmenu.c: Added Ruediger Hanke and
@@ -85,7 +93,7 @@
 
 	* src/sound/thread_ss_sdl.c (sound_sdl_command): Song initialization
 	now dups the memory block rather than relying on sharing. Still un-
-	fortunate that 
+	fortunate that
 
 2002-12-30  Christoph Reichenbach  <jameson@linuxgames.com>
 
@@ -193,7 +201,7 @@
 
 2002-12-12  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
-	* src/engine/game.c, src/engine/vm.c: Prevented inclusion of 
+	* src/engine/game.c, src/engine/vm.c: Prevented inclusion of
 	<sys/resource.h> for Dreamcast port.
 
 	* src/engine/kfile.c: Defined PATH_MAX for Dreamcast port.
@@ -232,7 +240,7 @@
 	4) Does not crash in several situations like naming a new game profile
 	identically to a previously existing one.
 
-	
+
 2002-11-13  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/tools/sciunpack.c (saidspec_dump): Added a feature for dumping
@@ -281,7 +289,7 @@
 	* src/engine/kpathing.c: New file.
 	* src/engine/klists.c (kSort): New kernel call. Not guaranteed to work.
 	* src/engine/kscrits.c (kLock): New kernel call.
-	
+
 2002-10-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/include/scitypes.h (sci_dir_t): Added Dreamcast definition.
@@ -360,8 +368,8 @@
 	* src/sound/sound.c:  Fix for missing midi patch.XXX file.
 	* src/sound/thread_ss_sdl.c:  Experimental fix for the high cpu
         usage problem.
-	
-	* src/sound/soundserver.h, src/sound/thread_ss_sdl.c, 
+
+	* src/sound/soundserver.h, src/sound/thread_ss_sdl.c,
 	  src/sound/polled_ss.c, src/sound/soundserver.c,
 	  src/sound/sound.c:   Lock sound resources when we're using 'em.
 
