@@ -1,5 +1,12 @@
 2001-03-17  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/scriptdebug.c (viewobjinfo): Improved objinfo output
+
+	* src/engine/kgraphics.c (kEditControl): Fixed cursor keys, ALT keys,
+	added A-d for "delete word"
+
+	* src/engine/kevent.c (sci_toupper): Shift-TAB is translated now
+
 	* src/engine/kgraphics.c (nsrect_clip): nsrect clipping now works as in
 	Sierra SCI
 	(GASEOUS_VIEW_MASK): any of NO_UPDATE, REMOVE, or IGNORE_ACTOR now

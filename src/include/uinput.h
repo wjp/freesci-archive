@@ -63,6 +63,8 @@ typedef struct {
 #define SCI_K_ESC 27
 #define SCI_K_BACKSPACE 8
 #define SCI_K_ENTER 13
+#define SCI_K_TAB '\t'
+#define SCI_K_SHIFT_TAB (0xf << 8)
 
 #define SCI_K_END (79 << 8)
 #define SCI_K_DOWN (80 << 8)
@@ -98,9 +100,11 @@ typedef struct {
 #define SCI_EVM_INSERT          (1<<7)
 
 
-extern long sci_clock_time;
-/* Time (in microseconds) in between two 'heart beats' */
-extern long sci_redraw_time;
-/* Time (in usecs) until the next SCI_EV_REDRAW can be sent */
+extern int
+scancode(int ch);
+/* Determines the PC 'scancode' for the specified character
+** Parameters: (int) ch: The character to translate
+** Returns   : (int) a matching scancode number
+*/
 
 #endif /* _SCI_UINPUT_H */

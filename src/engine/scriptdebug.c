@@ -646,31 +646,40 @@ int prop_ofs_to_id(state_t *s, int prop_ofs, int objp)
 }  
 
 void
-print_objname(state_t *s, heap_ptr pos)
+print_objname_wrapper(int foo)
 {
-  if ((pos < 4) || (pos > 0xfff0))
-    sciprintf("!invalid");
-  else {
-    if ((getInt16(s->heap + pos + SCRIPT_OBJECT_MAGIC_OFFSET)) != SCRIPT_OBJECT_MAGIC_NUMBER)
-      sciprintf("!non-object");
-    else {
-      word namepos = getUInt16(s->heap + pos + SCRIPT_NAME_OFFSET);
-      word type = getUInt16(s->heap + pos + SCRIPT_INFO_OFFSET);
+	if (foo == -1)
+		sciprintf("!invalid");
+	else if (foo == -2)
+		sciprintf("!non-object");}
 
-      if (type & SCRIPT_INFO_CLONE)
-	sciprintf("*");
-      else if (type & SCRIPT_INFO_CLASS)
-	sciprintf("%%");
-      else if (type != 0)
-	sciprintf("?[%04x]", type);
+int
+print_objname(state_t *s, heap_ptr pos, int address)
+{
+	if ((pos < 4) || (pos > 0xfff0))
+		return -1;
+	else {
+		if ((getInt16(s->heap + pos + SCRIPT_OBJECT_MAGIC_OFFSET)) != SCRIPT_OBJECT_MAGIC_NUMBER)
+			return -2;
+		else {
+			word namepos = getUInt16(s->heap + pos + SCRIPT_NAME_OFFSET);
+			word type = getUInt16(s->heap + pos + SCRIPT_INFO_OFFSET);
 
-      if (!namepos || !(*(s->heap + namepos)))
-	sciprintf("<???>");
-      else sciprintf(s->heap + namepos);
-    }
-  }
+			if (type & SCRIPT_INFO_CLONE)
+				sciprintf("*");
+			else if (type & SCRIPT_INFO_CLASS)
+				sciprintf("%%");
+			else if (type != 0)
+				sciprintf("?[%04x]", type);
 
-  sciprintf(" @%04x\n", pos);
+			if (!namepos || !(*(s->heap + namepos)))
+				sciprintf("<???>");
+			else sciprintf(s->heap + namepos);
+		}
+	}
+
+	if (address)
+		sciprintf(" @%04x\n", pos);
 }
 
 heap_ptr
@@ -1618,34 +1627,36 @@ c_mem_info(state_t *s)
 int
 c_objs(state_t *s)
 {
-  int i;
+	int i;
 
-  if (!s) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
+	if (!s) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
 
-  for (i = 0; i < 1000; i++)
-    if (s->scripttable[i].heappos) {
-      int seeker = s->scripttable[i].heappos;
-      int segment, size;
+	for (i = 0; i < 1000; i++)
+		if (s->scripttable[i].heappos) {
+			int seeker = s->scripttable[i].heappos;
+			int segment, size;
 
-      do {
-	segment = GET_HEAP(seeker);
-	size = GET_HEAP(seeker + 2);
+			do {
+				segment = GET_HEAP(seeker);
+				size = GET_HEAP(seeker + 2);
 
-	if (segment == sci_obj_object || segment == sci_obj_class)
-	  print_objname(s, seeker - SCRIPT_OBJECT_MAGIC_OFFSET + 4 /* to compensate for the header */);
+				if (segment == sci_obj_object || segment == sci_obj_class)
+					print_objname_wrapper(print_objname
+							      (s, seeker - SCRIPT_OBJECT_MAGIC_OFFSET + 4
+							       /* to compensate for the header */, 1));
 
-	seeker += size;
-      } while (segment && (seeker < 0xffff ));
-    }
+				seeker += size;
+			} while (segment && (seeker < 0xffff ));
+		}
 
-  for (i = 0; i < SCRIPT_MAX_CLONES; i++)
-    if (s->clone_list[i])
-      print_objname(s, s->clone_list[i]);
+	for (i = 0; i < SCRIPT_MAX_CLONES; i++)
+		if (s->clone_list[i])
+			print_objname_wrapper(print_objname(s, s->clone_list[i], 1));
 
-  return 0;
+	return 0;
 }
 
 
@@ -1663,98 +1674,205 @@ c_simsoundcue(state_t *s)
   return 0;
 }
 
+#define GETRECT(ll, rr, tt, bb) \
+ll = GET_SELECTOR(pos, ll); \
+rr = GET_SELECTOR(pos, rr); \
+tt = GET_SELECTOR(pos, tt); \
+bb = GET_SELECTOR(pos, bb);
+
+static void
+viewobjinfo(state_t *s, heap_ptr pos)
+{
+	char *signals[16] = {
+		"stop_update",
+		"updated",
+		"no_update",
+		"hidden",
+		"fixed_priority",
+		"always_update",
+		"force_update",
+		"remove",
+		"frozen",
+		"is_extra",
+		"hit_obstacle",
+		"doesnt_turn",
+		"no_cycler",
+		"ignore_horizon",
+		"ignore_actor",
+		"dispose!"
+	};
+
+	int x, y, z, priority;
+	int cel, loop, view, signal;
+	int nsLeft, nsRight, nsBottom, nsTop;
+	int lsLeft, lsRight, lsBottom, lsTop;
+	int brLeft, brRight, brBottom, brTop;
+	int i;
+	abs_rect_t nsrect, nsrect_clipped, brrect;
+
+	GETRECT(nsLeft, nsRight, nsBottom, nsTop);
+	GETRECT(lsLeft, lsRight, lsBottom, lsTop);
+	GETRECT(brLeft, brRight, brBottom, brTop);
+	GETRECT(view, loop, signal, cel);
+
+	sciprintf("\n-- View information:\ncel %d/%d/%d at ", view, loop, cel);
+
+	x = GET_SELECTOR(pos, x);
+	y = GET_SELECTOR(pos, y);
+	priority = GET_SELECTOR(pos, priority);
+	if (s->selector_map.z > 0) {
+		z = GET_SELECTOR(pos, z);
+		sciprintf("(%d,%d,%d)\n", x, y, z);
+	} else sciprintf("(%d,%d)\n", x, y);
+
+	if (priority == -1)
+		sciprintf("No priority.\n\n");
+	else
+		sciprintf("Priority = %d (band starts at %d)\n\n",
+			  priority, PRIORITY_BAND_FIRST(priority));
+
+	sciprintf("nsRect: [%d..%d]x[%d..%d]\n", nsLeft, nsRight, nsTop, nsBottom);
+	sciprintf("lsRect: [%d..%d]x[%d..%d]\n", lsLeft, lsRight, lsTop, lsBottom);
+	sciprintf("brRect: [%d..%d]x[%d..%d]\n", brLeft, brRight, brTop, brBottom);
+
+	nsrect = get_nsrect(s, pos);
+	nsrect_clipped = nsrect_clip(s, nsrect, priority);
+	brrect = set_base(s, pos);
+	sciprintf("new nsRect: [%d..%d]x[%d..%d]\n", nsrect.x, nsrect.xend,
+		  nsrect.y, nsrect.yend);
+	sciprintf("new clipped nsRect: [%d..%d]x[%d..%d]\n", nsrect_clipped.x,
+		  nsrect_clipped.xend, nsrect_clipped.y, nsrect_clipped.yend);
+	sciprintf("new brRect: [%d..%d]x[%d..%d]\n", brrect.x, brrect.xend,
+		  brrect.y, brrect.yend);
+	sciprintf("\n signals = %04x:\n", signal);
+
+	for (i = 0; i < 16; i++)
+		if (signal & (1 << i))
+			sciprintf("  %04x: %s\n", 1 << i, signals[i]);
+}
+
+#undef GETRECT
+
 int
 objinfo(state_t *s, heap_ptr pos)
 {
-  word type;
+	word type;
+	int is_view;
 
-  if ((pos < 4) || (pos > 0xfff0)) {
-    sciprintf("Invalid address.\n");
-    return 1;
-  }
-
-  if ((getInt16(s->heap + pos + SCRIPT_OBJECT_MAGIC_OFFSET)) != SCRIPT_OBJECT_MAGIC_NUMBER) {
-    sciprintf("Not an object.\n");
-    return 0;
-  }
-
-  type = getInt16(s->heap + pos + SCRIPT_INFO_OFFSET);
-
-  if (type & SCRIPT_INFO_CLONE)
-    sciprintf("Clone");
-  else if (type & SCRIPT_INFO_CLASS)
-    sciprintf("Class");
-  else if (type == 0)
-    sciprintf("Object");
-  else
-    sciprintf("Weird object");
-
-  {
-    word selectors, functions;
-    byte* selectorIDoffset;
-    byte* selectoroffset;
-    byte* functIDoffset;
-    byte* functoffset;
-    word localvarptr = getInt16(s->heap + pos + SCRIPT_LOCALVARPTR_OFFSET);
-    word species = getInt16(s->heap + pos + SCRIPT_SPECIES_OFFSET);
-    word superclass = getInt16(s->heap + pos + SCRIPT_SUPERCLASS_OFFSET);
-    word namepos = getInt16(s->heap + pos + SCRIPT_NAME_OFFSET);
-    int i;
-
-    sciprintf(" %s\n", s->heap + namepos);
-    sciprintf("Species=%04x, Superclass=%04x\n", species, superclass);
-    sciprintf("Local variables @ 0x%04x\n", localvarptr);
-    
-    selectors = getInt16(s->heap + pos + SCRIPT_SELECTORCTR_OFFSET);
-
-    selectoroffset = s->heap + pos + SCRIPT_SELECTOR_OFFSET;
-
-    if (type & SCRIPT_INFO_CLASS)
-      selectorIDoffset = selectoroffset + selectors * 2;
-    else
-      selectorIDoffset =
-	s->heap
-	+ *(s->classtable[species].scriptposp)
-	+ s->classtable[species].class_offset
-	+ SCRIPT_SELECTOR_OFFSET
-	+ selectors * 2;
-
-    functIDoffset = s->heap + pos + SCRIPT_FUNCTAREAPTR_MAGIC
-      + getUInt16(s->heap + pos + SCRIPT_FUNCTAREAPTR_OFFSET);
-
-    functions = getInt16(functIDoffset - 2);
-
-    functoffset = functIDoffset + 2 + functions * 2;
-
-    if (selectors > 0) {
-      sciprintf("Variable selectors:\n");
-
-      for (i = 0; i < selectors; i++) {
-	word selectorID = selectorIDoffset? getInt16(selectorIDoffset + i*2) : i;
-
-	sciprintf("  %s[%04x] = %04x\n", selectorIDoffset? selector_name(s, selectorID) : "<?>",
-		  selectorID, 0xffff & getInt16(selectoroffset + i*2));
-      }
-    } /* if variable selectors are present */
-
-
-    if (functions > 0) {
-      sciprintf("Method selectors:\n");
-
-      for (i = 0; i < functions; i++) {
-	word selectorID = getInt16(functIDoffset + i*2);
-
-	if (selectorID > s->selector_names_nr) {
-	  sciprintf("Invalid selector number: %04x!\n", selectorID);
-	  return 0;
+	if ((pos < 4) || (pos > 0xfff0)) {
+		sciprintf("Invalid address.\n");
+		return 1;
 	}
 
-	sciprintf("  %s[%04x] at %04x\n", s->selector_names[selectorID], selectorID,
-		  0xffff & getInt16(functoffset + i*2));
-      }
-    } /* if function selectors are present */
-  }
-  return 0;
+	if ((getInt16(s->heap + pos + SCRIPT_OBJECT_MAGIC_OFFSET)) != SCRIPT_OBJECT_MAGIC_NUMBER) {
+		sciprintf("Not an object.\n");
+		return 0;
+	}
+
+	type = getInt16(s->heap + pos + SCRIPT_INFO_OFFSET);
+
+	if (type & SCRIPT_INFO_CLONE)
+		sciprintf("Clone");
+	else if (type & SCRIPT_INFO_CLASS)
+		sciprintf("Class");
+	else if (type == 0)
+		sciprintf("Object");
+	else
+		sciprintf("Weird object");
+
+	{
+		word selectors, functions;
+		byte* selectorIDoffset;
+		byte* selectoroffset;
+		byte* functIDoffset;
+		byte* functoffset;
+		word localvarptr = getInt16(s->heap + pos + SCRIPT_LOCALVARPTR_OFFSET);
+		word species = getInt16(s->heap + pos + SCRIPT_SPECIES_OFFSET);
+		word superclass = getInt16(s->heap + pos + SCRIPT_SUPERCLASS_OFFSET);
+		word namepos = getInt16(s->heap + pos + SCRIPT_NAME_OFFSET);
+		int i;
+
+		sciprintf(" %s\n", s->heap + namepos);
+		sciprintf("Species=%04x, Superclass=%04x\n", species, superclass);
+		sciprintf("Local variables @ 0x%04x\n", localvarptr);
+    
+		selectors = getInt16(s->heap + pos + SCRIPT_SELECTORCTR_OFFSET);
+
+		selectoroffset = s->heap + pos + SCRIPT_SELECTOR_OFFSET;
+
+		if (type & SCRIPT_INFO_CLASS)
+			selectorIDoffset = selectoroffset + selectors * 2;
+		else
+			selectorIDoffset =
+				s->heap
+				+ *(s->classtable[species].scriptposp)
+				+ s->classtable[species].class_offset
+				+ SCRIPT_SELECTOR_OFFSET
+				+ selectors * 2;
+
+		functIDoffset = s->heap + pos + SCRIPT_FUNCTAREAPTR_MAGIC
+			+ getUInt16(s->heap + pos + SCRIPT_FUNCTAREAPTR_OFFSET);
+
+		functions = getInt16(functIDoffset - 2);
+
+		functoffset = functIDoffset + 2 + functions * 2;
+
+		if (selectors > 0) {
+			sciprintf("Variable selectors:\n");
+
+			for (i = 0; i < selectors; i++) {
+				word selectorID = selectorIDoffset? getInt16(selectorIDoffset + i*2) : i;
+				word value = 0xffff & getUInt16(selectoroffset + i*2);
+				int svalue = getInt16(selectoroffset + i*2);
+
+				sciprintf("  %s[%04x] = %04x ", selectorIDoffset? selector_name(s, selectorID) : "<?>",
+					  selectorID, value);
+				if (value < 0x1000 || (value > 0xf000))
+					sciprintf("(%d)", svalue);
+				else {
+					heap_ptr stackend =
+						s->execution_stack[s->execution_stack_pos].sp;
+
+					if (value > s->stack_base && value < stackend)
+						sciprintf("<stack addr>");
+					else if (listp(s, value))
+						sciprintf("<list>");
+					else print_objname(s, value, 0);
+				}
+				sciprintf("\n");
+			}
+		} /* if variable selectors are present */
+
+
+		if (functions > 0) {
+			sciprintf("Method selectors:\n");
+
+			for (i = 0; i < functions; i++) {
+				word selectorID = getInt16(functIDoffset + i*2);
+
+				if (selectorID > s->selector_names_nr) {
+					sciprintf("Invalid selector number: %04x!\n", selectorID);
+					return 0;
+				}
+
+				sciprintf("  %s[%04x] at %04x\n", s->selector_names[selectorID], selectorID,
+					  0xffff & getInt16(functoffset + i*2));
+			}
+		} /* if function selectors are present */
+	}
+	is_view =
+		(lookup_selector(s, pos, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE)
+		&&
+		(lookup_selector(s, pos, s->selector_map.lsBottom, NULL) == SELECTOR_VARIABLE)
+		&&
+		(lookup_selector(s, pos, s->selector_map.brBottom, NULL) == SELECTOR_VARIABLE)
+		&&
+		(lookup_selector(s, pos, s->selector_map.signal, NULL) == SELECTOR_VARIABLE);
+
+	if (is_view)
+		viewobjinfo(s, pos);
+
+	return 0;
 }
 
 int

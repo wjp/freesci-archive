@@ -40,7 +40,7 @@ struct {
 	{0x2c, "ZXCVBNM,./"}
 };
 
-static int
+int
 scancode(int ch) /* Calculates a PC keyboard scancode from a character */
 {
 	int row;
@@ -75,6 +75,7 @@ sci_toupper(int c)
 		return shifted_numbers[c-'0'];
 
 	switch (c) {
+	case SCI_K_TAB: return SCI_K_SHIFT_TAB;
 	case '`': return '~';
 	case '-': return '_';
 	case '=': return '+';
@@ -124,6 +125,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	switch(e.type)
 		{
 		case SCI_EVT_KEYBOARD: {
+
 			if ((e.buckybits & SCI_EVM_LSHIFT) && (e.buckybits & SCI_EVM_RSHIFT)
 			    && (e.data == '-')) {
 
@@ -157,6 +159,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				s->acc=1;
 				PUT_SELECTOR(obj, message, e.data);
 				PUT_SELECTOR(obj, modifiers, e.buckybits);
+
 			}
 		} break;
 		case SCI_EVT_MOUSE_RELEASE:

@@ -28,11 +28,11 @@
 #include <engine.h>
 
 
-static inline int
+inline int
 listp(state_t *s, heap_ptr address)
 {
 	int size = UGET_HEAP(address);
-	return (size == 6 || size == 8);
+	return (size == 6 || size == 8 || size == 10);
 }
 
 

@@ -203,6 +203,14 @@ kernel_lookup_text(struct _state *s, int address, int index);
 
 
 int
+listp(struct _state *s, heap_ptr address);
+/* Determines whether the object at <address> is a list
+** Parameters: (state_t *) s: The state to use
+**             (heap_ptr) address: The address to check
+** Returns   : (int) 0 if not, non-zero if it is a list.
+*/
+
+int
 is_object(struct _state *s, heap_ptr offset);
 /* Checks whether a heap address contains an object
 ** Parameters: (state_t *) s: The current state
@@ -271,6 +279,32 @@ kernel_oops(struct _state *s, char *file, int line, char *reason);
 
 
 /******************** Dynamic view list functions ********************/
+
+abs_rect_t
+set_base(struct _state *s, heap_ptr object);
+/* Determines the base rectangle of the specified view object
+** Parameters: (state_t *) s: The state to use
+**             (heap_ptr) object: The object to check
+** Returns   : (abs_rect) The absolute base rectangle
+*/
+
+abs_rect_t
+get_nsrect(struct _state *s, heap_ptr object);
+/* Determines the now-seen rectangle of a view object
+** Parameters: (state_t *) s: The state to use
+**             (heap_ptr) object: The object to check
+** Returns   : (abs_rect) The absolute rectangle describing the
+** now-seen area.
+*/
+
+abs_rect_t
+nsrect_clip(struct _state *s, abs_rect_t rect, int priority);
+/* Clips a now-seen rectangle against a priority band
+** Parameters: (state_t *) s: The state to use
+**             (abs_rect_t) rect: The nsrect to clip
+**             (int) priority: The priority band to clip against
+** Returns   : (abs_rect_t) The clipped rectangle
+*/
 
 void
 _k_dyn_view_list_prepare_change(struct _state *s);

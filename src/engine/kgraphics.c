@@ -780,17 +780,17 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 }
 
-
-static inline abs_rect_t
-set_base(state_t *s, heap_ptr object);
-
-static inline abs_rect_t
-get_nsrect(state_t *s, heap_ptr object);
-
-static inline abs_rect_t
-nsrect_clip(state_t *s, abs_rect_t rect, int priority);
-
 #define GASEOUS_VIEW_MASK (_K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)
+
+inline abs_rect_t
+set_base(struct _state *s, heap_ptr object);
+
+inline abs_rect_t
+get_nsrect(struct _state *s, heap_ptr object);
+
+inline abs_rect_t
+nsrect_clip(struct _state *s, abs_rect_t rect, int priority);
+
 
 static inline int
 collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int funct_nr, int argc, heap_ptr argp)
@@ -830,29 +830,31 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	gfxw_port_t *port = s->port;
 	word signal;
 
-	int x = GET_SELECTOR(obj, brLeft);
-	int y = GET_SELECTOR(obj, brTop);
-	int xend = GET_SELECTOR(obj, brRight);
-	int yend = GET_SELECTOR(obj, brBottom);
-	int xl = xend - x;
-	int yl = yend - y;
-	rect_t zone = gfx_rect(x + port->zone.x, y + port->zone.y, xl, yl);
+	int priority = GET_SELECTOR(obj, priority);
 	abs_rect_t abs_zone = set_base(s, obj);
+	rect_t zone = gfx_rect(abs_zone.x + port->zone.x, abs_zone.y + port->zone.y,
+			       abs_zone.xend - abs_zone.x, abs_zone.yend - abs_zone.y);
 	word edgehit;
 
+	abs_zone = nsrect_clip(s, get_nsrect(s, obj), priority);
+
 	signal = UGET_SELECTOR(obj, signal);
-	SCIkdebug(SCIkBRESEN,"Checking collision: (%d,%d) to (%d,%d), obj=%04x, sig=%04x, cliplist=%04x\n",
-		  x, y, xend, yend, obj, signal, cliplist);
+	SCIkdebug(SCIkBRESEN,"Checking collision: (%d,%d) to (%d,%d) ([%d..%d]x[%d..%d]), obj=%04x, sig=%04x, cliplist=%04x\n",
+		  GFX_PRINT_RECT(zone),
+		  abs_zone.x, abs_zone.xend, abs_zone.y, abs_zone.yend, obj, signal, cliplist);
 
 	s->acc = !(((word)GET_SELECTOR(obj, illegalBits))
 		   & (edgehit = gfxop_scan_bitmask(s->gfx_state, zone, GFX_MASK_CONTROL)));
 
 	SCIkdebug(SCIkBRESEN, "edgehit = %04x\n", edgehit);
-	if (s->acc == 0)
+	if (s->acc == 0) {
+		SCIkdebug(SCIkBRESEN, " -> %04x\n", s->acc);
 		return; /* Can'tBeHere */
+	}
 
 	if (signal & GASEOUS_VIEW_MASK) {
 		s->acc= signal & GASEOUS_VIEW_MASK; /* CanBeHere- it's either being disposed, or it ignores actors anyway */
+		SCIkdebug(SCIkBRESEN, " -> %04x\n", s->acc);
 		return; /* CanBeHere */
 	}
 
@@ -865,8 +867,10 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			heap_ptr other_obj = UGET_HEAP(node + LIST_NODE_VALUE);
 			if (other_obj != obj) { /* Clipping against yourself is not recommended */
 
-				if (collides_with(s, abs_zone, other_obj, funct_nr, argc, argp))
-				    return;
+				if (collides_with(s, abs_zone, other_obj, funct_nr, argc, argp)) {
+					SCIkdebug(SCIkBRESEN, " -> %04x\n", s->acc);
+					return;
+				}
 
 			} /* if (other_obj != obj) */
 			node = GET_HEAP(node + LIST_NEXT_NODE); /* Move on */
@@ -1005,7 +1009,6 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	s->acc = gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart, ystart + 10, xlen, ylen), map);
 
-
 	/* Apparently invalid
 	if (s->dyn_views) {
 		gfxw_dyn_view_t *view = (gfxw_dyn_view_t *) s->dyn_views->contents;
@@ -1117,7 +1120,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
 
-static inline abs_rect_t
+inline abs_rect_t
 set_base(state_t *s, heap_ptr object)
 {
 	int x, y, original_y, z, ystep, xsize, ysize;
@@ -1198,7 +1201,7 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 } /* kBaseSetter */
 
 
-static inline abs_rect_t
+inline abs_rect_t
 get_nsrect(state_t *s, heap_ptr object)
 {
 	int x, y, z;
@@ -1276,7 +1279,7 @@ kSetNowSeen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 } /* kSetNowSeen */
 
 
-static inline
+inline
 abs_rect_t nsrect_clip(state_t *s, abs_rect_t rect, int priority)
 {
 	int pri_top = PRIORITY_BAND_FIRST(priority);
@@ -1352,7 +1355,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				int max = GET_SELECTOR(obj, max);
 				int cursor = GET_SELECTOR(obj, cursor);
 				int modifiers = GET_SELECTOR(event, modifiers);
-				byte key = GET_SELECTOR(event, message);
+				int key = GET_SELECTOR(event, message);
 
 				char *text = s->heap + UGET_SELECTOR(obj, text);
 				int textlen = strlen(text);
@@ -1375,9 +1378,22 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 				} else if (modifiers & SCI_EVM_ALT) { /* Ctrl has precedence over Alt */
 
-					switch (tolower(key)) {
-					case 'f': while ((cursor < textlen) && (text[cursor++] != ' ')); break;
-					case 'b': while ((cursor > 0) && (text[--cursor - 1] != ' ')); break;
+					switch (key) {
+					case 0x2100 /* A-f */: while ((cursor < textlen) && (text[cursor++] != ' ')); break;
+					case 0x3000 /* A-b */: while ((cursor > 0) && (text[--cursor - 1] != ' ')); break;
+					case 0x2000 /* A-d */: {
+
+						while ((cursor < textlen) && (text[cursor] == ' ')) {
+							_K_EDIT_DELETE;
+							textlen--;
+						}
+
+						while ((cursor < textlen) && (text[cursor] != ' ')) {
+							_K_EDIT_DELETE;
+							textlen--;
+						}
+						break;
+					}
 					}
 					PUT_SELECTOR(event, claimed, 1);
 
@@ -1391,7 +1407,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 						PUT_SELECTOR(event, claimed, 0);
 					}
 
-				} else if ((key >= SCI_K_HOME) && (key <= SCI_K_DELETE)) {
+				} else if (key & 0xff00) {
 
 					switch(key) {
 					case SCI_K_HOME: cursor = 0; break;
@@ -1564,26 +1580,12 @@ static inline void
 draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, int base_set, int funct_nr, int argc, int argp)
 {
 	int priority = view->color.priority; 
-	int pri_top = PRIORITY_BAND_FIRST(priority);
-	int top, bottom, right, left;
+	abs_rect_t abs_zone;
 	int has_nsrect = (view->ID <=0)? 0 : lookup_selector(s, view->ID, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
 
 	if (has_nsrect) {
 		int obj = view->ID;
-
-		top = GET_SELECTOR(obj, nsTop);
-		bottom = GET_SELECTOR(obj, nsBottom);
-		left = GET_SELECTOR(obj, nsLeft);
-		right = GET_SELECTOR(obj, nsRight);
-
-		if (top < pri_top && pri_top_management)
-			top = pri_top;
-
-		if (bottom < top) {
-			int foo = top;
-			top = bottom;
-			bottom = foo;
-		}
+		abs_zone = nsrect_clip(s, get_nsrect(s, obj), priority);
 
 	} else if (!base_set) {
 		int width, height;
@@ -1592,16 +1594,12 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, i
 		GFX_ASSERT(gfxop_get_cel_parameters(s->gfx_state, view->view, view->loop, view->cel,
 						    &width, &height, &offset));
 
-		left = view->pos.x + offset.x - (width >> 1);
-		right = left + width;
-		bottom = view->pos.y + offset.y + 1;
-		top = bottom - height;
+		abs_zone.x = view->pos.x + offset.x - (width >> 1);
+		abs_zone.xend = abs_zone.x + width;
+		abs_zone.yend = view->pos.y + offset.y + 1;
+		abs_zone.y = abs_zone.yend - height;
 	} else {
-		abs_rect_t abs_bounds = set_base(s, (heap_ptr) view->ID);
-		top = abs_bounds.x;
-		left = abs_bounds.y;
-		bottom = abs_bounds.xend;
-		right = abs_bounds.yend;
+		abs_zone = nsrect_clip(s, get_nsrect(s, view->ID), priority);
 	}
 
 	if (!(view->signalp && (GET_HEAP(view->signalp) & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {
@@ -1610,11 +1608,13 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, i
 
 		gfxop_set_color(s->gfx_state, &color, -1, -1, -1, -1, -1, 0xf);
 
-		SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n", left, top,
-			  right, bottom);
+		SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n",
+			  abs_zone.x, abs_zone.y, abs_zone.xend, abs_zone.yend);
 
 		box = gfxw_new_box(s->gfx_state, 
-				   gfx_rect(left, top, right - left + 1, bottom - top + 1),
+				   gfx_rect(abs_zone.x, abs_zone.y,
+					    abs_zone.xend - abs_zone.x + 1,
+					    abs_zone.yend - abs_zone.y + 1),
 				   color, color, GFX_BOX_SHADE_FLAT);
 
 		assert_primary_widget_lists(s);
