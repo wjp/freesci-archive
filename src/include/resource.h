@@ -118,8 +118,10 @@
 #endif
 
 
+#ifdef HAVE_FCNTL_H
+#  include <fcntl.h>
+#endif
 #include <errno.h>
-#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>

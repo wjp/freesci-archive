@@ -169,6 +169,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, reg_t *argv)
 	int oldx, oldy, destx, desty, dx, dy, bdi, bi1, bi2, movcnt, bdelta, axis;
 	word signal = GET_SEL32V(client, signal);
 	int completed = 0;
+	int max_movcnt = GET_SEL32V(client, moveSpeed);
 
 	if (SCI_VERSION_MAJOR(s->version)>0)
 		signal&=~_K_VIEW_SIG_FLAG_HIT_OBSTACLE;
@@ -250,6 +251,12 @@ kDoBresen(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 		SCIkdebug(SCIkBRESEN, "Finished mover "PREG" by collision\n", PRINT_REG(mover));
 		completed = 1;
+	} else {
+		++movcnt;
+		if (movcnt > max_movcnt)
+			movcnt = 0;
+
+		PUT_SEL32V(mover, b_movCnt, movcnt); /* Needed for HQ1/Ogre? */
 	}
 
 	if (SCI_VERSION_MAJOR(s->version)>0)

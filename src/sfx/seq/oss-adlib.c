@@ -353,7 +353,7 @@ midi_adlib_set_option(char *name, char *value)
 sfx_sequencer_t sfx_sequencer_oss_adlib = {
 	"adlib",
 	"0.1",
-	NULL, /* No device dependancy-- fixme, this might becomde ossseq */
+	SFX_DEVICE_NONE, /* No device dependancy-- fixme, this might becomde ossseq */
 	&midi_adlib_set_option,
 	&midi_adlib_open,
 	&midi_adlib_close,

@@ -131,8 +131,8 @@ struct {
 	 "Paul David Doherty\nGame version information\n\n"
 	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements\n\n"
 	 "Rainer Canavan\nIRIX MIDI driver and bug fixes\n\n"
-	 "Rainer De Temple\nSCI research"
-	 "Ravi I.\nSCI0 sound resource specification\n\n",
+	 "Rainer De Temple\nSCI research\n\n"
+	 "Ravi I.\nSCI0 sound resource specification",
 	 0, 15},
 	{"Still more of them",
 	 "Rune Orsval\nConfiguration file editor\n\n"
@@ -140,7 +140,7 @@ struct {
 	 "Rink Springer\nPort to the DOS platform, several bug fixes\n\n"
 	 "Robey Pointer\nBug tracking system hosting\n\n"
 	 "Sergey Lapin\nPort of Carl's type 2 decompression code\n\n"
-	 "Solomon Peachy\nSDL ports and much of the sound subsystem"
+	 "Solomon Peachy\nSDL ports and much of the sound subsystem\n\n"
 	 "Vyacheslav Dikonov\nConfig script improvements",
 	 0, 15},
 	{"The CSCI5573 Team at CU Boulder",

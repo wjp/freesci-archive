@@ -911,7 +911,6 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 
 	s->acc = gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart, ystart + 10, xlen, ylen), map);
-
 }
 
 void
@@ -1878,12 +1877,6 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, list_t *list, int optio
 
 				SCIkdebug(SCIkGRAPHICS, "  invoking "PREG"::doit()\n", PRINT_REG(obj));
 				invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
-
-				if (s->pic_is_new) {
-					SCIkwarn(SCIkWARNING, "Warning: new pic"
-						 " or port used within Animate()!\n");
-					return;
-				}
 			}
 		}
 
@@ -2341,10 +2334,6 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	x = PARAM(1);
 	yl = PARAM(2) - y;
 	xl = PARAM(3) - x;
-
-	s->pic_is_new = 1; /* Well, it's different, at any rate... */
-	/* This is for Animate(), to inform it if one of its doit()s is responsible
-	** for the window being opened- in this case, we restart Animate().  */
 
 	y += s->wm_port->bounds.y - 1;
 

@@ -120,6 +120,9 @@ static int
 rt_init(resource_mgr_t *resmgr)
 {
 	resource_t *res = NULL;
+	void *seq_res = NULL;
+	void *seq_dev = NULL;
+
 	timer = sfx_find_timer(NULL);
 	seq = sfx_find_sequencer(NULL);
 
@@ -141,14 +144,18 @@ rt_init(resource_mgr_t *resmgr)
 		}
 	}
 
+	if (seq->device)
+		seq_dev = sfx_find_device(seq->device, NULL);
+
 	if (seq->open(res? res->size : 0,
 		      res? res->data : NULL,
-		      NULL)) {
+		      seq_dev)) {
 		fprintf(stderr, "[SFX] " __FILE__": Sequencer failed to initialize\n");
 		return SFX_ERROR;
 	}
 
-	if (timer->init(_rt_timer_callback, NULL)) {
+
+	if (timer->init(_rt_timer_callback, seq_res)) {
 		fprintf(stderr, __FILE__": Timer failed to initialize\n");
 		seq->close();
 		return SFX_ERROR;

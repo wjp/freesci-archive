@@ -1,5 +1,5 @@
 /***************************************************************************
- sequencers.c Copyright (C) 2002 Christoph Reichenbach
+ devices.c  Copyright (C) 2002 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -25,40 +25,68 @@
 
 ***************************************************************************/
 
-#include <sfx_sequencer.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+#include <sfx_device.h>
+#include <stdio.h>
 
-
-sfx_sequencer_t sfx_sequencer_mt32;
-
-#ifdef HAVE_SYS_SOUNDCARD_H
-sfx_sequencer_t sfx_sequencer_oss_adlib;
+#ifdef HAVE_ALSA
+extern struct _midi_device sfx_device_midi_alsa;
 #endif
 
 
-sfx_sequencer_t *sfx_sequencers[] = {
-	&sfx_sequencer_mt32,
-#ifdef HAVE_SYS_SOUNDCARD_H
-	&sfx_sequencer_oss_adlib,
+static struct _midi_device *devices_midi[] = {
+#ifdef HAVE_ALSA
+		&sfx_device_midi_alsa,
 #endif
+		NULL
+};
+
+static struct _midi_device *devices_opl2[] = {
 	NULL
 };
 
 
-sfx_sequencer_t *
-sfx_find_sequencer(char *name)
+/** -- **/
+
+struct _midi_device **devices[] = {
+	NULL, /* No device */
+	devices_midi,
+	devices_opl2,
+};
+
+
+static struct _midi_device *
+find_dev(int type, char *name)
 {
-	if (!name) {
-		/* Implement default policy for your platform (if any) here, or in a function
-		** called from here (if it's non-trivial). Try to use midi_devices[0], if
-		** feasible. */
+	int i = 0;
 
-		return sfx_sequencers[0]; /* default */
-	} else {
-		int n = 0;
-		while (sfx_sequencers[n]
-		       && strcasecmp(sfx_sequencers[n], name))
-		       ++ n;
+	if (!type)
+		return NULL;
 
-		return sfx_sequencers[n];
+	if (!name)
+		return devices[type][0];
+
+	while (devices[type][i] && !strcmp(name, devices[type][i]->name))
+		++i;
+
+	return devices[type][i];
+}
+
+
+void *
+sfx_find_device(int type, char *name)
+{
+	struct _midi_device *dev = find_dev(type, name);
+
+	if (dev) {
+		if (dev->init(dev)) {
+			fprintf(stderr, "[SFX] Opening device '%s' failed\n",
+				dev->name);
+			return NULL;
+		}
+
+		return dev;
 	}
 }

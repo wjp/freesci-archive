@@ -12,6 +12,7 @@ AC_PROG_RANLIB
 #AM_PROG_LIBTOOL
 #AC_PROG_LIBTOOL
 AC_CHECK_HEADERS(limits.h)
+AC_CHECK_HEADERS(fcntl.h)
 AC_CHECK_HEADERS(sys/uio.h)
 AC_CHECK_HEADERS(sys/soundcard.h)
 AC_CHECK_HEADERS(sys/time.h)
@@ -321,6 +322,7 @@ AC_CONFIG_FILES([Makefile    \
 	src/sfx/timer/Makefile \
 	src/sfx/seq/Makefile \
 	src/sfx/player/Makefile \
+	src/sfx/device/Makefile \
 	freesci.spec])
 
 AC_OUTPUT

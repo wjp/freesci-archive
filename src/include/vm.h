@@ -306,7 +306,7 @@ typedef struct {
 
 	selector_t looper, mover, isBlocked, heading; /* Used in DoAvoider */
 
-	selector_t caller, moveDone; /* Used for DoBresen */
+	selector_t caller, moveDone, moveSpeed; /* Used for DoBresen */
 
 	selector_t delete; /* Called by Animate() to dispose a view object */
 

@@ -1,3 +1,8 @@
+2002-12-28  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (_k_make_view_list): Forward-ported view list
+	changes
+
 2002-12-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/resmgr.c (gfxr_get_view): applied hash to views

@@ -28,6 +28,7 @@
 #endif /* HAVE_CONFIG_H */
 #include <scitypes.h>
 #include <stdio.h>
+#include <sfx_device.h>
 
 #define RHYTHM_CHANNEL 9
 
@@ -37,8 +38,7 @@ typedef struct _sfx_sequencer {
 	char *name;    /* Sequencer name */
 	char *version; /* Sequencer version */
 
-	char *device;  /* Device the sequencer depends on (linked by name), may be NULL.
-		       ** Several devices may be specified, separated by commas */
+	int device;  /* Type of device the sequencer depends on, may be SFX_DEVICE_NONE. */
 
 	int
 	(*set_option)(char *name, char *value);
