@@ -103,15 +103,12 @@ gfx_pixmap_color_t gfx_sci0_pic_colors[GFX_SCI0_PIC_COLORS_NR]; /* Initialized d
 
 static int _gfxr_pic0_colors_initialized = 0;
 
-/************************************/
-/************************************/
+#ifdef FILL_RECURSIVE_DEBUG
 /************************************/
 int fillc = 100000000;
-int fillrc = 3000000;
 int fillmagc = 30000000;
 /************************************/
-/************************************/
-/************************************/
+#endif
 
 /* Color mapping used while scaling embedded views. */
 gfx_pixmap_color_t embedded_view_colors[16] = {
@@ -160,6 +157,7 @@ gfxr_init_pic(gfx_mode_t *mode, int ID)
 								     200 * mode->yfact, ID, 0, 0));
 	pic->visual_map->colors = gfx_sci0_pic_colors;
 	pic->visual_map->colors_nr = GFX_SCI0_PIC_COLORS_NR;
+	pic->visual_map->color_key = GFX_PIXMAP_COLOR_KEY_NONE;
 
 	pic->visual_map->flags = GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
 	pic->priority_map->flags = GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
@@ -171,8 +169,10 @@ gfxr_init_pic(gfx_mode_t *mode, int ID)
 
 	pic->priority_map->colors = gfx_sci0_image_colors[sci0_palette];
 	pic->priority_map->colors_nr = GFX_SCI0_IMAGE_COLORS_NR;
+	pic->priority_map->color_key = GFX_PIXMAP_COLOR_KEY_NONE;
 	pic->control_map->colors = gfx_sci0_image_colors[sci0_palette];
 	pic->control_map->colors_nr = GFX_SCI0_IMAGE_COLORS_NR;
+	pic->control_map->color_key = GFX_PIXMAP_COLOR_KEY_NONE;
 
 	/* Initialize colors */
 	gfxr_init_static_palette();
@@ -327,6 +327,7 @@ _gfxr_auxbuf_line_clear(gfxr_pic_t *pic, rect_t line, int color)
 #undef LINEMACRO
 
 
+#ifdef WITH_PIC_SCALING
 static void
 _gfxr_auxbuf_propagate_changes(gfxr_pic_t *pic, int bitmask)
 {
@@ -352,6 +353,7 @@ _gfxr_auxbuf_propagate_changes(gfxr_pic_t *pic, int bitmask)
 		++data;
 	}
 }
+#endif
 
 
 static void
@@ -361,6 +363,11 @@ _gfxr_auxbuf_fill_helper(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy,
 	int xl, xr;
 	int oldytotal = y * 320;
 	unsigned char fillmask = 0x78;
+
+#ifndef WITH_PIC_SCALING
+	if (!control)
+		return; /* Without pic scaling, we only do this to fill the control map */
+#endif
 
 	do {
 		int ytotal = oldytotal + (320 * dy);
@@ -533,6 +540,7 @@ _gfxr_auxbuf_spread(gfxr_pic_t *pic, int *min_x, int *min_y, int *max_x, int *ma
 	*max_x = *max_y = -1;
 	*min_x = *min_y = 320;
 
+#ifdef FILL_RECURSIVE_DEBUG
 	if (!fillmagc) {
 		fprintf(stderr,"------------------------------------------------\n");
 		fprintf(stderr,"LineID:   ");
@@ -540,6 +548,7 @@ _gfxr_auxbuf_spread(gfxr_pic_t *pic, int *min_x, int *min_y, int *max_x, int *ma
 			fprintf(stderr,"  %d       ", i);
 		fprintf(stderr,"\n");
 	}
+#endif
 
 	for (y = 10; y < 200; y++) {
 		int ivi = y & 1; /* InterVal Index: Current intervals; !ivi is the list of old ones */
@@ -635,20 +644,17 @@ _gfxr_auxbuf_spread(gfxr_pic_t *pic, int *min_x, int *min_y, int *max_x, int *ma
 					}
 					i++;
 				}
-#if 0
-				if (!found_interval && y) /* No 'parent' interval? */
-					_gfxr_auxbuf_tag_line(pic, pos + xl - 320, xr - xl + 1);
-#endif
-
 				width = 0;
 			}
 
+#ifdef FILL_RECURSIVE_DEBUG
 		if (!fillmagc && intervals_nr) {
 			fprintf(stderr,"AI L#%03d:", y);
 			for (j = 0; j < intervals_nr; j++)
 				fprintf(stderr, "%c[%03d,%03d]", intervals[ivi][j].tag? ' ':'-', intervals[ivi][j].xl, intervals[ivi][j].xr);
 			fprintf(stderr,"\n");
 		}
+#endif
 
 		if (intervals_nr) {
 			if (y < *min_y)
@@ -1254,227 +1260,8 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color,
 
 #define IS_FILL_BOUNDARY(x) (((x) & legalmask) != legalcolor)
 
-static void
-_gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byte *bounds,
-		     int legalcolor, int legalmask, int color, int priority, int drawenable)
-{
-	int linewidth = pic->mode->xfact * 320;
-	int miny = pic->mode->yfact * SCI_TITLEBAR_SIZE;
-	int maxy = pic->mode->yfact * 200;
-	int xl, xr;
-	int oldytotal = y * linewidth;
-	int old_proj_y = -42;
-	int proj_y;
-	int proj_ytotal;
-	int proj_x;
-	int proj_xl_bound = 0;
-	int proj_xr_bound = 0;
 
-	do {
-		int ytotal = oldytotal + (linewidth * dy);
-		int xcont;
-		int state;
-
-		y += dy;
-		proj_y = y / pic->mode->yfact;
-
-		if (!fillc)
-			return;
-		else if (!fillmagc) { --fillc;
-		}
-
-		if (y < miny || y >= maxy) {
-#ifdef FILL_RECURSIVE_DEBUG
-			if (!fillmagc)
-				fprintf(stderr,"ABRT on failed initial assertion!\n");
-#endif
-			return;
-		}
-
-		if (proj_y != old_proj_y) {
-			/* First, find the projected coordinates, unless known already: */
-			proj_ytotal = proj_y * 320;
-			proj_x = old_xl / pic->mode->xfact;
-
-			proj_xl_bound = proj_x;
-			if (pic->aux_map[proj_ytotal + proj_xl_bound] & FRESH_PAINT) {
-				while (proj_xl_bound &&
-				       (pic->aux_map[proj_ytotal + proj_xl_bound - 1] & FRESH_PAINT))
-					--proj_xl_bound;
-			} else {
-				while (proj_xl_bound < 319 &&
-				       !(pic->aux_map[proj_ytotal + proj_xl_bound + 1] & FRESH_PAINT))
-					++proj_xl_bound;
-
-				if (proj_xl_bound < 319)
-					++proj_xl_bound;
-			}
-
-			if (proj_xl_bound == 319 && !(pic->aux_map[proj_ytotal + proj_xl_bound] & FRESH_PAINT)) {
-#ifdef FILL_RECURSIVE_DEBUG
-				if (!fillmagc)
-					fprintf(stderr,"ABRT because proj_xl_bound couldn't be found\n");
-#endif
-				return;
-			}
-
-			proj_xr_bound = (proj_xl_bound > proj_x)? proj_xl_bound : proj_x;
-			while ((proj_xr_bound < 319) &&
-			       (pic->aux_map[proj_ytotal + proj_xr_bound + 1] & FRESH_PAINT))
-				++proj_xr_bound;
-
-			if (!fillmagc) {
-				fprintf(stderr,"l%d: {%d,%d} | ", proj_y, proj_xl_bound, proj_xr_bound);
-				pic->aux_map[proj_y*320 + proj_xl_bound] |= 0x2;
-				pic->aux_map[proj_y*320 + proj_xr_bound] |= 0x2;
-			}
-
-			proj_xl_bound *= pic->mode->xfact;
-			if (proj_xl_bound)
-				proj_xl_bound -= pic->mode->xfact - 1;
-
-			if (proj_xr_bound < 319)
-				++proj_xr_bound;
-			proj_xr_bound *= pic->mode->xfact;
-			proj_xr_bound += pic->mode->xfact -1;
-
-			old_proj_y = proj_y;
-		}
-
-		/* Now we have the projected limits, get the real ones: */
-
-		xl = (old_xl > proj_xl_bound)? old_xl : proj_xl_bound;
-		if (!IS_FILL_BOUNDARY(bounds[ytotal + xl])) { /* go left as far as possible */
-			while (xl > proj_xl_bound && (!IS_FILL_BOUNDARY(bounds[ytotal + xl - 1])))
-				--xl;
-		} else /* go right until the fillable area starts */
-			while (xl < proj_xr_bound && (IS_FILL_BOUNDARY(bounds[ytotal + xl])))
-				++xl;
-
-
-#ifdef FILL_RECURSIVE_DEBUG
-		if (!fillmagc)
-			fprintf(stderr,"<%d,", xl);
-#endif
-
-		if ((xl > proj_xr_bound)
-		    || (xl > old_xr)) {
-#ifdef FILL_RECURSIVE_DEBUG
-			if (!fillmagc)
-				fprintf(stderr,"ABRT because xl > xr_bound\n");
-#endif
-			return;
-		}
-
-		xr = (xl > old_xl)? xl : old_xl;
-		while (xr < proj_xr_bound && (!IS_FILL_BOUNDARY(bounds[ytotal + xr + 1])))
-			++xr;
-
-#ifdef FILL_RECURSIVE_DEBUG
-		if (!fillmagc)
-			fprintf(stderr,"%d> -> ", xr);
-#endif
-
-		if (IS_FILL_BOUNDARY(bounds[ytotal + xl])) {
-#ifdef FILL_RECURSIVE_DEBUG
-			if (!fillmagc)
-				fprintf(stderr,"ABRT because xl illegal\n");
-#endif
-			return;
-		}
-
-		if (!fillmagc)
-			fprintf(stderr,"[%d[%d,%d]%d]\n", proj_xl_bound, xl, xr, proj_xr_bound);
-
-		if (xl < proj_xl_bound && xr - 3*pic->mode->xfact < proj_xl_bound) {
-#ifdef FILL_RECURSIVE_DEBUG
-			if (!fillmagc)
-				fprintf(stderr,"ABRT interval left of zone\n");
-#endif
-			return;
-		}
-
-		if (xr > proj_xr_bound && xl + 3*pic->mode->xfact > proj_xr_bound) {
-#ifdef FILL_RECURSIVE_DEBUG
-			if (!fillmagc)
-				fprintf(stderr,"ABRT because interval right of zone\n");
-#endif
-			return;
-		}
-
-		if (drawenable & GFX_MASK_VISUAL)
-			memset(pic->visual_map->index_data + ytotal + xl, color, xr - xl + 1);
-
-		if (drawenable & GFX_MASK_PRIORITY)
-			memset(pic->priority_map->index_data + ytotal + xl, priority, xr - xl + 1);
-
-
-		/* Check whether we need to recurse on branches in the same direction */
-		state = 0;
-		xcont = xr + 1;
-		while (xcont <= old_xr) {
-			if (IS_FILL_BOUNDARY(bounds[ytotal + xcont]))
-				state = xcont;
-			else if (state) { /* recurse */
-#ifdef FILL_RECURSIVE_DEBUG
-				if (!fillmagc)
-					fprintf(stderr, "[%d[%d,%d],%d]: rec BRANCH %d [%d,%d] l%d\n", old_xl, xl, xr, old_xr, dy,
-						state, xcont, y -dy);
-#endif
-				_gfxr_fill_recursive(pic, state, xcont, y - dy, dy, bounds, legalcolor,
-						     legalmask, color, priority, drawenable);
-				state = 0;
-			}
-			++xcont;
-		}
-
-		/* Check whether we need to recurse on backward branches: */
-		/* left */
-		if (xl < old_xl - 1) {
-			state = 0;
-			for (xcont = old_xl-1; xcont >= xl; xcont--) {
-				if (IS_FILL_BOUNDARY(bounds[oldytotal + xcont]))
-					state = xcont;
-				else if (state) { /* recurse */
-#ifdef FILL_RECURSIVE_DEBUG
-					if (!fillmagc)
-						fprintf(stderr, "[%d[%d,%d],%d]: rec BACK-LEFT %d [%d,%d] l%d\n", old_xl, xl, xr, old_xr, -dy,
-							xcont, state, y);
-#endif
-					_gfxr_fill_recursive(pic, xcont, state, y, -dy, bounds,
-							     legalcolor, legalmask, color, priority, drawenable);
-					state = 0;
-				}
-			}
-		}
-
-		/* right */
-		if (xr > old_xr + 1) {
-			state = 0;
-			for (xcont = old_xr + 1; xcont <= xr; xcont++) {
-				if (IS_FILL_BOUNDARY(bounds[oldytotal + xcont]))
-					state = xcont;
-				else if (state) { /* recurse */
-#ifdef FILL_RECURSIVE_DEBUG
-					if (!fillmagc)
-						fprintf(stderr, "[%d[%d,%d],%d]: rec BACK-RIGHT %d [%d,%d] l%d\n", old_xl, xl, xr, old_xr, -dy,
-							state, xcont, y);
-#endif
-					_gfxr_fill_recursive(pic, state, xcont, y, -dy, bounds,
-							     legalcolor, legalmask, color, priority, drawenable);
-					state = 0;
-				}
-			}
-		}
-
-		oldytotal = ytotal;
-		old_xl = xl;
-		old_xr = xr;
-
-	} while (1);
-}
-
-
+#ifdef WITH_PIC_SCALING
 
 #define TEST_POINT(xx, yy) \
   if (pic->aux_map[(yy)*320 + (xx)] & FRESH_PAINT) { \
@@ -1558,135 +1345,23 @@ _gfxr_find_fill_point(gfxr_pic_t *pic, int min_x, int min_y, int max_x, int max_
 
 #undef TEST_POINT
 
-static void
-_gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int control, int drawenable)
-{
-	int linewidth = pic->mode->xfact * 320;
-	int x, y;
-	int xl, xr;
-	int ytotal;
-	int bitmask;
-	byte *bounds = NULL;
-	int legalcolor, legalmask;
-	int min_x, min_y, max_x, max_y;
-	int original_drawenable = drawenable; /* Backup, since we need the unmodified value
-					      ** for filling the aux and control map  */
+/* Now include the actual filling code (with scaling support) */
+#define FILL_FUNCTION _gfxr_fill_any
+#define FILL_FUNCTION_RECURSIVE _gfxr_fill_any_recursive
+#define DRAW_SCALED
+#  include "sci_picfill.c"
+#undef DRAW_SCALED
+#undef FILL_FUNCTION_RECURSIVE
+#undef FILL_FUNCTION
 
-	/* Restrict drawenable not to restrict itself to zero */
-	if (pic->control_map->index_data[y_200 * 320 + x_320] != 0)
-		drawenable &= ~GFX_MASK_CONTROL;
+#endif /* defined(WITH_PIC_SCALING) */
 
-	if (color == 0xff)
-		drawenable &= ~GFX_MASK_VISUAL;
-
-	if (priority == 0) {
-		drawenable &= ~GFX_MASK_PRIORITY;
-		original_drawenable &= ~GFX_MASK_PRIORITY;
-	}
-
-	_gfxr_auxbuf_fill(pic, x_320, y_200, original_drawenable,
-			  (drawenable & GFX_MASK_CONTROL)? control : 0);
-	_gfxr_auxbuf_spread(pic, &min_x, &min_y, &max_x, &max_y);
-
-	if (_gfxr_find_fill_point(pic, min_x, min_y, max_x, max_y, x_320, y_200, color, drawenable, &x, &y)) {
-		/* GFXWARN("Could not find scaled fill point, but unscaled fill point was available!\n"); */
-		drawenable &= GFX_MASK_PRIORITY;
-		if (!drawenable)
-			_gfxr_auxbuf_propagate_changes(pic, 0);
-	}
-
-	ytotal = y * linewidth;
-
-	if (!drawenable)
-		return;
-
-	if (drawenable & GFX_MASK_VISUAL) {
-		bounds = pic->visual_map->index_data;
-		if ((color & 0xf) == 0xf /* When dithering with white, do more
-					 ** conservative checks  */
-		    || (color & 0xf0) == 0xf0)
-			legalcolor = 0xff;
-		else
-			legalcolor = 0xf0; /* Only check the second color */
-
-		legalmask = legalcolor;
-	} else if (drawenable & GFX_MASK_PRIORITY) {
-		bounds = pic->priority_map->index_data;
-		legalcolor = 0;
-		legalmask = 0xf;
-	} else {
-		legalcolor = 0;
-		legalmask = 0xf;
-	}
-
-	if (!bounds || IS_FILL_BOUNDARY(bounds[ytotal + x]))
-		return;
-
-	if (bounds) {
-		int proj_y = y_200;
-		int proj_ytotal = proj_y * 320;
-		int proj_x = x_320;
-		int proj_xl_bound;
-		int proj_xr_bound;
-		int proj_xl, proj_xr;
-
-		ytotal = y * linewidth;
-
-		proj_xl_bound = proj_x;
-		if (pic->aux_map[proj_ytotal + proj_xl_bound] & FRESH_PAINT) {
-			while (proj_xl_bound &&
-			       (pic->aux_map[proj_ytotal + proj_xl_bound - 1] & FRESH_PAINT))
-				--proj_xl_bound;
-		} else
-			while (proj_xl_bound < 319 &&
-			       !(pic->aux_map[proj_ytotal + proj_xl_bound + 1] & FRESH_PAINT))
-				++proj_xl_bound;
-
-		proj_xr_bound = (proj_xl_bound > proj_x)? proj_xl_bound : proj_x;
-		while ((proj_xr_bound < 319) &&
-		       (pic->aux_map[proj_ytotal + proj_xr_bound + 1] & FRESH_PAINT))
-			++proj_xr_bound;
-
-		proj_xl = proj_xl_bound;
-		proj_xr = proj_xr_bound;
-
-		proj_xl_bound *= pic->mode->xfact;
-		if (proj_xl_bound)
-			proj_xl_bound -= pic->mode->xfact -1;
-
-		if (proj_xr_bound < 319)
-			++proj_xr_bound;
-		proj_xr_bound *= pic->mode->xfact;
-		proj_xr_bound += pic->mode->xfact -1;
-
-		xl = x;
-		while (xl > proj_xl_bound && (!IS_FILL_BOUNDARY(bounds[ytotal + xl -1])))
-			--xl;
-
-		while (x < proj_xr_bound && (!IS_FILL_BOUNDARY(bounds[ytotal + x + 1])))
-			++x;
-		xr = x;
-
-		if (drawenable & GFX_MASK_VISUAL)
-			memset(pic->visual_map->index_data + ytotal + xl, color, xr - xl + 1);
-
-		if (drawenable & GFX_MASK_PRIORITY)
-			memset(pic->priority_map->index_data + ytotal + xl, priority, xr - xl + 1);
-
-		_gfxr_fill_recursive(pic, xl, xr, y, -1, bounds, legalcolor, legalmask, color, priority, drawenable);
-		_gfxr_fill_recursive(pic, xl, xr, y, +1, bounds, legalcolor, legalmask, color, priority, drawenable);
-	}
-
-	/* Now finish the aux buffer */
-	bitmask = drawenable &
-		(
-			((color != 0xff)? 1 : 0)
-			| ((priority)? 2 : 0)
-			| ((control)? 4 : 0)
-			);
-	if (fillmagc)
-		_gfxr_auxbuf_propagate_changes(pic, bitmask);
-}
+/* Include again, but this time without support for scaling */
+#define FILL_FUNCTION _gfxr_fill_1
+#define FILL_FUNCTION_RECURSIVE _gfxr_fill_1_recursive
+#  include "sci_picfill.c"
+#undef FILL_FUNCTION_RECURSIVE
+#undef FILL_FUNCTION
 
 
 #define GET_ABS_COORDS(x, y) \
@@ -1909,7 +1584,7 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 	int fill_count = 0;
 	byte op, opx;
 
-#ifdef GFXR_DEBUG_PIC0
+#ifdef FILL_RECURSIVE_DEBUG
 	fillmagc = atoi(getenv("FOO"));
 	fillc = atoi(getenv("FOO2"));
 #endif /* GFXR_DEBUG_PIC0 */
@@ -1941,11 +1616,6 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			}
 
 			color = palette[pal][index];
-#if 0
-#ifdef GFXR_DEBUG_PIC0
-			color &= 0x77;
-#endif
-#endif
 			p0printf("  color <- %02x [%d/%d]\n", color, pal, index);
 			drawenable |= GFX_MASK_VISUAL;
 			break;
@@ -2051,14 +1721,20 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 				GET_ABS_COORDS(x, y);
 				p0printf("Abs coords %d,%d\n", x, y);
 				/*fprintf(stderr,"C=(%d,%d)\n", x, y + SCI_TITLEBAR_SIZE);*/
-				_gfxr_fill(pic, x, y + SCI_TITLEBAR_SIZE, (fill_normally)? color : 0, priority, control, drawenable);
+#ifdef WITH_PIC_SCALING
+				if (pic->mode->xfact > 1
+				    || pic->mode->yfact > 1)
+					_gfxr_fill_any(pic, x, y + SCI_TITLEBAR_SIZE, (fill_normally)? color : 0, priority, control, drawenable);
+				else
+#endif
+				_gfxr_fill_1(pic, x, y + SCI_TITLEBAR_SIZE, (fill_normally)? color : 0, priority, control, drawenable);
 
 				if (fill_count++ > SCI_PIC0_MAX_FILL) {
 					sci_sched_yield();
 					fill_count = 0;
 				}
 
-#ifdef GFXR_DEBUG_PIC0
+#ifdef  FILL_RECURSIVE_DEBUG
 				if (!fillmagc) {
 					int x,y;
 					if (getenv("FOO1"))

@@ -224,6 +224,12 @@ _reset_graphics_input(state_t *s)
 int
 game_init_graphics(state_t *s)
 {
+#ifndef WITH_PIC_SCALING
+	if (s->gfx_state->options->pic0_unscaled == 0)
+		sciprintf("WARNING: Pic scaling was disabled; your version of FreeSCI has no support for scaled pic drawing built in.\n");
+
+	s->gfx_state->options->pic0_unscaled = 1;
+#endif
 	return _reset_graphics_input(s);
 }
 
