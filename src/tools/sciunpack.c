@@ -78,6 +78,7 @@
 #define ACT_LIST 2
 #define ACT_SCRIPTDUMP 3
 #define ACT_VOCABDUMP 4
+#define ACT_SAIDSPECDUMP 5
 
 #define ACT_DEFAULT ACT_UNPACK
 
@@ -121,6 +122,7 @@ static struct option options[] = {
 	{"words", no_argument, &action, ACT_WORDS},
 	{"vocab", no_argument, &action, ACT_VOCABDUMP},
 	{"objects", no_argument, &action, ACT_SCRIPTDUMP},
+	{"said-specs", no_argument, &action, ACT_SAIDSPECDUMP},
 	{"with-header", no_argument, &with_header, 1},
 	{"without-header", no_argument, &with_header, 0},
 	{"sort-alpha", no_argument, &vocab_sort, SORT_METHOD_ALPHA},
@@ -140,6 +142,74 @@ static struct option options[] = {
 void unpack_resource(int stype, int snr, char *outfilename);
 
 
+int
+saidspec_dump()
+{
+	int i;
+	word_t **parser_words;
+	int parser_words_nr;
+
+	if (!conversion)
+		parser_words = vocab_get_words(resmgr, &parser_words_nr);
+
+	for (i = 0; i < 999; i++) {
+		resource_t *r = scir_find_resource(resmgr, sci_script, i, 0);
+
+		if (r) {
+			int offset = 0;
+			int type, size;
+
+			do {
+				type = getUInt16(r->data + offset);
+				size = getUInt16(r->data + offset + 2);
+
+				if (offset + size > r->size)
+					break;
+
+				if (type == sci_obj_said) {
+					byte *pos = r->data + offset + 4;
+					int nextitem;
+
+					while (pos - r->data +1 < size + offset) { do {
+						nextitem = *pos++;
+
+						if (nextitem < 0xf0) {
+							nextitem = nextitem << 8 | *pos++;
+
+							if (conversion)
+								printf(" W");
+							else
+								printf(" %s", vocab_get_any_group_word(nextitem, parser_words, parser_words_nr),
+									  nextitem);
+
+							nextitem = 42; /* Make sure that group 0xff doesn't abort */
+						} else switch(nextitem) {
+						case 0xf0: printf(" ,"); break;
+						case 0xf1: printf(" &"); break;
+						case 0xf2: printf(" /"); break;
+						case 0xf3: printf(" ("); break;
+						case 0xf4: printf(" )"); break;
+						case 0xf5: printf(" ["); break;
+						case 0xf6: printf(" ]"); break;
+						case 0xf7: printf(" #"); break;
+						case 0xf8: printf(" <"); break;
+						case 0xf9: printf(" >"); break;
+						case 0xff: printf("\n"); break;
+						}
+					} while (nextitem != 0xff); }
+				}
+
+				offset += size;
+			} while (type && (offset < r->size));
+		}
+	}
+
+	if (!conversion)
+		vocab_free_words(parser_words, parser_words_nr);
+
+	return 0;
+}
+
 int main(int argc, char** argv)
 {
 	int retval = 0;
@@ -153,9 +223,9 @@ int main(int argc, char** argv)
 	char *gamedir = sci_getcwd();
 
 #ifdef HAVE_GETOPT_LONG
-	while ((c = getopt_long(argc, argv, "WOVUvhLco:d:M:", options, &optindex)) > -1) {
+	while ((c = getopt_long(argc, argv, "SWOVUvhLco:d:M:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_LONG */
-	while ((c = getopt(argc, argv, "WOVUvhLco:d:M:")) > -1) {
+	while ((c = getopt(argc, argv, "SWOVUvhLco:d:M:")) > -1) {
 #endif /* !HAVE_GETOPT_LONG */
 
 		switch (c) {
@@ -168,7 +238,7 @@ int main(int argc, char** argv)
 			exit(0);
 
 		case 'h': {
-			char *gcc_3_0_can_kiss_my_ass =
+			char *gcc_3_0_hates_me =
 			       "Usage: sciunpack [options] [-U] <resource.number>\n"
 			       "       sciunpack [options] [-U] <resource> <number>\n"
 			       "Unpacks resource data\n"
@@ -185,6 +255,7 @@ int main(int argc, char** argv)
 			       " --list        -L       List all resources\n"
 			       " --words       -W       List all vocabulary words\n"
 			       " --objects     -O       Print all objects\n"
+			       " --said-specs  -S       Prints all said specs\n"
 			       " --vocab       -V       Lists the complete vocabulary\n"
 			       "\nAvailable options:\n"
 			       "General:\n"
@@ -196,6 +267,8 @@ int main(int argc, char** argv)
 			       "Listing words:\n"
 			       " --sort-alpha		sort in alphabetical order\n"
 			       " --sort-group		sort in group order\n"
+			       "Dumping Said specs:\n"
+			       " --convert     -c       Print 'W' instead of actual words\n"
 			       "Unpacking:\n"
 			       " --convert     -c       Converts selected resources\n"
 			       " --output-file -o       Selects output file\n"
@@ -217,7 +290,7 @@ int main(int argc, char** argv)
 #endif /* DRAW_GRAPHICS */
 				;
 
-			printf(gcc_3_0_can_kiss_my_ass);
+			printf(gcc_3_0_hates_me);
 			exit(0);
 		}
 
@@ -239,6 +312,10 @@ int main(int argc, char** argv)
 
 		case 'O':
 			action = ACT_SCRIPTDUMP;
+			break;
+
+		case 'S':
+			action = ACT_SAIDSPECDUMP;
 			break;
 
 		case 'o':
@@ -358,6 +435,10 @@ int main(int argc, char** argv)
 
 	case ACT_VOCABDUMP:
 		retval = vocab_dump();
+		break;
+
+	case ACT_SAIDSPECDUMP:
+		retval = saidspec_dump();
 		break;
 
 	default:
