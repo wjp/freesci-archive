@@ -1,5 +1,5 @@
 # Generated automatically from Makefile.in by configure.
-# Makefile.in generated automatically by automake 1.4 from Makefile.am
+# Makefile.in generated automatically by automake 1.4a from Makefile.am
 
 # Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
@@ -46,9 +46,10 @@ AUTOMAKE = automake
 AUTOHEADER = autoheader
 
 INSTALL = /usr/bin/install -c
-INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
+INSTALL_PROGRAM = ${INSTALL}
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_SCRIPT = ${INSTALL_PROGRAM}
+INSTALL_STRIP_FLAG =
 transform = s,x,x,
 
 NORMAL_INSTALL = :
@@ -58,9 +59,9 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 CC = gcc
-GLIB_CFLAGS = -I/usr/local/lib/glib/include -I/usr/local/include
-GLIB_CONFIG = /usr/local/bin/glib-config
-GLIB_LIBS = -L/usr/local/lib -lglib
+GLIB_CFLAGS = -I/usr/lib/glib/include
+GLIB_CONFIG = /usr/bin/glib-config
+GLIB_LIBS = -L/usr/lib -lglib
 MAKEINFO = makeinfo
 PACKAGE = freesci
 RANLIB = ranlib
@@ -72,19 +73,19 @@ ac_glib_libraries =
 ac_graphics_ggi_libfile = graphics_ggi.c
 ac_graphics_ggi_libobjects = graphics_ggi.o
 ac_moresubdirs = demo
-ac_png_includes = -I/usr/local/include
-ac_png_libraries = -L/usr/lib -lpng
+ac_png_includes = 
+ac_png_libraries = 
 
 INCLUDES = -I$(top_srcdir)/src/include  -I/usr/local/include
 LDADD = -lefence -lc ../core/libscicore.a
 bin_PROGRAMS = sciunpack scriptdump vocabdump classes console
 sciunpack_SOURCES = sciunpack.c
-sciunpack_LDADD = -lc -lglib ../core/libscicore.a ../sound/libscisound.a ../graphics/libscigraphics.a -L/usr/lib -lpng 
+sciunpack_LDADD = -lc -lglib ../core/libscicore.a ../sound/libscisound.a ../graphics/libscigraphics.a  
 scriptdump_SOURCES = scriptdump.c
 scriptdump_LDADD = -L../core -lscicore -L../console -lsciconsole 
 vocabdump_SOURCES = vocabdump.c
 classes_SOURCES = classes.c
-console_LDADD = -lc -lglib -lreadline -lcurses ../core/libscicore.a ../sound/libscisound.a ../console/libsciconsole.a -L/usr/lib -lpng  
+console_LDADD = -lc -lglib -lreadline -lcurses ../core/libscicore.a ../sound/libscisound.a ../console/libsciconsole.a   
 console_SOURCES = console.c
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../config.h
@@ -94,7 +95,7 @@ PROGRAMS =  $(bin_PROGRAMS)
 
 DEFS = -DHAVE_CONFIG_H -I. -I$(srcdir) -I../..
 CPPFLAGS = 
-LDFLAGS =  -L/usr/local/lib -lglib
+LDFLAGS =  -L/usr/lib -lglib
 LIBS = 
 sciunpack_OBJECTS =  sciunpack.o
 sciunpack_DEPENDENCIES =  ../core/libscicore.a ../sound/libscisound.a \
@@ -115,7 +116,7 @@ console_OBJECTS =  console.o
 console_DEPENDENCIES =  ../core/libscicore.a ../sound/libscisound.a \
 ../console/libsciconsole.a
 console_LDFLAGS = 
-CFLAGS = -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include
+CFLAGS = -g -O2 -I/usr/lib/glib/include
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
@@ -156,8 +157,8 @@ install-binPROGRAMS: $(bin_PROGRAMS)
 	$(mkinstalldirs) $(DESTDIR)$(bindir)
 	@list='$(bin_PROGRAMS)'; for p in $$list; do \
 	  if test -f $$p; then \
-	    echo "  $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
-	     $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	    echo "  $(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
+	     $(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	  else :; fi; \
 	done
 
@@ -245,7 +246,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$/$$file $(distdir)/$$file; \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
@@ -306,7 +307,7 @@ uninstall: uninstall-am
 all-am: Makefile $(PROGRAMS)
 all-redirect: all-am
 install-strip:
-	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
 installdirs:
 	$(mkinstalldirs)  $(DESTDIR)$(bindir)
 

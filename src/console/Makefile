@@ -1,5 +1,5 @@
 # Generated automatically from Makefile.in by configure.
-# Makefile.in generated automatically by automake 1.4 from Makefile.am
+# Makefile.in generated automatically by automake 1.4a from Makefile.am
 
 # Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
@@ -46,9 +46,10 @@ AUTOMAKE = automake
 AUTOHEADER = autoheader
 
 INSTALL = /usr/bin/install -c
-INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
+INSTALL_PROGRAM = ${INSTALL}
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_SCRIPT = ${INSTALL_PROGRAM}
+INSTALL_STRIP_FLAG =
 transform = s,x,x,
 
 NORMAL_INSTALL = :
@@ -58,9 +59,9 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 CC = gcc
-GLIB_CFLAGS = -I/usr/local/lib/glib/include -I/usr/local/include
-GLIB_CONFIG = /usr/local/bin/glib-config
-GLIB_LIBS = -L/usr/local/lib -lglib
+GLIB_CFLAGS = -I/usr/lib/glib/include
+GLIB_CONFIG = /usr/bin/glib-config
+GLIB_LIBS = -L/usr/lib -lglib
 MAKEINFO = makeinfo
 PACKAGE = freesci
 RANLIB = ranlib
@@ -72,10 +73,10 @@ ac_glib_libraries =
 ac_graphics_ggi_libfile = graphics_ggi.c
 ac_graphics_ggi_libobjects = graphics_ggi.o
 ac_moresubdirs = demo
-ac_png_includes = -I/usr/local/include
-ac_png_libraries = -L/usr/lib -lpng
+ac_png_includes = 
+ac_png_libraries = 
 
-INCLUDES = -I$(top_srcdir)/src/include  -I/usr/local/include -I/usr/local/include
+INCLUDES = -I$(top_srcdir)/src/include  -I/usr/local/include 
 LDADD = -lefence -lglib -lscicore $(LDADD_ALL)
 lib_LIBRARIES = libsciconsole.a
 libsciconsole_a_SOURCES = console.c console_font.c commands.c commands_scr.c
@@ -87,13 +88,13 @@ LIBRARIES =  $(lib_LIBRARIES)
 
 DEFS = -DHAVE_CONFIG_H -I. -I$(srcdir) -I../..
 CPPFLAGS = 
-LDFLAGS =  -L/usr/local/lib -lglib
+LDFLAGS =  -L/usr/lib -lglib
 LIBS = 
 libsciconsole_a_LIBADD = 
 libsciconsole_a_OBJECTS =  console.o console_font.o commands.o \
 commands_scr.o
 AR = ar
-CFLAGS = -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include
+CFLAGS = -g -O2 -I/usr/lib/glib/include
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
@@ -215,7 +216,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$/$$file $(distdir)/$$file; \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
@@ -276,7 +277,7 @@ uninstall: uninstall-am
 all-am: Makefile $(LIBRARIES)
 all-redirect: all-am
 install-strip:
-	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
 installdirs:
 	$(mkinstalldirs)  $(DESTDIR)$(libdir)
 

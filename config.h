@@ -8,10 +8,10 @@
 #define PACKAGE "freesci"
 #define VERSION "0.2.4"
 #define HAVE_LIBGGI 1
-#define HAVE_LIBPNG 1
+/* #undef HAVE_LIBPNG */
 
 /* Define if you have the <gsi/gsi_interface.c> header file.  */
-#define HAVE_GSI_GSI_INTERFACE_C 1
+/* #undef HAVE_GSI_GSI_INTERFACE_C */
 
 /* Define if you have the <sys/soundcard.h> header file.  */
 #define HAVE_SYS_SOUNDCARD_H 1

@@ -1,5 +1,5 @@
 # Generated automatically from Makefile.in by configure.
-# Makefile.in generated automatically by automake 1.4 from Makefile.am
+# Makefile.in generated automatically by automake 1.4a from Makefile.am
 
 # Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
@@ -46,9 +46,10 @@ AUTOMAKE = automake
 AUTOHEADER = autoheader
 
 INSTALL = /usr/bin/install -c
-INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
+INSTALL_PROGRAM = ${INSTALL}
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_SCRIPT = ${INSTALL_PROGRAM}
+INSTALL_STRIP_FLAG =
 transform = s,x,x,
 
 NORMAL_INSTALL = :
@@ -58,9 +59,9 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 CC = gcc
-GLIB_CFLAGS = -I/usr/local/lib/glib/include -I/usr/local/include
-GLIB_CONFIG = /usr/local/bin/glib-config
-GLIB_LIBS = -L/usr/local/lib -lglib
+GLIB_CFLAGS = -I/usr/lib/glib/include
+GLIB_CONFIG = /usr/bin/glib-config
+GLIB_LIBS = -L/usr/lib -lglib
 MAKEINFO = makeinfo
 PACKAGE = freesci
 RANLIB = ranlib
@@ -72,8 +73,8 @@ ac_glib_libraries =
 ac_graphics_ggi_libfile = graphics_ggi.c
 ac_graphics_ggi_libobjects = graphics_ggi.o
 ac_moresubdirs = demo
-ac_png_includes = -I/usr/local/include
-ac_png_libraries = -L/usr/lib -lpng
+ac_png_includes = 
+ac_png_libraries = 
 
 SUBDIRS = misc
 EXTRA_DIST = README sci.sgml
@@ -199,7 +200,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$/$$file $(distdir)/$$file; \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
@@ -238,7 +239,7 @@ uninstall: uninstall-recursive
 all-am: Makefile
 all-redirect: all-recursive
 install-strip:
-	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
 installdirs: installdirs-recursive
 installdirs-am:
 

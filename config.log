@@ -4,24 +4,51 @@ running configure, to aid debugging if configure makes a mistake.
 configure:577: checking for a BSD compatible install
 configure:630: checking whether build environment is sane
 configure:687: checking whether make sets ${MAKE}
-configure:733: checking for working aclocal
-configure:746: checking for working autoconf
-configure:759: checking for working automake
-configure:772: checking for working autoheader
-configure:785: checking for working makeinfo
-configure:802: checking for gcc
-configure:915: checking whether the C compiler (gcc  ) works
-configure:931: gcc -o conftest    conftest.c  1>&5
-configure:957: checking whether the C compiler (gcc  ) is a cross-compiler
-configure:962: checking whether we are using GNU C
-configure:990: checking whether gcc accepts -g
-configure:1024: checking for ranlib
-configure:1052: checking how to run the C preprocessor
-configure:1135: checking for gsi/gsi_interface.c
-configure:1175: checking for sys/soundcard.h
-configure:1213: checking for ggi
-configure:1349: checking for glib-config
-configure:1384: checking for GLIB - version >= 0.9.7
-configure:1483: gcc -o conftest -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include   conftest.c -L/usr/local/lib -lglib  1>&5
-configure:1576: checking for libpng
-configure:1656: checking whether byte ordering is bigendian
+configure:734: checking for working aclocal
+configure:747: checking for working autoconf
+configure:760: checking for working automake
+configure:773: checking for working autoheader
+configure:786: checking for working makeinfo
+configure:803: checking for gcc
+configure:916: checking whether the C compiler (gcc  ) works
+configure:932: gcc -o conftest    conftest.c  1>&5
+configure:958: checking whether the C compiler (gcc  ) is a cross-compiler
+configure:963: checking whether we are using GNU C
+configure:972: gcc -E conftest.c
+configure:991: checking whether gcc accepts -g
+configure:1025: checking for ranlib
+configure:1053: checking how to run the C preprocessor
+configure:1074: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1136: checking for gsi/gsi_interface.c
+configure:1146: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1142: gsi/gsi_interface.c: No such file or directory
+configure: failed program was:
+#line 1141 "configure"
+#include "confdefs.h"
+#include <gsi/gsi_interface.c>
+configure:1176: checking for sys/soundcard.h
+configure:1186: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1214: checking for ggi
+configure:1350: checking for glib-config
+configure:1385: checking for GLIB - version >= 0.9.7
+configure:1484: gcc -o conftest -g -O2 -I/usr/lib/glib/include   conftest.c -L/usr/lib -lglib  1>&5
+configure:1577: checking for libpng
+configure:1657: checking whether byte ordering is bigendian
+configure:1675: gcc -c -g -O2 -I/usr/lib/glib/include  conftest.c 1>&5
+configure:1690: gcc -c -g -O2 -I/usr/lib/glib/include  conftest.c 1>&5
+configure: In function `main':
+configure:1685: `not' undeclared (first use in this function)
+configure:1685: (Each undeclared identifier is reported only once
+configure:1685: for each function it appears in.)
+configure:1685: parse error before `big'
+configure: failed program was:
+#line 1679 "configure"
+#include "confdefs.h"
+#include <sys/types.h>
+#include <sys/param.h>
+int main() {
+
+#if BYTE_ORDER != BIG_ENDIAN
+ not big endian
+#endif
+; return 0; }
