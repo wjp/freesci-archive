@@ -5,3 +5,4 @@
 #undef HAVE_CURSES
 #undef HAVE_GLX
 #undef HAVE_ALSA
+#undef HAVE_ALPHA_EV6_SUPPORT

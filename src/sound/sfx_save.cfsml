@@ -37,18 +37,22 @@
 #define O_BINARY 0
 #endif  /* !O_BINARY */
 
+#define SOUND_SAVE_VERSION 1;
+
 typedef struct {
 
-  int songs_nr; /* Number of songs */
-  song_t *songs; /* All songs in order */
+	int sound_version;
 
-  int active_song;
+	int songs_nr; /* Number of songs */
+	song_t *songs; /* All songs in order */
 
-  int master_volume; /* duh.. */
-  int soundcue; /* Cumulative sound cue */
-  int usecs_to_sleep; /* Microseconds until the next tick is due */
-  int ticks_to_wait; /* Ticks until the next sound command has to be interpreted */
-  int ticks_to_fade; /* Ticks until a fade-out is complete */
+	int active_song;
+
+	int master_volume; /* duh.. */
+	int soundcue; /* Cumulative sound cue */
+	int usecs_to_sleep; /* Microseconds until the next tick is due */
+	int ticks_to_wait; /* Ticks until the next sound command has to be interpreted */
+	int ticks_to_fade; /* Ticks until a fade-out is complete */
 
 } sound_lib_file_t;
 
@@ -60,41 +64,41 @@ TYPE word "word" LIKE int
 
 RECORD song_t "song_t" {
 
-  int flags[STATIC MIDI_CHANNELS];
-  int instruments[STATIC MIDI_CHANNELS];
-  int velocity[STATIC MIDI_CHANNELS];
-  int pressure[STATIC MIDI_CHANNELS];
-  int pitch[STATIC MIDI_CHANNELS];
-  int channel_map[STATIC MIDI_CHANNELS];
+	int flags[STATIC MIDI_CHANNELS];
+	int instruments[STATIC MIDI_CHANNELS];
+	int velocity[STATIC MIDI_CHANNELS];
+	int pressure[STATIC MIDI_CHANNELS];
+	int pitch[STATIC MIDI_CHANNELS];
+	int channel_map[STATIC MIDI_CHANNELS];
 
-  int size;
-  int pos;
-  int loopmark;
-  int fading;
+	int size;
+	int pos;
+	int loopmark;
+	int fading;
 
-  int reverb;
-  int maxfade;
-  int resetflag;
-  int polyphony[STATIC MIDI_CHANNELS];
+	int reverb;
+	int maxfade;
+	int resetflag;
+	int polyphony[STATIC MIDI_CHANNELS];
 
-  int file_nr;
-  int priority;
-  int loops;
-  int status;
+	int file_nr;
+	int priority;
+	int loops;
+	int status;
 
-  word handle;
+	word handle;
 }
 
 RECORD sound_lib_file_t "sound_lib_file_t" {
 
-  song_t songs[DYNAMIC songs_nr];
+	song_t songs[DYNAMIC songs_nr];
 
-  int active_song;
+	int active_song;
 
-  int soundcue;
-  int usecs_to_sleep;
-  int ticks_to_wait;
-  int ticks_to_fade;
+	int soundcue;
+	int usecs_to_sleep;
+	int ticks_to_wait;
+	int ticks_to_fade;
 
 }
 
@@ -190,6 +194,24 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
   return 0;
 }
 
+static void
+recover_version0(read_rec_t *rec)
+{
+	int i;
+
+	for (i = 0; i < rec->songs_nr; i++) {
+		int j;
+		song_t *song = rec->songs + i;
+
+		song->reverb = 0;
+		song->maxfade = 16;
+		song->resetflags = 0;
+
+		for (j = 0; j < MIDI_CHANNELS; j++)
+			song->polyphony[j] = 1;
+	}
+}
+
 /* Sound state restore complement for the saving reference implementation */
 int
 soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t **curr_song,
@@ -215,7 +237,13 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
 
   read_rec.songs = NULL;
 
+  /* Backwards capability crap */
+  read_rec.version = 0;
+  reac_rec.master_value = *master_volume;
   %CFSMLREAD-ATOMIC sound_lib_file_t &read_rec FROM fh ERRVAR error;
+
+  if (read_rec.version == 0)
+	  recover_version0(&read_rec);
 
   if (error) {
     if(read_rec.songs)

@@ -255,157 +255,163 @@ sound_restore(state_t *s, char *dir)
 int
 sound_command(state_t *s, int command, int handle, int parameter)
 {
-  sound_event_t event;
-  event.handle = handle;
-  event.signal = command;
-  event.value = parameter;
+	sound_event_t event;
+	int errcount = 0;
+	event.handle = handle;
+	event.signal = command;
+	event.value = parameter;
 
-  switch (command) {
-  case SOUND_COMMAND_INIT_SONG: {
-	  byte *xfer_buf;
-	  resource_t *song = findResource(sci_sound, parameter);
-	  int len;
-	  int finished = 0;
+	switch (command) {
+	case SOUND_COMMAND_INIT_SONG: {
+		byte *xfer_buf;
+		resource_t *song = findResource(sci_sound, parameter);
+		int len;
+		int finished = 0;
 
-	  if (!song) {
-		  sciprintf("Attempt to play invalid sound.%03d\n", parameter);
-		  return 1;
-	  }
+		if (!song) {
+			sciprintf("Attempt to play invalid sound.%03d\n", parameter);
+			return 1;
+		}
 
-	  len = song->length;
-	  write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
-	  write(s->sound_pipe_in[1], &len, sizeof(int)); /* Write song length */
+		len = song->length;
+		write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
+		write(s->sound_pipe_in[1], &len, sizeof(int)); /* Write song length */
 
-	  xfer_buf = song->data;
-	  while (len || !finished) {
-		  int status = _sound_expect_answer(s, "Sound/InitSong: Timeout while"
-						    " waiting for sound server during transfer\n",
-						    SOUND_SERVER_XFER_TIMEOUT);
-		  int xfer_bytes = MIN(len, SOUND_SERVER_XFER_SIZE);
+		xfer_buf = song->data;
+		while (len || !finished) {
+			int status = _sound_expect_answer(s, "Sound/InitSong: Timeout while"
+							  " waiting for sound server during transfer\n",
+							  SOUND_SERVER_XFER_TIMEOUT);
+			int xfer_bytes = MIN(len, SOUND_SERVER_XFER_SIZE);
 
-		  switch(status) {
-		  case SOUND_SERVER_XFER_ABORT:
-			  sciprintf("Sound/InitSong: Sound server aborted transfer\n");
-			  len = xfer_bytes = 0;
-			  break;
+			switch(status) {
+			case SOUND_SERVER_XFER_ABORT:
+				sciprintf("Sound/InitSong: Sound server aborted transfer\n");
+				len = xfer_bytes = 0;
+				break;
 
-		  case SOUND_SERVER_XFER_OK:
-			  finished = 1;
-			  if (len) {
-				  sciprintf("Sound/InitSong: Sound server reported OK with"
-					    " %d/%d bytes missing!\n", len, song->length);
-				  len = xfer_bytes = 0;
-			  }
-			  break;
+			case SOUND_SERVER_XFER_OK:
+				finished = 1;
+				if (len) {
+					sciprintf("Sound/InitSong: Sound server reported OK with"
+						  " %d/%d bytes missing!\n", len, song->length);
+					len = xfer_bytes = 0;
+				}
+				break;
 
-		  case SOUND_SERVER_XFER_WAITING:
-			  if (!len)
-				  sciprintf("Sound/InitSong: Sound server waiting, but nothing"
-					    " left to be sent!");
-			  break;
+			case SOUND_SERVER_XFER_WAITING:
+				if (!len) {
+					if (errcount++)
+						sciprintf("Sound/InitSong: Sound server waiting, but nothing"
+							  " left to be sent!\n");
 
-		  case SOUND_SERVER_XFER_TIMEOUT:
-			  len = xfer_bytes = 0;
-			  finished = 1;
-			  break;
+					if (errcount > 200)
+						return;
+				}
+				break;
 
-		  default:
-			  sciprintf("Sound/InitSong: Sound server in invalid state!\n");
-			  break;
-		  }
+			case SOUND_SERVER_XFER_TIMEOUT:
+				len = xfer_bytes = 0;
+				finished = 1;
+				break;
 
-		  if (xfer_bytes) {
-			  write(s->sound_pipe_in[1], xfer_buf, xfer_bytes); /* Transfer song */
-			  xfer_buf += xfer_bytes;
-			  len -= xfer_bytes;
-		  }
-	  }
-	  return 0;
-  }
+			default:
+				sciprintf("Sound/InitSong: Sound server in invalid state!\n");
+				break;
+			}
 
-  case SOUND_COMMAND_PLAY_HANDLE:
-  case SOUND_COMMAND_SET_LOOPS:
-  case SOUND_COMMAND_DISPOSE_HANDLE:
-  case SOUND_COMMAND_STOP_HANDLE:
-  case SOUND_COMMAND_SUSPEND_HANDLE:
-  case SOUND_COMMAND_RESUME_HANDLE:
-  case SOUND_COMMAND_RENICE_HANDLE:
-  case SOUND_COMMAND_SHUTDOWN:
-  case SOUND_COMMAND_MAPPINGS:
-  case SOUND_COMMAND_SAVE_STATE: /* Those two commands are only used from special wrapper */
-  case SOUND_COMMAND_RESTORE_STATE: /* functions that provide additional data. */
-  case SOUND_COMMAND_SUSPEND_SOUND:
-  case SOUND_COMMAND_RESUME_SOUND:
-  case SOUND_COMMAND_STOP_ALL:
-  case SOUND_COMMAND_GET_NEXT_EVENT:
-  case SOUND_COMMAND_FADE_HANDLE:
-    write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
-    return 0;
+			if (xfer_bytes) {
+				write(s->sound_pipe_in[1], xfer_buf, xfer_bytes); /* Transfer song */
+				xfer_buf += xfer_bytes;
+				len -= xfer_bytes;
+			}
+		}
+		return 0;
+	}
 
-    /* set the sound volume. */
-  case SOUND_COMMAND_SET_VOLUME:
-      if (s->sound_mute) {  /* if we're muted, update the mute */
-	s->sound_mute = parameter;
-      } else {
-	s->sound_volume = parameter;
-	write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
-      }
-   /* deliberate fallthrough */
-  case SOUND_COMMAND_GET_VOLUME:
-    if (s->sound_mute)
-      return s->sound_mute;
-    else 
-      return s->sound_volume;
+	case SOUND_COMMAND_PLAY_HANDLE:
+	case SOUND_COMMAND_SET_LOOPS:
+	case SOUND_COMMAND_DISPOSE_HANDLE:
+	case SOUND_COMMAND_STOP_HANDLE:
+	case SOUND_COMMAND_SUSPEND_HANDLE:
+	case SOUND_COMMAND_RESUME_HANDLE:
+	case SOUND_COMMAND_RENICE_HANDLE:
+	case SOUND_COMMAND_SHUTDOWN:
+	case SOUND_COMMAND_MAPPINGS:
+	case SOUND_COMMAND_SAVE_STATE: /* Those two commands are only used from special wrapper */
+	case SOUND_COMMAND_RESTORE_STATE: /* functions that provide additional data. */
+	case SOUND_COMMAND_SUSPEND_SOUND:
+	case SOUND_COMMAND_RESUME_SOUND:
+	case SOUND_COMMAND_STOP_ALL:
+	case SOUND_COMMAND_GET_NEXT_EVENT:
+	case SOUND_COMMAND_FADE_HANDLE:
+		write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
+		return 0;
+
+		/* set the sound volume. */
+	case SOUND_COMMAND_SET_VOLUME:
+		if (s->sound_mute) {  /* if we're muted, update the mute */
+			s->sound_mute = parameter;
+		} else {
+			s->sound_volume = parameter;
+			write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
+		}
+		/* deliberate fallthrough */
+	case SOUND_COMMAND_GET_VOLUME:
+		if (s->sound_mute)
+			return s->sound_mute;
+		else 
+			return s->sound_volume;
     
-    /* set the mute status */
-  case SOUND_COMMAND_SET_MUTE:
-    if (parameter == 0) {  // ie mute
-      s->sound_mute = s->sound_volume;
-      s->sound_volume = 0;
-    } else {  // restore sound
-      if (s->sound_mute > 0)
-        s->sound_volume = s->sound_mute;
-      s->sound_mute = 0;
-    }
-    /* let's send a volume change across the wire */
-    event.signal = SOUND_COMMAND_SET_VOLUME;
-    event.value = s->sound_volume;
-    write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
-    /* deliberate fallthrough */
-    /* return the mute status */
-  case SOUND_COMMAND_GET_MUTE:
-    if (s->sound_mute) 
-      return 0;
-    else
-      return 1;
+		/* set the mute status */
+	case SOUND_COMMAND_SET_MUTE:
+		if (parameter == 0) {  // ie mute
+			s->sound_mute = s->sound_volume;
+			s->sound_volume = 0;
+		} else {  // restore sound
+			if (s->sound_mute > 0)
+				s->sound_volume = s->sound_mute;
+			s->sound_mute = 0;
+		}
+		/* let's send a volume change across the wire */
+		event.signal = SOUND_COMMAND_SET_VOLUME;
+		event.value = s->sound_volume;
+		write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
+		/* deliberate fallthrough */
+		/* return the mute status */
+	case SOUND_COMMAND_GET_MUTE:
+		if (s->sound_mute) 
+			return 0;
+		else
+			return 1;
 
-  case SOUND_COMMAND_TEST: {
-    fd_set fds;
-    GTimeVal timeout = {0, SOUND_SERVER_TIMEOUT};
-    int dummy, success;
+	case SOUND_COMMAND_TEST: {
+		fd_set fds;
+		GTimeVal timeout = {0, SOUND_SERVER_TIMEOUT};
+		int dummy, success;
 
-    write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
+		write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
 
-    FD_ZERO(&fds);
-    FD_SET(s->sound_pipe_out[0], &fds);
-    success = select(s->sound_pipe_out[0]+1, &fds, NULL, NULL, (struct timeval *)&timeout);
+		FD_ZERO(&fds);
+		FD_SET(s->sound_pipe_out[0], &fds);
+		success = select(s->sound_pipe_out[0]+1, &fds, NULL, NULL, (struct timeval *)&timeout);
 
-    if (success) {
+		if (success) {
 
-      read(s->sound_pipe_out[0], &dummy, sizeof(int)); /* Empty pipe */
-      return dummy; /* should be the polyphony */
+			read(s->sound_pipe_out[0], &dummy, sizeof(int)); /* Empty pipe */
+			return dummy; /* should be the polyphony */
 
-    } else {
+		} else {
 
-      fprintf(stderr,"Sound server timed out\n");
-      return 0;
+			fprintf(stderr,"Sound server timed out\n");
+			return 0;
 
-    }
-  }    
+		}
+	}    
 
-  default: sciprintf("Unknown sound command %d\n", command);
-    return 1;
-  }
+	default: sciprintf("Unknown sound command %d\n", command);
+		return 1;
+	}
 
 }
 

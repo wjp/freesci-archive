@@ -31,6 +31,10 @@
 #include <gfx_system.h>
 #include <gfx_tools.h>
 
+#ifdef HAVE_ALPHA_EV6_SUPPORT
+int axp_have_mvi = 0;
+#endif
+
 int gfx_crossblit_alpha_threshold;
 
 #define DRAWLINE_FUNC _gfx_draw_line_buffer_1
@@ -193,18 +197,6 @@ _gfx_crossblit_simple(byte *dest, byte *src, int dest_line_width, int src_line_w
 	}
 }
 
-#ifdef __alpha__
-#  define FUNCT_NAME alpha_mvi_crossblit_32
-#    include "alpha_mvi_crossblit.c"
-#  undef FUNCT_NAME
-
-#  define FUNCT_NAME alpha_mvi_crossblit_32_P
-#  define PRIORITY
-#    include "alpha_mvi_crossblit.c"
-#  undef PRIORTY
-#  undef FUNCT_NAME
-#endif /* __alpha__ */
-
 int
 gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 		     rect_t src_coords,
@@ -320,8 +312,8 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 			break;
 
 		case 4:
-#ifdef __alpha__
-		if (mode->alpha_mask)
+#ifdef HAVE_ALPHA_EV6_SUPPORT
+		if (mode->alpha_mask && axp_have_mvi)
 			alpha_mvi_crossblit_32(dest, src, dest_line_width, pxm->xl * bpp,
 					       xl, yl, NULL, 0, 0, mode->alpha_mask, 24 - mode->alpha_shift);
 		else
@@ -358,8 +350,8 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 		break;
 
 	case 4: 
-#ifdef __alpha__
-		if (mode->alpha_mask)
+#ifdef HAVE_ALPHA_EV6_SUPPORT
+		if (mode->alpha_mask && axp_have_mvi)
 			alpha_mvi_crossblit_32_P(dest, src, dest_line_width, pxm->xl * bpp,
 						 xl, yl, NULL, 0, 0, mode->alpha_mask, 24 - mode->alpha_shift,
 						 priority_pos, priority_line_width, priority_skip, priority);

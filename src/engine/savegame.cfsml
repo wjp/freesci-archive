@@ -1030,10 +1030,14 @@ gamestate_restore(state_t *s, char *dirname)
 		return NULL;
 	}
 
-	retval->amp_rest = 0; /* Backwards compatibility */
+	 /* Backwards compatibility settings */
+	retval->amp_rest = 0;
 	retval->dyn_views = NULL;
 	retval->drop_views = NULL;
 	retval->port = NULL;
+
+	retval->sound_mute = s->sound_mute;
+	retval->sound_volume = s->sound_volume;
 
 	%CFSMLREAD-ATOMIC state_t retval FROM fh ERRVAR read_eof;
 

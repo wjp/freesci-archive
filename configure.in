@@ -28,6 +28,25 @@ AC_PATH_GGI
 AC_PATH_CURSES
 AC_PATH_X
 
+AC_MSG_CHECKING(for Alpha hardware and gcc style __asm__)
+AC_TRY_COMPILE([], [
+int main(int argc, char **argv)
+{
+	__asm__ ("zapnot \$31, \$31, \$31");
+	return 0;
+}
+], [
+	AC_MSG_RESULT(found.)
+	ev6_cpu="-mcpu=ev6"
+	AC_DEFINE(HAVE_ALPHA_EV6_SUPPORT)
+],
+[
+	AC_MSG_RESULT(not present.)
+	ev6_cpu=""
+])
+AC_SUBST(ev6_cpu)
+
+
 if test x"x_libraries" != x; then
 	x_libraries="-L$x_libraries -lX11 -lXi"
 fi
@@ -70,3 +89,12 @@ AC_OUTPUT(Makefile    \
 	src/tools/Makefile \
 	src/win32/Makefile \
 	src/sound/Makefile)
+
+
+
+
+
+
+
+
+

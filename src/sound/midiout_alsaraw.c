@@ -41,52 +41,54 @@ static int device = 0;
 #ifdef ALSA_09
 int midiout_alsaraw_open()
 {
-  int err;
-  char devname[16];
-  sprintf(devname, "hw:%d,%d", card, device);
+	int err;
+	char devname[16];
+	sprintf(devname, "hw:%d,%d", card, device);
+	fprintf(stderr,"Opening new ALSA %s\n", devname);
 
-  if ((err = snd_rawmidi_open(&handle, NULL, devname, O_WRONLY)) < 0) {
-    fprintf(stderr, "Open failed (%i): /dev/snd/midiC%iD%i\n", err, card, device);
-    return -1;
-  }
-  return 0;
+	if ((err = snd_rawmidi_open(NULL, &handle, devname, 0)) < 0) {
+		fprintf(stderr, "Open failed (%i): /dev/snd/midiC%iD%i\n", err, card, device);
+		return -1;
+	}
+	fprintf(stderr,"DONE\n");
+	return 0;
 }
 #else
 int midiout_alsaraw_open()
 {
-  int err;
+	int err;
 
-  if ((err = snd_rawmidi_open(&handle, card, device, SND_RAWMIDI_OPEN_OUTPUT)) < 0) {
-    fprintf(stderr, "Open failed (%i): /dev/snd/midiC%iD%i\n", err, card, device);
-    return -1;
-  }
-  return 0;
+	if ((err = snd_rawmidi_open(&handle, card, device, SND_RAWMIDI_OPEN_OUTPUT)) < 0) {
+		fprintf(stderr, "Open failed (%i): /dev/snd/midiC%iD%i\n", err, card, device);
+		return -1;
+	}
+	return 0;
 }
 #endif /* ALSA prior to 0.9.0 */
 
 int midiout_alsaraw_close()
 {
-  if (snd_rawmidi_close(handle) < 0)
-    return -1;
-  return 0;
+	if (snd_rawmidi_close(handle) < 0)
+		return -1;
+	return 0;
 }
 
 int midiout_alsaraw_write(guint8 *buffer, unsigned int count)
 {
-  if (snd_rawmidi_write(handle, buffer, count) != count)
-    return -1;
-  /*  if (snd_rawmidi_output_flush(handle) < 0)
-      return -1;*/
-  return 0;
+	if (snd_rawmidi_write(handle, buffer, count) != count)
+		return -1;
+	/*  if (snd_rawmidi_output_flush(handle) < 0)
+	    return -1;*/
+	return 0;
 }
 
 midiout_driver_t midiout_driver_alsaraw = {
-  "alsaraw",
-  "v0.01",
-  NULL,
-  &midiout_alsaraw_open,
-  &midiout_alsaraw_close,
-  &midiout_alsaraw_write
+	"alsaraw",
+	"v0.1",
+	NULL,
+	&midiout_alsaraw_open,
+	&midiout_alsaraw_close,
+	&midiout_alsaraw_write
 };
 
 

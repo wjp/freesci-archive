@@ -260,12 +260,12 @@ gfx_get_pixel_delta(unsigned int *color, int *delta, unsigned int *pixel0, unsig
 
 	if (transp0 && !transp1) { /* Transparent -> Opaque */
 		memset(delta, 0, sizeof(int) * 3);
-		delta[3] = -(0xffff);
+		delta[3] = ((pixel1[3] >> 8) - (pixel0[3] >> 8));
 		memcpy(color, pixel1, sizeof(int) * 3);
 		color[3] = 0xffffff;
 	} else if (!transp0 && transp1) { /* Opaque -> Transparent */
 		memset(delta, 0, sizeof(int) * 3);
-		delta[3] = (0xffff);
+		delta[3] = ((pixel1[3] >> 8) - (pixel0[3] >> 8));
 		memcpy(color, pixel0, sizeof(int) * 4);
 	} else if (transp0 && transp1) { /* Transparent */
 		delta[3] = 0;

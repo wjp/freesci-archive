@@ -80,6 +80,30 @@
 /* Neither NetBSD nor Win32 have this function, although it's in POSIX 1b */
 #endif /* !HAVE_SCHED_YIELD */
 
+/*** HW/OS-dependant features ***/
+
+static void
+check_features()
+{
+	int helper;
+#ifdef HAVE_ALPHA_EV6_SUPPORT
+	printf("Checking for MVI instruction-set extension: ");
+
+	helper = 0x100;
+	__asm__ ("amask %1, %0"
+		 : "=r"(axp_have_mvi)
+		 : "r"(helper));
+
+	axp_have_mvi = !axp_have_mvi;
+
+	if (axp_have_mvi)
+		printf("found\n");
+	else
+		printf("not present\n");
+#endif
+}
+
+
 static gfx_state_t static_gfx_state; /* see below */
 static gfx_options_t static_gfx_options; /* see below */
 
@@ -651,6 +675,8 @@ main(int argc, char** argv)
 	};
 
 	printf("SCI resources loaded.\n");
+
+	check_features();
 
 	chdir(startdir);
 

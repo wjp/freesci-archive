@@ -1,3 +1,21 @@
+2001-03-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/sfx_save.cfsml (recover_version0): Added older sound
+	savegame recovery
+
+	* src/sound/Makefile.am
+	* src/engine/Makefile.am (savegame.c): Included the cfsml -> c
+	code generation in the Makefiles
+
+	* src/gfx/gfx_pixmap_scale.c (gfx_get_pixel_delta): Fixed
+	braindead transparency bug in trilinear filter
+
+	* src/main.c (main): Added check for MVI instruction set
+	extension; MVI crossblitters are available iff it is found
+
+	* src/sound/midiout_alsaraw.c (midiout_alsaraw_open): Fixed my
+	fixes for the ALSA driver
+
 2001-03-10  Solomon Peachy <pizza@shaftnet.org>
 	* src/engine/savegame.c
 	* src/engine/savegame.cfsml
