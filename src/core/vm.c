@@ -161,7 +161,6 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
   int argc;
   int i;
   int origin = s->execution_stack_pos; /* Origin: Used for debugging */
-
   exec_stack_t *retval = s->execution_stack + s->execution_stack_pos;
   /* We return a pointer to the new active exec_stack_t */
 

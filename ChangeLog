@@ -1,3 +1,11 @@
+1999-11-15  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kernel.c (kParse): Updated parser to call wordFail correctly
+	(invoke_selector): Fixed a bug that could make kernel functions in the
+	backtrace list look strange, and another one that would write incorrect
+	parameters if invoke_selector was called with more than zero of them
+	(caused by a macro evaluating va_arg() twice).
+
 1999-11-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/sfx_save.cfsml: Implemented persistance for the sound

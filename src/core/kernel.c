@@ -250,12 +250,14 @@ write_selector(state_t *s, heap_ptr object, int selector_id, int value)
 
 int
 invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int kfunct,
-		heap_ptr stackframe, int argc, ...)
+		heap_ptr k_argp, int k_argc, /* Kernel function argp/argc */
+		int argc, ...)
 {
   va_list argp;
   int i;
   int framesize = 4 + 2 * argc;
   heap_ptr address;
+  heap_ptr stackframe = k_argp + k_argc * 2;
 
   exec_stack_t *xstack; /* Execution stack */
 
@@ -271,18 +273,21 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int
   }
 
   va_start(argp, argc);
-  for (i = 0; i < argc; i++)
-    PUT_HEAP(stackframe + 4 + (2 * i), va_arg(argp, int)); /* Write each argument */
+  for (i = 0; i < argc; i++) {
+    int j = va_arg(argp, heap_ptr);
+    PUT_HEAP(stackframe + 4 + (2 * i), j); /* Write each argument */
+  }
   va_end(argp);
 
+  /* Write "kernel" call to the stack, for debugging: */
   xstack = 
-    send_selector(s, object, object, stackframe + framesize, framesize, argc, stackframe); /* Commit */
+    add_exec_stack_entry(s, 0, 0, 0, k_argc, k_argp - 2, 0, 0, s->execution_stack_pos);
   xstack->selector = -42 - kfunct; /* Evil debugging hack to identify kernel function */
   xstack->type = EXEC_STACK_TYPE_KERNEL;
 
   /* Now commit the actual function: */
   xstack = 
-    send_selector(s, object, object, stackframe + framesize, framesize, argc, stackframe);
+    send_selector(s, object, object, stackframe + framesize, framesize, 0, stackframe);
 
   run_vm(s, 0); /* Start a new vm */
 
@@ -314,7 +319,7 @@ is_object(state_t *s, heap_ptr offset)
 */
 
 #define INV_SEL(_object_, _selector_, _noinvalid_) \
-  s, ##_object_,  s->selector_map.##_selector_, ##_noinvalid_, funct_nr, argp + (argc * 2)
+  s, ##_object_,  s->selector_map.##_selector_, ##_noinvalid_, funct_nr, argp, argc
 
 
 /* Allocates a set amount of memory for a specified use and returns a handle to it. */
@@ -1074,7 +1079,8 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  char *string = s->heap + UPARAM(0);
+  int stringpos = UPARAM(0);
+  char *string = s->heap + stringpos;
   int words_nr;
   char *error;
   result_word_t *words;
@@ -1112,7 +1118,9 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       s->acc = 1;
       PUT_SELECTOR(event, type, 0);
-      invoke_selector(INV_SEL(s->game_obj, syntaxFail, 0), 1, s->parser_base); /* Issue warning */
+      invoke_selector(INV_SEL(s->game_obj, syntaxFail, 0), 2, s->parser_base, stringpos);
+      /* Issue warning */
+
       SCIkdebug(SCIkPARSER, "Tree building failed\n");
 
     } else {
@@ -1127,9 +1135,12 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
     if (error) {
 
       strcpy(s->heap + s->parser_base, error);
-      fprintf(stderr,"Word unknown: %s\n", error);
-      invoke_selector(INV_SEL(s->game_obj, wordFail, 0), 1, s->parser_base); /* Issue warning */
+      SCIkdebug(SCIkPARSER,"Word unknown: %s\n", error);
+      /* Issue warning: */
+
+      invoke_selector(INV_SEL(s->game_obj, wordFail, 0), 2, s->parser_base, stringpos);
       free(error);
+      s->acc = 1; /* Tell them that it dind't work */
     }
   }
 }
@@ -1887,6 +1898,8 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
   CHECK_THIS_KERNEL_FUNCTION;
 
   source = _kernel_lookup_text(s, position, index);
+
+  SCIkdebug(SCIkSTRINGS, "Formatting \"%s\"\n", source);
 
   if (position < 1000) {
     startarg = 3; /* First parameter to use for formatting */
