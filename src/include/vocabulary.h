@@ -3,6 +3,10 @@
 
 /*#define VOCABULARY_DEBUG /**/
 
+#define SCRIPT_UNKNOWN_FUNCTION_STRING "[Unknown]"
+/* The string used to identify the "unknown" SCI0 function for each game */
+
+
 typedef struct opcode_
 {
   int type;

@@ -54,16 +54,12 @@ typedef guint8** picture_t;
 
 
 typedef struct {
-  guint16 padding; /* Used for compatibility to window_t */
-
   gint16 ymin, xmin; /* Upper left corner */
   gint16 ymax, xmax; /* Lower right corner */
 } port_t;
 
 
 typedef struct {
-  guint16 heapsize; /* SCI heap block size. Just leave it alone. */
-
   gint16 ymin, xmin; /* Upper left corner */
   gint16 ymax, xmax; /* Lower right corner */
 
@@ -221,6 +217,13 @@ void drawBox(picture_t dest, short x, short y, short xl, short yl, char color, c
 ** The box does not come with any fancy shading. Use drawWindow to do this.
 */
 
+
+void drawTitlebar(picture_t dest, int color);
+/* Fills the title bar with the specified color
+** Parameters: (picture_t) dest: The picture_t to draw to
+**             (int) color: The color which the titlebar should be filled with (usually 0 or 0xf)
+** Returns   : (void)
+*/
 
 void drawWindow(picture_t dest, port_t *port, char color, char priority,
 		char *title, guint8 *titlefont, gint16 flags);

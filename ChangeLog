@@ -1,7 +1,35 @@
+1999-08-02  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/scriptdebug.c (c_sret): Successfully tested the new sret
+	debug command (Step until RETurning from current level) which is simi-
+	larly useful as the Sierra SCI TAB key (skip send), but works the
+	way around (i.e. it doesn't skip the next function, it waits until the
+	current function terminates).
+
+	* src/core/kernel.c (kClone): Fixed a bug where cloning would corrupt
+	the heap
+
+	* src/core/vm.c (execute): Fixed a bug where the 'super' operation
+	would start execution with the base object set to the superclass
+	of the calling object as opposed to the calling object itself
+	(QfG1, step 1072 / Glory::startRoom)
+	(execute): Fixed two bugs with indexed variable operations (like
+	sali, sspi or +agi) where the accumulator wasn't bit-expanded as
+	neccessary and where + and - operations wrote back to the wrong ad-
+	dress.
+
+	* src/core/kernel.c: Added Clone, DisposeClone, ScriptID
+
+	* src/core/scriptdebug.c (c_listclones): Added listclones debug
+	function to list all clones
+
+	* src/console/commands.c (c_dissectscript): Fixed a bug that would
+	read too far, possibly causing a segfault with efence
+
 1999-07-30  Christoph Reichenbach  <jameson@linuxgames.com>
 
-	* src/core/kernel.c: Added OnControl and a few trivial functions (Random, Abs,
-	Sqrt, HaveMouse, GetAngle, GetDistance)
+	* src/core/kernel.c: Added OnControl and a few trivial functions
+	(Random, Abs, Sqrt, HaveMouse, GetAngle, GetDistance)
 
 1999-07-29  Christoph Reichenbach  <jameson@linuxgames.com>
 

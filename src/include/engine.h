@@ -48,6 +48,8 @@
 
 #define MAX_HUNK_BLOCKS 64 /* Used for SCI "far memory"; only used for sci_memory in FreeSCI */
 
+#define MAX_PORTS 16 /* Maximum number of view ports */
+
 
 typedef struct
 {
@@ -89,7 +91,10 @@ typedef struct _state
   int last_pointer_size_x, last_pointer_size_y; /* Mouse pointer size as last used */
   mouse_pointer_t *mouse_pointer; /* The current mouse pointer, or NULL if disabled */
 
-  port_t *view; /* The currently active view */
+  byte *title_font; /* Pointer to the font data used for window headers */
+
+  int view_port; /* The currently active view port */
+  port_t *ports[MAX_PORTS]; /* A list of all available ports */
 
   port_t titlebar_port; /* Title bar viewport (0,0,9,319) */
   port_t wm_port; /* window manager viewport and designated &heap[0] view (10,0,199,319) */
@@ -113,6 +118,8 @@ typedef struct _state
   int classtable_size; /* Number of classes in the table- for debugging */
   class_t *classtable; /* Table of all classes */
   script_t scripttable[1000]; /* Table of all scripts */
+
+  heap_ptr clone_list[SCRIPT_MAX_CLONES];
 
   int selector_names_nr; /* Number of selector names */
   char **selector_names; /* Zero-terminated selector name list */

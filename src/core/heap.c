@@ -72,6 +72,21 @@ void heap_del(heap_t* h)
 	free(h);
 }
 
+
+int heap_meminfo(heap_t* h)
+{
+  heap_ptr current = h->first_free;
+  int total = 0;
+
+  while (current != 0xffff) {
+    total += get_size(h, current);
+    current = get_next(h, current);
+  }
+
+  return total;
+}
+
+
 int heap_largest(heap_t* h)
 {
 	int current=h->first_free;
@@ -80,7 +95,7 @@ int heap_largest(heap_t* h)
 	while(current!=0xffff)
 	{
 		int size=get_size(h, current);
-		int next=get_size(h, current);
+		int next=get_next(h, current);
 
 		if(size>best_size)
 		{

@@ -732,7 +732,8 @@ c_dissectscript()
 
       sciprintf("Object\n");
 
-      sci_hexdump(script->data + seeker, objsize, seeker);
+      sci_hexdump(script->data + seeker, objsize -4, seeker);
+      /*-4 because the size includes the two-word header */
 
       sciprintf("Name: %s\n", namepos? ((char *)script->data + namepos) : "<unknown>");
       sciprintf("Superclass: %x\n", superclass);
@@ -772,20 +773,20 @@ c_dissectscript()
 
     case sci_obj_code: {
       sciprintf("Code\n");
-      sci_hexdump(script->data + seeker, objsize, seeker);
+      sci_hexdump(script->data + seeker, objsize -4, seeker);
     };
     break;
 
     case 3:
     case 4: {
       sciprintf("<unknown>\n");
-      sci_hexdump(script->data + seeker, objsize, seeker);
+      sci_hexdump(script->data + seeker, objsize -4, seeker);
     };
     break;
 
     case sci_obj_strings: {
       sciprintf("Strings\n");
-      sci_hexdump(script->data + seeker, objsize, seeker);
+      sci_hexdump(script->data + seeker, objsize -4, seeker);
     };
     break;
 
@@ -798,7 +799,7 @@ c_dissectscript()
 
       sciprintf("Class\n");
 
-      sci_hexdump(script->data + seeker, objsize, seeker); 
+      sci_hexdump(script->data + seeker, objsize -4, seeker); 
 
       sciprintf("Name: %s\n", namepos? ((char *)script->data + namepos) : "<unknown>");
       sciprintf("Superclass: %x\n", superclass);
@@ -842,25 +843,25 @@ c_dissectscript()
 
     case sci_obj_exports: {
       sciprintf("Exports\n");
-      sci_hexdump(script->data + seeker, objsize, seeker);
+      sci_hexdump(script->data + seeker, objsize -4, seeker);
     };
     break;
 
     case sci_obj_pointers: {
       sciprintf("Pointers\n");
-      sci_hexdump(script->data + seeker, objsize, seeker);
+      sci_hexdump(script->data + seeker, objsize -4, seeker);
     };
     break;
 
     case 9: {
       sciprintf("<unknown>\n");
-      sci_hexdump(script->data + seeker, objsize, seeker);
+      sci_hexdump(script->data + seeker, objsize -4, seeker);
     };
     break;
 
     case sci_obj_localvars: {
       sciprintf("Local vars\n");
-      sci_hexdump(script->data + seeker, objsize, seeker);
+      sci_hexdump(script->data + seeker, objsize -4, seeker);
     };
     break;
 

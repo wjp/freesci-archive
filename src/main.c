@@ -83,7 +83,7 @@ main(int argc, char** argv)
 
   ggiInit();
 
-  sci_color_mode = 0;
+  sci_color_mode = SCI_COLOR_DITHER;
 
   if (i = loadResources(SCI_VERSION_AUTODETECT, 1)) {
     fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);

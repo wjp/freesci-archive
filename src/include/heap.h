@@ -56,6 +56,13 @@ heap_del(heap_t* h);
 */
 
 int
+heap_meminfo(heap_t* h);
+/* Returns the total number of free bytes on the heap
+** Parameters: (heap_t *) h: The heap to check
+** Returns   : (int) The total free space in bytes
+*/
+
+int
 heap_largest(heap_t* h);
 /* Returns the block size of the largest free block on the heap
 ** Parameters: (heap_t *) h: The heap to check

@@ -120,9 +120,12 @@ static char** _vocabulary_get_knames0alt(int *names, resource_t *r)
 
   }
 
-  *names = i;
+  *names = i + 1;
   retval = realloc(retval, sizeof(char *) * (i+2));
-  retval[i] = "[Unknown]"; /* The mystery kernel function- one in each SCI0 package */
+  retval[i] = malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) + 1);
+  strcpy(retval[i], SCRIPT_UNKNOWN_FUNCTION_STRING);
+  /* The mystery kernel function- one in each SCI0 package */
+
   retval[i+1] = NULL; /* Required for cleanup */
 
   return retval;
@@ -151,7 +154,10 @@ static char** vocabulary_get_knames0(int* names)
       strncpy(t[i], r->data + offset + 2, len);
       t[i][len]='\0';
     }
-  t[count] = "[Unknown]"; /* The mystery kernel function */
+  t[count] = malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) +1);
+  strcpy(t[count], SCRIPT_UNKNOWN_FUNCTION_STRING);
+  /* The mystery kernel function */
+
   t[count+1]=0;
   *names=count + 1;
   return t;

@@ -68,8 +68,8 @@ int main(int argc, char** argv)
   ggi_visual_t bigvis;
   int noobj = 0;
   resource_t *resource, *font;
-  port_t clipframe = {0, 150, 120, 180, 200};
-  port_t winframe = {0, 12, 110, 46, 209};
+  port_t clipframe = {150, 120, 180, 200};
+  port_t winframe = {12, 110, 46, 209};
   int boxcol = 15, boxpri = 12, boxflags = 0;
 
   int pointernr = 999; /* mouse pointer ID */

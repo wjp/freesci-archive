@@ -12,6 +12,8 @@
 /* Maximum number of calls residing on the stack */
 #define SCRIPT_MAX_CLASSTABLE_SIZE 256
 /* Maximum number of entries in the class table */
+#define SCRIPT_MAX_CLONES 256
+/* Maximum number of cloned objects on the heap */
 
 
 #define SCRIPT_SELECTOR_OFFSET 8 -8
@@ -35,8 +37,12 @@
 #define SCRIPT_INFO_OFFSET 12 -8
 /* Object-relative offset of the -info- selector */
 
+#define SCRIPT_INFO_CLONE 0x0001
+/* Flag fo the -info- selector */
+
 #define SCRIPT_INFO_CLASS 0x8000
 /* Flag for the -info- selector */
+
 
 #define SCRIPT_OBJECT_MAGIC_NUMBER 0x1234
 /* Magical object identifier */

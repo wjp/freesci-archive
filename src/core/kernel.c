@@ -125,47 +125,6 @@ else { s->heap[(guint16) address] = (value) &0xff;               \
 
 #if 0
 
-int kClone(state* s)
-{
-  instance* old=instance_map[getInt16(s->heap->data+s->acc)];
-  instance* new=instantiate(s->heap, old->class);
-  int i;
-  if(new==0) return 1;
-
-  /*copy the selector values...*/
-  for(i=0; i<old->class->selector_count*2; i++)
-    new->heap[new->offset+i+2]=old->heap[old->offset+i+2];
-  /*...but use the correct id...*/
-  putInt16(new->heap+new->offset, new->id);
-  /*...mark as clone (ie set bit 0 in -info-)...*/
-  putInt16(new->heap+new->offset+6,
-	   (getInt16(new->heap+new->offset+6)|1));
-  /*...and use old's id as superclass*/
-  putInt16(new->heap+new->offset+4, old->id);
-
-  /*set acc to point to the new instance*/
-  s->acc=new->offset;
-  s->sp-=4;
-  return 0;
-}
-
-int kDisposeClone(state* s)
-{
-  int id=getInt16(s->heap->data+s->acc);
-  instance* i;
-  /*FIXME: check acc for sanity*/
-
-  i=instance_map[id];
-  if(h_free(s->heap, i->offset, (i->class->selector_count+1)*2)) return 1;
-
-  /*shuffle the instance_map*/
-  instance_map[id]=instance_map[max_instance--];
-  putInt16(s->heap->data+instance_map[id]->offset, id);
-
-  s->sp-=4;
-  return 0;
-}
-
 int kIsObject(state* s)
 {
   int id=getInt16(s->heap->data+s->acc);
@@ -248,6 +207,139 @@ kUnLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
+void
+kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr old_offs = PARAM(0);
+  heap_ptr new_offs;
+  heap_ptr functareaptr;
+  int selectors;
+  int object_size;
+  int i;
+
+  if (GET_HEAP(old_offs + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
+    SCIkwarn("Attempt to clone non-object/class at %04x", old_offs);
+    return;
+  }
+
+  if (GET_HEAP(old_offs + SCRIPT_INFO_OFFSET) != SCRIPT_INFO_CLASS) {
+    SCIkwarn("Attempt to clone something other than a class template at %04x\n", old_offs);
+    return;
+  }
+
+  selectors = GET_HEAP(old_offs + SCRIPT_SELECTORCTR_OFFSET);
+
+  object_size = 8 + 2 + (selectors * 2);
+  /* 8: Pre-selector area; 2: Function area (zero overloaded methods) */
+
+  new_offs = heap_allocate(s->_heap, object_size);
+  new_offs += 2; /* Step over heap header */
+
+  memcpy(s->heap + new_offs, s->heap + old_offs + SCRIPT_OBJECT_MAGIC_OFFSET, object_size);
+  new_offs -= SCRIPT_OBJECT_MAGIC_OFFSET; /* Center new_offs on the first selector value */
+
+  PUT_HEAP(new_offs + SCRIPT_INFO_OFFSET, SCRIPT_INFO_CLONE); /* Set this to be a clone */
+
+  functareaptr = selectors * 2; /* New function area */
+  PUT_HEAP(new_offs + functareaptr, 0); /* No functions */
+  PUT_HEAP(new_offs + SCRIPT_FUNCTAREAPTR_OFFSET, functareaptr);
+
+  s->acc = new_offs; /* return the object's address */
+
+  i = 0;
+  while ((i < SCRIPT_MAX_CLONES) && (s->clone_list[i])) i++;
+
+  if (i < SCRIPT_MAX_CLONES)
+    s->clone_list[i] = new_offs; /* Log this clone */
+  else SCIkwarn("Could not log clone at %04x\n", new_offs);
+}
+
+
+void
+kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr offset = PARAM(0);
+  int i;
+
+  if (GET_HEAP(offset + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
+    SCIkwarn("Attempt to dispose non-class/object at %04x\n", offset);
+    return;
+  }
+
+  if (GET_HEAP(offset + SCRIPT_INFO_OFFSET) != SCRIPT_INFO_CLONE) {
+    /*  SCIkwarn("Attempt to dispose something other than a clone at %04x\n", offset); */
+    /* SCI silently ignores this behaviour; some games actually depend on this */
+    return;
+  }
+
+  i = 0;
+  while ((i < SCRIPT_MAX_CLONES) && (s->clone_list[i] != offset)) i++;
+  if (i < SCRIPT_MAX_CLONES)
+    s->clone_list[i] = 0; /* un-log clone */
+  else SCIkwarn("Could not remove log entry from clone at %04x\n", offset);
+
+  offset += SCRIPT_OBJECT_MAGIC_OFFSET; /* Step back to beginning of object */
+
+  heap_free(s->_heap, offset -2); /* -2 to step back on the heap block size indicator */
+}
+
+
+/* kScriptID(script, index):
+** Returns script dispatch address index in the supplied script
+*/
+void
+kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int script = PARAM(0);
+  int index = PARAM(1);
+  int disp_size;
+  heap_ptr disp;
+
+  if (argc == 1)
+    index = 1;
+
+  if (s->scripttable[script].heappos == 0)
+    script_instantiate(s, script); /* Instantiate script if neccessary */
+
+  disp = s->scripttable[script].export_table_offset;
+
+  if (!disp) {
+    SCIkwarn("Script 0x%x does not have a dispatch table\n", script);
+    return;
+  }
+
+  disp_size = GET_HEAP(disp);
+
+  if (index > disp_size) {
+    SCIkwarn("Dispatch index too big: %d > %d\n", index, disp_size);
+    return;
+  }
+
+  s->acc = GET_HEAP(disp + index*2) + s->scripttable[script].heappos;
+}
+
+
+void
+kDisposeScript(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  script_uninstantiate(s, PARAM(0)); /* Does its own sanity checking */
+}
+
+
+void
+kIsObject(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr offset = PARAM(0);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  if (offset < 100)
+    s->acc = 0;
+  else
+    s->acc = (GET_HEAP(offset + SCRIPT_OBJECT_MAGIC_OFFSET) == SCRIPT_OBJECT_MAGIC_NUMBER);
+}
+
+
 /* kGameIsRestarting():
 ** Returns the restarting_flag in acc
 */
@@ -282,6 +374,11 @@ kNewList(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr listbase = heap_allocate(s->_heap, 4);
   CHECK_THIS_KERNEL_FUNCTION;
 
+  if (!listbase) {
+    kernel_oops(s, "Out of memory while creating a list");
+    return;
+  }
+
   listbase += 2; /* Jump over heap header */
 
   PUT_HEAP(listbase + LIST_FIRST_NODE, 0); /* No first node */
@@ -297,6 +394,11 @@ kNewNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr nodebase = heap_allocate(s->_heap, 8);
   /*  SCIkdebug("argc=%d; args = (%04x %04x)\n", argc, PARAM(0), PARAM(1)); */
   CHECK_THIS_KERNEL_FUNCTION;
+
+  if (!nodebase) {
+    kernel_oops(s, "Out of memory while creating a node");
+    return;
+  }
 
   nodebase += 2; /* Jump over heap header */
 
@@ -410,7 +512,30 @@ kNodeValue(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
+void
+kDisposeList(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr address = PARAM(0) - 2; /* -2 to get the heap header */
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  if (GET_HEAP(address) != 6) {
+    SCIkwarn("Attempt to dispose non-list at %04x\n", address);
+  } else heap_free(s->_heap, address);
+
+}
+
 /*************************************************************/
+
+void
+kMemoryInfo(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  switch (PARAM(0)) {
+  case 0: s->acc = heap_meminfo(s->_heap); break;
+  case 1: s->acc = heap_largest(s->_heap); break;
+  default: SCIkwarn("Unknown MemoryInfo operation: %04x\n", PARAM(0));
+  }
+}
+
 
 /* kGetCWD(address):
 ** Writes the cwd to the supplied address and returns the address in acc.
@@ -515,8 +640,8 @@ kSetCursor(state_t *s, int funct_nr, int argc, heap_ptr argp)
     s->mouse_pointer = NULL;
 
   if (argc > 2) {
-    s->pointer_x = PARAM(2);
-    s->pointer_y = PARAM(3) + 10; /* FIXME: Adjust to current port */
+    s->pointer_x = PARAM(2) + s->ports[s->view_port]->xmin;
+    s->pointer_y = PARAM(3) + s->ports[s->view_port]->ymin; /* Port-relative */
   } 
 
   s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0); /* Update mouse pointer */
@@ -590,20 +715,114 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
   sciprintf("kDoSound: Stub\n");
 
   switch (PARAM(0)) {
-  case 0x0: s->sound_object = PARAM(1); break; /* Initialize and set sound object? */
+  case 0x0: s->sound_object = PARAM(1); break;
+    /* Initialize and set sound object. Stores a heap_ptr to some special data in the sound
+    ** object's "handle" varselector.  */
   case 0x8: s->acc = 0xc; break; /* Determine sound type? */
   case 0xb: s->acc = 1; break; /* Check for sound? */
   }
 }
 
+void
 kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   CHECK_THIS_KERNEL_FUNCTION;
   sciprintf("kGraph: Stub\n");
 
   switch(PARAM(0)) {
-  case 0x2: s->acc = 0x10; /* Whatever */
+  case 0x2:
+    s->acc = (sci_version < SCI_VERSION_1) ? 0x10 : 0x100; /* number of colors */
   }
+}
+
+void
+k_Unknown(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  switch (funct_nr) {
+  case 0x70: kGraph(s, funct_nr, argc, argp); break;
+  default: {
+    CHECK_THIS_KERNEL_FUNCTION;
+    sciprintf("Unhandled Unknown function %04x\n", funct_nr);
+  }
+  }
+}
+
+void
+kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  CHECK_THIS_KERNEL_FUNCTION;
+  sciprintf("kGetEvent: Stub\n");
+
+  s->acc = 0; /* No event */
+}
+
+
+/* Format(targ_address, textresnr, index_inside_res, ...)
+** Formats the text from text.textresnr (offset index_inside_res) according to
+** the supplied parameters and writes it to the targ_address.
+*/
+void
+kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int *arguments;
+  char *target = ((char *) s->heap) + PARAM(0);
+  int resource_nr = PARAM(1);
+  int index = UPARAM(2);
+  resource_t *resource = findResource(sci_text, resource_nr);
+  char *source;
+  int mode = 0;
+  int paramindex = 0; /* Next parameter to evaluate */
+  char xfer;
+  int i;
+
+
+  if (!resource) {
+    SCIkwarn("Could not find text.%03d\n", resource_nr);
+    return;
+  }
+
+  arguments = malloc(sizeof(int) * argc);
+  for (i = 3; i < argc; i++)
+    arguments[i-3] = UPARAM(i); /* Parameters are copied to prevent overwriting */ 
+
+  source = resource->data + index;
+
+  while (xfer = *source++) {
+    if (xfer == '%') {
+      if (mode == 1)
+	*target++ = '%'; /* Literal % by using "%%" */
+      else mode = 1;
+    }
+    else { /* xfer != '%' */
+      if (mode == 1) {
+	switch (xfer) {
+	case 's': { /* Copy string */
+	  char *tempsource = ((char *) s->heap) + arguments[paramindex++];
+	  while (*target++ = *tempsource++);
+	}
+	break;
+	case 'd': { /* Copy decimal */
+	  target += sprintf(target, "%d", arguments[paramindex++]);
+	  paramindex++;
+	}
+	break;
+	default:
+	  *target = '%';
+	  *target++;
+	  *target = xfer;
+	  *target++;
+	}
+	mode = 0;
+      } else { /* mode != 1 */
+	*target = xfer;
+	*target++;
+      }
+    }
+  }
+
+  free(arguments);
+
+  *target = 0; /* Terminate string */
 }
 
 
@@ -640,6 +859,117 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
   s->acc = (word) retval;
 
 }
+
+
+void
+kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  resource_t *resource = findResource(sci_pic, PARAM(0));
+
+  if (resource) {
+    clearPicture(s->bgpic, 15);
+    drawPicture0(s->bgpic, PARAM(2), PARAM(3), resource->data);
+  } else
+    SCIkwarn("Request to draw non-existing pic.%03d", PARAM(0));
+}
+
+
+/*void
+kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  resource_t *resource = findResource(sci_pic, PARAM(0));
+
+  if (resource)
+    drawPicture0(s->bgpic, PARAM(2), PARAM(3), resource->data);
+  else
+    SCIkwarn("Request to add non-existing pic.%03d", PARAM(0));
+}*/
+
+
+void
+kGetPort(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  s->acc = s->view_port;
+}
+
+
+void
+kSetPort(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  unsigned int newport = PARAM(0);
+
+  if ((newport >= MAX_PORTS) || (s->ports[newport] == NULL)) {
+    SCIkwarn("Invalid port %04x requested\n", newport);
+    return;
+  }
+
+  s->view_port = newport;
+}
+
+
+void
+kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  unsigned int goner = PARAM(0);
+
+  if ((goner >= MAX_PORTS) || (goner < 3) ||(s->ports[goner] == NULL)) {
+    SCIkwarn("Removal of invalid window %04x requested\n", goner);
+    return;
+  }
+
+  free(s->ports[goner]);
+  s->ports[goner] = NULL; /* Mark as free */
+}
+
+
+void
+kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  unsigned int window = 3;
+  window_t *wnd;
+
+  while ((window < MAX_PORTS) && (s->ports[window]))
+    ++window;
+
+  if (window == MAX_PORTS) {
+    kernel_oops(s, "Out of window/port handles in kNewWindow! Increase MAX_PORTS in engine.h\n");
+    return;
+  }
+
+  wnd = malloc(sizeof(window_t));
+
+  wnd->ymin = PARAM(0);
+  wnd->xmin = PARAM(1);
+  wnd->ymax = PARAM(2);
+  wnd->xmax = PARAM(3);
+  wnd->title = PARAM(4);
+  wnd->flags = PARAM(5);
+  wnd->priority = PARAM(6);
+  wnd->color = PARAM(7);
+  wnd->bgcolor = PARAM(8);
+
+  s->ports[window] = (port_t *) wnd; /* Typecast to a port; it only carries some extra information */
+
+  drawWindow(s->pic, s->ports[window], wnd->bgcolor, wnd->priority,
+	     s->heap + wnd->title, s->title_font , wnd->flags); /* Draw window */
+
+  s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_BOX,
+		       wnd->xmin - 1, wnd->ymin - 1,
+		       wnd->xmax + 2, wnd->ymin + 2); /* Update screen */
+
+  s->acc = window;
+}
+
+void
+kDrawStatus(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  drawTitlebar(s->pic, 0xf);
+  drawText0(s->pic, &(s->titlebar_port), 1, 1, ((char *)s->heap) + PARAM(0), s->title_font, 0);
+
+  s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_BOX,
+		       0, 0, 319, 9);
+}
+
 
 
 void
@@ -686,8 +1016,27 @@ struct {
   {"NextNode", kNextNode },
   {"PrevNode", kPrevNode },
   {"NodeValue", kNodeValue },
+  {"Clone", kClone },
+  {"DisposeClone", kDisposeClone },
+  {"ScriptID", kScriptID },
+  {"MemoryInfo", kMemoryInfo },
+  {"DrawPic", kDrawPic },
+  {"DisposeList", kDisposeList },
+  {"DisposeScript", kDisposeScript },
+  /*  {"AddToPic", kAddToPic }, */
+  {"GetPort", kGetPort },
+  {"SetPort", kSetPort },
+  {"NewWindow", kNewWindow },
+  {"DisposeWindow", kDisposeWindow },
+  {"IsObject", kIsObject },
+  {"Format", kFormat },
+  {"DrawStatus", kDrawStatus },
+
+  /* Experimental functions */
   {"DoSound", kDoSound },
   {"Graph", kGraph },
+  {"GetEvent", kGetEvent },
+  {SCRIPT_UNKNOWN_FUNCTION_STRING, k_Unknown },
   {0,0} /* Terminator */
 };
 

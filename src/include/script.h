@@ -6,6 +6,7 @@
 
 /*#define SCRIPT_DEBUG /**/
 
+
 typedef struct script_opcode_
 {
   unsigned opcode;
@@ -66,6 +67,38 @@ typedef enum {
 } opcode_format;
 
 typedef enum { /* FIXME */
+  op_bnot = 0,
+  op_add,
+  op_sub,
+  op_mul,
+  op_div,
+  op_mod,
+  op_shr,
+  op_shl,
+  op_xor,
+  op_and,
+  op_or,
+  op_neg,
+  op_not,
+  op_eq,
+  op_ne_,
+  op_gt_,
+  op_ge_,
+  op_lt_,
+  op_le_,
+  op_ugt_,
+  op_uge_,
+  op_ult_,
+  op_ule_,
+  op_bt,
+  op_bnt,
+  op_jmp,
+  op_ldi,
+  op_push,
+  op_pushi,
+  op_toss,
+  op_dup,
+  op_link,
   op_call = 0x20,
   op_callk,
   op_callb,

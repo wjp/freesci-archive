@@ -53,6 +53,17 @@ void drawBox(picture_t dest, short x, short y, short xl, short yl, char color, c
 
 }
 
+void
+drawTitlebar(picture_t dest, int color)
+{
+  int i;
+
+  for (i = 0; i < 10; i++) {
+    memset(dest[0] + i * 320, (i == 9)? 0 : color, 319);
+    dest[0][i*320] = 0;
+    memset(dest[1] + i * 320, 10, 320); /* Priority for the menubar */
+  }
+}
 
 
 void drawWindow(picture_t dest, port_t *port, char color, char priority,

@@ -138,7 +138,9 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
 }
 
 void
-send_selector(state_t *s, heap_ptr send_obj, heap_ptr sp, int framesize, word restmod, heap_ptr argp)
+send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
+	      heap_ptr sp, int framesize, word restmod, heap_ptr argp)
+     /* send_obj and work_obj are equal for anything but 'super' */
 {
   heap_ptr lookupresult;
   int selector;
@@ -179,7 +181,7 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr sp, int framesize, word re
       break;
 
     case SELECTOR_METHOD:
-      execute(s, lookupresult, sp, send_obj, argc, argp, selector);
+      execute(s, lookupresult, sp, work_obj, argc, argp, selector);
       break;
     } /* switch(lookup_selector()) */
 
@@ -438,7 +440,7 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       break;
 
     case 0x25: /* send */
-      send_selector(s, s->acc, sp, opparams[0], restadjust, sp - opparams[0] - restadjust * 2);
+      send_selector(s, s->acc, s->acc, sp, opparams[0], restadjust, sp - opparams[0] - restadjust * 2);
       sp -= (opparams[0] + (restadjust * 2)); /* Adjust stack */
       restadjust = 0;
       break;
@@ -451,7 +453,7 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       break;
 
     case 0x2a: /* self */
-      send_selector(s, objp, sp, opparams[0], restadjust, sp - opparams[0] - restadjust * 2);
+      send_selector(s, objp, objp, sp, opparams[0], restadjust, sp - opparams[0] - restadjust * 2);
       sp -= (opparams[0] + (restadjust * 2)); /* Adjust stack */
       restadjust = 0;
       break;
@@ -462,7 +464,7 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
 	script_error(s, "Invalid superclass in object");
       else {
 	send_selector(s, *(s->classtable[opparams[0]].scriptposp)
-		      + s->classtable[opparams[0]].class_offset,
+		      + s->classtable[opparams[0]].class_offset, objp,
 		      sp, opparams[1], restadjust, sp - opparams[1] - restadjust * 2);
 	sp -= (opparams[1] + (restadjust * 2)); /* Adjust stack */
 	restadjust = 0;
@@ -589,8 +591,8 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
     case 0x4a: /* lati */
     case 0x4b: /* lapi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (opparams[0] << 1);
-      s->acc = GET_HEAP(temp + s->acc);
+      temp = variables[var_number] + ((opparams[0] + s->acc) << 1);
+      s->acc = GET_HEAP(temp);
       break;
 
     case 0x4c: /* lsgi */
@@ -598,8 +600,8 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
     case 0x4e: /* lsti */
     case 0x4f: /* lspi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (opparams[0] << 1);
-      PUSH(GET_HEAP(temp + s->acc));
+      temp = variables[var_number] + ((opparams[0] + s->acc) << 1);
+      PUSH(GET_HEAP(temp));
       break;
 
     case 0x50: /* sag */
@@ -626,8 +628,8 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
     case 0x5a: /* sati */
     case 0x5b: /* sapi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (opparams[0] << 1);
-      PUT_HEAP(temp + s->acc, s->acc);
+      temp = variables[var_number] + ((opparams[0] + s->acc) << 1);
+      PUT_HEAP(temp, s->acc);
       break;
 
     case 0x5c: /* ssgi */
@@ -635,9 +637,9 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
     case 0x5e: /* ssti */
     case 0x5f: /* sspi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (opparams[0] << 1);
+      temp = variables[var_number] + ((opparams[0] + s->acc) << 1);
       temp2 = POP();
-      PUT_HEAP(temp + s->acc, temp2);
+      PUT_HEAP(temp, temp2);
       break;
 
     case 0x60: /* +ag */
@@ -668,8 +670,8 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
     case 0x6a: /* +ati */
     case 0x6b: /* +api */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (opparams[0] << 1);
-      s->acc = GET_HEAP(temp + s->acc);
+      temp = variables[var_number] + ((opparams[0] + s->acc) << 1);
+      s->acc = GET_HEAP(temp);
       ++(s->acc);
       PUT_HEAP(temp, s->acc);
       break;
@@ -679,8 +681,8 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
     case 0x6e: /* +sti */
     case 0x6f: /* +spi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (opparams[0] << 1);
-      temp2 = GET_HEAP(temp + s->acc);
+      temp = variables[var_number] + ((opparams[0] + s->acc) << 1);
+      temp2 = GET_HEAP(temp);
       temp2++;
       PUT_HEAP(temp, temp2);
       PUSH(temp2);
@@ -714,8 +716,8 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
     case 0x7a: /* -ati */
     case 0x7b: /* -api */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (opparams[0] << 1);
-      s->acc = GET_HEAP(temp + s->acc);
+      temp = variables[var_number] + ((opparams[0] + s->acc) << 1);
+      s->acc = GET_HEAP(temp);
       --(s->acc);
       PUT_HEAP(temp, s->acc);
       break;
@@ -725,8 +727,8 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
     case 0x7e: /* -sti */
     case 0x7f: /* -spi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = variables[var_number] + (opparams[0] << 1);
-      temp2 = GET_HEAP(temp + s->acc);
+      temp = variables[var_number] + ((opparams[0] + s->acc) << 1);
+      temp2 = GET_HEAP(temp);
       temp2--;
       PUT_HEAP(temp, temp2);
       PUSH(temp2);
@@ -1013,7 +1015,8 @@ script_uninstantiate(state_t *s, int script_nr)
   int objtype, objlength;
 
   if (!handle) {
-    sciprintf("Warning: unloading script 0x%x requested although not loaded\n", script_nr);
+    /*    sciprintf("Warning: unloading script 0x%x requested although not loaded\n", script_nr); */
+    /* This is perfectly valid SCI behaviour */
     return;
   }
 
@@ -1070,6 +1073,7 @@ script_run(state_t *s)
   heap_ptr game_obj; /* Address of the game object */
   heap_ptr game_init; /* Address of the init() method */
   heap_ptr functarea;
+  resource_t *resource;
   int i;
 
   if (!stack_handle) {
@@ -1083,7 +1087,6 @@ script_run(state_t *s)
   }
 
   fprintf(stderr," Script 0 at %04x\n", script0);
-
 
   s->restarting_flag = 0; /* We're not restarting here */
 
@@ -1118,15 +1121,43 @@ script_run(state_t *s)
   s->pic_not_valid = 0; /* Picture is valid (cough) */
   s->pic_layer = 0; /* Other values only make sense for debugging */
 
+  memset(s->ports, sizeof(s->ports), 0); /* Set to no ports */
+
+  s->wm_port.ymin = 10; s->wm_port.ymax = 199;
+  s->wm_port.xmin = 0; s->wm_port.xmax = 319;
+  s->ports[0] = &(s->wm_port); /* Window Manager port */
+
+  s->wm_port.ymin = 00; s->wm_port.ymax = 9;
+  s->wm_port.xmin = 0; s->wm_port.xmax = 319;
+  s->ports[1] = &(s->titlebar_port);
+
+  s->wm_port.ymin = 10; s->wm_port.ymax = 199;
+  s->wm_port.xmin = 0; s->wm_port.xmax = 319;
+  s->ports[2] = &(s->picture_port); /* Background picture port */
+
+  s->view_port = 0; /* Currently using the window manager port */
+
+
+  i = 0;
+  do {
+    resource = findResource(sci_font, i++);
+  } while ((!resource) && (i < 1000));
+
+  if (!resource) {
+    sciprintf("No text font was found.\n");
+    return 1;
+  }
+  s->title_font = resource->data; /* Use the highest-numbered font available for window titles */
+
+
   memset(s->hunk, sizeof(s->hunk), 0); /* Sets hunk to be unused */
+  memset(s->clone_list, sizeof(s->clone_list), 0); /* No clones */
 
   s->save_dir = heap_allocate(s->_heap, MAX_HOMEDIR_SIZE + strlen(FREESCI_GAMEDIR)
 			      + MAX_GAMEDIR_SIZE + 4); /* +4 for the three slashes and trailing \0 */
 
   game_obj = script0 + GET_HEAP(s->scripttable[0].export_table_offset + 2);
   /* The first entry in the export table of script 0 points to the game object */
-
-  fprintf(stderr," Game object at %04x\n", game_obj);
 
   if (GET_HEAP(game_obj + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
     sciprintf("script_run(): Game object is not at 0x%x\n", game_obj);
@@ -1147,7 +1178,7 @@ script_run(state_t *s)
   sciprintf(" Calling %s::play()\n", s->game_name);
   putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector... */
   putInt16(s->heap + s->stack_base + 2, 0);                    /* ... with 0 arguments. */
-  send_selector(s, game_obj, s->stack_base + 2, 4, 0, s->stack_base); /* Engage! */
+  send_selector(s, game_obj, game_obj, s->stack_base + 2, 4, 0, s->stack_base); /* Engage! */
 
   sciprintf(" Game::play() finished.\n");
 
@@ -1164,6 +1195,12 @@ script_run(state_t *s)
 	  free(s->hunk[i].data);
 	  s->hunk[i].size = 0;
       }
+
+  for (i = 3; i < MAX_PORTS; i++) /* Ports 0,1,2 are fixed */
+    if (s->ports[i]) {
+      free(s->ports[i]);
+      s->ports[i] = 0;
+    }
 
   s->selector_names = NULL;
   s->kernel_names = NULL;

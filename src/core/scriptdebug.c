@@ -34,9 +34,11 @@ int _debugstate_valid = 0; /* Set to 1 while script_debug is running */
 int _debug_step_running = 0; /* Set to >0 to allow multiple stepping */
 int _debug_commands_not_hooked = 1; /* Commands not hooked to the console yet? */
 int _debug_seeking = 0; /* Stepping forward until some special condition is met */
+int _debug_seek_level = 0; /* Used for seekers that want to check their exec stack depth */
 
 #define _DEBUG_SEEK_NOTHING 0
 #define _DEBUG_SEEK_CALLK 1 /* Step forward until callk is found */
+#define _DEBUG_SEEK_LEVEL_RET 2 /* Step forward until returned from this level */
 
 state_t *_s;
 heap_ptr *_pc;
@@ -234,7 +236,7 @@ disassemble(state_t *s, heap_ptr pos)
 
 	while (argc--) {
 
-	  sciprintf("%04x", getInt16(s->heap + *_sp - stackframe));
+	  sciprintf("%04x", 0xffff & getInt16(s->heap + *_sp - stackframe));
 	  if (argc) sciprintf(", ");
 	  stackframe -= 2;
 
@@ -323,6 +325,59 @@ c_snk()
 }
 
 int
+c_sret()
+{
+  _debug_seeking = _DEBUG_SEEK_LEVEL_RET;
+  _debug_seek_level = script_exec_stackpos;
+  _debugstate_valid = 0;
+}
+
+
+int
+c_set_acc()
+{
+  if (!_debugstate_valid) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  _s->acc = cmd_params[0].val;
+}
+
+int
+c_resource_id()
+{
+  int id = cmd_params[0].val;
+
+  sciprintf("%s.%d (0x%x)\n", Resource_Types[id >> 11], id &0x7ff, id & 0x7ff);
+}
+
+int
+c_heap_free()
+{
+  if (!_debugstate_valid) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  heap_dump_free(_s->_heap);
+}
+
+int
+c_listclones()
+{
+  int i, j = 0;
+  sciprintf("Listing all logged clones:\n");
+  for (i = 0; i < SCRIPT_MAX_CLONES; i++)
+    if (_s->clone_list[i]) {
+      sciprintf("  Clone at %04x\n", _s->clone_list[i]);
+      j++;
+    }
+
+  sciprintf("Total of %d clones.\n", j);
+}
+
+int
 objinfo(heap_ptr pos)
 {
   word type;
@@ -342,12 +397,14 @@ objinfo(heap_ptr pos)
     return 0;
   }
 
-  type = getInt16(_s->heap + pos + SCRIPT_OBJECT_MAGIC_OFFSET - 4);
+  type = getInt16(_s->heap + pos + SCRIPT_INFO_OFFSET);
 
-  if (type == sci_obj_object)
-    sciprintf("Object");
-  else if (type == sci_obj_class)
+  if (type & SCRIPT_INFO_CLONE)
+    sciprintf("Clone");
+  else if (type & SCRIPT_INFO_CLASS)
     sciprintf("Class");
+  else if (type == 0)
+    sciprintf("Object");
   else {
     sciprintf("Not an object.\n");
     return 0;
@@ -373,7 +430,7 @@ objinfo(heap_ptr pos)
 
     selectoroffset = _s->heap + pos + SCRIPT_SELECTOR_OFFSET;
 
-    if (type == sci_obj_class)
+    if (type & SCRIPT_INFO_CLASS)
       selectorIDoffset = selectoroffset + selectors * 2;
     else
       selectorIDoffset =
@@ -451,6 +508,10 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       if (op != op_callk) return;
       break;
     }
+    case _DEBUG_SEEK_LEVEL_RET: {
+      if ((op != op_ret) || (_debug_seek_level < script_exec_stackpos)) return;
+      break;
+    }
 
     } /* switch(_debug_seeking) */
 
@@ -496,6 +557,13 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       cmdHook(c_stack, "stack", "i", "Dumps the specified number of stack elements");
       cmdHook(c_backtrace, "bt", "", "Dumps the send/self/super/call/calle/callb stack");
       cmdHook(c_snk, "snk", "", "Steps forward until it hits the next\n  callk operation");
+      cmdHook(c_listclones, "listclones", "", "Lists all registered clones");
+      cmdHook(c_set_acc, "set_acc", "i", "Sets the accumulator");
+      cmdHook(c_heap_free, "heapfree", "", "Shows the free heap");
+      cmdHook(c_sret, "sret", "", "Steps forward until ret is called\n  on the current execution stack"
+	      "\n  level.");
+      cmdHook(c_resource_id, "resource_id", "i", "Identifies a resource number by\n"
+	      "  splitting it up in resource type\n  and resource number.\n");
 
       cmdHookInt(&script_exec_stackpos, "script_exec_stackpos", "Position on the execution stack\n");
       cmdHookInt(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");
