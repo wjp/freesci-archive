@@ -1,5 +1,5 @@
 /***************************************************************************
- ksaid.y Copyright (C) 1999 Magnus Reftel, Christoph Reichenbach
+ said.y Copyright (C) 1999 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
