@@ -109,3 +109,8 @@ char *strerror(int errn)
 {
 	return "Unknown error";
 }
+
+int isatty(int desc)
+{
+	return 0;
+}

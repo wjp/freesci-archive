@@ -1,3 +1,9 @@
+2004-12-25  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl
+
+	* src/dc/dc.c (isatty): Function added to fix Dreamcast build.
+	* src/dc/Makefile: Removed YY_NEVER_INTERACTIVE from CFLAGS; recent
+	versions of flex don't use it.
+
 2004-12-24  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gp32/config.h, src/gp32/config.c, src/gp32/wrap.h,
