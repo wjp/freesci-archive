@@ -59,7 +59,7 @@
 #	else
 #		include <win32\getopt.h>
 #	endif
-	
+
 #endif /* HAVE_GETOPT_H */
 
 #ifdef HAVE_GETOPT_LONG
@@ -263,7 +263,7 @@ get_gets_input(void)
 	if (old_input)
 		free(old_input);
 
-	old_input = malloc(1024);
+	old_input = sci_malloc(1024);
 	strcpy(old_input, input);
 	return input;
 }
@@ -407,7 +407,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			if (cl_options->gamedir)
 				free(cl_options->gamedir);
 
-			cl_options->gamedir = strdup(optarg);
+			cl_options->gamedir = sci_strdup(optarg);
 			break;
 
 		case 'V': {
@@ -422,22 +422,22 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 		case 'g':
 			if (cl_options->gfx_driver_name)
 				free(cl_options->gfx_driver_name);
-			cl_options->gfx_driver_name = strdup(optarg);
+			cl_options->gfx_driver_name = sci_strdup(optarg);
 			break;
 		case 'O':
 		        if (cl_options->midiout_driver_name)
 		            free(cl_options->midiout_driver_name);
-		        cl_options->midiout_driver_name = strdup(optarg);
+		        cl_options->midiout_driver_name = sci_strdup(optarg);
 		        break;
 		case 'M':
 		        if (cl_options->midi_device_name)
 		            free(cl_options->midi_device_name);
-		        cl_options->midi_device_name = strdup(optarg);
+		        cl_options->midi_device_name = sci_strdup(optarg);
 		        break;
 		case 'S':
 		        if (cl_options->sound_server_name)
 		            free(cl_options->sound_server_name);
-		        cl_options->sound_server_name = strdup(optarg);
+		        cl_options->sound_server_name = sci_strdup(optarg);
 		        break;
 		case '?':
 			/* getopt_long already printed an error message. */
@@ -834,7 +834,7 @@ main(int argc, char** argv)
 
 	sciprintf("FreeSCI, version "VERSION"\n");
 
-	gamestate = malloc(sizeof(state_t));
+	gamestate = sci_malloc(sizeof(state_t));
 
 	if (init_gamestate(gamestate, version))
 		return 1;
