@@ -1,3 +1,9 @@
+2003-01-26  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/Makefile.am, src/dc/Makefile, src/dc/fs_iso9660.c: Imported
+	fs_iso9660.c from KOS. Slightly changed to work	around a problem with
+	CD's that don't conform to ISO 9660.
+
 2003-01-26  Alexander Angas  <wgd@internode.on.net>
 
 	* src/win32/fsci_dll.dsp:
