@@ -220,3 +220,7 @@ Rune Orsval: <u951663@daimi.au.dk>
 conf/
 	freesci-config
 	config.template
+
+
+Alexander R. Angas: <wgd@adelaide.on.net>
+Win32 optimizations and updates in many files

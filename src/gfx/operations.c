@@ -261,21 +261,32 @@ _gfxop_remove_pointer(gfx_state_t *state)
 	if (state->mouse_pointer_visible
 	    && !state->mouse_pointer_in_hw
 	    && state->mouse_pointer_bg) {
+		int retval;
 
 		if (state->mouse_pointer_visible == POINTER_VISIBLE_BUT_CLIPPED) {
 			state->mouse_pointer_visible = 0;
+			state->pointer_pos.x = state->driver->pointer_x / state->driver->mode->xfact;
+			state->pointer_pos.y = state->driver->pointer_y / state->driver->mode->yfact;
 			return GFX_OK;
 		}
 
 		state->mouse_pointer_visible = 0;
 
-		return
-			state->driver->draw_pixmap(state->driver, state->mouse_pointer_bg, GFX_NO_PRIORITY,
+		retval = state->driver->draw_pixmap(state->driver, state->mouse_pointer_bg, GFX_NO_PRIORITY,
 						   gfx_rect(0, 0, state->mouse_pointer_bg->xl, state->mouse_pointer_bg->yl),
 						   state->pointer_bg_zone,
 						   GFX_BUFFER_BACK);
 
-	} else return GFX_OK;
+		state->pointer_pos.x = state->driver->pointer_x / state->driver->mode->xfact;
+		state->pointer_pos.y = state->driver->pointer_y / state->driver->mode->yfact;
+
+		return retval;
+
+	} else {
+		state->pointer_pos.x = state->driver->pointer_x / state->driver->mode->xfact;
+		state->pointer_pos.y = state->driver->pointer_y / state->driver->mode->yfact;
+		return GFX_OK;
+	}
 }
 
 static int /* returns 1 if there are no pointer bounds, 0 otherwise */

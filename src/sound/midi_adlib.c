@@ -36,6 +36,7 @@
 #ifdef HAVE_SYS_SOUNDCARD_H
 
 #include <sys/ioctl.h>
+#include <sys/time.h>
 #include <sys/soundcard.h>
 
 #define ADLIB_VOICES 9

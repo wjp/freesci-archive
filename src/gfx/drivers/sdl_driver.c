@@ -1082,7 +1082,7 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
       sleep_time.tv_usec = usecs_to_sleep;
       sleep_time.tv_sec = 0;
 
-      sdl_usec_sleep(usecs_to_sleep);
+      sdl_usec_sleep(drv, usecs_to_sleep);
     }
 
   } while (usecs_to_sleep >= 0);

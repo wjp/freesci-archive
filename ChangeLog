@@ -1,3 +1,11 @@
+2001-08-04  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/operations.c (_gfxop_remove_pointer): Removing the
+	pointer now updates the operational layer's pointer position
+
+	* src/sound/midi_adlib.c: Now includes sys/time.h for
+	struct timeval
+
 2001-08-04  Alex Angas  <wgd@adelaide.on.net>
 
 	* src/win32_profiler.bat: _Remove._ (already present in win32 dir).
