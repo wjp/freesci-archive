@@ -1,5 +1,10 @@
 2004-03-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sfx/iterator.c (_tee_read_next_command): When playing
+	multiple songs and subtacting one song's delay time from another,
+	make sure that we don't reach '0' (which has a different, special
+	meaning).
+
 	* src/sfx/mixer/soft.c: Implemented locking, fixed bugs related
 	to realloc() messing things up when PCM feeds would install
 	new feeds

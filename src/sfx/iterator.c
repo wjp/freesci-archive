@@ -1092,7 +1092,6 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 			songit_id_t sought_id = msg.ID;
 			int i;
 
-fprintf(stderr, "[iterator-1:%08lx] Recv stop/%08lx\n", self->ID, sought_id);
 			if (sought_id == self->ID)
 				for (i = 0; i < self->channels_nr; i++)
 					self->channels[i].state = SI_STATE_FINISHED;
@@ -1428,7 +1427,7 @@ fprintf(stderr, "\t Child %d signalled completion, recursing w/ status %02x\n", 
 	retid = TEE_LEFT;
 	if ((it->children[TEE_LEFT].retval > 0)
 	    /* Asked to delay */
-	    && (it->children[TEE_RIGHT].retval < it->children[TEE_LEFT].retval))
+	    && (it->children[TEE_RIGHT].retval <= it->children[TEE_LEFT].retval))
 		/* Is not delaying or not delaying as much */
 		retid = TEE_RIGHT;
 
@@ -1436,6 +1435,7 @@ fprintf(stderr, "\t Child %d signalled completion, recursing w/ status %02x\n", 
 fprintf(stderr, "\tl:%d / r:%d / chose %d\n",
 	it->children[TEE_LEFT].retval, it->children[TEE_RIGHT].retval, retid);
 #endif
+#if 0
 	if (it->children[retid].retval == 0) {
 		/* Perform remapping, if neccessary */
 		byte *buf = it->children[retid].buf;
@@ -1449,12 +1449,22 @@ fprintf(stderr, "\tl:%d / r:%d / chose %d\n",
 			*buf = chan | op;
 		}
 	}
+#endif
 
 	/* Adjust delta times */
 	if (it->children[retid].retval > 0
-	    && it->children[1-retid].retval > 0)
-		it->children[1-retid].retval
-			-= it->children[retid].retval;
+	    && it->children[1-retid].retval > 0) {
+		if (it->children[1-retid].retval
+		    == it->children[retid].retval)
+			/* If both children wait the same amount of time,
+			** we have to re-fetch commands from both  */
+			it->status &= ~ready_masks[1-retid];
+		else
+			/* If they don't, we can/must re-use the other
+			** child's delay time  */
+			it->children[1-retid].retval
+				-= it->children[retid].retval;
+	}
 
 	it->status &= ~ready_masks[retid];
 	memcpy(buf, it->children[retid].buf, MAX_BUF_SIZE);
