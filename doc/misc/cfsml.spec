@@ -8,6 +8,17 @@ This documentation is provided WITHOUT WARRANTY of any kind.
 
 
 
+IMPLEMENTATION NOTES regarding the reference implementation
+-----------------------------------------------------------
+== READ THIS CAREFULLY ==
+The currrent reference implementation stores everything in a text file,
+as name/value pairs, with the names given by the variable names specified
+in the cfsml file. This means that renaming a variable will break
+compatibility with earlier versions, until this is taken care of by
+some sort of clever or semi-clever hack.
+
+
+
 Purpose of the CFSML
 --------------------
 It's damn hard to write functions that read and write C records to or from
