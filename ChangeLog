@@ -1,3 +1,11 @@
+2001-06-24  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/ksound.c (process_sound_events): songs' loop selector is no
+	longer written to
+
+	* src/engine/kernel.c (kRestartGame): Sound is now turned off when the
+	game is restarted
+
 2001-06-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* conf/freesci-config: Added

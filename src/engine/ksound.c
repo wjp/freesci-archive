@@ -65,7 +65,6 @@ process_sound_events(state_t *s) /* Get all sound events, apply their changes to
 			case SOUND_SIGNAL_LOOP:
 
 				SCIkdebug(SCIkSOUND,"Received loop signal for %04x\n", obj);
-				PUT_SELECTOR(obj, loop, event->value);
 				PUT_SELECTOR(obj, signal, -1);
 				break;
 

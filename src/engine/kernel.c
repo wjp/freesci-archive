@@ -401,6 +401,7 @@ kRestartGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->restarting_flags |= SCI_GAME_IS_RESTARTING_NOW;
 	s->restarting_flags &= ~SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE; /* This appears to help */
 	s->execution_stack_pos = s->execution_stack_base;
+	s->sound_server->command(s, SOUND_COMMAND_STOP_ALL, 0, 0);
 	script_abort_flag = 1; /* Force vm to abort ASAP */
 }
 
