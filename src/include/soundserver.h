@@ -445,4 +445,6 @@ void sound_get_data(byte **data_ptr, int *size, int maxlen);
 sound_event_t * 
 sound_get_command(struct timeval *wait_tvp);
 
+FILE *ds;
+
 #endif /* !_SCI_SOUND_SERVER_H_ */

@@ -48,7 +48,7 @@ sfx_driver_t sound_null;
 int x_fd_in, x_fd_out, x_fd_events, x_fd_debug;
 
 void
-sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug);
+sound_null_server(int fd_in, int fd_out, int fd_events);
 
 void
 _sound_server_sigpipe_handler(int signal)
@@ -107,7 +107,8 @@ sound_null_init(state_t *s)
 		x_fd_events = fd_events[1];
 		x_fd_debug = fd_debug[1];
 
-		sound_null_server(fd_in[0], fd_out[1], fd_events[1], fd_debug[1]); /* Run the sound server */
+		ds = fdopen(x_fd_debug, "w"); /* We want to output text to it */
+		sound_null_server(fd_in[0], fd_out[1], fd_events[1]); /* Run the sound server */
 	}
 
 	return 0;
@@ -141,7 +142,6 @@ sound_null_get_event(state_t *s)
   int inplen;
   int success;
   GTimeVal waittime = {0, 0};
-  GTimeVal waittime2 = {0, SOUND_SERVER_TIMEOUT};
   char debug_buf[65];
   sound_event_t *event = xalloc(sizeof(sound_event_t));
 
@@ -161,10 +161,13 @@ sound_null_get_event(state_t *s)
     
   }
   
+  waittime.tv_sec = 0;
+  waittime.tv_usec = 0;
+
   FD_ZERO(&inpfds);
   FD_SET(s->sound_pipe_events[0], &inpfds);
   
-  success = select(s->sound_pipe_events[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime2);
+  success = select(s->sound_pipe_events[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime);
   
   if (success && read(s->sound_pipe_events[0], event, sizeof(sound_event_t)) == sizeof(sound_event_t)) {
     
@@ -264,9 +267,8 @@ verify_pid(int pid) /* Checks if the specified PID is in use */
 #define CHECK song_lib_dump(songlib, __LINE__)
 
 void
-sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
+sound_null_server(int fd_in, int fd_out, int fd_events)
 {
-	FILE *ds = fdopen(fd_debug, "w"); /* We want to output text to it */
 	fd_set input_fds;
 	GTimeVal last_played, wakeup_time, ctime;
 	song_t *_songp = NULL;
