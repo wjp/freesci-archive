@@ -134,14 +134,14 @@ int midiout_ossseq_write(guint8 *buffer, unsigned int count)
 			fprintf(stderr,"While trying to write to '%s':\n", sequencer_dev);
 			perror("Sequencer error");
 			sequencer_dev = 0;
-			return 1;
+			return -1;
 		}
 	}
 #ifdef DEBUG_OUTPUT
 	fprintf(stderr, "\n");
 #endif
 
-	return (written != 4);
+	return written;
 }
 
 midiout_driver_t midiout_driver_ossseq = {

@@ -157,19 +157,19 @@ int midi_mt32gm_event2(guint8 command, guint8 param)
 
 			if (channel != RHYTHM_CHANNEL && xparam >= 0) {
 				if (midi_mt32_event(0xb0 | channel,
-						    0x65, 0x00)) return -1;
+						    0x65, 0x00) < 0) return -1;
 				if (midi_mt32_event(0xb0 | channel,
-						    0x64, 0x02)) return -1;
+						    0x64, 0x02) < 0) return -1;
 				if (midi_mt32_event(0xb0 | channel,
-						    0x06, MIDI_mapping[instr].keyshift)) return -1;
+						    0x06, MIDI_mapping[instr].keyshift) < 0) return -1;
 				if (midi_mt32_event(0xb0 | channel,
-						    0x65, 0x00)) return -1;
+						    0x65, 0x00) < 0) return -1;
 				if (midi_mt32_event(0xb0 | channel,
-						    0x64, 0x00)) return -1;
+						    0x64, 0x00) < 0) return -1;
 				if (midi_mt32_event(0xb0 | channel,
-						    0x06, MIDI_mapping[instr].bender_range)) return -1;
+						    0x06, MIDI_mapping[instr].bender_range) < 0) return -1;
 				if (midi_mt32_event(0xb0 | channel,
-						    0x26, 0x00)) return -1;
+						    0x26, 0x00) < 0) return -1;
 			}
 		}
 

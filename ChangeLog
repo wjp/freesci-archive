@@ -1,3 +1,15 @@
+2001-05-07  Christoph Reichenbach  <jameson@theta.darmstadt.gmd.de>
+
+	* src/win32/Makefile.am (EXTRA_DIST): Added various Win32 files to
+	this directory's EXTRA_DIST
+
+	* src/sound/midiout_alsaraw.c
+	* src/sound/midiout_ossseq.c
+	* src/sound/midi_mt32gm.c (midi_mt32gm_event2): Sound drivers' write
+	command now returns (and is expected to return) negative on error and
+	zero or positive on success (bytes written, actually, but that isn't
+	tested for and not returned by ossseq yet).
+
 2001-05-06  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* 0.3.2 release
