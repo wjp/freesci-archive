@@ -1,3 +1,8 @@
+2000-04-28  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/core/kmath.c (kGetDistance): Implemented optional fifth parameter
+	* src/core/kstring.c (kSaid): Made Said() ignore NULL pointers
+
 2000-04-25  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/core/kGraphics: Changed CanbeHere() yet again.

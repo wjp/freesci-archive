@@ -77,6 +77,8 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   CHECK_THIS_KERNEL_FUNCTION;
 
+  if (!said_block) { s->acc=0; return; }
+
   if (argc != 1)
     SCIkwarn(SCIkWARNING, "Said() called with %d parameters\n", argc);
 

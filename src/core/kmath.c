@@ -66,8 +66,7 @@ void
 kGetDistance(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int xrel = PARAM(1) - PARAM_OR_ALT(3, 0);
-  int yrel = PARAM(0) - PARAM_OR_ALT(2, 0);
-
+  int yrel = (int) (((float) PARAM(0) - PARAM_OR_ALT(2, 0))/cos(PARAM_OR_ALT(5, 0))); /* This works because cos(0)==1 */
   s->acc = sqrt((float) xrel*xrel + yrel*yrel);
 }
 
