@@ -227,6 +227,17 @@ sound_null_get_command(struct timeval *wait_tvp)
   return event;
 }
 
+void
+sound_null_get_data(byte **data_ptr, int *size, int maxlen)
+{
+
+}
+
+void
+sound_null_send_data(byte *data_ptr, int maxsend) 
+{
+
+}
 sfx_driver_t sound_null = {
 	"null",
 	&sound_null_init,
@@ -236,6 +247,8 @@ sfx_driver_t sound_null = {
 	&sound_null_queue_event,
 	&sound_null_get_command,
 	&sound_null_queue_command,
+	&sound_null_get_data,
+	&sound_null_send_data,
 	&sound_save,
 	&sound_restore,
 	&sound_command,

@@ -379,8 +379,16 @@ typedef struct {
 void (*queue_event)(int handle, int signal, int value);
 /* XXX write me */
 
-  sound_event_t* (*get_command)(struct timeval *wait_tvp);
+sound_event_t* (*get_command)(struct timeval *wait_tvp);
+/* XXX write me */
+
 void (*queue_command)(struct _state *s, int handle, int signal, int value);
+/* XXX write me */
+
+void (*get_data)(byte **data_ptr, int *size, int maxlen);
+/* XXX write me */
+
+void (*send_data)(byte *data_ptr, int maxsend);
 /* XXX write me */
 
   int (*save)(struct _state *s, char *name);
@@ -430,6 +438,9 @@ sound_queue_event(int handle, int signal, int value);
 
 void 
 sound_queue_command(struct _state *s, int handle, int signal, int value);
+
+void sound_send_data(byte *data_ptr, int maxsend);
+void sound_get_data(byte **data_ptr, int *size, int maxlen);
 
 sound_event_t * 
 sound_get_command(struct timeval *wait_tvp);

@@ -778,3 +778,12 @@ sound_event_t *
 sound_get_command(struct timeval *wait_tvp) {
   return soundserver->get_command(wait_tvp);
 }
+
+void sound_send_data(byte *data_ptr, int maxsend) {
+  return soundserver->send_data(data_ptr, maxsend);
+}
+
+void sound_get_data(byte **data_ptr, int *size, int maxlen){
+  return soundserver->get_data(data_ptr, size, maxlen);
+}
+

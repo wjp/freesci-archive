@@ -41,6 +41,11 @@ SDL_mutex *out_mutex;
 SDL_mutex *in_mutex;
 SDL_cond *in_cond;
 
+byte *sound_data;
+int sound_data_size;
+SDL_mutex *data_mutex;
+SDL_cond *data_cond;
+
 sfx_driver_t sound_sdl;
 
 void
@@ -76,6 +81,8 @@ sound_sdl_init(state_t *s)
   out_mutex = SDL_CreateMutex();
   in_mutex = SDL_CreateMutex();
   in_cond = SDL_CreateCond();
+  data_mutex = SDL_CreateMutex();
+  data_cond = SDL_CreateCond();
 
   child = SDL_CreateThread( &sdl_soundserver_init, s);
 
@@ -143,6 +150,32 @@ sound_sdl_get_command(GTimeVal *wait_tvp)
   return event;
 }
 
+void
+sound_sdl_get_data(byte **data_ptr, int *size, int maxlen) {
+
+  if (sound_data == NULL)
+    SDL_CondWait(data_cond, data_mutex);
+  else
+    SDL_LockMutex(data_mutex);
+
+  *data_ptr = sound_data;
+  *size = sound_data_size;
+  
+  SDL_UnlockMutex(data_mutex);
+}
+
+void
+sound_sdl_send_data(byte *data_ptr, int maxsend) {
+  SDL_LockMutex(data_mutex);
+
+  sound_data = data_ptr;
+  sound_data_size = maxsend;
+
+  SDL_UnlockMutex(data_mutex);
+  SDL_CondSignal(data_cond);
+}
+
+
 sfx_driver_t sound_sdl = {
 	"sdl",
 	&sound_sdl_init,
@@ -152,6 +185,8 @@ sfx_driver_t sound_sdl = {
 	&sound_sdl_queue_event,
 	&sound_sdl_get_command,
 	&sound_sdl_queue_command,
+	&sound_sdl_get_data,
+	&sound_sdl_send_data,
 	&sound_save,
 	&sound_restore,
 	&sound_command,
