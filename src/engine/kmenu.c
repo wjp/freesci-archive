@@ -105,11 +105,12 @@ struct {
 	 "Chris Kehler\n\n"
 	 "Christoph Reichenbach\nProject & Website maintenance, UN*X code\n\n"
 	 "Christopher T. Lansdown\nCVS maintenance, Alpha compatibility fixes\n\n"
-	 "Claudio Matsuoka\nCVS snapshots, daily builds, bug reports",
+	 "Claudio Matsuoka\nCVS snapshots, daily builds, bug reports\n\n"
+	 "Dark Minister\nSCI research (bytecode and parser)",
 	 0, 15},
 	{"More FreeSCI hackers and contributors",
-	 "Dark Minister\nSCI research (bytecode and parser)\n\n"
 	 "Dmitry Jemerov\nPort to the Win32 platform, numerous bugfixes\n\n"
+	 "Emmanuel Jeandel\nBugfixes and bug reports\n\n"
 	 "Francois-R Boyer\nMT-32 information and mapping code\n\n"
 	 "George Reid\nFreeBSD package management\n\n"
 	 "Lars Skovlund\nMost of the relevant documentation, several bugfixes\n\n"

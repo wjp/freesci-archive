@@ -29,7 +29,7 @@ AC_PATH_CURSES
 AC_PATH_X
 
 if test x"x_libraries" != x; then
-	x_libraries="-L$x_libraries -lX11 -lXmu -lXi"
+	x_libraries="-L$x_libraries -lX11 -lXi"
 fi
 AC_SUBST(x_libraries)
 

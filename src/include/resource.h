@@ -94,8 +94,14 @@
 #  define G_DIR_SEPARATOR_S "/"
 #endif
 
-#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
-#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#ifndef MIN
+#  define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef MAX
+#  define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#endif /* HP-UX defines both */
+
+
 #define GUINT16_SWAP_LE_BE_CONSTANT(val) ((((val) & 0x00ff) << 8) | (((val) & 0xff00) >> 8))
 
 #define GUINT32_SWAP_LE_BE_CONSTANT(val)  ( \

@@ -1,3 +1,17 @@
+2001-03-09  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kmenu.c: Listed Emmanuel in the 'about' page
+
+	* src/engine/klists.c (kAddAfter): Applied AddAfter patch by
+	Emmanuel Jeandel
+
+	* configure.in: Removed libXmu from the X library set
+
+	* src/include/resource.h: Made MIN and MAX #ifndef'd
+
+	* src/gfx/gfx_pixmap_scale.c (FUNCNAME_TRILINEAR): Added a
+	trilinear pixmap filter
+
 2001-03-08  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/include/soundserver.h   : added SCI midi event defines

@@ -240,15 +240,19 @@ kAddAfter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		PUT_HEAP(newnode + LIST_NEXT_NODE, oldnext);
 
 		if (!oldnext) /* Appended after last node? */
-			PUT_HEAP(list + LIST_LAST_NODE, newnode); /* Set new node as last list node */
+			PUT_HEAP(list + LIST_LAST_NODE, newnode) /* Set new node as last list node */
+		else
+			PUT_HEAP(oldnext + LIST_PREVIOUS_NODE, newnode);
 
 	} else { /* Set as initial list node */
-		PUT_HEAP(newnode + LIST_NEXT_NODE, firstnode);
-		PUT_HEAP(newnode + LIST_PREVIOUS_NODE, 0);
-		PUT_HEAP(list + LIST_FIRST_NODE, newnode);
 
-		if (UGET_HEAP(list + LIST_LAST_NODE) == 0) /* List was empty? */
-			PUT_HEAP(list + LIST_LAST_NODE, newnode); /* First node is also the last node */
+		heap_ptr nextnode = GET_HEAP(list + LIST_FIRST_NODE);
+		PUT_HEAP(newnode + LIST_NEXT_NODE, nextnode);
+		PUT_HEAP(list + LIST_FIRST_NODE, newnode);
+		if (!nextnode) /* List was empty? */
+			PUT_HEAP(list + LIST_LAST_NODE, newnode)
+		else
+			PUT_HEAP(nextnode + LIST_PREVIOUS_NODE, newnode);
 	}
 }
 
