@@ -209,20 +209,25 @@ int do_sound(sound_server_state_t *sss, int buff_ss)
 			}
 
 			/* now we have a MIDI command, but is it time for it to be played? */
-			if (this_cmd.delta_time > 0)
+			if (buff_ss)
 			{
-				/* not yet, make cache */
+				/* yes it is */
+			} else {
+				if (this_cmd.delta_time > 0)
+				{
+					/* not yet, make cache */
 #ifdef DEBUG_SOUND_SERVER
-				cached_cmd.pos_in_song = this_cmd.pos_in_song;
+					cached_cmd.pos_in_song = this_cmd.pos_in_song;
 #endif
-				cached_cmd.delta_time = this_cmd.delta_time;
-				cached_cmd.midi_cmd = this_cmd.midi_cmd;
-				cached_cmd.param1 = this_cmd.param1;
-				cached_cmd.param2 = this_cmd.param2;
+					cached_cmd.delta_time = this_cmd.delta_time;
+					cached_cmd.midi_cmd = this_cmd.midi_cmd;
+					cached_cmd.param1 = this_cmd.param1;
+					cached_cmd.param2 = this_cmd.param2;
 #if (DEBUG_SOUND_SERVER == 2)
-				fprintf(stdout, " [cached] ");
+					fprintf(stdout, " [cached] ");
 #endif
-				return 1;
+					return 1;
+				}
 			}
 
 		} else {

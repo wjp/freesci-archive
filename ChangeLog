@@ -1,3 +1,10 @@
+2002-02-27  Alexander R Angas <wgd@internode.on.net>
+
+	* src/sound/buff_ss.c:
+	* src/sound/midiout_win32mci_stream.c:
+	* src/sound/soundserver.c: Minor fixes to Win32 MCI streaming driver
+	so that it now plays the first song in some games.
+
 2002-02-19  Alexander R Angas <wgd@internode.on.net>
 
 	* src/config.c:

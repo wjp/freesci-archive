@@ -47,7 +47,7 @@
 #define PLAY_BUFFER		0
 #define CONTINUE_BUFFER	1
 
-static HANDLE midi_canplay_event;	/* if MIDI allowed to play then signalled */
+//static HANDLE midi_canplay_event;	/* if MIDI allowed to play then signalled */
 static MIDIHDR midiOutHdr;			/* currently used device header */
 static HMIDISTRM midiStream;		/* currently playing stream */
 static int midiDeviceNum = -1;
@@ -80,7 +80,6 @@ static sound_server_state_t *sss = 0;
 
 
 void CALLBACK _streamCallback(HMIDIOUT hmo, UINT wMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2);
-int _clear_buffered_song();
 
 
 void _win32mci_stream_print_error(int ret)
@@ -255,6 +254,7 @@ int midiout_win32mci_stream_open()
 	}
 
 	/* Set the stream device's Time Division to 96 PPQN */
+#if 0
 	prop.cbStruct = sizeof(MIDIPROPTIMEDIV);
 	prop.dwTimeDiv = 96;
 	ret = midiStreamProperty(midiStream, (LPBYTE)&prop, MIDIPROP_SET | MIDIPROP_TIMEDIV);
@@ -264,7 +264,7 @@ int midiout_win32mci_stream_open()
         _win32mci_stream_print_error(ret);
 		return -1;
     }
-
+#endif
 	buffered_song[0].data = (LPDWORD)sci_malloc(3 * sizeof(DWORD));
 
 #if 0
@@ -298,10 +298,8 @@ int midiout_win32mci_stream_close()
 
 int midiout_win32mci_stream_write_event(guint8 *buffer, unsigned int count, guint32 other_data)
 {
-	/* Puts buffer into format required by MCI (both long and short messages)
-	** and stores locally. */
+	/* Puts buffer into format required by MCI (both long and short messages) */
 
-	//ss_drv_info *ss_info = (ss_drv_info*)other_data;
 	static guint8 running_status;	/* last encountered MIDI msg */
 	static unsigned int ticks_so_far;		/* ticks in this buffer so far */
 	guint8 delta_time;	/* time before status is sent to device */
@@ -311,22 +309,9 @@ int midiout_win32mci_stream_write_event(guint8 *buffer, unsigned int count, guin
 	guint8 data2;		/* data byte 2 (if it exists) */
 	guint8 num_params;	/* number of parameters for this MIDI status */
 
-#if 0
-	if (ss_info)
-	{
-		sss = ss_info->sss;	/* save local copy of sound server state pointer */
-		/* Check if data for new song */
-		if (ss_info->handle != current_handle)
-		{
-			_clear_buffered_song();				/* stop whatever's playing and clear it */
-			current_handle = ss_info->handle;	/* keep record of this handle */
-		}
-	}
-#endif
-
 	/* Unpack buffer (for short messages only) */
 	status = *buffer;	/* get status byte */
-	
+
 	if (MIDI_RUNNING_STATUS_BYTE(status))
 	{
 		/* set first data byte when in running status mode */
@@ -348,11 +333,8 @@ int midiout_win32mci_stream_write_event(guint8 *buffer, unsigned int count, guin
 	if (num_params > 1)
 		data2 = *buffer;	/* set second parameter if there is one */
 
-//	if (ss_info)
-		delta_time = other_data;
-//	else
-//		delta_time = 0;
-
+	delta_time = other_data;
+//fprintf(stderr, "%i\n", delta_time);
 
 	/* Finished preparing data, now pack it up for MCI */
 
@@ -365,6 +347,7 @@ int midiout_win32mci_stream_write_event(guint8 *buffer, unsigned int count, guin
 	/* see if need a new buffer */
 	if (ticks_so_far > ticks_in_buffer)
 	{
+#if 0
 		buffi++;	/* move to next buffer in buffered_song[] */
 
 		/* make sure not over number of buffers */
@@ -392,8 +375,8 @@ int midiout_win32mci_stream_write_event(guint8 *buffer, unsigned int count, guin
 				(buffered_song[buffi - 1].pos - 1) * sizeof(DWORD));
 
 		buffered_song[buffi - 1].pos--;	/* set old pos to be size of old buffer */
-
-#if 1
+#endif
+#if 0
 		{
 			unsigned int i;
 			for (i = 0; i < buffered_song[buffi - 1].pos; i++)
@@ -473,8 +456,8 @@ void CALLBACK _streamCallback(HMIDIOUT hmo, UINT wMsg, DWORD dwInstance, DWORD d
 		}
 #endif
 
-		next_flush_buff++;
-		midiout_win32mci_stream_flush(CONTINUE_BUFFER);	/* play next buffer */
+//		next_flush_buff++;
+//		midiout_win32mci_stream_flush(CONTINUE_BUFFER);	/* play next buffer */
 
 		break;
 
@@ -488,6 +471,7 @@ void CALLBACK _streamCallback(HMIDIOUT hmo, UINT wMsg, DWORD dwInstance, DWORD d
     }
 }
 
+#if 0
 int _clear_buffered_song()
 {
 	unsigned int i;
@@ -511,11 +495,20 @@ int _clear_buffered_song()
 	buffi = 0;
 	next_flush_buff = 0;
 }
+#endif
 
 int midiout_win32mci_stream_flush(guint8 code)
 {
     MMRESULT ret;	/* stores return values from MCI functions */
-fprintf(stderr, "midiout_win32mci_stream_flush(): code %i\n", code);
+	static unsigned int play_times = 0;
+
+//fprintf(stderr, "midiout_win32mci_stream_flush(): code %i\n", code);
+
+	if (play_times)
+	{
+		printf("Sorry, can't play any more\n");
+		return -1;
+	}
 
 	if (code == PLAY_BUFFER)
 	{
@@ -528,6 +521,7 @@ fprintf(stderr, "midiout_win32mci_stream_flush(): code %i\n", code);
 
 		next_flush_buff = 0;	/* start from first buffer */
 	}
+#if 0
 	else if (code == CONTINUE_BUFFER)
 	{
 		/* see if reached end of buffers */
@@ -541,14 +535,11 @@ fprintf(stderr, "midiout_win32mci_stream_flush(): code %i\n", code);
 			else
 			{
 				/* a song so leave buffers intact but call end_of_track() */
-//				if (sss)
-//					do_end_of_track(sss);
-//				else
-//					fprintf(stderr, "SCREW UP!!\n");
 			}
 		}
 		/* else play next buffer as indicated by next_flush_buff */
 	}
+#endif
 
 #if 0
 	if (WaitForSingleObject(midi_canplay_event, INFINITE) != WAIT_OBJECT_0)
@@ -566,7 +557,7 @@ fprintf(stderr, "midiout_win32mci_stream_flush(): code %i\n", code);
 	midiOutHdr.dwBytesRecorded =
 		buffered_song[next_flush_buff].pos * sizeof(DWORD);
 
-#if 1
+#if 0
 	{
 		unsigned int i;
 		for (i = 0; i < buffered_song[next_flush_buff].pos; i++)

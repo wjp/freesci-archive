@@ -73,6 +73,8 @@ sci0_buff_ss(sound_server_state_t *ss_state)
 		switch (new_event->signal)
 		{
 		case SOUND_COMMAND_INIT_HANDLE:
+			fprintf(stderr, "This sound server and MCI stream driver is ALPHA code and should only\n");
+			fprintf(stderr, "be used to test the first song in a game and nothing further.\n");
 			init_handle((int)new_event->value, (word)new_event->handle, ss_state);
 			break;
 
@@ -81,24 +83,27 @@ sci0_buff_ss(sound_server_state_t *ss_state)
 			static int play_times = 0;
 
 			if (play_times)
-				fprintf(stderr, "This hacked together sound server will only play one song for now - sorry!\n");
-
-			ss_state->current_song = song_lib_find(ss_state->songlib, (word)new_event->handle);
-			if (ss_state->current_song && ss_state->current_song->data)
 			{
-				int i = 1;
-				ss_state->current_song->status = SOUND_STATUS_PLAYING;
-
-				/* call sci_midi_command() continuously until entire song is
-				** dumped. */
-				while (i)
-					i = do_sound(ss_state, 1);
-
-				midiout_flush(0);	/* actually play */
-				play_times++;
-
+				fprintf(stderr, "This hacked together sound server will only play one song for now - sorry!\n");
 			} else {
-				fprintf(stderr, "No data to play\n");
+
+				ss_state->current_song = song_lib_find(ss_state->songlib, (word)new_event->handle);
+				if (ss_state->current_song && ss_state->current_song->data)
+				{
+					int i = 1;
+					ss_state->current_song->status = SOUND_STATUS_PLAYING;
+
+					/* call sci_midi_command() continuously until entire song is
+					** dumped. */
+					while (i)
+						i = do_sound(ss_state, 1);
+
+					midiout_flush(0);	/* actually play */
+					play_times++;
+
+				} else {
+					fprintf(stderr, "No data to play\n");
+				}
 			}
 			global_sound_server->queue_event((word)new_event->handle, SOUND_SIGNAL_PLAYING, 0);
 			break;
