@@ -38,7 +38,9 @@ SDL_cond *in_cond;
 
 Uint32 master;
 
-byte *sound_data = NULL;
+
+byte *sound_data_serv = NULL;
+byte *sound_data_game = NULL;
 int sound_data_size = 0;
 SDL_mutex *data_mutex;
 SDL_cond *datain_cond;
@@ -153,18 +155,28 @@ int
 sound_sdl_get_data(byte **data_ptr, int *size, int maxlen)
 {
   SDL_cond *cond;
+  byte **sound_data;
+
   cond = (SDL_ThreadID() == master) ? datain_cond : dataout_cond ;
+  sound_data = (SDL_ThreadID() == master) ? &sound_data_serv : &sound_data_game;
+
   /* we ignore maxlen */
-  while (sound_data == NULL) 
+
+  SDL_LockMutex(data_mutex);
+  while (*sound_data == NULL) 
     SDL_CondWait(cond, data_mutex);
 
-  *data_ptr = sound_data;
+  *data_ptr = *sound_data;
   *size = sound_data_size;
-  sound_data = NULL;
+  *sound_data = NULL;
+
+  /*  printf("%d got %d bytes ",SDL_ThreadID(), sound_data_size); */
+  fflush(stdout);
 
   SDL_UnlockMutex(data_mutex);
 
   cond = (SDL_ThreadID() == master) ? dataout_cond : datain_cond ;
+
 
   SDL_CondSignal(cond);
   return *size;
@@ -174,15 +186,24 @@ int
 sound_sdl_send_data(byte *data_ptr, int maxsend) 
 {
   SDL_cond *cond;
-  cond = (SDL_ThreadID() == master) ? datain_cond : dataout_cond ;
+  byte *data;
+  byte **sound_data;
 
-  while(sound_data != NULL) 
+  cond = (SDL_ThreadID() == master) ? datain_cond : dataout_cond ;
+  sound_data = (SDL_ThreadID() == master) ? &sound_data_game : &sound_data_serv;
+
+  SDL_LockMutex(data_mutex);
+  while(*sound_data != NULL) 
     SDL_CondWait(cond, data_mutex);
 
-  sound_data = xalloc(maxsend);
-  memcpy(sound_data, data_ptr, maxsend);
+  data = xalloc(maxsend);
+  memcpy(data, data_ptr, maxsend);
   sound_data_size = maxsend;
-  printf(" %d bytes ",maxsend);
+  /* printf("%d wrote %d bytes ",SDL_ThreadID(), maxsend); */
+  fflush(stdout);
+
+  *sound_data = data;
+
   SDL_UnlockMutex(data_mutex);
 
   cond = (SDL_ThreadID() == master) ? dataout_cond : datain_cond ;
