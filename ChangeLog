@@ -1,3 +1,8 @@
+2003-12-27  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/savegame.cfsml (gamestate_save): Added a little more
+	error checking to saving savegames
+
 2003-12-19  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (_k_prepare_view_list): Equivalence

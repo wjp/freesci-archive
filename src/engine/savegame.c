@@ -6551,7 +6551,10 @@ gamestate_save(state_t *s, char *dirname)
 	filename = sci_find_first(&dir, "*");
 	while (filename) {
 		if (strcmp(filename, "..") && strcmp(filename, "."))
-			unlink(filename); /* Delete all files in directory */
+			if(unlink(filename)) { /* Delete all files in directory */
+				sciprintf("While preparing savegame: Failed to delete '%s'", filename);
+				return 1;
+			}
 		filename = sci_find_next(&dir);
 	}
 	sci_finish_find(&dir);
@@ -6565,6 +6568,19 @@ gamestate_save(state_t *s, char *dirname)
 		}
 	}
 
+	/* Visual C++ doesn't allow to specify O_BINARY with creat() */
+#ifdef _MSC_VER
+	fd = open("heap", _O_CREAT | _O_BINARY | _O_RDWR);
+#else
+	fd = creat("heap", 0600);
+#endif
+
+	if (!IS_VALID_FD(fd) || write(fd, s->_heap->start, SCI_HEAP_SIZE) < SCI_HEAP_SIZE) {
+		sciprintf("Saving failed for the heap state\n");
+		close(fd);
+		return 1;
+	}
+
 	fh = fopen("state", "w" FO_TEXT);
 
 	/* Calculate the time spent with this game */
@@ -6576,23 +6592,13 @@ SCI_MEMTEST;
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 1089 "savegame.cfsml"
+#line 1105 "savegame.cfsml"
 SCI_MEMTEST;
 
 	fclose(fh);
 
 	_gamestate_unfrob(s);
 
-
-	/* Visual C++ doesn't allow to specify O_BINARY with creat() */
-#ifdef _MSC_VER
-	fd = open("heap", _O_CREAT | _O_BINARY | _O_RDWR);
-#else
-	fd = creat("heap", 0600);
-#endif
-
-	write(fd, s->_heap->start, SCI_HEAP_SIZE);
-	close(fd);
 
 	chdir ("..");
 	return 0;
@@ -6674,7 +6680,7 @@ gamestate_restore(state_t *s, char *dirname)
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 1157 "savegame.cfsml"
+#line 1163 "savegame.cfsml"
 
 	fclose(fh);
 
