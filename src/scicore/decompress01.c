@@ -169,10 +169,6 @@ int decompress01(resource_t *result, int resh)
 	guint16 compressionMethod;
 	guint8 *buffer;
 
-#ifdef SATISFY_PURIFY
-	memset(result, 0, sizeof(resource_t));
-#endif
-
 	if (read(resh, &(result->id),2) != 2)
 		return SCI_ERROR_IO_ERROR;
 

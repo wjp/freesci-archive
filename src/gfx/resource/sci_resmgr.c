@@ -60,6 +60,7 @@ gfxr_interpreter_options_hash(gfx_resource_types_t type, int version,
 	case GFX_RESOURCE_TYPE_CURSOR:
 		return 0;
 
+	case GFX_RESOURCE_TYPES_NR:
 	default:
 		GFXERROR("Invalid resource type: %d\n", type);
 		return -1;

@@ -266,7 +266,7 @@ gfxr_pic_xlate_common(gfx_resource_t *res, int maps, int scaled, int force, gfx_
 gfxr_pic_t *
 gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_palette, int scaled)
 {
-	gfxr_pic_t *pic = NULL;
+	gfxr_pic_t *npic = NULL;
 	int restype = GFX_RESOURCE_TYPE_PIC;
 	sbtree_t *tree = state->resource_trees[restype];
 	gfx_resource_t *res = NULL;
@@ -351,7 +351,7 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
         must_post_process_pic = res->scaled_data.pic->visual_map->data == NULL;
 	/* If the pic was only just drawn, we'll have to antialiase and endianness-adjust it now */
 
-	pic = gfxr_pic_xlate_common(res, maps,
+	npic = gfxr_pic_xlate_common(res, maps,
 				    scaled || state->options->pic0_unscaled,
 				    0, state->driver->mode,
 				    state->options->pic_xlate_filter, 0);
@@ -360,13 +360,13 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 	if (must_post_process_pic) {
 
 		if (scaled || state->options->pic0_unscaled && maps & GFX_MASK_VISUAL)
-                        gfxr_antialiase(pic->visual_map, state->driver->mode,
+                        gfxr_antialiase(npic->visual_map, state->driver->mode,
                                         state->options->pic0_antialiasing);
 
-                gfxr_endianness_adjust(pic->visual_map, state->driver->mode);
+                gfxr_endianness_adjust(npic->visual_map, state->driver->mode);
 	}
 
-	return pic;
+	return npic;
 }
 
 

@@ -2903,7 +2903,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	<simplelist>
 	  <member><literal>[00][01]</literal>: Magic number 0x1234</member>
 	  <member><literal>[02][03]</literal>: Local variable offset (filled in at run-time)</member>
-	  <member><literal>[04][05]</literal>: Offset of the function selector list, relative to the first variable selector</member>
+	  <member><literal>[04][05]</literal>: Offset of the function selector list, relative to its own position</member>
 	  <member><literal>[06][07]</literal>: Number of variable selectors (= #vs)</member>
 	  <member><literal>[08][09]</literal>: The 'species' selector</member>
 	  <member><literal>[0a][0b]</literal>: The 'superClass' selector</member>
@@ -2956,7 +2956,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	<simplelist>
 	  <member><literal>[00][01]</literal>: Magic number 0x1234</member>
 	  <member><literal>[02][03]</literal>: Local variable offset (filled in at run-time)</member>
-	  <member><literal>[04][05]</literal>: Offset of the function selector list, relative to the first variable selector</member>
+	  <member><literal>[04][05]</literal>: Offset of the function selector list, relative to its own position</member>
 	  <member><literal>[06][07]</literal>: Number of variable selectors (= #vs)</member>
 	  <member><literal>[08][09]</literal>: The 'species' selector</member>
 	  <member><literal>[0a][0b]</literal>: The 'superClass' selector</member>

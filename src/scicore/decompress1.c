@@ -302,10 +302,6 @@ int decompress1(resource_t *result, int resh, int early)
 	guint8 *buffer;
 	guint8 tempid;
 
-#ifdef SATISFY_PURIFY
-	memset(result, 0, sizeof(resource_t));
-#endif
-
 	if (early) {
 		if (read(resh, &(result->id),2) != 2)
 			return SCI_ERROR_IO_ERROR;

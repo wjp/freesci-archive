@@ -135,6 +135,43 @@ sound_server_change_instrmap(FILE *output, int action, int instr, int value)
 }
 
 
+static void
+dump_song(song_t *song)
+{
+	char *stati[] = {"stopped", "playing", "suspended", "waiting"};
+	char marks[2][2] = {" .","|X"};
+
+	fprintf(stderr, "song: ");
+	if (!song)
+		fprintf(stderr, "NULL");
+	else {
+		int i;
+
+		fprintf(stderr, "size=%d, pos=0x%x, loopmark=0x%x, loops_left=%d\n",
+			song->size, song->pos, song->loopmark, song->loops);
+		fprintf(stderr, " Current status: %d (%s), Handle is: 0x%04x\n",
+			song->status,
+			(song->status >= 0 && song->status < 4)? stati[song->status] : "INVALID",
+			song->handle);
+		fprintf(stderr, "Mark descriptions: '.': Pos, '|': Loop mark, 'X': both\n");
+
+		for (i = 0; i < song->size; i++) {
+			char mark = marks[i == song->loopmark][i == song->pos];
+
+			if ((i & 0xf) == 0)
+				fprintf(stderr, " %04x:\t", i);
+			fprintf(stderr, "%c%02x%c", mark, song->data[i], mark);
+			if ((i & 0xf) == 0x7)
+				fprintf(stderr,"--");
+			if ((i & 0xf) == 0x3 || (i & 0xf) == 0xb)
+				fprintf(stderr," ");
+			if ((i & 0xf) == 0xf)
+				fprintf(stderr,"\n");
+		}
+		fprintf(stderr,"\n");
+	}
+}
+
 void
 sci0_soundserver(int reverse_stereo, sound_server_state_t *ss_state)
 {
@@ -221,8 +258,14 @@ sci0_soundserver(int reverse_stereo, sound_server_state_t *ss_state)
 						 ** at this point  */
 
 			/* Handle length escape sequence (see SCI sound specs) */
-			while ((tempticks = song->data[(song->pos)++]) == SCI_MIDI_TIME_EXPANSION_PREFIX)
+			while ((tempticks = song->data[(song->pos)++]) == SCI_MIDI_TIME_EXPANSION_PREFIX) {
 				ticks += SCI_MIDI_TIME_EXPANSION_LENGTH;
+				if (song->pos >= song->size) {
+					fprintf(stderr, "Sound server: Error: Reached end of song while decoding prefix:\n");
+					dump_song(song);
+					song = NULL;
+				}
+			}
 			ticks += tempticks;
 		}
 
