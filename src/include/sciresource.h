@@ -44,6 +44,14 @@
 #define SCI_MAX_RESOURCE_SIZE 0x0400000
 /* The maximum allowed size for a compressed or decompressed resource */
 
+#ifdef _WIN32
+#  define DIR_SEPARATOR_STR "\\"
+#  define PATH_SEPARATOR_STR ";"
+#else
+#  define DIR_SEPARATOR_STR "/"
+#  define PATH_SEPARATOR_STR ":"
+#endif
+
 
 /*** RESOURCE STATUS TYPES ***/
 #define SCI_STATUS_OK 0

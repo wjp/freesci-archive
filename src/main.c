@@ -689,10 +689,31 @@ init_gfx(cl_options_t *cl_options, gfx_driver_t *driver)
 }
 
 
-typedef void *lookup_funct_t(char *name);
+typedef void *old_lookup_funct_t(char *name);
+
+typedef void *lookup_funct_t(char *path, char *name);
+
 
 static void *
 lookup_driver(lookup_funct_t lookup_func, void explain_func(void),
+	      char *driver_class, char *driver_name, char *path)
+{
+	void *retval = lookup_func(path, driver_name);
+
+	if (!retval) {
+		sciprintf("The %s you requested, '%s', is not available.\n"
+			  "Please choose one among the following: ",
+			  driver_class, driver_name);
+		explain_func();
+		exit(1);
+	}
+
+	return retval;
+}
+
+
+static void *
+old_lookup_driver(old_lookup_funct_t lookup_func, void explain_func(void),
 	      char *driver_class, char *driver_name)
 {
 	void *retval = lookup_func(driver_name);
@@ -754,6 +775,7 @@ main(int argc, char** argv)
 	sci_version_t version			= 0;
 	gfx_driver_t *gfx_driver		= NULL;
 	sound_server_t *sound_server	= NULL;
+	char *module_path = SCI_DEFAULT_MODULE_PATH;
 
 	game_name = parse_arguments(argc, argv, &cl_options, &savegame_name);
 
@@ -845,32 +867,28 @@ main(int argc, char** argv)
 	if (!conf) /* Unless the configuration has been read... */
 		conf_nr = read_config(game_name, &conf, &conf_entries, &version);
 
-
 	/* gcc doesn't warn about (void *)s being typecast. If your compiler doesn't like these
 	** implicit casts, don't hesitate to typecast appropriately.  */
-	if (cl_options.gfx_driver_name)
-		gfx_driver = (gfx_driver_t *)
-			lookup_driver((lookup_funct_t *)gfx_find_driver, list_graphics_drivers,
-				      "graphics driver", cl_options.gfx_driver_name);
+	gfx_driver_name = cl_options.gfx_driver_name;
 
 	if (cl_options.midiout_driver_name)
-		midiout_driver = lookup_driver((lookup_funct_t *)midiout_find_driver,
-					       list_midiout_drivers,
-					       "midiout driver", cl_options.midiout_driver_name);
+		midiout_driver = old_lookup_driver((old_lookup_funct_t *)midiout_find_driver,
+						   list_midiout_drivers,
+						   "midiout driver", cl_options.midiout_driver_name);
 
 	if (cl_options.midi_device_name)
-		midi_device = lookup_driver((lookup_funct_t *)midi_find_device, list_midi_devices,
-					    "MIDI device", cl_options.midi_device_name);
+		midi_device = old_lookup_driver((old_lookup_funct_t *)midi_find_device, list_midi_devices,
+						"MIDI device", cl_options.midi_device_name);
 
 	if (cl_options.sound_server_name)
-		sound_server = lookup_driver((lookup_funct_t *)sound_server_find_driver,
-					     list_sound_servers,
-					     "sound server", cl_options.sound_server_name);
+		sound_server = old_lookup_driver((old_lookup_funct_t *)sound_server_find_driver,
+						 list_sound_servers,
+						 "sound server", cl_options.sound_server_name);
 
 	if (conf) {
 		memcpy(gfx_options, &(conf->gfx_options), sizeof(gfx_options_t)); /* memcpy so that console works */
-		if (!gfx_driver)
-			gfx_driver = conf[conf_nr].gfx_driver;
+		if (!gfx_driver_name)
+			gfx_driver_name = conf[conf_nr].gfx_driver_name;
 
 		if (!sound_server)
 			sound_server = conf[conf_nr].sound_server;
@@ -881,6 +899,17 @@ main(int argc, char** argv)
 		if (!midi_device)
 			midi_device = conf[conf_nr].midi_device;
 	}
+
+	if (conf) {
+		module_path = conf->module_path;
+
+		if (!gfx_driver_name)
+			gfx_driver_name = conf->gfx_driver_name;
+	}
+
+	gfx_driver = (gfx_driver_t *)
+		lookup_driver((lookup_funct_t *)gfx_find_driver, list_graphics_drivers,
+			      "graphics driver", gfx_driver_name, module_path);
 
 	if (!gfx_driver) {
 		if (gfx_driver_name)

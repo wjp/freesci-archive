@@ -207,8 +207,6 @@ Currently, the configuration file may contain:
 - resource_dir: Read the game's resource data from the specified location.
   Must not be used in the generic part of the config file.
 
--- NEW OPTIONS since the 0.3.1 release --
-
 - view_filter = none | linear | trilinear
   Magnification filter for 'views', i.e. moving foreground (and, in some cases,
   non-moving background) images. 'none' means that they are translated into
@@ -277,6 +275,13 @@ Currently, the configuration file may contain:
   * unix: A forked-off sound server
   Generally, the sdl sound server (default) should provide better performance,
   if available.
+
+-- NEW OPTIONS since the 0.3.2a release --
+
+- module_path: A list of directories modules (gfx drivers etc.) are searched
+  in. Directories are separated with the platform's default directory
+  separator (':' on UNIX) and are searched in order of appearance.
+  Default is '/usr/local/lib:/usr/lib'.
 
 
 2.1 Driver-specific options

@@ -57,7 +57,7 @@ struct {
 	char *name;
 	void *(*check_driver)(char *name);
 } freesci_subsystems[FREESCI_DRIVER_SUBSYSTEMS_NR] = {
-	{"gfx", parse_gfx_driver},
+	{"gfx", NULL},
 	{"midiout", parse_midiout_driver}
 };
 
@@ -179,6 +179,7 @@ static name_value_pair line_mode[] = {
 #define OPTION_TYPE_NVP 2
 #define OPTION_TYPE_INVERSE_NVP 3
 #define OPTION_TYPE_STATICREF 4
+#define OPTION_TYPE_STRING 5
 
 typedef struct {
 	int type;
@@ -196,6 +197,9 @@ typedef struct {
 
 #define OPT_INT(NAME, VARNAME, MIN, MAX)      {OPTION_TYPE_INT, NAME, MIN, MAX, NULL, NULL, offsetof (config_entry_t, VARNAME)}
 /* Read INT from the interval [MIN, MAX] */
+
+#define OPT_STRING(NAME, VARNAME)             {OPTION_TYPE_STRING, NAME, 0, 0, NULL, NULL, offsetof (config_entry_t, VARNAME)}
+/* Read a string */
 
 #define OPT_NVP(NAME, VARNAME, NVP)           {OPTION_TYPE_NVP, NAME, 0, 0, NVP, NULL, offsetof (config_entry_t, VARNAME)}
 /* Read (name,value) pair from NVP */
@@ -225,10 +229,12 @@ standard_option standard_options[] = {
 	OPT_INT("alpha_threshold", alpha_threshold, 0, 255),
 	OPT_INT("animation_delay", animation_delay, 0, 1000000),
 	OPT_INT("animation_granularity", animation_granularity, 1, 160),
-	OPT_STATICREF("gfx_driver", gfx_driver, parse_gfx_driver),
 	OPT_STATICREF("midiout_driver", midiout_driver, parse_midiout_driver),
 	OPT_STATICREF("midi_device", midi_device, parse_midi_device),
 	OPT_STATICREF("sound_server", sound_server, parse_sound_server),
+	OPT_STRING("console_log", console_log),
+	OPT_STRING("module_path", module_path),
+	OPT_STRING("gfx_driver", gfx_driver_name),
 	OPT_END
 };
 
@@ -239,11 +245,11 @@ parse_option(char *option, int optlen, char *value);
 %}
 
 DIGIT [0-9]
-PARAMTOKEN [[:alpha:]][[:alnum:]_-]*
+PARAMTOKEN [[:alpha:]][[:alnum:]"."_\:\/-]*
 SCIVERSION {DIGIT}"."{DIGIT}{3}"."{DIGIT}{3}
 NUMTOKEN {DIGIT}+
 NUMPARAMTOKEN {NUMTOKEN}|{PARAMTOKEN}
-PATHTOKEN [[:alnum:]"/""\\"]*
+PATHTOKEN [[:alnum:]"/""\\""."]*
 NUMPATHPARAMTOKEN {NUMPARAMTOKEN}|{PATHTOKEN}
 
 %%
@@ -303,18 +309,6 @@ version[[:blank:]]*"="[[:blank:]]*{SCIVERSION} { /***** End of graphics *****/
 	conf[cur_section].version = version_parse(yytext);
 }
 
-console_log[[:blank:]]*"="[[:blank:]]*.+  {
-	yytext = strchr (yytext, '=') + 1;
-
-	while (isspace(*yytext))
-		yytext++;
-
-	if (conf[cur_section].console_log)
-		free (conf[cur_section].console_log);
-	conf[cur_section].console_log = (char *) malloc (strlen (yytext)+1);
-	strcpy (conf[cur_section].console_log, yytext);
-}
-
 resource_dir[[:blank:]]*"="[[:blank:]]*.+  if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -323,16 +317,6 @@ resource_dir[[:blank:]]*"="[[:blank:]]*.+  if (cur_section) {
 	free(conf[cur_section].resource_dir);
 
 	conf[cur_section].resource_dir = strdup(yytext);
-}
-
-module_dir[[:blank:]]*"="[[:blank:]]*.+  {
-	yytext = strchr(yytext, '=') + 1;
-	while (isspace(*yytext))
-		yytext++;
-
-	free(conf[cur_section].module_dir);
-
-	conf[cur_section].module_dir = strdup(yytext);
 }
 
 debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
@@ -451,7 +435,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_options.dirty_frames = GFXOP_DIRTY_FRAMES_CLUSTERS;
 	conf->gfx_options.pic0_antialiasing = GFXR_ANTIALIASING_NONE;
 
-	conf->gfx_driver = gfx_find_driver(NULL);
+	conf->gfx_driver_name = NULL;
         conf->midiout_driver = midiout_find_driver(NULL);
         conf->midi_device = midi_find_device(NULL);
 	conf->sound_server = sound_server_find_driver(NULL);
@@ -468,7 +452,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->name = NULL;
 	conf->resource_dir = NULL;
 	conf->work_dir = NULL;
-        conf->module_dir = strdup(SCI_DEFAULT_MODULE_DIR);
+        conf->module_path = strdup(SCI_DEFAULT_MODULE_PATH);
 
 	for (i = 0; i < FREESCI_DRIVER_SUBSYSTEMS_NR; i++)
 		conf->driver_options[i] = NULL;
@@ -616,19 +600,6 @@ parse_name(char *name, name_value_pair *nvps, char *what, int oldval)
 
 
 void *
-parse_gfx_driver(char *driver_name)
-{
-	gfx_driver_t *retval = gfx_find_driver(driver_name);
-
-	if (retval)
-		return (void *) retval;
-	/* not found - return default */
-
-	printf ("Unknown graphics driver %s\n", driver_name);
-	return (void *) conf->gfx_driver;
-}
-
-void *
 parse_sound_server(char *driver_name)
 {
 	sound_server_t *retval = sound_server_find_driver(driver_name);
@@ -638,7 +609,7 @@ parse_sound_server(char *driver_name)
 	/* not found - return default */
 
 	printf ("Unknown sound server %s\n", driver_name);
-	return (void *) conf->gfx_driver;
+	return (void *) conf->sound_server;
 }
 
 void *
@@ -716,6 +687,14 @@ parse_option(char *option, int optlen, char *value)
 
 		*((int *)(((char *)&(conf[cur_section])) + opt->varoffset)) = int_value; /* Store value */
 
+		break;
+	}
+
+	case OPTION_TYPE_STRING: {
+		char **stringref = ((char **)(((char *)&(conf[cur_section])) + opt->varoffset));
+		if (*stringref)
+			free(*stringref);
+		*stringref = strdup(value); /* Store value */
 		break;
 	}
 
@@ -830,10 +809,12 @@ set_config_parameter(config_entry_t *conf, char *subsystem_name, char *driver_na
 		return;
 	}
 
+#if 0
 	if (!(freesci_subsystems[subsystem_nr].check_driver(driver_name))) {
 		sciprintf("config file: There is no %s driver called '%s'\n", subsystem_name, driver_name);
 		return;
 	}
+#endif
 
 	subsys_optionsp = &(conf->driver_options[subsystem_nr]);
 

@@ -1838,7 +1838,10 @@ _k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int nr, int funct_nr,
 	cel = oldcel = sign_extend_byte(GET_SELECTOR(obj, cel));
 
 	/* Clip loop and cel, write back if neccessary */
-	GFX_ASSERT(gfxop_check_cel(s->gfx_state, view_nr, &loop, &cel));
+	if (gfxop_check_cel(s->gfx_state, view_nr, &loop, &cel)) {
+		return NULL;
+	}
+
 	if (loop != oldloop)
 		loop = 0;
 	if (cel != oldcel)
@@ -1925,9 +1928,11 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 		}
 
 		widget = _k_make_dynview_obj(s, obj, options, sequence_nr--, funct_nr, argc, argp);
-		GFX_ASSERT((*widget_list)->add(GFXWC(*widget_list), GFXW(widget)));
+		if (widget) {
+			GFX_ASSERT((*widget_list)->add(GFXWC(*widget_list), GFXW(widget)));
 
-		node = UGET_HEAP(node + LIST_NEXT_NODE); /* Next node */
+			node = UGET_HEAP(node + LIST_NEXT_NODE); /* Next node */
+		}
 	}
 
 

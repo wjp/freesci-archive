@@ -121,9 +121,9 @@ _sound_transmit_text_expect_anwer(state_t *s, char *text, int command, char *tim
 
 	count = strlen(text) + 1;
 	sound_command(s, command, 0, count);
-	if (sound_send_data(text, count) != count)
-	{
-		fprintf(stderr, "_sound_transmit_text_expect_anwer(): sound_send_data returned < count\n");
+	if (sound_send_data(text, count) != count) {
+		fprintf(stderr, "_sound_transmit_text_expect_anwer():"
+			" sound_send_data returned < count\n");
 	}
 
 	return _sound_expect_answer(timeoutmessage, 1);
@@ -164,9 +164,9 @@ sound_command(state_t *s, int command, int handle, int parameter)
 
 		len = song->length;
 		sound_queue_command(event.handle, event.signal, event.value);
-		if (sound_send_data(song->data, len) != len)
-		{
-			fprintf(stderr, "sound_command(): sound_send_data returned < count\n");
+		if (sound_send_data(song->data, len) != len) {
+			fprintf(stderr, "sound_command(): sound_send_data"
+				" returned < count\n");
 		}
 
 		

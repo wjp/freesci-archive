@@ -383,9 +383,10 @@ typedef struct _gfx_driver { /* Graphics driver */
 
 
 gfx_driver_t *
-gfx_find_driver(char *name);
+gfx_find_driver(char *, char *name);
 /* Attempts to match a graphics driver to a name
-** Parameters: (char *) name: The name of the graphics driver to look for
+** Parameters: (char *) path: The path to search in
+**             (char *) name: The name of the graphics driver to look for
 **                            or NULL for the default driver
 ** Returns   : (gfx_driver_t *) The resulting driver, or NULL if none
 **                              was found

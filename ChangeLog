@@ -1,3 +1,15 @@
+2001-05-19  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/modules.c: Added file
+
+	* src/config.l:
+	* src/main.c: More sophisticated module and path handling
+
+	* src/sound/*.c: Removed several ^Ms
+
+	* src/gfx/drivers/Makefile.am: Fixed build/installation for
+	gfx driver modules
+
 2001-05-19  Matt Hargett  <matt@use.net>
 
         * sci.sgml: Add some documentation for DoBresen.

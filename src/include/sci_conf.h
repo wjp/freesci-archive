@@ -34,16 +34,16 @@
 #include <midiout.h>
 #include <midi_device.h>
 
-#ifdef _WIN32
-#  define MODULE_NAME_SUFFIX "_driver.dll"
-#else
-#  define MODULE_NAME_SUFFIX "_driver.so"
-#endif
-
 #define FREESCI_DRIVER_SUBSYSTEMS_NR 2
 
 #define FREESCI_DRIVER_SUBSYSTEM_GFX 0
 #define FREESCI_DRIVER_SUBSYSTEM_MIDIOUT 1
+
+#ifdef _WIN32
+#  define SCI_DEFAULT_MODULE_PATH "."
+#else
+#  define SCI_DEFAULT_MODULE_PATH "/usr/local/lib/freesci/:/usr/lib/freesci/"
+#endif
 
 typedef struct _driver_option {
 	char *option;
@@ -72,7 +72,7 @@ typedef struct {
 	int unknown_count; /* The number of "unknown" kernel functions */ 
 	char *resource_dir; /* Resource directory */
 	char *work_dir;     /* Working directory (save games, additional graphics) */
-	gfx_driver_t *gfx_driver; /* The graphics driver to use */
+	char *gfx_driver_name; /* The graphics driver to use */
 	char *console_log; /* The file to which console output should be echoed */
 	char debug_mode [80]; /* Characters specifying areas for which debug output should be enabled */
 	int mouse; /* Whether the mouse should be active */
@@ -81,11 +81,9 @@ typedef struct {
 	midi_device_t *midi_device; /* the midi device to use */
 	sound_server_t *sound_server; /* The sound server */
 
-	char *module_dir; /* directory modules are loaded from */
+	char *module_path; /* path to directories modules are loaded from */
 
 } config_entry_t;
-
-#define SCI_DEFAULT_MODULE_DIR "/usr/local/lib/freesci/:/usr/lib/freesci/"
 
 int
 config_init(config_entry_t **conf, char *conffil);

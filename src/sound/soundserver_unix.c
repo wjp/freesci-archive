@@ -385,7 +385,7 @@ sound_unix_send_data(byte *data_ptr, int maxsend)
 		}
 		to_go -= len;
 	}
-	return 0;
+	return maxsend;
 }
 
 void
