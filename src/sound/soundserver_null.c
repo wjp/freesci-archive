@@ -30,8 +30,8 @@
 #include <engine.h>
 #include <soundserver.h>
 #include <signal.h>
-
-
+#include <sound.h>
+#include <sys/types.h>
 
 void
 sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug);
@@ -216,28 +216,13 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
       newcmd = song->data[song->pos];
 
       if (newcmd & 0x80) {
-	++(song->pos);
-	command = newcmd;
+        ++(song->pos);
+        command = newcmd;
       } /* else we've got the 'running status' mode defined in the MIDI standard */
 
-      if (song->pos + cmdlen[command >> 4] > song->size) {
+      param = song->data[song->pos];
 
-	fprintf(stderr, "Running out of song data. Emergency stop.\n");
-	fprintf(stderr, "Song position is 0x%x/0x%x, handle %04x\n", song->pos, song->size, song->handle);
-
-	song->loops = 0; /* Set final loop */
-	command = SCI_MIDI_EOT; /* Finish track by force */
-
-      } else {
-	int params_nr = cmdlen[command >> 4];
-
-	if (params_nr)
-	  param = song->data[song->pos];
-	else
-	  param = 0;
-
-	song->pos += params_nr;
-      }
+      song->pos += cmdlen[command >> 4];
 
       if (command == SCI_MIDI_EOT) {
 
@@ -281,7 +266,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
       int got_input;
 
       if (!suspended) {
-	wakeup_time = song_next_wakeup_time(&last_played, ticks);
+            wakeup_time = song_next_wakeup_time(&last_played, ticks);
 
 	wait_tv = song_sleep_time(&last_played, ticks);
 	wait_tvp = &wait_tv;
@@ -317,6 +302,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 	    if (debugging)
 	      fprintf(ds, "Receiving song for handle %04x: ", event.handle);
+
 	    if (modsong) {
 	      int lastmode = song_lib_remove(songlib, event.handle);
 
@@ -536,6 +522,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    int size = event.value;
 	    int success = 1;
 	    int usecs, secs;
+
 	    while (size > 0) {
 	      int received = read(fd_in, dirptr, MIN(size, SSIZE_MAX));
 
@@ -548,6 +535,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	      dirptr += received;
 	      size -= received;
 	    }
+
 	    g_get_current_time(&last_played);
 
 	    success = soundsrv_restore_state(ds, dirname, songlib, &song,

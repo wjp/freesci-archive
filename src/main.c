@@ -277,7 +277,8 @@ main(int argc, char** argv)
   }
 
   printf("FreeSCI "VERSION" Copyright (C) 1999 Dmitry Jemerov, Christopher T. Lansdown,\n"
-	 "Sergey Lapin, Carl Muckenhoupt, Christoph Reichenbach, Magnus Reftel\n"
+     "Sergey Lapin, Carl Muckenhoupt, Christoph Reichenbach, Magnus Reftel,\n"
+     "Rink Springer\n"
 	 "This program is free software. You can copy and/or modify it freely\n"
 	 "according to the terms of the GNU general public license, v2.0\n"
 	 "or any later version, at your option.\n"
@@ -360,13 +361,6 @@ main(int argc, char** argv)
     fprintf(stderr,"Game initialization failed: Aborting...\n");
     return 1;
   }
-  /*
-  for (i = 0; i < 1000; i++) {
-    game_exit(gamestate);
-    printf("gamecheck loop %d\n", i);
-    game_init(gamestate);
-  }
-  */
 
   if (!game_name)
     game_name = gamestate->game_name;
@@ -410,11 +404,6 @@ main(int argc, char** argv)
     else gamestate->gfx_driver = gfx_drivers[j];
   }
 
-  if (gamestate->gfx_driver == NULL) {
-    fprintf(stderr,"No graphics driver active. Aborting...\n");
-    exit(1);
-  }
-
   if (strlen (conf[conf_nr].debug_mode))
     set_debug_mode (gamestate, 1, conf[conf_nr].debug_mode);
 
@@ -454,13 +443,6 @@ main(int argc, char** argv)
   game_run(&gamestate); /* Run the game */
   
 
-  if (console_logfile)
-  {
-    fclose (console_logfile);
-    console_logfile = NULL;
-    con_file = NULL;
-  }
-
   if (gamestate->sfx_driver)
     gamestate->sfx_driver->exit(gamestate); /* Shutdown sound daemon first */
 
@@ -471,6 +453,9 @@ main(int argc, char** argv)
   freeResources();
 
   config_free(&conf, conf_entries);
+
+  if (console_logfile)
+    fclose (console_logfile);
 
   chdir (startdir); /* ? */
 

@@ -60,30 +60,30 @@ typedef struct {
 
 
 /* Keycodes of special keys: */
-#define SCI_K_ESC       27
+#define SCI_K_ESC 27
 #define SCI_K_BACKSPACE 8
-#define SCI_K_ENTER     13
-#define SCI_K_END       0x4F00
-#define SCI_K_DOWN      0x5000
-#define SCI_K_PGDOWN    0x5100
-#define SCI_K_LEFT      0x4B00
-#define SCI_K_CENTER    53 /*Note: this is the same as '5'. Dunno what should be done here...*/
-#define SCI_K_RIGHT     0x4D00
-#define SCI_K_HOME      0x4700
-#define SCI_K_UP        0x4800
-#define SCI_K_PGUP      0x4900
-#define SCI_K_INSERT    0x5200
-#define SCI_K_DELETE    0x5300
-#define SCI_K_F1        0x3B00
-#define SCI_K_F2        0x3C00
-#define SCI_K_F3        0x3D00
-#define SCI_K_F4        0x3E00
-#define SCI_K_F5        0x3F00
-#define SCI_K_F6        0x4000
-#define SCI_K_F7        0x4100
-#define SCI_K_F8        0x4200
-#define SCI_K_F9        0x4300
-#define SCI_K_F10       0x400
+#define SCI_K_ENTER 13
+#define SCI_K_END 79
+#define SCI_K_DOWN 80
+#define SCI_K_PGDOWN 81
+#define SCI_K_LEFT 75
+#define SCI_K_CENTER 53 /*Note: this is the same as '5'. Dunno what should be done here...*/
+#define SCI_K_RIGHT 77
+#define SCI_K_HOME 71
+#define SCI_K_UP 72
+#define SCI_K_PGUP 73
+#define SCI_K_INSERT 82
+#define SCI_K_DELETE 83
+#define SCI_K_F1 59
+#define SCI_K_F2 60
+#define SCI_K_F3 61
+#define SCI_K_F4 62
+#define SCI_K_F5 63
+#define SCI_K_F6 64
+#define SCI_K_F7 65
+#define SCI_K_F8 66
+#define SCI_K_F9 67
+#define SCI_K_F10 68
 
 /*Values for buckybits */
 #define SCI_EVM_RSHIFT          (1<<0)
@@ -100,8 +100,5 @@ extern long sci_clock_time;
 /* Time (in microseconds) in between two 'heart beats' */
 extern long sci_redraw_time;
 /* Time (in usecs) until the next SCI_EV_REDRAW can be sent */
-
-int
-map_keyboard_event (int key, int *modifiers);
 
 #endif /* _SCI_UINPUT_H */

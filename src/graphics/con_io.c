@@ -83,47 +83,42 @@ con_input(sci_event_t *event)
 
   if (event->type == SCI_EVT_KEYBOARD) {
     
-    word key=event->data;
-    int modifiers=event->buckybits;
-
-    key=map_keyboard_event (key, &modifiers);
-    
-    if ((modifiers & (SCI_EVM_NUMLOCK | SCI_EVM_CTRL | SCI_EVM_ALT)) == 0) {
-      if (((key >= ' ') && (key <= '@')) || ((key >= '[') && (key <= '`'))
-	  || ((key >= 'a') && (key <= 'z'))) {
+    if ((event->buckybits & (SCI_EVM_NUMLOCK | SCI_EVM_CTRL | SCI_EVM_ALT)) == 0) {
+      if (((event->data >= '0') && (event->data < '@'))
+	  || ((event->data >= 'a') && (event->data <= 'z'))) {
 	if (stl < SCI_CONSOLE_MAX_INPUT) {
 	  memmove(_inpbuf + con_cursor, _inpbuf + con_cursor-1,
 		  SCI_CONSOLE_MAX_INPUT - con_cursor+1);
 
-	  if (modifiers & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT | SCI_EVM_CAPSLOCK)) /* Shift? */
-            _inpbuf[con_cursor] = toupper(key);
-          else 
-            _inpbuf[con_cursor] = key;  
+	  if (event->buckybits & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT | SCI_EVM_CAPSLOCK)) /* Shift? */
+	    switch (event->data) {
+
+	    case '1': _inpbuf[con_cursor] = '!'; break;
+	    case '2': _inpbuf[con_cursor] = '@'; break;
+	    case '3': _inpbuf[con_cursor] = '#'; break;
+	    case '4': _inpbuf[con_cursor] = '$'; break;
+	    case '5': _inpbuf[con_cursor] = '%'; break;
+	    case '6': _inpbuf[con_cursor] = '^'; break;
+	    case '7': _inpbuf[con_cursor] = '&'; break;
+	    case '8': _inpbuf[con_cursor] = '*'; break;
+	    case '9': _inpbuf[con_cursor] = '('; break;
+	    case '0': _inpbuf[con_cursor] = ')'; break;
+	    case '-': _inpbuf[con_cursor] = '_'; break;
+	    case '=': _inpbuf[con_cursor] = '+'; break;
+
+	    default:
+	      _inpbuf[con_cursor] = toupper(event->data);
+
+	    } else _inpbuf[con_cursor] = event->data;  
 
 	  con_cursor++;
 	}
 	con_outputlookback = con_outputbufpos;
-      } else switch (key) {
+      } else switch (event->data) {
 
-	case SCI_K_ENTER: 
-	  memcpy(&(_commandbuf[z = _commandbufpos]), con_input_line, SCI_CONSOLE_MAX_INPUT);
-	  ++_commandbufpos;
-	  _commandlookback = _commandbufpos %= SCI_CONSOLE_INPUT_BUFFER;
-	  if (_commandbuflen < _commandbufpos)
-	    _commandbuflen = _commandbufpos;
+	case SCI_K_ENTER: goto sci_evil_label_enter;
 
-	  con_input_line[0] = '\0';
-	  con_cursor = 1;
-	  con_outputlookback = con_outputbufpos;
-	  return _commandbuf[z];
-
-	case SCI_K_BACKSPACE: 
-	  if (con_cursor > 1) {
-	    memmove(_inpbuf + con_cursor-1, _inpbuf + con_cursor,
-		    SCI_CONSOLE_MAX_INPUT - con_cursor);
-	    con_cursor--;
-	  }
-	  break;
+	case SCI_K_BACKSPACE: goto sci_evil_label_backspace;
 
 	case SCI_K_LEFT:
 	  if (con_cursor > 1) con_cursor--;
@@ -132,44 +127,15 @@ con_input(sci_event_t *event)
 	  break;
 
 	case SCI_K_UP:
-	  if (_commandlookback == _commandbufpos)
-	    memcpy(&(_commandbuf[_commandbufpos]), con_input_line, SCI_CONSOLE_MAX_INPUT);
-
-	  if ((z = _commandlookback - 1) == -1)
-	    z = _commandbuflen;
-
-	  if (z != _commandbufpos) {
-	    _commandlookback = z;
-
-	    memcpy(con_input_line, &(_commandbuf[_commandlookback]), SCI_CONSOLE_MAX_INPUT);
-	    con_cursor = strlen(con_input_line)+1;
-	  }
-	  break;
+	  goto sci_evil_label_prevcommand;
 
 	case SCI_K_DOWN:
-	  if ((z = _commandlookback + 1) == _commandbuflen + 1)
-	    z = 0;
-
-	  if (_commandlookback != _commandbufpos) {
-	    _commandlookback = z;
-
-	    memcpy(con_input_line, &(_commandbuf[_commandlookback]), SCI_CONSOLE_MAX_INPUT);
-	    con_cursor = strlen(con_input_line)+1;
-	  }
-	  break;
+	  goto sci_evil_label_nextcommand;
 
 	case SCI_K_RIGHT:
 	  if (con_cursor <= stl) con_cursor++;
 	  z = 1;
 	  con_outputlookback = con_outputbufpos;
-	  break;
-
-        case SCI_K_HOME:
-	  con_cursor = 1;
-	  break;
-
-        case SCI_K_END:
-	  con_cursor = stl+1;
 	  break;
 
 	case SCI_K_PGUP:
@@ -205,12 +171,86 @@ con_input(sci_event_t *event)
       }
     } else
 
-      if (modifiers & SCI_EVM_CTRL) {
-	switch (key) {
+      if (event->buckybits & SCI_EVM_CTRL) {
+	switch (event->data) {
 
 	case 'k':
 	  _inpbuf[con_cursor] = 0;
 	  break;
+
+	case 'a':
+	  con_cursor = 1;
+	  break;
+
+	case 'e':
+	  con_cursor = stl+1;
+	  break;
+
+	case 'b':
+	  if (con_cursor > 1) con_cursor--;
+	  break;
+
+	case 'p':
+	sci_evil_label_prevcommand:
+	if (_commandlookback == _commandbufpos)
+	  memcpy(&(_commandbuf[_commandbufpos]), con_input_line, SCI_CONSOLE_MAX_INPUT);
+
+	if ((z = _commandlookback - 1) == -1)
+	  z = _commandbuflen;
+
+	if (z != _commandbufpos) {
+	  _commandlookback = z;
+
+	  memcpy(con_input_line, &(_commandbuf[_commandlookback]), SCI_CONSOLE_MAX_INPUT);
+	  con_cursor = strlen(con_input_line)+1;
+	}
+	break;
+
+	case 'n':
+	sci_evil_label_nextcommand:
+	if ((z = _commandlookback + 1) == _commandbuflen + 1)
+	  z = 0;
+
+	if (_commandlookback != _commandbufpos) {
+	  _commandlookback = z;
+
+	  memcpy(con_input_line, &(_commandbuf[_commandlookback]), SCI_CONSOLE_MAX_INPUT);
+	  con_cursor = strlen(con_input_line)+1;
+	}
+	break;
+
+	case 'f':
+	  if (con_cursor <= stl) con_cursor++;
+	  break;
+
+	case 'h':
+	sci_evil_label_backspace:
+	if (con_cursor > 1) {
+	  memmove(_inpbuf + con_cursor-1, _inpbuf + con_cursor,
+		  SCI_CONSOLE_MAX_INPUT - con_cursor);
+	  con_cursor--;
+	}
+	break;
+
+	case 'd':
+	  if (con_cursor <= stl) {
+	    memmove(_inpbuf + con_cursor, _inpbuf + con_cursor +1,
+		    SCI_CONSOLE_MAX_INPUT - con_cursor- 1);
+	  }
+	  break;
+
+	case 'm': /* Enter */
+	sci_evil_label_enter:
+	memcpy(&(_commandbuf[z = _commandbufpos]), con_input_line, SCI_CONSOLE_MAX_INPUT);
+	++_commandbufpos;
+	_commandlookback = _commandbufpos %= SCI_CONSOLE_INPUT_BUFFER;
+	if (_commandbuflen < _commandbufpos)
+	  _commandbuflen = _commandbufpos;
+
+	con_input_line[0] = '\0';
+	con_cursor = 1;
+	con_outputlookback = con_outputbufpos;
+	return _commandbuf[z];
 
 	}
 	con_outputlookback = con_outputbufpos;

@@ -43,25 +43,25 @@ opcode_format formats[128][4]={
   /*3C*/
   {Script_None}, {Script_None}, {Script_None}, {Script_Invalid},
   /*40-4F*/
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Param, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Param, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Param, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Param, 0},
   /*50-5F*/
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Param, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Param, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Param, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Param, 0},
   /*60-6F*/
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Param, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Param, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Param, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Param, 0},
   /*70-7F*/
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0},
-  {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0}
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Param, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Param, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Param, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Param, 0}
 };
 
 int

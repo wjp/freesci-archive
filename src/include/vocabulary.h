@@ -38,6 +38,7 @@
 #define PARSE_HEAP_SIZE 64
 /* Number of bytes allocated on the heap to store bad words if parsing fails */
 
+
 typedef struct opcode_
 {
   int type;
@@ -85,7 +86,7 @@ typedef struct opcode_
 #define SAID_HASH    0xf7
 #define SAID_LT      0xf8
 #define SAID_GT      0xf9
-#define SAID_END     0xff
+#define SAID_TERM    0xff
 
 #define SAID_FIRST SAID_COMMA
 
@@ -289,10 +290,10 @@ vocab_get_any_group_word(int group, word_t **words, int words_nr);
 
 
 void
-vocab_decypher_said_block(struct _state *s, byte *addr);
+vocab_decypher_said_block(struct _state *s, heap_ptr addr);
 /* Decyphers a said block and dumps its content via sciprintf.
 ** Parameters: (state_t *) s: The state to use
-**             (byte *) addr: The address of the spec to decypher
+**             (heap_ptr) addr: The heap address to decypher
 ** For debugging only.
 */
 
@@ -304,14 +305,6 @@ vocab_synonymize_tokens(result_word_t *words, int words_nr, synonym_t *synonyms,
 **             (int) words_nr: Number of word_ts in the list
 **             (synonym_t *) synonyms: Synonym list
 **             (int) synonyms_nr: Number of synonyms in the list
-*/
-
-int
-said(struct _state *s, byte *spec);
-/* Checks whether the last input matches the specified SAID spec
-** Parameters: (state_t *) s: The state to check
-**             (byte *) spec: The spec to test for
-** Returns   : (int) 1 if matched, 0 otherwise
 */
 
 #endif

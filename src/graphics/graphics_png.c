@@ -26,13 +26,14 @@
 ***************************************************************************/
 /* Provides facilities for writing pictures and seperate views to .png files */
 
-
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
 #include <engine.h>
 #ifdef HAVE_LIBPNG
 
 #include <graphics_png.h>
-#include <math.h>
+#include <math.h>  
 
 static png_color sci0_png_palette[16] = {
   {0x00, 0x00, 0x00}, {0x00, 0x00, 0xaa}, {0x00, 0xaa, 0x00}, {0x00, 0xaa, 0xaa},

@@ -54,9 +54,11 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <assert.h>
+#ifndef _DOS
 #include <glib.h>
-
-
+#else
+#include <sci_dos.h>
+#endif
 
 #define SCI_MAX_RESOURCE_SIZE 0x0400000
 /* The maximum allowed size for a compressed or decompressed resource */

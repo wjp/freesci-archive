@@ -86,8 +86,6 @@ typedef struct {
   int font_nr; /* Font number */
   byte gray_text; /* Set to 1 to "gray out" text */
 
-  int predecessor; /* For multiple overlaid windows */
-
   int bg_handle; /* Background picture handle for restoring */
 
 } port_t;
@@ -467,7 +465,7 @@ void draw_text0_centered(picture_t dest, port_t *port, int x, int y,
 **             (char) color: The color to use for drawing.
 ** Returns   : (void)
 ** This will only draw the supplied text, without any surrounding box.
-** draw_text0_centered will, in addition, center the text to the supplied port.
+** drawTextCentered will, in addition, center the text to the supplied port.
 */
 
 

@@ -37,6 +37,10 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#ifdef _DOS
+#include <sci_dos.h>
+#endif
+
 #include <engine.h>
 #include <graphics.h>
 #include <uinput.h>

@@ -27,7 +27,9 @@
 
 #include <stdarg.h>
 #include <sound.h>
+#ifndef _DOS
 #include <glib.h>
+#endif
 #include <soundserver.h>
 #include <sys/types.h>
 #include <engine.h>
@@ -45,11 +47,13 @@
 #endif /* _WIN32 */
 #endif /* !HAVE_UNISTD_H */
 
-
 #ifdef HAVE_FORK
 extern sfx_driver_t sound_null;
 #endif
 
+#ifdef _DOS
+extern sfx_driver_t sound_dos;
+#endif
 
 sound_event_t sound_eq_eoq_event = {0, SOUND_SIGNAL_END_OF_QUEUE, 0};
 
@@ -58,10 +62,11 @@ sfx_driver_t *sfx_drivers[] = {
   /* Assume that sound_null works on any box that has fork() */
   &sound_null,
 #endif /* HAVE_FORK */
+#ifdef _DOS
+  &sound_dos,
+#endif
   NULL
 };
-
-
 
 #ifdef HAVE_FORK
 
@@ -116,6 +121,7 @@ sound_get_event(state_t *s)
   fd_set inpfds;
   int inplen;
   GTimeVal waittime = {0, 0};
+  GTimeVal waittime2 = {0, 0};
   char debug_buf[65];
   sound_event_t *event = xalloc(sizeof(sound_event_t));
 
@@ -139,6 +145,7 @@ sound_get_event(state_t *s)
   FD_SET(s->sound_pipe_events[0], &inpfds);
 
   sound_command(s, SOUND_COMMAND_GET_NEXT_EVENT, 0, 0);
+  /*  select(s->sound_pipe_events[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime2); */
 
   if (read(s->sound_pipe_events[0], event, sizeof(sound_event_t)) == sizeof(sound_event_t)) {
 
@@ -192,9 +199,8 @@ sound_resume(state_t *s)
   sound_command(s, SOUND_COMMAND_RESUME_SOUND, 0, 0);
 }
 
-
 int
-_sound_transmit_text_expect_answer(state_t *s, char *text, int command, char *timeoutmessage)
+_sound_transmit_text_expect_anwer(state_t *s, char *text, int command, char *timeoutmessage)
 {
   fd_set fds;
   GTimeVal timeout = {0, SOUND_SERVER_TIMEOUT};
@@ -219,15 +225,15 @@ _sound_transmit_text_expect_answer(state_t *s, char *text, int command, char *ti
 int
 sound_save(state_t *s, char *dir)
 {
-  return _sound_transmit_text_expect_answer(s, dir, SOUND_COMMAND_SAVE_STATE,
-					    "Sound server timed out while saving\n");
+  return _sound_transmit_text_expect_anwer(s, dir, SOUND_COMMAND_SAVE_STATE,
+					   "Sound server timed out while saving\n");
 }
 
 int
 sound_restore(state_t *s, char *dir)
 {
-  return _sound_transmit_text_expect_answer(s, dir, SOUND_COMMAND_RESTORE_STATE,
-					    "Sound server timed out while restoring\n");
+  return _sound_transmit_text_expect_anwer(s, dir, SOUND_COMMAND_RESTORE_STATE,
+					   "Sound server timed out while restoring\n");
 }
 
 int
@@ -383,17 +389,16 @@ song_lib_add(songlib_t songlib, song_t *song)
   if (*songlib == NULL) {
     *songlib = song;
     song->next = NULL;
+
     return;
   }
 
   seeker = *songlib;
-
   while (seeker->next && (seeker->next->priority > pri))
     seeker = seeker->next;
 
   song->next = seeker->next;
   seeker->next = song;
-
 }
 
 void /* Recursively free a chain of songs */
@@ -431,12 +436,13 @@ song_lib_find_active(songlib_t songlib, song_t *last_played_song)
   song_t *seeker = *songlib;
 
   if (last_played_song)
-    if (last_played_song->status == SOUND_STATUS_PLAYING)
+    if (last_played_song->status == SOUND_STATUS_PLAYING) {
       return last_played_song; /* This one was easy... */
+    }
+
   while (seeker && (seeker->status != SOUND_STATUS_WAITING)
-	 && (seeker->status != SOUND_STATUS_PLAYING)) {
+     && (seeker->status != SOUND_STATUS_PLAYING))
     seeker = seeker->next;
-  }
 
   return seeker;
 }
@@ -498,27 +504,6 @@ song_lib_resort(songlib_t songlib, song_t *song)
 
 
 void
-sound_eq_dump(sound_eq_t *queue)
-{
-  sound_eq_node_t *node;
-
-  fprintf(stderr,"-- Sound Event Queue Dump:\n");
-
-  if (!queue) {
-    fprintf(stderr,"Queue is (null)\n");
-    return;
-  }
-
-  fprintf(stderr,"First: %p, Last: %p\n", queue->first, queue->last);
-  node = queue->first;
-  while (node) {
-    fprintf(stderr,"  Node %p<- %p ->%p\n", node->prev, node, node->next);
-    node = node->next;
-  }
-}
-
-
-void
 sound_eq_init(sound_eq_t *queue)
 {
   queue->first = queue->last = NULL;
@@ -564,6 +549,7 @@ sound_eq_retreive_event(sound_eq_t *queue)
 
     if (!queue->last)
       queue->first = NULL;
+
     return retval;
   }
   else return NULL;

@@ -29,8 +29,9 @@
    990401 - turned into "graphics.c" (CJR)
 
 ***************************************************************************/
-
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #else /* !HAVE_UNISTD_H */
@@ -41,7 +42,9 @@
 #endif /* error */
 #endif /* !HAVE_UNISTD_H */
 
+#ifndef _DOS
 #include "glib.h"
+#endif
 #include "stdio.h"
 #include <stdarg.h>
 #include "graphics.h"
@@ -57,6 +60,10 @@
 
 #ifdef HAVE_GLX
 #include "graphics_glx.h"
+#endif
+
+#ifdef HAVE_DGFX
+#include "graphics_dgfx.h"
 #endif
 
 #define DEBUG_DRAWPIC
@@ -92,11 +99,13 @@ gfx_driver_t *gfx_drivers[] =
 #ifdef HAVE_GLX
   &gfx_driver_glx,
 #endif
+#ifdef HAVE_DGFX
+  &gfx_driver_dgfx,
+#endif
   NULL
 };
 
 int sci_color_mode = SCI_COLOR_DITHER;
-
 
 gfx_driver_t *
 graph_get_default_driver()
@@ -107,7 +116,11 @@ graph_get_default_driver()
 #ifdef HAVE_DDRAW
   return &gfx_driver_ddraw;
 #else
+#ifdef HAVE_DGFX
+  return &gfx_driver_dgfx;
+#else
   return NULL;
+#endif
 #endif
 #endif
 }
@@ -730,7 +743,10 @@ int draw_view0(picture_t dest, port_t *port, int xp, int yp, short _priority,
     }
   }
 
-  fflush(NULL);
+  #ifndef _DOS
+     /* Where is this for? -- Rink */
+     fflush(NULL);
+  #endif
   return 0;
 }
 

@@ -33,7 +33,9 @@
 #include <engine.h>
 #include <assert.h>
 #include <heap.h>
+#ifndef _DOS
 #include <glib.h>
+#endif
 #include <ctype.h>
 #include <graphics_png.h>
 #ifdef HAVE_DIRENT_H
@@ -46,6 +48,7 @@
 #endif
 
 /* Missing:
+** - SFXdriver
 ** - File input/output state (this is likely not to happen)
 */
 
@@ -369,7 +372,7 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
     retval = (char *) g_realloc(retval, mem += 1);
 
   retval[pos] = 0; /* Terminate string */
-  return (char *) g_realloc(retval, strlen(retval) + 1);
+  return (char *) g_realloc(retval, strlen(retval));
   /* Re-allocate; this value might be used for quite some while (if we are
   ** restoring a string)
   */
@@ -662,9 +665,6 @@ _cfsml_write_state_t(FILE *fh, state_t* foo)
       fprintf(fh, "\n");
     }
     fprintf(fh, "]");
-    fprintf(fh, "\n");
-  fprintf(fh, "parser_valid = ");
-    _cfsml_write_int(fh, &(foo->parser_valid));
     fprintf(fh, "\n");
   fprintf(fh, "game_obj = ");
     write_heapptr(fh, &(foo->game_obj));
@@ -1103,11 +1103,6 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
                 return CFSML_FAILURE;
            } else done = 1;
          } while (!done);
-      } else
-      if (!strcmp(bar, "parser_valid")) {
-#line 553 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->parser_valid), value, line, hiteof))
-            return CFSML_FAILURE;
       } else
       if (!strcmp(bar, "game_obj")) {
 #line 553 "cfsml.pl"
@@ -1669,9 +1664,6 @@ _cfsml_write_port_t(FILE *fh, port_t* foo)
   fprintf(fh, "color = ");
     _cfsml_write_gint16(fh, &(foo->color));
     fprintf(fh, "\n");
-  fprintf(fh, "predecessor = ");
-    _cfsml_write_int(fh, &(foo->predecessor));
-    fprintf(fh, "\n");
   fprintf(fh, "gray_text = ");
     _cfsml_write_byte(fh, &(foo->gray_text));
     fprintf(fh, "\n");
@@ -1777,11 +1769,6 @@ _cfsml_read_port_t(FILE *fh, port_t* foo, char *lastval, int *line, int *hiteof)
       if (!strcmp(bar, "color")) {
 #line 553 "cfsml.pl"
          if (_cfsml_read_gint16(fh, &(foo->color), value, line, hiteof))
-            return CFSML_FAILURE;
-      } else
-      if (!strcmp(bar, "predecessor")) {
-#line 553 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->predecessor), value, line, hiteof))
             return CFSML_FAILURE;
       } else
       if (!strcmp(bar, "gray_text")) {
@@ -2406,8 +2393,8 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
 
 
 /* Auto-generated CFSML declaration and function block ends here */
-/* Auto-generation performed by cfsml.pl 0.6.7 */
-#line 381 "CFSML input file"
+/* Auto-generation performed by cfsml.pl 0.6.6 */
+#line 378 "CFSML input file"
 
 
 
@@ -2421,7 +2408,7 @@ write_menubar_tp(FILE *fh, menubar_t **foo)
   _cfsml_write_menubar_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 391 "CFSML input file"
+#line 388 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2448,7 +2435,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 408 "CFSML input file"
+#line 405 "CFSML input file"
 
   }
   return *hiteof;
@@ -2464,7 +2451,7 @@ write_port_tp(FILE *fh, port_t **foo)
   _cfsml_write_port_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 419 "CFSML input file"
+#line 416 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2492,7 +2479,7 @@ read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof)
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 437 "CFSML input file"
+#line 434 "CFSML input file"
 
     res =  findResource(sci_font, (*foo)->font_nr);
     if (res)
@@ -2553,7 +2540,7 @@ gamestate_save(state_t *s, char *dirname)
     }
   }
 
-  fh = fopen(FREESCI_FILE_STATE, "w");
+  fh = fopen("state", "w");
 
   /* Calculate the time spent with this game */
   s->game_time = time(NULL) - s->game_start_time.tv_sec;
@@ -2563,13 +2550,13 @@ gamestate_save(state_t *s, char *dirname)
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 503 "CFSML input file"
+#line 500 "CFSML input file"
 
   fclose(fh);
 
   _gamestate_unfrob(s);
 
-  fd = creat(FREESCI_FILE_HEAP, 0600);
+  fd = creat("heap", 0600);
   write(fd, s->_heap->start, SCI_HEAP_SIZE);
   close(fd);
 
@@ -2628,7 +2615,7 @@ gamestate_restore(state_t *s, char *dirname)
     read_eof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 555 "CFSML input file"
+#line 552 "CFSML input file"
 
   fclose(fh);
 

@@ -19,6 +19,10 @@ parts of core/decompress1.c
 Rickard Lind: [rpl@dd.chalmers.se]
 most of sound/midi.c
 
+Rink Springer: [rink@springer.cx]
+core/sci_dos.c graphics/graphics_dfgx.c sound/soundserver_dos.c
+DOS compatibility fixes all over the place
+
 Christoph Reichenbach: [creichen@rbg.informatik.tu-darmstadt.de]
 graphics/graphics_ggi.c graphics/font.c graphics/mcursor.c core/resource.c core/vm.c tools/sciunpack.c sound/sound*  console/*.c tools/console.c graphics/input*.c graphics/window.c graphics/engine_graphics.c main.c config.l
 core/kernel.c core/savegame.cfsml core/cfsml.pl

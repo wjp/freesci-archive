@@ -320,19 +320,19 @@ vocab_lookup_word(char *word, int word_len,
 
 
 void
-vocab_decypher_said_block(state_t *s, byte *addr)
+vocab_decypher_said_block(state_t *s, heap_ptr addr)
 {
   int nextitem;
 
   do {
-    nextitem = *addr++;
+    nextitem = s->heap[addr++];
 
     if (nextitem < 0xf0) {
-      nextitem = nextitem << 8 | *addr++;
+      nextitem = nextitem << 8 | s->heap[addr++];
       sciprintf(" %s[%03x]", vocab_get_any_group_word(nextitem, s->parser_words, s->parser_words_nr),
 		nextitem);
 
-      nextitem = 42; /* Make sure that word group 0xff doesn't abort */
+      nextitem = 42; /* Make sure that group 0xff doesn't abort */
     } else switch(nextitem) {
     case 0xf0: sciprintf(" ,"); break;
     case 0xf1: sciprintf(" &"); break;
@@ -626,7 +626,7 @@ vocab_build_parse_tree(parse_tree_node_t *nodes, result_word_t *words, int words
 void
 _vocab_recursive_ptree_dump(parse_tree_node_t *nodes, int nr, int prevnr)
 {
-  if (nr > VOCAB_TREE_NODES) {
+  if ((nr > VOCAB_TREE_NODES) || (nr < prevnr)) {
     sciprintf("Error(%04x)", nr);
     return;
   }

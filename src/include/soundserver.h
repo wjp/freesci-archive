@@ -32,10 +32,12 @@
 #define _SCI_SOUND_SERVER_H_
 
 #include <sound.h>
+#ifndef _DOS
 #include <glib.h>
+#endif
 
-#define SOUND_SERVER_TIMEOUT 100000
-/* microseconds until SOUND_COMMAND_TEST or SOUND_COMMAND_RESTORE fails */
+#define SOUND_SERVER_TIMEOUT 2000
+/* microseconds until SOUND_COMMAND_TEST fails */
 #define SOUND_TICK 1000000 / 60
 /* Approximately 16666 microseconds */
 
@@ -247,7 +249,7 @@ song_next_wakeup_time(GTimeVal *lastslept, int ticks);
 int
 soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *curr_song,
 		    int soundcue, int usecs_to_sleep, int ticks_to_wait, int ticks_to_fade);
-/*†Stores the sound server state to a file
+/*·Stores the sound server state to a file
 ** Parameters: (FILE *) debugstream: The stream which all errors are sent to
 **             (char *) dir: The name of the directory to enter and write to
 **             (songlib_t) songlib: The song library to write

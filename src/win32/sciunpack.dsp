@@ -178,10 +178,6 @@ SOURCE=..\include\sound.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\soundserver.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\include\uinput.h
 # End Source File
 # Begin Source File

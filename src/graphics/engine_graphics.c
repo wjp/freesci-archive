@@ -432,7 +432,7 @@ graph_draw_selector_icon(struct _state *s, port_t *port, int state,
 			 int x, int y, int xl, int yl,
 			 byte *data, int loop, int cel)
 {
-  draw_view0(s->pic, port, x, y, 16, loop, cel, 0, data);
+  draw_view0(s->pic, port, x, y, 16, loop, cel, GRAPHICS_VIEW_USE_ADJUSTMENT, data);
 
   if (state & SELECTOR_STATE_FRAMED)
     draw_frame(s->pic, port->xmin + x-1, port->ymin + y-2,

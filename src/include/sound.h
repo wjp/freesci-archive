@@ -40,7 +40,9 @@
 #define obstack_chunk_free free
 
 #include <resource.h>
+#ifndef _DOS
 #include <glib.h>
+#endif
 
 #ifdef HAVE_OBSTACK_H
 #include <obstack.h>
@@ -127,6 +129,9 @@ typedef struct {
   /* Resumes the sound subsystem
   ** Parameters: (state_t *) s: The current state
   */
+
+  void (*poll)();
+  /* This will poll the current sound driver */
 
 } sfx_driver_t;
 

@@ -21,7 +21,7 @@
 
  Current Maintainer:
 
-    Dmitry Jemerov (DJ)  [yole@nnz.ru]
+    Christoph Reichenbach (CJR) [creichen@rbg.informatik.tu-darmstadt.de]
 
  History:
 
@@ -57,7 +57,6 @@ static HermesFormat *hfDest;
 static RGBQUAD color_table [256];
 
 static BOOL bFullscreen = FALSE, bActive = FALSE, bInitialized = FALSE;
-static BOOL bWinNT = FALSE;
 static int scale=1;
 
 /* FIXME: It would be cleaner to store the state pointer in a window word,
@@ -254,7 +253,6 @@ ddraw_init(state_t *s, struct _picture *pic)
   RECT rc;
   char buf [128];
   int32* pPal;
-  OSVERSIONINFO os_ver;
 
   _s = s;
   
@@ -263,11 +261,6 @@ ddraw_init(state_t *s, struct _picture *pic)
   else
     scale = 2;
 
-  os_ver.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
-  GetVersionEx (&os_ver);
-  if (os_ver.dwPlatformId == VER_PLATFORM_WIN32_NT)
-    bWinNT = TRUE;
-  
   /* Register window class */
   wc.style         = CS_HREDRAW | CS_VREDRAW;
   wc.lpfnWndProc   = WndProc;
@@ -439,7 +432,7 @@ ddraw_shutdown(state_t *s)
 
 /*** Input and message handling stuff ***/
 
-/* Circular queue for events received by WndProc and not yet fetched by GetEvent() */
+/* Circular queue forevents received by WndProc and not yet fetched by GetEvent() */
 
 sci_event_t *event_queue = NULL;
 int queue_size, queue_first, queue_last;
@@ -509,17 +502,9 @@ void add_key_event (int data)
 {
   int buckybits = 0;
   
-  if (bWinNT)
-  {
-    if (GetAsyncKeyState (VK_LSHIFT)) 
-      buckybits |= SCI_EVM_LSHIFT;
-    if (GetAsyncKeyState (VK_RSHIFT))
-      buckybits |= SCI_EVM_RSHIFT;
-  }
-  else {
-    if (GetAsyncKeyState (VK_SHIFT))
-      buckybits |= SCI_EVM_LSHIFT | SCI_EVM_RSHIFT;
-  }
+  /* FIXME: If anyone cares, on Windows NT we can distinguish left and right shift */
+  if (GetAsyncKeyState (VK_SHIFT)) 
+    buckybits |= SCI_EVM_LSHIFT | SCI_EVM_RSHIFT;
   if (GetAsyncKeyState (VK_CONTROL)) 
     buckybits |= SCI_EVM_CTRL;
   if (GetAsyncKeyState (VK_MENU)) 
@@ -571,7 +556,7 @@ long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     break;
 
-    /* messages converted to SCI events */
+    /* messages converted to SCI aevents */
   case WM_MOUSEMOVE:
     _s->pointer_x = LOWORD (lParam) / scale;
     _s->pointer_y = HIWORD (lParam) / scale;
@@ -628,10 +613,6 @@ long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       }
       else if (wParam == 0xC0)  /* tilde key - used for invoking console */
         add_key_event ('`');
-      else if (wParam == 0xBD)
-        add_key_event ('-');
-      else if (wParam == 0xBB)
-        add_key_event ('=');
       else
         add_key_event (wParam);
     }

@@ -756,6 +756,20 @@ kHiliteControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
+#define _K_EDIT_DELETE \
+ if (cursor < textlen) { \
+  memmove(text + cursor, text + cursor + 1, textlen - cursor +1); \
+}
+
+#define _K_EDIT_BACKSPACE \
+ if (cursor) { \
+  --cursor;    \
+  memmove(text + cursor, text + cursor + 1, textlen - cursor +1); \
+  --textlen; \
+}
+
+
+
 void
 kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
@@ -775,7 +789,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	  int max = GET_SELECTOR(obj, max);
 	  int cursor = GET_SELECTOR(obj, cursor);
 	  int modifiers = GET_SELECTOR(event, modifiers);
-	  word key = GET_SELECTOR(event, message);
+	  byte key = GET_SELECTOR(event, message);
 
 	  int font_nr = GET_SELECTOR(obj, font);
 	  char *text = s->heap + UGET_SELECTOR(obj, text);
@@ -792,17 +806,20 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	  /*	  fprintf(stderr,"EditControl: mod=%04x, key=%04x, maxlen=%04x, cursor=%04x\n",
 		  modifiers, key, max, cursor);*/
 
-	  key=map_keyboard_event (key, &modifiers);
-          
-          if (modifiers & SCI_EVM_CTRL) {
+	  if (modifiers & SCI_EVM_CTRL) {
 
 	    switch (tolower(key)) {
+	    case 'a': cursor = 0; break;
+	    case 'e': cursor = textlen; break;
+	    case 'f': if (cursor < textlen) ++cursor; break;
+	    case 'b': if (cursor > 0) --cursor; break;
 	    case 'k': text[cursor] = 0; break; /* Terminate string */
+	    case 'h': _K_EDIT_BACKSPACE; break;
+	    case 'd': _K_EDIT_DELETE; break;
 	    }
 	    PUT_SELECTOR(event, claimed, 1);
 
-	  } 
-          else if (modifiers & SCI_EVM_ALT) { /* Ctrl has precedence over Alt */
+	  } else if (modifiers & SCI_EVM_ALT) { /* Ctrl has precedence over Alt */
 
 	    switch (tolower(key)) {
 	    case 'f': while ((cursor < textlen) && (text[cursor++] != ' ')); break;
@@ -816,14 +833,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	    PUT_SELECTOR(event, claimed, 1);
 
 	    switch(key) {
-	    case SCI_K_BACKSPACE:  
-              if (cursor) {
-                --cursor;
-                memmove(text + cursor, text + cursor + 1, textlen - cursor +1);
-                --textlen;
-              }
-              break;
-
+	    case SCI_K_BACKSPACE: _K_EDIT_BACKSPACE; break;
 	    default:
 	      PUT_SELECTOR(event, claimed, 0);
 	    }
@@ -837,15 +847,11 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	    case SCI_K_END: cursor = textlen; break;
 	    case SCI_K_RIGHT: if (cursor + 1 <= textlen) ++cursor; break;
 	    case SCI_K_LEFT: if (cursor > 0) --cursor; break;
-	    case SCI_K_DELETE: 
-               if (cursor < textlen) {
-                 memmove(text + cursor, text + cursor + 1, textlen - cursor +1);
-               }
-               break;
-
+	    case SCI_K_DELETE: _K_EDIT_DELETE; break;
 	    }
 	    PUT_SELECTOR(event, claimed, 1);
           }
+          
           else if ((key > 31) && (key < 128)) 
           {
             int inserting = (modifiers & SCI_EVM_INSERT);
@@ -1479,7 +1485,7 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
   if (goner == s->view_port) /* Are we killing the active port? */
-    s->view_port = s->ports[goner]->predecessor; /* Set wm_port as active port if so */
+    s->view_port = 0; /* Set wm_port as active port if so */
 
   _k_dyn_view_list_prepare_change(s);
   graph_restore_box(s, s->ports[goner]->bg_handle);
@@ -1525,7 +1531,6 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   wnd->bgcolor = PARAM_OR_ALT(8, 15);
   wnd->font = s->titlebar_port.font; /* Default to 'system' font */
   wnd->font_nr = s->titlebar_port.font_nr;
-  wnd->predecessor = s->view_port; /* Set correct predecessor */
 
   wnd->alignment = ALIGN_TEXT_LEFT; /* FIXME?? */
 

@@ -46,6 +46,7 @@
 #endif
 
 /* Missing:
+** - SFXdriver
 ** - File input/output state (this is likely not to happen)
 */
 
@@ -294,8 +295,6 @@ RECORD port_t "port_t" {
   gint16 bgcolor;
   gint16 color;
 
-  int predecessor;
-
   byte gray_text;
   int bg_handle;
 }
@@ -358,8 +357,6 @@ RECORD state_t "state_t" {
   heap_ptr global_vars;
 
   parse_tree_node_t parser_nodes[STATIC VOCAB_TREE_NODES];
-
-  int parser_valid;
 
   heap_ptr game_obj;
 
@@ -494,7 +491,7 @@ gamestate_save(state_t *s, char *dirname)
     }
   }
 
-  fh = fopen(FREESCI_FILE_STATE, "w");
+  fh = fopen("state", "w");
 
   /* Calculate the time spent with this game */
   s->game_time = time(NULL) - s->game_start_time.tv_sec;
@@ -505,7 +502,7 @@ gamestate_save(state_t *s, char *dirname)
 
   _gamestate_unfrob(s);
 
-  fd = creat(FREESCI_FILE_HEAP, 0600);
+  fd = creat("heap", 0600);
   write(fd, s->_heap->start, SCI_HEAP_SIZE);
   close(fd);
 

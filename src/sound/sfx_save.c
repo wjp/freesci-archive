@@ -134,7 +134,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
   while (isspace(c = fgetc(fd)) && (c != EOF));
   if (c == EOF) {
     _cfsml_error("Unexpected end of file at line %d\n", *line);
-    g_free(retval);
+    free(retval);
     *hiteof = 1;
     return NULL;
   }
@@ -149,7 +149,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
      if (!isspace(c)) {
         if (done) {
            _cfsml_error("Single word identifier expected at line %d\n", *line);
-           g_free(retval);
+           free(retval);
            return NULL;
         }
         retval[pos++] = c;
@@ -162,7 +162,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
 
   if (c == EOF) {
     _cfsml_error("Unexpected end of file at line %d\n", *line);
-    g_free(retval);
+    free(retval);
     *hiteof = 1;
     return NULL;
   }
@@ -177,7 +177,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
 
   if (pos == 0) {
     _cfsml_error("Missing identifier in assignment at line %d\n", *line);
-    g_free(retval);
+    free(retval);
     return NULL;
   }
 
@@ -216,7 +216,7 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
 
   if (pos == 0) {
     _cfsml_error("Missing value in assignment at line %d\n", *line);
-    g_free(retval);
+    free(retval);
     return NULL;
   }
 
@@ -227,7 +227,7 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
     retval = (char *) g_realloc(retval, mem += 1);
 
   retval[pos] = 0; /* Terminate string */
-  return (char *) g_realloc(retval, strlen(retval) + 1);
+  return (char *) g_realloc(retval, strlen(retval));
   /* Re-allocate; this value might be used for quite some while (if we are
   ** restoring a string)
   */
@@ -355,7 +355,7 @@ _cfsml_read_sound_lib_file_t(FILE *fh, sound_lib_file_t* foo, char *lastval, int
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -401,7 +401,7 @@ _cfsml_read_sound_lib_file_t(FILE *fh, sound_lib_file_t* foo, char *lastval, int
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -549,7 +549,7 @@ _cfsml_read_song_t(FILE *fh, song_t* foo, char *lastval, int *line, int *hiteof)
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -574,7 +574,7 @@ _cfsml_read_song_t(FILE *fh, song_t* foo, char *lastval, int *line, int *hiteof)
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -599,7 +599,7 @@ _cfsml_read_song_t(FILE *fh, song_t* foo, char *lastval, int *line, int *hiteof)
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -624,7 +624,7 @@ _cfsml_read_song_t(FILE *fh, song_t* foo, char *lastval, int *line, int *hiteof)
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -649,7 +649,7 @@ _cfsml_read_song_t(FILE *fh, song_t* foo, char *lastval, int *line, int *hiteof)
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -674,7 +674,7 @@ _cfsml_read_song_t(FILE *fh, song_t* foo, char *lastval, int *line, int *hiteof)
 #line 518 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 527 "cfsml.pl"
               return 1;
@@ -739,7 +739,7 @@ _cfsml_read_song_t(FILE *fh, song_t* foo, char *lastval, int *line, int *hiteof)
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -808,7 +808,7 @@ _cfsml_write_string(FILE *fh, char ** foo)
     fprintf(fh, "\\null\\");  else {
     bar = _cfsml_mangle_string((char *) *foo);
     fprintf(fh, "\"%s\"", bar);
-    g_free(bar);
+    free(bar);
   }
 }
 
@@ -845,7 +845,7 @@ _cfsml_read_string(FILE *fh, char ** foo, char *lastval, int *line, int *hiteof)
 
 
 /* Auto-generated CFSML declaration and function block ends here */
-/* Auto-generation performed by cfsml.pl 0.6.7 */
+/* Auto-generation performed by cfsml.pl 0.6.6 */
 #line 96 "CFSML input file"
 
 /* Sound state saving reference implementation */
@@ -976,7 +976,7 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
     char *_cfsml_inp = _cfsml_get_identifier(fh, &(_cfsml_line_ctr), &_cfsml_eof, &dummy);
 
     _cfsml_error = _cfsml_read_sound_lib_file_t(fh, &read_rec, _cfsml_inp, &(_cfsml_line_ctr), &_cfsml_eof);
-    g_free(_cfsml_inp);
+    free(_cfsml_inp);
     error = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */

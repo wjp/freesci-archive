@@ -33,38 +33,6 @@
 #include <menubar.h>
 #include <engine.h>
 
-/*
-static int __active = 0;
-
-inline void*
-__my_malloc(long size, char *function, int line)
-{
-  void *retval = malloc(size);
-  __active++;
-  fprintf(stderr,"[%d] line %d, %s: malloc(%d) -> %p\n", __active, line, function, size, retval);
-  return retval;
-}
-
-inline void*
-__my_realloc(void *origin, long size, char *function, int line)
-{
-  void *retval = realloc(origin, size);
-  fprintf(stderr,"line %d, %s: realloc(%p, %d) -> %p\n", line, function, origin, size, retval);
-  return retval;
-}
-
-inline void
-__my_free(void *origin, char *function, int line)
-{
-  free(origin);
-  fprintf(stderr,"[%d] line %d, %s: free(%p)\n", __active, line, function, origin);
-  __active--;
-}
-
-#define malloc(x) __my_malloc(x, __PRETTY_FUNCTION__, __LINE__)
-#define realloc(x,y) __my_realloc(x,y, __PRETTY_FUNCTION__, __LINE__)
-#define free(x) __my_free(x, __PRETTY_FUNCTION__, __LINE__)
-*/
 
 char *
 malloc_cpy(char *source)
@@ -107,7 +75,7 @@ menubar_free(menubar_t *menubar)
 
     for (j = 0; j < menu->items_nr; j++) {
       if (menu->items[j].keytext)
-	free (menu->items[j].keytext);
+        free (menu->items[j].keytext);
       if (menu->items[j].text)
         free (menu->items[j].text);
     }
@@ -132,7 +100,7 @@ _menubar_add_menu_item(menu_t *menu, int type, char *left, char *right, byte *fo
   int total_left_size;
 
   if (menu->items_nr == 0) {
-    menu->items = (menu_item_t *) malloc(sizeof(menu_item_t));
+    menu->items = (menu_item_t *) g_malloc0(sizeof(menu_item_t));
     menu->items_nr = 1;
   } else menu->items = (menu_item_t *) realloc(menu->items, sizeof(menu_item_t) * ++(menu->items_nr));
 
@@ -175,11 +143,12 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
   int string_len = 0;
   int tag, c_width, max_width = 0;
   char *_heapbase = (char *) heapbase;
+
   if (menubar->menus_nr == 0) {
 #ifdef MENU_FREESCI_BLATANT_PLUG
     add_freesci = 1;
 #endif
-    menubar->menus = malloc(sizeof(menu_t));
+    menubar->menus = g_malloc0(sizeof(menu_t));
     menubar->menus_nr = 1;
   } else menubar->menus = realloc(menubar->menus, ++(menubar->menus_nr) * sizeof (menu_t));
 
@@ -199,10 +168,8 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 
 	left = malloc_ncpy(entries - string_len - 1, string_len);
 
-	if (strncmp(left, MENU_HBAR_STRING, 3) == 0) {
+	if (strcmp(left, MENU_HBAR_STRING) == 0) {
 	  entrytype = MENU_TYPE_HBAR; /* Horizontal bar */
-	  free(left);
-	  left = NULL;
 	}
 
 	c_width = _menubar_add_menu_item(menu, entrytype, left, NULL, font, 0, 0, 0,
@@ -296,6 +263,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
     menu->items[menu->items_nr-1].flags = MENU_FREESCI_BLATANT_PLUG;
   }
 #endif /* MENU_FREESCI_BLATANT_PLUG */
+
   menu->width = max_width;
 }
 
@@ -593,6 +561,3 @@ menubar_map_pointer(state_t *s, int *menu_nr, int *item_nr, port_t *port)
   }
 
 }
-
-
-
