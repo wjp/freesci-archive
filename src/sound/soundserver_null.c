@@ -535,8 +535,9 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    break;
 
 	  case SOUND_COMMAND_SET_VOLUME:
-	    fprintf(ds, "Set volume to %d\n", event.value);
-	    midi_mt32_volume(event.value * 100 / 16);
+	    if (debugging)
+	      fprintf(ds, "Set volume to %d\n", event.value);
+	    midi_mt32_volume(event.value * 100 / 15);
 	    break;
 	  case SOUND_COMMAND_SET_MUTE:
 	    fprintf(ds, "Called mute??? should never happen\n");
