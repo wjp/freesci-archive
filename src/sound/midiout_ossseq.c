@@ -84,7 +84,7 @@ int midiout_ossseq_flush(guint8 code)
 	return 0;
 }
 
-int midiout_ossseq_write(guint8 *buffer, unsigned int count)
+int midiout_ossseq_write(guint8 *buffer, unsigned int count, guint32 other_data)
 {
 	int written;
 	int i;

@@ -106,7 +106,7 @@ int midiout_alsaraw_close()
 	return 0;
 }
 
-int midiout_alsaraw_write(guint8 *buffer, unsigned int count)
+int midiout_alsaraw_write(guint8 *buffer, unsigned int count, guint32 other_data)
 {
 	if (closed) {
 		fprintf(stderr,"midiout/ALSAraw: Attempt to write with sound device non-open\n");

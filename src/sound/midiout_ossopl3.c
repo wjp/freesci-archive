@@ -243,7 +243,7 @@ int midiout_ossopl3_flush(guint8 code)
   return 0;
 }
 
-int midiout_ossopl3_write(guint8 *buffer, unsigned int count)
+int midiout_ossopl3_write(guint8 *buffer, unsigned int count, guint32 other_data)
 {
  int i;
 

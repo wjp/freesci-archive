@@ -69,7 +69,7 @@ int midiout_unixraw_flush(guint8 code)
   return 0;
 }
 
-int midiout_unixraw_write(guint8 *buffer, unsigned int count)
+int midiout_unixraw_write(guint8 *buffer, unsigned int count, guint32 other_data)
 {
   int rval = 0;
   /*  printf("writing %d (%d)-- %02x %02x %02x\n", count, fd,
