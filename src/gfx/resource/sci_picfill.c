@@ -326,11 +326,11 @@ FILL_FUNCTION(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, in
 	} else if (drawenable & GFX_MASK_PRIORITY) {
 		bounds = pic->priority_map->index_data;
 		legalcolor = 0;
-		legalmask = 0xf;
+		legalmask = 0x0f0f;
 	} else {
 		bounds = NULL;
 		legalcolor = 0;
-		legalmask = 0xf;
+		legalmask = 0x0f0f;
 	}
 
 	if (!bounds || IS_BOUNDARY(x, y, bounds[ytotal + x]))

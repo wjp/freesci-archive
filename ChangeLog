@@ -1,3 +1,8 @@
+2005-01-21  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/resource/sci_picfill.c (FILL_FUNCTION): Back-ported
+	updates to pic drawing to fix iceman bug
+
 2005-01-16  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/Makefile: Changed VERSION.
