@@ -124,10 +124,6 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 
 	switch (command)
 	{
-	case 0:
-		fprintf(stderr, "WARNING: A sound command has not been defined\n");
-		return 1;
-
 	case SOUND_COMMAND_INIT_HANDLE: {
 		resource_t *song = scir_find_resource(
 			s->resmgr, sci_sound, event.value, 0);
@@ -716,7 +712,7 @@ unsigned int get_msg_value(char *msg)
 		return SOUND_COMMAND_TEST;
 
 	} else {
-		fprintf(stderr, "ERROR: %s does not have an entry in get_msg_value(). "
+		fprintf(debug_stream, "ERROR: %s does not have an entry in get_msg_value(). "
 			"Please add one!\n", msg);
 		return 0;
 	}

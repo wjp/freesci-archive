@@ -39,7 +39,8 @@
 #include <windows.h>
 #include <win32/messages.h>
 
-/* #define SSWIN_DEBUG 1 */
+/* #define SSWIN_DEBUG 0 */
+/* #define NO_CALLBACK */
 
 sound_server_t sound_server_win32e;
 
@@ -68,7 +69,7 @@ MainWndProc (HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam)
 {
 	/* does nothing */
 #if (SSWIN_DEBUG == 1)
-	fprintf(stderr, "MainWndProc called for hWnd %i with msg %i (TID: %i)\n", hWnd, nMsg, GetCurrentThreadId());
+	fprintf(debug_stream, "MainWndProc called for hWnd %i with msg %i (TID: %i)\n", hWnd, nMsg, GetCurrentThreadId());
 #endif
 
 	return DefWindowProc (hWnd, nMsg, wParam, lParam);
@@ -79,10 +80,20 @@ SoundWndProc (HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam)
 {
 	/* does nothing */
 #if (SSWIN_DEBUG == 1)
-	fprintf(stderr, "SoundWndProc called for hWnd %i with msg %i (TID: %i)\n", hWnd, nMsg, GetCurrentThreadId());
+	fprintf(debug_stream, "SoundWndProc called for hWnd %i with msg %i (TID: %i)\n", hWnd, nMsg, GetCurrentThreadId());
 #endif
 
 	return DefWindowProc (hWnd, nMsg, wParam, lParam);
+}
+
+void CALLBACK
+timeout(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
+{
+	if (PostMessage(sound_wnd, SOUND_COMMAND_DO_SOUND, 0, 0) == 0)
+	{
+		fprintf(debug_stream, "win32e_soundserver_init(): GetModuleHandle() failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
 }
 
 /* function called when sound server child thread begins */
@@ -94,7 +105,7 @@ win32e_soundserver_init(LPVOID lpP)
 	memset(&sss, 0, sizeof(sound_server_state_t));
 
 #if (SSWIN_DEBUG == 1)
-	fprintf(stderr, "win32e_soundserver_init() begins with TID %i\n", GetCurrentThreadId());
+	fprintf(debug_stream, "win32e_soundserver_init() begins with TID %i\n", GetCurrentThreadId());
 #endif
 
 	/*** register window class for messages to sound server ***/
@@ -137,7 +148,7 @@ win32e_soundserver_init(LPVOID lpP)
 	}
 
 #if (SSWIN_DEBUG == 1)
-	fprintf(stderr, "win32e_soundserver_init() sound_wnd %i, TID %i\n", sound_wnd, GetCurrentThreadId());
+	fprintf(debug_stream, "win32e_soundserver_init() sound_wnd %i, TID %i\n", sound_wnd, GetCurrentThreadId());
 #endif
 
 	/* signal that initialisation is done */
@@ -199,6 +210,7 @@ sound_win32e_init(struct _state *s, int flags)
 	emap[SOUND_COMMAND_IMAP_SET_VOLUME] = DECLARE_MESSAGE(SOUND_COMMAND_IMAP_SET_VOLUME);
 	emap[SOUND_COMMAND_MUTE_CHANNEL] = DECLARE_MESSAGE(SOUND_COMMAND_MUTE_CHANNEL);
 	emap[SOUND_COMMAND_UNMUTE_CHANNEL] = DECLARE_MESSAGE(SOUND_COMMAND_UNMUTE_CHANNEL);
+	emap[SOUND_COMMAND_REVERSE_STEREO] = DECLARE_MESSAGE(SOUND_COMMAND_REVERSE_STEREO);
 	emap[SOUND_SIGNAL_CUMULATIVE_CUE] = DECLARE_MESSAGE(SOUND_SIGNAL_CUMULATIVE_CUE);
 	emap[SOUND_SIGNAL_LOOP] = DECLARE_MESSAGE(SOUND_SIGNAL_LOOP);
 	emap[SOUND_SIGNAL_FINISHED] = DECLARE_MESSAGE(SOUND_SIGNAL_FINISHED);
@@ -207,14 +219,11 @@ sound_win32e_init(struct _state *s, int flags)
 	emap[SOUND_SIGNAL_RESUMED] = DECLARE_MESSAGE(SOUND_SIGNAL_RESUMED);
 	emap[SOUND_SIGNAL_INITIALIZED] = DECLARE_MESSAGE(SOUND_SIGNAL_INITIALIZED);
 	emap[SOUND_SIGNAL_ABSOLUTE_CUE] = DECLARE_MESSAGE(SOUND_SIGNAL_ABSOLUTE_CUE);
+	emap[SOUND_COMMAND_DO_SOUND] = DECLARE_MESSAGE(SOUND_COMMAND_DO_SOUND);
 
 	/*** initialise MIDI ***/
 	if (init_midi_device(s) < 0)
 		return -1;
-/* FIXME
-	if (flags & SOUNDSERVER_INIT_FLAG_REVERSE_STEREO)
-		set_reverse_stereo(1, sound_state);
-*/
 
 	/*** set up what we need for data transfer ***/
 	InitializeCriticalSection(&dq_cs);
@@ -260,7 +269,7 @@ sound_win32e_init(struct _state *s, int flags)
 	}
 
 #if (SSWIN_DEBUG == 1)
-	fprintf(stderr, "sound_win32e_init() main_wnd %i, TID %i\n", main_wnd, GetCurrentThreadId());
+	fprintf(debug_stream, "sound_win32e_init() main_wnd %i, TID %i\n", main_wnd, GetCurrentThreadId());
 #endif
 
 	/*** create time keeper sync object ***/
@@ -300,11 +309,24 @@ sound_win32e_init(struct _state *s, int flags)
 	CloseHandle(thread_created_event);
 
 	/*** start timer ***/
-	time_keeper_id = timeSetEvent(16, 2, (LPTIMECALLBACK)time_keeper, NULL, TIME_PERIODIC | TIME_CALLBACK_EVENT_PULSE);
+#ifdef NO_CALLBACK
+	time_keeper_id = timeSetEvent(16, 0, (LPTIMECALLBACK)time_keeper, NULL, TIME_PERIODIC | TIME_CALLBACK_EVENT_PULSE);
+#else
+	time_keeper_id = timeSetEvent(16, 0, (LPTIMECALLBACK)timeout, NULL, TIME_PERIODIC | TIME_CALLBACK_FUNCTION);
+#endif
 	if (time_keeper_id == NULL)
-		fprintf(stderr, "timer start failed\n");
+		fprintf(debug_stream, "timer start failed\n");
 
-	fprintf(stderr, "Sound server win32e initialised\n");
+	/*** set reverse stereo ***/
+	if (flags & SOUNDSERVER_INIT_FLAG_REVERSE_STEREO)
+	{
+#ifdef SSWIN_DEBUG
+	fprintf(debug_stream, "sound_win32e_init() setting reverse stereo\n");
+#endif
+		global_sound_server->queue_command(0, SOUND_COMMAND_REVERSE_STEREO, 1);
+	}
+
+	fprintf(debug_stream, "Sound server win32e initialised\n");
 
 	return 0;
 }
@@ -328,9 +350,10 @@ sound_win32e_get_event()
 	if (PeekMessage(&msg, main_wnd, 0, 0, PM_REMOVE))
 	{
 #if (SSWIN_DEBUG == 1)
-	fprintf(stderr, "sound_win32e_get_event() got msg %i (time: %i) (TID: %i)\n", msg.message, msg.time, GetCurrentThreadId());
+	fprintf(debug_stream, "sound_win32e_get_event() got msg %i (time: %i) (TID: %i)\n", msg.message, msg.time, GetCurrentThreadId());
 #endif
 		event_temp = (sound_event_t*)sci_malloc(sizeof(sound_event_t));
+		event_temp->signal = UNRECOGNISED_SOUND_SIGNAL;
 		event_temp->handle = msg.wParam;
 		event_temp->value = msg.lParam;
 
@@ -359,9 +382,11 @@ sound_win32e_get_command(GTimeVal *wait_tvp)
 
 	MSG msg; /* incoming message */
 	int i;
+	BOOL bRet;
 
 	sound_event_t *event_temp = NULL;
 
+#ifdef NO_CALLBACK
 	/* wait for timing semaphore */
 	if (WaitForSingleObject(time_keeper, INFINITE) != WAIT_OBJECT_0)
 	{
@@ -371,11 +396,21 @@ sound_win32e_get_command(GTimeVal *wait_tvp)
 
 	if (PeekMessage( &msg, sound_wnd, 0, 0, PM_REMOVE ))
 	{
+#else
+	if( (bRet = GetMessage( &msg, sound_wnd, 0, 0 )) != 0)
+	{
+		if (bRet == -1)
+		{
+			fprintf(debug_stream, "sound_win32e_get_command(): GetMessage() failed, GetLastError() returned %u\n", GetLastError());
+			exit(-1);
+		}
+#endif
+
 #if (SSWIN_DEBUG == 1)
-		fprintf(stderr, "sound_win32e_get_command() got msg %i (time: %i) (TID: %i)\n", msg.message, msg.time, GetCurrentThreadId());
+		fprintf(debug_stream, "sound_win32e_get_command() got msg %i (time: %i) (TID: %i)\n", msg.message, msg.time, GetCurrentThreadId());
 #endif
 		event_temp = (sound_event_t*)sci_malloc(sizeof(sound_event_t));
-		event_temp->signal = 0;
+		event_temp->signal = UNRECOGNISED_SOUND_SIGNAL;
 		event_temp->handle = msg.wParam;
 		event_temp->value = msg.lParam;
 
@@ -391,6 +426,7 @@ sound_win32e_get_command(GTimeVal *wait_tvp)
 				break;
 			}
 
+		/* messages not recognised by the server have a signal of 0 */
 		return event_temp;
 	}
 
@@ -434,7 +470,7 @@ sound_win32e_get_data(byte **data_ptr, int *size)
 
 			/* yield */
 #ifdef SSWIN_DEBUG
-		fprintf(stderr, "sound_win32e_get_data(): waiting for data (TID %i)\n", GetCurrentThreadId());
+		fprintf(debug_stream, "sound_win32e_get_data(): waiting for data (TID %i)\n", GetCurrentThreadId());
 #endif
 			if (WaitForSingleObject(sound_data_event, INFINITE) != WAIT_OBJECT_0)
 			{

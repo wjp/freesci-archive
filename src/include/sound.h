@@ -69,79 +69,81 @@ extern int soundserver_dead;
 ** map to heap addresses.
 */
 
-#define SOUND_COMMAND_INIT_HANDLE         1
+#define SOUND_COMMAND_INIT_HANDLE         0
 /* Loads a song, priority specified as PARAMETER, under the specified HANDLE.
 ** Followed by PARAMETER bytes containing the song.
 */
-#define SOUND_COMMAND_PLAY_HANDLE         2
+#define SOUND_COMMAND_PLAY_HANDLE         1
 /* Plays the sound stored as the HANDLE at priority PARAMETER. */
-#define SOUND_COMMAND_LOOP_HANDLE         3
+#define SOUND_COMMAND_LOOP_HANDLE         2
 /* Sets the amount of loops (PARAMETER) for the song at HANDLE to play. */
-#define SOUND_COMMAND_DISPOSE_HANDLE      4
+#define SOUND_COMMAND_DISPOSE_HANDLE      3
 /* Disposes the song from the specified HANDLE. Stops playing if the song is active. */
-#define SOUND_COMMAND_SET_MUTE            5
+#define SOUND_COMMAND_SET_MUTE            4
 /* Mutes sound if PARAMETER is MUTE_ON, unmutes if PARAMETER != MUTE_ON. */
-#define SOUND_COMMAND_GET_MUTE            6
+#define SOUND_COMMAND_GET_MUTE            5
 /* Return the mute status of the system */
-#define SOUND_COMMAND_STOP_HANDLE         7
+#define SOUND_COMMAND_STOP_HANDLE         6
 /* Stops playing the song associated with the specified HANDLE. */
-#define SOUND_COMMAND_SUSPEND_HANDLE      8
+#define SOUND_COMMAND_SUSPEND_HANDLE      7
 /* Suspends sound playing for sound with the specified HANDLE. */
-#define SOUND_COMMAND_RESUME_HANDLE       9
+#define SOUND_COMMAND_RESUME_HANDLE       8
 /* Resumes sound playing for sound with the specified HANDLE. */
-#define SOUND_COMMAND_SET_VOLUME          10
+#define SOUND_COMMAND_SET_VOLUME          9
 /* Sets the global sound volume to the specified level (0-15) */
-#define SOUND_COMMAND_RENICE_HANDLE       11
+#define SOUND_COMMAND_RENICE_HANDLE       10
 /* Sets the priority of the sound playing under the HANDLE to PARAMETER */
-#define SOUND_COMMAND_FADE_HANDLE         12
+#define SOUND_COMMAND_FADE_HANDLE         11
 /* Fades the sound playing under HANDLE so that it will be finished in PARAMETER ticks */
-#define SOUND_COMMAND_TEST                13
+#define SOUND_COMMAND_TEST                12
 /* Returns 0 if sound playing works, 1 if it doesn't. */
-#define SOUND_COMMAND_STOP_ALL            14
+#define SOUND_COMMAND_STOP_ALL            13
 /* Stops all playing tracks and returns appropriate signals. */
-#define SOUND_COMMAND_SHUTDOWN            15
+#define SOUND_COMMAND_SHUTDOWN            14
 /* Tells the sound server to die. Used by the default exit implementation.
 ** The server must not reply to this.
 */
-#define SOUND_COMMAND_SAVE_STATE          16
+#define SOUND_COMMAND_SAVE_STATE          15
 /* Saves the current state of the sound engine. Followed by a zero-terminated
 ** directory name with a length as specified by PARAMETER (including the \0)
 ** where the information should be placed. Returns one int (0 for success,
 ** 1 for failure)
 */
-#define SOUND_COMMAND_RESTORE_STATE       17
+#define SOUND_COMMAND_RESTORE_STATE       16
 /* Inverse of SOUND_COMMAND_SAVE_STATE: Restore sound state from zero terminated
 ** directory following the command, size specified in PARAMETER (incl. trailing \0).
 ** Returns one int (0 for success, 1 for failure)
 */
-#define SOUND_COMMAND_SUSPEND_ALL         18
+#define SOUND_COMMAND_SUSPEND_ALL         17
 /* Halt all sound execution (issued when the interpreter is stopped for debugging) */
-#define SOUND_COMMAND_RESUME_ALL          19
+#define SOUND_COMMAND_RESUME_ALL          18
 /* Resume all sound execution (issued when the interpreter is re-enabled after debugging) */
-#define SOUND_COMMAND_GET_VOLUME          20
+#define SOUND_COMMAND_GET_VOLUME          19
 /* retrn the global sound volume */
-#define SOUND_COMMAND_PRINT_SONG_INFO     21
+#define SOUND_COMMAND_PRINT_SONG_INFO     20
 /* Prints the current song ID to the debug stream */
-#define SOUND_COMMAND_PRINT_CHANNELS      22
+#define SOUND_COMMAND_PRINT_CHANNELS      21
 /* Prints the current channel status to the debug stream */
-#define SOUND_COMMAND_PRINT_MAPPING       23
+#define SOUND_COMMAND_PRINT_MAPPING       22
 /* Prints all current MT-32 -> GM instrument mappings to the debug stream */
-#define SOUND_COMMAND_IMAP_SET_INSTRUMENT   24
+#define SOUND_COMMAND_IMAP_SET_INSTRUMENT   23
 /* Sets the 'gm_instr' part of an instrument mapping */
-#define SOUND_COMMAND_IMAP_SET_KEYSHIFT     25
+#define SOUND_COMMAND_IMAP_SET_KEYSHIFT     24
 /* Sets the 'keyshift' part of an instrument mapping */
-#define SOUND_COMMAND_IMAP_SET_FINETUNE     26
+#define SOUND_COMMAND_IMAP_SET_FINETUNE     25
 /* Sets the 'finetune' part of an instrument mapping */
-#define SOUND_COMMAND_IMAP_SET_BENDER_RANGE 27
+#define SOUND_COMMAND_IMAP_SET_BENDER_RANGE 26
 /* Sets the 'bender range' part of an instrument mapping */
-#define SOUND_COMMAND_IMAP_SET_PERCUSSION   28
+#define SOUND_COMMAND_IMAP_SET_PERCUSSION   27
 /* Sets the 'gm_rhythmkey' part of an instrument mapping */
-#define SOUND_COMMAND_IMAP_SET_VOLUME       29
+#define SOUND_COMMAND_IMAP_SET_VOLUME       28
 /* Sets the 'volume' part of an instrument mapping */
-#define SOUND_COMMAND_MUTE_CHANNEL        30
+#define SOUND_COMMAND_MUTE_CHANNEL        29
 /* Mutes one of the output channels */
-#define SOUND_COMMAND_UNMUTE_CHANNEL      31
+#define SOUND_COMMAND_UNMUTE_CHANNEL      30
 /* Un-mutes one of the output channels */
+#define SOUND_COMMAND_REVERSE_STEREO      31
+/* Turns on or off reverse stereo (only with event ss at present) */
 
 #define SOUND_SIGNAL_CUMULATIVE_CUE  32
 /* Request for the specified HANDLE's signal to be increased */
@@ -160,7 +162,11 @@ extern int soundserver_dead;
 #define SOUND_SIGNAL_ABSOLUTE_CUE    39
 /* Set the HANDLE's signal to a fixed VALUE */
 
-#define NUMBER_SOUND_EVENTS 39
+#define SOUND_COMMAND_DO_SOUND    40
+
+#define NUMBER_SOUND_EVENTS 41
+
+#define UNRECOGNISED_SOUND_SIGNAL -1
 
 
 /* MIDI defines */

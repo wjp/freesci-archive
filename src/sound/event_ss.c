@@ -58,7 +58,7 @@ static void do_sound(sound_server_state_t *sss)
 		if (sss->current_song->fading == 0)
 		{
 #ifdef DEBUG_SOUND_SERVER
-		fprintf(stderr, "Song %04x faded out\n", sss->current_song->handle);
+		fprintf(debug_stream, "Song %04x faded out\n", sss->current_song->handle);
 #endif
 			/* set to reset song position */
 			sss->current_song->resetflag = 1;
@@ -176,7 +176,7 @@ static void do_sound(sound_server_state_t *sss)
 					}
 
 				} else {
-					fprintf(stderr, "ERROR: do_sound() MIDI command 0x%02X is not recognised\n", this_cmd.midi_cmd);
+					fprintf(debug_stream, "ERROR: do_sound() MIDI command 0x%02X is not recognised\n", this_cmd.midi_cmd);
 					exit(-1);
 				}
 			}
@@ -212,7 +212,7 @@ static void do_sound(sound_server_state_t *sss)
 		}
 		else
 		{
-			fprintf(stderr, "WARNING: do_sound() has song with no data!\n");
+			fprintf(debug_stream, "WARNING: do_sound() has song with no data!\n");
 		}
 	}
 }
@@ -230,8 +230,8 @@ sci0_event_ss(sound_server_state_t *ss_state)
 	ss_state->master_volume = 0;
 	ss_state->sound_cue = 127;
 
-	fprintf(stderr, "Sound server initialized\n");
-	fflush(stderr);	/* flush debug stream. Perhaps should move to main server loop */
+	fprintf(debug_stream, "Sound server initialized\n");
+	fflush(debug_stream);	/* flush debug stream. Perhaps should move to main server loop */
 
 
 	/*** sound server loop ***/
@@ -250,6 +250,10 @@ sci0_event_ss(sound_server_state_t *ss_state)
 		if (!new_event)
 		{
 			continue;	/* no new commands */
+
+		} else if (new_event->signal == UNRECOGNISED_SOUND_SIGNAL) {
+			sci_free(new_event);	/* no new commands */
+			continue;
 
 		} else if (new_event->signal == SOUND_COMMAND_SHUTDOWN) {
 			sci_free(new_event);
@@ -331,11 +335,11 @@ sci0_event_ss(sound_server_state_t *ss_state)
 			break;
 
 		case SOUND_COMMAND_SAVE_STATE:
-			fprintf(stderr, "Saving sound server state not implemented yet\n");
+			fprintf(debug_stream, "Saving sound server state not implemented yet\n");
 			break;
 
 		case SOUND_COMMAND_RESTORE_STATE:
-			fprintf(stderr, "Restoring sound server state not implemented yet\n");
+			fprintf(debug_stream, "Restoring sound server state not implemented yet\n");
 			break;
 
 		case SOUND_COMMAND_PRINT_SONG_INFO:
@@ -360,17 +364,20 @@ sci0_event_ss(sound_server_state_t *ss_state)
 			break;
 
 		case SOUND_COMMAND_SHUTDOWN:
-			fprintf(stderr, "sci0_event_ss(): Should never get to shutdown case!\n");
+			fprintf(debug_stream, "sci0_event_ss(): Should never get to shutdown case!\n");
 			break;
 
+		case SOUND_COMMAND_REVERSE_STEREO:
+			ss_state->reverse_stereo = (new_event->handle) ? 1 : 0;
+
 		default:
-			;	/* do nothing */
+			fprintf(debug_stream, "sci0_event_ss(): Received unknown sound signal %i\n", new_event->signal);
 		}
 		sci_free(new_event);
 	}
 
 	/*** shut down server ***/
-	fprintf(stderr, "Sound server: Received shutdown signal\n");
+	fprintf(debug_stream, "Sound server: Received shutdown signal\n");
 	midi_close();
 	song_lib_free(ss_state->songlib);
 }

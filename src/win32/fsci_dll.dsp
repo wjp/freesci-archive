@@ -377,6 +377,15 @@ SOURCE=..\sound\event_ss.c
 # Begin Source File
 
 SOURCE=..\sound\event_ss_win32.c
+
+!IF  "$(CFG)" == "fsci_dll - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
+
+# ADD CPP /W4
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -422,6 +431,19 @@ SOURCE=..\sound\polled_ss.c
 # Begin Source File
 
 SOURCE=..\sound\polled_ss_sdl.c
+
+!IF  "$(CFG)" == "fsci_dll - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
+
+# ADD CPP /W4
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\sound\polled_ss_unix.c
 
 !IF  "$(CFG)" == "fsci_dll - Win32 Release"
 

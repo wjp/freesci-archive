@@ -36,6 +36,12 @@
 
 /*** SOUND COMMANDS (sent to the sound server) ***/
 
+#define UM_SOUND_COMMAND_DO_SOUND_MSG                    "UM_SOUND_COMMAND_DO_SOUND-{4529B2CC-990C-4d24-9207-406EF6C8C3AA}"
+/* Used to keep time (i.e. should get posted every 16.6667 milliseconds)
+** UP: unused
+** LP: unused
+*/
+
 #define UM_SOUND_COMMAND_INIT_HANDLE_MSG                 "UM_SOUND_COMMAND_INIT_HANDLE-{4529B2CC-990C-4d24-9207-406EF6C8C3AA}"
 /* Loads a song
 ** UP: song handle (32 bits)
@@ -204,6 +210,12 @@
 #define UM_SOUND_COMMAND_UNMUTE_CHANNEL_MSG              "UM_SOUND_COMMAND_UNMUTE_CHANNEL-{4529B2CC-990C-4d24-9207-406EF6C8C3AA}"
 /* Unmutes one of the output channels
 ** UP: channel to mute (<= 32 bits)
+** LP: unused
+*/
+
+#define UM_SOUND_COMMAND_REVERSE_STEREO_MSG              "UM_SOUND_COMMAND_REVERSE_STEREO-{4529B2CC-990C-4d24-9207-406EF6C8C3AA}"
+/* Changes the reverse stereo setting
+** UP: new setting
 ** LP: unused
 */
 

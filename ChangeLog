@@ -1,3 +1,20 @@
+2001-12-07  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/sound/sound.c:
+	* src/include/sound.h: Numbered #defines correctly.
+	
+	* src/sound/event_ss.c:
+	* src/include/win32/messages.h: Added SOUND_COMMAND_DO_SOUND for time
+	keeping and SOUND_COMMAND_REVERSE_STEREO messages.
+
+	* src/sound/event_ss_win32.c: Now uses callback functions for timer
+	by default. (Define NO_CALLBACKS for previous method.) Adds support
+	for reverse stereo.
+
+	* ./README.Win32: Added note regarding MIDI device selection.
+	
+	* src/win32/fsci_dll.dsp: Added polled_ss_unix.c.
+
 2001-12-03  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/main.c (main): Removed call to register_sound_messages().
