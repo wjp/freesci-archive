@@ -7,8 +7,8 @@ Next TODO:
 	  situation
 	* Check "what's-all-this-then" warning in vm.c
 	* Check validity of OBJ_SPECIES, OBJ_SUPERCLASS, OBJ_ISCLASS in vm.c
-	* Re-implement kClone/kDisposeClone
 	* Re-enable list code, including kSort
+	* Re-implement kClone/kDisposeClone
 	* Implement compat code
 	* Re-implement 'delete' and 'doit' calls in kgraphics
 	* Re-enable hunk allocation/reference/deallocation

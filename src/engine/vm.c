@@ -683,7 +683,10 @@ run_vm(state_t *s, int restoring)
 
 #ifndef DISABLE_VALIDATIONS
 	/* Initialize maximum variable count */
-	variables_max[VAR_GLOBAL] = s->script_000->locals_block->nr;
+	if (s->script_000->locals_block)
+		variables_max[VAR_GLOBAL] = s->script_000->locals_block->nr;
+	else
+		variables_max[VAR_GLOBAL] = 0;
 #endif
 
 	variables_seg[VAR_GLOBAL] = s->script_000->locals_segment;
@@ -691,8 +694,11 @@ run_vm(state_t *s, int restoring)
 	variables_base[VAR_TEMP] = variables_base[VAR_PARAM] = s->stack_base;
 
 	/* SCI code reads the zeroeth argument to determine argc */
-	variables_base[VAR_GLOBAL] = variables[VAR_GLOBAL]
-		= s->script_000->locals_block->locals;
+	if (s->script_000->locals_block)
+		variables_base[VAR_GLOBAL] = variables[VAR_GLOBAL]
+			= s->script_000->locals_block->locals;
+	else
+		variables_base[VAR_GLOBAL] = variables[VAR_GLOBAL] = NULL;
 
 
 

@@ -109,7 +109,7 @@ c_segtable(state_t *s)
 				break;
 
 			case MEM_OBJ_LOCALS:
-				sciprintf("L  locals %03d)",
+				sciprintf("L  locals %03d",
 					  mobj->data.locals.script_id);
 				break;
 
