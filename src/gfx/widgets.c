@@ -262,6 +262,8 @@ gfxw_rect_isin(rect_t a, rect_t b)
 	  sciprintf("\n"); \
 	  return 1; \
   } \
+  if (!(widget->flags & GFXW_FLAG_VISIBLE)) \
+	  return 0; \
   if (!(widget->type == GFXW_VISUAL || widget->visual)) { \
 	  sciprintf("L%d: Error while drawing widget: Widget has no visual\n", __LINE__); \
 	  sciprintf("Erroneous widget: "); \
@@ -1305,13 +1307,9 @@ _parentize_widget(gfxw_container_t *container, gfxw_widget_t *widget)
 
 	if (GFXW_IS_VISUAL(container))
 		widget->set_visual(widget, (gfxw_visual_t *) container);
-	else {
-		if (container->visual)
-			widget->set_visual(widget, container->visual);
-		else {
-			GFXWARN("Adding widget to container without a visual!");
-		}
-	}
+	else if (container->visual)
+		widget->set_visual(widget, container->visual);
+
 	return 0;
 }
 			
@@ -1901,7 +1899,7 @@ gfxw_dyn_view_set_params(gfxw_dyn_view_t *widget, int under_bits, int under_bits
 }
 
 gfxw_widget_t *
-gfxw_remove_ID(gfxw_container_t *container, int ID)
+gfxw_remove_id(gfxw_container_t *container, int ID)
 {
 	gfxw_widget_t **wp = &(container->contents);
 
@@ -1909,10 +1907,10 @@ gfxw_remove_ID(gfxw_container_t *container, int ID)
 		if ((*wp)->ID == ID) {
 			gfxw_widget_t *widget = *wp;
 
-			(*wp)->next = NULL;
-			(*wp)->parent = NULL;
-			(*wp)->visual = NULL;
 			*wp = (*wp)->next;
+			widget->next = NULL;
+			widget->parent = NULL;
+			widget->visual = NULL;
 
 			return widget;
 		}
@@ -1921,4 +1919,31 @@ gfxw_remove_ID(gfxw_container_t *container, int ID)
 	}
 
 	return NULL;
+}
+
+
+gfxw_widget_t *
+gfxw_hide_widget(gfxw_widget_t *widget)
+{
+	if (widget->flags & GFXW_FLAG_VISIBLE) {
+		widget->flags &= ~GFXW_FLAG_VISIBLE;
+
+		if (widget->parent)
+			widget->parent->add_dirty_rel(widget->parent, widget->bounds, 1);
+	}
+
+	return widget;
+}
+
+gfxw_widget_t *
+gfxw_show_widget(gfxw_widget_t *widget)
+{
+	if (!(widget->flags & GFXW_FLAG_VISIBLE)) {
+		widget->flags |= GFXW_FLAG_VISIBLE;
+
+		if (widget->parent)
+			widget->parent->add_dirty_rel(widget->parent, widget->bounds, 1);
+	}
+
+	return widget;
 }

@@ -1423,6 +1423,8 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 	gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) list->contents;
 
 	while (widget) {
+		gfxw_dyn_view_t *next = (gfxw_dyn_view_t *) widget->next;
+
 		if (GFXW_IS_DYN_VIEW(widget) && (widget->ID != GFXW_NO_ID)) {
 			if (UGET_HEAP(widget->signalp) & _K_VIEW_SIG_FLAG_DISPOSE_ME) {
 
@@ -1435,14 +1437,24 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 					}
 				}
 
-
 				if (invoke_selector(INV_SEL(widget->ID, delete, 1), 0))
 					SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
 						 " a delete funcselector\n", widget->ID);
+
+				SCIkdebug(SCIkGRAPHICS, "Freeing %04x with %d&&%d\n", widget->ID, !!(widget->flags & GFXW_FLAG_VISIBLE), !!s->bg_widgets);
+
+				if (!(gfxw_remove_id(list, widget->ID) == widget)) {
+					SCIkwarn(SCIkERROR, "Attempt to remove view with ID %04x from list failed!\n", widget->ID);
+					BREAKPOINT();
+				}
+
+				if ((widget->flags & GFXW_FLAG_VISIBLE) && s->bg_widgets)
+					s->bg_widgets->add(GFXWC(s->bg_widgets), widget);
+				else widget->free(GFXW(widget));
 			}
 		}
 
-		widget = (gfxw_dyn_view_t *) widget->next;
+		widget = next;
 	}
 }
 
@@ -1563,6 +1575,8 @@ _k_make_view_list(state_t *s, gfxw_list_t *widget_list, heap_ptr list, int optio
 		    != SELECTOR_VARIABLE) {
 			signal = signalp = 0;
 			SCIkdebug(SCIkGRAPHICS, "Object at %04x has no signal selector\n", obj);
+		} else {
+			SCIkdebug(SCIkGRAPHICS, "    with signal = %04x\n", UGET_HEAP(signalp));
 		}
 
 		_priority = VIEW_PRIORITY(pos.y);
@@ -1716,6 +1730,11 @@ _k_draw_view_list(state_t *s, gfxw_list_t *list, int flags)
 						    _K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_UNKNOWN_6);
 					/* Clear all of those flags */
 
+					if (signal & _K_VIEW_SIG_FLAG_HIDDEN)
+						gfxw_hide_widget(GFXW(widget));
+					else
+						gfxw_show_widget(GFXW(widget));
+
 					PUT_HEAP(widget->signalp, signal); /* Write the changes back */
 				} else continue;
 
@@ -1725,7 +1744,6 @@ _k_draw_view_list(state_t *s, gfxw_list_t *list, int flags)
 
 		widget = (gfxw_dyn_view_t *) widget->next;
 	} /* while (widget) */
-	widget = (gfxw_dyn_view_t *) widget->next;
 
 	FULL_REDRAW();
 }
@@ -1981,14 +1999,13 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (open_animation)
 		gfxop_clear_box(s->gfx_state, gfx_rect(0, 10, 320, 190)); /* Propagate pic */
 
-
 	if (!s->dyn_views) {
 		s->dyn_views = gfxw_new_list(s->picture_port->bounds, GFXW_LIST_SORTED);
 		s->picture_port->add(GFXWC(s->picture_port), GFXW(s->dyn_views));
 	}
 
 	if (!s->bg_widgets) {
-		s->bg_widgets = gfxw_new_list(s->picture_port->bounds, GFXW_LIST);
+		s->bg_widgets = gfxw_new_list(s->picture_port->bounds, 0);
 		s->picture_port->add(GFXWC(s->picture_port), GFXW(s->bg_widgets));
 	}
 
@@ -2002,17 +2019,23 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				  | _K_MAKE_VIEW_LIST_CALC_PRIORITY, funct_nr, argc, argp);
 		/* Initialize pictures- Steps 3-9 in Lars' V 0.1 list */
 
+		/*		if (open_animation) {
+			sciprintf("Freeing tagged from ");
+			s->dyn_views->print(GFXW(s->dyn_views), 4);
+			s->dyn_views->free_tagged(GFXWC(s->dyn_views)); *//* Free obsolete dynviews *//*
+			sciprintf("result:--- ");
+			s->dyn_views->print(GFXW(s->dyn_views), 0);
+			sciprintf("======\n");
+		}*/
+
 		SCIkdebug(SCIkGRAPHICS, "Handling PicViews:\n");
 		/*		if (s->pic_not_valid)
 				_k_draw_view_list(s, s->pic_views, 0);*/ /* Step 10 */
 		SCIkdebug(SCIkGRAPHICS, "Handling Dyn:\n");
 
-		/*		_k_restore_view_list_backgrounds(s, s->dyn_views, s->dyn_views_nr); */
 		_k_draw_view_list(s, s->dyn_views, _K_DRAW_VIEW_LIST_DISPOSEABLE | _K_DRAW_VIEW_LIST_USE_SIGNAL);
-		/*		_k_save_view_list_backgrounds(s, s->dyn_views, s->dyn_views_nr); */
 		_k_draw_view_list(s, s->dyn_views, _K_DRAW_VIEW_LIST_NONDISPOSEABLE | _K_DRAW_VIEW_LIST_USE_SIGNAL); /* Step 11 */
-		/* Step 15 */
-		_k_view_list_dispose_loop(s, cast_list, s->dyn_views, funct_nr, argc, argp);
+		_k_view_list_dispose_loop(s, cast_list, s->dyn_views, funct_nr, argc, argp); /* Step 15 */
 	} /* if (cast_list) */
 
 

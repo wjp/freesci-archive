@@ -233,15 +233,14 @@ kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (underBits) {
 		SCIkwarn(SCIkWARNING,"Clone %04x was cleared with underBits set\n", offset);
 	}
-
+#if 0
 	if (s->dyn_views) {  /* Free any widget associated with the clone */
 		gfxw_widget_t *widget = gfxw_set_id(gfxw_remove_ID(s->dyn_views, offset), GFXW_NO_ID);
-WARNING("fixme???");
-fprintf(stderr,">>>>>>>>>> Removed widget with %04x\n", offset);
-s->dyn_views->print(GFXWC(s->dyn_views), 1);
+
 		if (widget && s->bg_widgets)
 			s->bg_widgets->add(GFXWC(s->bg_widgets), widget);
 	}
+#endif
 
 
 	i = 0;

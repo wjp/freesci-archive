@@ -900,6 +900,51 @@ first_file(state_t *s, char *dir, char *mask, heap_ptr buffer)
 #else /* !_WIN32 */
 #endif
 
+
+#ifdef _WIN32
+
+/* WIN32 findfirst/findnext */
+long search = -1;
+struct _finddata_t fileinfo;
+heap_ptr outbuffer;
+
+void first_file(state_t *s, char *dir, char *mask, heap_ptr buffer)
+{
+        if(search != -1)
+                _findclose(search);
+
+        assert(strcmp(dir,".")==0); /* currently used unly for cur. dir. */
+        
+        search = _findfirst(mask,&fileinfo);
+        s->acc = 0;
+        if(search != -1)
+        {
+                s->acc=buffer;
+                strcpy(s->heap + buffer, fileinfo.name);
+                outbuffer = buffer;
+        }
+}
+
+void next_file(state_t *s)
+{
+        s->acc = 0;
+        if(search == -1)
+                return;
+
+        if(_findnext(search,&fileinfo)<0)
+        {
+                _findclose(search);
+                search = -1;
+                return;
+        }
+
+        s->acc = outbuffer;
+        strcpy(s->heap + outbuffer, fileinfo.name);
+}
+/* -------------------- */
+
+#endif
+
 void
 kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {

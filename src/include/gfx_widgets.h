@@ -314,7 +314,7 @@ gfxw_set_id(gfxw_widget_t *widget, int ID);
 */
 
 gfxw_widget_t *
-gfxw_remove_ID(gfxw_container_t *container, int ID);
+gfxw_remove_id(gfxw_container_t *container, int ID);
 /* Finds a widget with a specific ID in a container and removes it from there
 ** Parameters: (gfxw_container_t *) container: The container to search in
 **             (int) ID: The ID to look for
@@ -329,6 +329,22 @@ gfxw_dyn_view_set_params(gfxw_dyn_view_t *widget, int under_bits, int under_bits
 ** Parameters: (gfxw_dyn_view_t *) widget: The widget affected
 **             (int x int x int x int) under_bits, inder_bitsp, signal, signalp: Interpreter-dependant data
 ** Returns   : (gfxw_dyn_view_t *) widget
+*/
+
+gfxw_widget_t *
+gfxw_hide_widget(gfxw_widget_t *widget);
+/* Makes a widget invisible without removing it from the list of widgets
+** Parameters: (gfxw_widget_t *) widget: The widget to invisibilize
+** Returns   : (gfxw_widget_t *) widget
+** Has no effect on invisible widgets
+*/
+
+gfxw_widget_t *
+gfxw_show_widget(gfxw_widget_t *widget);
+/* Makes an invisible widget reappear
+** Parameters: (gfxw_widget_t *) widget: The widget to show again
+** Returns   : (gfxw_widget_t *) widget
+** Does not affect visible widgets
 */
 
 /*-- Container types --*/

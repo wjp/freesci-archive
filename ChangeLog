@@ -1,3 +1,13 @@
+2000-12-24  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/widgets.c (gfxw_hide_widget): Added functionality to show and
+	hide widgets, and used it to fix several bugs.
+
+	* Misc fixes as suggested by Petr Vyhnak
+
+	* src/engine/kfile.c: Added first_file() and next_file() implementations
+	for win32 by Petr Vyhnak
+
 2000-12-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/widgets.c (_gfxwop_dyn_view_draw): Fixed dynviews being
