@@ -42,6 +42,13 @@
  **/
 
 
+#ifdef _WIN32
+#  ifndef _Win32
+#    define _Win32
+/* Work around problem with some versions of flex */
+#  endif
+#endif
+
 /*#define _SCI_RESOURCE_DEBUG */
 /*#define _SCI_DECOMPRESS_DEBUG*/
 #ifndef WITH_DMALLOC

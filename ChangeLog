@@ -1,7 +1,12 @@
+2002-03-16  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/resource.h: Define _Win32 on Win32 to work around
+	a problem with some versions of flex
+
 2002-03-16  Solomon Peachy <pizza@shaftnet.org>
        * src/sound/sound.c:  Pass along CC 0x7b (AllStop)
        * src/sound/midi_adlibemu.c:  Handle the AllStop CC, and also fix
-a memory corruption/crash when ADLIB_VOICES was set to 12.
+       a memory corruption/crash when ADLIB_VOICES was set to 12.
   
 2002-03-15  Solomon Peachy <pizza@shaftnet.org>
         * src/sound/sound.c

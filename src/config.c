@@ -2172,7 +2172,7 @@ crop_value(char *yytext)
 			++yytext;
 		*yytext = 0; /* Terminate */
 	} else {
-		while (!isspace(*yytext))
+		while (*yytext && !isspace(*yytext))
 			++yytext;
 		*yytext = 0; /* Terminate */
 	}
