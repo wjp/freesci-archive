@@ -35,6 +35,8 @@
 #  include <windows.h>
 #elif defined (__MORPHOS__)
 #  include <sys/stat.h>
+#elif defined (_DREAMCAST)
+#  include <dc.h>
 #endif
 
 #ifdef HAVE_UNISTD_H
@@ -45,12 +47,8 @@
 #  include <dirent.h>
 #endif
 
-#ifdef _DREAMCAST
-#  include <dc.h>
-#endif
-
 #ifndef O_BINARY
-#define O_BINARY 0
+#  define O_BINARY 0
 #endif
 
 static int _savegame_indices_nr = -1; /* means 'uninitialized' */
@@ -91,12 +89,8 @@ f_open_mirrored(state_t *s, char *fname)
 
 	chdir(s->work_dir);
 
-	/* Visual C++ doesn't allow to specify O_BINARY with creat() */
-#ifdef _MSC_VER
-	fd = _open(fname, _O_CREAT | _O_BINARY | _O_RDWR, _S_IREAD | _S_IWRITE);
-#else
-	fd = creat(fname, 0600);
-#endif
+	fd = sci_create_file(fname);
+
 
 	if (!IS_VALID_FD(fd) && buf) {
 		free(buf);
@@ -519,7 +513,7 @@ kGetSaveDir(state_t *s, int funct_nr, int argc, heap_ptr argp)
   s->acc = s->save_dir + 2; /* +2 to step over heap block size */
 }
 
-#ifdef _DREAMCAST
+#if defined(_DREAMCAST) || defined(ARM_WINCE)
 
 void
 kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -529,7 +523,7 @@ kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->acc = 1;
 }
 
-#else /* !_DREAMCAST */
+#else /* ! defined(_DREAMCAST) || defined(ARM_WINCE) */
 
 void
 kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -568,7 +562,7 @@ kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
       ++testpath[pathlen - 1];
   }
 
-  fd = creat(testpath, 0600);
+  fd = sci_create_file(testpath);
 
   if (!IS_VALID_FD(fd)) {
     SCIkwarn(SCIkWARNING,"Could not test for disk space: %s\n", strerror(errno));
@@ -1068,7 +1062,7 @@ kValidPath(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	chdir(cpath);
 }
 
-#define K_FILEIO_OPEN 		0
+#define K_FILEIO_OPEN		0
 #define K_FILEIO_CLOSE		1
 #define K_FILEIO_READ_RAW	2
 #define K_FILEIO_WRITE_RAW	3

@@ -179,8 +179,14 @@
 #  define G_DIR_PARENT_S ".."
 #endif
 
-#if defined(__MORPHOS__) || defined(_DREAMCAST) || defined(_MSC_VER) || defined(ARM_WINCE)
-#  define PATH_MAX 255
+#if defined (ARM_WINCE)
+#  undef HAVE_FORK
+#endif
+
+#if defined(__MORPHOS__) || defined(_DREAMCAST) || defined(_MSC_VER) || defined(ARM_WINCE) || defined(_WIN32)
+#  ifndef PATH_MAX
+#    define PATH_MAX 255
+#  endif
 #endif
 
 #ifndef MIN
@@ -442,6 +448,13 @@ sci_file_size(char *fname);
 /* Returns the filesize of a file
 ** Parameters: (char *) fname: Name of file to get filesize of
 ** Returns   : (int) filesize of the file, -1 on error
+*/
+
+int
+sci_create_file(char *fname);
+/* Creates a writeable file
+** Parameters: (char *) fname: The name of the file to create
+** Returns   : (int) A file handle on success, SCI_INVALID_FD on failure
 */
 
 #ifndef HAVE_FFS

@@ -31,6 +31,7 @@
 
 #include <versions.h>
 #include <gfx_options.h>
+#include <soundserver.h>
 #include <midiout.h>
 #include <midi_device.h>
 #include <pcmout.h>
@@ -91,16 +92,35 @@ typedef struct {
 
 	midiout_driver_t *midiout_driver; /* the midiout method to use */
 	midi_device_t *midi_device; /* the midi device to use */
-	
+
 	pcmout_driver_t *pcmout_driver; /* the pcm driver to use */
 	sound_server_t *sound_server; /* The sound server */
-        int pcmout_rate;  /* Sample rate */
-        int pcmout_stereo;  /* Stereo? */
+	int pcmout_rate;  /* Sample rate */
+	int pcmout_stereo;  /* Stereo? */
 	int pcmout_buffer_size; /* Buffer size (in frames) */
 
 	char *module_path; /* path to directories modules are loaded from */
 
 } config_entry_t;
+
+
+/* Command line options: Used to store options passed through the
+** command line, overriding  other configuration  */
+typedef struct {
+	int script_debug_flag;
+	int scale_x, scale_y, color_depth;
+	int mouse;
+	int show_rooms;
+	sci_version_t version;
+	char *gfx_driver_name;
+	char *gamedir;
+	char *midiout_driver_name;
+	char *midi_device_name;
+	char *sound_server_name;
+	char *pcmout_driver_name;
+} cl_options_t;
+
+
 
 int
 config_init(config_entry_t **conf, char *conffil);

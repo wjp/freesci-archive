@@ -43,8 +43,13 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %{_bindir}/sciv
 %{_bindir}/sciconsole
 %{_bindir}/scidisasm
+%{_bindir}/scipack
+%{_bindir}/freesci-setup
 %{_bindir}/sciunpack
 %{_mandir}/man6/
+%{_datadir}/applnk/Games/Adventure/FreeSCI.desktop
+%{_datadir}/games/freesci/config.template
+%{_datadir}/icons/hicolor/48x48/apps/freesci.png
 
 %clean
 rm -rf $RPM_BUILD_ROOT

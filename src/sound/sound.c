@@ -43,7 +43,7 @@
 #endif /* _WIN32 */
 #endif /* !HAVE_UNISTD_H */
 
-#if defined HAVE_SYSV_IPC
+#if defined(HAVE_SYSV_IPC) && !defined(ARM_WINCE)
 extern sound_server_t sound_server_unix;
 #endif
 
@@ -51,7 +51,7 @@ extern sound_server_t sound_server_unix;
 extern sound_server_t sound_server_sdl;
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(ARM_WINCE)
 extern sound_server_t sound_server_win32p;
 extern sound_server_t sound_server_win32e;
 #endif
@@ -74,6 +74,10 @@ sound_server_t *sound_servers[] = {
 #  ifdef _WIN32
 	&sound_server_win32p,
 	&sound_server_win32e,
+#  endif
+
+#  ifdef ARM_WINCE
+	&sound_server_win32p,
 #  endif
 
 #  ifdef HAVE_SDL

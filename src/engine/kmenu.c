@@ -72,10 +72,10 @@ kDrawStatus(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->status_bar_foreground=fgcolor;
 	s->status_bar_background=bgcolor;
 
-	if (NULL != s->status_bar_text) {
-		sci_free(s->status_bar_text);
-		s->status_bar_text = NULL;
-	}
+	if (s->status_bar_text)
+		free(s->status_bar_text);
+
+	s->status_bar_text = NULL;
 
 	if (text)
 		s->status_bar_text = sci_strdup((char *) s->heap + text);
@@ -123,27 +123,28 @@ struct {
 	 "Emmanuel Jeandel\nBugfixes and bug reports\n\n"
 	 "Francois-R Boyer\nMT-32 information and mapping code\n\n"
 	 "George Reid\nFreeBSD package management\n\n"
-	 "Lars Skovlund\nMost of the relevant documentation, several bugfixes",
+	 "Ismail Khatib\nPort to the PocketPC platform",
 	 0, 15},
 	{"Even more FreeSCI hackers & contributors",
+	 "Lars Skovlund\nMost of the relevant documentation, several bugfixes\n\n"
 	 "Magnus Reftel\nHeap implementation, Python class viewer, bugfixes\n\n"
 	 "Matt Hargett\nClean-ups, bugfixes, Hardcore QA, Win32\n\n"
 	 "Paul David Doherty\nGame version information\n\n"
 	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements\n\n"
 	 "Rainer Canavan\nIRIX MIDI driver and bug fixes\n\n"
-	 "Rainer De Temple\nSCI research\n\n"
-	 "Ravi I.\nSCI0 sound resource specification",
+	 "Rainer De Temple\nSCI research",
 	 0, 15},
 	{"Still more of them",
+	 "Ravi I.\nSCI0 sound resource specification\n\n"
 	 "Ruediger Hanke\nPort to the MorphOS platform\n\n"
 	 "Rune Orsval\nConfiguration file editor\n\n"
 	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research\n\n"
 	 "Rink Springer\nPort to the DOS platform, several bug fixes\n\n"
 	 "Robey Pointer\nBug tracking system hosting\n\n"
-	 "Sergey Lapin\nPort of Carl's type 2 decompression code\n\n"
-	 "Solomon Peachy\nSDL ports and much of the sound subsystem",
+	 "Sergey Lapin\nPort of Carl's type 2 decompression code",
 	 0, 15},
 	{"And even more",
+	 "Solomon Peachy\nSDL ports and much of the sound subsystem\n\n"
 	 "Vyacheslav Dikonov\nConfig script improvements\n\n"
 	 "Walter van Niftrik\nPort to the Dreamcast platform",
 	 0, 15},

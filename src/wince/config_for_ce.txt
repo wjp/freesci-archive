@@ -1,0 +1,3 @@
+./configure --with-forced-console --target=arm-wince-pe CXXFLAGS="-include fixincl.h -mcpu=strongarm1100 -Dmain=main -O2" CFLAGS="-include fixincl.h -mcpu=strongarm1100 -Dmain=main -O2" LIBS="-lg -lgcc -lsdlmain -lsdl -lsupc++ -lcoredll -lwinsock -laygshell -lpthread `sdl-config --libs`" --host=arm-wince-pe
+
+_WIN32 in fixincl.h NOT activated

@@ -556,6 +556,10 @@ game_init(state_t *s)
 	/* Global variables are script 0's local variables */
 
 	sci_get_current_time(&(s->game_start_time)); /* Get start time */
+#ifdef ARM_WINCE	
+	s->game_start_time.tv_usec = 0;
+	s->game_start_time.tv_sec = 0;
+#endif	
 	memcpy(&(s->last_wait_time), &(s->game_start_time), sizeof(GTimeVal));
 	/* Use start time as last_wait_time */
 

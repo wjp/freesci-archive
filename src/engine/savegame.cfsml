@@ -37,7 +37,7 @@
 #include <heap.h>
 
 #ifdef _MSC_VER
-#include <direct.h>
+#  include <direct.h>
 #endif
 
 #ifdef _WIN32
@@ -45,7 +45,7 @@
 #endif
 
 #ifdef _DREAMCAST
-#include <dc.h>
+#  include <dc.h>
 #endif
 
 #define HUNK_TYPE_GFX_SNAPSHOT_STRING "g\n"
@@ -516,12 +516,7 @@ write_hunk_block(FILE *fh, hunk_block_t *foo)
 		}
 
 
-		/* Visual C++ doesn't allow to specify O_BINARY with creat() */
-#ifdef _MSC_VER
-		hunkfile = open(filename, _O_CREAT | _O_BINARY | _O_RDWR);
-#else
-		hunkfile = creat(filename, 0600);
-#endif
+		hunkfile = sci_create_file(filename);
 
 		assert (IS_VALID_FD(hunkfile));
 
@@ -980,7 +975,7 @@ read_pixmap_color(FILE *fh, gfx_pixmap_color_t *color, char *lastval, int *line,
 {
 	%CFSMLREAD gfx_pixmap_color_t (color) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
 
-        color->global_index = GFX_COLOR_INDEX_UNMAPPED;
+	color->global_index = GFX_COLOR_INDEX_UNMAPPED;
 
 	if (_global_save_state->gfx_state->driver->mode->palette)
 		if (gfx_alloc_color(_global_save_state->gfx_state->driver->mode->palette, color) < 0)
@@ -1082,12 +1077,7 @@ gamestate_save(state_t *s, char *dirname)
 		}
 	}
 
-	/* Visual C++ doesn't allow to specify O_BINARY with creat() */
-#ifdef _MSC_VER
-	fd = open("heap", _O_CREAT | _O_BINARY | _O_RDWR);
-#else
-	fd = creat("heap", 0600);
-#endif
+	fd = sci_create_file("heap");
 
 	if (!IS_VALID_FD(fd) || write(fd, s->_heap->start, SCI_HEAP_SIZE) < SCI_HEAP_SIZE) {
 		sciprintf("Saving failed for the heap state\n");
@@ -1315,8 +1305,8 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->resmgr = s->resmgr;
 
 	if (retval->savegame_version < 5) {
-	        retval->status_bar_foreground = 0;
-	        retval->status_bar_background = 15;
+		retval->status_bar_foreground = 0;
+		retval->status_bar_background = 15;
 	}
 
 	if (retval->savegame_version < 3) {

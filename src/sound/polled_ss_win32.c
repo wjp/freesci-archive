@@ -35,7 +35,7 @@
 #include <sound.h>
 
 
-#ifdef _WIN32
+#if defined (_WIN32) || (ARM_WINCE)
 
 #include <sci_win32.h>
 #include <windows.h>
@@ -195,10 +195,12 @@ sound_win32p_get_event(state_t *s)
 	fflush(NULL);
 #endif
 
+#ifndef ARM_WINCE
 	/* Request ownership of the critical section */
 	__try
 	{
 		EnterCriticalSection(&ev_cs);
+#endif
 
 		/* Access the shared resource */
 
@@ -208,13 +210,15 @@ sound_win32p_get_event(state_t *s)
 		else {
 			sleep(5);
 		}
-			
+
+#ifndef ARM_WINCE
 	}
 	__finally
 	{
 		/* Release ownership of the critical section */
 		LeaveCriticalSection(&ev_cs);
 	}
+#endif
 
 #ifdef SSWIN_DEBUG
 	if (event)
@@ -238,18 +242,21 @@ sound_win32p_queue_event(unsigned int handle, unsigned int signal, long value)
 	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_queue_event()\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
-
+#ifndef ARM_WINCE
 	__try
 	{
 		EnterCriticalSection(&ev_cs);
+#endif	
 
 		/* Queue event */
 		sound_eq_queue_event(&ev_queue, handle, signal, value);
+#ifndef ARM_WINCE		
 	}
 	__finally
 	{
 		LeaveCriticalSection(&ev_cs);
 	}
+#endif	
 
 #ifdef SSWIN_DEBUG
 	fprintf(stdout, "SSWIN_DEBUG: sound_win32p_queue_event() set %04x %d %d\n", handle, signal, value);
@@ -264,18 +271,20 @@ sound_win32p_queue_command(unsigned int handle, unsigned int signal, long value)
 	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_queue_command()\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
-
+#ifndef ARM_WINCE
 	__try
 	{
 		EnterCriticalSection(&in_cs);
-
+#endif
 		/* Queue event */
 		sound_eq_queue_event(&inqueue, handle, signal, value);
+#ifndef ARM_WINCE		
 	}
 	__finally
 	{
 		LeaveCriticalSection(&in_cs);
 	}
+#endif	
 
 #ifdef SSWIN_DEBUG
 	fprintf(stdout, "SSWIN_DEBUG: sound_win32p_queue_command() set %04x %d %d\n", handle, signal, value);
@@ -292,22 +301,24 @@ sound_win32p_get_command(GTimeVal *wait_tvp)
 	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_get_command()\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
-
+#ifndef ARM_WINCE
 	__try
 	{
 		EnterCriticalSection(&in_cs);
-
+#endif
 		/* Get event from queue if there is one */
 		if (sound_eq_peek_event(&inqueue))
 			event = sound_eq_retreive_event(&inqueue);
 		else {
 			sleep(5);
 		}
+#ifndef ARM_WINCE
 	}
 	__finally
 	{
 		LeaveCriticalSection(&in_cs);
 	}
+#endif
 
 #ifdef SSWIN_DEBUG
 	if (event)
@@ -333,10 +344,11 @@ sound_win32p_get_data(byte **data_ptr, int *size)
 	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_get_data()\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
-
+#ifndef ARM_WINCE
 	__try
 	{
 		EnterCriticalSection(&bulk_cs[index]);
+#endif	
 #if (SSWIN_DEBUG == 1)
 	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_get_data() entered critical section\n", GetCurrentThreadId());
 	fflush(NULL);
@@ -357,15 +369,19 @@ sound_win32p_get_data(byte **data_ptr, int *size)
 			/* re-enter critical section */
 			EnterCriticalSection(&bulk_cs[index]);
 		}
+#ifndef ARM_WINCE		
 	}
 	__finally
 	{
 		LeaveCriticalSection(&bulk_cs[index]);
+#endif	
 #if (SSWIN_DEBUG == 1)
 	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_get_data() left critical section\n", GetCurrentThreadId());
 	fflush(NULL);
 #endif
+#ifndef ARM_WINCE
 	}
+#endif	
 
 	*data_ptr = (byte *) data;
 
@@ -386,16 +402,19 @@ sound_win32p_send_data(byte *data_ptr, int maxsend)
 	fprintf(stdout, "SSWIN_DEBUG: TID%u, sound_win32p_send_data(), queue %i\n", GetCurrentThreadId(), index);
 	fflush(NULL);
 #endif
-
+#ifndef ARM_WINCE
 	__try
 	{
 		EnterCriticalSection(&bulk_cs[index]);
+#endif	
 		sci_add_to_queue(&(bulk_queues[index]), sci_memdup(data_ptr, maxsend), maxsend);
+#ifndef ARM_WINCE		
 	}
 	__finally
 	{
 		LeaveCriticalSection(&bulk_cs[index]);
 	}
+#endif	
 
 	/* signal event that data is waiting */
 	if (SetEvent(sound_data_event) == 0)

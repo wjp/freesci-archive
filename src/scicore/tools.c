@@ -214,8 +214,10 @@ _SCIGNUkdebug(char *funcname, state_t *s, char *file, int line, int area, char *
 	}
 }
 
-
-#if defined(HAVE_SYS_TIME_H) || defined(_DREAMCAST)
+#if defined (HAVE_SYS_TIME_H) && !(ARM_WINCE)
+/* Do not use this function (even if it's there) when compiling for StrongARM & Windows CE.
+** See below for more information.
+*/
 void
 sci_gettime(long *seconds, long *useconds)
 {
@@ -248,7 +250,36 @@ void sci_gettime(long *seconds, long *useconds)
 	}
 
 	*seconds = tm/1000;
-	*useconds = (tm%1000)*1000;
+	*useconds = (tm % 1000) * 1000;
+}
+#elif defined (_DREAMCAST)
+/* Warning: This function returns the amount of time that has passed since the
+** start of the program. A gettimeofday() function is available, but it
+** contains a bug. So this will have to do for now.
+*/
+void
+sci_gettime(long *seconds, long *useconds)
+{
+	uint32 s, m;
+	timer_ms_gettime(&s, &m);
+	*seconds = s;
+	*useconds = m*1000;
+}
+#elif defined (ARM_WINCE) && (HAVE_SDL)
+/* Warning: This function returns the amount of time that has passed since the
+** initialization of the SDL_Driver. A gettimeofday() function is available, but it is
+** somehow buggy.
+** NOTE!!
+** Due to this, the game_start_time contains junk (SDL wasn't init'd yet)
+*/
+void
+sci_gettime(long *seconds, long *useconds)
+{
+	long tm;
+	tm = SDL_GetTicks();
+	*seconds = tm/1000;
+	*useconds = (tm % 1000) * 1000;
+	
 }
 #else
 #  error "You need to provide a microsecond resolution sci_gettime implementation for your platform!"
@@ -540,6 +571,8 @@ sci_get_homedir()
 	return "/ram";
 #elif defined(__MORPHOS__)
 	return "PROGDIR:";
+#elif defined(ARM_WINCE)
+	return "/";
 #else
 #  error Please add a $HOME policy for your platform!
 #endif
@@ -597,7 +630,9 @@ sci_get_from_queue(sci_queue_t *queue, int *type)
 /*-- Yielding to the scheduler --*/
 
 #ifdef HAVE_SCHED_YIELD
+# ifndef ARM_WINCE
 #  include <sched.h>
+# endif
 
 void
 sci_sched_yield()
@@ -763,3 +798,19 @@ sci_file_size(char *fname)
 }
 
 #endif
+
+
+int
+sci_create_file(char *fname)
+{
+       int fd;
+#ifdef _MSC_VER
+       /* Visual C++ doesn't allow to specify O_BINARY with creat() */
+       fd = _open(fname, _O_CREAT | _O_BINARY | _O_RDWR, _S_IREAD | _S_IWRITE);
+#elif defined (ARM_WINCE)
+       fd = open(fname, O_CREAT | O_BINARY | O_RDWR, S_IREAD | S_IWRITE);
+#else
+       fd = creat(fname, 0600);
+#endif
+       return fd;
+};

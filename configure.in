@@ -347,6 +347,8 @@ AC_CONFIG_FILES([Makefile    \
 	src/win32/Makefile \
 	src/sound/Makefile \
 	src/morphos/Makefile \
+	src/wince/Makefile \
+	src/menu/Makefile \
 	freesci.spec])
 
 AC_OUTPUT

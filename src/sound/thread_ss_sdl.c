@@ -640,13 +640,13 @@ sci0_thread_ss(int reverse_stereo, sound_server_state_t *ss_state)
       }
 
       /* we found an active song! */
-      
+
       sci_get_current_time((GTimeVal *)&last_played);
       /* Just played a note (see bottom of the big outer loop), so we
 	 reset the timer */
-      
+
       ticks_to_wait = 0; /* Number of ticks until the next note is played */
-      
+
       /* Handle length escape sequence (see SCI sound specs) */
       while ((tempticks = current->data[(current->pos)++]) == SCI_MIDI_TIME_EXPANSION_PREFIX) {
 	ticks_to_wait += SCI_MIDI_TIME_EXPANSION_LENGTH;
@@ -658,9 +658,9 @@ sci0_thread_ss(int reverse_stereo, sound_server_state_t *ss_state)
 	}
       }
       ticks_to_wait += tempticks;
-      
+
       /* the delay loop portion */
-      
+
       if (ticks_to_wait)
 	do {
 
@@ -668,44 +668,48 @@ sci0_thread_ss(int reverse_stereo, sound_server_state_t *ss_state)
 	     ordered to suspend. */
 
 	  GTimeVal *wait_tvp; /* Delay parameter (see select(3)) */
-	  
+
 	  /* Calculate the time we have to sleep */
 	  wakeup_time = song_next_wakeup_time(&last_played, ticks_to_wait);
-	  
+
 	  wait_tv = song_sleep_time(&last_played, ticks_to_wait);
 	  wait_tvp = &wait_tv;
-	  	  
+
 	  sci_get_current_time((GTimeVal *)&ctime); /* Get current time, store in ctime */
 
 	  /* we have to deal with latency of sleep().. so only sleep if
 	     it'll be more than XXXX us. */
-	  /* 5ms is arbitrary. may need to be tweaked. */
+
+#if defined(ARM_WINCE)
+	  usleep(5); /* 5ms is arbitrary. may need to be tweaked. */
+#else
 	  if ((wakeup_time.tv_usec - ctime.tv_usec) > 10000)
 	    usleep(0);
-	  
+#endif
+
 	  /* Exit when we've waited long enough */
 	} while ((wakeup_time.tv_sec > ctime.tv_sec)
 		 || ((wakeup_time.tv_sec == ctime.tv_sec)
 		     && (wakeup_time.tv_usec > ctime.tv_usec)));
-      
+
       /* The note-playing portion of the soundserver! */
       if (current && current->data) { 
 	/* If we have a current song */
 	int newcmd;
 	guint8 param, param2 = 0;
-	
+
 #ifdef OUTPUT_SONG_CHANGES
 	fprintf(stderr, "--[Handle %04x ---- pos = %04x]\n", current->handle,
 		current->pos);
 #endif
 	newcmd = current->data[current->pos]; /* Retreive MIDI command */
-	
+
 	/* Check for running status mode */
-	if (newcmd & 0x80) { 
+	if (newcmd & 0x80) {
 	  ++(current->pos);
 	  command = newcmd;
-	} 
-	
+	}
+
 	if (command == SCI_MIDI_EOT) { /* End of Track */
 #ifdef OUTPUT_SONG_CHANGES
 	  fprintf(stderr,"==EOT: loops=%d, loopmark=%d\n",

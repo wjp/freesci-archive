@@ -44,11 +44,11 @@
 #include <gfx_tools.h>
 
 #ifndef _MSC_VER
-#	include <sys/time.h>
-#	include <SDL/SDL.h>
+#  include <sys/time.h>
+#  include <SDL/SDL.h>
 #else
-#	include <SDL.h>
-#   include <sci_win32.h>
+#  include <SDL.h>
+#  include <sci_win32.h>
 #endif
 
 #ifndef SDL_DISABLE
@@ -64,6 +64,70 @@
 #define SCI_SDL_SWAP_CTRL_CAPS (1 << 0)
 #define SCI_SDL_FULLSCREEN (1 << 2)
 
+#ifdef ARM_WINCE
+#  include "../../wince/resource.h"	
+#  include "../../wince/SDL_rotozoom.c"
+#  define WIN32
+#  include <SDL/SDL_syswm.h>
+#  undef WIN32
+#  define SHFS_SHOWTASKBAR            0x0001
+#  define SHFS_HIDETASKBAR            0x0002
+#  define SHFS_SHOWSIPBUTTON          0x0004
+#  define SHFS_HIDESIPBUTTON          0x0008
+#  define SHFS_SHOWSTARTICON          0x0010
+#  define SHFS_HIDESTARTICON          0x0020
+#  define SHA_INPUTDIALOG	      0x00000001
+
+   LRESULT CALLBACK WindowProc(HWND hwnd, UINT nMsg, WPARAM wParam, LPARAM lParam);
+   WNDPROC OldWindowProc;
+   HBITMAP Banner;
+   static LPTSTR szAppName = TEXT("FreeSCI");
+   static LPTSTR AboutText = TEXT("FreeSCI for PocketPC, version "VERSION"\n\nPorted to PocketPC/ARM by\nIsmail Khatib");
+   static HWND hwndMB = NULL;
+   static SDL_Surface *toolbar1;
+   static SDL_Surface *toolbar2;
+   static SDL_Surface *toolbar3;
+   static SDL_Surface **Toolbars[3]={&toolbar1,&toolbar2,&toolbar3};
+   static SDL_Surface *pic_ctrl;
+   static SDL_Surface *pic_alt;   
+   static int CurrentToolbar;
+   static int Modifier = 0;
+   static int fullscreen = 0;
+
+	
+   typedef struct tagSHMENUBARINFO
+   {
+   	DWORD cbSize;               // IN  - Indicates which members of struct are valid
+	HWND hwndParent;            // IN
+   	DWORD dwFlags;              // IN  - Some features we want
+   	UINT nToolBarId;            // IN  - Which toolbar are we using
+   	HINSTANCE hInstRes;         // IN  - Instance that owns the resources
+   	int nBmpId;
+   	int cBmpImages;             // IN  - Count of bitmap images
+	HWND hwndMB;                // OUT
+    	COLORREF clrBk;             // IN  - background color of the menu bar (excluding sip)
+   } SHMENUBARINFO, *PSHMENUBARINFO;
+	
+   typedef enum tagSIPSTATE
+   {
+   	SIP_UP = 0,
+   	SIP_DOWN,
+	SIP_FORCEDOWN,
+    	SIP_UNCHANGED,
+    	SIP_INPUTDIALOG,
+   } SIPSTATE;
+	
+   typedef struct
+   {
+   	DWORD cbSize;
+   	HWND hwndLastFocus;
+   	UINT fSipUp :1;
+   	UINT fSipOnDeactivation :1;
+   	UINT fActive :1;
+   	UINT fReserved :29;
+   } SHACTIVATEINFO, *PSHACTIVATEINFO;
+#endif /* ARM_WINCE */
+
 static int
 sdl_usec_sleep(struct _gfx_driver *drv, long usecs);
 
@@ -76,6 +140,9 @@ struct _sdl_state {
 	SDL_Color colors[256];
 	SDL_Surface *visual[3];
 	SDL_Surface *primary;
+#ifdef ARM_WINCE
+	SDL_Surface *scl_buffer;
+#endif
 	int buckystate;
 	byte *pointer_data[2];
 	int alpha_mask;
@@ -127,8 +194,12 @@ sdl_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 	}
 
 	if (!strncmp(attribute, "fullscreen", 11)) {
-		if (string_truep(value))
+		if (string_truep(value)){
 			flags |= SCI_SDL_FULLSCREEN;
+#ifdef ARM_WINCE			
+			fullscreen = 1;
+#endif			
+		}
 		else
 			flags &= ~SCI_SDL_FULLSCREEN;
 
@@ -162,6 +233,9 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	if (xfact > 2 || yfact > 2)
 		drv->capabilities &= ~GFX_CAPABILITY_MOUSE_POINTER;
 #endif
+#ifdef ARM_WINCE /* WinCE doesn't support mouse pointers (at least PocketPC) */
+	drv->capabilities &= ~GFX_CAPABILITY_MOUSE_POINTER;
+#endif
 #ifdef __BEOS__ /* BeOS has been reported not to work well with the mouse pointer at all */
 	drv->capabilities &= ~GFX_CAPABILITY_MOUSE_POINTER;
 #endif
@@ -178,8 +252,12 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	S->primary = NULL;
 
+#ifdef ARM_WINCE
+	i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF | SDL_NOFRAME;
+#else	
 	i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF;
-	if (flags & SCI_SDL_FULLSCREEN) {
+#endif	
+		if (flags & SCI_SDL_FULLSCREEN) {
 		i |= SDL_FULLSCREEN;
 	}
 
@@ -189,7 +267,17 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	if (!drv->capabilities & GFX_CAPABILITY_MOUSE_POINTER)
 		sdl_set_null_pointer(drv);
 
+#ifdef ARM_WINCE
+	if (!(fullscreen == 1)) {
+		S->primary = SDL_SetVideoMode(240, 150, bytespp << 3, i);
+	} else {
+		S->primary = SDL_SetVideoMode(320, 240, bytespp << 3, i);
+	}
+#else
 	S->primary = SDL_SetVideoMode(xsize, ysize, bytespp << 3, i);
+#endif
+
+
 
 	if (!S->primary) {
 		SDLERROR("Could not set up a primary SDL surface!\n");
@@ -237,7 +325,53 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 
 	SDL_WM_SetCaption("FreeSCI", "freesci");
-
+	
+#ifdef ARM_WINCE
+	if (!(flags & SCI_SDL_FULLSCREEN)) {
+		/* get HWND from SDL-Window, stored in WMInfo.window */
+		SDL_SysWMinfo WMInfo;
+		SDL_VERSION(&WMInfo.version);
+		SDL_GetWMInfo(&WMInfo);
+		
+		/* create menubar */
+		WNDCLASS wc;
+		wc.style = CS_HREDRAW | CS_VREDRAW;
+		wc.lpfnWndProc = WindowProc;
+		wc.cbClsExtra = 0;
+		wc.cbWndExtra = 0;
+		wc.hInstance = GetModuleHandle(NULL);
+		wc.hIcon = (HICON)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_FREESCI));
+		wc.hCursor = NULL;
+		wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+		wc.lpszMenuName = NULL;
+		wc.lpszClassName = szAppName;
+		RegisterClass(&wc);
+		
+		OldWindowProc = (WNDPROC) SetWindowLong(WMInfo.window, GWL_WNDPROC, (LONG) WindowProc); 
+        	
+		SHMENUBARINFO smbi;
+		smbi.cbSize = sizeof(smbi); 
+		smbi.hwndParent = WMInfo.window; 
+		smbi.dwFlags = 0; 
+		smbi.nToolBarId = IDM_MENU; 
+		smbi.hInstRes = GetModuleHandle(NULL); 
+		smbi.nBmpId = 0; 
+		smbi.cBmpImages = 0; 
+		smbi.hwndMB = NULL;
+		BOOL res = SHCreateMenuBar(&smbi);
+		hwndMB = smbi.hwndMB;
+		
+		
+		MoveWindow(WMInfo.window, 0, 0, 240, 320, TRUE);
+		
+		SetWindowPos(WMInfo.window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
+		SetForegroundWindow(WMInfo.window);
+		SHFullScreen(WMInfo.window, SHFS_SHOWSIPBUTTON);
+		SHFullScreen(WMInfo.window, SHFS_HIDETASKBAR);
+		
+		Banner = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_BANNER));
+	}
+#endif	
 	SDL_ShowCursor(SDL_ENABLE);
 	S->pointer_data[0] = NULL;
 	S->pointer_data[1] = NULL;
@@ -305,7 +439,31 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		if (SDL_FillRect(S->primary, NULL, SDL_MapRGB(S->primary->format, 0,0,0)))
 			SDLERROR("Couldn't fill backbuffer!\n");
 	}
-
+#ifdef ARM_WINCE
+	if (!(flags & SCI_SDL_FULLSCREEN)) {
+		/* create the scaling buffer */
+		S->scl_buffer = NULL;
+		S->scl_buffer = SDL_CreateRGBSurface(SDL_SRCALPHA,
+					/* SDL_HWSURFACE | SDL_SWSURFACE, */
+					xsize, ysize,
+					bytespp << 3,
+					S->primary->format->Rmask,
+					S->primary->format->Gmask,
+					S->primary->format->Bmask,
+					S->alpha_mask);
+		if (S->scl_buffer == NULL) {
+			SDLERROR("Could not set up scaling buffer!\n");
+			return GFX_FATAL;
+		}
+        	
+		printf("Using scaling buffer SDL surface of %d,%d @%d bpp (%04x)\n",
+			xsize, ysize, bytespp << 3, S->scl_buffer);
+			
+		if (SDL_FillRect(S->scl_buffer, NULL, SDL_MapRGB(S->primary->format, 0,0,0)))
+				SDLERROR("Couldn't fill scaled backbuffer!\n");
+	}
+#endif /* (ARM_WINCE)  */
+			
 	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 
 	drv->mode = gfx_new_mode(xfact, yfact, bytespp,
@@ -315,9 +473,118 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 			   S->alpha_mask,
 			   red_shift, green_shift, blue_shift, alpha_shift,
 			   (bytespp == 1)? 256 : 0, 0); /*GFX_MODE_FLAG_REVERSE_ALPHA);*/
-
+#ifdef ARM_WINCE
+	if (flags & SCI_SDL_FULLSCREEN) {
+		if (!toolbar1){		// if not already loaded...
+			InitCE();
+			UpdateCE(drv);
+		}
+	}
+#endif				   
+			   
 	return GFX_OK;
 }
+
+#ifdef ARM_WINCE
+/* Subclass of the SDL-Window */
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT nMsg, WPARAM wParam, LPARAM lParam)
+{
+
+	HDC		hdc, hdcBanner;
+	HBITMAP		BanBuf;
+	PAINTSTRUCT	ps;
+	COLORREF	crTxt, crBk;
+	static		SHACTIVATEINFO sai;
+	switch (nMsg)
+	{
+	case WM_CREATE:
+		memset(&sai, 0, sizeof(sai));
+		SHSipPreference(hwnd, SIP_INPUTDIALOG);
+		break;
+	case WM_PAINT:
+	        hdc = BeginPaint(hwnd, &ps);
+	        hdcBanner = CreateCompatibleDC(NULL);
+	        BanBuf = SelectObject(hdcBanner, Banner);
+
+	        BitBlt(hdc, 0, 150, 240, 170, hdcBanner, 0, 0, SRCCOPY);
+	        
+	        SelectObject(hdcBanner, BanBuf);
+	        DeleteDC(hdcBanner);
+	        
+		EndPaint (hwnd, &ps);
+		SHSipPreference(hwnd, SIP_UP); /* Hack! */
+		break;
+	case WM_ACTIVATE:
+		SHFullScreen(hwnd, SHFS_SHOWSIPBUTTON);
+		SHHandleWMActivate(hwnd, wParam, lParam, &sai, SHA_INPUTDIALOG);
+		break;
+	case WM_SETTINGCHANGE:
+		SHHandleWMSettingChange(hwnd, wParam, lParam, &sai);
+		break;
+	case WM_COMMAND:
+		switch(wParam)
+		{
+		case IDC_ABOUT:
+			MessageBox(hwnd, AboutText, szAppName, MB_OK | MB_ICONINFORMATION | MB_APPLMODAL); 
+			break;
+		case IDC_EXIT:
+			sdl_exit();
+			break;
+		}
+		break;
+	}
+	return CallWindowProc(OldWindowProc, hwnd, nMsg, wParam, lParam);
+}		
+
+SDL_Surface *LoadToolbar(char* TB)
+{
+	SDL_Surface *converted;
+	SDL_Surface *sprite;
+	sprite = SDL_LoadBMP(TB);
+	converted = SDL_DisplayFormat(sprite);
+	SDL_FreeSurface(sprite);
+	return converted;
+}
+
+void InitCE()
+{
+	SDL_Rect r;
+
+	if(toolbar1)
+		SDL_FreeSurface(toolbar1);
+	toolbar1=LoadToolbar("toolbar.bmp");
+	if(toolbar2)
+		SDL_FreeSurface(toolbar2);
+	toolbar2=LoadToolbar("toolbar1.bmp");
+	if(toolbar3)
+		SDL_FreeSurface(toolbar3);
+	toolbar3=LoadToolbar("toolbar2.bmp");
+	
+	if(pic_ctrl)
+		SDL_FreeSurface(pic_ctrl);
+	pic_ctrl = SDL_CreateRGBSurface(SDL_SWSURFACE, 17, 12, 16,
+				toolbar1->format->Rmask,
+				toolbar1->format->Gmask,
+				toolbar1->format->Bmask,
+				NULL);
+						
+	r.x=320; r.y=0;
+	r.w=17; r.h=12;
+	SDL_BlitSurface(toolbar1, &r, pic_ctrl, NULL);
+	
+	if(pic_alt)
+		SDL_FreeSurface(pic_alt);
+	pic_alt = SDL_CreateRGBSurface(SDL_SWSURFACE, 15, 12, 16,
+				toolbar1->format->Rmask,
+				toolbar1->format->Gmask,
+				toolbar1->format->Bmask,
+				NULL);
+						
+	r.x=320; r.y=12;
+	r.w=15; r.h=12;
+	SDL_BlitSurface(toolbar1, &r, pic_alt, NULL);
+}
+#endif /* (ARM_WINCE) */
 
 static int
 sdl_init(struct _gfx_driver *drv)
@@ -358,7 +625,14 @@ sdl_exit(struct _gfx_driver *drv)
 			SDL_FreeSurface(S->visual[i]);
 			S->visual[i] = NULL;
 		}
-
+#ifdef ARM_WINCE
+		if (!(flags & SCI_SDL_FULLSCREEN)) {
+			SDL_FreeSurface(S->scl_buffer);
+			S->scl_buffer = NULL;
+		
+			DeleteObject(Banner);
+		}
+#endif
 		SDL_FreeCursor(SDL_GetCursor());
 
 		for (i = 0; i < 2; i++)
@@ -777,6 +1051,9 @@ sdl_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffe
 	int data_source = (buffer == GFX_BUFFER_BACK)? 2 : 1;
 	int data_dest = data_source - 1;
 	SDL_Rect srect, drect;
+#ifdef ARM_WINCE
+	SDL_Surface *temp;
+#endif
 
 	if (src.x != dest.x || src.y != dest.y) {
 		DEBUGU("Updating %d (%d,%d)(%dx%d) to (%d,%d) on %d\n", buffer, src.x, src.y,
@@ -804,15 +1081,34 @@ sdl_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffe
 			gfx_copy_pixmap_box_i(S->priority[0], S->priority[1], src);
 		break;
 	case GFX_BUFFER_FRONT:
+	
+#ifdef ARM_WINCE
+		if (flags & SCI_SDL_FULLSCREEN) {
+			if (SDL_BlitSurface(S->visual[data_source], &srect, S->primary, &drect))
+				SDLERROR("primary surface update failed!\n");
+			UpdateCE(drv);				
+		} else {
+			if (SDL_BlitSurface(S->visual[data_source], &srect, S->scl_buffer, &drect))
+				SDLERROR("scaled buffer surface update failed!\n");
+			
+			temp = zoomSurface(S->scl_buffer, 0.75, 0.75, 1);		
+
+			if (SDL_BlitSurface(temp, NULL, S->primary, NULL))
+				SDLERROR("primary surface update failed!\n");
+				
+			SDL_FreeSurface(temp);				
+		}
+
+#else
 		if (SDL_BlitSurface(S->visual[data_source], &srect, S->primary, &drect))
-			SDLERROR("primary surface update failed!\n");
+			SDLERROR("primary surface update failed!\n");			
+#endif			
 		SDL_Flip(S->primary);
 		break;
 	default:
 		GFXERROR("Invalid buffer %d in update!\n", buffer);
 		return GFX_ERROR;
 	}
-
 	return GFX_OK;
 }
 
@@ -952,18 +1248,54 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
 	case SDLK_KP1:
 	case SDLK_END: return SCI_K_END;
 	case SDLK_KP2:
+#ifdef ARM_WINCE					// Hardware cursor button 'rotate' down ->left
+	case SDLK_DOWN:
+		if (flags & SCI_SDL_FULLSCREEN) {
+			return SCI_K_LEFT;
+		} else {
+			return SCI_K_DOWN;
+		}
+#else
 	case SDLK_DOWN: return SCI_K_DOWN;
+#endif	
 	case SDLK_KP3:
 	case SDLK_PAGEDOWN: return SCI_K_PGDOWN;
 	case SDLK_KP4:
+#ifdef ARM_WINCE					// Hardware cursor button 'rotate' left -> up
+	case SDLK_LEFT:
+		if (flags & SCI_SDL_FULLSCREEN) {
+			return SCI_K_UP;
+		} else {
+			return SCI_K_LEFT;
+		}
+#else
 	case SDLK_LEFT: return SCI_K_LEFT;
+#endif	
 	case SDLK_KP5: return SCI_K_CENTER;
 	case SDLK_KP6:
+#ifdef ARM_WINCE					// Hardware cursor button 'rotate' right -> down
+	case SDLK_RIGHT:
+		if (flags & SCI_SDL_FULLSCREEN) {
+			return SCI_K_DOWN;
+		} else {
+			return SCI_K_RIGHT;
+		}
+#else
 	case SDLK_RIGHT: return SCI_K_RIGHT;
+#endif	
 	case SDLK_KP7:
 	case SDLK_HOME: return SCI_K_HOME;
 	case SDLK_KP8:
+#ifdef ARM_WINCE					// Hardware cursor button 'rotate' up -> right
+	case SDLK_UP:
+		if (flags & SCI_SDL_FULLSCREEN) {
+			return SCI_K_RIGHT;
+		} else {
+			return SCI_K_UP;
+		}
+#else
 	case SDLK_UP: return SCI_K_UP;
+#endif	
 	case SDLK_KP9:
 	case SDLK_PAGEUP: return SCI_K_PGUP;
 
@@ -1023,6 +1355,361 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
 	return 0;
 }
 
+#ifdef ARM_WINCE
+void UpdateCE(gfx_driver_t *drv)
+{
+	SDL_Rect r,r2;
+	r.x=0; r.y=200;
+	r.w=320; r.h=40;
+	r2.x=0; r2.y=0;
+	r2.w=320; r2.h=40;
+	SDL_BlitSurface(*(Toolbars[CurrentToolbar]), &r2, S->primary, &r);
+	switch (Modifier){
+		case KMOD_CTRL:
+			r2.x=1; r2.y=214;
+			r2.w=pic_ctrl->w; r2.h=pic_ctrl->h;			
+			SDL_BlitSurface(pic_ctrl, NULL, S->primary, &r2);
+			break;
+		case KMOD_ALT:
+			r2.x=19; r2.y=227;		
+			r2.w=pic_alt->w; r2.h=pic_alt->h;
+			SDL_BlitSurface(pic_alt, NULL, S->primary, &r2);
+			break;			
+		default:
+			break;
+	}
+}
+
+void HandleToolbarCE(gfx_driver_t *drv, SDL_Event event, sci_event_t *sci_event)
+{
+#define	SCI_K_NOTHING 255
+	int L=(event.button.y-200)/13;
+	int B=(event.button.x-10)/13;
+	int MapTB;
+	
+	if (L==0){	// clicked in Line 1
+		if (event.button.x >= 202){	// clicked in num-part
+			B=(event.button.x-10)/13;
+		} else {
+			B=(event.button.x-10)/13;
+		}
+	}
+	else if (L==1){	// clicked in Line 2
+		if (event.button.x >= 202){	// clicked in num-part
+			B=(event.button.x-10)/13;
+		} else {
+			B=(event.button.x-13)/13;
+		}
+	}
+	else if (L==2){	// clicked in Line 3
+		if (event.button.x >= 202){	// clicked in num-part	
+			B=(event.button.x-10)/13;
+		} else {
+			B=(event.button.x-11)/13;
+		}
+	}
+
+	static struct KeyInfo
+	{
+		int code;
+		int ascii;
+	} TB [2][3][24]={
+	  { {
+		{SCI_K_ESC,27},
+		{9,9},			// TAB
+		{'q','q'},			
+		{'w','w'},		
+		{'e','e'},		
+		{'r','r'},		
+		{'t','t'},		
+		{'y','y'},		
+		{'u','u'},		
+		{'i','i'},		
+		{'o','o'},
+		{'p','p'},
+		{'[','['},
+		{']',']'},
+		{SCI_K_BACKSPACE,8},
+		{'1','1'},
+		{'2','2'},
+		{'3','3'},
+		{'4','4'},
+		{'5','5'},
+		{'-','-'},
+		{SCI_K_HOME,71},
+		{SCI_K_UP,72},
+		{SCI_K_PGUP,73}
+	    }, 
+	    {
+	    	{KMOD_CTRL,-1},
+		{SCI_K_NOTHING,-5},	// SWITCH TO FN-TOOLBAR	    	
+		{'a','a'},
+		{'s','s'},
+		{'d','d'},	
+		{'f','f'},
+		{'g','g'},
+		{'h','h'},	
+		{'j','j'},
+		{'k','k'},
+		{'l','l'},	
+		{';',';'},
+		{'\'','\''},
+		{'`','`'},		
+		{SCI_K_ENTER,13},
+		{'6','6'},
+		{'7','7'},
+		{'8','8'},
+		{'9','9'},
+		{'0','0'},
+		{'=','='},
+		{SCI_K_LEFT,75},
+		{SCI_K_NOTHING,-2},
+		{SCI_K_RIGHT,77}
+	    },
+	    { 
+		{KMOD_CAPS,-1},	// -1 means "lock"
+		{KMOD_ALT,-1},
+		{'\\','\\'},
+		{'z','z'},
+		{'x','x'},
+		{'c','c'},
+		{'v','v'},		
+		{'b','b'},
+		{'n','n'},
+		{'m','m'},
+		{',',','},	
+		{'.','.'},
+		{'/','/'},
+		{SCI_K_ENTER,13},
+		{SCI_K_ENTER,13},
+		{' ',' '},
+		{' ',' '},
+		{' ',' '},
+		{' ',' '},
+		{' ',' '},
+		{' ',' '},
+		{SCI_K_END,79},		
+		{SCI_K_DOWN,80},
+		{SCI_K_PGDOWN,81}
+	    },
+	  },
+	  { {
+	  	{SCI_K_ESC,27},
+		{SCI_K_NOTHING,-2},
+		{SCI_K_F1,59},
+		{SCI_K_F2,60},
+		{SCI_K_F3,61},
+		{SCI_K_F4,62},
+		{SCI_K_F5,63},
+		{SCI_K_F6,64},
+		{SCI_K_F7,65},	
+		{SCI_K_F8,66},	
+		{SCI_K_F9,67},	
+		{SCI_K_F10,68},	
+		{SCI_K_NOTHING,-2},	
+		{SCI_K_NOTHING,-2},	
+		{SCI_K_BACKSPACE,8},	
+		{SCI_K_NOTHING,-2},	
+		{SCI_K_INSERT,82},
+		{SCI_K_HOME,71},
+		{SCI_K_PGUP,73},
+		{SCI_K_NOTHING,-2},	
+		{SCI_K_NOTHING,-2},	
+		{SCI_K_HOME,71},
+		{SCI_K_UP,72},
+		{SCI_K_PGUP,73}
+	    },
+	    {						
+	    	{KMOD_CTRL,-1},
+		{SCI_K_NOTHING,-5},	// SWITCH TOOLBAR	    	
+		{SCI_K_NOTHING,-2},	
+		{SCI_K_NOTHING,-2},	
+		{SCI_K_NOTHING,-2},	
+		{SCI_K_NOTHING,-2},	
+		{SCI_K_NOTHING,-2},	
+		{SCI_K_NOTHING,-2},	
+		{SCI_K_NOTHING,-2},	
+		{SCI_K_NOTHING,-2},	
+		{SCI_K_NOTHING,-2},	
+		{SCI_K_NOTHING,-2},	
+		{SCI_K_NOTHING,-2},	
+		{SCI_K_NOTHING,-2},
+		{SCI_K_ENTER,13},
+		{SCI_K_NOTHING,-2},		
+		{SCI_K_DELETE,83},
+		{SCI_K_END,79},
+		{SCI_K_PGDOWN,81},
+		{SCI_K_NOTHING,-2},
+		{SCI_K_NOTHING,-2},
+		{SCI_K_LEFT,75},
+		{SCI_K_NOTHING,-2},
+		{SCI_K_RIGHT,77}
+	    },
+	    {	
+		{SCI_K_NOTHING,-2},
+		{KMOD_ALT,-1},
+		{SCI_K_NOTHING,-2},				
+		{SCI_K_NOTHING,-2},				
+		{SCI_K_NOTHING,-2},				
+		{SCI_K_NOTHING,-2},				
+		{SCI_K_NOTHING,-2},				
+		{SCI_K_NOTHING,-2},				
+		{SCI_K_NOTHING,-2},				
+		{SCI_K_NOTHING,-2},				
+		{SCI_K_NOTHING,-2},				
+		{SCI_K_NOTHING,-2},				
+		{SCI_K_NOTHING,-2},				
+		{SCI_K_ENTER,13},
+		{SCI_K_ENTER,13},
+		{' ',' '},
+		{' ',' '},
+		{' ',' '},
+		{' ',' '},
+		{' ',' '},
+		{' ',' '},
+		{SCI_K_END,79},		
+		{SCI_K_DOWN,80},
+		{SCI_K_PGDOWN,81}
+	    }
+	  }
+	}; 
+
+	if(B<0 || B>23 || L<0 || L>2)
+		return;
+		
+	MapTB = CurrentToolbar;
+	if (MapTB==2) MapTB=0;		// Shifted 'abc' mapped to non shifted
+
+	int code=TB[MapTB][L][B].code;
+	int ascii=TB[MapTB][L][B].ascii;
+
+	switch(ascii)
+	{
+	    case -1:
+			//sciprintf("lockkey!\n");					    
+			break;
+	    case -2:
+			// DO NOTHING
+			break;			
+	    case -6:
+			//CPU_CycleIncrease();
+			break;
+	    case -7:
+			//CPU_CycleDecrease();
+	    		break;
+	    case -8:
+			//IncreaseFrameSkip();
+			break;
+	    case -9:
+			//DecreaseFrameSkip();
+	    		break;
+	    case -4:
+			//sdl_exit(); // Quick Exit (not clean yet)
+			break;
+	    case -5:
+	    		CurrentToolbar = (CurrentToolbar+1)%2;
+	    		S->buckystate =  0;
+	    		sci_event->buckybits = S->buckystate;
+			UpdateCE(drv);
+			SDL_Flip(S->primary);
+	    		break;
+	    case 0:
+	    		if(!code)
+		    		CurrentToolbar = (CurrentToolbar+1)%2;
+				UpdateCE(drv);
+				SDL_Flip(S->primary);
+	    		break;
+	};
+		
+	if(code!=SCI_K_NOTHING && code) // && ascii>0)
+	{
+		if(ascii==-1)
+		{	
+                	switch (code) {
+                	case KMOD_CAPS:
+                		if (!(S->buckystate ==  (SCI_EVM_LSHIFT | SCI_EVM_RSHIFT))) {
+                			CurrentToolbar = 2;
+                			S->buckystate =  SCI_EVM_LSHIFT | SCI_EVM_RSHIFT;
+                			Modifier = KMOD_CAPS;
+					UpdateCE(drv);
+					SDL_Flip(S->primary);                			
+                		} else {
+                			CurrentToolbar = 0;
+                			S->buckystate =  0;
+                			Modifier = 0;
+					UpdateCE(drv);
+					SDL_Flip(S->primary);                			
+                		}
+                		break;
+                	case KMOD_CTRL:
+                		if (!(S->buckystate ==  SCI_EVM_CTRL)) {
+                			S->buckystate =  SCI_EVM_CTRL;
+                			Modifier = KMOD_CTRL;
+					UpdateCE(drv);
+					SDL_Flip(S->primary);                			
+                		} else {
+                			S->buckystate =  0;
+                			Modifier = 0;
+					UpdateCE(drv);
+					SDL_Flip(S->primary);                			
+                		}
+                		break;
+                	case KMOD_ALT:
+                		if (!(S->buckystate ==  SCI_EVM_ALT)) {
+                			S->buckystate =  SCI_EVM_ALT;
+                			Modifier = KMOD_ALT;
+					UpdateCE(drv);
+					SDL_Flip(S->primary);                			
+                		} else {
+                			S->buckystate =  0;
+                			Modifier = 0;
+					UpdateCE(drv);
+					SDL_Flip(S->primary);                			
+                		}
+                		break;
+                	case KMOD_NUM:
+                		if (!(S->buckystate ==  SCI_EVM_NUMLOCK)) {
+                			S->buckystate =  SCI_EVM_NUMLOCK;
+                			Modifier = KMOD_NUM;
+                		} else {
+                			S->buckystate =  0;
+                			Modifier = 0;
+                		}
+                		break;
+                	case KMOD_RSHIFT:
+                		if (!(S->buckystate ==  SCI_EVM_RSHIFT)) {
+                			S->buckystate =  SCI_EVM_RSHIFT;
+                			Modifier = KMOD_RSHIFT;
+                		} else {
+                			S->buckystate =  0;
+                			Modifier = 0;
+                		}
+                		break;			
+                	case KMOD_LSHIFT:
+                		if (!(S->buckystate ==  SCI_EVM_LSHIFT)) {
+                			S->buckystate =  SCI_EVM_LSHIFT;
+                			Modifier = KMOD_LSHIFT;
+                		} else {
+                			S->buckystate =  0;
+                			Modifier = 0;
+                		}
+                		break;																				
+                	default:
+                		S->buckystate = 0;
+                		Modifier = 0;
+                		break;
+                	}		
+                	sci_event->buckybits = S->buckystate;
+		}
+		else if (ascii>0)		
+		{
+			sci_event->type = SCI_EVT_KEYBOARD;
+			sci_event->buckybits = S->buckystate;			
+			sci_event->data = code;
+		}
+	}
+}
+#endif
 
 void
 sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
@@ -1066,22 +1753,73 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
 				break;
 			}
 			case SDL_MOUSEBUTTONDOWN:
+#ifdef ARM_WINCE
+				if (flags & SCI_SDL_FULLSCREEN) {
+					if(event.button.y>200)
+						{
+						HandleToolbarCE(drv,event, sci_event);
+						return;
+					}
+				}
+#endif
 				sci_event->type = SCI_EVT_MOUSE_PRESS;
 				sci_event->buckybits = S->buckystate;
 				sci_event->data = event.button.button - 1;
+#ifdef ARM_WINCE
+				if (!(flags & SCI_SDL_FULLSCREEN)) {
+					drv->pointer_x = event.button.x *4/3;
+					drv->pointer_y = event.button.y *4/3;
+				} else {
+					drv->pointer_x = event.button.x;
+					drv->pointer_y = event.button.y;
+				}
+#else				
 				drv->pointer_x = event.button.x;
 				drv->pointer_y = event.button.y;
+#endif				
 				return;
 			case SDL_MOUSEBUTTONUP:
+#ifdef ARM_WINCE
+				if (flags & SCI_SDL_FULLSCREEN) {
+					if(event.button.y>200)
+					return;
+				}
+#endif			
 				sci_event->type = SCI_EVT_MOUSE_RELEASE;
 				sci_event->buckybits = S->buckystate;
 				sci_event->data = event.button.button - 1;
+#ifdef ARM_WINCE
+				if (!(flags & SCI_SDL_FULLSCREEN)) {
+					drv->pointer_x = event.button.x *4/3;
+					drv->pointer_y = event.button.y *4/3;
+				} else {
+					drv->pointer_x = event.button.x;
+					drv->pointer_y = event.button.y;
+				}
+#else				
 				drv->pointer_x = event.button.x;
 				drv->pointer_y = event.button.y;
+#endif
 				return;
 			case SDL_MOUSEMOTION:
+#ifdef ARM_WINCE
+				if (flags & SCI_SDL_FULLSCREEN) {
+					if(event.motion.y>200)
+						return;
+				}
+#endif						
+#ifdef ARM_WINCE
+				if (!(flags & SCI_SDL_FULLSCREEN)) {
+					drv->pointer_x = event.motion.x *4/3;
+					drv->pointer_y = event.motion.y *4/3;				
+				} else {
+					drv->pointer_x = event.motion.x;
+					drv->pointer_y = event.motion.y;					
+				}
+#else				
 				drv->pointer_x = event.motion.x;
 				drv->pointer_y = event.motion.y;
+#endif
 				break;
 			case SDL_QUIT:
 				sci_event->type = SCI_EVT_QUIT;
@@ -1102,9 +1840,9 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
 		usecs_to_sleep += timeout_time.tv_usec - ctime.tv_usec;
 		if (ctime.tv_sec > timeout_time.tv_sec) usecs_to_sleep = -1;
 
-		if (usecs_to_sleep > 0) {
-			if (usecs_to_sleep > 10000)
-				usecs_to_sleep = 10000; /* Sleep for a maximum of 10 ms */
+ 		if (usecs_to_sleep > 0) { 
+ 			if (usecs_to_sleep > 10000)
+ 					usecs_to_sleep = 10000; /* Sleep for a maximum of 10 ms */
 
 			sleep_time.tv_usec = usecs_to_sleep;
 			sleep_time.tv_sec = 0;
@@ -1138,8 +1876,14 @@ sdl_usec_sleep(struct _gfx_driver *drv, long usecs)
 	ctime.tv_sec = 0;
 	ctime.tv_usec = usecs;
 
+#ifdef _MSC_VER
+	sci_sched_yield(); /* usleep on win32 doesn't really sleep, so let's give up the rest of the quantum to play nice with the sound thread */
+#elif ARM_WINCE 
+	sci_sched_yield(); /* see above :) */
+#else
 	usleep(usecs);  /* let's try this out instead, no? */
 	/*  select(0, NULL, NULL, NULL, &ctime); /* Sleep. */
+#endif
 
 	return GFX_OK;
 }

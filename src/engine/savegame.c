@@ -37,7 +37,7 @@
 #include <heap.h>
 
 #ifdef _MSC_VER
-#include <direct.h>
+#  include <direct.h>
 #endif
 
 #ifdef _WIN32
@@ -45,7 +45,7 @@
 #endif
 
 #ifdef _DREAMCAST
-#include <dc.h>
+#  include <dc.h>
 #endif
 
 #define HUNK_TYPE_GFX_SNAPSHOT_STRING "g\n"
@@ -5632,12 +5632,7 @@ write_hunk_block(FILE *fh, hunk_block_t *foo)
 		}
 
 
-		/* Visual C++ doesn't allow to specify O_BINARY with creat() */
-#ifdef _MSC_VER
-		hunkfile = open(filename, _O_CREAT | _O_BINARY | _O_RDWR);
-#else
-		hunkfile = creat(filename, 0600);
-#endif
+		hunkfile = sci_create_file(filename);
 
 		assert (IS_VALID_FD(hunkfile));
 
@@ -5689,7 +5684,7 @@ read_hunk_block(FILE *fh, hunk_block_t *foo, char *lastval, int *line, int *hite
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 553 "savegame.cfsml"
+#line 548 "savegame.cfsml"
 
 		return 0;
 
@@ -5786,7 +5781,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_box_t(fh, ((gfxw_box_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 645 "savegame.cfsml"
+#line 640 "savegame.cfsml"
 		break;
 
 	case GFXW_RECT:
@@ -5797,7 +5792,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_primitive_t(fh, ((gfxw_primitive_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 651 "savegame.cfsml"
+#line 646 "savegame.cfsml"
 		break;
 
 	case GFXW_VIEW:
@@ -5807,7 +5802,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_view_t(fh, ((gfxw_view_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 656 "savegame.cfsml"
+#line 651 "savegame.cfsml"
 		break;
 
 	case GFXW_DYN_VIEW:
@@ -5817,7 +5812,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_dyn_view_t(fh, ((gfxw_dyn_view_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 661 "savegame.cfsml"
+#line 656 "savegame.cfsml"
 		break;
 
 	case GFXW_TEXT:
@@ -5826,7 +5821,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_text_t(fh, ((gfxw_text_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 665 "savegame.cfsml"
+#line 660 "savegame.cfsml"
 		break;
 
 
@@ -5837,7 +5832,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_list_t(fh, ((gfxw_list_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 671 "savegame.cfsml"
+#line 666 "savegame.cfsml"
 		break;
 
 	case GFXW_VISUAL:
@@ -5846,7 +5841,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_visual_t(fh, ((gfxw_visual_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 675 "savegame.cfsml"
+#line 670 "savegame.cfsml"
 		break;
 
 	case GFXW_PORT:
@@ -5855,7 +5850,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_port_t(fh, ((gfxw_port_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 679 "savegame.cfsml"
+#line 674 "savegame.cfsml"
 		break;
 
 	case GFXW_:
@@ -5870,14 +5865,14 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_container_t(fh, ((gfxw_container_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 689 "savegame.cfsml"
+#line 684 "savegame.cfsml"
 		} else {
 #line 877 "savegame.cfsml"
 /* Auto-generated CFSML data writer code */
   _cfsml_write_gfxw_widget_t(fh, (*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 691 "savegame.cfsml"
+#line 686 "savegame.cfsml"
 		}
 		break;
 	}
@@ -6084,7 +6079,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 874 "savegame.cfsml"
+#line 869 "savegame.cfsml"
 		break;
 
 	case GFXW_RECT:
@@ -6115,7 +6110,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 881 "savegame.cfsml"
+#line 876 "savegame.cfsml"
 		break;
 
 	case GFXW_VIEW:
@@ -6145,7 +6140,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 887 "savegame.cfsml"
+#line 882 "savegame.cfsml"
 		break;
 
 	case GFXW_DYN_VIEW:
@@ -6175,7 +6170,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 893 "savegame.cfsml"
+#line 888 "savegame.cfsml"
 		(*widget)->type = expected_type;
 		if (FILE_VERSION == 1)
 			((gfxw_dyn_view_t *) widget)->force_precedence = 0;
@@ -6207,7 +6202,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 901 "savegame.cfsml"
+#line 896 "savegame.cfsml"
 		(*widget)->type = expected_type;
 		break;
 
@@ -6241,7 +6236,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 911 "savegame.cfsml"
+#line 906 "savegame.cfsml"
 		(*widget)->type = expected_type;
 		break;
 
@@ -6273,7 +6268,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 919 "savegame.cfsml"
+#line 914 "savegame.cfsml"
 		(*widget)->type = expected_type;
 
 		full_widget_tree_traversal(*widget, NULL, NULL);
@@ -6310,7 +6305,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 932 "savegame.cfsml"
+#line 927 "savegame.cfsml"
 		(*widget)->type = expected_type;
 		break;
 
@@ -6343,7 +6338,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 941 "savegame.cfsml"
+#line 936 "savegame.cfsml"
 		(*widget)->type = expected_type;
 		break;
 
@@ -6374,7 +6369,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 948 "savegame.cfsml"
+#line 943 "savegame.cfsml"
 		(*widget)->type = expected_type;
 		break;
 
@@ -6407,7 +6402,7 @@ write_pixmap_color(FILE *fh, gfx_pixmap_color_t *color)
   _cfsml_write_gfx_pixmap_color_t(fh, (color));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 976 "savegame.cfsml"
+#line 971 "savegame.cfsml"
 }
 
 int
@@ -6436,9 +6431,9 @@ read_pixmap_color(FILE *fh, gfx_pixmap_color_t *color, char *lastval, int *line,
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 982 "savegame.cfsml"
+#line 977 "savegame.cfsml"
 
-        color->global_index = GFX_COLOR_INDEX_UNMAPPED;
+	color->global_index = GFX_COLOR_INDEX_UNMAPPED;
 
 	if (_global_save_state->gfx_state->driver->mode->palette)
 		if (gfx_alloc_color(_global_save_state->gfx_state->driver->mode->palette, color) < 0)
@@ -6460,7 +6455,7 @@ write_menubar_tp(FILE *fh, menubar_t **foo)
   _cfsml_write_menubar_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 1001 "savegame.cfsml"
+#line 996 "savegame.cfsml"
 
 	} else { /* Nothing to write */
 		fputs("\\null\\", fh);
@@ -6500,7 +6495,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 1018 "savegame.cfsml"
+#line 1013 "savegame.cfsml"
 
 	}
 	return *hiteof;
@@ -6568,12 +6563,7 @@ gamestate_save(state_t *s, char *dirname)
 		}
 	}
 
-	/* Visual C++ doesn't allow to specify O_BINARY with creat() */
-#ifdef _MSC_VER
-	fd = open("heap", _O_CREAT | _O_BINARY | _O_RDWR);
-#else
-	fd = creat("heap", 0600);
-#endif
+	fd = sci_create_file("heap");
 
 	if (!IS_VALID_FD(fd) || write(fd, s->_heap->start, SCI_HEAP_SIZE) < SCI_HEAP_SIZE) {
 		sciprintf("Saving failed for the heap state\n");
@@ -6594,7 +6584,7 @@ SCI_MEMTEST;
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 1107 "savegame.cfsml"
+#line 1097 "savegame.cfsml"
 SCI_MEMTEST;
 
 	fclose(fh);
@@ -6682,7 +6672,7 @@ gamestate_restore(state_t *s, char *dirname)
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 1165 "savegame.cfsml"
+#line 1155 "savegame.cfsml"
 
 	fclose(fh);
 
@@ -6836,8 +6826,8 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->resmgr = s->resmgr;
 
 	if (retval->savegame_version < 5) {
-	        retval->status_bar_foreground = 0;
-	        retval->status_bar_background = 15;
+		retval->status_bar_foreground = 0;
+		retval->status_bar_background = 15;
 	}
 
 	if (retval->savegame_version < 3) {

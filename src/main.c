@@ -35,6 +35,7 @@
 #include <kdebug.h>
 #include <sys/types.h>
 #include <games.h>
+#include <game_select.h>
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
@@ -77,7 +78,6 @@
 #ifdef _WIN32
 #  ifdef _MSC_VER
 #    include <direct.h>
-#    define PATH_MAX 255
 #    define strcasecmp stricmp
 #  endif
 #  define WIN32_LEAN_AND_MEAN
@@ -87,11 +87,11 @@
 #ifdef _DREAMCAST
 #  include <dc.h>
 #  include <selectgame.h>
-#  define PATH_MAX 255
 #endif
 
-#ifdef __MORPHOS__
-#  define PATH_MAX 255
+#ifdef ARM_WINCE
+#  include <win32/getopt.h>
+#  include <win32/getopt.c>
 #endif
 
 #ifdef _MSC_VER
@@ -300,7 +300,7 @@ get_gets_input(void)
 
 
 
-static void
+void
 list_graphics_drivers()
 {
 	int i = 0;
@@ -373,20 +373,6 @@ list_sound_servers()
 /* Startup and config management                          */
 /**********************************************************/
 
-typedef struct {
-	int script_debug_flag;
-	int scale_x, scale_y, color_depth;
-	int mouse;
-        int show_rooms;
-	sci_version_t version;
-	char *gfx_driver_name;
-	char *gamedir;
-        char *midiout_driver_name;
-        char *midi_device_name;
-        char *sound_server_name;
-        char *pcmout_driver_name;
-} cl_options_t;
-
 #define ON 1
 #define OFF 0
 #define DONTCARE -1
@@ -446,11 +432,11 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 	** "/ram/config", this file is created by the Dreamcast game
 	** selection menu.
 	*/
-	
+
 	savegame_name = NULL;
 	commandline_config_file = sci_strdup("/ram/config");
 	return NULL;
-	
+
 #else /* !_DREAMCAST */
 #ifdef HAVE_GETOPT_LONG
 	while ((c = getopt_long(argc, argv, "lvrhmsDd:V:g:x:y:c:M:O:S:P:f:", options, &optindex)) > -1) {
@@ -464,7 +450,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			break;
 
 		case 's':
-		        cl_options->show_rooms = 1;
+			cl_options->show_rooms = 1;
 			break;
 
 		case 'D':
@@ -497,25 +483,25 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			cl_options->gfx_driver_name = sci_strdup(optarg);
 			break;
 		case 'O':
-		        if (cl_options->midiout_driver_name)
-		            free(cl_options->midiout_driver_name);
-		        cl_options->midiout_driver_name = sci_strdup(optarg);
-		        break;
+			if (cl_options->midiout_driver_name)
+				free(cl_options->midiout_driver_name);
+			cl_options->midiout_driver_name = sci_strdup(optarg);
+			break;
 		case 'P':
-		        if (cl_options->pcmout_driver_name)
-		            free(cl_options->pcmout_driver_name);
-		        cl_options->pcmout_driver_name = sci_strdup(optarg);
-		        break;
+			if (cl_options->pcmout_driver_name)
+				free(cl_options->pcmout_driver_name);
+			cl_options->pcmout_driver_name = sci_strdup(optarg);
+			break;
 		case 'M':
-		        if (cl_options->midi_device_name)
-		            free(cl_options->midi_device_name);
-		        cl_options->midi_device_name = sci_strdup(optarg);
-		        break;
+			if (cl_options->midi_device_name)
+				free(cl_options->midi_device_name);
+			cl_options->midi_device_name = sci_strdup(optarg);
+			break;
 		case 'S':
-		        if (cl_options->sound_server_name)
-		            free(cl_options->sound_server_name);
-		        cl_options->sound_server_name = sci_strdup(optarg);
-		        break;
+			if (cl_options->sound_server_name)
+				free(cl_options->sound_server_name);
+			cl_options->sound_server_name = sci_strdup(optarg);
+			break;
 		case '?':
 			/* getopt_long already printed an error message. */
 			exit(1);
@@ -624,7 +610,8 @@ read_config(char *game_name, config_entry_t **conf, int *conf_entries,
 	*conf_entries = config_init(conf, commandline_config_file);
 
 	for (i = 1; i < *conf_entries; i++)
-		if (!strcasecmp((*conf)[i].name, game_name)) {
+		if (game_name &&
+		    !strcasecmp((*conf)[i].name, game_name)) {
 			conf_nr = i;
 			*version = (*conf)[i].version;
 		}
@@ -809,10 +796,8 @@ init_gfx(config_entry_t *conf, cl_options_t *cl_options, gfx_driver_t *driver, r
 
 typedef void *old_lookup_funct_t(char *name);
 
-typedef void *lookup_funct_t(char *path, char *name);
 
-
-static void *
+void *
 lookup_driver(lookup_funct_t lookup_func, void explain_func(void),
 	      char *driver_class, char *driver_name, char *path)
 {
@@ -936,7 +921,7 @@ main(int argc, char** argv)
 	char *gfx_driver_name			= NULL;
 	char *midiout_driver_name		= NULL;
 	char *midi_device_name			= NULL;
-	char *pcm_driver_name                   = NULL;
+	char *pcm_driver_name			= NULL;
 	char *game_name	= NULL;
 	char *savegame_name = NULL;
 	sci_version_t version			= 0;
@@ -958,7 +943,7 @@ main(int argc, char** argv)
 	printf(" Dmitry Jemerov, Christopher T. Lansdown, Sergey Lapin, Rickard Lind,\n"
 		   " Carl Muckenhoupt, Christoph Reichenbach, Magnus Reftel, Lars Skovlund,\n"
 		   " Rink Springer, Petr Vyhnak, Solomon Peachy, Matt Hargett, Alex Angas,\n"
-		   " Walter van Niftrik, Ruediger Hanke, Rainer Canavan\n"
+		   " Walter van Niftrik, Ruediger Hanke, Rainer Canavan, Ismail Khatib\n"
 	       "This program is free software. You can copy and/or modify it freely\n"
 	       "according to the terms of the GNU general public license, v2.0\n"
 	       "or any later version, at your option.\n"
@@ -969,9 +954,10 @@ main(int argc, char** argv)
 	choose_game();
 #endif
 
+	conf_nr = read_config(game_name, &confs, &conf_entries, &version);
+
 	if (game_name) {
 
-		conf_nr = read_config(game_name, &confs, &conf_entries, &version);
 		active_conf = confs + conf_nr;
 
 		if (!cl_options.gamedir)
@@ -993,10 +979,22 @@ main(int argc, char** argv)
 		free(cl_options.gamedir);
 	}
 
+	/* by now, if the user specified a game name or a game directory, the working dir has been changed */
+	/* so if no resource are found in the working dir, invoke the game selection screen */
+	if (!game_select_resource_found()) {
+		conf_nr = game_select(gamestate, cl_options, gfx_state, gfx_options,
+				      confs, conf_entries, startdir);
+		if (conf_nr < 0)
+			return 0;
+		else
+			active_conf = confs + conf_nr;
+fprintf(stderr, "CONF # = %d\n", conf_nr);
+	}
+
 	if (cl_options.version)
 		version = cl_options.version;
-	else 
-	        version = guess_version();
+	else
+		version = guess_version();
 
 	getcwd(resource_dir, PATH_MAX); /* Store resource directory */
 
@@ -1055,7 +1053,7 @@ main(int argc, char** argv)
 		game_name = (char *) gamestate->game_name;
 
 	/* If no game-specific configuration has been read, then read the non-specific config from file */
-	if (!confs) {
+	if (!active_conf) {
 		conf_nr = read_config(game_name, &confs, &conf_entries, &version);
 		active_conf = confs + conf_nr;
 	}

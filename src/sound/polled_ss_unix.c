@@ -28,7 +28,7 @@
 
 #include <engine.h>
 
-#ifdef HAVE_SYSV_IPC
+#if defined(HAVE_SYSV_IPC) && !defined(ARM_WINCE)
 #include <soundserver.h>
 #include <sciresource.h>
 #include <midi_device.h>

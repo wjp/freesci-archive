@@ -1,3 +1,17 @@
+2004-07-05  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/wince: Added Ismail's PocketPC patch
+
+	* src/include/resource.h: Added dedicated function for file
+	creation
+
+	* src/include/game_select.h: Added a modified version of Ismail's
+	version of Hugues' header file for the game selection
+	mechanisms. Documentation is still missing!
+
+	* src/menu/game_select.c (game_select): Relocated game selection
+	code to dedicated C file
+
 2004-07-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sound/midiout_dcraw.c: Added to repository.

@@ -30,6 +30,7 @@
 #define _GFX_OPTIONS_H_
 
 #include <gfx_resource.h>
+#include <gfx_tools.h>
 
 /* Dirty rectangle heuristics: */
 
