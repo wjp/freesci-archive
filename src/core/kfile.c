@@ -25,7 +25,7 @@
 
 ***************************************************************************/
 
-#include <kernel.h>
+#include <engine.h>
 
 #ifdef WIN32
 #define PATH_MAX 255

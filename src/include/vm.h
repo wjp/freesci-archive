@@ -77,11 +77,6 @@
 struct _state; /* engine.h */
 
 
-typedef void kfunct(struct _state *s, int funct_nr, int argc, heap_ptr argv);
-/* Kernel functions take the current state, the function number (for kstub()),
-** the number of arguments, and a heap_ptr to the first argument as parameters.
-*/
-
 typedef struct
 {
   int script; /* number of the script the class is in */

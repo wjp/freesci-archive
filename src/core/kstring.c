@@ -26,7 +26,7 @@
 ***************************************************************************/
 /* String and parser handling */
 
-#include <kernel.h>
+#include <engine.h>
 #include <vocabulary.h>
 
 

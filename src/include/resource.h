@@ -41,13 +41,17 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#else
+#endif
+
 #ifdef _WIN32
 #include <io.h>
-#endif
-#endif
+#else /* !_WIN32 */
+#define DLLEXTERN
+#endif /* !_WIN32 */
+
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>

@@ -4,10 +4,7 @@
 #include <old_objects.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-void
-graph_update_box(state_t *s, int x,int y,int z,int w)
-{}; /* Dummy because of braindead library design */
+#include <engine.h>
 
 int main()
 {

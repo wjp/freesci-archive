@@ -25,7 +25,7 @@
 
 ***************************************************************************/
 
-#include <kernel.h>
+#include <engine.h>
 
 
 sci_kernel_function_t kfunct_mappers[] = {

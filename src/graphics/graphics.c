@@ -130,7 +130,7 @@ alloc_empty_picture(int resolution, int colordepth)
 {
   int i;
 
-  picture_t retval = malloc(sizeof(struct _picture));
+  picture_t retval = malloc(sizeof(struct gfx_picture));
 
   switch (resolution) {
 

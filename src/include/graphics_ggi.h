@@ -45,6 +45,8 @@
 #define SCI_VISUAL_NORMAL 0
 #define SCI_VISUAL_DOUBLE 1
 
+struct gfx_picture;
+
 extern ggi_visual_t sci_default_visual;
 /* The default visual. This isn't used by the library itself. */
 extern int sci_default_visual_size;
@@ -52,7 +54,7 @@ extern int sci_default_visual_size;
 extern gfx_driver_t gfx_driver_libggi;
 
 int
-libggi_init(struct _state *s, struct _picture *pic);
+libggi_init(struct _state *s, struct gfx_picture *pic);
 
 void
 libggi_shutdown(struct _state *s);

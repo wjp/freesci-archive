@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <util.h>
 #include <vm.h>
+#include <engine.h>
 #include <assert.h>
 
 /* #define SCRIPT_DEBUG */

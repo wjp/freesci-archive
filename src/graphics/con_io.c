@@ -31,6 +31,8 @@
 #include <resource.h>
 #include <string.h>
 #include <assert.h>
+#include <graphics.h>
+#include <engine.h>
 
 int con_row_counter = 0;
 int con_visible_rows = 0;

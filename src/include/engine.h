@@ -53,6 +53,8 @@
 #include <menubar.h>
 #include <time.h>
 #include <versions.h>
+#include <kernel.h>
+#include <graphics.h>
 #ifdef HAVE_LIBGGI
 #include <ggi/ggi.h>
 #endif

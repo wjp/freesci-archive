@@ -175,8 +175,14 @@ simplesaid(int terminator)
 	break;
 
       case SAID_SLASH:
-	if (!truth)
-	  return 0; /* Only allowed on toplevel, so we may safely abort here */
+	if (!truth) {
+	  while (((token = next_parse_token(&token_is_op)) != terminator)
+		 && (token != SAID_TERM)); /* Proceed to end of block */
+	  if (token != terminator)
+	    SCIkwarn(SCIkERROR, "Syntax error: Unexpected end of spec");
+	  return 0;
+	}
+
 	major_state = STATE_SEEK;
 	minor_state = STATE_INITIAL;
 	break;

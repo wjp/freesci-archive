@@ -40,11 +40,11 @@
 #endif /* HAVE_READLINE_READLINE_H */
 
 static int quit = 0;
-int sci_color_mode = 0; /* Required for linking */
+/*int sci_color_mode = 0; /* Required for linking */
 
-void
+/*void
 graph_update_box(state_t *s, int x,int y,int z,int w)
-{}; /* Dummy because of braindead library design */
+{}; *//* Dummy because of braindead library design */
 
 int
 c_quit(state_t *s)

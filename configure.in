@@ -14,7 +14,7 @@ AC_CHECK_HEADERS(fnmatch.h)
 AC_CHECK_HEADERS(readline/readline.h)
 AC_CHECK_HEADERS(readline/history.h)
 AC_CHECK_HEADERS(getopt.h)
-AC_CHECK_FUNCS(pipe socketpair fork sched_yield memfrob)
+AC_CHECK_FUNCS(pipe socketpair fork sched_yield memfrob ffs)
 AC_PATH_GGI
 AC_PATH_CURSES
 AC_PATH_X

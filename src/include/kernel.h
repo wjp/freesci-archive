@@ -28,12 +28,13 @@
 #ifndef _SCI_KERNEL_H_
 #define _SCI_KERNEL_H_
 
-#include <engine.h>
 #include <math.h>
 #include <ctype.h>
 #include <kdebug.h>
 #include <uinput.h>
 #include <event.h>
+#include <heap.h>
+#include <console.h> /* sciprintf() */
 
 #ifdef HAVE_FNMATCH_H
 #include <fnmatch.h>
@@ -142,18 +143,18 @@ getHeapUInt16(unsigned char *base, int address)
 
 /* functions used internally by macros */
 int
-read_selector(state_t *s, heap_ptr object, int selector_id);
+read_selector(struct _state *s, heap_ptr object, int selector_id);
 void
-write_selector(state_t *s, heap_ptr object, int selector_id, int value);
+write_selector(struct _state *s, heap_ptr object, int selector_id, int value);
 int
-invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int kfunct,
+invoke_selector(struct _state *s, heap_ptr object, int selector_id, int noinvalid, int kfunct,
 		heap_ptr k_argp, int k_argc, int argc, ...);
 
 
 
 /******************** Text functionality ********************/
 char *
-kernel_lookup_text(state_t *s, int address, int index);
+kernel_lookup_text(struct _state *s, int address, int index);
 /* Looks up text referenced by scripts
 ** Parameters: (state_t *s): The current state
 **             (int) address: The address to look up
@@ -196,7 +197,7 @@ kernel_lookup_text(state_t *s, int address, int index);
 
 
 int
-is_object(state_t *s, heap_ptr offset);
+is_object(struct _state *s, heap_ptr offset);
 /* Checks whether a heap address contains an object
 ** Parameters: (state_t *) s: The current state
 **             (heap_ptr) offset: The heap address
@@ -239,7 +240,7 @@ _SCIkprintf(FILE *file, char *format, ...);
 
 
 int
-kernel_oops(state_t *s, char *file, int line, char *reason);
+kernel_oops(struct _state *s, char *file, int line, char *reason);
 /* Halts script execution and informs the user about an internal kernel error or failed assertion
 ** Paramters: (state_t *) s: The state to use
 **            (char *) file: The file the oops occured in
@@ -266,10 +267,10 @@ kernel_oops(state_t *s, char *file, int line, char *reason);
 /******************** Dynamic view list functions ********************/
 
 void
-_k_dyn_view_list_prepare_change(state_t *s);
+_k_dyn_view_list_prepare_change(struct _state *s);
      /* Removes all views in anticipation of a new window or text */
 void
-_k_dyn_view_list_accept_change(state_t *s);
+_k_dyn_view_list_accept_change(struct _state *s);
      /* Redraws all views after a new window or text was added */
 
 
@@ -278,7 +279,7 @@ _k_dyn_view_list_accept_change(state_t *s);
 /******************** Sound functions ********************/
 
 void
-process_sound_events(state_t *s); /* Get all sound events, apply their changes to the heap */
+process_sound_events(struct _state *s); /* Get all sound events, apply their changes to the heap */
 
 
 
@@ -324,6 +325,9 @@ process_sound_events(state_t *s); /* Get all sound events, apply their changes t
 
 /* Generic description: */
 
+
+typedef void kfunct(struct _state *s, int funct_nr, int argc, heap_ptr argv);
+
 /* void
 ** kFunct(state_t *s, int funct_nr, int argc, heap_ptr argp);
 ** Kernel function 'Funct'
@@ -337,124 +341,124 @@ process_sound_events(state_t *s); /* Get all sound events, apply their changes t
 ** s->acc, the accumulator.
 */
 
-void kLoad(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kUnLoad(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kGameIsRestarting(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kNewList(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kGetSaveDir(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kGetCWD(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kSetCursor(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kFindKey(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kNewNode(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kAddToFront(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kAddToEnd(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kShow(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kPicNotValid(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kRandom(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kAbs(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kSqrt(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kHaveMouse(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kGetAngle(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kGetDistance(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kLastNode(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kFirstNode(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kNextNode(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kPrevNode(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kNodeValue(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kClone(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kMemoryInfo(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kDisposeList(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kDisposeScript(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kGetPort(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kSetPort(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kIsObject(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kDrawStatus(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kDrawMenuBar(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kAddMenu(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kSetMenu(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kCelWide(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kCelHigh(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kDeleteKey(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kStrLen(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kGetFarText(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kStrEnd(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kStrCat(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kStrCmp(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kStrCpy(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kStrAt(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kReadNumber(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kNumCels(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kNumLoops(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kTextSize(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kInitBresen(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kDirLoop(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kCoordPri(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kPriCoord(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kValidPath(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kRespondsTo(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kFOpen(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kFPuts(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kFGets(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kFClose(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kTimesSin(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kTimesCos(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kCosMult(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kSinMult(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kMapKeyToDir(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kGlobalToLocal(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kLocalToGlobal(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kWait(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kCosDiv(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kSinDiv(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kParse(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kShakeScreen(state_t *s, int funct_nr, int argc, heap_ptr argp);
+void kLoad(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kUnLoad(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kGameIsRestarting(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kNewList(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kGetSaveDir(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kGetCWD(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kSetCursor(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kFindKey(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kNewNode(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kAddToFront(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kAddToEnd(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kShow(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kPicNotValid(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kRandom(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kAbs(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kSqrt(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kOnControl(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kHaveMouse(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kGetAngle(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kGetDistance(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kLastNode(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kFirstNode(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kNextNode(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kPrevNode(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kNodeValue(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kClone(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kDisposeClone(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kScriptID(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kMemoryInfo(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kDrawPic(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kDisposeList(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kDisposeScript(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kGetPort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kSetPort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kNewWindow(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kDisposeWindow(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kIsObject(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kFormat(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kDrawStatus(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kDrawMenuBar(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kAddMenu(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kSetMenu(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kAddToPic(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kCelWide(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kCelHigh(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kDisplay(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kAnimate(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kGetTime(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kDeleteKey(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kStrLen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kGetFarText(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kStrEnd(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kStrCat(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kStrCmp(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kStrCpy(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kStrAt(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kReadNumber(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kDrawControl(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kNumCels(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kNumLoops(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kTextSize(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kInitBresen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kDoBresen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kCanBeHere(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kDrawCel(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kDirLoop(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kCoordPri(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kPriCoord(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kValidPath(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kRespondsTo(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kFOpen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kFPuts(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kFGets(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kFClose(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kTimesSin(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kTimesCos(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kCosMult(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kSinMult(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kMapKeyToDir(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kGlobalToLocal(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kLocalToGlobal(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kWait(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kCosDiv(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kSinDiv(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kBaseSetter(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kParse(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kShakeScreen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 #ifdef _WIN32
-void kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, heap_ptr argp);
+void kDeviceInfo_Win32(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 #else
-void kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, heap_ptr argp);
+void kDeviceInfo_Unix(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 #endif
-void kHiliteControl(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kRestartGame(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kSetSynonyms(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kGetMenu(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kFlushResources(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kSetDebug(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kSetJump(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kEmptyList(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kAppendAfter(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void kSetNowSeen(state_t *s, int funct_nr, int argc, heap_ptr argp);
-void k_Unknown(state_t *s, int funct_nr, int argc, heap_ptr argp);
+void kHiliteControl(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kRestartGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kSaid(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kEditControl(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kDoSound(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kSetSynonyms(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kGraph(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kGetEvent(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kGetMenu(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kMenuSelect(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kCheckFreeSpace(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kFlushResources(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kGetSaveFiles(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kSetDebug(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kSetJump(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kCheckSaveGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kSaveGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kRestoreGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kEmptyList(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kAppendAfter(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kSetNowSeen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void k_Unknown(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 /* The Unknown/Unnamed kernel function */
-void kstub(state_t *s, int funct_nr, int argc, heap_ptr argp);
+void kstub(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 /* for unimplemented kernel functions */
-void kNOP(state_t *s, int funct_nr, int argc, heap_ptr argp);
+void kNOP(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 /* for kernel functions that don't do anything */
 
 typedef struct {
@@ -467,7 +471,7 @@ extern sci_kernel_function_t kfunct_mappers[];
 
 /******************** Portability kludges ********************/
 
-#ifdef _WIN32
+#ifndef HAVE_FFS
 int sci_ffs(int _mask);
 #else
 #define sci_ffs ffs

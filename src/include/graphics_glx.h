@@ -39,7 +39,7 @@
 
 #ifdef HAVE_GLX
 
-#include "graphics.h"
+#include <graphics.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>

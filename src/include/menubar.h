@@ -105,7 +105,8 @@ typedef struct {
 
 } menubar_t;
 
-
+struct gfx_port;
+struct gfx_picture; /* forward declarations for graphics.h */
 
 
 /********** function definitions *********/
@@ -191,7 +192,7 @@ menubar_get_attribute(struct _state *s, int menu, int item, int attribute);
 */
 
 void
-menubar_draw(picture_t pic, port_t *port, menubar_t *menubar, int activated, byte *font);
+menubar_draw(struct gfx_picture *pic, struct gfx_port *port, menubar_t *menubar, int activated, byte *font);
 /* Draws the menu bar
 ** Parameters: (picture_t *) pic: The picture to draw to
 **             (port_t *) port: The port to draw into
@@ -214,7 +215,7 @@ status_bar_draw(struct _state *s, char *text);
 
 
 int
-menubar_draw_menu(struct _state *s, int menu, port_t *menu_port);
+menubar_draw_menu(struct _state *s, int menu, struct gfx_port *menu_port);
 /* Draws a complete menu
 ** Parameters: (state_t *) s: The current state
 **             (int) menu: The menu to draw (starting at 0)
@@ -224,7 +225,7 @@ menubar_draw_menu(struct _state *s, int menu, port_t *menu_port);
 */
 
 void
-menubar_draw_item(struct _state *s, port_t *port, int menu, int item, int active);
+menubar_draw_item(struct _state *s, struct gfx_port *port, int menu, int item, int active);
 /* Draws one menu item
 ** Parameters: (state_t *) s: The current state
 **             (port_t *) port: The menu frame port (returned by menubar_draw_menu())
@@ -244,7 +245,7 @@ menubar_item_valid(struct _state *s, int menu, int item);
 
 
 int
-menubar_map_pointer(struct _state *s, int *menu_nr, int *item_nr, port_t *port);
+menubar_map_pointer(struct _state *s, int *menu_nr, int *item_nr, struct gfx_port *port);
 /* Maps the pointer position to a (menu,item) tuple.
 ** Parameters: (state_t *) s: The current state
 **             ((int *) x (int *)) (menu_nr, item_nr): Pointers to the current menu/item tuple

@@ -25,7 +25,7 @@
 
 ***************************************************************************/
 
-#include <kernel.h>
+#include <engine.h>
 
 /* Graph subfunctions */
 #define K_GRAPH_GET_COLORS_NR 2

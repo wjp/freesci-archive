@@ -34,15 +34,18 @@
 #define _SCI_CONSOLE_H_
 
 #ifdef HAVE_CONFIG_H
+#include <resource.h>
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
+
+#ifndef _WIN32
+#define DLLEXTERN
+#endif
 
 #ifdef _DOS
 #include <sci_dos.h>
 #endif
 
-#include <engine.h>
-#include <graphics.h>
 #include <uinput.h>
 #define SCI_CONSOLE
 
@@ -93,6 +96,7 @@ extern int con_outputlookback;
 
 
 struct _state; /* state_t later on */
+struct gfx_picture; /* later retreived from graphics.h */
 
 typedef union {
   long val;
@@ -135,7 +139,7 @@ con_input(sci_event_t *event);
 
 
 void
-con_draw_string(picture_t pic, int map, int row, int maxlen, char *string, int color);
+con_draw_string(struct gfx_picture *pic, int map, int row, int maxlen, char *string, int color);
 /* Draws a string to a specified row
 ** Parameters: pic: The picture_t to draw to
 **             map: The map inside the picture_t to draw to

@@ -48,7 +48,7 @@
 extern gfx_driver_t gfx_driver_ddraw;
 
 int
-ddraw_init(struct _state *s, struct _picture *pic);
+ddraw_init(struct _state *s, struct gfx_picture *pic);
 
 void
 ddraw_shutdown(struct _state *s);

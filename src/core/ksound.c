@@ -25,7 +25,7 @@
 
 ***************************************************************************/
 
-#include <kernel.h>
+#include <engine.h>
 
 #define _K_SOUND_INIT 0
 #define _K_SOUND_PLAY 1

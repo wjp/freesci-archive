@@ -29,6 +29,7 @@
 
 #include <console.h>
 #ifdef SCI_CONSOLE
+#include <engine.h>
 
 extern guint8 _font[];
 

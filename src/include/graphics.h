@@ -32,11 +32,21 @@
 #ifndef _SCI_GRAPHICS_H_
 #define _SCI_GRAPHICS_H_
 
-#include <engine.h>
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif /* HAVE_CONFIG_H */
+
+#ifndef _DOS
+#include <glib.h>
+#else
+#include <sci_dos.h>
+#endif
+
+#include <kernel.h> /* for heap_ptr */
 #include <uinput.h>
 
 
-struct _picture {
+struct gfx_picture {
 
   guint8 *view;    /* The currently visible picture */
   guint8 *maps[4]; /* Background picture: View, Priority, Control, and Auxiliary */
@@ -60,7 +70,7 @@ struct _picture {
 };
 
 
-typedef struct _picture* picture_t;
+typedef struct gfx_picture* picture_t;
 /* Used for storing "picture" resources (the background images). These
 ** have four layers: the actual screen buffer, a priority buffer (essentially
 ** a simple z buffer), a 'special' buffer (defining, among other things,
@@ -69,7 +79,7 @@ typedef struct _picture* picture_t;
 */
 
 
-typedef struct {
+typedef struct gfx_port {
   gint16 ymin, xmin; /* Upper left corner */
   gint16 ymax, xmax; /* Lower right corner */
 
@@ -148,7 +158,7 @@ typedef struct
   **             (picture *) pic: Pictures
   ** Returns   : (int) 0 on success, 1 otherwise
   */
-  int (*Initialize) (struct _state *s, struct _picture *pic);
+  int (*Initialize) (struct _state *s, struct gfx_picture *pic);
 
   /* Deinitializes graphics
   ** Parameter: (state_t *) s: Pointer to the affected state_t
