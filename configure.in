@@ -78,6 +78,7 @@ AC_CHECK_FUNCS(memchr fnmatch pipe socketpair fork sched_yield memfrob ffs getop
 AM_PATH_ALSA(0.5.0, [AC_DEFINE(HAVE_ALSA)], [echo >/dev/null])
 AM_WITHOUT_SOUND
 AC_PATH_GGI
+AC_PATH_DIRECTFB
 #AC_CHECK_FSCI_DLOPEN
 SCIV_LDFLAGS=""
 AC_SUBST(SCIV_LDFLAGS)
@@ -208,6 +209,11 @@ else
 	if test x"$fsci_ggi_driver" = xyes; then
 		fsci_ggi_st="ggi_driver.o"
 		LIBS="$LIBS $ac_ggi_libraries"
+	fi
+
+	if test x"$fsci_directfb_driver" = xyes; then
+		fsci_ggi_st="directfb_driver.o"
+		LIBS="$LIBS $ac_directfb_libraries"
 	fi
 
 	if test x"$fsci_sdl_driver" = xyes; then

@@ -199,6 +199,70 @@ AC_SUBST(ac_ggi_includes)
 AC_SUBST(ac_ggi_libraries)
 ])
 
+##
+## Customizing functions for libggi: Based on similar functions for qt
+##
+AC_DEFUN(AC_PATH_DIRECTFB,
+[
+AC_MSG_CHECKING([for directfb])
+
+ac_directfb_so=""
+
+_ac_directfb_includes="-I/usr/include -I/usr/local/include"
+_ac_directfb_libraries="-L/usr/lib -L/usr/local/lib -L/usr/local/directfb/lib"
+
+
+AC_ARG_WITH(directfb,
+    [  --without-directfb           Don't build the directfb driver])
+
+AC_ARG_WITH(directfb-dir,
+    [  --with-directfb-dir          where the root of directfb is installed ],
+    [  _ac_directfb_includes="-I$withval"/include
+       _ac_directfb_libraries="-L$withval"/lib
+    ])
+
+AC_ARG_WITH(directfb-includes,
+    [  --with-directfb-includes     where the directfb includes are. ],
+    [  
+       _ac_directfb_includes="-I$withval"
+    ])
+AC_ARG_WITH(directfb-libraries,
+    [  --with-directfb-libraries    where the directfb library is installed.],
+    [  _ac_directfb_libraries="-L$withval"
+    ])
+
+if test x"$with_directfb" = xno; then
+	AC_MSG_RESULT([disabled]);
+	ac_directfb_libraries=""
+	ac_directfb_includes=""
+else
+
+	AC_CHECK_INCLUDE_PATH([directfb/directfb.h],[$_ac_ggi_includes],[], ac_directfb_includes)
+	AC_CHECK_LINK_PATH([DirectFBInit(0, 0);],$_ac_directfb_libraries,["-ldirectfb"],
+			 [$ac_directfb_includes],[#include <directfb/directfb.h>], ac_directfb_libraries)
+
+	if test "$ac_directfb_includes" = no || test "$ac_directfb_libraries" = no; then
+
+		AC_MSG_RESULT([failed])
+		ac_directfb_libraries=""
+		ac_directfb_includes=""
+	else
+		AC_MSG_RESULT([found]);
+
+		ac_directfb_libraries="$ac_directfb_libraries"
+		ac_graphics_directfb_libfile="graphics_directfb.c"
+		AC_SUBST(ac_graphics_directfb_libfile)
+		ac_graphics_directfb_libobjects="graphics_directfb.o"
+		AC_SUBST(ac_graphics_directfb_libobjects)
+		AC_DEFINE(HAVE_DIRECTFB)
+		fsci_directfb_driver="yes"
+	fi
+fi
+
+AC_SUBST(ac_directfb_includes)
+AC_SUBST(ac_directfb_libraries)
+])
+
 
 AC_DEFUN(AC_CHECK_XSHM,
 [

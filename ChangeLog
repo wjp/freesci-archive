@@ -1,3 +1,8 @@
+2002-09-22  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/directfb_driver.c: Initial revision of
+	the libdirectfb driver.
+
 2002-09-22  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/include/soundserver.h, src/sound/Makefile.am, 

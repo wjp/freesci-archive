@@ -54,6 +54,10 @@ extern gfx_driver_t gfx_driver_dd;
 #  ifdef HAVE_SDL
 extern gfx_driver_t gfx_driver_sdl;
 #  endif
+
+#  ifdef HAVE_DIRECTFB
+extern gfx_driver_t gfx_driver_dfb;
+#  endif
 #endif
 
 static gfx_driver_t *gfx_drivers[] = {
@@ -69,6 +73,9 @@ static gfx_driver_t *gfx_drivers[] = {
 #  endif
 #  ifdef HAVE_DDRAW
 	&gfx_driver_dd,
+#  endif
+#  ifdef HAVE_DIRECTFB
+	&gfx_driver_dfb,
 #  endif
 #endif
 	NULL

@@ -878,13 +878,13 @@ xlib_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 		      src.xl, src.yl, dest.xl, dest.yl);
 		return GFX_ERROR;
 	}
-	fflush(stdout);
+
 	if (pxm->internal.handle == SCI_XLIB_PIXMAP_HANDLE_GRABBED) {
 		XPutImage(S->display, S->visual[bufnr], S->gc, (XImage *) pxm->internal.info,
 			  src.x, src.y, dest.x, dest.y, dest.xl, dest.yl);
 		return GFX_OK;
 	}
-	fflush(stdout);
+
 	tempimg = XGetImage(S->display, S->visual[bufnr], dest.x, dest.y,
 			    dest.xl, dest.yl, 0xffffffff, ZPixmap);
 
