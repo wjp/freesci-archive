@@ -1227,6 +1227,8 @@ x_map_key(gfx_driver_t *drv, XEvent *key_event, char *character)
 		return xkey;
 	if ((xkey >= '0') && (xkey <= '9'))
 		return xkey;
+	if (xkey == ' ')
+		return xkey;
 
 	switch (xkey) {
 	case XK_KP_Add: return '+';

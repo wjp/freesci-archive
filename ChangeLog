@@ -1,3 +1,7 @@
+2003-07-08  Rune Orsval  <u951663@daimi.au.dk>
+
+	* src/gfx/drivers/xlib_driver.c (x_map_key): Handle the Space key correctly.
+
 2003-07-07  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sfx/iterator.c (_sci0_read_next_command): Fixed rhythm channel
