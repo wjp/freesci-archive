@@ -560,7 +560,7 @@ _k_dirloop(heap_ptr obj, word angle, state_t *s, int funct_nr,
 
 	angle %= 360;
 
-	if (s->version < SCI_VERSION_FTU_2ND_ANGLES) {
+	if (s->version >= SCI_VERSION_FTU_2ND_ANGLES) {
 		if (angle < 45)
 			loop = 3;
 		else if (angle < 135)
@@ -574,11 +574,11 @@ _k_dirloop(heap_ptr obj, word angle, state_t *s, int funct_nr,
 	} else {
 		if (angle >= 330 || angle <= 30)
 			loop = 3;
-		else if (loop <= 150)
+		else if (angle <= 150)
 			loop = 0;
-		else if (loop <= 210)
+		else if (angle <= 210)
 			loop = 2;
-		else if (loop < 330)
+		else if (angle < 330)
 			loop = 1;
 		else loop = 0xffff;
 	}

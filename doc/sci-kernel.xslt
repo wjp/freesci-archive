@@ -52,17 +52,35 @@
 </xsl:template>
 
 <xsl:template match="retval" mode="type">
-    <xsl:value-of select="substring-before(string(text()), ':')"/>
+    <xsl:choose>
+      <xsl:when test="contains(string(text()), ':')">
+	<xsl:value-of select="substring-before(string(text()), ':')"/>
+      </xsl:when>
+      <xsl:otherwise>
+	<xsl:value-of select="string(text())"/>
+      </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 <xsl:template match="retval" mode="full">
-    <type>
-      <xsl:text>(</xsl:text>
-      <xsl:value-of select="substring-before(string(text()), ':')"/>
-      <xsl:text>)</xsl:text>
-    </type>
-    <xsl:text>:</xsl:text>
-    <xsl:value-of select="substring-after(string(self::*), ':')"/>
+    <xsl:choose>
+      <xsl:when test="contains(string(text()), ':')">
+	<type>
+	  <xsl:text>(</xsl:text>
+	  <xsl:value-of select="substring-before(string(text()), ':')"/>
+	  <xsl:text>)</xsl:text>
+	</type>
+	<xsl:text>:</xsl:text>
+	<xsl:value-of select="substring-after(string(self::*), ':')"/>
+      </xsl:when>
+      <xsl:otherwise>
+	<type>
+	  <xsl:text>(</xsl:text>
+	  <xsl:value-of select="string(text())"/>
+	  <xsl:text>)</xsl:text>
+	</type>
+      </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 <xsl:template match="param" mode="param-list">

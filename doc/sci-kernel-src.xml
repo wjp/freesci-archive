@@ -24,7 +24,7 @@ In the 'description' tag, the following special tags are allowed:
 
 <kernel-doc>
 
-  <function SCI0ID="00">Load
+  <function SCI0ID="0">Load
     <param>word res_type: The resource type number | 0x80 (as in the patch files)</param>
     <param>word res_nr: The resource number</param>
     <retval>&amp;far_ptr: A heap_ptr pointing to an
@@ -38,4 +38,30 @@ In the 'description' tag, the following special tags are allowed:
     </description>
   </function>
 
+  <function SCI0ID="1">UnLoad
+    <param>word res_type: The resource type number | 0x80</param>
+    <param>word res_nr: The resource number</param>
+    <retval>void</retval>
+    <description>
+      This function unloads a resource identified by its res_type and res_nr, NOT by the HeapPtr
+      it has been loaded to, except for sci_memory resources, where the parameters are the
+      memory resource type and the handle.
+    </description>
+  </function>
+
+  <function SCI0ID="2">ScriptID
+    <param>word script_nr: Number of the script to reference</param>
+    <param>word dispatch_nr: Number of the dispatch list entry of the script to
+      reference</param>
+    <retval>heap_ptr: Address pointed to by the specified element of the
+      dispatch (aka exports) table of the specified script.</retval>
+    <description>
+      This function returns the address pointed to by an element of a script's
+      dispatch table.
+    </description>
+  </function>
+
 </kernel-doc>
+
+
+

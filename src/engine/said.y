@@ -52,7 +52,9 @@
 #define AUGMENT_SENTENCE_MINOR_PARENTHESES 0x14f
 
 
-/*#define SCI_DEBUG_PARSE_TREE_AUGMENTATION *//* uncomment to debug parse tree augmentation*/
+#undef YYDEBUG /*1*/
+#undef SAID_DEBUG
+#undef SCI_DEBUG_PARSE_TREE_AUGMENTATION /* uncomment to debug parse tree augmentation*/
 
 
 #ifdef SCI_DEBUG_PARSE_TREE_AUGMENTATION
@@ -61,8 +63,6 @@
 #define scidprintf if (0) sciprintf
 #endif
 
-#undef YYDEBUG /*1*/
-#undef SAID_DEBUG
 
 static char *said_parse_error;
 
@@ -655,6 +655,7 @@ augment_match_expression_p(parse_tree_node_t *saidt, int augment_pos,
 						  base_words, base_words_nr,
 						  ref_words, ref_words_nr);
 
+
 	switch (major) {
 
 	case WORD_TYPE_BASE:
@@ -685,9 +686,20 @@ augment_match_expression_p(parse_tree_node_t *saidt, int augment_pos,
 						return 1;
 					gchild = aug_get_next_sibling(saidt, gchild, &gc_major, &gc_minor);
 				}
-			} else sciprintf("augment_match_expression_p(): Unknown type 141 minor number %3x\n", cminor);
+			} else
+				sciprintf("augment_match_expression_p(): Unknown type 141 minor number %3x\n", cminor);
 
 			cpos = aug_get_next_sibling(saidt, cpos, &cmajor, &cminor);
+
+			while (cpos && cmajor != WORD_TYPE_BASE) {
+				if (augment_match_expression_p(saidt, cpos,
+							       parset, parse_basepos,
+							       cmajor, cminor,
+							       base_words, base_words_nr,
+							       ref_words, ref_words_nr))
+					return 1;
+				cpos = aug_get_next_sibling(saidt, cpos, &cmajor, &cminor);
+			}
 		}
 		break;
 
@@ -722,6 +734,16 @@ augment_match_expression_p(parse_tree_node_t *saidt, int augment_pos,
 			} else sciprintf("augment_match_expression_p(): Unknown type 144 minor number %3x\n", cminor);
 
 			cpos = aug_get_next_sibling(saidt, cpos, &cmajor, &cminor);
+
+			while (cpos && cmajor != WORD_TYPE_REF) {
+				if (augment_match_expression_p(saidt, cpos,
+							       parset, parse_basepos,
+							       cmajor, cminor,
+							       base_words, base_words_nr,
+							       ref_words, ref_words_nr))
+					return 1;
+				cpos = aug_get_next_sibling(saidt, cpos, &cmajor, &cminor);
+			}
 		}
 		break;
 
