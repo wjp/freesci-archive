@@ -143,7 +143,10 @@ sci0_soundserver()
   int suspended = 0; /* Used to suspend the sound server */
   GTimeVal suspend_time; /* Time at which the sound server was suspended */
 
-  sci_get_current_time((GTimeVal *)&last_played);
+  memset(&suspend_time, 0, sizeof(GTimeVal));
+  memset(&wakeup_time, 0, sizeof(GTimeVal));
+  memset(&ctime, 0, sizeof(GTimeVal));
+  sci_get_current_time(&last_played);
 
   fprintf(ds, "NULL Sound server initialized\n");
 
@@ -152,7 +155,7 @@ sci0_soundserver()
     GTimeVal wait_tv;
     int ticks = 0; /* Ticks to next command */
     int fadeticks = 0;		
-    int old_songpos;
+    int old_songpos = 33; /* initial positiion */
     song_t *oldsong = song;
     byte last_command = 0; /* Used for 'running' mode */
 
