@@ -187,6 +187,8 @@ typedef struct {
 	int who, distance; /* Used for 'chasing' movers */
 
 	int looper, mover, isBlocked, heading; /* Used in DoAvoider */
+
+	int caller; /* Used for DoBresen */ 
 	
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 

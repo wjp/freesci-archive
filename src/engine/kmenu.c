@@ -104,7 +104,7 @@ struct {
 	 "Anders Baden Nielsen\nPPC testing\n\n"
 	 "Bas Zoetekouw\nMan pages and debian package management\n\n"
 	 "Carl Muckenhoupt\nSources to the SCI resource viewer tools that started it all\n\n"
-	 "Chris Kehler\nMakefile enhancements\n"
+	 "Chris Kehler\nMakefile enhancements\n\n"
 	 "Christoph Reichenbach\nProject & Website maintenance, UN*X code\n\n"
 	 "Christopher T. Lansdown\nCVS maintenance, Alpha compatibility fixes",
 	 0, 15},

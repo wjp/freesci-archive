@@ -1,3 +1,10 @@
+2001-08-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (collides_with): OB1 fix
+	(collides_with): No longer clip outside of screen
+
+	* src/engine/kmovement.c (kDoBresen): No longer set completed flag
+
 2001-08-04  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/soundserver.c (sci0_soundserver): Reversed stereo,

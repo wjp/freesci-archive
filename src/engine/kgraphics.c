@@ -632,8 +632,15 @@ collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int use_nsrect, i
 
 	other_area = nsrect_clip(s, y, other_area, other_priority);
 
+	if (other_area.xend < 0 || other_area.yend < 0 || area.xend < 0 || area.yend < 0)
+		return 0; /* Out of scope */
+
+	if (other_area.x >= 320 || other_area.y >= 190 || area.xend >= 320 || area.yend >= 190)
+		return 0; /* Out of scope */
+
 	SCIkdebug(SCIkBRESEN, "OtherSignal=%04x, z=%04x obj=%04x\n", other_signal,
 		  (other_signal & GASEOUS_VIEW_MASK), other_obj);
+
 	if ((other_signal & (GASEOUS_VIEW_MASK)) == 0) {
 					/* check whether the other object ignores actors */
 
@@ -642,10 +649,10 @@ collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int use_nsrect, i
 
 
 		if (((other_area.xend > area.x)
-		     && (other_area.x <= area.xend)) /* [other_x, other_xend] intersects [x, xend]? */
+		     && (other_area.x < area.xend)) /* [other_x, other_xend] intersects [x, xend]? */
 		    &&
 		    ((other_area.yend > area.y)
-		     && (other_area.y <= area.yend))) /* [other_y, other_yend] intersects [y, yend]? */
+		     && (other_area.y < area.yend))) /* [other_y, other_yend] intersects [y, yend]? */
 			return 1;
 
 	}

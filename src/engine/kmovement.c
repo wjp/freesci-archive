@@ -156,6 +156,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	heap_ptr mover = PARAM(0);
 	heap_ptr client = GET_SELECTOR(mover, client);
+	heap_ptr caller = 0;
 
 	int x = GET_SELECTOR(client, x);
 	int y = GET_SELECTOR(client, y);
@@ -199,8 +200,11 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			x = destx;
 			y = desty;
       
+			completed = 1;
+#if 0
 			if (s->selector_map.completed > -1)
-				PUT_SELECTOR(mover, completed, completed = 1); /* Finish! */
+				PUT_SELECTOR(mover, completed, 1); /* Finish! */
+#endif
 
 			SCIkdebug(SCIkBRESEN, "Finished mover %04x\n", mover);
 		}
@@ -213,10 +217,9 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	invoke_selector(INV_SEL(client, canBeHere, 0), 0);
 
-	if (s->acc) { /* Contains the return value */
+	if (s->acc) /* Contains the return value */
 		s->acc = completed;
-		return;
-	} else {
+	else {
 		word signal = UGET_SELECTOR(client, signal);
 
 		PUT_SELECTOR(client, x, oldx);
@@ -229,11 +232,13 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		PUT_SELECTOR(client, signal, (signal | _K_VIEW_SIG_FLAG_HIT_OBSTACLE));
 
+#if 0
 		if (s->selector_map.completed > -1)
 			PUT_SELECTOR(mover, completed, completed = 1); /* Finish! */
+#endif
 
 		SCIkdebug(SCIkBRESEN, "Finished mover %04x by collision\n", mover);
-		s->acc = 1;
+		s->acc = completed = 1;
 	}
 
 }
