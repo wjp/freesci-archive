@@ -91,9 +91,6 @@ pi_poll(sfx_pcm_feed_t *self, byte *dest, int size)
 {
 	int data_len;
 
-	fprintf(stderr, "Polling sample (%p): %d/%d\n",
-		self, size, D->frames_left);
-
 	if (size >= D->frames_left)
 		size = D->frames_left;
 

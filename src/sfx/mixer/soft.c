@@ -39,13 +39,30 @@
 **     >= 3 -- fully detailed input and output analysis (once per frame and feed)
 */
 
-#define DEBUG 0
+//#define DEBUG 0
 
 #define MIN_DELTA_OBSERVATIONS 100 /* Number of times the mixer is called before it starts trying to improve latency */
 #define MAX_DELTA_OBSERVATIONS 1000000 /* Number of times the mixer is called before we assume we truly understand timing */
 
 static int diagnosed_too_slow = 0;
 static int additional_frames = 2048; /* Additional frames to write ahead, into the queue */
+
+
+static int mixer_lock = 0;
+
+//#define DEBUG_LOCKS
+#ifdef DEBUG_LOCKS
+#  define DEBUG_ACQUIRE fprintf(stderr, "[ -LOCK -] ACKQ %d: %d\n", __LINE__, mixer_lock)
+#  define DEBUG_WAIT fprintf(stderr, "[ -LOCK -] WAIT %d: %d\n", __LINE__, mixer_lock);
+#  define DEBUG_RELEASE ; fprintf(stderr, "[ -LOCK -] REL %d: %d\n", __LINE__, mixer_lock);
+#else
+#  define DEBUG_ACQUIRE
+#  define DEBUG_WAIT
+#  define DEBUG_RELEASE
+#endif
+
+#define ACQUIRE_LOCK() ++mixer_lock; while (mixer_lock != 1) { DEBUG_WAIT sci_sched_yield(); } DEBUG_ACQUIRE
+#define RELEASE_LOCK() --mixer_lock DEBUG_RELEASE
 
 struct mixer_private {
 	byte *outbuf; /* Output buffer to write to the PCM device next time */
@@ -131,13 +148,16 @@ static void
 mix_subscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 {
 	sfx_pcm_feed_state_t *fs;
-
+	ACQUIRE_LOCK();
 	if (!self->feeds) {
 		self->feeds_allocd = 2;
-		self->feeds = sci_malloc(sizeof(sfx_pcm_feed_state_t) * self->feeds_allocd);
+		self->feeds = sci_malloc(sizeof(sfx_pcm_feed_state_t)
+					 * self->feeds_allocd);
 	} else if (self->feeds_allocd == self->feeds_nr) {
 		self->feeds_allocd += 2;
-		self->feeds = sci_realloc(self->feeds, sizeof(sfx_pcm_feed_state_t) * self->feeds_allocd);
+		self->feeds = sci_realloc(self->feeds,
+					  sizeof(sfx_pcm_feed_state_t)
+					  * self->feeds_allocd);
 	}
 
 	fs = self->feeds + self->feeds_nr++;
@@ -154,8 +174,17 @@ mix_subscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 	fs->buf_size = 2 + /* Additional safety */
 		(self->dev->buf_size *
 			(1 + (feed->conf.rate / self->dev->conf.rate)));
+fprintf(stderr, " ---> %d/%d/%d/%d = %d\n",
+	self->dev->buf_size,
+	feed->conf.rate,
+	self->dev->conf.rate,
+	feed->frame_size,
+	fs->buf_size);
 
 	fs->buf = sci_malloc(fs->buf_size * feed->frame_size);
+fprintf(stderr, " ---> --> %d for %p at %p\n", fs->buf_size * feed->frame_size, fs, fs->buf);
+{int i; for (i = 0; i < fs->buf_size * feed->frame_size; i++)
+fs->buf[i] = 0xa5; }
 	fs->scount = urat(0, 1);
 	fs->spd = urat(feed->conf.rate, self->dev->conf.rate);
 	fs->scount.den = fs->spd.den;
@@ -175,10 +204,12 @@ mix_subscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 		  feed->debug_name, feed->debug_nr, feed->conf.rate, feed->conf.stereo, feed->conf.format,
 		  fs->spd.val, fs->spd.nom, fs->spd.den, fs->buf_size);
 #endif
+	RELEASE_LOCK();
 }
 
+
 static void
-mix_unsubscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
+_mix_unsubscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 {
 	int i;
 #ifdef DEBUG
@@ -202,7 +233,10 @@ mix_unsubscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 			if (self->feeds_allocd > 8 && self->feeds_allocd > (self->feeds_nr << 1)) {
 				/* Limit memory waste */
 				self->feeds_allocd >>= 1;
-				self->feeds = sci_realloc(self->feeds, sizeof(sfx_pcm_feed_t *) * self->feeds_allocd);
+				self->feeds
+					= sci_realloc(self->feeds,
+						      sizeof(sfx_pcm_feed_state_t)
+						      * self->feeds_allocd);
 			}
 
 			for (i = 0; i < self->feeds_nr; i++)
@@ -220,12 +254,21 @@ mix_unsubscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 	BREAKPOINT();
 }
 
+static void
+mix_unsubscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
+{
+	ACQUIRE_LOCK();
+	_mix_unsubscribe(self, feed);
+	RELEASE_LOCK();
+}
+
 
 static void
 mix_exit(sfx_pcm_mixer_t *self)
 {
+	ACQUIRE_LOCK();
 	while (self->feeds_nr)
-		mix_unsubscribe(self, self->feeds[0].feed);
+		_mix_unsubscribe(self, self->feeds[0].feed);
 
 	if (P->outbuf)
 		sci_free(P->outbuf);
@@ -239,12 +282,12 @@ mix_exit(sfx_pcm_mixer_t *self)
 
 	sci_free(P);
 	P = NULL;
+	RELEASE_LOCK();
 
 #ifdef DEBUG
 	sciprintf("[soft-mixer] Uninitialising mixer\n");
 #endif
 }
-
 
 
 #define LIMIT_16_BITS(v)			\
@@ -510,12 +553,16 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_frames)
 		}
 
 
+static volatile int xx_offset;
+static volatile int xx_size;
+
 static void
-mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_state_t *fs,
+mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result,
 			 int len, sfx_timestamp_t *ts, sfx_timestamp_t base_ts)
      /* if add_result is non-zero, P->outbuf should be added to rather than overwritten. */
      /* base_ts is the timestamp for the first frame */
 {
+	sfx_pcm_feed_state_t *fs = self->feeds + add_result;
 	sfx_pcm_feed_t *f = fs->feed;
 	sfx_pcm_config_t conf = f->conf;
 	int use_16 = conf.format & SFX_PCM_FORMAT_16;
@@ -539,6 +586,7 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 	int frames_left;
 	int write_offset; /* Iterator for translation */
 	int delay_frames = 0; /* Number of frames (dest buffer) at the beginning we skip */
+
 	/* First, compute the number of frames we want to retreive */
 	frames_nr = fs->spd.val * len;
 	/* A little complicated since we must consider partial frames */
@@ -550,14 +598,27 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 
 	ts->secs = -1;
 
+	if (frames_nr > fs->buf_size) {
+		fprintf(stderr, "%d (%d*%d + somethign) bytes, but only %d allowed!!!!!\n",
+			frames_nr * f->frame_size,
+			fs->spd.val, len,
+			fs->buf_size);
+		BREAKPOINT();
+	}
+
 //fprintf(stderr, " frames_nr = %d * (%d + %d/%d) = %d\n",
 //len, fs->spd.val, fs->spd.nom, fs->scount
 	if (fs->pending_review) {
 		int newmode = PCM_FEED_EMPTY; /* empty unless a get_timestamp() tells otherwise */
 
+		RELEASE_LOCK();
 		/* Retrieve timestamp */
 		if (f->get_timestamp)
 			newmode = f->get_timestamp(f, ts);
+		ACQUIRE_LOCK();
+
+		fs = self->feeds + add_result;
+		/* Reset in case of status update */
 
 		switch (newmode) {
 
@@ -597,9 +658,17 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 		}
 	}
 
+	RELEASE_LOCK();
 	/* Make sure we have sufficient information */
 	frames_left = frames_read = fs->frame_bufstart +
-		f->poll(f, wr_dest, frames_nr - delay_frames - fs->frame_bufstart);
+		f->poll(f, wr_dest,
+			frames_nr
+			- delay_frames
+			- fs->frame_bufstart);
+
+	ACQUIRE_LOCK();
+	fs = self->feeds + add_result;
+	/* Reset in case of status update */
 
 	/* Skip at the beginning: */
 	if (delay_frames) {
@@ -727,6 +796,15 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 	fs->frame_bufstart = frames_left;
 
 	if (frames_left) {
+		xx_offset = ((frames_read - frames_left) * f->frame_size);
+		xx_size = frames_left * f->frame_size;
+		if (xx_offset + xx_size
+		    >= fs->buf_size * f->frame_size) {
+			fprintf(stderr, "offset %d >= max %d!\n",
+				(xx_offset + xx_size), fs->buf_size * f->frame_size);
+			BREAKPOINT();
+		}
+
 		memmove(fs->buf,
 			fs->buf + ((frames_read - frames_left) * f->frame_size),
 			frames_left * f->frame_size);
@@ -745,6 +823,8 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 
 static int
 mix_process_linear(sfx_pcm_mixer_t *self)
+{
+ACQUIRE_LOCK();
 {
 	int src_i; /* source feed index counter */
 	int frames_skip; /* Number of frames to discard, rather than to emit */
@@ -776,8 +856,10 @@ mix_process_linear(sfx_pcm_mixer_t *self)
 					   P->lastbuf_len,
 					   (P->have_outbuf_timestamp)? &ts : NULL);
 
-		if (rv == SFX_ERROR)
+		if (rv == SFX_ERROR) {
+			RELEASE_LOCK();
 			return rv; /* error */
+		}
 	}
 
 #if (DEBUG >= 1)
@@ -802,7 +884,7 @@ mix_process_linear(sfx_pcm_mixer_t *self)
 			}
 
 			for (src_i = 0; src_i < self->feeds_nr; src_i++) {
-				mix_compute_input_linear(self, src_i, self->feeds + src_i,
+				mix_compute_input_linear(self, src_i,
 							 fake_buflen, &timestamp,
 							 start_timestamp);
 
@@ -822,11 +904,10 @@ mix_process_linear(sfx_pcm_mixer_t *self)
 					}
 				}
 			}
-
 			/* Destroy all feeds we finished */
 			for (src_i = 0; src_i < self->feeds_nr; src_i++)
 				if (self->feeds[src_i].mode == SFX_PCM_FEED_MODE_DEAD)
-					mix_unsubscribe(self, self->feeds[src_i].feed);
+					_mix_unsubscribe(self, self->feeds[src_i].feed);
 		} while (frames_skip >= 0);
 
 	} else { /* Zero it out */
@@ -863,19 +944,24 @@ mix_process_linear(sfx_pcm_mixer_t *self)
 							timestamp_max_delta >> 1);
 	P->have_outbuf_timestamp = have_timestamp;
 
+}	RELEASE_LOCK();
 	return SFX_OK;
 }
 
 static void
 mix_pause(sfx_pcm_mixer_t *self)
 {
+	ACQUIRE_LOCK();
 	P->paused = 1;
+	RELEASE_LOCK();
 }
 
 static void
 mix_resume(sfx_pcm_mixer_t *self)
 {
+	ACQUIRE_LOCK();
 	P->paused = 0;
+	RELEASE_LOCK();
 }
 
 sfx_pcm_mixer_t sfx_pcm_mixer_soft_linear = {

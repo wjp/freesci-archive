@@ -102,14 +102,13 @@ static int
 pp_add_iterator(song_iterator_t *it, GTimeVal start_time)
 {
 	if (play_it == NULL) {
-		new_song = 1;
 		new_timestamp = sfx_new_timestamp(start_time.tv_sec,
 						  start_time.tv_usec,
 						  seq->pcm_conf.rate);
 		/* ASAP otherwise */
 		time_counter = 0;
+		new_song = 1;
 	}
-fprintf(stderr, "[play] Now running it %p\n", it);
 
 	SIMSG_SEND(it, SIMSG_SET_PLAYMASK(seq->playmask));
 	SIMSG_SEND(it, SIMSG_SET_RHYTHM(seq->play_rhythm));
