@@ -83,62 +83,70 @@ said_top_branch(tree_t);
 
 %%
 
-said_spec:	  Subexpression NestedBeforeA MoreAfter
+said_spec:	  ne_subexpression more_after
+			{ $$ = said_top_branch(said_attach_branch($1, said_aug_branch(0x142, 0x14a, SAID_BRANCH_NULL, $2))) }
+		| ne_subexpression nested_before_first more_after
 			{ $$ = said_top_branch(said_attach_branch($1, said_attach_branch($2, $3))) }
-		| Subexpression NestedBeforeA NestedBeforeB MoreAfter
+		| ne_subexpression nested_before_first nested_before_second more_after
 			{ $$ = said_top_branch(said_attach_branch($1, said_attach_branch($2, said_attach_branch($3, $4)))) }
 		;
 
 
-Subexpression:    /* empty */
+subexpression:    /* empty */
 			{ $$ = SAID_BRANCH_NULL }
-		| Expression YY_LT Subexpression
-			{ $$ = said_aug_branch(0x144, 0x14f, $1, $3) }
-		| Expression YY_LT Subexpression YY_LT Subexpression
-			{ $$ = said_aug_branch(0x141, 0x144, $1, said_aug_branch(0x144, 0x14f, $3, $5)) }
-		| Expression YY_BRACKETSO YY_LT Subexpression YY_BRACKETSC
-			{ $$ = said_aug_branch(0x152, 0x144, $1, $4) }
-		| Expression
+		| ne_subexpression
 			{ $$ = $1 }
 		;
 
-Expression:	  MainExp
+
+ne_subexpression:
+		  expression YY_LT subexpression
+			{ $$ = said_aug_branch(0x144, 0x14f, $1, $3) }
+		| expression YY_LT subexpression YY_LT subexpression
+			{ $$ = said_aug_branch(0x141, 0x144, $1, said_aug_branch(0x144, 0x14f, $3, $5)) }
+		| expression YY_BRACKETSO YY_LT subexpression YY_BRACKETSC
+			{ $$ = said_aug_branch(0x152, 0x144, $1, $4) }
+		| expression
 			{ $$ = $1 }
-		| MainExp YY_COMMA Expression
+		;
+
+expression:	  main_expression
+			{ $$ = $1 }
+		| main_expression YY_COMMA expression
 			{ $$ = said_attach_branch($1, $3) }
 		;
 
-MainExp:	  YY_BRACKETSO Subexpression YY_BRACKETSC
+main_expression:  YY_BRACKETSO subexpression YY_BRACKETSC
 			{ $$ = said_aug_branch(0x152, 0x14c, $2, SAID_BRANCH_NULL) }
-		| YY_PARENO Subexpression YY_PARENC
+		| YY_PARENO subexpression YY_PARENC
 			{ $$ = said_aug_branch(0x141, 0x14c, $2, SAID_BRANCH_NULL) }
 		| WGROUP
 			{ $$ = said_wgroup_branch($1) }
 		;
 
-BeforeExpA:	  /* empty */
+before_exp:	  /* empty */
 			{ $$ = SAID_BRANCH_NULL }
-		| YY_SLASH Subexpression
+		| YY_SLASH subexpression
 			{ $$ = $2 }
 		;
 
-BeforeExpB:	YY_SLASH Subexpression
+ne_before_exp:	YY_SLASH subexpression
 			{ $$ = $2 }
 		;
 
-NestedBeforeA:	  BeforeExpA
+nested_before_first:	  ne_before_exp
 			{ $$ = said_aug_branch(0x142, 0x14a, $1, SAID_BRANCH_NULL) }
-		| YY_BRACKETSO BeforeExpA YY_BRACKETSC
+		| YY_BRACKETSO before_exp YY_BRACKETSC
 			{ $$ = said_aug_branch(0x152, 0x142, $2, SAID_BRANCH_NULL) }
 		;
 
-NestedBeforeB:	  BeforeExpB
+nested_before_second:	  ne_before_exp
 			{ $$ = said_aug_branch(0x143, 0x14a, $1, SAID_BRANCH_NULL) }
-		| YY_BRACKETSO BeforeExpB YY_BRACKETSC
+		| YY_BRACKETSO before_exp YY_BRACKETSC
 			{ $$ = said_aug_branch(0x152, 0x143, $2, SAID_BRANCH_NULL) }
 		;
 
-MoreAfter:	  /* empty */
+more_after:	  /* empty */
 			{ $$ = SAID_BRANCH_NULL }
 		| YY_GT
 			{ $$ = said_aug_branch(0x14b, SAID_LONG(SAID_GT), SAID_BRANCH_NULL, SAID_BRANCH_NULL) }
