@@ -66,8 +66,6 @@ sigalrm_init(void (*callback)(void *), void *data)
 	sig_callback = callback;
 	sig_callback_data = data;
 
-	signal(SIGALRM, timer_handler);
-
 	return SFX_OK;
 }
 
@@ -81,7 +79,9 @@ sigalrm_start()
 	itimer.it_value.tv_usec = 1000000/60;
 	itimer.it_interval = itimer.it_value;
 
+	signal(SIGALRM, timer_handler); /* Re-instate timer handler, to make sure */
 	setitimer(ITIMER_REAL, &itimer, NULL);
+
 	return SFX_OK;
 };
 

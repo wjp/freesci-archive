@@ -1,5 +1,8 @@
 2003-01-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sfx/timer/sigalrm.c (sigalrm_start): Re-install timer handler
+	to make sure we can recover from libreadline destroying it
+
 	* src/sfx/player/realtime.c: Stop the timer when pausing
 
 	* src/include/sfx_timer.h: Separated timer initialization and
