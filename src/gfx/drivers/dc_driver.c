@@ -1010,8 +1010,9 @@ dc_exit(struct _gfx_driver *drv)
 		sciprintf("Freeing semaphores\n");
 		sem_destroy(S->sem_event);
 		sem_destroy(S->sem_pointer);
+		sci_free(S);
+		S = NULL;
 	}
-	sci_free(S);
 }
 
 	/*** Drawing operations ***/

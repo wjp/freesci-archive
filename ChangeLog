@@ -1,5 +1,11 @@
 2005-01-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/gfx/drivers/gp32_driver.c (gp32_exit),
+	src/gfx/drivers/dc_driver.c (dc_exit): Fixed bug which caused the
+	state struct to be freed and not re-allocated on second init.
+
+2005-01-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/gfx/drivers/gp32_driver.c: Changed button bindings.
 	* README.GP32: Updated.
 
