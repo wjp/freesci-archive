@@ -47,6 +47,10 @@
 #  define PATH_MAX 255
 #endif
 
+#ifdef __MORPHOS__
+#  define PATH_MAX 255
+#endif
+
 config_entry_t *conf;
 int cur_section=0; /* Size-1 and current section in conf */
 char *exported_conf_path; /* Path which the config file was found in */
@@ -550,7 +554,9 @@ config_init(config_entry_t **_conf, char *conffile)
 
 			conf_path = sci_malloc(strlen(homedir) + 3 + strlen(FREESCI_GAMEDIR) + strlen(FREESCI_CONFFILE));
 			strcpy(conf_path, homedir);
+#ifndef __MORPHOS__
 			strcat(conf_path, "/");
+#endif
 			strcat(conf_path, FREESCI_GAMEDIR);
 
 			exported_conf_path = sci_strdup(conf_path);

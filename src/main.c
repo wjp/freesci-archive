@@ -90,6 +90,10 @@
 #  define PATH_MAX 255
 #endif
 
+#ifdef __MORPHOS__
+#  define PATH_MAX 255
+#endif
+
 #ifdef _MSC_VER
 #  define MSVC_FUNCTYPECAST_KLUDGE (void *)
 #else

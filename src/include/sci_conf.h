@@ -43,6 +43,8 @@
 
 #ifdef _WIN32
 #  define SCI_DEFAULT_MODULE_PATH "."
+#elif defined(__MORPHOS__)
+#  define SCI_DEFAULT_MODULE_PATH "PROGDIR:Modules"
 #else
 #  define SCI_DEFAULT_MODULE_PATH "/usr/local/lib/freesci/:/usr/lib/freesci/"
 #endif

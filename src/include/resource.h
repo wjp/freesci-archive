@@ -168,6 +168,14 @@
 #  define G_DIR_SEPARATOR_S "/"
 #endif
 
+#if defined(__MORPHOS__)
+#  define G_DIR_CURRENT_S ""
+#  define G_DIR_PARENT_S "/"
+#else
+#  define G_DIR_CURRENT_S "."
+#  define G_DIR_PARENT_S ".."
+#endif
+
 #ifndef MIN
 #  define MIN(a, b)  (((a) < (b)) ? (a) : (b))
 #endif

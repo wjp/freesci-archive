@@ -35,8 +35,11 @@
 #  include <windows.h>
 #  include <sci_win32.h>
 #endif
-#if !defined(HAVE_FNMATCH) && !defined(_MSC_VER)
+#if !defined(HAVE_FNMATCH) && !defined(_MSC_VER) && !defined(__MORPHOS__)
 #  include <beos/fnmatch.h>
+#endif
+#if defined(__MORPHOS__)
+#  include <sys/stat.h>
 #endif
 
 #ifdef _DREAMCAST
@@ -439,7 +442,7 @@ sci_find_first(sci_dir_t *dir, char *mask)
 	if (dir->dir)
 		closedir(dir->dir);
 
-	if (!(dir->dir = opendir("."))) {
+	if (!(dir->dir = opendir(G_DIR_CURRENT_S))) {
 		sciprintf("%s, L%d: opendir(\".\") failed!\n", __FILE__, __LINE__);
 		return NULL;
 	}
@@ -546,6 +549,8 @@ sci_get_homedir()
 	return getenv("HOME");
 #elif defined (_DREAMCAST)
 	return "/ram";
+#elif defined(__MORPHOS__)
+	return "PROGDIR:";
 #else
 #  error Please add a $HOME policy for your platform!
 #endif

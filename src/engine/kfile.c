@@ -35,6 +35,9 @@
 #  include <windows.h>
 #elif defined (_DREAMCAST)
 #  define PATH_MAX 255
+#elif defined (__MORPHOS__)
+#  define PATH_MAX 255
+#  include <sys/stat.h>
 #else
 #  include <unistd.h>
 #  include <dirent.h>
@@ -620,7 +623,7 @@ _k_find_savegame_by_name(char *game_id_file, char *name)
 				fclose(idfile);
 			}
 
-			chdir("..");
+			chdir(G_DIR_PARENT_S);
 		}
 		free(buf);
 	}
@@ -658,7 +661,7 @@ test_savegame(state_t *s, char *savegame_id, char *savegame_name, int savegame_n
 		} else if (_k_check_file(game_id_file, 1))
 			retval = 0;
 
-		chdir ("..");
+		chdir (G_DIR_PARENT_S);
 	}
 	free(game_id_file);
 	return retval;
@@ -752,7 +755,7 @@ update_savegame_indices(char *gfname)
 				_savegame_indices[_savegame_indices_nr++].timestamp = get_file_mtime(fd);
 				close(fd);
 			}
-			chdir("..");
+			chdir(G_DIR_PARENT_S);
 		}
 
 		free(dirname);
@@ -814,7 +817,7 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 					fclose(idfile);
 				}
 			}
-			chdir("..");
+			chdir(G_DIR_PARENT_S);
 		}
 		free(savedir_name);
 	}
@@ -903,7 +906,7 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			s->acc = 0;
 		}
 
-		chdir ("..");
+		chdir (G_DIR_PARENT_S);
 	}
 	free(game_id_file_name);
 	_chdir_restoredir(workdir);
@@ -1017,7 +1020,7 @@ first_file(state_t *s, char *dir, char *mask, heap_ptr buffer)
 		return;
 	}
 
-	if (strcmp(dir, ".")) {
+	if (strcmp(dir, G_DIR_CURRENT_S)) {
 		sciprintf("%s L%d: Non-local first_file: Not implemented yet\n",
 			  __FILE__, __LINE__);
 		s->acc = 0;
@@ -1120,7 +1123,7 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #ifndef _WIN32
 	if (strcmp(mask, "*.*")==0) strcpy(mask, "*"); /* For UNIX */
 #endif
-	first_file(s, ".", mask, buf);
+	first_file(s, G_DIR_CURRENT_S, mask, buf);
 
 	break;
     }

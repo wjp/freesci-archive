@@ -58,6 +58,10 @@ extern midiout_driver_t midiout_driver_ossseq;
 extern midiout_driver_t midiout_driver_ossopl3;
 #endif
 
+#ifdef __MORPHOS__
+extern midiout_driver_t midiout_driver_morphos;
+#endif
+
 #ifdef _WIN32
 extern midiout_driver_t midiout_driver_win32mci;
 extern midiout_driver_t midiout_driver_win32mci_stream;

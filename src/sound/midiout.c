@@ -26,7 +26,7 @@ midiout_driver_t *midiout_drivers[] = {
 	&midiout_driver_ossseq,
 	&midiout_driver_ossopl3,
 #endif /* HAVE_SYS_SOUNDCARD_H */
-#if !defined(_DOS) && !defined(_WIN32) && !defined(_DREAMCAST)
+#if !defined(_DOS) && !defined(_WIN32) && !defined(_DREAMCAST) && !defined(__MORPHOS__)
 	&midiout_driver_unixraw,
 #endif
 #ifdef HAVE_ALSA
@@ -34,6 +34,9 @@ midiout_driver_t *midiout_drivers[] = {
 #endif
 #ifdef HAVE_DMEDIA_MIDI_H
 	&midiout_driver_sgimd,
+#endif
+#ifdef __MORPHOS__
+	&midiout_driver_morphos,
 #endif
 #ifdef _WIN32
 	&midiout_driver_win32mci,

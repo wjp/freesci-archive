@@ -10,7 +10,8 @@ libscisound_a_SOURCES = song_iterator.c oldmidi.c sound.c sfx_save.c	\
 		soundserver.c midi_adlib.c midi_adlibemu.c fmopl.c	\
 		polled_ss_unix.c polled_ss_win32.c midiout_win32mci.c	\
 		polled_ss.c pcmout.c pcmout_sdl.c pcmout_alsa.c		\
-		midiout_irixmd.c pcmout_al.c pcmout_oss.c fmopl.h
+		midiout_irixmd.c pcmout_al.c pcmout_oss.c fmopl.h	\
+		midiout_morphos.c
 sfx_save.c: sfx_save.cfsml
 	cat sfx_save.cfsml | ../engine/cfsml.pl @CFSML_FLAGS@ -f sfx_save.cfsml > sfx_save.c
 

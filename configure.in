@@ -300,6 +300,16 @@ AC_SUBST(RPM_VERSION)
 
 SDL_CFLAGS="$CFLAGS $SDL_CFLAGS"
 
+case $target in
+        *morphos*)
+		MORPHOS_LIBS="morphos/libmorphos.a"
+		AC_SUBST(MORPHOS_LIBS)
+		morphos=yes
+	;;
+esac
+
+AM_CONDITIONAL(MORPHOS, test x$morphos = xyes)
+
 AC_CONFIG_FILES([Makefile    \
 	debian/Makefile \
 	desktop/Makefile \
@@ -319,6 +329,7 @@ AC_CONFIG_FILES([Makefile    \
 	src/tools/Makefile \
 	src/win32/Makefile \
 	src/sound/Makefile \
+	src/morphos/Makefile \
 	freesci.spec])
 
 AC_OUTPUT

@@ -24,6 +24,12 @@
 #include <stdlib.h>
 #ifndef _WIN32
 #include <unistd.h>
+#else
+#ifndef YY_ALWAYS_INTERACTIVE
+#ifndef YY_NEVER_INTERACTIVE
+extern int isatty YY_PROTO(( int ));
+#endif
+#endif
 #endif
 
 /* Use prototypes in function declarations. */
@@ -627,6 +633,10 @@ char *yytext;
 #  define PATH_MAX 255
 #endif
 
+#ifdef __MORPHOS__
+#  define PATH_MAX 255
+#endif
+
 config_entry_t *conf;
 int cur_section=0; /* Size-1 and current section in conf */
 char *exported_conf_path; /* Path which the config file was found in */
@@ -841,7 +851,7 @@ parse_option(char *option, int optlen, char *value);
 char *
 crop_value(char *yytext);
 
-#line 845 "config.c"
+#line 855 "config.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -1003,10 +1013,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 275 "config.l"
+#line 279 "config.l"
 
 
-#line 1010 "config.c"
+#line 1020 "config.c"
 
 	if ( yy_init )
 		{
@@ -1091,7 +1101,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 277 "config.l"
+#line 281 "config.l"
 {
 	char *cleanup;
 	++yytext; /* Get over opening bracket */
@@ -1138,7 +1148,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 322 "config.l"
+#line 326 "config.l"
 {
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1151,7 +1161,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 332 "config.l"
+#line 336 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1164,7 +1174,7 @@ if (cur_section) {
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 342 "config.l"
+#line 346 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1176,7 +1186,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 352 "config.l"
+#line 356 "config.l"
 {
 /* driver parameters */
         char *subsys_name = yytext;
@@ -1208,11 +1218,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 382 "config.l"
+#line 386 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
-	char *foo;
 	int option_str_len;
 
 	while (isalnum(*value_str) || *value_str == '_')
@@ -1233,16 +1242,16 @@ case 7:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 403 "config.l"
+#line 406 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 405 "config.l"
+#line 408 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 407 "config.l"
+#line 410 "config.l"
 {
         yy_delete_buffer( YY_CURRENT_BUFFER );
         yyterminate();
@@ -1250,15 +1259,15 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 412 "config.l"
+#line 415 "config.l"
 printf("Unrecognized option: '%s'\n", yytext);
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 414 "config.l"
+#line 417 "config.l"
 ECHO;
 	YY_BREAK
-#line 1262 "config.c"
+#line 1271 "config.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2146,7 +2155,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 414 "config.l"
+#line 417 "config.l"
 
 
 int
@@ -2287,7 +2296,9 @@ config_init(config_entry_t **_conf, char *conffile)
 
 			conf_path = sci_malloc(strlen(homedir) + 3 + strlen(FREESCI_GAMEDIR) + strlen(FREESCI_CONFFILE));
 			strcpy(conf_path, homedir);
+#ifndef __MORPHOS__
 			strcat(conf_path, "/");
+#endif
 			strcat(conf_path, FREESCI_GAMEDIR);
 
 			exported_conf_path = sci_strdup(conf_path);
