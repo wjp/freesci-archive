@@ -135,7 +135,7 @@ void drawText0(picture_t dest, port_t *port, int x, int y, char *text, char *fon
       guint16 quux = getInt16((guint8 *) font+6+(foo<<1));
 
       guint8 *foopos = font + quux;
-      int pos = x+ (y*320);
+      int pos = x+ (y*SCI_SCREEN_WIDTH);
 
       xl = *foopos;
       yl = *(foopos+1);
@@ -149,7 +149,7 @@ void drawText0(picture_t dest, port_t *port, int x, int y, char *text, char *fon
 	    pos++;
 	    bitmask <<= 1;
 	  }
-	  pos = poshome + 320;
+	  pos = poshome + SCI_SCREEN_WIDTH;
 	}
       else { /* 16 bit */
 	for (yc = 0; yc < yl; yc++) {
@@ -162,11 +162,203 @@ void drawText0(picture_t dest, port_t *port, int x, int y, char *text, char *fon
 	    bitmask <<= 1;
 	    pos++;
 	  }
-	  pos = poshome + 320;
+	  pos = poshome + SCI_SCREEN_WIDTH;
 	}
       }
       x += xl;
     }
   }
+}
+
+
+int
+_text_draw_line(picture_t dest, int x, int y, char *text, int textlen, char *font, int color)
+     /* Draws one line of text and returns the maximum height encountered */
+{
+  int line_height = 0;
+  char foo;
+
+  while ((foo= *(text++)) && (textlen--))
+    if (foo < maxchar) {
+      short xc;
+      short yc;
+      unsigned char xl, yl;
+      guint16 quux = getInt16((guint8 *) font+6+(foo<<1));
+
+      guint8 *foopos = font + quux;
+      int pos = x+ (y*SCI_SCREEN_WIDTH);
+
+      xl = *foopos;
+      yl = *(foopos+1);
+
+      if (yl > line_height)
+	line_height = yl;
+
+      foopos += 2;
+      if (xl < 9) /* 8 bit */
+	for (yc = 0; yc < yl; yc++) {
+	  int poshome = pos;
+	  guint8 bitmask = *(foopos++);
+	  for (xc = 0; xc < xl; xc++) {
+	    if (bitmask & 0x80) dest[0][pos] = color;
+	    pos++;
+	    bitmask <<= 1;
+	  }
+	  pos = poshome + SCI_SCREEN_WIDTH;
+	}
+      else { /* 16 bit */
+	for (yc = 0; yc < yl; yc++) {
+	  int poshome = pos;
+	  guint16 bitmask = *(foopos+1) | *foopos << 8;
+	  /* interestingly, this bitmask is big-endian */
+	  foopos += 2;
+	  for (xc = 0; xc < xl; xc++) {
+	    if (bitmask & 0x8000) dest[0][pos] = color;
+	    bitmask <<= 1;
+	    pos++;
+	  }
+	  pos = poshome + SCI_SCREEN_WIDTH;
+	}
+      }
+      x += xl;
+    }
+
+  return line_height;
+}
+
+int
+_text_draw_gray_line(picture_t dest, int x, int y, char *text, int textlen, char *font, int c1, int c2)
+     /* Draws one line of text and returns the maximum height encountered */
+{
+  int line_height = 0;
+  char foo;
+
+  while ((foo= *(text++)) && (textlen--))
+    if (foo < maxchar) {
+      short xc;
+      short yc;
+      unsigned char xl, yl;
+      guint16 quux = getInt16((guint8 *) font+6+(foo<<1));
+
+      guint8 *foopos = font + quux;
+      int pos = x+ (y*SCI_SCREEN_WIDTH);
+
+      xl = *foopos;
+      yl = *(foopos+1);
+
+      if (yl > line_height)
+	line_height = yl;
+
+      foopos += 2;
+      if (xl < 9) /* 8 bit */
+	for (yc = 0; yc < yl; yc++) {
+	  int poshome = pos;
+	  guint8 bitmask = *(foopos++);
+	  for (xc = 0; xc < xl; xc++) {
+	    if (bitmask & 0x80) dest[0][pos] = (pos &1)? c1:c2;
+	    pos++;
+	    bitmask <<= 1;
+	  }
+	  pos = poshome + SCI_SCREEN_WIDTH;
+	}
+      else { /* 16 bit */
+	for (yc = 0; yc < yl; yc++) {
+	  int poshome = pos;
+	  guint16 bitmask = *(foopos+1) | *foopos << 8;
+	  /* interestingly, this bitmask is big-endian */
+	  foopos += 2;
+	  for (xc = 0; xc < xl; xc++) {
+	    if (bitmask & 0x8000) dest[0][pos] = (pos & 1)? c1:c2;
+	    bitmask <<= 1;
+	    pos++;
+	  }
+	  pos = poshome + SCI_SCREEN_WIDTH;
+	}
+      }
+      x += xl;
+    }
+
+  return line_height;
+}
+
+void
+text_draw(picture_t dest, port_t *port, char *text, int maxwidth)
+{
+  int x = port->x + port->xmin;
+  int y = port->y + port->ymin;
+  unsigned char foo;
+  short xhome = x;
+  int width = 0;
+  char* last_text_base = text;
+  int last_text_count = 0;
+  int last_breakpoint = 0;
+  int last_breakpoint_width = 0;
+  int line_height = getInt16(port->font + FONT_FONTSIZE_OFFSET);
+  if (maxwidth < 0) maxwidth = 32767; /* Negative means unlimited; 32767 does, too. */
+
+  do {
+    foo = *text++;
+
+    if (foo < maxchar) {
+      guint16 quux = getInt16((guint8 *) port->font+6+(foo<<1));
+      guint8 *foopos = port->font + quux;
+
+      int xl = *foopos; /* Get width */
+
+      if ((width > maxwidth) || (foo == 10) || (foo == 0)) {
+
+
+	if ((foo == 10) || (foo == 0)) { /* linefeed or end of text */
+
+	  last_breakpoint = last_text_count;
+	  last_breakpoint_width = width;
+
+	} else {
+	  if (!last_breakpoint) /* No blank to break at? */
+	    last_breakpoint = last_text_count;
+
+	  if (!last_breakpoint) { /* Uh-oh... */
+	    sciprintf("text_draw(): MaxWidth %d is too small for '%s'\n", maxwidth, last_text_base);
+	    return;
+	  }
+	}
+
+	if ((last_text_count) && (foo != 10)) /* Unless we only have a single char that's too wide */
+	  text--; /* unget char */
+	else last_text_count++;
+
+	if (port->alignment == ALIGN_TEXT_RIGHT)
+	  x += maxwidth - last_breakpoint_width;
+	else if (port->alignment == ALIGN_TEXT_CENTER)
+	  x += ((maxwidth - last_breakpoint_width) / 2);
+
+
+	if (port->gray_text)
+	  _text_draw_gray_line(dest, x, y, last_text_base, last_breakpoint,
+					     port->font, port->color, port->bgcolor);
+		  else
+	  _text_draw_line(dest, x, y, last_text_base, last_breakpoint,
+					port->font, port->color);
+
+	y += line_height;
+
+	text = last_text_base += last_breakpoint + 1;
+
+	last_breakpoint = width = last_text_count = 0;
+	x = xhome;
+
+      } else {  /* No reason to draw */
+
+	if (foo == ' ') {
+	  last_breakpoint = last_text_count;
+	  last_breakpoint_width = width;
+	}
+
+	width += xl;
+
+	last_text_count++;
+      }
+    }
+  } while (foo);
 }
 

@@ -269,4 +269,31 @@ script_map_kernel(struct _state *s);
 ** This function reads from and writes to s. It is called by script_run().
 */
 
+
+int
+kalloc(struct _state *s, int space);
+/* Allocates "kernel" memory and returns a handle suitable to be passed on to SCI scripts
+** Parameters: (state_t *) s: Pointer to the state_t to operate on
+**             (int) space: The space to allocate
+** Returns   : (int) The handle
+*/
+
+
+byte *
+kmem(struct _state *s, int handle);
+/* Returns a pointer to "kernel" memory based on the handle
+** Parameters: (state_t *) s: Pointer to the state_t to operate on
+**             (int) handle: The handle to use
+** Returns   : (byte *) A pointer to the allocated memory
+*/
+
+
+int
+kfree(struct _state *s, int handle);
+/* Frees all "kernel" memory associated with a handle
+** Parameters: (state_t *) s: Pointer to the state_t to operate on
+**             (handle) space: The space to allocate
+** Returns   : (int) 0 on success, 1 otherwise
+*/
+
 #endif /* !_SCI_VM_H */

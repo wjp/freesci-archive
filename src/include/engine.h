@@ -92,8 +92,6 @@ typedef struct _state
   int last_pointer_size_x, last_pointer_size_y; /* Mouse pointer size as last used */
   mouse_pointer_t *mouse_pointer; /* The current mouse pointer, or NULL if disabled */
 
-  byte *title_font; /* Pointer to the font data used for window headers */
-
   int view_port; /* The currently active view port */
   port_t *ports[MAX_PORTS]; /* A list of all available ports */
 
@@ -103,10 +101,16 @@ typedef struct _state
 
   picture_t bgpic; /* The background picture */
   picture_t pic; /* The foreground picture */
+  int pic_animate; /* The animation used by Animate() to display the picture */
+
+  int animation_delay; /* A delay factor for pic opening animations. Defaults to 1000. */
 
   hunk_block_t hunk[MAX_HUNK_BLOCKS]; /* Hunk memory */
 
   menubar_t *menubar; /* The menu bar */
+
+  int priority_first; /* The line where priority zone 0 ends */
+  int priority_last; /* The line where the highest priority zone starts */
 
   /* VM Information */
 

@@ -1,3 +1,12 @@
+1999-08-05  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/graphics/engine_graphics.c: Added a new file for some fancy
+	thinge like backupping (up-backing?) and restoring parts of the screen
+	maps and text rendering.
+
+	* src/core/kernel.c (kAnimate): Added Animate(), Display(), partial
+	Graph().
+
 1999-08-03  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/graphics/graphics.c (drawView0): Fixed a bug that would over-

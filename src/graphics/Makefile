@@ -78,7 +78,7 @@ ac_png_libraries = -L/usr/lib -lpng
 INCLUDES = -I$(top_srcdir)/src/include  -I/usr/local/include -I/usr/local/include
 LDADD = -lefence -lglib -lscicore $(LDADD_ALL)
 lib_LIBRARIES = libscigraphics.a
-libscigraphics_a_SOURCES = graphics.c font.c mcursor.c graphics_ggi.c graphics_png.c input.c input_ggi.c window.c menubar.c
+libscigraphics_a_SOURCES = graphics.c font.c mcursor.c graphics_ggi.c graphics_png.c input.c input_ggi.c window.c menubar.c engine_graphics.c
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../config.h
 CONFIG_CLEAN_FILES = 
@@ -91,7 +91,7 @@ LDFLAGS =  -L/usr/local/lib -lglib
 LIBS = 
 libscigraphics_a_LIBADD = 
 libscigraphics_a_OBJECTS =  graphics.o font.o mcursor.o graphics_ggi.o \
-graphics_png.o input.o input_ggi.o window.o menubar.o
+graphics_png.o input.o input_ggi.o window.o menubar.o engine_graphics.o
 AR = ar
 CFLAGS = -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -104,9 +104,9 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = gtar
 GZIP_ENV = --best
-DEP_FILES =  .deps/font.P .deps/graphics.P .deps/graphics_ggi.P \
-.deps/graphics_png.P .deps/input.P .deps/input_ggi.P .deps/mcursor.P \
-.deps/menubar.P .deps/window.P
+DEP_FILES =  .deps/engine_graphics.P .deps/font.P .deps/graphics.P \
+.deps/graphics_ggi.P .deps/graphics_png.P .deps/input.P \
+.deps/input_ggi.P .deps/mcursor.P .deps/menubar.P .deps/window.P
 SOURCES = $(libscigraphics_a_SOURCES)
 OBJECTS = $(libscigraphics_a_OBJECTS)
 

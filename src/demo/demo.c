@@ -68,7 +68,7 @@ int main(int argc, char** argv)
   ggi_visual_t bigvis;
   int noobj = 0;
   resource_t *resource, *font;
-  port_t clipframe = {150, 120, 180, 200};
+  port_t clipframe = {0, 0, 319, 199};
   port_t winframe = {22, 110, 56, 209};
   int boxcol = 15, boxpri = 12, boxflags = 0;
 
@@ -211,8 +211,8 @@ int main(int argc, char** argv)
 
       resource = findResource(sci_view, view_nr); /* Hero */
       if (resource)
-	drawView0(pic, &winframe,
-		  100-(sci_pointer_x/2), -3, 13, view_loop, view_cell, resource->data);
+	drawView0(pic, &clipframe,
+		  200-(sci_pointer_x/2), 45, 60, view_loop, view_cell, resource->data);
 
       if (pointernr != -1) {
 	resource = findResource(sci_cursor, pointernr);

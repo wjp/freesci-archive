@@ -56,19 +56,19 @@ typedef guint8** picture_t;
 typedef struct {
   gint16 ymin, xmin; /* Upper left corner */
   gint16 ymax, xmax; /* Lower right corner */
-} port_t;
-
-
-typedef struct {
-  gint16 ymin, xmin; /* Upper left corner */
-  gint16 ymax, xmax; /* Lower right corner */
 
   heap_ptr title; /* Window title (if applicable) */
 
   gint16 flags; /* Window flags. See below. */
+  int alignment; /* ALIGN_TEXT_* to determine how text should be displayed */
 
+  int x,y; /* Drawing coordinates */
   gint16 priority, bgcolor, color; /* Priority/color values as usual */
-} window_t; /* Can be typecast safely to become a port_t */
+
+  byte *font; /* Font data */
+  byte gray_text; /* Set to 1 to "gray out" text */
+
+} port_t;
 
 
 typedef struct {
@@ -90,7 +90,7 @@ typedef struct {
 /* Callback command to redraw the entire screen */
 
 #define GRAPHICS_CALLBACK_REDRAW_BOX 1
-/* Callback command to redraw the specified part of the screen and the mouse pointer */
+/* Callback command to redraw the specified part of the screen */
 
 #define GRAPHICS_CALLBACK_REDRAW_POINTER 2
 /* Callback command to update the mouse pointer */
@@ -107,12 +107,14 @@ typedef struct {
 /* Dither with 256 colors */
 
 
-#define SCI_FILL_NORMAL 1
-/* Fill with the selected color */
-#define SCI_FILL_BLACK 0
-/* Fill with black */
+/* Text justifications */
+#define ALIGN_TEXT_RIGHT -1
+#define ALIGN_TEXT_LEFT 0
+#define ALIGN_TEXT_CENTER 1
 
 
+#define FONT_FONTSIZE_OFFSET 4
+/* Offset of the font size information in the font resource */
 
 /* The following flags are applicable to windows in SCI0: */
 #define WINDOW_FLAG_TRANSPARENT 0x01
@@ -314,6 +316,16 @@ void drawTextCentered0(picture_t dest, port_t *port, int x, int y, char *text, c
 */
 
 
+void
+text_draw(picture_t dest, port_t *port, char *text, int maxwidth);
+/* Draws text according to the parameters specified.
+** Parameters: (picture_t) dest: The picture_t to draw to
+**             (port_t *) port: Pointer to the port containing color/font/alignment infos
+**             (char *) text: The text to draw
+**             (int) maxwidth: Maximum pixel width per line; or <0 for "unlimited"
+** Returns   : (void)
+*/
+
 void drawMouseCursor(picture_t target, int x, int y, guint8 *cursor);
 /* DEPRECATED
 ** Draws a mouse cursor
@@ -354,5 +366,64 @@ close_visual_ggi(struct _state *s);
 ** Parameter: (state_t *) s: Pointer to the affected state_t
 ** Returns  : (void)
 */
+
+/***************************************************************/
+/* Implementation-independant graphics operations for state_ts */
+/***************************************************************/
+
+void
+graph_clear_box(struct _state *s, int x, int y, int xl, int yl, int color);
+/* Fills the specified box with the specified color and updates the screen
+** Parameters: (state_t *) s: The state_t to operate on
+**             (int) x,y: Upper left hand coordinates of the affected box
+**             (int) xl,yl: Size of the affected box
+**             (int) color: The color to use
+** Returns   : (void)
+** This function invokes the callback command for the affected box ONLY.
+** The mouse pointer must be re-drawn separately.
+** No clipping is performed.
+*/
+
+void
+graph_update_box(struct _state *s, int x, int y, int xl, int yl);
+/* Copies the specified box from bgpic to pic and updates the screen
+** Parameters: (state_t *) s: The state_t to operate on
+**             (int) x,y: Upper left hand coordinates of the affected box
+**             (int) xl,yl: Size of the affected box
+** Returns   : (void)
+** This function invokes the callback command for the affected box ONLY.
+** The mouse pointer must be re-drawn separately
+** No clipping is performed.
+*/
+
+int
+graph_save_box(struct _state *s, int x, int y, int xl, int yl, int layers);
+/* Saves a box in graphics space (s->pic) into memory
+** Parameters: (state_t *) s: The state_t to operate on
+**             (int) x,y : The upper left hand coordinates of the box to save
+**             (int) xl, yl : The width and height of the box
+**             (int) layers: Bit 0: Store visual map?
+**                           Bit 1: Store priority map?
+**                           Bit 2: Store special map?
+** Returns   : (int) A "kernel memory" handle to be used with graph_restore_box
+*/
+
+void
+graph_restore_box(struct _state *s, int handle);
+/* Restores a box in graphics space associated with the specified handle and updates the screen.
+** Parameters: (state_t *) s: The state_t to operate on
+**             (int) handle: The handle of the box to restore
+** Returns     (void)
+*/
+
+void
+graph_fill_port(struct _state *s, port_t *port, int color);
+/* Fills the port with color, unless color < 0
+** Parameters: (state_t *) s: The state to operate on
+**             (port_t *) port: The port to use
+**             (int) color: The color to draw with
+** Returns   : (void)
+*/
+
 
 #endif

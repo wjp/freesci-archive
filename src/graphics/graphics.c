@@ -358,6 +358,7 @@ view0_cel_width(int loop, int cel, byte *data)
 {
   int loops_nr = getInt16(data);
   int lookup, cels_nr;
+  int addr;
 
   if ((loop >= loops_nr) || (loop < 0))
     return -1;
@@ -370,7 +371,9 @@ view0_cel_width(int loop, int cel, byte *data)
 
   lookup += 4 + (cel << 1);
 
-  return getInt16(data + lookup);
+  addr = getInt16(data + lookup);
+
+  return getInt16(data + addr);
 }
 
 
@@ -379,6 +382,7 @@ view0_cel_height(int loop, int cel, byte *data)
 {
   int loops_nr = getInt16(data);
   int lookup, cels_nr;
+  int addr;
 
   if ((loop >= loops_nr) || (loop < 0))
     return -1;
@@ -389,9 +393,11 @@ view0_cel_height(int loop, int cel, byte *data)
   if ((cel < 0) || (cel >= cels_nr))
     return -1;
 
-  lookup += 6 + (cel << 1);
+  lookup += 4 + (cel << 1);
 
-  return getInt16(data + lookup);
+  addr = getInt16(data + lookup);
+
+  return getInt16(data + addr + 2);
 }
 
 
@@ -435,9 +441,10 @@ int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
     dataptr = data+getInt16(lookup + (cell<<1));
     maxx = getInt16(dataptr);
     maxy = getInt16(dataptr+2);
+    fprintf(stderr,"Draw size= w=%d, h=%d\n", maxx, maxy);
 
-    xp -= maxx/2;
-    yp -= maxy; /* Coordinates are relative to the lower center */
+    /*    xp -= maxx/2;
+	  yp -= maxy;*/ /* Coordinates are relative to the lower center */
 
     minx = x = (xp < 0) ? 0 : xp;
     y = yp;

@@ -187,7 +187,6 @@ void closeVisual(ggi_visual_t visual)
   /* Nothing more ATM... */
 }
 
-
 void
 graphics_draw_region_ggi(ggi_visual_t vis, byte *data,
 			 int x, int y, int xl, int yl,
@@ -205,7 +204,7 @@ graphics_draw_region_ggi(ggi_visual_t vis, byte *data,
 
   if (mode.visible.x >= 640) { /* double sized? */
     /* FIXME */
-    /*    graphics_draw_region_ggi_double(vis, data, x, y, xl, yl, pointer, pointer_x, pointer_y); */
+    /*    call graphics_draw_region_ggi_double */
     return;
   }
   
@@ -241,6 +240,10 @@ graphics_draw_region_ggi(ggi_visual_t vis, byte *data,
 
     if ((pointer_end_x >= x) && (pointer_end_x < xend))
       pointer_x_affected = 1; /* Pointer might have to be drawn */
+
+    if ((pointer_x <= x) && (pointer_end_x >= xend))
+      pointer_x_affected = 1;
+
   } /* if (pointer) */
 
   for (yc = y; yc < yend; yc++) {
@@ -281,6 +284,7 @@ graphics_draw_region_ggi(ggi_visual_t vis, byte *data,
 
 }
 
+
 void
 graphics_callback_ggi(struct _state *s, int command, int x, int y, int xl, int yl)
 {
@@ -306,15 +310,8 @@ graphics_callback_ggi(struct _state *s, int command, int x, int y, int xl, int y
 			     s->mouse_pointer, s->pointer_x, s->pointer_y);
     break;
   case GRAPHICS_CALLBACK_REDRAW_BOX:
-    graphics_draw_region_ggi(vis, s->pic[s->pic_layer], /* Draw new pointer */
-			     mp_x, mp_y, mp_size_x, mp_size_y,
-			     s->mouse_pointer, s->pointer_x, s->pointer_y);
     graphics_draw_region_ggi(vis, s->pic[s->pic_layer], /* Draw box */
 			     x, y, xl, yl,
-			     s->mouse_pointer, s->pointer_x, s->pointer_y);
-    graphics_draw_region_ggi(vis, s->pic[s->pic_layer], /* Remove old pointer */
-			     s->last_pointer_x, s->last_pointer_y,
-			     s->last_pointer_size_x, s->last_pointer_size_y,
 			     s->mouse_pointer, s->pointer_x, s->pointer_y);
     break;
   case GRAPHICS_CALLBACK_REDRAW_POINTER:
@@ -326,7 +323,7 @@ graphics_callback_ggi(struct _state *s, int command, int x, int y, int xl, int y
 			     s->last_pointer_size_x, s->last_pointer_size_y,
 			     s->mouse_pointer, s->pointer_x, s->pointer_y);
     break;
-  default:
+default:
     fprintf(stderr,"graphics_callback_ggi: Invalid command %d\n", command);
   }
 

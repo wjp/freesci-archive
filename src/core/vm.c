@@ -20,7 +20,7 @@
  Please contact the maintainer for bug reports or inquiries.
 
  Current Maintainer:
-
+vvv
     Christoph Reichenbach (CJR) [jameson@linuxgames.com]
 
 ***************************************************************************/
@@ -30,6 +30,7 @@
 #include <script.h>
 #include <vm.h>
 #include <engine.h>
+#include <sys/time.h>
 
 
 
@@ -429,7 +430,7 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
     case 0x23: /* calle */
       execute_method(s, opparams[0], opparams[1], sp, objp,
 		     GET_HEAP(sp - opparams[2] - 2) + restadjust, sp - opparams[2] - 2);
-      sp -= (opparams[1] + (restadjust * 2) + 2);
+      sp -= (opparams[2] + (restadjust * 2) + 2);
       restadjust = 0; /* Used up the &rest adjustment */
       break;
 
@@ -943,7 +944,7 @@ script_instantiate(state_t *s, int script_nr)
   } while (objtype != 0);
 
 
-  /* And now a second pass to adjust objects and class pointers */
+  /* And now a second pass to adjust objects and class pointers, and the general pointers */
   pos = handle;
 
   objlength = 0;
@@ -969,9 +970,6 @@ script_instantiate(state_t *s, int script_nr)
 	+ SCRIPT_FUNCTAREAPTR_MAGIC;
       functions_nr = GET_HEAP(functarea - 2); /* Number of functions */
       superclass = OBJ_SUPERCLASS(pos); /* Get superclass */
-      name_addr = GET_HEAP(pos + SCRIPT_NAME_OFFSET);
-
-      PUT_HEAP(pos + SCRIPT_NAME_OFFSET, name_addr + handle); /* Fix name address */
 
       /*      fprintf(stderr,"functs (%x) area @ %x\n", functions_nr, functarea); */
 
@@ -993,6 +991,21 @@ script_instantiate(state_t *s, int script_nr)
       pos += SCRIPT_OBJECT_MAGIC_OFFSET; /* Step back from home to base */
       
     } /* if object or class */
+    else if (objtype == sci_obj_pointers) { /* A relocation table */
+      int pointerc = GET_HEAP(pos);
+      int i;
+
+      for (i = 0; i < pointerc; i++) {
+	int new_address = ((guint16) GET_HEAP(pos + 2 + i*2)) + handle;
+	int old_indexed_pointer;
+	PUT_HEAP(pos + 2 + i*2, new_address); /* Adjust pointers. Not sure if this is needed. */
+	old_indexed_pointer = ((guint16) GET_HEAP(new_address));
+	PUT_HEAP(new_address, old_indexed_pointer + handle);
+	/* Adjust indexed pointer. */
+
+      } /* For all indexed pointers pointers */
+
+    }
 
     pos -= 4; /* Step back on header */
 
@@ -1120,8 +1133,9 @@ script_run(state_t *s)
 
   s->bgpic = allocEmptyPicture();
   s->pic = allocEmptyPicture();
-  s->pic_not_valid = 0; /* Picture is valid (cough) */
+  s->pic_not_valid = 1; /* Picture is invalid */
   s->pic_layer = 0; /* Other values only make sense for debugging */
+  s->animation_delay = 500; /* Used in kAnimate for pic openings */
 
   memset(s->ports, sizeof(s->ports), 0); /* Set to no ports */
 
@@ -1129,16 +1143,21 @@ script_run(state_t *s)
   s->wm_port.xmin = 0; s->wm_port.xmax = 319;
   s->ports[0] = &(s->wm_port); /* Window Manager port */
 
-  s->wm_port.ymin = 00; s->wm_port.ymax = 9;
-  s->wm_port.xmin = 0; s->wm_port.xmax = 319;
+  s->titlebar_port.ymin = 0; s->titlebar_port.ymax = 9;
+  s->titlebar_port.xmin = 0; s->titlebar_port.xmax = 319;
   s->ports[1] = &(s->titlebar_port);
 
-  s->wm_port.ymin = 10; s->wm_port.ymax = 199;
-  s->wm_port.xmin = 0; s->wm_port.xmax = 319;
+  s->picture_port.ymin = 10; s->picture_port.ymax = 199;
+  s->picture_port.xmin = 0; s->picture_port.xmax = 319;
   s->ports[2] = &(s->picture_port); /* Background picture port */
 
   s->view_port = 0; /* Currently using the window manager port */
 
+  s->priority_first = 42; /* Priority zone 0 ends here */
+  s->priority_last = 200; /* The highest priority zone (15) starts here */
+
+
+  srand(time(NULL)); /* Initialize random number generator */
 
   i = 0;
   do {
@@ -1149,8 +1168,7 @@ script_run(state_t *s)
     sciprintf("No text font was found.\n");
     return 1;
   }
-  s->title_font = resource->data; /* Use the highest-numbered font available for window titles */
-
+  s->titlebar_port.font = resource->data;
 
   memset(s->hunk, sizeof(s->hunk), 0); /* Sets hunk to be unused */
   memset(s->clone_list, sizeof(s->clone_list), 0); /* No clones */
