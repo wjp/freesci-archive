@@ -4,37 +4,69 @@ running configure, to aid debugging if configure makes a mistake.
 configure:577: checking for a BSD compatible install
 configure:630: checking whether build environment is sane
 configure:687: checking whether make sets ${MAKE}
-configure:734: checking for working aclocal
-configure:747: checking for working autoconf
-configure:760: checking for working automake
-configure:773: checking for working autoheader
-configure:786: checking for working makeinfo
-configure:803: checking for gcc
-configure:916: checking whether the C compiler (gcc  ) works
-configure:932: gcc -o conftest    conftest.c  1>&5
-configure:958: checking whether the C compiler (gcc  ) is a cross-compiler
-configure:963: checking whether we are using GNU C
-configure:991: checking whether gcc accepts -g
-configure:1025: checking for ranlib
-configure:1053: checking how to run the C preprocessor
-configure:1136: checking for sys/soundcard.h
-configure:1176: checking for obstack.h
-configure:1216: checking for dirent.h
-configure:1256: checking for unistd.h
-configure:1296: checking for readline/readline.h
-configure:1336: checking for readline/history.h
-configure:1376: checking for getopt.h
-configure:1415: checking for pipe
-configure:1415: checking for socketpair
-configure:1415: checking for fork
-configure:1469: checking for ggi
-configure:1556: checking for flex
-configure:1589: checking for flex
-configure:1623: checking for yywrap in -lfl
-configure:1665: checking lex output file root
-configure:1686: checking whether yytext is a pointer
-configure:1779: checking for glib-config
-configure:1814: checking for GLIB - version >= 1.2.0
-configure:1913: gcc -o conftest -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include   conftest.c -L/usr/local/lib -lglib  1>&5
-configure:2006: checking for libpng
-configure:2086: checking whether byte ordering is bigendian
+configure:733: checking for working aclocal
+configure:746: checking for working autoconf
+configure:759: checking for working automake
+configure:772: checking for working autoheader
+configure:785: checking for working makeinfo
+configure:802: checking for gcc
+configure:915: checking whether the C compiler (gcc  ) works
+configure:931: gcc -o conftest    conftest.c  1>&5
+configure:957: checking whether the C compiler (gcc  ) is a cross-compiler
+configure:962: checking whether we are using GNU C
+configure:971: gcc -E conftest.c
+configure:990: checking whether gcc accepts -g
+configure:1024: checking for ranlib
+configure:1052: checking how to run the C preprocessor
+configure:1073: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1135: checking for sys/soundcard.h
+configure:1145: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1175: checking for obstack.h
+configure:1185: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1215: checking for dirent.h
+configure:1225: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1255: checking for unistd.h
+configure:1265: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1295: checking for readline/readline.h
+configure:1305: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1335: checking for readline/history.h
+configure:1345: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1375: checking for getopt.h
+configure:1385: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1414: checking for pipe
+configure:1442: gcc -o conftest -g -O2   conftest.c  1>&5
+configure:1414: checking for socketpair
+configure:1442: gcc -o conftest -g -O2   conftest.c  1>&5
+configure:1414: checking for fork
+configure:1442: gcc -o conftest -g -O2   conftest.c  1>&5
+configure:1468: checking for ggi
+configure:1555: checking for flex
+configure:1588: checking for flex
+configure:1622: checking for yywrap in -lfl
+configure:1641: gcc -o conftest -g -O2   conftest.c -lfl   1>&5
+configure:1664: checking lex output file root
+configure:1685: checking whether yytext is a pointer
+configure:1704: gcc -o conftest -g -O2   conftest.c  -lfl 1>&5
+configure:1778: checking for glib-config
+configure:1813: checking for GLIB - version >= 1.2.0
+configure:1912: gcc -o conftest -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include   conftest.c -L/usr/local/lib -lglib  1>&5
+configure:2005: checking for libpng
+configure:2085: checking whether byte ordering is bigendian
+configure:2103: gcc -c -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include  conftest.c 1>&5
+configure:2118: gcc -c -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include  conftest.c 1>&5
+configure: In function `main':
+configure:2113: `not' undeclared (first use in this function)
+configure:2113: (Each undeclared identifier is reported only once
+configure:2113: for each function it appears in.)
+configure:2113: parse error before `big'
+configure: failed program was:
+#line 2107 "configure"
+#include "confdefs.h"
+#include <sys/types.h>
+#include <sys/param.h>
+int main() {
+
+#if BYTE_ORDER != BIG_ENDIAN
+ not big endian
+#endif
+; return 0; }

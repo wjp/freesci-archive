@@ -1,4 +1,4 @@
-INCLUDES = -I$(top_srcdir)/src/include @ac_glib_includes@
+INCLUDES = -I$(top_srcdir)/src/include @ac_glib_includes@ @ac_ggi_includes@
 LDADD = @ac_glib_libraries@
 EXTRA_DIST = cfsml.pl savegame.cfsml
 lib_LIBRARIES = libscicore.a

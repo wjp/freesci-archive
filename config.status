@@ -85,7 +85,7 @@ s%@ac_glib_libraries@%%g
 s%@GLIB_CFLAGS@%-I/usr/local/lib/glib/include -I/usr/local/include%g
 s%@GLIB_LIBS@%-L/usr/local/lib -lglib%g
 s%@ac_png_includes@%-I/usr/local/include%g
-s%@ac_png_libraries@%-L/usr/lib -lpng%g
+s%@ac_png_libraries@%-L/usr/local/lib -lpng%g
 
 CEOF
 

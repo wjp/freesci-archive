@@ -130,7 +130,8 @@ AC_ARG_WITH(png-libraries,
     ])
 
 AC_FIND_FILE(png.h,$_ac_png_includes,ac_png_includes)
-AC_FIND_FILE(libpng.so.1,$_ac_png_libraries,ac_png_libraries)
+dnl Redhat 6 install libpng 1.0.3 in /usr/lib/libpng.2.1.0.3
+AC_FIND_FILE(libpng.so,$_ac_png_libraries,ac_png_libraries)
 
 if test "$ac_png_includes" = NO || test "$ac_png_libraries" = NO; then
 
