@@ -550,6 +550,12 @@ ggi_draw_pixmap(gfx_driver_t *drv, gfx_pixmap_t *pxm, int priority,
 	const ggi_directbuffer *dbuf;
 	byte *pri_map = NULL;
 
+	if (dest.xl != src.xl || dest.yl != src.yl) {
+		GFXERROR("Attempt to scale pixmap (%dx%d)->(%dx%d): Not supported\n",
+		      src.xl, src.yl, dest.xl, dest.yl);
+		return GFX_ERROR;
+	}
+
 	switch (buffer) {
 
 	case GFX_BUFFER_FRONT:

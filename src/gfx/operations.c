@@ -145,7 +145,6 @@ _gfxop_grab_pixmap(gfx_state_t *state, gfx_pixmap_t **pxmp, int x, int y,
 		(*pxmp)->index_yl = unscaled_yl + 1;
 		gfx_pixmap_alloc_data(*pxmp, state->driver->mode);
 	}
-
 	return state->driver->grab_pixmap(state->driver, *zone, *pxmp,
 					  priority? GFX_MASK_PRIORITY : GFX_MASK_VISUAL);
 }
@@ -328,7 +327,7 @@ _gfxop_draw_pointer(gfx_state_t *state)
 		state->old_pointer_draw_pos.y = y;
 
 		retval = _gfxop_grab_pixmap(state, &(state->mouse_pointer_bg), x, y,
-					    ppxm->xl, ppxm->yl, GFX_NO_PRIORITY,
+					    ppxm->xl, ppxm->yl, 0,
 					    &(state->pointer_bg_zone));
 
 		if (retval == GFX_ERROR) {

@@ -147,7 +147,6 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	int i;
 
 #ifdef _WIN32 /* Win32 doesn't support mouse pointers greater than 64x64 */
-#error "FIXME!"
 	if (xfact > 2 || yfact > 2)
 		drv->capabilities &= ~GFX_CAPABILITY_MOUSE_POINTER;
 #endif

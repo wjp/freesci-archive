@@ -873,6 +873,7 @@ xlib_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 	case GFX_MASK_VISUAL:
 		pxm->xl = src.xl;
 		pxm->yl = src.yl;
+
 		pxm->internal.info = XGetImage(S->display, S->visual[1], src.x, src.y,
 					       src.xl, src.yl, 0xffffffff, ZPixmap);
 		pxm->internal.handle = SCI_XLIB_PIXMAP_HANDLE_GRABBED;

@@ -1,5 +1,9 @@
 2001-09-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/gfx/operations.c (_gfxop_draw_pointer): Fixed parameter to
+	correctly grab pixmap on the visual (rather than priority) map,
+	fixes emulated mouse pointers
+
 	* Adjusted all files to use new LRU resource manager
 	
 	* Adjusted all files for removal of old global variables
