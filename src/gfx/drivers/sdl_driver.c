@@ -74,7 +74,7 @@ struct _sdl_state {
 #define DEBUGU if (drv->debug_flags & GFX_DEBUG_UPDATES && ((debugline = __LINE__))) sdlprintf
 #define DEBUGPXM if (drv->debug_flags & GFX_DEBUG_PIXMAPS && ((debugline = __LINE__))) sdlprintf
 #define DEBUGPTR if (drv->debug_flags & GFX_DEBUG_POINTER && ((debugline = __LINE__))) sdlprintf
-#define ERROR if ((debugline = __LINE__)) sdlprintf
+#define SDLERROR if ((debugline = __LINE__)) sdlprintf
 
 #define ALPHASURFACE (S->used_bytespp == 4)
 
@@ -117,7 +117,7 @@ sdl_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
     return GFX_OK;
   }
 
-  ERROR("Attempt to set sdl parameter \"%s\" to \"%s\"\n", attribute, value);
+  SDLERROR("Attempt to set sdl parameter \"%s\" to \"%s\"\n", attribute, value);
   return GFX_ERROR;
 }
 
@@ -136,7 +136,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
     return GFX_FATAL;
     
   if (xfact < 1 || yfact < 1 || bytespp < 1 || bytespp > 4) {
-    ERROR("Internal error: Attempt to open window w/ scale factors (%d,%d) and bpp=%d!\n",
+    SDLERROR("Internal error: Attempt to open window w/ scale factors (%d,%d) and bpp=%d!\n",
 	  xfact, yfact, bytespp);
   }
 
@@ -153,12 +153,12 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   S->primary = SDL_SetVideoMode(xsize, ysize, bytespp << 3, i);
 
   if (!S->primary) {
-    ERROR("Could not set up a primary SDL surface!\n");
+    SDLERROR("Could not set up a primary SDL surface!\n");
     return GFX_FATAL;
   }
 
   if (S->primary->format->BytesPerPixel != bytespp) {
-    ERROR("Could not set up a primary SDL surface of depth %d bpp!\n",bytespp);
+    SDLERROR("Could not set up a primary SDL surface of depth %d bpp!\n",bytespp);
     SDL_FreeSurface(S->primary);
     S->primary = NULL;
     return GFX_FATAL;
@@ -237,7 +237,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   for (i = 0; i < 2; i++) {
     S->priority[i] = gfx_pixmap_alloc_index_data(gfx_new_pixmap(xsize, ysize, GFX_RESID_NONE, -i, -777));
     if (!S->priority[i]) {
-      ERROR("Out of memory: Could not allocate priority maps! (%dx%d)\n",
+      SDLERROR("Out of memory: Could not allocate priority maps! (%dx%d)\n",
 	    xsize, ysize);
       return GFX_FATAL;
     }
@@ -255,7 +255,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 					S->primary->format->Bmask, 
 					S->alpha_mask);
     if (S->visual[i] == NULL) {
-      ERROR("Could not set up visual buffers!\n");
+      SDLERROR("Could not set up visual buffers!\n");
       return GFX_FATAL;
     }
 
@@ -263,7 +263,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
      SDL_SetAlpha(S->visual[i],SDL_SRCALPHA,SDL_ALPHA_OPAQUE);
 
     if (SDL_FillRect(S->primary, NULL, SDL_MapRGB(S->primary->format, 0,0,0)))
-      ERROR("Couldn't fill backbuffer!\n");
+      SDLERROR("Couldn't fill backbuffer!\n");
   }
 
   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
@@ -496,7 +496,7 @@ sdl_draw_filled_rect(struct _gfx_driver *drv, rect_t rect,
     srect.h = rect.yl;
       
     if (SDL_FillRect(S->visual[1], &srect, color))
-      ERROR("Can't fill rect");
+      SDLERROR("Can't fill rect");
   }
   
   if (color1.mask & GFX_MASK_PRIORITY)
@@ -511,7 +511,7 @@ static int
 sdl_register_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 {
   if (pxm->internal.info) {
-    ERROR("Attempt to register pixmap twice!\n");
+    SDLERROR("Attempt to register pixmap twice!\n");
     return GFX_ERROR;
   }
 
@@ -540,7 +540,7 @@ sdl_unregister_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 	   pxm->internal.info);
   
   if (!pxm->internal.info) {
-    ERROR("Attempt to unregister pixmap twice!\n");
+    SDLERROR("Attempt to unregister pixmap twice!\n");
     return GFX_ERROR;
   }
 
@@ -564,7 +564,7 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
   SDL_Rect drect;
 
   if (dest.xl != src.xl || dest.yl != src.yl) {
-    ERROR("Attempt to scale pixmap (%dx%d)->(%dx%d): Not supported\n",
+    SDLERROR("Attempt to scale pixmap (%dx%d)->(%dx%d): Not supported\n",
 	  src.xl, src.yl, dest.xl, dest.yl);
     return GFX_ERROR;
   }
@@ -584,7 +584,7 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
   if (pxm->internal.handle == SCI_SDL_HANDLE_GRABBED) {
     if (SDL_BlitSurface((SDL_Surface *)pxm->internal.info, &srect , 
 			S->visual[bufnr], &drect )) {
-      ERROR("blt failed");
+      SDLERROR("blt failed");
       return GFX_ERROR;
     }
     return GFX_OK;
@@ -601,7 +601,7 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
     SDL_SetAlpha(temp, SDL_SRCALPHA,SDL_ALPHA_OPAQUE);
 
   if (!temp) {
-    ERROR("Failed to allocate SDL surface");
+    SDLERROR("Failed to allocate SDL surface");
     return GFX_ERROR;
   }  
 
@@ -611,7 +611,7 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
   drect.y = 0;
 
   if(SDL_BlitSurface(S->visual[bufnr], &srect, temp, &drect))
-    ERROR("blt failed");
+    SDLERROR("blt failed");
 
   gfx_crossblit_pixmap(drv->mode, pxm, priority, src, dest,
 		       (byte *) temp->pixels, temp->pitch,
@@ -625,7 +625,7 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
   drect.y = dest.y;
   
   if(SDL_BlitSurface(temp, &srect, S->visual[bufnr], &drect))
-    ERROR("blt failed");
+    SDLERROR("blt failed");
 
   SDL_FreeSurface(temp);
   return GFX_OK;
@@ -638,12 +638,12 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 
 
   if (src.x < 0 || src.y < 0) {
-    ERROR("Attempt to grab pixmap from invalid coordinates (%d,%d)\n", src.x, src.y);
+    SDLERROR("Attempt to grab pixmap from invalid coordinates (%d,%d)\n", src.x, src.y);
     return GFX_ERROR;
   }
 
   if (!pxm->data) {
-    ERROR("Attempt to grab pixmap to unallocated memory\n");
+    SDLERROR("Attempt to grab pixmap to unallocated memory\n");
     return GFX_ERROR;
   }
   switch (map) {
@@ -665,7 +665,7 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
       SDL_SetAlpha(temp, SDL_SRCALPHA,SDL_ALPHA_OPAQUE);
 
     if (!temp) {
-      ERROR("Failed to allocate SDL surface");
+      SDLERROR("Failed to allocate SDL surface");
       return GFX_ERROR;
     }
 
@@ -679,7 +679,7 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
     drect.h = src.yl;
 
     if (SDL_BlitSurface(S->visual[1], &srect, temp, &drect))
-      ERROR("grab_pixmap:  grab blit failed!\n");
+      SDLERROR("grab_pixmap:  grab blit failed!\n");
 
     pxm->internal.info = temp;
     pxm->internal.handle = SCI_SDL_HANDLE_GRABBED;
@@ -694,11 +694,11 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
   }
     
   case GFX_MASK_PRIORITY:
-    ERROR("FIXME: priority map grab not implemented yet!\n");
+    SDLERROR("FIXME: priority map grab not implemented yet!\n");
     break;
     
   default:
-    ERROR("Attempt to grab pixmap from invalid map 0x%02x\n", map);
+    SDLERROR("Attempt to grab pixmap from invalid map 0x%02x\n", map);
     return GFX_ERROR;
   }
 
@@ -735,14 +735,14 @@ sdl_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffe
   case GFX_BUFFER_BACK:
     if (SDL_BlitSurface(S->visual[data_source], &srect, 
 			S->visual[data_dest], &drect))
-      ERROR("surface update failed!\n");
+      SDLERROR("surface update failed!\n");
     
     if ((src.x == dest.x) && (src.y == dest.y)) 
       gfx_copy_pixmap_box_i(S->priority[0], S->priority[1], src);
     break;
   case GFX_BUFFER_FRONT:
     if (SDL_BlitSurface(S->visual[data_source], &srect, S->primary, &drect))
-      ERROR("primary surface update failed!\n");
+      SDLERROR("primary surface update failed!\n");
     SDL_Flip(S->primary);
     break;
   default:
@@ -758,7 +758,7 @@ sdl_set_static_buffer(struct _gfx_driver *drv, gfx_pixmap_t *pic, gfx_pixmap_t *
 {
 
   if (!pic->internal.info) {
-    ERROR("Attempt to set static buffer with unregisterd pixmap!\n");
+    SDLERROR("Attempt to set static buffer with unregisterd pixmap!\n");
     return GFX_ERROR;
   }
   SDL_BlitSurface((SDL_Surface *)pic->internal.info, NULL, 
@@ -1023,7 +1023,7 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
 	return;
 	break;
       default:
-	ERROR("Received unhandled SDL event %04x\n", event.type);
+	SDLERROR("Received unhandled SDL event %04x\n", event.type);
       }
     }
 
@@ -1072,7 +1072,7 @@ sdl_usec_sleep(struct _gfx_driver *drv, int usecs)
   ctime.tv_usec = usecs;
 
 #ifdef _MSC_VER
-  Sleep(usecs/1000)
+  Sleep(usecs/1000);
 #else
   usleep(usecs);  /* let's try this out instead, no? */
 #endif

@@ -1,3 +1,8 @@
+2001-05-15  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/gfx/drivers/sdl_driver.c:  renamed ERROR to SDLERROR
+	                                 changed sdl_sleep heuristics.
+
 2001-05-15  Matt Hargett  <matt@use.net>
 
         * kgraphics.c: Get rid of unused variables.
