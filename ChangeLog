@@ -1,3 +1,7 @@
+2000-12-31  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/vm.c (script_instantiate): Squashed another old interpreter bug.
+
 2000-12-30  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/resource/sci_pic_0.c (_gfxr_fill): Added extra check to make

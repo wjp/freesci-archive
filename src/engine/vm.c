@@ -1228,7 +1228,8 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 
   if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
     int locals_size = getUInt16(script->data)*2;
-    s->scripttable[script_nr].localvar_offset=heap_allocate(s->_heap,locals_size);
+    int locals = s->scripttable[script_nr].localvar_offset=heap_allocate(s->_heap,locals_size);
+    memset(s->heap+locals,0,locals_size);
     /* sciprintf( "Loading script %d: Old SCI version; assuming locals size %d\n", script_nr, locals_size); */
     /* There won't be a localvar block in this case */
     memcpy(s->heap + script_basepos + 2, script->data + 2, script->length -2);
