@@ -191,8 +191,7 @@ scir_new_resource_manager(char *dir, int version,
 					       &mgr->resources,
 					       &mgr->resources_nr);
 
-		if (resource_error >= SCI_ERROR_CRITICAL
-		    || resource_error == SCI_ERROR_RESMAP_NOT_FOUND) {
+		if (resource_error >= SCI_ERROR_CRITICAL) {
 			sciprintf("Resmgr: Error while loading resource map: %s\n",
 				  sci_error_types[resource_error]);
 			if (resource_error == SCI_ERROR_RESMAP_NOT_FOUND)
@@ -202,9 +201,10 @@ scir_new_resource_manager(char *dir, int version,
 			free(caller_cwd);
 			return NULL;
 		}
-		sci0_read_resource_patches(dir,
-					   &mgr->resources,
-					   &mgr->resources_nr);
+		if (!resource_error)
+			sci0_read_resource_patches(dir,
+						   &mgr->resources,
+						   &mgr->resources_nr);
 
 		resmap_version = SCI_VERSION_0;
 	}
