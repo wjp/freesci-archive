@@ -48,10 +48,7 @@
 
 #define FREESCI_SAVEGAME_VERSION 5
 
-#ifdef _GP32
-#define FREESCI_GAMEDIR "FREESCI"
-#define STRLEN_FREESCI_GAMEDIR 7
-#else
+#ifndef FREESCI_GAMEDIR
 #define FREESCI_GAMEDIR ".freesci"
 #define STRLEN_FREESCI_GAMEDIR 8
 #endif
@@ -68,7 +65,9 @@
 #define FREESCI_ID_SUFFIX ".id"
 /* Used for <gamename>.id files ("real" save games) */
 
+#ifndef MAX_GAMEDIR_SIZE
 #define MAX_GAMEDIR_SIZE 32 /* Used for subdirectory inside of "~/.freesci/" */
+#endif
 #define MAX_SAVEGAME_NR 20 /* Maximum number of savegames */
 
 #define MAX_HUNK_BLOCKS 256 /* Used for SCI "far memory"; only used for sci_memory in FreeSCI */

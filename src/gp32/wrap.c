@@ -78,14 +78,19 @@ gp_print(char *msg, int mlen)
 	while (!gp_getButton());
 }
 
-int stdout_write(char *buf, int len)
+int write_stdout(char *buf, int len)
 {
 	return len;
 }
 
-int stderr_write(char *buf, int len)
+int write_stderr(char *buf, int len)
 {
 	return len;
+}
+
+int read_stdin(char *buf, int len)
+{
+	return 0;
 }
 
 void
@@ -96,8 +101,8 @@ gp32_main()
 	/* Set CPU speed to 133Mhz. */
 	gp_setCpuspeed(133);
 
-	/* Start realtime clock. */
-	gp_initRTC();
+	/* Init SMC library and RTC. */
+	newlib_init();
 
 	/* Call freesci's main(). */
 	exit(freesci_main(1, argv));

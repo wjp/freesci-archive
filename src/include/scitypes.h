@@ -98,7 +98,7 @@ typedef struct {
 	file_t dir;
 	char *mask_copy;
 #elif defined(_GP32)
-	GPDIR *dir;
+	DIR *dir;
 	int total, cur;
 	char *mask_copy;
 #else

@@ -1,3 +1,24 @@
+2005-01-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* README.GP32: Added section on BLU+ support.
+
+	* src/engine/savegame.c (gamestate_save),
+	src/engine/savegame.cfsml (gamestate_save): Force large file buffer
+	when writing `state'. This helps performance on GP32 where writes
+	are very expensive.
+
+	* src/gp32/Makefile, src/include/engine.h: On GP32, make sure
+	directories comply to 8.3 file format.
+
+	* src/gp32/config.h, src/gp32/wrap.h, src/include/scitypes.h,
+	src/scicore/tools.c (sci_gettime, sci_init_dir, sci_find_first,
+	sci_find_next, sci_finish_find): Removed GP32-specific sci_gettime()
+	implementation. Rewrote GP32 directory search functions to use smfs
+	directly.
+
+	* src/gp32/wrap.c: Changed names of functions for latest newlib
+	patch.
+
 2005-01-02  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/include/sci_conf.h: Removed work_dir from config_entry_t, as

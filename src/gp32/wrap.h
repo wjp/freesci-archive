@@ -45,6 +45,10 @@
 #undef rewind
 #undef fseek
 
+typedef struct {
+	char name[16];
+} DIR;
+
 /* Not present in newlib. */
 void usleep(unsigned long usec);
 

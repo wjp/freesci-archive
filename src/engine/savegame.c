@@ -6574,6 +6574,7 @@ gamestate_save(state_t *s, char *dirname)
 	close(fd);
 
 	fh = fopen("state", "w" FO_TEXT);
+	setvbuf(fh, NULL, _IOFBF, 262144);
 
 	/* Calculate the time spent with this game */
 	s->game_time = time(NULL) - s->game_start_time.tv_sec;
@@ -6584,7 +6585,7 @@ SCI_MEMTEST;
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 1097 "savegame.cfsml"
+#line 1098 "savegame.cfsml"
 SCI_MEMTEST;
 
 	fclose(fh);
@@ -6672,7 +6673,7 @@ gamestate_restore(state_t *s, char *dirname)
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 1155 "savegame.cfsml"
+#line 1156 "savegame.cfsml"
 
 	fclose(fh);
 

@@ -265,17 +265,6 @@ sci_gettime(long *seconds, long *useconds)
 	*seconds = s;
 	*useconds = m*1000;
 }
-#elif defined (_GP32)
-/* Warning: This function returns the amount of time that has passed since the
-** start of the program. FIXME: Use higher resolution timer.
-*/
-void
-sci_gettime(long *seconds, long *useconds)
-{
-	int ticks = gp_getRTC();
-	*seconds = ticks / 64;
-	*useconds = (ticks % 64) * 15625;
-}
 #elif defined (ARM_WINCE) && (HAVE_SDL)
 /* Warning: This function returns the amount of time that has passed since the
 ** initialization of the SDL_Driver. A gettimeofday() function is available, but it is
@@ -463,7 +452,7 @@ sci_finish_find(sci_dir_t *dir)
 void
 sci_init_dir(sci_dir_t *dir)   
 {
-	dir->dir = malloc(sizeof(GPDIR));
+	dir->dir = NULL;
 	dir->total = 0;
 	dir->cur = 0;
 	dir->mask_copy = NULL;
@@ -473,17 +462,29 @@ char *
 sci_find_first(sci_dir_t *dir, char *mask)
 {
 	char cur_dir[PATH_MAX + 1];
+	unsigned int total, read;
 
 	getcwd(cur_dir, PATH_MAX + 1);
 
-	dir->total = smc_dir(cur_dir, dir->dir);
+	if (smGetListNumDir(cur_dir, &total)) {
+		sciprintf("%s, L%d: smGetListNumDir() failed!\n", __FILE__, __LINE__);
+		return NULL;
+	}
 
-	if (!dir->total) {
-		sciprintf("%s, L%d: smc_dir(cur_dir, dir->dir) failed!\n", __FILE__, __LINE__);
+	if (total > 128)
+		total = 128;
+
+	dir->dir = sci_malloc(sizeof(DIR) * total);
+
+	if (smReadDir(cur_dir, 0, total, dir->dir, &read) || (read < total)) {
+		sciprintf("%s, L%d: smReadDir() failed!\n", __FILE__, __LINE__);
+		sci_free(dir->dir);
+		dir->dir = NULL;
 		return NULL;
 	}
 
 	dir->mask_copy = sci_strdup(mask);
+	dir->total = total;
 
 	return sci_find_next(dir);
 }
@@ -491,10 +492,9 @@ sci_find_first(sci_dir_t *dir, char *mask)
 char *
 sci_find_next(sci_dir_t *dir)
 {
-	while (dir->cur++ < dir->total) {
-		if (!fnmatch(dir->mask_copy, dir->dir->name[dir->cur - 1], 0))
-			return dir->dir->name[dir->cur - 1];
-	}
+	while (dir->cur++ < dir->total)
+		if (!fnmatch(dir->mask_copy, dir->dir[dir->cur - 1].name, 0))
+			return dir->dir[dir->cur - 1].name;
 
 	sci_finish_find(dir);
 	return NULL;
@@ -504,11 +504,11 @@ void
 sci_finish_find(sci_dir_t *dir)
 {
 	if (dir->dir) {
-		free(dir->dir);
+		sci_free(dir->dir);
 		dir->dir = NULL;
 	}
 	if (dir->mask_copy) {
-		free(dir->mask_copy);
+		sci_free(dir->mask_copy);
 		dir->mask_copy = NULL;
 	}
 	dir->total = 0;

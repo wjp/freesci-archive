@@ -1,6 +1,6 @@
 FreeSCI - GP32
 
-Last update: 2004-12-31
+Last update: 2005-01-02
 
 
 Index
@@ -14,6 +14,7 @@ Index
 1.2    Compiling FreeSCI
 2      Using FreeSCI
 2.1    The config file
+2.1.1  BLU+ support
 2.2    The controls
 2.2.1  Controlling the cursor keys
 2.2.2  Controlling the mouse
@@ -40,7 +41,7 @@ Create a temporary directory somewhere and download the following:
 binutils 2.15 (http://sources.redhat.com/binutils/)
 GCC 3.4.3 (http://gcc.gnu.org/)
 newlib 1.13.0 (http://sources.redhat.com/newlib/)
-newlib GP32 patch 0.2 (http://www.retrovg.com/gp32/)
+newlib GP32 patch (latest version) (http://www.retrovg.com/gp32/)
 
 Choose a directory where you want to install the toolchain, for example
 /usr/local/gp32. Make sure you have sufficient rights to write to this
@@ -68,9 +69,9 @@ Unpack GCC and newlib:
 # tar jxfv gcc-3.4.3.tar.bz2
 # tar zxfv newlib-1.13.0.tar.gz
 
-Apply the GP32 newlib patch
+Apply the GP32 newlib patch (replace x.y with actual version number).
 # cd newlib-1.13.0
-# patch -p1 < ../newlib-1.13.0-gp32-patch-0.2.diff
+# patch -p1 < ../newlib-1.13.0-gp32-patch-x.y.diff
 
 Modify the configure script to prevent libiberty from being built:
 # cd ../gcc-3.4.3
@@ -153,6 +154,14 @@ resource_dir = dev0:\gpmm\lsl1
 [sq3]
 resource_dir = dev0:\gpmm\sq3
 -------------->8--------------
+
+2.1.1 BLU+ support
+------------------
+
+If you have a BLU+ (the latest revision of the GP32 with the Taiwanese LCD),
+add the following line to the top of the config file:
+
+gfx.gp32.blu_plus = yes
 
 2.2    The controls
 -------------------

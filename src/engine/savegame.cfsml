@@ -1088,6 +1088,7 @@ gamestate_save(state_t *s, char *dirname)
 	close(fd);
 
 	fh = fopen("state", "w" FO_TEXT);
+	setvbuf(fh, NULL, _IOFBF, 262144);
 
 	/* Calculate the time spent with this game */
 	s->game_time = time(NULL) - s->game_start_time.tv_sec;

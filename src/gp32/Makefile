@@ -95,7 +95,8 @@ LNKSCRIPT = $(SDK_BASE)/lib/lnkscript
 INCLUDES  = -I. -I$(FSCI_BASE)/src/include -I$(SDK_BASE)/lib.src/include \
 	-I$(FSCI_BASE)/src/include/beos -I$(FSCI_BASE)/src/dc
 CFLAGS    = $(INCLUDES) -O2 -g -Wall -mtune=arm9tdmi -DHAVE_CONFIG_H \
-	-DWANT_CONSOLE -D_GP32
+	-DWANT_CONSOLE -DFREESCI_GAMEDIR=\"FREESCI\" \
+	-DSTRLEN_FREESCI_GAMEDIR=7 -DMAX_GAMEDIR_SIZE=9 -D_GP32
 
 all: $(PRG).fxe
 
