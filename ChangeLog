@@ -1,3 +1,8 @@
+2002-07-02  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/sound/fmopl.c, src/sound/fmopl.h:   Significant update
+	to the FM emulator code.  Tracked from the adplug codebase.
+
 2002-06-18  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kernel.c (kHaveMouse): Bugfix: Correctly handle
