@@ -3899,7 +3899,7 @@ _cfsml_write_script_t(FILE *fh, script_t* foo)
     write_heapptr(fh, &(foo->export_table_offset));
     fprintf(fh, "\n");
   fprintf(fh, "synonyms_offset = ");
-    _cfsml_write_int(fh, &(foo->synonyms_offset));
+    write_heapptr(fh, &(foo->synonyms_offset));
     fprintf(fh, "\n");
   fprintf(fh, "lockers = ");
     _cfsml_write_int(fh, &(foo->lockers));
@@ -3960,7 +3960,7 @@ _cfsml_read_script_t(FILE *fh, script_t* foo, char *lastval, int *line, int *hit
       } else
       if (!strcmp(bar, "synonyms_offset")) {
 #line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->synonyms_offset), value, line, hiteof))
+         if (read_heapptr(fh, &(foo->synonyms_offset), value, line, hiteof))
             return CFSML_FAILURE;
       } else
       if (!strcmp(bar, "lockers")) {

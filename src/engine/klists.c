@@ -362,6 +362,13 @@ kNodeValue(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	int a;
 
+	if (UPARAM(0)==0)
+	  {
+	    SCIkwarn(SCIkERROR, "NodeValue() on a NULL pointer attempted!\n");
+	    s->acc=0;
+	    return;
+	  }
+
 	if (!sane_nodep(s, UPARAM(0)))
 	  SCIkwarn(SCIkERROR,"List node at %04x is not sane anymore!\n", PARAM(0));
   

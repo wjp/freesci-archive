@@ -1,3 +1,11 @@
+2001-06-05  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/klists.c (kNodeValue): Worked around a bug in
+	Codename: Iceman.
+	* src/engine/vm.c (run_vm): Disabled warning on excessive 
+	hunk allocations.
+	* BUGS-IN-GAMES: New file.
+
 2001-06-02  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/savegame.cfsml: Added saving of synonym data

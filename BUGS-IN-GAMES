@@ -1,0 +1,11 @@
+This file contains a list of all known bugs in the original Sierra
+games. We try our best to work around these bugs in FreeSCI. Often,
+when creating these workarounds, we make FreeSCI output warning
+messages, so that they are easily identifiable using the below list.
+
+
+1. Codename: Iceman displays the warning "NodeValue() on a NULL
+   pointer attempted" at numerous points during the map table scene.
+
+2. Quest for Glory 1 displays the warning "List node at x is not sane
+   anymore" when the dinosaur snaps at you during the intro. 

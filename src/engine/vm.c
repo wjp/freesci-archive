@@ -516,7 +516,7 @@ run_vm(state_t *s, int restoring)
 		    zz++;
     }
     if (zz > 12) {
-	    fprintf(stderr, "%d hunk handles allocated!\n", zz);
+      /*    fprintf(stderr, "%d hunk handles allocated!\n", zz); */
     }
 
     #ifdef _DOS
