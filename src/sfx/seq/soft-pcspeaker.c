@@ -157,25 +157,6 @@ sps_delay(int ticks)
 				sample_block[i] = 0;
 		}
 
-		if (note) {
-			int lastval = 0;
-			int valcount = 0;
-			int i;
-			for (i = 0; i < SAMPLE_BLOCK_SIZE; i++) {
-				if (lastval != sample_block[i]) {
-					if (valcount) {
-						if (valcount > 1)
-							fprintf(stderr, "%dx[%d] ", valcount, lastval);
-						else
-							fprintf(stderr, "[%d] ", lastval);
-					}
-					lastval = sample_block[i];
-					valcount = 1;
-				} else ++valcount;
-			}
-			fprintf(stderr, "\n");
-		}
-
 		sfx_audbuf_write(&(PCM_SW_CHANNEL(&sfx_sequencer_sw_pcspeaker, 0)),
 				 (byte *) &(sample_block[0]), 2, SAMPLE_BLOCK_SIZE);
 	}

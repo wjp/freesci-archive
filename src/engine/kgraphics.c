@@ -1,5 +1,5 @@
 /***************************************************************************
- kgraphics.c Copyright (C) 1999,2000,01 Christoph Reichenbach
+ kgraphics.c Copyright (C) 1999,2000..04 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -911,10 +911,6 @@ kOnControl(state_t *s, int funct_nr, int argc, reg_t *argv)
 	if (argc > 3) {
 		ylen = SKPV(arg+3) - ystart;
 		xlen = SKPV(arg+2) - xstart;
-		if (xlen > 1)
-			--xlen;
-		if (ylen > 1)
-			--ylen;
 	}
 
 	return make_reg(0, gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart, ystart + 10, xlen, ylen), map));

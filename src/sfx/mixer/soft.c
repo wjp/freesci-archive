@@ -144,7 +144,6 @@ mix_subscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 		/ self->dev->conf.rate;
 
 	fs->buf = malloc(fs->buf_size * feed->sample_size);
-	fprintf(stderr, "Alloc'd to %p for %p\n", fs->buf, fs);
 	fs->scount = urat(0, 1);
 	fs->spd = urat(feed->conf.rate, self->dev->conf.rate);
 	fs->scount.den = fs->spd.den;
@@ -339,9 +338,11 @@ mix_swap_buffers(sfx_pcm_mixer_t *self)
 			/ (1000000L >> 7)
 
 static inline int
-mix_compute_buf_len(sfx_pcm_mixer_t *self)
+mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_samples)
      /* Computes the number of samples we ought to write. It tries to minimise the number,
      ** in order to reduce latency. */
+     /* It sets 'skip_samples' to the number of samples to assume lost by latency, effectively
+     ** skipping them.  */
 {
 	int free_samples;
 	int recommended_samples;
@@ -387,14 +388,16 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self)
 
 	if (free_samples > self->dev->buf_size) {
 		if (!diagnosed_too_slow) {
-			sciprintf("[sfx-mixer] Your timer is too slow for your PCM output device (%d/%d); disabling sound.\n"
-				  "[sfx-mixer] You might want to try changing the device or mixer, if possible.\n",
+			sciprintf("[sfx-mixer] Your timer is too slow for your PCM output device (%d/%d).\n"
+				  "[sfx-mixer] You might want to try changing the device, timer, or mixer, if possible.\n",
 				  played_samples, self->dev->buf_size);
 		}
 		diagnosed_too_slow = 1;
 
-		return 0;
-	}
+		*skip_samples = free_samples - self->dev->buf_size;
+		free_samples = self->dev->buf_size;
+	} else
+		*skip_samples = 0;
 
 	++P->delta_observations;
 	if (P->delta_observations > MAX_DELTA_OBSERVATIONS)
@@ -641,11 +644,11 @@ mix_process_linear(sfx_pcm_mixer_t *self)
 {
 	int src_i; /* source feed index counter */
 	int sample_size = SFX_PCM_SAMPLE_SIZE(self->dev->conf);
-	int buflen = mix_compute_buf_len(self); /* Compute # of samples we must compute and write */
+	int samples_skip; /* Number of samples to discard, rather than to emit */
+	int buflen = mix_compute_buf_len(self, &samples_skip); /* Compute # of samples we must compute and write */
+	int fake_buflen;
 	byte *left, *right;
 
-	if (diagnosed_too_slow)
-		return SFX_ERROR;
 	if (P->outbuf && P->lastbuf_len) {
 		int rv = self->dev->output(self->dev, P->outbuf, P->lastbuf_len);
 
@@ -658,14 +661,31 @@ mix_process_linear(sfx_pcm_mixer_t *self)
 		sciprintf("[soft-mixer] Mixing %d output samples on %d input feeds\n", buflen, self->feeds_nr);
 #endif
 	if (self->feeds_nr && !P->paused) {
-		for (src_i = 0; src_i < self->feeds_nr; src_i++) {
-			mix_compute_input_linear(self, src_i, self->feeds + src_i, buflen);
-		}
+		/* Below, we read out all feeds in case we have to skip samples first, then get the
+		** most current sound. 'fake_buflen' is either the actual buflen (for the last iteration)
+		** or a fraction of the buf length to discard.  */
+		do {
+			if (samples_skip) {
+				if (samples_skip > self->dev->buf_size)
+					fake_buflen = self->dev->buf_size;
+				else
+					fake_buflen = samples_skip;
 
-		/* Destroy all feeds we finished */
-		for (src_i = 0; src_i < self->feeds_nr; src_i++)
-			if (self->feeds[src_i].mode == SFX_PCM_FEED_MODE_DEAD)
-				mix_unsubscribe(self, self->feeds[src_i].feed);
+				samples_skip -= fake_buflen;
+			} else {
+				fake_buflen = buflen;
+				samples_skip = -1; /* Mark us as being completely done */
+			}
+
+			for (src_i = 0; src_i < self->feeds_nr; src_i++) {
+				mix_compute_input_linear(self, src_i, self->feeds + src_i, fake_buflen);
+			}
+
+			/* Destroy all feeds we finished */
+			for (src_i = 0; src_i < self->feeds_nr; src_i++)
+				if (self->feeds[src_i].mode == SFX_PCM_FEED_MODE_DEAD)
+					mix_unsubscribe(self, self->feeds[src_i].feed);
+		} while (samples_skip >= 0);
 
 	} else { /* Zero it out */
 		memset(P->compbuf_l, 0, sizeof(gint32) * buflen);
