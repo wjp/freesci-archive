@@ -668,9 +668,8 @@ collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int use_nsrect, i
 		other_area.xend = GET_SELECTOR(other_obj, brRight);
 		other_area.y = GET_SELECTOR(other_obj, brTop);
 		other_area.yend = GET_SELECTOR(other_obj, brBottom);
+		other_area = nsrect_clip(s, y, other_area, other_priority);
 	}
-
-	other_area = nsrect_clip(s, y, other_area, other_priority);
 
 	if (other_area.xend < 0 || other_area.yend < 0 || area.xend < 0 || area.yend < 0)
 		return 0; /* Out of scope */
@@ -689,11 +688,14 @@ collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int use_nsrect, i
 
 
 		if (((other_area.xend > area.x)
-		     && (other_area.x < area.xend)) /* [other_x, other_xend] intersects [x, xend]? */
+		     && (other_area.x < area.xend)) /* [other_x, other_xend] intersects [x, xend])? */
 		    &&
 		    ((other_area.yend > area.y)
 		     && (other_area.y < area.yend))) /* [other_y, other_yend] intersects [y, yend]? */
 			return 1;
+		/* CR (from :Bob Heitman:) Collision rects have Mac semantics, ((0,0),(1,1)) only
+		** covers the coordinate (0,0)  */
+
 
 	}
 
@@ -741,22 +743,6 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 
 	s->acc = 0;
-
-	/* Check against static places on the control map */
-	if ((illegal_bits & 0x8000) /* If we are vulnerable to those views at all... */
-	    && s->dyn_views) {
-		gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) s->dyn_views->contents;
-
-		SCIkdebug(SCIkBRESEN, "Checking vs dynviews:\n");
-
-	        while (widget) {
-			if (widget->ID && widget->ID != obj
-			    && is_object(s, widget->ID))
-				if (collides_with(s, abs_zone, widget->ID, 1, GASEOUS_VIEW_MASK_ACTIVE, funct_nr, argc, argp))
-					return;
-			widget = (gfxw_dyn_view_t *) widget->next;
-		}
-	}
 
 	if (signal & GASEOUS_VIEW_MASK_ACTIVE) {
 		s->acc = signal & GASEOUS_VIEW_MASK_ACTIVE; /* CanBeHere- it's either being disposed, or it ignores actors anyway */
@@ -1523,12 +1509,16 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 
 
 static inline void
-draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, int base_set, int funct_nr, int argc, int argp)
+draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int funct_nr, int argc, int argp)
 {
 	int priority = view->color.priority;
+	int y = view->pos.y;
 	abs_rect_t abs_zone;
-	int has_nsrect = (view->ID <=0)? 0 : lookup_selector(s, view->ID, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
+/*	int has_nsrect = (view->ID <=0)? 0 : lookup_selector(s, view->ID, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;*/
+	abs_zone = nsrect_clip(s, y, get_nsrect(s, view->ID, 1), priority);
 
+
+#if 0
 	if (has_nsrect) {
 		int obj = view->ID;
 		abs_zone = get_nsrect(s, obj, 1);
@@ -1547,6 +1537,7 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, i
 	} else {
 		abs_zone = get_nsrect(s, view->ID, 1);
 	}
+#endif
 
 	if (!(view->signalp && (GET_HEAP(view->signalp) & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {
 		gfxw_box_t *box;
@@ -1555,6 +1546,9 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, i
 		gfxop_set_color(s->gfx_state, &color, -1, -1, -1, -1, -1, 0xf);
 
 		SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n",
+			  abs_zone.x, abs_zone.y, abs_zone.xend, abs_zone.yend);
+
+		fprintf(stderr,"    adding control block (%d,%d)to(%d,%d)\n",
 			  abs_zone.x, abs_zone.y, abs_zone.xend, abs_zone.yend);
 
 		box = gfxw_new_box(s->gfx_state,
@@ -1696,7 +1690,7 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_dyn_view_t *widge
 
 						s->drop_views->add(GFXWC(s->drop_views), GFXW(gfxw_picviewize_dynview(widget)));
 
-						draw_to_control_map(s, widget, 0, funct_nr, 0, argc, argp);
+						draw_to_control_map(s, widget, funct_nr, argc, argp);
 						widget->draw_bounds.y += s->dyn_views->bounds.y - widget->parent->bounds.y;
 						widget->draw_bounds.x += s->dyn_views->bounds.x - widget->parent->bounds.x;
 						dropped = 1;
@@ -1907,8 +1901,11 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 		else
 			view->color.mask &= ~GFX_MASK_PRIORITY;
 
-		if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP)
-			draw_to_control_map(s, view, 1, funct_nr, 1, argc, argp);
+		/* CR (from :Bob Heitman:) stopupdated views (like pic views) have
+		** their clipped nsRect drawn to the control map  */
+		if ((options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP)
+		    || (view->signal &_K_VIEW_SIG_FLAG_STOP_UPDATE))
+			draw_to_control_map(s, view, funct_nr, argc, argp);
 
 
 		/* Extreme Pattern Matching ugliness ahead... */

@@ -1,3 +1,11 @@
+2001-12-21  Christoph Reichenbach  <jameson@rei>
+
+	* src/engine/kgraphics.c (kCanBeHere): Always collide against brRect
+	(_k_prepare_view_list): Draw pics with STOP_UPDATE set to the control
+	map
+	(kCanBeHere): No longer check against the dynviews, all views we should
+	check against are passed as parameters explicitly.
+
 2001-12-20  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/event_ss.c:
