@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Zi /I "..\include" /I "..\include\win32" /D VERSION=\"0.3.2\" /D "HAVE_SDL" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D "HAVE_STRING_H" /D "HAVE_GETOPT_H" /D "HAVE_USLEEP" /FR /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Zi /I "..\include" /I "..\include\win32" /D VERSION=\"0.3.3-BETA\" /D "HAVE_SDL" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D "HAVE_STRING_H" /D "HAVE_GETOPT_H" /D "HAVE_USLEEP" /FR /YX /FD /c
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe

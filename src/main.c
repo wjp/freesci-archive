@@ -40,6 +40,9 @@
 #ifdef HAVE_FORK
 #  include <sys/wait.h>
 #endif
+#ifdef HAVE_SCHED_YIELD
+#  include <sched.h>
+#endif /* HAVE_SCHED_YIELD */
 
 #ifdef _MSC_VER
 #define extern __declspec(dllimport) extern
@@ -78,6 +81,12 @@
 #define strcasecmp stricmp
 #endif
 
+#ifndef HAVE_SCHED_YIELD
+#define sched_yield() sleep(1)
+/* Neither NetBSD nor Win32 have this function, although it's in POSIX 1b */
+#endif /* !HAVE_SCHED_YIELD */
+
+
 #define ACTION_PLAY 0
 #define ACTION_LIST_SAVEGAMES 1
 
@@ -88,8 +97,8 @@ static int sciv_action = ACTION_PLAY;
 static void
 check_features()
 {
-	int helper;
 #ifdef HAVE_ALPHA_EV6_SUPPORT
+	int helper;
 	printf("Checking for MVI instruction-set extension: ");
 
 	helper = 0x100;
@@ -353,8 +362,10 @@ typedef struct {
 static char *
 parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame_name)
 {
-	int c, i, optindex;
+	int c;
 #ifdef HAVE_GETOPT_LONG
+	int optindex;
+
 	struct option options[] = {
 		{"run", no_argument, NULL, 0 },
 		{"debug", no_argument, NULL, 1 },
@@ -702,12 +713,11 @@ static void
 list_savegames(state_t *s)
 {
 	sci_dir_t dir;
-	char *filename;
+	char *filename		= NULL;
 
 	sci_init_dir(&dir);
 
 	filename = sci_find_first(&dir, "*");
-
 
 	sciprintf("\nSavegame listing:\n"
 		  "-----------------\n");
@@ -720,6 +730,8 @@ list_savegames(state_t *s)
 				sciprintf("%s\n", filename);
 		}
 		filename = sci_find_next(&dir);
+		fprintf(stderr, "filename = %s \n",filename);
+		fprintf(stderr, "dir.fileinfo.name = %s \n", dir.fileinfo.name);
 	}
 	sciprintf("-----------------\n");
 }
@@ -727,23 +739,23 @@ list_savegames(state_t *s)
 int
 main(int argc, char** argv)
 {
-	config_entry_t *conf = NULL;
+	config_entry_t *conf			= NULL;
 	cl_options_t cl_options;
-	int conf_entries = -1; /* Number of config entries */
-	int conf_nr = -1; /* Element of conf to use */
-	int i, errc;
-	FILE *console_logfile = NULL;
+	int conf_entries			= -1; /* Number of config entries */
+	int conf_nr				= -1; /* Element of conf to use */
+	int errc;
+	FILE *console_logfile			= NULL;
 	char startdir[PATH_MAX+1];
 	char resource_dir[PATH_MAX+1];
 	char work_dir[PATH_MAX+1];
-	char *gfx_driver_name = NULL;
-	char *midiout_driver_name = NULL;
-	char *midi_device_name = NULL;
-	char *game_name;
-	char *savegame_name;
-	sci_version_t version = 0;
-	gfx_driver_t *gfx_driver = NULL;
-	sound_server_t *sound_server = NULL;
+	char *gfx_driver_name			= NULL;
+	char *midiout_driver_name		= NULL;
+	char *midi_device_name			= NULL;
+	char *game_name				= NULL;
+	char *savegame_name			= NULL;
+	sci_version_t version			= 0;
+	gfx_driver_t *gfx_driver		= NULL;
+	sound_server_t *sound_server	= NULL;
 
 	game_name = parse_arguments(argc, argv, &cl_options, &savegame_name);
 
@@ -974,7 +986,7 @@ main(int argc, char** argv)
 			fprintf(stderr,"Sound server initialization failed- aborting.\n");
 			return 1;
 		}
-		sci_sched_yield(); /* Specified by POSIX 1b. If it doesn't work on your
+		sched_yield(); /* Specified by POSIX 1b. If it doesn't work on your
 			       ** system, make up an #ifdef'd version of it above.
 			       */
 		gamestate->sound_server->get_event(gamestate); /* Get init message */

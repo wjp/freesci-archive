@@ -1,3 +1,9 @@
+2001-05-13  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/soundserver_sdl.c: Use more sophisticated (but badly
+	granularized) functions for waiting for signals
+	* src/main.c: Applied Matt's anti-warning patch
+
 2001-05-12  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/resource/sci_pic_0.c (gfxr_draw_pic0): Now yields to scheduler
