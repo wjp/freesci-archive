@@ -361,6 +361,7 @@ process_sound_events(struct _state *s); /* Get all sound events, apply their cha
 #define _K_VIEW_SIG_FLAG_DISPOSE_ME     0x8000
 
 #define _K_VIEW_SIG_FLAG_FREESCI_PRIVATE 0x10000000
+#define _K_VIEW_SIG_FLAG_FREESCI_STOPUPD 0x20000000 /* View has been stop-updated */
 
 
 /* Sound status */

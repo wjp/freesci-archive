@@ -1,3 +1,11 @@
+2001-12-21  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/kernel.h:
+	* src/engine/kgraphics.c (_k_prepare_view_list): Introduced
+	internal FREESCI_STOPUPD flag to keep track of views that were stop-
+	updated.
+	(kCanBeHere): Test against stop-updated dynviews
+
 2001-12-21  Christoph Reichenbach  <jameson@rei>
 
 	* src/engine/kgraphics.c (kCanBeHere): Always collide against brRect

@@ -663,12 +663,12 @@ collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int use_nsrect, i
 
 	if (use_nsrect) {
 		other_area = get_nsrect(s, other_obj, 0);
+		other_area = nsrect_clip(s, y, other_area, other_priority);
 	} else {
 		other_area.x = GET_SELECTOR(other_obj, brLeft);
 		other_area.xend = GET_SELECTOR(other_obj, brRight);
 		other_area.y = GET_SELECTOR(other_obj, brTop);
 		other_area.yend = GET_SELECTOR(other_obj, brBottom);
-		other_area = nsrect_clip(s, y, other_area, other_priority);
 	}
 
 	if (other_area.xend < 0 || other_area.yend < 0 || area.xend < 0 || area.yend < 0)
@@ -743,6 +743,24 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 
 	s->acc = 0;
+
+        if ((illegal_bits & 0x8000) /* If we are vulnerable to those views at all... */
+            && s->dyn_views) { /* ...check against all stop-updated dynviews */
+                gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) s->dyn_views->contents;
+
+                SCIkdebug(SCIkBRESEN, "Checking vs dynviews:\n");
+
+                while (widget) {
+                        if (widget->ID
+			    && (widget->signal & _K_VIEW_SIG_FLAG_FREESCI_STOPUPD)
+			    && (widget->ID != obj)
+                            && is_object(s, widget->ID))
+                                if (collides_with(s, abs_zone, widget->ID, 1, GASEOUS_VIEW_MASK_ACTIVE, funct_nr, argc, argp))
+                                        return;
+
+                        widget = (gfxw_dyn_view_t *) widget->next;
+                }
+        }
 
 	if (signal & GASEOUS_VIEW_MASK_ACTIVE) {
 		s->acc = signal & GASEOUS_VIEW_MASK_ACTIVE; /* CanBeHere- it's either being disposed, or it ignores actors anyway */
@@ -1548,9 +1566,6 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int funct_nr, int argc, i
 		SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n",
 			  abs_zone.x, abs_zone.y, abs_zone.xend, abs_zone.yend);
 
-		fprintf(stderr,"    adding control block (%d,%d)to(%d,%d)\n",
-			  abs_zone.x, abs_zone.y, abs_zone.xend, abs_zone.yend);
-
 		box = gfxw_new_box(s->gfx_state,
 				   gfx_rect(abs_zone.x, abs_zone.y,
 					    abs_zone.xend - abs_zone.x + 1,
@@ -1605,8 +1620,8 @@ _k_view_list_do_postdraw(state_t *s, gfxw_list_t *list)
 #endif
 
 		if (widget->signalp) {
-			widget->signal &= 0xffff;
-			PUT_HEAP(widget->signalp, widget->signal); /* Write back signal */
+			widget->signal &= ~_K_VIEW_SIG_FLAG_FREESCI_PRIVATE;
+			PUT_HEAP(widget->signalp, widget->signal & 0xffff); /* Write back signal */
 		}
 
 		widget = (gfxw_dyn_view_t *) widget->next;
@@ -1859,8 +1874,6 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 }
 
 
-#define FOOP() if (obj == 0x922e) {fprintf(stderr,"%d: _p=%d, p=%d\n", __LINE__, _priority, priority);}
-
 static void
 _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, int argc, heap_ptr argp)
 {
@@ -1903,8 +1916,12 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 
 		/* CR (from :Bob Heitman:) stopupdated views (like pic views) have
 		** their clipped nsRect drawn to the control map  */
-		if ((options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP)
-		    || (view->signal &_K_VIEW_SIG_FLAG_STOP_UPDATE))
+		if (view->signal & _K_VIEW_SIG_FLAG_STOP_UPDATE) {
+			view->signal |= _K_VIEW_SIG_FLAG_FREESCI_STOPUPD;
+			SCIkdebug(SCIkGRAPHICS, "Setting magic STOP_UPD for %04x\n", view->ID);
+		}
+
+		if ((options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP))
 			draw_to_control_map(s, view, funct_nr, argc, argp);
 
 
@@ -1927,22 +1944,8 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 		     )
 		    ) {
 			view->signal |= _K_VIEW_SIG_FLAG_FREESCI_PRIVATE;
-#ifdef DEBUG_LSRECT
-			fprintf(stderr, "++++ Setting pvt for %04x\n", view->ID);
-#endif
 			s->pic_not_valid++;
 		}
-#ifdef DEBUG_LSRECT
-		else fprintf(stderr, "---- NOT Setting pvt for %04x: nU:%d vU:%d fU:%d iH:%d rV:%d aU:%d sU:%d\n", view->ID,
-			  !!(view->signal & _K_VIEW_SIG_FLAG_NO_UPDATE),
-			  !!(view->signal & _K_VIEW_SIG_FLAG_UPDATED),
-			  !!(view->signal & _K_VIEW_SIG_FLAG_FORCE_UPDATE),
-			  !!(view->signal & _K_VIEW_SIG_FLAG_HIDDEN),
-			  !!(view->signal & _K_VIEW_SIG_FLAG_REMOVE),
-			  !!(view->signal & _K_VIEW_SIG_FLAG_ALWAYS_UPDATE),
-			  !!(view->signal & _K_VIEW_SIG_FLAG_STOP_UPDATE)
-			  );
-#endif
 
 		SCIkdebug(SCIkGRAPHICS, "  dv[%04x]: signal %04x -> %04x\n", view->ID, oldsignal, view->signal);
 
@@ -1950,6 +1953,12 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 			view->signal &= ~_K_VIEW_SIG_FLAG_STOP_UPDATE;
 		else
 			view->signal &= ~_K_VIEW_SIG_FLAG_FORCE_UPDATE;
+
+		/* Never happens
+		if (view->signal & 0) {
+			view->signal &= ~_K_VIEW_SIG_FLAG_FREESCI_STOPUPD;
+			fprintf(stderr, "Unsetting magic StopUpd for view %04x\n", view->ID);
+		} */
 
 		view = (gfxw_dyn_view_t *) view->next;
 	}
@@ -1972,8 +1981,12 @@ _k_update_signals_in_view_list(gfxw_list_t *old_list, gfxw_list_t *new_list)
 		while (new_widget && new_widget->ID != old_widget->ID)
 			new_widget = (gfxw_dyn_view_t *) new_widget->next;
 
-		if (new_widget)
-			old_widget->signal = new_widget->signal;
+		if (new_widget) {
+			int carry = old_widget->signal & _K_VIEW_SIG_FLAG_FREESCI_STOPUPD;
+			/* Transfer 'stopupd' flag */
+
+			old_widget->signal = new_widget->signal |= carry;
+		}
 
 		old_widget = (gfxw_dyn_view_t *) old_widget->next;
 	}
@@ -2524,8 +2537,6 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			int width_l = 5 * (granularity3 - real_i + i);
 			int height = real_i * 3;
 			int width = real_i * 5;
-			fprintf(stderr,"width=%d l=%d i=%d g=%d\n",
-				width, width_l, i, granularity3);
 
 			GRAPH_BLANK_BOX(s, width, 10 + height,
 					width_l, 190 - 2*height, 0);
