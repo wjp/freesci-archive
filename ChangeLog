@@ -1,5 +1,8 @@
 2002-12-28  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/kmovement.c (kDoBresen): Read client::moveSpeed to
+	determine whether (and if, then how) b-movCnt should be modified
+
 	* src/engine/kgraphics.c (kAnimate): Now distinguish between port-based
 	and pic-based aborts; restart after the latter and abort after the
 	former (if occured during ::doit)

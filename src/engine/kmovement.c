@@ -167,6 +167,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int oldx, oldy, destx, desty, dx, dy, bdi, bi1, bi2, movcnt, bdelta, axis;
 	word signal = GET_SELECTOR(client, signal);
 	int completed = 0;
+	int max_movcnt = GET_SELECTOR(client, moveSpeed);
 
 	if (SCI_VERSION_MAJOR(s->version)>0)
 	  signal&=~_K_VIEW_SIG_FLAG_HIT_OBSTACLE;
@@ -194,7 +195,6 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 
 	PUT_SELECTOR(mover, b_di, bdi);
-/*	PUT_SELECTOR(mover, b_movCnt, movcnt - 1); *//* Needed for HQ1/Ogre? */
 
 	x += dx;
 	y += dy;
@@ -237,7 +237,15 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	invoke_selector(INV_SEL(client, canBeHere, 0), 0);
 
 	if (s->acc) { /* Contains the return value */
-		s->acc = completed;
+		if (completed)
+			s->acc = completed;
+		else {
+			++movcnt;
+			if (movcnt > max_movcnt)
+				movcnt = 0;
+
+			PUT_SELECTOR(mover, b_movCnt, movcnt); /* Needed for HQ1/Ogre? */
+		}
 	}
 	else {
 		signal = UGET_SELECTOR(client, signal);

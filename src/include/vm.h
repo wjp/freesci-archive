@@ -187,7 +187,7 @@ typedef struct {
 
 	int looper, mover, isBlocked, heading; /* Used in DoAvoider */
 
-	int caller, moveDone; /* Used for DoBresen */
+	int caller, moveDone, moveSpeed; /* Used for DoBresen */
 
 #ifndef __cplusplus
 /* Compiling as C++ not really supported; let's hope you're only using this on an insignificant sub-part */
