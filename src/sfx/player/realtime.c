@@ -179,6 +179,7 @@ rt_set_iterator(song_iterator_t *it, GTimeVal start_time)
 	}
 
 	SIMSG_SEND(it, SIMSG_SET_PLAYMASK(seq->playmask));
+	SIMSG_SEND(it, SIMSG_SET_RHYTHM(seq->play_rhythm));
 
 	play_last_time = start_time;
 	play_it = it;

@@ -57,6 +57,7 @@
 
 #define SCI_XLIB_SWAP_CTRL_CAPS (1 << 0)
 #define SCI_XLIB_INSERT_MODE    (1 << 1)
+#define SCI_XLIB_NLS		(1 << 2) /* Non-US keyboard support, sacrificing shortcut keys */
 
 #define X_COLOR_EXT(c) ((c << 8) | c)
 
@@ -212,6 +213,16 @@ xlib_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 			flags |= SCI_XLIB_SWAP_CTRL_CAPS;
 		else
 			flags &= ~SCI_XLIB_SWAP_CTRL_CAPS;
+
+		return GFX_OK;
+	}
+
+	if (!strncmp(attribute, "localised_keyboard", 18)
+	    || !strncmp(attribute, "localized_keyboard", 18)) {
+		if (string_truep(value))
+			flags |= SCI_XLIB_NLS;
+		else
+			flags &= ~SCI_XLIB_NLS;
 
 		return GFX_OK;
 	}
@@ -1122,23 +1133,15 @@ x_unmap_key(gfx_driver_t *drv, int keycode)
 {
 	KeySym xkey = XKeycodeToKeysym(S->display, keycode, 0);
 
-
 	return 0;
 }
 
 int
 x_map_key(gfx_driver_t *drv, XEvent *key_event, char *character)
 {
-	KeySym xkey;
+        KeySym xkey = XKeycodeToKeysym(S->display, key_event->xkey.keycode, 0);
 
-	XLookupString(key_event, character, 1, &xkey, NULL);
-
-	if ((xkey >= 'A') && (xkey <= 'Z'))
-		return xkey;
-	if ((xkey >= 'a') && (xkey <= 'z'))
-		return xkey;
-	if ((xkey >= '0') && (xkey <= '9'))
-		return xkey;
+	*character = 0;
 
 	if (flags & SCI_XLIB_SWAP_CTRL_CAPS) {
 		switch (xkey) {
@@ -1147,7 +1150,8 @@ x_map_key(gfx_driver_t *drv, XEvent *key_event, char *character)
 		}
 	}
 
-	switch (xkey) {
+	switch(xkey) {
+
 	case XK_BackSpace: return SCI_K_BACKSPACE;
 	case XK_Tab: return 9;
 	case XK_Escape: return SCI_K_ESC;
@@ -1208,13 +1212,27 @@ x_map_key(gfx_driver_t *drv, XEvent *key_event, char *character)
 	case XK_Shift_L:/* S->buckystate |= SCI_EVM_LSHIFT; return 0; */
 	case XK_Shift_R:/* S->buckystate |= SCI_EVM_RSHIFT; return 0; */
 		return 0;
+	default:
+	}
 
 
+	if (flags & SCI_XLIB_NLS) {
+		/* Localised key lookup */
+		XLookupString(&(key_event->xkey), character, 1, &xkey, NULL);
+	}
+
+	if ((xkey >= 'A') && (xkey <= 'Z'))
+		return xkey;
+	if ((xkey >= 'a') && (xkey <= 'z'))
+		return xkey;
+	if ((xkey >= '0') && (xkey <= '9'))
+		return xkey;
+
+	switch (xkey) {
 	case XK_KP_Add: return '+';
 	case XK_KP_Divide: return '/';
 	case XK_KP_Subtract: return '-';
 	case XK_KP_Multiply: return '*';
-
 	}
 
 	if (*character)
@@ -1268,6 +1286,7 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 
 				    case KeyPress: {
 					    int modifiers = event.xkey.state;
+					    char ch;
 					    sci_event->type = SCI_EVT_KEYBOARD;
 
 					    S->buckystate = ((flags & SCI_XLIB_INSERT_MODE)? SCI_EVM_INSERT : 0)
@@ -1280,8 +1299,13 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 
 					    sci_event->buckybits = S->buckystate;
 					    sci_event->data =
-						    x_map_key(drv, &event,
-							      &(sci_event->character));
+						    x_map_key(drv, &event, &ch);
+
+
+					    if (ch)
+						    sci_event->character = ch;
+					    else
+						    sci_event->character = sci_event->data;
 
 					    if (sci_event->data == SCI_K_INSERT)
 						    flags ^= SCI_XLIB_INSERT_MODE;
@@ -1381,7 +1405,7 @@ xlib_usec_sleep(struct _gfx_driver *drv, long usecs)
 gfx_driver_t
 gfx_driver_xlib = {
 	"xlib",
-	"0.4",
+	"0.5",
 	SCI_GFX_DRIVER_MAGIC,
 	SCI_GFX_DRIVER_VERSION,
 	NULL,

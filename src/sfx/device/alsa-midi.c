@@ -31,6 +31,8 @@
 
 #include <alsa/asoundlib.h>
 
+#define SCI_ALSA_MIDI_VERSION "0.1"
+
 static snd_midi_event_t *parser = NULL;
 static snd_seq_t *seq = NULL;
 static int queue = -1;
@@ -42,6 +44,21 @@ static char *seq_name = "default";
 static void
 _set_tempo()
 {
+	int resolution = 60;
+	int tempo = 60;
+	snd_seq_queue_tempo_t *queue_tempo;
+
+	snd_seq_queue_tempo_malloc(&queue_tempo);
+
+        memset(queue_tempo, 0, snd_seq_queue_tempo_sizeof());
+        snd_seq_queue_tempo_set_ppq(queue_tempo, resolution);
+        snd_seq_queue_tempo_set_tempo(queue_tempo, 1000000/tempo);
+
+        snd_seq_set_queue_tempo(seq, queue, queue_tempo);
+
+	snd_seq_queue_tempo_free(queue_tempo);
+
+#if 0
 	int tempo = 1000000 / 60;
 	snd_seq_queue_tempo_t *queue_tempo;
 
@@ -50,13 +67,30 @@ _set_tempo()
 	snd_seq_queue_tempo_set_ppq(queue_tempo, 1);
 	snd_seq_set_queue_tempo(seq, queue, queue_tempo);
 	snd_seq_queue_tempo_free(queue_tempo);
+#endif
 }
+
+
+static int
+am_subscribe_to_ports()
+{
+	if ((port_out = snd_seq_connect_to(seq, port_out, 64, 0)) < 0) {
+		fprintf(stderr, "[SFX] Could not connect to ALSA sequencer port: %s\n", snd_strerror(port_out));
+		return SFX_ERROR;
+	}
+	return SFX_OK;
+}
+
 
 static int
 aminit(midi_writer_t *self)
 {
+	int err;
+
 	snd_midi_event_new(4096, &parser);
 	snd_midi_event_init(parser);
+
+	sciprintf("[SFX] Initialising ALSA MIDI backend, v%s\n", SCI_ALSA_MIDI_VERSION);
 
 	if (snd_seq_open(&seq, seq_name, SND_SEQ_OPEN_OUTPUT, SND_SEQ_NONBLOCK)) {
 		fprintf(stderr, "[SFX] Failed to open ALSA MIDI sequencer '%s' for output\n",
@@ -65,15 +99,28 @@ aminit(midi_writer_t *self)
 	}
 
 	if ((port_out = snd_seq_create_simple_port(seq, "FreeSCI",
-						      SND_SEQ_PORT_CAP_READ|SND_SEQ_PORT_CAP_SUBS_READ,
-						      SND_SEQ_PORT_TYPE_APPLICATION)) < 0) {
+						   SND_SEQ_PORT_CAP_WRITE |
+						   SND_SEQ_PORT_CAP_SUBS_WRITE |
+						   SND_SEQ_PORT_CAP_READ,
+						   SND_SEQ_PORT_TYPE_MIDI_GENERIC)) < 0) {
 		fprintf(stderr, "[SFX] Could not create ALSA sequencer port\n");
 		return SFX_ERROR;
 	}
 
+	if (am_subscribe_to_ports())
+		return SFX_ERROR;
+
 	queue = snd_seq_alloc_queue(seq);
 	_set_tempo();
+
 	snd_seq_start_queue(seq, queue, NULL);
+
+	if ((err = snd_seq_drain_output(seq))) {
+		fflush(NULL);
+		sprintf("[SFX] Error while draining: %s\n",
+			snd_strerror(err));
+		return SFX_ERROR;
+	}
 
 	return SFX_OK;
 }
@@ -86,14 +133,19 @@ amsetopt(midi_writer_t *self, char *name, char *value)
 
 
 static int
-amwrite(midi_writer_t *self, char *buf, int len)
+amwrite(midi_writer_t *self, unsigned char *buf, int len)
 {
 	snd_seq_event_t evt;
 
+	snd_seq_ev_clear(&evt);
+	snd_seq_ev_set_source(&evt, port_out);
+	snd_seq_ev_set_subs(&evt); /* Broadcast to all subscribers */
+
 	snd_midi_event_encode(parser, buf, len, &evt);
 	snd_seq_ev_schedule_tick(&evt, queue,  1, delta);
-	snd_seq_ev_set_source(&evt, port_out);
-	snd_seq_event_output(seq, &evt);
+	delta = 0;
+
+	snd_seq_event_output_direct(seq, &evt);
 
 	return SFX_OK;
 }

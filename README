@@ -296,6 +296,12 @@ At this time, the GGI driver does not have any specific configuration options.
 --------------------
 - disable_shmem = true | false
 disables shmem x11 access (meaningless if XShm support wasn't compiled in).
+- swap_ctrl_caps = true | false
+Swap Ctrl and CapsLock
+- localise_keyboard = true | false
+Try to interpret keys according to the X11 native keyboard lookup table. This
+will make keys act according to their labels on non-US keyboards, but will
+render shortcut keys (Ctrl-*, Alt-*) disabled in many cases.
 
 2.1.1.3 SDL driver:
 -------------------

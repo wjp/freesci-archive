@@ -152,7 +152,6 @@ _sci0_read_next_command(base_song_iterator_t *self, unsigned char *buf, int *res
 		midi_op = cmd >> 4;
 		midi_channel = cmd & 0xf;
 		paramsleft = MIDI_cmdlen[midi_op];
-
 #if 0
 		fprintf(stderr, "[IT]: off=%d, cmd=%02x, takes %d args ",
 			self->offset - 1, cmd, paramsleft);
@@ -177,8 +176,10 @@ _sci0_read_next_command(base_song_iterator_t *self, unsigned char *buf, int *res
 		self->last_cmd = cmd;
 
 		/* Are we supposed to play this channel? */
-		if (self->playmask != PLAYMASK_NONE
-		    && !(self->data[2 + (midi_channel << 1)] & self->playmask))
+		if (self->playmask == PLAYMASK_NONE
+		    || ((midi_channel == MIDI_RHYTHM_CHANNEL) && !self->play_rhythm)
+		    || ((midi_channel != MIDI_RHYTHM_CHANNEL)
+			&& !(self->data[2 + (midi_channel << 1)] & self->playmask)))
 			return /* Execute next command */
 				_sci0_read_next_command(self, buf,
 							result);
@@ -356,11 +357,15 @@ _base_handle_message(base_song_iterator_t *self, song_iterator_message_t msg)
 			memcpy(mem, self, tsize);
 			mem->data = sci_malloc(mem->size);
 			memcpy(mem->data, self->data, self->size);
-			return mem; /* Assume caller has another copy of this */
+			return (struct _song_iterator *) mem; /* Assume caller has another copy of this */
 		}
 
 		case _SIMSG_BASEMSG_SET_PLAYMASK:
 			self->playmask = msg.args[0];
+			break;
+
+		case _SIMSG_BASEMSG_SET_RHYTHM:
+			self->play_rhythm = msg.args[0];
 			break;
 
 		default:
@@ -381,6 +386,7 @@ _sci0_init(base_song_iterator_t *self)
 	self->state = SI_STATE_DELTA_TIME;
 	self->ccc = 127; /* Reset cumulative cue counter */
 	self->playmask = PLAYMASK_NONE; /* All channels */
+	self->play_rhythm = 0; /* Disable rhythm channel */
 }
 
 static void

@@ -30,8 +30,6 @@
 #include <stdio.h>
 #include <sfx_device.h>
 
-#define RHYTHM_CHANNEL 9
-
 #define SFX_SEQ_PATCHFILE_NONE -1
 
 typedef struct _sfx_sequencer {
@@ -105,7 +103,7 @@ typedef struct _sfx_sequencer {
 		       ** SFX_SEQ_PATCHFILE_NONE  */
 	guint8 playmask; /* SCI 'playflag' mask to determine which SCI song channels
 			 ** this sequencer should play */
-	guint8 playrhythm; /* Plays the rhythm channel? */
+	guint8 play_rhythm; /* Plays the rhythm channel? */
 	gint8 polyphony; /* Device polyphony (# of voices) */
 
 	int min_write_ahead_ms; /* Minimal write-ahead, in milliseconds */

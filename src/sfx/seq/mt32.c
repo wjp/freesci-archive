@@ -156,7 +156,7 @@ midiout_write_block(byte *buf, int len, int delta)
 {
 	if (delta)
 		midi_writer->delay(midi_writer, delta);
-		
+
 	return midi_writer->write(midi_writer, buf, len);
 }
 
@@ -296,7 +296,7 @@ int midi_mt32_close(void)
 	midi_mt32_allstop();
 	if (type == 0) {
 		printf("MT-32: Displaying Text: \"%.20s\"\n", shutdown_msg);
-		midi_mt32_poke(0x200000, shutdown_msg, 20);
+		midi_mt32_poke(0x200000, (unsigned char *) shutdown_msg, 20);
 	}
 	midi_writer->close(midi_writer);
 	return SFX_OK;
@@ -510,7 +510,6 @@ midi_mt32_event(byte command, int argc, byte *argv)
 
 	buf[0] = command;
 	memcpy(buf + 1, argv, argc);
-
 	midiout_write_block(buf, argc + 1, delta);
 }
 

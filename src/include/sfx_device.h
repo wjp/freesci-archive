@@ -69,7 +69,7 @@ typedef struct _midi_writer {
 	** Returns   : (int) SFX_OK on success, SFX_ERROR otherwise (unsupported option)
 	*/
 
-	int (*write)(struct _midi_writer *self, char *buf, int len);
+	int (*write)(struct _midi_writer *self, unsigned char *buf, int len);
 	/* Writes some bytes to the MIDI stream
 	** Parameters: (char *) buf: The buffer to write
 	**             (int) len: Number of bytes to write
