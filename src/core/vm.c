@@ -4,8 +4,11 @@
 
 
 
-void (*VM_debug_function)(state *s, heap_ptr pc, heap_ptr sp, heap_ptr pp, heap_ptr objp) = NULL;
-/* The VM single step debug function */
+int script_debug_flag = 0; /* Defaulting to no debug mode */
+int script_abort_flag = 0; /* Set to 1 to abort execution */
+int script_exec_stackpos = -1; /* 0 means that one script is active */
+
+script_exec_stack_t script_exec_stack[SCRIPT_MAX_EXEC_STACK];
 
 #if 0
 instance* instantiate(heap_t* h, object* o)
@@ -25,15 +28,13 @@ instance* instantiate(heap_t* h, object* o)
 }
 #endif /* false */
 
-void
-scriptdebug(state *s, heap_ptr pc, heap_ptr sp, heap_ptr pp, heap_ptr objp)
+int
+script_error(state *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp, char *reason,
+	     int nonfatal) /* set nonfatal to 1 if returning should be allowed */
 {
-  if (VM_debug_function)
-    VM_debug_function(s, pc, sp, pp, objp);
-  else {
-    fprintf(stderr,"Scriptdebug requested: STUB\n"); /* FIXME */
-    exit (-1);
-  }
+  sciprintf("Script error: %s at 0x%04x\n", reason, *pc);
+  script_debug(s, pc, sp, pp, objp, nonfatal);
+  return 0;
 }
 
 #define putInt16(bytes, value) do{\
@@ -54,6 +55,13 @@ scriptdebug(state *s, heap_ptr pc, heap_ptr sp, heap_ptr pp, heap_ptr objp)
 #define GET_OP_SIGNED_WORD() ((gint16)(getInt16(s->heap + (pc += 2) - 2)))
 #define GET_OP_SIGNED_FLEX() ((opcode & 1)? GET_OP_SIGNED_BYTE() : GET_OP_SIGNED_WORD())
 
+#define GET_HEAP(address) ((address) < 800)? \
+script_error(s, &pc, &sp, &pp, &objp, "Heap address space violation on read", 0) \
+: getInt16(s->heap + (address))
+
+#define PUT_HEAP(address, value) if ((address) < 800) \
+script_error(s, &pc, &sp, &pp, &objp, "Heap address space violation on write", 0); \
+else { s->heap[address] = (value) &0xff; s->heap[(address) + 1] = ((value) >> 8) & 0xff;}
 
 
 void
@@ -67,17 +75,41 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
 {
   gint16 temp, temp2, temp3;
   gint16 pp = sp;
-  heap_ptr local_vars = objp + SCRIPT_SELECTOR_OFFSET;
+  heap_ptr local_vars = getInt16(s->heap + SCRIPT_LOCALVARPTR_OFFSET);
+
   heap_ptr variables[4] =
   { s->global_vars, local_vars, pp, argp }; /* Offsets of global, local, temp, and param variables */
 
+  heap_ptr selector_offset = objp + SCRIPT_SELECTOR_OFFSET;
+
+  /* Start entering debug information into call stack debug blocks */
+  ++script_exec_stackpos;
+  script_exec_stack[script_exec_stackpos].objpp = &objp;
+  script_exec_stack[script_exec_stackpos].pcp = &pc;
+  script_exec_stack[script_exec_stackpos].spp = &sp;
+  script_exec_stack[script_exec_stackpos].ppp = &pp;
+  script_exec_stack[script_exec_stackpos].argcp = &argc;
+  script_exec_stack[script_exec_stackpos].argpp = &argp;
+
   while (1) {
+    heap_ptr old_pc = pc;
     byte opcode = GET_OP_BYTE(); /* Get opcode */
     int var_number; /* See description below */
 
-    if (VM_debug_function)
-      VM_debug_function(s, pc, sp, pp, objp);
+    if (script_abort_flag)
+      return; /* Emergency */
+    if (script_debug_flag)
+      script_debug(s, &pc, &sp, &pp, &objp, 1);
     /* Debug if this has been requested */
+
+    if (sp < s->heap_base)
+      script_error(s, &pc, &sp, &pp, &objp, "Absolute stack underflow", 0);
+
+    if (sp < pp)
+      script_error(s, &pc, &sp, &pp, &objp, "Relative stack underflow", 1);
+
+    if (pc < 800)
+      script_error(s, &pc, &sp, &pp, &objp, "Program Counter gone astray", 0);
 
     switch (opcode >> 1) {
     case 0x00: /* bnot */
@@ -198,6 +230,7 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
       executeMethod(s, temp, temp2, sp, getInt16(s->heap + (sp - temp3 - 2)) , sp - temp3);
       break;
     case 0x24: /* ret */
+      --script_exec_stackpos; /* Go back one exec stack level */
       return; /* Hard return */
       break;
     case 0x25: /* send */
@@ -210,10 +243,24 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
       /* FIXME */
       break;
     case 0x2b: /* super */
+      /* FIXME */
       break;
     case 0x2c: /* &rest */
+      temp = GET_OP_FLEX() - 1; /* First argument (we start counting at 0) */
+      temp2 = argp + (temp << 1); /* Pointer to the first argument to &restore */
+      for (; temp < argc; temp++) {
+	PUSH(getInt16(s->heap + temp2));
+	temp2 += 2;
+      }
       break;
     case 0x2d: /* lea */
+      temp = GET_OP_FLEX() >> 1;
+      var_number = temp & 0x03; /* Get variable type */
+
+      temp2 = variables[var_number]; /* Get variable block offset */
+      if (temp & 0x08)
+	temp2 += s->acc; /* Add accumulator offset if requested */
+      s->acc = temp2 + (GET_OP_BYTE() << 1); /* Add index */
       break;
     case 0x2e: /* selfID */
       s->acc = objp;
@@ -222,20 +269,34 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
       PUSH(s->prev);
       break;
     case 0x31: /* pToa */
+      s->acc = GET_HEAP(selector_offset + GET_OP_FLEX()); 
       break;
     case 0x32: /* aTop */
+      PUT_HEAP(selector_offset + GET_OP_FLEX(), s->acc);
       break;
     case 0x33: /* pTos */
+      PUSH(GET_HEAP(selector_offset + GET_OP_FLEX()));
       break;
     case 0x34: /* sTop */
+      PUT_HEAP(selector_offset + GETO_OP_FLEX(), POP());
       break;
     case 0x35: /* ipToa */
+      s->acc = GET_HEAP(selector_offset + GET_OP_FLEX()); 
+      ++(s->acc);
+      PUT_HEAP(selector_offset + GET_OP_FLEX(), s->acc);
       break;
     case 0x36: /* dpToa */
+      s->acc = GET_HEAP(selector_offset + GET_OP_FLEX()); 
+      --(s->acc);
+      PUT_HEAP(selector_offset + GET_OP_FLEX(), s->acc);
       break;
     case 0x37: /* ipTos */
+      temp = GET_HEAP(selector_offset + GET_OP_FLEX()); 
+      PUT_HEAP(selector_offset + GET_OP_FLEX(), temp + 1);
       break;
     case 0x38: /* dpTos */
+      temp = GET_HEAP(selector_offset + GET_OP_FLEX()); 
+      PUT_HEAP(selector_offset + GET_OP_FLEX(), temp - 1);
       break;
     case 0x39: /* lofsa */
       break;
@@ -259,6 +320,7 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
     case 0x43: /* lap */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
       temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      s->acc = GET_HEAP(temp);
       break;
     case 0x44: /* lsg */
     case 0x45: /* lsl */
@@ -266,6 +328,7 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
     case 0x47: /* lsp */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
       temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      PUSH(GET_HEAP(temp));
       break;
     case 0x48: /* lagi */
     case 0x49: /* lali */
@@ -273,6 +336,7 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
     case 0x4b: /* lapi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
       temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      s->acc = GET_HEAP(temp + s->acc);
       break;
     case 0x4c: /* lsgi */
     case 0x4d: /* lsli */
@@ -280,6 +344,7 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
     case 0x4f: /* lspi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
       temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      PUSH(GET_HEAP(temp + s->acc));
       break;
     case 0x50: /* sag */
     case 0x51: /* sal */
@@ -287,6 +352,7 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
     case 0x53: /* sap */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
       temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      PUT_HEAP(temp, s->acc);
       break;
     case 0x54: /* ssg */
     case 0x55: /* ssl */
@@ -294,6 +360,7 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
     case 0x57: /* ssp */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
       temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      PUT_HEAP(temp, POP());
       break;
     case 0x58: /* sagi */
     case 0x59: /* sali */
@@ -301,6 +368,7 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
     case 0x5b: /* sapi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
       temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      PUT_HEAP(temp + s->acc, s->acc);
       break;
     case 0x5c: /* ssgi */
     case 0x5d: /* ssli */
@@ -308,6 +376,7 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
     case 0x5f: /* sspi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
       temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      PUT_HEAP(temp + s->acc, POP());
       break;
     case 0x60: /* +ag */
     case 0x61: /* +al */
@@ -315,6 +384,9 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
     case 0x63: /* +ap */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
       temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      s->acc = GET_HEAP(temp);
+      ++(s->acc);
+      GET_HEAP(temp);
       break;
     case 0x64: /* +sg */
     case 0x65: /* +sl */
@@ -322,6 +394,10 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
     case 0x67: /* +sp */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
       temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp2 = GET_HEAP(temp);
+      temp2++;
+      PUT_HEAP(temp, temp2);
+      PUSH(temp2);
       break;
     case 0x68: /* +agi */
     case 0x69: /* +ali */
@@ -329,6 +405,9 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
     case 0x6b: /* +api */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
       temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      s->acc = GET_HEAP(temp + s->acc);
+      ++(s->acc);
+      PUT_HEAP(temp, s->acc);
       break;
     case 0x6c: /* +sgi */
     case 0x6d: /* +sli */
@@ -336,6 +415,10 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
     case 0x6f: /* +spi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
       temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp2 = GET_HEAP(temp + s->acc);
+      temp2++;
+      PUT_HEAP(temp, temp2);
+      PUSH(temp2);
       break;
     case 0x70: /* -ag */
     case 0x71: /* -al */
@@ -343,6 +426,9 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
     case 0x73: /* -ap */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
       temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      s->acc = GET_HEAP(temp);
+      --(s->acc);
+      PUT_HEAP(temp, s->acc);
       break;
     case 0x74: /* -sg */
     case 0x75: /* -sl */
@@ -350,6 +436,10 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
     case 0x77: /* -sp */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
       temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp2 = GET_HEAP(temp);
+      temp2--;
+      PUT_HEAP(temp, temp2);
+      PUSH(temp2);
       break;
     case 0x78: /* -agi */
     case 0x79: /* -ali */
@@ -357,6 +447,9 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
     case 0x7b: /* -api */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
       temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      s->acc = GET_HEAP(temp + s->acc);
+      --(s->acc);
+      PUT_HEAP(temp, s->acc);
       break;
     case 0x7c: /* -sgi */
     case 0x7d: /* -sli */
@@ -364,11 +457,14 @@ execute(state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, word argc, heap_ptr a
     case 0x7f: /* -spi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
       temp = variables[var_number] + (GET_OP_FLEX() << 1);
+      temp2 = GET_HEAP(temp + s->acc);
+      temp2--;
+      PUT_HEAP(temp, temp2);
+      PUSH(temp2);
       break;
     default:
-      pc--;
-      sciprintf("Illegal opcode: %x\n at %x!\n", opcode & 0xff, pc);
-      scriptdebug(s, pc, sp, pp, objp);
+      pc = old_pc;
+      scriptdebug(s, &pc, &sp, &pp, &objp, "Illegal opcode", 0);
     }
   }
 }
