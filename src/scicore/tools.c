@@ -28,7 +28,12 @@
 
 #include <engine.h>
 #include <kdebug.h>
-#include <sys/time.h>
+#ifdef HAVE_SYS_TIME_H
+#  include <sys/time.h>
+#endif
+#ifdef _MSC_VER
+#  include <sys/timeb.h>
+#endif
 
 
 #ifdef HAVE_MEMFROB
@@ -193,6 +198,7 @@ _SCIGNUkdebug(char *funcname, state_t *s, char *file, int line, int area, char *
 }
 
 
+#ifdef HAVE_SYS_TIME_H
 void
 sci_gettime(int *seconds, int *useconds)
 {
@@ -202,4 +208,20 @@ sci_gettime(int *seconds, int *useconds)
         *seconds = time(NULL);
         *useconds = tv.tv_usec;
 }
+#elif defined (_MSC_VER)
+void sci_gettime(int *seconds, int *useconds)
+{
+
+        struct _timeb tv;
+
+     _ftime(&tv);
+     *seconds = time(NULL);
+     *useconds = tv.millitm*1000;
+}
+#else
+#  error "You need to provide a microsecond resolution sci_gettime implementation!"
+#endif
+
+
+
 

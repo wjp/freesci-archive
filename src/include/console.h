@@ -113,14 +113,6 @@ extern struct _state *con_gamestate;
 /*** FUNCTION DEFINITIONS ***/
 
 
-void
-sciprintf(char *fmt, ...);
-/* Prints a string to the console stack
-** Parameters: fmt: a printf-style format string
-**             ...: Additional parameters as defined in fmt
-** Returns   : (void)
-*/
-
 char *
 con_input(sci_event_t *event);
 /* Handles an input event

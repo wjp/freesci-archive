@@ -11,21 +11,21 @@
 
 /* General output macros */
 #ifdef __GNUC__
-# define GFXERROR sciprintf("GFX Error: %s, %s() L%d:", __FILE__, __FUNCTION__, __LINE__); sciprintf
-# define GFXWARN sciprintf("GFX Warning: %s, %s() L%d:", __FILE__, __FUNCTION__, __LINE__); sciprintf
-# ifdef GFX_DEBUG
-#  define GFXDEBUG sciprintf("GFX-debug: %s, %s() L%d:", __FILE__, __FUNCTION__, __LINE__); sciprintf
-# else /* !GFX_DEBUG */
-#  define GFXDEBUG if (0) printf
-# endif /* !GFX_DEBUG */
+#  define GFXERROR gfxprintf("GFX Error: %s, %s() L%d:", __FILE__, __FUNCTION__, __LINE__); sciprintf
+#  define GFXWARN gfxprintf("GFX Warning: %s, %s() L%d:", __FILE__, __FUNCTION__, __LINE__); sciprintf
+#  ifdef GFX_DEBUG
+#    define GFXDEBUG gfxprintf("GFX-debug: %s, %s() L%d:", __FILE__, __FUNCTION__, __LINE__); sciprintf
+#  else /* !GFX_DEBUG */
+#    define GFXDEBUG if (0) printf
+#  endif /* !GFX_DEBUG */
 #else /* !__GNUC__ */
-# define GFXERROR sciprintf("GFX Error: %s, L%d:", __FILE__, __LINE__); sciprintf
-# define GFXWARN sciprintf("GFX Warning: %s, L%d:", __FILE__, __LINE__); sciprintf
-# ifdef GFXDEBUG
-#  define GFXDEBUG sciprintf("GFX-debug: %s, L%d:", __FILE__, __LINE__); sciprintf
-# else /* !GFX_DEBUG */
-#  define GFXDEBUG if (0) printf
-# endif /* !GFX_DEBUG */
+#  define GFXERROR gfxprintf("GFX Error: %s, L%d:", __FILE__, __LINE__); sciprintf
+#  define GFXWARN gfxprintf("GFX Warning: %s, L%d:", __FILE__, __LINE__); sciprintf
+#  ifdef GFXDEBUG
+#    define GFXDEBUG gfxprintf("GFX-debug: %s, L%d:", __FILE__, __LINE__); sciprintf
+#  else /* !GFX_DEBUG */
+#    define GFXDEBUG if (0) printf
+#  endif /* !GFX_DEBUG */
 #endif /* !__GNUC__ */
 
 /***********************/
@@ -137,7 +137,7 @@ gfx_rects_overlap(rect_t a, rect_t b)
 	return OVERLAP(a, b, x, xl) || OVERLAP(a, b, y, yl) || OVERLAP(b, a, x, xl) || OVERLAP(b, a, y, yl);
 }
 
-#undef OVERLAP(z, zl)
+#undef OVERLAP
 
 #define MERGE_PARTIAL(z, zl) \
 if (a.z < b.z) SUBMERGE_PARTIAL(a, b, z, zl) \
@@ -167,8 +167,8 @@ gfx_rects_merge(rect_t a, rect_t b)
 	MERGE_PARTIAL(y, yl);
 	return retval;
 }
-#undef MERGE_PARTIAL(z, zl)
-#undef SUBMERGE_PARTIAL(a, b, z, zl)
+#undef MERGE_PARTIAL
+#undef SUBMERGE_PARTIAL
 
 
 /* Subset predicate for rectangles

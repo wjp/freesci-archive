@@ -26,12 +26,15 @@
 ***************************************************************************/
 /* gfx driver test and verification program */
 
+#ifndef _MSC_VER
+#  include <unistd.h>
+#  include <sys/time.h>
+#endif
+
 #include <assert.h>
 #include <sys/stat.h>
-#include <sys/time.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include <sys/mman.h>
 #include <string.h>
 #include <gfx_drivers_list.h>

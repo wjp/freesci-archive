@@ -369,7 +369,7 @@ sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char 
 
 	if (font_height <= 0) {
 		GFXERROR("Attempt to create list control with invalid font %d\n", font_nr);
-		list->free(GFXWC(list));
+		list->free(GFXW(list));
 		return NULL;
 	}
 
@@ -424,6 +424,4 @@ sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char 
 
 	return list;
 }
-
-
 

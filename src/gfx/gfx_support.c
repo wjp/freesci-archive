@@ -97,7 +97,7 @@ gfx_draw_line_buffer(byte *buffer, int linewidth, rect_t line, int color)
   }
 }
 
-#undef LINEMACRO()
+#undef LINEMACRO
 
 
 

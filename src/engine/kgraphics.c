@@ -134,7 +134,7 @@ void
 _k_redraw_box(state_t *s, int x1, int y1, int x2, int y2)
 {
   int i;
-#warning "_k_redraw_box: Fixme!"
+WARNING( "_k_redraw_box: Fixme!")
 #if 0
 
   view_object_t *list = s->dyn_views;
@@ -204,7 +204,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   case K_GRAPH_SAVE_BOX:
 
-#warning "fixme!"
+WARNING(fixme)
 #if 0
     s->acc = graph_save_box(s, PARAM(2), PARAM(1), PARAM(4), PARAM(3), PARAM(5));
 #endif
@@ -212,7 +212,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   case K_GRAPH_RESTORE_BOX:
 
-#warning "fixme!"
+WARNING(fixme)
 #if 0
     graph_restore_box(s, PARAM(1));
 #endif
@@ -220,7 +220,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   case K_GRAPH_FILL_BOX_BACKGROUND:
 
-#warning "fixme!"
+WARNING(fixme)
 #if 0
     graph_clear_box(s, port->xmin, port->ymin,
 		    port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
@@ -232,7 +232,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   case K_GRAPH_FILL_BOX_FOREGROUND:
 
-#warning "fixme!"
+WARNING(fixme)
 #if 0
     graph_clear_box(s, port->xmin, port->ymin,
 		    port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
@@ -246,7 +246,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
     int x = PARAM(2);
     int y = PARAM(1);
 
-#warning "fixme!"
+WARNING(fixme)
 #if 0
     SCIkdebug(SCIkGRAPHICS, "fill_box_any(%d, %d, %d, %d) map=%d (%d %d)\n",
 	      PARAM(1), PARAM(2), PARAM(3), PARAM(4), PARAM(5), PARAM(6), PARAM_OR_ALT(7, -1));
@@ -265,7 +265,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
     int x = PARAM(2);
     int y = PARAM(1);
 
-#warning "fixme!"
+WARNING(fixme)
 #if 0
     SCIkdebug(SCIkGRAPHICS, "update_box(%d, %d, %d, %d)\n",
 	      PARAM(1), PARAM(2), PARAM(3), PARAM(4));
@@ -281,7 +281,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     CHECK_THIS_KERNEL_FUNCTION;
 
-#warning "fixme!"
+WARNING(fixme)
 #if 0
     SCIkdebug(SCIkGRAPHICS, "redraw_box(%d, %d, %d, %d)\n",
 	      PARAM(1), PARAM(2), PARAM(3), PARAM(4));
@@ -638,7 +638,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	signal = GET_SELECTOR(obj, signal);
 	SCIkdebug(SCIkBRESEN,"Checking collision: (%d,%d) to (%d,%d), obj=%04x, sig=%04x, cliplist=%04x\n",
 		  x, y, xend, yend, obj, signal, cliplist);
-#warning fixme!
+WARNING( fixme!)
 #if 0
 	s->acc = !(((word)GET_SELECTOR(obj, illegalBits))
 		   & (edgehit = graph_on_control(s, x + port->bounds.x, y + port->bounds.y, xl-1, yl-1, GFX_MASK_CONTROL)));
@@ -804,7 +804,7 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		if (ylen > 1)
 			--ylen;
 	}
-#warning fixme!
+WARNING(fixme)
 #if 0
 	s->acc = graph_on_control(s, xstart, ystart + 10, xlen, ylen, map);
 #endif
@@ -1280,7 +1280,7 @@ void
 _k_dyn_view_list_prepare_change(state_t *s)
      /* Removes all views in anticipation of a new window or text */
 {
-#warning fixme!
+WARNING(fixme)
 #if 0
   view_object_t *list = s->dyn_views;
   int list_nr = s->dyn_views_nr;
@@ -1317,7 +1317,7 @@ void
 _k_restore_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
      /* Restores the view backgrounds of list_nr members of list */
 {
-#warning fixme!
+WARNING(fixme)
 #if 0
   int i;
 
@@ -1368,7 +1368,7 @@ _k_view_list_free_backgrounds(state_t *s, view_object_t *list, int list_nr)
 {
   int i;
 
-#warning fixme!
+WARNING(fixme)
 #if 0
   SCIkdebug(SCIkMEM, "Freeing bglist: %d entries\n", list_nr);
   for (i = 0; i < list_nr; i++)
@@ -1387,7 +1387,7 @@ void
 _k_save_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
      /* Stores the view backgrounds of list_nr members of list in their underBits selectors */
 {
-#warning fixme!
+WARNING(fixme)
 #if 0
   int i;
 
@@ -1659,7 +1659,7 @@ _k_view_list_dispose(state_t *s, gfxw_list_t **list_ptr)
 fprintf(stderr,"Error: DISPOSING LIST!\n");
 BREAKPOINT();
 
-#warning fixme!
+WARNING(fixme)
   /*  _k_view_list_free_backgrounds(s, list, *list_nr_ptr);*/
 
 	list->free(GFXW(list));
@@ -1731,7 +1731,7 @@ void
 _k_dyn_view_list_accept_change(state_t *s)
      /* Restores all views after backupping their new bgs */
 {
-#warning fixme!
+WARNING(fixme)
 #if 0
   view_object_t *list = s->dyn_views;
   int list_nr = s->dyn_views_nr;
@@ -1770,7 +1770,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr list = PARAM(0);
   CHECK_THIS_KERNEL_FUNCTION;
 
-#warning fixme!
+WARNING(fixme)
 #if 0
   if (s->pic_views_nr) {
     g_free(s->pic_views);
@@ -2303,7 +2303,7 @@ kShakeScreen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int shakes = PARAM_OR_ALT(0, 1);
   int i;
-#warning fixme!
+WARNING(fixme)
 #if 0
   for (i = 0; i < shakes; i++) {
     (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_ALL, 0, -10,0,0);
@@ -2330,7 +2330,7 @@ kShakeScreen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-#warning fixme!
+WARNING(fixme)
 #if 0
   int argpt;
   int textp = UPARAM(0);

@@ -289,6 +289,16 @@ sci_gettime(int *seconds, int *useconds);
 */
 
 
+int
+sciprintf(char *fmt, ...);
+#define gfxprintf sciprintf
+/* Prints a string to the console stack
+** Parameters: fmt: a printf-style format string
+**             ...: Additional parameters as defined in fmt
+** Returns   : (void)
+** Implementation is in src/scicore/console.c
+*/
+
 /* The following was stolen and adapted from glib.h, and is partially
  * Copyright (C) 1995-1997  Peter Mattis, Spencer Kimball and Josh MacDonald
  */
@@ -300,6 +310,9 @@ sci_gettime(int *seconds, int *useconds);
 #define BREAKPOINT() { fprintf(stderr, "Missed breakpoint in %s, line %d\n", __FILE__, __LINE__); exit(1); }
 #endif  /* __i386__ */
 
+#define WARNING(foo) {void *i; i=42;}
 
 #endif
+
+
 

@@ -81,7 +81,7 @@ kDrawMenuBar(state_t *s, int funct_nr, int argc, heap_ptr argp)
     SCIkwarn(SCIkERROR, "No titlebar font is set: %d\n", s->titlebar_port->font_nr);
   }
 
-#warning fixme!
+WARNING( fixme!)
 #if 0
   if (PARAM(0))
     menubar_draw(s->pic, &(s->titlebar_port), s->menubar, -1, s->titlebar_port->font_nr);
@@ -130,7 +130,7 @@ struct {
 void
 about_freesci(state_t *s)
 {
-#warning fixme!
+WARNING( fixme!)
 #if 0
   int page;
   port_t port;
@@ -223,7 +223,7 @@ _menu_go_down(state_t *s, int menu_nr, int item_nr)
 void
 kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-#warning fixme!
+WARNING( fixme!)
 #if 0
   heap_ptr event = UPARAM(0);
   int claimed = 0;

@@ -155,7 +155,7 @@ _menubar_add_menu_item(menu_t *menu, int type, char *left, char *right, int font
     item->flags = 0;
   }
 
-#warning fixme!
+WARNING( fixme!)
 #if 0
   if (right)
     total_left_size = MENU_BOX_CENTER_PADDING + (item->keytext_size = get_text_width(right, font));
@@ -165,7 +165,7 @@ _menubar_add_menu_item(menu_t *menu, int type, char *left, char *right, int font
   item->enabled = 1;
   item->tag = tag;
   item->text_pos = text_pos;
-#warning fixme!
+WARNING( fixme!)
 #if 0
   return total_left_size + get_text_width(left, font);
 #endif
@@ -195,7 +195,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, int font, byte 
   menu->items_nr = 0;
   menu->title = malloc_cpy(title);
 
-#warning fixme!
+WARNING( fixme!)
 #if 0
   menu->title_width = get_text_width(menu->title, font);
 #endif
@@ -464,7 +464,8 @@ menubar_get_attribute(state_t *s, int menu_nr, int item_nr, int attribute)
   }
 }
 
-#warning fixme!
+static int quux()
+WARNING( fixme! And remove the previous line once you did that!)
 #if 0
 void
 menubar_draw(gfx_state_t *state, port_t *port, menubar_t *menubar, int activated, int font)

@@ -84,4 +84,4 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 
 #undef FUNCNAME
 #undef SIZETYPE
-#undef EXTEND_COLOR(x)
+#undef EXTEND_COLOR

@@ -262,7 +262,7 @@ _gfxr_auxbuf_line_clear(gfxr_pic_t *pic, rect_t line, int color)
 	}
 }
 
-#undef LINEMACRO()
+#undef LINEMACRO
 
 
 static void
@@ -2106,7 +2106,7 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 
 		case PIC_OP_TERMINATE:
 			p0printf("Terminator\n");
-#warning "ARTIFACT REMOVAL CODE is commented out!"
+WARNING( "ARTIFACT REMOVAL CODE is commented out!")
 			/* _gfxr_vismap_remove_artifacts(); */
 			return;
 			break;

@@ -312,7 +312,7 @@ void dither_line(picture_t buffers, int curx, int cury, short x1, short y1,
   col1 = tc1;
 }
 
-#undef LINEMACRO()
+#undef LINEMACRO
 
 
 int _fill_bgcol, _fill_bgcol1, _fill_bgcol2;
@@ -976,7 +976,7 @@ void draw_pic0(picture_t dest, int flags, int defaultPalette, guint8 *data)
   }
 }
 
-#undef GETPIX(x, y, screen)
+#undef GETPIX
 
 /***************************************************************************/
 /* Carl's code ends here.                                                  */

@@ -848,7 +848,7 @@ gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, in
 		return NULL;
 	}
 
-	widget = (gfxw_view_t *) _gfxw_new_widget(sizeof(gfxw_dyn_view_t), GFXW_DYN_VIEW);
+	widget = (gfxw_dyn_view_t *) _gfxw_new_widget(sizeof(gfxw_dyn_view_t), GFXW_DYN_VIEW);
 
 	widget->pos = pos;
 	widget->color.mask =

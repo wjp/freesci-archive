@@ -1136,7 +1136,7 @@ gfxop_draw_box(gfx_state_t *state, rect_t box, gfx_color_t color1, gfx_color_t c
 			return drv->draw_filled_rect(drv, new_box, draw_color1, draw_color2, driver_shade_type);
 	}
 }
-#undef COLOR_MIX(type, dist)
+#undef COLOR_MIX
 
 
 int

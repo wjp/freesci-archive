@@ -120,7 +120,7 @@ gfxr_free_resource(gfx_driver_t *driver, gfx_resource_t *resource, int type)
 	free(resource);
 }
 
-#undef FREECMD(freecmd, type)
+#undef FREECMD
 
 
 void *
@@ -238,7 +238,7 @@ gfxr_pic_xlate_common(gfx_resource_t *res, int maps, int scaled, int force, gfx_
 		
 	return res->scaled_data.pic;
 }
-#undef XLATE_AS_APPROPRIATE(key, entry)
+#undef XLATE_AS_APPROPRIATE
 
 
 gfxr_pic_t *

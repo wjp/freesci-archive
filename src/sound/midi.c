@@ -872,8 +872,8 @@ makeMIDI0(const guint8 *src, int *size)
 
 }
 
-#undef MIDI_TIMESTAMP(deltatime)
-#undef SETUP_INSTRUMENT(channel, sci_instrument)
+#undef MIDI_TIMESTAMP
+#undef SETUP_INSTRUMENT
 
 gint8
 _lookup_instrument(char *iname)

@@ -46,7 +46,6 @@
 #include <direct.h>
 #endif
 
-#warning FIXME Savegames are completely broken
 
 int
 gamestate_save(state_t *s, char *dirname)
@@ -220,5 +219,6 @@ gamestate_restore(state_t *s, char *dirname)
 
   chdir ("..");
 
+WARNING( FIXME Savegames are completely broken)
   return retval;
 }

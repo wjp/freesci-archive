@@ -44,8 +44,8 @@
 #ifdef GFX_GGI_DEBUG
 
 #define POSMSG sciprintf("%s L%d:", __FILE__, __LINE__)
-#define DEBUG_POINTER (!(drv->debug_flags & GFX_DEBUG_POINTER))? 0 : POSMSG && sciprintf
-#define DEBUG_UPDATES (!(drv->debug_flags & GFX_DEBUG_UPDATES))? 0 : POSMSG && sciprintf
+#define DEBUG_POINTER (!(drv->debug_flags & GFX_DEBUG_POINTER))? 0 : POSMSG && gfxprintf
+#define DEBUG_UPDATES (!(drv->debug_flags & GFX_DEBUG_UPDATES))? 0 : POSMSG && gfxprintf
 #define DEBUG_PIXMAPS (!(drv->debug_flags & GFX_DEBUG_PIXMAPS))? 0 : POSMSG && sciprintf
 #define DEBUG_BASIC (!(drv->debug_flags & GFX_DEBUG_BASIC))? 0 : POSMSG && sciprintf
 #else /* !GFX_GGI_DEBUG */

@@ -7,6 +7,7 @@ AM_INIT_AUTOMAKE(freesci, 0.3.1)
 AC_PROG_CC
 AC_PROG_RANLIB
 AC_CHECK_HEADERS(sys/soundcard.h)
+AC_CHECK_HEADERS(sys/time.h)
 AC_CHECK_HEADERS(obstack.h)
 AC_CHECK_HEADERS(dirent.h)
 AC_CHECK_HEADERS(unistd.h)

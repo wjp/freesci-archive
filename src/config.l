@@ -228,12 +228,12 @@ config_init(config_entry_t **_conf, char *conffile)
   conf = malloc(sizeof(config_entry_t));
 
 /**** Default config: */
-#warning fixme
+WARNING( fixme)
   //  conf->color_mode = SCI_COLOR_DITHER;
 
   conf->version = 0;
 
-#warning fixme
+WARNING( fixme)
   conf->gfx_driver = &gfx_driver_ggi;//graph_get_default_driver();
 
   conf->console_log = NULL;
@@ -342,7 +342,7 @@ config_free(config_entry_t **conf, int entries)
 static int
 _parse_color_mode(char *mode) /* Parses the color mode string */
 {
-#warning fixme!
+WARNING(fixme)
 #if 0
   struct {
     char* name;

@@ -258,7 +258,7 @@ c_classtable(state_t *s)
 int
 c_viewinfo(state_t *s)
 {
-#warning fixme!
+WARNING( fixme!)
 #if 0
   resource_t *view = findResource(sci_view, cmd_params[0].val);
   int loops, i;
@@ -505,7 +505,7 @@ c_save_game(state_t *s)
       return 1;
     }
   }
-#warning fixme!
+WARNING(fixme!)
 #if 0
   if (s->onscreen_console)
     con_restore_screen(s, s->osc_backup);
@@ -532,7 +532,7 @@ c_restore_game(state_t *s)
     sciprintf("Not in debug state\n");
     return 1;
   }
-#warning fixme!
+WARNING(fixme!)
 #if 0
   if (s->onscreen_console)
     con_restore_screen(s, s->osc_backup);
@@ -541,7 +541,7 @@ c_restore_game(state_t *s)
   newstate = gamestate_restore(s, cmd_params[0].str);
 
   if (newstate) {
-#warning fixme!
+WARNING(fixme!)
 #if 0
     s->successor = newstate; /* Set successor */
     graph_update_box(newstate, 0, 0, 320, 200); /* Redraw screen */
@@ -560,7 +560,7 @@ c_restore_game(state_t *s)
     return 0;
 
   } else {
-#warning fixme!
+WARNING(fixme!)
 #if 0
     if (s->onscreen_console)
       s->osc_backup = con_backup_screen(s);
@@ -909,7 +909,7 @@ c_dumpnodes(state_t *s)
 int
 c_dynviews(state_t *s)
 {
-#warning fixme!
+WARNING(fixme!)
 #if 0
   int i;
   
@@ -926,7 +926,7 @@ c_dynviews(state_t *s)
 int
 c_picviews(state_t *s)
 {
-#warning fixme!
+WARNING(fixme!)
 #if 0
   int i;
   
@@ -1057,7 +1057,7 @@ c_visible_map(state_t *s)
     sciprintf("Not in debug state\n");
     return 1;
   }
-#warning fixme!
+WARNING(fixme!)
 #if 0
   if (s->onscreen_console)
     con_restore_screen(s, s->osc_backup);
@@ -1075,7 +1075,7 @@ c_visible_map(state_t *s)
 int
 c_showfont(state_t *s)
 {
-#warning fixme!
+WARNING(fixme!)
 #if 0
   resource_t *font;
   port_t port;
@@ -1942,7 +1942,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
   if (s->sfx_driver)
     (s->sfx_driver->suspend)(s);
 
-#warning fixme!
+WARNING(fixme!)
 #if 0
   if (s->onscreen_console) {
     s->osc_backup = con_backup_screen(s);

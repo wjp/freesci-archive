@@ -34,12 +34,14 @@
 #include <sci_conf.h>
 #include <kdebug.h>
 #include <sys/types.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
 #ifdef HAVE_FORK
-#include <sys/wait.h>
+#  include <sys/wait.h>
 #endif
 #ifdef HAVE_SCHED_YIELD
-#include <sched.h>
+#  include <sched.h>
 #endif /* HAVE_SCHED_YIELD */
 
 #ifdef _MSC_VER
@@ -422,7 +424,7 @@ main(int argc, char** argv)
   printf("Mapping instruments to General Midi\n");
   mapMIDIInstruments();
 
-#warning fixme!
+WARNING(fixme!);
 #if 0
   con_init();
   con_init_gfx();
