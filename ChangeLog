@@ -1,9 +1,15 @@
+2002-07-30  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/engine/game.c: Win32 SDK checking should work now.
+
+	* src/win32/freesci.def: Win32 link fix.
+
 2002-07-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kmovement.c (kDoBresen, initialize_bresen):
 	Re-disabled the earlier changes as they broke ego's cycler and
 	mover.
-	
+
 	* src/gfx/resource/sci_pic_0.c (_gfxr_fill): Used the original
 	drawable value for the call to _gfxr_auxbuf_fill(), since this
 	fixed PQ2 screen 15's control map.
@@ -28,7 +34,7 @@
 2002-07-14  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/font.c (gfxr_font_calculate_size): Removed my own
-	warning from yesterday (Oops! :-) 
+	warning from yesterday (Oops! :-)
 
 2002-07-13  Lars Skovlund  <lskovlun@image.dk>
 
@@ -137,7 +143,7 @@
 	* src/sound/sound.c
 	* src/include/version.h:  If the SCI version is older than
         0.000.572 (LSL3) stop all playing songs when we initialize a new
-        one. 
+        one.
 
 2002-03-17  Christoph Reichenbach  <jameson@linuxgames.com>
 
@@ -165,7 +171,7 @@
 	* src/sound/midi_adlibemu.c
 	  src/sound/pcmout_sdl.c
 	  src/include/pcmout.h:  Now we support the adlib in stereo!
-	  
+
 2002-03-16  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/polled_ss_unix.c (sound_unix_get_data): Fixed treatment
@@ -179,7 +185,7 @@
        * src/sound/sound.c:  Pass along CC 0x7b (AllStop)
        * src/sound/midi_adlibemu.c:  Handle the AllStop CC, and also fix
        a memory corruption/crash when ADLIB_VOICES was set to 12.
-  
+
 2002-03-15  Solomon Peachy <pizza@shaftnet.org>
         * src/sound/sound.c
           src/main.c:  Set a default master volume as older games do not
@@ -217,7 +223,7 @@
 2002-03-08  Rainer Canavan <rainer@canavan.de>
 	* src/sound/Makefile.am
         * src/sound/midiout.c
-        * src/sound/midiout_irixmd.c:  Added a driver for the SCI dmedia 
+        * src/sound/midiout_irixmd.c:  Added a driver for the SCI dmedia
         MIDI subsystem.  Needs integration into the autoconf structure.
 
 2002-03-07  Solomon Peachy <pizza@shaftnet.org>

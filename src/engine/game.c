@@ -25,14 +25,16 @@
 
 ***************************************************************************/
 
-/* Attempt to guess version of Platform SDK which may not work */
+/* Attempt to guess if recent version of Platform SDK */
 #ifdef _WIN32
-#	pragma message("IMPORTANT: You must be using a recent Platform and DirectX SDK")
+#	pragma message("******************** IMPORTANT MESSAGE ********************")
+#	pragma message("You must have installed a recent Platform and DirectX SDK")
 #	pragma message("for this build to be successful. Download MS SDKs from:")
 #	pragma message("www.microsoft.com/msdownload/platformsdk/sdkupdate")
+#	pragma message("***********************************************************")
 #	include <ntverp.h>
-#	if VER_PRODUCTBUILD < 2601
-#		error Please download and install more recent Platform and DirectX SDKs from http://www.microsoft.com/msdownload/platformsdk/sdkupdate
+#	if !defined(VER_PRODUCTBUILD) || (VER_PRODUCTBUILD < 2601)
+#		error *** BUILD FAILED: Need more recent SDKs ***
 #	endif
 #endif
 

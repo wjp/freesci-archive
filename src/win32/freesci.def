@@ -99,6 +99,7 @@ EXPORTS
   sound_servers
 
   test_savegame
+  sci_open
   sci_find_first
   sci_init_dir
   sci_get_homedir
