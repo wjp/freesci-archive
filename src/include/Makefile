@@ -75,7 +75,7 @@ ac_moresubdirs = demo
 ac_png_includes = -I/usr/local/include
 ac_png_libraries = -L/usr/lib -lpng
 
-EXTRA_DIST = graphics.h graphics_ggi.h resource.h script.h vocabulary.h sound.h graphics_png.h uinput.h console.h script.h vm.h engine.h util.h heap.h menubar.h
+EXTRA_DIST = sci_conf.h graphics.h graphics_ggi.h resource.h script.h vocabulary.h sound.h graphics_png.h uinput.h console.h script.h vm.h engine.h util.h heap.h menubar.h versions.h
 INCLUDES = 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../config.h

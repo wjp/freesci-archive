@@ -47,10 +47,10 @@ int sci_color_mode = SCI_COLOR_DITHER;
 
 picture_t allocEmptyPicture()
 {
-  picture_t retval = g_malloc(sizeof(gint8 *) * 4);
+  picture_t retval = malloc(sizeof(gint8 *) * 4);
   int i;
   for (i=0; i<4; i++)
-    retval[i] = g_malloc(64000);
+    retval[i] = calloc(320,200);
   return retval;
 }
 
@@ -400,7 +400,24 @@ view0_cel_height(int loop, int cel, byte *data)
   return getInt16(data + addr + 2);
 }
 
+int
+view0_loop_count(byte *data)
+{
+  return getInt16(data);
+}
 
+int
+view0_cel_count(int loop, byte *data)
+{
+  int loops_nr = getInt16(data);
+  int lookup;
+
+  if ((loop >= loops_nr) || (loop < 0))
+    return 0;
+
+  lookup = getInt16(data+8+(loop<<1));
+  return getInt16(data + lookup);
+}
 
 int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
 	      short group, short index, guint8 *data)
@@ -433,6 +450,7 @@ int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
     int blindtop, blindleft, blindright; /* zones outside of the picture */
     int homepos;
     int i;
+    int xoffs, yoffs;
 
     lookup = (data + (getInt16(data+6+(loop<<1))));
     ncells = getInt16(lookup);
@@ -442,14 +460,21 @@ int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
     maxx = getInt16(dataptr);
     maxy = getInt16(dataptr+2);
 
-    xp += (gint8) dataptr[4];
-    yp += (gint8) dataptr[5]; /* These two bytes contain relative offsets */
+    xoffs = (gint8) dataptr[4];
+    yoffs = (gint8) dataptr[5]; /* These two bytes contain relative offsets */
 
-    minx = x = (xp < 0) ? 0 : xp;
-    y = yp;
     dataptr += 7;
     transparency = dataptr[-1];
     reverse = (getInt16(data+2)>>(loop-1)) & 1;
+
+    if (reverse)
+      xp -= xoffs;
+    else
+      xp += xoffs;
+    yp += yoffs;
+
+    minx = x = (xp < 0) ? 0 : xp;
+    y = yp;
 
     if (y < 0) { /* clipping the ceiling */
       blindtop = (-y)*maxx;

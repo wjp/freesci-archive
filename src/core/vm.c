@@ -56,19 +56,24 @@ script_error(state_t *s, char *reason)
   return 0;
 }
 
-/*
-#define putInt16(bytes, value) do{\
-(bytes)[0]=((value)>>8)&0xFF;\
-(bytes)[1]=(value)&0xFF;\
-} while(0)
-*/
-
 inline void putInt16(byte *addr, word value)
 {
   addr[0] = value &0xff;
   addr[1] = value >> 8;
 }
 
+inline heap_ptr
+get_class_address(state_t *s, int classnr)
+{
+  heap_ptr scriptpos = *(s->classtable[classnr].scriptposp);
+
+  if (!scriptpos) {
+    script_instantiate(s, s->classtable[classnr].script);
+    scriptpos = *(s->classtable[classnr].scriptposp);
+  }
+
+  return scriptpos + s->classtable[classnr].class_offset;
+}
 
 /* Operating on the steck */
 #define PUSH(v) putInt16(s->heap + (sp += 2) - 2, (v))
@@ -99,8 +104,7 @@ else { s->heap[(guint16) address] = (value) &0xff;               \
 /* Sets a heap value if allowed */
 
 #define CLASS_ADDRESS(classnr) (((classnr < 0) || (classnr >= s->classtable_size)) ?              \
-				0 /* Error condition */ : *(s->classtable[(classnr)].scriptposp)  \
-				+ s->classtable[(classnr)].class_offset)
+				0 /* Error condition */ : get_class_address(s, classnr))
 
 #define OBJ_SPECIES(address) GET_HEAP((address) + SCRIPT_SPECIES_OFFSET)
 /* Returns an object's species */
@@ -489,9 +493,6 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       break;
 
     case 0x28: /* class */
-      if (*(s->classtable[opparams[0]].scriptposp) == 0) /* Not yet loaded? */
-	script_instantiate(s, s->classtable[opparams[0]].script); /* Load it now */
-
       s->acc = CLASS_ADDRESS(opparams[0]);
       break;
 
@@ -1075,7 +1076,7 @@ script_uninstantiate(state_t *s, int script_nr)
     return;
   }
 
-
+#if 0
   /* Make a pass over the object in order uninstantiate all superclasses */
   pos = handle;
 
@@ -1091,12 +1092,16 @@ script_uninstantiate(state_t *s, int script_nr)
     pos += objlength; /* Step over the last checked object */
 
     objtype = GET_HEAP(pos);
-    objlength = GET_HEAP(pos+2);
+    objlength = UGET_HEAP(pos+2);
 
     pos += 4; /* Step over header */
 
     if ((objtype == sci_obj_object) || (objtype == sci_obj_class)) { /* object or class? */
-      int superclass = OBJ_SUPERCLASS(pos); /* Get superclass */
+      int superclass;
+
+      pos -= SCRIPT_OBJECT_MAGIC_OFFSET;
+
+      superclass = OBJ_SUPERCLASS(pos); /* Get superclass */
 
       fprintf(stderr, "SuperClass = %04x from pos %04x\n", superclass, pos);
 
@@ -1111,6 +1116,7 @@ script_uninstantiate(state_t *s, int script_nr)
 	/* Recurse to assure that the superclass lockers number gets decreased */
       }
       
+      pos += SCRIPT_OBJECT_MAGIC_OFFSET;
     } /* if object or class */
 
     pos -= 4; /* Step back on header */
@@ -1121,6 +1127,8 @@ script_uninstantiate(state_t *s, int script_nr)
     return; /* if xxx.lockers > 0 */
 
   /* Otherwise unload it completely */
+#endif /* 0 */
+  /* Explanation: I'm starting to believe that this work is done by SCI itself. */
 
   s->scripttable[script_nr].heappos = 0;
   s->scripttable[script_nr].localvar_offset = 0;
@@ -1136,7 +1144,7 @@ script_uninstantiate(state_t *s, int script_nr)
 
 
 int
-script_run(state_t *s)
+game_init(state_t *s)
 {
   heap_ptr stack_handle = heap_allocate(s->_heap, 0x1000);
   heap_ptr script0;
@@ -1182,9 +1190,7 @@ script_run(state_t *s)
   memcpy(&(s->last_wait_time), &(s->game_start_time), sizeof(struct timeval));
   /* Use start time as last_wait_time */
 
-  s->sci_version_major = (sci_version > SCI_VERSION_0);
-  s->sci_version_minor = 0; /* Was always zero, AFAIK */
-  s->sci_version_patchlevel = 0; /* Default interpreter patchlevel */
+  s->version = SCI_VERSION_DEFAULT_SCI0;
 
   s->mouse_pointer = NULL; /* No mouse pointer */
   s->pointer_x = (320 / 2); /* With centered x coordinate */
@@ -1194,6 +1200,7 @@ script_run(state_t *s)
   s->last_pointer_size_x = 0;
   s->last_pointer_size_y = 0; /* No previous pointer */
 
+  s->back_pic = allocEmptyPicture();
   s->bgpic = allocEmptyPicture();
   s->pic = allocEmptyPicture();
   s->pic_not_valid = 0; /* Picture is valid (cough) */
@@ -1260,19 +1267,32 @@ script_run(state_t *s)
     sciprintf(" Designation too long; was truncated to \"%s\"\n", s->game_name);
 
   }
+
+  s->game_obj = game_obj;
+  s->stack_handle = stack_handle;
+}
   
+int
+game_run(state_t *s)
+{
   sciprintf(" Calling %s::play()\n", s->game_name);
   putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector... */
   putInt16(s->heap + s->stack_base + 2, 0);                    /* ... with 0 arguments. */
-  send_selector(s, game_obj, game_obj, s->stack_base + 2, 4, 0, s->stack_base); /* Engage! */
-
+  send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base); /* Engage! */
   sciprintf(" Game::play() finished.\n");
+}
+
+int
+game_exit(state_t *s)
+{
+  int i;
 
   vocabulary_free_snames(s->selector_names);
   vocabulary_free_knames(s->kernel_names);
   free(s->opcodes);
   free(s->kfunct_table);
 
+  freePicture(s->back_pic);
   freePicture(s->bgpic);
   freePicture(s->pic);
 
@@ -1296,7 +1316,7 @@ script_run(state_t *s)
 
   menubar_free(s->menubar);
 
-  heap_free(s->_heap, stack_handle);
+  heap_free(s->_heap, s->stack_handle);
   heap_free(s->_heap, s->save_dir);
 
   return 0;

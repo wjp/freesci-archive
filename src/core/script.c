@@ -88,7 +88,7 @@ opcode_format formats[128][4]={
   /*28*/
   {Script_SVariable, 0}, {Script_Invalid}, {Script_SByte, 0}, {Script_SVariable, Script_SByte, 0},
   /*2C*/
-  {Script_SVariable, 0}, {Script_SVariable, Script_SVariable, 0}, {Script_None}, {Script_Invalid},
+  {Script_SVariable, 0}, {Script_SVariable, Script_Variable, 0}, {Script_None}, {Script_Invalid},
   /*30*/
   {Script_None}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
   /*34*/
@@ -98,25 +98,25 @@ opcode_format formats[128][4]={
   /*3C*/
   {Script_None}, {Script_None}, {Script_None}, {Script_Invalid},
   /*40-4F*/
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
   /*50-5F*/
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
   /*60-6F*/
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
   /*70-7F*/
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0},
-  {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}, {Script_SVariable, 0}
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}
 };
 
 static int add_object(object* obj)
@@ -782,4 +782,5 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(text, "text");
   FIND_SELECTOR(type, "type");
   FIND_SELECTOR(state, "state");
+  FIND_SELECTOR(doit, "doit");
 }

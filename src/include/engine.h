@@ -38,6 +38,7 @@
 #include <vm.h>
 #include <menubar.h>
 #include <time.h>
+#include <versions.h>
 #ifdef HAVE_LIBGGI
 #include <ggi/ggi.h>
 #endif
@@ -45,6 +46,8 @@
 #define MAX_HOMEDIR_SIZE 255
 
 #define FREESCI_GAMEDIR ".freesci"
+#define FREESCI_CONFFILE "config"
+#define FREESCI_CONFFILE_DOS "freesci.cfg"
 
 #define MAX_GAMEDIR_SIZE 32 /* Used for subdirectory inside of "~/.freesci/" */
 
@@ -75,12 +78,12 @@ typedef struct _state
     int dummy;
   } graphics;
 
-  int restarting_flag; /* Flag used for restarting */
-  int have_mouse_flag; /* Do we have a hardware pointing device? */
+  byte restarting_flag; /* Flag used for restarting */
+  byte have_mouse_flag; /* Do we have a hardware pointing device? */
 
-  int pic_not_valid; /* Is 0 if the background picture is "valid" */
+  byte pic_not_valid; /* Is 0 if the background picture is "valid" */
 
-  int pic_layer; /* The picture layer (or "map") to be drawn */
+  byte pic_layer; /* The picture layer (or "map") to be drawn */
 
   long game_time; /* Counted at 60 ticks per second, reset during start time */
 
@@ -100,8 +103,9 @@ typedef struct _state
   port_t wm_port; /* window manager viewport and designated &heap[0] view (10,0,199,319) */
   port_t picture_port; /* The background picture viewport (10,0,199,319) */
 
-  picture_t bgpic; /* The background picture */
-  picture_t pic; /* The foreground picture */
+  picture_t back_pic; /* ONLY the background picture as drawn by DrawPic */
+  picture_t bgpic; /* The background picture buffer, includes views */
+  picture_t pic; /* The foreground picture- practically the same as the viewscreen */
   int pic_animate; /* The animation used by Animate() to display the picture */
 
   int animation_delay; /* A delay factor for pic opening animations. Defaults to 1000. */
@@ -116,9 +120,8 @@ typedef struct _state
   struct timeval game_start_time; /* The time at which the interpreter was started */
   struct timeval last_wait_time; /* The last time the game invoked Wait() */
 
-  int sci_version_major;
-  int sci_version_minor;
-  int sci_version_patchlevel; /* The approximated patchlevel of the version to emulate */
+  byte version_lock_flag; /* Set to 1 to disable any autodetection mechanisms */
+  sci_version_t version; /* The approximated patchlevel of the version to emulate */
 
   /* VM Information */
 
@@ -127,8 +130,11 @@ typedef struct _state
   gint16 acc; /* Accumulator */
   gint16 prev; /* previous comparison result */
 
-  heap_ptr stack_base; /* The base position of the stack; used for debugging */
-  heap_ptr global_vars; /* script 000 selectors */
+  heap_ptr stack_base;   /* The base position of the stack; used for debugging */
+  heap_ptr stack_handle; /* The stack's heap handle */
+  heap_ptr global_vars;  /* script 000 selectors */
+
+  heap_ptr game_obj; /* Pointer to the game object */
 
   int classtable_size; /* Number of classes in the table- for debugging */
   class_t *classtable; /* Table of all classes */

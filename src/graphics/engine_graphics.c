@@ -176,7 +176,7 @@ graph_draw_selector_button(struct _state *s, port_t *port, int state,
 			   int x, int y, int xl, int yl,
 			   char *text, byte *font)
 {
-  graph_draw_selector_text(s, port, state, x, y, xl, yl, text, font);
+  graph_draw_selector_text(s, port, state, x, y, xl, yl, text, font, ALIGN_TEXT_CENTER);
 
   if ((state & SELECTOR_STATE_SELECTABLE) && (state & SELECTOR_STATE_SELECTED))
     draw_frame(s->bgpic, port->xmin + x, port->ymin + y,
@@ -185,11 +185,20 @@ graph_draw_selector_button(struct _state *s, port_t *port, int state,
 }
 
 
+void
+graph_restore_back_pic(struct _state *s)
+{
+  int i;
+
+  for (i = 0; i < 3; i++)
+    memcpy(s->bgpic[i] + 320 * 10, s->back_pic[i] + 320 * 10, 64000 - (320 * 10));
+}
+
 
 void
 graph_draw_selector_text(struct _state *s, port_t *port, int state,
 			 int x, int y, int xl, int yl,
-			 char *text, byte *font)
+			 char *text, byte *font, int alignment)
 {
   port_t oldport;
 
@@ -199,6 +208,7 @@ graph_draw_selector_text(struct _state *s, port_t *port, int state,
   port->y = y;
   port->font = font;
   port->gray_text = state & SELECTOR_STATE_DISABLED;
+  port->alignment = alignment;
 
   text_draw(s->bgpic, port, text, xl);
 
@@ -215,7 +225,7 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
 			 int x, int y, int xl, int yl,
 			 char *text, byte *font)
 {
-  graph_draw_selector_text(s, port, state, x, y, xl, yl, text, font);
+  graph_draw_selector_text(s, port, state, x, y, xl, yl, text, font, ALIGN_TEXT_LEFT);
 }
 
 

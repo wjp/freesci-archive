@@ -30,6 +30,7 @@
 #include <uinput.h>
 #include <console.h>
 #include <graphics.h>
+#include <sci_conf.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -72,6 +73,7 @@ main(int argc, char** argv)
 {
   resource_t *resource;
   ggi_visual_t visual;
+  config_entry_t conf;
   int i;
 
   printf("FreeSCI "VERSION" Copyright (C) 1999 Christopher T. Lansdown, Sergey Lapin,\n"
@@ -83,7 +85,7 @@ main(int argc, char** argv)
 
   ggiInit();
 
-  sci_color_mode = SCI_COLOR_DITHER;
+  sci_color_mode = SCI_COLOR_DITHER256;
 
   if (i = loadResources(SCI_VERSION_AUTODETECT, 1)) {
     fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);
@@ -119,7 +121,19 @@ main(int argc, char** argv)
     exit(1);
   };
 
-  script_run(&gamestate); /* Run the game */
+  game_init(&gamestate); /* Initialize */
+
+  config_init(&conf, gamestate.game_name, NULL);
+  gamestate.version = conf.version;
+  sci_color_mode = conf.color_mode;
+
+  printf("Emulating SCI version %d.%03d.%03d\n",
+	 gamestate.version >> 20,
+	 (gamestate.version >> 10) & 0x3ff,
+	 gamestate.version & 0x3ff);
+
+  game_run(&gamestate); /* Run the game */
+  game_exit(&gamestate);
 
   close_visual_ggi(&gamestate); /* Close graphics */
 

@@ -108,6 +108,7 @@ typedef struct
   int nsLeft, nsRight, nsTop, nsBottom; /* Control boundaries */
   int text, font; /* Used by controls */
   int type, state; /* Used by contols as well */
+  int doit; /* Called (!) by the Animate() system call */
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 
@@ -246,14 +247,33 @@ script_uninstantiate(struct _state *s, int script_nr);
 ** aren't locked by other scripts as well.
 */
 
+
 int
-script_run(struct _state *s);
+game_init(struct _state *s);
+/* Initializes an SCI game
+** Parameters: (state_t *) s: The state to operate on
+** Returns   : (int): 0 on success, 1 if an error occured.
+** This function must be run before script_run() is executed.
+*/
+
+
+int
+game_run(struct _state *s);
 /* Runs an SCI game
 ** Parameters: (state_t *) s: The state to operate on
 ** Returns   : (int): 0 on success, 1 if an error occured.
 ** This is the main function for SCI games. It takes a valid state, loads script 0 to it,
 ** finds the game object, allocates a stack, and runs the init method of the game object.
 ** In layman's terms, this runs an SCI game.
+*/
+
+
+int
+game_exit(struct _state *s);
+/* Uninitializes an initialized SCI game
+** Parameters: (state_t *) s: The state to operate on
+** Returns   : (int): 0 on success, 1 if an error occured.
+** This function should be run after each script_run() call.
 */
 
 

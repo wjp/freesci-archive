@@ -35,10 +35,12 @@ int _debug_step_running = 0; /* Set to >0 to allow multiple stepping */
 int _debug_commands_not_hooked = 1; /* Commands not hooked to the console yet? */
 int _debug_seeking = 0; /* Stepping forward until some special condition is met */
 int _debug_seek_level = 0; /* Used for seekers that want to check their exec stack depth */
+int _debug_seek_special = 0; /* Used for special seeks */
 
 #define _DEBUG_SEEK_NOTHING 0
 #define _DEBUG_SEEK_CALLK 1 /* Step forward until callk is found */
 #define _DEBUG_SEEK_LEVEL_RET 2 /* Step forward until returned from this level */
+#define _DEBUG_SEEK_SPECIAL_CALLK 3 /* Step forward until a /special/ callk is found */
 
 state_t *_s;
 heap_ptr *_pc;
@@ -393,8 +395,19 @@ c_disasm()
 int
 c_snk()
 {
-  _debug_seeking = _DEBUG_SEEK_CALLK;
-  _debugstate_valid = 0;
+  if (!_debugstate_valid) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  if (cmd_paramlength > 0) {
+    _debug_seeking = _DEBUG_SEEK_SPECIAL_CALLK;
+    _debug_seek_special = cmd_params[0].val;
+    _debugstate_valid = 0;
+  } else {
+    _debug_seeking = _DEBUG_SEEK_CALLK;
+    _debugstate_valid = 0;
+  }
 }
 
 int
@@ -612,14 +625,19 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 
   if (_debug_seeking) { /* Are we looking for something special? */
     int op = s->heap[*pc] >> 1;
+    int paramb1 = s->heap[*pc + 1]; /* Careful with that ! */
 
     switch (_debug_seeking) {
 
+    case _DEBUG_SEEK_SPECIAL_CALLK:
+      if (paramb1 != _debug_seek_special)
+	return;
 
     case _DEBUG_SEEK_CALLK: {
       if (op != op_callk) return;
       break;
     }
+
     case _DEBUG_SEEK_LEVEL_RET: {
       if ((op != op_ret) || (_debug_seek_level < script_exec_stackpos)) return;
       break;
@@ -668,7 +686,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       cmdHook(c_classtable, "classtable", "", "Lists all available classes");
       cmdHook(c_stack, "stack", "i", "Dumps the specified number of stack elements");
       cmdHook(c_backtrace, "bt", "", "Dumps the send/self/super/call/calle/callb stack");
-      cmdHook(c_snk, "snk", "", "Steps forward until it hits the next\n  callk operation");
+      cmdHook(c_snk, "snk", "i*", "Steps forward until it hits the next\n  callk operation.\n"
+	      "  If invoked with a parameter, it will\n  look for that specific callk.\n");
       cmdHook(c_listclones, "listclones", "", "Lists all registered clones");
       cmdHook(c_set_acc, "set_acc", "i", "Sets the accumulator");
       cmdHook(c_heap_free, "heapfree", "", "Shows the free heap");

@@ -76,11 +76,11 @@ ac_png_includes = -I/usr/local/include
 ac_png_libraries = -L/usr/lib -lpng
 
 SUBDIRS = core include graphics sound console demo tools
-EXTRA_DIST = README python.tar.gz
+EXTRA_DIST = README config.l python.tar.gz
 INCLUDES = -I$(top_srcdir)/src/include 
-LDADD = -lefence -lglib -lm -lc -lggi -lgii -lreadline -lcurses core/libscicore.a graphics/libscigraphics.a sound/libscisound.a console/libsciconsole.a
+LDADD = -lefence -lfl -lglib -lm -lc -lggi -lgii -lreadline -lcurses core/libscicore.a graphics/libscigraphics.a sound/libscisound.a console/libsciconsole.a
 bin_PROGRAMS = sciv
-sciv_SOURCES = main.c
+sciv_SOURCES = config.c main.c
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
@@ -91,7 +91,7 @@ DEFS = -DHAVE_CONFIG_H -I. -I$(srcdir) -I..
 CPPFLAGS = 
 LDFLAGS =  -L/usr/local/lib -lglib
 LIBS = 
-sciv_OBJECTS =  main.o
+sciv_OBJECTS =  config.o main.o
 sciv_LDADD = $(LDADD)
 sciv_DEPENDENCIES =  core/libscicore.a graphics/libscigraphics.a \
 sound/libscisound.a console/libsciconsole.a
@@ -107,7 +107,7 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = gtar
 GZIP_ENV = --best
-DEP_FILES =  .deps/main.P
+DEP_FILES =  .deps/config.P .deps/main.P
 SOURCES = $(sciv_SOURCES)
 OBJECTS = $(sciv_OBJECTS)
 

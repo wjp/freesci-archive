@@ -224,7 +224,7 @@ view0_cel_width(int loop, int cel, byte *data);
 /* Returns the width of an SCI0 view cell.
 ** Parameters: (int) loop: The loop to examine
 **             (int) cel: The cell
-**             (byte *): The view data
+**             (byte *) data: The view data
 ** Returns   : (int) The width, or -1 if loop or cel were invalid.
 */
 
@@ -234,8 +234,32 @@ view0_cel_height(int loop, int cel, byte *data);
 /* Returns the height of an SCI0 view cell.
 ** Parameters: (int) loop: The loop to examine
 **             (int) cel: The cell
-**             (byte *): The view data
+**             (byte *) data: The view data
 ** Returns   : (int) The height, or -1 if loop or cel were invalid.
+*/
+
+
+int
+view0_loop_count(byte *data);
+/* Retreives the number of loops from a view
+** Parameters: (byte *) data: The view data
+** Returns   : (int) The number of loops in that view
+*/
+
+
+int
+view0_cel_count(int loop, byte *data);
+/* Retreives the number of cels from a loop of a view
+** Parameters: (int) loop: The loop in question
+**             (byte *) data: The view data
+** Returns   : (int) The number of cels in that loop
+*/
+
+void
+graph_restore_back_pic(struct _state *s);
+/* Restores the last-drawn picture to the background picture
+** Parameters: (state_t *) s: Pointer to the state_t to operate on
+** Returns   : (void)
 */
 
 
@@ -477,7 +501,7 @@ graph_draw_selector_button(struct _state *s, port_t *port, int state,
 void
 graph_draw_selector_text(struct _state *s, port_t *port, int state,
 			 int x, int y, int xl, int yl,
-			 char *text, byte *font);
+			 char *text, byte *font, int alignment);
 /* Draws a text selector.
 ** Parameters: (state_t *) s: The state to operate on
 **             (port_t *) port: The port to use
@@ -486,6 +510,7 @@ graph_draw_selector_text(struct _state *s, port_t *port, int state,
 **             (int) xl,yl: Height and width of the selector in question
 **             (char *) text: The text
 **             (byte *) font: Pointer to the font to use
+**             (int) alignment: One of ALIGN_TEXT_*
 ** Returns   : (void)
 */
 
