@@ -139,7 +139,7 @@ dnl AC_SUBST(ac_xlib_o)
 dnl AC_SUBST(ac_sdl_o)
 dnl AC_SUBST(ac_ggi_o)
 
-#AC_PATH_PNG
+AC_PATH_PNG
 AC_SUBST(ac_png_includes)
 AC_SUBST(ac_png_libraries)
 AM_PROG_LEX

@@ -1,3 +1,12 @@
+2001-07-03  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (reparentize_primary_widget_lists): Better
+	checking for cases where s->dyn_views isn't initialized
+
+2001-07-02  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/Makefile.am (freesci_LDFLAGS): Renamed sciv to freesci
+
 2001-07-01  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* doc/sci.sgml: Updates to NewNode() and ShakeScreen()

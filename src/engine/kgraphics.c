@@ -143,9 +143,11 @@ reparentize_primary_widget_lists(state_t *s, gfxw_port_t *newport)
 	if (!newport)
 		newport = s->picture_port;
 
-	gfxw_remove_widget_from_container(s->dyn_views->parent, GFXW(s->dyn_views));
+	if (s->dyn_views) {
+		gfxw_remove_widget_from_container(s->dyn_views->parent, GFXW(s->dyn_views));
 
-	newport->add(GFXWC(newport), GFXW(s->dyn_views));
+		newport->add(GFXWC(newport), GFXW(s->dyn_views));
+	}
 }
 
 int

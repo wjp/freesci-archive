@@ -6,6 +6,6 @@ LDADD = engine/libsciengine.a gfx/libscigraphics.a \
 	scicore/libscicore.a sound/libscisound.a \
 	@ac_readline@ @ac_curses_libraries@ @ac_png_libraries@ -lm \
 	@SDL_LIBS@
-bin_PROGRAMS = sciv
-sciv_SOURCES = config.l main.c
-sciv_LDFLAGS = @SCIV_LDFLAGS@
+bin_PROGRAMS = freesci
+freesci_SOURCES = config.l main.c
+freesci_LDFLAGS = @SCIV_LDFLAGS@

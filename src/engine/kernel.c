@@ -445,7 +445,7 @@ kMemoryInfo(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	case 1: s->acc = heap_largest(s->_heap); break;
 	case 2: /* Largest available hunk memory block */
 	case 3: /* Total amount of hunk memory */
-	case 4: s->acc = 0xffff; break; /* Amount of free DOS paragraphs- SCI01 */
+	case 4: s->acc = (gint16) 0xffff; break; /* Amount of free DOS paragraphs- SCI01 */
 	default: SCIkwarn(SCIkWARNING, "Unknown MemoryInfo operation: %04x\n", PARAM(0));
 	}
 }
