@@ -1,6 +1,12 @@
 2002-01-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/include/resource.h (BREAKPOINT): Changed 'bpt' on Alpha
+	to 'call_pal PAL_bpt'.
+
+	* src/engine/kgraphics.c (draw_to_control_map): Treat nsRect of
+	things drawn to the control map as mac-like rectangle
+
+	* src/include/resource.h (BREAKPOINT): Changed 'bpt' on Alpha
 	to 'call_pal bpt'.
 
 2002-01-02  Alexander R Angas  <wgd@internode.on.net>

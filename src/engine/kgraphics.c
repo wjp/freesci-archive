@@ -1567,8 +1567,8 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int funct_nr, int argc, i
 
 		box = gfxw_new_box(s->gfx_state,
 				   gfx_rect(abs_zone.x, abs_zone.y,
-					    abs_zone.xend - abs_zone.x + 1,
-					    abs_zone.yend - abs_zone.y + 1),
+					    abs_zone.xend - abs_zone.x,
+					    abs_zone.yend - abs_zone.y),
 				   color, color, GFX_BOX_SHADE_FLAT);
 
 		assert_primary_widget_lists(s);

@@ -395,7 +395,7 @@ sci_sched_yield();
 #  if defined (__i386__)
 #    define BREAKPOINT()          {__asm__ __volatile__ ("int $03"); }
 #  elif defined(__alpha__)
-#    define BREAKPOINT()          {__asm__ __volatile__ ("call_pal bpt"); }
+#    define BREAKPOINT()          {__asm__ __volatile__ ("call_pal PAL_bpt"); }
 #  endif /* !__i386__ && !__alpha__ */
 #elif defined (_MSC_VER)
 #  if defined (_M_IX86)
@@ -405,7 +405,7 @@ sci_sched_yield();
 #  endif /* !_M_IX86 && !_M_ALPHA */
 #elif defined (__DECC)
 #  if defined(__alpha__)
-#    define BREAKPOINT()          {asm ("call_pal bpt"); }
+#    define BREAKPOINT()          {asm ("call_pal PAL_bpt"); }
 #  endif /* !__i386__ && !__alpha__ */
 #endif
 #ifndef BREAKPOINT
