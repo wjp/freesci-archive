@@ -74,6 +74,7 @@ ac_graphics_ggi_libobjects = @ac_graphics_ggi_libobjects@
 ac_png_includes = @ac_png_includes@
 ac_png_libraries = @ac_png_libraries@
 ac_readline = @ac_readline@
+x_libraries = @x_libraries@
 
 EXTRA_DIST = sciv.6 freesci-tools.6
 man_MANS = sciv.6 freesci-tools.6

@@ -34,6 +34,17 @@
 #include <sound.h>
 #include <scitypes.h>
 
+#ifdef PIPE_BUF
+#  define SOUND_SERVER_XFER_SIZE PIPE_BUF
+#else
+#  define SOUND_SERVER_XFER_SIZE 256 /* be _very_ conservative */
+#endif
+
+#define SOUND_SERVER_XFER_ABORT -1
+#define SOUND_SERVER_XFER_OK 0
+#define SOUND_SERVER_XFER_WAITING 1
+#define SOUND_SERVER_XFER_TIMEOUT -1000
+
 #define SOUND_SERVER_TIMEOUT 100000
 /* microseconds until SOUND_COMMAND_TEST fails */
 #define SOUND_TICK 1000000 / 60

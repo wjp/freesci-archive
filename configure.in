@@ -27,9 +27,14 @@ AC_PATH_GGI
 AC_PATH_CURSES
 AC_PATH_X
 
-if test "no_x" != yes; then
-	AC_PATH_GLX
+if test x"x_libraries" != x; then
+	x_libraries="-L$x_libraries -lX11 -lXmu -lXi"
 fi
+AC_SUBST(x_libraries)
+
+dnl if test "no_x" != yes; then
+dnl 	AC_PATH_GLX
+dnl fi
 AC_SUBST(ac_glx_libraries)
 
 AM_PROG_LEX

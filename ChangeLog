@@ -1,3 +1,8 @@
+2001-02-07  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/sound.c (sound_command): Implemented a better song
+	transfer protocol
+
 2001-02-01  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* doc/sci.sgml: Added missing Said() rule

@@ -209,27 +209,33 @@ sound_resume(state_t *s)
   sound_command(s, SOUND_COMMAND_RESUME_SOUND, 0, 0);
 }
 
-int
+static int
+_sound_expect_answer(state_t *s, char *timeoutmessage, int def_value)
+{
+	GTimeVal timeout = {0, SOUND_SERVER_TIMEOUT};
+
+	int success;
+	fd_set fds;
+	FD_ZERO(&fds);
+	FD_SET(s->sound_pipe_out[0], &fds);
+	success = select(s->sound_pipe_out[0]+1, &fds, NULL, NULL, (struct timeval *)&timeout);
+
+	if (!success) {
+		sciprintf(timeoutmessage);
+		return def_value;
+	}
+	else read(s->sound_pipe_out[0], &success, sizeof(int));
+
+	return success;
+}
+
+static int
 _sound_transmit_text_expect_anwer(state_t *s, char *text, int command, char *timeoutmessage)
 {
-  fd_set fds;
-  GTimeVal timeout = {0, SOUND_SERVER_TIMEOUT};
-  int success;
+	sound_command(s, command, 0, strlen(text) + 1);
+	write(s->sound_pipe_in[1], text, strlen(text) + 1);
 
-  sound_command(s, command, 0, strlen(text) + 1);
-  write(s->sound_pipe_in[1], text, strlen(text) + 1);
-
-  FD_ZERO(&fds);
-  FD_SET(s->sound_pipe_out[0], &fds);
-  success = select(s->sound_pipe_out[0]+1, &fds, NULL, NULL, (struct timeval *)&timeout);
-
-  if (!success) {
-    sciprintf(timeoutmessage);
-    return 1;
-  }
-  else read(s->sound_pipe_out[0], &success, sizeof(int));
-
-  return success;
+	return _sound_expect_answer(s, timeoutmessage, 1);
 }
 
 int
@@ -256,20 +262,65 @@ sound_command(state_t *s, int command, int handle, int parameter)
 
   switch (command) {
   case SOUND_COMMAND_INIT_SONG: {
-    resource_t *song = findResource(sci_sound, parameter);
-    int len;
+	  byte *xfer_buf;
+	  resource_t *song = findResource(sci_sound, parameter);
+	  int len;
+	  int finished = 0;
 
-    if (!song) {
-      sciprintf("Attempt to play invalid sound.%03d\n", parameter);
-      return 1;
-    }
+	  if (!song) {
+		  sciprintf("Attempt to play invalid sound.%03d\n", parameter);
+		  return 1;
+	  }
 
-    len = song->length;
-    write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
-    write(s->sound_pipe_in[1], &len, sizeof(int)); /* Write song length */
-    write(s->sound_pipe_in[1], song->data, len); /* Transfer song */
+	  len = song->length;
+	  write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
+	  write(s->sound_pipe_in[1], &len, sizeof(int)); /* Write song length */
 
-    return 0;
+	  xfer_buf = song->data;
+	  while (len || !finished) {
+		  int status = _sound_expect_answer(s, "Sound/InitSong: Timeout while"
+						    " waiting for sound server during transfer\n",
+						    SOUND_SERVER_XFER_TIMEOUT);
+		  int xfer_bytes = MIN(len, SOUND_SERVER_XFER_SIZE);
+
+		  switch(status) {
+		  case SOUND_SERVER_XFER_ABORT:
+			  sciprintf("Sound/InitSong: Sound server aborted transfer\n");
+			  len = xfer_bytes = 0;
+			  break;
+
+		  case SOUND_SERVER_XFER_OK:
+			  finished = 1;
+			  if (len) {
+				  sciprintf("Sound/InitSong: Sound server reported OK with"
+					    " %d/%d bytes missing!\n", len, song->length);
+				  len = xfer_bytes = 0;
+			  }
+			  break;
+
+		  case SOUND_SERVER_XFER_WAITING:
+			  if (!len)
+				  sciprintf("Sound/InitSong: Sound server waiting, but nothing"
+					    " left to be sent!");
+			  break;
+
+		  case SOUND_SERVER_XFER_TIMEOUT:
+			  len = xfer_bytes = 0;
+			  finished = 1;
+			  break;
+
+		  default:
+			  sciprintf("Sound/InitSong: Sound server in invalid state!\n");
+			  break;
+		  }
+
+		  if (xfer_bytes) {
+			  write(s->sound_pipe_in[1], xfer_buf, xfer_bytes); /* Transfer song */
+			  xfer_buf += xfer_bytes;
+			  len -= xfer_bytes;
+		  }
+	  }
+	  return 0;
   }
 
   case SOUND_COMMAND_PLAY_HANDLE:

@@ -165,6 +165,9 @@ song_lib_dump(songlib_t songlib, int line)
 }
 
 
+
+#define REPORT_STATUS(status) {int _repstat = status; write(fd_out, &_repstat, sizeof(int)); }
+
 static int
 verify_pid(int pid) /* Checks if the specified PID is in use */
 {
@@ -182,7 +185,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
   song_t *_songp = NULL;
   songlib_t songlib = &_songp;   /* Song library */
   song_t *song = NULL; /* The song we're playing */
-  int debugging = 0;   /* Debugging enabled? */
+  int debugging = 1;   /* Debugging enabled? */
   int command = 0;
   int ccc = 127; /* cumulative cue counter */
   int suspended = 0; /* Used to suspend the sound server */
@@ -324,68 +327,76 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 	  case SOUND_COMMAND_INIT_SONG: {
 
-	    byte *data, *datptr;
-	    int size, totalsize;
-	    int received;
+		  byte *data, *datptr;
+		  int size, totalsize;
+		  int received, left_of_block;
 
 
-	    if (debugging)
-	      fprintf(ds, "Receiving song for handle %04x: ", event.handle);
+		  if (debugging)
+			  fprintf(ds, "Receiving song for handle %04x: ", event.handle);
 
-	    if (modsong) {
-	      int lastmode = song_lib_remove(songlib, event.handle);
+		  if (modsong) {
+			  int lastmode = song_lib_remove(songlib, event.handle);
 
-	      if (modsong) {
+			  if (modsong) {
 
-		int lastmode = song_lib_remove(songlib, event.handle);
-		if (lastmode == SOUND_STATUS_PLAYING) {
-		  song = songlib[0]; /* Force song detection to start with the highest priority song */
-		  sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_FINISHED, 0);
-		}
+				  int lastmode = song_lib_remove(songlib, event.handle);
+				  if (lastmode == SOUND_STATUS_PLAYING) {
+					  song = songlib[0]; /* Force song detection to start with the highest priority song */
+					  sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_FINISHED, 0);
+				  }
+			  }
 
-	      }
+			  if (modsong == song)
+				  song = NULL;
 
-	      if (modsong == song)
-		song = NULL;
+			  if (lastmode == SOUND_STATUS_PLAYING) {
+				  song = songlib[0]; /* Force song detection to start with the highest priority song */
+				  sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_FINISHED, 0);
+			  }
+			  
+		  }
 
-	      if (lastmode == SOUND_STATUS_PLAYING) {
-		song = songlib[0]; /* Force song detection to start with the highest priority song */
-		sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_FINISHED, 0);
-	      }
+		  if (read(fd_in, &size, sizeof(int)) != sizeof(int)) {
+			  fprintf(ds, "Critical: Receiving song failed\n");
+			  REPORT_STATUS(SOUND_SERVER_XFER_ABORT);
+			  while (read(fd_in, &size, 1)); /* Empty queue */
+			  break;
+		  }
 
-	    }
+		  if (debugging)
+			  fprintf(ds, "%d bytes: ", size);
 
-	    if (read(fd_in, &size, sizeof(int)) != sizeof(int)) {
-	      fprintf(ds, "Critical: Receiving song failed\n");
-	      while (read(fd_in, &size, 1)); /* Empty queue */
-	      break;
-	    }
+		  datptr = data = xalloc(totalsize = size);
 
-	    if (debugging)
-	      fprintf(ds, "%d bytes: ", size);
+		  left_of_block = 0;
+		  while (size > 0) {
+			  if (left_of_block == 0 && size) {
+				  left_of_block = SOUND_SERVER_XFER_SIZE;
+				  REPORT_STATUS(SOUND_SERVER_XFER_WAITING);
+			  }
 
-	    datptr = data = xalloc(totalsize = size);
+			  received = read(fd_in, datptr, MIN(size, SOUND_SERVER_XFER_SIZE));
 
-	    while (size > 0) {
-	      received = read(fd_in, datptr, MIN(size, SSIZE_MAX));
+			  if (received < 0) {
+				  fprintf(ds, "Critical: Receiving song failed\n");
+				  break;
+			  }
+			  datptr += received;
+			  size -= received;
+			  left_of_block -= received;
 
-	      if (received < 0) {
-		fprintf(ds, "Critical: Receiving song failed\n");
-		break;
-	      }
+		  }
+		  REPORT_STATUS(SOUND_SERVER_XFER_OK);
 
-	      datptr += received;
-	      size -= received;
-	    }
+		  if (debugging)
+			  fprintf(ds, "OK\n");
+		  modsong = song_new(event.handle, data, totalsize, event.value);
+		  song_lib_add(songlib, modsong);
 
-	    if (debugging)
-	      fprintf(ds, "OK\n");
-	    modsong = song_new(event.handle, data, totalsize, event.value);
-	    song_lib_add(songlib, modsong);
+		  ccc = 127; /* Reset ccc */
 
-	    ccc = 127; /* Reset ccc */
-
-	    sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_INITIALIZED, 0);
+		  sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_INITIALIZED, 0);
 
 	  }
 	  break;
@@ -524,7 +535,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    GTimeVal currtime;
 
 	    while (size > 0) {
-	      int received = read(fd_in, dirptr, MIN(size, SSIZE_MAX));
+	      int received = read(fd_in, dirptr, MIN(size, SOUND_SERVER_XFER_SIZE));
 
 	      if (received < 0) {
 		fprintf(ds, "Critical: Failed to receive save dir name\n");
@@ -558,7 +569,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    int usecs, secs;
 
 	    while (size > 0) {
-	      int received = read(fd_in, dirptr, MIN(size, SSIZE_MAX));
+	      int received = read(fd_in, dirptr, MIN(size, SOUND_SERVER_XFER_SIZE));
 
 	      if (received < 0) {
 		fprintf(ds, "Critical: Failed to receive restore dir name\n");
@@ -579,7 +590,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    last_played.tv_usec -= (usecs + secs * 1000000);
 
 	    /* Return return value */
-	    write(fd_out, &success, sizeof(int));
+	    REPORT_STATUS(success);
 	    free(dirname);
 	  }
 	  break;
