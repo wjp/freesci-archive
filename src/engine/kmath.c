@@ -31,116 +31,116 @@
 void
 kRandom(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->acc = PARAM(0) + (int) ((PARAM(1) + 1.0 - PARAM(0)) * (rand() / (RAND_MAX + 1.0)));
+	s->acc = PARAM(0) + (int) ((PARAM(1) + 1.0 - PARAM(0)) * (rand() / (RAND_MAX + 1.0)));
 }
 
 
 void
 kAbs(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->acc = abs(PARAM(0));
+	s->acc = abs(PARAM(0));
 }
 
 
 void
 kSqrt(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->acc = (gint16) sqrt((float) abs(PARAM(0)));
+	s->acc = (gint16) sqrt((float) abs(PARAM(0)));
 }
 
 
 void
 kGetAngle(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int xrel = PARAM(3) - PARAM(1);
-  int yrel = PARAM(2) - PARAM(0);
+	int xrel = PARAM(3) - PARAM(1);
+	int yrel = PARAM(2) - PARAM(0);
 
-  if ((xrel == 0) && (yrel == 0))
-    s->acc = 0;
-  else
-    s->acc = (int) -(180.0/PI * atan2(yrel, xrel) + 0.5) + 180;
+	if ((xrel == 0) && (yrel == 0))
+		s->acc = 0;
+	else
+		s->acc = (int) -(180.0/PI * atan2(yrel, xrel) + 0.5) + 180;
 }
 
 
 void
 kGetDistance(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int xrel = (int) (((float) PARAM(1) - PARAM_OR_ALT(3, 0))/cos(PARAM_OR_ALT(5, 0)* PI / 180.0)); /* This works because cos(0)==1 */
-  int yrel = PARAM(0) - PARAM_OR_ALT(2, 0); 
+	int xrel = (int) (((float) PARAM(1) - PARAM_OR_ALT(3, 0))/cos(PARAM_OR_ALT(5, 0)* PI / 180.0)); /* This works because cos(0)==1 */
+	int yrel = PARAM(0) - PARAM_OR_ALT(2, 0); 
 
-  s->acc = sqrt((float) xrel*xrel + yrel*yrel);
+	s->acc = sqrt((float) xrel*xrel + yrel*yrel);
 }
 
 void
 kTimesSin(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int angle = PARAM(0);
-  int factor = PARAM(1);
+	int angle = PARAM(0);
+	int factor = PARAM(1);
 
-  s->acc = (int) (factor * 1.0 * sin(angle * PI / 180.0));
+	s->acc = (int) (factor * 1.0 * sin(angle * PI / 180.0));
 }
 
 
 void
 kTimesCos(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int angle = PARAM(0);
-  int factor = PARAM(1);
+	int angle = PARAM(0);
+	int factor = PARAM(1);
 
-  s->acc = (int) (factor * 1.0 * cos(angle * PI / 180.0));
+	s->acc = (int) (factor * 1.0 * cos(angle * PI / 180.0));
 }
 
 void
 kCosDiv(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int angle = PARAM(0);
-  int value = PARAM(1);
-  double cosval = cos(angle * PI / 180.0);
+	int angle = PARAM(0);
+	int value = PARAM(1);
+	double cosval = cos(angle * PI / 180.0);
 
-  if ((cosval < 0.0001) && (cosval > 0.0001)) {
-    SCIkwarn(SCIkWARNING,"Attepted division by zero\n");
-    s->acc = 0x8000;
-  } else
-    s->acc = (gint16) (value/cosval);
+	if ((cosval < 0.0001) && (cosval > 0.0001)) {
+		SCIkwarn(SCIkWARNING,"Attepted division by zero\n");
+		s->acc = 0x8000;
+	} else
+		s->acc = (gint16) (value/cosval);
 }
 
 void
 kSinDiv(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int angle = PARAM(0);
-  int value = PARAM(1);
-  double sinval = sin(angle * PI / 180.0);
+	int angle = PARAM(0);
+	int value = PARAM(1);
+	double sinval = sin(angle * PI / 180.0);
 
-  if ((sinval < 0.0001) && (sinval > 0.0001)) {
-    SCIkwarn(SCIkWARNING,"Attepted division by zero\n");
-    s->acc = 0x8000;
-  } else
-    s->acc = (gint16) (value/sinval);
+	if ((sinval < 0.0001) && (sinval > 0.0001)) {
+		SCIkwarn(SCIkWARNING,"Attepted division by zero\n");
+		s->acc = 0x8000;
+	} else
+		s->acc = (gint16) (value/sinval);
 }
 
 void
 kTimesTan(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int param = PARAM(0);
-  int scale = PARAM_OR_ALT(1, 1);
+	int param = PARAM(0);
+	int scale = PARAM_OR_ALT(1, 1);
 
-  param -= 90;
-  if ((param % 90) == 0) {
-    SCIkwarn(SCIkWARNING, "Attempted tan(pi/2)");
-    s->acc = 0x8000;
-  } else
-      s->acc = (gint16) -(tan(param * PI / 180.0) * scale);
+	param -= 90;
+	if ((param % 90) == 0) {
+		SCIkwarn(SCIkWARNING, "Attempted tan(pi/2)");
+		s->acc = 0x8000;
+	} else
+		s->acc = (gint16) -(tan(param * PI / 180.0) * scale);
 }
 
 void
 kTimesCot(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int param = PARAM(0);
-  int scale = PARAM_OR_ALT(1, 1);
+	int param = PARAM(0);
+	int scale = PARAM_OR_ALT(1, 1);
 
-  if ((param % 90) == 0) {
-    SCIkwarn(SCIkWARNING, "Attempted tan(pi/2)");
-    s->acc = 0x8000;
-  } else
-      s->acc = (gint16) (tan(param * PI / 180.0) * scale);
+	if ((param % 90) == 0) {
+		SCIkwarn(SCIkWARNING, "Attempted tan(pi/2)");
+		s->acc = 0x8000;
+	} else
+		s->acc = (gint16) (tan(param * PI / 180.0) * scale);
 }

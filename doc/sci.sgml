@@ -4135,7 +4135,7 @@ structure.
 
   <sect1 ID="Kfunctions">
    <Title/Kernel functions/
-<note><para/Thanks to Lars Skovlund and Francois Boyer for additional information!/</note>
+<note><para/Thanks to Lars Skovlund, Francois Boyer and Jeremy Tartaglia for additional information!/</note>
 <para>
 In SCI0, calls to the SCI kernel are initiated by using the <function>callk</function> opcode.
 <function>callk</function> has the opcode <literal>0x42</literal>
@@ -5674,15 +5674,15 @@ Frees all memory associated to a list
     <funcsynopsis><funcprototype><funcdef>
 kfunct 0x34: NewNode
     </funcdef><paramdef>
-word key, word value</paramdef>
+word value, word key</paramdef>
     </funcprototype></funcsynopsis><para><simplelist>
   <member><type>
 (word)</type>
-<parameter/key/: The node key (used for searching the list)
+<parameter/value/: The node value
   </member>
   <member><type>
 (word)</type>
-<parameter/value/: The node value
+<parameter/key/: The node key (used for searching the list)
   </member>
     </simplelist></para><para>
     Returns: <type>
@@ -6153,7 +6153,7 @@ This function concatenates two strings on the heap.
 
 <sect3><Title/Kernel function 0x49: StrCmp(HeapPtr, HeapPtr[, word])/<para></para>
     <funcsynopsis><funcprototype><funcdef>
-kfunct 0x49:
+kfunct 0x49: StrCmp
     </funcdef><paramdef>
 HeapPtr foo, HeapPtr bar[, word length]</paramdef>
     </funcprototype></funcsynopsis><para><simplelist>
@@ -6803,8 +6803,29 @@ to pressing LShift-RShift-PadMinus.
 		</para>
 	</sect3>
 
-<!-- fixme -->
-<sect3><Title/Kernel function 0x6a: ShakeScreen(?)/<para></para></sect3>
+	<sect3>
+	<Title/Kernel function 0x6a: ShakeScreen(word[, word])/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x6a: ShakeScreen
+		</funcdef><paramdef>
+		  word times [, word direction]
+	</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ <parameter/times/: Number of times to shake the screen</member>
+                       <member><type/(word)/ <parameter/direction/: See below</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+		  If <parameter>direction</parameter> is not specified, it defaults to 1. It is a bitmask and defined as follows:
+		  <simplelist>
+		    <member>bit 0: Shake 10 pixels downwards</member>
+		    <member>bit 1: Shake to the right</member>
+		    <member>bit 2: Unknown, but used</member>
+		  </simplelist>
+		</para>
+	</sect3>
 
 <!-- fixme -->
 <sect3><Title/Kernel function 0x6b: FlushResources(?)/<para></para></sect3>

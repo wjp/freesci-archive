@@ -112,8 +112,8 @@ kNewNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	PUT_HEAP(nodebase + LIST_PREVIOUS_NODE, 0);
 	PUT_HEAP(nodebase + LIST_NEXT_NODE, 0);
-	PUT_HEAP(nodebase + LIST_NODE_KEY, PARAM(0));
-	PUT_HEAP(nodebase + LIST_NODE_VALUE, PARAM(1));
+	PUT_HEAP(nodebase + LIST_NODE_VALUE, PARAM(0));
+	PUT_HEAP(nodebase + LIST_NODE_KEY, PARAM(1));
 
 	SCIkdebug(SCIkNODES, "New nodebase at %04x\n", nodebase);
 

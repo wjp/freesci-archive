@@ -2916,28 +2916,44 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 }
 
+#define SHAKE_DOWN 1
+#define SHAKE_RIGHT 2
+
 void
 kShakeScreen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	int shakes = PARAM_OR_ALT(0, 1);
+	int directions = PARAM_OR_ALT(1, 0);
 	gfx_pixmap_t *screen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 0, 320, 200));
 	int i;
+
+	if (directions & ~3)
+		SCIkdebug(SCIkGRAPHICS, "ShakeScreen(): Direction bits are %x (unknown)\n", directions);
 
 	gfxop_set_clip_zone(s->gfx_state, gfx_rect_fullscreen);
 
 	for (i = 0; i < shakes; i++) {
-		gfxop_draw_box(s->gfx_state, gfx_rect(0, 190, 320, 10), s->ega_colors[0], s->ega_colors[0], GFX_BOX_SHADE_FLAT);
-		gfxop_draw_pixmap(s->gfx_state, screen, gfx_rect(0, 10, 320, 190), gfx_point(0, 0));
+		int shake_down = (directions & SHAKE_DOWN)? 10 : 0;
+		int shake_right = (directions & SHAKE_RIGHT)? 10 : 0;
+
+		if (directions & SHAKE_DOWN)
+			gfxop_draw_box(s->gfx_state, gfx_rect(0, 0, 320, 10), s->ega_colors[0], s->ega_colors[0], GFX_BOX_SHADE_FLAT);
+
+		if (directions & SHAKE_RIGHT)
+			gfxop_draw_box(s->gfx_state, gfx_rect(0, 0, 10, 200), s->ega_colors[0], s->ega_colors[0], GFX_BOX_SHADE_FLAT);
+
+		gfxop_draw_pixmap(s->gfx_state, screen, gfx_rect(0, 0, 320 - shake_right, 200 - shake_down),
+				  gfx_point(shake_right, shake_down));
+
 		gfxop_update(s->gfx_state);
 		gfxop_usleep(s->gfx_state, 50000);
 
-		gfxop_draw_box(s->gfx_state, gfx_rect(0, 0, 320, 10), s->ega_colors[0], s->ega_colors[0], GFX_BOX_SHADE_FLAT);
-		gfxop_draw_pixmap(s->gfx_state, screen, gfx_rect(0, 0, 320, 190), gfx_point(0, 10));
+
+		gfxop_draw_pixmap(s->gfx_state, screen, gfx_rect(0, 0, 320, 200), gfx_point(0, 0));
 		gfxop_update(s->gfx_state);
 		gfxop_usleep(s->gfx_state, 50000);
 	}
 
-	gfxop_draw_pixmap(s->gfx_state, screen, gfx_rect(0, 0, 320, 200), gfx_point(0, 0));
 	gfxop_free_pixmap(s->gfx_state, screen);
 	gfxop_update(s->gfx_state);
 }

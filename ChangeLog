@@ -1,3 +1,14 @@
+2001-07-01  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* doc/sci.sgml: Updates to NewNode() and ShakeScreen()
+
+	* src/engine/klists.c (kNewNode): Reversed node/value pairs, as in
+	Sierra SCI
+
+	* src/engine/kgraphics.c (kShakeScreen): Screen shaking now supports
+	horizontal and vertical shaking; also, it no longer shakes upwards
+	(same as Sierra SCI).
+
 2001-06-26  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/vm.c (run_vm): Re-fixed an old bug in callk wrt old scripts
