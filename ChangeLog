@@ -1,5 +1,23 @@
 2001-03-02  Solomon Peachy <pizza@shaftnet.org>
 
+	* include/Makefile.am
+	  include/midi_device.h
+	  include/midi_mt32.h
+	  sound/Makefile.am
+	  sound/midi_device.c
+	  sound/midi_mt32.c
+	  sound/soundserver_null.c
+
+	Now we have an abstracted midi_device API, with things like
+	midi_open, midi_noteon, midi_volume, etc.
+
+	Also changed -- Ignoring the Rhythm channel is now a
+                        device-dependent flag.
+		     -- ...channel masks were broken from day 1.
+                     -- Addition of an allstop() when switching songs.
+
+2001-03-02  Solomon Peachy <pizza@shaftnet.org>
+
 	* src/include/sound.h
 	  src/sound/oldmidi.c
 	  src/tools/sciunpack.c:  Will generate MIDI0 songs with the

@@ -478,8 +478,8 @@ song_new(word handle, byte *data, int size, int priority)
   memset(retval->channel_map, 1, sizeof(int) * MIDI_CHANNELS);
 
   for (i = 0; i < MIDI_CHANNELS; i++) {
-    retval->polyphony[i] = data[i << 1]; 
-    retval->flags[i] = data[1 + (i << 1)];
+    retval->polyphony[i] = data[1 + (i << 1)]; 
+    retval->flags[i] = data[2 + (i << 1)];
   }
   return retval;
 }

@@ -1,5 +1,5 @@
 /***************************************************************************
- midi_mt32.c Copyright (C) 2000 Rickard Lind
+ midi_mt32.c Copyright (C) 2000,2001 Rickard Lind, Solomon Peachy
 
 
  This program may be modified and copied freely according to the terms of
@@ -21,10 +21,9 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <midi_device.h>
 #include <midi_mt32.h>
 #include <midiout.h>
-
-#define RHYTHM_CHANNEL 9
 
 int midi_mt32_poke(guint32 address, guint8 *data, unsigned int n);
 int midi_mt32_poke_gather(guint32 address, guint8 *data1, unsigned int count1,
@@ -123,9 +122,6 @@ static struct {
   guint8 time;
   guint8 level;
 } mt32_reverb[11];
-
-unsigned short mt32_midi_patch = 001;
-guint8 mt32_midi_playflag = 0x01;
 
 int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
 {
@@ -443,3 +439,20 @@ int midi_mt32_sysex_delay()
   usleep(320 * 63); /* One MIDI byte is 320us, 320us * 63 > 20ms */
   return 0;
 }
+
+/* the driver struct */
+
+midi_device_t midi_device_mt32 = {
+  "mt32",
+  "v0.01",
+  &midi_mt32_open,
+  &midi_mt32_close,
+  &midi_mt32_event,
+  &midi_mt32_event2,
+  &midi_mt32_allstop,
+  &midi_mt32_volume,
+  &midi_mt32_reverb,
+  001,		/* patch.001 */
+  0x01,		/* playflag */
+  1  		/* play channel 9 */
+};

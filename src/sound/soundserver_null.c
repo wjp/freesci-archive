@@ -41,7 +41,7 @@
 #endif
 
 #include <sciresource.h>
-#include <midi_mt32.h>
+#include <midi_device.h>
 
 void
 sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug);
@@ -200,12 +200,16 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
   resource_t *midi_patch;
 
-  midi_patch = findResource(9,mt32_midi_patch);
+  midi_device = midi_devices[0];
+	 
+  midi_patch = findResource(9,midi_patchfile);
 
-  if (midi_patch == NULL)
-    printf("gack!  That patch (%d) didn't load!\n", mt32_midi_patch);
-  else if (midi_mt32_open(midi_patch->data, midi_patch->length) < 0)
-    printf("gack!  MT32 failed to open cleanly!\n");
+  if (midi_patch == NULL) {
+    printf("gack!  That patch (%03d) didn't load!\n", midi_patchfile);
+    if (midi_open(NULL, -1) < 0)
+      printf("gack! The midi device failed to open cleanly!\n");
+  } else if (midi_open(midi_patch->data, midi_patch->length) < 0)
+    printf("gack! The midi device failed to open cleanly!\n");
 
   sound_eq_init(&queue);
 
@@ -279,7 +283,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	  sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_FINISHED, 0);
 	  ticks = 1; /* Wait one tick, then continue with next song */
 
-	  midi_mt32_allstop();
+	  midi_allstop();
 	}
 
       } else { /* Song running normally */
@@ -300,13 +304,13 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	  } else if (param == 0x4b) {
 	    song->polyphony[command & 0x0f] = param2;
 	  } else if (param == 0x50) {
-	    midi_mt32_reverb(param2);
-	    fprintf(ds, "Midi reverb set to %d for handle %04x\n", param2, song->handle);
+	    midi_reverb(param2);
+	    if (debugging)
+	      fprintf(ds, "Midi reverb set to %d for handle %04x\n", param2, song->handle);
 	  } else if (param == 0x4E) {
 	    fprintf(ds, "Nonhandled MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
 	  } else if ((param != 0x01) && (param != 0x07) && (param != 0x0a) &&
 		     (param != 0x0b) && (param != 0x40) && (param != 0x79)) 
-	    /* CC changes in the MT32 */
 	    fprintf(ds, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
 	  
 	} else if (command == SCI_MIDI_SET_SIGNAL) {
@@ -319,12 +323,12 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
 	  }
 	} else {  /* just your regular midi event.. */
-	  if (song->flags[command & 0x0f] & mt32_midi_playflag) { /* check play flag */
+	  if (song->flags[command & 0x0f] & midi_playflag) { /* checkplay flag */
 	    if (param2 == -1)
-	      midi_mt32_event2(command, param);
+	      midi_event2(command, param);
 	    else
-	      midi_mt32_event(command, param, param2);
-	  }
+	      midi_event(command, param, param2);
+	  } 
 	}
       }
 
@@ -437,12 +441,15 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 		  if (debugging)
 			  fprintf(ds, "OK\n");
 		  modsong = song_new(event.handle, data, totalsize, event.value);
+		  if (midi_playrhythm)
+		    modsong->flags[RHYTHM_CHANNEL] |= midi_playflag;
 		  song_lib_add(songlib, modsong);
 
 		  ccc = 127; /* Reset ccc */
 
 		  /* set default reverb */
-		  midi_mt32_reverb(-1);
+		  midi_allstop();
+		  midi_reverb(-1);
 
 		  sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_INITIALIZED, 0);
 
@@ -494,7 +501,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	      fprintf(ds, "Stopping handle %04x (value %04x)\n", event.handle, event.value);
 	    if (modsong) {
 
-	      midi_mt32_allstop();
+	      midi_allstop();
 	      modsong->status = SOUND_STATUS_STOPPED;
 	      if (modsong->resetflag) /* only reset if we are supposed to. */
 		modsong->pos = modsong->loopmark = 33; /* Reset position */
@@ -539,7 +546,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	  case SOUND_COMMAND_SET_VOLUME:
 	    if (debugging)
 	      fprintf(ds, "Set volume to %d\n", event.value);
-	    midi_mt32_volume(event.value * 100 / 15);
+	    midi_volume(event.value * 100 / 15); /* scale to % */
 	    break;
 	  case SOUND_COMMAND_SET_MUTE:
 	    fprintf(ds, "Called mute??? should never happen\n");
@@ -695,12 +702,12 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 	    song = NULL;
 	  }
-	  midi_mt32_allstop();
+	  midi_allstop();
 	  break;
 
 	  case SOUND_COMMAND_SHUTDOWN:
 	    fprintf(stderr,"Sound server: Received shutdown signal\n");
-	    midi_mt32_close();
+	    midi_close();
 	    _exit(0);
 
 	  default:
