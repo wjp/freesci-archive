@@ -707,22 +707,35 @@ song_lib_dump(songlib_t songlib, int line)
 
 }
 
-int init_midi_device (state_t *s) {
+extern midi_device_t midi_device_null;
+
+int init_midi_device (state_t *s)
+{
 	resource_t *midi_patch;
+	int success = 1;
 
 	midi_patch = scir_find_resource(s->resmgr, sci_patch, midi_patchfile, 0);
 
 	if (midi_patch == NULL) {
-		sciprintf(" Patch (%03d) could not be loaded. Initializing with defaults...\n", midi_patchfile);
+		sciprintf("[SND] Patch (%03d) could not be loaded. Initializing with defaults...\n", midi_patchfile);
 
 		if (midi_open(NULL, 0) < 0) {
-			sciprintf(" The MIDI device failed to open cleanly.\n");
-			return -1;
+			sciprintf("[SND] The MIDI device failed to open cleanly.\n");
+			success = 0;
 		}
 
 	} else if (midi_open(midi_patch->data, midi_patch->size) < 0) {
-		sciprintf(" The MIDI device failed to open cleanly.\n");
-		return -1;
+		sciprintf("[SND] The MIDI device failed to open cleanly.\n");
+		success = 0;
+	}
+
+	if (!success) {
+		midi_device = &midi_device_null;
+		if (midi_open(NULL, 0) < 0) {
+			sciprintf("[SND] MIDI NULL driver failed to initialize, aborting...\n");
+			return -1;
+		}
+		sciprintf("[SND] Disabling sound output.\n");
 	}
 
 	s->sound_volume = 0xc;

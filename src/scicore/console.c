@@ -555,8 +555,8 @@ sciprintf (char *fmt, ...)
 	
 	if (_con_string_callback)
 		_con_string_callback(buf);
-
-	free(buf);
+	else
+		free(buf);
 
 	return 0;
 }

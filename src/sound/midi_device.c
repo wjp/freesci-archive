@@ -21,6 +21,8 @@
 
 midi_device_t *midi_device;
 
+midi_device_t midi_device_null;
+
 midi_device_t *midi_devices[] = {
 	&midi_device_mt32gm,
 	&midi_device_mt32,
@@ -28,6 +30,7 @@ midi_device_t *midi_devices[] = {
 	&midi_device_adlib,
 #endif
 	&midi_device_adlibemu,
+	&midi_device_null,
 	NULL
 };
 
@@ -147,3 +150,29 @@ void make_sbi(adlib_def *one, guint8 *buffer)
 
   return;
 }
+
+
+/** NULL MIDI device **/
+
+_midi_device_null_open(guint8 *_0, unsigned int _1) { return 0; }
+_midi_device_null_close() { return 0; }
+_midi_device_null_event(guint8 _0, guint8 _1, guint8 _2, guint32 _3) { return 0; }
+_midi_device_null_event2(guint8 _0, guint8 _1, guint32 _2) { return 0; }
+_midi_device_null_allstop() { return 0; }
+_midi_device_null_reverb(short _) { return 0; }
+
+midi_device_t midi_device_null = {
+	"null",
+	"0.1",
+	_midi_device_null_open,
+	_midi_device_null_close,
+	_midi_device_null_event,
+	_midi_device_null_event2,
+	_midi_device_null_allstop,
+	NULL,
+	_midi_device_null_reverb,
+	1,
+	0,
+	0,
+	1
+};
