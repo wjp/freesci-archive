@@ -979,7 +979,6 @@ kernel_dereference_pointer(struct _state *s, reg_t pointer, int entries)
 	mem_obj_t *mobj;
 	reg_t *base = NULL;
 	int count;
-	int factor = sizeof(reg_t); /* mult factor */
 
 	if (!pointer.segment
 	    || (pointer.segment >= s->seg_manager.heap_size)
@@ -1016,8 +1015,7 @@ kernel_dereference_pointer(struct _state *s, reg_t pointer, int entries)
 
 	case MEM_OBJ_DYNMEM:
 		count = mobj->data.dynmem.size;
-		base = mobj->data.dynmem.buf;
-		factor = 1;
+		base = (reg_t *) mobj->data.dynmem.buf;
 		break;
 		
 	case MEM_OBJ_SYS_STRINGS:
@@ -1037,12 +1035,10 @@ kernel_dereference_pointer(struct _state *s, reg_t pointer, int entries)
 		return NULL;
 	}
 
-	count *= factor;
-
 	if (pointer.offset + entries > count) {
 		SCIkdebug(SCIkERROR, "Trying to dereference pointer "PREG" beyond end of segment!\n",
 			  PRINT_REG(pointer));
 		return NULL;
 	} return
-		  (reg_t *) (((byte *) base) + pointer.offset);
+		  base + pointer.offset;
 }
