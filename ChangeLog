@@ -1,5 +1,11 @@
 2004-12-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/Makefile.am: Added Dreamcast virtual keyboard files to
+	EXTRA_DIST.
+	* src/include/Makefile.am: Added game_select.h to EXTRA_DIST.
+
+2004-12-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/gp32/config.c: Removed from repository.
 	* src/Makefile.am, src/gp32/Makefile: Updated.
 	* src/gp32/wrap.c, src/gp32/wrap.h: Most function wrappers were
