@@ -135,12 +135,18 @@ sci_kernel_function_t kfunct_mappers[] = {
   {"SaveGame", kSaveGame },
   {"RestoreGame", kRestoreGame },
   {"SetJump", kSetJump },
+  {"EditControl", kEditControl },
+  {"EmptyList", kEmptyList },
+  {"AddAfter", kAppendAfter },
 
   /* Experimental functions */
   {"RestartGame", kRestartGame },
+  {"SetNowSeen", kSetNowSeen },
   {"Said", kSaid },
-  {"EditControl", kEditControl },
   {"Graph", kGraph },
+
+  /* Special and NOP stuff */
+  {"DoAvoider", kNOP },
   {SCRIPT_UNKNOWN_FUNCTION_STRING, k_Unknown },
   {0,0} /* Terminator */
 };
@@ -431,6 +437,12 @@ kstub(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
+void
+kNOP(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  CHECK_THIS_KERNEL_FUNCTION;
+  SCIkwarn(SCIkWARNING, "Warning: Kernel function 0x%02x invoked: NOP\n");
+}
 
 
 void

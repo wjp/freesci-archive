@@ -780,6 +780,56 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 } /* kBaseSetter */
 
 
+void
+kSetNowSeen(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int x, y, z;
+  int xbase, ybase, xend, yend, xsize, ysize;
+  int view, loop, cell;
+  int xmod = 0, ymod = 0;
+  resource_t *viewres;
+  heap_ptr object = PARAM(0);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+  SCIkdebug(SCIkWARNING, "Warning: Experimental kernel function SetNowSeen(%04x) invoked\n", object);
+
+  x = GET_SELECTOR(object, x);
+  y = GET_SELECTOR(object, y);
+  z = GET_SELECTOR(object, z);
+
+  y -= z; /* Subtract z offset */
+
+  view = GET_SELECTOR(object, view);
+  loop = GET_SELECTOR(object, loop);
+  cell = GET_SELECTOR(object, cel);
+
+  viewres = findResource(sci_view, view);
+
+  if (!viewres)
+    xsize = ysize = 0;
+  else {
+    xsize = view0_cel_width(loop, cell, viewres->data);
+    ysize = view0_cel_height(loop, cell, viewres->data);
+  }
+
+  if ((xsize < 0) || (ysize < 0))
+    xsize = ysize = 0; /* Invalid view/loop */
+  else
+    view0_base_modify(loop, cell, viewres->data, &xmod, &ymod);
+  
+  xbase = x - xmod - (xsize) / 2;
+  xend = xbase + xsize;
+  yend = y - ymod;
+  ybase = yend - ysize;
+
+  PUT_SELECTOR(object, nsLeft, xbase);
+  PUT_SELECTOR(object, nsRight, xend);
+  PUT_SELECTOR(object, nsTop, ybase);
+  PUT_SELECTOR(object, nsBottom, yend);
+
+} /* kSetNowSeen */
+
+
 
 
 static void

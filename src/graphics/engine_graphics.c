@@ -465,13 +465,13 @@ graph_draw_selector_control(struct _state *s, port_t *port, int state,
     return;
   }
 
-  y += 10;
+  y += 11;
   for (entry = top_entry; entry < max_entry_pos; entry++) {
     if (entry == selection) { /* the selected entry? */
       graph_fill_box_custom(s, port->xmin+x+1, port->ymin+y, xl-2, fontheight, port->color, -1, -1, 1);
-      draw_text0_without_newline(s->pic, port, x, y, entries[entry], font, port->bgcolor);
+      draw_text0_without_newline(s->pic, port, x + 1, y, entries[entry], font, port->bgcolor);
     } else /* not selected: */
-      draw_text0_without_newline(s->pic, port, x, y, entries[entry], font, port->color);
+      draw_text0_without_newline(s->pic, port, x + 1, y, entries[entry], font, port->color);
 
     y += fontheight;
   }

@@ -1,3 +1,12 @@
+2000-04-12  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kernel.c: Took care of DoAvoider()
+
+	* src/core/kgraphics.c (kSetNowSeen): Implemented SetNowSeen()
+
+	* src/core/klists.c (kEmptyList): Implemented EmptyList()
+	(kAddAfter): Implemented AddAfter()
+
 2000-04-12  Dmitry Jemerov  <yole@nnz.ru>
 
 	* The usual bunch of build problem fixes.

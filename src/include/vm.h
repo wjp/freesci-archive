@@ -120,7 +120,7 @@ typedef struct
   int view, loop, cel; /* Description of a specific image */
   int brLeft, brRight, brTop, brBottom; /* Bounding Rectangle */
   int xStep, yStep; /* BR adjustments */
-  int nsLeft, nsRight, nsTop, nsBottom; /* View boundaries */
+  int nsLeft, nsRight, nsTop, nsBottom; /* View boundaries ('now seen') */
   int text, font; /* Used by controls */
   int type, state; /* Used by contols as well */
   int doit; /* Called (!) by the Animate() system call */

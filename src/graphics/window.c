@@ -178,7 +178,7 @@ void draw_window(picture_t dest, port_t *port, char color, char priority,
 
     if (flags & WINDOW_FLAG_TITLE) {
       memcpy(&headerport, port, sizeof (port_t)); /* Create a header */
-      headerport.ymax = y - 1;
+      headerport.ymax = y;
       headerport.ymin -= 10;
 
       draw_window(dest, &headerport, 0x88, priority, NULL, NULL,

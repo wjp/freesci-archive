@@ -197,6 +197,55 @@ kFirstNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
 void
+kEmptyList(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr list = UPARAM(0);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+  SCIkdebug(SCIkWARNING, "Warning: EmptyList() was invoked with %d parameters\n", argc);
+
+  if (list)
+    s->acc = !(GET_HEAP(UPARAM(0) + LIST_FIRST_NODE));
+}
+
+
+void
+kAppendAfter(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr list = UPARAM(0);
+  heap_ptr firstnode = UPARAM(1);
+  heap_ptr newnode = UPARAM(2);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+  SCIkdebug(SCIkWARNING, "Warning: AddAfter() was invoked with %d parameters\n", argc);
+
+  if (argc != 3) {
+    SCIkdebug(SCIkWARNING, "Aborting.\n");
+    return;
+  }
+
+  if (firstnode) { /* We're really appending after */
+
+    heap_ptr oldnext = GET_HEAP(firstnode + LIST_NEXT_NODE);
+    PUT_HEAP(newnode + LIST_PREVIOUS_NODE, firstnode);
+    PUT_HEAP(firstnode + LIST_NEXT_NODE, newnode);
+    PUT_HEAP(newnode + LIST_NEXT_NODE, oldnext);
+
+    if (!oldnext) /* Appended after last node? */
+      PUT_HEAP(list + LIST_LAST_NODE, newnode); /* Set new node as last list node */
+
+  } else { /* Set as initial list node */
+    PUT_HEAP(newnode + LIST_NEXT_NODE, firstnode);
+    PUT_HEAP(newnode + LIST_PREVIOUS_NODE, 0);
+    PUT_HEAP(list + LIST_FIRST_NODE, newnode);
+
+    if (GET_HEAP(list + LIST_LAST_NODE) == 0) /* List was empty? */
+      PUT_HEAP(list + LIST_LAST_NODE, newnode); /* First node is also the last node */
+  }
+}
+
+
+void
 kLastNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr list = UPARAM(0);
