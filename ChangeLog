@@ -1,3 +1,7 @@
+2000-06-01  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/klists.c (kDeleteKey): Now returns a result
+
 2000-06-01  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kCanBeHere): Fixed clipping not to check for

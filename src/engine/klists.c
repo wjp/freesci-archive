@@ -170,17 +170,17 @@ _k_delete_key(state_t *s, heap_ptr list, heap_ptr key)
 
     heap_free(s->_heap, node - 2);
 
-    return 0;
+    return 1;
 
   } else SCIkdebug(SCIkNODES,"Removing key from list: FAILED\n");
 
-  return 1;
+  return 0;
 }
 
 void
 kDeleteKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  _k_delete_key(s, UPARAM(0), UPARAM(1));
+  s->acc=_k_delete_key(s, UPARAM(0), UPARAM(1));
 }
 
 
