@@ -1,3 +1,10 @@
+FreeSCI does not currently work on DOS; the port is currently orphaned.
+The following are the old contents of the README file; most of them no
+longer apply.
+
+
+-------------------
+
 The DOS version of FreeSCI is around the same level of functionality as
 the Linux version. The MIDI support is also done (yay!), but it probably
 has a lot of bugs.
