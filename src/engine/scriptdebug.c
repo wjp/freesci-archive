@@ -32,6 +32,7 @@
 #include <vocabulary.h>
 #include <kernel_compat.h>
 #include <kernel_types.h>
+#include <sci_midi.h>
 #ifdef HAVE_UNISTD_H
 /* Assume this is a sufficient precondition */
 #  include <signal.h>
@@ -63,6 +64,9 @@ static reg_t **p_vars;
 static reg_t **p_var_base;
 static int *p_var_max; /* May be NULL even in valid state! */
 
+static const int MIDI_cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0,
+				    2, 2, 2, 2, 1, 1, 2, 0};
+
 int _kdebug_cheap_event_hack = 0;
 int _kdebug_cheap_soundcue_hack = -1;
 
@@ -85,6 +89,198 @@ _debug_get_input_default(void)
 
   return inputbuf;
 }
+
+
+static inline int
+_parse_ticks(byte *data, int *offset_p, int size)
+{
+	int ticks = 0;
+	int tempticks;
+	int offset = 0;
+
+	do {
+		tempticks = data[offset++];
+		ticks += (tempticks == SCI_MIDI_TIME_EXPANSION_PREFIX)?
+			SCI_MIDI_TIME_EXPANSION_LENGTH : tempticks;
+	} while (tempticks == SCI_MIDI_TIME_EXPANSION_PREFIX
+		 && offset < size);
+
+	if (offset_p)
+		*offset_p = offset;
+
+	return ticks;
+}
+
+
+static void
+midi_hexdump(byte *data, int size, int notational_offset)
+{ /* Specialised for SCI01 tracks (this affects the way cumulative cues are treated ) */
+	int offset = 0;
+	int prev = 0;
+
+	while (offset < size) {
+		int old_offset = offset;
+		int offset_mod;
+		int time = _parse_ticks(data + offset, &offset_mod,
+					size);
+		int cmd;
+		int pleft;
+		int firstarg;
+		int i;
+		int blanks = 0;
+
+		offset += offset_mod;
+		fprintf(stderr, "  [%04x] %d\t",
+			old_offset + notational_offset, time);
+
+		cmd = data[offset];
+		if (!(cmd & 0x80)) {
+			cmd = prev;
+			if (prev < 0x80) {
+				fprintf(stderr, "Track broken at %x after"
+					" offset mod of %d\n",
+					offset + notational_offset, offset_mod);
+				sci_hexdump(data, size, notational_offset);
+				return;
+			}
+			fprintf(stderr, "(rs %02x) ", cmd);
+			blanks += 8;
+		} else {
+			++offset;
+			fprintf(stderr, "%02x ", cmd);
+			blanks += 3;
+		}
+		prev = cmd;
+
+		pleft = MIDI_cmdlen[cmd >> 4];
+		if (SCI_MIDI_CONTROLLER(cmd) && data[offset]
+		    == SCI_MIDI_CUMULATIVE_CUE)
+			--pleft; /* This is SCI(0)1 specific */
+
+		for (i = 0; i < pleft; i++) {
+			if (i == 0)
+				firstarg = data[offset];
+			fprintf(stderr, "%02x ", data[offset++]);
+			blanks += 3;
+		}
+
+		while (blanks < 16) {
+			blanks += 4;
+			fprintf(stderr, "    ");
+		}
+
+		while (blanks < 20) {
+			++blanks;
+			fprintf(stderr, " ");
+		}
+
+		if (cmd == SCI_MIDI_EOT)
+			fprintf(stderr, ";; EOT");
+		else if (cmd == SCI_MIDI_SET_SIGNAL) {
+			if (firstarg == SCI_MIDI_SET_SIGNAL_LOOP)
+				fprintf(stderr, ";; LOOP point");
+			else
+				fprintf(stderr, ";; CUE (%d)", firstarg);
+		} else if (SCI_MIDI_CONTROLLER(cmd)) {
+			if (firstarg == SCI_MIDI_CUMULATIVE_CUE)
+				fprintf(stderr, ";; CUE (cumulative)");
+			else if (firstarg == SCI_MIDI_RESET_ON_SUSPEND)
+				fprintf(stderr, ";; RESET-ON-SUSPEND flag");
+		}
+		fprintf(stderr, "\n");
+
+		if (old_offset >= offset) {
+			fprintf(stderr, "-- Not moving forward anymore,"
+				" aborting (%x/%x)\n", offset, old_offset);
+			return;
+		}
+	}
+}
+
+#define SONGDATA(x) data[offset + (x)]
+#define CHECK_FOR_END_ABSOLUTE(off) if ((off) >= size) return;
+static void
+sci01_song_header_dump(byte *data, int size)
+{
+	int last_time;
+	int offset = 0;
+	int smallest_start = 10000;
+
+	sciprintf ("SCI01 song track mappings:\n");
+
+	CHECK_FOR_END_ABSOLUTE(0);
+	while (SONGDATA(0) != 0xff) {
+		byte device_id = data[offset];
+		sciprintf("* Device %02x:\n", device_id);
+		offset++;
+		CHECK_FOR_END_ABSOLUTE(offset + 1);
+		while (SONGDATA(0) != 0xff) {
+			int track_offset;
+			int end;
+			byte header1;
+
+			CHECK_FOR_END_ABSOLUTE(offset + 7);
+
+			offset += 2;
+
+			track_offset = getUInt16(data + offset);
+			header1 = data[track_offset];
+			track_offset += 2;
+
+			if (track_offset < smallest_start)
+				smallest_start = track_offset;
+			end = getUInt16(data + offset + 2);
+			sciprintf("  - %04x -- %04x",
+				  track_offset, end);
+
+			if (track_offset == 0xfe)
+				sciprintf(" (PCM data)\n");
+			else
+				sciprintf(" (channel %x)\n", header1 & 0xf);
+
+			offset += 4;
+		}
+		offset++;
+	}
+}
+#undef CHECK_FOR_END_ABSOLUTE
+#undef SONGDATA
+
+
+
+int c_sfx_01_header(state_t *s)
+{
+	resource_t *song = scir_find_resource(s->resmgr,
+					      sci_sound,
+					      cmd_params[0].val,
+					      0);
+
+	if (!song) {
+		sciprintf("Doesn't exist\n");
+		return 1;
+	}
+
+	sci01_song_header_dump(song->data, song->size);
+}
+
+int c_sfx_01_track(state_t *s)
+{
+	resource_t *song = scir_find_resource(s->resmgr,
+					      sci_sound,
+					      cmd_params[0].val,
+					      0);
+
+	int offset = cmd_params[1].val;
+
+	if (!song) {
+		sciprintf("Doesn't exist\n");
+		return 1;
+	}
+
+	midi_hexdump(song->data + offset, song->size, offset);
+}
+
+
 
 char *(*_debug_get_input)(void) = _debug_get_input_default;
 
@@ -2558,7 +2754,7 @@ static int
 c_is_sample(state_t *s)
 {
 	resource_t *song = scir_find_resource(s->resmgr,
-					      sci_sound, 
+					      sci_sound,
 					      cmd_params[0].val,
 					      0);
 	song_iterator_t *songit;
@@ -3336,6 +3532,16 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "Tests whether a given sound resource\n"
 					 "  is a PCM sample, and displays infor-\n"
 					 "  mation on it if it is.\n\n");
+			con_hook_command(c_sfx_01_header, "sfx-01-header", "i",
+					 "Dumps the header of an SCI01 song\n\n"
+					 "SEE ALSO\n\n"
+					 "  sfx-01-track.1\n\n");
+			con_hook_command(c_sfx_01_track, "sfx-01-track", "ii",
+					 "Dumps a track from an SCI01 song\n\n"
+					 "USAGE\n\n"
+					 "  sfx-01-track <song> <offset>\n\n"
+					 "SEE ALSO\n\n"
+					 "  sfx-01-header.1\n\n");
 
 
 			con_hook_int(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");

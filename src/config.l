@@ -38,13 +38,11 @@
 #  include <direct.h>
 
 #  define strcasecmp stricmp
-#  define PATH_MAX 255
 
 #endif
 
 #ifdef _DREAMCAST   
 #  include <dc.h>
-#  define PATH_MAX 255
 #endif
 
 config_entry_t *conf;
@@ -272,9 +270,9 @@ standard_option standard_options[] = {
 	OPT_STATICREF("midiout_driver", midiout_driver, parse_midiout_driver),
 	OPT_STATICREF("midi_device", midi_device, parse_midi_device),
 	OPT_STATICREF("sound_server", sound_server, parse_sound_server),
-        OPT_STATICREF("pcmout_driver", pcmout_driver, parse_pcmout_driver),
-        OPT_INT("pcmout_rate", pcmout_rate, 11025, 48000),
-        OPT_INT("pcmout_stereo", pcmout_stereo, 0, 1),
+	OPT_STATICREF("pcmout_driver", pcmout_driver, parse_pcmout_driver),
+	OPT_INT("pcmout_rate", pcmout_rate, 11025, 48000),
+	OPT_INT("pcmout_stereo", pcmout_stereo, 0, 1),
 #endif
 	OPT_STRING("console_log", console_log),
 	OPT_STRING("module_path", module_path),
@@ -388,23 +386,23 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 
 [[:alnum:]]+"."[[:alnum:]]+"."[[:alnum:]_]+[[:blank:]]*"="[[:blank:]]*({NUMPARAMTOKEN}|{QUOTED_NUMPARAMTOKEN})[[:blank:]]* {
 /* driver parameters */
-        char *subsys_name = yytext;
-        char *driver_name;
+	char *subsys_name = yytext;
+	char *driver_name;
 	char *option, *value;
 	char *p2;
 
-        yytext = strchr(yytext, '.');
-        *yytext++ = 0;
-        driver_name = yytext;
 	yytext = strchr(yytext, '.');
-        *yytext++ = 0;
+	*yytext++ = 0;
+	driver_name = yytext;
+	yytext = strchr(yytext, '.');
+	*yytext++ = 0;
 
 
 	option = yytext;
 	yytext = strchr(yytext, '=');
 	*yytext++ = 0;
 
-	p2 = yytext-2;                    /* trim right spaces */
+	p2 = yytext-2;			/* trim right spaces */
 	while (p2 > option && isspace (*p2))
 		*p2-- = 0;
 
@@ -446,7 +444,7 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 
 	option_str_len = value_str - option_str;
 
-        while (!(isdigit(*value_str)||(*value_str == '"')))
+	while (!(isdigit(*value_str)||(*value_str == '"')))
 		++value_str;
 
 	value_str = crop_value(value_str);
@@ -481,8 +479,8 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 [[:blank:]\n]+ /* Eat whitespace */
 
 <<EOF>> {
-        yy_delete_buffer( YY_CURRENT_BUFFER );
-        yyterminate();
+	yy_delete_buffer( YY_CURRENT_BUFFER );
+	yyterminate();
 }
 
 .* printf("Unrecognized option: '%s'\n", yytext);
@@ -492,7 +490,7 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 int
 yywrap(void)
 {
-        return pop_file(); /* no further input */
+	return pop_file(); /* no further input */
 }
 
 static int
@@ -555,12 +553,12 @@ pop_file(void)
 
 		free(goner);
 		return 0;
-	} else { 
+	} else {
 		if (yy_filename) {
 			free(yy_filename);
 			yy_filename = NULL;
 		}
-	        if (yyin) {
+		if (yyin) {
 			yy_delete_buffer(yy_fsci_active_buffer);
 			fclose(yyin);
 			yyin = NULL;
@@ -634,11 +632,11 @@ config_init(config_entry_t **_conf, char *conffile)
 #warning "Re-enable sound stuff"
 #endif
 #if 0
-        conf->pcmout_driver = pcmout_find_driver(NULL);
-        conf->pcmout_rate = 22050;
-        conf->pcmout_stereo = 1;
-        conf->midiout_driver = midiout_find_driver(NULL);
-        conf->midi_device = midi_find_device(NULL);
+	conf->pcmout_driver = pcmout_find_driver(NULL);
+	conf->pcmout_rate = 22050;
+	conf->pcmout_stereo = 1;
+	conf->midiout_driver = midiout_find_driver(NULL);
+	conf->midi_device = midi_find_device(NULL);
 	conf->sound_server = sound_server_find_driver(NULL);
 #endif
 

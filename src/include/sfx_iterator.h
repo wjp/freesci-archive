@@ -52,6 +52,7 @@
 #define _SIMSG_BASEMSG_SET_RHYTHM 3 /* Activate/deactivate rhythm channel */
 #define _SIMSG_BASEMSG_ACK_MORPH 4 /* Acknowledge self-morph */
 #define _SIMSG_BASEMSG_STOP 5 /* Stop iterator */
+#define _SIMSG_BASEMSG_PRINT 6 /* Print self to stderr, after printing param1 tabs */
 
 /* "Plastic" (discardable) wrapper messages */
 #define _SIMSG_PLASTICWRAP 1 /* Any base decoder */
@@ -64,6 +65,7 @@
 #define SIMSG_CLONE(x) _SIMSG_BASE,_SIMSG_BASEMSG_CLONE,(x),0
 #define SIMSG_ACK_MORPH _SIMSG_PLASTICWRAP,_SIMSG_PLASTICWRAP_ACK_MORPH,0,0
 #define SIMSG_STOP _SIMSG_BASE,_SIMSG_BASEMSG_STOP,0,0
+#define SIMSG_PRINT(indentation) _SIMSG_BASE,_SIMSG_BASEMSG_PRINT,(indentation),0
 
 /* Message transmission macro: Takes song reference, message reference */
 #define SIMSG_SEND(o, m) songit_handle_message(&(o), songit_make_message((o)->ID, m))
@@ -303,7 +305,6 @@ sfx_play_iterator_pcm(song_iterator_t *it, unsigned long handle);
 ** Returns   : (int) 0 if the effect will not be played, nonzero if it will
 ** This assumes that the last call to 'it->next()' returned SI_PCM.
 */
-
 
 
 #endif

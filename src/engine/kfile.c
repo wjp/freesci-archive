@@ -38,7 +38,6 @@
 #  define stat _stat
 #elif defined (_DREAMCAST)
 #  include <dc.h>
-#  define PATH_MAX 255
 #endif
 
 #ifndef O_BINARY

@@ -169,6 +169,10 @@
 #  define G_DIR_SEPARATOR_S "/"
 #endif
 
+#if defined(__MORPHOS__) || defined(_DREAMCAST) || defined(_MSC_VER) || defined(ARM_WINCE)
+#  define PATH_MAX 255
+#endif
+
 #ifndef MIN
 #  define MIN(a, b)  (((a) < (b)) ? (a) : (b))
 #endif

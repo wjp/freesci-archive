@@ -1,3 +1,11 @@
+2004-07-31  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* doc/sci.tex (subsection{resource.map}): Updated resource.map
+	documentation to discuss changes done to resource.map
+
+	* src/scicore/resource_map.c (sci_res_read_entry): Now handle -r3
+	(01-early VGA) resources differently
+
 2004-06-12  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gfx/drivers/xlib_driver.c: Fixed activation of

@@ -37,6 +37,15 @@ static const int MIDI_cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0,
 /*#define DEBUG_DECODING*/
 /*#define DEBUG_VERBOSE*/
 
+void
+print_tabs_id(int nr, songit_id_t id)
+{
+	while (nr-- > 0)
+		fprintf(stderr, "\t");
+
+	fprintf(stderr, "[%08x] ", id);
+}
+
 #ifndef HAVE_MEMCHR
 static void *
 memchr(void *_data, int c, int n)
@@ -107,94 +116,6 @@ _parse_ticks(byte *data, int *offset_p, int size)
 
 	return ticks;
 }
-
-#ifdef DEBUG_DECODING
-static void
-midi_hexdump(byte *data, int size, int notational_offset)
-{ /* Specialised for SCI01 tracks (this affects the way cumulative cues are treted ) */
-	int offset = 0;
-	int prev = 0;
-
-	while (offset < size) {
-		int old_offset = offset;
-		int offset_mod;
-		int time = _parse_ticks(data + offset, &offset_mod,
-					size);
-		int cmd;
-		int pleft;
-		int firstarg;
-		int i;
-		int blanks = 0;
-
-		offset += offset_mod;
-		fprintf(stderr, "  [%04x] %d\t",
-			old_offset + notational_offset, time);
-
-		cmd = data[offset];
-		if (!(cmd & 0x80)) {
-			cmd = prev;
-			if (prev < 0x80) {
-				fprintf(stderr, "Track broken at %x after"
-					" offset mod of %d\n",
-					offset + notational_offset, offset_mod);
-				sci_hexdump(data, size, notational_offset);
-				return;
-			}
-			fprintf(stderr, "(rs %02x) ", cmd);
-			blanks += 8;
-		} else {
-			++offset;
-			fprintf(stderr, "%02x ", cmd);
-			blanks += 3;
-		}
-		prev = cmd;
-
-		pleft = MIDI_cmdlen[cmd >> 4];
-		if (SCI_MIDI_CONTROLLER(cmd) && data[offset]
-		    == SCI_MIDI_CUMULATIVE_CUE)
-			--pleft; /* This is SCI(0)1 specific */
-
-		for (i = 0; i < pleft; i++) {
-			if (i == 0)
-				firstarg = data[offset];
-			fprintf(stderr, "%02x ", data[offset++]);
-			blanks += 3;
-		}
-
-		while (blanks < 16) {
-			blanks += 4;
-			fprintf(stderr, "    ");
-		}
-
-		while (blanks < 20) {
-			++blanks;
-			fprintf(stderr, " ");
-		}
-
-		if (cmd == SCI_MIDI_EOT)
-			fprintf(stderr, ";; EOT");
-		else if (cmd == SCI_MIDI_SET_SIGNAL) {
-			if (firstarg == SCI_MIDI_SET_SIGNAL_LOOP)
-				fprintf(stderr, ";; LOOP point");
-			else
-				fprintf(stderr, ";; CUE (%d)", firstarg);
-		} else if (SCI_MIDI_CONTROLLER(cmd)) {
-			if (firstarg == SCI_MIDI_CUMULATIVE_CUE)
-				fprintf(stderr, ";; CUE (cumulative)");
-			else if (firstarg == SCI_MIDI_RESET_ON_SUSPEND)
-				fprintf(stderr, ";; RESET-ON-SUSPEND flag");
-		}
-		fprintf(stderr, "\n");
-
-		if (old_offset >= offset) {
-			fprintf(stderr, "-- Not moving forward anymore,"
-				" aborting (%x/%x)\n", offset, old_offset);
-			return;
-		}
-	}
-}
-#endif
-
 
 
 static int
@@ -275,7 +196,7 @@ if (1) {
 			if (!(flags & PARSE_FLAG_LOOPS_UNLIMITED))
 				*result = --self->loops;
 
-//#ifdef DEBUG_DECODING
+#ifdef DEBUG_DECODING
 			fprintf(stderr, "%s L%d: (%p):%d Looping ", __FILE__, __LINE__, self, channel->id);
 			if (flags & PARSE_FLAG_LOOPS_UNLIMITED)
 				fprintf(stderr, "(indef.)");
@@ -283,7 +204,7 @@ if (1) {
 				fprintf(stderr, "(%d)", self->loops);
 			fprintf(stderr, " %x -> %x\n",
 				channel->offset, channel->loop_offset);
-//#endif
+#endif
 			channel->offset = channel->loop_offset;
 			channel->notes_played = 0;
 			channel->state = SI_STATE_COMMAND;
@@ -292,12 +213,12 @@ if (1) {
 			return SI_LOOP;
 		} else {
 			channel->state = SI_STATE_FINISHED;
-//#ifdef DEBUG_DECODING
+#ifdef DEBUG_DECODING
 			fprintf(stderr, "%s L%d: (%p):%d EOT because"
 				" %d notes, %d loops\n",
 				__FILE__, __LINE__, self, channel->id,
 				channel->notes_played, self->loops);
-//#endif
+#endif
 			return SI_FINISHED;
 		}
 
@@ -421,11 +342,11 @@ _sci_midi_process_state(base_song_iterator_t *self, unsigned char *buf, int *res
 		if (retval == SI_FINISHED) {
 			if (self->active_channels)
 				--(self->active_channels);
-//#ifdef DEBUG_DECODING
+#ifdef DEBUG_DECODING
 			fprintf(stderr, "%s L%d: (%p):%d Finished channel, %d channels left\n",
 				__FILE__, __LINE__, self, channel->id,
 				self->active_channels);
-//#endif
+#endif
 			/* If we still have channels left... */
 			if (self->active_channels) {
 				return self->next((song_iterator_t *) self, buf, result);
@@ -557,6 +478,13 @@ _sci0_handle_message(sci0_song_iterator_t *self, song_iterator_message_t msg)
 	if (msg.recipient == _SIMSG_BASE) {
 		switch (msg.type) {
 
+		case _SIMSG_BASEMSG_PRINT:
+			print_tabs_id(msg.args[0], self->ID);
+			fprintf(stderr, "SCI0: dev=%d, active-chan=%d, size=%d, loops=%d\n",
+				self->device_id, self->active_channels, self->size,
+				self->loops);
+			break;
+
 		case _SIMSG_BASEMSG_SET_LOOPS:
 			self->loops = msg.args[0];
 			break;
@@ -684,7 +612,7 @@ _sci1_sample_init(sci1_song_iterator_t *self, int offset)
 	int length;
 	int begin;
 	int end;
-fprintf(stderr, "re-initialising %p\n", self);
+
 	CHECK_FOR_END_ABSOLUTE(offset + 10);
 	if (self->data[offset + 1] != 0)
 		sciprintf("[iterator-1] In sample at offset 0x04x: Byte #1 is %02x instead of zero\n",
@@ -1036,7 +964,9 @@ _sci1_process_next_command(sci1_song_iterator_t *self,
 				return SI_LOOP;
 			}
 		} else if (retval == SI_FINISHED) {
+#ifdef DEBUG
 			fprintf(stderr, "FINISHED some channel\n");
+#endif
 		} else if (retval > 0) {
 			int sd ;
 			sd = _sci1_get_smallest_delta(self);
@@ -1063,6 +993,19 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 {
 	if (msg.recipient == _SIMSG_BASE) { /* May extend this in the future */
 		switch (msg.type) {
+
+		case _SIMSG_BASEMSG_PRINT: {
+			int playmask = 0;
+			int i;
+
+			for (i = 0; i < self->channels_nr; i++)
+				playmask |= self->channels[i].playmask;
+
+			print_tabs_id(msg.args[0], self->ID);
+			fprintf(stderr, "SCI1: chan-nr=%d, playmask=%04x\n",
+				self->channels_nr, playmask);
+		}
+			break;
 
 		case _SIMSG_BASEMSG_CLONE: {
 			int tsize = sizeof(sci1_song_iterator_t);
@@ -1094,9 +1037,12 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 			songit_id_t sought_id = msg.ID;
 			int i;
 
-			if (sought_id == self->ID)
+			if (sought_id == self->ID) {
+				self->ID = 0;
+
 				for (i = 0; i < self->channels_nr; i++)
 					self->channels[i].state = SI_STATE_FINISHED;
+			}
 			break;
 		}
 
@@ -1107,8 +1053,6 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 				[sci_ffs(msg.args[0] & 0xff) - 1]
 				[sfx_pcm_available()]
 				;
-
-fprintf(stderr, "re-setting playmask for %p\n", self);
 
 			if (self->device_id == 0xff) {
 				sciprintf("[iterator-1] Warning: Device %d(%d) not supported",
@@ -1134,12 +1078,10 @@ fprintf(stderr, "re-setting playmask for %p\n", self);
 				toffset -= self->delay_remaining;
 				self->delay_remaining = 0;
 
-fprintf(stderr, " toffset = %d\n", toffset);
 				if (toffset > 0)
 					return new_fast_forward_iterator((song_iterator_t *) self,
 									 toffset);
 			} else {
-fprintf(stderr, "Oh, btw, %p wasn't initialised.\n" , self);
 				_sci1_song_init(self);
 				self->initialised = 1;
 			}
@@ -1216,8 +1158,14 @@ _cleanup_iterator_init(song_iterator_t *it)
 }
 
 static song_iterator_t *
-_cleanup_iterator_handle_message(song_iterator_t *i, song_iterator_message_t _)
+_cleanup_iterator_handle_message(song_iterator_t *i, song_iterator_message_t msg)
 {
+	if (msg.recipient == _SIMSG_BASEMSG_PRINT
+	    && msg.type == _SIMSG_BASEMSG_PRINT) {
+		print_tabs_id(msg.args[0], i->ID);
+		fprintf(stderr, "CLEANUP\n");
+	}
+
 	return NULL;
 }
 
@@ -1310,6 +1258,17 @@ _ff_handle_message(fast_forward_song_iterator_t *self,
 		default:
 			BREAKPOINT();
 		}
+	else if (msg.recipient == _SIMSG_BASE) {
+		switch (msg.type) {
+
+		case _SIMSG_BASEMSG_PRINT:
+			print_tabs_id(msg.args[0], self->ID);
+			fprintf(stderr, "PLASTICWRAP:\n");
+			msg.args[0]++;
+			songit_handle_message(&(self->delegate), msg);
+			break;
+		}
+	}
 
 	return NULL;
 }
@@ -1353,6 +1312,7 @@ new_fast_forward_iterator(song_iterator_t *capsit, int delta)
 /********************/
 /*-- Tee iterator --*/
 /********************/
+
 
 static int
 _tee_read_next_command(tee_song_iterator_t *it, unsigned char *buf,
@@ -1495,6 +1455,12 @@ _tee_handle_message(tee_song_iterator_t *self, song_iterator_message_t msg)
 {
 	if (msg.recipient == _SIMSG_BASE) {
 		switch (msg.type) {
+
+		case _SIMSG_BASEMSG_PRINT:
+			print_tabs_id(msg.args[0], self->ID);
+			fprintf(stderr, "TEE:\n");
+			msg.args[0]++;
+			break; /* And continue with our children */
 
 		case _SIMSG_BASEMSG_CLONE: {
 			tee_song_iterator_t *newit
@@ -1918,3 +1884,5 @@ sfx_iterator_combine(song_iterator_t *it1, song_iterator_t *it2)
 	/* Both are non-NULL: */
 	return songit_new_tee(it1, it2, 1); /* 'may destroy' */
 }
+
+

@@ -1306,6 +1306,8 @@ kEditControl(state_t *s, int funct_nr, int argc, reg_t *argv)
 		word ct_type = GET_SEL32V(obj, type);
 		switch (ct_type) {
 
+		case 0: break; /* NOP */
+
 		case K_CONTROL_EDIT:
 			if (event.segment && ((GET_SEL32V(event, type)) == SCI_EVT_KEYBOARD)) {
 				int max_displayed = GET_SEL32V(obj, max);

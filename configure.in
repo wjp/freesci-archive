@@ -36,7 +36,7 @@ else
 	;;
 
 
-	i*86*|powerpc)
+	i*86*|powerpc|arm)
 		AC_DEFINE(SIZEOF_SHORT, 2)
 		AC_DEFINE(SIZEOF_INT, 4)
 		AC_DEFINE(SIZEOF_LONG, 4)

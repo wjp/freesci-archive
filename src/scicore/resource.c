@@ -195,7 +195,8 @@ scir_new_resource_manager(char *dir, int version,
 		resource_error =
 			sci0_read_resource_map(dir,
 					       &mgr->resources,
-					       &mgr->resources_nr);
+					       &mgr->resources_nr,
+					       version == SCI_VERSION_01_VGA);
 
 		if (resource_error >= SCI_ERROR_CRITICAL) {
 			sciprintf("Resmgr: Error while loading resource map: %s\n",

@@ -313,7 +313,8 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 	reg_t obj = KP_ALT(1, NULL_REG);
 	song_handle_t handle = FROBNICATE_HANDLE(obj);
 
-	if (s->debug_mode & (1 << SCIkSOUNDCHK_NR)) {
+	if ((s->debug_mode & (1 << SCIkSOUNDCHK_NR))
+	    && command != _K_SCI01_SOUND_UPDATE_CUES) {
 		int i;
 
 		SCIkdebug(SCIkSOUND, "Command 0x%x", command);
@@ -438,6 +439,8 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 		sfx_song_renice(&s->sound,
 				handle, pri);
 
+		SCIkdebug(SCIkSOUND, "[sound01-update-handle] -- CUE "PREG);
+
 		PUT_SEL32V(obj, signal, signal);
 		PUT_SEL32V(obj, min, min);
 		PUT_SEL32V(obj, sec, sec);
@@ -495,21 +498,22 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 		case SI_ABSOLUTE_CUE:
 			signal = cue;
-			fprintf(stderr, "[CUE] "PREG" Absolute Cue: %d\n",
-				PRINT_REG(obj), signal);
+			SCIkdebug(SCIkSOUND, "---    [CUE] "PREG" Absolute Cue: %d\n",
+				  PRINT_REG(obj), signal);
 
 			PUT_SEL32V(obj, signal, signal);
 			break;
 
 		case SI_RELATIVE_CUE:
-			fprintf(stderr, "[CUE] "PREG" Relative Cue: %d\n",
-				PRINT_REG(obj), cue);
+			SCIkdebug(SCIkSOUND, "---    [CUE] "PREG" Relative Cue: %d\n",
+				  PRINT_REG(obj), cue);
 
 			PUT_SEL32V(obj, dataInc, cue);
 			PUT_SEL32V(obj, signal, cue + 127);
 			break;
 
 		case SI_FINISHED:
+			SCIkdebug(SCIkSOUND, "---    [FINISHED] "PREG"\n", PRINT_REG(obj));
 			PUT_SEL32V(obj, signal, 0xffff);
 			break;
 

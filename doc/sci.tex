@@ -479,15 +479,37 @@ With several notable exceptions, such as script 0 and most vocab resources.
 \section{Resource storage}
 \label{id2428822}\hypertarget{id2428822}{}%
 
-Individual resources can be stored in one of two ways: Either in resource files (which, surprisingly, are called something like "resource.000" or "resource.001"), or in external patch files (not to be confused with "patch" resources). The external files are called something like "pic.100" or "script.000", and they take precedence over data from resource files.
+Individual resources can be stored in one of two ways: Either in
+resource files (which, surprisingly, are called something like
+"resource.000" or "resource.001"), or in external patch files (not to
+be confused with "patch" resources). The external files are called
+something like "pic.100" or "script.000", and they take precedence
+over data from resource files.
 
-There is also a file called "resource.map", which contains a lookup table for the individual resources, and another file, "resource.cfg", which contains configuration information; neither of those is used by FreeSCI.
+There is also a file called "resource.map", which contains a lookup
+table for the individual resources, and another file, "resource.cfg",
+which contains configuration information; neither of those is used by
+FreeSCI.
 
-Resource information stored in external patch files is not compressed and therefore easily readable. It is, however, preceeded by two bytes: The first byte contains the resource type ORed with 0x80, the purpose of the second byte is unknown (but it appears to be ignored by the original SCI version 0 engine).
+Resource information stored in external patch files is not compressed
+and therefore easily readable. It is, however, preceeded by two bytes:
+The first byte contains the resource type ORed with 0x80, the purpose
+of the second byte is unknown (but it appears to be ignored by the
+original SCI version 0 engine).
 
-As stated before, external patch files take precedence over resource resource files. Applying those external files as patches is an option since FreeSCI version 0.2.2.
+As stated before, external patch files take precedence over resource
+resource files. Applying those external files as patches is an option
+since FreeSCI version 0.2.2.
 
-The resource files, however, are more complicated. Each of them contains a sequence of resources preceeded by a header; these resources may be compressed. It is, also, quite common to find resources shared by several resource files. The reason for this appears to be that that, back when hard disks were rare and hard to come by, the games had to be playable from floppy disks. To prevent unneccessary disk-jockeying, common stuff was placed in several resource files, each of which was then stored on one disk.
+The resource files, however, are more complicated. Each of them
+contains a sequence of resources preceeded by a header; these
+resources may be compressed. It is, also, quite common to find
+resources shared by several resource files. The reason for this
+appears to be that that, back when hard disks were rare and hard to
+come by, the games had to be playable from floppy disks. To prevent
+unneccessary disk-jockeying, common stuff was placed in several
+resource files, each of which was then stored on one disk.
+
 
 % ------------------------   
 % Section 
@@ -930,7 +952,15 @@ The listing here is almost certainly incomplete. Thanks to the information provi
 
 with significant contributions from Petr Vyhnak and Vladimir Gneushev
 
-In order to allow games to be both distributeable and playable from several floppy disks, SCI was designed to support multi-volume data. The data itself could therefore be spread into separate files, with some of the more common resources present in more than one of them. The global index for these files was a "resource.map" file, which was read during startup and present on the same disk as the interpreter itself. This file contained a linear lookup table that mapped resource type/number tuples to a set of resource number/ offset tuples, which they could subsequently be read from.
+In order to allow games to be both distributeable and playable from
+several floppy disks, SCI was designed to support multi-volume
+data. The data itself could therefore be spread into separate files,
+with some of the more common resources present in more than one of
+them. The global index for these files was a "resource.map" file,
+which was read during startup and present on the same disk as the
+interpreter itself. This file contained a linear lookup table that
+mapped resource type/number tuples to a set of resource number/ offset
+tuples, which they could subsequently be read from.
 
 % ------------------------   
 % Section 
@@ -939,11 +969,37 @@ In order to allow games to be both distributeable and playable from several flop
 \subsection{resource.map}
 \label{id2492132}\hypertarget{id2492132}{}%
 
-The SCI0 map file format is pretty simple: It consists of 6-byte entries, terminated by the sequence 0xffff ffff ffff. The first 2 bytes, interpreted as little endian 16 bit integer, encode resource type (high 5 bits) and number (low 11 bits). The next 4 bytes are a 32 bit LE integer that contains the resource file number in the high 6 bits, and the absolute offset within the file in the low 26 bits. SCI0 performs a linear search to find the resource; however, multiple entries may match the search, since resources may be present more than once (the inverse mapping is not injective).
+The SCI0 map file format is pretty simple: It consists of 6-byte
+entries, terminated by the sequence 0xffff ffff ffff. The first 2
+bytes, interpreted as little endian 16 bit integer, encode resource
+type (high 5 bits) and number (low 11 bits). The next 4 bytes are a 32
+bit LE integer that contains the resource file number in the high 6
+bits, and the absolute offset within the file in the low 26 bits. SCI0
+performs a linear search to find the resource; however, multiple
+entries may match the search, since resources may be present more than
+once (the inverse mapping is not injective).
+
+Early SCI01 (namely certain VGA games not using the later SCI1
+resource.map format) uses a slight variation on this, which is almost
+identical: The first two bytes are unchanged, but the latter four only
+use the most significant 4 bits for storing the file number, and
+(consequently) 28 bits for the file offset.
+
 \subsection{resource.\textless{}nr\textgreater{}}
 \label{id2492153}\hypertarget{id2492153}{}%
 
-SCI0 resource entries start with a four-tuple of little endian 16 bit words, which we will call ({\texttt{{id}}}, {\texttt{{comp\_\dbz{}size}}}, {\texttt{{decomp\_\dbz{}size}}}, {\texttt{{method}}}). {\texttt{{id}}} has the usual SCI0 semantics (high 5 are the resource type, low 11 are its number). {\texttt{{comp\_\dbz{}size}}} and {\texttt{{decomp\_\dbz{}size}}} are the size of the compressed and the decompressed resource, respectively. The compressed size actually starts counting at the record position of {\texttt{{decomp\_\dbz{}size}}}, so it counts four bytes in addition to the actual content. {\texttt{{method}}}, finally, is the compression method used to store the data.
+SCI0 resource entries start with a four-tuple of little endian 16 bit
+words, which we will call ({\texttt{{id}}},
+{\texttt{{comp\_\dbz{}size}}}, {\texttt{{decomp\_\dbz{}size}}},
+{\texttt{{method}}}). {\texttt{{id}}} has the usual SCI0 semantics
+(high 5 are the resource type, low 11 are its
+number). {\texttt{{comp\_\dbz{}size}}} and
+{\texttt{{decomp\_\dbz{}size}}} are the size of the compressed and the
+decompressed resource, respectively. The compressed size actually
+starts counting at the record position of
+{\texttt{{decomp\_\dbz{}size}}}, so it counts four bytes in addition
+to the actual content. {\texttt{{method}}}, finally, is the
+compression method used to store the data.
 
 % ------------------------   
 % Section 
@@ -952,11 +1008,38 @@ SCI0 resource entries start with a four-tuple of little endian 16 bit words, whi
 \subsection{resource.map}
 \label{id2492230}\hypertarget{id2492230}{}%
 
-The SCI1 resource.map starts with an array of 3-byte structures where the 1st byte is the resource type (0x80 ... 0x91) and next 2 bytes (interpreted as little-endian 16 bit integer) represent the absolute offset of the resource's lookup table (within resource.map). This first array is terminated by a 3-byte entry with has 0xFF as a type and the offset pointing to the first byte after the last resource type's lookup table. SCI1 first goes through this list to find the start of list for the correct resource type and remember this offset and the offset from the next entry to know where it ends. The resulting interval contains a sorted list of 6-byte structures, where the first LE 16 bit integer is the resource number, and the next LE 32 bit integer contains the resource file number in its high 4 bits and the absolute resource offset (in the indicated resource file) in its low 28 bits. Because the list is sorted and its length is known, Sierra SCI can use binary search to locate the resource ID it is looking for.
+The SCI1 resource.map starts with an array of 3-byte structures where
+the 1st byte is the resource type (0x80 ... 0x91) and next 2 bytes
+(interpreted as little-endian 16 bit integer) represent the absolute
+offset of the resource's lookup table (within resource.map). This
+first array is terminated by a 3-byte entry with has 0xFF as a type
+and the offset pointing to the first byte after the last resource
+type's lookup table. SCI1 first goes through this list to find the
+start of list for the correct resource type and remember this offset
+and the offset from the next entry to know where it ends. The
+resulting interval contains a sorted list of 6-byte structures, where
+the first LE 16 bit integer is the resource number, and the next LE 32
+bit integer contains the resource file number in its high 4 bits and
+the absolute resource offset (in the indicated resource file) in its
+low 28 bits. Because the list is sorted and its length is known,
+Sierra SCI can use binary search to locate the resource ID it is
+looking for.
 \subsection{resource.\textless{}nr\textgreater{}}
 \label{id2492257}\hypertarget{id2492257}{}%
 
-Later versions of SCI1 changed the resource file structure slightly: The resource header now contains a byte describing the resource's type, and a four-tuple ({\texttt{{res\_\dbz{}nr}}}, {\texttt{{comp\_\dbz{}size}}}, {\texttt{{decomp\_\dbz{}size}}}, {\texttt{{method}}}), where {\texttt{{comp\_\dbz{}size}}}, {\texttt{{decomp\_\dbz{}size}}}, and {\texttt{{method}}} have the same meanings as before (with the exception of {\texttt{{method}}} referring to different algorithms), while res\_nr is simply the resource's number.
+Later versions of SCI1 changed the resource file structure slightly:
+The resource header now contains a byte describing the resource's
+type, and a four-tuple ({\texttt{{res\_\dbz{}nr}}},
+{\texttt{{comp\_\dbz{}size}}}, {\texttt{{decomp\_\dbz{}size}}},
+{\texttt{{method}}}), where {\texttt{{comp\_\dbz{}size}}},
+{\texttt{{decomp\_\dbz{}size}}}, and {\texttt{{method}}} have the same
+meanings as before (with the exception of {\texttt{{method}}}
+referring to different algorithms), while res\_nr is simply the
+resource's number.
+
+Rumor has it that late versions of SCI1 also stored the offsets
+shifted to the right by two bits (thus, all resources are always
+stored at word-aligned offsets in these games).
 
 % ------------------------   
 % Section 

@@ -6,6 +6,11 @@ Primary goals:
 
 Secondary goals:
 
+ * if scaled images are turned off, drawing SCI1 (pixmap) backgrounds
+   is completely broken for scaled (-x2 etc.) sizes. Fix this!
+ * Status bar: When removed, recover background (as opposed to just
+   drawing black)-- fixes Jones16 menu bar
+
 Bonus goals:
 
 

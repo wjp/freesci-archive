@@ -38,15 +38,28 @@
 #define SCI1_RESMAP_ENTRIES_SIZE 6
 
 
-int
-sci0_read_entry(byte *buf, resource_t *res)
+static int
+sci_res_read_entry(byte *buf, resource_t *res, int use_sci_01v)
 {
 	res->id = buf[0] | (buf[1] << 8);
 	res->type = SCI0_RESID_GET_TYPE(buf);
 	res->number = SCI0_RESID_GET_NUMBER(buf);
 	res->status = SCI_STATUS_NOMALLOC;
-	res->file = SCI0_RESFILE_GET_FILE(buf + 2);
-	res->file_offset = SCI0_RESFILE_GET_OFFSET(buf + 2);
+
+	if (use_sci_01v) {
+		res->file = SCI01V_RESFILE_GET_FILE(buf + 2);
+		res->file_offset = SCI01V_RESFILE_GET_OFFSET(buf + 2);
+	} else {
+		res->file = SCI0_RESFILE_GET_FILE(buf + 2);
+		res->file_offset = SCI0_RESFILE_GET_OFFSET(buf + 2);
+	}
+
+#if 0
+	fprintf(stderr, "Read [%08x] %6d.%s\tresource.%03d, %08x\n",
+		res->id, res->number,
+		sci_resource_type_suffixes[res->type],
+		res->file, res->file_offset);
+#endif
 
 	return 0;
 }
@@ -94,7 +107,7 @@ int sci1_parse_header(int fd, int *types)
 
 
 int
-sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
+sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, int use_01_vga)
 {
 	int fsize;
 	int fd;
@@ -147,7 +160,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 			int addto = resource_index;
 			int i;
 
-			sci0_read_entry(buf, resources + resource_index);
+			sci_res_read_entry(buf, resources + resource_index, use_01_vga);
 
 			if (resources[resource_index].file > max_resfile_nr)
 				max_resfile_nr =
@@ -214,6 +227,8 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 	return 0;
 }
 
+#define TEST fprintf(stderr, "OK in line %d\n", __LINE__);
+
 int
 sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 {
@@ -227,6 +242,7 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 	int *types = sci_malloc(sizeof(int) * sci1_last_resource);
 	int i;
 	byte buf[SCI1_RESMAP_ENTRIES_SIZE];
+
 	fd = sci_open(RESOURCE_MAP_FILENAME, O_RDONLY | O_BINARY);
 
 	if (!IS_VALID_FD(fd))
@@ -234,7 +250,7 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 
 	memset(types, 0, sizeof(int) * sci1_last_resource);
 
-	if (!(ofs=header_size=sci1_parse_header(fd, types)))
+	if (!(ofs = header_size = sci1_parse_header(fd, types)))
 	{
 		close(fd);
 		return SCI_ERROR_INVALID_RESMAP_ENTRY;
@@ -249,7 +265,7 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 
 	resources = sci_calloc(resources_nr, sizeof(resource_t));
 
-	for (i=0;i<resources_nr;i++)
+	for (i=0; i<resources_nr; i++)
 	{	
 		int read_ok = read(fd, &buf, SCI1_RESMAP_ENTRIES_SIZE);	
 		int j;

@@ -131,6 +131,26 @@ _dump_playing_list(sfx_state_t *self, char *msg)
 	fprintf(stderr, "]\n");
 }
 
+static void
+_dump_songs(sfx_state_t *self)
+{
+	song_t *song = self->song;
+
+	fprintf(stderr, "Cue iterators:\n");
+	song = *(self->songlib.lib);
+	while (song) {
+		fprintf(stderr, "  **\tHandle %08x (p%d): status %d\n",
+			song->handle, song->priority, song->status);
+		SIMSG_SEND(song->it, SIMSG_PRINT(1));
+		song = song->next;
+	}
+
+	if (player) {
+		fprintf(stderr, "Audio iterator:\n");
+		player->iterator_message(songit_make_message(0, SIMSG_PRINT(1)));
+	}
+}
+
 
 static void
 _thaw_time(sfx_state_t *self)
@@ -323,8 +343,8 @@ _update_multi_song(sfx_state_t *self)
 				sciprintf("[SFX] Stopping song %lx\n", oldseeker->it->ID);
 			}
 			if (player)
-				player->iterator_message(
-							 songit_make_message(oldseeker->it->ID, SIMSG_STOP));
+				player->iterator_message
+					(songit_make_message(oldseeker->it->ID, SIMSG_STOP));
 		}
 
 
@@ -656,9 +676,15 @@ sfx_add_song(sfx_state_t *self, song_iterator_t *it, int priority, song_handle_t
 
 	/* If we're already playing this, stop it */
 	/* Tell player to shut up */
+	_dump_songs(self);
+
 	if (player)
 		player->iterator_message(songit_make_message(handle, SIMSG_STOP));
+
 	if (song) {
+		_sfx_set_song_status(self, song, SOUND_STATUS_STOPPED);
+		song_lib_remove(self->songlib, handle); /* No duplicates */
+
 		fprintf(stderr, "Overwriting old song (%d) ...\n", song->status);
 		if (song->status == SOUND_STATUS_PLAYING
 		    || song->status == SOUND_STATUS_SUSPENDED) {
@@ -666,9 +692,6 @@ sfx_add_song(sfx_state_t *self, song_iterator_t *it, int priority, song_handle_t
 			songit_free(it);
 			return;
 		}
-
-		_sfx_set_song_status(self, song, SOUND_STATUS_STOPPED);
-		song_lib_remove(self->songlib, handle); /* No duplicates */
 	}
 
 	song = song_new(handle, it, priority);

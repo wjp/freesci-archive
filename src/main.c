@@ -1043,7 +1043,7 @@ main(int argc, char** argv)
 #ifndef _DREAMCAST
 	/* by now, if the user specified a game name or a game directory, the working dir has been changed */
 	/* so if no resource are found in the working dir, invoke the game selection screen */
-	if (!game_select_resource_found())
+	if (!game_name && !game_select_resource_found())
 	{
 		game_select(cl_options, confs, conf_entries, freesci_dir);
 	}

@@ -241,7 +241,7 @@ scir_free_resource_manager(resource_mgr_t *mgr);
 /**--- Resource map decoding functions ---*/
 
 int
-sci0_read_resource_map(char *path, resource_t **resources, int *resource_nr_p);
+sci0_read_resource_map(char *path, resource_t **resources, int *resource_nr_p, int use_01_vga);
 /* Reads the SCI0 resource.map file from a local directory
 ** Parameters: (char *) path: (unused)
 **             (resource_t **) resources: Pointer to a pointer
@@ -250,6 +250,7 @@ sci0_read_resource_map(char *path, resource_t **resources, int *resource_nr_p);
 **                                        (in one large chunk)
 **             (int *) resource_nr_p: Pointer to an int the number of resources
 **                                    read is stored in
+**             (int) use_01_vga: Use the (slightly different) SCI01 VGA (early) layout
 ** Returns   : (int) 0 on success, an SCI_ERROR_* code otherwise
 */
 
@@ -411,17 +412,28 @@ _scir_add_altsource(resource_t *res, int file, unsigned int file_offset);
 /* Resource type encoding */
 #define SCI0_B1_RESTYPE_MASK  0xf8
 #define SCI0_B1_RESTYPE_SHIFT 3
-#define SCI0_B3_RESFILE_MASK  0xfd
+#define SCI0_B3_RESFILE_MASK  0xfc
 #define SCI0_B3_RESFILE_SHIFT 2
+#define SCI01V_B3_RESFILE_MASK  0xf0
+#define SCI01V_B3_RESFILE_SHIFT 4
 
 #define SCI0_RESID_GET_TYPE(bytes) \
     (((bytes)[1] & SCI0_B1_RESTYPE_MASK) >> SCI0_B1_RESTYPE_SHIFT)
 #define SCI0_RESID_GET_NUMBER(bytes) \
     ((((bytes)[1] & ~SCI0_B1_RESTYPE_MASK) << 8) | ((bytes)[0]))
+
 #define SCI0_RESFILE_GET_FILE(bytes) \
     (((bytes)[3] & SCI0_B3_RESFILE_MASK) >> SCI0_B3_RESFILE_SHIFT)
 #define SCI0_RESFILE_GET_OFFSET(bytes) \
     ((((bytes)[3] & ~SCI0_B3_RESFILE_MASK) << 24) \
+      | (((bytes)[2]) << 16) \
+      | (((bytes)[1]) << 8) \
+      | (((bytes)[0]) << 0))
+
+#define SCI01V_RESFILE_GET_FILE(bytes) \
+    (((bytes)[3] & SCI01V_B3_RESFILE_MASK) >> SCI01V_B3_RESFILE_SHIFT)
+#define SCI01V_RESFILE_GET_OFFSET(bytes) \
+    ((((bytes)[3] & ~SCI01V_B3_RESFILE_MASK) << 24) \
       | (((bytes)[2]) << 16) \
       | (((bytes)[1]) << 8) \
       | (((bytes)[0]) << 0))

@@ -97,7 +97,7 @@ convert_font(FILE *in_file, FILE *out_file)
 	line_height = char_height + 1;
 	char_byte_size = bytes_per_row * char_height;
 
-	fprintf(out_file, "# %d %d\n", chars_nr, char_height);
+	fprintf(out_file, "# %d %d\n", chars_nr, char_height + 1);
 
 	for (i = 0; i < chars_nr; i++) {
 		int rh = GLYPH(i).bbx.height;
