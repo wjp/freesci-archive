@@ -2925,7 +2925,7 @@ void
 kShakeScreen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	int shakes = PARAM_OR_ALT(0, 1);
-	int directions = PARAM_OR_ALT(1, 0);
+	int directions = PARAM_OR_ALT(1, 1);
 	gfx_pixmap_t *screen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 0, 320, 200));
 	int i;
 

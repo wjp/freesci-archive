@@ -182,30 +182,32 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 			}
 		} break;
+
 		case SCI_EVT_MOUSE_RELEASE:
 		case SCI_EVT_MOUSE_PRESS: {
 			int extra_bits=0;
-			if(mask&e.type)
-				{
-					switch(e.data) {
-					case 2: extra_bits=SCI_EVM_LSHIFT|SCI_EVM_RSHIFT; break;
-					case 3: extra_bits=SCI_EVM_CTRL;
-					default:break;
-					}
-
-					PUT_SELECTOR(obj, type, e.type);
-					PUT_SELECTOR(obj, message, 1);
-					PUT_SELECTOR(obj, modifiers, e.buckybits|extra_bits);
-					s->acc=1;
+			if(mask & e.type) {
+				switch(e.data) {
+				case 2: extra_bits=SCI_EVM_LSHIFT|SCI_EVM_RSHIFT; break;
+				case 3: extra_bits=SCI_EVM_CTRL;
+				default:break;
 				}
+
+				PUT_SELECTOR(obj, type, e.type);
+				PUT_SELECTOR(obj, message, 1);
+				PUT_SELECTOR(obj, modifiers, e.buckybits|extra_bits);
+				s->acc=1;
+			} else fprintf(stderr,"Not got evt %04x bec %04x\n",
+				       e.type, mask);
 			return;
 		} break;
+
 		default: {
 			s->acc = 0; /* Unknown or no event */
 		}
 		}
     
-	if ((s->acc)&&(stop_on_event)) {
+	if ((s->acc) && (stop_on_event)) {
 		stop_on_event = 0;
 		script_debug_flag = 1;
 	}  

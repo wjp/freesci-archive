@@ -940,6 +940,8 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
   case SDLK_RCTRL:
   case SDLK_LALT:
   case SDLK_RALT:
+  case SDLK_LMETA:
+  case SDLK_RMETA:
   case SDLK_CAPSLOCK:
   case SDLK_SCROLLOCK:
   case SDLK_NUMLOCK:

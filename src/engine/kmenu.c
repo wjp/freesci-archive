@@ -101,6 +101,7 @@ struct {
 	int fgcolor, bgcolor;
 } _about_freesci_pages[ABOUT_FREESCI_PAGES_NR] = {
 	{"FreeSCI hackers and contributors",
+	 "Anders Baden Nielsen\nPPC testing\n\n"
 	 "Bas Zoetekouw\nMan pages and debian package management\n\n"
 	 "Carl Muckenhoupt\nSources to the SCI resource viewer tools that started it all\n\n"
 	 "Chris Kehler\nMakefile enhancements\n"

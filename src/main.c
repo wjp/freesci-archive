@@ -81,11 +81,6 @@
 #define strcasecmp stricmp
 #endif
 
-#ifndef HAVE_SCHED_YIELD
-#define sched_yield() sleep(1)
-/* Neither NetBSD nor Win32 have this function, although it's in POSIX 1b */
-#endif /* !HAVE_SCHED_YIELD */
-
 
 #define ACTION_PLAY 0
 #define ACTION_LIST_SAVEGAMES 1
