@@ -115,5 +115,8 @@ $(FSCI_BASE)/src/gp32/config.o: $(FSCI_BASE)/src/config.c
 crt0.o:	$(CRT0)
 	$(CC) -c -o crt0.o $(CRT0)
 
+run: $(PRG).fxe
+	gplink run $(PRG).fxe
+
 clean:
 	rm -f crt0.o $(OBJS) Test.map $(PRG).bin $(PRG).elf $(PRG).fxe

@@ -37,6 +37,14 @@
 static sci_event_t event_buffer[EVENT_BUFFER_SIZE];
 static int event_total;
 
+#define GP32_MODE_VKBD 0
+#define GP32_MODE_KBD 1
+#define GP32_MODE_MOUSE 2
+#define GP32_MODE_NR 3
+
+#define GP32_MOUSE_LEFT (1<<0)
+#define GP32_MOUSE_RIGHT (1<<1)
+
 struct _gp32_state {
 	/* 0 = static buffer, 1 = back buffer, 2 = front buffer */
 	/* Visual maps */
@@ -46,17 +54,24 @@ struct _gp32_state {
 	/* Line pitch of visual buffers */
 	int line_pitch[3];
 
-	/* Virtual keyboard on/off flag */
-	int vkbd;
+	/* Virtual mouse pointer */
+	int pointer_dx, pointer_dy;
+
+	/* Input mode */
+	int mode;
+
 	/* The current bucky state of the virtual keyboard */
 	int vkbd_bucky;
 	/* Virtual keyboard bitmap. */
 	byte *vkbd_bmp;
 
-	/* State of buttons. */
+	/* State of buttons */
 	guint16 buttons;
 	/* Button repeat timer */
 	int timer;
+
+	/* State of simulated mouse buttons */
+	int mstate;
 };
 
 static struct _gp32_state *S;
@@ -170,6 +185,25 @@ show_keyboard()
 }
 
 static void
+input_mode(int mode)
+{
+	if (mode == GP32_MODE_VKBD)
+		show_keyboard();
+	else if (mode == GP32_MODE_KBD) {
+		hide_keyboard();
+		gp_drawString(312, 212, 1,
+		  "K", 0xFFFE,
+		  (unsigned short *) FRAMEBUFFER);
+	}
+	else if (mode == GP32_MODE_MOUSE) {
+		hide_keyboard();
+		gp_drawString(312, 212, 1,
+		  "M", 0xFFFE,
+		  (unsigned short *) FRAMEBUFFER);
+	}
+}
+
+static void
 input_handler(void) __attribute__ ((interrupt ("IRQ")));
 
 static void
@@ -183,16 +217,21 @@ input_handler(void)
 	if (S->timer > 0)
 		S->timer--;
 	if ((buttons != S->buttons) || !S->timer) {
+		/* If we're repeating a key use a lower timer. */
+		if (!S->timer)
+			S->timer = 8;
+		else
+			S->timer = 25;
+
 		S->buttons = buttons;
-		S->timer = 25;
+
 		if (buttons & BUTTON_START) {
-			S->vkbd = S->vkbd ^ 1;
-			if(S->vkbd)
-				show_keyboard();
-			else
-				hide_keyboard();
+			S->mode++;
+			if (S->mode == GP32_MODE_NR)
+				S->mode = 0;
+			input_mode(S->mode);
 		}
-		if (S->vkbd) {
+		if (S->mode == GP32_MODE_VKBD) {
 			if (buttons & BUTTON_RIGHT)
 				vkbd_handle_input(KBD_RIGHT);
 			if (buttons & BUTTON_LEFT)
@@ -212,6 +251,68 @@ input_handler(void)
 				}
 			}
 			draw_keyboard();
+		}
+		else if (S->mode == GP32_MODE_KBD) {
+			sci_event_t event;
+			event.type = SCI_EVT_KEYBOARD;
+			event.buckybits = S->vkbd_bucky;
+			event.data = 0;
+			if (buttons & BUTTON_RIGHT)
+				event.data = SCI_K_RIGHT;
+			else if (buttons & BUTTON_LEFT)
+				event.data = SCI_K_LEFT;
+			else if (buttons & BUTTON_UP)
+				event.data = SCI_K_UP;
+			else if (buttons & BUTTON_DOWN)
+				event.data = SCI_K_DOWN;
+			else if (buttons & BUTTON_A)
+				event.data = SCI_K_ENTER;
+			else if (buttons & BUTTON_B)
+				event.data = SCI_K_ESC;
+			if (event.data)
+				gp32_add_event(&event);
+		}
+	}
+	if (S->mode == GP32_MODE_MOUSE) {
+		sci_event_t event;
+		event.buckybits = S->vkbd_bucky;
+		int step = (buttons & BUTTON_L ? 2 : 1);
+		if (buttons & BUTTON_RIGHT)
+			S->pointer_dx += step;
+		if (buttons & BUTTON_LEFT)
+			S->pointer_dx -= step;
+		if (buttons & BUTTON_UP)
+			S->pointer_dy -= step;
+		if (buttons & BUTTON_DOWN)
+			S->pointer_dy += step;
+
+		if ((buttons & BUTTON_A)
+		  && !(S->mstate & GP32_MOUSE_LEFT)) {
+			event.type = SCI_EVT_MOUSE_PRESS;
+			event.data = 1;
+			gp32_add_event(&event);
+			S->mstate |= GP32_MOUSE_LEFT;
+		}
+		if ((buttons & BUTTON_B)
+		  && !(S->mstate & GP32_MOUSE_RIGHT)) {
+			event.type = SCI_EVT_MOUSE_PRESS;
+			event.data = 2;
+			gp32_add_event(&event);
+			S->mstate |= GP32_MOUSE_RIGHT;
+		}
+		if (!(buttons & BUTTON_A)
+		  && (S->mstate & GP32_MOUSE_LEFT)) {
+			event.type = SCI_EVT_MOUSE_RELEASE;
+			event.data = 1;
+			gp32_add_event(&event);
+			S->mstate &= ~GP32_MOUSE_LEFT;
+		}
+		if (!(buttons & BUTTON_B)
+		  && (S->mstate & GP32_MOUSE_RIGHT)) {
+			event.type = SCI_EVT_MOUSE_RELEASE;
+			event.data = 2;
+			gp32_add_event(&event);
+			S->mstate &= ~GP32_MOUSE_RIGHT;
 		}
 	}
 }
@@ -476,12 +577,14 @@ gp32_init_specific(struct _gfx_driver *drv, int xfact, int yfact,
 	drv->mode = gfx_new_mode(xfact, yfact, bytespp, rmask, gmask, bmask,
 	  0, rshift, gshift, bshift, 0, 0, 0);
 
-	S->vkbd = 1;
+	S->pointer_dx = 0;
+	S->pointer_dy = 0;
+	S->mstate = 0;
 	S->vkbd_bucky = 0;
 	S->vkbd_bmp = sci_malloc(320 * 40 * 2);
-	vkbd_init(S->vkbd_bmp, 320);
-	show_keyboard();
-	draw_keyboard();
+	vkbd_init((guint16 *) S->vkbd_bmp, 320);
+	S->mode = GP32_MODE_KBD;
+	input_mode(S->mode);
 
 	event_total = 0;
 
@@ -513,6 +616,7 @@ gp32_exit(struct _gfx_driver *drv)
 	}
 	sci_free(S);
 
+	gp_setFramebuffer((u16 *) FRAMEBUFFER, 1);
 	gp_clearFramebuffer16((unsigned short *) FRAMEBUFFER, 0xFFFF);
 	gp_drawString(68, 116, 23, "Loading, please wait...", 0x0000,
 		(unsigned short *) FRAMEBUFFER);
@@ -696,6 +800,15 @@ gp32_get_event(struct _gfx_driver *drv)
 
 	gp_disableIRQ();
 
+	drv->pointer_x += S->pointer_dx;
+	drv->pointer_y += S->pointer_dy;
+	S->pointer_dx = 0;
+	S->pointer_dy = 0;
+	if (drv->pointer_x < 0) drv->pointer_x = 0;
+	if (drv->pointer_x >= 320) drv->pointer_x = 320 - 1;
+	if (drv->pointer_y < 0) drv->pointer_y = 0;
+	if (drv->pointer_y >= 200) drv->pointer_y = 200 - 1;
+
 	if (event_total > 0) {
 		event = event_buffer[event_total - 1];
 		event_total--;
@@ -725,7 +838,7 @@ gfx_driver_gp32 = {
 	NULL,
 	0,
 	0,
-	GFX_CAPABILITY_PIXMAP_GRABBING,
+	GFX_CAPABILITY_PIXMAP_GRABBING | GFX_CAPABILITY_MOUSE_SUPPORT,
 	0,
 	gp32_set_parameter,
 	gp32_init_specific,

@@ -94,7 +94,7 @@ static int key_map[3][3][25] = {
 static guint16 kbd_pal[256] = {0xFFFF, 0x0000, 0x0000};
 
 /* Keyboard images in 256-colour indexed mode. Based on images by
-** A. Schiffler
+** Ismail Khatib
 */
 static unsigned char kbd_img[3][320*40] = {
 	{0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02,

@@ -513,7 +513,7 @@ kGetSaveDir(state_t *s, int funct_nr, int argc, heap_ptr argp)
   s->acc = s->save_dir + 2; /* +2 to step over heap block size */
 }
 
-#if defined(_DREAMCAST) || defined(ARM_WINCE)
+#if defined(_DREAMCAST) || defined(ARM_WINCE) || defined(_GP32)
 
 void
 kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -523,7 +523,7 @@ kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->acc = 1;
 }
 
-#else /* ! defined(_DREAMCAST) || defined(ARM_WINCE) */
+#else /* ! defined(_DREAMCAST) && !defined(ARM_WINCE) && !defined(_GP32) */
 
 void
 kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)

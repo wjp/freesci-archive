@@ -479,7 +479,7 @@ sci_find_first(sci_dir_t *dir, char *mask)
 	dir->total = smc_dir(cur_dir, dir->dir);
 
 	if (!dir->total) {
-		sciprintf("%s, L%d: smc_dir(""."", dir->dir) failed!\n", __FILE__, __LINE__);
+		sciprintf("%s, L%d: smc_dir(cur_dir, dir->dir) failed!\n", __FILE__, __LINE__);
 		return NULL;
 	}
 

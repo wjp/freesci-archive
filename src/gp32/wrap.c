@@ -30,6 +30,7 @@
 #include <fcntl.h>
 #include <stdarg.h>
 #include <string.h>
+#include <ctype.h>
 #include "wrap.h"
 
 /* This file contains GP32 function wrappers.
@@ -37,8 +38,6 @@
 ** TODO:
 **
 ** - More accurate implementations of open(), gp_ferror(), gp_clearerr().
-** - Enable the use of relative pathnames in fopen() and family.
-** - Implement several file routines, such as fprintf(), fputc() etc.
 ** - Stop using (GPFILE *) as file descriptors (?).
 ** - Implement errno handling (?).
 ** - Put wrappers in newlib's syscalls.c instead (?).
@@ -207,11 +206,34 @@ chdir(const char *path)
 char *
 getcwd(char *buf, size_t size)
 {
-	if (strlen(cur_dir) + 1 > size)
+	int len = strlen(cur_dir);
+
+	/* Remove trailing slash. */
+	if (len > size)
 		return NULL;
 
-	strcpy(buf, cur_dir);
+	strncpy(buf, cur_dir, len - 1);
+	buf[len - 1] = '\0';
+
 	return buf;
+}
+
+int
+unlink(const char *pathname)
+{
+	char *cano = abs_path(pathname, 0);
+	GPFILE *fd;
+
+	if (!cano)
+		return -1;
+
+	/* No unlink function available, so we truncate instead. */
+	fd = smc_fopen(cano, "w");
+
+	if (fd)
+		smc_fclose(fd);
+
+	return 0;
 }
 
 ssize_t
@@ -238,6 +260,17 @@ close(int fd)
 	return -1;
 }
 
+ssize_t
+write(int fd, void *buf, size_t count)
+{
+	int wr = smc_fwrite(buf, 1, count, (GPFILE *) fd);
+
+	if (wr < count)
+		return -1;
+
+	return wr;
+}
+
 void
 usleep(unsigned long usec) {
 	int start = gp_getRTC();
@@ -261,6 +294,9 @@ mkdir(const char *pathname, mode_t mode)
 	char *cano = abs_path(pathname, 1);
 
 	if (cano) {
+		/* Remove trailing backslash. */
+		cano[strlen(cano) - 1] = '\0';
+
 		if (!smc_createdir(cano)) {
 			free(cano);
 			return -1;
@@ -281,6 +317,9 @@ open(const char *pathname, int flags, ...)
 	char *mode;
 	char *cano = abs_path(pathname, 0);
 
+	if (!cano)
+		return -1;
+
 	if (flags & O_RDONLY)
 		mode = "r";
 	else if (flags & O_WRONLY)
@@ -300,11 +339,25 @@ open(const char *pathname, int flags, ...)
 }
 
 int
-creat(const char *pathname, mode_t mode) {
+creat(const char *pathname, mode_t mode)
+{
 	return open(pathname, O_CREAT|O_WRONLY|O_TRUNC, mode);
 }
 
 /* <stdio.h> */
+
+int
+gp_ungetc(int c, GPFILE *stream)
+{
+	/* Warning: Incorrect. As FreeSCI only pushes back the character
+	** that was last read we simply seek one character backwards.
+	*/
+
+	if (smc_fseek(stream, -1, SEEK_CUR))
+		return EOF;
+
+	return c;
+}
 
 int
 gp_fgetc(GPFILE *stream)
@@ -314,10 +367,34 @@ gp_fgetc(GPFILE *stream)
 	*/
 	unsigned char retval;
 
+	if ((stream == stdin) || (stream == stdout) || (stream == stderr))
+		return EOF;
+
 	if (!smc_fread(&retval, 1, 1, stream))
 		return EOF;
 
 	return retval;
+}
+
+char *
+gp_fgets(char *s, int size, GPFILE *stream)
+{
+	int len = smc_fread(s, 1, size - 1, stream);
+
+	if (!len)
+		return NULL;
+
+	char *newline = memchr(s, '\n', size - 1);
+
+	if (!newline)
+		s[size - 1] = '\0';
+	else {
+		*(newline + 1) = '\0';
+		/* Set file pointer right after newline. */
+		smc_fseek(stream, -(len - (newline - s) - 1), SEEK_CUR);
+	}
+
+	return s;
 }
 
 int
@@ -328,7 +405,101 @@ gp_ferror(GPFILE *stream)
 }
 
 int
+gp_vfprintf(GPFILE *stream, const char *format, va_list ap)
+{
+	va_list apc;
+	int len, cnt;
+	char *buf;
+
+	/* NOTE: C99! */
+	va_copy(apc, ap);
+	len = vsnprintf(NULL, 0, format, apc);
+	va_end(apc);
+
+	buf = malloc(len + 1);
+	vsnprintf(buf, len + 1, format, ap);
+
+	if ((stream == stdout) || (stream == stderr))
+		cnt = printf("%s", buf);
+	else
+		cnt = smc_fwrite(buf, 1, len, stream);
+
+	free(buf);
+	return cnt;
+}
+
+int
+gp_fputs(char *s, GPFILE *stream)
+{
+	int len = strlen(s);
+	int cnt;
+
+	if ((stream == stdout) || (stream == stderr))
+		cnt = printf("%s", s);
+	else
+		cnt = smc_fwrite(s, 1, len, stream);
+
+	if (cnt < len)
+		return EOF;
+
+	return 0;
+}
+
+static void
+gp_print(char *msg);
+
+int
+gp_fprintf(GPFILE *stream, const char *format, ...)
+{
+	va_list argp;
+	int len, cnt;
+	char *buf;
+
+	va_start(argp, format);
+	len = vsnprintf(NULL, 0, format, argp);
+	va_end(argp);
+
+	buf = malloc(len + 1);
+
+	va_start(argp, format);
+	vsnprintf(buf, len + 1, format, argp);
+	va_end(argp);
+
+	if ((stream == stdout) || (stream == stderr))
+		cnt = printf("%s", buf);
+	else
+		cnt = smc_fwrite(buf, 1, len, stream);
+
+	free(buf);
+	return(cnt);
+}
+
+static void
+gp_print(char *msg);
+GPFILE *
+gp_fopen(const char *path, const char *mode)
+{
+	char *cano = abs_path(path, 0);
+
+	if (cano) {
+		GPFILE *f = smc_fopen(cano, mode);
+
+		free(cano);
+		return f;
+	}
+
+	return NULL;
+}
+
+int
 getchar()
+{
+	/* Not supported. */
+	return EOF;
+}
+
+int
+putchar(int c)
 {
 	/* Not supported. */
 	return EOF;

@@ -1,4 +1,16 @@
-2004-12-25  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl
+2004-12-27  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/engine/kfile.c: Skip free space test on GP32.
+	* src/gfx/drivers/gp32_driver.c: Implemented direct control of
+	cursor keys and mouse.
+	* src/gp32/Makefile: Added `run' target.
+	* src/gp32/wrap.c, src/gp32/wrap.h: Implemented several file
+	routines to make savegames work. Unfortunately restoring a game is
+	extremely slow (most likely caused by unbuffered SMC file routines).
+	The ideal solution would be to use these file routines in newlib's
+	syscalls.c and take advantage of newlib's I/O buffering.
+
+2004-12-25  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/dc.c (isatty): Function added to fix Dreamcast build.
 	* src/dc/Makefile: Removed YY_NEVER_INTERACTIVE from CFLAGS; recent
