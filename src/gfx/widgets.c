@@ -1670,14 +1670,21 @@ _gfxwop_ordered_add(gfxw_container_t *container, gfxw_widget_t *widget, int comp
 	while (*seekerp && (compare_all || (widget->compare_to(widget, *seekerp) >= 0))) {
 
 		if (widget->equals(GFXW(widget), GFXW(*seekerp))) {
-			widget->next = (*seekerp)->next;
-			(*seekerp)->widfree(GFXW(*seekerp));
-			*seekerp = widget;
-			return (_parentize_widget(container, widget));
-		}
+			if (compare_all) {
+				int xxx;
+				if ((*seekerp)->visual)
+					(*seekerp)->widfree(GFXW(*seekerp)); /* If it's a fresh widget */
+				else
+					gfxw_annihilate(GFXW(*seekerp));
 
-		if (widget->equals(GFXW(widget), GFXW(*seekerp)))
-			(*seekerp)->widfree(GFXW(*seekerp));
+				return _gfxwop_ordered_add(container, widget, compare_all); /* We might have destroyed the container's contents */
+			} else {
+				widget->next = (*seekerp)->next;
+				(*seekerp)->widfree(GFXW(*seekerp));
+				*seekerp = widget;
+				return (_parentize_widget(container, widget));
+			}
+		}
 
 		if (*seekerp)
 			seekerp = &((*seekerp)->next);
@@ -1696,7 +1703,7 @@ static int
 _gfxwop_sorted_list_add(gfxw_container_t *container, gfxw_widget_t *widget)
      /* O(n) */
 {
-	_gfxwop_ordered_add(container, widget, 0);
+	return _gfxwop_ordered_add(container, widget, 0);
 }
 
 void
@@ -2015,7 +2022,7 @@ static int
 _gfxwop_port_add(gfxw_container_t *container, gfxw_widget_t *widget)
      /* O(n) */
 {
-	_gfxwop_ordered_add(container, widget, 1);
+	return _gfxwop_ordered_add(container, widget, 1);
 }
 
 void

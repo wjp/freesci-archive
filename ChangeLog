@@ -1,5 +1,9 @@
 2001-01-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/gfx/widgets.c (_gfxwop_ordered_add): Fixed adding items
+	into ports
+	(_gfxwop_port_add): Added missing return statement
+
 	* src/tools/Makefile.am: Merged 'sciunpack' with 'listwords',
 	'scriptdump', and 'vocabdump'. Got rid of 'classes'.
 
