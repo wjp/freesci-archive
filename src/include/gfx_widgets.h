@@ -91,7 +91,7 @@ static point_t gfxw_point_zero = {0, 0};
 ** a container widget will recursively draw all of its contents.
 **
 **
-** -- free(gfxw_widget_t *self)
+** -- widfree(gfxw_widget_t *self)
 ** Frees all memory associated to the widget
 ** Parameters: (gfxw_widget_t *) self: self reference
 ** Returns   : (int) 0
