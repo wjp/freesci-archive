@@ -90,7 +90,7 @@ inline void
 _SCI_FREE(void *ptr, char *file, int line, char *funct)
 {
 #ifdef MALLOC_DEBUG
-	INFO_MEMORY("_SCI_FREE()", size, file, line, funct);
+	INFO_MEMORY("_SCI_FREE()", 0, file, line, funct);
 #endif
 	if (!ptr)
 	{
@@ -128,7 +128,7 @@ _SCI_STRDUP(const char *src, char *file, int line, char *funct)
 {
 	void *res;
 #ifdef MALLOC_DEBUG
-	INFO_MEMORY("_SCI_STRDUP()", size, file, line, funct);
+	INFO_MEMORY("_SCI_STRDUP()", 0, file, line, funct);
 #endif
 	if (!src)
 	{
@@ -149,7 +149,7 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct)
 	char *strres;
 	int rlen = MIN(strlen(src), length) + 1;
 #ifdef MALLOC_DEBUG
-	INFO_MEMORY("_SCI_STRNDUP()", size, file, line, funct);
+	INFO_MEMORY("_SCI_STRNDUP()", 0, file, line, funct);
 #endif
 	if (!src)
 	{
