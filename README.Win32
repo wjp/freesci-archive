@@ -1,15 +1,4 @@
-After some feedback from a friend, I've updated the win32 bulid docs a
-little. Someone please check this in to CVS :)
-
-
---
-http://www.clock.org/~matt
-
-
--- Attached file included as plaintext by Listar --
--- File: README.Win32
-
-Last updated 04-13-2001 by Matt Hargett <matt@use.net>
+Last updated 04-20-2001 by Matt Hargett <matt@use.net>
 
 The Win32 version of freesci is now almost at the same level of
 functionality as the Linux version. The main thing that is missing is MIDI
@@ -37,17 +26,38 @@ The project files assume the following directory structure:
 
 
 0. In the SDL-1.2.0 directory, unzip the VisualC.zip. Load their workspace,
-  and build a "Win32 - Release" binary.
+and build a "Win32 - Release" binary.
 
-1. Go into the src\win32 directory and load the freesci workspace (freesci.dsw) into
-  Visual C++ 6.
+1. Go into the src\win32 directory and load the freesci workspace (freesci.dsw) 
+into Visual C++ 6.
 
-2. Rebuild all.
+2. Set the active project to "sciv - Win32 Release". Rebuild all.
 
 3. The freesci.dll and sciv.exe binaries should be in freesci\src\win32\release. 
   Copy them into your path for convenience. 
   NOTE: sdl.dll MUST be in your path and/or in the same directory as freesci.dll.
 
-4. You should be good to go!
+4. You should be good to go! Go buy a Sierra collector's pack at your favorite
+software store for $15-20, copy the game directory on the CD to your hard
+drive, rename their sciv.exe to something else, and run FreeSCI's sciv.exe.
+
+You'll probably be thinking that it doesn't loook much prettier than the 
+original SCI. Try putting these options into your config
+file (%WINDIR%\.freesci\config):
+
+pic0_dither_mode = dither256
+pic0_dither_pattern = unscaled
+pic_buffer_size = 2
+view_filter = trilinear
+pic_filter = trilinear
+cursor_filter = trilinear
+text_filter = trilinear
+animation_delay = 5
+pic0_line_mode = fine
+
+
+
+Enjoy!
+
 
 

@@ -10,11 +10,11 @@ were completed.
 This release has the following limitations (plus some bugs):
 - Only SCI0 games are supported
 - The SCI debug functions aren't fully supported (and probably never will be,
-  since we're using our own debug functions).
-- Sound is only supported with a mt-32.
+  since we're using our own debug functions)
+- Sound is only supported on systems that support sequencer or raw MIDI output
 
 It has the following improvements over Sierra SCI:
-- SCI0 background pictures can be rendered in higher resolutions and 256 colors
+- Support for various filters and extended drawing operations for graphics
 - saving and restoring the game state is possible from more places than the
   Sierra SCI engine allowed (using the debugger functions)
 - Better debugger (we believe :-)
@@ -27,15 +27,21 @@ support is still missing from this release.
 
 
 Please refer to 'NEWS' and the 'ChangeLog' for information about changes
-in this and previous versions.
+in this and previous versions. Please also refer to the following files for
+platform specific instructions:
+
+README.Unix
+README.Win32
+
 
 0 Building FreeSCI
 ==================
 
 To build the package, type the following:
 
-./configure
-make
+0. ./configure
+
+1. make
 
 
 This will try to build several tools:
@@ -54,6 +60,28 @@ Required 'non-standard' libraries:
 Earlier versions required libpng and libglib; those are no longer required.
 Note that the graphics driver part of the game has been designed to be
 modular, so the dependancy on GGI is likely to be temporary.
+
+0.1 Bulding from CVS
+--------------------
+If you are using a CVS snapshot instead of an official release, you will
+require the following utilities:
+
+* A C compiler (such as gcc)
+* lex or flex
+* GNU automake and autoconf
+* perl 5.x
+* make
+
+Instructions:
+
+0. Get the source tarball and unpack it.
+
+1. Go into the freesci directory and run the reconf script. (./reconf) 
+
+2. Run the configure script. (./configure)
+
+3. Run make. Be sure that /usr/ccs/bin is in your path AFTER /usr/local/bin 
+and everything else.
 
 
 1 Running it on UNIX-like OSses
@@ -146,29 +174,38 @@ time, the configuration file may contain:
 
 -- NEW OPTIONS since 0.3.1 --
 
-- view_filter = none | bilinear
+- view_filter = none | linear | trilinear
   Magnification filter for 'views', i.e. moving foreground (and, in some cases,
   non-moving background) images. 'none' means that they are translated into
   what may look like a huge chunk of colored rectangles; 'bilinear' smoothes
   those rectangles somewhat.
   This has no effect if graphics are not scaled.
 
-- pic_filter = none | bilinear
+- pic_filter = none | bilinear | trilinear
   Selects the filter to use when scaling background pictures. This only applies
   if pic0_scale is set to 'no'.
   Please refer to the documentation of "view_filter" for details on the various
   settings.
 
-- cursor_filter = none | bilinear
+- cursor_filter = none | bilinear | trilinear
   Filter for the mouse cursor. Note that this only applies for graphics drivers
   which don't implement their own mouse cursor.
   Please refer to the documentation of "view_filter" for details on the various
   settings.
 
-- text_filter = none | bilinear
+- text_filter = none | bilinear | trilinear
   Filter for text.
   Please refer to the documentation of "view_filter" for details on the various
   settings.
+
+- pic_antialiasing = none | simple
+  Performs antialiasing on background pictures. Default is 'none'.
+  + 'simple' is a trivial anti-aliasing algorithm which calculates intensity
+    according to the following matrix:
+    (1/16 1/8 1/16)
+    (1/8  1/4  1/8)
+    (1/16 1/8 1/16)
+
 
 - animation_delay: A speed factor for transition animations. Default is 500.
   Set to 0 to disable transition animations.
@@ -236,7 +273,7 @@ a Sun keyboard. Default is 'false'.
 - swap_caps_ctrl = true | false
 Same as for the GGI driver.
 - disable_shmem = true | false
-disables shmem x11 access, if compiled in.
+disables shmem x11 access (meaningless if XShm support wasn't compiled in).
 
 2.1.1.3 SDL driver:
 --------------------
@@ -345,23 +382,15 @@ platforms (in order of appearance):
 - Alpha EV6/Compaq/Tru64/cc			built, basic tests
 - Alpha EV6//FreeBSD/gcc			built, basic tests
 - IA64/GNU/Linux64/gcc				built, baisc tests
+- IA32/Windows 9x/NT/2k/Visual C++              tested
+
 
 The following platforms used to be supported, but are no longer supported in this
 release for reasons given below:
 
-- ia32/Win32 (no GFX driver)
-	Petr Vyhnak is working on it, fixing many things broken by the UNIX
-	people. We are hoping to release a post-0.3.1 binary once he is
-	finished.
 
 - ia32/DOS (no maintainer)
 	This port is not being maintained at the moment.
-
-- MIPS/SGI/IRIX/cc (no GFX driver)
-	We didn't manage to get libggi to build on IRIX 6.2 during our tests.
-	Since the GLX target is not present for this release, the FreeSCI
-	might not work on IRIX.
-
 
 
 5 Notes

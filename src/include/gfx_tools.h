@@ -38,6 +38,11 @@ typedef enum {
 	GFX_XLATE_FILTER_TRILINEAR
 } gfx_xlate_filter_t;
 
+typedef enum {
+	GFXR_ANTIALIASING_NONE,
+	GFXR_ANTIALIASING_SIMPLE
+} gfxr_antialiasing_t;
+
 
 extern DLLEXTERN int gfx_crossblit_alpha_threshold; /* Crossblitting functions use this value as threshold
 		 			  ** for distinguishing between transparent and opaque
@@ -183,6 +188,14 @@ gfx_xlate_pixmap(gfx_pixmap_t *pxm, gfx_mode_t *mode, gfx_xlate_filter_t filter)
 ** Returns   : (void)
 */
 
+void
+gfxr_antialiase(gfx_pixmap_t *pixmap, gfx_mode_t *mode, gfxr_antialiasing_t type);
+/* Performs antialiasing on a pixmap
+** Parameters: (gfx_pixmap_t *) pixmap: The pixmap to antialiase
+**             (gfx_mode_t *) mode: The current mode
+**             (gfxr_antialiasing_t) type: Antialiasing algorithm to use
+** Returns   : (void)
+*/
 
 #define GFX_CROSSBLIT_FLAG_DATA_IS_HOMED (1<<0)
 /* Means that the first byte in the visual data refers to the

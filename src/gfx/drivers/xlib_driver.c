@@ -393,7 +393,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 
 	alpha_mask = xvisinfo.red_mask | xvisinfo.green_mask | xvisinfo.blue_mask;
-	if (bytespp_physical == 32 && (!(alpha_mask & 0xff000000) || !(alpha_mask & 0xff))) {
+	if (bytespp_physical == 4 && (!(alpha_mask & 0xff000000) || !(alpha_mask & 0xff))) {
 		if (alpha_mask & 0xff) {
 			alpha_mask = 0xff000000;
 			alpha_shift = 0;
@@ -483,7 +483,8 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	}
 
 	drv->mode = gfx_new_mode(xfact, yfact, bytespp_physical,
-				 xvisinfo.red_mask, xvisinfo.green_mask, xvisinfo.blue_mask, alpha_mask,
+				 xvisinfo.red_mask, xvisinfo.green_mask,
+				 xvisinfo.blue_mask, alpha_mask,
 				 red_shift, green_shift, blue_shift, alpha_shift,
 				 (bytespp == 1)? xvisinfo.colormap_size : 0, 0);
 
@@ -499,6 +500,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	S->old_error_handler = (XErrorHandler) XSetErrorHandler(xlib_error_handler);
 	S->pointer_data[0] = NULL;
 	S->pointer_data[1] = NULL;
+
 
 	return GFX_OK;
 }

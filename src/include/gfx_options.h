@@ -62,6 +62,8 @@ typedef struct _gfx_options { /* gfx_options_t: Contains all user options to the
 	gfx_xlate_filter_t text_xlate_filter;
 	gfxr_font_scale_filter_t fixed_font_xlate_filter; /* Scale filter for systems that provide font support which isn't scaled */
 
+	gfxr_antialiasing_t pic0_antialiasing;
+
 	int dirty_frames;
 
 	int workarounds; /* Workaround flags- see below */

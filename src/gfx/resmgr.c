@@ -259,6 +259,7 @@ gfxr_pic_xlate_common(gfx_resource_t *res, int maps, int scaled, int force, gfx_
 gfxr_pic_t *
 gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_palette, int scaled)
 {
+	gfxr_pic_t *pic;
 	int restype = GFX_RESOURCE_TYPE_PIC;
 	sbtree_t *tree = state->resource_trees[restype];
 	gfx_resource_t *res = NULL;
@@ -326,7 +327,16 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 		res->lock_sequence_nr = state->options->buffer_pics_nr; /* Update lock counter */
 	}
 
-	return gfxr_pic_xlate_common(res, maps, scaled || state->options->pic0_unscaled, 0, state->driver->mode, state->options->pic_xlate_filter);
+	pic = gfxr_pic_xlate_common(res, maps,
+				    scaled || state->options->pic0_unscaled,
+				    0, state->driver->mode,
+				    state->options->pic_xlate_filter);
+
+	if (scaled || state->options->pic0_unscaled && maps & GFX_MASK_VISUAL)
+		gfxr_antialiase(pic->visual_map, state->driver->mode,
+				state->options->pic0_antialiasing);
+
+	return pic;
 }
 
 

@@ -1,3 +1,25 @@
+2001-04-21  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/xlib_driver.c (xlib_init_specific): Fixed xlib alpha
+	blending support on Alpha.
+
+2001-04-21  Matt Hargett  <matt@use.net>
+	
+	* Updated README to include trilinear filtering options, and put Win32
+        back on the list of working platforms.
+
+	* New file for build instructions on Solaris.
+
+	* Updated Win32 README to include my favorite config options and make
+	some steps more clear.
+
+2001-04-21  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/config.l (config_init): Explicitly closed yyin
+
+	* src/gfx/antialias.c:
+	* src/gfx/resmgc.c: Added anti-aliasing option for pic0
+
 2001-04-18  Solomon Peachy <pizza@shaftnet.org>
 
 	* acconfig.h,acinclude.m4,aclocal.m4,config.h.in,configure,
@@ -51,7 +73,7 @@
 	modified dynamically during run-time whenever a new script is loaded;
 	all of the scripts classes are now stored in that table.
 
-	* src/engine/kgraphics.c (kCanBeHere): Added collission checks against
+	* src/engine/kgraphics.c (kCanBeHere): Added colission checks against
 	the dynview list
 	(_k_make_view_list): Reversed widget sort order on sequence_nr once again
 

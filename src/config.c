@@ -674,6 +674,15 @@ static name_value_pair filter_mode[] = {
 	{0, 0}
 };
 
+static name_value_pair antialiasing_modes[] = {
+	{"none", GFXR_ANTIALIASING_NONE},
+	{"0", GFXR_ANTIALIASING_NONE},
+	{"off", GFXR_ANTIALIASING_NONE},
+	{"on", GFXR_ANTIALIASING_SIMPLE},
+	{"basic", GFXR_ANTIALIASING_SIMPLE},
+	{"simple", GFXR_ANTIALIASING_SIMPLE}
+};
+
 static name_value_pair line_mode[] = {
 	{"correct", GFX_LINE_MODE_CORRECT},
 	{"normal", GFX_LINE_MODE_CORRECT},
@@ -728,6 +737,7 @@ standard_option standard_options[] = {
 	OPT_NVP("dirty_strategy", gfx_options.dirty_frames, dirty_strategy),
 	OPT_INVERSE_NVP("pic0_scaled", gfx_options.pic0_unscaled, yesno),
 	OPT_NVP("pic_filter", gfx_options.pic_xlate_filter, filter_mode),
+	OPT_NVP("pic_antialiasing", gfx_options.pic0_antialiasing, antialiasing_modes),
 	OPT_NVP("text_filter", gfx_options.text_xlate_filter, filter_mode),
 	OPT_NVP("view_filter", gfx_options.view_xlate_filter, filter_mode),
 	OPT_NVP("cursor_filter", gfx_options.cursor_xlate_filter, filter_mode),
@@ -746,7 +756,7 @@ standard_option standard_options[] = {
 static void
 parse_option(char *option, int optlen, char *value);
 
-#line 750 "lex.yy.c"
+#line 760 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -897,10 +907,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 237 "config.l"
+#line 247 "config.l"
 
 
-#line 904 "lex.yy.c"
+#line 914 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -985,7 +995,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 239 "config.l"
+#line 249 "config.l"
 {
 	char *cleanup;
 	++yytext; /* Get over opening bracket */
@@ -1032,7 +1042,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 284 "config.l"
+#line 294 "config.l"
 { /***** End of graphics *****/
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1045,7 +1055,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 294 "config.l"
+#line 304 "config.l"
 {
 	yytext = strchr (yytext, '=') + 1;
 
@@ -1060,7 +1070,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 306 "config.l"
+#line 316 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1073,7 +1083,7 @@ if (cur_section) {
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 317 "config.l"
+#line 327 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1085,7 +1095,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 327 "config.l"
+#line 337 "config.l"
 {
 /* driver parameters */
         char *subsys_name = yytext;
@@ -1124,7 +1134,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 364 "config.l"
+#line 374 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
@@ -1146,16 +1156,16 @@ case 8:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 382 "config.l"
+#line 392 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 384 "config.l"
+#line 394 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 386 "config.l"
+#line 396 "config.l"
 {
         yy_delete_buffer( YY_CURRENT_BUFFER );
         yyterminate();
@@ -1163,15 +1173,15 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 391 "config.l"
+#line 401 "config.l"
 printf("Unrecognized option: '%s'\n", yytext);
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 393 "config.l"
+#line 403 "config.l"
 ECHO;
 	YY_BREAK
-#line 1175 "lex.yy.c"
+#line 1185 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2055,7 +2065,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 393 "config.l"
+#line 403 "config.l"
 
 
 int
@@ -2168,6 +2178,7 @@ config_init(config_entry_t **_conf, char *conffile)
 
 	yylex(); /* Parse the file */
 
+	fclose(yyin); /* Ignore error conditions- might be lex implementation dependant */
 	free(conf_path);
 	free(exported_conf_path);
 

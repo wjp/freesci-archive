@@ -152,6 +152,15 @@ static name_value_pair filter_mode[] = {
 	{0, 0}
 };
 
+static name_value_pair antialiasing_modes[] = {
+	{"none", GFXR_ANTIALIASING_NONE},
+	{"0", GFXR_ANTIALIASING_NONE},
+	{"off", GFXR_ANTIALIASING_NONE},
+	{"on", GFXR_ANTIALIASING_SIMPLE},
+	{"basic", GFXR_ANTIALIASING_SIMPLE},
+	{"simple", GFXR_ANTIALIASING_SIMPLE}
+};
+
 static name_value_pair line_mode[] = {
 	{"correct", GFX_LINE_MODE_CORRECT},
 	{"normal", GFX_LINE_MODE_CORRECT},
@@ -206,6 +215,7 @@ standard_option standard_options[] = {
 	OPT_NVP("dirty_strategy", gfx_options.dirty_frames, dirty_strategy),
 	OPT_INVERSE_NVP("pic0_scaled", gfx_options.pic0_unscaled, yesno),
 	OPT_NVP("pic_filter", gfx_options.pic_xlate_filter, filter_mode),
+	OPT_NVP("pic_antialiasing", gfx_options.pic0_antialiasing, antialiasing_modes),
 	OPT_NVP("text_filter", gfx_options.text_xlate_filter, filter_mode),
 	OPT_NVP("view_filter", gfx_options.view_xlate_filter, filter_mode),
 	OPT_NVP("cursor_filter", gfx_options.cursor_xlate_filter, filter_mode),
@@ -502,6 +512,7 @@ config_init(config_entry_t **_conf, char *conffile)
 
 	yylex(); /* Parse the file */
 
+	fclose(yyin); /* Ignore error conditions- might be lex implementation dependant */
 	free(conf_path);
 	free(exported_conf_path);
 

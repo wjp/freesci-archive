@@ -1,0 +1,11 @@
+Solaris notes
+-------------
+Last updated 04-20-2001 by Matt Hargett <matt@use.net>
+
+Platforms tested:
+
+* Solaris 2.7 w/recommended patches.
+
+Before you run FreeSCI, you MUST add the following line to the config file
+(~/.freesci/config): "gfx.xlib.disable_shmem = true".
+
