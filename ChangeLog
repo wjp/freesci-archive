@@ -1,5 +1,8 @@
 2003-03-26  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/engine/kernel.c: Ignore extra parameter in DisposeWindow and
+	  SetPort.
+
 	* src/engine/kgraphics.c,
 	  src/engine/kmovement.c,
 	  src/scicore/script.c: Added support for inverse CanBeHere semantics.
