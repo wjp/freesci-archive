@@ -271,11 +271,13 @@ static char** vocabulary_get_knames0(int* names)
   resource_t* r=findResource(sci_vocab, 999);
   
   if (!r) { /* No kernel name table found? Fall back to default table */
-    t = g_malloc ((SCI0_KNAMES_DEFAULT_ENTRIES_NR) * sizeof(char*));
+    t = g_malloc ((SCI0_KNAMES_DEFAULT_ENTRIES_NR + 1) * sizeof(char*));
     *names = SCI0_KNAMES_DEFAULT_ENTRIES_NR - 1; /* index of last element */
 
     for (i = 0; i < SCI0_KNAMES_DEFAULT_ENTRIES_NR; i++)
       t[i] = strdup(sci0_default_knames[i]);
+
+    t[SCI0_KNAMES_DEFAULT_ENTRIES_NR] = NULL; /* Terminate list */
 
     return t;
   }
