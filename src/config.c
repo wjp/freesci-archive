@@ -1218,28 +1218,11 @@ YY_RULE_SETUP
 
 	conf[cur_section].resource_dir = sci_strdup(".");
 
-#if 0
-#ifndef ARM_WINCE
-	if (dospath)
-		conf[cur_section].work_dir = sci_strdup(exported_conf_path);
-	else {
-		char *tmp = sci_malloc(strlen(exported_conf_path) + 2 + strlen(conf[cur_section].name));
-		strcpy(tmp, exported_conf_path);
-		strcat(tmp, G_DIR_SEPARATOR_S);
-		strcat(tmp, conf[cur_section].name);
-
-		conf[cur_section].work_dir = tmp;
-		scimkdir(tmp, 0700); /* Make sure that the directory exists. */
-		/* This will be checked later, for the current game. */
-	}
-#endif
-#endif
-
 }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 358 "config.l"
+#line 341 "config.l"
 {
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1252,7 +1235,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 368 "config.l"
+#line 351 "config.l"
 if (cur_section) {
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1266,7 +1249,7 @@ if (cur_section) {
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 379 "config.l"
+#line 362 "config.l"
 {
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1279,7 +1262,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 390 "config.l"
+#line 373 "config.l"
 {
 /* driver parameters */
 	char *subsys_name = yytext;
@@ -1312,7 +1295,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 421 "config.l"
+#line 404 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
@@ -1339,17 +1322,17 @@ case 7:
 (yy_c_buf_p) = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 444 "config.l"
+#line 427 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 446 "config.l"
+#line 429 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 448 "config.l"
+#line 431 "config.l"
 {
 
 	yy_delete_buffer(YY_CURRENT_BUFFER );
@@ -1358,15 +1341,15 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 454 "config.l"
+#line 437 "config.l"
 printf("Unrecognized option: '%s'\n", yytext);
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 456 "config.l"
+#line 439 "config.l"
 ECHO;
 	YY_BREAK
-#line 1370 "lex.yy.c"
+#line 1353 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2330,7 +2313,7 @@ void yyfree (void * ptr )
 #undef YY_DECL_IS_OURS
 #undef YY_DECL
 #endif
-#line 456 "config.l"
+#line 439 "config.l"
 
 
 
@@ -2494,9 +2477,6 @@ config_free(config_entry_t **conf, int entries)
 
 		if (i >= 1) {
 			sci_free((*conf)[i].name);
-#if 0
-			sci_free((*conf)[i].work_dir);
-#endif
 			if ((*conf)[i].resource_dir)
 				sci_free((*conf)[i].resource_dir);
 			if ((*conf)[i].console_log)
@@ -2849,9 +2829,6 @@ configure_default(config_entry_t *conf)
 	conf->debug_mode [0] = '\0';
 	conf->name = NULL;
 	conf->resource_dir = NULL;
-#if 0
-	conf->work_dir = NULL;
-#endif
 	conf->module_path = sci_strdup(SCI_DEFAULT_MODULE_PATH);
 
 	for (i = 0; i < FREESCI_DRIVER_SUBSYSTEMS_NR; i++)

@@ -85,7 +85,7 @@ static void (*_con_pixmap_callback)(gfx_pixmap_t *) = NULL;
 int
 c_dm_log_heap (state_t * s)
 {
-	dmalloc_log_heap_map ();
+	sciprintf("No longer supported.\n");
 	return 0;
 }
 

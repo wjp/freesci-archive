@@ -1230,7 +1230,7 @@ fprintf(stderr, "CONF # = %d\n", conf_nr);
 		sound_server = sound_server_find_driver(NULL);
 
 	if (cl_options.show_rooms)
-	  set_debug_mode(gamestate, 1, "r");
+		set_debug_mode(gamestate, 1, "r");
 
 	gamestate->sound_server = sound_server;
 
