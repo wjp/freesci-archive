@@ -26,6 +26,7 @@
 #include <pthread.h>
 
 static pthread_t thread;
+static int run = 1;
 
 static guint16 *buffer;
 
@@ -44,7 +45,7 @@ static void *sound_thread (void *arg)
 {
   int count, err;
 
-  while(1) {
+  while(run) {
     count = mix_sound(BUFFER_SIZE);
     //    printf("XXXX Fill buffer, %04x, count: %d \n", *buffer, count);
     if ((err = snd_pcm_writei(pcm_handle, buffer, count)) < 0) {
@@ -52,6 +53,7 @@ static void *sound_thread (void *arg)
       printf("ALSA: Write error: %s\n", snd_strerror(err));
     }
   }
+  pthread_exit(0);
 }
 
 static int pcmout_alsa_open(guint16 *b, guint16 rate) {
@@ -80,8 +82,7 @@ static int pcmout_alsa_open(guint16 *b, guint16 rate) {
   }
 
   if ((err = snd_pcm_hw_params_set_access(pcm_handle, hwparams, pcm_access)) < 0) {
-    printf("ALSA: Error setting access.\n");
-    return -1;
+    printf("ALSA: Error setting access.\n");    return -1;
   }
 
   if ((err = snd_pcm_hw_params_set_format(pcm_handle, hwparams, alsa_format)) < 0) {
@@ -125,9 +126,13 @@ static int pcmout_alsa_open(guint16 *b, guint16 rate) {
   return 0;
 }
 
-static void pcmout_alsa_close() {
+static int pcmout_alsa_close() {
   int err;
   
+  run = 0;
+
+  pthread_join(thread, NULL);
+
   if ((err = snd_pcm_drop(pcm_handle)) < 0) {
     printf("ALSA:  Can't stop PCM device\n");
   }
@@ -137,6 +142,7 @@ static void pcmout_alsa_close() {
 
   snd_pcm_hw_params_free(hwparams);
   snd_pcm_sw_params_free(swparams);
+  return 0;
 }
 
 pcmout_driver_t pcmout_driver_alsa = {

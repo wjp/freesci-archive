@@ -164,7 +164,7 @@ _sci0_read_next_command(song_iterator_t *self, byte *buf, int *buf_size)
 				return SI_FINISHED;
 			}
 
-		} else if (cmd = SCI_MIDI_SET_SIGNAL) {
+		} else if ((cmd = SCI_MIDI_SET_SIGNAL)) {
 			if (buf[1] == SCI_MIDI_SET_SIGNAL_LOOP) {
 				self->loop_offset = self->offset;
 				return /* Execute next command */

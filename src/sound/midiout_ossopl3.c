@@ -66,11 +66,13 @@ Fmplay includes the following notice:
 #ifdef HAVE_SYS_SOUNDCARD_H
 #include <stdio.h>
 #include <errno.h>
+#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/soundcard.h>
+#include <math.h>
 
 #ifndef O_SYNC
 #  define O_SYNC 0
@@ -214,6 +216,7 @@ int midiout_ossopl3_open()
   loadfm();
 /*    start_note(64, 164); */
 
+  return 0;
 }
 
 /* initialise note/operator lists, etc. */
@@ -627,20 +630,22 @@ void read_midi(int fd)
 
 long sec(void)
 {
-     int err;
+/*     int err; */
 /*       if (( err = gettimeofday(&timev,&timez)) == -1 ) { */
 /*  	  printf("Gettimeofday error\n"); */
 /*       }   */
 /*       return(timev.tv_sec); */
+  return 0;
 }
 
 long usec(void)
 {
-     int err;
+/*     int err; */
 /*       if (( err = gettimeofday(&timev,&timez)) == -1 ) { */
 /*  	  printf("Gettimeofday error\n"); */
 /*       } */
 /*       return(timev.tv_usec); */
+  return 0;
 }
 
 #endif /* HAVE_SYS_SOUNDCARD_H */

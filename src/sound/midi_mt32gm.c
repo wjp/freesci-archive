@@ -97,7 +97,6 @@ midi_mt32gm_print_instrument(FILE *file, int index)
 	}
 }
 
-static int _notes = 0;
 int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2, guint32 delta)
 {
 	guint8 channel;

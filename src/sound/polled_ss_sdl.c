@@ -44,7 +44,6 @@ static Uint32 master;
 
 
 static int sdl_reverse_stereo = 0;
-static int sound_data_size = 0;
 
 extern sound_server_t sound_server_sdl;
 

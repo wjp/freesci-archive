@@ -271,8 +271,6 @@ sound_unix_queue_event(unsigned int handle, unsigned int signal, long value)
 
 }
 
-static int get_event_error_counter = 0;
-
 sound_event_t *
 sound_unix_get_event(state_t *s)
 {

@@ -48,7 +48,6 @@ extern int seqfd;
 #endif
 
 static guint8 instr[MIDI_CHANNELS];
-static int polyphony[MIDI_CHANNELS];
 static int dev;
 static int free_voices = ADLIB_VOICES;
 static long note_time[ADLIB_VOICES];
@@ -108,7 +107,7 @@ int adlib_stop_note(int chn, int note, int velocity)
 
 int adlib_kill_one_note(int chn)
 {
-  int oldest, i = 255;
+  int oldest = 255, i = 255;
   long time = 0;
      
   if (free_voices >= ADLIB_VOICES) {
@@ -301,7 +300,6 @@ int midi_adlib_event2(guint8 command, guint8 param, guint32 delta)
 {
   guint8 channel;
   guint8 oper;
-  int xparam = param;
   
   channel = command & 0x0f;
   oper = command & 0xf0;
