@@ -22,8 +22,8 @@
 midi_device_t *midi_device;
 
 midi_device_t *midi_devices[] = {
-  &midi_device_mt32, 
   &midi_device_mt32gm,
+  &midi_device_mt32, 
   NULL
 };
 

@@ -47,7 +47,10 @@ extern midiout_driver_t midiout_driver_unixraw;
 
 #ifdef HAVE_ALSA
 extern midiout_driver_t midiout_driver_alsaraw;
-/*extern midiout_driver_t midiout_driver_alsaseq;*/
+#endif
+
+#ifdef HAVE_SYS_SOUNDCARD_H
+extern midiout_driver_t midiout_driver_ossseq;
 #endif
 
 extern DLLEXTERN midiout_driver_t *midiout_drivers[];

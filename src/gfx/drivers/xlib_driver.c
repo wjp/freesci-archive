@@ -903,22 +903,6 @@ x_unmap_key(gfx_driver_t *drv, int keycode)
 {
 	KeySym xkey = XKeycodeToKeysym(S->display, keycode, 0);
 
-	if (S->flags & SCI_XLIB_SWAP_CTRL_CAPS) {
-		switch (xkey) {
-		case XK_Control_L: xkey = XK_Caps_Lock; break;
-		case XK_Caps_Lock: xkey = XK_Control_L; break;
-		}
-	}
-
-	switch (xkey) {
-	case XK_Control_L:
-	case XK_Control_R: S->buckystate &= ~SCI_EVM_CTRL; return 0;
-	case XK_Alt_L:
-	case XK_Alt_R: S->buckystate &= ~SCI_EVM_ALT; return 0;
-	case XK_Shift_L: S->buckystate &= ~SCI_EVM_LSHIFT; return 0;
-	case XK_Shift_R: S->buckystate &= ~SCI_EVM_RSHIFT; return 0;
-	}
-
 
 	return 0;
 }
@@ -991,17 +975,20 @@ x_map_key(gfx_driver_t *drv, int keycode)
 	case XK_F9: return SCI_K_F9;
 	case XK_F10: return SCI_K_F10;
 
-	case XK_Control_L:
-	case XK_Control_R: S->buckystate |= SCI_EVM_CTRL; return 0;
-	case XK_Alt_L:
-	case XK_Alt_R: S->buckystate |= SCI_EVM_ALT; return 0;
-	case XK_Caps_Lock:
-	case XK_Shift_Lock: S->buckystate ^= SCI_EVM_CAPSLOCK; return 0;
-	case XK_Scroll_Lock: S->buckystate ^= SCI_EVM_SCRLOCK; return 0;
-	case XK_Num_Lock: S->buckystate ^= SCI_EVM_NUMLOCK; return 0;
-	case XK_Shift_L: S->buckystate |= SCI_EVM_LSHIFT; return 0;
-	case XK_Shift_R: S->buckystate |= SCI_EVM_RSHIFT; return 0;
 
+	case XK_Control_L:
+	case XK_Control_R:/* S->buckystate |= SCI_EVM_CTRL; return 0; */
+	case XK_Alt_L:
+	case XK_Alt_R:/* S->buckystate |= SCI_EVM_ALT; return 0; */
+	case XK_Caps_Lock:
+	case XK_Shift_Lock:/* S->buckystate ^= SCI_EVM_CAPSLOCK; return 0; */
+	case XK_Scroll_Lock:/* S->buckystate ^= SCI_EVM_SCRLOCK; return 0; */
+	case XK_Num_Lock:/* S->buckystate ^= SCI_EVM_NUMLOCK; return 0; */
+	case XK_Shift_L:/* S->buckystate |= SCI_EVM_LSHIFT; return 0; */
+	case XK_Shift_R:/* S->buckystate |= SCI_EVM_RSHIFT; return 0; */
+		break;
+
+	
 	case XK_KP_Add: return '+';
 	case XK_KP_Divide: return '/';
 	case XK_KP_Subtract: return '-';
@@ -1057,7 +1044,17 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 				break;
 
 			case KeyPress: {
+				int modifiers = event.xkey.state;
 				sci_event->type = SCI_EVT_KEYBOARD;
+
+				S->buckystate =
+					(((modifiers & LockMask)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0)
+					 | ((modifiers & ControlMask)? SCI_EVM_CTRL : 0)
+					 | ((modifiers & (Mod1Mask | Mod4Mask))? SCI_EVM_ALT : 0)
+					 | ((modifiers & Mod2Mask)? SCI_EVM_NUMLOCK : 0)
+					 | ((modifiers & Mod5Mask)? SCI_EVM_SCRLOCK : 0))
+					^ ((modifiers & ShiftMask)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0);
+
 				sci_event->buckybits = S->buckystate;
 				sci_event->data = x_map_key(drv, event.xkey.keycode);
 
@@ -1068,7 +1065,7 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 			}
 
 			case KeyRelease:
-				x_unmap_key(drv, event.xkey.keycode);
+				/*x_unmap_key(drv, event.xkey.keycode);*/
 				break;
 
 			case ButtonPress: {

@@ -242,14 +242,19 @@ mapMIDIInstruments(void);
 ** If detection fails, the MIDI maps will default to 1:1 General MIDI mappings.
 */
 
-static struct {
-  gint8 gm_instr;
-  int keyshift;
-  int finetune;
-  int bender_range;
-  gint8 gm_rhythmkey;
-  int volume;
-} MIDI_mapping[128];
+
+extern char *GM_Instrument_Names[];
+
+typedef struct {
+	gint8 gm_instr;
+	int keyshift;
+	int finetune;
+	int bender_range;
+	gint8 gm_rhythmkey;
+	int volume;
+} MIDI_map_t;
+
+extern MIDI_map_t MIDI_mapping[128];
 
 
 #endif /* _SCI_SOUND_H_ */

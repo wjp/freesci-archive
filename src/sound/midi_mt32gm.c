@@ -31,9 +31,11 @@ int midi_mt32_allstop(void);
 
 int midi_mt32gm_open(guint8 *data_ptr, unsigned int data_length)
 {
-  if (midiout_open() < 0)
-    return -1;
-  return midi_mt32_allstop();
+	int i;
+
+	if (midiout_open() < 0)
+		return -1;
+	return midi_mt32_allstop();
 }
 
 int midi_mt32gm_close()
@@ -46,6 +48,8 @@ int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2)
 {
 	guint8 channel;
 	guint8 oper;
+	long volume;
+	int xparam = param;
 
 	channel = command & 0x0f;
 	oper = command & 0xf0;
@@ -53,11 +57,10 @@ int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2)
 	switch (oper) {
 	case 0x90:
 	case 0x80:  /* noteon and noteoff */
-		param2 = MIDI_mapping[param].volume;
+		volume = param2;
+		param2 = (volume * MIDI_mapping[param].volume) >> 7;
 		if (channel == RHYTHM_CHANNEL)
-			param = MIDI_mapping[param].gm_rhythmkey;
-		else
-			param = MIDI_mapping[param].gm_instr;
+			xparam = MIDI_mapping[param].gm_rhythmkey;
 		break;
 	case 0xe0:    /* Pitch bend NYI */
 		break;
@@ -68,28 +71,57 @@ int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2)
 
 	}
 
-	return midi_mt32_event(command, param, param2);
+	if (xparam < 0)
+		return 0;
+
+	return midi_mt32_event(command, xparam, param2);
 }
 
 int midi_mt32gm_event2(guint8 command, guint8 param)
 {
-  guint8 channel;
-  guint8 oper;
+	guint8 channel;
+	guint8 oper;
+	int xparam = param;
 
-  channel = command & 0x0f;
-  oper = command & 0xf0;
-  switch (oper) {
-  case 0xc0:  /* change instrument */
-    if (channel == RHYTHM_CHANNEL)
-      param = MIDI_mapping[param].gm_rhythmkey;
-    else
-      param = MIDI_mapping[param].gm_instr;
-    break;
-  default:
-    printf("MT32GM: Unknown event: %02x\n", command);
-  }
+	channel = command & 0x0f;
+	oper = command & 0xf0;
+	switch (oper) {
+	case 0xc0: {  /* change instrument */
+		int instr = param;
+		if (channel == RHYTHM_CHANNEL)
+			xparam = MIDI_mapping[param].gm_rhythmkey;
+		else {
+			xparam = MIDI_mapping[param].gm_instr;
+		
+			if (0 && xparam >= 0) {
+				if (midi_mt32_event(0xb0 | channel,
+						    0x65, 0x00)) return -1;
+				if (midi_mt32_event(0xb0 | channel,
+						    0x64, 0x02)) return -1;
+				if (midi_mt32_event(0xb0 | channel,
+						    0x06, MIDI_mapping[instr].keyshift)) return -1;
+				if (midi_mt32_event(0xb0 | channel,
+						    0x65, 0x00)) return -1;
+				if (midi_mt32_event(0xb0 | channel,
+						    0x64, 0x00)) return -1;
+				if (midi_mt32_event(0xb0 | channel,
+						    0x06, MIDI_mapping[instr].bender_range)) return -1;
+				if (midi_mt32_event(0xb0 | channel,
+						    0x26, 0x00)) return -1;
+			}
+		}
 
-  return midi_mt32_event2(command, param);
+		if (xparam < 0)
+			return 0;
+
+		return midi_mt32_event2(command, xparam);
+	}
+
+	default:
+		printf("MT32GM: Unknown event: %02x\n", command);
+	}
+
+	return 0;
 }
 
 int midi_mt32gm_volume(guint8 volume)

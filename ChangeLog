@@ -1,3 +1,23 @@
+2001-04-08  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/xlib_driver.c (x_get_event): xlib driver now uses
+	X11 modifier bits rather than tracking modifiers manually
+
+	* src/sound/midi_device.c: Made MT32->GM the default layer
+
+	* src/sound/midiout_ossseq.c: Added OSS sequencer driver
+
+	* src/sound/midiout.c: Made ossseq the default midiout driver
+
+	* src/sound/midi_mt32gm.c (midi_mt32gm_event): Several fixes to
+	GM->MT32 mapping
+
+	* src/engine/kgraphics.c (collides_with): NO_UPDATE no longer implies
+	passive collision immunity
+
+	* src/engine/kfile.c (fcaseopen): (f)caseopen now bails out if
+	called for a subdirectory
+
 2001-04-07  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/main.c (main): Added config options for midiout driver

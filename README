@@ -240,6 +240,8 @@ This subsystem is responsible for addressing the sound hardware. Its prefix is
 -----------------------
 This driver (driver ID 'alsaraw') passes output through to ALSA's raw MIDI output
 devices.
+
+Options:
 - card: The sound card number to use. Defaults to 0.
 - device: The sound device within the card to use. Default 0.
 
@@ -247,8 +249,22 @@ devices.
 -----------------------
 This driver (ID 'unixraw') handles output to the traditional /dev/midi* devices,
 such as those provided by OSS/Free.
+
+Options:
 - device: The device file to use for output (defaults to /dev/midi00)
 
+2.1.2.3 OSSseq driver:
+----------------------
+The OSS sequencer driver ('ossseq') issues MIDI commands to /dev/sequencer. It
+can be used to address a variety of sound hardware, including many synthesizer
+chips (such as the EMU8k or EMU10k). If you don't have an external MIDI device,
+this is most likely what you want to use.
+
+Options:
+- device: Number of the sequencer device to address (defauls to '1'). Try
+  altering this value if you can't hear anything.
+- recorder: Allows to record the events sent to /dev/sequencer, plus a
+  preceeding 0-byte. Useful for debugging.
 
 
 2.2 Config file example:

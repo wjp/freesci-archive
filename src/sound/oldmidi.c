@@ -40,7 +40,10 @@ static struct {
   char *name;
 } MT32_patch[128];
 
-static char *GM_Instrument_Names[] = {
+
+MIDI_map_t MIDI_mapping[128];
+
+char *GM_Instrument_Names[] = {
 
  /*000*/  "Acoustic Grand Piano",
  /*001*/  "Bright Acoustic Piano",
@@ -728,7 +731,7 @@ makeMIDI0(const guint8 *src, int *size, guint8 flag)
 	      obstack_1grow(stackp, status);
 	    laststatus = status;
 	    obstack_1grow(stackp, MIDI_mapping[src[pos]].gm_rhythmkey);
-	    obstack_1grow(stackp, (MIDI_mapping[src[pos]].volume * src[pos + 1]) / 100);
+	    obstack_1grow(stackp, (MIDI_mapping[src[pos]].volume * src[pos + 1]) >> 7);
 	    /* } else if ((status & 0xf0) == 0x90) {
 	       SCIsdebug("[%04x] Rhythm Channel, SCI Note: %d (mute)\n", pos - 1, src[pos]); */
 	  }
@@ -926,7 +929,7 @@ mapMIDIInstruments(void)
 
   for (i = 0; i < 128; i++) {
     MIDI_mapping[i].gm_rhythmkey = MT32_PresetRhythmKeymap[i];
-    MIDI_mapping[i].volume = 100;
+    MIDI_mapping[i].volume = 128;
   }
 
   /*
@@ -1035,7 +1038,7 @@ mapMIDIInstruments(void)
         MIDI_mapping[i + 23].gm_rhythmkey = MT32_RhythmTimbreMaps[number - 64].gm_rhythmkey;
       else
 	MIDI_mapping[i + 23].gm_rhythmkey = NOMAP;
-      MIDI_mapping[i + 23].volume = *(patch1->data + pos + 4 * i + 3);
+      MIDI_mapping[i + 23].volume = (((long) *(patch1->data + pos + 4 * i + 3))*128)/100;
       /* SCIsdebug("%d => %d\n", i + 23, MIDI_mapping[i + 23].gm_rhythmkey); */
     }
     SCIsdebug("MIDI mapping magic: MT-32 Rhythm Channel Note Map\n", memtimbres);

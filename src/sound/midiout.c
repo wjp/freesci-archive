@@ -23,13 +23,15 @@
 midiout_driver_t *midiout_driver = NULL;
 
 midiout_driver_t *midiout_drivers[] = {
+#ifdef HAVE_SYS_SOUNDCARD_H
+    &midiout_driver_ossseq,
+#endif /* HAVE_SYS_SOUNDCARD_H */
     &midiout_driver_null,
 #if !defined(_DOS) && !defined(WIN32)
     &midiout_driver_unixraw,
 #endif
 #ifdef HAVE_ALSA
     &midiout_driver_alsaraw,
-/*    &midiout_driver_alsaseq, */
 #endif
     NULL
 };
