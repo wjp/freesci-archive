@@ -160,6 +160,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 }
 
 
+
 #ifdef TEST_RESOURCE_MAP
 int
 main(int argc, char **argv)

@@ -126,7 +126,7 @@ typedef struct resource_index_struct resource_index_t;
 
 typedef struct _resource_source_struct {
 	unsigned int file_offset;
-	unsigned char file;
+	char file; /* Signed because -1 is used for patches */
 
 	struct _resource_source_struct *next;
 } resource_source_t;
@@ -142,7 +142,7 @@ typedef struct _resource_struct {
 	unsigned int size;
 
 	unsigned int file_offset; /* Offset in file */
-	unsigned char file; /* Number of the resource file this resource is stored in */
+	char file; /* Number of the resource file this resource is stored in */
 
 	unsigned char status;
 	unsigned short lockers; /* Number of places where this resource was locked */
@@ -238,7 +238,31 @@ scir_free_resource_manager(resource_mgr_t *mgr);
 int
 sci0_read_resource_map(char *path, resource_t **resources, int *resource_nr_p);
 /* Reads the resource.map file from a local directory
-** Parameters: (char *) path: The path to read the resource map file from
+** Parameters: (char *) path: (unused)
+**             (resource_t **) resources: Pointer to a pointer
+**                                        that will be set to the
+**                                        location of the resources
+**                                        (in one large chunk)
+**             (int *) resource_nr_p: Pointer to an int the number of resources
+**                                    read is stored in
+** Returns   : (int) 0 on success, an SCI_ERROR_* code otherwise
+*/
+
+/**--- Patch management functions ---*/
+
+void
+sci0_sprintf_patch_file_name(char *string, resource_t *res);
+/* Prints the name of a matching patch to a string buffer
+** Parameters: (char *) string: The buffer to print to
+**             (resource_t *) res: Resource containing the number and type of the
+**                                 resource whose name is to be print
+** Returns   : (void)
+*/
+
+int
+sci0_read_resource_patches(char *path, resource_t **resources, int *resource_nr_p);
+/* Reads SCI0 patch files from a local directory
+** Parameters: (char *) path: (unused)
 **             (resource_t **) resources: Pointer to a pointer
 **                                        that will be set to the
 **                                        location of the resources
@@ -250,7 +274,6 @@ sci0_read_resource_map(char *path, resource_t **resources, int *resource_nr_p);
 
 
 /**--- Decompression functions ---**/
-
 
 
 int decompress0(resource_t *result, int resh);
@@ -313,11 +336,23 @@ _scir_free_resources(resource_t *resources, int resources_nr);
 ** Returns   : (void)
 */
 
+resource_t *
+_scir_find_resource_unsorted(resource_t *res, int res_nr, int type, int number);
+/* Finds a resource matching type.number in an unsorted resource_t block
+** Parameters: (resource_t *) res: Pointer to the block to search in
+**             (int) res_nr: Number of resource_t structs allocated and defined
+**                           in the block pointed to by res
+**             (int) type: Type of the resource to look for
+**             (int) number: Number of the resource to look for
+** Returns   : (resource_t) The matching resource entry, or NULL if not found
+*/
+
 void
 _scir_add_altsource(resource_t *res, int file, unsigned int file_offset);
 /* Adds an alternative source to a resource
 ** Parameters: (resource_t *) res: The resource to add to
-**             (int) file: file the resource is stored in
+**             (int) file: file the resource is stored in, or SCI_RESOURCE_FILE_PATCH
+**                         if it's in a patch file
 **             (unsigned int) file_offset: Offset in the file the resource
 **                            is stored at
 ** Retruns   : (void)
@@ -325,6 +360,8 @@ _scir_add_altsource(resource_t *res, int file, unsigned int file_offset);
 
 
 /**** Internal #defines ****/
+
+#define SCI_RESOURCE_FILE_PATCH -1 /* Identifies resources read from patches */
 
 /* Resource type encoding */
 #define SCI0_B1_RESTYPE_MASK  0xf8

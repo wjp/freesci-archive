@@ -31,6 +31,8 @@
 #include <sci_graphics.h>
 #include <sci_widgets.h>
 
+#undef DEBUG_LSRECT
+
 /* Graph subfunctions */
 #define K_GRAPH_GET_COLORS_NR 2
 #define K_GRAPH_DRAW_LINE 4
@@ -1607,11 +1609,20 @@ _k_view_list_do_postdraw(state_t *s, gfxw_list_t *list)
 
 				temp = GET_SELECTOR(obj, nsBottom);
 				PUT_SELECTOR(obj, lsBottom, temp);
+#ifdef DEBUG_LSRECT
+				fprintf(stderr, "lsRected %04x\n", obj);
+#endif
 			}
+#ifdef DEBUG_LSRECT
+			else fprintf(stderr, "Not lsRecting %04x because %d\n", obj, lookup_selector(s, obj, s->selector_map.nsBottom, NULL));
+#endif
 
 			if (widget->signal & _K_VIEW_SIG_FLAG_HIDDEN)
 				widget->signal |= _K_VIEW_SIG_FLAG_REMOVE;
 		}
+#ifdef DEBUG_LSRECT
+		fprintf(stderr, "obj %04x has pflags %x\n", obj, (widget->signal & (_K_VIEW_SIG_FLAG_FREESCI_PRIVATE | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_NO_UPDATE)));
+#endif
 
 		if (widget->signalp) {
 			widget->signal &= 0xffff;
@@ -1918,9 +1929,13 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 		if ((view->signal & _K_VIEW_SIG_FLAG_NO_UPDATE
 		     && (  /* Brainwashed by LISP */
 			 (view->signal & (_K_VIEW_SIG_FLAG_UPDATED | _K_VIEW_SIG_FLAG_FORCE_UPDATE))
-			 || ((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_REMOVE)) == _K_VIEW_SIG_FLAG_REMOVE)
-			 || ((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)) == _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)
-			 || ((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)) == (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE))
+			 || (((view->signal & (_K_VIEW_SIG_FLAG_UPDATED | _K_VIEW_SIG_FLAG_FORCE_UPDATE)) == 0)
+			     && (((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_REMOVE)) == _K_VIEW_SIG_FLAG_REMOVE)
+				 || ((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)) == _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)
+				 || ((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE))
+				     == (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE))
+				 )
+			     )
 			 )
 		     )
 		    ||
@@ -1929,8 +1944,22 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 		     )
 		    ) {
 			view->signal |= _K_VIEW_SIG_FLAG_FREESCI_PRIVATE;
+#ifdef DEBUG_LSRECT
+			fprintf(stderr, "++++ Setting pvt for %04x\n", view->ID);
+#endif
 			s->pic_not_valid++;
 		}
+#ifdef DEBUG_LSRECT
+		else fprintf(stderr, "---- NOT Setting pvt for %04x: nU:%d vU:%d fU:%d iH:%d rV:%d aU:%d sU:%d\n", view->ID,
+			  !!(view->signal & _K_VIEW_SIG_FLAG_NO_UPDATE),
+			  !!(view->signal & _K_VIEW_SIG_FLAG_UPDATED),
+			  !!(view->signal & _K_VIEW_SIG_FLAG_FORCE_UPDATE),
+			  !!(view->signal & _K_VIEW_SIG_FLAG_HIDDEN),
+			  !!(view->signal & _K_VIEW_SIG_FLAG_REMOVE),
+			  !!(view->signal & _K_VIEW_SIG_FLAG_ALWAYS_UPDATE),
+			  !!(view->signal & _K_VIEW_SIG_FLAG_STOP_UPDATE)
+			  );
+#endif
 
 		SCIkdebug(SCIkGRAPHICS, "  dv[%04x]: signal %04x -> %04x\n", view->ID, oldsignal, view->signal);
 

@@ -103,11 +103,11 @@ struct {
 	{"FreeSCI hackers and contributors",
 	 "Alexander R. Angas\nWin32 fixes and generic memory handler functions\n\n"
 	 "Anders Baden Nielsen\nPPC testing\n\n"
-	 "Bas Zoetekouw\nMan pages and debian package management\n\n"
+	 "Bas Zoetekouw\nMan pages, debian package management, CVS maintenance\n\n"
 	 "Carl Muckenhoupt\nSources to the SCI resource viewer tools that started it all\n\n"
 	 "Chris Kehler\nMakefile enhancements\n\n"
 	 "Christoph Reichenbach\nProject & Website maintenance, UN*X code\n\n"
-	 "Christopher T. Lansdown\nCVS maintenance, Alpha compatibility fixes",
+	 "Christopher T. Lansdown\nOriginal CVS maintainer, Alpha compatibility fixes",
 	 0, 15},
 	{"More FreeSCI hackers and contributors",
 	 "Claudio Matsuoka\nCVS snapshots, daily builds, BeOS and cygwin ports\n\n"
@@ -130,6 +130,7 @@ struct {
 	 "Rune Orsval\nConfiguration file editor\n\n"
 	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research\n\n"
 	 "Rink Springer\nPort to the DOS platform, several bug fixes\n\n"
+	 "Robey Pointer\nBug tracking system hosting\n\n"
 	 "Sergey Lapin\nPort of Carl's type 2 decompression code\n\n"
 	 "\n\n Special Thanks\nto the linuxgames.com and telefragged.com crew\nfor hosting us",
 	 0, 15}

@@ -38,6 +38,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <ctype.h>
+
 #undef SCI_REQUIRE_RESOURCE_FILES
 /* #define SCI_VERBOSE_RESMGR 1 */
 
@@ -83,6 +85,7 @@ int resourcecmp(const void *first, const void *second);
 
 
 typedef int decomp_funct(resource_t *result, int resh);
+typedef void patch_sprintf_funct(char *string, resource_t *res);
 
 static decomp_funct *decompressors[] = {
 	NULL,
@@ -94,111 +97,15 @@ static decomp_funct *decompressors[] = {
 	NULL
 };
 
-#if 0
-int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
-     /* Adds external patch files to an unprepared list of resources
-     ** (as used internally by loadResources). It will override any
-     ** resources from the original resource files, freeing their memory
-     ** in the process.
-     */
-{
-	sci_dir_t dir;
-	char *entry;
-	int counter = 0;
-
-	sci_init_dir(&dir);
-	entry = sci_find_first(&dir, "*.???");
-	while (entry) {
-		int restype = sci_invalid_resource;
-		int resnumber = -1;
-		int i;
-		unsigned int resname_len;
-		char *endptr;
-
-		for (i = sci_view; i < sci_invalid_resource; i++)
-			if (strncasecmp(sci_resource_types[i], entry,
-					strlen(sci_resource_types[i])) == 0)
-				restype = i;
-
-		if (restype != sci_invalid_resource) {
-
-			resname_len = strlen(sci_resource_types[restype]);
-			if (entry[resname_len] != '.')
-				restype = sci_invalid_resource;
-			else {
-				resnumber = strtol(entry + 1 + resname_len,
-						   &endptr, 10); /* Get resource number */
-				if ((*endptr != '\0') || (resname_len+1 == strlen(entry)))
-					restype = sci_invalid_resource;
-
-				if ((resnumber < 0) || (resnumber > 1000))
-					restype = sci_invalid_resource;
-			}
-		}
-
-		if (restype != sci_invalid_resource) {
-			struct stat filestat;
-
-			printf("Patching \"%s\": ", entry);
-
-			if (stat(entry, &filestat))
-				perror("""__FILE__"": (""__LINE__""): stat()");
-			else {
-				int file;
-				guint8 filehdr[2];
-				resource_t *newrsc;
-
-				if (filestat.st_size < 3) {
-					printf("File too small\n");
-					entry = sci_find_next(&dir);
-					continue; /* next file */
-				}
-
-				file = open(entry, O_RDONLY);
-				if (!file)
-					perror("""__FILE__"": (""__LINE__""): open()");
-				else {
-
-					read(file, filehdr, 2);
-					if ((filehdr[0] & 0x7f) != restype) {
-						printf("Resource type mismatch\n");
-						close(file);
-					} else {
-
-						newrsc = sci_malloc(sizeof(resource_t));
-#ifdef SATISFY_PURIFY
-						memset(newrsc, 0, sizeof(resource_t));
-#endif
-
-						newrsc->size = filestat.st_size - 2;
-						newrsc->id = restype << 11 | resnumber;
-						newrsc->number = resnumber;
-						newrsc->status = SCI_STATUS_ALLOCATED;
-						newrsc->type = restype;
-
-						newrsc->data = sci_malloc(newrsc->size);
-#ifdef SATISFY_PURIFY
-						memset(newrsc->data, 0, newrsc->size);
-#endif
-
-						read(file, newrsc->data, newrsc->size);
-						close(file);
-
-						_addResource(resourcelist, newrsc, 1); /* Add and overwrite old stuff */
-
-						printf("OK\n");
-
-						counter++;
-					}
-				}
-			}
-		}
-		entry = sci_find_next(&dir);
-	}
-
-	return counter;
-}
-#endif
+static patch_sprintf_funct *patch_sprintfers[] = {
+	NULL,
+	&sci0_sprintf_patch_file_name,
+	&sci0_sprintf_patch_file_name,
+	NULL,
+	NULL,
+	NULL,
+	NULL
+};
 
 
 int resourcecmp (const void *first, const void *second)
@@ -214,9 +121,13 @@ int resourcecmp (const void *first, const void *second)
 			((resource_t *)second)->type)? -1 : 1;
 }
 
-/*------------------------------------------------*/
-/** Resource manager constructors and operations **/
-/*------------------------------------------------*/
+
+
+
+
+/*-----------------------------*/
+/*-- Resmgr helper functions --*/
+/*-----------------------------*/
 
 void
 _scir_add_altsource(resource_t *res, int file, unsigned int file_offset)
@@ -228,6 +139,23 @@ _scir_add_altsource(resource_t *res, int file, unsigned int file_offset)
 	rsrc->file_offset = file_offset;
 	res->alt_sources = rsrc;
 }
+
+resource_t *
+_scir_find_resource_unsorted(resource_t *res, int res_nr, int type, int number)
+{
+	int i;
+	for (i = 0; i < res_nr; i++)
+		if (res[i].number == number && res[i].type == type)
+			return res + i;
+	return NULL;
+}
+
+
+
+/*------------------------------------------------*/
+/** Resource manager constructors and operations **/
+/*------------------------------------------------*/
+
 
 resource_mgr_t *
 scir_new_resource_manager(char *dir, int version,
@@ -267,6 +195,10 @@ scir_new_resource_manager(char *dir, int version,
 			free(caller_cwd);
 			return NULL;
 		}
+
+		sci0_read_resource_patches(dir,
+					   &mgr->resources,
+					   &mgr->resources_nr);
 
 		resmap_version = SCI_VERSION_0;
 	}
@@ -365,6 +297,24 @@ scir_free_resource_manager(resource_mgr_t *mgr)
 }
 
 static void
+_scir_load_from_patch_file(int fh, resource_t *res, char *filename)
+{
+	int really_read;
+
+	res->data = sci_malloc(res->size);
+	really_read = read(fh, res->data, res->size);
+
+	if (really_read < res->size) {
+		sciprintf("Error: Read %d bytes from %s but expected %d!\n",
+			  really_read, filename, res->size);
+		exit(1);
+	}
+
+	res->status = SCI_STATUS_ALLOCATED;
+}
+
+
+static void
 _scir_load_resource(resource_mgr_t *mgr, resource_t *res)
 {
 	char *cwd = sci_getcwd();
@@ -375,31 +325,50 @@ _scir_load_resource(resource_mgr_t *mgr, resource_t *res)
 	chdir(mgr->resource_path);
 
 	/* First try lower-case name */
-	sprintf(filename, "resource.%03i", res->file);
+	if (res->file == SCI_RESOURCE_FILE_PATCH) {
+
+		if (!patch_sprintfers[mgr->sci_version]) {
+			sciprintf("Resource manager's SCI version (%d) has no patch file name printers -> internal error!\n",
+				  mgr->sci_version);
+			exit(1);
+		}
+
+		/* Get patch file name */
+		patch_sprintfers[mgr->sci_version](filename, res);
+	} else
+		sprintf(filename, "resource.%03i", res->file);
+
 	fh = open(filename, O_RDONLY | O_BINARY);
 
 	if (fh <= 0) {
-		sprintf(filename, "RESOURCE.%03i", res->file);
+		char *raiser = filename;
+		while (*raiser)
+			*raiser = toupper(*raiser++); /* Uppercasify */
+
 		fh = sci_open(filename, O_RDONLY|O_BINARY);
 	}    /* Try case-insensitively name */
 
 	if (fh <= 0) {
-		sciprintf("Failed to open %s/resource.%03d!\n",
-			  mgr->resource_path, res->file);
+		sciprintf("Failed to open %s/%s!\n",
+			  mgr->resource_path, filename);
 		res->data = NULL;
 		res->status = SCI_STATUS_NOMALLOC;
 		res->size = 0;
 		return;
 	}
 
+
 	lseek(fh, res->file_offset, SEEK_SET);
 
-	if (!decompressors[mgr->sci_version]) {
+	if (res->file == SCI_RESOURCE_FILE_PATCH) 
+		_scir_load_from_patch_file(fh, res, filename);
+	else if (!decompressors[mgr->sci_version]) {
+		/* Check whether we support this at all */
 		sciprintf("Resource manager's SCI version (%d) is invalid!\n",
 			  mgr->sci_version);
 		exit(1);
 	} else {
-		int error =
+		int error = /* Decompress from regular resource file */
 			decompressors[mgr->sci_version](res, fh);
 
 		if (error) {

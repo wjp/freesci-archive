@@ -1,3 +1,15 @@
+2001-12-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/resource_patch.c: Added support for resource patches
+
+2001-12-09  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/sound.c (song_new): Made the memset() dependant on
+	SATISFY_PURIFY to provoke warnings on reads on uninitialized members.
+
+	* THANKS
+	* src/engine/kmenu.c: Added Robey Pointer
+
 2001-12-08  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/main.c (main): Fixed various memory leaks occurring with command

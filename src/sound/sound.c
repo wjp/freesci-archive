@@ -300,7 +300,11 @@ song_new(word handle, byte *data, int size, int priority)
 	song_t *retval = sci_malloc(sizeof(song_t));
 	unsigned int i;
 
+#ifdef SATISFY_PURIFY
+	/* In general, we want to be warned if we forgot to
+	** initialize something relevant here */
 	memset(retval, 0, sizeof(song_t));
+#endif
 
 	retval->data = data;
 	retval->handle = handle;

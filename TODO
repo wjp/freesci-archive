@@ -1,7 +1,7 @@
 TODO for 0.3.3:
 
 Primary goals:
-	* Support patch files once again
+	-- ALL DONE --
 
 Secondary goals:
 	+ Add PCM output support and one driver to use it
