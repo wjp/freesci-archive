@@ -1,3 +1,8 @@
+2001-04-12  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/gfx/drivers/sdl_driver.c: more cleanups for the sdl code.
+        * freesci.spec:  Added a .spec file for RPM-based systems.
+
 2001-04-12  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/gfx_pixmap_scale.c: Added inverse Alpha support to all filters
