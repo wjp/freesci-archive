@@ -6214,7 +6214,7 @@ if test `eval echo '${'$as_ac_Header'}'` = yes; then
   cat >>confdefs.h <<EOF
 #define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
 EOF
- X_LIBS="$X_LIBS -lXft"
+
 fi
 done
 

@@ -264,7 +264,6 @@ NUMTOKEN {DIGIT}+
 NUMPARAMTOKEN {NUMTOKEN}|{PARAMTOKEN}
 PATHTOKEN [[:alnum:]"/""\\""."]*
 NUMPATHPARAMTOKEN {NUMPARAMTOKEN}|{PATHTOKEN}
-QUOTED_NUMPATHPARAMTOKEN "\"".*"\""
 QUOTED_NUMPARAMTOKEN "\"".*"\""
 
 %%
@@ -374,7 +373,7 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 }
 
 
-[[:alnum:]][[:blank:]]*"="[[:blank:]]*({NUMPATHPARAMTOKEN}|{QUOTED_NUMPATHPARAMTOKEN})[[:blank:]]* { /* Normal config option */
+{PARAMTOKEN}[[:blank:]]*"="[[:blank:]]*({NUMPATHPARAMTOKEN}|{QUOTED_NUMPARAMTOKEN})[[:blank:]]* { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
 	char *foo;
@@ -385,13 +384,10 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 
 	option_str_len = value_str - option_str;
 
-	while (!(isalnum(*value_str) || *value_str == '_'))
+	while (!(isalnum(*value_str) || *value_str == '_' || *value_str == '"'))
 		++value_str;
 
-	foo = value_str + 1;
-	while (*foo && !isblank(*foo))
-		++foo;
-	*foo = 0;
+	value_str = crop_value(value_str);
 
 	parse_option(option_str, option_str_len, value_str);
 }
@@ -427,7 +423,6 @@ crop_value(char *yytext)
 		++yytext;
 
 	retval = yytext;
-
 	if (*yytext == '"') { /* Magic Quote Mode */
 		++retval;
 		++yytext;
