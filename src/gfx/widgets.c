@@ -720,7 +720,7 @@ gfxw_new_line(rect_t line, gfx_color_t color, gfx_line_mode_t line_mode, gfx_lin
 
 
 gfxw_view_t *
-_gfxw_new_simple_view(gfx_state_t *state, point_t pos, int view, int loop, int cel, int priority, int control,
+_gfxw_new_simple_view(gfx_state_t *state, point_t pos, int view, int loop, int cel, int palette, int priority, int control,
 		      gfx_alignment_t halign, gfx_alignment_t valign, int size, int type)
 {
 	gfxw_view_t *widget;
@@ -750,7 +750,8 @@ _gfxw_new_simple_view(gfx_state_t *state, point_t pos, int view, int loop, int c
 	widget->view = view;
 	widget->loop = loop;
 	widget->cel = cel;
-
+	widget->palette = palette;
+	
 	if (halign == ALIGN_CENTER)
 		widget->pos.x -= width >> 1;
 	else if (halign == ALIGN_RIGHT)
@@ -833,7 +834,7 @@ _gfxw_set_ops_VIEW(gfxw_widget_t *view, char stat)
 }
 
 gfxw_view_t *
-gfxw_new_view(gfx_state_t *state, point_t pos, int view_nr, int loop, int cel, int priority, int control,
+gfxw_new_view(gfx_state_t *state, point_t pos, int view_nr, int loop, int cel, int palette, int priority, int control,
 	      gfx_alignment_t halign, gfx_alignment_t valign, int flags)
 {
 	gfxw_view_t *view;
@@ -846,7 +847,7 @@ gfxw_new_view(gfx_state_t *state, point_t pos, int view_nr, int loop, int cel, i
 		pos.y += offset.y;
 	}
 
-	view = _gfxw_new_simple_view(state, pos, view_nr, loop, cel, priority, control, halign, valign,
+	view = _gfxw_new_simple_view(state, pos, view_nr, loop, cel, palette, priority, control, halign, valign,
 				     sizeof(gfxw_view_t), (flags & GFXW_VIEW_FLAG_STATIC) ? GFXW_STATIC_VIEW : GFXW_VIEW);
 
 	_gfxw_set_ops_VIEW(GFXW(view), (char)(flags & GFXW_VIEW_FLAG_STATIC));
@@ -1019,7 +1020,7 @@ _gfxw_set_ops_PICVIEW(gfxw_widget_t *widget)
 }
 
 gfxw_dyn_view_t *
-gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, int cel, int priority, int control,
+gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, int cel, int palette, int priority, int control,
 		  gfx_alignment_t halign, gfx_alignment_t valign, int sequence)
 {
 	gfxw_dyn_view_t *widget;
@@ -1057,7 +1058,7 @@ gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, in
 	widget->cel = cel;
 	widget->sequence = sequence;
 	widget->force_precedence = 0;
-	widget->palette = 1;
+	widget->palette = palette;
 
 	if (halign == ALIGN_CENTER)
 		xalignmod = width >> 1;

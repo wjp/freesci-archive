@@ -312,6 +312,7 @@ typedef struct {
 
 	selector_t dataInc;
 	selector_t size;
+	selector_t palette;
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {

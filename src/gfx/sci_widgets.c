@@ -426,7 +426,7 @@ sciw_new_icon_control(gfxw_port_t *port, reg_t ID, rect_t zone, int view, int lo
 	zone.x = 0;
 	zone.y = 0;
 
-	icon = GFXW(gfxw_new_view(port->visual->gfx_state, gfx_point(zone.x, zone.y), view, loop, cel, -1, -1,
+	icon = GFXW(gfxw_new_view(port->visual->gfx_state, gfx_point(zone.x, zone.y), view, loop, cel, 0, -1, -1,
 				  ALIGN_LEFT, ALIGN_TOP, GFXW_VIEW_FLAG_DONT_MODIFY_OFFSET));
 
 	if (!icon) {

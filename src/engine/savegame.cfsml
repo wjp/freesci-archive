@@ -245,6 +245,7 @@ RECORD gfxw_view_t EXTENDS gfxw_widget_t {
 	int view;
 	int loop;
 	int cel;
+	int palette;
 }
 
 RECORD gfxw_dyn_view_t EXTENDS gfxw_view_t {
@@ -367,6 +368,7 @@ RECORD view_object_t {
 	int view_nr;
 	int loop;
 	int cel;
+	int palette;
 	int nsTop;
 	int nsLeft;
 	int nsRight;

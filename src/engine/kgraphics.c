@@ -1762,6 +1762,7 @@ _k_make_dynview_obj(state_t *s, reg_t obj, int options, int nr, int funct_nr, in
 {
 	short oldloop, oldcel;
 	int cel, loop, view_nr = GET_SEL32SV(obj, view);
+	int palette;
 	int has_nsrect = lookup_selector(s, obj, s->selector_map.nsBottom, NULL, NULL) == SELECTOR_VARIABLE;
 	int under_bits, signal;
 	reg_t *under_bitsp, *signalp;
@@ -1784,6 +1785,10 @@ _k_make_dynview_obj(state_t *s, reg_t obj, int options, int nr, int funct_nr, in
 	loop = oldloop = sign_extend_byte(GET_SEL32V(obj, loop));
 	cel = oldcel = sign_extend_byte(GET_SEL32V(obj, cel));
 
+	if (s->selector_map.palette)
+		palette = GET_SEL32V(obj, palette); else
+			palette = 0;
+	
 	/* Clip loop and cel, write back if neccessary */
 	if (gfxop_check_cel(s->gfx_state, view_nr, &loop, &cel)) {
 		return NULL;
@@ -1818,7 +1823,7 @@ _k_make_dynview_obj(state_t *s, reg_t obj, int options, int nr, int funct_nr, in
 		SCIkdebug(SCIkGRAPHICS, "    with signal = %04x\n", signal);
 	}
 
-	widget = gfxw_new_dyn_view(s->gfx_state, pos, z, view_nr, loop, cel,
+	widget = gfxw_new_dyn_view(s->gfx_state, pos, z, view_nr, loop, cel, palette,
 				   -1, -1, ALIGN_CENTER, ALIGN_BOTTOM, nr);
 
 	if (widget) {
@@ -2190,7 +2195,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 		priority = KP_SINT(argv[5]);
 		control = KP_SINT(argv[6]);
 
-		widget = GFXW(gfxw_new_dyn_view(s->gfx_state, gfx_point(x,y+1 /* magic +1 */ ), 0, view, loop, cel,
+		widget = GFXW(gfxw_new_dyn_view(s->gfx_state, gfx_point(x,y+1 /* magic +1 */ ), 0, view, loop, cel, 0,
 						priority, -1 /* No priority */ , ALIGN_CENTER, ALIGN_BOTTOM, 0));
 
 		if (!widget) {
@@ -2280,7 +2285,7 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	SCIkdebug(SCIkGRAPHICS, "DrawCel((%d,%d), (view.%d, %d, %d), p=%d)\n", x, y, view, loop,
 		  cel, priority);
 
-	new_view = gfxw_new_view(s->gfx_state, gfx_point(x, y), view, loop, cel, priority, -1,
+	new_view = gfxw_new_view(s->gfx_state, gfx_point(x, y), view, loop, cel, 0, priority, -1,
 				 ALIGN_LEFT, ALIGN_TOP, GFXW_VIEW_FLAG_DONT_MODIFY_OFFSET);
 
 	ADD_TO_CURRENT_BG_WIDGETS(new_view);

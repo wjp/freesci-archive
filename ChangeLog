@@ -1,3 +1,7 @@
+2002-11-23  Lars Skovlund  <lskovlun@image.dk>
+
+	* Added kernel support for palettized views
+
 2002-11-22  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/vm.c (run_vm): Allowed unsigned comparisons between

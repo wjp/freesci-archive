@@ -269,7 +269,7 @@ gfxw_new_line(rect_t line, gfx_color_t color, gfx_line_mode_t line_mode, gfx_lin
 #define GFXW_VIEW_FLAG_DONT_MODIFY_OFFSET (1 << 1)
 
 gfxw_view_t *
-gfxw_new_view(gfx_state_t *state, point_t pos, int view, int loop, int cel, int priority, int control,
+gfxw_new_view(gfx_state_t *state, point_t pos, int view, int loop, int cel, int palette, int priority, int control,
 	      gfx_alignment_t halign, gfx_alignment_t valign, int flags);
 /* Creates a new view (a cel, actually)
 ** Parameters: (gfx_state_t *) state: The graphics state
@@ -284,7 +284,7 @@ gfxw_new_view(gfx_state_t *state, point_t pos, int view, int loop, int cel, int 
 */
 
 gfxw_dyn_view_t *
-gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, int cel,
+gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, int cel, int palette,
 		  int priority, int control, gfx_alignment_t halign, gfx_alignment_t valign,
 		  int sequence);
 /* Creates a new dyn view
