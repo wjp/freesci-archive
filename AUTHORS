@@ -5,6 +5,10 @@ Authors of FreeSCI:
 Carl Muckenhoupt: [carl@wurb.com]
 parts of graphics/graphics.c core/decompress0.c core/decompress1.c
 
+Dmitri Jemerov: [yole@exch.nnz.spb.su]
+graphics/graphics_ddraw.c win32/*
+win32 compatibility fixes all over the place
+
 Magnus Reftel: [d96reftl@dtek.chalmers.se]
 core/script.c core/vocabulary.c core/heap.c tools/disasm.c tools/classes.c
 Everything from python.tar.gz

@@ -7,6 +7,8 @@ AC_PROG_CC
 AC_PROG_RANLIB
 AC_CHECK_HEADERS(gsi/gsi_interface.c)
 AC_CHECK_HEADERS(sys/soundcard.h)
+AC_CHECK_HEADERS(dirent.h)
+AC_CHECK_HEADERS(unistd.h)
 AC_PATH_GGI
 AM_PATH_GLIB(0.9.7,[
 		CFLAGS="$CFLAGS $GLIB_CFLAGS"
@@ -34,4 +36,5 @@ AC_OUTPUT(Makefile    \
 	src/include/Makefile \
 	src/tools/Makefile \
 	src/console/Makefile \
+	src/win32/Makefile \
 	src/sound/Makefile)

@@ -9,11 +9,17 @@
 #undef HAVE_LIBGGI
 #undef HAVE_LIBPNG
 
+/* Define if you have the <dirent.h> header file.  */
+#undef HAVE_DIRENT_H
+
 /* Define if you have the <gsi/gsi_interface.c> header file.  */
 #undef HAVE_GSI_GSI_INTERFACE_C
 
 /* Define if you have the <sys/soundcard.h> header file.  */
 #undef HAVE_SYS_SOUNDCARD_H
+
+/* Define if you have the <unistd.h> header file.  */
+#undef HAVE_UNISTD_H
 
 /* Name of package */
 #undef PACKAGE

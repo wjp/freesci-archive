@@ -10,11 +10,17 @@
 #define HAVE_LIBGGI 1
 #define HAVE_LIBPNG 1
 
+/* Define if you have the <dirent.h> header file.  */
+#define HAVE_DIRENT_H 1
+
 /* Define if you have the <gsi/gsi_interface.c> header file.  */
 #define HAVE_GSI_GSI_INTERFACE_C 1
 
 /* Define if you have the <sys/soundcard.h> header file.  */
 #define HAVE_SYS_SOUNDCARD_H 1
+
+/* Define if you have the <unistd.h> header file.  */
+#define HAVE_UNISTD_H 1
 
 /* Name of package */
 #define PACKAGE "freesci"

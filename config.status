@@ -28,7 +28,7 @@ done
 ac_given_srcdir=.
 ac_given_INSTALL="/usr/bin/install -c"
 
-trap 'rm -fr Makefile    	doc/Makefile         doc/misc/Makefile 	src/Makefile  	src/core/Makefile 	src/graphics/Makefile 	src/include/Makefile 	src/tools/Makefile 	src/console/Makefile 	src/sound/Makefile config.h conftest*; exit 1' 1 2 15
+trap 'rm -fr Makefile    	doc/Makefile         doc/misc/Makefile 	src/Makefile  	src/core/Makefile 	src/graphics/Makefile 	src/include/Makefile 	src/tools/Makefile 	src/console/Makefile 	src/win32/Makefile 	src/sound/Makefile config.h conftest*; exit 1' 1 2 15
 
 # Protect against being on the right side of a sed subst in config.status.
 sed 's/%@/@@/; s/@%/@@/; s/%g$/@g/; /@g$/s/[\\&%]/\\&/g;
@@ -118,7 +118,7 @@ if test -z "$ac_sed_cmds"; then
   ac_sed_cmds=cat
 fi
 
-CONFIG_FILES=${CONFIG_FILES-"Makefile    	doc/Makefile         doc/misc/Makefile 	src/Makefile  	src/core/Makefile 	src/graphics/Makefile 	src/include/Makefile 	src/tools/Makefile 	src/console/Makefile 	src/sound/Makefile"}
+CONFIG_FILES=${CONFIG_FILES-"Makefile    	doc/Makefile         doc/misc/Makefile 	src/Makefile  	src/core/Makefile 	src/graphics/Makefile 	src/include/Makefile 	src/tools/Makefile 	src/console/Makefile 	src/win32/Makefile 	src/sound/Makefile"}
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
   # Support "outfile[:infile[:infile...]]", defaulting infile="outfile.in".
   case "$ac_file" in
@@ -230,12 +230,24 @@ CEOF
   mv conftest.out conftest.in
 
   cat > conftest.frag <<CEOF
+${ac_dA}HAVE_DIRENT_H${ac_dB}HAVE_DIRENT_H${ac_dC}1${ac_dD}
+${ac_uA}HAVE_DIRENT_H${ac_uB}HAVE_DIRENT_H${ac_uC}1${ac_uD}
+${ac_eA}HAVE_DIRENT_H${ac_eB}HAVE_DIRENT_H${ac_eC}1${ac_eD}
+${ac_dA}HAVE_UNISTD_H${ac_dB}HAVE_UNISTD_H${ac_dC}1${ac_dD}
+${ac_uA}HAVE_UNISTD_H${ac_uB}HAVE_UNISTD_H${ac_uC}1${ac_uD}
+${ac_eA}HAVE_UNISTD_H${ac_eB}HAVE_UNISTD_H${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_LIBGGI${ac_dB}HAVE_LIBGGI${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_LIBGGI${ac_uB}HAVE_LIBGGI${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_LIBGGI${ac_eB}HAVE_LIBGGI${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_LIBPNG${ac_dB}HAVE_LIBPNG${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_LIBPNG${ac_uB}HAVE_LIBPNG${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_LIBPNG${ac_eB}HAVE_LIBPNG${ac_eC}1${ac_eD}
+CEOF
+  sed -f conftest.frag conftest.in > conftest.out
+  rm -f conftest.in
+  mv conftest.out conftest.in
+
+  cat > conftest.frag <<CEOF
 s%^[ 	]*#[ 	]*undef[ 	][ 	]*[a-zA-Z_][a-zA-Z_0-9]*%/* & */%
 CEOF
   sed -f conftest.frag conftest.in > conftest.out
