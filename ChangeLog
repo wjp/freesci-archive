@@ -1,3 +1,8 @@
+2001-04-13  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/main.c (init_directories): Made directory handling slightly more
+	sophisticated
+
 2001-04-12  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/gfx/drivers/sdl_driver.c: more cleanups for the sdl code.

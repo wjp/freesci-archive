@@ -719,11 +719,8 @@ gfxop_set_color(gfx_state_t *state, gfx_color_t *color, int r, int g, int b, int
 
 	color->mask = mask;
 
-	if (mask & GFX_MASK_PRIORITY)
-		color->priority = priority;
-
-	if (mask & GFX_MASK_CONTROL)
-		color->control = control;
+	color->priority = priority;
+	color->control = control;
 
 	if (mask & GFX_MASK_VISUAL) {
 

@@ -1504,69 +1504,70 @@ script_uninstantiate(state_t *s, int script_nr)
 int
 game_run(state_t **_s)
 {
-  state_t *successor = NULL;
-  state_t *s = *_s;
-  int game_is_finished = 0;
+	state_t *successor = NULL;
+	state_t *s = *_s;
+	int game_is_finished = 0;
 
-  sciprintf(" Calling %s::play()\n", s->game_name);
-  putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector... */
-  putInt16(s->heap + s->stack_base + 2, 0);                    /* ... with 0 arguments. */
+	sciprintf(" Calling %s::play()\n", s->game_name);
+	putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector... */
+	putInt16(s->heap + s->stack_base + 2, 0);                    /* ... with 0 arguments. */
 
-  /* Now: Register the first element on the execution stack- */
-  send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
-  /* and ENGAGE! */
+	/* Now: Register the first element on the execution stack- */
+	send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
+	/* and ENGAGE! */
 
-  do {
-    run_vm(s, (successor)? 1 : 0);
+	do {
+		s->execution_stack_pos_changed = 0;
+		run_vm(s, (successor)? 1 : 0);
 
-    if (s->restarting_flags & SCI_GAME_IS_RESTARTING_NOW) { /* Restart was requested? */
+		if (s->restarting_flags & SCI_GAME_IS_RESTARTING_NOW) { /* Restart was requested? */
 
-      free(s->execution_stack);
-      s->execution_stack = NULL;
-      s->execution_stack_pos = -1;
-      s->execution_stack_pos_changed = 0;
+			free(s->execution_stack);
+			s->execution_stack = NULL;
+			s->execution_stack_pos = -1;
+			s->execution_stack_pos_changed = 0;
 
-      game_exit(s);
-      game_init(s);
+			game_exit(s);
+			game_init(s);
 
-      putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector */
+			putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector */
 
-      putInt16(s->heap + s->stack_base + 2, 0);
-      send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
+			putInt16(s->heap + s->stack_base + 2, 0);
+			send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
 
-      script_abort_flag = 0;
-      s->restarting_flags = SCI_GAME_WAS_RESTARTED | SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE;
+			script_abort_flag = 0;
+			s->restarting_flags = SCI_GAME_WAS_RESTARTED | SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE;
 
-    } 
-    else {
-      successor = s->successor;
-      if (successor) {
-	game_exit(s);
-	script_free_vm_memory(s);
-	free(s);
-	*_s = s = successor;
+		} 
+		else {
+			successor = s->successor;
+			if (successor) {
+				game_exit(s);
+				script_free_vm_memory(s);
+				free(s);
+				*_s = s = successor;
 
-	if (!send_calls_allocated)
-	  send_calls = calloc(sizeof(calls_struct_t), send_calls_allocated = 16);
+				if (!send_calls_allocated)
+					send_calls = calloc(sizeof(calls_struct_t), send_calls_allocated = 16);
 
-	if (script_abort_flag == SCRIPT_ABORT_WITH_REPLAY) {
-	  sciprintf("Restarting with replay()\n");
-	  s->execution_stack_pos = -1; /* Resatart with replay */
-	  putInt16(s->heap + s->stack_base, s->selector_map.replay); /* Call the replay selector */
-	  putInt16(s->heap + s->stack_base + 2, 0);
-	  send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
-	}
+				if (script_abort_flag == SCRIPT_ABORT_WITH_REPLAY) {
+					sciprintf("Restarting with replay()\n");
+					s->execution_stack_pos = -1; /* Resatart with replay */
+					putInt16(s->heap + s->stack_base, s->selector_map.replay); /* Call the replay selector */
+					putInt16(s->heap + s->stack_base + 2, 0);
+					send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
+				}
 
-	script_abort_flag = 0;
+				script_abort_flag = 0;
 
-	SCI_MEMTEST;
-      } else
-	game_is_finished = 1;
-    }
-  } while (!game_is_finished);
+				SCI_MEMTEST;
+			} else
+				game_is_finished = 1;
+		}
+	} while (!game_is_finished);
 
-  sciprintf(" Game::play() finished.\n");
-  return 0;
+	sciprintf(" Game::play() finished.\n");
+	return 0;
 }
 
 

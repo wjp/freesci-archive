@@ -185,9 +185,19 @@ init_directories(char *work_dir, char *game_id)
   /* So we've got a home directory */
 
 	if (chdir(homedir)) {
+
+#ifdef _WIN32
+		if (!getcwd(work_dir, PATH_MAX)) {
+			fprintf(stderr,"Cannot get the working directory!\n");
+			return 1;
+		}
+#elif __unix__
 		fprintf(stderr,"Error: Could not enter home directory %s.\n", homedir);
 		perror("Reason");
 		return 1; /* If we get here, something really bad is happening */
+#else
+#  error Please add a $HOME policy for your platform!
+#endif
 	}
 
 	if (strlen(homedir) > MAX_HOMEDIR_SIZE) {

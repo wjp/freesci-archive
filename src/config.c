@@ -2074,6 +2074,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf = malloc(sizeof(config_entry_t));
 
 /**** Default config: */
+	conf->gfx_options.workarounds = 0;
 	conf->gfx_options.buffer_pics_nr = 0;
 	conf->gfx_options.correct_rendering = 1;
 	conf->gfx_options.pic0_unscaled = 0;
