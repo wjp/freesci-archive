@@ -282,7 +282,7 @@ gfxw_list_t *
 sciw_new_button_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, char selected, char inverse, char grayed_out)
 {
         gfx_color_t *frame_col = (inverse)? &(port->bgcolor) : &(port->color);
-	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
+	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y), 1), 0);
 
 	gfxw_set_id(GFXW(list), ID);
 
@@ -400,7 +400,7 @@ gfxw_list_t *
 sciw_new_icon_control(gfxw_port_t *port, int ID, rect_t zone, int view, int loop, int cel,
 		      char frame, char inverse)
 {
-	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
+	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y), 1), 0);
 	gfxw_widget_t *icon;
 	gfxw_set_id(GFXW(list), ID);
 
@@ -432,7 +432,7 @@ gfxw_list_t *
 sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char **entries_list,
 		      int entries_nr, int list_top, int selection, char inverse)
 {
-	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
+	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y), 1), 0);
 	char arr_up[2], arr_down[2];
 	int i;
 	int font_height = gfxop_get_font_height(port->visual->gfx_state, font_nr);
