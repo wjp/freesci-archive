@@ -145,7 +145,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
     S->colors[i].b = 0;
   }
   if (bytespp == 1) 
-    SDL_SetColors(S->primary, S->colors, 0, 256);
+    XASS(SDL_SetColors(S->primary, S->colors, 0, 256));
 
   /* create an input event mask */
   SDL_EventState(SDL_ACTIVEEVENT, SDL_IGNORE);
@@ -208,6 +208,8 @@ static int
 sdl_init(struct _gfx_driver *drv)
 {
   int i = 0;
+
+  drv->debug_flags = 0xffffffff;
 
   if (SDL_Init(SDL_INIT_VIDEO)) {
     DEBUGB("Failed to init SDL");
@@ -411,7 +413,7 @@ sdl_draw_filled_rect(struct _gfx_driver *drv, rect_t rect,
     srect.w = rect.xl;
     srect.h = rect.yl;
       
-    XASS(SDL_FillRect(S->visual[1], &srect, color));
+    SDL_FillRect(S->visual[1], &srect, color);
   }
   
   if (color1.mask & GFX_MASK_PRIORITY)
@@ -432,7 +434,7 @@ sdl_register_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 
   pxm->internal.info = SDL_CreateRGBSurfaceFrom(pxm->data, pxm->xl, pxm->yl,
 						S->used_bytespp << 3,
-						(S->used_bytespp << 3)*pxm->xl,
+						S->used_bytespp * pxm->xl,
 						S->primary->format->Rmask, 
 						S->primary->format->Gmask,
 						S->primary->format->Bmask, 
@@ -527,6 +529,7 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 		gfx_map_mask_t map)
 {
 
+
   if (src.x < 0 || src.y < 0) {
     ERROR("Attempt to grab pixmap from invalid coordinates (%d,%d)\n", src.x, src.y);
     return GFX_ERROR;
@@ -539,9 +542,34 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 
   switch (map) {
     
-  case GFX_MASK_VISUAL:
-    ERROR("FIXME: visual mask map grab not implemented yet!\n");
-    break;
+  case GFX_MASK_VISUAL: {
+    SDL_Rect srect, drect;
+    SDL_Surface *temp;    
+
+    pxm->xl = src.xl;
+    pxm->yl = src.yl;
+    temp = SDL_CreateRGBSurface(SDL_SWSURFACE, src.x, src.y,
+				S->used_bytespp << 3,
+				S->primary->format->Rmask, 
+				S->primary->format->Gmask,
+				S->primary->format->Bmask, 
+				S->primary->format->Amask);
+    srect.x = src.x;
+    srect.y = src.y;
+    srect.w = src.xl;
+    srect.h = src.yl;
+    drect.x = 0;
+    drect.y = 0;
+    drect.w = src.xl;
+    drect.h = src.yl;
+
+    SDL_BlitSurface(S->visual[1], &srect, temp, &drect);
+    pxm->internal.info = temp;
+    pxm->internal.handle = SCI_XLIB_PIXMAP_HANDLE_GRABBED;
+    pxm->flags |= GFX_PIXMAP_FLAG_INSTALLED | GFX_PIXMAP_FLAG_EXTERNAL_PALETTE | GFX_PIXMAP_FLAG_PALETTE_SET;
+    free(pxm->data);
+    pxm->data = (byte *) temp->pixels;
+    break; }
     
   case GFX_MASK_PRIORITY:
     ERROR("FIXME: priority map grab not implemented yet!\n");
@@ -661,6 +689,7 @@ static int sdl_set_pointer (struct _gfx_driver *drv, gfx_pixmap_t *pointer)
       }
     SDL_FreeCursor(SDL_GetCursor());
     SDL_SetCursor(sdl_create_cursor_data(drv, pointer));
+    SDL_ShowCursor(SDL_ENABLE);
   }  
 
   return 0;
@@ -906,7 +935,7 @@ gfx_driver_sdl = {
 	NULL,
 	0, 0,
 	GFX_CAPABILITY_MOUSE_SUPPORT | GFX_CAPABILITY_MOUSE_POINTER |
-	GFX_CAPABILITY_PIXMAP_REGISTRY,
+	GFX_CAPABILITY_PIXMAP_REGISTRY | GFX_CAPABILITY_PIXMAP_GRABBING,
 	0/*GFX_DEBUG_POINTER | GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC*/,
 	sdl_set_parameter,
 	sdl_init_specific,
