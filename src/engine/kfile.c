@@ -26,6 +26,7 @@
 ***************************************************************************/
 
 #include <engine.h>
+#include <kernel_compat.h>
 
 #ifdef _WIN32
 #  ifndef PATH_MAX
@@ -379,8 +380,11 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, heap_ptr argp)
     char *input_s = s->heap + output;
     char *output_s = s->heap + output;
 
+#warning "Re-implement sanity checks upon 32 bit conversion (1)"
+#if 0
     SCIkASSERT(input >= HEAP_MIN);
     SCIkASSERT(output >= HEAP_MIN);
+#endif
 
     GetFullPathName (input_s, sizeof (dir_buffer)-1, dir_buffer, NULL);
     strncpy(output_s, dir_buffer, 2);
@@ -392,7 +396,10 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, heap_ptr argp)
     heap_ptr output = UPARAM(2);
     char *output_s = s->heap + output;
 
+#warning "Re-implement sanity checks upon 32 bit conversion (2)"
+#if 0
     SCIkASSERT(output >= HEAP_MIN);
+#endif
 
     _getcwd (dir_buffer, sizeof (dir_buffer)-1);
     strncpy(output_s, dir_buffer, 2);
@@ -406,8 +413,11 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, heap_ptr argp)
     char *path1_s = s->heap + path1;
     char *path2_s = s->heap + path2;
 
+#warning "Re-implement sanity checks upon 32 bit conversion (3)"
+#if 0
     SCIkASSERT(path1 >= HEAP_MIN);
     SCIkASSERT(path2 >= HEAP_MIN);
+#endif
 
     GetFullPathName (path1_s, sizeof (dir_buffer)-1, dir_buffer, NULL);
     GetFullPathName (path2_s, sizeof (dir_buffer2)-1, dir_buffer2, NULL);
@@ -451,7 +461,10 @@ kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, heap_ptr argp)
     heap_ptr output = UPARAM(2);
     char *output_s = (char *) s->heap + output;
 
+#warning "Re-implement sanity checks upon 32 bit conversion (4)"
+#if 0
     SCIkASSERT(output >= HEAP_MIN);
+#endif
 
     strcpy(output_s, "/");
   }
@@ -461,7 +474,10 @@ kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, heap_ptr argp)
     heap_ptr output = UPARAM(1);
     char *output_s = (char *) s->heap + output;
 
+#warning "Re-implement sanity checks upon 32 bit conversion (5)"
+#if 0
     SCIkASSERT(output >= HEAP_MIN);
+#endif
 
     strcpy(output_s, "/");
   }
@@ -473,8 +489,11 @@ kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, heap_ptr argp)
     char *path1_s = (char *) s->heap + path1;
     char *path2_s = (char *) s->heap + path2;
 
+#warning "Re-implement sanity checks upon 32 bit conversion (6)"
+#if 0
     SCIkASSERT(path1 >= HEAP_MIN);
     SCIkASSERT(path2 >= HEAP_MIN);
+#endif
 
 #ifndef HAVE_FNMATCH_H
 #ifndef _DOS

@@ -32,6 +32,7 @@
 #include <vocabulary.h>
 #include <versions.h>
 #include <seg_manager.h>
+#include <vm_types.h>
 
 #ifndef _SCI_VM_H
 #define _SCI_VM_H
@@ -103,31 +104,6 @@
 #define HUNK_TYPE_ANY 0
 #define HUNK_TYPE_GFXBUFFER 1 /* Graphical buffer */
 
-#define SCI_REG_SIZE 16;
-#define SCI_SEG_SIZE 16;
-
-typedef int seg_id_t; /* Segment ID type */
-
-struct _state; /* engine.h */
-
-typedef struct {
-	seg_id_t offset : SCI_REG_SIZE;
-	int segment: SCI_SEG_SIZE;
-} reg_t;
-
-typedef reg_t *stack_ptr_t; /* Stack pointer type */
-
-
-static inline reg_t
-make_reg(int offset, int segment)
-{
-	reg_t r;
-	r.offset = offset;
-	r.segment = segment;
-	return r;
-}
-
-
 typedef struct {
 	int script; /* number of the script the class is in */
 	heap_ptr *scriptposp; /* Pointer to the script position entry in the script list */
@@ -156,6 +132,7 @@ typedef struct {
 
 typedef struct {
 	char* buf; /* Static data buffer, or NULL if not used */
+	size_t buf_size;
 
 	heap_ptr heappos; /* Script position on the heap or 0 if not yet loaded */
 	heap_ptr export_table_offset; /* Abs. offset of the export table or 0 if not present */
@@ -180,77 +157,77 @@ typedef struct {
 } mem_obj_t;
 
 typedef struct {
-	int init; /* Init function */
-	int play; /* Play function (first function to be called) */
-	int replay; /* Replay function */
-	int x, y, z; /* Coordinates */
-	int priority;
-	int view, loop, cel; /* Description of a specific image */
-	int brLeft, brRight, brTop, brBottom; /* Bounding Rectangle */
-	int xStep, yStep; /* BR adjustments */
-	int nsLeft, nsRight, nsTop, nsBottom; /* View boundaries ('now seen') */
-	int text, font; /* Used by controls */
-	int type, state; /* Used by contols as well */
-	int doit; /* Called (!) by the Animate() system call */
-	int signal; /* Used by Animate() to control a view's behaviour */
-	int underBits; /* Used by the graphics subroutines to store backupped BG pic data */
+	selector_t init; /* Init function */
+	selector_t play; /* Play function (first function to be called) */
+	selector_t replay; /* Replay function */
+	selector_t x, y, z; /* Coordinates */
+	selector_t priority;
+	selector_t view, loop, cel; /* Description of a specific image */
+	selector_t brLeft, brRight, brTop, brBottom; /* Bounding Rectangle */
+	selector_t xStep, yStep; /* BR adjustments */
+	selector_t nsLeft, nsRight, nsTop, nsBottom; /* View boundaries ('now seen') */
+	selector_t text, font; /* Used by controls */
+	selector_t type, state; /* Used by contols as well */
+	selector_t doit; /* Called (!) by the Animate() system call */
+	selector_t signal; /* Used by Animate() to control a view's behaviour */
+	selector_t underBits; /* Used by the graphics subroutines to store backupped BG pic data */
 
 	/* The following selectors are used by the Bresenham syscalls: */
-	int canBeHere; /* Funcselector: Checks for movement validity */
-	int client; /* The object that wants to be moved */
-	int cycler; /* The cycler of the client */
-	int dx, dy; /* Deltas */
-	int edgeHit;
-	int b_movCnt, b_i1, b_i2, b_di, b_xAxis, b_incr; /* Various Bresenham vars */
-	int completed;
+	selector_t canBeHere; /* Funcselector: Checks for movement validity */
+	selector_t client; /* The object that wants to be moved */
+	selector_t cycler; /* The cycler of the client */
+	selector_t dx, dy; /* Deltas */
+	selector_t edgeHit;
+	selector_t b_movCnt, b_i1, b_i2, b_di, b_xAxis, b_incr; /* Various Bresenham vars */
+	selector_t completed;
 
-	int illegalBits; /* Used by CanBeHere */
-	int dispose;
+	selector_t illegalBits; /* Used by CanBeHere */
+	selector_t dispose;
 
-	int prevSignal; /* Used by DoSound */
+	selector_t prevSignal; /* Used by DoSound */
 
-	int message, modifiers; /* Used by GetEvent */
+	selector_t message, modifiers; /* Used by GetEvent */
 
-	int owner, handle;
-	int cue;
-	int number;
+	selector_t owner, handle;
+	selector_t cue;
+	selector_t number;
 
-	int max, cursor; /* Used by EditControl */
-	int mode; /* Used by text controls (-> DrawControl()) */
+	selector_t max, cursor; /* Used by EditControl */
+	selector_t mode; /* Used by text controls (-> DrawControl()) */
 
-	int wordFail, syntaxFail, semanticFail; /* Used by Parse() */
+	selector_t wordFail, syntaxFail, semanticFail; /* Used by Parse() */
 
-	int claimed; /* Used generally by the event mechanism */
+	selector_t claimed; /* Used generally by the event mechanism */
 
-	int elements; /* Used by SetSynonyms() */
+	selector_t elements; /* Used by SetSynonyms() */
 
-	int lsTop, lsBottom, lsRight, lsLeft; /* Used by Animate() subfunctions and scroll list controls */
+	selector_t lsTop, lsBottom, lsRight, lsLeft; /* Used by Animate() subfunctions and scroll list controls */
 
-	int baseSetter; /* Alternative baseSetter */
+	selector_t baseSetter; /* Alternative baseSetter */
 
-	int who, distance; /* Used for 'chasing' movers */
+	selector_t who, distance; /* Used for 'chasing' movers */
 
-	int looper, mover, isBlocked, heading; /* Used in DoAvoider */
+	selector_t looper, mover, isBlocked, heading; /* Used in DoAvoider */
 
-	int caller, moveDone; /* Used for DoBresen */
+	selector_t caller, moveDone; /* Used for DoBresen */
 
 #ifndef __cplusplus
 /* Compiling as C++ not really supported; let's hope you're only using this on an insignificant sub-part */
-	int delete; /* Called by Animate() to dispose a view object */
+	selector_t delete; /* Called by Animate() to dispose a view object */
 #else
 /* Same size */
-	int _0_;
+	selector_t _0_;
 #endif
 
-	int vol;
-	int pri;
+	selector_t vol;
+	selector_t pri;
 	
-	int min;	/* SMPTE time format */
-	int sec;
-	int frame;
+	selector_t min;	/* SMPTE time format */
+	selector_t sec;
+	selector_t frame;
 
-	int dataInc;
-	int size;
+	selector_t dataInc;
+	selector_t size;
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {
@@ -277,13 +254,17 @@ typedef struct {
 #define EXEC_STACK_TYPE_VARSELECTOR 2
 
 typedef struct {
-	heap_ptr objp;
-	heap_ptr sendp; /* Pointer to the object containing the invoked method */
-	heap_ptr pc; /* Not accurate for the TOS element */
+	reg_t objp;
+	reg_t sendp; /* Pointer to the object containing the invoked method */
+	reg_t pc; /* Not accurate for the TOS element */
+	stack_ptr_t fp; /* Frame pointer */
 	stack_ptr_t sp; /* Stack pointer */
 	int argc;
-	heap_ptr variables[4]; /* variable base pointers: Global, Local, Temp, Param */
-	int selector; /* The selector which was used to call or -1 if not applicable */
+
+	/* former variables[4]: [all other values are derived] */
+	stack_ptr_t variables_argp; /* Argument pointer */
+
+	selector_t selector; /* The selector which was used to call or -1 if not applicable */
 	int origin;   /* The stack frame position the call was made from, or -1 if it
 		      ** was the initial call.
 		      */
@@ -342,30 +323,31 @@ extern kernel_function* kfuncs[];
 extern int max_instance;
 
 /*inline*/ exec_stack_t *
-execute_method(struct _state *s, word script, word pubfunct, heap_ptr sp, heap_ptr calling_obj,
-	       word argc, heap_ptr argp);
+execute_method(struct _state *s, word script, word pubfunct, stack_ptr_t sp, reg_t calling_obj,
+	       word argc, stack_ptr_t argp);
 /* Executes function pubfunct of the specified script.
 ** Parameters: (state_t *) s: The state which is to be executed with
 **             (word) script: The script which is called
 **             (word) pubfunct: The exported script function which is to be called
-**             (heap_ptr) calling_obj: The heap address of the object which executed the call
+**             (stack_ptr_t) sp: Stack pointer position
+**             (reg_t) calling_obj: The heap address of the object which executed the call
 **             (word) argc: Number of arguments supplied
-**             (heap_ptr) argp: Pointer to the first supplied argument
+**             (stack_ptr_t) argp: Pointer to the first supplied argument
 ** Returns   : (exec_stack_t *): A pointer to the new exec stack TOS entry
 */
 
 
 exec_stack_t *
-send_selector(struct _state *s, heap_ptr send_obj, heap_ptr work_obj,
-	      heap_ptr sp, int framesize, word restmod, heap_ptr argp);
+send_selector(struct _state *s, reg_t send_obj, reg_t work_obj,
+	      stack_ptr_t sp, int framesize, word restmod, stack_ptr_t argp);
 /* Executes a "send" or related operation to a selector
 ** Parameters: (state_t *) s: The state_t to operate on
-**             (heap_ptr) send_obj: Heap address of the object to send to
-**             (heap_ptr) work_obj: Heap address of the object initiating the send
-**             (heap_ptr) sp: Stack pointer position
+**             (reg_t) send_obj: Heap address of the object to send to
+**             (reg_t) work_obj: Heap address of the object initiating the send
+**             (stack_ptr_t) sp: Stack pointer position
 **             (int) framesize: Size of the send as determined by the "send" operation
 **             (word) restmod: The &rest modifier, if set
-**             (heap_ptr) argp: Pointer to the beginning of the heap block containing the
+**             (stack_ptr_t) argp: Pointer to the beginning of the heap block containing the
 **                              data to be send. This area is a succession of one or more
 **                              sequences of [selector_number][argument_counter] and then
 **                              "argument_counter" word entries with the parameter values.
@@ -374,36 +356,35 @@ send_selector(struct _state *s, heap_ptr send_obj, heap_ptr work_obj,
 
 
 exec_stack_t *
-add_exec_stack_entry(struct _state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc,
-		     heap_ptr argp, int selector, heap_ptr sendp, int origin, int localvarp);
+add_exec_stack_entry(struct _state *s, reg_t pc, stack_ptr_t sp, reg_t objp, int argc,
+		     stack_ptr_t argp, selector_t selector, reg_t sendp, int origin);
 /* Adds an entry to the top of the execution stack
 ** Parameters: (state_t *) s: The state with which to execute
-**             (heap_ptr) pc: The initial program counter
-**             (heap_ptr) sp: The initial stack pointer
-**             (heap_ptr) objp: Pointer to the beginning of the current object
+**             (reg_t) pc: The initial program counter
+**             (stack_ptr_t) sp: The initial stack pointer
+**             (reg_t) objp: Pointer to the beginning of the current object
 **             (int) argc: Number of parameters to call with
-**             (heap_ptr) argp: Heap pointer to the first parameter
-**             (int) selector: The selector over which it was called or -1 if n.a. For debugging.
-**             (heap_ptr) sendp: Pointer to the object which the message was sent to.
-**                               Equal to objp for anything but super.
+**             (stack_ptr_t) argp: Heap pointer to the first parameter
+**             (selector_t) selector: The selector by which it was called or
+**			 NULL_SELECTOR if n.a. For debugging.
+**             (reg_t) sendp: Pointer to the object which the message was sent to.
+**                       Equal to objp for anything but super.
 **             (int) origin: Number of the execution stack element this entry was created by
-**                           (usually the current TOS number, except for multiple sends).
-**             (int) localvarp: Pointer to the local variable block, or 0 to use the object's
-**                              local var block
+**                       (usually the current TOS number, except for multiple sends).
 ** Returns   : (exec_stack_t *): A pointer to the new exec stack TOS entry
 */
 
 
 exec_stack_t *
-add_exec_stack_varselector(struct _state *s, heap_ptr objp, int argc, heap_ptr argp, int selector,
-			   heap_ptr address, int origin);
+add_exec_stack_varselector(struct _state *s, reg_t objp, int argc, stack_ptr_t argp,
+			   selector_t selector, reg_t *address, int origin);
 /* Adds one varselector access to the execution stack
 ** Parameters: (state_t *) s: The state_t to use
-**             (heap_ptr) objp: Pointer to the object owning the selector
+**             (reg_t) objp: Pointer to the object owning the selector
 **             (int) argc: 1 for writing, 0 for reading
-**             (heap_ptr) argp: Pointer to the address of the data to write -2
+**             (stack_ptr_t) argp: Pointer to the address of the data to write -2
 **             (int) selector: Selector name
-**             (heap_ptr) address: Heap address of the selector
+**             (reg_t *) address: Heap address of the selector
 **             (int) origin: Stack frame which the access originated from
 ** Returns   : (exec_stack_t *): Pointer to the new exec-TOS element
 ** This function is called from send_selector only.
@@ -430,15 +411,15 @@ vm_handle_fatal_error(struct _state *s, int line, char *file);
 
 
 void
-script_debug(struct _state *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp,
-	     int *restadjust, int bp);
+script_debug(struct _state *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *objp,
+	     unsigned int *restadjust, int bp);
 /* Debugger functionality
 ** Parameters: (state_t *) s: The state at which debugging should take place
-**             (heap_ptr *) pc: Pointer to the program counter
-**             (heap_ptr *) sp: Pointer to the stack pointer
-**             (heap_ptr *) pp: Pointer to the frame pointer
-**             (heap_ptr *) objp: Pointer to the object base pointer
-**             (int *) restadjust: Pointer to the &rest adjustment value
+**             (reg_t *) pc: Pointer to the program counter
+**             (stack_ptr_t *) sp: Pointer to the stack pointer
+**             (stack_ptr_t *) pp: Pointer to the frame pointer
+**             (reg_t *) objp: Pointer to the object base pointer
+**             (unsigned int *) restadjust: Pointer to the &rest adjustment value
 **             (int) bp: Flag, set to 1 when a breakpoint is triggered
 ** Returns   : (void)
 */

@@ -25,6 +25,7 @@
 
 ***************************************************************************/
 /* hooks for debug commands (mainly for the sci console) */
+/* Remember, it doesn't have to be fast. */
 
 #include <sci_memory.h>
 #include <engine.h>
@@ -36,27 +37,60 @@
 
 state_t *con_gamestate = NULL;
 
-typedef struct
-{
-	int (*command) ();
+typedef struct {
 	char *name;
-	char *param;
 	char *description;
-}
-cmd_command_t;
+} cmd_mm_entry_t; /* All later structures must "extend" this */
+
+typedef cmd_mm_entry_t cmd_page_t; /* Simple info page */
+
+typedef struct {
+	char *name;
+	char *description;
+	int (*command) ();
+	char *param;
+} cmd_command_t;
 
 typedef struct
 {
-	union
-	{
-		int *intp;
-		char **charpp;
-	}
-	var;
 	char *name;
 	char *description;
-}
-cmd_var_t;
+	union {
+		int *intp;
+		char **charpp;
+		reg_t *reg;
+	} var;
+} cmd_var_t;
+
+#warning "Clean up here!"
+
+typedef struct {
+	char *name;
+	void *data; /* cmd_mm_entry_t */
+	size_t size_per_entry;
+	int entries; /* Number of used entries */
+	int allocated;  /* Number of allocated entries */
+} cmd_mm_struct_t;
+
+#define CMD_MM_ENTRIES 3 /* command console memory and manual page manager */
+#define CMD_MM_DEFAULT_ALLOC 4 /* Number of table entries to allocate per default */
+
+#define CMD_MM_CMD 0 /* Commands */
+#define CMD_MM_VAR 1 /* Variables */
+#define CMD_MM_DOC 2 /* Misc. documentation */
+
+static char *cmd_mm_names[CMD_MM_ENTRIES] = {
+	"Commands",
+	"Variables",
+	"Documentation"
+};
+static size_t cmd_mm_sizes_per_entry[CMD_MM_ENTRIES] = {
+	sizeof(cmd_command_t),
+	sizeof(cmd_var_t),
+	sizeof(cmd_page_t)
+};
+
+static cmd_mm_struct_t cmd_mm[CMD_MM_ENTRIES];
 
 unsigned int _cmd_command_mem = 0;
 unsigned int _cmd_command_count = 0;
@@ -70,6 +104,7 @@ cmd_var_t *_cmd_vars = 0;
 int con_passthrough = 0;
 FILE *con_file = NULL;
 
+static int _cmd_initialized = 0;
 static int _lists_need_sorting = 0;
 
 unsigned int cmd_paramlength;
@@ -198,6 +233,11 @@ con_init_dmalloc ()
 void
 _cmd_exit (void)
 {
+	int t;
+
+	for (t = 0; t < CMD_MM_ENTRIES; t++)
+		free(cmd_mm[t].data);
+
 	if (_cmd_commands)
 		free (_cmd_commands);
 
@@ -231,7 +271,18 @@ con_sort_all (void)
 void
 con_init (void)
 {
-	if (!_cmd_command_mem) {
+	if (!_cmd_initialized) {
+		int i;
+
+		_cmd_initialized = 1;
+		for (i = 0; i < CMD_MM_ENTRIES; i++) {
+			cmd_mm[i].name = cmd_mm_names[i];
+			cmd_mm[i].size_per_entry = cmd_mm_sizes_per_entry[i];
+			cmd_mm[i].entries = 0;
+			cmd_mm[i].allocated = CMD_MM_DEFAULT_ALLOC;
+			cmd_mm[i].data = sci_calloc(cmd_mm[i].allocated, cmd_mm[i].size_per_entry);
+		}
+		
 		_cmd_commands =
 			sci_realloc(_cmd_commands, sizeof (cmd_command_t)
 				    * (_cmd_command_mem = 32));
@@ -424,6 +475,53 @@ con_parse (state_t * s, char *command)
 
 }
 
+static cmd_mm_entry_t *
+con_iterate_entry(int ID, int *counter)
+{
+	byte *retval;
+	con_init();
+
+	if (*counter >= cmd_mm[ID].entries)
+		return 0;
+	retval = cmd_mm[ID].data;
+	retval += (*counter) * cmd_mm[ID].size_per_entry;
+
+	(*counter)++;
+
+	return (cmd_mm_entry_t *) retval;
+}
+
+static cmd_mm_entry_t *
+con_alloc_page_entry(int ID)
+{
+	int entry;
+	con_init();
+
+	if (cmd_mm[ID].entries >= cmd_mm[ID].allocated) {
+		int nextsize = cmd_mm[ID].allocated;
+		if (nextsize >= 64)
+			nextsize += 16;
+		else
+			nextsize <<= 1;
+
+		cmd_mm[ID].data = sci_realloc(cmd_mm[ID].data,
+					      nextsize * cmd_mm[ID].size_per_entry);
+		cmd_mm[ID].allocated = nextsize;
+	}
+
+	entry = cmd_mm[ID].entries++;
+	return (cmd_mm_entry_t *) (((byte *)cmd_mm[ID].data)
+				   + entry * cmd_mm[ID].size_per_entry);
+}
+
+int
+con_hook_page(char *name, char *body)
+{
+	cmd_page_t *page = (cmd_page_t *) con_alloc_page_entry(CMD_MM_DOC);
+
+	page->name = name;
+	page->description = body;
+}
 
 int
 con_hook_command (int command (state_t *), char *name, char *param,

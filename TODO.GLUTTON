@@ -28,8 +28,17 @@ Dependancies: '.' means "dependancy has been resolved"
 [T] fix sound cues				.D	CR
 --- disable savegames					CR
 
+Relevant TODO:
+	* Remove script.000 hack in game.c 
 
 Later TODO:
+	* Allocate some sort of stack
+	* Fix selector reading/writing/invocation
+	* Re-implement kClone/kDisposeClone
+	* Re-enable list code, including kSort
+	* Re-implement 'delete' and 'doit' calls in kgraphics
+	* Re-enable hunk allocation/reference/deallocation
+	* Fix remaining migration warnings
 	* Re-enable save_game, restore_game, check_savegame
 	* Re-enable quick-restore code
 	* Re-enable save_game and restore_game debug console commands

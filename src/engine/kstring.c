@@ -29,6 +29,7 @@
 #include <sciresource.h>
 #include <engine.h>
 #include <vocabulary.h>
+#include <kernel_compat.h>
 
 #define CHECK_OVERFLOW1(pt, size) \
 	if (((pt) - ((char *)s->heap)) + (size) > 0xffff) { \
@@ -135,10 +136,13 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
     vocab_decypher_said_block(s, said_block);
   }
 
-  if (!(s->parser_event) || (GET_SELECTOR(s->parser_event, claimed))) {
+#warning "Re-enable selector access with better macros"
+#if 0
+  if (!IS_NULL_REG(s->parser_event) || (GET_SELECTOR(s->parser_event, claimed))) {
     s->acc = 0;
     return;
   }
+#endif
 
 #ifdef SCI_SIMPLE_SAID_CODE
 
@@ -169,8 +173,11 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     s->acc = 1;
 
+#warning "Re-enable selector write with new selector interface"
+#if 0
     if (new_lastmatch != SAID_PARTIAL_MATCH)
       PUT_SELECTOR(s->parser_event, claimed, 1);
+#endif
 
     s->parser_lastmatch_word = new_lastmatch;
 
@@ -255,8 +262,10 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
   char *error;
   result_word_t *words;
   heap_ptr event = UPARAM(1);
-
+#warning "Resolve reg_t setter via appropriate lookup"
+#if 0
   s->parser_event = event;
+#endif
   s->parser_lastmatch_word = SAID_NO_MATCH;
 
   if (s->parser_valid == 2) {
@@ -301,7 +310,10 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       s->acc = 1;
       PUT_SELECTOR(event, claimed, 1);
+#warning "Re-enable selector invocation"
+#if 0
       invoke_selector(INV_SEL(s->game_obj, syntaxFail, 0), 2, (int) s->parser_base, (int) stringpos);
+#endif
       /* Issue warning */
 
       SCIkdebug(SCIkPARSER, "Tree building failed\n");
@@ -321,11 +333,17 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
     PUT_SELECTOR(event, claimed, 1);
     if (error) {
 
+#warning "Fix usage of parser_base"
+#if 0
       strcpy((char *) s->heap + s->parser_base, error);
+#endif
       SCIkdebug(SCIkPARSER,"Word unknown: %s\n", error);
       /* Issue warning: */
 
+#warning "Re-enable selector invocation"
+#if 0
       invoke_selector(INV_SEL(s->game_obj, wordFail, 0), 2, (int) s->parser_base, (int) stringpos);
+#endif
       free(error);
       s->acc = 1; /* Tell them that it dind't work */
     }

@@ -35,6 +35,7 @@
 
 #include <sci_memory.h>
 #include <resource.h>
+#include <vm_types.h>
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -62,6 +63,7 @@ struct _state; /* state_t later on */
 typedef union {
 	long val;
 	char *str;
+	reg_t reg;
 } cmd_param_t;
 
 extern unsigned int cmd_paramlength;
@@ -126,11 +128,17 @@ con_hook_command(int command(struct _state *s), char *name, char *param, char *d
 **             'name' already being in use.
 ** A valid param string is either empty (no parameters allowed)
 ** or contains one of the following tokens:
-** i (an int)
-** s (a 'string' (char *))
-** h (a byte, described in hexadecimal digits)
-** x* (an arbitrary (possibly 0) number of 'x' tokens)
+**   ! Special token: state_t* must be set for this function to be called
+**   i (an int)
+**   s (a 'string' (char *))
+**   h (a byte, described in hexadecimal digits)
+**   a (a heap address, register or object name)
+**   x* (an arbitrary (possibly 0) number of 'x' tokens)
 ** The '*' token may only be used as the last token of the list.
+** Another way to specify optional parameters is by means of the
+** '-opt:t' notation, which allows an optional parameter of type 't'
+** to be specified as 'opt:<value>' when calling. See also the
+** con_hasopt() and con_getopt() calls.
 **
 ** Please note that the 'h' type does accept hexadecimal numbers greater
 ** than 0xff and less than 0x00, but clips them to this range.
@@ -142,6 +150,23 @@ con_hook_command(int command(struct _state *s), char *name, char *param, char *d
 ** the actual number of parameters is stored in cmd_paramlength.
 ** It is allowed to modify the char*s from a cmd_params[] element, as long
 ** as no element beyond strlen(cmd_params[x].str)+1 is accessed.
+*/
+
+cmd_param_t
+con_getopt(char *opt);
+/* Retreives the specified optional parameter
+** -- for use within console functions only --
+** Parameters: (char *) opt: The optional parameter to retreive
+** Returns   : (cmd_param_t) The corresponding parameter
+** Should only be used if con_hasopt() reports its presence.
+*/
+
+int
+con_hasopt(char *opt);
+/* Checks whether an optional parameter was specified
+** -- for use within console functions only --
+** Parameters: (char *) opt: The optional parameter to check for
+** Returns   : (int) non-zero iff the parameter was specified
 */
 
 int
@@ -161,6 +186,12 @@ con_insert_pixmap(gfx_pixmap_t *pixmap);
 ** If the pixmap could not be inserted, the called must destroy it
 */
 
+int
+con_hook_page(char *topic, char *body);
+/* Hooks a general information page to the manual page system
+** Parameters: (char *) topic: The topic name
+**             (char *) body: The text body to assign to the topic
+*/
 
 int
 con_hook_int(int *pointer, char *name, char *description);

@@ -30,13 +30,15 @@
 #include <console.h>
 #include <kdebug.h>
 #include <vocabulary.h>
+#include <kernel_compat.h>
 
 int _debugstate_valid = 0; /* Set to 1 while script_debug is running */
 int _debug_step_running = 0; /* Set to >0 to allow multiple stepping */
 int _debug_commands_not_hooked = 1; /* Commands not hooked to the console yet? */
 int _debug_seeking = 0; /* Stepping forward until some special condition is met */
 int _debug_seek_level = 0; /* Used for seekers that want to check their exec stack depth */
-int _debug_seek_special = 0; /* Used for special seeks */
+int _debug_seek_special = 0;  /* Used for special seeks(1) */
+reg_t _debug_seek_reg = NULL_REG_INITIALIZER;  /* Used for special seeks(2) */
 
 #define _DEBUG_SEEK_NOTHING 0
 #define _DEBUG_SEEK_CALLK 1 /* Step forward until callk is found */
@@ -44,11 +46,11 @@ int _debug_seek_special = 0; /* Used for special seeks */
 #define _DEBUG_SEEK_SPECIAL_CALLK 3 /* Step forward until a /special/ callk is found */
 #define _DEBUG_SEEK_SO 5 /* Step forward until specified PC (after the send command) and stack depth */
 
-heap_ptr *p_pc;
-heap_ptr *p_sp;
-heap_ptr *p_pp;
-heap_ptr *p_objp;
-int *p_restadjust;
+reg_t *p_pc;
+stack_ptr_t *p_sp;
+stack_ptr_t *p_pp;
+reg_t *p_objp;
+unsigned int *p_restadjust;
 
 int _kdebug_cheap_event_hack = 0;
 int _kdebug_cheap_soundcue_hack = -1;
@@ -79,12 +81,26 @@ char *(*_debug_get_input)(void) = _debug_get_input_default;
 int
 c_debuginfo(state_t *s)
 {
-  sciprintf("pc=%04x acc=%04x o=%04x fp=%04x sp=%04x\n", *p_pc & 0xffff, s->acc & 0xffff,
-	    *p_objp & 0xffff, *p_pp & 0xffff, *p_sp & 0xffff);
-  sciprintf("prev=%x sbase=%04x globls=%04x &restmod=%x\n",
-	    s->prev & 0xffff, s->stack_base & 0xffff, s->global_vars & 0xffff,
-	    *p_restadjust & 0xffff);
-  return 0;
+	exec_stack_t *eframe = NULL;
+
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+// pc o fp
+	sciprintf("acc="PREG"[%04x] prev="PREG" &rest=%x\n",
+		  PRINT_REG(s->r_acc), s->acc & 0xffff,
+		  PRINT_REG(s->r_prev), *p_restadjust);
+	if (eframe)
+		sciprintf("pc="PREG" obj="PREG" fp="PSTK" sp="PSTK"\n",
+			  PRINT_REG(eframe->pc),
+			  PRINT_REG(eframe->objp),
+			  PRINT_STK(eframe->sp),
+			  PRINT_STK(eframe->sp));
+	else
+		sciprintf("<no execution stack: pc,obj,fp omitted>\n");
+	return 0;
 }
 
 
@@ -97,7 +113,8 @@ c_step(state_t *s)
   return 0;
 }
 
-
+#warning "Re-implement con:so"
+#if 0
 int
 c_stepover(state_t *s)
 {
@@ -141,6 +158,7 @@ c_stepover(state_t *s)
 
   return 0;
 }
+#endif
 
 int
 c_heapdump(state_t *s)
@@ -590,19 +608,30 @@ c_restart_game(state_t *s)
 int
 c_stack(state_t *s)
 {
-  int i;
+	int i;
+	exec_stack_t *xs;
 
-  if (!s) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
+	if (!s) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
 
-  for (i = cmd_params[0].val ; i > 0; i--)
-    sciprintf("[sp-%04x] = %04x\n", i * 2, 0xffff & getInt16(s->heap + *p_sp - i*2));
+	if (s->execution_stack_pos >= 0)
+		xs = s->execution_stack + s->execution_stack_pos;
+	else {
+		sciprintf("No exec stack!");
+		return 1;
+	}
 
-  return 0;
+	for (i = cmd_params[0].val ; i > 0 && (xs->sp - xs->fp - i) >= 0; i--)
+		sciprintf("[SP:%04x] = "PREG"\n",
+			  xs->sp - xs->fp - i, PRINT_REG(xs->sp[-i]));
+
+	return 0;
 }
 
+#warning "Re-implement con:scriptinfo"
+#if 0
 int
 c_scriptinfo(state_t *s)
 {
@@ -622,6 +651,7 @@ c_scriptinfo(state_t *s)
 
   return 0;
 }
+#endif
 
 char *selector_name(state_t *s, int selector)
 {
@@ -693,11 +723,13 @@ print_objname(state_t *s, heap_ptr pos, int address)
 }
 
 heap_ptr
-disassemble(state_t *s, heap_ptr pos, int print_bw_tag, int print_bytecode)
+disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 /* Disassembles one command from the heap, returns address of next command or 0 if a ret was
 ** encountered.
 */
 {
+#warning "Re-implement disassemble()"
+#if 0
 	heap_ptr retval = pos + 1;
 	word param_value;
 	int opsize = s->heap[pos];
@@ -919,6 +951,7 @@ disassemble(state_t *s, heap_ptr pos, int print_bw_tag, int print_bytecode)
 	} /* (heappos == *p_pc) */
 
 	return retval;
+#endif
 }
 
 int
@@ -948,6 +981,8 @@ c_dumpnodes(state_t *s)
 static char *varnames[] = {"global", "local", "temp", "param"};
 static char *varabbrev = "gltp";
 
+#warning "Re-implement con:vmvarlist"
+#if 0
 int
 c_vmvarlist(state_t *s)
 {
@@ -957,7 +992,10 @@ c_vmvarlist(state_t *s)
 	sciprintf("%s vars at %04x\n", varnames[i], stack->variables[i]);
       return 0;
 }
+#endif
 
+#warning "Re-implement con:vmvars"
+#if 0
 int
 c_vmvars(state_t *s)
 {
@@ -989,6 +1027,10 @@ c_vmvars(state_t *s)
   }
   return 0;
 }
+#endif
+
+#warning "Re-implement con:backtrace"
+#if 0
 int
 c_backtrace(state_t *s)
 {
@@ -1054,6 +1096,7 @@ c_backtrace(state_t *s)
   }
   return 0;
 }
+#endif
 
 int
 c_redraw_screen(state_t *s)
@@ -1526,6 +1569,8 @@ c_gfx_update_zone(state_t *s)
 
 }
 
+#if 0
+#warning "Re-implement con:disasm"
 int
 c_disasm(state_t *s)
 {
@@ -1565,6 +1610,7 @@ c_disasm(state_t *s)
 	} while ((vpc > 0) && (vpc < 0xfff2) && (cmd_paramlength > 1) && (--op_count));
 	return 0;
 }
+#endif
 
 
 int
@@ -1933,15 +1979,7 @@ c_mem_info(state_t *s)
   heap_meminfo(s->_heap);
   sciprintf("Heap: Free:%04x  Max:%04x\n", heap_meminfo(s->_heap) & 0xffff, heap_largest(s->_heap) & 0xffff);
 
-  sciprintf("Hunk:\n");
-  for (i = 0; i < MAX_HUNK_BLOCKS; i++)
-    if (s->hunk[i].size) {
-      sciprintf("#%d: %d bytes\n", i, s->hunk[i].size);
-      ++cnt;
-      allocd += s->hunk[i].size;
-    }
-
-  sciprintf("Hunk handles: %d (%d bytes total)\n", cnt, allocd);
+#warning "Make mem_info a little more useful"
 
   return 0;
 }
@@ -2199,8 +2237,10 @@ viewobjinfo(state_t *s, heap_ptr pos)
 #undef GETRECT
 
 int
-objinfo(state_t *s, heap_ptr pos)
+objinfo(state_t *s, reg_t pos)
 {
+#warning "Fix objinfo()"
+#if 0
 	word type;
 	int is_view;
 
@@ -2275,7 +2315,7 @@ objinfo(state_t *s, heap_ptr pos)
 				if (value < 0x1000 || (value > 0xf000))
 					sciprintf("(%d)", svalue);
 				else {
-					heap_ptr stackend =
+					stack_ptr_t stackend =
 						s->execution_stack[s->execution_stack_pos].sp;
 
 					if (value > s->stack_base && value < stackend)
@@ -2318,27 +2358,28 @@ objinfo(state_t *s, heap_ptr pos)
 		viewobjinfo(s, pos);
 
 	return 0;
+#endif
 }
 
 int
 c_heapobj(state_t *s)
 {
-  return
-    objinfo(s, (heap_ptr)cmd_params[0].val);
+	return
+		objinfo(s, cmd_params[0].reg);
 }
 
 int
 c_obj(state_t *s)
 {
-  return
-    objinfo(s, *p_objp);
+	return
+		objinfo(s, *p_objp);
 }
 
 int
 c_accobj(state_t *s)
 {
-  return
-    objinfo(s, s->acc);
+	return
+		objinfo(s, s->r_acc);
 }
 
 /*** Breakpoint commands ***/
@@ -2531,8 +2572,8 @@ c_sci_version(state_t *s)
 }
 
 void
-script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp,
-	     int *restadjust, int bp)
+script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *objp,
+	     unsigned int *restadjust, int bp)
 {
 	int have_windowed = s->gfx_state->driver->capabilities & GFX_CAPABILITY_WINDOWED;
 	/* Do we support a separate console? */
@@ -2559,7 +2600,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 		p_pp = pp;
 		p_objp = objp;
 		p_restadjust = restadjust;
-		sciprintf("acc=%04x  ", s->acc & 0xffff);
+		sciprintf("acc="PREG"  ", PRINT_REG(s->r_acc));
 		_debugstate_valid = 1;
 		disassemble(s, *pc, 0, 1);
 
@@ -2570,8 +2611,9 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 	}
 
 	if (_debug_seeking && !bp) { /* Are we looking for something special? */
-		int op = s->heap[*pc] >> 1;
-		int paramb1 = s->heap[*pc + 1]; /* Careful with that ! */
+#warning "FIXME: Determine opcode correctly"
+		int op = 0/*s->heap[*pc] >> 1*/;
+		int paramb1 = 0/*s->heap[*pc + 1]*/; /* Careful with that ! */
 
 		switch (_debug_seeking) {
 
@@ -2590,7 +2632,9 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 		}
 
 		case _DEBUG_SEEK_SO:
-			if (*pc != _debug_seek_special || s->execution_stack_pos != _debug_seek_level) return;
+			if (!REG_EQ(*pc,_debug_seek_reg) ||
+			    s->execution_stack_pos != _debug_seek_level)
+				return;
 			break;
 
 		} /* switch(_debug_seeking) */
@@ -2618,15 +2662,26 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			_debug_commands_not_hooked = 0;
 
 			con_hook_command(c_debuginfo, "registers", "", "Displays all current register values");
+#warning "Re-enable con:vmvars hook"
+#if 0
 			con_hook_command(c_vmvars, "vmvars", "si*", "Displays or changes variables in the VM\n\nFirst parameter is either g(lobal), l(ocal), t(emp) or p(aram).\nSecond parameter is the var number\nThird parameter (if specified) is the value to set the variable to");
+#endif
 			con_hook_command(c_sci_version, "sci_version", "", "Prints the SCI version currently being emulated");
+#warning "Re-enable con:vmvarlist"
+#if 0
 			con_hook_command(c_vmvarlist, "vmvarlist", "", "Displays the addresses of variables in the VM");
+#endif
 			con_hook_command(c_step, "s", "i*", "Executes one or several operations\n\nEXAMPLES\n\n"
 					 "    s 4\n\n  Execute 4 commands\n\n    s\n\n  Execute next command");
+#warning "Re-enable con:so hook"
+#if 0
 			con_hook_command(c_stepover, "so", "", "Executes one operation skipping over sends");
+#endif
 			con_hook_command(c_heapdump, "heapdump", "ii", "Dumps data from the heap\n"
 					 "\nEXAMPLE\n\n    heapdump 0x1200 42\n\n  Dumps 42 bytes starting at heap address\n"
 					 "  0x1200");
+#warning "Re-enable con:disasm hook"
+#if 0
 			con_hook_command(c_disasm, "disasm", "is*", "Disassembles one or more commands\n\n"
 					 "USAGE\n\n  disasm [startaddr] <options>\n\n"
 					 "  Valid options are:\n"
@@ -2635,7 +2690,12 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 					 "  bc   : Print bytecode\n\n"
 					 "  If the start address is specified to be zero, the\n"
 					 "  current program counter is used instead.\n\n");
+#endif
+#warning "Re-enable con:scriptinfo hook"
+#if 0
 			con_hook_command(c_scriptinfo, "scripttable", "", "Displays information about all\n  loaded scripts");
+#endif
+#warning "Make con:heapobj expect an 'a' type argument"
 			con_hook_command(c_heapobj, "heapobj", "i", "Displays information about an\n  object or class on the\n"
 					 "specified heap address.\n\nSEE ALSO\n\n  obj, accobj");
 			con_hook_command(c_obj, "obj", "", "Displays information about the\n  currently active object/class.\n"
@@ -2644,7 +2704,10 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 					 "address indexed by acc.\n\nSEE ALSO\n\n  obj, heapobj");
 			con_hook_command(c_classtable, "classtable", "", "Lists all available classes");
 			con_hook_command(c_stack, "stack", "i", "Dumps the specified number of stack elements");
+#warning "Re-enable con:backtrace hook"
+#if 0
 			con_hook_command(c_backtrace, "bt", "", "Dumps the send/self/super/call/calle/callb stack");
+#endif
 			con_hook_command(c_snk, "snk", "s*", "Steps forward until it hits the next\n  callk operation.\n"
 					 "  If invoked with a parameter, it will\n  look for that specific callk.\n");
 			con_hook_command(c_se, "se", "", "Steps forward until an SCI event is received.\n");
@@ -2832,6 +2895,26 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_int(&script_step_counter, "script_step_counter", "# of executed SCI operations\n");
 			con_hook_int(&sci_debug_flags, "debug_flags", "Debug flags:\n  0x0001: Log each command executed\n"
 				     "  0x0002: Break on warnings\n");
+			con_hook_page("addresses",
+				      "Passing address parameters\n\n"
+				      "  Address parameters may be passed in one of\n"
+				      "  three forms:\n"
+				      "  - ssss:oooo -- where 'ssss' denotes a\n"
+				      "    segment and 'oooo' an offset. Example:\n"
+				      "    \"a:c5\" would address something in seg-\n"
+				      "    ment 0xa at offset 0xc5.\n"
+				      "  - $REG -- where 'REG' is one of 'PC', 'ACC',\n"
+				      "    'PREV' or 'OBJ': References the address\n"
+				      "    indicated by the register of this name.\n"
+				      "  - $REG+n (or -n) -- Like $REG, but modifies\n"
+				      "    the offset part by a specific amount (which\n"
+				      "    is specified in hexadecimal).\n"
+				      "  - ?obj -- Looks up an object with the specified\n"
+				      "    name, uses its address. This will abort if\n"
+				      "    the object name is ambiguous; in that case,\n"
+				      "    a list of addresses and indices is provided.\n"
+				      "    ?obj.idx may be used to disambiguate 'obj'\n"
+				      "    by the index 'idx'.\n");
 
 		} /* If commands were not hooked up */
 

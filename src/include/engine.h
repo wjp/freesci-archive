@@ -201,16 +201,17 @@ typedef struct _state
 	gint16 acc;  /* 16 bit compatibility accumulator for old kernel functions */
 
 	reg_t r_acc; /* Accumulator */
-	reg_t r_amp_rest; /* &rest register (only used for save games) */
+	unsigned int r_amp_rest; /* &rest register (only used for save games) */
 	reg_t r_prev; /* previous comparison result */
 
 	seg_id_t stack_segment; /* Heap area for the stack to use */
 	stack_ptr_t stack_base; /* Pointer to the least stack element */
 	stack_ptr_t stack_top; /* First invalid stack element */
-	stack_ptr_t stack; /* Pointer to the current stack location */
 
 	seg_id_t parser_segment;  /* A heap area used by the parser for error reporting */
+	reg_t parser_base; /* Base address for the parser error reporting mechanism */
 	reg_t parser_event; /* The event passed to Parse() and later used by Said() */
+	seg_id_t script_000_segment;
 	script_t *script_000;  /* script 000, e.g. for globals */
 
 	int parser_lastmatch_word; /* Position of the input word the parser last matched on, or SAID_NO_MATCH */
@@ -235,7 +236,7 @@ typedef struct _state
 	synonym_t *synonyms; /* The list of synonyms */
 	int synonyms_nr;
 
-	heap_ptr game_obj; /* Pointer to the game object */
+	reg_t game_obj; /* Pointer to the game object */
 
 	int classtable_size; /* Number of classes in the table- for debugging */
 	class_t *classtable; /* Table of all classes */

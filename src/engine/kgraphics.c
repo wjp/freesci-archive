@@ -30,6 +30,7 @@
 #include <gfx_widgets.h>
 #include <sci_graphics.h>
 #include <sci_widgets.h>
+#include <kernel_compat.h>
 
 #undef DEBUG_LSRECT
 
@@ -1684,9 +1685,12 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_dyn_view_t *widge
 				}
 
 				if (tempid) {
+#warning "Re-enable 'delete' call from kgraphics"
+#if 0
 					if (invoke_selector(INV_SEL(tempid, delete, 1), 0))
 						SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
 							 " a delete funcselector\n", tempid);
+#endif
 					if (_k_animate_ran) {
 						SCIkwarn(SCIkWARNING, "Object at %04x invoked kAnimate() during deletion!\n", tempid);
 						return dropped;
@@ -1850,7 +1854,10 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 			if (!(signal & _K_VIEW_SIG_FLAG_FROZEN)) {
 
 				SCIkdebug(SCIkGRAPHICS, "  invoking %04x::doit()\n", obj);
+#warning "Re-enable kgraphics 'doit' call"
+#if 0
 				invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
+#endif
 
 				if (s->pic_is_new) {
 					SCIkwarn(SCIkWARNING, "Warning: new pic"

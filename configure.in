@@ -4,7 +4,7 @@ AC_CONFIG_SRCDIR([acinclude.m4])
 
 AC_CANONICAL_TARGET([])
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(freesci, 0.3.3-devel)
+AM_INIT_AUTOMAKE(freesci, 0.6.0-glutton-devel)
 
 AC_PROG_CC
 #AC_LIBTOOL_DLOPEN

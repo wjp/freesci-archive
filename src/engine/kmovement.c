@@ -158,6 +158,8 @@ kInitBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+#warning "Fix DoBresen() selector invocations"
+#if 0
 	heap_ptr mover = PARAM(0);
 	heap_ptr client = GET_SELECTOR(mover, client);
 	heap_ptr caller = 0;
@@ -253,7 +255,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	if (SCI_VERSION_MAJOR(s->version)>0)
 	  if (completed) invoke_selector(INV_SEL(mover, moveDone, 0), 0);
-
+#endif
 }
 
 extern void
@@ -269,6 +271,8 @@ get_angle(int xrel, int yrel);
 void
 kDoAvoider(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+#warning "Fix DoAvoider() selector invocations"
+#if 0
 	heap_ptr avoider = UPARAM(0);
 	heap_ptr client, looper, mover;
 	int angle;
@@ -397,5 +401,6 @@ kDoAvoider(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		_k_dirloop(client, (word)angle, s, funct_nr, argc, argp);
 	}
+#endif
 }
 

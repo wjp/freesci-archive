@@ -30,6 +30,7 @@
 #ifdef _WIN32
 #	include <windows.h>
 #endif /* _WIN32 */
+#include <kernel_compat.h>
 
 #include <gfx_operations.h>
 
@@ -323,11 +324,12 @@ kernel_oops(state_t *s, char *file, int line, char *reason)
 	return 0;
 }
 
-
+#warning "Re-implement hunk space (1)!"
 /* Allocates a set amount of memory for a specified use and returns a handle to it. */
 int
 kalloc(state_t *s, int type, int space)
 {
+#if 0
 	int seeker = 0;
 
 	while ((seeker < MAX_HUNK_BLOCKS) && (s->hunk[seeker].size))
@@ -343,13 +345,16 @@ kalloc(state_t *s, int type, int space)
 	SCIkdebug(SCIkMEM, "Allocated %d at hunk %04x\n", space, seeker | (sci_memory << 11));
 
 	return (seeker | (sci_memory << 11));
+#endif
 }
 
 
+#warning "Re-implement hunk space (2)!"
 /* Returns a pointer to the memory indicated by the specified handle */
 byte *
 kmem(state_t *s, int handle)
 {
+#if 0
 	if ((handle >> 11) != sci_memory) {
 		SCIkwarn(SCIkERROR, "Error: kmem() without a handle (%04x)\n", handle);
 		return 0;
@@ -363,12 +368,15 @@ kmem(state_t *s, int handle)
 	}
 
 	return (byte *) s->hunk[handle & 0x7ff].data;
+#endif
 }
 
+#warning "Re-implement hunk space (3)!"
 /* Frees the specified handle. Returns 0 on success, 1 otherwise. */
 int
 kfree(state_t *s, int handle)
 {
+#if 0
 	if ((handle >> 11) != sci_memory) {
 		SCIkwarn(SCIkERROR, "Attempt to kfree() non-handle (%04x)\n", handle);
 		return 1;
@@ -393,6 +401,7 @@ kfree(state_t *s, int handle)
 	s->hunk[handle].size = 0;
 
 	return 0;
+#endif
 }
 
 

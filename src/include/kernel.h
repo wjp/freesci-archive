@@ -45,7 +45,7 @@
 #endif
 
 #ifndef PI
-#define PI 3.14159265358979323846
+#  define PI 3.14159265358979323846
 #endif /* !PI */
 
 extern int _kdebug_cheap_event_hack;
@@ -64,7 +64,7 @@ typedef struct {
 
 /******************** Selector functionality ********************/
 
-#define GET_SELECTOR(_object_, _selector_) read_selector(s, _object_, s->selector_map._selector_, __FILE__, \
+#define GET_SELECTOR(_object_, _selector_) read_selector16(s, _object_, s->selector_map._selector_, __FILE__, \
 							 __LINE__)
 /* Retrieves a selector from an object
 ** Parameters: (heap_ptr) object: The address of the object which the selector should be read from
@@ -74,9 +74,8 @@ typedef struct {
 ** selector_map_t and mapped in script.c.
 */
 
-
 #define UGET_SELECTOR(_object_, _selector_) \
- ((guint16) read_selector(s, _object_, s->selector_map._selector_, __FILE__, __LINE__))
+ ((guint16) read_selector16(s, _object_, s->selector_map._selector_, __FILE__, __LINE__))
 /* Retrieves an unsigned selector value from an object
 ** Parameters: (heap_ptr) object: The address of the object which the selector should be read from
 **             (selector_name) selector: The selector to read
@@ -87,7 +86,7 @@ typedef struct {
 
 
 #define PUT_SELECTOR(_object_, _selector_, _value_)\
- write_selector(s, _object_, s->selector_map._selector_, _value_, __FILE__, __LINE__)
+ write_selector16(s, _object_, s->selector_map._selector_, _value_, __FILE__, __LINE__)
 /* Writes a selector value to an object
 ** Parameters: (heap_ptr) object: The address of the object which the selector should be written to
 **             (selector_name) selector: The selector to read
@@ -107,12 +106,22 @@ typedef struct {
 
 /* functions used internally by macros */
 int
-read_selector(struct _state *s, heap_ptr object, int selector_id, char *fname, int line);
+read_selector16(struct _state *s,  heap_ptr object, selector_t selector_id, char *fname, int line);
 void
-write_selector(struct _state *s, heap_ptr object, int selector_id, int value, char *fname, int line);
+write_selector16(struct _state *s, heap_ptr object, selector_t selector_id, int value, char *fname, int line);
 int
-invoke_selector(struct _state *s, heap_ptr object, int selector_id, int noinvalid, int kfunct,
-		heap_ptr k_argp, int k_argc, char *fname, int line, int argc, ...);
+invoke_selector16(struct _state *s, heap_ptr object, int selector_id, int noinvalid, int kfunct,
+		stack_ptr_t k_argp, int k_argc, char *fname, int line, int argc, ...);
+
+
+int
+read_selector(struct _state *s,  reg_t object, selector_t selector_id, char *fname, int line);
+void
+write_selector(struct _state *s, reg_t object, selector_t selector_id, int value, char *fname, int line);
+int
+invoke_selector(struct _state *s, reg_t object, int selector_id, int noinvalid, int kfunct,
+		stack_ptr_t k_argp, int k_argc, char *fname, int line, int argc, ...);
+
 
 
 
@@ -488,6 +497,9 @@ void kAddAfter(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetNowSeen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDoAvoider(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kFileIO(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kSort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kAvoidPath(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kLock(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kMemory(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void k_Unknown(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 /* The Unknown/Unnamed kernel function */

@@ -25,6 +25,7 @@
 
 ***************************************************************************/
 
+
 /* Attempt to guess if recent version of Platform SDK */
 #ifdef _WIN32
 #	pragma message("******************** IMPORTANT MESSAGE ********************")
@@ -43,6 +44,7 @@
 #include <versions.h>
 #include <kernel.h>
 #include <kdebug.h>
+#include <kernel_compat.h>
 
 #if !defined (_WIN32) && !defined (__BEOS__)
 #include <sys/resource.h>
@@ -231,6 +233,7 @@ _free_graphics_input(state_t *s)
 }
 
 
+/* Maps a class ID to the script the corresponding class is contained in */
 /* Returns the script number suggested by vocab.996, or -1 if there's none */
 static int
 suggested_script(resource_t *res, unsigned int class)
@@ -264,6 +267,20 @@ script_init_engine(state_t *s, sci_version_t version)
 	
 	s->seg_manager.init = sm_init;
 	s->seg_manager.init (&s->seg_manager);
+
+#warning "Dirty script.000 initialization, fixme!"
+	s->script_000_segment = 42;
+	s->script_000 = calloc(sizeof(script_t), 1);
+	s->script_000->buf = scir_find_resource(s->resmgr, sci_script,
+						0, 1)->data; /* Lock script.000 */
+	s->script_000->buf_size = scir_find_resource(s->resmgr, sci_script,
+						     0, 0)->size;
+/* Remember to add check for script.000, although this should be implicit later on */
+#warning "Dirty stack initialization, fixme!"
+	s->stack_base = calloc(VM_STACK_SIZE, sizeof(reg_t));
+	s->stack_top = s->stack_base + VM_STACK_SIZE;
+
+/*-- end of warnings --*/
 
 
 	if (!version) {
@@ -364,13 +381,12 @@ script_init_engine(state_t *s, sci_version_t version)
 
 	save_ff(s->_heap); /* Save heap state */
 
-	s->acc = s->amp_rest = s->prev = 0;
+	s->r_acc = s->r_prev = NULL_REG;
+	s->r_amp_rest = 0;
 
 	s->execution_stack = NULL;    /* Start without any execution stack */
 	s->execution_stack_base = -1; /* No vm is running yet */
 	s->execution_stack_pos = -1;   /* Start at execution stack position 0 */
-
-	s->global_vars = 0; /* Set during launch time */
 
 
 	s->kernel_names = vocabulary_get_knames(s->resmgr, &s->kernel_names_nr);
@@ -428,17 +444,6 @@ script_free_vm_memory(state_t *s)
 	sci_free(s->save_dir_copy_buf);
 	s->save_dir_copy_buf = NULL;
 
-	for (i = 0; i < MAX_HUNK_BLOCKS; i++)
-		if (s->hunk[i].size) {
-			if (s->hunk[i].type == HUNK_TYPE_GFXBUFFER) {
-				gfxw_snapshot_t *snapshot = *((gfxw_snapshot_t **) s->hunk[i].data);
-				sci_free(snapshot);
-			}
-			sci_free(s->hunk[i].data);
-			s->hunk[i].size = 0;
-		}
-
-
 	heap_del(s->_heap);
 	s->_heap = NULL;
 	sci_free(s->classtable);
@@ -493,11 +498,13 @@ script_free_engine(state_t *s)
 int
 game_init(state_t *s)
 {
-	heap_ptr stack_handle;
+#warning "Fixme: Use new VM instantiation code all over the place"
 	heap_ptr parser_handle;
 	heap_ptr script0;
 	heap_ptr game_obj; /* Address of the game object */
 	int i;
+
+#warning "Allocate stack segment here"
 
 	if (!script_instantiate(s, 0, 0)) {
 		sciprintf("game_init(): Could not instantiate script 0\n");
@@ -505,35 +512,19 @@ game_init(state_t *s)
 	}
 
 	s->parser_valid = 0; /* Invalidate parser */
-	s->parser_event = 0; /* Invalidate parser event */
+	s->parser_event = NULL_REG; /* Invalidate parser event */
 
-	stack_handle = heap_allocate(s->_heap, VM_STACK_SIZE);
 	parser_handle = heap_allocate(s->_heap, PARSE_HEAP_SIZE);
-
-	script0 = s->scripttable[0].heappos; /* Get script 0 position */
-
-	if (!script0) {
-		sciprintf("Game initialization requested, but script.000 not loaded\n");
-		return 1;
-	}
 
 	s->synonyms = NULL;
 	s->synonyms_nr = 0; /* No synonyms */
 
-	/* Initialize hunk data */
-	for (i = 0; i < MAX_HUNK_BLOCKS; i++)
-		s->hunk[i].size = 0;
 	/* Initialize clone list */
 	memset(&(s->clone_list), 0, sizeof(heap_ptr) * SCRIPT_MAX_CLONES);
 	/* Initialize send_calls buffer */
 
 	if (!send_calls_allocated)
 		send_calls = sci_calloc(sizeof(calls_struct_t), send_calls_allocated = 16);
-
-	if (!stack_handle) {
-		sciprintf("game_init(): Insufficient heap space for stack\n");
-		return 1;
-	}
 
 	if (!parser_handle) {
 		sciprintf("game_init(): Insufficient heap space for parser word error block\n");
@@ -550,10 +541,10 @@ game_init(state_t *s)
 
 	fprintf(stderr," Script 0 at %04x\n", script0);
 
-	s->stack_base = stack_handle + 2;
+#warning "Initialize parser base to a segment of its own"
+#if 0
 	s->parser_base = parser_handle + 2;
-	s->global_vars = s->scripttable[0].localvar_offset;
-	/* Global variables are script 0's local variables */
+#endif
 
 	sci_get_current_time(&(s->game_start_time)); /* Get start time */
 	memcpy(&(s->last_wait_time), &(s->game_start_time), sizeof(GTimeVal));
@@ -564,7 +555,6 @@ game_init(state_t *s)
 
 	srand(time(NULL)); /* Initialize random number generator */
 
-	memset(s->hunk, sizeof(s->hunk), 0); /* Sets hunk to be unused */
 	memset(s->clone_list, sizeof(s->clone_list), 0); /* No clones */
 
 	/*	script_dissect(0, s->selector_names, s->selector_names_nr); */
@@ -589,8 +579,10 @@ game_init(state_t *s)
 		sciprintf(" Designation too long; was truncated to \"%s\"\n", s->game_name);
 	}
 
+#warning "Fixme: Init game_obj correctly!"
+#if 0
 	s->game_obj = game_obj;
-	s->stack_handle = stack_handle;
+#endif
 
 	/* Mark parse tree as unused */
 	s->parser_nodes[0].type = PARSE_TREE_NODE_LEAF;
@@ -622,11 +614,11 @@ game_exit(state_t *s)
 	** that won't survive a stack restauration.
 	*/
 	for (i = 1; i < 1000; i++)
-		if (s->scripttable[i].heappos > s->stack_handle)
+#warning "Check if the following line needs an equivalent in the new system "
+/*		if (s->scripttable[i].heappos > s->stack_handle) */
 			s->scripttable[i].heappos = 0;
 
-	heap_free(s->_heap, s->stack_handle);
-	heap_free(s->_heap, s->parser_base - 2);
+#warning "Free parser segment here"
 	restore_ff(s->_heap); /* Restore former heap state */
 
 	if (send_calls_allocated) {

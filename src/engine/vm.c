@@ -68,7 +68,8 @@ validate_stack_addr(state_t *s, stack_ptr_t sp)
 		return sp;
 
 	script_debug_flag = script_error_flag = 1;
-	sciprintf("Stack index %d out of valid range [%d..%d]\n", sp, 0, s->stack_size -1);
+	sciprintf("Stack index %d out of valid range [%d..%d]\n",
+		  sp, 0, s->stack_top - s->stack_base -1);
 	return 0;
 }
 
@@ -89,7 +90,7 @@ validate_variable(reg_t *r, int type, int max, int index, int line)
 	char *names[4] = {"global", "local", "temp", "param"};
 
 	if (index < 0 || index >= max) {
-		script-debug_flag = script_error_flag = 1;
+		script_debug_flag = script_error_flag = 1;
 		sciprintf("Attempt to read invalid %s variable %d ");
 		if (max == 0)
 			sciprintf("(variable type invalid)");
@@ -131,12 +132,13 @@ validate_write_var(reg_t *r, int type, int max, int index, int line, reg_t value
 
 #endif
 
-#define READ_VAR(type, index) validate_read_var(variables[type], type, variables_max[type], index, __LINE__);
-#define WRITE_VAR(type, index, value) validate_write_var(variables[type], type, variables_max[type], index, __LINE__, value);
+#define READ_VAR(type, index) validate_read_var(variables[type], type, variables_max[type], index, __LINE__)
+#define WRITE_VAR(type, index, value) validate_write_var(variables[type], type, variables_max[type], index, __LINE__, value)
+#define WRITE_VAR16(type, index, value) WRITE_VAR(type, index, make_reg(0, value));
 
-#define ACC_ARITHMETIC_L(op) make_reg(0, (op validate_arithmetic(s->r_acc)));
-#define ACC_AUX_LOAD() aux_acc = validate_arithmetic(s->r_acc);
-#define ACC_AUX_STORE() s->r_acc = make_reg(0, aux_acc);
+#define ACC_ARITHMETIC_L(op) make_reg(0, (op validate_arithmetic(s->r_acc)))
+#define ACC_AUX_LOAD() aux_acc = validate_arithmetic(s->r_acc)
+#define ACC_AUX_STORE() s->r_acc = make_reg(0, aux_acc)
 
 /*==--------------------------==*/
 
@@ -172,20 +174,6 @@ script_error(state_t *s, char *file, int line, char *reason)
   sciprintf("Script error in file %s, line %d: %s\n", file, line, reason);
   script_debug_flag = script_error_flag = 1;
   return 0;
-}
-
-
-static inline void
-putInt16(byte *addr, word value)
-{
-  if (NULL == addr)
-  {
-    sciprintf("vm.c: putInt16(): NULL passed for \"addr\"\n");
-    return;
-  }
-
-  addr[0] = value &0xff;
-  addr[1] = value >> 8;
 }
 
 inline heap_ptr
@@ -243,10 +231,11 @@ get_class_address(state_t *s, int classnr)
 
 
 /*inline*/ exec_stack_t *
-execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
-	       heap_ptr calling_obj, word argc, heap_ptr argp)
+execute_method(state_t *s, word script, word pubfunct, stack_ptr_t sp,
+	       reg_t calling_obj, word argc, stack_ptr_t argp)
 {
-
+#warning "Re-enable execute_method"
+#if 0
   heap_ptr tableaddress;
   heap_ptr scriptpos;
   int exports_nr;
@@ -300,21 +289,21 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
     magic_ofs=0;
 
   return
-//add_exec_stack_entry(struct _state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc,
-//		     heap_ptr argp, int selector, heap_ptr sendp, int origin, int localvarp);
     add_exec_stack_entry(s, (heap_ptr)(scriptpos + GET_HEAP(tableaddress + (pubfunct * 2)) - magic_ofs),
-		sp, calling_obj, (int)argc, argp, -1, calling_obj, s->execution_stack_pos,
-		s->scripttable[script].localvar_offset);
+		 sp, calling_obj, (int)argc, argp, -1, calling_obj, s->execution_stack_pos);
+#endif
 }
 
 
 
 exec_stack_t *
-send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
-	      heap_ptr sp, int framesize, word restmod, heap_ptr argp)
+send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
+	      stack_ptr_t sp, int framesize, word restmod, stack_ptr_t argp)
      /* send_obj and work_obj are equal for anything but 'super' */
      /* Returns a pointer to the TOS exec_stack element */
 {
+#warning "Re-enable send_selector()"
+#if 0
 	heap_ptr lookupresult;
 	int selector;
 	int argc;
@@ -491,9 +480,12 @@ else
 
 		else
 			retval =
-				add_exec_stack_entry(s, send_calls[send_calls_nr].address, send_calls[send_calls_nr].sp, work_obj,
-						     send_calls[send_calls_nr].argc, send_calls[send_calls_nr].argp,
-						     send_calls[send_calls_nr].selector, send_obj, origin, 0);
+				add_exec_stack_entry(s, send_calls[send_calls_nr].address,
+						     send_calls[send_calls_nr].sp, work_obj,
+						     send_calls[send_calls_nr].argc,
+						     send_calls[send_calls_nr].argp,
+						     send_calls[send_calls_nr].selector,
+						     send_obj, origin);
 
 	/* Now check the TOS to execute all varselector entries */
 	if (s->execution_stack_pos >= 0)
@@ -513,79 +505,61 @@ else
 
 	retval = s->execution_stack + s->execution_stack_pos;
 	return retval;
+#endif
 }
 
 
 exec_stack_t *
-add_exec_stack_varselector(state_t *s, heap_ptr objp, int argc, heap_ptr argp, int selector,
-			   heap_ptr address, int origin)
+add_exec_stack_varselector(state_t *s, reg_t objp, int argc, stack_ptr_t argp,
+			   selector_t selector, reg_t *address, int origin)
 {
-  exec_stack_t *xstack = add_exec_stack_entry(s, address, 0, objp, argc, argp, selector,
-					      objp, origin, 0);
-  /* Store selector address in pc */
+	exec_stack_t *xstack = add_exec_stack_entry(s, NULL_REG, address, objp, argc, argp,
+						    selector, objp, origin);
+	/* Store selector address in sp */
 
-  xstack->type = EXEC_STACK_TYPE_VARSELECTOR;
+	xstack->type = EXEC_STACK_TYPE_VARSELECTOR;
 
   return xstack;
 }
 
 
 exec_stack_t *
-add_exec_stack_entry(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp,
-		     int argc,
-		     heap_ptr argp, int selector, heap_ptr sendp,
-		     int origin, int localvarp)
+add_exec_stack_entry(state_t *s, reg_t pc, stack_ptr_t sp, reg_t objp, int argc,
+		     stack_ptr_t argp, selector_t selector, reg_t sendp, int origin)
 /* Returns new TOS element for the execution stack*/
 {
-  exec_stack_t *xstack = NULL;
+	exec_stack_t *xstack = NULL;
 
-  if (NULL == s)
-  {
-    sciprintf("vm.c: add_exec_stack_entry(): NULL passed for \"s\"\n");
-    return NULL;
-  }
+	if (!s->execution_stack)
+		s->execution_stack =
+			sci_malloc(sizeof(exec_stack_t) * (s->execution_stack_size = 16));
 
-  if (!s->execution_stack)
-    s->execution_stack = sci_malloc(sizeof(exec_stack_t) * (s->execution_stack_size = 16));
-
-  if (++(s->execution_stack_pos) == s->execution_stack_size) /* Out of stack space? */
-    s->execution_stack = sci_realloc(s->execution_stack,
-				   sizeof(exec_stack_t) * (s->execution_stack_size += 8));
+	if (++(s->execution_stack_pos) == s->execution_stack_size) /* Out of stack space? */
+		s->execution_stack = sci_realloc(s->execution_stack,
+				     sizeof(exec_stack_t) * (s->execution_stack_size += 8));
 
   /*  sciprintf("Exec stack: [%d/%d], origin %d, at %p\n", s->execution_stack_pos,
       s->execution_stack_size, origin, s->execution_stack); */
 
-  xstack = s->execution_stack + s->execution_stack_pos;
+	xstack = s->execution_stack + s->execution_stack_pos;
 
-  xstack->objp = objp;
-  xstack->sendp = sendp;
-  xstack->pc = pc;
-  xstack->sp = sp;
-  xstack->argc = argc;
+	xstack->objp = objp;
+	xstack->sendp = sendp;
+	xstack->pc = pc;
+	xstack->sp = sp;
+	xstack->argc = argc;
 
-  xstack->variables[VAR_GLOBAL] = s->global_vars; /* Global variables */
+	xstack->variables_argp = argp; /* Parameters */
 
-  if (localvarp) {
-    xstack->variables[VAR_LOCAL] = localvarp;
-  } else
-    if (objp) {
-      xstack->variables[VAR_LOCAL] = /* Local variables */
-	getUInt16(s->heap + objp + SCRIPT_LOCALVARPTR_OFFSET);
-    } else
-      xstack->variables[VAR_LOCAL] = 0; /* No object => no local variables */
+	*argp = make_reg(0, argc);  /* SCI code relies on the zeroeth argument to equal argc */
 
-  xstack->variables[VAR_TEMP] = sp; /* Temp variables */
-  xstack->variables[VAR_PARAM] = argp; /* Parameters */
+	/* Additional debug information */
+	xstack->selector = selector;
+	xstack->origin = origin;
 
-  PUT_HEAP(argp, argc); /* SCI code relies on the zeroeth argument to equal argc */
+	xstack->type = EXEC_STACK_TYPE_CALL; /* Normal call */
 
-  /* Additional debug information */
-  xstack->selector = selector;
-  xstack->origin = origin;
-
-  xstack->type = EXEC_STACK_TYPE_CALL; /* Normal call */
-
-  return xstack;
+	return xstack;
 }
 
 
@@ -618,15 +592,17 @@ run_vm(state_t *s, int restoring)
 #endif
 	int temp;
 	gint16 aux_acc; /* Auxiliary 16 bit accumulator */
+	reg_t r_temp; /* Temporary register */
 //	gint16 temp, temp2;
 //	guint16 utemp, utemp2;
-//	gint16 opparams[4]; /* opcode parameters */
-//
-//  int restadjust = s->amp_rest; /* &rest adjusts the parameter count by this value */
-//  /* Current execution data: */
+	gint16 opparams[4]; /* opcode parameters */
+
+	unsigned int restadjust = s->r_amp_rest; /* &rest adjusts the parameter count
+						 ** by this value  */
+	/* Current execution data: */
 	exec_stack_t *xs = s->execution_stack + s->execution_stack_pos;
 	exec_stack_t *xs_new; /* Used during some operations */
-	script_t *local_script = !!FIXME!!;
+	script_t *local_script = s->script_000;
 	int pc_offset;
 	byte *code_buf;
 
@@ -664,20 +640,27 @@ run_vm(state_t *s, int restoring)
 	/* Initialize maximum variable count */
 	variables_max[VAR_GLOBAL] = s->script_000->locals_nr;
 	variables_max[VAR_LOCAL] = local_script->locals_nr;
-	variables_max[VAR_TEMP] = 0;
+	variables_max[VAR_TEMP] = xs->sp - xs->fp;
 	variables_max[VAR_PARAM] = xs->argc + 1;
 #endif
 
 
 	/* SCI code reads the zeroeth argument to determine argc */
-	WRITE_VAR(VAR_PARAM, 0, xs->argc);
+	variables[VAR_GLOBAL] = s->script_000->locals;
+	variables[VAR_LOCAL] = local_script->locals;
+	variables[VAR_TEMP] = xs->fp;
+	variables[VAR_PARAM] = xs->variables_argp;
+
+	WRITE_VAR16(VAR_PARAM, 0, xs->argc);
 
 
 	while (1) {
-//    reg_t old_pc = xs->pc;
-//    stack_ptr_t old_sp = xs->sp;
-//    byte opcode, opnumber;
-//    int var_number; /* See description below */
+		byte opcode;
+		reg_t old_pc = xs->pc;
+		stack_ptr_t old_sp = xs->sp;
+		byte opnumber;
+		int var_type; /* See description below */
+		int var_number;
 //
 //    if (s->execution_stack_pos_changed) {
 //      xs = s->execution_stack + s->execution_stack_pos;
@@ -692,7 +675,7 @@ run_vm(state_t *s, int restoring)
 
 		/* Debug if this has been requested: */
 		if (script_debug_flag || sci_debug_flags) {
-			script_debug(s, &(xs->pc), &(xs->sp), &(xs->variables[VAR_TEMP]),
+			script_debug(s, &(xs->pc), &(xs->sp), &(xs->fp),
 				     &(xs->objp), &restadjust, bp_flag);
 			bp_flag = 0;
 		}
@@ -701,13 +684,13 @@ run_vm(state_t *s, int restoring)
 
 
 #ifndef DISABLE_VALIDATIONS
-		if (xs->sp < xs->variables[VAR_TEMP])
-			script_error(s, __FILE__, __LINE__, "Relative stack underflow");
+		if (xs->sp < xs->fp)
+			script_error(s, "[VM] "__FILE__, __LINE__, "Stack underflow");
 
-		variables_max[VAR_TEMP] = xs->stack xs->variables[VAR_TEMP];
+		variables_max[VAR_TEMP] = xs->sp - xs->fp;
 
 		if (pc_offset < 0 || pc_offset >= local_script->buf_size)
-			script_error(s, __FILE__, __LINE__, "Program Counter gone astray");
+			script_error(s, "[VM] "__FILE__, __LINE__, "Program Counter gone astray");
 #endif
 
 		opnumber = opcode >> 1;
@@ -748,19 +731,19 @@ run_vm(state_t *s, int restoring)
 		switch (opnumber) {
 
 		case 0x00: /* bnot */
-			s->acc = ACC_ARITHMETIC_L (0xffff ^ /*acc*/);
+			s->r_acc = ACC_ARITHMETIC_L (0xffff ^ /*acc*/);
 			break;
 
 		case 0x01: /* add */
-			s->acc = ACC_ARITHMETIC_L (POP() + /*acc*/)
+			s->r_acc = ACC_ARITHMETIC_L (POP() + /*acc*/);
 			break;
 
 		case 0x02: /* sub */
-			s->acc = ACC_ARITHMETIC_L (POP() - /*acc*/);
+			s->r_acc = ACC_ARITHMETIC_L (POP() - /*acc*/);
 			break;
 
 		case 0x03: /* mul */
-			s->acc = ACC_ARITHMETIC_L (POP() * /*acc*/);
+			s->r_acc = ACC_ARITHMETIC_L (POP() * /*acc*/);
 			break;
 
 		case 0x04: /* div */
@@ -776,101 +759,101 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x06: /* shr */
-			s->acc = ACC_ARITHMETIC_L(((guint16) POP()) >> /*acc*/);
+			s->r_acc = ACC_ARITHMETIC_L(((guint16) POP()) >> /*acc*/);
 			break;
 
 		case 0x07: /* shl */
-			s->acc = ACC_ARITHMETIC_L(((guint16) POP()) << /*acc*/);
+			s->r_acc = ACC_ARITHMETIC_L(((guint16) POP()) << /*acc*/);
 			break;
 
 		case 0x08: /* xor */
-			s->acc = ACC_ARITHMETIC_L(POP() ^ /*acc*/);
+			s->r_acc = ACC_ARITHMETIC_L(POP() ^ /*acc*/);
 			break;
 
 		case 0x09: /* and */
-			s->acc = ACC_ARITHMETIC_L(POP() & /*acc*/);
+			s->r_acc = ACC_ARITHMETIC_L(POP() & /*acc*/);
 			break;
 
 		case 0x0a: /* or */
-			s->acc = ACC_ARITHMETIC_L(POP() | /*acc*/);
+			s->r_acc = ACC_ARITHMETIC_L(POP() | /*acc*/);
 			break;
 
 		case 0x0b: /* neg */
-			s->acc = ACC_ARITHMETIC_L(-/*acc*/);
+			s->r_acc = ACC_ARITHMETIC_L(-/*acc*/);
 			break;
 
 		case 0x0c: /* not */
-			s->acc = ACC_ARITHMETIC_L(!/*acc*/);
+			s->r_acc = ACC_ARITHMETIC_L(!/*acc*/);
 			break;
 
 		case 0x0d: /* eq? */
-			s->prev = s->acc;
-			s->acc = ACC_ARITHMETIC_L(POP() == /*acc*/);
+			s->r_prev = s->r_acc;
+			s->r_acc = ACC_ARITHMETIC_L(POP() == /*acc*/);
 			break;
 
 		case 0x0e: /* ne? */
-			s->prev = s->acc;
-			s->acc = ACC_ARITHMETIC_L(POP() != /*acc*/);
+			s->r_prev = s->r_acc;
+			s->r_acc = ACC_ARITHMETIC_L(POP() != /*acc*/);
 			break;
 
 		case 0x0f: /* gt? */
-			s->prev = s->acc;
-			s->acc = ACC_ARITHMETHIC_L(POP() > /*acc*/);
+			s->r_prev = s->r_acc;
+			s->r_acc = ACC_ARITHMETIC_L(POP() > /*acc*/);
 			break;
 
 		case 0x10: /* ge? */
-			s->prev = s->acc;
-			s->acc = ACC_ARITHMETIC_L(POP() >= /*acc*/);
+			s->r_prev = s->r_acc;
+			s->r_acc = ACC_ARITHMETIC_L(POP() >= /*acc*/);
 			break;
 
 		case 0x11: /* lt? */
-			s->prev = s->acc;
-			s->acc = ACC_ARITHMETIC_L(POP() < /*acc*/);
+			s->r_prev = s->r_acc;
+			s->r_acc = ACC_ARITHMETIC_L(POP() < /*acc*/);
 			break;
 
 		case 0x12: /* le? */
-			s->prev = s->acc;
-			s->acc = ACC_ARITHMETIC_L(POP() <= /*acc*/);
+			s->r_prev = s->r_acc;
+			s->r_acc = ACC_ARITHMETIC_L(POP() <= /*acc*/);
 			break;
 
 		case 0x13: /* ugt? */
-			s->prev = s->acc;
-			s->acc = ACC_ARITHMETIC_L((guint16)(POP()) > (guint16)/*acc*/);
+			s->r_prev = s->r_acc;
+			s->r_acc = ACC_ARITHMETIC_L((guint16)(POP()) > (guint16)/*acc*/);
 			break;
 
 		case 0x14: /* uge? */
-			s->prev = s->acc;
-			s->acc = ACC_ARITHMETIC_L((guint16)(POP()) >= (guint16)/*acc*/);
+			s->r_prev = s->r_acc;
+			s->r_acc = ACC_ARITHMETIC_L((guint16)(POP()) >= (guint16)/*acc*/);
 			break;
 
 		case 0x15: /* ult? */
-			s->prev = s->acc;
-			s->acc = ACC_ARITHMETIC_L((guint16)(POP()) < (guint16)/*acc*/);
+			s->r_prev = s->r_acc;
+			s->r_acc = ACC_ARITHMETIC_L((guint16)(POP()) < (guint16)/*acc*/);
 			break;
 
 		case 0x16: /* ule? */
-			s->prev = s->acc;
-			s->acc = ACC_ARITHMETIC_L((guint16)(POP()) <= (guint16)/*acc*/);
+			s->r_prev = s->r_acc;
+			s->r_acc = ACC_ARITHMETIC_L((guint16)(POP()) <= (guint16)/*acc*/);
 			break;
 
 		case 0x17: /* bt */
-			if (s->acc.offset || s->acc.segment) pc_offset += opparams[0];
+			if (s->r_acc.offset || s->r_acc.segment) pc_offset += opparams[0];
 			break;
 
 		case 0x18: /* bnt */
-			if (!(s->acc.offset || s->acc.segment)) pc_offset += opparams[0];
+			if (!(s->r_acc.offset || s->r_acc.segment)) pc_offset += opparams[0];
 			break;
 
 		case 0x19: /* jmp */
-			xs->pc += opparams[0];
+			xs->pc.offset += opparams[0];
 			break;
 
 		case 0x1a: /* ldi */
-			s->acc = make_reg(0, opparams[0]);
+			s->r_acc = make_reg(0, opparams[0]);
 			break;
 
 		case 0x1b: /* push */
-			PUSH32(s->acc);
+			PUSH32(s->r_acc);
 			break;
 
 		case 0x1c: /* pushi */
@@ -894,44 +877,52 @@ run_vm(state_t *s, int restoring)
 				+ 1 + restadjust;
 			stack_ptr_t call_base = xs->sp - argc;
 
-			xs_new = add_exec_stack_entry(s, xs->pc + opparams[0], xs->sp, xs->objp,
-						      validate_arithmetic(*call_base) + restadjust,
-						      call_base, -1, xs->objp,
-						      s->execution_stack_pos, xs->variables[VAR_LOCAL]);
+			xs_new = add_exec_stack_entry(s, make_reg(xs->pc.segment,
+								  xs->pc.offset + opparams[0]),
+						      xs->sp, xs->objp,
+						      (validate_arithmetic(*call_base) >> 1)
+						      	+ restadjust,
+						      call_base, NULL_SELECTOR, xs->objp,
+						      s->execution_stack_pos);
 			restadjust = 0; /* Used up the &rest adjustment */
 
 			xs = xs_new;
 			break;
 		}
 
-//    case 0x21: /* callk */
-//    xs->sp -= opparams[1]+2;
-//    if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-//    {
-//      xs->sp -= restadjust * 2;
-//      s->amp_rest = 0; /* We just used up the restadjust, remember? */
-//    }
-//      if (opparams[0] >= s->kernel_names_nr) {
-//
-//	sciprintf("Invalid kernel function 0x%x requested\n", opparams[0]);
-//	script_debug_flag = script_error_flag = 1;
-//
-//      } else {
-//
-//	if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-//	    s->kfunct_table[opparams[0]](s, opparams[0], GET_HEAP(xs->sp) + restadjust, xs->sp + 2); /* Call kernel function */ else
-//	    s->kfunct_table[opparams[0]](s, opparams[0], GET_HEAP(xs->sp), xs->sp + 2); /* Call kernel function */
-//
-//	/* Calculate xs again: The kernel function might have spawned a new VM */
-//	xs = s->execution_stack + s->execution_stack_pos;
-//
-//	if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-//	  restadjust = s->amp_rest;
-//
-//      }
-//
-//      break;
-//
+		case 0x21: /* callk */
+#warning "Disabled VM operations: fixme"
+#if 0
+			xs->sp -= opparams[1]+2;
+    if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+    {
+      xs->sp -= restadjust * 2;
+      s->amp_rest = 0; /* We just used up the restadjust, remember? */
+    }
+      if (opparams[0] >= s->kernel_names_nr) {
+
+	sciprintf("Invalid kernel function 0x%x requested\n", opparams[0]);
+	script_debug_flag = script_error_flag = 1;
+
+      } else {
+
+	if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+	    s->kfunct_table[opparams[0]](s, opparams[0], GET_HEAP(xs->sp) + restadjust, xs->sp + 2); /* Call kernel function */ else
+	    s->kfunct_table[opparams[0]](s, opparams[0], GET_HEAP(xs->sp), xs->sp + 2); /* Call kernel function */
+
+	/* Calculate xs again: The kernel function might have spawned a new VM */
+	xs = s->execution_stack + s->execution_stack_pos;
+
+	if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+	  restadjust = s->amp_rest;
+
+      }
+#endif
+      fprintf(stderr, "Not implemented yet: callk\n");
+      exit(1);
+
+      break;
+
 //    case 0x22: /* callb */
 //      temp = xs->sp;
 //      xs->sp -= (opparams[1] + (restadjust * 2) + 2);
@@ -974,7 +965,10 @@ run_vm(state_t *s, int restoring)
 //	  /* varselector access? */
 //	  if (s->execution_stack[s->execution_stack_pos].argc) { /* write? */
 //	    word temp = GET_HEAP(s->execution_stack[s->execution_stack_pos].variables[VAR_PARAM] + 2);
-//	    PUT_HEAP(s->execution_stack[s->execution_stack_pos].pc, temp);
+#if 0
+      /* adjusted for GLUTTON usage */
+      *(s->execution_stack[s->execution_stack_pos].sp) = VALUE_TO_STORE;
+#endif
 //	  } else /* No, read */
 //	    s->acc = GET_HEAP(s->execution_stack[s->execution_stack_pos].pc);
 //	}
@@ -1063,15 +1057,15 @@ run_vm(state_t *s, int restoring)
 //	utemp2 += (s->acc << 1); /* Add accumulator offset if requested */
 //      s->acc = utemp2 + (opparams[1] << 1); /* Add index */
 //      break;
-//
-//    case 0x2e: /* selfID */
-//      s->acc = xs->objp;
-//      break;
-//
-//    case 0x30: /* pprev */
-//      PUSH(s->prev);
-//      break;
-//
+
+		case 0x2e: /* selfID */
+			s->r_acc = xs->objp;
+			break;
+
+		case 0x30: /* pprev */
+			PUSH32(s->r_prev);
+			break;
+
 //    case 0x31: /* pToa */
 //      s->acc = GET_HEAP(xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0]);
 //      break;
@@ -1136,214 +1130,224 @@ run_vm(state_t *s, int restoring)
 //      }
 //      break;
 //
-//    case 0x3b: /* push0 */
-//      PUSH(0);
-//      break;
-//
-//    case 0x3c: /* push1 */
-//      PUSH(1);
-//      break;
-//
-//    case 0x3d: /* push2 */
-//      PUSH(2);
-//      break;
-//
-//    case 0x3e: /* pushSelf */
-//      PUSH(xs->objp);
-//      break;
-//
-//    case 0x40: /* lag */
-//    case 0x41: /* lal */
-//    case 0x42: /* lat */
-//    case 0x43: /* lap */
-//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-//      utemp = xs->variables[var_number] + (opparams[0] << 1);
-//      s->acc = GET_HEAP(utemp);
-//      break;
-//
-//    case 0x44: /* lsg */
-//    case 0x45: /* lsl */
-//    case 0x46: /* lst */
-//    case 0x47: /* lsp */
-//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-//      utemp = xs->variables[var_number] + (opparams[0] << 1);
-//      PUSH(GET_HEAP(utemp));
-//      break;
-//
-//    case 0x48: /* lagi */
-//    case 0x49: /* lali */
-//    case 0x4a: /* lati */
-//    case 0x4b: /* lapi */
-//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-//      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-//      s->acc = GET_HEAP(utemp);
-//      break;
-//
-//    case 0x4c: /* lsgi */
-//    case 0x4d: /* lsli */
-//    case 0x4e: /* lsti */
-//    case 0x4f: /* lspi */
-//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-//      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-//      PUSH(GET_HEAP(utemp));
-//      break;
-//
-//    case 0x50: /* sag */
-//    case 0x51: /* sal */
-//    case 0x52: /* sat */
-//    case 0x53: /* sap */
-//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-//      utemp = xs->variables[var_number] + (opparams[0] << 1);
-//      PUT_HEAP(utemp, s->acc);
-//      break;
-//
-//    case 0x54: /* ssg */
-//    case 0x55: /* ssl */
-//    case 0x56: /* sst */
-//    case 0x57: /* ssp */
-//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-//      utemp = xs->variables[var_number] + (opparams[0] << 1);
-//      utemp2 = POP();
-//      PUT_HEAP(utemp, utemp2);
-//      break;
-//
-//    case 0x58: /* sagi */
-//    case 0x59: /* sali */
-//    case 0x5a: /* sati */
-//    case 0x5b: /* sapi */
-//      utemp2 = POP();
-//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-//      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-//      PUT_HEAP(utemp, utemp2);
-//      s->acc = utemp2;
-//      break;
-//
-//    case 0x5c: /* ssgi */
-//    case 0x5d: /* ssli */
-//    case 0x5e: /* ssti */
-//    case 0x5f: /* sspi */
-//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-//      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-//      utemp2 = POP();
-//      PUT_HEAP(utemp, utemp2);
-//      break;
-//
-//    case 0x60: /* +ag */
-//    case 0x61: /* +al */
-//    case 0x62: /* +at */
-//    case 0x63: /* +ap */
-//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-//      utemp = xs->variables[var_number] + (opparams[0] << 1);
-//      s->acc = GET_HEAP(utemp);
-//      ++(s->acc);
-//      PUT_HEAP(utemp, s->acc);
-//      break;
-//
-//    case 0x64: /* +sg */
-//    case 0x65: /* +sl */
-//    case 0x66: /* +st */
-//    case 0x67: /* +sp */
-//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-//      utemp = xs->variables[var_number] + (opparams[0] << 1);
-//      utemp2 = GET_HEAP(utemp);
-//      utemp2++;
-//      PUT_HEAP(utemp, utemp2);
-//      PUSH(utemp2);
-//      break;
-//
-//    case 0x68: /* +agi */
-//    case 0x69: /* +ali */
-//    case 0x6a: /* +ati */
-//    case 0x6b: /* +api */
-//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-//      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-//      s->acc = GET_HEAP(utemp);
-//      ++(s->acc);
-//      PUT_HEAP(utemp, s->acc);
-//      break;
-//
-//    case 0x6c: /* +sgi */
-//    case 0x6d: /* +sli */
-//    case 0x6e: /* +sti */
-//    case 0x6f: /* +spi */
-//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-//      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-//      utemp2 = GET_HEAP(utemp);
-//      utemp2++;
-//      PUT_HEAP(utemp, utemp2);
-//      PUSH(utemp2);
-//      break;
-//
-//    case 0x70: /* -ag */
-//    case 0x71: /* -al */
-//    case 0x72: /* -at */
-//    case 0x73: /* -ap */
-//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-//      utemp = xs->variables[var_number] + (opparams[0] << 1);
-//      s->acc = GET_HEAP(utemp);
-//      --(s->acc);
-//      PUT_HEAP(utemp, s->acc);
-//      break;
-//
-//    case 0x74: /* -sg */
-//    case 0x75: /* -sl */
-//    case 0x76: /* -st */
-//    case 0x77: /* -sp */
-//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-//      utemp = xs->variables[var_number] + (opparams[0] << 1);
-//      utemp2 = GET_HEAP(utemp);
-//      utemp2--;
-//      PUT_HEAP(utemp, utemp2);
-//      PUSH(utemp2);
-//      break;
-//
-//    case 0x78: /* -agi */
-//    case 0x79: /* -ali */
-//    case 0x7a: /* -ati */
-//    case 0x7b: /* -api */
-//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-//      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-//      s->acc = GET_HEAP(utemp);
-//      --(s->acc);
-//      PUT_HEAP(utemp, s->acc);
-//      break;
-//
-//    case 0x7c: /* -sgi */
-//    case 0x7d: /* -sli */
-//    case 0x7e: /* -sti */
-//    case 0x7f: /* -spi */
-//      var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-//      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-//      utemp2 = GET_HEAP(utemp);
-//      utemp2--;
-//      PUT_HEAP(utemp, utemp2);
-//      PUSH(utemp2);
-//      break;
-//
-//    default:
-//      script_error(s, __FILE__, __LINE__, "Illegal opcode");
-//
-//    } /* switch(opcode >> 1) */
+		case 0x3b: /* push0 */
+			PUSH(0);
+			break;
+
+		case 0x3c: /* push1 */
+			PUSH(1);
+			break;
+
+		case 0x3d: /* push2 */
+			PUSH(2);
+			break;
+
+		case 0x3e: /* pushSelf */
+			PUSH32(xs->objp);
+			break;
+
+		case 0x40: /* lag */
+		case 0x41: /* lal */
+		case 0x42: /* lat */
+		case 0x43: /* lap */
+			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
+			var_number = opparams[0];
+			s->r_acc = READ_VAR(var_type, var_number);
+			break;
+
+		case 0x44: /* lsg */
+		case 0x45: /* lsl */
+		case 0x46: /* lst */
+		case 0x47: /* lsp */
+			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
+			var_number = opparams[0];
+			PUSH32(READ_VAR(var_type, var_number));
+			break;
+
+		case 0x48: /* lagi */
+		case 0x49: /* lali */
+		case 0x4a: /* lati */
+		case 0x4b: /* lapi */
+			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
+			var_number = opparams[0] + validate_arithmetic(s->r_acc);
+			s->r_acc = READ_VAR(var_type, var_number);
+			break;
+
+		case 0x4c: /* lsgi */
+		case 0x4d: /* lsli */
+		case 0x4e: /* lsti */
+		case 0x4f: /* lspi */
+			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
+			var_number = opparams[0] + validate_arithmetic(s->r_acc);
+			PUSH32(READ_VAR(var_type, var_number));
+			break;
+
+		case 0x50: /* sag */
+		case 0x51: /* sal */
+		case 0x52: /* sat */
+		case 0x53: /* sap */
+			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
+			var_number = opparams[0];
+			WRITE_VAR(var_type, var_number, s->r_acc);
+			break;
+
+		case 0x54: /* ssg */
+		case 0x55: /* ssl */
+		case 0x56: /* sst */
+		case 0x57: /* ssp */
+			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
+			var_number = opparams[0];
+			WRITE_VAR(var_type, var_number, POP32());
+			break;
+
+		case 0x58: /* sagi */
+		case 0x59: /* sali */
+		case 0x5a: /* sati */
+		case 0x5b: /* sapi */
+			/* Special semantics because it wouldn't really make a whole lot
+			** of sense otherwise, with acc being used for two things
+			** simultaneously... */
+			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
+			var_number = opparams[0] + validate_arithmetic(s->r_acc);
+			WRITE_VAR(var_type, var_number, s->r_acc = POP32());
+			break;
+
+		case 0x5c: /* ssgi */
+		case 0x5d: /* ssli */
+		case 0x5e: /* ssti */
+		case 0x5f: /* sspi */
+			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
+			var_number = opparams[0] + validate_arithmetic(s->r_acc);
+			WRITE_VAR(var_type, var_number, POP32());
+			break;
+
+		case 0x60: /* +ag */
+		case 0x61: /* +al */
+		case 0x62: /* +at */
+		case 0x63: /* +ap */
+			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
+			var_number = opparams[0];
+			s->r_acc = make_reg(0,
+					    1 + validate_arithmetic(READ_VAR(var_type,
+									     var_number)));
+			WRITE_VAR(var_type, var_number, s->r_acc);
+			break;
+
+		case 0x64: /* +sg */
+		case 0x65: /* +sl */
+		case 0x66: /* +st */
+		case 0x67: /* +sp */
+			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
+			var_number = opparams[0];
+			r_temp = make_reg(0,
+					  1 + validate_arithmetic(READ_VAR(var_type,
+									   var_number)));
+			PUSH32(r_temp);
+			WRITE_VAR(var_type, var_number, r_temp);
+			break;
+
+		case 0x68: /* +agi */
+		case 0x69: /* +ali */
+		case 0x6a: /* +ati */
+		case 0x6b: /* +api */
+			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
+			var_number = opparams[0] + validate_arithmetic(s->r_acc);
+			s->r_acc = make_reg(0,
+					    1 + validate_arithmetic(READ_VAR(var_type,
+									     var_number)));
+			WRITE_VAR(var_type, var_number, s->r_acc);
+			break;
+
+		case 0x6c: /* +sgi */
+		case 0x6d: /* +sli */
+		case 0x6e: /* +sti */
+		case 0x6f: /* +spi */
+			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
+			var_number = opparams[0] + validate_arithmetic(s->r_acc);
+			r_temp = make_reg(0,
+					  1 + validate_arithmetic(READ_VAR(var_type,
+									   var_number)));
+			PUSH32(r_temp);
+			WRITE_VAR(var_type, var_number, r_temp);
+			break;
+
+		case 0x70: /* -ag */
+		case 0x71: /* -al */
+		case 0x72: /* -at */
+		case 0x73: /* -ap */
+			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
+			var_number = opparams[0];
+			s->r_acc = make_reg(0,
+					    -1 + validate_arithmetic(READ_VAR(var_type,
+									     var_number)));
+			WRITE_VAR(var_type, var_number, s->r_acc);
+			break;
+
+		case 0x74: /* -sg */
+		case 0x75: /* -sl */
+		case 0x76: /* -st */
+		case 0x77: /* -sp */
+			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
+			var_number = opparams[0];
+			r_temp = make_reg(0,
+					  -1 + validate_arithmetic(READ_VAR(var_type,
+									   var_number)));
+			PUSH32(r_temp);
+			WRITE_VAR(var_type, var_number, r_temp);
+			break;
+
+		case 0x78: /* -agi */
+		case 0x79: /* -ali */
+		case 0x7a: /* -ati */
+		case 0x7b: /* -api */
+			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
+			var_number = opparams[0] + validate_arithmetic(s->r_acc);
+			s->r_acc = make_reg(0,
+					    -1 + validate_arithmetic(READ_VAR(var_type,
+									     var_number)));
+			WRITE_VAR(var_type, var_number, s->r_acc);
+			break;
+
+		case 0x7c: /* -sgi */
+		case 0x7d: /* -sli */
+		case 0x7e: /* -sti */
+		case 0x7f: /* -spi */
+			var_type = (opcode >> 1) & 0x3; /* Gets the variable type: g, l, t or p */
+			var_number = opparams[0] + validate_arithmetic(s->r_acc);
+			r_temp = make_reg(0,
+					  -1 + validate_arithmetic(READ_VAR(var_type,
+									   var_number)));
+			PUSH32(r_temp);
+			WRITE_VAR(var_type, var_number, r_temp);
+			break;
+
+		default:
+			script_error(s, __FILE__, __LINE__, "Illegal opcode");
+
+		} /* switch(opcode >> 1) */
+
+#warning "Exec stack assertion: fixme"
 //
 //    if (xs != s->execution_stack + s->execution_stack_pos) {
 //      sciprintf("Error: xs is stale; last command was %02x\n", opnumber);
 //    }
 //
-//    if (script_error_flag) {
-//      _debug_step_running = 0; /* Stop multiple execution */
-//      _debug_seeking = 0; /* Stop special seeks */
-//      xs->pc = old_pc;
-//      xs->sp = old_sp;
-//    }
-//    else script_step_counter++;
-//
-//  }
+		if (script_error_flag) {
+			_debug_step_running = 0; /* Stop multiple execution */
+			_debug_seeking = 0; /* Stop special seeks */
+			xs->pc = old_pc;
+			xs->sp = old_sp;
+		} else
+			++script_step_counter;
+	}
 }
 
 
 int
 _lookup_selector_functions(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address, heap_ptr speciespos)
 {
+#warning "Re-implement selector lookup"
+#if 0
 	int superclass; /* Possibly required for recursion */
 	word superclasspos;
 	int methodselectors = obj + GET_HEAP(obj + SCRIPT_FUNCTAREAPTR_OFFSET)
@@ -1376,12 +1380,15 @@ _lookup_selector_functions(state_t *s, heap_ptr obj, int selectorid, heap_ptr *a
 
 	return
 		_lookup_selector_functions(s, superclasspos, selectorid, address, 0); /* Recurse to superclass */
+#endif
 }
 
 
 int
 lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
 {
+#warning "Re-implement selector lookup"
+#if 0
 	int species = OBJ_SPECIES(obj);
 	int heappos = CLASS_ADDRESS(species);
 	int varselector_nr = GET_HEAP(heappos + SCRIPT_SELECTORCTR_OFFSET);
@@ -1403,6 +1410,7 @@ lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
 	return
 		_lookup_selector_functions(s, obj, selectorid, address, (heap_ptr)speciespos);
 	/* Call recursive function selector seeker */
+#endif
 }
 
 
@@ -1429,6 +1437,8 @@ void script_detect_early_versions(state_t *s)
 heap_ptr
 script_instantiate(state_t *s, int script_nr, int recursive)
 {
+#warning "Fix script instantiation"
+#if 0
 	resource_t *script = scir_find_resource(s->resmgr, sci_script, script_nr, 0);
 	heap_ptr pos;
 	int objtype;
@@ -1621,13 +1631,15 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 
 	/*    if (script_nr == 0)   sci_hexdump(s->heap + script_basepos +2, script->size-2, script_basepos);*/
 	return s->scripttable[script_nr].heappos;
-
+#endif
 }
 
 
 void
 script_uninstantiate(state_t *s, int script_nr)
 {
+#warning "Fix script uninstantiation"
+#if 0
 	heap_ptr handle = s->scripttable[script_nr].heappos;
 #if 0
 	heap_ptr pos;
@@ -1709,8 +1721,16 @@ script_uninstantiate(state_t *s, int script_nr)
 		sciprintf("Unloaded script 0x%x.\n", script_nr);
 
 	return;
+#endif
 }
 
+
+static void
+_init_stack_base_with_selector(state_t *s, selector_t selector)
+{
+	s->stack_base[0] = make_reg(0, (word) selector);
+	s->stack_base[1] = NULL_REG;
+}
 
 static state_t *
 _game_run(state_t *s, int restoring)
@@ -1729,13 +1749,15 @@ _game_run(state_t *s, int restoring)
 
 			game_exit(s);
 			game_init(s);
-			putInt16(s->heap + s->stack_base, (word)s->selector_map.play); /* Call the play selector */
+			_init_stack_base_with_selector(s, s->selector_map.play);
+			/* Call the play selector */
 
-			putInt16(s->heap + s->stack_base + 2, 0);
-			send_selector(s, s->game_obj, s->game_obj, (heap_ptr) (s->stack_base + 2), 4, 0, s->stack_base);
+			send_selector(s, s->game_obj, s->game_obj,
+				      s->stack_base, 2, 0, s->stack_base);
 
 			script_abort_flag = 0;
-			s->restarting_flags = SCI_GAME_WAS_RESTARTED | SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE;
+			s->restarting_flags = SCI_GAME_WAS_RESTARTED |
+				SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE;
 
 		}
 		else {
@@ -1747,14 +1769,19 @@ _game_run(state_t *s, int restoring)
 				s = successor;
 
 				if (!send_calls_allocated)
-					send_calls = sci_calloc(sizeof(calls_struct_t), send_calls_allocated = 16);
+					send_calls = sci_calloc(sizeof(calls_struct_t),
+								send_calls_allocated = 16);
 
 				if (script_abort_flag == SCRIPT_ABORT_WITH_REPLAY) {
 					sciprintf("Restarting with replay()\n");
 					s->execution_stack_pos = -1; /* Resatart with replay */
-					putInt16(s->heap + s->stack_base, (word)s->selector_map.replay); /* Call the replay selector */
-					putInt16(s->heap + s->stack_base + 2, 0);
-					send_selector(s, s->game_obj, s->game_obj, (heap_ptr) (s->stack_base + 2), 4, 0, s->stack_base);
+					
+					_init_stack_base_with_selector(s, s->selector_map.replay);
+					/* Call the replay selector */
+
+					send_selector(s, s->game_obj, s->game_obj,
+						      s->stack_base, 2,
+						      0, s->stack_base);
 				}
 
 				script_abort_flag = 0;
@@ -1774,11 +1801,13 @@ game_run(state_t **_s)
 	state_t *s = *_s;
 
 	sciprintf(" Calling %s::play()\n", s->game_name);
-	putInt16(s->heap + s->stack_base, (word)s->selector_map.play); /* Call the play selector... */
-	putInt16(s->heap + s->stack_base + 2, 0);                    /* ... with 0 arguments. */
+	_init_stack_base_with_selector(s, s->selector_map.play); /* Call the play selector */
+	
 
 	/* Now: Register the first element on the execution stack- */
-	if (!send_selector(s, s->game_obj, s->game_obj, (heap_ptr) (s->stack_base + 2), 4, 0, s->stack_base) || script_error_flag) {
+	if (!send_selector(s, s->game_obj, s->game_obj,
+			   s->stack_base, 2, 0,
+			   s->stack_base) || script_error_flag) {
 		sciprintf("Failed to run the game! Aborting...\n");
 		return 1;
 	}

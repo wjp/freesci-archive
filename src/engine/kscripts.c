@@ -27,22 +27,41 @@
 
 #include <sciresource.h>
 #include <engine.h>
+#include <kernel_compat.h>
 
 int
-read_selector(state_t *s, heap_ptr object, int selector_id, char *file, int line)
+read_selector16(state_t *s, heap_ptr object, selector_t selector_id, char *file, int line)
 {
+#warning "Implement 16 bit selector reading"
+}
+
+int
+read_selector(state_t *s, reg_t object, selector_t selector_id, char *file, int line)
+{
+#warning "Re-enable selector reading"
+#if 0
   heap_ptr address;
 
   if (lookup_selector(s, object, selector_id, &address) != SELECTOR_VARIABLE)
     return 0;
   else
     return GET_HEAP(address);
+#endif
 }
 
 
 void
-write_selector(state_t *s, heap_ptr object, int selector_id, int value, char *fname, int line)
+write_selector16(state_t *s, heap_ptr object, selector_t selector_id,
+		 int value, char *fname, int line)
 {
+#warning "Implement 16 bit selector writing"
+}
+
+void
+write_selector(state_t *s, reg_t object, selector_t selector_id, int value, char *fname, int line)
+{
+#warning "Re-enable selector writing"
+#if 0
   heap_ptr address;
 
   if ((selector_id < 0) || (selector_id > s->selector_names_nr)) {
@@ -58,13 +77,16 @@ write_selector(state_t *s, heap_ptr object, int selector_id, int value, char *fn
     PUT_HEAP(address, value);
 
   /*  sciprintf("Selector '%s' is at %04x\n", s->selector_names[selector_id], address); */
+#endif
 }
 
 int
-invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int kfunct,
-		heap_ptr k_argp, int k_argc, /* Kernel function argp/argc */
+invoke_selector(state_t *s, reg_t object, int selector_id, int noinvalid, int kfunct,
+		stack_ptr_t k_argp, int k_argc, /* Kernel function argp/argc */
 		char *fname, int line, int argc, ...)
 {
+#warning "Re-enable selector invocation"
+#if 0
   va_list argp;
   int i;
   int framesize = 4 + 2 * argc;
@@ -107,6 +129,7 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int
   --(s->execution_stack_pos); /* Get rid of the extra stack entry */
 
   return 0;
+#endif
 }
 
 
@@ -176,6 +199,8 @@ kUnLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+#warning "Re-implement kClone()"
+#if 0
   heap_ptr old_offs = UPARAM(0);
   heap_ptr new_offs;
   heap_ptr functareaptr;
@@ -240,12 +265,15 @@ kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     write_selector(s, new_offs, selector, value, __FILE__, __LINE__);
   }
+#endif
 }
 
 
 void
 kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+#warning "Re-implement kDisposeClone()"
+#if 0
 	heap_ptr offset = PARAM(0);
 	int i;
 	word underBits;
@@ -283,6 +311,7 @@ kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	offset += SCRIPT_OBJECT_MAGIC_OFFSET; /* Step back to beginning of object */
 
 	heap_free(s->_heap, offset -2); /* -2 to step back on the heap block size indicator */
+#endif
 }
 
 

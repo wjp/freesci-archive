@@ -26,6 +26,7 @@
 ***************************************************************************/
 
 #include <engine.h>
+#include <kernel_compat.h>
 
 
 int
@@ -293,6 +294,8 @@ kAddAfter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	heap_ptr firstnode = UPARAM(1);
 	heap_ptr newnode = UPARAM(2);
 
+#warning "Fix list code (1)!"
+#if 0
 
 	if (!sane_listp(s, list))
 		SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
@@ -324,12 +327,15 @@ kAddAfter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		else
 			PUT_HEAP(nextnode + LIST_PREVIOUS_NODE, newnode);
 	}
+#endif
 }
 
 
+#warning "Fix list code (2)!"
 void
 kLastNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+#if 0
 	heap_ptr list = UPARAM(0);
 
 	if (!sane_listp(s, list))
@@ -339,6 +345,7 @@ kLastNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		s->acc = UGET_HEAP(UPARAM(0) + LIST_LAST_NODE);
 	else
 		s->acc = 0;
+#endif
 }
 
 
@@ -416,6 +423,8 @@ typedef struct
 void
 kSort(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+#warning "Fix kSort()"
+#if 0
 	heap_ptr source = UPARAM(0);
 	heap_ptr dest = UPARAM(1);
 	heap_ptr order_func = UPARAM(2);
@@ -460,5 +469,5 @@ kSort(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				   temparray[i].value);
 		_k_add_to_end(s, output_data, node);
 	}
-
+#endif
 }

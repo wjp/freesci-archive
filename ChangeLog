@@ -1,3 +1,13 @@
+2002-10-25  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/vm_types.h: Added separate header for types used
+	within the VM
+	* src/include/kernel_compat.h: Added compatibility header for old
+	kernel macros
+	* src/engine/*.c: Millions of type changes all over the place, plus
+	changes to accomodate for upcoming VM changes (and VM improvements
+	wrt the new design)
+
 2002-10-19  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kpathing.c: New file.

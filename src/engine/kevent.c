@@ -122,7 +122,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	oldy=s->gfx_state->pointer_pos.y;
 	e = gfxop_get_event(s->gfx_state, mask);
 
-	s->parser_event = 0; /* Invalidate parser event */
+	s->parser_event = NULL_REG; /* Invalidate parser event */
 
 	PUT_SELECTOR(obj, x, s->gfx_state->pointer_pos.x);
 	PUT_SELECTOR(obj, y, s->gfx_state->pointer_pos.y);
