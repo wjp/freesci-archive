@@ -1,3 +1,10 @@
+2000-12-29  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/gfx/resource/sci_pic_0.c (_gfxr_fill): Fixed another SQ3 intro 
+	  bug
+	* src/engine/kernel.c (kGetTime): Added new GetTime() semantics.
+	  Docs coming RSN.
+	
 2000-12-29  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c: Allowed dynviews and picviews to be relocated

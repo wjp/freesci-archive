@@ -472,6 +472,11 @@ kSetDebug(state_t *s, int funct_nr, int argc, heap_ptr argp)
   _debug_seeking = _debug_step_running = 0;
 }
 
+#define _K_NEW_GETTIME_TICKS 0
+#define _K_NEW_GETTIME_TIME_12HOUR 1
+#define _K_NEW_GETTIME_TIME_24HOUR 2
+#define _K_NEW_GETTIME_DATE 3
+
 void
 kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
@@ -479,15 +484,51 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
   GTimeVal time_prec;
   time_t the_time;
 
-  if (argc) { /* Get seconds since last am/pm switch */
-    the_time = time(NULL);
-    loc_time = localtime(&the_time);
-    s->acc = loc_time->tm_sec + loc_time->tm_min * 60 + (loc_time->tm_hour % 12) * 3600;
-  } else { /* Get time since game started */
-    g_get_current_time (&time_prec);
-    s-> acc = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
-      (time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
-  }
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  the_time = time(NULL);
+  loc_time = localtime(&the_time);
+  if (s->version<SCI_VERSION_FTU_NEW_GETTIME) /* Use old semantics */
+  {
+    if (argc) { /* Get seconds since last am/pm switch */
+      s->acc = loc_time->tm_sec + loc_time->tm_min * 60 + (loc_time->tm_hour % 12) * 3600;
+      sciprintf("GetTime(timeofday) returns %d\n", s->acc);
+    } else { /* Get time since game started */
+      g_get_current_time (&time_prec);
+      s-> acc = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
+	         (time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
+      sciprintf("GetTime(elapsed) returns %d\n", s->acc);
+    }
+    } else {
+	int mode = UPARAM_OR_ALT(1, 0); /* The same strange method is still used for distinguishing
+					   mode 0 and the others. We assume that this is safe, though */
+	switch (mode) {
+	case _K_NEW_GETTIME_TICKS :
+	  {
+	    g_get_current_time (&time_prec);
+	    s-> acc = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
+	      (time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
+	    sciprintf("GetTime(elapsed) returns %d\n", s->acc);
+	    break;
+	  }
+	case _K_NEW_GETTIME_TIME_12HOUR :
+	  {
+   	    loc_time->tm_hour %= 12;
+	    s->acc=(loc_time->tm_min<<6)|(loc_time->tm_hour<<12);
+	    break;
+	  }  
+	case _K_NEW_GETTIME_TIME_24HOUR :
+          {
+	    s->acc=(loc_time->tm_min<<5)|(loc_time->tm_sec>>1)|(loc_time->tm_hour<<11);
+	    break;
+	  }
+	case _K_NEW_GETTIME_DATE :
+	  {
+	    s->acc=(loc_time->tm_mon<<5)|loc_time->tm_mday|(loc_time->tm_year<<9);
+	    break;
+	  }
+	}
+      }
 }
 
 #define K_MEMORY_ALLOCATE_CRITICAL 	1

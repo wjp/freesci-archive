@@ -1432,6 +1432,9 @@ _gfxr_find_fill_point(gfxr_pic_t *pic, int min_x, int min_y, int max_x, int max_
 	int legalcolor;
 	byte *test_map;
 
+	*x = x_320 * pic->mode->xfact;
+	*y = y_200 * pic->mode->yfact;
+
 	//fprintf(stderr,"FIND_FILL_POINT(%d,%d) s(%d,%d)\n", mid_x, mid_y, size_x, size_y);
 	if (size_x < 0 || size_y < 0)
 		return 0;

@@ -59,6 +59,8 @@ struct _state;
 #define SCI_VERSION_FTU_CENTERED_TEXT_AS_DEFAULT SCI_VERSION(0,000,629)
 /* Last version known not to do this: 0.000.502 */
 
+#define SCI_VERSION_FTU_NEW_GETTIME SCI_VERSION(0,000,629)
+
 #define SCI_VERSION_FTU_NEWER_DRAWPIC_PARAMETERS SCI_VERSION(0,000,502)
 /* Last version known not to do this: 0.000.435
 ** Old SCI versions used to interpret the third DrawPic() parameter inversely,
