@@ -1,3 +1,13 @@
+2001-07-15  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/midi_adlib.c: Patched to cooperate with Rune's patch
+
+	* src/engine/cfsml.pl: Added several command-line options
+
+2001-07-15  Rune Orsval  <u951663@daimi.au.dk>
+
+	* src/sound/midiout_ossopl3.c: Added
+
 2001-07-14  Solomon Peachy <pizza@shaftnet.org>
         * src/gfx/driver/sdl_driver.c, SDL_gfxPrimitives.c,
           SDL_gfxPrimitives.h, SDL_gfxPrimitives_font.h:  Ripped out the

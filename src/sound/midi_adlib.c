@@ -38,7 +38,11 @@
 #include <sys/ioctl.h>
 #include <sys/soundcard.h>
 
-SEQ_DEFINEBUF(1024);
+
+/*SEQ_DEFINEBUF(1024);*/
+extern unsigned char _seqbuf[1024];
+extern int _seqbuflen;
+extern int _seqbufptr;
 
 typedef struct _sci_adlib_def {
   guint8 keyscale;       /* 0-3 !*/
@@ -61,6 +65,8 @@ static sbi_instr_data adlib_sbi[96];
 static guint8 instr[MIDI_CHANNELS];
 static int seqfd, dev;
 
+#if 0
+/* -------------- */
 void seqbuf_dump()
 {
   if (_seqbufptr)
@@ -70,6 +76,8 @@ void seqbuf_dump()
     }
   _seqbufptr = 0;
 }
+/* -------------- */
+#endif
 
 void make_sbi(adlib_def *one, adlib_def *two, guint8 *buffer)
 {

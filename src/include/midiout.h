@@ -51,6 +51,7 @@ extern midiout_driver_t midiout_driver_alsaraw;
 
 #ifdef HAVE_SYS_SOUNDCARD_H
 extern midiout_driver_t midiout_driver_ossseq;
+extern midiout_driver_t midiout_driver_ossopl3;
 #endif
 
 #ifdef _WIN32
