@@ -1,3 +1,13 @@
+2003-02-07  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/include/sciresource.h: Added new resmgr version
+	number. Generally changed things around to support this.
+	* src/gfx/resource/sci_resmgr.c: Made glutton die properly instead
+	of looping when the SCI1 games break.
+	* src/main.c: Hijacked -r switch to specify the resmgr version
+	number.
+	* src/tools/sciunpack.c: Ditto.
+
 2003-02-05  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/seg_manager.c: Added support for code relocation and

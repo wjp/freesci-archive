@@ -105,8 +105,8 @@ gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gf
 	if (!res || !res->data)
 		return GFX_ERROR;
 
-	if (state->version >= SCI_VERSION_1) {
-		GFXWARN("Attempt to retreive pic in SCI1 or later\n");
+	if (state->version >= SCI_VERSION_01_VGA) {
+		GFXERROR("Attempt to retreive pic in SCI1 or later\n");
 		return GFX_ERROR;
 	}
 
@@ -141,8 +141,8 @@ gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal, int pal
 	if (!res || !res->data)
 		return NULL;
 
-	if (state->version >= SCI_VERSION_1) {
-		GFXWARN("Attempt to retreive view in SCI1 or later\n");
+	if (state->version >= SCI_VERSION_01_VGA) {
+		GFXERROR("Attempt to retreive view in SCI1 or later\n");
 		return NULL;
 	}
 
@@ -176,8 +176,8 @@ gfxr_interpreter_get_cursor(gfx_resstate_t *state, int nr, void *internal)
 	if (!res || !res->data)
 		return NULL;
 
-	if (state->version >= SCI_VERSION_1) {
-		GFXWARN("Attempt to retreive cursor in SCI1 or later\n");
+	if (state->version >= SCI_VERSION_1_1) {
+		GFXWARN("Attempt to retreive cursor in SCI1.1 or later\n");
 		return NULL;
 	}
 
@@ -249,7 +249,7 @@ gfxr_interpreter_needs_multicolored_pointers(int version, void *internal)
 {
 	gfx_sci_options_t *sci_options = (gfx_sci_options_t *) internal;
 
-	return (version > SCI_VERSION_0);
+	return (version > SCI_VERSION_1);
 }
 
 

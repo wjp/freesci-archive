@@ -95,6 +95,7 @@ static decomp_funct *decompressors[] = {
 	NULL,
 	&decompress0,
 	&decompress01,
+	&decompress01,
 	&decompress1e,
 	&decompress1l,
 	&decompress11,
@@ -105,6 +106,8 @@ static patch_sprintf_funct *patch_sprintfers[] = {
 	NULL,
 	&sci0_sprintf_patch_file_name,
 	&sci0_sprintf_patch_file_name,
+	&sci0_sprintf_patch_file_name,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -192,7 +195,7 @@ scir_new_resource_manager(char *dir, int version,
 
 	mgr->resources = NULL;
 
-	if (version <= SCI_VERSION_01) {
+	if (version <= SCI_VERSION_01_VGA) {
 		resource_error =
 			sci0_read_resource_map(dir,
 					       &mgr->resources,

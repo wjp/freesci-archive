@@ -152,11 +152,12 @@ int main(int argc, char** argv)
 	int optindex = 0;
 	int c;
 	char *gamedir = sci_getcwd();
-
+	int res_version = SCI_VERSION_AUTODETECT;
+	
 #ifdef HAVE_GETOPT_LONG
-	while ((c = getopt_long(argc, argv, "WOVUvhLco:d:M:", options, &optindex)) > -1) {
+	while ((c = getopt_long(argc, argv, "WOVUvhLcr:o:d:M:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_LONG */
-	while ((c = getopt(argc, argv, "WOVUvhLco:d:M:")) > -1) {
+	while ((c = getopt(argc, argv, "WOVUvhLcr:o:d:M:")) > -1) {
 #endif /* !HAVE_GETOPT_LONG */
 
 		switch (c) {
@@ -251,6 +252,10 @@ int main(int argc, char** argv)
 			gamedir = sci_strdup (optarg);
 			break;
 
+		case 'r':
+			res_version = atoi(optarg);
+			break;
+
 		case 'c':
 			conversion = 1;
 			break;
@@ -298,7 +303,7 @@ int main(int argc, char** argv)
 			exit(1);
 		}
 
-	if (!(resmgr = scir_new_resource_manager(gamedir, SCI_VERSION_AUTODETECT,
+	if (!(resmgr = scir_new_resource_manager(gamedir, res_version,
 						 0, 1024*128))) {
 		fprintf(stderr,"Could not find any resources; quitting.\n");
 		exit(1);

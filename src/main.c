@@ -370,6 +370,7 @@ typedef struct {
 	int mouse;
         int show_rooms;
 	sci_version_t version;
+	int res_version;
 	char *gfx_driver_name;
 	char *gamedir;
         char *midiout_driver_name;
@@ -424,16 +425,17 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 	cl_options->midi_device_name = NULL;
 	cl_options->sound_server_name = NULL;
 	cl_options->mouse = ON;
+	cl_options->res_version = SCI_VERSION_AUTODETECT;
 	cl_options->show_rooms = 0;
 #ifdef HAVE_GETOPT_LONG
-	while ((c = getopt_long(argc, argv, "lvrhmsDd:V:g:x:y:c:M:O:S:P:", options, &optindex)) > -1) {
+	while ((c = getopt_long(argc, argv, "lvhmsDr:d:V:g:x:y:c:M:O:S:P:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_LONG */
-	while ((c = getopt(argc, argv, "lvrhmsDd:V:g:x:y:c:M:O:S:P:")) > -1) {
+	while ((c = getopt(argc, argv, "lvhmsDr:d:V:g:x:y:c:M:O:S:P:")) > -1) {
 #endif /* !HAVE_GETOPT_LONG */
 		switch (c) {
 
 		case 'r':
-			cl_options->script_debug_flag = 0;
+			cl_options->res_version = atoi(optarg);
 			break;
 
 		case 's':
@@ -959,7 +961,7 @@ main(int argc, char** argv)
 	sciprintf("Loading resources...\n");
 
 	resmgr = scir_new_resource_manager(resource_dir,
-					   SCI_VERSION_AUTODETECT,
+					   cl_options.res_version,
 					   1, 256*1024);
 
 	if (!resmgr) {
