@@ -192,6 +192,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	song_t *_songp = NULL;
 	songlib_t songlib = &_songp;   /* Song library */
 	song_t *newsong, *song = NULL; /* The song we're playing */
+	int master_volume = 0x0c;  /* the master volume.. whee */
 	int debugging = 1;   /* Debugging enabled? */
 	int command = 0;
 	int ccc = 127; /* cumulative cue counter */
@@ -569,7 +570,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 
 						success = soundsrv_save_state(ds, dirname, songlib, newsong,
-									      ccc, usecs, ticks, fadeticks);
+									      ccc, usecs, ticks, fadeticks, master_volume);
 
 						/* Return soundsrv_save_state()'s return value */
 						write(fd_out, &success, sizeof(int));
@@ -600,7 +601,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 						sci_get_current_time(&last_played);
 
 						success = soundsrv_restore_state(ds, dirname, songlib, &newsong,
-										 &ccc, &usecs, &ticks, &fadeticks);
+										 &ccc, &usecs, &ticks, &fadeticks, &master_volume);
 						last_played.tv_sec -= secs = (usecs - last_played.tv_usec) / 1000000;
 						last_played.tv_usec -= (usecs + secs * 1000000);
 
@@ -609,7 +610,8 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 						free(dirname);
 
-						/* restore the instrument state */
+						/* restore the midi device state */
+						midi_volume(event.value * 100 / 15); /* scale to % */
 						if (newsong) {
 						  int i;
 						  for (i = 0; i < MIDI_CHANNELS; i++) {

@@ -1,4 +1,18 @@
 2001-03-10  Solomon Peachy <pizza@shaftnet.org>
+	* src/engine/savegame.c
+	* src/engine/savegame.cfsml
+
+	Saves and restores the volume / mute status
+
+	* src/include/soundserver.h
+	* src/sound/sfx_save.c
+	* src/sound/sfx_save.cfsml
+	* src/sound/soundserver_null.c
+
+	Saves and restores the midi master volume (and sends it to the
+        device upon restore)
+
+2001-03-10  Solomon Peachy <pizza@shaftnet.org>
 	
 	* src/sound/soundserver_null.c:  Restore instrument map &
                                          reverb status on game restore.

@@ -44,7 +44,8 @@ typedef struct {
 
   int active_song;
 
-  int soundcue; /* Cumulative sound vue */
+  int master_volume; /* duh.. */
+  int soundcue; /* Cumulative sound cue */
   int usecs_to_sleep; /* Microseconds until the next tick is due */
   int ticks_to_wait; /* Ticks until the next sound command has to be interpreted */
   int ticks_to_fade; /* Ticks until a fade-out is complete */
@@ -957,12 +958,12 @@ _cfsml_read_string(FILE *fh, char ** foo, char *lastval, int *line, int *hiteof)
 
 /* Auto-generated CFSML declaration and function block ends here */
 /* Auto-generation performed by cfsml.pl 0.8.1 */
-#line 101 "CFSML input file"
+#line 102 "CFSML input file"
 
 /* Sound state saving reference implementation */
 int
 soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *curr_song,
-		    int soundcue, int usecs_to_sleep, int ticks_to_wait, int ticks_to_fade)
+		    int soundcue, int usecs_to_sleep, int ticks_to_wait, int ticks_to_fade, int master_volume)
 {
   sound_lib_file_t write_rec;
   song_t *seeker;
@@ -983,6 +984,7 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
   write_rec.usecs_to_sleep = usecs_to_sleep;
   write_rec.ticks_to_wait = ticks_to_wait;
   write_rec.ticks_to_fade = ticks_to_fade;
+  write_rec.master_volume = master_volume;
 
   /* Determine number of songs */
   seeker = *songlib;
@@ -1041,7 +1043,7 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
   _cfsml_write_sound_lib_file_t(fh, &write_rec);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 181 "CFSML input file"
+#line 183 "CFSML input file"
 
   fclose(fh);
   fprintf(stderr,"Finished all writing.\n");
@@ -1055,7 +1057,7 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
 /* Sound state restore complement for the saving reference implementation */
 int
 soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t **curr_song,
-		       int *soundcue, int *usecs_to_sleep, int *ticks_to_wait, int *ticks_to_fade)
+		       int *soundcue, int *usecs_to_sleep, int *ticks_to_wait, int *ticks_to_fade, int *master_volume)
 {
   FILE *fh;
   sound_lib_file_t read_rec;
@@ -1107,7 +1109,7 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 217 "CFSML input file"
+#line 219 "CFSML input file"
 
   if (error) {
     if(read_rec.songs)
@@ -1172,6 +1174,7 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
   *usecs_to_sleep = read_rec.usecs_to_sleep;
   *ticks_to_wait = read_rec.ticks_to_wait;
   *ticks_to_fade = read_rec.ticks_to_fade;
+  *master_volume = read_rec.master_volume;
 
   if (read_rec.songs_nr)
     free(read_rec.songs);

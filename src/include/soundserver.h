@@ -273,7 +273,8 @@ song_next_wakeup_time(GTimeVal *lastslept, int ticks);
 
 int
 soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *curr_song,
-		    int soundcue, int usecs_to_sleep, int ticks_to_wait, int ticks_to_fade);
+		    int soundcue, int usecs_to_sleep, int ticks_to_wait, int ticks_to_fade,
+                    int master_volume);
 /*·Stores the sound server state to a file
 ** Parameters: (FILE *) debugstream: The stream which all errors are sent to
 **             (char *) dir: The name of the directory to enter and write to
@@ -289,7 +290,8 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
 
 int
 soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t **curr_song,
-		       int *soundcue, int *usecs_to_sleep, int *ticks_to_wait, int *ticks_to_fade);
+		       int *soundcue, int *usecs_to_sleep, int *ticks_to_wait, int *ticks_to_fade,
+		       int *master_volume);
 /* Restores the sound state written to a directory
 ** Parameters: (FILE *) debugstream: The stream to write all debug information to
 **             (char *) dir: The directory to enter and read from

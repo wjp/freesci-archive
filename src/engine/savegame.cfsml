@@ -421,6 +421,9 @@ RECORD state_t "state_t" {
 	heap_ptr save_dir;
 	heap_ptr sound_object;
 
+	int sound_mute;
+	int sound_volume;
+
 	int mouse_pointer_nr;
 
 	int port_serial;
