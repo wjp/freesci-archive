@@ -496,7 +496,7 @@ game_init(state_t *s)
 	heap_ptr game_obj; /* Address of the game object */
 	int i;
 
-	if (!script_instantiate(s, 0, 0)) {
+	if (!script_instantiate(s, 0, 1)) {
 		sciprintf("game_init(): Could not instantiate script 0\n");
 		return 1;
 	}

@@ -764,6 +764,40 @@ con_gfx_read(gfx_state_t *state)
 				}
 			} else switch (evt.data) {
 
+			case SCI_K_UP: {
+				char *hist = con_history_get_prev(&history_handle);
+
+				if (hist) {
+					sci_free(con.input_text);
+					con.input_text = sci_strdup(hist);
+				}
+				must_resize = must_redraw = must_rewin = 1;
+			}
+				break;
+
+			case SCI_K_DOWN: {
+				char *hist = con_history_get_next(&history_handle);
+
+				if (hist) {
+					sci_free(con.input_text);
+					con.input_text = sci_strdup(hist);
+				}
+				must_resize = must_redraw = must_rewin = 1;
+			}
+				break;
+
+
+			case SCI_K_LEFT:
+				if (con.cursor_position)
+					--con.cursor_position;
+				break;
+
+			case SCI_K_RIGHT:
+				if (con.cursor_position < slen)
+					++con.cursor_position;
+				break;
+
+
 			case SCI_K_PGUP:
 				must_redraw_text = 1;
 				con_scroll(state, -75, maxchars);

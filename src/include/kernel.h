@@ -530,6 +530,9 @@ void kSetNowSeen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDoAvoider(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kFileIO(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kMemory(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kSort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kAvoidPath(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kLock(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void k_Unknown(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 /* The Unknown/Unnamed kernel function */
 void kstub(struct _state *s, int funct_nr, int argc, heap_ptr argp);

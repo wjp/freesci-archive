@@ -1,3 +1,10 @@
+2002-10-19  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/gfx_console.c (con_gfx_read): Added support for cursor keys
+
+	* src/engine/scriptdebug.c (script_debug): Fixed NULL pointer being
+	passed to con_parse
+
 2002-10-19  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kpathing.c: New file.

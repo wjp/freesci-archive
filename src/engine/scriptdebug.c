@@ -2851,7 +2851,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_gfx_show(s->gfx_state);
 			input = con_gfx_read(s->gfx_state);
 			con_gfx_hide(s->gfx_state);
-			con_parse(s, input);
+			if (input)
+				con_parse(s, input);
 #  ifndef FORCE_CONSOLE
 		} else
 #  endif
