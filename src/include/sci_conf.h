@@ -34,10 +34,22 @@
 #include <midiout.h>
 #include <midi_device.h>
 
-typedef struct {
+#define FREESCI_DRIVER_SUBSYSTEMS_NR 2
+
+#define FREESCI_DRIVER_SUBSYSTEM_GFX 0
+#define FREESCI_DRIVER_SUBSYSTEM_MIDIOUT 1
+
+typedef struct _driver_option {
 	char *option;
 	char *value;
-} gfx_option_t;
+	struct _driver_option *next;
+} driver_option_t;
+
+typedef struct _subsystem_options {
+	char *name; /* Driver name */
+	driver_option_t *options;
+	struct _subsystem_options *next; /* next driver */
+} subsystem_options_t;
 
 typedef struct {
 
@@ -46,14 +58,14 @@ typedef struct {
 
 	gfx_options_t gfx_options;
 
+	subsystem_options_t *driver_options[FREESCI_DRIVER_SUBSYSTEMS_NR];
+
 	int animation_delay; /* Number of microseconds to wait between each pic transition animation cycle */
 	int alpha_threshold; /* Crossblitting alpha threshold */
 	int unknown_count; /* The number of "unknown" kernel functions */ 
 	char *resource_dir; /* Resource directory */
 	char *work_dir;     /* Working directory (save games, additional graphics) */
 	gfx_driver_t *gfx_driver; /* The graphics driver to use */
-	gfx_option_t *gfx_config; /* Graphics subsystem configuration options */
-	int gfx_config_nr; /* Number of options */
 	char *console_log; /* The file to which console output should be echoed */
 	char debug_mode [80]; /* Characters specifying areas for which debug output should be enabled */
 	int mouse; /* Whether the mouse should be active */
@@ -83,5 +95,39 @@ config_free(config_entry_t **conf, int entries);
 **             (int) entries: Number of entries to free
 ** Returns   : (void)
 */
+
+
+void *
+parse_gfx_driver(char *driver_name);
+/* Parses a string and looks up an appropriate driver structure
+** Parameters: (char *) driver_name: Name of the driver to look up
+** Returns   : (void *) A matching driver, or NULL on failure
+*/
+
+void *
+parse_midiout_driver(char *driver_name);
+/* Parses a string and looks up an appropriate driver structure
+** Parameters: (char *) driver_name: Name of the driver to look up
+** Returns   : (void *) A matching driver, or NULL on failure
+*/
+
+void *
+parse_midi_device(char *driver_name);
+/* Parses a string and looks up an appropriate driver structure
+** Parameters: (char *) driver_name: Name of the driver to look up
+** Returns   : (void *) A matching driver, or NULL on failure
+*/
+
+driver_option_t *
+get_driver_options(config_entry_t *config, int subsystem, char *name);
+/* Retreives the driver options for one specific driver in a subsystem
+** Parameters: (config_entry_t *) config: The config entry to search in
+**             (int) subsystem: Any of the FREESCI_DRIVER_SUBSYSTEMs
+**             (char *) name: Name of the driver to look for
+** Returns   : (driver_option_t *) A pointer to the first option in
+**             a singly-linked list of options, or NULL if none was
+**             found
+*/
+
 
 #endif /* !_SCI_CONFIG_H */

@@ -52,15 +52,32 @@ typedef struct {
 	int value;
 } name_value_pair;
 
+
+struct {
+	char *name;
+	void *(*check_driver)(char *name);
+} freesci_subsystems[FREESCI_DRIVER_SUBSYSTEMS_NR] = {
+	{"gfx", parse_gfx_driver},
+	{"midiout", parse_midiout_driver}
+};
+
+
+static void
+set_config_parameter(config_entry_t *conf, char *subsystem_name, char *driver_name,
+		       char *option, char *value);
+
+
 static int
 parse_name(char *name, name_value_pair* nvps, char *what, int oldval); /* Parses a string with a name value pair */
 
-static void *
-parse_gfx_driver(char *s); /* Parses a graphics driver */
-static void *
-parse_midiout_driver(char *driver_name); /* parses a midiout driver */
-static void *
-parse_midi_device(char *driver_name); /* ditto */
+static void
+copy_subsystem_options(config_entry_t *dest, config_entry_t *src);
+/* Copies all subsystem options
+** Parameters: (config_entry_t *) dest: The destination config struct
+**             (config_entry_t *) src: Source struct
+** Returns   : (void)
+*/
+
 
 static name_value_pair valid_modes[] = {
 	{"default", GFXR_DITHER_MODE_D16},
@@ -217,6 +234,7 @@ NUMPARAMTOKEN {NUMTOKEN}|{PARAMTOKEN}
 %%
 
 "["[_[:alnum:]]+"]" {
+	char *cleanup;
 	++yytext; /* Get over opening bracket */
 
 	++cur_section; /* Start new section */
@@ -229,18 +247,20 @@ NUMPARAMTOKEN {NUMTOKEN}|{PARAMTOKEN}
 	if (conf[0].console_log)
 		conf[cur_section].console_log = strdup (conf[0].console_log);
 
-	/* Copy the gfx system init strings */
-	if (conf[cur_section].gfx_config) {
-		conf[cur_section].gfx_config = malloc(sizeof(gfx_option_t *) * conf[0].gfx_config_nr);
-		memcpy(&(conf[cur_section].gfx_config), &(conf[0].gfx_config),
-		       sizeof(gfx_option_t *) * conf[0].gfx_config_nr);
-	}
+	/* Copy the subsystem init strings */
+	copy_subsystem_options(conf + cur_section, conf);
 
 	while (isspace(*yytext))
 		yytext++;
 
+	cleanup = strchr(yytext, ']');
+
+	do {
+		*cleanup-- = 0;
+	} while (isblank(*cleanup));
+
 	conf[cur_section].name = strdup(yytext);
-	conf[cur_section].name[strlen(yytext)-1] = 0; /* Terminate string at "]" */
+
 	conf[cur_section].resource_dir = strdup(".");
 
 	if (dospath)
@@ -301,42 +321,40 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 }
 
 
-[[:alnum:]]+"."[[:alnum:]_]+[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
-/* gfx driver parameters */
-        char *p=yytext;
-        char *p2;
+[[:alnum:]]+"."[[:alnum:]]+"."[[:alnum:]_]+[[:blank:]]*"="[[:blank:]]*{NUMPARAMTOKEN} {
+/* driver parameters */
+        char *subsys_name = yytext;
+        char *driver_name;
+	char *option, *value;
+	char *p2;
 
         yytext = strchr(yytext, '.');
         *yytext++ = 0;
-        if (!strcasecmp (p, conf->gfx_driver->name)) {
-                int newcfg;
+        driver_name = yytext;
+	yytext = strchr(yytext, '.');
+        *yytext++ = 0;
 
-                p = yytext;
-                yytext = strchr(yytext, '=');
-                *yytext++ = 0;
 
-                p2 = yytext-2;                    /* trim right spaces */
-                while (p2 > p && isspace (*p2))
-                        *p2-- = 0;
+	option = yytext;
+	yytext = strchr(yytext, '=');
+	*yytext++ = 0;
 
-                while (isspace(*yytext))
-                        yytext++;
+	p2 = yytext-2;                    /* trim right spaces */
+	while (p2 > option && isspace (*p2))
+		*p2-- = 0;
 
-                p2=yytext+strlen (yytext);        /* trim right spaces */
-                while (p2 > p && isspace (*p2))
+	while (isspace(*yytext))
+		yytext++;
+
+	value = yytext;
+
+	p2 = yytext+strlen (yytext);        /* trim right spaces */
+	while (p2 > value && isspace (*p2))
                 *p2-- = 0;
 
-                newcfg = (conf[cur_section].gfx_config_nr)++;
+	
+	set_config_parameter(conf + cur_section, subsys_name, driver_name, option, value);
 
-                if (newcfg)
-                conf[cur_section].gfx_config = realloc(conf[cur_section].gfx_config,
-			(newcfg + 1) * sizeof(gfx_option_t *));
-		else
-		        conf[cur_section].gfx_config = malloc(conf[cur_section].gfx_config_nr * sizeof(gfx_option_t *));
-
-                conf[cur_section].gfx_config[newcfg].option = strdup(p);
-                conf[cur_section].gfx_config[newcfg].value = strdup(yytext);
-        }
 }
 
 
@@ -383,6 +401,7 @@ config_init(config_entry_t **_conf, char *conffile)
 {
 	char *homedir = getenv("HOME");
 	char *conf_path;
+	int i;
 
 	conf = malloc(sizeof(config_entry_t));
 
@@ -415,8 +434,9 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->name = NULL;
 	conf->resource_dir = NULL;
 	conf->work_dir = NULL;
-	conf->gfx_config = NULL;
-	conf->gfx_config_nr = 0;
+
+	for (i = 0; i < FREESCI_DRIVER_SUBSYSTEMS_NR; i++)
+		conf->driver_options[i] = NULL;
 /**** Default config ends */
 
 
@@ -485,6 +505,32 @@ config_init(config_entry_t **_conf, char *conffile)
 }
 
 
+static void
+config_free_driver_options(driver_option_t *option)
+{
+	if (option) {
+		free(option->option);
+		free(option->value);
+
+		config_free_driver_options(option->next);
+		free(option);
+	}
+}
+
+static void
+config_free_driver_subsystem(subsystem_options_t *subsys)
+{
+	if (subsys) {
+		free(subsys->name);
+
+		config_free_driver_options(subsys->options);
+
+		config_free_driver_subsystem(subsys->next);
+		free(subsys);
+	}
+}
+
+
 void
 config_free(config_entry_t **conf, int entries)
 {
@@ -494,6 +540,8 @@ config_free(config_entry_t **conf, int entries)
 		free((*conf)->console_log);
 
 	for (i = 1; i < entries; i++) {
+		int j;
+
 		free ((*conf)[i].name);
 		free ((*conf)[i].work_dir);
 		if ((*conf)[i].resource_dir)
@@ -501,16 +549,9 @@ config_free(config_entry_t **conf, int entries)
 		if ((*conf)[i].console_log)
 			free((*conf)[i].console_log);
 
-		if ((*conf)[i].gfx_config) {
-			int j;
-
-			for (j = 0; j < (*conf)[i].gfx_config_nr; j++) {
-				free ((*conf)[i].gfx_config[j].option);
-				free ((*conf)[i].gfx_config[j].value);
-			}
-
-			free((*conf)[i].gfx_config);
-		}
+		for (j = 0; j < FREESCI_DRIVER_SUBSYSTEMS_NR; j++)
+			if ((*conf)->driver_options[j])
+				config_free_driver_subsystem((*conf)->driver_options[j]);
 	}
 
 	free (*conf);
@@ -535,7 +576,7 @@ parse_name(char *name, name_value_pair *nvps, char *what, int oldval)
 }
 
 
-static void *
+void *
 parse_gfx_driver(char *driver_name)
 {
 	gfx_driver_t *retval = gfx_find_driver(driver_name);
@@ -548,7 +589,7 @@ parse_gfx_driver(char *driver_name)
 	return (void *) conf->gfx_driver;
 }
 
-static void *
+void *
 parse_midiout_driver(char *driver_name)
 {
 	midiout_driver_t *retval = midiout_find_driver(driver_name);
@@ -562,7 +603,7 @@ parse_midiout_driver(char *driver_name)
 }
 
 
-static void *
+void *
 parse_midi_device(char *driver_name)
 {
 	midi_device_t *retval = midi_find_device(driver_name);
@@ -651,3 +692,120 @@ parse_option(char *option, int optlen, char *value)
 	}
 }
 
+
+driver_option_t *
+get_driver_options(config_entry_t *config, int subsystem, char *name)
+{
+	subsystem_options_t *options;
+
+	if (subsystem < 0 || subsystem >= FREESCI_DRIVER_SUBSYSTEMS_NR) {
+		fprintf(stderr, "Attempt to get options from invalid subsystem #%d!\n", subsystem);
+		return NULL;
+	}
+
+	if (!config)
+		return NULL;
+
+
+	options = config->driver_options[subsystem];
+
+	while (options && strcasecmp(options->name, name))
+		options = options->next;
+
+	if (options)
+		return options->options;
+
+	return NULL;
+}
+
+static driver_option_t *
+clone_driver_options(driver_option_t *options)
+{
+	driver_option_t *retval;
+
+	if (!options)
+		return NULL;
+
+	retval = malloc(sizeof(driver_option_t));
+	retval->option = strdup(options->option);
+	retval->value = strdup(options->value);
+	retval->next = clone_driver_options(options->next);
+
+	return retval;
+}
+
+static subsystem_options_t *
+clone_subsystem_options(subsystem_options_t *options)
+{
+	subsystem_options_t *retval;
+
+	if (!options)
+		return NULL;
+
+	retval = malloc(sizeof(subsystem_options_t));
+	retval->name = strdup(options->name);
+	retval->options = clone_driver_options(options->options);
+	retval->next = clone_subsystem_options(options->next);
+
+	return retval;
+}
+
+static void
+copy_subsystem_options(config_entry_t *dest, config_entry_t *src)
+{
+	int i;
+	for (i = 0; i < FREESCI_DRIVER_SUBSYSTEMS_NR; i++)
+		dest->driver_options[i] = clone_subsystem_options(src->driver_options[i]);
+}
+
+static void
+set_config_parameter(config_entry_t *conf, char *subsystem_name, char *driver_name,
+		       char *option, char *value)
+{
+	subsystem_options_t **subsys_optionsp;
+	driver_option_t **driver_optionsp;
+	int subsystem_nr = -1;
+	int i = 0;
+
+	while (subsystem_nr == -1 && i < FREESCI_DRIVER_SUBSYSTEMS_NR) {
+		if (!strcasecmp(subsystem_name, freesci_subsystems[i].name))
+			subsystem_nr = i;
+		i++;
+	}
+
+	if (subsystem_nr == -1) {
+		sciprintf("config file: There is no subsystem named '%s'\n", subsystem_name);
+		return;
+	}
+
+	if (!(freesci_subsystems[subsystem_nr].check_driver(driver_name))) {
+		sciprintf("config file: There is no %s driver called '%s'\n", subsystem_name, driver_name);
+		return;
+	}
+
+	subsys_optionsp = &(conf->driver_options[subsystem_nr]);
+
+	while (*subsys_optionsp && strcasecmp((*subsys_optionsp)->name, driver_name))
+		subsys_optionsp = &((*subsys_optionsp)->next);
+
+	if (!*subsys_optionsp) {
+		*subsys_optionsp = malloc(sizeof(subsystem_options_t));
+		(*subsys_optionsp)->name = strdup(driver_name);
+		(*subsys_optionsp)->next = NULL;
+		(*subsys_optionsp)->options = NULL;
+	}
+
+	driver_optionsp = &((*subsys_optionsp)->options);
+
+	while (*driver_optionsp && strcasecmp((*driver_optionsp)->option, option))
+		driver_optionsp = &((*driver_optionsp)->next);
+
+	if (*driver_optionsp) {
+		free((*driver_optionsp)->value);
+	} else {
+		*driver_optionsp = malloc(sizeof(driver_option_t));
+		(*driver_optionsp)->option = strdup(option);
+	}
+
+	(*driver_optionsp)->value = strdup(value);
+}

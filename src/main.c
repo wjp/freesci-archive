@@ -514,7 +514,7 @@ read_config(char *game_name, config_entry_t **conf, int *conf_entries,
 		if (!strcasecmp((*conf)[i].name, game_name)) {
 			conf_nr = i;
 			*version = (*conf)[i].version;
-	    }
+		}
 
 	return conf_nr;
 }
@@ -835,14 +835,60 @@ main(int argc, char** argv)
 	if (strlen (conf[conf_nr].debug_mode))
 		set_debug_mode (gamestate, 1, conf[conf_nr].debug_mode);
 
-	/* Now configure the graphics driver with the specified options */
-	for (i = 0; i < conf[conf_nr].gfx_config_nr; i++)
-		if ((gfx_driver->set_parameter)(gfx_driver, conf[conf_nr].gfx_config[i].option,
-						conf[conf_nr].gfx_config[i].value)) {
-			fprintf(stderr, "Fatal error occured in graphics driver while processing \"%s = %s\"\n",
-				conf[conf_nr].gfx_config[i].option, conf[conf_nr].gfx_config[i].value);
-			exit(1);
+
+#if 0
+	{
+		int j;
+		for (j =0; j < 4; j++) {
+			int i;
+			config_entry_t *c = conf + j;
+			fprintf(stderr, "[%s]\n", c->name);
+			for (i = 0; i < 2; i++) {
+				subsystem_options_t *subsys = c->driver_options[i];
+				fprintf(stderr, "  <%s>\n", i? "midiout" : "gfx");
+
+				while (subsys) {
+					driver_option_t *opt;
+					fprintf(stderr, "    {%s}\n", subsys->name);
+					opt = subsys->options;
+					while (opt) {
+						fprintf(stderr, "\t'%s' = '%s'\n", opt->option, opt->value);
+						opt = opt->next;
+					}
+					subsys = subsys->next;
+				}
+			}
 		}
+	}
+#endif /* 0 */
+
+	/* Now configure the graphics driver with the specified options */
+	{
+		driver_option_t *option = get_driver_options(conf + conf_nr, FREESCI_DRIVER_SUBSYSTEM_GFX, gfx_driver->name);
+		while (option) {
+			if ((gfx_driver->set_parameter)(gfx_driver, option->option, option->value)) {
+				fprintf(stderr, "Fatal error occured in graphics driver while processing \"%s = %s\"\n",
+					option->option, option->value);
+				exit(1);
+			}
+
+			option = option->next;
+		}
+	}
+
+	/* Configure the midiout driver */
+	{
+		driver_option_t *option = get_driver_options(conf + conf_nr, FREESCI_DRIVER_SUBSYSTEM_MIDIOUT, midiout_driver->name);
+		while (option) {
+			if ((midiout_driver->set_parameter)(midiout_driver, option->option, option->value)) {
+				fprintf(stderr, "Fatal error occured in midiout driver while processing \"%s = %s\"\n",
+					option->option, option->value);
+				exit(1);
+			}
+
+			option = option->next;
+		}
+	}
 
 	gamestate->sfx_driver = sfx_drivers[0];
 

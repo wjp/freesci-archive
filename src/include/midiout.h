@@ -28,13 +28,13 @@
 #include <resource.h>
 
 typedef struct _midiout_driver {
-  char *name;
-  char *version;
-  int (*set_parameter)(struct _midiout_driver *drv, char *attribute, char *value);
-  int (*midiout_open)(void);
-  int (*midiout_close)(void);
-  int (*midiout_write)(guint8 *data, unsigned int);
-  int (*midiout_flush)(void);
+	char *name;
+	char *version;
+	int (*set_parameter)(struct _midiout_driver *drv, char *attribute, char *value);
+	int (*midiout_open)(void);
+	int (*midiout_close)(void);
+	int (*midiout_write)(guint8 *data, unsigned int);
+	int (*midiout_flush)(void);
 } midiout_driver_t;
 
 extern DLLEXTERN midiout_driver_t *midiout_driver;

@@ -46,23 +46,23 @@ int midi_reverb(short param);
 /* the struct */
 
 typedef struct _midi_device {
-  char *name;
-  char *version;
+	char *name;
+	char *version;
 
-  int (*open)(guint8 *data_ptr, unsigned int data_length);
-  int (*close)(void);
+	int (*open)(guint8 *data_ptr, unsigned int data_length);
+	int (*close)(void);
 
-  int (*event)(guint8 command, guint8 param, guint8 param2);
-  int (*event2)(guint8 command, guint8 param);
-  int (*allstop)(void);
+	int (*event)(guint8 command, guint8 param, guint8 param2);
+	int (*event2)(guint8 command, guint8 param);
+	int (*allstop)(void);
 
-  int (*volume)(guint8 volume);
-  int (*reverb)(short param);
+	int (*volume)(guint8 volume);
+	int (*reverb)(short param);
 
-  unsigned short patchfile;
-  guint8 playflag;
-  guint8 playrhythm;
-  gint8 polyphony;
+	unsigned short patchfile;
+	guint8 playflag;
+	guint8 playrhythm;
+	gint8 polyphony;
  
 } midi_device_t;
 

@@ -36,6 +36,17 @@ static char *devicename = "/dev/midi00";
 
 static int unixraw_lastwrote = 0;
 
+static int
+midiout_unixraw_set_parameter(struct _midiout_driver *drv, char *attribute, char *value)
+{
+	if (!strcasecmp(attribute, "device")) {
+		devicename = value;
+	} else
+		sciprintf("Unknown unixraw option '%s'!\n", attribute);
+
+	return 0;
+}
+
 int midiout_unixraw_open()
 {
   if ((fd = open(devicename, O_WRONLY|O_SYNC)) < 0) {
@@ -76,7 +87,7 @@ int midiout_unixraw_write(guint8 *buffer, unsigned int count)
 midiout_driver_t midiout_driver_unixraw = {
   "unixraw",
   "v0.01",
-  NULL,
+  &midiout_unixraw_set_parameter,
   &midiout_unixraw_open,
   &midiout_unixraw_close,
   &midiout_unixraw_write,

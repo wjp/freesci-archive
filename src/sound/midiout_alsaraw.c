@@ -38,6 +38,31 @@ static int card = 0;
 static int device = 0;
 
 
+static int
+midiout_alsaraw_set_parameter(struct _midiout_driver *drv, char *attribute, char *value)
+{
+	char *testptr;
+
+	if (!strcasecmp(attribute, "card")) {
+		card = strtol(value, &testptr, 0);
+		if (*testptr) {
+			sciprintf("Warning: invalid ALSA card '%s'!\n", value);
+			return 1;
+		}
+	} else
+	if (!strcasecmp(attribute, "device")) {
+		device = strtol(value, &testptr, 0);
+		if (*testptr) {
+			sciprintf("Warning: invalid ALSA device '%s'!\n", value);
+			return 1;
+		}
+	}
+	else
+		sciprintf("Unknown ALSA option '%s'\n", value);
+
+	return 0;
+}
+
 #ifdef ALSA_09
 int midiout_alsaraw_open()
 {
@@ -101,7 +126,7 @@ int midiout_alsaraw_flush()
 midiout_driver_t midiout_driver_alsaraw = {
 	"alsaraw",
 	"v0.1",
-	NULL,
+	&midiout_alsaraw_set_parameter,
 	&midiout_alsaraw_open,
 	&midiout_alsaraw_close,
 	&midiout_alsaraw_write,

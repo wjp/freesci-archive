@@ -43,7 +43,7 @@ extern gfx_driver_t gfx_driver_xlib;
 extern gfx_driver_t gfx_driver_dd;
 #endif
 
-#ifdef HAVE_SDL
+#ifndef DONT_HAVE_SDL
 extern gfx_driver_t gfx_driver_sdl;
 #endif
 
@@ -54,7 +54,7 @@ static gfx_driver_t *gfx_drivers[] = {
 #ifndef X_DISPLAY_MISSING
 	&gfx_driver_xlib,
 #endif
-#ifdef HAVE_SDL
+#ifndef DONT_HAVE_SDL
 	&gfx_driver_sdl,
 #endif
 #ifdef HAVE_DDRAW

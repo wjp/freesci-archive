@@ -26,7 +26,7 @@
 ***************************************************************************/
 
 #include <gfx_driver.h>
-#ifdef HAVE_SDL
+#ifndef DONT_HAVE_SDL
 #include <gfx_tools.h>
 
 #include <SDL/SDL.h>
@@ -34,6 +34,10 @@
 #include <X11/Xlib.h>
 #include <X11/Xos.h>
 #include <X11/Xatom.h>
+
+#ifndef SDL_DISABLE
+#  define SDL_DISABLE 0
+#endif
 
 #define SCI_XLIB_PIXMAP_HANDLE_NORMAL 0
 #define SCI_XLIB_PIXMAP_HANDLE_GRABBED 1

@@ -284,20 +284,20 @@ static void yy_fatal_error YY_PROTO(( yyconst char msg[] ));
 
 #define YY_NUM_RULES 11
 #define YY_END_OF_BUFFER 12
-static yyconst short int yy_accept[108] =
+static yyconst short int yy_accept[111] =
     {   0,
        10,   10,   12,   10,    9,    9,   10,   10,   10,   10,
        10,   10,   10,   10,   10,    9,    9,   10,   10,   10,
        10,   10,   10,   10,   10,   10,   10,   10,   10,    8,
        10,   10,    7,    7,    1,   10,   10,   10,   10,   10,
-       10,    7,   10,   10,   10,   10,   10,    6,   10,   10,
-       10,   10,    6,   10,   10,   10,   10,   10,   10,   10,
-       10,   10,   10,   10,   10,   10,   10,   10,   10,   10,
         7,   10,   10,   10,   10,   10,   10,   10,   10,   10,
-       10,   10,    5,    5,    5,    5,   10,   10,    3,    3,
-        3,    3,    5,   10,   10,   10,    3,    4,    4,    4,
+       10,   10,   10,   10,   10,   10,   10,    6,    6,   10,
+       10,   10,   10,    6,   10,   10,   10,   10,   10,   10,
+       10,   10,   10,    7,   10,   10,   10,   10,   10,   10,
+       10,   10,   10,   10,   10,    5,    5,    5,    5,   10,
+       10,    3,    3,    3,    3,    5,   10,   10,   10,    3,
 
-        4,   10,    4,   10,   10,    2,    0
+        4,    4,    4,    4,   10,    4,   10,   10,    2,    0
     } ;
 
 static yyconst int yy_ec[256] =
@@ -339,148 +339,154 @@ static yyconst int yy_meta[27] =
         1,    1,    1,    1,    1,    1
     } ;
 
-static yyconst short int yy_base[128] =
+static yyconst short int yy_base[132] =
     {   0,
-        0,    0,  378,    0,   25,   27,    0,   30,   42,   54,
-       65,   17,   29,   41,    0,   76,   78,  370,   87,   98,
-       66,  110,  349,  121,  133,   61,   72,   62,  123,  433,
-      146,  157,  362,  169,    0,   83,  156,  345,   91,   88,
-      181,  193,  340,  102,  180,  118,  205,  217,  207,  154,
-      208,  338,  231,  133,  242,  176,  233,  162,  200,  192,
-      243,  237,  243,  212,  258,  257,  216,  180,  252,  266,
-      263,  254,  273,  229,  351,  274,  275,  294,  264,  349,
-      277,  306,    0,  318,  343,  330,  289,  337,    0,  341,
-      332,  353,  364,  278,  375,  331,  387,    0,  398,  328,
+        0,    0,  410,    0,   25,   27,    0,   30,   42,   54,
+       65,   17,   29,   41,    0,   76,   78,  405,   87,   99,
+       66,  111,  384,  122,  134,   61,   72,   62,  124,  449,
+      147,  159,  393,  171,    0,   84,  158,  372,   92,  183,
+      194,  367,  103,  181,  119,  206,  196,  156,  197,  365,
+       88,  220,  134,  232,  140,  223,  252,  378,  264,  164,
+      170,  207,  233,  275,  227,  258,  187,  259,  280,  217,
+      181,  269,  286,  242,  274,  288,  251,  376,  290,  293,
+      310,  277,  371,  297,  322,    0,  334,  369,  346,  305,
+      367,    0,  357,  365,  369,  380,  301,  391,  360,  403,
 
-      410,  326,  421,  320,  314,    0,  433,  314,  302,  291,
-      289,  288,  287,  277,  260,  239,  171,  159,  152,  141,
-      129,  116,  100,   71,   60,   48,   36
+        0,  414,  353,  426,  348,  437,  346,  344,    0,  449,
+      348,  342,  336,  330,  318,  305,  303,  301,  279,  250,
+      249,  212,  173,  142,  130,  117,  101,   71,   60,   48,
+       36
     } ;
 
-static yyconst short int yy_def[128] =
+static yyconst short int yy_def[132] =
     {   0,
-      107,    1,  107,  108,  108,  107,  109,  110,  111,  112,
-      111,   11,   11,   11,  108,  108,  107,  109,  113,  110,
-      108,  114,   11,  115,  112,   11,   11,   11,   11,  107,
-      113,  115,  108,  116,  108,   11,   11,   11,   11,  108,
-      117,  116,   11,   11,   11,   11,  117,  118,   11,   11,
-       11,   11,  118,   11,  114,   11,   11,   11,   55,   11,
-       11,   55,   55,   11,  108,   32,   55,   55,   55,   32,
-      108,   55,   55,   55,  108,   55,  108,  119,   55,  108,
-      108,  120,  121,  119,  121,  122,   55,  108,  123,  120,
-      123,  124,  122,  108,  125,  108,  124,  126,  125,  126,
+      110,    1,  110,  111,  111,  110,  112,  113,  114,  115,
+      114,   11,   11,   11,  111,  111,  110,  112,  116,  113,
+      111,  117,   11,  118,  115,   11,   11,   11,   11,  110,
+      116,  118,  111,  119,  111,   11,   11,   11,   11,  120,
+      119,   11,   11,   11,   11,  120,   11,   11,   11,   11,
+      111,  121,   11,  117,   11,   11,  121,  111,  122,   11,
+       54,   11,   11,  122,   54,   54,   11,  111,   32,   54,
+       54,   54,   32,  111,   54,   54,   54,  111,   54,  111,
+      123,   54,  111,  111,  124,  125,  123,  125,  126,   54,
+      111,  127,  124,  127,  128,  126,  111,  129,  111,  128,
 
-      127,  108,  127,  108,  108,  108,    0,  107,  107,  107,
-      107,  107,  107,  107,  107,  107,  107,  107,  107,  107,
-      107,  107,  107,  107,  107,  107,  107
+      130,  129,  130,  131,  111,  131,  111,  111,  111,    0,
+      110,  110,  110,  110,  110,  110,  110,  110,  110,  110,
+      110,  110,  110,  110,  110,  110,  110,  110,  110,  110,
+      110
     } ;
 
-static yyconst short int yy_nxt[460] =
+static yyconst short int yy_nxt[476] =
     {   0,
         4,    5,    6,    7,    4,    4,    8,    4,    9,   10,
         4,    4,    9,   11,   12,    9,    9,    9,    9,    9,
         9,    9,   13,    9,    9,   14,   16,   17,   17,   17,
-       15,   15,   27,   15,   15,   19,  103,   15,   23,   15,
-       15,   15,   15,   21,   28,   15,   22,   19,   98,   24,
+       15,   15,   27,   15,   15,   19,  106,   15,   23,   15,
+       15,   15,   15,   21,   28,   15,   22,   19,  101,   24,
        23,   15,   15,   22,   15,   15,   29,   15,   15,   15,
-      101,   15,   23,   15,   15,   15,   21,   21,   15,   22,
-       19,   97,   24,   24,   15,   15,   22,   16,   17,   17,
-       17,   36,   23,   23,   37,   38,   26,   15,   15,   40,
-       15,   15,   15,   23,   15,   41,   15,   15,   15,   15,
+      104,   15,   23,   15,   15,   15,   21,   21,   15,   22,
+       19,  100,   24,   24,   15,   15,   22,   16,   17,   17,
+       17,   36,   23,   23,   37,   38,   26,   15,   15,   51,
+       15,   15,   15,   23,   15,   52,   15,   15,   15,   15,
 
-       89,   15,   15,   19,   23,   15,   43,   15,   15,   15,
-       15,   21,   23,   15,   46,   15,   93,   24,   50,   15,
-       15,   15,   32,   23,   15,   15,   15,   33,   15,   83,
-       15,   15,   15,   15,   15,   52,   15,   15,   15,   23,
-       15,   92,   15,   35,   23,   39,   15,   40,   58,   15,
-       15,   15,   86,   41,   23,   15,   15,   15,   32,   53,
-       15,   15,   15,   33,   15,   55,   15,   15,   15,   15,
-       15,   48,   15,   62,   15,   23,   15,   23,   15,   15,
-       44,   15,   47,   23,   15,   15,   15,   15,   15,   60,
-       15,   15,   15,   15,   15,   73,   15,   23,   15,   22,
+       15,   92,   15,   15,   19,   23,   15,   42,   15,   15,
+       15,   15,   21,   23,   15,   45,   15,   96,   24,   48,
+       15,   15,   15,   32,   23,   15,   15,   15,   33,   15,
+       86,   15,   15,   15,   15,   15,   50,   15,   15,   15,
+       23,   15,   95,   15,   35,   23,   39,   15,   15,   60,
+       15,   15,   40,   62,   15,   23,   15,   15,   15,   15,
+       32,   23,   15,   15,   15,   33,   15,   54,   15,   15,
+       15,   15,   15,   89,   15,   65,   15,   23,   15,   23,
+       15,   15,   43,   15,   15,   23,   15,   15,   15,   22,
+       15,   66,   15,   15,   15,   15,   76,   15,   72,   15,
 
-       15,   23,   15,   15,   51,   15,   47,   64,   15,   15,
-       15,   15,   15,   23,   15,   15,   15,   15,   15,   22,
-       15,   63,   15,   69,   15,   54,   15,   15,   23,   23,
-       56,   15,   15,   23,   15,   22,   15,   72,   15,   42,
-       15,   15,   15,   21,   65,   15,   79,   15,   22,   24,
-       66,   15,   15,   61,   23,   67,   22,   68,   70,   65,
-       34,   59,   22,   71,   23,   66,   74,   70,   75,   33,
-       76,   22,   71,   22,   77,   81,   77,   22,   81,   94,
-       78,   82,   78,   22,   82,   95,   87,   31,   25,   23,
-       94,   20,   22,   22,   83,   84,   95,   83,   83,   83,
+       22,   15,   23,   15,   15,   49,   15,   51,   23,   15,
+       15,   15,   64,   52,   53,   15,   15,   23,   23,   55,
+       15,   57,   67,   15,   15,   15,   58,   15,   23,   15,
+       15,   15,   15,   21,   68,   15,   22,   15,   75,   24,
+       69,   15,   15,   63,   23,   70,   22,   78,   33,   59,
+       46,   61,   15,   57,   23,   15,   15,   15,   58,   15,
+       68,   15,   15,   15,   15,   15,   69,   15,   82,   15,
+       22,   15,   71,   15,   15,   15,   15,   22,   15,   41,
+       15,   73,   15,   77,   15,   15,   74,   73,   22,   80,
+       79,   84,   74,   22,   80,   81,   22,   85,   84,   90,
 
-       85,   83,   18,   83,   83,   83,   89,   90,   22,   89,
-       89,   89,   91,   89,   15,   89,   89,   89,   83,   84,
-      106,   83,   83,   83,   85,   83,  105,   83,   83,   83,
-       83,   83,  104,   83,  100,   83,  102,   83,   91,   83,
-       83,   89,   90,   96,   89,   89,   89,   91,   89,   85,
-       89,   89,   89,   89,   89,   88,   89,   80,   89,   57,
-       89,   49,   89,   89,   83,   83,   45,   83,   33,   83,
-       23,   83,   30,   83,   83,   98,   99,  107,   98,   98,
-       98,  100,   98,  107,   98,   98,   98,   89,   89,  107,
-       89,  107,   89,  107,   89,  107,   89,   89,   98,   99,
+       81,   34,   97,   22,   85,   31,   97,   22,   98,   22,
+       86,   87,   98,   86,   86,   86,   88,   86,   25,   86,
+       86,   86,   92,   93,   22,   92,   92,   92,   94,   92,
+       23,   92,   92,   92,   86,   87,   20,   86,   86,   86,
+       88,   86,   18,   86,   86,   86,   86,   86,   15,   86,
+      109,   86,  108,   86,  107,   86,   86,   92,   93,  103,
+       92,   92,   92,   94,   92,  105,   92,   92,   92,   92,
+       92,   94,   92,   99,   92,   88,   92,   91,   92,   92,
+       86,   86,   83,   86,   58,   86,   56,   86,   47,   86,
+       86,  101,  102,   44,  101,  101,  101,  103,  101,   33,
 
-      107,   98,   98,   98,  100,   98,  107,   98,   98,   98,
-       98,   98,  107,   98,  107,   98,  107,   98,  107,   98,
-       98,   98,   98,  107,   98,  107,   98,  107,   98,  107,
-       98,   98,    3,  107,  107,  107,  107,  107,  107,  107,
-      107,  107,  107,  107,  107,  107,  107,  107,  107,  107,
-      107,  107,  107,  107,  107,  107,  107,  107,  107
+      101,  101,  101,   92,   92,   23,   92,   30,   92,  110,
+       92,  110,   92,   92,  101,  102,  110,  101,  101,  101,
+      103,  101,  110,  101,  101,  101,  101,  101,  110,  101,
+      110,  101,  110,  101,  110,  101,  101,  101,  101,  110,
+      101,  110,  101,  110,  101,  110,  101,  101,    3,  110,
+      110,  110,  110,  110,  110,  110,  110,  110,  110,  110,
+      110,  110,  110,  110,  110,  110,  110,  110,  110,  110,
+      110,  110,  110,  110,  110
     } ;
 
-static yyconst short int yy_chk[460] =
+static yyconst short int yy_chk[476] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    5,    5,    6,    6,
-        8,    8,   12,    8,    8,    8,  127,    8,   12,    8,
-        8,    8,    9,    9,   13,    9,    9,    9,  126,    9,
+        8,    8,   12,    8,    8,    8,  131,    8,   12,    8,
+        8,    8,    9,    9,   13,    9,    9,    9,  130,    9,
        13,    9,    9,    9,   10,   10,   14,   10,   10,   10,
-      125,   10,   14,   10,   10,   11,   11,   21,   11,   11,
-       11,  124,   11,   21,   11,   11,   11,   16,   16,   17,
-       17,   26,   26,   28,   27,   28,   11,   19,   19,   40,
-       19,   19,   19,   27,   19,   40,   19,   19,   20,   20,
+      129,   10,   14,   10,   10,   11,   11,   21,   11,   11,
+       11,  128,   11,   21,   11,   11,   11,   16,   16,   17,
+       17,   26,   26,   28,   27,   28,   11,   19,   19,   51,
+       19,   19,   19,   27,   19,   51,   19,   19,   19,   20,
 
-      123,   20,   20,   20,   36,   20,   36,   20,   20,   20,
-       22,   22,   39,   22,   39,   22,  122,   22,   44,   22,
-       22,   24,   24,   44,   24,   24,   24,   24,   24,  121,
-       24,   24,   24,   25,   25,   46,   25,   25,   25,   46,
-       25,  120,   25,   25,   29,   29,   31,   31,   54,   31,
-       31,   31,  119,   31,   54,   31,   31,   32,   32,  118,
-       32,   32,   32,   32,   32,   50,   32,   32,   32,   34,
-       34,  117,   34,   58,   34,   50,   34,   37,   34,   34,
-       37,   41,   41,   58,   41,   41,   41,   41,   41,   56,
-       41,   41,   41,   42,   42,   68,   42,   56,   42,   68,
+       20,  127,   20,   20,   20,   36,   20,   36,   20,   20,
+       20,   22,   22,   39,   22,   39,   22,  126,   22,   43,
+       22,   22,   24,   24,   43,   24,   24,   24,   24,   24,
+      125,   24,   24,   24,   25,   25,   45,   25,   25,   25,
+       45,   25,  124,   25,   25,   29,   29,   31,   31,   53,
+       31,   31,   31,   55,   31,   53,   31,   31,   31,   32,
+       32,   55,   32,   32,   32,   32,   32,   48,   32,   32,
+       32,   34,   34,  123,   34,   60,   34,   48,   34,   37,
+       34,   34,   37,   40,   40,   60,   40,   40,   40,   61,
+       40,   61,   40,   40,   41,   41,   71,   41,   67,   41,
 
-       42,   45,   42,   42,   45,   47,   47,   60,   47,   47,
-       47,   47,   47,   60,   47,   47,   47,   48,   48,   59,
-       48,   59,   48,   64,   48,   49,   48,   48,   49,   51,
-       51,   53,   53,   64,   53,   67,   53,   67,   53,  116,
-       53,   53,   55,   55,   61,   55,   74,   55,   74,   55,
-       61,   55,   55,   57,   57,   62,   62,   63,   66,   65,
-      115,   55,   63,   66,   61,   65,   69,   70,   71,   71,
-       72,   69,   70,   72,   73,   76,   77,  114,   81,   94,
-       73,   76,   77,   79,   81,   94,   79,  113,  112,  111,
-       87,  110,   73,   76,   78,   78,   87,   78,   78,   78,
+       71,   41,   44,   41,   41,   44,   46,   46,   67,   46,
+       46,   46,  122,   46,   47,   46,   46,   47,   49,   49,
+       52,   52,   62,   52,   52,   52,   52,   52,   62,   52,
+       52,   52,   54,   54,   63,   54,   70,   54,   70,   54,
+       63,   54,   54,   56,   56,   65,   65,   74,   74,  121,
+      120,   54,   57,   57,   63,   57,   57,   57,   57,   57,
+       68,   57,   57,   57,   59,   59,   68,   59,   77,   59,
+       77,   59,   66,   59,   59,   64,   64,   66,   64,  119,
+       64,   69,   64,   72,   64,   64,   69,   73,   72,   76,
+       75,   79,   73,   75,   80,   76,   82,   79,   84,   82,
 
-       78,   78,  109,   78,   78,   78,   82,   82,   87,   82,
-       82,   82,   82,   82,  108,   82,   82,   82,   84,   84,
-      105,   84,   84,   84,   84,   84,  104,   84,   84,   84,
-       86,   86,  102,   86,  100,   86,   96,   86,   91,   86,
-       86,   90,   90,   88,   90,   90,   90,   90,   90,   85,
-       90,   90,   90,   92,   92,   80,   92,   75,   92,   52,
-       92,   43,   92,   92,   93,   93,   38,   93,   33,   93,
-       23,   93,   18,   93,   93,   95,   95,    3,   95,   95,
-       95,   95,   95,    0,   95,   95,   95,   97,   97,    0,
-       97,    0,   97,    0,   97,    0,   97,   97,   99,   99,
+       80,  118,   97,  117,   84,  116,   90,   76,   97,   79,
+       81,   81,   90,   81,   81,   81,   81,   81,  115,   81,
+       81,   81,   85,   85,   90,   85,   85,   85,   85,   85,
+      114,   85,   85,   85,   87,   87,  113,   87,   87,   87,
+       87,   87,  112,   87,   87,   87,   89,   89,  111,   89,
+      108,   89,  107,   89,  105,   89,   89,   93,   93,  103,
+       93,   93,   93,   93,   93,   99,   93,   93,   93,   95,
+       95,   94,   95,   91,   95,   88,   95,   83,   95,   95,
+       96,   96,   78,   96,   58,   96,   50,   96,   42,   96,
+       96,   98,   98,   38,   98,   98,   98,   98,   98,   33,
 
-        0,   99,   99,   99,   99,   99,    0,   99,   99,   99,
-      101,  101,    0,  101,    0,  101,    0,  101,    0,  101,
-      101,  103,  103,    0,  103,    0,  103,    0,  103,    0,
-      103,  103,  107,  107,  107,  107,  107,  107,  107,  107,
-      107,  107,  107,  107,  107,  107,  107,  107,  107,  107,
-      107,  107,  107,  107,  107,  107,  107,  107,  107
+       98,   98,   98,  100,  100,   23,  100,   18,  100,    3,
+      100,    0,  100,  100,  102,  102,    0,  102,  102,  102,
+      102,  102,    0,  102,  102,  102,  104,  104,    0,  104,
+        0,  104,    0,  104,    0,  104,  104,  106,  106,    0,
+      106,    0,  106,    0,  106,    0,  106,  106,  110,  110,
+      110,  110,  110,  110,  110,  110,  110,  110,  110,  110,
+      110,  110,  110,  110,  110,  110,  110,  110,  110,  110,
+      110,  110,  110,  110,  110
     } ;
 
 static yy_state_type yy_last_accepting_state;
@@ -549,15 +555,32 @@ typedef struct {
 	int value;
 } name_value_pair;
 
+
+struct {
+	char *name;
+	void *(*check_driver)(char *name);
+} freesci_subsystems[FREESCI_DRIVER_SUBSYSTEMS_NR] = {
+	{"gfx", parse_gfx_driver},
+	{"midiout", parse_midiout_driver}
+};
+
+
+static void
+set_config_parameter(config_entry_t *conf, char *subsystem_name, char *driver_name,
+		       char *option, char *value);
+
+
 static int
 parse_name(char *name, name_value_pair* nvps, char *what, int oldval); /* Parses a string with a name value pair */
 
-static void *
-parse_gfx_driver(char *s); /* Parses a graphics driver */
-static void *
-parse_midiout_driver(char *driver_name); /* parses a midiout driver */
-static void *
-parse_midi_device(char *driver_name); /* ditto */
+static void
+copy_subsystem_options(config_entry_t *dest, config_entry_t *src);
+/* Copies all subsystem options
+** Parameters: (config_entry_t *) dest: The destination config struct
+**             (config_entry_t *) src: Source struct
+** Returns   : (void)
+*/
+
 
 static name_value_pair valid_modes[] = {
 	{"default", GFXR_DITHER_MODE_D16},
@@ -703,7 +726,7 @@ standard_option standard_options[] = {
 static void
 parse_option(char *option, int optlen, char *value);
 
-#line 707 "lex.yy.c"
+#line 730 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -854,10 +877,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 217 "config.l"
+#line 234 "config.l"
 
 
-#line 861 "lex.yy.c"
+#line 884 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -908,13 +931,13 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 108 )
+				if ( yy_current_state >= 111 )
 					yy_c = yy_meta[(unsigned int) yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 433 );
+		while ( yy_base[yy_current_state] != 449 );
 
 yy_find_action:
 		yy_act = yy_accept[yy_current_state];
@@ -942,8 +965,9 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 219 "config.l"
+#line 236 "config.l"
 {
+	char *cleanup;
 	++yytext; /* Get over opening bracket */
 
 	++cur_section; /* Start new section */
@@ -956,18 +980,20 @@ YY_RULE_SETUP
 	if (conf[0].console_log)
 		conf[cur_section].console_log = strdup (conf[0].console_log);
 
-	/* Copy the gfx system init strings */
-	if (conf[cur_section].gfx_config) {
-		conf[cur_section].gfx_config = malloc(sizeof(gfx_option_t *) * conf[0].gfx_config_nr);
-		memcpy(&(conf[cur_section].gfx_config), &(conf[0].gfx_config),
-		       sizeof(gfx_option_t *) * conf[0].gfx_config_nr);
-	}
+	/* Copy the subsystem init strings */
+	copy_subsystem_options(conf + cur_section, conf);
 
 	while (isspace(*yytext))
 		yytext++;
 
+	cleanup = strchr(yytext, ']');
+
+	do {
+		*cleanup-- = 0;
+	} while (isblank(*cleanup));
+
 	conf[cur_section].name = strdup(yytext);
-	conf[cur_section].name[strlen(yytext)-1] = 0; /* Terminate string at "]" */
+
 	conf[cur_section].resource_dir = strdup(".");
 
 	if (dospath)
@@ -986,7 +1012,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 261 "config.l"
+#line 281 "config.l"
 { /***** End of graphics *****/
 
 	yytext = strchr(yytext, '=') + 1;
@@ -999,7 +1025,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 271 "config.l"
+#line 291 "config.l"
 {
 	yytext = strchr (yytext, '=') + 1;
 
@@ -1014,7 +1040,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 283 "config.l"
+#line 303 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1027,7 +1053,7 @@ if (cur_section) {
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 294 "config.l"
+#line 314 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1039,48 +1065,46 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 304 "config.l"
+#line 324 "config.l"
 {
-/* gfx driver parameters */
-        char *p=yytext;
-        char *p2;
+/* driver parameters */
+        char *subsys_name = yytext;
+        char *driver_name;
+	char *option, *value;
+	char *p2;
 
         yytext = strchr(yytext, '.');
         *yytext++ = 0;
-        if (!strcasecmp (p, conf->gfx_driver->name)) {
-                int newcfg;
+        driver_name = yytext;
+	yytext = strchr(yytext, '.');
+        *yytext++ = 0;
 
-                p = yytext;
-                yytext = strchr(yytext, '=');
-                *yytext++ = 0;
 
-                p2 = yytext-2;                    /* trim right spaces */
-                while (p2 > p && isspace (*p2))
-                        *p2-- = 0;
+	option = yytext;
+	yytext = strchr(yytext, '=');
+	*yytext++ = 0;
 
-                while (isspace(*yytext))
-                        yytext++;
+	p2 = yytext-2;                    /* trim right spaces */
+	while (p2 > option && isspace (*p2))
+		*p2-- = 0;
 
-                p2=yytext+strlen (yytext);        /* trim right spaces */
-                while (p2 > p && isspace (*p2))
+	while (isspace(*yytext))
+		yytext++;
+
+	value = yytext;
+
+	p2 = yytext+strlen (yytext);        /* trim right spaces */
+	while (p2 > value && isspace (*p2))
                 *p2-- = 0;
 
-                newcfg = (conf[cur_section].gfx_config_nr)++;
+	
+	set_config_parameter(conf + cur_section, subsys_name, driver_name, option, value);
 
-                if (newcfg)
-                conf[cur_section].gfx_config = realloc(conf[cur_section].gfx_config,
-			(newcfg + 1) * sizeof(gfx_option_t *));
-		else
-		        conf[cur_section].gfx_config = malloc(conf[cur_section].gfx_config_nr * sizeof(gfx_option_t *));
-
-                conf[cur_section].gfx_config[newcfg].option = strdup(p);
-                conf[cur_section].gfx_config[newcfg].value = strdup(yytext);
-        }
 }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 343 "config.l"
+#line 361 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
@@ -1102,16 +1126,16 @@ case 8:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 361 "config.l"
+#line 379 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 363 "config.l"
+#line 381 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 365 "config.l"
+#line 383 "config.l"
 {
         yy_delete_buffer( YY_CURRENT_BUFFER );
         yyterminate();
@@ -1119,15 +1143,15 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 370 "config.l"
+#line 388 "config.l"
 printf("Unrecognized option: '%s'\n", yytext);
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 372 "config.l"
+#line 390 "config.l"
 ECHO;
 	YY_BREAK
-#line 1131 "lex.yy.c"
+#line 1155 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -1417,7 +1441,7 @@ static yy_state_type yy_get_previous_state()
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 108 )
+			if ( yy_current_state >= 111 )
 				yy_c = yy_meta[(unsigned int) yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
@@ -1452,11 +1476,11 @@ yy_state_type yy_current_state;
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 108 )
+		if ( yy_current_state >= 111 )
 			yy_c = yy_meta[(unsigned int) yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
-	yy_is_jam = (yy_current_state == 107);
+	yy_is_jam = (yy_current_state == 110);
 
 	return yy_is_jam ? 0 : yy_current_state;
 	}
@@ -2011,7 +2035,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 372 "config.l"
+#line 390 "config.l"
 
 
 int
@@ -2026,6 +2050,7 @@ config_init(config_entry_t **_conf, char *conffile)
 {
 	char *homedir = getenv("HOME");
 	char *conf_path;
+	int i;
 
 	conf = malloc(sizeof(config_entry_t));
 
@@ -2058,8 +2083,9 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->name = NULL;
 	conf->resource_dir = NULL;
 	conf->work_dir = NULL;
-	conf->gfx_config = NULL;
-	conf->gfx_config_nr = 0;
+
+	for (i = 0; i < FREESCI_DRIVER_SUBSYSTEMS_NR; i++)
+		conf->driver_options[i] = NULL;
 /**** Default config ends */
 
 
@@ -2128,6 +2154,32 @@ config_init(config_entry_t **_conf, char *conffile)
 }
 
 
+static void
+config_free_driver_options(driver_option_t *option)
+{
+	if (option) {
+		free(option->option);
+		free(option->value);
+
+		config_free_driver_options(option->next);
+		free(option);
+	}
+}
+
+static void
+config_free_driver_subsystem(subsystem_options_t *subsys)
+{
+	if (subsys) {
+		free(subsys->name);
+
+		config_free_driver_options(subsys->options);
+
+		config_free_driver_subsystem(subsys->next);
+		free(subsys);
+	}
+}
+
+
 void
 config_free(config_entry_t **conf, int entries)
 {
@@ -2137,6 +2189,8 @@ config_free(config_entry_t **conf, int entries)
 		free((*conf)->console_log);
 
 	for (i = 1; i < entries; i++) {
+		int j;
+
 		free ((*conf)[i].name);
 		free ((*conf)[i].work_dir);
 		if ((*conf)[i].resource_dir)
@@ -2144,16 +2198,9 @@ config_free(config_entry_t **conf, int entries)
 		if ((*conf)[i].console_log)
 			free((*conf)[i].console_log);
 
-		if ((*conf)[i].gfx_config) {
-			int j;
-
-			for (j = 0; j < (*conf)[i].gfx_config_nr; j++) {
-				free ((*conf)[i].gfx_config[j].option);
-				free ((*conf)[i].gfx_config[j].value);
-			}
-
-			free((*conf)[i].gfx_config);
-		}
+		for (j = 0; j < FREESCI_DRIVER_SUBSYSTEMS_NR; j++)
+			if ((*conf)->driver_options[j])
+				config_free_driver_subsystem((*conf)->driver_options[j]);
 	}
 
 	free (*conf);
@@ -2178,7 +2225,7 @@ parse_name(char *name, name_value_pair *nvps, char *what, int oldval)
 }
 
 
-static void *
+void *
 parse_gfx_driver(char *driver_name)
 {
 	gfx_driver_t *retval = gfx_find_driver(driver_name);
@@ -2191,7 +2238,7 @@ parse_gfx_driver(char *driver_name)
 	return (void *) conf->gfx_driver;
 }
 
-static void *
+void *
 parse_midiout_driver(char *driver_name)
 {
 	midiout_driver_t *retval = midiout_find_driver(driver_name);
@@ -2205,7 +2252,7 @@ parse_midiout_driver(char *driver_name)
 }
 
 
-static void *
+void *
 parse_midi_device(char *driver_name)
 {
 	midi_device_t *retval = midi_find_device(driver_name);
@@ -2294,3 +2341,120 @@ parse_option(char *option, int optlen, char *value)
 	}
 }
 
+
+driver_option_t *
+get_driver_options(config_entry_t *config, int subsystem, char *name)
+{
+	subsystem_options_t *options;
+
+	if (subsystem < 0 || subsystem >= FREESCI_DRIVER_SUBSYSTEMS_NR) {
+		fprintf(stderr, "Attempt to get options from invalid subsystem #%d!\n", subsystem);
+		return NULL;
+	}
+
+	if (!config)
+		return NULL;
+
+
+	options = config->driver_options[subsystem];
+
+	while (options && strcasecmp(options->name, name))
+		options = options->next;
+
+	if (options)
+		return options->options;
+
+	return NULL;
+}
+
+static driver_option_t *
+clone_driver_options(driver_option_t *options)
+{
+	driver_option_t *retval;
+
+	if (!options)
+		return NULL;
+
+	retval = malloc(sizeof(driver_option_t));
+	retval->option = strdup(options->option);
+	retval->value = strdup(options->value);
+	retval->next = clone_driver_options(options->next);
+
+	return retval;
+}
+
+static subsystem_options_t *
+clone_subsystem_options(subsystem_options_t *options)
+{
+	subsystem_options_t *retval;
+
+	if (!options)
+		return NULL;
+
+	retval = malloc(sizeof(subsystem_options_t));
+	retval->name = strdup(options->name);
+	retval->options = clone_driver_options(options->options);
+	retval->next = clone_subsystem_options(options->next);
+
+	return retval;
+}
+
+static void
+copy_subsystem_options(config_entry_t *dest, config_entry_t *src)
+{
+	int i;
+	for (i = 0; i < FREESCI_DRIVER_SUBSYSTEMS_NR; i++)
+		dest->driver_options[i] = clone_subsystem_options(src->driver_options[i]);
+}
+
+static void
+set_config_parameter(config_entry_t *conf, char *subsystem_name, char *driver_name,
+		       char *option, char *value)
+{
+	subsystem_options_t **subsys_optionsp;
+	driver_option_t **driver_optionsp;
+	int subsystem_nr = -1;
+	int i = 0;
+
+	while (subsystem_nr == -1 && i < FREESCI_DRIVER_SUBSYSTEMS_NR) {
+		if (!strcasecmp(subsystem_name, freesci_subsystems[i].name))
+			subsystem_nr = i;
+		i++;
+	}
+
+	if (subsystem_nr == -1) {
+		sciprintf("config file: There is no subsystem named '%s'\n", subsystem_name);
+		return;
+	}
+
+	if (!(freesci_subsystems[subsystem_nr].check_driver(driver_name))) {
+		sciprintf("config file: There is no %s driver called '%s'\n", subsystem_name, driver_name);
+		return;
+	}
+
+	subsys_optionsp = &(conf->driver_options[subsystem_nr]);
+
+	while (*subsys_optionsp && strcasecmp((*subsys_optionsp)->name, driver_name))
+		subsys_optionsp = &((*subsys_optionsp)->next);
+
+	if (!*subsys_optionsp) {
+		*subsys_optionsp = malloc(sizeof(subsystem_options_t));
+		(*subsys_optionsp)->name = strdup(driver_name);
+		(*subsys_optionsp)->next = NULL;
+		(*subsys_optionsp)->options = NULL;
+	}
+
+	driver_optionsp = &((*subsys_optionsp)->options);
+
+	while (*driver_optionsp && strcasecmp((*driver_optionsp)->option, option))
+		driver_optionsp = &((*driver_optionsp)->next);
+
+	if (*driver_optionsp) {
+		free((*driver_optionsp)->value);
+	} else {
+		*driver_optionsp = malloc(sizeof(driver_option_t));
+		(*driver_optionsp)->option = strdup(option);
+	}
+
+	(*driver_optionsp)->value = strdup(value);
+}
