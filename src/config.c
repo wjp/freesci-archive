@@ -841,7 +841,7 @@ parse_option(char *option, int optlen, char *value);
 char *
 crop_value(char *yytext);
 
-#line 845 "lex.yy.c"
+#line 845 "config.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -1006,7 +1006,7 @@ YY_DECL
 #line 275 "config.l"
 
 
-#line 1010 "lex.yy.c"
+#line 1010 "config.c"
 
 	if ( yy_init )
 		{
@@ -1258,7 +1258,7 @@ YY_RULE_SETUP
 #line 414 "config.l"
 ECHO;
 	YY_BREAK
-#line 1262 "lex.yy.c"
+#line 1262 "config.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2240,7 +2240,7 @@ config_init(config_entry_t **_conf, char *conffile)
 
 	conf->version = 0;
 
-	conf->alpha_threshold = 0x81;
+	conf->alpha_threshold = 0x90;
 	conf->animation_delay = 5;
 	conf->animation_granularity = 4;
 	conf->console_log = NULL;

@@ -1570,8 +1570,10 @@ _gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int c
 	if (color == 0xff)
 		drawenable &= ~GFX_MASK_VISUAL;
 
-	if (priority == 0)
+	if (priority == 0) {
 		drawenable &= ~GFX_MASK_PRIORITY;
+		original_drawenable &= ~GFX_MASK_PRIORITY;
+	}
 
 	_gfxr_auxbuf_fill(pic, x_320, y_200, original_drawenable,
 			  (drawenable & GFX_MASK_CONTROL)? control : 0);

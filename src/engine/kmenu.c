@@ -100,7 +100,7 @@ kDrawMenuBar(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
-#define ABOUT_FREESCI_PAGES_NR 5
+#define ABOUT_FREESCI_PAGES_NR 6
 
 struct {
 	char *title;
@@ -131,19 +131,25 @@ struct {
 	 "Paul David Doherty\nGame version information\n\n"
 	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements\n\n"
 	 "Rainer Canavan\nIRIX MIDI driver and bug fixes\n\n"
-	 "Rainer De Temple\nSCI research",
+	 "Rainer De Temple\nSCI research\n\n"
+	 "Ravi I.\nSCI0 sound resource specification",
 	 0, 15},
 	{"Still more of them",
-	 "Ravi I.\nSCI0 sound resource specification\n\n"
 	 "Rune Orsval\nConfiguration file editor\n\n"
 	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research\n\n"
 	 "Rink Springer\nPort to the DOS platform, several bug fixes\n\n"
 	 "Robey Pointer\nBug tracking system hosting\n\n"
 	 "Sergey Lapin\nPort of Carl's type 2 decompression code\n\n"
-	 "Solomon Peachy\nSDL ports and much of the sound subsystem",
+	 "Solomon Peachy\nSDL ports and much of the sound subsystem\n\n"
+	 "Vyacheslav Dikonov\nConfig script improvements",
+	 0, 15},
+	{"The CSCI5573 Team at CU Boulder",
+	 "Xiaojun Chen\nSean Terrell\nChristoph Reichenbach\n\n"
+	 "Special thanks to Prof. Dr. Gary Nutt\n\nfor allowing the FreeSCI VM extension as a\ncourse project in his Advanced OS course",
 	 0, 15},
 	{"Special Thanks",
-	 "\nSpecial Thanks\n\n\nto the linuxgames.com and telefragged.com crew\nfor hosting us\n\n"
+	 "\nSpecial Thanks as well\n\n\nto the linuxgames.com and telefragged.com crew\nfor hosting us\n\n"
+	 "To the savannah.gnu.org staff\nfor hosting our mailing list\n\n"
 	 "To Bob Heitman and Corey Cole for their support",
 	 0, 15}
 };

@@ -1,3 +1,11 @@
+2002-12-29  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/config.l: Increased alpha threshold (backport from glutton)
+
+	* src/gfx/resource/sci_pic_0.c (_gfxr_fill): Delete priority mask
+	part of the original drawenable if neccessary; fixes pic 27 in
+	PQ2 without breaking pic 15 in the same game (priority map)
+
 2002-12-28  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kmovement.c (kDoBresen): Read client::moveSpeed to

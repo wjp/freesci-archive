@@ -906,7 +906,6 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 
 	s->acc = gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart, ystart + 10, xlen, ylen), map);
-
 }
 
 void
