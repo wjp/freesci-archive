@@ -93,7 +93,7 @@ kDrawMenuBar(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
-#define ABOUT_FREESCI_PAGES_NR 4
+#define ABOUT_FREESCI_PAGES_NR 5
 
 struct {
 	char *title;
@@ -117,7 +117,7 @@ struct {
 	 "Francois-R Boyer\nMT-32 information and mapping code\n\n"
 	 "George Reid\nFreeBSD package management",
 	 0, 15},
-	{"Still more FreeSCI hackers & contributors",
+	{"Even more FreeSCI hackers & contributors",
 	 "Lars Skovlund\nMost of the relevant documentation, several bugfixes\n\n"
 	 "Magnus Reftel\nHeap implementation, Python class viewer, bugfixes\n\n"
 	 "Matt Hargett\nClean-ups, bugfixes, Hardcore QA, Win32\n\n"
@@ -125,14 +125,17 @@ struct {
 	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements\n\n"
 	 "Rainer De Temple\nSCI research",
 	 0, 15},
-	{"That's all folks!",
+	{"Still more of them",
 	 "Ravi I.\nSCI0 sound resource specification\n\n"
 	 "Rune Orsval\nConfiguration file editor\n\n"
 	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research\n\n"
 	 "Rink Springer\nPort to the DOS platform, several bug fixes\n\n"
 	 "Robey Pointer\nBug tracking system hosting\n\n"
-	 "Sergey Lapin\nPort of Carl's type 2 decompression code\n\n"
-	 "\n\n Special Thanks\nto the linuxgames.com and telefragged.com crew\nfor hosting us",
+	 "Sergey Lapin\nPort of Carl's type 2 decompression code\n\n",
+	 0, 15},
+	{"Special Thanks"
+	 "\n\n Special Thanks\nto the linuxgames.com and telefragged.com crew\nfor hosting us\n\n"
+	 "Bob Heitman and Corey Cole for their support",
 	 0, 15}
 };
 
@@ -166,8 +169,8 @@ about_freesci(state_t *s)
 		_about_freesci_pages[page].fgcolor = 0;
 		_about_freesci_pages[page].bgcolor = 15;
 
-		gfxop_get_text_params(s->gfx_state, bodyfont, _about_freesci_pages[page].body, 300, &width, &height);
-		gfxop_get_text_params(s->gfx_state, titlefont, _about_freesci_pages[page].title, 300, &width2, &foo);
+		gfxop_get_text_params(s->gfx_state, bodyfont, _about_freesci_pages[page].body, 300, &width, &height, 0);
+		gfxop_get_text_params(s->gfx_state, titlefont, _about_freesci_pages[page].title, 300, &width2, &foo, 0);
 
 		width += 4;
 		width2 += 4;

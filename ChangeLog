@@ -1,5 +1,8 @@
 2001-12-28  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/gfx/widgets.c (gfxw_new_text): Use text flags for calculating
+	text size
+
 	* src/include/gfx_operations.h:
 	* src/gfx/operations.c (gfxop_draw_cel_static_clipped): Added function
 	to allow clipped drawing for static views

@@ -1217,7 +1217,7 @@ gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignme
 
 	strcpy(widget->text, text);
 
-	gfxop_get_text_params(state, font, text, area.xl, &(widget->width), &(widget->height));
+	gfxop_get_text_params(state, font, text, area.xl, &(widget->width), &(widget->height), text_flags);
 
 	/* FIXME: Window is too big
 	area.x += _calc_needmove(halign, area.xl, widget->width);
@@ -1381,6 +1381,7 @@ _gfxwop_container_draw_contents(gfxw_widget_t *widget, gfxw_widget_t *contents)
 			if (_gfxw_dirty_rect_overlaps_normal_rect(GFXW_IS_CONTAINER(seeker)? nullzone : container->zone,
 								  /* Containers have absolute coordinates, reflect this. */
 								  seeker->bounds, dirty->rect)) {
+
 				if (GFXW_IS_CONTAINER(seeker)) {/* Propagate dirty rectangles /upwards/ */
 					DDIRTY(stderr,"container_draw_contents: propagate upwards (%d,%d,%d,%d ,0)\n", GFX_PRINT_RECT(dirty->rect));
 					((gfxw_container_t *)seeker)->add_dirty_abs((gfxw_container_t *)seeker, dirty->rect, 0);

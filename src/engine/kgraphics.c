@@ -534,7 +534,8 @@ kTextSize(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 
 	GFX_ASSERT(gfxop_get_text_params(s->gfx_state, font_nr, text,
-					 maxwidth? maxwidth : MAX_TEXT_WIDTH_MAGIC_VALUE, &width, &height));
+					 maxwidth? maxwidth : MAX_TEXT_WIDTH_MAGIC_VALUE,
+					 &width, &height, 0));
 	SCIkdebug(SCIkSTRINGS, "GetTextSize '%s' -> %dx%d\n", text, width, height);
 
 	PUT_HEAP(dest + 0, 0);

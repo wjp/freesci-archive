@@ -142,14 +142,14 @@ _menubar_add_menu_item(gfx_state_t *state, menu_t *menu, int type, char *left, c
 
 	if (right) {
 		int width, height;
-		gfxop_get_text_params(state, font, right, SIZE_INF, &width, &height);
+		gfxop_get_text_params(state, font, right, SIZE_INF, &width, &height, 0);
 		total_left_size = MENU_BOX_CENTER_PADDING + (item->keytext_size = width);
 	}
 
 	item->enabled = 1;
 	item->tag = tag;
 	item->text_pos = text_pos;
-	gfxop_get_text_params(state, font, left, SIZE_INF, &width, &height);
+	gfxop_get_text_params(state, font, left, SIZE_INF, &width, &height, 0);
 
 	return total_left_size + width;
 }
@@ -179,7 +179,7 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 	menu->items_nr = 0;
 	menu->title = sci_strdup(title);
 
-	gfxop_get_text_params(state, font, menu->title, SIZE_INF, &(menu->title_width), &height);
+	gfxop_get_text_params(state, font, menu->title, SIZE_INF, &(menu->title_width), &height, 0);
 
 	do {
 		tracker = *entries++;
