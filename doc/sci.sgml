@@ -6490,14 +6490,15 @@ kfunct 0x52: OnControl
 
 
         <sect3>
-        <title/Kernel function 0x55: DoAvoider()/
+        <title/Kernel function 0x55: DoAvoider(HeapPtr)/
                 <funcsynopsis><funcprototype><funcdef>
                         kfunct 0x55: DoAvoider
-                </funcdef><paramdef></paramdef></funcprototype></funcsynopsis>
+                </funcdef><paramdef>HeapPtr avoider</paramdef></funcprototype></funcsynopsis>
                 <para>
-                        Returns: <type>(void)</type>
+                        Returns: <type>(word)</type> New direction
                 </para><para>
-                        This function is a no-op.
+                        This function is a no-op in later SCI games, but is implemented
+		  in some or all pre-0.000.576 interpreters.
                 </para>
         </sect3>
 

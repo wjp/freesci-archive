@@ -107,100 +107,100 @@
 struct _state; /* engine.h */
 
 
-typedef struct
-{
-  int script; /* number of the script the class is in */
-  heap_ptr *scriptposp; /* Pointer to the script position entry in the script list */
-  int class_offset; /* script-relative position of the class */
+typedef struct {
+	int script; /* number of the script the class is in */
+	heap_ptr *scriptposp; /* Pointer to the script position entry in the script list */
+	int class_offset; /* script-relative position of the class */
 } class_t;
 
 
 /* This struct is used to buffer the list of send calls in send_selector() */
 typedef struct {
-  heap_ptr address;
-  heap_ptr argp;
-  int argc;
-  int selector;
-  heap_ptr sp; /* Stack pointer */
-  heap_ptr type; /* Same as exec_stack_t.type */
+	heap_ptr address;
+	heap_ptr argp;
+	int argc;
+	int selector;
+	heap_ptr sp; /* Stack pointer */
+	heap_ptr type; /* Same as exec_stack_t.type */
 } calls_struct_t;
 
 
-typedef struct
-{
-  heap_ptr heappos; /* Script position on the heap or 0 if not yet loaded */
-  heap_ptr localvar_offset; /* Abs. offset of the local variable block or 0 if not present */
-  heap_ptr export_table_offset; /* Abs. offset of the export table or 0 if not present */
-  heap_ptr synonyms_offset; /* Abs. offset of the synonyms block  or 0 if not present*/
-  int synonyms_nr; /* Number of entries in the synonyms block */
-  int lockers; /* Number of classes and objects that require this script */
+typedef struct {
+	heap_ptr heappos; /* Script position on the heap or 0 if not yet loaded */
+	heap_ptr localvar_offset; /* Abs. offset of the local variable block or 0 if not present */
+	heap_ptr export_table_offset; /* Abs. offset of the export table or 0 if not present */
+	heap_ptr synonyms_offset; /* Abs. offset of the synonyms block  or 0 if not present*/
+	int synonyms_nr; /* Number of entries in the synonyms block */
+	int lockers; /* Number of classes and objects that require this script */
 } script_t;
 
-typedef struct
-{
-  int init; /* Init function */
-  int play; /* Play function (first function to be called) */
-  int replay; /* Replay function */
-  int x, y, z; /* Coordinates */
-  int priority;
-  int view, loop, cel; /* Description of a specific image */
-  int brLeft, brRight, brTop, brBottom; /* Bounding Rectangle */
-  int xStep, yStep; /* BR adjustments */
-  int nsLeft, nsRight, nsTop, nsBottom; /* View boundaries ('now seen') */
-  int text, font; /* Used by controls */
-  int type, state; /* Used by contols as well */
-  int doit; /* Called (!) by the Animate() system call */
-  int delete; /* Called by Animate() to dispose a view object */
-  int signal; /* Used by Animate() to control a view's behaviour */
-  int underBits; /* Used by the graphics subroutines to store backupped BG pic data */
+typedef struct {
+	int init; /* Init function */
+	int play; /* Play function (first function to be called) */
+	int replay; /* Replay function */
+	int x, y, z; /* Coordinates */
+	int priority;
+	int view, loop, cel; /* Description of a specific image */
+	int brLeft, brRight, brTop, brBottom; /* Bounding Rectangle */
+	int xStep, yStep; /* BR adjustments */
+	int nsLeft, nsRight, nsTop, nsBottom; /* View boundaries ('now seen') */
+	int text, font; /* Used by controls */
+	int type, state; /* Used by contols as well */
+	int doit; /* Called (!) by the Animate() system call */
+	int delete; /* Called by Animate() to dispose a view object */
+	int signal; /* Used by Animate() to control a view's behaviour */
+	int underBits; /* Used by the graphics subroutines to store backupped BG pic data */
 
-  /* The following selectors are used by the Bresenham syscalls: */
-  int canBeHere; /* Funcselector: Checks for movement validity */
-  int client; /* The object that wants to be moved */
-  int cycler; /* The cycler of the client */
-  int dx, dy; /* Deltas */
-  int edgeHit;
-  int b_movCnt, b_i1, b_i2, b_di, b_xAxis, b_incr; /* Various Bresenham vars */
-  int completed;
+	/* The following selectors are used by the Bresenham syscalls: */
+	int canBeHere; /* Funcselector: Checks for movement validity */
+	int client; /* The object that wants to be moved */
+	int cycler; /* The cycler of the client */
+	int dx, dy; /* Deltas */
+	int edgeHit;
+	int b_movCnt, b_i1, b_i2, b_di, b_xAxis, b_incr; /* Various Bresenham vars */
+	int completed;
 
-  int illegalBits; /* Used by CanBeHere */
-  int dispose;
+	int illegalBits; /* Used by CanBeHere */
+	int dispose;
 
-  int prevSignal; /* Used by DoSound */
+	int prevSignal; /* Used by DoSound */
 
-  int message, modifiers; /* Used by GetEvent */
+	int message, modifiers; /* Used by GetEvent */
 
-  int owner, handle;
-  int cue;
-  int number;
+	int owner, handle;
+	int cue;
+	int number;
 
-  int max, cursor; /* Used by EditControl */
+	int max, cursor; /* Used by EditControl */
 
-  int wordFail, syntaxFail, semanticFail; /* Used by Parse() */
+	int wordFail, syntaxFail, semanticFail; /* Used by Parse() */
 
-  int claimed; /* Used generally by the event mechanism */
+	int claimed; /* Used generally by the event mechanism */
 
-  int elements; /* Used by SetSynonyms() */
+	int elements; /* Used by SetSynonyms() */
 
-  int lsTop, lsBottom, lsRight, lsLeft; /* Used by Animate() subfunctions and scroll list controls */
+	int lsTop, lsBottom, lsRight, lsLeft; /* Used by Animate() subfunctions and scroll list controls */
 
-  int baseSetter; /* Alternative baseSetter */
+	int baseSetter; /* Alternative baseSetter */
 
-  int who, distance; /* Used for 'chasing' movers */
+	int who, distance; /* Used for 'chasing' movers */
+
+	int looper, mover, isBlocked, heading; /* Used in DoAvoider */
+	
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {
-  heap_ptr obj;
-  heap_ptr signalp;    /* Used only indirectly */
-  heap_ptr underBitsp; /* The same goes for the handle storage */
-  int underBits; /* Copy of the underbits: Needed for cleanup */
+	heap_ptr obj;
+	heap_ptr signalp;    /* Used only indirectly */
+	heap_ptr underBitsp; /* The same goes for the handle storage */
+	int underBits; /* Copy of the underbits: Needed for cleanup */
 
-  int x, y;
-  int priority;
-  byte *view;
-  int view_nr, loop, cel; /* view_nr is ised for save/restore */
-  int nsTop, nsLeft, nsRight, nsBottom;
-  int real_y, z, index_nr; /* Used for sorting */
+	int x, y;
+	int priority;
+	byte *view;
+	int view_nr, loop, cel; /* view_nr is ised for save/restore */
+	int nsTop, nsLeft, nsRight, nsBottom;
+	int real_y, z, index_nr; /* Used for sorting */
 } view_object_t;
 
 #define VAR_GLOBAL 0
@@ -213,27 +213,27 @@ typedef struct {
 #define EXEC_STACK_TYPE_VARSELECTOR 2
 
 typedef struct {
-  heap_ptr objp;
-  heap_ptr sendp;
-  heap_ptr pc; /* Not accurate for the TOS element */
-  heap_ptr sp; /* Not accurate for the TOS element */
-  int argc;
-  heap_ptr variables[4]; /* variable base pointers: Global, Local, Temp, Param */
-  int selector; /* The selector which was used to call or -1 if not applicable */
-  int origin;   /* The stack frame position the call was made from, or -1 if it
-		** was the initial call.
-		*/
-  heap_ptr type; /* EXEC_STACK_TYPE* */
+	heap_ptr objp;
+	heap_ptr sendp;
+	heap_ptr pc; /* Not accurate for the TOS element */
+	heap_ptr sp; /* Not accurate for the TOS element */
+	int argc;
+	heap_ptr variables[4]; /* variable base pointers: Global, Local, Temp, Param */
+	int selector; /* The selector which was used to call or -1 if not applicable */
+	int origin;   /* The stack frame position the call was made from, or -1 if it
+		      ** was the initial call.
+		      */
+	heap_ptr type; /* EXEC_STACK_TYPE* */
 
 } exec_stack_t;
 
 typedef struct _breakpoint {
-  int type;
-  union {
-    guint32 address;  /* Breakpoints on exports */
-    char *name; /* Breakpoints on selector names */
-  } data;
-  struct _breakpoint *next;
+	int type;
+	union {
+		guint32 address;  /* Breakpoints on exports */
+		char *name; /* Breakpoints on selector names */
+	} data;
+	struct _breakpoint *next;
 } breakpoint_t;
 
 #define BREAK_SELECTOR 1

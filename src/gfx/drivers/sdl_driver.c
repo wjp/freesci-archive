@@ -32,7 +32,6 @@
 #	include <sys/time.h>
 #	include <SDL/SDL.h>
 #else
-#	include <winsock2.h>
 #	include <SDL.h>
 #endif
 

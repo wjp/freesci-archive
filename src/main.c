@@ -40,9 +40,6 @@
 #ifdef HAVE_FORK
 #  include <sys/wait.h>
 #endif
-#ifdef HAVE_SCHED_YIELD
-#  include <sched.h>
-#endif /* HAVE_SCHED_YIELD */
 
 #ifdef _MSC_VER
 #define extern __declspec(dllimport) extern
@@ -73,14 +70,13 @@
 
 
 #ifdef _WIN32
-#include <direct.h>
-#define PATH_MAX 255
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#define sleep Sleep
-#define strcasecmp stricmp
+#	include <direct.h>
+#	define PATH_MAX 255
+#	define WIN32_LEAN_AND_MEAN
+#	include <windows.h>
+#	define sleep Sleep
+#	define strcasecmp stricmp
 #endif
-
 
 #define ACTION_PLAY 0
 #define ACTION_LIST_SAVEGAMES 1
@@ -757,24 +753,24 @@ int
 main(int argc, char** argv)
 {
 	config_entry_t *active_conf		= NULL;
-	config_entry_t *confs		= NULL;
+	config_entry_t *confs			= NULL;
 	cl_options_t cl_options;
 	int conf_entries			= -1; /* Number of config entries */
 	int conf_nr				= -1; /* Element of conf to use */
 	int errc;
 	FILE *console_logfile			= NULL;
-	char startdir[PATH_MAX+1];
-	char resource_dir[PATH_MAX+1];
-	char work_dir[PATH_MAX+1];
+	char startdir[PATH_MAX+1] = "";
+	char resource_dir[PATH_MAX+1] = "";
+	char work_dir[PATH_MAX+1] = "";
 	char *gfx_driver_name			= NULL;
 	char *midiout_driver_name		= NULL;
 	char *midi_device_name			= NULL;
-	char *game_name				= NULL;
-	char *savegame_name			= NULL;
+	char *game_name	= NULL;
+	char *savegame_name = NULL;
 	sci_version_t version			= 0;
 	gfx_driver_t *gfx_driver		= NULL;
 	sound_server_t *sound_server	= NULL;
-	char *module_path = SCI_DEFAULT_MODULE_PATH;
+	char *module_path				= SCI_DEFAULT_MODULE_PATH;
 
 	game_name = parse_arguments(argc, argv, &cl_options, &savegame_name);
 
@@ -835,6 +831,7 @@ main(int argc, char** argv)
 
 
 	init_console();
+
 	sciprintf("FreeSCI, version "VERSION"\n");
 
 	gamestate = malloc(sizeof(state_t));

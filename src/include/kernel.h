@@ -499,6 +499,7 @@ void kRestoreGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kEmptyList(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kAddAfter(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetNowSeen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kDoAvoider(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kFileIO(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kMemory(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void k_Unknown(struct _state *s, int funct_nr, int argc, heap_ptr argp);

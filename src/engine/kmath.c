@@ -49,16 +49,22 @@ kSqrt(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
+int
+get_angle(int xrel, int yrel)
+{
+	if ((xrel == 0) && (yrel == 0))
+		return 0;
+	else
+		return (int) -(180.0/PI * atan2(yrel, xrel) + 0.5) + 180;
+}
+
 void
 kGetAngle(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	int xrel = PARAM(3) - PARAM(1);
 	int yrel = PARAM(2) - PARAM(0);
 
-	if ((xrel == 0) && (yrel == 0))
-		s->acc = 0;
-	else
-		s->acc = (int) -(180.0/PI * atan2(yrel, xrel) + 0.5) + 180;
+	s->acc = get_angle(xrel, yrel);
 }
 
 

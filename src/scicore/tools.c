@@ -223,10 +223,14 @@ void sci_gettime(int *seconds, int *useconds)
         DWORD tm;
         
 	timeBeginPeriod(0);
+	if (TIMERR_NOERROR != timeBeginPeriod(1))
+	{
+		fprintf(stderr, "timeBeginPeriod(1) failed in sci_gettime\n");
+	}
 
         tm = timeGetTime();
 
-	timeEndPeriod(0);
+	timeEndPeriod(1);
 
         *seconds = tm/1000;
         *useconds = tm*1000;

@@ -1,3 +1,27 @@
+2001-07-25  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kmovement.c (kDoAvoider): Initial DoAvoider()
+	implementation
+
+2001-07-23  Matt Hargett  <matt@use.net>
+
+	* kernel.c (kGetTime): Check return value of
+        timeBeginPeriod/timeEndPeriod. Properly wrap all time
+        calls.
+
+	* tools.c (sci_gettime): Ditto.
+
+	* dd_driver.cpp: Remove Win32_usleep. Call Sleep instead.
+
+	* graphics_ddraw.c: Ditto.
+
+	* sdl_driver.c: Removed winsock2.h include.
+
+	* soundserver_sdl.c (sounds_sdl_get_command): Change Sleep(0)
+        to Sleep(1).
+
+	* freesci.def: Get rid of deprecated functions.
+	
 2001-07-22  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/resource/sci_pic_0.c (_gfxr_plot_aux_pattern): When drawing

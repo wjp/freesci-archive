@@ -569,7 +569,7 @@ waitkey(void)
 	sci_event_t event;
 
 	while (count--) {
-		event = gfxop_get_event(state);
+		event = gfxop_get_event(state, SCI_EVT_ANY);
 
 		if (event.type)
 			return 0;
@@ -586,7 +586,7 @@ wait_specific_key(int key)
 	sci_event_t event;
 
 	while (count--) {
-		event = gfxop_get_event(state);
+		event = gfxop_get_event(state, SCI_EVT_ANY);
 
 		if (event.type == SCI_EVT_KEYBOARD
 		    && event.data == key)
@@ -861,7 +861,7 @@ test_d(void)
 	MESSAGE("D.2: Mouse clicks\nPress and release buttons to\ndraw lines\nPress any key to continue");
 
 	while (event.type != SCI_EVT_KEYBOARD) {
-		event = gfxop_get_event(state);
+		event = gfxop_get_event(state, SCI_EVT_ANY);
 
 		if (event.type == SCI_EVT_MOUSE_PRESS) {
 
@@ -899,7 +899,7 @@ test_d(void)
 	waitkey();
 
 	while (event.type != SCI_EVT_KEYBOARD || event.data != ' ') {
-		event = gfxop_get_event(state);
+		event = gfxop_get_event(state, SCI_EVT_ANY);
 
 		if (event.type)
 			identify_event(event);

@@ -760,30 +760,11 @@ MsgWait (int WaitTime)
 	} while(1);
 }
 
-static void
-Win32_usleep (long usec)
-{
-	LARGE_INTEGER lFrequency;
-	LARGE_INTEGER lEndTime;
-	LARGE_INTEGER lCurTime;
-
-	QueryPerformanceFrequency (&lFrequency);
-	if (lFrequency.QuadPart)
-	{
-		QueryPerformanceCounter (&lEndTime);
-		lEndTime.QuadPart += (LONGLONG) usec * lFrequency.QuadPart / 1000000;
-		do
-		{
-			QueryPerformanceCounter (&lCurTime);
-		} while (lCurTime.QuadPart < lEndTime.QuadPart);
-	}
-}
-
 int
 dd_usleep(gfx_driver_t* drv, int usec)
 {
 	if (usec < 1000)
-		Win32_usleep (usec);
+		Sleep(usec / 1000);
 	else
 		MsgWait (usec / 1000);
 

@@ -216,6 +216,12 @@ kSetSynonyms(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	SCIkdebug(SCIkPARSER, "Setting %d synonyms for script.%d\n",
 		  s->scripttable[script].synonyms_nr, script);
 
+	if (s->scripttable[script].synonyms_nr > 16384) {
+		SCIkwarn(SCIkERROR, "Heap corruption: script.%03d has %d synonyms!\n",
+			 script, s->scripttable[script].synonyms_nr);
+		s->scripttable[script].synonyms_nr = 0;
+	} else
+
 	for (i = 0; i < s->scripttable[script].synonyms_nr; i++) {
 	  s->synonyms[synpos].replaceant = UGET_HEAP(s->scripttable[script].synonyms_offset + i * 4);
 	  s->synonyms[synpos].replacement = UGET_HEAP(s->scripttable[script].synonyms_offset + i * 4 + 2);

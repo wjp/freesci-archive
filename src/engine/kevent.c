@@ -121,6 +121,8 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	oldy=s->gfx_state->pointer_pos.y;
 	e = gfxop_get_event(s->gfx_state, mask);
 
+	if (mask & 0x8000) fprintf(stderr,"Block\n");
+
 	s->parser_event = 0; /* Invalidate parser event */
 
 	PUT_SELECTOR(obj, x, s->gfx_state->pointer_pos.x);
@@ -137,7 +139,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		else
 			s->kernel_opt_flags |= KERNEL_OPT_FLAG_GOT_EVENT;
 	}
-  
+
 	switch(e.type)
 		{
 		case SCI_EVT_QUIT:

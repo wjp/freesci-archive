@@ -149,6 +149,10 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(baseSetter, "baseSetter");
   FIND_SELECTOR(who, "who");
   FIND_SELECTOR(distance, "distance");
+  FIND_SELECTOR(mover, "mover");
+  FIND_SELECTOR(looper, "looper");
+  FIND_SELECTOR(isBlocked, "isBlocked");
+  FIND_SELECTOR(heading, "heading");
 }
 
 int

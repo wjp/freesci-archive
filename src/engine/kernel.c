@@ -29,7 +29,7 @@
 #include <engine.h>
 #ifdef _WIN32
 #	include <windows.h>
-#endif _WIN32
+#endif /* _WIN32 */
 
 
 sci_kernel_function_t kfunct_mappers[] = {
@@ -148,12 +148,12 @@ sci_kernel_function_t kfunct_mappers[] = {
 	{"TimesTan", kTimesTan },
 	{"TimesCot", kTimesCot },
 	{"Said", kSaid },
+	{"DoAvoider", kDoAvoider },
 
   /* Experimental functions */
 	{"FileIO", kFileIO },
 	{"Memory", kMemory },
   /* Special and NOP stuff */
-	{"DoAvoider", kNOP },
 	{SCRIPT_UNKNOWN_FUNCTION_STRING, k_Unknown },
 	{0,0} /* Terminator */
 };
@@ -501,15 +501,17 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->kernel_opt_flags &= ~(KERNEL_OPT_FLAG_GOT_EVENT
 				 | KERNEL_OPT_FLAG_GOT_2NDEVENT);
 
-	the_time = time(NULL);
 #ifdef _WIN32
-	timeBeginPeriod(0);
+	if (TIMERR_NOERROR != timeBeginPeriod(1))
+	{
+		fprintf(stderr, "timeBeginPeriod(1) failed in kGetTime!\n");
+	}
 #endif _WIN32
-
+	the_time = time(NULL);
 	loc_time = localtime(&the_time);
 
 #ifdef _WIN32
-	timeEndPeriod(0);
+	timeEndPeriod(1);
 #endif _WIN32
 
 	if (s->version<SCI_VERSION_FTU_NEW_GETTIME) { /* Use old semantics */

@@ -1865,14 +1865,8 @@ c_snd(state_t *s)
 		return 1;
 	}
 
-#ifdef HAVE_SCHED_YIELD
-	sched_yield();
-#endif
-#ifdef HAVE_USLEEP
-	usleep(350000);
-#else
-	sleep(1);
-#endif
+	sci_sched_yield();
+
 	process_sound_events(s);
 	return 0;
 }
@@ -1917,6 +1911,7 @@ c_sndmap(state_t *s)
 
 	sci_sched_yield();
 	gfxop_usleep(s->gfx_state, 350000);
+
 	process_sound_events(s);
 	return 0;
 }
