@@ -24,7 +24,7 @@ You'll need to run sciv in order to play SCI games.
 [ --graphics \fIgfx\fR, -g\fIgfx\fR ]
 [ --scale-x \fIxfact\fR, -x \fIxfact\fR ]
 [ --scale-y \fIyfact\fR, -y \fIyfact\fR ]
-[ --color-depth \fIbytespp\fR, -c \fIbytespp\fR ]
+[ --color-depth \fIbpp\fR, -c \fIbpp\fR ]
 [ --disable-mouse, -m ]
 [ --midiout \fIsfx\fR, -O\fsfx\fR ]
 [ --mididevice \fIdevice\fR, -M\fIdevice\fR ]
@@ -71,8 +71,8 @@ These options allow to explicitly specify the horizontal and vertical
 scaling factors. The resulting size of the game window will be
 320*xfact x 200*yfact, plus any window decorations.
 .TP
-.BR "--color-depth \fIbytespp\fR, -\fBc\fR\fIbytespp\fR"
-This sets the number of bytes to use per pixel. Some visuals/graphics
+.BR "--color-depth \fIbpp\fR, -\fBc\fR\fIbpp\fR"
+This sets the number of bits to use per pixel. Some visuals/graphics
 drivers support several color depths, so that auto-detection may not
 yield the desired effects.
 .TP

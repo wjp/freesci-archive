@@ -1,3 +1,17 @@
+05-04-2001  Matt Hargett <matt@use.net>
+
+	* README: Add section for win32mci driver.
+
+2001-05-05  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/resmgr.c (gfxr_add_to_pic): Added anti-aliasing and
+	endianness adjustments
+
+	* src/main.c (parse_arguments): Now uses bpp instead of bytespp
+
+	* src/sound/midi_mt32gm.c (midi_mt32gm_event2): Re-enabled fine tuning
+	output for GM
+
 2001-05-04  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* doc/sci.sgml: Updates.
@@ -11,8 +25,6 @@
 	* Corrected uninitialized memory read.
 
 	* User can now specify device number in config file.
-
-	* README: Added section for win32mci driver.
 
 2001-05-03  Christoph Reichenbach  <jameson@linuxgames.com>
 

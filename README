@@ -352,6 +352,16 @@ Options:
 - recorder: Allows to record the events sent to /dev/sequencer, plus a
   preceeding 0-byte. Useful for debugging.
 
+2.1.2.4 Win32 MCI driver:
+-----------------------
+This driver (ID 'win32mci') handles output to MCI MIDI Output devices in
+Windows 95/98/NT4/2000. 
+
+Options:
+- device: MCI Device number (as output my FreeSCI during initialization).
+  This defaults to the last MCI MIDIout device found in the system, but
+  can be set in the config file using "midiout.win32mci.device = x". 
+ 
 
 2.2 Config file example:
 ------------------------

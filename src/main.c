@@ -461,7 +461,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			break;
 
 		case 'c':
-			cl_options->color_depth = atoi(optarg);
+			cl_options->color_depth = (atoi(optarg) +4) >> 3;
 			break;
 
 		case 'm':
@@ -502,7 +502,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			       EXPLAIN_OPTION("--graphics gfx", "-ggfx", "use the 'gfx' graphics driver")
 			       EXPLAIN_OPTION("--scale-x\t", "-x", "Set horizontal scale factor")
 			       EXPLAIN_OPTION("--scale-y\t", "-y", "Set vertical scale factor")
-			       EXPLAIN_OPTION("--color-depth\t", "-c", "Specify color depth")
+			       EXPLAIN_OPTION("--color-depth\t", "-c", "Specify color depth in bpp")
 			       EXPLAIN_OPTION("--disable-mouse", "-m", "Disable support for pointing device")
 			       EXPLAIN_OPTION("--midiout drv\t", "-Odrv", "use the 'drv' midiout driver")
 			       EXPLAIN_OPTION("--mididevice drv", "-Mdrv", "use the 'drv' midi device (eg mt32 or adlib)")

@@ -154,8 +154,8 @@ int midi_mt32gm_event2(guint8 command, guint8 param)
 			xparam = MIDI_mapping[param].gm_rhythmkey;
 		else {
 			xparam = MIDI_mapping[param].gm_instr;
-		
-			if (0 && xparam >= 0) {
+
+			if (channel != RHYTHM_CHANNEL && xparam >= 0) {
 				if (midi_mt32_event(0xb0 | channel,
 						    0x65, 0x00)) return -1;
 				if (midi_mt32_event(0xb0 | channel,

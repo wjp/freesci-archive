@@ -333,6 +333,7 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 	}
 
         must_post_process_pic = res->scaled_data.pic->visual_map->data == NULL;
+	/* If the pic was only just drawn, we'll have to antialiase and endianness-adjust it now */
 
 	pic = gfxr_pic_xlate_common(res, maps,
 				    scaled || state->options->pic0_unscaled,
@@ -340,14 +341,14 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 				    state->options->pic_xlate_filter, 0);
 
 
-        if (must_post_process_pic) {
+	if (must_post_process_pic) {
 
-                if (scaled || state->options->pic0_unscaled && maps & GFX_MASK_VISUAL)
+		if (scaled || state->options->pic0_unscaled && maps & GFX_MASK_VISUAL)
                         gfxr_antialiase(pic->visual_map, state->driver->mode,
                                         state->options->pic0_antialiasing);
 
                 gfxr_endianness_adjust(pic->visual_map, state->driver->mode);
-        }
+	}
 
 	return pic;
 }
@@ -359,6 +360,7 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 {
 	int restype = GFX_RESOURCE_TYPE_PIC;
 	sbtree_t *tree = state->resource_trees[restype];
+	gfxr_pic_t *pic = NULL;
 	gfx_resource_t *res = NULL;
 	int hash = gfxr_interpreter_options_hash(restype, state->version, state->options);
 	int need_unscaled = !(state->options->pic0_unscaled)
@@ -393,7 +395,15 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 
 	res->mode = MODE_INVALID; /* Invalidate */
 
-	return gfxr_pic_xlate_common(res, maps, scaled, 1, state->driver->mode, state->options->pic_xlate_filter, 1);
+	pic = gfxr_pic_xlate_common(res, maps, scaled, 1, state->driver->mode, state->options->pic_xlate_filter, 1);
+
+	if (scaled || state->options->pic0_unscaled && maps & GFX_MASK_VISUAL)
+		gfxr_antialiase(pic->visual_map, state->driver->mode,
+				state->options->pic0_antialiasing);
+
+	gfxr_endianness_adjust(pic->visual_map, state->driver->mode);
+
+	return pic;
 }
 
 

@@ -154,18 +154,12 @@ sci0_soundserver()
     sound_event_t *event_temp;
     GTimeVal wait_tv;
     int ticks = 0; /* Ticks to next command */
-    int fadeticks = 0;		
     int old_songpos = 33; /* initial positiion */
     song_t *oldsong = song;
     byte last_command = 0; /* Used for 'running' mode */
 
     fflush(ds);
-    if (fadeticks) {
-
-      fadeticks--;
-      ticks = 1; /* Just fade for this tick */
-
-    } else if (song && (song->fading == 0)) { /* Finished fading? */
+    if (song && (song->fading == 0)) { /* Finished fading? */
       printf("song %04x faded out \n", song->handle);
       song->status = SOUND_STATUS_STOPPED;
       midi_allstop();
@@ -455,7 +449,7 @@ sci0_soundserver()
 	  success = soundsrv_save_state(ds, 
 					global_sound_server->flags & SOUNDSERVER_FLAG_SEPARATE_CWD? dirname : NULL,
 					songlib, newsong,
-					ccc, usecs, ticks, fadeticks, master_volume);
+					ccc, usecs, ticks, 0, master_volume);
 	  /* Return soundsrv_save_state()'s return value */
 	  sound_send_data((byte *)&success, sizeof(int));
 	  free(dirname);
@@ -467,6 +461,7 @@ sci0_soundserver()
 	  int success;
 	  int usecs, secs;
 	  int len;
+	  int fadeticks_obsolete;
 
 	  sound_get_data((byte **)&dirname, &len, event.value);
 
@@ -475,7 +470,7 @@ sci0_soundserver()
 	  success = soundsrv_restore_state(ds,
 					   global_sound_server->flags & SOUNDSERVER_FLAG_SEPARATE_CWD? dirname : NULL,
 					   songlib, &newsong,
-					   &ccc, &usecs, &ticks, &fadeticks, &master_volume);
+					   &ccc, &usecs, &ticks, &fadeticks_obsolete, &master_volume);
 	  last_played.tv_sec -= secs = (usecs - last_played.tv_usec) / 1000000;
 	  last_played.tv_usec -= (usecs + secs * 1000000);
 
@@ -665,7 +660,7 @@ sci0_soundserver()
       
       if (song->fading >= 0) {
 	
-	fadeticks = ticks;
+	int fadeticks = ticks;
 	ticks = !!ticks;
 	song->fading -= fadeticks;
 	

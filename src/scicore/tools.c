@@ -1,5 +1,5 @@
 /***************************************************************************
- tools.c Copyright (C) 1999 Christoph Reichenbach
+ tools.c Copyright (C) 1999,2000,2001 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
