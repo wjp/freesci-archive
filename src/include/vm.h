@@ -352,6 +352,7 @@ typedef struct {
 
 	/* former variables[4]: [all other values are derived] */
 	stack_ptr_t variables_argp; /* Argument pointer */
+	seg_id_t local_segment; /* local variables etc. */
 
 	selector_t selector; /* The selector which was used to call or -1 if not applicable */
 	int origin;   /* The stack frame position the call was made from, or -1 if it

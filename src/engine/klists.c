@@ -26,7 +26,6 @@
 ***************************************************************************/
 
 #include <engine.h>
-#include <kernel_compat.h>
 
 
 #define LOOKUP_NODE(addr) lookup_node(s, (addr), __FILE__, __LINE__)
@@ -34,11 +33,15 @@
 inline node_t *
 lookup_node(state_t *s, reg_t addr, char *file, int line)
 {
-	mem_obj_t *mobj = GET_SEGMENT(s->seg_manager, addr.segment, MEM_OBJ_NODES);
+	mem_obj_t *mobj;
 	node_table_t *nt;
 
+	if (!addr.offset && !addr.segment)
+		return NULL; /* Non-error null */
+
+	mobj = GET_SEGMENT(s->seg_manager, addr.segment, MEM_OBJ_NODES);
 	if (!mobj) {
-		sciprintf("%s, L%d: Attempt to use non-node "PREG" as list node",
+		sciprintf("%s, L%d: Attempt to use non-node "PREG" as list node=n",
 			  __FILE__, __LINE__, PRINT_REG(addr));
 		script_debug_flag = script_error_flag = 1;
 		return NULL;

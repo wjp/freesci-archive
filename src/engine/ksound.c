@@ -90,7 +90,10 @@ process_sound_events(state_t *s) /* Get all sound events, apply their changes to
 	while ((event = s->sound_server->get_event(s))) {
 		heap_ptr obj = event->handle;
 
-		if (is_object(s, obj))
+#ifdef __GNUC__
+#warning "Fixme: Sanity check!"
+#endif
+		if (1/*is_object(s, obj)*/)
 		{
 			int signal = GET_SELECTOR(obj, signal);
 			

@@ -28,6 +28,7 @@
 #include <sciresource.h>
 #include <engine.h>
 #include <kernel_compat.h>
+#include <kernel_types.h>
 
 reg_t
 read_selector(state_t *s, reg_t object, selector_t selector_id, char *file, int line)
@@ -114,14 +115,9 @@ invoke_selector(state_t *s, reg_t object, int selector_id, int noinvalid, int kf
 
 
 int
-is_object(state_t *s, heap_ptr offset)
+is_object(state_t *s, reg_t object)
 {
-  if (offset & 1) /* objects are always at even addresses */
-    return 0;
-  else if (offset < 1000)
-    return 0;
-  else
-    return (GET_HEAP(offset + SCRIPT_OBJECT_MAGIC_OFFSET) == SCRIPT_OBJECT_MAGIC_NUMBER);
+	return determine_reg_type(s, object) == KSIG_OBJECT;
 }
 
 
@@ -176,102 +172,65 @@ kUnLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
-void
-kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kClone(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-#warning "Re-implement kClone()"
-#if 0
-  heap_ptr old_offs = UPARAM(0);
-  heap_ptr new_offs;
-  heap_ptr functareaptr;
-  word species;
-  int selectors;
-  int object_size;
-  int i;
+	reg_t parent_addr = argv[0];
+	object_t *parent_obj = obj_get(s, parent_addr);
+	reg_t clone_addr;
+	clone_t *clone_obj; /* same as object_t* */
+	int varblock_size;
 
-  if (GET_HEAP(old_offs + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
-    SCIkwarn(SCIkERROR, "Attempt to clone non-object/class at %04x failed", old_offs);
-    return;
-  }
 
-  SCIkdebug(SCIkMEM, "Attempting to clone from %04x\n", old_offs);
+	if (!parent_obj) {
+		SCIkwarn(SCIkERROR, "Attempt to clone non-object/class at "PREG" failed", PRINT_REG(parent_addr));
+		return NULL_REG;
+	}
 
-  selectors = UGET_HEAP(old_offs + SCRIPT_SELECTORCTR_OFFSET);
+	SCIkdebug(SCIkMEM, "Attempting to clone from "PREG"\n", PRINT_REG(parent_addr));
 
-  object_size = 8 + 2 + (selectors * 2);
-  /* 8: Pre-selector area; 2: Function area (zero overloaded methods) */
+	clone_obj = s->seg_manager.alloc_clone(&s->seg_manager, &clone_addr);
 
-  new_offs = heap_allocate(s->_heap, object_size);
+	if (!clone_obj) {
+		SCIkwarn(SCIkERROR, "Cloning "PREG" failed-- internal error!\n", PRINT_REG(parent_addr));
+		return NULL_REG;
+	}
 
-  if (!new_offs) {
-    KERNEL_OOPS("Out of heap memory while cloning!\n");
-    return;
-  }
+	memcpy(clone_obj, parent_obj, sizeof(clone_t));
+	varblock_size = parent_obj->variables_nr * sizeof(reg_t);
+	clone_obj->variables = sci_malloc(varblock_size);
+	memcpy(clone_obj->variables, parent_obj->variables, varblock_size);
 
-  new_offs += 2; /* Step over heap header */
+	/* Mark as clone */
+	clone_obj->variables[SCRIPT_INFO_SELECTOR].offset = SCRIPT_INFO_CLONE;
 
-  SCIkdebug(SCIkMEM, "New clone at %04x, size %04x\n", new_offs, object_size);
-
-  memcpy(s->heap + new_offs, s->heap + old_offs + SCRIPT_OBJECT_MAGIC_OFFSET, object_size);
-  new_offs -= SCRIPT_OBJECT_MAGIC_OFFSET; /* Center new_offs on the first selector value */
-
-  PUT_HEAP(new_offs + SCRIPT_INFO_OFFSET, SCRIPT_INFO_CLONE); /* Set this to be a clone */
-
-  functareaptr = selectors * 2 + 2; /* New function area */
-  PUT_HEAP(new_offs + functareaptr - 2, 0); /* No functions */
-  PUT_HEAP(new_offs + SCRIPT_FUNCTAREAPTR_OFFSET, functareaptr);
-
-  species = GET_HEAP(new_offs + SCRIPT_SPECIES_OFFSET);
-  /*  PUT_HEAP(new_offs + SCRIPT_SUPERCLASS_OFFSET, species); */
-  PUT_HEAP(new_offs + SCRIPT_SUPERCLASS_OFFSET, old_offs); /* Offset of the original class */
-
-  s->acc = new_offs; /* return the object's address */
-
-  i = 0;
-  while ((i < SCRIPT_MAX_CLONES) && (s->clone_list[i])) i++;
-
-  if (i < SCRIPT_MAX_CLONES)
-    s->clone_list[i] = new_offs; /* Log this clone */
-  else SCIkwarn(SCIkWARNING, "Could not log clone at %04x\n", new_offs);
-
-  /* Now, optionally set new selector values (late SCI0+ functionality) */
-  if (argc>1)
-    SCIkdebug(SCIkMEM, "Clone() called with extended functionality\n");
-
-  for (i=1;i<argc;i+=2)
-  {
-    int selector = UPARAM(i);
-    int value = UPARAM(i+1);
-
-    write_selector(s, new_offs, selector, value, __FILE__, __LINE__);
-  }
-#endif
+	return clone_addr;
 }
 
 
-void
-kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kDisposeClone(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-#warning "Re-implement kDisposeClone()"
-#if 0
-	heap_ptr offset = PARAM(0);
+	reg_t victim_addr = argv[0];
+	clone_t *victim_obj = obj_get(s, victim_addr);
 	int i;
 	word underBits;
 
-	if (GET_HEAP(offset + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
-		SCIkwarn(SCIkERROR, "Attempt to dispose non-class/object at %04x\n", offset);
+	if (!victim_obj) {
+		SCIkwarn(SCIkERROR, "Attempt to dispose non-class/object at "PREG"\n",
+			 PRINT_REG(victim_addr));
 		return;
 	}
 
-	if (GET_HEAP(offset + SCRIPT_INFO_OFFSET) != SCRIPT_INFO_CLONE) {
+	if (victim_obj->variables[SCRIPT_INFO_SELECTOR].offset != SCRIPT_INFO_CLONE) {
 		/*  SCIkwarn("Attempt to dispose something other than a clone at %04x\n", offset); */
-		/* SCI silently ignores this behaviour; some games actually depend on this */
+		/* SCI silently ignores this behaviour; some games actually depend on it */
 		return;
 	}
 
-	underBits = GET_SELECTOR(offset, underBits);
+	underBits = GET_SEL32V(victim_addr, underBits);
 	if (underBits) {
-		SCIkwarn(SCIkWARNING,"Clone %04x was cleared with underBits set\n", offset);
+		SCIkwarn(SCIkWARNING,"Clone "PREG" was cleared with underBits set\n", PRINT_REG(victim_addr));
 	}
 #if 0
 	if (s->dyn_views) {  /* Free any widget associated with the clone */
@@ -282,16 +241,11 @@ kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 #endif
 
-	i = 0;
-	while ((i < SCRIPT_MAX_CLONES) && (s->clone_list[i] != offset)) i++;
-	if (i < SCRIPT_MAX_CLONES)
-		s->clone_list[i] = 0; /* un-log clone */
-	else SCIkwarn(SCIkWARNING, "Could not remove log entry from clone at %04x\n", offset);
+	sci_free(victim_obj->variables);
+	victim_obj->variables = NULL;
+	s->seg_manager.free_clone(&s->seg_manager, victim_addr);
 
-	offset += SCRIPT_OBJECT_MAGIC_OFFSET; /* Step back to beginning of object */
-
-	heap_free(s->_heap, offset -2); /* -2 to step back on the heap block size indicator */
-#endif
+	return s->r_acc;
 }
 
 

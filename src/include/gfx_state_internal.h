@@ -94,6 +94,7 @@ typedef int gfxw_bin_op(struct _gfxw_widget *, struct _gfxw_widget *);
    rect_t bounds; /* Boundaries */ \
    struct _gfxw_widget *next; /* Next widget in widget list */ \
    int ID; /* Unique ID or GFXW_NO_ID */ \
+   int subID; /* A 'sub-ID', or GFXW_NO_ID */ \
    struct _gfxw_container_widget *parent; /* The parent widget, or NULL if not owned */ \
    struct _gfxw_visual *visual; /* The owner visual */ \
    int widget_priority; /* Drawing priority, or -1 */ \
@@ -147,7 +148,7 @@ typedef struct {
 	VIEW_COMMON;
 	/* fixme: This code is specific to SCI */
         rect_t draw_bounds; /* The correct position to draw to */
-	int under_bitsp, signalp;
+	void *under_bitsp, *signalp;
 	int under_bits, signal;
 	int z; /* The z coordinate: Added to y, but used for sorting */ 
 	int sequence; /* Sequence number: For sorting */

@@ -1,3 +1,16 @@
+2002-11-17  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/vm.c: Misc. bugfixes
+
+	* src/engine/kernel.c (kMemoryInfo): Fixed return value to 0xe000 to
+	prevent overflows during script computations
+
+	* src/engine/scriptdebug.c (disassemble): Re-implemented additional
+	debug information
+	
+	* src/engine/kgraphics.c: Ported CanBeHere, SetNowSeen, DoBresen,
+	BaseSetter, AdToPic, Animate
+
 2002-11-11  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kscripts.c (invoke_selector): Re-enabled selector

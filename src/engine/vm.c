@@ -254,7 +254,7 @@ get_class_address(state_t *s, int classnr, int lock)
 #define OBJ_SUPERCLASS(s, reg, mem) SEG_GET_HEAP2(s, reg.segment, reg.offset + SCRIPT_SUPERCLASS_OFFSET, mem)
 /* Returns an object's superclass */
 
-/*inline*/ exec_stack_t *
+inline exec_stack_t *
 execute_method(state_t *s, word script, word pubfunct, stack_ptr_t sp,
 	       reg_t calling_obj, word argc, stack_ptr_t argp)
 {
@@ -299,7 +299,7 @@ execute_method(state_t *s, word script, word pubfunct, stack_ptr_t sp,
 
   return
 	  add_exec_stack_entry(s, make_reg( seg, temp ),
-			       sp, calling_obj, (int)argc, argp, -1, calling_obj,
+			       sp, calling_obj, argc, argp, -1, calling_obj,
 			       s->execution_stack_pos);
 }
 
@@ -310,11 +310,9 @@ _exec_varselectors(state_t *s)
 	/* Now check the TOS to execute all varselector entries */
 	if (s->execution_stack_pos >= 0)
 		while (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR) {
-
-			/* varselector access? */
+		/* varselector access? */
 			if (s->execution_stack[s->execution_stack_pos].argc) { /* write? */
-
-				reg_t temp = s->execution_stack[s->execution_stack_pos].sp[1];
+				reg_t temp = s->execution_stack[s->execution_stack_pos].variables_argp[1];
 				*(s->execution_stack[s->execution_stack_pos].addr.varp) = temp;
 
 			} else /* No, read */
@@ -549,6 +547,15 @@ add_exec_stack_entry(state_t *s, reg_t pc, stack_ptr_t sp, reg_t objp, int argc,
 	xstack = s->execution_stack + s->execution_stack_pos;
 
 	xstack->objp = objp;
+	xstack->local_segment = 0;
+	if (objp.segment) {
+		object_t *obj = obj_get(s, objp);
+		if (obj)
+			xstack->local_segment = obj->pos.segment;
+		else
+			sciprintf("Warning: Object "PREG", base of exec stack entry, does not exist\n",
+				  PRINT_REG(objp));
+	}
 	xstack->sendp = sendp;
 	xstack->addr.pc = pc;
 	xstack->fp = xstack->sp = sp;
@@ -623,7 +630,7 @@ run_vm(state_t *s, int restoring)
 	exec_stack_t *xs = s->execution_stack + s->execution_stack_pos;
 	exec_stack_t *xs_new; /* Used during some operations */
 	object_t *obj = obj_get(s, xs->objp);
-	script_t *local_script = script_locate_by_segment(s, obj->pos.segment);
+	script_t *local_script = script_locate_by_segment(s, xs->local_segment);
 	int old_execution_stack_base = s->execution_stack_base; /* Used to detect the
 								** stack bottom, for "physical"
 								** returns  */
@@ -692,7 +699,12 @@ run_vm(state_t *s, int restoring)
 			xs = s->execution_stack + s->execution_stack_pos;
 			s->execution_stack_pos_changed = 0;
 			obj = obj_get(s, xs->objp);
-			local_script = script_locate_by_segment(s, obj->pos.segment);
+
+			if (!obj)
+				sciprintf("Attempt to run on non-existant obj "PREG"\n", PRINT_REG(xs->objp));
+			/* aaaand segfault! */
+
+			local_script = script_locate_by_segment(s, xs->local_segment);
 			variables_seg[VAR_LOCAL] = local_script->locals_segment;
 
 			if (local_script->locals_block)
@@ -711,7 +723,6 @@ run_vm(state_t *s, int restoring)
 #endif
 			variables[VAR_TEMP] = xs->fp;
 			variables[VAR_PARAM] = xs->variables_argp;
-			WRITE_VAR16(VAR_PARAM, 0, xs->argc);
 
 			scr = script_locate_by_segment(s, xs->addr.pc.segment);
 			code_buf = scr->buf;
@@ -803,12 +814,12 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x03: /* mul */
-			s->r_acc = ACC_ARITHMETIC_L (POP() * /*acc*/);
+			s->r_acc = ACC_ARITHMETIC_L (((gint16)POP()) * (gint16)/*acc*/);
 			break;
 
 		case 0x04: /* div */
 			ACC_AUX_LOAD();
-			aux_acc = aux_acc? POP() / aux_acc : 0;
+			aux_acc = aux_acc? ((gint16)POP()) / aux_acc : 0;
 			ACC_AUX_STORE();
 			break;
 
@@ -843,7 +854,7 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x0c: /* not */
-			s->r_acc = make_reg(0, !s->r_acc.offset);
+			s->r_acc = make_reg(0, !(s->r_acc.offset || s->r_acc.segment));
 			/* Must allow pointers to be negated, as this is used for
 			** checking whether objects exist  */
 			break;
@@ -864,22 +875,22 @@ run_vm(state_t *s, int restoring)
 
 		case 0x0f: /* gt? */
 			s->r_prev = s->r_acc;
-			s->r_acc = ACC_ARITHMETIC_L(POP() > /*acc*/);
+			s->r_acc = ACC_ARITHMETIC_L((gint16)POP() > (gint16)/*acc*/);
 			break;
 
 		case 0x10: /* ge? */
 			s->r_prev = s->r_acc;
-			s->r_acc = ACC_ARITHMETIC_L(POP() >= /*acc*/);
+			s->r_acc = ACC_ARITHMETIC_L((gint16)POP() >= (gint16)/*acc*/);
 			break;
 
 		case 0x11: /* lt? */
 			s->r_prev = s->r_acc;
-			s->r_acc = ACC_ARITHMETIC_L(POP() < /*acc*/);
+			s->r_acc = ACC_ARITHMETIC_L((gint16)POP() < (gint16)/*acc*/);
 			break;
 
 		case 0x12: /* le? */
 			s->r_prev = s->r_acc;
-			s->r_acc = ACC_ARITHMETIC_L(POP() <= /*acc*/);
+			s->r_acc = ACC_ARITHMETIC_L((gint16)POP() <= (gint16)/*acc*/);
 			break;
 
 		case 0x13: /* ugt? */
@@ -943,13 +954,14 @@ run_vm(state_t *s, int restoring)
 		case 0x20: { /* call */
 			int argc = (opparams[1] >> 1) /* Given as offset, but we need count */
 				+ 1 + restadjust;
-			stack_ptr_t call_base = xs->sp - argc;
+			stack_ptr_t call_base = xs->sp -= argc;
 
+			xs->sp[1].offset += restadjust;
 			xs_new = add_exec_stack_entry(s, make_reg(xs->addr.pc.segment,
 								  xs->addr.pc.offset
 								  + opparams[0]),
 						      xs->sp, xs->objp,
-						      (validate_arithmetic(*call_base) >> 1)
+						      (validate_arithmetic(*call_base))
 						      	+ restadjust,
 						      call_base, NULL_SELECTOR, xs->objp,
 						      s->execution_stack_pos);
@@ -985,9 +997,10 @@ run_vm(state_t *s, int restoring)
 					sciprintf("[VM] Invalid arguments to kernel call %x\n",
 						  opparams[0]);
 					script_debug_flag = script_error_flag = 1;
-				} else
+				} else {
 					s->r_acc = s->kfunct_table[opparams[0]]
 						.fun(s, opparams[0], argc, xs->sp + 1);
+				}
 				/* Call kernel function */
 
 				/* Calculate xs again: The kernel function might
@@ -1001,20 +1014,27 @@ run_vm(state_t *s, int restoring)
 
 			}
 			break;
+
 		case 0x22: /* callb */
+			temp = ((opparams[1] >> 1) + restadjust + 1);
 			s_temp = xs->sp;
-			xs->sp->offset -= (opparams[1] + (restadjust * 2) + 2);
+			xs->sp -= temp;
+
+
+			xs->sp[0].offset += restadjust;
 			xs_new = execute_method(s, 0, opparams[0], s_temp, xs->objp,
-				xs->sp[0].offset + restadjust,
-				xs->sp);
+				xs->sp[0].offset + restadjust, xs->sp);
 			restadjust = 0; /* Used up the &rest adjustment */
 			if (xs_new)    /* in case of error, keep old stack */
 				s->execution_stack_pos_changed = 1;
 			break;
 			
 		case 0x23: /* calle */
+			temp = ((opparams[2] >> 1) + restadjust + 1);
 			s_temp = xs->sp;
-			xs->sp->offset -= opparams[2] + 2 + (restadjust*2);
+			xs->sp -= temp;
+
+			xs->sp[0].offset += restadjust;
 			xs_new = execute_method(s, opparams[0], opparams[1], s_temp, xs->objp,
 				xs->sp[0].offset + restadjust, xs->sp);
 			restadjust = 0; /* Used up the &rest adjustment */
@@ -1052,7 +1072,8 @@ run_vm(state_t *s, int restoring)
 				s->execution_stack_pos_changed = 1;
 				xs = s->execution_stack + s->execution_stack_pos;
 
-				if (xs->sp == CALL_SP_CARRY) { /* Used in sends to 'carry' the stack pointer */
+				if (xs->sp == CALL_SP_CARRY /* Used in sends to 'carry' the stack pointer */
+				    || xs->type != EXEC_STACK_TYPE_CALL) {
 					xs->sp = old_sp;
 					xs->fp = old_fp;
 				}
@@ -1068,11 +1089,12 @@ run_vm(state_t *s, int restoring)
 			s_temp = xs->sp;
 			xs->sp -= ((opparams[0] >> 1) + restadjust); /* Adjust stack */
 
+			xs->sp[1].offset += restadjust;
 			xs_new = send_selector(s, s->r_acc, s->r_acc, s_temp,
 					       (int)(opparams[0]>>1) + (word)restadjust,
 					       xs->sp);
 
-			if (xs_new)
+			if (xs_new && xs_new != xs)
 				s->execution_stack_pos_changed = 1;
 
 			restadjust = 0;
@@ -1087,11 +1109,12 @@ run_vm(state_t *s, int restoring)
 			s_temp = xs->sp;
 			xs->sp -= ((opparams[0] >> 1) + restadjust); /* Adjust stack */
 
+			xs->sp[1].offset += restadjust;
 			xs_new = send_selector(s, xs->objp, xs->objp, s_temp,
 					       (int)(opparams[0]>>1) + (word)restadjust,
 					       xs->sp);
 
-			if (xs_new)
+			if (xs_new && xs_new != xs)
 				s->execution_stack_pos_changed = 1;
 
 			restadjust = 0;
@@ -1106,11 +1129,12 @@ run_vm(state_t *s, int restoring)
 				s_temp = xs->sp;
 				xs->sp -= ((opparams[1] >> 1) + restadjust); /* Adjust stack */
 
+				xs->sp[1].offset += restadjust;
 				xs_new = send_selector(s, r_temp, xs->objp, s_temp,
 						       (int)(opparams[1]>>1) + (word)restadjust,
 						       xs->sp);
 
-				if (xs_new)
+				if (xs_new && xs_new != xs)
 					s->execution_stack_pos_changed = 1;
 
 				restadjust = 0;
@@ -1464,10 +1488,9 @@ _class_locate_funcselector(object_t *obj, selector_t slc)
 	** returned even if one of the superclasses defines the funcselector. */
 	int funcnum = obj->methods_nr;
 	int i;
-	guint16 *buf = obj->base_method; /* +1 because the first entry is constant 0 and boring */
 
 	for (i = 0; i < funcnum; i++)
-		if (getUInt16((byte *) (buf + i)) == slc) /* Found it? */
+		if (VM_OBJECT_GET_FUNCSELECTOR(obj, i) == slc) /* Found it? */
 			return i; /* report success */
 
 	return -1; /* Failed */
@@ -1529,7 +1552,8 @@ lookup_selector(state_t *s, reg_t obj_location, selector_t selector_id, reg_t **
 
 	if (index >= 0) {
 		/* Found it as a variable */
-		*vptr = obj->variables + index;
+		if (vptr)
+			*vptr = obj->variables + index;
 		return SELECTOR_VARIABLE;
 	} return
 		_lookup_selector_function(s, obj_location.segment, obj, selector_id, fptr);

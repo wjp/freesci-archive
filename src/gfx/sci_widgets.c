@@ -288,7 +288,7 @@ sciw_new_button_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int 
         gfx_color_t *frame_col = (inverse)? &(port->bgcolor) : &(port->color);
 	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y), 1), 0);
 
-	gfxw_set_id(GFXW(list), ID);
+	gfxw_set_id(GFXW(list), ID, GFXW_NO_ID);
 
 	zone.x = 0;
 	zone.y = 0;
@@ -328,7 +328,7 @@ sciw_new_text_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int fo
 {
 	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y), 2), 0);
 
-	gfxw_set_id(GFXW(list), ID);
+	gfxw_set_id(GFXW(list), ID, GFXW_NO_ID);
 
 	zone.x = 0;
 	zone.y = 0;
@@ -346,7 +346,7 @@ sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int fo
 	long draw_cursor;
 	long foo;
 
-	gfxw_set_id(GFXW(list), ID);
+	gfxw_set_id(GFXW(list), ID, GFXW_NO_ID);
 	zone.x = 0;
 	zone.y = 1;
 
@@ -416,7 +416,7 @@ sciw_new_icon_control(gfxw_port_t *port, int ID, rect_t zone, int view, int loop
 {
 	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y), 1), 0);
 	gfxw_widget_t *icon;
-	gfxw_set_id(GFXW(list), ID);
+	gfxw_set_id(GFXW(list), ID, GFXW_NO_ID);
 
 	if (!port->visual) {
 		GFXERROR("Attempting to create icon control for virtual port!\n");
@@ -460,7 +460,7 @@ sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char 
 
 	columns /= font_height;
 
-	gfxw_set_id(GFXW(list), ID);
+	gfxw_set_id(GFXW(list), ID, GFXW_NO_ID);
 
 	arr_up[0] = SCI_SPECIAL_CHAR_ARROW_UP;
 	arr_down[0] = SCI_SPECIAL_CHAR_ARROW_DOWN;
@@ -613,7 +613,7 @@ _make_menu_entry(menu_item_t *item, int offset, int width, gfxw_port_t *port, gf
 {
 	rect_t area		= gfx_rect(MENU_BOX_LEFT_PADDING, 0, width - MENU_BOX_LEFT_PADDING, 10);
 	rect_t list_area	= gfx_rect(port->zone.x, area.y + offset + port->zone.y, width, area.yl);
-	gfxw_list_t *list	= (gfxw_list_t *) gfxw_set_id(GFXW(gfxw_new_list(list_area, 0)), ID);
+	gfxw_list_t *list	= (gfxw_list_t *) gfxw_set_id(GFXW(gfxw_new_list(list_area, 0)), ID, GFXW_NO_ID);
 	gfx_color_t xcolor	= {0};
 
 	color = un_prioritize(color);
@@ -639,7 +639,7 @@ _make_menu_hbar(int offset, int width, gfxw_port_t *port, gfx_color_t color, gfx
 {
 	rect_t area = gfx_rect(0, 0, width, 10);
 	rect_t list_area = gfx_rect(area.x + port->zone.x, area.y + offset + port->zone.y, area.xl, area.yl);
-	gfxw_list_t *list = (gfxw_list_t *) gfxw_set_id(GFXW(gfxw_new_list(list_area, 0)), ID);
+	gfxw_list_t *list = (gfxw_list_t *) gfxw_set_id(GFXW(gfxw_new_list(list_area, 0)), ID, GFXW_NO_ID);
 
 	color = un_prioritize(color);
 	bgcolor = un_prioritize(bgcolor);

@@ -51,8 +51,6 @@ void kHaveMouse(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kJoystick(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetAngle(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetDistance(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kClone(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kDisposeClone(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDrawPic(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetPort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetPort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -63,11 +61,9 @@ void kDrawStatus(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDrawMenuBar(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kAddMenu(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetMenu(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kAddToPic(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kCelWide(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kCelHigh(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDisplay(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kAnimate(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetTime(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kStrLen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetFarText(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -80,9 +76,6 @@ void kReadNumber(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDrawControl(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kNumCels(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kNumLoops(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kInitBresen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kDoBresen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kCanBeHere(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDrawCel(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDirLoop(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kCoordPri(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -104,7 +97,6 @@ void kLocalToGlobal(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kWait(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kCosDiv(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSinDiv(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kBaseSetter(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kParse(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kShakeScreen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 #ifdef _WIN32
@@ -130,7 +122,6 @@ void kSetJump(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kCheckSaveGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSaveGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kRestoreGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kSetNowSeen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDoAvoider(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kFileIO(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -140,6 +131,16 @@ void kMemory(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 
 
 /* New kernel functions */
+reg_t kClone(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kDisposeClone(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kCanBeHere(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kSetNowSeen(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kInitBresen(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kDoBresen(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kBaseSetter(struct _state *s, int funct_nr, int argc, reg_t *argp);
+reg_t kAddToPic(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kAnimate(struct _state *s, int funct_nr, int argc, reg_t *argv);
+
 reg_t kScriptID(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kDisposeScript(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kIsObject(struct _state *s, int funct_nr, int argc, reg_t *argv);
@@ -181,21 +182,21 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*01*/	{KF_OLD, "UnLoad", {old:kUnLoad}},
 /*02*/	{KF_NEW, "ScriptID", {new:{kScriptID, "ii*"}}},
 /*03*/	{KF_NEW, "DisposeScript", {new:{kDisposeScript, "i"}}},
-/*04*/	{KF_OLD, "Clone", {old:kClone}},
-/*05*/	{KF_OLD, "DisposeClone", {old:kDisposeClone}},
+/*04*/	{KF_NEW, "Clone", {new:{kClone, "o"}}},
+/*05*/	{KF_NEW, "DisposeClone", {new:{kDisposeClone, "o"}}},
 /*06*/	{KF_NEW, "IsObject", {new:{kIsObject, "."}}},
 /*07*/	{KF_NEW, "RespondsTo", {new:{kRespondsTo, ".i"}}},
 /*08*/	{KF_OLD, "DrawPic", {old:kDrawPic}},
 /*09*/	{KF_OLD, "Show", {old:kShow}},
 /*0a*/	{KF_OLD, "PicNotValid", {old:kPicNotValid}},
-/*0b*/	{KF_OLD, "Animate", {old:kAnimate}},
-/*0c*/	{KF_OLD, "SetNowSeen", {old:kSetNowSeen}},
+/*0b*/	{KF_NEW, "Animate", {new:{kAnimate, "LI*"}}}, /* More like l?i? */
+/*0c*/	{KF_NEW, "SetNowSeen", {new:{kSetNowSeen, "o"}}},
 /*0d*/	{KF_OLD, "NumLoops", {old:kNumLoops}},
 /*0e*/	{KF_OLD, "NumCels", {old:kNumCels}},
 /*0f*/	{KF_OLD, "CelWide", {old:kCelWide}},
 /*10*/	{KF_OLD, "CelHigh", {old:kCelHigh}},
 /*11*/	{KF_OLD, "DrawCel", {old:kDrawCel}},
-/*12*/	{KF_OLD, "AddToPic", {old:kAddToPic}},
+/*12*/	{KF_NEW, "AddToPic", {new:{kAddToPic, "Il*"}}},
 /*13*/	{KF_OLD, "NewWindow", {old:kNewWindow}},
 /*14*/	{KF_OLD, "GetPort", {old:kGetPort}},
 /*15*/	{KF_OLD, "SetPort", {old:kSetPort}},
@@ -256,12 +257,12 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*4c*/	{KF_OLD, "Format", {old:kFormat}},
 /*4d*/	{KF_OLD, "GetFarText", {old:kGetFarText}},
 /*4e*/	{KF_OLD, "ReadNumber", {old:kReadNumber}},
-/*4f*/	{KF_OLD, "BaseSetter", {old:kBaseSetter}},
+/*4f*/	{KF_NEW, "BaseSetter", {new:{kBaseSetter, "o"}}},
 /*50*/	{KF_OLD, "DirLoop", {old:kDirLoop}},
-/*51*/	{KF_OLD, "CanBeHere", {old:kCanBeHere}},
+/*51*/	{KF_NEW, "CanBeHere", {new:{kCanBeHere, "ol*"}}},
 /*52*/	{KF_OLD, "OnControl", {old:kOnControl}},
-/*53*/	{KF_OLD, "InitBresen", {old:kInitBresen}},
-/*54*/	{KF_OLD, "DoBresen", {old:kDoBresen}},
+/*53*/	{KF_NEW, "InitBresen", {new:{kInitBresen, "oi*"}}},
+/*54*/	{KF_NEW, "DoBresen", {new:{kDoBresen, "o"}}},
 /*55*/	{KF_OLD, "DoAvoider", {old:kDoAvoider}},
 /*56*/	{KF_OLD, "SetJump", {old:kSetJump}},
 /*57*/	{KF_OLD, "SetDebug", {old:kSetDebug}},
@@ -493,7 +494,7 @@ kMemoryInfo(state_t *s, int funct_nr, int argc, reg_t *argv)
 	case 2: /* Largest available hunk memory block */
 	case 3: /* Total amount of hunk memory */
 	case 4: /* Amount of free DOS paragraphs- SCI01 */
-		return make_reg(0, 0xffff);
+		return make_reg(0, 0xe000); /* Must not be 0xffff, or some memory calculations will overflow */
 
 	default: SCIkwarn(SCIkWARNING, "Unknown MemoryInfo operation: %04x\n", argv[0].offset);
 	}

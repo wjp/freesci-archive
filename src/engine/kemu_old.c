@@ -150,7 +150,7 @@ writeout_value(state_t *s, emu_param_t *p)
 		SCIkdebug(SCIkEMU, "\tObject, %d selectors\n", max);
 
 		for (i = 0; i < max; i++) {
-			byte *dest = s->heap + p->emudat_location + (i >> 1);
+			byte *dest = s->heap + p->emudat_location + (i << 1);
 
 			dest[0] = p->emu_data.regs[i].offset & 0xff;
 			dest[1] = (p->emu_data.regs[i].offset >> 8) & 0xff;
@@ -180,9 +180,12 @@ recover_value(state_t *s, emu_param_t *p)
 	case EMU_TYPE_REGISTERS: {
 		int i, max = p->emudat_size >> 1;
 		for (i = 0; i < max; i++) {
-			int val = getUInt16(s->heap + p->emudat_location + (i >> 1));
-			if (p->emu_data.regs[i].offset != val)
+			int val = getUInt16(s->heap + p->emudat_location + (i << 1));
+			if (p->emu_data.regs[i].offset != val) {
+				SCIkdebug(SCIkEMU, "Recovering property #%d from %04x: 0:%04x\n",
+					  i, p->emudat_location + (1 << 1), val);
 				p->emu_data.regs[i] = make_reg(0, val);
+			}
 			/* Don't overwrite unless something changed, to preserve pointers */
 		}
 		return;
@@ -254,10 +257,10 @@ kFsciEmu(state_t *s, int _funct_nr, int argc, reg_t *argv)
 			datap += shadow_args[i].length; /* Step over last block we wrote */
 		}
 
-		s->kfunct_emu_table[funct_nr](s, funct_nr, argc, EMU_HEAP_START_ADDR);
-
 		for (i = 0; i < argc; i++)
 			recover_value(s, shadow_args + i);
+
+		s->kfunct_emu_table[funct_nr](s, funct_nr, argc, EMU_HEAP_START_ADDR);
 
 		free(shadow_args);
 		return make_reg(0, s->acc);

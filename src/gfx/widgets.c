@@ -109,8 +109,14 @@ _gfxw_print_widget(gfxw_widget_t *widget, int indentation)
 
 	sciprintf("S%08x", widget->serial);
 
-	if (widget->ID != GFXW_NO_ID)
-		sciprintf("#%x ", widget->ID);
+	if (widget->ID != GFXW_NO_ID) {
+		sciprintf("#%x", widget->ID);
+
+		if (widget->subID != GFXW_NO_ID)
+			sciprintf(":%x ", widget->subID);
+		else
+			sciprintf(" ");
+	}
 
 	sciprintf("[(%d,%d)(%dx%d)]", widget->bounds.x, widget->bounds.y, widget->bounds.xl, widget->bounds.yl);
 
@@ -147,6 +153,7 @@ _gfxw_new_widget(int size, int type)
 	widget->bounds = gfx_rect(0, 0, 0, 0);
 	widget->flags = GFXW_FLAG_DIRTY;
 	widget->ID = GFXW_NO_ID;
+	widget->subID = GFXW_NO_ID;
 	widget->serial = widget_serial_number_counter++;
 	widget->widget_priority = -1;
 
@@ -1077,7 +1084,8 @@ gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, in
 
 	_gfxw_set_ops_DYNVIEW(GFXW(widget));
 
-	widget->signalp = widget->signal = 0;
+	widget->signalp = NULL;
+	widget->signal = 0;
 
 	return widget;
 }
@@ -1566,7 +1574,9 @@ _gfxw_container_id_equals(gfxw_container_t *container, gfxw_widget_t *widget)
 	if (widget->ID == GFXW_NO_ID)
 		return 0;
 
-	while (*seekerp && (*seekerp)->ID != widget->ID)
+	while (*seekerp
+	       && (*seekerp)->ID != widget->ID
+	       && (*seekerp)->subID != widget->subID)
 		seekerp = &((*seekerp)->next);
 
 	if (!*seekerp)
@@ -2234,16 +2244,19 @@ gfxw_find_default_port(gfxw_visual_t *visual)
 /*** - other functions - ***/
 
 gfxw_widget_t *
-gfxw_set_id(gfxw_widget_t *widget, int ID)
+gfxw_set_id(gfxw_widget_t *widget, int ID, int subID)
 {
-	if (widget)
+	if (widget) {
 		widget->ID = ID;
+		widget->subID = subID;
+	}
 
 	return widget;
 }
 
 gfxw_dyn_view_t *
-gfxw_dyn_view_set_params(gfxw_dyn_view_t *widget, int under_bits, int under_bitsp, int signal, int signalp)
+gfxw_dyn_view_set_params(gfxw_dyn_view_t *widget, int under_bits, void *under_bitsp,
+			 int signal, void *signalp)
 {
 	if (!widget)
 		return NULL;
@@ -2257,12 +2270,14 @@ gfxw_dyn_view_set_params(gfxw_dyn_view_t *widget, int under_bits, int under_bits
 }
 
 gfxw_widget_t *
-gfxw_remove_id(gfxw_container_t *container, int ID)
+gfxw_remove_id(gfxw_container_t *container, int ID, int subID)
 {
 	gfxw_widget_t **wp = &(container->contents);
 
 	while (*wp) {
-		if ((*wp)->ID == ID) {
+		if ((*wp)->ID == ID
+		    && (subID == GFXW_NO_ID
+			|| (*wp)->subID == subID)) {
 			gfxw_widget_t *widget = *wp;
 
 			*wp = (*wp)->next;

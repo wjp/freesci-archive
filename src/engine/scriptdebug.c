@@ -867,9 +867,13 @@ c_stack(state_t *s)
 		return 1;
 	}
 
-	for (i = cmd_params[0].val ; i > 0 && (xs->sp - xs->fp - i) >= 0; i--)
-		sciprintf("[SP:%04x] = "PREG"\n",
-			  xs->sp - xs->fp - i, PRINT_REG(xs->sp[-i]));
+	for (i = cmd_params[0].val ; i > 0; i--) {
+		if ((xs->sp - xs->fp - i) == 0)
+			sciprintf("-- temp variables --\n");
+		if (xs->sp - i >= s->stack_base)
+			sciprintf(PSTK" = "PREG"\n",
+				  PRINT_STK(xs->sp - i), PRINT_REG(xs->sp[-i]));
+	}
 
 	return 0;
 }
@@ -1137,7 +1141,7 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 	if (REG_EQ(pos, *p_pc)) { /* Extra information if debugging the current opcode */
 
 		if (opcode == op_callk) {
-			int stackframe = (scr[pos.offset + 2] >> 1) + (*p_restadjust);
+			int stackframe = (scr[pos.offset + (opsize? 2 : 3)] >> 1) + (*p_restadjust);
 			int argc = ((*p_sp)[- stackframe - 1]).offset;
 			int i;
 
@@ -1151,54 +1155,36 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 			sciprintf(")\n");
 
 		}
-#warning "Re-enable extra disasm information"
-#if 0
- else if ((opcode == op_send) || (opcode == op_self)) {
+		else if ((opcode == op_send) || (opcode == op_self)) {
 			int restmod = *p_restadjust;
-			int stackframe = (scr[pos.offset + 2] >> 1) + (*p_restadjust);
+			int stackframe = (scr[pos.offset + 1] >> 1) + restmod;
+			reg_t *sb = *p_sp;
 			word selector;
-			heap_ptr selector_addr;
+			reg_t *val_ref;
+			reg_t fun_ref;
 
 			while (stackframe > 0) {
-				int argc = (*p_sp)[- stackframe + 1].offset;
-				heap_ptr nameaddress = 0;
+				int argc = sb[- stackframe + 1].offset;
+				char *name = NULL;
 				reg_t called_obj_addr;
-				char *name;
 
 				if (opcode == op_send)
-					called_obj_addr = s->acc;
+					called_obj_addr = s->r_acc;
 				else if (opcode == op_self)
 					called_obj_addr = *p_objp;
-#if 0
-				else { /* op_super */
-					called_obj_addr = s->heap[retval - 2];
 
-					called_obj_addr = (s->classtable[called_obj_addr].scriptposp)?
-							0 :
-						*(s->classtable[called_obj_addr].scriptposp)
-						+ s->classtable[called_obj_addr].class_offset;
-				}
-#endif
+				selector = sb[- stackframe].offset;
 
-				selector = *p_sp[- stackframe].offset;
+				name = obj_get_name(s, called_obj_addr);
 
-				if (called_obj_addr > 100) /* If we are in valid heap space */
-					if (getInt16(s->heap + called_obj_addr
-						     + SCRIPT_OBJECT_MAGIC_OFFSET)
-					    == SCRIPT_OBJECT_MAGIC_NUMBER)
-						nameaddress = getUInt16(s->heap + called_obj_addr
-									+ SCRIPT_NAME_OFFSET);
-
-				if (nameaddress)
-					name = (char *) s->heap + nameaddress;
-				else
+				if (!name)
 					name = "<invalid>";
 
 				sciprintf("  %s::%s[", name, (selector > s->selector_names_nr)
 					  ? "<invalid>" : selector_name(s,selector));
 
 				switch (lookup_selector(s, called_obj_addr, selector,
-							&selector_addr)) {
+							&val_ref, &fun_ref)) {
 				case SELECTOR_METHOD:
 					sciprintf("FUNCT");
 					argc += restmod;
@@ -1216,20 +1202,19 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 
 				while (argc--) {
 
-					sciprintf("%04x", 0xffff & getUInt16(s->heap + *p_sp - stackframe + 4));
-					if (argc) sciprintf(", ");
-					stackframe -= 2;
-						
-					}
+					sciprintf(PREG, PRINT_REG(sb[- stackframe + 2]));
+					if (argc)
+						sciprintf(", ");
+					stackframe--;
+				}
 
 				sciprintf(")\n");
 
-				stackframe -= 4;
+				stackframe -= 2;
 			} /* while (stackframe > 0) */
 
 		} /* Send-like opcodes */
 
-#endif
 	} /* (heappos == *p_pc) */
 
 
@@ -1525,20 +1510,21 @@ c_backtrace(state_t *s)
 
 		sciprintf(")\n    obj@"PREG,
 			  PRINT_REG(call->objp));
-		if (call->type == EXEC_STACK_TYPE_CALL)
+		if (call->type == EXEC_STACK_TYPE_CALL) {
 			sciprintf(" pc="PREG,
 				  PRINT_REG(call->addr.pc));
-		else
+			if (call->sp == CALL_SP_CARRY)
+				sciprintf(" sp,fp:carry");
+			else {
+				sciprintf(" sp="PSTK,
+					  PRINT_STK(call->sp));
+				sciprintf(" fp="PSTK,
+					  PRINT_STK(call->fp));
+			}
+		} else
 			sciprintf(" pc:none");
 
-		if (call->sp == CALL_SP_CARRY)
-			sciprintf(" sp:carry");
-		else
-			sciprintf(" sp="PSTK,
-				  PRINT_STK(call->sp));
-
-		sciprintf(" fp="PSTK,
-			  PRINT_STK(call->fp));
+		sciprintf(" argp:"PSTK, PRINT_STK(call->variables_argp));
 
 		sciprintf("\n");
 	}
@@ -3140,7 +3126,6 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 #if 0
 			con_hook_command(c_scriptinfo, "scripttable", "", "Displays information about all\n  loaded scripts");
 #endif
-#warning "Make con:heapobj expect an 'a' type argument"
 			con_hook_command(c_obj, "obj", "!", "Displays information about the\n  currently active object/class.\n"
 					 "\n\nSEE ALSO\n\n  vo.1, accobj.1");
 			con_hook_command(c_accobj, "accobj", "!", "Displays information about an\n  object or class at the\n"

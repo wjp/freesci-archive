@@ -322,10 +322,10 @@ gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignme
 */
 
 gfxw_widget_t *
-gfxw_set_id(gfxw_widget_t *widget, int ID);
+gfxw_set_id(gfxw_widget_t *widget, int ID, int subID);
 /* Sets a widget's ID
 ** Parmaeters: (gfxw_widget_t *) widget: The widget whose ID should be set
-**             (int) ID: The ID to set
+**             (int x int) ID, subID: The ID to set
 ** Returns   : (gfxw_widget_t *) widget
 ** A widget ID is unique within the container it is stored in, if and only if it was
 ** added to that container with gfxw_add().
@@ -333,20 +333,21 @@ gfxw_set_id(gfxw_widget_t *widget, int ID);
 */
 
 gfxw_widget_t *
-gfxw_remove_id(gfxw_container_t *container, int ID);
+gfxw_remove_id(gfxw_container_t *container, int ID, int subID);
 /* Finds a widget with a specific ID in a container and removes it from there
 ** Parameters: (gfxw_container_t *) container: The container to search in
 **             (int) ID: The ID to look for
+**             (int) subID: The subID to look for, or GFXW_NO_ID for any
 ** Returns   : (gfxw_widget_t *) The resulting widget or NULL if no match was found
 ** Search is non-recursive; widgets with IDs hidden in subcontainers will not be found.
 */
 
 
 gfxw_dyn_view_t *
-gfxw_dyn_view_set_params(gfxw_dyn_view_t *widget, int under_bits, int under_bitsp, int signal, int signalp);
+gfxw_dyn_view_set_params(gfxw_dyn_view_t *widget, int under_bits, void *under_bitsp, int signal, void *signalp);
 /* Initializes a dyn view's interpreter attributes
 ** Parameters: (gfxw_dyn_view_t *) widget: The widget affected
-**             (int x int x int x int) under_bits, inder_bitsp, signal, signalp: Interpreter-dependant data
+**             (int x void * x int x void *) under_bits, inder_bitsp, signal, signalp: Interpreter-dependant data
 ** Returns   : (gfxw_dyn_view_t *) widget
 */
 

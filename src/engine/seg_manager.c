@@ -939,7 +939,8 @@ guint16 sm_validate_export_func(struct _seg_manager_t* self, int pubfunct, int s
 static void
 _clone_cleanup(clone_t *clone)
 {
-	sci_free(clone->variables); /* Free the dynamically allocated memory part */
+	if (clone->variables)
+		sci_free(clone->variables); /* Free the dynamically allocated memory part */
 }
 
 DEFINE_HEAPENTRY(list, 8, 4);

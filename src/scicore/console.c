@@ -1037,9 +1037,9 @@ static void
 _cmd_print_command(cmd_mm_entry_t *data, int full)
 {
 	char *paramseeker = ((cmd_command_t *) data)->param;
-	sciprintf ("SYNOPSIS\n\n  %s ", data->name, paramseeker);
 
 	if (full) {
+		sciprintf ("SYNOPSIS\n\n  %s ", data->name, paramseeker);
 
 		while (*paramseeker)      {
 			switch (*paramseeker) {
@@ -1067,14 +1067,17 @@ _cmd_print_command(cmd_mm_entry_t *data, int full)
 
 		sciprintf("\n\nDESCRIPTION\n\n  %s",
 			  data->description);
-	}
+	} else
+		sciprintf(" %s", data->name);
 }
 
 static void
 _cmd_print_var(cmd_mm_entry_t *data, int full)
 {
 	cmd_var_t *var = (cmd_var_t *) data;
-	sciprintf ("VALUE\n\n  %s = %d\n", var->name, *(var->var.intp));
+	if (full)
+		sciprintf ("VALUE\n\n");
+	sciprintf("  %s = %d\n", var->name, *(var->var.intp));
 
 	if (full)
 		sciprintf("\n\nDESCRIPTION\n\n  %s",

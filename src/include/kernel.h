@@ -66,7 +66,9 @@ typedef struct {
 
 #define GET_SELECTOR(_object_, _selector_) read_selector16(s, _object_, s->selector_map._selector_, __FILE__, \
 							 __LINE__)
-#define GET_SEL32(_o_, _slc_) read_selector(s, _o_, s->selector_map._slc_, __FILE__, __LINE)
+#define GET_SEL32(_o_, _slc_) read_selector(s, _o_, s->selector_map._slc_, __FILE__, __LINE__)
+#define GET_SEL32V(_o_, _slc_) (GET_SEL32(_o_, _slc_).offset)
+#define GET_SEL32SV(_o_, _slc_) ((gint16)(GET_SEL32(_o_, _slc_).offset))
 /* Retrieves a selector from an object
 ** Parameters: (heap_ptr) object: The address of the object which the selector should be read from
 **             (selector_name) selector: The selector to read
@@ -88,7 +90,8 @@ typedef struct {
 
 #define PUT_SELECTOR(_object_, _selector_, _value_)\
  write_selector16(s, _object_, s->selector_map._selector_, _value_, __FILE__, __LINE__)
-#define PUT_SEL32(_o_, _slc_, _val_) write_selector(s, _o_, s->selector_map._slc_, _val_, __FILE__, __LINE)
+#define PUT_SEL32(_o_, _slc_, _val_) write_selector(s, _o_, s->selector_map._slc_, _val_, __FILE__, __LINE__)
+#define PUT_SEL32V(_o_, _slc_, _val_) write_selector(s, _o_, s->selector_map._slc_, make_reg(0, _val_), __FILE__, __LINE__)
 /* Writes a selector value to an object
 ** Parameters: (heap_ptr) object: The address of the object which the selector should be written to
 **             (selector_name) selector: The selector to read
@@ -100,7 +103,7 @@ typedef struct {
 
 
 #define INV_SEL(_object_, _selector_, _noinvalid_) \
-  s, _object_,  s->selector_map._selector_, _noinvalid_, funct_nr, argp, argc, __FILE__, __LINE__
+  s, _object_,  s->selector_map._selector_, _noinvalid_, funct_nr, argv, argc, __FILE__, __LINE__
 /* Kludge for use with invoke_selector(). Used for compatibility with compilers that can't
 ** handle vararg macros.
 */
@@ -111,9 +114,6 @@ int
 read_selector16(struct _state *s,  heap_ptr object, selector_t selector_id, char *fname, int line);
 void
 write_selector16(struct _state *s, heap_ptr object, selector_t selector_id, int value, char *fname, int line);
-int
-invoke_selector16(struct _state *s, heap_ptr object, int selector_id, int noinvalid, int kfunct,
-		stack_ptr_t k_argp, int k_argc, char *fname, int line, int argc, ...);
 
 
 reg_t
@@ -181,10 +181,10 @@ listp(struct _state *s, reg_t address);
 */
 
 int
-is_object(struct _state *s, heap_ptr offset);
+is_object(struct _state *s, reg_t obj);
 /* Checks whether a heap address contains an object
 ** Parameters: (state_t *) s: The current state
-**             (heap_ptr) offset: The heap address
+**             (reg_t) obj: The address to check
 ** Returns   : (int) 1 if it is an object, 0 otherwise
 */
 
@@ -292,15 +292,15 @@ _find_view_priority(struct _state *s, int y);
 /******************** Dynamic view list functions ********************/
 
 abs_rect_t
-set_base(struct _state *s, heap_ptr object);
+set_base(struct _state *s, reg_t object);
 /* Determines the base rectangle of the specified view object
 ** Parameters: (state_t *) s: The state to use
-**             (heap_ptr) object: The object to check
+**             (reg_t) object: The object to set
 ** Returns   : (abs_rect) The absolute base rectangle
 */
 
 extern abs_rect_t
-get_nsrect(struct _state *s, heap_ptr object, byte clip);
+get_nsrect(struct _state *s, reg_t object, byte clip);
 /* Determines the now-seen rectangle of a view object
 ** Parameters: (state_t *) s: The state to use
 **             (heap_ptr) object: The object to check

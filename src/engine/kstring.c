@@ -119,13 +119,6 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr said_block = UPARAM(0);
   int new_lastmatch;
 
-
-  if (is_object(s, said_block)) {
-    SCIkwarn(SCIkWARNING, "Attempt to apply Said() to object %04x\n", said_block);
-    s->acc = 0;
-    return;
-  }
-
   if (!said_block) { s->acc=0; return; }
 
   if (argc != 1)
