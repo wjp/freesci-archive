@@ -9,12 +9,10 @@
 #undef HAVE_ALPHA_EV6_SUPPORT
 #undef HAVE_MITSHM
 #undef HAVE_SDL
+#undef HAVE_DLOPEN
 
 /* Define if you have the <dirent.h> header file. */
 #undef HAVE_DIRENT_H
-
-/* Define if you have the <dlfcn.h> header file. */
-#undef HAVE_DLFCN_H
 
 /* Define if you have the `ffs' function. */
 #undef HAVE_FFS

@@ -26,21 +26,21 @@ AC_CHECK_SIZEOF(long)
 AC_CHECK_FUNCS(pipe socketpair fork sched_yield memfrob ffs getopt_long isblank usleep)
 AM_PATH_ALSA(0.5.0, [AC_DEFINE(HAVE_ALSA)], [echo >/dev/null])
 AC_PATH_GGI
-AC_CHECK_LIB(ld, dlopen, [LIBS="$LIBS -lld"])
+AC_CHECK_FSCI_DLOPEN
 
 AC_ARG_WITH(sdl, [  --without-sdl           Do not build the SDL driver])
 if test x"$with_sdl" != xno; then
 	AM_PATH_SDL(1.1.8, 	[
 					AC_DEFINE(HAVE_SDL)
-					ac_sdl_o="sdl_driver.la"
+					fsci_sdl_driver="yes"
 				],
 				[
-					ac_sdl_o=""
+					fsci_sdl_driver=""
 				])
 else
 	AC_MSG_CHECKING([for SDL])
 	AC_MSG_RESULT([disabled]) # Well, we should give some kind of feedback...
-	ac_sdl_so=""
+	fsci_sdl_driver=""
 fi
 
 AC_PATH_CURSES
@@ -73,7 +73,7 @@ AC_TRY_COMPILE([], [
 AC_SUBST(ev6_cpu)
 
 
-ac_xlib_o=""
+fsci_xlib_driver=""
 if test x"$have_x" = xyes; then
 	if test x"$x_libraries" != xNONE; then
 		if test x"$x_libraries" != x; then
@@ -82,7 +82,7 @@ if test x"$have_x" = xyes; then
 		AC_CHECK_LIB(Xi, XGrabDevice, [X_LIBS="$X_LIBS -lXi"])
 		AC_CHECK_LIB(X11, XOpenDisplay, [X_LIBS="$X_LIBS -lX11"])
 
-		ac_xlib_o="xlib_driver.la"
+		fsci_xlib_driver="yes"
 	fi
 fi
 
@@ -91,9 +91,53 @@ dnl 	AC_PATH_GLX
 dnl fi
 AC_SUBST(ac_glx_libraries)
 
-AC_SUBST(ac_xlib_o)
-AC_SUBST(ac_sdl_o)
-AC_SUBST(ac_ggi_o)
+
+fsci_xlib_dl=""
+fsci_sdl_dl=""
+fsci_ggi_dl=""
+fsci_xlib_st=""
+fsci_sdl_st=""
+fsci_ggi_st=""
+
+if test x"$dlopen" = xyes; then
+	if test x"$fsci_ggi_driver" = xyes; then
+		fsci_ggi_dl="ggi_driver.la"
+	fi
+
+	if test x"$fsci_sdl_driver" = xyes; then
+		fsci_sdl_dl="sdl_driver.la"
+	fi
+
+	if test x"$fsci_xlib_driver" = xyes; then
+		fsci_xlib_dl="xlib_driver.la"
+	fi
+else
+	if test x"$fsci_ggi_driver" = xyes; then
+		fsci_ggi_st="ggi_driver.o"
+#		LIBS="$LIBS $ac_ggi_libraries"
+	fi
+
+	if test x"$fsci_sdl_driver" = xyes; then
+		fsci_sdl_st="sdl_driver.o"
+		LIBS="$LIBS $SDL_LIBS"
+	fi
+
+	if test x"$fsci_xlib_driver" = xyes; then
+		fsci_xlib_st="xlib_driver.o"
+		LIBS="$LIBS $X_LIBS"
+	fi
+fi
+
+AC_SUBST(fsci_xlib_dl)
+AC_SUBST(fsci_sdl_dl)
+AC_SUBST(fsci_ggi_dl)
+AC_SUBST(fsci_xlib_st)
+AC_SUBST(fsci_sdl_st)
+AC_SUBST(fsci_ggi_st)
+
+dnl AC_SUBST(ac_xlib_o)
+dnl AC_SUBST(ac_sdl_o)
+dnl AC_SUBST(ac_ggi_o)
 
 #AC_PATH_PNG
 AC_SUBST(ac_png_includes)

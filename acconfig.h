@@ -8,3 +8,4 @@
 #undef HAVE_ALPHA_EV6_SUPPORT
 #undef HAVE_MITSHM
 #undef HAVE_SDL
+#undef HAVE_DLOPEN

@@ -36,9 +36,8 @@ static char *oldname = NULL;
 static void *oldhandle;
 
 
-#define USE_MODULES
 
-#ifndef USE_MODULES
+#ifndef HAVE_DLOPEN
 #  ifdef HAVE_LIBGGI
 extern gfx_driver_t gfx_driver_ggi;
 #  endif
@@ -58,7 +57,7 @@ extern gfx_driver_t gfx_driver_sdl;
 #endif
 
 static gfx_driver_t *gfx_drivers[] = {
-#ifndef USE_MODULES
+#ifndef HAVE_DLOPEN
 #  ifdef HAVE_LIBGGI
 	&gfx_driver_ggi,
 #  endif
@@ -79,6 +78,7 @@ static gfx_driver_t *gfx_drivers[] = {
 #define DRIVER_PREFIX "gfx_driver_"
 #define DRIVER_FILE_SUFFIX "_driver"
 
+#ifdef HAVE_DLOPEN
 struct _gfx_driver *
 gfx_find_driver(char *path, char *name)
 {
@@ -109,6 +109,26 @@ gfx_find_driver(char *path, char *name)
 				SCI_GFX_DRIVER_VERSION,
 				&oldhandle);
 }
+#else /* No dlopen */
+struct _gfx_driver *
+gfx_find_driver(char *path, char *name)
+{
+	int retval = 0;
+
+	if (!name) { /* Find default driver */
+#ifndef X_DISPLAY_MISSING
+		if (getenv("DISPLAY"))
+			return &gfx_driver_xlib;
+#endif
+		return gfx_drivers[0];
+	}
+
+	while (gfx_drivers[retval] && strcasecmp(name, gfx_drivers[retval]->name))
+		retval++;
+
+	return gfx_drivers[retval];
+}
+#endif
 
 
 char *
