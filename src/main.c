@@ -415,7 +415,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 	cl_options->midi_device_name = NULL;
 	cl_options->sound_server_name = NULL;
 	cl_options->mouse = ON;
-
+	cl_options->show_rooms = 0;
 #ifdef HAVE_GETOPT_LONG
 	while ((c = getopt_long(argc, argv, "lvrhmsDd:V:g:x:y:c:M:O:S:P:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_LONG */
