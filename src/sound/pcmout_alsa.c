@@ -31,7 +31,6 @@ static guint16 buffer_size;
 
 static snd_pcm_t *pcm_handle;
 
-static snd_pcm_hw_params_t *hwparams;
 static snd_output_t *output;
 
 static char *alsa_device = "hw:0,0"; 
@@ -53,6 +52,7 @@ static void *sound_thread (void *arg)
 
 static int pcmout_alsa_open(gint16 *b, guint16 size, guint16 rate, guint8 stereo) 
 {
+  snd_pcm_hw_params_t *hwparams;
   int channels = (stereo) ? 2 : 1;
   int periods = 8;
   int err;
@@ -142,7 +142,6 @@ static int pcmout_alsa_close() {
     printf("ALSA:  Can't close PCM device\n");
   }
 
-  snd_pcm_hw_params_free(hwparams);
   return 0;
 }
 
