@@ -27,7 +27,7 @@
 
 #include <engine.h>
 
-
+int stop_on_event;
 
 void
 kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -114,6 +114,12 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->acc = 0; /* Unknown or no event */
       }
     }
+    
+  if ((s->acc)&&(stop_on_event))
+  {
+    stop_on_event = 0;
+    script_debug_flag = 1;
+  }  
 }
 
 void

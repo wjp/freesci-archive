@@ -1,3 +1,10 @@
+2000-08-15  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kfile.c: Added (SCI01) FileIO kernel call
+	* src/engine/kernel.c: Added (SCI01) Memory kernel call
+	* src/engine/kevent.c (kGetEvent): Added break-on-event support
+	* src/scicore/resource.c (loadResources): Fixed an autodetection problem
+	
 2000-08-07  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/said.y: Added support for 'word1 < [ word2 ]' in the

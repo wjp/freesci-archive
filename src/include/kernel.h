@@ -51,6 +51,7 @@
 
 extern int _kdebug_cheap_event_hack;
 extern int _kdebug_cheap_soundcue_hack;
+extern int stop_on_event;
 
 extern DLLEXTERN int _debug_seeking;
 extern DLLEXTERN int _debug_step_running;
@@ -459,6 +460,8 @@ void kRestoreGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kEmptyList(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kAddAfter(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetNowSeen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kFileIO(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kMemory(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void k_Unknown(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 /* The Unknown/Unnamed kernel function */
 void kstub(struct _state *s, int funct_nr, int argc, heap_ptr argp);

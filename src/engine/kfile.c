@@ -1,5 +1,5 @@
 /***************************************************************************
- kfile.c Copyright (C) 1999 Christoph Reichenbach
+ Kfile.c Copyright (C) 1999 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -31,6 +31,8 @@
 #define PATH_MAX 255
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#else
+#include <dirent.h>
 #endif
 
 #ifndef O_BINARY
@@ -102,10 +104,8 @@ f_open_mirrored(state_t *s, char *fname)
 #define _K_FILE_MODE_CREATE 2
 
 void
-kFOpen(state_t *s, int funct_nr, int argc, heap_ptr argp)
+file_open(state_t *s, char *filename, int mode)
 {
-  char *filename = s->heap + UPARAM(0);
-  int mode = PARAM(1);
   int retval = 1; /* Ignore file_handles[0] */
   FILE *file = NULL;
 
@@ -129,7 +129,7 @@ kFOpen(state_t *s, int funct_nr, int argc, heap_ptr argp)
       SCIkdebug(SCIkFILE, "Creating file %s with mode %d\n", filename, mode);
     }
   if (!file) { /* Failed */
-    SCIkdebug(SCIkFILE, "kFOpen() failed\n");
+    SCIkdebug(SCIkFILE, "file_open() failed\n");
     s->acc = 0;
     return;
   }
@@ -143,14 +143,16 @@ kFOpen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   s->file_handles[retval] = file;
 
   s->acc = retval;
-
 }
 
 void
-kFClose(state_t *s, int funct_nr, int argc, heap_ptr argp)
+kFOpen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int handle = UPARAM(0);
+  file_open(s, s->heap + UPARAM(0), UPARAM(1));
+}
 
+void file_close(state_t *s, int handle)
+{
   SCIkdebug(SCIkFILE, "Closing file %d\n", handle);
 
   if (handle == 0) {
@@ -168,12 +170,14 @@ kFClose(state_t *s, int funct_nr, int argc, heap_ptr argp)
   s->file_handles[handle] = NULL;
 }
 
-
-void kFPuts(state_t *s, int funct_nr, int argc, heap_ptr argp)
+void
+kFClose(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int handle = UPARAM(0);
-  char *data = UPARAM(1) + s->heap;
+  file_close(s, UPARAM(0));
+}
 
+void fputs_wrapper(state_t *s, int handle, char *data)
+{
   SCIkdebug(SCIkFILE, "FPuts'ing \"%s\" to handle %d\n", data, handle);
 
   if (handle == 0) {
@@ -187,16 +191,37 @@ void kFPuts(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
   fputs(data, s->file_handles[handle]);
+}
 
+void fwrite_wrapper(state_t *s, int handle, char *data, int length)
+{
+  SCIkdebug(SCIkFILE, "fwrite()'ing \"%s\" to handle %d\n", data, handle);
+
+  if (handle == 0) {
+    SCIkwarn(SCIkERROR, "Attempt to write to file handle 0\n");
+    return;
+  }
+
+  if ((handle >= s->file_handles_nr) || (s->file_handles[handle] == NULL)) {
+    SCIkwarn(SCIkERROR, "Attempt to write to invalid/unused file handle %d\n", handle);
+    return;
+  }
+
+  fwrite(data, 1, length, s->file_handles[handle]);
+}
+
+
+void kFPuts(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int handle = UPARAM(0);
+  char *data = UPARAM(1) + s->heap;
+
+  fputs_wrapper(s, handle, data);
 }
 
 void
-kFGets(state_t *s, int funct_nr, int argc, heap_ptr argp)
+fgets_wrapper(state_t *s, char *dest, int maxsize, int handle)
 {
-  char *dest = UPARAM(0) + s->heap;
-  int maxsize = UPARAM(1);
-  int handle = UPARAM(2);
-
   SCIkdebug(SCIkFILE, "FGets'ing %d bytes from handle %d\n", maxsize, handle);
 
 
@@ -212,9 +237,57 @@ kFGets(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   fgets(dest, maxsize, s->file_handles[handle]);
 
+  SCIkdebug(SCIkFILE, "FGets'ed \"%s\"\n", dest);
+}
+
+
+void
+fread_wrapper(state_t *s, char *dest, int bytes, int handle)
+{
+  SCIkdebug(SCIkFILE, "fread()'ing %d bytes from handle %d\n", bytes, handle);
+
+  if (handle == 0) {
+    SCIkwarn(SCIkERROR, "Attempt to read from file handle 0\n");
+    return;
+  }
+
+  if ((handle >= s->file_handles_nr) || (s->file_handles[handle] == NULL)) {
+    SCIkwarn(SCIkERROR, "Attempt to read from invalid/unused file handle %d\n", handle);
+    return;
+  }
+
+  s->acc=fread(dest, 1, bytes, s->file_handles[handle]);
+}
+
+
+void
+fseek_wrapper(state_t *s, int handle, int offset, int whence)
+{
+
+  if (handle == 0) {
+    SCIkwarn(SCIkERROR, "Attempt seek on file handle 0\n");
+    return;
+  }
+
+  if ((handle >= s->file_handles_nr) || (s->file_handles[handle] == NULL)) {
+    SCIkwarn(SCIkERROR, "Attempt seek on invalid/unused file handle %d\n", handle);
+    return;
+  }
+
+  s->acc=fseek(s->file_handles[handle], offset, whence);
+}
+
+
+void
+kFGets(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  char *dest = UPARAM(0) + s->heap;
+  int maxsize = UPARAM(1);
+  int handle = UPARAM(2);
+
+  fgets_wrapper(s, dest, maxsize, handle);
   s->acc=UPARAM(0);
 
-  SCIkdebug(SCIkFILE, "FGets'ed \"%s\"\n", dest);
 }
 
 
@@ -769,3 +842,161 @@ kValidPath(state_t *s, int funct_nr, int argc, heap_ptr argp)
   chdir(cpath);
 }
 
+#define K_FILEIO_OPEN 		0
+#define K_FILEIO_CLOSE		1
+#define K_FILEIO_READ_RAW	2
+#define K_FILEIO_WRITE_RAW	3
+#define K_FILEIO_UNLINK		4
+#define K_FILEIO_READ_STRING	5
+#define K_FILEIO_WRITE_STRING	6
+#define K_FILEIO_SEEK		7
+#define K_FILEIO_FIND_FIRST	8
+#define K_FILEIO_FIND_NEXT	9
+#define K_FILEIO_STAT		10
+
+#ifndef _WIN32
+
+DIR *search;
+char *mask_copy;
+heap_ptr outbuffer;
+
+void
+next_file(state_t *s)
+{
+  struct dirent *match;
+  s->acc=0;
+  while (match=readdir(search))
+  {
+    if (fnmatch(mask_copy, match->d_name, FNM_PATHNAME) )
+    {
+	s->acc=outbuffer;
+	strcpy(s->heap + outbuffer, match->d_name);
+	return;
+    }
+  }
+  
+  free(mask_copy);
+}
+void
+first_file(state_t *s, char *dir, char *mask, heap_ptr buffer)
+{
+  struct dirent *match;
+
+  if (search) closedir(search);
+  
+  if (!(search=opendir(dir)))
+  {
+    sciprintf("opendir(\"%s\") failed.\n", dir);
+    return;
+  }
+
+  mask_copy=strdup(mask);
+  outbuffer=buffer;
+  
+  next_file(s);
+}
+
+#else /* !_WIN32 */
+#endif
+
+void
+kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int func_nr = UPARAM(0);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+  
+  switch (func_nr) {
+  
+    case K_FILEIO_OPEN :
+    {
+	char *name = s->heap + UPARAM(1);
+	int mode = UPARAM(2);
+	
+	file_open(s, name, mode);
+	break;
+    }
+    case K_FILEIO_CLOSE :
+    {
+	int handle = UPARAM(1);
+	
+	file_close(s, handle);
+	break;
+    }
+    case K_FILEIO_READ_RAW :
+    {
+	char *dest = s->heap + UPARAM(1);
+	int size = UPARAM(2);
+	int handle = UPARAM(3);
+	
+	fread_wrapper(s, dest, size, handle);
+	break;
+    }
+    case K_FILEIO_WRITE_RAW :
+    {
+	char *buf = s->heap + UPARAM(1);
+	int size = UPARAM(2);
+	int handle = UPARAM(3);
+	
+	fwrite_wrapper(s, handle, buf, size);
+	break;
+    }
+    case K_FILEIO_UNLINK :
+    {
+	char *name = s->heap + UPARAM(1);
+	
+	unlink(name);
+	break;
+    }
+    case K_FILEIO_READ_STRING :
+    {
+	char *dest = s->heap + UPARAM(1);
+	int size = UPARAM(2);
+	int handle = UPARAM(3);
+	
+	fgets_wrapper(s, dest, size, handle);
+	break;
+    }
+    case K_FILEIO_WRITE_STRING :
+    {
+	char *buf = s->heap + UPARAM(1);
+	int size = UPARAM(2);
+	int handle = UPARAM(3);
+	
+	fputs_wrapper(s, handle, buf);
+	break;
+    }
+    case K_FILEIO_SEEK :
+    {
+	int handle = UPARAM(1);
+	int offset = UPARAM(2);
+	int whence = UPARAM(3);
+	
+	fseek_wrapper(s, handle, offset, whence);
+	break;
+    }
+    case K_FILEIO_FIND_FIRST :
+    {
+	char *mask = s->heap + UPARAM(1);
+	heap_ptr buf = UPARAM(2);
+	int attr = UPARAM(3); /* We won't use this, Win32 might, though... */
+
+	first_file(s, ".", mask, buf);	
+
+	break;
+    }
+    case K_FILEIO_FIND_NEXT :
+    {
+	next_file(s);
+	break;
+    }
+    case K_FILEIO_STAT :
+    {
+	char *name = s->heap + UPARAM(1);
+	s->acc=1-_k_check_file(name, 0);
+	break;
+    }
+    default :
+        SCIkwarn(SCIkERROR, "Unknown FileIO() sub-command: %d\n", func_nr);
+  }
+}    

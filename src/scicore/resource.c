@@ -114,6 +114,7 @@ int loadResources(int version, int allow_patches)
     if ((retval = resourceLoader(&decompress0, autodetect, allow_patches))) {
       freeResources();
       if (autodetect && ((retval == SCI_ERROR_UNKNOWN_COMPRESSION) ||
+			 (retval == SCI_ERROR_DECOMPRESSION_INSANE) ||
 			 (retval == SCI_ERROR_DECOMPRESSION_OVERFLOW))) {
 	sci_version = SCI_VERSION_01;
       } else return retval;
@@ -123,8 +124,9 @@ int loadResources(int version, int allow_patches)
   if (sci_version == SCI_VERSION_01) {
     if ((retval = resourceLoader(&decompress01, autodetect, allow_patches))) {
       freeResources();
-      if (autodetect == ((retval == SCI_ERROR_UNKNOWN_COMPRESSION)
-			 || (retval == SCI_ERROR_DECOMPRESSION_OVERFLOW))) {
+      if (autodetect == ((retval == SCI_ERROR_UNKNOWN_COMPRESSION) ||
+			 (retval == SCI_ERROR_DECOMPRESSION_INSANE) ||
+			 (retval == SCI_ERROR_DECOMPRESSION_OVERFLOW))) {
 	sci_version = SCI_VERSION_1;
       } else return retval;
     } else return 0;
@@ -282,7 +284,7 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
       seeker = seeker->next;
   }
 
-  assert(resourceCounter == max_resource);
+/*  assert(resourceCounter == max_resource); */
 
   qsort(resource_map, max_resource, sizeof(resource_t),
     resourcecmp);

@@ -146,6 +146,8 @@ sci_kernel_function_t kfunct_mappers[] = {
 
   /* Experimental functions */
   {"Said", kSaid },
+  {"FileIO", kFileIO },
+  {"Memory", kMemory },
   /* Special and NOP stuff */
   {"DoAvoider", kNOP },
   {SCRIPT_UNKNOWN_FUNCTION_STRING, k_Unknown },
@@ -274,7 +276,10 @@ static kfunct * unknown_function_map[SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR] = { /* Ma
 /*0x6e*/ NULL,
 /*0x6f*/ NULL,
 /*0x70*/ kGraph,
-/*0x71*/ kJoystick
+/*0x71*/ kJoystick,
+/*0x72*/ NULL,
+/*0x73*/ NULL,
+/*0x74*/ kFileIO
 };
 
 
@@ -485,6 +490,62 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 }
 
+#define K_MEMORY_ALLOCATE_CRITICAL 	1
+#define K_MEMORY_ALLOCATE_NONCRITICAL   2
+#define K_MEMORY_FREE			3
+#define	K_MEMORY_MEMCPY			4
+#define K_MEMORY_PEEK			5
+#define K_MEMORY_POKE			6
+void
+kMemory(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  CHECK_THIS_KERNEL_FUNCTION;
+  
+  switch (PARAM(0)) {
+  
+    case K_MEMORY_ALLOCATE_CRITICAL :
+	
+	s->acc=heap_allocate(s->_heap, UPARAM(1));
+	if (!s->acc)
+	{
+	  SCIkwarn(SCIkERROR, "Critical heap allocation failed\n");
+	  script_error_flag = script_debug_flag = 1;
+	}
+	break;
+
+    case K_MEMORY_ALLOCATE_NONCRITICAL :
+	
+	s->acc=heap_allocate(s->_heap, UPARAM(1));
+	break;
+
+    case K_MEMORY_FREE :
+	
+	heap_free(s->_heap, UPARAM(1));
+	break;
+	
+    case K_MEMORY_MEMCPY :
+    {
+
+	int dest = UPARAM(1);
+    	int src = UPARAM(2);
+	int n = UPARAM(3);
+    
+	memcpy(s->heap + dest, s->heap + src, n);
+	break;
+    }
+    
+    case K_MEMORY_PEEK :
+    
+	s->acc=GET_HEAP(UPARAM(1));		
+	break;
+	
+    case K_MEMORY_POKE :
+    
+	PUT_HEAP(UPARAM(1), UPARAM(2));
+	break;
+    
+    }
+}
 
 void
 kstub(state_t *s, int funct_nr, int argc, heap_ptr argp)

@@ -279,6 +279,9 @@ else
 	--send_calls_nr;
 	sciprintf("Send error: Variable selector %04x in %04x called with %04x params\n",
 		  selector, send_obj, argc);
+	script_debug_flag = 1; /* Enter debug mode */
+	_debug_seeking = _debug_step_running = 0;
+
     }
       break;
 

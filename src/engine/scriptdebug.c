@@ -1753,6 +1753,14 @@ c_gnf(state_t *s)
   return 0;
 }
 
+int
+c_se(state_t *s)
+{
+  stop_on_event=1;
+  _debugstate_valid = script_debug_flag = script_error_flag = 0;
+  return 0;
+}
+
 void
 script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp,
 	     int *restadjust, int bp)
@@ -1847,6 +1855,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       con_hook_command(c_backtrace, "bt", "", "Dumps the send/self/super/call/calle/callb stack");
       con_hook_command(c_snk, "snk", "s*", "Steps forward until it hits the next\n  callk operation.\n"
 		       "  If invoked with a parameter, it will\n  look for that specific callk.\n");
+      con_hook_command(c_se, "se", "", "Steps forward until an SCI event is received.\n");      
       con_hook_command(c_listclones, "clonetable", "", "Lists all registered clones");
       con_hook_command(c_set_acc, "set_acc", "i", "Sets the accumulator");
       con_hook_command(c_heap_free, "heapfree", "", "Shows the free heap");

@@ -734,6 +734,8 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
   resource_t *resource = findResource(sci_pic, PARAM(0));
   CHECK_THIS_KERNEL_FUNCTION;
 
+  if (SCI_VERSION_MAJOR(s->version)!=0) return;
+
   if (resource) {
 
     if (s->version < SCI_VERSION_FTU_NEWER_DRAWPIC_PARAMETERS) {
