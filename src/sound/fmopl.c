@@ -71,9 +71,6 @@ Revision History:
 #define PI 3.14159265358979323846
 #endif
 
-#define INLINE inline
-
-
 
 /* output final shift */
 #if (OPL_SAMPLE_BITS==16)
