@@ -257,25 +257,25 @@ graphics_draw_region_ggi(ggi_visual_t vis, byte *data,
 
     if ((!pointer_x_affected) || (pointer_row == -1))
       for (xc=x; xc<xend; xc++)
-	*(uint32 *)&(_sci_xfer[index += bytelen]) = *(uint32 *)&(egacol[data[counter++]]);
+	memcpy(&(_sci_xfer[index += bytelen]), &(egacol[data[counter++]]), 4);
     else { /* Check for mouse pointer */
 
       xc = x;
       for (; xc < pointer_x; xc++)
-	*(uint32 *)&(_sci_xfer[index += bytelen]) = *(uint32 *)&(egacol[data[counter++]]);
+	memcpy(&(_sci_xfer[index += bytelen]), &(egacol[data[counter++]]), 4);
       
       for (; (xc < pointer_end_x) && (xc < xend); xc++) {
 	int colval = pointer->bitmap[pointer_row + xc - pointer_x];
 	if (colval == pointer->color_key)
 	  colval = data[counter];
 
-	*(uint32 *)&(_sci_xfer[index += bytelen]) = *(uint32 *)&(egacol[colval]);
+	memcpy(&(_sci_xfer[index += bytelen]), &(egacol[colval]), 4);
 
 	counter++;
       }
 
       for (; xc < xend; xc++)
-	*(uint32 *)&(_sci_xfer[index += bytelen]) = *(uint32 *)&(egacol[data[counter++]]);
+	memcpy(&(_sci_xfer[index += bytelen]), &(egacol[data[counter++]]), 4);
       
     }
 

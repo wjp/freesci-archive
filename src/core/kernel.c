@@ -1070,6 +1070,51 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
+void
+kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  char *string = s->heap + UPARAM(0);
+  int words_nr;
+  char *error;
+  result_word_t *words;
+  heap_ptr event = UPARAM(1);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  words = vocab_tokenize_string(string, &words_nr,
+				s->parser_words, s->parser_words_nr,
+				s->parser_suffices, s->parser_suffices_nr,
+				&error);
+
+  if (words) {
+
+    s->acc = 1;
+
+    if (s->debug_mode & (1 << SCIkPARSER_NR)) {
+      int i;
+
+      SCIkdebug(SCIkPARSER, "Parsed to the following blocks:\n", 0);
+
+      for (i = 0; i < words_nr; i++)
+	SCIkdebug(SCIkPARSER, "   Type[%04x] Group[%04x]\n", words[i].class, words[i].group);
+    }
+
+    free(words);
+
+  } else {
+
+    s->acc = 0;
+    if (error) {
+
+      strcpy(s->heap + s->parser_base, error);
+      fprintf(stderr,"Word unknown: %s\n", error);
+      /*      invoke_selector(INV_SEL(event, wordFail, 0), 1, s->parser_base); */
+      free(error);
+    }
+  }
+}
+
+
 /*************************************************************/
 
 void
@@ -3814,11 +3859,12 @@ struct {
   {"Wait", kWait },
   {"CosDiv", kCosDiv },
   {"SinDiv", kSinDiv },
+  {"BaseSetter", kBaseSetter},
 
   /* Experimental functions */
   {"Said", kSaid },
+  {"Parse", kParse },
   {"EditControl", kEditControl },
-  {"BaseSetter", kBaseSetter},
   {"DoSound", kDoSound },
   {"Graph", kGraph },
   {"GetEvent", kGetEvent },

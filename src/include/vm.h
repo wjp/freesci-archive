@@ -138,6 +138,8 @@ typedef struct
 
   int max, cursor, claimed; /* Used by EditControl */
 
+  int wordFail, syntaxFail, semanticFail; /* Used by Parse() */
+
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {

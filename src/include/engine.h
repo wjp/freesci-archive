@@ -158,6 +158,8 @@ typedef struct _state
   int parser_words_nr;
   suffix_t **parser_suffices;
   int parser_suffices_nr;
+  parse_tree_branch_t *parser_branches;
+  int parser_branches_nr;
 
   heap_ptr game_obj; /* Pointer to the game object */
 

@@ -35,7 +35,7 @@
 int
 _vocab_cmp_words(const void *word1, const void *word2)
 {
-  return g_strcasecmp(((word_t *) word1)->word, ((word_t *) word1)->word);
+  return g_strcasecmp((*((word_t **) word1))->word, (*((word_t **) word2))->word);
 }
 
 
@@ -192,13 +192,59 @@ vocab_free_suffices(suffix_t **suffices, int suffices_nr)
 }
 
 
+void
+vocab_free_branches(parse_tree_branch_t *parser_branches)
+{
+  if (parser_branches)
+    free(parser_branches);
+}
+
+
+parse_tree_branch_t *
+vocab_get_branches(int *branches_nr)
+{
+  resource_t *resource = findResource(sci_vocab, VOCAB_RESOURCE_PARSE_TREE_BRANCHES);
+  parse_tree_branch_t *retval;
+  int i;
+
+  if (!resource) {
+    fprintf(stderr,"No parser tree data found!\n");
+    return NULL;
+  }
+
+  *branches_nr = resource->length / 20;
+
+  if (*branches_nr == 0) {
+    fprintf(stderr,"Parser tree data is empty!\n");
+    return NULL;
+  }
+
+  retval = malloc(sizeof(parse_tree_branch_t) * *branches_nr);
+
+  for (i = 0; i < *branches_nr; i++) {
+    int k;
+
+    byte *base = resource->data + i*20;
+
+    retval[i].id = getInt16(base);
+
+    for (k = 0; k < 9; k++)
+      retval[i].data[k] = getInt16(base + 2 + 2*k);
+
+    retval[i].data[9] = 0; /* Always terminate */
+  }
+
+  return retval;
+}
+
+
 result_word_t *
 vocab_lookup_word(char *word, int word_len,
 		  word_t **words, int words_nr,
 		  suffix_t **suffices, int suffices_nr)
 {
   word_t *tempword = malloc(sizeof(word_t) + word_len + 256); /* 256: For suffices. Should suffice. */
-  word_t *dict_word;
+  word_t **dict_word;
   result_word_t *retval;
   char *tester;
   int i;
@@ -206,15 +252,17 @@ vocab_lookup_word(char *word, int word_len,
   strncpy(&(tempword->word[0]), word, word_len);
   tempword->word[word_len] = 0;
 
+  fprintf(stderr,"Looking up '%s'\n", tempword->word);
+
   retval = malloc(sizeof(result_word_t));
 
-  dict_word = bsearch(tempword, words, words_nr, sizeof(word_t *), _vocab_cmp_words);
+  dict_word = bsearch(&tempword, words, words_nr, sizeof(word_t *), _vocab_cmp_words);
 
   if (dict_word) {
     free(tempword);
 
-    retval->class = dict_word->class;
-    retval->group = dict_word->group;
+    retval->class = (*dict_word)->class;
+    retval->group = (*dict_word)->group;
 
     return retval;
   }
@@ -236,11 +284,11 @@ vocab_lookup_word(char *word, int word_len,
 
 	dict_word = bsearch(tempword, words, words_nr, sizeof(word_t *), _vocab_cmp_words);
 
-	if ((dict_word) && (dict_word->class & suffices[i]->class_mask)) { /* Found it? */
+	if ((dict_word) && ((*dict_word)->class & suffices[i]->class_mask)) { /* Found it? */
 	  free(tempword);
 
 	  retval->class = suffices[i]->result_class; /* Use suffix class */
-	  retval->group = dict_word->group;
+	  retval->group = (*dict_word)->group;
 
 	  return retval;
 	}
@@ -299,4 +347,69 @@ vocab_decypher_said_block(state_t *s, heap_ptr addr)
   } while (nextitem != 0xff);
 
   sciprintf("\n");
+}
+
+
+result_word_t *
+vocab_tokenize_string(char *sentence, int *result_nr,
+		      word_t **words, int words_nr,
+		      suffix_t **suffices, int suffices_nr,
+		      char **error)
+{
+  char *lastword = sentence;
+  int pos_in_sentence = 0;
+  char c;
+  int wordlen = 0;
+  result_word_t *retval = malloc(sizeof(result_word_t));
+  /* malloc'd size is always one result_word_t too big */
+
+  result_word_t *lookup_result;
+
+
+  *result_nr = 0;
+  *error = NULL;
+
+  do {
+
+    c = sentence[pos_in_sentence++];
+
+    if (isalnum(c))
+      ++wordlen; /* Continue on this word */
+
+    else {
+
+      if (wordlen) { /* Finished a word? */
+
+	lookup_result = vocab_lookup_word(lastword, wordlen,
+					  words, words_nr,
+					  suffices, suffices_nr);
+	/* Look it up */
+
+	if (!lookup_result) { /* Not found? */
+	  *error = calloc(wordlen + 1, 1);
+	  strncpy(*error, lastword, wordlen); /* Set the offending word */
+	  free(retval);
+	  return NULL; /* And return with error */
+	}
+
+	memcpy(retval + *result_nr, lookup_result, sizeof(result_word_t));
+	/* Copy into list */
+	++(*result_nr); /* Increase number of resulting words */
+
+	retval = realloc(retval, sizeof(result_word_t) * (*result_nr + 1));
+
+      }
+
+      lastword = sentence + pos_in_sentence;
+      wordlen = 0;
+    }
+
+  } while (c); /* Until terminator is hit */
+
+  if (*result_nr == 0) {
+    free(retval);
+    return NULL;
+  }
+
+  return retval;
 }

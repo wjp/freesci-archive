@@ -19,6 +19,7 @@ typedef struct opcode_
 
 
 #define VOCAB_RESOURCE_MAIN_VOCAB 0
+#define VOCAB_RESOURCE_PARSE_TREE_BRANCHES 900
 #define VOCAB_RESOURCE_SUFFIX_VOCAB 901
 
 
@@ -67,6 +68,16 @@ typedef struct {
   int group; /* Word group */
 
 } result_word_t;
+
+
+typedef struct {
+
+  int id;
+
+  int data[10];
+
+} parse_tree_branch_t;
+
 
 
 /*FIXME: These need freeing functions...*/
@@ -131,5 +142,38 @@ vocab_free_suffices(suffix_t **suffices, int suffices_nr);
 **             (int) suffices_nr: Number of entrie sin suffices
 */
 
+parse_tree_branch_t *
+vocab_get_branches(int *branches_nr);
+/* Retrieves all parse tree branches from the resource data
+** Parameters: (int *) branches_nr: Pointer to the variable which the number of entries is to be
+**                     stored in
+** Returns   : (parse_tree_branch_t *): The branches, or NULL on error
+*/
+
+void
+vocab_free_branches(parse_tree_branch_t *parser_branches);
+/* Frees all branches
+** Parameters: (parse_tree_branch_t *) parser_branches: The branches to free
+** Returns   : (null)
+*/
+
+result_word_t *
+vocab_tokenize_string(char *sentence, int *result_nr,
+		      word_t **words, int words_nr,
+		      suffix_t **suffices, int suffices_nr,
+		      char **error);
+/* Tokenizes a string and compiles it into word_ts.
+** Parameters: (char *) sentence: The sentence to examine
+**             (int *) result_nr: The variable to store the resulting number of words in
+**             (word_t **) words: The words to scan for
+**             (int) words_nr: Number of words to scan for
+**             (suffix_t **) suffices: suffixes to scan for
+**             (int) suffices_nr: Number of suffices to scan for
+**             (char **) error: Points to a malloc'd copy of the offending text or to NULL on error
+** Returns   : (word_t *): A list of word_ts containing the result, or NULL.
+** On error, NULL is returned. If *error is NULL, the sentence did not contain any useful words;
+** if not, *error points to a malloc'd copy of the offending word.
+** The returned list may contain anywords.
+*/
 
 #endif

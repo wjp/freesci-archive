@@ -1272,8 +1272,11 @@ game_init(state_t *s)
   fprintf(stderr," Script 0 at %04x\n", script0);
 
   /* Init parser */
-  s->parser_words = vocab_get_words(&(s->parser_words_nr));
-  s->parser_suffices = vocab_get_suffices(&(s->parser_suffices_nr));
+  if (s->parser_words = vocab_get_words(&(s->parser_words_nr))) {
+    s->parser_suffices = vocab_get_suffices(&(s->parser_suffices_nr));
+    s->parser_branches = vocab_get_branches(&(s->parser_branches_nr));
+  } else
+    sciprintf("Assuming that this game does not use a parser.\n");
 
   s->restarting_flag = 0; /* We're not restarting here */
 
@@ -1450,8 +1453,11 @@ game_exit(state_t *s)
 
   menubar_free(s->menubar);
 
-  vocab_free_words(s->parser_words, s->parser_words_nr);
-  vocab_free_suffices(s->parser_suffices, s->parser_suffices_nr);
+  if (s->parser_words) {
+    vocab_free_words(s->parser_words, s->parser_words_nr);
+    vocab_free_suffices(s->parser_suffices, s->parser_suffices_nr);
+    vocab_free_branches(s->parser_branches);
+  }
 
   heap_free(s->_heap, s->stack_handle);
   heap_free(s->_heap, s->save_dir);
