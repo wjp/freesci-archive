@@ -7,7 +7,7 @@ Build-Depends: debhelper (>=3.0.15), sgmltools-2, libggi2-dev, libncurses5-dev, 
 
 Package: freesci
 Architecture: any
-Depends: ${shlibs:Depends}, libggi-target-x || libggi-target-aa || libggi-target-fbdev || libggi-target-svgalib
+Depends: ${shlibs:Depends}, libggi-target-x | libggi-target-aa | libggi-target-fbdev | libggi-target-svgalib
 Suggests: freesci-doc
 Description: a portable interpreter for SCI games like Space Quest 3
  FreeSCI is a portable interpreter for SCI games, such as the Space Quest
