@@ -35,8 +35,6 @@
 #include <heap.h>
 #include <script.h>
 #include <vocabulary.h>
-#include <sound.h>
-#include <soundserver.h>
 #include <uinput.h>
 #include <console.h>
 #include <vm.h>
@@ -99,8 +97,6 @@ typedef struct _state
 
 	gfx_state_t *gfx_state; /* Graphics state and driver */
 	gfx_pixmap_t *old_screen; /* Old screen content: Stored during kDrawPic() for kAnimate() */
-
-	sound_server_t *sound_server; /* Sound server */
 
 	unsigned int sound_volume; /* 0x0 -> 0xf Current volume of sound system */
  	unsigned int sound_mute; /* 0 = not, else == saved value */

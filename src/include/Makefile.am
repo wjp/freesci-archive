@@ -10,4 +10,5 @@ EXTRA_DIST = old_objects.h graphics_glx.h kernel.h event.h    \
 	gfx_drivers_list.h sciresource.h midiout.h            \
 	midi_device.h modules.h sci_memory.h games.h          \
 	hashmap.h int_hashmap.h sys_strings.h heapmgr.h	      \
-	kernel_types.h
+	kernel_types.h sfx_iterator.h sfx_songlib.h           \
+	sfx_engine.h

@@ -82,6 +82,7 @@
 void
 process_sound_events(state_t *s) /* Get all sound events, apply their changes to the heap */
 {
+	/*
 	sound_event_t *event = NULL;
 
 	if (s->sound_server == NULL)
@@ -90,10 +91,7 @@ process_sound_events(state_t *s) /* Get all sound events, apply their changes to
 	while ((event = s->sound_server->get_event(s))) {
 		heap_ptr obj = event->handle;
 
-#ifdef __GNUC__
-#warning "Fixme: Sanity check!"
-#endif
-		if (1/*is_object(s, obj)*/)
+		if (is_object(s, obj))
 		{
 			int signal = GET_SELECTOR(obj, signal);
 			
@@ -147,6 +145,7 @@ process_sound_events(state_t *s) /* Get all sound events, apply their changes to
 
 		free(event);
 	}
+	*/
 }
 
 
@@ -189,93 +188,85 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 
 
-	if (s->sound_server)
-		switch (command) {
-		case _K_SCI0_SOUND_INIT_HANDLE:
-			s->sound_server->command(s, SOUND_COMMAND_INIT_HANDLE, obj, GET_SELECTOR(obj, number));
-			break;
-
-		case _K_SCI0_SOUND_PLAY_HANDLE:
-
-			s->sound_server->command(s, SOUND_COMMAND_PLAY_HANDLE, obj, 0);
-			s->sound_server->command(s, SOUND_COMMAND_LOOP_HANDLE, obj, GET_SELECTOR(obj, loop));
-			break;
-
-		case _K_SCI0_SOUND_NOP:
-
-			break;
-
-		case _K_SCI0_SOUND_DISPOSE_HANDLE:
-
-			s->sound_server->command(s, SOUND_COMMAND_DISPOSE_HANDLE, obj, 0);
-			break;
-
-		case _K_SCI0_SOUND_STOP_HANDLE:
-
-			s->sound_server->command(s, SOUND_COMMAND_STOP_HANDLE, obj, 0);
-			break;
-
-		case _K_SCI0_SOUND_SUSPEND_HANDLE:
-
-			s->sound_server->command(s, SOUND_COMMAND_SUSPEND_HANDLE, obj, 0);
-			break;
-
-		case _K_SCI0_SOUND_RESUME_HANDLE:
-
-			s->sound_server->command(s, SOUND_COMMAND_RESUME_HANDLE, obj, 0);
-			break;
-
-		case _K_SCI0_SOUND_MUTE_SOUND: {
-		  /* if there's a parameter, we're setting it.  Otherwise,
-		     we're querying it. */
-		  int param = UPARAM_OR_ALT(1,-1);
-
-		  if (param != -1)
-		    s->acc = s->sound_server->command(s, SOUND_COMMAND_SET_MUTE, 0, param);
-		  else
-		    s->acc = s->sound_server->command(s, SOUND_COMMAND_GET_MUTE, 0, 0);
-
-		}
+	switch (command) {
+	case _K_SCI0_SOUND_INIT_HANDLE:
+		/*			s->sound_server->command(s, SOUND_COMMAND_INIT_HANDLE, obj, GET_SELECTOR(obj, number));*/
 		break;
-		case _K_SCI0_SOUND_VOLUME: {
 
-		        /* range from 0x0 to 0xf */
-		        /* parameter optional. If present, set.*/
-		        int vol = UPARAM_OR_ALT(1, -1);
+	case _K_SCI0_SOUND_PLAY_HANDLE:
+		/*
+		  s->sound_server->command(s, SOUND_COMMAND_PLAY_HANDLE, obj, 0);
+		  s->sound_server->command(s, SOUND_COMMAND_LOOP_HANDLE, obj, GET_SELECTOR(obj, loop));
+		*/
+		break;
 
-		   if (vol != -1)
-		        s->acc = s->sound_server->command(s, SOUND_COMMAND_SET_VOLUME, 0, vol);
-		   else
-		        s->acc = s->sound_server->command(s, SOUND_COMMAND_GET_VOLUME, 0, 0);
-		}
-		 break;
+	case _K_SCI0_SOUND_NOP:
+		break;
 
-		case _K_SCI0_SOUND_UPDATE_VOL_PRI:
+	case _K_SCI0_SOUND_DISPOSE_HANDLE:
+		/*s->sound_server->command(s, SOUND_COMMAND_DISPOSE_HANDLE, obj, 0);*/
+		break;
 
-			s->sound_server->command(s, SOUND_COMMAND_RENICE_HANDLE, obj, GET_SELECTOR(obj, priority));
-			s->sound_server->command(s, SOUND_COMMAND_LOOP_HANDLE, obj, GET_SELECTOR(obj, loop));
-			break;
+	case _K_SCI0_SOUND_STOP_HANDLE:
+		/*s->sound_server->command(s, SOUND_COMMAND_STOP_HANDLE, obj, 0);*/
+		break;
 
-		case _K_SCI0_SOUND_FADE_HANDLE:
+	case _K_SCI0_SOUND_SUSPEND_HANDLE:
+		/*s->sound_server->command(s, SOUND_COMMAND_SUSPEND_HANDLE, obj, 0);*/
+		break;
 
-			s->sound_server->command(s, SOUND_COMMAND_FADE_HANDLE, obj, 120); /* Fade out in 2 secs */
-			break;
+	case _K_SCI0_SOUND_RESUME_HANDLE:
+		/*s->sound_server->command(s, SOUND_COMMAND_RESUME_HANDLE, obj, 0);*/
+		break;
 
-		case _K_SCI0_SOUND_GET_POLYPHONY:
+	case _K_SCI0_SOUND_MUTE_SOUND: {
+		/* if there's a parameter, we're setting it.  Otherwise,
+		   we're querying it. */
+		/*int param = UPARAM_OR_ALT(1,-1);
 
-			s->acc = s->sound_server->command(s, SOUND_COMMAND_TEST, 0, 0);
-			break;
+		if (param != -1)
+		s->acc = s->sound_server->command(s, SOUND_COMMAND_SET_MUTE, 0, param);
+		else
+		s->acc = s->sound_server->command(s, SOUND_COMMAND_GET_MUTE, 0, 0);*/
 
-		case _K_SCI0_SOUND_STOP_ALL:
+	}
+		break;
 
-			s->acc = s->sound_server->command(s, SOUND_COMMAND_STOP_ALL, 0, 0);
-			break;
+	case _K_SCI0_SOUND_VOLUME: {
+		/* range from 0x0 to 0xf */
+		/* parameter optional. If present, set.*/
+		/*int vol = UPARAM_OR_ALT(1, -1);
 
-		default:
-			SCIkwarn(SCIkWARNING, "Unhandled DoSound command: %x\n", command);
+		if (vol != -1)
+		s->acc = s->sound_server->command(s, SOUND_COMMAND_SET_VOLUME, 0, vol);
+		else
+		s->acc = s->sound_server->command(s, SOUND_COMMAND_GET_VOLUME, 0, 0);
+		*/
+	}
+		break;
 
-		}
-	process_sound_events(s); /* Take care of incoming events */
+	case _K_SCI0_SOUND_UPDATE_VOL_PRI:
+		/*s->sound_server->command(s, SOUND_COMMAND_RENICE_HANDLE, obj, GET_SELECTOR(obj, priority));
+		  s->sound_server->command(s, SOUND_COMMAND_LOOP_HANDLE, obj, GET_SELECTOR(obj, loop));*/
+		break;
+
+	case _K_SCI0_SOUND_FADE_HANDLE:
+		/*s->sound_server->command(s, SOUND_COMMAND_FADE_HANDLE, obj, 120);*/ /* Fade out in 2 secs */
+		break;
+
+	case _K_SCI0_SOUND_GET_POLYPHONY:
+		/*s->acc = s->sound_server->command(s, SOUND_COMMAND_TEST, 0, 0);*/
+		break;
+
+	case _K_SCI0_SOUND_STOP_ALL:
+		/*s->acc = s->sound_server->command(s, SOUND_COMMAND_STOP_ALL, 0, 0);*/
+		break;
+
+	default:
+		SCIkwarn(SCIkWARNING, "Unhandled DoSound command: %x\n", command);
+
+	}
+		process_sound_events(s); /* Take care of incoming events */
 
 }
 
@@ -290,24 +281,24 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	{
 	case _K_SCI01_SOUND_MASTER_VOLME :
 	{
-		int vol = UPARAM_OR_ALT (1, -1);
+		/*int vol = UPARAM_OR_ALT (1, -1);
 
 		if (vol != -1)
 		        s->acc = s->sound_server->command(s, SOUND_COMMAND_SET_VOLUME, 0, vol);
 		else
-		        s->acc = s->sound_server->command(s, SOUND_COMMAND_GET_VOLUME, 0, 0);
+		s->acc = s->sound_server->command(s, SOUND_COMMAND_GET_VOLUME, 0, 0);*/
 		break;
 	}
 	case _K_SCI01_SOUND_MUTE_SOUND :
 	{
 		/* if there's a parameter, we're setting it.  Otherwise,
 		   we're querying it. */
-		int param = UPARAM_OR_ALT(1,-1);
+		/*int param = UPARAM_OR_ALT(1,-1);
 		
 		if (param != -1)
 			s->acc = s->sound_server->command(s, SOUND_COMMAND_SET_MUTE, 0, param);
 		else
-			s->acc = s->sound_server->command(s, SOUND_COMMAND_GET_MUTE, 0, 0);
+		s->acc = s->sound_server->command(s, SOUND_COMMAND_GET_MUTE, 0, 0);*/
 
 		break;
 	}
@@ -317,7 +308,7 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 	case _K_SCI01_SOUND_GET_POLYPHONY :
 	{
-		s->acc = s->sound_server->command(s, SOUND_COMMAND_TEST, 0, 0);
+		/*s->acc = s->sound_server->command(s, SOUND_COMMAND_TEST, 0, 0);*/
 		break;
 	}
 	case _K_SCI01_SOUND_PLAY_HANDLE :
@@ -371,12 +362,12 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	case _K_SCI01_SOUND_SUSPEND_HANDLE :
 	{
 		int state = UPARAM(2);
-
+		/*
 		if (state)
 			s->sound_server->command(s, SOUND_COMMAND_SUSPEND_HANDLE, obj, 0);
 		else
 			s->sound_server->command(s, SOUND_COMMAND_RESUME_HANDLE, obj, 0);
-		
+		*/
 		break;
 	}
 	case _K_SCI01_SOUND_FADE_HANDLE :
@@ -388,7 +379,7 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	case _K_SCI01_SOUND_UPDATE_CUES :
 	{
 		/* FIXME: Fetch these from the sound server */
-		
+
 		int dataInc = 0;
 		int signal = 1; /* This allows QfG2 to continue past the ogre */
 		int min = 0;
@@ -408,12 +399,9 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			PUT_SELECTOR(obj, signal, signal);
 		}
 
-		/* TODO: Reset the signal value in the sound server */
-
 		PUT_SELECTOR(obj, min, min);
 		PUT_SELECTOR(obj, sec, sec);
 		PUT_SELECTOR(obj, frame, frame);
-		
 		break;
 	}
 	case _K_SCI01_SOUND_PITCH_WHEEL :
@@ -440,25 +428,25 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	{
 	case _K_SCI1_SOUND_MASTER_VOLME :
 	{
-		int vol = UPARAM_OR_ALT (1, -1);
+	   /*int vol = UPARAM_OR_ALT (1, -1);
 
 		if (vol != -1)
 		        s->acc = s->sound_server->command(s, SOUND_COMMAND_SET_VOLUME, 0, vol);
 		else
 		        s->acc = s->sound_server->command(s, SOUND_COMMAND_GET_VOLUME, 0, 0);
-		break;
+			break;*/
 	}
 	case _K_SCI1_SOUND_MUTE_SOUND :
 	{
 		/* if there's a parameter, we're setting it.  Otherwise,
 		   we're querying it. */
-		int param = UPARAM_OR_ALT(1,-1);
+		/*int param = UPARAM_OR_ALT(1,-1);
 		
 		if (param != -1)
 			s->acc = s->sound_server->command(s, SOUND_COMMAND_SET_MUTE, 0, param);
 		else
 			s->acc = s->sound_server->command(s, SOUND_COMMAND_GET_MUTE, 0, 0);
-		break;
+			break;*/
 	}
 	case _K_SCI1_SOUND_UNUSED1 :
 	{
@@ -466,7 +454,7 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 	case _K_SCI1_SOUND_GET_POLYPHONY :
 	{
-		s->acc = s->sound_server->command(s, SOUND_COMMAND_TEST, 0, 0);
+		/*s->acc = s->sound_server->command(s, SOUND_COMMAND_TEST, 0, 0);*/
 		break;
 	}
 	case _K_SCI1_SOUND_CD_AUDIO : 
@@ -544,10 +532,11 @@ void
 kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	if (s->version>SCI_VERSION_FTU_DOSOUND_VARIANT_2)
-		kDoSound_SCI1(s, funct_nr, argc, argp); else
-			if (s->version>SCI_VERSION_FTU_DOSOUND_VARIANT_1)
-				kDoSound_SCI01(s, funct_nr, argc, argp); else
-					kDoSound_SCI0(s, funct_nr, argc, argp);
+		kDoSound_SCI1(s, funct_nr, argc, argp);
+	else if (s->version>SCI_VERSION_FTU_DOSOUND_VARIANT_1)
+		kDoSound_SCI01(s, funct_nr, argc, argp);
+	else
+		kDoSound_SCI0(s, funct_nr, argc, argp);
 }
 
 	

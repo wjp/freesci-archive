@@ -317,7 +317,7 @@ AC_CONFIG_FILES([Makefile    \
 	src/include/beos/Makefile \
 	src/tools/Makefile \
 	src/win32/Makefile \
-	src/sound/Makefile \
+	src/sfx/Makefile \
 	freesci.spec])
 
 AC_OUTPUT

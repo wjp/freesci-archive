@@ -1,0 +1,154 @@
+/***************************************************************************
+ sfx_songlib.h (C) 2002 Christoph Reichenbach
+
+ This program may be modified and copied freely according to the terms of
+ the GNU general public license (GPL), as long as the above copyright
+ notice and the licensing information contained herein are preserved.
+
+ Please refer to www.gnu.org for licensing details.
+
+ This work is provided AS IS, without warranty of any kind, expressed or
+ implied, including but not limited to the warranties of merchantibility,
+ noninfringement, and fitness for a specific purpose. The author will not
+ be held liable for any damage caused by this work or derivatives of it.
+
+ By using this source code, you agree to the licensing terms as stated
+ above.
+
+
+ Please contact the maintainer for bug reports or inquiries.
+
+ Current Maintainer:
+
+		Christoph Reichenbach (CJR) [reichenb@colorado.edu]
+
+***************************************************************************/
+/* Song library */
+
+#ifndef _SCI_SFX_SONGLIB_H_
+#define _SCI_SFX_SONGLIB_H_
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+#include <scitypes.h>
+#include <sfx_iterator.h>
+
+#define SOUND_STATUS_STOPPED   0
+#define SOUND_STATUS_PLAYING   1
+#define SOUND_STATUS_SUSPENDED 2
+/* suspended: only if ordered from kernel space */
+#define SOUND_STATUS_WAITING   3
+/* "waiting" means "tagged for playing, but not active right now" */
+
+typedef unsigned long song_handle_t;
+
+typedef struct _song {
+	song_handle_t handle;
+	int priority; /* Song priority (more important if priority is higher) */
+	int status;   /* See above */
+
+	song_iterator_t *it;
+	long delay; /* Delay before accessing the iterator, in microseconds */
+
+	struct _song *next; /* Next song or NULL if this is the last one */
+} song_t;
+
+
+typedef song_t **songlib_t;
+
+/**************************/
+/* Song library commands: */
+/**************************/
+
+song_t *
+song_new(song_handle_t handle, song_iterator_t *it, int priority);
+/* Initializes a new song
+** Parameters: (song_handle_t) handle: The sound handle
+**             (song_iterator_t *) it: The song
+**             (int) priority: The song's priority
+** Returns   : (song_t *) A freshly allocated song
+** Other values are set to predefined defaults.
+*/
+
+
+void
+song_lib_init(songlib_t *songlib);
+/* Initializes a static song library
+** Parameters: (songlib_t *) songlib: Pointer to the library
+**             to initialize
+** Returns   : (void)
+*/
+
+void
+song_lib_free(songlib_t songlib);
+/* Frees a song library
+** Parameters: (songlib_t) songlib: The library to free
+** Returns   : (void)
+*/
+
+void
+song_lib_add(songlib_t songlib, song_t *song);
+/* Adds a song to a song library.
+** Parameters: (songlib_t) songlib: An existing sound library, or NULL
+**             (song_t *) song: The song to add
+** Returns   : (void)
+*/
+
+song_t *
+song_lib_find(songlib_t songlib, song_handle_t handle);
+/* Looks up the song with the specified handle
+** Parameters: (songlib_t) songlib: An existing sound library, may point to NULL
+**             (song_handle_t) handle: The sound handle to look for
+** Returns   : (song_t *) The song or NULL if it wasn't found
+*/
+
+song_t *
+song_lib_find_active(songlib_t songlib, song_t *last_played_song);
+/* Finds the song playing with the highest priority
+** Parameters: (songlib_t) songlib: An existing sound library
+**             (song_t *) last_played_song: The song that was played last
+** Returns   : (song_t *) The song that should be played next, or NULL if there is none
+*/
+
+int
+song_lib_remove(songlib_t songlib, song_handle_t handle);
+/* Removes a song from the library
+** Parameters: (songlib_t) songlib: An existing sound library
+**             (song_handle_t) handle: Handle of the song to remove
+** Returns   : (int) The status of the song that was removed
+*/
+
+void
+song_lib_resort(songlib_t songlib, song_t *song);
+/* Removes a song from the library and sorts it in again; for use after renicing
+** Parameters: (songlib_t) songlib: An existing sound library
+**             (song_t *) song: The song to work on
+** Returns   : (void)
+*/
+
+int
+song_lib_count(songlib_t songlib);
+/* Counts the number of songs in a song library
+** Parameters: (songlib_t) songlib: The library to count
+** Returns   : (int) The number of songs
+*/
+
+GTimeVal
+song_sleep_time(GTimeVal *lastslept, long ticks);
+/* Caluculates the amount of seconds and microseconds to sleep.
+** Parameters: (GTimeVal *) lastslept: The time to start counting on
+**             (long) ticks: Number of ticks to sleep
+** Returns   : (GTimeVal) The amount of time to sleep
+*/
+
+GTimeVal
+song_next_wakeup_time(GTimeVal *lastslept, long ticks);
+/* Calculates the time at which "ticks" have passed, counting from "lastslept".
+** Parameters: (GTimeVal *) lastslept: The base to start counting on
+**             (long) ticks: Number of ticks to count
+** Returns   : (GTimeVal) A structure describing the time at which the
+**                              specified number of ticks has passed
+*/
+
+#endif /* !_SCI_SOUND_SERVER_H_ */

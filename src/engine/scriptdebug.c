@@ -2477,112 +2477,6 @@ c_simsoundcue(state_t *s)
      return 1;\
    }
 
-int
-c_snd(state_t *s)
-{
-	char *op = cmd_params[0].str;
-
-	if (!s) {
-		sciprintf("Must have state to do this!");
-		return 1;
-	}
-
-	if (!strcmp(op, "stop")) {
-		sound_command_default(s, SOUND_COMMAND_SUSPEND_ALL, 0, 0);
-	} else if (!strcmp(op, "resume")) {
-		sound_command_default(s, SOUND_COMMAND_RESUME_ALL, 0, 0);
-	} else if (!strcmp(op, "play")) {
-		ASSERT_PARAMS(1);
-		if (!sound_command_default(s, SOUND_COMMAND_INIT_HANDLE, 42, cmd_params[1].val)); {
-			sound_command_default(s, SOUND_COMMAND_PLAY_HANDLE, 42, 1000);
-		}
-	} else if (!strcmp(op, "mute_channel")) {
-		ASSERT_PARAMS(1);
-		sound_command_default(s, SOUND_COMMAND_MUTE_CHANNEL, 0, cmd_params[1].val);
-	} else if (!strcmp(op, "unmute_channel")) {
-		ASSERT_PARAMS(1);
-		sound_command_default(s, SOUND_COMMAND_UNMUTE_CHANNEL, 0, cmd_params[1].val);
-	} else if (!strcmp(op, "mute")) {
-		int i;
-
-		for (i = 0; i < 16; i++)
-			sound_command_default(s, SOUND_COMMAND_MUTE_CHANNEL, 0, i);
-	} else if (!strcmp(op, "unmute")) {
-		int i;
-
-		for (i = 0; i < 16; i++)
-			sound_command_default(s, SOUND_COMMAND_UNMUTE_CHANNEL, 0, i);
-	} else if (!strcmp(op, "solo")) {
-		int i;
-
-		ASSERT_PARAMS(1);
-		for (i = 0; i < 16; i++)
-			sound_command_default(s, i == cmd_params[1].val?
-				      SOUND_COMMAND_UNMUTE_CHANNEL :
-				      SOUND_COMMAND_MUTE_CHANNEL, 0, i);
-	} else if (!strcmp(op, "printmap")) {
-		sound_command_default(s, SOUND_COMMAND_PRINT_MAPPING, 0, 0);
-	} else if (!strcmp(op, "printchannels")) {
-		sound_command_default(s, SOUND_COMMAND_PRINT_CHANNELS, 0, 0);
-	} else if (!strcmp(op, "songid")) {
-		sound_command_default(s, SOUND_COMMAND_PRINT_SONG_INFO, 0, 0);
-	} else {
-		sciprintf("Invalid sound command %s\n", op);
-		return 1;
-	}
-
-	sci_sched_yield();
-
-	process_sound_events(s);
-	return 0;
-}
-
-c_sndmap(state_t *s)
-{
-	char *op = cmd_params[0].str;
-	int instr = cmd_params[1].val;
-
-	if (!s) {
-		sciprintf("Must have state to do this!");
-		return 1;
-	}
-
-	if (!strcmp(op, "mute")) {
-		sound_command_default(s, SOUND_COMMAND_IMAP_SET_INSTRUMENT, instr, NOMAP);
-	} else if (!strcmp(op, "percussion")) {
-		ASSERT_PARAMS(2);
-		sound_command_default(s, SOUND_COMMAND_IMAP_SET_INSTRUMENT, instr, RHYTHM);
-		sound_command_default(s, SOUND_COMMAND_IMAP_SET_PERCUSSION, instr, cmd_params[2].val);
-	} else if (!strcmp(op, "instrument")) {
-		ASSERT_PARAMS(2);
-		sound_command_default(s, SOUND_COMMAND_IMAP_SET_INSTRUMENT, instr, cmd_params[2].val);
-	} else if (!strcmp(op, "shift")) {
-		ASSERT_PARAMS(2);
-		sound_command_default(s, SOUND_COMMAND_IMAP_SET_KEYSHIFT, instr, cmd_params[2].val);
-	} else if (!strcmp(op, "finetune")) {
-		ASSERT_PARAMS(2);
-		sound_command_default(s, SOUND_COMMAND_IMAP_SET_FINETUNE, instr, cmd_params[2].val);
-	} else if (!strcmp(op, "bender")) {
-		ASSERT_PARAMS(2);
-		sound_command_default(s, SOUND_COMMAND_IMAP_SET_BENDER_RANGE, instr, cmd_params[2].val);
-	} else if (!strcmp(op, "volume")) {
-		ASSERT_PARAMS(2);
-		sound_command_default(s, SOUND_COMMAND_IMAP_SET_VOLUME, instr, cmd_params[2].val);
-	} else {
-		sciprintf("Invalid sound mapping command %s\n", op);
-		sciprintf("Valid commands: mute, percussion, instrument, shift, finetune,\n"
-			  "  bender, volume\n");
-		return 1;
-	}
-
-	sci_sched_yield();
-	gfxop_usleep(s->gfx_state, 350000);
-
-	process_sound_events(s);
-	return 0;
-}
-
-#undef ASSERT_PARAMS
 
 
 #define GETRECT(ll, rr, tt, bb) \
@@ -3202,60 +3096,6 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "  all clones.\n  Objects are not marked; clones are marked\n  with a preceeding '*', and classes\n"
 					 "  with a preceeding '%'\n"
 					 "\n\nSEE ALSO\n  clonetable\n");
-			con_hook_command(c_snd, "snd", "si*",
-					 "Executes a sound command\n\n"
-					 "USAGE\n\n"
-					 "  snd <command> [param]\n\n"
-					 "  snd stop\n"
-					 "    Suspends audio output.\n\n"
-					 "  snd resume\n"
-					 "    Resumes audio output.\n\n"
-					 "  snd play <song>\n"
-					 "    Plays a song with a high priority\n\n"
-					 "  snd mute_channel <channel>\n"
-					 "    Mutes one output channel\n\n"
-					 "  snd unmute_channel <channel>\n"
-					 "    Unmutes one output channel\n\n"
-					 "  snd mute\n"
-					 "    Mutes all channels\n\n"
-					 "  snd unmute\n"
-					 "    Unmutes all channels\n\n"
-					 "  snd solo <channel>\n"
-					 "    Mutes all channels except for one\n\n"
-					 "  snd printchannels\n"
-					 "    Prints all channels and instruments\n\n"
-					 "  snd printmap\n"
-					 "    Prints all channels and instruments,\n"
-					 "    including their General MIDI map-\n"
-					 "    pings\n\n"
-					 "  snd songid\n"
-					 "    Prints the ID (heap address) of the\n"
-					 "    song currently playing. '42' is used\n"
-					 "    by songs run from the command line.\n"
-					 "SEE ALSO\n"
-					 "  sndmap\n");
-			con_hook_command(c_sndmap, "sndmap", "sii*",
-					 "Changes MT32->GM mappings\n\n"
-					 "USAGE\n\n"
-					 "  sndmap <command> <instr> [param]\n\n"
-					 "  sndmap mute <instr>\n"
-					 "    Mutes the specified instrument\n\n"
-					 "  sndmap percussion <instr> <gm-perc>\n"
-					 "    Maps the instrument to a GM percussion\n"
-					 "    instrument\n\n"
-					 "  sndmap instrument <instr> <gm-inst>\n"
-					 "    Maps the instrument to a GM instrument\n\n"
-					 "  sndmap shift <instr> <shift>\n"
-					 "    Selects the instrument shfit\n\n"
-					 "  sndmap finetune <instr> <val>\n"
-					 "    Fine-tunes the instrument\n\n"
-					 "  sndmap bender <instr> <range>\n"
-					 "    Selects a bender range\n\n"
-					 "  sndmap volume <instr> <vol>\n"
-					 "    Specifies a relative volume for the\n"
-					 "    instrument (0-128)\n\n"
-					 "SEE ALSO\n"
-					 "  snd\n");
 			con_hook_command(c_gfx_debuglog, "gfx_debuglog", "s*",
 					 "Sets or prints the gfx driver's debug\n"
 					 "settings\n\n"
@@ -3404,8 +3244,11 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 		_debug_step_running--;
 
 	/* Suspend music playing */
+#warning "Suspend music when entering debugger"
+#if 0
 	if (s->sound_server)
 		(s->sound_server->suspend)(s);
+#endif
 
 	while (_debugstate_valid) {
 		int skipfirst = 0;
@@ -3446,8 +3289,11 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 	}
 
 /* Resume music playing */
+#warning "Re-enable music when leaving debugger"
+#if 0
 	if (s->sound_server)
 		(s->sound_server->resume)(s);
+#endif
 }
 
 

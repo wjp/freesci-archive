@@ -58,8 +58,11 @@ struct {
 	void *(*check_driver)(char *name);
 } freesci_subsystems[FREESCI_DRIVER_SUBSYSTEMS_NR] = {
 	{"gfx", NULL},
+#warning "sound"
+#if 0
         {"pcm", parse_pcmout_driver},
 	{"midiout", parse_midiout_driver}
+#endif
 };
 
 
@@ -233,12 +236,15 @@ standard_option standard_options[] = {
 	OPT_INT("alpha_threshold", alpha_threshold, 0, 255),
 	OPT_INT("animation_delay", animation_delay, 0, 1000000),
 	OPT_INT("animation_granularity", animation_granularity, 1, 160),
+#warning "Re-enable sound server config"
+#if 0
 	OPT_STATICREF("midiout_driver", midiout_driver, parse_midiout_driver),
 	OPT_STATICREF("midi_device", midi_device, parse_midi_device),
 	OPT_STATICREF("sound_server", sound_server, parse_sound_server),
         OPT_STATICREF("pcmout_driver", pcmout_driver, parse_pcmout_driver),
         OPT_INT("pcmout_rate", pcmout_rate, 11025, 48000),
         OPT_INT("pcmout_stereo", pcmout_stereo, 0, 1),
+#endif
 	OPT_STRING("console_log", console_log),
 	OPT_STRING("module_path", module_path),
 	OPT_STRING("gfx_driver", gfx_driver_name),
@@ -469,12 +475,16 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_options.pic0_antialiasing = GFXR_ANTIALIASING_NONE;
 
 	conf->gfx_driver_name = NULL;
+
+#warning "Re-enable sound stuff"
+#if 0
         conf->pcmout_driver = pcmout_find_driver(NULL);
         conf->pcmout_rate = 22050;
         conf->pcmout_stereo = 1;
         conf->midiout_driver = midiout_find_driver(NULL);
         conf->midi_device = midi_find_device(NULL);
 	conf->sound_server = sound_server_find_driver(NULL);
+#endif
 
 	conf->x_scale = 0;
 	conf->y_scale = 0;
@@ -641,6 +651,8 @@ parse_name(char *name, name_value_pair *nvps, char *what, int oldval)
 }
 
 
+#warning "Re-enable sound stuff"
+#if 0
 void *
 parse_sound_server(char *driver_name)
 {
@@ -693,7 +705,7 @@ parse_pcmout_driver(char *driver_name)
 	printf ("Unknown pcmout driver %s\n", driver_name);
 	return (void *) conf->pcmout_driver;
 }
-
+#endif
 
 static void
 parse_option(char *option, int optlen, char *value)

@@ -27,7 +27,6 @@
 
 #include <sciresource.h>
 #include <engine.h>
-#include <sound.h>
 #include <uinput.h>
 #include <console.h>
 #include <gfx_operations.h>
@@ -302,6 +301,8 @@ list_graphics_drivers()
 	printf("\n");
 }
 
+#warning "Re-enable sound stuff"
+#if 0
 static void
 list_pcmout_drivers()
 {
@@ -354,6 +355,7 @@ list_sound_servers()
 	}
 	printf("\n");
 }
+#endif
 
 
 /**********************************************************/
@@ -510,6 +512,8 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			printf("Supported graphics drivers: ");
 			list_graphics_drivers();
 
+#warning "Re-enable sound stuff"
+#if 0
 			printf("Supported sound servers: ");
 			list_sound_servers();
 
@@ -521,6 +525,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 
 			printf("Supported pcmout drivers: ");
 			list_pcmout_drivers();
+#endif
 
 			printf("\n");
 			exit(0);
@@ -893,7 +898,9 @@ main(int argc, char** argv)
 	char *savegame_name = NULL;
 	sci_version_t version			= 0;
 	gfx_driver_t *gfx_driver		= NULL;
+#if 0
 	sound_server_t *sound_server = NULL;
+#endif
 	char *module_path			= SCI_DEFAULT_MODULE_PATH;
 	resource_mgr_t *resmgr;
 
@@ -961,10 +968,12 @@ main(int argc, char** argv)
 
 	chdir(startdir);
 
+#warning "sound"
+#if 0
 	printf("Mapping instruments to General Midi\n");
 
 	map_MIDI_instruments(resmgr);
-
+#endif
 
 	sciprintf("FreeSCI, version "VERSION"\n");
 
@@ -1011,6 +1020,8 @@ main(int argc, char** argv)
 		free(cl_options.gfx_driver_name);
 	} /* else it's still NULL */
 
+#warning "sound"
+#if 0
 	if (cl_options.pcmout_driver_name)
 		pcmout_driver = old_lookup_driver((old_lookup_funct_t *)pcmout_find_driver,
 						   MSVC_FUNCTYPECAST_KLUDGE list_pcmout_drivers,
@@ -1039,12 +1050,14 @@ main(int argc, char** argv)
 						 "sound server", cl_options.sound_server_name);
 		free(cl_options.sound_server_name);
 	}
+#endif
 
 	if (confs) {
 		memcpy(gfx_options, &(active_conf->gfx_options), sizeof(gfx_options_t)); /* memcpy so that console works */
 		if (!gfx_driver_name)
 			gfx_driver_name = active_conf->gfx_driver_name;
-
+#warning "sound"
+#if 0
 		if (!sound_server)
 			sound_server = active_conf->sound_server;
 
@@ -1055,6 +1068,7 @@ main(int argc, char** argv)
 			midi_device = active_conf->midi_device;
 		if (!pcmout_driver)
 		  pcmout_driver = active_conf->pcmout_driver;
+#endif
 	}
 
 	if (confs) {
@@ -1138,6 +1152,8 @@ main(int argc, char** argv)
 		}
 	}
 
+#warning "sound"
+#if 0
 	/* Configure the pcmout driver */
 	{
 	        pcmout_sample_rate = active_conf->pcmout_rate;
@@ -1157,6 +1173,7 @@ main(int argc, char** argv)
 			option = option->next;
 		}
 	}
+#endif
 
 
 	if (init_gfx(active_conf, &cl_options, gfx_driver, resmgr))
@@ -1168,12 +1185,17 @@ main(int argc, char** argv)
 		return 1;
 	}
 
+#warning "sound"
+#if 0
 	if (!sound_server)
 		sound_server = sound_server_find_driver(NULL);
+#endif
 
 	if (cl_options.show_rooms)
 	  set_debug_mode(gamestate, 1, "r");
 
+#warning "sound"
+#if 0
 	gamestate->sound_server = sound_server;
 
 	if (gamestate->sound_server) {
@@ -1200,6 +1222,7 @@ main(int argc, char** argv)
 		gamestate->sound_server->get_event(gamestate); /* Get init message */
 		/* FIXME: memory allocated that is not freed */
 	}
+#endif
 
 	if (active_conf && active_conf->console_log)
 		open_console_file (active_conf->console_log);
@@ -1214,6 +1237,8 @@ main(int argc, char** argv)
 
 	printf("Graphics: Using the %s driver %s\n",
 	       gfx_driver->name, gfx_driver->version);
+#warning "sound"
+#if 0
 	printf("MIDI-out: Using the %s driver %s\n",
 	       midiout_driver->name, midiout_driver->version);
 	printf("MIDI-device: Using the %s driver %s\n",
@@ -1226,6 +1251,7 @@ main(int argc, char** argv)
 		       sound_server->name, sound_server->version);
 	else
 		printf("Sound server: Disabled.\n");
+#endif
 
 	gamestate->have_mouse_flag = (cl_options.mouse == DONTCARE)?
 		active_conf->mouse : cl_options.mouse;
@@ -1234,8 +1260,11 @@ main(int argc, char** argv)
 		game_restore(&gamestate, savegame_name);
 	else
 		game_run(&gamestate); /* Run the game */
+#warning "sound"
+#if 0
 	if (gamestate->sound_server)
 		gamestate->sound_server->exit(gamestate); /* Shutdown sound daemon first */
+#endif
 
 	game_exit(gamestate);
 	script_free_engine(gamestate); /* Uninitialize game state */

@@ -31,9 +31,6 @@
 
 #include <versions.h>
 #include <gfx_options.h>
-#include <midiout.h>
-#include <midi_device.h>
-#include <pcmout.h>
 
 #define FREESCI_DRIVER_SUBSYSTEMS_NR 3
 
@@ -87,11 +84,14 @@ typedef struct {
 	int mouse; /* Whether the mouse should be active */
 	int reverse_stereo;
 
+#warning "Re-enable sound stuff"
+#if 0
 	midiout_driver_t *midiout_driver; /* the midiout method to use */
 	midi_device_t *midi_device; /* the midi device to use */
 	
 	pcmout_driver_t *pcmout_driver; /* the pcm driver to use */
 	sound_server_t *sound_server; /* The sound server */
+#endif
         guint16 pcmout_rate;  /* Sample rate */
         guint8 pcmout_stereo;  /* Stereo? */
 
