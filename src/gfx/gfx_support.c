@@ -283,7 +283,7 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 		int shift_nr = 0;
 
 		alpha_mask = mode->alpha_mask;
-		if (!alpha_mask && (priority != GFX_NO_PRIORITY)) {
+		if (!alpha_mask && pxm->alpha_map) {
 			GFXERROR("Invalid alpha mode: both pxm->alpha_map and alpha_mask are white!\n");
 			return GFX_ERROR;
 		}
