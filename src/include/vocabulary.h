@@ -1,3 +1,30 @@
+/***************************************************************************
+ vocabulary.h Copyright (C) 1999 Christoph Reichenbach
+
+
+ This program may be modified and copied freely according to the terms of
+ the GNU general public license (GPL), as long as the above copyright
+ notice and the licensing information contained herein are preserved.
+
+ Please refer to www.gnu.org for licensing details.
+
+ This work is provided AS IS, without warranty of any kind, expressed or
+ implied, including but not limited to the warranties of merchantibility,
+ noninfringement, and fitness for a specific purpose. The author will not
+ be held liable for any damage caused by this work or derivatives of it.
+
+ By using this source code, you agree to the licensing terms as stated
+ above.
+
+
+ Please contact the maintainer for bug reports or inquiries.
+
+ Current Maintainer:
+
+    Christoph Reichenbach (CJR) [jameson@linuxgames.com]
+
+***************************************************************************/
+
 #ifndef VOCABULARY_H
 #define VOCABULARY_H
 
@@ -49,6 +76,22 @@ typedef struct opcode_
 #define VOCAB_TREE_NODE_COMPARE_GROUP 0x14d
 #define VOCAB_TREE_NODE_FORCE_STORAGE 0x154
 
+#define SAID_COMMA   0xf0
+#define SAID_AMP     0xf1
+#define SAID_SLASH   0xf2
+#define SAID_PARENO  0xf3
+#define SAID_PARENC  0xf4
+#define SAID_BRACKO  0xf5
+#define SAID_BRACKC  0xf6
+#define SAID_HASH    0xf7
+#define SAID_LT      0xf8
+#define SAID_GT      0xf9
+#define SAID_TERM    0xff
+
+#define SAID_FIRST SAID_COMMA
+
+#define SAID_LONG(x) ((x) << 8)
+
 typedef struct {
 
   int class; /* Word class */
@@ -78,6 +121,13 @@ typedef struct {
   int group; /* Word group */
 
 } result_word_t;
+
+
+typedef struct
+{
+  int replaceant; /* The word group to replace */
+  int replacement; /* The replacement word group for this one */
+} synonym_t;
 
 
 typedef struct {
@@ -229,6 +279,8 @@ vocab_dump_parse_tree(parse_tree_node_t *nodes);
 
 struct _state;
 
+char *
+vocab_get_any_group_word(int group, word_t **words, int words_nr);
 /* Gets any word from the specified group.
 ** Parameters: (int) group: Group number.
 **             (word_t **) words: List of words
@@ -236,16 +288,23 @@ struct _state;
 ** For debugging only.
 */
 
-char *
-vocab_get_any_group_word(int group, word_t **words, int words_nr);
 
+void
+vocab_decypher_said_block(struct _state *s, heap_ptr addr);
 /* Decyphers a said block and dumps its content via sciprintf.
 ** Parameters: (state_t *) s: The state to use
 **             (heap_ptr) addr: The heap address to decypher
 ** For debugging only.
 */
-void
-vocab_decypher_said_block(struct _state *s, heap_ptr addr);
 
+
+void
+vocab_synonymize_tokens(result_word_t *words, int words_nr, synonym_t *synonyms, int synonyms_nr);
+/* Synonymizes a token list
+** Parameters: (result_wort_t *) words: The word list to synonymize
+**             (int) words_nr: Number of word_ts in the list
+**             (synonym_t *) synonyms: Synonym list
+**             (int) synonyms_nr: Number of synonyms in the list
+*/
 
 #endif

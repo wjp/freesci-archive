@@ -151,7 +151,7 @@ kernel_lookup_text(state_t *s, int address, int index);
 
 
 /******************** Debug functionality ********************/
-#define KERNEL_OOPS(reason) kernel_oops(s, __LINE__, reason)
+#define KERNEL_OOPS(reason) kernel_oops(s, __FILE__, __LINE__, reason)
 
 /* Non-fatal assertion */
 #define SCIkASSERT(a) if (!(a)) { \
@@ -222,9 +222,10 @@ _SCIkprintf(FILE *file, char *format, ...);
 
 
 int
-kernel_oops(state_t *s, int line, char *reason);
+kernel_oops(state_t *s, char *file, int line, char *reason);
 /* Halts script execution and informs the user about an internal kernel error or failed assertion
 ** Paramters: (state_t *) s: The state to use
+**            (char *) file: The file the oops occured in
 **            (int) line: The line the oops occured in
 **            (char *) reason: Reason for the kernel oops
 */
@@ -416,11 +417,15 @@ void kRestartGame(state_t *s, int funct_nr, int argc, heap_ptr argp);
 void kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp);
 void kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp);
 void kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp);
+void kSetSynonyms(state_t *s, int funct_nr, int argc, heap_ptr argp);
 void kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp);
 void kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp);
 void kGetMenu(state_t *s, int funct_nr, int argc, heap_ptr argp);
 void kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp);
 void kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp);
+void kFlushResources(state_t *s, int funct_nr, int argc, heap_ptr argp);
+void kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp);
+void kSetDebug(state_t *s, int funct_nr, int argc, heap_ptr argp);
 void k_Unknown(state_t *s, int funct_nr, int argc, heap_ptr argp);
 /* The Unknown/Unnamed kernel function */
 void kstub(state_t *s, int funct_nr, int argc, heap_ptr argp);

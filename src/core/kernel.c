@@ -127,6 +127,10 @@ sci_kernel_function_t kfunct_mappers[] = {
   {"GetEvent", kGetEvent },
   {"CheckFreeSpace", kCheckFreeSpace },
   {"DoSound", kDoSound },
+  {"SetSynonyms", kSetSynonyms },
+  {"FlushResources", kFlushResources },
+  {"SetDebug", kSetDebug },
+  {"GetSaveFiles", kGetSaveFiles },
 
   /* Experimental functions */
   {"RestartGame", kRestartGame },
@@ -235,10 +239,10 @@ _SCIGNUkdebug(char *funcname, state_t *s, char *file, int line, int area, char *
 /******************** Kernel Oops ********************/
 
 int
-kernel_oops(state_t *s, int line, char *reason)
+kernel_oops(state_t *s, char *file, int line, char *reason)
 {
-  sciprintf("Kernel Oops in line %d: %s\n", line, reason);
-  fprintf(stderr,"Kernel Oops in line %d: %s\n", line, reason);
+  sciprintf("Kernel Oops in file %s, line %d: %s\n", file, line, reason);
+  fprintf(stderr,"Kernel Oops in file %s, line %d: %s\n", file, line, reason);
   script_debug_flag = script_error_flag = 1;
   return 0;
 }
@@ -363,6 +367,22 @@ k_Unknown(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 }
 
+
+void
+kFlushResources(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  /* Nothing to do */
+}
+
+void
+kSetDebug(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  sciprintf("Debug mode activated\n");
+
+  script_debug_flag = 1; /* Enter debug mode */
+  _debug_seeking = _debug_step_running = 0;
+}
+
 void
 kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
@@ -387,15 +407,13 @@ kstub(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int i;
 
-  SCIkdebug(SCIkSTUB, "Stub: %s[%x](", s->kernel_names[funct_nr], funct_nr);
+  SCIkwarn(SCIkWARNING, "Unimpl'd syscall: %s[%x](", s->kernel_names[funct_nr], funct_nr);
 
-  if (s->debug_mode & (1 << SCIkSTUB_NR)) {
-    for (i = 0; i < argc; i++) {
-      sciprintf("%04x", 0xffff & PARAM(i));
-      if (i+1 < argc) sciprintf(", ");
-    }
-    sciprintf(")\n");
+  for (i = 0; i < argc; i++) {
+    sciprintf("%04x", 0xffff & PARAM(i));
+    if (i+1 < argc) sciprintf(", ");
   }
+  sciprintf(")\n");
 }
 
 

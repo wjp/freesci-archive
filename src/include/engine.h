@@ -59,6 +59,7 @@
 
 #define FREESCI_GAMEDIR ".freesci"
 #define FREESCI_CONFFILE "config"
+#define FREESCI_SAVEDIR_PREFIX "save_"
 #define FREESCI_CONFFILE_DOS "freesci.cfg"
 #define FREESCI_FILE_VISUAL_MAP "visual_map.png"
 #define FREESCI_FILE_PRIORITY_MAP "priority_map.png"
@@ -213,6 +214,9 @@ typedef struct _state
   parse_tree_branch_t *parser_branches;
   int parser_branches_nr;
   parse_tree_node_t parser_nodes[VOCAB_TREE_NODES]; /* The parse tree */
+
+  synonym_t *synonyms; /* The list of synonyms */
+  int synonyms_nr;
 
   heap_ptr game_obj; /* Pointer to the game object */
 

@@ -105,6 +105,8 @@ typedef struct
   heap_ptr heappos; /* Script position on the heap or 0 if not yet loaded */
   heap_ptr localvar_offset; /* Abs. offset of the local variable block or 0 if not present */
   heap_ptr export_table_offset; /* Abs. offset of the export table or 0 if not present */
+  heap_ptr synonyms_offset; /* Abs. offset of the synonyms block  or 0 if not present*/
+  int synonyms_nr; /* Number of entries in the synonyms block */
   int lockers; /* Number of classes and objects that require this script */
 } script_t;
 
@@ -151,6 +153,8 @@ typedef struct
   int wordFail, syntaxFail, semanticFail; /* Used by Parse() */
 
   int claimed; /* Used generally by the event mechanism */
+
+  int elements; /* Used by SetSynonyms() */
 
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 

@@ -85,6 +85,64 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
   s->acc = 0; /* Never true */
 }
 
+
+void
+kSetSynonyms(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr list = UPARAM(0);
+  int script;
+  int synpos = 0;
+
+  SCIkASSERT(list > 800);
+  if (s->synonyms_nr)
+    free(s->synonyms);
+
+  s->synonyms_nr = 0;
+
+  list = UGET_SELECTOR(list, elements); /* Get the number of elements */
+  list = UGET_HEAP(list + LIST_FIRST_NODE); /* Get first list node */
+
+  while (list) {
+    heap_ptr objpos = GET_HEAP(list + LIST_NODE_VALUE);
+
+    script = UGET_SELECTOR(objpos, number);
+    SCIkASSERT(script <= 1000);
+
+    if (s->scripttable[script].heappos) {
+
+      if (s->scripttable[script].synonyms_nr) {
+	int i;
+	if (s->synonyms_nr)
+	  s->synonyms = realloc(s->synonyms,
+				sizeof(synonym_t) * (s->synonyms_nr + s->scripttable[script].synonyms_nr));
+	else
+	  s->synonyms = malloc(sizeof(synonym_t) * (s->scripttable[script].synonyms_nr));
+
+	s->synonyms_nr +=  s->scripttable[script].synonyms_nr;
+
+	SCIkdebug(SCIkPARSER, "Setting %d synonyms for script.%d\n",
+		  s->scripttable[script].synonyms_nr, script);
+
+	for (i = 0; i < s->scripttable[script].synonyms_nr; i++) {
+	  s->synonyms[synpos].replaceant = UGET_HEAP(s->scripttable[script].synonyms_offset + i * 4);
+	  s->synonyms[synpos].replacement = UGET_HEAP(s->scripttable[script].synonyms_offset + i * 4 + 2);
+
+	  synpos++;
+	}
+      }
+
+    } else SCIkwarn(SCIkWARNING, "Synonyms of script.%03d were requested, but script is not available\n");
+
+    list = GET_HEAP(list + LIST_NEXT_NODE);
+  }
+
+  SCIkdebug(SCIkPARSER, "A total of %d synonyms are active now.\n", s->synonyms_nr);
+
+  if (!s->synonyms_nr)
+    s->synonyms = NULL;
+}
+
+
 void
 kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
@@ -99,6 +157,8 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				s->parser_words, s->parser_words_nr,
 				s->parser_suffices, s->parser_suffices_nr,
 				&error);
+
+  vocab_synonymize_tokens(words, words_nr, s->synonyms, s->synonyms_nr);
 
   if (words) {
 

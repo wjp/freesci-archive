@@ -441,6 +441,7 @@ main(int argc, char** argv)
 
   game_run(&gamestate); /* Run the game */
   
+
   if (gamestate->sfx_driver)
     gamestate->sfx_driver->exit(gamestate); /* Shutdown sound daemon first */
 

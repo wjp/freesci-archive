@@ -140,6 +140,7 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(syntaxFail, "syntaxFail");
   FIND_SELECTOR(semanticFail, "semanticFail");
   FIND_SELECTOR(cycler, "cycler");
+  FIND_SELECTOR(elements, "elements");
 }
 
 int

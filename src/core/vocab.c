@@ -660,3 +660,17 @@ vocab_dump_parse_tree(parse_tree_node_t *nodes)
   _vocab_recursive_ptree_dump(nodes, 0, 0);
   sciprintf("\n");
 }
+
+void
+vocab_synonymize_tokens(result_word_t *words, int words_nr, synonym_t *synonyms, int synonyms_nr)
+{
+  int i, sync;
+
+  if (!synonyms || !synonyms_nr)
+    return; /* No synonyms: Nothing to check */
+
+  for (i = 0; i < words_nr; i++)
+    for(sync = 0; sync < synonyms_nr; sync++)
+      if (words[i].class = synonyms[sync].replaceant)
+	words[i].class = synonyms[sync].replacement;
+}

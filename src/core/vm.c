@@ -53,9 +53,9 @@ static int bp_flag = 0;
 
 
 int
-script_error(state_t *s, int line, char *reason)
+script_error(state_t *s, char *file, int line, char *reason)
 {
-  sciprintf("Script error in line %d: %s\n", line, reason);
+  sciprintf("Script error in file %s, line %d: %s\n", file, line, reason);
   script_debug_flag = script_error_flag = 1;
   return 0;
 }
@@ -92,17 +92,17 @@ get_class_address(state_t *s, int classnr)
 #define GET_OP_SIGNED_FLEX() ((opcode & 1)? GET_OP_SIGNED_BYTE() : GET_OP_SIGNED_WORD())
 
 #define GET_HEAP(address) ((((guint16)(address)) < 800)? \
-script_error(s, __LINE__, "Heap address space violation on read")  \
+script_error(s, __FILE__, __LINE__, "Heap address space violation on read")  \
 : getInt16(s->heap + ((guint16)(address))))
 /* Reads a heap value if allowed */
 
 #define UGET_HEAP(address) ((((guint16)(address)) < 800)? \
-script_error(s, __LINE__, "Heap address space violation on read")   \
+script_error(s, __FILE__, __LINE__, "Heap address space violation on read")   \
 : getUInt16(s->heap + ((guint16)(address))))
 /* Reads an unsigned heap value if allowed */
 
 #define PUT_HEAP(address, value) if (((guint16)(address)) < 800) \
-script_error(s, __LINE__, "Heap address space violation on write");        \
+script_error(s, __FILE__, __LINE__, "Heap address space violation on write");        \
 else { s->heap[(guint16)(address)] = (value) &0xff;               \
  s->heap[((guint16)(address)) + 1] = ((value) >> 8) & 0xff;}
 /* Sets a heap value if allowed */
@@ -212,7 +212,7 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
     argc = GET_HEAP(argp);
 
     if (argc > 0x500){ /* More arguments than the stack could possibly accomodate for */
-      script_error(s, __LINE__, "More than 0x500 arguments to function call\n");
+      script_error(s, __FILE__, __LINE__, "More than 0x500 arguments to function call\n");
       return NULL;
     }
 
@@ -464,16 +464,16 @@ run_vm(state_t *s, int restoring)
     opcode = GET_OP_BYTE(); /* Get opcode */
 
     if (xs->sp < s->stack_base)
-      script_error(s, __LINE__, "Absolute stack underflow");
+      script_error(s, __FILE__, __LINE__, "Absolute stack underflow");
 
     if (xs->sp < xs->variables[VAR_TEMP])
-      script_error(s, __LINE__, "Relative stack underflow");
+      script_error(s, __FILE__, __LINE__, "Relative stack underflow");
 
     if (xs->sp >= s->stack_base + VM_STACK_SIZE)
-      script_error(s, __LINE__, "Stack overflow");
+      script_error(s, __FILE__, __LINE__, "Stack overflow");
 
     if (xs->pc < 800)
-      script_error(s, __LINE__, "Program Counter gone astray");
+      script_error(s, __FILE__, __LINE__, "Program Counter gone astray");
 
     opnumber = opcode >> 1;
 
@@ -758,7 +758,7 @@ run_vm(state_t *s, int restoring)
 
     case 0x2b: /* super */
       if ((opparams[0] < 0) || (opparams[0] >= s->classtable_size))
-	script_error(s, __LINE__, "Invalid superclass in object");
+	script_error(s, __FILE__, __LINE__, "Invalid superclass in object");
       else {
 	temp = xs->sp;
 	xs->sp -= (opparams[1] + (restadjust * 2)); /* Adjust stack */
@@ -1040,7 +1040,7 @@ run_vm(state_t *s, int restoring)
       break;
 
     default:
-      script_error(s, __LINE__, "Illegal opcode");
+      script_error(s, __FILE__, __LINE__, "Illegal opcode");
 
     } /* switch(opcode >> 1) */
 
@@ -1320,6 +1320,8 @@ script_instantiate(state_t *s, int script_nr)
   /* Set heap position (beyond the size word) */
   s->scripttable[script_nr].lockers = 1; /* Locked by one */
   s->scripttable[script_nr].export_table_offset = 0;
+  s->scripttable[script_nr].synonyms_offset = 0;
+  s->scripttable[script_nr].synonyms_nr = 0;
   s->scripttable[script_nr].localvar_offset = 0;
 
   if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
@@ -1351,6 +1353,11 @@ script_instantiate(state_t *s, int script_nr)
 
     if (objtype == sci_obj_exports)
       s->scripttable[script_nr].export_table_offset = pos + 4; /* +4 is to step over the header */
+    
+    if (objtype == sci_obj_synonyms) {
+      s->scripttable[script_nr].synonyms_offset = pos + 4; /* +4 is to step over the header */
+      s->scripttable[script_nr].synonyms_nr = (objlength - 4) / 4;
+    }
     
     if (objtype == sci_obj_localvars)
       s->scripttable[script_nr].localvar_offset = pos + 4; /* +4 is to step over the header */
@@ -1522,6 +1529,9 @@ game_init(state_t *s)
   heap_ptr functarea;
   resource_t *resource;
   int i, font_nr;
+
+  s->synonyms = NULL;
+  s->synonyms_nr = 0; /* No synonyms */
 
   /* Initialize script table */
   for (i = 0; i < 1000; i++)
@@ -1777,6 +1787,12 @@ game_exit(state_t *s)
   s->opcodes = NULL;
   s->kfunct_table = NULL;
   /* Make sure to segfault if any of those are dereferenced */
+
+  if (s->synonyms_nr) {
+    free(s->synonyms);
+    s->synonyms = NULL;
+    s->synonyms_nr = 0;
+  }
 
   sciprintf("Freeing graphics data...\n");
   free_picture(s->pic);

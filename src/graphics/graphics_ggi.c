@@ -122,12 +122,12 @@ void initColors(ggi_visual_t visual)
 ggi_visual_t openVisual()
 {
   ggi_mode mode = {
-    1, // 1 frame
-    {320,200}, // resolution
-    {320,200}, // virtual
-    {0,0},     // size in mm
-    GT_AUTO,   // color depth
-    {GGI_AUTO,GGI_AUTO}}; // font size
+    1, /* 1 frame */
+    {320,200}, /* resolution */
+    {320,200}, /* virtual */
+    {0,0},     /* size in mm */
+    GT_AUTO,   /* color depth */
+    {GGI_AUTO,GGI_AUTO}}; /* font size */
   ggi_visual_t retval;
   if (!(retval = ggiOpen(NULL))) return NULL;
 

@@ -1,3 +1,16 @@
+1999-12-17  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kfile.c (kGetSaveFiles): Implemented GetSaveFiles().
+
+	* src/core/kernel.c (kSetDebug): Wrote short implementation for
+	SetDebug(), made FlushResources() NOP without warning (we don't need
+	it, since all resources are available after load time).
+
+	* src/core/kstring.c (kSetSynonyms): Implemented SetSynonyms() and
+	updated related data structures and functions
+
+	* src/core/kfile.c (kCheckFreeSpace): Implemented CheckFreeSpace()
+
 1999-12-17  Dmitry Jemerov  <yole@nnz.ru>
 
 	* src/core/script.h, src/core/script.c: New opcode parameter type

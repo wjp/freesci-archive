@@ -358,17 +358,131 @@ void
 kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   char *path = (char *) s->heap + UPARAM(0);
-  char *testpath = malloc(strlen(path) + 5);
+  char *testpath = malloc(strlen(path) + 15);
   char buf[1024];
   int i;
+  int fd;
+  int failed = 0;
+  int pathlen;
 
   strcpy(testpath, path);
-  strcat(testpath, ".foo");
+  strcat(testpath, "freesci.foo");
+  pathlen = strlen(testpath);
 
-  /* FIXME */
-  s->acc = 1; /* Is there *any* way to test this? */
+  while ((fd = open(testpath, O_RDONLY)) > -1) {
+    close(fd);
+    if (testpath[pathlen - 2] == 'z') { /* Failed. */
+      SCIkwarn(SCIkWARNING, "Failed to find non-existing file for free space test\n");
+      free(testpath);
+      s->acc = 0;
+      return;
+    }
+
+    /* If this file couldn't be created, try freesci.fop, freesci.foq etc.,
+    ** then freesci.fpa, freesci.fpb. Stop at freesci.fza.
+    ** Yes, this is extremely arbitrary and very strange.
+    */
+    if (testpath[pathlen - 1] == 'z') {
+      testpath[pathlen - 1] = 'a';
+      ++testpath[pathlen - 2];
+    }
+    else
+      ++testpath[pathlen - 1];
+  }
+
+  fd = creat(testpath, O_WRONLY);
+
+  if (fd == -1) {
+    SCIkwarn(SCIkWARNING,"Could not test for disk space: %s\n", strerror(errno));
+    free(testpath);
+    s->acc = 0;
+    return;
+  }
+
+  for (i = 0; i < 1024; i++) /* Check for 1 MB */
+    if (write(fd, buf, 1024) < 1024)
+      failed = 1;
+
+  close(fd);
+
+  remove(testpath);
+
+  s->acc = !failed;
 
   free(testpath);
+}
+
+
+/* Returns a dynamically allocated pointer to the name of the requested save dir */
+char *
+_k_get_savedir_name(int nr)
+{
+  char suffices[] = "0123456789abcdef";
+  char *savedir_name = malloc(strlen(FREESCI_SAVEDIR_PREFIX) + 2);
+  assert(nr >= 0);
+  assert(nr < 16);
+  strcpy(savedir_name, FREESCI_SAVEDIR_PREFIX);
+  savedir_name[strlen(FREESCI_SAVEDIR_PREFIX)] = suffices[nr];
+  savedir_name[strlen(FREESCI_SAVEDIR_PREFIX) + 1] = 0;
+
+  return savedir_name;
+}
+
+void
+kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  char *game_id = UPARAM(0) + s->heap;
+  heap_ptr nametarget = UPARAM(1);
+  heap_ptr nameoffsets = UPARAM(2);
+  int gfname_len = strlen(game_id) + 4;
+  char *gfname = malloc(gfname_len);
+  int i;
+
+  strcpy(gfname, game_id);
+  strcat(gfname, ".id"); /* This file is used to identify in-game savegames */
+
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  SCIkASSERT(UPARAM(0) >= 800);
+  SCIkASSERT(nametarget >= 800);
+  SCIkASSERT(nameoffsets >= 800);
+
+  s->acc = 0;
+
+  for (i = 0; i < 16; i++) {
+    char *gidf_name = malloc(gfname_len + 3 + strlen(FREESCI_SAVEDIR_PREFIX));
+    char *savedir_name = _k_get_savedir_name(i);
+    FILE *idfile;
+
+    strcpy(gidf_name, savedir_name);
+    strcat(gidf_name, G_DIR_SEPARATOR_S);
+    strcat(gidf_name, gfname);
+
+    free(savedir_name);
+
+    if (idfile = fopen(gidf_name, "r")) { /* Valid game ID file: Assume valid game */
+      char namebuf[32]; /* Save game name buffer */
+      fgets(namebuf, 31, idfile);
+      if (strlen(namebuf) > 0) {
+
+	if (namebuf[strlen(namebuf) - 1] == '\n')
+	  namebuf[strlen(namebuf) - 1] = 0; /* Remove trailing newline */
+
+	++s->acc; /* Increase number of files found */
+
+	PUT_HEAP(nametarget, nameoffsets); /* Write down the addres of the identifier string */
+	nametarget += 2; /* Make sure the next ID string address is written to the next pointer */
+	strcpy(s->heap + nameoffsets, namebuf); /* Copy identifier string */
+	nameoffsets += strlen(namebuf) + 1; /* Increase name offset pointer accordingly */
+
+	fclose(idfile);
+      }
+    }
+
+    free(gidf_name);
+  }
+
+  free(gfname);
 }
 
 
