@@ -1,3 +1,8 @@
+2002-09-23  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/include/games.h:  Added several IDs for QFG2 and KQ1e in
+          honor of SCI01 support.
+
 2002-09-23  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/buff_ss.c:

@@ -36,7 +36,7 @@ typedef struct _sci_game {
   char *name;
 } sci_game_t;
 
-#define SCI_GAMES_COUNT 16
+#define SCI_GAMES_COUNT 22
 
 sci_game_t sci_games[] = {
   { 0x01684e20, SCI_VERSION(0,000,685), "ARTHUR" },
@@ -54,11 +54,13 @@ sci_game_t sci_games[] = {
   { 0x009b0cd2, SCI_VERSION(0,000,566), "HQ" },
   { 0x02e5c05f, SCI_VERSION(0,000,629), "HQ" },
   { 0x0117a04f, SCI_VERSION(0,000,453), "SQ3" },
-  { 0x00cb0bf2, SCI_VERSION(0,000,453), "SQ3-Astro" }
-  /*  
-      { 0x014291d1, SCI_VERSION(?,???,???), "KQ1E" }
-      { 0x05a8efaf, SCI_VERSION(?,???,???), "Trial" }
-  */
+  { 0x00cb0bf2, SCI_VERSION(0,000,453), "SQ3-Astro" },
+  { 0x05a8efaf, SCI_VERSION(1,000,172), "Trial" }, /* unknown as yet v1.102 */
+  { 0x05a71cde, SCI_VERSION(1,000,172), "Trial" }, /* unknown as yet */
+  { 0x0223e42c, SCI_VERSION(1,000,172), "Trial" }, /* also 1.000.072 v1.105 */
+  { 0x05a8efaf, SCI_VERSION(1,000,172), "Trial" }, /* unknown as yet */
+  { 0x014291d1, SCI_VERSION(0,000,999), "KQ1E" }, /* S.old.010 1.000.051 */
+  { 0x03aff799, SCI_VERSION(0,000,999), "KQ1E" }, /* S.old.010 */
 };
 
 #endif /* _SCI_GAMES_H_ */
