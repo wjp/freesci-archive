@@ -26,10 +26,10 @@
 ***************************************************************************/
 /* gfx driver test and verification program */
 
-#ifndef _MSC_VER
-#   include <unistd.h>
-#   include <sys/time.h>
-#   include <windows.h>
+#ifdef _MSC_VER
+#include <unistd.h>
+#include <sys/time.h>
+#include <windows.h>
 #endif
 
 #include <assert.h>
@@ -59,7 +59,7 @@ sci_gettime(int *seconds, int *useconds)
 
 #ifdef _WIN32
 	timeBeginPeriod(0);
-#endif _WIN32
+#endif
  
          assert(!gettimeofday(&tv, NULL));
          *seconds = time(NULL);
@@ -67,7 +67,7 @@ sci_gettime(int *seconds, int *useconds)
 
 #ifdef _WIN32
 	timeEndPeriod(0);
-#endif _WIN32
+#endif
 }
 
 
@@ -1175,7 +1175,7 @@ main(int argc, char **argv)
 			return 1;
 		}
 
-	drv = gfx_find_driver(driver);
+	drv = gfx_find_driver("/tmp", driver);
 
 	if (drv) {
 		printf("Using graphics driver '%s'\n", drv->name);
