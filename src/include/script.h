@@ -1,6 +1,5 @@
 /***************************************************************************
- Copyright (C) 2000,01 Magnus Reftel
-
+ script.h Copyright (C) 2000,01 Magnus Reftel
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
@@ -55,10 +54,10 @@ void script_dissect(resource_mgr_t *resmgr, int res_no, char **snames, int sname
 /* Opcode formats as used by script.c */
 typedef enum {
   Script_Invalid=-1,
-  Script_None=0, 
+  Script_None=0,
   Script_Byte,
   Script_SByte,
-  Script_Word, 
+  Script_Word,
   Script_SWord,
   Script_Variable,
   Script_SVariable,
@@ -196,7 +195,7 @@ typedef enum { /* FIXME */
   op_minussti,
   op_minusspi
 } sci_opcodes;
- 
+
 extern DLLEXTERN opcode_format formats[128][4];
 
 #endif

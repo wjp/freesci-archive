@@ -1,6 +1,5 @@
 /***************************************************************************
- sdl_driver.h Copyright (C) 2001 Solomon Peachy
-
+ sdl_driver.c Copyright (C) 2001 Solomon Peachy
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright

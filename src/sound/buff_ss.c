@@ -29,6 +29,7 @@
 
 ***************************************************************************/
 
+#include <sci_win32.h>
 #include <engine.h>
 #include <sciresource.h>
 #include <stdarg.h>

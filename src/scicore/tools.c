@@ -1,7 +1,6 @@
 /***************************************************************************
  tools.c Copyright (C) 1999,2000,2001 Christoph Reichenbach
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -34,6 +33,7 @@
 #ifdef _MSC_VER
 #  include <sys/timeb.h>
 #  include <windows.h>
+#  include <sci_win32.h>
 #endif
 #if !defined(HAVE_FNMATCH) && !defined(_MSC_VER)
 #  include <beos/fnmatch.h>
@@ -53,7 +53,7 @@ int sci_debug_flags = 0; /* Special flags */
 int
 memtest(char *file, int line)
 {
-	va_list argp;
+	/* va_list argp; -- unused */
 	int i;
 	void *blocks[MEMTEST_HARDNESS + 1];
 	fprintf(stderr,"Memtesting in %s, L%d\n", file, line);

@@ -1,7 +1,6 @@
 /***************************************************************************
  gfx_driver.h Copyright (C) 2000 Christoph Reichenbach
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -175,8 +174,8 @@ typedef struct _gfx_driver { /* Graphics driver */
 	** and is used for internal representation of graphical data. The physical
 	** resolution set by the graphics driver may be different for practical
 	** reasons.
-	** Must also set drv->mode, preferrably with the gfx_new_mode() function
-	** specified in gfx_utils.h.
+	** Must also set drv->mode, preferably with the gfx_new_mode() function
+	** specified in gfx_tools.h.
 	*/
 
 	int (*init) (struct _gfx_driver *drv);
@@ -187,8 +186,8 @@ typedef struct _gfx_driver { /* Graphics driver */
 	** most 'natural' to the graphics target. Target implementors have relatively
 	** free reign in choosing the heuristics used to determine the resulting
 	** mode.
-	** Must also set drv->mode, preferrably with the gfx_new_mode() function
-	** specified in gfx_utils.h.
+	** Must also set drv->mode, preferably with the gfx_new_mode() function
+	** specified in gfx_tools.h.
 	*/
 
 	void (*exit) (struct _gfx_driver *drv);
@@ -300,7 +299,7 @@ typedef struct _gfx_driver { /* Graphics driver */
 	** Parameters: (gfx_driver_t *) drv: The affected driver
 	**             (rect_t) src: Source rectangle
 	**             (point_t) dest: Destination point
-	**             (int) buffer: One of GFX_BUFFER_FRONT and GFX_BUFFER_BACK
+	**             (int) buffer: One of GFX_BUFFER_FRONT or GFX_BUFFER_BACK
 	** Returns   : (int) GFX_OK, GFX_ERROR or GFX_FATAL
 	** This function updates either the visual front buffer, or the two back
 	** buffers, by copying the specified source region to the destination

@@ -22,17 +22,19 @@
 pcmout_driver_t *pcmout_driver = NULL;
 
 pcmout_driver_t *pcmout_drivers[] = {
-#ifdef HAVE_ALSA
-        &pcmout_driver_alsa,
-#endif
-#ifdef HAVE_SYS_SOUNDCARD_H
-	&pcmout_driver_oss,
-#endif
-#ifdef HAVE_SDL
-	&pcmout_driver_sdl,
-#endif
-#ifdef HAVE_DMEDIA_AUDIO_H
-	&pcmout_driver_al,
+#ifndef NO_PCMOUT
+#	ifdef HAVE_ALSA
+		&pcmout_driver_alsa,
+#	endif
+#	ifdef HAVE_SYS_SOUNDCARD_H
+		&pcmout_driver_oss,
+#	endif
+#	ifdef HAVE_SDL
+		&pcmout_driver_sdl,
+#	endif
+#	ifdef HAVE_DMEDIA_AUDIO_H
+		&pcmout_driver_al,
+#	endif
 #endif
 	&pcmout_driver_null,
 	NULL

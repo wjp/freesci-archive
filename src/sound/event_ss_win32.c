@@ -31,6 +31,7 @@
 
 #ifdef _WIN32
 
+#include <sci_win32.h>
 #include <sci_memory.h>
 #include <soundserver.h>
 #include <sound.h>

@@ -492,7 +492,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 			char *writestart = target; /* Start of the written string, used after the switch */
 
-			int writelength;
+			/* int writelength; -- unused atm */
 
 			if (xfer && (isdigit(xfer) || xfer == '-')) {
 				char *destp;
@@ -554,7 +554,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			case 'x':
 			case 'u': unsigned_var = 1;
 			case 'd': { /* Copy decimal */
-				int templen;
+				/* int templen; -- unused atm */
 				char *format_string = "%d";
 
 				if (xfer == 'x')

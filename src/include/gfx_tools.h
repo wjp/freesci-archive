@@ -212,7 +212,7 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 ** Parameters: (gfx_mode_t *) mode: The graphics mode of the target buffer
 **             (gfx_pixmap_t *) pxm: The pixmap to transfer
 **             (int priority): The pixmap's priority
-**             (rect_t) dest_coords: The source coordinates within the pixmap
+**             (rect_t) src_coords: The source coordinates within the pixmap
 **             (rect_t) dest_coords: The destination coordinates (no scaling)
 **             (byte *) dest: Memory position of the upper left pixel of the
 **                      linear pixel buffer

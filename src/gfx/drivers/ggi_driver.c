@@ -587,12 +587,6 @@ ggi_draw_pixmap(gfx_driver_t *drv, gfx_pixmap_t *pxm, int priority,
 	assert(pri_map);
 	assert(vis);
 
-	if (src.xl != dest.xl
-	    || src.yl != dest.yl) {
-		GFXERROR("Attempt to draw scaled view- not supported by this driver!\n");
-		return GFX_FATAL; /* Scaling not supported! */
-	}
-
 	dbuf = ggiDBGetBuffer(vis, (vis == VISUAL)? buffer : 0);
 	if (!dbuf) {
 		GFXERROR("Could not acquire direct buffer!\n");

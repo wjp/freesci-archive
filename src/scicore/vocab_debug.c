@@ -138,7 +138,8 @@ int getInt(unsigned char* d)
 int* vocabulary_get_classes(resource_mgr_t *resmgr, int* count)
 {
   resource_t* r;
-  int *c, i;
+  int *c;
+  unsigned int i;
 
   if((r = scir_find_resource(resmgr, sci_vocab, 996, 0)) == NULL) return 0;
 
@@ -270,7 +271,7 @@ vocabulary_free_opcodes(opcode *opcodes)
 /* Alternative kernel func names retriever. Required for KQ1/SCI (at least). */
 static char** _vocabulary_get_knames0alt(int *names, resource_t *r)
 {
-  int mallocsize = 32;
+  unsigned int mallocsize = 32;
   char **retval = sci_malloc(sizeof (char *) * mallocsize);
   unsigned int i = 0, index = 0;
 

@@ -1,6 +1,5 @@
 /***************************************************************************
- gfx_operations Copyright (C) 2000,01 Christoph Reichenbach
-
+ gfx_operations.h Copyright (C) 2000,01 Christoph Reichenbach
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
@@ -226,7 +225,7 @@ gfxop_have_mouse(gfx_state_t *state);
 /* Determines whether a pointing device is attached
 ** Parameters: (gfx_state_t *) state: The state to inspect
 ** Returns   : (int) zero iff no pointing device is attached
-*/ 
+*/
 
 
 /******************************/

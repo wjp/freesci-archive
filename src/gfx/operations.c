@@ -1,7 +1,6 @@
 /***************************************************************************
  gfx_operations Copyright (C) 2000 Christoph Reichenbach
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -253,7 +252,7 @@ _gfxop_draw_pixmap(gfx_driver_t *driver, gfx_pixmap_t *pxm, int priority, int co
 	error = _gfxop_install_pixmap(driver, pxm);
 	if (error) return error;
 
-	DDIRTY(stderr, "\\-> Drawing to actual %d %d %d %d\n", 
+	DDIRTY(stderr, "\\-> Drawing to actual %d %d %d %d\n",
 	       clipped_dest.x / driver->mode->xfact,
 	       clipped_dest.y / driver->mode->yfact,
 	       clipped_dest.xl / driver->mode->xfact,
@@ -793,7 +792,7 @@ gfxop_set_color(gfx_state_t *state, gfx_color_t *color, int r, int g, int b, int
 				if (error_code < 0) {
 					GFXWARN("Could not get color entry for %02x/%02x/%02x\n", r, g, b);
 					return error_code;
-				} else if ((error_code = state->driver->set_palette(state->driver, pixmap_color.global_index, r, g, b))) {
+				} else if ((error_code = state->driver->set_palette(state->driver, pixmap_color.global_index, (byte) r, (byte) g, (byte) b))) {
 					GFXWARN("Graphics driver failed to set color index %d to (%02x/%02x/%02x)\n",
 						pixmap_color.global_index, r, g, b);
 					return error_code;
@@ -916,24 +915,24 @@ line_clip(rect_t *line, rect_t clip, int xfact, int yfact)
 
 	} else { /* "normal" line */
 		float start = 0.0, end = 1.0;
-		float xv = 1.0 * line->xl;
-		float yv = 1.0 * line->yl;
+		float xv = (float) line->xl;
+		float yv = (float) line->yl;
 
 		if (line->xl < 0)
-			clip_line_partial(&start, &end, 1.0 / xv, 1.0 * line->x, 1.0 * (clip.x + clip.xl), 1.0 * clip.x);
+			clip_line_partial(&start, &end, (float) (1.0 / xv), (float) line->x, (float) (clip.x + clip.xl), (float) clip.x);
 		else
-			clip_line_partial(&start, &end, 1.0 / xv, 1.0 * line->x, 1.0 * clip.x, 1.0 * (clip.x + clip.xl));
+			clip_line_partial(&start, &end, (float) (1.0 / xv), (float) line->x, (float) clip.x, (float) (clip.x + clip.xl));
 
 		if (line->yl < 0)
-			clip_line_partial(&start, &end, 1.0 / yv, 1.0 * line->y, 1.0 * (clip.y + clip.yl), 1.0 * clip.y);
+			clip_line_partial(&start, &end, (float) (1.0 / yv), (float) line->y, (float) (clip.y + clip.yl), (float) clip.y);
 		else
-			clip_line_partial(&start, &end, 1.0 / yv, 1.0 * line->y, 1.0 * clip.y, 1.0 * (clip.y + clip.yl));
+			clip_line_partial(&start, &end, (float) (1.0 / yv), (float) line->y, (float) clip.y, (float) (clip.y + clip.yl));
 
-		line->x += (int) xv * start;
-		line->y += (int) yv * start;
+		line->x += (int) (xv * start);
+		line->y += (int) (yv * start);
 
-		line->xl = (int) xv * (end-start);
-		line->yl = (int) yv * (end-start);
+		line->xl = (int) (xv * (end-start));
+		line->yl = (int) (yv * (end-start));
 
 		return (start > 1.0 || end < 0.0);
 	}
@@ -1214,15 +1213,15 @@ gfxop_draw_box(gfx_state_t *state, rect_t box, gfx_color_t color1, gfx_color_t c
 	case GFX_BOX_SHADE_LEFT: reverse = 1;
 	case GFX_BOX_SHADE_RIGHT:
 		driver_shade_type = GFX_SHADE_HORIZONTALLY;
-		mod_offset = ((new_box.x - box.x) * 1.0) / (box.xl * 1.0);
-		mod_breadth = (new_box.xl * 1.0) / (box.xl * 1.0);
+		mod_offset = (float) (((new_box.x - box.x) * 1.0) / (box.xl * 1.0));
+		mod_breadth = (float) ((new_box.xl * 1.0) / (box.xl * 1.0));
 		break;
 
 	case GFX_BOX_SHADE_UP: reverse = 1;
 	case GFX_BOX_SHADE_DOWN:
 		driver_shade_type = GFX_SHADE_VERTICALLY;
-		mod_offset = ((new_box.y - box.y) * 1.0) / (box.yl * 1.0);
-		mod_breadth = (new_box.yl * 1.0) / (box.yl * 1.0);
+		mod_offset = (float) (((new_box.y - box.y) * 1.0) / (box.yl * 1.0));
+		mod_breadth = (float) ((new_box.yl * 1.0) / (box.yl * 1.0));
 		break;
 
 	default:
@@ -1232,7 +1231,7 @@ gfxop_draw_box(gfx_state_t *state, rect_t box, gfx_color_t color1, gfx_color_t c
 
 
 	if (reverse)
-		mod_offset = 1.0 - (mod_offset + mod_breadth);
+		mod_offset = (float) (1.0 - (mod_offset + mod_breadth));
 	/* Reverse offset if we have to interpret colors inversely */
 
 	if (shade_type == GFX_BOX_SHADE_FLAT)
@@ -1247,17 +1246,17 @@ gfxop_draw_box(gfx_state_t *state, rect_t box, gfx_color_t color1, gfx_color_t c
 		draw_color1.priority = draw_color2.priority = color1.priority;
 
 		if (draw_color1.mask & GFX_MASK_VISUAL) {
-			draw_color1.visual.r = COLOR_MIX(visual.r, mod_offset);
-			draw_color1.visual.g = COLOR_MIX(visual.g, mod_offset);
-			draw_color1.visual.b = COLOR_MIX(visual.b, mod_offset);
-			draw_color1.alpha = COLOR_MIX(alpha, mod_offset);
+			draw_color1.visual.r = (guint8) COLOR_MIX(visual.r, mod_offset);
+			draw_color1.visual.g = (guint8) COLOR_MIX(visual.g, mod_offset);
+			draw_color1.visual.b = (guint8) COLOR_MIX(visual.b, mod_offset);
+			draw_color1.alpha = (guint8) COLOR_MIX(alpha, mod_offset);
 
 			mod_offset += mod_breadth;
 
-			draw_color2.visual.r = COLOR_MIX(visual.r, mod_offset);
-			draw_color2.visual.g = COLOR_MIX(visual.g, mod_offset);
-			draw_color2.visual.b = COLOR_MIX(visual.b, mod_offset);
-			draw_color2.alpha = COLOR_MIX(alpha, mod_offset);
+			draw_color2.visual.r = (guint8) COLOR_MIX(visual.r, mod_offset);
+			draw_color2.visual.g = (guint8) COLOR_MIX(visual.g, mod_offset);
+			draw_color2.visual.b = (guint8) COLOR_MIX(visual.b, mod_offset);
+			draw_color2.alpha = (guint8) COLOR_MIX(alpha, mod_offset);
 		}
 		if (reverse)
 			return drv->draw_filled_rect(drv, new_box, draw_color2, draw_color1, driver_shade_type);

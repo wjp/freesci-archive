@@ -1,3 +1,42 @@
+2002-09-15  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/include/win32/sci_win32.h: New file (contains sleep() and
+	  other Win32 macros).
+
+	* src/sound/pcmout.c: Added NO_PCMOUT compiler directive if ever required.
+
+	* src/gfx/drivers/ggi_driver.c: Removed unnecessary if statement.
+
+	* src/engine/kmovement.c:
+	* src/engine/kstring.c:
+	* src/engine/scriptdebug.c:
+	* src/engine/vm.c:
+	* src/gfx/operations.c:
+	* src/gfx/resource/sci_pic_0.c:
+	* src/scicore/tools.c:
+	* src/scicore/vocab_debug.c:
+	  Compiler warning fixes on Win32.
+
+	* src/include/engine.h:
+	* src/scicore/tools.c:
+	* src/sound/buff_ss.c:
+	* src/sound/buff_ss_win32.c:
+	* src/sound/event_ss_win32.c:
+	* src/sound/midiout_win32mci.c:
+	* src/sound/polled_ss_sdl.c:
+	* src/win32/fsci_dll.dsp:
+	* src/win32/sciv.dsp:
+	  Updates for move of Win32 sleep().
+
+	* src/gfx/drivers/sdl_driver.c:
+	* src/include/kernel.h:
+	* src/include/gfx_driver.h:
+	* src/include/gfx_operations.h:
+	* src/include/gfx_tools.h:
+	* src/include/scitypes.h:
+	* src/include/script.h:
+	  Minor documentation updates.
+
 2002-09-15  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* aclocal.m4, config.h.in, configure: Files removed from repository.
@@ -23,11 +62,11 @@
 	  src/sound/midiout_ossseq.c
 	* src/sound/pcmout_alsa.c: Hopefully fixed the alsa sound driver
 	  termination.
-	
+
 2002-09-09  Lars Skovlund  <lskovlun@image.dk>
 
 	* Fixed the implementation of the priority formula.
-	* src/engine/game.c (_reset_graphics_input): CoordPri() now also works 
+	* src/engine/game.c (_reset_graphics_input): CoordPri() now also works
 	  before DrawPic() is called for the first time.
 	* src/engine/game.c (kFGets): Rolled back the file API changes from 07/22.
 

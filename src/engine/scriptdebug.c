@@ -1,7 +1,6 @@
 /***************************************************************************
  scriptdebug.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -1366,7 +1365,7 @@ bb = GET_SELECTOR(pos, bb);
 int
 c_gfx_draw_viewobj(state_t *s)
 {
-	heap_ptr pos = cmd_params[0].val;
+	heap_ptr pos = (heap_ptr) (cmd_params[0].val);
 	int is_view;
 	int x, y, priority;
 	int nsLeft, nsRight, nsBottom, nsTop;
@@ -1581,7 +1580,7 @@ c_set_acc(state_t *s)
 		return 1;
 	}
 
-	s->acc = cmd_params[0].val;
+	s->acc = (gint16) (cmd_params[0].val);
 	return 0;
 }
 
@@ -2435,7 +2434,7 @@ c_se(state_t *s)
 }
 
 int
-c_statusbar(state_t *s) 
+c_statusbar(state_t *s)
 {
 	if (!s) {
 		sciprintf("Not in debug state\n");
@@ -2445,10 +2444,10 @@ c_statusbar(state_t *s)
 	s->titlebar_port->color=s->ega_colors[cmd_params[0].val];
 	s->titlebar_port->bgcolor=s->ega_colors[cmd_params[1].val];
 
-	s->status_bar_foreground=cmd_params[0].val;        
-	s->status_bar_background=cmd_params[1].val;        
+	s->status_bar_foreground=cmd_params[0].val;
+	s->status_bar_background=cmd_params[1].val;
 
-	sciw_set_status_bar(s, s->titlebar_port, s->status_bar_text, 
+	sciw_set_status_bar(s, s->titlebar_port, s->status_bar_text,
 			    s->status_bar_foreground,
 			    s->status_bar_background);
 	gfxop_update(s->gfx_state);

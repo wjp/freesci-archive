@@ -32,6 +32,7 @@
 #else
 #  include <SDL.h>
 #  include <SDL_thread.h>
+#  include <sci_win32.h>
 #  include <windows.h>
 #endif
 

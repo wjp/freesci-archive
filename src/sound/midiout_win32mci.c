@@ -27,6 +27,7 @@
 
 #ifdef _WIN32
 
+#include <sci_win32.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>

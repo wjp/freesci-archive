@@ -565,6 +565,10 @@ SOURCE=..\include\graphics_ddraw.h
 
 SOURCE=..\include\win32\messages.h
 # End Source File
+# Begin Source File
+
+SOURCE=..\include\win32\sci_win32.h
+# End Source File
 # End Group
 # Begin Group "SDL"
 
@@ -640,6 +644,10 @@ SOURCE=..\..\..\SDL\include\SDL_mouse.h
 # Begin Source File
 
 SOURCE=..\..\..\SDL\include\SDL_mutex.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_name.h
 # End Source File
 # Begin Source File
 

@@ -1,7 +1,6 @@
 /***************************************************************************
  sci_pic_0.c Copyright (C) 2000 Christoph Reichenbach
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -821,12 +820,12 @@ _gfxr_auxplot_brush(gfxr_pic_t *pic, byte *buffer, int yoffset, int offset, int 
 
 			srand(randseed);
 
-			x -= (sizex * rand()*1.0)/(RAND_MAX + 1.0);
-			x += (sizex * rand()*1.0)/(RAND_MAX + 1.0);
-			y -= (sizey * rand()*1.0)/(RAND_MAX + 1.0);
-			y += (sizey * rand()*1.0)/(RAND_MAX + 1.0);
-			sizex = (sizex * rand()*1.0)/(RAND_MAX + 1.0);
-			sizey = (sizey * rand()*1.0)/(RAND_MAX + 1.0);
+			x -= (int) ((sizex * rand()*1.0)/(RAND_MAX + 1.0));
+			x += (int) ((sizex * rand()*1.0)/(RAND_MAX + 1.0));
+			y -= (int) ((sizey * rand()*1.0)/(RAND_MAX + 1.0));
+			y += (int) ((sizey * rand()*1.0)/(RAND_MAX + 1.0));
+			sizex = (int) ((sizex * rand()*1.0)/(RAND_MAX + 1.0));
+			sizey = (int) ((sizey * rand()*1.0)/(RAND_MAX + 1.0));
 
 			_gfxr_fill_ellipse(pic, buffer, line_width, x, y, pic->mode->xfact >> 1, pic->mode->yfact >> 1,
 					   color, ELLIPSE_SOLID);

@@ -56,7 +56,7 @@ kSetJump(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	SCIkdebug(SCIkBRESEN, "t1: %d, t2: %d\n", t1, t2);
 
 	if (t2) {
-		x = sqrt(abs((gy * dx * dx) / (2 * t2)));
+		x = (int)sqrt(abs((gy * dx * dx) / (2 * t2)));
 		if (t2 *dx < 0)
 			x = -x;
 	}
@@ -64,7 +64,7 @@ kSetJump(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (dx >= 0)
 		y=-y;
 	if ((dy < 0) && (!y))
-		y = -sqrt(-2 * gy * dy);
+		y = -(int)sqrt(-2 * gy * dy);
 
 	SCIkdebug(SCIkBRESEN, "SetJump for object at %x", object);
 	SCIkdebug(SCIkBRESEN, "xStep: %d, yStep: %d\n", x, y);

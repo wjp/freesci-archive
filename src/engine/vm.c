@@ -1,7 +1,6 @@
 /***************************************************************************
  vm.c Copyright (C) 1999, 2000, 2001 Christoph Reichenbach
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -1419,7 +1418,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 		else if (objtype == sci_obj_synonyms) {
 			s->scripttable[script_nr].synonyms_offset = pos + 4; /* +4 is to step over the header */
 			s->scripttable[script_nr].synonyms_nr = (objlength) / 4;
-			if (GET_HEAP(s->scripttable[script_nr].synonyms_offset + 
+			if (GET_HEAP(s->scripttable[script_nr].synonyms_offset +
 				     ((s->scripttable[script_nr].synonyms_nr - 1) << 2)) < 0)
 				/* Adjust for "terminal" synonym entries */
 				--s->scripttable[script_nr].synonyms_nr;
@@ -1521,7 +1520,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 
 		pos -= 4; /* Step back on header */
 
-	} while ((objtype != 0) && ((pos - script_basepos) < script->size - 2));
+	} while ((objtype != 0) && (((unsigned)pos - script_basepos) < script->size - 2));
 
 	/*    if (script_nr == 0)   sci_hexdump(s->heap + script_basepos +2, script->size-2, script_basepos);*/
 	return s->scripttable[script_nr].heappos;
@@ -1636,7 +1635,7 @@ _game_run(state_t *s, int restoring)
 			putInt16(s->heap + s->stack_base, (word)s->selector_map.play); /* Call the play selector */
 
 			putInt16(s->heap + s->stack_base + 2, 0);
-			send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
+			send_selector(s, s->game_obj, s->game_obj, (heap_ptr) (s->stack_base + 2), 4, 0, s->stack_base);
 
 			script_abort_flag = 0;
 			s->restarting_flags = SCI_GAME_WAS_RESTARTED | SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE;
@@ -1658,7 +1657,7 @@ _game_run(state_t *s, int restoring)
 					s->execution_stack_pos = -1; /* Resatart with replay */
 					putInt16(s->heap + s->stack_base, (word)s->selector_map.replay); /* Call the replay selector */
 					putInt16(s->heap + s->stack_base + 2, 0);
-					send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
+					send_selector(s, s->game_obj, s->game_obj, (heap_ptr) (s->stack_base + 2), 4, 0, s->stack_base);
 				}
 
 				script_abort_flag = 0;
@@ -1682,7 +1681,7 @@ game_run(state_t **_s)
 	putInt16(s->heap + s->stack_base + 2, 0);                    /* ... with 0 arguments. */
 
 	/* Now: Register the first element on the execution stack- */
-	if (!send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base) || script_error_flag) {
+	if (!send_selector(s, s->game_obj, s->game_obj, (heap_ptr) (s->stack_base + 2), 4, 0, s->stack_base) || script_error_flag) {
 		sciprintf("Failed to run the game! Aborting...\n");
 		return 1;
 	}

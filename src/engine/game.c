@@ -32,6 +32,7 @@
 #	pragma message("for this build to be successful. Download MS SDKs from:")
 #	pragma message("www.microsoft.com/msdownload/platformsdk/sdkupdate")
 #	pragma message("***********************************************************")
+#	include <windows.h>
 #	if (WINVER < 0x500)
 #		error *** BUILD FAILED: Need more recent SDKs or fix your SDK paths in Tools Options ***
 #	endif

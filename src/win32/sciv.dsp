@@ -154,6 +154,10 @@ SOURCE=..\include\event.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\include\games.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\include\win32\getopt.h
 # End Source File
 # Begin Source File
