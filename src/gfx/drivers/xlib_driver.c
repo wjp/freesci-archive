@@ -414,7 +414,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	      ERROR("ARGH!  Can't attach shared memory segment\n");
 	      have_shmem = 0;
 	    }
-	    shmctl(S->shm[i]->shmid, IPC_RMID, 0);
+	    /*	    shmctl(S->shm[i]->shmid, IPC_RMID, 0); */
 	  }
 
 	  if (have_shmem) {	    
@@ -496,18 +496,17 @@ xlib_exit(struct _gfx_driver *drv)
 		for (i = 0; i < 3; i++) {
 #ifdef HAVE_MITSHM
 		  if (have_shmem && S->shm[i]) {
-		    XShmDetach(S->display, S->shm[i]);
 		    XFreePixmap(S->display, S->visual[i]);
+		    XShmDetach(S->display, S->shm[i]);
 
-		    if (S->shm[i]->shmaddr)		    
-		      shmdt(S->shm[i]->shmaddr);
 		    if (S->shm[i]->shmid >=0)
 		      shmctl(S->shm[i]->shmid, IPC_RMID, 0);
+		    if (S->shm[i]->shmaddr)		    
+		      shmdt(S->shm[i]->shmaddr);
 
 		    free(S->shm[i]);
 		    S->shm[i] = NULL;
-		  }
-		if (S->visual[i])
+		  } else
 #endif
 		    XFreePixmap(S->display, S->visual[i]);
 		}
