@@ -115,8 +115,11 @@ int decrypt1(guint8 *dest, guint8 *src, int length, int complength)
 						    length, destctr, tokenlastlength);
 #endif
 
-					    for (; destctr<length; destctr++)
+					    i = 0;
+					    for (; destctr<length; destctr++) {
 					      dest[destctr++] = dest [tokenlist[token]+i];
+					      i++;
+					    }
 					  } else
 					for (i=0; i< tokenlastlength; i++) {
 						dest[destctr++] = dest[tokenlist[token]+i];

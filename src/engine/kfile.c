@@ -482,7 +482,7 @@ kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 #ifndef HAVE_FNMATCH_H
 #ifndef _DOS
-# warn "File matches will be unprecise!"
+#  warning "File matches will be unprecise!"
 #endif
     s->acc = !strcmp(path1_s, path2_s);
 #else

@@ -1,5 +1,9 @@
 2001-05-20  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/tools/sciunpack.c: added support for gcc-3.0
+
+	* src/scicore/decompress0.c (decrypt1): Fixed bug
+
 	* src/scicore/modules.c: Generic fixes
 
 2001-05-19  Christoph Reichenbach  <jameson@linuxgames.com>

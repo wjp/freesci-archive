@@ -53,7 +53,7 @@
 
 /*Prints an error message and returns (from the function using the macro)*/
 #define FLEXARRAY_PANIC(message, errorcode) do{\
-	fprintf##message;\
+	fprintf ##message;\
 	errorcode;\
 } while(0)
 

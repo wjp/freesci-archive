@@ -168,8 +168,9 @@ int main(int argc, char** argv)
 			       "This is free software, released under the GNU General Public License.\n");
 			exit(0);
 	  
-		case 'h':
-			printf("Usage: sciunpack [options] [-U] <resource.number>\n"
+		case 'h': {
+			char *gcc_3_0_can_kiss_my_ass =
+			       "Usage: sciunpack [options] [-U] <resource.number>\n"
 			       "       sciunpack [options] [-U] <resource> <number>\n"
 			       "Unpacks resource data\n"
 			       "If * is specified instead of <number>, \n"
@@ -215,8 +216,11 @@ int main(int argc, char** argv)
 			       "  picture resources: Will be converted to PNG, stored in <number>.png\n"
 
 #endif /* DRAW_GRAPHICS */
-			       );
+				;
+
+			printf(gcc_3_0_can_kiss_my_ass);
 			exit(0);
+		}
 
 		case 'v':
 			verbose = 1;

@@ -9,6 +9,7 @@ gfxdriver_LTLIBRARIES = @ac_xlib_o@ @ac_ggi_o@ @ac_sdl_o@
 noinst_LIBRARIES = libscidrivers.a
 libscidrivers_a_SOURCES = gfx_drivers.c
 
+
 xlib_driver_la_LDFLAGS = -rpath $(gfxdriverdir) -module -no-undefined \
 			 -export-symbols $(srcdir)/EXPORTS_xlib
 xlib_driver_la_LIBADD = @X_LIBS@
@@ -23,4 +24,5 @@ sdl_driver_la_LDFLAGS = -rpath $(gfxdriverdir) -module -no-undefined \
 			-export-symbols $(srcdir)/EXPORTS_sdl
 sdl_driver_la_LIBADD =  @SDL_LIBS@
 sdl_driver_la_SOURCES = sdl_driver.c
+
 

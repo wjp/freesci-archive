@@ -50,7 +50,7 @@
 # ifdef AF_UNIX
 #  define AF_LOCAL AF_UNIX
 # else
-#  warn Neither AF_LOCAL nor AF_UNIX are defined!
+#  warning Neither AF_LOCAL nor AF_UNIX are defined!
 #  undef HAVE_SOCKETPAIR
 # endif
 #endif
