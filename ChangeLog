@@ -1,3 +1,7 @@
+2001-01-15  Lars Skovlund  <lskovlun@image.dk>
+
+	* Added extended Clone() functionality.
+
 2001-01-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* Applied Solomon's patches for dmalloc support, a free(NULL)

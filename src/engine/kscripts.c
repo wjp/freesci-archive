@@ -208,6 +208,17 @@ kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
     s->clone_list[i] = new_offs; /* Log this clone */
   else SCIkwarn(SCIkWARNING, "Could not log clone at %04x\n", new_offs);
 
+  /* Now, optionally set new selector values (late SCI0+ functionality) */
+  if (argc>1)
+    SCIkdebug(SCIkMEM, "Clone() called with extended functionality\n");
+  
+  for (i=1;i<argc;i+=2)
+  {
+    int selector = UPARAM(i);
+    int value = UPARAM(i+1);
+    
+    write_selector(s, new_offs, selector, value, __FUNCTION__, __LINE__);
+  }
 }
 
 
