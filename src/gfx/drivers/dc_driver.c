@@ -37,6 +37,8 @@
 #include <gfx_driver.h>
 #include <gfx_tools.h>
 
+#include "keyboard.h"
+
 /* Event queue struct */
 
 struct dc_event_t {
@@ -195,7 +197,8 @@ vram_init_gfx(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	int vidres = 0, vidcol = 0;
 
 	/* Center screen vertically */
-	S->visual[2] = (byte *) vram_s+320*xfact*20*yfact*bytespp;
+	/* S->visual[2] = (byte *) vram_s+320*xfact*20*yfact*bytespp; */
+	S->visual[2] = (byte *) vram_s;
 
 	S->line_pitch[2] = 320*xfact*bytespp;
 
@@ -225,6 +228,9 @@ vram_init_gfx(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	}
 		
 	vid_set_mode(vidres, vidcol);
+
+	vkbd_init((uint16 *) (S->visual[2] + 320 * xfact * 200 * yfact * bytespp));
+	vkbd_draw();
 }
 
 static int
@@ -520,6 +526,35 @@ dc_input_thread(struct _gfx_driver *drv)
 				event.buckybits = bucky;
 				dc_add_event(drv, &event);
 				mstate &= ~DC_MOUSE_RIGHT;
+			}
+			{
+				static int timer;
+				static unsigned int cstate;
+
+				if (timer > 0)
+					timer--;
+				if ((cont->buttons != cstate) || !timer) {
+					cstate = cont->buttons;
+					timer = 15;
+					if (cstate & CONT_DPAD_RIGHT)
+						vkbd_handle_input(KBD_RIGHT);
+					if (cstate & CONT_DPAD_LEFT)
+						vkbd_handle_input(KBD_LEFT);
+					if (cstate & CONT_DPAD_UP)
+						vkbd_handle_input(KBD_UP);
+					if (cstate & CONT_DPAD_DOWN)
+						vkbd_handle_input(KBD_DOWN);
+					if (cstate & CONT_A) {
+						int key = vkbd_get_key();
+						if (key)
+						{
+							event.type = SCI_EVT_KEYBOARD;
+							event.data = key;
+							event.buckybits = 0;
+							dc_add_event(drv, &event);
+						}
+					}
+				}
 			}
 		}
 		else drv->capabilities &= ~GFX_CAPABILITY_MOUSE_SUPPORT;

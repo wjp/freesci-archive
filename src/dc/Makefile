@@ -10,6 +10,7 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/dc/dc.o \
 	$(FSCI_BASE)/src/dc/dc_save.o \
 	$(FSCI_BASE)/src/dc/gamemenu.o \
+	$(FSCI_BASE)/src/dc/keyboard.o \
 	$(FSCI_BASE)/src/dc/selectgame.o \
 	$(FSCI_BASE)/src/dc/snd_stream.o \
 	$(FSCI_BASE)/src/dc/snprintf.o \
