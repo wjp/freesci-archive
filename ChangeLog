@@ -1,5 +1,9 @@
 2003-07-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sfx/seq/mt32.c (MAGIC_MIDIOUT_DELAY): Slowed down MT-32 MIDI
+	output during initialisation to avoid execution buffer overflows in
+	KQ1
+
 	* src/gfx/drivers/xlib_driver.c (x_map_key): Allow all printable
 	ASCII characters to be returned by the xlib driver
 

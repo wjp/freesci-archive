@@ -160,6 +160,15 @@ midiout_write_block(byte *buf, int len, int delta)
 	return midi_writer->write(midi_writer, buf, len);
 }
 
+/* The following is the result of some experimenting, trying to approach the MT32's processing speed */
+#define MAGIC_MIDIOUT_DELAY 15
+
+static int
+midiout_write_delayed_block(byte *buf, int len)
+{
+	return midiout_write_block(buf, len, len * MAGIC_MIDIOUT_DELAY);
+}
+
 /* send default rhythm map and reserve */
 int midi_mt32_defaults(guint8 volume, guint8 reverb) {
 	printf("MT-32: Writing Default Rhythm key map\n");
@@ -365,7 +374,7 @@ midi_mt32_poke(guint32 address, guint8 *data, unsigned int count)
 	sysex_buffer[count + 8] = checksum & 0x7F;
 	sysex_buffer[count + 9] = 0xF7;
 
-	midiout_write_block(sysex_buffer, count + 10, 0);
+	midiout_write_delayed_block(sysex_buffer, count + 10);
 	midi_writer->flush(midi_writer);
 	midi_mt32_sysex_delay();
 
@@ -394,7 +403,7 @@ midi_mt32_poke_gather(guint32 address, guint8 *data1, unsigned int count1,
 	sysex_buffer[count1 + count2 + 8] = checksum & 0x7F;
 	sysex_buffer[count1 + count2 + 9] = 0xF7;
 
-	midiout_write_block(sysex_buffer, count1 + count2 + 10, 0);
+	midiout_write_delayed_block(sysex_buffer, count1 + count2 + 10);
 	midi_writer->flush(midi_writer);
 	midi_mt32_sysex_delay();
 	return count1 + count2 + 10;
@@ -409,18 +418,19 @@ midi_mt32_write_block(guint8 *data, unsigned int count)
 
 	while (i < count) {
 		if ((data[i] == 0xF0) && (i != block_start)) {
-			midiout_write_block(data + block_start, i - block_start, 0);
+			midiout_write_delayed_block(data + block_start, i - block_start);
 			block_start = i;
 		}
 		if (data[i] == 0xF7) {
-			midiout_write_block(data + block_start, i - block_start + 1, 0);
+			midiout_write_delayed_block(data + block_start, i - block_start + 1);
 			midi_mt32_sysex_delay();
 			block_start = i + 1;
 		}
 		i++;
 	}
 	if (count >= block_start) {
-		if (midiout_write_block(data + block_start, count - block_start, 0) != (count - block_start)) {
+		if (midiout_write_delayed_block(data + block_start, count - block_start
+					) != (count - block_start)) {
 			fprintf(stderr, "midi_mt32_write_block(): midiout_write_block failed!\n");
 			return 1;
 		}
