@@ -1,3 +1,8 @@
+2001-02-09  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/soundserver_null.c (sound_null_server): No longer
+	decrement number of loops if looping indefinitely
+
 2001-02-08  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/resource/sci_cursor_0.c: Fixed SCI0 cursors to use
