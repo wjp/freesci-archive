@@ -1,5 +1,14 @@
 2002-12-16  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/dc/dc.c, src/dc/dc.h, src/dc/bsearch.c, src/dc/snprintf.c:
+	Added these files to the repository. They implement the following
+	functions for the Dreamcast port: localtime(), remove(), vfprintf(),
+	getcwd(), strerror(), bsearch(), snprintf(), vsnprintf().
+	* src/dc/LICENSE.txt: Added to the repository. This license is used by
+	snprintf.c.
+
+2002-12-16  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/include/pcmout.h: Added reference to Dreamcast pcmout driver.
 
 	* configure.in: Have configure check for existence of fcntl.h.
