@@ -339,6 +339,16 @@ gfxr_draw_view1(int id, byte *resource, int size);
 ** Returns   : (gfxr_view_t *) The resulting view
 */
 
+gfx_pixmap_t *
+gfxr_endianness_adjust(gfx_pixmap_t *pixmap, gfx_mode_t *mode);
+/* Endianness-adjusts a pixmap, if neccessary
+** Parameters: (gfx_pixmap_t *) pixmap: The pixmap to adjust
+**             (gfx_mode_t *) mode: The mode to adjust it for
+** Returns   : (gfx_pixmap_t *) pixmap, or NULL on error
+** The pixmap is adjusted iff the mode signals that this is
+** required (by means of setting the appropriate flag), and
+** the mode has a byte depth of more than 1.
+*/
 
 
 static inline int

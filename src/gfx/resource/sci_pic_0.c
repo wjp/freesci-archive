@@ -1658,10 +1658,36 @@ _gfxr_vismap_remove_artifacts_old(gfxr_pic_t *pic)
 
 
 inline static void
-check_and_remove_artifact(byte *dest, int src, int legalcolor)
+check_and_remove_artifact(byte *dest, byte* srcp, int legalcolor, byte l, byte r, byte u, byte d)
 {
-	if (*dest == legalcolor && src != legalcolor)
-		*dest = src;
+	if (*dest == legalcolor) {
+		if (*srcp == legalcolor)
+			return;
+		if (l) {
+			if (srcp[-1] == legalcolor)
+				return;
+			if (u && srcp[-320 - 1] == legalcolor)
+				return;
+			if (d && srcp[320 - 1] == legalcolor)
+				return;
+		}
+		if (r) {
+			if (srcp[1] == legalcolor)
+				return;
+			if (u && srcp[-320 + 1] == legalcolor)
+				return;
+			if (d && srcp[320 + 1] == legalcolor)
+				return;
+		}
+
+		if (u && srcp[-320] == legalcolor)
+			return;
+
+		if (d && srcp[-320] == legalcolor)
+			return;
+
+		*dest = *srcp;
+	}
 }
 
 
@@ -1687,15 +1713,17 @@ gfxr_remove_artifacts_pic0(gfxr_pic_t *dest, gfxr_pic_t *src)
 		for (x_320 = 0; x_320 < 320; x_320++) {
 			int write_offset = (y_200 * bound_y * scaled_line_size) + (x_320 * bound_x);
 			int sub_x, sub_y;
-			int src_visual = src->visual_map->index_data[read_offset];
-			int src_priority = src->priority_map->index_data[read_offset];
+			byte *src_visualp = &(src->visual_map->index_data[read_offset]);
+			byte *src_priorityp = &(src->priority_map->index_data[read_offset]);
 
 			for (sub_y = 0; sub_y < bound_y; sub_y++) {
 				for (sub_x = 0; sub_x < bound_x; sub_x++) {
 					check_and_remove_artifact(dest->visual_map->index_data + write_offset,
-								  src_visual, 0xff);
+								  src_visualp, 0xff,
+								  x_320, x_320<319, y_200>10, y_200<199);
 					check_and_remove_artifact(dest->priority_map->index_data + write_offset,
-								  src_priority, 0);
+								  src_priorityp, 0,
+								  x_320, x_320<319, y_200>10, y_200<199);
 					++write_offset;
 				}
 				write_offset += scaled_line_size - bound_x;
@@ -2071,7 +2099,6 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			/* WARNING( "ARTIFACT REMOVAL CODE is commented out!") */
 			/* _gfxr_vismap_remove_artifacts(); */
 			return;
-			break;
 
 		default: GFXWARN("Unknown op %02x\n", op);
 			return;

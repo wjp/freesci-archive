@@ -230,6 +230,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	int ysize = yfact * 200;
 	XSizeHints *size_hints;
         XImage *foo_image = NULL;
+	int reverse_endian = 0;
 	int i;
 
 	if (!S)
@@ -336,6 +337,11 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 				 bytespp << 3, ZPixmap, 0, malloc(23), 2, 2, 8, 0);
 
 	bytespp_physical = foo_image->bits_per_pixel >> 3;
+#ifdef WORDS_BIGENDIAN
+	reverse_endian = foo_image->byte_order == LSBFirst;
+#else
+	reverse_endian = foo_image->byte_order == MSBFirst;
+#endif	
 	XDestroyImage(foo_image);
 
 #ifdef HAVE_MITSHM
@@ -393,7 +399,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 
 	alpha_mask = xvisinfo.red_mask | xvisinfo.green_mask | xvisinfo.blue_mask;
-	if (bytespp_physical == 4 && (!(alpha_mask & 0xff000000) || !(alpha_mask & 0xff))) {
+	if (!reverse_endian && bytespp_physical == 4 && (!(alpha_mask & 0xff000000) || !(alpha_mask & 0xff))) {
 		if (alpha_mask & 0xff) {
 			alpha_mask = 0xff000000;
 			alpha_shift = 0;
@@ -486,7 +492,8 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 				 xvisinfo.red_mask, xvisinfo.green_mask,
 				 xvisinfo.blue_mask, alpha_mask,
 				 red_shift, green_shift, blue_shift, alpha_shift,
-				 (bytespp == 1)? xvisinfo.colormap_size : 0, 0);
+				 (bytespp == 1)? xvisinfo.colormap_size : 0,
+				 (reverse_endian)? GFX_MODE_FLAG_REVERSE_ENDIAN : 0);
 
 #ifdef HAVE_MITSHM
 	if (have_shmem) {

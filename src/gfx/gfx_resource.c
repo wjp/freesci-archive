@@ -72,6 +72,141 @@ gfxr_free_view(gfx_driver_t *driver, gfxr_view_t *view)
 }
 
 
+static void
+pixmap_endianness_reverse_2_simple(byte *data, int area)
+{
+        int c;
+        for (c = 0; c < area; c++) {
+                byte val = *data;
+                *data = data[1];
+                data[1] = val;
+
+                data += 2;
+        }
+}
+
+static void
+pixmap_endianness_reverse_2(byte *data, int area)
+{
+        int c;
+        int sl = sizeof(unsigned long);
+
+        for (c = 0; c < (area & ~(sl-1)); c += (sl>>1)) {
+                unsigned long temp;
+
+                memcpy(&temp, data, sl);
+
+                /* The next line will give warnings on 32 bit archs, but
+                ** that's OK.  */
+                temp = ((temp & 0xff00ff00ff00ff00l) >> 8)
+                        | ((temp & 0x00ff00ff00ff00ffl) << 8);
+
+                memcpy(data, &temp, sl);
+
+                data += sl;
+        }
+
+        pixmap_endianness_reverse_2_simple(data, area & (sl-1));
+}
+
+static void
+pixmap_endianness_reverse_3_simple(byte *data, int area)
+{
+        int c;
+        for (c = 0; c < area; c++) {
+                byte val0 = data[0];
+
+                data[0] = data[2];
+                data[2] = val0;
+
+                data += 3;
+        }
+}
+
+static void
+pixmap_endianness_reverse_4_simple(byte *data, int area)
+{
+        int c;
+        for (c = 0; c < area; c++) {
+                byte val0 = data[0];
+                byte val1 = data[1];
+
+                data[0] = data[3];
+                data[3] = val0;
+
+                data[1] = data[2];
+                data[2] = val1;
+
+                data += 4;
+        }
+}
+
+static void
+pixmap_endianness_reverse_4(byte *data, int area)
+{
+        int c;
+        int sl = sizeof(unsigned long);
+
+        for (c = 0; c < (area & ~(sl-1)); c += (sl>>2)) {
+                unsigned long temp;
+
+                memcpy(&temp, data, sl);
+
+                /* The next lines will give warnings on 32 bit archs, but
+                ** that's OK.  */
+                temp = ((temp & 0xffff0000ffff0000l) >> 16)
+                        | ((temp & 0x0000ffff0000ffffl) << 16);
+                temp = ((temp & 0xff00ff00ff00ff00l) >> 8)
+                        | ((temp & 0x00ff00ff00ff00ffl) << 8);
+
+                memcpy(data, &temp, sl);
+
+                data += sl;
+        }
+
+        pixmap_endianness_reverse_4_simple(data, area & (sl-1));
+}
+
+gfx_pixmap_t *
+gfxr_endianness_adjust(gfx_pixmap_t *pixmap, gfx_mode_t *mode)
+{
+        int bytespp;
+        byte *data;
+
+        if (!pixmap || !pixmap->data || !mode) {
+                GFXERROR("gfxr_endianness_adjust(): Invoked with invalid values");
+                return NULL;
+        }
+
+        if (!(mode->flags & GFX_MODE_FLAG_REVERSE_ENDIAN))
+                return pixmap;
+
+        bytespp = mode->bytespp;
+
+        data = pixmap->data;
+
+        switch (bytespp) {
+        case 1:
+                break;
+
+        case 2: pixmap_endianness_reverse_2(data, pixmap->xl
+                                            * pixmap->yl);
+        break;
+
+        case 3: pixmap_endianness_reverse_3_simple(data, pixmap->xl
+                                            * pixmap->yl);
+        break;
+
+        case 4: pixmap_endianness_reverse_4(data, pixmap->xl * pixmap->yl);
+        break;
+
+        default: fprintf(stderr,"gfxr_endianness_adjust(): Cannot adjust endianness for %d bytespp!\n", bytespp);
+                return NULL;
+        }
+
+        return pixmap;
+}
+
 
 /* Now construct the pixmap scaling functions */
 #define EXTRA_BYTE_OFFSET 0

@@ -32,8 +32,8 @@
 #  define O_SYNC 0
 #endif
 
-static int fd;
-static char *devicename = "c:\\win32mci.txt";
+/* static int fd; */
+LPHMIDIOUT devicename;
 
 static int win32mci_lastwrote = 0;
 
@@ -52,9 +52,9 @@ midiout_win32mci_set_parameter(struct _midiout_driver *drv, char *attribute, cha
 
 int midiout_win32mci_open()
 {
-	int numdevs				= 0;
-	MMRESULT ret;
-	MIDIOUTCAPS devicecaps;
+	int numdevs				= 0;	/* total number of MIDIout devices */
+	MMRESULT ret;					/* return value of MCI calls */
+	MIDIOUTCAPS devicecaps;			/* device capabilities structure */
 	int loop				= 0;
 	
 	numdevs = midiOutGetNumDevs();
@@ -94,19 +94,33 @@ int midiout_win32mci_open()
 
 	}
 	
-	if ((fd = open(devicename, O_WRONLY|O_SYNC)) < 0) 
+	ret = midiOutOpen(&devicename, 1, NULL, NULL, NULL);
+	if (MMSYSERR_NOERROR != ret)
 	{
-	    fprintf(stderr, "Open failed (%d): %s\n", fd, devicename);
-	    exit;
+		fprintf(stderr, "Something went wrong opening device %d: %s\n",
+			loop, ret);
+		exit;
 	}
+		else
+		{
+			fprintf(stderr, "Successfully opened MCI MIDI device\n");
+		}
+
 	return 0;
 }
 
 int midiout_win32mci_close()
 {
-  if (close(fd) < 0)
-    return -1;
-  return 0;
+	MMRESULT ret;
+
+	ret = midiOutClose(devicename);
+	if (MMSYSERR_NOERROR != ret)
+	{
+		fprintf(stderr, "Something went wrong closing the MIDI output device!: %s\n", ret);
+		return -1;
+	}
+
+	return 0;
 }
 
 int midiout_win32mci_flush()
@@ -118,16 +132,33 @@ int midiout_win32mci_flush()
 
 int midiout_win32mci_write(guint8 *buffer, unsigned int count)
 {
-  int rval = 0;
-  /*  printf("writing %d (%d)-- %02x %02x %02x\n", count, fd, 
-      buffer[0], buffer[1], buffer[2]); */
-  rval = write(fd, buffer, count);
-  if (rval != count) {
-    printf("write error on fd %d: %d -- %d\n", fd, rval, errno);
-    rval = -1;
-  }
-  win32mci_lastwrote = rval;
-  return rval;
+	unsigned int loop = 0;
+	MMRESULT ret;
+
+	for (loop = 0; loop < count; loop++)
+	{
+		ret = midiOutShortMsg(devicename, buffer[loop]);
+		if (ret != MMSYSERR_NOERROR) 
+		{
+			printf("write error on MIDI device: ");
+			switch(ret)
+			{
+				case MIDIERR_BADOPENMODE: printf("MIDIERR_BADOPENMODE\n");
+				case MIDIERR_NOTREADY: printf("MIDIERR_NOTREADY\n");
+				case MMSYSERR_INVALHANDLE: printf("MMSYSERR_INVALHANDLE\n");
+				default: printf("Unknown error!\n");
+			}
+			return -1;
+		}
+
+		printf("writing %d (%d)-- %02x %02x %02x\n", loop, count, 
+			buffer[0], buffer[1], buffer[2]); 
+		
+	}
+  
+  win32mci_lastwrote = loop;
+  
+  return loop;
 }
 
 midiout_driver_t midiout_driver_win32mci = {

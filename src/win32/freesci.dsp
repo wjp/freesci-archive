@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Zi /I "..\include" /I "..\..\..\SDL-1.2.0\include" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.2\" /D "HAVE_STRING_H" /D "HAVE_GETOPT_H" /D "HAVE_SDL" /FR /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Zi /I "..\..\..\SDL-1.2.0\include" /I "..\include" /I "..\include\win32" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /D VERSION=\"0.3.2\" /D "HAVE_SDL" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D "HAVE_STRING_H" /D "HAVE_GETOPT_H" /D "HAVE_USLEEP" /FR /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x419 /d "NDEBUG"

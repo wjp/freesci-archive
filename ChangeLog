@@ -1,3 +1,25 @@
+2001-04-23  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/resource/sci_pic_0.c (gfxr_remove_artifacts_pic0): 
+	Removing artifacts is now slightly more permissive
+
+2001-04-23  Matt Hargett  <matt@use.net>
+	
+	* Updated project/workspace files to define HAVE_USLEEP.
+
+	* Updated win32mci drivers, getting near functional!
+
+	* Updated freesci.def to reflect API changes.
+
+
+2001-04-23  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/xlib_driver.c (xlib_init_specific): Added check
+	to detect reverse endianness
+
+	* src/gfx/resmgr.c:
+	* src/gfx/gfx_resource.c: Added support for reversing endianness
+
 2001-04-22  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/scriptdebug.c (c_sndmap): Added snd and sndmap commands

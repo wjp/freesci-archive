@@ -46,7 +46,7 @@ EXPORTS
 ;  draw_pic0
 ;  graph_get_default_driver
 ;  gfx_drivers DATA
-  sfx_drivers DATA
+;  sound_server_drivers DATA
   sci_ffs
   class_names DATA
   version_parse
@@ -93,6 +93,9 @@ EXPORTS
   midi_device_mt32 DATA
   midi_device_mt32gm DATA
   midiout_driver_win32mci
+  sound_server_find_driver
+  sound_servers
+
 
   test_savegame
   sci_find_first
