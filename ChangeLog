@@ -1,3 +1,12 @@
+1999-08-26  Dmitry Jemerov  <yole@exch.nnz.spb.su>
+        * src/core/kernel.c (kFOpen) using UPARAM(0) instead of
+        PARAM(0) (fixes a crash in LSL3). (kOnControl) now supports
+        calling with 2 or 4 parameters (as it had in PQ2 - fixes
+        a crash with it). (kIsObject) fixed another problem with
+        PQ2.
+        * src/core/scriptdebug.c (disassemble): Heap offsets are
+        now printed for each disassembled command.
+
 1999-08-25  Dmitry Jemerov  <yole@exch.nnz.spb.su>
         * src/main.c (main): Added support for command line options.
         Added options --gamedir (-d), --run (-r), --sci-version (-v).

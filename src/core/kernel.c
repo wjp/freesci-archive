@@ -206,7 +206,7 @@ else { s->heap[(guint16) address] = (value) &0xff;               \
 #endif /* !SCI_KERNEL_DEBUG */
 
 #define PARAM(x) ((gint16) getInt16(s->heap + argp + ((x)*2)))
-#define UPARAM(x) ((guint16) getInt16(s->heap + argp + ((x)*2)))
+#define UPARAM(x) ((guint16) getUInt16(s->heap + argp + ((x)*2)))
 
 #define PARAM_OR_ALT(x, alt) ((x < argc)? PARAM(x) : (alt))
 #define UPARAM_OR_ALT(x, alt) ((x < argc)? UPARAM(x) : (alt))
@@ -699,7 +699,7 @@ kIsObject(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr offset = PARAM(0);
 
-  if (offset < 100)
+  if (offset < 800)
     s->acc = 0;
   else
     s->acc = (GET_HEAP(offset + SCRIPT_OBJECT_MAGIC_OFFSET) == SCRIPT_OBJECT_MAGIC_NUMBER);
@@ -951,7 +951,7 @@ kDisposeList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kFOpen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  char *filename = s->heap + PARAM(0);
+  char *filename = s->heap+UPARAM(0);
   int mode = PARAM(1);
   int retval = 1; /* Ignore file_handles[0] */
   FILE *file = NULL;
@@ -2358,14 +2358,28 @@ kNumCels(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int map = PARAM(0);
-  int xstart = PARAM(2);
-  int ystart = PARAM(1);
+  /* [DJ] in Police Quest 2 (0.000.395), OnControl has only 4 (2) parameters
+     and always works with the special map. We can autodetect it without
+     using versions.h.
+  */
+  int arg=0;
+
+  int map, xstart, ystart;
   int xlen = 1, ylen = 1;
 
+  if (argc == 2 || argc == 4)
+    map = 4;
+  else {
+    map = PARAM(0);
+    arg = 1;
+  }
+
+  xstart = PARAM(arg+1);
+  ystart = PARAM(arg);
+
   if (argc > 3) {
-    xlen = PARAM(4) - xstart + 1;
-    ylen = PARAM(3) - ystart + 1;
+    xlen = PARAM(arg+3) - xstart + 1;
+    ylen = PARAM(arg+2) - ystart + 1;
   }
 
   s->acc = graph_on_control(s, xstart, ystart + 10, xlen, ylen, map);

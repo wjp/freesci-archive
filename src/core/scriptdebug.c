@@ -194,7 +194,7 @@ disassemble(state_t *s, heap_ptr pos)
 
   opsize &= 1; /* byte if true, word if false */
 
-  sciprintf(" [%c] %s", opsize? 'B' : 'W', s->opcodes[opcode].name);
+  sciprintf("%04X: [%c] %s", pos, opsize? 'B' : 'W', s->opcodes[opcode].name);
 
   while (formats[opcode][i])
 
