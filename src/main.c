@@ -379,15 +379,15 @@ typedef struct {
 	int script_debug_flag;
 	int scale_x, scale_y, color_depth;
 	int mouse;
-        int show_rooms;
+	int show_rooms;
 	sci_version_t version;
 	int res_version;
 	char *gfx_driver_name;
 	char *gamedir;
-        char *midiout_driver_name;
-        char *midi_device_name;
-        char *sound_server_name;
-        char *pcmout_driver_name;
+	char *midiout_driver_name;
+	char *midi_device_name;
+	char *sound_server_name;
+	char *pcmout_driver_name;
 } cl_options_t;
 
 #define ON 1
@@ -461,7 +461,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			break;
 
 		case 's':
-		        cl_options->show_rooms = 1;
+			cl_options->show_rooms = 1;
 			break;
 
 		case 'D':
@@ -490,25 +490,25 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			cl_options->gfx_driver_name = sci_strdup(optarg);
 			break;
 		case 'O':
-		        if (cl_options->midiout_driver_name)
-		            free(cl_options->midiout_driver_name);
-		        cl_options->midiout_driver_name = sci_strdup(optarg);
-		        break;
+			if (cl_options->midiout_driver_name)
+				free(cl_options->midiout_driver_name);
+			cl_options->midiout_driver_name = sci_strdup(optarg);
+			break;
 		case 'P':
-		        if (cl_options->pcmout_driver_name)
-		            free(cl_options->pcmout_driver_name);
-		        cl_options->pcmout_driver_name = sci_strdup(optarg);
-		        break;
+			if (cl_options->pcmout_driver_name)
+				free(cl_options->pcmout_driver_name);
+			cl_options->pcmout_driver_name = sci_strdup(optarg);
+			break;
 		case 'M':
-		        if (cl_options->midi_device_name)
-		            free(cl_options->midi_device_name);
-		        cl_options->midi_device_name = sci_strdup(optarg);
-		        break;
+			if (cl_options->midi_device_name)
+				free(cl_options->midi_device_name);
+			cl_options->midi_device_name = sci_strdup(optarg);
+			break;
 		case 'S':
-		        if (cl_options->sound_server_name)
-		            free(cl_options->sound_server_name);
-		        cl_options->sound_server_name = sci_strdup(optarg);
-		        break;
+			if (cl_options->sound_server_name)
+				free(cl_options->sound_server_name);
+			cl_options->sound_server_name = sci_strdup(optarg);
+			break;
 		case '?':
 			/* getopt_long already printed an error message. */
 			exit(1);
@@ -980,7 +980,7 @@ main(int argc, char** argv)
 	if (cl_options.version)
 		version = cl_options.version;
 	else 
-	        version = guess_version();
+		version = guess_version();
 
 	getcwd(resource_dir, PATH_MAX); /* Store resource directory */
 
@@ -1002,7 +1002,7 @@ main(int argc, char** argv)
 	}
 
 	script_adjust_opcode_formats(resmgr->sci_version);
-	
+
 	check_features();
 
 	chdir(startdir);
@@ -1202,8 +1202,8 @@ main(int argc, char** argv)
 #if 0
 	/* Configure the pcmout driver */
 	{
-	        pcmout_sample_rate = active_conf->pcmout_rate;
-	        pcmout_stereo = active_conf->pcmout_stereo;
+		pcmout_sample_rate = active_conf->pcmout_rate;
+		pcmout_stereo = active_conf->pcmout_stereo;
 	}
 
 	/* Configure the midiout driver */
@@ -1273,7 +1273,7 @@ main(int argc, char** argv)
 		gamestate->sound_server->command(gamestate, get_msg_value("SOUND_COMMAND_SET_VOLUME"), 0, 0xc);
 
 		}
-		
+
 		gamestate->sound_server->get_event(gamestate); /* Get init message */
 		/* FIXME: memory allocated that is not freed */
 	}

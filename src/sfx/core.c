@@ -44,6 +44,12 @@ static sfx_timer_t *timer = NULL;
 #define MILLION 1000000
 
 int
+sfx_pcm_available()
+{
+	return (pcm_device != NULL);
+}
+
+int
 sfx_get_player_polyphony(void)
 {
 	if (player)
@@ -154,31 +160,48 @@ _update(sfx_state_t *self)
 		self->song = newsong;
 		_thaw_time(self); /* Recover song delay time */
 
-		if (newsong && (player || mixer)) {
+		/* Effects are now played by players */
+/* 		if (newsong && (player || mixer)) { */
+/* 			song_iterator_t *clonesong = songit_clone(newsong->it); */
+
+/* 			if (sfx_play_iterator_pcm(clonesong, newsong->handle)) */
+/* 				clonesong = NULL; */
+
+/* 			if (player && clonesong) { */
+/* 				player->set_iterator(clonesong, */
+/* 						     self->wakeup_time); */
+/* 				clonesong = NULL; */
+/* 			} */
+
+/* 			if (clonesong) */
+/* 				songit_free(clonesong); */
+/* 		} */
+		if (newsong && player) {
 			song_iterator_t *clonesong = songit_clone(newsong->it);
 
-			if (mixer) {
-				sfx_pcm_feed_t *newfeed = sfx_iterator_feed(clonesong);
-				if (newfeed) {
-					clonesong = NULL;
-					newfeed->debug_nr = (int) newsong->handle;
-					mixer->subscribe(mixer, newfeed);
-				}
-			}
-
-			if (player && clonesong) {
-				player->set_iterator(clonesong,
-						     self->wakeup_time);
-				clonesong = NULL;
-			}
-
-			if (clonesong)
-				songit_free(clonesong);
+			player->set_iterator(clonesong,
+					     self->wakeup_time);
 		}
 	}
 }
 
 static int _sfx_timer_active = 0; /* Timer toggle */
+
+int
+sfx_play_iterator_pcm(song_iterator_t *it, song_handle_t handle)
+{
+	song_iterator_t *clonesong = songit_clone(it);
+	if (mixer) {
+		sfx_pcm_feed_t *newfeed = sfx_iterator_feed(clonesong);
+		if (newfeed) {
+			newfeed->debug_nr = (int) handle;
+			mixer->subscribe(mixer, newfeed);
+			return 1;
+		}
+	}
+	songit_free(clonesong);
+	return 0;
+}
 
 static void
 _sfx_timer_callback(void *data)

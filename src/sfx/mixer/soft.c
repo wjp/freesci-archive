@@ -235,11 +235,11 @@ mix_exit(sfx_pcm_mixer_t *self)
 #ifdef DEBUG
 	sciprintf("[soft-mixer] Uninitialising mixer\n");
 #endif
-}	
+}
 
 
 
-#define LIMIT_16_BITS(v) 			\
+#define LIMIT_16_BITS(v)			\
 		if (v < -32767)			\
 			v = -32768;		\
 		else if (v > 32766)		\
@@ -257,7 +257,7 @@ mix_compute_output(sfx_pcm_mixer_t *self, int outplen)
 	gint32 *rsrc = P->compbuf_r;
 	int frame_size = SFX_PCM_FRAME_SIZE(conf);
 
- 
+
 	if (!P->writebuf)
 		P->writebuf = sci_malloc(self->dev->buf_size * frame_size);
 
@@ -388,7 +388,7 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_frames)
 	}
 	else
 		usecs -= P->skew;
-	
+
 	frame_pos = FRAME_OFFSET(usecs);
 
 	played_frames = P->played_this_second - frame_pos

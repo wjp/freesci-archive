@@ -67,6 +67,9 @@ pp_init(resource_mgr_t *resmgr, int expected_latency)
 {
 	resource_t *res = NULL;
 
+	if (!mixer)
+		return SFX_ERROR;
+
 	seq = sfx_find_softseq(NULL);
 
 	if (!seq) {
@@ -112,6 +115,8 @@ pp_set_iterator(song_iterator_t *it, GTimeVal start_time)
 	SIMSG_SEND(it, SIMSG_SET_PLAYMASK(seq->playmask));
 	SIMSG_SEND(it, SIMSG_SET_RHYTHM(seq->play_rhythm));
 	play_it = it;
+
+	seq->allstop(seq);
 	seq->set_volume(seq, volume);
 
 	return SFX_OK;
@@ -207,7 +212,10 @@ ppf_poll(sfx_pcm_feed_t *self, byte *dest, int size)
 			int next_stat = play_it->next(play_it, &(buf[0]), &buf_nr);
 
 			switch (next_stat) {
-			case SI_PCM: /* Should this be happening? */
+			case SI_PCM:
+				sfx_play_iterator_pcm(play_it, 0);
+				break;
+
 			case SI_FINISHED:
 				songit_free(play_it);
 				play_it = NULL;
@@ -221,7 +229,7 @@ ppf_poll(sfx_pcm_feed_t *self, byte *dest, int size)
 				seq->handle_command(seq, buf[0], buf_nr - 1, buf+1);
 				break;
 
-			default: 
+			default:
 				time_counter += next_stat * seq->pcm_conf.rate;
 			}
 		}

@@ -1,3 +1,18 @@
+2004-02-02  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/ksound.c (kDoSound_SCI0): Added support for SCI1 song
+	playing
+
+	* src/sfx/iterator.c: Added SCI1 song iterators 
+
+	* src/sfx/player/polled.c (play_song): Added PCM playing support
+
+	* src/sfx/player/realtime.c (play_song): Added PCM playing support
+
+	* src/sfx/core.c (sfx_play_iterator_pcm): PCM playing has now been
+	deferred to song players, to allow for more than one sample to be
+	embedded in a song.
+
 2004-01-06  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sfx/iterator.c (_sci0_read_next_command): Song iterators now

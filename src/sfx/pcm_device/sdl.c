@@ -1,6 +1,6 @@
 /***************************************************************************
  sdl.c Copyright (C) 2002 Solomon Peachy, Claudio Matsuoka,
- 		     2003,04  Christoph Reichenbach
+		     2003,04  Christoph Reichenbach
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
@@ -161,7 +161,7 @@ pcmout_sdl_init(sfx_pcm_device_t *self)
 
 	frame_size = SFX_PCM_FRAME_SIZE(self->conf);
 
-	sfx_audbuf_init(&audio_buffer, self->conf); 
+	sfx_audbuf_init(&audio_buffer, self->conf);
 	SDL_PauseAudio (0);
 
 	return SFX_OK;

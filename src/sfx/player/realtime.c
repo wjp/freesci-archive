@@ -106,7 +106,10 @@ play_song(song_iterator_t *it, GTimeVal *wakeup_time, int writeahead_time)
 
 		case SI_LOOP:
 		case SI_CUE:
+			break;
+
 		case SI_PCM:
+			sfx_play_iterator_pcm(play_it, 0);
 			break;
 
 		case 0:

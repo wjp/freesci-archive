@@ -52,10 +52,11 @@
 
 /* States */
 
-#define SI_STATE_UNINITIALIZED -1
+#define SI_STATE_UNINITIALISED -1
 #define SI_STATE_DELTA_TIME 0 /* Now at a delta time */
 #define SI_STATE_COMMAND 1 /* Now at a MIDI operation */
-#define SI_STATE_FINISHED 2 /* End of song */
+#define SI_STATE_PCMWAIT 2 /* End of song */
+#define SI_STATE_FINISHED 3 /* Waiting for PCM to be picked up */
 
 
 #define SI_FINISHED -1 /* Song finished playing */
@@ -167,33 +168,36 @@ typedef struct _song_iterator {
 
 #define MIDI_CHANNELS 16
 
+#define BASE_SONG_ITERATOR_BODY \
+	INHERITS_SONG_ITERATOR; /* aka "extends song iterator" */				\
+												\
+	int flags[MIDI_CHANNELS]; /* Flags for each channel */					\
+	int polyphony[MIDI_CHANNELS]; /* # of simultaneous notes on each */			\
+	int instruments[MIDI_CHANNELS]; /* Instrument number for each channel */		\
+	int velocity[MIDI_CHANNELS]; /* Velocity for each channel (0 for "mute") */		\
+	int pressure[MIDI_CHANNELS]; /* Channel pressure (MIDI Dx command) */			\
+	int pitch[MIDI_CHANNELS]; /* Pitch wheel */						\
+	int channel_map[MIDI_CHANNELS]; /* Number of HW channels to use */			\
+	int reverb[MIDI_CHANNELS]; /* Reverb setting for the channel */				\
+												\
+	unsigned int size; /* Song size */							\
+	int offset; /* Current read offset in data */						\
+	int loop_offset; /* Loopback position */						\
+	int loops; /* Number of loops */							\
+												\
+	unsigned char last_cmd; /* Last MIDI command, for 'running status' mode */		\
+												\
+	int state; /* SI_STATE_* */								\
+	int ccc; /* Cumulative cue counter, for those who need it */				\
+	unsigned char resetflag; /* for 0x4C -- on DoSound StopSound, do we return to start? */	\
+	int playmask; /* Active playmask, default 0 */						\
+	int play_rhythm; /* Active rhythm channel, default 0 */					\
+												\
+	unsigned char *data
+
+
 typedef struct _base_song_iterator {
-	INHERITS_SONG_ITERATOR; /* aka "extends song iterator" */
-
-	int flags[MIDI_CHANNELS]; /* Flags for each channel */
-	int polyphony[MIDI_CHANNELS]; /* # of simultaneous notes on each */
-	int instruments[MIDI_CHANNELS]; /* Instrument number for each channel */
-	int velocity[MIDI_CHANNELS]; /* Velocity for each channel (0 for "mute") */
-	int pressure[MIDI_CHANNELS]; /* Channel pressure (MIDI Dx command) */
-	int pitch[MIDI_CHANNELS]; /* Pitch wheel */
-	int channel_map[MIDI_CHANNELS]; /* Number of HW channels to use */
-	int reverb[MIDI_CHANNELS]; /* Reverb setting for the channel */
-
-	unsigned int size; /* Song size */
-	int offset; /* Current read offset in data */
-	int loop_offset; /* Loopback position */
-	int loops; /* Number of loops */
-
-	unsigned char last_cmd; /* Last MIDI command, for 'running status' mode */
-
-	int state; /* SI_STATE_* */
-	int ccc; /* Cumulative cue counter, for those who need it */
-	unsigned char resetflag; /* for 0x4C -- on DoSound StopSound, do we return to start? */
-	int playmask; /* Active playmask, default 0 */
-	int play_rhythm; /* Active rhythm channel, default 0 */
-
-	unsigned char *data;
-
+	BASE_SONG_ITERATOR_BODY;
 } base_song_iterator_t;
 
 
@@ -246,6 +250,15 @@ songit_clone(song_iterator_t *it);
 ** Parameters: (song_iterator_t *) it: The iterator to clone
 ** Returns   : (song_iterator_t *) A shallow clone of 'it'.
 ** This performs a clone on the bottom-most part (containing the actual song data) _only_. 
+*/
+
+int
+sfx_play_iterator_pcm(song_iterator_t *it, unsigned long handle);
+/* Plays a song iterator that found a PCM through a PCM device, if possible
+** Parameters: (song_iterator_t *) it: The iterator to play
+**             (song_handle_t) handle: Debug handle
+** Returns   : (int) 0 if the effect will not be played, nonzero if it will
+** This assumes that the last call to 'it->next()' returned SI_PCM.
 */
 
 sfx_pcm_feed_t *
