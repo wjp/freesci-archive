@@ -2776,6 +2776,8 @@ objinfo(state_t *s, reg_t pos)
 			  selector_name(s, VM_OBJECT_GET_FUNCSELECTOR(obj, i)),
 			  PRINT_REG(fptr));
 	}
+	if (s->seg_manager.heap[pos.segment]->type==MEM_OBJ_SCRIPT)
+		sciprintf("\nOwner script:\t%d\n", s->seg_manager.heap[pos.segment]->data.script.nr);
 	return 0;
 }
 

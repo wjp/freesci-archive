@@ -870,7 +870,7 @@ run_vm(state_t *s, int restoring)
 					}
 				} else {
 					r_ptr = r_temp;
-					offset = r_temp.offset;
+					offset = s->r_acc.offset;
 				}
 
 				s->r_acc = pointer_add(s, r_ptr, offset);

@@ -179,7 +179,7 @@ reg_t kFsciEmu(struct _state *s, int funct_nr, int argc, reg_t *argv);
 
 
 sci_kernel_function_t kfunct_mappers[] = {
-/*00*/	{KF_NEW, "Load", {new:{kLoad, "ii"}}},
+/*00*/	{KF_NEW, "Load", {new:{kLoad, "ii*"}}},
 /*01*/	{KF_NEW, "UnLoad", {new:{kUnLoad, "i."}}},
 /*02*/	{KF_NEW, "ScriptID", {new:{kScriptID,  "ii*"}}},
 /*03*/	{KF_NEW, "DisposeScript", {new:{kDisposeScript, "i"}}},
@@ -303,7 +303,7 @@ sci_kernel_function_t kfunct_mappers[] = {
   /* Experimental functions */
 /*74*/	{KF_OLD, "FileIO", {old:kFileIO}},
 /*(?)*/	{KF_NEW, "Memory", {new:{kMemory, "i.*"}}},
-/*(?)*/	{KF_OLD, "Sort", {old:kSort}},
+/*(?)*/	{KF_NEW, "Sort", {new:{kSort, "ooo"}}},
 /*(?)*/	{KF_NEW, "AvoidPath", {new:{kAvoidPath, ".iiIO.*"}}},
 /*(?)*/	{KF_OLD, "Lock", {old:kLock}},
 

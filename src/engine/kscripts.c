@@ -111,8 +111,13 @@ invoke_selector(state_t *s, reg_t object, int selector_id, int noinvalid, int kf
 	xstack = send_selector(s, object, object,
 			       stackframe, framesize, stackframe);
 
+	xstack->sp+=argc+2;
+	xstack->fp+=argc+2;
+
 	run_vm(s, 0); /* Start a new vm */
 
+	xstack->sp-=argc+2;
+	xstack->fp-=argc+2;
 	--(s->execution_stack_pos); /* Get rid of the extra stack entry */
 
 	return 0;
@@ -126,8 +131,9 @@ is_object(state_t *s, reg_t object)
 }
 
 
-/* kLoad(restype, resnr):
-** Loads an arbitrary resource of type 'restype' with resource number 'resnr'
+/* kLoad(restype, resnrs ... ):
+** Loads arbitrary resources of type 'restype' with resource numbers 'resnrs'
+** This implementation ignores all resource numbers except the first one.
 */
 reg_t
 kLoad(state_t *s, int funct_nr, int argc, reg_t *argv)

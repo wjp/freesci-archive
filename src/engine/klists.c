@@ -507,60 +507,73 @@ kDeleteKey(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 typedef struct
 {
-	int key, value;
+	reg_t key, value;
 	int order;
 } sort_temp_t;
 
-void
-kSort(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kSort(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-#ifdef __GNUC__
-#warning "Fix kSort()"
-#endif
-#if 0
-	heap_ptr source = UPARAM(0);
-	heap_ptr dest = UPARAM(1);
-	heap_ptr order_func = UPARAM(2);
+	reg_t source = argv[0];
+	reg_t dest = argv[1];
+	reg_t order_func = argv[2];
 
-	int input_size = UGET_SELECTOR(source, size);
-	heap_ptr input_data = UGET_SELECTOR(source, elements);
-	heap_ptr output_data = UGET_SELECTOR(dest, elements);
+	int input_size = GET_SEL32SV(source, size);
 
-	heap_ptr node;
 	int i = 0, j, ordval;
+
 	sort_temp_t *temparray = (sort_temp_t *) 
 		malloc(sizeof(sort_temp_t)*input_size);
 
-	if (input_size)
+	reg_t input_data = GET_SEL32(source, elements);
+	reg_t output_data = GET_SEL32(dest, elements);
+
+	list_t *list;
+	node_t *node;
+
+	if (!input_size)
 		return;
 
-	PUT_SELECTOR(dest, size, input_size);
+	if (IS_NULL_REG(output_data))
+	{
+		list = s->seg_manager.alloc_list(&s->seg_manager, &output_data);
+		list->first = list->last = NULL_REG;
+		PUT_SEL32(dest, elements, output_data);
+	}
 
-	node = UGET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
+	PUT_SEL32V(dest, size, input_size);
+
+	list = LOOKUP_NULL_LIST(input_data);
+
+	node = LOOKUP_NODE(list->first);
 
 	while (node)
 	{
-		ordval=invoke_selector(INV_SEL(order_func, doit, 0), 1, UGET_HEAP(node + LIST_NODE_VALUE));
+		invoke_selector(INV_SEL(order_func, doit, 0), 1, node->value);
+
+		ordval=s->r_acc.offset;
 
 		j=i-1;
-		while (j>0)
+		while (j>=0)
 		{
 			if (ordval>temparray[j].order)
 				break;
 			j--;
 		}
-		temparray[j+1].key=UGET_HEAP(node + LIST_NODE_KEY);
-		temparray[j+1].value=UGET_HEAP(node + LIST_NODE_VALUE);
-		temparray[j+1].order=ordval;
+		j++;
+
+		memmove(&(temparray[j+1]),&(temparray[j]),(i-j)*sizeof(sort_temp_t));
+		temparray[j].key=node->key;
+		temparray[j].value=node->value;
+		temparray[j].order=ordval;
 		i++;
-		node=UGET_HEAP(node + LIST_NEXT_NODE);
+		node=LOOKUP_NODE(node->succ);
 	}
 
 	for (i=0;i<input_size;i++)
 	{
-		node = _k_new_node(s, temparray[i].key,
-				   temparray[i].value);
+		reg_t node = _k_new_node(s, temparray[i].key,
+					 temparray[i].value);
 		_k_add_to_end(s, output_data, node);
 	}
-#endif
 }

@@ -1,3 +1,16 @@
+2002-12-07  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kstring.c (kStrCpy): Implemented support for negative
+	string lengths.
+	* src/engine/kernel.c (kLoad): Fixed kernel signature.
+	* src/engine/klists.c (kSort): Properly implemented.
+	* src/engine/scriptdebug.c (objinfo): Now displays the number of
+	the owning script.
+	* src/engine/vm.c (run_vm): Fixed pointer arithmetic bug in the
+	add opcode. 
+	* src/engine/kscripts.c (invoke_selector): Fixed invocation with
+	parameters.
+	
 2002-11-29  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kevent.c (kGetEvent): Don't report insert mask on pointer
