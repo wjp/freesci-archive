@@ -1,5 +1,10 @@
 2003-01-30  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/engine/kgraphics.c (_find_view_priority): Corrected a typo.
+	This should fix many of the priority problems in KQ1.
+
+2003-01-30  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/gfx/drivers/sdl_driver.c: Removed GFX_CAPABILITY_WINDOWED flag.
 
 2003-01-29  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
