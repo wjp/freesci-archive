@@ -81,6 +81,12 @@
 /* Neither NetBSD nor Win32 have this function, although it's in POSIX 1b */
 #endif /* !HAVE_SCHED_YIELD */
 
+
+#define ACTION_PLAY 0
+#define ACTION_LIST_SAVEGAMES 1
+
+static int sciv_action = ACTION_PLAY;
+
 /*** HW/OS-dependant features ***/
 
 static void
@@ -169,13 +175,7 @@ get_readline_input(void)
 int
 init_directories(char *work_dir, char *game_id)
 {
-#ifdef _WIN32
-	char *homedir = getenv("WINDIR");
-#elif __unix__
-	char *homedir = getenv("HOME");
-#else
-#  error Please add a $HOME policy for your platform!
-#endif
+	char *homedir = sci_get_homedir();
 
 	printf("Initializing directories...\n");
 	if (!homedir) { /* We're probably not under UNIX if this happens */
@@ -357,7 +357,7 @@ typedef struct {
 #define DONTCARE -1
 
 static char *
-parse_arguments(int argc, char **argv, cl_options_t *cl_options)
+parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame_name)
 {
 	int c, i, optindex;
 #ifdef HAVE_GETOPT_LONG
@@ -375,6 +375,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 		{"scale-y", no_argument, 0, 'y'},
 		{"color-depth", no_argument, 0, 'c'},
 		{"disable-mouse", no_argument, 0, 'm'},
+		{"list-savegames", no_argument, 0, 'l'},
 		{0,0,0,0}
 	};
 
@@ -392,9 +393,9 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 	cl_options->mouse = ON;
 
 #ifdef HAVE_GETOPT_LONG
-	while ((c = getopt_long(argc, argv, "vrhmDd:V:g:x:y:c:M:O:", options, &optindex)) > -1) {
+	while ((c = getopt_long(argc, argv, "lvrhmDd:V:g:x:y:c:M:O:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_LONG */
-	while ((c = getopt(argc, argv, "vrhmDd:V:g:x:y:c:M:O:")) > -1) {
+	while ((c = getopt(argc, argv, "lvrhmDd:V:g:x:y:c:M:O:")) > -1) {
 #endif /* !HAVE_GETOPT_LONG */
 		switch (c) {
 
@@ -479,8 +480,8 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 			exit(0);
 
 		case 'h':
-			printf("Usage: sciv [options] [game name]\n"
-			       "Run a Sierra SCI game.\n"
+			printf("Usage: sciv [options] [game name] [savegame ID]\n"
+			       "Runs a Sierra SCI game.\n"
 			       "\n"
 			       EXPLAIN_OPTION("--gamedir dir\t", "-ddir", "read game resources from dir")
 			       EXPLAIN_OPTION("--run\t\t", "-r", "do not start the debugger")
@@ -495,6 +496,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 			       EXPLAIN_OPTION("--disable-mouse", "-m", "Disable support for pointing device")
 			       EXPLAIN_OPTION("--midiout drv\t", "-Odrv", "use the 'drv' midiout driver")
 			       EXPLAIN_OPTION("--mididevice drv", "-Mdrv", "use the 'drv' midi device (eg mt32 or adlib)")
+			       EXPLAIN_OPTION("--list-savegames", "-l", "Lists all savegame IDs")
 			       "\n"
 			       "The game name, if provided, must be equal to a game name as specified in the\n"
 			       "FreeSCI config file.\n"
@@ -503,6 +505,10 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 			       );
 			exit(0);
 
+		case 'l':
+			sciv_action = ACTION_LIST_SAVEGAMES;
+			break;
+
 		default:
 			exit(1);
 		}
@@ -510,6 +516,11 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options)
 #if 0
 	} /* Work around EMACS paren matching bug */
 #endif
+
+	if (optind+1 >= argc)
+		*savegame_name = NULL;
+	else
+		*savegame_name = argv[optind + 1];
 
 	if (optind == argc)
 		return NULL;
@@ -684,6 +695,32 @@ lookup_driver(lookup_funct_t lookup_func, void explain_func(void),
 	return retval;
 }
 
+#define NAMEBUF_LEN 30
+static void
+list_savegames(state_t *s)
+{
+	sci_dir_t dir;
+	char *filename;
+
+	sci_init_dir(&dir);
+
+	filename = sci_find_first(&dir, "*");
+
+
+	sciprintf("\nSavegame listing:\n"
+		  "-----------------\n");
+	while (filename) {
+		char namebuf[NAMEBUF_LEN + 1];
+		if (test_savegame(s, filename, namebuf, NAMEBUF_LEN)) {
+			if (namebuf[0])
+				sciprintf("%s:\t\"%s\"\n", filename, namebuf);
+			else
+				sciprintf("%s\n", filename);
+		}
+		filename = sci_find_next(&dir);
+	}
+	sciprintf("-----------------\n");
+}
 
 int
 main(int argc, char** argv)
@@ -701,10 +738,11 @@ main(int argc, char** argv)
 	char *midiout_driver_name = NULL;
 	char *midi_device_name = NULL;
 	char *game_name;
+	char *savegame_name;
 	sci_version_t version = 0;
 	gfx_driver_t *gfx_driver = NULL;
 
-	game_name = parse_arguments(argc, argv, &cl_options);
+	game_name = parse_arguments(argc, argv, &cl_options, &savegame_name);
 
 	getcwd(startdir, PATH_MAX);
 	script_debug_flag = cl_options.script_debug_flag;
@@ -779,6 +817,12 @@ main(int argc, char** argv)
 		fprintf(stderr,"Error resolving the working directory\n");
 		exit(1);
 	}
+
+	if (sciv_action == ACTION_LIST_SAVEGAMES) {
+		list_savegames(gamestate);
+		exit(0);
+	}
+
 	gamestate->resource_dir = resource_dir;
 	gamestate->work_dir = work_dir;
 
@@ -931,8 +975,11 @@ main(int argc, char** argv)
 	gamestate->have_mouse_flag = (cl_options.mouse == DONTCARE)?
 		conf[conf_nr].mouse : cl_options.mouse;
 
-	game_run(&gamestate); /* Run the game */
 
+	if (savegame_name)
+		game_restore(&gamestate, savegame_name);
+	else
+		game_run(&gamestate); /* Run the game */
 
 	if (gamestate->sfx_driver)
 		gamestate->sfx_driver->exit(gamestate); /* Shutdown sound daemon first */

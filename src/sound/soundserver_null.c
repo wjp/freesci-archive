@@ -241,7 +241,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 			song->status = SOUND_STATUS_STOPPED;
 			midi_allstop();
 			song->pos = 33;
-			song->loopmark = 0; /* Reset position */
+			song->loopmark = 33; /* Reset position */
 			sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_LOOP, -1);
 			sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_FINISHED, 0);
 
@@ -440,7 +440,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 							modsong->status = SOUND_STATUS_STOPPED;
 							if (modsong->resetflag) { /* only reset if we are supposed to. */
 							  modsong->pos = 33;
-							  modsong->loopmark = 0; /* Reset position */
+							  modsong->loopmark = 33; /* Reset position */
 							}
 							sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_FINISHED, 0);
 
@@ -732,7 +732,6 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 
 			if (command == SCI_MIDI_EOT) {
-
 				if ((--(song->loops) != 0) && song->loopmark) {
 				  if (debugging)
 				        fprintf(ds, "looping back from %d to %d on handle %04x\n",
@@ -744,7 +743,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 					song->status = SOUND_STATUS_STOPPED;
 					song->pos = 33;
-					song->loopmark = 0; /* Reset position */
+					song->loopmark = 33; /* Reset position */
 					sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_LOOP, -1);
 					sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_FINISHED, 0);
 					ticks = 1; /* Wait one tick, then continue with next song */

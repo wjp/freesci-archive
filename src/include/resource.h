@@ -32,6 +32,16 @@
 #ifndef FREESCI_PRIMARY_RESOURCE_H_
 #define FREESCI_PRIMARY_RESOURCE_H_
 
+/** This header file defines (mostly) generic tools and utility functions.
+ ** It also handles portability stuff, in cooperation with scitypes.h
+ ** (which specializes in primitive data types).
+ ** Most implementations of the functions found here are in
+ ** $(SRCDIR)/src/scicore/tools.c
+ **
+ ** -- Christoph Reichenbach
+ **/
+
+
 /*#define _SCI_RESOURCE_DEBUG */
 /*#define _SCI_DECOMPRESS_DEBUG*/
 
@@ -254,6 +264,14 @@ sciprintf(char *fmt, ...);
 **             ...: Additional parameters as defined in fmt
 ** Returns   : (int) 1
 ** Implementation is in src/scicore/console.c
+*/
+
+char *
+sci_get_homedir();
+/* Returns the user's home directory
+** Parameters: (void)
+** Returns   : (char *) Pointer to a static buffer containing the user's home,
+**                      or NULL if there is no such thing.
 */
 
 

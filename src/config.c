@@ -2068,7 +2068,7 @@ yywrap()
 int
 config_init(config_entry_t **_conf, char *conffile)
 {
-	char *homedir = getenv("HOME");
+	char *homedir = sci_get_homedir();
 	char *conf_path;
 	int i;
 

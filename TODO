@@ -1,11 +1,11 @@
 TODO for 0.3.2:
 
 Primary goals:
-	* Win32 port
+	-- all done --
 
 Secondary goals:
 	+ Fix DoAvoider
-	+ Fix DoBresen in the HQ and CB1 intros
+	+ Fix DoBresen in the CB1 intros
 	* LRU resource manager
 	* fix invalid (but consistent) shifting for word classes
 	  (is w[0] << 4 | (w[1] & 0xf0) >> 4, but should be w[0] | w[1] << 4).
@@ -20,9 +20,7 @@ Secondary goals:
 Bonus goals:
 	+ pic_0.c: Fix artifact removal to check surrounding pixels for
 	  occurences of	white before removing a white pixel
-	+ pic_0.c: Fix white spots in QfG1 forest
-	+ pic_0.c: Fix black line on left side in Erana's Peace
-	* Add any gfx driver of the following: glx, SDL
+	* Add glx graphics driver
 	* pic_0.c: Add SCI01 support (priority palettes and embedded views)
 	* pal_1.c: Fix palettes not to compress colors (doing this is pointless
 	  and wrong)

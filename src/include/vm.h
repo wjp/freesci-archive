@@ -484,6 +484,14 @@ game_run(struct _state **s);
 ** By the way, *s may be changed during the game, e.g. if a game state is restored.
 */
 
+int
+game_restore(struct _state **s, char *savegame_name);
+/* Restores an SCI game state and runs the game
+** Parameters: (state_t **) s: Pointer to the pointer of the state to operate on
+**             (char *) savegame_name: Name of the savegame to restore
+** Returns   : (int): 0 on success, 1 if an error occured.
+** This restores a savegame; otherwise, it behaves just like game_run().
+*/
 
 int
 game_exit(struct _state *s);
@@ -544,6 +552,18 @@ kfree(struct _state *s, int handle);
 ** Parameters: (state_t *) s: Pointer to the state_t to operate on
 **             (handle) space: The space to allocate
 ** Returns   : (int) 0 on success, 1 otherwise
+*/
+
+int
+test_savegame(struct _state *s, char *savegame_id, char *savegame_name, int savegame_name_length);
+/* Simple savegame validity check
+** Parameters: (state_t *) s: Pointer to the state_t to operate on
+**             (char *) savegame_id: Name of the savegame to check
+**             (char *) savegame_name: Pointer to a static buffer the savegame
+**                      name string should be stored in
+**             (int) savegame_name_length: Max. number of bytes to write into the
+**                   static string
+** Returns   : (int) 1 if it might be a savegame, 0 if not
 */
 
 #endif /* !_SCI_VM_H */

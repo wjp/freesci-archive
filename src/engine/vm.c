@@ -1502,27 +1502,14 @@ script_uninstantiate(state_t *s, int script_nr)
 }
 
 
-int
-game_run(state_t **_s)
+static state_t *
+_game_run(state_t *s, int restoring)
 {
 	state_t *successor = NULL;
-	state_t *s = *_s;
 	int game_is_finished = 0;
-
-	sciprintf(" Calling %s::play()\n", s->game_name);
-	putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector... */
-	putInt16(s->heap + s->stack_base + 2, 0);                    /* ... with 0 arguments. */
-
-	/* Now: Register the first element on the execution stack- */
-	if (!send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base) || script_error_flag) {
-		sciprintf("Failed to run the game! Aborting...\n");
-		return 1;
-	}
-	/* and ENGAGE! */
-
 	do {
 		s->execution_stack_pos_changed = 0;
-		run_vm(s, (successor)? 1 : 0);
+		run_vm(s, (successor || restoring)? 1 : 0);
 
 		if (s->restarting_flags & SCI_GAME_IS_RESTARTING_NOW) { /* Restart was requested? */
 
@@ -1549,7 +1536,7 @@ game_run(state_t **_s)
 				game_exit(s);
 				script_free_vm_memory(s);
 				free(s);
-				*_s = s = successor;
+				s = successor;
 
 				if (!send_calls_allocated)
 					send_calls = calloc(sizeof(calls_struct_t), send_calls_allocated = 16);
@@ -1569,6 +1556,50 @@ game_run(state_t **_s)
 				game_is_finished = 1;
 		}
 	} while (!game_is_finished);
+
+	return s;
+}
+
+int
+game_run(state_t **_s)
+{
+	state_t *s = *_s;
+
+	sciprintf(" Calling %s::play()\n", s->game_name);
+	putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector... */
+	putInt16(s->heap + s->stack_base + 2, 0);                    /* ... with 0 arguments. */
+
+	/* Now: Register the first element on the execution stack- */
+	if (!send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base) || script_error_flag) {
+		sciprintf("Failed to run the game! Aborting...\n");
+		return 1;
+	}
+	/* and ENGAGE! */
+	*_s = s = _game_run(s, 0);
+
+	sciprintf(" Game::play() finished.\n");
+	return 0;
+}
+
+int
+game_restore(state_t **_s, char *game_name)
+{
+	state_t *s;
+	int debug_state = _debugstate_valid;
+
+	sciprintf("Restoring savegame '%s'...\n", game_name);
+
+	s = gamestate_restore(*_s, game_name);
+
+	if (!s) {
+		sciprintf("Restoring gamestate '%s' failed.\n", cmd_params[0].str);
+		return 1;
+	}
+	_debugstate_valid = debug_state;
+	script_abort_flag = 0;
+	s->restarting_flags = 0;
+
+	*_s = s = _game_run(s, 1);
 
 	sciprintf(" Game::play() finished.\n");
 	return 0;

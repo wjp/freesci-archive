@@ -1,3 +1,14 @@
+After some feedback from a friend, I've updated the win32 bulid docs a
+little. Someone please check this in to CVS :)
+
+
+--
+http://www.clock.org/~matt
+
+
+-- Attached file included as plaintext by Listar --
+-- File: README.Win32
+
 Last updated 04-13-2001 by Matt Hargett <matt@use.net>
 
 The Win32 version of freesci is now almost at the same level of
@@ -10,7 +21,8 @@ same reason.
 You will need the following libraries tools to build freesci for Win32:
  * Visual C++ 6.0 with Service Pack 5 for Visual Studio installed.
  * The win32 platform SDK, and the DirectX SDK.
- * The SDL library: http://www.libsdl.org . You really only need sdl.dll.
+ * The SDL library: http://www.libsdl.org . You need to download the source
+	zip file.
 
 The project files assume the following directory structure:
 
@@ -18,9 +30,14 @@ The project files assume the following directory structure:
   \src
     \freesci
       \src
-        \win32  
+      \win32  
     \sdl-1.2.0
+      \include
+      \VisualC
 
+
+0. In the SDL-1.2.0 directory, unzip the VisualC.zip. Load their workspace,
+  and build a "Win32 - Release" binary.
 
 1. Go into the src\win32 directory and load the freesci workspace (freesci.dsw) into
   Visual C++ 6.
@@ -32,3 +49,5 @@ The project files assume the following directory structure:
   NOTE: sdl.dll MUST be in your path and/or in the same directory as freesci.dll.
 
 4. You should be good to go!
+
+

@@ -43,8 +43,8 @@
 static int _savegame_indices_nr = -1; /* means 'uninitialized' */
 
 static struct _savegame_index_struct {
-  int id;
-  long timestamp;
+	int id;
+	long timestamp;
 } _savegame_indices[MAX_SAVEGAME_NR];
 
 /* This assumes modern stream implementations. It may break on DOS. */
@@ -634,11 +634,46 @@ _k_find_savegame_by_name(char *game_id_file, char *name)
 	return 0;
 }
 
+
+int
+test_savegame(state_t *s, char *savegame_id, char *savegame_name, int savegame_name_length)
+{
+	int retval = 1;
+	char *game_id = s->game_name;
+	char *game_id_file = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
+
+	strcpy(game_id_file, game_id);
+	strcat(game_id_file, FREESCI_ID_SUFFIX);
+
+	if (chdir(savegame_id)) {
+		retval = 0; /* Couldn't enter savedir */
+	}  else {
+
+		if (_k_check_file(FREESCI_FILE_HEAP, SCI_HEAP_SIZE))
+			retval = 0;
+		if (_k_check_file(FREESCI_FILE_STATE, 1))
+			retval = 0;
+		if (savegame_name) {
+			if (_k_check_file(game_id_file, 1)) {
+				*savegame_name = 0;
+			} else {
+				int foo = open(game_id_file, O_RDONLY);
+				int bytes_read = read(foo, savegame_name, savegame_name_length);
+				savegame_name[MIN(bytes_read, savegame_name_length)] = 0; /* terminate */
+				close(foo);
+			}
+		} else if (_k_check_file(game_id_file, 1))
+			retval = 0;
+
+		chdir ("..");
+	}
+	free(game_id_file);
+	return retval;
+}
+
 void
 kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	char *game_id = (char *) (UPARAM(0) + s->heap);
-	char *game_id_file = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
 	int savedir_nr = UPARAM(1);
 	char *buf = NULL;
 
@@ -651,33 +686,14 @@ kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		return;
 	}
 
-	strcpy(game_id_file, game_id);
-	strcat(game_id_file, FREESCI_ID_SUFFIX);
-
 	if (savedir_nr > MAX_SAVEGAME_NR-1) {
 		s->acc = 0;
-		free(game_id_file);
 		return;
 	}
 
-	s->acc = 1;
+	s->acc = test_savegame(s, (buf = _k_get_savedir_name(savedir_nr)), NULL, 0);
 
-	if (chdir((buf = _k_get_savedir_name(savedir_nr)))) {
-		s->acc = 0; /* Couldn't enter savedir */
-	}  else {
-
-		if (_k_check_file(FREESCI_FILE_HEAP, SCI_HEAP_SIZE))
-			s->acc = 0;
-		if (_k_check_file(FREESCI_FILE_STATE, 1))
-			s->acc = 0;
-		if (_k_check_file(game_id_file, 1))
-			s->acc = 0;
-
-		chdir ("..");
-	}
 	free(buf);
-
-	free(game_id_file);
 }
 
 
@@ -696,18 +712,18 @@ kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 static long
 get_file_mtime_Unix(int fd) /* returns the  */
 {
-  struct stat fd_stat;
-  fstat(fd, &fd_stat);
+	struct stat fd_stat;
+	fstat(fd, &fd_stat);
 
-  return fd_stat.st_ctime;
+	return fd_stat.st_ctime;
 }
 
 
 static int
 _savegame_index_struct_compare(const void *a, const void *b)
 {
-  return ((struct _savegame_index_struct *)b)->timestamp
-    - ((struct _savegame_index_struct *)a)->timestamp;
+	return ((struct _savegame_index_struct *)b)->timestamp
+		- ((struct _savegame_index_struct *)a)->timestamp;
 }
 
 static void

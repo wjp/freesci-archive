@@ -1,5 +1,7 @@
 2001-04-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/main.c: Added quickrestore and --list-savegames options
+
 	* src/engine/kstring.c (kParse): We now set event::claimed: 0 on
 	successful parses.
 	(kSaid): Update internal state after doing final match

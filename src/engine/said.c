@@ -1483,7 +1483,7 @@ aug_find_words_recursively(parse_tree_node_t *tree, int startpos,
 
 	while (pos) {
 		if ((word = aug_get_wgroup(tree, pos))) { /* found a word */
-			sciprintf("Found word %03x in (%03x %03x\n", word, major, minor);
+
 			if (!refbranch && major == WORD_TYPE_BASE) {	
 				if ((*base_words_nr) == maxwords) {
 					sciprintf("Out of regular words\n");
