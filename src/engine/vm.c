@@ -855,8 +855,7 @@ run_vm(state_t *s, int restoring)
 	temp = xs->sp;
 	xs->sp -= (opparams[1] + (restadjust * 2)); /* Adjust stack */
 
-	xs_new = send_selector(s, *(s->classtable[opparams[0]].scriptposp)
-			       + s->classtable[opparams[0]].class_offset, xs->objp,
+	xs_new = send_selector(s, get_class_address(s,opparams[0]), xs->objp,
 			       temp, opparams[1], restadjust, xs->sp);
 	restadjust = 0;
 
@@ -1259,6 +1258,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 	unsigned int objlength;
 	heap_ptr script_basepos;
 	int magic_pos_adder; /* Usually 0; 2 for older SCI versions */
+
 	if (!script) {
 		sciprintf("Script 0x%x requested but not found\n", script_nr);
 		/*    script_debug_flag = script_error_flag = 1; */
@@ -1284,7 +1284,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 		script_debug_flag = script_error_flag = 1;
 		return 0;
 	}
-
+recursive = 1;
 	s->scripttable[script_nr].heappos = script_basepos + 2;
 	/* Set heap position (beyond the size word) */
 	s->scripttable[script_nr].lockers = 1; /* Locked by one */
@@ -1324,11 +1324,29 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 		if (objtype == sci_obj_exports)
 			s->scripttable[script_nr].export_table_offset = pos + 4; /* +4 is to step over the header */
     
-		if (objtype == sci_obj_synonyms) {
+		else if (objtype == sci_obj_synonyms) {
 			s->scripttable[script_nr].synonyms_offset = pos + 4; /* +4 is to step over the header */
 			s->scripttable[script_nr].synonyms_nr = (objlength - 4) / 4;
+
+		} else if (objtype == sci_obj_class) {
+			heap_ptr classpos = pos - SCRIPT_OBJECT_MAGIC_OFFSET + 4/* Header */;
+			int species = OBJ_SPECIES(classpos);
+
+			if (species < 0 || species >= s->classtable_size) {
+				sciprintf("Invalid species %d(0x%x) not in interval "
+					  "[0,%d) while instantiating script %d\n",
+					  species, species, s->classtable_size,
+					  script_nr);
+				script_debug_flag = script_error_flag = 1;
+				return 1;
+			}
+
+			s->classtable[species].class_offset = classpos - magic_pos_adder - script_basepos;
+			s->classtable[species].script = script_nr;
+			s->classtable[species].scriptposp = &(s->scripttable[script_nr].heappos);
+
 		}
-    
+
 		if (objtype == sci_obj_localvars)
 			s->scripttable[script_nr].localvar_offset = pos + 4; /* +4 is to step over the header */
 
@@ -1418,87 +1436,88 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 void
 script_uninstantiate(state_t *s, int script_nr)
 {
-  heap_ptr handle = s->scripttable[script_nr].heappos;
+	int i;
+	heap_ptr handle = s->scripttable[script_nr].heappos;
 #if 0
-  heap_ptr pos;
-  int objtype, objlength;
+	heap_ptr pos;
+	int objtype, objlength;
 #endif
 
-  if (!handle) {
-    /*    sciprintf("Warning: unloading script 0x%x requested although not loaded\n", script_nr); */
-    /* This is perfectly valid SCI behaviour */
-    return;
-  }
+	if (!handle) {
+		/*    sciprintf("Warning: unloading script 0x%x requested although not loaded\n", script_nr); */
+		/* This is perfectly valid SCI behaviour */
+		return;
+	}
 
 #if 0
-  /* Make a pass over the object in order uninstantiate all superclasses */
-  pos = handle;
+	/* Make a pass over the object in order uninstantiate all superclasses */
+	pos = handle;
 
-  objlength = 0;
+	objlength = 0;
 
-  sciprintf("Unlocking script.0x%x\n", script_nr);
-  if (s->scripttable[script_nr].lockers == 0)
-    return; /* This can happen during recursion */
+	sciprintf("Unlocking script.0x%x\n", script_nr);
+	if (s->scripttable[script_nr].lockers == 0)
+		return; /* This can happen during recursion */
 
-  --(s->scripttable[script_nr].lockers); /* One less locker */
+	--(s->scripttable[script_nr].lockers); /* One less locker */
 
-  do {
-    pos += objlength; /* Step over the last checked object */
+	do {
+		pos += objlength; /* Step over the last checked object */
 
-    objtype = GET_HEAP(pos);
-    objlength = UGET_HEAP(pos+2);
+		objtype = GET_HEAP(pos);
+		objlength = UGET_HEAP(pos+2);
 
-    pos += 4; /* Step over header */
+		pos += 4; /* Step over header */
 
-    if ((objtype == sci_obj_object) || (objtype == sci_obj_class)) { /* object or class? */
-      int superclass;
+		if ((objtype == sci_obj_object) || (objtype == sci_obj_class)) { /* object or class? */
+			int superclass;
 
-      pos -= SCRIPT_OBJECT_MAGIC_OFFSET;
+			pos -= SCRIPT_OBJECT_MAGIC_OFFSET;
 
-      superclass = OBJ_SUPERCLASS(pos); /* Get superclass */
+			superclass = OBJ_SUPERCLASS(pos); /* Get superclass */
 
-      fprintf(stderr, "SuperClass = %04x from pos %04x\n", superclass, pos);
+			fprintf(stderr, "SuperClass = %04x from pos %04x\n", superclass, pos);
 
-      if (superclass >= 0) {
-	int superclass_script = s->classtable[superclass].script;
+			if (superclass >= 0) {
+				int superclass_script = s->classtable[superclass].script;
 
-	if (superclass_script == script_nr) {
-	  if (s->scripttable[script_nr].lockers)
-	    --(s->scripttable[script_nr].lockers); /* Decrease lockers if this is us ourselves */
-	} else
-	  script_uninstantiate(s, superclass_script);
-	/* Recurse to assure that the superclass lockers number gets decreased */
-      }
+				if (superclass_script == script_nr) {
+					if (s->scripttable[script_nr].lockers)
+						--(s->scripttable[script_nr].lockers); /* Decrease lockers if this is us ourselves */
+				} else
+					script_uninstantiate(s, superclass_script);
+				/* Recurse to assure that the superclass lockers number gets decreased */
+			}
       
-      pos += SCRIPT_OBJECT_MAGIC_OFFSET;
-    } /* if object or class */
+			pos += SCRIPT_OBJECT_MAGIC_OFFSET;
+		} /* if object or class */
 
-    pos -= 4; /* Step back on header */
-    
-  } while (objtype != 0);
+		pos -= 4; /* Step back on header */
 
-  if (s->scripttable[script_nr].lockers)
-    return; /* if xxx.lockers > 0 */
+	} while (objtype != 0);
+
+	if (s->scripttable[script_nr].lockers)
+		return; /* if xxx.lockers > 0 */
 
   /* Otherwise unload it completely */
 #endif /* 0 */
   /* Explanation: I'm starting to believe that this work is done by SCI itself. */
 
-  s->scripttable[script_nr].heappos = 0;
+	s->scripttable[script_nr].heappos = 0;
 
-  if ((s->scripttable[script_nr].localvar_offset)&&
-      (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER))
-    heap_free(s->_heap, s->scripttable[script_nr].localvar_offset);
+	if ((s->scripttable[script_nr].localvar_offset)&&
+	    (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER))
+		heap_free(s->_heap, s->scripttable[script_nr].localvar_offset);
     
-  s->scripttable[script_nr].localvar_offset = 0;
-  s->scripttable[script_nr].export_table_offset = 0;
+	s->scripttable[script_nr].localvar_offset = 0;
+	s->scripttable[script_nr].export_table_offset = 0;
 
-  heap_free(s->_heap, handle - 2); /* Unallocate script on the heap */
+	heap_free(s->_heap, handle - 2); /* Unallocate script on the heap */
 
-  if (script_checkloads_flag)
-    sciprintf("Unloaded script 0x%x.\n", script_nr);
+	if (script_checkloads_flag)
+		sciprintf("Unloaded script 0x%x.\n", script_nr);
 
-  return;
+	return;
 }
 
 

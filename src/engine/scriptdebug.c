@@ -816,8 +816,10 @@ disassemble(state_t *s, heap_ptr pos)
 	else { /* op_super */
 	  called_obj_addr = s->heap[retval - 2];
 
-	  called_obj_addr = *(s->classtable[called_obj_addr].scriptposp)
-	    + s->classtable[called_obj_addr].class_offset;
+	  called_obj_addr = (s->classtable[called_obj_addr].scriptposp)?
+		  0 :
+		  *(s->classtable[called_obj_addr].scriptposp)
+		  + s->classtable[called_obj_addr].class_offset;
 	}
 
 	selector = getInt16(s->heap + *_sp - stackframe);

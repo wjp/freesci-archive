@@ -1,7 +1,12 @@
 2001-04-16  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/vm.c (script_instantiate): The class table is now
+	modified dynamically during run-time whenever a new script is loaded;
+	all of the scripts classes are now stored in that table.
+
 	* src/engine/kgraphics.c (kCanBeHere): Added collission checks against
 	the dynview list
+	(_k_make_view_list): Reversed widget sort order on sequence_nr once again
 
 	* src/gfx/drivers/xlib_driver.c (xlib_init_specific): Used physical
 	display depth in a few places.
