@@ -68,6 +68,9 @@ sound_null_init(state_t *s)
   ppid = getpid(); /* Get process ID */
   child_pid = fork();
 
+  s->sound_volume = 0xc;
+  s->sound_mute = 0;
+
   if (child_pid < 0) {
     fprintf(stderr,"NULL Sound server init failed: fork() failed\n");
     /* If you get this message twice, something funny has happened :-> */

@@ -186,7 +186,8 @@ extern DLLEXTERN sfx_driver_t *sfx_drivers[]; /* All available sound fx drivers,
 /* Resume all sound execution (issued when the interpreter is re-enabled after debugging) */
 #define SOUND_COMMAND_GET_NEXT_EVENT 17
 /* Request that the next event on the sound server should be transmitted */
-
+#define SOUND_COMMAND_GET_MUTE 18
+/* return the mute status of the system */
 
 #define SOUND_SIGNAL_CUMULATIVE_CUE 0
 /* Request for the specified HANDLE's signal to be increased */

@@ -344,14 +344,28 @@ sound_command(state_t *s, int command, int handle, int parameter)
 
     /* set the sound volume. */
   case SOUND_COMMAND_SET_VOLUME:
-    if (parameter > -1) { /* only set if != -1 */
-      s->sound_volume = parameter;
-      write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
+    if (parameter != 0xffff) { /* only set if != -1 */
+      
+      if (s-sound_mute) {
+	s->sound_mute = parameter;
+      } else {
+	s->sound_volume = parameter;
+	write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
+      }
+
     }
     return parameter;
 
+    /* return the mute status */
+  case SOUND_COMMAND_GET_MUTE:
+    if (s->sound_mute)
+      return 1;
+    else 
+      return 0;
+    
+    /* set the mute status */
   case SOUND_COMMAND_SET_MUTE:
-    if (parameter == 0) {  // ie mute
+    if (parameter == 1) {  // ie mute
       s->sound_mute = s->sound_volume;
       s->sound_volume = 0;
     } else {  // restore sound
@@ -378,12 +392,12 @@ sound_command(state_t *s, int command, int handle, int parameter)
     if (success) {
 
       read(s->sound_pipe_out[0], &dummy, sizeof(int)); /* Empty pipe */
-      return 0;
+      return 1;
 
     } else {
 
       fprintf(stderr,"Sound server timed out\n");
-      return 1;
+      return 0;
 
     }
   }    
