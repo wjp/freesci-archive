@@ -196,6 +196,7 @@ print_list(state_t *s, list_t *l)
 	sciprintf("\t>\n");
 }
 
+
 static void
 _c_single_seg_info(state_t *s, mem_obj_t *mobj)
 {
@@ -310,6 +311,135 @@ _c_single_seg_info(state_t *s, mem_obj_t *mobj)
 	default : sciprintf("Invalid type %d\n", mobj->type);
 		break;
 	}
+}
+
+static int
+show_node(state_t *s, reg_t addr)
+{
+
+	mem_obj_t *mobj = GET_SEGMENT(s->seg_manager, addr.segment, MEM_OBJ_LISTS);
+
+	if (mobj) {
+		list_table_t *lt = &(mobj->data.lists);
+		list_t *list;
+
+		if (!ENTRY_IS_VALID(lt, addr.offset)) {
+			sciprintf("Address does not contain a list\n");
+			return 1;
+		}
+
+		list = &(lt->table[addr.offset].entry);
+
+		sciprintf(PREG" : first x last = ("PREG", "PREG")\n",
+			  PRINT_REG(addr), PRINT_REG(list->first),
+			  PRINT_REG(list->last));
+	} else {
+		node_table_t *nt;
+		node_t *node;
+		mobj = GET_SEGMENT(s->seg_manager, addr.segment, MEM_OBJ_NODES);
+
+		if (!mobj) {
+			sciprintf("Segment #%04x is not a list or node segment\n", addr.segment);
+			return 1;
+		}
+
+		nt = &(mobj->data.nodes);
+
+		if (!ENTRY_IS_VALID(nt, addr.offset)) {
+			sciprintf("Address does not contain a node\n");
+			return 1;
+		}
+		node = &(nt->table[addr.offset].entry);
+
+		sciprintf(PREG" : prev x next = ("PREG", "PREG"); maps "PREG" -> "PREG"\n",
+			  PRINT_REG(addr),
+			  PRINT_REG(node->pred),
+			  PRINT_REG(node->succ),
+			  PRINT_REG(node->key),
+			  PRINT_REG(node->value));
+	}
+	return 0;
+}
+
+static int
+c_vr(state_t *s)
+{
+	reg_t reg = cmd_params[0].reg;
+	int type_mask = determine_reg_type(s, reg);
+	int filter;
+	int found = 0;
+
+	sciprintf(PREG" is of type 0x%x: ", PRINT_REG(reg), type_mask);
+
+	if (reg.segment == 0
+	    && reg.offset == 0) {
+		sciprintf("Null.\n");
+		return 0;
+	}
+
+	for (filter = 1; filter < 0xf000; filter <<= 1) {
+		int type = type_mask & filter;
+
+		if (found && type) {
+			sciprintf("--- Alternatively, it could be a ");
+		}
+
+
+		switch (type) {
+		case 0: break;
+
+		case KSIG_LIST: {
+			list_t *l = LOOKUP_LIST(reg);
+
+			sciprintf("list\n");
+
+			if (l)
+				print_list(s, l);
+			else
+				sciprintf("Invalid list.\n");
+		}
+			break;
+
+		case KSIG_NODE:
+			sciprintf("list node\n");
+			show_node(s, reg);
+			break;
+
+		case KSIG_OBJECT:
+			sciprintf("object\n");
+			objinfo(s, reg);
+			break;
+
+		case KSIG_REF: {
+			int evilchars = 0;
+			int i;
+			int size;
+			unsigned char *block = s->seg_manager.dereference(&s->seg_manager,
+									  reg, &size);
+
+			sciprintf("raw data\n");
+			sciprintf("Block size less than or equal to %d\n", size);
+
+			sci_hexdump(block, size, 0);
+		}
+			break;
+
+		case KSIG_ARITHMETIC:
+			sciprintf("arithmetic value\n  %d (%04x)\n", (gint16) reg.offset, reg.offset);
+			break;
+
+
+		default: sciprintf("unknown.\n", type);
+
+		}
+
+		if (type) {
+			sciprintf("\n");
+			found = 1;
+		}
+	}
+
+	return 0;
 }
 
 int
@@ -2646,48 +2776,8 @@ int
 c_shownode(state_t *s)
 {
 	reg_t addr = cmd_params[0].reg;
-	mem_obj_t *mobj = GET_SEGMENT(s->seg_manager, addr.segment, MEM_OBJ_LISTS);
 
-	if (mobj) {
-		list_table_t *lt = &(mobj->data.lists);
-		list_t *list;
-
-		if (!ENTRY_IS_VALID(lt, addr.offset)) {
-			sciprintf("Address does not contain a list\n");
-			return 1;
-		}
-
-		list = &(lt->table[addr.offset].entry);
-
-		sciprintf(PREG" : first x last = ("PREG", "PREG")\n",
-			  PRINT_REG(addr), PRINT_REG(list->first),
-			  PRINT_REG(list->last));
-	} else {
-		node_table_t *nt;
-		node_t *node;
-		mobj = GET_SEGMENT(s->seg_manager, addr.segment, MEM_OBJ_NODES);
-
-		if (!mobj) {
-			sciprintf("Segment #%04x is not a list or node segment\n", addr.segment);
-			return 1;
-		}
-
-		nt = &(mobj->data.nodes);
-
-		if (!ENTRY_IS_VALID(nt, addr.offset)) {
-			sciprintf("Address does not contain a node\n");
-			return 1;
-		}
-		node = &(nt->table[addr.offset].entry);
-
-		sciprintf(PREG" : prev x next = ("PREG", "PREG"); maps "PREG" -> "PREG"\n",
-			  PRINT_REG(addr),
-			  PRINT_REG(node->pred),
-			  PRINT_REG(node->succ),
-			  PRINT_REG(node->key),
-			  PRINT_REG(node->value));
-	}
-	return 0;
+	return show_node(s, addr);
 }
 
 /*** Breakpoint commands ***/
@@ -3202,6 +3292,8 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "Examines an object\n\n"
 					 "SEE ALSO\n\n"
 					 "  addresses.3, type.1");
+			con_hook_command(c_vr, "vr", "!a",
+					 "Examines an arbitrary reference\n\n");
 #ifdef HAVE_FORK
 			con_hook_command(c_codebug, "codebug", "!s",
 					 "Starts codebugging mode\n\nUSAGE\n\n"

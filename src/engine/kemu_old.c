@@ -40,6 +40,7 @@ static int funct_nr;
 
 typedef struct {
 	heap_ptr start; /* Beginning of the block */
+	reg_t pos; /* Needed for resolving conflicts */
 	int length; /* Number of bytes occupied on the heap */
 	object_t *obj; /* For object types: Pointer to the physical object */
 
@@ -60,6 +61,7 @@ identify_value(state_t *s, reg_t reg, heap_ptr firstfree)
 	int type = determine_reg_type(s, reg);
 
 	retval.start = firstfree;
+	retval.pos = reg;
 
 	retval.obj = NULL;
 	retval.length = 0;
@@ -180,11 +182,40 @@ recover_value(state_t *s, emu_param_t *p)
 
 	case EMU_TYPE_BLOCK:
 		memcpy(p->emu_data.block, s->heap + p->emudat_location, p->emudat_size);
+		SCIkdebug(SCIkEMU, "    Recovering %d raw bytes from %04x\n",
+			  p->emudat_size, p->emudat_location);
 		return;
 
 	default:
 		BREAKPOINT();
 	}
+}
+
+static void
+_restrict_against(state_t *s, emu_param_t *self, emu_param_t *other)
+{
+	if (self->pos.segment != other->pos.segment)
+		return;
+
+	if (self->pos.offset <= other->pos.offset
+	    && self->pos.offset + self->emudat_size > other->pos.offset) {
+		mem_obj_t *mobj = GET_SEGMENT_ANY(s->seg_manager, self->pos.segment);
+
+		self->emudat_size = other->pos.offset - self->pos.offset;
+
+		if (mobj && mobj->type == MEM_OBJ_STACK)
+			self->emudat_size *= sizeof(reg_t); /* Accomodate for size differences */
+	}
+}
+
+static void
+resolve_conflicts(state_t *s, emu_param_t *params, int count)
+{
+	int i, j;
+	for (i = 0; i < count; i++)
+		for (j = 0; j < count; j++)
+			if (i != j)
+				_restrict_against(s, params + i, params + j);
 }
 
 reg_t
@@ -214,7 +245,6 @@ kFsciEmu(state_t *s, int _funct_nr, int argc, reg_t *argv)
 			SCIkdebug(SCIkEMU, "   %3d : ["PREG"] ->\n", i, PRINT_REG(argv[i]));
 
 			shadow_args[i] = identify_value(s, argv[i], datap);
-			writeout_value(s, shadow_args + i);
 
 			switch (shadow_args[i].emudat_type) {
 
@@ -244,6 +274,10 @@ kFsciEmu(state_t *s, int _funct_nr, int argc, reg_t *argv)
 			datap += shadow_args[i].length; /* Step over last block we wrote */
 		}
 
+		for (i = 0; i < argc; i++)
+			writeout_value(s, shadow_args + i);
+
+		resolve_conflicts(s, shadow_args, argc);
 
 		s->kfunct_emu_table[funct_nr](s, funct_nr, argc, EMU_HEAP_START_ADDR);
 

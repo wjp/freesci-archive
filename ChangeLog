@@ -1,3 +1,8 @@
+2002-11-26  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kemu_old.c (resolve_conflicts): Fixed kernel emulation
+	to handle overlapping memory chunks
+
 2002-11-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sfx/iterator.c (_sci0_read_next_command): More bugfixes for song
