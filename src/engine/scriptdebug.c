@@ -914,11 +914,17 @@ int
 c_vmvars(state_t *s)
 {
   exec_stack_t *stack = s->execution_stack+s->execution_stack_pos;
-  
+  int vartype = strchr(varabbrev, *cmd_params[0].str)-varabbrev;
+
+  if (!vartype) {
+	  sciprintf("Invalid variable type '%c'\n",
+		    *cmd_params[0].str);
+	  return 1;
+  }
+
   switch(cmd_paramlength) {
   case 2:
     {
-      int vartype = strchr(varabbrev, *cmd_params[0].str)-varabbrev;
       sciprintf("%s var %d == %d (0x%04x)\n", varnames[vartype], cmd_params[1].val,
 		GET_HEAP(stack->variables[vartype]+(cmd_params[1].val<<1)),
 		UGET_HEAP(stack->variables[vartype]+(cmd_params[1].val<<1))
@@ -927,7 +933,6 @@ c_vmvars(state_t *s)
     }
   case 3:
     {
-      int vartype = strchr(varabbrev, *cmd_params[0].str)-varabbrev;
       PUT_HEAP(stack->variables[vartype]+(cmd_params[1].val<<1),cmd_params[2].val);
       break;
     }

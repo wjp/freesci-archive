@@ -1,3 +1,7 @@
+2001-08-04  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/operations.c: Line clipping now compensates for scaling
+
 2001-08-03  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* acinclude.m4 (no_alsa): Fixed some libtool dependancies

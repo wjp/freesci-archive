@@ -847,9 +847,13 @@ clip_line_partial(float *start, float *end, float delta_val, float pos_val, floa
 }
 
 static int
-line_clip(rect_t *line, rect_t clip)
+line_clip(rect_t *line, rect_t clip, int xfact, int yfact)
 /* returns 1 if nothing is left, or 0 if part of the line is in the clip window */
 {
+	/* Compensate for line thickness (should match precisely) */
+	clip.xl -= xfact;
+	clip.yl -= yfact;
+
 	if (!line->xl) {/* vbar */
 		if (line->x < clip.x || line->x >= (clip.x + clip.xl))
 			return 1;
@@ -895,7 +899,7 @@ static void
 draw_line_to_control_map(gfx_state_t *state, rect_t line, gfx_color_t color)
 {
 	if (color.mask & GFX_MASK_CONTROL)
-		if (!line_clip(&line, state->clip_zone_unscaled))
+		if (!line_clip(&line, state->clip_zone_unscaled, 0, 0))
 			gfx_draw_line_pixmap_i(state->control_map, line, color.control);
 }
 
@@ -979,7 +983,8 @@ _gfxop_draw_line_clipped(gfx_state_t *state, rect_t line, gfx_color_t color, gfx
 	    || line.y < state->clip_zone.y
 	    || (line.x + line.xl) >= (state->clip_zone.x + state->clip_zone.xl)
 	    || (line.y + line.yl) >= (state->clip_zone.y + state->clip_zone.yl))
-		if (line_clip(&line, state->clip_zone))
+		if (line_clip(&line, state->clip_zone, state->driver->mode->xfact - 1,
+			      state->driver->mode->yfact - 1))
 			return GFX_OK; /* Clipped off */
 
 	if (line_style == GFX_LINE_STYLE_STIPPLED) {

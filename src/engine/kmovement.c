@@ -278,7 +278,9 @@ kDoAvoider(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	mover = GET_SELECTOR(client, mover);
 
 	if (!is_object(s, mover)) {
-		SCIkwarn(SCIkWARNING, "DoAvoider() where mover %04x is not an object\n", mover);
+		if (mover) {
+			SCIkwarn(SCIkWARNING, "DoAvoider() where mover %04x is not an object\n", mover);
+		}
 		return;
 	}
 
