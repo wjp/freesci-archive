@@ -22,3 +22,6 @@ messages, so that they are easily identifiable using the below list.
 5. LSL2 tries to allocate zero bytes of memory when entering Molto Lira.
 
 6. QG1 accesses property 0xf02 in a couple of cases
+
+7. SQ1 calls UnLoad() with only one argument when exiting the Ulence
+   Flats bar.

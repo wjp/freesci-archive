@@ -1,3 +1,8 @@
+2004-03-27  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/gfx/resource/sci_view_1.c (gfxr_draw_view1): Handle (?) the
+	case where views don't have palettes.
+
 2004-03-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sfx/iterator.c (_sci1_command_index): Return

@@ -254,17 +254,25 @@ gfxr_draw_view1(int id, byte *resource, int size)
 				id, i, view_magics[i], resource[V1_FIRST_MAGIC + i]);
 		}
 */
-	if (palette_offset > size) {
+
+	if (palette_offset > 0)
+	{
+	    if (palette_offset > size) {
 		GFXERROR("Palette is outside of view %04x\n", id);
 		free(view);
 		return NULL;
-	}
-
-	if (!(view->colors = gfxr_read_pal1(id, &(view->colors_nr),
-					    resource + palette_offset, size - palette_offset))) {
+	    }   
+	    if (!(view->colors = gfxr_read_pal1(id, &(view->colors_nr),
+						resource + palette_offset, size - palette_offset))) {
 		GFXERROR("view %04x: Palette reading failed. Aborting...\n", id);
 		free(view);
 		return NULL;
+	    }
+	} else
+	{
+	    GFXWARN("view %04x: Doesn't have a palette. Can FreeSCI handle this?\n", view->ID);
+	    view->colors = NULL;
+	    view->colors_nr = 0;
 	}
 
 	view->loops = sci_malloc(sizeof (gfxr_loop_t) * view->loops_nr);
