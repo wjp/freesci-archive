@@ -49,7 +49,11 @@ extern pcmout_driver_t pcmout_driver_sdl;
 #ifdef HAVE_ALSA
 extern pcmout_driver_t pcmout_driver_alsa;
 #endif
+#ifdef HAVE_DMEDIA_AUDIO_H
+extern pcmout_driver_t pcmout_driver_al;
+#endif
 
+ 
 extern DLLEXTERN pcmout_driver_t *pcmout_drivers[];
 
 int pcmout_open();

@@ -93,6 +93,18 @@ if test "${ac_cv_header_dmedia_midi_h}" = "yes"; then
 	esac
 fi
 
+AC_CHECK_HEADERS(dmedia/audio.h)
+
+if test "${ac_cv_header_dmedia_audio_h}" = "yes"; then
+	case ${host_os} in
+	irix*)
+		found_sound=yes
+		AC_DEFINE(HAVE_DMEDIA_AUDIO_H)
+		LIBS="-laudio -lpthread $LIBS"
+	esac
+fi
+
+
 
 AC_ARG_WITH(sdl, [  --without-sdl           Do not build the SDL driver])
 if test x"$with_sdl" != xno; then
