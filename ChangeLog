@@ -1,3 +1,10 @@
+2004-03-28  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kgraphics.c (kBaseSetter): Add a small note
+	describing the wrong fix for the SQ3 rail bug.
+	* src/engine/kgraphics.c (kDisposeWindow): Make the window
+	manager port active when disposing a window.
+
 2004-03-27  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/resource/sci_view_1.c (gfxr_draw_view1): Handle (?) the
@@ -90,7 +97,7 @@
 	* src/include/uinput.h: Remove SCI_EVT_NONBLOCK flag from
 	SCI_EVT_ANY mask.
 	* src/engine/kgraphics.c (kOnControl): Cope with nonstandard port
-	sizes.
+	izes.
 
 2004-03-06  Christoph Reichenbach  <jameson@linuxgames.com>
 

@@ -279,9 +279,23 @@ graph_map_ega_color(state_t *s, int color, int priority, int control)
 
 
 reg_t
+kSetCursor_SCI11(state_t *s, int funct_nr, int argc, reg_t *argv)
+{
+	switch (argc)
+	{
+	case 3 :
+		GFX_ASSERT(gfxop_set_pointer_view(s->gfx_state, UKPV(0), UKPV(1), UKPV(2)));
+		break;
+	default :
+		SCIkwarn(SCIkERROR, "kSetCursor: Unhandled case: %d arguments given!\n", argc);
+		break;
+	}
+	return s->r_acc;
+}
+
+reg_t
 kSetCursor(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-
 	if (SKPV_OR_ALT(1,1)) {
 		s->mouse_pointer_nr = SKPV(0);
 	} else
@@ -914,7 +928,7 @@ kOnControl(state_t *s, int funct_nr, int argc, reg_t *argv)
 		xlen = SKPV(arg+2) - xstart;
 	}
 
-	return make_reg(0, gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart, ystart + s->picture_port->bounds.y, xlen, ylen), map));
+	return make_reg(0, gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart, ystart + 10, xlen, ylen), map));
 }
 
 void
@@ -930,14 +944,10 @@ kDrawPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 	int palette = SKPV_OR_ALT(3, 0);
 	gfx_color_t transparent = s->wm_port->bgcolor;
 
+	CHECK_THIS_KERNEL_FUNCTION;
 
-	if (s->version < SCI_VERSION_FTU_NEWER_DRAWPIC_PARAMETERS) {
-		if (!SKPV_OR_ALT(2, 0))
-			add_to_pic = 0;
-	} else
-		if (SKPV_OR_ALT(2, 1))
-			add_to_pic = 0;
-
+	if (SKPV_OR_ALT(2, 0))
+	  add_to_pic = 0;
 
 	gfxop_disable_dirty_frames(s->gfx_state);
 	
@@ -972,10 +982,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 	s->wm_port->widfree(GFXW(s->wm_port));
 	s->picture_port->widfree(GFXW(s->picture_port));
 
-	/* FIXME: Not how it's supposed to be; good enough for release */
-	s->wm_port = gfxw_new_port(s->visual, NULL, s->gfx_state->options->pic_port_bounds, s->ega_colors[0], transparent);
-
-	/* but this is correct */
+	s->wm_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 200), s->ega_colors[0], transparent);
 	s->picture_port = gfxw_new_port(s->visual, NULL, s->gfx_state->options->pic_port_bounds, s->ega_colors[0], transparent);
 
 	s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));
@@ -1072,7 +1079,7 @@ set_base(state_t *s, reg_t object)
 
 	xbase = x - xmod - (xsize >> 1);
 	xend = xbase + xsize;
-	// Used to be: 	yend = y /* - ymod */ + 1;
+	// Used to be: 	yend = y /* - ymod */ + 1; (fixes SQ3 rail death)
 	yend = y - ymod + 1; 
 	ybase = yend - ystep;
 
@@ -2288,7 +2295,7 @@ kGetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kSetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	switch (argc) {
+        switch (argc) {
 	case 1 : {
 		unsigned int port_nr = SKPV(0);
 		gfxw_port_t *new_port;
@@ -2318,7 +2325,6 @@ kSetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 		break;
 	}
 
-	return NULL_REG;
 }
 
 
@@ -2340,7 +2346,7 @@ kDrawCel(state_t *s, int funct_nr, int argc, reg_t *argv)
 		return;
 	}
 */
-
+	
 	if (gfxop_check_cel(s->gfx_state, view, &loop, &cel)) {
 		SCIkwarn(SCIkERROR, "Attempt to draw non-existing view.%03d\n", view);
 		return s->r_acc;
@@ -2384,7 +2390,7 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 	if (goner == s->port) /* Did we kill the active port? */
 		s->port = pred;
 
-	s->port = gfxw_find_port(s->visual, goner_nr - 1);
+	s->port = s->wm_port;
 
 	if (!s->port)
 		s->port = gfxw_find_default_port(s->visual);
@@ -2400,30 +2406,30 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 	int x, y, xl, yl, flags;
 	gfx_color_t bgcolor;
 	int priority;
-	int arg_ignore = argc == 13 ? 4 : 0;
+
 
 	y = SKPV(0);
 	x = SKPV(1);
 	yl = SKPV(2) - y;
 	xl = SKPV(3) - x;
 
-	y += s->wm_port->bounds.y;
+	y += s->wm_port->bounds.y - 1;
 
 	if (x+xl > 319)
 		x -= ((x+xl) - 319);
 
-	flags = SKPV(5+arg_ignore);
+	flags = SKPV(5);
 
-	bgcolor = s->ega_colors[SKPV_OR_ALT(8+arg_ignore, 15)];
-	priority = SKPV_OR_ALT(6+arg_ignore, -1);
+	bgcolor = s->ega_colors[SKPV_OR_ALT(8, 15)];
+	priority = SKPV_OR_ALT(6, -1);
 	bgcolor.mask = GFX_MASK_VISUAL | ((priority >= 0)? GFX_MASK_PRIORITY : 0);
 	bgcolor.priority = priority;
 
 	SCIkdebug(SCIkGRAPHICS, "New window with params %d, %d, %d, %d\n", SKPV(0), SKPV(1), SKPV(2), SKPV(3));
 	window = sciw_new_window(s, gfx_rect(x, y, xl, yl), s->titlebar_port->font_nr,
-				 s->ega_colors[SKPV_OR_ALT(7+arg_ignore, 0)], bgcolor, s->titlebar_port->font_nr,
-				 s->ega_colors[15], s->ega_colors[8],
-				 argv[4+arg_ignore].segment ? kernel_dereference_bulk_pointer(s, argv[4+arg_ignore], 0) : NULL,
+				 s->ega_colors[SKPV_OR_ALT(7, 0)], bgcolor, s->titlebar_port->font_nr,
+				 s->ega_colors[15], s->ega_colors[8], 
+				 argv[4].segment ? kernel_dereference_bulk_pointer(s, argv[4], 0) : NULL, 
 				 flags);
 
 	ADD_TO_CURRENT_PORT(window);
@@ -3090,7 +3096,7 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	transparent.mask = 0;
 
-	color0 = &(s->ega_colors[0]);
+	color0 = &(port->color);
 	bg_color = &(port->bgcolor);
 
 
@@ -3207,15 +3213,6 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 	if (!text_handle) {
 		SCIkwarn(SCIkERROR, "Display: Failed to create text widget!\n");
 		return NULL_REG;
-	} else {
-		/* OK, this is just a cheap excuse to introduce a sub-block */
-		int lines_nr, line_height, lastline_width;
-
-		gfxw_text_info(s->gfx_state, text_handle,
-			       &lines_nr, &line_height, &lastline_width);
-
-		port->draw_pos.x += lastline_width;
-		port->draw_pos.y += line_height * (lines_nr - 1);
 	}
 
 	if (save_under) {    /* Backup */
