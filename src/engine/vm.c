@@ -1,5 +1,5 @@
 /***************************************************************************
- vm.c Copyright (C) 1999 Christoph Reichenbach
+ vm.c Copyright (C) 1999, 2000, 2001 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -1167,7 +1167,7 @@ lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
 	int species = OBJ_SPECIES(obj);
 	int heappos = CLASS_ADDRESS(species);
 	int varselector_nr = GET_HEAP(heappos + SCRIPT_SELECTORCTR_OFFSET);
-	int speciespos = 0;
+	int speciespos = 0; /* ALWAYS zero ATM... */
 	/* Number of variable selectors */
 
 	int i;
@@ -1181,9 +1181,6 @@ lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
 					*address = obj + SCRIPT_SELECTOR_OFFSET + i; /* Get object- relative address */
 				return SELECTOR_VARIABLE; /* report success */
 			}
-
-	if (species == OBJ_SPECIES(heappos)) /* Current object is a static instance */
-		speciespos = heappos; /* Make sure we pass the (possibly new) species address */
 
 	return
 		_lookup_selector_functions(s, obj, selectorid, address, speciespos);
@@ -1214,153 +1211,158 @@ void script_detect_early_versions(state_t *s)
 heap_ptr
 script_instantiate(state_t *s, int script_nr, int recursive)
 {
-  resource_t *script = findResource(sci_script, script_nr);
-  heap_ptr pos;
-  int objtype;
-  unsigned int objlength;
-  heap_ptr script_basepos;
-  int magic_pos_adder; /* Usually 0; 2 for older SCI versions */
-  if (!script) {
-    sciprintf("Script 0x%x requested but not found\n", script_nr);
-    /*    script_debug_flag = script_error_flag = 1; */
-    return 0;
-  }
+	resource_t *script = findResource(sci_script, script_nr);
+	heap_ptr pos;
+	int objtype;
+	unsigned int objlength;
+	heap_ptr script_basepos;
+	int magic_pos_adder; /* Usually 0; 2 for older SCI versions */
+	if (!script) {
+		sciprintf("Script 0x%x requested but not found\n", script_nr);
+		/*    script_debug_flag = script_error_flag = 1; */
+		return 0;
+	}
 
-  if (s->scripttable[script_nr].heappos) { /* Is it already loaded? */
-    s->scripttable[script_nr].lockers++; /* Required by another script */
-    return s->scripttable[script_nr].heappos;
-  }
+	if (s->scripttable[script_nr].heappos) { /* Is it already loaded? */
+		s->scripttable[script_nr].lockers++; /* Required by another script */
+		return s->scripttable[script_nr].heappos;
+	}
 
-  script_basepos = heap_allocate(s->_heap, script->length);
+	script_basepos = heap_allocate(s->_heap, script->length);
 
-  if (!script_basepos) {
-    sciprintf("Not enough heap space for script size 0x%x of script 0x%x, has 0x%x\n",
-	      script->length, script_nr, heap_largest(s->_heap));
-    script_debug_flag = script_error_flag = 1;
-    return 0;
-  }
+	if (!script_basepos) { /* ALL YOUR SCRIPT BASE ARE BELONG TO US */
+		sciprintf("Not enough heap space for script size 0x%x of script 0x%x, has 0x%x\n",
+			  script->length, script_nr, heap_largest(s->_heap));
+		script_debug_flag = script_error_flag = 1;
+		return 0;
+	}
 
-  s->scripttable[script_nr].heappos = script_basepos + 2;
-  /* Set heap position (beyond the size word) */
-  s->scripttable[script_nr].lockers = 1; /* Locked by one */
-  s->scripttable[script_nr].export_table_offset = 0;
-  s->scripttable[script_nr].synonyms_offset = 0;
-  s->scripttable[script_nr].synonyms_nr = 0;
-  s->scripttable[script_nr].localvar_offset = 0;
+	s->scripttable[script_nr].heappos = script_basepos + 2;
+	/* Set heap position (beyond the size word) */
+	s->scripttable[script_nr].lockers = 1; /* Locked by one */
+	s->scripttable[script_nr].export_table_offset = 0;
+	s->scripttable[script_nr].synonyms_offset = 0;
+	s->scripttable[script_nr].synonyms_nr = 0;
+	s->scripttable[script_nr].localvar_offset = 0;
 
-  if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
-    int locals_size = getUInt16(script->data)*2;
-    int locals = s->scripttable[script_nr].localvar_offset=heap_allocate(s->_heap,locals_size);
-    memset(s->heap+locals,0,locals_size);
-    /* sciprintf( "Loading script %d: Old SCI version; assuming locals size %d\n", script_nr, locals_size); */
-    /* There won't be a localvar block in this case */
-    memcpy(s->heap + script_basepos + 2, script->data + 2, script->length -2);
-    pos = script_basepos + 2;
-    magic_pos_adder = 2;
-  } else {
-    memcpy(s->heap + script_basepos + 2, script->data, script->length); /* Copy the script */
-    script_basepos += 2; 
-    magic_pos_adder = 0;
-    pos = script_basepos;
-  }
+	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
+		int locals_size = getUInt16(script->data)*2;
+		int locals = s->scripttable[script_nr].localvar_offset=heap_allocate(s->_heap,locals_size);
+		memset(s->heap+locals,0,locals_size);
+		/* Old script block */
+		/* There won't be a localvar block in this case */
+		memcpy(s->heap + script_basepos + 2, script->data + 2, script->length -2);
+		pos = script_basepos + 2;
+		magic_pos_adder = 2;
+	} else {
+		memcpy(s->heap + script_basepos + 2, script->data, script->length); /* Copy the script */
+		script_basepos += 2; 
+		magic_pos_adder = 0;
+		pos = script_basepos;
+	}
 
-  /* Now do a first pass through the script objects to find the
-  ** export table and local variable block 
-  */
+	/* Now do a first pass through the script objects to find the
+	** export table and local variable block 
+	*/
 
-  objlength = 0;
+	objlength = 0;
 
-  do {
-    pos += objlength; /* Step over the last checked object */
+	do {
+		pos += objlength; /* Step over the last checked object */
 
-    objtype = GET_HEAP(pos);
-    objlength = GET_HEAP(pos+2);
+		objtype = GET_HEAP(pos);
+		objlength = GET_HEAP(pos+2);
 
-    if (objtype == sci_obj_exports)
-      s->scripttable[script_nr].export_table_offset = pos + 4; /* +4 is to step over the header */
+		if (objtype == sci_obj_exports)
+			s->scripttable[script_nr].export_table_offset = pos + 4; /* +4 is to step over the header */
     
-    if (objtype == sci_obj_synonyms) {
-      s->scripttable[script_nr].synonyms_offset = pos + 4; /* +4 is to step over the header */
-      s->scripttable[script_nr].synonyms_nr = (objlength - 4) / 4;
-    }
+		if (objtype == sci_obj_synonyms) {
+			s->scripttable[script_nr].synonyms_offset = pos + 4; /* +4 is to step over the header */
+			s->scripttable[script_nr].synonyms_nr = (objlength - 4) / 4;
+		}
     
-    if (objtype == sci_obj_localvars)
-      s->scripttable[script_nr].localvar_offset = pos + 4; /* +4 is to step over the header */
+		if (objtype == sci_obj_localvars)
+			s->scripttable[script_nr].localvar_offset = pos + 4; /* +4 is to step over the header */
 
-  } while (objtype != 0);
+	} while (objtype != 0);
 
 
-  /* And now a second pass to adjust objects and class pointers, and the general pointers */
-  pos = script_basepos + magic_pos_adder;
+	/* And now a second pass to adjust objects and class pointers, and the general pointers */
+	pos = script_basepos + magic_pos_adder;
 
-  objlength = 0;
+	objlength = 0;
 
-  do {
-    pos += objlength; /* Step over the last checked object */
+	do {
+		pos += objlength; /* Step over the last checked object */
 
-    objtype = GET_HEAP(pos);
-    objlength = GET_HEAP(pos+2);
+		objtype = GET_HEAP(pos);
+		objlength = GET_HEAP(pos+2);
 
-    pos += 4; /* Step over header */
+		pos += 4; /* Step over header */
 
-    if ((objtype == sci_obj_object) || (objtype == sci_obj_class)) { /* object or class? */
-      int i;
-      heap_ptr functarea;
-      int functions_nr;
-      int superclass;
+		if ((objtype == sci_obj_object) || (objtype == sci_obj_class)) { /* object or class? */
+			int i;
+			heap_ptr functarea;
+			int functions_nr;
+			int superclass;
+			int species;
 
-      pos -= SCRIPT_OBJECT_MAGIC_OFFSET; /* Get into home position */
+			pos -= SCRIPT_OBJECT_MAGIC_OFFSET; /* Get into home position */
 
-      functarea = pos + GET_HEAP(pos + SCRIPT_FUNCTAREAPTR_OFFSET)
-	+ SCRIPT_FUNCTAREAPTR_MAGIC;
-      functions_nr = GET_HEAP(functarea - 2); /* Number of functions */
-      superclass = OBJ_SUPERCLASS(pos); /* Get superclass */
+			functarea = pos + GET_HEAP(pos + SCRIPT_FUNCTAREAPTR_OFFSET)
+				+ SCRIPT_FUNCTAREAPTR_MAGIC;
+			functions_nr = GET_HEAP(functarea - 2); /* Number of functions */
+			superclass = OBJ_SUPERCLASS(pos); /* Get superclass... */
+			species = OBJ_SPECIES(pos); /* ...and species */
 
-      /*      fprintf(stderr,"functs (%x) area @ %x\n", functions_nr, functarea); */
+			/*      fprintf(stderr,"functs (%x) area @ %x\n", functions_nr, functarea); */
 
-      /* This sets the local variable pointer: */
-      PUT_HEAP(pos + SCRIPT_LOCALVARPTR_OFFSET, s->scripttable[script_nr].localvar_offset);
-      /* Now set the superclass address: */
-      if (superclass > -1)
-	PUT_HEAP(pos + SCRIPT_SUPERCLASS_OFFSET, get_class_address(s, superclass));
+			/* This sets the local variable pointer: */
+			PUT_HEAP(pos + SCRIPT_LOCALVARPTR_OFFSET, s->scripttable[script_nr].localvar_offset);
+			/* Now set the superclass address: */
+			if (superclass > -1)
+				PUT_HEAP(pos + SCRIPT_SUPERCLASS_OFFSET, get_class_address(s, superclass));
 
-      functarea += 2 + functions_nr * 2;
-      /* Move over the selector IDs to the actual addresses */
+			PUT_HEAP(pos + SCRIPT_SPECIES_OFFSET, 
+				 get_class_address(s, species));
 
-      for (i = 0; i < functions_nr * 2; i += 2) {
-	heap_ptr functpos = GET_HEAP(functarea + i);
-	PUT_HEAP(functarea + i, functpos + script_basepos); /* Adjust function pointer addresses */
-      }
+			functarea += 2 + functions_nr * 2;
+			/* Move over the selector IDs to the actual addresses */
 
-      if ((superclass >= 0) && recursive)
-	script_instantiate(s, s->classtable[superclass].script, 1);
-      /* Recurse to assure that the superclass is available */
+			for (i = 0; i < functions_nr * 2; i += 2) {
+				heap_ptr functpos = GET_HEAP(functarea + i);
+				PUT_HEAP(functarea + i, functpos + script_basepos); /* Adjust function pointer addresses */
+			}
 
-      pos += SCRIPT_OBJECT_MAGIC_OFFSET; /* Step back from home to base */
+			if ((superclass >= 0) && recursive)
+				script_instantiate(s, s->classtable[superclass].script, 1);
+			/* Recurse to assure that the superclass is available */
+
+			pos += SCRIPT_OBJECT_MAGIC_OFFSET; /* Step back from home to base */
       
-    } /* if object or class */
-    else if (objtype == sci_obj_pointers) { /* A relocation table */
-      int pointerc = GET_HEAP(pos);
-      int i;
+		} /* if object or class */
+		else if (objtype == sci_obj_pointers) { /* A relocation table */
+			int pointerc = GET_HEAP(pos);
+			int i;
 
-      for (i = 0; i < pointerc; i++) {
-	int new_address = ((guint16) GET_HEAP(pos + 2 + i*2)) + script_basepos;
-	int old_indexed_pointer;
-	PUT_HEAP(pos + 2 + i*2, new_address); /* Adjust pointers. Not sure if this is needed. */
-	old_indexed_pointer = ((guint16) GET_HEAP(new_address));
-	PUT_HEAP(new_address, old_indexed_pointer + script_basepos);
-	/* Adjust indexed pointer. */
+			for (i = 0; i < pointerc; i++) {
+				int new_address = ((guint16) GET_HEAP(pos + 2 + i*2)) + script_basepos;
+				int old_indexed_pointer;
+				PUT_HEAP(pos + 2 + i*2, new_address); /* Adjust pointers. Not sure if this is needed. */
+				old_indexed_pointer = ((guint16) GET_HEAP(new_address));
+				PUT_HEAP(new_address, old_indexed_pointer + script_basepos);
+				/* Adjust indexed pointer. */
 
-      } /* For all indexed pointers pointers */
+			} /* For all indexed pointers pointers */
 
-    }
+		}
 
-    pos -= 4; /* Step back on header */
+		pos -= 4; /* Step back on header */
 
-  } while ((objtype != 0) && ((pos - script_basepos) < script->length - 2));
+	} while ((objtype != 0) && ((pos - script_basepos) < script->length - 2));
 
-  /*    if (script_nr == 0)   sci_hexdump(s->heap + script_basepos +2, script->length-2, script_basepos);*/
-  return s->scripttable[script_nr].heappos;
+	/*    if (script_nr == 0)   sci_hexdump(s->heap + script_basepos +2, script->length-2, script_basepos);*/
+	return s->scripttable[script_nr].heappos;
 
 }
 

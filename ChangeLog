@@ -1,4 +1,13 @@
+2001-03-18  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (set_base): Now uses xStep as well.
+
 2001-03-17  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/vm.c (script_instantiate): During script initialization,
+	static objects' species classes' addresses are now written into the
+	places the numeric IDs were contained in, as in Sierra SCI. This
+	resolves the problem introduced with the last VM patch.
 
 	* src/engine/kgraphics.c (collides_with): Now reads nsrect directly
 	from object

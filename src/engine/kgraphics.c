@@ -793,15 +793,11 @@ static inline int
 collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int funct_nr, int argc, heap_ptr argp)
 {
 	int other_signal = UGET_SELECTOR(other_obj, signal);
-#ifdef FALSE
-	abs_rect_t other_area = get_nsrect(s, other_obj, 1);
-#else
 	abs_rect_t other_area;
 	other_area.x = UGET_SELECTOR(other_obj, nsLeft);
 	other_area.xend = UGET_SELECTOR(other_obj, nsRight);
 	other_area.y = UGET_SELECTOR(other_obj, nsTop);
 	other_area.yend = UGET_SELECTOR(other_obj, nsBottom);
-#endif
 
 	SCIkdebug(SCIkBRESEN, "OtherSignal=%04x, z=%04x obj=%04x\n", other_signal,
 		  (other_signal & GASEOUS_VIEW_MASK), other_obj);
@@ -835,10 +831,21 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	word signal;
 
 	int priority = GET_SELECTOR(obj, priority);
-	abs_rect_t abs_zone = set_base(s, obj);
-	rect_t zone = gfx_rect(abs_zone.x + port->zone.x, abs_zone.y + port->zone.y,
-			       abs_zone.xend - abs_zone.x, abs_zone.yend - abs_zone.y);
+	abs_rect_t abs_zone;
+	rect_t zone;
 	word edgehit;
+
+#ifdef FALSE
+	abs_zone = set_base(s, obj);
+#else
+	abs_zone.x = UGET_SELECTOR(obj, brLeft);
+	abs_zone.xend = UGET_SELECTOR(obj, brRight);
+	abs_zone.y = UGET_SELECTOR(obj, brTop);
+	abs_zone.yend = UGET_SELECTOR(obj, brBottom);
+#endif
+
+	zone = gfx_rect(abs_zone.x + port->zone.x, abs_zone.y + port->zone.y,
+			abs_zone.xend - abs_zone.x, abs_zone.yend - abs_zone.y);
 
 	signal = UGET_SELECTOR(obj, signal);
 	SCIkdebug(SCIkBRESEN,"Checking collision: (%d,%d) to (%d,%d) ([%d..%d]x[%d..%d]), obj=%04x, sig=%04x, cliplist=%04x\n",
@@ -1143,6 +1150,14 @@ set_base(state_t *s, heap_ptr object)
 	y -= z; /* Subtract z offset */
 
 	ystep = GET_SELECTOR(object, yStep);
+	if (s->selector_map.xStep > -1) {
+		int has_xstep = lookup_selector(s, object, s->selector_map.xStep, NULL) == SELECTOR_VARIABLE;
+		if (has_xstep) {
+			int xstep = GET_SELECTOR(object, xStep);
+			if (xstep > ystep)
+				ystep = xstep;
+		}
+	}
 	view = GET_SELECTOR(object, view);
 	loop = sign_extend_byte(GET_SELECTOR(object, loop));
 	cel = sign_extend_byte(GET_SELECTOR(object, cel));

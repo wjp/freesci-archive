@@ -1812,8 +1812,9 @@ objinfo(state_t *s, heap_ptr pos)
 		else
 			selectorIDoffset =
 				s->heap
-				+ *(s->classtable[species].scriptposp)
-				+ s->classtable[species].class_offset
+				+ species
+/*				+ *(s->classtable[species].scriptposp)
+				+ s->classtable[species].class_offset*/
 				+ SCRIPT_SELECTOR_OFFSET
 				+ selectors * 2;
 
