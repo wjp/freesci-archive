@@ -1597,8 +1597,13 @@ _k_view_list_do_postdraw(state_t *s, gfxw_list_t *list)
 
 	while (widget) {
 		int obj = widget->ID;
-
-		if ((widget->signal & (_K_VIEW_SIG_FLAG_FREESCI_PRIVATE | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_NO_UPDATE)) == _K_VIEW_SIG_FLAG_FREESCI_PRIVATE) {
+		/*
+		 * this fixes a few problems, but doesn't match SSCI's logic.
+		 * The semantics of the private flag need to be verified before this can be uncommented.
+		 * Fixes bug #326 (CB1, ego falls down stairs)
+		 * if ((widget->signal & (_K_VIEW_SIG_FLAG_FREESCI_PRIVATE | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_NO_UPDATE)) == _K_VIEW_SIG_FLAG_FREESCI_PRIVATE) {
+		 */
+		if ((widget->signal & (_K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_NO_UPDATE)) == 0) {
 			int has_nsrect = lookup_selector(s, (heap_ptr)obj, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
 
 			if (has_nsrect) {
