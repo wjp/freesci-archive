@@ -158,13 +158,10 @@ AC_TRY_COMPILE([
 #include <X11/Xlib.h>
 #include <X11/extensions/XShm.h>
 ], [
-int main(int argc, char **argv)
-{
 	Display *display;
 	XShmSegmentInfo foo;
 
 	XShmAttach(display, &foo);
-}
 ],[
 	AC_MSG_RESULT(found.)
 	AC_DEFINE(HAVE_MITSHM)

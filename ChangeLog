@@ -1,3 +1,41 @@
+2001-04-21  Matt Hargett  <matt@use.net>
+	* main.c: Reimplemented ifdef for using win32/getopt.h.
+
+	* soundserver.c: Added include for winsock2.h where fd_get is defined.
+	Changed all instances of gettimeofday() to sci_get_current_time().
+	Fixed misspelled SCI_MIDI_TIME_EXPANSION_LENGTH macro.
+
+	* midiout_win32mci.c (Win32_usleep): Renamed to usleep and put into a
+        common file, usleep.c.
+
+	* usleep.c: New file implements usleep for win32.
+        Taken from apache.
+
+	* vocab_debug.c (vocabulary_free_knames): Made loop a bit simpler,
+        trying to track down repeatable crashes on Win2k.
+
+	* README.Win32: removed warning about HQ1 not working, added
+	recommended pic_antialiasing option.
+
+
+2001-04-21  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (animate_do_animation): Removed full update
+	after transition animations
+
+	* acinclude.m4 (X_LIBS): Fixed XShm detection for non-gcc C compilers
+
+	* src/engine/kgraphics.c (animate_do_animation): Added left/right
+	scrolling
+
+	* src/sound/midiout_ossseq.c (midiout_ossseq_write): Fixed sequencer
+	failures
+
+2001-04-21  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/resource.c (loadResourcePatches): Fixed endless loop with
+	patch files being too small
+
 2001-04-21  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/include/soundserver.h, src/sound/Makefile.am,

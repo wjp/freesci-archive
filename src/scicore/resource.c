@@ -353,6 +353,7 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 
 				if (filestat.st_size < 3) {
 					printf("File too small\n");
+					entry = sci_find_next(&dir);
 					continue; /* next file */
 				}
 

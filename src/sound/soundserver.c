@@ -33,6 +33,10 @@
 #include <midi_device.h>
 #include <sys/types.h>
 
+#ifdef _MSC_VER
+#	include <winsock2.h>
+#endif
+
 sfx_driver_t *soundserver;
 
 void
@@ -50,7 +54,7 @@ sci0_soundserver()
   int suspended = 0; /* Used to suspend the sound server */
   GTimeVal suspend_time; /* Time at which the sound server was suspended */
 
-  gettimeofday((struct timeval *)&last_played, NULL);
+  sci_get_current_time((struct timeval *)&last_played, NULL);
 
   fprintf(ds, "NULL Sound server initialized\n");
 
@@ -80,13 +84,13 @@ sci0_soundserver()
     }
     song = song_lib_find_active(songlib, song);
     if (song == NULL) {
-      gettimeofday((struct timeval *)&last_played, NULL);
+      sci_get_current_time((struct timeval *)&last_played, NULL);
       ticks = 60; /* Wait a second for new commands, then collect your new ticks here. */
     }
     if (ticks == 0) {
       int tempticks;
 
-      gettimeofday((struct timeval *)&last_played, NULL);
+      sci_get_current_time((struct timeval *)&last_played, NULL);
 
       ticks = 0;
 
@@ -94,7 +98,7 @@ sci0_soundserver()
 
       /* Handle length escape sequence */
       while ((tempticks = song->data[(song->pos)++]) == SCI_MIDI_TIME_EXPANSION_PREFIX)
-	ticks += SCI_MIDI_TIME_EXPANSION_LENGHT;
+	ticks += SCI_MIDI_TIME_EXPANSION_LENGTH;
 
       ticks += tempticks;
     }
@@ -401,7 +405,7 @@ sci0_soundserver()
 
 	case SOUND_COMMAND_SUSPEND_SOUND: {
 
-	  gettimeofday((struct timeval *)&suspend_time, NULL);
+	  sci_get_current_time((struct timeval *)&suspend_time, NULL);
 	  suspended = 1;
 
 	}
@@ -411,7 +415,7 @@ sci0_soundserver()
 
 	  GTimeVal resume_time;
 
-	  gettimeofday((struct timeval *)&resume_time, NULL);
+	  sci_get_current_time((struct timeval *)&resume_time, NULL);
 	  /* Modify last_played relative to wakeup_time - suspend_time */
 	  last_played.tv_sec += resume_time.tv_sec - suspend_time.tv_sec - 1; 
 	  last_played.tv_usec += resume_time.tv_usec - suspend_time.tv_usec + 1000000;
@@ -463,7 +467,7 @@ sci0_soundserver()
 	_exit(1); /* Die semi-ungracefully **
     } */
 
-      gettimeofday((struct timeval *)&ctime, NULL);
+      sci_get_current_time((struct timeval *)&ctime, NULL);
       
     } while (suspended
 	     || (wakeup_time.tv_sec > ctime.tv_sec)

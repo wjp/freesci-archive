@@ -43,8 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /I "..\include" /I "..\..\..\SDL-1.2.0\include" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_STRING_H" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /D "HAVE_GETOPT_H" /FR /YX /FD /c
-# SUBTRACT CPP /Z<none>
+# ADD CPP /nologo /W3 /GX /Zi /I "..\include" /I "..\..\..\SDL-1.2.0\include" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.2\" /D "HAVE_STRING_H" /D "HAVE_GETOPT_H" /D "HAVE_SDL" /FR /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
@@ -54,8 +53,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ddraw.lib winmm.lib ..\..\..\SDL-1.2.0\VisualC\SDL\Release\SDL.lib wsock32.lib winmm.lib /nologo /dll /incremental:yes /machine:I386
-# SUBTRACT LINK32 /pdb:none /debug
+# ADD LINK32 wsock32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib winmm.lib ..\..\..\SDL-1.2.0\VisualC\SDL\Release\SDL.lib /nologo /dll /incremental:yes /debug /machine:I386
+# SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "freesci - Win32 Debug"
 
@@ -226,6 +225,10 @@ SOURCE=..\gfx\drivers\sdl_driver.c
 # End Group
 # Begin Source File
 
+SOURCE=..\gfx\antialias.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\gfx\font.c
 # End Source File
 # Begin Source File
@@ -361,9 +364,25 @@ SOURCE=..\sound\oldmidi.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\sound\sfx_save.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\sound\sound.c
 # End Source File
+# Begin Source File
+
+SOURCE=..\sound\soundserver.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\sound\soundserver_sdl.c
+# End Source File
 # End Group
+# Begin Source File
+
+SOURCE=.\usleep.c
+# End Source File
 # End Group
 # Begin Group "Libs"
 

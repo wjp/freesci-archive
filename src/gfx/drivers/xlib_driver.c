@@ -670,6 +670,7 @@ xlib_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 	}
 	fflush(stdout);
 	if (pxm->internal.handle == SCI_XLIB_PIXMAP_HANDLE_GRABBED) {
+		fprintf(stderr, "    == Drawing grabbed %d %d\n", dest.y, dest.yl);
 		XPutImage(S->display, S->visual[bufnr], S->gc, (XImage *) pxm->internal.info,
 			  src.x, src.y, dest.x, dest.y, dest.xl, dest.yl);
 		return GFX_OK;
@@ -765,9 +766,6 @@ xlib_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buff
 		col.visual.g = 0;
 		col.visual.b = 0;
 
-		/*src.xl = 640;
-		src.yl = 400;
-		src.x = src.y = dest.x = dest.y = 0;*/
 		XCopyArea(S->display, S->visual[0], S->window, S->gc,
 			  dest.x, dest.y, src.xl, src.yl, dest.x, dest.y);
 	}

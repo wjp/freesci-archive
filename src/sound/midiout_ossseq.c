@@ -93,6 +93,9 @@ int midiout_ossseq_write(guint8 *buffer, unsigned int count)
 	char buf[4];
 	byte input;
 
+	if (sequencer_dev == 0)
+		return 0;
+
 	buf[0] = SEQ_MIDIPUTC;
 	buf[2] = device_nr;
 	buf[3] = 0;
@@ -130,6 +133,7 @@ int midiout_ossseq_write(guint8 *buffer, unsigned int count)
 		if (written == -1) {
 			fprintf(stderr,"While trying to write to '%s':\n", sequencer_dev);
 			perror("Sequencer error");
+			sequencer_dev = 0;
 			return 1;
 		}
 	}

@@ -639,8 +639,8 @@ int
 test_savegame(state_t *s, char *savegame_id, char *savegame_name, int savegame_name_length)
 {
 	int retval = 1;
-	char *game_id = s->game_name;
-	char *game_id_file = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
+	char *game_id = (char *) s->game_name;
+	char *game_id_file = (char *) malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
 
 	strcpy(game_id_file, game_id);
 	strcat(game_id_file, FREESCI_ID_SUFFIX);

@@ -33,35 +33,18 @@
 #endif
 
 static int fd;
-static char *devicename = "/dev/midi00";
+static char *devicename = "c:\\win32mci.txt";
 
 static int win32mci_lastwrote = 0;
-
-static void
-Win32_usleep (long usec)
-{
-	LARGE_INTEGER lFrequency;
-	LARGE_INTEGER lEndTime;
-	LARGE_INTEGER lCurTime;
-
-	QueryPerformanceFrequency (&lFrequency);
-	if (lFrequency.QuadPart)
-	{
-		QueryPerformanceCounter (&lEndTime);
-		lEndTime.QuadPart += (LONGLONG) usec * lFrequency.QuadPart / 1000000;
-		do
-		{
-			QueryPerformanceCounter (&lCurTime);
-		} while (lCurTime.QuadPart < lEndTime.QuadPart);
-	}
-}
 
 static int
 midiout_win32mci_set_parameter(struct _midiout_driver *drv, char *attribute, char *value)
 {
-	if (!strcasecmp(attribute, "device")) {
+	if (!strcasecmp(attribute, "device")) 
+	{
 		devicename = value;
-	} else
+	} 
+	else
 		sciprintf("Unknown win32mci option '%s'!\n", attribute);
 
 	return 0;
@@ -69,21 +52,52 @@ midiout_win32mci_set_parameter(struct _midiout_driver *drv, char *attribute, cha
 
 int midiout_win32mci_open()
 {
-	int numdevs		= 0;
+	int numdevs				= 0;
+	MMRESULT ret;
+	MIDIOUTCAPS devicecaps;
+	int loop				= 0;
 	
 	numdevs = midiOutGetNumDevs();
 
 	if (numdevs == 0)
 	{
-		fprintf(stderr, "No win32 MCI MIDI output devices found!");
+		fprintf(stderr, "No win32 MCI MIDI output devices found!\n");
 		return -1;
 	}
 
-	fprintf(stderr, "%d MCI MIDI output devices found");
+	fprintf(stderr, "MCI MIDI output devices found: %d \n",numdevs);
+
+
+	for (loop = 0; loop < numdevs; loop++)
+	{
+		ret = midiOutGetDevCaps(loop, &devicecaps, sizeof(devicecaps));
+		if (MMSYSERR_NOERROR != ret)
+		{
+			fprintf(stderr, "Something went wrong querying device %d: %s\n",
+				loop, ret);
+			exit;
+		}
+
+		fprintf(stderr, "MCI Device %d: ",loop);
+		fprintf(stderr, "%s,", devicecaps.szPname);
+		switch (devicecaps.wTechnology)
+		{
+			case MOD_FMSYNTH: fprintf(stderr, "FM synth, "); break;
+			case MOD_MAPPER: fprintf(stderr, "MIDI mapper, "); break;
+			case MOD_WAVETABLE: fprintf(stderr, "Wavetable synth, "); break;
+			case MOD_MIDIPORT: fprintf(stderr, "MIDI port, "); break;
+			case MOD_SYNTH: fprintf(stderr, "Generic synth, "); break;
+			default: fprintf(stderr, "Unknown synth, "); break;
+		}
+
+		fprintf(stderr, "%d voices\n", devicecaps.wVoices);
+
+	}
 	
-	if ((fd = open(devicename, O_WRONLY|O_SYNC)) < 0) {
+	if ((fd = open(devicename, O_WRONLY|O_SYNC)) < 0) 
+	{
 	    fprintf(stderr, "Open failed (%d): %s\n", fd, devicename);
-	    return -1;
+	    exit;
 	}
 	return 0;
 }
@@ -98,7 +112,7 @@ int midiout_win32mci_close()
 int midiout_win32mci_flush()
 {
   /* opened with O_SYNC; already flushed.. */
-  Win32_usleep (320 * win32mci_lastwrote);  /* delay to make sure all was written */
+  usleep (320 * win32mci_lastwrote);  /* delay to make sure all was written */
   return 0;
 }
 

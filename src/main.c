@@ -57,7 +57,12 @@
 #endif /* HAVE_READLINE_READLINE_H */
 
 #ifdef HAVE_GETOPT_H
-#include <getopt.h>
+#	ifndef _MSC_VER
+#		include <getopt.h>
+#	else
+#		include <win32\getopt.h>
+#	endif
+	
 #endif /* HAVE_GETOPT_H */
 
 #ifdef HAVE_GETOPT_LONG

@@ -391,7 +391,12 @@ char** vocabulary_get_knames(int* count)
 
 void vocabulary_free_knames(char** names)
 {
-	int i=0;
-	while(names[i]) free(names[i++]);
+	int i	= 0;
+	while(names[i])
+	{
+		free(names[i]);
+		i++;
+	}
+
 	free(names);
 }
