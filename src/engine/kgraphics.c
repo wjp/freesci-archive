@@ -1658,16 +1658,19 @@ _k_view_list_do_postdraw(state_t *s, gfxw_list_t *list)
 void
 _k_view_list_mark_free(state_t *s, reg_t off)
 {
-	gfxw_dyn_view_t *w = (gfxw_dyn_view_t *) s->dyn_views->contents;
+	if (s->dyn_views) {
 
-	while (w) {
-		if (w->ID == off.segment
-		    && w->subID == off.offset) {
-			w->under_bitsp = NULL;
-			w->signalp = NULL;
+		gfxw_dyn_view_t *w = (gfxw_dyn_view_t *) s->dyn_views->contents;
+
+		while (w) {
+			if (w->ID == off.segment
+			    && w->subID == off.offset) {
+				w->under_bitsp = NULL;
+				w->signalp = NULL;
+			}
+
+			w = (gfxw_dyn_view_t *) w->next;
 		}
-
-		w = (gfxw_dyn_view_t *) w->next;
 	}
 }
 
