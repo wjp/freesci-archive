@@ -373,11 +373,10 @@ script_init_engine(state_t *s, sci_version_t version)
 							     &s->sys_strings_segment);
 	/* Allocate static buffer for savegame and CWD directories */
 	sys_string_acquire(s->sys_strings, SYS_STRING_SAVEDIR, "savedir", MAX_SAVE_DIR_SIZE);
+
 	s->save_dir = heap_allocate(s->_heap, MAX_SAVE_DIR_SIZE);
-	s->save_dir_copy = 0xffff;
+	s->save_dir_copy = make_reg(s->sys_strings_segment, SYS_STRING_SAVEDIR);
 	s->save_dir_edit_offset = 0;
-	s->save_dir_copy_buf = sci_malloc(MAX_SAVE_DIR_SIZE);
-	s->save_dir_copy_buf[0] = 0; /* Terminate string */
 
 	save_ff(s->_heap); /* Save heap state */
 

@@ -117,7 +117,7 @@ invoke_selector(state_t *s, reg_t object, int selector_id, int noinvalid, int kf
 int
 is_object(state_t *s, reg_t object)
 {
-	return determine_reg_type(s, object) == KSIG_OBJECT;
+	return obj_get(s, object) != NULL;
 }
 
 

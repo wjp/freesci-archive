@@ -122,7 +122,7 @@ typedef struct _state
 	long game_time; /* Counted at 60 ticks per second, reset during start time */
 
 	heap_ptr save_dir; /* Pointer to the allocated space for the save directory */
-	heap_ptr save_dir_copy; /* Last copy of the save dir */
+	reg_t save_dir_copy; /* Last copy of the save dir */
 	int save_dir_edit_offset; /* For kEdit(): Display offset for editing the savedir */
 	char *save_dir_copy_buf; /* Temp savedir buffer for kEdit() */
 

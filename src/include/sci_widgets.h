@@ -90,11 +90,11 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 /*---------------------*/
 
 gfxw_list_t *
-sciw_new_button_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, char selected, char inverse, char gray);
+sciw_new_button_control(gfxw_port_t *port, reg_t ID, rect_t zone, char *text, int font, char selected, char inverse, char gray);
 /* Creates a new button control list
 ** Parameters: (gfxw_port_t *) port: The port containing the color values to use for the
 **                                   button (the button is /not/ appended to the port there)
-**             (int) ID: Button's ID
+**             (reg_t) ID: Button's ID
 **             (rect_t) zone: The area occupied by the button
 **             (char *) text: The text to write into the button
 **             (int) font: The font to use for the button
@@ -105,11 +105,11 @@ sciw_new_button_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int 
 */
 
 gfxw_list_t *
-sciw_new_text_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font,
+sciw_new_text_control(gfxw_port_t *port, reg_t ID, rect_t zone, char *text, int font,
 		      gfx_alignment_t align, char frame, char inverse);
 /* Creates a new text control list
 ** Parameters: (gfxw_port_t *) port: The port containing the color values to use
-**             (int) ID: Text widget ID
+**             (reg_t) ID: Text widget ID
 **             (rect_t) zone: Area occupied by the text
 **             (char *) text: The text
 **             (int) font: The font the text is to be drawn in
@@ -120,11 +120,11 @@ sciw_new_text_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int fo
 */
 
 gfxw_list_t *
-sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, unsigned int cursor,
+sciw_new_edit_control(gfxw_port_t *port, reg_t ID, rect_t zone, char *text, int font, unsigned int cursor,
 		      char inverse);
 /* Creates a new edit control list
 ** Parameters: (gfxw_port_t *) port: The port containing the color values to use
-**             (int) ID: Text widget ID
+**             (reg_t) ID: Text widget ID
 **             (rect_t) zone: Area occupied by the text
 **             (char *) text: The text
 **             (int) font: The font the text is to be drawn in
@@ -134,11 +134,11 @@ sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int fo
 */
 
 gfxw_list_t *
-sciw_new_icon_control(gfxw_port_t *port, int ID, rect_t zone, int view, int loop, int cel,
+sciw_new_icon_control(gfxw_port_t *port, reg_t ID, rect_t zone, int view, int loop, int cel,
 		      char frame, char inverse);
 /* Creates a new icon control list
 ** Parameters: (gfxw_port_t *) port: The port containing the color values to use
-**             (int) ID: Text widget ID
+**             (reg_t) ID: Text widget ID
 **             (rect_t) zone: Area occupied by the text
 **             (int x int x int) view, loop, cel: The cel to display
 **             (char) frame: Whether the widget should be surrounded by a frame
@@ -147,7 +147,7 @@ sciw_new_icon_control(gfxw_port_t *port, int ID, rect_t zone, int view, int loop
 */
 
 gfxw_list_t *
-sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char **entries_list,
+sciw_new_list_control(gfxw_port_t *port, reg_t ID, rect_t zone, int font_nr, char **entries_list,
 		      int entries_nr, int list_top, int selection, char inverse);
 /* Creates a new list control list
 ** Parameters: (gfxw_port_t *) port: The port containing the color values to use

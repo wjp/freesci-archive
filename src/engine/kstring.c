@@ -384,29 +384,6 @@ kStrCpy(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	s->acc = PARAM(0);
 
-	if (src == s->save_dir + 2) {
-		int pathlen;
-		strcpy(s->save_dir_copy_buf, ((char *) s->heap + src));
-		s->save_dir_copy = dest;
-		SCIkdebug(SCIkSTRINGS, "Magic: Copying savedir -> savedir_tmp\n");
-
-		pathlen = strlen(s->save_dir_copy_buf);
-
-		s->save_dir_edit_offset = pathlen - 20;
-		if (s->save_dir_edit_offset < 8)
-			s->save_dir_edit_offset = 0;
-
-		strcpy((char *) (s->heap + dest), "The directory you specified");
-		return;
-	}
-
-	if (dest == s->save_dir + 2) {
-		strcpy(((char *) s->heap + dest), s->save_dir_copy_buf);
-		s->save_dir_copy = 0xffff;
-		SCIkdebug(SCIkSTRINGS, "Magic: Copying savedir_tmp -> savedir\n");
-		return;
-	}
-
 	if (argc > 2)
 		strncpy((char *) (s->heap + dest), (char *) (s->heap + src), UPARAM(2));
 	else

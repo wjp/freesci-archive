@@ -82,6 +82,9 @@ sm_free_script ( mem_obj_t* mem );
 static int
 _sm_deallocate (seg_manager_t* self, int seg);
 
+static byte*
+sm_dereference(seg_manager_t *self, reg_t ref, int *size);
+
 static clone_t *sm_alloc_clone(seg_manager_t *self, reg_t *addr);
 static list_t *sm_alloc_list(seg_manager_t *self, reg_t *addr);
 static node_t *sm_alloc_node(seg_manager_t *self, reg_t *addr);
@@ -89,6 +92,7 @@ static node_t *sm_alloc_node(seg_manager_t *self, reg_t *addr);
 static void sm_free_clone(seg_manager_t *self, reg_t addr);
 static void sm_free_list(seg_manager_t *self, reg_t addr);
 static void sm_free_node(seg_manager_t *self, reg_t addr);
+
 
 /***--------------------------***/
 /** end of forward declarations */
@@ -187,6 +191,8 @@ void sm_init(seg_manager_t* self) {
 
 	self->script_initialize_locals_zero = sm_script_initialize_locals_zero;
 	self->script_initialize_locals = sm_script_initialize_locals;
+
+	self->dereference = sm_dereference;
 
 	self->alloc_clone = sm_alloc_clone;
 	self->alloc_list = sm_alloc_list;
@@ -995,3 +1001,44 @@ sm_free_##TYPE(seg_manager_t *self, reg_t addr)							  \
 DEFINE_ALLOC_DEALLOC(clone, MEM_OBJ_CLONES);
 DEFINE_ALLOC_DEALLOC(list, MEM_OBJ_LISTS);
 DEFINE_ALLOC_DEALLOC(node, MEM_OBJ_NODES);
+
+
+
+static byte *
+sm_dereference(seg_manager_t *self, reg_t reg, int *size)
+{
+	mem_obj_t *mobj = self->heap[reg.segment];
+	VERIFY( sm_check (self, reg.segment), "Invalid seg id" );
+
+	switch (mobj->type) {
+
+	case MEM_OBJ_SCRIPT:
+		if (size)
+			*size = mobj->data.script.buf_size - reg.offset;
+		return mobj->data.script.buf + reg.offset;
+		break;
+
+	case MEM_OBJ_LOCALS: /* Emulate for strings */
+		if (size)
+			*size = (mobj->data.locals.nr - reg.offset) * 2;
+		return (byte *)(mobj->data.locals.locals + reg.offset);
+		break;
+
+	case MEM_OBJ_STACK: /* Emulate for strings */
+		if (size)
+			*size = (mobj->data.stack.nr - reg.offset) * 2;
+		return (byte *)(mobj->data.stack.entries + reg.offset);
+		break;
+
+	case MEM_OBJ_SYS_STRINGS:
+		if (size)
+			*size = mobj->data.sys_strings.strings[reg.offset].max_size;
+		return mobj->data.sys_strings.strings[reg.offset].value;
+		break;
+
+	default:
+		if (size)
+			*size = 0;
+		return NULL;
+	}
+}

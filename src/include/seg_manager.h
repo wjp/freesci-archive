@@ -196,6 +196,14 @@ typedef struct _seg_manager_t {
 	*/
 
 
+	byte *
+	(*dereference)(struct _seg_manager_t *self, reg_t reg, int *size);
+	/* Dereferences a raw memory pointer
+	** Parameters: (reg_t) reg: The reference to dereference
+	** Returns   : (byte *) The data block referenced
+	**             (int) size: (optionally) the theoretical maximum size of it
+	*/
+
 	/* Allocation/deallocation primitives for certain objects */
 	clone_t* (*alloc_clone)(struct _seg_manager_t *self, reg_t *addr);
 	list_t* (*alloc_list)(struct _seg_manager_t *self, reg_t *addr);

@@ -86,32 +86,13 @@ identify_value(state_t *s, reg_t reg, heap_ptr firstfree)
 		break;
 
 	case KSIG_REF: {
-		mem_obj_t *mobj = s->seg_manager.heap[reg.segment];
 		retval.emudat_type = EMU_TYPE_BLOCK;
 
-		switch (mobj->type) {
+		retval.emu_data.block =
+			s->seg_manager.dereference(&s->seg_manager,
+						   reg, &retval.emudat_size);
 
-		case MEM_OBJ_SCRIPT:
-			retval.emudat_size = mobj->data.script.buf_size - reg.offset;
-			retval.emu_data.block = mobj->data.script.buf + reg.offset;
-			break;
-
-		case MEM_OBJ_LOCALS: /* Emulate for strings */
-			retval.emudat_size = (mobj->data.locals.nr - reg.offset) * 2;
-			retval.emu_data.block = (byte *)(mobj->data.locals.locals + reg.offset);
-			break;
-
-		case MEM_OBJ_STACK: /* Emulate for strings */
-			retval.emudat_size = (mobj->data.stack.nr - reg.offset) * 2;
-			retval.emu_data.block = (byte *)(mobj->data.stack.entries + reg.offset);
-			break;
-
-		case MEM_OBJ_SYS_STRINGS:
-			retval.emudat_size = mobj->data.sys_strings.strings[reg.offset].max_size;
-			retval.emu_data.block = mobj->data.sys_strings.strings[reg.offset].value;
-			break;
-
-		default:
+		if (!retval.emu_data.block) {
 			SCIkdebug(SCIkERROR, "Cannot handle references into segment type %02x"
 				  " (from "PREG") during emulation\n",
 				  type, PRINT_REG(reg));

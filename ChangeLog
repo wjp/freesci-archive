@@ -1,3 +1,13 @@
+2002-11-22  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/vm.c (run_vm): Allowed unsigned comparisons between
+	pointers (always false if segments don't match)
+
+	* src/engine/kgraphics.c (_k_draw_control): Ported control drawing
+	(and the three related functions) to glutton
+	(draw_to_control_map): Don't draw to control map if the object has
+	been disposed
+
 2002-11-19  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/klists.c (kFirstNode): Allowed swallowing NULL

@@ -73,7 +73,6 @@ void kStrCmp(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kStrCpy(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kStrAt(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kReadNumber(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kDrawControl(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kNumCels(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kNumLoops(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDrawCel(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -104,10 +103,8 @@ void kDeviceInfo_Win32(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 #else
 void kDeviceInfo_Unix(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 #endif
-void kHiliteControl(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kRestartGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSaid(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kEditControl(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDoSound(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetSynonyms(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGraph(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -131,6 +128,9 @@ void kMemory(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 
 
 /* New kernel functions */
+reg_t kEditControl(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kDrawControl(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kHiliteControl(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kClone(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kDisposeClone(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kCanBeHere(struct _state *s, int funct_nr, int argc, reg_t *argv);
@@ -201,9 +201,9 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*14*/	{KF_OLD, "GetPort", {old:kGetPort}},
 /*15*/	{KF_OLD, "SetPort", {old:kSetPort}},
 /*16*/	{KF_OLD, "DisposeWindow", {old:kDisposeWindow}},
-/*17*/	{KF_OLD, "DrawControl", {old:kDrawControl}},
-/*18*/	{KF_OLD, "HiliteControl", {old:kHiliteControl}},
-/*19*/	{KF_OLD, "EditControl", {old:kEditControl}},
+/*17*/	{KF_NEW, "DrawControl", {new:{kDrawControl, "o"}}},
+/*18*/	{KF_NEW, "HiliteControl", {new:{kHiliteControl, "o"}}},
+/*19*/	{KF_NEW, "EditControl", {new:{kEditControl, "ZoZo"}}},
 /*1a*/	{KF_NEW, "TextSize", {new:{kTextSize, "rrii*"}}},
 /*1b*/	{KF_OLD, "Display", {old:kDisplay}},
 /*1c*/	{KF_OLD, "GetEvent", {old:kGetEvent}},
@@ -948,7 +948,7 @@ kernel_matches_signature(state_t *s, char *sig, int argc, reg_t *argv)
 	while (*sig && argc) {
 		int type = determine_reg_type(s, *argv);
 
-		if (!type) {
+		if (!type && *sig != KSIG_ANY) {
 			sciprintf("[KERN] Could not determine type of ref "PREG";"
 				  " failing signature check\n",
 				  PRINT_REG(*argv));

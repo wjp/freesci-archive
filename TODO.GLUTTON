@@ -2,56 +2,14 @@ Problem:
 	VC++ 6.0 (SP5) + SDL
 
 Next TODO:
-	* [S] Re-implement kClone/kDisposeClone
-	* [C] Implement Animate()
-	* [C] Implement CanBeHere()
-	* [C] Implement DoBresen()
-	* [X] Find out why all lockers are exactly 1, fix this erroneous
-	  situation
-	* [X] Check validity of OBJ_SPECIES, OBJ_SUPERCLASS, OBJ_ISCLASS in vm.c
-	* [X] Re-implement 'delete' and 'doit' calls in kgraphics (upcalls)
 	* [C] Add sound cues
 	* [C] Implement Sort()
 	* Fix remaining migration warnings
 	* Re-enable hunk allocation/reference/deallocation
+	* Fix list widgets
 	* Re-enable save_game, restore_game, check_savegame
 	* Re-enable quick-restore code
 	* Re-enable save_game and restore_game debug console commands
 
 
-
-NOTES:
-
-
-Reference counting for scripts
-==============================
-Two separate kinds of reference counts must be kept: The 'active' count and the
-'dependancy' count. A script must be available if either count is non-zero.
-
-Active count
-------------
-  The active count is either 0 or 1. It is set to 1 whenever script code
-instantiates the script (by doing a 'class' call, a 'calle', or a
-'callk ScriptID'). It is set to 0 whenever 'callk DisposeScript' is invoked
-upon it.
-
-Dependancy count
-----------------
-  This count gives the number of currently loaded/cloned objects and classes
-which, directly or indirectly, depend on this script. It is increased and
-decreased recursively upon object/class cloning, script instantiation and
-script uninstantiation.
-
-
-Encoding
---------
-  Storing these in the same integer and identifying the active count with the
-LSB allows checking for whether the script has already been loaded with a
-single comparison. Operations for this are:
-
--- Lock active		: refcount |= 1
--- Unlock active	: refcount &= ~1;
--- Add dependancy	: refcount += 2;
--- Remove dependancy	: refcount -= 2;
--- Check dependancy	: if (refcount) ...
 

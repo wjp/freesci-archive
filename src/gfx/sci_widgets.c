@@ -283,12 +283,12 @@ _sciw_add_text_to_list(gfxw_list_t *list, gfxw_port_t *port, rect_t zone, char *
 }
 
 gfxw_list_t *
-sciw_new_button_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, char selected, char inverse, char grayed_out)
+sciw_new_button_control(gfxw_port_t *port, reg_t ID, rect_t zone, char *text, int font, char selected, char inverse, char grayed_out)
 {
         gfx_color_t *frame_col = (inverse)? &(port->bgcolor) : &(port->color);
 	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y), 1), 0);
 
-	gfxw_set_id(GFXW(list), ID, GFXW_NO_ID);
+	gfxw_set_id(GFXW(list), ID.segment, ID.offset);
 
 	zone.x = 0;
 	zone.y = 0;
@@ -323,12 +323,12 @@ sciw_new_button_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int 
 
 
 gfxw_list_t *
-sciw_new_text_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font,
+sciw_new_text_control(gfxw_port_t *port, reg_t ID, rect_t zone, char *text, int font,
 		      gfx_alignment_t align, char framed, char inverse)
 {
 	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y), 2), 0);
 
-	gfxw_set_id(GFXW(list), ID, GFXW_NO_ID);
+	gfxw_set_id(GFXW(list), ID.segment, ID.offset);
 
 	zone.x = 0;
 	zone.y = 0;
@@ -338,7 +338,7 @@ sciw_new_text_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int fo
 
 
 gfxw_list_t *
-sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, unsigned int cursor,
+sciw_new_edit_control(gfxw_port_t *port, reg_t ID, rect_t zone, char *text, int font, unsigned int cursor,
 		      char inverse)
 {
 	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y), 1), 0);
@@ -346,7 +346,7 @@ sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int fo
 	long draw_cursor;
 	long foo;
 
-	gfxw_set_id(GFXW(list), ID, GFXW_NO_ID);
+	gfxw_set_id(GFXW(list), ID.segment, ID.offset);
 	zone.x = 0;
 	zone.y = 1;
 
@@ -411,12 +411,12 @@ sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int fo
 
 
 gfxw_list_t *
-sciw_new_icon_control(gfxw_port_t *port, int ID, rect_t zone, int view, int loop, int cel,
+sciw_new_icon_control(gfxw_port_t *port, reg_t ID, rect_t zone, int view, int loop, int cel,
 		      char frame, char inverse)
 {
 	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y), 1), 0);
 	gfxw_widget_t *icon;
-	gfxw_set_id(GFXW(list), ID, GFXW_NO_ID);
+	gfxw_set_id(GFXW(list), ID.segment, ID.offset);
 
 	if (!port->visual) {
 		GFXERROR("Attempting to create icon control for virtual port!\n");
@@ -443,7 +443,7 @@ sciw_new_icon_control(gfxw_port_t *port, int ID, rect_t zone, int view, int loop
 
 
 gfxw_list_t *
-sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char **entries_list,
+sciw_new_list_control(gfxw_port_t *port, reg_t ID, rect_t zone, int font_nr, char **entries_list,
 		      int entries_nr, int list_top, int selection, char inverse)
 {
 	gfxw_list_t *list = gfxw_new_list(_move_and_extend_rect(zone, gfx_point(port->zone.x, port->zone.y), 1), 0);
@@ -460,7 +460,7 @@ sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char 
 
 	columns /= font_height;
 
-	gfxw_set_id(GFXW(list), ID, GFXW_NO_ID);
+	gfxw_set_id(GFXW(list), ID.segment, ID.offset);
 
 	arr_up[0] = SCI_SPECIAL_CHAR_ARROW_UP;
 	arr_down[0] = SCI_SPECIAL_CHAR_ARROW_DOWN;

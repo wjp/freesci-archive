@@ -1216,27 +1216,29 @@ kSetNowSeen(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 
 static void
-_k_draw_control(state_t *s, heap_ptr obj, int inverse);
+_k_draw_control(state_t *s, reg_t obj, int inverse);
 
 
-void
-kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kDrawControl(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr obj = UPARAM(0);
+	reg_t obj = argv[0];
 
 
 	_k_draw_control(s, obj, 0);
 	FULL_REDRAW();
+	return s->r_acc;
 }
 
 
-void
-kHiliteControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kHiliteControl(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr obj = UPARAM(0);
+	reg_t obj = argv[0];
 
 
 	_k_draw_control(s, obj, 1);
+	return s->r_acc;
 }
 
 
@@ -1268,33 +1270,38 @@ update_cursor_limits(int *display_offset, int *cursor, int max_displayed)
 
 
 
-void
-kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kEditControl(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr obj = UPARAM(0);
-	heap_ptr event = UPARAM(1);
+	reg_t obj = argv[0];
+	reg_t event = argv[1];
 
 
-	if (obj) {
-		word ct_type = GET_SELECTOR(obj, type);
+	if (obj.segment) {
+		word ct_type = GET_SEL32V(obj, type);
 		switch (ct_type) {
 
 		case K_CONTROL_EDIT:
-			if (event && (GET_SELECTOR(event, type) == SCI_EVT_KEYBOARD)) {
-				int max_displayed = GET_SELECTOR(obj, max);
+			if (event.segment && ((GET_SEL32V(event, type)) == SCI_EVT_KEYBOARD)) {
+				int max_displayed = GET_SEL32V(obj, max);
 				int max = max_displayed;
-				int cursor = GET_SELECTOR(obj, cursor);
-				int modifiers = GET_SELECTOR(event, modifiers);
-				int key = GET_SELECTOR(event, message);
-				heap_ptr text_offset = UGET_SELECTOR(obj, text);
+				int cursor = GET_SEL32V(obj, cursor);
+				int modifiers = GET_SEL32V(event, modifiers);
+				int key = GET_SEL32V(event, message);
+				reg_t text_pos = GET_SEL32(obj, text);
 				int display_offset = 0;
 
-				char *text = (char *) (s->heap + text_offset);
+				char *text = (char *) s->seg_manager.dereference(&s->seg_manager, text_pos, NULL);
 				int textlen;
 
-				if (text_offset == s->save_dir_copy) {
+				if (!text) {
+					SCIkdebug(SCIkWARNING, "Could not draw control: "PREG" does not reference text!\n",
+						  PRINT_REG(text_pos));
+					return;
+				}
+
+				if (REG_EQ(text_pos, s->save_dir_copy)) {
 					max = MAX_SAVE_DIR_SIZE - 1;
-					text = s->save_dir_copy_buf;
 					display_offset = s->save_dir_edit_offset;
 				}
 				textlen = strlen(text);
@@ -1315,7 +1322,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 					case 'h': _K_EDIT_BACKSPACE; break;
 					case 'd': _K_EDIT_DELETE; break;
 					}
-					PUT_SELECTOR(event, claimed, 1);
+					PUT_SEL32V(event, claimed, 1);
 
 				} else if (modifiers & SCI_EVM_ALT) { /* Ctrl has precedence over Alt */
 
@@ -1336,16 +1343,16 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 						break;
 					}
 					}
-					PUT_SELECTOR(event, claimed, 1);
+					PUT_SEL32V(event, claimed, 1);
 
 				} else if (key < 31) {
 
-					PUT_SELECTOR(event, claimed, 1);
+					PUT_SEL32V(event, claimed, 1);
 
 					switch(key) {
 					case SCI_K_BACKSPACE: _K_EDIT_BACKSPACE; break;
 					default:
-						PUT_SELECTOR(event, claimed, 0);
+						PUT_SEL32V(event, claimed, 0);
 					}
 
 				} else if (key & 0xff00) {
@@ -1358,7 +1365,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 					case SCI_K_DELETE: _K_EDIT_DELETE; break;
 					}
 
-					PUT_SELECTOR(event, claimed, 1);
+					PUT_SEL32V(event, claimed, 1);
 				} else if ((key > 31) && (key < 128)) {
 					int inserting = (modifiers & SCI_EVM_INSERT);
 
@@ -1385,29 +1392,29 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 					if (max_displayed < max)
 						update_cursor_limits(&display_offset, &cursor, max_displayed);
 
-					if (text_offset == s->save_dir_copy)
+					if (REG_EQ(text_pos, s->save_dir_copy))
 						s->save_dir_edit_offset = display_offset;
 
 					cursor -= display_offset;
 
-					PUT_SELECTOR(event, claimed, 1);
+					PUT_SEL32V(event, claimed, 1);
 				}
 
-				PUT_SELECTOR(obj, cursor, cursor); /* Write back cursor position */
+				PUT_SEL32V(obj, cursor, cursor); /* Write back cursor position */
 			}
 
 		case K_CONTROL_BOX:
 		case K_CONTROL_BUTTON:
-			if (event) PUT_SELECTOR(event, claimed, 1);
+			if (event.segment) PUT_SEL32V(event, claimed, 1);
 			_k_draw_control(s, obj, 0);
-			s->acc = 0;
+			return NULL_REG;
 			break;
 
 		case K_CONTROL_TEXT: {
-			int state = GET_SELECTOR(obj, state);
-			PUT_SELECTOR(obj, state, state | CONTROL_STATE_DITHER_FRAMED);
+			int state = GET_SEL32V(obj, state);
+			PUT_SEL32V(obj, state, state | CONTROL_STATE_DITHER_FRAMED);
 			_k_draw_control(s, obj, 0);
-			PUT_SELECTOR(obj, state, state);
+			PUT_SEL32V(obj, state, state);
 		}
 		break;
 
@@ -1415,67 +1422,68 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			SCIkwarn(SCIkWARNING, "Attempt to edit control type %d\n", ct_type);
 		}
 	}
+
+	return s->r_acc;
 }
 
 
 static void
-_k_draw_control(state_t *s, heap_ptr obj, int inverse)
+_k_draw_control(state_t *s, reg_t obj, int inverse)
 {
-	int x = GET_SELECTOR(obj, nsLeft);
-	int y = GET_SELECTOR(obj, nsTop);
-	int xl = GET_SELECTOR(obj, nsRight) - x;
-	int yl = GET_SELECTOR(obj, nsBottom) - y;
+	int x = GET_SEL32SV(obj, nsLeft);
+	int y = GET_SEL32SV(obj, nsTop);
+	int xl = GET_SEL32SV(obj, nsRight) - x;
+	int yl = GET_SEL32SV(obj, nsBottom) - y;
 	rect_t area = gfx_rect(x, y, xl, yl);
 
-	int font_nr = GET_SELECTOR(obj, font);
-	heap_ptr text_offset = UGET_SELECTOR(obj, text);
-	char *text = (char *) (s->heap + text_offset);
-	int view = GET_SELECTOR(obj, view);
-	int cel = sign_extend_byte(GET_SELECTOR(obj, cel));
-	int loop = sign_extend_byte(GET_SELECTOR(obj, loop));
+	int font_nr = GET_SEL32V(obj, font);
+	reg_t text_pos = GET_SEL32(obj, text);
+	char *text = (char *) s->seg_manager.dereference(&s->seg_manager, text_pos, NULL);
+	int view = GET_SEL32V(obj, view);
+	int cel = sign_extend_byte(GET_SEL32V(obj, cel));
+	int loop = sign_extend_byte(GET_SEL32V(obj, loop));
 	int mode;
 
-	int type = GET_SELECTOR(obj, type);
-	int state = GET_SELECTOR(obj, state);
+	int type = GET_SEL32V(obj, type);
+	int state = GET_SEL32V(obj, state);
 	int cursor;
 	int max;
 
-	if (text_offset == s->save_dir_copy) {
+	if (REG_EQ(text_pos, s->save_dir_copy)) {
 		SCIkdebug(SCIkGRAPHICS, "Displaying the save_dir copy\n");
-		text = s->save_dir_copy_buf + s->save_dir_edit_offset;
 	}
 
 	switch (type) {
 
 	case K_CONTROL_BUTTON:
 
-		SCIkdebug(SCIkGRAPHICS, "drawing button %04x to %d,%d\n", obj, x, y);
+		SCIkdebug(SCIkGRAPHICS, "drawing button "PREG" to %d,%d\n", PRINT_REG(obj), x, y);
 		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_button_control(s->port, obj, area, text, font_nr,
 								  (gint8)(state & CONTROL_STATE_FRAMED),
 								  (gint8)inverse, (gint8)(state & CONTROL_STATE_GRAY)));
 		break;
 
 	case K_CONTROL_TEXT:
-		mode = GET_SELECTOR(obj, mode);
+		mode = GET_SEL32V(obj, mode);
 
-		SCIkdebug(SCIkGRAPHICS, "drawing text %04x to %d,%d, mode=%d\n", obj, x, y, mode);
+		SCIkdebug(SCIkGRAPHICS, "drawing text "PREG" to %d,%d, mode=%d\n", PRINT_REG(obj), x, y, mode);
 
 		ADD_TO_CURRENT_BG_WIDGETS(
-			sciw_new_text_control(s->port, (int)obj, area, text, font_nr, mode,
-								(gint8)(!!(state & CONTROL_STATE_DITHER_FRAMED)),
-								(gint8)inverse));
+			sciw_new_text_control(s->port, obj, area, text, font_nr, mode,
+					      (gint8)(!!(state & CONTROL_STATE_DITHER_FRAMED)),
+					      (gint8)inverse));
 		break;
 
 	case K_CONTROL_EDIT:
-		SCIkdebug(SCIkGRAPHICS, "drawing edit control %04x to %d,%d\n", obj, x, y);
+		SCIkdebug(SCIkGRAPHICS, "drawing edit control "PREG" to %d,%d\n", PRINT_REG(obj), x, y);
 
-		max = GET_SELECTOR(obj, max);
-		cursor = GET_SELECTOR(obj, cursor);
+		max = GET_SEL32V(obj, max);
+		cursor = GET_SEL32V(obj, cursor);
 
 		if (cursor > (signed)strlen(text))
 			cursor = strlen(text);
 
-		if (text_offset == s->save_dir_copy)
+		if (REG_EQ(text_pos, s->save_dir_copy))
 			update_cursor_limits(&s->save_dir_edit_offset, &cursor, max);
 
 		update_cursor_limits(&s->save_dir_edit_offset, &cursor, max);
@@ -1484,7 +1492,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 
 	case K_CONTROL_ICON:
 
-		SCIkdebug(SCIkGRAPHICS, "drawing icon control %04x to %d,%d\n", obj, x, y -1);
+		SCIkdebug(SCIkGRAPHICS, "drawing icon control "PREG" to %d,%d\n", PRINT_REG(obj), x, y -1);
 
 		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_icon_control(s->port, obj, area, view, loop, cel,
 							  (gint8)(state & CONTROL_STATE_FRAMED), (gint8)inverse));
@@ -1494,19 +1502,22 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 		char **entries_list = NULL;
 		char *seeker;
 		int entries_nr;
-		int lsTop = UGET_SELECTOR(obj, lsTop);
+		int lsTop = GET_SEL32V(obj, lsTop);
 		int list_top = 0;
 		int selection = 0;
+		int string_width = SCI_MAX_SAVENAME_LENGTH;
+		int phys_string_width = string_width << 1;
+		int virt_string_width = SCI_MAX_SAVENAME_LENGTH >> 1;
 		int i;
 
 		SCIkdebug(SCIkGRAPHICS, "drawing list control %04x to %d,%d\n", obj, x, y);
-		cursor = UGET_SELECTOR(obj, cursor);
+		cursor = GET_SEL32V(obj, cursor);
 
 		entries_nr = 0;
 		seeker = text;
 		while (seeker[0]) { /* Count string entries in NULL terminated string list */
 			++entries_nr;
-			seeker += SCI_MAX_SAVENAME_LENGTH;
+			seeker += phys_string_width;
 		}
 
 		if (entries_nr) { /* determine list_top, selection, and the entries_list */
@@ -1514,10 +1525,10 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 			entries_list = sci_malloc(sizeof(char *) * entries_nr);
 			for (i = 0; i < entries_nr; i++) {
 				entries_list[i] = seeker;
-				seeker += SCI_MAX_SAVENAME_LENGTH;
-				if ((seeker - ((char *)s->heap)) == lsTop)
+				seeker += virt_string_width;
+				if ((seeker - text) == lsTop)
 					list_top = i + 1;
-				if ((seeker - ((char *)s->heap)) == cursor)
+				if ((seeker - text) == cursor)
 					selection = i + 1;
 			}
 		}
@@ -1533,8 +1544,8 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 		break;
 
 	default:
-		SCIkwarn(SCIkWARNING, "Unknown control type: %d at %04x, at (%d, %d) size %d x %d\n",
-			 type, obj, x, y, xl, yl);
+		SCIkwarn(SCIkWARNING, "Unknown control type: %d at "PREG", at (%d, %d) size %d x %d\n",
+			 type, PRINT_REG(obj), x, y, xl, yl);
 	}
 
 	if (!s->pic_not_valid) {
@@ -1549,6 +1560,10 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int funct_nr, int argc, r
 	int priority = view->color.priority;
 	int y = view->pos.y;
 	abs_rect_t abs_zone;
+	reg_t obj = make_reg(view->ID, view->subID);
+
+	if (!is_object(s, obj))
+		return;
 /*	int has_nsrect = (view->ID <=0)? 0 : lookup_selector(s, view->ID, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;*/
 
 	if (view->ID > 0)
@@ -1685,11 +1700,10 @@ _k_view_list_dispose_loop(state_t *s, list_t *list, gfxw_dyn_view_t *widget,
 					}
 				}
 
-				if (obj.segment) {
+				if (is_object(s, obj)) {
 					if (invoke_selector(INV_SEL(obj, delete, 1), 0))
 						SCIkwarn(SCIkWARNING, "Object at "PREG" requested deletion, but does not have"
 							 " a delete funcselector\n", PRINT_REG(obj));
-
 					if (_k_animate_ran) {
 						SCIkwarn(SCIkWARNING, "Object at "PREG" invoked kAnimate() during deletion!\n",
 							 PRINT_REG(obj));
