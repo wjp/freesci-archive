@@ -1,7 +1,13 @@
 2001-03-10  Solomon Peachy <pizza@shaftnet.org>
 	
-	* src/sound/soundserver_null.c:  restore instrument map on game
-                                         restore.
+	* src/sound/soundserver_null.c:  Restore instrument map &
+                                         reverb status on game restore.
+	* src/sound/sfx_save.cfsml:  Added in new[er] song_t state,
+                      such as the polyphony, reset on stop, etc.
+	* src/sound/sfx_save.c:  compiled above cfsml file.
+	* src/include/soundserver.h:  Added in reverb state to the
+                                      song_t thingey.
+	* src/sound/sound.c: Initialize the maxfade, reverb settings
 
 2001-03-10  Christoph Reichenbach  <jameson@linuxgames.com>
 

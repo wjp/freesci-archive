@@ -71,6 +71,11 @@ RECORD song_t "song_t" {
   int loopmark;
   int fading;
 
+  int reverb;
+  int maxfade;
+  int resetflag;
+  int polyphony[STATIC MIDI_CHANNELS];
+
   int file_nr;
   int priority;
   int loops;

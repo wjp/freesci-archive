@@ -107,6 +107,8 @@ typedef struct _song {
   int loopmark; /* loop position */
   int fading;   /* Ticks left until faded out, or -1 if not fading */
   int maxfade;  /* Total ticks in the fade (used to calculate volume */
+ 
+  int reverb;   /* current reverb setting */
 
   byte *data;   /* dynamically allocated data */
   int file_nr;  /* Temporarily used to save and restore song data */

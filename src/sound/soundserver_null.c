@@ -608,6 +608,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 						    if (newsong->instruments[i]) 
 						      midi_event2(0xc0 | i, newsong->instruments[i]);
 						  }
+						  midi_reverb(newsong->reverb);
 						}
 
 						last_played.tv_sec -= secs = (usecs - last_played.tv_usec) / 1000000;
@@ -788,6 +789,7 @@ void sci_midi_command(song_t *song, guint8 command,
       song->polyphony[command & 0x0f] = param2;
       break;
     case SCI_MIDI_SET_REVERB:
+      song->reverb = param2;
       midi_reverb(param2);
       break;
     case SCI_MIDI_SET_VELOCITY:

@@ -467,9 +467,11 @@ song_new(word handle, byte *data, int size, int priority)
 
   retval->pos = retval->loopmark = 33; /* The first 33 bytes are header data */
   retval->fading = -1; /* Not fading */
+  retval->maxfade = 1; /* placeholder */
   retval->loops = 0; /* No fancy additional loops */
   retval->status = SOUND_STATUS_STOPPED;
 
+  retval->reverb = 0;  /* what reverb setting to use */
   retval->resetflag = 0; /* don't reset position on SoundStop */
   
   memset(retval->instruments, 0, sizeof(int) * MIDI_CHANNELS);
