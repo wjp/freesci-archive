@@ -38,11 +38,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifndef O_BINARY
-#define O_BINARY 0
-/* Not defined on most systems */
-#endif
-
 #undef SCI_REQUIRE_RESOURCE_FILES
 /* #define SCI_VERBOSE_RESMGR 1 */
 
@@ -368,7 +363,7 @@ _scir_load_resource(resource_mgr_t *mgr, resource_t *res)
 
 	/* First try lower-case name */
 	sprintf(filename, "resource.%03i", res->file);
-	fh = open(filename, O_RDONLY|O_BINARY);
+	fh = open(filename, O_RDONLY | O_BINARY);
 
 	if (fh <= 0) {
 		sprintf(filename, "RESOURCE.%03i", res->file);

@@ -1,5 +1,13 @@
 2001-09-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/kmovement.c (initialize_bresen): No longer initializes
+	b_movCnt
+	(kDoBresen): No longer set mover's coordinates to the client's
+	coordinates if finishing by collision
+
+	* src/scicore/resource_map.c (sci0_read_resource_map):
+	Set O_BINARY for reading file, for Win32
+
 	* src/engine/kmath.c (get_angle): No longer returns negative
 	angles.
 

@@ -5701,14 +5701,13 @@ gamestate_save(state_t *s, char *dirname)
 	sci_dir_t dir;
 	char *filename;
 	int fd;
-SCI_MEMTEST;
+
 	_global_save_state = s;
 	s->savegame_version = FREESCI_SAVEGAME_VERSION;
 	s->dyn_views_list_serial = (s->dyn_views)? s->dyn_views->serial : -2;
 	s->drop_views_list_serial = (s->drop_views)? s->drop_views->serial : -2;
 	s->port_serial = (s->port)? s->port->serial : -2;
 
-SCI_MEMTEST;
 	if (s->execution_stack_base) {
 		sciprintf("Cannot save from below kernel function\n");
 		return 1;
@@ -5749,7 +5748,7 @@ SCI_MEMTEST;
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 1030 "savegame.cfsml"
+#line 1029 "savegame.cfsml"
 SCI_MEMTEST;
 
 	fclose(fh);
@@ -5838,13 +5837,13 @@ gamestate_restore(state_t *s, char *dirname)
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 1089 "savegame.cfsml"
+#line 1088 "savegame.cfsml"
 
 	fclose(fh);
 
 	if ((retval->savegame_version < 1) || (retval->savegame_version > FREESCI_SAVEGAME_VERSION)) {
 
-		if (retval->savegame_version < 1)
+		if (retval->savegame_version < 3)
 			sciprintf("Old savegame version detected- can't load\n");
 		else
 			sciprintf("Savegame version is %d- maximum supported is %0d\n", retval->savegame_version, FREESCI_SAVEGAME_VERSION);
@@ -5968,6 +5967,12 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->kernel_opt_flags = 0;
 
 	retval->resmgr = s->resmgr;
+
+	if (retval->savegame_version < 3) {
+		retval->save_dir = heap_allocate(retval->_heap, MAX_HOMEDIR_SIZE + strlen(FREESCI_GAMEDIR)
+						 + MAX_GAMEDIR_SIZE + 4); /* +4 for the three slashes and trailing \0 */
+		/* Compensate for save_dir location change */
+	}
 
 	retval->successor = NULL;
 

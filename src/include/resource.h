@@ -151,6 +151,9 @@ typedef guint16 word;
 
 #define MAX_HOMEDIR_SIZE 255
 
+#ifndef O_BINARY
+#  define O_BINARY 0
+#endif
 
 /**** FUNCTION DECLARATIONS ****/
 

@@ -132,7 +132,7 @@ initialize_bresen(state_t *s, int funct_nr, int argc, heap_ptr argp, heap_ptr mo
 	SCIkdebug(SCIkBRESEN, "    steps=%d, mv=(%d, %d), i1= %d, i2=%d\n",
 		  numsteps, deltax_step, deltay_step, i1, bdi*2);
 
-	PUT_SELECTOR(mover, b_movCnt, numsteps);
+	/* PUT_SELECTOR(mover, b_movCnt, numsteps); */
 	PUT_SELECTOR(mover, b_di, bdi);
 	PUT_SELECTOR(mover, b_i1, i1);
 	PUT_SELECTOR(mover, b_i2, bdi * 2);
@@ -201,10 +201,6 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			y = desty;
       
 			completed = 1;
-#if 0
-			if (s->selector_map.completed > -1)
-				PUT_SELECTOR(mover, completed, 1); /* Finish! */
-#endif
 
 			SCIkdebug(SCIkBRESEN, "Finished mover %04x\n", mover);
 		}
@@ -224,18 +220,8 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		PUT_SELECTOR(client, x, oldx);
 		PUT_SELECTOR(client, y, oldy);
-		if (s->selector_map.completed > -1)
-			PUT_SELECTOR(mover, completed, 1);
  
-		PUT_SELECTOR(mover, x, oldx);
-		PUT_SELECTOR(mover, y, oldy);    
-
 		PUT_SELECTOR(client, signal, (signal | _K_VIEW_SIG_FLAG_HIT_OBSTACLE));
-
-#if 0
-		if (s->selector_map.completed > -1)
-			PUT_SELECTOR(mover, completed, completed = 1); /* Finish! */
-#endif
 
 		SCIkdebug(SCIkBRESEN, "Finished mover %04x by collision\n", mover);
 		s->acc = completed = 1;

@@ -47,7 +47,7 @@
 #include <kernel.h>
 #include <gfx_state_internal.h>
 
-#define FREESCI_SAVEGAME_VERSION 2
+#define FREESCI_SAVEGAME_VERSION 3
 
 #define FREESCI_GAMEDIR ".freesci"
 #define FREESCI_CONFFILE "config"

@@ -27,9 +27,12 @@
 
 #include <sci_memory.h>
 #include <sciresource.h>
+#include <resource.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
 
 #define RESOURCE_MAP_FILENAME "resource.map"
 
@@ -61,7 +64,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 	int next_entry;
 	int max_resfile_nr = 0;
 	byte buf[SCI0_RESMAP_ENTRIES_SIZE];
-	fd = sci_open(RESOURCE_MAP_FILENAME, O_RDONLY);
+	fd = sci_open(RESOURCE_MAP_FILENAME, O_RDONLY | O_BINARY);
 
 	if (!fd)
 		return SCI_ERROR_RESMAP_NOT_FOUND;
