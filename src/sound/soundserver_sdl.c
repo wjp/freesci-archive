@@ -171,7 +171,6 @@ sound_sdl_get_command(GTimeVal *wait_tvp)
 		}
 	}
 
-	SDL_LockMutex(in_mutex);
 	event = sound_eq_retreive_event(&inqueue);
 	SDL_UnlockMutex(in_mutex);
 
