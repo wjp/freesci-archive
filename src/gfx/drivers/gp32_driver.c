@@ -28,6 +28,7 @@
 #include <sci_memory.h>
 #include <gfx_driver.h>
 #include <gfx_tools.h>
+#include <ctype.h>
 #include "keyboard.h"
 #include "wrap.h"
 
@@ -42,8 +43,12 @@ static int event_total;
 #define GP32_MODE_MOUSE 2
 #define GP32_MODE_NR 3
 
-#define GP32_MOUSE_LEFT (1<<0)
-#define GP32_MOUSE_RIGHT (1<<1)
+#define GP32_MOUSE_LEFT (1 << 0)
+#define GP32_MOUSE_RIGHT (1 << 1)
+
+/* Chatboard IRQ routines. */
+extern void UART0Rx(void) __attribute__ ((interrupt ("IRQ")));
+extern void UART0Tx(void) __attribute__ ((interrupt ("IRQ")));
 
 struct _gp32_state {
 	/* 0 = static buffer, 1 = back buffer, 2 = front buffer */
@@ -75,6 +80,10 @@ struct _gp32_state {
 };
 
 static struct _gp32_state *S;
+
+#define GP32_OPTION_CHATBOARD (1 << 0)
+#define GP32_OPTION_BLU_PLUS (1 << 1)
+static int options;
 
 static int
 gp32_add_event(sci_event_t *event)
@@ -213,6 +222,7 @@ input_handler(void)
 ** Returns   : (void)
 */
 {
+	sci_event_t event;
 	guint16 buttons = gp_getButton();
 	if (S->timer > 0)
 		S->timer--;
@@ -243,7 +253,6 @@ input_handler(void)
 			if (buttons & BUTTON_A) {
 				int vkbd_key;
 				if (vkbd_get_key(&vkbd_key, &S->vkbd_bucky)) {
-					sci_event_t event;
 					event.type = SCI_EVT_KEYBOARD;
 					event.data = vkbd_key;
 					event.buckybits = S->vkbd_bucky;
@@ -253,7 +262,6 @@ input_handler(void)
 			draw_keyboard();
 		}
 		else if (S->mode == GP32_MODE_KBD) {
-			sci_event_t event;
 			event.type = SCI_EVT_KEYBOARD;
 			event.buckybits = S->vkbd_bucky;
 			event.data = 0;
@@ -274,7 +282,6 @@ input_handler(void)
 		}
 	}
 	if (S->mode == GP32_MODE_MOUSE) {
-		sci_event_t event;
 		event.buckybits = S->vkbd_bucky;
 		int step = (buttons & BUTTON_L ? 2 : 1);
 		if (buttons & BUTTON_RIGHT)
@@ -313,6 +320,18 @@ input_handler(void)
 			event.data = 2;
 			gp32_add_event(&event);
 			S->mstate &= ~GP32_MOUSE_RIGHT;
+		}
+	}
+	if (options & GP32_OPTION_CHATBOARD) {
+		char c = gp_getChatboard();
+		if ((c == '\r') || ((c >= ' ') && (c <= '~'))) {
+			event.type = SCI_EVT_KEYBOARD;
+			event.data = tolower(c);
+			event.buckybits = 0;
+			gp32_add_event(&event);
+		}
+		else {
+			sciprintf("Unknown Chatboard key %02x\n", c);
 		}
 	}
 }
@@ -519,6 +538,16 @@ gp32_copy_rect_buffer(byte *src, byte *dest, int srcline, int destline,
 static int
 gp32_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 {
+	if (!stricmp(attribute, "blu_plus")) {
+		if (string_truep(value)) {
+			options |= GP32_OPTION_BLU_PLUS;
+			return GFX_OK;
+		}
+		else {
+			options &= ~GP32_OPTION_BLU_PLUS;
+			return GFX_OK;
+		}
+	}
 	sciprintf("Fatal error: Attribute '%s' does not exist\n", attribute);
 	return GFX_FATAL;
 }
@@ -566,7 +595,10 @@ gp32_init_specific(struct _gfx_driver *drv, int xfact, int yfact,
 	gshift = 21;
 	bshift = 26;
 
-	gp_initFramebuffer((u16 *) FRAMEBUFFER, 16, 50);
+	if (options & GP32_OPTION_BLU_PLUS)
+		gp_initFramebufferBP((u16 *) FRAMEBUFFER, 16, 50);
+	else
+		gp_initFramebuffer((u16 *) FRAMEBUFFER, 16, 50);
 	S->visual[2] = (byte *) FRAMEBUFFER;
 	S->line_pitch[2] = 240 * 2;
 	/* We clear 40 extra bytes which are displayed when virtual
@@ -588,6 +620,13 @@ gp32_init_specific(struct _gfx_driver *drv, int xfact, int yfact,
 
 	event_total = 0;
 
+	if (gp_initChatboard()) {
+		sciprintf("Chatboard detected.\n");
+		options |= GP32_OPTION_CHATBOARD;
+	}
+	else
+		options &= ~GP32_OPTION_CHATBOARD;
+
 	install_input_handler();
 
 	sciprintf("Video mode initialisation completed succesfully\n");
@@ -607,6 +646,15 @@ static void
 gp32_exit(struct _gfx_driver *drv)
 {
 	remove_input_handler();
+
+	/* Remove Chatboard driver. */
+	if (options & GP32_OPTION_CHATBOARD) {
+		gp_disableIRQ();
+		gp_removeSWIIRQ(23, UART0Rx);
+		gp_removeSWIIRQ(28, UART0Tx);
+		gp_enableIRQ();
+	}
+
 	if (S) {
 		sciprintf("Freeing graphics buffers\n");
 		sci_free(S->visual[0]);

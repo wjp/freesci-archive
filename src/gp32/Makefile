@@ -103,8 +103,8 @@ $(PRG).fxe: $(PRG).bin
 	b2fxec -a FreeSCI_team -t FreeSCI $(PRG).bin $(PRG).fxe
 
 $(PRG).elf: $(OBJS) crt0.o
-	$(LD) -nostartfiles -Wall -Wl,-Map,Test.map -T $(LNKSCRIPT) crt0.o \
-	-o $(PRG).elf $(OBJS) $(LIBS)
+	$(LD) -nostartfiles -Wall -T $(LNKSCRIPT) crt0.o -o $(PRG).elf \
+	$(OBJS) $(LIBS)
 
 $(PRG).bin: $(PRG).elf
 	arm-elf-objcopy -O binary $(PRG).elf $(PRG).bin
@@ -116,4 +116,4 @@ run: $(PRG).fxe
 	gplink run $(PRG).fxe
 
 clean:
-	rm -f crt0.o $(OBJS) Test.map $(PRG).bin $(PRG).elf $(PRG).fxe
+	rm -f crt0.o $(OBJS) $(PRG).bin $(PRG).elf $(PRG).fxe

@@ -1,5 +1,15 @@
 2004-12-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* README, src/gfx/drivers/gp32_driver.c: Added GP32 Chatboard
+	support (untested). Added support for BLU+ with Taiwanese LCD
+	screen (untested).
+
+	* src/gp32/Makefile: Removed Test.map.
+
+	* src/gp32/.cvsignore: Added to repository.
+
+2004-12-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/Makefile.am: Added Dreamcast virtual keyboard files to
 	EXTRA_DIST.
 	* src/include/Makefile.am: Added game_select.h to EXTRA_DIST.
