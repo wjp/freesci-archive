@@ -37,6 +37,7 @@
 #include <mmsystem.h>
 #include <sci_memory.h>
 
+MIDIHDR midioutput;
 HMIDIOUT devicename;				/* global handle to midiOut device */
 int devicenum			= -1;		/* device number */
 
@@ -245,7 +246,10 @@ int midiout_win32mci_write(guint8 *buffer, unsigned int count)
 {
     MMRESULT ret;
     unsigned int midioutputsize;
-	MIDIHDR midioutput;
+
+	/* set up midihdr struct */
+	memset(&midioutput, 0, sizeof(midioutput));
+	midioutput.dwBytesRecorded      = 1;    /* number of events that will be */
 
     /* first, we populate the fields of the MIDIHDR */
     midioutput.lpData           = buffer;       /* pointer to a MIDI event str
