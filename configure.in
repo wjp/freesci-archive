@@ -236,6 +236,12 @@ AC_CHECK_LIB(m, cos, [LIB_M="-lm"], [LIB_M=""])
 dnl AC_CHECK_LIB(c, sprintf, [LIB_C="-lc"], [LIB_C=""])
 LIBS="$LIBS $LIB_M"  # libc is added later, during the efence check
 
+AC_CHECK_HEADERS(Xm/MwmUtil.h)
+
+if test "${ac_cv_header_Xm_MwmUtil_h}" = "yes"; then
+	AC_DEFINE(HAVE_XM_MWMUTIL_H)
+fi
+
 AC_PATH_PNG
 AC_SUBST(ac_png_includes)
 AC_SUBST(ac_png_libraries)

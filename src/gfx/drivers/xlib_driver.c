@@ -48,6 +48,10 @@
 #include <errno.h>
 #endif
 
+#ifdef HAVE_XM_MWMUTIL_H
+#include <Xm/MwmUtil.h>
+#endif
+
 #define SCI_XLIB_PIXMAP_HANDLE_NORMAL 0
 #define SCI_XLIB_PIXMAP_HANDLE_GRABBED 1
 
@@ -265,6 +269,11 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	XClassHint *class_hint;
         XImage *foo_image = NULL;
 	int reverse_endian = 0;
+#ifdef HAVE_XM_MWMUTIL_H
+	PropMotifWmHints motif_hints;
+	Atom prop, proptype;
+#endif
+
 	int i;
 
 	if (!S)
@@ -352,6 +361,16 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	}
 
 	XSync(S->display, False);
+#ifdef HAVE_XM_MWMUTIL_H
+	motif_hints.flags = MWM_HINTS_DECORATIONS|MWM_HINTS_FUNCTIONS;
+	motif_hints.decorations = MWM_DECOR_BORDER|MWM_DECOR_TITLE|MWM_DECOR_MENU|MWM_DECOR_MINIMIZE;
+	motif_hints.functions=MWM_FUNC_MOVE|MWM_FUNC_MINIMIZE|MWM_FUNC_CLOSE|MWM_FUNC_QUIT_APP;
+	prop = XInternAtom(S->display, "_MOTIF_WM_HINTS", True );
+	if (prop) {
+		proptype = prop;
+		XChangeProperty(S->display, S->window, prop, proptype, 32, PropModeReplace, (unsigned char *) &motif_hints, PROP_MOTIF_WM_HINTS_ELEMENTS);
+	}
+#endif
 
 	XStoreName(S->display, S->window, "FreeSCI");
 	XDefineCursor(S->display, S->window, (S->mouse_cursor = x_empty_cursor(S->display, S->window)));
