@@ -1,3 +1,8 @@
+2002-03-21  Solomon Peachy <pizza@shaftnet.org>
+	* src/incluce/version.h
+	* src/main.c:  Add in automagic game interpreter
+        version detection.
+
 2002-03-17  Solomon Peachy <pizza@shaftnet.org>
 	* src/sound/sound.c:  Backed out previous special-case for
         ARTHUR.  I think the game is simply buggy.

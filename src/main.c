@@ -34,6 +34,7 @@
 #include <sci_conf.h>
 #include <kdebug.h>
 #include <sys/types.h>
+#include <games.h>
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
@@ -827,6 +828,35 @@ list_savegames(state_t *s)
 	sciprintf("-----------------\n");
 }
 
+int 
+guess_version() 
+{
+  struct stat filestat;
+  int fd = -1;
+  off_t size = 0;
+  
+  if ((fd = sci_open("sciv.exe", O_RDONLY|O_BINARY)) < 0)
+    if ((fd = sci_open("sierra.exe", O_RDONLY|O_BINARY)) < 0)
+	return 0;
+  
+  if (fstat(fd, &filestat) < 0)
+    return 0;
+  
+  size = filestat.st_size;
+  
+  if (fd > 0)
+    close(fd);
+  
+  for (fd = 0 ; fd < SCI_GAMES_COUNT ; fd++) {
+    if (sci_games[fd].id == size) {
+      sciprintf("Detected interpreter version %d.%03d.%03d (%s)\n", SCI_VERSION_MAJOR(sci_games[fd].version), SCI_VERSION_MINOR(sci_games[fd].version), SCI_VERSION_PATCHLEVEL(sci_games[fd].version), sci_games[fd].name);
+      return sci_games[fd].version;
+    }
+  }
+
+  return 0;
+}
+
 int
 main(int argc, char** argv)
 {
@@ -885,6 +915,8 @@ main(int argc, char** argv)
 
 	if (cl_options.version)
 		version = cl_options.version;
+	else 
+	        version = guess_version();
 
 	if (cl_options.gamedir)
 	{
