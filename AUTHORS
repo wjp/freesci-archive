@@ -197,4 +197,7 @@ gfx/drivers
 
 
 
-
+Matt Hargett: <matt@use.net>
+[win32 fixes]
+[Bug fixes]
+[Cleanups and assertions all over the place]

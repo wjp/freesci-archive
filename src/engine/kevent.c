@@ -85,9 +85,8 @@ sci_toupper(int c)
 	case ',': return '<';
 	case '.': return '>';
 	case '/': return '?';
+	default: return c; /* No match */
 	}
-
-	return c; /* No match */
 }
 
 void
@@ -187,6 +186,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 					switch(e.data) {
 					case 2: extra_bits=SCI_EVM_LSHIFT|SCI_EVM_RSHIFT; break;
 					case 3: extra_bits=SCI_EVM_CTRL;
+					default:break;
 					}
 
 					PUT_SELECTOR(obj, type, e.type);
@@ -210,29 +210,30 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kMapKeyToDir(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr obj = UPARAM(0);
+	heap_ptr obj = UPARAM(0);
 
-  if (GET_SELECTOR(obj, type) == SCI_EVT_KEYBOARD) { /* Keyboard */
-    int mover = -1;
-    switch (GET_SELECTOR(obj, message)) {
-    case SCI_K_HOME: mover = 8; break;
-    case SCI_K_UP: mover = 1; break;
-    case SCI_K_PGUP: mover = 2; break;
-    case SCI_K_LEFT: mover = 7; break;
-    case SCI_K_CENTER:
-    case 76: mover = 0; break;
-    case SCI_K_RIGHT: mover = 3; break;
-    case SCI_K_END: mover = 6; break;
-    case SCI_K_DOWN: mover = 5; break;
-    case SCI_K_PGDOWN: mover = 4; break;
-    }
+	if (GET_SELECTOR(obj, type) == SCI_EVT_KEYBOARD) { /* Keyboard */
+		int mover = -1;
+		switch (GET_SELECTOR(obj, message)) {
+		case SCI_K_HOME: mover = 8; break;
+		case SCI_K_UP: mover = 1; break;
+		case SCI_K_PGUP: mover = 2; break;
+		case SCI_K_LEFT: mover = 7; break;
+		case SCI_K_CENTER:
+		case 76: mover = 0; break;
+		case SCI_K_RIGHT: mover = 3; break;
+		case SCI_K_END: mover = 6; break;
+		case SCI_K_DOWN: mover = 5; break;
+		case SCI_K_PGDOWN: mover = 4; break;
+		default: break;
+		}
 
-    if (mover >= 0) {
-      PUT_SELECTOR(obj, type, SCI_EVT_JOYSTICK);
-      PUT_SELECTOR(obj, message, mover);
-      s->acc = 1;
-    } else s->acc = 0;
-  }
+		if (mover >= 0) {
+			PUT_SELECTOR(obj, type, SCI_EVT_JOYSTICK);
+			PUT_SELECTOR(obj, message, mover);
+			s->acc = 1;
+		} else s->acc = 0;
+	}
 }
 
 
@@ -268,9 +269,9 @@ kLocalToGlobal(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void /* Not implemented */
 kJoystick(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  CHECK_THIS_KERNEL_FUNCTION;
-  SCIkdebug(SCIkSTUB, "Unimplemented syscall 'Joystick()'\n", funct_nr);
-  s->acc = 0;
+	CHECK_THIS_KERNEL_FUNCTION;
+	SCIkdebug(SCIkSTUB, "Unimplemented syscall 'Joystick()'\n", funct_nr);
+	s->acc = 0;
 }
 
 

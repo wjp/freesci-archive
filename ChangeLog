@@ -1,3 +1,12 @@
+2001-04-10  Matt Hargett  <matt@use.net>
+
+	* Initialized a couple of pointers to NULL on declaration.
+	* kevent.c (sci_toupper): added default case to switch
+	* console.c: Added NULL pointer checks.
+	* Ran through indent.
+	* (c_hexgrep): Corrected potential memory leak where seekstr wasn't freed
+        if the resource type was unknown.
+
 2001-04-09  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/gfx/drivers/sdl_driver.c:  Except for colors being all

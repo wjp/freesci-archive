@@ -44,7 +44,7 @@
 void
 process_sound_events(state_t *s) /* Get all sound events, apply their changes to the heap */
 {
-	sound_event_t *event;
+	sound_event_t *event = NULL;
 
 	if (s->sfx_driver == NULL)
 		return;
@@ -142,6 +142,7 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		case 10: sciprintf("[Fade(?)]"); break;
 		case 11: sciprintf("[ChkDriver]"); break;
 		case 12: sciprintf("[StopAll]"); break;
+		default: sciprintf("[unknown]"); break;
 		}
 
 		sciprintf("(");

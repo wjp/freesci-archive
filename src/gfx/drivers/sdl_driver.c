@@ -165,10 +165,10 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   if (bytespp == 1)
     red_shift = green_shift = blue_shift = alpha_shift = 0;
   else {
-    red_shift = 24 + S->primary->format->Rshift - S->primary->format->Rloss;
-    green_shift = 24 + S->primary->format->Gshift - S->primary->format->Gloss;
-    blue_shift = 24 + S->primary->format->Bshift - S->primary->format->Bloss;
-    alpha_shift = 24 + S->primary->format->Ashift - S->primary->format->Aloss;
+    red_shift = 24 - S->primary->format->Rshift + S->primary->format->Rloss;
+    green_shift = 24 - S->primary->format->Gshift + S->primary->format->Gloss;
+    blue_shift = 24 - S->primary->format->Bshift + S->primary->format->Bloss;
+    alpha_shift = 24 - S->primary->format->Ashift + S->primary->format->Aloss;
   }
 
   printf("%08x %08x %08x %08x %d/%d=%d %d/%d=%d %d/%d=%d %d/%d=%d\n",

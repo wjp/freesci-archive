@@ -116,9 +116,10 @@ struct {
 	 "George Reid\nFreeBSD package management\n\n"
 	 "Lars Skovlund\nMost of the relevant documentation, several bugfixes\n\n"
 	 "Magnus Reftel\nHeap implementation, Python class viewer, bugfixes\n\n"
-	 "Paul David Doherty\nGame version information",
+	 "Matt Hargett\nClean-ups, bugfixes, assertions, Win32 stuff",
 	 0, 15},
 	{"Still more FreeSCI hackers & contributors",
+	 "Paul David Doherty\nGame version information\n\n"
 	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements\n\n"
 	 "Rainer De Temple\nSCI research\n\n"
 	 "Ravi I.\nSCI0 sound resource specification\n\n"
