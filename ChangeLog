@@ -1,5 +1,8 @@
 2004-08-02  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/engine/klists.c: Make NextNode and NodeValue use the new
+	signature options.
+
 	* src/engine/kernel.c (determine_reg_type): Allow a signature to
 	ignore invalid pointers. 
 

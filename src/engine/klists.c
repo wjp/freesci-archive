@@ -351,8 +351,12 @@ kNextNode(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	node_t *n = LOOKUP_NODE(argv[0]);
 	if (!sane_nodep(s, argv[0]))
+	{
 		SCIkwarn(SCIkERROR,"List node at "PREG" is not sane anymore!\n",
 			 PRINT_REG(argv[0]));
+		script_error_flag = script_debug_flag = 0;
+		return NULL_REG;
+	}
 
 	return n->succ;
 }
@@ -374,8 +378,12 @@ kNodeValue(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	node_t *n = LOOKUP_NODE(argv[0]);
 	if (!sane_nodep(s, argv[0]))
+	{
 		SCIkwarn(SCIkERROR,"List node at "PREG" is not sane!\n",
 			 PRINT_REG(argv[0]));
+		script_debug_flag = script_error_flag = 0;
+		return NULL_REG;
+	}
 
 	return n->value;
 }
