@@ -1,5 +1,5 @@
 /***************************************************************************
- uinput.h (C) 1999,2000,01 Christoph Reichenbach, TU Darmstadt
+ uinput.h (C) 1999,2000,01,03 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -41,9 +41,19 @@ struct _state;
 
 
 typedef struct {
-  int type;
-  short data;
-  short buckybits;
+	short type;
+	short data;
+	short buckybits;
+	short character; /* for keyboard events: 'data' after applying
+			 ** the effects of 'buckybits', e.g. if
+			 **   type == SCI_EVT_KEYBOARD
+			 **   data == 'a'
+			 **   buckybits == SCI_EVM_LSHIFT
+			 ** then
+			 **   character == 'A'
+			 ** For 'Alt', characters are interpreted by their
+			 ** PC keyboard scancodes.
+			 */
 } sci_event_t;
 
 /*Values for type*/
@@ -102,20 +112,5 @@ typedef struct {
 #define SCI_EVM_CAPSLOCK        (1<<6)
 #define SCI_EVM_INSERT          (1<<7)
 
-
-extern int
-scancode(int ch);
-/* Determines the PC 'scancode' for the specified character
-** Parameters: (int) ch: The character to translate
-** Returns   : (int) a matching scancode number
-*/
-
-int
-sci_toupper(int ch);
-/* Uppercasifies the character
-** Parameters: (int) ch: The character to capitalize
-** Returns   : (int) The capitalized version of the character
-** Also selects special symbols underlying the key
-*/
 
 #endif /* _SCI_UINPUT_H */

@@ -50,6 +50,7 @@ typedef enum {
 #define GFX_CAPABILITY_POINTER_PIXMAP_REGISTRY (1<<8)
 #define GFX_CAPABILITY_FINE_LINES (1<<9)
 #define GFX_CAPABILITY_WINDOWED (1<<10)
+#define GFX_CAPABILITY_KEYTRANSLATE (1<<11)
 
 #define GFX_DEBUG_POINTER (1<<0)
 #define GFX_DEBUG_UPDATES (1<<1)
@@ -142,6 +143,11 @@ typedef struct _gfx_driver { /* Graphics driver */
 	**    fine (width 1) lines
 	** GFX_CAPABILITY_WINDOWED: Driver runs in a window and supports a debug
 	**    console running on stdin/stdout
+	** GFX_CAPABILITY_KEYTRANSLATE: The driver's input layer automatically
+	**    handles 'shifted' keys (i.e. turning shift-'a' to 'A' etc.).
+	**    Drivers only need to handle this if they desire to support
+	**    non-US keyboard layouts, usually by localisation methods
+	**    provided by the underlying windowing or operating system.
 	*/
 
 	int debug_flags; /* Driver debug flags */

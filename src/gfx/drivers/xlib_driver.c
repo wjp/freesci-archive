@@ -1126,11 +1126,12 @@ x_unmap_key(gfx_driver_t *drv, int keycode)
 	return 0;
 }
 
-
 int
-x_map_key(gfx_driver_t *drv, int keycode)
+x_map_key(gfx_driver_t *drv, XEvent *key_event, char *character)
 {
-	KeySym xkey = XKeycodeToKeysym(S->display, keycode, 0);
+	KeySym xkey;
+
+	XLookupString(key_event, character, 1, &xkey, NULL);
 
 	if ((xkey >= 'A') && (xkey <= 'Z'))
 		return xkey;
@@ -1289,7 +1290,9 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 						    ^ ((modifiers & ShiftMask)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0);
 
 					    sci_event->buckybits = S->buckystate;
-					    sci_event->data = x_map_key(drv, event.xkey.keycode);
+					    sci_event->data =
+						    x_map_key(drv, &event,
+							      &(sci_event->character));
 
 					    if (sci_event->data == SCI_K_INSERT)
 						    flags ^= SCI_XLIB_INSERT_MODE;
@@ -1397,7 +1400,7 @@ gfx_driver_xlib = {
 	GFX_CAPABILITY_STIPPLED_LINES | GFX_CAPABILITY_MOUSE_SUPPORT
 	| GFX_CAPABILITY_MOUSE_POINTER | GFX_CAPABILITY_PIXMAP_REGISTRY
 	| GFX_CAPABILITY_PIXMAP_GRABBING | GFX_CAPABILITY_FINE_LINES
-	| GFX_CAPABILITY_WINDOWED,
+	| GFX_CAPABILITY_WINDOWED | GFX_CAPABILITY_KEYTRANSLATE,
 	0/*GFX_DEBUG_POINTER | GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC*/,
 	xlib_set_parameter,
 	xlib_init_specific,
