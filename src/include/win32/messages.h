@@ -29,17 +29,6 @@
 
 ***************************************************************************/
 
-#ifdef __cplusplus
-#include <windows.h>
-#include <initguid.h>
-#include <dmusicc.h>
-#include <dmusici.h>
-#include <dsound.h>
-#include <dxerr8.h>
-#include <stdio.h>
-#include <uuids.h>
-#endif
-
 
 /* UP == Unsigned int Parameter */
 /* LP == Long Parameter */

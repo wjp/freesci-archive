@@ -120,44 +120,42 @@ static void do_sound(sound_server_state_t *sss)
 
 				/* work out the parameters */
 				msg_type = (unsigned char)(this_cmd.midi_cmd >> 4);
-				if ( ((msg_type >= '\x8') && (msg_type <= '\xB')) ||
-				     (msg_type == '\xE')
-				   )
+				if (MIDI_PARAMETERS_TWO(msg_type))
 				{
 					/* two parameters */
 					this_cmd.param1 = sss->current_song->data[sss->current_song->pos];
 					this_cmd.param2 = sss->current_song->data[(sss->current_song->pos) + 1];
 					(sss->current_song->pos) += 2;	/* lined up for next time around */
 
-					if (sss->reverse_stereo && (msg_type == '\xB') &&
-						(this_cmd.param1 == MIDI_CC_PAN))
+					if (sss->reverse_stereo &&
+						(msg_type == MIDI_MSG_TYPE_CONTROLLER_CHANGE) &&
+						(this_cmd.param1 == MIDI_CONTROLLER_PAN_COARSE))
 						this_cmd.param2 = 0x7f - this_cmd.param2;	/* reverse stereo */
 
-				} else if ( (msg_type >= '\xC') && (msg_type <= '\xD') ) {
+				} else if (MIDI_PARAMETERS_ONE(msg_type)) {
 					/* one parameter */
 					this_cmd.param1 = sss->current_song->data[sss->current_song->pos];
 					this_cmd.param2 = 0;
 					(sss->current_song->pos)++;
 
-				} else if (msg_type >= '\xF') {
-					/* SysEx cancels running status */
-					last_cmd = 0;
+				} else if (msg_type == MIDI_MSG_TYPE_SYSTEM) {
+					if (this_cmd.midi_cmd <= 0xF6)
+						/* all system common messages cancel running status */
+						last_cmd = 0;
 
 					/* varying parameters - yay! */
 
 					/* this command is ignored */
-					if (this_cmd.midi_cmd == 0xF0)
+					if (this_cmd.midi_cmd == MIDI_SYSTEM_SYSEX)	/* 0xF0 */
 					{
-						/* keep looping until 0xF7 or SysEx */
-						while (
-						       (sss->current_song->data[(sss->current_song->pos) + 1] != 0xF7) ||
-						       ( (sss->current_song->data[(sss->current_song->pos) + 1] >= 0x80) &&
-						         (sss->current_song->data[(sss->current_song->pos) + 1] < 0xF0) )
-						      )
-							  (sss->current_song->pos)++;	/* for now, this is ignored */
+						while ((sss->current_song->data[(sss->current_song->pos) + 1] >= 0x80) &&
+						       (sss->current_song->data[(sss->current_song->pos) + 1] <= MIDI_SYSTEM_SYSEX_END))
+							  (sss->current_song->pos)++;
 						return;
 
-					/* } else if (this_cmd.midi_cmd == 0xF1) { ...... */
+					} else if (this_cmd.midi_cmd == MIDI_SYSTEM_SYSEX_END) {	/* 0xF7 */
+						/* ignore this if it just appears from nowhere */
+						return;
 
 					} else if (this_cmd.midi_cmd == SCI_MIDI_END_OF_TRACK) {	/* 0xFC */
 						if ((--(sss->current_song->loops) != 0) && sss->current_song->loopmark)
@@ -193,7 +191,7 @@ static void do_sound(sound_server_state_t *sss)
 			}
 
 			/* unless the channel is muted, send MIDI command */
-			if (!( ((this_cmd.midi_cmd & 0xf0) == 0x90) &&
+			if (!( ((this_cmd.midi_cmd & 0xf0) == MIDI_NOTE_ON) &&
 				   sss->mute_channel[this_cmd.midi_cmd & 0xf] ))
 				sci_midi_command(debug_stream,
 					sss->current_song,

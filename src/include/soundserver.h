@@ -189,7 +189,7 @@ typedef struct _song {
 	byte *data;   /* dynamically allocated data */
 	int file_nr;  /* Temporarily used to save and restore song data */
 
-	int priority; /* Song priority */
+	int priority; /* Song priority (more important if priority is higher) */
 	int loops;    /* Loops left to do */
 	int status;   /* See above */
 
@@ -434,6 +434,8 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 
 #define SOUNDSERVER_INIT_FLAG_REVERSE_STEREO (1 << 0) /* Reverse pan control changes */
 
+#define SOUNDSERVER_FLAG_PIPED (1 << 0)	/* driver is piped (UNIX) */
+
 typedef struct {
 
 	char *name; /* Name of this particular driver */
@@ -564,7 +566,7 @@ typedef struct {
 	sound_server_t *ss_driver;	/* driver currently being used for sound server */
 	playing_notes_t playing_notes[16];	/* keeps track of polyphony */
 	byte mute_channel[MIDI_CHANNELS];	/* which channels are muted */
-	int reverse_stereo;	/* FIXME: not currently used correctly */
+	int reverse_stereo;	/* reverse stereo setting */
 
 	/* note: only present in polled sound server and not currently used */
 	unsigned long usecs_to_sleep;

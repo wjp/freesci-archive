@@ -64,9 +64,8 @@ extern int soundserver_dead;
 /* Non-zero IFF the sound server died- set by sound.c, must also be
 ** set by non-fork()ed sound server implementations */
 
-/* A word on priorities: A song is more important if its priority is higher.  */
-/* Another note: SysTicks are at 60 Hz, in case you didn't already know this. */
-/* Third note: Handles are actually set by the caller, so that they can directly
+/* Note 1: SysTicks are at 60 Hz, in case you didn't already know this. */
+/* Note 2: Handles are actually set by the caller, so that they can directly
 ** map to heap addresses.
 */
 
@@ -165,8 +164,25 @@ unsigned int SOUND_SIGNAL_ABSOLUTE_CUE;
 
 
 /* MIDI defines */
-#define MIDI_CONTROL_CHANGE 0xb0
-#define MIDI_CC_PAN 10
+#define MIDI_MSG_TYPE_NOTE_OFF          '\x8'
+#define MIDI_MSG_TYPE_NOTE_ON           '\x9'
+#define MIDI_MSG_TYPE_AFTERTOUCH        '\xA'
+#define MIDI_MSG_TYPE_CONTROLLER_CHANGE '\xB'
+#define MIDI_MSG_TYPE_INSTRUMENT_CHANGE '\xC'
+#define MIDI_MSG_TYPE_CHANNEL_PRESSURE  '\xD'
+#define MIDI_MSG_TYPE_PITCH_WHEEL       '\xE'
+#define MIDI_MSG_TYPE_SYSTEM            '\xF'
+
+#define MIDI_CONTROLLER_PAN_COARSE 10
+
+#define MIDI_NOTE_ON           0x90
+#define MIDI_CONTROL_CHANGE    0xB0
+#define MIDI_INSTRUMENT_CHANGE 0xC0
+#define MIDI_SYSTEM_SYSEX      0xF0
+#define MIDI_SYSTEM_SYSEX_END  0xF7
+
+#define MIDI_PARAMETERS_TWO(typ)  ( ((typ >= '\x8') && (typ <= '\xB'))  || (typ == '\xE') )
+#define MIDI_PARAMETERS_ONE(typ)  ( (typ >= '\xC') && (typ <= '\xD') )
 
 typedef struct {
 	unsigned int delta_time;	/* number of ticks before send this command */
@@ -237,7 +253,6 @@ typedef struct {
 
 extern MIDI_map_t MIDI_mapping[128];
 extern int MIDI_mappings_nr; /* Number of MIDI mappings */
-
 
 extern int MIDI_cmdlen[16]; /* Number of parameters for each MIDI operation */
 

@@ -682,14 +682,14 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 
 				if (reverse_stereo
 				    && ((command & MIDI_CONTROL_CHANGE) == MIDI_CONTROL_CHANGE)
-				    && (param == MIDI_CC_PAN))
+				    && (param == MIDI_CONTROLLER_PAN_COARSE))
 					param2 = (unsigned char)(0x7f - param2); /* Reverse stereo */
 #ifdef DEBUG_SOUND_SERVER
-				if ((command & 0xf0) == 0xc0) /* Change instrument */
+				if ((command & 0xf0) == MIDI_INSTRUMENT_CHANGE) /* Change instrument */
 					channel_instrument[command & 0xf] = param;
 #endif
 
-				if (!((command & 0xf0) == 0x90 && mute_channel[command & 0xf]))
+				if (!((command & 0xf0) == MIDI_NOTE_ON && mute_channel[command & 0xf]))
 					/* Unless the channel is muted */
 					sci_midi_command(debug_stream, song, command, param, param2,
 					                 &ccc, &(playing_notes[command & 0xf]));
@@ -711,7 +711,8 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 				guint8 i;
 				for (i = 0; i < MIDI_CHANNELS; i++) {
 					if (newsong->instruments[i])
-						midi_event2((guint8)(0xc0 | i), newsong->instruments[i]);
+						midi_event2((guint8)(MIDI_INSTRUMENT_CHANGE | i),
+							newsong->instruments[i]);
 				}
 			}
 			if (song)	/* Muting active song: Un-play the last note/MIDI event */

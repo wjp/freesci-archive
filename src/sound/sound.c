@@ -54,7 +54,6 @@ extern sound_server_t sound_server_sdl;
 
 #ifdef _WIN32
 extern sound_server_t sound_server_win32p;
-extern sound_server_t sound_server_win32e_qp;
 extern sound_server_t sound_server_win32e;
 #endif
 
@@ -71,7 +70,6 @@ sound_server_t *sound_servers[] = {
 
 #  ifdef _WIN32
 	&sound_server_win32p,
-	&sound_server_win32e_qp,
 	&sound_server_win32e,
 #  endif
 
@@ -139,11 +137,23 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 		}
 
 		len = song->size;
-		if (global_sound_server->send_data(song->data, len) != len) {
-			fprintf(debug_stream, "sound_command(): sound_send_data"
-				" returned < count\n");
+
+		if (global_sound_server->flags & SOUNDSERVER_FLAG_PIPED)
+		{
+			if (global_sound_server->send_data(song->data, len) != len) {
+				fprintf(debug_stream, "sound_command(): sound_send_data"
+					" returned < count\n");
+			}
+			global_sound_server->queue_command(event.handle, event.signal, event.value);
 		}
-		global_sound_server->queue_command(event.handle, event.signal, event.value);
+		else
+		{
+			global_sound_server->queue_command(event.handle, event.signal, event.value);
+			if (global_sound_server->send_data(song->data, len) != len) {
+				fprintf(debug_stream, "sound_command(): sound_send_data"
+					" returned < count\n");
+			}
+		}
 
 		return 0;
 

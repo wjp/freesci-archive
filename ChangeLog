@@ -1,3 +1,21 @@
+2001-11-30  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/sound/event_ss.c (do_sound):
+	* src/sound/polled_ss.c (sci0_polled_ss):
+	* src/include/sound.h: More MIDI #defines.
+
+	* src/sound/polled_ss_unix.c:
+	* src/sound/sound.c:
+	* src/include/soundserver.h: Added #define for a piped (UNIX) sound
+	driver.
+
+	* src/include/win32/messages.h: Removed #includes.
+
+	* src/sound/event_ss_win32.cpp: Dumped all DirectX stuff for 1ms
+	resolution timeSetEvent().
+
+	* src/win32/fsci_dll.dsp: Removed event_ss_win32_qp references.
+
 2001-11-28  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/event_ss_win32.cpp: Fixed race condition for creation of

@@ -80,7 +80,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 msvcrtd.lib ..\..\..\SDL\lib\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ole32.lib /nologo /dll /pdb:none /debug /machine:I386 /nodefaultlib:"libc.lib" /nodefaultlib:"libcmt.lib" /nodefaultlib:"msvcrt.lib" /nodefaultlib:"libcd.lib" /nodefaultlib:"libcmtd.lib" /out:"Debug/fsci.dll"
+# ADD LINK32 dsound.lib dxguid.lib dxerr8.lib msvcrtd.lib ..\..\..\SDL\lib\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ole32.lib /nologo /dll /pdb:none /debug /machine:I386 /nodefaultlib:"libc.lib" /nodefaultlib:"libcmt.lib" /nodefaultlib:"msvcrt.lib" /nodefaultlib:"libcd.lib" /nodefaultlib:"libcmtd.lib" /out:"Debug/fsci.dll"
 
 !ENDIF 
 
@@ -386,10 +386,6 @@ SOURCE=..\sound\event_ss_win32.cpp
 
 !ENDIF 
 
-# End Source File
-# Begin Source File
-
-SOURCE=..\sound\event_ss_win32_qp.c
 # End Source File
 # Begin Source File
 
