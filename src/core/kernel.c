@@ -1098,6 +1098,35 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
   s->acc = dest; /* Return target addr */
 }
 
+
+void
+kTextSize(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int width, height;
+  heap_ptr heap_text = PARAM(1);
+  char *text = s->heap + heap_text;
+  heap_ptr dest = PARAM(0);
+  int maxwidth = UPARAM_OR_ALT(3, 0);
+  resource_t *fontres = findResource(sci_font, UPARAM(2));
+
+  if (!maxwidth)
+    maxwidth = MAX_TEXT_WIDTH_MAGIC_VALUE;
+
+  if (!fontres) {
+    SCIkwarn("font.%03d not found!\n", UPARAM(2));
+    return;
+  }
+
+  get_text_size(text, fontres->data, maxwidth, &width, &height);
+
+  PUT_HEAP(dest + 0, 0);
+  PUT_HEAP(dest + 2, 0);
+  PUT_HEAP(dest + 4, height);
+  PUT_HEAP(dest + 6, width); /* The reason for this is unknown to me */
+}
+
+
+
 void
 kAddMenu(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
@@ -1475,6 +1504,9 @@ kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
   default:
     SCIkwarn("Unknown control type: %d at %04x\n", type, obj);
   }
+
+  if (!s->pic_not_valid)
+    graph_update_port(s, s->ports[s->view_port]);
 }
 
 
@@ -1562,15 +1594,15 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   wnd = calloc(sizeof(port_t), 1);
 
-  wnd->ymin = PARAM(0);
+  wnd->ymin = PARAM(0) + 10;
   wnd->xmin = PARAM(1);
-  wnd->ymax = PARAM(2);
+  wnd->ymax = PARAM(2) + 10; /* +10 because of the title bar- SCI scripts don't count it */
   wnd->xmax = PARAM(3);
   wnd->title = PARAM(4);
   wnd->flags = PARAM(5);
   wnd->priority = PARAM(6);
-  wnd->color = PARAM(7);
-  wnd->bgcolor = PARAM(8);
+  wnd->color = PARAM_OR_ALT(7, 0);
+  wnd->bgcolor = PARAM_OR_ALT(8, 15);
   wnd->font = s->titlebar_port.font; /* Default to 'system' font */
 
   s->ports[window] = wnd;
@@ -1578,13 +1610,8 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   drawWindow(s->bgpic, s->ports[window], wnd->bgcolor, wnd->priority,
 	     s->heap + wnd->title, s->titlebar_port.font , wnd->flags); /* Draw window */
 
-  drawWindow(s->pic, s->ports[window], wnd->bgcolor, wnd->priority,
-	     s->heap + wnd->title, s->titlebar_port.font , wnd->flags); /* Draw window */
 
-  s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_BOX,
-		       wnd->xmin - 1, wnd->ymin - (wnd->flags & WINDOW_FLAG_TITLE)? 11 : 1,
-		       wnd->xmax + 2, wnd->ymin + 2); /* Update screen */
-  s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0); /* Update mouse pointer */
+  graph_update_port(s, wnd); /* Update viewscreen */
 
   s->view_port = window; /* Set active port */
 
@@ -2086,6 +2113,7 @@ struct {
   {"DrawControl", kDrawControl },
 
   /* Experimental functions */
+  {"TextSize", kTextSize },
   {"Wait", kWait },
   {"BaseSetter", kBaseSetter},
   {"DoSound", kDoSound },

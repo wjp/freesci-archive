@@ -361,7 +361,7 @@ c_refresh_screen()
 }
 
 int
-c_reload_screen()
+c_redraw_screen()
 {
   memcpy(_s->pic[0], _s->bgpic[0], 320*200);
   _s->graphics_callback(_s, GRAPHICS_CALLBACK_REDRAW_ALL,0,0,0,0);
@@ -677,7 +677,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       cmdHook(c_resource_id, "resource_id", "i", "Identifies a resource number by\n"
 	      "  splitting it up in resource type\n  and resource number.");
       cmdHook(c_refresh_screen, "refresh_screen", "", "Redraws the screen");
-      cmdHook(c_reload_screen, "refresh_screen", "", "Reloads and redraws the screen");
+      cmdHook(c_redraw_screen, "redraw_screen", "", "Reloads and redraws the screen");
       cmdHook(c_show_list, "show_list", "i", "Examines the specified heap address");
 
       cmdHookInt(&script_exec_stackpos, "script_exec_stackpos", "Position on the execution stack\n");

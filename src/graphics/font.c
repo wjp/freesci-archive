@@ -70,6 +70,74 @@ get_text_width(char *text, byte *font)
 }
 
 
+void
+get_text_size(char *text, byte *font, int max_allowed_width, int *width, int *height)
+/* Similar to get_text_width, but detects both width and height, at a specified maxwidth */
+{
+  unsigned char foo;
+  int maxwidth = 0;
+  int localmaxwidth = 0;
+  int lineheight = getInt16(font + FONT_FONTSIZE_OFFSET);
+  int maxheight = lineheight;
+  int last_breakpoint = 0;
+  int last_break_width = 0;
+
+  if (max_allowed_width < 0)
+    max_allowed_width = 32768;
+
+  while (foo = *text++) {
+    if (foo == '\n') {
+
+      maxheight += lineheight;
+
+      if (localmaxwidth > maxwidth)
+	maxwidth = localmaxwidth;
+      localmaxwidth = 0;
+
+    } else { /* foo != '\n' */
+      guint16 quux = getInt16((guint8 *) font+6+(foo<<1));
+      guint8 *foopos = font + quux;
+
+      if (isspace(*(text-1))) {
+	last_breakpoint = localmaxwidth;
+	last_break_width = *foopos;
+      }
+
+      localmaxwidth += *foopos;
+
+      if (localmaxwidth > max_allowed_width) {
+
+	maxheight += lineheight;
+	
+	if (last_breakpoint == 0) { /* Text block too long and without whitespace? */
+	  last_breakpoint = localmaxwidth - *foopos;
+	  last_break_width = 0;
+	}
+
+	if (last_breakpoint == 0) {
+	  sciprintf("font.c: get_text_size: Warning: maxsize %04x too small for '%s'\n",
+		    max_allowed_width, text);
+	  return;
+	}
+
+	if (last_breakpoint > maxwidth)
+	  maxwidth = last_breakpoint;
+	localmaxwidth = localmaxwidth - last_breakpoint - last_break_width;
+
+      }
+
+    }
+  }
+
+  if (localmaxwidth > maxwidth)
+    *width = localmaxwidth;
+  else
+    *width = maxwidth;
+
+  *height = maxheight;
+}
+
+
 void getTextParams(char *text, char *font)
 /* sets lastwidth and lastheight properly */
 {
@@ -297,7 +365,9 @@ text_draw(picture_t dest, port_t *port, char *text, int maxwidth)
   int last_breakpoint_width = 0;
   int maxchar = getInt16(port->font + FONT_MAXCHAR_OFFSET);
   int line_height = getInt16(port->font + FONT_FONTSIZE_OFFSET);
-  if (maxwidth < 0) maxwidth = 32767; /* Negative means unlimited; 32767 does, too. */
+
+  if (maxwidth < 0)
+    maxwidth = 32767; /* Negative means unlimited; 32767 does, too. */
 
   do {
     foo = *text++;

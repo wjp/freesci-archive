@@ -159,9 +159,10 @@ graph_fill_port(struct _state *s, port_t *port, int color)
 void
 graph_update_port(struct _state *s, port_t *port)
 {
-  graph_update_box(s, port->xmin, port->ymin,
-		   port->xmax - port->xmin + 1,
-		   port->ymax - port->ymin + 1);
+
+  graph_update_box(s, port->xmin-1, port->ymin - ((port->flags & WINDOW_FLAG_TITLE)? 11 : 1),
+		   port->xmax - port->xmin + 4,
+		   port->ymax - port->ymin + ((port->flags & WINDOW_FLAG_TITLE)? 14 : 4));
 
   s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0);
 }

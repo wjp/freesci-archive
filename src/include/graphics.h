@@ -112,6 +112,9 @@ typedef struct {
 #define ALIGN_TEXT_LEFT 0
 #define ALIGN_TEXT_CENTER 1
 
+#define MAX_TEXT_WIDTH_MAGIC_VALUE 192
+/* This is the real width of a text with a specified width of 192 */
+
 
 #define FONT_FONTSIZE_OFFSET 4
 /* Offset of the font size information in the font resource */
@@ -277,6 +280,18 @@ get_text_width(char *text, byte *font);
 ** returned.
 */
 
+void
+get_text_size(char *text, byte *font, int max_allowed_width, int *width, int *height);
+/* Determines the width and height of the specified text
+** Parameters: (char *) text: The text to check
+**             (byte *) font: The font to check it with
+**             (int) max_allowed_width: The maximum width to allow for a single text line
+**             (int *) width, height: Pointers to the variables which the result is stored in
+** Returns   : (void)
+** The '\n' character is treated as usual (newline), so that the provided text may
+** contain of several lines of text. In this case, the length of the longest line is
+** returned.
+*/
 
 void draw_titlebar(picture_t dest, int color);
 /* Fills the title bar with the specified color
