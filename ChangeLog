@@ -1,6 +1,13 @@
 2001-03-01  Solomon Peachy <pizza@shaftnet.org>
 
 	* include/midiout.h
+	  sound/Makefile.am
+	  sound/midiout_unixraw.c:  Added in the unixraw driver.
+	* sfx/ROADMAP:  Documentation updates.
+
+2001-03-01  Solomon Peachy <pizza@shaftnet.org>
+
+	* include/midiout.h
 	  sound/midiout.c:  Reworked the midiout architechure.  Now
                             supports multiple midiout drivers.
         * main.c:  Added midiout know-how to the cl parser.
