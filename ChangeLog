@@ -1,5 +1,10 @@
 2002-11-23  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/gfx/resource/sci_resmgr.c (gfxr_interpreter_get_view):
+	Fixed palettized views for games that dont support them.
+
+2002-11-23  Lars Skovlund  <lskovlun@image.dk>
+
 	* Added kernel support for palettized views
 
 2002-11-22  Christoph Reichenbach  <jameson@linuxgames.com>

@@ -146,6 +146,8 @@ gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal, int pal
 		return NULL;
 	}
 
+	if (state->version < SCI_VERSION_01) palette=-1;
+	
 	return gfxr_draw_view0(res->id, res->data, res->size, palette);
 }
 

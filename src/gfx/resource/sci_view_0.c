@@ -192,7 +192,7 @@ gfxr_draw_view0(int id, byte *resource, int size, int palette)
 	view->flags = GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
 	view->colors = gfx_sci0_image_colors[sci0_palette];
 
-	if (palette_ofs)
+	if ((palette_ofs)&&(palette>=0))
 	{
 		byte *paldata = resource + palette_ofs + (palette * GFX_SCI0_IMAGE_COLORS_NR);
 
