@@ -1,3 +1,7 @@
+2000-04-19  Dmitry Jemerov  <yole@nnz.ru>
+
+	* Some more build fixes. Hopefully everything is stable now.
+
 2000-04-18  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/simplesaid.c (simplesaid): Fixed minor bug

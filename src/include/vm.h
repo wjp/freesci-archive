@@ -230,6 +230,10 @@ extern int script_step_counter;
 extern DLLEXTERN char *(*_debug_get_input)(void);
 /* The function used to get input for debugging */
 
+extern DLLEXTERN int _debugstate_valid;
+extern DLLEXTERN int _debug_seeking;
+extern DLLEXTERN int _debug_step_running;
+
 
 typedef int kernel_function(struct _state* s);
 

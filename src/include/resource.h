@@ -64,6 +64,16 @@
 #include <sci_dos.h>
 #endif
 
+#ifdef _MSC_VER
+  #ifdef FREESCI_EXPORTS
+  #define DLLEXTERN
+  #else
+  #define DLLEXTERN __declspec(dllimport)
+  #endif
+#else
+#define DLLEXTERN
+#endif
+
 #define SCI_MAX_RESOURCE_SIZE 0x0400000
 /* The maximum allowed size for a compressed or decompressed resource */
 

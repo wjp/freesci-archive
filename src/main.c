@@ -73,11 +73,6 @@
 static int quit = 0;
 static state_t *gamestate; /* The main game state */
 
-
-extern DLLEXTERN int _debugstate_valid;
-extern DLLEXTERN int _debug_seeking;
-extern DLLEXTERN int _debug_step_running;
-
 static int _script_debug_flag = 0;
 
 char *requested_gfx_driver = NULL;

@@ -33,14 +33,11 @@
 #ifndef _SCI_CONSOLE_H_
 #define _SCI_CONSOLE_H_
 
-#ifdef HAVE_CONFIG_H
 #include <resource.h>
+
+#ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
-
-#ifndef _WIN32
-#define DLLEXTERN
-#endif
 
 #ifdef _DOS
 #include <sci_dos.h>
