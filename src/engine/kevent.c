@@ -91,6 +91,25 @@ sci_toupper(int c)
 	}
 }
 
+static int
+sci_numlockify(int c)
+{
+	switch (c) {
+	case SCI_K_DELETE: return '.';
+	case SCI_K_INSERT: return '0';
+	case SCI_K_END: return '1';
+	case SCI_K_DOWN: return '2';
+	case SCI_K_PGDOWN: return '3';
+	case SCI_K_LEFT: return '4';
+	case SCI_K_CENTER: return '5';
+	case SCI_K_RIGHT: return '6';
+	case SCI_K_HOME: return '7';
+	case SCI_K_UP: return '8';
+	case SCI_K_PGUP: return '9';
+	default: return c; /* Unchanged */
+	}
+}
+
 reg_t
 kGetEvent(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
@@ -175,6 +194,9 @@ kGetEvent(state_t *s, int funct_nr, int argc, reg_t *argv)
 					e.data = sci_toupper(e.data);
 				if (!(e.buckybits & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT)) && (e.buckybits & SCI_EVM_CAPSLOCK))
 					e.data = sci_toupper(e.data);
+
+				if (e.buckybits & SCI_EVM_NUMLOCK)
+					e.data = sci_numlockify(e.data);
 
 				PUT_SEL32V(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
 				s->r_acc=make_reg(0, 1);

@@ -1,3 +1,7 @@
+2003-07-03  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kevent.c (kGetEvent): Added NumLock support
+
 2003-06-03  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/config.l: Added '%include<>' option for config files
