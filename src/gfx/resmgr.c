@@ -33,7 +33,7 @@
 #include <gfx_resmgr.h>
 #include <gfx_state_internal.h>
 
-#define TIME_PICDRAWING
+#undef TIME_PICDRAWING
 
 /* Invalid hash mode: Used to invalidate modified pics */
 #define MODE_INVALID -1

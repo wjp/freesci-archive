@@ -3,6 +3,8 @@
 	* src/gfx/resource/sci_picfill.c (IS_BOUNDARY): Fixed correctness
 	for iceman pic.002, where we did not consider the effects of
 	dithering for determining fill boundaries.
+	(FILL_FUNCTION): Fixed priority/control map bug related to the
+	IS_BOUNDARY fix
 
 	* src/gfx/resmgr.c (gfxr_get_pic): Added some #ifdef'd code for
 	timing pic drawing
