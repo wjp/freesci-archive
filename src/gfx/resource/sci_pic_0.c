@@ -783,10 +783,15 @@ static inline void
 _gfxr_auxplot_brush(gfxr_pic_t *pic, byte *buffer, int yoffset, int offset, int plot,
 		    int color, gfx_brush_mode_t brush_mode, int randseed)
 {
+	/* yoffset 63680, offset 320, plot 1, color 34, brush_mode 0, randseed 432)*/
 	/* Auxplot: Used by plot_aux_pattern to plot to visual and priority */
 	int xc, yc;
 	int line_width = 320 * pic->mode->xfact;
 	int full_offset = (yoffset * pic->mode->yfact + offset) * pic->mode->xfact;
+
+	if (yoffset + offset >= 64000) {
+		BREAKPOINT();
+	}
 
 	switch (brush_mode) {
 	case GFX_BRUSH_MODE_SCALED:
@@ -909,7 +914,7 @@ _gfxr_plot_aux_pattern(gfxr_pic_t *pic, int x, int y, int size, int circle, int 
 
 	if (!circle) {
 		offset = -size;
-		width = (size << 1) + 1;
+		width = (size << 1) + 2;
 	}
 
 	for (i = -size; i <= size; i++) {
@@ -920,7 +925,7 @@ _gfxr_plot_aux_pattern(gfxr_pic_t *pic, int x, int y, int size, int circle, int 
 			offset = circle_data[size][abs(i)];
 			height = width = (offset << 1) + 1;
 			offset = -offset;
-		} else height = width++;
+		} else height = width - 1;
 
 		if (random == PLOT_AUX_PATTERN_NO_RANDOM) {
 
@@ -941,20 +946,24 @@ _gfxr_plot_aux_pattern(gfxr_pic_t *pic, int x, int y, int size, int circle, int 
 					pic->aux_map[yoffset + x + offset + j] |= mask;
 
 					if (mask & GFX_MASK_VISUAL)
-						_gfxr_auxplot_brush(pic, pic->visual_map->index_data, yoffset, x + offset + j,
+						_gfxr_auxplot_brush(pic, pic->visual_map->index_data,
+								    yoffset, x + offset + j,
 								    1, color, brush_mode, random_index + x);
 
 					if (mask & GFX_MASK_PRIORITY)
-						_gfxr_auxplot_brush(pic, pic->priority_map->index_data, yoffset, x + offset + j,
+						_gfxr_auxplot_brush(pic, pic->priority_map->index_data,
+								    yoffset, x + offset + j,
 								    1, priority, brush_mode, random_index + x);
 
 				} else {
 					if (mask & GFX_MASK_VISUAL)
-						_gfxr_auxplot_brush(pic, pic->visual_map->index_data, yoffset, x + offset + j,
+						_gfxr_auxplot_brush(pic, pic->visual_map->index_data,
+								    yoffset, x + offset + j,
 								    0, color, brush_mode, random_index + x);
 
 					if (mask & GFX_MASK_PRIORITY)
-						_gfxr_auxplot_brush(pic, pic->priority_map->index_data, yoffset, x + offset + j,
+						_gfxr_auxplot_brush(pic, pic->priority_map->index_data,
+								    yoffset, x + offset + j,
 								    0, priority, brush_mode, random_index + x);
 				}
 				random_index = (random_index + 1) & 0xff;

@@ -1,3 +1,10 @@
+2001-12-30  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/resource/sci_pic_0.c (_gfxr_plot_aux_pattern): Kicked out
+	some complete and utter crap that made the code look like I was drunk
+	when I wrote it (OK, some people drink intentionally to dumb down for
+	coding, but this doesn't belong into a ChangeLog)
+
 2001-12-29  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (nsrect_clip): Clipping nsRect: Use priority
