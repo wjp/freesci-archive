@@ -23,6 +23,10 @@
 
 #include <alsa/asoundlib.h>
 
+#include <pthread.h>
+
+static pthread_t thread;
+
 static guint16 *buffer;
 
 static snd_pcm_t *pcm_handle;
@@ -32,37 +36,27 @@ static snd_pcm_access_t pcm_access = SND_PCM_ACCESS_RW_INTERLEAVED;
 static snd_pcm_format_t alsa_format = SND_PCM_FORMAT_S16_LE;
 static snd_pcm_hw_params_t *hwparams;
 static snd_pcm_sw_params_t *swparams;
-static snd_async_handler_t *ahandler;
 static snd_output_t *output;
 
-static char *alsa_device = "plughw:0,0"; 
+static char *alsa_device = "hw:0,0"; 
 
-static void async_callback(snd_async_handler_t *ahandler)
+static void *sound_thread (void *arg)
 {
-  snd_pcm_t *handle = snd_async_handler_get_pcm(ahandler);
-  snd_pcm_sframes_t avail;
-  int err, count;
+  int count, err;
 
-  if ((avail = snd_pcm_avail_update(handle)) < 0) {
-    printf("ALSA: Buffer underrun\n");
-    snd_pcm_prepare(handle);
-    avail = snd_pcm_avail_update(handle);
-  }
-
-  while (avail >= BUFFER_SIZE) {
+  while(1) {
     count = mix_sound(BUFFER_SIZE);
-    if ((err = snd_pcm_writei(handle, buffer, count)) < 0) {
+    //    printf("XXXX Fill buffer, %04x, count: %d \n", *buffer, count);
+    if ((err = snd_pcm_writei(pcm_handle, buffer, count)) < 0) {
+      snd_pcm_prepare(pcm_handle);
       printf("ALSA: Write error: %s\n", snd_strerror(err));
-      return;
     }
-    avail = snd_pcm_avail_update(handle);
-    printf("XXXX Fill buffer, %04x, count: %d actual: %d, avail: %d\n", *buffer, count, err, avail);
   }
 }
 
 static int pcmout_alsa_open(guint16 *b, guint16 rate) {
   int channels = 2;
-  int periods = 4;
+  int periods = 8;
   int err, count;
 
   buffer = b;
@@ -75,9 +69,7 @@ static int pcmout_alsa_open(guint16 *b, guint16 rate) {
     return -1;
   }
 
-  //  if ((err = snd_pcm_open(&pcm_handle, alsa_device, stream, SND_PCM_ASYNC)) < 0) {
-  if ((err = snd_pcm_open(&pcm_handle, alsa_device, stream, SND_PCM_NONBLOCK)) < 0) {
-  //  if ((err = snd_pcm_open(&pcm_handle, alsa_device, stream, 0)) < 0) {
+  if ((err = snd_pcm_open(&pcm_handle, alsa_device, stream, 0)) < 0) {
     printf("ALSA: Playback open error: %s\n", snd_strerror(err));
     return -1;
   }
@@ -112,7 +104,8 @@ static int pcmout_alsa_open(guint16 *b, guint16 rate) {
     return -1;
   }
 
-  if ((err = snd_pcm_hw_params_set_buffer_size(pcm_handle, hwparams, BUFFER_SIZE*periods)) < 0) {
+  /* buffer size, in frames */
+  if ((err = snd_pcm_hw_params_set_buffer_size(pcm_handle, hwparams, BUFFER_SIZE*periods)>>2) < 0) {
     printf("ALSA: Error setting buffersize.\n");
     return -1;
   }
@@ -122,52 +115,12 @@ static int pcmout_alsa_open(guint16 *b, guint16 rate) {
     return -1;
   }
 
-  /* register callback */
-  if ((err = snd_async_add_pcm_handler(&ahandler, pcm_handle, async_callback, NULL)) < 0) {
-    printf("ALSA: Unable to register async handler\n");
-    return -1;
-  }
+#if 0
+  snd_pcm_dump(pcm_handle, output);
+#endif
 
-  /* software interface settings */
-  if ((err = snd_pcm_sw_params_current(pcm_handle, swparams)) < 0) {
-    printf("ALSA: Unable to determine current swparams for playback\n");
-    return -1;
-  }
-
-  /*
-  if ((err = snd_pcm_sw_params_set_start_threshold(pcm_handle, swparams, BUFFER_SIZE*2)) < 0) {
-    printf("ALSA: Unable to set start threshold mode for playback\n");
-    return -1;
-  }
-  */
-  if ((err = snd_pcm_sw_params_set_avail_min(pcm_handle, swparams, BUFFER_SIZE)) < 0) {
-    printf("ALSA: Unable to set avail min for playback\n");
-    return -1;
-  }
-
-  if ((err = snd_pcm_sw_params(pcm_handle, swparams)) < 0) {
-    printf("ALSA: Unable to set sw params for playback\n");
-    return -1;
-  }
-
-  for (count = 0 ; count < periods ; count++) {
-    if ((err = snd_pcm_writei(pcm_handle, buffer, BUFFER_SIZE)) < 0) {
-      printf("ALSA: Initial write error %d: %s\n", count, snd_strerror(err));
-      return -1;
-    }
-  }
-
-  /*
-  if ((err = snd_pcm_prepare(pcm_handle)) < 0) {
-    printf("ALSA: Unable to prepare device\n");
-    return -1;
-  }
-
-  if ((err = snd_pcm_start(pcm_handle)) < 0) {
-    printf("ALSA: Unable to start device\n");
-    return -1;
-  }
-  */
+  pthread_create (&thread, NULL, sound_thread, NULL);
+  pthread_detach (thread);
 
   return 0;
 }

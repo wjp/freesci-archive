@@ -1,3 +1,8 @@
+2002-09-05  Solomon Peachy <pizza@shaftnet.org>
+	* src/sound/pcmout_alsa.c:    Trash the async callback model as
+	it didn't work correctly with X11.  (SIGIO collisions)  Switch
+	instead to a pthreads-oriented backend.  works now!
+
 2002-09-04  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/sound/fmopl.h, src/sound/fmopl.c,
