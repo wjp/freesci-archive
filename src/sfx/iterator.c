@@ -1620,7 +1620,7 @@ songit_new_tee(song_iterator_t *left, song_iterator_t *right, int may_destroy)
 				incomplete_map = 1;
 				fprintf(stderr, "[songit-tee <%08lx,%08lx>] "
 					"Could not remap right channel #%d:"
-					" Out of channels",
+					" Out of channels\n",
 					left->ID, right->ID, i);
 			} else {
 				it->children[TEE_RIGHT].channel_remap[i]

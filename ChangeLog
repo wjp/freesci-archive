@@ -1,5 +1,9 @@
 2004-03-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sfx/mixer/soft.c (mix_compute_input_linear): Defer
+	computation on 'fs' until after 'fs' has been updated following a
+	lock acquisition
+
 	* src/sfx/core.c (_update_multi_song): Stop, rather than suspend,
 	songs in multisong mode when they're no longer around
 

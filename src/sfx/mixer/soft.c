@@ -658,14 +658,17 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result,
 
 	RELEASE_LOCK();
 	/* Make sure we have sufficient information */
-	frames_left = frames_read = fs->frame_bufstart +
+	frames_read =
 		f->poll(f, wr_dest,
 			frames_nr
 			- delay_frames
 			- fs->frame_bufstart);
-
 	ACQUIRE_LOCK();
 	fs = self->feeds + add_result;
+
+	frames_read += fs->frame_bufstart;
+	frames_left = frames_read;
+
 	/* Reset in case of status update */
 
 	/* Skip at the beginning: */
