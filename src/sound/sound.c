@@ -322,10 +322,7 @@ song_new(word handle, byte *data, int size, int priority)
 	retval->size = size;
 	retval->next = NULL;
 
-	if (global_sound_server->flags & SOUNDSERVER_FLAG_SHAREDMEM)
-		retval->shared = 1;
-	else
-		retval->shared = 0;
+	retval->shared = 0;
 
 	retval->pos = 33;
 	retval->loopmark = 33; /* The first 33 bytes are header data */
@@ -452,7 +449,7 @@ song_lib_find_active(songlib_t songlib, song_t *last_played_song)
 }
 
 int
-song_lib_remove(songlib_t songlib, word handle)
+song_lib_remove(songlib_t songlib, word handle, resource_mgr_t *resmgr)
 {
 	int retval;
 	song_t *goner = *songlib;
@@ -480,7 +477,13 @@ song_lib_remove(songlib_t songlib, word handle)
 	/* Don't free if we are sharing this resource. */
 	if (goner->shared == 0)
 		free(goner->data);
+	else if (resmgr)
+		scir_unlock_resource(resmgr, 
+				     scir_find_resource(resmgr, sci_sound,
+							goner->shared, 0),
+				     goner->shared, sci_sound);
 
+	goner->data = NULL;
 	free(goner);
 
 	return retval;

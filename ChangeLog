@@ -5,6 +5,10 @@
 	* src/sound/sound.c:  Fix for missing midi patch.XXX file.
 	* src/sound/thread_ss_sdl.c:  Experimental fix for the high cpu
         usage problem.
+	
+	* src/sound/soundserver.h, src/sound/thread_ss_sdl.c, 
+	  src/sound/polled_ss.c, src/sound/soundserver.c,
+	  src/sound/sound.c:   Lock sound resources when we're using 'em.
 
 2002-09-23  Solomon Peachy <pizza@shaftnet.org>
 

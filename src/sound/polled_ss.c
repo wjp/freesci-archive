@@ -186,7 +186,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 						fprintf(debug_stream, "Initialising song handle %04x: ", event.handle);
 #endif
 						if (modsong) { /* If the song already exists in cache... */
-							int lastmode = song_lib_remove(ss_state->songlib, (word)event.handle); /* remove it */
+							int lastmode = song_lib_remove(ss_state->songlib, (word)event.handle, ss_state->resmgr); /* remove it */
 							if (lastmode == SOUND_STATUS_PLAYING) {
 								newsong = ss_state->songlib[0];	/* If we just retreived the current song,
 														** we'll have to reset the queue for
@@ -291,7 +291,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 						fprintf(debug_stream, "Disposing handle %04x (value %04x)\n", event.handle, event.value);
 #endif
 						if (modsong) {
-							int lastmode = song_lib_remove(ss_state->songlib, (word)event.handle);
+							int lastmode = song_lib_remove(ss_state->songlib, (word)event.handle, ss_state->resmgr);
 							if (lastmode == SOUND_STATUS_PLAYING) {
 								newsong = ss_state->songlib[0]; /* Force song detection to start with the highest priority song */
 								global_sound_server->queue_event(event.handle, SOUND_SIGNAL_FINISHED, 0);

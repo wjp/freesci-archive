@@ -550,7 +550,7 @@ init_handle(int priority, word song_handle, sound_server_state_t *ss_state)
 	if (this_song)
 	{
 		/* in the cache so remove it */
-		int last_mode = song_lib_remove(ss_state->songlib, song_handle);
+		int last_mode = song_lib_remove(ss_state->songlib, song_handle, ss_state->resmgr);
 
 		/* if just retrieved the current song, reset the queue for
 		 * song_lib_find_active() */
@@ -835,7 +835,7 @@ dispose_handle(word song_handle, sound_server_state_t *ss_state)
 
 	if (this_song)
 	{
-		int last_mode = song_lib_remove(ss_state->songlib, song_handle);
+		int last_mode = song_lib_remove(ss_state->songlib, song_handle, ss_state->resmgr);
 		if (last_mode == SOUND_STATUS_PLAYING)
 		{
 			/* force song detection to start with the highest priority song */

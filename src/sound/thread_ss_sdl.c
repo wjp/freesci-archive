@@ -105,6 +105,8 @@ int sound_sdl_init(state_t *s, int flags)
   sss.songlib = &songlib;
   sss.current_song = NULL;
 
+  sss.resmgr = s->resmgr;
+
   fprintf(debug_stream, "Threaded sound server initialized\n");
 
   return 0;
@@ -341,7 +343,7 @@ int sound_sdl_command(state_t *s, unsigned int command, unsigned int handle,
     fprintf(debug_stream, "Initialising song handle %04x: ", handle);
 #endif
      
-     song_resource = scir_find_resource(s->resmgr, sci_sound, value, 0);
+     song_resource = scir_find_resource(s->resmgr, sci_sound, value, 1);
      if (song_resource == NULL) {
        fprintf(debug_stream, "Attempted to init a non-existant sound resource! %04x\n", value);
        return 1;
@@ -372,7 +374,7 @@ int sound_sdl_command(state_t *s, unsigned int command, unsigned int handle,
       }
 
       /* Mark it for deletion */
-      song_lib_remove(ss_state->songlib, handle);
+      song_lib_remove(ss_state->songlib, handle, ss_state->resmgr);
 
       /* Usually the same as above, but not always */
       if (modsong == ss_state->current_song)
@@ -381,6 +383,9 @@ int sound_sdl_command(state_t *s, unsigned int command, unsigned int handle,
     
     /* create a new song */
     modsong = song_new(handle, song_resource->data, song_resource->size, value);
+    /* keep track of the resnum, so we can unlock it later */
+    modsong->shared = value;
+
     /* If the hardware wants it, enable the rhythm channel */
     if (midi_playrhythm) 
       modsong->flags[RHYTHM_CHANNEL] |= midi_playflag;

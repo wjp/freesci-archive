@@ -328,7 +328,7 @@ song_lib_find_active(songlib_t songlib, song_t *last_played_song);
 */
 
 int
-song_lib_remove(songlib_t songlib, word handle);
+song_lib_remove(songlib_t songlib, word handle, resource_mgr_t *resmgr);
 /* Removes a song from the library
 ** Parameters: (songlib_t) songlib: An existing sound library
 **             (word) handle: Handle of the song to remove
@@ -562,6 +562,7 @@ extern sound_server_t *global_sound_server; /* current soundserver */
 typedef struct {
 	int suspended;	/* if sound server is suspended */
 	sound_server_t *ss_driver;	/* driver currently being used for sound server */
+	resource_mgr_t *resmgr;
 	int reverse_stereo;	/* reverse stereo setting */
 	byte mute_channel[MIDI_CHANNELS];	/* which channels are muted */
 
