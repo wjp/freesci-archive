@@ -1,5 +1,8 @@
 2003-12-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sfx/songlib.c (song_new): Initialise all songs to 'stopped'
+	by default
+
 	* src/sfx/mixer/soft.c (mix_compute_buf_len): Nasty bug in new
 	code fixed, thanks to Matt and Walter
 

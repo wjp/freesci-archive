@@ -86,6 +86,7 @@ song_new(song_handle_t handle, song_iterator_t *it, int priority)
 	retval->next = NULL;
 	retval->delay = 0;
 	retval->it = it;
+	retval->status = SOUND_STATUS_STOPPED;
 
 	return retval;
 }
