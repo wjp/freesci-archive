@@ -61,11 +61,11 @@ typedef struct {
 
 /* Auto-generated CFSML declaration and function block */
 
-#line 741 "cfsml.pl"
+#line 790 "savegame.cfsml"
 #define CFSML_SUCCESS 0
 #define CFSML_FAILURE 1
 
-#line 53 "cfsml.pl"
+#line 102 "savegame.cfsml"
 
 #include <stdarg.h> /* We need va_lists */
 
@@ -297,7 +297,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
      retval = (char *) realloc(retval, mem += 1);
 
   retval[pos] = 0; /* Terminate string */
-#line 294 "cfsml.pl"
+#line 343 "savegame.cfsml"
 
   return _cfsml_last_identifier_retreived = retval;
 }
@@ -345,167 +345,167 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
     retval = (char *) realloc(retval, mem += 1);
 
   retval[pos] = 0; /* Terminate string */
-#line 351 "cfsml.pl"
+#line 400 "savegame.cfsml"
   return (_cfsml_last_value_retreived = (char *) realloc(retval, strlen(retval) + 1));
   /* Re-allocate; this value might be used for quite some while (if we are
   ** restoring a string)
   */
 }
-#line 403 "cfsml.pl"
+#line 452 "savegame.cfsml"
 static void
-_cfsml_write_song_t(FILE *fh, song_t* foo);
+_cfsml_write_song_t(FILE *fh, song_t* save_struc);
 static int
-_cfsml_read_song_t(FILE *fh, song_t* foo, char *lastval, int *line, int *hiteof);
+_cfsml_read_song_t(FILE *fh, song_t* save_struc, char *lastval, int *line, int *hiteof);
 
-#line 403 "cfsml.pl"
+#line 452 "savegame.cfsml"
 static void
-_cfsml_write_string(FILE *fh, char ** foo);
+_cfsml_write_string(FILE *fh, char ** save_struc);
 static int
-_cfsml_read_string(FILE *fh, char ** foo, char *lastval, int *line, int *hiteof);
+_cfsml_read_string(FILE *fh, char ** save_struc, char *lastval, int *line, int *hiteof);
 
-#line 403 "cfsml.pl"
+#line 452 "savegame.cfsml"
 static void
-_cfsml_write_sound_lib_file_t(FILE *fh, sound_lib_file_t* foo);
+_cfsml_write_sound_lib_file_t(FILE *fh, sound_lib_file_t* save_struc);
 static int
-_cfsml_read_sound_lib_file_t(FILE *fh, sound_lib_file_t* foo, char *lastval, int *line, int *hiteof);
+_cfsml_read_sound_lib_file_t(FILE *fh, sound_lib_file_t* save_struc, char *lastval, int *line, int *hiteof);
 
-#line 403 "cfsml.pl"
+#line 452 "savegame.cfsml"
 static void
-_cfsml_write_int(FILE *fh, int* foo);
+_cfsml_write_int(FILE *fh, int* save_struc);
 static int
-_cfsml_read_int(FILE *fh, int* foo, char *lastval, int *line, int *hiteof);
+_cfsml_read_int(FILE *fh, int* save_struc, char *lastval, int *line, int *hiteof);
 
-#line 403 "cfsml.pl"
+#line 452 "savegame.cfsml"
 static void
-_cfsml_write_word(FILE *fh, word* foo);
+_cfsml_write_word(FILE *fh, word* save_struc);
 static int
-_cfsml_read_word(FILE *fh, word* foo, char *lastval, int *line, int *hiteof);
+_cfsml_read_word(FILE *fh, word* save_struc, char *lastval, int *line, int *hiteof);
 
-#line 416 "cfsml.pl"
+#line 465 "savegame.cfsml"
 static void
-_cfsml_write_song_t(FILE *fh, song_t* foo)
+_cfsml_write_song_t(FILE *fh, song_t* save_struc)
 {
-  char *bar;
+  char *token;
   int min, max, i;
 
-#line 434 "cfsml.pl"
+#line 483 "savegame.cfsml"
   fprintf(fh, "{\n");
   fprintf(fh, "flags = ");
     min = max = MIDI_CHANNELS;
-#line 460 "cfsml.pl"
+#line 509 "savegame.cfsml"
     fprintf(fh, "[%d][\n", max);
     for (i = 0; i < min; i++) {
-      _cfsml_write_int(fh, &(foo->flags[i]));
+      _cfsml_write_int(fh, &(save_struc->flags[i]));
       fprintf(fh, "\n");
     }
     fprintf(fh, "]");
     fprintf(fh, "\n");
   fprintf(fh, "instruments = ");
     min = max = MIDI_CHANNELS;
-#line 460 "cfsml.pl"
+#line 509 "savegame.cfsml"
     fprintf(fh, "[%d][\n", max);
     for (i = 0; i < min; i++) {
-      _cfsml_write_int(fh, &(foo->instruments[i]));
+      _cfsml_write_int(fh, &(save_struc->instruments[i]));
       fprintf(fh, "\n");
     }
     fprintf(fh, "]");
     fprintf(fh, "\n");
   fprintf(fh, "velocity = ");
     min = max = MIDI_CHANNELS;
-#line 460 "cfsml.pl"
+#line 509 "savegame.cfsml"
     fprintf(fh, "[%d][\n", max);
     for (i = 0; i < min; i++) {
-      _cfsml_write_int(fh, &(foo->velocity[i]));
+      _cfsml_write_int(fh, &(save_struc->velocity[i]));
       fprintf(fh, "\n");
     }
     fprintf(fh, "]");
     fprintf(fh, "\n");
   fprintf(fh, "pressure = ");
     min = max = MIDI_CHANNELS;
-#line 460 "cfsml.pl"
+#line 509 "savegame.cfsml"
     fprintf(fh, "[%d][\n", max);
     for (i = 0; i < min; i++) {
-      _cfsml_write_int(fh, &(foo->pressure[i]));
+      _cfsml_write_int(fh, &(save_struc->pressure[i]));
       fprintf(fh, "\n");
     }
     fprintf(fh, "]");
     fprintf(fh, "\n");
   fprintf(fh, "pitch = ");
     min = max = MIDI_CHANNELS;
-#line 460 "cfsml.pl"
+#line 509 "savegame.cfsml"
     fprintf(fh, "[%d][\n", max);
     for (i = 0; i < min; i++) {
-      _cfsml_write_int(fh, &(foo->pitch[i]));
+      _cfsml_write_int(fh, &(save_struc->pitch[i]));
       fprintf(fh, "\n");
     }
     fprintf(fh, "]");
     fprintf(fh, "\n");
   fprintf(fh, "channel_map = ");
     min = max = MIDI_CHANNELS;
-#line 460 "cfsml.pl"
+#line 509 "savegame.cfsml"
     fprintf(fh, "[%d][\n", max);
     for (i = 0; i < min; i++) {
-      _cfsml_write_int(fh, &(foo->channel_map[i]));
+      _cfsml_write_int(fh, &(save_struc->channel_map[i]));
       fprintf(fh, "\n");
     }
     fprintf(fh, "]");
     fprintf(fh, "\n");
   fprintf(fh, "size = ");
-    _cfsml_write_int(fh, &(foo->size));
+    _cfsml_write_int(fh, &(save_struc->size));
     fprintf(fh, "\n");
   fprintf(fh, "pos = ");
-    _cfsml_write_int(fh, &(foo->pos));
+    _cfsml_write_int(fh, &(save_struc->pos));
     fprintf(fh, "\n");
   fprintf(fh, "loopmark = ");
-    _cfsml_write_int(fh, &(foo->loopmark));
+    _cfsml_write_int(fh, &(save_struc->loopmark));
     fprintf(fh, "\n");
   fprintf(fh, "fading = ");
-    _cfsml_write_int(fh, &(foo->fading));
+    _cfsml_write_int(fh, &(save_struc->fading));
     fprintf(fh, "\n");
   fprintf(fh, "reverb = ");
-    _cfsml_write_int(fh, &(foo->reverb));
+    _cfsml_write_int(fh, &(save_struc->reverb));
     fprintf(fh, "\n");
   fprintf(fh, "maxfade = ");
-    _cfsml_write_int(fh, &(foo->maxfade));
+    _cfsml_write_int(fh, &(save_struc->maxfade));
     fprintf(fh, "\n");
   fprintf(fh, "resetflag = ");
-    _cfsml_write_int(fh, &(foo->resetflag));
+    _cfsml_write_int(fh, &(save_struc->resetflag));
     fprintf(fh, "\n");
   fprintf(fh, "polyphony = ");
     min = max = MIDI_CHANNELS;
-#line 460 "cfsml.pl"
+#line 509 "savegame.cfsml"
     fprintf(fh, "[%d][\n", max);
     for (i = 0; i < min; i++) {
-      _cfsml_write_int(fh, &(foo->polyphony[i]));
+      _cfsml_write_int(fh, &(save_struc->polyphony[i]));
       fprintf(fh, "\n");
     }
     fprintf(fh, "]");
     fprintf(fh, "\n");
   fprintf(fh, "file_nr = ");
-    _cfsml_write_int(fh, &(foo->file_nr));
+    _cfsml_write_int(fh, &(save_struc->file_nr));
     fprintf(fh, "\n");
   fprintf(fh, "priority = ");
-    _cfsml_write_int(fh, &(foo->priority));
+    _cfsml_write_int(fh, &(save_struc->priority));
     fprintf(fh, "\n");
   fprintf(fh, "loops = ");
-    _cfsml_write_int(fh, &(foo->loops));
+    _cfsml_write_int(fh, &(save_struc->loops));
     fprintf(fh, "\n");
   fprintf(fh, "status = ");
-    _cfsml_write_int(fh, &(foo->status));
+    _cfsml_write_int(fh, &(save_struc->status));
     fprintf(fh, "\n");
   fprintf(fh, "handle = ");
-    _cfsml_write_word(fh, &(foo->handle));
+    _cfsml_write_word(fh, &(save_struc->handle));
     fprintf(fh, "\n");
   fprintf(fh, "}");
 }
 
-#line 508 "cfsml.pl"
+#line 557 "savegame.cfsml"
 static int
-_cfsml_read_song_t(FILE *fh, song_t* foo, char *lastval, int *line, int *hiteof)
+_cfsml_read_song_t(FILE *fh, song_t* save_struc, char *lastval, int *line, int *hiteof)
 {
-  char *bar;
+  char *token;
   int min, max, i;
-#line 563 "cfsml.pl"
+#line 612 "savegame.cfsml"
   int assignment, closed, done;
 
   if (strcmp(lastval, "{")) {
@@ -515,12 +515,12 @@ _cfsml_read_song_t(FILE *fh, song_t* foo, char *lastval, int *line, int *hiteof)
   closed = 0;
   do {
     char *value;
-    bar = _cfsml_get_identifier(fh, line, hiteof, &assignment);
+    token = _cfsml_get_identifier(fh, line, hiteof, &assignment);
 
-    if (!bar)
+    if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(bar, "}")) 
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -532,266 +532,266 @@ _cfsml_read_song_t(FILE *fh, song_t* foo, char *lastval, int *line, int *hiteof)
         value = _cfsml_get_value(fh, line, hiteof);
       if (!value)
          return CFSML_FAILURE;
-      if (!strcmp(bar, "flags")) {
-#line 620 "cfsml.pl"
+      if (!strcmp(token, "flags")) {
+#line 669 "savegame.cfsml"
          if ((value[0] != '[') || (value[strlen(value) - 1] != '[')) {
             _cfsml_error("Opening brackets expected at line %d\n", *line);
             return CFSML_FAILURE;
 ;         }
          /* Prepare to restore static array */
          max = MIDI_CHANNELS;
-#line 653 "cfsml.pl"
+#line 702 "savegame.cfsml"
          done = i = 0;
          do {
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
-#line 661 "cfsml.pl"
+#line 710 "savegame.cfsml"
               return 1;
            if (strcmp(value, "]")) {
              if (i == max) {
-               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, bar, *line);
+               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, token, *line);
                return CFSML_FAILURE;
              }
-             if (_cfsml_read_int(fh, &(foo->flags[i++]), value, line, hiteof))
+             if (_cfsml_read_int(fh, &(save_struc->flags[i++]), value, line, hiteof))
                 return CFSML_FAILURE;
            } else done = 1;
          } while (!done);
       } else
-      if (!strcmp(bar, "instruments")) {
-#line 620 "cfsml.pl"
+      if (!strcmp(token, "instruments")) {
+#line 669 "savegame.cfsml"
          if ((value[0] != '[') || (value[strlen(value) - 1] != '[')) {
             _cfsml_error("Opening brackets expected at line %d\n", *line);
             return CFSML_FAILURE;
 ;         }
          /* Prepare to restore static array */
          max = MIDI_CHANNELS;
-#line 653 "cfsml.pl"
+#line 702 "savegame.cfsml"
          done = i = 0;
          do {
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
-#line 661 "cfsml.pl"
+#line 710 "savegame.cfsml"
               return 1;
            if (strcmp(value, "]")) {
              if (i == max) {
-               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, bar, *line);
+               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, token, *line);
                return CFSML_FAILURE;
              }
-             if (_cfsml_read_int(fh, &(foo->instruments[i++]), value, line, hiteof))
+             if (_cfsml_read_int(fh, &(save_struc->instruments[i++]), value, line, hiteof))
                 return CFSML_FAILURE;
            } else done = 1;
          } while (!done);
       } else
-      if (!strcmp(bar, "velocity")) {
-#line 620 "cfsml.pl"
+      if (!strcmp(token, "velocity")) {
+#line 669 "savegame.cfsml"
          if ((value[0] != '[') || (value[strlen(value) - 1] != '[')) {
             _cfsml_error("Opening brackets expected at line %d\n", *line);
             return CFSML_FAILURE;
 ;         }
          /* Prepare to restore static array */
          max = MIDI_CHANNELS;
-#line 653 "cfsml.pl"
+#line 702 "savegame.cfsml"
          done = i = 0;
          do {
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
-#line 661 "cfsml.pl"
+#line 710 "savegame.cfsml"
               return 1;
            if (strcmp(value, "]")) {
              if (i == max) {
-               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, bar, *line);
+               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, token, *line);
                return CFSML_FAILURE;
              }
-             if (_cfsml_read_int(fh, &(foo->velocity[i++]), value, line, hiteof))
+             if (_cfsml_read_int(fh, &(save_struc->velocity[i++]), value, line, hiteof))
                 return CFSML_FAILURE;
            } else done = 1;
          } while (!done);
       } else
-      if (!strcmp(bar, "pressure")) {
-#line 620 "cfsml.pl"
+      if (!strcmp(token, "pressure")) {
+#line 669 "savegame.cfsml"
          if ((value[0] != '[') || (value[strlen(value) - 1] != '[')) {
             _cfsml_error("Opening brackets expected at line %d\n", *line);
             return CFSML_FAILURE;
 ;         }
          /* Prepare to restore static array */
          max = MIDI_CHANNELS;
-#line 653 "cfsml.pl"
+#line 702 "savegame.cfsml"
          done = i = 0;
          do {
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
-#line 661 "cfsml.pl"
+#line 710 "savegame.cfsml"
               return 1;
            if (strcmp(value, "]")) {
              if (i == max) {
-               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, bar, *line);
+               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, token, *line);
                return CFSML_FAILURE;
              }
-             if (_cfsml_read_int(fh, &(foo->pressure[i++]), value, line, hiteof))
+             if (_cfsml_read_int(fh, &(save_struc->pressure[i++]), value, line, hiteof))
                 return CFSML_FAILURE;
            } else done = 1;
          } while (!done);
       } else
-      if (!strcmp(bar, "pitch")) {
-#line 620 "cfsml.pl"
+      if (!strcmp(token, "pitch")) {
+#line 669 "savegame.cfsml"
          if ((value[0] != '[') || (value[strlen(value) - 1] != '[')) {
             _cfsml_error("Opening brackets expected at line %d\n", *line);
             return CFSML_FAILURE;
 ;         }
          /* Prepare to restore static array */
          max = MIDI_CHANNELS;
-#line 653 "cfsml.pl"
+#line 702 "savegame.cfsml"
          done = i = 0;
          do {
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
-#line 661 "cfsml.pl"
+#line 710 "savegame.cfsml"
               return 1;
            if (strcmp(value, "]")) {
              if (i == max) {
-               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, bar, *line);
+               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, token, *line);
                return CFSML_FAILURE;
              }
-             if (_cfsml_read_int(fh, &(foo->pitch[i++]), value, line, hiteof))
+             if (_cfsml_read_int(fh, &(save_struc->pitch[i++]), value, line, hiteof))
                 return CFSML_FAILURE;
            } else done = 1;
          } while (!done);
       } else
-      if (!strcmp(bar, "channel_map")) {
-#line 620 "cfsml.pl"
+      if (!strcmp(token, "channel_map")) {
+#line 669 "savegame.cfsml"
          if ((value[0] != '[') || (value[strlen(value) - 1] != '[')) {
             _cfsml_error("Opening brackets expected at line %d\n", *line);
             return CFSML_FAILURE;
 ;         }
          /* Prepare to restore static array */
          max = MIDI_CHANNELS;
-#line 653 "cfsml.pl"
+#line 702 "savegame.cfsml"
          done = i = 0;
          do {
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
-#line 661 "cfsml.pl"
+#line 710 "savegame.cfsml"
               return 1;
            if (strcmp(value, "]")) {
              if (i == max) {
-               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, bar, *line);
+               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, token, *line);
                return CFSML_FAILURE;
              }
-             if (_cfsml_read_int(fh, &(foo->channel_map[i++]), value, line, hiteof))
+             if (_cfsml_read_int(fh, &(save_struc->channel_map[i++]), value, line, hiteof))
                 return CFSML_FAILURE;
            } else done = 1;
          } while (!done);
       } else
-      if (!strcmp(bar, "size")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->size), value, line, hiteof))
+      if (!strcmp(token, "size")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->size), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "pos")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->pos), value, line, hiteof))
+      if (!strcmp(token, "pos")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->pos), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "loopmark")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->loopmark), value, line, hiteof))
+      if (!strcmp(token, "loopmark")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->loopmark), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "fading")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->fading), value, line, hiteof))
+      if (!strcmp(token, "fading")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->fading), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "reverb")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->reverb), value, line, hiteof))
+      if (!strcmp(token, "reverb")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->reverb), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "maxfade")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->maxfade), value, line, hiteof))
+      if (!strcmp(token, "maxfade")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->maxfade), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "resetflag")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->resetflag), value, line, hiteof))
+      if (!strcmp(token, "resetflag")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->resetflag), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "polyphony")) {
-#line 620 "cfsml.pl"
+      if (!strcmp(token, "polyphony")) {
+#line 669 "savegame.cfsml"
          if ((value[0] != '[') || (value[strlen(value) - 1] != '[')) {
             _cfsml_error("Opening brackets expected at line %d\n", *line);
             return CFSML_FAILURE;
 ;         }
          /* Prepare to restore static array */
          max = MIDI_CHANNELS;
-#line 653 "cfsml.pl"
+#line 702 "savegame.cfsml"
          done = i = 0;
          do {
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
-#line 661 "cfsml.pl"
+#line 710 "savegame.cfsml"
               return 1;
            if (strcmp(value, "]")) {
              if (i == max) {
-               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, bar, *line);
+               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, token, *line);
                return CFSML_FAILURE;
              }
-             if (_cfsml_read_int(fh, &(foo->polyphony[i++]), value, line, hiteof))
+             if (_cfsml_read_int(fh, &(save_struc->polyphony[i++]), value, line, hiteof))
                 return CFSML_FAILURE;
            } else done = 1;
          } while (!done);
       } else
-      if (!strcmp(bar, "file_nr")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->file_nr), value, line, hiteof))
+      if (!strcmp(token, "file_nr")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->file_nr), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "priority")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->priority), value, line, hiteof))
+      if (!strcmp(token, "priority")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->priority), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "loops")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->loops), value, line, hiteof))
+      if (!strcmp(token, "loops")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->loops), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "status")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->status), value, line, hiteof))
+      if (!strcmp(token, "status")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->status), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "handle")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_word(fh, &(foo->handle), value, line, hiteof))
+      if (!strcmp(token, "handle")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_word(fh, &(save_struc->handle), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-#line 703 "cfsml.pl"
+#line 752 "savegame.cfsml"
        {
-          _cfsml_error("Assignment to invalid identifier '%s' in line %d\n", bar, *line);
+          _cfsml_error("Assignment to invalid identifier '%s' in line %d\n", token, *line);
           return CFSML_FAILURE;       }
      }
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
 
-#line 416 "cfsml.pl"
+#line 465 "savegame.cfsml"
 static void
-_cfsml_write_string(FILE *fh, char ** foo)
+_cfsml_write_string(FILE *fh, char ** save_struc)
 {
-  char *bar;
+  char *token;
   int min, max, i;
 
-#line 424 "cfsml.pl"
-  if (!(*foo))
+#line 473 "savegame.cfsml"
+  if (!(*save_struc))
     fprintf(fh, "\\null\\");  else {
-    bar = _cfsml_mangle_string((char *) *foo);
-    fprintf(fh, "\"%s\"", bar);
-    free(bar);
+    token = _cfsml_mangle_string((char *) *save_struc);
+    fprintf(fh, "\"%s\"", token);
+    free(token);
   }
 }
 
-#line 508 "cfsml.pl"
+#line 557 "savegame.cfsml"
 static int
-_cfsml_read_string(FILE *fh, char ** foo, char *lastval, int *line, int *hiteof)
+_cfsml_read_string(FILE *fh, char ** save_struc, char *lastval, int *line, int *hiteof)
 {
-  char *bar;
+  char *token;
   int min, max, i;
-#line 541 "cfsml.pl"
+#line 590 "savegame.cfsml"
 
   if (strcmp(lastval, "\\null\\")) { /* null pointer? */
     if (*lastval == '"') { /* Quoted string? */
@@ -808,64 +808,64 @@ _cfsml_read_string(FILE *fh, char ** foo, char *lastval, int *line, int *hiteof)
       lastval[seeker] = 0; /* Terminate string at closing quotes... */
       lastval++; /* ...and skip the opening quotes locally */
     }
-    *foo = _cfsml_unmangle_string(lastval);
-    _cfsml_register_pointer(*foo);
+    *save_struc = _cfsml_unmangle_string(lastval);
+    _cfsml_register_pointer(*save_struc);
     return CFSML_SUCCESS;
   } else {
-    *foo = NULL;
+    *save_struc = NULL;
     return CFSML_SUCCESS;
   }
 }
 
-#line 416 "cfsml.pl"
+#line 465 "savegame.cfsml"
 static void
-_cfsml_write_sound_lib_file_t(FILE *fh, sound_lib_file_t* foo)
+_cfsml_write_sound_lib_file_t(FILE *fh, sound_lib_file_t* save_struc)
 {
-  char *bar;
+  char *token;
   int min, max, i;
 
-#line 434 "cfsml.pl"
+#line 483 "savegame.cfsml"
   fprintf(fh, "{\n");
   fprintf(fh, "sound_version = ");
-    _cfsml_write_int(fh, &(foo->sound_version));
+    _cfsml_write_int(fh, &(save_struc->sound_version));
     fprintf(fh, "\n");
   fprintf(fh, "songs = ");
-    min = max = foo->songs_nr;
-    if (!foo->songs)
+    min = max = save_struc->songs_nr;
+    if (!save_struc->songs)
        min = max = 0; /* Don't write if it points to NULL */
-#line 460 "cfsml.pl"
+#line 509 "savegame.cfsml"
     fprintf(fh, "[%d][\n", max);
     for (i = 0; i < min; i++) {
-      _cfsml_write_song_t(fh, &(foo->songs[i]));
+      _cfsml_write_song_t(fh, &(save_struc->songs[i]));
       fprintf(fh, "\n");
     }
     fprintf(fh, "]");
     fprintf(fh, "\n");
   fprintf(fh, "active_song = ");
-    _cfsml_write_int(fh, &(foo->active_song));
+    _cfsml_write_int(fh, &(save_struc->active_song));
     fprintf(fh, "\n");
   fprintf(fh, "soundcue = ");
-    _cfsml_write_int(fh, &(foo->soundcue));
+    _cfsml_write_int(fh, &(save_struc->soundcue));
     fprintf(fh, "\n");
   fprintf(fh, "usecs_to_sleep = ");
-    _cfsml_write_int(fh, &(foo->usecs_to_sleep));
+    _cfsml_write_int(fh, &(save_struc->usecs_to_sleep));
     fprintf(fh, "\n");
   fprintf(fh, "ticks_to_wait = ");
-    _cfsml_write_int(fh, &(foo->ticks_to_wait));
+    _cfsml_write_int(fh, &(save_struc->ticks_to_wait));
     fprintf(fh, "\n");
   fprintf(fh, "ticks_to_fade = ");
-    _cfsml_write_int(fh, &(foo->ticks_to_fade));
+    _cfsml_write_int(fh, &(save_struc->ticks_to_fade));
     fprintf(fh, "\n");
   fprintf(fh, "}");
 }
 
-#line 508 "cfsml.pl"
+#line 557 "savegame.cfsml"
 static int
-_cfsml_read_sound_lib_file_t(FILE *fh, sound_lib_file_t* foo, char *lastval, int *line, int *hiteof)
+_cfsml_read_sound_lib_file_t(FILE *fh, sound_lib_file_t* save_struc, char *lastval, int *line, int *hiteof)
 {
-  char *bar;
+  char *token;
   int min, max, i;
-#line 563 "cfsml.pl"
+#line 612 "savegame.cfsml"
   int assignment, closed, done;
 
   if (strcmp(lastval, "{")) {
@@ -875,12 +875,12 @@ _cfsml_read_sound_lib_file_t(FILE *fh, sound_lib_file_t* foo, char *lastval, int
   closed = 0;
   do {
     char *value;
-    bar = _cfsml_get_identifier(fh, line, hiteof, &assignment);
+    token = _cfsml_get_identifier(fh, line, hiteof, &assignment);
 
-    if (!bar)
+    if (!token)
        return CFSML_FAILURE;
     if (!assignment) {
-      if (!strcmp(bar, "}")) 
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -892,128 +892,128 @@ _cfsml_read_sound_lib_file_t(FILE *fh, sound_lib_file_t* foo, char *lastval, int
         value = _cfsml_get_value(fh, line, hiteof);
       if (!value)
          return CFSML_FAILURE;
-      if (!strcmp(bar, "sound_version")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->sound_version), value, line, hiteof))
+      if (!strcmp(token, "sound_version")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->sound_version), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "songs")) {
-#line 620 "cfsml.pl"
+      if (!strcmp(token, "songs")) {
+#line 669 "savegame.cfsml"
          if ((value[0] != '[') || (value[strlen(value) - 1] != '[')) {
             _cfsml_error("Opening brackets expected at line %d\n", *line);
             return CFSML_FAILURE;
 ;         }
-#line 630 "cfsml.pl"
+#line 679 "savegame.cfsml"
          /* Prepare to restore dynamic array */
          max = strtol(value + 1, NULL, 0);
          if (max < 0) {
-            _cfsml_error("Invalid number of elements to allocate for dynamic array '%s' at line %d\n", bar, *line);
+            _cfsml_error("Invalid number of elements to allocate for dynamic array '%s' at line %d\n", token, *line);
             return CFSML_FAILURE;
 ;         }
 
          if (max) {
-           foo->songs = (song_t *) malloc(max * sizeof(song_t));
-           _cfsml_register_pointer(foo->songs);
+           save_struc->songs = (song_t *) malloc(max * sizeof(song_t));
+           _cfsml_register_pointer(save_struc->songs);
          }
          else
-           foo->songs = NULL;
-#line 653 "cfsml.pl"
+           save_struc->songs = NULL;
+#line 702 "savegame.cfsml"
          done = i = 0;
          do {
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
-#line 661 "cfsml.pl"
+#line 710 "savegame.cfsml"
               return 1;
            if (strcmp(value, "]")) {
              if (i == max) {
-               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, bar, *line);
+               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, token, *line);
                return CFSML_FAILURE;
              }
-             if (_cfsml_read_song_t(fh, &(foo->songs[i++]), value, line, hiteof))
+             if (_cfsml_read_song_t(fh, &(save_struc->songs[i++]), value, line, hiteof))
                 return CFSML_FAILURE;
            } else done = 1;
          } while (!done);
-         foo->songs_nr = max ; /* Set array size accordingly */
+         save_struc->songs_nr = max ; /* Set array size accordingly */
       } else
-      if (!strcmp(bar, "active_song")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->active_song), value, line, hiteof))
+      if (!strcmp(token, "active_song")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->active_song), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "soundcue")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->soundcue), value, line, hiteof))
+      if (!strcmp(token, "soundcue")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->soundcue), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "usecs_to_sleep")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->usecs_to_sleep), value, line, hiteof))
+      if (!strcmp(token, "usecs_to_sleep")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->usecs_to_sleep), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "ticks_to_wait")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->ticks_to_wait), value, line, hiteof))
+      if (!strcmp(token, "ticks_to_wait")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->ticks_to_wait), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-      if (!strcmp(bar, "ticks_to_fade")) {
-#line 696 "cfsml.pl"
-         if (_cfsml_read_int(fh, &(foo->ticks_to_fade), value, line, hiteof))
+      if (!strcmp(token, "ticks_to_fade")) {
+#line 745 "savegame.cfsml"
+         if (_cfsml_read_int(fh, &(save_struc->ticks_to_fade), value, line, hiteof))
             return CFSML_FAILURE;
       } else
-#line 703 "cfsml.pl"
+#line 752 "savegame.cfsml"
        {
-          _cfsml_error("Assignment to invalid identifier '%s' in line %d\n", bar, *line);
+          _cfsml_error("Assignment to invalid identifier '%s' in line %d\n", token, *line);
           return CFSML_FAILURE;       }
      }
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
 
-#line 416 "cfsml.pl"
+#line 465 "savegame.cfsml"
 static void
-_cfsml_write_int(FILE *fh, int* foo)
+_cfsml_write_int(FILE *fh, int* save_struc)
 {
-  char *bar;
+  char *token;
   int min, max, i;
 
-  fprintf(fh, "%li", (long) *foo);
+  fprintf(fh, "%li", (long) *save_struc);
 }
 
-#line 508 "cfsml.pl"
+#line 557 "savegame.cfsml"
 static int
-_cfsml_read_int(FILE *fh, int* foo, char *lastval, int *line, int *hiteof)
+_cfsml_read_int(FILE *fh, int* save_struc, char *lastval, int *line, int *hiteof)
 {
-  char *bar;
+  char *token;
   int min, max, i;
-#line 532 "cfsml.pl"
+#line 581 "savegame.cfsml"
 
-  *foo = strtol(lastval, &bar, 0);
-  if (*bar != 0) {
+  *save_struc = strtol(lastval, &token, 0);
+  if (*token != 0) {
      _cfsml_error("Non-integer encountered while parsing int value at line %d\n", *line);
      return CFSML_FAILURE;
   }
   return CFSML_SUCCESS;
 }
 
-#line 416 "cfsml.pl"
+#line 465 "savegame.cfsml"
 static void
-_cfsml_write_word(FILE *fh, word* foo)
+_cfsml_write_word(FILE *fh, word* save_struc)
 {
-  char *bar;
+  char *token;
   int min, max, i;
 
-  fprintf(fh, "%li", (long) *foo);
+  fprintf(fh, "%li", (long) *save_struc);
 }
 
-#line 508 "cfsml.pl"
+#line 557 "savegame.cfsml"
 static int
-_cfsml_read_word(FILE *fh, word* foo, char *lastval, int *line, int *hiteof)
+_cfsml_read_word(FILE *fh, word* save_struc, char *lastval, int *line, int *hiteof)
 {
-  char *bar;
+  char *token;
   int min, max, i;
-#line 532 "cfsml.pl"
+#line 581 "savegame.cfsml"
 
-  *foo = strtol(lastval, &bar, 0);
-  if (*bar != 0) {
+  *save_struc = strtol(lastval, &token, 0);
+  if (*token != 0) {
      _cfsml_error("Non-integer encountered while parsing int value at line %d\n", *line);
      return CFSML_FAILURE;
   }
@@ -1022,8 +1022,9 @@ _cfsml_read_word(FILE *fh, word* foo, char *lastval, int *line, int *hiteof)
 
 
 /* Auto-generated CFSML declaration and function block ends here */
-/* Auto-generation performed by cfsml.pl 0.8.1 */
-#line 108 "CFSML input file"
+/* Auto-generation performed by cfsml.pl 0.8.2 */
+#line 108 "savegame.cfsml"
+
 
 /* Sound state saving reference implementation */
 int
@@ -1107,12 +1108,12 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
 
   fh = fopen("sound", "w");
 
-#line 822 "cfsml.pl"
+#line 871 "savegame.cfsml"
 /* Auto-generated CFSML data writer code */
   _cfsml_write_sound_lib_file_t(fh, &write_rec);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 193 "CFSML input file"
+#line 193 "savegame.cfsml"
 
   fclose(fh);
   fprintf(stderr,"Finished all writing.\n");
@@ -1172,25 +1173,25 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
   read_rec.sound_version = 0;
   read_rec.master_volume = *master_volume;
 /* Auto-generated CFSML data reader code */
-#line 768 "cfsml.pl"
+#line 817 "savegame.cfsml"
   {
-#line 771 "cfsml.pl"
+#line 820 "savegame.cfsml"
     int _cfsml_line_ctr = 0;
-#line 776 "cfsml.pl"
+#line 825 "savegame.cfsml"
     struct _cfsml_pointer_refstruct **_cfsml_myptrrefptr = _cfsml_get_current_refpointer();
-#line 779 "cfsml.pl"
+#line 828 "savegame.cfsml"
     int _cfsml_eof = 0, _cfsml_error;
     int dummy;
-#line 787 "cfsml.pl"
+#line 836 "savegame.cfsml"
     char *_cfsml_inp = _cfsml_get_identifier(fh, &(_cfsml_line_ctr), &_cfsml_eof, &dummy);
 
-#line 792 "cfsml.pl"
+#line 841 "savegame.cfsml"
     _cfsml_error = _cfsml_read_sound_lib_file_t(fh, &read_rec, _cfsml_inp, &(_cfsml_line_ctr), &_cfsml_eof);
-#line 797 "cfsml.pl"
+#line 846 "savegame.cfsml"
     error = _cfsml_error;
-#line 801 "cfsml.pl"
+#line 850 "savegame.cfsml"
      _cfsml_free_pointer_references(_cfsml_myptrrefptr, _cfsml_error);
-#line 804 "cfsml.pl"
+#line 853 "savegame.cfsml"
      if (_cfsml_last_value_retreived) {
        free(_cfsml_last_value_retreived);
        _cfsml_last_value_retreived = NULL;
@@ -1201,7 +1202,7 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 252 "CFSML input file"
+#line 252 "savegame.cfsml"
 
   if (read_rec.sound_version == 0)
 	  recover_version0(&read_rec);

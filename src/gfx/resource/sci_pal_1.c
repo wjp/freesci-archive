@@ -38,7 +38,6 @@ gfxr_read_pal1(int id, int *colors_nr, byte *resource, int size)
 {
 	int counter = 0;
 	int pos;
-	int pos_counter = 0;
 	unsigned int colors[MAX_COLORS];
 	gfx_pixmap_color_t *retval;
 
@@ -50,32 +49,24 @@ gfxr_read_pal1(int id, int *colors_nr, byte *resource, int size)
 
 	pos = PALETTE_START;
 
-	while (pos < size && resource[pos] == COLOR_OK && pos_counter < MAX_COLORS) {
+	while (pos < size && resource[pos] == COLOR_OK && counter < MAX_COLORS) {
 		int i;
-		int new_color = 1;
 		int color = resource[pos]
 			| (resource[pos + 1] << 8)
 			| (resource[pos + 2] << 16)
 			| (resource[pos + 3] << 24);
 
 		pos += 4;
-		++pos_counter;
 
-		for (i = 0; i < counter && new_color; i++)
-			if (colors[i] == color)
-				new_color = 0;
-
-		if (new_color)
-			colors[counter++] = color;
-
+		colors[counter++] = color;
 	}
 
-	if (pos_counter < MAX_COLORS && resource[pos] != COLOR_OK) {
+	if (counter < MAX_COLORS && resource[pos] != COLOR_OK) {
 		GFXERROR("Palette %04x uses unknown palette color prefix 0x%02x at offset 0x%04x\n", id, resource[pos], pos);
 		return NULL;
 	}
 
-	if (pos_counter < MAX_COLORS) {
+	if (counter < MAX_COLORS) {
 		GFXERROR("Palette %04x ends prematurely\n", id);
 		return NULL;
 	}

@@ -826,7 +826,7 @@ line_check_bar(int *start, int *length, int clipstart, int cliplength)
 		*start = clipstart;
 	}
 
-	overlength = (*start + *length) - (clipstart + cliplength);
+	overlength = 1 + (*start + *length) - (clipstart + cliplength);
 
 	if (overlength > 0)
 		*length -= overlength;
@@ -850,6 +850,7 @@ static int
 line_clip(rect_t *line, rect_t clip)
 /* returns 1 if nothing is left, or 0 if part of the line is in the clip window */
 {
+fprintf(stderr,"lclipping %d,%d,%d,%d against %d,%d,%d,%d\n", GFX_PRINT_RECT(*line), GFX_PRINT_RECT(clip));
 	if (!line->xl) {/* vbar */
 		if (line->x < clip.x || line->x >= (clip.x + clip.xl))
 			return 1;
@@ -975,11 +976,10 @@ _gfxop_draw_line_clipped(gfx_state_t *state, rect_t line, gfx_color_t color, gfx
 	}
 
 	if (line.x < state->clip_zone.x
-	    || (line.x + line.xl) < state->clip_zone.x
+	    || line.x < state->clip_zone.x
 	    || line.y < state->clip_zone.y
-	    || (line.x + line.xl) > (state->clip_zone.x + state->clip_zone.xl)
-	    || line.x > (state->clip_zone.x + state->clip_zone.xl)
-	    || (line.y + line.yl) > (state->clip_zone.y + state->clip_zone.yl))
+	    || (line.x + line.xl) >= (state->clip_zone.x + state->clip_zone.xl)
+	    || (line.y + line.yl) >= (state->clip_zone.y + state->clip_zone.yl))
 		if (line_clip(&line, state->clip_zone))
 			return GFX_OK; /* Clipped off */
 

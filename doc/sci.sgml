@@ -250,12 +250,12 @@ resources deserve further discussion.
     background pictures are drawn using vector-oriented commands from at least one
     pic resource (several resources may be overlaid). The fact that vector graphics
     were used for SCI0 allows for several interesting picture quality improvements.
-    Pic resources also include two additional "screens": The priority screen, which
+    Pic resources also include two additional "maps": The priority map, which
     marks parts of the pictures with a certain priority, so that other things with
     less priority can be fully or partially covered by them even if they are drawn
-    at a later time, and the control screen, which delimits the walking area and
+    at a later time, and the control map, which delimits the walking area and
     some special places used by the game logic. FreeSCI uses a fourth auxiliary
-    screen for during drawing time (this is a heritage from Carl Muckenhoupt's
+    map for during drawing time (this is a heritage from Carl Muckenhoupt's
     original code).
   </para>
   <para>
@@ -1321,11 +1321,11 @@ END LOOP
  <listitem><para/Cursor resources for displaying the mouse pointer/</listitem>
  </itemizedlist>
  
- Those resources are drawn on three distinct screens:
+ Those resources are drawn on three distinct maps:
  <itemizedlist>
- <listitem><para/The visual screen, used for displaying the actual pictures the player sees/</listitem>
- <listitem><para/The priority screen, which keeps information about how the depth of the screen/</listitem>
- <listitem><para/The control screen, which contains special information/</listitem>
+ <listitem><para/The visual map, used for displaying the actual pictures the player sees/</listitem>
+ <listitem><para/The priority map, which keeps information about how the depth of the screen/</listitem>
+ <listitem><para/The control map, which contains special information/</listitem>
  </itemizedlist>
  </para>
  </sect1>

@@ -57,7 +57,6 @@ void DRAWLINE_FUNC(byte *buffer, int linewidth, rect_t line, unsigned int color)
 #ifdef WORDS_BIGENDIAN
         color = GUINT32_SWAP_LE_BE_CONSTANT(color);
 #endif
-
 	dx = abs(dx);
 	dy = abs(dy);
 

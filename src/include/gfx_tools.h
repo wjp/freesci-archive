@@ -155,6 +155,7 @@ gfx_draw_line_buffer(byte *buffer, int linewidth, int pixelwidth, rect_t line, u
 **             (int) linewidth: Number of bytes per pixel line in the buffer
 **             (int) pixelwidth: Number of bytes per pixel
 **             (rect_t) Coordinates: the line should be drawn to (must be clipped already)
+**                      xl and yl describe relative offsets, as usual.
 **             (unsigned int) color: The color to draw (only the lowest 8 * pixelwidth bits are relevant)
 ** Returns   : (void)
 ** This function assumes 1 <= pixelwidth <= 4
