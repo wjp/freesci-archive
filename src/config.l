@@ -502,7 +502,7 @@ config_init(config_entry_t **_conf, char *conffile)
 
 	conf->version = 0;
 
-	conf->alpha_threshold = 0x81;
+	conf->alpha_threshold = 0x90;
 	conf->animation_delay = 5;
 	conf->animation_granularity = 4;
 	conf->console_log = NULL;

@@ -1,5 +1,7 @@
 2002-12-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/gfx/resmgr.c (gfxr_get_view): applied hash to views
+
 	* src/engine/kgraphics.c (_k_draw_control): Added dynamic width
 	specifications
 

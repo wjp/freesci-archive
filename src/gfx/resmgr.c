@@ -459,6 +459,7 @@ gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel, int palette)
 			gfxr_free_view(state->driver, res->unscaled_data.view);
 		}
 
+		res->mode = hash;
 		res->unscaled_data.view = view;
 
 	} else {
