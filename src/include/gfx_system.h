@@ -183,6 +183,7 @@ gfx_rect_subset(rect_t a, rect_t b)
 		&& ((a.y + a.yl) <= (b.y + b.yl)));
 }
 
+
 /* Equality predicate for rects
 ** Parameters: (rect_t) a, b
 ** Returns   : (int) gfx_rect_subset(a,b) AND gfx_rect_subset(b,a)
@@ -197,7 +198,7 @@ gfx_rect_equals(rect_t a, rect_t b)
 }
 
 
-
+static rect_t gfx_rect_fullscreen = {0, 0, 320, 200};
 
 /*** points ***/
 
@@ -219,6 +220,20 @@ gfx_point(int x, int y)
 	point.y = y;
 
 	return point;
+}
+
+/* Translation operation for rects
+** Parameters: (rect_t) rect: The rect to translate
+**             (point_t) offset: The offset to translate it by
+** Returns   : (rect_t) The translated rect
+*/
+static inline rect_t
+gfx_rect_translate(rect_t rect, point_t offset)
+{
+	rect.x += offset.x;
+	rect.y += offset.y;
+
+	return rect;
 }
 
 #define GFX_RESID_NONE -1

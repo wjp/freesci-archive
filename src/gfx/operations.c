@@ -87,7 +87,7 @@ _gfxop_free_colors(gfx_state_t *state, gfx_pixmap_color_t *colors, int colors_nr
 }
 
 
-static int _gfxop_clip(rect_t *rect, rect_t clipzone)
+int _gfxop_clip(rect_t *rect, rect_t clipzone)
 /* Returns 1 if nothing is left */
 {
 	if (rect->x < clipzone.x) {
@@ -512,7 +512,8 @@ _gfxop_init_common(gfx_state_t *state, gfx_options_t *options)
 
 	state->mouse_pointer = state->mouse_pointer_bg = NULL;
 	state->mouse_pointer_visible = 0;
-	state->control_map = gfx_new_pixmap(320, 200, GFX_RESID_NONE, 0, 0);
+	state->control_map = gfx_pixmap_alloc_index_data(gfx_new_pixmap(320, 200, GFX_RESID_NONE, 0, 0));
+	state->control_map->flags |= GFX_PIXMAP_FLAG_DONT_UNALLOCATE_PALETTE;
 	state->options = options;
 	state->mouse_pointer_in_hw = 0;
 	state->disable_dirty = 0;
@@ -606,6 +607,9 @@ gfxop_scan_bitmask(gfx_state_t *state, rect_t area, gfx_map_mask_t map)
 	gfxr_pic_t *pic = (state->pic_unscaled)? state->pic_unscaled : state->pic;
 	int retval = 0;
 
+	area.x++;
+	area.y++;
+
 	_gfxop_clip(&area, gfx_rect(0, 0, 320, 200));
 
 	if (map & GFX_MASK_VISUAL)
@@ -615,7 +619,7 @@ gfxop_scan_bitmask(gfx_state_t *state, rect_t area, gfx_map_mask_t map)
 		retval |= _gfxop_scan_one_bitmask(pic->priority_map, area);
 
 	if (map & GFX_MASK_CONTROL)
-		retval |= _gfxop_scan_one_bitmask(pic->control_map, area);
+		retval |= _gfxop_scan_one_bitmask(state->control_map, area);
 
 	return retval;
 }
@@ -1656,6 +1660,10 @@ _gfxop_set_pic(gfx_state_t *state)
 {
 	gfx_pixmap_t *pxm = NULL;
 
+	gfx_copy_pixmap_box_i(state->control_map, state->pic->control_map, gfx_rect(0, 0, 320, 200));
+	state->control_map->colors_nr = state->pic->control_map->colors_nr;
+	state->control_map->colors = state->pic->control_map->colors;
+
 	switch (state->visible_map) {
 
 	case GFX_MASK_VISUAL:
@@ -2006,6 +2014,12 @@ gfxop_draw_pixmap(gfx_state_t *state, gfx_pixmap_t *pxm, rect_t zone, point_t po
 {
 	rect_t target;
 	BASIC_CHECKS(GFX_ERROR);
+
+	if (!pxm) {
+		GFXERROR("Attempt to draw NULL pixmap!\n");
+		return GFX_ERROR;
+	}
+
 	REMOVE_POINTER;
 
 	target = gfx_rect(pos.x, pos.y, zone.xl, zone.yl);

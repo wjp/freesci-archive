@@ -1267,6 +1267,40 @@ c_gfx_print_widget(state_t *s)
 #endif
 
 int
+c_gfx_show_map(state_t *s)
+{
+	int map = cmd_params[0].val;
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	switch (map) {
+	case 0:
+		s->visual->add_dirty_abs(GFXWC(s->visual), gfx_rect(0, 0, 320, 200), 0);
+		s->visual->draw(GFXW(s->visual), gfx_point(0, 0));
+		break;
+
+	case 1:
+		gfx_xlate_pixmap(s->gfx_state->pic_unscaled->priority_map, s->gfx_state->driver->mode, 0);
+		gfxop_draw_pixmap(s->gfx_state, s->gfx_state->pic_unscaled->priority_map, gfx_rect(0, 0, 320, 200), gfx_point(0, 0));
+		break;
+
+	case 2:
+		gfx_xlate_pixmap(s->gfx_state->control_map, s->gfx_state->driver->mode, 0);
+		gfxop_draw_pixmap(s->gfx_state, s->gfx_state->control_map, gfx_rect(0, 0, 320, 200), gfx_point(0, 0));
+		break;
+
+	default:
+		sciprintf("Map %d is not available.\n", map);
+		return 1;
+	}
+
+	gfxop_update(s->gfx_state);
+	return 0;
+}
+
+int
 c_disasm(state_t *s)
 {
   int vpc = cmd_params[0].val;
@@ -2038,6 +2072,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_gfx_print_widget, "gfx_print_widget", "i*", "If called with no parameters, it\n  shows which widgets are active.\n"
 					 "  With parameters, it lists the\n  widget corresponding to the\n  numerical index specified (for\n  each parameter).");
 #endif
+			con_hook_command(c_gfx_show_map, "gfx_show_map", "i", "Shows one of the screen maps\n  Semantics of the int parameter:\n"
+					 "    0: visual map (back buffer)\n    1: priority map (back buf.)\n    2: control map (static buf.)");
 
 			con_hook_int(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");
 			con_hook_int(&script_checkloads_flag, "script_checkloads_flag", "Set != 0 to display information\n"

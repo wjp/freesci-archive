@@ -173,11 +173,13 @@ static point_t gfxw_point_zero = {0, 0};
 ** Returns   : (int) 0
 **
 **
-** -- add_dirty_abs(gfxw_container_t *self, rect_t dirty)
+** -- add_dirty_abs(gfxw_container_t *self, rect_t dirty, int propagate)
 ** Adds a dirty rectangle to the container's list of dirty rects
 ** Parameters: (gfxw_container_t *) self: self reference
 **             (rect_t) dirty: The rectangular screen area that is to be flagged
 **                             as dirty, absolute to the screen
+**             (int) propagate: Whether the dirty rect should be propagated to the
+**                              widget's parents
 ** Returns   : (int) 0
 ** Transparent containers will usually pass this value to their next ancestor,
 ** because areas below them might have to be redrawn.
@@ -185,11 +187,13 @@ static point_t gfxw_point_zero = {0, 0};
 ** GFXW_DIRTY_STRATEGY.
 **
 **
-** -- add_dirty_rel(gfxw_container_t *self, rect_t dirty)
+** -- add_dirty_rel(gfxw_container_t *self, rect_t dirty, int propagate)
 ** Adds a dirty rectangle to the container's list of dirty rects
 ** Parameters: (gfxw_container_t *) self: self reference
 **             (rect_t) dirty: The rectangular screen area that is to be flagged
 **                             as dirty, relative to the widget
+**             (int) propagate: Whether the dirty rect should be propagated to the
+**                              widget's parents
 ** Returns   : (int) 0
 ** Transparent containers will usually pass this value to their next ancestor,
 ** because areas below them might have to be redrawn.

@@ -456,7 +456,7 @@ game_init(state_t *s)
   memcpy(&(s->last_wait_time), &(s->game_start_time), sizeof(GTimeVal));
   /* Use start time as last_wait_time */
 
-  s->animation_delay = 5000; /* Used in kAnimate for pic openings */
+  s->animation_delay = 500; /* Used in kAnimate for pic openings */
 
   s->debug_mode = 0x0; /* Disable all debugging */
   s->onscreen_console = 0; /* No onscreen console unless explicitly requested */

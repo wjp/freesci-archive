@@ -86,7 +86,6 @@ typedef struct _dirty_rect {
 
 
 typedef struct {
-	gfx_mode_t *mode;
 	int version; /* Interpreter version */
 
 	gfx_options_t *options;
@@ -651,6 +650,14 @@ gfxdr_add_dirty(gfx_dirty_rect_t *base, rect_t box, int strategy);
 **             (int) strategy: The dirty frame heuristic to use (see gfx_options.h)
 ** Returns   : (gfx_dirty_rect_t *) an appropriate singly-linked dirty rectangle
 **                                  result cluster
+*/
+
+int
+_gfxop_clip(rect_t *rect, rect_t clipzone);
+/* Clips a rectangle against another one
+** Parameters: (rect_t *) rect: The rectangle to clip
+**             (rect_t) clipzone: The outer bounds rect must be in
+** Reuturns  : (int) 1 if rect is empty now, 0 otherwise
 */
 
 #endif /* !_GFX_OPERATIONS_H_ */

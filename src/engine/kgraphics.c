@@ -56,6 +56,12 @@
   else \
        s->visual->add(GFXWC(s->visual), GFXW(widget));
 
+#define ADD_TO_CURRENT_PICTURE_PORT(widget) \
+  if (s->port) \
+       s->port->add(GFXWC(s->port), GFXW(widget)); \
+  else \
+       s->picture_port->add(GFXWC(s->visual), GFXW(widget));
+
 #define FULL_REDRAW()\
   if (s->visual) \
        s->visual->draw(GFXW(s->visual), gfxw_point_zero); \
@@ -82,6 +88,36 @@ handle_gfx_error(int line, char *file)
 			handle_gfx_error(__LINE__, __FILE__); \
 	        } \
         }\
+}
+
+#define ASSERT(x) { \
+       int val = !!(x); \
+       if (!val) { \
+                        SCIkwarn(SCIkERROR, "GFX subsystem fatal error condition on \"" #x "\"!\n"); \
+                        BREAKPOINT(); \
+			handle_gfx_error(__LINE__, __FILE__); \
+       } \
+}
+
+
+static void
+assert_primary_widget_lists(state_t *s)
+{
+	if (!s->dyn_views) {
+
+		if (!s->pic_views) {
+			s->pic_views = gfxw_new_list(s->picture_port->bounds, 0);
+			ADD_TO_CURRENT_PICTURE_PORT(s->pic_views);
+		}
+
+		ASSERT(!s->bg_widgets);
+
+		s->bg_widgets = gfxw_new_list(s->picture_port->bounds, 0);
+		ADD_TO_CURRENT_PICTURE_PORT(s->bg_widgets);
+
+		s->dyn_views = gfxw_new_list(s->picture_port->bounds, GFXW_LIST_SORTED);
+		ADD_TO_CURRENT_PICTURE_PORT(s->dyn_views);
+	}
 }
 
 
@@ -452,7 +488,7 @@ kSetJump(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	SCIkdebug(SCIkBRESEN, "t1: %d, t2: %d\n", t1, t2);
  
-	if (t2) x=sqrt((gy*dx*dx)/(2*t2));
+	if (t2) x=sqrt((gy*dx*dx)/(2.0*t2));
 	y=abs(t1*y);
 	if (dx>=0) y=-y;
 	if ((dy<0)&&(!y)) y=-sqrt(-2*gy*dy);
@@ -1008,9 +1044,7 @@ kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	CHECK_THIS_KERNEL_FUNCTION;
 
-	_k_dyn_view_list_prepare_change(s);
 	_k_draw_control(s, obj, 0);
-	_k_dyn_view_list_accept_change(s);
 }
 
 
@@ -1021,9 +1055,7 @@ kHiliteControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	CHECK_THIS_KERNEL_FUNCTION;
 
-	_k_dyn_view_list_prepare_change(s);
 	_k_draw_control(s, obj, 1);
-	_k_dyn_view_list_accept_change(s);
 }
 
 
@@ -1210,7 +1242,6 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 		break;
 
 	case K_CONTROL_EDIT:
-
 		SCIkdebug(SCIkGRAPHICS, "drawing edit control %04x to %d,%d\n", obj, x, y);
 
 		cursor = GET_SELECTOR(obj, cursor);
@@ -1220,7 +1251,6 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 	case K_CONTROL_ICON:
 
 		SCIkdebug(SCIkGRAPHICS, "drawing icon control %04x to %d,%d\n", obj, x, y -1);
-
 
 		ADD_TO_CURRENT_PORT(sciw_new_icon_control(s->port, obj, area, view, loop, cel,
 							  state & CONTROL_STATE_FRAMED, inverse));
@@ -1278,42 +1308,6 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 	}
 }
 
-void
-_k_dyn_view_list_prepare_change(state_t *s)
-     /* Removes all views in anticipation of a new window or text */
-{
-WARNING(fixme)
-#if 0
-  view_object_t *list = s->dyn_views;
-  int list_nr = s->dyn_views_nr;
-  int i;
-
-  for (i = 0; i < list_nr; i++)
-    if (list[i].obj) {
-    word signal = GET_HEAP(list[i].signalp);
-
-    if (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE)) {
-
-      if (list[i].underBitsp && !(signal & _K_VIEW_SIG_FLAG_DONT_RESTORE)) {
-	word under_bits = UGET_HEAP(list[i].underBitsp);
-	if (under_bits == 0xffff) {
-	  under_bits = list[i].underBits;
-	  SCIkwarn(SCIkWARNING, "underBits for obj %04x set to 0xffff, using older %04x instead\n", list[i].obj, under_bits);
-	} else
-	  list[i].underBits = under_bits;
-
-	if (under_bits) {
-
-	  SCIkdebug(SCIkGRAPHICS, "Restoring BG for obj %04x with signal %04x\n", list[i].obj, signal);
-	  graph_restore_box(s, under_bits);
-
-	  PUT_HEAP(list[i].underBitsp, list[i].underBits = 0); /* Restore and mark as restored */
-	}
-      }
-    } /* if NOT (signal & _K_VIEW_SIG_FLAG_NO_UPDATE) */
-  } /* For each list member */
-#endif
-}
 
 void
 _k_restore_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
@@ -1443,13 +1437,13 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 
 				SCIkdebug(SCIkGRAPHICS, "Freeing %04x with %d&&%d\n", widget->ID, !!(widget->flags & GFXW_FLAG_VISIBLE), !!s->bg_widgets);
 
-				if (!(gfxw_remove_id(list, widget->ID) == widget)) {
+				if (!(gfxw_remove_id(list, widget->ID) == GFXW(widget))) {
 					SCIkwarn(SCIkERROR, "Attempt to remove view with ID %04x from list failed!\n", widget->ID);
 					BREAKPOINT();
 				}
 
 				if ((widget->flags & GFXW_FLAG_VISIBLE) && s->bg_widgets)
-					s->bg_widgets->add(GFXWC(s->bg_widgets), widget);
+					s->bg_widgets->add(GFXWC(s->bg_widgets), GFXW(widget));
 				else widget->free(GFXW(widget));
 			}
 		}
@@ -1639,12 +1633,15 @@ _k_make_view_list(state_t *s, gfxw_list_t *widget_list, heap_ptr list, int optio
 				box = gfxw_new_box(s->gfx_state, gfx_rect(left, top, right - left + 1, bottom - top + 1),
 						   color, color, GFX_BOX_SHADE_FLAT);
 
-				s->picture_port->add(GFXWC(s->picture_port), GFXW(box));
+				assert_primary_widget_lists(s);
+
+				s->bg_widgets->add(GFXWC(s->bg_widgets), GFXW(box));
 			}
 		}
 
 		widget = gfxw_new_dyn_view(s->gfx_state, pos, z, view_nr, loop, cel,
 					   priority, -1, ALIGN_CENTER, ALIGN_BOTTOM);
+
 
 		if (widget) {
 
@@ -1705,10 +1702,8 @@ _k_draw_view_list(state_t *s, gfxw_list_t *list, int flags)
 		return; /* Return if the pictures are meant for a different port */
 
 	while (widget) {
-
 		if (GFXW_IS_DYN_VIEW(widget) && widget->ID) {
 			word signal = (flags & _K_DRAW_VIEW_LIST_USE_SIGNAL)? GET_HEAP(widget->signalp) : 0;
-
 			if (!(flags & _K_DRAW_VIEW_LIST_USE_SIGNAL)
 			    || ((flags & _K_DRAW_VIEW_LIST_DISPOSEABLE) && (signal & _K_VIEW_SIG_FLAG_DISPOSE_ME))
 			    || ((flags & _K_DRAW_VIEW_LIST_NONDISPOSEABLE) && !(signal & _K_VIEW_SIG_FLAG_DISPOSE_ME))) {
@@ -1736,7 +1731,7 @@ _k_draw_view_list(state_t *s, gfxw_list_t *list, int flags)
 						gfxw_show_widget(GFXW(widget));
 
 					PUT_HEAP(widget->signalp, signal); /* Write the changes back */
-				} else continue;
+				};
 
 			} /* ...if we're drawing disposeables and this one is disposeable, or if we're drawing non-
 			  ** disposeables and this one isn't disposeable */
@@ -1749,67 +1744,26 @@ _k_draw_view_list(state_t *s, gfxw_list_t *list, int flags)
 }
 
 void
-_k_dyn_view_list_accept_change(state_t *s)
-     /* Restores all views after backupping their new bgs */
-{
-WARNING(fixme)
-#if 0
-  view_object_t *list = s->dyn_views;
-  int list_nr = s->dyn_views_nr;
-  int i;
-
-  int oldvp = s->view_port;
-
-  if (s->view_port != s->dyn_view_port)
-    return; /* Return if the pictures are meant for a different port */
-
-  s->view_port = 0; /* WM Viewport */
-  _k_save_view_list_backgrounds(s, list, list_nr);
-  s->view_port = oldvp;
-
-  for (i = 0; i < list_nr; i++)
-    if (list[i].obj) {
-    word signal = GET_HEAP(list[i].signalp);
-
-    if (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE) && !(signal & _K_VIEW_SIG_FLAG_HIDDEN)) {
-      SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", list[i].obj, signal);
-
-      _k_clip_view(list[i].view, &(list[i].loop), &(list[i].cel));
-
-      draw_view0(s->pic, &(s->wm_port),
-		 list[i].x, list[i].y, list[i].priority, list[i].loop, list[i].cel,
-		 GRAPHICS_VIEW_CENTER_BASE | GRAPHICS_VIEW_USE_ADJUSTMENT, list[i].view);
-    }
-  }
-#endif
-}
-
-
-void
 kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr list = PARAM(0);
-  CHECK_THIS_KERNEL_FUNCTION;
+	heap_ptr list = PARAM(0);
+	CHECK_THIS_KERNEL_FUNCTION;
 
-WARNING(fixme)
-#if 0
-  if (s->pic_views_nr) {
-    g_free(s->pic_views);
-    s->pic_views = NULL;
-  }
+	assert_primary_widget_lists(s);
 
-  if (!list)
-    return;
+	if (argc > 1) {
+		SCIkwarn(SCIkWARNING, "FIXME: Need to implement alternative (old) semantics for AddToPic()\n");
+	} else {
 
-  SCIkdebug(SCIkGRAPHICS, "Preparing list...\n");
-  s->pic_views = _k_make_view_list(s, list, &(s->pic_views_nr), _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP, funct_nr, argc, argp);
-  /* Store pic views for later re-use */
+		SCIkdebug(SCIkGRAPHICS, "Preparing picview list...\n");
+		_k_make_view_list(s, s->pic_views, list, _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP, funct_nr, argc, argp);
+		/* Store pic views for later re-use */
 
-  SCIkdebug(SCIkGRAPHICS, "Drawing list...\n");
-  _k_draw_view_list(s, s->pic_views, s->pic_views_nr, _K_DRAW_VIEW_LIST_NONDISPOSEABLE | _K_DRAW_VIEW_LIST_DISPOSEABLE);
-  /* Draw relative to the bottom center */
-  SCIkdebug(SCIkGRAPHICS, "Returning.\n");
-#endif
+		SCIkdebug(SCIkGRAPHICS, "Drawing picview list...\n");
+		_k_draw_view_list(s, s->pic_views, _K_DRAW_VIEW_LIST_NONDISPOSEABLE | _K_DRAW_VIEW_LIST_DISPOSEABLE);
+		/* Draw relative to the bottom center */
+		SCIkdebug(SCIkGRAPHICS, "Returning.\n");
+	}
 }
 
 
@@ -1991,7 +1945,6 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	CHECK_THIS_KERNEL_FUNCTION;
 
-	/*  SCI_MEMTEST; */
 	process_sound_events(s); /* Take care of incoming events (kAnimate is called semi-regularly) */
 
 	open_animation = (s->pic_is_new) && (s->pic_not_valid);
@@ -1999,15 +1952,8 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (open_animation)
 		gfxop_clear_box(s->gfx_state, gfx_rect(0, 10, 320, 190)); /* Propagate pic */
 
-	if (!s->dyn_views) {
-		s->dyn_views = gfxw_new_list(s->picture_port->bounds, GFXW_LIST_SORTED);
-		s->picture_port->add(GFXWC(s->picture_port), GFXW(s->dyn_views));
-	}
-
-	if (!s->bg_widgets) {
-		s->bg_widgets = gfxw_new_list(s->picture_port->bounds, 0);
-		s->picture_port->add(GFXWC(s->picture_port), GFXW(s->bg_widgets));
-	}
+	assert_primary_widget_lists(s);
+	s->visual->add_dirty_abs(GFXWC(s->visual), gfx_rect_fullscreen, 0);
 
 	if (!cast_list)
 		s->dyn_views->tag(GFXW(s->dyn_views));
@@ -2029,8 +1975,8 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		}*/
 
 		SCIkdebug(SCIkGRAPHICS, "Handling PicViews:\n");
-		/*		if (s->pic_not_valid)
-				_k_draw_view_list(s, s->pic_views, 0);*/ /* Step 10 */
+		if (s->pic_not_valid)
+			_k_draw_view_list(s, s->pic_views, 0); /* Step 10 */
 		SCIkdebug(SCIkGRAPHICS, "Handling Dyn:\n");
 
 		_k_draw_view_list(s, s->dyn_views, _K_DRAW_VIEW_LIST_DISPOSEABLE | _K_DRAW_VIEW_LIST_USE_SIGNAL);
@@ -2325,6 +2271,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		s->old_screen = NULL;
 	} /* if (open_animation) */
 
+	FULL_REDRAW();
 	s->pic_not_valid = 0;
 
 }
@@ -2487,14 +2434,10 @@ WARNING(fixme)
 
   SCIkdebug(SCIkGRAPHICS, "Display: Commiting text '%s'\n", text);
 
-  _k_dyn_view_list_prepare_change(s);
-
   /*  if (s->view_port)
       graph_fill_port(s, port, port->bgcolor); */ /* Only fill if we aren't writing to the main view */
 
   text_draw(s->pic, port, text, width);
-
-  _k_dyn_view_list_accept_change(s);
 
   if ((!s->pic_not_valid)&&update_immediately) { /* Refresh if drawn to valid picture */
     graph_update_box(s, port->xmin, port->ymin + 1,

@@ -1,7 +1,23 @@
+2000-12-25  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/resource/sci_pic_0.c (gfxr_clear_pic0): Fixed problems with
+	SCI0 pic titlebar priorities
+
 2000-12-24  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kAddToPic): Added support for pic views
+
+	* src/gfx/widgets.c (_gfxwop_container_add): Fixed spurious warnings
+	when adding a widget to an unsorted container
+
+	* src/gfx/operations.c (_gfxop_set_pic): Fixed control map handling
+
+	* src/engine/scriptdebug.c (c_gfx_show_map): Implemented the
+	gfx_show_map command
 
 	* src/gfx/widgets.c (gfxw_hide_widget): Added functionality to show and
 	hide widgets, and used it to fix several bugs.
+	(_gfxwop_dyn_view_compare_to): Fixed y comparison
 
 	* Misc fixes as suggested by Petr Vyhnak
 

@@ -114,13 +114,6 @@ gfxr_init_pic(gfx_mode_t *mode, int ID)
 	pic->control_map->colors = gfx_sci0_image_colors;
 	pic->control_map->colors_nr = GFX_SCI0_IMAGE_COLORS_NR;
 
-#if 0
-	/* This is done by the resource manager */
-	gfx_pixmap_alloc_data(pic->visual_map, mode);
-	gfx_pixmap_alloc_data(pic->priority_map, mode);
-	gfx_pixmap_alloc_data(pic->control_map, mode);
-#endif
-
 	/* Initialize colors */
 	gfxr_init_static_palette();
 
@@ -137,7 +130,9 @@ gfxr_clear_pic0(gfxr_pic_t *pic)
 {
 	memset(pic->visual_map->index_data + (320 * pic->mode->xfact * SCI_TITLEBAR_SIZE * pic->mode->yfact),
 	       0xff, pic->mode->xfact * 320 * pic->mode->yfact * (200 - SCI_TITLEBAR_SIZE)); /* white */
-	memset(pic->priority_map->index_data, 0, pic->mode->xfact * 320 * pic->mode->yfact * 200);
+	memset(pic->priority_map->index_data + (320 * pic->mode->xfact * SCI_TITLEBAR_SIZE * pic->mode->yfact),
+	       0x0, pic->mode->xfact * 320 * pic->mode->yfact * (200 - SCI_TITLEBAR_SIZE));
+	memset(pic->priority_map->index_data, 0x0a, pic->mode->xfact * 320 * pic->mode->xfact);
 	memset(pic->control_map->index_data, 0, GFXR_AUX_MAP_SIZE);
 	memset(pic->aux_map, 0, GFXR_AUX_MAP_SIZE);
 }
@@ -1101,7 +1096,7 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int pr
 	if (drawenable & GFX_MASK_CONTROL) {
 
 		p0printf(" ctl:%x", control);
-		gfx_draw_line_pixmap_i(pic->control_map, line, control);
+		gfx_draw_line_pixmap_i(pic->control_map, gfx_rect_translate(line, gfx_point(0, SCI_TITLEBAR_SIZE)), control);
 	}
 
 
@@ -1454,7 +1449,7 @@ _gfxr_find_fill_point(gfxr_pic_t *pic, int min_x, int min_y, int max_x, int max_
 	/* Now check all surrounding rectangles */
 	for (size = 1; size <= max_size; size++) {
 		int i;
-		fprintf(stderr,"Seek size %d (%d,%d)\n", size, mid_x, mid_y);
+		//fprintf(stderr,"Seek size %d (%d,%d)\n", size, mid_x, mid_y);
 
 		if (size <= size_y) {
 			int limited_size = (size > size_x)? size_x : size;
