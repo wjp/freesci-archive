@@ -204,6 +204,19 @@ char** vocabulary_get_snames(resource_mgr_t *resmgr, int* pcount, sci_version_t 
   return t;
 }
 
+int
+vocabulary_lookup_sname(char **snames_list, char *sname)
+{
+  int pos = 0;
+  while (snames_list[pos])
+  {
+	  if (!strcasecmp(sname, snames_list[pos])) return pos;
+	  pos++;
+  }
+
+  return -1;
+}
+
 void
 vocabulary_free_snames(char **snames_list)
 {

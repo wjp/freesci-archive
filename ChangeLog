@@ -1,3 +1,8 @@
+2003-04-12  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/scicore/console.c: Added debugcmd type 'r'.
+	* src/engine/scriptdebug.c (c_send): Add 'send' debugger command.
+	
 2003-04-06  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/drivers/xlib_driver.c (x_map_key): Handle the Delete key correctly.

@@ -201,10 +201,15 @@ int vocabulary_get_class_count(resource_mgr_t *resmgr);
  * Returns a null terminated array of selector names.
  */
 char** vocabulary_get_snames(resource_mgr_t *resmgr, int *pcount, sci_version_t version);
+
 /**
  * Frees the aforementioned array
  */
 void vocabulary_free_snames(char **snames_list);
+
+/* Look up a selector name in an array, return the index */
+int vocabulary_lookup_snames(char **snames_list, char *sname);
+
 
 /**
  * Returns a null terminated array of opcodes.

@@ -350,7 +350,7 @@ clone_is_used(clone_table_t *t, int idx)
 }
 
 int
-parse_reg_t(state_t *s, char *str, reg_t *dest)
+parse_reg_t(state_t *s, char *str, reg_t *dest, int addresses_only)
 { /* Returns 0 on success */
 	int rel_offsetting = 0;
 	char *offsetting = NULL;
@@ -538,6 +538,10 @@ parse_reg_t(state_t *s, char *str, reg_t *dest)
 		if (*endptr)
 			return 1;
 	}
+
+	if (addresses_only&&!(dest->segment))
+		return 1;
+
 	return 0;
 }
 
@@ -657,11 +661,15 @@ con_parse (state_t *s, char *command)
 							** unless they're strings, and store them in the global cmd_params[]
 							** structure  */
 
-						case 'a': if (parse_reg_t(s, cmd_params[i].str,
-									  &(cmd_params[i].reg)))
+						case 'a':
+							if (parse_reg_t(s, cmd_params[i].str,
+									  &(cmd_params[i].reg), 0))
 										carry = 0;
 							break;
-
+						case 'r': if (parse_reg_t(s, cmd_params[i].str,
+									  &(cmd_params[i].reg), 1))
+										carry = 0;
+							break;
 						case 'i': {
 							char *orgstr = cmd_params[i].str;
 
@@ -798,6 +806,7 @@ con_hook_command (int command (state_t *), char *name, char *param,
 		case 'i':
 		case 'a':
 		case 's':
+		case 'r':
 			break;
 		default:
 			return 1;

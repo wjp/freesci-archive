@@ -2260,6 +2260,70 @@ c_set_acc(state_t *s)
 }
 
 int
+c_send(state_t *s)
+{
+	reg_t object = cmd_params[0].reg;
+	char *selector_name = cmd_params[1].str;
+	stack_ptr_t stackframe = s->execution_stack->sp;
+	int i, selector_id, selector_type;
+	exec_stack_t *xstack;
+	object_t *o;
+	reg_t *vptr;
+	reg_t fptr;
+	
+	selector_id = vocabulary_lookup_sname(s->selector_names, selector_name);
+
+	if (selector_id < 0)
+	{
+		sciprintf("Unknown selector: \"%s\"\n", selector_name);
+		return 1;
+	}
+
+	o = obj_get(s, object);
+	if (o == NULL)
+	{
+		sciprintf("Address \""PREG"\" is not an object\n", PRINT_REG(object));
+		return 1;
+	}
+	
+	selector_type = lookup_selector(s, object, selector_id, &vptr, &fptr);
+
+	if (selector_type == SELECTOR_NONE)
+	{
+		sciprintf("Object does not support selector: \"%s\"\n", selector_name);
+		return 1;
+	}
+	
+	stackframe[0] = make_reg(0, selector_id);
+	stackframe[1] = make_reg(0, cmd_paramlength - 2);
+
+	for (i=2; i<cmd_paramlength; i++)
+		stackframe[i] = cmd_params[i].reg;
+
+	xstack = add_exec_stack_entry(s, fptr, s->execution_stack->sp + cmd_paramlength, object,
+				      cmd_paramlength - 2, s->execution_stack->sp - 1, 0, object,
+				      s->execution_stack_pos, SCI_XS_CALLEE_LOCALS);
+	xstack->selector = selector_id; 
+	xstack->type = selector_type == SELECTOR_VARIABLE ? EXEC_STACK_TYPE_VARSELECTOR :
+							    EXEC_STACK_TYPE_CALL;
+	
+	/* Now commit the actual function: */
+	xstack = send_selector(s, object, object,
+			       stackframe, cmd_paramlength - 2, stackframe);
+
+	xstack->sp += cmd_paramlength;
+	xstack->fp += cmd_paramlength;
+
+	s->execution_stack_pos_changed = 1;
+	
+//	run_vm(s, 0); /* Start a new vm */
+
+//	--(s->execution_stack_pos); /* Get rid of the extra stack entry */
+
+	return 0;
+}
+
+int
 c_resource_id(state_t *s)
 {
 	int id = cmd_params[0].val;
@@ -3023,6 +3087,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_se, "se", "", "Steps forward until an SCI event is received.\n");
 			con_hook_command(c_listclones, "clonetable", "", "Lists all registered clones");
 			con_hook_command(c_set_acc, "set_acc", "!r", "Sets the accumulator");
+			con_hook_command(c_send, "send", "!asr*", "Sends a message to an object\nExample: send ?fooScript cue");
 			con_hook_command(c_sret, "sret", "", "Steps forward until ret is called\n  on the current execution"
 					 " stack\n  level.");
 			con_hook_command(c_resource_id, "resource_id", "i", "Identifies a resource number by\n"
