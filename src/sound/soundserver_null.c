@@ -248,7 +248,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
       if (command == SCI_MIDI_EOT) {
 
-	if (song->loops) {
+	if ((song->loops) > 0) {
 
 	  --(song->loops);
 	  song->pos = song->loopmark;
