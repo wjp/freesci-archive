@@ -380,8 +380,6 @@ sound_win32e_get_event()
 #endif
 		new_event_event = (sound_event_t*)sci_malloc(sizeof(sound_event_t));
 		new_event_event->signal = UNRECOGNISED_SOUND_SIGNAL;
-		new_event_event->handle = msg.wParam;
-		new_event_event->value = msg.lParam;
 
 		/* map back to normal values */
 		for (i = 0; i < sizeof(emap); i++)
@@ -389,6 +387,8 @@ sound_win32e_get_event()
 			if (emap[i] == msg.message)
 			{
 				new_event_event->signal = i;
+				new_event_event->handle = msg.wParam;
+				new_event_event->value = msg.lParam;
 				break;
 			}
 		}
@@ -426,15 +426,15 @@ sound_win32e_get_command(GTimeVal *wait_tvp)
 		fprintf(debug_stream, "sound_win32e_get_command() got msg %i (time: %i) (TID: %i)\n", msg.message, msg.time, GetCurrentThreadId());
 #endif
 		new_command_event->signal = UNRECOGNISED_SOUND_SIGNAL;
-		new_command_event->handle = msg.wParam;
-		new_command_event->value = msg.lParam;
 
 		/* map back to normal values */
-		for (i = 0; i < sizeof(emap); i++)
+		for (i = NUMBER_SOUND_EVENTS; i >= 0; --i)
 		{
 			if (emap[i] == msg.message)
 			{
 				new_command_event->signal = i;
+				new_command_event->handle = msg.wParam;
+				new_command_event->value = msg.lParam;
 				break;
 			}
 		}

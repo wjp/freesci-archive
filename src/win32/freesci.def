@@ -9,6 +9,8 @@ EXPORTS
   pcmout_sample_rate DATA
   mix_sound
 
+  soundserver_dead
+
   script_set_gamestate_save_dir
 
   usleep

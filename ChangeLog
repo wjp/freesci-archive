@@ -1,3 +1,17 @@
+2002-03-17  Alexander R Angas <wgd@internode.on.net>
+
+	* src/sound/event_ss.c: Fixed an error message that should not appear.
+
+	* src/sound/event_ss_win32.c: Very minor optimisation tweaks.
+
+	* src/sound/midiout_win32mci_stream.c: Code clean ups and preliminary
+	support for long MIDI messages.
+
+	* src/engine/game.c: Attempt to detect Win32 Platform SDK version and
+	to print information message regardless.
+
+	* src/win32/freesci.def: Added soundserver_dead.
+
 2002-03-16  Solomon Peachy <pizza@shaftnet.org>
 	* src/sound/midi_adlibemu.c
 	  src/sound/pcmout_sdl.c
@@ -26,7 +40,7 @@
 
 2002-03-12  Alexander R Angas <wgd@internode.on.net>
 
-        * src/scicore/tools.c: Fixed 100% CPU usage on Win32.
+	* src/scicore/tools.c: Fixed 100% CPU usage on Win32.
 
 2002-03-10  Christoph Reichenbach  <jameson@linuxgames.com>
 
@@ -41,13 +55,13 @@
 
 2002-03-09  Alexander R Angas <wgd@internode.on.net>
 
-        * src/sound/buff_ss.c:
-        * src/sound/midiout_win32mci_stream.c:
-        * src/include/sound.h: Added double-buffering and ability to play more
-        than one song to MCI streaming.
+	* src/sound/buff_ss.c:
+	* src/sound/midiout_win32mci_stream.c:
+	* src/include/sound.h: Added double-buffering and ability to play more
+	than one song to MCI streaming.
 
 	* ./README.Win32: Added some information about the above server/driver.
-	
+
 	* src/win32/sciunpack.dsp: Updated compiler options to match other
 	projects, however does not compile.
 

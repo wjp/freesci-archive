@@ -192,6 +192,7 @@ sci0_event_ss(sound_server_state_t *ss_state)
 
 		case SOUND_COMMAND_REVERSE_STEREO:
 			ss_state->reverse_stereo = (new_event->handle) ? 1 : 0;
+			break;
 
 		default:
 			fprintf(debug_stream, "sci0_event_ss(): Received unknown sound signal %i\n", new_event->signal);
