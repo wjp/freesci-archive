@@ -1,3 +1,7 @@
+2005-01-01  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/scicore/tools.c (sci_gettime): Fixed a GP32 bug.
+
 2004-12-31  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* README.GP32: Updated.

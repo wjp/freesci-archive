@@ -274,7 +274,7 @@ sci_gettime(long *seconds, long *useconds)
 {
 	int ticks = gp_getRTC();
 	*seconds = ticks / 64;
-	*useconds = ticks % 64 * 15625;
+	*useconds = (ticks % 64) * 15625;
 }
 #elif defined (ARM_WINCE) && (HAVE_SDL)
 /* Warning: This function returns the amount of time that has passed since the
