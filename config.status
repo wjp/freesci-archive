@@ -41,8 +41,8 @@ s%@CPPFLAGS@%%g
 s%@CXXFLAGS@%%g
 s%@FFLAGS@%%g
 s%@DEFS@%-DHAVE_CONFIG_H%g
-s%@LDFLAGS@%-lefence  -L/usr/local/lib -lglib%g
-s%@LIBS@%%g
+s%@LDFLAGS@% -L/usr/local/lib -lglib%g
+s%@LIBS@% -lc%g
 s%@exec_prefix@%${prefix}%g
 s%@prefix@%/usr/local%g
 s%@program_transform_name@%s,x,x,%g
@@ -274,21 +274,24 @@ CEOF
 ${ac_dA}HAVE_SCHED_YIELD${ac_dB}HAVE_SCHED_YIELD${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_SCHED_YIELD${ac_uB}HAVE_SCHED_YIELD${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_SCHED_YIELD${ac_eB}HAVE_SCHED_YIELD${ac_eC}1${ac_eD}
+${ac_dA}HAVE_MEMFROB${ac_dB}HAVE_MEMFROB${ac_dC}1${ac_dD}
+${ac_uA}HAVE_MEMFROB${ac_uB}HAVE_MEMFROB${ac_uC}1${ac_uD}
+${ac_eA}HAVE_MEMFROB${ac_eB}HAVE_MEMFROB${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_LIBGGI${ac_dB}HAVE_LIBGGI${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_LIBGGI${ac_uB}HAVE_LIBGGI${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_LIBGGI${ac_eB}HAVE_LIBGGI${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_CURSES${ac_dB}HAVE_CURSES${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_CURSES${ac_uB}HAVE_CURSES${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_CURSES${ac_eB}HAVE_CURSES${ac_eC}1${ac_eD}
-${ac_dA}YYTEXT_POINTER${ac_dB}YYTEXT_POINTER${ac_dC}1${ac_dD}
-${ac_uA}YYTEXT_POINTER${ac_uB}YYTEXT_POINTER${ac_uC}1${ac_uD}
-${ac_eA}YYTEXT_POINTER${ac_eB}YYTEXT_POINTER${ac_eC}1${ac_eD}
 CEOF
   sed -f conftest.frag conftest.in > conftest.out
   rm -f conftest.in
   mv conftest.out conftest.in
 
   cat > conftest.frag <<CEOF
+${ac_dA}YYTEXT_POINTER${ac_dB}YYTEXT_POINTER${ac_dC}1${ac_dD}
+${ac_uA}YYTEXT_POINTER${ac_uB}YYTEXT_POINTER${ac_uC}1${ac_uD}
+${ac_eA}YYTEXT_POINTER${ac_eB}YYTEXT_POINTER${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_LIBPNG${ac_dB}HAVE_LIBPNG${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_LIBPNG${ac_uB}HAVE_LIBPNG${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_LIBPNG${ac_eB}HAVE_LIBPNG${ac_eC}1${ac_eD}

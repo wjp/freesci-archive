@@ -533,37 +533,8 @@ _parse_color_mode(char *s); /* Parses the color mode string */
 static gfx_driver_t *
 _parse_gfx_driver(char *s); /* Parses a graphics driver */
 
-int
-memtest(char *where)
-{
-  int i;
-  void *blocks[32];
-fprintf(stderr,"Memtesting %s!\n", where);
-  for (i = 0; i < 31; i++)
-    blocks[i] = malloc(1 + i);
-  for (i = 0; i < 31; i++)
-    free(blocks[i]);
 
-  for (i = 0; i < 31; i++)
-    blocks[i] = malloc(5 + i*5);
-  for (i = 0; i < 31; i++)
-    free(blocks[i]);
-
-  for (i = 0; i < 31; i++)
-    blocks[i] = malloc(5 + i*100);
-  for (i = 0; i < 31; i++)
-    free(blocks[i]);
-
-  for (i = 0; i < 31; i++)
-    blocks[i] = malloc(5 + i*1000);
-  for (i = 0; i < 31; i++)
-    free(blocks[i]);
-fprintf(stderr,"Memtest succeeded!\n");
-return 0;
-}
-
-
-#line 567 "lex.yy.c"
+#line 538 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -714,10 +685,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 90 "config.l"
+#line 61 "config.l"
 
 
-#line 721 "lex.yy.c"
+#line 692 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -802,7 +773,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 92 "config.l"
+#line 63 "config.l"
 {
   ++yytext; /* Get over opening bracket */
 
@@ -845,7 +816,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 132 "config.l"
+#line 103 "config.l"
 {
   yytext = strchr(yytext, '=') + 1;
 
@@ -857,7 +828,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 141 "config.l"
+#line 112 "config.l"
 {
   yytext = strchr(yytext, '=') + 1;
 
@@ -869,7 +840,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 150 "config.l"
+#line 121 "config.l"
 {
   yytext = strchr (yytext, '=') + 1;
 
@@ -884,7 +855,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 162 "config.l"
+#line 133 "config.l"
 if (cur_section) {
   yytext = strchr(yytext, '=') + 1;
   while (isspace(*yytext))
@@ -897,7 +868,7 @@ if (cur_section) {
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 173 "config.l"
+#line 144 "config.l"
 {
   yytext = strchr(yytext, '=') + 1;
 
@@ -909,7 +880,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 182 "config.l"
+#line 153 "config.l"
 {
   yytext = strchr(yytext, '=') + 1;
 
@@ -921,7 +892,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 191 "config.l"
+#line 162 "config.l"
 {
   char *p=yytext;
   char *p2;
@@ -965,25 +936,25 @@ case 9:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 232 "config.l"
+#line 203 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 234 "config.l"
+#line 205 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 236 "config.l"
+#line 207 "config.l"
 printf("Unrecognized option: %s\n", yytext);
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 238 "config.l"
+#line 209 "config.l"
 ECHO;
 	YY_BREAK
-#line 987 "lex.yy.c"
+#line 958 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1869,7 +1840,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 238 "config.l"
+#line 209 "config.l"
 
 
 int

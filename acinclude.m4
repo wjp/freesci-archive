@@ -185,22 +185,22 @@ _ac_curses_libnames="-lncurses -lcurses"
 
 
 AC_ARG_WITH(curses-dir,
-    [  --with-curses-dir           where the root of lib(n)curses is installed ],
+    [  --with-curses-dir        where the root of lib(n)curses is installed ],
     [  _ac_curses_includes="-I$withval"/include
        _ac_curses_libraries="-L$withval"/lib
     ])
 
 AC_ARG_WITH(curses-includes,
-    [  --with-curses-includes      where the (n)curses includes are. ],
+    [  --with-curses-includes   where the (n)curses includes are. ],
     [  
        _ac_curses_includes="-I$withval"
     ])
 AC_ARG_WITH(curses-library,
-    [  --with-curses-libraries     where the (n)curses library is installed.],
+    [  --with-curses-libraries  where the (n)curses library is installed.],
     [  _ac_curses_libraries="-L$withval"
     ])
 AC_ARG_WITH(curses-libname,
-    [  --with-curses-libraries     whether to use curses or ncurses.],
+    [  --with-curses-libraries  whether to use curses or ncurses.],
     [  _ac_curses_libnames="-l$withval"
     ])
 
@@ -272,3 +272,35 @@ AC_SUBST(ac_png_libraries)
 ])
 
 
+
+# Checks for endianness, unless endianness is specified by a parameter
+AC_DEFUN(AC_C_PARAMETRIZED_BIGENDIAN,
+[
+force_endian=no
+
+AC_ARG_WITH(endianness,
+	[  --with-endianness        whether big or little endianness should be used.],
+	[
+		force_endian="$withval"
+	])
+
+
+if test "$force_endian" = no; then
+
+	AC_C_BIGENDIAN
+else
+
+
+	if test "$force_endian" = big; then
+
+		AC_DEFINE(WORDS_BIGENDIAN)
+	else
+
+		if test "$force_endian" != little; then
+
+			AC_MSG_ERROR(["Endianness may only be 'big' or 'little', not $force_endian."])
+
+		fi 
+	fi
+fi
+])

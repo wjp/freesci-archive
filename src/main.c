@@ -265,10 +265,12 @@ main(int argc, char** argv)
     exit(1);
   };
   printf("SCI resources loaded.\n");
+
   chdir (startdir);
 
   printf("Mapping instruments to General Midi\n");
   mapMIDIInstruments();
+
 
   cmdHook(&c_quit, "quit", "", "console: Quits gracefully");
   cmdHook(&c_die, "die", "", "console: Quits ungracefully");
@@ -335,7 +337,7 @@ main(int argc, char** argv)
 					  conf[conf_nr].gfx_config[i].value);
 
   gamestate->sfx_driver = sfx_drivers[0];
-  
+
   if (gamestate->sfx_driver)
   {
     gamestate->sfx_driver->init(gamestate);
@@ -364,7 +366,7 @@ main(int argc, char** argv)
 
   game_run(&gamestate); /* Run the game */
   
-    if (gamestate->sfx_driver)
+  if (gamestate->sfx_driver)
     gamestate->sfx_driver->exit(gamestate); /* Shutdown sound daemon first */
 
   game_exit(gamestate);

@@ -1665,7 +1665,6 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr obj = UPARAM(1);
   sci_event_t e;
   int oldx, oldy;
-  
   CHECK_THIS_KERNEL_FUNCTION;
   
   /*If there's a simkey pending, and the game wants a keyboard event, use the

@@ -40,7 +40,6 @@
 #include <sys/types.h> /* Required by e.g. NetBSD */
 #include <dirent.h>
 #endif
-#endif
 
 #ifdef _MSC_VER
 #include <direct.h>
@@ -2310,7 +2309,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
 
 /* Auto-generated CFSML declaration and function block ends here */
 /* Auto-generation performed by cfsml.pl 0.6.5 */
-#line 372 "CFSML input file"
+#line 371 "CFSML input file"
 
 
 
@@ -2324,7 +2323,7 @@ write_menubar_tp(FILE *fh, menubar_t **foo)
   _cfsml_write_menubar_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 382 "CFSML input file"
+#line 381 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2351,7 +2350,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 399 "CFSML input file"
+#line 398 "CFSML input file"
 
   }
   return *hiteof;
@@ -2367,7 +2366,7 @@ write_port_tp(FILE *fh, port_t **foo)
   _cfsml_write_port_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 410 "CFSML input file"
+#line 409 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2395,7 +2394,7 @@ read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof)
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 428 "CFSML input file"
+#line 427 "CFSML input file"
 
     res =  findResource(sci_font, (*foo)->font_nr);
     if (res)
@@ -2466,7 +2465,7 @@ gamestate_save(state_t *s, char *dirname)
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 494 "CFSML input file"
+#line 493 "CFSML input file"
 
   fclose(fh);
 
@@ -2531,7 +2530,7 @@ gamestate_restore(state_t *s, char *dirname)
     read_eof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 546 "CFSML input file"
+#line 545 "CFSML input file"
 
   fclose(fh);
 

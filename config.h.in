@@ -16,6 +16,9 @@
 /* Define if you have the fork function.  */
 #undef HAVE_FORK
 
+/* Define if you have the memfrob function.  */
+#undef HAVE_MEMFROB
+
 /* Define if you have the pipe function.  */
 #undef HAVE_PIPE
 

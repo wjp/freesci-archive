@@ -403,3 +403,58 @@ _XALLOC(size_t size, char *file, int line, char *funct)
   return memblock;
 }
 
+
+
+int
+memtest(char *where)
+{
+  int i;
+  void *blocks[32];
+fprintf(stderr,"Memtesting %s!\n", where);
+  for (i = 0; i < 31; i++) {
+    blocks[i] = malloc(1 + i);
+#ifdef HAVE_MEMFROB
+    memfrob(blocks[i], 1 + i);
+#else
+    memset(blocks[i], 42, 1 + i);
+#endif
+  }
+  for (i = 0; i < 31; i++)
+    free(blocks[i]);
+
+  for (i = 0; i < 31; i++) {
+    blocks[i] = malloc(5 + i*5);
+#ifdef HAVE_MEMFROB
+    memfrob(blocks[i], 5 + i*5);
+#else
+    memset(blocks[i], 42, 5 + i*5);
+#endif
+  }
+  for (i = 0; i < 31; i++)
+    free(blocks[i]);
+
+  for (i = 0; i < 31; i++) {
+    blocks[i] = malloc(5 + i*100);
+#ifdef HAVE_MEMFROB
+    memfrob(blocks[i], 5 + i*100);
+#else
+    memset(blocks[i], 42, 5 + i*100);
+#endif
+  }
+  for (i = 0; i < 31; i++)
+    free(blocks[i]);
+
+  for (i = 0; i < 31; i++) {
+    blocks[i] = malloc(5 + i*1000);
+#ifdef HAVE_MEMFROB
+    memfrob(blocks[i], 5 + i * 1000);
+#else
+    memset(blocks[i], 42, 5 + i * 1000);
+#endif
+  }
+  for (i = 0; i < 31; i++)
+    free(blocks[i]);
+fprintf(stderr,"Memtest succeeded!\n");
+return 0;
+}
+

@@ -259,7 +259,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	wakeup_time = song_next_wakeup_time(&last_played, ticks);
 
 	wait_tv = song_sleep_time(&last_played, ticks);
-	wait_tvp = (struct timeval *)&wait_tv;
+	wait_tvp = &wait_tv;
 
       } else {
 	/* Sound server is suspended */
@@ -272,7 +272,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
       FD_SET(fd_in, &input_fds);
 
       /* Wait for input: */
-      got_input = select(fd_in + 1, &input_fds, NULL, NULL, wait_tvp);
+      got_input = select(fd_in + 1, &input_fds, NULL, NULL, (struct timeval *)wait_tvp);
 
       if (got_input) { /* We've got mail! */
 	sound_event_t event;
@@ -541,7 +541,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 	  case SOUND_COMMAND_SUSPEND_SOUND: {
 
-	    gettimeofday(&suspend_time, NULL);
+	    gettimeofday((struct timeval *)&suspend_time, NULL);
 	    suspended = 1;
 
 	  }
@@ -551,7 +551,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 	    GTimeVal resume_time;
 
-	    gettimeofday(&resume_time, NULL);
+	    gettimeofday((struct timeval *)&resume_time, NULL);
 	    /* Modify last_played relative to wakeup_time - suspend_time */
 	    last_played.tv_sec += resume_time.tv_sec - suspend_time.tv_sec - 1; 
 	    last_played.tv_usec += resume_time.tv_usec - suspend_time.tv_usec + 1000000;

@@ -51,35 +51,6 @@ _parse_color_mode(char *s); /* Parses the color mode string */
 static gfx_driver_t *
 _parse_gfx_driver(char *s); /* Parses a graphics driver */
 
-int
-memtest(char *where)
-{
-  int i;
-  void *blocks[32];
-fprintf(stderr,"Memtesting %s!\n", where);
-  for (i = 0; i < 31; i++)
-    blocks[i] = malloc(1 + i);
-  for (i = 0; i < 31; i++)
-    free(blocks[i]);
-
-  for (i = 0; i < 31; i++)
-    blocks[i] = malloc(5 + i*5);
-  for (i = 0; i < 31; i++)
-    free(blocks[i]);
-
-  for (i = 0; i < 31; i++)
-    blocks[i] = malloc(5 + i*100);
-  for (i = 0; i < 31; i++)
-    free(blocks[i]);
-
-  for (i = 0; i < 31; i++)
-    blocks[i] = malloc(5 + i*1000);
-  for (i = 0; i < 31; i++)
-    free(blocks[i]);
-fprintf(stderr,"Memtest succeeded!\n");
-return 0;
-}
-
 
 %}
 

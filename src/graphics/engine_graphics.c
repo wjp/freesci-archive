@@ -60,6 +60,16 @@ graph_update_box(struct _state *s, int x, int y, int xl, int yl)
   int pos = y * SCI_SCREEN_WIDTH + x;
   int i, _yl = yl;
 
+  if (x < 0)
+    { xl += x; x = 0; }
+  if (y < 0)
+    { yl += y; y = 0; }
+
+  if (x + xl > 319)
+    xl = 320 - x ;
+  if (y + yl > 199)
+    yl = 200 - y ;
+
   while (_yl--) {
     memcpy(s->pic->view + pos, s->pic->maps[s->pic_visible_map] + pos, xl);
     pos += SCI_SCREEN_WIDTH;

@@ -1,5 +1,14 @@
 1999-11-28  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/core/vm.c (run_vm): Changed behaviour of send-like functions
+	to accomodate for realloc() moving the execution stack.
+
+	* src/graphics/engine_graphics.c (graph_update_box): Added range
+	checks.
+
+	* acinclude.m4 (AC_C_PARAMETRIZED_BIGENDIAN): Added support for
+	"forced" endianness setting, for cross-compiling.
+
 	* src/core/savegame.cfsml, src/main.c, configure.in: Tried to patch
 	headers to make things more portable for non-POSIX systems.
 

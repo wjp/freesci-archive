@@ -129,7 +129,6 @@ ggi_visual_t openVisual()
     GT_AUTO,   // color depth
     {GGI_AUTO,GGI_AUTO}}; // font size
   ggi_visual_t retval;
-
   if (!(retval = ggiOpen(NULL))) return NULL;
 
   if (ggiSetMode(retval, &mode)) {
@@ -146,9 +145,6 @@ ggi_visual_t openVisual()
   _sci_ggi_double_visual = 0;
   initInputGGI();
 
-#if 0
-  return _sci_ggi_last_visual = retval;
-#endif
   return retval;
 }
 
@@ -258,8 +254,8 @@ graphics_draw_region_ggi(ggi_visual_t vis, byte *data,
     y = 0;
   }
 
-  xend = x + xl + 1;
-  yend = y + yl + 1;
+  xend = x + xl;
+  yend = y + yl;
 
   if (xend > SCI_SCREEN_WIDTH)
     xend = SCI_SCREEN_WIDTH;
@@ -353,12 +349,14 @@ libggi_redraw(struct _state *s, int command, int x, int y, int xl, int yl)
       int i;
 
       if (y < 0) {
+	fprintf(stderr, "shaking downwards; pic at %p\n", s->pic->view);
 	graphics_draw_region_ggi(vis, s->pic->view + (320 * y),
 				 0, -y, 320, 200+y,
 				 s->mouse_pointer, s->pointer_x, s->pointer_y);
 	lines_to_clear = -y;
 	first_line_to_clear = 0;
       } else { /* y > 0 */
+	fprintf(stderr, "shaking upwards; pic at %p\n", s->pic->view);
 	graphics_draw_region_ggi(vis, s->pic->view + (320 * y),
 				 0, 0, 320, 200-y,
 				 s->mouse_pointer, s->pointer_x, s->pointer_y);
@@ -406,9 +404,13 @@ libggi_redraw(struct _state *s, int command, int x, int y, int xl, int yl)
 int
 libggi_init(state_t *s, picture_t pic)
 {
+memtest("Before ggiInit()");
   ggiInit();
+memtest("After ggiInit()");
   s->graphics.ggi_visual = openVisual();
+memtest("After openVisual");
   memset(_null_rec, 0, NULL_REC_SIZE);
+memtest("After memset");
   return 0;
 }
 
