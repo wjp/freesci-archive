@@ -1106,7 +1106,7 @@ c_parse(state_t *s)
   }
   return 0;
 }
-#if 0
+
 int
 c_save_game(state_t *s)
 {
@@ -1117,8 +1117,6 @@ c_save_game(state_t *s)
 		sciprintf("Not in debug state\n");
 		return 1;
 	}
-
-	s->amp_rest = *p_restadjust;
 
 	if (!omit_check) {
 		int result = 0;
@@ -1139,7 +1137,6 @@ c_save_game(state_t *s)
 
 	return 0;
 }
-
 
 int
 c_restore_game(state_t *s)
@@ -1166,7 +1163,6 @@ c_restore_game(state_t *s)
 		return 1;
 	}
 }
-#endif
 
 int
 c_restart_game(state_t *s)
@@ -3392,13 +3388,8 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_go, "go", "", "Executes the script.\n");
 			con_hook_command(c_dumpnodes, "dumpnodes", "i", "shows the specified number of nodes\n"
 					 "  from the parse node tree");
-#ifdef __GNUC__
-#warning "Re-enable savegames"
-#endif
-#if 0
 			con_hook_command(c_save_game, "save_game", "s", "Saves the current game state to\n  the hard disk");
 			con_hook_command(c_restore_game, "restore_game", "s", "Restores a saved game from the\n  hard disk");
-#endif
 			con_hook_command(c_restart_game, "restart", "s*", "Restarts the game.\n\nUSAGE\n\n  restart [-r] [-p]"
 					 " [--play] [--replay]\n\n  There are two ways to restart an SCI\n  game:\n"
 					 "  play (-p) calls the game object's play()\n    method\n  replay (-r) calls the replay() method");

@@ -45,7 +45,7 @@
 #include <seg_manager.h>
 #include <sfx_engine.h>
 
-#define FREESCI_SAVEGAME_VERSION 5
+#define FREESCI_SAVEGAME_VERSION 6
 
 #define FREESCI_GAMEDIR ".freesci"
 #define STRLEN_FREESCI_GAMEDIR 8

@@ -1,3 +1,9 @@
+2005-04-05  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/savegame.cfsml: Remove stuff related to the old VM.
+	* src/engine/scriptdebug.c: Re-enable console commands for saving
+	and restoring games.
+
 2005-03-18  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/sfx/pcm_device/audiobuf.c: Moved reporting of buffer

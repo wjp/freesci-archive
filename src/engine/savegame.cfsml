@@ -57,16 +57,18 @@ static state_t *_global_save_state;
 
 
 void
-write_heapptr(FILE *fh, heap_ptr *foo)
+write_reg_t(FILE *fh, reg_t *foo)
 {
-	fprintf(fh, "0x%04x", *foo);
+	fprintf(fh, PREG, PRINT_REG(*foo));
 }
 
 int
-read_heapptr(FILE *fh, heap_ptr *foo, char *lastval, int *line, int *hiteof)
+read_reg_t(FILE *fh, reg_t *foo, char *lastval, int *line, int *hiteof)
 {
-	*foo = strtol(lastval, NULL, 0);
-	return 0;
+	int segment, offset;
+
+	scanf(lastval, PREG, &segment, &offset);
+	*foo = make_reg(segment, offset);
 }
 
 void
@@ -157,22 +159,17 @@ write_pixmap_color(FILE *fh, gfx_pixmap_color_t *color);
 int
 read_pixmap_color(FILE *fh, gfx_pixmap_color_t *color, char *lastval, int *line, int *hiteof);
 
-void
-write_hunk_block(FILE *fh, hunk_block_t *foo);
-int
-read_hunk_block(FILE *fh, hunk_block_t *foo, char *lastval, int *line, int *hiteof);
-
 %CFSML
 
 TYPE byte "byte" LIKE int;
 TYPE long "long" LIKE int;
 TYPE gint16 "gint16" LIKE int;
-TYPE heap_ptr "heap_ptr" USING write_heapptr read_heapptr;
+TYPE seg_id_t "seg_id_t" LIKE int;
 TYPE sci_version_t "sci_version_t" USING write_sci_version read_sci_version;
 
 TYPE hunk_block_t "hunk_block_t" USING write_hunk_block read_hunk_block;
 TYPE parse_tree_node_t "parse_tree_node_t" USING write_PTN read_PTN;
-
+TYPE reg_t "reg_t" USING write_reg_t read_reg_t;
 TYPE menubar_tp "menubar_t*" USING write_menubar_tp read_menubar_tp;
 
 /* Widget subsystem */
@@ -320,9 +317,9 @@ RECORD menu_item_t "menu_item_t" {
 
 	int flags;
 	byte said[STATIC MENU_SAID_SPEC_SIZE];
-	heap_ptr said_pos;
+	reg_t said_pos;
 	string text;
-	heap_ptr text_pos;
+	reg_t text_pos;
 	int modifiers;
 	int key;
 	int enabled;
@@ -341,49 +338,26 @@ RECORD menubar_t "menubar_t" {
 	menu_t menus[DYNAMIC menus_nr];
 }
 
-RECORD exec_stack_t "exec_stack_t" {
-	heap_ptr objp;
-	heap_ptr sendp;
-	heap_ptr pc;
-	heap_ptr sp;
-	int argc;
-	heap_ptr variables[STATIC 4];
-	int selector;
-	int origin;
-	heap_ptr type;
-}
-
 RECORD class_t "class_t" {
 	int script;
-	int class_offset;
+	reg_t reg;
 }
 
 RECORD view_object_t {
-	heap_ptr obj;
-	heap_ptr signalp;
-	heap_ptr underBitsp;
+	reg_t obj;
+	reg_t signalp;
+	reg_t underBitsp;
 	int x;
 	int y;
 	int priority;
 	int view_nr;
 	int loop;
 	int cel;
-	int palette;
 	int nsTop;
 	int nsLeft;
 	int nsRight;
 	int nsBottom;
 	int underBits;
-}
-
-
-RECORD script_t "script_t" {
-	heap_ptr heappos;
-	heap_ptr localvar_offset;
-	heap_ptr export_table_offset;
-	heap_ptr synonyms_offset;
-	int lockers;
-	int synonyms_nr;
 }
 
 
@@ -408,11 +382,9 @@ RECORD state_t "state_t" {
 	byte onscreen_console;
 
 	long game_time;
-	heap_ptr save_dir;
-	heap_ptr save_dir_copy;
+	reg_t save_dir_copy;
 	string save_dir_copy_buf;
 	int save_dir_edit_offset;
-	heap_ptr sound_object;
 
 	int sound_mute;
 	int sound_volume;
@@ -431,8 +403,6 @@ RECORD state_t "state_t" {
 
 	long animation_delay;
 
-	hunk_block_t hunk[STATIC MAX_HUNK_BLOCKS];
-
 	menubar_tp menubar;
 	string status_bar_text;
 	int status_bar_foreground;
@@ -448,17 +418,9 @@ RECORD state_t "state_t" {
 	sci_version_t max_version;
 	sci_version_t min_version;
 
-	exec_stack_t execution_stack[DYNAMIC execution_stack_size, MAXWRITE execution_stack_pos+1];
-
-	gint16 acc;
-	gint16 amp_rest;
-	gint16 prev;
-
-	heap_ptr stack_base;
-	heap_ptr stack_handle;
-	heap_ptr parser_base;
-	heap_ptr parser_event;
-	heap_ptr global_vars;
+	reg_t stack_base;
+	reg_t parser_base;
+	reg_t parser_event;
 
 	int parser_lastmatch_word;
 
@@ -467,20 +429,7 @@ RECORD state_t "state_t" {
 
 	synonym_t synonyms[DYNAMIC synonyms_nr];
 
-	heap_ptr game_obj;
-
-	class_t classtable[DYNAMIC classtable_size];
-
-	script_t scripttable[STATIC 1000];
-
-	heap_ptr clone_list[STATIC SCRIPT_MAX_CLONES];
-
-	int _heap->first_free;
-	int _heap->old_ff;
-
-	POINTER _heap->base RELATIVETO _heap->start;
-	POINTER game_name RELATIVETO _heap->start;
-
+	reg_t game_obj;
 
 	/* Backwards compatibility crap */
 	int port_ID;
@@ -488,87 +437,6 @@ RECORD state_t "state_t" {
 }
 
 %END CFSML
-
-void
-write_hunk_block(FILE *fh, hunk_block_t *foo)
-{
-	char filename[14] = "hunk.0";
-	int filenr = 0;
-	int hunkfile;
-
-	if (!foo->size) {
-		fputs("\\null\\", fh);
-		return; /* Don't write empty blocks */
-	}
-
-	if (foo->type == HUNK_TYPE_GFXBUFFER) {
-		fputs(HUNK_TYPE_GFX_SNAPSHOT_STRING, fh);
-		%CFSMLWRITE gfxw_snapshot_t (*(((gfxw_snapshot_t**)foo->data))) INTO fh;
-		return;
-
-	} else { /* Normal buffer */
-
-		while (IS_VALID_FD(hunkfile = open(filename, O_RDONLY | O_BINARY))) {
-			close(hunkfile);
-			sprintf(filename + 5, "%d", ++filenr);
-		}
-
-
-		/* Visual C++ doesn't allow to specify O_BINARY with creat() */
-#ifdef _MSC_VER
-		hunkfile = open(filename, _O_CREAT | _O_BINARY | _O_RDWR);
-#else
-		hunkfile = creat(filename, 0600);
-#endif
-
-		assert (IS_VALID_FD(hunkfile));
-
-		write(hunkfile, foo->data, foo->size);
-
-		close(hunkfile);
-	}
-
-	fputs(filename, fh);
-}
-
-int
-read_hunk_block(FILE *fh, hunk_block_t *foo, char *lastval, int *line, int *hiteof)
-{
-	int hunkfile;
-
-	if (lastval[0] == '\\') { /* Nothing written? */
-		foo->size = 0;
-		return 0;
-	}
-
-	if (lastval[0] == HUNK_TYPE_GFX_SNAPSHOT_STRING[0]) { /* Graphical buffer */
-		foo->type = HUNK_TYPE_GFXBUFFER;
-		foo->size = sizeof(gfxw_snapshot_t);
-		foo->data = sci_malloc(sizeof (gfxw_snapshot_t *));
-		*((gfxw_snapshot_t **)foo->data) = sci_malloc(sizeof (gfxw_snapshot_t));
-
-		%CFSMLREAD gfxw_snapshot_t (*(gfxw_snapshot_t**)(foo->data)) FROM fh ERRVAR *hiteof LINECOUNTER *line
-
-		return 0;
-
-	} else { /* Normal hunk */
-
-		foo->type = HUNK_TYPE_ANY;
-
-		hunkfile = open(lastval, O_RDONLY | O_BINARY);
-
-		foo->size = lseek(hunkfile, 0, SEEK_END);
-		lseek(hunkfile, 0, SEEK_SET);
-
-		foo->data = (char *) sci_malloc(foo->size);
-		read(hunkfile, foo->data, foo->size);
-		close(hunkfile);
-
-		return 0;
-	}
-
-	return 0;
-}
 
 struct {
 	gfxw_widget_types_t type;
@@ -1025,8 +893,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
 */
 void
 _gamestate_unfrob(state_t *s)
-{ /* Remnant of ancient times. May be restored to its full glory one day. */
-	s->heap = s->_heap->start;
+{
 }
 
 
@@ -1065,6 +932,7 @@ gamestate_save(state_t *s, char *dirname)
 	}
 	sci_finish_find(&dir);
 
+/*
 	if (s->sound_server) {
 		if ((s->sound_server->save)(s, dirname)) {
 			sciprintf("Saving failed for the sound subsystem\n");
@@ -1072,7 +940,7 @@ gamestate_save(state_t *s, char *dirname)
 			return 1;
 		}
 	}
-
+*/
 	fh = fopen("state", "w" FO_TEXT);
 
 	/* Calculate the time spent with this game */
@@ -1086,16 +954,6 @@ SCI_MEMTEST;
 
 	_gamestate_unfrob(s);
 
-
-	/* Visual C++ doesn't allow to specify O_BINARY with creat() */
-#ifdef _MSC_VER
-	fd = open("heap", _O_CREAT | _O_BINARY | _O_RDWR);
-#else
-	fd = creat("heap", 0600);
-#endif
-
-	write(fd, s->_heap->start, SCI_HEAP_SIZE);
-	close(fd);
 
 	chdir ("..");
 	return 0;
@@ -1116,28 +974,26 @@ gamestate_restore(state_t *s, char *dirname)
 		return NULL;
 	}
 
+/*
 	if (s->sound_server) {
 		if ((s->sound_server->restore)(s, dirname)) {
 			sciprintf("Restoring failed for the sound subsystem\n");
 			return NULL;
 		}
 	}
-
+*/
 	retval = (state_t *) sci_malloc(sizeof(state_t));
-	retval->_heap = heap_new();
 	retval->savegame_version = -1;
 	_global_save_state = retval;
 	retval->gfx_state = s->gfx_state;
 
 	fh = fopen("state", "r" FO_TEXT);
 	if (!fh) {
-		heap_del(retval->_heap);
 		free(retval);
 		return NULL;
 	}
 
 	 /* Backwards compatibility settings */
-	retval->amp_rest = 0;
 	retval->dyn_views = NULL;
 	retval->drop_views = NULL;
 	retval->port = NULL;
@@ -1158,24 +1014,9 @@ gamestate_restore(state_t *s, char *dirname)
 			sciprintf("Savegame version is %d- maximum supported is %0d\n", retval->savegame_version, FREESCI_SAVEGAME_VERSION);
 
 		chdir("..");
-		heap_del(retval->_heap);
 		free(retval);
 		return NULL;
 	}
-
-	if (read_eof || (!IS_VALID_FD(fd = open("heap", O_RDONLY | O_BINARY)))) {
-		if (read_eof)
-			sciprintf("Error while reading gamestate '%s'\n", dirname);
-		else
-			sciprintf("Heap file does not exist for game state '%s'\n", dirname);
-		chdir("..");
-		heap_del(retval->_heap);
-		free(retval);
-		return NULL;
-	}
-
-	read(fd, retval->_heap->start, SCI_HEAP_SIZE);
-	close(fd);
 
 	_gamestate_unfrob(retval);
 
@@ -1185,10 +1026,6 @@ gamestate_restore(state_t *s, char *dirname)
 
 	/* Set exec stack base to zero */
 	retval->execution_stack_base = 0;
-
-	/* Set the class table pointers to the script positions */
-	for (i = 0; i < retval->classtable_size; i++)
-		retval->classtable[i].scriptposp = &(retval->scripttable[retval->classtable[i].script].heappos);
 
 	/* Now copy all current state information */
 	/* Graphics and input state: */
@@ -1229,14 +1066,6 @@ gamestate_restore(state_t *s, char *dirname)
 		return NULL;
 	}
 
-	/* Sound state: */
-	retval->sound_server = s->sound_server;
-/*
-	memcpy(&(retval->sound_pipe_in[0]), &(s->sound_pipe_in[0]), sizeof(int[2]));
-	memcpy(&(retval->sound_pipe_out[0]), &(s->sound_pipe_out[0]), sizeof(int[2]));
-	memcpy(&(retval->sound_pipe_events[0]), &(s->sound_pipe_events[0]), sizeof(int[2]));
-	memcpy(&(retval->sound_pipe_debug[0]), &(s->sound_pipe_debug[0]), sizeof(int[2]));
-*/
 	/* Time state: */
 	sci_get_current_time(&(retval->last_wait_time));
 	retval->game_start_time.tv_sec = time(NULL) - retval->game_time;
@@ -1245,23 +1074,6 @@ gamestate_restore(state_t *s, char *dirname)
 	/* File IO state: */
 	retval->file_handles_nr = 2;
 	retval->file_handles = sci_calloc(2, sizeof(FILE *));
-
-	if (!retval->save_dir_copy_buf) { /* FIXME: Maybe other versions as well! */
-		retval->save_dir_copy_buf = sci_malloc(MAX_SAVE_DIR_SIZE);
-		retval->save_dir = heap_allocate(retval->_heap, MAX_SAVE_DIR_SIZE);
-		if (!retval->save_dir) {
-			fprintf(stderr, "ERROR: While restoring old savegame: Not enough space to allocate space for"
-				" save_dir buffer!\n");
-			return NULL;
-			/* This should only happen with corrupt save states, since all games HAVE enough
-			** spare memory for this.  */
-		}
-	}
-
-
-	strcpy(retval->save_dir_copy_buf, s->save_dir_copy_buf);
-	if (retval->save_dir)
-		strcpy(retval->heap + retval->save_dir + 2, s->heap + s->save_dir + 2);
 
 	/* static parser information: */
 	retval->parser_rules = s->parser_rules;
@@ -1302,24 +1114,6 @@ gamestate_restore(state_t *s, char *dirname)
 	if (retval->savegame_version < 5) {
 	        retval->status_bar_foreground = 0;
 	        retval->status_bar_background = 15;
-	}
-
-	if (retval->savegame_version < 3) {
-		char *cwd = sci_getcwd();
-
-		retval->save_dir = heap_allocate(retval->_heap, MAX_SAVE_DIR_SIZE);
-		/* Compensate for save_dir location change */
-		if (strlen(cwd) > MAX_SAVE_DIR_SIZE)
-			sciprintf("Warning: cwd '%s' is longer than the"
-				  " MAX_SAVE_DIR_SIZE %d\n",
-				  cwd, MAX_SAVE_DIR_SIZE);
-		else
-			strcpy(retval->heap + retval->save_dir + 2, cwd);
-
-		sci_free(cwd);
-
-		retval->save_dir_copy = 0xffff;
-		retval->save_dir_edit_offset = 0;
 	}
 
 	if (retval->savegame_version < 4) {
