@@ -1251,6 +1251,29 @@ c_gfx_print_fgwidgets(state_t *s)
 	return 0;
 }
 
+c_gfx_drawpic(state_t *s)
+{
+	int flags = 1, default_palette = 0;
+
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	if (cmd_paramlength > 1) {
+		default_palette = cmd_params[1].val;
+
+		if (cmd_paramlength > 2)
+			flags = cmd_params[2].val;
+	}
+
+	gfxop_new_pic(s->gfx_state, cmd_params[0].val, flags, default_palette);
+	gfxop_clear_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
+	gfxop_update(s->gfx_state);
+	gfxop_usleep(s->gfx_state, 5000000);
+	return 0;
+}
+
 #ifdef GFXW_DEBUG_WIDGETS
 extern gfxw_widget_t *debug_widgets[];
 extern int debug_widget_pos;
@@ -2108,6 +2131,9 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_gfx_print_picviews, "gfx_print_picviews", "", "Shows the picview list");
 			con_hook_command(c_gfx_print_bgwidgets, "gfx_print_bgwidgets", "", "Shows the background widget list");
 			con_hook_command(c_gfx_print_fgwidgets, "gfx_print_fgwidgets", "", "Shows the foreground widget list");
+			con_hook_command(c_gfx_drawpic, "gfx_drawpic", "ii*", "Draws a pic resource\n\nUSAGE\n  gfx_drawpic <nr> [<pal> [<fl>]]\n"
+					 "  where <nr> is the number of the pic resource\n  to draw\n  <pal> is the optional default\n  palette for the pic (0 is"
+					 "\n  assumed if not specified)\n  <fl> are any pic draw flags (default\n  is 1)");
 			con_hook_command(c_dump_words, "dumpwords", "", "Lists all parser words");
 #ifdef GFXW_DEBUG_WIDGETS
 			con_hook_command(c_gfx_print_widget, "gfx_print_widget", "i*", "If called with no parameters, it\n  shows which widgets are active.\n"

@@ -153,7 +153,7 @@ int
 graph_save_box(state_t *s, rect_t area)
 {
 	int handle = kalloc(s, HUNK_TYPE_GFXBUFFER, sizeof(gfxw_snapshot_t *));
-	gfxw_snapshot_t **ptr = kmem(s, handle);
+	gfxw_snapshot_t **ptr = (gfxw_snapshot_t **) kmem(s, handle);
 
 	*ptr = gfxw_make_snapshot(s->visual, area);
 
@@ -163,7 +163,7 @@ graph_save_box(state_t *s, rect_t area)
 void
 graph_restore_box(state_t *s, int handle)
 {
-	gfxw_snapshot_t **ptr = kmem(s, handle);
+	gfxw_snapshot_t **ptr = (gfxw_snapshot_t **) kmem(s, handle);
 
 	if (s->dyn_views) {
 		gfxw_container_t *parent = s->dyn_views->parent;
@@ -189,6 +189,26 @@ graph_restore_box(state_t *s, int handle)
 
 	kfree(s, handle);
 }
+
+
+static gfx_color_t
+graph_map_ega_color(state_t *s, int color, int priority, int control)
+{
+	gfx_color_t retval = s->ega_colors[(color >=0 && color < 16)? color : 0];
+	retval.priority = priority;
+	retval.control = control;
+
+	if (color == -1)
+		retval.alpha = 255;
+
+	retval.mask = ((color >=0)? GFX_MASK_VISUAL : 0)
+		| ((priority >= 0)? GFX_MASK_PRIORITY : 0)
+		| ((control >= 0)? GFX_MASK_CONTROL : 0);
+
+	return retval;
+}
+
+/* --- */
 
 
 void
@@ -239,7 +259,7 @@ kPicNotValid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 _k_redraw_box(state_t *s, int x1, int y1, int x2, int y2)
 {
-  int i;
+	int i;
 WARNING( "_k_redraw_box: Fixme!")
 #if 0
 
@@ -272,6 +292,38 @@ WARNING( "_k_redraw_box: Fixme!")
 #endif
 }
 
+void
+_k_graph_rebuild_port_with_color(state_t *s, gfx_color_t newbgcolor)
+{
+	gfxw_port_t *port = s->port;
+	gfxw_port_t *newport = sciw_new_window(s, port->zone, port->font_nr, port->color, newbgcolor,
+					       s->titlebar_port->font_nr, s->ega_colors[15], s->ega_colors[8],
+					       port->title_text, port->port_flags & ~WINDOW_FLAG_TRANSPARENT);
+
+	if (s->dyn_views) {
+		int found = 0;
+		gfxw_container_t *parent = s->dyn_views->parent;
+
+		while (parent && !(found |= (GFXW(parent) == GFXW(port))))
+			parent->parent;
+
+		s->dyn_views = s->pic_views = s->fg_widgets = NULL;
+	}
+
+	if (s->bg_widgets) {
+		int found = 0;
+		gfxw_container_t *parent = s->bg_widgets->parent;
+
+		while (parent && !(found |= (GFXW(parent) == GFXW(port))))
+			parent->parent;
+
+		s->bg_widgets = NULL;
+	}
+
+	port->parent->add(GFXWC(port->parent), GFXW(newport));
+	port->free(GFXW(port));
+}
+
 
 void
 kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -282,6 +334,11 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	gfxw_port_t *port = s->port;
 	int redraw_port = 0;
 
+	area = gfx_rect(PARAM(2), PARAM(1) , PARAM(4), PARAM(3));
+
+	area.xl = area.xl - area.x; /* Since the actual coordinates are absolute */
+	area.yl = area.yl - area.y;
+  
 	switch(PARAM(0)) {
 
 	case K_GRAPH_GET_COLORS_NR:
@@ -289,83 +346,65 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		s->acc = (sci_version < SCI_VERSION_1) ? 0x10 : 0x100; /* number of colors */
 		break;
   
-	case K_GRAPH_DRAW_LINE:
+	case K_GRAPH_DRAW_LINE: {
 
-		color = PARAM(5);
-		priority = PARAM(6);
-		special = PARAM(7);
-		area = gfx_rect(PARAM(2), PARAM(1) , PARAM(4), PARAM(3));
+		gfx_color_t color = graph_map_ega_color(s, PARAM(5) & 0xf, PARAM_OR_ALT(6, -1), PARAM_OR_ALT(7, -1));
 
-		area.xl = area.xl - area.x; /* Since the actual coordinates are absolute */
-		area.yl = area.yl - area.y;
-  
-		gfxcolor = s->ega_colors[color];
-		gfxcolor.priority = priority;
-		gfxcolor.control = special;
-
-		gfxcolor.mask = !(color & 0x80) | (!(priority & 0x80) << 1) | (!(special & 0x80) << 2);
+		SCIkdebug(SCIkGRAPHICS, "draw_line((%d, %d), (%d, %d), col=%d, p=%d, c=%d, mask=%d)\n",
+			  PARAM(2), PARAM(1), PARAM(4), PARAM(3), PARAM(5), PARAM_OR_ALT(6, -1), PARAM_OR_ALT(7, -1),
+			  color.mask);
 
 		redraw_port = 1;
 		ADD_TO_CURRENT_BG_WIDGETS(GFXW(gfxw_new_line(area, gfxcolor, GFX_LINE_MODE_FAST, GFX_LINE_STYLE_NORMAL)));
 		
 		break;
+	}
 
 	case K_GRAPH_SAVE_BOX:
 
-WARNING(fixme)
-#if 0
-		s->acc = graph_save_box(s, PARAM(2), PARAM(1), PARAM(4), PARAM(3), PARAM(5));
-#endif
+		area.x += s->port->zone.x;
+		area.y += s->port->zone.y;
+  
+		s->acc = graph_save_box(s, area);
 		break;
 
 	case K_GRAPH_RESTORE_BOX:
 
-WARNING(fixme)
-#if 0
 		graph_restore_box(s, PARAM(1));
-#endif
 	break;
 
 	case K_GRAPH_FILL_BOX_BACKGROUND:
 
-WARNING(fixme)
-#if 0
-		graph_clear_box(s, port->xmin, port->ymin,
-				port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
-				port->bgcolor);
+		_k_graph_rebuild_port_with_color(s, port->bgcolor);
+		port = s->port;
+
 		redraw_port = 1;
-#endif
 		CHECK_THIS_KERNEL_FUNCTION;
 		break;
 
 	case K_GRAPH_FILL_BOX_FOREGROUND:
 
-WARNING(fixme);
-#if 0
-		graph_clear_box(s, port->xmin, port->ymin,
-				port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
-				port->color);
+		_k_graph_rebuild_port_with_color(s, port->color);
+		port = s->port;
+
+		redraw_port = 1;
 		CHECK_THIS_KERNEL_FUNCTION;
-#endif
 		break;
 
 	case K_GRAPH_FILL_BOX_ANY: {
 
-		int x = PARAM(2);
-		int y = PARAM(1);
+		gfx_color_t color = graph_map_ega_color(s, PARAM(6), PARAM_OR_ALT(7, -1), PARAM_OR_ALT(8, -1));
 
-WARNING(fixme);
-#if 0
-		SCIkdebug(SCIkGRAPHICS, "fill_box_any(%d, %d, %d, %d) map=%d (%d %d)\n",
-			  PARAM(1), PARAM(2), PARAM(3), PARAM(4), PARAM(5), PARAM(6), PARAM_OR_ALT(7, -1));
+		color.mask = UPARAM(5);
 
-		graph_fill_box_custom(s, x + s->port->xmin, y + s->port->ymin,
-				      PARAM(4)-x, PARAM(3)-y, PARAM(6), PARAM_OR_ALT(7, -1),
-				      PARAM_OR_ALT(8, -1), UPARAM(5));
+		SCIkdebug(SCIkGRAPHICS, "fill_box_any((%d, %d), (%d, %d), col=%d, p=%d, c=%d, mask=%d)\n",
+			  PARAM(2), PARAM(1), PARAM(4), PARAM(3), PARAM(6), PARAM_OR_ALT(7, -1), PARAM_OR_ALT(8, -1),
+			  UPARAM(5));
+
+		ADD_TO_CURRENT_BG_WIDGETS(gfxw_new_box(s->gfx_state, area, color, color, GFX_BOX_SHADE_FLAT));
 		CHECK_THIS_KERNEL_FUNCTION;
-#endif
 
-  }
+	}
 	break;
 
 	case K_GRAPH_UPDATE_BOX: {
@@ -373,31 +412,32 @@ WARNING(fixme);
 		int x = PARAM(2);
 		int y = PARAM(1);
 
-WARNING(fixme);
-#if 0
 		SCIkdebug(SCIkGRAPHICS, "update_box(%d, %d, %d, %d)\n",
 			  PARAM(1), PARAM(2), PARAM(3), PARAM(4));
 
-		(*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_BOX, x, y + 10, PARAM(4)-x+1, PARAM(3)-y+1);
-		CHECK_THIS_KERNEL_FUNCTION;
-#endif
+		area.x += s->port->zone.x;
+		area.y += s->port->zone.y;
 
-  }
-  break;
+		gfxop_update_box(s->gfx_state, area);
+		CHECK_THIS_KERNEL_FUNCTION;
+
+	}
+	break;
 
 	case K_GRAPH_REDRAW_BOX: {
 
 		CHECK_THIS_KERNEL_FUNCTION;
 
-		WARNING(fixme);
-#if 0
 		SCIkdebug(SCIkGRAPHICS, "redraw_box(%d, %d, %d, %d)\n",
 			  PARAM(1), PARAM(2), PARAM(3), PARAM(4));
 
-		if (!s->dyn_views_nr)
-			graph_update_box(s, PARAM(2), PARAM(1), PARAM(4), PARAM(3)); else
-				_k_redraw_box(s, PARAM(2), PARAM(1), PARAM(4), PARAM(3));
-#endif
+		area.x += s->port->zone.x;
+		area.y += s->port->zone.y;
+
+		if (s->dyn_views && s->dyn_views->contents)
+			s->dyn_views->draw(GFXW(s->dyn_views), gfx_point(0, 0));
+		
+		gfxop_update_box(s->gfx_state, area);
 
 	}
 
@@ -418,7 +458,9 @@ WARNING(fixme);
 
 	}
 
-	port->draw(GFXW(port), gfxw_point_zero);
+	if (redraw_port)
+		FULL_REDRAW();
+
 	gfxop_update(s->gfx_state);
 }
 
@@ -745,7 +787,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int yend = GET_SELECTOR(obj, brBottom);
 	int xl = xend - x;
 	int yl = yend - y;
-	rect_t zone = gfx_rect(x + port->zone.x, y + port->zone.y, xl - 1, yl - 1);
+	rect_t zone = gfx_rect(x + port->zone.x, y + port->zone.y, xl, yl);
 	word edgehit;
 
 	signal = GET_SELECTOR(obj, signal);
@@ -918,6 +960,20 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 
 	s->acc = gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart, ystart + 10, xlen, ylen), map);
+
+	/*  { */
+/*  		int x, y; */
+/*  		fprintf(stderr,"Area %d,%d %dx%d returned %04x\n", xstart, ystart + 10, xlen, ylen, s->acc); */
+
+/*  		fprintf(stderr, "     /  %d\n", xstart - 1); */
+/*  		for (y = -1; y <= ylen+1; y++) { */
+/*  			fprintf(stderr," %3d : ", y + ystart + 10); */
+/*  			for (x = -1; x <= xlen+1; x++) */
+/*  				fprintf(stderr, "%1x ", ffs(gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart + x, ystart + 10 + y, */
+/*  												      1, 1), map)) - 1); */
+/*  			fprintf(stderr, "\n"); */
+/*  		} */
+/*  	} */
 }
 
 void
@@ -1389,105 +1445,6 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 
 
 void
-_k_restore_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
-     /* Restores the view backgrounds of list_nr members of list */
-{
-WARNING(fixme)
-#if 0
-  int i;
-
-  for (i = 0; i < list_nr; i++)
-    if (list[i].obj) {
-    word signal = GET_HEAP(list[i].signalp);
-    SCIkdebug(SCIkGRAPHICS, "Trying to restore with signal = %04x\n", signal);
-
-    if (signal & _K_VIEW_SIG_FLAG_NO_UPDATE) {
-
-      if (signal & _K_VIEW_SIG_FLAG_UPDATE_ENDED)
-	PUT_HEAP(list[i].signalp, (signal & ~_K_VIEW_SIG_FLAG_UPDATE_ENDED) |
-		 _K_VIEW_SIG_FLAG_NO_UPDATE);
-
-      continue; /* Don't restore this view */
-    } else {
-
-      if (list[i].underBitsp && !(signal & _K_VIEW_SIG_FLAG_DONT_RESTORE)) {
-	word under_bits = UGET_HEAP(list[i].underBitsp);
-	if (under_bits == 0xffff) {
-	  under_bits = list[i].underBits;
-	  SCIkwarn(SCIkWARNING, "underBits for obj %04x set to 0xffff, using older %04x instead\n", list[i].obj, under_bits);
-	} else
-	  list[i].underBits = under_bits;
-
-	if (under_bits) {
-
-	  SCIkdebug(SCIkGRAPHICS, "Restoring BG for obj %04x with signal %04x\n", list[i].obj, signal);
-	  graph_restore_box(s, under_bits);
-
-	  PUT_HEAP(list[i].underBitsp, list[i].underBits = 0); /* Restore and mark as restored */
-	}
-      }
-      signal &= ~_K_VIEW_SIG_FLAG_UNKNOWN_6;
-
-      if (signal & _K_VIEW_SIG_FLAG_UPDATING)
-	signal &= ~(_K_VIEW_SIG_FLAG_UPDATING |
-		    _K_VIEW_SIG_FLAG_NO_UPDATE); /* Clear those two flags */
-
-    } /* if NOT (signal & _K_VIEW_SIG_FLAG_NO_UPDATE) */
-  } /* For each list member */
-#endif
-}
-
-void
-_k_view_list_free_backgrounds(state_t *s, view_object_t *list, int list_nr)
-     /* Frees all backgrounds from the list without restoring; called by DrawPic */
-{
-  int i;
-
-WARNING(fixme)
-#if 0
-  SCIkdebug(SCIkMEM, "Freeing bglist: %d entries\n", list_nr);
-  for (i = 0; i < list_nr; i++)
-    if (list[i].obj) {
-    int handle = list[i].underBits;
-
-    if (handle)
-      kfree(s, handle);
-
-    PUT_HEAP(list[i].underBitsp, list[i].underBits = 0);
-  }
-#endif
-}
-
-void
-_k_save_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
-     /* Stores the view backgrounds of list_nr members of list in their underBits selectors */
-{
-WARNING(fixme)
-#if 0
-  int i;
-
-  for (i = 0; i < list_nr; i++)
-    if (list[i].obj) {
-    int handle;
-
-    if (!(list[i].underBitsp))
-      continue; /* No underbits? */
-
-    if (GET_HEAP(list[i].underBitsp))
-      continue; /* Don't overwrite an existing backup */
-
-    SCIkdebug(SCIkGRAPHICS, "Saving BG for obj %04x with signal %04x\n",
-	      list[i].obj, UGET_HEAP(list[i].signalp));
-
-    handle = view0_backup_background(s, list[i].x, list[i].y,
-				     list[i].loop, list[i].cel, list[i].view);
-
-    PUT_HEAP(list[i].underBitsp, list[i].underBits = handle);
-  }
-#endif
-}
-
-void
 _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 			  int funct_nr, int argc, int argp)
      /* disposes all list members flagged for disposal; funct_nr is the invoking kfunction */
@@ -1754,11 +1711,8 @@ _k_view_list_dispose(state_t *s, gfxw_list_t **list_ptr)
 	if (!(*list_ptr))
 		return; /* Nothing to do :-( */
 
-fprintf(stderr,"Error: DISPOSING LIST!\n");
-BREAKPOINT();
-
-WARNING(fixme)
-  /*  _k_view_list_free_backgrounds(s, list, *list_nr_ptr);*/
+	SCIkwarn(SCIkERROR,"DISPOSING DISPLAY LIST! This shouldn't happen anymore!\n");
+	BREAKPOINT();
 
 	list->free(GFXW(list));
 	*list_ptr = NULL;

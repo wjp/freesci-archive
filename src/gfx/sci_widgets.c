@@ -103,6 +103,8 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 	gfxw_list_t *decorations;
 	
 	win->font_nr = font;
+	win->title_text = title;
+	win->port_flags = flags;
 
 	if (flags & WINDOW_FLAG_DONTDRAW)
 		flags = WINDOW_FLAG_TRANSPARENT | WINDOW_FLAG_NOFRAME;

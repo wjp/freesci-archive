@@ -42,7 +42,6 @@
 #include <gfx_tools.h>
 #include <gfx_operations.h>
 
-
 void
 sciprintf(char *fmt, ...)
 {

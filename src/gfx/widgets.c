@@ -621,10 +621,23 @@ _gfxwop_line_draw(gfxw_widget_t *widget, point_t pos)
 {
 	gfxw_primitive_t *line = (gfxw_primitive_t *) widget;
 	DRAW_ASSERT(widget, GFXW_LINE);
-
+	/*
+	gfxop_set_clip_zone(line->visual->gfx_state, gfx_rect(0,0,320,200));
+	fprintf(stderr, "drawline pos =%d,%d\n", pos.x, pos.y);
+	fprintf(stderr,"    drawline ofs=%d,%d  %d,%d\n", line->bounds.x, line->bounds.y,
+		line->bounds.xl, line->bounds.yl);
+	fprintf(stderr,"     clip=%d, %d, %d, %d\n",
+		line->visual->gfx_state->clip_zone.x,
+		line->visual->gfx_state->clip_zone.y,
+		line->visual->gfx_state->clip_zone.xl,
+		line->visual->gfx_state->clip_zone.yl);
+	*/
 	GFX_ASSERT(gfxop_draw_line(line->visual->gfx_state, _move_rect(line->bounds, pos),
 				   line->color, line->line_mode, line->line_style));
-
+	/*
+	gfxop_update(line->visual->gfx_state);
+	gfxop_usleep(line->visual->gfx_state, 100000);
+	*/
 	return 0;
 }
 

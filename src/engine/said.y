@@ -37,6 +37,8 @@
 #define AUGMENT_MAX_WORDS 64
 
 
+#define ANYWORD 0xfff
+
 #define WORD_TYPE_BASE 0x141
 #define WORD_TYPE_REF 0x144
 #define WORD_TYPE_SYNTACTIC_SUGAR 0x145
@@ -597,11 +599,15 @@ aug_find_words(parse_tree_node_t *tree, int startpos,
 static inline int
 aug_contains_word(int *list, int length, int word)
 {
-  int i;
-  for (i = 0; i < length; i++)
-    if (list[i] == word)
-      return 1;
-  return 0;
+	int i;
+	if (word == ANYWORD) {
+		return (length);
+	}
+
+	for (i = 0; i < length; i++)
+		if (list[i] == word)
+			return 1;
+	return 0;
 }
 
 

@@ -208,6 +208,8 @@ typedef struct _gfxw_port {
 	gfx_color_t color, bgcolor;
 	int font_nr;
 	point_t draw_pos; /* Drawing position */
+	int port_flags; /* interpreter-dependant flags */
+	char *title_text;
 	byte gray_text; /* Whether text is 'grayed out' (dithered) */
 } gfxw_port_t;
 

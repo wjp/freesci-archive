@@ -1,7 +1,6 @@
 
 /*  A Bison parser, made from said.y
- by  GNU Bison version 1.27
-  */
+    by GNU Bison version 1.28  */
 
 #define YYBISON 1  /* Identify Bison output.  */
 
@@ -32,6 +31,8 @@
 /* Maximum number of words to be expected in a parsed sentence */
 #define AUGMENT_MAX_WORDS 64
 
+
+#define ANYWORD 0xfff
 
 #define WORD_TYPE_BASE 0x141
 #define WORD_TYPE_REF 0x144
@@ -181,9 +182,9 @@ static const short yyrhs[] = {    19,
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-   134,   136,   138,   143,   145,   151,   153,   159,   161,   163,
-   169,   171,   173,   179,   184,   186,   191,   193,   195,   197,
-   203,   205,   207,   213,   215,   221,   223,   225,   231,   233
+   136,   138,   140,   145,   147,   153,   155,   161,   163,   165,
+   171,   173,   175,   181,   186,   188,   193,   195,   197,   199,
+   205,   207,   209,   215,   217,   223,   225,   227,   233,   235
 };
 #endif
 
@@ -260,8 +261,8 @@ static const short yycheck[] = {     2,
     10,    13,     0,     0,     4,     9,     5,    41
 };
 /* -*-C-*-  Note some compilers choke on comments on `#line' lines.  */
-#line 3 "/usr/lib/bison.simple"
-/* This file comes from bison-1.27.  */
+#line 3 "/usr/share/misc/bison.simple"
+/* This file comes from bison-1.28.  */
 
 /* Skeleton output parser for bison,
    Copyright (C) 1984, 1989, 1990 Free Software Foundation, Inc.
@@ -474,7 +475,7 @@ __yy_memcpy (char *to, char *from, unsigned int count)
 #endif
 #endif
 
-#line 216 "/usr/lib/bison.simple"
+#line 217 "/usr/share/misc/bison.simple"
 
 /* The user can define YYPARSE_PARAM as the name of an argument to be passed
    into yyparse.  The argument should have type void *.
@@ -803,128 +804,128 @@ yyreduce:
   switch (yyn) {
 
 case 1:
-#line 135 "said.y"
+#line 137 "said.y"
 { yyval = said_top_branch(said_attach_branch(yyvsp[-1], yyvsp[0])) ;
     break;}
 case 2:
-#line 137 "said.y"
+#line 139 "said.y"
 { yyval = said_top_branch(said_attach_branch(yyvsp[-2], said_attach_branch(yyvsp[-1], yyvsp[0]))) ;
     break;}
 case 3:
-#line 139 "said.y"
+#line 141 "said.y"
 { yyval = said_top_branch(said_attach_branch(yyvsp[-3], said_attach_branch(yyvsp[-2], said_attach_branch(yyvsp[-1], yyvsp[0])))) ;
     break;}
 case 4:
-#line 144 "said.y"
+#line 146 "said.y"
 { yyval = SAID_BRANCH_NULL ;
     break;}
 case 5:
-#line 146 "said.y"
+#line 148 "said.y"
 { yyval = said_paren(said_value(0x14b, said_value(0xf900, said_terminal(0xf900))), SAID_BRANCH_NULL) ;
     break;}
 case 6:
-#line 152 "said.y"
+#line 154 "said.y"
 { yyval = SAID_BRANCH_NULL ;
     break;}
 case 7:
-#line 154 "said.y"
+#line 156 "said.y"
 { yyval = said_paren(said_value(0x141, said_value(0x149, yyvsp[0])), SAID_BRANCH_NULL) ;
     break;}
 case 8:
-#line 160 "said.y"
+#line 162 "said.y"
 { yyval = said_aug_branch(0x142, 0x14a, yyvsp[0], SAID_BRANCH_NULL) ;
     break;}
 case 9:
-#line 162 "said.y"
+#line 164 "said.y"
 { yyval = said_aug_branch(0x152, 0x142, said_aug_branch(0x142, 0x14a, yyvsp[-1], SAID_BRANCH_NULL), SAID_BRANCH_NULL) ;
     break;}
 case 10:
-#line 164 "said.y"
+#line 166 "said.y"
 { yyval = SAID_BRANCH_NULL ;
     break;}
 case 11:
-#line 170 "said.y"
+#line 172 "said.y"
 { yyval = said_aug_branch(0x143, 0x14a, yyvsp[0], SAID_BRANCH_NULL) ;
     break;}
 case 12:
-#line 172 "said.y"
+#line 174 "said.y"
 { yyval = said_aug_branch(0x152, 0x143, said_aug_branch(0x143, 0x14a, yyvsp[-1], SAID_BRANCH_NULL), SAID_BRANCH_NULL) ;
     break;}
 case 13:
-#line 174 "said.y"
+#line 176 "said.y"
 { yyval = SAID_BRANCH_NULL ;
     break;}
 case 14:
-#line 180 "said.y"
+#line 182 "said.y"
 { yyval = said_paren(said_value(0x141, said_value(0x153, said_terminal(yyvsp[0]))), SAID_BRANCH_NULL) ;
     break;}
 case 15:
-#line 185 "said.y"
+#line 187 "said.y"
 { yyval = said_aug_branch(0x141, 0x14f, yyvsp[0], SAID_BRANCH_NULL) ;
     break;}
 case 16:
-#line 187 "said.y"
+#line 189 "said.y"
 { yyval = said_aug_branch(0x141, 0x14f, said_aug_branch(0x152, 0x14c, said_aug_branch(0x141, 0x14f, yyvsp[-1], SAID_BRANCH_NULL), SAID_BRANCH_NULL), SAID_BRANCH_NULL) ;
     break;}
 case 17:
-#line 192 "said.y"
+#line 194 "said.y"
 { yyval = yyvsp[0] ;
     break;}
 case 18:
-#line 194 "said.y"
+#line 196 "said.y"
 { yyval = said_aug_branch(0x141, 0x14c, yyvsp[-1], SAID_BRANCH_NULL) ;
     break;}
 case 19:
-#line 196 "said.y"
+#line 198 "said.y"
 { yyval = said_attach_branch(yyvsp[-2], yyvsp[0]) ;
     break;}
 case 20:
-#line 198 "said.y"
+#line 200 "said.y"
 { yyval = said_attach_branch(yyvsp[-4], yyvsp[-2]) ;
     break;}
 case 21:
-#line 204 "said.y"
+#line 206 "said.y"
 { yyval = said_attach_branch(yyvsp[-1], yyvsp[0]) ;
     break;}
 case 22:
-#line 206 "said.y"
-{ yyval = yyvsp[0] ;
-    break;}
-case 23:
 #line 208 "said.y"
 { yyval = yyvsp[0] ;
     break;}
+case 23:
+#line 210 "said.y"
+{ yyval = yyvsp[0] ;
+    break;}
 case 24:
-#line 214 "said.y"
+#line 216 "said.y"
 { yyval = yyvsp[0] ;
     break;}
 case 25:
-#line 216 "said.y"
+#line 218 "said.y"
 { yyval = said_aug_branch(0x152, 0x144, yyvsp[-1], SAID_BRANCH_NULL) ;
     break;}
 case 26:
-#line 222 "said.y"
+#line 224 "said.y"
 { yyval = said_aug_branch(0x144, 0x14f, yyvsp[-1], yyvsp[0]) ;
     break;}
 case 27:
-#line 224 "said.y"
+#line 226 "said.y"
 { yyval = said_aug_branch(0x144, 0x14f, yyvsp[0], SAID_BRANCH_NULL) ;
     break;}
 case 28:
-#line 226 "said.y"
+#line 228 "said.y"
 { yyval = said_aug_branch(0x152, 0x144, said_aug_branch(0x144, 0x14f, yyvsp[-1], SAID_BRANCH_NULL), SAID_BRANCH_NULL) ;
     break;}
 case 29:
-#line 232 "said.y"
+#line 234 "said.y"
 { yyval = said_aug_branch(0x141, 0x144, said_aug_branch(0x144, 0x14f, yyvsp[-1], SAID_BRANCH_NULL), yyvsp[0]) ;
     break;}
 case 30:
-#line 234 "said.y"
+#line 236 "said.y"
 { yyval = said_aug_branch(0x141, 0x144, said_aug_branch(0x144, 0x14f, yyvsp[0], SAID_BRANCH_NULL), SAID_BRANCH_NULL) ;
     break;}
 }
    /* the action file gets copied in in place of this dollarsign */
-#line 542 "/usr/lib/bison.simple"
+#line 543 "/usr/share/misc/bison.simple"
 
   yyvsp -= yylen;
   yyssp -= yylen;
@@ -1144,7 +1145,7 @@ yyerrhandle:
     }
   return 1;
 }
-#line 239 "said.y"
+#line 241 "said.y"
 
 
 
@@ -1506,11 +1507,15 @@ aug_find_words(parse_tree_node_t *tree, int startpos,
 static inline int
 aug_contains_word(int *list, int length, int word)
 {
-  int i;
-  for (i = 0; i < length; i++)
-    if (list[i] == word)
-      return 1;
-  return 0;
+	int i;
+	if (word == ANYWORD) {
+		return (length);
+	}
+
+	for (i = 0; i < length; i++)
+		if (list[i] == word)
+			return 1;
+	return 0;
 }
 
 

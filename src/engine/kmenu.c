@@ -117,7 +117,7 @@ struct {
    "Paul David Doherty\nGame version information",
    0, 15},
   {"Still more FreeSCI hackers & contributors",
-   "Petr Vyhnak\nThe deflate-like SCI1 decompression algorithm\n\n"
+   "Petr Vyhnak\nThe DCL-INFLATE algorithm, Many Win32 improvements\n\n"
    "Rainer De Temple\nSCI research\n\n"
    "Ravi I.\nSCI0 sound resource specification\n\n"
    "Rickard Lind\nMT32->GM MIDI mapping magic, sound research\n\n"

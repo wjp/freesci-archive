@@ -1507,9 +1507,8 @@ _gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int c
 	_gfxr_auxbuf_fill(pic, x_320, y_200, drawenable, (drawenable & GFX_MASK_CONTROL)? control : 0);
 	_gfxr_auxbuf_spread(pic, &min_x, &min_y, &max_x, &max_y);
 
-
 	if (_gfxr_find_fill_point(pic, min_x, min_y, max_x, max_y, x_320, y_200, drawenable, &x, &y)) {
-		/*GFXWARN("Could not find scaled fill point, but unscaled fill point was available!\n");*/
+		/* GFXWARN("Could not find scaled fill point, but unscaled fill point was available!\n"); */
 		drawenable &= GFX_MASK_PRIORITY;
 		if (!drawenable)
 			_gfxr_auxbuf_propagate_changes(pic, 0);
@@ -1527,6 +1526,9 @@ _gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int c
 		bounds = pic->priority_map->index_data;
 		legalcolor = 0;
 	}
+
+	if (bounds[ytotal + x] != legalcolor)
+		return;
 
 	if (bounds) {
 		int proj_y = y_200;

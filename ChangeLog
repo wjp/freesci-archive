@@ -1,5 +1,10 @@
 2000-12-30  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/gfx/resource/sci_pic_0.c (_gfxr_fill): Added extra check to make
+	sure non-empty data is not filled twice
+
+	* src/engine/said.y (aug_contains_word): Added support for ANYWORD
+
 	* src/engine/kgraphics.c (kDisplay): Reimplemented Display
 	(kSetJump): Fixed SIGFPE on Alpha
 	(_k_view_list_dispose_loop): Dropped dynviews now have their ID removed

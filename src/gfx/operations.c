@@ -612,9 +612,6 @@ gfxop_scan_bitmask(gfx_state_t *state, rect_t area, gfx_map_mask_t map)
 	gfxr_pic_t *pic = (state->pic_unscaled)? state->pic_unscaled : state->pic;
 	int retval = 0;
 
-	area.x++;
-	area.y++;
-
 	_gfxop_clip(&area, gfx_rect(0, 0, 320, 200));
 
 	if (map & GFX_MASK_VISUAL)
