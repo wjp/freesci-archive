@@ -456,7 +456,7 @@ script_dump_object(disasm_state_t *d, script_state_t *s,
 	while (selectors--) {
 		if (pass_no == 2) {
 			sel=getInt16(data + seeker) & 0xffff;
-			if (sels && sels [i] >= 0) {
+			if (sels && (sels [i] >= 0) && (sels[i] < d->selector_count)) {
 				sciprintf("  [#%03x] %s = 0x%x\n", i, d->snames [sels [i]], sel);
 				i++;
 			}

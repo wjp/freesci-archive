@@ -1,3 +1,11 @@
+2002-01-13  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/scicore/console.c (open_console_file): Now screams if the
+	open fails.
+	* src/tools/scidisasm.c: Fixed a segfault
+	* src/engine/kgraphics.c (_k_prepare_view_list): Made sure that
+	the priority is only recalculated when we have to.
+
 2002-02-13  Solomon Peachy <pizza@shaftnet.org>
 	* src/include/pcmout.h, src/sound/pcmout.c,
           src/sound/polled_ss_unix.c, src/sound/polled_ss_sdl.c,

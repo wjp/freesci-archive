@@ -649,8 +649,11 @@ open_console_file (char *filename)
 #else
   con_file = fopen (filename, "w");
 #endif
-}
 
+  if (NULL == con_file)
+    fprintf(stderr, "console.c: open_console_file(): Could not open output file %s\n", filename);
+
+}
 
 void
 close_console_file ()

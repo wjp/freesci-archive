@@ -1906,7 +1906,7 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 
 		if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP) { /* Picview */
 			priority = GET_SELECTOR(obj, priority);
-			if (priority <= 0)
+			if (priority < 0)
 				priority = _priority; /* Always for picviews */
 		} else { /* Dynview */
 			if (has_nsrect
