@@ -164,7 +164,6 @@ static int load_options(char *infname, char *options)
 	}
 	if (vmu_pkg_parse(data, &pkg) == -1) {
 		sciprintf("%s, L%d: vmu_pkg_parse() failed!\n", __FILE__, __LINE__);
-		sci_free(data);
 		fs_close(inf);
 		return -1;
 	}
@@ -173,7 +172,6 @@ static int load_options(char *infname, char *options)
 			(pkg.data[1] != DC_OPTIONS_TAG_MINOR)) {
 		sciprintf("%s, L%d: Option file version doesn't match!\n",
 			__FILE__, __LINE__);
-		sci_free(data);
 		fs_close(inf);
 		return -1;
 	}

@@ -1,3 +1,7 @@
+2004-05-05  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/gamemenu.c (load_options): Small bug fix.
+
 2004-04-27  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/Makefile.am: Updated Dreamcast EXTRA_DIST list.
