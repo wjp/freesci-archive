@@ -194,10 +194,8 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	while ((((bytespp > 1) && (vistype >= 4))
 		|| ((bytespp == 1) && (vistype == 3)))
-	       && !XMatchVisualInfo(S->display, default_screen, bytespp << 3, vistype, &xvisinfo)) {
-          fprintf(stderr,"!vistype=%d\n", vistype);
+	       && !XMatchVisualInfo(S->display, default_screen, bytespp << 3, vistype, &xvisinfo))
 		vistype--;
-	}
 
 	if (vistype < 3 || ((vistype == 3) && (bytespp != 1))) {
 		if (bytespp == 1) {

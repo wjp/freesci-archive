@@ -1845,6 +1845,29 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 	}
 }
 
+static void
+_k_update_signals_in_view_list(gfxw_list_t *old_list, gfxw_list_t *new_list)
+{ /* O(n^2)... a bit painful, but much faster than the redraws it helps prevent */
+	gfxw_dyn_view_t *old_widget = (gfxw_dyn_view_t *) old_list->contents;
+
+	/* Traverses all old widgets, updates them with signals from the new widgets.
+	** This is done to avoid evil hacks in widget.c; widgets with unique IDs are
+	** replaced there iff they are NOT equal_to a new widget with the same ID.
+	** If they were replaced every time, we'd be doing far too many redraws.
+	*/
+
+	while (old_widget) {
+		gfxw_dyn_view_t *new_widget = (gfxw_dyn_view_t *) new_list->contents;
+
+		while (new_widget && new_widget->ID != old_widget->ID)
+			new_widget = (gfxw_dyn_view_t *) new_widget->next;
+
+		if (new_widget)
+			old_widget->signal = new_widget->signal;
+
+		old_widget = (gfxw_dyn_view_t *) old_widget->next;
+	}
+}
 
 static void
 _k_raise_topmost_in_view_list(state_t *s, gfxw_list_t *list, gfxw_dyn_view_t *view)
@@ -2540,6 +2563,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			_k_redraw_view_list(s, templist);
 		}
 
+		_k_update_signals_in_view_list(s->dyn_views, templist);
 		s->dyn_views->tag(GFXW(s->dyn_views));
 
 		_k_raise_topmost_in_view_list(s, s->dyn_views, (gfxw_dyn_view_t *) templist->contents);

@@ -910,9 +910,6 @@ _gfxwop_dyn_view_equals(gfxw_widget_t *widget, gfxw_widget_t *other)
 	if (!_color_equals(wview->color, oview->color))
 		return 0;
 
-	if (wview->signal != oview->signal)
-		return 0;
-
 	return 1;
 }
 
@@ -1400,7 +1397,6 @@ _w_gfxwop_container_set_visual_contents(gfxw_widget_t *contents, gfxw_visual_t *
 {
 	while (contents) {
 		contents->set_visual(contents, visual);
-
 		contents = contents->next;
 	}
 	return 0;
@@ -1413,8 +1409,10 @@ _gfxwop_container_set_visual(gfxw_widget_t *widget, gfxw_visual_t *visual)
 
 	container->visual = visual;
 	if (widget->parent) {
-		DDIRTY(stderr,"set_visual::DOWNWARDS abs(%d,%d,%d,%d, 1)\n", GFX_PRINT_RECT(widget->bounds));
-		widget->parent->add_dirty_abs(widget->parent, widget->bounds, 1);
+		if (!(GFXW_IS_LIST(widget) && !GFXWC(widget)->contents)) {
+			DDIRTY(stderr,"set_visual::DOWNWARDS abs(%d,%d,%d,%d, 1)\n", GFX_PRINT_RECT(widget->bounds));
+			widget->parent->add_dirty_abs(widget->parent, widget->bounds, 1);
+		}
 	}
 
 	return _w_gfxwop_container_set_visual_contents(container->contents, visual);
@@ -1536,8 +1534,10 @@ _gfxwop_container_add(gfxw_container_t *container, gfxw_widget_t *widget)
 	if (_parentize_widget(container, widget))
 		return 1;
 
-	DDIRTY(stderr, "container_add: dirtify DOWNWARDS (%d,%d,%d,%d, 1)\n", GFX_PRINT_RECT(widget->bounds));
-	_gfxw_dirtify_container(container, widget);
+	if (!(GFXW_IS_LIST(widget) && (!GFXWC(widget)->contents))) { /* Don't dirtify self on empty lists */
+		DDIRTY(stderr, "container_add: dirtify DOWNWARDS (%d,%d,%d,%d, 1)\n", GFX_PRINT_RECT(widget->bounds));
+		_gfxw_dirtify_container(container, widget);
+	}
 
 	*(container->nextpp) = widget;
 	container->nextpp = &(widget->next);

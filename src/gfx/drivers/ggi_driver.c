@@ -446,21 +446,23 @@ ggi_draw_line(gfx_driver_t *drv, rect_t line, gfx_color_t color,
 	}
 
 	if (color.mask & GFX_MASK_PRIORITY) {
-		ggiSetGCForeground(STATE->priority_visuals[GFX_BUFFER_BACK], color.priority);
+		ggi_visual_t privis = STATE->priority_visuals[GFX_BUFFER_BACK];
+
+		ggiSetGCForeground(privis, color.priority);
 
 		for (xc = 0; xc < xw; xc++)
-			ggiDrawLine(VISUAL, rx + xc, ry, endx + xc, endy);
+			ggiDrawLine(privis, rx + xc, ry, endx + xc, endy);
 		if (yw > 0)
 			for (xc = 0; xc < xw; xc++)
-				ggiDrawLine(VISUAL, rx + xc, ry + yw - 1, endx + xc, endy + yw - 1);
+				ggiDrawLine(privis, rx + xc, ry + yw - 1, endx + xc, endy + yw - 1);
 
 		if (yw > 1) {
 			for (yc = 1; yc < yw-1; yc++)
-				ggiDrawLine(VISUAL, rx, ry + yc, endx, endy + yc);
+				ggiDrawLine(privis, rx, ry + yc, endx, endy + yc);
 
 			if (xw > 0)
 				for (yc = 1; yc < yw-1; yc++)
-					ggiDrawLine(VISUAL, rx + xw - 1, ry + yc, endx + xw - 1, endy + yc);
+					ggiDrawLine(privis, rx + xw - 1, ry + yc, endx + xw - 1, endy + yc);
 		}
 	}
 

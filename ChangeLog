@@ -1,5 +1,10 @@
 2001-02-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/gfx/sci_widgets.c (sciw_set_menubar): Fixed menubar line
+
+	* src/gfx/widgets.c (_gfxwop_container_set_visual): List widgets
+	no longer dirtify their parents during set_visual() if they are empty
+
 	* src/engine/klists.c (listp): When verifying lists, sizes of both 6
 	and 8 (6 +2 bytes heap padding) are allowed now.
 

@@ -137,7 +137,7 @@ gfxr_clear_pic0(gfxr_pic_t *pic)
 	       0xff, pic->mode->xfact * 320 * pic->mode->yfact * (200 - SCI_TITLEBAR_SIZE)); /* white */
 	memset(pic->priority_map->index_data + (320 * pic->mode->xfact * SCI_TITLEBAR_SIZE * pic->mode->yfact),
 	       0x0, pic->mode->xfact * 320 * pic->mode->yfact * (200 - SCI_TITLEBAR_SIZE));
-	memset(pic->priority_map->index_data, 0x0a, pic->mode->xfact * 320 * pic->mode->xfact);
+	memset(pic->priority_map->index_data, 0x0a, SCI_TITLEBAR_SIZE * (pic->mode->yfact * 320 * pic->mode->xfact));
 	memset(pic->control_map->index_data, 0, GFXR_AUX_MAP_SIZE);
 	memset(pic->aux_map, 0, GFXR_AUX_MAP_SIZE);
 }

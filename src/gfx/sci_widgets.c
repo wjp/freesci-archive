@@ -48,13 +48,31 @@ clear_titlebar(gfxw_port_t *titlebar)
 static gfxw_list_t *
 make_titlebar_list(state_t *s, rect_t bounds, gfxw_port_t *status_bar)
 {
-	gfxw_list_t *list = gfxw_new_list(status_bar->bounds, 0);
-	gfxw_box_t *bgbox = gfxw_new_box(s->gfx_state, gfx_rect(0, 0, status_bar->bounds.xl, status_bar->bounds.yl - 1),
-					 s->ega_colors[0xf], s->ega_colors[0xf], GFX_BOX_SHADE_FLAT);
-	gfxw_primitive_t *line = gfxw_new_line(gfx_rect(0, status_bar->bounds.yl - 1, status_bar->bounds.xl, 0),
-					       s->ega_colors[0], GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL);
+	gfx_color_t white = s->ega_colors[0xf];
+	gfxw_list_t *list;
+	gfxw_box_t *bgbox; 
+
+
+	list = gfxw_new_list(status_bar->bounds, 0);
+	bgbox = gfxw_new_box(s->gfx_state, gfx_rect(0, 0, status_bar->bounds.xl, status_bar->bounds.yl - 1),
+			     white, white, GFX_BOX_SHADE_FLAT);
 
 	list->add((gfxw_container_t *) list, (gfxw_widget_t *) bgbox);
+
+	return list;
+}
+
+static gfxw_list_t *
+finish_titlebar_list(state_t *s, gfxw_list_t *list, gfxw_port_t *status_bar)
+{
+	gfx_color_t black = s->ega_colors[0];
+	gfxw_primitive_t *line;
+
+	black.priority = 15;
+	black.mask |= GFX_MASK_PRIORITY;
+
+	line = gfxw_new_line(gfx_rect(0, status_bar->bounds.yl - 1, status_bar->bounds.xl, 0),
+			     black, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL);
 	list->add((gfxw_container_t *) list, (gfxw_widget_t *) line);
 
 	return list;
@@ -65,6 +83,11 @@ sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text)
 {
 	gfx_state_t *state;
 	gfxw_list_t *list;
+	gfx_color_t white = s->ega_colors[0xf];
+	gfx_color_t black = s->ega_colors[0];
+
+	black.priority = white.priority = 11;
+	black.mask = white.mask |= GFX_MASK_PRIORITY;
 
 	if (!status_bar->visual) {
 		GFXERROR("Attempt to change title bar without visual!\n");
@@ -82,8 +105,8 @@ sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text)
 
 	if (text) {
 		gfxw_text_t *textw = gfxw_new_text(state, gfx_rect(0, 0, status_bar->bounds.xl, status_bar->bounds.yl),
-						  status_bar->font_nr, text, ALIGN_LEFT, ALIGN_CENTER,
-						  s->ega_colors[0], s->ega_colors[0], s->ega_colors[0xf], GFXR_FONT_FLAG_NO_NEWLINES);
+						   status_bar->font_nr, text, ALIGN_LEFT, ALIGN_CENTER,
+						   black, black, white, GFXR_FONT_FLAG_NO_NEWLINES);
 
 		list = make_titlebar_list(s, status_bar->bounds, status_bar);
 
@@ -91,7 +114,7 @@ sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text)
 
 	} else {
 		gfxw_box_t *bgbox = gfxw_new_box(state, gfx_rect(0, 0, status_bar->bounds.xl, status_bar->bounds.yl - 1),
-						 s->ega_colors[0], s->ega_colors[0], GFX_BOX_SHADE_FLAT);
+						 black, black, GFX_BOX_SHADE_FLAT);
 
 		list = gfxw_new_list(status_bar->bounds, 0);
 
@@ -99,6 +122,7 @@ sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text)
 	}
 
 	list->add(GFXWC(status_bar), GFXW(list));
+	finish_titlebar_list(s, list, status_bar);
 
 	status_bar->draw(GFXW(status_bar), gfxw_point_zero);
 	gfxop_update(state);
@@ -524,6 +548,7 @@ sciw_set_menubar(state_t *s, gfxw_port_t *status_bar, menubar_t *menubar, int se
 	}
 
 	status_bar->add(GFXWC(status_bar), GFXW(list));
+	finish_titlebar_list(s, list, status_bar);
 }
 
 gfxw_port_t *
