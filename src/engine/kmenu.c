@@ -304,6 +304,11 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			case SCI_EVT_KEYBOARD:
 				switch (event.data) {
 
+				case '`':
+					if (event.buckybits & SCI_EVM_CTRL)
+						s->visual->print(GFXW(s->visual), 0);
+					break;
+
 				case SCI_K_ESC:
 					menu_mode = 0;
 					break;
