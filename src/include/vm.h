@@ -156,6 +156,8 @@ typedef struct
 
   int elements; /* Used by SetSynonyms() */
 
+  int lsTop; /* Used by scroll list controls */
+
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {

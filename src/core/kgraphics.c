@@ -541,26 +541,32 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
       heap_ptr other_obj = UGET_HEAP(node + LIST_NODE_VALUE);
       if (other_obj != obj) { /* Clipping against yourself is not recommended */
 
-	int other_x = GET_SELECTOR(other_obj, brLeft);
-	int other_y = GET_SELECTOR(other_obj, brTop);
-	int other_xend = GET_SELECTOR(other_obj, brRight);
-	int other_yend = GET_SELECTOR(other_obj, brBottom);
-	/*	SCIkdebug(SCIkBRESEN, "  against (%d,%d) to (%d, %d)\n",
+	int other_signal = GET_SELECTOR(other_obj, signal);
+	if (signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR) == 0) {
+	  /* check whether the other object ignores actors */
+
+	  int other_x = GET_SELECTOR(other_obj, brLeft);
+	  int other_y = GET_SELECTOR(other_obj, brTop);
+	  int other_xend = GET_SELECTOR(other_obj, brRight);
+	  int other_yend = GET_SELECTOR(other_obj, brBottom);
+	  /*	SCIkdebug(SCIkBRESEN, "  against (%d,%d) to (%d, %d)\n",
 		other_x, other_y, other_xend, other_yend);*/
 
-	if ((((other_x >= x) && (other_x <= xend)) /* Other's left boundary inside of our object? */
-	    || ((other_xend >= x) && (other_xend <= xend))) /* ...right boundary... ? */
-	    &&
-	    (((other_y >= y) && (other_y <= yend)) /* Other's top boundary inside of our object? */
-	    || ((other_yend >= y) && (other_yend <= yend)))) /* ...bottom boundary... ? */
-	  return;
 
-	if (((other_x >= x) && (other_xend <= xend)
-	    && (other_y >= y) && (other_yend <= yend)) /* Other object inside this object? */
-	  ||
-	    ((other_x <= x) && (other_xend >= xend)
-	     && (other_y <= y) && (other_yend >= yend))) /* Other object surrounds this one? */
-	  return;
+	  if ((((other_x >= x) && (other_x <= xend)) /* Other's left boundary inside of our object? */
+	       || ((other_xend >= x) && (other_xend <= xend))) /* ...right boundary... ? */
+	      &&
+	      (((other_y >= y) && (other_y <= yend)) /* Other's top boundary inside of our object? */
+	       || ((other_yend >= y) && (other_yend <= yend)))) /* ...bottom boundary... ? */
+	    return;
+
+	  if (((other_x >= x) && (other_xend <= xend)
+	       && (other_y >= y) && (other_yend <= yend)) /* Other object inside this object? */
+	      ||
+	      ((other_x <= x) && (other_xend >= xend)
+	       && (other_y <= y) && (other_yend >= yend))) /* Other object surrounds this one? */
+	    return;
+	}
 
 	/*	SCIkdebug(SCIkBRESEN, " (no)\n");*/
 
@@ -1025,7 +1031,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 
     cursor = GET_SELECTOR(obj, cursor);
 
-    graph_draw_selector_edit(s, s->ports[s->view_port], state, x, y, xl, yl, cursor,
+    graph_draw_selector_edit(s, s->ports[s->view_port], state | SELECTOR_STATE_FRAMED, x, y, xl, yl, cursor,
 			     text, font_res->data);
     break;
 
@@ -1040,10 +1046,48 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 			     view_res->data, loop, cel);
     break;
 
-  case K_CONTROL_CONTROL:
+  case K_CONTROL_CONTROL: {
+    char **entries_list;
+    char *seeker;
+    int entries_nr;
+    int lsTop = GET_SELECTOR(obj, lsTop);
+    int list_top = 0;
+    int selection = 0;
+    int i;
 
-    graph_draw_selector_control(s, s->ports[s->view_port], state, x, y, xl, yl);
-    break;
+    cursor = GET_SELECTOR(obj, cursor);
+
+    entries_nr = 0;
+    seeker = text;
+    while (seeker[0]) { /* Count string entries in NULL terminated string list */
+      ++entries_nr;
+      seeker += strlen(seeker) + 1;
+    }
+
+    if (entries_nr) { /* determine list_top, selection, and the entries_list */
+      seeker = text;
+      entries_list = malloc(sizeof(char *) * entries_nr);
+      for (i = 0; i < entries_nr; i++) {
+	entries_list[i] = seeker;
+	seeker += strlen(seeker) + 1;
+	if ((seeker - ((char *)s->heap)) == lsTop)
+	  list_top = i;
+	if ((seeker - ((char *)s->heap)) == cursor)
+	  selection = i;
+      }
+    }
+
+    font_res  = findResource(sci_font, font_nr);
+    if (!font_res) {
+      SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
+      break;
+    }
+    graph_draw_selector_control(s, s->ports[s->view_port], state, x, y, xl, yl,
+				entries_list, entries_nr, list_top, selection, font_res->data);
+    if (entries_nr)
+      free(entries_list);
+  }
+  break;
 
   default:
     SCIkwarn(SCIkWARNING, "Unknown control type: %d at %04x, at (%d, %d) size %d x %d\n",

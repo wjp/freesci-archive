@@ -1,3 +1,16 @@
+2000-04-11  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kgraphics.c (_k_draw_control): Frames are now drawn around
+	all edit controls.
+	
+	* src/core/kgraphics.c (kCanBeHere): dynviews with IGNORE_ACTOR
+	or DONT_RESTORE don't just actively ignore moving objects, they
+	also are passively ignored now.
+
+	* src/graphics/engine_graphics.c (graph_draw_selector_control):
+	Savegame names are now drawn correctly (?) in the savegame selection
+	lists. They aren't selectable yet, though.
+
 2000-04-10  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/game.c (game_exit): Fixed restarting in KQ4 by resetting

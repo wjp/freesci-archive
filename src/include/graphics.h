@@ -397,6 +397,13 @@ void dither_line(picture_t dest, int x1, int y1, short x2, short y2,
 ** Returns   : (void)
 */
 
+int
+get_font_height(byte *font);
+/* Returns the pixel height of the specified font
+** Parameters: (byte *) font: The font to investigate
+** Returns   : (int) The pixel height attributed to that font
+*/
+
 
 int
 get_text_width(char *text, byte *font);
@@ -652,13 +659,19 @@ graph_draw_selector_icon(struct _state *s, port_t *port, int state,
 
 void
 graph_draw_selector_control(struct _state *s, port_t *port, int state,
-			    int x, int y, int xl, int yl);
+			    int x, int y, int xl, int yl,
+			    char **entries, int entries_nr, int top_entry, int selection, byte *font);
 /* Draws a control selector (a "scollbox").
 ** Parameters: (state_t *) s: The state to operate on
 **             (port_t *) port: The port to use
 **             (int) state: The selector state to use; a combination of the SELECTOR_STATE_* flags
 **             (int) x,y: The upper left corner of the selector
 **             (int) xl,yl: Height and width of the selector in question
+**             (char **) entries: The string entries of the scrollbox
+**             (int) entries_nr: The number of scrollbox entries
+**             (int) top_entry: The number of the topmost entry in the scrollbox
+**             (int) selection: The number of the highlighted (selected) entry
+**             (byte *) font: The font to use
 ** Returns   : (void)
 */
 

@@ -49,6 +49,13 @@ short rowheights[32];
 
 
 int
+get_font_height(byte *font)
+{
+  return getInt16(font + FONT_FONTSIZE_OFFSET);
+}
+
+
+int
 get_text_width(char *text, byte *font)
 /* Similar to getTextParams, but threadsafe and less informative */
 {

@@ -439,13 +439,38 @@ graph_draw_selector_icon(struct _state *s, port_t *port, int state,
 
 void
 graph_draw_selector_control(struct _state *s, port_t *port, int state,
-			 int x, int y, int xl, int yl)
+			    int x, int y, int xl, int yl,
+			    char **entries, int entries_nr, int top_entry, int selection, byte *font)
 {
+  int fontheight = font? get_font_height(font) : 1;
+  int max_entries = (yl - 20) / fontheight;
+  int entry;
+  int max_entry_pos = ((entries_nr - top_entry > max_entries)? max_entries + top_entry : entries_nr);
+
   /* Draw outer frame: */
   draw_frame(s->pic, port->xmin+x, port->ymin+y, xl, yl, port->color, port->priority);
 
   /* Draw inner frame: */
   draw_frame(s->pic, port->xmin+x, port->ymin+y + 10, xl, yl - 20, port->color, port->priority);
+
+  /* Clear inner space */
+  graph_fill_box_custom(s, port->xmin+x+1, port->ymin+y + 11, xl-2, yl - 22, port->bgcolor, -1, -1, 1);
+
+  if (fontheight == 1) {
+    sciprintf("%s, %s(L%d): No font set while attempting to draw\n", __FILE__, __FUNCTION__, __LINE__);
+    return;
+  }
+
+  y += 10;
+  for (entry = top_entry; entry < max_entry_pos; entry++) {
+    if (entry == selection) { /* the selected entry? */
+      graph_fill_box_custom(s, port->xmin+x+1, port->ymin+y, xl-2, fontheight, port->color, -1, -1, 1);
+      draw_text0_without_newline(s->pic, port, x, y, entries[entry], font, port->bgcolor);
+    } else /* not selected: */
+      draw_text0_without_newline(s->pic, port, x, y, entries[entry], font, port->color);
+
+    y += fontheight;
+  }
 }
 
 
