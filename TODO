@@ -1,32 +1,31 @@
-TODO for 0.3.2:
+TODO for 0.3.3:
 
 Primary goals:
-	-- all done --
+	* Fix DoAvoider
+	* Fix DoBresen in the CB1 intros
+	* Add LRU resource manager
+	* Add graphical config file manager
+	* Add PCM output support and one driver to use it
+	* Add implicit note-offs dependant on the MIDI file's max number of
+	  notes
 
 Secondary goals:
-	+ Fix DoAvoider
-	+ Fix DoBresen in the CB1 intros
-	* LRU resource manager
+	+ Re-implement on-screen console
+	+ operations.c: Add full support for state->visible_map
+	+ optimize pic drawing
+	+ Add graphical game selection screen
 	* fix invalid (but consistent) shifting for word classes
 	  (is w[0] << 4 | (w[1] & 0xf0) >> 4, but should be w[0] | w[1] << 4).
 	* docs: Mention words with class set to zero (no word).
-	* Re-implement on-screen console
-
-	GFX subsystem:
-
-	* operations.c: Add full support for state->visible_map
-
 
 Bonus goals:
-	+ pic_0.c: Fix artifact removal to check surrounding pixels for
-	  occurences of	white before removing a white pixel
+	+ grammar.c: Replace proto-Earley parser with backtracking Earley
 	* Add glx graphics driver
 	* pic_0.c: Add SCI01 support (priority palettes and embedded views)
 	* pal_1.c: Fix palettes not to compress colors (doing this is pointless
 	  and wrong)
-	* grammar.c: Replace proto-Earley parser with backtracking Earley
 
 
 *: Normal goal
-+: If not met for 0.3.1, the goal will rise up one class
++: If not met for 0.3.3, the goal will rise up one class
 

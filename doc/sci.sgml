@@ -5,6 +5,7 @@
 ]>
 
 
+
 <!-- (set 'font-lock-maximum-size 1024000) C-x e this in EMACS to make it possible to fontify this buffer -->
 
 <Book>
@@ -7949,6 +7950,21 @@ the maps using the cast list created by Animate, whereas the ShowBits call
 		  static objects, relocation tables, and all the other stuff contained in scripts.
 		</para>
 	      </sect3>
+	      <sect3>
+		<title>dm_*</title>
+		<para>
+		  These are dmalloc utility functions. They are described in the
+		  dmalloc section below.
+	      </sect3>
+	      <sect3>
+		<title>draw_viewobj (object)</title>
+		<para>
+		  This operation draws the boundaries of the cel described by the
+		  indicated SCI object to the screen. The nsRect is drawn in green,
+		  the brRect in dark blue, and the position is marked by a small cross
+		  in the cel's priority, within a black box.
+		</para>
+	      </sect3>
 	      <sect3><title/dump (restype, resnr)/
 		<para>
 		  Displays a hex dump of the specified resource.
@@ -8179,6 +8195,88 @@ the maps using the cast list created by Animate, whereas the ShowBits call
 	      <sect3><title/size (restype, resnr)/
 		<para>
 		  Displays the total byte size of one single resource.
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd ...</title>
+		<para>
+		  This executes a sound command. Due to the nature of pipelining
+		  between the sound server and the interpreter, it is possible that
+		  the result messages of those operations will not be print
+		  immediately, so you may have to issue a second command in order
+		  for the results of the first command to be displayed.
+		</para>
+		<para>
+		  Also, please note that after entering the debug console, the sound
+		  server is, by default, suspended, so you will have to issue an
+		  explicit <userinput>snd resume</userinput> to do anything useful.
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd stop</title>
+		<para>
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd resume</title>
+		<para>
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd play (song)</title>
+		<para>
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd mute_channel (channel)</title>
+		<para>
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd unmute_channel (channel)</title>
+		<para>
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd mute</title>
+		<para>
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd unmute</title>
+		<para>
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd solo (channel)</title>
+		<para>
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd printchannels</title>
+		<para>
+		  Lists all
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd printmaps</title>
+		<para>
+		  Prints the instrument names and all General MIDI mappings for
+		  the song currently playing. This operation will only work correctly
+		  if MT-32 to General MIDI translation is being performed.
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>sndmap ...</title>
+		<para>
+		  
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>snd songid</title>
+		<para>
+		  Retreives the numerical ID of the song currently playing from the sound
+		  server. Songs started with 'snd play' have a song ID of 42.
 		</para>
 	      </sect3>
               <sect3><Title/snk [number]/
@@ -8458,14 +8556,14 @@ the maps using the cast list created by Animate, whereas the ShowBits call
        </para>
        <sect3><title>point_t</title>
          <para>
-	   This data type is nothing more than a tuple (<varname>x</varname>,<varname>y</varname>). It describes a coordinate on the screen; a one-line
+	   This data type is nothing more than a tuple (<literal>x</literal>,<literal>y</literal>). It describes a coordinate on the screen; a one-line
 	   way to generate a <type>point_t</type> is to use the function <function>gfx_point(x,y)</function>.
 	 </para>
        <sect3><title>rect_t</title>
          <para>
-	   This type describes a rectangular area on the screen, as a four-tuple (<varname>x</varname>,<varname>y</varname>,<varname>xlen</varname>,
-	   <varname>ylen</varname>), where the point (<varname>x</varname>, <varname>y</varname>) describes the upper left point of the rectangle,
-	     whereas <varname>xlen</varname> and <varname>ylen</varname> are the number of pixels the rectangle extends to the right on the x and
+	   This type describes a rectangular area on the screen, as a four-tuple (<literal>x</literal>,<literal>y</literal>,<literal>xlen</literal>,
+	   <literal>ylen</literal>), where the point (<literal>x</literal>, <literal>y</literal>) describes the upper left point of the rectangle,
+	     whereas <literal>xlen</literal> and <literal>ylen</literal> are the number of pixels the rectangle extends to the right on the x and
 	     downwards on the y axis, respectively. A <type>rect_t</type> can be generated in-line by the function <function>gfx_rect(x,y,xl,yl)</function>.
 	 </para>
 	 <para>
@@ -8475,44 +8573,44 @@ the maps using the cast list created by Animate, whereas the ShowBits call
 	 </para>
 	 <sect4><title>gfx_rect_equals(rect_a, rect_b)</title>
 	   <para>
-	     This function is a predicate that returns non-zero iff <varname>rect_a</varname> describes the same rectangle as <varname>rect_b</varname>.
+	     This function is a predicate that returns non-zero iff <literal>rect_a</literal> describes the same rectangle as <literal>rect_b</literal>.
 	   </para>
 	 <sect4><title>gfx_rect_translate(rect, point)</title>
 	   <para>
-	     Returns a rectangle which equals <varname>rect</varname> translated (moved) by the (<varname>x</varname>, <varname>y</varname>) tuple
-	     described by the <varname>point</varname> parameter (i.e. <varname>point</varname> is interpreted as a relative coordinate).
+	     Returns a rectangle which equals <literal>rect</literal> translated (moved) by the (<literal>x</literal>, <literal>y</literal>) tuple
+	     described by the <literal>point</literal> parameter (i.e. <literal>point</literal> is interpreted as a relative coordinate).
 	   </para>
 	 <sect4><title>gfx_rect_subset(rect_a, rect_b)</title>
 	   <para>
-	     A predicate to determine whether all pixels contained in the area described by <varname>rect_a</varname> are also
-	     contained in the area described by <varname>rect_b</varname>. Reflexive and transitive.
+	     A predicate to determine whether all pixels contained in the area described by <literal>rect_a</literal> are also
+	     contained in the area described by <literal>rect_b</literal>. Reflexive and transitive.
 	   </para>
 	 <sect4><title>gfx_rects_overlap(rect_a, rect_b)</title>
 	   <para>
-	     A predicate to test whether there exists a pixel in the area described by <varname>rect_a</varname> which is
-	     contained in the area described by <varname>rect_b</varname>. Reflexive and symmetric.
+	     A predicate to test whether there exists a pixel in the area described by <literal>rect_a</literal> which is
+	     contained in the area described by <literal>rect_b</literal>. Reflexive and symmetric.
 	   </para>
 	 <sect4><title>gfx_rects_merge(rect_a, rect_b)</title>
 	   <para>
-	     Returns the smallest rectangle containing both <varname>rect_a</varname> and <varname>rect_b</varname>.
+	     Returns the smallest rectangle containing both <literal>rect_a</literal> and <literal>rect_b</literal>.
 	   </para>
        <sect3><title>gfx_pixmap_color_t</title>
          <para>
-	   This structure describes a single color in a pixmap. It consists of 8 bit <varname>r</varname>, <varname>g</varname>, <varname>b</varname> values
-	   to describe a color; when used in a pixmap, it is part of a palette of <type>gfx_pixmap_color_t</type>s where the entry at index <varname>i</varname>
-	   describes the color of the respective color index <varname>i</varname> inside the pixmap.
+	   This structure describes a single color in a pixmap. It consists of 8 bit <literal>r</literal>, <literal>g</literal>, <literal>b</literal> values
+	   to describe a color; when used in a pixmap, it is part of a palette of <type>gfx_pixmap_color_t</type>s where the entry at index <literal>i</literal>
+	   describes the color of the respective color index <literal>i</literal> inside the pixmap.
 	 </para>
 	 <para>
-	   In palette mode, the <varname>global_index</varname> entry is used to store the color index entry of the global palette that
+	   In palette mode, the <literal>global_index</literal> entry is used to store the color index entry of the global palette that
 	   correlates with the pixmap index (or <literal>GFX_COLOR_INDEX_UNMAPPED</literal> if this value has not been determined yet).
 	 </para>
        <sect3><title>gfx_color_t</title>
          <para>
 	   <type>gfx_color_t</type> structures contain color information for all three color maps.
-	   They consist of a <type>gfx_pixmap_color_t</type> structure, <varname>visual</varname>, which describes the effects of the
-	   color on the visual map, an <varname>alpha</varname> entry to describe the color's transparency (0 means 'opaque', 255 means
+	   They consist of a <type>gfx_pixmap_color_t</type> structure, <literal>visual</literal>, which describes the effects of the
+	   color on the visual map, an <literal>alpha</literal> entry to describe the color's transparency (0 means 'opaque', 255 means
 	     'totally transparent', although graphics drivers may choose to slighly alter those meanings for performance considerations),
-	     <varname>priority</varname> and <varname>control</varname> values for the respective maps, and a <varname>mask</varname>
+	     <literal>priority</literal> and <literal>control</literal> values for the respective maps, and a <literal>mask</literal>
 	     to determine the maps affected.
 	 </para>
 	 <para>
@@ -8525,9 +8623,9 @@ the maps using the cast list created by Animate, whereas the ShowBits call
 	   value of each pixel can be stored in 8, 16, 24, or 32 bits. Color index mode is supported, but non-indexed mode has additional
 	   requirements: Each color aspect of red, green, and blue must be represented by a consecutive sub-vector 
 	   &lt;v<subscript>c</subscript>, v<subscript>c+1</subscript>, ... ,v<subscript>c+n-1</subscript>&gt; of the total color vector
-	   &lt;v<subscript>0</subscript>, v<subscript>1</subscript>, ... ,v<subscript>b-1</subscript>&gt;, where <varname>n</varname> and
-	   <varname>c</varname> are non-negative integers, and c+n &le; b holds. With v<subscript>b</subscript> being the most significant
-	     bit of the total bit vector, we also require that for each <varname>m</varname> where 0 &lt; m &lt; n the bit v<subscript>c+m</subscript>
+	   &lt;v<subscript>0</subscript>, v<subscript>1</subscript>, ... ,v<subscript>b-1</subscript>&gt;, where <literal>n</literal> and
+	   <literal>c</literal> are non-negative integers, and c+n &le; b holds. With v<subscript>b</subscript> being the most significant
+	     bit of the total bit vector, we also require that for each <literal>m</literal> where 0 &lt; m &lt; n the bit v<subscript>c+m</subscript>
 	     should, if set, increase brightness about twice as much as setting v<subscript>c+m-1</subscript> would. This allows us to
 	     represent each color aspect by means of an AND bitmask and an integer shift value.
 	 </para>
@@ -8541,44 +8639,44 @@ the maps using the cast list created by Animate, whereas the ShowBits call
          <para>
 	   The <type>gfx_pixmap_t</type> structure is another fundamental element of the graphics subsystem. It describes a single
 	   pixmap, such as a background picture, a cel, a mouse pointer, or a single line of text. It contains up to two references to
-	   the graphical data it describes: One unscaled block of color-indexed data (<varname>index_data</varname>, and another block
-	   scaled and in the graphics driver's native format (<varname>data</varname>).
+	   the graphical data it describes: One unscaled block of color-indexed data (<literal>index_data</literal>, and another block
+	   scaled and in the graphics driver's native format (<literal>data</literal>).
 	 </para>
 	 <para>
-	   Each pixmap contains a local palette of <varname>colors_nr</varname> <type>gfx_pixmap_color_t</type> entries,
-	   called <varname>colors</varname>. This palette is allocated dynamically and may be NULL if no <varname>index_data</varname> block
+	   Each pixmap contains a local palette of <literal>colors_nr</literal> <type>gfx_pixmap_color_t</type> entries,
+	   called <literal>colors</literal>. This palette is allocated dynamically and may be NULL if no <literal>index_data</literal> block
 	   is present.
 	 </para>
 	 <para>
-	   Also, a tuple (<varname>xoffset</varname>, <varname>yoffset</varname>) describes the pixmap's 'hot spot'. This is a relative offset
+	   Also, a tuple (<literal>xoffset</literal>, <literal>yoffset</literal>) describes the pixmap's 'hot spot'. This is a relative offset
 	   into the unscaled data; it is used to describe the point which drawing operations will refer to. This means that pixmap
-	   draw operations on this pixmap will cause it to be drawn <varname>xoffset</varname> pixels (unscaled) to the left of the coordinate
+	   draw operations on this pixmap will cause it to be drawn <literal>xoffset</literal> pixels (unscaled) to the left of the coordinate
 	   specified.
 	 </para>
 	 <para>
-	   Next comes the unscaled pixmap data, called <varname>index_data</varname>, which occupies a size of <varname>index_xl</varname> *
-	   <varname>index_yl</varname> bytes. Each byte is either a reference into the palette, or <literal>GFX_COLOR_INDEX_TRANSPARENT</literal> (0xff),
+	   Next comes the unscaled pixmap data, called <literal>index_data</literal>, which occupies a size of <literal>index_xl</literal> *
+	   <literal>index_yl</literal> bytes. Each byte is either a reference into the palette, or <literal>GFX_COLOR_INDEX_TRANSPARENT</literal> (0xff),
 	     which means that it describes a transparent pixel, unless 256 colors are indeed present in the palette<footnote>
 	     <para>This may cause a problem for SCI1 support, which explicitly allows for 256 separate colors to be used alongside with transparency.
-	       Possible solutions include a separate transparency bitmap or increasing the number of bits per <varname>index_data</varname>
+	       Possible solutions include a separate transparency bitmap or increasing the number of bits per <literal>index_data</literal>
 	       entry to 16bpp.</para></footnote>
 	 </para>
 	 <para>
-	   The pointer <varname>data</varname>, unless NULL, points to a block of data allocated to contain the translated graphical data
-	   in the graphics driver's native format. The number of bytes per pixel equals the <varname>bytespp</varname> property of the
+	   The pointer <literal>data</literal>, unless NULL, points to a block of data allocated to contain the translated graphical data
+	   in the graphics driver's native format. The number of bytes per pixel equals the <literal>bytespp</literal> property of the
 	   <type>gfx_mode_t</type> structure it was allocated for, whereas its horizontal and vertical extensions are stored in the
-	   <varname>xl</varname> and <varname>yl</varname> properties. Unless the graphics mode indicated that it supports an alpha
-	     channel itself, a separate <varname>alpha_map</varname> is also provided, at 8bpp.
+	   <literal>xl</literal> and <literal>yl</literal> properties. Unless the graphics mode indicated that it supports an alpha
+	     channel itself, a separate <literal>alpha_map</literal> is also provided, at 8bpp.
 	 </para>
 	 <para>
-	   Each pixmap also comes with a <varname>pixmap_internal</varname> block, which may be used by graphics drivers to store
+	   Each pixmap also comes with a <literal>pixmap_internal</literal> block, which may be used by graphics drivers to store
 	   internal information (like pixmap repository handles).
 	 </para>
 	 <para>
-	   Finally, each pixmap comes with a set of <varname>flags</varname> with the following meanings:
+	   Finally, each pixmap comes with a set of <literal>flags</literal> with the following meanings:
 	   <itemizedlist>
 	     <listitem><para><literal>GFX_PIXMAP_FLAG_SCALED_INDEX</literal>: The pixmaps index data is already scaled; any algorithm for calculating
-	       <varname>data</varname> (and, possibly, <varname>alpha_map</varname>) therefore must not scale it again.</para></listitem>
+	       <literal>data</literal> (and, possibly, <literal>alpha_map</literal>) therefore must not scale it again.</para></listitem>
 	     <listitem><para><literal>GFX_PIXMAP_FLAG_EXTERNAL_PALETTE</literal>: The palette supplied with the pixmap is stored externally, meaning
 	       that it must not be freed when the pixmap itself is freed</para></listitem>
 	     <listitem><para><literal>GFX_PIXMAP_FLAG_INSTALLED</literal>: The pixmap has been installed in the pixmap repository (used by the
@@ -8600,8 +8698,8 @@ the maps using the cast list created by Animate, whereas the ShowBits call
          <para>
 	   These structures provide a bitmap lookup table intended for up to 256 entries. In practice, they are used to store
 	   font data. There is little surprising about this structure, with the possible exception of the difference between the
-	   <varname>height</varname> and <varname>line_height</varname> variables: <varname>height</varname> describes the actual
-	     character size, whereas <varname>line_height</varname> only describes how many pixels the text rendering functions
+	   <literal>height</literal> and <literal>line_height</literal> variables: <literal>height</literal> describes the actual
+	     character size, whereas <literal>line_height</literal> only describes how many pixels the text rendering functions
 	     should leave in between text lines.
 	 </para>
        </sect2>
@@ -8611,7 +8709,7 @@ the maps using the cast list created by Animate, whereas the ShowBits call
 	 such as the X Window System. In order to work correctly, it needs to implement the interface outlined
 	 in <filename>src/include/gfx_driver.h</filename> and list itself in <filename>src/include/gfx_drivers.h</filename>.
 	 Drivers have some freedom in determining which features they want to provide and which they want to have
-	 emulated. These features are determined by flags contained in its variable <varname>capabilities</varname>.
+	 emulated. These features are determined by flags contained in its variable <literal>capabilities</literal>.
        </para>
        <para>
 	 Graphics drivers must provide at least five buffers: Both priority buffers, and the three visual buffers.
@@ -8632,12 +8730,13 @@ the maps using the cast list created by Animate, whereas the ShowBits call
 	 if and only if a fatal and unrecoverable error occured, such as the target display being closed by external means. 
        </para>
        <para>
-	 Functions that receive color parameters must respect those parameters' mask values for <literal>GFX_MAP_MASK
+	 Functions that receive color parameters must respect those parameters' mask values for <literal>GFX_MAP_MASK</literal>.
+       </para>
        <sect3>
 	 <title>I/O and debug functionality</title>
 	 <para>
 	   For basic input and output, the <function>GFXDEBUG()</function>, <function>GFXWARN()</function> and <function>GFXERROR()</function> macros defined in
-	   <filename>src/include/gfx_system.h</filename> can be used. Also, there is another variable, <varname>debug_flags</varname>
+	   <filename>src/include/gfx_system.h</filename> can be used. Also, there is another variable, <literal>debug_flags</literal>
 	   defined for drivers; while it cannot be changed during runtime (yet), it may be used in combination with the
 	   various GFX_DEBUG_ constants to selectively enable and disable debugging for certain parts of the driver
 	   during development.
@@ -8662,12 +8761,12 @@ the maps using the cast list created by Animate, whereas the ShowBits call
 	   <para>Documentation of this function's options is up to the graphics driver's maintainer.</para>
 	 <sect4><title>init_specific(xscale, yscale, bytespp)</title>
 	   <para>
-	     Initializes a graphics driver to a pre-determined mode, where <varname>xscale</varname> and <varname>yscale</varname>
-	     are the requested horizontal and vertical scaling factors (integers > 0), and <varname>bytespp</varname> is the number of bytes per
+	     Initializes a graphics driver to a pre-determined mode, where <literal>xscale</literal> and <literal>yscale</literal>
+	     are the requested horizontal and vertical scaling factors (integers > 0), and <literal>bytespp</literal> is the number of bytes per
 	     pixel on the target display.
 	   </para>
 	   <para>
-	     The function may set a higher resolution, provided that no matching resolution is available. The <varname>mode</varname> structure
+	     The function may set a higher resolution, provided that no matching resolution is available. The <literal>mode</literal> structure
 	     (stored locally to the driver structure) must be set by this function if it succeeds; for this, the function
 	     <function>gfx_new_mode()</function>, defined in <filename>src/include/gfx_tools.h</filename>, may be used.
 	   </para>
@@ -8701,8 +8800,8 @@ the maps using the cast list created by Animate, whereas the ShowBits call
 	 </para>
 	 <sect4><title>draw_line(line, color, line_mode, line_style)</title>
 	   <para>
-	     Draws a single line. The <varname>line</varname> parameter describes the starting point and a relative coordinates
-	     of the line to draw in the specified <varname>color</varname>, whereas <varname>line_mode</varname> specifies the
+	     Draws a single line. The <literal>line</literal> parameter describes the starting point and a relative coordinates
+	     of the line to draw in the specified <literal>color</literal>, whereas <literal>line_mode</literal> specifies the
 	     line mode to use. This value may be <literal>GFX_LINE_MODE_FAST</literal>, which means that the line's thickness
 	     is roughly about the average of the horizontal and vertical scaling factors. The other two values need not be
 	     supported (they should fall back to <literal>GFX_LINE_MODE_FAST</literal> if they're used'):
@@ -8713,14 +8812,17 @@ the maps using the cast list created by Animate, whereas the ShowBits call
 	     </simplelist>
 	   </para>
 	   <para>
-	     The other parameter, <varname>line_style</varname>, may be either of <varname>GFX_LINE_STYLE_NORMAL</varname> or
-	     <varname>GFX_LINE_STYLE_STIPPLED</varname>, although the latter is used iff the capability flag <literal>GFX_CAPABILITY_STIPPLED_LINES</literal>
+	     The other parameter, <literal>line_style</literal>, may be either of <literal>GFX_LINE_STYLE_NORMAL</literal> or
+	     <literal>GFX_LINE_STYLE_STIPPLED</literal>, although the latter is used iff the capability flag <literal>GFX_CAPABILITY_STIPPLED_LINES</literal>
 	     is set.
 	   </para>
 	   <para>
 	     This function must return GFX_OK or GFX_FATAL.
 	   </para>
 	 <sect4><title>draw_filled_rect(rect, color1, color2, shade_mode)</title>
+	   <para>
+	   </para>
+	 </sect4>
        </sect3>
        <sect3>
 	<title>Pixmap operations</title>

@@ -430,8 +430,8 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_options.workarounds = 0;
 	conf->gfx_options.buffer_pics_nr = 0;
 	conf->gfx_options.correct_rendering = 1;
-	conf->gfx_options.pic0_unscaled = 0;
-	conf->gfx_options.pic0_dither_mode = GFXR_DITHER_MODE_D16;
+	conf->gfx_options.pic0_unscaled = 1;
+	conf->gfx_options.pic0_dither_mode = GFXR_DITHER_MODE_D256;
 	conf->gfx_options.pic0_dither_pattern = GFXR_DITHER_PATTERN_SCALED;
 	conf->gfx_options.pic0_brush_mode = GFX_BRUSH_MODE_RANDOM_ELLIPSES;
 	conf->gfx_options.pic0_line_mode = GFX_LINE_MODE_CORRECT;
@@ -452,8 +452,8 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->version = 0;
 
 	conf->alpha_threshold = 0x81;
-	conf->animation_delay = 500;
-	conf->animation_granularity = 1;
+	conf->animation_delay = 5;
+	conf->animation_granularity = 4;
 	conf->console_log = NULL;
 	conf->debug_mode [0] = '\0';
 	conf->name = NULL;

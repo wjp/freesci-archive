@@ -147,6 +147,9 @@ Currently, the configuration file may contain:
   sciv startup, and is also used to create the save game directory).
   You can use this to provide game-specific configuration options.
 
+- console_log: Specifies a console log file which keeps track of all output
+  print with the function sciprintf().
+
 - version = x.yyy.zzz: emulate SCI version x.yyy.zzz. The version number
   is sometimes printed on game discs, or can be found out by
   grepping your main executable for "0.000." (for SCI0 games). It is
@@ -184,7 +187,7 @@ Currently, the configuration file may contain:
 
 - pic0_scaled = yes | no
   Whether SCI0 background pics should be scaled (may look better) or not
-  (faster, looks more like the original games)
+  (faster, looks more like the original games). By default, they are not scaled.
 
 - pic_buffer_size = #
   Number of background pics to store in an LRU buffer. Increasing this value
@@ -232,12 +235,12 @@ Currently, the configuration file may contain:
     (1/8  1/4  1/8)
     (1/16 1/8 1/16)
 
-- animation_delay: A speed factor for transition animations. Default is 500.
+- animation_delay: A speed factor for transition animations. Default is 5.
   Set to 0 to disable transition animations.
 
 - animation_granularity: If transition animations are too slow on your system,
   this option can be used to draw several steps of a transition animation
-  before updating the screen, resulting in a faster animation. The default is 1,
+  before updating the screen, resulting in a faster animation. The default is 4,
   which causes transition behaviour identical to FreeSCI 0.3.1.
 
 - alpha_threshold: A value between 0 and 255 (defaults to 129) used by the
@@ -246,10 +249,7 @@ Currently, the configuration file may contain:
   resource type.
   Smaller values will cause fewer parts of the picture to be displayed,
   which may result e.g. in text being unreadable, while larger values may
-  cause too many pixels to be drawn, resulting in bulky images. Most of
-  the "critical" pixels are around the area of 128; it is recommended that
-  you use 129 when running with even scaling factors, and 128 for odd
-  factors.
+  cause too many pixels to be drawn, resulting in bulky images.
   This does not have any effect when running unscaled.
 
 - midi_device:  The equivalent of what sound driver you select in a SCI

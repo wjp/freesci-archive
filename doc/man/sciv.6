@@ -125,16 +125,39 @@ game will create another directory inside the \fI.freesci\fR directory, to
 store its save games in.
 .P
 Also, if a file called \fIconfig\fR exists in this directory, it will be read
-and parsed by the interpreter after the game has been loaded. At this
-time, the configuration file may contain:
+and parsed by the interpreter after the game has been loaded. This configuration
+file can be divided into a global section and various game-specific sections.
+Within the config file, comments must be preceeded by a hash '#' sign.
+.P
+Game-specific sections are marked by a text string like \fB[GAME_ID]\fR, where
+\fIGAME_ID\fR is an ID to use for the game. If the section also contains a
+\fBresource_dir\fR entry, the ID may be passed to \fIsciv\fR as a parameter to
+start the game by its name.
+.P
+The config file section before the first game-specific section is the global
+configuration section; anything specified here will be used as the setting for
+any game that does not explicitly request different settings.
+.P
+Here is a complete listing of all options supported:
 .IP \-
-Comments preceeded by a hash '#' sign
+\fBresource_dir\fR: Read the game's resource data from the specified 
+location. Must not be used in the generic part of the config file.
 .IP \-
 \fBversion = x.yyy.zzz\fR: emulate SCI version \fBx.yyy.zzz\fR. The version 
 number is sometimes printed on game discs, or can be found out by
 grepping your main executable for "0.000." (for SCI0 games). It is
 also displayed if the built-in debugger is activated in the Sierra SCI
 engine.
+.IP \-
+\fBconsole_log\fR: Sets a logging file for FreeSCI's console output (by default,
+this is disabled)
+.IP \-
+\fBmouse = yes \fR|\fB no\fR:
+Specifies whether the interpreter should report to the game that it has a mouse.
+
+.TP
+Graphics options:
+
 .IP \-
 \fBpic0_dither_mode = dither \fR|\fB flat \fR|\fB dither256\fR: (only one of 
 those three modes).
@@ -155,7 +178,7 @@ Affects how semi-random brushes (used mostly for dirt and foilage) are drawn in 
 \fBrandom-ellipses\fR: As ellipses, but slightly shift ellipse offset and size
 \fBmore-random\fR: Add more random pixels to the whole area
 .IP \-
-\fBpic0_line_mode = correct \fR|\fB fine\fR |\fB hald\fR: Specify how lines are drawn when background
+\fBpic0_line_mode = correct \fR|\fB fine\fR |\fB half\fR: Specify how lines are drawn when background
 pictures are rendered in SCI0:
 \fBcorrect\fR: Draw lines appropriately scaled
 \fBfine\fR: Don't scale lines (thin lines, may cause problems) 
@@ -170,30 +193,160 @@ systems.
 .IP \-
 \fBpic0_scaled = yes \fR|\fB no\fR:
 Whether SCI0 background pics should be scaled (may look better) or not
-(faster, looks more like the original games)
+(faster, looks more like the original games). By default, it is disabled.
 .IP \-
 \fBpic_buffer_size = #\fR:
 Number of background pics to store in an LRU buffer. Increasing this value
 will increase the amount of memory used, but may considerably speed up
 changing back to rooms you visited not too long ago.
 .IP \-
-\fBmouse = yes \fR|\fB no\fR:
-Specifies whether the interpreter should report to the game that it has a mouse.
-.IP \-
-\fB[GAME_ID]\fR: Commands following this line will only have an effect for
-the game with the specified game ID. (The game ID is printed during
-sciv startup, and is also used to create the save game directory).
-.IP \-
-\fBresource_dir\fR: Read the game's resource data from the specified 
-location. Must not be used in the generic part of the config file.
-.IP \-
 \fBview_filter = none \fR|\fB linear \fR|\fB trilinear \fR:
 Specifies the way views (non-background images) are scaled
 (this obviously does not affect unscaled images):
-\fnone\fR: No filtering is performed
+\fnone\fR: No filtering is performed (default)
 \flinear\fR: A simple linear filter is applied
 \ftrilinear\fR: Views are passed through a trilinear filter
+.IP \-
+\fBpic_filter\fR: Specifies scaling for background images; see \fBview_filter\fR
+for a list of possible options.
+.IP \-
+\fBcursor_filter\fR: Specifies scaling for mouse pointers; see \fBview_filter\fR
+for a list of possible options. This option does not apply to graphics drivers
+which handle the mouse pointer explicitly (currently, only the GGI driver is
+affected).
+.IP \-
+\fBtext_filter\fR: Specifies scaling for text; see \fBview_filter\fR
+for a list of possible options.
+.IP \-
+\fBpic_antialiasing = none \fR|\fB simple\fR: If activated, this option
+will do an extra pass over background images to anti-aliase them, usually
+improving the overall picture quality. This is set to 'none' by default.
+.IP \-
+\fBanimation_delay\fR: This chooses the amount of microseconds to wait between
+each sub-element of a transition animation (also see the next option). Setting
+this to zero will disable transition animations completely.
+The default is 5.
+.IP \-
+\fBanimation_granularity\fR: This sets the amount of steps to execute
+simultaneously for each transition animation. If transition animations seem
+too slow on your system but you don't want to disable them completely, you
+might want to try increasing this value.
+The default is 4.
+.IP \-
+\fBalpha_threshold\fR: When using filtered images (specifically views, text,
+and cursors where used by the graphics driver), this value is used to determine
+when a part of the image should be drawn and when it should be omitted. The
+definition space of this value is 0 to 255, where larger values cause more to
+be drawn.
+This value does not affect unfiltered images or images drawn with alpha blending.
+Default is 129.
 
+.TP
+Sound options:
+
+.IP \-
+\fBmidi_device\fR: Chooses the default MIDI device; this can be either "mt32" for
+plain MT-32 output, or "mt32gm" to use FreeSCI's MT32 -> General MIDI mapping
+algorithm.
+This defaults to mt32gm.
+.IP \-
+\fBmidiout_driver\fR: Selects the output device to use. Available options are
+"alsaraw" (using ALSA's raw MIDI output devices), "unixraw" (using /dev/midi-style
+raw MIDI output devices), "ossseq" (for OSS sequencer devices) and "win32mci"
+on Win32 systems.
+The default on UNIXish systems is ossseq.
+.IP \-
+\fBsound_server\fR: This chooses one of the asynchronous sound servers. For sound
+output, FreeSCI uses an asynchronous process or thread; currently two implementations
+of this mechanism are available: "unix", which forks off a separate process, and
+"sdl", which uses libsdl's threading mechanisms.
+Defaults to 'unix', where available.
+
+.TP
+Driver-specific options (graphics drivers):
+
+.IP \-
+\fBgfx.xlib.disable_shmem\fR: Can be used to disable support for MIT Shm support
+on the X11 Windowing System in cases where detection fails.
+This is off by default, enabling SHM support.
+.IP \-
+\fBgfx.sdl.swap_caps_ctrl\fR: This option instructs the SDL driver to swap
+caps lock and ctrl when reading input.
+Disabled by default.
+.IP \-
+\fBgfx.sdl.fillscreen\fR:
+Toggles the SDL graphics driver's fullscreen option.
+
+.TP
+Driver-specific options (sound drivers):
+
+.IP \-
+\fBmidiout.alsaraw.card\fR: This specifies the ALSA card to use for raw MIDI
+output; the default is 0.
+.IP \-
+\fBmidiout.alsaraw.device\fR: Specifies the ALSA device, relative to the card,
+for raw MIDI output. It also defaults to 0.
+.IP \-
+\fBmidiout.unixraw.device\fR: Sets the device file to use for raw UNIX MIDI output.
+This defaults to "/dev/midi".
+.IP \-
+\fBmidiout.ossseq.device\fR: Selects the OSS sequencer device number; this defaults
+to 1.
+.IP \-
+\fBmidiout.ossseq.recorder\fR: Chooses a file the OSS sequencer should print debug
+output to. This is not particularly helpful for everyday use, and disabled by
+default.
+
+
+.SH EXAMPLES
+Here is an exemplary configuartion file:
+.PP
+.ne 3
+.nf
+.RS
+# FreeSCI configuration file
+# For FreeSCI version 0.3.2
+
+# default values:
+
+console_log = /home/user/.freesci/log
+pic_buffer_size = 4
+pic0_brush_mode = more-random
+pic_antialiasing = simple
+pic0_dither_mode = dither256
+pic0_scaled = yes
+pic0_line_mode = normal
+pic0_dither_pattern = scaled
+text_filter = trilinear
+cursor_filter = trilinear
+pic_filter = trilinear
+view_filter = trilinear
+midi_device = mt32
+midiout_driver = alsaraw
+alpha_threshold = 140
+sound_server = unix
+
+gfx_driver=ggi
+animation_delay = 1
+animation_granularity=4
+gfx.ggi.swap_caps_ctrl=yes
+gfx.xlib.swap_caps_ctrl=yes
+gfx.sdl.swap_caps_ctrl=yes
+midiout.alsaraw.device=0
+midiout.unixraw.device=/dev/midi
+midiout.ossseq.device=1
+midiout.ossseq.recorder=/tmp/recorder
+[LSL3]
+
+resource_dir = /usr/share/freesci/lsl3
+
+[KQ4]
+
+resource_dir = /usr/share/freesci/kq4
+version = 0.000.502
+.RE
+.fi
+.PP
 
 .SH SUPPORTED GAMES
 .P

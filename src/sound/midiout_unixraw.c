@@ -32,7 +32,7 @@
 #endif
 
 static int fd;
-static char *devicename = "/dev/midi00";
+static char *devicename = "/dev/midi";
 
 static int unixraw_lastwrote = 0;
 
