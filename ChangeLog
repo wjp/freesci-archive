@@ -1,3 +1,9 @@
+2004-04-15  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/Makefile.am: Updated Dreamcast EXTRA_DIST list.
+
+	* src/engine/savegame.cfsml: Close heap file after writing.
+
 2004-04-08  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sound/fmopl.c: Declare inline functions the way we did

@@ -1095,6 +1095,8 @@ gamestate_save(state_t *s, char *dirname)
 		return 1;
 	}
 
+	close(fd);
+
 	fh = fopen("state", "w" FO_TEXT);
 
 	/* Calculate the time spent with this game */
