@@ -749,7 +749,7 @@ main(int argc, char** argv)
 	freeResources();
 
 	if (conf_entries >= 0)
-		confifree(&conf, conf_entries);
+		config_free(&conf, conf_entries);
 
 	if (console_logfile)
 		fclose (console_logfile);

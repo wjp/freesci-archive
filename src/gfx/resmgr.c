@@ -225,7 +225,7 @@ gfxr_free_tagged_resources(gfx_driver_t *driver, gfx_resstate_t *state)
 		if (res->unscaled_data.pic \
                     && (force || !res->unscaled_data.pic->entry->data)) \
 			        gfx_xlate_pixmap(res->unscaled_data.pic->entry, mode, filter); \
-		if (res->scaled_data.pic \
+		if (scaled && res->scaled_data.pic \
                     && (force || !res->scaled_data.pic->entry->data)) \
 			        gfx_xlate_pixmap(res->scaled_data.pic->entry, mode, filter); \
 	}
@@ -249,8 +249,8 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 	sbtree_t *tree = state->resource_trees[restype];
 	gfx_resource_t *res;
 	int hash = gfxr_interpreter_options_hash(restype, state->version, state->options);
-	int need_unscaled = !(state->options->pic0_unscaled)
-		&& (state->driver->mode->xfact != 1 || state->driver->mode->yfact != 1);
+	int need_unscaled = 
+		(state->driver->mode->xfact != 1 || state->driver->mode->yfact != 1);
 
 	if (!tree)
 		return NULL;

@@ -1674,6 +1674,7 @@ static int
 _gfxop_set_pic(gfx_state_t *state)
 {
 	gfx_pixmap_t *pxm = NULL;
+	byte unscaled = (state->options->pic0_unscaled);
 
 	gfx_copy_pixmap_box_i(state->control_map, state->pic->control_map, gfx_rect(0, 0, 320, 200));
 	state->control_map->colors_nr = state->pic->control_map->colors_nr;
@@ -1682,7 +1683,7 @@ _gfxop_set_pic(gfx_state_t *state)
 	switch (state->visible_map) {
 
 	case GFX_MASK_VISUAL:
-		pxm = state->pic->visual_map;
+		pxm = unscaled? state->pic_unscaled->visual_map : state->pic->visual_map;
 		break;
 
 	case GFX_MASK_PRIORITY:
@@ -1712,6 +1713,7 @@ gfxop_new_pic(gfx_state_t *state, int nr, int flags, int default_palette)
 	state->tag_mode = 1;
 
 	state->pic = gfxr_get_pic(state->resstate, nr, state->visible_map, flags, default_palette, 1);
+
 	if (state->driver->mode->xfact == 1 && state->driver->mode->yfact == 1)
 		state->pic_unscaled = state->pic;
 	else
@@ -1748,7 +1750,7 @@ gfxop_add_to_pic(gfx_state_t *state, int nr, int flags, int default_palette)
 	}
 
 	if (!gfxr_add_to_pic(state->resstate, state->pic_nr, nr,
-			     state->visible_map, flags, default_palette, 0)) {
+			     state->visible_map, flags, default_palette, 1)) {
 		GFXERROR("Could not add pic #%d to pic #%d!\n", state->pic_nr, nr);
 		return GFX_ERROR;
 	}

@@ -105,9 +105,11 @@ gfxr_init_pic(gfx_mode_t *mode, int ID)
 	pic->visual_map->colors = gfx_sci0_pic_colors;
 	pic->visual_map->colors_nr = GFX_SCI0_PIC_COLORS_NR;
 
-	pic->visual_map->flags = GFX_PIXMAP_FLAG_EXTERNAL_PALETTE | GFX_PIXMAP_FLAG_SCALED_INDEX;
 	pic->priority_map->flags = GFX_PIXMAP_FLAG_EXTERNAL_PALETTE | GFX_PIXMAP_FLAG_SCALED_INDEX;
 	pic->control_map->flags = GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
+	pic->visual_map->flags = GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
+	if (mode->xfact > 1 || mode->yfact > 1)
+		pic->visual_map->flags |= GFX_PIXMAP_FLAG_SCALED_INDEX;
 
 	pic->priority_map->colors = gfx_sci0_image_colors;
 	pic->priority_map->colors_nr = GFX_SCI0_IMAGE_COLORS_NR;
@@ -2135,6 +2137,11 @@ gfxr_dither_pic0(gfxr_pic_t *pic, int dmode, int pattern)
 	if (dmode == GFXR_DITHER_MODE_F256)
 		return; /* Nothing to do */
 
+	if (dmode == GFXR_DITHER_MODE_D16) { /* Limit to 16 colors */
+		pic->visual_map->colors = gfx_sci0_image_colors;
+		pic->visual_map->colors_nr = GFX_SCI0_IMAGE_COLORS_NR;
+	}
+
 	for (y = 0; y < yl; y++) {
 		for (x = 0; x < xl; x++) {
 
@@ -2142,9 +2149,9 @@ gfxr_dither_pic0(gfxr_pic_t *pic, int dmode, int pattern)
 
 			case GFXR_DITHER_MODE_D16:
 				if (selection)
-					*data = (*data & 0xf) | ((*data & 0xf) << 4);
+					*data = (*data & 0xf);
 				else
-					*data = (*data & 0xf0) | ((*data & 0xf0) >> 4);
+					*data = (*data & 0xf0) >> 4;
 				break;
 
 			case GFXR_DITHER_MODE_D256:
@@ -2169,7 +2176,6 @@ gfxr_dither_pic0(gfxr_pic_t *pic, int dmode, int pattern)
 			selection = !selection;
 			yfrobc = 0;
 		}
-	
-}
+	}
 }
 

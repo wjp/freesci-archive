@@ -332,7 +332,7 @@ song_sleep_time(GTimeVal *lastslept, int ticks)
   long timetosleep = ticks * SOUND_TICK; /* Time to sleep in us */
   long timeslept; /* Time already slept */
 
-  g_get_current_time(&tv);
+  sci_get_current_time(&tv);
   timeslept = 1000000 * (tv.tv_sec - lastslept->tv_sec) +
     tv.tv_usec - lastslept->tv_usec;
 

@@ -495,7 +495,7 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			s->acc = loc_time->tm_sec + loc_time->tm_min * 60 + (loc_time->tm_hour % 12) * 3600;
 			SCIkdebug(SCIkTIME, "GetTime(timeofday) returns %d\n", s->acc);
 		} else { /* Get time since game started */
-			g_get_current_time (&time_prec);
+			sci_get_current_time (&time_prec);
 			s-> acc = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
 				(time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
 			SCIkdebug(SCIkTIME, "GetTime(elapsed) returns %d\n", s->acc);
@@ -505,7 +505,7 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 						   mode 0 and the others. We assume that this is safe, though */
 		switch (mode) {
 		case _K_NEW_GETTIME_TICKS : {
-			g_get_current_time (&time_prec);
+			sci_get_current_time (&time_prec);
 			s-> acc = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
 				(time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
 			SCIkdebug(SCIkTIME, "GetTime(elapsed) returns %d\n", s->acc);

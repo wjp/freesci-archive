@@ -3,7 +3,7 @@
 
 /* Define if your processor stores words with the most significant
    byte first (like Motorola and SPARC, unlike Intel and VAX).  */
-#define WORDS_BIGENDIAN 1
+/* #undef WORDS_BIGENDIAN */
 
 /* Define if lex declares yytext as a char * by default, not a char[].  */
 #define YYTEXT_POINTER 1
@@ -11,15 +11,15 @@
 #define PACKAGE "freesci"
 #define VERSION "0.3.0.devel"
 #define HAVE_LIBGGI 1
-/* #undef HAVE_LIBPNG */
-/* #undef HAVE_CURSES */
-/* #undef HAVE_GLX */
+#define HAVE_LIBPNG 1
+#define HAVE_CURSES 1
+#define HAVE_GLX 1
 
 /* The number of bytes in a int.  */
 #define SIZEOF_INT 4
 
 /* The number of bytes in a long.  */
-#define SIZEOF_LONG 4
+#define SIZEOF_LONG 8
 
 /* The number of bytes in a short.  */
 #define SIZEOF_SHORT 2
@@ -31,19 +31,19 @@
 #define HAVE_FORK 1
 
 /* Define if you have the getopt_long function.  */
-/* #undef HAVE_GETOPT_LONG */
+#define HAVE_GETOPT_LONG 1
 
 /* Define if you have the memfrob function.  */
-/* #undef HAVE_MEMFROB */
+#define HAVE_MEMFROB 1
 
 /* Define if you have the pipe function.  */
 #define HAVE_PIPE 1
 
 /* Define if you have the sched_yield function.  */
-/* #undef HAVE_SCHED_YIELD */
+#define HAVE_SCHED_YIELD 1
 
 /* Define if you have the socketpair function.  */
-/* #undef HAVE_SOCKETPAIR */
+#define HAVE_SOCKETPAIR 1
 
 /* Define if you have the <dirent.h> header file.  */
 #define HAVE_DIRENT_H 1
@@ -52,7 +52,7 @@
 #define HAVE_FNMATCH_H 1
 
 /* Define if you have the <getopt.h> header file.  */
-/* #undef HAVE_GETOPT_H */
+#define HAVE_GETOPT_H 1
 
 /* Define if you have the <limits.h> header file.  */
 #define HAVE_LIMITS_H 1
@@ -61,13 +61,13 @@
 #define HAVE_OBSTACK_H 1
 
 /* Define if you have the <readline/history.h> header file.  */
-/* #undef HAVE_READLINE_HISTORY_H */
+#define HAVE_READLINE_HISTORY_H 1
 
 /* Define if you have the <readline/readline.h> header file.  */
 #define HAVE_READLINE_READLINE_H 1
 
 /* Define if you have the <sys/soundcard.h> header file.  */
-/* #undef HAVE_SYS_SOUNDCARD_H */
+#define HAVE_SYS_SOUNDCARD_H 1
 
 /* Define if you have the <sys/time.h> header file.  */
 #define HAVE_SYS_TIME_H 1

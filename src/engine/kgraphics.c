@@ -493,9 +493,9 @@ kWait(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	GTimeVal time;
 	int SleepTime = PARAM(0);
 
-	g_get_current_time (&time);
+	sci_get_current_time (&time);
 
-	s-> acc = ((time.tv_usec - s->last_wait_time.tv_usec) * 60 / 1000000) +
+	s->acc = ((time.tv_usec - s->last_wait_time.tv_usec) * 60 / 1000000) +
 		(time.tv_sec - s->last_wait_time.tv_sec) * 60;
 
 	memcpy(&(s->last_wait_time), &time, sizeof(GTimeVal));
@@ -2029,7 +2029,9 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	assert_primary_widget_lists(s);
 
-	reparentize_primary_widget_lists(s, s->port);
+	if (GFXWC(s->port) != GFXWC(s->dyn_views->parent) /* If dynviews are on other port... */
+	    || (s->dyn_views->next)) /* ... or not on top of the view list */
+		reparentize_primary_widget_lists(s, s->port);
 
 	if (!cast_list)
 		s->dyn_views->tag(GFXW(s->dyn_views));

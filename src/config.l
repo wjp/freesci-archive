@@ -507,7 +507,7 @@ _parse_name(char *name, name_value_pair *nvps, char *what, int oldval)
 	int i = 0;
 
 	while (nvps[i].name) {
-		if (0 == g_strcasecmp(name, nvps[i].name))
+		if (0 == strcasecmp(name, nvps[i].name))
 			return nvps[i].value;
 
 		i++;

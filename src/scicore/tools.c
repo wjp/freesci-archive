@@ -175,26 +175,26 @@ _SCIkdebug(state_t *s, char *file, int line, int area, char *format, ...)
 void
 _SCIGNUkdebug(char *funcname, state_t *s, char *file, int line, int area, char *format, ...)
 {
-  va_list xargs;
-  int error = ((area == SCIkWARNING_NR) || (area == SCIkERROR_NR));
+	va_list xargs;
+	int error = ((area == SCIkWARNING_NR) || (area == SCIkERROR_NR));
 
-  if (error || (s->debug_mode & (1 << area))) { /* Is debugging enabled for this area? */
+	if (error || (s->debug_mode & (1 << area))) { /* Is debugging enabled for this area? */
 
-    _SCIkprintf(stderr, "FSCI: ");
+		_SCIkprintf(stderr, "FSCI: ");
 
-    if (area == SCIkERROR_NR)
-      _SCIkprintf(stderr, "ERROR in %s ", funcname);
-    else if (area == SCIkWARNING_NR)
-      _SCIkprintf(stderr, "%s: Warning ", funcname);
-    else _SCIkprintf(stderr, funcname);
+		if (area == SCIkERROR_NR)
+			_SCIkprintf(stderr, "ERROR in %s ", funcname);
+		else if (area == SCIkWARNING_NR)
+			_SCIkprintf(stderr, "%s: Warning ", funcname);
+		else _SCIkprintf(stderr, funcname);
 
-    _SCIkprintf(stderr, "(%s L%d): ", file, line);
+		_SCIkprintf(stderr, "(%s L%d): ", file, line);
 
-    va_start(xargs, format);
-    _SCIkvprintf(stderr, format, xargs);
-    va_end(xargs);
+		va_start(xargs, format);
+		_SCIkvprintf(stderr, format, xargs);
+		va_end(xargs);
 
-  }
+	}
 }
 
 
@@ -214,14 +214,23 @@ void sci_gettime(int *seconds, int *useconds)
 
         struct _timeb tv;
 
-     _ftime(&tv);
-     *seconds = time(NULL);
-     *useconds = tv.millitm*1000;
+	_ftime(&tv);
+	*seconds = time(NULL);
+	*useconds = tv.millitm*1000;
 }
 #else
-#  error "You need to provide a microsecond resolution sci_gettime implementation!"
+#  error "You need to provide a microsecond resolution sci_gettime implementation for your platform!"
 #endif
 
+
+void
+sci_get_current_time(GTimeVal *val)
+{
+	int foo, bar;
+	sci_gettime(&foo, &bar);
+	val->tv_sec = foo;
+	val->tv_usec = bar;
+}
 
 
 

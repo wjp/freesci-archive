@@ -454,7 +454,7 @@ game_init(state_t *s)
 	s->global_vars = s->scripttable[0].localvar_offset;
 	/* Global variables are script 0's local variables */
 
-	g_get_current_time(&(s->game_start_time)); /* Get start time */
+	sci_get_current_time(&(s->game_start_time)); /* Get start time */
 	memcpy(&(s->last_wait_time), &(s->game_start_time), sizeof(GTimeVal));
 	/* Use start time as last_wait_time */
 

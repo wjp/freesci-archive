@@ -861,7 +861,7 @@ read_pixmap_color(FILE *fh, gfx_pixmap_color_t *color, char *lastval, int *line,
 {
 	%CFSMLREAD gfx_pixmap_color_t (color) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
 
-        color->visual.index = GFX_COLOR_INDEX_UNMAPPED;
+        color->global_index = GFX_COLOR_INDEX_UNMAPPED;
 
 	if (_global_save_state->gfx_state->driver->mode->palette)
 		if (gfx_alloc_color(_global_save_state->gfx_state->driver->mode->palette, color) < 0)
@@ -1065,7 +1065,7 @@ gamestate_restore(state_t *s, char *dirname)
 	memcpy(&(retval->sound_pipe_debug[0]), &(s->sound_pipe_debug[0]), sizeof(int[2]));
 
 	/* Time state: */
-	g_get_current_time(&(retval->last_wait_time));
+	sci_get_current_time(&(retval->last_wait_time));
 	retval->game_start_time.tv_sec = time(NULL) - retval->game_time;
 	retval->game_start_time.tv_usec = 0;
 

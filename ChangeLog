@@ -1,4 +1,12 @@
-2001-01-11  Christoph Reichenbach <creichen@rbg.informatik.tu-darmstadt.de>
+2001-01-11  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/operations.c (_gfxop_set_pic): Fixed support for
+	pic0_unscaled
+
+	* Removed dependancies on libpng and libglib
+
+	* src/gfx/resource/sci_pic_0.c (gfxr_dither_pic0): Truly limited
+	range of colors to 16 colors if requested
 
 	* src/gfx/widgets.c (_gfxwop_visual_free): Fixed warnings/errors;
 	fixes suggested by Petr Vyhnak

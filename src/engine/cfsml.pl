@@ -116,7 +116,7 @@ _cfsml_mangle_string(char *s)
 {
   char *source = s;
   char c;
-  char *target = (char *) g_malloc(1 + strlen(s) * 2); /* We will probably need less than that */
+  char *target = (char *) malloc(1 + strlen(s) * 2); /* We will probably need less than that */
   char *writer = target;
 
   while ((c = *source++)) {
@@ -131,14 +131,14 @@ _cfsml_mangle_string(char *s)
   }
   *writer = 0; /* Terminate string */
 
-  return (char *) g_realloc(target, strlen(target) + 1);
+  return (char *) realloc(target, strlen(target) + 1);
 }
 
 
 static char *
 _cfsml_unmangle_string(char *s)
 {
-  char *target = (char *) g_malloc(1 + strlen(s));
+  char *target = (char *) malloc(1 + strlen(s));
   char *writer = target;
   char *source = s;
   char c;
@@ -153,7 +153,7 @@ _cfsml_unmangle_string(char *s)
   }
   *writer = 0; /* Terminate string */
 
-  return (char *) g_realloc(target, strlen(target) + 1);
+  return (char *) realloc(target, strlen(target) + 1);
 }
 
 
@@ -164,12 +164,12 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
   int mem = 32;
   int pos = 0;
   int done = 0;
-  char *retval = (char *) g_malloc(mem);
+  char *retval = (char *) malloc(mem);
 
   while (isspace(c = fgetc(fd)) && (c != EOF));
   if (c == EOF) {
     _cfsml_error("Unexpected end of file at line %d\n", *line);
-    g_free(retval);
+    free(retval);
     *hiteof = 1;
     return NULL;
   }
@@ -179,12 +179,12 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
   while (((c = fgetc(fd)) != EOF) && ((pos == 0) || (c != '\n')) && (c != '=')) {
 
      if (pos == mem - 1) /* Need more memory? */
-       retval = (char *) g_realloc(retval, mem *= 2);
+       retval = (char *) realloc(retval, mem *= 2);
 
      if (!isspace(c)) {
         if (done) {
            _cfsml_error("Single word identifier expected at line %d\n", *line);
-           g_free(retval);
+           free(retval);
            return NULL;
         }
         retval[pos++] = c;
@@ -197,7 +197,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
 
   if (c == EOF) {
     _cfsml_error("Unexpected end of file at line %d\n", *line);
-    g_free(retval);
+    free(retval);
     *hiteof = 1;
     return NULL;
   }
@@ -212,12 +212,12 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
 
   if (pos == 0) {
     _cfsml_error("Missing identifier in assignment at line %d\n", *line);
-    g_free(retval);
+    free(retval);
     return NULL;
   }
 
   if (pos == mem - 1) /* Need more memory? */
-     retval = (char *) g_realloc(retval, mem += 1);
+     retval = (char *) realloc(retval, mem += 1);
 
   retval[pos] = 0; /* Terminate string */
 EOF
@@ -238,12 +238,12 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
   char c;
   int mem = 64;
   int pos = 0;
-  char *retval = (char *) g_malloc(mem);
+  char *retval = (char *) malloc(mem);
 
   while (((c = fgetc(fd)) != EOF) && (c != '\n')) {
 
      if (pos == mem - 1) /* Need more memory? */
-       retval = (char *) g_realloc(retval, mem *= 2);
+       retval = (char *) realloc(retval, mem *= 2);
 
      if (pos || (!isspace(c)))
         retval[pos++] = c;
@@ -258,7 +258,7 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
 
   if (pos == 0) {
     _cfsml_error("Missing value in assignment at line %d\n", *line);
-    g_free(retval);
+    free(retval);
     return NULL;
   }
 
@@ -266,7 +266,7 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
      ++(*line);
 
   if (pos == mem - 1) /* Need more memory? */
-    retval = (char *) g_realloc(retval, mem += 1);
+    retval = (char *) realloc(retval, mem += 1);
 
   retval[pos] = 0; /* Terminate string */
 EOF2
@@ -276,7 +276,7 @@ if ($debug) {
 }
 
 print <<'EOF3';
-  return (char *) g_realloc(retval, strlen(retval) + 1);
+  return (char *) realloc(retval, strlen(retval) + 1);
   /* Re-allocate; this value might be used for quite some while (if we are
   ** restoring a string)
   */
@@ -355,7 +355,7 @@ sub create_writer
       print "  else {\n";
       print "    bar = _cfsml_mangle_string((char *) *foo);\n";
       print "    fprintf(fh, \"\\\"%s\\\"\", bar);\n";
-      print "    g_free(bar);\n";
+      print "    free(bar);\n";
       print "  }\n";
     }
     elsif ($types{$type}{'type'} eq $type_record) {
@@ -581,7 +581,7 @@ sub create_reader
 	  print "#line ", __LINE__, " \"cfsml.pl\"\n";
 	  print "         done = i = 0;\n";
 	  print "         do {\n";
-	  print "           g_free(value);\n";
+	  print "           free(value);\n";
 	  if ($type eq $type_record) {
 	    print "           if (!(value = _cfsml_get_value(fh, line, hiteof)))\n";
 	  } else {
@@ -637,7 +637,7 @@ sub create_reader
       print "       }\n";
       print "     }\n";
 
-      print "\n    g_free (bar);\n";
+      print "\n    free (bar);\n";
       print "  } while (!closed); /* Until closing braces are hit */\n";
 
       print $reladdress_resolver; # Resolves any relative addresses
@@ -718,7 +718,7 @@ sub insert_reader_code {
     " $types{$type}{'reader'}($fh, $datap, _cfsml_inp, &($linecounter), &_cfsml_eof);\n";
 
   if (!$firsttoken) {
-    print "    g_free(_cfsml_inp);\n";
+    print "    free(_cfsml_inp);\n";
   }
 
   if ($eofvar) {

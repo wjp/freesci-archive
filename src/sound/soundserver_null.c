@@ -531,7 +531,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	      size -= received;
 	    }
 
-	    g_get_current_time(&currtime);
+	    sci_get_current_time(&currtime);
 	    usecs = (currtime.tv_sec - last_played.tv_sec) * 1000000
 	      + (currtime.tv_usec - last_played.tv_usec);
 
@@ -565,7 +565,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	      size -= received;
 	    }
 
-	    g_get_current_time(&last_played);
+	    sci_get_current_time(&last_played);
 
 	    success = soundsrv_restore_state(ds, dirname, songlib, &song,
 					     &ccc, &usecs, &ticks, &fadeticks);

@@ -88,6 +88,12 @@
 #define MAX(a, b)  (((a) > (b)) ? (a) : (b))
 #define GUINT16_SWAP_LE_BE_CONSTANT(val) ((((val) & 0x00ff) << 8) | (((val) & 0xff00) >> 8))
 
+#define GUINT32_SWAP_LE_BE_CONSTANT(val)  ( \
+                                             (((val) & 0xff000000) >> 24) \
+                                           | (((val) & 0x00ff0000) >> 8) \
+                                           | (((val) & 0x0000ff00) << 8) \
+                                           | (((val) & 0x000000ff) << 24))
+
 #define SCI_MAX_RESOURCE_SIZE 0x0400000
 /* The maximum allowed size for a compressed or decompressed resource */
 
@@ -310,6 +316,12 @@ sci_gettime(int *seconds, int *useconds);
 ** (typically 01/01/1970 on *NIX systems).
 */
 
+void
+sci_get_current_time(GTimeVal *val);
+/* GTimeVal version of sci_gettime()
+** Parameters: (GTimeVal *) val: Pointer to the structure the values will be stored in
+** Returns   : (void)
+*/
 
 int
 sciprintf(char *fmt, ...);

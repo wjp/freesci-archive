@@ -894,7 +894,7 @@ _lookup_rhythm_key(char *iname)
   int i = 0;
 
   while (MT32_MemoryTimbreMaps[i].name) {
-    if (g_strncasecmp(iname, MT32_MemoryTimbreMaps[i].name, 10) == 0)
+    if (strncasecmp(iname, MT32_MemoryTimbreMaps[i].name, 10) == 0)
       return MT32_MemoryTimbreMaps[i].gm_rhythm_key;
     i++;
   }
