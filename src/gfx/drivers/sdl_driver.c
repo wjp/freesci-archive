@@ -225,6 +225,7 @@ sdl_init(struct _gfx_driver *drv)
     DEBUGB("Failed to init SDL");
     return GFX_FATAL;
   }
+  SDL_EnableUNICODE(SDL_ENABLE);
 
   depth = SDL_VideoModeOK(640,400, 32, SDL_HWSURFACE | SDL_SWSURFACE);
   if (depth && (! sdl_init_specific(drv, 2, 2, depth >> 3 )))
@@ -525,6 +526,7 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 
   drect.x = 0;
   drect.y = 0;
+
   if(SDL_BlitSurface(S->visual[bufnr], &srect, temp, &drect))
     ERROR("blt failed");
 
@@ -594,7 +596,8 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
     pxm->flags |= GFX_PIXMAP_FLAG_INSTALLED | GFX_PIXMAP_FLAG_EXTERNAL_PALETTE | GFX_PIXMAP_FLAG_PALETTE_SET;
     free(pxm->data);
     pxm->data = (byte *) temp->pixels;
-    break; }
+    break; 
+  }
     
   case GFX_MASK_PRIORITY:
     ERROR("FIXME: priority map grab not implemented yet!\n");
@@ -724,20 +727,11 @@ sdl_unmap_key(gfx_driver_t *drv, SDL_keysym keysym)
   SDLKey skey = keysym.sym;
   int rkey = keysym.unicode;
 
-if (S->flags & SCI_XLIB_SWAP_CTRL_CAPS) {
-  switch (skey) {
-  case SDLK_LCTRL: skey = SDLK_CAPSLOCK; break;
-  case SDLK_CAPSLOCK: skey = SDLK_LCTRL; break;
-  }
-}
-
-  switch (skey) {
-  case SDLK_LCTRL:
-  case SDLK_RCTRL: S->buckystate &= ~SCI_EVM_CTRL; return 0;
-  case SDLK_LALT:
-  case SDLK_RALT: S->buckystate &= ~SCI_EVM_ALT; return 0;
-  case SDLK_LSHIFT: S->buckystate &= ~SCI_EVM_LSHIFT; return 0;
-  case SDLK_RSHIFT: S->buckystate &= ~SCI_EVM_RSHIFT; return 0;
+  if (S->flags & SCI_XLIB_SWAP_CTRL_CAPS) {
+    switch (skey) {
+    case SDLK_LCTRL: skey = SDLK_CAPSLOCK; break;
+    case SDLK_CAPSLOCK: skey = SDLK_LCTRL; break;
+    }
   }
 
   return 0;
@@ -748,14 +742,10 @@ int
 sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
 {
   SDLKey skey = keysym.sym;
-  int rkey = keysym.unicode;
-   
-  if ((skey >= SDLK_a) && (skey <= SDLK_z)) {
-    if ((keysym.mod & KMOD_SHIFT) || (keysym.mod & KMOD_CAPS)) 
-      return (rkey + 32);
-      else
-	return rkey;
-  }
+  int rkey = keysym.unicode & 0x7f;
+
+  if ((skey >= SDLK_a) && (skey <= SDLK_z))
+      return rkey;
 
   if ((skey >= SDLK_0) && (skey <= SDLK_9))
     return rkey;
@@ -807,14 +797,14 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
   case SDLK_F10: return SCI_K_F10;
 
   case SDLK_LCTRL:
-  case SDLK_RCTRL: S->buckystate |= SCI_EVM_CTRL; return 0;
+  case SDLK_RCTRL:
   case SDLK_LALT:
-  case SDLK_RALT: S->buckystate |= SCI_EVM_ALT; return 0;
-  case SDLK_CAPSLOCK: S->buckystate ^= SCI_EVM_CAPSLOCK; return 0;
-  case SDLK_SCROLLOCK: S->buckystate ^= SCI_EVM_SCRLOCK; return 0;
-  case SDLK_NUMLOCK: S->buckystate ^= SCI_EVM_NUMLOCK; return 0;
-  case SDLK_LSHIFT: S->buckystate |= SCI_EVM_LSHIFT; return 0;
-  case SDLK_RSHIFT: S->buckystate |= SCI_EVM_RSHIFT; return 0;
+  case SDLK_RALT:
+  case SDLK_CAPSLOCK:
+  case SDLK_SCROLLOCK:
+  case SDLK_NUMLOCK:
+  case SDLK_LSHIFT:
+  case SDLK_RSHIFT:  return 0;
     
   case SDLK_PLUS:
   case SDLK_KP_PLUS: return '+';
@@ -867,13 +857,23 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
     while (SDL_PollEvent(&event)) {
 
       switch (event.type) {
-      case SDL_KEYDOWN:
+      case SDL_KEYDOWN: {
+	int modifiers = event.key.keysym.mod;
 	sci_event->type = SCI_EVT_KEYBOARD;
+	
+	S->buckystate = (((modifiers & KMOD_CAPS)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0)
+			 | ((modifiers & KMOD_CTRL)? SCI_EVM_CTRL : 0)
+			 | ((modifiers & KMOD_ALT)? SCI_EVM_ALT : 0)
+			 | ((modifiers & KMOD_NUM) ? SCI_EVM_NUMLOCK : 0))
+	  ^ (  ((modifiers & KMOD_RSHIFT)? SCI_EVM_RSHIFT : 0) 
+	       |((modifiers & KMOD_LSHIFT)? SCI_EVM_LSHIFT : 0));
+
 	sci_event->buckybits = S->buckystate;
 	sci_event->data = sdl_map_key(drv, event.key.keysym);
-	if (sci_event->data)
+	printf("...%04x (%d)\n",sci_event->data, sci_event->data);
+	if (sci_event->data) 
 	  return;
-	break;
+	break; }
       case SDL_KEYUP:
 	sdl_unmap_key(drv, event.key.keysym);
 	break;
@@ -908,10 +908,8 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
     usecs_to_sleep = (timeout_time.tv_sec > ctime.tv_sec)? 1000000 : 0;
     usecs_to_sleep += timeout_time.tv_usec - ctime.tv_usec;
     if (ctime.tv_sec > timeout_time.tv_sec) usecs_to_sleep = -1;
-    
-    
+        
     if (usecs_to_sleep > 0) {
-      
       if (usecs_to_sleep > 10000)
 	usecs_to_sleep = 10000; /* Sleep for a maximum of 10 ms */
       
