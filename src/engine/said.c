@@ -25,10 +25,10 @@
 
 #define SAID_BRANCH_NULL 0
 
-#define MAX_SAID_TOKENS 32
+#define MAX_SAID_TOKENS 128
 
 /* Maximum number of words to be expected in a parsed sentence */
-#define AUGMENT_MAX_WORDS 32
+#define AUGMENT_MAX_WORDS 64
 
 
 #define WORD_TYPE_BASE 0x141

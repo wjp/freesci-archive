@@ -7,6 +7,7 @@
 #include <engine.h>
 
 /* Default kernel name table */
+#define SCI0_KNAMES_WELL_DEFINED 0x6e
 #define SCI0_KNAMES_DEFAULT_ENTRIES_NR 0x72
 
 char *sci0_default_knames[SCI0_KNAMES_DEFAULT_ENTRIES_NR] =
@@ -281,7 +282,7 @@ static char** _vocabulary_get_knames0alt(int *names, resource_t *r)
 static char** vocabulary_get_knames0(int* names)
 {
   char** t;
-  int count, i, index=2;
+  int count, i, index=2, empty_to_add = 1;
   resource_t* r=findResource(sci_vocab, 999);
   
   if (!r) { /* No kernel name table found? Fall back to default table */
@@ -301,7 +302,12 @@ static char** vocabulary_get_knames0(int* names)
   if (count > 1023)
     return _vocabulary_get_knames0alt(names, r);
 
-  t=g_malloc(sizeof(char*)*(count+2));
+  if (count < SCI0_KNAMES_WELL_DEFINED) {
+    empty_to_add = SCI0_KNAMES_WELL_DEFINED - count;
+    sciprintf("Less than %d kernel functions; adding %d\n", SCI0_KNAMES_WELL_DEFINED, empty_to_add);
+  }
+
+  t=g_malloc(sizeof(char*)*(count+1 + empty_to_add));
   for(i=0; i<count; i++)
     {
       int offset=getInt(r->data+index);
@@ -312,11 +318,13 @@ static char** vocabulary_get_knames0(int* names)
       memcpy(t[i], r->data + offset + 2, len);
       t[i][len]='\0';
     }
-  t[count] = g_malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) +1);
-  strcpy(t[count], SCRIPT_UNKNOWN_FUNCTION_STRING);
-  /* The mystery kernel function */
 
-  t[count+1]=0;
+  for (i = 0; i < empty_to_add; i++) {
+    t[count + i] = g_malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) +1);
+    strcpy(t[count + i], SCRIPT_UNKNOWN_FUNCTION_STRING);
+  }
+
+  t[count+empty_to_add]=0;
   *names=count + 1;
   return t;
 }

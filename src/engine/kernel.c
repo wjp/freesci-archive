@@ -137,7 +137,7 @@ sci_kernel_function_t kfunct_mappers[] = {
   {"SetJump", kSetJump },
   {"EditControl", kEditControl },
   {"EmptyList", kEmptyList },
-  {"AddAfter", kAppendAfter },
+  {"AddAfter", kAddAfter },
   {"RestartGame", kRestartGame },
   {"SetNowSeen", kSetNowSeen },
   {"Graph", kGraph },
@@ -152,6 +152,148 @@ sci_kernel_function_t kfunct_mappers[] = {
   {0,0} /* Terminator */
 };
 
+
+
+#define SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR 0x72
+
+static kfunct * unknown_function_map[SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR] = { /* Map for unknown kernel functions */
+/*0x00*/ kLoad,
+/*0x01*/ kUnLoad,
+/*0x02*/ kScriptID,
+/*0x03*/ kDisposeScript,
+/*0x04*/ kClone,
+/*0x05*/ kDisposeClone,
+/*0x06*/ kIsObject,
+/*0x07*/ kRespondsTo,
+/*0x08*/ kDrawPic,
+/*0x09*/ kShow,
+/*0x0a*/ kPicNotValid,
+/*0x0b*/ kAnimate,
+/*0x0c*/ kSetNowSeen,
+/*0x0d*/ kNumLoops,
+/*0x0e*/ kNumCels,
+/*0x0f*/ kCelWide,
+/*0x10*/ kCelHigh,
+/*0x11*/ kDrawCel,
+/*0x12*/ kAddToPic,
+/*0x13*/ kNewWindow,
+/*0x14*/ kGetPort,
+/*0x15*/ kSetPort,
+/*0x16*/ kDisposeWindow,
+/*0x17*/ kDrawControl,
+/*0x18*/ kHiliteControl,
+/*0x19*/ kEditControl,
+/*0x1a*/ kTextSize,
+/*0x1b*/ kDisplay,
+/*0x1c*/ kGetEvent,
+/*0x1d*/ kGlobalToLocal,
+/*0x1e*/ kLocalToGlobal,
+/*0x1f*/ kMapKeyToDir,
+/*0x20*/ kDrawMenuBar,
+/*0x21*/ kMenuSelect,
+/*0x22*/ kAddMenu,
+/*0x23*/ kDrawStatus,
+/*0x24*/ kParse,
+/*0x25*/ kSaid,
+/*0x26*/ kSetSynonyms,
+/*0x27*/ kHaveMouse,
+/*0x28*/ kSetCursor,
+/*0x29*/ kFOpen,
+/*0x2a*/ kFPuts,
+/*0x2b*/ kFGets,
+/*0x2c*/ kFClose,
+/*0x2d*/ kSaveGame,
+/*0x2e*/ kRestoreGame,
+/*0x2f*/ kRestartGame,
+/*0x30*/ kGameIsRestarting,
+/*0x31*/ kDoSound,
+/*0x32*/ kNewList,
+/*0x33*/ kDisposeList,
+/*0x34*/ kNewNode,
+/*0x35*/ kFirstNode,
+/*0x36*/ kLastNode,
+/*0x37*/ kEmptyList,
+/*0x38*/ kNextNode,
+/*0x39*/ kPrevNode,
+/*0x3a*/ kNodeValue,
+/*0x3b*/ kAddAfter, /* AddAfter */
+/*0x3c*/ kAddToFront,
+/*0x3d*/ kAddToEnd,
+/*0x3e*/ kFindKey,
+/*0x3f*/ kDeleteKey,
+/*0x40*/ kRandom,
+/*0x41*/ kAbs,
+/*0x42*/ kSqrt,
+/*0x43*/ kGetAngle,
+/*0x44*/ kGetDistance,
+/*0x45*/ kWait,
+/*0x46*/ kGetTime,
+/*0x47*/ kStrEnd,
+/*0x48*/ kStrCat,
+/*0x49*/ kStrCmp,
+/*0x4a*/ kStrLen,
+/*0x4b*/ kStrCpy,
+/*0x4c*/ kFormat,
+/*0x4d*/ kGetFarText,
+/*0x4e*/ kReadNumber,
+/*0x4f*/ kBaseSetter,
+/*0x50*/ kDirLoop,
+/*0x51*/ kCanBeHere,
+/*0x52*/ kOnControl,
+/*0x53*/ kInitBresen,
+/*0x54*/ kDoBresen,
+/*0x55*/ kNOP, /* DoAvoider */
+/*0x56*/ kSetJump,
+/*0x57*/ kSetDebug,
+/*0x58*/ NULL, /* kInspectObj */
+/*0x59*/ NULL, /* ShowSends */
+/*0x5a*/ NULL, /* ShowObjs */
+/*0x5b*/ NULL, /* ShowFree */
+/*0x5c*/ kMemoryInfo,
+/*0x5d*/ NULL, /* StackUsage */
+/*0x5e*/ NULL, /* Profiler */
+/*0x5f*/ kGetMenu,
+/*0x60*/ kSetMenu,
+/*0x61*/ kGetSaveFiles,
+/*0x62*/ kGetCWD,
+/*0x63*/ kCheckFreeSpace,
+/*0x64*/ kValidPath,
+/*0x65*/ kCoordPri,
+/*0x66*/ kStrAt,
+#ifdef _WIN32
+/*0x67*/ kDeviceInfo_Win32,
+#else
+/*0x67*/ kDeviceInfo_Unix,
+#endif
+/*0x68*/ kGetSaveDir,
+/*0x69*/ kCheckSaveGame,
+/*0x6a*/ kShakeScreen,
+/*0x6b*/ kFlushResources,
+/*0x6c*/ kTimesSin,
+/*0x6d*/ kTimesCos,
+/*0x6e*/ NULL,
+/*0x6f*/ NULL,
+/*0x70*/ kGraph,
+/*0x71*/ kJoystick
+};
+
+
+
+const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
+  "Stubs",
+  "Lists and nodes",
+  "Graphics",
+  "Character handling",
+  "Memory management",
+  "Function parameter checks",
+  "Bresenham algorithms",
+  "Audio subsystem",
+  "System graphics driver",
+  "Base setter results",
+  "Parser",
+  "Menu handling",
+  "Said specs"
+};
 
 
 /******************** Kernel Oops ********************/
@@ -289,13 +431,12 @@ kMemoryInfo(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 k_Unknown(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  switch (funct_nr) {
-  case 0x70: kGraph(s, funct_nr, argc, argp); break;
-  default: {
+  kfunct *funct = (funct_nr >= SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR)? NULL : unknown_function_map[funct_nr];
+
+  if (!funct) {
     CHECK_THIS_KERNEL_FUNCTION;
-    SCIkdebug(SCIkSTUB, "Unhandled Unknown function %04x\n", funct_nr);
-  }
-  }
+    SCIkwarn(SCIkSTUB, "Unhandled Unknown function %04x\n", funct_nr);
+  } else funct(s, funct_nr, argc, argp);
 }
 
 

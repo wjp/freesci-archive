@@ -253,5 +253,13 @@ menubar_map_pointer(struct _state *s, int *menu_nr, int *item_nr, struct gfx_por
 ** Returns   : (int) 1 if the pointer is outside a valid port, 0 otherwise.
 */
 
+int
+menubar_match_key(menu_item_t *item, int message, int modifiers);
+/* Determines whether a message/modifiers key pair matches a menu item's key parameters
+** Parameters: (menu_item_t *) item: The menu item to match
+**             (int x int) message, modifiers: The input to compare
+** Returns   : (int) 1 on match, 0 otherwise
+*/
+
 #endif /* !_SCI_MENUBAR_H_ */
 

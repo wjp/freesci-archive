@@ -4036,7 +4036,7 @@ the position remains unchanged.
 		<para>
 			Returns: <type>(void)</type>
 		</para><para>
-			This function restores a previously saved game. In theory, it should only
+			This function restores a previously saved game. It should only
 			return if restoring failed.
 		</para>
 	</sect3>
@@ -5161,7 +5161,7 @@ to pressing LShift-RShift-PadMinus.
                    <simplelist>
                        <member><type/(String)/ game_id: The game ID as a string</member>
                        <member><type/(String)/ strspace: The string which the result should be stored in</member>
-                       <member><type/(HeapPtr *)/ ptrs: The array of pointers which the string starts are to be stored in</member>
+                       <member><type/(HeapPtr *)/ ptrs: The array of pointers which the string pointers are to be stored in</member>
                    </simplelist></para>
 		<para>
 			Returns: <type>(word)</type>
@@ -5170,7 +5170,7 @@ to pressing LShift-RShift-PadMinus.
                    Returns an array of strings describing the existing save games for game_id.
                    The strings are put into strspace one by one, and heap pointers to each of
                    them are put into the ptrs array.
-                   The number is saved games is returned in the accumulator.
+                   The number of saved games is returned in the accumulator.
 		</para>
 	</sect3>
 

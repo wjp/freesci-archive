@@ -361,6 +361,7 @@ void kAbs(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSqrt(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kOnControl(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kHaveMouse(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kJoystick(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetAngle(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetDistance(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kLastNode(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -456,7 +457,7 @@ void kCheckSaveGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSaveGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kRestoreGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kEmptyList(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kAppendAfter(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kAddAfter(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetNowSeen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void k_Unknown(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 /* The Unknown/Unnamed kernel function */

@@ -172,3 +172,12 @@ kLocalToGlobal(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 }
 
+void /* Not implemented */
+kJoystick(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  CHECK_THIS_KERNEL_FUNCTION;
+  SCIkwarn(SCIkSTUB, "Unimplemented syscall 'Joystick()'\n", funct_nr);
+  s->acc = 0;
+}
+
+

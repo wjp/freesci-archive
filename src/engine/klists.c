@@ -210,7 +210,7 @@ kEmptyList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
 void
-kAppendAfter(state_t *s, int funct_nr, int argc, heap_ptr argp)
+kAddAfter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr list = UPARAM(0);
   heap_ptr firstnode = UPARAM(1);
@@ -276,7 +276,7 @@ kNodeValue(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int a;
   
-  a=UPARAM(0) + LIST_NODE_VALUE;
+  a = UPARAM(0) + LIST_NODE_VALUE;
 
   s->acc=GET_HEAP(a);
 

@@ -51,7 +51,7 @@ _init_vocabulary(state_t *s) /* initialize vocabulary and related resources */
   s->parser_event = 0; /* Invalidate parser event */
   s->parser_lastmatch_word = SAID_NO_MATCH;
 
-  if (s->parser_words = vocab_get_words(&(s->parser_words_nr))) {
+  if ((s->parser_words = vocab_get_words(&(s->parser_words_nr)))) {
     s->parser_suffices = vocab_get_suffices(&(s->parser_suffices_nr));
     s->parser_branches = vocab_get_branches(&(s->parser_branches_nr));
 
@@ -204,23 +204,12 @@ script_init_engine(state_t *s, sci_version_t version)
   int seeker;
   int classnr;
   int size;
-  resource_t *script;
   int magic_offset; /* For strange scripts in older SCI versions */
 
   s->max_version = SCI_VERSION(9,999,999); /* :-) */
   s->min_version = 0; /* Set no real limits */
   s->version = SCI_VERSION_DEFAULT_SCI0;
 
-
-  s->_heap = heap_new();
-  s->heap = s->_heap->start;
-  s->acc = s->amp_rest = s->prev = 0;
-
-  s->execution_stack = NULL;    /* Start without any execution stack */
-  s->execution_stack_base = -1; /* No vm is running yet */
-  s->execution_stack_pos = -1;   /* Start at execution stack position 0 */
-
-  s->global_vars = 0; /* Set during launch time */
 
   if (!version) {
     s->version_lock_flag = 0;
@@ -253,10 +242,16 @@ script_init_engine(state_t *s, sci_version_t version)
 
 	while (seeker < script->length)
 	  {
+	    int lastseeker = seeker;
 	    objtype = getInt16(script->data + seeker);
 	    if (objtype == sci_obj_class || objtype == sci_obj_terminator) 
 	      break;
 	    seeker += getInt16(script->data + seeker + 2);
+	    if (seeker <= lastseeker) {
+	      sciprintf("Warning: Script version is invalid.\n");
+	      free(s->classtable);
+	      return  SCI_ERROR_INVALID_SCRIPT_VERSION;
+	    }
 	  }
         
 	if (objtype == sci_obj_class) {
@@ -292,6 +287,17 @@ script_init_engine(state_t *s, sci_version_t version)
     }
   }
 
+  s->_heap = heap_new();
+  s->heap = s->_heap->start;
+  s->acc = s->amp_rest = s->prev = 0;
+
+  s->execution_stack = NULL;    /* Start without any execution stack */
+  s->execution_stack_base = -1; /* No vm is running yet */
+  s->execution_stack_pos = -1;   /* Start at execution stack position 0 */
+
+  s->global_vars = 0; /* Set during launch time */
+
+
   s->kernel_names = vocabulary_get_knames(&s->kernel_names_nr);
   script_map_kernel(s);
   /* Maps the kernel functions */
@@ -311,7 +317,6 @@ script_init_engine(state_t *s, sci_version_t version)
   s->file_handles = g_new0(FILE *, s->file_handles_nr);
   /* Allocate memory for file handles */
   sciprintf("Engine initialized\n");
-  sciprintf("s->classtable_size = %d\n", s->classtable_size);
 
   return 0;
 }

@@ -57,6 +57,16 @@ const char* SCI_Version_Types[] = {
   "SCI WIN/32"
 };
 
+const char* SCI_Error_Types[] = {
+  "No error",
+  "I/O error",
+  "Resource is empty (size 0)",
+  "resource.000 or resource.001 not found",
+  "Unknown compression method",
+  "Decompression failed: Decompression buffer overflow",
+  "Decompression failed: Sanity check failed",
+  "Decompression failed: Resource too big",
+  "SCI version is unsupported"};
 
 const char* Resource_Types[] = {"view","pic","script","text","sound",
 				"memory","vocab","font","cursor",
@@ -96,23 +106,25 @@ int loadResources(int version, int allow_patches)
 
   sci_version = (autodetect)? SCI_VERSION_0 : version;
 
-  if (sci_version == SCI_VERSION_0)
-    if (retval = resourceLoader(&decompress0, autodetect, allow_patches)) {
+  if (sci_version == SCI_VERSION_0) {
+    if ((retval = resourceLoader(&decompress0, autodetect, allow_patches))) {
       freeResources();
       if ((retval == SCI_ERROR_UNKNOWN_COMPRESSION) ||
 	  (retval == SCI_ERROR_DECOMPRESSION_OVERFLOW)) {
 	sci_version = SCI_VERSION_01;
       } else return retval;
     } else return 0;
+  }
 
   if ((sci_version == SCI_VERSION_01) ||
-      (sci_version == SCI_VERSION_1))
-    if (retval = resourceLoader(&decompress1, autodetect, allow_patches)) {
+      (sci_version == SCI_VERSION_1)) {
+    if ((retval = resourceLoader(&decompress1, autodetect, allow_patches))) {
       freeResources();
       return retval;
     } else return 0;
-  return SCI_ERROR_UNSUPPORTED_VERSION;
+  }
 
+  return SCI_ERROR_UNSUPPORTED_VERSION;
 }
 
 
@@ -163,8 +175,8 @@ _addResource(struct singly_linked_resources_struct *base, resource_t *resource, 
 int
 resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int allow_patches)
 {
-  int resourceFile;
-  int resourceFileCounter=0;
+  int resourceFile = 0;
+  int resourceFileCounter = 0;
   resource_t *resource;
   char filename[13];
   int resourceCounter;
@@ -282,9 +294,9 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
   struct dirent *entry;
   int counter = 0;
 
-  while (entry = readdir(directory)) {
+  while ((entry = readdir(directory))) {
     int restype = sci_invalid_resource;
-    int resnumber;
+    int resnumber = -1;
     int i;
     int resname_len;
     char *endptr;

@@ -32,6 +32,11 @@
 #include <graphics.h>
 #include <sci_conf.h>
 #include <kdebug.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#ifdef HAVE_SCHED_YIELD
+#include <sched.h>
+#endif /* HAVE_SCHED_YIELD */
 
 #ifdef _MSC_VER
 #define extern __declspec(dllimport) extern
@@ -130,7 +135,6 @@ char *
 get_gets_input(void)
 {
   static char input[1024] = "";
-  int seeker;
 
   putchar('>');
 
@@ -174,11 +178,10 @@ static struct option options[] = {
 int
 main(int argc, char** argv)
 {
-  resource_t *resource;
   config_entry_t *conf = NULL;
-  int conf_entries; /* Number of config entries */
+  int conf_entries = -1; /* Number of config entries */
   int conf_nr; /* Element of conf to use */
-  int i, c;
+  int i, c, errc;
   FILE *console_logfile = NULL;
   int optindex = 0;
   char *gamedir = NULL;
@@ -269,7 +272,7 @@ main(int argc, char** argv)
 	     EXPLAIN_OPTION("--gamedir dir\t", "-ddir", "read game resources from dir")
 	     EXPLAIN_OPTION("--run\t\t", "-r", "do not start the debugger")
 	     EXPLAIN_OPTION("--sci-version\t", "-Vver", "set the version for sciv to emulate")
-	     EXPLAIN_OPTION("--version\t", "ver", "display version number and exit")
+	     EXPLAIN_OPTION("--version\t", "-v", "display version number and exit")
 	     EXPLAIN_OPTION("--debug\t", "-D", "start up in debug mode")
 	     EXPLAIN_OPTION("--help\t", "-h", "display this help text and exit")
 	     EXPLAIN_OPTION("--graphics gfx", "-ggfx", "use the 'gfx' graphics driver")
@@ -333,7 +336,7 @@ main(int argc, char** argv)
       }
 
   printf ("Loading resources...\n");
-  if (i = loadResources(SCI_VERSION_AUTODETECT, 1)) {
+  if ((i = loadResources(SCI_VERSION_AUTODETECT, 1))) {
     fprintf(stderr,"Error while loading resources: %s!\n", SCI_Error_Types[i]);
     exit(1);
   };
@@ -366,9 +369,46 @@ main(int argc, char** argv)
 
   gamestate = malloc(sizeof(state_t));
 
-  if (script_init_engine(gamestate, version)) { /* Initialize game state */
-    fprintf(stderr,"Script initialization failed. Aborting...\n");
-    return 1;
+  if ((errc = script_init_engine(gamestate, version))) { /* Initialize game state */
+    int recovered = 0;
+
+    if (errc == SCI_ERROR_INVALID_SCRIPT_VERSION) {
+      int tversion = SCI_VERSION_FTU_NEW_SCRIPT_HEADER - ((version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)? 0 : 1);
+
+      while (!recovered && tversion) {
+	printf("Trying version %d.%03x.%03d instead\n", SCI_VERSION_MAJOR(tversion),
+	       SCI_VERSION_MINOR(tversion), SCI_VERSION_PATCHLEVEL(tversion));
+
+	errc = script_init_engine(gamestate, tversion);
+
+	if ((recovered = !errc))
+	  version = tversion;
+
+	if (errc != SCI_ERROR_INVALID_SCRIPT_VERSION)
+	  break;
+
+	switch (tversion) {
+
+	case SCI_VERSION_FTU_NEW_SCRIPT_HEADER - 1:
+	  if (version >= SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+	    tversion = 0;
+	  else
+	    tversion = SCI_VERSION_FTU_NEW_SCRIPT_HEADER;
+	  break;
+
+	case SCI_VERSION_FTU_NEW_SCRIPT_HEADER:
+	  tversion = 0;
+	  break;
+	}
+      }
+      if (recovered)
+	printf("Success.\n");
+    }
+
+    if (!recovered) {
+      fprintf(stderr,"Script initialization failed. Aborting...\n");
+      return 1;
+    }
   }
 
   gamestate->have_mouse_flag = 1; /* Assume that a pointing device is present */
@@ -398,8 +438,9 @@ main(int argc, char** argv)
       exit(1);
     }
 
-  if (conf[conf_nr].version)
-    gamestate->version = conf[conf_nr].version;
+  if (!gamestate->version_lock_flag)
+    if (conf[conf_nr].version)
+      gamestate->version = conf[conf_nr].version;
 
   sci_color_mode = conf[conf_nr].color_mode;
   gamestate->gfx_driver = conf[conf_nr].gfx_driver;
@@ -468,7 +509,8 @@ main(int argc, char** argv)
 
   freeResources();
 
-  config_free(&conf, conf_entries);
+  if (conf_entries >= 0)
+    config_free(&conf, conf_entries);
 
   if (console_logfile)
     fclose (console_logfile);

@@ -1,3 +1,17 @@
+2000-05-20  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kfile.c (update_savegame_indices): Added sorting for
+	savegames
+
+	* src/engine/kmenu.c (kMenuSelect): TAB now matches C-I in the menu
+	bar
+
+	* src/graphics/menubar.c (menubar_set_attribute): Added support for
+	said specs in the menu bar
+
+	* src/engine/game.c (script_init_engine): Added more checks for old
+	script data
+
 2000-05-20  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/vm.c (run_vm): callk now ignores &rest arguments for old

@@ -184,7 +184,6 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
   heap_ptr lookupresult;
   int selector;
   int argc;
-  int i;
   int origin = s->execution_stack_pos; /* Origin: Used for debugging */
   exec_stack_t *retval = s->execution_stack + s->execution_stack_pos;
   /* We return a pointer to the new active exec_stack_t */
@@ -652,7 +651,6 @@ run_vm(state_t *s, int restoring)
       temp = opparams[1] + 2 + (restadjust*2);
       temp2 = xs->sp;
       xs->sp -= temp;
-
       xs_new = add_exec_stack_entry(s, xs->pc + opparams[0], temp2, xs->objp,
 				    GET_HEAP(xs->sp) + restadjust,
 				    xs->sp, -1, xs->objp, s->execution_stack_pos, 0);

@@ -33,6 +33,13 @@
 #include <windows.h>
 #endif
 
+static int _savegame_indices_nr = -1; /* means 'uninitialized' */
+
+static struct _savegame_index_struct {
+  int id;
+  long timestamp;
+} _savegame_indices[MAX_SAVEGAME_NR];
+
 /* This assumes modern stream implementations. It may break on DOS. */
 
 #define _K_FILE_MODE_OPEN_OR_FAIL 0
@@ -143,7 +150,6 @@ kGetCWD(state_t *s, int funct_nr, int argc, heap_ptr argp)
   char *homedir = getenv("HOME");
   char _cwd[256];
   char *cwd = &(_cwd[0]);
-  char *savedir;
   char *targetaddr = UPARAM(0) + s->heap;
 
   s->acc = PARAM(0);
@@ -176,7 +182,7 @@ kGetCWD(state_t *s, int funct_nr, int argc, heap_ptr argp)
   *targetaddr++ = '/';
   *(targetaddr + 1) = 0;
 
-  if (chdir(FREESCI_GAMEDIR))
+  if (chdir(FREESCI_GAMEDIR)) {
     if (scimkdir(FREESCI_GAMEDIR, 0700)) {
 
       SCIkwarn(SCIkWARNING, "Warning: Could not enter ~/"FREESCI_GAMEDIR"; save files"
@@ -187,13 +193,14 @@ kGetCWD(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
     else /* mkdir() succeeded */
       chdir(FREESCI_GAMEDIR);
+  }
 
   memcpy(targetaddr, FREESCI_GAMEDIR, strlen(FREESCI_GAMEDIR));
   targetaddr += strlen(FREESCI_GAMEDIR);
   *targetaddr++ = '/';
   *targetaddr = 0;
 
-  if (chdir(s->game_name))
+  if (chdir(s->game_name)) {
     if (scimkdir(s->game_name, 0700)) {
 
       fprintf(stderr,"Warning: Could not enter ~/"FREESCI_GAMEDIR"/%s; "
@@ -203,6 +210,7 @@ kGetCWD(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
     else /* mkdir() succeeded */
       chdir(s->game_name);
+  }
 
   memcpy(targetaddr, s->game_name, strlen(s->game_name));
   targetaddr += strlen(s->game_name);
@@ -420,7 +428,7 @@ _k_get_savedir_name(int nr)
   char suffices[] = "0123456789abcdef";
   char *savedir_name = malloc(strlen(FREESCI_SAVEDIR_PREFIX) + 2);
   assert(nr >= 0);
-  assert(nr < 16);
+  assert(nr < MAX_SAVEGAME_NR);
   strcpy(savedir_name, FREESCI_SAVEDIR_PREFIX);
   savedir_name[strlen(FREESCI_SAVEDIR_PREFIX)] = suffices[nr];
   savedir_name[strlen(FREESCI_SAVEDIR_PREFIX) + 1] = 0;
@@ -447,7 +455,7 @@ _k_find_savegame_by_name(char *game_id_file, char *name)
   int savedir_nr = -1;
   int i;
 
-  for (i = 0; i < 16; i++) {
+  for (i = 0; i < MAX_SAVEGAME_NR; i++) {
     if (!chdir(_k_get_savedir_name(i))) {
       char namebuf[32]; /* Save game name buffer */
       FILE *idfile = fopen(game_id_file, "r");
@@ -469,6 +477,7 @@ _k_find_savegame_by_name(char *game_id_file, char *name)
       chdir("..");
     }
   }
+  return 0;
 }
 
 void
@@ -493,8 +502,7 @@ kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   if (chdir(_k_get_savedir_name(savedir_nr))) {
     s->acc = 0; /* Couldn't enter savedir */
-}  else {
-    int fh;
+  }  else {
 
     if (_k_check_file(FREESCI_FILE_HEAP, SCI_HEAP_SIZE))
       s->acc = 0;
@@ -510,30 +518,64 @@ kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
-void
-kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
+#define get_file_mtime(fd) get_file_mtime_Unix(fd)
+/* Returns the time of the specified file's last modification
+** Parameters: (int) fd: The file descriptor of the file in question
+** Returns   : (long) An integer value describing the time of the
+**                    file's last modification.
+** The only thing that must be ensured is that
+** get_file_mtime(f1) > get_file_mtime(f2)
+**   <=>
+** if f1 was modified at a later point in time than the last time
+** f2 was modified.
+*/
+
+static long
+get_file_mtime_Unix(int fd) /* returns the  */
 {
-  char *game_id = UPARAM(0) + s->heap;
-  int savedir_nr = UPARAM(1);
+  struct stat fd_stat;
+  fstat(fd, &fd_stat);
 
-  CHECK_THIS_KERNEL_FUNCTION;
+  return fd_stat.st_ctime;
+}
 
-  if (savedir_nr > -1) {
-    state_t *newstate = gamestate_restore(s, _k_get_savedir_name(savedir_nr));
 
-    if (newstate) {
+static int
+_savegame_index_struct_compare(const void *a, const void *b)
+{
+  return ((struct _savegame_index_struct *)b)->timestamp
+    - ((struct _savegame_index_struct *)a)->timestamp;
+}
 
-      s->successor = newstate;
-      script_abort_flag = 1; /* Abort current game */
+static void
+update_savegame_indices(char *gfname)
+{
+  int i;
+  int gfname_len = strlen(gfname);
 
-    } else {
-      sciprintf("Restoring failed.\n");
+  _savegame_indices_nr = 0;
+
+  for (i = 0; i < MAX_SAVEGAME_NR; i++) {
+    char *dirname = _k_get_savedir_name(i);
+    char *gidf_name = malloc(gfname_len + 3 + strlen(dirname));
+    int fd;
+
+    strcpy(gidf_name, dirname);
+    strcat(gidf_name, G_DIR_SEPARATOR_S);
+    strcat(gidf_name, gfname);
+
+    if ((fd = open(dirname, O_RDONLY)) > 0) {
+      _savegame_indices[_savegame_indices_nr].id = i;
+      _savegame_indices[_savegame_indices_nr++].timestamp = get_file_mtime(fd);
+      close(fd);
     }
-
-  } else {
-    s->acc = 1;
-    sciprintf("Savegame #%d not found!\n", savedir_nr);
+    free(dirname);
+    free(gidf_name);
   }
+
+  qsort(_savegame_indices, _savegame_indices_nr, sizeof(struct _savegame_index_struct),
+	_savegame_index_struct_compare);
+
 }
 
 
@@ -550,6 +592,8 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
   strcpy(gfname, game_id);
   strcat(gfname, FREESCI_ID_SUFFIX); /* This file is used to identify in-game savegames */
 
+  update_savegame_indices(gfname);
+
   CHECK_THIS_KERNEL_FUNCTION;
 
   SCIkASSERT(UPARAM(0) >= 800);
@@ -558,9 +602,9 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   s->acc = 0;
 
-  for (i = 0; i < 16; i++) {
+  for (i = 0; i < _savegame_indices_nr; i++) {
     char *gidf_name = malloc(gfname_len + 3 + strlen(FREESCI_SAVEDIR_PREFIX));
-    char *savedir_name = _k_get_savedir_name(i);
+    char *savedir_name = _k_get_savedir_name(_savegame_indices[i].id);
     FILE *idfile;
 
     strcpy(gidf_name, savedir_name);
@@ -569,9 +613,9 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     free(savedir_name);
 
-    if (idfile = fopen(gidf_name, "r")) { /* Valid game ID file: Assume valid game */
-      char namebuf[32]; /* Save game name buffer */
-      fgets(namebuf, 31, idfile);
+    if ((idfile = fopen(gidf_name, "r"))) { /* Valid game ID file: Assume valid game */
+      char namebuf[SCI_MAX_SAVENAME_LENGTH]; /* Save game name buffer */
+      fgets(namebuf, SCI_MAX_SAVENAME_LENGTH-1, idfile);
       if (strlen(namebuf) > 0) {
 
 	if (namebuf[strlen(namebuf) - 1] == '\n')
@@ -601,8 +645,20 @@ void
 kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   char *game_id = UPARAM(0) + s->heap;
-  char *savegame_dir = _k_get_savedir_name(UPARAM(1));
+  char *savegame_dir;
+  int savedir_nr = UPARAM(1);
+  char *game_id_file_name = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
   char *game_description = UPARAM(2) + s->heap;
+
+  strcpy(game_id_file_name, game_id);
+  strcat(game_id_file_name, FREESCI_ID_SUFFIX);
+
+  if (_savegame_indices_nr < 0) {
+    SCIkwarn(SCIkWARNING, "Savegame index list not initialized!\n");
+    update_savegame_indices(game_id_file_name);
+  }
+
+  savegame_dir = _k_get_savedir_name(_savegame_indices[savedir_nr].id);
 
   CHECK_THIS_KERNEL_FUNCTION;
   s->acc = 1;
@@ -612,10 +668,6 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
     s->acc = 0;
   } else {
     FILE *idfile;
-    char *game_id_file_name = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
-
-    strcpy(game_id_file_name, game_id);
-    strcat(game_id_file_name, FREESCI_ID_SUFFIX);
 
     chdir(savegame_dir);
 
@@ -631,6 +683,45 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
 
     chdir ("..");
+  }
+  free(game_id_file_name);
+}
+
+
+void
+kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  char *game_id = UPARAM(0) + s->heap;
+  int savedir_nr = UPARAM(1);
+
+  if (_savegame_indices_nr < 0) {
+    char *game_id_file_name = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
+
+    strcpy(game_id_file_name, game_id);
+    strcat(game_id_file_name, FREESCI_ID_SUFFIX);
+    SCIkwarn(SCIkWARNING, "Savegame index list not initialized!\n");
+    update_savegame_indices(game_id_file_name);
+  }
+
+  savedir_nr = _savegame_indices[savedir_nr].id;
+
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  if (savedir_nr > -1) {
+    state_t *newstate = gamestate_restore(s, _k_get_savedir_name(savedir_nr));
+
+    if (newstate) {
+
+      s->successor = newstate;
+      script_abort_flag = 1; /* Abort current game */
+
+    } else {
+      sciprintf("Restoring failed (game_id = '%s').\n", game_id);
+    }
+
+  } else {
+    s->acc = 1;
+    sciprintf("Savegame #%d not found!\n", savedir_nr);
   }
 }
 

@@ -29,6 +29,10 @@
 #include <engine.h>
 #include <kdebug.h>
 
+#ifdef HAVE_MEMFROB
+void *memfrob(void *s, size_t n);
+#endif
+
 int script_debug_flag = 0; /* Defaulting to running mode */
 int sci_debug_flags = 0; /* Special flags */
 

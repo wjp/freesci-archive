@@ -151,7 +151,6 @@ con_init(void)
 void
 con_parse(state_t *s, char *command)
 {
-  int escape = 0; /* escape next char? */
   int quote = 0; /* quoting? */
   int done = 0; /* are we done yet? */
   int cdone = 0; /* Done with the current command? */
@@ -648,7 +647,7 @@ c_hexgrep(state_t *s)
   }
 
   for (; resnr <= resmax; resnr++)
-    if (script = findResource(restype, resnr)) {
+    if ((script = findResource(restype, resnr))) {
       int seeker = 0, seekerold = 0;
       int comppos = 0;
       int output_script_name = 0;

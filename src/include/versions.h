@@ -72,7 +72,6 @@ struct _state;
 ** word header.
 */
 
-
 typedef int sci_version_t;
 
 struct _state;

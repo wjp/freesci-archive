@@ -181,7 +181,7 @@ script_dump_object(char *data, int seeker, int objsize, char **snames)
   int species = getInt16(data + 8 + seeker);
   int superclass = getInt16(data + 10 + seeker);
   int namepos = getInt16(data + 14 + seeker);
-  int nameseeker, i = 0;
+  int i = 0;
 
   sciprintf("Object\n");
 
@@ -229,7 +229,6 @@ script_dump_class(char *data, int seeker, int objsize, char **snames)
   int species = getInt16(data + 8 + seeker);
   int superclass = getInt16(data + 10 + seeker);
   int namepos = getInt16(data + 14 + seeker);
-  int nameseeker;
 
   sciprintf("Class\n");
 

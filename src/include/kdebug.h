@@ -32,21 +32,7 @@
 struct _state;
 #define SCIk_DEBUG_MODES 13
 
-static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
-  "Stubs",
-  "Lists and nodes",
-  "Graphics",
-  "Character handling",
-  "Memory management",
-  "Function parameter checks",
-  "Bresenham algorithms",
-  "Audio subsystem",
-  "System graphics driver",
-  "Base setter results",
-  "Parser",
-  "Menu handling",
-  "Said specs"
-};
+extern const char *SCIk_Debug_Names[SCIk_DEBUG_MODES];
 /* The various debug areas */
 
 #define SCIkERROR_NR -2

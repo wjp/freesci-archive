@@ -67,7 +67,6 @@ void decryptinit3()
 
 int decrypt3(guint8 *dest, guint8 *src, int length, int complength)
 {
-  guint8 *orgdest = dest;
   static gint16 token;
   while(length != 0) {
 

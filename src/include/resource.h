@@ -96,21 +96,10 @@
 #define SCI_ERROR_RESOURCE_TOO_BIG 7
 /* Resource size exceeds SCI_MAX_RESOURCE_SIZE */
 #define SCI_ERROR_UNSUPPORTED_VERSION 8
+#define SCI_ERROR_INVALID_SCRIPT_VERSION 9
 
 #define SCI_ERROR_CRITICAL SCI_ERROR_NO_RESOURCE_FILES_FOUND
 /* the first critical error number */
-
-static const char* SCI_Error_Types[] = {
-  "No error",
-  "I/O error",
-  "Resource is empty (size 0)",
-  "resource.000 or resource.001 not found",
-  "Unknown compression method",
-  "Decompression failed: Decompression buffer overflow",
-  "Decompression failed: Sanity check failed",
-  "Decompression failed: Resource too big",
-  "SCI version is unsupported"};
-
 
 /*** SCI VERSION NUMBERS ***/
 #define SCI_VERSION_AUTODETECT 0
@@ -121,6 +110,7 @@ static const char* SCI_Error_Types[] = {
 #define SCI_VERSION_LAST SCI_VERSION_01
 /* The last supported SCI version */
 
+extern const char* SCI_Error_Types[];
 extern const char* SCI_Version_Types[];
 extern const char* Resource_Types[];
 

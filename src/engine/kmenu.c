@@ -138,7 +138,7 @@ about_freesci(state_t *s)
   titlefont = s->titlebar_port.font;
 
   i = 999;
-  while (!bodyfont_res & i > -1)
+  while (!bodyfont_res && (i > -1))
     bodyfont_res = findResource(sci_font, i);
 
   if (i == -1)
@@ -225,15 +225,17 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int menu_mode = 0; /* Menu is active */
   int mouse_down = 0;
 
-  /* Check whether we can claim the event directly as a keyboard event */
-  if (type == SCI_EVT_KEYBOARD) {
+  /* Check whether we can claim the event directly as a keyboard or said event */
+  if (type & (SCI_EVT_KEYBOARD | SCI_EVT_SAID)) {
     int menuc, itemc;
 
-    if (message == SCI_K_ESC)
+    if ((type == SCI_EVT_KEYBOARD)
+	&& (message == SCI_K_ESC))
       menu_mode = 1;
 
-    else if (message) { /* Don't claim 0 keyboard event */
-      SCIkdebug(SCIkMENU,"Menu: Got KBD event: %04x/%04x\n", message, modifiers);
+    else if ((type == SCI_EVT_SAID) || message) { /* Don't claim 0 keyboard event */
+      SCIkdebug(SCIkMENU,"Menu: Got %s event: %04x/%04x\n",
+		((type == SCI_EVT_SAID)? "SAID":"KBD"), message, modifiers);
     
       for (menuc = 0; menuc < s->menubar->menus_nr; menuc++)
 	for (itemc = 0; itemc < s->menubar->menus[menuc].items_nr; itemc++) {
@@ -243,11 +245,16 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		    item->text? item->text : "--bar--", item->key, item->modifiers,
 		    item->type, item->enabled? "enabled":"disabled");
 
-	  /* FIXME: Add Said() check */
-	  if ((item->type == MENU_TYPE_NORMAL)
-	      && (item->enabled)
-	      && (item->key == message)
-	      && ((modifiers & (SCI_EVM_CTRL | SCI_EVM_ALT)) == item->modifiers)) {
+	  if (((item->type == MENU_TYPE_NORMAL)
+	       && (item->enabled))
+	      && (((type == SCI_EVT_KEYBOARD) /* keyboard event */
+		   && menubar_match_key(item, message, modifiers))
+		  || ((type == SCI_EVT_SAID) /* Said event */
+		      && (item->flags & MENU_ATTRIBUTE_FLAGS_SAID)
+		      && (said(s, item->said, (s->debug_mode & (1 << SCIkPARSER_NR))) != SAID_NO_MATCH)
+		      )
+		  )
+	      ) {
 	    /* Claim the event */
 	    SCIkdebug(SCIkMENU,"Menu: Event CLAIMED for %d/%d\n", menuc, itemc);
 	    claimed = 1;

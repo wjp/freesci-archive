@@ -172,7 +172,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
   int add_freesci = 0;
   menu_t *menu;
   char tracker;
-  char *left = NULL, *right, *left_origin;
+  char *left = NULL, *right, *left_origin = NULL;
   int string_len = 0;
   int tag, c_width, max_width = 0;
   char *_heapbase = (char *) heapbase;
@@ -304,6 +304,21 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
   menu->width = max_width;
 }
 
+int
+menubar_match_key(menu_item_t *item, int message, int modifiers)
+{
+  if ((item->key == message)
+      && ((modifiers & (SCI_EVM_CTRL | SCI_EVM_ALT)) == item->modifiers))
+    return 1;
+
+  if (message == '\t'
+      && item->key == 'i'
+      && ((modifiers & (SCI_EVM_CTRL | SCI_EVM_ALT)) == 0)
+      && item->modifiers == SCI_EVM_CTRL)
+    return 1; /* Match TAB to ^I */
+
+  return 0;
+}
 
 int
 menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int value)
@@ -314,7 +329,7 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int v
   if ((menu_nr < 0) || (item_nr < 0))
     return 1;
 
-  if ((menu_nr < menubar->menus_nr) || (item_nr < menubar->menus[menu_nr].items_nr))
+  if ((menu_nr >= menubar->menus_nr) || (item_nr >= menubar->menus[menu_nr].items_nr))
     return 1;
 
   item = menubar->menus[menu_nr].items + item_nr;
@@ -326,10 +341,10 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int v
 
       item->said_pos = value;
       memcpy(item->said, s->heap + value, 8); /* Copy Said spec */
-      item->flags |= MENU_ATTRIBUTE_SAID;
+      item->flags |= MENU_ATTRIBUTE_FLAGS_SAID;
 
     } else
-      item->flags &= ~MENU_ATTRIBUTE_SAID;
+      item->flags &= ~MENU_ATTRIBUTE_FLAGS_SAID;
 
     break;
 
@@ -351,7 +366,7 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int v
       item->keytext = malloc(2);
       item->keytext[0] = value;
       item->keytext[1] = 0;
-      item->flags |= MENU_ATTRIBUTE_KEY;
+      item->flags |= MENU_ATTRIBUTE_FLAGS_KEY;
       if ((item->key >= 'A') && (item->key <= 'Z'))
 	item->key = item->key - 'A' + 'a'; /* Lowercase the key */
 

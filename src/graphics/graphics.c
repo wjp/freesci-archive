@@ -265,8 +265,8 @@ inline void plot(picture_t buffers, int x, int y,
 void dither_line(picture_t buffers, int curx, int cury, short x1, short y1,
 		 int col1, int col2, int priority, int special, char drawenable)
 {
-  short temp, dx, dy, incrE, incrNE, d, x, y, finalx, finaly;
-  short tc1 = col1, tc2 = col2, tx = curx, ty = cury;
+  short dx, dy, incrE, incrNE, d, x, y, finalx, finaly;
+  short tc1 = col1, tc2 = col2;
   finalx = x1;
   finaly = y1;
 
@@ -562,10 +562,7 @@ int draw_view0(picture_t dest, port_t *port, int xp, int yp, short _priority,
   int x, y, maxx, maxy, minx;
   guint8 transparency;
   guint8 reverse;
-  gint16 *test;
-  gint16 absx = xp, absy = 10 + yp, clipmaxx = 319, clipmaxy = 199;
-  char drawenable = 1;
-  int col1, col2, priority, special;
+  int clipmaxx = 319, clipmaxy = 199;
 
   group++; index++; /* Both start at 0, but we need them to start at 1 */
 
@@ -586,7 +583,6 @@ int draw_view0(picture_t dest, port_t *port, int xp, int yp, short _priority,
   {
     int blindtop, blindleft, blindright; /* zones outside of the picture */
     int homepos;
-    int i;
     int xoffs, yoffs;
 
     lookup = (data + (getInt16(data+6+(loop<<1))));
@@ -859,7 +855,7 @@ void draw_pic0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	break;
       case 0xf8: /* fill */
 	{
-	  int oldc1, oldc2;
+	  int oldc1 = col1, oldc2 = col2;
 
 	  if (!(flags & 1)) { /* Fill in black only? */
 	    oldc1 = col1;
