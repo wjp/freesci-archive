@@ -1257,7 +1257,8 @@ main(int argc, char** argv)
 #ifdef WITH_DMALLOC
 	fprintf(stderr,"--- Everything but the two console buffers should have been freed now ---\n");
 	dmalloc_log_unfreed();
-	BREAKPOINT();
+/*	BREAKPOINT(); */
+	((*(int *)NULL) = 42);
 #endif
 	return 0;
 }

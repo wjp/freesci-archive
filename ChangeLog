@@ -1,3 +1,13 @@
+2002-10-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/scriptdebug.c (c_viewinfo): Changed viewinfo to
+	include graphics with its cells when possible
+	(c_disasm): Extended function to allow listing bytecode along with
+	data
+
+	* src/gfx/gfx_console.c (con_scroll): Fixed misc. bus in scrolling
+	the debug console
+
 2002-10-05  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/gfx_console.c: Added initial graphical console

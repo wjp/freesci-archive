@@ -27,12 +27,6 @@
 /* Graphical on-screen console */
 
 
-/*--
-TODO:
-5 Implement scrollback
-6 Demo code for inline gfx
---*/
-
 #include <console.h>
 
 #ifdef WANT_CONSOLE
@@ -308,6 +302,10 @@ _add_into_con_buffer(gfx_pixmap_t *pixmap, char *text)
 		strcat(target->text, text);
 		free(oldtext);
 		free(text);
+
+		con.partial_write = (target->text && *(target->text) &&
+				     target->text[strlen(target->text)] != '\n');
+
 		return;
 	}
 	else ++con_top_buffer_entry_nr;
@@ -317,7 +315,7 @@ _add_into_con_buffer(gfx_pixmap_t *pixmap, char *text)
 			     text[strlen(text)] != '\n');
 
 	if (pixmap)
-		target->height = pixmap->yl;
+		target->height = pixmap->index_yl;
 	else
 		target->height = 1; /* Will be calculated on demand */
 
@@ -398,40 +396,47 @@ con_scroll(gfx_state_t *state, int offset, int maxchars)
 
 	con.locked_to_end = 0;
 
-	con.pos.offset += offset;
-	/* _unfold_graphics() */
+	con.pos.offset += offset; /* offset exceeds size -> Use PREVIOUS entry */
+
 	while (con.pos.offset < 0 || con.pos.offset > con.pos.buf->entries[con.pos.entry].height) {
+
 		if (con.pos.offset < 0) {
-
-			if (con.pos.entry == 0) {
-				if (con.pos.buf->prev) {
-					con.pos.entry = CON_CLUSTER_SIZE;
-					con.pos.buf = con.pos.buf->prev;
-				} else {
-					con_jump_to_end(state);
-					return;
-				}
-			}
-
-			next_entry = con.pos.buf->entries + --con.pos.entry;
-
-			_unfold_graphics(state, next_entry, maxchars);
-			con.pos.offset += next_entry->height;
-		} else { /* offset too great ? */
-
 			if (++con.pos.entry == CON_CLUSTER_SIZE
 			    || ((con.pos.buf == con_buffer)
 			    && (con.pos.entry >= con_top_buffer_entry_nr))) {
 				if (con.pos.buf->next) {
 					con.pos.entry = 0;
 					con.pos.buf = con.pos.buf->next;
-				} else return; /* Can't scroll back any further */
+				} else {
+					con_jump_to_end(state);
+					return;
+				}
 			}
 
 			next_entry = con.pos.buf->entries + con.pos.entry;
 
 			_unfold_graphics(state, next_entry, maxchars);
 			con.pos.offset += next_entry->height;
+		} else { /* offset too great ? */
+
+			if (con.pos.entry == 0) {
+				if (con.pos.buf->prev) {
+					con.pos.entry = CON_CLUSTER_SIZE;
+					con.pos.buf = con.pos.buf->prev;
+				} else {
+					con.pos.offset = con.pos.buf->entries[0].height - 1;
+					return;
+				}
+			}
+			--con.pos.entry;
+
+			next_entry = con.pos.buf->entries + con.pos.entry;
+
+			_unfold_graphics(state, next_entry, maxchars);
+			con.pos.offset -= next_entry->height;
+
+			if (con.pos.offset < 0)
+				con.pos.offset = -con.pos.offset;
 		}
 	}
 }
@@ -761,12 +766,12 @@ con_gfx_read(gfx_state_t *state)
 
 			case SCI_K_PGUP:
 				must_redraw_text = 1;
-				con_scroll(state, -100, maxchars);
+				con_scroll(state, -75, maxchars);
 				break;
 
 			case SCI_K_PGDOWN:
 				must_redraw_text = 1;
-				con_scroll(state, 100, maxchars);
+				con_scroll(state, 75, maxchars);
 				break;
 
 			case SCI_K_END:
@@ -1049,10 +1054,18 @@ _con_redraw(gfx_state_t *state, int update_display_field, int update_input_field
 			continue;
 		}
 
-		while (depth > (drawme->pixmaps[pixmap_index]->index_yl + yscale - 1) / yscale)
-			depth -= (drawme->pixmaps[pixmap_index--]->index_yl + yscale -1) / yscale;
+		while (pixmap_index >= 0
+		       && depth > (drawme->pixmaps[pixmap_index]->yl + yscale - 1) / yscale)
+			depth -= (drawme->pixmaps[pixmap_index--]->yl + yscale -1) / yscale;
 
-		line_yl = (drawme->pixmaps[pixmap_index]->index_yl + yscale - 1) / yscale;
+		if (pixmap_index == -1) {
+			fprintf(stderr, "ERROR: Offset too great! It was %d in a block of height %d\n",
+				con.pos.offset, drawme->height);
+			exit(1);
+			continue;
+		}
+
+		line_yl = (drawme->pixmaps[pixmap_index]->yl + yscale - 1) / yscale;
 
 		offset -= line_yl - depth;
 		depth = line_yl;

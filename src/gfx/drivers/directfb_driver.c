@@ -694,11 +694,11 @@ scidfb_init_specific(gfx_driver_t *drv, int xres, int yres, int bytespp)
 	SCIGFX_CHECKED(_scidfb_init_input(&keyboard, &mouse));
 
 	if (!keyboard) {
-		GFXERROR("DFB-GFX: No keyboard found-- aborting...");
+		GFXERROR("DFB-GFX: No keyboard found-- aborting...\n");
 		return GFX_FATAL;
 	}
 	if (!mouse) {
-		GFXWARN("DFB-GFX: No pointing device found, disabling mouse support...");
+		GFXWARN("DFB-GFX: No pointing device found, disabling mouse support...\n");
 		drv->capabilities &= ~GFX_CAPABILITY_MOUSE_SUPPORT;
 	}
 

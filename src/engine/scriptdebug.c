@@ -262,12 +262,12 @@ c_viewinfo(state_t *s)
 {
 	int view = cmd_params[0].val;
 	int loops, i;
+	gfxr_view_t *view_pixmaps = NULL;
 
 	if (!s) {
 		sciprintf("Not in debug state\n");
 		return 1;
 	}
-
 	sciprintf("Resource view.%d ", view);
 
 	loops = gfxop_lookup_view_get_loops(s->gfx_state, view);
@@ -275,8 +275,6 @@ c_viewinfo(state_t *s)
 	if (loops < 0)
 		sciprintf("does not exist.\n");
 	else {
-		/* con_can_handle_pixmap() */
-		/* con_insert_pixmap() */
 		sciprintf("has %d loops:\n", loops);
 
 		for (i = 0; i < loops; i++) {
@@ -287,6 +285,13 @@ c_viewinfo(state_t *s)
 				int width;
 				int height;
 				point_t mod;
+
+				if (con_can_handle_pixmaps()) {
+					view_pixmaps = gfxr_get_view(s->gfx_state->resstate,
+								     view, &i, &j);
+					con_insert_pixmap(gfx_clone_pixmap(view_pixmaps->loops[i].cels[j],
+									   s->gfx_state->driver->mode));
+				}
 
 				gfxop_get_cel_parameters(s->gfx_state, view, i, j, &width, &height, &mod);
 
@@ -688,187 +693,232 @@ print_objname(state_t *s, heap_ptr pos, int address)
 }
 
 heap_ptr
-disassemble(state_t *s, heap_ptr pos)
+disassemble(state_t *s, heap_ptr pos, int print_bw_tag, int print_bytecode)
 /* Disassembles one command from the heap, returns address of next command or 0 if a ret was
 ** encountered.
 */
 {
-  heap_ptr retval = pos + 1;
-  word param_value;
-  int opsize = s->heap[pos];
-  int opcode = opsize >> 1;
-  int i = 0;
+	heap_ptr retval = pos + 1;
+	word param_value;
+	int opsize = s->heap[pos];
+	int opcode = opsize >> 1;
+	int bytecount = 1;
+	int i = 0;
 
-  if (!_debugstate_valid) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
-
-  opsize &= 1; /* byte if true, word if false */
-
-  sciprintf("%04x: [%c] %s", pos, opsize? 'B' : 'W', s->opcodes[opcode].name);
-
-  while (formats[opcode][i])
-
-    switch (formats[opcode][i++]) {
-
-    case Script_Invalid: sciprintf("-Invalid operation-"); break;
-
-    case Script_SByte:
-    case Script_Byte: sciprintf(" %02x", s->heap[retval++]); break;
-
-    case Script_Word:
-    case Script_SWord:
-      sciprintf(" %04x", 0xffff & (s->heap[retval] | (s->heap[retval+1] << 8)));
-      retval += 2;
-      break;
-
-    case Script_SVariable:
-    case Script_Variable:
-    case Script_Property:
-    case Script_Global:
-    case Script_Local:
-    case Script_Temp:
-    case Script_Param:
-      if (opsize)
-	param_value = s->heap[retval++];
-      else {
-	param_value = 0xffff & (s->heap[retval] | (s->heap[retval+1] << 8));
-	retval += 2;
-      }
-
-      if (opcode == op_callk)
-	sciprintf(" %s[%x]", (param_value < s->kernel_names_nr)
-		  ? s->kernel_names[param_value] : "<invalid>", param_value);
-      else sciprintf(opsize? " %02x" : " %04x", param_value);
-
-      break;
-
-    case Script_SRelative:
-      if (opsize)
-	param_value = s->heap[retval++];
-      else {
-	param_value = 0xffff & (s->heap[retval] | (s->heap[retval+1] << 8));
-	retval += 2;
-      }
-      sciprintf (opsize? " %02x  [%04x]" : " %04x  [%04x]", param_value, (0xffff) & (retval+(heap_ptr) param_value));
-      break;
-
-    case Script_End: retval = 0;
-      break;
-
-    default:
-      sciprintf("Internal assertion failed in 'disassemble', %s, L%d\n", __FILE__, __LINE__);
-
-    }
-
-  if (pos == *p_pc) /* Extra information if debugging the current opcode */
-
-    if ((opcode == op_pTos)||(opcode == op_sTop)||
-        (opcode == op_pToa)||(opcode == op_aTop)||
-	(opcode == op_dpToa)||(opcode == op_ipToa)||
-	(opcode == op_dpTos)||(opcode == op_ipTos))
-    {
-      int prop_ofs = s->heap[retval - 1];
-      int prop_id = prop_ofs_to_id(s, prop_ofs, *p_objp & 0xffff);
-
-      sciprintf("	(%s)", selector_name(s, prop_id));
-    }
-
-  sciprintf("\n");
-
-  if (pos == *p_pc) { /* Extra information if debugging the current opcode */
-
-    if (opcode == op_callk) {
-      int stackframe = s->heap[retval - 1] + (*p_restadjust * 2);
-      int argc = getInt16(s->heap + *p_sp - stackframe - 2);
-      int i;
-
-      sciprintf(" Kernel params: (");
-
-      for (i = 0; i < argc; i++) {
-	sciprintf("%04x", getUInt16(s->heap + *p_sp - stackframe + i*2));
-	if (i+1 < argc)
-	  sciprintf(", ");
-      }
-      sciprintf(")\n");
-
-    } else
-
-    if ((opcode == op_send) || (opcode == op_self)) {
-      int restmod = *p_restadjust;
-      int stackframe = s->heap[retval - 1] + (restmod * 2);
-      word selector;
-      heap_ptr selector_addr;
-
-      while (stackframe > 0) {
-	int argc = getInt16(s->heap + *p_sp - stackframe + 2);
-	heap_ptr nameaddress = 0;
-	heap_ptr called_obj_addr;
-	char *name;
-
-	if (opcode == op_send)
-	  called_obj_addr = s->acc;
-	else if (opcode == op_self)
-	  called_obj_addr = *p_objp;
-	else { /* op_super */
-	  called_obj_addr = s->heap[retval - 2];
-
-	  called_obj_addr = (s->classtable[called_obj_addr].scriptposp)?
-		  0 :
-		  *(s->classtable[called_obj_addr].scriptposp)
-		  + s->classtable[called_obj_addr].class_offset;
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
 	}
 
-	selector = getInt16(s->heap + *p_sp - stackframe);
+	opsize &= 1; /* byte if true, word if false */
 
-	if (called_obj_addr > 100) /* If we are in valid heap space */
-	  if (getInt16(s->heap + called_obj_addr + SCRIPT_OBJECT_MAGIC_OFFSET)
-	      == SCRIPT_OBJECT_MAGIC_NUMBER)
-	    nameaddress = getUInt16(s->heap + called_obj_addr + SCRIPT_NAME_OFFSET);
+  
+	sciprintf("%04x: ", pos);
 
-	if (nameaddress)
-	  name = (char *) s->heap + nameaddress;
-	else
-	  name = "<invalid>";
+	if (print_bytecode) {
+		while (formats[opcode][i]) {
+			switch (formats[opcode][i++]) {
 
-	sciprintf("  %s::%s[", name, (selector > s->selector_names_nr)
-		  ? "<invalid>" : selector_name(s,selector));
+			case Script_SByte:
+			case Script_Byte: bytecount++;
+				break;
 
-	switch (lookup_selector(s, called_obj_addr, selector, &selector_addr)) {
-	case SELECTOR_METHOD:
-	  sciprintf("FUNCT");
-	  argc += restmod;
-	  restmod = 0;
-	  break;
-	case SELECTOR_VARIABLE:
-	  sciprintf("VAR");
-	  break;
-	case SELECTOR_NONE:
-	  sciprintf("INVALID");
-	  break;
-	}
+			case Script_Word:
+			case Script_SWord: bytecount += 2;
+				break;
 
-	sciprintf("](");
+			case Script_SVariable:
+			case Script_Variable:
+			case Script_Property:
+			case Script_Global:
+			case Script_Local:
+			case Script_Temp:
+			case Script_Param:
+			case Script_SRelative:
+				if (opsize)
+					bytecount ++;
+				else
+					bytecount += 2;
+				break;
 
-	while (argc--) {
+			default:
+				break;
+			}
+		}
 
-	  sciprintf("%04x", 0xffff & getUInt16(s->heap + *p_sp - stackframe + 4));
-	  if (argc) sciprintf(", ");
-	  stackframe -= 2;
+		for (i = 0; i < bytecount; i++)
+			sciprintf("%02x ", s->heap[pos + i]);
+
+		for (i = bytecount; i < 5; i++)
+			sciprintf("   ");
 
 	}
 
-	sciprintf(")\n");
+	if (print_bw_tag)
+		sciprintf("[%c] ", opsize? 'B' : 'W');
+	sciprintf("%s", s->opcodes[opcode].name);
 
-	stackframe -= 4;
-      } /* while (stackframe > 0) */
+	i = 0;
+	while (formats[opcode][i])
 
-    } /* Send-like opcodes */
+		switch (formats[opcode][i++]) {
 
-  } /* (heappos == *p_pc) */
+		case Script_Invalid: sciprintf("-Invalid operation-"); break;
 
-  return retval;
+		case Script_SByte:
+		case Script_Byte: sciprintf(" %02x", s->heap[retval++]); break;
+
+		case Script_Word:
+		case Script_SWord:
+			sciprintf(" %04x", 0xffff & (s->heap[retval] | (s->heap[retval+1] << 8)));
+			retval += 2;
+			break;
+
+		case Script_SVariable:
+		case Script_Variable:
+		case Script_Property:
+		case Script_Global:
+		case Script_Local:
+		case Script_Temp:
+		case Script_Param:
+			if (opsize)
+				param_value = s->heap[retval++];
+			else {
+				param_value = 0xffff & (s->heap[retval] | (s->heap[retval+1] << 8));
+				retval += 2;
+			}
+
+			if (opcode == op_callk)
+				sciprintf(" %s[%x]", (param_value < s->kernel_names_nr)
+					  ? s->kernel_names[param_value] : "<invalid>", param_value);
+			else sciprintf(opsize? " %02x" : " %04x", param_value);
+
+			break;
+
+		case Script_SRelative:
+			if (opsize)
+				param_value = s->heap[retval++];
+			else {
+				param_value = 0xffff & (s->heap[retval] | (s->heap[retval+1] << 8));
+				retval += 2;
+			}
+			sciprintf (opsize? " %02x  [%04x]" : " %04x  [%04x]", param_value, (0xffff) & (retval+(heap_ptr) param_value));
+			break;
+
+		case Script_End: retval = 0;
+			break;
+
+		default:
+			sciprintf("Internal assertion failed in 'disassemble', %s, L%d\n", __FILE__, __LINE__);
+
+		}
+
+	if (pos == *p_pc) /* Extra information if debugging the current opcode */
+
+		if ((opcode == op_pTos)||(opcode == op_sTop)||
+		    (opcode == op_pToa)||(opcode == op_aTop)||
+		    (opcode == op_dpToa)||(opcode == op_ipToa)||
+		    (opcode == op_dpTos)||(opcode == op_ipTos)) {
+			int prop_ofs = s->heap[retval - 1];
+			int prop_id = prop_ofs_to_id(s, prop_ofs, *p_objp & 0xffff);
+
+			sciprintf("	(%s)", selector_name(s, prop_id));
+		}
+
+	sciprintf("\n");
+
+	if (pos == *p_pc) { /* Extra information if debugging the current opcode */
+
+		if (opcode == op_callk) {
+			int stackframe = s->heap[retval - 1] + (*p_restadjust * 2);
+			int argc = getInt16(s->heap + *p_sp - stackframe - 2);
+			int i;
+
+			sciprintf(" Kernel params: (");
+
+			for (i = 0; i < argc; i++) {
+				sciprintf("%04x", getUInt16(s->heap + *p_sp - stackframe + i*2));
+				if (i+1 < argc)
+					sciprintf(", ");
+			}
+			sciprintf(")\n");
+
+		} else
+
+			if ((opcode == op_send) || (opcode == op_self)) {
+				int restmod = *p_restadjust;
+				int stackframe = s->heap[retval - 1] + (restmod * 2);
+				word selector;
+				heap_ptr selector_addr;
+
+				while (stackframe > 0) {
+					int argc = getInt16(s->heap + *p_sp - stackframe + 2);
+					heap_ptr nameaddress = 0;
+					heap_ptr called_obj_addr;
+					char *name;
+
+					if (opcode == op_send)
+						called_obj_addr = s->acc;
+					else if (opcode == op_self)
+						called_obj_addr = *p_objp;
+					else { /* op_super */
+						called_obj_addr = s->heap[retval - 2];
+
+						called_obj_addr = (s->classtable[called_obj_addr].scriptposp)?
+							0 :
+							*(s->classtable[called_obj_addr].scriptposp)
+							+ s->classtable[called_obj_addr].class_offset;
+					}
+
+					selector = getInt16(s->heap + *p_sp - stackframe);
+
+					if (called_obj_addr > 100) /* If we are in valid heap space */
+						if (getInt16(s->heap + called_obj_addr + SCRIPT_OBJECT_MAGIC_OFFSET)
+						    == SCRIPT_OBJECT_MAGIC_NUMBER)
+							nameaddress = getUInt16(s->heap + called_obj_addr + SCRIPT_NAME_OFFSET);
+
+					if (nameaddress)
+						name = (char *) s->heap + nameaddress;
+					else
+						name = "<invalid>";
+
+					sciprintf("  %s::%s[", name, (selector > s->selector_names_nr)
+						  ? "<invalid>" : selector_name(s,selector));
+
+					switch (lookup_selector(s, called_obj_addr, selector, &selector_addr)) {
+					case SELECTOR_METHOD:
+						sciprintf("FUNCT");
+						argc += restmod;
+						restmod = 0;
+						break;
+					case SELECTOR_VARIABLE:
+						sciprintf("VAR");
+						break;
+					case SELECTOR_NONE:
+						sciprintf("INVALID");
+						break;
+					}
+
+					sciprintf("](");
+
+					while (argc--) {
+
+						sciprintf("%04x", 0xffff & getUInt16(s->heap + *p_sp - stackframe + 4));
+						if (argc) sciprintf(", ");
+						stackframe -= 2;
+
+					}
+
+					sciprintf(")\n");
+
+					stackframe -= 4;
+				} /* while (stackframe > 0) */
+
+			} /* Send-like opcodes */
+
+	} /* (heappos == *p_pc) */
+
+	return retval;
 }
 
 int
@@ -1480,7 +1530,11 @@ int
 c_disasm(state_t *s)
 {
 	int vpc = cmd_params[0].val;
-	int op_count;
+	int op_count = 1;
+	int do_bwc = 0;
+	int do_bytes = 0;
+	int i;
+	int invalid = 0;
 
 	if (!_debugstate_valid) {
 		sciprintf("Not in debug state\n");
@@ -1490,17 +1544,24 @@ c_disasm(state_t *s)
 	if (vpc <= 0)
 		vpc = *p_pc + vpc;
 
-	if (cmd_paramlength > 1)
-		{
-			if (cmd_params[1].val < 0)
-				return 0;
-			op_count = cmd_params[1].val;
-		}
-	else
-		op_count = 1;
+	for (i = 1; i < cmd_paramlength; i++) {
+			if (!strcasecmp(cmd_params[i].str, "bwt"))
+				do_bwc = 1;
+			else if (!strcasecmp(cmd_params[i].str, "bc"))
+				do_bytes = 1;
+			else if (toupper(cmd_params[i].str[0]) == 'C')
+				op_count = atoi(cmd_params[i].str + 1);
+			else {
+				invalid = 1;
+				sciprintf("Invalid option '%s'\n", cmd_params[i].str);
+			}
+	}
+
+	if (invalid || op_count < 0)
+		return invalid;
 
 	do {
-		vpc = disassemble(s, (heap_ptr)vpc);
+		vpc = disassemble(s, (heap_ptr)vpc, do_bwc, do_bytes);
 	} while ((vpc > 0) && (vpc < 0xfff2) && (cmd_paramlength > 1) && (--op_count));
 	return 0;
 }
@@ -2500,7 +2561,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 		p_restadjust = restadjust;
 		sciprintf("acc=%04x  ", s->acc & 0xffff);
 		_debugstate_valid = 1;
-		disassemble(s, *pc);
+		disassemble(s, *pc, 0, 1);
 
 		_debugstate_valid = old_debugstate;
 
@@ -2550,7 +2611,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 
 		c_debuginfo(s);
 		sciprintf("Step #%d\n", script_step_counter);
-		disassemble(s, *pc);
+		disassemble(s, *pc, 1, 0);
 
 		if (_debug_commands_not_hooked) {
 
@@ -2566,8 +2627,14 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_heapdump, "heapdump", "ii", "Dumps data from the heap\n"
 					 "\nEXAMPLE\n\n    heapdump 0x1200 42\n\n  Dumps 42 bytes starting at heap address\n"
 					 "  0x1200");
-			con_hook_command(c_disasm, "disasm", "ii*", "Disassembles one or more commands\n\n"
-					 "USAGE\n\n  disasm [startaddr] <number of commands to disassemble>");
+			con_hook_command(c_disasm, "disasm", "is*", "Disassembles one or more commands\n\n"
+					 "USAGE\n\n  disasm [startaddr] <options>\n\n"
+					 "  Valid options are:\n"
+					 "  bwt  : Print byte/word tag\n"
+					 "  c<x> : Disassemble <x> bytes\n"
+					 "  bc   : Print bytecode\n\n"
+					 "  If the start address is specified to be zero, the\n"
+					 "  current program counter is used instead.\n\n");
 			con_hook_command(c_scriptinfo, "scripttable", "", "Displays information about all\n  loaded scripts");
 			con_hook_command(c_heapobj, "heapobj", "i", "Displays information about an\n  object or class on the\n"
 					 "specified heap address.\n\nSEE ALSO\n\n  obj, accobj");
