@@ -1,3 +1,8 @@
+2003-03-27  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/gfx/gfx_console.c (_add_into_con_buffer): Fixed a bug which
+	caused the possibility for the entry list to grow really large.
+
 2003-03-06  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/scriptdebug.c: Improved display of priority bands

@@ -304,7 +304,7 @@ _add_into_con_buffer(gfx_pixmap_t *pixmap, char *text)
 		free(text);
 
 		con.partial_write = (target->text && *(target->text) &&
-				     target->text[strlen(target->text)] != '\n');
+				     target->text[strlen(target->text) - 1] != '\n');
 
 		return;
 	}
@@ -312,7 +312,7 @@ _add_into_con_buffer(gfx_pixmap_t *pixmap, char *text)
 
 
 	con.partial_write = (text && *(text) &&
-			     text[strlen(text)] != '\n');
+			     text[strlen(text) - 1] != '\n');
 
 	if (pixmap)
 		target->height = pixmap->index_yl;
