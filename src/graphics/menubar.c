@@ -139,7 +139,10 @@ _menubar_add_menu_item(menu_t *menu, int type, char *left, char *right, byte *fo
   item = &(menu->items[menu->items_nr - 1]);
 
   if ((item->type = type) == MENU_TYPE_HBAR)
+  {
+    item->keytext = NULL;
     return 0;
+  }    
 
   /* else assume MENU_TYPE_NORMAL */
   item->text = left;

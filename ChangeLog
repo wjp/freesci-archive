@@ -1,3 +1,7 @@
+2000-02-13  Lars Skovlund  <lskovlun@image.dk>
+
+	* Fixed the menubar bug (?).
+
 2000-02-08  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* Added several fixes and improvements that had been lost (!)
