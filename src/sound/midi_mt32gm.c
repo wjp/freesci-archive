@@ -44,6 +44,7 @@ int midi_mt32gm_open(guint8 *data_ptr, unsigned int data_length)
 
 int midi_mt32gm_close(void)
 {
+	midi_mt32_allstop();
 	return midiout_close();
 }
 

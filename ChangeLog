@@ -1,3 +1,8 @@
+2004-09-08  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sound/midi_mt32gm.c (midi_mt32gm_close): Stop all notes on
+	shutdown.
+
 2004-08-15  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* configure.in: Corrected a problem caused by my previous commit.
