@@ -177,8 +177,8 @@ AC_MSG_CHECKING([for the X11 MIT-SHM extension])
 
 AC_LANG_SAVE
 AC_LANG_C
-oldLIBS="$LIBS"
-LIBS="$LIBS -lXShm"
+oldLIBS="$X_LIBS"
+X_LIBS="$X_LIBS -lXext"
 AC_TRY_COMPILE([
 #include <X11/Xlib.h>
 #include <X11/extensions/XShm.h>
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
 	AC_DEFINE(HAVE_MITSHM)
 ],[
 	AC_MSG_RESULT(not present.)
-	LIBS="$oldLIBS"
+	X_LIBS="$oldLIBS"
 ])
 AC_LANG_RESTORE
 ])

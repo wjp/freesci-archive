@@ -3076,8 +3076,8 @@ fi
 
 if test x"$have_x" == xyes; then
 	
-echo $ac_n "checking for the new X11 MIT-SHM extension""... $ac_c" 1>&6
-echo "configure:3081: checking for the new X11 MIT-SHM extension" >&5
+echo $ac_n "checking for the X11 MIT-SHM extension""... $ac_c" 1>&6
+echo "configure:3081: checking for the X11 MIT-SHM extension" >&5
 
 
 ac_ext=c
@@ -3087,8 +3087,8 @@ ac_compile='${CC-cc} -c $CFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
 ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
 cross_compiling=$ac_cv_prog_cc_cross
 
-oldLIBS="$LIBS"
-LIBS="$LIBS -lXShm"
+oldLIBS="$X_LIBS"
+X_LIBS="$X_LIBS -lXext"
 cat > conftest.$ac_ext <<EOF
 #line 3094 "configure"
 #include "confdefs.h"
@@ -3123,7 +3123,7 @@ else
   rm -rf conftest*
   
 	echo "$ac_t""not present." 1>&6
-	LIBS="$oldLIBS"
+	X_LIBS="$oldLIBS"
 
 fi
 rm -f conftest*
