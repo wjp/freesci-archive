@@ -535,7 +535,7 @@ sci_sched_yield()
 void
 sci_sched_yield()
 {
-	sleep(0);
+	sleep(1);
 }
 
 #endif /* !HAVE_SCHED_YIELD */

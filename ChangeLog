@@ -1,3 +1,7 @@
+2002-03-12  Alexander R Angas <wgd@internode.on.net>
+
+        * src/scicore/tools.c: Fixed 100% CPU usage on Win32.
+
 2002-03-10  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/config.l: Lexer now accepts quoted arguments for config options
