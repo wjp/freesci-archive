@@ -32,6 +32,23 @@
 
 #include <ctype.h>
 
+char *class_names[] = 
+  {"",               /* These strange names were taken from an SCI01 interpreter */
+   "", 
+   "conj", 
+   "ass", 
+   "pos", 
+   "art", 
+   "adj", 
+   "pron", 
+   "noun", 
+   "auxv", 
+   "adv", 
+   "verb", 
+   "", 
+   "", 
+   "", 
+   ""}; 
 
 
 int

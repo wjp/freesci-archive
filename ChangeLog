@@ -1,5 +1,7 @@
 2000-04-13  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/core/vocab.c: Fixed compile problem caused by a new array.
+
 	* src/core/kscripts.c (kDisposeClone): underBits are no longer freed
 	automatically, as suggested by Lars. Stabilizes KQ1 and does not seem
 	to harm any other games.

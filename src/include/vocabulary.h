@@ -63,23 +63,7 @@ typedef struct opcode_
 #define VOCAB_CLASS_IMPERATIVE_VERB 0x80
 #define VOCAB_CLASS_NUMBER 0x100
 
-char *class_names[] = 
-  {"",               /* These strange names were taken from an SCI01 interpreter */
-   "", 
-   "conj", 
-   "ass", 
-   "pos", 
-   "art", 
-   "adj", 
-   "pron", 
-   "noun", 
-   "auxv", 
-   "adv", 
-   "verb", 
-   "", 
-   "", 
-   "", 
-   ""}; 
+extern char *class_names[]; /* Vocabulary class names */
 
 #define VOCAB_CLASS_ANYWORD 0xff
 /* Anywords are ignored by the parser */
