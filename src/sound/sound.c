@@ -338,8 +338,8 @@ song_new(word handle, byte *data, int size, int priority)
 	switch (data[0]) {
 	case 2:
 	  j = MIDI_CHANNELS -1;
-	  retval->polyphony[MIDI_CHANNELS] = 0;
-	  retval->flags[MIDI_CHANNELS] = 0;
+	  retval->polyphony[j] = 0;
+	  retval->flags[j] = 0;
 	  break;
 	case 0:
 	  j = MIDI_CHANNELS;
@@ -349,7 +349,7 @@ song_new(word handle, byte *data, int size, int priority)
 	  printf("Unrecognized number of channels in song resource!\n");
 	}
 
-	for (i = 0; i < MIDI_CHANNELS; i++) {
+	for (i = 0; i < j; i++) {
 		retval->polyphony[i] = data[1 + (i << 1)];
 		retval->flags[i] = data[2 + (i << 1)];
 	}
