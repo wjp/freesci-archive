@@ -1,1 +1,1 @@
-EXTRA_DIST = getopt.h
+EXTRA_DIST = getopt.h sci_win32.h

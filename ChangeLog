@@ -1,3 +1,18 @@
+2004-04-02  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/resmgr.c (gfxr_get_font): Added support for the two
+	new built-in fonts GFX_FONT_BUILTIN_5x8 and GFX_FONT_BUILTIN_6x10.
+
+	* src/gfx/font-6x10.c:
+	* src/gfx/font-5x8.c: Added two X11 fonts, converted to c. The 6x10
+	font also received some manual treatment for beautification pur-
+	poses.
+
+	* src/tools/fonttoc.c: Added 'font' file to FreeSCI source converter.
+
+	* src/tools/bdftofont.c (convert_font): Added bdf -> 'font' file
+	converter based on xmbdef source code (X11 licence).
+
 2004-03-28  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kgraphics.c (kDrawPic): Revert bogus change that was

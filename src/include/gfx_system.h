@@ -335,6 +335,8 @@ typedef struct { /* gfx_pixmap_t: Pixel map */
 } gfx_pixmap_t;
 
 
+#define GFX_FONT_BUILTIN_5x8  -1
+#define GFX_FONT_BUILTIN_6x10 -2
 
 typedef struct { /* gfx_bitmap_font_t: Bitmap font information */
 	int ID; /* Unique resource ID */
