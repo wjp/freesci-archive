@@ -884,7 +884,7 @@ sciprintf("returned, seekpos=%d\n", seekpos);
 void
 _vocab_recursive_ptree_dump_treelike(parse_tree_node_t *nodes, int nr, int prevnr)
 {
-  if ((nr > VOCAB_TREE_NODES) || (nr < prevnr)) {
+  if ((nr > VOCAB_TREE_NODES)/* || (nr < prevnr)*/) {
     sciprintf("Error(%04x)", nr);
     return;
   }
@@ -923,7 +923,7 @@ _vocab_recursive_ptree_dump(parse_tree_node_t *nodes, int nr, int prevnr)
     return;
   }
 
-  if ((nr > VOCAB_TREE_NODES) || (nr < prevnr)) {
+  if ((nr > VOCAB_TREE_NODES)/* || (nr < prevnr)*/) {
     sciprintf("Error(%04x))", nr);
     return;
   }

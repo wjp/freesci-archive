@@ -16,6 +16,7 @@
 #define	YY_HASH	266
 #define	YY_LT	267
 #define	YY_GT	268
+#define	YY_BRACKETSO_LT	269
 
 #line 28 "said.y"
 
@@ -53,12 +54,22 @@ said_aug_branch(int, int, tree_t, tree_t);
 
 static tree_t
 said_attach_branch(tree_t, tree_t);
-
+/*
 static tree_t
 said_wgroup_branch(wgroup_t);
-
+*/
 static said_spec_t
 said_top_branch(tree_t);
+
+static tree_t
+said_paren(tree_t, tree_t);
+
+static tree_t
+said_value(int, tree_t);
+
+static tree_t
+said_terminal(int);
+
 
 static int
 yylex(void);
@@ -83,11 +94,11 @@ yyerror(char *s)
 
 
 
-#define	YYFINAL		42
+#define	YYFINAL		47
 #define	YYFLAG		-32768
-#define	YYNTBASE	14
+#define	YYNTBASE	15
 
-#define YYTRANSLATE(x) ((unsigned)(x) <= 268 ? yytranslate[x] : 24)
+#define YYTRANSLATE(x) ((unsigned)(x) <= 269 ? yytranslate[x] : 27)
 
 static const char yytranslate[] = {     0,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -116,33 +127,34 @@ static const char yytranslate[] = {     0,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     1,     2,     3,     4,     5,
-     6,     7,     8,     9,    10,    11,    12,    13
+     6,     7,     8,     9,    10,    11,    12,    13,    14
 };
 
 #if YYDEBUG != 0
 static const short yyprhs[] = {     0,
-     0,     3,     7,    12,    13,    15,    19,    25,    31,    33,
-    35,    39,    43,    47,    49,    50,    53,    56,    58,    62,
-    64,    68,    69
+     0,     3,     7,    12,    13,    15,    16,    18,    21,    26,
+    28,    31,    36,    38,    40,    44,    46,    50,    54,    57,
+    59,    61,    63,    67,    71,    74,    78
 };
 
-static const short yyrhs[] = {    16,
-    23,     0,    16,    21,    23,     0,    16,    21,    22,    23,
-     0,     0,    16,     0,    17,    12,    15,     0,    17,    12,
-    15,    12,    15,     0,    17,     9,    12,    15,    10,     0,
-    17,     0,    18,     0,    18,     4,    17,     0,     9,    15,
-    10,     0,     7,    15,     8,     0,     3,     0,     0,     6,
-    15,     0,     6,    15,     0,    20,     0,     9,    19,    10,
-     0,    20,     0,     9,    19,    10,     0,     0,    13,     0
+static const short yyrhs[] = {    17,
+    16,     0,    17,    18,    16,     0,    17,    18,    19,    16,
+     0,     0,    13,     0,     0,    23,     0,     6,    23,     0,
+     9,     6,    23,    10,     0,     6,     0,     6,    23,     0,
+     9,     6,    23,    10,     0,     3,     0,    22,     0,     9,
+    22,    10,     0,    20,     0,     7,    23,     8,     0,    20,
+     4,    22,     0,    21,    24,     0,    21,     0,    24,     0,
+    25,     0,    14,    25,    10,     0,    12,    20,    26,     0,
+    12,    20,     0,    12,    20,    26,     0,    12,    20,     0
 };
 
 #endif
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-    98,   100,   102,   107,   109,   114,   117,   119,   121,   125,
-   127,   131,   133,   135,   139,   141,   145,   149,   151,   155,
-   157,   161,   163
+   107,   109,   111,   116,   118,   124,   126,   132,   134,   136,
+   142,   144,   150,   155,   157,   162,   164,   166,   172,   174,
+   176,   182,   184,   190,   192,   198,   200
 };
 #endif
 
@@ -151,64 +163,68 @@ static const short yyrline[] = { 0,
 
 static const char * const yytname[] = {   "$","error","$undefined.","WGROUP",
 "YY_COMMA","YY_AMP","YY_SLASH","YY_PARENO","YY_PARENC","YY_BRACKETSO","YY_BRACKETSC",
-"YY_HASH","YY_LT","YY_GT","said_spec","subexpression","ne_subexpression","expression",
-"main_expression","before_exp","ne_before_exp","nested_before_first","nested_before_second",
-"more_after", NULL
+"YY_HASH","YY_LT","YY_GT","YY_BRACKETSO_LT","saidspec","optcont","leftspec",
+"midspec","rightspec","word","cwordset","wordset","expr","cwordrefset","wordrefset",
+"recref", NULL
 };
 #endif
 
 static const short yyr1[] = {     0,
-    14,    14,    14,    15,    15,    16,    16,    16,    16,    17,
-    17,    18,    18,    18,    19,    19,    20,    21,    21,    22,
-    22,    23,    23
+    15,    15,    15,    16,    16,    17,    17,    18,    18,    18,
+    19,    19,    20,    21,    21,    22,    22,    22,    23,    23,
+    23,    24,    24,    25,    25,    26,    26
 };
 
 static const short yyr2[] = {     0,
-     2,     3,     4,     0,     1,     3,     5,     5,     1,     1,
-     3,     3,     3,     1,     0,     2,     2,     1,     3,     1,
-     3,     0,     1
+     2,     3,     4,     0,     1,     0,     1,     2,     4,     1,
+     2,     4,     1,     1,     3,     1,     3,     3,     2,     1,
+     1,     1,     3,     3,     2,     3,     2
 };
 
-static const short yydefact[] = {     0,
-    14,     4,     4,    22,     9,    10,     0,     5,     0,     4,
-    15,    23,    18,    22,     1,     0,     4,     0,    13,    12,
-    17,     4,     0,    15,    20,    22,     2,     4,     6,    11,
-    16,    19,     0,     3,     0,     4,    21,     8,     7,     0,
-     0,     0
+static const short yydefact[] = {     6,
+    13,     0,     0,     0,     0,     4,    16,    20,    14,     7,
+    21,    22,     0,     0,    25,     0,    10,     0,     5,     1,
+     4,     0,    19,    17,    15,     0,    24,    23,     8,     0,
+     0,     0,     2,     4,    18,    27,     0,    11,     0,     3,
+    26,     9,     0,    12,     0,     0,     0
 };
 
-static const short yydefgoto[] = {    40,
-     7,     8,     5,     6,    23,    13,    14,    26,    15
+static const short yydefgoto[] = {    45,
+    20,     6,    21,    34,     7,     8,     9,    10,    11,    12,
+    27
 };
 
-static const short yypact[] = {     3,
--32768,     3,     3,    -4,     8,    -1,    10,-32768,    -6,     3,
-    15,-32768,-32768,     2,-32768,     4,     3,     3,-32768,-32768,
--32768,     3,    12,    15,-32768,    11,-32768,     3,-32768,-32768,
--32768,-32768,    13,-32768,    16,     3,-32768,-32768,-32768,    27,
-    28,-32768
+static const short yypact[] = {     5,
+-32768,     5,     4,     1,    -7,     0,    21,     6,-32768,-32768,
+-32768,-32768,     2,    12,    14,    20,     5,    26,-32768,-32768,
+    18,     4,-32768,-32768,-32768,     1,-32768,-32768,-32768,     5,
+     5,    27,-32768,    22,-32768,    14,    24,-32768,     5,-32768,
+-32768,-32768,    28,-32768,    36,    39,-32768
 };
 
 static const short yypgoto[] = {-32768,
-    -3,    29,    14,-32768,     6,    17,-32768,-32768,   -13
+   -18,-32768,-32768,-32768,    -3,-32768,    -1,    -2,    32,    37,
+     7
 };
 
 
-#define	YYLAST		33
+#define	YYLAST		43
 
 
-static const short yytable[] = {     9,
-    27,    10,    18,    20,    11,     1,    21,    10,    12,     2,
-    24,     3,    34,    29,    12,    28,    16,    19,    31,    17,
-    22,    32,    37,    12,    35,    38,    41,    42,     4,    33,
-    25,    30,    39
+static const short yytable[] = {    13,
+    15,    14,    33,     1,     4,    17,     1,     1,    18,    24,
+     2,     2,    19,     3,    29,    40,     4,     4,     5,     5,
+    35,    25,    36,    31,    22,    26,    32,    37,    38,    28,
+    19,    30,    39,    42,    19,    46,    43,    44,    47,    23,
+     0,    16,    41
 };
 
-static const short yycheck[] = {     3,
-    14,     6,     4,    10,     9,     3,    10,     6,    13,     7,
-     9,     9,    26,    17,    13,    12,     9,     8,    22,    12,
-     6,    10,    10,    13,    28,    10,     0,     0,     0,    24,
-    14,    18,    36
+static const short yycheck[] = {     2,
+     4,     3,    21,     3,    12,     6,     3,     3,     9,     8,
+     7,     7,    13,     9,    17,    34,    12,    12,    14,    14,
+    22,    10,    26,     6,     4,    12,     9,    30,    31,    10,
+    13,     6,     6,    10,    13,     0,    39,    10,     0,     8,
+    -1,     5,    36
 };
 /* -*-C-*-  Note some compilers choke on comments on `#line' lines.  */
 #line 3 "/usr/share/bison.simple"
@@ -713,96 +729,112 @@ yyreduce:
   switch (yyn) {
 
 case 1:
-#line 99 "said.y"
-{ yyval = said_top_branch(said_attach_branch(yyvsp[-1], said_aug_branch(0x142, 0x14a, SAID_BRANCH_NULL, yyvsp[0]))) ;
+#line 108 "said.y"
+{ yyval = said_top_branch(said_attach_branch(yyvsp[-1], yyvsp[0])) ;
     break;}
 case 2:
-#line 101 "said.y"
+#line 110 "said.y"
 { yyval = said_top_branch(said_attach_branch(yyvsp[-2], said_attach_branch(yyvsp[-1], yyvsp[0]))) ;
     break;}
 case 3:
-#line 103 "said.y"
+#line 112 "said.y"
 { yyval = said_top_branch(said_attach_branch(yyvsp[-3], said_attach_branch(yyvsp[-2], said_attach_branch(yyvsp[-1], yyvsp[0])))) ;
     break;}
 case 4:
-#line 108 "said.y"
+#line 117 "said.y"
 { yyval = SAID_BRANCH_NULL ;
     break;}
 case 5:
-#line 110 "said.y"
-{ yyval = yyvsp[0] ;
+#line 119 "said.y"
+{ yyval = said_paren(said_value(0x14b, said_value(0xf900, said_terminal(0xf900))), SAID_BRANCH_NULL) ;
     break;}
 case 6:
-#line 116 "said.y"
-{ yyval = said_aug_branch(0x144, 0x14f, yyvsp[-2], yyvsp[0]) ;
-    break;}
-case 7:
-#line 118 "said.y"
-{ yyval = said_aug_branch(0x141, 0x144, yyvsp[-4], said_aug_branch(0x144, 0x14f, yyvsp[-2], yyvsp[0])) ;
-    break;}
-case 8:
-#line 120 "said.y"
-{ yyval = said_aug_branch(0x152, 0x144, yyvsp[-4], yyvsp[-1]) ;
-    break;}
-case 9:
-#line 122 "said.y"
-{ yyval = yyvsp[0] ;
-    break;}
-case 10:
-#line 126 "said.y"
-{ yyval = yyvsp[0] ;
-    break;}
-case 11:
-#line 128 "said.y"
-{ yyval = said_attach_branch(yyvsp[-2], yyvsp[0]) ;
-    break;}
-case 12:
-#line 132 "said.y"
-{ yyval = said_aug_branch(0x152, 0x14c, yyvsp[-1], SAID_BRANCH_NULL) ;
-    break;}
-case 13:
-#line 134 "said.y"
-{ yyval = said_aug_branch(0x141, 0x14c, yyvsp[-1], SAID_BRANCH_NULL) ;
-    break;}
-case 14:
-#line 136 "said.y"
-{ yyval = said_wgroup_branch(yyvsp[0]) ;
-    break;}
-case 15:
-#line 140 "said.y"
+#line 125 "said.y"
 { yyval = SAID_BRANCH_NULL ;
     break;}
+case 7:
+#line 127 "said.y"
+{ yyval = said_paren(said_value(0x141, said_value(0x149, yyvsp[0])), SAID_BRANCH_NULL) ;
+    break;}
+case 8:
+#line 133 "said.y"
+{ yyval = said_aug_branch(0x142, 0x14a, yyvsp[0], SAID_BRANCH_NULL) ;
+    break;}
+case 9:
+#line 135 "said.y"
+{ yyval = said_aug_branch(0x152, 0x142, said_aug_branch(0x142, 0x14a, yyvsp[-1], SAID_BRANCH_NULL), SAID_BRANCH_NULL) ;
+    break;}
+case 10:
+#line 137 "said.y"
+{ yyval = SAID_BRANCH_NULL ;
+    break;}
+case 11:
+#line 143 "said.y"
+{ yyval = said_aug_branch(0x143, 0x14a, yyvsp[0], SAID_BRANCH_NULL) ;
+    break;}
+case 12:
+#line 145 "said.y"
+{ yyval = said_aug_branch(0x152, 0x143, said_aug_branch(0x143, 0x14a, yyvsp[-1], SAID_BRANCH_NULL), SAID_BRANCH_NULL) ;
+    break;}
+case 13:
+#line 151 "said.y"
+{ yyval = said_paren(said_value(0x141, said_value(0x153, said_terminal(yyvsp[0]))), SAID_BRANCH_NULL) ;
+    break;}
+case 14:
+#line 156 "said.y"
+{ yyval = said_aug_branch(0x141, 0x14f, yyvsp[0], SAID_BRANCH_NULL) ;
+    break;}
+case 15:
+#line 158 "said.y"
+{ yyval = said_aug_branch(0x141, 0x14f, said_aug_branch(0x152, 0x14c, said_aug_branch(0x141, 0x14f, yyvsp[-1], SAID_BRANCH_NULL), SAID_BRANCH_NULL), SAID_BRANCH_NULL) ;
+    break;}
 case 16:
-#line 142 "said.y"
+#line 163 "said.y"
 { yyval = yyvsp[0] ;
     break;}
 case 17:
-#line 146 "said.y"
-{ yyval = yyvsp[0] ;
+#line 165 "said.y"
+{ yyval = said_aug_branch(0x141, 0x14c, yyvsp[-1], SAID_BRANCH_NULL) ;
     break;}
 case 18:
-#line 150 "said.y"
-{ yyval = said_aug_branch(0x142, 0x14a, yyvsp[0], SAID_BRANCH_NULL) ;
+#line 167 "said.y"
+{ yyval = said_attach_branch(yyvsp[-2], yyvsp[0]) ;
     break;}
 case 19:
-#line 152 "said.y"
-{ yyval = said_aug_branch(0x152, 0x142, yyvsp[-1], SAID_BRANCH_NULL) ;
+#line 173 "said.y"
+{ yyval = said_attach_branch(yyvsp[-1], yyvsp[0]) ;
     break;}
 case 20:
-#line 156 "said.y"
-{ yyval = said_aug_branch(0x143, 0x14a, yyvsp[0], SAID_BRANCH_NULL) ;
+#line 175 "said.y"
+{ yyval = yyvsp[0] ;
     break;}
 case 21:
-#line 158 "said.y"
-{ yyval = said_aug_branch(0x152, 0x143, yyvsp[-1], SAID_BRANCH_NULL) ;
+#line 177 "said.y"
+{ yyval = yyvsp[0] ;
     break;}
 case 22:
-#line 162 "said.y"
-{ yyval = SAID_BRANCH_NULL ;
+#line 183 "said.y"
+{ yyval = yyvsp[0] ;
     break;}
 case 23:
-#line 164 "said.y"
-{ yyval = said_aug_branch(0x14b, SAID_LONG(SAID_GT), SAID_BRANCH_NULL, SAID_BRANCH_NULL) ;
+#line 185 "said.y"
+{ yyval = said_aug_branch(0x152, 0x144, yyvsp[-1], SAID_BRANCH_NULL) ;
+    break;}
+case 24:
+#line 191 "said.y"
+{ yyval = said_aug_branch(0x144, 0x14f, yyvsp[-1], yyvsp[0]) ;
+    break;}
+case 25:
+#line 193 "said.y"
+{ yyval = said_aug_branch(0x144, 0x14f, yyvsp[0], SAID_BRANCH_NULL) ;
+    break;}
+case 26:
+#line 199 "said.y"
+{ yyval = said_aug_branch(0x141, 0x144, said_aug_branch(0x144, 0x14f, yyvsp[-1], SAID_BRANCH_NULL), yyvsp[0]) ;
+    break;}
+case 27:
+#line 201 "said.y"
+{ yyval = said_aug_branch(0x141, 0x144, said_aug_branch(0x144, 0x14f, yyvsp[0], SAID_BRANCH_NULL), SAID_BRANCH_NULL) ;
     break;}
 }
    /* the action file gets copied in in place of this dollarsign */
@@ -1002,7 +1034,19 @@ yyerrhandle:
   yystate = yyn;
   goto yynewstate;
 }
-#line 169 "said.y"
+#line 206 "said.y"
+
+
+#if 0
+((((((((((((((((((((((((((((((((((
+))))))))))))))))))))))))))))))))))
+//////////////////////////////////
+[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[
+]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+#endif
 
 
 int
@@ -1025,6 +1069,9 @@ yylex(void)
     else {
       assert(retval >= SAID_FIRST);
       retval = parse_yy_token_lookup[retval - SAID_FIRST];
+      if (retval == YY_BRACKETSO
+	  && ((said_tokens[said_token] >> 8) == SAID_LT))
+	retval = YY_BRACKETSO_LT;
     }
   }
 
@@ -1058,6 +1105,36 @@ said_branch_node(tree_t pos, int left, int right)
   return pos;
 }
 
+
+static tree_t
+said_paren(tree_t t1, tree_t t2)
+{
+  if (t1)
+    return said_branch_node(SAID_NEXT_NODE,
+			    t1,
+			    t2
+			    );
+  else
+    return t2;
+}
+
+static tree_t
+said_value(int val, tree_t t)
+{
+  return said_branch_node(SAID_NEXT_NODE,
+			  said_leaf_node(SAID_NEXT_NODE, val),
+			  t
+			  );
+			  
+}
+
+static tree_t
+said_terminal(int val)
+{
+  return said_leaf_node(SAID_NEXT_NODE, val);
+}
+
+
 static tree_t
 said_aug_branch(int n1, int n2, tree_t t1, tree_t t2)
 {
@@ -1088,6 +1165,12 @@ said_attach_branch(tree_t base, tree_t attacheant)
 #ifdef SAID_DEBUG
   fprintf(stderr,"ATT2([%04x], [%04x]) = [%04x]\n", base, attacheant, base);
 #endif
+
+  if (!attacheant)
+    return base;
+  if (!base)
+    return attacheant;
+
   if (!base)
     return 0; /* Happens if we're out of space */
 

@@ -1,3 +1,7 @@
+2000-05-14  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/said.y: Significant improvements in Said() tree building.
+
 2000-05-13  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/grammar.c (_vocab_build_gnf): Changed the list writing

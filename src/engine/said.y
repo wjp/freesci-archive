@@ -60,12 +60,22 @@ said_aug_branch(int, int, tree_t, tree_t);
 
 static tree_t
 said_attach_branch(tree_t, tree_t);
-
+/*
 static tree_t
 said_wgroup_branch(wgroup_t);
-
+*/
 static said_spec_t
 said_top_branch(tree_t);
+
+static tree_t
+said_paren(tree_t, tree_t);
+
+static tree_t
+said_value(int, tree_t);
+
+static tree_t
+said_terminal(int);
+
 
 static int
 yylex(void);
@@ -88,85 +98,124 @@ yyerror(char *s)
 %token YY_BRACKETSO /* 0xf5 */
 %token YY_BRACKETSC /* 0xf6 */
 %token YY_HASH      /* 0xf7 */
-%left YY_LT         /* 0xf8 */
+%token YY_LT        /* 0xf8 */
 %token YY_GT        /* 0xf9 */
-
-%expect 5 /* 5 s/r conflicts */
+%token YY_BRACKETSO_LT /* special token used to imitate LR(2) behaviour */
 
 %%
 
-said_spec:	  ne_subexpression more_after
-			{ $$ = said_top_branch(said_attach_branch($1, said_aug_branch(0x142, 0x14a, SAID_BRANCH_NULL, $2))) }
-		| ne_subexpression nested_before_first more_after
+saidspec :	  leftspec optcont
+			{ $$ = said_top_branch(said_attach_branch($1, $2)) }
+		| leftspec midspec optcont
 			{ $$ = said_top_branch(said_attach_branch($1, said_attach_branch($2, $3))) }
-		| ne_subexpression nested_before_first nested_before_second more_after
+		| leftspec midspec rightspec optcont
 			{ $$ = said_top_branch(said_attach_branch($1, said_attach_branch($2, said_attach_branch($3, $4)))) }
 		;
 
 
-subexpression:    /* empty */
+optcont :	 /* empty */
 			{ $$ = SAID_BRANCH_NULL }
-		| ne_subexpression
-			{ $$ = $1 }
+		| YY_GT
+			{ $$ = said_paren(said_value(0x14b, said_value(0xf900, said_terminal(0xf900))), SAID_BRANCH_NULL) }
 		;
 
 
-ne_subexpression:
-		  expression YY_LT subexpression
-			{ $$ = said_aug_branch(0x144, 0x14f, $1, $3) }
-		| expression YY_LT subexpression YY_LT subexpression
-			{ $$ = said_aug_branch(0x141, 0x144, $1, said_aug_branch(0x144, 0x14f, $3, $5)) }
-		| expression YY_BRACKETSO YY_LT subexpression YY_BRACKETSC
-			{ $$ = said_aug_branch(0x152, 0x144, $1, $4) }
-		| expression
-			{ $$ = $1 }
+
+leftspec :	/* empty */
+			{ $$ = SAID_BRANCH_NULL }
+		| expr
+			{ $$ = said_paren(said_value(0x141, said_value(0x149, $1)), SAID_BRANCH_NULL) }
 		;
 
-expression:	  main_expression
+
+
+midspec :	 YY_SLASH expr
+			{ $$ = said_aug_branch(0x142, 0x14a, $2, SAID_BRANCH_NULL) }
+		| YY_BRACKETSO YY_SLASH expr YY_BRACKETSC
+			{ $$ = said_aug_branch(0x152, 0x142, said_aug_branch(0x142, 0x14a, $3, SAID_BRANCH_NULL), SAID_BRANCH_NULL) }
+		| YY_SLASH
+			{ $$ = SAID_BRANCH_NULL }
+		;
+
+
+
+rightspec :	 YY_SLASH expr
+			{ $$ = said_aug_branch(0x143, 0x14a, $2, SAID_BRANCH_NULL) }
+		| YY_BRACKETSO YY_SLASH expr YY_BRACKETSC
+			{ $$ = said_aug_branch(0x152, 0x143, said_aug_branch(0x143, 0x14a, $3, SAID_BRANCH_NULL), SAID_BRANCH_NULL) }
+		;
+
+
+
+word :		 WGROUP
+			{ $$ = said_paren(said_value(0x141, said_value(0x153, said_terminal($1))), SAID_BRANCH_NULL) }
+		;
+
+
+cwordset :	wordset
+			{ $$ = said_aug_branch(0x141, 0x14f, $1, SAID_BRANCH_NULL) }
+		| YY_BRACKETSO wordset YY_BRACKETSC
+			{ $$ = said_aug_branch(0x141, 0x14f, said_aug_branch(0x152, 0x14c, said_aug_branch(0x141, 0x14f, $2, SAID_BRANCH_NULL), SAID_BRANCH_NULL), SAID_BRANCH_NULL) }
+		;
+
+
+wordset :	 word
 			{ $$ = $1 }
-		| main_expression YY_COMMA expression
+		| YY_PARENO expr YY_PARENC
+			{ $$ = said_aug_branch(0x141, 0x14c, $2, SAID_BRANCH_NULL) }
+		| word YY_COMMA wordset
 			{ $$ = said_attach_branch($1, $3) }
 		;
 
-main_expression:  YY_BRACKETSO subexpression YY_BRACKETSC
-			{ $$ = said_aug_branch(0x152, 0x14c, $2, SAID_BRANCH_NULL) }
-		| YY_PARENO subexpression YY_PARENC
-			{ $$ = said_aug_branch(0x141, 0x14c, $2, SAID_BRANCH_NULL) }
-		| WGROUP
-			{ $$ = said_wgroup_branch($1) }
+
+
+expr :		 cwordset cwordrefset
+			{ $$ = said_attach_branch($1, $2) }
+		| cwordset
+			{ $$ = $1 }
+		| cwordrefset
+			{ $$ = $1 }
 		;
 
-before_exp:	  /* empty */
-			{ $$ = SAID_BRANCH_NULL }
-		| YY_SLASH subexpression
-			{ $$ = $2 }
+
+
+cwordrefset :	 wordrefset
+			{ $$ = $1 }
+		| YY_BRACKETSO_LT wordrefset YY_BRACKETSC
+			{ $$ = said_aug_branch(0x152, 0x144, $2, SAID_BRANCH_NULL) }
 		;
 
-ne_before_exp:	YY_SLASH subexpression
-			{ $$ = $2 }
+
+
+wordrefset :	YY_LT word recref
+			{ $$ = said_aug_branch(0x144, 0x14f, $2, $3) }
+		| YY_LT word
+			{ $$ = said_aug_branch(0x144, 0x14f, $2, SAID_BRANCH_NULL) }
 		;
 
-nested_before_first:	  ne_before_exp
-			{ $$ = said_aug_branch(0x142, 0x14a, $1, SAID_BRANCH_NULL) }
-		| YY_BRACKETSO before_exp YY_BRACKETSC
-			{ $$ = said_aug_branch(0x152, 0x142, $2, SAID_BRANCH_NULL) }
-		;
 
-nested_before_second:	  ne_before_exp
-			{ $$ = said_aug_branch(0x143, 0x14a, $1, SAID_BRANCH_NULL) }
-		| YY_BRACKETSO before_exp YY_BRACKETSC
-			{ $$ = said_aug_branch(0x152, 0x143, $2, SAID_BRANCH_NULL) }
-		;
 
-more_after:	  /* empty */
-			{ $$ = SAID_BRANCH_NULL }
-		| YY_GT
-			{ $$ = said_aug_branch(0x14b, SAID_LONG(SAID_GT), SAID_BRANCH_NULL, SAID_BRANCH_NULL) }
+recref :	YY_LT word recref
+			{ $$ = said_aug_branch(0x141, 0x144, said_aug_branch(0x144, 0x14f, $2, SAID_BRANCH_NULL), $3) }
+		| YY_LT word
+			{ $$ = said_aug_branch(0x141, 0x144, said_aug_branch(0x144, 0x14f, $2, SAID_BRANCH_NULL), SAID_BRANCH_NULL) }
 		;
 
 
 
 %%
+
+#if 0
+((((((((((((((((((((((((((((((((((
+))))))))))))))))))))))))))))))))))
+//////////////////////////////////
+[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[
+]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+#endif
+
 
 int
 parse_yy_token_lookup[] = {YY_COMMA, YY_AMP, YY_SLASH, YY_PARENO, YY_PARENC, YY_BRACKETSO, YY_BRACKETSC,
@@ -188,6 +237,9 @@ yylex(void)
     else {
       assert(retval >= SAID_FIRST);
       retval = parse_yy_token_lookup[retval - SAID_FIRST];
+      if (retval == YY_BRACKETSO
+	  && ((said_tokens[said_token] >> 8) == SAID_LT))
+	retval = YY_BRACKETSO_LT;
     }
   }
 
@@ -221,6 +273,36 @@ said_branch_node(tree_t pos, int left, int right)
   return pos;
 }
 
+
+static tree_t
+said_paren(tree_t t1, tree_t t2)
+{
+  if (t1)
+    return said_branch_node(SAID_NEXT_NODE,
+			    t1,
+			    t2
+			    );
+  else
+    return t2;
+}
+
+static tree_t
+said_value(int val, tree_t t)
+{
+  return said_branch_node(SAID_NEXT_NODE,
+			  said_leaf_node(SAID_NEXT_NODE, val),
+			  t
+			  );
+			  
+}
+
+static tree_t
+said_terminal(int val)
+{
+  return said_leaf_node(SAID_NEXT_NODE, val);
+}
+
+
 static tree_t
 said_aug_branch(int n1, int n2, tree_t t1, tree_t t2)
 {
@@ -251,6 +333,12 @@ said_attach_branch(tree_t base, tree_t attacheant)
 #ifdef SAID_DEBUG
   fprintf(stderr,"ATT2([%04x], [%04x]) = [%04x]\n", base, attacheant, base);
 #endif
+
+  if (!attacheant)
+    return base;
+  if (!base)
+    return attacheant;
+
   if (!base)
     return 0; /* Happens if we're out of space */
 
