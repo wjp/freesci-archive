@@ -1,3 +1,19 @@
+2001-02-28  Solomon Peachy <pizza@shaftnet.org>
+
+	* include/Makefile.am
+          sound/Makefile.am:        New files added to build.
+	* include/sound.h:          Beginnings of sound driver.
+	* sound/soundserver_null.c: Tweaked debug output
+	* include/midi_mt32.h 
+	  sound/midi_mt32.c:        mt32 midi code
+	* include/midiout.h 
+	  sound/midiout.c:          midiout framework & null driver
+
+	FreeSCI now has near-complete MT32 support!
+		
+	Basically, the midi "driver" just discards stuff instead of
+        actual writes.  Only thing currently lacking is reverb.
+
 2001-02-28  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kAnimate): Make all dynviews invulnerable

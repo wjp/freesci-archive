@@ -46,7 +46,7 @@ int midiout_null_close()
 
 int midiout_null_write(guint8 *buffer, unsigned int count)
 {
-  printf("Got %d bytes to write to null device\n");
+  /*  printf("Got %d bytes to write to null device\n", count); */
 
   return 0;
 }

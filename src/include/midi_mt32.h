@@ -30,8 +30,13 @@
 int midi_mt32_open(guint8 *data_ptr, unsigned int data_length);
 int midi_mt32_close(void);
 
-int midi_mt32_noteoff(guint8 channel, guint8 note);
+int midi_mt32_noteoff(guint8 channel, guint8 note, guint8 velocity);
 int midi_mt32_noteon(guint8 channel, guint8 note, guint8 velocity);
+int midi_mt32_event(guint8 command, guint8 note, guint8 velocity);
+int midi_mt32_event2(guint8 command, guint8 param);
+
+int midi_mt32_volume(guint8 volume);
+int midi_mt32_allstop(void);
 
 int midi_mt32_poke(guint32 address, guint8 *data, unsigned int count);
 int midi_mt32_poke_gather(guint32 address, guint8 *data1, unsigned int count1,
@@ -39,5 +44,6 @@ int midi_mt32_poke_gather(guint32 address, guint8 *data1, unsigned int count1,
 
 int midi_mt32_write_block(guint8 *data, unsigned int count);
 
+extern unsigned short mt32_midi_patch;
 
 #endif /* _MIDI_MT32_H_ */

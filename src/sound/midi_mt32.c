@@ -59,8 +59,7 @@ static gint8 volume_adjust[128] = {
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-static guint8 velocity_map_index[128] = {
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+static guint8 velocity_map_index[128] = {  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -117,6 +116,8 @@ static gint8 rhythmkey_map[128] = {
   guint8 
 } channel[16]; */
 static guint8 master_volume;
+
+unsigned short mt32_midi_patch = 001;
 
 int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
 {
@@ -204,32 +205,74 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
 
 int midi_mt32_close()
 {
-if (type == 0) {
-  printf("MT-32: Displaying Text: \"%.20s\"\n", data + 40);
-  midi_mt32_poke(0x200000, data + 40, 20);
-  midi_mt32_sysex_delay();
-}
-return midiout_close();
+  midi_mt32_allstop();
+  if (type == 0) {
+    printf("MT-32: Displaying Text: \"%.20s\"\n", data + 40);
+    midi_mt32_poke(0x200000, data + 40, 20);
+    midi_mt32_sysex_delay();
+  }
+  return midiout_close();
 }
 
-int midi_mt32_noteoff(guint8 channel, guint8 note)
+int midi_mt32_volume(guint8 volume)
 {
+  printf("MT32: Set volume to: %d\n", volume);
+  return midi_mt32_poke(0x100016, &volume, 1);
+}
+
+int midi_mt32_allstop(void) 
+{
+  int i;
+  for (i = 0; i < 16; i++) 
+    midi_mt32_event(0xb0 | i, 0x7b, 0x00);
+
   return 0;
+}
+
+int midi_mt32_reverb(guint8 param)
+{
+  printf("MT32: reberb set NYI\n");
+  return 0;
+}
+
+int midi_mt32_noteoff(guint8 channel, guint8 note, guint8 velocity)
+{
+  return midi_mt32_event(channel | 0x80, note, velocity);
 }
 
 int midi_mt32_noteon(guint8 channel, guint8 note, guint8 velocity)
 {
-/*  guint8 buffer[3] = {0x90};
-  if (channel == RHYTHM_CHANNEL)
+  return midi_mt32_event(channel | 0x90, note, velocity);
+}
+
+int midi_mt32_event(guint8 command, guint8 note, guint8 velocity)
+{
+  guint8 buffer[3] = {0,0,0};
+  /*  if (channel == RHYTHM_CHANNEL)
     if (rhythmkey_map[note] == -1)
       return 0;
-    else {
-      buffer[0] |= channel
-      buffer[1] = rhythmkey_map[note];
-      buffer[2] = velo
-      midi_write_event(buffer, 3);
-    }; */
+      else  */
+
+  buffer[0] = command;
+  buffer[1] = note;
+  buffer[2] = velocity;
+
+  /*  printf("Midi Event  %02x %02x %02x\n", command, note, velocity); */
+  midiout_write_event(buffer, 3);
+
   return 0;
+}
+
+int midi_mt32_event2(guint8 command, guint8 param)
+{
+  guint8 buffer[2] = {0,0};
+
+  buffer[0] = command;
+  buffer[1] = param;
+
+
+  /*  printf("Midi Event  %02x %02x\n", command, param); */
+  midiout_write_event(buffer, 2);
 }
 
 int midi_mt32_poke(guint32 address, guint8 *data, unsigned int count)
@@ -319,7 +362,7 @@ int midi_mt32_patch001_type0_length(guint8 *data, unsigned int length)
 
   if ((length >= (pos + 386)) && (data[pos] == 0xAB) && (data[pos + 1] == 0xCD))
     pos += 386;
-  if ((length >= (pos + 267)) && (data[pos] == 0xDC) && (data[pos + 1] == 0xBA))
+  if ((length >= (pos + 267)) && (data[pos] == 0xDC) && (data[pos + 1] == 0xB))
     pos += 267;
   if (pos == length)
     return 1;
