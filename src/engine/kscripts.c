@@ -214,6 +214,7 @@ kClone(state_t *s, int funct_nr, int argc, reg_t *argv)
 	/* Mark as clone */
 	clone_obj->variables[SCRIPT_INFO_SELECTOR].offset = SCRIPT_INFO_CLONE;
 	clone_obj->variables[SCRIPT_SPECIES_SELECTOR] = clone_obj->pos;
+	s->seg_manager.increment_lockers(&s->seg_manager, parent_obj->pos.segment, SEG_ID);
 	s->seg_manager.increment_lockers(&s->seg_manager, clone_obj->pos.segment, SEG_ID);
 
 	return clone_addr;
@@ -303,6 +304,14 @@ reg_t
 kDisposeScript(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	int script = argv[0].offset;
+	
+	if (s->seg_manager.isloaded(&(s->seg_manager), script, SCRIPT_ID))
+        {
+	    int id = s->seg_manager.seg_get(&(s->seg_manager), script);
+	    
+	    if (s->execution_stack[s->execution_stack_pos].addr.pc.segment != id)
+		s->seg_manager.set_lockers(&(s->seg_manager), script, 1, SCRIPT_ID);
+	}
 
 	script_uninstantiate(s, script);
 	s->execution_stack_pos_changed = 1;

@@ -1182,7 +1182,7 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x28: /* class */
-			s->r_acc = get_class_address(s, (unsigned) opparams[0], SCRIPT_GET_LOAD, xs->addr.pc);
+			s->r_acc = get_class_address(s, (unsigned) opparams[0], SCRIPT_GET_LOCK, xs->addr.pc);
 			break;
 
 		case 0x2a: /* self */
@@ -1201,7 +1201,7 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x2b: /* super */
-			r_temp = get_class_address(s, opparams[0], 0, xs->addr.pc);
+			r_temp = get_class_address(s, opparams[0], SCRIPT_GET_LOAD, xs->addr.pc);
 
 			if (!r_temp.segment)
 				CORE_ERROR("VM", "Invalid superclass in object");

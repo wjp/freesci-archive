@@ -302,7 +302,7 @@ int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, in
 	return 1;
 };
 
-static int
+int
 _sm_deallocate (seg_manager_t* self, int seg, int recursive)
 {
 	mem_obj_t *mobj;
