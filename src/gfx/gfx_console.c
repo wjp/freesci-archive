@@ -798,12 +798,12 @@ con_gfx_read(gfx_state_t *state)
 				break;
 
 
-			case SCI_K_PGUP:
+			case SCI_K_PGDOWN:
 				must_redraw_text = 1;
 				con_scroll(state, -75, maxchars);
 				break;
 
-			case SCI_K_PGDOWN:
+			case SCI_K_PGUP:
 				must_redraw_text = 1;
 				con_scroll(state, 75, maxchars);
 				break;
