@@ -633,16 +633,16 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int yend = GET_SELECTOR(obj, brBottom);
 	int xl = xend - x;
 	int yl = yend - y;
+	rect_t zone = gfx_rect(x + port->zone.x, y + port->zone.y, xl - 1, yl - 1);
 	word edgehit;
 
 	signal = GET_SELECTOR(obj, signal);
 	SCIkdebug(SCIkBRESEN,"Checking collision: (%d,%d) to (%d,%d), obj=%04x, sig=%04x, cliplist=%04x\n",
 		  x, y, xend, yend, obj, signal, cliplist);
-WARNING( fixme!)
-#if 0
+
 	s->acc = !(((word)GET_SELECTOR(obj, illegalBits))
-		   & (edgehit = graph_on_control(s, x + port->bounds.x, y + port->bounds.y, xl-1, yl-1, GFX_MASK_CONTROL)));
-#endif
+		   & (edgehit = gfxop_scan_bitmask(s->gfx_state, zone, GFX_MASK_CONTROL)));
+
 	SCIkdebug(SCIkBRESEN, "edgehit = %04x\n", edgehit);
 	if (s->acc == 0)
 		return; /* Can'tBeHere */
@@ -804,10 +804,8 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		if (ylen > 1)
 			--ylen;
 	}
-WARNING(fixme)
-#if 0
-	s->acc = graph_on_control(s, xstart, ystart + 10, xlen, ylen, map);
-#endif
+
+	s->acc = gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart, ystart + 10, xlen, ylen), map);
 }
 
 void
@@ -1795,27 +1793,27 @@ WARNING(fixme)
 void
 kGetPort(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->acc = s->port->ID;
+	s->acc = s->port->ID;
 }
 
 
 void
 kSetPort(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  unsigned int port_nr = PARAM(0);
-  gfxw_port_t *new_port;
+	unsigned int port_nr = PARAM(0);
+	gfxw_port_t *new_port;
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
   
-  new_port = gfxw_find_port(s->visual, port_nr);
+	new_port = gfxw_find_port(s->visual, port_nr);
   
-  if (!new_port) {
-	  SCIkwarn(SCIkERROR, "Invalid port %04x requested\n", port_nr);
-	  return;
-  }
+	if (!new_port) {
+		SCIkwarn(SCIkERROR, "Invalid port %04x requested\n", port_nr);
+		return;
+	}
 
-  s->port->draw(GFXW(s->port), gfxw_point_zero); /* Update the port we're leaving */
-  s->port = new_port;
+	s->port->draw(GFXW(s->port), gfxw_point_zero); /* Update the port we're leaving */
+	s->port = new_port;
 }
 
 

@@ -1160,6 +1160,50 @@ WARNING(fixme!)
 
 
 int
+c_gfx_current_port(state_t *s)
+{
+	if (!s->port)
+		sciprintf("none.\n");
+	else
+		sciprintf("%d\n", s->port->ID);
+	return 0;
+}
+
+int
+c_gfx_print_port(state_t *s)
+{
+	gfxw_port_t *port = s->port;
+
+	if (cmd_paramlength > 0) {
+		if (s->visual) {
+			port = gfxw_find_port(s->visual, cmd_params[0].val);
+		} else {
+			sciprintf("visual is uninitialized.\n");
+			return 1;
+		}
+	}
+
+	if (port)
+		port->print(GFXW(port), 0);
+	else
+		sciprintf("No such port.\n");
+
+	return 0;
+}
+
+int
+c_gfx_print_visual(state_t *s)
+{
+	if (s->visual)
+		s->visual->print(GFXW(s->visual), 0);
+	else
+		sciprintf("visual is uninitialized.\n");
+
+	return 0;
+}
+
+
+int
 c_disasm(state_t *s)
 {
   int vpc = cmd_params[0].val;
@@ -1774,227 +1818,232 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 	     int *restadjust, int bp)
 {
 
-  if (sci_debug_flags & _DEBUG_FLAG_LOGGING) {
-    int old_debugstate = _debugstate_valid;
+	if (sci_debug_flags & _DEBUG_FLAG_LOGGING) {
+		int old_debugstate = _debugstate_valid;
 
-    _pc = pc;
-    _sp = sp;
-    _pp = pp;
-    _objp = objp;
-    _restadjust = restadjust;
-    sciprintf("acc=%04x  ", s->acc & 0xffff);
-    _debugstate_valid = 1;
-    disassemble(s, *pc);
+		_pc = pc;
+		_sp = sp;
+		_pp = pp;
+		_objp = objp;
+		_restadjust = restadjust;
+		sciprintf("acc=%04x  ", s->acc & 0xffff);
+		_debugstate_valid = 1;
+		disassemble(s, *pc);
 
-    _debugstate_valid = old_debugstate;
+		_debugstate_valid = old_debugstate;
 
-    if (!script_debug_flag)
-      return;
-  }
+		if (!script_debug_flag)
+			return;
+	}
 
-  if (_debug_seeking && !bp) { /* Are we looking for something special? */
-    int op = s->heap[*pc] >> 1;
-    int paramb1 = s->heap[*pc + 1]; /* Careful with that ! */
+	if (_debug_seeking && !bp) { /* Are we looking for something special? */
+		int op = s->heap[*pc] >> 1;
+		int paramb1 = s->heap[*pc + 1]; /* Careful with that ! */
 
-    switch (_debug_seeking) {
+		switch (_debug_seeking) {
 
-    case _DEBUG_SEEK_SPECIAL_CALLK:
-      if (paramb1 != _debug_seek_special)
-	return;
+		case _DEBUG_SEEK_SPECIAL_CALLK:
+			if (paramb1 != _debug_seek_special)
+				return;
 
-    case _DEBUG_SEEK_CALLK: {
-      if (op != op_callk) return;
-      break;
-    }
+		case _DEBUG_SEEK_CALLK: {
+			if (op != op_callk) return;
+			break;
+		}
 
-    case _DEBUG_SEEK_LEVEL_RET: {
-      if ((op != op_ret) || (_debug_seek_level < s->execution_stack_pos)) return;
-      break;
-    }
+		case _DEBUG_SEEK_LEVEL_RET: {
+			if ((op != op_ret) || (_debug_seek_level < s->execution_stack_pos)) return;
+			break;
+		}
 
-    case _DEBUG_SEEK_SO:
-      if (*pc != _debug_seek_special || s->execution_stack_pos != _debug_seek_level) return;
-      break;
+		case _DEBUG_SEEK_SO:
+			if (*pc != _debug_seek_special || s->execution_stack_pos != _debug_seek_level) return;
+			break;
 
-    } /* switch(_debug_seeking) */
+		} /* switch(_debug_seeking) */
 
-    _debug_seeking = _DEBUG_SEEK_NOTHING; /* OK, found whatever we were looking for */
+		_debug_seeking = _DEBUG_SEEK_NOTHING; /* OK, found whatever we were looking for */
 
-  } /* if (_debug_seeking) */
+	} /* if (_debug_seeking) */
 
 
-  _debugstate_valid = (_debug_step_running == 0);
+	_debugstate_valid = (_debug_step_running == 0);
 
-  if (_debugstate_valid) {
-    _pc = pc;
-    _sp = sp;
-    _pp = pp;
-    _objp = objp;
-    _restadjust = restadjust;
+	if (_debugstate_valid) {
+		_pc = pc;
+		_sp = sp;
+		_pp = pp;
+		_objp = objp;
+		_restadjust = restadjust;
 
-    c_debuginfo(s);
-    sciprintf("Step #%d\n", script_step_counter);
-    disassemble(s, *pc);
+		c_debuginfo(s);
+		sciprintf("Step #%d\n", script_step_counter);
+		disassemble(s, *pc);
 
-    if (_debug_commands_not_hooked) {
+		if (_debug_commands_not_hooked) {
 
-      _debug_commands_not_hooked = 0;
+			_debug_commands_not_hooked = 0;
 
-      con_hook_command(c_debuginfo, "registers", "", "Displays all current register values");
-      con_hook_command(c_vmvars, "vmvars", "si*", "Displays or changes variables in the VM\n\nFirst parameter is either g(lobal), l(ocal), t(emp) or p(aram).\nSecond parameter is the var number\nThird parameter (if specified) is the value to set the variable to");
-      con_hook_command(c_vmvarlist, "vmvarlist", "", "Displays the addresses of variables in the VM");
-      con_hook_command(c_step, "s", "i*", "Executes one or several operations\n\nEXAMPLES\n\n"
-		       "    s 4\n\n  Execute 4 commands\n\n    s\n\n  Execute next command");
-      con_hook_command(c_stepover, "so", "", "Executes one operation skipping over sends");
-      con_hook_command(c_heapdump, "heapdump", "ii", "Dumps data from the heap\n"
-		       "\nEXAMPLE\n\n    heapdump 0x1200 42\n\n  Dumps 42 bytes starting at heap address\n"
-		       "  0x1200");
-      con_hook_command(c_disasm, "disasm", "ii*", "Disassembles one or more commands\n\n"
-		       "USAGE\n\n  disasm [startaddr] <number of commands to disassemble>");
-      con_hook_command(c_scriptinfo, "scripttable", "", "Displays information about all\n  loaded scripts");
-      con_hook_command(c_heapobj, "heapobj", "i", "Displays information about an\n  object or class on the\n"
-		       "specified heap address.\n\nSEE ALSO\n\n  obj, accobj");
-      con_hook_command(c_obj, "obj", "", "Displays information about the\n  currently active object/class.\n"
-		       "\n\nSEE ALSO\n\n  heapobj, accobj");
-      con_hook_command(c_accobj, "accobj", "", "Displays information about an\n  object or class at the\n"
-		       "address indexed by acc.\n\nSEE ALSO\n\n  obj, heapobj");
-      con_hook_command(c_classtable, "classtable", "", "Lists all available classes");
-      con_hook_command(c_stack, "stack", "i", "Dumps the specified number of stack elements");
-      con_hook_command(c_backtrace, "bt", "", "Dumps the send/self/super/call/calle/callb stack");
-      con_hook_command(c_snk, "snk", "s*", "Steps forward until it hits the next\n  callk operation.\n"
-		       "  If invoked with a parameter, it will\n  look for that specific callk.\n");
-      con_hook_command(c_se, "se", "", "Steps forward until an SCI event is received.\n");      
-      con_hook_command(c_listclones, "clonetable", "", "Lists all registered clones");
-      con_hook_command(c_set_acc, "set_acc", "i", "Sets the accumulator");
-      con_hook_command(c_heap_free, "heapfree", "", "Shows the free heap");
-      con_hook_command(c_sret, "sret", "", "Steps forward until ret is called\n  on the current execution"
-		       " stack\n  level.");
-      con_hook_command(c_resource_id, "resource_id", "i", "Identifies a resource number by\n"
-		       "  splitting it up in resource type\n  and resource number.");
-      con_hook_command(c_redraw_screen, "redraw_screen", "", "Redraws the screen");
-      con_hook_command(c_show_list, "listinfo", "i", "Examines the list at the specified\n  heap address");
-      con_hook_command(c_mem_info, "meminfo", "", "Displays heap memory information");
-      con_hook_command(c_debuglog, "debuglog", "s*", "Sets the debug log modes.\n  Possible parameters:\n"
-		       "  +x (sets debugging for x)\n  -x (unsets debugging for x)\n\nPossible values"
-		       " for x:\n  u: Unimpl'd/stubbed stuff\n  l: Lists and nodes\n  g: Graphics\n"
-		       "  c: Character handling\n  m: Memory management\n  f: Function call checks\n"
-		       "  b: Bresenham details\n  a: Audio\n  d: System gfx management\n  s: Base setter"
-		       "\n  p: Parser\n  M: The menu system\n  \n  S: Said specs\n  F: File I/O\n  *: Everything\n\n"
-		       "  If invoked withour parameters,\n  it will list all activated\n  debug options.");
-      con_hook_command(c_visible_map, "set_vismap", "i", "Sets the visible map.\n  Default is 0 (visual).\n"
-		       "  Other useful values are:\n  1: Priority\n  2: Control\n  3: Auxiliary\n");
-      con_hook_command(c_simkey, "simkey", "i", "Simulates a keypress with the\n  specified scancode.\n");
-      con_hook_command(c_bpx, "bpx", "s", "Sets a breakpoint on the execution of specified method.\n");
-      con_hook_command(c_bpe, "bpe", "ii", "Sets a breakpoint on the execution of specified"
-		       " exported function.\n");
-      con_hook_command(c_bplist, "bplist", "", "Lists all breakpoints.\n");
-      con_hook_command(c_bpdel, "bpdel", "i", "Deletes a breakpoint with specified index.");
-      con_hook_command(c_go, "go", "", "Executes the script.\n");
-      con_hook_command(c_dumpnodes, "dumpnodes", "i", "shows the specified number of nodes\n"
-		       "  from the parse node tree");
-      con_hook_command(c_save_game, "save_game", "s", "Saves the current game state to\n  the hard disk");
-      con_hook_command(c_restore_game, "restore_game", "s", "Restores a saved game from the\n  hard disk");
-      con_hook_command(c_restart_game, "restart", "s*", "Restarts the game.\n\nUSAGE\n\n  restart [-r] [-p]"
-		       " [--play] [--replay]\n\n  There are two ways to restart an SCI\n  game:\n"
-		       "  play (-p) calls the game object's play()\n    method\n  replay (-r) calls the replay() method");
-      con_hook_command(c_dynviews, "dynviews", "", "Lists the currently active dynamic views");
-      con_hook_command(c_picviews, "picviews", "", "Lists the currently active picture views");
-      con_hook_command(c_viewinfo, "viewinfo", "i", "Displays the number of loops\n  and cels of each loop"
-		       " for the\n  specified view resource.\n\n  Output:\n    C(x): Check word type against x\n"
-		       "    WG(x): Check word group against mask x\n    FORCE(x): Force storage node x\n");
-      con_hook_command(c_list_sentence_fragments, "list_sentence_fragments", "", "Lists all sentence fragments (which\n"
-		       "  are used to build Parse trees).");
-      con_hook_command(c_parse, "parse", "s", "Parses a sequence of words and prints\n  the resulting parse tree.\n"
-		       "  The word sequence must be provided as a\n  single string.");
-      con_hook_command(c_gnf, "gnf", "", "Displays the Parse grammar\n  in strict GNF");
-      con_hook_command(c_set_parse_nodes, "set_parse_nodes", "s*", "Sets the contents of all parse nodes.\n"
-		       "  Input token must be separated by\n  blanks.");
-      con_hook_command(c_showfont, "showfont", "i", "Displays all characters of the specified font");
-      con_hook_command(c_objs, "objs", "", "Lists all objects and classes from all\n  currently loaded scripts, plus\n"
-		       "  all clones.\n  Objects are not marked; clones are marked\n  with a preceeding '*', and classes\n"
-		       "  with a preceeding '%'\n"
-		       "\n\nSEE ALSO\n  clonetable\n");
+			con_hook_command(c_debuginfo, "registers", "", "Displays all current register values");
+			con_hook_command(c_vmvars, "vmvars", "si*", "Displays or changes variables in the VM\n\nFirst parameter is either g(lobal), l(ocal), t(emp) or p(aram).\nSecond parameter is the var number\nThird parameter (if specified) is the value to set the variable to");
+			con_hook_command(c_vmvarlist, "vmvarlist", "", "Displays the addresses of variables in the VM");
+			con_hook_command(c_step, "s", "i*", "Executes one or several operations\n\nEXAMPLES\n\n"
+					 "    s 4\n\n  Execute 4 commands\n\n    s\n\n  Execute next command");
+			con_hook_command(c_stepover, "so", "", "Executes one operation skipping over sends");
+			con_hook_command(c_heapdump, "heapdump", "ii", "Dumps data from the heap\n"
+					 "\nEXAMPLE\n\n    heapdump 0x1200 42\n\n  Dumps 42 bytes starting at heap address\n"
+					 "  0x1200");
+			con_hook_command(c_disasm, "disasm", "ii*", "Disassembles one or more commands\n\n"
+					 "USAGE\n\n  disasm [startaddr] <number of commands to disassemble>");
+			con_hook_command(c_scriptinfo, "scripttable", "", "Displays information about all\n  loaded scripts");
+			con_hook_command(c_heapobj, "heapobj", "i", "Displays information about an\n  object or class on the\n"
+					 "specified heap address.\n\nSEE ALSO\n\n  obj, accobj");
+			con_hook_command(c_obj, "obj", "", "Displays information about the\n  currently active object/class.\n"
+					 "\n\nSEE ALSO\n\n  heapobj, accobj");
+			con_hook_command(c_accobj, "accobj", "", "Displays information about an\n  object or class at the\n"
+					 "address indexed by acc.\n\nSEE ALSO\n\n  obj, heapobj");
+			con_hook_command(c_classtable, "classtable", "", "Lists all available classes");
+			con_hook_command(c_stack, "stack", "i", "Dumps the specified number of stack elements");
+			con_hook_command(c_backtrace, "bt", "", "Dumps the send/self/super/call/calle/callb stack");
+			con_hook_command(c_snk, "snk", "s*", "Steps forward until it hits the next\n  callk operation.\n"
+					 "  If invoked with a parameter, it will\n  look for that specific callk.\n");
+			con_hook_command(c_se, "se", "", "Steps forward until an SCI event is received.\n");      
+			con_hook_command(c_listclones, "clonetable", "", "Lists all registered clones");
+			con_hook_command(c_set_acc, "set_acc", "i", "Sets the accumulator");
+			con_hook_command(c_heap_free, "heapfree", "", "Shows the free heap");
+			con_hook_command(c_sret, "sret", "", "Steps forward until ret is called\n  on the current execution"
+					 " stack\n  level.");
+			con_hook_command(c_resource_id, "resource_id", "i", "Identifies a resource number by\n"
+					 "  splitting it up in resource type\n  and resource number.");
+			con_hook_command(c_redraw_screen, "redraw_screen", "", "Redraws the screen");
+			con_hook_command(c_show_list, "listinfo", "i", "Examines the list at the specified\n  heap address");
+			con_hook_command(c_mem_info, "meminfo", "", "Displays heap memory information");
+			con_hook_command(c_debuglog, "debuglog", "s*", "Sets the debug log modes.\n  Possible parameters:\n"
+					 "  +x (sets debugging for x)\n  -x (unsets debugging for x)\n\nPossible values"
+					 " for x:\n  u: Unimpl'd/stubbed stuff\n  l: Lists and nodes\n  g: Graphics\n"
+					 "  c: Character handling\n  m: Memory management\n  f: Function call checks\n"
+					 "  b: Bresenham details\n  a: Audio\n  d: System gfx management\n  s: Base setter"
+					 "\n  p: Parser\n  M: The menu system\n  \n  S: Said specs\n  F: File I/O\n  *: Everything\n\n"
+					 "  If invoked withour parameters,\n  it will list all activated\n  debug options.");
+			con_hook_command(c_visible_map, "set_vismap", "i", "Sets the visible map.\n  Default is 0 (visual).\n"
+					 "  Other useful values are:\n  1: Priority\n  2: Control\n  3: Auxiliary\n");
+			con_hook_command(c_simkey, "simkey", "i", "Simulates a keypress with the\n  specified scancode.\n");
+			con_hook_command(c_bpx, "bpx", "s", "Sets a breakpoint on the execution of specified method.\n");
+			con_hook_command(c_bpe, "bpe", "ii", "Sets a breakpoint on the execution of specified"
+					 " exported function.\n");
+			con_hook_command(c_bplist, "bplist", "", "Lists all breakpoints.\n");
+			con_hook_command(c_bpdel, "bpdel", "i", "Deletes a breakpoint with specified index.");
+			con_hook_command(c_go, "go", "", "Executes the script.\n");
+			con_hook_command(c_dumpnodes, "dumpnodes", "i", "shows the specified number of nodes\n"
+					 "  from the parse node tree");
+			con_hook_command(c_save_game, "save_game", "s", "Saves the current game state to\n  the hard disk");
+			con_hook_command(c_restore_game, "restore_game", "s", "Restores a saved game from the\n  hard disk");
+			con_hook_command(c_restart_game, "restart", "s*", "Restarts the game.\n\nUSAGE\n\n  restart [-r] [-p]"
+					 " [--play] [--replay]\n\n  There are two ways to restart an SCI\n  game:\n"
+					 "  play (-p) calls the game object's play()\n    method\n  replay (-r) calls the replay() method");
+			con_hook_command(c_dynviews, "dynviews", "", "Lists the currently active dynamic views");
+			con_hook_command(c_picviews, "picviews", "", "Lists the currently active picture views");
+			con_hook_command(c_viewinfo, "viewinfo", "i", "Displays the number of loops\n  and cels of each loop"
+					 " for the\n  specified view resource.\n\n  Output:\n    C(x): Check word type against x\n"
+					 "    WG(x): Check word group against mask x\n    FORCE(x): Force storage node x\n");
+			con_hook_command(c_list_sentence_fragments, "list_sentence_fragments", "", "Lists all sentence fragments (which\n"
+					 "  are used to build Parse trees).");
+			con_hook_command(c_parse, "parse", "s", "Parses a sequence of words and prints\n  the resulting parse tree.\n"
+					 "  The word sequence must be provided as a\n  single string.");
+			con_hook_command(c_gnf, "gnf", "", "Displays the Parse grammar\n  in strict GNF");
+			con_hook_command(c_set_parse_nodes, "set_parse_nodes", "s*", "Sets the contents of all parse nodes.\n"
+					 "  Input token must be separated by\n  blanks.");
+			con_hook_command(c_showfont, "showfont", "i", "Displays all characters of the specified font");
+			con_hook_command(c_objs, "objs", "", "Lists all objects and classes from all\n  currently loaded scripts, plus\n"
+					 "  all clones.\n  Objects are not marked; clones are marked\n  with a preceeding '*', and classes\n"
+					 "  with a preceeding '%'\n"
+					 "\n\nSEE ALSO\n  clonetable\n");
 #ifdef SCI_SIMPLE_SAID_CODE
-      con_hook_command(c_sim_parse, "simparse", "s*", "Simulates a parsed entity.\n\nUSAGE\n  Call this"
-		       " function with a list of\n  Said operators, words, and word group"
-		       "\n  numbers to match Said() specs\n  that look identical.\n"
-		       "\n  Note that opening braces and\n  everything behind them are\n"
-		       "\n  removed from all non-operator\n  parameter tokens.\n"
-		       "\n  simparse without parameters\n  removes the entity.\n");
+			con_hook_command(c_sim_parse, "simparse", "s*", "Simulates a parsed entity.\n\nUSAGE\n  Call this"
+					 " function with a list of\n  Said operators, words, and word group"
+					 "\n  numbers to match Said() specs\n  that look identical.\n"
+					 "\n  Note that opening braces and\n  everything behind them are\n"
+					 "\n  removed from all non-operator\n  parameter tokens.\n"
+					 "\n  simparse without parameters\n  removes the entity.\n");
 #endif SCI_SIMPLE_SAID_CODE
+			con_hook_command(c_gfx_current_port, "gfx_current_port", "", "Determines the current port number");
+			con_hook_command(c_gfx_print_port, "gfx_print_port", "i*", "Displays all information about the\n  specified port,"
+					 " or the current port\n  if no port was specified.");
+			con_hook_command(c_gfx_print_visual, "gfx_print_visual", "", "Displays all information about the\n  current widget state");
 
-      con_hook_int(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");
-      con_hook_int(&script_checkloads_flag, "script_checkloads_flag", "Set != 0 to display information\n"
-		   "  when scripts are loaded or unloaded");
-      con_hook_int(&script_abort_flag, "script_abort_flag", "Set != 0 to abort execution\n");
-      con_hook_int(&script_step_counter, "script_step_counter", "# of executed SCI operations\n");
-      con_hook_int(&sci_debug_flags, "debug_flags", "Debug flags:\n  0x0001: Log each command executed\n"
-		   "  0x0002: Break on warnings\n");
+			con_hook_int(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");
+			con_hook_int(&script_checkloads_flag, "script_checkloads_flag", "Set != 0 to display information\n"
+				     "  when scripts are loaded or unloaded");
+			con_hook_int(&script_abort_flag, "script_abort_flag", "Set != 0 to abort execution\n");
+			con_hook_int(&script_step_counter, "script_step_counter", "# of executed SCI operations\n");
+			con_hook_int(&sci_debug_flags, "debug_flags", "Debug flags:\n  0x0001: Log each command executed\n"
+				     "  0x0002: Break on warnings\n");
 
-    } /* If commands were not hooked up */
+		} /* If commands were not hooked up */
 
-  }
+	}
 
-  if (_debug_step_running)
-    _debug_step_running--;
+	if (_debug_step_running)
+		_debug_step_running--;
 
-  /* Suspend music playing */
-  if (s->sfx_driver)
-    (s->sfx_driver->suspend)(s);
+	/* Suspend music playing */
+	if (s->sfx_driver)
+		(s->sfx_driver->suspend)(s);
 
 WARNING(fixme!)
 #if 0
-  if (s->onscreen_console) {
-    s->osc_backup = con_backup_screen(s);
-    con_visible_rows = 20;
+		if (s->onscreen_console) {
+			s->osc_backup = con_backup_screen(s);
+			con_visible_rows = 20;
 
-    con_draw(s, s->osc_backup);
+			con_draw(s, s->osc_backup);
 
-    while (_debugstate_valid) {
-      sci_event_t event = (gfxop_get_event(s->gfx_state));
-      int redraw_console = 0;
-      char *commandbuf;
+			while (_debugstate_valid) {
+				sci_event_t event = (gfxop_get_event(s->gfx_state));
+				int redraw_console = 0;
+				char *commandbuf;
 
-      if ((event.type & SCI_EVT_KEYBOARD)
-	  || (s->pointer_x != s->last_pointer_x)
-	  || (s->pointer_y != s->last_pointer_y))
-	redraw_console = 1; /* Redraw on keypress or mouse movement */
+				if ((event.type & SCI_EVT_KEYBOARD)
+				    || (s->pointer_x != s->last_pointer_x)
+				    || (s->pointer_y != s->last_pointer_y))
+					redraw_console = 1; /* Redraw on keypress or mouse movement */
 
-      if ((event.buckybits & SCI_EVM_CTRL) && (event.data == '`')) /* UnConsole command? */
-	_debugstate_valid = 0;
-      else
-	if ((commandbuf = con_input(&event))) {
+				if ((event.buckybits & SCI_EVM_CTRL) && (event.data == '`')) /* UnConsole command? */
+					_debugstate_valid = 0;
+				else
+					if ((commandbuf = con_input(&event))) {
 
-	  sciprintf(" >%s\n", commandbuf);
+						sciprintf(" >%s\n", commandbuf);
 
-	  if (strlen(commandbuf) == 0) /* Repeat old command? */
-	    strcpy(commandbuf, oldcommand);
-	  else /* No, a new valid command */
-	    strcpy(oldcommand, commandbuf);
+						if (strlen(commandbuf) == 0) /* Repeat old command? */
+							strcpy(commandbuf, oldcommand);
+						else /* No, a new valid command */
+							strcpy(oldcommand, commandbuf);
 
-	  con_parse(s, commandbuf);
+						con_parse(s, commandbuf);
 
-	  redraw_console = 1;
-	}
+						redraw_console = 1;
+					}
 
-      if (redraw_console)
-	con_draw(s, s->osc_backup);
-    }
+				if (redraw_console)
+					con_draw(s, s->osc_backup);
+			}
 
-    con_restore_screen(s, s->osc_backup);
+			con_restore_screen(s, s->osc_backup);
 
-  } else {
-
-    while (_debugstate_valid) {
-      con_parse(s, _debug_get_input());
-      sciprintf("\n");
-    }
-
-  }
+		} else {
 #endif
-  /* Resume music playing */
-  if (s->sfx_driver)
-    (s->sfx_driver->resume)(s);
+
+			while (_debugstate_valid) {
+				con_parse(s, _debug_get_input());
+				sciprintf("\n");
+			}
+#if 0
+		}
+#endif
+/* Resume music playing */
+	if (s->sfx_driver)
+		(s->sfx_driver->resume)(s);
 }
 
 

@@ -457,7 +457,6 @@ game_init(state_t *s)
   s->animation_delay = 5000; /* Used in kAnimate for pic openings */
 
   s->debug_mode = 0x0; /* Disable all debugging */
-  s->debug_mode = 0x4;
   s->onscreen_console = 0; /* No onscreen console unless explicitly requested */
 
   srand(time(NULL)); /* Initialize random number generator */

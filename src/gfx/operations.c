@@ -305,6 +305,7 @@ _gfxop_draw_pointer(gfx_state_t *state)
 		int error;
 
 		state->mouse_pointer_visible = 1;
+
 		retval = _gfxop_grab_pixmap(state, &(state->mouse_pointer_bg), x, y,
 					    ppxm->xl, ppxm->yl, GFX_NO_PRIORITY,
 					    &(state->pointer_bg_zone));
@@ -576,6 +577,47 @@ gfxop_exit(gfx_state_t *state)
 	gfxr_free_resource_manager(state->driver, state->resstate);
 	state->driver->exit(state->driver);
 	return GFX_OK;
+}
+
+
+static int
+_gfxop_scan_one_bitmask(gfx_pixmap_t *pixmap, rect_t zone)
+{
+	int retval = 0;
+	int startindex = (pixmap->index_xl * zone.y) + zone.x;
+
+	if (_gfxop_clip(&zone, gfx_rect(0, 0, pixmap->index_xl, pixmap->index_yl)))
+		return 0;
+
+	while (zone.yl--) {
+		int i;
+		for (i = 0; i < zone.xl; i++)
+			retval |= (1 << ((pixmap->index_data[startindex + i]) & 0xf));
+
+		startindex += pixmap->index_xl;
+	}
+
+	return retval;
+}
+
+int
+gfxop_scan_bitmask(gfx_state_t *state, rect_t area, gfx_map_mask_t map)
+{
+	gfxr_pic_t *pic = (state->pic_unscaled)? state->pic_unscaled : state->pic;
+	int retval = 0;
+
+	_gfxop_clip(&area, gfx_rect(0, 0, 320, 200));
+
+	if (map & GFX_MASK_VISUAL)
+		retval |= _gfxop_scan_one_bitmask(pic->visual_map, area);
+
+	if (map & GFX_MASK_PRIORITY)
+		retval |= _gfxop_scan_one_bitmask(pic->priority_map, area);
+
+	if (map & GFX_MASK_CONTROL)
+		retval |= _gfxop_scan_one_bitmask(pic->control_map, area);
+
+	return retval;
 }
 
 

@@ -9,7 +9,7 @@
 #define YYTEXT_POINTER 1
 
 #define PACKAGE "freesci"
-#define VERSION "0.3.1"
+#define VERSION "0.3.0.devel"
 #define HAVE_LIBGGI 1
 #define HAVE_LIBPNG 1
 #define HAVE_CURSES 1
@@ -67,5 +67,5 @@
 #define PACKAGE "freesci"
 
 /* Version number of package */
-#define VERSION "0.3.1"
+#define VERSION "0.3.0.devel"
 

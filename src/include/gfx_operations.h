@@ -179,6 +179,20 @@ gfxop_exit(gfx_state_t *state);
 */
 
 int
+gfxop_scan_bitmask(gfx_state_t *state, rect_t area, gfx_map_mask_t map);
+/* Calculates a bit mask calculated from some pixels on the specified map
+** Parameters: (gfx_state_t *) state: The state containing the pixels to scan
+**             (rect_t) area: The area to check
+**             (gfx_map_mask_t) map: The GFX_MASKed map(s) to test
+** Returns   : (int) An integer value where, for each 0<=i<=15, bit #i is set
+**             iff there exists a map for which the corresponding bit was set
+**             in the 'map' parameter and for which there exists a pixel within
+**             the specified area so that the pixel's lower 4 bits, interpreted
+**             as an integer value, equal i.
+** (Short version: This is an implementation of "on_control()").
+*/
+
+int
 gfxop_set_visible_map(gfx_state_t *state, gfx_map_mask_t map);
 /* Sets the currently visible map
 ** Parameters: (gfx_state_t *) state: The state to modify

@@ -1,3 +1,18 @@
+2000-12-17  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/ggi_driver.c (ggi_init): Fixed a bug in the default
+	ggi initialization caused by subtle libggi API changes.
+
+2000-12-16  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/operations.c (gfxop_scan_bitmask): Implemented
+	functionality for OnControl() and enabled OnControl() stuff
+
+	* src/engine/scriptdebug.c (script_debug): Re-enabled the debugger
+	(for text input only)
+
+	* src/include/gfx_drivers_list.h: #ifdef'd the ggi driver
+
 2000-12-11  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c: Implemented display lists

@@ -93,16 +93,16 @@ typedef int gfxw_bin_op(struct _gfxw_widget *, struct _gfxw_widget *);
    gfxw_bin_op *compare_to; /* a.compare_to(a, b) returns <0 if a<b, =0 if a=b and >0 if a>b */ \
    gfxw_bin_op *equals; /* a equals b if both cause the same data to be displayed */ \
    gfxw_bin_op *superarea_of; /* a superarea_of b <=> for each pixel of b there exists an opaque pixel in a at the same location */ \
-   gfxw_visual_op *set_visual; /* Sets the visual the widget belongs to */
+   gfxw_visual_op *set_visual /* Sets the visual the widget belongs to */
 
 typedef struct _gfxw_widget {
-	WIDGET_COMMON
+	WIDGET_COMMON;
 } gfxw_widget_t;
 
 
 #define GFXW_IS_BOX(widget) ((widget)->type == GFXW_BOX)
 typedef struct {
-	WIDGET_COMMON
+	WIDGET_COMMON;
 	gfx_color_t color1, color2;
 	gfx_box_shade_t shade_type;
 } gfxw_box_t;
@@ -110,7 +110,7 @@ typedef struct {
 
 #define GFXW_IS_PRIMITIVE(widget) ((widget)->type == GFXW_RECT || (widget)->type == GFXW_LINE)
 typedef struct {
-	WIDGET_COMMON
+	WIDGET_COMMON;
 	gfx_color_t color;
 	gfx_line_mode_t line_mode;
 	gfx_line_style_t line_style;
@@ -119,19 +119,19 @@ typedef struct {
 
 
 #define VIEW_COMMON \
-	WIDGET_COMMON \
+	WIDGET_COMMON; \
 	point_t pos; /* Implies the value of 'bounds' in WIDGET_COMMON */ \
 	gfx_color_t color; \
 	int view, loop, cel; \
 
 #define GFXW_IS_VIEW(widget) ((widget)->type == GFXW_VIEW || (widget)->type == GFXW_STATIC_VIEW || (widget)->type == GFXW_DYN_VIEW)
 typedef struct {
-	VIEW_COMMON
+	VIEW_COMMON;
 } gfxw_view_t;
 
 #define GFXW_IS_DYN_VIEW(widget) ((widget)->type == GFXW_DYN_VIEW)
 typedef struct {
-	VIEW_COMMON
+	VIEW_COMMON;
 	/* fixme: This code is specific to SCI */
 	int under_bitsp, signalp;
 	int under_bits, signal;
@@ -142,7 +142,7 @@ typedef struct {
 
 #define GFXW_IS_TEXT(widget) ((widget)->type == GFXW_TEXT)
 typedef struct {
-	WIDGET_COMMON
+	WIDGET_COMMON;
 	int font_nr;
 	char *text;
 	gfx_alignment_t halign, valign;
@@ -160,7 +160,7 @@ typedef int gfxw_container_op(struct _gfxw_container_widget *, gfxw_widget_t *);
 typedef int gfxw_rect_op(struct _gfxw_container_widget *, rect_t, int);
 
 #define WIDGET_CONTAINER \
-   WIDGET_COMMON \
+   WIDGET_COMMON; \
    rect_t zone; /* The writeable zone (absolute) for contained objects */ \
    gfx_dirty_rect_t *dirty; /* List of dirty rectangles */ \
    gfxw_widget_t *contents; \
@@ -169,11 +169,11 @@ typedef int gfxw_rect_op(struct _gfxw_container_widget *, rect_t, int);
    gfxw_unary_container_op *free_contents; /* Free all contained widgets */ \
    gfxw_rect_op *add_dirty_abs; /* Add an absolute dirty rectangle */ \
    gfxw_rect_op *add_dirty_rel; /* Add a relative dirty rectangle */ \
-   gfxw_container_op *add;  /* Append widget to an appropriate position (for view and control lists) */
+   gfxw_container_op *add  /* Append widget to an appropriate position (for view and control lists) */
 
 
 typedef struct _gfxw_container_widget {
-	WIDGET_CONTAINER
+	WIDGET_CONTAINER;
 } gfxw_container_t;
 
 
@@ -194,7 +194,7 @@ typedef struct _gfxw_visual {
 
 #define GFXW_IS_PORT(widget) ((widget)->type == GFXW_PORT)
 typedef struct _gfxw_port {
-	WIDGET_CONTAINER
+	WIDGET_CONTAINER;
 	gfxw_list_t *decorations; /* optional window decorations- drawn before the contents */
 	gfxw_widget_t *port_bg; /* Port background widget or NULL */
 	struct _gfxw_port *next_port; /* Pointer to the next port in the port list */

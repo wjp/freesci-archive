@@ -1438,7 +1438,7 @@ _gfxr_find_fill_point(gfxr_pic_t *pic, int min_x, int min_y, int max_x, int max_
 
 	//fprintf(stderr,"FIND_FILL_POINT(%d,%d) s(%d,%d)\n", mid_x, mid_y, size_x, size_y);
 	if (size_x < 0 || size_y < 0)
-		return;
+		return 0;
 
 	if (drawenable & GFX_MASK_VISUAL) {
 		test_map = pic->visual_map->index_data;

@@ -275,7 +275,8 @@ ggi_init(gfx_driver_t *drv)
 	meta->frames = mode.frames;
 
 	pixelformat = ggiGetPixelFormat(meta->vis);
-	drv->mode = gfx_new_mode(mode.size.x / 320, mode.size.y / 200, pixelformat->size >> 3,
+
+	drv->mode = gfx_new_mode(mode.visible.x / 320, mode.visible.y / 200, pixelformat->size >> 3,
 				 pixelformat->red_mask, pixelformat->green_mask, pixelformat->blue_mask,
 				 0, /* alpha mask */
 				 pixelformat->red_shift, pixelformat->green_shift, pixelformat->blue_shift,
@@ -285,9 +286,9 @@ ggi_init(gfx_driver_t *drv)
 	drv->state = meta;
 
 	meta->priority_maps[GGI_BUFFER_BACK] =
-		gfx_pixmap_alloc_index_data(gfx_new_pixmap(mode.size.x, mode.size.y, GFX_RESID_NONE, 0, 0));
+		gfx_pixmap_alloc_index_data(gfx_new_pixmap(mode.visible.x, mode.visible.y, GFX_RESID_NONE, 0, 0));
 	meta->priority_maps[GGI_BUFFER_STATIC] =
-		gfx_pixmap_alloc_index_data(gfx_new_pixmap(mode.size.x, mode.size.y, GFX_RESID_NONE, 0, 0));
+		gfx_pixmap_alloc_index_data(gfx_new_pixmap(mode.visible.x, mode.visible.y, GFX_RESID_NONE, 0, 0));
 
 	meta->priority_maps[GGI_BUFFER_BACK]->flags |= GFX_PIXMAP_FLAG_SCALED_INDEX;
 	meta->priority_maps[GGI_BUFFER_STATIC]->flags |= GFX_PIXMAP_FLAG_SCALED_INDEX;
@@ -302,17 +303,17 @@ ggi_init(gfx_driver_t *drv)
 	}
 
 	if (meta->frames < 2) {
-		meta->alt_back_buffer = malloc((pixelformat->size >> 3) * mode.size.x * mode.size.y);
+		meta->alt_back_buffer = malloc((pixelformat->size >> 3) * mode.visible.x * mode.visible.y);
 		meta->back_vis = ggiOpen("memory:pointer", meta->alt_back_buffer, NULL);
-		if (ggiSetSimpleMode(meta->back_vis, mode.size.x, mode.size.y, 1, GT_8BIT)) {
+		if (ggiSetSimpleMode(meta->back_vis, mode.visible.x, mode.visible.y, 1, GT_8BIT)) {
 			sciprintf("GFXGGI: Warning: Setting mode for memory visual failed\n");
 		}
 	} else meta->alt_back_buffer = NULL;
 
 	if (meta->frames < 3) {
-		meta->static_buffer = malloc((pixelformat->size >> 3) * mode.size.x * mode.size.y);
+		meta->static_buffer = malloc((pixelformat->size >> 3) * mode.visible.x * mode.visible.y);
 		meta->static_vis = ggiOpen("memory:pointer", meta->static_buffer, NULL);
-		if (ggiSetSimpleMode(meta->static_vis, mode.size.x, mode.size.y, 1, GT_8BIT)) {
+		if (ggiSetSimpleMode(meta->static_vis, mode.visible.x, mode.visible.y, 1, GT_8BIT)) {
 			sciprintf("GFXGGI: Warning: Setting mode for memory visual #2 failed\n");
 		}
 	} else meta->static_buffer = NULL;

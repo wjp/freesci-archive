@@ -6,7 +6,9 @@
 extern gfx_driver_t gfx_driver_ggi;
 
 static gfx_driver_t *gfx_drivers[] = {
+#ifdef HAVE_LIBGGI
   &gfx_driver_ggi,
+#endif
   NULL
 };
 
