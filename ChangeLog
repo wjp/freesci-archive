@@ -1,3 +1,24 @@
+2001-12-28  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/gfx_operations.h:
+	* src/gfx/operations.c (gfxop_draw_cel_static_clipped): Added function
+	to allow clipped drawing for static views
+
+	* src/gfx/widgets.c (_gfxwop_pic_view_draw): Use
+	gfxop_draw_cel_static_clipped() to draw picviews clipped against the
+	current port
+
+	* src/engine/savegame.cfsml (gamestate_restore): Fixed support for
+	pre-save_dir_copy_buf savegames by testing for this case and allocating
+	the memory automagically
+
+2001-12-27  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/kernel.h: Priority band algorithms now support 14 (rather
+	than 13) bands
+	* src/engine/kgraphics.c (kDrawPic): priority_last now 190
+	Net result: The algorithm actually matches observations from Sierra SCI
+
 2001-12-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (_k_update_signals_in_view_list): Delete stop-

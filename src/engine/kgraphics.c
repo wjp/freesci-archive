@@ -991,7 +991,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->drop_views = NULL;
 
 	s->priority_first = 42;
-	s->priority_last = 180;
+	s->priority_last = 190;
 	s->pic_not_valid = 1;
 	s->pic_is_new = 1;
 

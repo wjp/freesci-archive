@@ -513,7 +513,7 @@ gfxop_draw_cel(gfx_state_t *state, int nr, int loop, int cel, point_t pos,
 int
 gfxop_draw_cel_static(gfx_state_t *state, int nr, int loop, int cel, point_t pos,
 		      gfx_color_t color);
-/* Draws (part of) a cel to the static buffer
+/* Draws a cel to the static buffer; no clipping is performed
 ** Parameters: (gfx_state_t *) state: The state encapsulating the driver to draw with
 **             (int) nr: Number of the view to draw
 **             (int) loop: Loop of the cel to draw
@@ -521,6 +521,22 @@ gfxop_draw_cel_static(gfx_state_t *state, int nr, int loop, int cel, point_t pos
 **             (point_t) pos: The positino the cel is to be drawn to
 **             (gfx_color_t color): The priority and control values to use for drawing
 ** Returns   : (int) GFX_OK or GFX_FATAL
+** Let me repeat, no clipping (except for the display borders) is performed.
+*/
+
+
+int
+gfxop_draw_cel_static_clipped(gfx_state_t *state, int nr, int loop, int cel, point_t pos,
+			      gfx_color_t color);
+/* Draws (part of) a clipped cel to the static buffer
+** Parameters: (gfx_state_t *) state: The state encapsulating the driver to draw with
+**             (int) nr: Number of the view to draw
+**             (int) loop: Loop of the cel to draw
+**             (int) cel: The cel number of the cel to draw
+**             (point_t) pos: The positino the cel is to be drawn to
+**             (gfx_color_t color): The priority and control values to use for drawing
+** Returns   : (int) GFX_OK or GFX_FATAL
+** This function does clip.
 */
 
 

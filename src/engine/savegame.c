@@ -6571,6 +6571,7 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->dyn_views = NULL;
 	retval->drop_views = NULL;
 	retval->port = NULL;
+	retval->save_dir_copy_buf = NULL;
 
 	retval->sound_mute = s->sound_mute;
 	retval->sound_volume = s->sound_volume;
@@ -6605,7 +6606,7 @@ gamestate_restore(state_t *s, char *dirname)
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 1106 "savegame.cfsml"
+#line 1107 "savegame.cfsml"
 
 	fclose(fh);
 
@@ -6705,11 +6706,22 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->file_handles_nr = 2;
 	retval->file_handles = sci_calloc(2, sizeof(FILE *));
 
+	if (!retval->save_dir_copy_buf) { /* FIXME: Maybe other versions as well! */
+		retval->save_dir_copy_buf = sci_malloc(MAX_SAVE_DIR_SIZE);
+		retval->save_dir = heap_allocate(retval->_heap, MAX_SAVE_DIR_SIZE);
+		if (!retval->save_dir) {
+			fprintf(stderr, "ERROR: While restoring old savegame: Not enough space to allocate space for"
+				" save_dir buffer!\n");
+			return NULL;
+			/* This should only happen with corrupt save states, since all games HAVE enough
+			** spare memory for this.  */
+		}
+	}
+
+
 	strcpy(retval->save_dir_copy_buf, s->save_dir_copy_buf);
-	fprintf(stderr, "savedir '%s' <= '%s'\n",
-		retval->heap + retval->save_dir + 2,
-		s->heap + s->save_dir + 2);
-	strcpy(retval->heap + retval->save_dir + 2, s->heap + s->save_dir + 2);
+	if (retval->save_dir)
+		strcpy(retval->heap + retval->save_dir + 2, s->heap + s->save_dir + 2);
 
 	/* static parser information: */
 	retval->parser_rules = s->parser_rules;

@@ -469,7 +469,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 			guint8 param, param2 = 0;
 
 #ifdef OUTPUT_SONG_CHANGES
-fprintf(stderr, "--NEW--[Handle %04x ---- pos = %04x]\n", ss_state->current_song->handle,
+fprintf(stderr, "--[Handle %04x ---- pos = %04x]\n", ss_state->current_song->handle,
 ss_state->current_song->pos);
 #endif
 
