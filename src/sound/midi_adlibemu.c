@@ -416,6 +416,7 @@ midi_device_t midi_device_adlibemu = {
   ADLIB_VOICES  /* Max polyphony */
 };
 
+/* count is # of SAMPLES, not bytes */
 void synth_mixer (void* buffer, int count)
 {
     if (!buffer)

@@ -76,6 +76,7 @@ static int pcmout_sdl_open(guint16 *b) {
 }
 
 static void pcmout_sdl_close() {
+  SDL_PauseAudio (1);
   SDL_CloseAudio();
 }
 

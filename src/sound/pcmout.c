@@ -46,11 +46,13 @@ int pcmout_close(void)
 
 void synth_mixer (void* tmp_bk, int count);
 
+/* returns # of samples, not bytes */
 int mix_sound()
 {
-  synth_mixer(snd_buffer, BUFFER_SIZE);
 
-  return BUFFER_SIZE;
+  synth_mixer(snd_buffer, BUFFER_SIZE/2);
+
+  return BUFFER_SIZE/2;
 }
 
 /* the pcmout_null sound driver */
