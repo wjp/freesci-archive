@@ -208,6 +208,9 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 	}
 
 	case SOUND_COMMAND_SET_MUTE: {
+	  if (s->version == SCI_VERSION_LAST_SCI0) /* Arthur... */
+	    event.value = (event.value == SCI_MUTE_ON) ? SCI_MUTE_OFF : SCI_MUTE_ON ;
+
 		switch (event.value)
 		{
 		case SCI_MUTE_ON:
@@ -233,19 +236,23 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 		global_sound_server->queue_command(event.handle, event.signal, event.value);
 
 		/* return the mute status */
-		if (s->sound_mute)
-			return SCI_MUTE_ON;
-		else
-			return SCI_MUTE_OFF;
 	}
 
+	/* Intentional fallthrough */
 	case SOUND_COMMAND_GET_MUTE: {
-		if (s->sound_mute)
-			return s->sound_mute;
-		else
-			return 0;
+	  if (s->sound_mute) {
+	    if (s->version == SCI_VERSION_LAST_SCI0) /* Arthur... */
+	      return SCI_MUTE_OFF;
+	    else 
+		return SCI_MUTE_ON;
+	  } else {
+	    if (s->version == SCI_VERSION_LAST_SCI0) /* Arthur... */
+	      return SCI_MUTE_ON;
+	    else
+	      return SCI_MUTE_OFF;
+	  }
 	}
-
+	break;
 	case SOUND_COMMAND_TEST: {
 		int *retval = NULL;
 		int len = 0;
@@ -598,6 +605,7 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 		case 0x00: /* UNKNOWN NYI (happens in SQ3 on phleebut */
 		case 0x04: /* UNKNOWN NYI (happens in LSL2 gameshow) */
 		case 0x46: /* UNKNOWN NYI (happens in LSL3 binoculars) */
+		case 0x52: /* UNKNOWN NYI (PQ2 1.001.000 scuba dive */
 		case 0x61: /* UNKNOWN NYI (special for adlib? Iceman) */
 		case 0x73: /* UNKNOWN NYI (happens in Hoyle) */
 		case 0xd1: /* UNKNOWN NYI (happens in KQ4 when riding the unicorn) */
