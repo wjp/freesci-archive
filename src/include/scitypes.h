@@ -91,6 +91,9 @@ typedef struct {
 #ifdef _MSC_VER
 	long search;
 	struct _finddata_t fileinfo;
+#elif defined(_DREAMCAST)
+	file_t dir;
+	char *mask_copy;
 #else
 	DIR *dir;
 	char *mask_copy;

@@ -39,6 +39,9 @@
 #  include <beos/fnmatch.h>
 #endif
 
+#ifdef _DREAMCAST
+#  include <arch/timer.h>
+#endif
 
 #ifdef HAVE_MEMFROB
 void *memfrob(void *s, size_t n);
@@ -242,6 +245,19 @@ void sci_gettime(long *seconds, long *useconds)
 	*seconds = tm/1000;
 	*useconds = tm*1000;
 }
+#elif defined (_DREAMCAST)
+/* Warning: This function returns the amount of time that has passed since the
+** start of the program. A gettimeofday() function is available, but it
+** contains a bug. So this will have to do for now.
+*/
+void
+sci_gettime(long *seconds, long *useconds)
+{
+	uint32 s, m;
+	timer_ms_gettime(&s, &m);
+	*seconds = s;
+	*useconds = m*1000;
+}
 #else
 #  error "You need to provide a microsecond resolution sci_gettime implementation for your platform!"
 #endif
@@ -352,7 +368,62 @@ sci_finish_find(sci_dir_t *dir)
 	}
 }
 
-#else /* !_WIN32 */
+#elif defined(_DREAMCAST)
+/******** Dir: DREAMCAST CODE ********/
+
+void
+sci_init_dir(sci_dir_t *dir)   
+{
+	dir->dir = 0;
+	dir->mask_copy = NULL;
+}
+
+char *
+sci_find_first(sci_dir_t *dir, char *mask)
+{
+	if (dir->dir)
+		fs_close(dir->dir);
+
+	/* Opening "." does not work */
+	if (!(dir->dir = fs_open(fs_getwd(), O_RDONLY | O_DIR))) {
+		sciprintf("%s, L%d: fs_open(fs_getwd(), O_RDONLY | O_DIR) failed!\n",__FILE__, __LINE__);
+		return NULL;
+	}                                                                                
+
+	dir->mask_copy = sci_strdup(mask);
+
+	return sci_find_next(dir);
+}
+                                                                                                
+char *
+sci_find_next(sci_dir_t *dir)
+{
+	dirent_t *match;
+
+	while ((match = fs_readdir(dir->dir))) {
+		if (match->name[0] == '.')
+			continue;
+
+		if (!fnmatch(dir->mask_copy, match->name, 0))
+			return match->name;
+	}
+
+	sci_finish_find(dir);
+	return NULL;
+}
+                                                                                                                        
+void
+sci_finish_find(sci_dir_t *dir)
+{
+	if (dir->dir) {
+		fs_close(dir->dir);
+		dir->dir = 0;
+		free(dir->mask_copy);
+		dir->mask_copy = NULL;
+	}
+}
+
+#else /* !_WIN32 && !_DREAMCAST */
 /******** Dir: UNIX CODE ********/
 
 void
