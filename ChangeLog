@@ -1,3 +1,7 @@
+2001-07-28  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* configure.in: Got rid of modules
+
 2001-07-27  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/drivers/sdl_driver.c (sdl_draw_line): Fixed bounds
