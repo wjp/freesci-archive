@@ -1,5 +1,10 @@
 2003-01-13  Alexander Angas  <wgd@internode.on.net>
 
+	* src/gfx/drivers/dx_driver.cpp: Fixed crash due to invalid rect
+	parameters passed to LockRect().
+
+2003-01-13  Alexander Angas  <wgd@internode.on.net>
+
 	* src/gfx/drivers/gfx_drivers.c:
 	* src/include/uinput.h:
 	* src/win32/fsci_dll.dsp:
