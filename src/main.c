@@ -1033,7 +1033,7 @@ main(int argc, char** argv)
 		gamestate->sound_server->get_event(gamestate); /* Get init message */
 	}
 
-	if (active_conf)
+	if (active_conf && active_conf->console_log)
 		open_console_file (active_conf->console_log);
 	gamestate->animation_delay = active_conf->animation_delay;
 	gamestate->animation_granularity = active_conf->animation_granularity;

@@ -1,3 +1,7 @@
+2001-07-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/main.c (main): Optionalized console file initialization
+
 2001-07-03  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (reparentize_primary_widget_lists): Better

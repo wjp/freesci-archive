@@ -1,0 +1,53 @@
+Delivery-date: Thu, 05 Jul 2001 19:57:47 +0200
+To: freesci-develop@telefragged.com
+From: Ravi <ravi.i@softhome.net>
+Subject: [freesci-develop] Adlib Sound (Was Re: FreeSCI build 20010703 for
+  i686-pc-linux-gnu is broken.)
+X-listar-version: Listar v0.128a
+X-original-sender: ravi.i@softhome.net
+Reply-to: freesci-develop@telefragged.com
+X-list: freesci-develop
+
+Howdy,
+
+At 07:52 PM 7/4/01 +0200, Rune Orsval wrote:
+>> > btw. I'll be looking into the possibillity of getting freesci to play
+>> > sound on the OPL3 FM synth.
+>> 
+>> Cool! :-)
+>> IIRC the AdLib patches only had OPL/2 information, though. Which sound
+>> interface were you planning to use?
+>
+>My initial idea is to (ab)use the GM sound data and some free patches
+>for the OPL3. I'll be using the OSS /dev/sequencer interface.
+
+I have a partial format for the Adlib patch resources if you feel like
+playing around with them. The information isn't verified correct, so when
+stuff goes wrong trust your own results over whatever I write here:
+
+Each instrument definition is 28 bytes long consisting of two 14 byte
+structures. The structures hold Adlib register information for the two
+Adlib operators which make up the instrument.
+
+0000 keyScaling      db ?   ; 0 - 3
+0001 freqMod         db ?   ; 0 - 15
+0002 feedback        db ?   ; 0 - 7
+0003 attackRate      db ?   ; 0 - 15
+0004 sustainVol      db ?   ; 0 - 15
+0005 envelope        db ?   ; true, false
+0006 decayRate       db ?   ; 0 - 15
+0007 releaseRate     db ?   ; 0 - 15
+0008 volume          db ?   ; 0 - 63
+0009 ampMod          db ?   ; true, false
+000A vibrato         db ?   ; true, false
+000B kybdScaling     db ?   ; true, false
+000C algorithm       db ?   ; 0, 1
+000D waveform        db ?   ; 0 - 3
+
+Some of the fields, like algorithm, are only relevant in one of the
+operator structures. I think these fields contain other data in the other
+operator structure, but I don't know what they hold.
+
+Cheers,
+Ravi.
+
