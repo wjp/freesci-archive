@@ -1,3 +1,8 @@
+2002-01-02  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/resource.h (BREAKPOINT): Changed 'bpt' on Alpha
+	to 'call_pal bpt'.
+
 2002-01-02  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/gfx/drivers/sdl_driver.c: Fixed calling Sleep() twice under

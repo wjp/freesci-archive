@@ -653,7 +653,7 @@ _cfsml_write_gfxw_container_t(FILE *fh, gfxw_container_t* save_struc)
   fprintf(fh, "dirty = ");
     if (!save_struc->dirty)
       fprintf(fh, "\\null\\");
-    else
+    else 
       _cfsml_write_gfx_dirty_rect_t(fh, save_struc->dirty);
     fprintf(fh, "\n");
   fprintf(fh, "contents = ");
@@ -685,7 +685,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -845,7 +845,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -992,7 +992,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1139,7 +1139,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1306,7 +1306,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1390,7 +1390,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1576,7 +1576,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1731,7 +1731,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1857,7 +1857,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -2050,7 +2050,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -2133,7 +2133,7 @@ _cfsml_write_gfxw_port_t(FILE *fh, gfxw_port_t* save_struc)
   fprintf(fh, "dirty = ");
     if (!save_struc->dirty)
       fprintf(fh, "\\null\\");
-    else
+    else 
       _cfsml_write_gfx_dirty_rect_t(fh, save_struc->dirty);
     fprintf(fh, "\n");
   fprintf(fh, "contents = ");
@@ -2192,7 +2192,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -2398,7 +2398,7 @@ _cfsml_write_gfxw_visual_t(FILE *fh, gfxw_visual_t* save_struc)
   fprintf(fh, "dirty = ");
     if (!save_struc->dirty)
       fprintf(fh, "\\null\\");
-    else
+    else 
       _cfsml_write_gfx_dirty_rect_t(fh, save_struc->dirty);
     fprintf(fh, "\n");
   fprintf(fh, "contents = ");
@@ -2436,7 +2436,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -2652,7 +2652,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -2913,7 +2913,7 @@ _cfsml_write_gfxw_list_t(FILE *fh, gfxw_list_t* save_struc)
   fprintf(fh, "dirty = ");
     if (!save_struc->dirty)
       fprintf(fh, "\\null\\");
-    else
+    else 
       _cfsml_write_gfx_dirty_rect_t(fh, save_struc->dirty);
     fprintf(fh, "\n");
   fprintf(fh, "contents = ");
@@ -2945,7 +2945,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -3090,7 +3090,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -3403,7 +3403,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4146,7 +4146,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4324,7 +4324,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4487,7 +4487,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4593,7 +4593,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4671,7 +4671,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4777,7 +4777,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4983,7 +4983,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -5154,7 +5154,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -5269,7 +5269,7 @@ _cfsml_write_gfx_dirty_rect_t(FILE *fh, gfx_dirty_rect_t* save_struc)
   fprintf(fh, "next = ");
     if (!save_struc->next)
       fprintf(fh, "\\null\\");
-    else
+    else 
       _cfsml_write_gfx_dirty_rect_t(fh, save_struc->next);
     fprintf(fh, "\n");
   fprintf(fh, "}");
@@ -5298,7 +5298,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -5416,7 +5416,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -5541,7 +5541,7 @@ int min, max, i;
 
 /* Auto-generated CFSML declaration and function block ends here */
 /* Auto-generation performed by cfsml.pl 0.8.2 */
-#line 448 "savegame.cfsml"
+#line 452 "savegame.cfsml"
 
 void
 write_hunk_block(FILE *fh, hunk_block_t *foo)
@@ -5562,7 +5562,7 @@ write_hunk_block(FILE *fh, hunk_block_t *foo)
   _cfsml_write_gfxw_snapshot_t(fh, (*(((gfxw_snapshot_t**)foo->data))));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 464 "savegame.cfsml"
+#line 468 "savegame.cfsml"
 		return;
 
 	} else { /* Normal buffer */
@@ -5630,7 +5630,7 @@ read_hunk_block(FILE *fh, hunk_block_t *foo, char *lastval, int *line, int *hite
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 508 "savegame.cfsml"
+#line 512 "savegame.cfsml"
 
 		return 0;
 
@@ -5727,7 +5727,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_box_t(fh, ((gfxw_box_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 600 "savegame.cfsml"
+#line 604 "savegame.cfsml"
 		break;
 
 	case GFXW_RECT:
@@ -5738,7 +5738,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_primitive_t(fh, ((gfxw_primitive_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 606 "savegame.cfsml"
+#line 610 "savegame.cfsml"
 		break;
 
 	case GFXW_VIEW:
@@ -5748,7 +5748,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_view_t(fh, ((gfxw_view_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 611 "savegame.cfsml"
+#line 615 "savegame.cfsml"
 		break;
 
 	case GFXW_DYN_VIEW:
@@ -5758,7 +5758,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_dyn_view_t(fh, ((gfxw_dyn_view_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 616 "savegame.cfsml"
+#line 620 "savegame.cfsml"
 		break;
 
 	case GFXW_TEXT:
@@ -5767,7 +5767,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_text_t(fh, ((gfxw_text_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 620 "savegame.cfsml"
+#line 624 "savegame.cfsml"
 		break;
 
 
@@ -5778,7 +5778,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_list_t(fh, ((gfxw_list_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 626 "savegame.cfsml"
+#line 630 "savegame.cfsml"
 		break;
 
 	case GFXW_VISUAL:
@@ -5787,7 +5787,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_visual_t(fh, ((gfxw_visual_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 630 "savegame.cfsml"
+#line 634 "savegame.cfsml"
 		break;
 
 	case GFXW_PORT:
@@ -5796,7 +5796,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_port_t(fh, ((gfxw_port_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 634 "savegame.cfsml"
+#line 638 "savegame.cfsml"
 		break;
 
 	case GFXW_:
@@ -5811,14 +5811,14 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_container_t(fh, ((gfxw_container_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 644 "savegame.cfsml"
+#line 648 "savegame.cfsml"
 		} else {
 #line 877 "savegame.cfsml"
 /* Auto-generated CFSML data writer code */
   _cfsml_write_gfxw_widget_t(fh, (*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 646 "savegame.cfsml"
+#line 650 "savegame.cfsml"
 		}
 		break;
 	}
@@ -6025,7 +6025,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 829 "savegame.cfsml"
+#line 833 "savegame.cfsml"
 		break;
 
 	case GFXW_RECT:
@@ -6056,7 +6056,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 836 "savegame.cfsml"
+#line 840 "savegame.cfsml"
 		break;
 
 	case GFXW_VIEW:
@@ -6086,7 +6086,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 842 "savegame.cfsml"
+#line 846 "savegame.cfsml"
 		break;
 
 	case GFXW_DYN_VIEW:
@@ -6116,7 +6116,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 848 "savegame.cfsml"
+#line 852 "savegame.cfsml"
 		(*widget)->type = expected_type;
 		if (FILE_VERSION == 1)
 			((gfxw_dyn_view_t *) widget)->force_precedence = 0;
@@ -6148,7 +6148,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 856 "savegame.cfsml"
+#line 860 "savegame.cfsml"
 		(*widget)->type = expected_type;
 		break;
 
@@ -6182,7 +6182,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 866 "savegame.cfsml"
+#line 870 "savegame.cfsml"
 		(*widget)->type = expected_type;
 		break;
 
@@ -6214,7 +6214,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 874 "savegame.cfsml"
+#line 878 "savegame.cfsml"
 		(*widget)->type = expected_type;
 
 		full_widget_tree_traversal(*widget, NULL, NULL);
@@ -6251,7 +6251,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 887 "savegame.cfsml"
+#line 891 "savegame.cfsml"
 		(*widget)->type = expected_type;
 		break;
 
@@ -6284,7 +6284,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 896 "savegame.cfsml"
+#line 900 "savegame.cfsml"
 		(*widget)->type = expected_type;
 		break;
 
@@ -6315,7 +6315,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 903 "savegame.cfsml"
+#line 907 "savegame.cfsml"
 		(*widget)->type = expected_type;
 		break;
 
@@ -6348,7 +6348,7 @@ write_pixmap_color(FILE *fh, gfx_pixmap_color_t *color)
   _cfsml_write_gfx_pixmap_color_t(fh, (color));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 931 "savegame.cfsml"
+#line 935 "savegame.cfsml"
 }
 
 int
@@ -6377,7 +6377,7 @@ read_pixmap_color(FILE *fh, gfx_pixmap_color_t *color, char *lastval, int *line,
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 937 "savegame.cfsml"
+#line 941 "savegame.cfsml"
 
         color->global_index = GFX_COLOR_INDEX_UNMAPPED;
 
@@ -6401,7 +6401,7 @@ write_menubar_tp(FILE *fh, menubar_t **foo)
   _cfsml_write_menubar_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 956 "savegame.cfsml"
+#line 960 "savegame.cfsml"
 
 	} else { /* Nothing to write */
 		fputs("\\null\\", fh);
@@ -6441,7 +6441,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 973 "savegame.cfsml"
+#line 977 "savegame.cfsml"
 
 	}
 	return *hiteof;
@@ -6513,7 +6513,7 @@ SCI_MEMTEST;
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 1040 "savegame.cfsml"
+#line 1044 "savegame.cfsml"
 SCI_MEMTEST;
 
 	fclose(fh);
@@ -6610,7 +6610,7 @@ gamestate_restore(state_t *s, char *dirname)
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 1107 "savegame.cfsml"
+#line 1111 "savegame.cfsml"
 
 	fclose(fh);
 
