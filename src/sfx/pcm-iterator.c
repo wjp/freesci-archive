@@ -74,7 +74,7 @@ sfx_iterator_feed(song_iterator_t *it)
 		/* Now this is silly; why'd you call this function in the first place? */
 		return NULL;
 	}
-	
+
 	idat = sci_malloc(sizeof(pcm_data_internal_t));
 	idat->data = data;
 	idat->samples_left = size;
@@ -99,6 +99,10 @@ pi_poll(sfx_pcm_feed_t *self, byte *dest, int size)
 	data_len = size * self->sample_size;
 
 	memcpy(dest, D->data, data_len);
+#if 0
+memset(dest, 0xff, data_len);
+#endif
+
 	D->data += data_len;
 
 	return size;

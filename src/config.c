@@ -20,10 +20,6 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
-#ifndef _WIN32
-#  include <stdint.h> /* May break IA64 test-noansi-r */
-#endif _WIN32
-
 
 /* end standard C headers. */
 
@@ -891,7 +887,7 @@ static int
 push_file(char *name);
 
 static int
-pop_file();
+pop_file(void);
 
 FILE *initial_file;
 
@@ -1097,7 +1093,7 @@ crop_value(char *yytext);
 char *
 purge_comments(char *comments);
 
-#line 1098 "config.c"
+#line 1097 "config.c"
 
 #define INITIAL 0
 
@@ -1106,9 +1102,7 @@ purge_comments(char *comments);
  * down here because we want the user's section 1 to have been scanned first.
  * The user has a chance to override it with an option.
  */
-#ifndef _WIN32
 #include <unistd.h>
-#endif
 #endif
 
 #ifndef YY_EXTRA_TYPE
@@ -1253,7 +1247,7 @@ YY_DECL
 #line 307 "config.l"
 
 
-#line 1252 "config.c"
+#line 1251 "config.c"
 
 	if ( (yy_init) )
 		{
@@ -1533,7 +1527,7 @@ YY_RULE_SETUP
 #line 465 "config.l"
 ECHO;
 	YY_BREAK
-#line 1532 "config.c"
+#line 1531 "config.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2502,7 +2496,7 @@ void yyfree (void * ptr )
 
 
 int
-yywrap()
+yywrap(void)
 {
         return pop_file(); /* no further input */
 }
@@ -2552,7 +2546,7 @@ push_file(char *name)
 }
 
 static int
-pop_file()
+pop_file(void)
 {
 	if (file_stack) {
 		void *goner = file_stack;
@@ -2672,6 +2666,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->resource_dir = NULL;
 	conf->work_dir = NULL;
         conf->module_path = sci_strdup(SCI_DEFAULT_MODULE_PATH);
+	conf->res_version = SCI_VERSION_AUTODETECT;
 
 	for (i = 0; i < FREESCI_DRIVER_SUBSYSTEMS_NR; i++)
 		conf->driver_options[i] = NULL;

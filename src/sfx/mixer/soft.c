@@ -150,7 +150,8 @@ mix_subscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 		/ self->dev->conf.rate;
 	*/
 	/* For the sake of people without 64 bit CPUs: */
-	fs->buf_size = (self->dev->buf_size *
+	fs->buf_size = 2 + /* Additional safety */
+		(self->dev->buf_size *
 			(1 + (feed->conf.rate / self->dev->conf.rate)));
 
 	fs->buf = sci_malloc(fs->buf_size * feed->sample_size);
@@ -162,6 +163,7 @@ mix_subscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 	fs->ch_new.left = 0;
 	fs->ch_new.right = 0;
 	fs->mode = SFX_PCM_FEED_MODE_ALIVE;
+
 	/* If the feed can't provide us with timestamps, we don't need to wait for it to do so */
 	fs->pending_review = (feed->get_timestamp)? 1 : 0;
 
@@ -254,7 +256,6 @@ mix_compute_output(sfx_pcm_mixer_t *self, int outplen)
 	gint32 *lsrc = P->compbuf_l;
 	gint32 *rsrc = P->compbuf_r;
 	int sample_size = SFX_PCM_SAMPLE_SIZE(conf);
-gint32 *xxx = lsrc;
 
  
 	if (!P->writebuf)
@@ -529,6 +530,8 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 	struct twochannel_data c_old = fs->ch_old;
 	struct twochannel_data c_new = fs->ch_new;
 
+#warning "Remove"
+int lastl = 0;
 	int samples_read;
 	int samples_left;
 	int write_offset; /* Iterator for translation */
@@ -537,12 +540,15 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 	samples_nr = fs->spd.val * len;
 	/* A little complicated since we must consider partial samples */
 	samples_nr += (fs->spd.nom * len
-		       - fs->scount.nom /* remember that we may have leftovers */
-		       + (fs->scount.den - 1 /* round up */))
+		       + (fs->scount.den - fs->scount.nom) /* remember that we may have leftovers */
+		       + (fs->spd.den - 1 /* round up */)
+		       )
 		/ fs->spd.den;
 
 	ts->secs = -1;
 
+//fprintf(stderr, " samples_nr = %d * (%d + %d/%d) = %d\n",
+//len, fs->spd.val, fs->spd.nom, fs->scount
 	if (fs->pending_review) {
 		int newmode = PCM_FEED_EMPTY; /* empty unless a get_timestamp() tells otherwise */
 
@@ -589,7 +595,8 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 	}
 
 	/* Make sure we have sufficient information */
-	samples_left = samples_read = f->poll(f, wr_dest, samples_nr - delay_samples);
+	samples_left = samples_read = fs->sample_bufstart +
+		f->poll(f, wr_dest, samples_nr - delay_samples - fs->sample_bufstart);
 
 	/* Skip at the beginning: */
 	if (delay_samples) {
@@ -603,21 +610,6 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 		len -= delay_samples;
 	}
 
-
-#if 0
-	/* Truncate end: */
-	if (samples_nr - delay_samples < samples_read) {
-		int end_samples = (samples_nr - delay_samples) - samples_read;
-		/* Number of samples at the end we potentially must zero out */
-
-		if (!add_result) {
-			memset(lchan + len, 0, sizeof(gint32) * end_samples);
-			memset(rchan + len, 0, sizeof(gint32) * end_samples);
-		}
-
-		len -= end_samples;
-	}
-#endif
 
 #if (DEBUG >= 2)
 	sciprintf("[soft-mixer] Examining %s-%x (sample size %d); read %d/%d/%d, re-using %d samples\n",
@@ -692,6 +684,7 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 		left  /= fs->spd.den;
 		right /= fs->spd.den;
 
+
 		leftsum += left;
 		rightsum += right;
 
@@ -701,6 +694,21 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 			leftsum  /= (sample_steps);
 			rightsum /= (sample_steps);
 		}
+#if 0
+leftsum = c_new.left;
+rightsum = c_new.right;
+ if (leftsum != 0x7f00)
+	 fprintf(stderr, "\tFoul in Denmark: %d at %d/%d from %d\n", leftsum, write_offset, len, lsrc[-1]);
+#if 0
+
+ if ((lastl > 20000 || lastl < -20000) && leftsum == 0) {
+	 fprintf(stderr, "Found funny edge!\n");
+	 BREAKPOINT();
+ }
+ lastl = leftsum;
+#endif
+#endif
+
 
 #if (DEBUG >= 3)
 		sciprintf("[soft-mix] Ultimate result: %d:%d (frac %d:%d)\n", leftsum, rightsum, left, right);
@@ -728,9 +736,10 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 
 	/* Save whether we have a partial sample still stored */
 	fs->sample_bufstart = samples_left;
+		
 	if (samples_left) {
 		memmove(fs->buf,
-			fs->buf + (write_offset * f->sample_size),
+			fs->buf + ((samples_read - samples_left) * f->sample_size),
 			samples_left * f->sample_size);
 	}
 #if (DEBUG >= 2)

@@ -87,7 +87,7 @@ static int
 push_file(char *name);
 
 static int
-pop_file();
+pop_file(void);
 
 FILE *initial_file;
 
@@ -465,7 +465,7 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 %%
 
 int
-yywrap()
+yywrap(void)
 {
         return pop_file(); /* no further input */
 }
@@ -515,7 +515,7 @@ push_file(char *name)
 }
 
 static int
-pop_file()
+pop_file(void)
 {
 	if (file_stack) {
 		void *goner = file_stack;
@@ -635,6 +635,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->resource_dir = NULL;
 	conf->work_dir = NULL;
         conf->module_path = sci_strdup(SCI_DEFAULT_MODULE_PATH);
+	conf->res_version = SCI_VERSION_AUTODETECT;
 
 	for (i = 0; i < FREESCI_DRIVER_SUBSYSTEMS_NR; i++)
 		conf->driver_options[i] = NULL;

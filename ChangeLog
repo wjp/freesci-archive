@@ -1,3 +1,20 @@
+2004-01-01  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sfx/mixer/soft.c (mix_compute_input_linear): Fixed an error
+	whereby an insufficient number of samples was requested from a PCM
+	feed
+
+2003-12-31  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sfx/mixer/soft.c (mix_compute_input_linear): Fixed incorrect
+	offset in memmove() causing cracking sound
+
+	* src/sfx/seq/sequencers.c: Added compile-time support for heap
+	poisoning
+
+	* src/config.l (config_init): Fixed missing initialisation for
+	'res_version' in the config structurex
+
 2003-12-30  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sfx/pcm_device/audiobuf.c (sfx_audbuf_write): Minor fix to

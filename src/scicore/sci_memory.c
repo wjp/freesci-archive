@@ -34,6 +34,8 @@
 
 #include <sci_memory.h>
 
+/*#define POISON_MEMORY*/
+
 /* set optimisations for Win32: */
 /* g on: enable global optimizations */
 /* t on: use fast code */
@@ -58,6 +60,11 @@ _SCI_MALLOC(size_t size, char *file, int line, char *funct)
 	INFO_MEMORY("_SCI_MALLOC()", size, file, line, funct);
 #endif
 	ALLOC_MEM((res = malloc(size)), size, file, line, funct)
+#ifdef POISON_MEMORY
+	{
+		memset(res, 0xa5, size);
+	}
+#endif
 	return res;
 }
 

@@ -55,6 +55,8 @@ pcmout_sdl_output_timestamp(sfx_pcm_device_t *self)
 				 delta);
 }
 
+FILE *fil = NULL;
+
 static void
 timer_sdl_internal_callback(void *userdata, byte *dest, int len)
 {
@@ -101,6 +103,21 @@ timer_sdl_internal_callback(void *userdata, byte *dest, int len)
 #endif
 	sfx_audbuf_read(&audio_buffer, dest, len / sample_size);
 
+#if 0
+	if (!fil) {
+		fil = fopen("/tmp/sdl.log", "w");
+	}
+	{
+		int i;
+		int end = len / sample_size;
+		gint16 *d = dest;
+		fprintf(fil, "Writing %d/%d\n", len, sample_size);
+		for (i = 0; i < end; i++) {
+			fprintf(fil, "\t%d\t%d\n", d[0], d[1]);
+			d += 2;
+		}
+	}
+#endif
 }
 
 
@@ -121,7 +138,7 @@ pcmout_sdl_init(sfx_pcm_device_t *self)
 	a.format = AUDIO_S16LSB; /* FIXME */
 #endif
 	a.channels = 2; /* FIXME */
-	a.samples = 2048; /* FIXME */
+	a.samples = 8192; /* FIXME */
 	a.callback = timer_sdl_internal_callback;
 	a.userdata = NULL;
 
