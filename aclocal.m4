@@ -1,4 +1,4 @@
-dnl aclocal.m4 generated automatically by aclocal 1.4
+dnl aclocal.m4 generated automatically by aclocal 1.4-p4
 
 dnl Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
@@ -292,7 +292,7 @@ AC_CHECK_LINK_PATH([png_info_init(0);],$_ac_png_libraries,["-lpng"],
 if test "$ac_png_libraries" = no; then
 # Try again with -lz
 	LIBS="$LIBS -lz"
-	AC_CHECK_LINK_PATH([png_info_init((png_infop)0);],$_ac_png_libraries,["-lpng"],
+	AC_CHECK_LINK_PATH([png_read_end(NULL, NULL);],$_ac_png_libraries,["-lpng"],
 			 [$ac_png_includes],[#include <png.h>], ac_png_libraries)
 fi
 

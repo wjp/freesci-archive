@@ -59,18 +59,6 @@ gfx_pixmap_color_t gfx_sci0_pic_colors[GFX_SCI0_PIC_COLORS_NR]; /* Initialized d
 
 static int _gfxr_pic0_colors_initialized = 0;
 
-typedef struct _line_list_node {
-	rect_t line;
-	struct _line_list_node *next;
-} line_list_node_t;
-
-typedef struct {
-	line_list_node_t *list;
-} line_list_t;
-/* Line lists are used to track previously drawn lines so we can draw auxiliary
-** lines in certain cases
-*/
-
 /************************************/
 /************************************/
 /************************************/
@@ -142,98 +130,6 @@ gfxr_init_pic(gfx_mode_t *mode, int ID)
 }
 
 
-static void
-free_line_list_node(line_list_node_t *node)
-{
-	if (node) {
-		free_line_list_node(node->next);
-		sci_free(node);
-	}
-}
-
-static void
-free_line_list(line_list_t *list)
-{
-	free_line_list_node(list->list);
-}
-
-static void
-init_line_list(line_list_t *list)
-{
-	list->list = NULL;
-}
-
-static void
-add_to_line_list(line_list_t *list, rect_t line)
-{
-	line_list_node_t *node = malloc(sizeof(line_list_node_t));
-	node->line = line;
-	node->next = list->list;
-	list->list = node;
-}
-
-static void
-_gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int priority, int control,
-		int drawenable, int line_mode, int cmd, line_list_t *line_list);
-
-
-int
-point_touches_line(int px, int py, rect_t line, point_t *intersection)
-{
-/*
-  l0 = (lx, ly) + (ldx, ldy) * i
-  l1 = (px, py) + (-ldy, ldx) * j    \ orthogonal to l0, starting at (px, py)
-
-  (lx, ly) - (px, py) = (-ldy, ldx) * j - (ldx, ldy) * i
-
-    Dx = lx - px
-    Dy = ly - py
-
-  Dx = -ldy * j - ldx * i
-
-             -ldx * i - Dx
-     ==> j = -------------
-                  ldx
-
-  Dy =  ldx * j - ldy * i
-
-     ==>
-
-  Dy = -ldx * i - Dx - ldy * i    \ Assumes that ldx != 0
-
-  Dx + Dy = i * (-ldx - ldy)
-
-     ==>
-
-        Dx + Dy
-  i = -----------
-      - ldx - ldy
-
-*/
-
-	int denominator = line.xl * line.yl * 2; /* Orthogonal lines */
-	/*	int numerator_x = -dy * (line.y, py) -  */
-	return 0;
-}
-
-static void
-draw_auxiliary_lines(gfxr_pic_t *pic, int x, int y, int color, int priority, int control,
-		     int drawenable, int line_mode, int cmd, line_list_t *line_list)
-{
-	line_list_node_t *node = line_list->list;
-
-	while (node) {
-		point_t point;
-
-		if (point_touches_line(x, y, node->line, &point))
-			_gfxr_draw_line(pic, x, y, point.x, point.y,
-					color, priority, control, drawenable,
-					line_mode, cmd, NULL);
-		node = node->next;
-	}
-}
-
-
 /****************************/
 /* Pic rendering operations */
 /****************************/
@@ -267,6 +163,7 @@ gfxr_clear_pic0(gfxr_pic_t *pic)
    d = nonlinearstart-1;  \
    while (linearvar != (linearend)) { \
      buffer[linewidth * y + x] operation color; \
+     color ^= color2; color2 ^= color; color ^= color2; /* Swap colors */ \
      linearvar += linearmod; \
      if ((d+=incrE) < 0) { \
        d += incrNE; \
@@ -276,7 +173,7 @@ gfxr_clear_pic0(gfxr_pic_t *pic)
   buffer[linewidth * y + x] operation color;
 
 static void
-_gfxr_auxbuf_line_draw(gfxr_pic_t *pic, rect_t line, int color)
+_gfxr_auxbuf_line_draw(gfxr_pic_t *pic, rect_t line, int color, int color2)
 {
 	int dx, dy, incrE, incrNE, d, finalx, finaly;
 	int x = line.x;
@@ -331,6 +228,7 @@ _gfxr_auxbuf_line_clear(gfxr_pic_t *pic, rect_t line, int color)
 	int y = line.y + SCI_TITLEBAR_SIZE;
 	unsigned char *buffer = pic->aux_map;
 	int linewidth = 320;
+	int color2 = color;
 
 	dx = line.xl;
 	dy = line.yl;
@@ -1153,13 +1051,15 @@ _gfxr_draw_subline(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int
 static void
 _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color,
 		int priority, int control, int drawenable, int line_mode,
-		int cmd, line_list_t *line_list)
+		int cmd)
 {
 	int scale_x = pic->mode->xfact;
 	int scale_y = pic->mode->yfact;
 	int xc, yc;
 	rect_t line;
 	int mask;
+	int partially_white = (drawenable & GFX_MASK_VISUAL)
+		&& (((color & 0xf0) == 0xf0) || ((color & 0x0f) == 0x0f));
 
 	line.x = x;
 	line.y = y;
@@ -1170,16 +1070,6 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color,
 	    || ex > 319 || ey > 199 || ex < 0 || ey < 0) {
 		GFXWARN("While building pic: Attempt to draw line (%d,%d) to (%d,%d): cmd was %d\n", x, y, ex, ey, cmd);
 		return;
-	}
-
-	if (line_list) {
-		draw_auxiliary_lines(pic, x, y, color,
-				     priority, control, drawenable, line_mode,
-				     cmd, line_list);
-		draw_auxiliary_lines(pic, ex, ey, color,
-				     priority, control, drawenable, line_mode,
-				     cmd, line_list);
-		add_to_line_list(line_list, line);
 	}
 
 	y += SCI_TITLEBAR_SIZE;
@@ -1200,8 +1090,12 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color,
 			| ((control)? 4 : 0)
 			);
 
-	if (mask)
-		_gfxr_auxbuf_line_draw(pic, line, mask);
+	if (mask) {
+		int mask2 = mask;
+		if (partially_white)
+			mask2 = mask &= ~GFX_MASK_VISUAL;
+		_gfxr_auxbuf_line_draw(pic, line, mask, mask2);
+	}
 
 	/* Calculate everything that is changed to TRANSPARENT */
 	mask = drawenable &
@@ -1292,9 +1186,11 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color,
 }
 
 
+#define IS_FILL_BOUNDARY(x) (((x) & legalmask) != legalcolor)
+
 static void
 _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byte *bounds,
-		     int legalcolor, int color, int priority, int drawenable)
+		     int legalcolor, int legalmask, int color, int priority, int drawenable)
 {
 	int linewidth = pic->mode->xfact * 320;
 	int miny = pic->mode->yfact * SCI_TITLEBAR_SIZE;
@@ -1343,7 +1239,9 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
 				while (proj_xl_bound < 319 &&
 				       !(pic->aux_map[proj_ytotal + proj_xl_bound + 1] & FRESH_PAINT))
 					++proj_xl_bound;
-				++proj_xl_bound;
+
+				if (proj_xl_bound < 319)
+					++proj_xl_bound;
 			}
 
 			if (proj_xl_bound == 319 && !(pic->aux_map[proj_ytotal + proj_xl_bound] & FRESH_PAINT)) {
@@ -1369,7 +1267,6 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
 			if (proj_xl_bound)
 				proj_xl_bound -= pic->mode->xfact - 1;
 
-
 			if (proj_xr_bound < 319)
 				++proj_xr_bound;
 			proj_xr_bound *= pic->mode->xfact;
@@ -1381,11 +1278,11 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
 		/* Now we have the projected limits, get the real ones: */
 
 		xl = (old_xl > proj_xl_bound)? old_xl : proj_xl_bound;
-		if (bounds[ytotal + xl] == legalcolor) { /* go left as far as possible */
-			while (xl > proj_xl_bound && (bounds[ytotal + xl - 1] == legalcolor))
+		if (!IS_FILL_BOUNDARY(bounds[ytotal + xl])) { /* go left as far as possible */
+			while (xl > proj_xl_bound && (!IS_FILL_BOUNDARY(bounds[ytotal + xl - 1])))
 				--xl;
 		} else /* go right until the fillable area starts */
-			while (xl < proj_xr_bound && (bounds[ytotal + xl] != legalcolor))
+			while (xl < proj_xr_bound && (IS_FILL_BOUNDARY(bounds[ytotal + xl])))
 				++xl;
 
 
@@ -1404,7 +1301,7 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
 		}
 
 		xr = (xl > old_xl)? xl : old_xl;
-		while (xr < proj_xr_bound && (bounds[ytotal + xr + 1] == legalcolor))
+		while (xr < proj_xr_bound && (!IS_FILL_BOUNDARY(bounds[ytotal + xr + 1])))
 			++xr;
 
 #ifdef FILL_RECURSIVE_DEBUG
@@ -1412,7 +1309,7 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
 			fprintf(stderr,"%d> -> ", xr);
 #endif
 
-		if (bounds[ytotal + xl] != legalcolor) {
+		if (IS_FILL_BOUNDARY(bounds[ytotal + xl])) {
 #ifdef FILL_RECURSIVE_DEBUG
 			if (!fillmagc)
 				fprintf(stderr,"ABRT because xl illegal\n");
@@ -1450,7 +1347,7 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
 		state = 0;
 		xcont = xr + 1;
 		while (xcont <= old_xr) {
-			if (bounds[ytotal + xcont] != legalcolor)
+			if (IS_FILL_BOUNDARY(bounds[ytotal + xcont]))
 				state = xcont;
 			else if (state) { /* recurse */
 #ifdef FILL_RECURSIVE_DEBUG
@@ -1459,7 +1356,7 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
 						state, xcont, y -dy);
 #endif
 				_gfxr_fill_recursive(pic, state, xcont, y - dy, dy, bounds, legalcolor,
-						     color, priority, drawenable);
+						     legalmask, color, priority, drawenable);
 				state = 0;
 			}
 			++xcont;
@@ -1470,7 +1367,7 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
 		if (xl < old_xl - 1) {
 			state = 0;
 			for (xcont = old_xl-1; xcont >= xl; xcont--) {
-				if (bounds[oldytotal + xcont] != legalcolor)
+				if (IS_FILL_BOUNDARY(bounds[oldytotal + xcont]))
 					state = xcont;
 				else if (state) { /* recurse */
 #ifdef FILL_RECURSIVE_DEBUG
@@ -1479,7 +1376,7 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
 							xcont, state, y);
 #endif
 					_gfxr_fill_recursive(pic, xcont, state, y, -dy, bounds,
-							     legalcolor, color, priority, drawenable);
+							     legalcolor, legalmask, color, priority, drawenable);
 					state = 0;
 				}
 			}
@@ -1489,7 +1386,7 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
 		if (xr > old_xr + 1) {
 			state = 0;
 			for (xcont = old_xr + 1; xcont <= xr; xcont++) {
-				if (bounds[oldytotal + xcont] != legalcolor)
+				if (IS_FILL_BOUNDARY(bounds[oldytotal + xcont]))
 					state = xcont;
 				else if (state) { /* recurse */
 #ifdef FILL_RECURSIVE_DEBUG
@@ -1498,7 +1395,7 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
 							state, xcont, y);
 #endif
 					_gfxr_fill_recursive(pic, state, xcont, y, -dy, bounds,
-							     legalcolor, color, priority, drawenable);
+							     legalcolor, legalmask, color, priority, drawenable);
 					state = 0;
 				}
 			}
@@ -1518,7 +1415,7 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
     mpos = (((yy) * 320 * pic->mode->yfact) + (xx)) * pic->mode->xfact; \
     for (iy = 0; iy < pic->mode->yfact; iy++) { \
       for (ix = 0; ix < pic->mode->xfact; ix++) \
-	if (test_map[mpos + ix] == legalcolor) { \
+	if (!IS_FILL_BOUNDARY(test_map[mpos + ix])) { \
 	  *x = ix + (xx) * pic->mode->xfact; \
 	  *y = iy + (yy) * pic->mode->yfact; \
 	  return 0; \
@@ -1529,7 +1426,7 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
 
 static inline int /* returns -1 on failure, 0 on success */
 _gfxr_find_fill_point(gfxr_pic_t *pic, int min_x, int min_y, int max_x, int max_y, int x_320,
-		      int y_200, int drawenable, int *x, int *y)
+		      int y_200, int color, int drawenable, int *x, int *y)
 {
 	int linewidth = pic->mode->xfact * 320;
 	int mpos, ix, iy;
@@ -1540,6 +1437,7 @@ _gfxr_find_fill_point(gfxr_pic_t *pic, int min_x, int min_y, int max_x, int max_
 	int max_size = (size_x > size_y)? size_x : size_y;
 	int size;
 	int legalcolor;
+	int legalmask;
 	byte *test_map;
 	*x = x_320 * pic->mode->xfact;
 	*y = y_200 * pic->mode->yfact;
@@ -1549,10 +1447,19 @@ _gfxr_find_fill_point(gfxr_pic_t *pic, int min_x, int min_y, int max_x, int max_
 
 	if (drawenable & GFX_MASK_VISUAL) {
 		test_map = pic->visual_map->index_data;
-		legalcolor = 0xff;
+
+		if ((color & 0xf) == 0xf /* When dithering with white, do more
+					 ** conservative checks  */
+		    || (color & 0xf0) == 0xf0)
+			legalcolor = 0xff;
+		else
+			legalcolor = 0xf0; /* Only check the second color */
+
+		legalmask = legalcolor;
 	} else if (drawenable & GFX_MASK_PRIORITY) {
 		test_map = pic->priority_map->index_data;
 		legalcolor = 0;
+		legalmask = 0xf;
 	} else return -3;
 
 	TEST_POINT(x_320, y_200); /* Most likely candidate */
@@ -1594,7 +1501,7 @@ _gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int c
 	int ytotal;
 	int bitmask;
 	byte *bounds = NULL;
-	int legalcolor;
+	int legalcolor, legalmask;
 	int min_x, min_y, max_x, max_y;
 
 	if (pic->control_map->index_data[y_200 * 320 + x_320] != 0)
@@ -1609,7 +1516,7 @@ _gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int c
 	_gfxr_auxbuf_fill(pic, x_320, y_200, drawenable, (drawenable & GFX_MASK_CONTROL)? control : 0);
 	_gfxr_auxbuf_spread(pic, &min_x, &min_y, &max_x, &max_y);
 
-	if (_gfxr_find_fill_point(pic, min_x, min_y, max_x, max_y, x_320, y_200, drawenable, &x, &y)) {
+	if (_gfxr_find_fill_point(pic, min_x, min_y, max_x, max_y, x_320, y_200, color, drawenable, &x, &y)) {
 		/* GFXWARN("Could not find scaled fill point, but unscaled fill point was available!\n"); */
 		drawenable &= GFX_MASK_PRIORITY;
 		if (!drawenable)
@@ -1623,13 +1530,24 @@ _gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int c
 
 	if (drawenable & GFX_MASK_VISUAL) {
 		bounds = pic->visual_map->index_data;
-		legalcolor = 0xff;
+		if ((color & 0xf) == 0xf /* When dithering with white, do more
+					 ** conservative checks  */
+		    || (color & 0xf0) == 0xf0)
+			legalcolor = 0xff;
+		else
+			legalcolor = 0xf0; /* Only check the second color */
+
+		legalmask = legalcolor;
 	} else if (drawenable & GFX_MASK_PRIORITY) {
 		bounds = pic->priority_map->index_data;
 		legalcolor = 0;
-	} else legalcolor = 0;
+		legalmask = 0xf;
+	} else {
+		legalcolor = 0;
+		legalmask = 0xf;
+	}
 
-	if (!bounds || bounds[ytotal + x] != legalcolor)
+	if (!bounds || IS_FILL_BOUNDARY(bounds[ytotal + x]))
 		return;
 
 	if (bounds) {
@@ -1670,10 +1588,10 @@ _gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int c
 		proj_xr_bound += pic->mode->xfact -1;
 
 		xl = x;
-		while (xl > proj_xl_bound && (bounds[ytotal + xl -1] == legalcolor))
+		while (xl > proj_xl_bound && (!IS_FILL_BOUNDARY(bounds[ytotal + xl -1])))
 			--xl;
 
-		while (x < proj_xr_bound && (bounds[ytotal + x + 1] == legalcolor))
+		while (x < proj_xr_bound && (!IS_FILL_BOUNDARY(bounds[ytotal + x + 1])))
 			++x;
 		xr = x;
 
@@ -1683,8 +1601,8 @@ _gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int c
 		if (drawenable & GFX_MASK_PRIORITY)
 			memset(pic->priority_map->index_data + ytotal + xl, priority, xr - xl + 1);
 
-		_gfxr_fill_recursive(pic, xl, xr, y, -1, bounds, legalcolor, color, priority, drawenable);
-		_gfxr_fill_recursive(pic, xl, xr, y, +1, bounds, legalcolor, color, priority, drawenable);
+		_gfxr_fill_recursive(pic, xl, xr, y, -1, bounds, legalcolor, legalmask, color, priority, drawenable);
+		_gfxr_fill_recursive(pic, xl, xr, y, +1, bounds, legalcolor, legalmask, color, priority, drawenable);
 	}
 
 	/* Now finish the aux buffer */
@@ -1917,14 +1835,12 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 	int temp;
 	int line_mode = style->line_mode;
 	int fill_count = 0;
-	line_list_t line_list;
 	byte op, opx;
 
 #ifdef GFXR_DEBUG_PIC0
 	fillmagc = atoi(getenv("FOO"));
 	fillc = atoi(getenv("FOO2"));
 #endif /* GFXR_DEBUG_PIC0 */
-	init_line_list(&line_list);
 
 	/* Initialize palette */
 	for (i = 0; i < GFXR_PIC0_NUM_PALETTES; i++)
@@ -1953,7 +1869,7 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			}
 
 			color = palette[pal][index];
-#if 1
+#if 0
 #ifdef GFXR_DEBUG_PIC0
 			color &= 0x77;
 #endif
@@ -2027,10 +1943,7 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 #if 0
 				fprintf(stderr, " to %d,%d\n", x, y);
 #endif
-				_gfxr_draw_line(pic, oldx, oldy, x, y, color,
-						priority, control, drawenable,
-						line_mode, PIC_OP_MEDIUM_LINES,
-						&line_list);
+				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode, PIC_OP_MEDIUM_LINES);
 				oldx = x; oldy = y;
 			}
 			break;
@@ -2041,10 +1954,7 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			GET_ABS_COORDS(oldx, oldy);
 			while (*(resource + pos) < PIC_OP_FIRST) {
 				GET_ABS_COORDS(x,y);
-				_gfxr_draw_line(pic, oldx, oldy, x, y, color,
-						priority, control, drawenable,
-						line_mode, PIC_OP_LONG_LINES,
-						&line_list);
+				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode, PIC_OP_LONG_LINES);
 				oldx = x; oldy = y;
 			}
 			break;
@@ -2056,10 +1966,7 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			x = oldx; y = oldy;
 			while (*(resource + pos) < PIC_OP_FIRST) {
 				GET_REL_COORDS(x,y);
-				_gfxr_draw_line(pic, oldx, oldy, x, y, color,
-						priority, control, drawenable,
-						line_mode, PIC_OP_SHORT_LINES,
-						&line_list);
+				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode, PIC_OP_SHORT_LINES);
 				oldx = x; oldy = y;
 			}
 			break;
@@ -2248,7 +2155,6 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			case PIC_OPX_EMBEDDED_VIEW:
 				GFXWARN("Embedded view @%d\n", pos);
 				GFXWARN("-- not implemented- aborting --\n");
-				free_line_list(&line_list);
 				return;
 				break;
 
@@ -2256,13 +2162,11 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			case PIC_OPX_SET_PRIORITY_TABLE:
 				GFXWARN("Set priority table @%d\n", pos);
 				GFXWARN("-- not implemented- aborting --\n");
-				free_line_list(&line_list);
 				return;
 				break;
 
 
 			default: sciprintf("%s L%d: Warning: Unknown opx %02x\n", __FILE__, __LINE__, op);
-				free_line_list(&line_list);
 				return;
 			}
 			break;
@@ -2271,16 +2175,13 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			p0printf("Terminator\n");
 			/* WARNING( "ARTIFACT REMOVAL CODE is commented out!") */
 			/* _gfxr_vismap_remove_artifacts(); */
-			free_line_list(&line_list);
 			return;
 
 		default: GFXWARN("Unknown op %02x\n", op);
-			free_line_list(&line_list);
 			return;
 		}
 	}
 
-	free_line_list(&line_list);
 	GFXWARN("Reached end of pic resource %04x\n", resid);
 }
 

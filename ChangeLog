@@ -1,3 +1,9 @@
+2001-09-19  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/resource/sci_pic_0.c (_gfxr_fill_recursive): Fixed write over
+	right border of picture
+	Fixed treatment of lines dithered with white to permit filling over
+
 2001-09-17  Alex Angas  <wgd@internode.on.net>
 
         * src/sound/soundserver_win32.c: Changed use of mutexes to use of
