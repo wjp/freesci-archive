@@ -44,8 +44,8 @@ gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size
 {
 	int xl = get_int_16(resource);
 	int yl = get_int_16(resource + 2);
-	int xhot = get_int_16(resource + 4);
-	int yhot = get_int_16(resource + 6);
+	int xhot = (gint8) resource[4];
+	int yhot = (gint8) resource[5];
 	int pos = 8;
 	int writepos = mirrored? xl : 0;
 	int pixmap_size = xl * yl;
@@ -244,6 +244,8 @@ gfxr_draw_view1(int id, byte *resource, int size)
 		free(view);
 		return NULL;
 	}
+
+	fprintf(stderr, "View flags are 0x%02x\n", resource[3]);
 
 /*
 	for (i = 0; i < V1_MAGICS_NR; i++)

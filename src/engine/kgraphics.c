@@ -1068,7 +1068,8 @@ set_base(state_t *s, reg_t object)
 
 	xbase = x - xmod - (xsize >> 1);
 	xend = xbase + xsize;
-	yend = y /*- ymod*/ + 1;
+	// Used to be: 	yend = y /* - ymod */ + 1;
+	yend = y - ymod + 1; 
 	ybase = yend - ystep;
 
 	SCIkdebug(SCIkBASESETTER, "(%d,%d)+/-(%d,%d), (%d x %d) -> (%d, %d) to (%d, %d)\n",

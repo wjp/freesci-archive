@@ -1,5 +1,8 @@
 2004-02-25  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/gfx/resource/sci_view_1.c (gfxr_draw_cel1): Fix hotspot
+	retrieval for SCI1 views. 
+
 	* src/engine/ksound.c (kDoSound_SCI01): One-liner fix for KQ5
 	intro: When song ends, set signal to 0xffff, not 0xff.
 
