@@ -2348,7 +2348,7 @@ kDrawCel(state_t *s, int funct_nr, int argc, reg_t *argv)
 				 ALIGN_LEFT, ALIGN_TOP, GFXW_VIEW_FLAG_DONT_MODIFY_OFFSET);
 
 
-	s->wm_port->add(GFXWC(s->wm_port), GFXW(new_view));
+	ADD_TO_CURRENT_BG_WIDGETS(new_view);
 	FULL_REDRAW();
 	return s->r_acc;
 }
