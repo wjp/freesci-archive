@@ -76,7 +76,7 @@ ac_png_includes = @ac_png_includes@
 ac_png_libraries = @ac_png_libraries@
 
 SUBDIRS = misc
-EXTRA_DIST = README sci.sgml operations.txt
+EXTRA_DIST = README sci.sgml
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 

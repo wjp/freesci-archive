@@ -54,54 +54,56 @@ typedef struct
 
 typedef struct _state
 {
-    char *game_name; /* Designation of the primary object (which inherits from Game) */
+  char *game_name; /* Designation of the primary object (which inherits from Game) */
 
-    /* Non-VM information */
+  /* Non-VM information */
 
-    int restarting_flag; /* Flag used for restarting */
-    int have_mouse_flag; /* Do we have a hardware pointing device? */
+  int restarting_flag; /* Flag used for restarting */
+  int have_mouse_flag; /* Do we have a hardware pointing device? */
 
-    int pic_not_valid; /* Is 0 if the background picture is "valid" */
+  int pic_not_valid; /* Is 0 if the background picture is "valid" */
 
-    heap_ptr save_dir; /* Pointer to the allocated space for the save directory */
+  long game_time; /* Counted at 60 ticks per second, reset during start time */
 
-    int pounter_x, pointer_y; /* Mouse pointer coordinates */
-    byte* mouse_pointer; /* Pointer to the current mouse pointer or NULL if none has been selected */
+  heap_ptr save_dir; /* Pointer to the allocated space for the save directory */
 
-    port_t *view; /* The currently active view */
+  int pounter_x, pointer_y; /* Mouse pointer coordinates */
+  byte* mouse_pointer; /* Pointer to the current mouse pointer or NULL if none has been selected */
 
-    port_t titlebar_port; /* Title bar viewport (0,0,9,319) */
-    port_t wm_port; /* window manager viewport and designated &heap[0] view (10,0,199,319) */
-    port_t picture_port; /* The background picture viewport (10,0,199,319) */
+  port_t *view; /* The currently active view */
 
-    picture_t bgpic; /* The background picture */
-    picture_t pic; /* The foreground picture */
+  port_t titlebar_port; /* Title bar viewport (0,0,9,319) */
+  port_t wm_port; /* window manager viewport and designated &heap[0] view (10,0,199,319) */
+  port_t picture_port; /* The background picture viewport (10,0,199,319) */
 
-    hunk_block_t hunk[MAX_HUNK_BLOCKS]; /* Hunk memory */
+  picture_t bgpic; /* The background picture */
+  picture_t pic; /* The foreground picture */
 
-    /* VM Information */
+  hunk_block_t hunk[MAX_HUNK_BLOCKS]; /* Hunk memory */
 
-    heap_t *_heap; /* The heap structure */
-    byte *heap; /* The actual heap data (equal to _heap->start) */
-    gint16 acc; /* Accumulator */
-    gint16 prev; /* previous comparison result */
+  /* VM Information */
 
-    heap_ptr stack_base; /* The base position of the stack; used for debugging */
-    heap_ptr global_vars; /* script 000 selectors */
+  heap_t *_heap; /* The heap structure */
+  byte *heap; /* The actual heap data (equal to _heap->start) */
+  gint16 acc; /* Accumulator */
+  gint16 prev; /* previous comparison result */
 
-    int classtable_size; /* Number of classes in the table- for debugging */
-    class_t *classtable; /* Table of all classes */
-    script_t scripttable[1000]; /* Table of all scripts */
+  heap_ptr stack_base; /* The base position of the stack; used for debugging */
+  heap_ptr global_vars; /* script 000 selectors */
 
-    int selector_names_nr; /* Number of selector names */
-    char **selector_names; /* Zero-terminated selector name list */
-    int kernel_names_nr; /* Number of kernel function names */
-    char **kernel_names; /* List of kernel names */
-    kfunct **kfunct_table; /* Table of kernel functions */
+  int classtable_size; /* Number of classes in the table- for debugging */
+  class_t *classtable; /* Table of all classes */
+  script_t scripttable[1000]; /* Table of all scripts */
 
-    opcode *opcodes;
+  int selector_names_nr; /* Number of selector names */
+  char **selector_names; /* Zero-terminated selector name list */
+  int kernel_names_nr; /* Number of kernel function names */
+  char **kernel_names; /* List of kernel names */
+  kfunct **kfunct_table; /* Table of kernel functions */
 
-    selector_map_t selector_map; /* Shortcut list for important selectors */
+  opcode *opcodes;
+
+  selector_map_t selector_map; /* Shortcut list for important selectors */
 
 } state_t;
 

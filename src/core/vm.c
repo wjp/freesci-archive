@@ -1087,6 +1087,8 @@ script_run(state_t *s)
   script_map_kernel(s);
   /* Maps the kernel functions */
 
+  s->game_time = 0;
+
   s->mouse_pointer = NULL; /* No mouse pointer */
 
   s->bgpic = allocEmptyPicture();

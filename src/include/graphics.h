@@ -106,11 +106,13 @@ typedef struct {
 /* Don't draw anything */
 
 
+#define SCI_SCREEN_WIDTH 320
+
+
 extern int sci_color_mode;
 /* sci_color_interpolate forces 16 color background pictures to be drawn
 ** with 256 interpolated colors instead of 16 dithered colors
 */
-
 
 /*** FUNCTION DECLARATIONS ***/
 

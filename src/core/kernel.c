@@ -32,6 +32,12 @@
 #include <script.h>
 #include <vm.h>
 #include <engine.h>
+#include <math.h>
+
+
+#ifndef PI
+#define PI 3.14159265358979323846
+#endif /* !PI */
 
 
 #define SCI_KERNEL_DEBUG
@@ -165,9 +171,11 @@ int kIsObject(state* s)
 #endif /* false */
 
 
-#define PARAM(x) ((guint16) getInt16(s->heap + argp + ((x)*2)))
+#define PARAM(x) ((gint16) getInt16(s->heap + argp + ((x)*2)))
+#define UPARAM(x) ((guint16) getInt16(s->heap + argp + ((x)*2)))
 
 #define PARAM_OR_ALT(x, alt) ((x < argc)? PARAM(x) : (alt))
+#define UPARAM_OR_ALT(x, alt) ((x < argc)? UPARAM(x) : (alt))
 /* Returns the parameter value or (alt) if not enough parameters were supplied */
 
 
@@ -177,8 +185,8 @@ int kIsObject(state* s)
 void
 kLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-    int restype = PARAM(0);
-    int resnr = PARAM(1);
+    int restype = UPARAM(0);
+    int resnr = UPARAM(1);
 
     s->acc = ((restype << 11) | resnr); /* Return the resource identifier as handle */
 
@@ -214,8 +222,8 @@ kLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kUnLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-    int restype = PARAM(0);
-    int resnr = PARAM(1);
+    int restype = UPARAM(0);
+    int resnr = UPARAM(1);
 
     if (restype == sci_memory) {
 	int seeker;
@@ -239,6 +247,13 @@ kGameIsRestarting(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   s->acc = s->restarting_flag;
 }
+
+void
+kHaveMouse(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  s->acc = s->have_mouse_flag;
+}
+
 
 
 /******************** Doubly linked lists ********************/
@@ -285,8 +300,8 @@ kNewNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kAddToEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr listbase = PARAM(0);
-  heap_ptr nodebase = PARAM(1);
+  heap_ptr listbase = UPARAM(0);
+  heap_ptr nodebase = UPARAM(1);
   heap_ptr old_lastnode = GET_HEAP(listbase + LIST_LAST_NODE);
 
   if (old_lastnode)
@@ -305,8 +320,8 @@ kAddToEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kAddToFront(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr listbase = PARAM(0);
-  heap_ptr nodebase = PARAM(1);
+  heap_ptr listbase = UPARAM(0);
+  heap_ptr nodebase = UPARAM(1);
   heap_ptr old_firstnode = GET_HEAP(listbase + LIST_FIRST_NODE);
 
   if (old_firstnode)
@@ -326,11 +341,11 @@ void
 kFindKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr node;
-  word key = PARAM(1);
+  word key = UPARAM(1);
 
   /*  SCIkdebug("argc=%d; args = (%04x %04x %04x)\n", argc, PARAM(0), PARAM(1), PARAM(2)); */
 
-  node = GET_HEAP(PARAM(0) + LIST_FIRST_NODE);
+  node = GET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
 
   while (node && (GET_HEAP(node + LIST_NODE_KEY) != key))
     node = GET_HEAP(node + LIST_NEXT_NODE);
@@ -354,7 +369,7 @@ kGetCWD(state_t *s, int funct_nr, int argc, heap_ptr argp)
   char _cwd[256];
   char *cwd = &(_cwd[0]);
   char *savedir;
-  char *targetaddr = PARAM(0) + s->heap;
+  char *targetaddr = UPARAM(0) + s->heap;
 
   s->acc = PARAM(0);
 
@@ -442,7 +457,7 @@ kSetCursor(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kShow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-    s->pic_not_valid = 0;
+    s->pic_not_valid = 2;
 }
 
 
@@ -452,6 +467,86 @@ kPicNotValid(state_t *s, int funct_nr, int argc, heap_ptr argp)
     s->acc = s->pic_not_valid;
     if (argc)
 	s->pic_not_valid = PARAM(0);
+}
+
+
+void
+kRandom(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  s->acc = PARAM(0) + (int) ((PARAM(1) + 1 - PARAM(0)) * rand() / (RAND_MAX + 1.0));
+}
+
+
+void
+kAbs(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  s->acc = abs(PARAM(0));
+}
+
+
+void
+kSqrt(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  s->acc = (gint16) sqrt((float) abs(PARAM(0)));
+}
+
+
+void
+kGetAngle(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int xrel = PARAM(3) - PARAM(1);
+  int yrel = PARAM(2) - PARAM(0);
+
+  if ((xrel == 0) && (yrel == 0))
+    s->acc = 0;
+  else
+    s->acc = (int) -(180.0/PI * atan2(yrel, xrel)) + 180;
+}
+
+
+void
+kGetDistance(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int xrel = PARAM(1) - PARAM_OR_ALT(3, 0);
+  int yrel = PARAM(0) - PARAM_OR_ALT(2, 0);
+
+  s->acc = sqrt((float) xrel*xrel + yrel*yrel);
+}
+
+
+
+/********************* Graphics ********************/
+
+void
+kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int map;
+  int xstart = PARAM(2);
+  int ystart = PARAM(1);
+  int xlen = 1, ylen = 1;
+
+  int retval = 0;
+
+  if (argc > 3) {
+    xlen = PARAM(4) - xstart + 1;
+    ylen = PARAM(3) - ystart + 1;
+  }
+
+  for (map = 0; map < 3; map++)
+    if (PARAM(0) && (1 << map)) {
+      int startindex = (SCI_SCREEN_WIDTH * ystart) + xstart;
+      int i;
+
+      while (ylen--) {
+	for (i = 0; i < xlen; i++)
+	  retval |= (1 << (s->bgpic[map][startindex + i]));
+
+	startindex += SCI_SCREEN_WIDTH;
+      }
+    }
+
+  s->acc = (word) retval;
+
 }
 
 
@@ -487,6 +582,13 @@ struct {
   {"AddToEnd", kAddToEnd },
   {"Show", kShow },
   {"PicNotValid", kPicNotValid },
+  {"Random", kRandom },
+  {"Abs", kAbs },
+  {"Sqrt", kSqrt },
+  {"OnControl", kOnControl },
+  {"HaveMouse", kHaveMouse },
+  {"GetAngle", kGetAngle },
+  {"GetDistance", kGetDistance },
   {0,0} /* Terminator */
 };
 
@@ -495,6 +597,7 @@ void
 script_map_kernel(state_t *s)
 {
   int functnr;
+  int mapped = 0;
 
   s->kfunct_table = malloc(sizeof(kfunct *) * (s->kernel_names_nr + 1));
 
@@ -502,8 +605,10 @@ script_map_kernel(state_t *s)
     int seeker, found = -1;
 
     for (seeker = 0; (found == -1) && kfunct_mappers[seeker].functname; seeker++)
-      if (strcmp(kfunct_mappers[seeker].functname, s->kernel_names[functnr]) == 0)
+      if (strcmp(kfunct_mappers[seeker].functname, s->kernel_names[functnr]) == 0) {
 	found = seeker; /* Found a kernel function with the same name! */
+	mapped++;
+      }
 
     if (found == -1) {
 
@@ -513,5 +618,7 @@ script_map_kernel(state_t *s)
     } else s->kfunct_table[functnr] = kfunct_mappers[found].kernel_function;
 
   } /* for all functions requesting to be mapped */
+
+  sciprintf("Mapped %d of %d kernel functions.\n", mapped, s->kernel_names_nr);
 
 }

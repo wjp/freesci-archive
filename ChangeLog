@@ -1,3 +1,12 @@
+1999-07-30  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kernel.c: Added OnControl and a few trivial functions (Random, Abs,
+	Sqrt, HaveMouse, GetAngle, GetDistance)
+
+1999-07-29  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kernel.c: Fixed Load, Unload, added PicNotValid and Show.
+
 1999-07-27  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/vm.c (execute_method): Fixed calle/callb madness and some
