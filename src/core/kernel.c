@@ -3654,6 +3654,20 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 }
 
+void
+kShakeScreen(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int shakes = PARAM_OR_ALT(0, 1);
+  int i;
+
+  for (i = 0; i < shakes * 3; i++) {
+    (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_ALL, 0, -10,0,0);
+    (*s->gfx_driver->Wait)(s, 25);
+    (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_ALL, 0, 10,0,0);
+    (*s->gfx_driver->Wait)(s, 25);
+  }
+  (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_ALL, 0,0,0,0);
+}
 
 #define K_DISPLAY_SET_COORDS 100
 #define K_DISPLAY_SET_ALIGNMENT 101
@@ -3903,8 +3917,9 @@ struct {
   {"Wait", kWait },
   {"CosDiv", kCosDiv },
   {"SinDiv", kSinDiv },
-  {"BaseSetter", kBaseSetter},
+  {"BaseSetter", kBaseSetter },
   {"Parse", kParse },
+  {"ShakeScreen", kShakeScreen },
 
   /* Experimental functions */
   {"Said", kSaid },

@@ -45,6 +45,8 @@ char colors_uninitialized = 1;
 ggi_visual_t sci_default_visual;
 int sci_default_visual_size;
 
+#define NULL_REC_SIZE 640
+static byte _null_rec[NULL_REC_SIZE]; /* Initialized to zero */
 
 extern int _sci_ggi_double_visual;
 #if 0
@@ -214,7 +216,6 @@ graphics_draw_region_ggi(ggi_visual_t vis, byte *data,
   
   bytelen = GT_SIZE(mode.graphtype) >> 3; /* min of 8 bpp */
 
-
   /* The following lines should help the compiler in determining the
   ** possible values for write_bytelen
   */
@@ -337,9 +338,33 @@ libggi_redraw(struct _state *s, int command, int x, int y, int xl, int yl)
 
   switch (command) {
   case GRAPHICS_CALLBACK_REDRAW_ALL:
-    graphics_draw_region_ggi(vis, s->pic->view,
-			     0, 0, 320, 200,
-			     s->mouse_pointer, s->pointer_x, s->pointer_y);
+    if (y == 0)
+      graphics_draw_region_ggi(vis, s->pic->view,
+			       0, 0, 320, 200,
+			       s->mouse_pointer, s->pointer_x, s->pointer_y);
+    else {
+      int lines_to_clear;
+      int first_line_to_clear;
+      int i;
+
+      if (y < 0) {
+	graphics_draw_region_ggi(vis, s->pic->view,
+				 0, -y, 320, 200+y,
+				 s->mouse_pointer, s->pointer_x, s->pointer_y);
+	lines_to_clear = -y;
+	first_line_to_clear = 0;
+      } else { /* y > 0 */
+	graphics_draw_region_ggi(vis, s->pic->view + (320 * y),
+				 0, 0, 320, 200-y,
+				 s->mouse_pointer, s->pointer_x, s->pointer_y);
+	lines_to_clear = y;
+	first_line_to_clear = 200 - y;
+      }
+      for (i = 0; i < lines_to_clear; i++) {
+	graphics_draw_region_ggi(vis, &(_null_rec[0]), 0, first_line_to_clear++, 320, 1,
+				 s->mouse_pointer, s->pointer_x, s->pointer_y);
+      }
+    }
     break;
   case GRAPHICS_CALLBACK_REDRAW_BOX:
     graphics_draw_region_ggi(vis, s->pic->view, /* Draw box */
@@ -355,7 +380,7 @@ libggi_redraw(struct _state *s, int command, int x, int y, int xl, int yl)
 			     s->last_pointer_size_x, s->last_pointer_size_y,
 			     s->mouse_pointer, s->pointer_x, s->pointer_y);
     break;
-default:
+  default:
     fprintf(stderr,"graphics_callback_ggi: Invalid command %d\n", command);
   }
 
@@ -373,6 +398,7 @@ libggi_init(state_t *s, picture_t pic)
 {
   ggiInit();
   s->graphics.ggi_visual = openVisual();
+  memset(_null_rec, 0, NULL_REC_SIZE);
   return 0;
 }
 

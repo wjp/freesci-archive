@@ -610,7 +610,7 @@ _cfsml_write_state_t(FILE *fh, state_t* foo)
   fprintf(fh, "execution_stack = ");
     min = max = foo->execution_stack_size;
     if (foo->execution_stack_pos < min)
-       min = foo->execution_stack_pos;
+       min = foo->execution_stack_pos + 1;
     if (!foo->execution_stack)
        min = max = 0; /* Don't write if it points to NULL */
 #line 341 "cfsml.pl"
@@ -2291,7 +2291,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
 
 
 /* Auto-generated CFSML declaration and function block ends here */
-/* Auto-generation performed by cfsml.pl 0.6.2 */
+/* Auto-generation performed by cfsml.pl 0.6.3 */
 
 
 

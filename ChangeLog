@@ -1,5 +1,13 @@
 1999-11-12  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/core/cfsml.pl: Fixed a bug that would cause the number of
+	array elements to be too low by one if MAXWRITE was used.
+
+	* src/core/kernel.c (kShakeScreen): Implemented ShakeScreen. The
+	gfx_driver->Redraw protocol was extended to allow y parameters for
+	this- this means that gfx drivers w/o shakescreen don't need to
+	worry about this feature.
+
 	* src/core/savegame.cfsml : Implemented saving/restoring the game
 	state. Everything seems to save and restore cleanly, except for the
 	sound driver (saving/restoring still needs to be implemented there).

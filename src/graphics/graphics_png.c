@@ -200,7 +200,8 @@ png_load_buffer(picture_t pic, char *name,
   png_color sci0_color_interpol[256];
 
   if (!(fil = fopen(name, "rb"))) {
-    perror("While trying to open PNG file");
+    sciprintf("File opening failed while trying to access '%s'\n", name);
+    perror("");
     return NULL;
   }
 

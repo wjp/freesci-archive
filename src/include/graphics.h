@@ -125,6 +125,12 @@ typedef struct {
 
 #define GRAPHICS_CALLBACK_REDRAW_ALL 0
 /* Callback command to redraw the entire screen */
+/* If the gfx driver intends to support screen shaking, the y coordinate
+** must be interpreted as the y coordinate of the upper left pixel that
+** is intended to be visible.
+** This has the effect displaying the visual map as if it had been moved
+** y pixels upwards.
+*/
 
 #define GRAPHICS_CALLBACK_REDRAW_BOX 1
 /* Callback command to redraw the specified part of the screen */
