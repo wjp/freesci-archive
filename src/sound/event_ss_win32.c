@@ -444,7 +444,7 @@ sound_win32e_get_command(GTimeVal *wait_tvp)
 		return new_command_event;
 	}
 
-	SwitchToThread();
+	Sleep(0);
 
 	return NULL;
 }

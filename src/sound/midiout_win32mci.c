@@ -237,7 +237,7 @@ int midiout_win32mci_flush(void)
 {
     timeBeginPeriod(1);
     Sleep(1);
-    SwitchToThread();
+    Sleep(0);
     timeEndPeriod(1);
     return 0;
 }
@@ -279,7 +279,7 @@ m */
     if (ret != MMSYSERR_NOERROR)
     {
         /* if it fails, it's probably because it's still playing */
-        Sleep(count);
+        sci_sched_yield();
         ret = midiOutUnprepareHeader(devicename, &midioutput, midioutputsize);
         /* if it still fails, it's probably something else */
         if (ret != MMSYSERR_NOERROR)

@@ -15,7 +15,7 @@ usleep (long usec)
 		do
 		{
 			QueryPerformanceCounter (&lCurTime);
-			SwitchToThread();
+			Sleep(0);
 		} while (lCurTime.QuadPart < lEndTime.QuadPart);
 	}
 }
