@@ -1703,10 +1703,10 @@ kStrAt(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr address = UPARAM(0) + UPARAM(1);
 
-  s->acc = UGET_HEAP(address);
+  s->acc = s->heap[address];
 
   if (argc > 2)
-    PUT_HEAP(address, UPARAM(2)); /* Request to modify this char */
+    s->heap[address]=UPARAM(2); /* Request to modify this char */
 }
 
 
@@ -1718,7 +1718,7 @@ kReadNumber(state_t *s, int funct_nr, int argc, heap_ptr argp)
   while (isspace(*source))
     source++; /* Skip whitespace */
 
-  if (*source = '$') /* SCI uses this for hex numbers */
+  if (*source == '$') /* SCI uses this for hex numbers */
     s->acc = strtol(source + 1, NULL, 16); /* Hex */
   else
     s->acc = strtol(source, NULL, 10); /* Force decimal */
@@ -1912,14 +1912,14 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kStrLen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->acc = strlen(s->heap + PARAM(0));
+  s->acc = strlen(s->heap + UPARAM(0));
 }
 
 
 void
 kGetFarText(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  resource_t *textres = findResource(sci_text, PARAM(0));
+  resource_t *textres = findResource(sci_text, UPARAM(0));
   char *seeker;
   int counter = PARAM(1);
 
@@ -2461,6 +2461,9 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	  port_t *port = s->ports[s->view_port];
 
+	  if (cursor > strlen(text))
+	    cursor = strlen(text);
+
 	  graph_fill_box_custom(s, x + port->xmin, y + port->ymin,
 				xl, yl, port->bgcolor, -1, 0, 1); /* Clear input box background */
 
@@ -2486,6 +2489,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       }
 
+      if (event) PUT_SELECTOR(event, claimed, 1);
       _k_draw_control(s, obj);
     }
   }
