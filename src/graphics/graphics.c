@@ -698,9 +698,10 @@ int draw_view0(picture_t dest, port_t *port, int xp, int yp, short _priority,
 	      if (!(rep = (*dataptr >> 4) & 0xf)) return 0;
 	    }
 
-	    if (((color & 0xf) != transparency) && (dest->maps[1][pos] <= _priority)) {
+	    if (((color & 0xf) != transparency) && ((dest->maps[1][pos] <= _priority) || (_priority < 0))) {
 	      dest->maps[0][pos]= color;
-	      dest->maps[1][pos]= _priority;
+	      if (_priority >= 0)
+		dest->maps[1][pos]= _priority;
 	    }
 
 	    rep--;
@@ -715,9 +716,10 @@ int draw_view0(picture_t dest, port_t *port, int xp, int yp, short _priority,
 	      if (!(rep = (*dataptr >> 4) & 0xf)) return 0;
 	    }
 
-	    if (((color & 0xf) != transparency) && (dest->maps[1][pos] <= _priority)) {
+	    if (((color & 0xf) != transparency) && ((dest->maps[1][pos] <= _priority) || (_priority < 0))) {
 	      dest->maps[0][pos]= color;
-	      dest->maps[1][pos]= _priority;
+	      if (_priority >= 0)
+		dest->maps[1][pos]= _priority;
 	    }
 
 	    rep--;

@@ -354,11 +354,11 @@ said(state_t *s, byte *spec)
 
     if (said_parse_spec(s, spec)) {
       sciprintf("Offending spec was: ");
-      vocab_decypher_said_block(s, s->heap - spec);
+      vocab_decypher_said_block(s, spec - s->heap);
       return 0;
     }
 
-    vocab_dump_parse_tree(said_tree); /* Nothing better to do yet */
+    vocab_dump_parse_tree("Said-tree", said_tree); /* Nothing better to do yet */
     return 0;
 
   }

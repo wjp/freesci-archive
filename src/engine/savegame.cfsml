@@ -257,6 +257,9 @@ RECORD class_t "class_t" {
 }
 
 RECORD view_object_t {
+  heap_ptr obj;
+  heap_ptr signalp;
+  heap_ptr underBitsp;
   int x;
   int y;
   int priority;

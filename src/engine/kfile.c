@@ -581,8 +581,9 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	PUT_HEAP(nameoffsets, i); /* Write down the savegame number */
 	nameoffsets += 2; /* Make sure the next ID string address is written to the next pointer */
-	strcpy(s->heap + nametarget, namebuf); /* Copy identifier string */
-	nametarget += strlen(namebuf) + 1; /* Increase name offset pointer accordingly */
+	strncpy(s->heap + nametarget, namebuf, SCI_MAX_SAVENAME_LENGTH); /* Copy identifier string */
+	s->heap[nametarget + SCI_MAX_SAVENAME_LENGTH - 1] = 0; /* Make sure it's terminated */
+	nametarget += SCI_MAX_SAVENAME_LENGTH; /* Increase name offset pointer accordingly */
 
 	fclose(idfile);
       }

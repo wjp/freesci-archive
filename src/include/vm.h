@@ -365,13 +365,15 @@ lookup_selector(struct _state *s, heap_ptr obj, int selectorid, heap_ptr *addres
 
 
 heap_ptr
-script_instantiate(struct _state *s, int script_nr);
+script_instantiate(struct _state *s, int script_nr, int recursive);
 /* Makes sure that a script and its superclasses get loaded to the heap
 ** Parameters: (state_t *) s: The state to operate on
 **             (int) script_nr: The script number to load
+**             (int) recursive: Whether to recurse
 ** Returns   : (heap_ptr) The address of the script on the heap or 0 if out of heap
 ** If the script already has been loaded, only the number of lockers is increased.
-** All scripts containing superclasses of this script get loaded recursively as well.
+** All scripts containing superclasses of this script aret loaded recursively as well,
+** unless 'recursive' is set to zero.
 ** The complementary function is "script_uninstantiate()" below.
 */
 

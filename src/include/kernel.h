@@ -287,6 +287,9 @@ process_sound_events(struct _state *s); /* Get all sound events, apply their cha
 
 /******************** Constants ********************/
 
+/* Maximum length of a savegame name (including terminator character) */
+#define SCI_MAX_SAVENAME_LENGTH 0x24
+
 /* Flags for the signal selector */
 #define _K_VIEW_SIG_FLAG_UPDATE_ENDED   0x0001
 #define _K_VIEW_SIG_FLAG_UPDATING       0x0002

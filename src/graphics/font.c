@@ -371,7 +371,7 @@ text_draw(picture_t dest, port_t *port, char *text, int maxwidth)
   int bgcolor = port->bgcolor;
 
   if (maxwidth < 0)
-    maxwidth = 32767; /* Negative means unlimited; 32767 does, too. */
+    maxwidth = port->xmax - port->x; /* Negative means unlimited */
 
   do {
     foo = *text++;

@@ -72,13 +72,13 @@ graph_clear_box(struct _state *s, int x, int y, int xl, int yl, int color)
 void
 graph_update_box(struct _state *s, int x, int y, int xl, int yl)
 {
-  int pos = y * SCI_SCREEN_WIDTH + x;
+  int pos;
   int i, _yl;
-
   CLIP_COORDS_AND_SIZE(x, y, xl, yl);
   if ((xl < 0) || (yl < 0))
     return;
 
+  pos = y * SCI_SCREEN_WIDTH + x;
   _yl = yl;
 
   while (_yl--) {

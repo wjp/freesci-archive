@@ -274,7 +274,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
       s->parser_valid = 1;
 #ifndef SCI_SIMPLE_SAID_CODE
       if (s->debug_mode & (1 << SCIkPARSER_NR))
-	vocab_dump_parse_tree(s->parser_nodes);
+	vocab_dump_parse_tree("Parse-tree", s->parser_nodes);
 #endif /* !SCI_SIMPLE_SAID_CODE */
     }
 

@@ -1208,7 +1208,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
     seeker = text;
     while (seeker[0]) { /* Count string entries in NULL terminated string list */
       ++entries_nr;
-      seeker += strlen(seeker) + 1;
+      seeker += SCI_MAX_SAVENAME_LENGTH;
     }
 
     if (entries_nr) { /* determine list_top, selection, and the entries_list */
@@ -1216,11 +1216,11 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
       entries_list = malloc(sizeof(char *) * entries_nr);
       for (i = 0; i < entries_nr; i++) {
 	entries_list[i] = seeker;
-	seeker += strlen(seeker) + 1;
+	seeker += SCI_MAX_SAVENAME_LENGTH;
 	if ((seeker - ((char *)s->heap)) == lsTop)
-	  list_top = i;
+	  list_top = i + 1;
 	if ((seeker - ((char *)s->heap)) == cursor)
-	  selection = i;
+	  selection = i + 1;
       }
     }
 
@@ -1551,9 +1551,6 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int func
     } else /* DON'T calculate the priority */
       retval[i].priority = GET_SELECTOR(obj, priority);
 
-    if (retval[i].priority < 0)
-      retval[i].priority = 16;
-
     s->pic_not_valid++; /* There ought to be some kind of check here... */
 
     i++; /* Next object in the list */
@@ -1761,8 +1758,6 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int priority = PARAM(5);
   int maxloops, maxcels;
 
-  if (priority < 0)
-    priority = 16;
 
   CHECK_THIS_KERNEL_FUNCTION;
 
@@ -2370,9 +2365,9 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   _k_dyn_view_list_accept_change(s);
 
-  if ((!s->pic_not_valid)&&update_immediately) /* Refresh if drawn to valid picture */
-    graph_update_box(s, port->xmin, port->ymin,
-		     port->xmax - port->xmin + 1, port->ymax - port->ymin + 1);
+  /*  if ((!s->pic_not_valid)&&update_immediately) /* Refresh if drawn to valid picture */
+  /*    graph_update_box(s, port->xmin, port->ymin,
+	port->xmax - port->xmin + 1, port->ymax - port->ymin + 1);*/
 
   *port=save;
 

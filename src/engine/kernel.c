@@ -244,6 +244,7 @@ void
 kRestartGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   s->restarting_flags |= SCI_GAME_IS_RESTARTING_NOW;
+  s->restarting_flags &= ~SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE; /* This appears to help */
   script_abort_flag = 1; /* Force vm to abort ASAP */
 }
 
@@ -258,9 +259,7 @@ kGameIsRestarting(state_t *s, int funct_nr, int argc, heap_ptr argp)
   s->acc = (s->restarting_flags & SCI_GAME_WAS_RESTARTED);
 
   if (argc) {/* Only happens during replay */
-    if (PARAM(0)) /* Set restarting flag */
-      s->restarting_flags |= SCI_GAME_WAS_RESTARTED;
-    else /* Reset restarting flag */
+    if (!PARAM(0)) /* Set restarting flag */
       s->restarting_flags &= ~SCI_GAME_WAS_RESTARTED;
   }
 }

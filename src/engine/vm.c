@@ -72,7 +72,7 @@ get_class_address(state_t *s, int classnr)
   heap_ptr scriptpos = *(s->classtable[classnr].scriptposp);
 
   if (!scriptpos) {
-    script_instantiate(s, s->classtable[classnr].script);
+    script_instantiate(s, s->classtable[classnr].script, 1);
     scriptpos = *(s->classtable[classnr].scriptposp);
   }
 
@@ -115,7 +115,7 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
   int magic_ofs;
 
   if (s->scripttable[script].heappos == 0) /* Script not present yet? */
-      script_instantiate(s, script);
+      script_instantiate(s, script, 1);
 
   scriptpos = s->scripttable[script].heappos;
   tableaddress = s->scripttable[script].export_table_offset;
@@ -790,7 +790,7 @@ run_vm(state_t *s, int restoring)
 
       utemp2 = xs->variables[var_number]; /* Get variable block offset */
       if (utemp & 0x08)
-	utemp2 += s->acc; /* Add accumulator offset if requested */
+	utemp2 += (s->acc << 1); /* Add accumulator offset if requested */
       s->acc = utemp2 + (opparams[1] << 1); /* Add index */
       break;
 
@@ -1148,7 +1148,7 @@ void script_detect_early_versions(state_t *s)
 
 
 heap_ptr
-script_instantiate(state_t *s, int script_nr)
+script_instantiate(state_t *s, int script_nr, int recursive)
 {
   resource_t *script = findResource(sci_script, script_nr);
   heap_ptr pos;
@@ -1265,8 +1265,8 @@ script_instantiate(state_t *s, int script_nr)
 	PUT_HEAP(functarea + i, functpos + script_basepos); /* Adjust function pointer addresses */
       }
 
-      if (superclass >= 0)
-	script_instantiate(s, s->classtable[superclass].script);
+      if ((superclass >= 0) && recursive)
+	script_instantiate(s, s->classtable[superclass].script, 1);
       /* Recurse to assure that the superclass is available */
 
       pos += SCRIPT_OBJECT_MAGIC_OFFSET; /* Step back from home to base */
@@ -1409,6 +1409,7 @@ game_run(state_t **_s)
       sciprintf(" Restarting flags=%02x\n", s->restarting_flags);
 
       sciprintf(" Restarting game with ");
+
       if (s->restarting_flags & SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE) {
 	sciprintf("replay()\n");
 	putInt16(s->heap + s->stack_base, s->selector_map.replay); /* Call the replay selector */

@@ -197,11 +197,11 @@ main(int argc, char** argv)
     switch (c)
     {
     case 'r':
-      script_debug_flag = 0;
+      _script_debug_flag = 0;
       break;
 
     case 'D':
-      script_debug_flag = 1;
+      _script_debug_flag = 1;
       break;
 
     case 'd':

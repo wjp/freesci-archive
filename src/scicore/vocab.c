@@ -751,7 +751,7 @@ _vocab_recursive_ptree_dump_treelike(parse_tree_node_t *nodes, int nr, int prevn
 
   if (nodes[nr].type == PARSE_TREE_NODE_LEAF)
     /*    sciprintf("[%03x]%04x", nr, nodes[nr].content.value); */
-    sciprintf("%04x", nodes[nr].content.value);
+    sciprintf("%d", nodes[nr].content.value);
   else {
     int lbranch = nodes[nr].content.branches[0];
     int rbranch = nodes[nr].content.branches[1];
@@ -794,7 +794,7 @@ _vocab_recursive_ptree_dump(parse_tree_node_t *nodes, int nr, int prevnr)
       _vocab_recursive_ptree_dump(nodes, lbranch, nr);
       sciprintf(")");
     } else
-      sciprintf("%04x", nodes[lbranch].content.value);
+      sciprintf("%d", nodes[lbranch].content.value);
   } else sciprintf ("nil");
 
   sciprintf(" ");
@@ -803,17 +803,17 @@ _vocab_recursive_ptree_dump(parse_tree_node_t *nodes, int nr, int prevnr)
     if (nodes[rbranch].type == PARSE_TREE_NODE_BRANCH)
       _vocab_recursive_ptree_dump(nodes, rbranch, nr);
     else
-      sciprintf("%04x", nodes[rbranch].content.value);
+      sciprintf("%d", nodes[rbranch].content.value);
   } else sciprintf("nil");
 }
 
 void
-vocab_dump_parse_tree(parse_tree_node_t *nodes)
+vocab_dump_parse_tree(char *tree_name, parse_tree_node_t *nodes)
 {
   _vocab_recursive_ptree_dump_treelike(nodes, 0, 0);
-  sciprintf("\n(");
+  sciprintf("\n(setq %s '(", tree_name);
   _vocab_recursive_ptree_dump(nodes, 0, 0);
-  sciprintf(")\n");
+  sciprintf("))\n");
 }
 
 void

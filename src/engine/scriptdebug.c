@@ -651,6 +651,17 @@ c_dynviews(state_t *s)
 }
 
 int
+c_picviews(state_t *s)
+{
+  int i;
+  
+  sciprintf("%d picviews currently active:\n",s->pic_views_nr);
+  for (i=0;i<s->pic_views_nr;i++)
+    sciprintf("Object at %04x", s->pic_views[i].obj);
+  return 0;
+}
+
+int
 c_backtrace(state_t *s)
 {
   int i;
@@ -1434,6 +1445,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 		       " [--play] [--replay]\n\n  There are two ways to restart an SCI\n  game:\n"
 		       "  play (-p) calls the game object's play()\n    method\n  replay (-r) calls the replay() method");
       con_hook_command(c_dynviews, "dynviews", "", "Lists the currently active dynamic views");
+      con_hook_command(c_picviews, "picviews", "", "Lists the currently active picture views");
       con_hook_command(c_viewinfo, "viewinfo", "i", "Displays the number of loops\n  and cels of each loop"
 		       " for the\n  specified view resource.");
 #ifdef SCI_SIMPLE_SAID_CODE

@@ -1,3 +1,26 @@
+2000-05-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/graphics/engine_graphics.c (graph_update_box): Fixed display bug
+	that could cause missed display updates and memory corruption
+
+	* src/engine/vm.c (run_vm): lea with its first operand's 4th bit set
+	now uses twice the accumulator value for relative offsetting
+
+	* src/engine/savegame.cfsml: Fixed savegame bugs related to incomplete
+	picview information being stored
+
+	* src/engine/kgraphics.c (_k_draw_control): List control now behaves
+	like the Sierra SCI one
+
+	* src/engine/kernel.c: Completely fixed restarting (?)
+
+	* src/engine/game.c (script_init_engine): The interpreter no longer
+	recurses in script loading while loading script 0, fixing some bugs in
+	the restart code
+
+	* src/graphics/graphics.c (draw_view0): Pictures with negative priority
+	are now drawn correctly
+
 2000-05-03  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (_k_make_view_list): Picviews no longer

@@ -268,7 +268,7 @@ kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp)
     index = 0;
 
   if (s->scripttable[script].heappos == 0)
-    script_instantiate(s, script); /* Instantiate script if neccessary */
+    script_instantiate(s, script, 1); /* Instantiate script if neccessary */
 
   disp = s->scripttable[script].export_table_offset;
 

@@ -293,14 +293,9 @@ script_init_engine(state_t *s, sci_version_t version)
 
   s->restarting_flags = SCI_GAME_IS_NOT_RESTARTING;
 
+
   for (i = 0; i < 1000; i++)
     s->scripttable[i].heappos = 0; /* Mark all scripts as 'not installed' */
-  if (!script_instantiate(s, 0)) {
-    sciprintf("script_init_engine(): Could not instantiate script 0\n");
-    return 1;
-  }
-
-  save_ff(s->_heap); /* Save heap state */
 
   s->bp_list = NULL; /* No breakpoints defined */
   s->have_bp = 0;
@@ -370,14 +365,24 @@ script_free_engine(state_t *s)
 int
 game_init(state_t *s)
 {
-  heap_ptr stack_handle = heap_allocate(s->_heap, VM_STACK_SIZE);
-  heap_ptr parser_handle = heap_allocate(s->_heap, PARSE_HEAP_SIZE);
+  heap_ptr stack_handle;
+  heap_ptr parser_handle;
   heap_ptr script0;
   heap_ptr game_obj; /* Address of the game object */
   heap_ptr game_init; /* Address of the init() method */
   heap_ptr functarea;
   resource_t *resource;
   int i, font_nr;
+
+  if (!script_instantiate(s, 0, 0)) {
+    sciprintf("script_init_engine(): Could not instantiate script 0\n");
+    return 1;
+  }
+
+  save_ff(s->_heap); /* Save heap state */
+
+  stack_handle = heap_allocate(s->_heap, VM_STACK_SIZE);
+  parser_handle = heap_allocate(s->_heap, PARSE_HEAP_SIZE);
 
   script0 = s->scripttable[0].heappos; /* Get script 0 position */
 
@@ -510,8 +515,8 @@ game_exit(state_t *s)
     send_calls_allocated = 0;
   }
 
-  for (i = 1; i < 1000; i++)
-    if (s->scripttable[i].heappos > s->_heap->first_free)
+  for (i = 0; i < 1000; i++)
+    /*  if (s->scripttable[i].heappos > s->_heap->old_ff)*/
       s->scripttable[i].heappos = 0; /* Mark all non-high scripts as 'not installed', except for 0 */
 
   menubar_free(s->menubar);

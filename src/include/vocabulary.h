@@ -294,9 +294,10 @@ vocab_build_parse_tree(parse_tree_node_t *nodes, result_word_t *words, int words
 */
 
 void
-vocab_dump_parse_tree(parse_tree_node_t *nodes);
+vocab_dump_parse_tree(char *tree_name, parse_tree_node_t *nodes);
 /* Prints a parse tree
-** Parameters: (parse_tree_node_t *) nodes: The nodes containing the parse tree
+** Parameters: (char *) tree_name: Name of the tree to dump (free-form)
+**             (parse_tree_node_t *) nodes: The nodes containing the parse tree
 ** Returns   : (void)
 */
 
