@@ -30,18 +30,75 @@
 #  include <SDL.h>
 #endif
 
+#define DELTA_TIME_LIMIT 10000 /* Report errors above this delta time */
+
 static sfx_audio_buf_t audio_buffer;
 static void (*sdl_sfx_timer_callback)(void *data);
 static void *sdl_sfx_timer_data;
 static int sample_size;
+static int buf_size;
+static int rate;
+static long last_callback_secs, last_callback_usecs;
+static int last_callback_len;
 
+static sfx_timestamp_t
+pcmout_sdl_output_timestamp(sfx_pcm_device_t *self)
+{
+	/* Number of samples enqueued in the output device: */
+	int delta = (buf_size - last_callback_len) / sample_size
+		/* Number of samples enqueued in the internal audio buffer: */
+		+ audio_buffer.samples_nr;
+
+	return sfx_timestamp_add(sfx_new_timestamp(last_callback_secs,
+						   last_callback_usecs,
+						   rate),
+				 delta);
+}
 
 static void
 timer_sdl_internal_callback(void *userdata, byte *dest, int len)
 {
+	sci_gettime(&last_callback_secs, &last_callback_usecs);
+	last_callback_len = len;
+
 	if (sdl_sfx_timer_callback)
 		sdl_sfx_timer_callback(sdl_sfx_timer_data);
 
+#if 0
+	if (!sfx_audbuf_read_timestamp(&audio_buffer, &ts)) {
+		int delta = (buf_size - len) / sample_size;
+		sfx_timestamp_t real_ts;
+		long deltatime;
+		long sec2, usec2;
+		sci_gettime(&sec2, &usec2);
+
+		real_ts = sfx_timestamp_add(sfx_new_timestamp(sec, usec, rate), delta);
+
+		deltatime = sfx_timestamp_usecs_diff(ts, real_ts);
+
+		fprintf(stderr, "[SDL] Samples requested: %d  Playing %ld too late. Needed %ldus for computations.\n",
+				len / sample_size, deltatime,
+			(usec2-usec) + (sec2-sec)*1000000);
+
+		if (abs(deltatime) > DELTA_TIME_LIMIT)
+			sciprintf("[SND:SDL] Very high delta time for PCM playback: %ld too late (%d samples in the future)\n",
+				  deltatime, sfx_timestamp_sample_diff(sfx_new_timestamp(sec, usec, rate), ts));
+
+#if 0
+		if (deltatime < 0) {
+			/* Read and discard samples, explicitly underrunning */
+			int max_read = len / sample_size;
+			int samples_to_kill = sfx_timestamp_sample_diff(real_ts, ts);
+
+			while (samples_to_kill) {
+				int d = samples_to_kill > max_read? max_read : samples_to_kill;
+				sfx_audbuf_read(&audio_buffer, dest, d);
+				samples_to_kill -= d;
+			}
+		}
+#endif
+	}
+#endif
 	sfx_audbuf_read(&audio_buffer, dest, len / sample_size);
 }
 
@@ -72,6 +129,9 @@ pcmout_sdl_init(sfx_pcm_device_t *self)
 		return SFX_ERROR;
 	}
 
+	buf_size = a.samples;
+	rate = a.freq;
+
 	self->buf_size = a.samples << 1; /* Looks like they're using double size */
 	self->conf.rate = a.freq;
 	self->conf.stereo = a.channels > 1;
@@ -86,8 +146,11 @@ pcmout_sdl_init(sfx_pcm_device_t *self)
 }
 
 int
-pcmout_sdl_output(sfx_pcm_device_t *self, byte *buf, int count)
+pcmout_sdl_output(sfx_pcm_device_t *self, byte *buf,
+		  int count, sfx_timestamp_t *ts)
 {
+	if (ts)
+		sfx_audbuf_write_timestamp(&audio_buffer, *ts);
 	sfx_audbuf_write(&audio_buffer, buf, count);
 	return SFX_OK;
 }
@@ -152,6 +215,7 @@ sfx_pcm_device_t sfx_pcm_driver_sdl = {
 	pcmout_sdl_exit,
 	pcmout_sdl_set_option,
 	pcmout_sdl_output,
+	pcmout_sdl_output_timestamp,
 	{0, 0, 0},
 	0,
 	&pcmout_sdl_timer,

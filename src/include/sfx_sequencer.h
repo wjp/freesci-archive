@@ -86,8 +86,10 @@ typedef struct _sfx_sequencer {
 	** Returns   : SFX_OK on success, SFX_ERROR otherwise
 	*/
 
-	int (*reset_timer)(void); /* OPTIONAL -- may be NULL, but highly recommended in combination with delay() */
+	int (*reset_timer)(GTimeVal ts);
+	/* OPTIONAL -- may be NULL, but highly recommended in combination with delay() */
 	/* Resets the timer counter associated with the 'delay()' function
+	** Parameters: (GTimeVal) ts: Timestamp of the base time
 	** Returns   : SFX_OK on success, SFX_ERROR otherwise
 	*/
 

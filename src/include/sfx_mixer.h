@@ -45,6 +45,8 @@ typedef struct {
 	sfx_pcm_urat_t scount; /* Sample counter, backed up in between calls */
 	int sample_bufstart; /* Left-over samples at the beginning of the buffer */
 	int mode; /* Whether the feed is alive or pending destruction */
+
+	int pending_review; /* Timestamp needs to be checked for this stream */
 } sfx_pcm_feed_state_t;
 
 

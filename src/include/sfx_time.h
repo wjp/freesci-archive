@@ -27,8 +27,8 @@
 
 ***************************************************************************/
 
-#ifndef _SFX_TIMER_H_
-#define _SFX_TIMER_H_
+#ifndef _SFX_TIME_H_
+#define _SFX_TIME_H_
 
 typedef struct {
 	long secs;
@@ -54,6 +54,32 @@ sfx_timestamp_add(sfx_timestamp_t timestamp, int samples);
 ** Returns   : (sfx_timestamp_t) The increased timestamp
 */
 
+sfx_timestamp_t
+sfx_timestamp_renormalise(sfx_timestamp_t timestamp, int new_freq);
+/* Translates a timestamp to a new base sample frequency
+** Parameters: (sfx_timestamp_t *) timestamp: The timestamp to normalise
+**             (int) new_freq: The new frequency to normalise to
+** Returns   : (sfx_timestamp_t) The re-normalised timestamp
+** The translation looses accuracy in the order of magnitude of milliseconds
+** for "usual" sampling frequencies.
+*/
+
+int
+sfx_timestamp_sample_diff(sfx_timestamp_t a, sfx_timestamp_t b);
+/* Computes the difference (# of samples) between two timestamps
+** Parameters: (sfx_timestamp) a: See below
+**             (sfx_timestamp) b: See below
+** Returns   : (int) a-b
+*/
+
+long
+sfx_timestamp_usecs_diff(sfx_timestamp_t a, sfx_timestamp_t b);
+/* Computes the difference (# of microseconds) between two timestamps
+** Parameters: (sfx_timestamp) a: See below
+**             (sfx_timestamp) b: See below
+** Returns   : (long) a-b
+*/
+
 void
 sfx_timestamp_gettime(sfx_timestamp_t *timestamp, long *secs, long *usecs);
 /* Determines the time described by a given timestamp
@@ -64,4 +90,4 @@ sfx_timestamp_gettime(sfx_timestamp_t *timestamp, long *secs, long *usecs);
 
 
 
-#endif /* !defined(_SFX_TIMER_H_) */
+#endif /* !defined(_SFX_TIME_H_) */

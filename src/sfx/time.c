@@ -28,6 +28,7 @@
 ***************************************************************************/
 
 #include <sfx_time.h>
+#include <resource.h>
 
 sfx_timestamp_t
 sfx_new_timestamp(long secs, long usecs, int sample_rate)
@@ -37,6 +38,8 @@ sfx_new_timestamp(long secs, long usecs, int sample_rate)
 	r.usecs = usecs;
 	r.sample_rate = sample_rate;
 	r.sample_offset = 0;
+
+	return r;
 }
 
 
@@ -45,10 +48,65 @@ sfx_timestamp_add(sfx_timestamp_t timestamp, int samples)
 {
 	timestamp.sample_offset += samples;
 
+	if (timestamp.sample_offset < 0) {
+		int secsub = 1 + (-timestamp.sample_offset / timestamp.sample_rate);
+
+		timestamp.sample_offset += timestamp.sample_rate * secsub;
+		timestamp.secs -= secsub;
+	}
+
 	timestamp.secs += (timestamp.sample_offset / timestamp.sample_rate);
 	timestamp.sample_offset %= timestamp.sample_rate;
 
 	return timestamp;
+}
+
+int
+sfx_timestamp_sample_diff(sfx_timestamp_t a, sfx_timestamp_t b)
+{
+	long usecdelta = 0;
+
+	if (a.sample_rate != b.sample_rate) {
+		fprintf(stderr, "Fatal: The semantics of subtracting two timestamps with a different base from each other is not defined!\n");
+		BREAKPOINT();
+	}
+
+	if (a.usecs != b.usecs) {
+#if (SIZEOF_LONG >= 8)
+		usecdelta = (a.usecs * a.sample_rate) / 1000000
+			- (b.usecs * b.sample_rate) / 1000000;
+#else
+		usecdelta = ((a.usecs/1000) * a.sample_rate) / 1000
+			- ((b.usecs/1000) * b.sample_rate) / 1000;
+#endif
+	}
+
+	return usecdelta
+		+ (a.secs - b.secs) * a.sample_rate
+		+ a.sample_offset - b.sample_offset;
+}
+
+long
+sfx_timestamp_usecs_diff(sfx_timestamp_t t1, sfx_timestamp_t t2)
+{
+	long secs1, secs2;
+	long usecs1, usecs2;
+
+	sfx_timestamp_gettime(&t1, &secs1, &usecs1);
+	sfx_timestamp_gettime(&t2, &secs2, &usecs2);
+
+	return (usecs1 - usecs2) + ((secs1 - secs2) * 1000000);
+} 
+
+sfx_timestamp_t
+sfx_timestamp_renormalise(sfx_timestamp_t timestamp, int new_freq)
+{
+	sfx_timestamp_t r;
+	sfx_timestamp_gettime(&timestamp, &r.secs, &r.usecs);
+	r.sample_rate = new_freq;
+	r.sample_offset = 0;
+
+	return r;
 }
 
 void
@@ -57,9 +115,9 @@ sfx_timestamp_gettime(sfx_timestamp_t *timestamp, long *secs, long *usecs)
 	long ust = timestamp->usecs;
 	/* On 64 bit machines, we can do an accurate computation */
 #if (SIZEOF_LONG >= 8)
-	ust += (timestamp->sample_offset) / (timestamp->sample_rate);
+	ust += (timestamp->sample_offset * 1000000l) / (timestamp->sample_rate);
 #else
-	ust += (timestamp->sample_offset * 1000) / (timestamp->sample_rate / 1000);
+	ust += (timestamp->sample_offset * 1000l) / (timestamp->sample_rate / 1000l);
 #endif
 
 	if (ust > 1000000) {
@@ -71,6 +129,3 @@ sfx_timestamp_gettime(sfx_timestamp_t *timestamp, long *secs, long *usecs)
 	*usecs = ust;
 }
 
-
-
-#endif /* !defined(_SFX_TIMER_H_) */

@@ -45,12 +45,14 @@
 #include <sci_memory.h>
 #include <sfx_pcm.h>
 
+
 #define SFX_AUDIO_BUF_SIZE 8192	/* Must be multiple of framesize */
 #define SFX_AUDIO_MAX_FRAME 8	/* Max. individual sample size */
 
 typedef struct _sfx_audio_buf_chunk {
 	unsigned char data[SFX_AUDIO_BUF_SIZE];
 	int used;
+	struct _sfx_audio_buf_chunk *prev;
 	struct _sfx_audio_buf_chunk *next;
 } sfx_audio_buf_chunk_t;
 
@@ -111,7 +113,7 @@ sfx_audbuf_read_timestamp(sfx_audio_buf_t *buf, sfx_timestamp_t *ts);
 /* Reads the timestamp describing the time right before the next sample being read
 ** Parameters: (sfx_audio_buf_t *) buf: The buffer to read from
 ** Returns   : (sfx_timestamp_t) *ts: The requested timestamp, or nothing
-**             (int) nonzero on success, zero if no timestamp is known
+**             (int) zero on success, nonzero if no timestamp is known
 */
 
 

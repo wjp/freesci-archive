@@ -1,3 +1,12 @@
+2003-12-28  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sfx/mixer/soft.c (mix_compute_input_linear): Fixed some
+	smaller bugs
+
+	* src/include/sfx_pcm.h: Changed PCM API to use timestamps,
+	allowing better debugging
+	Allow streams to suspend output temporarily
+
 2003-12-27  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/scriptdebug.c (script_debug): Do not suspend and

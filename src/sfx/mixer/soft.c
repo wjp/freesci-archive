@@ -28,6 +28,8 @@
 #include <sfx_mixer.h>
 #include <sci_memory.h>
 
+/* Max. number of microseconds in difference allowed between independent audio streams */
+#define TIMESTAMP_MAX_ALLOWED_DELTA 2000
 
 /*#define DEBUG 3*/
 /* Set DEBUG to one of the following:
@@ -46,6 +48,8 @@ static int diagnosed_too_slow = 0;
 
 struct mixer_private {
 	byte *outbuf; /* Output buffer to write to the PCM device next time */
+	sfx_timestamp_t outbuf_timestamp; /* Timestamp associated with the output buffer */
+	int have_outbuf_timestamp; /* Whether we really _have_ an associated timestamp */
 	byte *writebuf; /* Buffer we're supposed to write to */
 	gint32 *compbuf_l, *compbuf_r; /* Intermediate buffers for computation */
 	int lastbuf_len; /* Number of samples stored in the last buffer */
@@ -57,6 +61,8 @@ struct mixer_private {
 
 	int max_delta; /* maximum observed time delta (using 'samples' as a metric unit) */
 	int delta_observations; /* Number of times we played; confidence measure for max_delta */
+
+
 
 	/* Pause data */
 	int paused;
@@ -152,6 +158,7 @@ mix_subscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 	fs->spd = urat(feed->conf.rate, self->dev->conf.rate);
 	fs->scount.den = fs->spd.den;
 	fs->mode = SFX_PCM_FEED_MODE_ALIVE;
+	fs->pending_review = 1;
 
 	fs->sample_bufstart = 0;
 
@@ -493,8 +500,10 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_samples)
 
 
 static void
-mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_state_t *fs, int len)
+mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_state_t *fs,
+			 int len, sfx_timestamp_t *ts, sfx_timestamp_t base_ts)
      /* if add_result is non-zero, P->outbuf should be added to rather than overwritten. */
+     /* base_ts is the timestamp for the first sample */
 {
 	sfx_pcm_feed_t *f = fs->feed;
 	sfx_pcm_config_t conf = f->conf;
@@ -520,6 +529,8 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 	int samples_read;
 	int samples_left;
 
+	int delay_samples = 0; /* Number of samples (dest buffer) at the beginning we skip */
+
 	/* First, compute the number of samples we want to retreive */
 	samples_nr = fs->spd.val * len;
 	/* A little complicated since we must consider partial samples */
@@ -528,8 +539,80 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 		       + (fs->scount.den - 1 /* round up */))
 		/ fs->spd.den;
 
+	ts->secs = -1;
+
+	if (fs->pending_review) {
+		int newmode = PCM_FEED_EMPTY; /* empty unless a get_timestamp() tells otherwise */
+
+		/* Retrieve timestamp */
+		if (f->get_timestamp)
+			newmode = f->get_timestamp(f, ts);
+
+
+		switch (newmode) {
+
+		case PCM_FEED_TIMESTAMP: {
+			/* Compute the number of samples the returned timestamp is in the future: */
+			delay_samples =
+				sfx_timestamp_sample_diff(sfx_timestamp_renormalise(*ts, base_ts.sample_rate),
+							  base_ts);
+
+			if (delay_samples <= 0)
+				/* Start ASAP, even if it's too late */
+				delay_samples = 0;
+			else
+				if (delay_samples > len)
+					delay_samples = len;
+		}
+			break;
+
+		case PCM_FEED_EMPTY:
+			fs->mode = SFX_PCM_FEED_MODE_DEAD;
+
+			/* ...fall through... */
+
+		case PCM_FEED_IDLE:
+			/* Clear audio buffer, if neccessary, and return */
+			if (!add_result) {
+				memset(P->compbuf_l, 0, sizeof(gint32) * len);
+				memset(P->compbuf_r, 0, sizeof(gint32) * len);
+			}
+			return;
+
+		default:
+			fprintf(stderr, "[soft-mixer] Fatal: Invalid mode returned by PCM feed %s-%d's get_timestamp(): %d\n",
+				f->debug_name, f->debug_nr, newmode);
+			exit(1);
+		}
+	}
+
 	/* Make sure we have sufficient information */
-	samples_left = samples_read = f->poll(f, wr_dest, samples_nr);
+	samples_left = samples_read = f->poll(f, wr_dest, samples_nr - delay_samples);
+
+	/* Skip at the beginning: */
+	if (delay_samples) {
+		if (!add_result) {
+			memset(lchan, 0, sizeof(gint32) * delay_samples);
+			memset(rchan, 0, sizeof(gint32) * delay_samples);
+		}
+		lchan += delay_samples;
+		rchan += delay_samples;
+
+		len -= delay_samples;
+	}
+
+	/* Truncate end: */
+	if (samples_nr - delay_samples < samples_read) {
+		int end_samples = (samples_nr - delay_samples) - samples_read;
+		/* Number of samples at the end we potentially must zero out */
+
+		if (!add_result) {
+			memset(lchan + len, 0, sizeof(gint32) * end_samples);
+			memset(rchan + len, 0, sizeof(gint32) * end_samples);
+		}
+
+		len -= end_samples;
+	}
 
 #if (DEBUG >= 2)
 	sciprintf("[soft-mixer] Examining %s-%x (sample size %d); read %d/%d/%d, re-using %d samples\n",
@@ -637,8 +720,9 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 	sciprintf("[soft-mix] Leaving %d over\n", fs->sample_bufstart);
 #endif
 
-	if (samples_read < samples_nr)
-		fs->mode = SFX_PCM_FEED_MODE_DEAD;
+	if (samples_read < samples_nr) {
+		fs->pending_review = 1;
+	}
 }
 
 long xlastsec = 0;
@@ -654,10 +738,29 @@ mix_process_linear(sfx_pcm_mixer_t *self)
 	int samples_skip; /* Number of samples to discard, rather than to emit */
 	int buflen = mix_compute_buf_len(self, &samples_skip); /* Compute # of samples we must compute and write */
 	int fake_buflen;
+	int timestamp_max_delta = 0;
+	int have_timestamp = 0;
+	sfx_timestamp_t start_timestamp; /* The timestamp at which the first sample will be played */
+	sfx_timestamp_t min_timestamp;
+	sfx_timestamp_t timestamp;
 	byte *left, *right;
 
+	if (self->dev->get_output_timestamp)
+		start_timestamp = self->dev->get_output_timestamp(self->dev);
+	else {
+		long sec, usec;
+		sci_gettime(&sec, &usec);
+		start_timestamp = sfx_new_timestamp(sec, usec, self->dev->conf.rate);
+	}
+
 	if (P->outbuf && P->lastbuf_len) {
-		int rv = self->dev->output(self->dev, P->outbuf, P->lastbuf_len);
+		sfx_timestamp_t ts;
+		if (P->have_outbuf_timestamp)
+			ts = sfx_timestamp_renormalise(P->outbuf_timestamp, self->dev->conf.rate);
+
+		int rv = self->dev->output(self->dev, P->outbuf,
+					   P->lastbuf_len,
+					   (P->have_outbuf_timestamp)? &ts : NULL);
 
 		if (rv == SFX_ERROR)
 			return rv; /* error */
@@ -685,7 +788,25 @@ mix_process_linear(sfx_pcm_mixer_t *self)
 			}
 
 			for (src_i = 0; src_i < self->feeds_nr; src_i++) {
-				mix_compute_input_linear(self, src_i, self->feeds + src_i, fake_buflen);
+				mix_compute_input_linear(self, src_i, self->feeds + src_i,
+							 fake_buflen, &timestamp,
+							 start_timestamp);
+
+				if (timestamp.secs >= 0) {
+					if (have_timestamp) {
+						int diff = sfx_timestamp_usecs_diff(min_timestamp, timestamp);
+						if (diff > 0) {
+							/* New earlier timestamp */
+							timestamp = min_timestamp;
+							timestamp_max_delta += diff;
+						} else if (diff > timestamp_max_delta)
+							timestamp_max_delta = diff;
+						/* New max delta for timestamp */
+					} else {
+						min_timestamp = timestamp;
+						have_timestamp = 1;
+					}
+				}
 			}
 
 			/* Destroy all feeds we finished */
@@ -715,11 +836,18 @@ mix_process_linear(sfx_pcm_mixer_t *self)
 	}
 #endif
 
+	if (timestamp_max_delta > TIMESTAMP_MAX_ALLOWED_DELTA)
+		sciprintf("[soft-mixer] Warning: Difference in timestamps between audio feeds is %d us\n", timestamp_max_delta);
+
 	mix_compute_output(self, buflen);
 	P->lastbuf_len = buflen;
 
 	/* Finalize */
 	mix_swap_buffers(self);
+	if (have_timestamp)
+		P->outbuf_timestamp = sfx_timestamp_add(min_timestamp,
+							timestamp_max_delta >> 1);
+	P->have_outbuf_timestamp = have_timestamp;
 
 	return SFX_OK;
 }

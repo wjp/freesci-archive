@@ -30,6 +30,7 @@
 
 #include <sfx_engine.h>
 #include <sfx_timer.h>
+#include <sfx_time.h>
 
 
 /* A number of standard options most devices will support */
@@ -116,14 +117,33 @@ typedef struct _sfx_pcm_device {
 	** May be NULL
 	*/
 
-	int (*output)(struct _sfx_pcm_device *self, byte *buf, int count);
+	int (*output)(struct _sfx_pcm_device *self, byte *buf,
+		      int count, sfx_timestamp_t *timestamp);
 	/* Writes output to the device
 	** Parameters: (sfx_pcm_device_t *) self: Self reference
 	**             (byte *) buf: The buffer to write
 	**             (int) count: Number of /samples/ that should be written
+	**             (sfx_timestamp_t *) timestamp: Optional point in time
+	**                                     for which the PCM data is scheduled
 	** Returns   : (int) SFX_OK on success, SFX_ERROR on error
 	** The size of the buffer allocated as 'buf' equals buf_size.
 	** 'buf' is guaranteed not to be modified in between calls to 'output()'.
+	** 'timestamp' is guaranteed to be used only in sequential order, but not
+	** guaranteed to be used in all cases. It is guaranteed to be compaible with
+	** the sample rate used by the device itself (i.e., the sfx_time.h functionality
+	** is applicable)
+	*/
+
+	sfx_timestamp_t
+	(*get_output_timestamp)(struct _sfx_pcm_device *self);
+	/* Determines the timestamp for 'output'
+	** Parameters: (sfx_pcm_device_t *) self: Self reference
+	** Returns   : (sfx_timestamp_t) A timestamp (with the device's conf.rate)
+	**                               describing the point in time at which
+	**                               the next sample passed to 'output'
+	**                               will be played
+	** This function is OPTIONAL and may be NULL, but it is recommended
+	** that pcm device implementers attempt to really implement it.
 	*/
 
 	/* The following must be set after initialisation */
@@ -148,6 +168,10 @@ typedef struct _sfx_pcm_device {
 } sfx_pcm_device_t;
 
 
+#define PCM_FEED_TIMESTAMP 0	/* New timestamp available */
+#define PCM_FEED_IDLE 1		/* No sound ATM, but new timestamp may be available later */
+#define PCM_FEED_EMPTY 2	/* Feed is finished, can be destroyed */
+
 typedef struct _sfx_pcm_feed_t {
 	/* PCM feeds are sources of input for the PCM mixer. Their member functions
 	** are invoked as callbacks on demand, to provide the mixer with input it
@@ -164,13 +188,22 @@ typedef struct _sfx_pcm_feed_t {
 	**                         to write
 	** Returns   : (int) The number of samples written
 	** If the number of samples written is smaller than 'size', the PCM feed will
-	** be destroyed subsequently.
+	** be queried for a new timestamp afterwards, or destroyed if no new timestamp
+	** is available.
 	*/
 
 	void (*destroy)(struct _sfx_pcm_feed_t *self);
 	/* Asks the PCM feed to free all resources it occupies
 	** Parameters: (sfx_pcm_feed_t *) self: Self reference
 	** free(self) should be part of this function, if applicable.
+	*/
+
+	int
+	(*get_timestamp)(struct _sfx_pcm_feed_t *self, sfx_timestamp_t *timestamp);
+	/* Determines the timestamp of the next sample-to-read
+	** Returns   : (sfx_timestamp_t) timestamp: The timestamp of the next sample
+	**             (int) PCM_FEED_*
+	** This function is OPTIONAL and may be NULL
 	*/
 
 	void *internal; /* The private bits of a PCM feed. */

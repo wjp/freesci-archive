@@ -33,6 +33,7 @@ sfx_audbuf_alloc_chunk(void)
 	sfx_audio_buf_chunk_t *ch = sci_malloc(sizeof(sfx_audio_buf_chunk_t));
 	ch->used = 0;
 	ch->next = NULL;
+	ch->prev = NULL;
 
 	return ch;
 }
@@ -68,6 +69,7 @@ sfx_audbuf_init(sfx_audio_buf_t *buf, sfx_pcm_config_t pcm_conf)
 	buf->read_offset = 0;
 	buf->framesize = framesize;
 	buf->read_timestamp.secs = -1; /* Mark as inactive */
+	buf->samples_nr = 0;
 }
 
 static void
@@ -95,12 +97,13 @@ sfx_audbuf_write(sfx_audio_buf_t *buf, unsigned char *src, int frames)
 	/* In here, we compute PER BYTE */
 	int data_left = buf->framesize * frames;
 
-
 	if (!buf->last) {
 		fprintf(stderr, "FATAL: Violation of audiobuf.h usage protocol: Must use 'init' before 'write'\n");
 		exit(1);
 	}
 
+
+	buf->samples_nr += frames;
 
 	while (data_left) {
 		int cpsize;
@@ -121,6 +124,7 @@ sfx_audbuf_write(sfx_audio_buf_t *buf, unsigned char *src, int frames)
 
 		if (buf->last->used == SFX_AUDIO_BUF_SIZE) {
 			if (!buf->last->next) {
+				sfx_audio_buf_chunk_t *old = buf->last;
 				if (buf->unused) { /* Re-use old chunks */
 					buf->last->next = buf->unused;
 					buf->unused = buf->unused->next;
@@ -129,6 +133,8 @@ sfx_audbuf_write(sfx_audio_buf_t *buf, unsigned char *src, int frames)
 				} else /* Allocate */
 					buf->last->next =
 						sfx_audbuf_alloc_chunk();
+
+				buf->last->prev = old;
 			}
 
 			buf->last = buf->last->next;
@@ -166,6 +172,18 @@ sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int frames)
 	int written = 0;
 	if (frames <= 0)
 		return 0;
+
+	if (buf->read_timestamp.secs >= 0) {
+		/* Have a timestamp? Must update it! */
+		buf->read_timestamp =
+			sfx_timestamp_add(buf->read_timestamp,
+					  frames);
+							
+	}
+
+	buf->samples_nr -= frames;
+	if (buf->samples_nr < 0)
+		buf->samples_nr = 0;
 
 #ifdef TRACE_BUFFER
 	{
@@ -214,6 +232,8 @@ sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int frames)
 
 		if (frames &&
 		    (!buf->first || buf->read_offset == buf->first->used)) {
+			fprintf(stderr, "Underrun by %d samples at %d\n", frames,
+				buf->read_timestamp.sample_rate);
 			/* Buffer underrun! */
 			if (!reported_buffer_underrun) {
 				sciprintf("[audiobuf] Buffer underrun\n");
@@ -230,8 +250,86 @@ sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int frames)
 	return written;
 }
 
+#if 0
+static void
+_sfx_audbuf_rewind_stream(sfx_audio_buf_t *buf, int delta)
+{
+	if (delta > buf->samples_nr)
+		delta = buf->samples_nr;
+
+
+	fprintf(stderr, "Rewinding %d\n", delta);
+	buf->samples_nr -= delta;
+
+	/* From here on, 'delta' means the number of BYTES to remove */
+	delta *= buf->framesize;
+
+	while (delta) {
+		if (buf->last->used >= delta) {
+			fprintf(stderr, "Subtracting from  %d  %d\n", buf->last->used, delta);
+			buf->last->used -= delta;
+			delta = 0;
+		} else {
+			fprintf(stderr, "Must do block-unuse\n");
+			delta -= buf->last->used;
+			buf->last->used = 0;
+			buf->last->next = buf->unused;
+			buf->unused = buf->last;
+			buf->last = buf->unused->prev;
+			buf->unused->prev = NULL;
+		}
+	}
+}
+#endif
+
 void
-sfx_audbuf_write_timestamp(sfx_audio_buf_t *buf, sfx_timestamp_t ts);
+sfx_audbuf_write_timestamp(sfx_audio_buf_t *buf, sfx_timestamp_t ts)
+{
+	sfx_timestamp_t newstamp;
+
+	newstamp = sfx_timestamp_add(ts, -buf->samples_nr);
+
+
+	if (buf->read_timestamp.secs <= 0)
+		/* Initial stamp */
+		buf->read_timestamp = newstamp;
+	else {
+		int delta = sfx_timestamp_sample_diff(newstamp, buf->read_timestamp);
+		long s1,s2,s3,u1,u2,u3;
+		sfx_timestamp_gettime(&(buf->read_timestamp), &s1, &u1);
+		sfx_timestamp_gettime(&(newstamp), &s2, &u2);
+		sfx_timestamp_gettime(&(ts), &s3, &u3);
+
+		if (delta < 0) {
+#if 0
+			/*			fprintf(stderr, "[SFX-BUF] audiobuf.c: Timestamp delta %d at %d: Must rewind (not implemented yet)\n",
+						delta, buf->read_timestamp.sample_rate);*/
+			_sfx_audbuf_rewind_stream(buf, -delta);
+			buf->read_timestamp = newstamp;
+#endif
+		} else if (delta > 0) {
+			fprintf(stderr, "[SFX-BUF] audiobuf.c: Timestamp delta %d at %d: Filling in as silence frames\n",
+				delta, buf->read_timestamp.sample_rate);
+			/* Fill up with silence */
+			while (delta--) {
+				sfx_audbuf_write(buf, buf->last_frame, 1);
+			}
+			buf->read_timestamp = newstamp;
+		}
+	}
+}
 
 int
-sfx_audbuf_read_timestamp(sfx_audio_buf_t *buf, sfx_timestamp_t *ts);
+sfx_audbuf_read_timestamp(sfx_audio_buf_t *buf, sfx_timestamp_t *ts)
+{
+	if (buf->read_timestamp.secs > 0) {
+		*ts = buf->read_timestamp;
+		return 0;
+	} else {
+		ts->secs = -1;
+		ts->usecs = -1;
+		ts->sample_offset = -1;
+		ts->sample_rate = -1;
+		return 1; /* No timestamp */
+	}
+}

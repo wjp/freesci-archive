@@ -33,20 +33,27 @@
 #include <sfx_audiobuf.h>
 #include <sfx_pcm.h>
 
+struct sfx_sw_buf_chain;
+
 typedef struct {
-	sfx_audio_buf_t buf;
+	sfx_pcm_config_t pcm_conf;
+	sfx_audio_buf_t *readbuf;
+	sfx_audio_buf_t *writebuf;
+	struct sfx_sw_buf_chain *old_read; /* Pointer to location to read from */
+	struct sfx_sw_buf_chain **old_append; /* Pointer to location to append to */
+
 	sfx_pcm_feed_t *feed;
 } sfx_pcm_buffered_feed_t;
+
 
 typedef struct {
 	int feeds_nr;
 	sfx_pcm_buffered_feed_t* feeds;
 } sfx_pcm_sw_seq_data_t;
 
-
 /* Accesses the sfx_audio_buf_t associated with a channel */
 #define PCM_SW_CHANNEL(self, index) 	\
-	((self)->sw_seq_data->feeds[index].buf)
+	((self)->sw_seq_data->feeds[index].writebuf)
 
 struct _sfx_sequencer;
 
@@ -60,6 +67,14 @@ sfx_init_sw_sequencer(struct _sfx_sequencer *seq, int feeds, sfx_pcm_config_t co
 ** Modifiers : seq->sw_seq_data
 ** Returns   : (void)
 */
+
+void
+sfx_sw_sequencer_start_recording(struct _sfx_sequencer *seq, GTimeVal ts);
+/* Closes the currently active buffered PCM streams and starts new ones
+** Parameters: (sfx_sequencer_t *) seq: The sequencer to operate on
+**             (GTimeVal) ts: The time for which the streams should be scheduled
+*/
+
 
 void
 sfx_exit_sw_sequencer(struct _sfx_sequencer *seq);
