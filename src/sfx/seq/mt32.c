@@ -161,7 +161,7 @@ midiout_write_block(byte *buf, int len, int delta)
 }
 
 /* The following is the result of some experimenting, trying to approach the MT32's processing speed */
-#define MAGIC_MIDIOUT_DELAY 15
+#define MAGIC_MIDIOUT_DELAY 20
 
 static int
 midiout_write_delayed_block(byte *buf, int len)

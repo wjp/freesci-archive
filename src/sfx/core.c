@@ -30,7 +30,7 @@
 #include <sfx_engine.h>
 #include <sfx_player.h>
 
-#define DEBUG_CUES
+/*#define DEBUG_CUES*/
 #ifdef DEBUG_CUES
 int sciprintf(char *msg, ...);
 #endif
@@ -327,6 +327,7 @@ sfx_song_set_status(sfx_state_t *self, song_handle_t handle, int status)
 		return;
 
 	}
+
 	song->status = status;
 	_update(self);
 }

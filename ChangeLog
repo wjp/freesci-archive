@@ -1,5 +1,12 @@
 2003-07-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sfx/iterator.c (_sci0_read_next_command): Do not consider
+	special-purpose MIDI commands in 0xfx for being subjected to
+	per-channel filtering
+	Reset last_cmd prior to looping
+
+	* src/sfx/songlib.c (song_lib_add): Fixed OB1 in song library
+
 	* src/sfx/seq/mt32.c (MAGIC_MIDIOUT_DELAY): Slowed down MT-32 MIDI
 	output during initialisation to avoid execution buffer overflows in
 	KQ1

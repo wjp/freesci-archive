@@ -95,29 +95,27 @@ song_new(song_handle_t handle, song_iterator_t *it, int priority)
 void
 song_lib_add(songlib_t songlib, song_t *song)
 {
-	song_t *seeker = NULL;
+	song_t **seeker = NULL;
 	int pri	= song->priority;
 
-	if (NULL == song)
-	{
+	if (NULL == song) {
 		 sciprintf("song_lib_add(): NULL passed for song\n");
-	return;
+		 return;
 	}
 
-	if (*(songlib.lib) == NULL)
-	{
+	if (*(songlib.lib) == NULL) {
 		*(songlib.lib) = song;
 		song->next = NULL;
 
 		return;
 	}
 
-	seeker = *(songlib.lib);
-	while (seeker->next && (seeker->next->priority > pri))
-		seeker = seeker->next;
+	seeker = (songlib.lib);
+	while (*seeker && ((*seeker)->priority > pri))
+		seeker = &((*seeker)->next);
 
-	song->next = seeker->next;
-	seeker->next = song;
+	song->next = *seeker;
+	*seeker = song;
 }
 
 void /* Recursively free a chain of songs */

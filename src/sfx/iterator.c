@@ -120,11 +120,6 @@ _sci0_read_next_command(base_song_iterator_t *self, unsigned char *buf, int *res
 		} while (tempticks == SCI_MIDI_TIME_EXPANSION_PREFIX
 			 && self->offset < self->size);
 
-		if (self->offset == self->size) {
-			self->state = SI_STATE_FINISHED;
-			fprintf(stderr, SIPFX "Reached end of song without terminator!\n");
-		}
-
 		CHECK_FOR_END(0);
 
 		self->state = SI_STATE_COMMAND;
@@ -176,10 +171,21 @@ _sci0_read_next_command(base_song_iterator_t *self, unsigned char *buf, int *res
 		self->last_cmd = cmd;
 
 		/* Are we supposed to play this channel? */
-		if (self->playmask == PLAYMASK_NONE
-		    || ((midi_channel == MIDI_RHYTHM_CHANNEL) && !self->play_rhythm)
-		    || ((midi_channel != MIDI_RHYTHM_CHANNEL)
-			&& !(self->data[2 + (midi_channel << 1)] & self->playmask)))
+		if (
+		    /* First, exclude "global" properties-- such as cues-- from consideration */
+		    (midi_op < 0xf
+		     && !(cmd == SCI_MIDI_SET_SIGNAL)
+		     && !(SCI_MIDI_CONTROLLER(cmd)
+			  && buf[1] == SCI_MIDI_CUMULATIVE_CUE))
+
+		    /* Next, check if the channel is allowed */
+		    && (self->playmask == PLAYMASK_NONE /* Any channels at all? */
+
+			/* Rhythm channel? Abort if it's explicitly disabled */
+			|| ((midi_channel == MIDI_RHYTHM_CHANNEL) && !self->play_rhythm)
+			/* Not rhythm channel? Abort if it's filtered out by the playmask */
+			|| ((midi_channel != MIDI_RHYTHM_CHANNEL)
+			    && !(self->data[2 + (midi_channel << 1)] & self->playmask))))
 			return /* Execute next command */
 				_sci0_read_next_command(self, buf,
 							result);
@@ -189,6 +195,7 @@ _sci0_read_next_command(base_song_iterator_t *self, unsigned char *buf, int *res
 			if (self->loops) {
 				*result = --self->loops;
 				self->offset = self->loop_offset;
+				self->last_cmd = 0;
 				self->state = SI_STATE_COMMAND;
 				return SI_LOOP;
 			} else {
