@@ -54,9 +54,9 @@
 #define _K_SCI01_SOUND_SUSPEND_HANDLE 9 /* or resume */
 #define _K_SCI01_SOUND_FADE_HANDLE 10
 #define _K_SCI01_SOUND_UPDATE_CUES 11
-#define _K_SCI01_SOUND_PITCH_WHEEL 12
+#define _K_SCI01_SOUND_MIDI_SEND 12
 #define _K_SCI01_SOUND_REVERB 13 /* Get/Set */
-#define _K_SCI01_SOUND_CONTROLLER 14
+#define _K_SCI01_SOUND_HOLD 14
  
 #define _K_SCI1_SOUND_MASTER_VOLME 0 /* Set/Get */
 #define _K_SCI1_SOUND_MUTE_SOUND 1
@@ -313,9 +313,9 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 		case 9: sciprintf("[Suspend]"); break;
 		case 10: sciprintf("[Fade]"); break;
 		case 11: sciprintf("[UpdateCues]"); break;
-		case 12: sciprintf("[PitchWheel]"); break;
+	 	case 12: sciprintf("[MidiSend]"); break;
 		case 13: sciprintf("[Reverb]"); break;
-		case 14: sciprintf("[Controller]"); break;
+		case 14: sciprintf("[Hold]"); break;
 		default: sciprintf("[unknown]"); break;
 		}
 
@@ -374,7 +374,6 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 					    handle, SOUND_STATUS_PLAYING);
 			sfx_song_set_loops(&s->sound,
 					   handle, looping);
-			PUT_SEL32V(obj, state, _K_SOUND_STATUS_PLAYING);
 			sfx_song_renice(&s->sound,
 					handle, pri);
 		}
@@ -394,7 +393,6 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 				     build_iterator(s, GET_SEL32V(obj, number),
 						    SCI_SONG_ITERATOR_TYPE_SCI1),
 				     0, handle);
-			PUT_SEL32V(obj, state, _K_SOUND_STATUS_INITIALIZED);
 		}
 		break;
 	}
@@ -436,7 +434,6 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 		if (obj.segment) {
 			sfx_song_set_status(&s->sound,
 					    handle, SOUND_STATUS_STOPPED);
-			PUT_SEL32V(obj, state, SOUND_STATUS_STOPPED);
 		}
 		break;
 	}
@@ -449,7 +446,6 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 		if (obj.segment) {
 			sfx_song_set_status(&s->sound,
 					    handle, setstate);
-			PUT_SEL32V(obj, state, setstate);
 		}
 		break;
 	}
@@ -469,17 +465,29 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 		int sec = 0;
 		int frame = 0;
 
-		if (signal==0xff)
-			/* Stop the handle */
-		;
-
-		if (dataInc!=GET_SEL32V(obj, dataInc))
+		switch (signal)
 		{
-			PUT_SEL32V(obj, dataInc, dataInc);
-			PUT_SEL32V(obj, signal, dataInc+0x7f);
-		} else
-		{
-			PUT_SEL32V(obj, signal, signal);
+		case 0x00:
+			if (dataInc!=GET_SEL32V(obj, dataInc))
+			{
+				PUT_SEL32V(obj, dataInc, dataInc);
+				PUT_SEL32V(obj, signal, dataInc+0x7f);
+			} else
+			{
+				PUT_SEL32V(obj, signal, signal);
+			}
+		case 0xFF: /* May be unnecessary */
+			sfx_song_set_status(&s->sound,
+					    handle, SOUND_STATUS_STOPPED);
+		default :
+			if (dataInc!=GET_SEL32V(obj, dataInc))
+			{
+				PUT_SEL32V(obj, dataInc, dataInc);
+				PUT_SEL32V(obj, signal, dataInc+0x7f);
+			} else
+			{
+				PUT_SEL32V(obj, signal, signal);
+			}
 		}
 
 		PUT_SEL32V(obj, min, min);
@@ -487,16 +495,27 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 		PUT_SEL32V(obj, frame, frame);
 		break;
 	}
-	case _K_SCI01_SOUND_PITCH_WHEEL :
+	case _K_SCI01_SOUND_MIDI_SEND :
 	{
+		int channel = SKPV(2);
+		int command = UKPV(3);
+		int param = SKPV(4);
+
+		if (command == 0xff) /* Pitch wheel */
+		{
+		} else /* command indicates a MIDI controller # otherwise */
+		{ 
+		}
+
 		break;
 	}
 	case _K_SCI01_SOUND_REVERB :
 	{
 		break;
 	}
-	case _K_SCI01_SOUND_CONTROLLER :
+	case _K_SCI01_SOUND_HOLD :
 	{
+		int flag = SKPV(2);
 		break;
 	}
 	}

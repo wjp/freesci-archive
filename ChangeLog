@@ -1,3 +1,9 @@
+2004-02-03  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/ksound.c (kDoSound_SCI01): Misc. fixes: Command
+	no. 12 and 14 were wrong, a bit of pseudocode added, UPDATE_CUES
+	fixed, references to state selector removed (obsolete in SCI01).
+
 2004-02-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/ksound.c (kDoSound_SCI0): Added support for SCI1 song
