@@ -106,7 +106,7 @@ _sfx_pcm_feed_poll(sfx_pcm_feed_t *feed, byte *dest, int size)
 {
 	sfx_pcm_buffered_feed_t *buffeed = (sfx_pcm_buffered_feed_t *)feed->internal;
 	int samples_nr = buffeed->readbuf->samples_nr;
-int oldsize = size;
+
 	retire_obsolete_feeds(buffeed);
 
 	if (size > samples_nr)
@@ -115,7 +115,6 @@ int oldsize = size;
 	sfx_audbuf_read(buffeed->readbuf, dest, size);
 
 	retire_obsolete_feeds(buffeed);
-
 
 	return size;
 }

@@ -170,6 +170,7 @@ int
 sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int frames)
 {
 	int written = 0;
+
 	if (frames <= 0)
 		return 0;
 
@@ -211,6 +212,7 @@ sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int frames)
 			rdbytes = buf->first->used - buf->read_offset;
 
 		memcpy(dest, buf->first->data + buf->read_offset, rdbytes);
+
 		buf->read_offset += rdbytes;
 		dest += rdbytes;
 

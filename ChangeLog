@@ -1,5 +1,10 @@
 2003-12-29  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sfx/mixer/soft.c (mix_compute_input_linear): Fixed cracking
+	more completely by also considering skipped samples when computing
+	the actual number of samples gotten vs. the number of samples
+	expected
+
 	* src/sfx/pcm-iterator.c:  Added support for PCM sound effects in
 	song iterators
 

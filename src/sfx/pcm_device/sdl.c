@@ -100,6 +100,7 @@ timer_sdl_internal_callback(void *userdata, byte *dest, int len)
 	}
 #endif
 	sfx_audbuf_read(&audio_buffer, dest, len / sample_size);
+
 }
 
 
@@ -120,7 +121,7 @@ pcmout_sdl_init(sfx_pcm_device_t *self)
 	a.format = AUDIO_S16LSB; /* FIXME */
 #endif
 	a.channels = 2; /* FIXME */
-	a.samples = 8192; /* FIXME */
+	a.samples = 2048; /* FIXME */
 	a.callback = timer_sdl_internal_callback;
 	a.userdata = NULL;
 

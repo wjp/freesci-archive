@@ -157,6 +157,10 @@ mix_subscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 	fs->scount = urat(0, 1);
 	fs->spd = urat(feed->conf.rate, self->dev->conf.rate);
 	fs->scount.den = fs->spd.den;
+	fs->ch_old.left = 0;
+	fs->ch_old.right = 0;
+	fs->ch_new.left = 0;
+	fs->ch_new.right = 0;
 	fs->mode = SFX_PCM_FEED_MODE_ALIVE;
 	/* If the feed can't provide us with timestamps, we don't need to wait for it to do so */
 	fs->pending_review = (feed->get_timestamp)? 1 : 0;
@@ -463,39 +467,39 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_samples)
 		if (samples_left > 0) {						\
 			if (bias) { /* unsigned data */					\
 				if (!use_16) {						\
-					new_left = (*lsrc) << 8;			\
-					new_right = (*rsrc) << 8;			\
+					c_new.left = (*lsrc) << 8;			\
+					c_new.right = (*rsrc) << 8;			\
 				} else {						\
 					if (conf.format & SFX_PCM_FORMAT_LE) {		\
-						new_left = lsrc[0] | lsrc[1] << 8;	\
-						new_right = rsrc[0] | rsrc[1] << 8;	\
+						c_new.left = lsrc[0] | lsrc[1] << 8;	\
+						c_new.right = rsrc[0] | rsrc[1] << 8;	\
 					} else {					\
-						new_left = lsrc[1] | lsrc[0] << 8;	\
-						new_right = rsrc[1] | rsrc[0] << 8;	\
+						c_new.left = lsrc[1] | lsrc[0] << 8;	\
+						c_new.right = rsrc[1] | rsrc[0] << 8;	\
 					}						\
 				}							\
 			} else { /* signed data */							\
 				if (!use_16) {								\
-					new_left = (*((signed char *)lsrc)) << 8;			\
-					new_right = (*((signed char *)rsrc)) << 8;			\
+					c_new.left = (*((signed char *)lsrc)) << 8;			\
+					c_new.right = (*((signed char *)rsrc)) << 8;			\
 				} else {								\
 					if (conf.format & SFX_PCM_FORMAT_LE) {				\
-						new_left = lsrc[0] | ((signed char *)lsrc)[1] << 8;	\
-						new_right = rsrc[0] | ((signed char *)rsrc)[1] << 8;	\
+						c_new.left = lsrc[0] | ((signed char *)lsrc)[1] << 8;	\
+						c_new.right = rsrc[0] | ((signed char *)rsrc)[1] << 8;	\
 					} else {							\
-						new_left = lsrc[1] | ((signed char *)lsrc)[0] << 8;	\
-						new_right = rsrc[1] | ((signed char *)rsrc)[0] << 8;	\
+						c_new.left = lsrc[1] | ((signed char *)lsrc)[0] << 8;	\
+						c_new.right = rsrc[1] | ((signed char *)rsrc)[0] << 8;	\
 					}								\
 				}									\
 			}										\
 										\
-			new_left -= bias;					\
-			new_right -= bias;					\
+			c_new.left -= bias;					\
+			c_new.right -= bias;					\
 										\
 			lsrc += sample_size;					\
 			rsrc += sample_size;					\
 		} else {							\
-			new_left = new_right = 0;				\
+			c_new.left = c_new.right = 0;				\
 			break;							\
 		}
 
@@ -524,12 +528,12 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 
 	/* The two most extreme source samples we consider for a
 	** destination sample  */
-	int old_left, old_right;
-	int new_right, new_left;
+	struct twochannel_data c_old = fs->ch_old;
+	struct twochannel_data c_new = fs->ch_new;
 
 	int samples_read;
 	int samples_left;
-
+	int write_offset; /* Iterator for translation */
 	int delay_samples = 0; /* Number of samples (dest buffer) at the beginning we skip */
 	/* First, compute the number of samples we want to retreive */
 	samples_nr = fs->spd.val * len;
@@ -601,6 +605,8 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 		len -= delay_samples;
 	}
 
+
+#if 0
 	/* Truncate end: */
 	if (samples_nr - delay_samples < samples_read) {
 		int end_samples = (samples_nr - delay_samples) - samples_read;
@@ -613,6 +619,7 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 
 		len -= end_samples;
 	}
+#endif
 
 #if (DEBUG >= 2)
 	sciprintf("[soft-mixer] Examining %s-%x (sample size %d); read %d/%d/%d, re-using %d samples\n",
@@ -630,7 +637,7 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 #if (DEBUG >= 2)
 	sciprintf("[soft-mixer] Stretching theoretical %d (physical %d) results to %d\n", samples_nr, samples_left, len);
 #endif
-	for (i = 0; i < len; i++) {
+	for (write_offset = 0; write_offset < len; write_offset++) {
 		int leftsum = 0; /* Sum of any complete samples we used */
 		int rightsum = 0;
 
@@ -647,27 +654,25 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 			fs->scount.nom -= fs->scount.den; /* Ensure fractional part < 1 */
 			++sample_steps;
 		}
+		if (sample_steps)
+			c_old = c_new;
 
-		if (sample_steps) {
-			old_left = new_left;
-			old_right = new_right;
-		}
-
-		if (i == 0) {
+#if 0
+		if (write_offset == 0) {
 			READ_NEW_VALUES();
 			--samples_left;
 #if (DEBUG >= 3)
-			sciprintf("[soft-mix] Initial read %d:%d\n", new_left, new_right);
+			sciprintf("[soft-mix] Initial read %d:%d\n", c_new.left, c_new.right);
 #endif
-			old_left = new_left;
-			old_right = new_right;
-		}
+			c_old = c_new;
+			}
+#endif
 
 		for (j = 0; j < sample_steps; j++) {
 			READ_NEW_VALUES();
 			--samples_left;
 #if (DEBUG >= 3)
-			sciprintf("[soft-mix] Step %d/%d made %d:%d\n", j, sample_steps, new_left, new_right);
+			sciprintf("[soft-mix] Step %d/%d made %d:%d\n", j, sample_steps, c_new.left, c_new.right);
 #endif
 
 			/* The last sample will be subject to the fractional
@@ -675,15 +680,15 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 			** later-- all others are added to (leftsum, rightsum).
 			*/
 			if (j+1 < sample_steps) {
-				leftsum += new_left;
-				rightsum += new_right;
+				leftsum += c_new.left;
+				rightsum += c_new.right;
 			}
 		}
 
-		left = new_left * fs->scount.nom
-			+ old_left * (fs->scount.den - fs->scount.nom);
-		right = new_right * fs->scount.nom
-			+ old_right * (fs->scount.den - fs->scount.nom);
+		left = c_new.left * fs->scount.nom
+			+ c_old.left * (fs->scount.den - fs->scount.nom);
+		right = c_new.right * fs->scount.nom
+			+ c_old.right * (fs->scount.den - fs->scount.nom);
 
 		/* Normalise */
 		left  /= fs->spd.den;
@@ -714,24 +719,33 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 		fs->scount.nom += fs->spd.nom; /* Count up fractional part */
 	}
 
+	fs->ch_old = c_old;
+	fs->ch_new = c_new;
+
+	/* If neccessary, zero out the rest */
+	if (write_offset < len && !add_result) {
+		memset(lchan, 0, sizeof(gint32) * (len - write_offset));
+		memset(rchan, 0, sizeof(gint32) * (len - write_offset));
+	}
+
 	/* Save whether we have a partial sample still stored */
-	fs->sample_bufstart = samples_left + ((fs->scount.nom != 0)? 1 : 0);
+	fs->sample_bufstart = samples_left;
+	if (samples_left) {
+		memmove(fs->buf,
+			fs->buf + (write_offset * f->sample_size),
+			samples_left * f->sample_size);
+	}
 #if (DEBUG >= 2)
 	sciprintf("[soft-mix] Leaving %d over\n", fs->sample_bufstart);
 #endif
 
-	if (samples_read < samples_nr) {
+	if (samples_read + delay_samples < samples_nr) {
 		if (f->get_timestamp) /* Can resume? */
 			fs->pending_review = 1;
 		else
 			fs->mode = SFX_PCM_FEED_MODE_DEAD; /* Done. */
 	}
 }
-
-long xlastsec = 0;
-long xlastusec = 0;
-long xsec = 0;
-long xusec = 0;
 
 static int
 mix_process_linear(sfx_pcm_mixer_t *self)

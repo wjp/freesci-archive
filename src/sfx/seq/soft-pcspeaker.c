@@ -96,7 +96,9 @@ sps_event(byte command, int argc, byte *argv)
 		break;
 
 	default:
+#if DEBUG
 		fprintf(stderr, "[SFX:PCM-PC] Unused MIDI command %02x %02x %02x\n", command, argc?argv[0] : 0, (argc > 1)? argv[1] : 0);
+#endif
 		break; /* ignore */
 	}
 
