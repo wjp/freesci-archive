@@ -52,10 +52,11 @@ sfx_driver_t sound_sdl;
 sound_eq_t inqueue; /* The in-event queue */
 sound_eq_t queue; /* The event queue */
 
-int* sdl_soundserver_init(void *args) {
+int sdl_soundserver_init(void *args) {
 
   state_t *s = (state_t *) args;
   sci0_soundserver();
+  return 0;
 
 }
 
@@ -150,7 +151,7 @@ sound_sdl_get_command(GTimeVal *wait_tvp)
 }
 
 void
-sound_sdl_get_data(void **data_ptr, int *size, int maxlen)
+sound_sdl_get_data(byte **data_ptr, int *size, int maxlen)
 {
   /* we ignore maxlen */
   while (sound_data == NULL) 
@@ -165,7 +166,7 @@ sound_sdl_get_data(void **data_ptr, int *size, int maxlen)
 }
 
 void
-sound_sdl_send_data(void *data_ptr, int maxsend) 
+sound_sdl_send_data(byte *data_ptr, int maxsend) 
 {
   while(sound_data != NULL) 
     SDL_CondWait(dataout_cond, data_mutex);

@@ -266,7 +266,7 @@ sound_null_get_command(GTimeVal *wait_tvp)
   FD_ZERO(&input_fds);
   FD_SET(x_fd_in, &input_fds);
   
-  if(select(x_fd_in + 1, &input_fds, NULL, NULL, wait_tvp)) {
+  if(select(x_fd_in + 1, &input_fds, NULL, NULL, (struct timeval *)wait_tvp)) {
     event = xalloc(sizeof(sound_event_t));
     if (read(x_fd_in, event, sizeof(sound_event_t)) != sizeof(sound_event_t)) {
       free(event);
@@ -279,7 +279,7 @@ sound_null_get_command(GTimeVal *wait_tvp)
 }
 
 void
-sound_null_get_data(void **data_ptr, int *size, int maxlen)
+sound_null_get_data(byte **data_ptr, int *size, int maxlen)
 {
   int len = 0;
   fd_set fds;
@@ -310,7 +310,7 @@ sound_null_get_data(void **data_ptr, int *size, int maxlen)
 }
 
 void
-sound_null_send_data(void *data_ptr, int maxsend) 
+sound_null_send_data(byte *data_ptr, int maxsend) 
 {
   int len;
   int fd = x_fd_out;

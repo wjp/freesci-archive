@@ -54,7 +54,7 @@ sci0_soundserver()
   int suspended = 0; /* Used to suspend the sound server */
   GTimeVal suspend_time; /* Time at which the sound server was suspended */
 
-  sci_get_current_time((struct timeval *)&last_played, NULL);
+  sci_get_current_time((GTimeVal *)&last_played);
 
   fprintf(ds, "NULL Sound server initialized\n");
 
@@ -84,13 +84,13 @@ sci0_soundserver()
     }
     song = song_lib_find_active(songlib, song);
     if (song == NULL) {
-      sci_get_current_time((struct timeval *)&last_played, NULL);
+      sci_get_current_time((GTimeVal *)&last_played);
       ticks = 60; /* Wait a second for new commands, then collect your new ticks here. */
     }
     if (ticks == 0) {
       int tempticks;
 
-      sci_get_current_time((struct timeval *)&last_played, NULL);
+      sci_get_current_time((GTimeVal *)&last_played);
 
       ticks = 0;
 
@@ -342,7 +342,7 @@ sci0_soundserver()
 	  if (debugging)
 	    fprintf(ds, "Received TEST signal. Responding...\n");
 
-	  sound_send_data(&i, sizeof(int));
+	  sound_send_data((byte *) &i, sizeof(int));
 
 	} break;
 
@@ -354,7 +354,7 @@ sci0_soundserver()
 	  int size;
 	  GTimeVal currtime;
 
-	  sound_get_data(&dirname,&size,event.value);
+	  sound_get_data((byte **)&dirname,&size,event.value);
 	  sci_get_current_time(&currtime);
 	  usecs = (currtime.tv_sec - last_played.tv_sec) * 1000000
 	    + (currtime.tv_usec - last_played.tv_usec);
@@ -364,7 +364,7 @@ sci0_soundserver()
 					ccc, usecs, ticks, fadeticks, master_volume);
 
 	  /* Return soundsrv_save_state()'s return value */
-	  sound_send_data(&success, sizeof(int));
+	  sound_send_data((byte *)&success, sizeof(int));
 	  free(dirname);
 	}
 	break;
@@ -375,7 +375,7 @@ sci0_soundserver()
 	  int usecs, secs;
 	  int len;
 
-	  sound_get_data(&dirname, &len, event.value);
+	  sound_get_data((byte **)&dirname, &len, event.value);
 
 	  sci_get_current_time(&last_played);
 
@@ -385,7 +385,7 @@ sci0_soundserver()
 	  last_played.tv_usec -= (usecs + secs * 1000000);
 
 	  /* Return return value */
-	  sound_send_data(&success, sizeof(int));
+	  sound_send_data((byte *)&success, sizeof(int));
 	  /* REPORT_STATUS(success); */
 
 	  free(dirname);
@@ -405,7 +405,7 @@ sci0_soundserver()
 
 	case SOUND_COMMAND_SUSPEND_SOUND: {
 
-	  sci_get_current_time((struct timeval *)&suspend_time, NULL);
+	  sci_get_current_time((GTimeVal *)&suspend_time);
 	  suspended = 1;
 
 	}
@@ -415,7 +415,7 @@ sci0_soundserver()
 
 	  GTimeVal resume_time;
 
-	  sci_get_current_time((struct timeval *)&resume_time, NULL);
+	  sci_get_current_time((GTimeVal *)&resume_time);
 	  /* Modify last_played relative to wakeup_time - suspend_time */
 	  last_played.tv_sec += resume_time.tv_sec - suspend_time.tv_sec - 1; 
 	  last_played.tv_usec += resume_time.tv_usec - suspend_time.tv_usec + 1000000;
@@ -467,7 +467,7 @@ sci0_soundserver()
 	_exit(1); /* Die semi-ungracefully **
     } */
 
-      sci_get_current_time((struct timeval *)&ctime, NULL);
+      sci_get_current_time((GTimeVal *)&ctime);
       
     } while (suspended
 	     || (wakeup_time.tv_sec > ctime.tv_sec)
@@ -572,11 +572,11 @@ sound_get_command(GTimeVal *wait_tvp) {
   return soundserver->get_command(wait_tvp);
 }
 
-void sound_send_data(void *data_ptr, int maxsend) {
+int sound_send_data(byte *data_ptr, int maxsend) {
   return soundserver->send_data(data_ptr, maxsend);
 }
 
-void sound_get_data(void **data_ptr, int *size, int maxlen){
+int sound_get_data(byte **data_ptr, int *size, int maxlen){
   return soundserver->get_data(data_ptr, size, maxlen);
 }
 
