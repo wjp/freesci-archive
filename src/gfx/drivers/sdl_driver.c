@@ -439,8 +439,8 @@ sdl_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
   Uint32 scolor;
   int xfact = (line_mode == GFX_LINE_MODE_FINE)? 1: XFACT;
   int yfact = (line_mode == GFX_LINE_MODE_FINE)? 1: YFACT;
-  int xsize = 320 * XFACT;
-  int ysize = 200 * YFACT;
+  int xsize = S->visual[1]->w * XFACT;
+  int ysize = S->visual[1]->h * YFACT;
   
   if (color.mask & GFX_MASK_VISUAL) {
     int xc, yc;
@@ -471,8 +471,8 @@ sdl_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 	  newline.xl = xsize;
 	if (newline.y > ysize)
 	  newline.y = ysize;
-	if (newline.y > ysize)
-	  newline.y = ysize;
+	if (newline.yl > ysize)
+	  newline.yl = ysize;
 
 	/*	fprintf(stderr, "draw %d %d %d %d %08x\n", newline.x, newline.y, newline.xl, newline.yl, scolor); */
 
