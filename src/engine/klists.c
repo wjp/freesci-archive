@@ -576,4 +576,6 @@ kSort(state_t *s, int funct_nr, int argc, reg_t *argv)
 					 temparray[i].value);
 		_k_add_to_end(s, output_data, node);
 	}
+
+	free(temparray);
 }

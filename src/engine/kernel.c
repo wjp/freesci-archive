@@ -205,7 +205,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*17*/	{KF_NEW, "DrawControl", {new:{kDrawControl, "o"}}},
 /*18*/	{KF_NEW, "HiliteControl", {new:{kHiliteControl, "o"}}},
 /*19*/	{KF_NEW, "EditControl", {new:{kEditControl, "ZoZo"}}},
-/*1a*/	{KF_NEW, "TextSize", {new:{kTextSize, "rrii*"}}},
+/*1a*/	{KF_NEW, "TextSize", {new:{kTextSize, "rrii*r*"}}},
 /*1b*/	{KF_NEW, "Display", {new:{kDisplay, ".i.*"}}},
 /*1c*/	{KF_OLD, "GetEvent", {old:kGetEvent}},
 /*1d*/	{KF_OLD, "GlobalToLocal", {old:kGlobalToLocal}},
