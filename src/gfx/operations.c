@@ -850,7 +850,6 @@ static int
 line_clip(rect_t *line, rect_t clip)
 /* returns 1 if nothing is left, or 0 if part of the line is in the clip window */
 {
-fprintf(stderr,"lclipping %d,%d,%d,%d against %d,%d,%d,%d\n", GFX_PRINT_RECT(*line), GFX_PRINT_RECT(clip));
 	if (!line->xl) {/* vbar */
 		if (line->x < clip.x || line->x >= (clip.x + clip.xl))
 			return 1;
@@ -993,6 +992,10 @@ _gfxop_draw_line_clipped(gfx_state_t *state, rect_t line, gfx_color_t color, gfx
 			return simulate_stippled_line_draw(state->driver, skipone, line, color, line_mode);
 	}
 
+	if (line_mode == GFX_LINE_MODE_FINE
+	    && !(state->driver->capabilities & GFX_CAPABILITY_FINE_LINES))
+		line_mode = GFX_LINE_MODE_FAST;
+
 	if ((retval = state->driver->draw_line(state->driver, line, color, line_mode, line_style))) {
 		GFXERROR("Failed to draw line (%d,%d)+(%d,%d)\n", line.x, line.y, line.xl, line.yl);
 		return retval;
@@ -1016,8 +1019,10 @@ gfxop_draw_line(gfx_state_t *state, rect_t line, gfx_color_t color, gfx_line_mod
 
 	_gfxop_scale_rect(&line, state->driver->mode);
 
-	line.x += xfact >> 1;
-	line.y += yfact >> 1;
+	if (line_mode == GFX_LINE_MODE_FINE) {
+		line.x += xfact >> 1;
+		line.y += yfact >> 1;
+	}
 
 	return _gfxop_draw_line_clipped(state, line, color, line_mode, line_style);
 }
@@ -1044,7 +1049,8 @@ gfxop_draw_rectangle(gfx_state_t *state, rect_t rect, gfx_color_t color, gfx_lin
 		return GFX_ERROR;
 	}
 
-	if (line_mode == GFX_LINE_MODE_FINE) {
+	if (line_mode == GFX_LINE_MODE_FINE
+	    && state->driver->capabilities & GFX_CAPABILITY_FINE_LINES) {
 		xunit = yunit = 1;
 		xl = 1 + (rect.xl - 1) * xfact;
 		yl = 1 + (rect.yl - 1) * yfact;
@@ -1055,8 +1061,8 @@ gfxop_draw_rectangle(gfx_state_t *state, rect_t rect, gfx_color_t color, gfx_lin
 		yunit = yfact;
 		xl = rect.xl * xfact;
 		yl = rect.yl * yfact;
-		line.x = rect.x * xfact + (xfact >> 1);
-		line.y = rect.y * yfact + (yfact >> 1);
+		line.x = rect.x * xfact;
+		line.y = rect.y * yfact;
 	}
 
 	ystart = line.y;

@@ -40,7 +40,7 @@
 #include <ctype.h>
 
 
-#define GGI_DRIVER_VERSION "0.3"
+#define GGI_DRIVER_VERSION "0.4"
 
 #define GFX_GGI_DEBUG
 
@@ -459,8 +459,8 @@ ggi_draw_line(gfx_driver_t *drv, rect_t line, gfx_color_t color,
 		xw = MODE->xfact, yw = MODE->yfact;
 	}
 
-	rx = line.x - (xw >> 1);
-	ry = line.y - (yw >> 1);
+	rx = line.x;
+	ry = line.y;
 	endx = rx + line.xl;
 	endy = ry + line.yl;
 
@@ -1008,7 +1008,7 @@ gfx_driver_t gfx_driver_ggi = {
 	SCI_GFX_DRIVER_VERSION,
 	NULL,
 	0,0,
-	GFX_CAPABILITY_PIXMAP_GRABBING,
+	GFX_CAPABILITY_PIXMAP_GRABBING | GFX_CAPABILITY_FINE_LINES,
 	GFX_DEBUG_POINTER | GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC,
 	ggi_set_param,
 	ggi_init_specific,

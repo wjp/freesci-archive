@@ -633,6 +633,12 @@ xlib_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 		(drv->mode->xfact + drv->mode->yfact) >> 1;
 
 	if (color.mask & GFX_MASK_VISUAL) {
+		int xmod = drv->mode->xfact >> 1;
+		int ymod = drv->mode->yfact >> 1;
+
+		if (line_mode == GFX_LINE_MODE_FINE)
+			xmod = ymod = 0;
+
 		S->gc_values.foreground = xlib_map_color(drv, color);
 		S->gc_values.line_width = linewidth;
 		S->gc_values.line_style = (line_style == GFX_LINE_STYLE_NORMAL)?
@@ -641,8 +647,9 @@ xlib_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 
 		XChangeGC(S->display, S->gc, GCLineWidth | GCLineStyle | GCForeground | GCCapStyle, &(S->gc_values));
 
-		XASS(XDrawLine(S->display, S->visual[1], S->gc, line.x, line.y,
-			       line.x + line.xl, line.y + line.yl));
+		XASS(XDrawLine(S->display, S->visual[1], S->gc, line.x + xmod,
+			       line.y + ymod, line.x + line.xl + xmod,
+			       line.y + line.yl + ymod));
 	}
 
 	if (color.mask & GFX_MASK_PRIORITY) {
@@ -653,7 +660,7 @@ xlib_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 		newline.yl = line.yl;
 
 		linewidth--;
-		for (xc = -linewidth; xc <= linewidth; xc++)
+		for (xc = 0; xc <= linewidth; xc++)
 			for (yc = -linewidth; yc <= linewidth; yc++) {
 				newline.x = line.x + xc;
 				newline.y = line.y + yc;
@@ -1268,13 +1275,14 @@ xlib_usec_sleep(struct _gfx_driver *drv, int usecs)
 gfx_driver_t
 gfx_driver_xlib = {
 	"xlib",
-	"0.1",
+	"0.2",
 	SCI_GFX_DRIVER_MAGIC,
 	SCI_GFX_DRIVER_VERSION,
 	NULL,
 	0, 0,
-	GFX_CAPABILITY_STIPPLED_LINES | GFX_CAPABILITY_MOUSE_SUPPORT | GFX_CAPABILITY_MOUSE_POINTER |
-	GFX_CAPABILITY_PIXMAP_REGISTRY | GFX_CAPABILITY_PIXMAP_GRABBING,
+	GFX_CAPABILITY_STIPPLED_LINES | GFX_CAPABILITY_MOUSE_SUPPORT
+	| GFX_CAPABILITY_MOUSE_POINTER | GFX_CAPABILITY_PIXMAP_REGISTRY
+	| GFX_CAPABILITY_PIXMAP_GRABBING | GFX_CAPABILITY_FINE_LINES,
 	0/*GFX_DEBUG_POINTER | GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC*/,
 	xlib_set_parameter,
 	xlib_init_specific,

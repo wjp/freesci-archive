@@ -49,6 +49,7 @@ typedef enum {
 #define GFX_CAPABILITY_STIPPLED_LINES (1<<6)
 #define GFX_CAPABILITY_MOUSE_SUPPORT (1<<7)
 #define GFX_CAPABILITY_POINTER_PIXMAP_REGISTRY (1<<8)
+#define GFX_CAPABILITY_FINE_LINES (1<<9)
 
 #define GFX_DEBUG_POINTER (1<<0)
 #define GFX_DEBUG_UPDATES (1<<1)
@@ -137,6 +138,8 @@ typedef struct _gfx_driver { /* Graphics driver */
   **    input. Note that this flag may be disabled by external code after
   **    initialization time, if no support for mouse pointer /drawing/ is
   **    available.
+  ** GFX_CAPABILITY_FINE_LINES: Should be set IFF the driver supports drawing
+  **    fine (width 1) lines
   */
 
   int debug_flags; /* Driver debug flags */
@@ -210,6 +213,8 @@ typedef struct _gfx_driver { /* Graphics driver */
   ** Note that color.priority is relevant and must be drawn if
   ** (color.mask & GFX_MASK_PRIORITY).
   ** Support for line modes other than GFX_LINE_MODE_FAST is optional.
+  ** For non-fine lines, the coordinates provided describe the upper left
+  ** corner of the pixels of the line to draw.
   ** line_style support is optional, if GFX_CAPABILITY_STIPPLED_LINES is not
   ** set.
   */

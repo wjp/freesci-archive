@@ -449,8 +449,8 @@ sdl_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
     newline.xl = line.x;
     newline.yl = line.y;
 
-    for (xc = -(xfact >> 1); xc <= ((xfact+1) >> 1); xc++)
-      for (yc = -(yfact >> 1); yc <= ((yfact+1) >> 1); yc++) {
+    for (xc = 0; xc < xfact; xc++)
+      for (yc = 0; yc < yfact; yc++) {
 	newline.x = line.x + xc;
 	newline.y = line.y + yc;
 	newline.xl = line.x + line.xl + xc;
@@ -1108,13 +1108,14 @@ sdl_usec_sleep(struct _gfx_driver *drv, int usecs)
 gfx_driver_t
 gfx_driver_sdl = {
 	"sdl",
-	"0.1",
+	"0.2",
 	SCI_GFX_DRIVER_MAGIC,
 	SCI_GFX_DRIVER_VERSION,
 	NULL,
 	0, 0,
-	GFX_CAPABILITY_MOUSE_SUPPORT | GFX_CAPABILITY_MOUSE_POINTER |
-	GFX_CAPABILITY_PIXMAP_REGISTRY | GFX_CAPABILITY_PIXMAP_GRABBING,
+	GFX_CAPABILITY_MOUSE_SUPPORT | GFX_CAPABILITY_MOUSE_POINTER
+	| GFX_CAPABILITY_PIXMAP_REGISTRY | GFX_CAPABILITY_PIXMAP_GRABBING
+	| GFX_CAPABILITY_FINE_LINES,
 	0, /*GFX_DEBUG_POINTER | GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC, */
 	sdl_set_parameter,
 	sdl_init_specific,

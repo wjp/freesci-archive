@@ -1,4 +1,11 @@
+2001-07-27  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/gfx_driver.h: Added FINE_LINE capability flag, changed
+	and clarified draw_line semantice for non-fine lines
+
 2001-07-26  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/operations.c (line_check_bar): Clipped against size+1
 
 	* src/engine/kgraphics.c (_k_draw_control): Text controls now derive
 	their alignment from their 'mode' selector
