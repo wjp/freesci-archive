@@ -1004,6 +1004,7 @@ YY_RULE_SETUP
 	memcpy(&(conf[cur_section]), &(conf[0]), sizeof(config_entry_t));
 	if (conf[0].console_log)
 		conf[cur_section].console_log = strdup (conf[0].console_log);
+
 	/* Copy the gfx system init strings */
 	if (conf[cur_section].gfx_config) {
 		conf[cur_section].gfx_config = malloc(sizeof(gfx_option_t *) * conf[0].gfx_config_nr);
@@ -1034,7 +1035,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 182 "config.l"
+#line 183 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1046,7 +1047,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 191 "config.l"
+#line 192 "config.l"
 { /* Deprecated: For backward compatibility */
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1058,7 +1059,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 200 "config.l"
+#line 201 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1070,7 +1071,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 209 "config.l"
+#line 210 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1082,7 +1083,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 218 "config.l"
+#line 219 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1094,7 +1095,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 227 "config.l"
+#line 228 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1106,7 +1107,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 236 "config.l"
+#line 237 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1118,7 +1119,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 245 "config.l"
+#line 246 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1130,7 +1131,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 254 "config.l"
+#line 255 "config.l"
 {
 	int val;
 	yytext = strchr(yytext, '=') + 1;
@@ -1146,7 +1147,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 267 "config.l"
+#line 268 "config.l"
 { /***** End of graphics *****/
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1159,7 +1160,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 277 "config.l"
+#line 278 "config.l"
 {
 	yytext = strchr (yytext, '=') + 1;
 
@@ -1174,7 +1175,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 289 "config.l"
+#line 290 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1187,7 +1188,7 @@ if (cur_section) {
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 300 "config.l"
+#line 301 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1199,7 +1200,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 309 "config.l"
+#line 310 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1211,7 +1212,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 318 "config.l"
+#line 319 "config.l"
 {
         char *p=yytext;
         char *p2;
@@ -1254,27 +1255,32 @@ case 17:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 358 "config.l"
+#line 359 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 360 "config.l"
+#line 361 "config.l"
 /* Eat whitespace */
+	YY_BREAK
+case YY_STATE_EOF(INITIAL):
+#line 363 "config.l"
+{
+        yy_delete_buffer( YY_CURRENT_BUFFER );
+        yyterminate();
+}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 362 "config.l"
+#line 368 "config.l"
 printf("Unrecognized option: %s\n", yytext);
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 364 "config.l"
+#line 370 "config.l"
 ECHO;
 	YY_BREAK
-#line 1276 "lex.yy.c"
-case YY_STATE_EOF(INITIAL):
-	yyterminate();
+#line 1284 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2158,7 +2164,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 364 "config.l"
+#line 370 "config.l"
 
 
 int
@@ -2276,6 +2282,9 @@ config_free(config_entry_t **conf, int entries)
 {
 	int i;
 
+	if ((*conf)->console_log)
+		free((*conf)->console_log);
+
 	for (i = 1; i < entries; i++) {
 		free ((*conf)[i].name);
 		free ((*conf)[i].work_dir);
@@ -2283,6 +2292,7 @@ config_free(config_entry_t **conf, int entries)
 			free ((*conf)[i].resource_dir);
 		if ((*conf)[i].console_log)
 			free((*conf)[i].console_log);
+
 		if ((*conf)[i].gfx_config) {
 			int j;
 

@@ -32,6 +32,9 @@
 #  include <sys/types.h>
 #  include <dirent.h>
 #endif
+#ifdef _WIN32
+#  include <io.h>
+#endif
 
 #if defined(WIN32) && defined(_MSC_VER)
 #  define TYPE_16 short

@@ -82,18 +82,21 @@ cmd_param_t *cmd_params;
 void
 _cmd_exit(void)
 {
-  if (_cmd_commands)
-    free (_cmd_commands);
+	if (_cmd_commands)
+		free (_cmd_commands);
+
+	if (_cmd_vars)
+		free (_cmd_vars);
 }
 
 void *_xrealloc(void *oldp, size_t size)
 {
-  void *retval = (void *) realloc(oldp, size);
-  if (!retval) {
-    fprintf(stderr,"Out of memory!\n");
-    exit(1);
-  }
-  return retval;
+	void *retval = (void *) realloc(oldp, size);
+	if (!retval) {
+		fprintf(stderr,"Out of memory!\n");
+		exit(1);
+	}
+	return retval;
 }
 
 static int

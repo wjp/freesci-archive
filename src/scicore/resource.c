@@ -206,7 +206,6 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 		if (resourceFileCounter > 0 && resourceFile > 0) {
 			int decomperr;
 			resource = malloc(sizeof(resource_t));
-
 			while (!(decomperr = (*decompress)(resource, resourceFile))) {
 
 				_addResource(&base, resource, 0);
@@ -292,10 +291,10 @@ void killlist(struct singly_linked_resources_struct *rs)
 {
 	if (rs->next) {
 		killlist(rs->next);
-		free(rs->resource);
 		free(rs->next);
 		rs->next = NULL;
 	}
+	free(rs->resource);
 }
 
 
@@ -371,6 +370,7 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 						newrsc->length = filestat.st_size - 2;
 						newrsc->id = restype << 11 | resnumber;
 						newrsc->number = resnumber;
+						newrsc->status = SCI_STATUS_OK;
 						newrsc->type = restype;
 
 						newrsc->data = malloc(newrsc->length);

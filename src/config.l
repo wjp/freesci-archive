@@ -151,6 +151,7 @@ NUMTOKEN {DIGIT}+
 	memcpy(&(conf[cur_section]), &(conf[0]), sizeof(config_entry_t));
 	if (conf[0].console_log)
 		conf[cur_section].console_log = strdup (conf[0].console_log);
+
 	/* Copy the gfx system init strings */
 	if (conf[cur_section].gfx_config) {
 		conf[cur_section].gfx_config = malloc(sizeof(gfx_option_t *) * conf[0].gfx_config_nr);
@@ -359,6 +360,11 @@ debug_mode[[:blank:]]*"="[::blank:]]*.+  {
 
 [[:blank:]\n]+ /* Eat whitespace */
 
+<<EOF>> {
+        yy_delete_buffer( YY_CURRENT_BUFFER );
+        yyterminate();
+}
+
 .* printf("Unrecognized option: %s\n", yytext);
 
 %%
@@ -478,6 +484,9 @@ config_free(config_entry_t **conf, int entries)
 {
 	int i;
 
+	if ((*conf)->console_log)
+		free((*conf)->console_log);
+
 	for (i = 1; i < entries; i++) {
 		free ((*conf)[i].name);
 		free ((*conf)[i].work_dir);
@@ -485,6 +494,7 @@ config_free(config_entry_t **conf, int entries)
 			free ((*conf)[i].resource_dir);
 		if ((*conf)[i].console_log)
 			free((*conf)[i].console_log);
+
 		if ((*conf)[i].gfx_config) {
 			int j;
 

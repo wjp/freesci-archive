@@ -1,3 +1,8 @@
+2001-01-20  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/gfx_resource.c (gfxr_free_view): Fixed memory leak
+	when freeing views
+
 2001-01-19  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/scicore/tools.c (sci_find_next): Implemented find_first/

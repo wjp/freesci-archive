@@ -28,9 +28,6 @@
 
 
 #include <resource.h>
-#if 0
-#include <zlib.h>
-#endif
 
 void decryptinit3();
 int decrypt3(guint8* dest, guint8* src, int length, int complength);

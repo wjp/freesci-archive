@@ -246,25 +246,25 @@ sci_init_dir(sci_dir_t *dir)
 char *
 sci_find_first(sci_dir_t *dir, char *mask)
 {
-	dir->search = findfirst(mask, &(dir->fileinfo));
+        dir->search = _findfirst(mask, &(dir->fileinfo));
 
-	if (dir->search != -1)
-		return dir->fileinfo.name;
-	else
-		return NULL;
+        if (dir->search != -1)
+                return dir->fileinfo.name;
+        else
+                return NULL;
 }
 
 char *
 sci_find_next(sci_dir_t *dir)
 {
-	if (dir->search == -1)
-		return NULL;
+        if (dir->search == -1)
+                return NULL;
 
-	if (_findnext(dir->search, &(dir->fileinfo)) < 0) {
-		_findclose(dir->fileinfo);
-		dir->search = -1;
-		return NULL;
-	} else return dir->fileinfo.name;
+        if (_findnext(dir->search, &(dir->fileinfo)) < 0) {
+                _findclose(dir->search);
+                dir->search = -1;
+                return NULL;
+        } else return dir->fileinfo.name;
 }
 
 void

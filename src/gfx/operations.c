@@ -588,6 +588,17 @@ gfxop_exit(gfx_state_t *state)
 {
 	BASIC_CHECKS(GFX_ERROR);
 	gfxr_free_resource_manager(state->driver, state->resstate);
+
+	if (state->control_map) {
+		gfx_free_pixmap(state->driver, state->control_map);
+		state->control_map = NULL;
+	}
+
+	if (state->mouse_pointer_bg) {
+		gfx_free_pixmap(state->driver, state->mouse_pointer_bg);
+		state->mouse_pointer_bg = NULL;
+	}
+
 	state->driver->exit(state->driver);
 	return GFX_OK;
 }

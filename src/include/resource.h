@@ -59,7 +59,8 @@
 #  undef inline /* just to be sure it is not defined */
 #  define inline __inline
 #  define strcasecmp stricmp
-#  define strcasecmp stricmp
+#  define strncasecmp strnicmp
+#  define vsnprintf _vsnprintf
 #else /* !_WIN32 */
 #  define DLLEXTERN
 #endif /* !_WIN32 */

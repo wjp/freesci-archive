@@ -67,6 +67,7 @@ gfxr_free_view(gfx_driver_t *driver, gfxr_view_t *view)
 
 		free(view->loops);
 	}
+	free(view);
 }
 
 
