@@ -139,7 +139,7 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
   length = data_length;
 
   type = midi_mt32_patch001_type(data, length);
-  printf("MT-32: Programming Roland MT-32 with patch.001 (v%i)\n", type);
+  printf("MT-32: Programming Roland MT-32 with patch.001 (v%i) %d bytes\n", type, length);
 
   if (type == 0) {
     /* Display MT-32 initialization message */
@@ -202,6 +202,10 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
 	  midi_mt32_volume(data[0x3f]); */
     return 0;
   } else if (type == 1) {
+    printf("MT-32: Displaying Text: \"%.20s\"\n", data + 20);
+    midi_mt32_poke(0x200000, data + 20, 20);
+    midi_mt32_sysex_delay();
+    printf("MT-32: Loading SyEx bank\n");
     midi_mt32_write_block(data + 1155, (data[1154] << 8) + data[1153]);
     memcpy(patch_map, data, 128);
     memcpy(keyshift, data + 128, 128);
@@ -211,7 +215,13 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
       memcpy(velocity_map[i], data + 641 + i * 128, 128);
     memcpy(rhythmkey_map, data + 384, 128);
     memcpy(mt32_reverb,data+ 0x4c, 3 * 11);
-    midi_mt32_volume(data[0x3f]);
+
+    /*    printf("MT-32: Setting default volume\n");
+	  midi_mt32_volume(data[0x3f]); */
+
+    printf("MT-32: Displaying Text: \"%.20s\"\n", data);
+    midi_mt32_poke(0x200000, data, 20);
+    midi_mt32_sysex_delay();
     return 0;
   }
   return -1;
@@ -250,6 +260,9 @@ int midi_mt32_allstop(void)
 
 int midi_mt32_reverb(short param)
 {
+  if (data == NULL) /* no patch data == no reverb */
+    return 0;
+
   if (param == -1)
     param = default_reverb;
 
@@ -379,6 +392,9 @@ int midi_mt32_write_block(guint8 *data, unsigned int count)
 
 int midi_mt32_patch001_type(guint8 *data, unsigned int length)
 {
+  if (data == NULL)  /* kq4 doesn't have a patch */
+    return -1;
+
   /* length test */
   if (length < 1155)
     return 0;
