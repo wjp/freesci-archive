@@ -61,7 +61,7 @@ void
 libggi_redraw (struct _state *s, int command, int x, int y, int xl, int yl);
 
 void
-libggi_wait (long usec);
+libggi_wait (struct _state* s, long usec);
 
 int
 initInputGII(void);

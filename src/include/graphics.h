@@ -166,7 +166,7 @@ typedef struct
   /* Suspends execution for the specified amount of microseconds.
   ** Parameters: usec: time to wait in microseconds
   */
-  void (*Wait) (long usec);
+  void (*Wait) (struct _state* s, long usec);
 
   /* Returns the next SCI_EV_* event
   ** Parameters: (struct state *) Current game state

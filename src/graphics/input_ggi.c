@@ -39,8 +39,9 @@ struct timeval _sci_ggi_redraw_loopt, _sci_ggi_loopt;
 /* timer variables */
 
 int _sci_ggi_double_visual;
+#if 0
 ggi_visual_t _sci_ggi_last_visual;
-
+#endif
 
 #define SCI_TIMEVAL_ADD(timev, addusec)  \
   { timev.tv_usec += addusec;              \
@@ -61,27 +62,29 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
   sci_event_t event_redraw, event_loop;
   struct timeval temptime = {0,0};
   struct timeval curtime;
-
+  
   event_loop.type = SCI_EVT_CLOCK;
   event_redraw.type = SCI_EVT_REDRAW;
-
+  
   if(pending!=-1)
-  {
-  	sci_event_t r;
-  	r.type=SCI_EVT_KEYBOARD;
-  	r.data=pending;
-  	pending=-1;
-  	r.buckybits=buckybits;
-  	return r;
-  }
-
+    {
+      sci_event_t r;
+      r.type=SCI_EVT_KEYBOARD;
+      r.data=pending;
+      pending=-1;
+      r.buckybits=buckybits;
+      return r;
+    }
+  
   while (1) {
-
-    if (ggiEventPoll(_sci_ggi_last_visual, emAll, &temptime)) {
+    #if 0
+    printf("ggiEP %p\n", _sci_ggi_last_visual);
+    #endif
+    if (ggiEventPoll(s->graphics.ggi_visual, emAll, &temptime)) {
       ggi_event event;
       sci_event_t retval;
       
-      ggiEventRead(_sci_ggi_last_visual, &event, emAll);
+      ggiEventRead(s->graphics.ggi_visual, &event, emAll);
       switch (event.any.type) {
       case evKeyPress:
       case evKeyRepeat:
@@ -153,17 +156,17 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
         return retval; 
       
       case evPtrAbsolute:
-	sci_pointer_x = event.pmove.x;
-	sci_pointer_y = event.pmove.y;
+	s->pointer_x = event.pmove.x;
+	s->pointer_y = event.pmove.y;
 	if (_sci_ggi_double_visual) {
-	  sci_pointer_x >>= 1;
-	  sci_pointer_y >>= 1;
+	  s->pointer_x >>= 1;
+	  s->pointer_y >>= 1;
 	}
 	continue;
 	
       case evPtrRelative:
-	sci_pointer_x += event.pmove.x;
-	sci_pointer_y += event.pmove.y;
+	s->pointer_x += event.pmove.x;
+	s->pointer_y += event.pmove.y;
 	/* FIXME: This may make the pointer too fast on high res! */
 	continue;
       }
@@ -310,17 +313,17 @@ sci_event_t _sci_gii_input_handler(state_t* s)
         return retval; 
       
       case evPtrAbsolute:
-	sci_pointer_x = event.pmove.x;
-	sci_pointer_y = event.pmove.y;
+	s->pointer_x = event.pmove.x;
+	s->pointer_y = event.pmove.y;
 	if (_sci_ggi_double_visual) {
-	  sci_pointer_x >>= 1;
-	  sci_pointer_y >>= 1;
+	  s->pointer_x >>= 1;
+	  s->pointer_y >>= 1;
 	}
 	continue;
 	
       case evPtrRelative:
-	sci_pointer_x += event.pmove.x;
-	sci_pointer_y += event.pmove.y;
+	s->pointer_x += event.pmove.x;
+	s->pointer_y += event.pmove.y;
 	/* FIXME: This may make the pointer too fast on high res! */
 	continue;
       }

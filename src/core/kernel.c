@@ -1519,10 +1519,10 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
     break;
 
   default:
-
+    
     CHECK_THIS_KERNEL_FUNCTION;
     SCIkdebug(SCIkSTUB, "Unhandled Graph() operation %04x\n", PARAM(0));
-
+    
   }
 }
 
@@ -1544,23 +1544,10 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int mask = UPARAM(0);
   heap_ptr obj = UPARAM(1);
   sci_event_t e;
+  int oldx, oldy;
   
   CHECK_THIS_KERNEL_FUNCTION;
   SCIkdebug(SCIkSTUB, "kGetEvent: Stub\n");
-  
-  /*If there is a mouse, and it has been moved, then the global pointer
-    position is updated, the pointer is redrawn, and the x and y selectors are
-    set to their new values*/
-  if (s->have_mouse_flag) {
-    if(s->pointer_x!=sci_pointer_x || s->pointer_y!=s->pointer_y)
-      {
-	s->pointer_x = sci_pointer_x;
-	s->pointer_y = sci_pointer_y;
-	s->gfx_driver->Redraw(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0);
-	PUT_SELECTOR(obj, x, s->pointer_x);
-	PUT_SELECTOR(obj, y, s->pointer_y);
-      }
-  }
   
   /*If there's a simkey pending, and the game wants a keyboard event, use the
    *simkey instead of a normal event*/
@@ -1569,12 +1556,21 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
     s->acc=1;
     PUT_SELECTOR(obj, message, _kdebug_cheap_event_hack);
     PUT_SELECTOR(obj, modifiers, SCI_EVM_NUMLOCK); /*Numlock on*/
+    PUT_SELECTOR(obj, x, s->pointer_x);
+    PUT_SELECTOR(obj, y, s->pointer_y);
     _kdebug_cheap_event_hack = 0;
     return;
   }
   
-
+  oldx=s->pointer_x;
+  oldy=s->pointer_y;
   e=getEvent(s);
+
+  PUT_SELECTOR(obj, x, s->pointer_x);
+  PUT_SELECTOR(obj, y, s->pointer_y);
+  if((oldx!=s->pointer_x || oldy!=s->pointer_y) && s->have_mouse_flag)
+    s->gfx_driver->Redraw(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0, 0, 0, 0);
+  
   switch(e.type)
     {
     case SCI_EVT_KEYBOARD:
@@ -1586,7 +1582,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if ((e.buckybits & SCI_EVM_LSHIFT) && (e.buckybits & SCI_EVM_RSHIFT)
 	    && (e.data == '-'))
 	  script_debug_flag = 1; /* Enter debug mode */
-
+	
       } break;
     case SCI_EVT_CLOCK:
       {
@@ -1613,12 +1609,12 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	    PUT_SELECTOR(obj, modifiers, e.buckybits|extra_bits);
 	    s->acc=1;
 	  }
-	  return;
-	} break;
-      default:
-	{
-	  s->acc = 0; /* Unknown event */
-	}
+	return;
+      } break;
+    default:
+      {
+	s->acc = 0; /* Unknown event */
+      }
     }
 }
 
@@ -1986,7 +1982,7 @@ kWait(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   memcpy(&(s->last_wait_time), &time, sizeof(GTimeVal));
 
-  (*s->gfx_driver->Wait)(SleepTime * 1000000 / 60);
+  (*s->gfx_driver->Wait)(s, SleepTime * 1000000 / 60);
 }
 
 
@@ -2441,7 +2437,7 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   if (s->debug_mode & (1 << SCIkBASESETTER_NR)) {
     graph_clear_box(s, xbase, ybase + 10, xend-xbase+1, yend-ybase+1, VIEW_PRIORITY(y));
-    (*s->gfx_driver->Wait)(100000);
+    (*s->gfx_driver->Wait)(s, 100000);
   }
 
 } /* kBaseSetter */
@@ -3277,7 +3273,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 0; i < 160; i++) {
 	graph_clear_box(s, i, 10, 1, 190, 0);
 	graph_clear_box(s, 319-i, 10, 1, 190, 0);
-	(*s->gfx_driver->Wait)(s->animation_delay);
+	(*s->gfx_driver->Wait)(s, s->animation_delay);
 	process_sound_events(s);
       }
 
@@ -3286,7 +3282,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 159; i >= 0; i--) {
 	graph_update_box(s, i, 10, 1, 190);
 	graph_update_box(s, 319-i, 10, 1, 190);
-	(*s->gfx_driver->Wait)(s->animation_delay);
+	(*s->gfx_driver->Wait)(s, s->animation_delay);
 	process_sound_events(s);
       }
       break;
@@ -3297,7 +3293,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 0; i < 95; i++) {
 	graph_clear_box(s, 0, i + 10, 320, 1, 0);
 	graph_clear_box(s, 0, 199 - i, 320, 1, 0);
-	(*s->gfx_driver->Wait)(2 * s->animation_delay);
+	(*s->gfx_driver->Wait)(s, 2 * s->animation_delay);
 	process_sound_events(s);
       }
 
@@ -3306,7 +3302,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 94; i >= 0; i--) {
 	graph_update_box(s, 0, i + 10, 320, 1);
 	graph_update_box(s, 0, 199 - i, 320, 1);
-	(*s->gfx_driver->Wait)(2 * s->animation_delay);
+	(*s->gfx_driver->Wait)(s, 2 * s->animation_delay);
 	process_sound_events(s);
       }
       break;
@@ -3316,14 +3312,14 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for(i = 0; i < 320; i++) {
 	graph_clear_box(s, i, 10, 1, 190, 0);
-	(*s->gfx_driver->Wait)(s->animation_delay / 2);
+	(*s->gfx_driver->Wait)(s, s->animation_delay / 2);
 	process_sound_events(s);
       }
 
     case K_ANIMATE_RIGHT_OPEN :
       for(i = 319; i >= 0; i--) {
 	graph_update_box(s, i, 10, 1, 190);
-	(*s->gfx_driver->Wait)(s->animation_delay / 2);
+	(*s->gfx_driver->Wait)(s, s->animation_delay / 2);
 	process_sound_events(s);
       }
       break;
@@ -3333,7 +3329,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for(i = 319; i >= 0; i--) {
 	graph_clear_box(s, i, 10, 1, 190, 0);
-	(*s->gfx_driver->Wait)(s->animation_delay / 2);
+	(*s->gfx_driver->Wait)(s, s->animation_delay / 2);
 	process_sound_events(s);
       }
 
@@ -3341,7 +3337,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for(i = 0; i < 320; i++) {
 	graph_update_box(s, i, 10, 1, 190);
-	(*s->gfx_driver->Wait)(s->animation_delay / 2);
+	(*s->gfx_driver->Wait)(s, s->animation_delay / 2);
 	process_sound_events(s);
       }
       break;
@@ -3351,7 +3347,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for (i = 10; i < 200; i++) {
 	graph_clear_box(s, 0, i, 320, 1, 0);
-	(*s->gfx_driver->Wait)(s->animation_delay);
+	(*s->gfx_driver->Wait)(s, s->animation_delay);
 	process_sound_events(s);
       }
 
@@ -3359,7 +3355,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for (i = 199; i >= 10; i--) {
 	graph_update_box(s, 0, i, 320, 1);
-	(*s->gfx_driver->Wait)(s->animation_delay);
+	(*s->gfx_driver->Wait)(s, s->animation_delay);
 	process_sound_events(s);
       }
       break;
@@ -3369,7 +3365,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for (i = 199; i >= 10; i--) {
 	graph_clear_box(s, 0, i, 320, 1, 0);
-	(*s->gfx_driver->Wait)(s->animation_delay);
+	(*s->gfx_driver->Wait)(s, s->animation_delay);
 	process_sound_events(s);
       }
 
@@ -3377,7 +3373,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for (i = 10; i < 200; i++) {
 	graph_update_box(s, 0, i, 320, 1);
-	(*s->gfx_driver->Wait)(s->animation_delay);
+	(*s->gfx_driver->Wait)(s, s->animation_delay);
 	process_sound_events(s);
       }
       break;
@@ -3395,7 +3391,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_clear_box(s, width, 10 + height, 320 - 2*width, 3, 0);
 	graph_clear_box(s, width, 200 - 3 - height, 320 - 2*width, 3, 0);
 
-	(*s->gfx_driver->Wait)(4 * s->animation_delay);
+	(*s->gfx_driver->Wait)(s, 4 * s->animation_delay);
 	process_sound_events(s);
       }
 
@@ -3411,7 +3407,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_update_box(s, width, 10 + height, 320 - 2*width, 3);
 	graph_update_box(s, width, 200 - 3 - height, 320 - 2*width, 3);
 
-	(*s->gfx_driver->Wait)(4 * s->animation_delay);
+	(*s->gfx_driver->Wait)(s, 4 * s->animation_delay);
 	process_sound_events(s);
       }
 
@@ -3430,7 +3426,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_clear_box(s, width, 10 + height, 320 - 2*width, 3, 0);
 	graph_clear_box(s, width, 200 - 3 - height, 320 - 2*width, 3, 0);
 
-	(*s->gfx_driver->Wait)(7 * s->animation_delay);
+	(*s->gfx_driver->Wait)(s, 7 * s->animation_delay);
 	process_sound_events(s);
       }
 
@@ -3446,7 +3442,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_update_box(s, width, 10 + height, 320 - 2 * width, 3);
 	graph_update_box(s, width, 200 - 3 - height, 320 - 2 * width, 3);
 
-	(*s->gfx_driver->Wait)(7 * s->animation_delay);
+	(*s->gfx_driver->Wait)(s, 7 * s->animation_delay);
 	process_sound_events(s);
       }
 
@@ -3471,7 +3467,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	graph_clear_box(s, x * 10, 10 + y * 10, 10, 10, 0);
         if (remaining_checkers & 1)
-	  s->gfx_driver->Wait(s->animation_delay / 8);
+	  s->gfx_driver->Wait(s, s->animation_delay / 8);
 
 	--remaining_checkers;
 	process_sound_events(s);
@@ -3496,7 +3492,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_update_box(s, x * 10, 10 + y * 10, 10, 10);
 
 	if (remaining_checkers & 1)
-	  s->gfx_driver->Wait(s->animation_delay / 8);
+	  s->gfx_driver->Wait(s, s->animation_delay / 8);
 
 	--remaining_checkers;
 	process_sound_events(s);

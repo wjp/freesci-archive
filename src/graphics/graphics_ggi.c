@@ -47,7 +47,9 @@ int sci_default_visual_size;
 
 
 extern int _sci_ggi_double_visual;
+#if 0
 extern ggi_visual_t _sci_ggi_last_visual;
+#endif
 sci_event_t _sci_ggi_input_handler(state_t *s);
 void initInputGGI();
 /* those are from input_ggi.c */
@@ -126,7 +128,10 @@ ggi_visual_t openVisual()
   _sci_ggi_double_visual = 0;
   initInputGGI();
 
+#if 0
   return _sci_ggi_last_visual = retval;
+#endif
+  return retval;
 }
 
 
@@ -158,7 +163,10 @@ ggi_visual_t openDoubleVisual()
   _sci_ggi_double_visual = 1;
   initInputGGI();
 
+#if 0
   return _sci_ggi_last_visual = retval;
+#endif
+  return retval;
 }
 
 
@@ -323,6 +331,7 @@ libggi_init(state_t *s, picture_t pic)
 {
   ggiInit();
   s->graphics.ggi_visual = openVisual();
+  printf("init, vis=%p\n", s->graphics.ggi_visual);
   return 0;
 }
 
@@ -334,12 +343,37 @@ libggi_shutdown(state_t *s)
 }
 
 void
-libggi_wait(long usec)
+libggi_wait(state_t* s, long usec)
 {
   struct timeval tv = {0, usec};
 
-  select(0, NULL, NULL, NULL, &tv);
+  while(tv.tv_usec>0)
+    {
+      if(ggiEventPoll(s->graphics.ggi_visual, emPtrMove, &tv))
+	{
+	  ggi_event e;
+	  ggiEventRead(s->graphics.ggi_visual, &e, emPtrMove);
+	  switch(e.any.type)
+	    {
+	    case evPtrRelative:
+	      {
+		s->pointer_x+=e.pmove.x;
+		s->pointer_y+=e.pmove.y;
+	      } break;
+	    case evPtrAbsolute:
+	      {
+		s->pointer_x=e.pmove.x;
+		s->pointer_y=e.pmove.y;
+		if (_sci_ggi_double_visual) {
+		  s->pointer_x >>= 1;
+		  s->pointer_y >>= 1;
+		}
+	      } break;
+	    }
+	  s->gfx_driver->Redraw(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0, 0,
+				0, 0);
+	}
+    } 
 }
-  
 
 #endif /* HAVE_LIBGGI */
