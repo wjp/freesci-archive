@@ -65,9 +65,11 @@
 /* Base messages */
 #define _SIMSG_BASE 0 /* Any base decoder */
 #define _SIMSG_BASEMSG_SET_LOOPS 0 /* Set loops */
+#define _SIMSG_BASEMSG_CLONE 1 /* Clone object and data */
 
 /* Messages */
 #define SIMSG_SET_LOOPS(x) _SIMSG_BASE,_SIMSG_BASEMSG_SET_LOOPS,(x),0
+#define SIMSG_CLONE _SIMSG_BASE,_SIMSG_BASEMSG_CLONE,0,0
 
 /* Message transmission macro: Takes song reference, message reference */
 #define SIMSG_SEND(o, m) songit_handle_message(&(o), songit_make_message(m))
@@ -172,7 +174,6 @@ typedef struct _base_song_iterator {
 	int channel_map[MIDI_CHANNELS]; /* Number of HW channels to use */
 	int reverb[MIDI_CHANNELS]; /* Reverb setting for the channel */
 
-	unsigned char *data;
 	unsigned int size; /* Song size */
 	int offset; /* Current read offset in data */
 	int loop_offset; /* Loopback position */
@@ -183,6 +184,8 @@ typedef struct _base_song_iterator {
 	int state; /* SI_STATE_* */
 	int ccc; /* Cumulative cue counter, for those who need it */
 	unsigned char resetflag; /* for 0x4C -- on DoSound StopSound, do we return to start? */
+
+	unsigned char *data;
 
 } base_song_iterator_t;
 
@@ -229,5 +232,14 @@ songit_handle_message(song_iterator_t **it_reg, song_iterator_message_t msg);
 ** The song iterator may polymorph as result of msg, so a writeable reference is required.
 */
 
+
+song_iterator_t *
+songit_clone(song_iterator_t *it);
+/* Clones a song iterator
+** Parameters: (song_iterator_t *) it: The iterator to clone
+** Returns   : (song_iterator_t *) A shallow clone of 'it'.
+** This performs a clone on the bottom-most part (containing the actual song data) _only_. 
+** The actual song data will not be cloned.
+*/
 
 #endif

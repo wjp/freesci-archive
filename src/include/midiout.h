@@ -31,9 +31,10 @@ typedef struct _midiout_driver {
 	char *name;
 	char *version;
 	int (*set_parameter)(struct _midiout_driver *drv, char *attribute, char *value);
-	int (*midiout_open)();
+	int (*midiout_open)(int ticks_per_second); /* open with specified hz rate */
 	int (*midiout_close)();
-	int (*midiout_write)(guint8 *data, unsigned int count, guint32 delta);
+	int (*midiout_delay)(int ticks); /* number of ticks to sleep */
+	int (*midiout_write)(guint8 *data, unsigned int count);
 	int (*midiout_flush)(guint8);
 } midiout_driver_t;
 
@@ -69,12 +70,11 @@ extern midiout_driver_t midiout_driver_sgimd;
 
 extern DLLEXTERN midiout_driver_t *midiout_drivers[];
 
-int midiout_open();
-int midiout_close();
-int midiout_write_event(guint8 *buffer, unsigned int count, guint32 delta);
-int midiout_write_block(guint8 *buffer, unsigned int count, guint32 delta);
-int midiout_flush(guint8);
-
-struct _midiout_driver *midiout_find_driver(char *name);
+midiout_driver_t *
+midiout_find_driver(char *name);
+/* Finds a MIDIout driver with the specified name
+** Parameters : (char *) name: Name of the driver to look for
+** Returns    : (midiout_driver_t *) A matching driver, or NULL
+*/
 
 #endif /* _MIDIOUT_H_ */
