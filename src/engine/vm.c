@@ -223,9 +223,11 @@ get_class_address(state_t *s, int classnr)
 				classnr /* parameter was parent object address */ : get_class_address(s, classnr))
 
 #define OBJ_SPECIES(address) GET_HEAP((address) + SCRIPT_SPECIES_OFFSET)
+#define OBJ_SPECIES(s, reg, mem) GET_HEAP2(s, reg.segment, reg.offset + SCRIPT_SPECIES_OFFSET, mem)
 /* Returns an object's species */
 
 #define OBJ_SUPERCLASS(address) GET_HEAP((address) + SCRIPT_SUPERCLASS_OFFSET)
+#define OBJ_SUPERCLASS(s, reg, mem) GET_HEAP2(s, reg.segment, reg.offset + SCRIPT_SUPERCLASS_OFFSET, mem)
 /* Returns an object's superclass */
 
 #define OBJ_ISCLASS(address) (GET_HEAP((address) + SCRIPT_INFO_OFFSET) & SCRIPT_INFO_CLASS)
@@ -1525,7 +1527,7 @@ int
 script_instantiate(state_t *s, int script_nr, int recursive)
 {
 #warning "Fix script instantiation"
-#if 0
+#if 1
 	resource_t *script = scir_find_resource(s->resmgr, sci_script, script_nr, 0);
 	heap_ptr pos;
 	int objtype;
@@ -1607,15 +1609,18 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 	reg_tmp = reg;
 	do {
 		reg.offset += objlength; /* Step over the last checked object */
-
+		dbg_print( "reg.offset", reg.offset );
 		objtype = GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
+		if( !objtype ) break;
 		reg_tmp.offset = reg.offset + 2;
 		objlength = GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT);
 
-		if (objtype == sci_obj_exports)
+		switch( objtype ) {
+		case sci_obj_exports:
 			s->seg_manager.set_export_table_offset( &s->seg_manager, reg.offset + 4, reg.segment, SEG_ID ); /* +4 is to step over the header */
+			break;
 
-		else if (objtype == sci_obj_synonyms) {
+		case sci_obj_synonyms:
 			s->seg_manager.set_synonyms_offset( &s->seg_manager, reg.offset + 4, reg.segment, SEG_ID ); /* +4 is to step over the header */
 			s->seg_manager.set_synonyms_nr( &s->seg_manager, (objlength) / 4, reg.segment, SEG_ID );
 			reg_tmp.offset = s->seg_manager.get_synonyms_offset( &s->seg_manager, reg.segment, SEG_ID ) +
@@ -1624,11 +1629,14 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 			if (GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT) < 0)
 				/* Adjust for "terminal" synonym entries */
 				s->seg_manager.set_synonyms_nr( &s->seg_manager, (objlength) / 4 - 1, reg.segment, SEG_ID );
+			break;
 
-		} else if (objtype == sci_obj_class) {
-			heap_ptr classpos = reg.offset - SCRIPT_OBJECT_MAGIC_OFFSET + 4/* Header */;
-			int species = 0;// OBJ_SPECIES(classpos);
-#warning fix the OBJ_SPECIES!!
+		case sci_obj_class:
+			{
+			int classpos = reg.offset - SCRIPT_OBJECT_MAGIC_OFFSET + 4/* Header */;
+			int species;
+			reg_tmp.offset = reg.offset - SCRIPT_OBJECT_MAGIC_OFFSET + 4/* Header */;
+			species = OBJ_SPECIES(s, reg_tmp, MEM_OBJ_SCRIPT);
 			if (species < 0 || species >= s->classtable_size) {
 				sciprintf("Invalid species %d(0x%x) not in interval "
 					  "[0,%d) while instantiating script %d\n",
@@ -1637,16 +1645,14 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 				script_debug_flag = script_error_flag = 1;
 				return 1;
 			}
+			s->classtable[species].class_offset = classpos - magic_pos_adder;
+			s->classtable[species].reg = reg;
+			}
+			break;
 
-			s->classtable[species].class_offset = classpos - magic_pos_adder - script_basepos; // ?????
-			s->classtable[species].script = script_nr;
-			s->classtable[species].scriptposp = &(s->scripttable[script_nr].heappos); //??????????? !!!!!!
-
+		default:
+			break;
 		}
-
-		if (objtype == sci_obj_localvars)
-			s->seg_manager.set_localvar_offset( &s->seg_manager, reg.offset + 4, reg.segment, SEG_ID );/* +4 is to step over the header */
-
 	} while (objtype != 0);
 
 
@@ -1656,15 +1662,18 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 	objlength = 0;
 	reg_tmp = reg;
 	do {
-		pos += objlength; /* Step over the last checked object */
-
+		reg.offset += objlength; /* Step over the last checked object */
+		dbg_print( "reg.offset", reg.offset );
 		objtype = GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
-		reg_tmp.offset = reg.offset + 2;
-		objlength = GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT);
+		if( !objtype ) break;
+		objlength = GET_HEAP2(s, reg.segment, reg.offset + 2, MEM_OBJ_SCRIPT);
 
 		reg.offset += 4; /* Step over header */
 
-		if ((objtype == sci_obj_object) || (objtype == sci_obj_class)) { /* object or class? */
+		switch (objtype) {
+		case sci_obj_object:
+		case sci_obj_class:
+		{ /* object or class? */
 			int i;
 			heap_ptr functarea;
 			int functions_nr;
@@ -1672,21 +1681,20 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 			int species;
 
 			reg.offset -= SCRIPT_OBJECT_MAGIC_OFFSET; /* Get into home position */
-
-			reg_tmp.offset = reg.offset + SCRIPT_FUNCTAREAPTR_OFFSET;
-			functarea = reg.offset + GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT)
+			functarea = reg.offset + GET_HEAP2(s, reg.segment, reg.offset + SCRIPT_FUNCTAREAPTR_OFFSET, MEM_OBJ_SCRIPT)
 				+ SCRIPT_FUNCTAREAPTR_MAGIC;
-			reg_tmp.offset = functarea - 2;
-			functions_nr = GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT); /* Number of functions */
-			superclass = 0;// OBJ_SUPERCLASS(reg.offset); /* Get superclass... */
-#warning fix OBJ_SUPERCLASS!!!
-			species = 0; //OBJ_SPECIES(reg.offset); /* ...and species */
-#warning fix OBJ_SPECIES!!!!
+			functions_nr = GET_HEAP2(s, reg.segment, functarea - 2, MEM_OBJ_SCRIPT); /* Number of functions */
+			superclass = OBJ_SUPERCLASS(s, reg, MEM_OBJ_SCRIPT); /* Get superclass... */
+			species = OBJ_SPECIES(s, reg, MEM_OBJ_SCRIPT); /* ...and species */
 			/*      fprintf(stderr,"functs (%x) area @ %x\n", functions_nr, functarea); */
 
 			/* This sets the local variable pointer: */
+#warning "fix the local varible pointer set, superclass, species"
+#if 0
+			// we need fill something in this field
 			reg_tmp.offset = reg.offset + SCRIPT_LOCALVARPTR_OFFSET;
 			PUT_HEAP(s, reg_tmp, s->seg_manager.get_localvar_offset( &s->seg_manager, reg.segment, SEG_ID ), MEM_OBJ_SCRIPT);
+		
 			/* Now set the superclass address: */
 			if (superclass > -1) {
 				reg_tmp.offset = reg.offset + SCRIPT_SUPERCLASS_OFFSET;
@@ -1695,6 +1703,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 
 			reg_tmp.offset = reg.offset + SCRIPT_SPECIES_OFFSET;
 			PUT_HEAP(s, reg_tmp, get_class_address(s, species), MEM_OBJ_SCRIPT);
+#endif
 
 			functarea += 2 + functions_nr * 2;
 			/* Move over the selector IDs to the actual addresses */
@@ -1714,7 +1723,9 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 			reg.offset += SCRIPT_OBJECT_MAGIC_OFFSET; /* Step back from home to base */
 
 		} /* if object or class */
-		else if (objtype == sci_obj_pointers) { /* A relocation table */
+			break;
+		case sci_obj_pointers: /* A relocation table */
+		{
 			int pointerc = GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
 			int i;
 
@@ -1731,7 +1742,10 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 				/* Adjust indexed pointer. */
 
 			} /* For all indexed pointers pointers */
-
+		}
+			break;
+		default:
+			break;
 		}
 
 		reg.offset -= 4; /* Step back on header */
@@ -1739,7 +1753,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 	} while ((objtype != 0) && (((unsigned)reg.offset - script_basepos) < script->size - 2));
 
 	/*    if (script_nr == 0)   sci_hexdump(s->heap + script_basepos +2, script->size-2, script_basepos);*/
-	return s->scripttable[script_nr].heappos;	//???
+	return 1;		// instantiate successfully
 #endif
 
 }

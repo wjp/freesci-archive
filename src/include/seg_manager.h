@@ -35,6 +35,7 @@
 #define DEFAULT_SCRIPTS 32
 
 #define GET_HEAP( s, reg, mem_type ) s->seg_manager.get_heap( &s->seg_manager, reg, mem_type )
+#define GET_HEAP2( s, seg, offset, mem_type ) s->seg_manager.get_heap2( &s->seg_manager, seg, offset, mem_type )
 #define PUT_HEAP( s, reg, v, mem_type ) s->seg_manager.put_heap( &s->seg_manager, reg, v, mem_type )
 
 /* SCRIPT_ID must be 0 */
@@ -43,7 +44,7 @@ typedef enum {
 	SEG_ID,
 } id_flag;
 
-
+void dbg_print( char* msg, int i );		// for debug only
 
 /* verify the the given condition is true, output the message if condition is false, and exit
 ** Parameters:
@@ -52,9 +53,10 @@ typedef enum {
 ** return:
 **   none, terminate the program if fails
 */
-#define VERIFY( cond, msg ) if (cond) return; \
+#define VERIFY( cond, msg ) if (! ( cond ) ) {\
 	sciprintf( "%s, line, %d, %s", __FILE__, __LINE__, msg ); \
-	exit ( -1 );
+	exit ( -1 ); \
+	}
 
 #define MEM_OBJ_SCRIPT (1 << 0)
 #define MEM_OBJ_CLONES (1 << 1)
@@ -92,6 +94,7 @@ typedef struct _seg_manager_t {
 	void (*mcpy_out_in) (struct _seg_manager_t* self, void* dst, const int src, size_t n, int id, int flag);
 
 	gint16 (*get_heap) (struct _seg_manager_t* self, reg_t reg, mem_obj_enum mem_type );
+	gint16 (*get_heap2) (struct _seg_manager_t* self, seg_id_t seg, int offset, mem_obj_enum mem_type );
 	void (*put_heap) (struct _seg_manager_t* self, reg_t reg, gint16 value, mem_obj_enum mem_type );
 
 	int (*isloaded) (struct _seg_manager_t* self, int id, int flag);
@@ -143,6 +146,7 @@ void sm_mcpy_in_in (seg_manager_t* self, int dst, const int src, size_t n, int i
 void sm_mcpy_in_out (seg_manager_t* self, int dst, const void* src, size_t n, int id, int flag);
 void sm_mcpy_out_in (seg_manager_t* self, void* dst, const int src, size_t n, int id, int flag);
 gint16 sm_get_heap (seg_manager_t* self, reg_t reg, mem_obj_enum mem_type );
+gint16 sm_get_heap2 (seg_manager_t* self, seg_id_t seg, int offset, mem_obj_enum mem_type );
 void sm_put_heap (seg_manager_t* self, reg_t reg, gint16 value, mem_obj_enum mem_type );
 
 int sm_isloaded (seg_manager_t* self, int id, int flag);

@@ -34,6 +34,13 @@
 				id = sm_seg_get (self, id); \
 			VERIFY ( sm_check (self, id), "invalid seg id" );
 
+void dbg_print( char* msg, int i ) {
+	char buf[1000];
+	sprintf( buf, "%s = [0x%x], dec:[%d]", msg, i, i);
+	perror( buf );
+};
+
+
 
 void sm_init(seg_manager_t* self) {
 	int i;
@@ -61,6 +68,7 @@ void sm_init(seg_manager_t* self) {
 	self->mcpy_in_out = sm_mcpy_in_out;
 	self->mcpy_out_in = sm_mcpy_out_in;
 	self->get_heap = sm_get_heap;
+	self->get_heap2 = sm_get_heap2;
 	self->put_heap = sm_put_heap;
 
 	self->increment_lockers = sm_increment_lockers;
@@ -272,8 +280,8 @@ gint16 sm_get_heap (seg_manager_t* self, reg_t reg, mem_obj_enum mem_type ) {
 	switch( mem_type ) {
 	case MEM_OBJ_SCRIPT:
 		VERIFY( reg.offset + 1 < mem_obj->data.script.buf_size, "invalid offset" );
-		return mem_obj->data.script.buf[reg.offset] +
-		     ( mem_obj->data.script.buf[reg.offset+1] << 8 );
+		return (unsigned char)mem_obj->data.script.buf[reg.offset] +
+		     ( ((unsigned char)mem_obj->data.script.buf[reg.offset+1]) << 8 );
 	case MEM_OBJ_CLONES:
 		sciprintf( "memcpy for clones haven't been implemented\n" );
 		break;
@@ -283,6 +291,13 @@ gint16 sm_get_heap (seg_manager_t* self, reg_t reg, mem_obj_enum mem_type ) {
 	}
 	return 0;	// never get here
 }
+
+gint16 sm_get_heap2 (seg_manager_t* self, seg_id_t seg, int offset, mem_obj_enum mem_type ) {
+  reg_t reg;
+  reg.segment = seg;
+  reg.offset = offset;
+  return sm_get_heap( self, reg, mem_type );
+};
 
 void sm_put_heap (seg_manager_t* self, reg_t reg, gint16 value, mem_obj_enum mem_type ) {
 	mem_obj_t* mem_obj;
