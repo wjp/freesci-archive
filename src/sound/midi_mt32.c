@@ -22,7 +22,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <midi_device.h>
-#include <midi_mt32.h>
 #include <midiout.h>
 
 int midi_mt32_poke(guint32 address, guint8 *data, unsigned int n);
@@ -33,6 +32,9 @@ int midi_mt32_patch001_type(guint8 *data, unsigned int length);
 int midi_mt32_patch001_type0_length(guint8 *data, unsigned int length);
 int midi_mt32_patch001_type1_length(guint8 *data, unsigned int length);
 int midi_mt32_sysex_delay();
+int midi_mt32_volume(guint8 volume);
+int midi_mt32_reverb(short param);
+int midi_mt32_event(guint8 command, guint8 note, guint8 velocity);
 
 static guint8 *data;
 static unsigned int length;
@@ -115,7 +117,6 @@ static gint8 rhythmkey_map[128] = {
   guint8 velocity_map_index;
   guint8 
 } channel[16]; */
-static guint8 master_volume;
 
 static struct {
   guint8 mode;
@@ -134,6 +135,8 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
 
   data = data_ptr;
   length = data_length;
+
+  midi_mt32_allstop();
 
   type = midi_mt32_patch001_type(data, length);
   printf("MT-32: Programming Roland MT-32 with patch.001 (v%i) %d bytes\n", type, length);

@@ -36,15 +36,6 @@
 #include <stdarg.h>
 
 static struct {
-  gint8 gm_instr;
-  int keyshift;
-  int finetune;
-  int bender_range;
-  gint8 gm_rhythmkey;
-  int volume;
-} MIDI_mapping[128];
-
-static struct {
   guint8 group; /* 0=GroupA, 1=GroupB, 2=Memory, 3=Rhythm */
   char *name;
 } MT32_patch[128];

@@ -20,11 +20,6 @@
 
 #include <midiout.h>
 
-/*
-#include "midiout_alsaraw.h"
-#include "midiout_unixraw.h"
-*/
-
 midiout_driver_t *midiout_driver = NULL;
 
 static unsigned char running_status = 0;

@@ -1,3 +1,23 @@
+2001-03-04  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/include/Makefile.am
+	  src/sound/midi_mt32.c
+	  src/sound/midiout.c
+	  src/sound/soundserver_null.c
+
+	Minor cleanups and eliminating dead code, most notably
+        midi_mt32.h
+
+	* src/sound/Makefile.am
+	  src/sound/midi_mt32gm.c
+	  src/sound/oldmidi.c
+	  src/include/midi_device.h
+	  src/include/sound.h
+
+	Added in the "mt32gm" midi device.  Considered pre-alpha
+        quality for now.  There's not currently any way to switch
+        devices at the moment.  
+
 2001-03-05  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/alpha_mvi_crossblit.c: Added "accellerated" MVI

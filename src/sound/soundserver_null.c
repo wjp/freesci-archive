@@ -42,7 +42,6 @@
 
 #include <sciresource.h>
 #include <midi_device.h>
-#include <midi_mt32.h>
 
 void
 sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug);
