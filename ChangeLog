@@ -1,3 +1,12 @@
+2002-12-21  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/include/midi_device.h: Put back ADLIB_VOICES define.
+
+	* src/dc/snd_stream.c (snd_stream_poll), src/include/pcmout.h
+	(BUFFER_SIZE), src/config.l (config_init): On Dreamcast, use 11025hz
+	to ease the load put on the system by adlibemu. To keep the note timing
+	acceptable, the pcmout buffer was reduced to 1024 words.
+
 2002-12-19  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/selectgame.c (choose_game): Display FreeSCI VERSION on

@@ -475,11 +475,12 @@ config_init(config_entry_t **_conf, char *conffile)
 
 	conf->gfx_driver_name = NULL;
         conf->pcmout_driver = pcmout_find_driver(NULL);
-        conf->pcmout_rate = 22050;
 #ifdef _DREAMCAST
-	/* On Dreamcast, default to mono for performance reasons. */
+	/* On Dreamcast, default to 11025hz mono for performance reasons. */
+        conf->pcmout_rate = 11025;
 	conf->pcmout_stereo = 0;
 #else
+        conf->pcmout_rate = 22050;
         conf->pcmout_stereo = 1;
 #endif
         conf->midiout_driver = midiout_find_driver(NULL);

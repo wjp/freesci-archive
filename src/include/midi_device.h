@@ -138,6 +138,8 @@ midi_mt32gm_print_all_maps(FILE *file);
 
 /***********  Adlib crap ***************/
 
+#define ADLIB_VOICES 12
+
 typedef struct _sci_adlib_def {
   guint8 keyscale1;       /* 0-3 !*/
   guint8 freqmod1;        /* 0-15 !*/

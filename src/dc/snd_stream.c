@@ -295,7 +295,7 @@ int snd_stream_poll() {
 	else
 		needed_samples = (BUFFER_SIZE/2) - last_write_pos;
 	/* round it a little bit */
-	needed_samples &= ~0x7ff;
+	needed_samples &= ~0x3ff;
 	/* printf("last_write_pos %6i, current_play_pos %6i, needed_samples %6i\n",last_write_pos,current_play_pos,needed_samples); */
 
 	if (needed_samples > 0) {
