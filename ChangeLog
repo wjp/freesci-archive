@@ -1,3 +1,9 @@
+2000-05-20  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/vm.c (run_vm): callk now ignores &rest arguments for old
+	  script versions.
+	* src/engine/game.c (script_init_engine): Called detect_early_versions() before resetting version_lock_flag. Fixed.
+
 2000-05-20  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/vm.c (execute_method): The local variable block is now

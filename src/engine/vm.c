@@ -662,9 +662,12 @@ run_vm(state_t *s, int restoring)
       break;
 
     case 0x21: /* callk */
-      xs->sp -= (opparams[1] + 2 + (restadjust * 2));
+    xs->sp -= opparams[1]+2;
+    if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+    {
+      xs->sp -= restadjust * 2;
       s->amp_rest = 0; /* We just used up the restadjust, remember? */
-
+    }
       if (opparams[0] >= s->kernel_names_nr) {
 
 	sciprintf("Invalid kernel function 0x%x requested\n", opparams[0]);
@@ -677,7 +680,9 @@ run_vm(state_t *s, int restoring)
 
 	/* Calculate xs again: The kernel function might have spawned a new VM */
 	xs = s->execution_stack + s->execution_stack_pos;
-	restadjust = s->amp_rest;
+	
+	if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+	  restadjust = s->amp_rest;
 
       }
 
@@ -792,6 +797,7 @@ run_vm(state_t *s, int restoring)
 	PUSH(getInt16(s->heap + utemp2));
 	utemp2 += 2;
       }
+      
       break;
 
     case 0x2d: /* lea */
@@ -1195,7 +1201,7 @@ script_instantiate(state_t *s, int script_nr, int recursive)
   if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
     int locals_size = getUInt16(script->data)*2;
     s->scripttable[script_nr].localvar_offset=heap_allocate(s->_heap,locals_size);
-    sciprintf( "Loading script %d: Old SCI version; assuming locals size %d\n", script_nr, locals_size); 
+    /* sciprintf( "Loading script %d: Old SCI version; assuming locals size %d\n", script_nr, locals_size); */
     /* There won't be a localvar block in this case */
     memcpy(s->heap + script_basepos + 2, script->data + 2, script->length -2);
     pos = script_basepos + 2;

@@ -211,7 +211,6 @@ script_init_engine(state_t *s, sci_version_t version)
   s->min_version = 0; /* Set no real limits */
   s->version = SCI_VERSION_DEFAULT_SCI0;
 
-  script_detect_early_versions(s);
 
   s->_heap = heap_new();
   s->heap = s->_heap->start;
@@ -229,6 +228,8 @@ script_init_engine(state_t *s, sci_version_t version)
     s->version = version;
     s->version_lock_flag = 1; /* Lock version */
   }
+
+  script_detect_early_versions(s);
 
   if (!vocab996)
     s->classtable_size = 20;
