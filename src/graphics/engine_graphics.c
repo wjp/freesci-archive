@@ -121,6 +121,7 @@ graph_fill_box_custom(struct _state *s, int x, int y, int xl, int yl,
   }
 }
 
+
 int
 graph_save_box(struct _state *s, int x, int y, int xl, int yl, int layers)
 {
@@ -327,15 +328,17 @@ graph_draw_selector_button(struct _state *s, port_t *port, int state,
 			   int x, int y, int xl, int yl,
 			   char *text, byte *font)
 {
+  graph_fill_box_custom(s, x + port->xmin, y + port->ymin, xl, yl,
+			port->bgcolor, -1, -1, 1); /* Clear button background */
+  graph_draw_selector_text(s, port, state,
+			   x, y, xl, yl, text, font, ALIGN_TEXT_CENTER);
+
   if ((state & SELECTOR_STATE_SELECTABLE) && (state & SELECTOR_STATE_SELECTED))
     draw_frame(s->pic, port->xmin + x, port->ymin + y -1,
 	       xl - 1, yl - 1, port->color, port->priority);
   else
     draw_frame(s->pic, port->xmin + x, port->ymin + y -1,
 	       xl - 1, yl - 1, port->bgcolor, port->priority);
-
-  graph_draw_selector_text(s, port, state,
-			   x, y, xl, yl, text, font, ALIGN_TEXT_CENTER);
 }
 
 

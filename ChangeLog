@@ -1,3 +1,16 @@
+1999-12-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kernel.c: Added HiliteControl()
+
+	* src/graphics/font.c (text_draw): Made the font drawing functions
+	draw the font with background
+
+	* src/graphics/engine_graphics.c (graph_draw_selector_button):
+	Cleared background before drawing buttons
+
+	* src/core/kernel.c: Fixed a possible division by zero in the
+	bresenham code
+
 1999-12-05  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kernel.c (kDeviceInfo_Unix): Added DeviceInfo for UNIX-

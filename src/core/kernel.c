@@ -2362,8 +2362,8 @@ kInitBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int deltay = GET_SELECTOR(mover, y) - GET_SELECTOR(client, y);
   int stepx = GET_SELECTOR(client, xStep) * step_factor;
   int stepy = GET_SELECTOR(client, yStep) * step_factor;
-  int numsteps_x = (abs(deltax) + stepx-1) / stepx;
-  int numsteps_y = (abs(deltay) + stepy-1) / stepy;
+  int numsteps_x = stepx? (abs(deltax) + stepx-1) / stepx : 0;
+  int numsteps_y = stepy? (abs(deltay) + stepy-1) / stepy : 0;
   int bdi, i1;
   int numsteps;
   int deltax_step;
@@ -2765,19 +2765,32 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #define K_CONTROL_CONTROL 6
 #define K_CONTROL_SELECT_BOX 10
 
-void
-_k_draw_control(state_t *s, heap_ptr obj);
+static void
+_k_draw_control(state_t *s, heap_ptr obj, int inverse);
 
 
 void
 kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr obj = PARAM(0);
+  heap_ptr obj = UPARAM(0);
 
   CHECK_THIS_KERNEL_FUNCTION;
 
   _k_dyn_view_list_prepare_change(s);
-  _k_draw_control(s, obj);
+  _k_draw_control(s, obj, 0);
+  _k_dyn_view_list_accept_change(s);
+}
+
+
+static void
+kHiliteControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr obj = UPARAM(0);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  _k_dyn_view_list_prepare_change(s);
+  _k_draw_control(s, obj, 1);
   _k_dyn_view_list_accept_change(s);
 }
 
@@ -2915,14 +2928,32 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
       }
 
       if (event) PUT_SELECTOR(event, claimed, 1);
-      _k_draw_control(s, obj);
+      _k_draw_control(s, obj, 0);
     }
   }
 }
 
 
-void
-_k_draw_control(state_t *s, heap_ptr obj)
+static inline void
+_k_clip_view(byte *view, int *loop, int *cel)
+     /* Checks if *loop and *cel are valid; if they aren't, they're clipped to the highest possible
+     ** valid values.
+     */
+{
+  int maxloops, maxcels;
+
+  maxloops = view0_loop_count(view) - 1;
+  if (*loop > maxloops)
+    *loop = maxloops;
+
+  maxcels = view0_cel_count(*loop, view) - 1;
+  if (*cel >= maxcels)
+    *cel = maxcels;
+}
+
+
+static void
+_k_draw_control(state_t *s, heap_ptr obj, int inverse)
 {
   int x = GET_SELECTOR(obj, nsLeft);
   int y = GET_SELECTOR(obj, nsTop);
@@ -2942,6 +2973,13 @@ _k_draw_control(state_t *s, heap_ptr obj)
   resource_t *font_res;
   resource_t *view_res;
 
+  if (inverse) { /* Ugly hack */
+    port_t *port = s->ports[s->view_port];
+    int foo = port->bgcolor;
+    port->bgcolor = port->color;
+    port->color = foo;
+  }
+
   switch (type) {
 
   case K_CONTROL_BUTTON:
@@ -2949,7 +2987,7 @@ _k_draw_control(state_t *s, heap_ptr obj)
     font_res  = findResource(sci_font, font_nr);
     if (!font_res) {
       SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
-      return;
+      break;
     }
     graph_draw_selector_button(s, s->ports[s->view_port], state, x, y, xl, yl, text, font_res->data);
     break;
@@ -2959,7 +2997,7 @@ _k_draw_control(state_t *s, heap_ptr obj)
     font_res  = findResource(sci_font, font_nr);
     if (!font_res) {
       SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
-      return;
+      break;
     }
     graph_draw_selector_text(s, s->ports[s->view_port], state, x, y, xl, yl, text, font_res->data,
 			     (s->version < SCI_VERSION_FTU_CENTERED_TEXT_AS_DEFAULT)
@@ -2971,7 +3009,7 @@ _k_draw_control(state_t *s, heap_ptr obj)
     font_res  = findResource(sci_font, font_nr);
     if (!font_res) {
       SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
-      return;
+      break;
     }
 
     cursor = GET_SELECTOR(obj, cursor);
@@ -2985,7 +3023,7 @@ _k_draw_control(state_t *s, heap_ptr obj)
     view_res = findResource(sci_view, view);
     if (!view_res) {
       SCIkwarn(SCIkERROR, "View.%03d not found!\n", font_nr);
-      return;
+      break;
     }
     graph_draw_selector_icon(s, s->ports[s->view_port], state, x, y, xl, yl,
 			     view_res->data, loop, cel);
@@ -2996,16 +3034,20 @@ _k_draw_control(state_t *s, heap_ptr obj)
     graph_draw_selector_control(s, s->ports[s->view_port], state, x, y, xl, yl);
     break;
 
-  case K_CONTROL_SELECT_BOX:
-
-    break;
-
   default:
-    SCIkwarn(SCIkWARNING, "Unknown control type: %d at %04x\n", type, obj);
+    SCIkwarn(SCIkWARNING, "Unknown control type: %d at %04x, at (%d, %d) size %d x %d\n",
+	     type, obj, x, y, xl, yl);
   }
 
   if (!s->pic_not_valid)
     graph_update_port(s, s->ports[s->view_port]);
+
+  if (inverse) {
+    port_t *port = s->ports[s->view_port];
+    int foo = port->bgcolor;
+    port->bgcolor = port->color;
+    port->color = foo;
+  }
 }
 
 void
@@ -3317,6 +3359,9 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int use_signal)
     /* Now, if we either don't use signal OR if signal allows us to draw, do so: */
     if ((use_signal == 0) || (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE) &&
 			      !(signal & _K_VIEW_SIG_FLAG_HIDDEN))) {
+
+      _k_clip_view(list[i].view, &(list[i].loop), &(list[i].cel));
+
       SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", list[i].obj, signal);
       draw_view0(s->pic, s->ports[s->view_port],
 		 list[i].x, list[i].y, list[i].priority, list[i].loop, list[i].cel,
@@ -3375,6 +3420,9 @@ _k_dyn_view_list_accept_change(state_t *s)
 
     if (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE) && !(signal & _K_VIEW_SIG_FLAG_HIDDEN)) {
       SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", list[i].obj, signal);
+
+      _k_clip_view(list[i].view, &(list[i].loop), &(list[i].cel));
+
       draw_view0(s->pic, &(s->wm_port),
 		 list[i].x, list[i].y, list[i].priority, list[i].loop, list[i].cel,
 		 GRAPHICS_VIEW_CENTER_BASE | GRAPHICS_VIEW_USE_ADJUSTMENT, list[i].view);
@@ -3455,13 +3503,7 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
     return;
   }
 
-  maxloops = view0_loop_count(view->data) - 1;
-  if (loop >= maxloops)
-    loop = maxloops;
-
-  maxcels = view0_cel_count(loop, view->data) - 1;
-  if (cel >= maxcels)
-    cel = maxcels;
+  _k_clip_view(view->data, &loop, &cel);
 
   SCIkdebug(SCIkGRAPHICS, "DrawCel((%d,%d), (view.%d, %d, %d), p=%d)\n", x, y, PARAM(0), loop,
 	    cel, priority);
@@ -4188,14 +4230,15 @@ struct {
   {"BaseSetter", kBaseSetter },
   {"Parse", kParse },
   {"ShakeScreen", kShakeScreen },
-  {"RestartGame", kRestartGame },
 #ifdef _WIN32
   {"DeviceInfo", kDeviceInfo_Win32},
 #else /* !_WIN32 */
   {"DeviceInfo", kDeviceInfo_Unix},
 #endif
+  {"HiliteControl", kHiliteControl},
 
   /* Experimental functions */
+  {"RestartGame", kRestartGame },
   {"Said", kSaid },
   {"EditControl", kEditControl },
   {"DoSound", kDoSound },

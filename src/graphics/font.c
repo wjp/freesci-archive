@@ -242,9 +242,9 @@ void draw_text0(picture_t dest, port_t *port, int x, int y, char *text, char *fo
 }
 
 
-int
+static int
 _text_draw_line(picture_t dest, int x, int y, char *text, int textlen, char *font,
-		int c1, int c2, int priority)
+		int c1, int c2, int bgcolor, int priority)
      /* Draws one line of text and returns the maximum height encountered */
 {
   int line_height = 0;
@@ -273,10 +273,14 @@ _text_draw_line(picture_t dest, int x, int y, char *text, int textlen, char *fon
 	  int poshome = pos;
 	  guint8 bitmask = *(foopos++);
 	  for (xc = 0; xc < xl; xc++) {
+
 	    if (bitmask & 0x80) {
 	      dest->maps[0][pos] = (pos &1)? c1:c2;
 	      dest->maps[1][pos] = priority;
-	    }
+	    } else
+	      if (bgcolor > 0)
+		dest->maps[0][pos] = bgcolor; /* Background */
+
 	    pos++;
 	    bitmask <<= 1;
 	  }
@@ -289,10 +293,14 @@ _text_draw_line(picture_t dest, int x, int y, char *text, int textlen, char *fon
 	  /* interestingly, this bitmask is big-endian */
 	  foopos += 2;
 	  for (xc = 0; xc < xl; xc++) {
+
 	    if (bitmask & 0x8000) {
 	      dest->maps[0][pos] = (pos & 1)? c1:c2;
 	      dest->maps[1][pos] = priority;
-	    }
+	    } else
+	      if (bgcolor > 0)
+		dest->maps[0][pos] = bgcolor; /* Background */
+
 	    bitmask <<= 1;
 	    pos++;
 	  }
@@ -331,6 +339,7 @@ text_draw(picture_t dest, port_t *port, char *text, int maxwidth)
   int maxchar = getInt16(port->font + FONT_MAXCHAR_OFFSET);
   int line_height = getInt16(port->font + FONT_FONTSIZE_OFFSET);
   int priority = port->priority;
+  int bgcolor = port->bgcolor;
 
   if (maxwidth < 0)
     maxwidth = 32767; /* Negative means unlimited; 32767 does, too. */
@@ -371,12 +380,16 @@ text_draw(picture_t dest, port_t *port, char *text, int maxwidth)
 
 	if (port->gray_text)
 	  _text_draw_line(dest, x, y, last_text_base, last_breakpoint,
-			  port->font, port->color | (port->color << 4),
-			  port->bgcolor | (port->color << 4), priority);
+			  port->font, port->bgcolor | (port->color << 4),
+			  port->bgcolor | (port->color << 4),
+			  port->bgcolor | (port->bgcolor << 4),
+			  priority);
 		  else
 	  _text_draw_line(dest, x, y, last_text_base, last_breakpoint,
 			  port->font, port->color | (port->color << 4),
-			  port->color | (port->color << 4), priority);
+			  port->color | (port->color << 4),
+			  port->bgcolor | (port->bgcolor << 4),
+			  priority);
 
 	y += line_height;
 
