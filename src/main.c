@@ -763,7 +763,8 @@ list_savegames(state_t *s)
 int
 main(int argc, char** argv)
 {
-	config_entry_t *conf			= NULL;
+	config_entry_t *active_conf		= NULL;
+	config_entry_t *confs		= NULL;
 	cl_options_t cl_options;
 	int conf_entries			= -1; /* Number of config entries */
 	int conf_nr				= -1; /* Element of conf to use */
@@ -799,12 +800,13 @@ main(int argc, char** argv)
 
 	if (game_name) {
 
-		conf_nr = read_config(game_name, &conf, &conf_entries, &version);
+		conf_nr = read_config(game_name, &confs, &conf_entries, &version);
+		active_conf = confs + conf_nr;
 
 		if (!cl_options.gamedir)
-			if (chdir(conf[conf_nr].resource_dir)) {
+			if (chdir(active_conf->resource_dir)) {
 				if (conf_nr)
-					fprintf(stderr,"Error entering '%s' to load resource data\n", conf[conf_nr].resource_dir);
+					fprintf(stderr,"Error entering '%s' to load resource data\n", active_conf->resource_dir);
 				else
 					fprintf(stderr,"Game '%s' isn't registered in your config file.\n", game_name);
 				exit(1);
@@ -869,8 +871,10 @@ main(int argc, char** argv)
 	if (!game_name)
 		game_name = (char *) gamestate->game_name;
 
-	if (!conf) /* Unless the configuration has been read... */
-		conf_nr = read_config(game_name, &conf, &conf_entries, &version);
+	if (!confs) { /* Unless the configuration has been read... */
+		conf_nr = read_config(game_name, &confs, &conf_entries, &version);
+		active_conf = confs + conf_nr;
+	}
 
 	/* gcc doesn't warn about (void *)s being typecast. If your compiler doesn't like these
 	** implicit casts, don't hesitate to typecast appropriately.  */
@@ -890,26 +894,26 @@ main(int argc, char** argv)
 						 list_sound_servers,
 						 "sound server", cl_options.sound_server_name);
 
-	if (conf) {
-		memcpy(gfx_options, &(conf->gfx_options), sizeof(gfx_options_t)); /* memcpy so that console works */
+	if (confs) {
+		memcpy(gfx_options, &(active_conf->gfx_options), sizeof(gfx_options_t)); /* memcpy so that console works */
 		if (!gfx_driver_name)
-			gfx_driver_name = conf[conf_nr].gfx_driver_name;
+			gfx_driver_name = active_conf->gfx_driver_name;
 
 		if (!sound_server)
-			sound_server = conf[conf_nr].sound_server;
+			sound_server = active_conf->sound_server;
 
 		/* make sure we have sound drivers */
 		if (!midiout_driver)
-			midiout_driver = conf[conf_nr].midiout_driver;
+			midiout_driver = active_conf->midiout_driver;
 		if (!midi_device)
-			midi_device = conf[conf_nr].midi_device;
+			midi_device = active_conf->midi_device;
 	}
 
-	if (conf) {
-		module_path = conf->module_path;
+	if (confs) {
+		module_path = active_conf->module_path;
 
 		if (!gfx_driver_name)
-			gfx_driver_name = conf->gfx_driver_name;
+			gfx_driver_name = active_conf->gfx_driver_name;
 	}
 
 	gfx_driver = (gfx_driver_t *)
@@ -927,21 +931,22 @@ main(int argc, char** argv)
 		return 1;
 	}
 
-	if (conf && conf[conf_nr].work_dir)
+	if (confs && active_conf->work_dir)
 		gamestate->work_dir = work_dir;
 
 
 	if (chdir(gamestate->work_dir)) {
-		fprintf(stderr,"Error entering working directory '%s'\n", conf[conf_nr].work_dir);
+		fprintf(stderr,"Error entering working directory '%s'\n",
+			active_conf->work_dir);
 		exit(1);
 	}
 
 	if (!gamestate->version_lock_flag)
-		if (conf[conf_nr].version)
-			gamestate->version = conf[conf_nr].version;
+		if (active_conf->version)
+			gamestate->version = active_conf->version;
 
-	if (strlen (conf[conf_nr].debug_mode))
-		set_debug_mode (gamestate, 1, conf[conf_nr].debug_mode);
+	if (strlen (active_conf->debug_mode))
+		set_debug_mode (gamestate, 1, active_conf->debug_mode);
 
 
 #if 0
@@ -972,7 +977,7 @@ main(int argc, char** argv)
 
 	/* Now configure the graphics driver with the specified options */
 	{
-		driver_option_t *option = get_driver_options(conf + conf_nr, FREESCI_DRIVER_SUBSYSTEM_GFX, gfx_driver->name);
+		driver_option_t *option = get_driver_options(active_conf, FREESCI_DRIVER_SUBSYSTEM_GFX, gfx_driver->name);
 		while (option) {
 			if ((gfx_driver->set_parameter)(gfx_driver, option->option, option->value)) {
 				fprintf(stderr, "Fatal error occured in graphics driver while processing \"%s = %s\"\n",
@@ -986,7 +991,7 @@ main(int argc, char** argv)
 
 	/* Configure the midiout driver */
 	{
-		driver_option_t *option = get_driver_options(conf + conf_nr, FREESCI_DRIVER_SUBSYSTEM_MIDIOUT, midiout_driver->name);
+		driver_option_t *option = get_driver_options(active_conf, FREESCI_DRIVER_SUBSYSTEM_MIDIOUT, midiout_driver->name);
 		while (option) {
 			if ((midiout_driver->set_parameter)(midiout_driver, option->option, option->value)) {
 				fprintf(stderr, "Fatal error occured in midiout driver while processing \"%s = %s\"\n",
@@ -1024,11 +1029,11 @@ main(int argc, char** argv)
 		gamestate->sound_server->get_event(gamestate); /* Get init message */
 	}
 
-	if (conf[conf_nr].console_log)
-		open_console_file (conf[conf_nr].console_log);
-	gamestate->animation_delay = conf[conf_nr].animation_delay;
-	gamestate->animation_granularity = conf[conf_nr].animation_granularity;
-	gfx_crossblit_alpha_threshold = conf[conf_nr].alpha_threshold;
+	if (active_conf)
+		open_console_file (active_conf->console_log);
+	gamestate->animation_delay = active_conf->animation_delay;
+	gamestate->animation_granularity = active_conf->animation_granularity;
+	gfx_crossblit_alpha_threshold = active_conf->alpha_threshold;
 
 	printf("Emulating SCI version %d.%03d.%03d\n",
 	       SCI_VERSION_MAJOR(gamestate->version),
@@ -1048,7 +1053,7 @@ main(int argc, char** argv)
 		printf("Sound server: Disabled.\n");
 
 	gamestate->have_mouse_flag = (cl_options.mouse == DONTCARE)?
-		conf[conf_nr].mouse : cl_options.mouse;
+		active_conf->mouse : cl_options.mouse;
 
 
 	if (savegame_name)
@@ -1066,7 +1071,7 @@ main(int argc, char** argv)
 	freeResources();
 
 	if (conf_entries >= 0)
-		config_free(&conf, conf_entries);
+		config_free(&confs, conf_entries);
 
 	close_console_file();
 
