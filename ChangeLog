@@ -1,4 +1,13 @@
+2005-01-05  Lars Skovlund  <lskovlun@image.dk>
+
+	* doc/sci.tex: Update palette section.
+
 2004-12-20  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/menu/game_select_init.c
+	* src/gfx/operations.c: Change all references to
+	state->static_palette into state->resstate->static_palette. This
+	completes the move of said data structure.
 
 	* src/gfx/resource: Rudimentary global palette suppor added.
 	* src/scicore/resource_map.c: Fix boundary case.

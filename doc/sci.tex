@@ -2668,29 +2668,54 @@ FI
 % ------------------------   
 % Section 
 \section{SCI1 palettes}
-\subsection{General information}
-A palette in SCI1.0 always has 256 elements, and contains the
-following information, in order:
+\section{Palette types}
+There are two kinds of palettes in SCI: Local palettes and global
+palettes. Local palettes are associated with a graphical resource,
+while the global palette resides in a separate resource. In SCI1.0,
+both kinds hold exactly 256 elements, and only
+synchronous palette operations can be initiated by the VM. SCI1.1
+changes the palette format radically and introduces the ability to
+perform asynchronous palette cross-fades. The exact format of SCI1.1
+palettes is not known and will not be described here, nor will the
+associated kernel calls.
 
+\noindent The global palette is updated on several occasions:
+\begin{itemize}
+\item On game startup, the global palette is loaded from the 999.pal resource. 
+\item It may be replaced at any time using the appropriate kernel
+  call. 
+\item When a graphical resource is loaded for
+display, its palette entries are merged into the global palette
+(``installing'' it -- see section \ref{installmode} for more information), and all further operations are
+carried out on the global palette. Functions that only return view
+metadata do not touch the global palette.
+\item The game may explicitly request installation of a view's palette
+  (SCI1.1 only)
+\end{itemize}
+
+The local palette entries are usually placed in the right spot in the
+local palette, such that installing them is a simple matter of
+copying. This is not always the case, however.
+\section{The palette format}
+\noindent A SCI1.0 palette, whether global or local, consists of the following items:
 \begin{enumerate}
-\item A mapping of each color into another palette, often the global one (the global palette itself has
-  the identity function here).
+\item A mapping of each color index into the global palette (the
+  global palette and most, if not all, palettes on disk have the
+  identity function here).
 \item A 32-bit time stamp for internal use (it is always zero in the
   resources). 
-\item A list of FRGB triples where F is a flag byte telling if the index is in use and if it is the
-  victim of an approximate mapping (see section \ref{insertmode}). The
-  flag bits are given in figure \ref{fig:palflagbits}.
+\item A list of FRGB tuples where F is a flag byte telling if the index is in use and if it is the
+  victim of an approximate mapping (see section \ref{installmode}). The
+  flag bits are given in figure \ref{fig:palflagbits} -- the remaining bits
+  were perhaps used during development.
 \end{enumerate}
 
-\begin{figure}
-\begin{tabular}{|c|l|}
-\hline
+\begin{figure}[b!]
+\begin{tabular}{cl}
 Bit&Description\\
 \hline
 0&The entry is used\\
-\hline
 4&Another color has been inexactly mapped to this one\\
-\hline
 \end{tabular}
 \label{fig:palflagbits}
 \caption{Flag bits in each palette entry}
@@ -2698,33 +2723,39 @@ Bit&Description\\
 In addition to these, the global palette contains, for each color, a
 brightness value. It is measured in percent, and is kept separate
 from the RGB triples to avoid interfering with color matching. This is
-not stored in the resources, but defaults to $100$.
+not stored in the resources, but defaults to $100$. The values may be
+changed by the game, for example to allow the same pic to be used in
+day and night scenes.
 
-A palette should always contain pure black and pure white with indices
-$0$ and $255$, respectively. 
-This is enforced when creating temporary palettes internally, and in
-addition, those entries are ignored by certain operations.
+A palette is assumed always to contain pure black and pure white with
+indices $0$ and $255$, respectively. This is enforced when performing
+cross-fades in SCI1.1, and in addition, those entries are ignored by
+certain operations, brightness control in particular.
 
-\subsection{Installing a palette}
-\label{insertmode}
+\section{Installing a palette}
+\label{installmode}
 When installing a palette, there are two different modes. They are
-shown in table \ref{fig:palinsertmode} and described in detail below.
+shown in table \ref{fig:palinstallmode} and described in detail
+below. No, the numbers in the table are not reversed, it just happens
+that the least-used mode has the value 0.
 \begin{figure}
-\begin{tabular}{|c|l|}
-\hline
+\begin{tabular}{cl}
 Mode&Description\\
 \hline
 0&Merge into the global palette.\\
-\hline
+%1&Same as above. Used for cel palettes.\\
 2&Force insertion.\\
-\hline
 \end{tabular}
-\label{fig:palinsertmode}
+\label{fig:palinstallmode}
 \caption{The palette installation modes}
 \end{figure}
 \begin{description}
+\item[Forced mapping] As the name indicates, \emph{target} palette
+  entries are always overwritten by the corresponding \emph{source}
+  entry. If a \emph{source} entry is unused, the corresponding
+  \emph{target} entry is left untouched.
 \item[Normal merge]
-When using this method, four steps are taken in an attempt to map each
+When using this method, five steps are taken in an attempt to map each
 source entry to a target entry. In each case, the \emph{source}
 palette is updated to indicate the new mapping. If one step fails, the
 next is executed, and so on:
@@ -2736,43 +2767,65 @@ next is executed, and so on:
   to it if one is found.
 \item Try to find an unused index in the \emph{target} palette and map
   to it if one is found.
-\item Map to the closest color in the \emph{target} palette. Since
-  infinite tolerance is used, this step will never fail. In addition,
-  flag bit 4 is set in the \emph{target} palette entry to indicate an
+\item Map to the closest color in the \emph{target} palette, with
+  infinite tolerance. Because infinite tolerance is used, this step
+  will never fail. In addition, flag bit 4 in the \emph{target}
+  palette entry may be set by some SCI versions to indicate an
   approximate mapping.
 \end{enumerate}
-\item[Forced mapping] As the name indicates, \emph{target} palette
-  entries are always overwritten by the corresponding \emph{source}
-  entry. If a \emph{source} entry is unused, the corresponding
-  \emph{target} entry is left untouched.
 \end{description}
+Forced mapping is used implicitly almost everywhere within the
+interpreter. Thus, there is no real need
+for removing palette entries explicitly, because a large part of the
+palette is (in practice, though not in theory) replaced in strategic
+places. When loading palettes explicitly, the game may specify a
+different mapping strategy. 
 
-Brightness values are left untouched when performing palette
-installations. Thus, it may not be safe to add new cels to a scene
-while using brightness adjustment.
-\subsection{Kernel calls}
-\begin{kernelcall}{Palette}
-The subfunctions listed here are for version 1.001.029.
+Brightness values are left untouched during all implicit palette
+operations. Thus, it is not safe to add new cels to a scene while
+using brightness adjustment. 
+\newpage
+\section{Kernel calls}
+\begin{kernelcall*}{Palette}
+The subfunctions listed here are for version 1.001.029; the
+subfunction indices are given in figure
+\ref{subfx:Palette:indices}. Palette ranges are closed intervals. The functions are described in detail below.
+\begin{figure}[b!]
+\caption{Subfunction indices of the Palette() kernel call}
+\label{subfx:Palette:indices}
+\begin{tabular}{ll}
+Subfunction&Index\\
+\hline
+PAL\_LOAD\_PALETTE&1\\
+PAL\_SET\_FLAGS&2\\
+PAL\_CLEAR\_FLAGS&3\\
+PAL\_SET\_BRIGHTNESS&4\\
+PAL\_CLOSEST\_RGB&5\\
+PAL\_CYCLE&6\\
+PAL\_SAVE\_PALETTE&7\\
+PAL\_RESTORE\_PALETTE&8\\
+\hline
+\end{tabular}
+\end{figure}
+
 \begin{subfx}
 \callsynt{PAL\_LOAD\_PALETTE number mode}
 
 Loads the palette resource given by \parameter{number} and makes it
-the ccurrent global palette. The exact semantics depend on the
-\parameter{mode} parameter, see section \ref{insertmode}.
+the current global palette. The exact semantics depend on the
+\parameter{mode} parameter, see section \ref{installmode}.
 
 \callsynt{PAL\_SET\_FLAGS first last bit}
 
 For the range of palette entries givem by \parameter{first} and
 \parameter{last}, sets the given \parameter{bit}(s) in the palette
-flags (using the binary OR operator). As is the case with SCI
-rectangles, the \parameter{last} entry itself is excluded.
+flags (using the binary OR operator).
 
 \callsynt{PAL\_CLEAR\_FLAGS first last bit}
 
 For the range of palette entries givem by \parameter{first} and
 \parameter{last}, sets the given \parameter{bit}(s) in the palette
-flags (using the binary NAND operator). As is the case with SCI
-rectangles, the \parameter{last} entry itself is excluded.
+flags (using the binary NAND operator).
 
 \callsynt{PAL\_SET\_BRIGHTNESS first last brightness defer}
 
@@ -2783,31 +2836,37 @@ The \parameter{defer} flag, if given, tells SCI whether to defer the
 changes until later. If the parameter is not given, the changes are
 always committed immediately.
 
-\callsynt{PAL\_FIND\_CLOSEST r g b}
-
+\callsynt{PAL\_CLOSEST\_RGB r g b}
 Finds the palette entry that matches the given rgb triple most
 closely. Infinite tolerance is used -- new palette entries are never
 created.
 \returns{The index of the matching palette entry}
 
-\callsynt{PAL\_CYCLE first last amount \ldots}
-Cycles the given range(s) of palette entries by the given amount(s). 
-An arbitrary number of arguments can be given in groups of three.
+\callsynt{PAL\_CYCLE first last speed \ldots}
+Cycles the given range(s) of palette entries once. The \parameter{speed}
+parameter can be used to control the cycling as follows: The
+interpreter remembers each active cycling range, and stores a timestamp for
+each of them. We only cycle a particular range if at least
+\parameter{speed} game ticks have passed since the last time we did so. The
+interpreter is responsible for aging the active cycles and eventually
+getting rid of them.
+
+An arbitrary number of arguments can be given in groups of three. The
+given cycles are performed sequentially. A negative \parameter{speed}
+indicates reverse cycling (but the function as a speed setting still applies).
 
 \callsynt{PAL\_SAVE\_PALETTE}
-Allocates heap memory for a palette and stores a snapshot of the global
-palette in it. The memory may be released in two ways: Either by using the
-\methname{PAL\_RESTORE\_PALETTE} subfunction (which restores the snapshot) 
-or the \kcallname{Memory} kernel call (which doesn't). The
-snapshot includes brightness information. 
+Allocates memory for a palette and stores a snapshot of the global
+palette in it (including brightness values). The memory may be released either by using the
+\methname{PAL\_RESTORE\_PALETTE} subfunction or the \kcallname{Memory}
+kernel call.
 \returns{A pointer to the allocated memory block}
 
 \callsynt{PAL\_RESTORE\_PALETTE handle}
 Restores the contents of a palette handle and implicitly frees the
 associated memory.
 \end{subfx}
-\end{kernelcall}
-
+\end{kernelcall*}
 \section{Windows, Dialogs and Controls}
 \label{LarsWindows}\hypertarget{LarsWindows}{}%
 
