@@ -54,17 +54,18 @@ void initInputGGI();
 
 uint8 _sci_xfer[640 * 4]; /* Transfer buffer for GGI */
 
-void graphInit()
-{
-  ggiInit();
-}
 
-void graphExit()
-{
-  ggiExit();
-}
+/*** Graphics driver ***/
 
-#define INTERCOL(a, b) ((int) sqrt((((3.5 * (a))*(a)) + ((1.5 * (b))*(b))) / 5.0))
+gfx_driver_t gfx_driver_libggi = 
+{
+  "libggi",
+  libggi_init,
+  libggi_shutdown,
+  libggi_redraw
+};
+
+#define INTERCOL(a, b) ((int) sqrt((((3.3 * (a))*(a)) + ((1.7 * (b))*(b))) / 5.0))
 
 void initColors(ggi_visual_t visual)
 {
@@ -110,7 +111,7 @@ ggi_visual_t openVisual()
   if (!(retval = ggiOpen(NULL))) return NULL;
 
   if (ggiSetMode(retval, &mode)) {
-    fprintf(stderr,"Evading to different mode...\n");
+    fprintf(stderr,"Evading to different graphics mode...\n");
     if (ggiSetMode(retval, &mode)) return NULL;
   }
 
@@ -142,7 +143,7 @@ ggi_visual_t openDoubleVisual()
   if (!(retval = ggiOpen(NULL))) return NULL;
 
   if (ggiSetMode(retval, &mode)) {
-    fprintf(stderr,"Evading to different mode...\n");
+    fprintf(stderr,"Evading to different graphics mode...\n");
     if (ggiSetMode(retval, &mode)) return NULL;
   }
 
@@ -265,7 +266,7 @@ graphics_draw_region_ggi(ggi_visual_t vis, byte *data,
 
 
 void
-graphics_callback_ggi(struct _state *s, int command, int x, int y, int xl, int yl)
+libggi_redraw(struct _state *s, int command, int x, int y, int xl, int yl)
 {
   ggi_visual_t vis = s->graphics.ggi_visual;
   int mp_x, mp_y, mp_size_x, mp_size_y;
@@ -316,16 +317,18 @@ default:
 
 
 int
-graphOpen(state_t *s)
+libggi_init(state_t *s, picture_t pic)
 {
+  ggiInit();
   s->graphics.ggi_visual = openVisual();
-  return (!(s->graphics_callback = graphics_callback_ggi));
+  return 0;
 }
 
 void
-graphClose(state_t *s)
+libggi_shutdown(state_t *s)
 {
   ggiClose(s->graphics.ggi_visual);
+  ggiExit();
 }
   
 

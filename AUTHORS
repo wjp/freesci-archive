@@ -5,7 +5,7 @@ Authors of FreeSCI:
 Carl Muckenhoupt: [carl@wurb.com]
 parts of graphics/graphics.c core/decompress0.c core/decompress1.c
 
-Dmitri Jemerov: [yole@exch.nnz.spb.su]
+Dmitry Jemerov: [yole@exch.nnz.spb.su]
 graphics/graphics_ddraw.c win32/*
 win32 compatibility fixes all over the place
 

@@ -33,7 +33,10 @@
 #ifndef _SCI_CONSOLE_H_
 #define _SCI_CONSOLE_H_
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif /* HAVE_CONFIG_H */
+
 #include <engine.h>
 #include <graphics.h>
 #include <uinput.h>

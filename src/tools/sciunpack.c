@@ -29,6 +29,10 @@
 
 ***************************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif /* HAVE_CONFIG_H */
+
 #include <resource.h>
 #include <getopt.h>
 #include <sound.h>
@@ -56,11 +60,9 @@ static struct option options[] = {
   {"list", no_argument, &list, 1},
   {"with-header", no_argument, &with_header, 1},
   {"without-header", no_argument, &with_header, 0},
-#ifdef SCI_GRAPHICS_ALLOW_256
   {"palette-dither", no_argument, &sci_color_mode, SCI_COLOR_DITHER},
   {"palette-interpolate", no_argument, &sci_color_mode, SCI_COLOR_INTERPOLATE},
   {"palette-dither256", no_argument, &sci_color_mode, SCI_COLOR_DITHER256},
-#endif /* SCI_GRAPHICS_ALLOW_INTERPOLATION */
   {0, 0, 0, 0}};
 
 
@@ -98,11 +100,9 @@ int main(int argc, char** argv)
 		 " --output-file -o       Selects output file\n"
 		 " --with-header          Forces the SCI header to be written (default)\n"
                  " --without-header       Prevents the two SCI header bytes from being written\n"
-#ifdef SCI_GRAPHICS_ALLOW_256
 		 " --palette-dither       Forces colors in 16 color games to be dithered\n"
 		 " --palette-interpolate  Does color interpolation when drawing picture resources\n"
 		 " --palette-dither256    Does dithering in 256 colors\n"
-#endif /* SCI_GRAPHICS_ALLOW_INTERPOLATION */
 		 " --no-conversion        Does not convert special resources\n"
 		 "\nAs a default, 'resource.number' is the output filename, with the following\n"
 		 "exceptions:\n"

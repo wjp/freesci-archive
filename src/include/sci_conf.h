@@ -30,11 +30,13 @@
 #define _SCI_CONFIG_H_
 
 #include <versions.h>
+#include <graphics.h>
 
 typedef struct {
 
   sci_version_t version; /* The version to emulate */
   int color_mode; /* The mode to use for pic drawing */
+  gfx_driver_t *gfx_driver; /* The graphics driver to use */
 
 } config_entry_t;
 

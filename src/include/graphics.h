@@ -112,12 +112,9 @@ typedef struct {
 /* Macro for color mapping */
 
 
-/****************************** GRAPHICS CALLBACK FUNCTION ******************************/
-/* The graphics callback function is used by some kernel functions to redraw all or part
-** of the screen. Its parameters are the current state, a command, two coordinates, and
-** two block sizes. Each graphics library implementation must provide such a callback
-** function, which is usually set automatically during graphics initialization.
-*/
+/****************************************************************************************/
+
+/*** GRAPHICS DRIVER ***/
 
 #define GRAPHICS_CALLBACK_REDRAW_ALL 0
 /* Callback command to redraw the entire screen */
@@ -128,8 +125,36 @@ typedef struct {
 #define GRAPHICS_CALLBACK_REDRAW_POINTER 2
 /* Callback command to update the mouse pointer */
 
+typedef struct
+{
+  char *Name;    /* Name of the driver (can be specified in the configuration file)
 
-/****************************************************************************************/
+  /* Initializes graphics
+  ** Parameters: (state_t *) s: Pointer to the affected state_t
+  **             (picture *) pic: Pictures
+  ** Returns   : (int) 0 on success, 1 otherwise
+  */
+  int (*Initialize) (struct _state *s, struct _picture *pic);
+
+  /* Deinitializes graphics
+  ** Parameter: (state_t *) s: Pointer to the affected state_t
+  ** Returns  : (void)
+  */
+  void (*Shutdown) (struct _state *s);
+
+  /* Redraws all or part of the screen. 
+  ** Parameters: (state_t *) s: Current state
+  **             command: One of GRAPHICS_CALLBACK_xxx constants specifying the 
+  **                      redraw command
+  **             x,y:     Coordinates of top left corner of the box to be redrawn
+  **             xl,yl:   Size of the box to be redrawn
+  */
+  void (*Redraw) (struct _state *s, int command, int x, int y, int xl, int yl);
+
+} gfx_driver_t;
+
+
+extern gfx_driver_t *gfx_drivers[];
 
 
 #define SCI_COLOR_DITHER 0
@@ -186,25 +211,6 @@ extern int sci_color_mode;
 */
 
 /*** FUNCTION DECLARATIONS ***/
-
-/* [DJ] Graphics functions common for all graphics libraries: */
-
-void graphInit();
-void graphExit();
-
-int
-graphOpen(struct _state *s);
-/* Opens a visual and sets all callbacks to graphics library-specific functions
-** Parameter: (state_t *) s: Pointer to the affected state_t
-** Returns  : (int) 0 on success, 1 otherwise
-*/
-
-void
-graphClose(struct _state *s);
-/* Closes a ggi visual on a state_t
-** Parameter: (state_t *) s: Pointer to the affected state_t
-** Returns  : (void)
-*/
 
 picture_t alloc_empty_picture(int resolution, int colordepth);
 /* Creates an initialized but empty picture buffer.
@@ -446,6 +452,11 @@ free_mouse_cursor(mouse_pointer_t *pointer);
 /***************************************************************/
 /* Implementation-independant graphics operations for state_ts */
 /***************************************************************/
+
+gfx_driver_t *
+graph_get_default_driver();
+/* Sets s->gfx_driver to the default graphics driver.
+*/
 
 void
 graph_clear_box(struct _state *s, int x, int y, int xl, int yl, int color);

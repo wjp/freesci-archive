@@ -62,9 +62,10 @@ LINK32=link.exe
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "sciv_Debug"
+# PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.5\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\hermes\src" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.5\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
 # ADD RSC /l 0x419 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -72,7 +73,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ddraw.lib winmm.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 
 !ENDIF 
 
@@ -94,6 +95,29 @@ SOURCE=..\console\commands_scr.c
 # Begin Source File
 
 SOURCE=..\config.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\config.l
+
+!IF  "$(CFG)" == "sciv - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "sciv - Win32 Debug"
+
+# Begin Custom Build
+ProjDir=.
+InputPath=..\config.l
+InputName=config
+
+"..\config.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	cd $(ProjDir) 
+	cd .. 
+	flex -o$(InputName).c $(InputName).l 
+	
+# End Custom Build
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -205,15 +229,15 @@ SOURCE=..\include\graphics.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\include\graphics_ggi.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\include\graphics_sdl.h
+SOURCE=..\include\graphics_ddraw.h
 # End Source File
 # Begin Source File
 
 SOURCE=..\include\heap.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\kdebug.h
 # End Source File
 # Begin Source File
 
@@ -345,6 +369,34 @@ SOURCE=..\..\..\glib\glibconfig.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\Hermes\src\H_Clear.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Hermes\src\H_Config.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Hermes\src\H_Conv.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Hermes\src\H_Format.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Hermes\src\H_Pal.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Hermes\src\H_Types.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Hermes\src\Hermes.h
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\history.h"
 # End Source File
 # Begin Source File
@@ -366,6 +418,10 @@ SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\readline.h"
 # Begin Source File
 
 SOURCE="..\..\..\glib\glib-1.3.lib"
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Hermes\src\Release\Hermes.lib
 # End Source File
 # End Group
 # End Target

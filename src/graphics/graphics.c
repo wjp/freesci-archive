@@ -45,6 +45,15 @@
 #include "stdio.h"
 #include <stdarg.h>
 #include "graphics.h"
+#include <engine.h>
+
+#ifdef HAVE_LIBGGI
+#include "graphics_ggi.h"
+#endif
+
+#ifdef HAVE_DDRAW
+#include "graphics_ddraw.h"
+#endif
 
 #define DEBUG_DRAWPIC
 
@@ -66,7 +75,34 @@ void _drawpicmsg(const char* format, ...)
 #define DRAWPICMSG 1 ? (void)0 : _drawpicmsg
 #endif
 
+/*** Graphics drivers ***/
+
+gfx_driver_t *gfx_drivers[] =
+{
+#ifdef HAVE_LIBGGI
+  &gfx_driver_libggi,
+#endif
+#ifdef HAVE_DDRAW
+  &gfx_driver_ddraw,
+#endif
+  NULL
+};
+
 int sci_color_mode = SCI_COLOR_DITHER;
+
+gfx_driver_t *
+graph_get_default_driver()
+{
+#ifdef HAVE_LIBGGI
+  return &gfx_driver_libggi;
+#else
+#ifdef HAVE_DDRAW
+  return &gfx_driver_ddraw;
+#else
+  return NULL;
+#endif
+#endif
+}
 
 picture_t
 alloc_empty_picture(int resolution, int colordepth)
@@ -534,6 +570,7 @@ int draw_view0(picture_t dest, port_t *port, int xp, int yp, short _priority,
     if (maxx < 0) return 0;
     if (y > clipmaxy) return 0;
     if (maxy < 0) return 0;
+    if (x >= clipmaxx) return 0;
 
     /* clipping the sides: */
     if (xp < 0) {
@@ -646,6 +683,8 @@ int draw_view0(picture_t dest, port_t *port, int xp, int yp, short _priority,
   return 0;
 }
 
+#define DEBUG_DRAWPIC
+
 void draw_pic0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 {
   gint8 *ptr;
@@ -686,6 +725,7 @@ void draw_pic0(picture_t dest, int flags, int defaultPalette, guint8 *data)
       case 0xf2: /* set priority */
 	code = *(ptr++);
 	priority = priorities[code/40][code%40];
+	priority = code & 0xf;
 	drawenable |= 2;
 	break;
       case 0xf3: /* turn off priority draw */
@@ -827,6 +867,7 @@ void draw_pic0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	    break;
 	  case 5:
 	    ptr++;
+	    break;
 	  default:
 	    fprintf(stderr,"Unknown palette %02x", code);
 	    break;

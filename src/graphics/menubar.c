@@ -75,10 +75,8 @@ menubar_free(menubar_t *menubar)
     for (j = 0; j < menu->items_nr; j++) {
       if (menu->items[j].right)
 	free (menu->items[j].right);
-      free (menu->items[j].left);
       if (menu->items[j].left)
-	free (menu->items[j].right);
-
+        free (menu->items[j].left);
     }
 
     free(menu->items);
@@ -110,8 +108,15 @@ _menubar_add_menu_item(menu_t *menu, int type, char *left, char *right, byte *fo
     return 0;
 
   /* else assume MENU_TYPE_NORMAL */
-  item->left = left;
-  item->right = right;
+  item->left = (char *) malloc (strlen (left)+1);
+  strcpy (item->left, left);
+  if (right)
+  {
+    item->right = (char *) malloc (strlen (right)+1);
+    strcpy (item->right, right);
+  }
+  else item->right=NULL;
+
   if (right)
     total_left_size = MENU_BOX_CENTER_PADDING + (item->rightsize = get_text_width(right, font));
   else total_left_size = item->rightsize = 0;
@@ -153,7 +158,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font)
       if ((tracker == ':') || (tracker == 0)) { /* End of entry */
 	int entrytype = MENU_TYPE_NORMAL;
 
-	left = malloc_ncpy(entries - string_len, string_len);
+	left = malloc_ncpy(entries - string_len - 1, string_len);
 
 	if (strcmp(left, MENU_HBAR_STRING) == 0)
 	  entrytype = MENU_TYPE_HBAR; /* Horizontal bar */
@@ -167,7 +172,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font)
 
       } else if (tracker == '`') { /* Start of right string */
 
-	left = malloc_ncpy(entries - string_len, string_len);
+	left = malloc_ncpy(entries - string_len - 1, string_len);
 	string_len = 0; /* Continue with the right string */
 
       } string_len++; /* Nothing special */
@@ -175,7 +180,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font)
     } else { /* Left string finished => working on right string */
       if ((tracker == ':') || (tracker == 0)) { /* End of entry */
 
-	right = malloc_ncpy(entries - string_len, MIN(2, string_len));
+	right = malloc_ncpy(entries - string_len - 1, MIN(2, string_len));
 	/* Some entries have strange stuff added to the end */
 
 	if (right[0] == '#')

@@ -50,6 +50,8 @@ heap_ptr *_pp;
 heap_ptr *_objp;
 int *_restadjust;
 
+int _kdebug_cheap_event_hack = 0;
+int _kdebug_cheap_soundcue_hack = -1;
 
 char inputbuf[256] = "";
 
@@ -381,7 +383,7 @@ c_refresh_screen(void)
     return 1;
   }
 
-  _s->graphics_callback(_s, GRAPHICS_CALLBACK_REDRAW_ALL,0,0,0,0);
+  (*_s->gfx_driver->Redraw)(_s, GRAPHICS_CALLBACK_REDRAW_ALL,0,0,0,0);
   return 0;
 }
 
@@ -515,7 +517,7 @@ c_debuglog(void)
 {
   int i;
   char *parser;
-  char modechars[] = "ulgcmf"; /* Valid parameter chars */
+  char modechars[] = "ulgcmfb"; /* Valid parameter chars */
 
   if (!_debugstate_valid) {
     sciprintf("Not in debug state\n");
@@ -628,6 +630,18 @@ c_show_list(void)
     show_list(list);
 }
 
+
+int
+c_simkey(void)
+{
+  _kdebug_cheap_event_hack = cmd_params[0].val;
+}
+
+int
+c_simsoundcue(void)
+{
+  _kdebug_cheap_soundcue_hack = cmd_params[0].val;
+}
 
 int
 objinfo(heap_ptr pos)
@@ -828,10 +842,13 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       cmdHook(c_debuglog, "debuglog", "s*", "Sets the debug log modes.\n  Possible parameters:\n"
 	      "  +x (sets debugging for x)\n  -x (unsets debugging for x)\n\nPossible values for x:\n"
 	      "  u: Unimpl'd/stubbed stuff\n  l: Lists and nodes\n  g: Graphics\n  c: Character"
-	      " handling\n  m: Memory management\n  f: Function call checks\n  *: Everything\n\n"
+	      " handling\n  m: Memory management\n  f: Function call checks\n  b: Bresenham details"
+	      "  *: Everything\n\n"
 	      "  If invoked withour parameters,\n  it will list all activated\n  debug options.");
       cmdHook(c_visible_map, "set_vismap", "i", "Sets the visible map.\n  Default is 0 (visual).\n"
 	      "  Other useful values are:\n  1: Priority\n  2: Control\n  3: Auxiliary\n");
+      cmdHook(c_simkey, "simkey", "i", "Simulates a keypress with the\n  specified scancode.\n");
+      cmdHook(c_simsoundcue, "simsoundcue", "i", "Simulates a sound cue \n  of the specified type.\n");
 
       cmdHookInt(&script_exec_stackpos, "script_exec_stackpos", "Position on the execution stack\n");
       cmdHookInt(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");

@@ -1,5 +1,5 @@
 /***************************************************************************
- config.c (C) 1999 Christoph Reichenbach, TU Darmstadt
+ config.l (C) 1999 Christoph Reichenbach, TU Darmstadt
 
 
  This program may be modified and copied freely according to the terms of
@@ -52,6 +52,9 @@ _parse_color_mode(char *s); /* Parses the color mode string */
 sci_version_t
 _parse_version_nr(char *s); /* Parses a version number */
 
+gfx_driver_t *
+_parse_gfx_driver(char *s); /* Parses a graphics driver */
+
 %}
 
 DIGIT [0-9]
@@ -84,6 +87,17 @@ version[[:blank:]]*"="[[:blank:]]*{SCIVERSION}  if (workname == name) {
   conf->version = _parse_version_nr(yytext);
 }
 
+gfx_driver[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} if (workname == name) {
+  yytext = strchr(yytext, '=') + 1;
+
+  while (isspace(*yytext))
+    yytext++;
+
+  conf->gfx_driver = _parse_gfx_driver(yytext);
+}
+
+
+
 
 "#".+$ /* Ignore comments */
 
@@ -110,6 +124,8 @@ config_init(config_entry_t *_conf, char *_name, char *conffile)
     conf->version = SCI_VERSION_DEFAULT_SCI0;
   else if (sci_version == SCI_VERSION_01)
     conf->version = SCI_VERSION_DEFAULT_SCI01;
+
+  conf->gfx_driver = graph_get_default_driver();
 /**** Default config ends */
 
   if (conffile)
@@ -199,3 +215,17 @@ _parse_version_nr(char *vn) /* Parses a version number */
   return SCI_VERSION(major, minor, patchlevel);
 }
 
+gfx_driver_t *
+_parse_gfx_driver(char *driver_name)
+{
+  int i;
+
+  for (i=0; gfx_drivers [i]; i++)
+    if (!strcmp (gfx_drivers [i]->Name, driver_name))
+      return gfx_drivers [i];
+
+  /* not found - return default */
+
+  printf ("Unknown graphics driver %s\n", driver_name);
+  return conf->gfx_driver;
+}

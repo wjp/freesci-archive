@@ -32,7 +32,10 @@
 #ifndef _SCI_SOUND_H_
 #define _SCI_SOUND_H_
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif /* HAVE_CONFIG_H */
+
 #ifdef HAVE_GSI_GSI_INTERFACE_C
 #define HAVE_GSI
 /* This is somewhat shorter */

@@ -35,6 +35,7 @@
 #include <graphics_ddraw.h>
 #include <uinput.h>
 #include <engine.h>
+#include <vm.h>
 
 #include <Hermes.h>
 
@@ -43,6 +44,7 @@ static IDirectDraw *pDD=NULL;
 static IDirectDrawSurface *pPrimary=NULL;
 static IDirectDrawSurface *pBuffer=NULL;
 static IDirectDrawClipper *pClipper=NULL;
+static IDirectDrawPalette *pPalette=NULL;
 static int WndXStart, WndYStart;
 
 static HermesHandle hhPalette;
@@ -50,27 +52,25 @@ static HermesHandle hhConverter;
 static HermesFormat *hfSrc;
 static HermesFormat *hfDest;
 
-void
-graphics_callback_ddraw (struct _state *s, int command, int x, int y, int xl, int yl);
+static RGBQUAD color_table [256];
+
+/*** Graphics driver ***/
+
+gfx_driver_t gfx_driver_ddraw = 
+{
+  "ddraw",
+  ddraw_init,
+  ddraw_shutdown,
+  ddraw_redraw
+};
 
 /*** Initialization and window stuff ***/
 
-void graphInit()
-{
-}
-
-void graphExit()
-{
-}
-
-void initColors (HermesHandle hhPal)
+void initColors()
 {
   int i;
-  int32* pPal;
   RGBQUAD vcal [16];
-  RGBQUAD color [256];
 
-  pPal=Hermes_PaletteGet (hhPal);
   for (i=0; i<16; i++) {
     vcal[i].rgbRed = (i & 0x04) ? 0xaaaa : 0;
     vcal[i].rgbGreen = (i & 0x02) ? 0xaaaa : 0;
@@ -80,24 +80,20 @@ void initColors (HermesHandle hhPal)
       vcal[i].rgbGreen += 0x5555;
       vcal[i].rgbBlue += 0x5555;
     }
-    if (i == 6) { /* Special exception for brown */
+    if (i == 6) { /* Srgbcial exception for brown */
       vcal[i].rgbGreen >>= 1;
     }
   }
   
   for (i=0; i< 256; i++) {
-    color [i].rgbRed = (vcal[i & 0xf].rgbRed / 5)*3
+    color_table [i].rgbRed = (vcal[i & 0xf].rgbRed / 5)*3
       + (vcal[i >> 4].rgbRed / 5)*2;
-    color [i].rgbGreen = (vcal[i & 0xf].rgbGreen / 5)*3
+    color_table [i].rgbGreen = (vcal[i & 0xf].rgbGreen / 5)*3
       + (vcal[i >> 4].rgbGreen / 5)*2;
-    color [i].rgbBlue = (vcal[i & 0xf].rgbBlue / 5)*3
+    color_table [i].rgbBlue = (vcal[i & 0xf].rgbBlue / 5)*3
       + (vcal[i >> 4].rgbBlue / 5)*2;
-    color [i].rgbReserved = 0;
+    color_table [i].rgbReserved = 0;
   }
-
-  memcpy (pPal, color, 4*256);
-
-  Hermes_PaletteInvalidateCache (hhPal);
 }
 
 long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -113,6 +109,11 @@ long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       WndXStart = pnt.x;
       WndYStart = pnt.y;
     }
+    break;
+
+  case WM_DESTROY:
+    script_abort_flag = 1;
+    PostQuitMessage (0);
     break;
   }
 
@@ -235,12 +236,12 @@ DDrawFailure (HRESULT hr)
 {
   char buf [128];
   TraceLastDDrawError (hr, buf);
-  printf ("DirectDraw initialization failed: %s\n", buf);
+  printf ("DirectDraw operation failed: %s\n", buf);
   return 1;
 }
 
 int
-graphOpen(state_t *s)
+ddraw_init(state_t *s, struct _picture *pic)
 {
   WNDCLASS wc;
   HRESULT hr;
@@ -249,6 +250,7 @@ graphOpen(state_t *s)
   MSG msg;
   RECT rc;
   char buf [128];
+  int32* pPal;
 
   /* Register window class */
   wc.style         = CS_HREDRAW | CS_VREDRAW;
@@ -291,7 +293,7 @@ graphOpen(state_t *s)
   SetFocus (hMainWnd);
 
   /* Initialize DirectDraw for windowed mode, create the surface and 
-     attach clipper */
+     attach cliprgbr */
   if (!pDD)
   {
     hr=DirectDrawCreate (NULL, &pDD, NULL);
@@ -312,8 +314,8 @@ graphOpen(state_t *s)
   ddsd.dwSize = sizeof (DDSURFACEDESC);
   ddsd.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
   ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
-  ddsd.dwWidth = SCI_SCREEN_WIDTH;
-  ddsd.dwHeight = SCI_SCREEN_HEIGHT;
+  ddsd.dwWidth = SCI_SCREEN_WIDTH*2;
+  ddsd.dwHeight = SCI_SCREEN_HEIGHT*2;
 
   hr=IDirectDraw_CreateSurface (pDD, &ddsd, &pBuffer, NULL);
   if (hr != DD_OK) return DDrawFailure (hr);
@@ -327,30 +329,56 @@ graphOpen(state_t *s)
   hr=IDirectDrawSurface_SetClipper (pPrimary, pClipper);
   if (hr != DD_OK) return DDrawFailure (hr);
 
+  /* Find out the pixel format of the primary surface */
+  ddpf.dwSize = sizeof (DDPIXELFORMAT);
+  IDirectDrawSurface_GetPixelFormat (pBuffer, &ddpf);
+
+  initColors();
+
+  if (ddpf.dwFlags & DDPF_PALETTEINDEXED8)
+  {
+    /* The RGBQUAD and PALETTEENTRY structure have different order of RGB
+       bytes. The order in RGBQUAD corresponds to what Hermes understands,
+       but for DirectDraw we need to do a conversion. */
+    PALETTEENTRY pe [256];
+    int i;
+
+    for (i=0; i<256; i++)
+    {
+      pe [i].peBlue  = color_table [i].rgbBlue;
+      pe [i].peGreen = color_table [i].rgbGreen;
+      pe [i].peRed   = color_table [i].rgbRed;
+      pe [i].peFlags = 0;
+    }
+
+    hr=IDirectDraw_CreatePalette (pDD, DDPCAPS_8BIT | DDPCAPS_ALLOW256, pe, &pPalette, NULL);
+    if (hr != DD_OK) return DDrawFailure (hr);
+    
+    hr=IDirectDrawSurface_SetPalette (pPrimary, pPalette);
+    if (hr != DD_OK) return DDrawFailure (hr);
+  }
+
   /* Initialize Hermes */
   Hermes_Init();
   hhPalette = Hermes_PaletteInstance();
   if (!hhPalette) return 1;
-  initColors (hhPalette);
+  pPal=Hermes_PaletteGet (hhPalette);
+  memcpy (pPal, color_table, 4*256);
+  Hermes_PaletteInvalidateCache (hhPalette);
   hhConverter = Hermes_ConverterInstance (0);
   if (!hhConverter) return 1;
   hfSrc = Hermes_FormatNew (8, 0, 0, 0, 0, 1);
   
-  /* Find out the pixel format of the primary surface and convert it to Hermes
-     format */
-  ddpf.dwSize = sizeof (DDPIXELFORMAT);
-  IDirectDrawSurface_GetPixelFormat (pBuffer, &ddpf);
-  if (ddpf.dwFlags & DDPF_PALETTEINDEXED8)
-  {
-    printf ("Desktop is in 8 bpp mode - currently not supported\n");
-    return 1;
-  }
+  /* Create Hermes format corresponding to the DirectDraw format of the
+     primary surface */
   hfDest = Hermes_FormatNew (ddpf.dwRGBBitCount,
-    ddpf.dwRBitMask, ddpf.dwGBitMask, ddpf.dwBBitMask, 0, 0);
+    ddpf.dwRBitMask, ddpf.dwGBitMask, ddpf.dwBBitMask, 0, 
+    ((ddpf.dwFlags & DDPF_PALETTEINDEXED8) != 0));
  
   /* Set graphics callback */
-  s->graphics_callback = graphics_callback_ddraw;
+  /*s->graphics_callback = graphics_callback_ddraw;*/
 
+  /* Process initial messages */
   while (PeekMessage (&msg, NULL, 0, 0, PM_NOREMOVE))
   {
     if (!GetMessage (&msg, NULL, 0, 0)) return 0;
@@ -362,8 +390,9 @@ graphOpen(state_t *s)
 }
 
 void
-graphClose(state_t *s)
+ddraw_shutdown(state_t *s)
 {
+  printf ("Closing DirectDraw\n");
   /* Deinitialize Hermes */
   Hermes_ConverterReturn (hhConverter);
   Hermes_PaletteReturn (hhPalette);
@@ -376,6 +405,18 @@ graphClose(state_t *s)
     {
       IDirectDrawClipper_Release (pClipper);
       pClipper = NULL;
+    }
+
+    if (pPalette)
+    {
+      IDirectDrawPalette_Release (pPalette);
+      pPalette = NULL;
+    }
+
+    if (pBuffer)
+    {
+      IDirectDrawSurface_Release (pBuffer);
+      pBuffer = NULL;
     }
 
     if (pPrimary)
@@ -451,48 +492,113 @@ void
 graphics_draw_region_ddraw(byte *data,
                            int sx, int sy,
                            int pitch,
+                           int *color_key,
 			   int x, int y, int xl, int yl)
 {
   DDSURFACEDESC ddsd;
   RECT rcDest, rcSrc;
+  HRESULT hr;
+  DWORD cvt_color_key;
+  DDBLTFX bltfx;
 
   /* adjust coordinates */
   if (x < 0) {
     xl += x;
     x = 0;
   }
+  if (x > SCI_SCREEN_WIDTH) {
+    xl -= (x - SCI_SCREEN_WIDTH);
+    x = SCI_SCREEN_WIDTH;
+  }
 
   if (y < 0) {
     yl += y;
     y = 0;
   }
+  if (y > SCI_SCREEN_HEIGHT) {
+    yl -= (y - SCI_SCREEN_HEIGHT);
+    y = SCI_SCREEN_HEIGHT;
+  }
+
+  if (sx < 0)
+    sx = 0;
+  if (sx > SCI_SCREEN_WIDTH)
+    sx = SCI_SCREEN_WIDTH;
+  if (sy < 0)
+    sy = 0;
+  if (sy > SCI_SCREEN_HEIGHT)
+    sy = SCI_SCREEN_HEIGHT;
+
+  if (sx+xl > SCI_SCREEN_WIDTH)
+    xl = SCI_SCREEN_WIDTH-sx;
+  if (sy+yl > SCI_SCREEN_HEIGHT)
+    yl = SCI_SCREEN_HEIGHT-sy;
 
   if (IDirectDrawSurface_IsLost (pPrimary) == DDERR_SURFACELOST)
     IDirectDrawSurface_Restore (pPrimary);
 
+  /* In the window mode, locking the primary surface gives us a pointer
+     to the entire desktop space. However, it is not a good idea to draw
+     over other windows. In order to clip the output correctly, we can
+     either obtain the clip list from IDirectDrawClipper and process it
+     ourselves, or do a blit from a secondary buffer, letting DirectDraw
+     use the clipper by itself. The second approach is faster and easier
+     to implement, despite the need of using a secondary buffer. */
+    
   ddsd.dwSize = sizeof (DDSURFACEDESC);
   IDirectDrawSurface_Lock (pBuffer, NULL, &ddsd, DDLOCK_WAIT, NULL);
 
   Hermes_ConverterRequest (hhConverter, hfSrc, hfDest);
   Hermes_ConverterPalette (hhConverter, hhPalette, hhPalette);
-  Hermes_ConverterCopy (hhConverter,
+
+  if (color_key)
+  {
+    /* Convert a single pixel with color_key color and find out the color
+       it got converted to. We use it later for color-keyed blitting */
+    Hermes_ConverterCopy (hhConverter,
+      color_key, 0, 0, 1, 1, 1,
+      ddsd.lpSurface,
+      0,0,1,1,
+      ddsd.lPitch);
+    
+    cvt_color_key=0;
+    memcpy (&cvt_color_key, ddsd.lpSurface, ddsd.ddpfPixelFormat.dwRGBBitCount);
+  }
+  
+  if (!Hermes_ConverterCopy (hhConverter,
     data,
     sx, sy, xl, yl,
     pitch,
     ddsd.lpSurface,
-    /*WndXStart+x*2, WndYStart+y*2, xl*2, yl*2,*/
-    0, 0, xl, yl,
-    ddsd.lPitch);
+    0, 0, xl*2, yl*2,
+    ddsd.lPitch))
+    printf ("Hermes copy failed\n");
   
   IDirectDrawSurface_Unlock (pBuffer, NULL);
 
-  SetRect (&rcDest, WndXStart+x*2, WndYStart+y*2, xl*2, yl*2);
-  SetRect (&rcSrc, sx, sy, xl, yl);
-  IDirectDrawSurface_Blt (pPrimary, &rcDest, pBuffer, &rcSrc, DDBLT_WAIT, NULL);
+  SetRect (&rcDest, WndXStart+x*2, WndYStart+y*2, WndXStart+(x+xl)*2, WndYStart+(y+yl)*2);
+  SetRect (&rcSrc, 0, 0, xl*2, yl*2);
+  if (!color_key)
+    hr=IDirectDrawSurface_Blt (pPrimary, &rcDest, pBuffer, &rcSrc, DDBLT_WAIT, NULL);
+  else
+  {
+    bltfx.dwSize = sizeof (DDBLTFX);
+    bltfx.ddckSrcColorkey.dwColorSpaceLowValue = cvt_color_key;
+    bltfx.ddckSrcColorkey.dwColorSpaceHighValue = cvt_color_key;
+    hr=IDirectDrawSurface_Blt (pPrimary, &rcDest, pBuffer, &rcSrc, 
+      DDBLT_WAIT | DDBLT_KEYSRCOVERRIDE, &bltfx);
+  }
+
+  if (hr != DD_OK) 
+  {
+    DDrawFailure (hr);
+    printf ("src rect (%d,%d)-(%d,%d)\n", rcSrc.left, rcSrc.top, rcSrc.right, rcSrc.bottom);
+    printf ("dest rect (%d,%d)-(%d,%d)\n", rcDest.left, rcDest.top, rcDest.right, rcDest.bottom);
+  }
 }
 
 void
-graphics_callback_ddraw (struct _state *s, int command, int x, int y, int xl, int yl)
+ddraw_redraw (struct _state *s, int command, int x, int y, int xl, int yl)
 {
   int mp_x, mp_y, mp_size_x, mp_size_y;
 
@@ -507,33 +613,36 @@ graphics_callback_ddraw (struct _state *s, int command, int x, int y, int xl, in
     mp_size_x = mp_size_y = 0;
   }
 
-
   switch (command) {
   case GRAPHICS_CALLBACK_REDRAW_ALL:
     graphics_draw_region_ddraw(s->pic->view,
-			       0, 0, SCI_SCREEN_WIDTH,
+			       0, 0, SCI_SCREEN_WIDTH, NULL,
                                0, 0, SCI_SCREEN_WIDTH, SCI_SCREEN_HEIGHT);
     break;
 
   case GRAPHICS_CALLBACK_REDRAW_BOX:
-    graphics_draw_region_ddraw(s->pic->view, /* Draw box */
-			       x, y, SCI_SCREEN_WIDTH,
-                               x, y, xl, yl);
+    if (xl > 0 && yl > 0)
+      graphics_draw_region_ddraw(s->pic->view, /* Draw box */
+                                 x, y, SCI_SCREEN_WIDTH, NULL,
+                                 x, y, xl, yl);
     break;
 
   case GRAPHICS_CALLBACK_REDRAW_POINTER:
-    graphics_draw_region_ddraw(s->pic->view, /* Remove old pointer */
-                               s->last_pointer_x,s->last_pointer_y, SCI_SCREEN_WIDTH,
-			       s->last_pointer_x,s->last_pointer_y,
-			       s->last_pointer_size_x, s->last_pointer_size_y);
+    if (s->last_pointer_size_x > 0 && s->last_pointer_size_y > 0)
+      graphics_draw_region_ddraw(s->pic->view, /* Remove old pointer */
+                                 s->last_pointer_x,s->last_pointer_y, SCI_SCREEN_WIDTH, NULL,
+			         s->last_pointer_x,s->last_pointer_y,
+			         s->last_pointer_size_x, s->last_pointer_size_y);
     break;
 default:
     fprintf(stderr,"graphics_callback_ddraw: Invalid command %d\n", command);
+    return;
   }
 
+  /* Redraw mouse pointer, if present */
   if (s->mouse_pointer)
     graphics_draw_region_ddraw(s->mouse_pointer->bitmap,
-                               0, 0, s->mouse_pointer->size_x,
+                               0, 0, s->mouse_pointer->size_x, &s->mouse_pointer->color_key,
                                s->pointer_x, s->pointer_y,
                                s->mouse_pointer->size_x, s->mouse_pointer->size_y);
 

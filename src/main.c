@@ -80,8 +80,6 @@ main(int argc, char** argv)
 	 "or any later version, at your option.\n"
 	 "It comes with ABSOLUTELY NO WARRANTY.\n");
 
-  graphInit();
-
   sci_color_mode = SCI_COLOR_DITHER256;
 
   if (i = loadResources(SCI_VERSION_AUTODETECT, 1)) {
@@ -115,14 +113,17 @@ main(int argc, char** argv)
 
   game_init(&gamestate); /* Initialize */
 
-  if (graphOpen(&gamestate)) { /* initialize graphics */
+  config_init(&conf, gamestate.game_name, NULL);
+
+  gamestate.version = conf.version;
+  sci_color_mode = conf.color_mode;
+  gamestate.gfx_driver = conf.gfx_driver;
+
+  /* initialize graphics */
+  if ((*gamestate.gfx_driver->Initialize)(&gamestate, gamestate.pic)) { 
     fprintf(stderr,"Graphics initialization failed. Aborting...\n");
     exit(1);
   };
-
-  config_init(&conf, gamestate.game_name, NULL);
-  gamestate.version = conf.version;
-  sci_color_mode = conf.color_mode;
 
   printf("Emulating SCI version %d.%03d.%03d\n",
 	 gamestate.version >> 20,
@@ -132,13 +133,11 @@ main(int argc, char** argv)
   game_run(&gamestate); /* Run the game */
   game_exit(&gamestate);
 
-  graphClose(&gamestate); /* Close graphics */
+  (*gamestate.gfx_driver->Shutdown)(&gamestate); /* Close graphics */
 
   script_free_state(&gamestate); /* Uninitialize game state */
 
   freeResources();
-
-  graphExit();
 
   return 0;
 }

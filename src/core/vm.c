@@ -865,6 +865,7 @@ script_init_state(state_t *s)
   int scriptnr;
   int seeker;
   int classnr;
+  int size;
   resource_t *script;
 
   s->_heap = heap_new();
@@ -884,9 +885,14 @@ script_init_state(state_t *s)
     int objtype;
     resource_t *script = findResource(sci_script, scriptnr);
 
-    seeker = 0;
+    if (script) {
 
-    if (script)
+      size = getInt16(script->data);
+      if (size == script->length)
+	seeker = 2;
+      else
+	seeker = 0;
+
       do {
 
 	while ((objtype = getInt16(script->data + seeker)) && (objtype != sci_obj_class))
@@ -923,6 +929,7 @@ script_init_state(state_t *s)
 
       } while (objtype != sci_obj_terminator);
 
+    }
   }
 
   return 0;
@@ -973,7 +980,11 @@ script_instantiate(state_t *s, int script_nr)
   s->scripttable[script_nr].export_table_offset = 0;
   s->scripttable[script_nr].localvar_offset = 0;
 
-  memcpy(s->heap + handle, script->data, script->length); /* Copy the script */
+  objlength = getInt16(script->data);
+  if (objlength != script->length)
+    memcpy(s->heap + handle, script->data, script->length); /* Copy the script */
+  else
+    memcpy(s->heap + handle, script->data + 2, script->length -2);
 
   /* Now do a first pass through the script objects to find the
   ** export table and local variable block 
@@ -1243,7 +1254,7 @@ game_init(state_t *s)
   s->priority_first = 42; /* Priority zone 0 ends here */
   s->priority_last = 200; /* The highest priority zone (15) starts here */
 
-  s->debug_mode = 0xffffffff; /* Enable all debugging */
+  s->debug_mode = 0x0; /* Disable all debugging */
 
   srand(time(NULL)); /* Initialize random number generator */
 
@@ -1343,6 +1354,7 @@ game_exit(state_t *s)
   free(s->file_handles);
 
   menubar_free(s->menubar);
+
 
   heap_free(s->_heap, s->stack_handle);
   heap_free(s->_heap, s->save_dir);

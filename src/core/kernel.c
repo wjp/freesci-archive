@@ -40,6 +40,9 @@
 #define PI 3.14159265358979323846
 #endif /* !PI */
 
+extern int _kdebug_cheap_event_hack;
+extern int _kdebug_cheap_soundcue_hack;
+
 #ifdef _WIN32
 #define scimkdir(arg1,arg2) mkdir(arg1)
 void MsgWait (int WaitTime);
@@ -72,8 +75,6 @@ void Win32_usleep (long usec);
 
 
 
-
-
 #ifdef __GNUC__
 
 #define SCIkwarn(arguments...) _SCIGNUkdebug(__PRETTY_FUNCTION__, ## arguments)
@@ -83,7 +84,6 @@ void Win32_usleep (long usec);
 #define SCIkwarn _SCIkwarn
 
 #endif /* !__GNUC__ */
-
 
 /******************** Debug functions ********************/
 
@@ -227,7 +227,7 @@ write_selector(state_t *s, heap_ptr object, int selector_id, int value)
   heap_ptr address;
 
   if ((selector_id < 0) || (selector_id > s->selector_names_nr)) {
-    SCIkwarn(SCIkERROR, "Attempt to write to invalid selector of object at %04x.\n", object);
+    SCIkwarn(SCIkWARNING, "Attempt to write to invalid selector of object at %04x.\n", object);
     return;
   }
 
@@ -423,8 +423,19 @@ _kernel_lookup_text(state_t *s, int address, int index)
 #define _K_VIEW_SIG_FLAG_IGNORE_ACTOR   0x4000
 #define _K_VIEW_SIG_FLAG_DISPOSE_ME     0x8000
 
+void
+_k_dyn_view_list_prepare_change(state_t *s);
+     /* Removes all views in anticipation of a new window or text */
+void
+_k_dyn_view_list_accept_change(state_t *s);
+     /* Removes all views in anticipation of a new window or text */
 
 
+#define VIEW_PRIORITY(y) (((y) < s->priority_first)? 0 : (((y) > s->priority_last)? 15 : 1\
+	+ ((((y) - s->priority_first) * 14) / (s->priority_last - s->priority_first))))
+
+#define PRIORITY_BAND_FIRST(nr) (((nr) == 0)? 0 :  \
+        ((s->priority_first) + ((nr) * (s->priority_last - s->priority_first)) / 14))
 
 
 /*****************************************/
@@ -595,7 +606,13 @@ kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kDisposeScript(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  script_uninstantiate(s, PARAM(0)); /* Does its own sanity checking */
+  int script = UPARAM(0);
+
+  if (script < 1000)
+    script_uninstantiate(s, PARAM(0));
+  else
+    SCIkwarn(SCIkWARNING, "Attemt to dispose invalid script %04x\n", script);
+
 }
 
 
@@ -777,21 +794,30 @@ kDeleteKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
     heap_free(s->_heap, node - 2);
 
   } else SCIkdebug(SCIkNODES,"Removing key from list: FAILED\n");
-
 }
 
 
 void
 kFirstNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->acc = GET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
+  heap_ptr list = UPARAM(0);
+
+  if (list)
+    s->acc = GET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
+  else
+    s->acc = 0;
 }
 
 
 void
 kLastNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->acc = GET_HEAP(UPARAM(0) + LIST_LAST_NODE);
+  heap_ptr list = UPARAM(0);
+
+  if (list)
+    s->acc = GET_HEAP(UPARAM(0) + LIST_LAST_NODE);
+  else
+    s->acc = 0;
 }
 
 
@@ -1056,7 +1082,7 @@ kSetCursor(state_t *s, int funct_nr, int argc, heap_ptr argp)
     s->pointer_y = PARAM(3) + s->ports[s->view_port]->ymin; /* Port-relative */
   }
 
-  s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0); /* Update mouse pointer */
+  (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0); /* Update mouse pointer */
 }
 
 
@@ -1152,8 +1178,9 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
   SCIkdebug(SCIkSTUB, "kDoSound: Stub\n");
 
   if (obj > 1000) {
-    PUT_SELECTOR(obj, state, 2); /* Set state to a magic value */
-    PUT_SELECTOR(obj, prevSignal, -1);
+    if (sci_version < SCI_VERSION_01)
+      PUT_SELECTOR(obj, state, 2); /* Set state to a magic value */
+    PUT_SELECTOR(obj, signal, _kdebug_cheap_soundcue_hack);
   }
 
   switch (PARAM(0)) {
@@ -1267,10 +1294,52 @@ k_Unknown(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+  int mask = UPARAM(0);
+  heap_ptr obj = UPARAM(1);
+
   CHECK_THIS_KERNEL_FUNCTION;
   SCIkdebug(SCIkSTUB, "kGetEvent: Stub\n");
 
-  s->acc = 0; /* No event */
+  PUT_SELECTOR(obj, x, s->pointer_x);
+  PUT_SELECTOR(obj, y, s->pointer_y);
+
+  if (_kdebug_cheap_event_hack) { /* Simulated keypress event? */
+
+    PUT_SELECTOR(obj, type, 4); /* Keyboard event */
+    s->acc = 4;
+
+    PUT_SELECTOR(obj, message, _kdebug_cheap_event_hack); /* Key */
+    PUT_SELECTOR(obj, modifiers, 32); /* NumLock active */
+    _kdebug_cheap_event_hack = 0;
+
+  } else
+    s->acc = 0; /* No event */
+}
+
+void
+kMapKeyToDir(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr obj = UPARAM(0); /* FIXME: Replace numbers with defines */
+
+  if (GET_SELECTOR(obj, type) == 4) { /* Keyboard */
+    int mover = -1;
+    switch (GET_SELECTOR(obj, message)) {
+    case 71: mover = 8; break;
+    case 72: mover = 1; break;
+    case 73: mover = 2; break;
+    case 75: mover = 7; break;
+    case 76: mover = 0; break;
+    case 77: mover = 3; break;
+    case 79: mover = 6; break;
+    case 80: mover = 5; break;
+    case 81: mover = 4; break;
+    }
+
+    if (mover >= 0) {
+      PUT_SELECTOR(obj, type, 64);
+      PUT_SELECTOR(obj, message, mover);
+    }
+  }
 }
 
 void
@@ -1582,11 +1651,7 @@ kCoordPri(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int y = PARAM(0);
 
-  if (y < s->priority_first)
-    s->acc = 0;
-  else if (y > s->priority_last)
-    s->acc = 15;
-  else s->acc = ((y - s->priority_first) * 15) / (s->priority_last - s->priority_first);
+  s->acc = VIEW_PRIORITY(y);
 }
 
 
@@ -1595,7 +1660,7 @@ kPriCoord(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int priority = PARAM(0);
 
-  s->acc = s->priority_first + (priority * (s->priority_last - s->priority_first)) / 15;
+  s->acc = PRIORITY_BAND_FIRST(priority);
 }
 
 
@@ -1684,11 +1749,20 @@ kInitBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int stepy = GET_SELECTOR(client, yStep) * step_factor;
   int numsteps_x = (abs(deltax) + stepx-1) / stepx;
   int numsteps_y = (abs(deltay) + stepy-1) / stepy;
-  int numsteps = MAX(numsteps_x, numsteps_y);
-  int deltax_step = deltax / numsteps;
-  int deltay_step = deltay / numsteps;
-  int bdi;
+  int bdi, i1;
+  int numsteps;
+  int deltax_step;
+  int deltay_step;
 
+  if (numsteps_x > numsteps_y) {
+    numsteps = numsteps_x;
+    deltax_step = (deltax < 0)? -stepx : stepx;
+    deltay_step = numsteps? deltay / numsteps : deltay;
+  } else { /* numsteps_x <= numsteps_y */
+    numsteps = numsteps_y;
+    deltay_step = (deltay < 0)? -stepy : stepy;
+    deltax_step = numsteps? deltax / numsteps : deltax;
+  }
 
   PUT_SELECTOR(mover, b_movCnt, 0);
   PUT_SELECTOR(mover, completed, 0);
@@ -1700,19 +1774,24 @@ kInitBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     PUT_SELECTOR(mover, b_xAxis, _K_BRESEN_AXIS_Y);
     PUT_SELECTOR(mover, b_incr, (deltay < 0)? -1 : 1);
-    PUT_SELECTOR(mover, b_i1, 2 * (abs(deltay) - abs(deltay_step * numsteps)) * abs(deltax_step));
+    i1 = 2 * (abs(deltay) - abs(deltay_step * numsteps)) * abs(deltax_step);
     bdi = -abs(deltax);
 
   } else { /* Bresenham on x */
 
     PUT_SELECTOR(mover, b_xAxis, _K_BRESEN_AXIS_X);
     PUT_SELECTOR(mover, b_incr, (deltax < 0)? -1 : 1);
-    PUT_SELECTOR(mover, b_i1, 2 * (abs(deltax) - abs(deltax_step * numsteps)) * abs(deltay_step));
+    i1= 2 * (abs(deltax) - abs(deltax_step * numsteps)) * abs(deltay_step);
     bdi = -abs(deltay);
 
   }
 
+  SCIkdebug(SCIkBRESEN, "Init bresen for mover %04x: d=(%d,%d)\n", mover, deltax, deltay);
+  SCIkdebug(SCIkBRESEN, "    steps=%d, mv=(%d, %d), i1= %d, i2=%d\n",
+	    numsteps, deltax_step, deltay_step, i1, bdi*2);
+
   PUT_SELECTOR(mover, b_di, bdi);
+  PUT_SELECTOR(mover, b_i1, i1);
   PUT_SELECTOR(mover, b_i2, bdi * 2);
 
 }
@@ -1759,6 +1838,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
       x = destx;
       y = desty;
       PUT_SELECTOR(mover, completed, 1);
+      SCIkdebug(SCIkBRESEN, "Finished mover %04x\n", mover);
     }
 
   PUT_SELECTOR(client, x, x);
@@ -1766,12 +1846,19 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   invoke_selector(INV_SEL(client, canBeHere, 0), 0);
 
-  if (s->acc) /* Contains the return value */
+  if (s->acc) { /* Contains the return value */
+    s->acc = GET_SELECTOR(mover, completed);
     return;
-  else { /* Yep, this isn't really neccessary */
+  } else { /* Yep, this isn't really neccessary */
+    word signal = GET_SELECTOR(client, signal);
+
     PUT_SELECTOR(client, x, oldx);
     PUT_SELECTOR(client, y, oldy);
     PUT_SELECTOR(mover, completed, 1);
+
+    PUT_SELECTOR(client, signal, signal | _K_VIEW_SIG_FLAG_HIT_OBSTACLE);
+
+    SCIkdebug(SCIkBRESEN, "Finished mover %04x\n", mover);
   }
 
 }
@@ -1827,7 +1914,6 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
   }
 
-fprintf(stderr,"Returning...\n");
   s->acc = 1;
   /* CanBeHere */
 }
@@ -2046,6 +2132,8 @@ kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   CHECK_THIS_KERNEL_FUNCTION;
 
+  _k_dyn_view_list_prepare_change(s);
+
   switch (type) {
 
   case K_CONTROL_BUTTON:
@@ -2099,6 +2187,8 @@ kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
   default:
     SCIkwarn(SCIkWARNING, "Unknown control type: %d at %04x\n", type, obj);
   }
+
+  _k_dyn_view_list_accept_change(s);
 
   if (!s->pic_not_valid)
     graph_update_port(s, s->ports[s->view_port]);
@@ -2260,7 +2350,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
   if (cycle)
     _k_invoke_view_list(s, list, funct_nr, argc, argp); /* Invoke all objects bif requested */
 
-  node = GET_HEAP(list + LIST_FIRST_NODE);
+  node = GET_HEAP(list + LIST_LAST_NODE);
   *list_nr = 0;
 
   SCIkdebug(SCIkGRAPHICS, "Making list from %04x\n", list);
@@ -2272,7 +2362,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
 
   while (node) {
     (*list_nr)++;
-    node = UGET_HEAP(node + LIST_NEXT_NODE);
+    node = UGET_HEAP(node + LIST_PREVIOUS_NODE);
   } /* Counting the nodes */
 
   if (!(*list_nr))
@@ -2280,7 +2370,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
 
   retval = malloc(*list_nr * (sizeof(view_object_t))); /* Allocate the list */
 
-  node = UGET_HEAP(list + LIST_FIRST_NODE); /* Start over */
+  node = UGET_HEAP(list + LIST_LAST_NODE); /* Start over */
 
   i = 0;
   while (node) {
@@ -2340,13 +2430,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
 
     if (!(UGET_HEAP(retval[i].signalp) & _K_VIEW_SIG_FLAG_FIX_PRI_ON)) { /* Calculate priority */
       int _priority, y = retval[i].y;
-      if (y < s->priority_first)
-	_priority = 0;
-      else
-	if (y > s->priority_last)
-	  _priority = 15;
-	else
-	  _priority = ((y - s->priority_first) * 15) / (s->priority_last - s->priority_first);
+      _priority = VIEW_PRIORITY(y);
 
       PUT_SELECTOR(obj, priority, _priority);
 
@@ -2357,7 +2441,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
     s->pic_not_valid++; /* There ought to be some kind of check here... */
 
     i++; /* Next object in the list */
-    node = UGET_HEAP(node + LIST_NEXT_NODE); /* Next node */
+    node = UGET_HEAP(node + LIST_PREVIOUS_NODE); /* Next node */
   }
 
   return retval;
@@ -2396,8 +2480,7 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int use_signal)
       continue; /* I assume that this is used for PicViews as well, so no use_signal check */
     else { /* Yep, the continue doesn't really make sense. It's for clarification. */
       int yl, y = list[i].nsTop;
-      int priority_band_start = s->priority_first +
-	(list[i].priority * (s->priority_last - s->priority_first)) / 15;
+      int priority_band_start = PRIORITY_BAND_FIRST(list[i].priority);
       /* Get start of priority band */
 
       if (priority_band_start > y)
@@ -2422,15 +2505,18 @@ _k_dyn_view_list_accept_change(state_t *s)
   int list_nr = s->dyn_views_nr;
   int i;
 
+  int oldvp = s->view_port;
+
+  s->view_port = 0; /* WM Viewport */
   _k_save_view_list_backgrounds(s, list, list_nr);
+  s->view_port = oldvp;
 
   for (i = 0; i < list_nr; i++) {
     word signal = GET_HEAP(list[i].signalp);
 
-    /* Now, if we either don't use signal OR if signal allows us to draw, do so: */
-    if ((!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE) && !(signal & _K_VIEW_SIG_FLAG_HIDDEN))) {
+    if (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE) && !(signal & _K_VIEW_SIG_FLAG_HIDDEN)) {
       SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", list[i].obj, signal);
-      draw_view0(s->pic, s->ports[s->view_port],
+      draw_view0(s->pic, &(s->wm_port),
 		 list[i].x - view0_cel_width(list[i].loop, list[i].cel, list[i].view) / 2,
 		 list[i].y - view0_cel_height(list[i].loop, list[i].cel, list[i].view),
 		 list[i].priority, list[i].loop, list[i].cel, list[i].view);
@@ -2516,6 +2602,8 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   graph_restore_box(s, s->ports[goner]->bg_handle);
   _k_dyn_view_list_accept_change(s);
 
+  graph_update_port(s, s->ports[goner]);
+
   free(s->ports[goner]);
   s->ports[goner] = NULL; /* Mark as free */
 
@@ -2545,7 +2633,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   wnd->ymin = PARAM(0) + 10;
   wnd->xmin = PARAM(1);
-  wnd->ymax = PARAM(2) + 10; /* +10 because of the title bar- SCI scripts don't count it */
+  wnd->ymax = PARAM(2) + 10; /*  +10 because of the menu bar- SCI scripts don't count it */
   wnd->xmax = PARAM(3);
   wnd->title = PARAM(4);
   wnd->flags = PARAM(5);
@@ -2556,10 +2644,13 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   wnd->alignment = ALIGN_TEXT_LEFT; /* FIXME?? */
 
+  if (wnd->priority == -1)
+    wnd->priority = 16; /* Max priority + 1*/
+
   s->ports[window] = wnd;
 
   xlo = wnd->xmin - 1;
-  ylo = wnd->ymin - (wnd->flags & WINDOW_FLAG_TITLE)? 11 : 1;
+  ylo = wnd->ymin - ((wnd->flags & WINDOW_FLAG_TITLE)? 11 : 1);
 
   _k_dyn_view_list_prepare_change(s);
 
@@ -3135,6 +3226,7 @@ struct {
   {"SinMult", kTimesSin },
   {"TimesCos", kTimesCos },
   {"CosMult", kTimesCos },
+  {"MapKeyToDir", kMapKeyToDir },
 
   /* Experimental functions */
   {"Wait", kWait },

@@ -30,7 +30,10 @@
 #ifndef _SCI_GRAPHICS_PNG_H_
 #define _SCI_GRAPHICS_PNG_H_
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif /* HAVE_CONFIG_H */
+
 #ifdef HAVE_LIBPNG
 
 #include <resource.h>

@@ -50,7 +50,7 @@ graph_clear_box(struct _state *s, int x, int y, int xl, int yl, int color)
     pos += SCI_SCREEN_WIDTH;
   }
 
-  s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_BOX, x, y, xl, yl);
+  (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_BOX, x, y, xl, yl);
 }
 
 
@@ -60,12 +60,31 @@ graph_update_box(struct _state *s, int x, int y, int xl, int yl)
   int pos = y * SCI_SCREEN_WIDTH + x;
   int i, _yl = yl;
 
+  if (x < 0) {
+    xl += x;
+    x = 0;
+  }
+
+  if (y < 0) {
+    yl += y;
+    y = 0;
+  }
+
+  if (x + xl >= s->pic->xres)
+    xl = s->pic->xres - x;
+
+  if (y + yl >= s->pic->yres)
+    yl = s->pic->yres - y;
+
+  if ((xl <= 0) || (yl <= 0))
+    return;
+
   while (_yl--) {
     memcpy(s->pic->view + pos, s->pic->maps[s->pic_visible_map] + pos, xl);
     pos += SCI_SCREEN_WIDTH;
   }
 
-  s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_BOX, x, y, xl, yl);
+  (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_BOX, x, y, xl, yl);
 }
 
 int
@@ -136,8 +155,8 @@ graph_restore_box(struct _state *s, int handle)
 
   box = (_graph_memrect_t *) kmem(s, handle);
 
-  /*#ifdef SCI_GRAPHICS_DEBUG_IMAGE_REPOSITORY */
-  /*  draw_frame(s->pic, box->x, box->y, box->xl, box->yl, 0xee, -1);
+  /*#ifdef SCI_GRAPHICS_DEBUG_IMAGE_REPOSITORY
+    draw_frame(s->pic, box->x, box->y, box->xl, box->yl, 0xee, -1);
       graph_update_box(s, box->x, box->y, box->xl, box->yl);
     fprintf(stderr,"Restoring (%d, %d), size (%d, %d)\n", box->x, box->y, box->xl, box->yl);
   #endif */
@@ -260,7 +279,7 @@ graph_update_port(struct _state *s, port_t *port)
 		   port->xmax - port->xmin + 4,
 		   port->ymax - port->ymin + ((port->flags & WINDOW_FLAG_TITLE)? 14 : 4));
 
-  s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0);
+  (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0);
 }
 
 
@@ -272,12 +291,14 @@ graph_draw_selector_button(struct _state *s, port_t *port, int state,
 			   int x, int y, int xl, int yl,
 			   char *text, byte *font)
 {
-  graph_draw_selector_text(s, port, state, x, y, xl, yl, text, font, ALIGN_TEXT_CENTER);
-
   if ((state & SELECTOR_STATE_SELECTABLE) && (state & SELECTOR_STATE_SELECTED))
-    draw_frame(s->pic, port->xmin + x, port->ymin + y,
+    draw_frame(s->pic, port->xmin + x, port->ymin + y -1,
 	       xl - 1, yl - 1, port->color, port->priority);
+  else
+    draw_frame(s->pic, port->xmin + x -1, port->ymin + y -1,
+	       xl - 1, yl - 1, port->bgcolor, port->priority);
 
+  graph_draw_selector_text(s, port, state, x, y, xl, yl, text, font, ALIGN_TEXT_CENTER);
 }
 
 
@@ -299,7 +320,7 @@ graph_draw_selector_text(struct _state *s, port_t *port, int state,
   text_draw(s->pic, port, text, xl);
 
   if (state & SELECTOR_STATE_FRAMED)
-    draw_frame(s->pic, port->xmin + x-1, port->ymin + y-1,
+    draw_frame(s->pic, port->xmin + x-1, port->ymin + y-2,
 	       xl + 1, yl + 1, port->color, port->priority);
 
   memcpy(port, &oldport, sizeof(oldport)); /* Restore old port data */

@@ -26,7 +26,7 @@
 ***************************************************************************/
 /* Kernel debug defines */
 
-#define SCIk_DEBUG_MODES 6
+#define SCIk_DEBUG_MODES 7
 
 static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
   "Stubs",
@@ -35,6 +35,7 @@ static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
   "Character handling",
   "Memory management",
   "Function parameter checks",
+  "Bresenham algorithms"
 };
 /* The various debug areas */
 
@@ -51,3 +52,4 @@ static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
 #define SCIkSTRINGS  s, __LINE__, 3
 #define SCIkMEM      s, __LINE__, 4
 #define SCIkFUNCCHK  s, __LINE__, SCIkFUNCCHK_NR
+#define SCIkBRESEN   s, __LINE__, 6

@@ -33,7 +33,10 @@
 #ifndef _SCI_GRAPHICS_GGI_H_
 #define _SCI_GRAPHICS_GGI_H_
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif /* HAVE_CONFIG_H */
+
 #ifdef HAVE_LIBGGI
 
 #include "graphics.h"
@@ -46,6 +49,16 @@ extern ggi_visual_t sci_default_visual;
 /* The default visual. This isn't used by the library itself. */
 extern int sci_default_visual_size;
 /* The default visual's size. Not used by the library itself */
+extern gfx_driver_t gfx_driver_libggi;
+
+int
+libggi_init(struct _state *s, struct _picture *pic);
+
+void
+libggi_shutdown(struct _state *s);
+
+void
+libggi_redraw (struct _state *s, int command, int x, int y, int xl, int yl);
 
 int
 initInputGII(void);

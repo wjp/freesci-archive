@@ -27,7 +27,10 @@
 #ifndef _SCI_ENGINE_H
 #define _SCI_ENGINE_H
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif /* HAVE_CONFIG_H */
+
 #include <graphics.h>
 #include <resource.h>
 #include <script.h>
@@ -68,8 +71,7 @@ typedef struct _state
 
   /* Non-VM information */
 
-  void (*graphics_callback)(struct _state *s, int command, int x, int y, int xl, int yl);
-  /* Graphics callback function: Called with a special command (see graphics.h) */
+  gfx_driver_t *gfx_driver; /* Graphics driver */
 
   union {
 #ifdef HAVE_LIBGGI
