@@ -36,14 +36,16 @@ AC_PROG_YACC
 AC_PATH_PNG
 
 AC_ARG_WITH(efence,
-	[  --with-efence            link against libefence (for debugging)],
+	[  --with-efence           link against libefence (for debugging)],
 	[LIBS="$LIBS -lefence"],
 	[LIBS="$LIBS -lc"])
 
 AC_ARG_WITH(Wall,
-	[  --with-Wall		   compile using -Wall],
+	[  --with-Wall		  compile using -Wall],
 	[CFLAGS="-Wall $CFLAGS"],
 	[])
+
+AM_WITH_DMALLOC
 
 AC_C_PARAMETRIZED_BIGENDIAN
 

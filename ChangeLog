@@ -1,3 +1,11 @@
+2001-01-15  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* Applied Solomon's patches for dmalloc support, a free(NULL)
+	fix, and widget->free() to widget->widfree()
+
+	* Countless minor fixes all over the place (had a look at -Wall
+	output)
+
 2001-01-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/main.c (init_gfx): Fixed use of interpreter version

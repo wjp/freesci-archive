@@ -58,7 +58,7 @@ static FILE *
 f_open_mirrored(state_t *s, char *fname)
 {
   int fd;
-  char *buf;
+  char *buf = NULL;
   struct stat fstate;
 
   chdir(s->resource_dir);
@@ -80,7 +80,7 @@ f_open_mirrored(state_t *s, char *fname)
 
   fd = creat(fname, 0600);
 
-  if (!fd) {
+  if (!fd && buf) {
     free(buf);
     sciprintf("kfile.c: f_open_mirrored(): Warning: Could not create '%s' in '%s' (%d bytes to copy)\n",
 	      fname, s->work_dir, fstate.st_size);
@@ -866,7 +866,7 @@ next_file(state_t *s)
 {
   struct dirent *match;
   s->acc=0;
-  while (match=readdir(search))
+  while ((match=readdir(search)))
   {
     if (match->d_name[0]=='.') continue;
     if (!fnmatch(mask_copy, match->d_name, FNM_PATHNAME))
@@ -882,8 +882,6 @@ next_file(state_t *s)
 void
 first_file(state_t *s, char *dir, char *mask, heap_ptr buffer)
 {
-  struct dirent *match;
-
   if (search) closedir(search);
   
   if (!(search=opendir(dir)))

@@ -95,12 +95,6 @@ _gfxw_print_widget(gfxw_widget_t *widget, int indentation)
 {
 	int i;
 	char flags_list[] = "VOCDTMI";
-	gfxw_view_t *view = (gfxw_view_t *) widget;
-	gfxw_dyn_view_t *dyn_view = (gfxw_dyn_view_t *) widget;
-	gfxw_text_t *text = (gfxw_text_t *) widget;
-	gfxw_list_t *list = (gfxw_list_t *) widget;
-	gfxw_port_t *port = (gfxw_port_t *) widget;
-	gfxw_primitive_t *primitive = (gfxw_primitive_t *) widget;
 
 	indent(indentation);
 
@@ -151,7 +145,7 @@ _gfxw_new_widget(int size, int type)
 	widget_serial_number_counter &= MAX_SERIAL_NUMBER;
 
 	widget->draw = NULL;
-	widget->free = NULL;
+	widget->widfree = NULL;
 	widget->tag = NULL;
 	widget->print = _gfxwop_print_empty;
 	widget->compare_to = widget->equals = widget->superarea_of = NULL;
@@ -334,7 +328,7 @@ _gfxw_set_ops(gfxw_widget_t *widget, gfxw_point_op *draw, gfxw_op *free, gfxw_op
 	      gfxw_bin_op *compare_to, gfxw_bin_op *equals, gfxw_bin_op *superarea_of)
 {
 	widget->draw = draw;
-	widget->free = free;
+	widget->widfree = free;
 	widget->tag = tag;
 	widget->print = print;
 	widget->compare_to = compare_to;
@@ -1383,7 +1377,7 @@ _gfxwop_container_free(gfxw_widget_t *widget)
 
 	while (seeker) {
 		gfxw_widget_t *next = seeker->next;
-		seeker->free(seeker);
+		seeker->widfree(seeker);
 		seeker = next;
 	}
 
@@ -1442,7 +1436,7 @@ _gfxwop_container_free_tagged(gfxw_container_t *container)
 
                 if (redshirt->flags & GFXW_FLAG_TAGGED) {
                         seekerp = (redshirt->next);
-                        redshirt->free(redshirt); /* He's dead, Jim. */
+                        redshirt->widfree(redshirt); /* He's dead, Jim. */
                 } else
                         seekerp = (seekerp)->next;
         }
@@ -1456,7 +1450,7 @@ _gfxwop_container_free_contents(gfxw_container_t *container)
 
 	while (seeker) {
 		gfxw_widget_t *next = seeker->next;
-		seeker->free(seeker);
+		seeker->widfree(seeker);
 		seeker = next;
 	}
 	return 0;
@@ -1511,12 +1505,12 @@ _gfxw_container_id_equals(gfxw_container_t *container, gfxw_widget_t *widget)
 		return 0;
 
 	if ((*seekerp)->equals(*seekerp, widget)) {
-		widget->free(widget);
+		widget->widfree(widget);
 		(*seekerp)->flags &= ~GFXW_FLAG_TAGGED;
 		return 1;
 	} else {
 		if (!(widget->flags & GFXW_FLAG_MULTI_ID))
-			(*seekerp)->free(*seekerp);
+			(*seekerp)->widfree(*seekerp);
 		return 0;
 	}
 }
@@ -1711,12 +1705,12 @@ _gfxwop_sorted_list_add(gfxw_container_t *container, gfxw_widget_t *widget)
 #if 0
 		if (widget->equals(GFXW(widget), GFXW(*seekerp))) {
 			widget->next = (*seekerp)->next;
-			(*seekerp)->free(GFXW(*seekerp));
+			(*seekerp)->widfree(GFXW(*seekerp));
 			*seekerp = widget;
 			return (_parentize_widget(container, widget));
 #endif
 		if (widget->equals(GFXW(widget), GFXW(*seekerp)))
-			(*seekerp)->free(GFXW(*seekerp));
+			(*seekerp)->widfree(GFXW(*seekerp));
 
 		if (*seekerp)
 			seekerp = &((*seekerp)->next);
@@ -1965,7 +1959,7 @@ _gfxwop_port_free(gfxw_widget_t *widget)
 	}
 
 	if (port->decorations)
-		port->decorations->free(GFXW(port->decorations));
+		port->decorations->widfree(GFXW(port->decorations));
 
 	return _gfxwop_container_free(widget);
 }
@@ -2098,7 +2092,7 @@ gfxw_remove_port(gfxw_visual_t *visual, gfxw_port_t *port)
 	}
 
 	parent = (gfxw_port_t *) port->parent;
-	if (port->free(GFXW(port)))
+	if (port->widfree(GFXW(port)))
 		return parent;
 
 	while (parent && !GFXW_IS_PORT(parent))
@@ -2233,7 +2227,7 @@ _gfxw_free_contents_appropriately(gfxw_container_t *container, gfxw_snapshot_t *
 		gfxw_widget_t *next = widget->next;
 
 		if (gfxw_widget_matches_snapshot(snapshot, widget) && !(widget->flags & GFXW_FLAG_IMMUNE_TO_SNAPSHOTS))
-			widget->free(widget);
+			widget->widfree(widget);
 		else {
 			if (GFXW_IS_CONTAINER(widget))
 				_gfxw_free_contents_appropriately(GFXWC(widget), snapshot);

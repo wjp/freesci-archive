@@ -130,7 +130,7 @@ _menubar_add_menu_item(gfx_state_t *state, menu_t *menu, int type, char *left, c
 /* Returns the total text size, plus MENU_BOX_CENTER_PADDING if (right != NULL) */
 {
 	menu_item_t *item;
-	int total_left_size;
+	int total_left_size = 0;
 	int width, height;
 
 	if (menu->items_nr == 0) {
@@ -177,14 +177,14 @@ _menubar_add_menu_item(gfx_state_t *state, menu_t *menu, int type, char *left, c
 void
 menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entries, int font, byte *heapbase)
 {
-	int add_freesci = 0;
+	int i, add_freesci = 0;
 	menu_t *menu;
 	char tracker;
 	char *left = NULL, *right, *left_origin = NULL;
 	int string_len = 0;
 	int tag = 0, c_width, max_width = 0;
 	char *_heapbase = (char *) heapbase;
-	int width, height;
+	int height;
 
 	if (menubar->menus_nr == 0) {
 #ifdef MENU_FREESCI_BLATANT_PLUG
@@ -308,6 +308,11 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 						key = key - 'A' + 'a'; /* Lowercase the key */
 				}
 
+
+				i = strlen(right);
+
+				while (i>0 && right[--i] == ' ')
+					right[i] = 0; /* Cut off chars to the right */
 
 				c_width = _menubar_add_menu_item(state, menu, MENU_TYPE_NORMAL, left, right, font, key,
 								 modifiers, tag, left_origin - _heapbase);

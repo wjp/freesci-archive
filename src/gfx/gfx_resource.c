@@ -134,7 +134,6 @@ gfx_xlate_pixmap(gfx_pixmap_t *pxm, gfx_mode_t *mode, gfx_xlate_filter_t filter)
 	if (mode->palette
 	    && !(pxm->flags & GFX_PIXMAP_FLAG_PALETTE_ALLOCATED)) {
 		int i;
-		gfx_color_t color;
 
 		for (i = 0; i < pxm->colors_nr; i++) {
 			if (gfx_alloc_color(mode->palette, pxm->colors + i) < 0) {

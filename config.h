@@ -84,3 +84,6 @@
 /* Version number of package */
 #define VERSION "0.3.0.devel"
 
+/* Define if using the dmalloc debugging malloc package */
+#define WITH_DMALLOC 1
+

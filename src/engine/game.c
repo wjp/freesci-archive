@@ -195,7 +195,7 @@ _free_graphics_input(state_t *s)
 
 	sciprintf("Freeing graphics\n");
 
-	s->visual->free(GFXW(s->visual));
+	s->visual->widfree(GFXW(s->visual));
 
 	s->wm_port = s->titlebar_port = s->picture_port = NULL;
 	s->visual = NULL;

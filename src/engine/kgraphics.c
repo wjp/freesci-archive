@@ -172,7 +172,7 @@ graph_restore_box(state_t *s, int handle)
 		gfxw_container_t *parent = s->dyn_views->parent;
 
 		do {
-			parent->parent;
+			parent = parent->parent;
 		} while (parent && (gfxw_widget_matches_snapshot(*ptr, GFXW(parent))));
 
 		if (!parent) {
@@ -304,20 +304,19 @@ _k_graph_rebuild_port_with_color(state_t *s, gfx_color_t newbgcolor)
 		gfxw_container_t *parent = s->dyn_views->parent;
 
 		while (parent && !(found |= (GFXW(parent) == GFXW(port))))
-			parent->parent;
+			parent = parent->parent;
 
 		s->dyn_views = NULL;
 	}
 
 	port->parent->add(GFXWC(port->parent), GFXW(newport));
-	port->free(GFXW(port));
+	port->widfree(GFXW(port));
 }
 
 
 void
 kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	int color, priority, special;
 	gfx_color_t gfxcolor;
 	rect_t area;
 	gfxw_port_t *port = s->port;
@@ -396,9 +395,6 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	break;
 
 	case K_GRAPH_UPDATE_BOX: {
-
-		int x = PARAM(2);
-		int y = PARAM(1);
 
 		SCIkdebug(SCIkGRAPHICS, "update_box(%d, %d, %d, %d)\n",
 			  PARAM(1), PARAM(2), PARAM(3), PARAM(4));
@@ -788,7 +784,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	SCIkdebug(SCIkBRESEN, "edgehit = %04x\n", edgehit);
 	if (s->acc == 0)
 		return; /* Can'tBeHere */
-	if (signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | signal & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))
+	if (signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR))
 		s->acc= signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE|_K_VIEW_SIG_FLAG_IGNORE_ACTOR); /* CanBeHere- it's either being disposed, or it ignores actors anyway */
 
 	if (cliplist) {
@@ -842,7 +838,6 @@ kCelHigh(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int view = PARAM(0);
 	int loop = PARAM(1);
 	int cel = PARAM(2);
-	int result;
 	int height, width;
 	point_t offset;
 
@@ -862,7 +857,6 @@ kCelWide(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int view = PARAM(0);
 	int loop = PARAM(1);
 	int cel = PARAM(2);
-	int result;
 	int height, width;
 	point_t offset;
 
@@ -998,8 +992,8 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		GFX_ASSERT(gfxop_new_pic(s->gfx_state, pic_nr, 1, PARAM_OR_ALT(3, 0)));
 	}
 
-	s->wm_port->free(GFXW(s->wm_port));
-	s->picture_port->free(GFXW(s->picture_port));
+	s->wm_port->widfree(GFXW(s->wm_port));
+	s->picture_port->widfree(GFXW(s->picture_port));
 
 	s->wm_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
 	s->picture_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
@@ -1205,10 +1199,6 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		case K_CONTROL_EDIT:
 			if (event && (GET_SELECTOR(event, type) == SCI_EVT_KEYBOARD)) {
-				int x = GET_SELECTOR(obj, nsLeft);
-				int y = GET_SELECTOR(obj, nsTop);
-				int xl = GET_SELECTOR(obj, nsRight) - x + 1;
-				int yl = GET_SELECTOR(obj, nsBottom) - y + 1;
 				int max = GET_SELECTOR(obj, max);
 				int cursor = GET_SELECTOR(obj, cursor);
 				int modifiers = GET_SELECTOR(event, modifiers);
@@ -1216,8 +1206,6 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 				char *text = s->heap + UGET_SELECTOR(obj, text);
 				int textlen = strlen(text);
-
-				gfxw_port_t *port = s->port;
 
 				if (cursor > textlen)
 					cursor = textlen;
@@ -1433,7 +1421,6 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 			  int funct_nr, int argc, int argp)
      /* disposes all list members flagged for disposal; funct_nr is the invoking kfunction */
 {
-	int i;
 	gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) list->contents;
 
 	while (widget) {
@@ -1467,7 +1454,7 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 					widget->draw_bounds.y += s->dyn_views->bounds.y - widget->parent->bounds.y;
 					widget->draw_bounds.x += s->dyn_views->bounds.x - widget->parent->bounds.x;
 				}
-				else widget->free(GFXW(widget));
+				else widget->widfree(GFXW(widget));
 			}
 		}
 
@@ -1494,25 +1481,11 @@ _k_invoke_view_list(state_t *s, heap_ptr list, int funct_nr, int argc, int argp)
     
 		PUT_SELECTOR(obj, signal, signal | _K_VIEW_SIG_FLAG_UPDATING);
 
-		if (!(signal & _K_VIEW_SIG_FLAG_FROZEN)) {
-			word ubitsnew, ubitsold = GET_SELECTOR(obj, underBits);
+		if (!(signal & _K_VIEW_SIG_FLAG_FROZEN))
 			invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
-			ubitsnew = GET_SELECTOR(obj, underBits);
-		}
 
 		node = UGET_HEAP(node + LIST_PREVIOUS_NODE);
 	}
-}
-
-
-static int _cmp_view_object(const void *obj1, const void *obj2) /* Used for qsort() later on */
-{
-  int retval = (((view_object_t *)obj1)->real_y) - (((view_object_t *)obj2)->real_y);
-  if (retval == 0)
-    retval = (((view_object_t *)obj1)->z) - (((view_object_t *)obj2)->z);
-  if (retval == 0)
-    return (((view_object_t *)obj2)->index_nr) - (((view_object_t *)obj1)->index_nr);
-  return retval;
 }
 
 
@@ -1568,7 +1541,8 @@ _k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int funct_nr, int arg
 		signal = signalp = 0;
 		SCIkdebug(SCIkGRAPHICS, "Object at %04x has no signal selector\n", obj);
 	} else {
-		SCIkdebug(SCIkGRAPHICS, "    with signal = %04x\n", UGET_HEAP(signalp));
+		signal = UGET_HEAP(signalp);
+		SCIkdebug(SCIkGRAPHICS, "    with signal = %04x\n", signal);
 	}
 
 	_priority = VIEW_PRIORITY((pos.y - 1)); /* Accomodate difference between interpreter and gfx engine */
@@ -1663,7 +1637,6 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
      */
 {
 	heap_ptr node;
-	int i;
 
 	if (!*widget_list) {
 		SCIkwarn(SCIkERROR, "make_view_list with widget_list == ()\n");
@@ -1713,7 +1686,7 @@ _k_view_list_dispose(state_t *s, gfxw_list_t **list_ptr)
 	SCIkwarn(SCIkERROR,"DISPOSING DISPLAY LIST! This shouldn't happen anymore!\n");
 	BREAKPOINT();
 
-	list->free(GFXW(list));
+	list->widfree(GFXW(list));
 	*list_ptr = NULL;
 }
 
@@ -1730,9 +1703,6 @@ void
 _k_draw_view_list(state_t *s, gfxw_list_t *list, int flags)
      /* Draws list_nr members of list to s->pic. */
 {
-	int i;
-	int argc = 0, argp = 0, funct_nr = -1; /* Kludges to work around INV_SEL dependancies */
-
 	gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) list->contents;
 
 	if (GFXWC(s->port) != GFXWC(s->dyn_views->parent))
@@ -1940,7 +1910,6 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	gfxw_port_t *window;
 	int x, y, xl, yl, flags;
 	gfx_color_t bgcolor;
-	char *text;
 	int priority;
 
 	CHECK_THIS_KERNEL_FUNCTION;
@@ -2016,7 +1985,6 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	heap_ptr cast_list = UPARAM_OR_ALT(0, 0);
 	int cycle = UPARAM_OR_ALT(1, 0);
 	int open_animation = 0;
-	gfx_pixmap_t *oldscreen = NULL;
 
 	CHECK_THIS_KERNEL_FUNCTION;
 
@@ -2413,7 +2381,6 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	gfx_color_t transparent;
 	char *text;
 	gfxw_port_t *port = (s->port)? s->port : s->picture_port;
-	resource_t *font_resource;
 	int update_immediately = 1;
 
 	gfx_color_t *color0, *color1, *bg_color;

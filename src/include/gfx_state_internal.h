@@ -95,7 +95,7 @@ typedef int gfxw_bin_op(struct _gfxw_widget *, struct _gfxw_widget *);
    struct _gfxw_container_widget *parent; /* The parent widget, or NULL if not owned */ \
    struct _gfxw_visual *visual; /* The owner visual */ \
    gfxw_point_op *draw; /* Draw widget (if dirty) and anything else required for the display to be consistant */ \
-   gfxw_op *free; /* Remove widget (and any sub-widgets it may contain) */ \
+   gfxw_op *widfree; /* Remove widget (and any sub-widgets it may contain) */ \
    gfxw_op *tag; /* Tag the specified widget */ \
    gfxw_op_int *print; /* Prints the widget's contents, using sciprintf. Second parameter is indentation. */ \
    gfxw_bin_op *compare_to; /* a.compare_to(a, b) returns <0 if a<b, =0 if a=b and >0 if a>b */ \

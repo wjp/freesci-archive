@@ -36,29 +36,34 @@
 /*#define _SCI_DECOMPRESS_DEBUG*/
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#  include <config.h>
 #endif
+
+#include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 
+#ifdef WITH_DMALLOC
+#  include <dmalloc.h>
+#endif
+
 #include <scitypes.h>
 
 #ifdef HAVE_UNISTD_H
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #ifdef _WIN32
-#include <io.h>
+#  include <io.h>
 #else /* !_WIN32 */
-#define DLLEXTERN
+#  define DLLEXTERN
 #endif /* !_WIN32 */
 
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <stdlib.h>
 #include <assert.h>
 #ifdef _DOS
 #  include <sci_dos.h>

@@ -105,18 +105,18 @@ _ac_ggi_libraries="-L/usr/lib -L/usr/local/lib -L/usr/local/ggi/lib"
 
 
 AC_ARG_WITH(ggi-dir,
-    [  --with-ggi-dir           where the root of ggi is installed ],
+    [  --with-ggi-dir          where the root of ggi is installed ],
     [  _ac_ggi_includes="-I$withval"/include
        _ac_ggi_libraries="-L$withval"/lib
     ])
 
 AC_ARG_WITH(ggi-includes,
-    [  --with-ggi-includes      where the ggi includes are. ],
+    [  --with-ggi-includes     where the ggi includes are. ],
     [  
        _ac_ggi_includes="-I$withval"
     ])
 AC_ARG_WITH(ggi-libraries,
-    [  --with-ggi-libraries     where the ggi library is installed.],
+    [  --with-ggi-libraries    where the ggi library is installed.],
     [  _ac_ggi_libraries="-L$withval"
     ])
 
@@ -156,22 +156,22 @@ _ac_curses_libnames="-lncurses -lcurses"
 
 
 AC_ARG_WITH(curses-dir,
-    [  --with-curses-dir        where the root of lib(n)curses is installed ],
+    [  --with-curses-dir       where the root of lib(n)curses is installed ],
     [  _ac_curses_includes="-I$withval"/include
        _ac_curses_libraries="-L$withval"/lib
     ])
 
 AC_ARG_WITH(curses-includes,
-    [  --with-curses-includes   where the (n)curses includes are. ],
+    [  --with-curses-includes  where the (n)curses includes are. ],
     [  
        _ac_curses_includes="-I$withval"
     ])
 AC_ARG_WITH(curses-library,
-    [  --with-curses-libraries  where the (n)curses library is installed.],
+    [  --with-curses-libraries where the (n)curses library is installed.],
     [  _ac_curses_libraries="-L$withval"
     ])
 AC_ARG_WITH(curses-libname,
-    [  --with-curses-libraries  whether to use curses or ncurses.],
+    [  --with-curses-libraries whether to use curses or ncurses.],
     [  _ac_curses_libnames="-l$withval"
     ])
 
@@ -205,18 +205,18 @@ _ac_png_libraries="-L/usr/lib -L/usr/local/lib"
 
 
 AC_ARG_WITH(png-dir,
-    [  --with-png-dir           where the root of png is installed ],
+    [  --with-png-dir          where the root of png is installed ],
     [  _ac_png_includes="-I$withval"/include
        _ac_png_libraries="-L$withval"/lib
     ])
 
 AC_ARG_WITH(png-includes,
-    [  --with-png-includes      where the png includes are. ],
+    [  --with-png-includes     where the png includes are. ],
     [  
        _ac_png_includes="-I$withval"
     ])
 AC_ARG_WITH(png-libraries,
-    [  --with-png-libraries     where the png library is installed.],
+    [  --with-png-libraries    where the png library is installed.],
     [  _ac_png_libraries="-L$withval"
     ])
 
@@ -254,7 +254,7 @@ AC_DEFUN(AC_C_PARAMETRIZED_BIGENDIAN,
 force_endian=no
 
 AC_ARG_WITH(endianness,
-	[  --with-endianness=ARG    whether big or little endianness should be used.],
+	[  --with-endianness=ARG   whether big or little endianness should be used.],
 	[
 		force_endian="$withval"
 	])
@@ -463,4 +463,23 @@ AC_DEFUN(AM_PROG_LEX,
 AC_CHECK_PROGS(LEX, flex lex, "$missing_dir/missing flex")
 AC_PROG_LEX
 AC_DECL_YYTEXT])
+
+
+# serial 1
+
+AC_DEFUN(AM_WITH_DMALLOC,
+[AC_MSG_CHECKING(if malloc debugging is wanted)
+AC_ARG_WITH(dmalloc,
+[  --with-dmalloc          use dmalloc, as in
+                          ftp://ftp.letters.com/src/dmalloc/dmalloc.tar.gz],
+[if test "$withval" = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(WITH_DMALLOC,1,
+            [Define if using the dmalloc debugging malloc package])
+  LIBS="$LIBS -ldmalloc"
+  LDFLAGS="$LDFLAGS -g"
+else
+  AC_MSG_RESULT(no)
+fi], [AC_MSG_RESULT(no)])
+])
 

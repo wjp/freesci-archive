@@ -304,7 +304,7 @@ _gfxr_auxbuf_fill_helper(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy,
 		int ytotal = oldytotal + (320 * dy);
 		int xcont;
 		int state;
-		int dx;
+
 		y += dy;
 
 		if (y < SCI_TITLEBAR_SIZE || y > 199)
@@ -453,8 +453,8 @@ _gfxr_auxbuf_spread_old(gfxr_pic_t *pic)
 
 	for (x = 0; x < 319; x++)
 		for (y = 0; y < 199; y++)
-			if (auxbuf[x, y*320] & 0x10)
-				auxbuf[x, y*320] |= 0x40;
+			if (auxbuf[x + y*320] & 0x10)
+				auxbuf[x + y*320] |= 0x40;
 
 	/* Spread horizontally */
 	for (x = 1; x < 318; x++)
@@ -626,10 +626,10 @@ _gfxr_auxbuf_spread(gfxr_pic_t *pic, int *min_x, int *min_y, int *max_x, int *ma
 				int xl = intervals[!ivi][j].xl;
 				int xr = intervals[!ivi][j].xr;
 				int width = xr - xl + 1;
+#if 0
 				int length = width >> 1;
 				int xleft;
 
-#if 0
 				xleft = (length > xl)? xl : length;
 				_gfxr_auxbuf_tag_line(pic, pos - 320 + xl - xleft, xleft);
 
@@ -727,7 +727,6 @@ _gfxr_fill_ellipse(gfxr_pic_t *pic, byte *buffer, int linewidth, int x, int y,
 	int i, x_i, y_i;
 	int xr = 2 * rad_x * rad_x;
 	int yr = 2 * rad_y * rad_y;
-	int proj_xlimit = pic->mode->xfact;
 
 	x_i = 1;
 	y_i = xr * rad_y -1;
@@ -753,7 +752,6 @@ _gfxr_fill_ellipse(gfxr_pic_t *pic, byte *buffer, int linewidth, int x, int y,
 			int j;
 			int offset0 = (y-oldyy) * linewidth;
 			int offset1 = (y+oldyy) * linewidth;
-			int proj_o0, proj_o1;
 
 			offset0 += x-oldxx;
 			offset1 += x-oldxx;
@@ -899,10 +897,10 @@ _gfxr_plot_aux_pattern(gfxr_pic_t *pic, int x, int y, int size, int circle, int 
 		0x06, 0x6f, 0xc6, 0x4a, 0xa4, 0x75, 0x97, 0xe1
 	};
 
-	int offset, width;
+	int offset = 0, width = 0;
 	int yoffset = (y - size) * 320;
 	int i;
-	int random_index;
+	int random_index = 0;
 
 	if (random >= 0)
 		random_index = random_offset[random];

@@ -162,7 +162,7 @@ init_directories(char *work_dir, char *game_id)
 
 	if (strlen(homedir) > MAX_HOMEDIR_SIZE) {
 		fprintf(stderr, "Your home directory path is too long. Re-compile FreeSCI with "
-			"MAX_HOMEDIR_SIZE set to at least %i and try again.\n", strlen(homedir));
+			"MAX_HOMEDIR_SIZE set to at least %i and try again.\n", (int)(strlen(homedir)));
 		return 1;
 	}
 
@@ -577,7 +577,7 @@ main(int argc, char** argv)
 	char *gfx_driver_name = NULL;
 	char *game_name;
 	sci_version_t version = 0;
-	gfx_driver_t *gfx_driver;
+	gfx_driver_t *gfx_driver = NULL;
 
 	game_name = parse_arguments(argc, argv, &cl_options);
 
@@ -672,7 +672,7 @@ main(int argc, char** argv)
 		if (gfx_driver_name)
 			fprintf(stderr,"Failed to find graphics driver \"%s\"\n"
 				"Please run 'sciv -v' to get a list of all "
-				"available drivers.\n");
+				"available drivers.\n", gfx_driver_name);
 		else
 			fprintf(stderr,"No default gfx driver available.\n");
 

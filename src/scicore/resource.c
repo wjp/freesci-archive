@@ -294,8 +294,11 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 
 void killlist(struct singly_linked_resources_struct *rs)
 {
-	if (rs->next) killlist(rs->next);
-	free(rs->next);
+	if (rs->next) {
+		killlist(rs->next);
+		free(rs->next);
+		rs->next = NULL;
+	}
 }
 
 

@@ -619,7 +619,6 @@ ggi_grab_pixmap(gfx_driver_t *drv, rect_t src, gfx_pixmap_t *pxm,
 static int
 ggi_update(gfx_driver_t *drv, rect_t src, point_t dest, gfx_buffer_t buffer)
 {
-	int xw = MODE->xfact, yw = MODE->yfact;
 	int sx = src.x, sy = src.y;
 	int dx = dest.x, dy = dest.y;
 	int xl = src.xl, yl = src.yl;

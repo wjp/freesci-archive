@@ -189,7 +189,7 @@ about_freesci(state_t *s)
 		}
 
 
-		port->free(GFXW(port));
+		port->widfree(GFXW(port));
 		s->visual->draw(GFXW(s->visual), gfx_point(0,0));
 		gfxop_update(s->gfx_state);
     
@@ -372,7 +372,7 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				sciw_set_menubar(s, s->titlebar_port, s->menubar, menu_nr);
 
 				if (port)
-					port->free(GFXW(port));
+					port->widfree(GFXW(port));
 
 				port = sciw_new_menu(s, s->titlebar_port, s->menubar, menu_nr);
 				s->wm_port->add(GFXWC(s->wm_port), GFXW(port));
@@ -398,7 +398,7 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		} /* while (menu_mode) */
 
 		if (port) {
-			port->free(GFXW(port));
+			port->widfree(GFXW(port));
 			port = NULL;
 
 			sciw_set_status_bar(s, s->titlebar_port, s->status_bar_text);
