@@ -247,7 +247,6 @@ gfxr_free_tagged_resources(gfx_driver_t *driver, gfx_resstate_t *state)
 static gfxr_pic_t *
 gfxr_pic_xlate_common(gfx_resource_t *res, int maps, int scaled, int force, gfx_mode_t *mode, int filter)
 {
-
 	XLATE_AS_APPROPRIATE(GFX_MASK_VISUAL, visual_map);
 	XLATE_AS_APPROPRIATE(GFX_MASK_PRIORITY, priority_map);
 	XLATE_AS_APPROPRIATE(GFX_MASK_CONTROL, control_map);

@@ -34,22 +34,24 @@
 #define CURSOR_SIZE 16
 
 #define GFX_SCI01_CURSOR_COLORS_NR 3
+#define GFX_SCI0_CURSOR_COLORS_NR 2
 
 gfx_pixmap_color_t gfx_sci01_cursor_colors[GFX_SCI01_CURSOR_COLORS_NR] = {
-	{GFX_COLOR_INDEX_UNMAPPED, 0x00, 0x00, 0x00}, {GFX_COLOR_INDEX_UNMAPPED, 0xaa, 0xaa, 0xaa},
-	{GFX_COLOR_INDEX_UNMAPPED, 0xff, 0xff, 0xff}};
+	{GFX_COLOR_INDEX_UNMAPPED, 0x00, 0x00, 0x00},
+	{GFX_COLOR_INDEX_UNMAPPED, 0xff, 0xff, 0xff},
+	{GFX_COLOR_INDEX_UNMAPPED, 0xaa, 0xaa, 0xaa}};
 
 
 static gfx_pixmap_t *
 _gfxr_draw_cursor(int id, byte *resource, int size, int sci01)
 {
-	int colors[4] = {0, 2, GFX_COLOR_INDEX_TRANSPARENT, 2};
+	int colors[4] = {0, 1, GFX_COLOR_INDEX_TRANSPARENT, 1};
 	int line;
 	byte *data;
 	gfx_pixmap_t *retval;
 
 	if (sci01)
-		colors[3] = 1;
+		colors[3] = 2;
 
 	if (size != CURSOR_RESOURCE_SIZE) {
 		GFXERROR("Expected resource size of %d, but found %d\n", CURSOR_RESOURCE_SIZE, size);
@@ -58,7 +60,7 @@ _gfxr_draw_cursor(int id, byte *resource, int size, int sci01)
 
 	retval = gfx_pixmap_alloc_index_data(gfx_new_pixmap(CURSOR_SIZE, CURSOR_SIZE, id, 0, 0));
 	retval->colors = gfx_sci01_cursor_colors;
-	retval->colors_nr = GFX_SCI01_CURSOR_COLORS_NR;
+	retval->colors_nr = sci01? GFX_SCI01_CURSOR_COLORS_NR : GFX_SCI0_CURSOR_COLORS_NR;
 	retval->flags |= GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
 
 	if (sci01) {

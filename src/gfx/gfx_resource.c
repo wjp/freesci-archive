@@ -103,7 +103,6 @@ gfxr_free_view(gfx_driver_t *driver, gfxr_view_t *view)
 static inline void
 _gfx_xlate_pixmap_unfiltered(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 {
-
 	switch (mode->bytespp) {
 
 	case 1:_gfx_xlate_pixmap_unfiltered_1(mode, pxm, scale);
@@ -123,8 +122,13 @@ _gfx_xlate_pixmap_unfiltered(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 					
 	}
 
-	pxm->xl = pxm->index_xl * mode->xfact;
-	pxm->yl = pxm->index_yl * mode->yfact;
+	if (pxm->flags & GFX_PIXMAP_FLAG_SCALED_INDEX) {
+		pxm->xl = pxm->index_xl;
+		pxm->yl = pxm->index_yl;
+	} else {
+		pxm->xl = pxm->index_xl * mode->xfact;
+		pxm->yl = pxm->index_yl * mode->yfact;
+	}
 }
 
 void

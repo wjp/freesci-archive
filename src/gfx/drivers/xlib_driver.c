@@ -51,6 +51,8 @@ struct _xlib_state {
 #define S ((struct _xlib_state *)(drv->state))
 
 #define XASS(foo) { int val = foo; if (!val) xlderror(drv, __LINE__); }
+#define XFACT drv->mode->xfact
+#define YFACT drv->mode->yfact
 
 #define DEBUGB if (drv->debug_flags & GFX_DEBUG_BASIC && ((debugline = __LINE__))) xldprintf
 #define DEBUGU if (drv->debug_flags & GFX_DEBUG_UPDATES && ((debugline = __LINE__))) xldprintf
@@ -227,9 +229,9 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	if (bytespp == 1)
 		red_shift = green_shift = blue_shift = 0;
 	else {
-		red_shift = 32 - ffs((~xvisinfo.red_mask) & (xvisinfo.red_mask << 1));
-		green_shift = 32 - ffs((~xvisinfo.green_mask) & (xvisinfo.green_mask << 1));
-		blue_shift = 32 - ffs((~xvisinfo.blue_mask) & (xvisinfo.blue_mask << 1));
+		red_shift = 32 - ffs((~xvisinfo.red_mask >> 1) & (xvisinfo.red_mask));
+		green_shift = 32 - ffs((~xvisinfo.green_mask >> 1) & (xvisinfo.green_mask));
+		blue_shift = 32 - ffs((~xvisinfo.blue_mask >> 1) & (xvisinfo.blue_mask));
 	}
 
 	drv->mode = gfx_new_mode(xfact, yfact, bytespp,
@@ -374,16 +376,20 @@ xlib_register_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 		ERROR("Attempt to register pixmap twice!\n");
 		return GFX_ERROR;
 	}
-
 	pxm->internal.info = XCreateImage(S->display, DefaultVisual(S->display, DefaultScreen(S->display)),
-					  drv->mode->bytespp << 3, XYPixmap, 0, pxm->data, pxm->xl,
+					  drv->mode->bytespp << 3, ZPixmap, 0, pxm->data, pxm->xl,
 					  pxm->yl, 8, 0);
+	DEBUGPXM("Registered pixmap %d/%d/%d at %p (%dx%d)\n", pxm->ID, pxm->loop, pxm->cel,
+		 pxm->internal.info, pxm->xl, pxm->yl);
 	return GFX_OK;
 }
 
 static int
 xlib_unregister_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 {
+	DEBUGPXM("Freeing pixmap %d/%d/%d at %p\n", pxm->ID, pxm->loop, pxm->cel,
+		 pxm->internal.info);
+
 	if (!pxm->internal.info) {
 		ERROR("Attempt to unregister pixmap twice!\n");
 		return GFX_ERROR;
@@ -391,44 +397,81 @@ xlib_unregister_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 
 	XDestroyImage((XImage *) pxm->internal.info);
 	pxm->internal.info = NULL;
+	pxm->data = NULL; /* Freed by XDestroyImage */
 	return GFX_OK;
 }
 
 static int
 xlib_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
                  rect_t src, rect_t dest, gfx_buffer_t buffer)
-  /* Draws part of a pixmap to the static or back buffer
-  ** Parameters: (gfx_driver_t *) drv: The affected driver
-  **             (gfx_pixmap_t *) pxm: The pixmap to draw
-  **             (int) priority: The priority to draw with, or GFX_NO_PRIORITY
-  **                   to draw on top of everything without setting the
-  **                   priority back buffer
-  **             (rect_t) src: The pixmap-relative source rectangle
-  **             (rect_t) dest: The destination rectangle
-  **             (int) buffer: One of GFX_BUFFER_STATIC and GFX_BUFFER_BACK
-  ** Returns   : (int) GFX_OK or GFX_FATAL, or GFX_ERROR if pxm was not
-  **                   (but should have been) registered.
-  ** dest.xl and dest.yl must be evaluated and used for scaling if
-  ** GFX_CAPABILITY_SCALEABLE_PIXMAPS is supported.
-  */
 {
+	int bufnr = (buffer == GFX_BUFFER_STATIC)? 2:1;
+	int pribufnr = bufnr -1;
+	XImage *tempimg;
+
+	if (dest.xl != src.xl || dest.yl != src.yl) {
+		ERROR("Attempt to scale pixmap (%dx%d)->(%dx%d): Not supported\n",
+		      src.xl, src.yl, dest.xl, dest.yl);
+		return GFX_ERROR;
+	}
+
+	tempimg = XGetImage(S->display, S->visual[bufnr], dest.x, dest.y,
+			    dest.xl, dest.yl, 0xffffffff, ZPixmap);
+
+	if (!tempimg) {
+		ERROR("Failed to grab X image!\n");
+		return GFX_ERROR;
+	}
+
+	gfx_crossblit_pixmap(drv->mode, pxm, priority, src, gfx_rect(0, 0, dest.xl, dest.yl),
+			     tempimg->data, tempimg->bytes_per_line,
+			     S->priority[pribufnr]->index_data,
+			     S->priority[pribufnr]->index_xl, 1);
+
+	XPutImage(S->display, S->visual[bufnr], S->gc, tempimg,
+		  0, 0, dest.x, dest.y, dest.xl, dest.yl);
+
+	XDestroyImage(tempimg);
+	return GFX_OK;
 }
 
 static int
 xlib_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
                  gfx_map_mask_t map)
-  /* Grabs an image from the visual or priority back buffer
-  ** Parameters: (gfx_driver_t *) drv: The affected driver
-  **             (rect_t) src: The rectangle to grab
-  **             (gfx_pixmap_t *) pxm: The pixmap structure the data is to
-  **                              be written to
-  **             (int) map: GFX_MASK_VISUAL or GFX_MASK_PRIORITY
-  ** Returns   : (int) GFX_OK, GFX_FATAL, or GFX_ERROR for invalid map values
-  ** pxm may be assumed to be empty and pre-allocated with an appropriate
-  ** memory size.
-  ** This function is optional if GFX_CAPABILITY_PIXMAP_GRABBING is not set.
-  */
 {
+
+	if (src.x < 0 || src.y < 0) {
+		ERROR("Attempt to grab pixmap from invalid coordinates (%d,%d)\n", src.x, src.y);
+		return GFX_ERROR;
+	}
+
+	if (!pxm->data) {
+		ERROR("Attempt to grab pixmap to unallocated memory\n");
+		return GFX_ERROR;
+	}
+
+	switch (map) {
+
+	case GFX_MASK_VISUAL:
+		pxm->xl = src.xl;
+		pxm->yl = src.yl;
+
+		pxm->internal.info = XGetImage(S->display, S->visual[1], src.x, src.y,
+					       src.xl, src.yl, 0xffffffff, ZPixmap);
+
+		pxm->flags |= GFX_PIXMAP_FLAG_INSTALLED;
+		break;
+
+	case GFX_MASK_PRIORITY:
+		ERROR("FIXME: priority map grab not implemented yet!\n");
+		break;
+
+	default:
+		ERROR("Attempt to grab pixmap from invalid map 0x%02x\n", map);
+		return GFX_ERROR;
+	}
+
+	return GFX_OK;
 }
 
 
@@ -436,55 +479,43 @@ xlib_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 
 static int
 xlib_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffer)
-  /* Updates the front buffer or the back buffers
-  ** Parameters: (gfx_driver_t *) drv: The affected driver
-  **             (rect_t) src: Source rectangle
-  **             (point_t) dest: Destination point
-  **             (int) buffer: One of GFX_BUFFER_FRONT and GFX_BUFFER_BACK
-  ** Returns   : (int) GFX_OK, GFX_ERROR or GFX_FATAL
-  ** This function updates either the visual front buffer, or the two back
-  ** buffers, by copying the specified source region to the destination
-  ** region.
-  ** For heuristical reasons, it may be assumed that the x and y fields of
-  ** src and dest will be identical in /most/ cases.
-  ** If they aren't, the priority map will not be required to be copied.
-  */
 {
 	int data_source = (buffer == GFX_BUFFER_BACK)? 2 : 1;
 	int data_dest = data_source - 1;
 
+
+	if (src.x != dest.x || src.y != dest.y) {
+		DEBUGU("Updating %d (%d,%d)(%dx%d) to (%d,%d)\n", buffer, src.x, src.y,
+		       src.xl, src.yl, dest.x, dest.y);
+	} else {
+		DEBUGU("Updating %d (%d,%d)(%dx%d)\n", buffer, src.x, src.y, src.xl, src.yl);
+	}
+
 	XCopyArea(S->display, S->visual[data_source], S->visual[data_dest], S->gc,
 		  src.x, src.y, src.xl, src.yl, dest.x, dest.y);
 
-	if (buffer == GFX_BUFFER_BACK)
+	if (buffer == GFX_BUFFER_BACK && (src.x == dest.x) && (src.y == dest.y))
 		gfx_copy_pixmap_box_i(S->priority[0], S->priority[1], src);
 	else
 		XCopyArea(S->display, S->visual[0], S->window, S->gc,
-			  src.x, src.y, src.xl, src.yl, dest.x, dest.y);
+			  dest.x, dest.y, src.xl, src.yl, dest.x, dest.y);
 
 	return GFX_OK;
 }
 
 static int
 xlib_set_static_buffer(struct _gfx_driver *drv, gfx_pixmap_t *pic, gfx_pixmap_t *priority)
-  /* Sets the contents of the static visual and priority buffers
-  ** Parameters: (gfx_driver_t *) drv: The affected driver
-  **             (gfx_pixmap_t *) pic: The image defining the new content
-  **                              of the visual back buffer
-  **             (gfx_pixmap_t *) priority: The priority map containing
-  **                              the new content of the priority back buffer
-  **                              in the index buffer
-  ** Returns   : (int) GFX_OK or GFX_FATAL
-  ** pic and priority may be modified or written to freely. They may also be
-  ** used as the actual static buffers, since they are not freed and re-
-  ** allocated between calls to set_static_buffer() and update(), unless
-  ** exit() was called in between.
-  ** Note that later version of the driver interface may disallow modifying
-  ** pic and priority.
-  ** pic and priority are always scaled to the appropriate resolution, even
-  ** if GFX_CAPABILITY_SCALEABLE_PIXMAPS is set.
-  */
 {
+	if (!pic->internal.info) {
+		ERROR("Attempt to set static buffer with unregisterd pixmap!\n");
+		return GFX_ERROR;
+	}
+
+	XPutImage(S->display, S->visual[2], S->gc, (XImage *) pic->internal.info,
+		  0, 0, 0, 0, 320 * XFACT, 200 * YFACT);
+	gfx_copy_pixmap_box_i(S->priority[1], priority, gfx_rect(0, 0, 320*XFACT, 200*YFACT));
+
+	return GFX_OK;
 }
 
 
@@ -501,11 +532,6 @@ xlib_create_cursor_data(gfx_driver_t *drv, gfx_pixmap_t *pointer, int mode)
 	byte *linebase = data, *pos;
 	byte *src = pointer->index_data;
 
-
-	if (pointer->index_xl & 7) {
-		ERROR("No support for non-multiples of 8 in cursor generation!\n");
-		return NULL;
-	}
 
 	for (yc = 0; yc < pointer->index_yl; yc++) {
 		int scalectr;
@@ -541,18 +567,6 @@ xlib_create_cursor_data(gfx_driver_t *drv, gfx_pixmap_t *pointer, int mode)
 
 static int
 xlib_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
-  /* Sets a new mouse pointer.
-  ** Parameters: (gfx_driver_t *) drv: The driver to modify
-  **             (gfx_pixmap_t *) pointer: The pointer to set, or NULL to set
-  **                              no pointer
-  ** Returns   : (int) GFX_OK or GFX_FATAL
-  ** This function may be NULL if GFX_CAPABILITY_MOUSE_POINTER is not set.
-  ** If pointer is not NULL, it will have been scaled to the appropriate
-  ** size and registered as a pixmap (if neccessary) beforehand.
-  ** If this function is called for a target that supports only two-color
-  ** pointers, the image is a color index image, where only color index values
-  ** 0, 1, and GFX_COLOR_INDEX_TRANSPARENT are used.
-  */
 {
 	XFreeCursor(S->display, S->mouse_cursor);
 
@@ -562,10 +576,10 @@ xlib_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 		XColor cols[2];
 		Pixmap visual, mask;
 		byte *mask_data, *visual_data;
+		int real_xl = (pointer->xl + 7 >> 3) << 3;
 		int i, j;
 
 		for (i = 0; i < 2; i++) {
-			//			cols[i].pixel = xlib_map_pixmap_color(drv, pointer->colors[i]);
 			cols[i].red = pointer->colors[i].r;
 			cols[i].red |= (cols[i].red << 8);
 			cols[i].green = pointer->colors[i].g;
@@ -576,8 +590,8 @@ xlib_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 
 		visual_data = xlib_create_cursor_data(drv, pointer, 1);
 		mask_data = xlib_create_cursor_data(drv, pointer, 0);
-		visual = XCreateBitmapFromData(S->display, S->window, visual_data, pointer->xl, pointer->yl);
-		mask = XCreateBitmapFromData(S->display, S->window, mask_data, pointer->xl, pointer->yl);
+		visual = XCreateBitmapFromData(S->display, S->window, visual_data, real_xl, pointer->yl);
+		mask = XCreateBitmapFromData(S->display, S->window, mask_data, real_xl, pointer->yl);
 		
 
 		S->mouse_cursor =
@@ -840,8 +854,9 @@ gfx_driver_xlib = {
 	"0.1",
 	NULL,
 	0, 0,
-	GFX_CAPABILITY_STIPPLED_LINES | GFX_CAPABILITY_MOUSE_SUPPORT | GFX_CAPABILITY_MOUSE_POINTER,
-	0,
+	GFX_CAPABILITY_STIPPLED_LINES | GFX_CAPABILITY_MOUSE_SUPPORT | GFX_CAPABILITY_MOUSE_POINTER |
+	GFX_CAPABILITY_PIXMAP_REGISTRY | GFX_CAPABILITY_PIXMAP_GRABBING,
+	GFX_DEBUG_POINTER | GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC,
 	xlib_set_parameter,
 	xlib_init_specific,
 	xlib_init,

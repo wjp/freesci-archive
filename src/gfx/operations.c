@@ -1397,7 +1397,7 @@ _gfxop_set_pointer(gfx_state_t *state, gfx_pixmap_t *pxm)
 			}
 
 		if (pxm == NULL
-		    || state->driver->capabilities & GFX_CAPABILITY_COLOR_MOUSE_POINTER
+		    || (state->driver->capabilities & GFX_CAPABILITY_COLOR_MOUSE_POINTER)
 		    || pxm->colors_nr <= 2) {
 			if (state->driver->capabilities & GFX_CAPABILITY_POINTER_PIXMAP_REGISTRY) {
 				if ((pxm) && (retval = state->driver->register_pixmap(state->driver, pxm))) {

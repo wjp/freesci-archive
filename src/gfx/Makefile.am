@@ -8,7 +8,7 @@ EXTRA_libscigraphics_a_SOURCES = gfx_crossblit.c gfx_pixmap_scale.c
 libscigraphics_a_SOURCES = font.c  gfx_resource.c  gfx_support.c  gfx_tools.c  operations.c  resmgr.c  sbtree.c  widgets.c menubar.c sci_widgets.c
 
 check_PROGRAMS = gfx_test
-gfx_test_LDADD = libscigraphics.a drivers/libscidrivers.a @ac_glx_libraries@ @ac_ggi_libraries@ @ac_readline@ @ac_curses_libraries@ @ac_png_libraries@ -lm
+gfx_test_LDADD = libscigraphics.a drivers/libscidrivers.a @x_libraries@ @ac_glx_libraries@ @ac_ggi_libraries@ @ac_readline@ @ac_curses_libraries@ @ac_png_libraries@ -lm
 gfx_test_SOURCES = gfx_test.c
 
 
