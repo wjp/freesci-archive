@@ -1,5 +1,5 @@
 /***************************************************************************
- sfx_player.h Copyright (C) 2002 Christoph Reichenbach
+ sfx_player.h Copyright (C) 2003,04 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of

@@ -41,7 +41,7 @@ sfx_audbuf_alloc_chunk(void)
 void
 sfx_audbuf_init(sfx_audio_buf_t *buf, sfx_pcm_config_t pcm_conf)
 {
-	int framesize = SFX_PCM_SAMPLE_SIZE(pcm_conf);
+	int framesize = SFX_PCM_FRAME_SIZE(pcm_conf);
 	byte silence[16];
 	int silencew = pcm_conf.format & ~SFX_PCM_FORMAT_LMASK;
 
@@ -69,7 +69,7 @@ sfx_audbuf_init(sfx_audio_buf_t *buf, sfx_pcm_config_t pcm_conf)
 	buf->read_offset = 0;
 	buf->framesize = framesize;
 	buf->read_timestamp.secs = -1; /* Mark as inactive */
-	buf->samples_nr = 0;
+	buf->frames_nr = 0;
 }
 
 static void
@@ -103,7 +103,7 @@ sfx_audbuf_write(sfx_audio_buf_t *buf, unsigned char *src, int frames)
 	}
 
 
-	buf->samples_nr += frames;
+	buf->frames_nr += frames;
 
 	while (data_left) {
 		int cpsize;
@@ -182,9 +182,9 @@ sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int frames)
 							
 	}
 
-	buf->samples_nr -= frames;
-	if (buf->samples_nr < 0)
-		buf->samples_nr = 0;
+	buf->frames_nr -= frames;
+	if (buf->frames_nr < 0)
+		buf->frames_nr = 0;
 
 #ifdef TRACE_BUFFER
 	{
@@ -234,8 +234,8 @@ sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int frames)
 
 		if (frames &&
 		    (!buf->first || buf->read_offset == buf->first->used)) {
-			fprintf(stderr, "Underrun by %d samples at %d\n", frames,
-				buf->read_timestamp.sample_rate);
+			fprintf(stderr, "Underrun by %d frames at %d\n", frames,
+				buf->read_timestamp.frame_rate);
 			/* Buffer underrun! */
 			if (!reported_buffer_underrun) {
 				sciprintf("[audiobuf] Buffer underrun\n");
@@ -256,12 +256,12 @@ sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int frames)
 static void
 _sfx_audbuf_rewind_stream(sfx_audio_buf_t *buf, int delta)
 {
-	if (delta > buf->samples_nr)
-		delta = buf->samples_nr;
+	if (delta > buf->frames_nr)
+		delta = buf->frames_nr;
 
 
 	fprintf(stderr, "Rewinding %d\n", delta);
-	buf->samples_nr -= delta;
+	buf->frames_nr -= delta;
 
 	/* From here on, 'delta' means the number of BYTES to remove */
 	delta *= buf->framesize;
@@ -289,14 +289,14 @@ sfx_audbuf_write_timestamp(sfx_audio_buf_t *buf, sfx_timestamp_t ts)
 {
 	sfx_timestamp_t newstamp;
 
-	newstamp = sfx_timestamp_add(ts, -buf->samples_nr);
+	newstamp = sfx_timestamp_add(ts, -buf->frames_nr);
 
 
 	if (buf->read_timestamp.secs <= 0)
 		/* Initial stamp */
 		buf->read_timestamp = newstamp;
 	else {
-		int delta = sfx_timestamp_sample_diff(newstamp, buf->read_timestamp);
+		int delta = sfx_timestamp_frame_diff(newstamp, buf->read_timestamp);
 		long s1,s2,s3,u1,u2,u3;
 		sfx_timestamp_gettime(&(buf->read_timestamp), &s1, &u1);
 		sfx_timestamp_gettime(&(newstamp), &s2, &u2);
@@ -305,13 +305,13 @@ sfx_audbuf_write_timestamp(sfx_audio_buf_t *buf, sfx_timestamp_t ts)
 		if (delta < 0) {
 #if 0
 			/*			fprintf(stderr, "[SFX-BUF] audiobuf.c: Timestamp delta %d at %d: Must rewind (not implemented yet)\n",
-						delta, buf->read_timestamp.sample_rate);*/
+						delta, buf->read_timestamp.frame_rate);*/
 			_sfx_audbuf_rewind_stream(buf, -delta);
 			buf->read_timestamp = newstamp;
 #endif
 		} else if (delta > 0) {
 			fprintf(stderr, "[SFX-BUF] audiobuf.c: Timestamp delta %d at %d: Filling in as silence frames\n",
-				delta, buf->read_timestamp.sample_rate);
+				delta, buf->read_timestamp.frame_rate);
 			/* Fill up with silence */
 			while (delta--) {
 				sfx_audbuf_write(buf, buf->last_frame, 1);
@@ -330,8 +330,8 @@ sfx_audbuf_read_timestamp(sfx_audio_buf_t *buf, sfx_timestamp_t *ts)
 	} else {
 		ts->secs = -1;
 		ts->usecs = -1;
-		ts->sample_offset = -1;
-		ts->sample_rate = -1;
+		ts->frame_offset = -1;
+		ts->frame_rate = -1;
 		return 1; /* No timestamp */
 	}
 }

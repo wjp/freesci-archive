@@ -1,5 +1,5 @@
 /***************************************************************************
- sfx_pcm.h Copyright (C) 2003 Christoph Reichenbach
+ sfx_pcm.h Copyright (C) 2003,04 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -69,7 +69,7 @@
 #  define SFX_PCM_FORMAT_S16_NATIVE SFX_PCM_FORMAT_S16_LE
 #endif
 
-#define SFX_PCM_SAMPLE_SIZE(conf) ((conf).stereo? 2 : 1) * (((conf).format & SFX_PCM_FORMAT_16)? 2 : 1)
+#define SFX_PCM_FRAME_SIZE(conf) ((conf).stereo? 2 : 1) * (((conf).format & SFX_PCM_FORMAT_16)? 2 : 1)
 
 
 typedef struct {
@@ -122,7 +122,7 @@ typedef struct _sfx_pcm_device {
 	/* Writes output to the device
 	** Parameters: (sfx_pcm_device_t *) self: Self reference
 	**             (byte *) buf: The buffer to write
-	**             (int) count: Number of /samples/ that should be written
+	**             (int) count: Number of /frames/ that should be written
 	**             (sfx_timestamp_t *) timestamp: Optional point in time
 	**                                     for which the PCM data is scheduled
 	** Returns   : (int) SFX_OK on success, SFX_ERROR on error
@@ -140,7 +140,7 @@ typedef struct _sfx_pcm_device {
 	** Parameters: (sfx_pcm_device_t *) self: Self reference
 	** Returns   : (sfx_timestamp_t) A timestamp (with the device's conf.rate)
 	**                               describing the point in time at which
-	**                               the next sample passed to 'output'
+	**                               the next frame passed to 'output'
 	**                               will be played
 	** This function is OPTIONAL and may be NULL, but it is recommended
 	** that pcm device implementers attempt to really implement it.
@@ -148,7 +148,7 @@ typedef struct _sfx_pcm_device {
 
 	/* The following must be set after initialisation */
 	sfx_pcm_config_t conf;
-	int buf_size; /* Output buffer size, i.e. the number of samples (!)
+	int buf_size; /* Output buffer size, i.e. the number of frames (!)
 		      ** that can be queued by this driver before calling
 		      ** output() will block or fail, drained according
 		      ** to conf.rate  */
@@ -184,10 +184,10 @@ typedef struct _sfx_pcm_feed_t {
 	/* Asks the PCM feed to write out the next stuff it would like to have written
 	** Parameters: (sfx_pcm_feed_t *) self: Self reference
 	**             (byte *) dest: The destination buffer to write to
-	**             (int) size: The maximum number of _samples_ (not neccessarily bytes)
+	**             (int) size: The maximum number of _frames_ (not neccessarily bytes)
 	**                         to write
-	** Returns   : (int) The number of samples written
-	** If the number of samples written is smaller than 'size', the PCM feed will
+	** Returns   : (int) The number of frames written
+	** If the number of frames written is smaller than 'size', the PCM feed will
 	** be queried for a new timestamp afterwards, or destroyed if no new timestamp
 	** is available.
 	*/
@@ -200,8 +200,8 @@ typedef struct _sfx_pcm_feed_t {
 
 	int
 	(*get_timestamp)(struct _sfx_pcm_feed_t *self, sfx_timestamp_t *timestamp);
-	/* Determines the timestamp of the next sample-to-read
-	** Returns   : (sfx_timestamp_t) timestamp: The timestamp of the next sample
+	/* Determines the timestamp of the next frame-to-read
+	** Returns   : (sfx_timestamp_t) timestamp: The timestamp of the next frame
 	**             (int) PCM_FEED_*
 	** This function is OPTIONAL and may be NULL
 	*/
@@ -213,7 +213,7 @@ typedef struct _sfx_pcm_feed_t {
 	char *debug_name; /* The channel name, for debugging */
 	int debug_nr; /* A channel number relative to the channel name, for debugging
 		      ** (print in hex)  */
-	int sample_size; /* Sample size, computed by the mixer for the feed */
+	int frame_size; /* Frame size, computed by the mixer for the feed */
 
 } sfx_pcm_feed_t;
 

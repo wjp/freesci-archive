@@ -113,6 +113,9 @@ if test x"$with_sdl" != xno; then
 	AM_PATH_SDL(1.1.8, 	[
 					AC_DEFINE(HAVE_SDL)
 					fsci_sdl_driver="yes"
+					AC_TRY_COMPILE([
+#include <SDL.h>
+						], [], AC_DEFINE(SDL_HEADER_IMMEDIATE));
 				],
 				[
 					fsci_sdl_driver=""

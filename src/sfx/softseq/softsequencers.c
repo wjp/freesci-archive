@@ -1,5 +1,5 @@
 /***************************************************************************
- softsequencers.c  Copyright (C) 2002 Christoph Reichenbach
+ softsequencers.c  Copyright (C) 2004 Christoph Reichenbach
 
 
  This program is free software; you can redistribute it and/or

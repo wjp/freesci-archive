@@ -1,5 +1,5 @@
 /***************************************************************************
- time.c  Copyright (C) 2002 Christoph Reichenbach
+ time.c  Copyright (C) 2003 Christoph Reichenbach
 
 
  This program is free software; you can redistribute it and/or
@@ -31,59 +31,59 @@
 #include <resource.h>
 
 sfx_timestamp_t
-sfx_new_timestamp(long secs, long usecs, int sample_rate)
+sfx_new_timestamp(long secs, long usecs, int frame_rate)
 {
 	sfx_timestamp_t r;
 	r.secs = secs;
 	r.usecs = usecs;
-	r.sample_rate = sample_rate;
-	r.sample_offset = 0;
+	r.frame_rate = frame_rate;
+	r.frame_offset = 0;
 
 	return r;
 }
 
 
 sfx_timestamp_t
-sfx_timestamp_add(sfx_timestamp_t timestamp, int samples)
+sfx_timestamp_add(sfx_timestamp_t timestamp, int frames)
 {
-	timestamp.sample_offset += samples;
+	timestamp.frame_offset += frames;
 
-	if (timestamp.sample_offset < 0) {
-		int secsub = 1 + (-timestamp.sample_offset / timestamp.sample_rate);
+	if (timestamp.frame_offset < 0) {
+		int secsub = 1 + (-timestamp.frame_offset / timestamp.frame_rate);
 
-		timestamp.sample_offset += timestamp.sample_rate * secsub;
+		timestamp.frame_offset += timestamp.frame_rate * secsub;
 		timestamp.secs -= secsub;
 	}
 
-	timestamp.secs += (timestamp.sample_offset / timestamp.sample_rate);
-	timestamp.sample_offset %= timestamp.sample_rate;
+	timestamp.secs += (timestamp.frame_offset / timestamp.frame_rate);
+	timestamp.frame_offset %= timestamp.frame_rate;
 
 	return timestamp;
 }
 
 int
-sfx_timestamp_sample_diff(sfx_timestamp_t a, sfx_timestamp_t b)
+sfx_timestamp_frame_diff(sfx_timestamp_t a, sfx_timestamp_t b)
 {
 	long usecdelta = 0;
 
-	if (a.sample_rate != b.sample_rate) {
+	if (a.frame_rate != b.frame_rate) {
 		fprintf(stderr, "Fatal: The semantics of subtracting two timestamps with a different base from each other is not defined!\n");
 		BREAKPOINT();
 	}
 
 	if (a.usecs != b.usecs) {
 #if (SIZEOF_LONG >= 8)
-		usecdelta = (a.usecs * a.sample_rate) / 1000000
-			- (b.usecs * b.sample_rate) / 1000000;
+		usecdelta = (a.usecs * a.frame_rate) / 1000000
+			- (b.usecs * b.frame_rate) / 1000000;
 #else
-		usecdelta = ((a.usecs/1000) * a.sample_rate) / 1000
-			- ((b.usecs/1000) * b.sample_rate) / 1000;
+		usecdelta = ((a.usecs/1000) * a.frame_rate) / 1000
+			- ((b.usecs/1000) * b.frame_rate) / 1000;
 #endif
 	}
 
 	return usecdelta
-		+ (a.secs - b.secs) * a.sample_rate
-		+ a.sample_offset - b.sample_offset;
+		+ (a.secs - b.secs) * a.frame_rate
+		+ a.frame_offset - b.frame_offset;
 }
 
 long
@@ -103,8 +103,8 @@ sfx_timestamp_renormalise(sfx_timestamp_t timestamp, int new_freq)
 {
 	sfx_timestamp_t r;
 	sfx_timestamp_gettime(&timestamp, &r.secs, &r.usecs);
-	r.sample_rate = new_freq;
-	r.sample_offset = 0;
+	r.frame_rate = new_freq;
+	r.frame_offset = 0;
 
 	return r;
 }
@@ -115,9 +115,9 @@ sfx_timestamp_gettime(sfx_timestamp_t *timestamp, long *secs, long *usecs)
 	long ust = timestamp->usecs;
 	/* On 64 bit machines, we can do an accurate computation */
 #if (SIZEOF_LONG >= 8)
-	ust += (timestamp->sample_offset * 1000000l) / (timestamp->sample_rate);
+	ust += (timestamp->frame_offset * 1000000l) / (timestamp->frame_rate);
 #else
-	ust += (timestamp->sample_offset * 1000l) / (timestamp->sample_rate / 1000l);
+	ust += (timestamp->frame_offset * 1000l) / (timestamp->frame_rate / 1000l);
 #endif
 
 	if (ust > 1000000) {

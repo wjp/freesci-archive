@@ -1,5 +1,5 @@
 /***************************************************************************
- sequencers.c Copyright (C) 2002 Christoph Reichenbach
+ sequencers.c Copyright (C) 2004 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of

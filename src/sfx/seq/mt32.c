@@ -1,6 +1,6 @@
 /***************************************************************************
  midi_mt32.c Copyright (C) 2000,2001 Rickard Lind, Solomon Peachy
- mt32.c Copyright (C) 2002 Christoph Reichenbach
+ mt32.c Copyright (C) 2002..04 Christoph Reichenbach
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright

@@ -1,7 +1,7 @@
 /***************************************************************************
  sfx_adlib.h, from
 	 midi_device.h Copyright (C) 2001 Solomon Peachy
-		       Copytight (C) 2002 Christoph Reichenbach
+		       Copytight (C) 2002..04 Christoph Reichenbach
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright

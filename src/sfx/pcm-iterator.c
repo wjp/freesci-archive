@@ -40,7 +40,7 @@ pi_destroy(sfx_pcm_feed_t *self);
 
 typedef struct {
 	byte *data;
-	int samples_left;
+	int frames_left;
 	song_iterator_t *it;
 } pcm_data_internal_t;
 
@@ -77,7 +77,7 @@ sfx_iterator_feed(song_iterator_t *it)
 
 	idat = sci_malloc(sizeof(pcm_data_internal_t));
 	idat->data = data;
-	idat->samples_left = size;
+	idat->frames_left = size;
 	idat->it = it;
 	feed = sci_malloc(sizeof(sfx_pcm_feed_t));
 	*feed = pcm_it_prototype;
@@ -92,11 +92,11 @@ pi_poll(sfx_pcm_feed_t *self, byte *dest, int size)
 {
 	int data_len;
 
-	if (size > D->samples_left)
-		size = D->samples_left;
-	D->samples_left -= size;
+	if (size > D->frames_left)
+		size = D->frames_left;
+	D->frames_left -= size;
 
-	data_len = size * self->sample_size;
+	data_len = size * self->frame_size;
 
 	memcpy(dest, D->data, data_len);
 #if 0

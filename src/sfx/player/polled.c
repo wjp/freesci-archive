@@ -1,5 +1,5 @@
 /***************************************************************************
- polled.c Copyright (C) 2002 Christoph Reichenbach
+ polled.c Copyright (C) 2004 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -41,7 +41,7 @@ static sfx_timestamp_t new_timestamp;
 static int new_song = 0;
 
 /* The time counter is used to determine how close to the end of a tick we are.
-** For each sample played, it is decreased by 60.  */
+** For each frame played, it is decreased by 60.  */
 #define TIME_INC 60
 static int time_counter = 0;
 
@@ -231,7 +231,7 @@ ppf_poll(sfx_pcm_feed_t *self, byte *dest, int size)
 
 		time_counter -= do_play * TIME_INC;
 
-		seq->poll(seq, dest + written * self->sample_size, do_play);
+		seq->poll(seq, dest + written * self->frame_size, do_play);
 		written += do_play;
 	}
 

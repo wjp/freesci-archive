@@ -1,5 +1,5 @@
 /***************************************************************************
- sfx_time.h  Copyright (C) 2002 Christoph Reichenbach
+ sfx_time.h  Copyright (C) 2003,04 Christoph Reichenbach
 
 
  This program is free software; you can redistribute it and/or
@@ -33,30 +33,30 @@
 typedef struct {
 	long secs;
 	long usecs;
-	int sample_rate;
-	int sample_offset;
-	/* Total time: secs + usecs + sample_offset/sample_rate */
+	int frame_rate;
+	int frame_offset;
+	/* Total time: secs + usecs + frame_offset/frame_rate */
 } sfx_timestamp_t;
 
 
 sfx_timestamp_t
-sfx_new_timestamp(long secs, long usecs, int sample_rate);
+sfx_new_timestamp(long secs, long usecs, int frame_rate);
 /* Creates a new mutable timestamp
 ** Parameters: (long x long) (secs, usecs): Initial timestamp
-**             (int) sample_rate: Sample rate, for increasing the time stamp
+**             (int) frame_rate: Frame rate, for increasing the time stamp
 */
 
 sfx_timestamp_t
-sfx_timestamp_add(sfx_timestamp_t timestamp, int samples);
-/* Adds a number of samples to a timestamp
+sfx_timestamp_add(sfx_timestamp_t timestamp, int frames);
+/* Adds a number of frames to a timestamp
 ** Parameters: (sfx_timestampt_t *) timestamp: The timestamp to update
-**             (int) samples: Number of samples to add
+**             (int) frames: Number of frames to add
 ** Returns   : (sfx_timestamp_t) The increased timestamp
 */
 
 sfx_timestamp_t
 sfx_timestamp_renormalise(sfx_timestamp_t timestamp, int new_freq);
-/* Translates a timestamp to a new base sample frequency
+/* Translates a timestamp to a new base frame frequency
 ** Parameters: (sfx_timestamp_t *) timestamp: The timestamp to normalise
 **             (int) new_freq: The new frequency to normalise to
 ** Returns   : (sfx_timestamp_t) The re-normalised timestamp
@@ -65,8 +65,8 @@ sfx_timestamp_renormalise(sfx_timestamp_t timestamp, int new_freq);
 */
 
 int
-sfx_timestamp_sample_diff(sfx_timestamp_t a, sfx_timestamp_t b);
-/* Computes the difference (# of samples) between two timestamps
+sfx_timestamp_frame_diff(sfx_timestamp_t a, sfx_timestamp_t b);
+/* Computes the difference (# of frames) between two timestamps
 ** Parameters: (sfx_timestamp) a: See below
 **             (sfx_timestamp) b: See below
 ** Returns   : (int) a-b

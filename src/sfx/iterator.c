@@ -1,5 +1,5 @@
 /***************************************************************************
- iterator.c Copyright (C) 2001 Christoph Reichenbach
+ iterator.c Copyright (C) 2001..04 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of

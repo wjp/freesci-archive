@@ -1,5 +1,5 @@
 /***************************************************************************
- sfx_softseq.h  Copyright (C) 2002 Christoph Reichenbach
+ sfx_softseq.h  Copyright (C) 2004 Christoph Reichenbach
 
 
  This program is free software; you can redistribute it and/or
@@ -89,8 +89,8 @@ typedef struct sfx_softseq {
 	(*poll)(struct sfx_softseq *self, byte *dest, int len);
 	/* Asks the software sequencer to fill in parts of a buffer
 	** Parameters: (sfx_softseq_t *) self: Self reference
-	**             (int) len: Number of _samples_ to write
-	** Returns   : (byte) *dest: 'len' samples must be written to this buffer
+	**             (int) len: Number of _frames_ to write
+	** Returns   : (byte) *dest: 'len' frames must be written to this buffer
 	*/
 
 	void

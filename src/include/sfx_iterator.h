@@ -1,5 +1,5 @@
 /***************************************************************************
- sfx_iterator.h (C) 2002 Christoph Reichenbach
+ sfx_iterator.h (C) 2002..04 Christoph Reichenbach
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright

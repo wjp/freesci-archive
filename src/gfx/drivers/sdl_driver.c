@@ -43,9 +43,13 @@
 #ifdef HAVE_SDL
 #include <gfx_tools.h>
 
-#if !defined(_MSC_VER) && !defined(__APPLE__)
-#	include <sys/time.h>
-#	include <SDL/SDL.h>
+#if !defined(_MSC_VER)
+#  include <sys/time.h>
+#  if defined(SDL_HEADER_IMMEDIATE)
+#    include <SDL.h>
+#  else
+#    include <SDL/SDL.h>
+#  endif
 #else
 #	include <SDL.h>
 #endif

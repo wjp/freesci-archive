@@ -1,5 +1,5 @@
 /***************************************************************************
- oss-adlib.c Copyright (C) 2001 Solomon Peachy, Christoph Reichenbach
+ oss-adlib.c Copyright (C) 2001 Solomon Peachy, 03,04 Christoph Reichenbach
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright

@@ -47,7 +47,7 @@
 
 
 #define SFX_AUDIO_BUF_SIZE 8192	/* Must be multiple of framesize */
-#define SFX_AUDIO_MAX_FRAME 8	/* Max. individual sample size */
+#define SFX_AUDIO_MAX_FRAME 8	/* Max. individual frame size */
 
 typedef struct _sfx_audio_buf_chunk {
 	unsigned char data[SFX_AUDIO_BUF_SIZE];
@@ -65,7 +65,7 @@ typedef struct {
 	/* Contains the last frame successfully read; used for buffer
 	** underruns to avoid crack before silance  */
 	sfx_timestamp_t read_timestamp; /* Timestamp for reading */
-	int samples_nr; /* Total number of samples currently in between reading and writing */
+	int frames_nr; /* Total number of frames currently in between reading and writing */
 	int framesize;
 } sfx_audio_buf_t;
 
@@ -93,7 +93,7 @@ sfx_audbuf_write(sfx_audio_buf_t *buf, unsigned char *src, int frames);
 ** Parameters: (sfx_audio_buf_t *) buf: The buffer to write to
 **             (unsigned char *) src: Pointer to the data that should be
 **                                    written
-**             (int) frames: Number of samples to write
+**             (int) frames: Number of frames to write
 ** Modifies  : (sfx_audio_buf_t) *buf
 */
 
@@ -110,7 +110,7 @@ sfx_audbuf_write_timestamp(sfx_audio_buf_t *buf, sfx_timestamp_t ts);
 
 int
 sfx_audbuf_read_timestamp(sfx_audio_buf_t *buf, sfx_timestamp_t *ts);
-/* Reads the timestamp describing the time right before the next sample being read
+/* Reads the timestamp describing the time right before the next frame being read
 ** Parameters: (sfx_audio_buf_t *) buf: The buffer to read from
 ** Returns   : (sfx_timestamp_t) *ts: The requested timestamp, or nothing
 **             (int) zero on success, nonzero if no timestamp is known
@@ -123,15 +123,15 @@ sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int frames);
 ** Parameters: (sfx_audio_buf_t *) buf: The buffer to write to
 **             (unsigned char *) dest: Pointer to the place the read data
 **                                     should be written to
-**             (int) frames: Number of samples to write
-** Returns   : (int) Number of samples actually read
+**             (int) frames: Number of frames to write
+** Returns   : (int) Number of frames actually read
 ** Affects   : (sfx_audio_buf_t) *buf
 **             (unsigned char ) *dest
 **             global error stream
-** If the returned number of samples is smaller than the number of samples
+** If the returned number of frames is smaller than the number of frames
 ** requested to be written, this function will issue a buffer underrun
-** warning and fill up the remaining space with the last sample it en--
-** countered, or a block of '0' if no such sample is known.
+** warning and fill up the remaining space with the last frame it en--
+** countered, or a block of '0' if no such frame is known.
 */
 
 

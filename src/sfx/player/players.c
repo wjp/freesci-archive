@@ -1,5 +1,5 @@
 /***************************************************************************
- players.c Copyright (C) 2002 Christoph Reichenbach
+ players.c Copyright (C) 2002..04 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of

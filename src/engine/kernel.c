@@ -290,8 +290,13 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*6b*/	{KF_NEW, "FlushResources", {kFlushResources, "i"}},
 /*6c*/	{KF_NEW, "TimesSin", {kTimesSin, "ii"}},
 /*6d*/	{KF_NEW, "TimesCos", {kTimesCos, "ii"}},
+#if 0
 /*6e*/	{KF_NONE, NULL},
 /*6f*/	{KF_NONE, NULL},
+#else
+/*6e*/	{KF_NEW, "6e", {kTimesSin, "ii"}},
+/*6f*/	{KF_NEW, "6f", {kTimesCos, "ii"}},
+#endif
 /*70*/	{KF_NEW, "Graph", {kGraph, ".*"}},
 /*71*/	{KF_NEW, "Joystick", {kJoystick, ".*"}},
 /*72*/	{KF_NONE, NULL},
@@ -611,8 +616,8 @@ kMemory(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	case K_MEMORY_MEMCPY : {
 		int size = UKPV(3);
-		char *dest = kernel_dereference_bulk_pointer(s, argv[1], size);
-		char *src = kernel_dereference_bulk_pointer(s, argv[2], size);
+		byte *dest = kernel_dereference_bulk_pointer(s, argv[1], size);
+		byte *src = kernel_dereference_bulk_pointer(s, argv[2], size);
 
 		if (dest && src)
 			memcpy(dest, src, size);
@@ -630,7 +635,7 @@ kMemory(state_t *s, int funct_nr, int argc, reg_t *argv)
 		}
 
 	case K_MEMORY_PEEK : {
-		char *ref = kernel_dereference_bulk_pointer(s, argv[1], 2);
+		byte *ref = kernel_dereference_bulk_pointer(s, argv[1], 2);
 		if (ref)
 			return make_reg(0, getInt16(ref));
 		else {
@@ -642,7 +647,7 @@ kMemory(state_t *s, int funct_nr, int argc, reg_t *argv)
 		break;
 
 	case K_MEMORY_POKE : {
-		char *ref = kernel_dereference_bulk_pointer(s, argv[1], 2);
+		byte *ref = kernel_dereference_bulk_pointer(s, argv[1], 2);
 
 		if (argv[2].segment) {
 			SCIkdebug(SCIkERROR, "Attempt to poke memory reference "PREG" to "PREG"!\n",
@@ -799,7 +804,7 @@ script_map_kernel(state_t *s)
 			sciprintf("Warning: Kernel function %s[%x] unmapped\n",
 				  s->kernel_names[functnr], functnr);
 			s->kfunct_table[functnr].signature = NULL;
-			s->kfunct_table[functnr].fun = kstub;
+			s->kfunct_table[functnr].fun = k_Unknown;
 		} else switch (kfunct_mappers[found].type) {
 
 		case KF_OLD:
@@ -975,7 +980,7 @@ _kernel_dereference_pointer(struct _state *s, reg_t pointer, int entries, int al
 
 }
 
-char *
+byte *
 kernel_dereference_bulk_pointer(struct _state *s, reg_t pointer, int entries)
 {
 	return _kernel_dereference_pointer(s, pointer, entries, 1);

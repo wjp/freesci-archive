@@ -47,7 +47,7 @@ static unsigned int period_time = 100000; /* FIXME */
 static snd_pcm_sframes_t buffer_size;
 static snd_pcm_sframes_t period_size;
 
-static int sample_size;
+static int frame_size;
 static long last_callback_secs, last_callback_usecs;
 static int last_callback_len;
 
@@ -86,10 +86,10 @@ xrun_recovery(snd_pcm_t *handle, int err)
 static sfx_timestamp_t
 pcmout_alsa_output_timestamp(sfx_pcm_device_t *self)
 {
-	/* Number of samples enqueued in the output device: */
-	int delta = (buffer_size - last_callback_len) / sample_size
-		/* Number of samples enqueued in the internal audio buffer: */
-		+ audio_buffer.samples_nr;
+	/* Number of frames enqueued in the output device: */
+	int delta = (buffer_size - last_callback_len) / frame_size
+		/* Number of frames enqueued in the internal audio buffer: */
+		+ audio_buffer.frames_nr;
 
 	return sfx_timestamp_add(sfx_new_timestamp(last_callback_secs,
 						   last_callback_usecs,
@@ -160,7 +160,7 @@ async_direct_callback(snd_async_handler_t *ahandler)
 				}
 				first = 1;
 			}
-			sfx_audbuf_read(&audio_buffer, my_areas->addr + offset*sample_size, frames);
+			sfx_audbuf_read(&audio_buffer, my_areas->addr + offset*frame_size, frames);
 			commitres = snd_pcm_mmap_commit(handle, offset, frames);
 			if (commitres < 0 || commitres != frames) {
 				if ((err = xrun_recovery(handle, commitres >= 0 ? -EPIPE : commitres)) < 0) {
@@ -277,7 +277,7 @@ pcmout_alsa_init(sfx_pcm_device_t *self)
 	self->conf.stereo = channels > 1;
 	self->conf.format = SFX_PCM_FORMAT_S16_NATIVE;
 
-	sample_size = SFX_PCM_SAMPLE_SIZE(self->conf);
+	frame_size = SFX_PCM_FRAME_SIZE(self->conf);
 
 	sfx_audbuf_init(&audio_buffer, self->conf);
 
@@ -301,7 +301,7 @@ pcmout_alsa_init(sfx_pcm_device_t *self)
 					return SFX_ERROR;
 				}
 			}
-			sfx_audbuf_read(&audio_buffer, my_areas->addr + offset*sample_size, frames);
+			sfx_audbuf_read(&audio_buffer, my_areas->addr + offset*frame_size, frames);
 			commitres = snd_pcm_mmap_commit(handle, offset, frames);
 			if (commitres < 0 || commitres != frames) {
 				if ((err = xrun_recovery(handle, commitres >= 0 ? -EPIPE : commitres)) < 0) {

@@ -1,3 +1,8 @@
+2004-01-04  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kernel.c (script_map_kernel): Unknown kernel calls
+	are now correctly mapped to k_Unknown (rather than kstub)
+
 2004-01-04  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/sfx/pcm_device/alsa.c: Build fix for older versions of ALSA. 

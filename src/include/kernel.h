@@ -193,7 +193,7 @@ _SCIkprintf(FILE *file, char *format, ...);
 
 reg_t *
 kernel_dereference_reg_pointer(struct _state *s, reg_t pointer, int entries);
-char *
+byte *
 kernel_dereference_bulk_pointer(struct _state *s, reg_t pointer, int entries);
 /* Dereferences a heap pointer
 ** Parameters: (state_t *) s: The state to operate on

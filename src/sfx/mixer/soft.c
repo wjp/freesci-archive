@@ -36,7 +36,7 @@
 ** anything -- high-level debugging (feed subscriptions/deletions etc.)
 **     >= 1 -- rough input and output analysis (once per call)
 **     >= 2 -- more detailed input analysis (once per call and feed)
-**     >= 3 -- fully detailed input and output analysis (once per sample and feed)
+**     >= 3 -- fully detailed input and output analysis (once per frame and feed)
 */
 
 #define DEBUG 0
@@ -52,14 +52,14 @@ struct mixer_private {
 	int have_outbuf_timestamp; /* Whether we really _have_ an associated timestamp */
 	byte *writebuf; /* Buffer we're supposed to write to */
 	gint32 *compbuf_l, *compbuf_r; /* Intermediate buffers for computation */
-	int lastbuf_len; /* Number of samples stored in the last buffer */
+	int lastbuf_len; /* Number of frames stored in the last buffer */
 
 	long skew; /* Millisecond relative to which we compute time. This is the millisecond
 		   ** part of the first time we emitted sound, to simplify some computations.  */
 	long lsec; /* Last point in time we updated buffers, if any (seconds since the epoch) */
-	int played_this_second; /* Number of samples emitted so far in second lsec */
+	int played_this_second; /* Number of frames emitted so far in second lsec */
 
-	int max_delta; /* maximum observed time delta (using 'samples' as a metric unit) */
+	int max_delta; /* maximum observed time delta (using 'frames' as a metric unit) */
 	int delta_observations; /* Number of times we played; confidence measure for max_delta */
 
 
@@ -142,7 +142,7 @@ mix_subscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 	fs = self->feeds + self->feeds_nr++;
 	fs->feed = feed;
 
-	feed->sample_size = SFX_PCM_SAMPLE_SIZE(feed->conf);
+	feed->frame_size = SFX_PCM_FRAME_SIZE(feed->conf);
 
 	/*	fs->buf_size = (self->dev->buf_size
 			  * (feed->conf.rate
@@ -154,7 +154,7 @@ mix_subscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 		(self->dev->buf_size *
 			(1 + (feed->conf.rate / self->dev->conf.rate)));
 
-	fs->buf = sci_malloc(fs->buf_size * feed->sample_size);
+	fs->buf = sci_malloc(fs->buf_size * feed->frame_size);
 	fs->scount = urat(0, 1);
 	fs->spd = urat(feed->conf.rate, self->dev->conf.rate);
 	fs->scount.den = fs->spd.den;
@@ -167,7 +167,7 @@ mix_subscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 	/* If the feed can't provide us with timestamps, we don't need to wait for it to do so */
 	fs->pending_review = (feed->get_timestamp)? 1 : 0;
 
-	fs->sample_bufstart = 0;
+	fs->frame_bufstart = 0;
 
 #ifdef DEBUG
 	sciprintf("[soft-mixer] Subscribed %s-%x (%d Hz, %d/%x) at %d+%d/%d, buffer size %d\n",
@@ -248,18 +248,18 @@ mix_exit(sfx_pcm_mixer_t *self)
 static inline void
 mix_compute_output(sfx_pcm_mixer_t *self, int outplen)
 {
-	int sample_i;
+	int frame_i;
 	sfx_pcm_config_t conf = self->dev->conf;
 	int use_16 = conf.format & SFX_PCM_FORMAT_16;
 	int bias = conf.format & ~SFX_PCM_FORMAT_LMASK;
 	byte *lchan, *rchan;
 	gint32 *lsrc = P->compbuf_l;
 	gint32 *rsrc = P->compbuf_r;
-	int sample_size = SFX_PCM_SAMPLE_SIZE(conf);
+	int frame_size = SFX_PCM_FRAME_SIZE(conf);
 
  
 	if (!P->writebuf)
-		P->writebuf = sci_malloc(self->dev->buf_size * sample_size);
+		P->writebuf = sci_malloc(self->dev->buf_size * frame_size);
 
 	if (conf.stereo) {
 		if (conf.stereo == SFX_PCM_STEREO_RL) {
@@ -273,7 +273,7 @@ mix_compute_output(sfx_pcm_mixer_t *self, int outplen)
 		lchan = P->writebuf;
 
 
-	for (sample_i = 0; sample_i < outplen; sample_i++) {
+	for (frame_i = 0; frame_i < outplen; frame_i++) {
 		int left = *lsrc++;
 		int right = *rsrc++;
 
@@ -348,24 +348,24 @@ mix_swap_buffers(sfx_pcm_mixer_t *self)
 }
 
 
-#define SAMPLE_OFFSET(usecs) \
+#define FRAME_OFFSET(usecs) \
 			((usecs >> 7) /* approximate, since uint32 is too small */ \
 			 * ((long) self->dev->conf.rate)) \
 			/ (1000000L >> 7)
 
 static inline int
-mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_samples)
-     /* Computes the number of samples we ought to write. It tries to minimise the number,
+mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_frames)
+     /* Computes the number of frames we ought to write. It tries to minimise the number,
      ** in order to reduce latency. */
-     /* It sets 'skip_samples' to the number of samples to assume lost by latency, effectively
+     /* It sets 'skip_frames' to the number of frames to assume lost by latency, effectively
      ** skipping them.  */
 {
-	int free_samples;
-	int recommended_samples;
-	int played_samples = 0; /* since the last call */
+	int free_frames;
+	int recommended_frames;
+	int played_frames = 0; /* since the last call */
 	long secs, usecs;
-	int sample_pos;
-	int result_samples;
+	int frame_pos;
+	int result_frames;
 
 	sci_gettime(&secs, &usecs);
 
@@ -376,7 +376,7 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_samples)
 		P->max_delta = 0;
 		P->delta_observations = 0;
 		P->played_this_second = self->dev->buf_size;
-		*skip_samples = 0;
+		*skip_frames = 0;
 		return self->dev->buf_size;
 	}
 
@@ -389,32 +389,32 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_samples)
 	else
 		usecs -= P->skew;
 	
-	sample_pos = SAMPLE_OFFSET(usecs);
+	frame_pos = FRAME_OFFSET(usecs);
 
-	played_samples = P->played_this_second - sample_pos
+	played_frames = P->played_this_second - frame_pos
 		- ((secs - P->lsec) * self->dev->conf.rate);
 	/*
 	fprintf(stderr, "Between %d:? offset=%d and %d:%d offset=%d: Played %d at %d\n", P->lsec, P->played_this_second,
-		secs, usecs, sample_pos, played_samples, self->dev->conf.rate);
+		secs, usecs, frame_pos, played_frames, self->dev->conf.rate);
 	*/
 
-	if (played_samples > P->max_delta)
-		P->max_delta = played_samples;
+	if (played_frames > P->max_delta)
+		P->max_delta = played_frames;
 
-	free_samples = self->dev->buf_size - played_samples;
+	free_frames = self->dev->buf_size - played_frames;
 
-	if (free_samples > self->dev->buf_size) {
+	if (free_frames > self->dev->buf_size) {
 		if (!diagnosed_too_slow) {
 			sciprintf("[sfx-mixer] Your timer is too slow for your PCM output device (%d/%d).\n"
 				  "[sfx-mixer] You might want to try changing the device, timer, or mixer, if possible.\n",
-				  played_samples, self->dev->buf_size);
+				  played_frames, self->dev->buf_size);
 		}
 		diagnosed_too_slow = 1;
 
-		*skip_samples = free_samples - self->dev->buf_size;
-		free_samples = self->dev->buf_size;
+		*skip_frames = free_frames - self->dev->buf_size;
+		free_frames = self->dev->buf_size;
 	} else
-		*skip_samples = 0;
+		*skip_frames = 0;
 
 	++P->delta_observations;
 	if (P->delta_observations > MAX_DELTA_OBSERVATIONS)
@@ -426,44 +426,44 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_samples)
 		int diff = self->dev->conf.rate - P->max_delta;
 
 		/* log-approximate P->max_delta over time */
-		recommended_samples = P->max_delta +
+		recommended_frames = P->max_delta +
 			((diff * MIN_DELTA_OBSERVATIONS) / P->delta_observations);
 /* WTF? */
 	} else
-		recommended_samples = self->dev->buf_size; /* Initially, keep the buffer full */
+		recommended_frames = self->dev->buf_size; /* Initially, keep the buffer full */
 
 #if (DEBUG >= 1)
 	sciprintf("[soft-mixer] played since last time: %d, recommended: %d, free: %d\n",
-		  played_samples, recommended_samples, free_samples);
+		  played_frames, recommended_frames, free_frames);
 #endif
 
-	if (recommended_samples > free_samples)
-		result_samples = free_samples;
+	if (recommended_frames > free_frames)
+		result_frames = free_frames;
 	else
-		result_samples = recommended_samples;
+		result_frames = recommended_frames;
 
-	if (result_samples < 0)
-		result_samples = 0;
+	if (result_frames < 0)
+		result_frames = 0;
 
-	P->played_this_second += result_samples;
+	P->played_this_second += result_frames;
 	while (P->played_this_second > self->dev->conf.rate) {
 		/* Won't normally happen more than once */
 		P->played_this_second -= self->dev->conf.rate;
 		P->lsec++;
 	}
 
-	if (result_samples > self->dev->buf_size) {
-		fprintf(stderr, "[soft-mixer] Internal assertion failed: samples-to-write %d > %d\n",
-			result_samples, self->dev->buf_size);
+	if (result_frames > self->dev->buf_size) {
+		fprintf(stderr, "[soft-mixer] Internal assertion failed: frames-to-write %d > %d\n",
+			result_frames, self->dev->buf_size);
 	}
 
-	return result_samples;
+	return result_frames;
 }
 
 
 
 #define READ_NEW_VALUES() \
-		if (samples_left > 0) {						\
+		if (frames_left > 0) {						\
 			if (bias) { /* unsigned data */					\
 				if (!use_16) {						\
 					c_new.left = (*lsrc) << 8;			\
@@ -495,8 +495,8 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_samples)
 			c_new.left -= bias;					\
 			c_new.right -= bias;					\
 										\
-			lsrc += sample_size;					\
-			rsrc += sample_size;					\
+			lsrc += frame_size;					\
+			rsrc += frame_size;					\
 		} else {							\
 			c_new.left = c_new.right = 0;				\
 			break;							\
@@ -507,37 +507,37 @@ static void
 mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_state_t *fs,
 			 int len, sfx_timestamp_t *ts, sfx_timestamp_t base_ts)
      /* if add_result is non-zero, P->outbuf should be added to rather than overwritten. */
-     /* base_ts is the timestamp for the first sample */
+     /* base_ts is the timestamp for the first frame */
 {
 	sfx_pcm_feed_t *f = fs->feed;
 	sfx_pcm_config_t conf = f->conf;
 	int use_16 = conf.format & SFX_PCM_FORMAT_16;
 	gint32 *lchan = P->compbuf_l;
 	gint32 *rchan = P->compbuf_r;
-	int sample_size = f->sample_size;
-	byte *wr_dest = fs->buf + (sample_size * fs->sample_bufstart);
+	int frame_size = f->frame_size;
+	byte *wr_dest = fs->buf + (frame_size * fs->frame_bufstart);
 	byte *lsrc = fs->buf;
 	byte *rsrc = fs->buf;
 	/* Location to write to */
-	int samples_nr;
+	int frames_nr;
 	int bias = (conf.format & ~SFX_PCM_FORMAT_LMASK)? 0x8000 : 0;
 	/* We use this only on a 16 bit level here */
 	int i;
 	sfx_pcm_urat_t counter = urat(0, 1);
 
-	/* The two most extreme source samples we consider for a
-	** destination sample  */
+	/* The two most extreme source frames we consider for a
+	** destination frame  */
 	struct twochannel_data c_old = fs->ch_old;
 	struct twochannel_data c_new = fs->ch_new;
 
-	int samples_read;
-	int samples_left;
+	int frames_read;
+	int frames_left;
 	int write_offset; /* Iterator for translation */
-	int delay_samples = 0; /* Number of samples (dest buffer) at the beginning we skip */
-	/* First, compute the number of samples we want to retreive */
-	samples_nr = fs->spd.val * len;
-	/* A little complicated since we must consider partial samples */
-	samples_nr += (fs->spd.nom * len
+	int delay_frames = 0; /* Number of frames (dest buffer) at the beginning we skip */
+	/* First, compute the number of frames we want to retreive */
+	frames_nr = fs->spd.val * len;
+	/* A little complicated since we must consider partial frames */
+	frames_nr += (fs->spd.nom * len
 		       + (fs->scount.den - fs->scount.nom) /* remember that we may have leftovers */
 		       + (fs->spd.den - 1 /* round up */)
 		       )
@@ -545,7 +545,7 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 
 	ts->secs = -1;
 
-//fprintf(stderr, " samples_nr = %d * (%d + %d/%d) = %d\n",
+//fprintf(stderr, " frames_nr = %d * (%d + %d/%d) = %d\n",
 //len, fs->spd.val, fs->spd.nom, fs->scount
 	if (fs->pending_review) {
 		int newmode = PCM_FEED_EMPTY; /* empty unless a get_timestamp() tells otherwise */
@@ -557,17 +557,17 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 		switch (newmode) {
 
 		case PCM_FEED_TIMESTAMP: {
-			/* Compute the number of samples the returned timestamp is in the future: */
-			delay_samples =
-				sfx_timestamp_sample_diff(sfx_timestamp_renormalise(*ts, base_ts.sample_rate),
+			/* Compute the number of frames the returned timestamp is in the future: */
+			delay_frames =
+				sfx_timestamp_frame_diff(sfx_timestamp_renormalise(*ts, base_ts.frame_rate),
 							  base_ts);
 
-			if (delay_samples <= 0)
+			if (delay_frames <= 0)
 				/* Start ASAP, even if it's too late */
-				delay_samples = 0;
+				delay_frames = 0;
 			else
-				if (delay_samples > len)
-					delay_samples = len;
+				if (delay_frames > len)
+					delay_frames = len;
 			fs->pending_review = 0;
 		}
 			break;
@@ -593,26 +593,26 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 	}
 
 	/* Make sure we have sufficient information */
-	samples_left = samples_read = fs->sample_bufstart +
-		f->poll(f, wr_dest, samples_nr - delay_samples - fs->sample_bufstart);
+	frames_left = frames_read = fs->frame_bufstart +
+		f->poll(f, wr_dest, frames_nr - delay_frames - fs->frame_bufstart);
 
 	/* Skip at the beginning: */
-	if (delay_samples) {
+	if (delay_frames) {
 		if (!add_result) {
-			memset(lchan, 0, sizeof(gint32) * delay_samples);
-			memset(rchan, 0, sizeof(gint32) * delay_samples);
+			memset(lchan, 0, sizeof(gint32) * delay_frames);
+			memset(rchan, 0, sizeof(gint32) * delay_frames);
 		}
-		lchan += delay_samples;
-		rchan += delay_samples;
+		lchan += delay_frames;
+		rchan += delay_frames;
 
-		len -= delay_samples;
+		len -= delay_frames;
 	}
 
 
 #if (DEBUG >= 2)
-	sciprintf("[soft-mixer] Examining %s-%x (sample size %d); read %d/%d/%d, re-using %d samples\n",
-		  f->debug_name, f->debug_nr, sample_size, samples_read, samples_nr,
-		  fs->buf_size, fs->sample_bufstart);
+	sciprintf("[soft-mixer] Examining %s-%x (frame size %d); read %d/%d/%d, re-using %d frames\n",
+		  f->debug_name, f->debug_nr, frame_size, frames_read, frames_nr,
+		  fs->buf_size, fs->frame_bufstart);
 #endif
 
 
@@ -623,32 +623,32 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 	/* Otherwise, we let both point to the same place */
 
 #if (DEBUG >= 2)
-	sciprintf("[soft-mixer] Stretching theoretical %d (physical %d) results to %d\n", samples_nr, samples_left, len);
+	sciprintf("[soft-mixer] Stretching theoretical %d (physical %d) results to %d\n", frames_nr, frames_left, len);
 #endif
 	for (write_offset = 0; write_offset < len; write_offset++) {
-		int leftsum = 0; /* Sum of any complete samples we used */
+		int leftsum = 0; /* Sum of any complete frames we used */
 		int rightsum = 0;
 
-		int left; /* Sum of the two most extreme source samples
+		int left; /* Sum of the two most extreme source frames
 			  ** we considered, i.e. the oldest and newest
-			  ** one corresponding to the output sample we are
+			  ** one corresponding to the output frame we are
 			  ** computing  */
 		int right;
 
-		int sample_steps = fs->spd.val;
+		int frame_steps = fs->spd.val;
 		int j;
 
 		if (fs->scount.nom >= fs->scount.den) {
 			fs->scount.nom -= fs->scount.den; /* Ensure fractional part < 1 */
-			++sample_steps;
+			++frame_steps;
 		}
-		if (sample_steps)
+		if (frame_steps)
 			c_old = c_new;
 
 #if 0
 		if (write_offset == 0) {
 			READ_NEW_VALUES();
-			--samples_left;
+			--frames_left;
 #if (DEBUG >= 3)
 			sciprintf("[soft-mix] Initial read %d:%d\n", c_new.left, c_new.right);
 #endif
@@ -656,18 +656,18 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 			}
 #endif
 
-		for (j = 0; j < sample_steps; j++) {
+		for (j = 0; j < frame_steps; j++) {
 			READ_NEW_VALUES();
-			--samples_left;
+			--frames_left;
 #if (DEBUG >= 3)
-			sciprintf("[soft-mix] Step %d/%d made %d:%d\n", j, sample_steps, c_new.left, c_new.right);
+			sciprintf("[soft-mix] Step %d/%d made %d:%d\n", j, frame_steps, c_new.left, c_new.right);
 #endif
 
-			/* The last sample will be subject to the fractional
+			/* The last frame will be subject to the fractional
 			** part analysis, so we add it to 'left' and 'right'
 			** later-- all others are added to (leftsum, rightsum).
 			*/
-			if (j+1 < sample_steps) {
+			if (j+1 < frame_steps) {
 				leftsum += c_new.left;
 				rightsum += c_new.right;
 			}
@@ -687,10 +687,10 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 		rightsum += right;
 
 
-		/* Make sure to divide by the number of samples we added here */
-		if (sample_steps > 1) {
-			leftsum  /= (sample_steps);
-			rightsum /= (sample_steps);
+		/* Make sure to divide by the number of frames we added here */
+		if (frame_steps > 1) {
+			leftsum  /= (frame_steps);
+			rightsum /= (frame_steps);
 		}
 
 
@@ -718,19 +718,19 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 		memset(rchan, 0, sizeof(gint32) * (len - write_offset));
 	}
 
-	/* Save whether we have a partial sample still stored */
-	fs->sample_bufstart = samples_left;
+	/* Save whether we have a partial frame still stored */
+	fs->frame_bufstart = frames_left;
 		
-	if (samples_left) {
+	if (frames_left) {
 		memmove(fs->buf,
-			fs->buf + ((samples_read - samples_left) * f->sample_size),
-			samples_left * f->sample_size);
+			fs->buf + ((frames_read - frames_left) * f->frame_size),
+			frames_left * f->frame_size);
 	}
 #if (DEBUG >= 2)
-	sciprintf("[soft-mix] Leaving %d over\n", fs->sample_bufstart);
+	sciprintf("[soft-mix] Leaving %d over\n", fs->frame_bufstart);
 #endif
 
-	if (samples_read + delay_samples < samples_nr) {
+	if (frames_read + delay_frames < frames_nr) {
 		if (f->get_timestamp) /* Can resume? */
 			fs->pending_review = 1;
 		else
@@ -742,13 +742,13 @@ static int
 mix_process_linear(sfx_pcm_mixer_t *self)
 {
 	int src_i; /* source feed index counter */
-	int sample_size = SFX_PCM_SAMPLE_SIZE(self->dev->conf);
-	int samples_skip; /* Number of samples to discard, rather than to emit */
-	int buflen = mix_compute_buf_len(self, &samples_skip); /* Compute # of samples we must compute and write */
+	int frame_size = SFX_PCM_FRAME_SIZE(self->dev->conf);
+	int frames_skip; /* Number of frames to discard, rather than to emit */
+	int buflen = mix_compute_buf_len(self, &frames_skip); /* Compute # of frames we must compute and write */
 	int fake_buflen;
 	int timestamp_max_delta = 0;
 	int have_timestamp = 0;
-	sfx_timestamp_t start_timestamp; /* The timestamp at which the first sample will be played */
+	sfx_timestamp_t start_timestamp; /* The timestamp at which the first frame will be played */
 	sfx_timestamp_t min_timestamp;
 	sfx_timestamp_t timestamp;
 	byte *left, *right;
@@ -779,23 +779,23 @@ mix_process_linear(sfx_pcm_mixer_t *self)
 
 #if (DEBUG >= 1)
 	if (self->feeds_nr)
-		sciprintf("[soft-mixer] Mixing %d output samples on %d input feeds\n", buflen, self->feeds_nr);
+		sciprintf("[soft-mixer] Mixing %d output frames on %d input feeds\n", buflen, self->feeds_nr);
 #endif
 	if (self->feeds_nr && !P->paused) {
-		/* Below, we read out all feeds in case we have to skip samples first, then get the
+		/* Below, we read out all feeds in case we have to skip frames first, then get the
 		** most current sound. 'fake_buflen' is either the actual buflen (for the last iteration)
 		** or a fraction of the buf length to discard.  */
 		do {
-			if (samples_skip) {
-				if (samples_skip > self->dev->buf_size)
+			if (frames_skip) {
+				if (frames_skip > self->dev->buf_size)
 					fake_buflen = self->dev->buf_size;
 				else
-					fake_buflen = samples_skip;
+					fake_buflen = frames_skip;
 
-				samples_skip -= fake_buflen;
+				frames_skip -= fake_buflen;
 			} else {
 				fake_buflen = buflen;
-				samples_skip = -1; /* Mark us as being completely done */
+				frames_skip = -1; /* Mark us as being completely done */
 			}
 
 			for (src_i = 0; src_i < self->feeds_nr; src_i++) {
@@ -824,7 +824,7 @@ mix_process_linear(sfx_pcm_mixer_t *self)
 			for (src_i = 0; src_i < self->feeds_nr; src_i++)
 				if (self->feeds[src_i].mode == SFX_PCM_FEED_MODE_DEAD)
 					mix_unsubscribe(self, self->feeds[src_i].feed);
-		} while (samples_skip >= 0);
+		} while (frames_skip >= 0);
 
 	} else { /* Zero it out */
 		memset(P->compbuf_l, 0, sizeof(gint32) * buflen);

@@ -1,5 +1,5 @@
 /***************************************************************************
- timetest.c  Copyright (C) 2002 Christoph Reichenbach
+ timetest.c  Copyright (C) 2003 Christoph Reichenbach
 
 
  This program is free software; you can redistribute it and/or
