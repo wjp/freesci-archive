@@ -150,6 +150,12 @@ vocab_get_any_group_word(int group, word_t **words, int words_nr)
 }
 
 
+static inline unsigned int
+inverse_16(unsigned int foo)
+{
+  return (((foo & 0xff) << 8) | ((foo & 0xff00) >> 8));
+}
+
 suffix_t **
 vocab_get_suffices(int *suffices_nr)
 {
@@ -187,8 +193,8 @@ vocab_get_suffices(int *suffices_nr)
     suffices[counter]->alt_suffix = &(suffices[counter]->word_suffix[word_len]);
     suffices[counter]->alt_suffix_length = alt_len;
     suffices[counter]->word_suffix_length = word_len;
-    suffices[counter]->class_mask = getInt16(resource->data + seeker);
-
+    suffices[counter]->class_mask = inverse_16(getInt16(resource->data + seeker)); /* Inverse endianness */
+    
     seeker += word_len + 2; /* Hit end of string */
     suffices[counter]->result_class = getInt16(resource->data + seeker);
 
@@ -272,6 +278,7 @@ vocab_lookup_word(char *word, int word_len,
 
   strncpy(&(tempword->word[0]), word, word_len);
   tempword->word[word_len] = 0;
+  fprintf(stderr,"Looking for '%s'\n", tempword->word);
 
   retval = g_malloc(sizeof(result_word_t));
 
@@ -287,21 +294,18 @@ vocab_lookup_word(char *word, int word_len,
   }
 
   /* Now try all suffices */
-
   for (i = 0; i < suffices_nr; i++)
-    if (suffices[i]->alt_suffix_length > word_len) {
+    if (suffices[i]->alt_suffix_length <= word_len) {
 
-      int suff_index = suffices[i]->alt_suffix_length - word_len;
+      int suff_index = word_len - suffices[i]->alt_suffix_length;
       /* Offset of the start of the suffix */
-
       if (g_strncasecmp(suffices[i]->alt_suffix, word + suff_index,
 			suffices[i]->alt_suffix_length) == 0) { /* Suffix matched! */
-
 	strncpy(&(tempword->word[0]), word, word_len);
 	tempword->word[suff_index] = 0; /* Terminate word at suffix start position... */
-	strcat(&(tempword->word[0]), suffices[i]->word_suffix); /* ...and append "correct" suffix */
+	strncat(&(tempword->word[0]), suffices[i]->word_suffix, suffices[i]->word_suffix_length); /* ...and append "correct" suffix */
 
-	dict_word = bsearch(tempword, words, words_nr, sizeof(word_t *), _vocab_cmp_words);
+	dict_word = bsearch(&tempword, words, words_nr, sizeof(word_t *), _vocab_cmp_words);
 
 	if ((dict_word) && ((*dict_word)->class & suffices[i]->class_mask)) { /* Found it? */
 	  g_free(tempword);
