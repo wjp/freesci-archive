@@ -667,9 +667,17 @@ sci0_thread_ss(int reverse_stereo, sound_server_state_t *ss_state)
 	  wait_tvp = &wait_tv;
 	  	  
 	  sci_get_current_time((GTimeVal *)&ctime); /* Get current time, store in ctime */
-	  
-	  //usleep(0);
-	  // XXXX sleeps go here. */
+
+
+	  /* we have to deal with latency of sleep().. so only sleep if
+	     it'll be more than XXXX us. */
+#if !defined(MSC_VER)
+	  /* 5ms is arbitrary. may need to be tweaked. */
+	  if ((wakeup_time.tv_usec - ctime.tv_usec) > 10000)
+	    usleep(0);
+#else
+	  sci_sched_yield();
+#endif
 	  
 	  /* Exit when we've waited long enough */
 	} while ((wakeup_time.tv_sec > ctime.tv_sec)
