@@ -435,14 +435,14 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	    }
 	  }
 	  if (have_shmem) {
-	    if (!XShmAttach(S->display, S->shm[i])) {
+	    if (!XShmAttach(S->display, S->shm[i]) || x11_error) {
 	      ERROR("ARGH!  Can't attach shared memory segment\n");
 	      have_shmem = 0;
 	    }
 	    shmctl(S->shm[i]->shmid, IPC_RMID, 0);
 	  }
 
-	  if (have_shmem) {	    
+	  if (have_shmem && !x11_error) {	    
 	    S->visual[i] = XShmCreatePixmap(S->display, S->window, 
 					    S->shm[i]->shmaddr,
 					    S->shm[i], xsize, ysize, 
@@ -454,10 +454,12 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		have_shmem = 0;
 		XFreePixmap(S->display, S->visual[i]);
 		XShmDetach(S->display ,S->shm[i]);
-		S->visual[i] = 0;
+		XSync(S->display, False);
+		S->visual[i] = NULL;
 		x11_error = 0;
 		shmdt(S->shm[i]->shmaddr);
 		free(S->shm[i]);
+
 	    }
 
 	  }
