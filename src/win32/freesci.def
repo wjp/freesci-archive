@@ -99,6 +99,11 @@ EXPORTS
   scir_new_resource_manager
   scir_find_resource
   scir_free_resource_manager
-   
   memtest
   sci0_palette
+  _SCI_MALLOC
+  _SCI_CALLOC
+  _SCI_MEMDUP
+  _SCI_REALLOC
+  _SCI_STRDUP
+  _SCI_FREE

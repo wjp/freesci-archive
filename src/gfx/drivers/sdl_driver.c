@@ -181,10 +181,6 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF;
 	if (flags & SCI_SDL_FULLSCREEN) {
 		i |= SDL_FULLSCREEN;
-#ifdef _MSC_VER
-		ysize = yfact * 240;
-		drv->capabilities &= ~GFX_CAPABILITY_MOUSE_POINTER;
-#endif
 	}
 
 	/* If we are using mouse pointer emulation:

@@ -317,6 +317,7 @@ else
 					sciprintf("[read selector]\n");
 					print_send_action = 0;
 				}
+				/* fallthrough */
 			case 1:
 #ifndef STRICT_SEND
 			default:
@@ -1589,17 +1590,15 @@ _game_run(state_t *s, int restoring)
 	do {
 		s->execution_stack_pos_changed = 0;
 		run_vm(s, (successor || restoring)? 1 : 0);
-
 		if (s->restarting_flags & SCI_GAME_IS_RESTARTING_NOW) { /* Restart was requested? */
 
-			free(s->execution_stack);
+			sci_free(s->execution_stack);
 			s->execution_stack = NULL;
 			s->execution_stack_pos = -1;
 			s->execution_stack_pos_changed = 0;
 
 			game_exit(s);
 			game_init(s);
-
 			putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector */
 
 			putInt16(s->heap + s->stack_base + 2, 0);
@@ -1614,7 +1613,7 @@ _game_run(state_t *s, int restoring)
 			if (successor) {
 				game_exit(s);
 				script_free_vm_memory(s);
-				free(s);
+				sci_free(s);
 				s = successor;
 
 				if (!send_calls_allocated)

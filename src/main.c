@@ -44,6 +44,7 @@
 #ifdef _MSC_VER
 #define extern __declspec(dllimport) extern
 #include <win32/getopt.h>
+#include <crtdbg.h>
 #endif
 
 #ifdef HAVE_READLINE_READLINE_H
@@ -876,6 +877,7 @@ main(int argc, char** argv)
 
 	gamestate = sci_malloc(sizeof(state_t));
 
+
 	if (init_gamestate(gamestate, resmgr, version))
 		return 1;
 
@@ -894,7 +896,6 @@ main(int argc, char** argv)
 		list_savegames(gamestate);
 		exit(0);
 	}
-
 	gamestate->resource_dir = resource_dir;
 	gamestate->work_dir = work_dir;
 	gamestate->sound_object = 0;
@@ -1046,7 +1047,6 @@ main(int argc, char** argv)
 		fprintf(stderr,"Game initialization failed: Error in GFX subsystem. Aborting...\n");
 		return 1;
 	}
-
 	if (!sound_server)
 		sound_server = sound_server_find_driver(NULL);
 
@@ -1101,14 +1101,11 @@ main(int argc, char** argv)
 		game_restore(&gamestate, savegame_name);
 	else
 		game_run(&gamestate); /* Run the game */
-
 	if (gamestate->sound_server)
 		gamestate->sound_server->exit(gamestate); /* Shutdown sound daemon first */
 
 	game_exit(gamestate);
-SCI_MEMTEST;
 	script_free_engine(gamestate); /* Uninitialize game state */
-
 	scir_free_resource_manager(resmgr);
 
 	if (conf_entries >= 0)
@@ -1123,7 +1120,7 @@ SCI_MEMTEST;
 	wait(NULL); /* Wait for sound server process to die, if neccessary */
 	printf(" OK.\n");
 #endif
-	free(gamestate);
+	sci_free(gamestate);
 
 	gfxop_exit(gfx_state);
 

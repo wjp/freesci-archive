@@ -58,7 +58,7 @@ int _win32mci_print_error(int ret)
 
 	midiOutGetErrorText(ret, err, MAXERRORLENGTH);
 	fprintf(stderr, "%s\n", err);
-	free(err);
+	sci_free(err);
 	return -1;
 }
 
@@ -66,6 +66,12 @@ int _win32mci_print_error(int ret)
 static int
 midiout_win32mci_set_parameter(struct _midiout_driver *drv, char *attribute, char *value)
 {
+	if (NULL == value)
+	{
+		sciprintf("midiout_win32mci_set_parameter(): NULL passed for value.\n");
+		return -1;
+	}
+
 	if (!strcasecmp(attribute, "device"))
 	{
 		devicenum = ((int)*value) - 48;
@@ -76,7 +82,7 @@ midiout_win32mci_set_parameter(struct _midiout_driver *drv, char *attribute, cha
 	return 0;
 }
 
-int midiout_win32mci_open()
+int midiout_win32mci_open(void)
 {
 	int numdevs				= 0;	/* total number of MIDIout devices */
 	MMRESULT ret;					/* return value of MCI calls */
@@ -132,7 +138,7 @@ int midiout_win32mci_open()
 	{
 		fprintf(stderr, "midiOutOpen of device #%d: ",devicenum);
 		return (_win32mci_print_error(ret));
-	}
+	} 
 		else
 		{
 			fprintf(stderr, "Successfully opened MCI MIDI device #%d\n",devicenum);
@@ -155,7 +161,7 @@ int midiout_win32mci_close(void)
 	return 0;
 }
 
-int midiout_win32mci_flush()
+int midiout_win32mci_flush(void)
 {
 	Sleep(win32mci_lastwrote);
 	return 0;

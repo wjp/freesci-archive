@@ -211,7 +211,7 @@ _free_graphics_input(state_t *s)
 	s->port = NULL;
 
 	if (s->pics)
-		free(s->pics);
+		sci_free(s->pics);
 	s->pics = NULL;
 }
 
@@ -286,7 +286,7 @@ script_init_engine(state_t *s, sci_version_t version)
 					seeker += getInt16(script->data + seeker + 2);
 					if (seeker <= lastseeker) {
 						sciprintf("Warning: Script version is invalid.\n");
-						free(s->classtable);
+						sci_free(s->classtable);
 						return  SCI_ERROR_INVALID_SCRIPT_VERSION;
 					}
 				}
@@ -402,7 +402,6 @@ script_free_vm_memory(state_t *s)
 	int i;
 
 	sciprintf("Freeing VM memory\n");
-
 	heap_free(s->_heap, s->save_dir);
 	sci_free(s->save_dir_copy_buf);
 	s->save_dir_copy_buf = NULL;
@@ -411,16 +410,16 @@ script_free_vm_memory(state_t *s)
 		if (s->hunk[i].size) {
 			if (s->hunk[i].type == HUNK_TYPE_GFXBUFFER) {
 				gfxw_snapshot_t *snapshot = *((gfxw_snapshot_t **) s->hunk[i].data);
-				free(snapshot);
+				sci_free(snapshot);
 			}
-			free(s->hunk[i].data);
+			sci_free(s->hunk[i].data);
 			s->hunk[i].size = 0;
 		}
 
 
 	heap_del(s->_heap);
 	s->_heap = NULL;
-	free(s->classtable);
+	sci_free(s->classtable);
 	s->classtable = NULL;
 
 	/* Close all opened file handles */
@@ -430,7 +429,7 @@ script_free_vm_memory(state_t *s)
 			fclose(s->file_handles[i]);
 #endif
 
-	free(s->file_handles);
+	sci_free(s->file_handles);
 	s->file_handles = NULL;
 
 	/* FIXME: file handles will NOT be closed under DOS. DJGPP generates an
@@ -446,7 +445,7 @@ script_free_engine(state_t *s)
 
 	sciprintf("Freeing state-dependant data\n");
 
-	free(s->kfunct_table);
+	sci_free(s->kfunct_table);
 	s->kfunct_table = NULL;
 
 	_free_vocabulary(s);
@@ -585,11 +584,12 @@ game_exit(state_t *s)
 {
 	int i;
 
-	if (s->execution_stack)
-		free(s->execution_stack);
+	if (s->execution_stack) {
+		sci_free(s->execution_stack);
+	}
 
 	if (s->synonyms_nr) {
-		free(s->synonyms);
+		sci_free(s->synonyms);
 		s->synonyms = NULL;
 		s->synonyms_nr = 0;
 	}
@@ -608,7 +608,7 @@ game_exit(state_t *s)
 	restore_ff(s->_heap); /* Restore former heap state */
 
 	if (send_calls_allocated) {
-		free(send_calls);
+		sci_free(send_calls);
 		send_calls_allocated = 0;
 	}
 

@@ -552,8 +552,8 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		}
 		case _K_NEW_GETTIME_DATE : {
 			s->acc=(loc_time->tm_mon<<5)|loc_time->tm_mday|(loc_time->tm_year<<9);
-			break;
 			SCIkdebug(SCIkTIME, "GetTime(date) returns %d\n", s->acc);
+			break;
 		}
 		default: {
 			SCIkdebug(SCIkWARNING, "Attempt to use unknown GetTime mode %d\n", mode);

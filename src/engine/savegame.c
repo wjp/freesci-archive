@@ -140,10 +140,10 @@ read_hunk_block(FILE *fh, hunk_block_t *foo, char *lastval, int *line, int *hite
 #define calloc(n, s)   dbg_sci_calloc(n, s)
 #define realloc(p, s)  dbg_sci_realloc(p, s)
 */
-#define free        dbg_sci_free
-#define malloc      dbg_sci_malloc
-#define calloc      dbg_sci_calloc
-#define realloc     dbg_sci_realloc
+#define free        sci_free
+#define malloc      sci_malloc
+#define calloc      sci_calloc
+#define realloc     sci_realloc
 #endif
 
 static void
@@ -186,8 +186,9 @@ _cfsml_free_pointer_references_recursively(struct _cfsml_pointer_refstruct *refs
 	    "ALL": "cleanup only");
     #endif
 
+
     if (free_pointers)
-	free(refs->ptr);
+		free(refs->ptr);
 
     #ifdef CFSML_DEBUG_MALLOC
     SCI_MEMTEST;

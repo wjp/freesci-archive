@@ -20,11 +20,15 @@
 
 #include <stdio.h>
 #ifdef HAVE_UNISTD_H
-  #include <unistd.h>
+#	include <unistd.h>
 #endif
 #include <string.h>
 #include <midi_device.h>
 #include <midiout.h>
+
+#ifdef _WIN32
+#	include <windows.h>
+#endif
 
 int midi_mt32_poke(guint32 address, guint8 *data, unsigned int n);
 int midi_mt32_poke_gather(guint32 address, guint8 *data1, unsigned int count1,
@@ -501,7 +505,7 @@ int midi_mt32_sysex_delay()
 {
   /* Under Win32, we won't get any sound, in any case... */
 #ifndef _WIN32
-  usleep(320 * 63); /* One MIDI byte is 320us, 320us * 63 > 20ms */
+  Sleep(320 * 63); /* One MIDI byte is 320us, 320us * 63 > 20ms */
 #endif
   return 0;
 }

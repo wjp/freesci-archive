@@ -321,7 +321,7 @@ resource_dir[[:blank:]]*"="[[:blank:]]*.+  if (cur_section) {
 	while (isspace(*yytext))
 		yytext++;
 
-	free(conf[cur_section].resource_dir);
+	sci_free(conf[cur_section].resource_dir);
 
 	conf[cur_section].resource_dir = sci_strdup(yytext);
 }
@@ -520,8 +520,8 @@ config_init(config_entry_t **_conf, char *conffile)
 	if (!(yyin = fopen(conf_path, "r"))) {
 		printf("No configuration file found; using defaults.\n");
 		*_conf = conf; /* Set the result variable */
-		free(conf_path);
-		free(exported_conf_path);
+		sci_free(conf_path);
+		sci_free(exported_conf_path);
 		return 1;
 	}
 
@@ -530,8 +530,8 @@ config_init(config_entry_t **_conf, char *conffile)
 	yylex(); /* Parse the file */
 
 	fclose(yyin); /* Ignore error conditions- might be lex implementation dependant */
-	free(conf_path);
-	free(exported_conf_path);
+	sci_free(conf_path);
+	sci_free(exported_conf_path);
 
 	*_conf = conf; /* Store the result */
 	return cur_section + 1;
@@ -542,11 +542,11 @@ static void
 config_free_driver_options(driver_option_t *option)
 {
 	if (option) {
-		free(option->option);
-		free(option->value);
+		sci_free(option->option);
+		sci_free(option->value);
 
 		config_free_driver_options(option->next);
-		free(option);
+		sci_free(option);
 	}
 }
 
@@ -554,12 +554,12 @@ static void
 config_free_driver_subsystem(subsystem_options_t *subsys)
 {
 	if (subsys) {
-		free(subsys->name);
+		sci_free(subsys->name);
 
 		config_free_driver_options(subsys->options);
 
 		config_free_driver_subsystem(subsys->next);
-		free(subsys);
+		sci_free(subsys);
 	}
 }
 
@@ -570,18 +570,18 @@ config_free(config_entry_t **conf, int entries)
 	int i;
 
 	if ((*conf)->console_log)
-		free((*conf)->console_log);
+		sci_free((*conf)->console_log);
 
 	for (i = 0; i < entries; i++) {
 		int j;
 
 		if (i >= 1) {
-			free ((*conf)[i].name);
-			free ((*conf)[i].work_dir);
+			sci_free((*conf)[i].name);
+			sci_free((*conf)[i].work_dir);
 			if ((*conf)[i].resource_dir)
-				free ((*conf)[i].resource_dir);
+				sci_free((*conf)[i].resource_dir);
 			if ((*conf)[i].console_log)
-				free((*conf)[i].console_log);
+				sci_free((*conf)[i].console_log);
 		}
 
 		for (j = 0; j < FREESCI_DRIVER_SUBSYSTEMS_NR; j++) {
@@ -590,7 +590,7 @@ config_free(config_entry_t **conf, int entries)
 		}
 	}
 
-	free (*conf);
+	sci_free(*conf);
 }
 
 
@@ -706,7 +706,7 @@ parse_option(char *option, int optlen, char *value)
 	case OPTION_TYPE_STRING: {
 		char **stringref = ((char **)(((char *)&(conf[cur_section])) + opt->varoffset));
 		if (*stringref)
-			free(*stringref);
+			sci_free(*stringref);
 		*stringref = sci_strdup(value); /* Store value */
 		break;
 	}
@@ -847,7 +847,7 @@ set_config_parameter(config_entry_t *conf, char *subsystem_name, char *driver_na
 		driver_optionsp = &((*driver_optionsp)->next);
 
 	if (*driver_optionsp) {
-		free((*driver_optionsp)->value);
+		sci_free((*driver_optionsp)->value);
 	} else {
 		*driver_optionsp = sci_malloc(sizeof(driver_option_t));
 		(*driver_optionsp)->option = sci_strdup(option);
