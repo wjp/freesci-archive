@@ -166,8 +166,8 @@ _addResource(struct singly_linked_resources_struct *base, resource_t *resource, 
 			if (seeker->resource->number == resource->number
 			    && seeker->resource->type == resource->type) {
 				if (priority) { /* replace the old resource */
-					g_free(seeker->resource->data);
-					g_free(seeker->resource);
+					free(seeker->resource->data);
+					free(seeker->resource);
 					seeker->resource = resource;
 					return;
 				} else seeker = 0;
@@ -176,15 +176,15 @@ _addResource(struct singly_linked_resources_struct *base, resource_t *resource, 
 
 		if (seeker) {
 
-			seeker->next = g_malloc(sizeof(struct singly_linked_resources_struct));
+			seeker->next = malloc(sizeof(struct singly_linked_resources_struct));
 			seeker->next->resource = resource;
 			seeker->next->next = 0;
 			max_resource++;
 
 		} else {
 
-			g_free(resource->data);
-			g_free(resource);
+			free(resource->data);
+			free(resource);
 
 		}
 	}
@@ -209,16 +209,16 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 	do {
 		if (resourceFileCounter > 0 && resourceFile > 0) {
 			int decomperr;
-			resource = g_malloc(sizeof(resource_t));
+			resource = malloc(sizeof(resource_t));
 
 			while (!(decomperr = (*decompress)(resource, resourceFile))) {
 
 				_addResource(&base, resource, 0);
 				found_resfiles = 1;
 
-				resource = g_malloc(sizeof(resource_t));
+				resource = malloc(sizeof(resource_t));
 			}
-			g_free(resource);
+			free(resource);
 			close(resourceFile);
 			if (decomperr >= SCI_ERROR_CRITICAL) {
 #ifdef _SCI_RESOURCE_DEBUG
@@ -264,7 +264,7 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 	}
 	else printf("Ignoring any patches.\n");
 
-	resource_map = g_malloc(max_resource * sizeof(resource_t));
+	resource_map = malloc(max_resource * sizeof(resource_t));
 
 	seeker = &base;
 
@@ -295,7 +295,7 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 void killlist(struct singly_linked_resources_struct *rs)
 {
 	if (rs->next) killlist(rs->next);
-	g_free(rs->next);
+	free(rs->next);
 }
 
 
@@ -365,13 +365,13 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 						close(file);
 					} else {
 
-						newrsc = g_malloc(sizeof(resource_t));
+						newrsc = malloc(sizeof(resource_t));
 						newrsc->length = filestat.st_size - 2;
 						newrsc->id = restype << 11 | resnumber;
 						newrsc->number = resnumber;
 						newrsc->type = restype;
 
-						newrsc->data = g_malloc(newrsc->length);
+						newrsc->data = malloc(newrsc->length);
 						read(file, newrsc->data, newrsc->length);
 						close(file);
 
@@ -425,9 +425,9 @@ void freeResources()
 		int i;
 
 		for (i=0; i < max_resource; i++) {
-			if (!resource_map[i].status) g_free(resource_map[i].data);
+			if (!resource_map[i].status) free(resource_map[i].data);
 		}
-		g_free(resource_map);
+		free(resource_map);
 		max_resource = 0;
 		return;
 	}

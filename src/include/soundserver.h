@@ -32,9 +32,7 @@
 #define _SCI_SOUND_SERVER_H_
 
 #include <sound.h>
-#ifndef _DOS
-#include <glib.h>
-#endif
+#include <scitypes.h>
 
 #define SOUND_SERVER_TIMEOUT 100000
 /* microseconds until SOUND_COMMAND_TEST fails */

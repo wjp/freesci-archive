@@ -40,9 +40,6 @@
 #define obstack_chunk_free free
 
 #include <resource.h>
-#ifndef _DOS
-#include <glib.h>
-#endif
 
 #ifdef HAVE_OBSTACK_H
 #include <obstack.h>

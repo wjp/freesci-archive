@@ -34,9 +34,6 @@
 #include <engine.h>
 #include <assert.h>
 #include <heap.h>
-#ifndef _DOS
-# include <glib.h>
-#endif
 #include <ctype.h>
 #ifdef HAVE_DIRENT_H
 #include <sys/types.h> /* Required by e.g. NetBSD */

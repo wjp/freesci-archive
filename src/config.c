@@ -654,16 +654,13 @@ char *yytext;
 #include <gfx_resource.h>
 #include <gfx_drivers_list.h>
 #include <sci_conf.h>
-#ifndef _DOS
-# include <glib.h>
-#endif
 
 #ifdef _MSC_VER
-#include <ctype.h>
-#include <direct.h>
+#  include <ctype.h>
+#  include <direct.h>
 
-#define strcasecmp stricmp
-#define PATH_MAX 255
+#  define strcasecmp stricmp
+#  define PATH_MAX 255
 
 #endif
 
@@ -755,7 +752,7 @@ static name_value_pair line_mode[] = {
 	{0, 0}
 };
 
-#line 759 "lex.yy.c"
+#line 756 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -906,10 +903,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 143 "config.l"
+#line 140 "config.l"
 
 
-#line 913 "lex.yy.c"
+#line 910 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -994,7 +991,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 145 "config.l"
+#line 142 "config.l"
 {
 	++yytext; /* Get over opening bracket */
 
@@ -1037,7 +1034,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 185 "config.l"
+#line 182 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1049,7 +1046,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 194 "config.l"
+#line 191 "config.l"
 { /* Deprecated: For backward compatibility */
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1061,7 +1058,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 203 "config.l"
+#line 200 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1073,7 +1070,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 212 "config.l"
+#line 209 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1085,7 +1082,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 221 "config.l"
+#line 218 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1097,7 +1094,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 230 "config.l"
+#line 227 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1109,7 +1106,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 239 "config.l"
+#line 236 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1121,7 +1118,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 248 "config.l"
+#line 245 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1133,7 +1130,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 257 "config.l"
+#line 254 "config.l"
 {
 	int val;
 	yytext = strchr(yytext, '=') + 1;
@@ -1149,7 +1146,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 270 "config.l"
+#line 267 "config.l"
 { /***** End of graphics *****/
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1162,7 +1159,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 280 "config.l"
+#line 277 "config.l"
 {
 	yytext = strchr (yytext, '=') + 1;
 
@@ -1177,7 +1174,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 292 "config.l"
+#line 289 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1190,7 +1187,7 @@ if (cur_section) {
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 303 "config.l"
+#line 300 "config.l"
 {
 	yytext = strchr(yytext, '=') + 1;
 
@@ -1202,7 +1199,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 312 "config.l"
+#line 309 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1214,7 +1211,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 321 "config.l"
+#line 318 "config.l"
 {
         char *p=yytext;
         char *p2;
@@ -1257,25 +1254,25 @@ case 17:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 361 "config.l"
+#line 358 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 363 "config.l"
+#line 360 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 365 "config.l"
+#line 362 "config.l"
 printf("Unrecognized option: %s\n", yytext);
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 367 "config.l"
+#line 364 "config.l"
 ECHO;
 	YY_BREAK
-#line 1279 "lex.yy.c"
+#line 1276 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2161,7 +2158,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 367 "config.l"
+#line 364 "config.l"
 
 
 int

@@ -327,7 +327,7 @@ kalloc(state_t *s, int type, int space)
   if (seeker == MAX_HUNK_BLOCKS)
     KERNEL_OOPS("Out of hunk handles! Try increasing MAX_HUNK_BLOCKS in engine.h");
   else {
-    s->hunk[seeker].data = g_malloc(s->hunk[seeker].size = space);
+    s->hunk[seeker].data = malloc(s->hunk[seeker].size = space);
     s->hunk[seeker].type = type;
   }
 
@@ -379,7 +379,7 @@ kfree(state_t *s, int handle)
     return 1;
   }
 
-  g_free(s->hunk[handle].data);
+  free(s->hunk[handle].data);
   s->hunk[handle].size = 0;
 
   return 0;
@@ -621,7 +621,7 @@ script_map_kernel(state_t *s)
   int functnr;
   int mapped = 0;
 
-  s->kfunct_table = g_malloc(sizeof(kfunct *) * (s->kernel_names_nr + 1));
+  s->kfunct_table = malloc(sizeof(kfunct *) * (s->kernel_names_nr + 1));
 
   for (functnr = 0; functnr < s->kernel_names_nr; functnr++) {
     int seeker, found = -1;

@@ -28,11 +28,12 @@
 #include <engine.h>
 
 #ifdef WIN32
-#define PATH_MAX 255
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#  define PATH_MAX 255
+#  define WIN32_LEAN_AND_MEAN
+#  include <windows.h>
 #else
-#include <dirent.h>
+#  include <unistd.h>
+#  include <dirent.h>
 #endif
 
 #ifndef O_BINARY
@@ -138,7 +139,7 @@ file_open(state_t *s, char *filename, int mode)
     retval++;
 
   if (retval == s->file_handles_nr) /* Hit size limit => Allocate more space */
-    s->file_handles = g_realloc(s->file_handles, sizeof(FILE *) * ++(s->file_handles_nr));
+    s->file_handles = realloc(s->file_handles, sizeof(FILE *) * ++(s->file_handles_nr));
 
   s->file_handles[retval] = file;
 

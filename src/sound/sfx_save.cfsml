@@ -254,7 +254,8 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
 
   for (i = 0; i < read_rec.songs_nr; i++) {
 
-    next = g_memdup(&(read_rec.songs[i]), sizeof(song_t));
+    next = malloc(sizeof(song_t));	
+    memcpy(next, &(read_rec.songs[i]), sizeof(song_t));
     next->next = NULL;
     if (i > 0)
       seeker->next = next;

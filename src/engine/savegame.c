@@ -34,9 +34,6 @@
 #include <engine.h>
 #include <assert.h>
 #include <heap.h>
-#ifndef _DOS
-# include <glib.h>
-#endif
 #include <ctype.h>
 #ifdef HAVE_DIRENT_H
 #include <sys/types.h> /* Required by e.g. NetBSD */
@@ -264,7 +261,7 @@ _cfsml_mangle_string(char *s)
 {
   char *source = s;
   char c;
-  char *target = (char *) g_malloc(1 + strlen(s) * 2); /* We will probably need less than that */
+  char *target = (char *) malloc(1 + strlen(s) * 2); /* We will probably need less than that */
   char *writer = target;
 
   while ((c = *source++)) {
@@ -279,14 +276,14 @@ _cfsml_mangle_string(char *s)
   }
   *writer = 0; /* Terminate string */
 
-  return (char *) g_realloc(target, strlen(target) + 1);
+  return (char *) realloc(target, strlen(target) + 1);
 }
 
 
 static char *
 _cfsml_unmangle_string(char *s)
 {
-  char *target = (char *) g_malloc(1 + strlen(s));
+  char *target = (char *) malloc(1 + strlen(s));
   char *writer = target;
   char *source = s;
   char c;
@@ -301,7 +298,7 @@ _cfsml_unmangle_string(char *s)
   }
   *writer = 0; /* Terminate string */
 
-  return (char *) g_realloc(target, strlen(target) + 1);
+  return (char *) realloc(target, strlen(target) + 1);
 }
 
 
@@ -312,12 +309,12 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
   int mem = 32;
   int pos = 0;
   int done = 0;
-  char *retval = (char *) g_malloc(mem);
+  char *retval = (char *) malloc(mem);
 
   while (isspace(c = fgetc(fd)) && (c != EOF));
   if (c == EOF) {
     _cfsml_error("Unexpected end of file at line %d\n", *line);
-    g_free(retval);
+    free(retval);
     *hiteof = 1;
     return NULL;
   }
@@ -327,12 +324,12 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
   while (((c = fgetc(fd)) != EOF) && ((pos == 0) || (c != '\n')) && (c != '=')) {
 
      if (pos == mem - 1) /* Need more memory? */
-       retval = (char *) g_realloc(retval, mem *= 2);
+       retval = (char *) realloc(retval, mem *= 2);
 
      if (!isspace(c)) {
         if (done) {
            _cfsml_error("Single word identifier expected at line %d\n", *line);
-           g_free(retval);
+           free(retval);
            return NULL;
         }
         retval[pos++] = c;
@@ -345,7 +342,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
 
   if (c == EOF) {
     _cfsml_error("Unexpected end of file at line %d\n", *line);
-    g_free(retval);
+    free(retval);
     *hiteof = 1;
     return NULL;
   }
@@ -360,12 +357,12 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
 
   if (pos == 0) {
     _cfsml_error("Missing identifier in assignment at line %d\n", *line);
-    g_free(retval);
+    free(retval);
     return NULL;
   }
 
   if (pos == mem - 1) /* Need more memory? */
-     retval = (char *) g_realloc(retval, mem += 1);
+     retval = (char *) realloc(retval, mem += 1);
 
   retval[pos] = 0; /* Terminate string */
 
@@ -379,12 +376,12 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
   char c;
   int mem = 64;
   int pos = 0;
-  char *retval = (char *) g_malloc(mem);
+  char *retval = (char *) malloc(mem);
 
   while (((c = fgetc(fd)) != EOF) && (c != '\n')) {
 
      if (pos == mem - 1) /* Need more memory? */
-       retval = (char *) g_realloc(retval, mem *= 2);
+       retval = (char *) realloc(retval, mem *= 2);
 
      if (pos || (!isspace(c)))
         retval[pos++] = c;
@@ -399,7 +396,7 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
 
   if (pos == 0) {
     _cfsml_error("Missing value in assignment at line %d\n", *line);
-    g_free(retval);
+    free(retval);
     return NULL;
   }
 
@@ -407,10 +404,10 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
      ++(*line);
 
   if (pos == mem - 1) /* Need more memory? */
-    retval = (char *) g_realloc(retval, mem += 1);
+    retval = (char *) realloc(retval, mem += 1);
 
   retval[pos] = 0; /* Terminate string */
-  return (char *) g_realloc(retval, strlen(retval) + 1);
+  return (char *) realloc(retval, strlen(retval) + 1);
   /* Re-allocate; this value might be used for quite some while (if we are
   ** restoring a string)
   */
@@ -756,7 +753,7 @@ _cfsml_read_gfxw_container_t(FILE *fh, gfxw_container_t* foo, char *lastval, int
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -865,7 +862,7 @@ _cfsml_read_menu_t(FILE *fh, menu_t* foo, char *lastval, int *line, int *hiteof)
 #line 581 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 590 "cfsml.pl"
               return 1;
@@ -886,7 +883,7 @@ _cfsml_read_menu_t(FILE *fh, menu_t* foo, char *lastval, int *line, int *hiteof)
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -998,7 +995,7 @@ _cfsml_read_gfxw_widget_t(FILE *fh, gfxw_widget_t* foo, char *lastval, int *line
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -1134,7 +1131,7 @@ _cfsml_read_gfxw_primitive_t(FILE *fh, gfxw_primitive_t* foo, char *lastval, int
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -1245,7 +1242,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
 #line 581 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 590 "cfsml.pl"
               return 1;
@@ -1266,7 +1263,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -1283,7 +1280,7 @@ _cfsml_write_string(FILE *fh, char ** foo)
     fprintf(fh, "\\null\\");  else {
     bar = _cfsml_mangle_string((char *) *foo);
     fprintf(fh, "\"%s\"", bar);
-    g_free(bar);
+    free(bar);
   }
 }
 
@@ -1466,7 +1463,7 @@ _cfsml_read_gfxw_view_t(FILE *fh, gfxw_view_t* foo, char *lastval, int *line, in
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -1538,7 +1535,7 @@ _cfsml_read_point_t(FILE *fh, point_t* foo, char *lastval, int *line, int *hiteo
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -1730,7 +1727,7 @@ _cfsml_read_gfxw_text_t(FILE *fh, gfxw_text_t* foo, char *lastval, int *line, in
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -1810,7 +1807,7 @@ _cfsml_read_gfx_pixmap_color_t(FILE *fh, gfx_pixmap_color_t* foo, char *lastval,
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -2024,7 +2021,7 @@ _cfsml_read_gfxw_port_t(FILE *fh, gfxw_port_t* foo, char *lastval, int *line, in
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -2182,7 +2179,7 @@ _cfsml_read_gfxw_visual_t(FILE *fh, gfxw_visual_t* foo, char *lastval, int *line
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -2382,7 +2379,7 @@ _cfsml_read_gfxw_dyn_view_t(FILE *fh, gfxw_dyn_view_t* foo, char *lastval, int *
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -2490,7 +2487,7 @@ _cfsml_read_gfxw_list_t(FILE *fh, gfxw_list_t* foo, char *lastval, int *line, in
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -2812,7 +2809,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 #line 581 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 590 "cfsml.pl"
               return 1;
@@ -2862,7 +2859,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 #line 581 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 590 "cfsml.pl"
               return 1;
@@ -2939,7 +2936,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 #line 581 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 590 "cfsml.pl"
               return 1;
@@ -3011,7 +3008,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 #line 581 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 590 "cfsml.pl"
               return 1;
@@ -3053,7 +3050,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 #line 581 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 590 "cfsml.pl"
               return 1;
@@ -3096,7 +3093,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 #line 581 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 590 "cfsml.pl"
               return 1;
@@ -3122,7 +3119,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 #line 581 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 590 "cfsml.pl"
               return 1;
@@ -3147,7 +3144,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
 #line 581 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 590 "cfsml.pl"
               return 1;
@@ -3187,7 +3184,7 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   foo->_heap->base = foo->_heap->start + reladdresses[0];
   foo->game_name = foo->_heap->start + reladdresses[1];
@@ -3313,7 +3310,7 @@ _cfsml_read_menu_item_t(FILE *fh, menu_item_t* foo, char *lastval, int *line, in
 #line 581 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 590 "cfsml.pl"
               return 1;
@@ -3368,7 +3365,7 @@ _cfsml_read_menu_item_t(FILE *fh, menu_item_t* foo, char *lastval, int *line, in
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -3464,7 +3461,7 @@ _cfsml_read_gfx_color_t(FILE *fh, gfx_color_t* foo, char *lastval, int *line, in
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -3604,7 +3601,7 @@ _cfsml_read_script_t(FILE *fh, script_t* foo, char *lastval, int *line, int *hit
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -3676,7 +3673,7 @@ _cfsml_read_class_t(FILE *fh, class_t* foo, char *lastval, int *line, int *hiteo
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -3748,7 +3745,7 @@ _cfsml_read_synonym_t(FILE *fh, synonym_t* foo, char *lastval, int *line, int *h
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -3868,7 +3865,7 @@ _cfsml_read_exec_stack_t(FILE *fh, exec_stack_t* foo, char *lastval, int *line, 
 #line 581 "cfsml.pl"
          done = i = 0;
          do {
-           g_free(value);
+           free(value);
            if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
 #line 590 "cfsml.pl"
               return 1;
@@ -3903,7 +3900,7 @@ _cfsml_read_exec_stack_t(FILE *fh, exec_stack_t* foo, char *lastval, int *line, 
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -4043,7 +4040,7 @@ _cfsml_read_rect_t(FILE *fh, rect_t* foo, char *lastval, int *line, int *hiteof)
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -4231,7 +4228,7 @@ _cfsml_read_gfxw_box_t(FILE *fh, gfxw_box_t* foo, char *lastval, int *line, int 
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -4309,7 +4306,7 @@ _cfsml_read_gfx_dirty_rect_t(FILE *fh, gfx_dirty_rect_t* foo, char *lastval, int
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -4477,7 +4474,7 @@ _cfsml_read_view_object_t(FILE *fh, view_object_t* foo, char *lastval, int *line
           return CFSML_FAILURE;       }
      }
 
-    g_free (bar);
+    free (bar);
   } while (!closed); /* Until closing braces are hit */
   return CFSML_SUCCESS;
 }
@@ -4827,7 +4824,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
     char *_cfsml_inp = _cfsml_get_identifier(fh, &(*line), &_cfsml_eof, &dummy);
 
     _cfsml_error = _cfsml_read_gfxw_box_t(fh, ((gfxw_box_t*)*widget), _cfsml_inp, &(*line), &_cfsml_eof);
-    g_free(_cfsml_inp);
+    free(_cfsml_inp);
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
@@ -4846,7 +4843,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
     char *_cfsml_inp = _cfsml_get_identifier(fh, &(*line), &_cfsml_eof, &dummy);
 
     _cfsml_error = _cfsml_read_gfxw_primitive_t(fh, ((gfxw_primitive_t*)*widget), _cfsml_inp, &(*line), &_cfsml_eof);
-    g_free(_cfsml_inp);
+    free(_cfsml_inp);
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
@@ -4864,7 +4861,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
     char *_cfsml_inp = _cfsml_get_identifier(fh, &(*line), &_cfsml_eof, &dummy);
 
     _cfsml_error = _cfsml_read_gfxw_view_t(fh, ((gfxw_view_t*)*widget), _cfsml_inp, &(*line), &_cfsml_eof);
-    g_free(_cfsml_inp);
+    free(_cfsml_inp);
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
@@ -4881,7 +4878,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
     char *_cfsml_inp = _cfsml_get_identifier(fh, &(*line), &_cfsml_eof, &dummy);
 
     _cfsml_error = _cfsml_read_gfxw_dyn_view_t(fh, ((gfxw_dyn_view_t*)*widget), _cfsml_inp, &(*line), &_cfsml_eof);
-    g_free(_cfsml_inp);
+    free(_cfsml_inp);
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
@@ -4898,7 +4895,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
     char *_cfsml_inp = _cfsml_get_identifier(fh, &(*line), &_cfsml_eof, &dummy);
 
     _cfsml_error = _cfsml_read_gfxw_text_t(fh, ((gfxw_text_t*)*widget), _cfsml_inp, &(*line), &_cfsml_eof);
-    g_free(_cfsml_inp);
+    free(_cfsml_inp);
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
@@ -4919,7 +4916,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
     char *_cfsml_inp = _cfsml_get_identifier(fh, &(*line), &_cfsml_eof, &dummy);
 
     _cfsml_error = _cfsml_read_gfxw_list_t(fh, ((gfxw_list_t*)*widget), _cfsml_inp, &(*line), &_cfsml_eof);
-    g_free(_cfsml_inp);
+    free(_cfsml_inp);
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
@@ -4938,7 +4935,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
     char *_cfsml_inp = _cfsml_get_identifier(fh, &(*line), &_cfsml_eof, &dummy);
 
     _cfsml_error = _cfsml_read_gfxw_visual_t(fh, ((gfxw_visual_t*)*widget), _cfsml_inp, &(*line), &_cfsml_eof);
-    g_free(_cfsml_inp);
+    free(_cfsml_inp);
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
@@ -4961,7 +4958,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
     char *_cfsml_inp = _cfsml_get_identifier(fh, &(*line), &_cfsml_eof, &dummy);
 
     _cfsml_error = _cfsml_read_gfxw_port_t(fh, ((gfxw_port_t*)*widget), _cfsml_inp, &(*line), &_cfsml_eof);
-    g_free(_cfsml_inp);
+    free(_cfsml_inp);
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
@@ -4981,7 +4978,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
     char *_cfsml_inp = _cfsml_get_identifier(fh, &(*line), &_cfsml_eof, &dummy);
 
     _cfsml_error = _cfsml_read_gfxw_container_t(fh, ((gfxw_container_t*)*widget), _cfsml_inp, &(*line), &_cfsml_eof);
-    g_free(_cfsml_inp);
+    free(_cfsml_inp);
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
@@ -4999,7 +4996,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
     char *_cfsml_inp = _cfsml_get_identifier(fh, &(*line), &_cfsml_eof, &dummy);
 
     _cfsml_error = _cfsml_read_gfxw_widget_t(fh, (*widget), _cfsml_inp, &(*line), &_cfsml_eof);
-    g_free(_cfsml_inp);
+    free(_cfsml_inp);
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
@@ -5226,7 +5223,7 @@ gamestate_restore(state_t *s, char *dirname)
     char *_cfsml_inp = _cfsml_get_identifier(fh, &(_cfsml_line_ctr), &_cfsml_eof, &dummy);
 
     _cfsml_error = _cfsml_read_state_t(fh, retval, _cfsml_inp, &(_cfsml_line_ctr), &_cfsml_eof);
-    g_free(_cfsml_inp);
+    free(_cfsml_inp);
     read_eof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */

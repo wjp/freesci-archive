@@ -80,9 +80,6 @@ extern gpointer g_malloc0(guint32 size);
 /* paths longer than 128 chars? nah... */
 #define PATH_MAX 128
 
-#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
-#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
-
 #define SSIZE_MAX 1024
 
 #define g_get_current_time(x) gettimeofday(x,NULL)

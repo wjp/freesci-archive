@@ -241,7 +241,7 @@ sciprintf("Send to selector %04x (%s):", selector, s->selector_names[selector]);
 #endif /* VM_DEBUG_SEND */
 
     if (++send_calls_nr == (send_calls_allocated - 1))
-      send_calls = g_realloc(send_calls, sizeof(calls_struct_t) * (send_calls_allocated *= 2));
+      send_calls = realloc(send_calls, sizeof(calls_struct_t) * (send_calls_allocated *= 2));
 
     argc += restmod;
     restmod = 0; /* Take care that the rest modifier is used only once */
@@ -372,10 +372,10 @@ add_exec_stack_entry(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int ar
   exec_stack_t *xstack;
 
   if (!s->execution_stack)
-    s->execution_stack = g_malloc(sizeof(exec_stack_t) * (s->execution_stack_size = 16));
+    s->execution_stack = malloc(sizeof(exec_stack_t) * (s->execution_stack_size = 16));
 
   if (++(s->execution_stack_pos) == s->execution_stack_size) /* Out of stack space? */
-    s->execution_stack = g_realloc(s->execution_stack,
+    s->execution_stack = realloc(s->execution_stack,
 				   sizeof(exec_stack_t) * (s->execution_stack_size += 8));
 
   /*  sciprintf("Exec stack: [%d/%d], origin %d, at %p\n", s->execution_stack_pos,
@@ -1450,7 +1450,7 @@ game_run(state_t **_s)
 
     if (s->restarting_flags & SCI_GAME_IS_RESTARTING_NOW) { /* Restart was requested? */
 
-      g_free(s->execution_stack);
+      free(s->execution_stack);
       s->execution_stack = NULL;
       s->execution_stack_pos = -1;
       s->execution_stack_pos_changed = 0;
@@ -1475,7 +1475,7 @@ game_run(state_t **_s)
 	*_s = s = successor;
 
 	if (!send_calls_allocated)
-	  send_calls = g_new(calls_struct_t, send_calls_allocated = 16);
+	  send_calls = calloc(sizeof(calls_struct_t), send_calls_allocated = 16);
 
 	if (script_abort_flag == SCRIPT_ABORT_WITH_REPLAY) {
 	  sciprintf("Restarting with replay()\n");

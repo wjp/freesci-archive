@@ -91,7 +91,7 @@ _free_vocabulary(state_t *s)
 
 	vocabulary_free_snames(s->selector_names);
 	vocabulary_free_knames(s->kernel_names);
-	g_free(s->opcodes);
+	free(s->opcodes);
 
 	s->selector_names = NULL;
 	s->kernel_names = NULL;
@@ -236,7 +236,7 @@ script_init_engine(state_t *s, sci_version_t version)
 	else
 		s->classtable_size = vocab996->length >> 2;
 
-	s->classtable = g_new0(class_t, s->classtable_size);
+	s->classtable = calloc(sizeof(class_t), s->classtable_size);
 
 	for (scriptnr = 0; scriptnr < 1000; scriptnr++) {
 		int objtype = 0;
@@ -277,7 +277,7 @@ script_init_engine(state_t *s, sci_version_t version)
 							return 1;
 						}
 
-						s->classtable = g_realloc(s->classtable, sizeof(class_t) * (classnr + 1));
+						s->classtable = realloc(s->classtable, sizeof(class_t) * (classnr + 1));
 						memset(&(s->classtable[s->classtable_size]), 0,
 						       sizeof(class_t) * (1 + classnr - s->classtable_size)); /* Clear after resize */
 
@@ -327,7 +327,7 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->have_bp = 0;
 
 	s->file_handles_nr = 5;
-	s->file_handles = g_new0(FILE *, s->file_handles_nr);
+	s->file_handles = calloc(sizeof(FILE *), s->file_handles_nr);
 	/* Allocate memory for file handles */
 	sciprintf("Engine initialized\n");
 
@@ -351,7 +351,7 @@ script_free_engine(state_t *s)
 	sciprintf("Freeing state-dependant data\n");
 	for (i = 0; i < MAX_HUNK_BLOCKS; i++)
 		if (s->hunk[i].size) {
-			g_free(s->hunk[i].data);
+			free(s->hunk[i].data);
 			s->hunk[i].size = 0;
 		}
 
@@ -362,14 +362,14 @@ script_free_engine(state_t *s)
 			fclose(s->file_handles[i]);
 #endif
 
-	g_free(s->file_handles);
+	free(s->file_handles);
 
 	heap_del(s->_heap);
 
-	g_free(s->kfunct_table);
+	free(s->kfunct_table);
 	s->kfunct_table = NULL;
 
-	g_free(s->classtable);
+	free(s->classtable);
 
 	_free_vocabulary(s);
 
@@ -377,8 +377,8 @@ script_free_engine(state_t *s)
 	bp = s->bp_list;
 	while (bp) {
 		bp_next = bp->next;
-		if (bp->type == BREAK_SELECTOR) g_free (bp->data.name);
-		g_free (bp);
+		if (bp->type == BREAK_SELECTOR) free (bp->data.name);
+		free (bp);
 		bp = bp_next;
 	}
 
@@ -429,7 +429,7 @@ game_init(state_t *s)
 	/* Initialize send_calls buffer */
 
 	if (!send_calls_allocated)
-		send_calls = g_new(calls_struct_t, send_calls_allocated = 16);
+		send_calls = calloc(sizeof(calls_struct_t), send_calls_allocated = 16);
 
 	if (!stack_handle) {
 		sciprintf("game_init(): Insufficient heap space for stack\n");
@@ -512,7 +512,7 @@ game_exit(state_t *s)
 	int i;
 
 	if (s->execution_stack)
-		g_free(s->execution_stack);
+		free(s->execution_stack);
 
 	if (s->synonyms_nr) {
 		free(s->synonyms);
@@ -535,7 +535,7 @@ game_exit(state_t *s)
 	restore_ff(s->_heap); /* Restore former heap state */
 
 	if (send_calls_allocated) {
-		g_free(send_calls);
+		free(send_calls);
 		send_calls_allocated = 0;
 	}
 

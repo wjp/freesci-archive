@@ -383,17 +383,17 @@ sciprintf(char *fmt, ...)
   va_list argp;
   size_t bufsize = 256;
   int i;
-  char *buf = (char *) g_malloc(bufsize);
+  char *buf = (char *) malloc(bufsize);
   char *mbuf;
 
   va_start(argp, fmt);
-  while ((i = g_vsnprintf(buf, bufsize-1, fmt, argp)) == -1 || (i >= bufsize - 2)) {
+  while ((i = vsnprintf(buf, bufsize-1, fmt, argp)) == -1 || (i >= bufsize - 2)) {
     /* while we're out of space... */
     va_end(argp);
     va_start(argp, fmt); /* reset argp */
 
     free(buf);
-    buf = (char *) g_malloc(bufsize <<= 1);
+    buf = (char *) malloc(bufsize <<= 1);
   }
   va_end(argp);
 
@@ -443,7 +443,7 @@ sciprintf(char *fmt, ...)
     con_outputbuflen = con_outputbufpos;
 
   con_outputlookback = con_outputbufpos;
-  g_free(buf);
+  free(buf);
 
   return 0;
 }

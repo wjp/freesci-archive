@@ -64,7 +64,7 @@ char *class_names[] =
 int
 _vocab_cmp_words(const void *word1, const void *word2)
 {
-  return g_strcasecmp((*((word_t **) word1))->word, (*((word_t **) word2))->word);
+  return strcasecmp((*((word_t **) word1))->word, (*((word_t **) word2))->word);
 }
 
 /* FIXME: Unify this with the SCI0 routine */
@@ -95,12 +95,12 @@ vocab_get_words_sci1(int *word_counter)
     /* Now this ought to be critical, but it'll just cause parse() and said() not to work */
   }
 
-  words = g_malloc(sizeof(word_t *));
+  words = malloc(sizeof(word_t *));
 
   while (seeker < resource->length) {
     byte c;
 
-    words = g_realloc(words, (counter + 1) * sizeof(word_t *));
+    words = realloc(words, (counter + 1) * sizeof(word_t *));
 
     currentwordpos = resource->data[seeker++]; /* Parts of previous words may be re-used */
 
@@ -111,7 +111,7 @@ vocab_get_words_sci1(int *word_counter)
     
     currentword[currentwordpos] = 0;
 
-    words[counter] = g_malloc(sizeof(word_t) + currentwordpos);
+    words[counter] = malloc(sizeof(word_t) + currentwordpos);
     /* Allocate more memory, so that the word fits into the structure */
 
     strcpy(&(words[counter]->word[0]), &(currentword[0])); /* Copy the word */
@@ -160,12 +160,12 @@ vocab_get_words(int *word_counter)
     /* Now this ought to be critical, but it'll just cause parse() and said() not to work */
   }
 
-  words = g_malloc(sizeof(word_t *));
+  words = malloc(sizeof(word_t *));
 
   while (seeker < resource->length) {
     byte c;
 
-    words = g_realloc(words, (counter + 1) * sizeof(word_t *));
+    words = realloc(words, (counter + 1) * sizeof(word_t *));
 
     currentwordpos = resource->data[seeker++]; /* Parts of previous words may be re-used */
 
@@ -175,7 +175,7 @@ vocab_get_words(int *word_counter)
     } while (c < 0x80);
     currentword[currentwordpos] = 0;
 
-    words[counter] = g_malloc(sizeof(word_t) + currentwordpos);
+    words[counter] = malloc(sizeof(word_t) + currentwordpos);
     /* Allocate more memory, so that the word fits into the structure */
 
     strcpy(&(words[counter]->word[0]), &(currentword[0])); /* Copy the word */
@@ -211,9 +211,9 @@ vocab_free_words(word_t **words, int words_nr)
   int i;
 
   for (i = 0; i < words_nr; i++)
-    g_free(words[i]);
+    free(words[i]);
 
-  g_free(words);
+  free(words);
 }
 
 
@@ -252,7 +252,7 @@ vocab_get_suffices(int *suffices_nr)
     return NULL; /* Not critical */
   }
 
-  suffices = g_malloc(sizeof(suffix_t *));
+  suffices = malloc(sizeof(suffix_t *));
 
   while ((seeker < resource->length-1) && (resource->data[seeker + 1] != 0xff)) {
 
@@ -261,13 +261,13 @@ vocab_get_suffices(int *suffices_nr)
     char *word_suffix;
     int word_len;
 
-    suffices = g_realloc(suffices, sizeof(suffix_t *) * (counter + 1));
+    suffices = realloc(suffices, sizeof(suffix_t *) * (counter + 1));
 
     seeker += alt_len + 1; /* Hit end of string */
     word_suffix = resource->data + seeker + 3; /* Beginning of next string +1 (ignore '*') */
     word_len = strlen(word_suffix);
 
-    suffices[counter] = g_malloc(sizeof(suffix_t));
+    suffices[counter] = malloc(sizeof(suffix_t));
     /* allocate enough memory to store the strings */
 
     suffices[counter]->word_suffix = word_suffix;
@@ -306,7 +306,7 @@ void
 vocab_free_branches(parse_tree_branch_t *parser_branches)
 {
   if (parser_branches)
-    g_free(parser_branches);
+    free(parser_branches);
 }
 
 
@@ -329,7 +329,7 @@ vocab_get_branches(int *branches_nr)
     return NULL;
   }
 
-  retval = g_malloc(sizeof(parse_tree_branch_t) * *branches_nr);
+  retval = malloc(sizeof(parse_tree_branch_t) * *branches_nr);
 
   for (i = 0; i < *branches_nr; i++) {
     int k;
@@ -356,7 +356,7 @@ vocab_lookup_word(char *word, int word_len,
 		  word_t **words, int words_nr,
 		  suffix_t **suffices, int suffices_nr)
 {
-  word_t *tempword = g_malloc(sizeof(word_t) + word_len + 256);
+  word_t *tempword = malloc(sizeof(word_t) + word_len + 256);
   /* 256: For suffices. Should suffice. */
   word_t **dict_word;
   result_word_t *retval;
@@ -366,12 +366,12 @@ vocab_lookup_word(char *word, int word_len,
   strncpy(&(tempword->word[0]), word, word_len);
   tempword->word[word_len] = 0;
 
-  retval = g_malloc(sizeof(result_word_t));
+  retval = malloc(sizeof(result_word_t));
 
   dict_word = bsearch(&tempword, words, words_nr, sizeof(word_t *), _vocab_cmp_words);
 
   if (dict_word) {
-    g_free(tempword);
+    free(tempword);
 
     retval->class = (*dict_word)->class;
     retval->group = (*dict_word)->group;
@@ -386,7 +386,7 @@ vocab_lookup_word(char *word, int word_len,
       int suff_index = word_len - suffices[i]->alt_suffix_length;
       /* Offset of the start of the suffix */
 
-      if (g_strncasecmp(suffices[i]->alt_suffix, word + suff_index,
+      if (strncasecmp(suffices[i]->alt_suffix, word + suff_index,
 			suffices[i]->alt_suffix_length) == 0) { /* Suffix matched! */
 
 	strncpy(&(tempword->word[0]), word, word_len);
@@ -396,7 +396,7 @@ vocab_lookup_word(char *word, int word_len,
 	dict_word = bsearch(&tempword, words, words_nr, sizeof(word_t *), _vocab_cmp_words);
 
 	if ((dict_word) && ((*dict_word)->class & suffices[i]->class_mask)) { /* Found it? */
-	  g_free(tempword);
+	  free(tempword);
 
 	  retval->class = suffices[i]->result_class; /* Use suffix class */
 	  retval->group = (*dict_word)->group;
@@ -414,7 +414,7 @@ vocab_lookup_word(char *word, int word_len,
 
   if ((strtol(&(tempword->word[0]), &tester, 10) >= 0)
       && (*tester == '\0')) { /* Do we have a complete number here? */
-    g_free(tempword);
+    free(tempword);
 
     retval->group = VOCAB_MAGIC_NUMBER_GROUP;
     retval->class = VOCAB_CLASS_NUMBER;
@@ -422,8 +422,8 @@ vocab_lookup_word(char *word, int word_len,
     return(retval);
   }
 
-  g_free(tempword);
-  g_free(retval);
+  free(tempword);
+  free(retval);
   return NULL;
 }
 
@@ -569,7 +569,7 @@ vocab_tokenize_string(char *sentence, int *result_nr,
   int pos_in_sentence = 0;
   char c;
   int wordlen = 0;
-  result_word_t *retval = g_malloc(sizeof(result_word_t));
+  result_word_t *retval = malloc(sizeof(result_word_t));
   /* malloc'd size is always one result_word_t too big */
 
   result_word_t *lookup_result;
@@ -595,9 +595,9 @@ vocab_tokenize_string(char *sentence, int *result_nr,
 	/* Look it up */
 
 	if (!lookup_result) { /* Not found? */
-	  *error = g_malloc0(wordlen + 1);
+	  *error = calloc(wordlen + 1, 1);
 	  strncpy(*error, lastword, wordlen); /* Set the offending word */
-	  g_free(retval);
+	  free(retval);
 	  return NULL; /* And return with error */
 	}
 
@@ -605,7 +605,7 @@ vocab_tokenize_string(char *sentence, int *result_nr,
 	/* Copy into list */
 	++(*result_nr); /* Increase number of resulting words */
 
-	retval = g_realloc(retval, sizeof(result_word_t) * (*result_nr + 1));
+	retval = realloc(retval, sizeof(result_word_t) * (*result_nr + 1));
 
       }
 
@@ -616,7 +616,7 @@ vocab_tokenize_string(char *sentence, int *result_nr,
   } while (c); /* Until terminator is hit */
 
   if (*result_nr == 0) {
-    g_free(retval);
+    free(retval);
     return NULL;
   }
 

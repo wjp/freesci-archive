@@ -1798,7 +1798,7 @@ static int
 _gfxwop_visual_free(gfxw_widget_t *widget)
 {
 	gfxw_visual_t *visual = (gfxw_visual_t *) widget;
-        gfxw_port_t *portrefs;
+        gfxw_port_t **portrefs;
         int retval;
 
 	if (!GFXW_IS_VISUAL(visual)) {
@@ -1812,7 +1812,7 @@ _gfxwop_visual_free(gfxw_widget_t *widget)
 	retval = _gfxwop_container_free(widget);
 
 	free(portrefs);
-        return;
+        return 0;
 }
 
 static int

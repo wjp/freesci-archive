@@ -87,12 +87,12 @@ int decompress11(resource_t *result, int resh)
 		return SCI_ERROR_EMPTY_OBJECT;
 	}
 
-	buffer = g_malloc(compressedLength);
-	result->data = g_malloc(result->length);
+	buffer = malloc(compressedLength);
+	result->data = malloc(result->length);
 
 	if (read(resh, buffer, compressedLength) != compressedLength) {
-		g_free(result->data);
-		g_free(buffer);
+		free(result->data);
+		free(buffer);
 		return SCI_ERROR_IO_ERROR;
 	};
 
@@ -118,10 +118,10 @@ int decompress11(resource_t *result, int resh)
 
 	case 0: /* no compression */
 		if (result->length != compressedLength) {
-			g_free(result->data);
+			free(result->data);
 			result->data = NULL;
 			result->status = SCI_STATUS_NOMALLOC;
-			g_free(buffer);
+			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
 		memcpy(result->data, buffer, compressedLength);
@@ -133,10 +133,10 @@ int decompress11(resource_t *result, int resh)
 	case 18:
 		fprintf(stderr,"Preparing decompression...\n");
 		if (decrypt4(result->data, buffer, result->length, compressedLength)) {
-			g_free(result->data);
+			free(result->data);
 			result->data = 0; /* So that we know that it didn't work */
 			result->status = SCI_STATUS_NOMALLOC;
-			g_free(buffer);
+			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
 		result->status = SCI_STATUS_OK;
@@ -148,7 +148,7 @@ int decompress11(resource_t *result, int resh)
 	case 4: /* NYI */
 		fprintf(stderr,"Resource %d.%s: Warning: compression type #%d not yet implemented\n",
 			result->number, resource_type_suffixes[result->type], compressionMethod);
-		g_free(result->data);
+		free(result->data);
 		result->data = NULL;
 		result->status = SCI_STATUS_NOMALLOC;
 		break;
@@ -157,14 +157,14 @@ int decompress11(resource_t *result, int resh)
 		fprintf(stderr,"Resource %d.%s: Compression method SCI1/%hi not "
 			"supported!\n", result->number, resource_type_suffixes[result->type],
 			compressionMethod);
-		g_free(result->data);
+		free(result->data);
 		result->data = NULL; /* So that we know that it didn't work */
 		result->status = SCI_STATUS_NOMALLOC;
-		//    g_free(buffer);
+		//    free(buffer);
 		//    return SCI_ERROR_UNKNOWN_COMPRESSION;
 	}
 
-  g_free(buffer);
+  free(buffer);
   return 0;
 }
 

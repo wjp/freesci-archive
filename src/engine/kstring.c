@@ -286,7 +286,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
     vocab_build_simple_parse_tree(&(s->parser_nodes[0]), words, words_nr);
 #endif SCI_SIMPLE_SAID_CODE
 
-    g_free(words);
+    free(words);
 
     if (syntax_fail) {
 
@@ -316,7 +316,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
       /* Issue warning: */
 
       invoke_selector(INV_SEL(s->game_obj, wordFail, 0), 2, (int) s->parser_base, (int) stringpos);
-      g_free(error);
+      free(error);
       s->acc = 1; /* Tell them that it dind't work */
     }
   }
@@ -430,7 +430,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
     startarg = 2;
   }
 
-  arguments = g_malloc(sizeof(int) * argc);
+  arguments = malloc(sizeof(int) * argc);
   for (i = startarg; i < argc; i++)
     arguments[i-startarg] = UPARAM(i); /* Parameters are copied to prevent overwriting */
 
@@ -523,7 +523,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
   }
 
-  g_free(arguments);
+  free(arguments);
 
   *target = 0; /* Terminate string */
   s->acc = dest; /* Return target addr */

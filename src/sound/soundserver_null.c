@@ -33,6 +33,12 @@
 #include <sound.h>
 #include <sys/types.h>
 #include <dirent.h>
+#ifdef HAVE_SYS_UIO_H
+#  ifdef HAVE_LIMITS_H
+#    include <limits.h>
+#  endif
+#  include <sys/uio.h>
+#endif
 
 
 void

@@ -30,7 +30,7 @@
 #define G_VA_COPY(ap1, ap2)     ((ap1) = (ap2))
 
 gpointer
-g_malloc0(guint32 size) {
+malloc0(guint32 size) {
     char* ptr;
 
     /* allocate the buffer, return NULL if no buffer */
@@ -198,7 +198,7 @@ g_vsnprintf (gchar       *str,
   strncpy (str, printed, n);
   str[n-1] = '\0';
 
-  g_free (printed);
+  free (printed);
 
   return strlen (str);
 }
@@ -208,7 +208,7 @@ g_memdup (gpointer mem, guint byte_size) {
   gpointer new_mem;
 
   if (mem) {
-    new_mem = g_malloc (byte_size);
+    new_mem = malloc (byte_size);
     memcpy (new_mem, mem, byte_size);
   } else {
     new_mem = NULL;

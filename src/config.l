@@ -32,16 +32,13 @@
 #include <gfx_resource.h>
 #include <gfx_drivers_list.h>
 #include <sci_conf.h>
-#ifndef _DOS
-# include <glib.h>
-#endif
 
 #ifdef _MSC_VER
-#include <ctype.h>
-#include <direct.h>
+#  include <ctype.h>
+#  include <direct.h>
 
-#define strcasecmp stricmp
-#define PATH_MAX 255
+#  define strcasecmp stricmp
+#  define PATH_MAX 255
 
 #endif
 

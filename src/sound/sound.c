@@ -29,9 +29,7 @@
 
 #include <engine.h>
 #include <sound.h>
-#ifndef _DOS
-#include <glib.h>
-#endif
+#include <scitypes.h>
 #include <soundserver.h>
 #include <sys/types.h>
 
@@ -418,10 +416,10 @@ song_lib_add(songlib_t songlib, song_t *song)
 }
 
 void /* Recursively free a chain of songs */
-_song_free_chain(song_t *song)
+_sonfree_chain(song_t *song)
 {
   if (song) {
-    _song_free_chain(song->next);
+    _sonfree_chain(song->next);
     free(song);
   }
 }
@@ -430,7 +428,7 @@ _song_free_chain(song_t *song)
 void
 song_lib_free(songlib_t songlib)
 {
-  _song_free_chain(*songlib);
+  _sonfree_chain(*songlib);
 }
 
 

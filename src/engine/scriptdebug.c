@@ -469,7 +469,7 @@ c_parse(state_t *s)
 			s->parser_rules, 1))
       syntax_fail = 1; /* Building a tree failed */
 
-    g_free(words);
+    free(words);
 
     if (syntax_fail)
       sciprintf("Building a tree failed.\n");
@@ -479,7 +479,7 @@ c_parse(state_t *s)
   } else {
     
       sciprintf("Unknown word: '%s'\n", error);
-      g_free(error);
+      free(error);
   }
   return 0;
 }
@@ -1821,11 +1821,11 @@ bp_alloc(state_t *s)
     bp = s->bp_list;
     while (bp->next)
       bp = bp->next;
-    bp->next = (breakpoint_t *) g_malloc (sizeof (breakpoint_t));
+    bp->next = (breakpoint_t *) malloc (sizeof (breakpoint_t));
     bp = bp->next;
   }
   else {
-    s->bp_list = (breakpoint_t *) g_malloc (sizeof (breakpoint_t));
+    s->bp_list = (breakpoint_t *) malloc (sizeof (breakpoint_t));
     bp = s->bp_list;
   }
 
@@ -1846,7 +1846,7 @@ c_bpx(state_t *s)
   bp=bp_alloc (s);
 
   bp->type = BREAK_SELECTOR;
-  bp->data.name = g_malloc (strlen (cmd_params [0].str)+1);
+  bp->data.name = malloc (strlen (cmd_params [0].str)+1);
   strcpy (bp->data.name, cmd_params [0].str);
   s->have_bp |= BREAK_SELECTOR;
 
@@ -1920,8 +1920,8 @@ int c_bpdel(state_t *s)
   /* Delete it */
   bp_next = bp->next;
   type = bp->type;
-  if (type == BREAK_SELECTOR) g_free (bp->data.name);
-  g_free (bp);
+  if (type == BREAK_SELECTOR) free (bp->data.name);
+  free (bp);
   if (bp_prev)
     bp_prev->next = bp_next;
   else

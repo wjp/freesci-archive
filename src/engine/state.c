@@ -137,7 +137,7 @@ script_init_state(state_t *s, sci_version_t version)
 	      return 1;
 	    }
 
-	    s->classtable = g_realloc(s->classtable, sizeof(class_t) * (classnr + 1));
+	    s->classtable = realloc(s->classtable, sizeof(class_t) * (classnr + 1));
 	    memset(&(s->classtable[s->classtable_size]), 0,
 		   sizeof(class_t) * (1 + classnr - s->classtable_size)); /* Clear after resize */
 
@@ -170,35 +170,35 @@ script_free_state(state_t *s)
   sciprintf("Freeing state-dependant data\n");
   for (i = 0; i < MAX_HUNK_BLOCKS; i++)
       if (s->hunk[i].size) {
-	  g_free(s->hunk[i].data);
+	  free(s->hunk[i].data);
 	  s->hunk[i].size = 0;
       }
 
   for (i = 3; i < MAX_PORTS; i++) /* Ports 0,1,2 are fixed */
     if (s->ports[i]) {
-      g_free(s->ports[i]);
+      free(s->ports[i]);
       s->ports[i] = 0;
     }
 
   if (s->pic_views_nr)
   {
-    g_free(s->pic_views);
+    free(s->pic_views);
     s->pic_views = NULL;
   }
   if (s->dyn_views_nr)
   {
-    g_free(s->dyn_views);
+    free(s->dyn_views);
     s->dyn_views = NULL;
   }
 
   if (s->execution_stack)
-    g_free(s->execution_stack);
+    free(s->execution_stack);
 
   heap_del(s->_heap);
 
-  g_free(s->classtable);
+  free(s->classtable);
 
-  g_free(s->kfunct_table);
+  free(s->kfunct_table);
   s->kfunct_table = NULL;
 
   vocabulary_free_knames(s->kernel_names);
@@ -212,7 +212,7 @@ script_free_state(state_t *s)
     vocab_free_branches(s->parser_branches);
   }
 
-  g_free(s->opcodes);
+  free(s->opcodes);
   vocabulary_free_snames(s->selector_names);
   s->selector_names = NULL;
   s->opcodes = NULL;

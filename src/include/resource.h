@@ -42,6 +42,8 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include <scitypes.h>
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -58,21 +60,33 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <assert.h>
-#ifndef _DOS
-#include <glib.h>
-#else
-#include <sci_dos.h>
+#ifdef _DOS
+#  include <sci_dos.h>
+#endif
+#ifdef HAVE_LIMITS_H
+#  include <limits.h>
 #endif
 
+
 #ifdef _MSC_VER
-  #ifdef FREESCI_EXPORTS
-  #define DLLEXTERN
-  #else
-  #define DLLEXTERN __declspec(dllimport)
-  #endif
-#else
-#define DLLEXTERN
+#  ifdef FREESCI_EXPORTS
+#    define DLLEXTERN
+#  else
+#    define DLLEXTERN __declspec(dllimport)
 #endif
+#else
+#  define DLLEXTERN
+#endif
+
+#if _MSC_VER || _DOS
+#  define G_DIR_SEPARATOR_S "\\"
+#else
+#  define G_DIR_SEPARATOR_S "/"
+#endif
+
+#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#define GUINT16_SWAP_LE_BE_CONSTANT(val) ((((val) & 0x00ff) << 8) | (((val) & 0xff00) >> 8))
 
 #define SCI_MAX_RESOURCE_SIZE 0x0400000
 /* The maximum allowed size for a compressed or decompressed resource */

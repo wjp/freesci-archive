@@ -218,7 +218,7 @@ disasm_init (disasm_state_t *d)
   d->old_header = 0;
 
   classes=vocabulary_get_classes (&d->class_count);
-  g_free (classes);
+  free (classes);
   d->class_names = (char **) malloc (d->class_count * sizeof (char *));
   memset (d->class_names, 0, d->class_count * sizeof (char *));
   d->class_selectors = (short **) malloc (d->class_count * sizeof (short *));
@@ -249,7 +249,7 @@ disasm_free_state (disasm_state_t *d)
   free (d->class_selectors);
   
   vocabulary_free_snames (d->snames);
-  g_free (d->opcodes);
+  free (d->opcodes);
   vocabulary_free_knames (d->kernel_names);
   vocab_free_words (d->words, d->word_count);
 }

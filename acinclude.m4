@@ -268,7 +268,6 @@ fi
 if test "$ac_png_includes" = no || test "$ac_png_libraries" = no; then
 
 	AC_MSG_RESULT([failed])
-	AC_MSG_ERROR([libpng is required to compile FreeSCI.])
 	ac_png_libraries=""
 	ac_png_includes=""
 else

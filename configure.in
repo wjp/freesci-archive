@@ -6,6 +6,8 @@ AM_INIT_AUTOMAKE(freesci, 0.3.0.devel)
 
 AC_PROG_CC
 AC_PROG_RANLIB
+AC_CHECK_HEADERS(limits.h)
+AC_CHECK_HEADERS(sys/uio.h)
 AC_CHECK_HEADERS(sys/soundcard.h)
 AC_CHECK_HEADERS(sys/time.h)
 AC_CHECK_HEADERS(obstack.h)
@@ -16,6 +18,9 @@ AC_CHECK_HEADERS(readline/readline.h, [	ac_readline="-lreadline" ], [ ac_readlin
 AC_SUBST(ac_readline)
 AC_CHECK_HEADERS(readline/history.h)
 AC_CHECK_HEADERS(getopt.h)
+AC_CHECK_SIZEOF(short)
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(long)
 AC_CHECK_FUNCS(pipe socketpair fork sched_yield memfrob ffs getopt_long)
 AC_PATH_GGI
 AC_PATH_CURSES
@@ -28,18 +33,6 @@ AC_SUBST(ac_glx_libraries)
 
 AM_PROG_LEX
 AC_PROG_YACC
-AM_PATH_GLIB(1.2.0,[
-		CFLAGS="$CFLAGS $GLIB_CFLAGS"
-#		LDFLAGS="$LDFLAGS $GLIB_LIBS"
-		LIBS="$LIBS $GLIB_LIBS"
-		AC_SUBST(ac_glib_includes)
-		AC_SUBST(ac_glib_libraries)
-	], 
-	[
-#if glib was't found
-		AC_MSG_ERROR([You must install a recent version of glib to compile this package!])
-	])
-
 AC_PATH_PNG
 
 AC_ARG_WITH(efence,

@@ -151,7 +151,7 @@ dgfx_init(state_t* s, picture_t pic) {
   dgfx_state=s;
 
   /* first allocate 64KB of temponary data */
-  if((dgfx_virtualmem=g_malloc0(64000))==NULL) {
+  if((dgfx_virtualmem=malloc0(64000))==NULL) {
     /* this failed... say it's bad */
     return 1;
   }
@@ -230,7 +230,7 @@ dgfx_shutdown(state_t *s) {
 
   /* free the extra buffer */
   if (dgfx_virtualmem!=NULL) {
-    g_free(dgfx_virtualmem);
+    free(dgfx_virtualmem);
     dgfx_virtualmem=NULL;
   }
 
