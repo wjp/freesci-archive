@@ -1,3 +1,12 @@
+2000-03-25  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/core/kgraphics.c (kNewWindow): Bit 7 of the window flags wasn't
+	  handled correctly. Fixed - this should take care of some of the
+	  problems related to CB1 and Camelot box drawing
+	* src/core/kgraphics.c (kGraph): Added an (incomplete) implementation
+	  of KERNEL_GRAPH_REDRAW_BOX
+	* src/core/scriptdebug.c (c_dynviews): Added dynviews console command
+
 2000-03-18  Lars Skovlund  <lskovlun@image.dk>
 
 	* Fixed priority drawing for Camelot

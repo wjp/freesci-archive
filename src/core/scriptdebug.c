@@ -541,6 +541,19 @@ c_dumpnodes(state_t *s)
   return 0;
 }
 
+int
+c_dynviews(state_t *s)
+{
+  int i;
+  
+  sciprintf("%d dynviews currently active:\n",s->dyn_views_nr);
+  for (i=0;i<s->dyn_views_nr;i++)
+  {
+    sciprintf("Object at %04x with underBits %04x\n",s->dyn_views[i].obj,
+						     s->dyn_views[i].underBitsp);
+  }
+  return 0;
+}
 
 int
 c_backtrace(state_t *s)
@@ -1310,6 +1323,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       con_hook_command(c_save_game, "save_game", "s", "Saves the current game state to\n  the hard disk");
       con_hook_command(c_restore_game, "restore_game", "s", "Restores a saved game from the\n  hard disk");
       con_hook_command(c_restart_game, "restart", "", "Restarts the game");
+      con_hook_command(c_dynviews, "dynviews", "", "Lists the currently active dynamic views");
       con_hook_command(c_viewinfo, "viewinfo", "i", "Displays the number of loops\n  and cels of each loop"
 		       " for the\n  specified view resource.");
 

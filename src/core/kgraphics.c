@@ -176,14 +176,22 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
   break;
 
-  case K_GRAPH_REDRAW_BOX:
+  case K_GRAPH_REDRAW_BOX: {
+
     CHECK_THIS_KERNEL_FUNCTION;
 
     SCIkdebug(SCIkGRAPHICS, "redraw_box(%d, %d, %d, %d)\n",
 	      PARAM(1), PARAM(2), PARAM(3), PARAM(4));
 
+    if (!s->dyn_views_nr)
+      graph_update_box(s, PARAM(2), PARAM(1), PARAM(4), PARAM(3)); else
+      ; /* Not handled yet */
+      
     SCIkwarn(SCIkWARNING, "KERNEL_GRAPH_REDRAW_BOX: stub\n");
-    break;
+
+  }
+
+  break;
 
   case K_GRAPH_ADJUST_PRIORITY:
 
@@ -1585,14 +1593,18 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   ylo = wnd->ymin - ((wnd->flags & WINDOW_FLAG_TITLE)? 10 : 0);
   /* Windows with a title bar get positioned in a way ignoring the title bar. */
 
-  _k_dyn_view_list_prepare_change(s);
+  if (!(wnd->flags&WINDOW_FLAG_DONTDRAW))
+  {
+    _k_dyn_view_list_prepare_change(s);
 
-  wnd->bg_handle = graph_save_box(s, xlo, ylo, wnd->xmax - xlo + 1, wnd->ymax - ylo + 1, 3);
+    wnd->bg_handle = graph_save_box(s, xlo, ylo, wnd->xmax - xlo + 1, wnd->ymax - ylo + 1, 3);
 
-  draw_window(s->pic, s->ports[window], wnd->bgcolor, wnd->priority,
-	     s->heap + wnd->title, s->titlebar_port.font , wnd->flags); /* Draw window */
+    draw_window(s->pic, s->ports[window], wnd->bgcolor, wnd->priority,
+	        s->heap + wnd->title, s->titlebar_port.font , wnd->flags); /* Draw window */
 
-  _k_dyn_view_list_accept_change(s);
+    _k_dyn_view_list_accept_change(s);
+
+  }
 
   /* Now sanitize the port values */
   if (wnd->xmin < 0)
@@ -1604,7 +1616,8 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   if (wnd->ymax > 199)
     wnd->ymax = 199;
 
-  graph_update_port(s, wnd); /* Update viewscreen */
+  if (!(wnd->flags&WINDOW_FLAG_DONTDRAW))
+    graph_update_port(s, wnd); /* Update viewscreen */
 
   s->view_port = window; /* Set active port */
 
