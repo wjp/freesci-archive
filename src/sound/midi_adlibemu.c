@@ -459,6 +459,59 @@ void test_adlib () {
   */
 }
 
+
+/* count is # of FRAMES, not bytes.
+   We assume 16-bit stereo frames (ie 4 bytes)
+*/
+static int synth_mixer (gint16 *buffer, int count)
+{
+  gint16 *ptr = buffer;
+
+  if (!ready) {
+      return 0;
+  }
+
+  if (!buffer)
+  {
+	  fprintf(stderr, "synth_mixer(): !buffer \n");
+      return 0;
+  }
+
+#if 0
+  {
+    static unsigned long remaining_delta = 0;
+    int samples;
+    int remaining = count;
+
+    while (remaining > 0) {
+      samples = remaining_delta * pcmout_sample_rate / 1000000;
+      samples = sci_min(samples, remaining);
+      if (samples) {
+        YM3812UpdateOne(ADLIB_LEFT, ptr, samples, 1);
+        YM3812UpdateOne(ADLIB_RIGHT, ptr+1, samples, 1);
+      }
+      if (remaining > samples) {
+        remaining_delta = (remaining - samples) * 1000000 / pcmout_sample_rate;
+      } else {
+        song->play_next_note();
+        remaining_delta = song->get_next_delta();
+        song->advance();
+      }
+      remaining -= samples;
+    }
+  }
+#endif
+
+  if (pcmout_stereo) {
+    YM3812UpdateOne (ADLIB_LEFT, ptr, count, 1);
+    YM3812UpdateOne (ADLIB_RIGHT, ptr+1, count, 1);
+  } else {
+    YM3812UpdateOne (ADLIB_LEFT, ptr, count, 0);
+  }
+
+  return count;
+}
+
 int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
 {
   int i;
@@ -484,7 +537,8 @@ int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
 
   ready = 1;
 
-  // XXX register with pcm layer.
+  pcmout_set_mixer(synth_mixer);
+
   return midi_adlibemu_reset();
 }
 
@@ -622,55 +676,3 @@ midi_device_t midi_device_adlibemu = {
   0, 		/* do not play channel 9 */
   ADLIB_VOICES  /* Max polyphony */
 };
-
-/* count is # of FRAMES, not bytes.
-   We assume 16-bit stereo frames (ie 4 bytes)
-*/
-int synth_mixer (gint16 *buffer, int count)
-{
-  gint16 *ptr = buffer;
-
-  if (!ready) {
-      return 0;
-  }
-
-  if (!buffer)
-  {
-	  fprintf(stderr, "synth_mixer(): !buffer \n");
-      return 0;
-  }
-
-#if 0
-  {
-    static unsigned long remaining_delta = 0;
-    int samples;
-    int remaining = count;
-
-    while (remaining > 0) {
-      samples = remaining_delta * pcmout_sample_rate / 1000000;
-      samples = sci_min(samples, remaining);
-      if (samples) {
-        YM3812UpdateOne(ADLIB_LEFT, ptr, samples, 1);
-        YM3812UpdateOne(ADLIB_RIGHT, ptr+1, samples, 1);   
-      }
-      if (remaining > samples) {
-        remaining_delta = (remaining - samples) * 1000000 / pcmout_sample_rate;
-      } else {
-        song->play_next_note();
-        remaining_delta = song->get_next_delta();
-        song->advance();
-      }
-      remaining -= samples;
-    }
-  }
-#endif
-
-  if (pcmout_stereo) {
-    YM3812UpdateOne (ADLIB_LEFT, ptr, count, 1); 
-    YM3812UpdateOne (ADLIB_RIGHT, ptr+1, count, 1);   
-  } else {
-    YM3812UpdateOne (ADLIB_LEFT, ptr, count, 0); 
-  }
-
-  return count;
-}

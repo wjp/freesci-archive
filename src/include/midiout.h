@@ -71,6 +71,10 @@ extern midiout_driver_t midiout_driver_win32mci_stream;
 extern midiout_driver_t midiout_driver_sgimd;
 #endif
 
+#ifdef HAVE_FLUIDSYNTH_H
+extern midiout_driver_t midiout_driver_fluidsynth;
+#endif
+
 extern DLLEXTERN midiout_driver_t *midiout_drivers[];
 
 int midiout_open();

@@ -72,7 +72,7 @@ extern pcmout_driver_t pcmout_driver_al;
 #ifdef _DREAMCAST
 extern pcmout_driver_t pcmout_driver_dc;
 #endif
- 
+
 extern DLLEXTERN pcmout_driver_t *pcmout_drivers[];
 
 int pcmout_open();
@@ -83,6 +83,9 @@ void pcmout_disable(void);
 ** Returns   : (void)
 ** Modifies  : Active PCM driver
 */
+
+typedef int (*synth_mixer_func_t)(gint16 *tmp_bk, int samples);
+void pcmout_set_mixer(synth_mixer_func_t func);
 
 struct _pcmout_driver *pcmout_find_driver(char *name);
 

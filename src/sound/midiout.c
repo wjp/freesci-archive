@@ -41,6 +41,9 @@ midiout_driver_t *midiout_drivers[] = {
 #ifdef _WIN32
 	&midiout_driver_win32mci,
 #endif
+#ifdef HAVE_FLUIDSYNTH_H
+	&midiout_driver_fluidsynth,
+#endif
 	&midiout_driver_null,
 	NULL
 };

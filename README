@@ -148,7 +148,7 @@ Currently, the configuration file may contain:
   screen content. Modifying this may affect performance on slow or networked
   systems.
   1: Collect everything in one dirty region
-  clusters: Cluster non-overlapping modified regions into a set of regions 
+  clusters: Cluster non-overlapping modified regions into a set of regions
 
 - pic0_scaled = yes | no
   Whether SCI0 background pics should be scaled (may look better) or not
@@ -368,13 +368,25 @@ Options:
 - patchpath:  Location to the instrument data (drums.o3, std.o3).
               Defaults to /etc/midi
 
-2.1.2.6 Adlib driver:
+2.1.2.6 FluidSynth driver
+-------------------------
+This driver (ID 'fluidsynth') uses the software synthesizer FluidSynth
+(http://www.fluidsynth.org) to generate PCM sound data. This data is played
+back through the PCM subsystem. To use this driver you'll need to have
+FluidSynth installed on your system. You'll also need a working PCM driver
+and an SF2 soundfont file.
+
+Options:
+- soundfont: Path to an SF2 soundfont file. Defaults to
+             '/etc/midi/8MBGMSFX.SF2'.
+
+2.1.2.7 Adlib driver:
 ---------------------
 This driver ('adlib') uses the OSS/Free interface to the OPL/2 chip present
 in AdLib (TM), SoundBlaster (TM) and many other cards. It plays back music
 and sound the same way Sierra did.
 
-2.1.2.7 AdlibEMU driver:
+2.1.2.8 AdlibEMU driver:
 ------------------------
 The 'adlibemu' driver uses the PCM subsystem to play back sound. It emulates
 a stereo variant of a beefed-up OPL/2 chip that supports a few more voices

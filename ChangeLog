@@ -1,3 +1,12 @@
+2003-08-26  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sound/midiout_fsynth.c: Added to repository.
+	* README, configure.in, src/include/midiout.h, src/sound/Makefile.am,
+	src/sound/midiout.c: Added FluidSynth midiout driver.
+	* src/include/pcmout.h, src/sound/midi_adlibemu.c,
+	src/sound/pcmout.c: Added a 'pcmout_set_mixer' function to register
+	a mixer function with the PCM subsystem.
+
 2003-07-30  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* README.DC, src/gfx/drivers/dc_driver.c: Added support for 50Hz

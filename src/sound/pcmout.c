@@ -46,6 +46,7 @@ pcmout_driver_t *pcmout_drivers[] = {
 static gint16 *snd_buffer = NULL;
 guint16 pcmout_sample_rate = 44100;
 guint8  pcmout_stereo = 1;
+static synth_mixer_func_t synth_mixer = NULL;
 
 int pcmout_open()
 {
@@ -65,8 +66,6 @@ int pcmout_close(void)
   return retval;
 }
 
-int synth_mixer (gint16* tmp_bk, int samples);
-
 /* returns # of frames, not bytes */
 int mix_sound(int count)
 {
@@ -75,12 +74,19 @@ int mix_sound(int count)
 	if (count > BUFFER_SIZE)
 		count = BUFFER_SIZE;
 
-	i = synth_mixer(snd_buffer, count);
+	if (synth_mixer)
+		i = synth_mixer(snd_buffer, count);
+	else return count;
 
 	if (i <= 0)
 		i = count;
 
 	return i;
+}
+
+void pcmout_set_mixer(synth_mixer_func_t func)
+{
+	synth_mixer = func;
 }
 
 /* the pcmout_null sound driver */
