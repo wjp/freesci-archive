@@ -1523,6 +1523,7 @@ gfxw_new_list(rect_t area, int sorted)
 				_gfxwop_container_free_contents,
 				_gfxwop_list_add_dirty,
 				sorted? _gfxwop_sorted_list_add : _gfxwop_container_add);
+	return list;
 }
 
 

@@ -12,8 +12,8 @@
 #define VERSION "0.3.0.devel"
 #define HAVE_LIBGGI 1
 #define HAVE_LIBPNG 1
-#define HAVE_CURSES 1
-#define HAVE_GLX 1
+/* #undef HAVE_CURSES */
+/* #undef HAVE_GLX */
 
 /* Define if you have the ffs function.  */
 #define HAVE_FFS 1
@@ -49,10 +49,10 @@
 #define HAVE_OBSTACK_H 1
 
 /* Define if you have the <readline/history.h> header file.  */
-#define HAVE_READLINE_HISTORY_H 1
+/* #undef HAVE_READLINE_HISTORY_H */
 
 /* Define if you have the <readline/readline.h> header file.  */
-#define HAVE_READLINE_READLINE_H 1
+/* #undef HAVE_READLINE_READLINE_H */
 
 /* Define if you have the <sys/soundcard.h> header file.  */
 #define HAVE_SYS_SOUNDCARD_H 1
