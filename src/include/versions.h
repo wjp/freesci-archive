@@ -48,7 +48,9 @@ struct _state;
 ** - "FTU" means "First To Use"
 */
 
-#define SCI_VERSION_DEFAULT_SCI0 SCI_VERSION(0,000,685)
+#define SCI_VERSION_LAST_SCI0 SCI_VERSION(0,000,685)
+
+#define SCI_VERSION_DEFAULT_SCI0 SCI_VERSION_LAST_SCI0
 /* AFAIK this is the last published SCI0 version */
 #define SCI_VERSION_DEFAULT_SCI01 SCI_VERSION(1,000,72)
 /* The version used by my implementation of QfG2 */

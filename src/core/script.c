@@ -754,7 +754,8 @@ script_find_selector(state_t *s, char *selectorname)
   int i;
   for (i = 0; i < s->selector_names_nr; i++)
     if (strcmp(selectorname, s->selector_names[i]) == 0)
-      return i;
+      if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+        { return i; } else return i*2;
 
   sciprintf("Warning: Could not map '%s' to any selector!\n", selectorname);
   return -1;

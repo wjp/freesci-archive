@@ -257,7 +257,7 @@ main(int argc, char** argv)
   config_init(&conf, gamestate.game_name, NULL);
   chdir (gamedir);
 
-  gamestate.version = conf.version;
+  if (conf.version!=SCI_VERSION_LAST_SCI0) gamestate.version = conf.version;
   sci_color_mode = conf.color_mode;
   gamestate.gfx_driver = conf.gfx_driver;
   if (strlen (conf.debug_mode))

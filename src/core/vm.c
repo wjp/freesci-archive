@@ -172,6 +172,9 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
 
     selector = GET_HEAP(argp);
 
+    //if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+    //  selector*=2;
+
     argp += 2;
     argc = GET_HEAP(argp);
 
@@ -1045,8 +1048,8 @@ script_instantiate(state_t *s, int script_nr)
   script_basepos = heap_allocate(s->_heap, script->length);
 
   if (!script_basepos) {
-    sciprintf("Not enough heap space for script size 0x%x of script 0x%x\n",
-	      script->length, script_nr);
+    sciprintf("Not enough heap space for script size 0x%x of script 0x%x, has 0x%x\n",
+	      script->length, script_nr, heap_largest(s->_heap));
     script_debug_flag = script_error_flag = 1;
     return 0;
   }
@@ -1058,6 +1061,8 @@ script_instantiate(state_t *s, int script_nr)
   s->scripttable[script_nr].localvar_offset = 0;
 
   if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
+    s->scripttable[script_nr].localvar_offset=heap_allocate(s->_heap,getUInt16(s->heap+script_basepos)*2);
+    /* There won't be a localvar block in this case */
     memcpy(s->heap + script_basepos + 2, script->data + 2, script->length -2);
     pos = script_basepos + 2;
     magic_pos_adder = 2;
