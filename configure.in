@@ -28,6 +28,7 @@ AM_PATH_GLIB(1.2.0,[
 		AC_MSG_ERROR([You must install a recent version of glib to compile this package!])
 	])
 
+LIBS="$LIBS -lGL -L/usr/X11R6/lib -lX11 -lXmu -lXi"
 AC_PATH_PNG
 
 AC_ARG_WITH(efence,

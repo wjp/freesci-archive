@@ -1,16 +1,27 @@
-Thanks for downloading this release of FreeSCI!
+Thanks for downloading this development release of FreeSCI!
 
-This is a development snapshot of FreeSCI. Please do not confuse it with a
-working SCI engine.
+FreeSCI is a portable interpreter for SCI games, such as the Space Quest
+series (starting with SQ3) or Leisure Suit Larry (2 and sequels); see
+below for a complete (?) listing.
 
-The FreeSCI distribution currently consists of tools and libraries to allow
-the platform-independant usage of SCI resource files. The current goal is
-to build an SCI virtual machine which is capable of running at least the
-older SCI0 games (like Space Quest 3, King's Quest 4 or Leisure Suit Larry 2
-((C) Sierra On-Line, Inc.)) In this process, support for the various
-SCI resources will be built and improved, as well as tested. Feel free to
-contribute in any way you wish, be it source code, documentation, or bug
-reports.
+FreeSCI is incomplete. You will not be able to finish any SCI game with it.
+This release has the following limitations (plus some bugs):
+- Only SCI0 games are supported
+- The parser is not yet implemented
+- Restarting the game does not work
+- The game menu is not supported yet
+- Several SCI kernel functions are missing
+- Not all keys are mapped/interpreted correctly
+- Sound is not supported yet
+- Graphics are slow, especially on displays not using 8bpp color index mode.
+
+It has the following improvements over Sierra SCI:
+- SCI0 background pictures can be rendered in 256 colors
+- saving and restoring the game state is possible from more places than the
+  Sierra SCI engine allowed
+- Better debugger (we think :-)
+- readline-style editing is supported in selectors
+
 
 Please refer to 'NEWS' and the 'ChangeLog' for information about changes
 in this and previous versions.
@@ -39,31 +50,30 @@ Required 'non-standard' libraries:
  * GGI (ftp://ftp.ggi-project.org)
 
 libpng is a new requirement (it was previously listed as "not being
-neccessary", sorry for that.
+neccessary", sorry for that).
 
 
-Running it
-----------
+Running it under UNIX-like OSses
+--------------------------------
 
 To run FreeSCI, execute 'sciv' while you are in a directory containing
-Sierra resource files (resource.000, resource.001, etc). This will open
-a ggi visual, and wait for input on the console you started it from
-(Therefore, you should only run it under X).
-At the moment, FreeSCI only supports SCI0 games, up to and including
-Quest for Glory 2.
-You will start up in the built-in debugger. Execute "sret" to let the
-vm run until it finishes or crashes, and watch things move (or break,
-depending on the game you're testing).
+Sierra resource files (resource.000, resource.001, etc), or set up a
+~/.freesci/config file as described below and run 'sciv <gameID>'. This
+will try to run the SCI game; it will abort as soon as it encounters an
+error and enter debug mode. In debug mode, type "quit" to leave the
+interpreter. If you stumbled over a bug that isn't listed on the FreeSCI
+bug list (http://freesci.linuxgames.com/bugs.html) yet, please contact
+one of the maintainers and send him a short description of the problem you
+encountered.
+
 For further debug commands, refer to the documentation file, doc/sci.sgml,
 written for the docbook DTD. If you don't have sgml tools to convert the
 file, you can either have a look at the docbook sources, or examine the
 documentation section on the FreeSCI home page.
 
-For a list of all commands supported by the debugger (it supports the debug
-commands listed in the documentation, plus the default command line commands
-like "play" to convert and play music over the gsi sound server), type
-"list cmds" on the debugger command line. Use "man command" to learn about
-the specified command.
+For a list of all commands supported by the debugger, type "list cmds" at
+the debugger command line. Use "man <command>" to learn about the specified
+command.
 
 
 Configuration
@@ -104,30 +114,51 @@ color_mode = flat
 [Glory]
 
 color_mode = dither256
-resource_dir = /usr/local/share/freesci/qg1
 # Quest for glory looks better in that mode
+resource_dir = /usr/local/share/freesci/qg1
 
 [SQ3]
 
 version = 0.000.453
-resource_dir = /home/bob/stuff/misc/other/games/more/sierra/old/sq/3
 # This SQ3 version is ancient
+resource_dir = /home/bob/stuff/misc/other/games/more/sierra/old/sq/3
 -----------------------
+
+
+Potentially supported games
+---------------------------
+
+The following games have been tested with FreeSCI and are known to give some
+level of interactivity:
+- Hero's Quest / Quest for Glory 1
+- Space Quest 3
+- King's Quest 4
+- Leisure Suit Larry 2
+- Leisure Suit Larry 3
+- Police Quest 2
+- Codename: Iceman
+- The Colonel's Bequest
+- Conquest of Camelot
+- The Fun Seeker's Guide (from the SQ Collector's Series)
+
+
+
+Platforms
+---------
+
+Successful builds have been reported for the following platforms (in order of
+appearance):
+- i686-pc-linux-gnu
+- sparc-sun-solaris2.5
+- Alpha/Linux
+- ia32/Win32 (Visual C++)
+- ia32/FreeBSD
+- ia32/NetBSD
 
 
 
 Notes
 -----
-
-
-Successful builds have been reported for the following platforms:
-- i686-pc-linux-gnu
-- sparc-sun-solaris2.5
-- DEC Alpha running Linux
-
-For a list of what's left to be done, please refer to the web site at: 
-http://freesci.linuxgames.com
-
 
 Please note that most of the documentation found in the doc/misc subdirectory
 is random information copied from the SCI Decoding Project homepage and
@@ -142,8 +173,9 @@ sources without the knowledge of its authors.
 In order to do something useful, you need all of the resource files of any
 SCI0 game in your current working directory before running one of the programs
 from this package. These resource files and everything they contain are
-property and copyrighted by Sierra On-Line (which in turn is a trademark
-of Sierra On-Line, Inc.).
-"Space Quest 3: The Pirates of Pestulon" and "Quest for Glory 1: So You Want
-To Be A Hero" are trademarks of Sierra On-Line, Inc.
+property and copyrighted by Sierra On-Line (which in turn is a registerd
+trademark of Sierra On-Line, Inc.).
+Space Quest, Quest for Glory, King's Quest, Leisure Suit Larry, Police Quest,
+Codename: Iceman, Conquest of Camelot, and The Colonel's Bequest are registered
+trademarks of Sierra On-Line, Inc.
 

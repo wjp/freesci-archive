@@ -1,9 +1,14 @@
-TODO for version 0.2.5:
+TODO for the next version:
 
+- Fix the remaining bugs
+- Re-implement pic resource drawing
+- Implement Menu system
 - Write more kernel functions
+- Implement the "missing half" of the parser (Said())
 
-TODO for later:
 
-- Check the healer's hut inside (QG1) and fix FILLBOUNDARY (graph.c)
-  until it works again WITHOUT breaking the LSL3 intro.
+TODO for 0.3.x:
+
+- Re-structure the graphics subsystem for performance
+- Implement sound servers that actually make some sound
 - Merge Magnus' Python class browser into the main tree

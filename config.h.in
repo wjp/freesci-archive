@@ -12,7 +12,7 @@
 #undef HAVE_LIBGGI
 #undef HAVE_LIBPNG
 #undef HAVE_CURSES
-#undef HAVE_GLX
+#define HAVE_GLX
 
 /* Define if you have the fork function.  */
 #undef HAVE_FORK

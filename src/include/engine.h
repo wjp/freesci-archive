@@ -85,6 +85,7 @@ typedef struct
   Display *glx_display;
   Window glx_window;
   GLXContext glx_context;
+  unsigned int width, height;
 } glx_state_t;
 #endif
 

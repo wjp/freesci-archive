@@ -171,7 +171,7 @@ char** vocabulary_get_snames()
       int offset=getInt(r->data+2+i*2);
       int len=getInt(r->data+offset);
       t[i]=malloc(len+1);
-      strncpy(t[i], r->data+offset+2, len);
+      memcpy(t[i], r->data+offset+2, len);
       t[i][len]='\0';
     }
 
@@ -213,7 +213,7 @@ opcode* vocabulary_get_opcodes()
       o[i].type=getInt(r->data+offset+2);
       o[i].number=i;
       o[i].name=malloc(len+1);
-      strncpy(o[i].name, r->data+offset+4, len);
+      memcpy(o[i].name, r->data+offset+4, len);
       o[i].name[len]='\0';
 #ifdef VOCABULARY_DEBUG
       printf("Opcode %02X: %s, %d\n", i, o[i].name, o[i].type);
@@ -290,10 +290,10 @@ static char** vocabulary_get_knames0(int* names)
     {
       int offset=getInt(r->data+index);
       int len=getInt(r->data+offset);
-      //fprintf(stderr,"Getting name %d of %d...\n", i, count);
+      /*fprintf(stderr,"Getting name %d of %d...\n", i, count);*/
       index+=2;
       t[i]=malloc(len+1);
-      strncpy(t[i], r->data + offset + 2, len);
+      memcpy(t[i], r->data + offset + 2, len);
       t[i][len]='\0';
     }
   t[count] = malloc(strlen(SCRIPT_UNKNOWN_FUNCTION_STRING) +1);

@@ -1,3 +1,25 @@
+This release took somewhat longer than the previous ones; partially because
+of a 1.5 month break in the development cycle, but also because the
+daily CVS snapshots provided by Claudio Matsuoka invalidated the need to
+push out releases at semi-regular intervals.
+So, what's new? Quite a lot, actually: Input support has been implemented,
+many of the missing kernel functions were written, it is now possible to
+save and restore the game state, and a "NULL" sound server that handles
+sound cues was implemented. At least for the UNIXish platforms, as ia32/
+Win32 doesn't take fork()s, pipe()s and related stuff too well. ia32/Win32?
+Indeed, FreeSCI has been ported to Windows by Dmitry Jemerov.
+The port uses DirectX for drawing and can handle both windowed and full-screen
+mode; it is integrated into the FreeSCI source tree (a separate binary has
+been provided by Dmitry for those Windows users who aren't fortunate enough
+to have VisualC++ installed, though).
+Meanwhile, FreeSCI has been tested with success on ia32/FreeBSD and
+ia32/NetBSD, so the number of supported platforms has doubled since the last
+release.
+
+
+
+--- 0.2.4: ---
+
 0.2.4 has arrived, and we're still not finished ;-)
 Seriosly, though, this is the first release of FreeSCI that displays and
 animates graphics according to the directions given by SCI scripts
@@ -14,7 +36,6 @@ form. It is not part of this distribution, and is unlikely to return in
 later releases, since most of its functionality are provided by the main
 executable as well; the missing features (displaying arbitrary pic and view
 resources) might return in an independant pic viewer later on.
-
 
 
 
