@@ -88,16 +88,18 @@ c_debuginfo(state_t *s)
 		return 1;
 	}
 
-// pc o fp
+	if (s->execution_stack && s->execution_stack_pos >= 0)
+		eframe = s->execution_stack + s->execution_stack_pos;
+
 	sciprintf("acc="PREG"[%04x] prev="PREG" &rest=%x\n",
 		  PRINT_REG(s->r_acc), s->acc & 0xffff,
 		  PRINT_REG(s->r_prev), *p_restadjust);
 	if (eframe)
 		sciprintf("pc="PREG" obj="PREG" fp="PSTK" sp="PSTK"\n",
-			  PRINT_REG(eframe->pc),
-			  PRINT_REG(eframe->objp),
-			  PRINT_STK(eframe->sp),
-			  PRINT_STK(eframe->sp));
+			  PRINT_REG(*p_pc),
+			  PRINT_REG(*p_objp),
+			  PRINT_STK(*p_pp),
+			  PRINT_STK(*p_sp));
 	else
 		sciprintf("<no execution stack: pc,obj,fp omitted>\n");
 	return 0;
@@ -722,30 +724,57 @@ print_objname(state_t *s, heap_ptr pos, int address)
         return 0;
 }
 
-heap_ptr
+reg_t
 disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 /* Disassembles one command from the heap, returns address of next command or 0 if a ret was
 ** encountered.
 */
 {
-#warning "Re-implement disassemble()"
+#warning "FIXME for segment manager use"
 #if 0
-	heap_ptr retval = pos + 1;
+	mem_obj_t *memobj = GET_SEGMENT(s->seg_manager, pos.segment, MEM_OBJ_SCRIPT);
+	script_t *script_entity = NULL;
+#else
+	script_t *script_entity = s->script_000;
+#endif
+	byte *scr;
+	int scr_size;
+	reg_t retval = make_reg(pos.segment, pos.offset + 1);
 	word param_value;
-	int opsize = s->heap[pos];
-	int opcode = opsize >> 1;
+	int opsize;
+	int opcode;
 	int bytecount = 1;
 	int i = 0;
 
+#warning "FIXME for segment manager use"
+#if 0
+	if (!memobj) {
+		sciprintf("Disassembly failed: Segment %04x non-existant or not a script\n",
+			  pos.segment);
+		return retval;
+	} else script_entity = &(memobj->data.script);
+#endif
+
+	scr = script_entity->buf;
+	scr_size = script_entity->buf_size;
+
+	if (pos.offset >= scr_size) {
+		sciprintf("Trying to disassemble beyond end of script\n");
+		return pos;
+	}
+
+	opsize = scr[pos.offset];
+	opcode = opsize >> 1;
+
 	if (!_debugstate_valid) {
 		sciprintf("Not in debug state\n");
-		return 1;
+		return retval;
 	}
 
 	opsize &= 1; /* byte if true, word if false */
 
   
-	sciprintf("%04x: ", pos);
+	sciprintf("%04x: ", pos.offset);
 
 	if (print_bytecode) {
 		while (formats[opcode][i]) {
@@ -778,8 +807,13 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 			}
 		}
 
+		if (pos.offset + bytecount > scr_size) {
+			sciprintf("Operation arguments extend beyond end of script\n");
+			return retval;
+		}
+
 		for (i = 0; i < bytecount; i++)
-			sciprintf("%02x ", s->heap[pos + i]);
+			sciprintf("%02x ", scr[pos.offset + i]);
 
 		for (i = bytecount; i < 5; i++)
 			sciprintf("   ");
@@ -798,12 +832,13 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 		case Script_Invalid: sciprintf("-Invalid operation-"); break;
 
 		case Script_SByte:
-		case Script_Byte: sciprintf(" %02x", s->heap[retval++]); break;
+		case Script_Byte: sciprintf(" %02x", scr[retval.offset++]); break;
 
 		case Script_Word:
 		case Script_SWord:
-			sciprintf(" %04x", 0xffff & (s->heap[retval] | (s->heap[retval+1] << 8)));
-			retval += 2;
+			sciprintf(" %04x", 0xffff & (scr[retval.offset]
+						     | (scr[retval.offset+1] << 8)));
+			retval.offset += 2;
 			break;
 
 		case Script_SVariable:
@@ -814,10 +849,11 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 		case Script_Temp:
 		case Script_Param:
 			if (opsize)
-				param_value = s->heap[retval++];
+				param_value = scr[retval.offset++];
 			else {
-				param_value = 0xffff & (s->heap[retval] | (s->heap[retval+1] << 8));
-				retval += 2;
+				param_value = 0xffff & (scr[retval.offset]
+							| (scr[retval.offset+1] << 8));
+				retval.offset += 2;
 			}
 
 			if (opcode == op_callk)
@@ -829,15 +865,16 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 
 		case Script_SRelative:
 			if (opsize)
-				param_value = s->heap[retval++];
+				param_value = scr[retval.offset++];
 			else {
-				param_value = 0xffff & (s->heap[retval] | (s->heap[retval+1] << 8));
-				retval += 2;
+				param_value = 0xffff & (scr[retval.offset]
+							| (scr[retval.offset+1] << 8));
+				retval.offset += 2;
 			}
-			sciprintf (opsize? " %02x  [%04x]" : " %04x  [%04x]", param_value, (0xffff) & (retval+(heap_ptr) param_value));
+			sciprintf (opsize? " %02x  [%04x]" : " %04x  [%04x]", param_value, (0xffff) & (retval.offset + param_value));
 			break;
 
-		case Script_End: retval = 0;
+		case Script_End: retval = NULL_REG;
 			break;
 
 		default:
@@ -845,6 +882,8 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 
 		}
 
+#warning "Re-enable extra disasm information"
+#if 0
 	if (pos == *p_pc) /* Extra information if debugging the current opcode */
 
 		if ((opcode == op_pTos)||(opcode == op_sTop)||
@@ -856,9 +895,12 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 
 			sciprintf("	(%s)", selector_name(s, prop_id));
 		}
+#endif
 
 	sciprintf("\n");
 
+#warning "Re-enable extra disasm information"
+#if 0
 	if (pos == *p_pc) { /* Extra information if debugging the current opcode */
 
 		if (opcode == op_callk) {
@@ -949,9 +991,8 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 			} /* Send-like opcodes */
 
 	} /* (heappos == *p_pc) */
-
-	return retval;
 #endif
+	return retval;
 }
 
 int
@@ -2661,7 +2702,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 
 		c_debuginfo(s);
 		sciprintf("Step #%d\n", script_step_counter);
-		disassemble(s, *pc, 1, 0);
+		disassemble(s, *pc, 0, 1);
 
 		if (_debug_commands_not_hooked) {
 

@@ -1,3 +1,14 @@
+2002-10-29  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/vm.c (game_run): Implemented quick bootstrapping hack
+	(lookup_selector): Re-implemented
+	(send_selector): Re-implemented
+
+	* src/engine/scriptdebug.c (disassemble): Re-enabled
+
+	* src/include/vm.h: Execution stack now uses a better encoding for
+	variable addresses
+
 2002-10-28  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/vm.c (lookup_selector): Initial new selector lookup

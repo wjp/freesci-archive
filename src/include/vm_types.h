@@ -37,12 +37,12 @@ typedef int seg_id_t; /* Segment ID type */
 struct _state; /* engine.h */
 
 typedef struct {
-	seg_id_t offset : SCI_REG_SIZE;
-	int segment: SCI_SEG_SIZE;
+	seg_id_t segment: SCI_SEG_SIZE;
+	int offset : SCI_REG_SIZE;
 } reg_t;
 
 #define PREG "%04x:%04x"
-#define PRINT_REG(r) (unsigned) (r).segment, (unsigned) (r).offset
+#define PRINT_REG(r) (0xffff) & (unsigned) (r).segment, (unsigned) (r).offset
 
 typedef reg_t *stack_ptr_t; /* Stack pointer type */
 typedef int selector_t; /* Selector ID */
@@ -52,7 +52,7 @@ typedef int selector_t; /* Selector ID */
 #define PRINT_STK(v) (unsigned) (v - s->stack_base)
 
 static inline reg_t
-make_reg(int offset, int segment)
+make_reg(int segment, int offset)
 {
 	reg_t r;
 	r.offset = offset;

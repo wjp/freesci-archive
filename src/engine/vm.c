@@ -1,5 +1,5 @@
 /***************************************************************************
- vm.c Copyright (C) 1999, 2000, 2001 Christoph Reichenbach
+ vm.c Copyright (C) 1999 -- 2002 Christoph Reichenbach
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
@@ -91,12 +91,12 @@ validate_variable(reg_t *r, int type, int max, int index, int line)
 
 	if (index < 0 || index >= max) {
 		script_debug_flag = script_error_flag = 1;
-		sciprintf("Attempt to read invalid %s variable %d ");
+		sciprintf("Attempt to use invalid %s variable %04x ", names[type], index);
 		if (max == 0)
 			sciprintf("(variable type invalid)");
 		else
 			sciprintf("(out of range [%d..%d])", 0, max-1);
-		sciprintf(" in %s, line %d", __FILE__, __LINE__);
+		sciprintf(" in %s, line %d\n", __FILE__, line);
 		script_debug_flag = script_error_flag = 1;
 
 		return 1;
@@ -297,16 +297,35 @@ execute_method(state_t *s, word script, word pubfunct, stack_ptr_t sp,
 }
 
 
+static void
+_exec_varselectors(state_t *s)
+{ /* Executes all varselector read/write ops on the TOS */
+	/* Now check the TOS to execute all varselector entries */
+	if (s->execution_stack_pos >= 0)
+		while (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR) {
+
+			/* varselector access? */
+			if (s->execution_stack[s->execution_stack_pos].argc) { /* write? */
+
+				reg_t temp = s->execution_stack[s->execution_stack_pos].sp[1];
+				*(s->execution_stack[s->execution_stack_pos].addr.varp) = temp;
+
+			} else /* No, read */
+				s->r_acc = *(s->execution_stack[s->execution_stack_pos].addr.varp);
+
+			--(s->execution_stack_pos);
+		}
+}
+
 
 exec_stack_t *
 send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
-	      stack_ptr_t sp, int framesize, word restmod, stack_ptr_t argp)
+	      stack_ptr_t sp, int framesize, stack_ptr_t argp)
      /* send_obj and work_obj are equal for anything but 'super' */
      /* Returns a pointer to the TOS exec_stack element */
 {
-#warning "Re-enable send_selector()"
-#if 0
-	heap_ptr lookupresult;
+	reg_t *varp;
+	reg_t funcp;
 	int selector;
 	int argc;
 	int origin = s->execution_stack_pos; /* Origin: Used for debugging */
@@ -317,32 +336,23 @@ send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
 	/* The selector calls we catch are stored below: */
 	int send_calls_nr = -1;
 
-        if (NULL == s)
-        {
+        if (NULL == s) {
                 sciprintf("vm.c: exec_stack_t(): NULL passed for \"s\"\n");
                 return NULL;
         }
 
-	framesize += restmod * 2;
-
-	if (GET_HEAP(send_obj + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
-		sciprintf("Send: No object at %04x!\n", send_obj);
-		script_error_flag = script_debug_flag = 1;
-		return NULL;
-	}
-
 	while (framesize > 0) {
 
-		selector = GET_HEAP(argp);
+		selector = validate_arithmetic(*argp++);
+		argc = validate_arithmetic(*argp);
 
-		argp += 2;
-		argc = GET_HEAP(argp);
-
-		if (argc > 0x500){ /* More arguments than the stack could possibly accomodate for */
-			script_error(s, __FILE__, __LINE__, "More than 0x500 arguments to function call\n");
+		if (argc > 0x800){ /* More arguments than the stack could possibly accomodate for */
+			CORE_ERROR("SEND", "More than 0x800 arguments to function call\n");
 			return NULL;
 		}
 
+#warning "Fix breakpoints in send"
+#if 0
 		/* Check if a breakpoint is set on this method */
 		if (s->have_bp & BREAK_SELECTOR) {
 			breakpoint_t *bp;
@@ -367,6 +377,7 @@ send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
 				bp = bp->next;
 			}
 		}
+#endif
 
 #ifdef VM_DEBUG_SEND
 		sciprintf("Send to selector %04x (%s):", selector, s->selector_names[selector]);
@@ -375,10 +386,8 @@ send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
 		if (++send_calls_nr == (send_calls_allocated - 1))
 			send_calls = sci_realloc(send_calls, sizeof(calls_struct_t) * (send_calls_allocated *= 2));
 
-		argc += restmod;
-		restmod = 0; /* Take care that the rest modifier is used only once */
 
-		switch (lookup_selector(s, send_obj, selector, &lookupresult)) {
+		switch (lookup_selector(s, send_obj, selector, &varp, &funcp)) {
 
 		case SELECTOR_NONE:
 			sciprintf("Send to invalid selector 0x%x of object at 0x%x\n", 0xffff & selector, send_obj);
@@ -392,8 +401,8 @@ send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
 			sciprintf("Varselector: ");
 			if (argc)
 				sciprintf("Write %04x\n", UGET_HEAP(argp + 2));
-else
-	sciprintf("Read\n");
+			else
+				sciprintf("Read\n");
 #endif /* VM_DEBUG_SEND */
 
 			switch (argc) {
@@ -410,16 +419,14 @@ else
 				{ /* Argument is supplied -> Selector should be set */
 
 				if (print_send_action) {
-					int val = GET_HEAP(lookupresult);
-					int uval = UGET_HEAP(lookupresult);
-					int new = GET_HEAP(argp + 2);
-					int unew = UGET_HEAP(argp + 2);
+					reg_t val = *varp;
+					reg_t new = argp[1];
 
-					sciprintf("[write to selector: change %d(0x%04x) to %d(0x%04x)]\n",
-						  val, uval, new, unew);
+					sciprintf("[write to selector: change "PREG" to "PREG"]\n",
+						  PRINT_REG(val), PRINT_REG(new));
 					print_send_action = 0;
 				}
-				send_calls[send_calls_nr].address = lookupresult; /* register the call */
+				send_calls[send_calls_nr].address.var = varp; /* register the call */
 				send_calls[send_calls_nr].argp = argp;
 				send_calls[send_calls_nr].argc = argc;
 				send_calls[send_calls_nr].selector = selector;
@@ -443,7 +450,7 @@ else
 #ifdef VM_DEBUG_SEND
 			sciprintf("Funcselector(");
 			for (i = 0; i < argc; i++) {
-				sciprintf("%04x", UGET_HEAP(argp + 2 + 2*i));
+				sciprintf(PREG, PRINT_REG(argp[i+1]));
 				if (i + 1 < argc)
 					sciprintf(", ");
 			}
@@ -454,7 +461,7 @@ else
 				print_send_action = 0;
 			}
 
-			send_calls[send_calls_nr].address = lookupresult; /* register call */
+			send_calls[send_calls_nr].address.func = funcp; /* register call */
 			send_calls[send_calls_nr].argp = argp;
 			send_calls[send_calls_nr].argc = argc;
 			send_calls[send_calls_nr].selector = selector;
@@ -466,8 +473,8 @@ else
 		} /* switch(lookup_selector()) */
 
 
-		framesize -= (4 + argc * 2);
-		argp += argc * 2 + 2;
+		framesize -= (2 + argc);
+		argp += argc + 1;
 	}
 
 	/* Iterate over all registered calls in the reverse order. This way, the first call is
@@ -478,36 +485,21 @@ else
 			retval = add_exec_stack_varselector(s, work_obj, send_calls[send_calls_nr].argc,
 							    send_calls[send_calls_nr].argp,
 							    send_calls[send_calls_nr].selector,
-							    send_calls[send_calls_nr].address, origin);
+							    send_calls[send_calls_nr].address.var, origin);
 
 		else
 			retval =
-				add_exec_stack_entry(s, send_calls[send_calls_nr].address,
+				add_exec_stack_entry(s, send_calls[send_calls_nr].address.func,
 						     send_calls[send_calls_nr].sp, work_obj,
 						     send_calls[send_calls_nr].argc,
 						     send_calls[send_calls_nr].argp,
 						     send_calls[send_calls_nr].selector,
 						     send_obj, origin);
 
-	/* Now check the TOS to execute all varselector entries */
-	if (s->execution_stack_pos >= 0)
-		while (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR) {
-
-			/* varselector access? */
-			if (s->execution_stack[s->execution_stack_pos].argc) { /* write? */
-
-				word temp = GET_HEAP(s->execution_stack[s->execution_stack_pos].variables[VAR_PARAM] + 2);
-				PUT_HEAP(s->execution_stack[s->execution_stack_pos].pc, temp);
-
-			} else /* No, read */
-				s->acc = GET_HEAP(s->execution_stack[s->execution_stack_pos].pc);
-
-			--(s->execution_stack_pos);
-		}
+	_exec_varselectors(s);
 
 	retval = s->execution_stack + s->execution_stack_pos;
 	return retval;
-#endif
 }
 
 
@@ -519,9 +511,10 @@ add_exec_stack_varselector(state_t *s, reg_t objp, int argc, stack_ptr_t argp,
 						    selector, objp, origin);
 	/* Store selector address in sp */
 
+	xstack->addr.varp = address;
 	xstack->type = EXEC_STACK_TYPE_VARSELECTOR;
 
-  return xstack;
+	return xstack;
 }
 
 
@@ -547,7 +540,7 @@ add_exec_stack_entry(state_t *s, reg_t pc, stack_ptr_t sp, reg_t objp, int argc,
 
 	xstack->objp = objp;
 	xstack->sendp = sendp;
-	xstack->pc = pc;
+	xstack->addr.pc = pc;
 	xstack->sp = sp;
 	xstack->argc = argc;
 
@@ -614,7 +607,7 @@ run_vm(state_t *s, int restoring)
 		return;
 	}
 	
-	pc_offset = xs->pc.offset;
+	pc_offset = xs->addr.pc.offset;
 	code_buf = local_script->buf;
 //
 //  int old_execution_stack_base = s->execution_stack_base;
@@ -654,12 +647,13 @@ run_vm(state_t *s, int restoring)
 	variables[VAR_TEMP] = xs->fp;
 	variables[VAR_PARAM] = xs->variables_argp;
 
-	WRITE_VAR16(VAR_PARAM, 0, xs->argc);
+#warning "Explicitly set argument count here again!"
+//	WRITE_VAR16(VAR_PARAM, 0, xs->argc);
 
 
 	while (1) {
 		byte opcode;
-		reg_t old_pc = xs->pc;
+		int old_pc_offset = pc_offset;
 		stack_ptr_t old_sp = xs->sp;
 		byte opnumber;
 		int var_type; /* See description below */
@@ -678,7 +672,8 @@ run_vm(state_t *s, int restoring)
 
 		/* Debug if this has been requested: */
 		if (script_debug_flag || sci_debug_flags) {
-			script_debug(s, &(xs->pc), &(xs->sp), &(xs->fp),
+			xs->addr.pc.offset = pc_offset;
+			script_debug(s, &(xs->addr.pc), &(xs->sp), &(xs->fp),
 				     &(xs->objp), &restadjust, bp_flag);
 			bp_flag = 0;
 		}
@@ -847,7 +842,7 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x19: /* jmp */
-			xs->pc.offset += opparams[0];
+			xs->addr.pc.offset += opparams[0];
 			break;
 
 		case 0x1a: /* ldi */
@@ -879,8 +874,8 @@ run_vm(state_t *s, int restoring)
 				+ 1 + restadjust;
 			stack_ptr_t call_base = xs->sp - argc;
 
-			xs_new = add_exec_stack_entry(s, make_reg(xs->pc.segment,
-								  xs->pc.offset + opparams[0]),
+			xs_new = add_exec_stack_entry(s, make_reg(xs->addr.pc.segment,
+								  xs->addr.pc.offset + opparams[0]),
 						      xs->sp, xs->objp,
 						      (validate_arithmetic(*call_base) >> 1)
 						      	+ restadjust,
@@ -993,7 +988,7 @@ run_vm(state_t *s, int restoring)
 //      temp = xs->sp;
 //      xs->sp -= (opparams[0] + (restadjust * 2)); /* Adjust stack */
 //
-//      xs_new = send_selector(s, s->acc, s->acc, temp, (int)opparams[0],
+//      xs_new = send_selector(s, s->acc, s->acc, temp, (int)(opparams[0]>>1) +
 //			     (word)restadjust, xs->sp);
 //
 //      if (xs_new)
@@ -1011,7 +1006,7 @@ run_vm(state_t *s, int restoring)
 //      temp = xs->sp;
 //      xs->sp -= (opparams[0] + (restadjust * 2)); /* Adjust stack */
 //
-//      xs_new = send_selector(s, xs->objp, xs->objp, temp,
+//      xs_new = send_selector(s, xs->objp, xs->objp, (temp>>1) +
 //			     (int)opparams[0], (word)restadjust, xs->sp);
 //
 //      restadjust = 0;
@@ -1029,7 +1024,7 @@ run_vm(state_t *s, int restoring)
 //	xs->sp -= (opparams[1] + (restadjust * 2)); /* Adjust stack */
 //        kludge = get_class_address(s, opparams[0]);
 //	/* kludge necessary due to compiler bugs (egcs 2.91.66, at least) */
-//	xs_new = send_selector(s, (heap_ptr)kludge, xs->objp, temp, (int)opparams[1], (word)restadjust, xs->sp);
+//	xs_new = send_selector(s, (heap_ptr)kludge, xs->objp, temp, (int)(opparams[1] >> 1) + (word)restadjust, xs->sp);
 //	restadjust = 0;
 //
 //	if (xs_new) xs = xs_new;
@@ -1337,7 +1332,7 @@ run_vm(state_t *s, int restoring)
 		if (script_error_flag) {
 			_debug_step_running = 0; /* Stop multiple execution */
 			_debug_seeking = 0; /* Stop special seeks */
-			xs->pc = old_pc;
+			xs->addr.pc.offset = old_pc_offset;
 			xs->sp = old_sp;
 		} else
 			++script_step_counter;
@@ -1526,11 +1521,11 @@ void script_detect_early_versions(state_t *s)
 }
 
 
-heap_ptr
+int
 script_instantiate(state_t *s, int script_nr, int recursive)
 {
 #warning "Fix script instantiation"
-#if 1
+#if 0
 	resource_t *script = scir_find_resource(s->resmgr, sci_script, script_nr, 0);
 	heap_ptr pos;
 	int objtype;
@@ -1868,7 +1863,7 @@ _game_run(state_t *s, int restoring)
 			/* Call the play selector */
 
 			send_selector(s, s->game_obj, s->game_obj,
-				      s->stack_base, 2, 0, s->stack_base);
+				      s->stack_base, 2, s->stack_base);
 
 			script_abort_flag = 0;
 			s->restarting_flags = SCI_GAME_WAS_RESTARTED |
@@ -1896,7 +1891,7 @@ _game_run(state_t *s, int restoring)
 
 					send_selector(s, s->game_obj, s->game_obj,
 						      s->stack_base, 2,
-						      0, s->stack_base);
+						      s->stack_base);
 				}
 
 				script_abort_flag = 0;
@@ -1915,13 +1910,29 @@ game_run(state_t **_s)
 {
 	state_t *s = *_s;
 
+#warning "Quick exec test hack-- kill me!"
+#if 1
+	int i;
+	for (i = 0; i < 100; i++)
+		s->stack_base[i] = make_reg(0xabcd, 0x1000 + i);
+	s->execution_stack_pos = 0;
+	s->execution_stack = calloc(sizeof(exec_stack_t), 1);
+	s->execution_stack[0].fp = s->stack_base;
+	s->execution_stack[0].sp = s->stack_base;
+	s->execution_stack[0].addr.pc = make_reg(0x42, 0x255);
+	fprintf(stderr, "Executing in quick hack mode\n");
+	run_vm(s, 0);
+	fprintf(stderr, "VM Quit-- quick abort\n");
+	exit(1);
+#endif	
+
 	sciprintf(" Calling %s::play()\n", s->game_name);
 	_init_stack_base_with_selector(s, s->selector_map.play); /* Call the play selector */
 	
 
 	/* Now: Register the first element on the execution stack- */
 	if (!send_selector(s, s->game_obj, s->game_obj,
-			   s->stack_base, 2, 0,
+			   s->stack_base, 2,
 			   s->stack_base) || script_error_flag) {
 		sciprintf("Failed to run the game! Aborting...\n");
 		return 1;
@@ -1940,7 +1951,7 @@ game_restore(state_t **_s, char *game_name)
 	int debug_state = _debugstate_valid;
 
 	sciprintf("Restoring savegame '%s'...\n", game_name);
-	fprintf(stderr, "Quick-restore disabled until VM reconstruction is complete!");
+	fprintf(stderr, "Quick-restore disabled until VM reconstruction is complete!\n");
 	return 0;
 #if 0
 	s = gamestate_restore(*_s, game_name);

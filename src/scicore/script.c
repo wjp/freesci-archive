@@ -224,7 +224,7 @@ script_dump_object(char *data, int seeker, int objsize, char **snames, int sname
   }
 
 
-  sciprintf("Overloaded functions: %x\n", selectors =
+  sciprintf("Overridden functions: %x\n", selectors =
 	    overloads = getInt16((unsigned char *) data + seeker));
 
   seeker += 2;

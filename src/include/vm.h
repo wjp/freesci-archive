@@ -99,7 +99,7 @@
 /* Magic adjustment value for lofsa and lofss */
 
 
-#define CALL_SP_CARRY 0 /* Stack pointer value: Use predecessor's value */
+#define CALL_SP_CARRY NULL /* Stack pointer value: Use predecessor's value */
 
 
 #define SELECTOR_NONE 0
@@ -123,12 +123,15 @@ typedef struct {
 
 /* This struct is used to buffer the list of send calls in send_selector() */
 typedef struct {
-	heap_ptr address;
-	heap_ptr argp;
+	union {
+		reg_t func;
+		reg_t *var;
+	} address;
+	stack_ptr_t argp;
 	int argc;
-	int selector;
-	heap_ptr sp; /* Stack pointer */
-	heap_ptr type; /* Same as exec_stack_t.type */
+	selector_t selector;
+	stack_ptr_t sp; /* Stack pointer */
+	int type; /* Same as exec_stack_t.type */
 } calls_struct_t;
 
 
@@ -278,7 +281,10 @@ typedef struct {
 typedef struct {
 	reg_t objp;
 	reg_t sendp; /* Pointer to the object containing the invoked method */
-	reg_t pc; /* Not accurate for the TOS element */
+	union {
+		reg_t *varp; /* Variable pointer for read/write access */
+		reg_t pc; /* Not accurate for the TOS element */
+	} addr;
 	stack_ptr_t fp; /* Frame pointer */
 	stack_ptr_t sp; /* Stack pointer */
 	int argc;
@@ -361,14 +367,13 @@ execute_method(struct _state *s, word script, word pubfunct, stack_ptr_t sp, reg
 
 exec_stack_t *
 send_selector(struct _state *s, reg_t send_obj, reg_t work_obj,
-	      stack_ptr_t sp, int framesize, word restmod, stack_ptr_t argp);
+	      stack_ptr_t sp, int framesize, stack_ptr_t argp);
 /* Executes a "send" or related operation to a selector
 ** Parameters: (state_t *) s: The state_t to operate on
 **             (reg_t) send_obj: Heap address of the object to send to
 **             (reg_t) work_obj: Heap address of the object initiating the send
 **             (stack_ptr_t) sp: Stack pointer position
 **             (int) framesize: Size of the send as determined by the "send" operation
-**             (word) restmod: The &rest modifier, if set
 **             (stack_ptr_t) argp: Pointer to the beginning of the heap block containing the
 **                              data to be send. This area is a succession of one or more
 **                              sequences of [selector_number][argument_counter] and then
@@ -495,13 +500,13 @@ lookup_selector(struct _state *s, reg_t obj, selector_t selectorid, reg_t **vptr
 */
 
 
-heap_ptr
+int
 script_instantiate(struct _state *s, int script_nr, int recursive);
 /* Makes sure that a script and its superclasses get loaded to the heap
 ** Parameters: (state_t *) s: The state to operate on
 **             (int) script_nr: The script number to load
 **             (int) recursive: Whether to recurse
-** Returns   : (heap_ptr) The address of the script on the heap or 0 if out of heap
+** Returns   : (heap_ptr) The script's segment ID or 0 if out of heap
 ** If the script already has been loaded, only the number of lockers is increased.
 ** All scripts containing superclasses of this script aret loaded recursively as well,
 ** unless 'recursive' is set to zero.

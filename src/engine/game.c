@@ -586,8 +586,12 @@ game_init(state_t *s)
 #if 0
 	s->game_obj = game_obj;
 #endif
-#warning "Evil startup hack: Fix"
+#warning "Evil startup hacks: Fix"
+#if 1
+	s->script_000->locals_nr = 100;
+	s->script_000->locals = calloc(sizeof(reg_t), s->script_000->locals_nr);;
 	s->game_obj = make_reg(0x42, getUInt16(s->script_000->buf + 4));
+#endif
 
 	/* Mark parse tree as unused */
 	s->parser_nodes[0].type = PARSE_TREE_NODE_LEAF;
