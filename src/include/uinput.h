@@ -95,9 +95,6 @@ typedef struct {
 #define SCI_EVM_INSERT          (1<<7)
 
 
-/*extern sci_event_t (*_sci_input_handler)(void);*/
-/* The input handler for the main window */
-
 extern int sci_pointer_x, sci_pointer_y;
 /* The current coordinates of the mouse pointer */
 

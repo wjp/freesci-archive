@@ -702,7 +702,7 @@ kIsObject(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr offset = PARAM(0);
 
-  if (offset < 100)
+  if (offset < 800)
     s->acc = 0;
   else
     s->acc = (GET_HEAP(offset + SCRIPT_OBJECT_MAGIC_OFFSET) == SCRIPT_OBJECT_MAGIC_NUMBER);
@@ -954,7 +954,7 @@ kDisposeList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kFOpen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  char *filename = s->heap + PARAM(0);
+  char *filename = s->heap + UPARAM(0);
   int mode = PARAM(1);
   int retval = 1; /* Ignore file_handles[0] */
   FILE *file = NULL;
@@ -2304,14 +2304,23 @@ kNumCels(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int map = PARAM(0);
-  int xstart = PARAM(2);
-  int ystart = PARAM(1);
+  int arg = 0;
+  int map, xstart, ystart;
   int xlen = 1, ylen = 1;
 
+  if (argc == 2 || argc == 4)
+    map = 4;
+  else {
+    arg = 1;
+    map = PARAM(0);
+  }
+
+  xstart = PARAM(arg+1);
+  ystart = PARAM(arg);
+
   if (argc > 3) {
-    xlen = PARAM(4) - xstart + 1;
-    ylen = PARAM(3) - ystart + 1;
+    xlen = PARAM(arg+3) - xstart + 1;
+    ylen = PARAM(arg+2) - ystart + 1;
   }
 
   s->acc = graph_on_control(s, xstart, ystart + 10, xlen, ylen, map);

@@ -28,8 +28,6 @@
 #include <uinput.h>
 #include <engine.h>
 
-/*sci_event_t (*_sci_input_handler)(void);*/
-
 int sci_pointer_x, sci_pointer_y;
 
 int sci_have_pointer = 0;

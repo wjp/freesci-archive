@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "sciunpack_Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "..\win32\getopt" /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\libpng" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_LIBPNG" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.5\" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "..\win32\getopt" /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\libpng" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_LIBPNG" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.5\" /D "HAVE_OBSTACK_H" /YX /FD /c
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
 # ADD RSC /l 0x419 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -64,7 +64,7 @@ LINK32=link.exe
 # PROP Intermediate_Dir "sciunpack_Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\win32" /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\libpng" /I "..\..\..\zlib" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_LIBPNG" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.5\" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\win32" /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\libpng" /I "..\..\..\zlib" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_LIBPNG" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.5\" /D "HAVE_OBSTACK_H" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
 # ADD RSC /l 0x419 /d "_DEBUG"
 BSC32=bscmake.exe

@@ -443,7 +443,7 @@ void free_event_queue()
   if (event_queue) free(event_queue);
 }
 
-void add_queue_event(unsigned char type, char key)
+void add_queue_event(int type, int data, int buckybits)
 {
   if ((queue_last+1) % queue_size == queue_first)
   {
@@ -462,8 +462,9 @@ void add_queue_event(unsigned char type, char key)
     queue_last = event_count;
   }
 
-  event_queue [queue_last].key = key;
-  event_queue [queue_last++].type = type;
+  event_queue [queue_last].data = data;
+  event_queue [queue_last].type = type;
+  event_queue [queue_last++].buckybits = buckybits;
   if (queue_last == queue_size) queue_last=0;
 }
 
@@ -473,14 +474,35 @@ sci_event_t get_queue_event()
   if (queue_first == queue_last)
   {
     sci_event_t noevent;
-    noevent.key = 0;
-    noevent.type = SCI_EV_NOEVENT;
+    noevent.data = 0;
+    noevent.type = SCI_EVT_CLOCK;
+    noevent.buckybits = 0;
     return noevent;
   }
   else return event_queue [queue_first++];
 }
 
-#define MAP_KEY(x,y) case x: add_queue_event (SCI_EV_SPECIAL_KEY, y); break
+void add_mouse_event (int type, int data, WPARAM wParam)
+{
+  int buckybits = 0;
+
+  if (wParam & MK_SHIFT) buckybits |= SCI_EVM_LSHIFT | SCI_EVM_RSHIFT;
+  if (wParam & MK_CONTROL) buckybits |= SCI_EVM_CTRL;
+  add_queue_event (type, data, buckybits);
+}
+
+void add_key_event (int data)
+{
+  int buckybits = 0;
+  
+  /* FIXME: If anyone cares, on Windows NT we can distinguish left and right shift */
+  if (GetAsyncKeyState (VK_SHIFT)) buckybits |= SCI_EVM_LSHIFT | SCI_EVM_RSHIFT;
+  if (GetAsyncKeyState (VK_CONTROL)) buckybits |= SCI_EVM_CTRL;
+  if (GetAsyncKeyState (VK_MENU)) buckybits |= SCI_EVM_ALT;
+  add_queue_event (SCI_EVT_KEYBOARD, data, buckybits);
+}
+
+#define MAP_KEY(x,y) case x: add_key_event (y); break
 
 long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -518,17 +540,12 @@ long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     sci_pointer_y = HIWORD (lParam) / scale;
     break;
 
-  case WM_LBUTTONDOWN:
-    add_queue_event (SCI_EV_MOUSE_CLICK, 1);
-    break;
-
-  case WM_RBUTTONDOWN:
-    add_queue_event (SCI_EV_MOUSE_CLICK, 2);
-    break;
-
-  case WM_MBUTTONDOWN:
-    add_queue_event (SCI_EV_MOUSE_CLICK, 3);
-    break;
+  case WM_LBUTTONDOWN: add_mouse_event (SCI_EVT_MOUSE_PRESS, 1, wParam);   break;
+  case WM_RBUTTONDOWN: add_mouse_event (SCI_EVT_MOUSE_PRESS, 2, wParam);   break;
+  case WM_MBUTTONDOWN: add_mouse_event (SCI_EVT_MOUSE_PRESS, 3, wParam);   break;
+  case WM_LBUTTONUP:   add_mouse_event (SCI_EVT_MOUSE_RELEASE, 1, wParam); break;
+  case WM_RBUTTONUP:   add_mouse_event (SCI_EVT_MOUSE_RELEASE, 2, wParam); break;
+  case WM_MBUTTONUP:   add_mouse_event (SCI_EVT_MOUSE_RELEASE, 3, wParam); break;
 
   case WM_KEYDOWN:
     switch (wParam)
@@ -544,14 +561,16 @@ long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       MAP_KEY (VK_PRIOR,  SCI_K_PGUP);
       MAP_KEY (VK_INSERT, SCI_K_INSERT);
       MAP_KEY (VK_DELETE, SCI_K_DELETE);
-    case VK_BACK:   add_queue_event (SCI_EV_CTRL_KEY, 'H'); break;
-    case VK_TAB:    add_queue_event (SCI_EV_CTRL_KEY, 'I'); break;
-    case VK_RETURN: add_queue_event (SCI_EV_CTRL_KEY, 'M'); break;
+      MAP_KEY (VK_BACK,   SCI_K_BACKSPACE);
+      MAP_KEY (VK_TAB,    '\t');
+      MAP_KEY (VK_RETURN, '\r');
     default:
       if (wParam >= VK_F1 && wParam <= VK_F10)
-        add_queue_event (SCI_EV_SPECIAL_KEY, wParam - VK_F1 + SCI_K_F1);
+        add_key_event (wParam - VK_F1 + SCI_K_F1);
+      else if (wParam >= 'A' && wParam <= 'Z')
+        add_key_event (wParam - 'A' + 97);
       else
-        add_queue_event (SCI_EV_KEY, wParam);
+        add_key_event (wParam);
     }
     break;
   }
