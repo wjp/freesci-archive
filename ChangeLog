@@ -1,3 +1,8 @@
+2001-05-02  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/gfx/gfx_support.c (gfx_crossblit_pixmap): Correctly calculates
+	alpha mask offset for BE architectures now
+
 2001-05-01  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* doc/man/sciv.6: Finished man page

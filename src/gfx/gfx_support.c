@@ -267,6 +267,8 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 	if (pxm->alpha_map)
 		alpha_mask = 0xff;
 	else {
+		int shift_nr = 0;
+
 		alpha_mask = mode->alpha_mask;
 		if (!alpha_mask && (priority != GFX_NO_PRIORITY)) {
 			GFXERROR("Invalid alpha mode: both pxm->alpha_map and alpha_mask are white!\n");
@@ -276,13 +278,18 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 		if (alpha_mask) {
 			while (!(alpha_mask & 0xff)) {
 				alpha_mask >>= 8;
-				alpha++;
+				shift_nr++;
 			}
 			alpha_mask &= 0xff;
 		}
+
+#ifdef WORDS_BIGENDIAN
+		alpha += (mode->bytespp) - (shift_nr + 1);
+#else
+		alpha += shift_nr;
+#endif
 	}
 
-#define ALPHA_FACTOR1 0x81
 	if (alpha_mask & 0xff)
 		alpha_min = ((alpha_mask * gfx_crossblit_alpha_threshold) >> 8) & alpha_mask;
 	else
