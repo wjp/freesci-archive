@@ -177,11 +177,6 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			s->sfx_driver->command(s, SOUND_COMMAND_DISPOSE_HANDLE, obj, 0);
 			break;
 
-		case _K_SOUND_SETON:
-
-			s->sfx_driver->command(s, SOUND_COMMAND_SET_MUTE, obj, 0);
-			break;
-
 		case _K_SOUND_STOP:
 
 			s->sfx_driver->command(s, SOUND_COMMAND_STOP_HANDLE, obj, 0);
@@ -197,10 +192,18 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			s->sfx_driver->command(s, SOUND_COMMAND_RESUME_HANDLE, obj, 0);
 			break;
 
+		case _K_SOUND_SETON:
+		  /* 0 = MUTE, 1 = OK. */
+			s->sfx_driver->command(s, SOUND_COMMAND_SET_MUTE, obj, 0);
+			break;
+
 		case _K_SOUND_VOLUME:
 
-			s->acc = 0xc; /* FIXME */
-			break;
+		        /* range from 0x0 to 0xf */
+		        /* parameter optional.  set to -1 if just query. */
+		        obj = UPARAM_OR_ALT(1, -1);
+		        s->acc = s->sfx_driver->command(s, SOUND_COMMAND_SET_VOLUME, 0, obj);
+		        break;
 
 		case _K_SOUND_UPDATE:
 

@@ -111,6 +111,9 @@ typedef struct _state
 	int sound_pipe_events[2]; /* Sound events returned by the server: Engine <= Sound server */
 	int sound_pipe_debug[2]; /* Text pipeline for debug data Engine: <= Sound server */
 
+	int sound_volume; /* 0x0 -> 0xf Current volume of sound system */
+ 	int sound_mute; /* 0 = not, else == saved value */
+
 	byte restarting_flags; /* Flags used for restarting */
 	byte have_mouse_flag;  /* Do we have a hardware pointing device? */
 

@@ -275,11 +275,9 @@ sound_command(state_t *s, int command, int handle, int parameter)
   case SOUND_COMMAND_PLAY_HANDLE:
   case SOUND_COMMAND_SET_LOOPS:
   case SOUND_COMMAND_DISPOSE_HANDLE:
-  case SOUND_COMMAND_SET_MUTE:
   case SOUND_COMMAND_STOP_HANDLE:
   case SOUND_COMMAND_SUSPEND_HANDLE:
   case SOUND_COMMAND_RESUME_HANDLE:
-  case SOUND_COMMAND_SET_VOLUME:
   case SOUND_COMMAND_RENICE_HANDLE:
   case SOUND_COMMAND_SHUTDOWN:
   case SOUND_COMMAND_MAPPINGS:
@@ -289,6 +287,28 @@ sound_command(state_t *s, int command, int handle, int parameter)
   case SOUND_COMMAND_RESUME_SOUND:
   case SOUND_COMMAND_STOP_ALL:
   case SOUND_COMMAND_GET_NEXT_EVENT:
+    write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
+    return 0;
+
+    /* set the sound volume. */
+  case SOUND_COMMAND_SET_VOLUME:
+    if (parameter > -1) { /* only set if != -1 */
+      s->sound_volume = parameter;
+      write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
+    }
+    return parameter;
+
+  case SOUND_COMMAND_SET_MUTE:
+    if (parameter == 0) {  // ie mute
+      s->sound_mute = s->sound_volume;
+      s->sound_volume = 0;
+    } else {  // restore sound
+      s->sound_volume = s->sound_mute;
+      s->sound_mute = 0;
+    }
+    /* let's send a volume change across the wire */
+    event.signal = SOUND_COMMAND_SET_VOLUME;
+    event.value = s->sound_volume;
     write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
     return 0;
 
@@ -559,7 +579,6 @@ sound_eq_retreive_event(sound_eq_t *queue)
 
     if (!queue->last)
       queue->first = NULL;
-
     return retval;
   }
   else return NULL;

@@ -474,9 +474,14 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	      fprintf(ds, "Attempt to resume invalid handle %04x\n", event.handle);
 	    break;
 
+	    /* XXXX FIXME with real calls */
 	  case SOUND_COMMAND_SET_VOLUME:
+	    fprintf(ds, "Set volume to %d\n", event.value);
+	    break;
 	  case SOUND_COMMAND_SET_MUTE:
-	    break; /* Muahahaha! Not much to do here ;-) */
+	    fprintf(ds, "Called mute??? shold never happen\n");
+	    break;
+
 
 	  case SOUND_COMMAND_RENICE_HANDLE:
 

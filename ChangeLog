@@ -1,3 +1,13 @@
+2001-01-16  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/engine/ksound.h: Implemented _K_SOUND_VOLUME
+
+	* src/include/engine.h: Added volume/mute to game state
+
+	* src/sound/sound.c:  Implemented VOLUME and MUTE commands
+
+	* src/sound/soundserver_null.c:  Debug output on VOLUME & MUTE 
+
 2001-01-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/scicore/resource.c: Fixed memory leak in resource management
