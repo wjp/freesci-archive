@@ -47,7 +47,7 @@ void sm_init(seg_manager_t* self) {
 
 	self->id_seg_map = new_int_hash_map();
 	self->heap_size = DEFAULT_SCRIPTS;
-        self->heap = (mem_obj_t**) malloc (self->heap_size);
+        self->heap = (mem_obj_t**) malloc (self->heap_size * sizeof(mem_obj_t *));
 
 	/*  initialize the heap pointers*/
 	for (i = 0; i < self->heap_size; i++) {

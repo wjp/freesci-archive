@@ -294,8 +294,7 @@ typedef struct {
 
 	selector_t selector; /* The selector which was used to call or -1 if not applicable */
 	int origin;   /* The stack frame position the call was made from, or -1 if it
-		      ** was the initial call.
-		      */
+		      ** was the initial call.  */
 	byte type; /* EXEC_STACK_TYPE* */
 
 } exec_stack_t;
