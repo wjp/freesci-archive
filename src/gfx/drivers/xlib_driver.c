@@ -338,8 +338,10 @@ xlib_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 		S->gc_values.line_width = linewidth;
 		S->gc_values.line_style = (line_style == GFX_LINE_STYLE_NORMAL)?
 			LineSolid : LineOnOffDash;
+		S->gc_values.cap_style = CapProjecting;
 
-		XChangeGC(S->display, S->gc, GCLineWidth | GCLineStyle | GCForeground, &(S->gc_values));
+		XChangeGC(S->display, S->gc, GCLineWidth | GCLineStyle | GCForeground | GCCapStyle, &(S->gc_values));
+
 		XASS(XDrawLine(S->display, S->visual[1], S->gc, line.x, line.y,
 			       line.x + line.xl, line.y + line.yl));
 	}
@@ -353,7 +355,7 @@ xlib_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 
 		linewidth--;
 		for (xc = -linewidth; xc++; xc <= linewidth)
-			for (yc = -linewidth; xc++; xc <= linewidth) {
+			for (yc = -linewidth; yc++; yc <= linewidth) {
 				newline.x = line.x + xc;
 				newline.y = line.y + yc;
 				gfx_draw_line_pixmap_i(S->priority[0], newline, color.priority);
@@ -705,25 +707,30 @@ x_map_key(gfx_driver_t *drv, int keycode)
 	case XK_KP_Decimal: return SCI_K_DELETE;
 	case XK_KP_0:
 	case XK_KP_Insert: return SCI_K_INSERT;
+	case XK_End:
 	case XK_KP_End:
 	case XK_KP_1: return SCI_K_END;
 	case XK_Down:
 	case XK_KP_Down:
 	case XK_KP_2: return SCI_K_DOWN;
+	case XK_Page_Down:
 	case XK_KP_Page_Down:
 	case XK_KP_3: return SCI_K_PGDOWN;
 	case XK_Left:
 	case XK_KP_Left:
 	case XK_KP_4: return SCI_K_LEFT;
+	case XK_KP_Begin:
 	case XK_KP_5: return SCI_K_CENTER;
 	case XK_Right:
 	case XK_KP_Right:
 	case XK_KP_6: return SCI_K_RIGHT;
+	case XK_Home:
 	case XK_KP_Home:
 	case XK_KP_7: return SCI_K_HOME;
 	case XK_Up:
 	case XK_KP_Up:
 	case XK_KP_8: return SCI_K_UP;
+	case XK_Page_Up:
 	case XK_KP_Page_Up:
 	case XK_KP_9: return SCI_K_PGUP;
 

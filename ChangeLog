@@ -1,3 +1,8 @@
+2001-02-15  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/xlib_driver.c (xlib_draw_line): Fixed typo
+	causing endless loop
+
 2001-02-14  Solomon Peachy <pizza@shaftnet.org>
 
         * src/sound/soundserver_null.c
