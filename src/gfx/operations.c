@@ -1591,6 +1591,10 @@ gfxop_get_event(gfx_state_t *state, unsigned int mask)
 			if (event.type) {
 				*seekerp = sci_malloc(sizeof(gfx_input_event_t));
 				(*seekerp)->next = NULL;
+
+				event.data = (char) (event.data);
+				/* Clip illegal bits */
+
 				(*seekerp)->event = event;
 				seekerp = &((*seekerp)->next);
 			}

@@ -1,3 +1,13 @@
+2002-04-08  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (set_base): Removed obsolete debug messages
+
+	* src/engine/kstring.c (kFormat): Interpret "%x"
+
+	* src/gfx/operations.c (gfxop_get_event): Added typecast to 'char'
+	for values retreived from drivers to work around problems with
+	drivers reporting unexpected values
+
 2002-04-02  Lars Skovlund  <lskovlun@image.dk>
 
 	* SCI01: Implicitly call moveDone when a Bresenham operation is

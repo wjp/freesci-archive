@@ -437,133 +437,138 @@ kReadNumber(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int *arguments;
-  int dest = UPARAM(0);
-  char *target = ((char *) s->heap) + dest;
-  int position = UPARAM(1);
-  int index = UPARAM(2);
-  char *source;
-  int mode = 0;
-  int paramindex = 0; /* Next parameter to evaluate */
-  char xfer;
-  int i;
-  int startarg;
-  int str_leng = 0; /* Used for stuff like "%13s" */
-  int unsigned_var = 0;
+	int *arguments;
+	int dest = UPARAM(0);
+	char *target = ((char *) s->heap) + dest;
+	int position = UPARAM(1);
+	int index = UPARAM(2);
+	char *source;
+	int mode = 0;
+	int paramindex = 0; /* Next parameter to evaluate */
+	char xfer;
+	int i;
+	int startarg;
+	int str_leng = 0; /* Used for stuff like "%13s" */
+	int unsigned_var = 0;
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  source = kernel_lookup_text(s, position, index);
+	source = kernel_lookup_text(s, position, index);
 
-  SCIkdebug(SCIkSTRINGS, "Formatting \"%s\"\n", source);
+	SCIkdebug(SCIkSTRINGS, "Formatting \"%s\"\n", source);
 
-  if (position < 1000) {
-    startarg = 3; /* First parameter to use for formatting */
-  } else  { /* position >= 1000 */
-    startarg = 2;
-  }
+	if (position < 1000) {
+		startarg = 3; /* First parameter to use for formatting */
+	} else  { /* position >= 1000 */
+		startarg = 2;
+	}
 
-  arguments = sci_malloc(sizeof(int) * argc);
+	arguments = sci_malloc(sizeof(int) * argc);
 #ifdef SATISFY_PURIFY
-  memset(arguments, 0, sizeof(int) * argc);
+	memset(arguments, 0, sizeof(int) * argc);
 #endif
 
-  for (i = startarg; i < argc; i++)
-    arguments[i-startarg] = UPARAM(i); /* Parameters are copied to prevent overwriting */
+	for (i = startarg; i < argc; i++)
+		arguments[i-startarg] = UPARAM(i); /* Parameters are copied to prevent overwriting */
 
-  while ((xfer = *source++)) {
-    if (xfer == '%') {
-      if (mode == 1)
-	*target++ = '%'; /* Literal % by using "%%" */
-      else {
-	mode = 1;
-	str_leng = 0;
-      }
-    }
-    else { /* xfer != '%' */
-      if (mode == 1) {
-	switch (xfer) {
-	case 's': { /* Copy string */
-	  char *tempsource = kernel_lookup_text(s, arguments[paramindex], arguments[paramindex + 1]);
-	  int extralen = str_leng - strlen(tempsource);
+	while ((xfer = *source++)) {
+		if (xfer == '%') {
+			if (mode == 1)
+				*target++ = '%'; /* Literal % by using "%%" */
+			else {
+				mode = 1;
+				str_leng = 0;
+			}
+		} else { /* xfer != '%' */
+			if (mode == 1) switch (xfer) {
+			case 's': { /* Copy string */
+				char *tempsource = kernel_lookup_text(s, arguments[paramindex], arguments[paramindex + 1]);
+				int extralen = str_leng - strlen(tempsource);
 
-	  if (arguments[paramindex] > 1000) /* Heap address? */
-	    paramindex++;
-	  else
-	    paramindex += 2; /* No, text resource address */
+				if (arguments[paramindex] > 1000) /* Heap address? */
+					paramindex++;
+				else
+					paramindex += 2; /* No, text resource address */
 
-	  while (extralen-- > 0)
-	    *target++ = ' '; /* Format into the text */
+				while (extralen-- > 0)
+					*target++ = ' '; /* Format into the text */
 
-	  while ((*target++ = *tempsource++));
+				while ((*target++ = *tempsource++));
 
-	  target--; /* Step back on terminator */
-	  mode = 0;
+				target--; /* Step back on terminator */
+				mode = 0;
+			}
+				break;
+
+			case 'c': { /* insert character */
+				while (str_leng-- > 1)
+					*target++ = ' '; /* Format into the text */
+
+				*target++ = arguments[paramindex++];
+				mode = 0;
+			}
+				break;
+
+			case 'x':
+			case 'u': unsigned_var = 1;
+			case 'd': { /* Copy decimal */
+				int templen;
+				char *format_string = "%d";
+
+				if (xfer == 'x')
+					format_string = "%x";
+
+				if (!unsigned_var)
+					if (arguments[paramindex] & 0x8000)
+						/* sign extend */
+						arguments[paramindex] = (~0xffff) | arguments[paramindex];
+
+				templen = sprintf(target, format_string, arguments[paramindex++]);
+
+				unsigned_var = 0;
+
+				if (templen < str_leng) {
+					int diff = str_leng - templen;
+					char *dest = target + str_leng - 1;
+
+					while (templen--) {
+						*dest = *(dest - diff);
+						dest--;
+					} /* Copy the number */
+
+					while (diff--)
+						*dest-- = ' ';
+					/* And fill up with blanks */
+
+					templen = str_leng;
+				}
+
+				target += templen;
+				mode = 0;
+			}
+				break;
+			default:
+				if (isdigit(xfer))
+					str_leng = (str_leng * 10)
+						+ (xfer - '0');
+				else {
+					*target = '%';
+					target++;
+					*target = xfer;
+					target++;
+					mode = 0;
+				} /* if (!isdigit(xfer)) */
+			} else { /* mode != 1 */
+				*target = xfer;
+				target++;
+			}
+		}
 	}
-	break;
 
-	case 'c': { /* insert character */
-	  while (str_leng-- > 1)
-	    *target++ = ' '; /* Format into the text */
+	free(arguments);
 
-	  *target++ = arguments[paramindex++];
-	  mode = 0;
-	}
-	break;
-
-	case 'u': unsigned_var = 1;
-	case 'd': { /* Copy decimal */
-	  int templen;
-
-	  if (!unsigned_var)
-	    if (arguments[paramindex] & 0x8000)
-	      arguments[paramindex] = (~0xffff) | arguments[paramindex]; /* sign extend */
-
-	  templen = sprintf(target, "%d", arguments[paramindex++]);
-
-	  unsigned_var = 0;
-
-	  if (templen < str_leng) {
-	    int diff = str_leng - templen;
-	    char *dest = target + str_leng - 1;
-
-	    while (templen--) {
-	      *dest = *(dest - diff);
-	      dest--;
-	    } /* Copy the number */
-
-	    while (diff--)
-	      *dest-- = ' '; /* And fill up with blanks */
-
-	    templen = str_leng;
-	  }
-
-	  target += templen;
-	  mode = 0;
-	}
-	break;
-	default:
-	  if (isdigit(xfer))
-	    str_leng = (str_leng * 10) + (xfer - '0');
-	  else {
-	    *target = '%';
-	    target++;
-	    *target = xfer;
-	    target++;
-	    mode = 0;
-	  } /* if (!isdigit(xfer)) */
-	}
-      } else { /* mode != 1 */
-	*target = xfer;
-	target++;
-      }
-    }
-  }
-
-  free(arguments);
-
-  *target = 0; /* Terminate string */
-  s->acc = dest; /* Return target addr */
+	*target = 0; /* Terminate string */
+	s->acc = dest; /* Return target addr */
 }
 
 
