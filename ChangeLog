@@ -1,3 +1,10 @@
+2001-01-27  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/gfx_tools.h: Removed 'inline' in function declaration
+
+	* src/gfx/gfx_line.c (DRAWLINE_FUNC): Fixed line drawing on big-endian
+	processors
+
 2001-01-25  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* doc/man/sciv.6: Updated man page for the 0.3.1 release

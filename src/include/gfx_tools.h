@@ -57,7 +57,7 @@ gfx_new_mode(int xfact, int yfact, int bytespp, unsigned int red_mask, unsigned 
 */
 
 
-inline void
+void
 gfx_clip_box_basic(rect_t *box, int maxx, int maxy);
 /* Clips a rect_t
 ** Parameters: (rect_t *) box: Pointer to the box to clip

@@ -9,7 +9,7 @@
 #define YYTEXT_POINTER 1
 
 #define PACKAGE "freesci"
-#define VERSION "0.3.0.frozen"
+#define VERSION "0.3.0.frozen-1"
 #define HAVE_LIBGGI 1
 #define HAVE_LIBPNG 1
 #define HAVE_CURSES 1
@@ -82,7 +82,7 @@
 #define PACKAGE "freesci"
 
 /* Version number of package */
-#define VERSION "0.3.0.frozen"
+#define VERSION "0.3.0.frozen-1"
 
 /* Define if using the dmalloc debugging malloc package */
 /* #undef WITH_DMALLOC */

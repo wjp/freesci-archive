@@ -252,6 +252,7 @@ AC_ARG_WITH(png-libraries,
     [  _ac_png_libraries="-L$withval"
     ])
 
+OLDLIBS="$LIBS"
 LIBS="$LIBS -lpng -lm"
 AC_CHECK_INCLUDE_PATH([png.h],[$_ac_png_includes],[], ac_png_includes)
 AC_CHECK_LINK_PATH([png_info_init((png_infop)0);],$_ac_png_libraries,["-lpng"],
@@ -268,6 +269,7 @@ fi
 if test "$ac_png_includes" = no || test "$ac_png_libraries" = no; then
 
 	AC_MSG_RESULT([failed])
+	LIBS="$OLDLIBS"
 	ac_png_libraries=""
 	ac_png_includes=""
 else
