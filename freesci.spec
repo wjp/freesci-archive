@@ -1,6 +1,6 @@
 Summary: A portable interpreter for SCI games
 Name: freesci
-Version: dev
+Version: 0.3.2-devel
 Release: 1
 Group: Games/Adventure
 Copyright: GPL

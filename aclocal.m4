@@ -104,6 +104,9 @@ _ac_ggi_includes="-I/usr/include -I/usr/local/include"
 _ac_ggi_libraries="-L/usr/lib -L/usr/local/lib -L/usr/local/ggi/lib"
 
 
+AC_ARG_WITH(ggi,
+    [  --without-ggi           Don't build the ggi driver])
+
 AC_ARG_WITH(ggi-dir,
     [  --with-ggi-dir          where the root of ggi is installed ],
     [  _ac_ggi_includes="-I$withval"/include
@@ -120,25 +123,32 @@ AC_ARG_WITH(ggi-libraries,
     [  _ac_ggi_libraries="-L$withval"
     ])
 
-AC_CHECK_INCLUDE_PATH([ggi/ggi.h],[$_ac_ggi_includes],[#include <ggi/gii.h>], ac_ggi_includes)
-AC_CHECK_LINK_PATH([ggiInit();],$_ac_ggi_libraries,["-lggi"],
-		 [$ac_ggi_includes -lgii -lgg],[#include <ggi/ggi.h>
-#include <ggi/gii.h>], ac_ggi_libraries)
-
-if test "$ac_ggi_includes" = no || test "$ac_ggi_libraries" = no; then
-
-	AC_MSG_RESULT([failed])
+if test x"$with_ggi" = xno; then
+	AC_MSG_RESULT([disabled]);
 	ac_ggi_libraries=""
 	ac_ggi_includes=""
 else
-	AC_MSG_RESULT([found]);
 
-	ac_ggi_libraries="$ac_ggi_libraries -lgii -lgg"
-	ac_graphics_ggi_libfile="graphics_ggi.c"
-	AC_SUBST(ac_graphics_ggi_libfile)
-	ac_graphics_ggi_libobjects="graphics_ggi.o"
-	AC_SUBST(ac_graphics_ggi_libobjects)
-	AC_DEFINE(HAVE_LIBGGI)
+	AC_CHECK_INCLUDE_PATH([ggi/ggi.h],[$_ac_ggi_includes],[#include <ggi/gii.h>], ac_ggi_includes)
+	AC_CHECK_LINK_PATH([ggiInit();],$_ac_ggi_libraries,["-lggi"],
+			 [$ac_ggi_includes -lgii -lgg],[#include <ggi/ggi.h>
+#include <ggi/gii.h>], ac_ggi_libraries)
+
+	if test "$ac_ggi_includes" = no || test "$ac_ggi_libraries" = no; then
+
+		AC_MSG_RESULT([failed])
+		ac_ggi_libraries=""
+		ac_ggi_includes=""
+	else
+		AC_MSG_RESULT([found]);
+
+		ac_ggi_libraries="$ac_ggi_libraries -lgii -lgg"
+		ac_graphics_ggi_libfile="graphics_ggi.c"
+		AC_SUBST(ac_graphics_ggi_libfile)
+		ac_graphics_ggi_libobjects="graphics_ggi.o"
+		AC_SUBST(ac_graphics_ggi_libobjects)
+		AC_DEFINE(HAVE_LIBGGI)
+	fi
 fi
 
 AC_SUBST(ac_ggi_includes)

@@ -2,7 +2,7 @@
 AC_PREREQ(2.13)
 AC_INIT(acinclude.m4)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(freesci, 0.3.2a)
+AM_INIT_AUTOMAKE(freesci, 0.3.2-devel)
 
 AC_PROG_CC
 AC_PROG_RANLIB
@@ -24,7 +24,14 @@ AC_CHECK_SIZEOF(long)
 AC_CHECK_FUNCS(pipe socketpair fork sched_yield memfrob ffs getopt_long isblank usleep)
 AM_PATH_ALSA(0.5.0, [AC_DEFINE(HAVE_ALSA)], [echo >/dev/null])
 AC_PATH_GGI
-AM_PATH_SDL(1.1.8, [AC_DEFINE(HAVE_SDL)])
+
+AC_ARG_WITH(sdl, [  --without-sdl           Do not build the SDL driver])
+if test x"$with_sdl" != xno; then
+	AM_PATH_SDL(1.1.8, [AC_DEFINE(HAVE_SDL)])
+else
+	AC_MSG_CHECKING([for SDL])
+	AC_MSG_RESULT([disabled]) # Well, we should give some kind of feedback...
+fi
 
 AC_PATH_CURSES
 AC_PATH_XTRA
@@ -89,8 +96,7 @@ AM_WITH_DMALLOC
 
 AC_C_PARAMETRIZED_BIGENDIAN
 
-FREESCI_VERSION="`(cd $srcdir ; pwd) |sed -e 's/.*-//'`"
-AC_SUBST(FREESCI_VERSION)
+AC_SUBST(VERSION)
 
 AC_OUTPUT(Makefile    \
 	debian/Makefile \

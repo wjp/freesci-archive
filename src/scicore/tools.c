@@ -421,3 +421,66 @@ sci_get_from_queue(sci_queue_t *queue, int *type)
 	}
 	return NULL;
 }
+
+
+/*-- Yielding to the scheduler --*/
+
+#ifdef HAVE_SCHED_YIELD
+#  include <sched.h>
+
+void
+sci_sched_yield()
+{
+	sched_yield();
+}
+
+#else
+
+void
+sci_sched_yield()
+{
+	sleep(0);
+}
+
+#endif /* !HAVE_SCHED_YIELD */
+
+
+/*-- Safe memory allocation --*/
+
+#ifdef SCI_SAFE_ALLOC
+
+#  define SAFE_ALLOC_FUN(f)                                                    \
+{                                                                              \
+	int print = 1;                                                         \
+	void *retval = NULL;                                                   \
+                                                                               \
+	while (!retval) {                                                      \
+		retval = f;                                                    \
+                                                                               \
+		if (!retval) {                                                 \
+			if (print) {                                           \
+				fprintf(stderr,"Low on memory; waiting...\n"); \
+				print = 0;                                     \
+			}                                                      \
+			sleep(1);                                              \
+		}                                                              \
+	}                                                                      \
+                                                                               \
+	return retval;                                                         \
+}
+
+void *
+sci_malloc(size_t size)
+     SAFE_ALLOC_FUN(malloc(size))
+
+void *
+sci_calloc(size_t nmemb, size_t count)
+     SAFE_ALLOC_FUN(calloc(nmemb, count))
+
+void *
+sci_realloc(void *ptr, size_t size)
+     SAFE_ALLOC_FUN(realloc(ptr, size))
+
+#  undef SAFE_ALLOC_FUN
+
+#endif

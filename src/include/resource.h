@@ -44,6 +44,9 @@
 
 /*#define _SCI_RESOURCE_DEBUG */
 /*#define _SCI_DECOMPRESS_DEBUG*/
+#ifndef WITH_DMALLOC
+#  define SCI_SAFE_ALLOC /* Undefine for debugging */
+#endif
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -328,6 +331,58 @@ sci_get_homedir();
 ** Parameters: (void)
 ** Returns   : (char *) Pointer to a static buffer containing the user's home,
 **                      or NULL if there is no such thing.
+*/
+
+void
+sci_sched_yield();
+/* Yields the running process/thread to the scheduler
+** Parameters: (void)
+** Returns   : after a while.
+*/
+
+
+#ifdef SCI_SAFE_ALLOC
+
+void *
+sci_malloc(size_t size);
+/* Allocates the specified amount of memory
+** Parameters: (size_t) size: Amount of bytes to allocate
+** Returns   : (void *) A pointer to the allocated memory chunk
+** If not enough memory is available, this function suspends execution and
+** waits for it to become available again.
+*/
+
+void *
+sci_calloc(size_t nmemb, size_t count);
+/* Allocates nmemb*count bytes of zeroed-out memory
+** Parameters: (size_t, size_t) nmemb, count: Two factors describing the amount
+**                                            of memory
+** Returns   : (void *) A pointer to the allocated memory chunk
+** See 'scialloc()' for more information.
+*/
+
+void *
+sci_realloc(void *ptr, size_t size);
+/* Increases the size of an allocated memory chunk
+** Parameters: (void *) ptr: The original pointer
+**             (size_t) size: New size of the memory chunk
+** Returns   : (void *) A possibly new pointer, containing 'size'
+**             bytes of memory and everything contained in the original 'ptr'
+**             (possibly minus some trailing data if the new memory area is
+**             smaller than the old one).
+** See 'scialloc()' for more information.
+*/
+
+#else
+#  define sci_malloc(size) malloc(size)
+#  define sci_calloc(nmemb, size) calloc(nmemb, size)
+#  define sci_realloc(ptr, size) realloc(ptr size)
+#endif
+
+#define sci_free(ptr) free(ptr)
+/* Frees previously allocated memory chunks
+** Parameters: (void *) ptr: The pointer to free
+** Returns   : (void)
 */
 
 

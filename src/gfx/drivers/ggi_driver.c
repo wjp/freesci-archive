@@ -40,7 +40,7 @@
 #include <ctype.h>
 
 
-#define GGI_DRIVER_VERSION "0.2"
+#define GGI_DRIVER_VERSION "0.3"
 
 #define GFX_GGI_DEBUG
 
@@ -94,6 +94,9 @@ typedef struct {
 
 	gfx_pixmap_t *priority_maps[2];
 	ggi_visual_t priority_visuals[2]; /* Visuals for the maps */
+
+	int x_blank, y_blank;
+	int x_blank2, y_blank2;
 
 } gfx_ggi_struct_t;
 
@@ -237,6 +240,7 @@ ggi_init(gfx_driver_t *drv)
 {
 	gfx_ggi_struct_t *meta;
 	ggi_mode mode;
+	int x_blank, y_blank;
 	const ggi_pixelformat *pixelformat;
 	mode.frames = 3;
 	mode.visible.x = mode.visible.y = mode.virt.x = mode.virt.y
@@ -268,8 +272,10 @@ ggi_init(gfx_driver_t *drv)
 		return GFX_FATAL;
 	}
 
-	mode.visible.x -= (mode.visible.x % 320);
-	mode.visible.y -= (mode.visible.y % 200);
+	x_blank = mode.visible.x % 320;
+	y_blank = mode.visible.y % 200;
+	mode.visible.x -= x_blank;
+	mode.visible.y -= y_blank;
 
 	if (mode.visible.x == 0)
 		mode.visible.x = 320;
@@ -288,10 +294,26 @@ ggi_init(gfx_driver_t *drv)
 
 	if (ggiSetMode(meta->vis, &mode)) {
 		sciprintf("GFXGGI: Could not set proposed graphics mode!\n");
-		free(meta);
-		ggiExit();
-		return GFX_FATAL;
-	}
+
+		mode.virt.x = mode.size.x = mode.visible.x += x_blank;
+		mode.virt.y = mode.size.y = mode.visible.y += y_blank;
+
+		DEBUG_BASIC("Attempting to create augmented mode with %dx%d, graphtype=%08x, %d frames\n",
+			    mode.visible.x, mode.visible.y, mode.graphtype, mode.frames);
+
+		if (ggiSetMode(meta->vis, &mode)) {
+			sciprintf("GFXGGI: Could not set proposed graphics mode!\n");
+			free(meta);
+			ggiExit();
+			return GFX_FATAL;
+		}
+
+		ggiSetOrigin(meta->vis, (x_blank >> 1), (y_blank >> 1));
+		
+		mode.virt.x = mode.size.x = mode.visible.x -= x_blank;
+		mode.virt.y = mode.size.y = mode.visible.y -= y_blank;
+	} else
+		x_blank = y_blank = 0;
 
 	meta->frames = mode.frames;
 
@@ -341,6 +363,11 @@ ggi_init(gfx_driver_t *drv)
 
 	init_input_ggi();
 	flags = 0;
+
+	STATE->x_blank = x_blank;
+	STATE->y_blank = y_blank;
+	STATE->x_blank2 = x_blank >> 1;
+	STATE->y_blank2 = y_blank >> 1;
 
 	return GFX_OK;
 }
@@ -440,6 +467,27 @@ ggi_draw_line(gfx_driver_t *drv, rect_t line, gfx_color_t color,
 	if (!line.xl && !line.yl)
 		return ggi_draw_filled_rect(drv, gfx_rect(rx, ry, xw, yw), color, color, GFX_SHADE_FLAT);
 
+	if (color.mask & GFX_MASK_PRIORITY) {
+		ggi_visual_t privis = STATE->priority_visuals[GFX_BUFFER_BACK];
+
+		ggiSetGCForeground(privis, color.priority);
+
+		for (xc = 0; xc < xw; xc++)
+			ggiDrawLine(privis, rx + xc, ry, endx + xc, endy);
+		if (yw > 0)
+			for (xc = 0; xc < xw; xc++)
+				ggiDrawLine(privis, rx + xc, ry + yw - 1, endx + xc, endy + yw - 1);
+
+		if (yw > 1) {
+			for (yc = 1; yc < yw-1; yc++)
+				ggiDrawLine(privis, rx, ry + yc, endx, endy + yc);
+
+			if (xw > 0)
+				for (yc = 1; yc < yw-1; yc++)
+					ggiDrawLine(privis, rx + xw - 1, ry + yc, endx + xw - 1, endy + yc);
+		}
+	}
+
 	if (color.mask & GFX_MASK_VISUAL) {
 		ggi_visual_t vis;
 
@@ -462,27 +510,6 @@ ggi_draw_line(gfx_driver_t *drv, rect_t line, gfx_color_t color,
 			if (xw > 0)
 				for (yc = 1; yc < yw-1; yc++)
 					ggiDrawLine(vis, rx + xw - 1, ry + yc, endx + xw - 1, endy + yc);
-		}
-	}
-
-	if (color.mask & GFX_MASK_PRIORITY) {
-		ggi_visual_t privis = STATE->priority_visuals[GFX_BUFFER_BACK];
-
-		ggiSetGCForeground(privis, color.priority);
-
-		for (xc = 0; xc < xw; xc++)
-			ggiDrawLine(privis, rx + xc, ry, endx + xc, endy);
-		if (yw > 0)
-			for (xc = 0; xc < xw; xc++)
-				ggiDrawLine(privis, rx + xc, ry + yw - 1, endx + xc, endy + yw - 1);
-
-		if (yw > 1) {
-			for (yc = 1; yc < yw-1; yc++)
-				ggiDrawLine(privis, rx, ry + yc, endx, endy + yc);
-
-			if (xw > 0)
-				for (yc = 1; yc < yw-1; yc++)
-					ggiDrawLine(privis, rx + xw - 1, ry + yc, endx + xw - 1, endy + yc);
 		}
 	}
 
@@ -655,10 +682,10 @@ ggi_update(gfx_driver_t *drv, rect_t src, point_t dest, gfx_buffer_t buffer)
 		ggiSetWriteFrame(VISUAL, 0);
 
 		if (STATE->frames < 2)
-			ggiCrossBlit(STATE->back_vis, sx, sy, xl, yl, VISUAL, dx, dy);
+			ggiCrossBlit(STATE->back_vis, sx, sy, xl, yl, VISUAL, dx + STATE->x_blank2, dy + STATE->y_blank2);
 		else {
 			ggiSetReadFrame(VISUAL, 1);
-			ggiCopyBox(VISUAL, sx, sy, xl, yl, dx, dy);
+			ggiCopyBox(VISUAL, sx, sy, xl, yl, dx + STATE->x_blank2, dy + STATE->y_blank2);
 		}
 
 		break;
@@ -911,8 +938,8 @@ ggi_get_event(gfx_driver_t *drv)
 				return retval; 
       
 			case evPtrAbsolute:
-				drv->pointer_x = event.pmove.x;
-				drv->pointer_y = event.pmove.y;
+				drv->pointer_x = event.pmove.x - STATE->x_blank2;
+				drv->pointer_y = event.pmove.y - STATE->y_blank2;
 				continue;
 	
 			case evPtrRelative:
@@ -962,8 +989,8 @@ ggi_usleep(gfx_driver_t* drv, int usec)
 			} return GFX_OK;
 			case evPtrAbsolute:
 			{
-				drv->pointer_x=e.pmove.x;
-				drv->pointer_y=e.pmove.y;
+				drv->pointer_x=e.pmove.x - STATE->x_blank2;
+				drv->pointer_y=e.pmove.y - STATE->y_blank2;
 			} return GFX_OK;
 			}
 		}

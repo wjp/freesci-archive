@@ -1,3 +1,26 @@
+2001-05-12  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/tools.c
+	* src/include/resource.h: Added sci_malloc(), sci_calloc(),
+	sci_realloc(), sci_free() global API functions
+
+	* src/scicore/tools.c: Added sci_sched_yield() function
+
+	* configure.in: Added --without-sdl and --without-ggi options
+
+	* src/scicore/decompress0.c (decrypt1): Applied Nikita's patch to
+	strengthen error detection
+
+2001-05-11  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/ggi_driver.c (ggi_init): GGI driver now supports
+	arbitrary resolutions if it can't get the one it wants
+
+2001-05-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/resource/sci_pic_0.c (gfxr_dither_pic0): Fixed dither16 to
+	dither "the other way 'round", to match Sierra SCI.
+
 2001-05-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/sound.c (sci_midi_command): Muted the 0xd1 command

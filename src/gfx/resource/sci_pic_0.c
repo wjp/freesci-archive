@@ -2143,9 +2143,9 @@ gfxr_dither_pic0(gfxr_pic_t *pic, int dmode, int pattern)
 
 			case GFXR_DITHER_MODE_D16:
 				if (selection)
-					*data = (*data & 0xf);
-				else
 					*data = (*data & 0xf0) >> 4;
+				else
+					*data = (*data & 0xf);
 				break;
 
 			case GFXR_DITHER_MODE_D256:

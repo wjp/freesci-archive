@@ -96,12 +96,41 @@ int decrypt1(guint8 *dest, guint8 *src, int length, int complength)
 				int i;
 
 				if (token > 0xff) {
+				  if (token >= tokenctr)
+				    {
+#ifdef _SCI_DECOMPRESS_DEBUG
+				      fprintf(stderr, "decrypt1: Bad token %x!\n", token);
+#endif
+				      /* Well this is really bad  */
+				      /* May be it should throw something like SCI_ERROR_DECOMPRESSION_INSANE */
+				    } else
+				      {
 					tokenlastlength = tokenlengthlist[token]+1;
+					if (destctr+tokenlastlength>length)
+					  {
+#ifdef _SCI_DECOMPRESS_DEBUG
+
+					    /* For me this seems a normal situation, It's necessary to handle it*/
+					    printf ("decrypt1: Trying to write beyond the end of array(len=%d, destctr=%d, tok_len=%d)!\n",
+						    length, destctr, tokenlastlength);
+#endif
+
+					    for (; destctr<length; destctr++)
+					      dest[destctr++] = dest [tokenlist[token]+i];
+					  } else
 					for (i=0; i< tokenlastlength; i++) {
 						dest[destctr++] = dest[tokenlist[token]+i];
 					}
+				      }
 				} else {
 					tokenlastlength = 1;
+				  if (destctr >= length)
+				    {
+#ifdef _SCI_DECOMPRESS_DEBUG
+				      printf ("decrypt1: Try to write sing byte beyound end of array!\n"); 
+#endif
+				      //May be it sould throw decompression SCI_ERROR_DECOMPRESSION_INSANE
+				    } else
 					dest[destctr++] = token;
 				}
 

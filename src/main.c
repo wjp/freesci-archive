@@ -40,9 +40,6 @@
 #ifdef HAVE_FORK
 #  include <sys/wait.h>
 #endif
-#ifdef HAVE_SCHED_YIELD
-#  include <sched.h>
-#endif /* HAVE_SCHED_YIELD */
 
 #ifdef _MSC_VER
 #define extern __declspec(dllimport) extern
@@ -80,12 +77,6 @@
 #define sleep Sleep
 #define strcasecmp stricmp
 #endif
-
-#ifndef HAVE_SCHED_YIELD
-#define sched_yield() sleep(1)
-/* Neither NetBSD nor Win32 have this function, although it's in POSIX 1b */
-#endif /* !HAVE_SCHED_YIELD */
-
 
 #define ACTION_PLAY 0
 #define ACTION_LIST_SAVEGAMES 1
@@ -983,7 +974,7 @@ main(int argc, char** argv)
 			fprintf(stderr,"Sound server initialization failed- aborting.\n");
 			return 1;
 		}
-		sched_yield(); /* Specified by POSIX 1b. If it doesn't work on your
+		sci_sched_yield(); /* Specified by POSIX 1b. If it doesn't work on your
 			       ** system, make up an #ifdef'd version of it above.
 			       */
 		gamestate->sound_server->get_event(gamestate); /* Get init message */
