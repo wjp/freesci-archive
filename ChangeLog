@@ -1,5 +1,7 @@
 2001-07-25  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/kmovement.c (kDoAvoider): Fixed angle calculation
+	
 	* src/engine/kmovement.c (kDoAvoider): Initial DoAvoider()
 	implementation
 

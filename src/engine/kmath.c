@@ -55,14 +55,14 @@ get_angle(int xrel, int yrel)
 	if ((xrel == 0) && (yrel == 0))
 		return 0;
 	else
-		return (int) -(180.0/PI * atan2(yrel, xrel) + 0.5) + 180;
+		return (int) (180.0/PI * atan2(xrel, -yrel) + 0.5);
 }
 
 void
 kGetAngle(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	int xrel = PARAM(3) - PARAM(1);
-	int yrel = PARAM(2) - PARAM(0);
+	int xrel = PARAM(2) - PARAM(0);
+	int yrel = PARAM(3) - PARAM(1);
 
 	s->acc = get_angle(xrel, yrel);
 }
