@@ -72,6 +72,12 @@ struct _state;
 ** Old versions change the priority map one pixel earlier
 */
 
+#define SCI_VERSION_LTU_PRIORITY_14_ZONES SCI_VERSION(0,000,490)
+/* Uses 14 zones from 42 to 179 instead of 15 zones from 42 to 190, with
+** the last zone being unused.
+*/
+
+
 #define SCI_VERSION_FTU_NEW_SCRIPT_HEADER SCI_VERSION(0,000,397)
 /* Last version known not to do this: 0.000.343
 ** Old SCI versions used two word header for script blocks (first word equal

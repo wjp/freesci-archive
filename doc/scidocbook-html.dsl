@@ -26,7 +26,7 @@
 					  (make element gi: "center"
 						(make element gi: "b"
 						      (make element gi: "a"
-							    attributes: (list (list "href" "../index.html"))
+							    attributes: (list (list "href" "../index.shtml"))
 							    (make element gi: "font"
 								  attributes: (list (list "color" "ffff55"))
 								  (literal "Main")

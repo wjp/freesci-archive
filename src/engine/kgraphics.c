@@ -81,11 +81,6 @@
   if (s->visual) \
        s->visual->print(GFXW(s->visual), 0);
 
-static inline void
-handle_gfx_error(int line, char *file)
-{
-	exit(1); /* FIXME: Replace this with a longjmp() eventually */
-}
 
 #define GFX_ASSERT(x) { \
 	int val = !!(x); \
@@ -94,8 +89,7 @@ handle_gfx_error(int line, char *file)
 			SCIkwarn(SCIkWARNING, "GFX subsystem returned error on \"" #x "\"!\n"); \
 		else {\
                         SCIkwarn(SCIkERROR, "GFX subsystem fatal error condition on \"" #x "\"!\n"); \
-                        BREAKPOINT(); \
-			handle_gfx_error(__LINE__, __FILE__); \
+			vm_handle_fatal_error(s, __LINE__, __FILE__); \
 	        } \
         }\
 }
@@ -103,9 +97,9 @@ handle_gfx_error(int line, char *file)
 #define ASSERT(x) { \
        int val = !!(x); \
        if (!val) { \
-                        SCIkwarn(SCIkERROR, "GFX subsystem fatal error condition on \"" #x "\"!\n"); \
+                        SCIkwarn(SCIkERROR, "Fatal error condition on \"" #x "\"!\n"); \
                         BREAKPOINT(); \
-			handle_gfx_error(__LINE__, __FILE__); \
+			vm_handle_fatal_error(s, __LINE__, __FILE__); \
        } \
 }
 
@@ -166,7 +160,10 @@ _find_view_priority(state_t *s, int y)
 				return j;
 		return 14; /* Maximum */
 	} else
-		return SCI0_VIEW_PRIORITY(y);
+		if (s->version <= SCI_VERSION_LTU_PRIORITY_14_ZONES)
+			return SCI0_VIEW_PRIORITY_14_ZONES(y);
+		else
+			return SCI0_VIEW_PRIORITY(y);
 }
 
 inline int
@@ -183,7 +180,13 @@ _find_priority_band(state_t *s, int nr)
 	if (s->pic_priority_table) /* SCI01 priority table set? */
 		return s->pic_priority_table[nr];
 	else {
-		int retval = SCI0_PRIORITY_BAND_FIRST(nr);
+		int retval;
+
+		if (s->version <= SCI_VERSION_LTU_PRIORITY_14_ZONES)
+			retval = SCI0_PRIORITY_BAND_FIRST_14_ZONES(nr);
+		else
+			retval = SCI0_PRIORITY_BAND_FIRST(nr);
+
 		if (s->version <= SCI_VERSION_LTU_PRIORITY_OB1)
 			--retval;
 		return retval;
@@ -992,7 +995,12 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->drop_views = NULL;
 
 	s->priority_first = 42;
-	s->priority_last = 190;
+
+	if (s->version <= SCI_VERSION_LTU_PRIORITY_14_ZONES)
+		s->priority_last = 179;
+	else
+		s->priority_last = 190;
+
 	s->pic_not_valid = 1;
 	s->pic_is_new = 1;
 

@@ -365,6 +365,14 @@ run_vm(struct _state *s, int restoring);
 ** correctly.
 */
 
+void
+vm_handle_fatal_error(struct _state *s, int line, char *file);
+/* Handles a fatal error condition
+** Parameters: (state_t *) s: The state to recover from
+**             (int) line: Source code line number the error occured in
+**             (char *) file: File the error occured in
+*/
+
 
 void
 script_debug(struct _state *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp,

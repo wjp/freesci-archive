@@ -35,6 +35,11 @@
 #include <sys/resource.h>
 #endif
 
+#ifdef HAVE_SETJMP_H
+#include <setjmp.h>
+#endif
+
+
 /*#define VM_DEBUG_SEND*/
 #undef STRICT_SEND /* Disallows variable sends with more than one parameter */
 
@@ -495,6 +500,26 @@ add_exec_stack_entry(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int ar
 }
 
 
+static int jump_initialized = 0;
+#ifdef HAVE_SETJMP_H
+static jmp_buf vm_error_address;
+#endif
+
+void
+vm_handle_fatal_error(state_t *s, int line, char *file)
+{
+	fprintf(stderr, "Fatal VM error in %s, L%d; aborting...\n", file, line);
+#ifdef HAVE_SETJMP_H
+	if (jump_initialized)
+		longjmp(vm_error_address, 0);
+	else
+#endif
+		{
+			fprintf(stderr, "Could not recover, exitting...\n");
+			exit(1);
+		}
+}
+
 void
 run_vm(state_t *s, int restoring)
 {
@@ -514,6 +539,11 @@ run_vm(state_t *s, int restoring)
     sciprintf("vm.c: run_vm(): NULL passed for \"s\"\n");
     return;
   }
+
+#ifdef HAVE_SETJMP_H
+  setjmp(vm_error_address);
+  jump_initialized = 1;
+#endif
 
 
   if (restoring) {
@@ -567,8 +597,7 @@ run_vm(state_t *s, int restoring)
     if (script_abort_flag)
       return; /* Emergency */
 
-    if (script_debug_flag || sci_debug_flags)
-    {
+    if (script_debug_flag || sci_debug_flags) {
       script_debug(s, &(xs->pc), &(xs->sp), &(xs->variables[VAR_TEMP]),
 		   &(xs->objp), &restadjust, bp_flag);
       bp_flag = 0;

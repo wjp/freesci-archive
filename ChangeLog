@@ -1,5 +1,11 @@
 2002-08-04  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/include/vm.h: add vm_handle_fatal_error() for semi-graceful
+	error recovery where longjmp is available
+
+	* src/include/versions.h (SCI_VERSION_LTU_PRIORITY_14_ZONES):
+	Added suppport for old SCI interpretation of the control map scale
+
 	* doc/scidocbook-html.dsl ($html-body-start$): Added. This formats
 	our online docs.
 
