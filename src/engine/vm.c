@@ -1739,15 +1739,6 @@ script_instantiate(state_t *s, int script_nr)
 		case sci_obj_synonyms:
 			s->seg_manager.set_synonyms_offset( &s->seg_manager, reg.offset + 4, reg.segment, SEG_ID ); /* +4 is to step over the header */
 			s->seg_manager.set_synonyms_nr( &s->seg_manager, (objlength) / 4, reg.segment, SEG_ID );
-#warning "What's all this then?"
-#if 0
-			reg_tmp.offset = s->seg_manager.get_synonyms_offset( &s->seg_manager, reg.segment, SEG_ID ) +
-				     ((s->seg_manager.get_synonyms_nr( &s->seg_manager, reg.segment, SEG_ID )) << 2);
-
-			if (SEG_GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT) < 0)
-				/* Adjust for "terminal" synonym entries */
-				s->seg_manager.set_synonyms_nr( &s->seg_manager, (objlength) / 4 - 1, reg.segment, SEG_ID );
-#endif
 			break;
 
 		case sci_obj_localvars:
