@@ -1215,21 +1215,10 @@ x_map_key(gfx_driver_t *drv, XEvent *key_event, char *character)
 	case XK_KP_Subtract: return '-';
 	case XK_KP_Multiply: return '*';
 
-	case ',':
-	case '.':
-	case '/':
-	case '\\':
-	case ';':
-	case '\'':
-	case '[':
-	case ']':
-	case '`':
-	case '-':
-	case '=':
-	case '<':
-	case ' ':
-		return xkey;
 	}
+
+	if (*character)
+		return xkey; /* Should suffice for all practical purposes */
 
 	sciprintf("Unknown X keysym: %04x\n", xkey);
 	return 0;
