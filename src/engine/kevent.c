@@ -140,6 +140,10 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
   
 	switch(e.type)
 		{
+		case SCI_EVT_QUIT:
+			quit_vm();
+			break;
+
 		case SCI_EVT_KEYBOARD: {
 
 			if ((e.buckybits & SCI_EVM_LSHIFT) && (e.buckybits & SCI_EVM_RSHIFT)

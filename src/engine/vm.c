@@ -1658,3 +1658,13 @@ version_parse(char *vn)
 
   return SCI_VERSION(major, minor, patchlevel);
 }
+
+
+void
+quit_vm()
+{
+	script_abort_flag = 1; /* Terminate VM */
+	_debugstate_valid = 0;
+	_debug_seeking = 0;
+	_debug_step_running = 0;
+}

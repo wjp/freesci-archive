@@ -501,6 +501,12 @@ game_exit(struct _state *s);
 ** This function should be run after each script_run() call.
 */
 
+void
+quit_vm();
+/* Instructs the virtual machine to abort
+** Paramteres: (void)
+** Returns   : (void)
+*/
 
 void
 script_map_selectors(struct _state *s, selector_map_t *map);

@@ -215,6 +215,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	int vistype = (bytespp == 1)? 3 /* PseudoColor */ : 4 /* TrueColor */;
 	int found_vistype = 0;
 	int red_shift, green_shift, blue_shift, alpha_shift;
+	int bytespp_physical;
 	unsigned int alpha_mask;
 	int xsize = xfact * 320;
 	int ysize = yfact * 200;
@@ -321,6 +322,13 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		}
 	}
 
+	foo_image = XCreateImage(S->display, DefaultVisual(S->display,
+							   DefaultScreen(S->display)),
+				 bytespp << 3, ZPixmap, 0, malloc(23), 2, 2, 8, 0);
+
+	bytespp_physical = foo_image->bits_per_pixel >> 3;
+	XDestroyImage(foo_image);
+
 #ifdef HAVE_MITSHM
 	/* set up and test the XSHM extension to make sure it's sane */
 	if (have_shmem) {
@@ -331,9 +339,11 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	  
 	  foo_image = XShmCreateImage(S->display, DefaultVisual(S->display,
 								DefaultScreen(S->display)),
-				      bytespp << 3, ZPixmap, 0, &shminfo, 2, 2);
+				      bytespp_physical << 3, ZPixmap, 0, &shminfo, 2, 2);
 	  if (foo_image)
-	    shminfo.shmid = shmget(IPC_PRIVATE, foo_image->bytes_per_line * foo_image->height,
+	    shminfo.shmid = shmget(IPC_PRIVATE,
+				   foo_image->bytes_per_line *
+				   foo_image->height,
 				   IPC_CREAT | 0777);
 	  if (-1 == shminfo.shmid) {
 	    have_shmem = 0;
@@ -370,10 +380,6 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	}
 
 #endif	   
-	if (!foo_image)
-	  foo_image = XCreateImage(S->display, DefaultVisual(S->display,
-							     DefaultScreen(S->display)),
-				   bytespp << 3, ZPixmap, 0, malloc(23), 2, 2, 8, 0);
 
 
 	alpha_mask = xvisinfo.red_mask | xvisinfo.green_mask | xvisinfo.blue_mask;
@@ -410,7 +416,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	    memset(S->shm[i], 0, sizeof(XShmSegmentInfo));
 	    
 	    S->shm[i]->shmid = shmget(IPC_PRIVATE, xsize * ysize * 
-					     (bytespp >= 3)? 4 : bytespp,
+				      bytespp_physical,
 				      IPC_CREAT | IPC_EXCL | 0666);
 	    S->shm[i]->readOnly = False;
 	    
@@ -464,7 +470,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	  XFillRectangle(S->display, S->visual[i], S->gc, 0, 0, xsize, ysize);
 	}
 
-	drv->mode = gfx_new_mode(xfact, yfact, foo_image->bits_per_pixel >> 3,
+	drv->mode = gfx_new_mode(xfact, yfact, bytespp_physical,
 				 xvisinfo.red_mask, xvisinfo.green_mask, xvisinfo.blue_mask, alpha_mask,
 				 red_shift, green_shift, blue_shift, alpha_shift,
 				 (bytespp == 1)? xvisinfo.colormap_size : 0, 0);
@@ -474,9 +480,8 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	  XShmDetach(S->display, &shminfo);
 	  XDestroyImage(foo_image);
 	  shmdt(shminfo.shmaddr);
-	} else
+	}
 #endif
-	  XDestroyImage(foo_image);
 
         S->used_bytespp = bytespp;
 	S->old_error_handler = (XErrorHandler) XSetErrorHandler(xlib_error_handler);

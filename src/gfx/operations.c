@@ -1510,11 +1510,6 @@ gfxop_get_event(gfx_state_t *state)
 
 	event = state->driver->get_event(state->driver);
 
-	if (event.type == SCI_EVT_QUIT) {
-		fprintf(stderr,"GFX driver issued explicit quit- quick shutdown\n");
-		exit(0);
-	}
-
 	if (_gfxop_full_pointer_refresh(state)) {
 		GFXERROR("Failed to update the mouse pointer!\n");
 		return error_event;

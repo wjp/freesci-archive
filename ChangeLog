@@ -1,3 +1,11 @@
+2001-04-16  Christoph Reichenbach  <jameson@linuxgames.com>
+	
+	* src/gfx/drivers/xlib_driver.c (xlib_init_specific): Used physical
+	display depth in a few places.
+
+	* Handled the QUIT event in the interpreter, thus performing the
+	appopriate clean-ups.
+
 2001-04-15  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/operations.c: Now keeps track of palette numbers for

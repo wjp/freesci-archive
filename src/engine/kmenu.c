@@ -191,6 +191,11 @@ about_freesci(state_t *s)
 			if (event.type == SCI_EVT_MOUSE_RELEASE || event.type == SCI_EVT_MOUSE_PRESS)
 				--cont;
 
+			if (event.type == SCI_EVT_QUIT) {
+				quit_vm();
+				return;
+			}
+
 			if (event.type == SCI_EVT_KEYBOARD)
 				cont = 0;
 
@@ -310,6 +315,10 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			claimed = 0;
 
 			switch (event.type) {
+			case SCI_EVT_QUIT:
+				quit_vm();
+				return;
+
 			case SCI_EVT_KEYBOARD:
 				switch (event.data) {
 
