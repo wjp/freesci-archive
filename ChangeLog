@@ -1,3 +1,8 @@
+2001-11-14  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/sound/polled_ss.c: Fixed mute_channel array not being
+	initialised properly.
+
 2001-11-13  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/polled_ss.c: New home for sci0_soundserver(), not known as

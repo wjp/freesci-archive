@@ -68,13 +68,8 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 	int i;
 
 	/* initialise default values */
-	for (i = 0; i < 16; i++)
-		playing_notes[i].playing = 0;
-
-#ifdef SATISFY_PURIFY
 	memset(playing_notes, 0, 16 * sizeof(playing_notes_t));
-#endif
-
+	memset(mute_channel, 0, MIDI_CHANNELS * sizeof(byte));
 	memset(&suspend_time, 0, sizeof(GTimeVal));
 	memset(&wakeup_time, 0, sizeof(GTimeVal));
 	memset(&ctime, 0, sizeof(GTimeVal));
