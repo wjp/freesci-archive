@@ -412,11 +412,19 @@ int midi_mt32_patch001_type(guint8 *data, unsigned int length)
 int midi_mt32_patch001_type0_length(guint8 *data, unsigned int length)
 {
   unsigned int pos = 492 + 246 * data[491];
+/*  printf("timbres %d (post = %04x)\n",data[491], pos);*/
 
   if ((length >= (pos + 386)) && (data[pos] == 0xAB) && (data[pos + 1] == 0xCD))
     pos += 386;
-  if ((length >= (pos + 267)) && (data[pos] == 0xDC) && (data[pos + 1] == 0xB))
+
+/*  printf("pos = %04x (%02x %02x)\n", pos, data[pos], data[pos + 1]); */
+
+  if ((length >= (pos + 267)) && (data[pos] == 0xDC) && (data[pos + 1] == 0xBA))
     pos += 267;
+
+/*  printf("pos = %04x %04x (%d)\n", pos, length, pos-length); */
+
+
   if (pos == length)
     return 1;
   return 0;
