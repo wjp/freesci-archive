@@ -1,5 +1,5 @@
 /***************************************************************************
- event_ss_win32.cpp Copyright (C) 2001 Alexander R Angas
+ event_ss_win32.c Copyright (C) 2001 Alexander R Angas
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
@@ -29,15 +29,9 @@
 
 ***************************************************************************/
 
-#ifndef __cplusplus
-#error NOTE: This file MUST be compiled as C++. In Visual C++, use the /Tp command line option.
-#endif
-
-extern "C" {
 #include <sci_memory.h>
 #include <soundserver.h>
 #include <sound.h>
-};
 
 #ifdef _WIN32
 
@@ -45,18 +39,21 @@ extern "C" {
 #include <windows.h>
 #include <win32/messages.h>
 
-#define SSWIN_DEBUG 0
+/* #define SSWIN_DEBUG 1 */
 
-extern "C" sound_server_t sound_server_win32e;
+sound_server_t sound_server_win32e;
 
 #define MAIN_CLASS_NAME "FreeSCI Main Receiving from Event SS"
 #define SOUND_CLASS_NAME "Event SS Receiving from FreeSCI Main"
 #define WINDOW_SUFFIX " (Window)"
 
+/* Event map */
+static unsigned int emap[NUMBER_SOUND_EVENTS];
+
 static HWND main_wnd, sound_wnd;
 static HINSTANCE hi_main, hi_sound;
 static HANDLE child_thread;
-static HANDLE time_keeper, sound_data_event;
+static HANDLE time_keeper, sound_data_event, thread_created_event;
 static UINT time_keeper_id;
 static DWORD sound_timer;
 
@@ -138,12 +135,17 @@ win32e_soundserver_init(LPVOID lpP)
 		fprintf(debug_stream, "win32e_soundserver_init(): CreateWindow() for sound failed, GetLastError() returned %u\n", GetLastError());
 		exit(-1);
 	}
-	else
-		fprintf(stderr, "Created sound window class\n");
 
 #if (SSWIN_DEBUG == 1)
 	fprintf(stderr, "win32e_soundserver_init() sound_wnd %i, TID %i\n", sound_wnd, GetCurrentThreadId());
 #endif
+
+	/* signal that initialisation is done */
+	if (SetEvent(thread_created_event) == 0)
+	{
+		fprintf(debug_stream, "win32e_soundserver_init(): SetEvent(thread_created_event) failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
 
 	/*** start the sound server ***/
 	sci0_event_ss(&sss);
@@ -159,17 +161,60 @@ sound_win32e_init(struct _state *s, int flags)
 
 	/* let app know what sound server we are running and yield to the scheduler */
 	global_sound_server = &sound_server_win32e;
+	debug_stream = stderr;
+
 	gs = s;	/* keep copy of pointer */
 	sci_sched_yield();
 
+	/*** register event map and windows messages ***/
+	#define DECLARE_MESSAGE(name)  RegisterWindowMessage(UM_##name##_MSG)
+	emap[SOUND_COMMAND_INIT_HANDLE] = DECLARE_MESSAGE(SOUND_COMMAND_INIT_HANDLE);
+	emap[SOUND_COMMAND_PLAY_HANDLE] = DECLARE_MESSAGE(SOUND_COMMAND_PLAY_HANDLE);
+	emap[SOUND_COMMAND_LOOP_HANDLE] = DECLARE_MESSAGE(SOUND_COMMAND_LOOP_HANDLE);
+	emap[SOUND_COMMAND_DISPOSE_HANDLE] = DECLARE_MESSAGE(SOUND_COMMAND_DISPOSE_HANDLE);
+	emap[SOUND_COMMAND_SET_MUTE] = DECLARE_MESSAGE(SOUND_COMMAND_SET_MUTE);
+	emap[SOUND_COMMAND_GET_MUTE] = DECLARE_MESSAGE(SOUND_COMMAND_GET_MUTE);
+	emap[SOUND_COMMAND_STOP_HANDLE] = DECLARE_MESSAGE(SOUND_COMMAND_STOP_HANDLE);
+	emap[SOUND_COMMAND_SUSPEND_HANDLE] = DECLARE_MESSAGE(SOUND_COMMAND_SUSPEND_HANDLE);
+	emap[SOUND_COMMAND_RESUME_HANDLE] = DECLARE_MESSAGE(SOUND_COMMAND_RESUME_HANDLE);
+	emap[SOUND_COMMAND_SET_VOLUME] = DECLARE_MESSAGE(SOUND_COMMAND_SET_VOLUME);
+	emap[SOUND_COMMAND_RENICE_HANDLE] = DECLARE_MESSAGE(SOUND_COMMAND_RENICE_HANDLE);
+	emap[SOUND_COMMAND_FADE_HANDLE] = DECLARE_MESSAGE(SOUND_COMMAND_FADE_HANDLE);
+	emap[SOUND_COMMAND_TEST] = DECLARE_MESSAGE(SOUND_COMMAND_TEST);
+	emap[SOUND_COMMAND_STOP_ALL] = DECLARE_MESSAGE(SOUND_COMMAND_STOP_ALL);
+	emap[SOUND_COMMAND_SHUTDOWN] = DECLARE_MESSAGE(SOUND_COMMAND_SHUTDOWN);
+	emap[SOUND_COMMAND_SAVE_STATE] = DECLARE_MESSAGE(SOUND_COMMAND_SAVE_STATE);
+	emap[SOUND_COMMAND_RESTORE_STATE] = DECLARE_MESSAGE(SOUND_COMMAND_RESTORE_STATE);
+	emap[SOUND_COMMAND_SUSPEND_ALL] = DECLARE_MESSAGE(SOUND_COMMAND_SUSPEND_ALL);
+	emap[SOUND_COMMAND_RESUME_ALL] = DECLARE_MESSAGE(SOUND_COMMAND_RESUME_ALL);
+	emap[SOUND_COMMAND_GET_VOLUME] = DECLARE_MESSAGE(SOUND_COMMAND_GET_VOLUME);
+	emap[SOUND_COMMAND_PRINT_SONG_INFO] = DECLARE_MESSAGE(SOUND_COMMAND_PRINT_SONG_INFO);
+	emap[SOUND_COMMAND_PRINT_CHANNELS] = DECLARE_MESSAGE(SOUND_COMMAND_PRINT_CHANNELS);
+	emap[SOUND_COMMAND_PRINT_MAPPING] = DECLARE_MESSAGE(SOUND_COMMAND_PRINT_MAPPING);
+	emap[SOUND_COMMAND_IMAP_SET_INSTRUMENT] = DECLARE_MESSAGE(SOUND_COMMAND_IMAP_SET_INSTRUMENT);
+	emap[SOUND_COMMAND_IMAP_SET_KEYSHIFT] = DECLARE_MESSAGE(SOUND_COMMAND_IMAP_SET_KEYSHIFT);
+	emap[SOUND_COMMAND_IMAP_SET_FINETUNE] = DECLARE_MESSAGE(SOUND_COMMAND_IMAP_SET_FINETUNE);
+	emap[SOUND_COMMAND_IMAP_SET_BENDER_RANGE] = DECLARE_MESSAGE(SOUND_COMMAND_IMAP_SET_BENDER_RANGE);
+	emap[SOUND_COMMAND_IMAP_SET_PERCUSSION] = DECLARE_MESSAGE(SOUND_COMMAND_IMAP_SET_PERCUSSION);
+	emap[SOUND_COMMAND_IMAP_SET_VOLUME] = DECLARE_MESSAGE(SOUND_COMMAND_IMAP_SET_VOLUME);
+	emap[SOUND_COMMAND_MUTE_CHANNEL] = DECLARE_MESSAGE(SOUND_COMMAND_MUTE_CHANNEL);
+	emap[SOUND_COMMAND_UNMUTE_CHANNEL] = DECLARE_MESSAGE(SOUND_COMMAND_UNMUTE_CHANNEL);
+	emap[SOUND_SIGNAL_CUMULATIVE_CUE] = DECLARE_MESSAGE(SOUND_SIGNAL_CUMULATIVE_CUE);
+	emap[SOUND_SIGNAL_LOOP] = DECLARE_MESSAGE(SOUND_SIGNAL_LOOP);
+	emap[SOUND_SIGNAL_FINISHED] = DECLARE_MESSAGE(SOUND_SIGNAL_FINISHED);
+	emap[SOUND_SIGNAL_PLAYING] = DECLARE_MESSAGE(SOUND_SIGNAL_PLAYING);
+	emap[SOUND_SIGNAL_PAUSED] = DECLARE_MESSAGE(SOUND_SIGNAL_PAUSED);
+	emap[SOUND_SIGNAL_RESUMED] = DECLARE_MESSAGE(SOUND_SIGNAL_RESUMED);
+	emap[SOUND_SIGNAL_INITIALIZED] = DECLARE_MESSAGE(SOUND_SIGNAL_INITIALIZED);
+	emap[SOUND_SIGNAL_ABSOLUTE_CUE] = DECLARE_MESSAGE(SOUND_SIGNAL_ABSOLUTE_CUE);
+
+	/*** initialise MIDI ***/
 	if (init_midi_device(s) < 0)
 		return -1;
 /* FIXME
 	if (flags & SOUNDSERVER_INIT_FLAG_REVERSE_STEREO)
 		set_reverse_stereo(1, sound_state);
 */
-
-	debug_stream = stderr;
 
 	/*** set up what we need for data transfer ***/
 	InitializeCriticalSection(&dq_cs);
@@ -213,29 +258,27 @@ sound_win32e_init(struct _state *s, int flags)
 		fprintf(debug_stream, "sound_win32e_init(): CreateWindow() for main failed, GetLastError() returned %u\n", GetLastError());
 		exit(-1);
 	}
-	else
-		fprintf(stderr, "Created main window class\n");
 
 #if (SSWIN_DEBUG == 1)
 	fprintf(stderr, "sound_win32e_init() main_wnd %i, TID %i\n", main_wnd, GetCurrentThreadId());
 #endif
 
-#if 0
-	time_keeper = CreateSemaphore(NULL, 0, 0x7FFFFFFF, NULL);
-	if (time_keeper == NULL)
-	{
-		fprintf(debug_stream, "sound_win32e_init(): CreateSemaphore() failed, GetLastError() returned %u\n", GetLastError());
-		exit(-1);
-	}
-	else
-		fprintf(stderr, "Created sound semaphore\n");
-#endif
-
+	/*** create time keeper sync object ***/
 	time_keeper = CreateEvent(NULL, FALSE, FALSE, NULL);
 	if (time_keeper == NULL)
-		fprintf(stderr, "create event failed\n");
+	{
+		fprintf(debug_stream, "sound_win32e_init(): CreateEvent(time_keeper) for main failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
 
 	/*** create thread ***/
+	thread_created_event = CreateEvent(NULL, TRUE, FALSE, NULL);
+	if (thread_created_event == NULL)
+	{
+		fprintf(debug_stream, "sound_win32e_init(): CreateEvent(thread_created_event) for main failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
+
 	child_thread = CreateThread( NULL,		/* not inheritable */
 		                         0,			/* use default stack size */
 								 win32e_soundserver_init,	/* callback function */
@@ -247,8 +290,14 @@ sound_win32e_init(struct _state *s, int flags)
 		fprintf(debug_stream, "sound_win32e_init(): CreateThread() failed, GetLastError() returned %u\n", GetLastError());
 		exit(-1);
 	}
-	else
-		fprintf(stderr, "Created sound thread\n");
+
+	/* wait until thread has finished initialising */
+	if (WaitForSingleObject(thread_created_event, INFINITE) != WAIT_OBJECT_0)
+	{
+		fprintf(debug_stream, "sound_win32e_init(): WaitForSingleObject() failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
+	CloseHandle(thread_created_event);
 
 	/*** start timer ***/
 	time_keeper_id = timeSetEvent(16, 2, (LPTIMECALLBACK)time_keeper, NULL, TIME_PERIODIC | TIME_CALLBACK_EVENT_PULSE);
@@ -272,6 +321,7 @@ sound_win32e_get_event()
 	/* receives message for main thread queue */
 
 	MSG msg; /* incoming message */
+	int i;
 
 	sound_event_t *event_temp = NULL;
 
@@ -280,14 +330,22 @@ sound_win32e_get_event()
 #if (SSWIN_DEBUG == 1)
 	fprintf(stderr, "sound_win32e_get_event() got msg %i (time: %i) (TID: %i)\n", msg.message, msg.time, GetCurrentThreadId());
 #endif
-		event_temp = (sound_event_t*)malloc(sizeof(sound_event_t));
-		event_temp->signal = msg.message;
+		event_temp = (sound_event_t*)sci_malloc(sizeof(sound_event_t));
 		event_temp->handle = msg.wParam;
 		event_temp->value = msg.lParam;
 
 		/* pass on the message regardless */
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
+
+		/* map back to normal values */
+		for (i = 0; i < sizeof(emap); i++)
+			if (emap[i] == msg.message)
+			{
+				event_temp->signal = i;
+				break;
+			}
+
 		return event_temp;
 	}
 
@@ -300,6 +358,7 @@ sound_win32e_get_command(GTimeVal *wait_tvp)
 	/* receives message from sound server queue */
 
 	MSG msg; /* incoming message */
+	int i;
 
 	sound_event_t *event_temp = NULL;
 
@@ -315,14 +374,23 @@ sound_win32e_get_command(GTimeVal *wait_tvp)
 #if (SSWIN_DEBUG == 1)
 		fprintf(stderr, "sound_win32e_get_command() got msg %i (time: %i) (TID: %i)\n", msg.message, msg.time, GetCurrentThreadId());
 #endif
-		event_temp = (sound_event_t*)malloc(sizeof(sound_event_t));
-		event_temp->signal = msg.message;
+		event_temp = (sound_event_t*)sci_malloc(sizeof(sound_event_t));
+		event_temp->signal = 0;
 		event_temp->handle = msg.wParam;
 		event_temp->value = msg.lParam;
 
 		/* pass on the message regardless */
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
+
+		/* map back to normal values */
+		for (i = 0; i < sizeof(emap); i++)
+			if (emap[i] == msg.message)
+			{
+				event_temp->signal = i;
+				break;
+			}
+
 		return event_temp;
 	}
 
@@ -333,7 +401,7 @@ void
 sound_win32e_queue_event(unsigned int handle, unsigned int signal, long value)
 {
 	/* posts message to main thread queue */
-	if (PostMessage(main_wnd, signal, handle, value) == 0)
+	if (PostMessage(main_wnd, emap[signal], handle, value) == 0)
 	{
 		fprintf(debug_stream, "sound_win32e_queue_event(): PostMessage() failed, GetLastError() returned %u\n", GetLastError());
 		exit(-1);
@@ -344,7 +412,7 @@ void
 sound_win32e_queue_command(unsigned int handle, unsigned int signal, long value)
 {
 	/* posts message to sound server queue */
-	if (PostMessage(sound_wnd, signal, handle, value) == 0)
+	if (PostMessage(sound_wnd, emap[signal], handle, value) == 0)
 	{
 		fprintf(debug_stream, "sound_win32e_queue_command(): PostMessage() failed, GetLastError() returned %u\n", GetLastError());
 		exit(-1);
@@ -365,7 +433,7 @@ sound_win32e_get_data(byte **data_ptr, int *size)
 			LeaveCriticalSection(&dq_cs);
 
 			/* yield */
-#if (SSWIN_DEBUG == 0)
+#ifdef SSWIN_DEBUG
 		fprintf(stderr, "sound_win32e_get_data(): waiting for data (TID %i)\n", GetCurrentThreadId());
 #endif
 			if (WaitForSingleObject(sound_data_event, INFINITE) != WAIT_OBJECT_0)
@@ -439,7 +507,6 @@ sound_win32e_save(struct _state *s, char *dir)
 	return 0;
 }
 
-extern "C"
 sound_server_t sound_server_win32e = {
 	"win32e",
 	"0.2",

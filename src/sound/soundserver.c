@@ -85,10 +85,26 @@ print_song_info(word song_handle, sound_server_state_t *ss_state)
 
 
 void
+dump_song_pos(int i, song_t *song)
+{
+	char marks[2][2] = {" .", "|X"};
+	char mark = marks[i == song->loopmark][i == song->pos];
+
+	if ((i & 0xf) == 0)
+		fprintf(stderr, " %04x:\t", i);
+	fprintf(stderr, "%c%02x%c", mark, song->data[i], mark);
+	if ((i & 0xf) == 0x7)
+		fprintf(stderr,"--");
+	if ((i & 0xf) == 0x3 || (i & 0xf) == 0xb)
+		fprintf(stderr," ");
+	if ((i & 0xf) == 0xf)
+		fprintf(stderr,"\n");
+}
+
+void
 dump_song(song_t *song)
 {
 	char *stati[] = {"stopped", "playing", "suspended", "waiting"};
-	char marks[2][2] = {" .","|X"};
 
 	fprintf(stderr, "song: ");
 	if (!song)
@@ -104,19 +120,8 @@ dump_song(song_t *song)
 			song->handle);
 		fprintf(stderr, "Mark descriptions: '.': Pos, '|': Loop mark, 'X': both\n");
 
-		for (i = 0; i < song->size; i++) {
-			char mark = marks[i == song->loopmark][i == song->pos];
-
-			if ((i & 0xf) == 0)
-				fprintf(stderr, " %04x:\t", i);
-			fprintf(stderr, "%c%02x%c", mark, song->data[i], mark);
-			if ((i & 0xf) == 0x7)
-				fprintf(stderr,"--");
-			if ((i & 0xf) == 0x3 || (i & 0xf) == 0xb)
-				fprintf(stderr," ");
-			if ((i & 0xf) == 0xf)
-				fprintf(stderr,"\n");
-		}
+		for (i = 0; i < song->size; i++)
+			dump_song_pos(i, song);
 		fprintf(stderr,"\n");
 	}
 }
@@ -554,8 +559,8 @@ suspend_all(sound_server_state_t *ss_state)
 #if 0
 	/* store the time suspended at */
 	sci_get_current_time((GTimeVal *)&suspend_time);
-	ss_state->suspended = 1;
 #endif
+	ss_state->suspended = 1;
 }
 
 void
@@ -580,9 +585,9 @@ resume_all(sound_server_state_t *ss_state)
 	/* make sure that 0 <= tv_usec <= 999999 */
 	last_played_time.tv_sec -= last_played_time.tv_usec / 1000000;
 	last_played_time.tv_usec %= 1000000;
+#endif
 
 	ss_state->suspended = 0;
-#endif
 }
 
 void

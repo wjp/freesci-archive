@@ -54,42 +54,53 @@ process_sound_events(state_t *s) /* Get all sound events, apply their changes to
 
 		if (is_object(s, obj))
 		{
-			if (event->signal == SOUND_SIGNAL_CUMULATIVE_CUE) {
-				int signal = GET_SELECTOR(obj, signal);
+			int signal = GET_SELECTOR(obj, signal);
+
+			switch(event->signal)
+			{
+			case SOUND_SIGNAL_CUMULATIVE_CUE:
 				SCIkdebug(SCIkSOUND,"Received cumulative cue for %04x\n", obj);
-
 				PUT_SELECTOR(obj, signal, signal + 1);
+				break;
 
-			} else if (event->signal == SOUND_SIGNAL_LOOP) {
+			case SOUND_SIGNAL_LOOP:
 				SCIkdebug(SCIkSOUND,"Received loop signal for %04x\n", obj);
 				PUT_SELECTOR(obj, signal, -1);
+				break;
 
-			} else if (event->signal == SOUND_SIGNAL_FINISHED) {
+			case SOUND_SIGNAL_FINISHED:
 				SCIkdebug(SCIkSOUND,"Received finished signal for %04x\n", obj);
 				PUT_SELECTOR(obj, state, _K_SOUND_STATUS_STOPPED);
+				break;
 
-			} else if (event->signal == SOUND_SIGNAL_PLAYING) {
+			case SOUND_SIGNAL_PLAYING:
 				SCIkdebug(SCIkSOUND,"Received playing signal for %04x\n", obj);
 				PUT_SELECTOR(obj, state, _K_SOUND_STATUS_PLAYING);
+				break;
 
-			} else if (event->signal == SOUND_SIGNAL_PAUSED) {
+			case SOUND_SIGNAL_PAUSED:
 				SCIkdebug(SCIkSOUND,"Received pause signal for %04x\n", obj);
 				PUT_SELECTOR(obj, state, _K_SOUND_STATUS_PAUSED);
+				break;
 
-			} else if (event->signal == SOUND_SIGNAL_RESUMED) {
+			case SOUND_SIGNAL_RESUMED:
 				SCIkdebug(SCIkSOUND,"Received resume signal for %04x\n", obj);
 				PUT_SELECTOR(obj, state, _K_SOUND_STATUS_PAUSED);
+				break;
 
-			} else if (event->signal == SOUND_SIGNAL_INITIALIZED) {
+			case SOUND_SIGNAL_INITIALIZED:
 				PUT_SELECTOR(obj, state, _K_SOUND_STATUS_INITIALIZED);
 				SCIkdebug(SCIkSOUND,"Received init signal for %04x\n", obj);
+				break;
 
-			} else if (event->signal == SOUND_SIGNAL_ABSOLUTE_CUE) {
+			case SOUND_SIGNAL_ABSOLUTE_CUE:
 				SCIkdebug(SCIkSOUND,"Received absolute cue %d for %04x\n", event->value, obj);
 				PUT_SELECTOR(obj, signal, event->value);
+				break;
 
-			} else {
+			default:
 				SCIkwarn(SCIkERROR, "Unknown sound signal: %d\n", event->signal);
+				break;
 			}
 		}
 

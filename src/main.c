@@ -1026,7 +1026,6 @@ main(int argc, char** argv)
 	}
 
 	/* Configure the midiout driver */
-	register_sound_messages();
 	{
 		driver_option_t *option = get_driver_options(active_conf, FREESCI_DRIVER_SUBSYSTEM_MIDIOUT, midiout_driver->name);
 		while (option) {

@@ -70,7 +70,6 @@ EXPORTS
   gfx_get_driver_name
   gfx_crossblit_alpha_threshold DATA
 
-  register_sound_messages
   get_msg_value
   midiout_find_driver
   midiout_driver DATA

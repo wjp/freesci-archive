@@ -42,28 +42,6 @@
 /* Approximately 16666 microseconds */
 
 
-#define SCI_MIDI_EOT 0xfc
-#define SCI_MIDI_END_OF_TRACK SCI_MIDI_EOT
-/* End of track command */
-
-#define SCI_MIDI_CONTROLLER(status) ((status & 0xf0) == 0xb0)
-
-#define SCI_MIDI_SET_SIGNAL 0xcf
-#define SCI_MIDI_SET_POLYPHONY 0x4b
-#define SCI_MIDI_RESET_ON_STOP 0x4c
-#define SCI_MIDI_SET_VELOCITY 0x4e
-#define SCI_MIDI_SET_REVERB 0x50
-#define SCI_MIDI_CUMULATIVE_CUE 0x60
-
-#define SCI_MIDI_SET_SIGNAL_LOOP 0x7f
-/* If this is the parameter of 0xcf, the loop point is set here */
-
-#define SCI_MIDI_TIME_EXPANSION_PREFIX 0xf8
-#define SCI_MIDI_TIME_EXPANSION_LENGHT 240
-/* [RS] tsk tsk tsk */
-/* [CR] WTF? */
-#define SCI_MIDI_TIME_EXPANSION_LENGTH SCI_MIDI_TIME_EXPANSION_LENGHT
-
 /* INTERNAL SOUND COMMANDS */
 #define SOUND_COMMAND_MAPPINGS 100
 /* PARAMETER sound mappings are incoming. First comes an int describing their byte size,
@@ -193,7 +171,7 @@ typedef struct _song {
 	int loops;    /* Loops left to do */
 	int status;   /* See above */
 
-	int resetflag; /* for 0x4C -- on DoSound StopSound, do we return to start? */
+	int resetflag; /* for 0x4C: does suspend reset song position? */
 	word handle;  /* Handle for the game engine */
 
 	song_iterator_t *it;
@@ -201,6 +179,14 @@ typedef struct _song {
 	struct _song *next; /* Next song or NULL if this is the last one */
 
 } song_t;
+
+
+void
+dump_song_pos(int i, song_t *song);
+/* Dumps data at a song position to stderr.
+** Parameters: (int) i: Song position
+**             (song_t *) song: Song to dump
+*/
 
 void
 dump_song(song_t *song);

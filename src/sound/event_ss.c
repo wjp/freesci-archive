@@ -89,6 +89,7 @@ static void do_sound(sound_server_state_t *sss)
 
 				} else {
 					/* the tick is now so build midi cmd from cache */
+					this_cmd.pos_in_song = cached_cmd.pos_in_song;
 					this_cmd.delta_time = 0;
 					this_cmd.midi_cmd = cached_cmd.midi_cmd;
 					this_cmd.param1 = cached_cmd.param1;
@@ -106,6 +107,7 @@ static void do_sound(sound_server_state_t *sss)
 				}
 				this_cmd.delta_time += sss->current_song->data[sss->current_song->pos];
 				(sss->current_song->pos)++;
+				this_cmd.pos_in_song = sss->current_song->pos;
 				this_cmd.midi_cmd = sss->current_song->data[sss->current_song->pos];
 
 				if ((this_cmd.midi_cmd >> 4) >= '\x8')	/* this is a command */
@@ -165,7 +167,7 @@ static void do_sound(sound_server_state_t *sss)
 								sss->current_song->handle, SOUND_SIGNAL_LOOP, sss->current_song->loops);
 
 						} else {
-							sss->current_song->resetflag = 1;
+							sss->current_song->resetflag = 1;	/* reset song position */
 							global_sound_server->queue_command(
 								sss->current_song->handle, SOUND_COMMAND_STOP_HANDLE, 0);
 
@@ -183,6 +185,7 @@ static void do_sound(sound_server_state_t *sss)
 			if (this_cmd.delta_time > 0)
 			{
 				/* not yet, make cache */
+				cached_cmd.pos_in_song = this_cmd.pos_in_song;
 				cached_cmd.delta_time = this_cmd.delta_time;
 				cached_cmd.midi_cmd = this_cmd.midi_cmd;
 				cached_cmd.param1 = this_cmd.param1;
@@ -193,6 +196,11 @@ static void do_sound(sound_server_state_t *sss)
 			/* unless the channel is muted, send MIDI command */
 			if (!( ((this_cmd.midi_cmd & 0xf0) == MIDI_NOTE_ON) &&
 				   sss->mute_channel[this_cmd.midi_cmd & 0xf] ))
+			{
+#ifdef DEBUG_SOUND_SERVER
+				fprintf(stdout, "MIDI (ess): %04x:\t0x%02x\t%u\t%u\n", this_cmd.pos_in_song, this_cmd.midi_cmd, this_cmd.param1, this_cmd.param2);
+#endif
+
 				sci_midi_command(debug_stream,
 					sss->current_song,
 					this_cmd.midi_cmd,
@@ -200,6 +208,7 @@ static void do_sound(sound_server_state_t *sss)
 					(unsigned char)this_cmd.param2,
 					&(sss->sound_cue),
 					&(sss->playing_notes[this_cmd.midi_cmd & 0xf]));
+			}
 		}
 		else
 		{
@@ -239,113 +248,125 @@ sci0_event_ss(sound_server_state_t *ss_state)
 		*/
 		new_event = global_sound_server->get_command(NULL);
 		if (!new_event)
+		{
 			continue;	/* no new commands */
 
-		if (new_event->signal == SOUND_COMMAND_INIT_HANDLE) {
+		} else if (new_event->signal == SOUND_COMMAND_SHUTDOWN) {
+			sci_free(new_event);
+			break;		/* drop out of for loop */
+		}
+
+		switch (new_event->signal)
+		{
+		case SOUND_COMMAND_INIT_HANDLE:
 			init_handle((int)new_event->value, (word)new_event->handle, ss_state);
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_PLAY_HANDLE) {
+		case SOUND_COMMAND_PLAY_HANDLE:
 			play_handle((int)new_event->value, (word)new_event->handle, ss_state);
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_STOP_HANDLE) {
+		case SOUND_COMMAND_STOP_HANDLE:
 			stop_handle((word)new_event->handle, ss_state);
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_SUSPEND_HANDLE) {
+		case SOUND_COMMAND_SUSPEND_HANDLE:
 			suspend_handle((word)new_event->handle, ss_state);
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_RESUME_HANDLE) {
+		case SOUND_COMMAND_RESUME_HANDLE:
 			resume_handle((word)new_event->handle, ss_state);
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_RENICE_HANDLE) {
+		case SOUND_COMMAND_RENICE_HANDLE:
 			renice_handle((int)new_event->value, (word)new_event->handle, ss_state);
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_FADE_HANDLE) {
+		case SOUND_COMMAND_FADE_HANDLE:
 			fade_handle((int)new_event->value, (word)new_event->handle, ss_state);
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_LOOP_HANDLE) {
+		case SOUND_COMMAND_LOOP_HANDLE:
 			loop_handle((int)new_event->value, (word)new_event->handle, ss_state);
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_DISPOSE_HANDLE) {
+		case SOUND_COMMAND_DISPOSE_HANDLE:
 			dispose_handle((word)new_event->handle, ss_state);
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_INSTRUMENT) {
-			imap_set(SOUND_COMMAND_IMAP_SET_INSTRUMENT,
+		case SOUND_COMMAND_IMAP_SET_INSTRUMENT:
+		case SOUND_COMMAND_IMAP_SET_KEYSHIFT:
+		case SOUND_COMMAND_IMAP_SET_FINETUNE:
+		case SOUND_COMMAND_IMAP_SET_BENDER_RANGE:
+		case SOUND_COMMAND_IMAP_SET_PERCUSSION:
+		case SOUND_COMMAND_IMAP_SET_VOLUME:
+			imap_set(new_event->signal,
 					 (int)new_event->value,	/* instrument */
 					 (word)new_event->handle);	/* handle */
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_KEYSHIFT) {
-			imap_set(SOUND_COMMAND_IMAP_SET_KEYSHIFT,
-					 (int)new_event->value, (word)new_event->handle);
+		case SOUND_COMMAND_MUTE_CHANNEL:
+		case SOUND_COMMAND_UNMUTE_CHANNEL:
+			set_channel_mute((int)new_event->value, (unsigned char)new_event->handle, ss_state);
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_FINETUNE) {
-			imap_set(SOUND_COMMAND_IMAP_SET_FINETUNE,
-					 (int)new_event->value, (word)new_event->handle);
-
-		} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_BENDER_RANGE) {
-			imap_set(SOUND_COMMAND_IMAP_SET_BENDER_RANGE,
-					 (int)new_event->value, (word)new_event->handle);
-
-		} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_PERCUSSION) {
-			imap_set(SOUND_COMMAND_IMAP_SET_PERCUSSION,
-					 (int)new_event->value, (word)new_event->handle);
-
-		} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_VOLUME) {
-			imap_set(SOUND_COMMAND_IMAP_SET_VOLUME,
-					 (int)new_event->value, (word)new_event->handle);
-
-		} else if (new_event->signal == SOUND_COMMAND_MUTE_CHANNEL) {
-			set_channel_mute((int)new_event->value, MUTE_ON, ss_state);
-
-		} else if (new_event->signal == SOUND_COMMAND_UNMUTE_CHANNEL) {
-			set_channel_mute((int)new_event->value, MUTE_OFF, ss_state);
-
-		} else if (new_event->signal == SOUND_COMMAND_SET_VOLUME) {
+		case SOUND_COMMAND_SET_VOLUME:
 			set_master_volume((unsigned char)new_event->value, ss_state);
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_TEST) {
+		case SOUND_COMMAND_TEST:
 			sound_check(midi_polyphony, ss_state);
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_STOP_ALL) {
+		case SOUND_COMMAND_STOP_ALL:
 			stop_all(ss_state);
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_SUSPEND_ALL) {
+		case SOUND_COMMAND_SUSPEND_ALL:
 			suspend_all(ss_state);
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_RESUME_ALL) {
+		case SOUND_COMMAND_RESUME_ALL:
 			resume_all(ss_state);
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_SAVE_STATE) {
+		case SOUND_COMMAND_SAVE_STATE:
 			fprintf(stderr, "Saving sound server state not implemented yet\n");
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_RESTORE_STATE) {
+		case SOUND_COMMAND_RESTORE_STATE:
 			fprintf(stderr, "Restoring sound server state not implemented yet\n");
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_PRINT_SONG_INFO) {
+		case SOUND_COMMAND_PRINT_SONG_INFO:
 #ifdef DEBUG_SOUND_SERVER
 			if ((int)new_event->value == 0)
 				print_song_info(ss_state->current_song->handle, ss_state);
 			else
 				print_song_info((word)new_event->handle, ss_state);
 #endif
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_PRINT_CHANNELS) {
+		case SOUND_COMMAND_PRINT_CHANNELS:
 #ifdef DEBUG_SOUND_SERVER
 			print_channels_any(0, ss_state);
 #endif
+			break;
 
-		} else if (new_event->signal == SOUND_COMMAND_PRINT_MAPPING) {
+		case SOUND_COMMAND_PRINT_MAPPING:
 #ifdef DEBUG_SOUND_SERVER
 			print_channels_any(1, ss_state);
 #endif
-
-		} else if (new_event->signal == SOUND_COMMAND_SHUTDOWN) {
-			free(new_event);
 			break;
 
-		} else {
-			/* do nothing */
+		case SOUND_COMMAND_SHUTDOWN:
+			fprintf(stderr, "sci0_event_ss(): Should never get to shutdown case!\n");
+			break;
+
+		default:
+			;	/* do nothing */
 		}
-		free(new_event);
+		sci_free(new_event);
 	}
 
 	/*** shut down server ***/

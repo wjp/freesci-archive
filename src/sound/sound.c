@@ -122,11 +122,13 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 	event.signal = command;
 	event.value = value;
 
-	if (command == 0) {
+	switch (command)
+	{
+	case 0:
 		fprintf(stderr, "WARNING: A sound command has not been defined\n");
 		return 1;
 
-	} else if (command == SOUND_COMMAND_INIT_HANDLE) {
+	case SOUND_COMMAND_INIT_HANDLE: {
 		resource_t *song = scir_find_resource(
 			s->resmgr, sci_sound, event.value, 0);
 		int len;
@@ -156,37 +158,38 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 		}
 
 		return 0;
+	}
 
-	} else if ( (command == SOUND_COMMAND_PLAY_HANDLE)    ||
-	            (command == SOUND_COMMAND_LOOP_HANDLE)    ||
-	            (command == SOUND_COMMAND_DISPOSE_HANDLE) ||
-	            (command == SOUND_COMMAND_STOP_HANDLE)    ||
-				(command == SOUND_COMMAND_SUSPEND_HANDLE) ||
-	            (command == SOUND_COMMAND_RESUME_HANDLE)  ||
-	            (command == SOUND_COMMAND_RENICE_HANDLE)  ||
-	            (command == SOUND_COMMAND_SHUTDOWN)       ||
-	            (command == SOUND_COMMAND_MAPPINGS)       ||
-	            (command == SOUND_COMMAND_SAVE_STATE)     || /* These two commands are only used from special wrapper */
-	            (command == SOUND_COMMAND_RESTORE_STATE)  || /* functions that provide additional data. */
-	            (command == SOUND_COMMAND_SUSPEND_ALL)    ||
-	            (command == SOUND_COMMAND_RESUME_ALL)     ||
-	            (command == SOUND_COMMAND_STOP_ALL)       ||
-	            (command == SOUND_COMMAND_FADE_HANDLE)    ||
-	            (command == SOUND_COMMAND_PRINT_SONG_INFO)||
-	            (command == SOUND_COMMAND_PRINT_CHANNELS) ||
-	            (command == SOUND_COMMAND_PRINT_MAPPING)  ||
-	            (command == SOUND_COMMAND_IMAP_SET_INSTRUMENT)   ||
-	            (command == SOUND_COMMAND_IMAP_SET_KEYSHIFT)     ||
-	            (command == SOUND_COMMAND_IMAP_SET_FINETUNE)     ||
-	            (command == SOUND_COMMAND_IMAP_SET_BENDER_RANGE) ||
-	            (command == SOUND_COMMAND_IMAP_SET_PERCUSSION)   ||
-	            (command == SOUND_COMMAND_IMAP_SET_VOLUME)       ||
-	            (command == SOUND_COMMAND_MUTE_CHANNEL)   ||
-				(command == SOUND_COMMAND_UNMUTE_CHANNEL) ) {
+	case SOUND_COMMAND_PLAY_HANDLE:
+	case SOUND_COMMAND_LOOP_HANDLE:
+	case SOUND_COMMAND_DISPOSE_HANDLE:
+	case SOUND_COMMAND_STOP_HANDLE:
+	case SOUND_COMMAND_SUSPEND_HANDLE:
+	case SOUND_COMMAND_RESUME_HANDLE:
+	case SOUND_COMMAND_RENICE_HANDLE:
+	case SOUND_COMMAND_SHUTDOWN:
+	case SOUND_COMMAND_MAPPINGS:
+	case SOUND_COMMAND_SAVE_STATE:    /* These two commands are only used from special wrapper */
+	case SOUND_COMMAND_RESTORE_STATE: /* functions that provide additional data. */
+	case SOUND_COMMAND_SUSPEND_ALL:
+	case SOUND_COMMAND_RESUME_ALL:
+	case SOUND_COMMAND_STOP_ALL:
+	case SOUND_COMMAND_FADE_HANDLE:
+	case SOUND_COMMAND_PRINT_SONG_INFO:
+	case SOUND_COMMAND_PRINT_CHANNELS:
+	case SOUND_COMMAND_PRINT_MAPPING:
+	case SOUND_COMMAND_IMAP_SET_INSTRUMENT:
+	case SOUND_COMMAND_IMAP_SET_KEYSHIFT:
+	case SOUND_COMMAND_IMAP_SET_FINETUNE:
+	case SOUND_COMMAND_IMAP_SET_BENDER_RANGE:
+	case SOUND_COMMAND_IMAP_SET_PERCUSSION:
+	case SOUND_COMMAND_IMAP_SET_VOLUME:
+	case SOUND_COMMAND_MUTE_CHANNEL:
+	case SOUND_COMMAND_UNMUTE_CHANNEL:
 		global_sound_server->queue_command(event.handle, event.signal, event.value);
 		return 0;
 
-	} else if (command == SOUND_COMMAND_SET_VOLUME) {
+	case SOUND_COMMAND_SET_VOLUME: {
 		if (s->sound_mute) {  /* if we're muted, update the mute */
 			s->sound_mute = event.value;
 		} else {
@@ -198,14 +201,16 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 			return s->sound_mute;
 		else
 			return s->sound_volume;
+	}
 
-	} else if (command == SOUND_COMMAND_GET_VOLUME) {
+	case SOUND_COMMAND_GET_VOLUME: {
 		if (s->sound_mute)
 			return s->sound_mute;
 		else
 			return s->sound_volume;
+	}
 
-	} else if (command == SOUND_COMMAND_SET_MUTE) {
+	case SOUND_COMMAND_SET_MUTE: {
 		if (event.value == MUTE_OFF) {
 			/* mute is off so turn it on */
 			s->sound_mute = s->sound_volume;
@@ -227,14 +232,16 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 			return s->sound_mute;
 		else
 			return MUTE_OFF;
+	}
 
-	} else if (command == SOUND_COMMAND_GET_MUTE) {
+	case SOUND_COMMAND_GET_MUTE: {
 		if (s->sound_mute)
 			return s->sound_mute;
 		else
 			return MUTE_OFF;
+	}
 
-	} else if (command == SOUND_COMMAND_TEST) {
+	case SOUND_COMMAND_TEST: {
 		int *retval = NULL;
 		int len = 0;
 		global_sound_server->queue_command(event.handle, event.signal, event.value);
@@ -242,8 +249,9 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 		len = *retval;
 		free(retval);
 		return len; /* should be the polyphony */
+	}
 
-	} else {
+	default:
 		sciprintf("Unknown sound command %d\n", command);
 		return 1;
 	}
@@ -565,8 +573,8 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 			*ccc += param2;
 			global_sound_server->queue_event(song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, *ccc);
 			break;
-		case SCI_MIDI_RESET_ON_STOP:
-			song->resetflag = param2;
+		case SCI_MIDI_RESET_ON_SUSPEND:
+			song->resetflag = 1;
 			break;
 		case SCI_MIDI_SET_POLYPHONY:
 			song->polyphony[command & 0x0f] = param2;
@@ -676,54 +684,6 @@ song_lib_dump(songlib_t songlib, int line)
 	} while (seeker);
 	fprintf(debug_stream,"\n");
 
-}
-
-void register_sound_messages() {
-	/* NOTE: should all be defined > 0 for error checking purposes */
-#ifndef _WIN32
-/*	SOUND_COMMAND_DO_SOUND              = 1; */
-	SOUND_COMMAND_INIT_HANDLE           = 2;
-	SOUND_COMMAND_PLAY_HANDLE           = 3;
-	SOUND_COMMAND_LOOP_HANDLE           = 4;
-	SOUND_COMMAND_DISPOSE_HANDLE        = 5;
-	SOUND_COMMAND_SET_MUTE              = 6;
-	SOUND_COMMAND_GET_MUTE              = 32;
-	SOUND_COMMAND_STOP_HANDLE           = 7;
-	SOUND_COMMAND_SUSPEND_HANDLE        = 8;
-	SOUND_COMMAND_RESUME_HANDLE         = 9;
-	SOUND_COMMAND_SET_VOLUME            = 10;
-	SOUND_COMMAND_RENICE_HANDLE         = 11;
-	SOUND_COMMAND_FADE_HANDLE           = 12;
-	SOUND_COMMAND_TEST                  = 13;
-	SOUND_COMMAND_STOP_ALL              = 14;
-	SOUND_COMMAND_SHUTDOWN              = 15;
-	SOUND_COMMAND_SAVE_STATE            = 16;
-	SOUND_COMMAND_RESTORE_STATE         = 17;
-	SOUND_COMMAND_SUSPEND_ALL           = 18;
-	SOUND_COMMAND_RESUME_ALL            = 19;
-	SOUND_COMMAND_GET_VOLUME            = 20;
-	SOUND_COMMAND_PRINT_SONG_INFO       = 21;
-	SOUND_COMMAND_PRINT_CHANNELS        = 22;
-	SOUND_COMMAND_PRINT_MAPPING         = 23;
-	SOUND_COMMAND_IMAP_SET_INSTRUMENT   = 24;
-	SOUND_COMMAND_IMAP_SET_KEYSHIFT     = 25;
-	SOUND_COMMAND_IMAP_SET_FINETUNE     = 26;
-	SOUND_COMMAND_IMAP_SET_BENDER_RANGE = 27;
-	SOUND_COMMAND_IMAP_SET_PERCUSSION   = 28;
-	SOUND_COMMAND_IMAP_SET_VOLUME       = 29;
-	SOUND_COMMAND_MUTE_CHANNEL          = 30;
-	SOUND_COMMAND_UNMUTE_CHANNEL        = 31;
-	SOUND_SIGNAL_CUMULATIVE_CUE         = 1001;
-	SOUND_SIGNAL_LOOP                   = 1002;
-	SOUND_SIGNAL_FINISHED               = 1003;
-	SOUND_SIGNAL_PLAYING                = 1004;
-	SOUND_SIGNAL_PAUSED                 = 1005;
-	SOUND_SIGNAL_RESUMED                = 1006;
-	SOUND_SIGNAL_INITIALIZED            = 1007;
-	SOUND_SIGNAL_ABSOLUTE_CUE           = 1008;
-#else
-	DECLARE_MESSAGES();
-#endif
 }
 
 int init_midi_device (state_t *s) {

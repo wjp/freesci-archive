@@ -217,7 +217,9 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 					modsong = song_lib_find(songlib, (word)event.handle);
 
 					/* find out what the event is */
-					if (event.signal == SOUND_COMMAND_INIT_HANDLE) {
+					switch (event.signal)
+					{
+					case SOUND_COMMAND_INIT_HANDLE: {
 						byte *data;
 						int totalsize = 0;
 
@@ -257,15 +259,17 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 						/* midi_allstop(); */
 
 						global_sound_server->queue_event(event.handle, SOUND_SIGNAL_INITIALIZED, 0); /* Send back ACK */
+						break;
+					}
 
-					} else if (event.signal == SOUND_COMMAND_PLAY_HANDLE) {
+					case SOUND_COMMAND_PLAY_HANDLE: {
 #ifdef DEBUG_SOUND_SERVER
 						fprintf(debug_stream, "Playing handle %04x\n", event.handle);
 #endif
 						if (modsong) {
 #if 0
 #ifdef HAVE_SYS_SOUNDCARD_H
-					/* Temporary PCM support for testing */
+							/* Temporary PCM support for testing */
 							byte *pcm = NULL;
 							int pcm_size, sample_rate;
 
@@ -301,10 +305,9 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 									close(fd);
 									fprintf(stderr, "SndSrv: Finished writing PCM to /dev/dsp\n");
 								}
-							} else
+							} else {
 #endif
 #endif
-							{
 								midi_allstop();
 								modsong->status = SOUND_STATUS_PLAYING;
 								global_sound_server->queue_event(event.handle, SOUND_SIGNAL_PLAYING, 0);
@@ -313,12 +316,18 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 								memcpy(channel_instrument, channel_instrument_orig, sizeof(int)*16);
 								/* Reset instrument mappings from song defaults */
 #endif
+#if 0
+#ifdef HAVE_SYS_SOUNDCARD_H
 							}
+#endif
+#endif
 						} else {
 							fprintf(debug_stream, "Attempt to play invalid handle %04x\n", event.handle);
 						}
+						break;
+					}
 
-					} else if (event.signal == SOUND_COMMAND_LOOP_HANDLE) {
+					case SOUND_COMMAND_LOOP_HANDLE: {
 #ifdef DEBUG_SOUND_SERVER
 						fprintf(debug_stream, "Set loops to %d on handle %04x\n", event.value, event.handle);
 #endif
@@ -327,7 +336,10 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 						else
 							fprintf(debug_stream, "Attempt to set loops on invalid handle %04x\n", event.handle);
 
-					} else if (event.signal == SOUND_COMMAND_DISPOSE_HANDLE) {
+						break;
+					}
+
+					case SOUND_COMMAND_DISPOSE_HANDLE: {
 #ifdef DEBUG_SOUND_SERVER
 						fprintf(debug_stream, "Disposing handle %04x (value %04x)\n", event.handle, event.value);
 #endif
@@ -346,8 +358,10 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 												** dereference it later on! */
 							song = NULL;
 
+						break;
+					}
 
-					} else if (event.signal == SOUND_COMMAND_STOP_HANDLE) {
+					case SOUND_COMMAND_STOP_HANDLE: {
 #ifdef DEBUG_SOUND_SERVER
 						fprintf(debug_stream, "Stopping handle %04x (value %04x)\n", event.handle, event.value);
 #endif
@@ -363,8 +377,10 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 						} else {
 							fprintf(debug_stream, "Attempt to stop invalid handle %04x\n", event.handle);
 						}
+						break;
+					}
 
-					} else if (event.signal == SOUND_COMMAND_SUSPEND_HANDLE) {
+					case SOUND_COMMAND_SUSPEND_HANDLE: {
 						song_t *seeker = *songlib;
 
 						if (event.handle) { /* Only act for non-zero song IDs */
@@ -387,21 +403,10 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 								}
 							}
 						}
-	  /*
+						break;
+					}
 
-	    if (debugging)
-	    fprintf(debug_stream, "Suspending handle %04x (value %04x)\n", event.handle, event.value);
-
-	    if (modsong) {
-
-	    modsong->status = SOUND_STATUS_SUSPENDED;
-	    global_sound_server->queue_event(event.handle, SOUND_SIGNAL_PAUSED, 0);
-
-	    } else
-	    fprintf(debug_stream, "Attempt to suspend invalid handle %04x\n", event.handle);
-	  */ /* Old code. */
-
-					} else if (event.signal == SOUND_COMMAND_RESUME_HANDLE) {
+					case SOUND_COMMAND_RESUME_HANDLE: {
 #ifdef DEBUG_SOUND_SERVER
 						fprintf(debug_stream, "Resuming on handle %04x (value %04x)\n", event.handle, event.value);
 #endif
@@ -412,30 +417,42 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 							} else {
 								fprintf(debug_stream, "Attempt to resume handle %04x although not suspended\n", event.handle);
 							}
-						} else
+						} else {
 							fprintf(debug_stream, "Attempt to resume invalid handle %04x\n", event.handle);
+						}
 
-					} else if (event.signal == SOUND_COMMAND_SET_VOLUME) {
+						break;
+					}
+
+					case SOUND_COMMAND_SET_VOLUME: {
 #ifdef DEBUG_SOUND_SERVER
 						fprintf(debug_stream, "Set volume to %d\n", event.value);
 #endif
 						master_volume = (unsigned char)(event.value * 100 / 15); /* scale to % */
 						midi_volume(master_volume);
+						break;
+					}
 
-					} else if (event.signal == SOUND_COMMAND_SET_MUTE) {
+					case SOUND_COMMAND_SET_MUTE: {
 						fprintf(debug_stream, "Called mute??? should never happen\n");
+						break;
+					}
 
-					} else if (event.signal == SOUND_COMMAND_RENICE_HANDLE) {
+					case SOUND_COMMAND_RENICE_HANDLE: {
 #ifdef DEBUG_SOUND_SERVER
 						fprintf(debug_stream, "Renice to %d on handle %04x\n", event.value, event.handle);
 #endif
 						if (modsong) {
 							modsong->priority = event.value;
 							song_lib_resort(songlib, modsong); /* Re-sort it according to the new priority */
-						} else
+						} else {
 							fprintf(debug_stream, "Attempt to renice on invalid handle %04x\n", event.handle);
+						}
 
-					} else if (event.signal == SOUND_COMMAND_FADE_HANDLE) {
+						break;
+					}
+
+					case SOUND_COMMAND_FADE_HANDLE: {
 #ifdef DEBUG_SOUND_SERVER
 						fprintf(debug_stream, "Fading %d on handle %04x\n", event.value, event.handle);
 #endif
@@ -446,18 +463,24 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 							}
 						} else if (modsong) {
 							modsong->fading = event.value;
-						} else
+						} else {
 							fprintf(debug_stream, "Attempt to fade on invalid handle %04x\n", event.handle);
+						}
 
-					} else if (event.signal == SOUND_COMMAND_TEST) {
+						break;
+					}
+
+					case SOUND_COMMAND_TEST: {
 						int i = midi_polyphony;
 #ifdef DEBUG_SOUND_SERVER
 						fprintf(debug_stream, "Received TEST signal. Responding...\n");
 #endif
 
 						global_sound_server->send_data((byte *) &i, sizeof(int));
+						break;
+					}
 
-					} else if (event.signal == SOUND_COMMAND_SAVE_STATE) {
+					case SOUND_COMMAND_SAVE_STATE: {
 						char *dirname;
 						int success;
 						long usecs;
@@ -482,7 +505,10 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 						global_sound_server->send_data((byte *)&success, sizeof(int));
 						free(dirname);
 
-					} else if (event.signal == SOUND_COMMAND_RESTORE_STATE) {
+						break;
+					}
+
+					case SOUND_COMMAND_RESTORE_STATE: {
 						char *dirname;
 						int success;
 						long usecs, secs;
@@ -529,45 +555,54 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 							}
 							midi_reverb(newsong->reverb);
 						}
+						break;
+					}
 
-					} else if (event.signal == SOUND_COMMAND_PRINT_SONG_INFO) {
+					case SOUND_COMMAND_PRINT_SONG_INFO: {
 						if (song)
 							fprintf(debug_stream, "%04x", song->handle);
 						else
 							fprintf(debug_stream, "No song is playing.");
 
-					} else if (event.signal == SOUND_COMMAND_PRINT_CHANNELS) {
+						break;
+					}
+
+					case SOUND_COMMAND_PRINT_CHANNELS: {
 #ifdef DEBUG_SOUND_SERVER
 						print_channels_any(0, ss_state);
 #endif
+						break;
+					}
 
-					} else if (event.signal == SOUND_COMMAND_PRINT_MAPPING) {
+					case SOUND_COMMAND_PRINT_MAPPING: {
 #ifdef DEBUG_SOUND_SERVER
 						print_channels_any(1, ss_state);
 #endif
+						break;
+					}
 
-					} else if ( (event.signal == SOUND_COMMAND_IMAP_SET_INSTRUMENT)   ||
-					            (event.signal == SOUND_COMMAND_IMAP_SET_KEYSHIFT)     ||
-					            (event.signal == SOUND_COMMAND_IMAP_SET_FINETUNE)     ||
-					            (event.signal == SOUND_COMMAND_IMAP_SET_BENDER_RANGE) ||
-					            (event.signal == SOUND_COMMAND_IMAP_SET_PERCUSSION)   ||
-								(event.signal == SOUND_COMMAND_IMAP_SET_VOLUME) ) {
-						imap_set(event.signal,
-						  event.handle, event.value);
+					case SOUND_COMMAND_IMAP_SET_INSTRUMENT:
+					case SOUND_COMMAND_IMAP_SET_KEYSHIFT:
+					case SOUND_COMMAND_IMAP_SET_FINETUNE:
+					case SOUND_COMMAND_IMAP_SET_BENDER_RANGE:
+					case SOUND_COMMAND_IMAP_SET_PERCUSSION:
+					case SOUND_COMMAND_IMAP_SET_VOLUME:
+						imap_set(event.signal, event.handle, event.value);
+						break;
 
-					} else if (event.signal == SOUND_COMMAND_MUTE_CHANNEL) {
+					case SOUND_COMMAND_MUTE_CHANNEL:
+					case SOUND_COMMAND_UNMUTE_CHANNEL:
 						if (event.value >= 0 && event.value < 16)
-							mute_channel[event.value] = MUTE_ON;
+							mute_channel[event.value] = event.handle;
+						break;
 
-					} else if (event.signal == SOUND_COMMAND_UNMUTE_CHANNEL) {
-						if (event.value >= 0 && event.value < 16)
-							mute_channel[event.value] = MUTE_OFF;
-
-					} else if (event.signal == SOUND_COMMAND_SUSPEND_ALL) {
+					case SOUND_COMMAND_SUSPEND_ALL: {
 						sci_get_current_time((GTimeVal *)&suspend_time); /* Track the time we suspended at */
 						suspended = 1;
+						break;
+					}
 
-					} else if (event.signal == SOUND_COMMAND_RESUME_ALL) {
+					case SOUND_COMMAND_RESUME_ALL: {
 						GTimeVal resume_time;
 
 						sci_get_current_time((GTimeVal *)&resume_time);
@@ -584,8 +619,10 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 						** we were suspended.  */
 
 						suspended = 0;
+						break;
+					}
 
-					} else if (event.signal == SOUND_COMMAND_STOP_ALL) {
+					case SOUND_COMMAND_STOP_ALL: {
 						song_t *seeker = *songlib;
 
 	  					while (seeker) { /* FOREACH seeker IN songlib */
@@ -601,17 +638,21 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 
 						newsong = NULL;
 						midi_allstop();
+						break;
+					}
 
-					} else if (event.signal == SOUND_COMMAND_SHUTDOWN) {
+					case SOUND_COMMAND_SHUTDOWN: {
 						fprintf(stderr,"Sound server: Received shutdown signal\n");
 						midi_close();
 						song_lib_free(songlib);
 
 						soundserver_dead = 1;
 						return;
+					}
 
-					} else {
+					default:
 						fprintf(debug_stream, "Received invalid signal: %d\n", event.signal);
+						break;
 					}
 				}
 
@@ -639,6 +680,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 		if (song && song->data) { /* If we have a current song */
 			int newcmd;
 			guint8 param, param2 = 0;
+			int pos_at_start = song->pos;
 
 			newcmd = song->data[song->pos]; /* Retreive MIDI command */
 
@@ -690,9 +732,15 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 #endif
 
 				if (!((command & 0xf0) == MIDI_NOTE_ON && mute_channel[command & 0xf]))
+				{
+#ifdef DEBUG_SOUND_SERVER
+					fprintf(stdout, "MIDI (pss): %04x:\t0x%02x\t%u\t%u\n", pos_at_start, command, param, param2);
+#endif
+
 					/* Unless the channel is muted */
 					sci_midi_command(debug_stream, song, command, param, param2,
 					                 &ccc, &(playing_notes[command & 0xf]));
+				}
 			}
 
 			if (song->fading >= 0) { /* If the song is fading out... */

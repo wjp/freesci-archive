@@ -1,12 +1,11 @@
-Last updated 8 September 2001 by Alex Angas <wgd@internode.on.net>
+Last updated 3 December 2001 by Alex Angas <wgd@internode.on.net>
 
 ABOUT
 -----
 
 The Win32 version of freesci is now almost at the same level of
 functionality as the UNIX version. The major bugs are currently:
-fullscreen support causes gfx corruption, scaling > 3 causes gfx corruption,
-savegames aren't working properly. 
+fullscreen support causes gfx corruption, scaling > 3 causes gfx corruption. 
 
 
 BUILDING
@@ -64,6 +63,14 @@ animation_delay = 5
 NOTE: When scaling beyond 3 times (-x3 or -y3), cursor redraws no longer 
 work properly. Also, fullscreen mode in SDL is currently not supported/working 
 on Win32. Hopefully, both of these bugs will be fixed in an upcoming release.
+
+
+If you wish to change the default MIDI out driver that FreeSCI chooses, add
+this to your config file:
+
+device = x
+
+where x is the number of the MIDI out device you wish to use.
 
 
 DEBUGGING

@@ -1,3 +1,35 @@
+2001-12-03  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/main.c (main): Removed call to register_sound_messages().
+
+	* src/engine/ksound.c (process_sound_events): Changed if/else -> case.
+
+	* src/include/sound.h: Changed sound events back to #defines. Moved
+	SCI MIDI command #defines here.
+
+	* src/include/soundserver.h: Removed SCI MIDI #defines as above.
+
+	* src/include/win32/messages.h: Removed macros for declaring messages.
+
+	* src/sound/polled_ss.c:
+	* src/sound/event_ss.c: Added song position to MIDI commands for
+	better debugging. Changed if/else -> case.
+
+	* src/sound/sound.c: Changed if/else -> case. Removed
+	register_sound_messages().
+
+	* src/sound/soundserver.c: Fixed suspend_all() and resume_all().
+
+	* src/sound/event_ss_win32.cpp: Renamed to event_ss_win32.c. Fixed race
+	condition with main thread when sound thread starts. Added mapping
+	between Windows messages and #defined sound events.
+
+	* src/win32/fsci_dll.dsp: Fixed for file change above.
+
+	* src/win32/freesci.def: Removed reference to register_sound_messages.
+
+	* src/win32/event_ss_win32_qp.c: Deleted.
+
 2001-12-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (_find_view_priority): Support priority map
@@ -35,26 +67,26 @@
 2001-11-26  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/include/engine.h: Made sound_volume and sound_mute unsigned.
-	
+
 	* src/include/sound.h: Removed SOUND_DATA 'command'.
-	
+
 	* src/include/soundserver.h: Added more commenting.
-	
+
 	* src/sound/event_ss.c (sci0_event_ss): Altered way to call
 	do_sound(). Fixed memory leak on shutdown.
-	
+
 	* src/sound/event_ss_win32.cpp: Added more checks for returned values
 	everywhere. Fixed crash on shutdown. Improved way of checking if data
 	is waiting by using event and fixed synchronisation for data_queue.
 	Adjusted to match new way to call do_sound() (above).
-	
+
 	* src/sound/event_ss_win32_qp.c: Currently broken.
-	
+
 	* src/sound/sound.c (sound_command_default): Reversed last change made
 	by Christoph (temporarily). Added MUTE_ON / MUTE_OFF constants where
 	appropriate.
 	Removed print_message_map().
-	
+
 	* src/sound/midiout_win32mci.c (midiout_win32mci_open): Fixed Cygwin
 	compilation.
 

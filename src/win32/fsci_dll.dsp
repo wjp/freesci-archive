@@ -376,16 +376,7 @@ SOURCE=..\sound\event_ss.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\sound\event_ss_win32.cpp
-
-!IF  "$(CFG)" == "fsci_dll - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "fsci_dll - Win32 Debug"
-
-# ADD CPP /W4
-
-!ENDIF 
-
+SOURCE=..\sound\event_ss_win32.c
 # End Source File
 # Begin Source File
 
