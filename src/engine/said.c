@@ -273,7 +273,7 @@ static const short yycheck[] = {     2,
     10,    10,     0,     0,    10,     4,    10,    46
 };
 /* -*-C-*-  Note some compilers choke on comments on `#line' lines.  */
-#line 3 "/usr/public//share/bison.simple"
+#line 3 "/usr/share/bison/bison.simple"
 /* This file comes from bison-1.28.  */
 
 /* Skeleton output parser for bison,
@@ -487,7 +487,7 @@ __yy_memcpy (char *to, char *from, unsigned int count)
 #endif
 #endif
 
-#line 217 "/usr/public//share/bison.simple"
+#line 217 "/usr/share/bison/bison.simple"
 
 /* The user can define YYPARSE_PARAM as the name of an argument to be passed
    into yyparse.  The argument should have type void *.
@@ -945,7 +945,7 @@ case 32:
     break;}
 }
    /* the action file gets copied in in place of this dollarsign */
-#line 543 "/usr/public//share/bison.simple"
+#line 543 "/usr/share/bison/bison.simple"
 
   yyvsp -= yylen;
   yyssp -= yylen;
@@ -1020,7 +1020,7 @@ yyerrlab:   /* here on detecting error */
 	       x < (sizeof(yytname) / sizeof(char *)); x++)
 	    if (yycheck[x + yyn] == x)
 	      size += strlen(yytname[x]) + 15, count++;
-	  msg = (char *) sci_malloc(size + 15);
+	  msg = (char *) malloc(size + 15);
 	  if (msg != 0)
 	    {
 	      strcpy(msg, "parse error");
@@ -1253,7 +1253,7 @@ said_value(int val, tree_t t)
 				said_leaf_node(SAID_NEXT_NODE, val),
 				t
 				);
-
+			  
 }
 
 static tree_t
@@ -1484,7 +1484,7 @@ aug_find_words_recursively(parse_tree_node_t *tree, int startpos,
 	while (pos) {
 		if ((word = aug_get_wgroup(tree, pos))) { /* found a word */
 
-			if (!refbranch && major == WORD_TYPE_BASE) {
+			if (!refbranch && major == WORD_TYPE_BASE) {	
 				if ((*base_words_nr) == maxwords) {
 					sciprintf("Out of regular words\n");
 					return; /* return gracefully */
@@ -1506,7 +1506,7 @@ aug_find_words_recursively(parse_tree_node_t *tree, int startpos,
 			}
 			if (major != WORD_TYPE_SYNTACTIC_SUGAR && major != WORD_TYPE_BASE && major != WORD_TYPE_REF)
 				sciprintf("aug_find_words_recursively(): Unknown word type %03x\n", major);
-
+    
 		} else /* Did NOT find a word group: Attempt to recurse */
 			aug_find_words_recursively(tree, pos, base_words, base_words_nr,
 						   ref_words, ref_words_nr, maxwords, refbranch || major == WORD_TYPE_REF);
@@ -1788,7 +1788,7 @@ augment_parse_nodes(parse_tree_node_t *parset, parse_tree_node_t *saidt)
 		sciprintf("augment_parse_nodes(): Parse tree is corrupt\n");
 		return 0;
 	}
-
+  
 	augment_basepos = aug_get_base_node(saidt);
 	if (!augment_basepos) {
 		sciprintf("augment_parse_nodes(): Said tree is corrupt\n");

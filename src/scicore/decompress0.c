@@ -305,7 +305,7 @@ int decompress0(resource_t *result, int resh)
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
 		memcpy(result->data, buffer, compressedLength);
-		result->status = SCI_STATUS_OK;
+		result->status = SCI_STATUS_ALLOCATED;
 		break;
 
 	case 1: /* LZW compression */
@@ -316,7 +316,7 @@ int decompress0(resource_t *result, int resh)
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
-		result->status = SCI_STATUS_OK;
+		result->status = SCI_STATUS_ALLOCATED;
 		break;
 
 	case 2: /* Some sort of Huffman encoding */
@@ -327,7 +327,7 @@ int decompress0(resource_t *result, int resh)
 			free(buffer);
 			return SCI_ERROR_DECOMPRESSION_OVERFLOW;
 		}
-		result->status = SCI_STATUS_OK;
+		result->status = SCI_STATUS_ALLOCATED;
 		break;
 
 	default:

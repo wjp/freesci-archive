@@ -78,7 +78,9 @@
 #  define inline __inline
 #endif
 
-
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199900L
+#  define inline
+#endif
 
 /********** macros for error messages **********/
 

@@ -1991,7 +1991,7 @@ static void *yy_flex_alloc( size )
 yy_size_t size;
 #endif
 	{
-	return (void *) sci_malloc( size );
+	return (void *) malloc( size );
 	}
 
 #ifdef YY_USE_PROTOS
@@ -2009,7 +2009,7 @@ yy_size_t size;
 	 * any pointer type to void*, and deal with argument conversions
 	 * as though doing an assignment.
 	 */
-	return (void *) sci_realloc( (char *) ptr, size );
+	return (void *) realloc( (char *) ptr, size );
 	}
 
 #ifdef YY_USE_PROTOS

@@ -27,6 +27,7 @@
 /* Static binary lookup tree lookup */
 
 
+#include <sci_memory.h>
 #include <sbtree.h>
 #include <stdlib.h>
 #include <stdio.h>

@@ -1,4 +1,4 @@
-/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+/* config.h.in.  Generated automatically from configure.in by autoheader 2.13.  */
 
 /* Define as __inline if that's what the C compiler calls it.  */
 #undef inline
@@ -109,6 +109,9 @@
 
 /* Version number of package */
 #undef VERSION
+
+/* Defined if not compiling a sound server */
+#undef NO_SOUND
 
 /* Define if using the dmalloc debugging malloc package */
 #undef WITH_DMALLOC

@@ -1,3 +1,7 @@
+2001-08-25  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/sci_memory.h: Fixed for C99 inline semantics
+
 2001-08-24  Alex Angas  <wgd@internode.on.net>
 
 	* src/*.c* *.l *.y *.pl *.h: Global search and replace as follows:

@@ -381,7 +381,7 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 						newrsc->length = filestat.st_size - 2;
 						newrsc->id = restype << 11 | resnumber;
 						newrsc->number = resnumber;
-						newrsc->status = SCI_STATUS_OK;
+						newrsc->status = SCI_STATUS_ALLOCATED;
 						newrsc->type = restype;
 
 						newrsc->data = sci_malloc(newrsc->length);
