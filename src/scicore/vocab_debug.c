@@ -276,7 +276,7 @@ static char** _vocabulary_get_knames0alt(int *names, resource_t *r)
 
   while (index < r->length) {
 
-    int slen = strlen(r->data + index) + 1;
+    int slen = strlen((char *) r->data + index) + 1;
 
     retval[i] = malloc(slen);
     memcpy(retval[i++], r->data + index, slen);
@@ -366,9 +366,9 @@ static char** vocabulary_get_knames1(int *count)
 	  size*=2;
 	  t=realloc(t, size*sizeof(char*));
 	}
-      len=strlen(r->data+pos);
+      len=strlen((char *) r->data+pos);
       t[used]=malloc(len+1);
-      strcpy(t[used], r->data+pos);
+      strcpy(t[used], (char *) r->data+pos);
       used++;
       pos+=len+1;
     }

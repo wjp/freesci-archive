@@ -507,7 +507,8 @@ static object* read_object(int script, int positions[1000])
 	if(get_selector_count(raw)<4) obj->name="<anonymous>";
 	else
 	{
-		if(get_selector_value(raw, 3)) obj->name=r->data + get_selector_value(raw, 3);
+		if (get_selector_value(raw, 3))
+			obj->name = (char *) r->data + get_selector_value(raw, 3);
 		else obj->name="<null>";
 	}
 
@@ -601,7 +602,8 @@ static object* read_class(int script, int positions[1000])
 	if(get_selector_count(raw)<4) obj->name="<anonymous>";
 	else
 	{
-		if(get_selector_value(raw, 3)) obj->name=r->data + get_selector_value(raw, 3);
+		if (get_selector_value(raw, 3))
+			obj->name = (char *) r->data + get_selector_value(raw, 3);
 		else obj->name="<null>";
 	}
 

@@ -182,45 +182,45 @@ static void
 script_dump_object(char *data, int seeker, int objsize, char **snames)
 {
   int selectors, overloads, selectorsize;
-  int species = getInt16(data + 8 + seeker);
-  int superclass = getInt16(data + 10 + seeker);
-  int namepos = getInt16(data + 14 + seeker);
+  int species = getInt16((unsigned char *) data + 8 + seeker);
+  int superclass = getInt16((unsigned char *) data + 10 + seeker);
+  int namepos = getInt16((unsigned char *) data + 14 + seeker);
   int i = 0;
 
   sciprintf("Object\n");
 
-  sci_hexdump(data + seeker, objsize -4, seeker);
+  sci_hexdump((unsigned char *) data + seeker, objsize -4, seeker);
   /*-4 because the size includes the two-word header */
 
-  sciprintf("Name: %s\n", namepos? ((char *)data + namepos) : "<unknown>");
+  sciprintf("Name: %s\n", namepos? ((char *)(data + namepos)) : "<unknown>");
   sciprintf("Superclass: %x\n", superclass);
   sciprintf("Species: %x\n", species);
-  sciprintf("-info-:%x\n", getInt16(data + 12 + seeker) & 0xffff);
+  sciprintf("-info-:%x\n", getInt16((unsigned char *) data + 12 + seeker) & 0xffff);
 
-  sciprintf("Function area offset: %x\n", getInt16(data + seeker + 4));
+  sciprintf("Function area offset: %x\n", getInt16((unsigned char *) data + seeker + 4));
   sciprintf("Selectors [%x]:\n",
-	    selectors = (selectorsize = getInt16(data + seeker + 6)));
+	    selectors = (selectorsize = getInt16((unsigned char *) data + seeker + 6)));
 
   seeker += 8;
 
   while (selectors--) {
-    sciprintf("  [#%03x] = 0x%x\n", i++, getInt16(data + seeker) & 0xffff);
+    sciprintf("  [#%03x] = 0x%x\n", i++, getInt16((unsigned char *) data + seeker) & 0xffff);
 
     seeker += 2;
   }
 
 
   sciprintf("Overloaded functions: %x\n", selectors = 
-	    overloads = getInt16(data + seeker));
+	    overloads = getInt16((unsigned char *) data + seeker));
 
   seeker += 2;
 
   if (overloads < 100)
   while (overloads--) {
-    int selector = getInt16(data + (seeker));
+    int selector = getInt16((unsigned char *) data + (seeker));
 
     sciprintf("  [%03x] %s: @", selector & 0xffff, (snames)? snames[selector] : "<?>");
-    sciprintf("%04x\n", getInt16(data + seeker + selectors*2 + 2) & 0xffff);
+    sciprintf("%04x\n", getInt16((unsigned char *) data + seeker + selectors*2 + 2) & 0xffff);
 
     seeker += 2;
   }
@@ -230,31 +230,31 @@ static void
 script_dump_class(char *data, int seeker, int objsize, char **snames)
 {
   int selectors, overloads, selectorsize;
-  int species = getInt16(data + 8 + seeker);
-  int superclass = getInt16(data + 10 + seeker);
-  int namepos = getInt16(data + 14 + seeker);
+  int species = getInt16((unsigned char *) data + 8 + seeker);
+  int superclass = getInt16((unsigned char *) data + 10 + seeker);
+  int namepos = getInt16((unsigned char *) data + 14 + seeker);
 
   sciprintf("Class\n");
 
-  sci_hexdump(data + seeker, objsize -4, seeker); 
+  sci_hexdump((unsigned char *) data + seeker, objsize -4, seeker); 
 
   sciprintf("Name: %s\n", namepos? ((char *)data + namepos) : "<unknown>");
   sciprintf("Superclass: %x\n", superclass);
   sciprintf("Species: %x\n", species);
-  sciprintf("-info-:%x\n", getInt16(data + 12 + seeker) & 0xffff);
+  sciprintf("-info-:%x\n", getInt16((unsigned char *) data + 12 + seeker) & 0xffff);
 
-  sciprintf("Function area offset: %x\n", getInt16(data + seeker + 4));
+  sciprintf("Function area offset: %x\n", getInt16((unsigned char *) data + seeker + 4));
   sciprintf("Selectors [%x]:\n",
-	    selectors = (selectorsize = getInt16(data + seeker + 6)));
+	    selectors = (selectorsize = getInt16((unsigned char *) data + seeker + 6)));
 
   seeker += 8;
   selectorsize <<= 1;
 
   while (selectors--) {
-    int selector = getInt16(data + (seeker) + selectorsize);
+    int selector = getInt16((unsigned char *) data + (seeker) + selectorsize);
 
     sciprintf("  [%03x] %s = 0x%x\n", 0xffff & selector, (snames)? snames[selector] : "<?>",
-	      getInt16(data + seeker) & 0xffff);
+	      getInt16((unsigned char *) data + seeker) & 0xffff);
 
     seeker += 2;
   }
@@ -262,15 +262,15 @@ script_dump_class(char *data, int seeker, int objsize, char **snames)
   seeker += selectorsize;
 
   sciprintf("Overloaded functions: %x\n", selectors = 
-	    overloads = getInt16(data + seeker));
+	    overloads = getInt16((unsigned char *) data + seeker));
 
   seeker += 2;
 
   while (overloads--) {
-    int selector = getInt16(data + (seeker));
+    int selector = getInt16((unsigned char *) data + (seeker));
 
     sciprintf("  [%03x] %s: @", selector & 0xffff, (snames)? snames[selector] : "<?>");
-    sciprintf("%04x\n", getInt16(data + seeker + selectors*2 + 2) & 0xffff);
+    sciprintf("%04x\n", getInt16((unsigned char *) data + seeker + selectors*2 + 2) & 0xffff);
 
     seeker += 2;
   }
@@ -319,7 +319,7 @@ script_dissect(int res_no, char **snames)
 
     switch (objtype) {
     case sci_obj_object: 
-      script_dump_object (script->data, seeker, objsize, snames);
+      script_dump_object ((char *) script->data, seeker, objsize, snames);
       break;
 
     case sci_obj_code: {
@@ -374,19 +374,19 @@ script_dissect(int res_no, char **snames)
       while (script->data [seeker])
       {
         sciprintf ("%04x: %s\n", seeker, script->data+seeker);
-        seeker += strlen (script->data+seeker)+1;
+        seeker += strlen ((char *) script->data+seeker)+1;
       }
       seeker++; /* the ending zero byte */
     };
     break;
 
     case sci_obj_class: 
-      script_dump_class (script->data, seeker, objsize, snames);
+      script_dump_class ((char *) script->data, seeker, objsize, snames);
       break;
 
     case sci_obj_exports: {
       sciprintf("Exports\n");
-      sci_hexdump(script->data + seeker, objsize -4, seeker);
+      sci_hexdump((unsigned char *) script->data + seeker, objsize -4, seeker);
     };
     break;
 

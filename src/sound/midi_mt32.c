@@ -270,7 +270,7 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
     midi_mt32_poke(0x200000, data, 20);
     return 0;
   } else if (type == 2) {
-    midi_mt32_poke(0x200000, "   FreeSCI Rocks!  ", 20);
+    midi_mt32_poke(0x200000, (guint8 *)"   FreeSCI Rocks!  ", 20);
     return midi_mt32_defaults(0x0c,1);  /* send defaults in absence of patch data */
   }
   return -1;

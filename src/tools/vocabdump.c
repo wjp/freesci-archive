@@ -36,12 +36,15 @@ vocab_dump()
 {
 	char **names;
 	opcode *opcodes;
-	int i, count;
+	int i = 0, count;
 	int *classes;
 
 	printf("Selectors:\n");
 	names = vocabulary_get_snames(NULL, 0);
-	while (names[i]) printf("0x%02X: %s\n", i, names[i++]);
+	while (names[i]) {
+		printf("0x%02X: %s\n", i, names[i]);
+		i++;
+	}
 	vocabulary_free_snames(names);
 
 	i = 0;

@@ -474,7 +474,7 @@ kTextSize(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	int width, height;
 	int heap_text = UPARAM(1);
-	char *text = s->heap + heap_text;
+	char *text = (char *) s->heap + heap_text;
 	heap_ptr dest = UPARAM(0);
 	int maxwidth = PARAM_OR_ALT(3, 0);
 	int font_nr = UPARAM(2);
@@ -1393,7 +1393,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				int modifiers = GET_SELECTOR(event, modifiers);
 				int key = GET_SELECTOR(event, message);
 
-				char *text = s->heap + UGET_SELECTOR(obj, text);
+				char *text = (char *) (s->heap + UGET_SELECTOR(obj, text));
 				int textlen = strlen(text);
 
 				if (cursor > textlen)
@@ -1515,7 +1515,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 	rect_t area = gfx_rect(x, y, xl, yl);
 
 	int font_nr = GET_SELECTOR(obj, font);
-	char *text = s->heap + UGET_SELECTOR(obj, text);
+	char *text = (char *) (s->heap + UGET_SELECTOR(obj, text));
 	int view = GET_SELECTOR(obj, view);
 	int cel = sign_extend_byte(GET_SELECTOR(obj, cel));
 	int loop = sign_extend_byte(GET_SELECTOR(obj, loop));
@@ -1921,6 +1921,8 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 }
 
 
+#define FOOP() if (obj == 0x922e) {fprintf(stderr,"%d: _p=%d, p=%d\n", __LINE__, _priority, priority);}
+
 static void
 _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, int argc, heap_ptr argp)
 {
@@ -1933,23 +1935,28 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 		int oldsignal = view->signal;
 
 		_k_set_now_seen(s, view->ID);
-		_priority = VIEW_PRIORITY((view->pos.y)); /* Accomodate difference between interpreter and gfx engine */
+		_priority = VIEW_PRIORITY((view->pos.y));
 
-		if (has_nsrect
-		    && !(view->signal & _K_VIEW_SIG_FLAG_FIX_PRI_ON)) { /* Calculate priority */
-
-			if (options & _K_MAKE_VIEW_LIST_CALC_PRIORITY)
-				PUT_SELECTOR(obj, priority, _priority);
-
-			priority = _priority;
-
-		} else /* DON'T calculate the priority */
+		if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP) { /* Picview */
 			priority = GET_SELECTOR(obj, priority);
+			if (priority <= 0)
+				priority = _priority; /* Always for picviews */
+		} else { /* Dynview */
+			if (has_nsrect
+			    && !(view->signal & _K_VIEW_SIG_FLAG_FIX_PRI_ON)) { /* Calculate priority */
 
-		if ((options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP) && priority <= 0)
-			priority = _priority; /* Always for picviews */
+				if (options & _K_MAKE_VIEW_LIST_CALC_PRIORITY)
+					PUT_SELECTOR(obj, priority, _priority);
+
+				priority = _priority;
+
+			} else /* DON'T calculate the priority */
+				priority = GET_SELECTOR(obj, priority);
+		}
+
 
 		view->color.priority = priority;
+
 		if (priority > -1)
 			view->color.mask |= GFX_MASK_PRIORITY;
 		else
@@ -2320,7 +2327,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	SCIkdebug(SCIkGRAPHICS, "New window with params %d, %d, %d, %d\n", PARAM(0), PARAM(1), PARAM(2), PARAM(3));
 	window = sciw_new_window(s, gfx_rect(x, y, xl, yl), s->titlebar_port->font_nr, 
 				 s->ega_colors[PARAM_OR_ALT(7, 0)], bgcolor, s->titlebar_port->font_nr,
-				 s->ega_colors[15], s->ega_colors[8], s->heap + UPARAM(4), flags);
+				 s->ega_colors[15], s->ega_colors[8], (char *) (s->heap + UPARAM(4)), flags);
 
 	ADD_TO_CURRENT_PORT(window);
 	FULL_REDRAW();

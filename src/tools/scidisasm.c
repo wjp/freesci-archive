@@ -677,7 +677,7 @@ script_dump_strings(disasm_state_t *d, script_state_t *s,
   while (data [seeker] && seeker < endptr)
   {                                                           
     sciprintf ("%04x: %s\n", seeker, data+seeker);
-    seeker += strlen (data+seeker)+1;
+    seeker += strlen ((char *) data+seeker)+1;
   }
 }
 
@@ -845,7 +845,7 @@ script_disassemble_code(disasm_state_t *d, script_state_t *s,
               int atype=script_get_area_type (s, dest, &area_data);
               if (atype == area_string)
               {
-                strncpy (buf, &data [dest], sizeof (buf)-1);
+                strncpy (buf, (char *) &data [dest], sizeof (buf)-1);
                 buf [sizeof (buf)-1] = 0;
                 if (strlen (buf) > 40)
                 {

@@ -149,7 +149,7 @@ file_open(state_t *s, char *filename, int mode)
 void
 kFOpen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  file_open(s, s->heap + UPARAM(0), UPARAM(1));
+  file_open(s, (char *) s->heap + UPARAM(0), UPARAM(1));
 }
 
 void file_close(state_t *s, int handle)
@@ -215,7 +215,7 @@ void fwrite_wrapper(state_t *s, int handle, char *data, int length)
 void kFPuts(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int handle = UPARAM(0);
-  char *data = UPARAM(1) + s->heap;
+  char *data = (char *) (UPARAM(1) + s->heap);
 
   fputs_wrapper(s, handle, data);
 }
@@ -282,7 +282,7 @@ fseek_wrapper(state_t *s, int handle, int offset, int whence)
 void
 kFGets(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  char *dest = UPARAM(0) + s->heap;
+  char *dest = (char *) (UPARAM(0) + s->heap);
   int maxsize = UPARAM(1);
   int handle = UPARAM(2);
 
@@ -299,7 +299,7 @@ void
 kGetCWD(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr offset = UPARAM(0);
-  char *targetaddr = s->heap + offset;
+  char *targetaddr = (char *) s->heap + offset;
 
   s->acc = offset;
   getcwd(targetaddr, PATH_MAX + 1);
@@ -395,7 +395,7 @@ kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   case K_DEVICE_INFO_GET_DEVICE: {
     heap_ptr output = UPARAM(2);
-    char *output_s = s->heap + output;
+    char *output_s = (char *) s->heap + output;
 
     SCIkASSERT(output >= HEAP_MIN);
 
@@ -405,7 +405,7 @@ kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   case K_DEVICE_INFO_GET_CURRENT_DEVICE: {
     heap_ptr output = UPARAM(1);
-    char *output_s = s->heap + output;
+    char *output_s = (char *) s->heap + output;
 
     SCIkASSERT(output >= HEAP_MIN);
 
@@ -416,8 +416,8 @@ kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, heap_ptr argp)
   case K_DEVICE_INFO_PATHS_EQUAL: {
     heap_ptr path1 = UPARAM(1);
     heap_ptr path2 = UPARAM(2);
-    char *path1_s = s->heap + path1;
-    char *path2_s = s->heap + path2;
+    char *path1_s = (char *) s->heap + path1;
+    char *path2_s = (char *) s->heap + path2;
 
     SCIkASSERT(path1 >= HEAP_MIN);
     SCIkASSERT(path2 >= HEAP_MIN);
@@ -579,13 +579,19 @@ _k_find_savegame_by_name(char *game_id_file, char *name)
 void
 kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	char *game_id = UPARAM(0) + s->heap;
+	char *game_id = (char *) (UPARAM(0) + s->heap);
 	char *game_id_file = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
 	int savedir_nr = UPARAM(1);
 	char *buf = NULL;
 
 
 	CHECK_THIS_KERNEL_FUNCTION;
+
+	if (soundserver_dead) {
+		sciprintf("Soundserver is dead- cannot save game state!");
+		s->acc = 0;
+		return;
+	}
 
 	strcpy(game_id_file, game_id);
 	strcat(game_id_file, FREESCI_ID_SUFFIX);
@@ -681,7 +687,7 @@ update_savegame_indices(char *gfname)
 void
 kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	char *game_id = UPARAM(0) + s->heap;
+	char *game_id = (char *) (UPARAM(0) + s->heap);
 	heap_ptr nametarget = UPARAM(1);
 	heap_ptr nameoffsets = UPARAM(2);
 	int gfname_len = strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1;
@@ -724,7 +730,7 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 				PUT_HEAP(nameoffsets, i); /* Write down the savegame number */
 				nameoffsets += 2; /* Make sure the next ID string address is written to the next pointer */
-				strncpy(s->heap + nametarget, namebuf, SCI_MAX_SAVENAME_LENGTH); /* Copy identifier string */
+				strncpy((char *) s->heap + nametarget, namebuf, SCI_MAX_SAVENAME_LENGTH); /* Copy identifier string */
 				s->heap[nametarget + SCI_MAX_SAVENAME_LENGTH - 1] = 0; /* Make sure it's terminated */
 				nametarget += SCI_MAX_SAVENAME_LENGTH; /* Increase name offset pointer accordingly */
 
@@ -743,11 +749,11 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	char *game_id = UPARAM(0) + s->heap;
+	char *game_id = (char *) (UPARAM(0) + s->heap);
 	char *savegame_dir;
 	int savedir_nr = UPARAM(1);
 	char *game_id_file_name = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
-	char *game_description = UPARAM(2) + s->heap;
+	char *game_description = (char *) (UPARAM(2) + s->heap);
 
 	if (_savegame_indices_nr < 0) {
 		char *game_id_file_name = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
@@ -801,7 +807,7 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	char *game_id = UPARAM(0) + s->heap;
+	char *game_id = (char *) (UPARAM(0) + s->heap);
 	int savedir_nr = UPARAM(1);
 
 	if (_savegame_indices_nr < 0) {
@@ -842,7 +848,7 @@ kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kValidPath(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	char *pathname = s->heap + UPARAM(0);
+	char *pathname = (char *) s->heap + UPARAM(0);
 	char cpath[PATH_MAX + 1];
 	getcwd(cpath, PATH_MAX + 1);
 
@@ -869,7 +875,7 @@ write_filename_to_mem(state_t *s, heap_ptr address, char *string)
 {
 	if (string) {
 		memset(s->heap + address, 0, 12);
-		strncpy(s->heap + address, string, 11);
+		strncpy((char *) s->heap + address, string, 11);
 	}
 
 	return string;
@@ -925,7 +931,7 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
   
     case K_FILEIO_OPEN :
     {
-	char *name = s->heap + UPARAM(1);
+	char *name = (char *) s->heap + UPARAM(1);
 	int mode = UPARAM(2);
 	
 	file_open(s, name, mode);
@@ -940,7 +946,7 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
     case K_FILEIO_READ_RAW :
     {
-	char *dest = s->heap + UPARAM(2);
+	char *dest = (char *) s->heap + UPARAM(2);
 	int size = UPARAM(3);
 	int handle = UPARAM(1);
 	
@@ -949,7 +955,7 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
     case K_FILEIO_WRITE_RAW :
     {
-	char *buf = s->heap + UPARAM(2);
+	char *buf = (char *) s->heap + UPARAM(2);
 	int size = UPARAM(3);
 	int handle = UPARAM(1);
 	
@@ -958,14 +964,14 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
     case K_FILEIO_UNLINK :
     {
-	char *name = s->heap + UPARAM(1);
+	char *name = (char *) (s->heap + UPARAM(1));
 	
 	unlink(name);
 	break;
     }
     case K_FILEIO_READ_STRING :
     {
-	char *dest = s->heap + UPARAM(1);
+	char *dest = (char *) (s->heap + UPARAM(1));
 	int size = UPARAM(2);
 	int handle = UPARAM(3);
 	
@@ -974,7 +980,7 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
     case K_FILEIO_WRITE_STRING :
     {
-	char *buf = s->heap + UPARAM(1);
+	char *buf = (char *) (s->heap + UPARAM(1));
 	int size = UPARAM(2);
 	int handle = UPARAM(3);
 	
@@ -992,7 +998,7 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
     case K_FILEIO_FIND_FIRST :
     {
-	char *mask = s->heap + UPARAM(1);
+	char *mask = (char *) (s->heap + UPARAM(1));
 	heap_ptr buf = UPARAM(2);
 	int attr = UPARAM(3); /* We won't use this, Win32 might, though... */
 
@@ -1010,7 +1016,7 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
     case K_FILEIO_STAT :
     {
-	char *name = s->heap + UPARAM(1);
+	char *name = (char *) (s->heap + UPARAM(1));
 	s->acc=1-_k_check_file(name, 0);
 	break;
     }

@@ -518,7 +518,7 @@ game_init(state_t *s)
 
 	sciprintf(" Game designation is \"%s\"\n", s->game_name);
 
-	if (strlen(s->game_name) >= MAX_GAMEDIR_SIZE) {
+	if (strlen((char *) s->game_name) >= MAX_GAMEDIR_SIZE) {
 
 		s->game_name[MAX_GAMEDIR_SIZE - 1] = 0; /* Fix length with brute force */
 		sciprintf(" Designation too long; was truncated to \"%s\"\n", s->game_name);

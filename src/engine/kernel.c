@@ -354,7 +354,7 @@ kmem(state_t *s, int handle)
 		return 0;
 	}
 
-	return s->hunk[handle & 0x7ff].data;
+	return (byte *) s->hunk[handle & 0x7ff].data;
 }
 
 /* Frees the specified handle. Returns 0 on success, 1 otherwise. */
@@ -397,7 +397,7 @@ char *old_save_dir;
 void
 kRestartGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	old_save_dir=strdup(s->heap+s->save_dir+2);
+	old_save_dir=strdup((char *) s->heap+s->save_dir+2);
 	s->restarting_flags |= SCI_GAME_IS_RESTARTING_NOW;
 	s->restarting_flags &= ~SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE; /* This appears to help */
 	script_abort_flag = 1; /* Force vm to abort ASAP */
@@ -415,7 +415,7 @@ kGameIsRestarting(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	if ((old_save_dir)&&(s->save_dir))
 		{
-			strcpy(s->heap + s->save_dir + 2, old_save_dir);
+			strcpy((char *) s->heap + s->save_dir + 2, old_save_dir);
 			free(old_save_dir);
 			old_save_dir = NULL;
 		}

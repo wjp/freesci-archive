@@ -33,7 +33,8 @@
 void
 kAddMenu(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	menubar_add_menu(s->gfx_state, s->menubar, s->heap + UPARAM(0), s->heap + UPARAM(1), s->titlebar_port->font_nr, s->heap);
+	menubar_add_menu(s->gfx_state, s->menubar, (char *) (s->heap + UPARAM(0)),
+			 (char *) (s->heap + UPARAM(1)), s->titlebar_port->font_nr, s->heap);
 }
 
 
@@ -69,7 +70,7 @@ kDrawStatus(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->status_bar_text = NULL;
 
 	if (text)
-		s->status_bar_text = strdup(s->heap + text);
+		s->status_bar_text = strdup((char *) s->heap + text);
 
 	sciw_set_status_bar(s, s->titlebar_port, s->status_bar_text);
 

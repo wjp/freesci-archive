@@ -59,7 +59,7 @@ struct _xlib_state {
         XShmSegmentInfo *shm[4];
 #endif
 	int buckystate;
-	void *old_error_handler;
+	XErrorHandler old_error_handler;
 	Cursor mouse_cursor;
 	byte *pointer_data[2];
 	int flags;
@@ -205,7 +205,7 @@ x_empty_cursor(Display *display, Drawable drawable) /* Generates an empty X curs
 
 	Cursor retval;
 
-	cursor_map = XCreateBitmapFromData(display, drawable, cursor_data, 1, 1);
+	cursor_map = XCreateBitmapFromData(display, drawable, (char *) cursor_data, 1, 1);
 
 	retval = XCreatePixmapCursor(display, cursor_map, cursor_map, &black, &black, 0, 0);
 
@@ -487,7 +487,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	  XDestroyImage(foo_image);
 
         S->used_bytespp = bytespp;
-	S->old_error_handler = XSetErrorHandler(xlib_error_handler);
+	S->old_error_handler = (XErrorHandler) XSetErrorHandler(xlib_error_handler);
 	S->pointer_data[0] = NULL;
 	S->pointer_data[1] = NULL;
 
@@ -541,7 +541,7 @@ xlib_exit(struct _gfx_driver *drv)
 		XFreeGC(S->display, S->gc);
 		XDestroyWindow(S->display, S->window);
 		XCloseDisplay(S->display);
-		XSetErrorHandler(S->old_error_handler);
+		XSetErrorHandler((XErrorHandler) (S->old_error_handler));
 		free(S);
 		S = NULL;
 		gfx_free_mode(drv->mode);
@@ -619,7 +619,7 @@ xlib_register_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 		return GFX_ERROR;
 	}
 	pxm->internal.info = XCreateImage(S->display, DefaultVisual(S->display, DefaultScreen(S->display)),
-					    S->used_bytespp << 3, ZPixmap, 0, pxm->data, pxm->xl,
+					    S->used_bytespp << 3, ZPixmap, 0, (char *) pxm->data, pxm->xl,
 					    pxm->yl, 8, 0);
 
 	DEBUGPXM("Registered pixmap %d/%d/%d at %p (%dx%d)\n", pxm->ID, pxm->loop, pxm->cel,
@@ -673,7 +673,7 @@ xlib_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 	}
 
 	gfx_crossblit_pixmap(drv->mode, pxm, priority, src, dest,
-			     tempimg->data, tempimg->bytes_per_line,
+			     (byte *) tempimg->data, tempimg->bytes_per_line,
 			     S->priority[pribufnr]->index_data,
 			     S->priority[pribufnr]->index_xl, 1,
                              GFX_CROSSBLIT_FLAG_DATA_IS_HOMED);
@@ -710,7 +710,7 @@ xlib_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 		pxm->internal.handle = SCI_XLIB_PIXMAP_HANDLE_GRABBED;
 		pxm->flags |= GFX_PIXMAP_FLAG_INSTALLED | GFX_PIXMAP_FLAG_EXTERNAL_PALETTE | GFX_PIXMAP_FLAG_PALETTE_SET;
 		free(pxm->data);
-		pxm->data = ((XImage *)(pxm->internal.info))->data;
+		pxm->data = (byte *) ((XImage *)(pxm->internal.info))->data;
 		break;
 
 	case GFX_MASK_PRIORITY:
@@ -860,8 +860,8 @@ xlib_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 		S->pointer_data[1] = mask_data = xlib_create_cursor_data(drv, pointer, 0);
 		S->pointer_data[0] = NULL;
 		S->pointer_data[1] = NULL;
-		visual = XCreateBitmapFromData(S->display, S->window, visual_data, real_xl, pointer->yl);
-		mask = XCreateBitmapFromData(S->display, S->window, mask_data, real_xl, pointer->yl);
+		visual = XCreateBitmapFromData(S->display, S->window, (char *) visual_data, real_xl, pointer->yl);
+		mask = XCreateBitmapFromData(S->display, S->window, (char *) mask_data, real_xl, pointer->yl);
 		
 
 		S->mouse_cursor =
@@ -876,6 +876,8 @@ xlib_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 	}
 
 	XDefineCursor(S->display, S->window, S->mouse_cursor);
+
+	return 0;
 }
 
 

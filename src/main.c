@@ -758,7 +758,7 @@ main(int argc, char** argv)
 		return 1;
 	}
 
-	if (init_directories(work_dir, gamestate->game_name)) {
+	if (init_directories(work_dir, (char *) gamestate->game_name)) {
 		fprintf(stderr,"Error resolving the working directory\n");
 		exit(1);
 	}
@@ -766,7 +766,7 @@ main(int argc, char** argv)
 	gamestate->work_dir = work_dir;
 
 	if (!game_name)
-		game_name = gamestate->game_name;
+		game_name = (char *) gamestate->game_name;
 
 	if (!conf) /* Unless the configuration has been read... */
 		conf_nr = read_config(game_name, &conf, &conf_entries, &version);

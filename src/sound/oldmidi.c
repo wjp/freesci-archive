@@ -875,8 +875,8 @@ makeMIDI0(const guint8 *src, int *size, guint8 flag)
 
 }
 
-#undef MIDI_TIMESTAMP(deltatime)
-#undef SETUP_INSTRUMENT(channel, sci_instrument)
+#undef MIDI_TIMESTAMP
+#undef SETUP_INSTRUMENT
 
 gint8
 _lookup_instrument(char *iname)
@@ -1000,8 +1000,8 @@ mapMIDIInstruments(void)
           MIDI_mapping[i].gm_instr = MT32_PresetTimbreMaps[number + 64].gm_instr;
 	  break;
         case 2:
-	  MT32_patch[i].name = patch1->data + 0x1EC + number * 0xF6;
-	  MIDI_mapping[i].gm_instr = _lookup_instrument(patch1->data + 0x1EC + number * 0xF6);
+	  MT32_patch[i].name = (char *) patch1->data + 0x1EC + number * 0xF6;
+	  MIDI_mapping[i].gm_instr = _lookup_instrument((char *) patch1->data + 0x1EC + number * 0xF6);
 	  /* SCIsdebug("Patch %d => %d\n",i, MIDI_mapping[i].gm_instr); */
 	  break;
         case 3:
@@ -1030,7 +1030,7 @@ mapMIDIInstruments(void)
     for (i = 0; i < 64 ; i++) {
       number = *(patch1->data + pos + 4 * i + 2);
       if (number < 64)
-	MIDI_mapping[i + 23].gm_rhythmkey = _lookup_rhythm_key(patch1->data + 0x1EC + number * 0xF6);
+	MIDI_mapping[i + 23].gm_rhythmkey = _lookup_rhythm_key((char *) patch1->data + 0x1EC + number * 0xF6);
       else if (number < 94)
         MIDI_mapping[i + 23].gm_rhythmkey = MT32_RhythmTimbreMaps[number - 64].gm_rhythmkey;
       else

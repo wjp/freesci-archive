@@ -61,7 +61,8 @@ script_error(state_t *s, char *file, int line, char *reason)
   return 0;
 }
 
-inline void putInt16(byte *addr, word value)
+static inline void
+putInt16(byte *addr, word value)
 {
   addr[0] = value &0xff;
   addr[1] = value >> 8;
@@ -521,6 +522,9 @@ run_vm(state_t *s, int restoring)
 
       case Script_Variable: 
       case Script_Property:
+
+      case Script_Local:
+      case Script_Temp:
       case Script_Global:
       case Script_Param:
         opparams[temp] = GET_OP_FLEX(); break;

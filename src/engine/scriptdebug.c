@@ -677,7 +677,7 @@ print_objname(state_t *s, heap_ptr pos, int address)
 
 			if (!namepos || !(*(s->heap + namepos)))
 				sciprintf("<???>");
-			else sciprintf(s->heap + namepos);
+			else sciprintf((char *) s->heap + namepos);
 		}
 	}
 
@@ -825,7 +825,7 @@ disassemble(state_t *s, heap_ptr pos)
 	    nameaddress = getUInt16(s->heap + called_obj_addr + SCRIPT_NAME_OFFSET);
 
 	if (nameaddress)
-	  name = s->heap + nameaddress;
+	  name = (char *) s->heap + nameaddress;
 	else
 	  name = "<invalid>";
 
@@ -2298,7 +2298,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 					 "\n  Note that opening braces and\n  everything behind them are\n"
 					 "\n  removed from all non-operator\n  parameter tokens.\n"
 					 "\n  simparse without parameters\n  removes the entity.\n");
-#endif SCI_SIMPLE_SAID_CODE
+#endif /* SCI_SIMPLE_SAID_CODE */
 #ifdef GFXW_DEBUG_WIDGETS
 			con_hook_command(c_gfx_print_widget, "gfx_print_widget", "i*", "If called with no parameters, it\n  shows which widgets are active.\n"
 					 "  With parameters, it lists the\n  widget corresponding to the\n  numerical index specified (for\n  each parameter).");

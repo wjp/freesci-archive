@@ -257,7 +257,7 @@ vocab_get_suffices(int *suffices_nr)
 
   while ((seeker < resource->length-1) && (resource->data[seeker + 1] != 0xff)) {
 
-    char *alt_suffix = resource->data + seeker;
+    char *alt_suffix = (char *) resource->data + seeker;
     int alt_len = strlen(alt_suffix);
     char *word_suffix;
     int word_len;
@@ -265,7 +265,7 @@ vocab_get_suffices(int *suffices_nr)
     suffices = realloc(suffices, sizeof(suffix_t *) * (counter + 1));
 
     seeker += alt_len + 1; /* Hit end of string */
-    word_suffix = resource->data + seeker + 3; /* Beginning of next string +1 (ignore '*') */
+    word_suffix = (char *) resource->data + seeker + 3; /* Beginning of next string +1 (ignore '*') */
     word_len = strlen(word_suffix);
 
     suffices[counter] = malloc(sizeof(suffix_t));

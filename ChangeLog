@@ -1,3 +1,20 @@
+2001-04-04  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* (many files): Added appropriate typecasts to fix compiler warnings
+
+	* src/engine/kfile.c (kCheckSaveGame): Added sanity check to prevent
+	game saving when sound server is dead
+
+2001-04-03  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/sound.c: Added global variable soundserver_dead
+
+	* src/engine/kgraphics.c (_k_prepare_view_list): Picview priorities
+	are now treated the way they were intended to be treated
+
+	* src/engine/vm.c (run_vm): Added support for Script_Local and
+	Script_Temp
+
 2001-04-01  Dmitry Jemerov <yole@spb.cityline.ru>
 
 	* src/scicore/old_objects.c, src/scicore/script.c,

@@ -311,4 +311,4 @@ vocab_simple_said_test(state_t *s, heap_ptr address)
   return SAID_FULL_MATCH;
 }
 
-#endif SCI_SIMPLE_SAID_CODE
+#endif /* SCI_SIMPLE_SAID_CODE */

@@ -30,20 +30,21 @@
 #include <gfx_tools.h>
 
 
-#undef USE_C_CODE
-
 #ifdef __alpha__
+
+#ifdef __DECC
+#  include "c_asm.h"
+#  define USE_C_CODE
+#else /* GNU C */
+#  undef USE_C_CODE
+#endif
 
 void
 FUNCT_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per_src_line,
 	   int xl, int yl, byte *alpha, int bytes_per_alpha_line, int bytes_per_alpha_pixel,
 	   unsigned int alpha_test_mask, int alpha_shift
 #ifdef PRIORITY
-#  define FUNCTIONPREF "XP"
 	   ,byte *priority_pos ,int bytes_per_priority_line, int bytes_per_priority_pixel, int priority
-
-#else
-#  define FUNCTIONPREF "X"
 #endif
      )
 {
@@ -63,10 +64,8 @@ FUNCT_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per_src_lin
 		int x;
 		byte *dest_next = dest + bytes_per_dest_line;
 		byte *src_next = src + bytes_per_src_line;
-		__asm__ (
-			 "ldl $31, 0(%0)\n\t"
-			 "ldl $31, 0(%1)\n\t"
-			 : : "r"(dest_next), "r"(src_next)); /* Prefetch memory for next line */
+		asm ("ldl $31, 0($31)\n\t"
+		     "ldl $31, 0($31)\n\t"); /* Prefetch memory for next line */
 
 		if (((unsigned long)src) & 4)
 			data = *((unsigned int *) src);
@@ -82,28 +81,18 @@ FUNCT_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per_src_lin
 				unsigned long result;
 				unsigned long orig;
 
-				__asm__ (
-					 "unpkbw %1, %0\n\t"
-					 : "=r"(data)
-					 : "r"(data)
-					 : "1");
+				data = asm("unpkbw %0, %v0\n\t", data);
 
 				result = data * (255 - alpha);
 
 				orig = *((unsigned int *) dest);
 
-				__asm__ ("unpkbw %1, %0\n\t"
-					 : "=r"(orig)
-					 : "r"(orig)
-					 : "1");
+				orig = ("unpkbw %0, %v0\n\t", orig);
 
 				result += orig * alpha;
 				src += 4;
 
-				__asm__ ("pkwb %1, %0\n\t"
-					 : "=r"(result)
-					 : "r"(result >> 8)
-					 : "1");
+				result = ("pkwb %0, #v0\n\t", (result >> 8));
 
 				data >>= 32;
 				*((unsigned int *) dest) = result;
@@ -342,6 +331,4 @@ FUNCT_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per_src_lin
 #endif
 }
 
-#undef FUNCTIONPREF
-
-#endif __alpha__
+#endif /* __alpha__ */

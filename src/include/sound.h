@@ -133,6 +133,10 @@ typedef struct {
 } sfx_driver_t;
 
 
+extern int soundserver_dead; /* Non-zero IFF the sound server died- set by sound.c, must also be
+			     ** set by non-fork()ed sound server implementations */
+
+
 extern DLLEXTERN sfx_driver_t *sfx_drivers[]; /* All available sound fx drivers, NULL-terminated */
 
 /* A word on priorities: A song is more important if its priority is higher.  */

@@ -656,7 +656,7 @@ enum {
 
 enum {
 	ELLIPSE_SOLID, /* Normal filled ellipse */
-	ELLIPSE_OR,    /* color ORred to the buffer */
+	ELLIPSE_OR     /* color ORred to the buffer */
 };
 
 static void

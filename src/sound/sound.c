@@ -66,6 +66,8 @@ extern sfx_driver_t sound_dos;
 
 sound_event_t sound_eq_eoq_event = {0, SOUND_SIGNAL_END_OF_QUEUE, 0};
 
+int soundserver_dead = 0;
+
 sfx_driver_t *sfx_drivers[] = {
 #ifdef HAVE_FORK
   /* Assume that sound_null works on any box that has fork() */
@@ -84,12 +86,14 @@ sfx_driver_t *sfx_drivers[] = {
 void
 _sound_server_oops_handler(int signal)
 {
-  if (signal == SIGCHLD)
-    fprintf(stderr, "Warning: Sound server died\n");
-  else if (signal == SIGPIPE)
-    fprintf(stderr, "Warning: Connection to sound server was severed\n");
-  else
-    fprintf(stderr,"Warning: Signal handler cant' handle signal %d\n", signal);
+	if (signal == SIGCHLD) {
+		fprintf(stderr, "Warning: Sound server died\n");
+		soundserver_dead = 1;
+	} else if (signal == SIGPIPE) {
+		fprintf(stderr, "Warning: Connection to sound server was severed\n");
+		soundserver_dead = 1;
+	} else
+		fprintf(stderr,"Warning: Signal handler cant' handle signal %d\n", signal);
 }
 
 
@@ -323,7 +327,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 							  " left to be sent!\n");
 
 					if (errcount > 200)
-						return;
+						return 1;
 				}
 				break;
 

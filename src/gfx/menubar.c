@@ -393,7 +393,7 @@ menubar_set_attribute(state_t *s, int menu_nr, int item_nr, int attribute, int v
 	case MENU_ATTRIBUTE_TEXT:
 		free(item->text);
 		assert(value);
-		item->text = strdup(s->heap + value);
+		item->text = strdup((char *) s->heap + value);
 		item->text_pos = value;
 		break;
 

@@ -50,7 +50,7 @@ kernel_lookup_text(state_t *s, int address, int index)
     }
 
     textlen = textres->length;
-    seeker = textres->data;
+    seeker = (char *) textres->data;
 
     while (index--)
       while ((textlen--) && (*seeker++));
@@ -62,7 +62,7 @@ kernel_lookup_text(state_t *s, int address, int index)
       return 0;
     }
 
-  } else return s->heap + address;
+  } else return (char *) s->heap + address;
 }
 
 
@@ -241,7 +241,7 @@ void
 kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int stringpos = UPARAM(0);
-  char *string = s->heap + stringpos;
+  char *string = (char *) (s->heap + stringpos);
   int words_nr;
   char *error;
   result_word_t *words;
@@ -285,7 +285,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 #ifdef SCI_SIMPLE_SAID_CODE
     vocab_build_simple_parse_tree(&(s->parser_nodes[0]), words, words_nr);
-#endif SCI_SIMPLE_SAID_CODE
+#endif /* SCI_SIMPLE_SAID_CODE */
 
     free(words);
 
@@ -312,7 +312,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
     PUT_SELECTOR(event, claimed, 1);
     if (error) {
 
-      strcpy(s->heap + s->parser_base, error);
+      strcpy((char *) s->heap + s->parser_base, error);
       SCIkdebug(SCIkPARSER,"Word unknown: %s\n", error);
       /* Issue warning: */
 
@@ -328,7 +328,7 @@ void
 kStrEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr address = UPARAM(0);
-  char *seeker = s->heap + address;
+  char *seeker = (char *) s->heap + address;
 
   while (*seeker++)
     ++address;
@@ -341,16 +341,16 @@ kStrCat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   CHECK_THIS_KERNEL_FUNCTION;
 
-  strcat(s->heap + UPARAM(0), s->heap + UPARAM(1));
+  strcat((char *) s->heap + UPARAM(0), (char *) s->heap + UPARAM(1));
 }
 
 void
 kStrCmp(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   if (argc > 2)
-    s->acc = strncmp(s->heap + UPARAM(0), s->heap + UPARAM(1), UPARAM(2));
+    s->acc = strncmp((char *) (s->heap + UPARAM(0)), (char *) (s->heap + UPARAM(1)), UPARAM(2));
   else
-    s->acc = strcmp(s->heap + UPARAM(0), s->heap + UPARAM(1));
+    s->acc = strcmp((char *) (s->heap + UPARAM(0)), (char *) (s->heap + UPARAM(1)));
 }
 
 
@@ -360,9 +360,9 @@ kStrCpy(state_t *s, int funct_nr, int argc, heap_ptr argp)
   CHECK_THIS_KERNEL_FUNCTION;
 
   if (argc > 2)
-    strncpy(s->heap + UPARAM(0), s->heap + UPARAM(1), UPARAM(2));
+    strncpy((char *) (s->heap + UPARAM(0)), (char *) (s->heap + UPARAM(1)), UPARAM(2));
   else
-    strcpy(s->heap + UPARAM(0), s->heap + UPARAM(1));
+    strcpy((char *) (s->heap + UPARAM(0)), (char *) (s->heap + UPARAM(1)));
 
   s->acc = PARAM(0);
 
@@ -384,7 +384,7 @@ kStrAt(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kReadNumber(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  char *source = s->heap + UPARAM(0);
+  char *source = (char *) (s->heap + UPARAM(0));
 
   while (isspace(*source))
     source++; /* Skip whitespace */
@@ -534,7 +534,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kStrLen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->acc = strlen(s->heap + UPARAM(0));
+  s->acc = strlen((char *) (s->heap + UPARAM(0)));
 }
 
 
@@ -552,7 +552,7 @@ kGetFarText(state_t *s, int funct_nr, int argc, heap_ptr argp)
     return;
   }
 
-  seeker = textres->data;
+  seeker = (char *) textres->data;
 
   while (counter--)
     while (*seeker++);
@@ -561,6 +561,6 @@ kGetFarText(state_t *s, int funct_nr, int argc, heap_ptr argp)
   */
 
   s->acc = UPARAM(2);
-  strcpy(s->heap + UPARAM(2), seeker); /* Copy the string and get return value */
+  strcpy((char *) (s->heap + UPARAM(2)), seeker); /* Copy the string and get return value */
 }
 
