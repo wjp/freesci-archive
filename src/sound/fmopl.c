@@ -24,6 +24,8 @@
 #endif
 #define logerror printf
 
+#define TWELVE_VOICE 1
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -108,7 +110,11 @@ static const int slot_array[32]=
 	 0, 2, 4, 1, 3, 5,-1,-1,
 	 6, 8,10, 7, 9,11,-1,-1,
 	12,14,16,13,15,17,-1,-1,
+#ifdef TWELVE_VOICE
+	18,20,22,19,21,23,-1,-1
+#else
 	-1,-1,-1,-1,-1,-1,-1,-1
+#endif
 };
 
 /* key scale level */
@@ -1199,7 +1205,12 @@ FM_OPL *OPLCreate(int type, int clock, int rate)
 	char *ptr;
 	FM_OPL *OPL;
 	int state_size;
+#ifdef TWELVE_VOICE
+	int max_ch = 12;
+#else
 	int max_ch = 9; /* normaly 9 channels */
+#endif
+
 
 	if( OPL_LockTable() ==-1) return NULL;
 	/* allocate OPL state space */

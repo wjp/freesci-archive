@@ -36,9 +36,10 @@ static int register_base[11] = {
     0xe0, 0xe3, 0xc0
 };
 
-static int register_offset[9] = {
-    /* Channel           1     2     3     4     5     6     7     8     9 */
-    /* Operator 1 */   0x00, 0x01, 0x02, 0x08, 0x09, 0x0A, 0x10, 0x11, 0x12
+static int register_offset[12] = {
+  /* Channel           1     2     3     4     5     6     7     8     9  */
+  /* Operator 1 */   0x00, 0x01, 0x02, 0x08, 0x09, 0x0A, 0x10, 0x11, 0x12, 0x18, 0x19, 0x20
+
 }; 
 
 static int ym3812_note[13] = {
@@ -216,13 +217,6 @@ int adlibemu_start_note(int chn, int note, int velocity)
   
   inst = instr[chn];
 
-#if 0
-  if (chn == RHYTHM_CHANNEL)
-    inst = note;
-  else 
-    inst = instr[chn];
-#endif
-
   synth_setpatch(op, adlib_sbi[inst]);
   synth_setvolume(op, volume);
   synth_setnote(op, note, pitch[chn]); 
@@ -231,9 +225,11 @@ int adlibemu_start_note(int chn, int note, int velocity)
   oper_note[op] = note;
   free_voices--;
 
+#if 0
   printf("play voice %d (%d rem):  C%02x N%02x V%02x/%02x P%02x (%02x/%02x)\n", op, free_voices, chn, note, velocity, volume, inst, 
 	 adlib_reg[register_base[2]+register_offset[op]] & 0x3f,
 	 adlib_reg[register_base[3]+register_offset[op]] & 0x3f);
+#endif
 
   return 0;
 }
@@ -411,7 +407,7 @@ midi_device_t midi_device_adlibemu = {
   &midi_adlibemu_reverb,
   003,		/* patch.003 */
   0x04,		/* playflag */
-  1, 		/* play channel 9 -- rhythm ?notnot */
+  0, 		/* do not play channel 9 */
   ADLIB_VOICES  /* Max polyphony */
 };
 

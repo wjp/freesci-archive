@@ -1,4 +1,11 @@
 2002-01-14  Solomon Peachy <pizza@shaftnet.org>
+	* src/include/midi_device.h, src/sound/fmopl.c,
+	  src/sound/midi_adlibemu.c:  12-channel adlib emulation!
+	* src/sound/midi_adlibemu.c, src/sound/midi_adlib.c:
+	Turned off the rhythm channel.
+	* src/include/pcmout.h:  Bumped up the output buffer size a bit.
+
+2002-01-14  Solomon Peachy <pizza@shaftnet.org>
         * src/include/midi_device.h, src/sound/fmopl.c,
           src/sound/fmopl.h, src/sound/midi_device.c: Misc fixes.
         * src/sound/polled_ss_unix.c:  Move initialization of pcm and

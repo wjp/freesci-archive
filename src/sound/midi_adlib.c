@@ -345,7 +345,7 @@ midi_device_t midi_device_adlib = {
   &midi_adlib_reverb,
   003,		/* patch.003 */
   0x04,		/* playflag */
-  1, 		/* play channel 9 -- rhythm ? */
+  0, 		/* do not play channel 9 */
   ADLIB_VOICES  /* Max polyphony */
 };
 
