@@ -308,13 +308,7 @@ typedef struct {
 
 	selector_t caller, moveDone; /* Used for DoBresen */
 
-#ifndef __cplusplus
-/* Compiling as C++ not really supported; let's hope you're only using this on an insignificant sub-part */
 	selector_t delete; /* Called by Animate() to dispose a view object */
-#else
-/* Same size */
-	selector_t _0_;
-#endif
 
 	selector_t vol;
 	selector_t pri;
