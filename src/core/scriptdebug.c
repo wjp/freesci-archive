@@ -1059,8 +1059,8 @@ c_bpx(state_t *s)
   bp=bp_alloc (s);
 
   bp->type = BREAK_SELECTOR;
-  bp->data = g_malloc (strlen (cmd_params [0].str)+1);
-  strcpy ((char *) bp->data, cmd_params [0].str);
+  bp->data.name = g_malloc (strlen (cmd_params [0].str)+1);
+  strcpy (bp->data.name, cmd_params [0].str);
   s->have_bp |= BREAK_SELECTOR;
 
   return 0;
@@ -1074,7 +1074,7 @@ c_bpe(state_t *s)
   bp=bp_alloc (s);
 
   bp->type = BREAK_EXPORT;
-  bp->data = (void *) (cmd_params [0].val << 16 | cmd_params [1].val);
+  bp->data.address = (cmd_params [0].val << 16 | cmd_params [1].val);
   s->have_bp |= BREAK_EXPORT;
 
   return 0;
@@ -1094,10 +1094,10 @@ c_bplist(state_t *s)
     switch (bp->type)
     {
     case BREAK_SELECTOR:
-      sciprintf ("Execute %s\n", bp->data);
+      sciprintf ("Execute %s\n", bp->data.name);
       break;
     case BREAK_EXPORT:
-      bpdata=(long) bp->data;
+      bpdata = bp->data.address;
       sciprintf ("Execute script %d, export %d\n", bpdata >> 16, bpdata & 0xFFFF);
       break;
     }
@@ -1133,7 +1133,7 @@ int c_bpdel(state_t *s)
   /* Delete it */
   bp_next = bp->next;
   type = bp->type;
-  if (type == BREAK_SELECTOR) g_free (bp->data);
+  if (type == BREAK_SELECTOR) g_free (bp->data.name);
   g_free (bp);
   if (bp_prev)
     bp_prev->next = bp_next;

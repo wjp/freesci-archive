@@ -177,7 +177,7 @@ glx_init(state_t *s, picture_t pic)
 
   xvisinfo = glXChooseVisual(x->glx_display, default_screen, attributes);
   if (!xvisinfo) {
-    fprintf(stderr,"FSCI-GLX: Could not get an RBG visual with one AUX buffer!\n");
+    fprintf(stderr,"FSCI-GLX: Could not get an RGB visual with one AUX buffer!\n");
     free(x);
     return 1;
   }

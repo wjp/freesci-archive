@@ -153,14 +153,14 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
   if (s->have_bp & BREAK_EXPORT)
   {
     breakpoint_t *bp;
-    void *bpdata;
+    gint32 bpaddress;
 
-    bpdata = (void *) (script << 16 | pubfunct);
+    bpaddress = (script << 16 | pubfunct);
 
     bp = s->bp_list;
     while (bp)
     {
-      if (bp->type == BREAK_EXPORT && bp->data == bpdata)
+      if (bp->type == BREAK_EXPORT && bp->data.address == bpaddress)
       {
         sciprintf ("Break on script %d, export %d\n", script, pubfunct);
         script_debug_flag = 1;
@@ -228,7 +228,7 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
       bp = s->bp_list;
       while (bp)
       {
-        if (bp->type == BREAK_SELECTOR && !strcmp ((char *) bp->data, method_name))
+        if (bp->type == BREAK_SELECTOR && !strcmp (bp->data.name, method_name))
         {
           sciprintf ("Break on %s\n", method_name);
           script_debug_flag = 1;
@@ -1791,7 +1791,7 @@ game_exit(state_t *s)
   while (bp)
   {
     bp_next = bp->next;
-    if (bp->type == BREAK_SELECTOR) g_free (bp->data);
+    if (bp->type == BREAK_SELECTOR) g_free (bp->data.name);
     g_free (bp);
     bp = bp_next;
   }

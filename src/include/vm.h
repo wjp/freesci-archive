@@ -192,7 +192,10 @@ typedef struct {
 
 typedef struct _breakpoint {
   int type;
-  void *data;
+  union {
+    guint32 address;  /* Breakpoints on exports */
+    char *name; /* Breakpoints on selector names */
+  } data;
   struct _breakpoint *next;
 } breakpoint_t;
 
