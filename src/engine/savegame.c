@@ -649,7 +649,7 @@ _cfsml_write_gfxw_container_t(FILE *fh, gfxw_container_t* save_struc)
   fprintf(fh, "dirty = ");
     if (!save_struc->dirty)
       fprintf(fh, "\\null\\");
-    else
+    else 
       _cfsml_write_gfx_dirty_rect_t(fh, save_struc->dirty);
     fprintf(fh, "\n");
   fprintf(fh, "contents = ");
@@ -681,7 +681,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -841,7 +841,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -988,7 +988,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1135,7 +1135,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1302,7 +1302,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1386,7 +1386,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1572,7 +1572,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1727,7 +1727,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1853,7 +1853,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -2046,7 +2046,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -2129,7 +2129,7 @@ _cfsml_write_gfxw_port_t(FILE *fh, gfxw_port_t* save_struc)
   fprintf(fh, "dirty = ");
     if (!save_struc->dirty)
       fprintf(fh, "\\null\\");
-    else
+    else 
       _cfsml_write_gfx_dirty_rect_t(fh, save_struc->dirty);
     fprintf(fh, "\n");
   fprintf(fh, "contents = ");
@@ -2188,7 +2188,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -2394,7 +2394,7 @@ _cfsml_write_gfxw_visual_t(FILE *fh, gfxw_visual_t* save_struc)
   fprintf(fh, "dirty = ");
     if (!save_struc->dirty)
       fprintf(fh, "\\null\\");
-    else
+    else 
       _cfsml_write_gfx_dirty_rect_t(fh, save_struc->dirty);
     fprintf(fh, "\n");
   fprintf(fh, "contents = ");
@@ -2432,7 +2432,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -2648,7 +2648,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -2909,7 +2909,7 @@ _cfsml_write_gfxw_list_t(FILE *fh, gfxw_list_t* save_struc)
   fprintf(fh, "dirty = ");
     if (!save_struc->dirty)
       fprintf(fh, "\\null\\");
-    else
+    else 
       _cfsml_write_gfx_dirty_rect_t(fh, save_struc->dirty);
     fprintf(fh, "\n");
   fprintf(fh, "contents = ");
@@ -2941,7 +2941,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -3086,7 +3086,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -3399,7 +3399,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4142,7 +4142,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4320,7 +4320,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4483,7 +4483,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4589,7 +4589,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4667,7 +4667,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4773,7 +4773,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -4979,7 +4979,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -5150,7 +5150,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -5265,7 +5265,7 @@ _cfsml_write_gfx_dirty_rect_t(FILE *fh, gfx_dirty_rect_t* save_struc)
   fprintf(fh, "next = ");
     if (!save_struc->next)
       fprintf(fh, "\\null\\");
-    else
+    else 
       _cfsml_write_gfx_dirty_rect_t(fh, save_struc->next);
     fprintf(fh, "\n");
   fprintf(fh, "}");
@@ -5294,7 +5294,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -5412,7 +5412,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -5707,7 +5707,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
 	if (type_name)
 		fputs(type_name, fh);
 	else {
-		sciprintf("While writing widget: Encountered invalid widget type %d\n",
+		sciprintf("While writing widget: Encountered invalid widget type %d\n", 
 			  (*widget)->type);
 		fputs("\\null\\", fh);
 		return;
@@ -5893,7 +5893,7 @@ full_widget_tree_traversal(gfxw_widget_t *widget, gfxw_container_t *parent, gfxw
 				sciprintf("Restored port with invalid ID #%d\n", port->ID);
 			else
 				visual->port_refs[port->ID] = port; /* List port globally */
-
+					  
 		}
 	}
 
@@ -6749,7 +6749,7 @@ gamestate_restore(state_t *s, char *dirname)
 			strcpy(retval->heap + retval->save_dir + 2, cwd);
 
 		sci_free(cwd);
-
+		
 		retval->save_dir_copy = 0xffff;
 		retval->save_dir_edit_offset = 0;
 	}

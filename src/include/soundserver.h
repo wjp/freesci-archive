@@ -553,7 +553,7 @@ typedef struct {
 	playing_notes_t playing_notes[MIDI_CHANNELS];	/* keeps track of polyphony */
 	byte mute_channel[MIDI_CHANNELS];	/* which channels are muted */
 	int reverse_stereo;	/* reverse stereo setting */
-	unsigned int sound_cue;	/* cumulative cue counter */
+	int sound_cue;	/* cumulative cue counter */
 
 	/* note: only present in polled sound server and not currently used */
 	unsigned long usecs_to_sleep;
