@@ -30,6 +30,7 @@
 ** savegame.cfsml. If this doesn't solve your problem, contact the maintainer.
 */
 
+#include <gfx_operations.h>
 #include <engine.h>
 #include <assert.h>
 #include <heap.h>
@@ -96,12 +97,7 @@ write_hunk_block(FILE *fh, hunk_block_t *foo)
 
 	if (foo->type == HUNK_TYPE_GFXBUFFER) {
 
-		int handle = graph_png_save_box(_global_save_state, foo->data);
-
-		if (handle >= 0)
-			sprintf(filename, "buffer.%d", handle);
-		else
-			strcpy(filename, "\\ERROR\\"); /* Treat as empty */
+		strcpy(filename, "\\ERROR\\"); /* Treat as empty */
 
 	} else { /* Normal buffer */
 
@@ -132,15 +128,8 @@ read_hunk_block(FILE *fh, hunk_block_t *foo, char *lastval, int *line, int *hite
 	}
 
 	if (lastval[0] == 'b') { /* Graphical buffer */
-		int bufnum;
 
-		foo->type = HUNK_TYPE_GFXBUFFER;
-
-		sscanf(lastval, "buffer.%d", &bufnum);
-		foo->data = graph_png_load_box(_global_save_state, bufnum, &(foo->size));
-
-		if (!foo->data)
-			return 1;
+		return 1;
 
 	} else { /* Normal hunk */
 
@@ -191,19 +180,14 @@ int
 read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof);
 
 void
-write_port_tp(FILE *fh, port_t **foo);
-int
-read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof);
-
-void
 write_any_widget(FILE *fh, gfxw_widget_t **widget);
 int
 read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int *hiteof);
 
 void
-write_pixmap_color(FILE *fh, gfx_pixmap_color_t **color);
+write_pixmap_color(FILE *fh, gfx_pixmap_color_t *color);
 int
-read_pixmap_color(FILE *fh, gfx_pixmap_color_t **color, char *lastval, int *line, int *hiteof);
+read_pixmap_color(FILE *fh, gfx_pixmap_color_t *color, char *lastval, int *line, int *hiteof);
 
 
 %CFSML
@@ -218,7 +202,6 @@ TYPE hunk_block_t "hunk_block_t" USING write_hunk_block read_hunk_block;
 TYPE parse_tree_node_t "parse_tree_node_t" USING write_PTN read_PTN;
 
 TYPE menubar_tp "menubar_t*" USING write_menubar_tp read_menubar_tp;
-TYPE port_tp "port_t*" USING write_port_tp read_port_tp;
 
 /* Widget subsystem */
 /*------------------*/
@@ -256,7 +239,7 @@ RECORD gfx_color_t {
 
 RECORD gfx_dirty_rect_t {
 	rect_t rect;
-	gfx_dirty_rect_t next[*];
+	gfx_dirty_rect_t * next;
 }
 
 
@@ -317,7 +300,7 @@ RECORD gfxw_text_t EXTENDS gfxw_widget_t {
 
 RECORD gfxw_container_t EXTENDS gfxw_widget_t {
 	rect_t zone;
-	gfx_dirty_rect_t dirty[*];
+	gfx_dirty_rect_t * dirty;
 	any_widget_p contents;
 }
 /* Handled externally: nextpp */
@@ -418,30 +401,6 @@ RECORD script_t "script_t" {
 	int lockers;
 }
 
-RECORD port_t "port_t" {
-	gint16 ymin;
-	gint16 xmin;
-	gint16 ymax;
-	gint16 xmax;
-
-	heap_ptr title;
-	gint16 flags;
-	int alignment;
-	int x;
-	int y;
-
-	int font_nr;
-
-	gint16 priority;
-	gint16 bgcolor;
-	gint16 color;
-
-	byte gray_text;
-	int bg_handle;
-
-	int predecessor;
-}
-
 
 RECORD synonym_t "synonym_t" {
 	int replaceant;
@@ -528,14 +487,14 @@ RECORD state_t "state_t" {
 struct {
 	gfxw_widget_types_t type;
 	char *name;
-} widget_string_names = {
+} widget_string_names[] = {
 	{GFXW_BOX, "BOX"},
 	{GFXW_RECT, "PRIMITIVE"},
 	{GFXW_LINE, "PRIMITIVE"},
 	{GFXW_INVERSE_LINE, "PRIMITIVE"},
 	{GFXW_STATIC_VIEW, "VIEW"},
 	{GFXW_VIEW, "VIEW"},
-	{GFXW_DYNVIEW, "DYNVIEW"},
+	{GFXW_DYN_VIEW, "DYNVIEW"},
 	{GFXW_TEXT, "TEXT"},
 	{GFXW_SORTED_LIST, "LIST"},
 	{GFXW_LIST, "LIST"},
@@ -544,7 +503,7 @@ struct {
 	{GFXW_CONTAINER, "_CONTAINER"},
 	{GFXW_, "_WIDGET"},
 	{-1, NULL}
-}
+};
 
 static char *
 stringify_widget_type(int type)
@@ -574,7 +533,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
 	char *type_name;
 
 	if (*widget == NULL) {
-		fputs("NULL", fh);
+		fputs("\\null\\", fh);
 		return;
 	}
 
@@ -584,49 +543,49 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
 	else {
 		sciprintf("While writing widget: Encountered invalid widget type %d\n", 
 			  (*widget)->type);
-		fputs("NULL", fh);
+		fputs("\\null\\", fh);
 		return;
 	}
 
-	fputs(type_name, " {\n");
+	fputs("\n<\n", fh);
 
 	switch ((*widget)->type) {
 
 	case GFXW_BOX:
-		%CFSMLWRITE gfxw_box_t (**widget) INTO fh;
+		%CFSMLWRITE gfxw_box_t ((gfxw_box_t*)*widget) INTO fh;
 		break;
 
 	case GFXW_RECT:
 	case GFXW_LINE:
 	case GFXW_INVERSE_LINE:
-		%CFSMLWRITE gfxw_primitive_t (**widget) INTO fh;
+		%CFSMLWRITE gfxw_primitive_t ((gfxw_primitive_t*)*widget) INTO fh;
 		break;
 
 	case GFXW_VIEW:
 	case GFXW_STATIC_VIEW:
-		%CFSMLWRITE gfxw_view_t (**widget) INTO fh;
+		%CFSMLWRITE gfxw_view_t ((gfxw_view_t*)*widget) INTO fh;
 		break;
 
-	case GFXW_DYNVIEW:
-		%CFSMLWRITE gfxw_dyn_view_t (**widget) INTO fh;
+	case GFXW_DYN_VIEW:
+		%CFSMLWRITE gfxw_dyn_view_t ((gfxw_dyn_view_t*)*widget) INTO fh;
 		break;
 
 	case GFXW_TEXT:
-		%CFSMLWRITE gfxw_text_t (**widget) INTO fh;
+		%CFSMLWRITE gfxw_text_t ((gfxw_text_t*)*widget) INTO fh;
 		break;
 
 
 	case GFXW_SORTED_LIST:
 	case GFXW_LIST:
-		%CFSMLWRITE gfxw_list_t (**widget) INTO fh;
+		%CFSMLWRITE gfxw_list_t ((gfxw_list_t*)*widget) INTO fh;
 		break;
 
 	case GFXW_VISUAL:
-		%CFSMLWRITE gfxw_visual_t (**widget) INTO fh;
+		%CFSMLWRITE gfxw_visual_t ((gfxw_visual_t*)*widget) INTO fh;
 		break;
 
 	case GFXW_PORT:
-		%CFSMLWRITE gfxw_port_t (**widget) INTO fh;
+		%CFSMLWRITE gfxw_port_t ((gfxw_port_t*)*widget) INTO fh;
 		break;
 
 	case GFXW_:
@@ -636,15 +595,13 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
 		(*widget)->print((*widget), 0);
 
 		if ((*widget)->type == GFXW_CONTAINER) {
-			fputs("CONTAINER{", fh);
-			%CFSMLWRITE gfxw_container_t (**widget) INTO fh;
+			%CFSMLWRITE gfxw_container_t ((gfxw_container_t*)*widget) INTO fh;
 		} else {
-			fputs("WIDGET{", fh);
-			%CFSMLWRITE gfxw_widget_t (**widget) INTO fh;
+			%CFSMLWRITE gfxw_widget_t (*widget) INTO fh;
 		}
 		break;
 	}
-	fputs("}\n", fh);
+	fputs(">\n", fh);
 }
 
 void
@@ -666,7 +623,7 @@ _gfxw_set_ops_PORT(gfxw_container_t *widget);
 
 
 void
-full_widget_tree_traversal(gfxw_widget_t *widget, gfxw_container_t *parent, gfxw_visual_t visual)
+full_widget_tree_traversal(gfxw_widget_t *widget, gfxw_container_t *parent, gfxw_visual_t *visual)
 {
 	if (!widget)
 		return;
@@ -681,6 +638,9 @@ full_widget_tree_traversal(gfxw_widget_t *widget, gfxw_container_t *parent, gfxw
 
 	if (widget->next)
 		full_widget_tree_traversal(widget->next, parent, visual);
+
+	fprintf(stderr,"Setting vis to %p in wSerial %x\n", visual, widget->serial);
+	widget->visual = visual;
 
 	if (GFXW_IS_CONTAINER(widget)) {
 		gfxw_container_t *container = GFXWC(widget);
@@ -701,7 +661,7 @@ full_widget_tree_traversal(gfxw_widget_t *widget, gfxw_container_t *parent, gfxw
 		if (GFXW_IS_PORT(container)) {
 			gfxw_port_t *port = (gfxw_port_t *) container;
 
-			full_widget_tree_traversal(port->decorations, container, visual);
+			full_widget_tree_traversal(GFXW(port->decorations), container, visual);
 			full_widget_tree_traversal(port->port_bg, container, visual);
 
 			if (visual->port_refs_nr <= port->ID
@@ -736,7 +696,7 @@ full_widget_tree_traversal(gfxw_widget_t *widget, gfxw_container_t *parent, gfxw
 		_gfxw_set_ops_VIEW(widget, 1);
 		break;
 
-	case GFXW_DYNVIEW:
+	case GFXW_DYN_VIEW:
 		_gfxw_set_ops_DYNVIEW(widget);
 		break;
 
@@ -765,14 +725,16 @@ full_widget_tree_traversal(gfxw_widget_t *widget, gfxw_container_t *parent, gfxw
 	}
 }
 
+gfxw_widget_t *
+_gfxw_new_widget(int size, int type);
+
 int
 read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int *hiteof)
 {
-	gfxw_widget_type_t expected_type;
+	gfxw_widget_types_t expected_type;
 	int nextchar;
 
-
-	if (!strcmp(lastval, "NULL")) {
+	if (!strcmp(lastval, "\\null\\")) {
 		*widget = NULL;
 		return;
 		/* That was easy */
@@ -786,13 +748,13 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
 		return 1;
 	}
 
-	while ((nextchar = fgetc(fh)) != "{") {
+	while ((nextchar = fgetc(fh)) != '<') {
 		if (nextchar == EOF)
 			return ((*hiteof = 1));
 
 		if (nextchar == '\n')
 			(*line)++;
-		else if (!iswhite(nextchar)) {
+		else if (!isspace(nextchar)) {
 			sciprintf("Invalid character encountered: '%c' (%02x) in line %d\n",
 				  nextchar, nextchar, *line);
 			return 1;
@@ -802,72 +764,82 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
 	switch (expected_type) {
 
 	case GFXW_BOX:
-		*widget = malloc(sizeof(gfxw_box_t));
-		%CFSMLREAD gfxw_box_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		*widget = _gfxw_new_widget(sizeof(gfxw_box_t), expected_type);
+		%CFSMLREAD gfxw_box_t ((gfxw_box_t*)*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
 		break;
 
 	case GFXW_RECT:
 	case GFXW_LINE:
 	case GFXW_INVERSE_LINE:
-		*widget = malloc(sizeof(gfxw_primitive_t));
-		%CFSMLREAD gfxw_primitive_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		*widget = _gfxw_new_widget(sizeof(gfxw_primitive_t), expected_type);
+		%CFSMLREAD gfxw_primitive_t ((gfxw_primitive_t*)*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
 		break;
 
 	case GFXW_VIEW:
 	case GFXW_STATIC_VIEW:
-		*widget = malloc(sizeof(gfxw_view_t));
-		%CFSMLREAD gfxw_view_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		*widget = _gfxw_new_widget(sizeof(gfxw_view_t), expected_type);
+		%CFSMLREAD gfxw_view_t ((gfxw_view_t*)*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
 		break;
 
-	case GFXW_DYNVIEW:
-		*widget = malloc(sizeof(gfxw_dyn_view_t));
-		%CFSMLREAD gfxw_dyn_view_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+	case GFXW_DYN_VIEW:
+		*widget = _gfxw_new_widget(sizeof(gfxw_dyn_view_t), expected_type);
+		%CFSMLREAD gfxw_dyn_view_t ((gfxw_dyn_view_t*)*widget) FROM fh ERRVAR *hiteof LINECOUNTER *line;
 		break;
 
 	case GFXW_TEXT:
-		*widget = malloc(sizeof(gfxw_text_t));
-		%CFSMLREAD gfxw_text_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		*widget = _gfxw_new_widget(sizeof(gfxw_text_t), expected_type);
+		%CFSMLREAD gfxw_text_t ((gfxw_text_t*)*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
 		break;
 
 
 	case GFXW_LIST:
 	case GFXW_SORTED_LIST:
-		*widget = malloc(sizeof(gfxw_list_t));
-		%CFSMLREAD gfxw_list_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		*widget = _gfxw_new_widget(sizeof(gfxw_list_t), expected_type);
+		GFXWC(*widget)->contents = NULL;
+		GFXWC(*widget)->dirty = NULL;
+		%CFSMLREAD gfxw_list_t ((gfxw_list_t*)*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
 		break;
 
 	case GFXW_VISUAL:
-		*widget = malloc(sizeof(gfxw_visual_t));
-		%CFSMLREAD gfxw_visual_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		*widget = _gfxw_new_widget(sizeof(gfxw_visual_t), expected_type);
+		GFXWC(*widget)->contents = NULL;
+		GFXWC(*widget)->dirty = NULL;
+		%CFSMLREAD gfxw_visual_t ((gfxw_visual_t*)*widget) FROM fh ERRVAR *hiteof LINECOUNTER *line;
 		full_widget_tree_traversal(*widget, NULL, NULL);
 		break;
 
 	case GFXW_PORT:
-		*widget = malloc(sizeof(gfxw_port_t));
-		%CFSMLREAD gfxw_port_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		*widget = _gfxw_new_widget(sizeof(gfxw_port_t), expected_type);
+		GFXWC(*widget)->contents = NULL;
+		GFXWC(*widget)->dirty = NULL;
+		((gfxw_port_t *) (*widget))->decorations = NULL;
+		((gfxw_port_t *) (*widget))->port_bg = NULL;
+		%CFSMLREAD gfxw_port_t ((gfxw_port_t*)*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
 		break;
 
 	case GFXW_CONTAINER:
+		*widget = _gfxw_new_widget(sizeof(gfxw_container_t), expected_type);
+		GFXWC(*widget)->contents = NULL;
+		GFXWC(*widget)->dirty = NULL;
 		sciprintf("Warning: Restoring untyped widget container\n");
-		*widget = malloc(sizeof(gfxw_container_t));
-		%CFSMLREAD gfxw_container_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		%CFSMLREAD gfxw_container_t ((gfxw_container_t*)*widget) FROM fh ERRVAR *hiteof LINECOUNTER *line;
 		break;
 
 	case GFXW_:
+		*widget = _gfxw_new_widget(sizeof(gfxw_widget_t), expected_type);
 		sciprintf("Warning: Restoring untyped widget\n");
-		*widget = malloc(sizeof(gfxw_widget_t));
-		%CFSMLREAD gfxw_widget_t (**widget) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+		%CFSMLREAD gfxw_widget_t (*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
 		break;
 
 	}
 
-	while ((nextchar = fgetc(fh)) != "}") {
+	while ((nextchar = fgetc(fh)) != '>') {
 		if (nextchar == EOF)
 			return ((*hiteof = 1));
 
 		if (nextchar == '\n')
 			(*line)++;
-		else if (!iswhite(nextchar)) {
+		else if (!isspace(nextchar)) {
 			sciprintf("Invalid character encountered: '%c' (%02x) in line %d\n",
 				  nextchar, nextchar, *line);
 			return 1;
@@ -879,20 +851,20 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
 /* Identify, handle stuff listed as "handled externally" */
 
 void
-write_pixmap_color(FILE *fh, gfx_pixmap_color_t **color);
+write_pixmap_color(FILE *fh, gfx_pixmap_color_t *color)
 {
-	%CFSMLWRITE gfx_pixmap_color_t (*color) INTO fh;
+	%CFSMLWRITE gfx_pixmap_color_t (color) INTO fh;
 }
 
 int
-read_pixmap_color(FILE *fh, gfx_pixmap_color_t **color, char *lastval, int *line, int *hiteof);
+read_pixmap_color(FILE *fh, gfx_pixmap_color_t *color, char *lastval, int *line, int *hiteof)
 {
-	%CFSMLREAD gfx_pixmap_color_t (*color) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+	%CFSMLREAD gfx_pixmap_color_t (color) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
 
-	if (_global_save_state->gfx_state->mode->palette)
-		if (gfx_alloc_color(_global_save_state->gfx_state->mode->palette, *color) < 0)
+	if (_global_save_state->gfx_state->driver->mode->palette)
+		if (gfx_alloc_color(_global_save_state->gfx_state->driver->mode->palette, color) < 0)
 			sciprintf("While restoring color index: Allocating color entry for (%02x,%02x,%02x) failed!\n",
-				  (*color)->r, (*color)->g, (*color)->b);
+				  color->r, color->g, color->b);
 
 	return *hiteof;
 }
@@ -922,41 +894,6 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
 
 		*foo = (menubar_t *) malloc(sizeof(menubar_t));
 		%CFSMLREAD menubar_t (*foo) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
-
-	}
-	return *hiteof;
-}
-
-void
-write_port_tp(FILE *fh, port_t **foo)
-{
-	if (*foo) {
-
-		%CFSMLWRITE port_t (*foo) INTO fh;
-
-	} else { /* Nothing to write */
-		fputs("\\null\\", fh);
-	}
-}
-
-
-int
-read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof)
-{
-	resource_t *res;
-
-	if (lastval[0] == '\\') {
-		*foo = NULL; /* No port */
-	} else {
-
-		*foo = (port_t *) malloc(sizeof(port_t));
-		%CFSMLREAD port_t (*foo) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
-
-		res =  findResource(sci_font, (*foo)->font_nr);
-		if (res)
-			(*foo)->font = res->data;
-		else
-			(*foo)->font = NULL;
 
 	}
 	return *hiteof;
@@ -1028,8 +965,6 @@ gamestate_save(state_t *s, char *dirname)
 	write(fd, s->_heap->start, SCI_HEAP_SIZE);
 	close(fd);
 
-	png_save_pic(s->pic);
-
 	chdir ("..");
 	return 0;
 }
@@ -1074,10 +1009,6 @@ gamestate_restore(state_t *s, char *dirname)
 
 	%CFSMLREAD state_t retval FROM fh ERRVAR read_eof;
 
-	retval->wm_port = gfxw_find_port(retval->visual, 0);
-	retval->titlebar_port = gfxw_find_port(retval->visual, 1);
-	retval->picture_port = gfxw_find_port(retval->visual, 2);
-
 	fclose(fh);
 
 	if ((retval->savegame_version < FREESCI_SAVEGAME_VERSION) || (retval->savegame_version > FREESCI_SAVEGAME_VERSION)) {
@@ -1107,17 +1038,11 @@ gamestate_restore(state_t *s, char *dirname)
 	read(fd, retval->_heap->start, SCI_HEAP_SIZE);
 	close(fd);
 
-	if (png_load_pic(s->pic)) {
-		sciprintf("Picture data does not exist for game state '%s'\n", dirname);
-		chdir("..");
-		heap_del(retval->_heap);
-		free(retval);
-		return NULL;
-	}
-
-	retval->pic = s->pic; /* Continue using that pic */
-
 	_gamestate_unfrob(retval);
+
+	retval->wm_port = gfxw_find_port(retval->visual, 0);
+	retval->titlebar_port = gfxw_find_port(retval->visual, 1);
+	retval->picture_port = gfxw_find_port(retval->visual, 2);
 
 	/* Set exec stack base to zero */
 	retval->execution_stack_base = 0;
@@ -1126,43 +1051,9 @@ gamestate_restore(state_t *s, char *dirname)
 	for (i = 0; i < retval->classtable_size; i++)
 		retval->classtable[i].scriptposp = &(retval->scripttable[retval->classtable[i].script].heappos);
 
-	/* Set views in pic_views */
-	for (i = 0; i < retval->pic_views_nr; i++) {
-		resource_t *res = findResource(sci_view, retval->pic_views[i].view_nr);
-		retval->pic_views[i].view = (res? res->data : NULL);
-	}
-
-	/* Set views in dyn_views */
-	for (i = 0; i < retval->dyn_views_nr; i++) {
-		resource_t *res = findResource(sci_view, retval->dyn_views[i].view_nr);
-		retval->dyn_views[i].view = (res? res->data : NULL);
-	}
-
-	/* Now set all standard ports */
-	memcpy(&(retval->wm_port), retval->ports[0], sizeof(port_t));
-	memcpy(&(retval->titlebar_port), retval->ports[1], sizeof(port_t));
-	memcpy(&(retval->picture_port), retval->ports[2], sizeof(port_t));
-
-	for (i = 0; i < 3; i++)
-		free(retval->ports[i]); /* Free those ports... */
-
-	/* ...and let them point to where they belong */
-	retval->ports[0] = &(retval->wm_port);
-	retval->ports[1] = &(retval->titlebar_port);
-	retval->ports[2] = &(retval->picture_port);
-
-	/* Map port fonts */
-	for (i = 0; i < MAX_PORTS; i++)
-		if (retval->ports[i]) {
-			resource_t *resource = findResource(sci_font, retval->ports[i]->font_nr);
-			if (resource)
-				retval->ports[i]->font = resource->data;
-		}
-
 	/* Now copy all current state information */
 	/* Graphics and input state: */
-	retval->gfx_driver = s->gfx_driver;
-	memcpy(&(retval->graphics), &(s->graphics), sizeof (s->graphics));
+	retval->gfx_state = s->gfx_state;
 
 	/* Sound state: */
 	retval->sfx_driver = s->sfx_driver;
@@ -1197,22 +1088,6 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->kfunct_table = s->kfunct_table;
 	retval->opcodes = s->opcodes;
 
-	/* Mouse pointer */
-	retval->pointer_x = s->pointer_x;
-	retval->pointer_y = s->pointer_y;
-	if (retval->mouse_pointer_nr == -1)
-		retval->mouse_pointer = NULL;
-	else {
-		resource_t *resource = findResource(sci_cursor, retval->mouse_pointer_nr);
-		byte *data = (resource)? resource->data : NULL;
-		if (data)
-			retval->mouse_pointer = calc_mouse_cursor(data);
-		else {
-			retval->mouse_pointer = NULL;
-			retval->mouse_pointer_nr = -1;
-		}
-	}
-
 	memcpy(&(retval->selector_map), &(s->selector_map), sizeof(selector_map_t));
 
 	/* Copy breakpoint information from current game instance */
@@ -1225,6 +1100,10 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->successor = NULL;
 
 	chdir ("..");
+
+	/* Old state cleanup */
+	if (s->visual)
+		s->visual->free(GFXW(s->visual));
 
 	return retval;
 }

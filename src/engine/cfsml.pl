@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # The C File Storage Meta Language "reference" implementation
 # This implementation is supposed to conform to version
-$version = "0.7.0";
+$version = "0.8.0";
 # of the spec. Please contact the maintainer if it doesn't.
 #
 # cfsml.pl Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
@@ -38,6 +38,7 @@ $type_integer = "integer";
 $type_string = "string";
 $type_record = "RECORD";
 $type_pointer = "POINTER";
+$type_abspointer = "ABSPOINTER";
 
 %types;      # Contains all type bindings
 %records;    # Contains all record bindings
@@ -63,6 +64,52 @@ _cfsml_error(char *fmt, ...)
   va_end(argp);
 
 }
+
+
+struct _cfsml_pointer_refstruct {
+    struct _cfsml_pointer_refstruct *next;
+    void *ptr;
+} *_cfsml_pointer_references = NULL;
+
+static struct _cfsml_pointer_refstruct **_cfsml_pointer_references_current = &_cfsml_pointer_references;
+
+
+static void
+_cfsml_free_pointer_references_recursively(struct _cfsml_pointer_refstruct *refs, int free_pointers)
+{
+    if (!refs)
+	return;
+
+    _cfsml_free_pointer_references_recursively(refs->next, free_pointers);
+
+    if (free_pointers)
+	free(refs->ptr);
+
+    free(refs);
+}
+
+static void
+_cfsml_free_pointer_references(struct _cfsml_pointer_refstruct **meta_ref, int free_pointers)
+{
+    _cfsml_free_pointer_references_recursively(*meta_ref, free_pointers);
+    *meta_ref = NULL;
+    _cfsml_pointer_references_current = meta_ref;
+}
+
+static struct _cfsml_pointer_refstruct **
+_cfsml_get_current_refpointer()
+{
+    return _cfsml_pointer_references_current;
+}
+
+static void _cfsml_register_pointer(void *ptr)
+{
+    struct _cfsml_pointer_refstruct *newref = malloc(sizeof (struct _cfsml_pointer_refstruct));
+    newref->next = NULL;
+    newref->ptr = ptr;
+    *_cfsml_pointer_references_current = newref;
+}
+
 
 static char *
 _cfsml_mangle_string(char *s)
@@ -353,6 +400,14 @@ sub create_writer
 	  print "    fprintf(fh, \"%d\", foo->$n->{'name'} - foo->$n->{'anchor'});" .
 	    " /* Relative pointer */\n";
 
+      } elsif ($n->{'type'} eq $type_abspointer) { # Absolute pointer
+
+	  print "    if (!foo->$n->{'name'})\n";
+	  print "      fprintf(fh, \"\\\\null\\\\\");";
+	  print "    else \n";
+	  print "      $types{$n->{'reftype'}}{'writer'}";
+	  print "(fh, foo->$n->{'name'});\n";
+
 	} else { # Normal record entry
 
 	  print "    $types{$n->{'type'}}{'writer'}";
@@ -426,6 +481,7 @@ sub create_reader
       print "      lastval++; /* ...and skip the opening quotes locally */\n";
       print "    }\n";
       print "    *foo = _cfsml_unmangle_string(lastval);\n";
+      print "    _cfsml_register_pointer(foo);\n";
       print "    return CFSML_SUCCESS;\n";
       print "  } else {\n";
       print "    *foo = NULL;\n";
@@ -435,8 +491,8 @@ sub create_reader
       print "#line ", __LINE__, " \"cfsml.pl\"\n";
       print "  int assignment, closed, done;\n\n";
       print "  if (strcmp(lastval, \"{\")) {\n";
-      print "     _cfsml_error(\"Reading record; expected opening braces in line %d\\n\",";
-      print "*line);\n";
+      print "     _cfsml_error(\"Reading record; expected opening braces in line %d, got \\\"%s\\\"\\n\",";
+      print "line, lastval);\n";
       print "     return CFSML_FAILURE;\n";
       print "  };\n";
       print "  closed = 0;\n";
@@ -463,6 +519,11 @@ sub create_reader
       foreach $n (@{$records{$type}}) { # Now take care of all record elements
 
 	my $type = $n->{'type'};
+	my $reference = undef;
+	if ($type eq $type_abspointer) {
+	    $reference = 1;
+	    $type = $n->{'reftype'};
+	}
 	my $name = $n->{'name'};
 	my $reader = $types{$type}{'reader'};
 	my $size = $n->{'size'};
@@ -505,8 +566,10 @@ sub create_reader
 	    print "            return CFSML_FAILURE;\n;";
 	    print "         }\n\n";
 
-	    print "         if (max)\n";
-	    print "           foo->$name = ($n->{'type'} *) g_malloc(max * sizeof($type));\n";
+	    print "         if (max) {\n";
+	    print "           foo->$name = ($n->{'type'} *) malloc(max * sizeof($type));\n";
+	    print "           _cfsml_register_pointer(foo->$name);\n";
+	    print "         }\n";
 	    print "         else\n";
 	    print "           foo->$name = NULL;\n"
 
@@ -548,6 +611,15 @@ sub create_reader
 	    print "         foo->$xpr[0] = i $xpr[1]; /* Set number of elements */\n";
 	  }
 
+	}
+	elsif ($reference) {
+	  print "#line ", __LINE__, " \"cfsml.pl\"\n";
+	  print "        if (strcmp(value, \"\\\\null\\\\\")) { /* null pointer? */\n";
+	  print "           foo->$name = malloc(sizeof ($type));\n";
+	  print "           _cfsml_register_pointer(foo->$name);\n";
+	  print "           if ($reader(fh, foo->$name, value, line, hiteof))\n";
+	  print "              return CFSML_FAILURE;\n";
+	  print "        } else foo->$name = NULL;\n";
 	}
 	else { # It's a simple variable or a struct
 	  print "#line ", __LINE__, " \"cfsml.pl\"\n";
@@ -629,6 +701,9 @@ sub insert_reader_code {
     print "    int _cfsml_line_ctr = 0;\n";
     $linecounter = '_cfsml_line_ctr';
   }
+  if ($atomic) {
+      print "    struct _cfsml_pointer_refstruct *_cfsml_myptrrefptr = _cfsml_get_current_refpointer();\n";
+  }
   print "    int _cfsml_eof = 0, _cfsml_error;\n";
   print "    int dummy;\n";
 
@@ -648,6 +723,9 @@ sub insert_reader_code {
 
   if ($eofvar) {
     print "    $eofvar = _cfsml_error;\n";
+  }
+  if ($atomic) {
+      print "     _cfsml_free_pointer_references(_cfsml_pointer_refstruct, _cfsml_error);\n";
   }
   print "  }\n";
   print "/* End of auto-generated CFSML data reader code */\n";
@@ -747,6 +825,13 @@ while (<STDIN>) {
 	  $member{'name'} = $tokens[1];
 	  $member{'type'} = $tokens[0];
 
+	  if ($tokens_nr == 3 && $tokens[1] == "*") {
+	      $tokens_nr = 2;
+	      $member{'name'} = $tokens[2];
+	      $member{'reftype'} = $tokens[0];
+	      $member{'type'} = $type_abspointer;
+	  }
+
 	  if ($tokens_nr == 4 and $tokens[0] eq $type_pointer) { # Relative pointer
 
 	    if (not $tokens[2] eq "RELATIVETO") {
@@ -789,12 +874,6 @@ while (<STDIN>) {
 		} elsif ($tokens[$parsepos] eq "DYNAMIC") {
 
 		  $member{'array'} = "dynamic";
-		  $parsepos++;
-
-		} elsif ($tokens[$parsepos] eq "*") {
-
-		  $member{'array'} = "dynamic";
-		  $member{'size'} = 1;
 		  $parsepos++;
 
 		} elsif ($tokens[$parsepos] eq "MAXWRITE") {
@@ -882,6 +961,8 @@ while (<STDIN>) {
 	      } else { # Record name is the same as the c type name
 		  $types{$struct}{'ctype'} = $struct;
 	      }
+	  } elsif ($tokens_nr == 3) {
+		  $types{$struct}{'ctype'} = $struct;
 	  }
 
 	  if (($tokens_nr > $extoffset + 1) && ($extoffset + 1 <= $tokens_nr)) {
@@ -923,7 +1004,7 @@ while (<STDIN>) {
       my $templine = $line + 1;
       print "#line $templine \"CFSML input file\"\n"; # Yes, this sucks.
 
-    } elsif ($tokens[0] eq "%CFSMLREAD" and $tokens[3] eq "FROM" and $tokens_nr >= 5) {
+    } elsif (($tokens[0] eq "%CFSMLREAD") or ($tokens[0] eq "%CFSMLREAD-ATOMIC") and $tokens[3] eq "FROM" and $tokens_nr >= 5) {
 
       my $myeofvar = 0;
       my $myfirsttoken = 0;
@@ -947,7 +1028,7 @@ while (<STDIN>) {
       }
       insert_reader_code($type = $tokens[1], $datap = $tokens[2],
 			 $fh = $tokens[4], $eofvar = $myeofvar, $firsttoken = $myfirsttoken,
-			$linecounter = $mylinecounter);
+			$linecounter = $mylinecounter, $atomic = ($tokens[0] eq "%CFSMLREAD-ATOMIC"));
       my $templine = $line + 1;
       print "#line $templine \"CFSML input file\"\n"; # Yes, this sucks, too.
 

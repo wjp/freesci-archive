@@ -1,3 +1,15 @@
+2001-01-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kernel.c (kMemoryInfo): MemoryInfo mode 4, by
+	Petr Vyhnak
+
+	* src/gfx/widgets.c (_gfxwop_container_free_tagged): widget fix
+	by Petr Vyhnak
+
+	* src/engine/cfsml.pl: Updated cfsml to (apparently) conform
+	to version 0.8 of the spec (boostet spec's version number
+	appropriately :-)
+
 2001-01-03  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/widgets.c (_gfxwop_container_draw_contents): Fixed

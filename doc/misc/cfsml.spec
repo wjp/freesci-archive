@@ -1,7 +1,7 @@
 The C File Storage Meta Language (CFSML)
 ----------------------------------------
 
-Specification of version 0.7
+Specification of version 0.8
 
 
 This documentation is provided WITHOUT WARRANTY of any kind.
@@ -146,11 +146,10 @@ and each of the elements will be restored. This is fairly straightforward.
 
 The following keywords can be used inside arrays:
 - STATIC/DYNAMIC: Use to define array types. If ommited, static is assumed.
-Dynamic arrays will get the memory they requre allocated during restoration
-time.
+  Dynamic arrays will get the memory they requre allocated during restoration
+  time.
 - MAXWRITE followed by a int-like variable member of the underlying record
-that is used to limit the number of elements to be written / read.
-- * is synonymous for "DYNAMIC 1".
+  that is used to limit the number of elements to be written / read.
 
 If the dynamic/static keyword is followed by a string instead of a numeric
 value, the length is assumed to be variable and equal to that string token
@@ -215,10 +214,9 @@ information (like the file name) to its output. This may be added to
 the specifications at a later time.
 
 
-Relative pointers
------------------
-While storing absolute pointers does not make a whole lot of sense in
-general, it is possible to store relative pointers. This feature should
+Pointers
+--------
+It is possible to store relative pointers. This feature should
 be used with care; for portability, only pointers relative to other
 pointers pointing to the same data type should be stored.
 
@@ -233,6 +231,22 @@ RECORD name "struct name" {
 
 This will only work if firstname and lastname are, indeed, relative to the
 string pointed to by "fullname".
+
+Also, absolute pointers are supported. The syntax is similar, but not identical
+to the one employed in C:
+
+	int * foo;
+
+(Note the asterisk must be separated from type and variable name by whitespace).
+Saving these pointers is relatively straightforward; it will, however, cause
+problems if foo points to an invalid memory address. Empty pointers MUST be NULL
+for this to work.
+
+While restoring, it is assured that no memory is lost. All allocations are kept
+track of, and all memory allocated dynamically is automatically freed if
+restoring failed. This holds until the next atomic restoration operation is
+encountered.
+
 
 
 Reading and writing
@@ -255,6 +269,14 @@ where
 	  newline is hit. If not supplied, a CFSML generated variable will be
 	  used for this task.
 
+For an atomic read, use %CFSMLREAD-ATOMIC. Atomic reads guarantee that, if
+they fail, all memory allocated by them will be freed, unless another atomic
+read was hit by recursion.
+Only after a %CFSMLREAD-ATOMIC command is it guaranteed that the previous
+command did not leave any allocated memory. Typically, this call would be
+the actual call invoked from the rest of the program, while other %CFSMLREAD
+commands would be invoked by recursion.
+
 To write data, use %CFSMLWRITE similarly (with a writeable file
 handle, of course):
 %CFSMLWRITE type dataptr INTO filehandle
@@ -275,6 +297,9 @@ however, their chance of being accepted is much more likely with code
 to back them up.
 
 
+Changes since 0.7:
+- Removed "*" in "[*]", replaced it with the normal unary pointer
+  operator
 Changes since 0.6:
 - Added EXTENDS
 - Added "*"

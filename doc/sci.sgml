@@ -939,6 +939,285 @@ END LOOP
 	  </para>
 	</sect3>
 
+      	<sect3>
+	  <title>Huffman Tree #3</title>
+	  <para>
+	    This tree describes literal values for ASCII mode, which adds another
+	    compression step to the algorithm.
+	    <informaltable>
+	      <tgroup cols="2">
+		<thead>
+		  <row>
+		    <entry>value (hex)</entry>
+		    <entry>code (binary)</entry>
+		  </row>
+		</thead>
+		<tbody>
+                  <row> <entry>00</entry> <entry>0000 1001 001</entry> </row>
+                  <row> <entry>01</entry> <entry>0000 0111 1111 </entry> </row>
+                  <row> <entry>02</entry> <entry>0000 0111 1110 </entry> </row>
+                  <row> <entry>03</entry> <entry>0000 0111 1101 </entry> </row>
+                  <row> <entry>04</entry> <entry>0000 0111 1100 </entry> </row>
+                  <row> <entry>05</entry> <entry>0000 0111 1011 </entry> </row>
+                  <row> <entry>06</entry> <entry>0000 0111 1010 </entry> </row>
+                  <row> <entry>07</entry> <entry>0000 0111 1001 </entry> </row>
+                  <row> <entry>08</entry> <entry>0000 0111 1000 </entry> </row>
+                  <row> <entry>09</entry> <entry>0001 1101 </entry> </row>
+                  <row> <entry>0a</entry> <entry>0100 011</entry> </row>
+                  <row> <entry>0b</entry> <entry>0000 0111 0111 </entry> </row>
+                  <row> <entry>0c</entry> <entry>0000 0111 0110 </entry> </row>
+                  <row> <entry>0d</entry> <entry>0100 010</entry> </row>
+                  <row> <entry>0e</entry> <entry>0000 0111 0101 </entry> </row>
+                  <row> <entry>0f</entry> <entry>0000 0111 0100 </entry> </row>
+                  <row> <entry>10</entry> <entry>0000 0111 0011 </entry> </row>
+                  <row> <entry>11</entry> <entry>0000 0111 0010 </entry> </row>
+                  <row> <entry>12</entry> <entry>0000 0111 0001 </entry> </row>
+                  <row> <entry>13</entry> <entry>0000 0111 0000 </entry> </row>
+                  <row> <entry>14</entry> <entry>0000 0110 1111 </entry> </row>
+                  <row> <entry>15</entry> <entry>0000 0110 1110 </entry> </row>
+                  <row> <entry>16</entry> <entry>0000 0110 1101 </entry> </row>
+                  <row> <entry>17</entry> <entry>0000 0110 1100 </entry> </row>
+                  <row> <entry>18</entry> <entry>0000 0110 1011 </entry> </row>
+                  <row> <entry>19</entry> <entry>0000 0110 1010 </entry> </row>
+                  <row> <entry>1a</entry> <entry>0000 0010 0100 1</entry> </row>
+                  <row> <entry>1b</entry> <entry>0000 0110 1001 </entry> </row>
+                  <row> <entry>1c</entry> <entry>0000 0110 1000 </entry> </row>
+                  <row> <entry>1d</entry> <entry>0000 0110 0111 </entry> </row>
+                  <row> <entry>1e</entry> <entry>0000 0110 0110 </entry> </row>
+                  <row> <entry>1f</entry> <entry>0000 0110 0101 </entry> </row>
+                  <row> <entry>20</entry> <entry>1111 </entry> </row>
+                  <row> <entry>21</entry> <entry>0000 1010 01</entry> </row>
+                  <row> <entry>22</entry> <entry>0001 1100 </entry> </row>
+                  <row> <entry>23</entry> <entry>0000 0110 0100 </entry> </row>
+                  <row> <entry>24</entry> <entry>0000 1010 00</entry> </row>
+                  <row> <entry>25</entry> <entry>0000 0110 0011 </entry> </row>
+                  <row> <entry>26</entry> <entry>0000 1001 11</entry> </row>
+                  <row> <entry>27</entry> <entry>0001 1011 </entry> </row>
+                  <row> <entry>28</entry> <entry>0100 001</entry> </row>
+                  <row> <entry>29</entry> <entry>0100 000</entry> </row>
+                  <row> <entry>2a</entry> <entry>0001 1010 </entry> </row>
+                  <row> <entry>2b</entry> <entry>0000 1101 1</entry> </row>
+                  <row> <entry>2c</entry> <entry>0011 111</entry> </row>
+                  <row> <entry>2d</entry> <entry>1001 01</entry> </row>
+                  <row> <entry>2e</entry> <entry>0011 110</entry> </row>
+                  <row> <entry>2f</entry> <entry>0001 1001 </entry> </row>
+                  <row> <entry>30</entry> <entry>0011 101</entry> </row>
+                  <row> <entry>31</entry> <entry>1001 00</entry> </row>
+                  <row> <entry>32</entry> <entry>0011 100</entry> </row>
+                  <row> <entry>33</entry> <entry>0011 011</entry> </row>
+                  <row> <entry>34</entry> <entry>0011 010</entry> </row>
+                  <row> <entry>35</entry> <entry>0011 001</entry> </row>
+                  <row> <entry>36</entry> <entry>0001 1000 </entry> </row>
+                  <row> <entry>37</entry> <entry>0011 000</entry> </row>
+                  <row> <entry>38</entry> <entry>0010 111</entry> </row>
+                  <row> <entry>39</entry> <entry>0001 0111 </entry> </row>
+                  <row> <entry>3a</entry> <entry>0001 0110 </entry> </row>
+                  <row> <entry>3b</entry> <entry>0000 0110 0010 </entry> </row>
+                  <row> <entry>3c</entry> <entry>0000 1001 000</entry> </row>
+                  <row> <entry>3d</entry> <entry>0010 110</entry> </row>
+                  <row> <entry>3e</entry> <entry>0000 1101 0</entry> </row>
+                  <row> <entry>3f</entry> <entry>0000 1000 111</entry> </row>
+                  <row> <entry>40</entry> <entry>0000 0110 0001 </entry> </row>
+                  <row> <entry>41</entry> <entry>1000 11</entry> </row>
+                  <row> <entry>42</entry> <entry>0010 101</entry> </row>
+                  <row> <entry>43</entry> <entry>1000 10</entry> </row>
+                  <row> <entry>44</entry> <entry>1000 01</entry> </row>
+                  <row> <entry>45</entry> <entry>1110 1</entry> </row>
+                  <row> <entry>46</entry> <entry>0010 100</entry> </row>
+                  <row> <entry>47</entry> <entry>0001 0101 </entry> </row>
+                  <row> <entry>48</entry> <entry>0001 0100 </entry> </row>
+                  <row> <entry>49</entry> <entry>1000 00</entry> </row>
+                  <row> <entry>4a</entry> <entry>0000 1000 110</entry> </row>
+                  <row> <entry>4b</entry> <entry>0000 1100 1</entry> </row>
+                  <row> <entry>4c</entry> <entry>0111 11</entry> </row>
+                  <row> <entry>4d</entry> <entry>0010 011</entry> </row>
+                  <row> <entry>4e</entry> <entry>0111 10</entry> </row>
+                  <row> <entry>4f</entry> <entry>0111 01</entry> </row>
+                  <row> <entry>50</entry> <entry>0010 010</entry> </row>
+                  <row> <entry>51</entry> <entry>0000 1000 101</entry> </row>
+                  <row> <entry>52</entry> <entry>0111 00</entry> </row>
+                  <row> <entry>53</entry> <entry>0110 11</entry> </row>
+                  <row> <entry>54</entry> <entry>0110 10</entry> </row>
+                  <row> <entry>55</entry> <entry>0010 001</entry> </row>
+                  <row> <entry>56</entry> <entry>0000 1100 0</entry> </row>
+                  <row> <entry>57</entry> <entry>0001 0011 </entry> </row>
+                  <row> <entry>58</entry> <entry>0000 1011 1</entry> </row>
+                  <row> <entry>59</entry> <entry>0000 1011 0</entry> </row>
+                  <row> <entry>5a</entry> <entry>0000 1000 100</entry> </row>
+                  <row> <entry>5b</entry> <entry>0001 0010 </entry> </row>
+                  <row> <entry>5c</entry> <entry>0000 1000 011</entry> </row>
+                  <row> <entry>5d</entry> <entry>0000 1010 1</entry> </row>
+                  <row> <entry>5e</entry> <entry>0000 0110 0000 </entry> </row>
+                  <row> <entry>5f</entry> <entry>0001 0001 </entry> </row>
+                  <row> <entry>60</entry> <entry>0000 0101 1111 </entry> </row>
+                  <row> <entry>61</entry> <entry>1110 0</entry> </row>
+                  <row> <entry>62</entry> <entry>0110 01</entry> </row>
+                  <row> <entry>63</entry> <entry>0110 00</entry> </row>
+                  <row> <entry>64</entry> <entry>0101 11</entry> </row>
+                  <row> <entry>65</entry> <entry>1101 1</entry> </row>
+                  <row> <entry>66</entry> <entry>0101 10</entry> </row>
+                  <row> <entry>67</entry> <entry>0101 01</entry> </row>
+                  <row> <entry>68</entry> <entry>0101 00</entry> </row>
+                  <row> <entry>69</entry> <entry>1101 0</entry> </row>
+                  <row> <entry>6a</entry> <entry>0000 1000 010</entry> </row>
+                  <row> <entry>6b</entry> <entry>0010 000</entry> </row>
+                  <row> <entry>6c</entry> <entry>1100 1</entry> </row>
+                  <row> <entry>6d</entry> <entry>0100 11</entry> </row>
+                  <row> <entry>6e</entry> <entry>1100 0</entry> </row>
+                  <row> <entry>6f</entry> <entry>1011 1</entry> </row>
+                  <row> <entry>70</entry> <entry>0100 10</entry> </row>
+                  <row> <entry>71</entry> <entry>0000 1001 10</entry> </row>
+                  <row> <entry>72</entry> <entry>1011 0</entry> </row>
+                  <row> <entry>73</entry> <entry>1010 1</entry> </row>
+                  <row> <entry>74</entry> <entry>1010 0</entry> </row>
+                  <row> <entry>75</entry> <entry>1001 1</entry> </row>
+                  <row> <entry>76</entry> <entry>0001 0000 </entry> </row>
+                  <row> <entry>77</entry> <entry>0001 111</entry> </row>
+                  <row> <entry>78</entry> <entry>0000 1111 </entry> </row>
+                  <row> <entry>79</entry> <entry>0000 1110 </entry> </row>
+                  <row> <entry>7a</entry> <entry>0000 1001 01</entry> </row>
+                  <row> <entry>7b</entry> <entry>0000 1000 001</entry> </row>
+                  <row> <entry>7c</entry> <entry>0000 1000 000</entry> </row>
+                  <row> <entry>7d</entry> <entry>0000 0101 1110 </entry> </row>
+                  <row> <entry>7e</entry> <entry>0000 0101 1101 </entry> </row>
+                  <row> <entry>7f</entry> <entry>0000 0101 1100 </entry> </row>
+                  <row> <entry>80</entry> <entry>0000 0010 0100 0</entry> </row>
+                  <row> <entry>81</entry> <entry>0000 0010 0011 1</entry> </row>
+                  <row> <entry>82</entry> <entry>0000 0010 0011 0</entry> </row>
+                  <row> <entry>83</entry> <entry>0000 0010 0010 1</entry> </row>
+                  <row> <entry>84</entry> <entry>0000 0010 0010 0</entry> </row>
+                  <row> <entry>85</entry> <entry>0000 0010 0001 1</entry> </row>
+                  <row> <entry>86</entry> <entry>0000 0010 0001 0</entry> </row>
+                  <row> <entry>87</entry> <entry>0000 0010 0000 1</entry> </row>
+                  <row> <entry>88</entry> <entry>0000 0010 0000 0</entry> </row>
+                  <row> <entry>89</entry> <entry>0000 0001 1111 1</entry> </row>
+                  <row> <entry>8a</entry> <entry>0000 0001 1111 0</entry> </row>
+                  <row> <entry>8b</entry> <entry>0000 0001 1110 1</entry> </row>
+                  <row> <entry>8c</entry> <entry>0000 0001 1110 0</entry> </row>
+                  <row> <entry>8d</entry> <entry>0000 0001 1101 1</entry> </row>
+                  <row> <entry>8e</entry> <entry>0000 0001 1101 0</entry> </row>
+                  <row> <entry>8f</entry> <entry>0000 0001 1100 1</entry> </row>
+                  <row> <entry>90</entry> <entry>0000 0001 1100 0</entry> </row>
+                  <row> <entry>91</entry> <entry>0000 0001 1011 1</entry> </row>
+                  <row> <entry>92</entry> <entry>0000 0001 1011 0</entry> </row>
+                  <row> <entry>93</entry> <entry>0000 0001 1010 1</entry> </row>
+                  <row> <entry>94</entry> <entry>0000 0001 1010 0</entry> </row>
+                  <row> <entry>95</entry> <entry>0000 0001 1001 1</entry> </row>
+                  <row> <entry>96</entry> <entry>0000 0001 1001 0</entry> </row>
+                  <row> <entry>97</entry> <entry>0000 0001 1000 1</entry> </row>
+                  <row> <entry>98</entry> <entry>0000 0001 1000 0</entry> </row>
+                  <row> <entry>99</entry> <entry>0000 0001 0111 1</entry> </row>
+                  <row> <entry>9a</entry> <entry>0000 0001 0111 0</entry> </row>
+                  <row> <entry>9b</entry> <entry>0000 0001 0110 1</entry> </row>
+                  <row> <entry>9c</entry> <entry>0000 0001 0110 0</entry> </row>
+                  <row> <entry>9d</entry> <entry>0000 0001 0101 1</entry> </row>
+                  <row> <entry>9e</entry> <entry>0000 0001 0101 0</entry> </row>
+                  <row> <entry>9f</entry> <entry>0000 0001 0100 1</entry> </row>
+                  <row> <entry>a0</entry> <entry>0000 0001 0100 0</entry> </row>
+                  <row> <entry>a1</entry> <entry>0000 0001 0011 1</entry> </row>
+                  <row> <entry>a2</entry> <entry>0000 0001 0011 0</entry> </row>
+                  <row> <entry>a3</entry> <entry>0000 0001 0010 1</entry> </row>
+                  <row> <entry>a4</entry> <entry>0000 0001 0010 0</entry> </row>
+                  <row> <entry>a5</entry> <entry>0000 0001 0001 1</entry> </row>
+                  <row> <entry>a6</entry> <entry>0000 0001 0001 0</entry> </row>
+                  <row> <entry>a7</entry> <entry>0000 0001 0000 1</entry> </row>
+                  <row> <entry>a8</entry> <entry>0000 0001 0000 0</entry> </row>
+                  <row> <entry>a9</entry> <entry>0000 0000 1111 1</entry> </row>
+                  <row> <entry>aa</entry> <entry>0000 0000 1111 0</entry> </row>
+                  <row> <entry>ab</entry> <entry>0000 0000 1110 1</entry> </row>
+                  <row> <entry>ac</entry> <entry>0000 0000 1110 0</entry> </row>
+                  <row> <entry>ad</entry> <entry>0000 0000 1101 1</entry> </row>
+                  <row> <entry>ae</entry> <entry>0000 0000 1101 0</entry> </row>
+                  <row> <entry>af</entry> <entry>0000 0000 1100 1</entry> </row>
+                  <row> <entry>b0</entry> <entry>0000 0101 1011 </entry> </row>
+                  <row> <entry>b1</entry> <entry>0000 0101 1010 </entry> </row>
+                  <row> <entry>b2</entry> <entry>0000 0101 1001 </entry> </row>
+                  <row> <entry>b3</entry> <entry>0000 0101 1000 </entry> </row>
+                  <row> <entry>b4</entry> <entry>0000 0101 0111 </entry> </row>
+                  <row> <entry>b5</entry> <entry>0000 0101 0110 </entry> </row>
+                  <row> <entry>b6</entry> <entry>0000 0101 0101 </entry> </row>
+                  <row> <entry>b7</entry> <entry>0000 0101 0100 </entry> </row>
+                  <row> <entry>b8</entry> <entry>0000 0101 0011 </entry> </row>
+                  <row> <entry>b9</entry> <entry>0000 0101 0010 </entry> </row>
+                  <row> <entry>ba</entry> <entry>0000 0101 0001 </entry> </row>
+                  <row> <entry>bb</entry> <entry>0000 0101 0000 </entry> </row>
+                  <row> <entry>bc</entry> <entry>0000 0100 1111 </entry> </row>
+                  <row> <entry>bd</entry> <entry>0000 0100 1110 </entry> </row>
+                  <row> <entry>be</entry> <entry>0000 0100 1101 </entry> </row>
+                  <row> <entry>bf</entry> <entry>0000 0100 1100 </entry> </row>
+                  <row> <entry>c0</entry> <entry>0000 0100 1011 </entry> </row>
+                  <row> <entry>c1</entry> <entry>0000 0100 1010 </entry> </row>
+                  <row> <entry>c2</entry> <entry>0000 0100 1001 </entry> </row>
+                  <row> <entry>c3</entry> <entry>0000 0100 1000 </entry> </row>
+                  <row> <entry>c4</entry> <entry>0000 0100 0111 </entry> </row>
+                  <row> <entry>c5</entry> <entry>0000 0100 0110 </entry> </row>
+                  <row> <entry>c6</entry> <entry>0000 0100 0101 </entry> </row>
+                  <row> <entry>c7</entry> <entry>0000 0100 0100 </entry> </row>
+                  <row> <entry>c8</entry> <entry>0000 0100 0011 </entry> </row>
+                  <row> <entry>c9</entry> <entry>0000 0100 0010 </entry> </row>
+                  <row> <entry>ca</entry> <entry>0000 0100 0001 </entry> </row>
+                  <row> <entry>cb</entry> <entry>0000 0100 0000 </entry> </row>
+                  <row> <entry>cc</entry> <entry>0000 0011 1111 </entry> </row>
+                  <row> <entry>cd</entry> <entry>0000 0011 1110 </entry> </row>
+                  <row> <entry>ce</entry> <entry>0000 0011 1101 </entry> </row>
+                  <row> <entry>cf</entry> <entry>0000 0011 1100 </entry> </row>
+                  <row> <entry>d0</entry> <entry>0000 0011 1011 </entry> </row>
+                  <row> <entry>d1</entry> <entry>0000 0011 1010 </entry> </row>
+                  <row> <entry>d2</entry> <entry>0000 0011 1001 </entry> </row>
+                  <row> <entry>d3</entry> <entry>0000 0011 1000 </entry> </row>
+                  <row> <entry>d4</entry> <entry>0000 0011 0111 </entry> </row>
+                  <row> <entry>d5</entry> <entry>0000 0011 0110 </entry> </row>
+                  <row> <entry>d6</entry> <entry>0000 0011 0101 </entry> </row>
+                  <row> <entry>d7</entry> <entry>0000 0011 0100 </entry> </row>
+                  <row> <entry>d8</entry> <entry>0000 0011 0011 </entry> </row>
+                  <row> <entry>d9</entry> <entry>0000 0011 0010 </entry> </row>
+                  <row> <entry>da</entry> <entry>0000 0011 0001 </entry> </row>
+                  <row> <entry>db</entry> <entry>0000 0011 0000 </entry> </row>
+                  <row> <entry>dc</entry> <entry>0000 0010 1111 </entry> </row>
+                  <row> <entry>dd</entry> <entry>0000 0010 1110 </entry> </row>
+                  <row> <entry>de</entry> <entry>0000 0010 1101 </entry> </row>
+                  <row> <entry>df</entry> <entry>0000 0010 1100 </entry> </row>
+                  <row> <entry>e0</entry> <entry>0000 0000 1100 0</entry> </row>
+                  <row> <entry>e1</entry> <entry>0000 0010 1011 </entry> </row>
+                  <row> <entry>e2</entry> <entry>0000 0000 1011 1</entry> </row>
+                  <row> <entry>e3</entry> <entry>0000 0000 1011 0</entry> </row>
+                  <row> <entry>e4</entry> <entry>0000 0000 1010 1</entry> </row>
+                  <row> <entry>e5</entry> <entry>0000 0010 1010 </entry> </row>
+                  <row> <entry>e6</entry> <entry>0000 0000 1010 0</entry> </row>
+                  <row> <entry>e7</entry> <entry>0000 0000 1001 1</entry> </row>
+                  <row> <entry>e8</entry> <entry>0000 0000 1001 0</entry> </row>
+                  <row> <entry>e9</entry> <entry>0000 0010 1001 </entry> </row>
+                  <row> <entry>ea</entry> <entry>0000 0000 1000 1</entry> </row>
+                  <row> <entry>eb</entry> <entry>0000 0000 1000 0</entry> </row>
+                  <row> <entry>ec</entry> <entry>0000 0000 0111 1</entry> </row>
+                  <row> <entry>ed</entry> <entry>0000 0000 0111 0</entry> </row>
+                  <row> <entry>ee</entry> <entry>0000 0010 1000 </entry> </row>
+                  <row> <entry>ef</entry> <entry>0000 0000 0110 1</entry> </row>
+                  <row> <entry>f0</entry> <entry>0000 0000 0110 0</entry> </row>
+                  <row> <entry>f1</entry> <entry>0000 0000 0101 1</entry> </row>
+                  <row> <entry>f2</entry> <entry>0000 0010 0111 </entry> </row>
+                  <row> <entry>f3</entry> <entry>0000 0010 0110 </entry> </row>
+                  <row> <entry>f4</entry> <entry>0000 0010 0101 </entry> </row>
+                  <row> <entry>f5</entry> <entry>0000 0000 0101 0</entry> </row>
+                  <row> <entry>f6</entry> <entry>0000 0000 0100 1</entry> </row>
+                  <row> <entry>f7</entry> <entry>0000 0000 0100 0</entry> </row>
+                  <row> <entry>f8</entry> <entry>0000 0000 0011 1</entry> </row>
+                  <row> <entry>f9</entry> <entry>0000 0000 0011 0</entry> </row>
+                  <row> <entry>fa</entry> <entry>0000 0000 0010 1</entry> </row>
+                  <row> <entry>fb</entry> <entry>0000 0000 0010 0</entry> </row>
+                  <row> <entry>fc</entry> <entry>0000 0000 0001 1</entry> </row>
+                  <row> <entry>fd</entry> <entry>0000 0000 0001 0</entry> </row>
+                  <row> <entry>fe</entry> <entry>0000 0000 0000 1</entry> </row>
+                  <row> <entry>ff</entry> <entry>0000 0000 0000 0</entry> </row>
+		</tbody>
+	      </tgroup>
+	    </informaltable>
+	    where bits should be read from the left to the right.
+	  </para>
+	</sect3>
+
+    </sect2>
+
     </sect2>
     <sect2>
       <title>Decompression algorithm UNKNOWN</title>
@@ -5754,7 +6033,7 @@ to pressing LShift-RShift-PadMinus.
 		</funcdef><paramdef>word mode</paramdef></funcprototype></funcsynopsis>
                 <para>
                    <simplelist>
-                       <member><type/(word)/ mode: 0 to 3 (see below)</member>
+                       <member><type/(word)/ mode: 0 to 4 (see below)</member>
                    </simplelist></para>
 		<para>
 			Returns: <type>(word)</type> The amount of free memory on the heap, in bytes
@@ -5763,7 +6042,10 @@ to pressing LShift-RShift-PadMinus.
 		  If mode equals 1, the total size of the largest chunk of heap memory is returned.
 		  In mode 2, the size of the largest available hunk memory block is returned, and
 		  mode 3 returns the total amount of free hunk memory, shiftet to the right by 4 bits.
-		</para>
+		  </para><para>
+		    Mode 4 was apparently introduced in SCI01 and reports the amount of free memory
+		    provided by DOS in paragraphs.
+		  </para>
 	</sect3>
 
 <!-- fixme -->

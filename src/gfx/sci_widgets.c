@@ -447,16 +447,19 @@ sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char 
 
 	for (i = list_top; columns-- && i < entries_nr; i++) {
 
-		if (i == selection)
+		if (i != selection)
 			list->add(GFXWC(list),
 				  GFXW(gfxw_new_text(port->visual->gfx_state, gfx_rect(zone.x, zone.y, zone.xl - 2, font_height),
-						     port->font_nr, entries_list[i], ALIGN_LEFT, ALIGN_TOP,
+						     font_nr, entries_list[i], ALIGN_LEFT, ALIGN_TOP,
 						     port->color, port->color, port->bgcolor, GFXR_FONT_FLAG_NO_NEWLINES)));
-		else
+		else {
+			list->add(GFXWC(list), gfxw_new_box(port->visual->gfx_state, gfx_rect(zone.x, zone.y, zone.xl - 1, font_height),
+							    port->color, port->color, GFX_BOX_SHADE_FLAT));
 			list->add(GFXWC(list),
 				  GFXW(gfxw_new_text(port->visual->gfx_state, gfx_rect(zone.x, zone.y, zone.xl - 2, font_height),
-						     port->font_nr, entries_list[i], ALIGN_LEFT, ALIGN_TOP,
+						     font_nr, entries_list[i], ALIGN_LEFT, ALIGN_TOP,
 						     port->bgcolor, port->bgcolor, port->color, GFXR_FONT_FLAG_NO_NEWLINES)));
+		}
 
 		zone.y += font_height;
 	}

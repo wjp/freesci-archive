@@ -59,6 +59,11 @@ static int distance_tree[] = {
 	0 /* We need something witout a comma at the end */
 };
 
+static int ascii_tree[] = {
+#include "treedef.3"
+	0 /* We need something witout a comma at the end */
+};
+
 #define CALLC(x) { if ((x) == -SCI_ERROR_DECOMPRESSION_OVERFLOW) return -SCI_ERROR_DECOMPRESSION_OVERFLOW; }
 
 static inline int
@@ -138,6 +143,8 @@ huffman_lookup(struct bit_read_struct *inp, int *tree)
 
 #define VALUE_M(i) ((i == 0)? 7 : (VALUE_M(i - 1) + 2**i));
 
+#define DCL_ASCII_MODE 1
+
 static int
 decrypt4_hdyn(byte *dest, int length, struct bit_read_struct *reader)
 {
@@ -148,10 +155,12 @@ decrypt4_hdyn(byte *dest, int length, struct bit_read_struct *reader)
 	CALLC(mode = getbits(reader, 8));
 	CALLC(length_param = getbits(reader, 8));
 
-	if (mode) {
-		fprintf(stderr,"Warning: While decompressing DCL-INFLATE: Mode is %02x (expected 0x00)\n", mode);
-		return 0;
-		DEBUG_DCL_INFLATE = 1;
+	if (mode == DCL_ASCII_MODE) {
+		fprintf(stderr,"DCL-INFLATE: Warning: Decompressing ASCII mode (untested)\n");
+		/*		DEBUG_DCL_INFLATE = 1; */
+	} else if (mode) {
+		fprintf(stderr,"DCL-INFLATE: Error: Encountered mode %02x, expected 00 or 01\n", mode);
+		return 1;
 	}
 
 	if (DEBUG_DCL_INFLATE) {
@@ -239,7 +248,12 @@ decrypt4_hdyn(byte *dest, int length, struct bit_read_struct *reader)
 			write_pos += val_length_backup;
 
 		} else { /* Copy byte verbatim */
-			CALLC(value = getbits(reader, 8));
+			if (mode == DCL_ASCII_MODE) {
+				CALLC(value = huffman_lookup(reader, ascii_tree));
+			} else {
+				CALLC(value = getbits(reader, 8));
+			}
+
 			dest[write_pos++] = value;
 
 			if (DEBUG_DCL_INFLATE)

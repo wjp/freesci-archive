@@ -134,7 +134,7 @@ _gfxwop_print_empty(gfxw_widget_t *widget, int indentation)
 }
 
 
-static gfxw_widget_t *
+gfxw_widget_t *
 _gfxw_new_widget(int size, int type)
 {
 	gfxw_widget_t *widget = malloc(size);
@@ -1434,18 +1434,18 @@ _gfxwop_container_set_visual(gfxw_widget_t *widget, gfxw_visual_t *visual)
 static int
 _gfxwop_container_free_tagged(gfxw_container_t *container)
 {
-	gfxw_widget_t **seekerp = &(container->contents);
+        gfxw_widget_t *seekerp = (container->contents);
 
-	while (*seekerp) {
-		gfxw_widget_t *redshirt = *seekerp;
+        while (seekerp) {
+                gfxw_widget_t *redshirt = seekerp;
 
-		if (redshirt->flags & GFXW_FLAG_TAGGED) {
-			seekerp = &(redshirt->next);
-			redshirt->free(redshirt); /* He's dead, Jim. */
-		} else
-			seekerp = &((*seekerp)->next);
-	}
-	return 0;
+                if (redshirt->flags & GFXW_FLAG_TAGGED) {
+                        seekerp = (redshirt->next);
+                        redshirt->free(redshirt); /* He's dead, Jim. */
+                } else
+                        seekerp = (seekerp)->next;
+        }
+        return 0;
 }
 
 static int

@@ -487,93 +487,61 @@ c_parse(state_t *s)
 int
 c_save_game(state_t *s)
 {
-  int omit_check = cmd_params[0].str[0] == '_';
-  int i;
+	int omit_check = cmd_params[0].str[0] == '_';
+	int i;
 
-  if (!s) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
+	if (!s) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
 
-  s->amp_rest = *_restadjust;
+	s->amp_rest = *_restadjust;
 
-  if (!omit_check) {
-    int result = 0;
-    for (i = 0; i < s->file_handles_nr; i++)
-      if (s->file_handles[i])
-	result++;
+	if (!omit_check) {
+		int result = 0;
+		for (i = 0; i < s->file_handles_nr; i++)
+			if (s->file_handles[i])
+				result++;
+		
+		if (result) {
+			sciprintf("Game state has %d open file handles.\n", result);
+			sciprintf("Save to '_%s' to ignore this check.\nGame was NOT saved.\n", cmd_params[0].str);
+			return 1;
+		}
+	}
 
-    if (result) {
-      sciprintf("Game state has %d open file handles.\n", result);
-      sciprintf("Save to '_%s' to ignore this check.\nGame was NOT saved.\n", cmd_params[0].str);
-      return 1;
-    }
-  }
-WARNING(fixme!)
-#if 0
-  if (s->onscreen_console)
-    con_restore_screen(s, s->osc_backup);
+	if (gamestate_save(s, cmd_params[0].str)) {
+		sciprintf("Saving the game state to '%s' failed\n", cmd_params[0].str);
+	}
 
-  if (gamestate_save(s, cmd_params[0].str)) {
-    sciprintf("Saving the game state to '%s' failed\n", cmd_params[0].str);
-  }
-
-  if (s->onscreen_console) {
-    s->osc_backup = con_backup_screen(s);
-  }
-#endif
-
-  return 0;
+	return 0;
 }
 
 
 int
 c_restore_game(state_t *s)
 {
-  state_t *newstate;
+	state_t *newstate;
+  
+	if (!s) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
 
-  if (!s) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
-WARNING(fixme!)
-#if 0
-  if (s->onscreen_console)
-    con_restore_screen(s, s->osc_backup);
-#endif
+	newstate = gamestate_restore(s, cmd_params[0].str);
 
-  newstate = gamestate_restore(s, cmd_params[0].str);
+	if (newstate) {
 
-  if (newstate) {
-WARNING(fixme!)
-#if 0
-    s->successor = newstate; /* Set successor */
-    graph_update_box(newstate, 0, 0, 320, 200); /* Redraw screen */
-    sciprintf("Game '%s' was restored.\n", cmd_params[0].str);
-    script_abort_flag = 1; /* Abort game */
-    _debugstate_valid = 0;
+		s->successor = newstate; /* Set successor */
 
-    if (s->onscreen_console) {
-      newstate->onscreen_console = 1;
-      s->osc_backup = con_backup_screen(s);
-    } else
-      newstate->onscreen_console = 0;
+		script_abort_flag = 1; /* Abort game */
+		_debugstate_valid = 0;
 
-    /*    game_exit(s); *//* Clear old state */
-#endif
-    return 0;
-
-  } else {
-WARNING(fixme!)
-#if 0
-    if (s->onscreen_console)
-      s->osc_backup = con_backup_screen(s);
-
-    sciprintf("Restoring gamestate '%s' failed.\n", cmd_params[0].str);
-#endif
-    return 1;
-  }
-
+		return 0;
+	} else {
+		sciprintf("Restoring gamestate '%s' failed.\n", cmd_params[0].str);
+		return 1;
+	}
 }
 
 
