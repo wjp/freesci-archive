@@ -24,7 +24,7 @@ AC_CHECK_SIZEOF(long)
 AC_CHECK_FUNCS(pipe socketpair fork sched_yield memfrob ffs getopt_long isblank)
 AM_PATH_ALSA(0.5.0, [AC_DEFINE(HAVE_ALSA)], [echo >/dev/null])
 AC_PATH_GGI
-AM_PATH_SDL(1.1.3, [AC_DEFINE(HAVE_SDL)], [AC_DEFINE(DONT_HAVE_SDL)])
+AM_PATH_SDL(1.1.3, [AC_DEFINE(HAVE_SDL)])
 
 AC_PATH_CURSES
 AC_PATH_XTRA

@@ -25,7 +25,7 @@
 ***************************************************************************/
 
 #include <gfx_driver.h>
-#ifndef DONT_HAVE_SDL
+#ifdef HAVE_SDL
 #include <gfx_tools.h>
 
 #ifndef _MSC_VER
@@ -50,7 +50,7 @@
 #define SCI_SDL_FULLSCREEN (1 << 2)
 
 int string_truep(char *value); 
-int flags;
+int flags = 0;
 
 struct _sdl_state {
   int used_bytespp;

@@ -1,3 +1,11 @@
+2001-04-18  Solomon Peachy <pizza@shaftnet.org>
+
+	* acconfig.h,acinclude.m4,aclocal.m4,config.h.in,configure,
+          configure.in,src/gfx/drivers/gfx_drivers.c, 
+          src/gfx/drivers/sdl_driver.c:
+             Changed the flags for SDL's detection. HAVE_SDL is only
+             defined when the version is great enough.
+
 2001-04-18  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/drivers/sdl_driver.c (sdl_fetch_event): Fixed 64 bit
