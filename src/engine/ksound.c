@@ -96,14 +96,16 @@ build_iterator(state_t *s, int song_nr, int type)
 }
 
 
-
-
 void
 process_sound_events(state_t *s) /* Get all sound events, apply their changes to the heap */
 {
 	int result;
 	song_handle_t handle;
 	int cue;
+
+	if (s->version>SCI_VERSION_FTU_DOSOUND_VARIANT_1)
+		return;
+	/* SCI01 and later explicitly poll for everything */
 
 	while ((result = sfx_poll(&s->sound, &handle, &cue))) {
 		reg_t obj = DEFROBNICATE_HANDLE(handle);
@@ -120,8 +122,14 @@ process_sound_events(state_t *s) /* Get all sound events, apply their changes to
 			PUT_SEL32V(obj, signal, -1);
 			break;
 
-		case SI_CUE:
-			SCIkdebug(SCIkSOUND, "[process-sound] Song "PREG" received cue %d\n",
+		case SI_RELATIVE_CUE:
+			SCIkdebug(SCIkSOUND, "[process-sound] Song "PREG" received relative cue %d\n",
+				  PRINT_REG(obj), cue);
+			PUT_SEL32V(obj, signal, cue + 0x7f);
+			break;
+
+		case SI_ABSOLUTE_CUE:
+			SCIkdebug(SCIkSOUND, "[process-sound] Song "PREG" received absolute cue %d\n",
 				  PRINT_REG(obj), cue);
 			PUT_SEL32V(obj, signal, cue);
 			break;
@@ -313,7 +321,7 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 		case 9: sciprintf("[Suspend]"); break;
 		case 10: sciprintf("[Fade]"); break;
 		case 11: sciprintf("[UpdateCues]"); break;
-	 	case 12: sciprintf("[MidiSend]"); break;
+		case 12: sciprintf("[MidiSend]"); break;
 		case 13: sciprintf("[Reverb]"); break;
 		case 14: sciprintf("[Hold]"); break;
 		default: sciprintf("[unknown]"); break;
@@ -457,41 +465,71 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 	case _K_SCI01_SOUND_UPDATE_CUES :
 	{
-		/* FIXME: Fetch these from the sound server */
-
-		int dataInc = 0;
-		int signal = 1; /* This allows QfG2 to continue past the ogre */
+		int signal = 0;
 		int min = 0;
 		int sec = 0;
 		int frame = 0;
+		int result = SI_LOOP; /* small hack */
+		int cue;
 
-		switch (signal)
-		{
-		case 0x00:
-			if (dataInc!=GET_SEL32V(obj, dataInc))
-			{
-				PUT_SEL32V(obj, dataInc, dataInc);
-				PUT_SEL32V(obj, signal, dataInc+0x7f);
-			} else
-			{
-				PUT_SEL32V(obj, signal, signal);
-			}
+		while (result == SI_LOOP)
+		       result = sfx_poll(&s->sound, &handle, &cue);
+
+		obj = DEFROBNICATE_HANDLE(handle);
+
+		switch (result) {
+
+		case SI_ABSOLUTE_CUE:
+			signal = cue;
+			fprintf(stderr, "[CUE] "PREG" Absolute Cue: %d\n",
+				PRINT_REG(obj), signal);
+
+			PUT_SEL32V(obj, signal, signal);
 			break;
-		case 0xFF: /* May be unnecessary */
-			sfx_song_set_status(&s->sound,
-					    handle, SOUND_STATUS_STOPPED);
+
+		case SI_RELATIVE_CUE:
+			fprintf(stderr, "[CUE] "PREG" Relative Cue: %d\n",
+				PRINT_REG(obj), cue);
+
+			PUT_SEL32V(obj, dataInc, cue);
+			PUT_SEL32V(obj, signal, cue + 127);
 			break;
-		default :
-			if (dataInc!=GET_SEL32V(obj, dataInc))
-			{
-				PUT_SEL32V(obj, dataInc, dataInc);
-				PUT_SEL32V(obj, signal, dataInc+0x7f);
-			} else
-			{
-				PUT_SEL32V(obj, signal, signal);
-			}
+
+		case SI_FINISHED:
+			PUT_SEL32V(obj, signal, 0xff);
 			break;
+
+		case SI_LOOP:
+			break; /* Doesn't happen */
 		}
+
+/* 		switch (signal) */
+/* 		{ */
+/* 		case 0x00: */
+/* 			if (dataInc!=GET_SEL32V(obj, dataInc)) */
+/* 			{ */
+/* 				PUT_SEL32V(obj, dataInc, dataInc); */
+/* 				PUT_SEL32V(obj, signal, dataInc+0x7f); */
+/* 			} else */
+/* 			{ */
+/* 				PUT_SEL32V(obj, signal, signal); */
+/* 			} */
+/* 			break; */
+/* 		case 0xFF: /\* May be unnecessary *\/ */
+/* 			sfx_song_set_status(&s->sound, */
+/* 					    handle, SOUND_STATUS_STOPPED); */
+/* 			break; */
+/* 		default : */
+/* 			if (dataInc!=GET_SEL32V(obj, dataInc)) */
+/* 			{ */
+/* 				PUT_SEL32V(obj, dataInc, dataInc); */
+/* 				PUT_SEL32V(obj, signal, dataInc+0x7f); */
+/* 			} else */
+/* 			{ */
+/* 				PUT_SEL32V(obj, signal, signal); */
+/* 			} */
+/* 			break; */
+/* 		} */
 
 		PUT_SEL32V(obj, min, min);
 		PUT_SEL32V(obj, sec, sec);
@@ -548,7 +586,7 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 		/* if there's a parameter, we're setting it.  Otherwise,
 		   we're querying it. */
 		/*int param = UPARAM_OR_ALT(1,-1);
-		
+
 		if (param != -1)
 			s->acc = s->sound_server->command(s, SOUND_COMMAND_SET_MUTE, 0, param);
 		else
@@ -564,7 +602,7 @@ kDoSound_SCI1(state_t *s, int funct_nr, int argc, reg_t *argv)
 		/*s->acc = s->sound_server->command(s, SOUND_COMMAND_TEST, 0, 0);*/
 		break;
 	}
-	case _K_SCI1_SOUND_CD_AUDIO : 
+	case _K_SCI1_SOUND_CD_AUDIO :
 	{
 		break;
 	}

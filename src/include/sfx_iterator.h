@@ -30,39 +30,12 @@
 
 #include <sfx_pcm.h>
 
-#define MIDI_RHYTHM_CHANNEL 9
-
-/* Special SCI sound stuff */
-
-#define SCI_MIDI_TIME_EXPANSION_PREFIX 0xF8
-#define SCI_MIDI_TIME_EXPANSION_LENGTH 240
-
-#define SCI_MIDI_EOT 0xFC
-#define SCI_MIDI_SET_SIGNAL 0xCF
-#define SCI_MIDI_SET_POLYPHONY 0x4B
-#define SCI_MIDI_RESET_ON_SUSPEND 0x4C
-#define SCI_MIDI_SET_VELOCITY 0x4E
-#define SCI_MIDI_SET_REVERB 0x50
-#define SCI_MIDI_CUMULATIVE_CUE 0x60
-
-#define SCI_MIDI_SET_SIGNAL_LOOP 0x7F
-/* If this is the parameter of 0xCF, the loop point is set here */
-
-#define SCI_MIDI_CONTROLLER(status) ((status & 0xF0) == 0xB0)
-
-/* States */
-
-#define SI_STATE_UNINITIALISED -1
-#define SI_STATE_DELTA_TIME 0 /* Now at a delta time */
-#define SI_STATE_COMMAND 1 /* Now at a MIDI operation */
-#define SI_STATE_PCMWAIT 2 /* End of song */
-#define SI_STATE_FINISHED 3 /* Waiting for PCM to be picked up */
-
-
 #define SI_FINISHED -1 /* Song finished playing */
 #define SI_LOOP -2 /* Song just looped */
-#define SI_CUE -3 /* Found a song cue */
-#define SI_PCM -4 /* Found a PCM */
+#define SI_ABSOLUTE_CUE -3 /* Found a song cue (absolute) */
+#define SI_RELATIVE_CUE -4 /* Found a song cue (relative) */
+#define SI_PCM -5 /* Found a PCM */
+#define SI_MORPH -255 /* Song iterator requested self-morph. */
 
 #define SONG_ITERATOR_MESSAGE_ARGUMENTS_NR 2
 
@@ -70,15 +43,24 @@
 /* Base messages */
 #define _SIMSG_BASE 0 /* Any base decoder */
 #define _SIMSG_BASEMSG_SET_LOOPS 0 /* Set loops */
-#define _SIMSG_BASEMSG_CLONE 1 /* Clone object and data */
+#define _SIMSG_BASEMSG_CLONE 1 /* Clone object and data. Must provide the
+			       ** (possibly negative) number of ticks that have
+			       ** passed since the last delay time started being
+			       ** used  */
 #define _SIMSG_BASEMSG_SET_PLAYMASK 2 /* Set the current playmask for filtering */
 #define _SIMSG_BASEMSG_SET_RHYTHM 3 /* Activate/deactivate rhythm channel */
+#define _SIMSG_BASEMSG_ACK_MORPH 4 /* Acknowledge self-morph */
+
+/* "Plastic" (discardable) wrapper messages */
+#define _SIMSG_PLASTICWRAP 1 /* Any base decoder */
+#define _SIMSG_PLASTICWRAP_ACK_MORPH 4 /* Acknowledge self-morph */
 
 /* Messages */
 #define SIMSG_SET_LOOPS(x) _SIMSG_BASE,_SIMSG_BASEMSG_SET_LOOPS,(x),0
 #define SIMSG_SET_PLAYMASK(x) _SIMSG_BASE,_SIMSG_BASEMSG_SET_PLAYMASK,(x),0
 #define SIMSG_SET_RHYTHM(x) _SIMSG_BASE,_SIMSG_BASEMSG_SET_RHYTHM,(x),0
-#define SIMSG_CLONE _SIMSG_BASE,_SIMSG_BASEMSG_CLONE,0,0
+#define SIMSG_CLONE(x) _SIMSG_BASE,_SIMSG_BASEMSG_CLONE,(x),0
+#define SIMSG_ACK_MORPH _SIMSG_PLASTICWRAP,_SIMSG_PLASTICWRAP_ACK_MORPH,0,0
 
 /* Message transmission macro: Takes song reference, message reference */
 #define SIMSG_SEND(o, m) songit_handle_message(&(o), songit_make_message(m))
@@ -166,41 +148,6 @@ typedef struct _song_iterator {
 
 } song_iterator_t;
 
-#define MIDI_CHANNELS 16
-
-#define BASE_SONG_ITERATOR_BODY \
-	INHERITS_SONG_ITERATOR; /* aka "extends song iterator" */				\
-												\
-	int flags[MIDI_CHANNELS]; /* Flags for each channel */					\
-	int polyphony[MIDI_CHANNELS]; /* # of simultaneous notes on each */			\
-	int instruments[MIDI_CHANNELS]; /* Instrument number for each channel */		\
-	int velocity[MIDI_CHANNELS]; /* Velocity for each channel (0 for "mute") */		\
-	int pressure[MIDI_CHANNELS]; /* Channel pressure (MIDI Dx command) */			\
-	int pitch[MIDI_CHANNELS]; /* Pitch wheel */						\
-	int channel_map[MIDI_CHANNELS]; /* Number of HW channels to use */			\
-	int reverb[MIDI_CHANNELS]; /* Reverb setting for the channel */				\
-												\
-	unsigned int size; /* Song size */							\
-	int offset; /* Current read offset in data */						\
-	int loop_offset; /* Loopback position */						\
-	int loops; /* Number of loops */							\
-												\
-	unsigned char last_cmd; /* Last MIDI command, for 'running status' mode */		\
-												\
-	int state; /* SI_STATE_* */								\
-	int ccc; /* Cumulative cue counter, for those who need it */				\
-	unsigned char resetflag; /* for 0x4C -- on DoSound StopSound, do we return to start? */	\
-	int playmask; /* Active playmask, default 0 */						\
-	int play_rhythm; /* Active rhythm channel, default 0 */					\
-												\
-	unsigned char *data
-
-
-typedef struct _base_song_iterator {
-	BASE_SONG_ITERATOR_BODY;
-} base_song_iterator_t;
-
-
 
 /********************************/
 /*-- Song iterator operations --*/
@@ -208,6 +155,33 @@ typedef struct _base_song_iterator {
 
 #define SCI_SONG_ITERATOR_TYPE_SCI0 0
 #define SCI_SONG_ITERATOR_TYPE_SCI1 1
+
+#define IT_READER_MASK_MIDI	(1 << 0)
+#define IT_READER_MASK_DELAY	(1 << 1)
+#define IT_READER_MASK_LOOP	(1 << 2)
+#define IT_READER_MASK_CUE	(1 << 3)
+#define IT_READER_MASK_PCM	(1 << 4)
+
+#define IT_READER_MASK_ALL (~0)
+
+int
+songit_next(song_iterator_t **it, unsigned char *buf, int *result, int mask);
+/* Convenience wrapper around it->next
+** Parameters: (song_iterator_t **it) Reference to the iterator to access
+**             (byte *) buf: The buffer to write to (needs to be able to
+**                           store at least 4 bytes)
+**             (int) mask: IT_READER_MASK options specifying the events to
+**                   listen for
+** Returns   : (int) zero if a MIDI operation was written, SI_FINISHED
+**                   if the song has finished playing, SI_LOOP if looping
+**                   (after updating the loop variable), SI_CUE if we found
+**                   a cue, SI_PCM if a PCM was found, or the number of ticks
+**                   to wait before this function should be called next.
+**             (int) *result: Number of bytes written to the buffer
+**                   (equals the number of bytes that need to be passed
+**                   to the lower layers) for 0, the cue value for SI_CUE,
+**                   or the number of loops remaining for SI_LOOP.
+*/
 
 song_iterator_t *
 songit_new(unsigned char *data, unsigned int size, int type);
@@ -245,11 +219,15 @@ songit_handle_message(song_iterator_t **it_reg, song_iterator_message_t msg);
 
 
 song_iterator_t *
-songit_clone(song_iterator_t *it);
+songit_clone(song_iterator_t *it, int delta);
 /* Clones a song iterator
 ** Parameters: (song_iterator_t *) it: The iterator to clone
+**             (int) delta: Number of ticks that still need to elapse until
+**                          the next item should be read from the song iterator
 ** Returns   : (song_iterator_t *) A shallow clone of 'it'.
 ** This performs a clone on the bottom-most part (containing the actual song data) _only_. 
+** The justification for requiring 'delta' to be passed in here is that this
+** is typically maintained outside of the song iterator.
 */
 
 int

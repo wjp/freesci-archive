@@ -1,3 +1,15 @@
+2004-02-16  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sfx/iterator.c: Lots of changes and bug fixes in song
+	iterator code.
+
+	* src/engine/ksound.c: Support for SCI(0)1 sound cues
+
+2004-02-15  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/sfx_iterator.h (SI_RELATIVE_CUE): Split cues into
+	relative and absolute cues
+
 2004-02-06  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* doc/sci.sgml: Added game information contributed by Jonathan

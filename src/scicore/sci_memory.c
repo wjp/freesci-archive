@@ -1,5 +1,6 @@
 /***************************************************************************
  sci_memory.c Copyright (C) 2001 Alexander R Angas
+			Refcounted memory by Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -224,3 +225,65 @@ debug_win32_memory(int dbg_setting)
 #endif
 }
 #endif
+
+
+
+/*-------- Refcounting ----------*/
+
+#define REFCOUNT_OVERHEAD (sizeof(guint32)*3)
+#define REFCOUNT_MAGIC_LIVE_1 0xebdc1741
+#define REFCOUNT_MAGIC_LIVE_2 0x17015ac9
+#define REFCOUNT_MAGIC_DEAD_1 0x11dead11
+#define REFCOUNT_MAGIC_DEAD_2 0x22dead22
+
+#define REFCOUNT_CHECK(p) ((((guint32 *)p)[-3] == REFCOUNT_MAGIC_LIVE_2)    \
+			   && (((guint32 *)p)[-1] == REFCOUNT_MAGIC_LIVE_1))
+
+#define REFCOUNT(p) (((guint32 *)p)[-2])
+
+
+extern void *
+sci_refcount_alloc(size_t length)
+{
+	guint32 *data = sci_malloc(REFCOUNT_OVERHEAD + length);
+
+	data[-1] = REFCOUNT_MAGIC_LIVE_1;
+	data[-3] = REFCOUNT_MAGIC_LIVE_2;
+	REFCOUNT(data) = 1;
+
+	return data + 3;
+}
+
+extern void *
+sci_refcount_incref(void *data)
+{
+	if (!REFCOUNT_CHECK(data)) {
+		BREAKPOINT();
+	} else
+		REFCOUNT(data)++;
+
+	return data;
+}
+
+extern void
+sci_refcount_decref(void *data)
+{
+	if (!REFCOUNT_CHECK(data)) {
+		BREAKPOINT();
+	} else if (--REFCOUNT(data) == 0) {
+		guint32 *fdata = data;
+
+		fdata[-1] = REFCOUNT_MAGIC_DEAD_1;
+		fdata[-3] = REFCOUNT_MAGIC_DEAD_2;
+
+		sci_free(fdata - 3);
+	}
+}
+
+extern void *
+sci_refcount_memdup(void *data, size_t len)
+{
+	void *dest = sci_refcount_alloc(data);
+	memcpy(dest, data, len);
+	return dest;
+}

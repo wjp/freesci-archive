@@ -195,3 +195,5 @@ some interesting twists:
    cumulative cues nor with mixed cumulative/absolute cues.
 4. A signal of 0xff will stop the sound object playing. This may be
    for purely internal purposes.
+5. There no longer is a field indicating the amount of increment for
+   a cue.

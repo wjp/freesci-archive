@@ -246,6 +246,46 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct);
 ** See _SCI_MALLOC() for more information if call fails.
 */
 
+/****************************************/
+/* Refcounting garbage collected memory */
+/****************************************/
+
+/* Refcounting memory calls are a little slower than the others,
+** and using it improperly may cuase memory leaks. It conserves
+** memory, though.  */
+
+extern void *
+sci_refcount_alloc(size_t length);
+/* Allocates "garbage" memory
+** Parameters: (size_t) length: Number of bytes to allocate
+** Returns   : (void *) The allocated memory
+** Memory allocated in this fashion will be marked as holding one reference.
+** It cannot be freed with 'free()', only by using sci_refcount_decref().
+*/
+
+extern void *
+sci_refcount_incref(void *data);
+/* Adds another reference to refcounted memory
+** Parameters: (void *) data: The data to add a reference to
+** Returns   : (void *) data
+*/
+
+extern void
+sci_refcount_decref(void *data);
+/* Decrements the reference count for refcounted memory
+** Parameters: (void *) data: The data to add a reference to
+** Returns   : (void *) data
+** If the refcount reaches zero, the memory will be deallocated
+*/
+
+extern void *
+sci_refcount_memdup(void *data, size_t len);
+/* Duplicates non-refcounted memory into a refcounted block
+** Parameters: (void *) data: The memory to copy from
+**             (size_t) len: The number of bytes to copy/allocate
+** Returns   : (void *) Newly allocated refcounted memory
+** The number of references accounted for will be one.
+*/
 
 /********** macro definitions for routines **********/
 

@@ -98,14 +98,17 @@ play_song(song_iterator_t *it, GTimeVal *wakeup_time, int writeahead_time)
 	       < writeahead_time) {
 		int delay;
 
-		switch ((delay = play_it->next(it, &(buf[0]), &result))) {
+		switch ((delay = songit_next(&(play_it),
+					     &(buf[0]), &result,
+					     IT_READER_MASK_ALL))) {
 
 		case SI_FINISHED:
 			play_it_done = 1;
 			return;
 
 		case SI_LOOP:
-		case SI_CUE:
+		case SI_RELATIVE_CUE:
+		case SI_ABSOLUTE_CUE:
 			break;
 
 		case SI_PCM:

@@ -41,4 +41,6 @@
 #define SFX_OK 0
 #define SFX_ERROR -1
 
+#define MIDI_CHANNELS 16
+
 #endif /* !defined(_SFX_CORE_H_) */

@@ -45,7 +45,7 @@
 #define MAX_DELTA_OBSERVATIONS 1000000 /* Number of times the mixer is called before we assume we truly understand timing */
 
 static int diagnosed_too_slow = 0;
-static int additional_frames = 1024; /* Additional frames to write ahead, into the queue */
+static int additional_frames = 2048; /* Additional frames to write ahead, into the queue */
 
 struct mixer_private {
 	byte *outbuf; /* Output buffer to write to the PCM device next time */
@@ -196,7 +196,8 @@ mix_unsubscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 			self->feeds_nr--;
 
 			/* Copy topmost into deleted so that we don't have any holes */
-			self->feeds[i] = self->feeds[self->feeds_nr];
+			if (i != self->feeds_nr)
+				self->feeds[i] = self->feeds[self->feeds_nr];
 
 			if (self->feeds_allocd > 8 && self->feeds_allocd > (self->feeds_nr << 1)) {
 				/* Limit memory waste */
@@ -204,12 +205,18 @@ mix_unsubscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 				self->feeds = sci_realloc(self->feeds, sizeof(sfx_pcm_feed_t *) * self->feeds_allocd);
 			}
 
+			for (i = 0; i < self->feeds_nr; i++)
+				fprintf(stderr, "  Feed #%d: %s-%x\n",
+					i, self->feeds[i].feed->debug_name,
+					self->feeds[i].feed->debug_nr);
+
 			return;
 		}
 	}
 
 	fprintf(stderr, "[sfx-mixer] Assertion failed: Deleting invalid feed %p out of %d\n", 
 		feed, self->feeds_nr);
+
 	BREAKPOINT();
 }
 
@@ -423,7 +430,6 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_frames)
 
 	/* Disabled, broken */
 	if (0 && P->delta_observations > MIN_DELTA_OBSERVATIONS) { /* Start improving after a while */
-		int d = P->delta_observations - MIN_DELTA_OBSERVATIONS;
 		int diff = self->dev->conf.rate - P->max_delta;
 
 		/* log-approximate P->max_delta over time */
@@ -523,8 +529,6 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 	int frames_nr;
 	int bias = (conf.format & ~SFX_PCM_FORMAT_LMASK)? 0x8000 : 0;
 	/* We use this only on a 16 bit level here */
-	int i;
-	sfx_pcm_urat_t counter = urat(0, 1);
 
 	/* The two most extreme source frames we consider for a
 	** destination frame  */
@@ -721,7 +725,7 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 
 	/* Save whether we have a partial frame still stored */
 	fs->frame_bufstart = frames_left;
-		
+
 	if (frames_left) {
 		memmove(fs->buf,
 			fs->buf + ((frames_read - frames_left) * f->frame_size),
@@ -743,7 +747,6 @@ static int
 mix_process_linear(sfx_pcm_mixer_t *self)
 {
 	int src_i; /* source feed index counter */
-	int frame_size = SFX_PCM_FRAME_SIZE(self->dev->conf);
 	int frames_skip; /* Number of frames to discard, rather than to emit */
 	int buflen = mix_compute_buf_len(self, &frames_skip); /* Compute # of frames we must compute and write */
 	int fake_buflen;
@@ -752,7 +755,6 @@ mix_process_linear(sfx_pcm_mixer_t *self)
 	sfx_timestamp_t start_timestamp; /* The timestamp at which the first frame will be played */
 	sfx_timestamp_t min_timestamp;
 	sfx_timestamp_t timestamp;
-	byte *left, *right;
 
 	if (self->dev->get_output_timestamp)
 		start_timestamp = self->dev->get_output_timestamp(self->dev);

@@ -115,6 +115,7 @@ _thaw_time(sfx_state_t *self)
 	self->wakeup_time = time_plus(ctime, self->song->delay);
 }
 
+/* Update internal state */
 static void
 _update(sfx_state_t *self)
 {
@@ -177,7 +178,8 @@ _update(sfx_state_t *self)
 /* 				songit_free(clonesong); */
 /* 		} */
 		if (newsong && player) {
-			song_iterator_t *clonesong = songit_clone(newsong->it);
+			song_iterator_t *clonesong
+				= songit_clone(newsong->it, newsong->delay);
 
 			player->set_iterator(clonesong,
 					     self->wakeup_time);
@@ -190,7 +192,9 @@ static int _sfx_timer_active = 0; /* Timer toggle */
 int
 sfx_play_iterator_pcm(song_iterator_t *it, song_handle_t handle)
 {
-	song_iterator_t *clonesong = songit_clone(it);
+	song_iterator_t *clonesong = songit_clone(it, 0);
+	/* Delta of 0: We just hit a PCM right now */
+
 	if (mixer) {
 		sfx_pcm_feed_t *newfeed = sfx_iterator_feed(clonesong);
 		if (newfeed) {
@@ -375,7 +379,8 @@ sfx_poll(sfx_state_t *self, song_handle_t *handle, int *cue)
 
 		if (!time_le(self->wakeup_time, ctime))
 			return 0; /* Patience, young hacker! */
-		result = self->song->it->next(self->song->it, buf, cue);
+		result = songit_next(&(self->song->it), buf, cue,
+				     IT_READER_MASK_ALL);
 
 		switch (result) {
 
@@ -384,7 +389,8 @@ sfx_poll(sfx_state_t *self, song_handle_t *handle, int *cue)
 			_update(self);
 			/* ...fall through... */
 		case SI_LOOP:
-		case SI_CUE:
+		case SI_RELATIVE_CUE:
+		case SI_ABSOLUTE_CUE:
 #ifdef DEBUG_CUES
 			sciprintf("[SFX:CUE] %lx: <= ", *handle);
 			if (result == SI_FINISHED)
@@ -502,7 +508,6 @@ sfx_song_set_loops(sfx_state_t *self, song_handle_t handle, int loops)
 	song_t *song = song_lib_find(self->songlib, handle);
 	song_iterator_message_t msg = songit_make_message(SIMSG_SET_LOOPS(loops));
 	ASSERT_SONG(song);
-
 	songit_handle_message(&(song->it), msg);
 
 	if (player/* && player->send_iterator_message*/)

@@ -209,7 +209,9 @@ ppf_poll(sfx_pcm_feed_t *self, byte *dest, int size)
 		int do_play;
 
 		while (time_counter <= TIME_INC) {
-			int next_stat = play_it->next(play_it, &(buf[0]), &buf_nr);
+			int next_stat = songit_next(&play_it,
+						    &(buf[0]), &buf_nr,
+						    IT_READER_MASK_ALL);
 
 			switch (next_stat) {
 			case SI_PCM:
@@ -222,7 +224,8 @@ ppf_poll(sfx_pcm_feed_t *self, byte *dest, int size)
 				return written; /* We're done... */
 
 			case SI_LOOP:
-			case SI_CUE:
+			case SI_RELATIVE_CUE:
+			case SI_ABSOLUTE_CUE:
 				break; /* Boooring... .*/
 
 			case 0: /* MIDI command */
