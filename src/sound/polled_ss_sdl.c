@@ -21,6 +21,7 @@
 #include <engine.h>
 #include <soundserver.h>
 #include <sound.h>
+#include <pcmout.h>
 
 #ifdef HAVE_SDL
 
@@ -300,7 +301,7 @@ sound_sdl_exit(state_t *s)
     SDL_DestroyCond(bulk_conds[i]);
     SDL_DestroyMutex(bulk_mutices[i]);
 
-    while (data = sci_get_from_queue(&(bulk_queues[i]), NULL))
+    while ((data = sci_get_from_queue(&(bulk_queues[i]), NULL)))
       free(data); /* Flush queues */
   }
 

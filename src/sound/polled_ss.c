@@ -37,6 +37,8 @@
 #include <soundserver.h>
 #include <midi_device.h>
 #include <sys/types.h>
+#include <pcmout.h>
+
 #ifdef HAVE_SYS_SOUNDCARD_H
 #  include <sys/stat.h>
 #  include <fcntl.h>

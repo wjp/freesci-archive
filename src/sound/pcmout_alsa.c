@@ -57,7 +57,7 @@ static void *sound_thread (void *arg)
 static int pcmout_alsa_open(guint16 *b, guint16 rate) {
   int channels = 2;
   int periods = 8;
-  int err, count;
+  int err;
 
   buffer = b;
 
@@ -94,7 +94,7 @@ static int pcmout_alsa_open(guint16 *b, guint16 rate) {
     return -1;
   }
 
-  if ((err = snd_pcm_hw_params_set_channels(pcm_handle, hwparams, 2)) < 0) {
+  if ((err = snd_pcm_hw_params_set_channels(pcm_handle, hwparams, channels)) < 0) {
     printf("ALSA: Error setting channels.\n");
     return -1;
   }

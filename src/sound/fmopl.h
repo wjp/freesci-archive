@@ -10,7 +10,7 @@
 #endif
 
 /* --- select emulation chips --- */
-#define BUILD_YM3812 (HAS_YM3812)
+#define BUILD_YM3812 1
 /* #define BUILD_YM3526 (HAS_YM3526) */
 /* #define BUILD_Y8950  (HAS_Y8950) */
 
@@ -43,7 +43,7 @@ typedef void (*OPL_PORTHANDLER_W)(int param,unsigned char data);
 typedef unsigned char (*OPL_PORTHANDLER_R)(int param);
 
 
-#if BUILD_YM3812
+#ifdef BUILD_YM3812
 
 int  YM3812Init(int num, int clock, int rate);
 void YM3812Shutdown(void);

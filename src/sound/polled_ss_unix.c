@@ -32,7 +32,7 @@
 #include <soundserver.h>
 #include <sciresource.h>
 #include <midi_device.h>
-
+#include <pcmout.h>
 
 #include <signal.h>
 #include <sound.h>
@@ -441,8 +441,6 @@ sound_unix_send_data(byte *data_ptr, int maxsend)
 void
 sound_unix_exit(state_t *s)
 {
-	int i;
-
 	signal(SIGPIPE, SIG_IGN); /* Ignore SIGPIPEs */
 	signal(SIGTSTP, SIG_DFL);
 	signal(SIGCONT, SIG_DFL);

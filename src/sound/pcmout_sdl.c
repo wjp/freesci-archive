@@ -39,7 +39,7 @@ static void fill_audio (void *udata, guint8 *stream, int len)
   Uint32 p;
   static Uint32 remain = 0, offset = 0;
 
-  // printf("%d %d %d\n", len, remain, offset);
+  //  printf("%d %d %d\n", len, remain, offset);
 
   /* mix_sound returns FRAMES, 1 frame = 4 bytes */
   memcpy (stream, (guint8 *) buffer + offset, p = remain);

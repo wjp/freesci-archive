@@ -29,6 +29,10 @@
 
 #include "fmopl.h"
 
+/* local function declarations */
+
+int midi_adlibemu_reset(void);
+
 /* #define DEBUG_ADLIB */
 /* #define ADLIB_MONO */
 /* #define ADLIB_LINEAR_VOLUME */
@@ -91,16 +95,14 @@ static guint8 adlib_reg_R[256];
 /* initialise note/operator lists, etc. */
 void adlibemu_init_lists()
 {
-  int i;
-
   free_voices = ADLIB_VOICES;
 
   memset(instr, 0, sizeof(instr));
-  memset(pitch, 0, sizeof(instr));
-  memset(vol, 0x7f, sizeof(instr));
-  memset(pan, 0x3f, sizeof(instr));
-  memset(adlib_reg_L, 0, sizeof(instr));
-  memset(adlib_reg_R, 0, sizeof(instr));
+  memset(pitch, 0, sizeof(pitch));
+  memset(vol, 0x7f, sizeof(vol));
+  memset(pan, 0x3f, sizeof(pan));
+  memset(adlib_reg_L, 0, sizeof(adlib_reg_L));
+  memset(adlib_reg_R, 0, sizeof(adlib_reg_R));
   memset(oper_chn, 0xff, sizeof(oper_chn));
   memset(oper_note, 0xff, sizeof(oper_note));
 }
@@ -137,7 +139,7 @@ static inline guint8 opl_read (int a)
 
 void synth_setpatch (int voice, guint8 *data)
 {
-  int i, x;
+  int i;
 
   opl_write(0xBD, 0);
 
@@ -372,7 +374,7 @@ void test_adlib () {
 
 int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
 {
-  int i, n;
+  int i;
 
   /* load up the patch.003 file, parse out the insturments */
   if (data_length < 1344) {
@@ -527,9 +529,9 @@ int synth_mixer (void* buffer, int count)
     count = BUFFER_SIZE;
 
   if (!buffer)
-    return;
+    return 0;
   if (!ready)
-    return;
+    return 0;
 
   YM3812UpdateOne (ADLIB_LEFT, databuf, count); 
 
