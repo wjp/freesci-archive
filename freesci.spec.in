@@ -6,8 +6,8 @@ Group: Games/Adventure
 Copyright: GPL
 Source: ftp://ftp.shaftnet.org/pub/freesci/freesci-%{version}.tar.bz2
 Buildroot: /var/tmp/%{name}-%{version}-%{release}-root
-Prereq: ggi, SDL >= 1.1.8
-BuildPrereq:  ggi-devel, SDL-devel >= 1.1.8
+#Prereq: ggi, SDL >= 1.1.8
+#BuildPrereq:  ggi-devel, SDL-devel >= 1.1.8
 
 %description
 FreeSCI is a portable interpreter for SCI games, such as the Space Quest
@@ -26,7 +26,7 @@ It has the following improvements over Sierra SCI:
 %setup -q
 
 %build
-./configure --prefix=/usr
+./configure --prefix=/usr --mandir=%{_mandir}
 make
 
 %install
@@ -38,7 +38,6 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %defattr(-,root,root)
 %doc AUTHORS ChangeLog COPYING INSTALL NEWS 
 %doc THANKS TODO doc/sci.sgml
-%doc freesci-bugs
 %doc README*
 %{_bindir}/sciv
 %{_bindir}/sciconsole
@@ -51,5 +50,12 @@ make install DESTDIR=$RPM_BUILD_ROOT
 rm -rf $RPM_BUILD_ROOT
 
 %changelog
+* Thu May 10 2001 Solomon Peachy <pizza@shaftnet.org>
+- Mangled through autoconf now.
+- got rid of freesci-bugs
+- workarounds for manpath issues
+- got rid of SDL/ggi dependencies
+
 * Thu Apr 12 2001 Solomon Peachy <pizza@shaftnet.org>
 - initial package for 0.3.1
+
