@@ -476,9 +476,11 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 			{
 				PUT_SEL32V(obj, signal, signal);
 			}
+			break;
 		case 0xFF: /* May be unnecessary */
 			sfx_song_set_status(&s->sound,
 					    handle, SOUND_STATUS_STOPPED);
+			break;
 		default :
 			if (dataInc!=GET_SEL32V(obj, dataInc))
 			{
@@ -488,6 +490,7 @@ kDoSound_SCI01(state_t *s, int funct_nr, int argc, reg_t *argv)
 			{
 				PUT_SEL32V(obj, signal, signal);
 			}
+			break;
 		}
 
 		PUT_SEL32V(obj, min, min);
