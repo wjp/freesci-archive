@@ -136,7 +136,7 @@ malloc_cpy(char *source);
 
 
 char *
-malloc_ncpy(char *source, int length);
+malloc_ncpy(char *source, size_t length);
 /* Copies a string into a newly allocated memory part, up to a certain length.
 ** Parameters: (char *) source: The source string
 **             (int) length: The maximum length of the string (not conting a trailing \0).

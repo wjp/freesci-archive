@@ -77,7 +77,7 @@ malloc_cpy(char *source)
 }
 
 char *
-malloc_ncpy(char *source, int length)
+malloc_ncpy(char *source, size_t length)
 {
 	int rlen = MIN(strlen(source), length) + 1;
 	char *tmp = malloc(rlen);

@@ -255,16 +255,37 @@ kDoAvoider(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	heap_ptr client, looper, mover;
 	int angle;
 	int dx, dy;
+	int destx, desty;
 
 	CHECK_THIS_KERNEL_FUNCTION;
 
-	client = GET_SELECTOR(avoider, client);
-	looper = GET_SELECTOR(client, looper);
-	mover = GET_SELECTOR(client, mover);
-
 	s->acc = -1;
 
-	SCIkdebug(SCIkBRESEN, "Doing avoider %04x\n", avoider);
+	if (!is_object(s, avoider)) {
+		SCIkwarn(SCIkWARNING, "DoAvoider() where avoider %04x is not an object\n", avoider);
+		return;
+	}
+
+	client = GET_SELECTOR(avoider, client);
+
+	if (!is_object(s, client)) {
+		SCIkwarn(SCIkWARNING, "DoAvoider() where client %04x is not an object\n", client);
+		return;
+	}
+
+	looper = GET_SELECTOR(client, looper);
+
+	mover = GET_SELECTOR(client, mover);
+
+	if (!is_object(s, mover)) {
+		SCIkwarn(SCIkWARNING, "DoAvoider() where mover %04x is not an object\n", mover);
+		return;
+	}
+
+	destx = GET_SELECTOR(mover, x);
+	desty = GET_SELECTOR(mover, y);
+
+	SCIkdebug(SCIkBRESEN, "Doing avoider %04x (dest=%d,%d)\n", avoider, destx, desty);
 
 	if (!mover)
 		return;
@@ -285,8 +306,8 @@ kDoAvoider(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		return;
 	}
 
-	dx = GET_SELECTOR(mover, x) - GET_SELECTOR(client, x);
-	dy = GET_SELECTOR(mover, y) - GET_SELECTOR(client, y);
+	dx = destx - GET_SELECTOR(client, x);
+	dy = desty - GET_SELECTOR(client, y);
 	angle = get_angle(dx, dy);
 
 	SCIkdebug(SCIkBRESEN, "Movement (%d,%d), angle %d is %s blocked\n",
@@ -303,8 +324,8 @@ kDoAvoider(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		SCIkdebug(SCIkBRESEN, " avoider %04x\n", avoider);
 
 		for (moves = 0; moves < 8; moves++) {
-			int move_x = (int) (cos(angle * PI / 180.0) * xstep);
-			int move_y = (int) (sin(angle * PI / 180.0) * ystep);
+			int move_x = (int) (sin(angle * PI / 180.0) * (xstep));
+			int move_y = (int) (-cos(angle * PI / 180.0) * (ystep));
 
 			PUT_SELECTOR(client, x, oldx + move_x);
 			PUT_SELECTOR(client, y, oldy + move_y);
