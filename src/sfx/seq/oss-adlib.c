@@ -353,12 +353,13 @@ midi_adlib_set_option(char *name, char *value)
 sfx_sequencer_t sfx_sequencer_oss_adlib = {
 	"adlib",
 	"0.1",
-	SFX_DEVICE_NONE, /* No device dependancy-- fixme, this might becomde ossseq */
+	SFX_DEVICE_NONE, /* No device dependancy-- fixme, this might become ossseq */
 	&midi_adlib_set_option,
 	&midi_adlib_open,
 	&midi_adlib_close,
 	&midi_adlib_event,
 	&midi_adlib_delay,
+	NULL,
 	&midi_adlib_allstop,
 	NULL,
 	&midi_adlib_reverb,
@@ -366,7 +367,8 @@ sfx_sequencer_t sfx_sequencer_oss_adlib = {
 	0x04,		/* playflag */
 	0, 		/* do not play channel 9 */
 	ADLIB_VOICES,  /* Max polyphony */
-	0 /* Does not require any write-ahead by its own */
+	0, /* Does not require any write-ahead by its own */
+	NULL
 };
 
 #endif /* HAVE_SYS_SOUNDCARD_H */

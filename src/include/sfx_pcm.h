@@ -29,10 +29,12 @@
 #define _SFX_PCM_H_
 
 #include <sfx_engine.h>
+#include <sfx_timer.h>
 
 
 /* A number of standard options most devices will support */
 #define SFX_PCM_OPTION_RATE "rate"            /* Sampling rate: Number of samples per second */
+#define SFX_PCM_OPTION_BITS "bits"            /* Sample size in bits */
 #define SFX_PCM_OPTION_STEREO "stereo"        /* Whether to support stereo output */
 #define SFX_PCM_OPTION_BUF_SIZE "buffer-size" /* Requested buffer size */
 /* Device implementors are advised to use these constants whenever possible. */
@@ -96,6 +98,8 @@ typedef struct _sfx_pcm_device {
 	** Parameters: (sfx_pcm_device_t *) self: Self reference
 	** Returns   : (int) SFX_OK on success, SFX_ERROR if the device could not be
 	**                   opened
+	** This should attempt to open the highest quality output allowed by any options
+	** specified beforehand.
 	*/
 
 	void (*exit)(struct _sfx_pcm_device *self);
@@ -109,8 +113,9 @@ typedef struct _sfx_pcm_device {
 	**             (char *) name: Name of the option to set
 	**             (char *) value: Value of the option to set
 	** Returns   : (int) SFX_OK on success, SFX_ERROR otherwise (unsupported option)
+	** May be NULL
 	*/
-	
+
 	int (*output)(struct _sfx_pcm_device *self, byte *buf, int count);
 	/* Writes output to the device
 	** Parameters: (sfx_pcm_device_t *) self: Self reference
@@ -121,7 +126,6 @@ typedef struct _sfx_pcm_device {
 	** 'buf' is guaranteed not to be modified in between calls to 'output()'.
 	*/
 
-
 	/* The following must be set after initialisation */
 	sfx_pcm_config_t conf;
 	int buf_size; /* Output buffer size, i.e. the number of samples (!)
@@ -130,6 +134,15 @@ typedef struct _sfx_pcm_device {
 		      ** to conf.rate  */
 
 	/* The following are optional */
+	sfx_timer_t *timer;
+	/* Many PCM drivers use a callback mechanism, which can be
+	** exploited as a timer. Such a timer may be exported here and
+	** will be preferred over other timers.  */
+	/* This is an _optional_ timer provided by the PCM
+	** subsystem (may be NULL). It is checked for afer
+	** initialisation, and used in preference to any
+	** other timers available.
+	*/
 	void *internal; /* The private bits */
 
 } sfx_pcm_device_t;
@@ -170,5 +183,15 @@ typedef struct _sfx_pcm_feed_t {
 	int sample_size; /* Sample size, computed by the mixer for the feed */
 
 } sfx_pcm_feed_t;
+
+
+sfx_pcm_device_t *
+sfx_pcm_find_device(char *name);
+/* Finds a PCM device by name
+** Parameters: (char *) name: Name of the PCM device to look for, or NULL to
+**                            use the system default
+** Returns   : (sfx_pcm_device_t *) The requested device, or NULL if no matching
+**                                  device could be found
+*/
 
 #endif /* !defined(_SFX_PCM_H_) */

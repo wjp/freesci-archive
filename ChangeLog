@@ -1,3 +1,8 @@
+2003-12-25  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sfx/pcm_device: Committed PCM subsystem, fixed various
+	mixer bugs, fixed up core.c to initialise PCM subsystem
+	
 2003-08-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
         * src/scicore/tools.c (sci_gettime): Fixed a bug in the win32

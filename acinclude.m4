@@ -562,7 +562,7 @@ if test "$alsa_prefix" != "" ; then
 fi
 
 dnl add the alsa library
-ALSA_LIBS="$ALSA_LIBS -lasound -lm -ldl"
+ALSA_LIBS="$ALSA_LIBS -lasound -lm"
 LIBS="$ALSA_LIBS $LIBS"
 AC_MSG_RESULT($ALSA_LIBS)
 
@@ -622,8 +622,8 @@ exit(0);
 AC_LANG_RESTORE
 
 dnl Now that we know that we have the right version, let's see if we have the library and not just the headers.
-dnl Changed from snd_defaults_card to snd_rawmidi_open -- Christoph Reichenbach
-AC_CHECK_LIB([asound], [snd_rawmidi_open],,
+dnl Changed from snd_defaults_card to snd_pcm_info -- Christoph Reichenbach
+AC_CHECK_LIB([asound], [snd_pcm_info],,
         [ifelse([$3], , [AC_MSG_ERROR(No linkable libasound was found.)])
          alsa_found=no]
 )

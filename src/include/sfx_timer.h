@@ -43,6 +43,7 @@ typedef struct {
 	** Parameters: (char *) name: The name describing what to set
 	**             (char *) value: The value to set
 	** Returns   : (int) SFX_OK, or SFX_ERROR if the name wasn't understood
+	** May be NULL
 	*/
 
 	int
@@ -57,15 +58,11 @@ typedef struct {
 	*/
 
 	int
-	(*start)();
-	/* Starts the timer
-	** Returns   : (int) SFX_OK on success, SFX_ERROR on failure
-	*/
-
-	int
-	(*stop)();
+	(*exit)();
 	/* Stops the timer
 	** Returns   : (int) SFX_OK on success, SFX_ERROR on failure
+	** All resources allocated with the timer should be freed as an effect
+	** of this.
 	*/
 
 } sfx_timer_t;
@@ -76,6 +73,8 @@ sfx_find_timer(char *name);
 ** Parameters: (char *) name: Name of the timer to look up, or NULL for default
 ** Returns   : (sfx_timer_t *) The timer of matching name, or NULL
 **                             if not found
+** This does not consider timers provided by PCM devices; there must be
+** retrieved externally.
 */
 
 #endif /* !_FREESCI_SFX_TIMER_H_ */

@@ -33,9 +33,11 @@
 extern sfx_sequencer_t sfx_sequencer_mt32;
 extern sfx_sequencer_t sfx_sequencer_oss_adlib;
 #endif
+extern sfx_sequencer_t sfx_sequencer_sw_pcspeaker;
 
 
 sfx_sequencer_t *sfx_sequencers[] = {
+	&sfx_sequencer_sw_pcspeaker,
 #ifdef HAVE_SYS_SOUNDCARD_H
 	&sfx_sequencer_mt32,
 	&sfx_sequencer_oss_adlib,
@@ -57,7 +59,7 @@ sfx_find_sequencer(char *name)
 		int n = 0;
 		while (sfx_sequencers[n]
 		       && strcasecmp(sfx_sequencers[n]->name, name))
-		       ++ n;
+		       ++n;
 
 		return sfx_sequencers[n];
 	}

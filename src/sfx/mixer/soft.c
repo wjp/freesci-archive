@@ -36,6 +36,8 @@
 **     >= 3 -- fully detailed input and output analysis (once per sample and feed)
 */
 
+#define DEBUG 0
+
 #define MIN_DELTA_OBSERVATIONS 100 /* Number of times the mixer is called before it starts trying to improve latency */
 #define MAX_DELTA_OBSERVATIONS 1000000 /* Number of times the mixer is called before we assume we truly understand timing */
 
@@ -54,6 +56,9 @@ struct mixer_private {
 
 	int max_delta; /* maximum observed time delta (using 'samples' as a metric unit) */
 	int delta_observations; /* Number of times we played; confidence measure for max_delta */
+
+	/* Pause data */
+	int paused;
 };
 
 #define P ((struct mixer_private *)(self->private_bits))
@@ -68,13 +73,15 @@ mix_init(sfx_pcm_mixer_t *self, sfx_pcm_device_t *device)
 	P->lastbuf_len = 0;
 	P->compbuf_l = malloc(sizeof(gint32) * device->buf_size);
 	P->compbuf_r = malloc(sizeof(gint32) * device->buf_size);
+fprintf(stderr, "-- ALLOCD size %d\n", device->buf_size);
 	P->played_this_second = 0;
-	device->init(device);
+	P->paused = 0;
 #ifdef DEBUG
 	sciprintf("[soft-mixer] Initialised device %s v%s (%d Hz, %d/%x)\n",
 		  device->name, device->version,
 		  device->conf.rate, device->conf.stereo, device->conf.format);
 #endif
+	return SFX_OK;
 }
 
 static inline unsigned int
@@ -235,6 +242,7 @@ mix_compute_output(sfx_pcm_mixer_t *self, int outplen)
 	gint32 *rsrc = P->compbuf_r;
 	int sample_size = SFX_PCM_SAMPLE_SIZE(conf);
 
+
 	if (!P->writebuf)
 		P->writebuf = malloc(self->dev->buf_size * sample_size);
 
@@ -249,10 +257,10 @@ mix_compute_output(sfx_pcm_mixer_t *self, int outplen)
 	} else
 		lchan = P->writebuf;
 
+
 	for (sample_i = 0; sample_i < outplen; sample_i++) {
 		int left = *lsrc++;
 		int right = *rsrc++;
-
 
 		if (conf.stereo) {
 			LIMIT_16_BITS(left);
@@ -324,6 +332,12 @@ mix_swap_buffers(sfx_pcm_mixer_t *self)
 	P->writebuf = tmp;
 }
 
+
+#define SAMPLE_OFFSET(usecs) \
+			((usecs >> 7) /* approximate, since uint32 is too small */ \
+			 * ((long) self->dev->conf.rate)) \
+			/ (1000000L >> 7)
+
 static inline int
 mix_compute_buf_len(sfx_pcm_mixer_t *self)
      /* Computes the number of samples we ought to write. It tries to minimise the number,
@@ -334,6 +348,7 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self)
 	int played_samples = 0; /* since the last call */
 	long secs, usecs;
 	int sample_pos;
+	int result_samples;
 
 	sci_gettime(&secs, &usecs);
 
@@ -347,30 +362,34 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self)
 		return self->dev->buf_size;
 	}
 
-	if (P->skew > usecs)
+	/*	fprintf(stderr, "[%d:%d]S%d ", secs, usecs, P->skew);*/
+
+	if (P->skew > usecs) {
 		secs--;
+		usecs += (1000000 - P->skew);
+	}
 	else
 		usecs -= P->skew;
 	
-	sample_pos = ((usecs >> 7) /* approximate, since uint32 is too small */
-		      * ((long) self->dev->conf.rate))
-		/ (1000000L >> 7);
+	sample_pos = SAMPLE_OFFSET(usecs);
 
-	played_samples = self->dev->conf.rate - P->played_this_second
-		+ sample_pos
-		- self->dev->conf.rate
-		+ ((secs - P->lsec) * self->dev->conf.rate);
+	played_samples = P->played_this_second - sample_pos
+		- ((secs - P->lsec) * self->dev->conf.rate);
+	/*
+	fprintf(stderr, "Between %d:? offset=%d and %d:%d offset=%d: Played %d at %d\n", P->lsec, P->played_this_second,
+		secs, usecs, sample_pos, played_samples, self->dev->conf.rate);
+	*/
 
 	if (played_samples > P->max_delta)
 		P->max_delta = played_samples;
 
-	free_samples = self->dev->conf.rate - played_samples;
+	free_samples = self->dev->buf_size - played_samples;
 
-	if (free_samples < 0) {
+	if (free_samples > self->dev->buf_size) {
 		if (!diagnosed_too_slow) {
 			sciprintf("[sfx-mixer] Your timer is too slow for your PCM output device (%d/%d); disabling sound.\n"
-				  "[sfx-mixer] You might want to try changing the device or mixer if possible.\n",
-				  self->dev->conf.rate, played_samples);
+				  "[sfx-mixer] You might want to try changing the device or mixer, if possible.\n",
+				  played_samples, self->dev->buf_size);
 		}
 		diagnosed_too_slow = 1;
 
@@ -388,8 +407,9 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self)
 		/* log-approximate P->max_delta over time */
 		recommended_samples = P->max_delta +
 			((diff * MIN_DELTA_OBSERVATIONS) / P->delta_observations);
+/* WTF? */
 	} else
-		recommended_samples = self->dev->conf.rate; /* Initially, keep the buffer full */
+		recommended_samples = self->dev->buf_size; /* Initially, keep the buffer full */
 
 #if (DEBUG >= 1)
 	sciprintf("[soft-mixer] played since last time: %d, recommended: %d, free: %d\n",
@@ -397,9 +417,26 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self)
 #endif
 
 	if (recommended_samples > free_samples)
-		return free_samples;
+		result_samples = free_samples;
 	else
-		return recommended_samples;
+		result_samples = recommended_samples;
+
+	if (result_samples < 0)
+		result_samples = 0;
+
+	P->played_this_second += result_samples;
+	while (P->played_this_second > self->dev->conf.rate) {
+		/* Won't normally happen more than once */
+		P->played_this_second -= self->dev->conf.rate;
+		P->lsec++;
+	}
+
+	if (result_samples > self->dev->buf_size) {
+		fprintf(stderr, "[soft-mixer] Internal assertion failed: samples-to-write %d > %d\n",
+			result_samples, self->dev->buf_size);
+	}
+
+	return result_samples;
 }
 
 
@@ -594,6 +631,10 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 		fs->mode = SFX_PCM_FEED_MODE_DEAD;
 }
 
+long xlastsec = 0;
+long xlastusec = 0;
+long xsec = 0;
+long xusec = 0;
 
 static int
 mix_process_linear(sfx_pcm_mixer_t *self)
@@ -602,9 +643,9 @@ mix_process_linear(sfx_pcm_mixer_t *self)
 	int sample_size = SFX_PCM_SAMPLE_SIZE(self->dev->conf);
 	int buflen = mix_compute_buf_len(self); /* Compute # of samples we must compute and write */
 	byte *left, *right;
-	if (diagnosed_too_slow)
-		return;
 
+	if (diagnosed_too_slow)
+		return SFX_ERROR;
 	if (P->outbuf && P->lastbuf_len) {
 		int rv = self->dev->output(self->dev, P->outbuf, P->lastbuf_len);
 
@@ -616,20 +657,21 @@ mix_process_linear(sfx_pcm_mixer_t *self)
 	if (self->feeds_nr)
 		sciprintf("[soft-mixer] Mixing %d output samples on %d input feeds\n", buflen, self->feeds_nr);
 #endif
-	if (self->feeds_nr) {
+	if (self->feeds_nr && !P->paused) {
 		for (src_i = 0; src_i < self->feeds_nr; src_i++) {
 			mix_compute_input_linear(self, src_i, self->feeds + src_i, buflen);
 		}
+
+		/* Destroy all feeds we finished */
+		for (src_i = 0; src_i < self->feeds_nr; src_i++)
+			if (self->feeds[src_i].mode == SFX_PCM_FEED_MODE_DEAD)
+				mix_unsubscribe(self, self->feeds[src_i].feed);
+
 	} else { /* Zero it out */
-		memset(P->compbuf_l, 0, sizeof(int) * buflen);
-		memset(P->compbuf_r, 0, sizeof(int) * buflen);
+		memset(P->compbuf_l, 0, sizeof(gint32) * buflen);
+		memset(P->compbuf_r, 0, sizeof(gint32) * buflen);
 	}
 
-	/* Destroy all feeds we finished */
-	for (src_i = 0; src_i < self->feeds_nr; src_i++)
-		if (self->feeds[src_i].mode == SFX_PCM_FEED_MODE_DEAD)
-			mix_unsubscribe(self, self->feeds[src_i].feed);
-			
 #if (DEBUG >= 1)
 	if (self->feeds_nr)
 		sciprintf("[soft-mixer] Done mixing for this session, the result will be our next output buffer\n");
@@ -655,6 +697,17 @@ mix_process_linear(sfx_pcm_mixer_t *self)
 	return SFX_OK;
 }
 
+static void
+mix_pause(sfx_pcm_mixer_t *self)
+{
+	P->paused = 1;
+}
+
+static void
+mix_resume(sfx_pcm_mixer_t *self)
+{
+	P->paused = 0;
+}
 
 sfx_pcm_mixer_t sfx_pcm_mixer_soft_linear = {
 	"soft-linear",
@@ -663,6 +716,8 @@ sfx_pcm_mixer_t sfx_pcm_mixer_soft_linear = {
 	mix_init,
 	mix_exit,
 	mix_subscribe,
+	mix_pause,
+	mix_resume,
 	mix_process_linear,
 
 	0,

@@ -120,12 +120,6 @@ static void (*_con_pixmap_callback)(gfx_pixmap_t *) = NULL;
 /********** dmalloc functions **********/
 
 #ifdef WITH_DMALLOC
-int
-c_dm_log_heap (state_t * s)
-{
-	dmalloc_log_heap_map ();
-	return 0;
-}
 
 int
 c_dm_stats (state_t * s)
@@ -201,8 +195,6 @@ c_dm_print (state_t * s)
 void
 con_init_dmalloc ()
 {
-	con_hook_command (c_dm_log_heap, "dm_log_heap", "",
-			  "Dumps the heap state to\n  the dmalloc output file\n\nUSAGE\n\n  dm_log_heap");
 	con_hook_command (c_dm_stats, "dm_stats", "",
 			  "Prints memory usage stats\n  to the dmalloc output file\n\n  dm_stats");
 	con_hook_command (c_dm_log_unfreed, "dm_log_unfreed", "",

@@ -312,8 +312,10 @@ main(int argc, char **argv)
 	srand(time(NULL));
 
 	for (dev_nr = 0; dev_nr < DEVICES_NR; dev_nr++) {
+		sfx_pcm_device_t *dev = &(devices[dev_nr++]);
 		int j;
-		mix->init(mix, &(devices[dev_nr++]));
+		dev->init(dev);
+		mix->init(mix, dev);
 
 		dev_output_enabled = 0;
 		/* Prime it to our timing */

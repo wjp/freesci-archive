@@ -46,9 +46,11 @@ typedef struct {
 	*/
 
 	int
-	(*init)(resource_mgr_t *resmgr);
+	(*init)(resource_mgr_t *resmgr, int expected_latency);
 	/* Initializes the player
 	** Parameters: (resource_mgr_t *) resmgr: A resource manager for driver initialization
+	**             (int) expected_latency: Expected delay in between calls to 'maintenance'
+	**                   (in microseconds)
 	** Returns   : (int) SFX_OK on success, SFX_ERROR on failure
 	*/
 
@@ -101,6 +103,13 @@ typedef struct {
 	(*exit)();
 	/* Stops the player
 	** Returns   : (int) SFX_OK on success, SFX_ERROR on failure
+	*/
+
+	void
+	(*maintenance)(); /* OPTIONAL -- may be NULL */
+	/* Regularly called maintenance function
+	** This function is called frequently and regularly (if present), it can be
+	** used to emit sound.
 	*/
 
 } sfx_player_t;

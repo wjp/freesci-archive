@@ -75,6 +75,14 @@ typedef struct _sfx_pcm_mixer {
 	**             (sfx_pcm_feed_t *) feed: The feed to subscribe to
 	*/
 
+	void (*pause)(struct _sfx_pcm_mixer *self);
+	/* Pauses the processing of input and output
+	*/
+
+	void (*resume)(struct _sfx_pcm_mixer *self);
+	/* Resumes the processing of input and output after a pause
+	*/
+
 	int (*process)(struct _sfx_pcm_mixer *self);
 	/* Processes all feeds, mixes their results, and passes everything to the output device
 	** Returns  : (int) SFX_OK on success, SFX_ERROR otherwise (output device error or
@@ -98,5 +106,7 @@ sfx_pcm_find_mixer(char *name);
 ** Parameters: (char *) name: Name of the mixer to look for, or NULL to
 **                            take a default
 */
+
+extern sfx_pcm_mixer_t *mixer; /* _THE_ global pcm mixer */
 
 #endif /* !defined(_SFX_MIXER_H_) */

@@ -29,6 +29,7 @@
 #include <scitypes.h>
 #include <stdio.h>
 #include <sfx_device.h>
+#include <sfx_sw_sequencer.h>
 
 #define SFX_SEQ_PATCHFILE_NONE -1
 
@@ -62,6 +63,7 @@ typedef struct _sfx_sequencer {
 	** FreeSCI documentation, particularly the part regarding 'patch.*' resource
 	** data.
 	*/
+
 	int (*close)();
 	/* Closes the sequencer
 	** Returns   : SFX_OK on success, SFX_ERROR otherwise
@@ -85,7 +87,7 @@ typedef struct _sfx_sequencer {
 	*/
 
 	int (*reset_timer)(); /* OPTIONAL -- may be NULL, but highly recommended in combination with delay() */
-	/* Resets the timer associated with the 'delay()' function
+	/* Resets the timer counter associated with the 'delay()' function
 	** Returns   : SFX_OK on success, SFX_ERROR otherwise
 	*/
 
@@ -99,6 +101,7 @@ typedef struct _sfx_sequencer {
 	** Parameters; (byte) volume: The volume to set, with 0 being mute and 127 full volume
 	** Returns   : SFX_OK on success, SFX_ERROR otherwise
 	*/
+
 	int (*reverb)(int param); /* OPTIONAL -- may be NULL */
 	/* Sets the device reverb
 	** Parameters; (int) param: The reverb to set
@@ -109,11 +112,21 @@ typedef struct _sfx_sequencer {
 		       ** SFX_SEQ_PATCHFILE_NONE  */
 	guint8 playmask; /* SCI 'playflag' mask to determine which SCI song channels
 			 ** this sequencer should play */
+	/* 0x01	-- MT-32
+	** 0x02	-- Yamaha FB-01
+	** 0x04	-- CMS or Game Blaster
+	** 0x08	-- Casio MT540 or CT460
+	** 0x10	-- Tandy 3-voice
+	** 0x20 -- PC speaker
+	*/
 	guint8 play_rhythm; /* Plays the rhythm channel? */
 	gint8 polyphony; /* Device polyphony (# of voices) */
 
 	int min_write_ahead_ms; /* Minimal write-ahead, in milliseconds */
 	/* Note that write-ahead is tuned automatically; this enforces a lower limit */
+
+	/* Optional data */
+	sfx_pcm_sw_seq_data_t *sw_seq_data; /* Software sequencer data-- NULL if unused */
 
 } sfx_sequencer_t;
 

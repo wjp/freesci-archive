@@ -27,15 +27,21 @@
 /* Sound subsystem core: Event handler, sound player dispatching */
 
 #include <stdio.h>
+#include <sfx_timer.h>
 #include <sfx_engine.h>
 #include <sfx_player.h>
+#include <sfx_mixer.h>
+#include <sfx_pcm.h>
 
 /*#define DEBUG_CUES*/
 #ifdef DEBUG_CUES
 int sciprintf(char *msg, ...);
 #endif
 
-sfx_player_t *player = NULL;
+static sfx_player_t *player = NULL;
+sfx_pcm_mixer_t *mixer = NULL;
+static sfx_pcm_device_t *pcm_device = NULL;
+static sfx_timer_t *timer = NULL;
 
 #define MILLION 1000000
 
@@ -145,28 +151,125 @@ _update(sfx_state_t *self)
 	}
 }
 
+static int _sfx_timer_active = 0; /* Timer toggle */
+
+static void
+_sfx_timer_callback(void *data)
+{
+	if (_sfx_timer_active) {
+		/* First run the player, to give it a chance to fill
+		** the audio buffer  */
+
+		if (player)
+			player->maintenance(player);
+
+		if (mixer)
+			mixer->process(mixer);
+	}
+}
+
 void
 sfx_init(sfx_state_t *self, resource_mgr_t *resmgr)
 {
 	song_lib_init(&self->songlib);
 	self->song = NULL;
 	sci_get_current_time(&self->wakeup_time); /* No need to delay */
-
+	mixer = sfx_pcm_find_mixer(NULL);
+	pcm_device = sfx_pcm_find_device(NULL);
 	player = sfx_find_player(NULL);
-	if (player->init(resmgr))
+
+
+	/*------------------*/
+	/* Initialise timer */
+	/*------------------*/
+
+	if (pcm_device || player->maintenance) {
+		if (pcm_device && pcm_device->timer)
+			timer = pcm_device->timer;
+		else
+			timer = sfx_find_timer(NULL);
+
+		if (!timer) {
+			fprintf(stderr, "[SFX] " __FILE__": Could not find timing mechanism\n");
+			fprintf(stderr, "[SFX] Disabled sound support\n");
+			return;
+		}
+
+		if (timer->init(_sfx_timer_callback, NULL)) {
+			fprintf(stderr, "[SFX] " __FILE__": Timer failed to initialize\n");
+			fprintf(stderr, "[SFX] Disabled sound support\n");
+			return;
+		}
+
+		sciprintf("[SFX] Initialised timer '%s', v%s\n",
+			  timer->name, timer->version);
+	} /* With no PCM device and no player, we don't need a timer */
+
+	/*----------------*/
+	/* Initialise PCM */
+	/*----------------*/
+
+	if (!pcm_device) {
+		sciprintf("[SFX] No PCM device found, disabling PCM support\n");
+		mixer = NULL;
+	} else {
+		if (pcm_device->init(pcm_device)) {
+			sciprintf("[SFX] Failed to open PCM device, disabling PCM support\n");
+			mixer = NULL;
+			pcm_device = NULL;
+		} else {
+			if (mixer->init(mixer, pcm_device)) {
+				sciprintf("[SFX] Failed to initialise PCM mixer; disabling PCM support\n");
+				mixer = NULL;
+				pcm_device->exit(pcm_device);
+				pcm_device = NULL;
+			}
+		}
+	}
+
+	/*-------------------*/
+	/* Initialise player */
+	/*-------------------*/
+
+	if (player->init(resmgr, timer? timer->delay_ms : 0)) {
 		player = NULL;
+		sciprintf("[SFX] Song player '%s' reported error, disabled\n", player->name);
+	}
+
 	if (!player)
-		printf("[SFX]: No song player found\n");
+		sciprintf("[SFX] No song player found\n");
 	else
-		printf("[SFX]: Using song player '%s', v%s\n", player->name, player->version);
+		sciprintf("[SFX] Using song player '%s', v%s\n", player->name, player->version);
+
+	_sfx_timer_active = 1;
 }
 
 void
 sfx_exit(sfx_state_t *self)
 {
+	_sfx_timer_active = 0;
+
 	song_lib_free(self->songlib);
+
+	if (timer && timer->exit())
+		fprintf(stderr, "[SFX] Timer reported error on exit\n");
+
+	/* WARNING: The mixer may hold feeds from the
+	** player, so we must stop the mixer BEFORE
+	** stopping the player. */
+	if (mixer) {
+		mixer->exit(mixer);
+		mixer = NULL;
+	}
+
 	if (player)
+		/* See above: This must happen AFTER stopping the mixer */
 		player->exit();
+
+	if (pcm_device) {
+		pcm_device->exit(pcm_device);
+		pcm_device = NULL;
+	}
 }
 
 static inline int

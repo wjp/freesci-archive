@@ -32,13 +32,34 @@
 #include <sfx_timer.h>
 #include <sfx_sequencer.h>
 
-static sfx_timer_t *timer;
 static sfx_sequencer_t *seq;
 
 /* Playing mechanism */
 
+static inline GTimeVal
+current_time()
+{
+	GTimeVal tv;
+	sci_get_current_time(&tv);
+	return tv;
+}
+
+static inline GTimeVal
+add_time_delta(GTimeVal tv, long delta)
+{
+	int sec_d;
+
+	tv.tv_usec += delta;
+	sec_d = tv.tv_usec / 1000000;
+	tv.tv_usec -= sec_d * 1000000;
+
+	tv.tv_sec += sec_d;
+
+	return tv;
+}
+
 static inline long
-delta_time(GTimeVal comp_tv)
+delta_time(GTimeVal comp_tv, GTimeVal base)
 {
 	GTimeVal tv;
 	sci_get_current_time(&tv);
@@ -48,6 +69,9 @@ delta_time(GTimeVal comp_tv)
 
 static song_iterator_t *play_it = NULL;
 static GTimeVal play_last_time;
+static GTimeVal play_pause_started; /* Beginning of the last pause */
+static GTimeVal play_pause_counter; /* Last point in time to mark a
+				    ** play position augmentation  */
 static int play_paused = 0;
 static int play_it_done = 0;
 static int play_writeahead_initial = 0;
@@ -60,7 +84,16 @@ play_song(song_iterator_t *it, GTimeVal *wakeup_time, int writeahead_time)
 	unsigned char buf[8];
 	int result;
 
-	while (play_it && delta_time(*wakeup_time) < writeahead_time) {
+	if (play_paused) {
+fprintf(stderr, "PAUSED\n");
+		GTimeVal ct;
+		*wakeup_time =
+			add_time_delta(*wakeup_time, delta_time(play_pause_counter, ct));
+		play_pause_counter = ct;
+	} else
+	/* Not paused: */
+	while (play_it && delta_time(*wakeup_time, current_time())
+	       < writeahead_time) {
 		int delay;
 
 		switch ((delay = play_it->next(it, &(buf[0]), &result))) {
@@ -88,11 +121,11 @@ play_song(song_iterator_t *it, GTimeVal *wakeup_time, int writeahead_time)
 }
 
 static void
-_rt_timer_callback(void *data)
+rt_timer_callback()
 {
 	if (play_it && !play_it_done) {
 		if (!play_moredelay) {
-			long delta = delta_time(play_last_time);
+			long delta = delta_time(play_last_time, current_time());
 
 			if (delta < 0) {
 				play_writeahead -= (int)((double)delta * 1.2); /* Adjust upwards */
@@ -117,26 +150,20 @@ rt_set_option(char *name, char *value)
 }
 
 static int
-rt_init(resource_mgr_t *resmgr)
+rt_init(resource_mgr_t *resmgr, int expected_latency)
 {
 	resource_t *res = NULL;
 	void *seq_res = NULL;
 	void *seq_dev = NULL;
 
-	timer = sfx_find_timer(NULL);
 	seq = sfx_find_sequencer(NULL);
-
-	if (!timer) {
-		fprintf(stderr, "[SFX] " __FILE__": Could not find timing mechanism\n");
-		return SFX_ERROR;
-	}
 
 	if (!seq) {
 		fprintf(stderr, "[SFX] " __FILE__": Could not find sequencer\n");
 		return SFX_ERROR;
 	}
 
-	if (seq->patchfile) {
+	if (seq->patchfile != SFX_SEQ_PATCHFILE_NONE) {
 		res = scir_find_resource(resmgr, sci_patch, seq->patchfile, 0);
 		if (!res) {
 			fprintf(stderr, "[SFX] " __FILE__": patch.%03d requested by sequencer (%s), but not found\n",
@@ -154,14 +181,7 @@ rt_init(resource_mgr_t *resmgr)
 		return SFX_ERROR;
 	}
 
-
-	if (timer->init(_rt_timer_callback, seq_res) || timer->start()) {
-		fprintf(stderr, __FILE__": Timer failed to initialize\n");
-		seq->close();
-		return SFX_ERROR;
-	}
-
-	play_writeahead = timer->delay_ms;
+	play_writeahead = expected_latency;
 	if (play_writeahead < seq->min_write_ahead_ms)
 		play_writeahead = seq->min_write_ahead_ms;
 
@@ -227,15 +247,20 @@ rt_send_iterator_message(song_iterator_message_t msg)
 static int
 rt_pause()
 {
+	sci_get_current_time(&play_pause_started);
+	/* Also, indicate that we haven't modified the time counter
+	** yet  */
+	play_pause_counter = play_pause_started;
+
 	play_paused = 1;
-	return (seq->allstop() || timer->stop());
+	return seq->allstop();
 }
 
 static int
 rt_resume()
 {
 	play_paused = 0;
-	return timer->start();
+	return SFX_OK;
 }
 
 static int
@@ -245,11 +270,6 @@ rt_exit()
 
 	if(seq->close()) {
 		fprintf(stderr, "[SFX] Sequencer reported error on close\n");
-		retval = SFX_ERROR;
-	}
-
-	if(timer->stop()) {
-		fprintf(stderr, "[SFX] Timer reported error on close\n");
 		retval = SFX_ERROR;
 	}
 
@@ -267,5 +287,6 @@ sfx_player_t sfx_player_realtime = {
 	&rt_send_iterator_message,
 	&rt_pause,
 	&rt_resume,
-	&rt_exit
+	&rt_exit,
+	&rt_timer_callback
 };
