@@ -92,6 +92,8 @@ static struct option options[] = {
   {"gamedir", required_argument, 0, 'd'},
   {"run", no_argument, &script_debug_flag, 1 },
   {"sci-version", required_argument, 0, 'v'},
+  {"version", no_argument, 0, 'V'},
+  {"help", no_argument, 0, 'h'},
   {0,0,0,0}
 };
 
@@ -106,12 +108,6 @@ main(int argc, char** argv)
   char gamedir [256], startdir [256];
   sci_version_t cmd_version = 0;
 
-  printf("FreeSCI "VERSION" Copyright (C) 1999 Dmitry Jemerov, Christopher T. Lansdown,\n"
-	 "Sergey Lapin, Carl Muckenhoupt, Christoph Reichenbach, Magnus Reftel\n"
-	 "This program is free software. You can copy and/or modify it freely\n"
-	 "according to the terms of the GNU general public license, v2.0\n"
-	 "or any later version, at your option.\n"
-	 "It comes with ABSOLUTELY NO WARRANTY.\n");
 
   strcpy (gamedir, ".");
   while ((c = getopt_long(argc, argv, "rd:v:", options, &optindex)) > -1)
@@ -141,10 +137,34 @@ main(int argc, char** argv)
       /* getopt_long already printed an error message. */
       break;
 
+    case 'V':
+      printf("%s\n", VERSION);
+      return 0;
+    
+    case 'h':
+      printf("Usage: sciv [OPTION]...\n"
+             "Run a sierra SCI game.\n"
+             "\n"
+             "  --gamedir dir	read game resources from dir\n"
+             "  --run		do not start the debugger\n"
+             "  --sci-version	set the version of sciv to emulate\n"
+             "  --version	display version information and exit\n"
+             "  --help	display this help text and exit\n"
+             );
+      return 0;
+
     default:
-      return -1;
+      return 1;
     }
   }
+
+  printf("FreeSCI "VERSION" Copyright (C) 1999 Dmitry Jemerov, Christopher T. Lansdown,\n"
+	 "Sergey Lapin, Carl Muckenhoupt, Christoph Reichenbach, Magnus Reftel\n"
+	 "This program is free software. You can copy and/or modify it freely\n"
+	 "according to the terms of the GNU general public license, v2.0\n"
+	 "or any later version, at your option.\n"
+	 "It comes with ABSOLUTELY NO WARRANTY.\n");
+
   
   sci_color_mode = SCI_COLOR_DITHER256;
 
@@ -152,12 +172,12 @@ main(int argc, char** argv)
   if (chdir (gamedir))
   {
     printf ("Error changing to game directory %s\n", gamedir);
-    exit(-1);
+    exit(1);
   }
 
   if (i = loadResources(SCI_VERSION_AUTODETECT, 1)) {
     fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);
-    exit(-1);
+    exit(1);
   };
   printf("SCI resources loaded.\n");
 
