@@ -38,7 +38,7 @@ static guint8 *data;
 static unsigned int length;
 static int type;
 static guint8 sysex_buffer[266] = {0xF0, 0x41, 0x10, 0x16, 0x12};
-static  guint8 default_reverb;
+static guint8 default_reverb;
 
 static gint8 patch_map[128] = {
   0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
@@ -178,7 +178,6 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
 	data[block3] == 0xDC &&
 	data[block3 + 1] == 0xBA) {
       printf("MT-32: Writing Rhythm key map\n");
-      /*    XXXX Do we memcpy it over?  Do we care? */
       midi_mt32_poke(0x030110, data + block3 + 2, 256);  
       midi_mt32_sysex_delay();
       printf("MT-32: Writing Partial Reserve\n");
@@ -194,10 +193,11 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
     midi_mt32_poke(0x52000A, unknown_sysex, 6);
     midi_mt32_sysex_delay();
     printf("MT-32: Setting up reverb levels\n");
-    memcpy(mt32_reverb,data+ 0x4c, 3 * 11);
-    /* midi_mt32_reverb(default_reverb); */
-    /*    printf("MT-32: Setting default volume\n");
-	  midi_mt32_volume(data[0x3f]); */
+    default_reverb = data[0x3e];
+    memcpy(mt32_reverb,data+ 0x4a, 3 * 11);
+    midi_mt32_reverb(default_reverb);
+    printf("MT-32: Setting default volume (%d)\n", data[0x3c]);
+    midi_mt32_volume(data[0x3c]);
     return 0;
   } else if (type == 1) {
     printf("MT-32: Displaying Text: \"%.20s\"\n", data + 20);
@@ -212,10 +212,14 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
     for (i = 0; i < 4; i++)
       memcpy(velocity_map[i], data + 641 + i * 128, 128);
     memcpy(rhythmkey_map, data + 384, 128);
-    memcpy(mt32_reverb,data+ 0x4c, 3 * 11);
 
-    /*    printf("MT-32: Setting default volume\n");
-	  midi_mt32_volume(data[0x3f]); */
+    printf("MT-32: Setting up reverb levels\n");
+    default_reverb = data[0x3e]; /* damn endian-ness */
+    memcpy(mt32_reverb,data+ 0x4a, 3 * 11);
+    midi_mt32_reverb(default_reverb);
+
+    printf("MT-32: Setting default volume (%d)\n", data[0x3c]);
+    midi_mt32_volume(data[0x3c]);
 
     printf("MT-32: Displaying Text: \"%.20s\"\n", data);
     midi_mt32_poke(0x200000, data, 20);

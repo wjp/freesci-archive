@@ -368,8 +368,9 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 						ccc = 127; /* Reset ccc */
 
 						/* set default reverb */
-						midi_allstop();
-						midi_reverb(-1);
+						/* midi_reverb(-1); */
+						/* midi_allstop(); */
+
 
 						sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_INITIALIZED, 0);
 
@@ -382,6 +383,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 							fprintf(ds, "Playing handle %04x\n", event.handle);
 						if (modsong) {
 
+						  midi_allstop();
 							modsong->status = SOUND_STATUS_PLAYING;
 							sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_PLAYING, 0);
 							newsong = modsong; /* Play this song */
@@ -672,7 +674,9 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 			if (command == SCI_MIDI_EOT) {
 
-				if (--(song->loops) != 0) {
+				if ((song->loops) != 0) {
+
+					--(song->loops);
 
 					fprintf(ds, "looping back from %d to %d on handle %04x\n",
 						song->pos, song->loopmark, song->handle);

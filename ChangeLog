@@ -1,3 +1,13 @@
+2001-03-02  Solomon Peachy <pizza@shaftnet.org>
+	* src/include/sound.h:  Stripped out some useless midimap stuff.
+	* src/sound/midi_mt32.c:  Fixed a bunch of things from patch.001
+                                   - reverb definitions correctly loaded.
+			           - sends default reverb on init
+				   - sends default volume on init
+	* src/sound/soundserver_null:  Minor changes:
+		- reverb no longer set on every song load.
+		- allstop() moved from SONG_INIT to SONG_PLAY.	
+
 2001-03-03  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/soundserver_null.c (sound_null_server): The sound

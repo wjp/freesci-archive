@@ -236,17 +236,4 @@ mapMIDIInstruments(void);
 ** If detection fails, the MIDI maps will default to 1:1 General MIDI mappings.
 */
 
-typedef struct {
-
-  char *name;
-  int (*init)(struct _state *s);
-  int (*configure)(struct _state *s, char *option, char *value);
-  int (*getpatch)(void); /* returns the PATCH.XXX needed. */
-  int (*dumpdata)(char *data, int len); /* dump raw data to the device */
-  int (*volume)(int newvol); /* set device volume */
-  int (*reverb)(int vewval); /* set reverb level */
-  int (*exit)(void);
-
-} sound_midi_mapper_t;
-
 #endif /* _SCI_SOUND_H_ */
