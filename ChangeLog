@@ -1,5 +1,8 @@
 2001-04-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/said.y: Added support for phrases with both optional and
+	non-optional wordrefsets.
+
 	* src/main.c (init_directories): Added WINDIR getenv for Win32,
 	as suggested by Matt
 

@@ -51,7 +51,7 @@
 #define AUGMENT_SENTENCE_MINOR_RECURSE 0x144
 
 
-/*#define SCI_DEBUG_PARSE_TREE_AUGMENTATION *//* uncomment to debug parse tree augmentation */
+/*#define SCI_DEBUG_PARSE_TREE_AUGMENTATION *//* uncomment to debug parse tree augmentation*/
 
 
 #ifdef SCI_DEBUG_PARSE_TREE_AUGMENTATION
@@ -216,6 +216,8 @@ cwordrefset :	 wordrefset
 			{ $$ = $1 }
 		| YY_BRACKETSO_LT wordrefset YY_BRACKETSC
 			{ $$ = said_aug_branch(0x152, 0x144, $2, SAID_BRANCH_NULL) }
+		| wordrefset YY_BRACKETSO_LT wordrefset YY_BRACKETSC
+			{ $$ = said_attach_branch($1, said_aug_branch(0x152, 0x144, $3, SAID_BRANCH_NULL)) }
 		;
 
 

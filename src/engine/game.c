@@ -212,7 +212,8 @@ _free_graphics_input(state_t *s)
 	s->dyn_views = NULL;
 	s->port = NULL;
 
-	free(s->pics);
+	if (s->pics)
+		free(s->pics);
 	s->pics = NULL;
 }
 
