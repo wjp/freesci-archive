@@ -701,7 +701,11 @@ lookup_driver(lookup_funct_t lookup_func, void explain_func(void),
 	void *retval = lookup_func(path, driver_name);
 
 	if (!retval) {
-		sciprintf("The %s you requested, '%s', is not available.\n"
+		if (!driver_name)
+			sciprintf("The default %s is not available; please choose"
+				  " one explicitly.\n", driver_class);
+		else
+			sciprintf("The %s you requested, '%s', is not available.\n"
 /*			  "Please choose one among the following: " */
 			  ,
 			  driver_class, driver_name);

@@ -31,43 +31,46 @@
 #include <gfx_driver.h>
 #include <modules.h>
 
-#undef HAVE_LIBGGI
-#undef HAVE_LIBXLIB
-#undef HAVE_SDL
-#define X_DISPLAY_MISSING
 
 static char *oldname = NULL;
 static void *oldhandle;
 
-#ifdef HAVE_LIBGGI
+
+#define USE_MODULES
+
+#ifndef USE_MODULES
+#  ifdef HAVE_LIBGGI
 extern gfx_driver_t gfx_driver_ggi;
-#endif
+#  endif
 
 
-#ifndef X_DISPLAY_MISSING
+#  ifndef X_DISPLAY_MISSING
 extern gfx_driver_t gfx_driver_xlib;
-#endif
+#  endif
 
-#ifdef HAVE_DDRAW
+#  ifdef HAVE_DDRAW
 extern gfx_driver_t gfx_driver_dd;
-#endif
+#  endif
 
-#ifdef HAVE_SDL
+#  ifdef HAVE_SDL
 extern gfx_driver_t gfx_driver_sdl;
+#  endif
 #endif
 
 static gfx_driver_t *gfx_drivers[] = {
-#ifdef HAVE_LIBGGI
+#ifndef USE_MODULES
+#  ifdef HAVE_LIBGGI
 	&gfx_driver_ggi,
-#endif
-#ifndef X_DISPLAY_MISSING
+#  endif
+#  ifndef X_DISPLAY_MISSING
 	&gfx_driver_xlib,
-#endif
-#ifdef HAVE_SDL
+#  endif
+#  ifdef HAVE_SDL
 	&gfx_driver_sdl,
-#endif
-#ifdef HAVE_DDRAW
+#  endif
+#  ifdef HAVE_DDRAW
 	&gfx_driver_dd,
+#  endif
 #endif
 	NULL
 };
