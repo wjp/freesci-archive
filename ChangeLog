@@ -1,3 +1,14 @@
+2001-05-17  Matt Hargett <matt@use.net>
+
+        * Fixed usage of "count".
+
+        * Removed Sleep() accidentally left in.
+
+2001-05-17  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/gfx/resource/sci_pic_0.c (_gfxr_plot_aux_pattern): Bug fix
+	for segfault
+
 2001-05-15  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/gfx/drivers/sdl_driver.c:  renamed ERROR to SDLERROR

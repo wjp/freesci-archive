@@ -160,8 +160,8 @@ int midiout_win32mci_write(guint8 *buffer, unsigned int count)
 
 	/* first, we populate the fields of the MIDIHDR */
 	midioutput.lpData			= buffer;		/* pointer to a MIDI event stream */
-	midioutput.dwBufferLength	= 4;			/* size of buffer */
-	midioutput.dwBytesRecorded	= count;		/* actual number of events */
+	midioutput.dwBufferLength	= count;			/* size of buffer */
+	midioutput.dwBytesRecorded	= 1;		/* actual number of events */
 	midioutput.dwFlags			= 0;			/* MSDN sez to init this to zero */
 
 	midioutputsize = sizeof(midioutput);
@@ -181,14 +181,13 @@ int midiout_win32mci_write(guint8 *buffer, unsigned int count)
 		fprintf(stderr, "midiOutLongMsg: ");
 		return(_win32mci_print_error(ret));
 	}
-	Sleep(0);
-	/* then we free/flush the MIDIHDR */
+
 	/* things can't get freed before they're done playing */
 	ret = midiOutUnprepareHeader(devicename, &midioutput, midioutputsize);
 	if (ret != MMSYSERR_NOERROR) 
 	{
 		/* if it fails, it's probably because it's still playing */
-		Sleep(1000);
+		Sleep(count);
 		ret = midiOutUnprepareHeader(devicename, &midioutput, midioutputsize);
 		/* if it still fails, it's probably something else */
 		if (ret != MMSYSERR_NOERROR) 
