@@ -13,7 +13,7 @@
 #define HAVE_LIBGGI 1
 #define HAVE_LIBPNG 1
 #define HAVE_CURSES 1
-#define HAVE_GLX 1
+/* #undef HAVE_GLX */
 
 /* Define if you have the fork function.  */
 #define HAVE_FORK 1

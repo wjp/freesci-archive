@@ -75,7 +75,7 @@ script_init_state(state_t *s, sci_version_t version)
 
   s->opcodes = vocabulary_get_opcodes();
 
-  if (!(s->selector_names = vocabulary_get_snames(NULL))) {
+  if (!(s->selector_names = vocabulary_get_snames(&(s->selector_names_nr)))) {
     sciprintf("script_init(): Could not retreive selector names (vocab.997)!\n");
     return 1;
   }
@@ -83,9 +83,6 @@ script_init_state(state_t *s, sci_version_t version)
 
   script_map_selectors(s, &(s->selector_map));
   /* Maps a few special selectors for later use */
-
-  for (s->selector_names_nr = 0; s->selector_names[s->selector_names_nr]; s->selector_names_nr++);
-  /* Counts the number of selector names */
 
   s->execution_stack = NULL;    /* Start without any execution stack */
   s->execution_stack_base = -1; /* No vm is running yet */

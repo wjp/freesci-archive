@@ -27,19 +27,19 @@
 
 #include <kernel.h>
 
-#define _K_SOUND_INIT 0
-#define _K_SOUND_PLAY 1
-#define _K_SOUND_NOP 2
-#define _K_SOUND_DISPOSE 3
-#define _K_SOUND_SETON 4
-#define _K_SOUND_STOP 5
-#define _K_SOUND_SUSPEND 6
-#define _K_SOUND_RESUME 7
-#define _K_SOUND_VOLUME 8
-#define _K_SOUND_UPDATE 9
-#define _K_SOUND_FADE 10
-#define _K_SOUND_CHECK_DRIVER 11
-#define _K_SOUND_STOP_ALL 12
+#define _K_SCI0_SOUND_INIT 0
+#define _K_SCI0_SOUND_PLAY 1
+#define _K_SCI0_SOUND_NOP 2
+#define _K_SCI0_SOUND_DISPOSE 3
+#define _K_SCI0_SOUND_SETON 4
+#define _K_SCI0_SOUND_STOP 5
+#define _K_SCI0_SOUND_SUSPEND 6
+#define _K_SCI0_SOUND_RESUME 7
+#define _K_SCI0_SOUND_VOLUME 8
+#define _K_SCI0_SOUND_UPDATE 9
+#define _K_SCI0_SOUND_FADE 10
+#define _K_SCI0_SOUND_CHECK_DRIVER 11
+#define _K_SCI0_SOUND_STOP_ALL 12
 
 void
 process_sound_events(state_t *s) /* Get all sound events, apply their changes to the heap */
@@ -117,7 +117,7 @@ process_sound_events(state_t *s) /* Get all sound events, apply their changes to
 
 
 void
-kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
+kDoSound_SCI0(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   word command = UPARAM(0);
   heap_ptr obj = UPARAM_OR_ALT(1, 0);
@@ -156,68 +156,68 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   if (s->sfx_driver)
     switch (command) {
-    case _K_SOUND_INIT:
+    case _K_SCI0_SOUND_INIT:
 
       s->sfx_driver->command(s, SOUND_COMMAND_INIT_SONG, obj, GET_SELECTOR(obj, number));
       break;
 
-    case _K_SOUND_PLAY:
+    case _K_SCI0_SOUND_PLAY:
 
       s->sfx_driver->command(s, SOUND_COMMAND_SET_LOOPS, obj, GET_SELECTOR(obj, loop));
       s->sfx_driver->command(s, SOUND_COMMAND_PLAY_HANDLE, obj, 0);
       break;
 
-    case _K_SOUND_NOP:
+    case _K_SCI0_SOUND_NOP:
 
       break;
 
-    case _K_SOUND_DISPOSE:
+    case _K_SCI0_SOUND_DISPOSE:
 
       s->sfx_driver->command(s, SOUND_COMMAND_DISPOSE_HANDLE, obj, 0);
       break;
 
-    case _K_SOUND_SETON:
+    case _K_SCI0_SOUND_SETON:
 
       s->sfx_driver->command(s, SOUND_COMMAND_SET_MUTE, obj, 0);
       break;
 
-    case _K_SOUND_STOP:
+    case _K_SCI0_SOUND_STOP:
 
       s->sfx_driver->command(s, SOUND_COMMAND_STOP_HANDLE, obj, 0);
       break;
 
-    case _K_SOUND_SUSPEND:
+    case _K_SCI0_SOUND_SUSPEND:
 
       s->sfx_driver->command(s, SOUND_COMMAND_SUSPEND_HANDLE, obj, 0);
       break;
 
-    case _K_SOUND_RESUME:
+    case _K_SCI0_SOUND_RESUME:
 
       s->sfx_driver->command(s, SOUND_COMMAND_RESUME_HANDLE, obj, 0);
       break;
 
-    case _K_SOUND_VOLUME:
+    case _K_SCI0_SOUND_VOLUME:
 
       s->acc = 0xc; /* FIXME */
       break;
 
-    case _K_SOUND_UPDATE:
+    case _K_SCI0_SOUND_UPDATE:
 
       s->sfx_driver->command(s, SOUND_COMMAND_RENICE_HANDLE, obj, GET_SELECTOR(obj, priority));
       s->sfx_driver->command(s, SOUND_COMMAND_SET_LOOPS, obj, GET_SELECTOR(obj, loop));
       break;
 
-    case _K_SOUND_FADE:
+    case _K_SCI0_SOUND_FADE:
 
       s->sfx_driver->command(s, SOUND_COMMAND_FADE_HANDLE, obj, 120); /* Fade out in 2 secs */
       break;
 
-    case _K_SOUND_CHECK_DRIVER:
+    case _K_SCI0_SOUND_CHECK_DRIVER:
 
       s->acc = s->sfx_driver->command(s, SOUND_COMMAND_TEST, 0, 0);
       break;
 
-    case _K_SOUND_STOP_ALL:
+    case _K_SCI0_SOUND_STOP_ALL:
 
       s->acc = s->sfx_driver->command(s, SOUND_COMMAND_STOP_ALL, 0, 0);
       break;
@@ -228,4 +228,24 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
   process_sound_events(s); /* Take care of incoming events */
 
+}
+
+void
+kDoSound_SCI1(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  word command = UPARAM(0);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  switch (command) { }
+
+}
+void
+kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+/* This will do ATM, but further version checks must be implemented
+   eventually */
+  if (SCI_VERSION_MAJOR(s->version)==1) 
+    { kDoSound_SCI1(s, funct_nr, argc, argp); } else
+    kDoSound_SCI0(s, funct_nr, argc, argp);
 }
