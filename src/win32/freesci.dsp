@@ -43,7 +43,8 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /W3 /Gm /GX /Zi /I "..\include" /I "..\..\..\SDL-1.2.0\include" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /D "HAVE_GETOPT_H" /FR /YX /FD /c
+# ADD CPP /nologo /W3 /GX /I "..\include" /I "..\..\..\SDL-1.2.0\include" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_STRING_H" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /D "HAVE_GETOPT_H" /FR /YX /FD /c
+# SUBTRACT CPP /Z<none>
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
@@ -53,8 +54,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ddraw.lib winmm.lib ..\..\..\SDL-1.2.0\VisualC\SDL\Release\SDL.lib wsock32.lib /nologo /dll /incremental:yes /debug /machine:I386
-# SUBTRACT LINK32 /pdb:none
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ddraw.lib winmm.lib ..\..\..\SDL-1.2.0\VisualC\SDL\Release\SDL.lib wsock32.lib winmm.lib /nologo /dll /incremental:yes /machine:I386
+# SUBTRACT LINK32 /pdb:none /debug
 
 !ELSEIF  "$(CFG)" == "freesci - Win32 Debug"
 
@@ -71,7 +72,6 @@ LINK32=link.exe
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /YX /FD /GZ /c
 # ADD CPP /nologo /W3 /GX /I "..\include" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.3.0\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "FREESCI_EXPORTS" /D "X_DISPLAY_MISSING" /FR /YX /FD /GZ /c
-# SUBTRACT CPP /Z<none>
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
@@ -217,18 +217,6 @@ SOURCE=..\gfx\resource\sci_view_1.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\gfx\drivers\dd_driver.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\gfx\drivers\dd_driver.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\gfx\drivers\dd_driver_line.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\gfx\drivers\gfx_drivers.c
 # End Source File
 # Begin Source File
@@ -365,6 +353,10 @@ SOURCE=..\sound\midiout.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\sound\midiout_win32mci.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\sound\oldmidi.c
 # End Source File
 # Begin Source File
@@ -378,63 +370,11 @@ SOURCE=..\sound\sound.c
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=D:\VStudio\VC98\Include\BASETSD.H
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\chardefs.h"
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\glib\config.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\include\event.h
 # End Source File
 # Begin Source File
 
 SOURCE=c:\cygwin\usr\include\getopt.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\Hermes\src\H_Clear.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\Hermes\src\H_Config.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\Hermes\src\H_Conv.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\Hermes\src\H_Format.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\Hermes\src\H_Pal.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\Hermes\src\H_Types.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\Hermes\src\Hermes.h
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\history.h"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\keymaps.h"
-# End Source File
-# Begin Source File
-
-SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\readline.h"
 # End Source File
 # End Group
 # Begin Group "Header Files"

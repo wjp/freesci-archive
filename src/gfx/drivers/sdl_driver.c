@@ -960,8 +960,11 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
   int x_button_xlate[] = {0, 1, 3, 2, 4, 5};
   struct timeval ctime, timeout_time, sleep_time;
   int usecs_to_sleep;
+  int time_sec, time_usec;
   
-  sci_gettime(&(timeout_time.tv_sec), &(timeout_time.tv_usec));
+  sci_gettime(&time_sec, &time_usec);
+  timeout_time.tv_sec = time_sec;
+  timeout_time.tv_usec = time_usec;
   timeout_time.tv_usec += wait_usec;
   
   /* Calculate wait time */
@@ -1017,7 +1020,9 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
       }
     }
 
-    sci_gettime(&(ctime.tv_sec), &(ctime.tv_usec));
+    sci_gettime(&time_sec, &time_usec);
+    ctime.tv_sec = time_sec;
+    ctime.tv_usec = time_usec;
     
     usecs_to_sleep = (timeout_time.tv_sec > ctime.tv_sec)? 1000000 : 0;
     usecs_to_sleep += timeout_time.tv_usec - ctime.tv_usec;

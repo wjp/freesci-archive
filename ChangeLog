@@ -1,3 +1,24 @@
+2001-04-18  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/sdl_driver.c (sdl_fetch_event): Fixed 64 bit
+	cleanness issue
+
+2001-04-18  Matt Hargett <matt@use.net>
+
+	* freesci.def: added  midiout_driver_win32mci,
+        test_savegame, sci_find_first, sci_init_dir, sci_get_homedir,
+	game_restore, sci_find_next to correct link errors.
+
+	* midiout.h: added necessary things for new driver (midiout_win32mci)
+
+	* midiout.c: Ditto.
+
+	* getopt.c: Removed extern to eliminate some link warnings.
+
+	* freesci.dsp: Removed more cruft, fixed debug build.
+
+	* sciv.dsp: Ditto.
+
 2001-04-17  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/gfx/drivers/xlib_driver.c: added a 'disable-shmem' option.

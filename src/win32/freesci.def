@@ -92,4 +92,13 @@ EXPORTS
   midi_devices DATA
   midi_device_mt32 DATA
   midi_device_mt32gm DATA
+  midiout_driver_win32mci
+
+  test_savegame
+  sci_find_first
+  sci_init_dir
+  sci_get_homedir
+  game_restore
+  sci_find_next
+
    

@@ -53,6 +53,10 @@ extern midiout_driver_t midiout_driver_alsaraw;
 extern midiout_driver_t midiout_driver_ossseq;
 #endif
 
+#ifdef _WIN32
+extern midiout_driver_t midiout_driver_win32mci;
+#endif
+
 extern DLLEXTERN midiout_driver_t *midiout_drivers[];
 
 int midiout_open();

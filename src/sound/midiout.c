@@ -33,6 +33,9 @@ midiout_driver_t *midiout_drivers[] = {
 #ifdef HAVE_ALSA
     &midiout_driver_alsaraw,
 #endif
+#ifdef _WIN32
+	&midiout_driver_win32mci,
+#endif
     NULL
 };
 
