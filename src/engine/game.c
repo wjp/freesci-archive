@@ -344,22 +344,28 @@ script_init_engine(state_t *s, sci_version_t version)
 }
 
 
-
 void
-script_free_engine(state_t *s)
+script_free_vm_memory(state_t *s)
 {
 	int i;
-	breakpoint_t *bp, *bp_next;
 
-	/* FIXME: file handles will NOT be closed under DOS. DJGPP generates an
-	   exception fault whenever you try to close a never-opened file */
+	sciprintf("Freeing VM memory\n");
 
-	sciprintf("Freeing state-dependant data\n");
 	for (i = 0; i < MAX_HUNK_BLOCKS; i++)
 		if (s->hunk[i].size) {
+			if (s->hunk[i].type == HUNK_TYPE_GFXBUFFER) {
+				gfxw_snapshot_t *snapshot = *((gfxw_snapshot_t **) s->hunk[i].data);
+				free(snapshot);
+			}
 			free(s->hunk[i].data);
 			s->hunk[i].size = 0;
 		}
+
+
+	heap_del(s->_heap);
+	s->_heap = NULL;
+	free(s->classtable);
+	s->classtable = NULL;
 
 	/* Close all opened file handles */
 	for (i = 1; i < s->file_handles_nr; i++)
@@ -369,13 +375,24 @@ script_free_engine(state_t *s)
 #endif
 
 	free(s->file_handles);
+	s->file_handles = NULL;
 
-	heap_del(s->_heap);
+	/* FIXME: file handles will NOT be closed under DOS. DJGPP generates an
+	   exception fault whenever you try to close a never-opened file */
+}
+
+void
+script_free_engine(state_t *s)
+{
+	int i;
+	breakpoint_t *bp, *bp_next;
+
+	script_free_vm_memory(s);
+
+	sciprintf("Freeing state-dependant data\n");
 
 	free(s->kfunct_table);
 	s->kfunct_table = NULL;
-
-	free(s->classtable);
 
 	_free_vocabulary(s);
 

@@ -94,6 +94,7 @@ typedef int gfxw_bin_op(struct _gfxw_widget *, struct _gfxw_widget *);
    int ID; /* Unique ID or GFXW_NO_ID */ \
    struct _gfxw_container_widget *parent; /* The parent widget, or NULL if not owned */ \
    struct _gfxw_visual *visual; /* The owner visual */ \
+   int widget_priority; /* Drawing priority, or -1 */ \
    gfxw_point_op *draw; /* Draw widget (if dirty) and anything else required for the display to be consistant */ \
    gfxw_op *widfree; /* Remove widget (and any sub-widgets it may contain) */ \
    gfxw_op *tag; /* Tag the specified widget */ \

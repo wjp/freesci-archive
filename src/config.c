@@ -2329,7 +2329,6 @@ _parse_name(char *name, name_value_pair *nvps, char *what, int oldval)
 static gfx_driver_t *
 _parse_gfx_driver(char *driver_name)
 {
-	int i;
 	gfx_driver_t *retval = gfx_find_driver(driver_name);
 
 	if (retval)

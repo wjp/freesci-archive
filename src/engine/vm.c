@@ -1471,6 +1471,7 @@ game_run(state_t **_s)
       successor = s->successor;
       if (successor) {
 	game_exit(s);
+	script_free_vm_memory(s);
 	free(s);
 	*_s = s = successor;
 

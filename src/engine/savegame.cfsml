@@ -243,6 +243,7 @@ RECORD gfxw_widget_t {
 	rect_t bounds;
 	any_widget_p next;
 	int ID;
+	int widget_priority;
 }
 /* Handled externally: parent, visual */
 
@@ -633,7 +634,6 @@ full_widget_tree_traversal(gfxw_widget_t *widget, gfxw_container_t *parent, gfxw
 	if (widget->next)
 		full_widget_tree_traversal(widget->next, parent, visual);
 
-	fprintf(stderr,"Setting vis to %p in wSerial %x\n", visual, widget->serial);
 	widget->visual = visual;
 
 	if (GFXW_IS_CONTAINER(widget)) {
@@ -1006,7 +1006,7 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->amp_rest = 0; /* Backwards compatibility */
 	retval->dyn_views = NULL;
 
-	%CFSMLREAD state_t retval FROM fh ERRVAR read_eof;
+	%CFSMLREAD-ATOMIC state_t retval FROM fh ERRVAR read_eof;
 
 	fclose(fh);
 

@@ -1,3 +1,8 @@
+2001-01-21  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/game.c, src/engine/cfsml.pl, src/engine/savegame.cfsml:
+	Fixed various (all?) memory leaks
+
 2001-01-20  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/gfx_resource.c (gfxr_free_view): Fixed memory leak

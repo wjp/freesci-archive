@@ -385,6 +385,16 @@ script_free_engine(struct _state *s);
 ** Returns   : (void)
 */
 
+void
+script_free_vm_memory(struct _state *s);
+/* Frees all script memory (heap, hunk, and class tables).
+** Parameters: (state_t *) s: The state_t to free
+** Returns   : (void)
+** This operation is implicit in script_free_engine(), but is required for restoring
+** the game state.
+*/
+
+
 int
 lookup_selector(struct _state *s, heap_ptr obj, int selectorid, heap_ptr *address);
 /* Looks up a selector and returns its type and value

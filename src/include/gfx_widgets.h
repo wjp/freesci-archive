@@ -351,6 +351,13 @@ gfxw_show_widget(gfxw_widget_t *widget);
 ** Does not affect visible widgets
 */
 
+gfxw_widget_t *
+gfxw_abandon_widget(gfxw_widget_t *widget);
+/* Marks a widget as "abandoned"
+** Parameters: (gfxw_widget_t *) widget: The widget to abandon
+** Returns   : (gfxw_widget_t *) widget
+*/
+
 /*-- Container types --*/
 
 #define GFXW_LIST_UNSORTED 0
@@ -443,4 +450,12 @@ gfxw_restore_snapshot(gfxw_visual_t *visual, gfxw_snapshot_t *snapshot);
 ** the snapshotted area are destroyed.
 */
 
+void
+gfxw_annihilate(gfxw_widget_t *widget);
+/* As widget->widfree(widget), but destroys all overlapping widgets
+** Parameters: (gfxw_widget_t *) widget: The widget to use
+** Returns   : (void)
+** This operation calls widget->widfree(widget), but it also destroys
+** all widgets with a higher or equal priority drawn after this widget.
+*/
 #endif /* !_GFX_WIDGETS_H_ */

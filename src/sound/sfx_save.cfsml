@@ -208,7 +208,7 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
 
   read_rec.songs = NULL;
 
-  %CFSMLREAD sound_lib_file_t &read_rec FROM fh ERRVAR error;
+  %CFSMLREAD-ATOMIC sound_lib_file_t &read_rec FROM fh ERRVAR error;
 
   if (error) {
     if(read_rec.songs)

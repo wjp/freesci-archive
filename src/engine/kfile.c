@@ -546,69 +546,74 @@ _k_check_file(char *filename, int minfilesize)
 int
 _k_find_savegame_by_name(char *game_id_file, char *name)
 {
-  int savedir_nr = -1;
-  int i;
+	int savedir_nr = -1;
+	int i;
+	char *buf = NULL;
 
-  for (i = 0; i < MAX_SAVEGAME_NR; i++) {
-    if (!chdir(_k_get_savedir_name(i))) {
-      char namebuf[32]; /* Save game name buffer */
-      FILE *idfile = fopen(game_id_file, "r");
+	for (i = 0; i < MAX_SAVEGAME_NR; i++) {
+		if (!chdir((buf = _k_get_savedir_name(i)))) {
+			char namebuf[32]; /* Save game name buffer */
+			FILE *idfile = fopen(game_id_file, "r");
 
-      if (idfile) {
-	fgets(namebuf, 31, idfile);
-	if (strlen(namebuf) > 0)
-	  if (namebuf[strlen(namebuf) - 1] == '\n')
-	    namebuf[strlen(namebuf) - 1] = 0; /* Remove trailing newlines */
+			if (idfile) {
+				fgets(namebuf, 31, idfile);
+				if (strlen(namebuf) > 0)
+					if (namebuf[strlen(namebuf) - 1] == '\n')
+						namebuf[strlen(namebuf) - 1] = 0; /* Remove trailing newlines */
 
-	if (strcmp(name, namebuf) == 0) {
-	  sciprintf("Save game name matched entry %d\n", i);
-	  savedir_nr = i;
+				if (strcmp(name, namebuf) == 0) {
+					sciprintf("Save game name matched entry %d\n", i);
+					savedir_nr = i;
+				}
+
+				fclose(idfile);
+			}
+
+			chdir("..");
+		}
+		free(buf);
 	}
-
-	fclose(idfile);
-      }
-
-      chdir("..");
-    }
-  }
-  return 0;
+	return 0;
 }
 
 void
 kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  char *game_id = UPARAM(0) + s->heap;
-  char *game_id_file = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
-  int savedir_nr = UPARAM(1);
+	char *game_id = UPARAM(0) + s->heap;
+	char *game_id_file = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
+	int savedir_nr = UPARAM(1);
+	char *buf = NULL;
 
-  CHECK_THIS_KERNEL_FUNCTION;
 
-  strcpy(game_id_file, game_id);
-  strcat(game_id_file, FREESCI_ID_SUFFIX);
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  if (savedir_nr > 15) {
-    s->acc = 0;
-    free(game_id_file);
-    return;
-  }
+	strcpy(game_id_file, game_id);
+	strcat(game_id_file, FREESCI_ID_SUFFIX);
 
-  s->acc = 1;
+	if (savedir_nr > 15) {
+		s->acc = 0;
+		free(game_id_file);
+		return;
+	}
 
-  if (chdir(_k_get_savedir_name(savedir_nr))) {
-    s->acc = 0; /* Couldn't enter savedir */
-  }  else {
+	s->acc = 1;
 
-    if (_k_check_file(FREESCI_FILE_HEAP, SCI_HEAP_SIZE))
-      s->acc = 0;
-    if (_k_check_file(FREESCI_FILE_STATE, 1))
-      s->acc = 0;
-    if (_k_check_file(game_id_file, 1))
-      s->acc = 0;
+	if (chdir((buf = _k_get_savedir_name(savedir_nr)))) {
+		s->acc = 0; /* Couldn't enter savedir */
+	}  else {
 
-    chdir ("..");
-  }
+		if (_k_check_file(FREESCI_FILE_HEAP, SCI_HEAP_SIZE))
+			s->acc = 0;
+		if (_k_check_file(FREESCI_FILE_STATE, 1))
+			s->acc = 0;
+		if (_k_check_file(game_id_file, 1))
+			s->acc = 0;
 
-  free(game_id_file);
+		chdir ("..");
+	}
+	free(buf);
+
+	free(game_id_file);
 }
 
 
@@ -796,38 +801,41 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  char *game_id = UPARAM(0) + s->heap;
-  int savedir_nr = UPARAM(1);
+	char *game_id = UPARAM(0) + s->heap;
+	int savedir_nr = UPARAM(1);
 
-  if (_savegame_indices_nr < 0) {
-    char *game_id_file_name = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
+	if (_savegame_indices_nr < 0) {
+		char *game_id_file_name = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
 
-    strcpy(game_id_file_name, game_id);
-    strcat(game_id_file_name, FREESCI_ID_SUFFIX);
-    SCIkwarn(SCIkWARNING, "Savegame index list not initialized!\n");
-    update_savegame_indices(game_id_file_name);
-  }
+		strcpy(game_id_file_name, game_id);
+		strcat(game_id_file_name, FREESCI_ID_SUFFIX);
+		SCIkwarn(SCIkWARNING, "Savegame index list not initialized!\n");
+		update_savegame_indices(game_id_file_name);
+	}
 
-  savedir_nr = _savegame_indices[savedir_nr].id;
+	savedir_nr = _savegame_indices[savedir_nr].id;
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  if (savedir_nr > -1) {
-    state_t *newstate = gamestate_restore(s, _k_get_savedir_name(savedir_nr));
+	if (savedir_nr > -1) {
+		char *savedir_name = _k_get_savedir_name(savedir_nr);
+		state_t *newstate = gamestate_restore(s, savedir_name);
 
-    if (newstate) {
+		free(savedir_name);
 
-      s->successor = newstate;
-      script_abort_flag = SCRIPT_ABORT_WITH_REPLAY; /* Abort current game */
+		if (newstate) {
 
-    } else {
-      sciprintf("Restoring failed (game_id = '%s').\n", game_id);
-    }
+			s->successor = newstate;
+			script_abort_flag = SCRIPT_ABORT_WITH_REPLAY; /* Abort current game */
 
-  } else {
-    s->acc = 1;
-    sciprintf("Savegame #%d not found!\n", savedir_nr);
-  }
+		} else {
+			sciprintf("Restoring failed (game_id = '%s').\n", game_id);
+		}
+
+	} else {
+		s->acc = 1;
+		sciprintf("Savegame #%d not found!\n", savedir_nr);
+	}
 }
 
 

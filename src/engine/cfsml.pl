@@ -1,10 +1,10 @@
-#!/usr/bin/perl
+#! /usr/bin/perl
 # The C File Storage Meta Language "reference" implementation
 # This implementation is supposed to conform to version
-$version = "0.8.0";
+$version = "0.8.1";
 # of the spec. Please contact the maintainer if it doesn't.
 #
-# cfsml.pl Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+# cfsml.pl Copyright (C) 1999, 2000, 2001 Christoph Reichenbach
 #
 #
 # This program may be modified and copied freely according to the terms of
@@ -66,13 +66,15 @@ _cfsml_error(char *fmt, ...)
 }
 
 
-struct _cfsml_pointer_refstruct {
+static struct _cfsml_pointer_refstruct {
     struct _cfsml_pointer_refstruct *next;
     void *ptr;
 } *_cfsml_pointer_references = NULL;
 
 static struct _cfsml_pointer_refstruct **_cfsml_pointer_references_current = &_cfsml_pointer_references;
 
+static char *_cfsml_last_value_retreived = NULL;
+static char *_cfsml_last_identifier_retreived = NULL;
 
 static void
 _cfsml_free_pointer_references_recursively(struct _cfsml_pointer_refstruct *refs, int free_pointers)
@@ -105,7 +107,8 @@ _cfsml_get_current_refpointer()
 static void _cfsml_register_pointer(void *ptr)
 {
     struct _cfsml_pointer_refstruct *newref = malloc(sizeof (struct _cfsml_pointer_refstruct));
-    newref->next = NULL;
+
+    newref->next = *_cfsml_pointer_references_current;
     newref->ptr = ptr;
     *_cfsml_pointer_references_current = newref;
 }
@@ -166,6 +169,11 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
   int done = 0;
   char *retval = (char *) malloc(mem);
 
+  if (_cfsml_last_identifier_retreived) {
+      free(_cfsml_last_identifier_retreived);
+      _cfsml_last_identifier_retreived = NULL;
+  }
+
   while (isspace(c = fgetc(fd)) && (c != EOF));
   if (c == EOF) {
     _cfsml_error("Unexpected end of file at line %d\n", *line);
@@ -223,12 +231,15 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
 EOF
 
 if ($debug) {
-print "  printf(\"idenditifier is '%s'\\n\", retval);\n";
+    print "  printf(\"idenditifier is '%s'\\n\", retval);\n";
 }
 
-print <<'EOF2';
+  $firstline = __LINE__;
+  $firstline += 4;
+  print "#line $firstline \"cfsml.pl\"\n";
+  print <<'EOF2';
 
-  return retval;
+  return _cfsml_last_identifier_retreived = retval;
 }
 
 
@@ -239,6 +250,11 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
   int mem = 64;
   int pos = 0;
   char *retval = (char *) malloc(mem);
+
+  if (_cfsml_last_value_retreived) {
+      free(_cfsml_last_value_retreived);
+      _cfsml_last_value_retreived = NULL;
+  }
 
   while (((c = fgetc(fd)) != EOF) && (c != '\n')) {
 
@@ -271,12 +287,15 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
   retval[pos] = 0; /* Terminate string */
 EOF2
 
-if ($debug) {
-  print "  printf(\"value is '%s'\\n\", retval);\n";
-}
+    if ($debug) {
+	print "  printf(\"value is '%s'\\n\", retval);\n";
+    }
 
-print <<'EOF3';
-  return (char *) realloc(retval, strlen(retval) + 1);
+    $firstline = __LINE__;
+    $firstline += 4;
+    print "#line $firstline \"cfsml.pl\"\n";
+  print <<'EOF3';
+  return (_cfsml_last_value_retreived = (char *) realloc(retval, strlen(retval) + 1));
   /* Re-allocate; this value might be used for quite some while (if we are
   ** restoring a string)
   */
@@ -581,7 +600,6 @@ sub create_reader
 	  print "#line ", __LINE__, " \"cfsml.pl\"\n";
 	  print "         done = i = 0;\n";
 	  print "         do {\n";
-	  print "           free(value);\n";
 	  if ($type eq $type_record) {
 	    print "           if (!(value = _cfsml_get_value(fh, line, hiteof)))\n";
 	  } else {
@@ -637,7 +655,6 @@ sub create_reader
       print "       }\n";
       print "     }\n";
 
-      print "\n    free (bar);\n";
       print "  } while (!closed); /* Until closing braces are hit */\n";
 
       print $reladdress_resolver; # Resolves any relative addresses
@@ -698,35 +715,48 @@ sub insert_reader_code {
   print "#line ", __LINE__, " \"cfsml.pl\"\n";
   print "  {\n";
   if (!$linecounter) {
-    print "    int _cfsml_line_ctr = 0;\n";
-    $linecounter = '_cfsml_line_ctr';
+      print "#line ", __LINE__, " \"cfsml.pl\"\n";
+      print "    int _cfsml_line_ctr = 0;\n";
+      $linecounter = '_cfsml_line_ctr';
   }
   if ($atomic) {
-      print "    struct _cfsml_pointer_refstruct *_cfsml_myptrrefptr = _cfsml_get_current_refpointer();\n";
+      print "#line ", __LINE__, " \"cfsml.pl\"\n";
+      print "    struct _cfsml_pointer_refstruct **_cfsml_myptrrefptr = _cfsml_get_current_refpointer();\n";
   }
+  print "#line ", __LINE__, " \"cfsml.pl\"\n";
   print "    int _cfsml_eof = 0, _cfsml_error;\n";
   print "    int dummy;\n";
 
   if ($firsttoken) {
-    print "    char *_cfsml_inp = $firsttoken;\n";
+      print "#line ", __LINE__, " \"cfsml.pl\"\n";
+      print "    char *_cfsml_inp = $firsttoken;\n";
   } else {
-    print "    char *_cfsml_inp =".
-      " _cfsml_get_identifier($fh, &($linecounter), &_cfsml_eof, &dummy);\n\n";
+      print "#line ", __LINE__, " \"cfsml.pl\"\n";
+      print "    char *_cfsml_inp =".
+	  " _cfsml_get_identifier($fh, &($linecounter), &_cfsml_eof, &dummy);\n\n";
   }
 
+  print "#line ", __LINE__, " \"cfsml.pl\"\n";
   print "    _cfsml_error =".
-    " $types{$type}{'reader'}($fh, $datap, _cfsml_inp, &($linecounter), &_cfsml_eof);\n";
-
-  if (!$firsttoken) {
-    print "    free(_cfsml_inp);\n";
-  }
+      " $types{$type}{'reader'}($fh, $datap, _cfsml_inp, &($linecounter), &_cfsml_eof);\n";
 
   if ($eofvar) {
-    print "    $eofvar = _cfsml_error;\n";
+      print "#line ", __LINE__, " \"cfsml.pl\"\n";
+      print "    $eofvar = _cfsml_error;\n";
   }
   if ($atomic) {
-      print "     _cfsml_free_pointer_references(_cfsml_pointer_refstruct, _cfsml_error);\n";
+      print "#line ", __LINE__, " \"cfsml.pl\"\n";
+      print "     _cfsml_free_pointer_references(_cfsml_myptrrefptr, _cfsml_error);\n";
   }
+  print "#line ", __LINE__, " \"cfsml.pl\"\n";
+  print "     if (_cfsml_last_value_retreived) {\n";
+  print "       free(_cfsml_last_value_retreived);\n";
+  print "       _cfsml_last_value_retreived = NULL;\n";
+  print "     }\n";
+  print "     if (_cfsml_last_identifier_retreived) {\n";
+  print "       free(_cfsml_last_identifier_retreived);\n";
+  print "       _cfsml_last_identifier_retreived = NULL;\n";
+  print "     }\n";
   print "  }\n";
   print "/* End of auto-generated CFSML data reader code */\n";
 }

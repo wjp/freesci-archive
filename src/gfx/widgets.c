@@ -143,6 +143,7 @@ _gfxw_new_widget(int size, int type)
 	widget->flags = GFXW_FLAG_DIRTY;
 	widget->ID = GFXW_NO_ID;
 	widget->serial = widget_serial_number_counter++;
+	widget->widget_priority = -1;
 
 	widget_serial_number_counter &= MAX_SERIAL_NUMBER;
 
@@ -353,7 +354,8 @@ gfxw_remove_widget_from_container(gfxw_container_t *container, gfxw_widget_t *wi
 static int
 _gfxwop_basic_free(gfxw_widget_t *widget)
 {
-	gfx_state_t *state = (widget->visual)? widget->visual->gfx_state : NULL;
+	gfxw_visual_t *visual = widget->visual;
+	gfx_state_t *state = (visual)? visual->gfx_state : NULL;
 
 	DDIRTY(stderr, "BASIC-FREE: SomeAddDirty\n");
 
@@ -367,6 +369,7 @@ _gfxwop_basic_free(gfxw_widget_t *widget)
 	}
 	
 	_gfxw_unallocate_widget(state, widget);
+
 
 	return 0;
 }
@@ -492,11 +495,18 @@ _gfxw_set_ops_BOX(gfxw_widget_t *widget)
 		      _gfxwop_box_superarea_of);
 }
 
+static inline int
+_gfxw_color_get_priority(gfx_color_t color)
+{
+	return (color.mask & GFX_MASK_PRIORITY)? color.priority : -1;
+}
+
 gfxw_box_t *
 gfxw_new_box(gfx_state_t *state, rect_t area, gfx_color_t color1, gfx_color_t color2, gfx_box_shade_t shade_type)
 {
 	gfxw_box_t *widget = (gfxw_box_t *) _gfxw_new_widget(sizeof(gfxw_box_t), GFXW_BOX);
 
+	widget->widget_priority = _gfxw_color_get_priority(color1);
 	widget->bounds = area;
 	widget->color1 = color1;
 	widget->color2 = color2;
@@ -519,6 +529,8 @@ static inline gfxw_primitive_t *
 _gfxw_new_primitive(rect_t area, gfx_color_t color, gfx_line_mode_t mode, gfx_line_style_t style, int type)
 {
 	gfxw_primitive_t *widget = (gfxw_primitive_t *) _gfxw_new_widget(sizeof(gfxw_primitive_t), type);
+
+	widget->widget_priority = _gfxw_color_get_priority(color);
 	widget->bounds = area;
 	widget->color = color;
 	widget->line_mode = mode;
@@ -710,6 +722,7 @@ _gfxw_new_simple_view(gfx_state_t *state, point_t pos, int view, int loop, int c
 
 	widget = (gfxw_view_t *) _gfxw_new_widget(size, type);
 
+	widget->widget_priority = priority;
 	widget->pos = pos;
 	widget->color.mask =
 		(priority < 0)? 0 : GFX_MASK_PRIORITY
@@ -945,6 +958,7 @@ gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, in
 	widget->color.mask =
 		((priority < 0)? 0 : GFX_MASK_PRIORITY)
 		| ((control < 0)? 0 : GFX_MASK_CONTROL);
+	widget->widget_priority = priority;
 	widget->color.priority = priority;
 	widget->color.control = control;
 	widget->view = view;
@@ -1093,7 +1107,7 @@ gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignme
 	gfxw_text_t *widget = (gfxw_text_t *)
 		_gfxw_new_widget(sizeof(gfxw_text_t), GFXW_TEXT);
 
-
+	widget->widget_priority = _gfxw_color_get_priority(color1);
 	widget->font_nr = font;
 	widget->text = malloc(strlen(text) + 1);
 	widget->halign = halign;
@@ -2164,19 +2178,22 @@ gfxw_widget_matches_snapshot(gfxw_snapshot_t *snapshot, gfxw_widget_t *widget)
 		&& gfx_rect_subset(bounds, snapshot->area));
 }
 
+#define MAGIC_FREE_NUMBER -42
+
 void
-_gfxw_free_contents_appropriately(gfxw_container_t *container, gfxw_snapshot_t *snapshot)
+_gfxw_free_contents_appropriately(gfxw_container_t *container, gfxw_snapshot_t *snapshot, int priority)
 {
 	gfxw_widget_t *widget = container->contents;
 
 	while (widget) {
 		gfxw_widget_t *next = widget->next;
 
-		if (gfxw_widget_matches_snapshot(snapshot, widget) && !(widget->flags & GFXW_FLAG_IMMUNE_TO_SNAPSHOTS))
+		if (gfxw_widget_matches_snapshot(snapshot, widget) && !(widget->flags & GFXW_FLAG_IMMUNE_TO_SNAPSHOTS)
+		    && (priority == MAGIC_FREE_NUMBER || priority <= widget->widget_priority)) {
 			widget->widfree(widget);
-		else {
+		} else {
 			if (GFXW_IS_CONTAINER(widget))
-				_gfxw_free_contents_appropriately(GFXWC(widget), snapshot);
+				_gfxw_free_contents_appropriately(GFXWC(widget), snapshot, priority);
 		}
 
 		widget = next;
@@ -2186,7 +2203,32 @@ _gfxw_free_contents_appropriately(gfxw_container_t *container, gfxw_snapshot_t *
 gfxw_snapshot_t *
 gfxw_restore_snapshot(gfxw_visual_t *visual, gfxw_snapshot_t *snapshot)
 {
-	_gfxw_free_contents_appropriately(GFXWC(visual), snapshot);
+	_gfxw_free_contents_appropriately(GFXWC(visual), snapshot, MAGIC_FREE_NUMBER);
 
 	return snapshot;
+}
+
+void
+gfxw_annihilate(gfxw_widget_t *widget)
+{
+	gfxw_visual_t *visual = widget->visual;
+	int widget_priority = 0;
+	int free_overdrawn = 0;
+
+	gfxw_snapshot_t snapshot;
+	if (!GFXW_IS_CONTAINER(widget) && widget->parent && visual && (widget->flags & GFXW_FLAG_VISIBLE)) {
+		snapshot.serial = widget->serial;
+		snapshot.area = widget->bounds;
+		snapshot.area.x += widget->parent->zone.x;
+		snapshot.area.y += widget->parent->zone.y;
+		free_overdrawn = 1;
+		widget_priority = widget->widget_priority;
+	}
+
+	widget->widfree(GFXW(widget));
+
+	return;
+
+	if (free_overdrawn)
+		_gfxw_free_contents_appropriately(GFXWC(visual), &snapshot, widget_priority);
 }

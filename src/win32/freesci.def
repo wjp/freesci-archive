@@ -71,6 +71,8 @@ EXPORTS
   gfxop_exit
   gfxop_init_default
   game_init_graphics
+  gfx_find_driver
+  gfx_get_driver_name
   con_hook_int
   mapMIDIInstruments
  

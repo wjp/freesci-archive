@@ -604,6 +604,7 @@ vocab_tokenize_string(char *sentence, int *result_nr,
 	memcpy(retval + *result_nr, lookup_result, sizeof(result_word_t));
 	/* Copy into list */
 	++(*result_nr); /* Increase number of resulting words */
+	free(lookup_result);
 
 	retval = realloc(retval, sizeof(result_word_t) * (*result_nr + 1));
 

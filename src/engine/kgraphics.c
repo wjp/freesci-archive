@@ -1421,13 +1421,14 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 			  int funct_nr, int argc, int argp)
      /* disposes all list members flagged for disposal; funct_nr is the invoking kfunction */
 {
+	int signal;
 	gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) list->contents;
 
 	while (widget) {
 		gfxw_dyn_view_t *next = (gfxw_dyn_view_t *) widget->next;
 
 		if (GFXW_IS_DYN_VIEW(widget) && (widget->ID != GFXW_NO_ID)) {
-			if (UGET_HEAP(widget->signalp) & _K_VIEW_SIG_FLAG_DISPOSE_ME) {
+			if (signal = (UGET_HEAP(widget->signalp)) & _K_VIEW_SIG_FLAG_DISPOSE_ME) {
 
 				if (widget->under_bitsp) { /* Is there a bg picture left to clean? */
 					word mem_handle = widget->under_bits = GET_HEAP(widget->under_bitsp);
@@ -1442,19 +1443,23 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 					SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
 						 " a delete funcselector\n", widget->ID);
 
-				SCIkdebug(SCIkGRAPHICS, "Freeing %04x with %d\n", widget->ID, !!(widget->flags & GFXW_FLAG_VISIBLE));
+				SCIkdebug(SCIkGRAPHICS, "Freeing %04x with signal=%04x\n", widget->ID, signal);
 
 				if (!(gfxw_remove_id(list, widget->ID) == GFXW(widget))) {
 					SCIkwarn(SCIkERROR, "Attempt to remove view with ID %04x from list failed!\n", widget->ID);
 					BREAKPOINT();
 				}
-				if (widget->flags & GFXW_FLAG_VISIBLE) {
+				if (!(signal & _K_VIEW_SIG_FLAG_HIDDEN)) {
+					SCIkdebug(SCIkGRAPHICS, "Adding view at %04x to background\n", widget->ID);
 					ADD_TO_CURRENT_PICTURE_PORT(gfxw_set_id(GFXW(widget), GFXW_NO_ID));
 
 					widget->draw_bounds.y += s->dyn_views->bounds.y - widget->parent->bounds.y;
 					widget->draw_bounds.x += s->dyn_views->bounds.x - widget->parent->bounds.x;
 				}
-				else widget->widfree(GFXW(widget));
+				else {
+					SCIkdebug(SCIkGRAPHICS, "Deleting view at %04x\n", widget->ID);
+					widget->widfree(GFXW(widget));
+				}
 			}
 		}
 
