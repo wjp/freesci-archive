@@ -1,4 +1,4 @@
-INCLUDES = -I$(top_srcdir)/src/include @ac_glib_includes@ @ac_ggi_includes@ $(GLIB_CFLAGS)
+INCLUDES = -I$(top_srcdir)/src/include @ac_glib_includes@ @ac_ggi_includes@ $(GLIB_CFLAGS) @ac_png_includes@
 LDADD = ../core/libscicore.a -lc
 bin_PROGRAMS = sciunpack scriptdump vocabdump classes sciconsole
 sciunpack_SOURCES = sciunpack.c
