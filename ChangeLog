@@ -1,5 +1,9 @@
 2001-04-30  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/gfx/drivers/sdl_driver.c (sdl_map_key): Fixed ' ' on SDL
+	(sdl_init_specific): Initialized key repeat
+	(sdl_draw_line): Fixed minor line drawing glitch
+
 	* src/sound/soundserver_sdl.c: New queued bulk data transfer
 	implementation
 

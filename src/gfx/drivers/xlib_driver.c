@@ -597,8 +597,8 @@ xlib_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 		newline.yl = line.yl;
 
 		linewidth--;
-		for (xc = -linewidth; xc++; xc <= linewidth)
-			for (yc = -linewidth; yc++; yc <= linewidth) {
+		for (xc = -linewidth; xc <= linewidth; xc++)
+			for (yc = -linewidth; yc <= linewidth; yc++) {
 				newline.x = line.x + xc;
 				newline.y = line.y + yc;
 				gfx_draw_line_pixmap_i(S->priority[0], newline, color.priority);

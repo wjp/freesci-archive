@@ -265,6 +265,8 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
     if (SDL_FillRect(S->primary, NULL, SDL_MapRGB(S->primary->format, 0,0,0)))
       ERROR("Couldn't fill backbuffer!\n");
   }
+
+  SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
   
   drv->mode = gfx_new_mode(xfact, yfact, bytespp,
 			   S->primary->format->Rmask, 
@@ -438,8 +440,8 @@ sdl_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 	      gfx_line_mode_t line_mode, gfx_line_style_t line_style)
 {
   Uint32 scolor;
-  int linewidth = (line_mode == GFX_LINE_MODE_FINE)? 1:
-    (XFACT + YFACT) >> 1;
+  int xfact = (line_mode == GFX_LINE_MODE_FINE)? 1: XFACT;
+  int yfact = (line_mode == GFX_LINE_MODE_FINE)? 1: YFACT;
   
   if (color.mask & GFX_MASK_VISUAL) {
     int xc, yc;
@@ -449,16 +451,13 @@ sdl_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
     newline.xl = line.x;
     newline.yl = line.y;
 
-    /* XXXX line_style = 
-       (line_style == GFX_LINE_STYLE_NORMAL)? LineSolid : LineOnOffDash; 
-    and set GFX_CAPABILITY_STIPPLED_LINES */
-
-    for (xc = -linewidth; xc++; xc <= linewidth)
-      for (yc = -linewidth; yc++; yc <= linewidth) {
+    for (xc = -(xfact >> 1); xc <= ((xfact+1) >> 1); xc++)
+      for (yc = -(yfact >> 1); yc <= ((yfact+1) >> 1); yc++) {
 	newline.x = line.x + xc;
 	newline.y = line.y + yc;
 	newline.xl = line.x + line.xl + xc;
 	newline.yl = line.y + line.yl + yc;
+
 	lineColor(S->visual[1], newline.x, newline.y,
 		  newline.xl, newline.yl, scolor);
       }
@@ -471,9 +470,8 @@ sdl_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
     newline.xl = line.xl;
     newline.yl = line.yl;
     
-    linewidth--;
-    for (xc = -linewidth; xc++; xc <= linewidth)
-      for (yc = -linewidth; yc++; yc <= linewidth) {
+    for (xc = -(xfact >> 1); xc <= ((xfact+1) >> 1); xc++)
+      for (yc = -(yfact >> 1); yc <= ((yfact+1) >> 1); yc++) {
 	newline.x = line.x + xc;
 	newline.y = line.y + yc;
 	gfx_draw_line_pixmap_i(S->priority[0], newline, color.priority);
@@ -950,8 +948,8 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
   case SDLK_LEFTBRACKET:
   case SDLK_RIGHTBRACKET:
   case SDLK_LESS:
-  case SDLK_GREATER:
-  case SDLK_SPACE:  return rkey; 
+  case SDLK_GREATER: return rkey; 
+  case SDLK_SPACE: return ' ';
 
   case SDLK_BACKQUOTE:
     if (keysym.mod & KMOD_CTRL)
