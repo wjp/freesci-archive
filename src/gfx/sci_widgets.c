@@ -186,3 +186,80 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 }
 
 
+
+/*----------------*/
+/**** Controls ****/
+/*----------------*/
+static inline rect_t
+_move_rect(rect_t rect, point_t point)
+{
+	return gfx_rect(rect.x + point.x, rect.y + point.y, rect.xl, rect.yl);
+}
+
+
+gfxw_list_t *
+sciw_new_button_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, char inverse)
+{
+	gfxw_list_t *list = gfxw_new_list(_move_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
+	return list;
+}
+
+
+gfxw_list_t *
+sciw_new_text_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font,
+		      gfx_alignment_t align, char framed, char inverse)
+{
+	gfxw_list_t *list = gfxw_new_list(_move_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
+	gfx_color_t *color1, *color2, *bgcolor;
+
+	if (inverse) {
+		color1 = color2 = &(port->bgcolor);
+		bgcolor = &(port->color);
+	} else if (port->gray_text) {
+		bgcolor = color1 = &(port->bgcolor);
+		color2 = &(port->color);
+	} else {
+		color1 = color2 = &(port->color);
+		bgcolor = &(port->bgcolor);
+	}
+
+	list->add(GFXWC(list), GFXW(gfxw_new_text(port->visual->gfx_state, zone,
+						  font, text, ALIGN_CENTER, align,
+						  *color1, *color2, *bgcolor, 0)));
+	if (framed)
+		list->add(GFXWC(list),
+			  GFXW(gfxw_new_rect(zone, *color2, GFX_LINE_MODE_FINE,
+					     GFX_LINE_STYLE_STIPPLED)));
+	
+	return list;
+}
+
+
+gfxw_list_t *
+sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, int cursor,
+		      char inverse)
+{
+	gfxw_list_t *list = gfxw_new_list(_move_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
+	return list;
+}
+
+
+gfxw_list_t *
+sciw_new_icon_control(gfxw_port_t *port, int ID, rect_t zone, int view, int loop, int cel,
+		      char frame, char inverse)
+{
+	gfxw_list_t *list = gfxw_new_list(_move_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
+	return list;
+}
+
+
+gfxw_list_t *
+sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char **entries_list,
+		      int entries_nr, int list_top, int selection, char inverse)
+{
+	gfxw_list_t *list = gfxw_new_list(_move_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
+	return list;
+}
+
+
+

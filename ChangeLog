@@ -1,3 +1,12 @@
+2000-11-25  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* THANKS: Added Petr Vyhnak
+
+	* src/engine/kmenu.c: Updated the "About FreeSCI" menu entry stuff
+
+	* src/engine/kgraphics.c (kCelHigh, kCelWide): Added checks for
+	calls with 3 != argc
+
 2000-11-24  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/widgets.c: Changed the widget system to a more OO-based

@@ -47,6 +47,12 @@
 /* Don't draw anything */
 
 
+/* Used in kgraphics to flag text surrounded by a dithered frame */
+#define CONTROL_STATE_DITHER_FRAMED 0x1000
+
+/* Used by the interpreter to flag some widgets to determine whether they should be surrounded by a frame */
+#define CONTROL_STATE_FRAMED 0x0002
+
 
 void
 sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text);
@@ -73,6 +79,77 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 **             (char *) title: The text to write into the title bar
 **             (int) flags: Any ORred combination of window flags
 ** Returns   : (gfxw_port_t *) A newly allocated port with the requested characteristics
+*/
+
+gfxw_list_t *
+sciw_new_button_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, char inverse);
+/* Creates a new button control list
+** Parameters: (gfxw_port_t *) port: The port containing the color values to use for the
+**                                   button (the button is /not/ appended to the port there)
+**             (int) ID: Button's ID
+**             (rect_t) zone: The area occupied by the button
+**             (char *) text: The text to write into the button
+**             (int) font: The font to use for the button
+**             (char) inverse: Whether to inverse the color scheme
+** Returns   : (gfxw_list_t *) The button
+*/
+
+gfxw_list_t *
+sciw_new_text_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font,
+		      gfx_alignment_t align, char frame, char inverse);
+/* Creates a new text control list
+** Parameters: (gfxw_port_t *) port: The port containing the color values to use
+**             (int) ID: Text widget ID
+**             (rect_t) zone: Area occupied by the text
+**             (char *) text: The text
+**             (int) font: The font the text is to be drawn in
+**             (gfx_alignment_t) align: Horizontal text alignment to use
+**             (char) frame: Whether a dithered frame should surround the text
+**             (char) inverse: Whether the text colors should be inversed
+** Returns   : (gfxw_list_t *) The text control widget list
+*/
+
+gfxw_list_t *
+sciw_new_edit_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int font, int cursor,
+		      char inverse);
+/* Creates a new edit control list
+** Parameters: (gfxw_port_t *) port: The port containing the color values to use
+**             (int) ID: Text widget ID
+**             (rect_t) zone: Area occupied by the text
+**             (char *) text: The text
+**             (int) font: The font the text is to be drawn in
+**             (int) cursor: Cursor position
+**             (char) inverse: Whether the edit widget should be reversed
+** Returns   : (gfxw_list_t *) An appropriate widget list
+*/
+
+gfxw_list_t *
+sciw_new_icon_control(gfxw_port_t *port, int ID, rect_t zone, int view, int loop, int cel,
+		      char frame, char inverse);
+/* Creates a new icon control list
+** Parameters: (gfxw_port_t *) port: The port containing the color values to use
+**             (int) ID: Text widget ID
+**             (rect_t) zone: Area occupied by the text
+**             (int x int x int) view, loop, cel: The cel to display
+**             (char) frame: Whether the widget should be surrounded by a frame
+**             (char) lina inverse: Whether colors should be inversed
+** Returns   : (gfxw_list_t *) An appropriate widget list
+*/
+
+gfxw_list_t *
+sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char **entries_list,
+		      int entries_nr, int list_top, int selection, char inverse);
+/* Creates a new list control list
+** Parameters: (gfxw_port_t *) port: The port containing the color values to use
+**             (int) ID: Text widget ID
+**             (rect_t) zone: Area occupied by the text
+**             (int) font_nr: number of the font to use
+**             (char **) entries_list: List of strings to contain within the list
+**             (int) entries_nr: Number of entries in entries_list
+**             (int) list_top: First list item that is visible
+**             (int) selection: The list item that is selected
+**             (char) invserse: The usual meaning
+** Returns   : (gfxw_list_t *) An appropriate widget list
 */
 
 #endif /* _!SCI_WIDGETS_H_ */

@@ -153,7 +153,7 @@ typedef struct {
 
 typedef int gfxw_unary_container_op(struct _gfxw_container_widget *);
 typedef int gfxw_container_op(struct _gfxw_container_widget *, gfxw_widget_t *);
-typedef int gfxw_rect_op(struct _gfxw_container_widget *, rect_t);
+typedef int gfxw_rect_op(struct _gfxw_container_widget *, rect_t, int);
 
 #define WIDGET_CONTAINER \
    WIDGET_COMMON \

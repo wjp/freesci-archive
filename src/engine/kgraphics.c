@@ -58,7 +58,12 @@
 
 #define FULL_REDRAW()\
   if (s->visual) \
-       s->visual->draw(GFXW(s->visual), gfxw_point_zero);
+       s->visual->draw(GFXW(s->visual), gfxw_point_zero); \
+  gfxop_update(s->gfx_state);
+
+#define FULL_INSPECTION()\
+  if (s->visual) \
+       s->visual->print(GFXW(s->visual), 0);
 
 static inline void
 handle_gfx_error(int line, char *file)
@@ -703,6 +708,10 @@ kCelHigh(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int height, width;
 	point_t offset;
 
+	if (argc != 3) {
+		SCIkwarn(SCIkWARNING, "CelHigh called with %d parameters!\n", argc);
+	}
+
 	if (gfxop_get_cel_parameters(s->gfx_state, view, loop, cel, &width, &height, &offset))
 		SCIkwarn(SCIkERROR, "Invalid loop (%d) or cel (%d) in view.%d (0x%x), or view invalid\n", loop, cel, view, view);
 	else
@@ -718,6 +727,10 @@ kCelWide(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int result;
 	int height, width;
 	point_t offset;
+
+	if (argc != 3) {
+		SCIkwarn(SCIkWARNING, "CelHigh called with %d parameters!\n", argc);
+	}
 
 	if (gfxop_get_cel_parameters(s->gfx_state, view, loop, cel, &width, &height, &offset))
 		SCIkwarn(SCIkERROR, "Invalid loop (%d) or cel (%d) in view.%d (0x%x), or view invalid\n", loop, cel, view, view);
@@ -1175,7 +1188,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     case K_CONTROL_TEXT: {
       int state = GET_SELECTOR(obj, state);
-      PUT_SELECTOR(obj, state, state | SELECTOR_STATE_DITHER_FRAMED);
+      PUT_SELECTOR(obj, state, state | CONTROL_STATE_DITHER_FRAMED);
       _k_draw_control(s, obj, 0);
       PUT_SELECTOR(obj, state, state);
     }
@@ -1209,150 +1222,118 @@ _k_clip_view(byte *view, int *loop, int *cel)
 static void
 _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 {
-#warning fixme!
-#if 0
-  int x = GET_SELECTOR(obj, nsLeft);
-  int y = GET_SELECTOR(obj, nsTop);
-  int xl = GET_SELECTOR(obj, nsRight) - x + 1;
-  int yl = GET_SELECTOR(obj, nsBottom) - y + 1;
+	int x = GET_SELECTOR(obj, nsLeft);
+	int y = GET_SELECTOR(obj, nsTop);
+	int xl = GET_SELECTOR(obj, nsRight) - x + 1;
+	int yl = GET_SELECTOR(obj, nsBottom) - y + 1;
+	rect_t area = gfx_rect(x, y, xl, yl);
 
-  int font_nr = GET_SELECTOR(obj, font);
-  char *text = s->heap + UGET_SELECTOR(obj, text);
-  int view = GET_SELECTOR(obj, view);
-  int cel = GET_SELECTOR(obj, cel);
-  int loop = GET_SELECTOR(obj, loop);
+	int font_nr = GET_SELECTOR(obj, font);
+	char *text = s->heap + UGET_SELECTOR(obj, text);
+	int view = GET_SELECTOR(obj, view);
+	int cel = GET_SELECTOR(obj, cel);
+	int loop = GET_SELECTOR(obj, loop);
 
-  int type = GET_SELECTOR(obj, type);
-  int state = GET_SELECTOR(obj, state);
-  int cursor;
+	int type = GET_SELECTOR(obj, type);
+	int state = GET_SELECTOR(obj, state);
+	int cursor;
 
-  resource_t *font_res;
-  resource_t *view_res;
+	switch (type) {
 
-  if (inverse) { /* Ugly hack */
-    gfxw_port_t *port = s->port;
-    gfx_color_t foo = port->bgcolor;
-    port->bgcolor = port->color;
-    port->color = foo;
-  }
+	case K_CONTROL_BUTTON:
 
-  switch (type) {
+		SCIkdebug(SCIkGRAPHICS, "drawing button %04x to %d,%d\n", obj, x, y);
+		ADD_TO_CURRENT_PORT(sciw_new_button_control(s->port, obj, area, text, font_nr, inverse));
+		break;
 
-  case K_CONTROL_BUTTON:
+	case K_CONTROL_TEXT:
 
-    font_res  = findResource(sci_font, font_nr);
-    SCIkdebug(SCIkGRAPHICS, "drawing button %04x to %d,%d\n", obj, x, y);
-    if (!font_res) {
-      SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
-      break;
-    }
-    graph_draw_control_button(s, s->port, state, x, y, xl, yl, text, font_res->data);
-    break;
+		SCIkdebug(SCIkGRAPHICS, "drawing text %04x to %d,%d\n", obj, x, y);
+		ADD_TO_CURRENT_PORT(sciw_new_text_control(s->port, obj, area, text, font_nr,
+							  (s->version < SCI_VERSION_FTU_CENTERED_TEXT_AS_DEFAULT)
+							  ? ALIGN_LEFT : ALIGN_CENTER, state & CONTROL_STATE_DITHER_FRAMED,
+							  inverse));
+		break;
 
-  case K_CONTROL_TEXT:
+	case K_CONTROL_EDIT:
 
-    font_res  = findResource(sci_font, font_nr);
-    SCIkdebug(SCIkGRAPHICS, "drawing text %04x to %d,%d\n", obj, x, y);
-    if (!font_res) {
-      SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
-      break;
-    }
-    graph_draw_control_text(s, s->port, state & ~ SELECTOR_STATE_FRAMED,
-			    x, y, 0, xl, yl, text, font_res->data,
-			    (s->version < SCI_VERSION_FTU_CENTERED_TEXT_AS_DEFAULT)
-			    ? ALIGN_LEFT : ALIGN_CENTER);
-    break;
+		SCIkdebug(SCIkGRAPHICS, "drawing edit control %04x to %d,%d\n", obj, x, y);
 
-  case K_CONTROL_EDIT:
+		cursor = GET_SELECTOR(obj, cursor);
+		ADD_TO_CURRENT_PORT(sciw_new_edit_control(s->port, obj, area, text, font_nr, cursor, inverse));
+		break;
 
-    font_res  = findResource(sci_font, font_nr);
-    SCIkdebug(SCIkGRAPHICS, "drawing edit control %04x to %d,%d\n", obj, x, y);
-    if (!font_res) {
-      SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
-      break;
-    }
+	case K_CONTROL_ICON:
 
-    cursor = GET_SELECTOR(obj, cursor);
+		SCIkdebug(SCIkGRAPHICS, "drawing icon control %04x to %d,%d\n", obj, x, y -1);
 
-    graph_draw_control_edit(s, s->port, state | SELECTOR_STATE_FRAMED, x, y, xl, yl, cursor,
-			     text, font_res->data);
-    break;
 
-  case K_CONTROL_ICON:
+		ADD_TO_CURRENT_PORT(sciw_new_icon_control(s->port, obj, area, view, loop, cel,
+							  state & CONTROL_STATE_FRAMED, inverse));
+		break;
 
-    view_res = findResource(sci_view, view);
-    SCIkdebug(SCIkGRAPHICS, "drawing icon control %04x to %d,%d\n", obj, x, y -1);
+	case K_CONTROL_CONTROL: {
+		char **entries_list = NULL;
+		char *seeker;
+		int entries_nr;
+		int lsTop = GET_SELECTOR(obj, lsTop);
+		int list_top = 0;
+		int selection = 0;
+		int i;
 
-    if (!view_res) {
-      SCIkwarn(SCIkERROR, "View.%03d not found!\n", font_nr);
-      break;
-    }
-    graph_draw_control_icon(s, s->port, state, x, y-1, xl, yl,
-			     view_res->data, loop, cel);
-    break;
+		SCIkdebug(SCIkGRAPHICS, "drawing list control %04x to %d,%d\n", obj, x, y);
+		cursor = GET_SELECTOR(obj, cursor);
 
-  case K_CONTROL_CONTROL: {
-    char **entries_list = NULL;
-    char *seeker;
-    int entries_nr;
-    int lsTop = GET_SELECTOR(obj, lsTop);
-    int list_top = 0;
-    int selection = 0;
-    int i;
+		entries_nr = 0;
+		seeker = text;
+		while (seeker[0]) { /* Count string entries in NULL terminated string list */
+			++entries_nr;
+			seeker += SCI_MAX_SAVENAME_LENGTH;
+		}
 
-    SCIkdebug(SCIkGRAPHICS, "drawing list control %04x to %d,%d\n", obj, x, y);
-    cursor = GET_SELECTOR(obj, cursor);
+		if (entries_nr) { /* determine list_top, selection, and the entries_list */
+			seeker = text;
+			entries_list = malloc(sizeof(char *) * entries_nr);
+			for (i = 0; i < entries_nr; i++) {
+				entries_list[i] = seeker;
+				seeker += SCI_MAX_SAVENAME_LENGTH;
+				if ((seeker - ((char *)s->heap)) == lsTop)
+					list_top = i + 1;
+				if ((seeker - ((char *)s->heap)) == cursor)
+					selection = i + 1;
+			}
+		}
 
-    entries_nr = 0;
-    seeker = text;
-    while (seeker[0]) { /* Count string entries in NULL terminated string list */
-      ++entries_nr;
-      seeker += SCI_MAX_SAVENAME_LENGTH;
-    }
+		ADD_TO_CURRENT_PORT(sciw_new_list_control(s->port, obj, area, font_nr, entries_list, entries_nr,
+							  list_top, selection, inverse));
+		if (entries_nr)
+			free(entries_list);
+	}
+	break;
 
-    if (entries_nr) { /* determine list_top, selection, and the entries_list */
-      seeker = text;
-      entries_list = malloc(sizeof(char *) * entries_nr);
-      for (i = 0; i < entries_nr; i++) {
-	entries_list[i] = seeker;
-	seeker += SCI_MAX_SAVENAME_LENGTH;
-	if ((seeker - ((char *)s->heap)) == lsTop)
-	  list_top = i + 1;
-	if ((seeker - ((char *)s->heap)) == cursor)
-	  selection = i + 1;
-      }
-    }
+	case K_CONTROL_BOX:
+		break;
 
-    font_res  = findResource(sci_font, font_nr);
-    if (!font_res) {
-      SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
-      break;
-    }
-    graph_draw_control_control(s, s->port, state, x, y, xl, yl,
-				entries_list, entries_nr, list_top, selection, font_res->data);
-    if (entries_nr)
-      free(entries_list);
-  }
-  break;
+	default:
+		SCIkwarn(SCIkWARNING, "Unknown control type: %d at %04x, at (%d, %d) size %d x %d\n",
+			 type, obj, x, y, xl, yl);
+	}
 
-  case K_CONTROL_BOX:
-  break;
-
-  default:
-    SCIkwarn(SCIkWARNING, "Unknown control type: %d at %04x, at (%d, %d) size %d x %d\n",
-	     type, obj, x, y, xl, yl);
-  }
-
-  if (!s->pic_not_valid)
-    graph_update_port(s, s->port);
-
-  if (inverse) {
-    gfxw_port_t *port = s->port;
-    gfx_color_t foo = port->bgcolor;
-    port->bgcolor = port->color;
-    port->color = foo;
-  }
-#endif
+	sciprintf("------------------------------------------------------\n");
+	sciprintf("------------------------------------------------------\n");
+	sciprintf("------------------------------------------------------\n");
+	sciprintf("------------------------------------------------------\n");
+	sciprintf("------------------------------------------------------\n");
+	FULL_INSPECTION();
+	if (!s->pic_not_valid) {
+		FULL_REDRAW();
+	}
+	sciprintf("------------------------------------------------------\n");
+	sciprintf("------------------------------------------------------\n");
+	sciprintf("------------------------------------------------------\n");
+	sciprintf("------------------------------------------------------\n");
+	sciprintf("------------------------------------------------------\n");
+	FULL_INSPECTION();
 }
 
 void
@@ -2027,6 +2008,8 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	priority = PARAM_OR_ALT(6, -1);
 	bgcolor.mask = GFX_MASK_VISUAL | ((priority >= 0)? GFX_MASK_PRIORITY : 0);
 	bgcolor.priority = priority;
+
+SCI_MEMTEST;
 
 	window = sciw_new_window(s, gfx_rect(x, y, xl, yl), s->titlebar_port->font_nr, 
 				 s->ega_colors[PARAM_OR_ALT(7, 0)], bgcolor, s->titlebar_port->font_nr,

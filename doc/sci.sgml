@@ -5,6 +5,8 @@
 ]>
 
 
+<!-- (set 'font-lock-maximum-size 1024000) C-x e this in EMACS to make it possible to fontify this buffer -->
+
 <Book>
 
   <Title>The Sierra Creative Interpreter</Title>
@@ -3287,42 +3289,43 @@ and returns the number of cels (animation frames) in it.
     </para>
 </sect3>
 
-<sect3><Title/Kernel function 0x0f: CelWide(HeapPtr)/<para></para>
+<sect3><Title/Kernel function 0x0f: CelWide(word view, word loop, word cel)/<para></para>
     <funcsynopsis><funcprototype><funcdef>
 kfunct 0x0f: CelWide
     </funcdef><paramdef>
-HeapPtr object</paramdef>
+word view, word loop, word cel</paramdef>
     </funcprototype></funcsynopsis><para><simplelist><member><type>
 (HeapPtr)
     </type>
-<parameter/object/: The object to retreive the selectors from
+<parameter/view/: The view we're searching in
+<parameter/loop/: The loop the cel is contained in
+<parameter/cel/: The cel we're interested in
     </member></simplelist></para><para>
     Returns: <type>
 (word)
     </type>
-The cel's width
+The width of the cel identified by the tuple (view, loop, cel).
     </para><para>
-This function looks up the width of a specific cel. cel, frame, and view are
-retreived from the selectors of the specified object.
     </para>
 </sect3>
 
-<sect3><Title/Kernel function 0x10: CelHigh(HeapPtr)/<para></para>
+<sect3><Title/Kernel function 0x0f: CelWide(word view, word loop, word cel)/<para></para>
     <funcsynopsis><funcprototype><funcdef>
 kfunct 0x10: CelHigh
     </funcdef><paramdef>
-HeapPtr object</paramdef>
+word view, word loop, word cel</paramdef>
     </funcprototype></funcsynopsis><para><simplelist><member><type>
 (HeapPtr)
     </type>
-<parameter/object/: The object to retreive the selectors from
+<parameter/view/: The view we're searching in
+<parameter/loop/: The loop the cel is contained in
+<parameter/cel/: The cel we're interested in
     </member></simplelist></para><para>
     Returns: <type>
 (word)
     </type>
-The height of the cel
+The height of the cel identified by the tuple (view, loop, cel).
     </para><para>
-View, loop, and cel number are retreived from the object passed as parameter.
     </para>
 </sect3>
 

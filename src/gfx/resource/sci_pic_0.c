@@ -1076,7 +1076,7 @@ _gfxr_draw_subline(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int
 
 static void
 _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int priority, int control,
-		int drawenable, int fine)
+		int drawenable, int fine, int cmd)
 {
 	int scale_x = pic->mode->xfact;
 	int scale_y = pic->mode->yfact;
@@ -1091,7 +1091,7 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int pr
 
 	if (x > 319 || y > 199 || x < 0 || y < 0
 	    || ex > 319 || ey > 199 || ex < 0 || ey < 0) {
-		GFXWARN("While building pic: Attempt to draw line (%d,%d) to (%d,%d)\n", x, y, ex, ey);
+		GFXWARN("While building pic: Attempt to draw line (%d,%d) to (%d,%d): cmd was %d\n", x, y, ex, ey, cmd);
 		return;
 	}
 
@@ -1883,7 +1883,7 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			GET_ABS_COORDS(oldx, oldy);
 			while (*(resource + pos) < PIC_OP_FIRST) {
 				GET_MEDREL_COORDS(oldx, oldy);
-				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode);
+				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode, PIC_OP_MEDIUM_LINES);
 				oldx = x; oldy = y;
 			}
 			break;
@@ -1894,7 +1894,7 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			GET_ABS_COORDS(oldx, oldy);
 			while (*(resource + pos) < PIC_OP_FIRST) {
 				GET_ABS_COORDS(x,y);
-				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode);
+				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode, PIC_OP_LONG_LINES);
 				oldx = x; oldy = y;
 			}
 			break;
@@ -1906,7 +1906,7 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			x = oldx; y = oldy;
 			while (*(resource + pos) < PIC_OP_FIRST) {
 				GET_REL_COORDS(x,y);
-				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode);
+				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode, PIC_OP_SHORT_LINES);
 				oldx = x; oldy = y;
 			}
 			break;
