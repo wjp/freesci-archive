@@ -1,5 +1,5 @@
 /***************************************************************************
- midi.c (C) 1999 Christoph Reichenbach
+ midi.c (C) 1999 Christoph Reichenbach, TU Darmstadt
         (C) 1999-2000 Rickard Lind
 
  This program may be modified and copied freely according to the terms of
@@ -247,14 +247,14 @@ char *name;
 gint8 gm_instr;
 gint8 gm_rhythm_key;
 } MT32_PresetTimbreMaps[] = {
-/*000*/  {"Acou Piano 1", 0, NOMAP},
-/*001*/  {"Acou Piano 2", 1, NOMAP},
-/*002*/  {"Acou Piano 3", 2, NOMAP},
-/*003*/  {"Elec Piano 1", 4, NOMAP},
-/*004*/  {"Elec Piano 2", 5, NOMAP},
-/*005*/  {"Elec Piano 3", 4, NOMAP},
-/*006*/  {"Elec Piano 4", 5, NOMAP},
-/*007*/  {"Honkytonk", 3, NOMAP},
+/*000*/  {"AcouPiano1", 0, NOMAP},
+/*001*/  {"AcouPiano2", 1, NOMAP},
+/*002*/  {"AcouPiano3", 2, NOMAP},
+/*003*/  {"ElecPiano1", 4, NOMAP},
+/*004*/  {"ElecPiano2", 5, NOMAP},
+/*005*/  {"ElecPiano3", 4, NOMAP},
+/*006*/  {"ElecPiano4", 5, NOMAP},
+/*007*/  {"Honkytonk ", 3, NOMAP},
 /*008*/  {"Elec Org 1", 16, NOMAP},
 /*009*/  {"Elec Org 2", 17, NOMAP},
 /*010*/  {"Elec Org 3", 18, NOMAP},
@@ -262,119 +262,119 @@ gint8 gm_rhythm_key;
 /*012*/  {"Pipe Org 1", 19, NOMAP},
 /*013*/  {"Pipe Org 2", 19, NOMAP},
 /*014*/  {"Pipe Org 3", 20, NOMAP},
-/*015*/  {"Accordion", 21, NOMAP},
-/*016*/  {"Harpsi 1", 6, NOMAP},
-/*017*/  {"Harpsi 2", 6, NOMAP},
-/*018*/  {"Harpsi 3", 6, NOMAP},
-/*019*/  {"Clavi 1", 7, NOMAP},
-/*020*/  {"Clavi 2", 7, NOMAP},
-/*021*/  {"Clavi 3", 7, NOMAP},
-/*022*/  {"Celesta 1", 8, NOMAP},
-/*023*/  {"Celesta 2", 8, NOMAP},
-/*024*/  {"Syn Brass 1", 62, NOMAP},
-/*025*/  {"Syn Brass 2", 63, NOMAP},
-/*026*/  {"Syn Brass 3", 62, NOMAP},
-/*027*/  {"Syn Brass 4", 63, NOMAP},
+/*015*/  {"Accordion ", 21, NOMAP},
+/*016*/  {"Harpsi 1  ", 6, NOMAP},
+/*017*/  {"Harpsi 2  ", 6, NOMAP},
+/*018*/  {"Harpsi 3  ", 6, NOMAP},
+/*019*/  {"Clavi 1   ", 7, NOMAP},
+/*020*/  {"Clavi 2   ", 7, NOMAP},
+/*021*/  {"Clavi 3   ", 7, NOMAP},
+/*022*/  {"Celesta 1 ", 8, NOMAP},
+/*023*/  {"Celesta 2 ", 8, NOMAP},
+/*024*/  {"Syn Brass1", 62, NOMAP},
+/*025*/  {"Syn Brass2", 63, NOMAP},
+/*026*/  {"Syn Brass3", 62, NOMAP},
+/*027*/  {"Syn Brass4", 63, NOMAP},
 /*028*/  {"Syn Bass 1", 38, NOMAP},
 /*029*/  {"Syn Bass 2", 39, NOMAP},
 /*030*/  {"Syn Bass 3", 38, NOMAP},
 /*031*/  {"Syn Bass 4", 39, NOMAP},
-/*032*/  {"Fantasy", 88, NOMAP},
-/*033*/  {"Harmo Pan", 89, NOMAP},
-/*034*/  {"Chorale", 52, NOMAP},
-/*035*/  {"Glasses", 98, NOMAP},
+/*032*/  {"Fantasy   ", 88, NOMAP},
+/*033*/  {"Harmo Pan ", 89, NOMAP},
+/*034*/  {"Chorale   ", 52, NOMAP},
+/*035*/  {"Glasses   ", 98, NOMAP},
 /*036*/  {"Soundtrack", 97, NOMAP},
 /*037*/  {"Atmosphere", 99, NOMAP},
-/*038*/  {"Warm Bell", 89, NOMAP},
-/*039*/  {"Funny Vox", 85, NOMAP},
-/*040*/  {"Echo Bell", 39, NOMAP},
-/*041*/  {"Ice Rain", 101, NOMAP},
-/*042*/  {"Oboe 2001", 68, NOMAP},
-/*043*/  {"Echo Pan", 87, NOMAP},
-/*044*/  {"Doctor Solo", 86, NOMAP},
+/*038*/  {"Warm Bell ", 89, NOMAP},
+/*039*/  {"Funny Vox ", 85, NOMAP},
+/*040*/  {"Echo Bell ", 39, NOMAP},
+/*041*/  {"Ice Rain  ", 101, NOMAP},
+/*042*/  {"Oboe 2001 ", 68, NOMAP},
+/*043*/  {"Echo Pan  ", 87, NOMAP},
+/*044*/  {"DoctorSolo", 86, NOMAP},
 /*045*/  {"Schooldaze", 103, NOMAP},
-/*046*/  {"Bellsinger", 88, NOMAP},
-/*047*/  {"Square Wave", 80, NOMAP},
+/*046*/  {"BellSinger", 88, NOMAP},
+/*047*/  {"SquareWave", 80, NOMAP},
 /*048*/  {"Str Sect 1", 48, NOMAP},
 /*049*/  {"Str Sect 2", 48, NOMAP},
 /*050*/  {"Str Sect 3", 49, NOMAP},
-/*051*/  {"Pizzicato", 45, NOMAP},
-/*052*/  {"Violin 1", 40, NOMAP},
-/*053*/  {"Violin 2", 40, NOMAP},
-/*054*/  {"Cello 1", 42, NOMAP},
-/*055*/  {"Cello 2", 42, NOMAP},
+/*051*/  {"Pizzicato ", 45, NOMAP},
+/*052*/  {"Violin 1  ", 40, NOMAP},
+/*053*/  {"Violin 2  ", 40, NOMAP},
+/*054*/  {"Cello 1   ", 42, NOMAP},
+/*055*/  {"Cello 2   ", 42, NOMAP},
 /*056*/  {"Contrabass", 43, NOMAP},
-/*057*/  {"Harp 1", 46, NOMAP},
-/*058*/  {"Harp 2", 46, NOMAP},
-/*059*/  {"Guitar 1", 24, NOMAP},
-/*060*/  {"Guitar 2", 25, NOMAP},
+/*057*/  {"Harp 1    ", 46, NOMAP},
+/*058*/  {"Harp 2    ", 46, NOMAP},
+/*059*/  {"Guitar 1  ", 24, NOMAP},
+/*060*/  {"Guitar 2  ", 25, NOMAP},
 /*061*/  {"Elec Gtr 1", 26, NOMAP},
 /*062*/  {"Elec Gtr 2", 27, NOMAP},
-/*063*/  {"Sitar", 104, NOMAP},
-/*064*/  {"Acou Bass 1", 32, NOMAP},
-/*065*/  {"Acou Bass 2", 33, NOMAP},
-/*066*/  {"Elec Bass 1", 34, NOMAP},
-/*067*/  {"Elec Bass 2", 39, NOMAP},
-/*068*/  {"Slap Bass 1", 36, NOMAP},
-/*069*/  {"Slap Bass 2", 37, NOMAP},
+/*063*/  {"Sitar     ", 104, NOMAP},
+/*064*/  {"Acou Bass1", 32, NOMAP},
+/*065*/  {"Acou Bass2", 33, NOMAP},
+/*066*/  {"Elec Bass1", 34, NOMAP},
+/*067*/  {"Elec Bass2", 39, NOMAP},
+/*068*/  {"Slap Bass1", 36, NOMAP},
+/*069*/  {"Slap Bass2", 37, NOMAP},
 /*070*/  {"Fretless 1", 35, NOMAP},
 /*071*/  {"Fretless 2", 35, NOMAP},
-/*072*/  {"Flute 1", 73, NOMAP},
-/*073*/  {"Flute 2", 73, NOMAP},
-/*074*/  {"Piccolo 1", 72, NOMAP},
-/*075*/  {"Piccolo 2", 72, NOMAP},
-/*076*/  {"Recorder", 74, NOMAP},
-/*077*/  {"Pan Pipes", 75, NOMAP},
-/*078*/  {"Sax 1", 64, NOMAP},
-/*079*/  {"Sax 2", 65, NOMAP},
-/*080*/  {"Sax 3", 66, NOMAP},
-/*081*/  {"Sax 4", 67, NOMAP},
+/*072*/  {"Flute 1   ", 73, NOMAP},
+/*073*/  {"Flute 2   ", 73, NOMAP},
+/*074*/  {"Piccolo 1 ", 72, NOMAP},
+/*075*/  {"Piccolo 2 ", 72, NOMAP},
+/*076*/  {"Recorder  ", 74, NOMAP},
+/*077*/  {"Panpipes  ", 75, NOMAP},
+/*078*/  {"Sax 1     ", 64, NOMAP},
+/*079*/  {"Sax 2     ", 65, NOMAP},
+/*080*/  {"Sax 3     ", 66, NOMAP},
+/*081*/  {"Sax 4     ", 67, NOMAP},
 /*082*/  {"Clarinet 1", 71, NOMAP},
 /*083*/  {"Clarinet 2", 71, NOMAP},
-/*084*/  {"Oboe", 68, NOMAP},
-/*085*/  {"Engl Horn", 69, NOMAP},
-/*086*/  {"Bassoon", 70, NOMAP},
-/*087*/  {"Harmonica", 22, NOMAP},
-/*088*/  {"Trumpet 1", 56, NOMAP},
-/*089*/  {"Trumpet 2", 56, NOMAP}, /* QfG1 with 59 sound not as good as 56 */
+/*084*/  {"Oboe      ", 68, NOMAP},
+/*085*/  {"Engl Horn ", 69, NOMAP},
+/*086*/  {"Bassoon   ", 70, NOMAP},
+/*087*/  {"Harmonica ", 22, NOMAP},
+/*088*/  {"Trumpet 1 ", 56, NOMAP},
+/*089*/  {"Trumpet 2 ", 56, NOMAP}, /* QfG1 with 59 sound not as good as 56 */
 /*090*/  {"Trombone 1", 57, NOMAP},
 /*091*/  {"Trombone 2", 57, NOMAP},
-/*092*/  {"Fr Horn 1", 60, NOMAP},
-/*093*/  {"Fr Horn 2", 60, NOMAP},
-/*094*/  {"Tuba", 58, NOMAP},
+/*092*/  {"Fr Horn 1 ", 60, NOMAP},
+/*093*/  {"Fr Horn 2 ", 60, NOMAP},
+/*094*/  {"Tuba      ", 58, NOMAP},
 /*095*/  {"Brs Sect 1", 61, NOMAP},
 /*096*/  {"Brs Sect 2", 61, NOMAP},
-/*097*/  {"Vibe 1", 11, NOMAP},
-/*098*/  {"Vibe 2", 11, NOMAP},
+/*097*/  {"Vibe 1    ", 11, NOMAP},
+/*098*/  {"Vibe 2    ", 11, NOMAP},
 /*099*/  {"Syn Mallet", 12, NOMAP},
-/*100*/  {"Windbell", 88, NOMAP},
-/*101*/  {"Glock", 9, NOMAP},
-/*102*/  {"Tube Bell", 14, NOMAP},
-/*103*/  {"Xylophone", 13, NOMAP},
-/*104*/  {"Marimba", 12, NOMAP},
-/*105*/  {"Koto", 107, NOMAP},
-/*106*/  {"Sho", 111, NOMAP},
+/*100*/  {"Wind Bell ", 88, NOMAP},
+/*101*/  {"Glock     ", 9, NOMAP},
+/*102*/  {"Tube Bell ", 14, NOMAP},
+/*103*/  {"Xylophone ", 13, NOMAP},
+/*104*/  {"Marimba   ", 12, NOMAP},
+/*105*/  {"Koto      ", 107, NOMAP},
+/*106*/  {"Sho       ", 111, NOMAP},
 /*107*/  {"Shakuhachi", 77, NOMAP},
-/*108*/  {"Whistle 1", 78, NOMAP},
-/*109*/  {"Whistle 2", 78, NOMAP},
-/*110*/  {"Bottleblow", 76, NOMAP},
-/*111*/  {"Breathpipe", 121, NOMAP},
-/*112*/  {"Timpani", 47, NOMAP},
-/*113*/  {"Melodic Tom", 117, NOMAP},
+/*108*/  {"Whistle 1 ", 78, NOMAP},
+/*109*/  {"Whistle 2 ", 78, NOMAP},
+/*110*/  {"BottleBlow", 76, NOMAP},
+/*111*/  {"BreathPipe", 121, NOMAP},
+/*112*/  {"Timpani   ", 47, NOMAP},
+/*113*/  {"MelodicTom", 117, NOMAP},
 /*114*/  {"Deep Snare", RHYTHM, 37},
-/*115*/  {"Elec Perc 1", 115, NOMAP}, /* ? */
-/*116*/  {"Elec Perc 2", 118, NOMAP}, /* ? */
-/*117*/  {"Taiko", 116, NOMAP},
-/*118*/  {"Taiko   Rim", 118, NOMAP},
-/*119*/  {"Cymbal", RHYTHM, 50},
-/*120*/  {"Castanets", RHYTHM, NOMAP},
-/*121*/  {"Triangle", 112, NOMAP},
-/*122*/  {"Orche Hit", 55, NOMAP},
-/*123*/  {"Telephone", 124, NOMAP},
+/*115*/  {"Elec Perc1", 115, NOMAP}, /* ? */
+/*116*/  {"Elec Perc2", 118, NOMAP}, /* ? */
+/*117*/  {"Taiko     ", 116, NOMAP},
+/*118*/  {"Taiko Rim ", 118, NOMAP},
+/*119*/  {"Cymbal    ", RHYTHM, 50},
+/*120*/  {"Castanets ", RHYTHM, NOMAP},
+/*121*/  {"Triangle  ", 112, NOMAP},
+/*122*/  {"Orche Hit ", 55, NOMAP},
+/*123*/  {"Telephone ", 124, NOMAP},
 /*124*/  {"Bird Tweet", 123, NOMAP},
-/*125*/  {"One Note Jam", NOMAP, NOMAP}, /* ? */
-/*126*/  {"Water Bells", 98, NOMAP},
-/*127*/  {"Jungle Tune", NOMAP, NOMAP} /* ? */
+/*125*/  {"OneNoteJam", NOMAP, NOMAP}, /* ? */
+/*126*/  {"WaterBells", 98, NOMAP},
+/*127*/  {"JungleTune", NOMAP, NOMAP} /* ? */
 };
 
 static struct {
@@ -465,11 +465,12 @@ gint8 gm_rhythm_key;
 {"Chorale MS", 52, NOMAP},    /* + (CoC) */
 {"ClarinetMS", 71, NOMAP},
 {"Claves    ", RHYTHM, 74},   /* R (PQ2) */
+{"Claw    MS", 117, NOMAP},    /* ? (HQ) */
 {"ClockBell ", 14, NOMAP},    /* + (CB) */
 {"ConcertCym", RHYTHM, 54},   /* R ? (KQ1) */
 {"Conga   MS", RHYTHM, 63},   /* R (HQ) */
 {"CoolPhone ", 124, NOMAP},   /* ++ (LSL3) */
-{"CracklesMS", NOMAP, NOMAP}, /* ? (CoC, HQ) */
+{"CracklesMS", 115, NOMAP}, /* ? (CoC, HQ) */
 {"CreakyD MS", NOMAP, NOMAP}, /* ??? (KQ1) */
 {"CrshCymbMS", RHYTHM, 56},   /* R +++ (iceMan) */
 {"CstlGateMS", NOMAP, NOMAP}, /* ? (HQ) */
@@ -488,6 +489,7 @@ gint8 gm_rhythm_key;
 {"Fantasy2MS", 99, NOMAP},    /* ++ (CoC, HQ) */
 {"Filter  MS", 95, NOMAP},    /* +++ (iceMan) */
 {"Filter2 MS", 95, NOMAP},    /* ++ (iceMan) */
+{"Flames  MS", 121, NOMAP},   /* ? (HQ) */
 {"Flute   MS", 73, NOMAP},    /* +++ (HQ) */
 {"FogHorn MS", 58, NOMAP},
 {"FrHorn1 MS", 60, NOMAP},    /* +++ (HQ) */
@@ -508,7 +510,7 @@ gint8 gm_rhythm_key;
 {"KongHit   ", NOMAP, NOMAP}, /* ??? (KQ1) */
 {"Koto      ", 107, NOMAP},   /* +++ (PQ2) */
 {"Laser   MS", 103, NOMAP},   /* ?? (HQ) */
-{"MTrak   MS", 97, NOMAP},    /* ?? (iceMan) */
+{"MTrak   MS", 62, NOMAP},    /* ?? (iceMan) */
 {"MachGun MS", 127, NOMAP},   /* ? (iceMan) */
 {"OCEANSOUND", 122, NOMAP},   /* + (LSL3) */
 {"Oboe 2001 ", 68, NOMAP},    /* + (PQ2) */
@@ -529,7 +531,7 @@ gint8 gm_rhythm_key;
 {"RifleShot ", 127, NOMAP},   /* + (CB) */
 {"RimShot MS", RHYTHM, 36},   /* R */
 {"SHOWER    ", 52, NOMAP},    /* ? (LSL3) */
-{"SQ Bass MS", 38, NOMAP},    /* + (SQ3) */
+{"SQ Bass MS", 32, NOMAP},    /* + (SQ3) */
 {"ShakuVibMS", 79, NOMAP},    /* + (iceMan) */
 {"SlapBassMS", 36, NOMAP},    /* +++ (iceMan) */
 {"Snare   MS", RHYTHM, 37},   /* R (HQ) */
@@ -678,12 +680,12 @@ makeMIDI0(const guint8 *src, int *size)
   */
 
   for (chn=0; chn < 16; chn ++)
-    if (chn == MIDI_PERCUSSIONS)
-      muteflags[chn] = 0;
-    else if (((src[(chn << 1) + 2] & 001) == 0) || (chn == 15))
-      muteflags[chn] = 2;
-    else
+    if ((chn > 0) && (chn < 9) && (src[(chn << 1) + 2] & 001))
       muteflags[chn] = 1;
+    else if ((chn == 9) && (src[(chn << 1) + 1] & 0x80))
+      muteflags[chn] = 0;
+    else
+      muteflags[chn] = 2;
 
   pos = 0x21; /* skip the header */
 
@@ -710,7 +712,7 @@ makeMIDI0(const guint8 *src, int *size)
     if (status < 0xb0) {
     /* Note Off (8x), Note On (9x), Aftertouch (Ax) */
       if (muteflags[status & 0x0f] == 0)
-	if ((status & 0x0f) == MIDI_PERCUSSIONS) {
+	if ((status & 0x0f) == 9) {
 	  if (MIDI_mapping[src[pos]].gm_rhythmkey >= 0) {
 	    /* if ((status & 0xf0) == 0x90) {
 	      SCIsdebug("[%04x] Rhythm Channel, SCI Note: %d", pos - 1, src[pos]);
@@ -783,7 +785,7 @@ makeMIDI0(const guint8 *src, int *size)
       pos +=2;
     } else if (status < 0xd0) {
     /* Program (patch) Change */
-      if ((muteflags[status & 0xf] != 2) && ((status & 0xf) != MIDI_PERCUSSIONS)) {
+      if ((muteflags[status & 0xf] != 2) && ((status & 0xf) != 9)) {
 	if (MIDI_mapping[src[pos]].gm_instr >= 0) {
           SCIsdebug("[%04x] Channel: %d, SCI Patch: %d", pos - 1, status & 0xf, src[pos]);
 	  SCIsdebug(" => %s\n", GM_Instrument_Names[MIDI_mapping[src[pos]].gm_instr]);
