@@ -1842,10 +1842,10 @@ gfxr_remove_artifacts_pic0(gfxr_pic_t *dest, gfxr_pic_t *src)
 				for (sub_x = 0; sub_x < bound_x; sub_x++) {
 					check_and_remove_artifact(dest->visual_map->index_data + write_offset,
 								  src_visualp, 0xff,
-								  x_320, x_320<319, y_200>10, y_200<199);
+								  (unsigned char)x_320, x_320<319, y_200>10, y_200<199);
 					check_and_remove_artifact(dest->priority_map->index_data + write_offset,
 								  src_priorityp, 0,
-								  x_320, x_320<319, y_200>10, y_200<199);
+								  (unsigned char)x_320, x_320<319, y_200>10, y_200<199);
 					++write_offset;
 				}
 				write_offset += scaled_line_size - bound_x;

@@ -914,7 +914,7 @@ map_MIDI_instruments(resource_mgr_t *resmgr)
   guint8 group, number, keyshift, finetune, bender_range;
   guint8 *patchpointer;
   guint32 pos;
-  FILE *logfile;
+/*  FILE *logfile; */
   resource_t *patch1;
 
   patch1 = scir_find_resource(resmgr, sci_patch, 1, 0);

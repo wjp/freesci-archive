@@ -1,3 +1,22 @@
+2002-01-02  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/main.c:
+	* src/engine/kgraphics.c:
+	* src/engine/klists.c:
+	* src/engine/kmovement.c:
+	* src/engine/kscripts.c:
+	* src/engine/savegame.c:
+	* src/engine/savegame.cfsml:
+	* src/engine/scriptdebug.c
+	* src/engine/vm.c:
+	* src/gfx/menubar.c:
+	* src/gfx/widgets.c:
+	* src/gfx/resource/sci_pic_0.c:
+	* src/include/soundserver.h:
+	* src/scicore/resource.c:
+	* src/sound/oldmidi.c:
+	* src/include/win32/usleep.h: Warnings fixes.
+
 2001-12-30  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/main.c (parse_arguments): Changed no_argument to

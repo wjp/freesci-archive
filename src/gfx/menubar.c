@@ -213,7 +213,7 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 					}
 
 				c_width = _menubar_add_menu_item(state, menu, entrytype, left, NULL, font, 0, 0, tag,
-								 (entries - _heapbase) - string_len - 1);
+								 (unsigned short)((entries - _heapbase) - string_len - 1));
 				if (c_width > max_width)
 					max_width = c_width;
 
@@ -300,7 +300,7 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 					right[i] = 0; /* Cut off chars to the right */
 
 				c_width = _menubar_add_menu_item(state, menu, MENU_TYPE_NORMAL, left, right, font, key,
-								 modifiers, tag, left_origin - _heapbase);
+								 modifiers, tag, (unsigned short)(left_origin - _heapbase));
 				tag = 0;
 				if (c_width > max_width)
 					max_width = c_width;

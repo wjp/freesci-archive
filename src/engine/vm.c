@@ -870,8 +870,8 @@ run_vm(state_t *s, int restoring)
       temp = xs->sp;
       xs->sp -= (opparams[0] + (restadjust * 2)); /* Adjust stack */
 
-      xs_new = send_selector(s, s->acc, s->acc, temp, opparams[0],
-			     restadjust, xs->sp);
+      xs_new = send_selector(s, s->acc, s->acc, temp, (int)opparams[0],
+			     (unsigned short)restadjust, xs->sp);
 
       if (xs_new)
 	xs = xs_new;
@@ -889,7 +889,7 @@ run_vm(state_t *s, int restoring)
       xs->sp -= (opparams[0] + (restadjust * 2)); /* Adjust stack */
 
       xs_new = send_selector(s, xs->objp, xs->objp, temp,
-			     opparams[0], restadjust, xs->sp);
+			     (int)opparams[0], (unsigned short)restadjust, xs->sp);
 
       restadjust = 0;
 
@@ -906,7 +906,7 @@ run_vm(state_t *s, int restoring)
 	xs->sp -= (opparams[1] + (restadjust * 2)); /* Adjust stack */
         kludge = get_class_address(s, opparams[0]);
 	/* kludge necessary due to compiler bugs (egcs 2.91.66, at least) */
-	xs_new = send_selector(s, kludge, xs->objp, temp, opparams[1], restadjust, xs->sp);
+	xs_new = send_selector(s, (unsigned short)kludge, xs->objp, temp, (int)opparams[1], (unsigned short)restadjust, xs->sp);
 	restadjust = 0;
 
 	if (xs_new) xs = xs_new;
@@ -1274,7 +1274,7 @@ lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
 			}
 
 	return
-		_lookup_selector_functions(s, obj, selectorid, address, speciespos);
+		_lookup_selector_functions(s, obj, selectorid, address, (unsigned short)speciespos);
 	/* Call recursive function selector seeker */
 }
 
@@ -1599,7 +1599,7 @@ _game_run(state_t *s, int restoring)
 
 			game_exit(s);
 			game_init(s);
-			putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector */
+			putInt16(s->heap + s->stack_base, (unsigned short)s->selector_map.play); /* Call the play selector */
 
 			putInt16(s->heap + s->stack_base + 2, 0);
 			send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
@@ -1622,7 +1622,7 @@ _game_run(state_t *s, int restoring)
 				if (script_abort_flag == SCRIPT_ABORT_WITH_REPLAY) {
 					sciprintf("Restarting with replay()\n");
 					s->execution_stack_pos = -1; /* Resatart with replay */
-					putInt16(s->heap + s->stack_base, s->selector_map.replay); /* Call the replay selector */
+					putInt16(s->heap + s->stack_base, (unsigned short)s->selector_map.replay); /* Call the replay selector */
 					putInt16(s->heap + s->stack_base + 2, 0);
 					send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
 				}
@@ -1644,7 +1644,7 @@ game_run(state_t **_s)
 	state_t *s = *_s;
 
 	sciprintf(" Calling %s::play()\n", s->game_name);
-	putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector... */
+	putInt16(s->heap + s->stack_base, (unsigned short)s->selector_map.play); /* Call the play selector... */
 	putInt16(s->heap + s->stack_base + 2, 0);                    /* ... with 0 arguments. */
 
 	/* Now: Register the first element on the execution stack- */

@@ -74,7 +74,7 @@ sane_listp(state_t *s, heap_ptr address)
   if (last==-1)
     return 0;
 
-  return sane_nodep(s, seeker);
+  return sane_nodep(s, (unsigned short)seeker);
 }
 
 void
@@ -369,7 +369,7 @@ kNodeValue(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	if (!sane_nodep(s, UPARAM(0)))
 	  SCIkwarn(SCIkERROR,"List node at %04x is not sane anymore!\n", PARAM(0));
-  
+
 	a = UPARAM(0) + LIST_NODE_VALUE;
 
 	s->acc=UGET_HEAP(a);

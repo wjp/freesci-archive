@@ -755,8 +755,8 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
                         if (widget->ID
 			    && (widget->signal & _K_VIEW_SIG_FLAG_FREESCI_STOPUPD)
 			    && (widget->ID != obj)
-                            && is_object(s, widget->ID))
-                                if (collides_with(s, abs_zone, widget->ID, 1, GASEOUS_VIEW_MASK_ACTIVE, funct_nr, argc, argp))
+                            && is_object(s, (unsigned short)widget->ID))
+                                if (collides_with(s, abs_zone, (unsigned short)widget->ID, 1, GASEOUS_VIEW_MASK_ACTIVE, funct_nr, argc, argp))
                                         return;
 
                         widget = (gfxw_dyn_view_t *) widget->next;
@@ -1447,8 +1447,8 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 
 		SCIkdebug(SCIkGRAPHICS, "drawing button %04x to %d,%d\n", obj, x, y);
 		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_button_control(s->port, obj, area, text, font_nr,
-								  state & CONTROL_STATE_FRAMED,
-								  inverse, state & CONTROL_STATE_GRAY));
+								  (char)(state & CONTROL_STATE_FRAMED),
+								  (char)inverse, (char)(state & CONTROL_STATE_GRAY)));
 		break;
 
 	case K_CONTROL_TEXT:
@@ -1456,9 +1456,9 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 
 		SCIkdebug(SCIkGRAPHICS, "drawing text %04x to %d,%d, mode=%d\n", obj, x, y, mode);
 
-		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_text_control(s->port, obj, area, text, font_nr, mode,
+		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_text_control(s->port, (int)obj, area, text, font_nr, mode,
 								!!(state & CONTROL_STATE_DITHER_FRAMED),
-								inverse));
+								(char)inverse));
 		break;
 
 	case K_CONTROL_EDIT:
@@ -1474,7 +1474,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 			update_cursor_limits(&s->save_dir_edit_offset, &cursor, max);
 
 		update_cursor_limits(&s->save_dir_edit_offset, &cursor, max);
-		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_edit_control(s->port, obj, area, text, font_nr, cursor, inverse));
+		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_edit_control(s->port, obj, area, text, font_nr, (unsigned)cursor, (char)inverse));
 		break;
 
 	case K_CONTROL_ICON:
@@ -1482,7 +1482,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 		SCIkdebug(SCIkGRAPHICS, "drawing icon control %04x to %d,%d\n", obj, x, y -1);
 
 		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_icon_control(s->port, obj, area, view, loop, cel,
-							  state & CONTROL_STATE_FRAMED, inverse));
+							  (char)(state & CONTROL_STATE_FRAMED), (char)inverse));
 		break;
 
 	case K_CONTROL_CONTROL: {
@@ -1518,7 +1518,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 		}
 
 		ADD_TO_CURRENT_BG_WIDGETS(sciw_new_list_control(s->port, obj, area, font_nr, entries_list, entries_nr,
-							  list_top, selection, inverse));
+							  list_top, selection, (char)inverse));
 		if (entries_nr)
 			free(entries_list);
 	}
@@ -1547,7 +1547,7 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int funct_nr, int argc, i
 /*	int has_nsrect = (view->ID <=0)? 0 : lookup_selector(s, view->ID, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;*/
 
 	if (view->ID > 0)
-		abs_zone = get_nsrect(s, view->ID, 1);
+		abs_zone = get_nsrect(s, (unsigned short)view->ID, 1);
 	else {
 		abs_zone = nsrect_clip(s, view->pos.y,
 				       calculate_nsrect(s, view->pos.x, view->pos.y,
@@ -1587,7 +1587,7 @@ _k_view_list_do_postdraw(state_t *s, gfxw_list_t *list)
 		int obj = widget->ID;
 
 		if ((widget->signal & (_K_VIEW_SIG_FLAG_FREESCI_PRIVATE | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_NO_UPDATE)) == _K_VIEW_SIG_FLAG_FREESCI_PRIVATE) {
-			int has_nsrect = lookup_selector(s, obj, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
+			int has_nsrect = lookup_selector(s, (unsigned short)obj, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
 
 			if (has_nsrect) {
 				int temp;
@@ -1653,7 +1653,7 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_dyn_view_t *widge
 				int tempid = widget->ID;
 				heap_ptr under_bits = 0;
 
-				if (!is_object(s, tempid)) {
+				if (!is_object(s, (unsigned short)tempid)) {
 					SCIkwarn(SCIkERROR, "Non-object %04x present"
 						  " in view list during delete time\n",
 						  tempid);
@@ -1826,7 +1826,7 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 
 	SCIkdebug(SCIkGRAPHICS, "Making list from %04x\n", list);
 
-	if (!listp(s, list - 2)) { /* heap size check */
+	if (!listp(s, (unsigned short)(list - 2))) { /* heap size check */
 		SCIkwarn(SCIkWARNING, "Attempt to draw non-list at %04x\n", list);
 		return;
 	}
@@ -1881,10 +1881,10 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 	while (view) {
 		heap_ptr obj = view->ID;
 		int priority, _priority;
-		int has_nsrect = (view->ID <=0)? 0 : lookup_selector(s, view->ID, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
+		int has_nsrect = (view->ID <=0)? 0 : lookup_selector(s, (unsigned short)view->ID, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
 		int oldsignal = view->signal;
 
-		_k_set_now_seen(s, view->ID);
+		_k_set_now_seen(s, (unsigned short)view->ID);
 		_priority = /*GET_SELECTOR(obj, y); */((view->pos.y));/**/
 		_priority = VIEW_PRIORITY(_priority - 1);
 

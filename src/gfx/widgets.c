@@ -842,7 +842,7 @@ gfxw_new_view(gfx_state_t *state, point_t pos, int view_nr, int loop, int cel, i
 	view = _gfxw_new_simple_view(state, pos, view_nr, loop, cel, priority, control, halign, valign,
 				     sizeof(gfxw_view_t), (flags & GFXW_VIEW_FLAG_STATIC) ? GFXW_STATIC_VIEW : GFXW_VIEW);
 
-	_gfxw_set_ops_VIEW(GFXW(view), flags & GFXW_VIEW_FLAG_STATIC);
+	_gfxw_set_ops_VIEW(GFXW(view), (char)(flags & GFXW_VIEW_FLAG_STATIC));
 
 	return view;
 }
@@ -1831,7 +1831,7 @@ gfxw_new_list(rect_t area, int sorted)
 	gfxw_list_t *list = (gfxw_list_t *) _gfxw_new_container_widget(area, sizeof(gfxw_list_t),
 								       sorted? GFXW_SORTED_LIST : GFXW_LIST);
 
-	_gfxw_set_ops_LIST(GFXWC(list), sorted);
+	_gfxw_set_ops_LIST(GFXWC(list), (char)sorted);
 
 	return list;
 }
@@ -1846,7 +1846,6 @@ _gfxwop_visual_draw(gfxw_widget_t *widget, point_t pos)
 {
 	gfxw_visual_t *visual = (gfxw_visual_t *) widget;
 	gfx_dirty_rect_t *dirty = visual->dirty;
-	gfxw_widget_t *c_widget;
 	DRAW_ASSERT(widget, GFXW_VISUAL);
 
 	while (dirty) {

@@ -40,6 +40,10 @@
 
 #include <ctype.h>
 
+#ifdef _WIN32
+#include <direct.h>
+#endif
+
 #undef SCI_REQUIRE_RESOURCE_FILES
 /* #define SCI_VERBOSE_RESMGR 1 */
 
@@ -361,7 +365,7 @@ _scir_load_resource(resource_mgr_t *mgr, resource_t *res)
 
 	lseek(fh, res->file_offset, SEEK_SET);
 
-	if (res->file == SCI_RESOURCE_FILE_PATCH) 
+	if (res->file == SCI_RESOURCE_FILE_PATCH)
 		_scir_load_from_patch_file(fh, res, filename);
 	else if (!decompressors[mgr->sci_version]) {
 		/* Check whether we support this at all */
@@ -443,7 +447,7 @@ _scir_add_to_lru(resource_mgr_t *mgr, resource_t *res)
 	fprintf(stderr, "Adding %s.%03d (%d bytes) to lru control: %d bytes total\n",
 		sci_resource_types[res->type], res->number, res->size,
 		mgr->memory_lru);
-	
+
 #endif
 
 	res->status = SCI_STATUS_ENQUEUED;

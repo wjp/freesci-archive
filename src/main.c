@@ -73,7 +73,6 @@
 #  ifdef _MSC_VER
 #    include <direct.h>
 #    define PATH_MAX 255
-#    define sleep(x) timeBeginPeriod(0); Sleep(x); timeEndPeriod(0);
 #    define strcasecmp stricmp
 #  endif
 #  define WIN32_LEAN_AND_MEAN

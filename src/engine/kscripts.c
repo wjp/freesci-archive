@@ -92,13 +92,13 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int
   va_end(argp);
 
   /* Write "kernel" call to the stack, for debugging: */
-  xstack = 
+  xstack =
     add_exec_stack_entry(s, 0, 0, 0, k_argc, k_argp - 2, 0, 0, s->execution_stack_pos, 0);
   xstack->selector = -42 - kfunct; /* Evil debugging hack to identify kernel function */
   xstack->type = EXEC_STACK_TYPE_KERNEL;
 
   /* Now commit the actual function: */
-  xstack = 
+  xstack =
     send_selector(s, object, object, stackframe + framesize, framesize, 0, stackframe);
 
   run_vm(s, 0); /* Start a new vm */
@@ -211,12 +211,12 @@ kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
   /* Now, optionally set new selector values (late SCI0+ functionality) */
   if (argc>1)
     SCIkdebug(SCIkMEM, "Clone() called with extended functionality\n");
-  
+
   for (i=1;i<argc;i+=2)
   {
     int selector = UPARAM(i);
     int value = UPARAM(i+1);
-    
+
     write_selector(s, new_offs, selector, value, __FILE__, __LINE__);
   }
 }
@@ -335,6 +335,6 @@ kRespondsTo(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int obj = PARAM(0);
   int selector = PARAM(1);
 
-  s->acc = (lookup_selector(s, obj, selector, NULL) != SELECTOR_NONE);
+  s->acc = (lookup_selector(s, (unsigned short)obj, selector, NULL) != SELECTOR_NONE);
 }
 

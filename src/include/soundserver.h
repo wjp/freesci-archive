@@ -563,6 +563,13 @@ typedef struct {
 } sound_server_state_t;
 
 
+void
+sci0_event_ss(sound_server_state_t *ss_state);
+
+void
+sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state);
+
+
 int
 soundsrv_save_state(FILE *debugstream, char *dir, sound_server_state_t *sss);
 /* Stores the sound server state to a file
@@ -651,7 +658,7 @@ snd_srv_process(sound_server_state_t *s, sound_event_t cmd);
 **             (sound_event_t) cmd: The sound command to process
 ** Returns   : (void)
 ** This function must be invoked with 'cmd' filled out whenever a command was
-** received. 
+** received.
 ** s->queue_event() is called from here on occasion, to send back events.
 ** snd_srv_play() should be called immediately after snd_srv_process().
 */

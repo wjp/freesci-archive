@@ -40,6 +40,10 @@
 #include <direct.h>
 #endif
 
+#ifdef _WIN32
+#pragma warning( disable : 4101 )
+#endif
+
 #define HUNK_TYPE_GFX_SNAPSHOT_STRING "g\n"
 
 /* Missing:
@@ -585,7 +589,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
 	if (type_name)
 		fputs(type_name, fh);
 	else {
-		sciprintf("While writing widget: Encountered invalid widget type %d\n", 
+		sciprintf("While writing widget: Encountered invalid widget type %d\n",
 			  (*widget)->type);
 		fputs("\\null\\", fh);
 		return;
@@ -721,7 +725,7 @@ full_widget_tree_traversal(gfxw_widget_t *widget, gfxw_container_t *parent, gfxw
 				sciprintf("Restored port with invalid ID #%d\n", port->ID);
 			else
 				visual->port_refs[port->ID] = port; /* List port globally */
-					  
+
 		}
 	}
 
@@ -1269,7 +1273,7 @@ gamestate_restore(state_t *s, char *dirname)
 			strcpy(retval->heap + retval->save_dir + 2, cwd);
 
 		sci_free(cwd);
-		
+
 		retval->save_dir_copy = 0xffff;
 		retval->save_dir_edit_offset = 0;
 	}

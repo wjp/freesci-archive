@@ -43,7 +43,7 @@ kSetJump(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	CHECK_THIS_KERNEL_FUNCTION;
 
 	if ((dx)&&(abs(dy)>dx)) t1=(2*abs(dy))/dx;
-  
+
 	SCIkdebug(SCIkBRESEN, "t1: %d\n", t1);
 
 	t1--;
@@ -54,9 +54,9 @@ kSetJump(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	} while (abs(2 * t2) < abs(dx));
 
 	SCIkdebug(SCIkBRESEN, "t1: %d, t2: %d\n", t1, t2);
- 
+
 	if (t2) {
-		x=sqrt(abs((gy * dx * dx) / (2.0 * t2)));
+		x = sqrt(abs((gy * dx * dx) / (2 * t2)));
 		if (t2 *dx < 0)
 			x = -x;
 	}
@@ -391,7 +391,7 @@ kDoAvoider(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		}
 		/* No looper? Fall back to DirLoop */
 
-		_k_dirloop(client, angle, s, funct_nr, argc, argp);
+		_k_dirloop(client, (unsigned short)angle, s, funct_nr, argc, argp);
 	}
 }
 
