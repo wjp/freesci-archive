@@ -56,6 +56,7 @@ extern midiout_driver_t midiout_driver_ossopl3;
 
 #ifdef _WIN32
 extern midiout_driver_t midiout_driver_win32mci;
+extern midiout_driver_t midiout_driver_win32mci_stream;
 #endif
 
 extern DLLEXTERN midiout_driver_t *midiout_drivers[];

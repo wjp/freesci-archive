@@ -44,7 +44,7 @@ sound_server_t *global_sound_server = NULL;
 
 int soundserver_dead;	/* if sound server is dead */
 
-int do_sound(sound_server_state_t *sss)
+int do_sound(sound_server_state_t *sss, int buff_ss)
 {
 	static midi_op_t cached_cmd;
 	/* cached MIDI command stored while waiting for ticks to == 0 */
@@ -232,6 +232,8 @@ int do_sound(sound_server_state_t *sss)
 		/* handle 0xF commands */
 		if (this_cmd.midi_cmd == SCI_MIDI_END_OF_TRACK)
 		{
+			if (buff_ss)
+				return 0;
 			if ((--(sss->current_song->loops) != 0) && sss->current_song->loopmark)
 			{
 #ifdef DEBUG_SOUND_SERVER
@@ -276,7 +278,7 @@ int do_sound(sound_server_state_t *sss)
 		fprintf(stdout, "\n");
 #endif
 	}
-	return 0;
+	return 1;
 }
 
 #ifdef DEBUG_SOUND_SERVER

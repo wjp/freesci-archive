@@ -82,7 +82,7 @@ sci0_event_ss(sound_server_state_t *ss_state)
 		switch (new_event->signal)
 		{
 		case SOUND_COMMAND_DO_SOUND:
-			do_sound(ss_state);
+			do_sound(ss_state, 0);
 			break;
 
 		case SOUND_COMMAND_INIT_HANDLE:

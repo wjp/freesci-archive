@@ -1,3 +1,20 @@
+2002-02-19  Alexander R Angas <wgd@internode.on.net>
+
+	* src/config.c:
+	* src/win32/freesci.def: Fixes to Win32 build.
+
+	* src/sound/buff_ss.c: (new)
+	* src/sound/buff_ss_win32.c: (new)
+	* src/sound/midiout_win32mci_stream.c: (new)
+	* src/include/midiout.h:
+	* src/include/sound.h:
+	* src/sound/event_ss.c:
+	* src/sound/midiout.c:
+	* src/sound/sound.c:
+	* src/sound/soundserver.c:
+	* src/win32/fsci_dll.dsp: Added prototype Win32 MCI stream driver and
+	sound server to work with it.
+
 2002-02-13  Solomon Peachy <pizza@shaftnet.org>
 
 	* README, src/config.c, src/config.l, src/main.c,

@@ -54,6 +54,7 @@ extern sound_server_t sound_server_sdl;
 #ifdef _WIN32
 extern sound_server_t sound_server_win32p;
 extern sound_server_t sound_server_win32e;
+extern sound_server_t sound_server_win32b;
 #endif
 
 #ifdef _DOS
@@ -70,6 +71,7 @@ sound_server_t *sound_servers[] = {
 #  ifdef _WIN32
 	&sound_server_win32p,
 	&sound_server_win32e,
+	&sound_server_win32b,
 #  endif
 
 #  ifdef HAVE_SDL

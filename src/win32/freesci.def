@@ -1,12 +1,16 @@
 LIBRARY
 DESCRIPTION "FreeSCI"
 EXPORTS
+
   pcmout_find_driver
   pcmout_driver DATA
   pcmout_drivers DATA
   pcmout_open
+  pcmout_sample_rate DATA
   mix_sound
+
   script_set_gamestate_save_dir
+
   usleep
   vocabulary_get_classes
   vocabulary_get_class_count
@@ -102,8 +106,6 @@ EXPORTS
   sci_resource_type_suffixes
   sci_resource_types
   sci_version_types
-
-  other_libs_exit
 
   sci0_read_resource_map
   scir_new_resource_manager

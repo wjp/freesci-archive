@@ -193,6 +193,10 @@ extern int soundserver_dead;
 #define MIDI_PARAMETERS_ONE(typ)  ( (typ >= '\xC') && (typ <= '\xD') )
 #define MIDI_RUNNING_STATUS(typ)  ( (typ < '\x8') )
 
+#define MIDI_PARAMETERS_TWO_BYTE(b)  ( ((b >= 0x80) && (b < 0xC0))  || ((b >= 0xE0) && (b < 0xF0)) )
+#define MIDI_PARAMETERS_ONE_BYTE(b)  ( (b >= 0xC0) && (b < 0xE0) )
+#define MIDI_RUNNING_STATUS_BYTE(b)  ( (b < 0x80) )
+
 #define SCI_MUTE_ON  0
 #define SCI_MUTE_OFF 1
 
