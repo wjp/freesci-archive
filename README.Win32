@@ -1,13 +1,15 @@
-Last updated 9 March 2002 by Alex Angas <wgd@internode.on.net>
-
 ABOUT
 -----
 
-The Win32 version of freesci is now almost at the same level of
+The Win32 version of FreeSCI is virtually at the same level of
 functionality as the UNIX version. The major bugs are currently:
- * fullscreen support causes gfx corruption
- * scaling > 3 causes gfx corruption
- * 'slow' sound problems (see below)
+ * sound timing problems (see below)
+ * SDL fullscreen support causes gfx corruption
+ * SDL scaling > 3 causes gfx corruption
+
+New specifically to the Win32 version for this release is:
+ * a DirectX 8.0a (or higher) driver, usable with the -gdirectx command line
+   option (more features to be added soon)
 
 
 BUILDING
@@ -19,7 +21,8 @@ You will need the following libraries and tools to build FreeSCI for Win32:
    http://www.microsoft.com/msdownload/platformsdk/sdkupdate/
    (No need to download the 64-bit components.)
  * The SDL library from http://www.libsdl.org/ . You need to download the
-   development library for Win32 (e.g. SDL-devel-x.y.z-VC6.zip).
+   development library for Win32 (e.g. SDL-devel-x.y.z-VC6.zip). At the time
+   of writing, this file was called SDL-devel-1.2.5a-VC6.zip.
 
 The project files assume the following directory structure:
 
@@ -33,7 +36,7 @@ The project files assume the following directory structure:
       \lib
 
 
-1. Go into the src\win32 directory and load the freesci workspace (freesci.dsw) 
+1. Go to the src\win32 directory and load the freesci workspace (freesci.dsw) 
    into Visual C++ 6.
 
 2. Set the active project to "freesci - Win32 Release". Rebuild all.
@@ -48,6 +51,8 @@ The project files assume the following directory structure:
 
 CONFIG
 ------
+
+GRAPHICS:
 
 You'll probably be thinking that it doesn't look much prettier than the 
 original SCI. Try putting these options into your config file
@@ -67,6 +72,8 @@ work properly. Also, fullscreen mode in SDL is currently not supported/working
 on Win32. Hopefully, both of these bugs will be fixed in an upcoming release.
 
 
+SOUND:
+
 To change the MIDI out device, add this line to your FreeSCI config file:
 
 midiout.win32mci.device = x
@@ -74,28 +81,30 @@ midiout.win32mci.device = x
 where x is the number of the device you wish to use.
 
 
-SOUND PROBLEMS
+KNOWN PROBLEMS
 --------------
 
-There are currently timing problems when playing sound in games. At the time
-of writing, the current sound implementation was soon to be overhauled and
-replaced with a song iterator. In the meantime, both the event and polled
-sound servers should be tested to see which one works best on your system.
+SOUND:
+
+There are currently timing problems when playing sound in games. While a Win32
+version of the FreeSCI (Glutton) 0.5.x series will solve these, at the moment
+we are stuck with it. Test both the event and threaded sound servers to see
+which one works best on your system.
 
 To use the event sound server, use the -Swin32e command line switch.
 To use the polled Win32 sound server, use the -Swin32p command line switch.
-To use the polled SDL sound server, use the -Ssdl command line switch.
+To use the threaded SDL sound server, use the -Ssdl command line switch.
 
-If you'd like a taste of the future, a sound server with accurate timing is
-available but is not yet ready for general game play. This can be used by
-specifying the -Swin32b -Owin32mci_stream command line switches.
 
-You can also alter the way this sound server behaves by changing the value for
-buffered_ticks in the midiout_win32mci_stream.c source file. This is the
-number of MIDI ticks to be buffered. Low values work better on fast computers
-and give better sound responsiveness. High values work better on slow
-computers but give lower sound responsiveness. The default value is 15. If you
-get choppy sound, use a higher value.
+GRAPHICS:
+
+The DirectX driver will run with the -gdirectx command line switch on versions
+of DirectX 8.0a (for Win95) and higher. While the driver is only rendering 2D
+images, significant performance gains may be achieved by using a 3D graphics
+card with the driver.
+
+The DirectX driver does not yet support mouse input or picture scaling, and
+doesn't quite draw lines on the edges of menus correctly.
 
 
 CVS
@@ -153,3 +162,5 @@ Enjoy!
 
 The FreeSCI Team.
 http://freesci.linuxgames.com/
+
+(Last updated 18 January 2003 by Alex Angas <wgd@internode.on.net>)
