@@ -248,27 +248,23 @@ change_song(song_t *new_song, sound_server_state_t *ss_state)
 {
 	guint8 i;
 #ifdef DEBUG_SOUND_SERVER
-	fprintf(debug_stream, "Changing to song handle %04x\n", new_song->handle);
+	if (new_song)
+		fprintf(debug_stream, "Changing to song handle %04x\n", new_song->handle);
+	else
+		fprintf(debug_stream, "Changing to NULL song handle\n");
 #endif
 
 	if (new_song)
 	{
 		for (i = 0; i < MIDI_CHANNELS; i++) {
-			/* lingering notes are usually intended */
-			ss_state->playing_notes[i].polyphony = MAX(1, MIN(POLYPHONY(new_song, i),
-				MAX_POLYPHONY));
-			ss_state->playing_notes[i].playing = 0;
-
 			if (new_song->instruments[i])
 				midi_event2((guint8)(0xc0 | i), (guint8)new_song->instruments[i]);
 		}
+
 		ss_state->current_song = new_song;
 		ss_state->current_song->pos = 33;
 
 	} else {
-		for (i = 0; i < MIDI_CHANNELS; i++)
-			ss_state->playing_notes[i].playing = 0;
-
 		ss_state->current_song = NULL;
 	}
 }
@@ -339,7 +335,7 @@ play_handle(int priority, word song_handle, sound_server_state_t *ss_state)
 	song_t *this_song;
 
 #ifdef DEBUG_SOUND_SERVER
-	fprintf(debug_stream, "Playing handle %04x and priority %i\n", song_handle, priority);
+	fprintf(debug_stream, "Playing handle %04x with priority %i\n", song_handle, priority);
 #endif
 
 	this_song = song_lib_find(ss_state->songlib, song_handle);
@@ -347,9 +343,6 @@ play_handle(int priority, word song_handle, sound_server_state_t *ss_state)
 	if (this_song)
 	{
 		midi_allstop();
-		this_song->status = SOUND_STATUS_PLAYING;
-
-		global_sound_server->queue_event(song_handle, SOUND_SIGNAL_PLAYING, 0);
 
 #ifdef DEBUG_SOUND_SERVER
 		/* play this song and reset instrument mappings */
@@ -357,6 +350,9 @@ play_handle(int priority, word song_handle, sound_server_state_t *ss_state)
 #endif
 
 		change_song(this_song, ss_state);
+
+		this_song->status = SOUND_STATUS_PLAYING;
+		global_sound_server->queue_event(song_handle, SOUND_SIGNAL_PLAYING, 0);
 
 	} else {
 		fprintf(debug_stream, "play_handle(): Attempt to play invalid sound handle %04x\n", song_handle);
@@ -406,8 +402,10 @@ fade_handle(int ticks, word song_handle, sound_server_state_t *ss_state)
 			ss_state->current_song->fading = ticks;
 			ss_state->current_song->maxfade = ticks;
 
+#ifdef DEBUG_SOUND_SERVER
 		} else {
 			fprintf(debug_stream, "Attempt to fade with no currently playing song\n");
+#endif
 		}
 
 	} else if (this_song) {
@@ -619,7 +617,7 @@ set_master_volume(guint8 new_volume, sound_server_state_t *ss_state)
 	fprintf(debug_stream, "Setting master volume to %i ", new_volume);
 #endif
 
-	ss_state->master_volume = (guint8)(new_volume * 100 / 15);	/* scale to % */
+	ss_state->master_volume = (guint8)((float)new_volume * 100.0 / 15.0);	/* scale to % */
 	midi_volume((guint8)ss_state->master_volume);
 
 #ifdef DEBUG_SOUND_SERVER

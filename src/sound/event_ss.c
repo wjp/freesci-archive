@@ -55,7 +55,11 @@ void do_sound(sound_server_state_t *sss)
 		return;
 
 	/* find the active song */
+#ifdef NO_TELEPHONE_BOX_BUG
+	sss->current_song = song_lib_find(sss->songlib, sss->current_song);
+#else
 	sss->current_song = song_lib_find_active(sss->songlib, sss->current_song);
+#endif
 
 	if (sss->current_song && (sss->current_song->status == SOUND_STATUS_PLAYING))	/* have an active song */
 	{
@@ -71,8 +75,13 @@ void do_sound(sound_server_state_t *sss)
 			sss->current_song->resetflag = 1;
 
 			/* stop this song */
+/*			sss->current_song->status = SOUND_STATUS_FADED_OUT;
+/*			midi_allstop();
+*/
 			global_sound_server->queue_command(
 				sss->current_song->handle, SOUND_COMMAND_STOP_HANDLE, 0);
+			global_sound_server->queue_event(
+				sss->current_song->handle, SOUND_SIGNAL_LOOP, -1);
 
 		} else if (sss->current_song->fading > 0) {
 			/* fade by one more tick */
@@ -231,10 +240,18 @@ void do_sound(sound_server_state_t *sss)
 		{
 			if ((--(sss->current_song->loops) != 0) && sss->current_song->loopmark)
 			{
+#ifdef DEBUG_SOUND_SERVER
+					fprintf(debug_stream, "Looping back from %d to %d on handle %04x\n",
+					        sss->current_song->pos, sss->current_song->loopmark, sss->current_song->handle);
+#endif
 				sss->current_song->pos = sss->current_song->loopmark;
 				global_sound_server->queue_event(
 					sss->current_song->handle, SOUND_SIGNAL_LOOP, sss->current_song->loops);
 			} else {
+#ifdef DEBUG_SOUND_SERVER
+					fprintf(debug_stream, "Reached end of track for handle %04x\n",
+					        sss->current_song->handle);
+#endif
 				sss->current_song->resetflag = 1;	/* reset song position */
 				sss->current_song->status = SOUND_STATUS_STOPPED;
 				global_sound_server->queue_command(
@@ -254,8 +271,7 @@ void do_sound(sound_server_state_t *sss)
 					this_cmd.midi_cmd,
 					(unsigned char)this_cmd.param1,
 					(unsigned char)this_cmd.param2,
-					&(sss->sound_cue),
-					&(sss->playing_notes[this_cmd.midi_cmd & 0xf]));
+					&(sss->sound_cue));
 #if (DEBUG_SOUND_SERVER == 2)
 					fprintf(stdout, " (playing %02x %02x %02x)", this_cmd.midi_cmd, this_cmd.param1, this_cmd.param2);
 #endif
@@ -275,8 +291,7 @@ sci0_event_ss(sound_server_state_t *ss_state)
 
 	/*** initialisation ***/
 	ss_state->songlib = &_songp;	/* song library (the local song cache) */
-	memset(ss_state->playing_notes, 0, MIDI_CHANNELS * sizeof(playing_notes_t));
-	memset(ss_state->mute_channel, MUTE_OFF, MIDI_CHANNELS * sizeof(byte));
+	memset(ss_state->mute_channel, MIDI_MUTE_OFF, MIDI_CHANNELS * sizeof(byte));
 	ss_state->master_volume = 0;
 	ss_state->sound_cue = 127;
 
@@ -298,10 +313,12 @@ sci0_event_ss(sound_server_state_t *ss_state)
 		/* process any waiting sound */
 		do_sound(ss_state);
 
+#if 0	/* this code is not called due to the use of GetMessage() in the driver */
 		if (!new_event) {
 			continue;	/* no new commands */
+#endif
 
-		} else if (new_event->signal == UNRECOGNISED_SOUND_SIGNAL) {
+		if (new_event->signal == UNRECOGNISED_SOUND_SIGNAL) {
 			continue;
 
 		} else if (new_event->signal == SOUND_COMMAND_SHUTDOWN) {
@@ -415,6 +432,8 @@ sci0_event_ss(sound_server_state_t *ss_state)
 
 				_restore_midi_state(ss_state);
 				change_song(ss_state->current_song, ss_state);
+				if (ss_state->current_song)
+					ss_state->current_song->status = SOUND_STATUS_PLAYING;
 			}
 			break;
 

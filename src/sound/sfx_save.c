@@ -1347,10 +1347,20 @@ soundsrv_save_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
 		return 1;
 	}
 
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(debugstream, "Saving game to %s\n", dir);
+#endif
+
 	write_rec.sound_version = SOUND_SAVEGAME_VERSION;
 
 	write_rec.master_volume = sss->master_volume;
 	write_rec.sound_cue = sss->sound_cue;
+
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(debugstream, " Save game version: %i\n", write_rec.sound_version);
+	fprintf(debugstream, " Master volume    : %i\n", write_rec.master_volume);
+	fprintf(debugstream, " Sound cue        : %i\n", write_rec.sound_cue);
+#endif
 
 	/* Determine number of songs */
 	number_of_songs = song_lib_count(sss->songlib);
@@ -1366,6 +1376,14 @@ soundsrv_save_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
 
 	write_rec.number_of_songs = number_of_songs;
 	write_rec.active_song = curr_songs_nr;
+
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(debugstream, " Number of songs  : %i\n", write_rec.number_of_songs);
+	if (seeker)
+		fprintf(debugstream, " Active song      : %04x (%i)\n", seeker->handle, write_rec.active_song);
+	else
+		fprintf(debugstream, " No active song   : (%i)\n", write_rec.active_song);
+#endif
 
 	write_rec.songs = sci_malloc(sizeof(song_t) * number_of_songs);
 
@@ -1394,6 +1412,10 @@ soundsrv_save_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
 			return 1;
 		}
 
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(debugstream, " Writing song     : %04x\n", seeker->handle);
+#endif
+
 		if (fwrite(seeker->data, sizeof(byte), seeker->size, fh) < seeker->size) {
 			fprintf(debugstream, "Write error: Failed to write to '%s/%s'\n", dir, filename);
 			sci_free(write_rec.songs);
@@ -1414,10 +1436,10 @@ soundsrv_save_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
   _cfsml_write_sound_lib_file_ver2_t(fh, &write_rec);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 232 "sfx_save.cfsml"
+#line 254 "sfx_save.cfsml"
 
 	fclose(fh);
-	fprintf(stderr,"Finished all writing.\n");
+	fprintf(debugstream, "Finished all writing.\n");
 
 	sci_free(write_rec.songs);
 
@@ -1490,7 +1512,7 @@ recover_version1(FILE *fh, sound_lib_file_ver1_t *rec,
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 278 "sfx_save.cfsml"
+#line 300 "sfx_save.cfsml"
 	fclose(fh);
 
 	if (error) {
@@ -1531,6 +1553,10 @@ recover_version1(FILE *fh, sound_lib_file_ver1_t *rec,
 	song_lib_free(sss->songlib);
 	sss->current_song = NULL;
 
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(ds, " Number of songs  : %i\n", rec->songs_nr);
+#endif
+
 	for (i = 0; i < rec->songs_nr; i++) {
 
 		next = sci_malloc(sizeof(song_t));
@@ -1538,6 +1564,10 @@ recover_version1(FILE *fh, sound_lib_file_ver1_t *rec,
 		next->next = NULL;
 		if (i > 0)
 			seeker->next = next;
+
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(ds, " Reading song     : %04x\n", next->handle);
+#endif
 
 		seeker = next;
 
@@ -1548,11 +1578,23 @@ recover_version1(FILE *fh, sound_lib_file_ver1_t *rec,
 			sss->current_song = seeker;
 	}
 
-	sss->sound_cue = rec->soundcue;
+#ifdef DEBUG_SOUND_SERVER
+	if (sss->current_song)
+		fprintf(ds, " Active song      : %04x (%i)\n", sss->current_song->handle, rec->active_song);
+	else
+		fprintf(ds, " No active song   : (%i)\n", rec->active_song);
+#endif
+
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(ds, " Master volume    : %i\n", rec->master_volume);
+	fprintf(ds, " Sound cue        : %i\n", rec->soundcue);
+#endif
+
 	/* sss->usecs_to_sleep = rec->usecs_to_sleep; */
 	/* sss->ticks_to_wait = rec->ticks_to_wait; */
 	/* sss->ticks_to_fade = rec->ticks_to_fade; */
-	sss->master_volume = rec->master_volume;
+	set_master_volume((guint8)((float)rec->master_volume / 100.0 * 15.0), sss);
+	sss->sound_cue = rec->soundcue;
 
 	if (rec->songs_nr)
 		sci_free(rec->songs);
@@ -1601,7 +1643,7 @@ recover_version2(FILE *fh, sound_lib_file_ver2_t *rec,
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 359 "sfx_save.cfsml"
+#line 401 "sfx_save.cfsml"
 	fclose(fh);
 
 	if (error) {
@@ -1639,14 +1681,21 @@ recover_version2(FILE *fh, sound_lib_file_ver2_t *rec,
 	song_lib_free(sss->songlib);
 	sss->current_song = NULL;
 
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(ds, " Number of songs  : %i\n", rec->number_of_songs);
+#endif
+
 	for (i = 0; i < rec->number_of_songs; i++) {
 
 		next = sci_malloc(sizeof(song_t));
 		memcpy(next, &(rec->songs[i]), sizeof(song_t));
-
 		next->next = NULL;
 		if (i > 0)
 			seeker->next = next;
+
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(ds, " Reading song     : %04x\n", next->handle);
+#endif
 
 		seeker = next;
 
@@ -1657,14 +1706,26 @@ recover_version2(FILE *fh, sound_lib_file_ver2_t *rec,
 			sss->current_song = seeker;
 	}
 
+#ifdef DEBUG_SOUND_SERVER
+	if (sss->current_song)
+		fprintf(ds, " Active song      : %04x (%i)\n", sss->current_song->handle, rec->active_song);
+	else
+		fprintf(ds, " No active song   : (%i)\n", rec->active_song);
+#endif
+
 	if (song_lib_count(sss->songlib) != rec->number_of_songs)
 	{
 		fprintf(ds, "Number of songs read does not match number of songs saved\n");
 		return 1;
 	}
 
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(ds, " Master volume    : %i\n", rec->master_volume);
+	fprintf(ds, " Sound cue        : %i\n", rec->sound_cue);
+#endif
+
+	set_master_volume((guint8)((float)rec->master_volume / 100.0 * 15.0), sss);
 	sss->sound_cue = rec->sound_cue;
-	sss->master_volume = rec->master_volume;
 
 	if (rec->number_of_songs)
 		sci_free(rec->songs);
@@ -1708,6 +1769,11 @@ soundsrv_restore_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
 	}
 
 	rewind(fh);
+
+#ifdef DEBUG_SOUND_SERVER
+	fprintf(debugstream, "Restoring game from %s\n", dir);
+	fprintf(debugstream, " Save game version: %i\n", sound_version);
+#endif
 
 	if ( (sound_version == 0) || (sound_version == 1) ) {
 		sound_lib_file_ver1_t read_rec;

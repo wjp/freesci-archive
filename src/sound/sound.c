@@ -207,34 +207,42 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 	}
 
 	case SOUND_COMMAND_SET_MUTE: {
-		if (event.value == MUTE_OFF) {
-			/* mute is off so turn it on */
+		switch (event.value)
+		{
+		case SCI_MUTE_ON:
+			/* sound should not be active (but store old volume) */
 			s->sound_mute = s->sound_volume;
 			s->sound_volume = 0;
-		} else {
-			/* mute is on so turn it off */
-			if (s->sound_mute != MUTE_OFF)
+			break;
+
+		case SCI_MUTE_OFF:
+			/* sound should be active */
+			if (s->sound_mute != 0)	/* don't let volume get set to 0 */
 				s->sound_volume = s->sound_mute;
-			s->sound_mute = MUTE_OFF;
+			s->sound_mute = 0;
+			break;
+
+		default:
+			sciprintf("Unknown mute value %d\n", event.value);
 		}
 
-		/* let's send a volume change across the wire */
+		/* send volume change across the wire */
 		event.signal = SOUND_COMMAND_SET_VOLUME;
 		event.value = s->sound_volume;
 		global_sound_server->queue_command(event.handle, event.signal, event.value);
 
 		/* return the mute status */
 		if (s->sound_mute)
-			return s->sound_mute;
+			return SCI_MUTE_ON;
 		else
-			return MUTE_OFF;
+			return SCI_MUTE_OFF;
 	}
 
 	case SOUND_COMMAND_GET_MUTE: {
 		if (s->sound_mute)
 			return s->sound_mute;
 		else
-			return MUTE_OFF;
+			return 0;
 	}
 
 	case SOUND_COMMAND_TEST: {
@@ -297,12 +305,11 @@ song_next_wakeup_time(GTimeVal *lastslept, long ticks)
 song_t *
 song_new(word handle, byte *data, int size, int priority)
 {
-	song_t *retval = sci_malloc(sizeof(song_t));
 	unsigned int i;
+	song_t *retval;
+	retval = (song_t*)sci_malloc(sizeof(song_t));
 
 #ifdef SATISFY_PURIFY
-	/* In general, we want to be warned if we forgot to
-	** initialize something relevant here */
 	memset(retval, 0, sizeof(song_t));
 #endif
 
@@ -310,6 +317,7 @@ song_new(word handle, byte *data, int size, int priority)
 	retval->handle = handle;
 	retval->priority = priority;
 	retval->size = size;
+	retval->next = NULL;
 
 	retval->pos = 33;
 	retval->loopmark = 33; /* The first 33 bytes are header data */
@@ -399,7 +407,8 @@ song_lib_find_active(songlib_t songlib, song_t *last_played_song)
 	song_t *seeker = *songlib;
 
 	if (last_played_song)
-		if (last_played_song->status == SOUND_STATUS_PLAYING) {
+		if (last_played_song->status == SOUND_STATUS_PLAYING)
+		{
 			return last_played_song; /* That one was easy... */
 		}
 
@@ -536,46 +545,13 @@ sound_eq_retreive_event(sound_eq_t *queue)
 }
 
 
-/** Two utility functions to modify playing note lists */
-
-static inline int
-add_note_playing(playing_notes_t *playing, int note)
-		 /* Returns 0 or a note to suspend */
-{
-	int retval = 0;
-
-	if (playing->playing >= playing->polyphony) {
-		retval = playing->notes[0];
-		if (playing->polyphony > 1)
-			memcpy(playing->notes, &(playing->notes[1]), sizeof(byte) * (playing->polyphony - 1)); /* Yes, this sucks. */
-	} else playing->playing++;
-
-	playing->notes[playing->playing-1] = (unsigned char)note;
-
-	return retval;
-}
-
-static inline void
-remove_note_playing(playing_notes_t *playing, int note)
-{
-	int i;
-
-	for (i = 0; i < playing->playing; i++)
-		if (playing->notes[i] == note) {
-			if (i < playing->polyphony)
-				memcpy(&(playing->notes[i]), &(playing->notes[i + 1]), (playing->polyphony - i));
-			playing->playing--;
-		}
-}
-
-
 /* process the actual midi events */
 
-int MIDI_cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0};
+const int MIDI_cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0};
 /* Taken from playmidi */
 
 void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 param,
-		guint8 param2, int *ccc, playing_notes_t *playing)
+		guint8 param2, int *ccc)
 {
 	if (SCI_MIDI_CONTROLLER(command)) {
 		switch (param) {
@@ -629,30 +605,13 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 		if (song->flags[command & 0x0f] & midi_playflag) {
 			switch (command & 0xf0) {
 
-			case 0xc0:  /* program change */
+			case MIDI_INSTRUMENT_CHANGE:  /* program change */
 				song->instruments[command & 0xf] = param;
 				midi_event2(command, param);
 				break;
-			case 0x80:  /* note on */
-			case 0x90:  /* note off */
 
-				if (1 || (command & 0xf != RHYTHM_CHANNEL)) {
-					if ((command & 0x90) == 0x80) {
-						int retval;
-						/* Register notes when playing: */
-
-						retval = add_note_playing(playing, param);
-
-						if (retval) { /* If we exceeded our polyphony */
-							midi_event((guint8)(command | 0x10), (guint8)retval, 0);
-						}
-					} else {
-						/* Unregister notes when muting: */
-						midi_event((guint8)(command & 0x80), param, param2);
-						remove_note_playing(playing, param);
-					}
-				}
-
+			case MIDI_NOTE_OFF:
+			case MIDI_NOTE_ON:
 				if (song->velocity[command & 0x0f])  /* do we ignore velocities? */
 					param2 = (unsigned char)song->velocity[command & 0x0f];
 
@@ -662,13 +621,13 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 
 					param2 = (guint8) ((param2 * (song->fading)) / (song->maxfade));  /* scale the velocity */
 					/*	  printf("fading %d %d\n", song->fading, song->maxfade);*/
-
 				}
+
 				/* intentional fall through */
 
-			case 0xb0:  /* program control */
-			case 0xd0:  /* channel pressure */
-			case 0xe0:  /* pitch bend */
+			case MIDI_CONTROL_CHANGE:
+			case MIDI_CHANNEL_PRESSURE:
+			case MIDI_PITCH_BEND:
 				midi_event(command, param, param2);
 				break;
 			default:
@@ -716,7 +675,7 @@ int init_midi_device (state_t *s) {
 	}
 
 	s->sound_volume = 0xc;
-	s->sound_mute = MUTE_OFF;
+	s->sound_mute = 0;
 
 	return 0;
 }

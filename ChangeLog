@@ -1,14 +1,27 @@
+2001-12-20  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/sound/event_ss.c:
+	* src/sound/polled_ss.c:
+	* src/sound/sfx_save.c:
+	* src/sound/sfx_save.cfsml:
+	* src/sound/sound.c:
+	* src/sound/soundserver.c:
+	* src/include/sound.h:
+	* src/include/soundserver.h: Very minor fixes. Removed
+	add_note_playing(). Added more debugging information when
+	DEBUG_SOUND_SERVER is defined.
+
 2001-12-18  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/event_ss.c: Fixed end of track problems.
-	
+
 	* src/sound/polled_ss.c: Now uses stop_all() from soundserver.c.
-	
+
 2001-12-17  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/event_ss.c:
 	* src/sound/event_ss_win32.c: Removed excess mallocs.
-	
+
 	* src/fsci_dll.dsp:
 	* src/sciv.dsp: Fixed to work properly under Quantify.
 
@@ -41,7 +54,7 @@
 	except on debug builds.
 
 	* src/include/resource.h: Fixed type conversion warning.
-	
+
 	* src/config.c:
 	* src/config.l: Added SATISFY_PURIFY to fix UMC.
 
@@ -51,7 +64,7 @@
 
 	* src/scicore/sci_memory.c: Fixed error that occurred with new Purify
 	configuration.
-	
+
 	* ./README.Win32: Added info on above configuration and sound problems.
 
 2001-12-15  Christoph Reichenbach  <jameson@linuxgames.com>

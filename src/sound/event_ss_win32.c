@@ -312,11 +312,8 @@ sound_win32e_init(struct _state *s, int flags)
 	/*** start timer ***/
 	{
 		TIMECAPS tc;
-		if (timeGetDevCaps(&tc, sizeof(TIMECAPS)) != TIMERR_NOERROR)
-		{
-		    // Error; application can't continue.
-		}
-		fprintf(debug_stream, "Multimedia timer supports resolution min: %u, max: %u\n", tc.wPeriodMin, tc.wPeriodMax);
+		if (timeGetDevCaps(&tc, sizeof(TIMECAPS)) == TIMERR_NOERROR)
+			fprintf(debug_stream, "Multimedia timer supports resolution min: %u, max: %u\n", tc.wPeriodMin, tc.wPeriodMax);
 	}
 
 #ifdef NO_CALLBACK
@@ -325,7 +322,7 @@ sound_win32e_init(struct _state *s, int flags)
 	time_keeper_id = timeSetEvent(16, 0, (LPTIMECALLBACK)timeout, NULL, TIME_PERIODIC | TIME_CALLBACK_FUNCTION);
 #endif
 	if (time_keeper_id == NULL)
-		fprintf(debug_stream, "timer start failed\n");
+		fprintf(debug_stream, "Timer start failed\n");
 
 	/*** set reverse stereo ***/
 	if (flags & SOUNDSERVER_INIT_FLAG_REVERSE_STEREO)

@@ -181,14 +181,20 @@ extern int soundserver_dead;
 
 #define MIDI_CONTROLLER_PAN_COARSE 10
 
+#define MIDI_NOTE_OFF          0x80
 #define MIDI_NOTE_ON           0x90
 #define MIDI_CONTROL_CHANGE    0xB0
 #define MIDI_INSTRUMENT_CHANGE 0xC0
+#define MIDI_CHANNEL_PRESSURE  0xD0
+#define MIDI_PITCH_BEND        0xE0
 #define MIDI_SYSTEM_SYSEX      0xF0
 #define MIDI_SYSTEM_SYSEX_END  0xF7
 
 #define MIDI_PARAMETERS_TWO(typ)  ( ((typ >= '\x8') && (typ <= '\xB'))  || (typ == '\xE') )
 #define MIDI_PARAMETERS_ONE(typ)  ( (typ >= '\xC') && (typ <= '\xD') )
+
+#define SCI_MUTE_ON  0
+#define SCI_MUTE_OFF 1
 
 #define SCI_MIDI_EOT 0xFC
 #define SCI_MIDI_END_OF_TRACK SCI_MIDI_EOT
@@ -279,6 +285,6 @@ typedef struct {
 extern MIDI_map_t MIDI_mapping[128];
 extern int MIDI_mappings_nr; /* Number of MIDI mappings */
 
-extern int MIDI_cmdlen[16]; /* Number of parameters for each MIDI operation */
+extern const int MIDI_cmdlen[16]; /* Number of parameters for each MIDI operation */
 
 #endif /* _SCI_SOUND_H_ */

@@ -66,8 +66,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 	ss_state->songlib = &_songp;   /* Song library */
 
 	/* initialise default values */
-	memset(ss_state->playing_notes, 0, MIDI_CHANNELS * sizeof(playing_notes_t));
-	memset(ss_state->mute_channel, MUTE_OFF, MIDI_CHANNELS * sizeof(byte));
+	memset(ss_state->mute_channel, MIDI_MUTE_OFF, MIDI_CHANNELS * sizeof(byte));
 	memset(&suspend_time, 0, sizeof(GTimeVal));
 	memset(&wakeup_time, 0, sizeof(GTimeVal));
 	memset(&ctime, 0, sizeof(GTimeVal));
@@ -395,6 +394,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 						_restore_midi_state(ss_state);
 						change_song(ss_state->current_song, ss_state);
 						newsong = ss_state->current_song;
+						newsong->status = SOUND_STATUS_PLAYING;
 
 						break;
 					}
@@ -508,7 +508,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 			if (command == SCI_MIDI_EOT) { /* End of Track */
 				if ((--(ss_state->current_song->loops) != 0) && ss_state->current_song->loopmark) {
 #ifdef DEBUG_SOUND_SERVER
-					fprintf(debug_stream, "looping back from %d to %d on handle %04x\n",
+					fprintf(debug_stream, "Looping back from %d to %d on handle %04x\n",
 					        ss_state->current_song->pos, ss_state->current_song->loopmark, ss_state->current_song->handle);
 #endif
 					ss_state->current_song->pos = ss_state->current_song->loopmark;
@@ -556,8 +556,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 						(unsigned char)command,
 						param,
 						param2,
-						&ss_state->sound_cue,
-						&(ss_state->playing_notes[command & 0xf]));
+						&ss_state->sound_cue);
 				}
 			}
 

@@ -34,7 +34,6 @@
 #include <sound.h>
 #include <scitypes.h>
 
-#define MAX_POLYPHONY 16 /* Max number of notes per channel */
 
 #define SOUND_SERVER_TIMEOUT 100000
 /* microseconds until SOUND_COMMAND_TEST fails */
@@ -57,19 +56,10 @@
 
 #define MIDI_CHANNELS 16
 
-#define MUTE_OFF 0
-#define MUTE_ON  1
-
-#define POLYPHONY(song, channel) song->data[(channel << 1) + 1]
+#define MIDI_MUTE_OFF 0
+#define MIDI_MUTE_ON  1
 
 FILE *debug_stream;	/* Where error messages are output to */
-
-
-typedef struct {
-	int polyphony;
-	int playing;
-	byte notes[MAX_POLYPHONY]; /* -1 for notes not playing */
-} playing_notes_t;
 
 
 #define SI_STATE_UNINITIALIZED -1
@@ -165,7 +155,6 @@ typedef struct _song {
 	int reverb;   /* current reverb setting */
 
 	byte *data;   /* dynamically allocated data */
-	int file_nr;  /* Temporarily used to save and restore song data */
 
 	int priority; /* Song priority (more important if priority is higher) */
 	int loops;    /* Loops left to do */
@@ -174,6 +163,7 @@ typedef struct _song {
 	int resetflag; /* for 0x4C: does suspend reset song position? */
 	unsigned int handle;  /* Handle for the game engine */
 
+	int file_nr;	/* used for saving */
 	song_iterator_t *it;
 
 	struct _song *next; /* Next song or NULL if this is the last one */
@@ -410,7 +400,7 @@ sound_eq_peek_event(sound_eq_t *queue);
 */
 
 void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 param,
-		guint8 param2, int *ccc, playing_notes_t *playing);
+		guint8 param2, int *ccc);
 /* Performs a regular midi event in the song.
 ** Parameters: (FILE *) debugstream: The stream to write all debug information to
 **             (song_t *) song: The song to play the event from
@@ -418,7 +408,6 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 **             (guint8) param: MIDI command parameter 1
 **             (guint8) param2: MIDI command parameter 2
 **             (int *) ccc: Cumulative cue counter
-**             (playing_notes_t *) playing: Array of notes being played
 */
 
 
@@ -559,7 +548,6 @@ typedef struct {
 	int suspended;	/* if sound server is suspended */
 	sound_server_t *ss_driver;	/* driver currently being used for sound server */
 	int reverse_stereo;	/* reverse stereo setting */
-	playing_notes_t playing_notes[MIDI_CHANNELS];	/* keeps track of polyphony */
 	byte mute_channel[MIDI_CHANNELS];	/* which channels are muted */
 
 	SOUND_SERVER_STATE_SAVED_MEMBERS
