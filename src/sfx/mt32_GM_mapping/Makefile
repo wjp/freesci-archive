@@ -1,4 +1,4 @@
-CC	=gcc
+CC	=ccache gcc
 CFLAGS	=-O2 -Wall
 objects =main.o
 

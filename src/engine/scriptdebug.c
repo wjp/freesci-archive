@@ -1170,8 +1170,16 @@ c_gfx_priority(state_t *s)
 			zone = 0;
 		if (zone > 15) zone = 15;
 
-		sciprintf("Zone %x starts at y=%d\n", zone, PRIORITY_BAND_FIRST(zone));
+		if (s->pic_priority_table)
+			sciprintf("Zone %d starts at y=%d\n", zone, PRIORITY_BAND_FIRST(zone)); else
+			sciprintf("Zone %d starts at y=%d\n", zone, s->pic_priority_table[zone]);
 	} else {
+		if (s->pic_priority_table)
+		{
+			int j;
+			for (j=0;j<15;j++)
+				printf("Zone %d starts at y=%d\n", j, s->pic_priority_table[j]);
+		} else
 		sciprintf("Priority bands start at y=%d\nThey end at y=%d\n", s->priority_first, s->priority_last);
 	}
 

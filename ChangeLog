@@ -1,3 +1,9 @@
+2003-03-06  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/scriptdebug.c: Improved display of priority bands
+	* src/engine/vm.c: Fixed a critical bug in the handling of ipTos
+	and dpTos opcodes.
+
 2003-03-05  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gfx/drivers/dc_driver.c (dc_input_thread): Added initial

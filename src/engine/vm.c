@@ -1009,14 +1009,16 @@ run_vm(state_t *s, int restoring)
 
     case 0x37: /* ipTos */
       temp2 = xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0];
-      temp = GET_HEAP(temp2);
-      PUT_HEAP(temp2, temp + 1);
+      temp = GET_HEAP(temp2)+1;
+      PUT_HEAP(temp2, temp);
+      PUSH(temp);
       break;
 
     case 0x38: /* dpTos */
       temp2 = xs->objp + SCRIPT_SELECTOR_OFFSET + opparams[0];
-      temp = GET_HEAP(temp2);
-      PUT_HEAP(temp2, temp - 1);
+      temp = GET_HEAP(temp2)-1;
+      PUT_HEAP(temp2, temp);
+      PUSH(temp);
       break;
 
     case 0x39: /* lofsa */

@@ -1,4 +1,4 @@
-CC	= gcc
+CC	= ccache gcc
 CFLAGS	= -O2 -Wall
 LIBS	= -L/usr/lib -lasound
 objects = main.o midi_mt32.o midiout.o midiout_unixraw.o midiout_alsaraw.o
