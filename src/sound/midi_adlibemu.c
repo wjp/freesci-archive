@@ -362,7 +362,7 @@ int midi_adlibemu_event(guint8 command, guint8 note, guint8 velocity)
       vol[channel] = velocity;
       break;
     default:
-      /* XXXX ignore everything else for now */
+      ; /* XXXX ignore everything else for now */
     }
     return 0;
   case 0xd0:    /* aftertouch */

@@ -19,9 +19,15 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 #define HAS_YM3812 1
+
 #ifndef INLINE
-#define INLINE inline
+#	ifdef _MSC_VER
+#		define INLINE __inline
+#	else
+#		define INLINE inline
+#	endif
 #endif
+
 #define logerror printf
 
 #define TWELVE_VOICE 1

@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FSCI_DLL_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /Zi /O1 /Ob2 /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_STRING_H" /D "_CONSOLE" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D "NDEBUG" /FR /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /O1 /Ob2 /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "HAVE_STRING_H" /D "_CONSOLE" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D "NDEBUG" /D "HAVE_MEMCHR" /FR /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0xc09 /d "NDEBUG"
@@ -451,7 +451,15 @@ SOURCE=..\sound\event_ss_win32.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\sound\fmopl.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\sound\midi_adlib.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\sound\midi_adlibemu.c
 # End Source File
 # Begin Source File
 
@@ -479,6 +487,14 @@ SOURCE=..\sound\oldmidi.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\sound\pcmout.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\sound\pcmout_sdl.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\sound\polled_ss.c
 # End Source File
 # Begin Source File
@@ -500,6 +516,10 @@ SOURCE=..\sound\sfx_save.c
 # Begin Source File
 
 SOURCE=..\sound\sfx_save.cfsml
+# End Source File
+# Begin Source File
+
+SOURCE=..\sound\song_iterator.c
 # End Source File
 # Begin Source File
 
@@ -660,6 +680,10 @@ SOURCE=..\include\event.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\sound\fmopl.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\include\gfx_driver.h
 # End Source File
 # Begin Source File
@@ -745,6 +769,10 @@ SOURCE=..\include\modules.h
 # Begin Source File
 
 SOURCE=..\include\old_objects.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\pcmout.h
 # End Source File
 # Begin Source File
 
