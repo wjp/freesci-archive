@@ -46,6 +46,7 @@
 #define SCI_XLIB_PIXMAP_HANDLE_GRABBED 1
 
 #define SCI_XLIB_SWAP_CTRL_CAPS (1 << 0)
+#define SCI_XLIB_INSERT_MODE    (1 << 1)
 
 struct _xlib_state {
 	Display *display;
@@ -234,7 +235,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	if (!S)
 		S = malloc(sizeof(struct _xlib_state));
 
-	S->flags = 0;
+	S->flags = SCI_XLIB_INSERT_MODE;
 
 	if (xfact < 1 || yfact < 1 || bytespp < 1 || bytespp > 4) {
 		ERROR("Internal error: Attempt to open window w/ scale factors (%d,%d) and bpp=%d!\n",
@@ -1047,16 +1048,19 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 				int modifiers = event.xkey.state;
 				sci_event->type = SCI_EVT_KEYBOARD;
 
-				S->buckystate =
-					(((modifiers & LockMask)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0)
-					 | ((modifiers & ControlMask)? SCI_EVM_CTRL : 0)
-					 | ((modifiers & (Mod1Mask | Mod4Mask))? SCI_EVM_ALT : 0)
-					 | ((modifiers & Mod2Mask)? SCI_EVM_NUMLOCK : 0)
-					 | ((modifiers & Mod5Mask)? SCI_EVM_SCRLOCK : 0))
+				S->buckystate = ((S->flags & SCI_XLIB_INSERT_MODE)? SCI_EVM_INSERT : 0)
+					| (((modifiers & LockMask)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0)
+					   | ((modifiers & ControlMask)? SCI_EVM_CTRL : 0)
+					   | ((modifiers & (Mod1Mask | Mod4Mask))? SCI_EVM_ALT : 0)
+					   | ((modifiers & Mod2Mask)? SCI_EVM_NUMLOCK : 0)
+					   | ((modifiers & Mod5Mask)? SCI_EVM_SCRLOCK : 0))
 					^ ((modifiers & ShiftMask)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0);
 
 				sci_event->buckybits = S->buckystate;
 				sci_event->data = x_map_key(drv, event.xkey.keycode);
+
+				if (sci_event->data == SCI_K_INSERT)
+					S->flags ^= SCI_XLIB_INSERT_MODE;
 
 				if (sci_event->data)
 					return;

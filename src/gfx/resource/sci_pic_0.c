@@ -514,7 +514,7 @@ _gfxr_auxbuf_spread(gfxr_pic_t *pic, int *min_x, int *min_y, int *max_x, int *ma
 				while (!done && i < old_intervals_nr) {
 					if (intervals[!ivi][i].xl > xr+1)
 						done = 1;
-#if 0
+
 					else if (intervals[!ivi][i].xr < xl-1) {
 						int o_xl = intervals[!ivi][i].xl;
 						int o_xr = intervals[!ivi][i].xr;
@@ -528,7 +528,7 @@ _gfxr_auxbuf_spread(gfxr_pic_t *pic, int *min_x, int *min_y, int *max_x, int *ma
 
 						old_intervals_start_offset = i;
 					}
-#endif
+
 					else {
 						int k = i;
 						int old_xl = intervals[!ivi][i].xl;
@@ -1766,8 +1766,10 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			}
 
 			color = palette[pal][index];
+#if 1
 #ifdef GFXR_DEBUG_PIC0
 			color &= 0x77;
+#endif
 #endif
 			p0printf("  color <- %02x [%d/%d]\n", color, pal, index);
 			drawenable |= GFX_MASK_VISUAL;

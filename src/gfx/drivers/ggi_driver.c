@@ -40,7 +40,7 @@
 #include <ctype.h>
 
 
-#define GGI_DRIVER_VERSION "0.1"
+#define GGI_DRIVER_VERSION "0.2"
 
 #define GFX_GGI_DEBUG
 
@@ -749,6 +749,8 @@ struct timeval _sci_ggi_redraw_loopt, _sci_ggi_loopt;
 
 int _sci_ggi_double_visual;
 
+static int buckybits;
+
 #define SCI_TIMEVAL_ADD(timev, addusec)  \
   { timev.tv_usec += addusec;            \
   while (timev.tv_usec >= 1000000L) {    \
@@ -760,25 +762,13 @@ int _sci_ggi_double_visual;
   ((later.tv_sec == earlier.tv_sec)? (later.tv_usec >= earlier.tv_usec) \
     : (later.tv_sec >= earlier.tv_sec))
 
-static int buckybits;
-static int pending;
-
 
 static sci_event_t
 ggi_get_event(gfx_driver_t *drv)
 {
 	struct timeval temptime = {0,0};
 	gfx_ggi_struct_t *meta = (gfx_ggi_struct_t *) drv->state;
-  
-	if(pending!=-1)
-	{
-		sci_event_t r;
-		r.type=SCI_EVT_KEYBOARD;
-		r.data=pending;
-		pending=-1;
-		r.buckybits=buckybits | SCI_EVM_NUMLOCK;
-		return r;
-	}
+	int modifiers;
   
 	while (1) {
 
@@ -831,7 +821,7 @@ ggi_get_event(gfx_driver_t *drv)
 				case GIIK_PPlus: retval.data = '+'; break;
 
 				case GIIUC_Grave: retval.data = '`'; break;
-
+#if 0
 				case GIIK_ShiftL: buckybits |= SCI_EVM_LSHIFT; break;
 				case GIIK_ShiftR: buckybits |= SCI_EVM_RSHIFT; break;
 				case GIIK_CtrlR:
@@ -843,6 +833,7 @@ ggi_get_event(gfx_driver_t *drv)
 				case GIIK_CapsLock: buckybits ^= SCI_EVM_CAPSLOCK; break;
 				case GIIK_NumLock: buckybits ^= SCI_EVM_NUMLOCK; break;
 				case GIIK_ScrollLock: buckybits ^= SCI_EVM_SCRLOCK; break;
+#endif
 				case GIIK_Insert: buckybits ^= SCI_EVM_INSERT; break;
 				case GIIK_PEnter:
 				case GIIK_Enter: retval.data='\r'; break;
@@ -872,12 +863,24 @@ ggi_get_event(gfx_driver_t *drv)
 						retval.data=event.key.label-'0'+48;
 				}
 				}
+
+				modifiers = event.key.modifiers;
+
+				buckybits = (buckybits & SCI_EVM_INSERT) |
+					(((modifiers & GII_MOD_CAPS)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0)
+					 | ((modifiers & GII_MOD_CTRL)? SCI_EVM_CTRL : 0)
+					 | ((modifiers & (GII_MOD_ALT | GII_MOD_META))? SCI_EVM_ALT : 0)
+					 | ((modifiers & GII_MOD_NUM)? SCI_EVM_NUMLOCK : 0)
+					 | ((modifiers & GII_MOD_SCROLL)? SCI_EVM_SCRLOCK : 0))
+					^ ((modifiers & GII_MOD_SHIFT)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0);
+
 				if(retval.data==-1) continue;
 				retval.buckybits |= buckybits;
 
 				return retval;
 
 			case evKeyRelease:
+#if 0
 				switch(event.key.label)
 				{
 				case GIIK_ShiftL: buckybits &= ~SCI_EVM_LSHIFT; break;
@@ -889,6 +892,7 @@ ggi_get_event(gfx_driver_t *drv)
 				case GIIK_MetaL:
 				case GIIK_MetaR: buckybits &= ~SCI_EVM_ALT; break;
 				}
+#endif
 				continue;
 	
 			case evPtrButtonPress:
@@ -943,7 +947,6 @@ init_input_ggi()
 	gettimeofday(&_sci_ggi_redraw_loopt, NULL);
 	_sci_ggi_loopt = _sci_ggi_redraw_loopt;
 	buckybits = SCI_EVM_INSERT; /* Start up in "insert" mode */
-	pending = -1;
 	/* reset timers, leave them at current time to send redraw events ASAP */
 
 }

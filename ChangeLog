@@ -1,3 +1,14 @@
+2001-04-11  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/resource/sci_pic_0.c (_gfxr_auxbuf_spread): Re-enabled more
+	conservative fill spreading code
+
+	* src/gfx/drivers/xlib_driver.c (x_get_event): Added support for insert
+	mode
+
+	* src/gfx/drivers/ggi_driver.c (ggi_get_event): Made modifier masks less
+	sticky
+
 2001-04-10  Matt Hargett  <matt@use.net>
 
 	* Initialized a couple of pointers to NULL on declaration.
