@@ -4,7 +4,7 @@ AC_CONFIG_SRCDIR([acinclude.m4])
 
 AC_CANONICAL_TARGET([])
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(freesci, 0.3.4a-rc2)
+AM_INIT_AUTOMAKE(freesci, 0.3.4c)
 
 AC_PROG_CC
 #AC_LIBTOOL_DLOPEN
@@ -77,6 +77,7 @@ esac
 
 AC_CHECK_FUNCS(memchr fnmatch pipe socketpair fork sched_yield memf	rob ffs getopt_long isblank usleep)
 AM_PATH_ALSA(0.5.0, [AC_DEFINE(HAVE_ALSA)], [echo >/dev/null])
+AC_CHECK_HEADERS(sys/asoundlib.h alsa/asoundlib.h)
 AM_WITHOUT_SOUND
 AC_PATH_GGI
 AC_PATH_PTHREAD
@@ -139,10 +140,15 @@ if test x"$have_x" = xyes; then
 	AC_CHECK_XSHM
 	AC_CHECK_HEADERS(X11/extensions/Xrender.h, [X_LIBS="$XLIBS -lXrender -lXft"])
 
-        PKG_CHECK_MODULES(XFT, xft)
-        X_LIBS="$X_LIBS $XFT_LIBS"
-        CFLAGS="$CFLAGS $XFT_CFLAGS"
-        CPPFLAGS="$CPPFLAGS $XFT_CFLAGS"
+        PKG_CHECK_OPT_MODULES(XFT, xft, [
+        		X_LIBS="$X_LIBS $XFT_LIBS"
+        		CFLAGS="$CFLAGS $XFT_CFLAGS"
+        		CPPFLAGS="$CPPFLAGS $XFT_CFLAGS"
+		], [
+			AC_MSG_WARN(No xft.pc found; assuming defaults for older xft)
+		], [
+			AC_MSG_WARN(No pkg-config found; this may break linking.)
+		])
 
 	AC_CHECK_HEADERS(X11/Xft/Xft.h)
 fi

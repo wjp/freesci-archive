@@ -934,7 +934,7 @@ fi], [AC_MSG_RESULT(yes)])
 
 ## find flags to use for a certain library
 ## taken from libxft2
-AC_DEFUN(PKG_CHECK_MODULES, [
+AC_DEFUN(PKG_CHECK_OPT_MODULES, [
   succeeded=no
 
   if test -z "$PKG_CONFIG"; then
@@ -942,10 +942,8 @@ AC_DEFUN(PKG_CHECK_MODULES, [
   fi
 
   if test "$PKG_CONFIG" = "no" ; then
-     echo "*** The pkg-config script could not be found. Make sure it is"
-     echo "*** in your path, or set the PKG_CONFIG environment variable"
-     echo "*** to the full path to pkg-config."
-     echo "*** Or see http://www.freedesktop.org/software/pkgconfig to get pkg-config."
+     ifelse([$5], , [AC_MSG_WARN(pkg-config is not present; linker flags may be inaccurate.)], [$5])
+  	succeeded=yes
   else
      PKG_CONFIG_MIN_VERSION=0.9.0
      if $PKG_CONFIG --atleast-pkgconfig-version $PKG_CONFIG_MIN_VERSION; then
@@ -982,7 +980,7 @@ AC_DEFUN(PKG_CHECK_MODULES, [
   if test $succeeded = yes; then
      ifelse([$3], , :, [$3])
   else
-     ifelse([$4], , AC_MSG_ERROR([Library requirements ($2) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them.]), [$4])
+     ifelse([$4], , :, [$4])
   fi
 ])
 

@@ -19,9 +19,7 @@
 
 #include <pcmout.h>
 
-#if defined(HAVE_ALSA) && defined(HAVE_PTHREADS)
-
-#include <alsa/asoundlib.h>
+#ifdef SUPPORT_ALSA_PCM
 
 #include <pthread.h>
 
@@ -155,4 +153,4 @@ pcmout_driver_t pcmout_driver_alsa = {
   &pcmout_alsa_close
 };
 
-#endif  /* HAVE_ALSA */
+#endif  /* SUPPORT_ALSA_PCM */

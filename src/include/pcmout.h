@@ -27,6 +27,18 @@
 #include <sci_memory.h>
 #include <resource.h>
 
+#if defined(HAVE_ALSA) && defined(HAVE_PTHREADS)
+#  ifdef HAVE_ALSA_ASOUNDLIB_H
+#    include <alsa/asoundlib.h>
+#  else
+#    include <sys/asoundlib.h>
+#  endif
+#  if (SND_LIB_MAJOR > 0) || (SND_LIB_MINOR > 5)
+#    define SUPPORT_ALSA_PCM
+#  endif
+#endif
+
+
 typedef struct _pcmout_driver {
 	char *name;
 	char *version;

@@ -23,7 +23,7 @@ pcmout_driver_t *pcmout_driver = NULL;
 
 pcmout_driver_t *pcmout_drivers[] = {
 #ifndef NO_PCMOUT
-#	ifdef HAVE_ALSA
+#	ifdef SUPPORT_ALSA_PCM
 		&pcmout_driver_alsa,
 #	endif
 #	if defined(HAVE_SYS_SOUNDCARD_H) && defined(HAVE_PTHREADS)
