@@ -663,18 +663,14 @@ xlib_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 
 static int
 xlib_set_palette(struct _gfx_driver *drv, int index, byte red, byte green, byte blue)
-  /* Manipulates a palette index in the hardware palette
-  ** Parameters: (gfx_driver_t *) drv: The driver affected
-  **             (int) index: The index of the palette entry to modify
-  **             (int x int x int) red, green, blue: The RGB intensities to
-  **                               set for the specified index. The minimum
-  **                               intensity is 0, maximum is 0xff.
-  ** Returns   : (int) GFX_OK, GFX_ERROR or GFX_FATAL
-  ** This function does not need to update mode->palette, as this is done
-  ** by the calling code.
-  ** set_palette() is only required for targets supporting color index mode.
-  */
 {
+	char stringbuf[8];
+	sprintf(stringbuf, "#%02x%02x%02x", red, green, blue);  /* Argh. */
+
+	XStoreNamedColor(S->display, S->colormap, stringbuf, index, DoRed | DoGreen | DoBlue);
+	/* Isn't there some way to do this without strings? */
+
+	return GFX_OK;
 }
 
 

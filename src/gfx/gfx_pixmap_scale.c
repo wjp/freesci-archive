@@ -84,17 +84,18 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 }
 
 
+
+
 /* linear filter: Macros (in reverse order) */
 
-#define X_CALC_INTENSITY_NORMAL (linecolor[i] >> 1) + (((othercolumn[i]*(255-column_valuator)) + (ctexel[i]*column_valuator)) >> 1)
+#define X_CALC_INTENSITY_NORMAL (linecolor[i] >> 1) + (((othercolumn[i]*(256-column_valuator)) + (ctexel[i]*column_valuator)) >> 1)
 #define X_CALC_INTENSITY_CENTER (linecolor[i] >> 1) + (ctexel[i] << 7)
 
 #define WRITE_XPART(X_CALC_INTENSITY, DO_X_STEP) \
-				for (subx = 0; subx < xfact >> 1; subx++) { \
+				for (subx = 0; subx < ((DO_X_STEP)? (xfact >> 1) : 1); subx++) { \
                                         unsigned int intensity; \
 					wrcolor = 0; \
 					for (i = 0; i < 4; i++) { \
-if (0) fprintf(stderr,"%d:%08x, %08x, %08x\n", i, linecolor[i], othercolumn[i], ctexel[i]);\
 						intensity = X_CALC_INTENSITY; \
 						wrcolor |= (intensity >> shifts[i]) & masks[i]; \
 					} \
@@ -115,7 +116,7 @@ if (0) fprintf(stderr,"%d:%08x, %08x, %08x\n", i, linecolor[i], othercolumn[i], 
 #define Y_CALC_INTENSITY_NORMAL (otherline[i]*(256-line_valuator)) + (ctexel[i]*line_valuator)
 
 #define WRITE_YPART(DO_Y_STEP, LINE_COLOR) \
-			for (suby = 0; suby < yfact >> 1; suby++) { \
+			for (suby = 0; suby < ((DO_Y_STEP)? yfact >> 1 : 1); suby++) { \
 				unsigned int column_valuator = column_step? (column_step >> 1) : 256; \
 				unsigned int linecolor[4]; \
 				unsigned int othercolumn[4]; \

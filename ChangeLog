@@ -1,4 +1,12 @@
+2001-02-23  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/widgets.c (_gfxwop_dyn_view_compare_to): Implemented
+	precedence forcing for dynviews
+
 2001-02-22  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/gfx_pixmap_scale.c: Fixed bug that would break some less
+	common scaling factors, along with 1x1
 
 	* src/gfx/resource/sci_pic_0.c (_gfxr_draw_line): Re-formulated pixmap
 	line drawing macro expansion to work around gcc bug on ia32

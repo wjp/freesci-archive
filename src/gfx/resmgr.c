@@ -326,7 +326,7 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 		res->lock_sequence_nr = state->options->buffer_pics_nr; /* Update lock counter */
 	}
 
-	return gfxr_pic_xlate_common(res, maps, scaled, 0, state->driver->mode, state->options->pic_xlate_filter);
+	return gfxr_pic_xlate_common(res, maps, scaled || state->options->pic0_unscaled, 0, state->driver->mode, state->options->pic_xlate_filter);
 }
 
 

@@ -120,6 +120,14 @@ static name_value_pair brush_mode[] = {
 	{0, 0}
 };
 
+static name_value_pair filter_mode[] = {
+	{"none", GFX_XLATE_FILTER_NONE},
+	{"linear", GFX_XLATE_FILTER_LINEAR},
+	{"bilinear", GFX_XLATE_FILTER_LINEAR},
+	{"bi-linear", GFX_XLATE_FILTER_LINEAR},
+	{0, 0}
+};
+
 static name_value_pair line_mode[] = {
 	{"correct", GFX_LINE_MODE_CORRECT},
 	{"normal", GFX_LINE_MODE_CORRECT},
@@ -240,6 +248,42 @@ pic0_scaled[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
 		yytext++;
 	conf[cur_section].gfx_options.pic0_unscaled =
 		!_parse_name(yytext, yesno, "pic0 scaling", !conf[cur_section].gfx_options.pic0_unscaled);
+}
+
+pic_filter[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
+	yytext = strchr(yytext, '=') + 1;
+
+	while (isspace(*yytext))
+		yytext++;
+	conf[cur_section].gfx_options.pic_xlate_filter =
+		_parse_name(yytext, filter_mode, "pic filter", conf[cur_section].gfx_options.pic_xlate_filter);
+}
+
+text_filter[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
+	yytext = strchr(yytext, '=') + 1;
+
+	while (isspace(*yytext))
+		yytext++;
+	conf[cur_section].gfx_options.text_xlate_filter =
+		_parse_name(yytext, filter_mode, "text filter", conf[cur_section].gfx_options.text_xlate_filter);
+}
+
+view_filter[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
+	yytext = strchr(yytext, '=') + 1;
+
+	while (isspace(*yytext))
+		yytext++;
+	conf[cur_section].gfx_options.view_xlate_filter =
+		_parse_name(yytext, filter_mode, "view filter", conf[cur_section].gfx_options.view_xlate_filter);
+}
+
+cursor_filter[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
+	yytext = strchr(yytext, '=') + 1;
+
+	while (isspace(*yytext))
+		yytext++;
+	conf[cur_section].gfx_options.cursor_xlate_filter =
+		_parse_name(yytext, filter_mode, "cursor filter", conf[cur_section].gfx_options.cursor_xlate_filter);
 }
 
 mouse[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
@@ -391,10 +435,10 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_options.pic0_dither_pattern = GFXR_DITHER_PATTERN_SCALED;
 	conf->gfx_options.pic0_brush_mode = GFX_BRUSH_MODE_RANDOM_ELLIPSES;
 	conf->gfx_options.pic0_line_mode = GFX_LINE_MODE_CORRECT;
-	conf->gfx_options.cursor_xlate_filter = GFX_XLATE_FILTER_LINEAR;
-	conf->gfx_options.view_xlate_filter = GFX_XLATE_FILTER_LINEAR;
+	conf->gfx_options.cursor_xlate_filter = GFX_XLATE_FILTER_NONE;
+	conf->gfx_options.view_xlate_filter = GFX_XLATE_FILTER_NONE;
 	conf->gfx_options.pic_xlate_filter = GFX_XLATE_FILTER_NONE;
-	conf->gfx_options.text_xlate_filter = GFX_XLATE_FILTER_LINEAR;
+	conf->gfx_options.text_xlate_filter = GFX_XLATE_FILTER_NONE;
 	conf->gfx_options.dirty_frames = GFXOP_DIRTY_FRAMES_CLUSTERS;
 
 	conf->gfx_driver = gfx_find_driver(NULL);

@@ -144,6 +144,32 @@ time, the configuration file may contain:
 - resource_dir: Read the game's resource data from the specified location.
   Must not be used in the generic part of the config file.
 
+-- NEW OPTIONS since 0.3.1 --
+
+- view_filter = none | bilinear
+  Magnification filter for 'views', i.e. moving foreground (and, in some cases,
+  non-moving background) images. 'none' means that they are translated into
+  what may look like a huge chunk of colored rectangles; 'bilinear' smoothes
+  those rectangles somewhat.
+
+- pic_filter = none | bilinear
+  Selects the filter to use when scaling background pictures. This only applies
+  if pic0_scale is set to 'no'.
+  Please refer to the documentation of "view_filter" for details on the various
+  settings.
+
+- cursor_filter = none | bilinear
+  Filter for the mouse cursor. Note that this only applies for graphics drivers
+  which don't implement their own mouse cursor.
+  Please refer to the documentation of "view_filter" for details on the various
+  settings.
+
+- text_filter = none | bilinear
+  Filter for text.
+  Please refer to the documentation of "view_filter" for details on the various
+  settings.
+
+
 Example:
 ------------------------
 # FreeSCI config file

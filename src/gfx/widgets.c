@@ -923,6 +923,10 @@ _gfxwop_dyn_view_compare_to(gfxw_widget_t *widget, gfxw_widget_t *other)
 
 	oview = (gfxw_dyn_view_t *) other;
 
+	retval = wview->force_precedence - oview->force_precedence;
+	if (retval)
+		return retval;
+
 	retval = wview->pos.y - oview->pos.y;
 	if (retval)
 		return retval;
@@ -980,6 +984,7 @@ gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, in
 	widget->loop = loop;
 	widget->cel = cel;
 	widget->sequence = sequence;
+	widget->force_precedence = 0;
 
 	if (halign == ALIGN_CENTER)
 		xalignmod = width >> 1;

@@ -274,6 +274,7 @@ RECORD gfxw_dyn_view_t EXTENDS gfxw_view_t {
 	int under_bits;
 	int signal;
 	int z;
+	int force_precedence; /* * */
 }
 
 RECORD gfxw_text_t EXTENDS gfxw_widget_t {
