@@ -1,4 +1,6 @@
-
+#ifndef __cplusplus
+#error NOTE: This file MUST be compiled as C++. In Visual C++, use the /Tp command line option.
+#endif
 
 extern "C" {
 #include <gfx_system.h>

@@ -1,3 +1,6 @@
+#ifndef __cplusplus
+#error NOTE: This file MUST be compiled as C++. In Visual C++, use the /Tp command line option.
+#endif
 
 // for WINNT 4.0 (only DirectDraw 3)
 #ifdef HAVE_DDRAW
@@ -9,6 +12,7 @@
 #include <windows.h>
 #include <ddraw.h>
 #include <stdarg.h>
+
 extern "C" {
 #include <gfx_system.h>
 #include <gfx_driver.h>
@@ -517,7 +521,7 @@ dd_draw_pixmap(gfx_driver_t *drv, gfx_pixmap_t *pxm, int priority,
 	}
 
 	gfx_crossblit_pixmap(drv->mode, pxm, priority, src, dest, (byte *) ddsc.lpSurface,
-			     ddsc.lPitch,pri_map, drv->mode->xfact * 320, 1);
+			     ddsc.lPitch,pri_map, drv->mode->xfact * 320, 1, 0);
 
 	hr = dst->Unlock(NULL);
 
