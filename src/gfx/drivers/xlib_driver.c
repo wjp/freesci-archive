@@ -1153,7 +1153,8 @@ x_map_key(gfx_driver_t *drv, int keycode)
 	case XK_Return:
 	case XK_KP_Enter: return SCI_K_ENTER;
 
-	case XK_KP_Decimal: return SCI_K_DELETE;
+	case XK_KP_Decimal:
+	case XK_KP_Delete: return SCI_K_DELETE;
 	case XK_KP_0:
 	case XK_KP_Insert: return SCI_K_INSERT;
 	case XK_End:
