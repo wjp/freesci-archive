@@ -289,7 +289,7 @@ int sm_deallocate (seg_manager_t* self, struct _state *s, int script_nr) {
 
 	sm_free ( self->heap[seg] );
 	self->heap[seg] = NULL;
-	int_hash_map_remove_value( self->id_seg_map, seg );
+	int_hash_map_remove_value( self->id_seg_map, script_nr );
 	return 1;
 };
 

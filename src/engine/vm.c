@@ -1655,9 +1655,6 @@ script_instantiate(state_t *s, int script_nr)
 		return 0;
 	}
 
-	dbg_print( "--- script id", script_nr );
-	dbg_print( "script size", script->size );
-
         if (NULL == s) {
                 sciprintf("vm.c: script_instantiate(): NULL passed for \"s\"\n");
 		return 0;
@@ -1719,7 +1716,6 @@ script_instantiate(state_t *s, int script_nr)
 	do {
 		reg_t data_base;
 		reg.offset += objlength; /* Step over the last checked object */
-		dbg_print( "reg.offset", reg.offset );
 		objtype = SEG_GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
 		if( !objtype ) break;
 		reg_tmp.offset = reg.offset + 2;
@@ -1774,9 +1770,6 @@ script_instantiate(state_t *s, int script_nr)
 		}
 	} while (objtype != 0);
 
-
-	dbg_print( "          middle ++++++++++++", 0 );
-
 	/* And now a second pass to adjust objects and class pointers, and the general pointers */
 	reg.offset = s->seg_manager.get_heappos( &s->seg_manager, reg.segment, SEG_ID) + magic_pos_adder;
 
@@ -1784,7 +1777,6 @@ script_instantiate(state_t *s, int script_nr)
 	reg.offset = 0;
 	do {
 		reg.offset += objlength; /* Step over the last checked object */
-		dbg_print( "reg.offset", reg.offset );
 		objtype = SEG_GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
 		if( !objtype ) break;
 		objlength = SEG_GET_HEAP2(s, reg.segment, reg.offset + 2, MEM_OBJ_SCRIPT);
