@@ -1,3 +1,14 @@
+2002-12-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/gfx/drivers/dc_driver.c (dc_init_specific): Shutdown PVR
+	before changing video mode.
+
+	* src/sound/midiout.c: Removed reference to unixraw driver when
+	building the Dreamcast port.
+
+	* src/sound/sfx_save.cfsml (soundsrv_restore_state): Added a
+	temporary Dreamcast workaround for the missing fscanf() function.
+
 2002-12-12  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/engine/game.c, src/engine/vm.c: Prevented inclusion of 

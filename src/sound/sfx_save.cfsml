@@ -521,13 +521,17 @@ soundsrv_restore_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
 		ch = fgetc(fh);
 	ungetc(ch, fh);
 
+#ifdef _DREAMCAST
+	/* FIXME (Dreamcast) */
+	sound_version = 2;
+#else
 	if ( (fscanf(fh, "%d", &sound_version)) < 0 ) {
 		fprintf(debugstream, "Error reading saved game sound version!\n");
 		if (dir)
 			chdir ("..");
 		return 1;
 	}
-
+#endif
 	rewind(fh);
 
 #ifdef DEBUG_SOUND_SERVER

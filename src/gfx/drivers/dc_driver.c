@@ -31,6 +31,7 @@
 #include <dc/maple/mouse.h>
 #include <dc/maple/keyboard.h>
 #include <dc/video.h>
+#include <dc/pvr.h>
 
 #include <sci_memory.h>
 #include <gfx_driver.h>
@@ -519,6 +520,8 @@ dc_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	kthread_t *thread;
 
 	sciprintf("Initialising video mode\n");
+
+	pvr_shutdown();
 
 	if (!S)	S = sci_malloc(sizeof(struct _dc_state));
 	if (!S) return GFX_FATAL;

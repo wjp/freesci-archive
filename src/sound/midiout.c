@@ -26,7 +26,7 @@ midiout_driver_t *midiout_drivers[] = {
 	&midiout_driver_ossseq,
 	&midiout_driver_ossopl3,
 #endif /* HAVE_SYS_SOUNDCARD_H */
-#if !defined(_DOS) && !defined(_WIN32)
+#if !defined(_DOS) && !defined(_WIN32) && !defined(_DREAMCAST)
 	&midiout_driver_unixraw,
 #endif
 #ifdef HAVE_ALSA
