@@ -1,5 +1,11 @@
 2001-12-28  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/kfile.c (kSaveGame): Correctly search for unused
+	savegame slots when instructed to store the game state
+
+	* src/engine/scriptdebug.c (c_sci_version): Added sci_version command
+	to debugger
+
 	* src/scicore/resource_patch.c (sci0_read_resource_patches): After
 	creating additional entry for patch file, write to the entry, and not
 	right behind it

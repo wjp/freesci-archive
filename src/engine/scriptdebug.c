@@ -2418,6 +2418,22 @@ c_se(state_t *s)
 	return 0;
 }
 
+int
+c_sci_version(state_t *s)
+{
+	if (!s) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	sciprintf("Emulating SCI version %d.%03d.%03d\n",
+		  SCI_VERSION_MAJOR(s->version),
+		  SCI_VERSION_MINOR(s->version),
+		  SCI_VERSION_PATCHLEVEL(s->version));
+
+	return 0;
+}
+
 void
 script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp,
 	     int *restadjust, int bp)
@@ -2491,6 +2507,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 
 			con_hook_command(c_debuginfo, "registers", "", "Displays all current register values");
 			con_hook_command(c_vmvars, "vmvars", "si*", "Displays or changes variables in the VM\n\nFirst parameter is either g(lobal), l(ocal), t(emp) or p(aram).\nSecond parameter is the var number\nThird parameter (if specified) is the value to set the variable to");
+			con_hook_command(c_sci_version, "sci_version", "", "Prints the SCI version currently being emulated");
 			con_hook_command(c_vmvarlist, "vmvarlist", "", "Displays the addresses of variables in the VM");
 			con_hook_command(c_step, "s", "i*", "Executes one or several operations\n\nEXAMPLES\n\n"
 					 "    s 4\n\n  Execute 4 commands\n\n    s\n\n  Execute next command");

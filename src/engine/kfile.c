@@ -822,6 +822,7 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	char *game_id = (char *) (UPARAM(0) + s->heap);
 	char *savegame_dir;
 	int savedir_nr = UPARAM(1);
+	int savedir_id; /* Savegame ID, derived from savedir_nr and the savegame ID list */
 	char *game_id_file_name = sci_malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
 	char *game_description = (char *) (UPARAM(2) + s->heap);
 	char *workdir = _chdir_savedir(s);
@@ -834,26 +835,42 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		return;
 	}
 
-	if (_savegame_indices_nr < 0) {
-		char *game_id_file_name = sci_malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
-
-		strcpy(game_id_file_name, game_id);
-		strcat(game_id_file_name, FREESCI_ID_SUFFIX);
-		SCIkwarn(SCIkWARNING, "Savegame index list not initialized!\n");
-		update_savegame_indices(game_id_file_name);
-
-	} if (savedir_nr < _savegame_indices_nr)
-		savedir_nr = _savegame_indices[savedir_nr].id;
 
 	strcpy(game_id_file_name, game_id);
 	strcat(game_id_file_name, FREESCI_ID_SUFFIX);
 
-	if (_savegame_indices_nr < 0) {
-		SCIkwarn(SCIkWARNING, "Savegame index list not initialized!\n");
-		update_savegame_indices(game_id_file_name);
+	update_savegame_indices(game_id_file_name);
+
+	if (savedir_nr >= 0 && savedir_nr < _savegame_indices_nr)
+		/* Overwrite */
+		savedir_id = _savegame_indices[savedir_nr].id;
+	else if (savedir_nr >= 0 && savedir_nr < MAX_SAVEGAME_NR) {
+		int i = 0;
+
+		savedir_id = 0;
+
+		/* First, look for holes */
+		while (i < _savegame_indices_nr)
+			if (_savegame_indices[i].id == savedir_id) {
+				++savedir_id;
+				i = 0;
+			} else ++i;
+
+		if (savedir_id >= MAX_SAVEGAME_NR) {
+			sciprintf("Internal error: Free savegame ID is %d, shouldn't happen!\n",
+				  savedir_id);
+			s->acc = 0;
+			return;
+		}
+
+		/* This loop terminates when savedir_id is not in [x | ex. n. _savegame_indices[n].id = x] */
+	} else {
+		sciprintf("Savegame ID %d is not allowed!\n", savedir_nr);
+		s->acc = 0;
+		return;
 	}
 
-	savegame_dir = _k_get_savedir_name(savedir_nr);
+	savegame_dir = _k_get_savedir_name(savedir_id);
 
 	CHECK_THIS_KERNEL_FUNCTION;
 	s->acc = 1;
