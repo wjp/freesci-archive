@@ -124,6 +124,10 @@ typedef struct {
 #define SCI_COLORDEPTH_16BPP 2
 /* The two color depths that should be supported */
 
+
+#define SCI_SPECIAL_CHAR_ARROW_UP 0x18
+#define SCI_SPECIAL_CHAR_ARROW_DOWN 0x19
+
 #define SCI_MAP_EGA_COLOR(pic, col) (pic->bytespp == 1)? (col | (col << 4)) : pic->ega_colors[col]
 /* Macro for color mapping */
 

@@ -1,3 +1,27 @@
+2000-06-02  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kDoBresen): Removed explicit handling of
+	b_movCnt in DoBresen() and InitBresen()
+
+	* src/engine/scriptdebug.c (c_backtrace): Fixed varselector entries
+	in stack traces
+
+	* src/graphics/menubar.c (menubar_add_menu): Added support for tag
+	assignments before the start of the right part of a menu item
+
+	* src/graphics/window.c (draw_frame): Fixed frames not being clipped
+	correctly before being drawn
+
+	* src/graphics/engine_graphics.c (graph_on_control): Fixed a clipping
+	bug that would cause memory beyond the allowed area to be read
+
+	* src/engine/kgraphics.c (_k_make_view_list): During the picview
+	list generation, the internal priority is set to the actual generated
+	priority (unless the object doesn't have an nsRect), but not written
+	back to the object. Also, a 0xf-colored control block is written in
+	that case (nsRect and initial picview list generation), as specified
+	in Lars' specs.
+
 2000-06-02  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/scriptdebug.c (disassemble): When disassembling property 

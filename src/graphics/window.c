@@ -36,7 +36,7 @@ draw_box(picture_t dest, int x, int y, int xl, int yl, int color, int priority)
 
   if (x<0) x = 0;
   if (y<10) y = 10;
-  if (x+xl>319) xl = 319-x;
+  if (x+xl>320) xl = 320-x;
   if (y+yl>199) yl = 199-y;
   if (xl<1) return;
   if (yl<1) return;
@@ -62,7 +62,7 @@ fill_box(picture_t dest, int x, int y, int xl, int yl, int value, int map)
 
   if (x<0) x = 0;
   if (y<10) y = 10;
-  if (x+xl>319) xl = 319-x;
+  if (x+xl>320) xl = 320-x;
   if (y+yl>199) yl = 199-yl;
   if (xl<1) return;
   if (yl<1) return;
@@ -90,8 +90,8 @@ draw_frame(picture_t dest, int x, int y, int xl, int yl, int color, int priority
 
   if (x<0) x = 0;
   if (y<10) y = 10;
-  if (x+xl>319) xl = 319-x;
-  if (y+yl>199) yl = 199-yl;
+  if (x+xl>320) xl = 320-x;
+  if (y+yl>200) yl = 200-y;
   if (xl<1) return;
   if (yl<1) return;
 
@@ -186,7 +186,7 @@ void draw_window(picture_t dest, port_t *port, int color, int priority,
     if (flags & WINDOW_FLAG_TITLE) {
       memcpy(&headerport, port, sizeof (port_t)); /* Create a header */
       headerport.ymax = y;
-      headerport.ymin -= 10;
+      headerport.ymin -= 9;
 
       draw_window(dest, &headerport, 0x88, priority, NULL, NULL,
 		 flags & (WINDOW_FLAG_TRANSPARENT | WINDOW_FLAG_NOFRAME)); /* Draw header */

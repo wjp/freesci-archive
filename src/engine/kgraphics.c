@@ -441,8 +441,6 @@ initialize_bresen(state_t *s, int funct_nr, int argc, heap_ptr argp, heap_ptr mo
 
   }
 
-  PUT_SELECTOR(mover, b_movCnt, numsteps);
-
   PUT_SELECTOR(mover, dx, deltax_step);
   PUT_SELECTOR(mover, dy, deltay_step);
 
@@ -492,8 +490,6 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   movcnt = GET_SELECTOR(mover, b_movCnt);
   bdelta = GET_SELECTOR(mover, b_incr);
   axis = GET_SELECTOR(mover, b_xAxis);
-
-  PUT_SELECTOR(mover, b_movCnt, movcnt - 1);
 
   if ((bdi += bi1) >= 0) {
     bdi += bi2;
@@ -575,7 +571,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   s->acc = !(((word)GET_SELECTOR(obj, illegalBits))
 	     & (edgehit = graph_on_control(s, x, y + 10, xl, yl, SCI_MAP_CONTROL)));
-
+  SCIkdebug(SCIkBRESEN, "edgehit = %04x\n", edgehit);
   if (s->acc == 0)
     return; /* Can'tBeHere */
   if (signal & _K_VIEW_SIG_FLAG_DONT_RESTORE)/* || (signal & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))*/
@@ -619,7 +615,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
   }
 
-  s->acc = 1;
+  s->acc = edgehit;
   /* CanBeHere */
 }
 
@@ -814,14 +810,13 @@ _k_base_setter(state_t *s, heap_ptr object)
   else
     view0_base_modify(loop, cell, viewres->data, &xmod, &ymod);
 
-
   xbase = x - xmod - (xsize) / 2;
   xend = xbase + xsize;
-  yend = y - ymod + 1;
+  yend = y /*- ymod*/ + 1;
   ybase = yend - ystep;
 
   SCIkdebug(SCIkBASESETTER, "(%d,%d)+/-(%d,%d), (%d x %d) -> (%d, %d) to (%d, %d)\n",
-	    x, y, xmod, ymod, xsize, ysize, xbase, xend, ybase, yend);
+	    x, y, xmod, ymod, xsize, ysize, xbase, ybase, xend, yend);
   
   PUT_SELECTOR(object, brLeft, xbase);
   PUT_SELECTOR(object, brRight, xend);
@@ -1440,13 +1435,17 @@ _k_invoke_view_list(state_t *s, heap_ptr list, int funct_nr, int argc, int argp)
 
   while (node) {
     heap_ptr obj = UGET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
+    word signal = GET_SELECTOR(obj, signal);
 
     if (lookup_selector(s, obj, s->selector_map.baseSetter, NULL) == SELECTOR_METHOD)
       invoke_selector(INV_SEL(obj, baseSetter, 1), 0); /* SCI-implemented base setter */
     else
       _k_base_setter(s, obj);
 
-    if (!(GET_SELECTOR(obj, signal) & _K_VIEW_SIG_FLAG_FROZEN)) {
+    
+    PUT_SELECTOR(obj, signal, signal | _K_VIEW_SIG_FLAG_UPDATING);
+
+    if (!(signal & _K_VIEW_SIG_FLAG_FROZEN)) {
       word ubitsnew, ubitsold = GET_SELECTOR(obj, underBits);
       invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
       ubitsnew = GET_SELECTOR(obj, underBits);
@@ -1465,6 +1464,7 @@ static int _cmp_view_object(const void *obj1, const void *obj2) /* Used for qsor
 
 #define _K_MAKE_VIEW_LIST_CYCLE 1
 #define _K_MAKE_VIEW_LIST_CALC_PRIORITY 2
+#define _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP 4
 
 view_object_t *
 _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int funct_nr, int argc, int argp)
@@ -1507,6 +1507,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int func
     short oldloop, oldcel;
     heap_ptr obj = GET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
     int view_nr = GET_SELECTOR(obj, view);
+    int has_nsrect = lookup_selector(s, obj, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
     resource_t *viewres = findResource(sci_view, view_nr);
 
     SCIkdebug(SCIkGRAPHICS, " - Adding %04x\n", obj);
@@ -1522,10 +1523,12 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int func
     retval[i].x = GET_SELECTOR(obj, x);
     retval[i].y = GET_SELECTOR(obj, y) - GET_SELECTOR(obj, z);
 
-    retval[i].nsLeft = GET_SELECTOR(obj, nsLeft);
-    retval[i].nsRight = GET_SELECTOR(obj, nsRight);
-    retval[i].nsTop = GET_SELECTOR(obj, nsTop);
-    retval[i].nsBottom = GET_SELECTOR(obj, nsBottom);
+    if (has_nsrect) {
+      retval[i].nsLeft = GET_SELECTOR(obj, nsLeft);
+      retval[i].nsRight = GET_SELECTOR(obj, nsRight);
+      retval[i].nsTop = GET_SELECTOR(obj, nsTop);
+      retval[i].nsBottom = GET_SELECTOR(obj, nsBottom);
+    }
 
     retval[i].loop = oldloop = GET_SELECTOR(obj, loop);
     retval[i].cel = oldcel = GET_SELECTOR(obj, cel);
@@ -1563,18 +1566,41 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int func
       SCIkdebug(SCIkGRAPHICS, "Object at %04x has no signal selector\n", obj);
     }
 
-    if ((options & _K_MAKE_VIEW_LIST_CALC_PRIORITY)
+    if (has_nsrect
 	&& !(UGET_HEAP(retval[i].signalp) & _K_VIEW_SIG_FLAG_FIX_PRI_ON)) { /* Calculate priority */
       int _priority, y = retval[i].y;
       _priority = VIEW_PRIORITY(y);
 
-      PUT_SELECTOR(obj, priority, _priority);
+      if (options & _K_MAKE_VIEW_LIST_CALC_PRIORITY)
+	PUT_SELECTOR(obj, priority, _priority);
 
       retval[i].priority = _priority;
     } else /* DON'T calculate the priority */
       retval[i].priority = GET_SELECTOR(obj, priority);
 
-    //    s->pic_not_valid++; /* There ought to be some kind of check here... */
+    if (has_nsrect && (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP)) {
+      int top = PRIORITY_BAND_FIRST(retval[i].priority);
+      int bottom = retval[i].nsBottom;
+
+      if (top < retval[i].nsTop)
+	top = retval[i].nsTop;
+
+      if (bottom < top) {
+	int foo = top;
+	top = bottom;
+	bottom = foo;
+      }
+
+      SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n", retval[i].nsLeft, top,
+			     retval[i].nsRight, bottom);
+      graph_fill_box_custom(s, retval[i].nsLeft + s->ports[s->view_port]->xmin,
+			    top + s->ports[s->view_port]->ymin,
+			    retval[i].nsRight - retval[i].nsLeft + 1,
+			    bottom - top + 1,
+			    0, 0, 15, 4); /* Fill control map rectangle */
+    }
+
+      /*    s->pic_not_valid++; *//* There ought to be some kind of check here... */
 
     i++; /* Next object in the list */
 
@@ -1729,7 +1755,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
     return;
 
   SCIkdebug(SCIkGRAPHICS, "Preparing list...\n");
-  s->pic_views = _k_make_view_list(s, list, &(s->pic_views_nr), 0, funct_nr, argc, argp);
+  s->pic_views = _k_make_view_list(s, list, &(s->pic_views_nr), _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP, funct_nr, argc, argp);
   /* Store pic views for later re-use */
 
   SCIkdebug(SCIkGRAPHICS, "Drawing list...\n");

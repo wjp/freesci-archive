@@ -1,5 +1,5 @@
 /***************************************************************************
- menubar.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+ menubar.c Copyright (C) 1999,2000 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -174,7 +174,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
   char tracker;
   char *left = NULL, *right, *left_origin = NULL;
   int string_len = 0;
-  int tag, c_width, max_width = 0;
+  int tag = 0, c_width, max_width = 0;
   char *_heapbase = (char *) heapbase;
   if (menubar->menus_nr == 0) {
 #ifdef MENU_FREESCI_BLATANT_PLUG
@@ -196,10 +196,17 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 
     if (!left) { /* Left string not finished? */
 
-      if ((tracker == ':') || (tracker == 0)) { /* End of entry */
-	int entrytype = MENU_TYPE_NORMAL;
+      if (tracker == '=') { /* Hit early-SCI tag assignment? */
 
 	left = malloc_ncpy(entries - string_len - 1, string_len);
+	tag = atoi(entries++);
+	tracker =  *entries++;
+      }
+      if ((tracker == '=') || (tracker == ':')) { /* End of entry */
+	int entrytype = MENU_TYPE_NORMAL;
+
+	if (!left)
+	  left = malloc_ncpy(entries - string_len - 1, string_len);
 
 	if (!strncmp(left, MENU_HBAR_STRING_1, strlen(MENU_HBAR_STRING_1))
 	    || !strncmp(left, MENU_HBAR_STRING_2, strlen(MENU_HBAR_STRING_2))
@@ -210,7 +217,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 	    left = NULL;
 	  }
 
-	c_width = _menubar_add_menu_item(menu, entrytype, left, NULL, font, 0, 0, 0,
+	c_width = _menubar_add_menu_item(menu, entrytype, left, NULL, font, 0, 0, tag,
 					 (entries - _heapbase) - string_len - 1);
 	if (c_width > max_width)
 	  max_width = c_width;
@@ -220,7 +227,8 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 
       } else if (tracker == '`') { /* Start of right string */
 
-	left = malloc_ncpy(left_origin = (entries - string_len - 1), string_len);
+	if (!left)
+	  left = malloc_ncpy(left_origin = (entries - string_len - 1), string_len);
 	string_len = 0; /* Continue with the right string */
 
       } 
@@ -243,7 +251,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 	  if (right[2]=='=') {
 	    tag = atoi(right + 3);
 	    right[2] = 0;
-	  } else tag=0;	  
+	  };
 	}
 	else if (right[0] == '@') { /* Alt key */
 	  right[0] = SCI_SPECIAL_CHAR_ALT; /* ALT */
@@ -256,7 +264,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 	  if (right[2]=='=') {
 	    tag = atoi(right+3);
 	    right[2] = 0;
-	  } else tag=0;	  
+	  };
 
 	}
 	else {
@@ -272,7 +280,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 	    if (right[2]=='=') {
 	      tag = atoi(right+3);
 	      right[2] = 0;
-	    } else tag=0;	  
+	    }
 
 	  }
 	  else {
@@ -283,7 +291,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 	    if (right[1]=='=') {
 	      tag=atoi(right+2);
 	      right[1] = 0;
-	    } else tag=0;	  
+	    }
 	  }
 
 	  if ((key >= 'A') && (key <= 'Z'))
@@ -293,6 +301,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 
 	c_width = _menubar_add_menu_item(menu, MENU_TYPE_NORMAL, left, right, font, key,
 					 modifiers, tag, left_origin - _heapbase);
+	tag = 0;
 	if (c_width > max_width)
 	  max_width = c_width;
 

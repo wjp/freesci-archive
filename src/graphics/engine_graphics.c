@@ -453,9 +453,29 @@ graph_draw_control_control(struct _state *s, port_t *port, int state,
   int max_entry_pos = ((entries_nr - top_entry > max_entries)? max_entries + top_entry : entries_nr);
   int bgcol = port->bgcolor | (port->bgcolor << 4);
   int col = port->color | (port->color << 4);
+  char boxtext[2];
+  port_t boxport;
+
+  memcpy(&boxport, port, sizeof(port_t));
+  boxport.xmin += x;
+  boxport.xmax = boxport.xmin + xl;
+  boxport.ymin += y;
+  boxport.ymax = boxport.ymin + yl;
+
+  boxtext[1] = 0;
 
   /* Draw outer frame: */
   draw_frame(s->pic, port->xmin+x, port->ymin+y, xl, yl, col, port->priority, 0);
+
+  /* draw up arrow */
+  boxtext[0] = SCI_SPECIAL_CHAR_ARROW_UP;
+  if (port->font)
+    draw_text0_centered(s->pic, &boxport, 0, 1, boxtext, port->font, col);
+
+  /* draw down arrow */
+  boxtext[0] = SCI_SPECIAL_CHAR_ARROW_DOWN;
+  if (port->font)
+    draw_text0_centered(s->pic, &boxport, 0, yl - 10, boxtext, port->font, col);
 
   /* Draw inner frame: */
   draw_frame(s->pic, port->xmin+x, port->ymin+y + 10, xl, yl - 20, col, port->priority, 0);
@@ -502,10 +522,12 @@ graph_on_control(state_t *s, int x, int y, int xl, int yl, int _map)
   }
   if (x + xl > port->xmax)
     xl = port->xmax + 1 - x;
-  if (y + yl > port->ymax)
-    yl = port->ymax + 1 - y;
 
-  if ((xl <= 0) || (yl <= 0))
+  if (y + yl > port->ymax)
+    yl = port->ymax - y;
+
+
+  if ((xl < 0) || (yl < 0))
     return 0;
 
   ++yl;

@@ -258,7 +258,7 @@ kernel_oops(struct _state *s, char *file, int line, char *reason);
 	+ ((((y) - s->priority_first) * 13) / (s->priority_last - s->priority_first))))
 
 #define PRIORITY_BAND_FIRST(nr) ((((nr) == 0)? 0 :  \
-        ((s->priority_first) + ((nr) * (s->priority_last - s->priority_first)) / 13)))
+        ((s->priority_first) + (((nr)-1) * (s->priority_last - s->priority_first)) / 13)))
 
 
 

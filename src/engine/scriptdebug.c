@@ -958,8 +958,9 @@ c_backtrace(state_t *s)
       break;
 
     case EXEC_STACK_TYPE_VARSELECTOR:
-      sciprintf(" %x:[%x] vs%s: k%s(", i, call->origin, (call->argc)? "write" : "read",
-		s->kernel_names[-(call->selector)-42]);
+      namepos = getInt16(s->heap + call->sendp + SCRIPT_NAME_OFFSET);
+      sciprintf(" %x:[%x] vs%s %s::%s (", i, call->origin, (call->argc)? "write" : "read",
+		s->heap + namepos, s->selector_names[call->selector]);
       break;
     } /* switch */
 
