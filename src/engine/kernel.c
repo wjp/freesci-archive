@@ -91,6 +91,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*2f*/	{KF_OLD, "RestartGame", {old:kRestartGame}},
 /*30*/	{KF_OLD, "GameIsRestarting", {old:kGameIsRestarting}},
 /*31*/	{KF_OLD, "DoSound", {old:kDoSound}},
+
 /*32*/	{KF_OLD, "NewList", {old:kNewList}},
 /*33*/	{KF_OLD, "DisposeList", {old:kDisposeList}},
 /*34*/	{KF_OLD, "NewNode", {old:kNewNode}},
@@ -105,6 +106,8 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*3d*/	{KF_OLD, "AddToEnd", {old:kAddToEnd}},
 /*3e*/	{KF_OLD, "FindKey", {old:kFindKey}},
 /*3f*/	{KF_OLD, "DeleteKey", {old:kDeleteKey}},
+/* and Sort */
+
 /*40*/	{KF_OLD, "Random", {old:kRandom}},
 /*41*/	{KF_OLD, "Abs", {old:kAbs}},
 /*42*/	{KF_OLD, "Sqrt", {old:kSqrt}},

@@ -98,6 +98,27 @@ kNewList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->acc = listbase; /* Return list base address */
 }
 
+void
+kDisposeList(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+        heap_ptr address = PARAM(0) - 2; /* -2 to get the heap header */
+	heap_ptr node = UGET_HEAP(address + 2 + LIST_FIRST_NODE);
+
+	if (!sane_listp(s, UPARAM(0)))
+	  SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", UPARAM(0));
+
+	while (node) { /* Free all nodes */
+		heap_ptr node_heapbase = node - 2;
+
+		node = GET_HEAP(node + LIST_NEXT_NODE); /* Next node */
+		heap_free(s->_heap, node_heapbase); /* Clear heap space of old node */
+	}
+
+	if (!listp(s, address)) {
+		SCIkwarn(SCIkERROR,"Attempt to dispose non-list at %04x\n", address);
+	} else heap_free(s->_heap, address);
+}
+
 
 inline heap_ptr
 _k_new_node(state_t *s, int value, int key)
@@ -128,6 +149,52 @@ kNewNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
+
+void
+kFirstNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+	heap_ptr list = UPARAM(0);
+
+	if (list&&!sane_listp(s, list))
+		SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
+
+	if (list)
+		s->acc = UGET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
+	else
+		s->acc = 0;
+}
+
+#warning "Fix list code (2)!"
+void
+kLastNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+#if 0
+	heap_ptr list = UPARAM(0);
+
+	if (!sane_listp(s, list))
+	  SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
+
+	if (list)
+		s->acc = UGET_HEAP(UPARAM(0) + LIST_LAST_NODE);
+	else
+		s->acc = 0;
+#endif
+}
+
+
+void
+kEmptyList(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+	heap_ptr list = UPARAM(0);
+
+
+	if (!sane_listp(s, list))
+		SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
+
+	if (list)
+		s->acc = !(GET_HEAP(UPARAM(0) + LIST_FIRST_NODE));
+}
+
 inline void
 _k_add_to_end(state_t *s, heap_ptr listbase, heap_ptr nodebase)
 {
@@ -149,15 +216,93 @@ _k_add_to_end(state_t *s, heap_ptr listbase, heap_ptr nodebase)
 	if (GET_HEAP(listbase + LIST_FIRST_NODE) == 0)
 		PUT_HEAP(listbase + LIST_FIRST_NODE, nodebase);
 }
-void
-kAddToEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
-{
-	heap_ptr listbase = UPARAM(0);
-	heap_ptr nodebase = UPARAM(1);
 
-	_k_add_to_end(s, listbase, nodebase);
+
+void
+kNextNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+
+	if (!sane_nodep(s, UPARAM(0)))
+		SCIkwarn(SCIkERROR,"List node at %04x is not sane anymore!\n", PARAM(0));
+
+	s->acc = UGET_HEAP(UPARAM(0) + LIST_NEXT_NODE);
 }
 
+void
+kPrevNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+
+	if (!sane_nodep(s, UPARAM(0)))
+		SCIkwarn(SCIkERROR,"List node at %04x is not sane anymore!\n", PARAM(0));
+
+	s->acc = UGET_HEAP(UPARAM(0) + LIST_PREVIOUS_NODE);
+}
+
+
+
+void
+kNodeValue(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+	int a;
+
+	if (UPARAM(0)==0)
+	  {
+	    SCIkwarn(SCIkERROR, "NodeValue() on a NULL pointer attempted!\n");
+	    s->acc=0;
+	    return;
+	  }
+
+	if (!sane_nodep(s, UPARAM(0)))
+	  SCIkwarn(SCIkERROR,"List node at %04x is not sane anymore!\n", PARAM(0));
+
+	a = UPARAM(0) + LIST_NODE_VALUE;
+
+	s->acc=UGET_HEAP(a);
+
+}
+
+void
+kAddAfter(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+	heap_ptr list = UPARAM(0);
+	heap_ptr firstnode = UPARAM(1);
+	heap_ptr newnode = UPARAM(2);
+
+#warning "Fix list code (1)!"
+#if 0
+
+	if (!sane_listp(s, list))
+		SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
+
+	if (argc != 3) {
+		SCIkdebug(SCIkWARNING, "Aborting.\n");
+		return;
+	}
+
+	if (firstnode) { /* We're really appending after */
+
+		heap_ptr oldnext = GET_HEAP(firstnode + LIST_NEXT_NODE);
+		PUT_HEAP(newnode + LIST_PREVIOUS_NODE, firstnode);
+		PUT_HEAP(firstnode + LIST_NEXT_NODE, newnode);
+		PUT_HEAP(newnode + LIST_NEXT_NODE, oldnext);
+
+		if (!oldnext) /* Appended after last node? */
+			PUT_HEAP(list + LIST_LAST_NODE, newnode) /* Set new node as last list node */
+		else
+			PUT_HEAP(oldnext + LIST_PREVIOUS_NODE, newnode);
+
+	} else { /* Set as initial list node */
+
+		heap_ptr nextnode = GET_HEAP(list + LIST_FIRST_NODE);
+		PUT_HEAP(newnode + LIST_NEXT_NODE, nextnode);
+		PUT_HEAP(list + LIST_FIRST_NODE, newnode);
+		if (!nextnode) /* List was empty? */
+			PUT_HEAP(list + LIST_LAST_NODE, newnode)
+		else
+			PUT_HEAP(nextnode + LIST_PREVIOUS_NODE, newnode);
+	}
+#endif
+}
 
 void
 kAddToFront(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -180,6 +325,16 @@ kAddToFront(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (GET_HEAP(listbase + LIST_LAST_NODE) == 0)
 		PUT_HEAP(listbase + LIST_LAST_NODE, nodebase);
 	/* Set node to be the first and last node if it's the only node of the list */
+}
+
+
+void
+kAddToEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+	heap_ptr listbase = UPARAM(0);
+	heap_ptr nodebase = UPARAM(1);
+
+	_k_add_to_end(s, listbase, nodebase);
 }
 
 
@@ -258,161 +413,7 @@ kDeleteKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
-void
-kFirstNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
-{
-	heap_ptr list = UPARAM(0);
 
-	if (list&&!sane_listp(s, list))
-		SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
-
-	if (list)
-		s->acc = UGET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
-	else
-		s->acc = 0;
-}
-
-
-void
-kEmptyList(state_t *s, int funct_nr, int argc, heap_ptr argp)
-{
-	heap_ptr list = UPARAM(0);
-
-
-	if (!sane_listp(s, list))
-		SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
-
-	if (list)
-		s->acc = !(GET_HEAP(UPARAM(0) + LIST_FIRST_NODE));
-}
-
-
-void
-kAddAfter(state_t *s, int funct_nr, int argc, heap_ptr argp)
-{
-	heap_ptr list = UPARAM(0);
-	heap_ptr firstnode = UPARAM(1);
-	heap_ptr newnode = UPARAM(2);
-
-#warning "Fix list code (1)!"
-#if 0
-
-	if (!sane_listp(s, list))
-		SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
-
-	if (argc != 3) {
-		SCIkdebug(SCIkWARNING, "Aborting.\n");
-		return;
-	}
-
-	if (firstnode) { /* We're really appending after */
-
-		heap_ptr oldnext = GET_HEAP(firstnode + LIST_NEXT_NODE);
-		PUT_HEAP(newnode + LIST_PREVIOUS_NODE, firstnode);
-		PUT_HEAP(firstnode + LIST_NEXT_NODE, newnode);
-		PUT_HEAP(newnode + LIST_NEXT_NODE, oldnext);
-
-		if (!oldnext) /* Appended after last node? */
-			PUT_HEAP(list + LIST_LAST_NODE, newnode) /* Set new node as last list node */
-		else
-			PUT_HEAP(oldnext + LIST_PREVIOUS_NODE, newnode);
-
-	} else { /* Set as initial list node */
-
-		heap_ptr nextnode = GET_HEAP(list + LIST_FIRST_NODE);
-		PUT_HEAP(newnode + LIST_NEXT_NODE, nextnode);
-		PUT_HEAP(list + LIST_FIRST_NODE, newnode);
-		if (!nextnode) /* List was empty? */
-			PUT_HEAP(list + LIST_LAST_NODE, newnode)
-		else
-			PUT_HEAP(nextnode + LIST_PREVIOUS_NODE, newnode);
-	}
-#endif
-}
-
-
-#warning "Fix list code (2)!"
-void
-kLastNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
-{
-#if 0
-	heap_ptr list = UPARAM(0);
-
-	if (!sane_listp(s, list))
-	  SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
-
-	if (list)
-		s->acc = UGET_HEAP(UPARAM(0) + LIST_LAST_NODE);
-	else
-		s->acc = 0;
-#endif
-}
-
-
-void
-kPrevNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
-{
-
-	if (!sane_nodep(s, UPARAM(0)))
-		SCIkwarn(SCIkERROR,"List node at %04x is not sane anymore!\n", PARAM(0));
-
-	s->acc = UGET_HEAP(UPARAM(0) + LIST_PREVIOUS_NODE);
-}
-
-
-void
-kNextNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
-{
-
-	if (!sane_nodep(s, UPARAM(0)))
-		SCIkwarn(SCIkERROR,"List node at %04x is not sane anymore!\n", PARAM(0));
-
-	s->acc = UGET_HEAP(UPARAM(0) + LIST_NEXT_NODE);
-}
-
-
-void
-kNodeValue(state_t *s, int funct_nr, int argc, heap_ptr argp)
-{
-	int a;
-
-	if (UPARAM(0)==0)
-	  {
-	    SCIkwarn(SCIkERROR, "NodeValue() on a NULL pointer attempted!\n");
-	    s->acc=0;
-	    return;
-	  }
-
-	if (!sane_nodep(s, UPARAM(0)))
-	  SCIkwarn(SCIkERROR,"List node at %04x is not sane anymore!\n", PARAM(0));
-
-	a = UPARAM(0) + LIST_NODE_VALUE;
-
-	s->acc=UGET_HEAP(a);
-
-}
-
-
-void
-kDisposeList(state_t *s, int funct_nr, int argc, heap_ptr argp)
-{
-        heap_ptr address = PARAM(0) - 2; /* -2 to get the heap header */
-	heap_ptr node = UGET_HEAP(address + 2 + LIST_FIRST_NODE);
-
-	if (!sane_listp(s, UPARAM(0)))
-	  SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", UPARAM(0));
-
-	while (node) { /* Free all nodes */
-		heap_ptr node_heapbase = node - 2;
-
-		node = GET_HEAP(node + LIST_NEXT_NODE); /* Next node */
-		heap_free(s->_heap, node_heapbase); /* Clear heap space of old node */
-	}
-
-	if (!listp(s, address)) {
-		SCIkwarn(SCIkERROR,"Attempt to dispose non-list at %04x\n", address);
-	} else heap_free(s->_heap, address);
-}
 
 typedef struct
 {

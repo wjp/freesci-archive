@@ -35,6 +35,7 @@
 #include <seg_manager.h>
 #include <vm_types.h>
 #include <sys_strings.h>
+#include <heapmgr.h>
 
 #ifndef _SCI_VM_H
 #define _SCI_VM_H
@@ -203,17 +204,27 @@ typedef struct {
 } dstack_t; /* Data stack */
 
 #define CLONE_USED -1
+#define CLONE_NONE -1
+
+typedef object_t clone_t;
 
 typedef struct {
-	int next_free; /* Used for empty offset tracking, CLONE_USED for used clones */
-	object_t obj;
-} clone_t;
+	reg_t pred, succ; /* Predecessor, successor */
+	reg_t name;
+	reg_t value;
+} node_t; /* List nodes */
 
 typedef struct {
-	int clones_nr; /* Number of allocated clones */
-	int first_free_clone; /* Kept in a linked list using clone_t.next_free */
-	clone_t *clones;
-} clone_table_t;
+	reg_t first;
+	reg_t last;
+} list_t;
+
+/* clone_table_t */
+DECLARE_HEAPENTRY(clone);
+/* node_table_t */
+DECLARE_HEAPENTRY(node);
+/* list_table_t */
+DECLARE_HEAPENTRY(list); /* list entries */
 
 typedef struct _mem_obj {
 	int type;
@@ -224,8 +235,12 @@ typedef struct _mem_obj {
 		local_variables_t locals;
 		dstack_t stack;
 		sys_strings_t sys_strings;
+		list_table_t lists;
+		node_table_t nodes;
 	} data;
 } mem_obj_t;
+
+
 
 typedef struct {
 	selector_t init; /* Init function */

@@ -2,18 +2,16 @@ Problem:
 	VC++ 6.0 (SP5) + SDL
 
 Next TODO:
-	* [X] Add callb, calle
-	* Find out why all lockers are exactly 1, fix this erroneous
+	* [X] Find out why all lockers are exactly 1, fix this erroneous
 	  situation
-	* Check "what's-all-this-then" warning in vm.c
-	* Check validity of OBJ_SPECIES, OBJ_SUPERCLASS, OBJ_ISCLASS in vm.c
-	* Re-enable list code, including kSort
-	* Re-implement kClone/kDisposeClone
-	* Implement compat code
-	* Re-implement 'delete' and 'doit' calls in kgraphics
-	* Re-enable hunk allocation/reference/deallocation
-	* Add sound cues
+	* [X] Check validity of OBJ_SPECIES, OBJ_SUPERCLASS, OBJ_ISCLASS in vm.c
+	* [C] Re-enable list code, including kSort
+	* [S] Re-implement kClone/kDisposeClone
+	* [C] Implement compat code
+	* [X] Re-implement 'delete' and 'doit' calls in kgraphics (upcalls)
 	* Fix remaining migration warnings
+	* Add sound cues
+	* Re-enable hunk allocation/reference/deallocation
 	* Re-enable save_game, restore_game, check_savegame
 	* Re-enable quick-restore code
 	* Re-enable save_game and restore_game debug console commands

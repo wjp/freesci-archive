@@ -68,7 +68,9 @@ void dbg_print( char* msg, int i );		// for debug only
 #define MEM_OBJ_LOCALS 3
 #define MEM_OBJ_STACK 4
 #define MEM_OBJ_SYS_STRINGS 5
-#define MEM_OBJ_MAX MEM_OBJ_SYS_STRINGS /* For sanity checking */
+#define MEM_OBJ_LISTS 6
+#define MEM_OBJ_NODES 7
+#define MEM_OBJ_MAX MEM_OBJ_NODES /* For sanity checking */
 typedef int mem_obj_enum;
 
 struct _mem_obj;

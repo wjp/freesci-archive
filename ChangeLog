@@ -1,6 +1,7 @@
 2002-11-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/vm.c (run_vm): Misc. bugfixes, particularly wrt calls
+	(run_vm): Added check to prevent problems when script.000 has no locals
 
 	* src/engine/kernel.c (script_map_kernel): More sophisticated kernel
 	function handling

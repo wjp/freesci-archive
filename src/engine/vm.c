@@ -1028,30 +1028,6 @@ run_vm(state_t *s, int restoring)
 				s->execution_stack_pos_changed = 1;
 			break;
 
-//    case 0x22: /* callb */
-//      temp = xs->sp;
-//      xs->sp -= (opparams[1] + (restadjust * 2) + 2);
-//      xs_new = execute_method(s, 0, opparams[0], temp, xs->objp,
-//			      GET_HEAP(xs->sp) + restadjust,
-//			      xs->sp);
-//      restadjust = 0; /* Used up the &rest adjustment */
-//
-//      if (xs_new)    /* in case of error, keep old stack */
-//					s->execution_stack_pos_changed = 1;
-//      break;
-//
-//    case 0x23: /* calle */
-//      temp = xs->sp;
-//      xs->sp -= opparams[2] + 2 + (restadjust*2);
-//
-//      xs_new = execute_method(s, opparams[0], opparams[1], temp, xs->objp,
-//			      GET_HEAP(xs->sp) + restadjust, xs->sp);
-//      restadjust = 0; /* Used up the &rest adjustment */
-//
-//      if (xs_new)  /* in case of error, keep old stack */
-//					s->execution_stack_pos_changed = 1;
-//      break;
-//
 		case 0x24: /* ret */
 			do {
 				stack_ptr_t old_sp = xs->sp;
@@ -2072,14 +2048,14 @@ obj_get(state_t *s, reg_t offset)
 
 	if (memobj != NULL) {
 		if (memobj->type == MEM_OBJ_CLONES
-		    && memobj->data.clones.clones_nr > offset.offset
-		    && memobj->data.clones.clones[offset.offset].next_free == CLONE_USED)
-			obj = &(memobj->data.clones.clones[offset.offset].obj);
+		    && ENTRY_IS_VALID(&memobj->data.clones, offset.offset))
+			obj = &(memobj->data.clones.table[offset.offset].entry);
 		else if (memobj->type == MEM_OBJ_SCRIPT)
 			if (offset.offset <= memobj->data.script.buf_size
 			    && offset.offset >= -SCRIPT_OBJECT_MAGIC_OFFSET
 			    && RAW_IS_OBJECT(memobj->data.script.buf + offset.offset)) {
 				int idx = RAW_GET_CLASS_INDEX(memobj->data.script.buf + offset.offset);
+
 				if (idx >= 0 && idx < memobj->data.script.objects_nr)
 					obj = memobj->data.script.objects + idx;
 			}

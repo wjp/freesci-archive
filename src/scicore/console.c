@@ -344,6 +344,12 @@ con_init (void)
 	}
 }
 
+static inline int
+clone_is_used(clone_table_t *t, int idx)
+{
+	return ENTRY_IS_VALID(t, idx);
+}
+
 int
 parse_reg_t(state_t *s, char *str, reg_t *dest)
 { /* Returns 0 on success */
@@ -446,7 +452,7 @@ parse_reg_t(state_t *s, char *str, reg_t *dest)
 				if (mobj->type == MEM_OBJ_SCRIPT)
 					max_index = mobj->data.script.objects_nr;
 				else if (mobj->type == MEM_OBJ_CLONES)
-					max_index = mobj->data.clones.clones_nr;
+					max_index = mobj->data.clones.max_entry;
 			}
 
 			while (idx < max_index) {
@@ -459,10 +465,9 @@ parse_reg_t(state_t *s, char *str, reg_t *dest)
 					obj = mobj->data.script.objects + idx;
 					objpos.offset = obj->pos.offset;
 				} else if (mobj->type == MEM_OBJ_CLONES) {
-					obj = &(mobj->data.clones.clones[idx].obj);
+					obj = &(mobj->data.clones.table[idx].entry);
 					objpos.offset = idx;
-					valid = (mobj->data.clones.clones[idx].next_free
-						 == CLONE_USED);
+					valid = clone_is_used(&mobj->data.clones, idx);
 				}
 
 				if (valid) {

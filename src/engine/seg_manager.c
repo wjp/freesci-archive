@@ -905,3 +905,13 @@ guint16 sm_validate_export_func(struct _seg_manager_t* self, int pubfunct, int s
 
 	return offset;
 };
+
+static void
+_clone_cleanup(clone_t *clone)
+{
+	sci_free(clone->variables); /* Free the dynamically allocated memory part */
+}
+
+DEFINE_HEAPENTRY(list, 8, 4);
+DEFINE_HEAPENTRY(node, 32, 16);
+DEFINE_HEAPENTRY_WITH_CLEANUP(clone, 16, 4, _clone_cleanup);

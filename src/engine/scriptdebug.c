@@ -105,11 +105,12 @@ c_segtable(state_t *s)
 				break;
 
 			case MEM_OBJ_CLONES:
-				sciprintf("C  clones (%d allocd)", mobj->data.clones.clones_nr);
+				sciprintf("C  clones (%d allocd)",
+					  mobj->data.clones.entries_used);
 				break;
 
 			case MEM_OBJ_LOCALS:
-				sciprintf("L  locals %03d",
+				sciprintf("V  locals %03d",
 					  mobj->data.locals.script_id);
 				break;
 
@@ -120,6 +121,14 @@ c_segtable(state_t *s)
 
 			case MEM_OBJ_SYS_STRINGS:
 				sciprintf("Y  system string table");
+				break;
+
+			case MEM_OBJ_LISTS:
+				sciprintf("L  lists (%d)", mobj->data.lists.entries_used);
+				break;
+
+			case MEM_OBJ_NODES:
+				sciprintf("N  nodes (%d)", mobj->data.nodes.entries_used);
 				break;
 
 			default:
@@ -143,6 +152,40 @@ print_obj_head(state_t *s, object_t *obj)
 		  obj->variables_nr,
 		  obj->methods_nr,
 		  obj_get_name(s, obj->pos));
+}
+
+static void
+print_list(state_t *s, list_t *l)
+{
+	reg_t pos = l->first;
+	reg_t my_prev = NULL_REG_INITIALIZER;
+
+	sciprintf("\t<\n");
+
+	while (!IS_NULL_REG(pos)) {
+		node_t *node;
+		mem_obj_t *mobj = GET_SEGMENT(s->seg_manager, pos.segment, MEM_OBJ_LISTS);
+
+		if (!mobj || !ENTRY_IS_VALID(&(mobj->data.nodes), pos.offset)) {
+			sciprintf("   WARNING: "PREG": Doesn't contain list node!\n");
+			return;
+		}
+
+		node = &(mobj->data.nodes.table[pos.offset].entry);
+
+		sciprintf("\t"PREG"  : "PREG" -> "PREG"\n",
+			  PRINT_REG(pos), PRINT_REG(node->name), PRINT_REG(node->value));
+
+		if (!REG_EQ(my_prev, node->pred))
+			sciprintf("   WARNING: current node gives "PREG" as predecessor!\n", PRINT_REG(node->pred));
+
+		my_prev = pos;
+		pos = node->succ;
+	}
+
+	if (!REG_EQ(my_prev, l->last))
+		sciprintf("   WARNING: Last node was expected to be "PREG"!\n", PRINT_REG(l->last));
+	sciprintf("\t>\n");
 }
 
 static void
@@ -215,12 +258,31 @@ _c_single_seg_info(state_t *s, mem_obj_t *mobj)
 
 		sciprintf("clones\n");
 
-		for (i = 0; i < ct->clones_nr; i++)
-			if (ct->clones[i].next_free == CLONE_USED) {
+		for (i = 0; i < ct->max_entry; i++)
+			if (ENTRY_IS_VALID(ct, i)) {
 				sciprintf("  [%04x] ", i);
-				print_obj_head(s, &(ct->clones[i].obj));
+				print_obj_head(s, &(ct->table[i].entry));
 			}
 		     }
+		break;
+
+	case MEM_OBJ_LISTS: {
+		int i = 0;
+		list_table_t *lt =
+			&(mobj->data.lists);
+
+		sciprintf("lists\n");
+		for (i = 0; i < lt->max_entry; i++)
+			if (ENTRY_IS_VALID(lt, i)) {
+				sciprintf("  [%04x]: ", i);
+				print_list(s, &(lt->table[i].entry));
+			}
+	}
+		break;
+
+	case MEM_OBJ_NODES: {
+		sciprintf("nodes (total %d)\n", mobj->data.nodes.entries_used);
+	}
 		break;
 
 	default : sciprintf("Invalid type %d\n", mobj->type);
