@@ -867,7 +867,8 @@ next_file(state_t *s)
   s->acc=0;
   while (match=readdir(search))
   {
-    if (fnmatch(mask_copy, match->d_name, FNM_PATHNAME) )
+    if (match->d_name[0]=='.') continue;
+    if (!fnmatch(mask_copy, match->d_name, FNM_PATHNAME))
     {
 	s->acc=outbuffer;
 	strcpy(s->heap + outbuffer, match->d_name);
@@ -925,18 +926,18 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
     case K_FILEIO_READ_RAW :
     {
-	char *dest = s->heap + UPARAM(1);
-	int size = UPARAM(2);
-	int handle = UPARAM(3);
+	char *dest = s->heap + UPARAM(2);
+	int size = UPARAM(3);
+	int handle = UPARAM(1);
 	
 	fread_wrapper(s, dest, size, handle);
 	break;
     }
     case K_FILEIO_WRITE_RAW :
     {
-	char *buf = s->heap + UPARAM(1);
-	int size = UPARAM(2);
-	int handle = UPARAM(3);
+	char *buf = s->heap + UPARAM(2);
+	int size = UPARAM(3);
+	int handle = UPARAM(1);
 	
 	fwrite_wrapper(s, handle, buf, size);
 	break;
@@ -981,6 +982,9 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	heap_ptr buf = UPARAM(2);
 	int attr = UPARAM(3); /* We won't use this, Win32 might, though... */
 
+#ifndef _WIN32
+	if (strcmp(mask, "*.*")==0) strcpy(mask, "*"); /* For UNIX */
+#endif
 	first_file(s, ".", mask, buf);	
 
 	break;

@@ -156,7 +156,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 
 
 
-#define SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR 0x72
+#define SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR 0x75
 
 static kfunct * unknown_function_map[SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR] = { /* Map for unknown kernel functions */
 /*0x00*/ kLoad,
@@ -505,7 +505,7 @@ kMemory(state_t *s, int funct_nr, int argc, heap_ptr argp)
   
     case K_MEMORY_ALLOCATE_CRITICAL :
 	
-	s->acc=heap_allocate(s->_heap, UPARAM(1));
+	s->acc=heap_allocate(s->_heap, UPARAM(1))+2;
 	if (!s->acc)
 	{
 	  SCIkwarn(SCIkERROR, "Critical heap allocation failed\n");
@@ -515,12 +515,12 @@ kMemory(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     case K_MEMORY_ALLOCATE_NONCRITICAL :
 	
-	s->acc=heap_allocate(s->_heap, UPARAM(1));
+	s->acc=heap_allocate(s->_heap, UPARAM(1))+2;
 	break;
 
     case K_MEMORY_FREE :
 	
-	heap_free(s->_heap, UPARAM(1));
+	heap_free(s->_heap, UPARAM(1)-2);
 	break;
 	
     case K_MEMORY_MEMCPY :
@@ -566,7 +566,7 @@ void
 kNOP(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   CHECK_THIS_KERNEL_FUNCTION;
-  SCIkwarn(SCIkWARNING, "Warning: Kernel function 0x%02x invoked: NOP\n");
+  SCIkwarn(SCIkWARNING, "Warning: Kernel function 0x%02x invoked: NOP\n", funct_nr);
 }
 
 

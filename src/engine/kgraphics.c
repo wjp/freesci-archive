@@ -113,7 +113,35 @@ kPicNotValid(state_t *s, int funct_nr, int argc, heap_ptr argp)
     s->pic_not_valid = PARAM(0);
 }
 
+void
+_k_redraw_box(state_t *s, int x1, int y1, int x2, int y2)
+{
+  int i;
+  view_object_t *list = s->dyn_views;
+  
+  sciprintf("Reanimating %d views\n", s->dyn_views_nr);
+  for (i=0;i<s->dyn_views_nr;i++)
+  {
+    list[i].underBits=graph_save_box(s,
+	       list[i].nsLeft,
+	       list[i].nsTop,
+	       list[i].nsRight-list[i].nsLeft,
+	       list[i].nsBottom-list[i].nsTop,
+	       SCI_MAP_VISUAL | SCI_MAP_PRIORITY);
+    draw_view0(s->pic, s->ports[0], 
+	       list[i].nsLeft, list[i].nsTop,
+	       list[i].priority, list[i].loop,
+	       list[i].cel, 0, list[i].view);	
+  }
+ 
+  graph_update_box(s, x1, y1, x2-x1, y2-y1);
 
+  for (i=0;i<s->dyn_views_nr;i++)
+  {
+    graph_restore_box(s, list[i].underBits);
+    list[i].underBits=0;
+  }
+}
 void
 kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
@@ -204,10 +232,8 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     if (!s->dyn_views_nr)
       graph_update_box(s, PARAM(2), PARAM(1), PARAM(4), PARAM(3)); else
-      ; /* Not handled yet */
+      _k_redraw_box(s, PARAM(2), PARAM(1), PARAM(4), PARAM(3));
       
-    SCIkwarn(SCIkWARNING, "KERNEL_GRAPH_REDRAW_BOX: stub\n");
-
   }
 
   break;
@@ -733,8 +759,6 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   resource_t *resource = findResource(sci_pic, PARAM(0));
   CHECK_THIS_KERNEL_FUNCTION;
-
-  if (SCI_VERSION_MAJOR(s->version)!=0) return;
 
   if (resource) {
 

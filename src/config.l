@@ -62,7 +62,7 @@ SCIVERSION {DIGIT}"."{DIGIT}{3}"."{DIGIT}{3}
 
 %%
 
-"["[[:alnum:]]+"]" {
+"["[_[:alnum:]]+"]" {
   ++yytext; /* Get over opening bracket */
 
   ++cur_section; /* Start new section */

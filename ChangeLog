@@ -1,3 +1,14 @@
+2000-09-19  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kgraphics.c: Fixed small SCI01 pic goof
+	                          Implemented GRAPH_REDRAW_BOX
+	* src/engine/kfile.c: Fixed reversed FileIO parameters
+	* src/engine/vocab.c: Added support for SCI01 vocabulary
+
+2000-09-16  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kernel.c: Fixed Memory() bug and warnings
+
 2000-08-15  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kfile.c: Added (SCI01) FileIO kernel call

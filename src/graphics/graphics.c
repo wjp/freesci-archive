@@ -959,9 +959,11 @@ void draw_pic0(picture_t dest, int flags, int defaultPalette, guint8 *data)
           	x = ((*ptr & 0xf0) << 4) | (0xff & ptr[1]);
 		y = ((*ptr & 0x0f) << 8) | (0xff & ptr[2]);
 		ptr=ptr+5+getInt16(ptr); /* Past the embedded view */
+                fprintf(stderr, "draw_pic0: Embedded view skipped\n");
 		break;
 	  case 8: /* Sets priority values for the pic */
 	      ptr+=16;
+	      fprintf(stderr, "draw_pic0: Priority table skipped\n");
 	      break;
 	      	        
 	  default:

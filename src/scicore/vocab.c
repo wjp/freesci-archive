@@ -32,6 +32,16 @@
 
 #include <ctype.h>
 
+int vocab_version;
+
+#define VOCAB_RESOURCE_PARSE_TREE_BRANCHES vocab_version==1 ? \
+					   VOCAB_RESOURCE_SCI1_PARSE_TREE_BRANCHES : \
+					   VOCAB_RESOURCE_SCI0_PARSE_TREE_BRANCHES
+
+#define VOCAB_RESOURCE_SUFFIX_VOCAB vocab_version==1 ? \
+				    VOCAB_RESOURCE_SCI1_SUFFIX_VOCAB : \
+				    VOCAB_RESOURCE_SCI0_SUFFIX_VOCAB					   
+
 char *class_names[] = 
   {"",               /* These strange names were taken from an SCI01 interpreter */
    "", 
@@ -57,6 +67,73 @@ _vocab_cmp_words(const void *word1, const void *word2)
   return g_strcasecmp((*((word_t **) word1))->word, (*((word_t **) word2))->word);
 }
 
+/* FIXME: Unify this with the SCI0 routine */
+
+word_t **
+vocab_get_words_sci1(int *word_counter)
+{
+  int counter = 0;
+  int seeker;
+  word_t **words;
+
+  char currentword[256] = ""; /* They're not going to use words longer than 255 ;-) */
+  int currentwordpos = 0;
+
+  resource_t *resource = findResource(sci_vocab, VOCAB_RESOURCE_SCI1_MAIN_VOCAB);
+  vocab_version = 1;
+
+  if (!resource) {
+    fprintf(stderr,"SCI1: Could not find a main vocabulary!\n");
+    return NULL; /* NOT critical: SCI1 games and some demos don't have one! */
+  }
+
+  seeker = 0x1fe; /* vocab.900 starts with 255 16-bit pointers which we don't use */
+ 
+  if (resource->length < 510) {
+    fprintf(stderr, "Invalid main vocabulary encountered: Too small\n");
+    return NULL;
+    /* Now this ought to be critical, but it'll just cause parse() and said() not to work */
+  }
+
+  words = g_malloc(sizeof(word_t *));
+
+  while (seeker < resource->length) {
+    byte c;
+
+    words = g_realloc(words, (counter + 1) * sizeof(word_t *));
+
+    currentwordpos = resource->data[seeker++]; /* Parts of previous words may be re-used */
+
+    do {
+      c = resource->data[seeker++];
+      currentword[currentwordpos++] = c;
+    } while (c);
+    
+    currentword[currentwordpos] = 0;
+
+    words[counter] = g_malloc(sizeof(word_t) + currentwordpos);
+    /* Allocate more memory, so that the word fits into the structure */
+
+    strcpy(&(words[counter]->word[0]), &(currentword[0])); /* Copy the word */
+
+    /* Now decode class and group: */
+    c = resource->data[seeker + 1];
+    words[counter]->class = ((resource->data[seeker]) << 4) | ((c & 0xf0) >> 4);
+    words[counter]->group = (resource->data[seeker + 2]) | ((c & 0x0f) << 8);
+
+    ++counter;
+
+    seeker += 3;
+
+  }
+
+  *word_counter = counter;
+
+  qsort(words, counter, sizeof(word_t *), _vocab_cmp_words); /* Sort entries */
+
+  return words;
+}
+
 
 word_t **
 vocab_get_words(int *word_counter)
@@ -68,11 +145,11 @@ vocab_get_words(int *word_counter)
   char currentword[256] = ""; /* They're not going to use words longer than 255 ;-) */
   int currentwordpos = 0;
 
-  resource_t *resource = findResource(sci_vocab, VOCAB_RESOURCE_MAIN_VOCAB);
+  resource_t *resource = findResource(sci_vocab, VOCAB_RESOURCE_SCI0_MAIN_VOCAB);
 
   if (!resource) {
-    fprintf(stderr,"Could not find a main vocabulary!\n");
-    return NULL; /* NOT critical: SCI1 games and some demos don't have one! */
+    fprintf(stderr,"SCI0: Could not find a main vocabulary, trying SCI01.\n");
+    return vocab_get_words_sci1(word_counter); /* NOT critical: SCI1 games and some demos don't have one! */
   }
 
   seeker = 52; /* vocab.000 starts with 26 16-bit pointers which we don't use */

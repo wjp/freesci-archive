@@ -881,10 +881,22 @@ run_vm(state_t *s, int restoring)
 
     case 0x39: /* lofsa */
       s->acc = opparams[0] + xs->pc;
+      if (opparams[0]+xs->pc>=0xFFFE)
+      {
+        sciprintf("VM: lofsa operation overflowed: 0x%x + 0x%x=0x%x\n", opparams[0], xs->pc,
+	          opparams[0]+xs->pc);
+	script_error_flag = script_debug_flag = 1;
+      }
       break;
 
     case 0x3a: /* lofss */
       PUSH(opparams[0] + xs->pc);
+      if (opparams[0]+xs->pc>=0xFFFE)
+      {
+        sciprintf("VM: lofss operation overflowed: %x + %x=%x\n", opparams[0], xs->pc,
+	          opparams[0]+xs->pc);
+	script_error_flag = script_debug_flag = 1;
+      }
       break;
 
     case 0x3b: /* push0 */
