@@ -4,7 +4,7 @@
 			<thead><row>
 				<entry>Game name</entry>
 				<entry>ID</entry>
-				<entry>interpreter version</entry>
+				<entry>Interpreter version</entry>
 				<entry>Parser</entry>
 				<entry>Map file ver.</entry>
 				<entry>More</entry>
@@ -19,6 +19,7 @@
 			<row><entry>King's Quest 4</entry><entry>KQ4</entry><entry>0.000.502</entry><entry>yes</entry><entry>0</entry><entry>Re Dd Ss </entry></row>
 			<row><entry>Fun Seeker's Guide</entry><entry>emc</entry><entry>0.000.506</entry><entry>yes</entry><entry>0</entry><entry>Re Dd Ss </entry></row>
 			<row><entry>Hoyle's Book of Games 1</entry><entry>cardGames</entry><entry>0.000.530</entry><entry>?</entry><entry>0</entry><entry>Re Dd Ss </entry></row>
+			<row><entry>Leisure suit Larry 3 demo</entry><entry>LSL3</entry><entry>0.000.530</entry><entry>?</entry><entry>0</entry><entry></entry></row>
 			<row><entry>Hero's Quest 1</entry><entry>HQ</entry><entry>0.000.566</entry><entry>yes</entry><entry>0</entry><entry>Re Dd Ss </entry></row>
 			<row><entry>Leisure Suit Larry 3</entry><entry>LSL3</entry><entry>0.000.572</entry><entry>yes</entry><entry>0</entry><entry>Re Dd Ss </entry></row>
 			<row><entry>Quest for Glory 1</entry><entry>Glory</entry><entry>0.000.629</entry><entry>yes</entry><entry>0</entry><entry>Re Dd Ss </entry></row>
@@ -40,7 +41,7 @@
 			<thead><row>
 				<entry>Game name</entry>
 				<entry>ID</entry>
-				<entry>interpreter version</entry>
+				<entry>Interpreter version</entry>
 				<entry>Parser</entry>
 				<entry>Map file ver.</entry>
 				<entry>More</entry>
@@ -63,7 +64,7 @@
 			<thead><row>
 				<entry>Game name</entry>
 				<entry>ID</entry>
-				<entry>interpreter version</entry>
+				<entry>Interpreter version</entry>
 				<entry>Parser</entry>
 				<entry>Map file ver.</entry>
 				<entry>More</entry>
@@ -73,6 +74,8 @@
 			<row><entry>Leisure suit Larry 1 demo</entry><entry>?</entry><entry>1.000.084</entry><entry>no</entry><entry>0</entry><entry>Rn Ss </entry></row>
 			<row><entry>Conquest of the long bow</entry><entry>?</entry><entry>1.000.168</entry><entry>no</entry><entry>1</entry><entry>Rn Ss </entry></row>
 			<row><entry>Space Quest 1 demo</entry><entry>?</entry><entry>1.000.181</entry><entry>no</entry><entry>0</entry><entry>Rn Ss </entry></row>
+			<row><entry>Leisure suit Larry 5 demo</entry><entry>?</entry><entry>1.000.181</entry><entry>?</entry><entry>0</entry><entry></entry></row>
+			<row><entry>Leisure Suit Larry 1 (VGA)</entry><entry>?</entry><entry>1.000.500</entry><entry>?</entry><entry>0</entry><entry></entry></row>
 			<row><entry>Leisure Suit Larry 1 (VGA)</entry><entry>?</entry><entry>1.000.577</entry><entry>?</entry><entry>?</entry><entry></entry></row>
 			<row><entry>King's Quest 5</entry><entry>?</entry><entry>1.000.784</entry><entry>?</entry><entry>?</entry><entry></entry></row>
 			<row><entry>Space Quest 4</entry><entry>?</entry><entry>1.000.753</entry><entry>no</entry><entry>0</entry><entry>Re Ss </entry></row>
@@ -88,14 +91,14 @@
 			<thead><row>
 				<entry>Game name</entry>
 				<entry>ID</entry>
-				<entry>interpreter version</entry>
+				<entry>Interpreter version</entry>
 				<entry>Parser</entry>
 				<entry>Map file ver.</entry>
 				<entry>More</entry>
 			</row></thead>
 			<tbody>
 			<row><entry>Police Quest 3 demo</entry><entry>?</entry><entry>T.A00.052</entry><entry>no</entry><entry>1</entry><entry>Rn Ss </entry></row>
-			<row><entry>Space Quest 1 (VGA)</entry><entry>?</entry><entry>T.A00.081</entry><entry>?</entry><entry>?</entry><entry></entry></row>
+			<row><entry>Space Quest 1 (VGA)</entry><entry>?</entry><entry>T.A00.081</entry><entry>?</entry><entry>1</entry><entry></entry></row>
 			<row><entry>Leisure suit Larry 5</entry><entry>?</entry><entry>T.A00.169</entry><entry>no</entry><entry>1</entry><entry>Rn Ss </entry></row>
 			<row><entry>Police Quest 3</entry><entry>?</entry><entry>T.A00.178</entry><entry>?</entry><entry>?</entry><entry></entry></row>
 			</tbody>
@@ -110,7 +113,7 @@
 			<thead><row>
 				<entry>Game name</entry>
 				<entry>ID</entry>
-				<entry>interpreter version</entry>
+				<entry>Interpreter version</entry>
 				<entry>Parser</entry>
 				<entry>Map file ver.</entry>
 				<entry>More</entry>
@@ -132,7 +135,7 @@
 			<thead><row>
 				<entry>Game name</entry>
 				<entry>ID</entry>
-				<entry>interpreter version</entry>
+				<entry>Interpreter version</entry>
 				<entry>Parser</entry>
 				<entry>Map file ver.</entry>
 				<entry>More</entry>
@@ -159,15 +162,20 @@
 			<row><entry>Space Quest 5 german</entry><entry>?</entry><entry>1.001.068</entry><entry>?</entry><entry>?</entry><entry></entry></row>
 			<row><entry>Freddy Pharkas demo</entry><entry>?</entry><entry>1.001.069</entry><entry>no</entry><entry>1</entry><entry>Rn Sh </entry></row>
 			<row><entry>Leisure suit Larry 6 dos+win</entry><entry>?</entry><entry>1.001.069</entry><entry>no</entry><entry>1</entry><entry>Rn D* Sh </entry></row>
+			<row><entry>Kings Quest 6</entry><entry>?</entry><entry>1.001.069</entry><entry>?</entry><entry>1</entry><entry></entry></row>
 			<row><entry>Twisty history demo dos+win</entry><entry>?</entry><entry>1.001.069</entry><entry>no</entry><entry>1</entry><entry>Rn Sh </entry></row>
 			<row><entry>Twisty history demo dos+win</entry><entry>?</entry><entry>1.001.070</entry><entry>no</entry><entry>1</entry><entry>Rn Sh </entry></row>
 			<row><entry>Pepper's adventures in time</entry><entry>?</entry><entry>1.001.072</entry><entry>no</entry><entry>1</entry><entry>Rn Sh </entry></row>
 			<row><entry>Laura Bow 2</entry><entry>?</entry><entry>1.001.072</entry><entry>no</entry><entry>1</entry><entry>Rn Sh </entry></row>
 			<row><entry>Freddy Pharkas</entry><entry>?</entry><entry>1.cfs.081</entry><entry>no</entry><entry>1</entry><entry>Rn Sh </entry></row>
+			<row><entry>Slater and Charlie go camping demo</entry><entry>?</entry><entry>1.cfs.081</entry><entry>?</entry><entry>1</entry><entry></entry></row>
 			<row><entry>Gabriel Knight 1 demo</entry><entry>?</entry><entry>1.001.092</entry><entry>no</entry><entry>1</entry><entry>Rn Sh </entry></row>
 			<row><entry>Freddy Pharkas demo win</entry><entry>?</entry><entry>1.001.095</entry><entry>no</entry><entry>1</entry><entry>Rn Sh </entry></row>
+			<row><entry>Police Quest 4 demo</entry><entry>?</entry><entry>1.001.096</entry><entry>?</entry><entry>1</entry><entry></entry></row>
 			<row><entry>Leisure suit Larry 6 dos+win</entry><entry>?</entry><entry>1.001.113</entry><entry>no</entry><entry>1</entry><entry>Rn D* Sh </entry></row>
+			<row><entry>Freddy Pharkas</entry><entry>?</entry><entry>1.001.132</entry><entry>?</entry><entry>1</entry><entry></entry></row>
 			<row><entry>King's Quest 6</entry><entry>?</entry><entry>1.cfs.158</entry><entry>?</entry><entry>?</entry><entry></entry></row>
+			<row><entry>King's Quest 6 demo</entry><entry>?</entry><entry>1.cfs.158</entry><entry>?</entry><entry>1</entry><entry></entry></row>
 			<row><entry>Laura Bow 2</entry><entry>?</entry><entry>2.000.274</entry><entry>no</entry><entry>1</entry><entry>Rn Sh </entry></row>
 			<row><entry>Quest for Glory 1 vga</entry><entry>?</entry><entry>L.rry.021</entry><entry>?</entry><entry>?</entry><entry></entry></row>
 			<row><entry>Quest for Glory 3 german</entry><entry>?</entry><entry>L.rry.083</entry><entry>?</entry><entry>?</entry><entry></entry></row>
@@ -185,7 +193,7 @@
 			<thead><row>
 				<entry>Game name</entry>
 				<entry>ID</entry>
-				<entry>interpreter version</entry>
+				<entry>Interpreter version</entry>
 				<entry>Parser</entry>
 				<entry>Map file ver.</entry>
 				<entry>More</entry>

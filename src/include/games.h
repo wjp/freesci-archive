@@ -36,11 +36,12 @@ typedef struct _sci_game {
   char *name;
 } sci_game_t;
 
-#define SCI_GAMES_COUNT 24
+#define SCI_GAMES_COUNT 26
 
 sci_game_t sci_games[] = {
   { 0x01684e20, SCI_VERSION(0,000,685), "ARTHUR" },
   { 0x00a9a8d0, SCI_VERSION(0,000,631), "CB1" },
+  { 0x032efe2a, SCI_VERSION(0,000,631), "CB1" }, /* ver. 1.000.046 */
   { 0x010a46ae, SCI_VERSION(0,000,519), "cardGames" },
   { 0x009f17fb, SCI_VERSION(0,000,572), "solitare" },
   { 0x00d441c7, SCI_VERSION(0,000,668), "iceMan" },
@@ -49,6 +50,7 @@ sci_game_t sci_games[] = {
   { 0x00e8b382, SCI_VERSION(0,000,409), "LSL2" },
   { 0x03082081, SCI_VERSION(0,000,572), "LSL3" },
   { 0x00e2e755, SCI_VERSION(0,000,572), "LSL3" },
+  { 0x00798ae3, SCI_VERSION(0,000,530), "LSL3" }, /* Demo version */
   { 0x032e674b, SCI_VERSION(0,000,395), "PQ2" },
   { 0x032eaeff, SCI_VERSION(0,000,490), "PQ2" },
   { 0x009b0cd2, SCI_VERSION(0,000,566), "HQ" },

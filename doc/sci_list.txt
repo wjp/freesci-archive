@@ -18,6 +18,7 @@ Police Quest 2                    |1ee0psl d 0.000.490 PQ2
 King's Quest 4                    |1ee0psl d 0.000.502 KQ4
 Fun Seeker's Guide                |1ee0psl d 0.000.506 emc
 Hoyle's Book of Games 1           |1ee0 sl d 0.000.530 cardGames
+Leisure suit Larry 3 demo         |1e 0      0.000.530 LSL3
 Hero's Quest 1                    |1ee0psl d 0.000.566 HQ
 Leisure Suit Larry 3              |1ee0psl d 0.000.572 LSL3
 Quest for Glory 1                 |1ee0psl d 0.000.629 Glory
@@ -43,13 +44,15 @@ King's Quest 5                    |1ve0-sl   1.000.060
 Leisure suit Larry 1 demo         |1vn0-sl   1.000.084
 Conquest of the long bow          |1vn1-sl   1.000.168
 Space Quest 1 demo                |1vn0-sl   1.000.181
+Leisure suit Larry 5 demo         |   0      1.000.181
+Leisure Suit Larry 1 (VGA)        |   0      1.000.500
 Leisure Suit Larry 1 (VGA)        |1v        1.000.577
 King's Quest 5                    |1         1.000.784
 Space Quest 4                     |1ve0-sl   1.000.753
 
 --BEGIN: SCI1-T.A series
 Police Quest 3 demo               |1vn1-sl   T.A00.052
-Space Quest 1 (VGA)               |1v        T.A00.081
+Space Quest 1 (VGA)               |1v 1      T.A00.081
 Leisure suit Larry 5              |1vn1-sl   T.A00.169
 Police Quest 3                    |1         T.A00.178
 
@@ -82,15 +85,20 @@ Space Quest 5 french              |1         1.001.068
 Space Quest 5 german              |1         1.001.068
 Freddy Pharkas demo               |1vn1-hp   1.001.069
 Leisure suit Larry 6 dos+win      |1vn1-hp * 1.001.069
+Kings Quest 6                     |   1      1.001.069
 Twisty history demo dos+win       |1vn1-hp   1.001.069
 Twisty history demo dos+win       |1vn1-hp   1.001.070
 Pepper's adventures in time       |1vn1-hp   1.001.072
 Laura Bow 2                       |1vn1-hp   1.001.072
 Freddy Pharkas                    |1vn1-hp   1.cfs.081
+Slater and Charlie go camping demo|   1      1.cfs.081
 Gabriel Knight 1 demo             |1vn1-hp   1.001.092
 Freddy Pharkas demo win           |1vn1-hp   1.001.095
+Police Quest 4 demo               |   1      1.001.096
 Leisure suit Larry 6 dos+win      |1vn1-hp * 1.001.113
+Freddy Pharkas                    |   1      1.001.132
 King's Quest 6                    |1v        1.cfs.158
+King's Quest 6 demo               |   1      1.cfs.158
 Laura Bow 2                       |1vn1-hp   2.000.274
 Quest for Glory 1 vga             |1v        L.rry.021
 Quest for Glory 3 german          |1v        L.rry.083
