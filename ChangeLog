@@ -1,5 +1,13 @@
 2004-12-24  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/gp32/config.h, src/gp32/config.c, src/gp32/wrap.h,
+	src/gp32/wrap.c, src/gp32/Makefile, src/gp32/main.S,
+	src/gfx/drivers/gp32_driver.c: Added to	repository.
+	* src/Makefile.am, src/gfx/drivers/Makefile.am: Updated for new
+	files.
+
+2004-12-24  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/main.c, src/gfx/drivers/gfx_drivers.c, src/include/engine.h,
 	src/include/resource.h, src/include/scitypes.h, src/scicore/tools.c,
 	src/sound/midiout.c: Rudimentary GP32 port.
