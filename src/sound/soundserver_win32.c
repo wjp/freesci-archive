@@ -85,8 +85,8 @@ win32_soundserver_init(LPVOID lpP)
 int
 sound_win32_init(state_t *s, int flags)
 {
-	LPDWORD lpChildId = NULL;	/* child thread ID */
-	int i;					/* for enumerating over bulk queues */
+	DWORD dwChildId;	/* child thread ID */
+	int i;				/* for enumerating over bulk queues */
 
 #ifdef SSWIN_DEBUG
 	fprintf(stderr, "SSWIN_DEBUG: TID%u, sound_win32_init()\n", GetCurrentThreadId());
@@ -115,13 +115,13 @@ sound_win32_init(state_t *s, int flags)
 							out_mutex_name);
 	if (out_mutex == NULL)
 	{
-		fprintf(stderr, "sound_win32_init(): CreateMutex(%s) failed\n", out_mutex_name);
+		fprintf(stderr, "sound_win32_init(): CreateMutex(%s) failed, GetLastError() returned %u\n", out_mutex_name, GetLastError());
 	}
 
 	in_mutex = CreateMutex(NULL, FALSE, in_mutex_name);
 	if (in_mutex == NULL)
 	{
-		fprintf(stderr, "sound_win32_init(): CreateMutex(%s) failed\n", in_mutex_name);
+		fprintf(stderr, "sound_win32_init(): CreateMutex(%s) failed, GetLastError() returned %u\n", in_mutex_name, GetLastError());
 	}
 
 	/* set up name for bulk mutices and create them */
@@ -137,7 +137,7 @@ sound_win32_init(state_t *s, int flags)
 		bulk_mutices[i] = CreateMutex(NULL, FALSE, mutex_name_temp);
 		if (bulk_mutices[i] == NULL)
 		{
-			fprintf(stderr, "sound_win32_init(): CreateMutex(%s) failed\n", mutex_name_temp);
+			fprintf(stderr, "sound_win32_init(): CreateMutex(%s) failed, GetLastError() returned %u\n", mutex_name_temp, GetLastError());
 		}
 
 		mutex_name_temp[mutex_name_len - 2] = '\0'; /* overwrite number */
@@ -148,10 +148,15 @@ sound_win32_init(state_t *s, int flags)
 	sound_eq_init(&inqueue);
 	sound_eq_init(&ev_queue);
 
-	child_thread = CreateThread( NULL, 0, win32_soundserver_init, s, 0, lpChildId);
+	child_thread = CreateThread( NULL,		/* not inheritable */
+		                         0,			/* use default stack size */
+								 win32_soundserver_init,	/* callback function */
+								 0,			/* cb function parameter - should be s but fails on Win9x */
+								 0,			/* thread runs immediately */
+								 &dwChildId);	/* pointer to id of thread */
 	if (child_thread == NULL)
 	{
-		fprintf(stderr, "sound_win32_init(): CreateThread() failed\n");
+		fprintf(stderr, "sound_win32_init(): CreateThread() failed, GetLastError() returned %u\n", GetLastError());
 	}
 
 	return 0;
@@ -178,7 +183,7 @@ sound_win32_get_event(state_t *s)
 
 	if (WaitForSingleObject(out_mutex, MUTEX_TIMEOUT) != WAIT_OBJECT_0)
 	{
-		fprintf(stderr, "sound_win32_get_event(): WaitForSingleObject(%s) failed\n", out_mutex_name);
+		fprintf(stderr, "sound_win32_get_event(): WaitForSingleObject(%s) failed, GetLastError() returned %u\n", out_mutex_name, GetLastError());
 		return NULL;
 	}
 
@@ -186,7 +191,7 @@ sound_win32_get_event(state_t *s)
 	{
 		if (ReleaseMutex(out_mutex) == 0)
 		{
-			fprintf(stderr, "sound_win32_get_event(): ReleaseMutex(%s) failed\n", out_mutex_name);
+			fprintf(stderr, "sound_win32_get_event(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", out_mutex_name, GetLastError());
 		}
 
 		return NULL;
@@ -196,7 +201,7 @@ sound_win32_get_event(state_t *s)
 
 	if (ReleaseMutex(out_mutex) == 0)
 	{
-		fprintf(stderr, "sound_win32_get_event(): ReleaseMutex(%s) failed\n", out_mutex_name);
+		fprintf(stderr, "sound_win32_get_event(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", out_mutex_name, GetLastError());
 	}
 
 	/*
@@ -216,7 +221,7 @@ sound_win32_queue_event(int handle, int signal, int value)
 
 	if (WaitForSingleObject(out_mutex, MUTEX_TIMEOUT) != WAIT_OBJECT_0)
 	{
-		fprintf(stderr, "sound_win32_queue_event(): WaitForSingleObject(%s) failed\n", out_mutex_name);
+		fprintf(stderr, "sound_win32_queue_event(): WaitForSingleObject(%s) failed, GetLastError() returned %u\n", out_mutex_name, GetLastError());
 		return;
 	}
 
@@ -224,7 +229,7 @@ sound_win32_queue_event(int handle, int signal, int value)
 
 	if (ReleaseMutex(out_mutex) == 0)
 	{
-		fprintf(stderr, "sound_win32_queue_event(): ReleaseMutex(%s) failed\n", out_mutex_name);
+		fprintf(stderr, "sound_win32_queue_event(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", out_mutex_name, GetLastError());
 	}
 
 	/*  printf("set %04x %d %d\n", handle, signal, value); */
@@ -239,7 +244,7 @@ sound_win32_queue_command(int handle, int signal, int value)
 
 	if (WaitForSingleObject(in_mutex, MUTEX_TIMEOUT) != WAIT_OBJECT_0)
 	{
-		fprintf(stderr, "sound_win32_queue_command(): WaitForSingleObject(%s) failed\n", in_mutex_name);
+		fprintf(stderr, "sound_win32_queue_command(): WaitForSingleObject(%s) failed, GetLastError() returned %u\n", in_mutex_name, GetLastError());
 		return;
 	}
 
@@ -247,7 +252,7 @@ sound_win32_queue_command(int handle, int signal, int value)
 
 	if (ReleaseMutex(in_mutex) == 0)
 	{
-		fprintf(stderr, "sound_win32_queue_command(): ReleaseMutex(%s) failed\n", in_mutex_name);
+		fprintf(stderr, "sound_win32_queue_command(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", in_mutex_name, GetLastError());
 	}
 }
 
@@ -262,7 +267,7 @@ sound_win32_get_command(GTimeVal *wait_tvp)
 
 	if (WaitForSingleObject(in_mutex, MUTEX_TIMEOUT) != WAIT_OBJECT_0)
 	{
-		fprintf(stderr, "sound_win32_get_command(): WaitForSingleObject(%s) failed\n", in_mutex_name);
+		fprintf(stderr, "sound_win32_get_command(): WaitForSingleObject(%s) failed, GetLastError() returned %u\n", in_mutex_name, GetLastError());
 		return NULL;
 	}
 
@@ -271,7 +276,7 @@ sound_win32_get_command(GTimeVal *wait_tvp)
 
 		if (ReleaseMutex(in_mutex) == 0)
 		{
-			fprintf(stderr, "sound_win32_get_command(): ReleaseMutex(%s) failed\n", in_mutex_name);
+			fprintf(stderr, "sound_win32_get_command(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", in_mutex_name, GetLastError());
 		}
 
 		return NULL;
@@ -281,7 +286,7 @@ sound_win32_get_command(GTimeVal *wait_tvp)
 
 	if (ReleaseMutex(in_mutex) == 0)
 	{
-		fprintf(stderr, "sound_win32_get_command(): ReleaseMutex(%s) failed\n", in_mutex_name);
+		fprintf(stderr, "sound_win32_get_command(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", in_mutex_name, GetLastError());
 	}
 
 	return event;
@@ -304,7 +309,7 @@ sound_win32_get_data(byte **data_ptr, int *size, int maxlen)
 
 	if (WaitForSingleObject(bulk_mutices[index], MUTEX_TIMEOUT) != WAIT_OBJECT_0)
 	{
-		fprintf(stderr, "sound_win32_get_data(): WaitForSingleObject(%s) failed\n", mutex_name_temp);
+		fprintf(stderr, "sound_win32_get_data(): WaitForSingleObject(%s) failed, GetLastError() returned %u\n", mutex_name_temp, GetLastError());
 		return -1;
 	}
 
@@ -313,7 +318,7 @@ sound_win32_get_data(byte **data_ptr, int *size, int maxlen)
 		/* no data, so release the mutex */
 		if (ReleaseMutex(bulk_mutices[index]) == 0)
 		{
-			fprintf(stderr, "sound_win32_get_data(): ReleaseMutex(%s) failed\n", mutex_name_temp);
+			fprintf(stderr, "sound_win32_get_data(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", mutex_name_temp, GetLastError());
 		}
 
 		Sleep(1); /* take a nap */
@@ -321,14 +326,14 @@ sound_win32_get_data(byte **data_ptr, int *size, int maxlen)
 		/* then get it back again */
 		if (WaitForSingleObject(bulk_mutices[index], MUTEX_TIMEOUT) != WAIT_OBJECT_0)
 		{
-			fprintf(stderr, "sound_win32_get_data(): WaitForSingleObject(%s) failed\n", mutex_name_temp);
+			fprintf(stderr, "sound_win32_get_data(): WaitForSingleObject(%s) failed, GetLastError() returned %u\n", mutex_name_temp, GetLastError());
 			return -1;
 		}
 	}
 
 	if (ReleaseMutex(bulk_mutices[index]) == 0)
 	{
-		fprintf(stderr, "sound_win32_get_data(): ReleaseMutex(%s) failed\n", mutex_name_temp);
+		fprintf(stderr, "sound_win32_get_data(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", mutex_name_temp, GetLastError());
 	}
 
 	*data_ptr = (byte *) data;
@@ -352,7 +357,7 @@ sound_win32_send_data(byte *data_ptr, int maxsend)
 
 	if (WaitForSingleObject(bulk_mutices[index], MUTEX_TIMEOUT) != WAIT_OBJECT_0)
 	{
-		fprintf(stderr, "sound_win32_send_data(): WaitForSingleObject(%s) failed\n", mutex_name_temp);
+		fprintf(stderr, "sound_win32_send_data(): WaitForSingleObject(%s) failed, GetLastError() returned %u\n", mutex_name_temp, GetLastError());
 		return -1;
 	}
 
@@ -360,7 +365,7 @@ sound_win32_send_data(byte *data_ptr, int maxsend)
 
 	if (ReleaseMutex(bulk_mutices[index]) == 0)
 	{
-		fprintf(stderr, "sound_win32_send_data(): ReleaseMutex(%s) failed\n", mutex_name_temp);
+		fprintf(stderr, "sound_win32_send_data(): ReleaseMutex(%s) failed, GetLastError() returned %u\n", mutex_name_temp, GetLastError());
 	}
 
 	return maxsend;

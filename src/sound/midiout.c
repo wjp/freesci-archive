@@ -27,7 +27,6 @@ midiout_driver_t *midiout_drivers[] = {
 	&midiout_driver_ossseq,
 	&midiout_driver_ossopl3,
 #endif /* HAVE_SYS_SOUNDCARD_H */
-	&midiout_driver_null,
 #if !defined(_DOS) && !defined(WIN32)
 	&midiout_driver_unixraw,
 #endif
@@ -37,6 +36,7 @@ midiout_driver_t *midiout_drivers[] = {
 #ifdef _WIN32
 	&midiout_driver_win32mci,
 #endif
+	&midiout_driver_null,
 	NULL
 };
 
@@ -59,9 +59,9 @@ int midiout_write_event(guint8 *buffer, unsigned int count)
   if (buffer[0] == running_status)
     return midiout_driver->midiout_write(buffer + 1, count -1);
   else {
-  running_status = buffer[0]; 
+  running_status = buffer[0];
     return midiout_driver->midiout_write(buffer, count);
-  } 
+  }
 
 }
 
@@ -122,7 +122,7 @@ struct _midiout_driver *midiout_find_driver(char *name)
 	  return midiout_drivers[0];
         }
 
-        while (midiout_drivers[retval] && 
+        while (midiout_drivers[retval] &&
 	       strcasecmp(name, midiout_drivers[retval]->name))
                 retval++;
 

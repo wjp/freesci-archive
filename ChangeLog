@@ -1,4 +1,19 @@
-2001-09-06  Alex Angas  <wgd@adelaide.on.net>
+2001-09-08  Alex Angas  <wgd@internode.on.net>
+
+	* ./DEBUGGING.Win32: Removed.
+	
+	* ./README.Win32: Updated.
+	
+	* ./THANKS: Updated to include the old Sierra employees I'm aware of
+	that gave us leads or tried to otherwise help.
+	
+	* src/sound/soundserver_win32.c: Fixed CreateThread() problem under
+	Win9x. Added GetLastError() output on Win32 function failures.
+	
+	* src/sound/midiout.c: Moved the null sound driver to be the least
+	likely used.
+
+2001-09-06  Alex Angas  <wgd@internode.on.net>
 
 	* src/sound/soundserver.c: Did some very initial commenting.
 	

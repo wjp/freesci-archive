@@ -1,50 +1,58 @@
-Last updated 05-02-2001 by Matt Hargett <matt@use.net>
+Last updated 8 September 2001 by Alex Angas <wgd@internode.on.net>
+
+ABOUT
+-----
 
 The Win32 version of freesci is now almost at the same level of
-functionality as the Linux version. The main thing that is missing is MIDI
-support. Because of this, introductions of several games do not run
-automatically and have to be interrupted by a keypress. Also,
-Hero's Quest 1 will not allow to you create a character for the
+functionality as the Linux version. The main thing that is missing is decent
+MIDI support. Because of this, introductions of several games do not run
+automatically and may have to be interrupted by a keypress. Also,
+Hero's Quest 1 may not allow to you create a character for the
 same reason.
 
-You will need the following libraries tools to build freesci for Win32:
+
+BUILDING
+--------
+
+You will need the following libraries and tools to build FreeSCI for Win32:
  * Visual C++ 6.0 with Service Pack 5 for Visual Studio installed.
- * The win32 platform SDK, and the DirectX SDK.
- * The SDL library: http://www.libsdl.org . You need to download the source
-	zip file.
+ * The latest Win32 Platform SDK, both Core and DirectX components, from:
+   http://www.microsoft.com/msdownload/platformsdk/sdkupdate/
+   (No need to download the 64-bit components.)
+ * The SDL library from http://www.libsdl.org/ . You need to download the
+   development library for Win32 (e.g. SDL-devel-x.y.z-VC6.zip).
 
 The project files assume the following directory structure:
 
-<root>
   \src
     \freesci
+      \bin
       \src
-        \win32  
-    \sdl-1.2.0
+        \win32
+    \SDL
       \include
-      \VisualC
+      \lib
 
-
-0. In the SDL-1.2.0 directory, unzip the VisualC.zip. Load their workspace,
-and build a "Win32 - Release" binary. Copy the resulting SDL.DLL somewhere in
-your path.
 
 1. Go into the src\win32 directory and load the freesci workspace (freesci.dsw) 
-into Visual C++ 6.
+   into Visual C++ 6.
 
-2. Set the active project to "sciv - Win32 Release". Rebuild all.
+2. Set the active project to "freesci - Win32 Release". Rebuild all.
 
-3. The freesci.dll and sciv.exe binaries should be in freesci\src\win32\release. 
-  Copy them into your path for convenience. 
-  NOTE: sdl.dll MUST be in your path or in the same directory as freesci.dll.
+3. The fsci.dll and freesci.exe binaries should be in freesci\bin. 
+   NOTE: sdl.dll MUST be in your path or in the same directory as fsci.dll.
 
 4. You should be good to go! Go buy a Sierra collector's pack at your favorite
-software store for $15-20, copy the game directory on the CD to your hard
-drive, rename their sciv.exe to something else, and run FreeSCI's sciv.exe.
+   software store for $15-20 and copy the game directory on the CD to the
+   FreeSCI bin directory.
 
-You'll probably be thinking that it doesn't loook much prettier than the 
-original SCI. Try putting these options into your config
-file (%WINDIR%\.freesci\config):
+
+CONFIG
+------
+
+You'll probably be thinking that it doesn't look much prettier than the 
+original SCI. Try putting these options into your config file
+(%WINDIR%\.freesci\config):
 
 pic0_dither_mode = dither256
 pic0_dither_pattern = unscaled
@@ -55,14 +63,59 @@ cursor_filter = trilinear
 text_filter = trilinear
 animation_delay = 5
 
-
 NOTE: When scaling beyond 3 times (-x3 or -y3), cursor redraws no longer 
 work properly. Also, fullscreen mode in SDL is currently not supported/working 
 on Win32. Hopefully, both of these bugs will be fixed in an upcoming release.
-If you're feeling adventurous, you can also try the preliminary MIDI support
-for win32 by specifying -Owin32mci on the sciv commandline. 
+
+
+DEBUGGING
+---------
+
+Have a read of 'How Do I... Topics: Debugging' in the MSDN docs. Don't have
+the MSDN library? Either use http://msdn.microsoft.com/ , or subscribe to the
+MSDN Library (see the MS Web site), or buy a cheap copy of Visual Basic
+Learning Edition which comes with the MSDN CDs. :-)
+
+
+CVS
+---
+
+This is the best way to make sure you have the latest snapshot of FreeSCI. Info
+on CVS can be obtained from http://www.cvshome.org/ .
+
+Once you have a copy, I suggest copying it somewhere else to actually play with
+and work on, and then use the built-in diff command to submit diffs. :-)
+
+
+How to set up WinCVS:
+
+1. Download WinCVS from http://www.wincvs.org/ and install.
+2. Run it, and under Admin / Preferences... enter this for CVSROOT:
+   anonymous@cs.alfred.edu:/home/cvs
+   (Note: you may need to enter the IP for cs.alfred.edu instead of its host
+   name if WinCVS can't find it.
+3. Go to Admin / Login... and leave the password blank.
+4. Go to Create / Checkout module... and enter freesci as module name.
+5. Once it's downloaded, go to Admin / Logout.
+
+
+How to set up command-line CVS:
+
+1. Download the command-line tool from http://www.cvshome.org/ or their FTP
+   server ftp://ftp.cvshome.org/pub/win32/ .
+2. Unzip it somewhere, go to the DOS prompt (or make a shortcut) and enter
+   the command:
+   cvs -d :pserver:anonymous@cs.alfred.edu:/home/cvs -z3 co freesci
+
+
+GET INVOLVED
+------------
+
+We'd love people to help out. You don't have to have much (or any) experience
+with C. Check out the Development page at the FreeSCI Web site for more
+details.
 
 Enjoy!
 
-
-
+The FreeSCI Team.
+http://freesci.linuxgames.com/
