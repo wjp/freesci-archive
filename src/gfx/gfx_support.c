@@ -35,7 +35,7 @@
 int axp_have_mvi = 0;
 #endif
 
-int gfx_crossblit_alpha_threshold;
+int gfx_crossblit_alpha_threshold = 128;
 
 #define DRAWLINE_FUNC _gfx_draw_line_buffer_1
 #define PIXELWIDTH 1

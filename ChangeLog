@@ -1,3 +1,17 @@
+2001-03-17  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (nsrect_clip): nsrect clipping now works as in
+	Sierra SCI
+	(GASEOUS_VIEW_MASK): any of NO_UPDATE, REMOVE, or IGNORE_ACTOR now
+	ignores the actor wrt CanBeHere
+
+2001-03-16  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/gfx_support.c: Preinitialized alpha threshold to fix gfx_test
+
+	* src/engine/kgraphics.c (kCanBeHere): Changed to behave more like
+	Sierra SCI
+
 2001-03-14  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/gfx/drivers/xlib_driver.c:  Added MIT-SHM pixmap support
@@ -17,6 +31,12 @@
 
 2001-03-13  Christoph Reichenbach  <jameson@theta.darmstadt.gmd.de>
 
+	* src/engine/kgraphics.c (_k_set_now_seen): Split SetNowSeen()
+	into another abs_rect_t function
+	(nsrect_clip): Added function for priority line clipping
+	(collides_with): Function now collides against nsrects rather
+	than bases
+	
 	* configure.in: Added X11 MIT-SHM detection
 
 2001-03-12  Christoph Reichenbach  <jameson@linuxgames.com>

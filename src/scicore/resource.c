@@ -311,7 +311,7 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 	int counter = 0;
 
 	sci_init_dir(&dir);
-	entry = sci_find_first(&dir, "*");
+	entry = sci_find_first(&dir, "*.???");
 	while (entry) {
 		int restype = sci_invalid_resource;
 		int resnumber = -1;

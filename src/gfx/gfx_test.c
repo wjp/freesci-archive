@@ -427,7 +427,7 @@ gfxr_interpreter_get_font(gfx_resstate_t *state, int nr)
 	for (i = 0; i < BUILTIN_CHARS_NR; i++)
 		font->widths[i] = BUILTIN_CHARS_WIDTH;
 	font->row_size = (BUILTIN_CHARS_WIDTH + 7) >> 3;
-	font->line_height = BUILTIN_CHARS_HEIGHT;
+	font->height = font->line_height = BUILTIN_CHARS_HEIGHT;
 	font->char_size = ((BUILTIN_CHARS_WIDTH + 7) >> 3) * BUILTIN_CHARS_HEIGHT;
 	font->data = memdup(builtin_font, font->char_size * BUILTIN_CHARS_NR);
 
@@ -596,7 +596,7 @@ message(char *msg)
 
 
 	handle = gfxop_new_text(state, 0, msg, 320, ALIGN_CENTER, ALIGN_TOP,
-				white, white, transparent, 0);
+				white, white, black, 0);
 
 	if (!handle) return 1;
 

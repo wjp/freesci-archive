@@ -353,7 +353,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 #endif	   
 	if (!foo_image)
-	  foo_image = XCreateImage(S->display, DefaultVisual(S->display, 
+	  foo_image = XCreateImage(S->display, DefaultVisual(S->display,
 							     DefaultScreen(S->display)),
 				   bytespp << 3, ZPixmap, 0, malloc(23), 2, 2, 8, 0);
 
@@ -416,6 +416,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	    }
 	    shmctl(S->shm[i]->shmid, IPC_RMID, 0);
 	  }
+
 	  if (have_shmem) {	    
 	    S->visual[i] = XShmCreatePixmap(S->display, S->window, 
 					    S->shm[i]->shmaddr,
@@ -492,7 +493,7 @@ xlib_exit(struct _gfx_driver *drv)
 			S->priority[i] = NULL;
 		}
 
-		for (i = 0; i < 3; i++)
+		for (i = 0; i < 3; i++) {
 #ifdef HAVE_MITSHM
 		  if (have_shmem && S->shm[i]) {
 		    XShmDetach(S->display, S->shm[i]);
@@ -509,6 +510,7 @@ xlib_exit(struct _gfx_driver *drv)
 		if (S->visual[i])
 #endif
 		    XFreePixmap(S->display, S->visual[i]);
+		}
 
 		XFreeGC(S->display, S->gc);
 		XDestroyWindow(S->display, S->window);
@@ -830,6 +832,7 @@ xlib_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 
 		S->pointer_data[0] = visual_data = xlib_create_cursor_data(drv, pointer, 1);
 		S->pointer_data[1] = mask_data = xlib_create_cursor_data(drv, pointer, 0);
+		S->pointer_data[0] = NULL;
 		S->pointer_data[1] = NULL;
 		visual = XCreateBitmapFromData(S->display, S->window, visual_data, real_xl, pointer->yl);
 		mask = XCreateBitmapFromData(S->display, S->window, mask_data, real_xl, pointer->yl);
@@ -843,6 +846,7 @@ xlib_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 		XFreePixmap(S->display, visual);
 		XFreePixmap(S->display, mask);
 		free(mask_data);
+		free(visual_data);
 	}
 
 	XDefineCursor(S->display, S->window, S->mouse_cursor);

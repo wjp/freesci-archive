@@ -47,15 +47,15 @@ extern gfx_driver_t gfx_driver_dd;
 
 static gfx_driver_t *gfx_drivers[] = {
 #ifdef HAVE_LIBGGI
-  &gfx_driver_ggi,
+	&gfx_driver_ggi,
 #endif
 #ifndef X_DISPLAY_MISSING
-  &gfx_driver_xlib,
+	&gfx_driver_xlib,
 #endif
 #ifdef HAVE_DDRAW
-  &gfx_driver_dd,
+	&gfx_driver_dd,
 #endif
-  NULL
+	NULL
 };
 
 struct _gfx_driver *

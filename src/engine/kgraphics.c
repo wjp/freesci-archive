@@ -790,6 +790,8 @@ get_nsrect(state_t *s, heap_ptr object);
 static inline abs_rect_t
 nsrect_clip(state_t *s, abs_rect_t rect, int priority);
 
+#define GASEOUS_VIEW_MASK (_K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)
+
 static inline int
 collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int funct_nr, int argc, heap_ptr argp)
 {
@@ -798,9 +800,8 @@ collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int funct_nr, int
 					    UGET_SELECTOR(other_obj, priority));
 
 	SCIkdebug(SCIkBRESEN, "OtherSignal=%04x, z=%04x obj=%04x\n", other_signal,
-		  (other_signal & (_K_VIEW_SIG_FLAG_DISPOSE_ME | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)), other_obj);
-	if ((other_signal & (_K_VIEW_SIG_FLAG_DISPOSE_ME | _K_VIEW_SIG_FLAG_IGNORE_ACTOR |
-			     _K_VIEW_SIG_FLAG_HIDDEN)) == 0) {
+		  (other_signal & GASEOUS_VIEW_MASK), other_obj);
+	if ((other_signal & GASEOUS_VIEW_MASK) == 0) {
 					/* check whether the other object ignores actors */
 
 		SCIkdebug(SCIkBRESEN, "  against (%d,%d) to (%d,%d)\n",
@@ -850,8 +851,8 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (s->acc == 0)
 		return; /* Can'tBeHere */
 
-	if (signal & (_K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)) {
-		s->acc= signal & (_K_VIEW_SIG_FLAG_REMOVE|_K_VIEW_SIG_FLAG_IGNORE_ACTOR); /* CanBeHere- it's either being disposed, or it ignores actors anyway */
+	if (signal & GASEOUS_VIEW_MASK) {
+		s->acc= signal & GASEOUS_VIEW_MASK; /* CanBeHere- it's either being disposed, or it ignores actors anyway */
 		return; /* CanBeHere */
 	}
 
@@ -1283,11 +1284,8 @@ abs_rect_t nsrect_clip(state_t *s, abs_rect_t rect, int priority)
 	if (rect.y < pri_top)
 		rect.y = pri_top;
 
-	if (rect.yend < rect.y) {
-		int swap = rect.y;
-		rect.y = rect.yend;
-		rect.yend = swap;
-	}
+	if (rect.yend < rect.y)
+		rect.y = rect.yend - 1;
 
 	return rect;
 }

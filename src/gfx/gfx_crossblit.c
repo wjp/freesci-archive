@@ -46,6 +46,8 @@ static void FUNCTION_NAME(byte *dest, byte *src, int bytes_per_dest_line, int by
 	int x, y;
 	int alpha_end = xl * bytes_per_alpha_pixel;
 
+byte *_dest = dest;
+
 	for (y = 0; y < yl; y++) {
 		int pixel_offset = 0;
 		int alpha_offset = 0;
