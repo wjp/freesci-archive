@@ -1,3 +1,13 @@
+2001-03-14  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/gfx/drivers/xlib_driver.c:  Added MIT-SHM pixmap support
+                  to the Xlib driver.  It is much much faster now.  :)
+	* src/sound/soundserver_null.c:   Fixed the fading code so that
+                  now 0x0000 is treated as "everything", or a regular
+                  handle will also be good.  Also, restore insturment
+                  set whenever the song changes.  And lastly, my last
+                  commit broke the sending of valid MIDI CC events.  
+
 2001-03-14  Christoph Reichenbach  <jameson@theta.darmstadt.gmd.de>
 
 	* src/engine/kgraphics.c (kCanBeHere): CanBeHere now returns success

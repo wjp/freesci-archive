@@ -527,17 +527,16 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 						if (debugging)
 						  fprintf(ds, "Fading %d on handle %04x\n", event.value, event.handle);
 
-						if (song) {
-						  song->fading = event.value;
-						  song->maxfade = event.value;
-						} 
+						if (event.handle == 0x0000) 
+						  if (song) {
+						    song->fading = event.value;
+						    song->maxfade = event.value;
+						  } else if (modsong) {
+						    modsong->fading = event.value;
+						  } else {
+						    fprintf(ds, "Attempt to fade on invalid handle %04x\n", event.handle);
+						  }
 
-						/*
-						if (modsong) 
-						modsong->fading = event.value;
-						else
-						fprintf(ds, "Attempt to fade on invalid handle %04x\n", event.handle);
-						*/
 						break;
 
 					case SOUND_COMMAND_TEST: {
@@ -772,8 +771,18 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 			}
 
 		}
-		if ((song != newsong) && song)
-		  song->pos = old_songpos;
+		if (song != newsong) {
+		  if (newsong) {
+		    int i;
+		    for (i = 0; i < MIDI_CHANNELS; i++) {
+		      if (newsong->instruments[i]) 
+			midi_event2(0xc0 | i, newsong->instruments[i]);
+		    }
+		  }
+		  if (song)
+		    song->pos = old_songpos;
+		}
+
 	
 		song = newsong;
 	}
@@ -808,13 +817,15 @@ void sci_midi_command(song_t *song, guint8 command,
       if (!param)
 	song->velocity[command & 0x0f] = 127;
       break;
-
+    case 0x61: /* UNKNOWN NYI (special for adlib? */
+      break;
     case 0x01: /* modulation */
     case 0x07: /* volume */
     case 0x0a: /* panpot */
     case 0x0b: /* expression */
     case 0x40: /* hold */
     case 0x79: /* reset all */
+      midi_event(command, param, param2);
       break; 
     default:
       fprintf(ds, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
