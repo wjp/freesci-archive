@@ -1,3 +1,7 @@
+2001-04-25  Matt Hargett  <matt@use.net>
+
+	* src/sound/midiout_win32mci.c: New version
+
 2001-04-24  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/cfsml.pl: Fixed heap corruption caused by staic references

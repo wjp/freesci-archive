@@ -16,24 +16,25 @@
  By using this source code, you agree to the licensing terms as stated
  above.
 
+ Current maintainer: Matt Hargett <matt@use.net>
+
 ***************************************************************************/
+
+
+/* NOTE: See http://msdn.microsoft.com for documentation on the midiOut* API
+	calls used in this driver. */
 
 #include <midiout.h>
 
 #include <stdio.h>
-#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <windows.h>
 #include <mmsystem.h>
 
-#ifndef O_SYNC
-#  define O_SYNC 0
-#endif
-
-/* static int fd; */
-LPHMIDIOUT devicename;
+HMIDIOUT devicename;				/* global handle to midiOut device */
+MIDIHDR midioutput;					/* used by midiOut* */
 
 static int win32mci_lastwrote = 0;
 
@@ -42,7 +43,7 @@ midiout_win32mci_set_parameter(struct _midiout_driver *drv, char *attribute, cha
 {
 	if (!strcasecmp(attribute, "device")) 
 	{
-		devicename = value;
+/*		TODO: user should be able to specify MCI device number */
 	} 
 	else
 		sciprintf("Unknown win32mci option '%s'!\n", attribute);
@@ -75,11 +76,12 @@ int midiout_win32mci_open()
 		{
 			fprintf(stderr, "Something went wrong querying device %d: %s\n",
 				loop, ret);
-			exit;
+			return -1;
 		}
 
 		fprintf(stderr, "MCI Device %d: ",loop);
 		fprintf(stderr, "%s,", devicecaps.szPname);
+		/* which kind of device would be the best to default to? */
 		switch (devicecaps.wTechnology)
 		{
 			case MOD_FMSYNTH: fprintf(stderr, "FM synth, "); break;
@@ -93,13 +95,14 @@ int midiout_win32mci_open()
 		fprintf(stderr, "%d voices\n", devicecaps.wVoices);
 
 	}
-	
-	ret = midiOutOpen(&devicename, 1, NULL, NULL, NULL);
+
+	/* TODO: use user specified device number for parameter 2 */
+	ret = midiOutOpen(&devicename, 1, 0, 0, CALLBACK_NULL);
 	if (MMSYSERR_NOERROR != ret)
 	{
 		fprintf(stderr, "Something went wrong opening device %d: %s\n",
 			loop, ret);
-		exit;
+		return -1;
 	}
 		else
 		{
@@ -125,40 +128,71 @@ int midiout_win32mci_close()
 
 int midiout_win32mci_flush()
 {
-  /* opened with O_SYNC; already flushed.. */
-  usleep (320 * win32mci_lastwrote);  /* delay to make sure all was written */
-  return 0;
+	/* usleep (win32mci_lastwrote);  /* delay to make sure all was written */
+
+	return 0;
 }
 
 int midiout_win32mci_write(guint8 *buffer, unsigned int count)
 {
-	unsigned int loop = 0;
 	MMRESULT ret;
 
-	for (loop = 0; loop < count; loop++)
-	{
-		ret = midiOutShortMsg(devicename, buffer[loop]);
-		if (ret != MMSYSERR_NOERROR) 
-		{
-			printf("write error on MIDI device: ");
-			switch(ret)
-			{
-				case MIDIERR_BADOPENMODE: printf("MIDIERR_BADOPENMODE\n");
-				case MIDIERR_NOTREADY: printf("MIDIERR_NOTREADY\n");
-				case MMSYSERR_INVALHANDLE: printf("MMSYSERR_INVALHANDLE\n");
-				default: printf("Unknown error!\n");
-			}
-			return -1;
-		}
+	/* first, we populate the fields of the MIDIHDR */
+	midioutput.lpData			= buffer;	
+	midioutput.dwBufferLength	= sizeof(buffer);
+	midioutput.dwBytesRecorded	= count + 1;	/* WTF is count? */
+	midioutput.dwFlags			= 0;			/* MSDN sez to init this to zero */
 
-		printf("writing %d (%d)-- %02x %02x %02x\n", loop, count, 
-			buffer[0], buffer[1], buffer[2]); 
-		
+	/* then we pass the MIDIHDR here to have the rest of it initialized */
+	ret = midiOutPrepareHeader(devicename, &midioutput, sizeof(midioutput));
+	if (ret != MMSYSERR_NOERROR) 
+	{
+		printf("midiOutPrepareHeader() failed: ");
+		switch(ret)
+		{
+			case MMSYSERR_NOMEM: fprintf(stderr, "MMSYSERR_NOMEM\n"); break;
+			case MMSYSERR_INVALHANDLE: fprintf(stderr, "MMSYSERR_INVALHANDLE\n"); break;
+			case MMSYSERR_INVALPARAM: fprintf(stderr, "MMSYSERR_INVALPARAM\n"); break;
+			default: printf("Unknown error!\n"); break;
+		}
+		return -1;
 	}
-  
-  win32mci_lastwrote = loop;
-  
-  return loop;
+	
+	/* then we send MIDIHDR to be played */
+	ret = midiOutLongMsg(devicename, &midioutput, sizeof(midioutput));
+	if (ret != MMSYSERR_NOERROR) 
+	{
+		printf("write error on MIDI device: ");
+		switch(ret)
+		{
+			case MIDIERR_NOTREADY: fprintf(stderr, "MIDIERR_NOTREADY\n"); break;
+			case MIDIERR_UNPREPARED: fprintf(stderr, "MIDIERR_UNPREPARED\n"); break;
+			case MMSYSERR_INVALHANDLE: fprintf(stderr, "MMSYSERR_INVALHANDLE\n"); break;
+			case MMSYSERR_INVALPARAM: fprintf(stderr, "MMSYSERR_INVALPARAM\n"); break;
+			default: printf("Unknown error!\n"); break;
+		}
+		return -1;
+	}
+
+	/* then we free/flush the MIDIHDR */
+	/* TODO: this can't happen right after, things get cleared before they're done */
+	ret = midiOutUnprepareHeader(devicename, &midioutput, sizeof(midioutput));
+	if (ret != MMSYSERR_NOERROR) 
+	{
+		printf("midiOutUnprepareHeader() failed: ");
+		switch(ret)
+		{
+			case MIDIERR_STILLPLAYING: fprintf(stderr, "MIDIERR_STILLPLAYING\n"); break;
+			case MMSYSERR_INVALHANDLE: fprintf(stderr, "MMSYSERR_INVALHANDLE\n"); break;
+			case MMSYSERR_INVALPARAM: fprintf(stderr, "MMSYSERR_INVALPARAM\n"); break;
+			default: printf("Unknown error!\n"); break;
+		}
+		return -1;
+	}
+
+  win32mci_lastwrote = count;
+
+  return count;
 }
 
 midiout_driver_t midiout_driver_win32mci = {

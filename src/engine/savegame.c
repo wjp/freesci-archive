@@ -4891,7 +4891,6 @@ read_hunk_block(FILE *fh, hunk_block_t *foo, char *lastval, int *line, int *hite
 		foo->size = sizeof(gfxw_snapshot_t);
 		foo->data = xalloc(sizeof (gfxw_snapshot_t *));
 		*((gfxw_snapshot_t **)foo->data) = xalloc(sizeof (gfxw_snapshot_t));
-fprintf(stderr, "GFX at %p\n", foo);
 
 /* Auto-generated CFSML data reader code */
 #line 768 "cfsml.pl"
@@ -4917,13 +4916,12 @@ fprintf(stderr, "GFX at %p\n", foo);
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 495 "CFSML input file"
+#line 494 "CFSML input file"
 
 		return 0;
 
 	} else { /* Normal hunk */
 
-fprintf(stderr, "MISC at %p\n", foo);
 		foo->type = HUNK_TYPE_ANY;
 
 		hunkfile = open(lastval, O_RDONLY);
@@ -5015,7 +5013,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_box_t(fh, ((gfxw_box_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 588 "CFSML input file"
+#line 586 "CFSML input file"
 		break;
 
 	case GFXW_RECT:
@@ -5026,7 +5024,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_primitive_t(fh, ((gfxw_primitive_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 594 "CFSML input file"
+#line 592 "CFSML input file"
 		break;
 
 	case GFXW_VIEW:
@@ -5036,7 +5034,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_view_t(fh, ((gfxw_view_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 599 "CFSML input file"
+#line 597 "CFSML input file"
 		break;
 
 	case GFXW_DYN_VIEW:
@@ -5046,7 +5044,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_dyn_view_t(fh, ((gfxw_dyn_view_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 604 "CFSML input file"
+#line 602 "CFSML input file"
 		break;
 
 	case GFXW_TEXT:
@@ -5055,7 +5053,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_text_t(fh, ((gfxw_text_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 608 "CFSML input file"
+#line 606 "CFSML input file"
 		break;
 
 
@@ -5066,7 +5064,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_list_t(fh, ((gfxw_list_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 614 "CFSML input file"
+#line 612 "CFSML input file"
 		break;
 
 	case GFXW_VISUAL:
@@ -5075,7 +5073,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_visual_t(fh, ((gfxw_visual_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 618 "CFSML input file"
+#line 616 "CFSML input file"
 		break;
 
 	case GFXW_PORT:
@@ -5084,7 +5082,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_port_t(fh, ((gfxw_port_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 622 "CFSML input file"
+#line 620 "CFSML input file"
 		break;
 
 	case GFXW_:
@@ -5099,14 +5097,14 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
   _cfsml_write_gfxw_container_t(fh, ((gfxw_container_t*)*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 632 "CFSML input file"
+#line 630 "CFSML input file"
 		} else {
 #line 822 "cfsml.pl"
 /* Auto-generated CFSML data writer code */
   _cfsml_write_gfxw_widget_t(fh, (*widget));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 634 "CFSML input file"
+#line 632 "CFSML input file"
 		}
 		break;
 	}
@@ -5313,7 +5311,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 817 "CFSML input file"
+#line 815 "CFSML input file"
 		break;
 
 	case GFXW_RECT:
@@ -5344,7 +5342,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 824 "CFSML input file"
+#line 822 "CFSML input file"
 		break;
 
 	case GFXW_VIEW:
@@ -5374,7 +5372,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 830 "CFSML input file"
+#line 828 "CFSML input file"
 		break;
 
 	case GFXW_DYN_VIEW:
@@ -5404,7 +5402,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 836 "CFSML input file"
+#line 834 "CFSML input file"
 		(*widget)->type = expected_type;
 		if (FILE_VERSION == 1)
 			((gfxw_dyn_view_t *) widget)->force_precedence = 0;
@@ -5436,7 +5434,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 844 "CFSML input file"
+#line 842 "CFSML input file"
 		(*widget)->type = expected_type;
 		break;
 
@@ -5470,7 +5468,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 854 "CFSML input file"
+#line 852 "CFSML input file"
 		(*widget)->type = expected_type;
 		break;
 
@@ -5502,7 +5500,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 862 "CFSML input file"
+#line 860 "CFSML input file"
 		(*widget)->type = expected_type;
 
 		full_widget_tree_traversal(*widget, NULL, NULL);
@@ -5539,7 +5537,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 875 "CFSML input file"
+#line 873 "CFSML input file"
 		(*widget)->type = expected_type;
 		break;
 
@@ -5572,7 +5570,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 884 "CFSML input file"
+#line 882 "CFSML input file"
 		(*widget)->type = expected_type;
 		break;
 
@@ -5603,7 +5601,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 891 "CFSML input file"
+#line 889 "CFSML input file"
 		(*widget)->type = expected_type;
 		break;
 
@@ -5636,7 +5634,7 @@ write_pixmap_color(FILE *fh, gfx_pixmap_color_t *color)
   _cfsml_write_gfx_pixmap_color_t(fh, (color));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 919 "CFSML input file"
+#line 917 "CFSML input file"
 }
 
 int
@@ -5665,7 +5663,7 @@ read_pixmap_color(FILE *fh, gfx_pixmap_color_t *color, char *lastval, int *line,
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 925 "CFSML input file"
+#line 923 "CFSML input file"
 
         color->global_index = GFX_COLOR_INDEX_UNMAPPED;
 
@@ -5689,7 +5687,7 @@ write_menubar_tp(FILE *fh, menubar_t **foo)
   _cfsml_write_menubar_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 944 "CFSML input file"
+#line 942 "CFSML input file"
 
 	} else { /* Nothing to write */
 		fputs("\\null\\", fh);
@@ -5729,7 +5727,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 961 "CFSML input file"
+#line 959 "CFSML input file"
 
 	}
 	return *hiteof;
@@ -5802,7 +5800,7 @@ SCI_MEMTEST;
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 1029 "CFSML input file"
+#line 1027 "CFSML input file"
 SCI_MEMTEST;
 
 	fclose(fh);
@@ -5891,7 +5889,7 @@ gamestate_restore(state_t *s, char *dirname)
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 1088 "CFSML input file"
+#line 1086 "CFSML input file"
 
 	fclose(fh);
 

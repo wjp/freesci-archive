@@ -1,4 +1,4 @@
-#! /usr/bin/perl
+#! /usr/bin/env perl
 # The C File Storage Meta Language "reference" implementation
 # This implementation is supposed to conform to version
 $version = "0.8.1";
