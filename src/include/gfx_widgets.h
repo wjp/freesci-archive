@@ -321,6 +321,18 @@ gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignme
 ** Returns   : (gfxw_text_t *) The resulting text widget
 */
 
+void
+gfxw_text_info(gfx_state_t *state, gfxw_text_t *text, int *lines_nr,
+	       int *lineheight, int *offset);
+/* Determines text widget meta-information
+** Parameters: (gfx_state_t *) state: The state to operate on
+**             (gfx_text_t *) text: The widget to query
+** Returns   : (int) lines_nr: Number of lines used in the text
+**             (int) lineheight: Pixel height (SCI scale) of each text line
+**             (int) offset: Pixel offset (SCI scale) of the space after the
+**                           last character in the last line
+*/
+
 gfxw_widget_t *
 gfxw_set_id(gfxw_widget_t *widget, int ID, int subID);
 /* Sets a widget's ID

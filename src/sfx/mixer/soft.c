@@ -727,6 +727,8 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 	fs->frame_bufstart = frames_left;
 
 	if (frames_left) {
+fprintf(stderr, "Memmove %p + (%d - %d), %d\n",
+fs->buf, frames_read, frames_left, frames_left);
 		memmove(fs->buf,
 			fs->buf + ((frames_read - frames_left) * f->frame_size),
 			frames_left * f->frame_size);

@@ -1226,7 +1226,10 @@ gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignme
 
 	strcpy(widget->text, text);
 
-	gfxop_get_text_params(state, font, text, area.xl, &(widget->width), &(widget->height), text_flags);
+	gfxop_get_text_params(state, font, text, area.xl, &(widget->width),
+			      &(widget->height), text_flags,
+			      &(widget->lines_nr), &(widget->lineheight),
+			      &(widget->lastline_width));
 
 	/* FIXME: Window is too big
 	area.x += _calc_needmove(halign, area.xl, widget->width);
@@ -1248,6 +1251,17 @@ gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignme
 }
 
 
+void
+gfxw_text_info(gfx_state_t *state, gfxw_text_t *text, int *lines,
+	       int *lineheight, int *offset)
+{
+	if (lines)
+		*lines = text->lines_nr;
+	if (lineheight)
+		*lineheight = text->lineheight;
+	if (offset)
+		*offset = text->lastline_width;
+}
 
 
 /***********************/
@@ -1506,18 +1520,18 @@ _gfxwop_container_set_visual(gfxw_widget_t *widget, gfxw_visual_t *visual)
 static int
 _gfxwop_container_free_tagged(gfxw_container_t *container)
 {
-        gfxw_widget_t *seekerp = (container->contents);
+	gfxw_widget_t *seekerp = (container->contents);
 
-        while (seekerp) {
-                gfxw_widget_t *redshirt = seekerp;
+	while (seekerp) {
+		gfxw_widget_t *redshirt = seekerp;
 
-                if (redshirt->flags & GFXW_FLAG_TAGGED) {
-                        seekerp = (redshirt->next);
-                        redshirt->widfree(redshirt); /* He's dead, Jim. */
-                } else
-                        seekerp = (seekerp)->next;
-        }
-        return 0;
+		if (redshirt->flags & GFXW_FLAG_TAGGED) {
+			seekerp = (redshirt->next);
+			redshirt->widfree(redshirt); /* He's dead, Jim. */
+		} else
+			seekerp = (seekerp)->next;
+	}
+	return 0;
 }
 
 static int

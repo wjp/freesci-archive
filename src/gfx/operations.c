@@ -2029,11 +2029,11 @@ gfxop_get_font_height(gfx_state_t *state, int font_nr)
 
 int
 gfxop_get_text_params(gfx_state_t *state, int font_nr, char *text,
-		      int maxwidth, int *width, int *height, int text_flags)
+		      int maxwidth, int *width, int *height, int text_flags,
+		      int *lines_nr, int *lineheight, int *lastline_width)
 {
 	text_fragment_t *textsplits;
 	gfx_bitmap_font_t *font;
-	int lines;
 
 	BASIC_CHECKS(GFX_FATAL);
 
@@ -2045,7 +2045,9 @@ gfxop_get_text_params(gfx_state_t *state, int font_nr, char *text,
 		return GFX_ERROR;
 	}
 
-	textsplits = gfxr_font_calculate_size(font, maxwidth, text, width, height, &lines,
+	textsplits = gfxr_font_calculate_size(font, maxwidth, text, width,
+					      height, lines_nr,
+					      lineheight, lastline_width,
 					      (state->options->workarounds & GFX_WORKAROUND_WHITESPACE_COUNT)
 					      | text_flags);
 
@@ -2099,6 +2101,7 @@ gfxop_new_text(gfx_state_t *state, int font_nr, char *text, int maxwidth,
 	handle->lines =
 		gfxr_font_calculate_size(font, maxwidth, handle->text, &(handle->width), &(handle->height),
 					 &(handle->lines_nr),
+					 NULL, NULL,
 					 ((state->options->workarounds & GFX_WORKAROUND_WHITESPACE_COUNT)?
 					  GFXR_FONT_FLAG_COUNT_WHITESPACE : 0)
 					 | flags);

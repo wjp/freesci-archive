@@ -200,8 +200,10 @@ about_freesci(state_t *s)
 		_about_freesci_pages[page].fgcolor = 0;
 		_about_freesci_pages[page].bgcolor = 15;
 
-		gfxop_get_text_params(s->gfx_state, bodyfont, _about_freesci_pages[page].body, 300, &width, &height, 0);
-		gfxop_get_text_params(s->gfx_state, titlefont, _about_freesci_pages[page].title, 300, &width2, &foo, 0);
+		gfxop_get_text_params(s->gfx_state, bodyfont, _about_freesci_pages[page].body, 300, &width, &height, 0,
+				      NULL, NULL, NULL);
+		gfxop_get_text_params(s->gfx_state, titlefont, _about_freesci_pages[page].title, 300, &width2, &foo, 0,
+				      NULL, NULL, NULL);
 
 		width += 4;
 		width2 += 4;

@@ -482,12 +482,11 @@ _sci0_header_magic_p(unsigned char *data, int offset, int size)
 static sfx_pcm_feed_t *
 _sci0_check_pcm(sci0_song_iterator_t *self)
 {
-	unsigned int offset;
 	int tries = 2;
 	int found_it = 0;
 	unsigned char *pcm_data;
 	int size;
-	offset = SCI0_MIDI_OFFSET;
+	unsigned int offset = SCI0_MIDI_OFFSET;
 	sfx_pcm_config_t format;
 
 	if (self->data[0] != 2)
@@ -1273,10 +1272,11 @@ _tee_read_next_command(tee_song_iterator_t *it, unsigned char *buf,
 	int retsource; /* source from which we returned */
 	int rv;
 
-	if (it->active_left == 0)
-		return it->right->next(it->right, buf, result);
-	else if (it->active_right == 0)
-		return it->left->next(it->left, buf, result);
+	if (!it->active_left && !it->active_right)
+		return SI_FINISHED;
+
+	if (it->active_left == 0 || it->active_right == 0)
+		return SI_MORPH; /* Did enough */
 
 	if (!it->has_next) {
 		it->has_next = TEE_RIGHT;
@@ -1328,7 +1328,7 @@ _tee_read_next_command(tee_song_iterator_t *it, unsigned char *buf,
 			= 0;
 
 		if (it->active_left || it->active_right)
-			return it->next((song_iterator_t *) it, buf, result);
+			return SI_MORPH;
 		else
 			return SI_FINISHED; /* Both are dead */
 	}
@@ -1373,6 +1373,33 @@ _tee_handle_message(tee_song_iterator_t *self, song_iterator_message_t msg)
 			break;
 		}
 	}
+
+	if (msg.recipient == _SIMSG_PLASTICWRAP) {
+		switch (msg.type) {
+
+		case _SIMSG_PLASTICWRAP_ACK_MORPH:
+			if (!self->active_left && !self->active_right) {
+				songit_free(self);
+				return NULL;
+			} else if (!self->active_left) {
+				songit_free(self->left);
+				sci_free(self);
+				return self->right;
+			} else if (!self->active_right) {
+				songit_free(self->right);
+				sci_free(self);
+				return self->left;
+			} else {
+				sciprintf("[tee-iterator] WARNING:"
+					  " Morphing without need\n");
+				return self;
+			}
+
+		default:
+			BREAKPOINT();
+		}
+	}
+
 	if (self->left)
 		songit_handle_message(&(self->left), msg);
 	if (self->right)

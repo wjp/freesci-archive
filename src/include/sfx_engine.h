@@ -30,15 +30,21 @@
 
 #include <sfx_core.h>
 #include <sfx_songlib.h>
+#include <sfx_iterator.h>
 #include <sciresource.h>
 
 #define SOUND_TICK 1000000 / 60
 /* Approximately 16666 microseconds */
 
 
+#define SFX_STATE_FLAG_MULTIPLAY (1 << 0) /* More than one song playable
+					  ** simultaneously ? */
+
 typedef struct {
+	song_iterator_t *it; /* The song iterator at the heart of things */
+	unsigned int flags; /* SFX_STATE_FLAG_* */
 	songlib_t songlib; /* Song library */
-	song_t *song; /* Active song */
+	song_t *song; /* Active song, or start of active song chain */
 	int suspended; /* Whether we are suspended */
 
 	GTimeVal wakeup_time; /* Overrides delay for the topmost song */

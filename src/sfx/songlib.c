@@ -161,9 +161,9 @@ song_lib_find(songlib_t songlib, song_handle_t handle)
 
 
 song_t *
-song_lib_find_active(songlib_t songlib, song_t *last_played_song)
+song_lib_find_next_active(songlib_t songlib, song_t *other)
 {
-	song_t *seeker = *(songlib.lib);
+	song_t *seeker = other? other : *(songlib.lib);
 
 	while (seeker) {
 		if ((seeker->status == SOUND_STATUS_WAITING) ||
@@ -172,7 +172,17 @@ song_lib_find_active(songlib_t songlib, song_t *last_played_song)
 		seeker = seeker->next;
 	}
 
+	/* Only return songs that have equal priority */
+	if (other && other->priority > seeker->priority)
+		return NULL;
+
 	return seeker;
+}
+
+song_t *
+song_lib_find_active(songlib_t songlib)
+{
+	return song_lib_find_next_active(songlib, NULL);
 }
 
 int

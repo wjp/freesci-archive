@@ -115,11 +115,11 @@ _thaw_time(sfx_state_t *self)
 	self->wakeup_time = time_plus(ctime, self->song->delay);
 }
 
-/* Update internal state */
+/* Update internal state iff only one song may be played */
 static void
-_update(sfx_state_t *self)
+_update_single_song(sfx_state_t *self)
 {
-	song_t *newsong = song_lib_find_active(self->songlib, self->song);
+	song_t *newsong = song_lib_find_active(self->songlib);
 
 	if (newsong != self->song) {
 
@@ -188,6 +188,68 @@ fprintf(stderr, "Cloned %p to %p\n",
 		}
 	}
 }
+
+
+static void
+_update_multi_song(sfx_state_t *self)
+{
+	song_t *oldfirst = self->song;
+	song_t *oldseeker;
+	song_t *newsong = song_lib_find_active(self->songlib);
+	song_t *newseeker;
+	song_t not_playing_anymore; /* Dummy object, referenced by
+				    ** songs which are no longer
+				    ** active.  */
+
+	/* First, put all old songs into the 'stopping' list and
+	** mark their 'next-playing' as not_playing_anymore.  */
+	for (oldseeker = oldfirst; oldseeker;
+	     oldseeker = oldseeker->next_playing) {
+		oldseeker->next_stopping = oldseeker->next_playing;
+		oldseeker->next_playing = &not_playing_anymore;
+	}
+
+	/* Second, re-generate the new song queue. */
+	for (newseeker = newsong; newseeker;
+	     newseeker = newseeker->next_playing)
+		newseeker->next_playing
+			= song_lib_find_next_active(self->songlib,
+						    newseeker);
+
+	/* Third, stop all old songs */
+	for (oldseeker = oldfirst; oldseeker;
+	     oldseeker = oldseeker->next_stopping)
+		if (oldseeker->next_playing == &not_playing_anymore) {
+			oldseeker->status = SOUND_STATUS_WAITING;
+			
+                         /* FIXME: alert song player to discard this song */          
+			
+		}
+
+	for (newseeker = newsong; newseeker;
+	     newseeker = newseeker->next_playing) {
+		if (newseeker->status == SOUND_STATUS_PLAYING) {
+			
+                         /* FIXME: alert song player to include this song ASAP */     
+			
+		}
+		newseeker->status = SOUND_STATUS_PLAYING;
+	}
+
+}
+
+/* Update internal state */
+static void
+_update(sfx_state_t *self)
+{
+	/* FIXME: This isn't actually used yet... */
+
+	if (0 /* self->flags & SFX_STATE_FLAG_MULTIPLAY*/)
+		_update_multi_song(self);
+	else
+		_update_single_song(self);
+}
+
 
 static int _sfx_timer_active = 0; /* Timer toggle */
 

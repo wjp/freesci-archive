@@ -1,3 +1,13 @@
+2004-03-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kDisplay): Now uses default colour
+	black, as opposed to "whatever the port specifies"
+
+	* src/gfx/sci_widgets.c (sciw_new_window): Changed titlebar size
+	to 9
+
+	* src/engine/kgraphics.c (kNewWindow): Removed magic -1 to y
+
 2004-03-06  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/seg_manager.c (sm_script_relocate): Fix OB1 bug.
@@ -5,7 +15,7 @@
 2004-03-04  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/operations.c (gfxop_get_event): Add support for
-	SCI_EVT_NONBLOCK flag. 
+	SCI_EVT_NONBLOCK flag.
 
 	* src/engine/kevent.c (kGetEvent): Fix bug so the 'se' command
 	also breaks on mouse clicks.

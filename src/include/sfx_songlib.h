@@ -52,6 +52,10 @@ typedef struct _song {
 	long delay; /* Delay before accessing the iterator, in microseconds */
 
 	struct _song *next; /* Next song or NULL if this is the last one */
+	struct _song *next_playing; /* Next playing song; used by the
+				    ** core song system */
+	struct _song *next_stopping; /* Next song pending stopping; used by
+				     ** the core song system */
 } song_t;
 
 
@@ -107,11 +111,22 @@ song_lib_find(songlib_t songlib, song_handle_t handle);
 */
 
 song_t *
-song_lib_find_active(songlib_t songlib, song_t *last_played_song);
-/* Finds the song playing with the highest priority
+song_lib_find_active(songlib_t songlib);
+/* Finds the first song playing with the highest priority
 ** Parameters: (songlib_t) songlib: An existing sound library
-**             (song_t *) last_played_song: The song that was played last
 ** Returns   : (song_t *) The song that should be played next, or NULL if there is none
+*/
+
+song_t *
+song_lib_find_next_active(songlib_t songlib, song_t *song);
+/* Finds the next song playing with the highest priority
+** Parameters: (songlib_t) songlib: The song library to operate on
+**             (song_t *) song: A song previously returned from the song library
+** Returns   : (song_t *) The next song to play relative to 'song', or
+**                        NULL if none are left
+** The functions 'song_lib_find_active' and 'song_lib_find_next_active
+** allow to iterate over all songs that satisfy the requirement of
+** being 'playable'.
 */
 
 int

@@ -155,7 +155,7 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 		return win; /* Fully transparent window */
 
 	if (flags & WINDOW_FLAG_TITLE)
-		frame = gfx_rect(area.x -1, area.y -11, area.xl + 2, area.yl + 12);
+		frame = gfx_rect(area.x -1, area.y -10, area.xl + 2, area.yl + 11);
 	else
 		frame = gfx_rect(area.x -1, area.y -1, area.xl + 2, area.yl + 2);
 
@@ -168,7 +168,7 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 	if (!(flags & WINDOW_FLAG_TRANSPARENT)) {
 		/* Draw window background */
 		win->port_bg = (gfxw_widget_t *) gfxw_new_box (state,
-							       gfx_rect(1, (flags & WINDOW_FLAG_TITLE)? 11 : 1,
+							       gfx_rect(1, (flags & WINDOW_FLAG_TITLE)? 10 : 1,
 									area.xl, area.yl),
 							       bgcolor, bgcolor, GFX_BOX_SHADE_FLAT);
 		decorations->add((gfxw_container_t *) decorations, win->port_bg);
@@ -177,7 +177,7 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 
 	if (flags & WINDOW_FLAG_TITLE) {
 		/* Add window title */
-		rect_t title_rect = gfx_rect(1, 1, area.xl, 10);
+		rect_t title_rect = gfx_rect(1, 1, area.xl, 9);
 
 		decorations->add((gfxw_container_t *) decorations, (gfxw_widget_t *)
 				 gfxw_new_box(state, title_rect, title_bgcolor, title_bgcolor, GFX_BOX_SHADE_FLAT));

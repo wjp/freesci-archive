@@ -151,7 +151,9 @@ gfxr_scale_font(gfx_bitmap_font_t *orig_font, gfx_mode_t *mode, gfxr_font_scale_
 
 text_fragment_t *
 gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
-			 int *width, int *height, int *lines, int flags)
+			 int *width, int *height,
+			 int *lines, int *line_height_p, int *last_offset_p,
+			 int flags)
 {
 	int est_char_width = font->widths[(font->chars_nr > 'M')? 'M' : font->chars_nr - 1];
 	/* 'M' is typically among the widest chars */
@@ -167,6 +169,8 @@ gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
 	char *breakpoint_ptr = NULL;
 	unsigned char foo;
 
+	if (line_height_p)
+		*line_height_p = lineheight;
 
 	if (max_width>1) fragments_nr = 3 + (strlen(text) * est_char_width)*3 / (max_width << 1); else fragments_nr = 1;
 
@@ -260,8 +264,13 @@ gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
 	else
 		*width = maxwidth;
 
-	*height = maxheight;
-	*lines = current_fragment;
+	if (last_offset_p)
+		*last_offset_p = localmaxwidth;
+
+	if (height)
+		*height = maxheight;
+	if (lines)
+		*lines = current_fragment;
 
 	fragments[current_fragment-1].length = text - fragments[current_fragment-1].offset - 1;
 

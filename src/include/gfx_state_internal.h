@@ -162,6 +162,7 @@ typedef struct {
 typedef struct {
 	WIDGET_COMMON;
 	int font_nr;
+	int lines_nr, lineheight, lastline_width;
 	char *text;
 	gfx_alignment_t halign, valign;
 	gfx_color_t color1, color2, bgcolor;

@@ -51,6 +51,7 @@
 #define _SIMSG_BASEMSG_SET_PLAYMASK 2 /* Set the current playmask for filtering */
 #define _SIMSG_BASEMSG_SET_RHYTHM 3 /* Activate/deactivate rhythm channel */
 #define _SIMSG_BASEMSG_ACK_MORPH 4 /* Acknowledge self-morph */
+#define _SIMSG_BASEMSG_STOP 5 /* Stop iterator */
 
 /* "Plastic" (discardable) wrapper messages */
 #define _SIMSG_PLASTICWRAP 1 /* Any base decoder */

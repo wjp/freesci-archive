@@ -209,18 +209,22 @@ gfxr_scale_font(gfx_bitmap_font_t *font, gfx_mode_t *mode, gfxr_font_scale_filte
 
 text_fragment_t *
 gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
-			 int *width, int *height, int *lines, int flags);
+			 int *width, int *height,
+			 int *lines, int *line_height, int *last_offset,
+			 int flags);
 /* Calculates the size that would be occupied by drawing a specified text
 ** Parameters: (gfx_bitmap_font_t *) font: The font to calculate with
 **             (int) max_width: Maximum pixel width allowed for the output
 **             (char *) text: The text to calculate for
-**             (int *) width: Variable the resulting width is written to
-**             (int *) height: Variable the resulting height is written to
-**             (int *) lines: The number of lines the text was split into
 **             (int) flags: Any text formatting flags
 ** Returns   : (text_fragment *) a newly allocated array of text_fragments,
 **                               containing the start and size of each string
 **                               segment
+**             (int) *width: The resulting width
+**             (int) *height: The resulting height
+**             (int) *lines: Number of lines used
+**             (int) *line_height: Pixel height of a single line of text
+**             (int) *last_offset: Pixel offset after the last drawn line
 ** This function assumes 320x200 mode.
 */
 

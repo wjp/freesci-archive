@@ -535,7 +535,8 @@ kTextSize(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	GFX_ASSERT(gfxop_get_text_params(s->gfx_state, font_nr, text,
 					 maxwidth? maxwidth : MAX_TEXT_WIDTH_MAGIC_VALUE,
-					 &width, &height, 0));
+					 &width, &height, 0,
+					 NULL, NULL, NULL));
 	SCIkdebug(SCIkSTRINGS, "GetTextSize '%s' -> %dx%d\n", text, width, height);
 
 	dest[2] = make_reg(0, height);
@@ -2284,7 +2285,7 @@ kGetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kSetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-        switch (argc) {
+	switch (argc) {
 	case 1 : {
 		unsigned int port_nr = SKPV(0);
 		gfxw_port_t *new_port;
@@ -2335,7 +2336,7 @@ kDrawCel(state_t *s, int funct_nr, int argc, reg_t *argv)
 		return;
 	}
 */
-	
+
 	if (gfxop_check_cel(s->gfx_state, view, &loop, &cel)) {
 		SCIkwarn(SCIkERROR, "Attempt to draw non-existing view.%03d\n", view);
 		return s->r_acc;
@@ -2396,13 +2397,12 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 	gfx_color_t bgcolor;
 	int priority;
 
-
 	y = SKPV(0);
 	x = SKPV(1);
 	yl = SKPV(2) - y;
 	xl = SKPV(3) - x;
 
-	y += s->wm_port->bounds.y - 1;
+	y += s->wm_port->bounds.y;
 
 	if (x+xl > 319)
 		x -= ((x+xl) - 319);
@@ -2417,7 +2417,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 	SCIkdebug(SCIkGRAPHICS, "New window with params %d, %d, %d, %d\n", SKPV(0), SKPV(1), SKPV(2), SKPV(3));
 	window = sciw_new_window(s, gfx_rect(x, y, xl, yl), s->titlebar_port->font_nr,
 				 s->ega_colors[SKPV_OR_ALT(7, 0)], bgcolor, s->titlebar_port->font_nr,
-				 s->ega_colors[15], s->ega_colors[8], 
+				 s->ega_colors[15], s->ega_colors[8],
 				 argv[4].segment ? kernel_dereference_bulk_pointer(s, argv[4], 0) : NULL, 
 				 flags);
 
@@ -3085,7 +3085,7 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	transparent.mask = 0;
 
-	color0 = &(port->color);
+	color0 = &(s->ega_colors[0]);
 	bg_color = &(port->bgcolor);
 
 
@@ -3202,6 +3202,15 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 	if (!text_handle) {
 		SCIkwarn(SCIkERROR, "Display: Failed to create text widget!\n");
 		return NULL_REG;
+	} else {
+		/* OK, this is just a cheap excuse to introduce a sub-block */
+		int lines_nr, line_height, lastline_width;
+
+		gfxw_text_info(s->gfx_state, text_handle,
+			       &lines_nr, &line_height, &lastline_width);
+
+		port->draw_pos.x += lastline_width;
+		port->draw_pos.y += line_height * (lines_nr - 1);
 	}
 
 	if (save_under) {    /* Backup */
