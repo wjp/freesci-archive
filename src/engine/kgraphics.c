@@ -395,7 +395,7 @@ kGraph(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	case K_GRAPH_GET_COLORS_NR:
 
-		s->acc = (s->resmgr->sci_version < SCI_VERSION_1) ? 0x10 : 0x100; /* number of colors */
+		return make_reg(0, (s->resmgr->sci_version < SCI_VERSION_1) ? 0x10 : 0x100); /* number of colors */
 		break;
 
 	case K_GRAPH_DRAW_LINE: {
@@ -417,7 +417,7 @@ kGraph(state_t *s, int funct_nr, int argc, reg_t *argv)
 		area.x += s->port->zone.x;
 		area.y += s->port->zone.y;
 
-		s->r_acc = graph_save_box(s, area);
+		return(graph_save_box(s, area));
 		break;
 
 	case K_GRAPH_RESTORE_BOX:
@@ -504,6 +504,7 @@ kGraph(state_t *s, int funct_nr, int argc, reg_t *argv)
 		FULL_REDRAW();
 
 	gfxop_update(s->gfx_state);
+	return s->r_acc;
 }
 
 
@@ -1436,7 +1437,7 @@ _k_draw_control(state_t *s, reg_t obj, int inverse)
 
 	int font_nr = GET_SEL32V(obj, font);
 	reg_t text_pos = GET_SEL32(obj, text);
-	char *text = (char *) s->seg_manager.dereference(&s->seg_manager, text_pos, NULL);
+	char *text = IS_NULL_REG(text_pos)? NULL : (char *) s->seg_manager.dereference(&s->seg_manager, text_pos, NULL);
 	int view = GET_SEL32V(obj, view);
 	int cel = sign_extend_byte(GET_SEL32V(obj, cel));
 	int loop = sign_extend_byte(GET_SEL32V(obj, loop));

@@ -102,7 +102,6 @@ void kDeviceInfo_Unix(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 #endif
 void kRestartGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSaid(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kDoSound(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetSynonyms(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetEvent(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetMenu(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -139,6 +138,7 @@ reg_t kAnimate(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kDisplay(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kGraph(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kFormat(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kDoSound(struct _state *s, int funct_nr, int argc, reg_t *argv);
 
 reg_t kLoad(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kUnLoad(struct _state *s, int funct_nr, int argc, reg_t *argv);
@@ -228,7 +228,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*2e*/	{KF_OLD, "RestoreGame", {old:kRestoreGame}},
 /*2f*/	{KF_OLD, "RestartGame", {old:kRestartGame}},
 /*30*/	{KF_OLD, "GameIsRestarting", {old:kGameIsRestarting}},
-/*31*/	{KF_OLD, "DoSound", {old:kDoSound}},
+/*31*/	{KF_NEW, "DoSound", {new:{kDoSound, "iIo*"}}},
 /*32*/	{KF_NEW, "NewList", {new:{kNewList, ""}}},
 /*33*/	{KF_NEW, "DisposeList", {new:{kDisposeList, "l"}}},
 /*34*/	{KF_NEW, "NewNode", {new:{kNewNode, ".."}}},
@@ -903,7 +903,7 @@ kernel_matches_signature(state_t *s, char *sig, int argc, reg_t *argv)
 		return 1;
 
 	while (*sig && argc) {
-		if (*sig != KSIG_ANY) {
+		if ((*sig & KSIG_ANY) != KSIG_ANY) {
 			int type = determine_reg_type(s, *argv);
 
 			if (!type) {

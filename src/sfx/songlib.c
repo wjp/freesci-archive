@@ -100,19 +100,19 @@ song_lib_add(songlib_t songlib, song_t *song)
 
 	if (NULL == song)
 	{
-		sciprintf("song_lib_add(): NULL passed for song\n");
+		 sciprintf("song_lib_add(): NULL passed for song\n");
 	return;
 	}
 
-	if (*songlib == NULL)
+	if (*(songlib.lib) == NULL)
 	{
-		*songlib = song;
+		*(songlib.lib) = song;
 		song->next = NULL;
 
 		return;
 	}
 
-	seeker = *songlib;
+	seeker = *(songlib.lib);
 	while (seeker->next && (seeker->next->priority > pri))
 		seeker = seeker->next;
 
@@ -135,20 +135,21 @@ _sonfree_chain(song_t *song)
 void
 song_lib_init(songlib_t *songlib)
 {
-	*songlib = NULL;
+	songlib->lib = &(songlib->_s);
+	songlib->_s = NULL;
 }
 
 void
 song_lib_free(songlib_t songlib)
 {
-	_sonfree_chain(*songlib);
+	_sonfree_chain(*(songlib.lib));
 }
 
 
 song_t *
 song_lib_find(songlib_t songlib, song_handle_t handle)
 {
-	song_t *seeker = *songlib;
+	song_t *seeker = *(songlib.lib);
 
 	while (seeker) {
 		if (seeker->handle == handle)
@@ -163,7 +164,7 @@ song_lib_find(songlib_t songlib, song_handle_t handle)
 song_t *
 song_lib_find_active(songlib_t songlib, song_t *last_played_song)
 {
-	song_t *seeker = *songlib;
+	song_t *seeker = *(songlib.lib);
 
 	if (last_played_song)
 		if (last_played_song->status == SOUND_STATUS_PLAYING)
@@ -183,13 +184,13 @@ int
 song_lib_remove(songlib_t songlib, song_handle_t handle)
 {
 	int retval;
-	song_t *goner = *songlib;
+	song_t *goner = *(songlib.lib);
 
 	if (!goner)
 		return -1;
 
 	if (goner->handle == handle)
-		*songlib = goner->next;
+		*(songlib.lib) = goner->next;
 
 	else {
 		while ((goner->next) && (goner->next->handle != handle))
@@ -214,10 +215,10 @@ song_lib_remove(songlib_t songlib, song_handle_t handle)
 void
 song_lib_resort(songlib_t songlib, song_t *song)
 {
-	if (*songlib == song)
-		*songlib = song->next;
+	if (*(songlib.lib) == song)
+		*(songlib.lib) = song->next;
 	else {
-		song_t *seeker = *songlib;
+		song_t *seeker = *(songlib.lib);
 
 		while (seeker->next && (seeker->next != song))
 			seeker = seeker->next;
@@ -232,7 +233,7 @@ song_lib_resort(songlib_t songlib, song_t *song)
 int
 song_lib_count(songlib_t songlib)
 {
-	song_t *seeker = *songlib;
+	song_t *seeker = *(songlib.lib);
 	int retval = 0;
 
 	while (seeker) {
@@ -247,14 +248,14 @@ song_lib_count(songlib_t songlib)
 void
 song_lib_dump(songlib_t songlib, int line)
 {
-	song_t *seeker = *songlib;
+	song_t *seeker = *(songlib.lib);
 
 	fprintf(debug_stream,"L%d:", line);
 	do {
 		fprintf(debug_stream,"    %p", seeker);
 
 		if (seeker) {
-			fprintf(debug_stream,"[%04x]->", seeker->handle);
+			fprintf(debug_stream,"[%04x,p=%d]->", seeker->handle, seeker->priority);
 			seeker = seeker->next;
 		}
 		fprintf(debug_stream,"\n");

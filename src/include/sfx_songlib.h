@@ -55,7 +55,10 @@ typedef struct _song {
 } song_t;
 
 
-typedef song_t **songlib_t;
+typedef struct {
+	song_t **lib;
+	song_t *_s;
+} songlib_t;
 
 /**************************/
 /* Song library commands: */

@@ -133,7 +133,6 @@ _sci0_read_next_command(base_song_iterator_t *self, unsigned char *buf, int *res
 
 	case SI_STATE_COMMAND: {
 		unsigned char cmd;
-		int paramcount = 0;
 		int paramsleft;
 		int midi_op;
 		int midi_channel;
@@ -142,11 +141,12 @@ _sci0_read_next_command(base_song_iterator_t *self, unsigned char *buf, int *res
 
 		cmd = self->data[self->offset++];
 
-		if (!(cmd & 0x80))
+		if (!(cmd & 0x80)) {
 			/* 'Running status' mode */
 			cmd = self->last_cmd;
+			self->offset--;
+		}
 
-		buf[paramcount++] = cmd;
 		midi_op = cmd >> 4;
 		midi_channel = cmd & 0xf;
 		paramsleft = MIDI_cmdlen[midi_op];
@@ -163,12 +163,11 @@ _sci0_read_next_command(base_song_iterator_t *self, unsigned char *buf, int *res
 			self->data[self->offset+2]);
 #endif
 
-		if (paramcount)
-			--paramsleft;
+		buf[0] = cmd;
 
 		CHECK_FOR_END(paramsleft);
-		memcpy(buf + paramcount, self->data, paramsleft);
-		*result = paramcount + paramsleft;
+		memcpy(buf + 1, self->data + self->offset, paramsleft);
+		*result = 1 + paramsleft;
 
 		self->offset += paramsleft;
 
@@ -376,6 +375,8 @@ songit_new(unsigned char *data, unsigned int size, int type)
 {
 	base_song_iterator_t *it = sci_malloc(sizeof(base_song_iterator_t));
 	int i;
+
+	it->delegate = NULL;
 
 	it->data = data;
 	it->size = size;

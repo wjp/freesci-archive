@@ -1,5 +1,8 @@
 2002-11-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sfx/iterator.c (_sci0_read_next_command): More bugfixes for song
+	iterators
+
 	* src/engine/vm.c (_obj_locate_varselector): Handled objects with
 	nameless properties
 

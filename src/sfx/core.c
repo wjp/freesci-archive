@@ -209,7 +209,7 @@ sfx_poll(sfx_state_t *self, song_handle_t *handle, int *cue)
 		case SI_LOOP:
 		case SI_CUE:
 #ifdef DEBUG_CUES
-			sciprintf("[SFX:CUE] %lx: <= ");
+			sciprintf("[SFX:CUE] %lx: <= ", *handle);
 			if (result == SI_FINISHED)
 				sciprintf("Finished\n");
 			else {
@@ -248,7 +248,10 @@ sfx_add_song(sfx_state_t *self, song_iterator_t *it, int priority, song_handle_t
 		return;
 	}
 
+	it->init(it);
 	song = song_new(handle, it, priority);
+	song_lib_remove(self->songlib, handle); /* No duplicates */
+	self->song = NULL; /* Make sure we don't keep stale references */
 	song_lib_add(self->songlib, song);
 	_update(self);
 }
@@ -257,6 +260,9 @@ sfx_add_song(sfx_state_t *self, song_iterator_t *it, int priority, song_handle_t
 void
 sfx_remove_song(sfx_state_t *self, song_handle_t handle)
 {
+	if (self->song && self->song->handle == handle)
+		self->song = NULL;
+
 	song_lib_remove(self->songlib, handle);
 	_update(self);
 }
@@ -278,6 +284,9 @@ sfx_song_set_status(sfx_state_t *self, song_handle_t handle, int status)
 	switch (status) {
 
 	case SOUND_STATUS_STOPPED:
+		song->it->init(song->it); /* Reset */
+		break;
+
 	case SOUND_STATUS_SUSPENDED:
 		break;
 
