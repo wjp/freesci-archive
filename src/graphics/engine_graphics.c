@@ -71,9 +71,9 @@ graph_update_box(struct _state *s, int x, int y, int xl, int yl)
 int
 graph_save_box(struct _state *s, int x, int y, int xl, int yl, int layers)
 {
-  int handle = kalloc(s, xl * yl * 3 +  5*(sizeof(int))); /* Three layers plus x, y, xl, yl, layers */
-  _graph_memrect_t *box = (_graph_memrect_t *) kmem(s, handle);
-  byte *dest = &(box->data[0]);
+  int handle;
+  _graph_memrect_t *box;
+  byte *dest;
   int i, map;
   int pos;
 
@@ -95,6 +95,10 @@ graph_save_box(struct _state *s, int x, int y, int xl, int yl, int layers)
 
   if ((xl < 0) || (yl < 0))
     return 0;
+
+  handle = kalloc(s, xl * yl * 3 +  5*(sizeof(int))); /* Three layers plus x, y, xl, yl, layers */
+  box = (_graph_memrect_t *) kmem(s, handle);
+  dest = &(box->data[0]);
 
   box->x = x;
   box->y = y;
