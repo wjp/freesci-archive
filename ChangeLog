@@ -1,3 +1,9 @@
+2002-01-04  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/sound/event_ss.c:
+	* src/sound/event_ss_win32.c: Fixed do_sound() not being called due to
+	missed use of emap[].
+	
 2002-01-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/include/resource.h (BREAKPOINT): Changed 'bpt' on Alpha

@@ -39,7 +39,7 @@
 #include <windows.h>
 #include <win32/messages.h>
 
-/* #define SSWIN_DEBUG 0 */
+/* #define SSWIN_DEBUG 1 */
 
 sound_server_t sound_server_win32e;
 #define MAIN_CLASS_NAME "FreeSCI Main Receiving from Event SS"
@@ -96,7 +96,7 @@ timeout(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2
 	/* we want the next high performance timer to end 16.667 mseconds after the previous one.
 	 * right now, I'm trying 8.333ms because 16.667 sounds too slow for some reason.
 	 * The timer is definitely right, I think there is a deterministic amount of extra
-	 * latency introduced by using PostMessage, whi5ch goes into a queue.
+	 * latency introduced by using PostMessage, which goes into a queue.
 	 */
 	(__int64)end.QuadPart += (__int64)8333 * (__int64)freq.QuadPart / (__int64)1000000;
 
@@ -107,21 +107,15 @@ timeout(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2
 	 * while the current tick count is less than the end tickcount, keep querying.
 	 * We do an initial query in case the callback happened late and we can't afford to query at all.
 	 */
-	while ((__int64)now.QuadPart < (__int64)end.QuadPart) 
-	{ 
-		QueryPerformanceCounter(&now); 
-	} 
+	while ((__int64)now.QuadPart < (__int64)end.QuadPart)
+	{
+		sleep(1);
+		QueryPerformanceCounter(&now);
+	}
 
-	if (PostMessage(sound_wnd, SOUND_COMMAND_DO_SOUND, 0, 0) == 0)
+
+	if (PostMessage(sound_wnd, emap[SOUND_COMMAND_DO_SOUND], 0, 0) == 0)
 		fprintf(debug_stream, "win32e_soundserver_init(): PostMessage(DO_SOUND) failed, GetLastError() returned %u\n", GetLastError());
-
-	/* start the next timer */
-	timeBeginPeriod(0);
-	time_keeper_id = timeSetEvent(6, 1, (LPTIMECALLBACK)timeout, 0, TIME_CALLBACK_FUNCTION);
-	timeEndPeriod(0);
-	if (time_keeper_id == NULL)
-		fprintf(debug_stream, "Timer start failed\n");
-
 }
 
 /* function called when sound server child thread begins */
@@ -338,7 +332,7 @@ sound_win32e_init(struct _state *s, int flags)
 	if (QueryPerformanceCounter (&end) == 0)
 		fprintf(debug_stream, "event_ss_win32.c: sound_win32e_init(): QueryPerformanceCounter() failed!\n");
 
-	time_keeper_id = timeSetEvent(1, 1, (LPTIMECALLBACK)timeout, 0, TIME_CALLBACK_FUNCTION);
+	time_keeper_id = timeSetEvent(6, 0, (LPTIMECALLBACK)timeout, 0, TIME_PERIODIC | TIME_CALLBACK_FUNCTION);
 	if (time_keeper_id == NULL)
 		fprintf(debug_stream, "Timer start failed\n");
 
@@ -389,17 +383,21 @@ sound_win32e_get_event()
 		new_event_event->handle = msg.wParam;
 		new_event_event->value = msg.lParam;
 
-		/* pass on the message regardless */
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-
 		/* map back to normal values */
 		for (i = 0; i < sizeof(emap); i++)
+		{
 			if (emap[i] == msg.message)
 			{
 				new_event_event->signal = i;
 				break;
 			}
+		}
+
+		if (new_event_event->signal == UNRECOGNISED_SOUND_SIGNAL)
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 
 		return new_event_event;
 	}
@@ -431,17 +429,21 @@ sound_win32e_get_command(GTimeVal *wait_tvp)
 		new_command_event->handle = msg.wParam;
 		new_command_event->value = msg.lParam;
 
-		/* pass on the message regardless */
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-
 		/* map back to normal values */
 		for (i = 0; i < sizeof(emap); i++)
+		{
 			if (emap[i] == msg.message)
 			{
 				new_command_event->signal = i;
 				break;
 			}
+		}
+
+		if (new_command_event->signal == UNRECOGNISED_SOUND_SIGNAL)
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 
 		return new_command_event;
 	}
