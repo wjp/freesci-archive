@@ -2244,8 +2244,9 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	int i, remaining_checkers;
 	char checkers[32 * 19];
-
 	gfx_pixmap_t *newscreen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 10, 320, 190));
+
+	gfxop_set_clip_zone(s->gfx_state, gfx_rect_fullscreen);
 
 	if (!newscreen) {
 		SCIkwarn(SCIkERROR, "Failed to allocate 'newscreen'!\n");

@@ -68,9 +68,6 @@ finish_titlebar_list(state_t *s, gfxw_list_t *list, gfxw_port_t *status_bar)
 	gfx_color_t black = s->ega_colors[0];
 	gfxw_primitive_t *line;
 
-	black.priority = 15;
-	black.mask |= GFX_MASK_PRIORITY;
-
 	line = gfxw_new_line(gfx_rect(0, status_bar->bounds.yl - 1, status_bar->bounds.xl, 0),
 			     black, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL);
 	list->add((gfxw_container_t *) list, (gfxw_widget_t *) line);
@@ -85,9 +82,6 @@ sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text)
 	gfxw_list_t *list;
 	gfx_color_t white = s->ega_colors[0xf];
 	gfx_color_t black = s->ega_colors[0];
-
-	black.priority = white.priority = 11;
-	black.mask = white.mask |= GFX_MASK_PRIORITY;
 
 	if (!status_bar->visual) {
 		GFXERROR("Attempt to change title bar without visual!\n");

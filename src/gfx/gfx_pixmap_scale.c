@@ -88,8 +88,8 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 
 /* linear filter: Macros (in reverse order) */
 
-#define X_CALC_INTENSITY_NORMAL (linecolor[i] >> 1) + (((othercolumn[i]*(256-column_valuator)) + (ctexel[i]*column_valuator)) >> 1)
-#define X_CALC_INTENSITY_CENTER (linecolor[i] >> 1) + (ctexel[i] << 7)
+#define X_CALC_INTENSITY_NORMAL (ctexel[i] << 16) + ((linecolor[i])*(256-column_valuator)) + ((othercolumn[i]*column_valuator))*(256-line_valuator)
+#define X_CALC_INTENSITY_CENTER (ctexel[i] << 16) + ((linecolor[i])*(256-column_valuator))
 
 #define WRITE_XPART(X_CALC_INTENSITY, DO_X_STEP) \
 				for (subx = 0; subx < ((DO_X_STEP)? (xfact >> 1) : 1); subx++) { \
@@ -105,21 +105,21 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 					memcpy(wrpos, &wrcolor, COPY_BYTES); \
 					wrpos += COPY_BYTES; \
 					if (DO_X_STEP) \
-                                                column_valuator += column_step; \
+                                                column_valuator -= column_step; \
 				} \
                                 if (DO_X_STEP) \
 				        column_step = -column_step
 /* End of macro definition */
 
 
-#define Y_CALC_INTENSITY_CENTER (ctexel[i] << 8)
-#define Y_CALC_INTENSITY_NORMAL (otherline[i]*(256-line_valuator)) + (ctexel[i]*line_valuator)
+#define Y_CALC_INTENSITY_CENTER 0
+#define Y_CALC_INTENSITY_NORMAL otherline[i]*line_valuator
 
 #define WRITE_YPART(DO_Y_STEP, LINE_COLOR) \
 			for (suby = 0; suby < ((DO_Y_STEP)? yfact >> 1 : 1); suby++) { \
-				unsigned int column_valuator = column_step? (column_step >> 1) : 256; \
-				unsigned int linecolor[4]; \
-				unsigned int othercolumn[4]; \
+				int column_valuator = column_step? 128 - (column_step >> 1) : 256; \
+				int linecolor[4]; \
+				int othercolumn[4]; \
 				int i; \
 				SIZETYPE wrcolor; \
 				wrpos = sublinepos; \
@@ -129,7 +129,7 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 				/*-- left half --*/ \
 				MAKE_PIXEL((x == 0), othercolumn, ctexel, src[-1]); \
 				WRITE_XPART(X_CALC_INTENSITY_NORMAL, 1); \
-				column_valuator += column_step; \
+				column_valuator -= column_step; \
 				/*-- center --*/ \
 				if (xfact & 1) { \
 					WRITE_XPART(X_CALC_INTENSITY_CENTER, 0); \
@@ -138,7 +138,7 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 				MAKE_PIXEL((x+1 == pxm->index_xl), othercolumn, ctexel, src[+1]); \
 				WRITE_XPART(X_CALC_INTENSITY_NORMAL, 1); \
 				if (DO_Y_STEP) \
-                                        line_valuator += line_step; \
+                                        line_valuator -= line_step; \
 				sublinepos += pxm->xl * bytespp; \
 				alpha_sublinepos += pxm->xl; \
 			} \
@@ -154,8 +154,8 @@ FUNCNAME_LINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 {
 	int xfact = mode->xfact;
 	int yfact = mode->yfact;
-	int line_step = (yfact < 2)? 0 : 256 / (yfact >> 1);
-	int column_step = (xfact < 2)? 0 : 256 / (xfact >> 1);
+	int line_step = (yfact < 2)? 0 : 256 / (yfact & ~1);
+	int column_step = (xfact < 2)? 0 : 256 / (xfact & ~1);
 	int bytespp = mode->bytespp;
 	byte *src = pxm->index_data;
 	byte *dest = pxm->data;
@@ -165,7 +165,8 @@ FUNCNAME_LINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 	unsigned int masks[4], shifts[4], zero[3];
 	int x,y;
 
-	zero[0] = zero[1] = zero[2] = 0;
+	zero[0] = 255;
+	zero[1] = zero[2] = 0;
 
 	if (separate_alpha_map) {
 		masks[3] = 0;
@@ -192,25 +193,28 @@ FUNCNAME_LINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 		byte *alpha_linepos = alpha_dest;
 
 		for (x = 0; x < pxm->index_xl; x++) {
-			unsigned int otherline[4]; /* the above line or the line below */
-			unsigned int ctexel[4]; /* Current texel */
+			int otherline[4]; /* the above line or the line below */
+			int ctexel[4]; /* Current texel */
 			int subx, suby;
-			int line_valuator = line_step? (line_step >> 1) : 256;
+			int j;
+			int line_valuator = line_step? 128 - (line_step >> 1) : 256;
 			byte *wrpos, *alpha_wrpos;
 			byte *sublinepos = linepos;
 			byte *alpha_sublinepos = alpha_linepos;
 
+			ctexel[0] = ctexel[1] = ctexel[2] = ctexel[3] = 0;
+
 #define MAKE_PIXEL(cond, rec, other, nr) \
 			if ((cond) || (using_alpha && nr == 255)) { \
-				rec[0] = other[0]; \
-				rec[1] = other[1]; \
-				rec[2] = other[2]; \
-				rec[3] = 0xffffff; \
+				rec[0] = other[0] - ctexel[0]; \
+				rec[1] = other[1] - ctexel[1]; \
+				rec[2] = other[2] - ctexel[2]; \
+				rec[3] = 0xffff - ctexel[3]; \
 			} else { \
-				rec[0] = EXTEND_COLOR(pxm->colors[nr].r) >> 8; \
-				rec[1] = EXTEND_COLOR(pxm->colors[nr].g) >> 8; \
-				rec[2] = EXTEND_COLOR(pxm->colors[nr].b) >> 8; \
-				rec[3] = 0; \
+				rec[0] = (EXTEND_COLOR(pxm->colors[nr].r) >> 16) - ctexel[0]; \
+				rec[1] = (EXTEND_COLOR(pxm->colors[nr].g) >> 16) - ctexel[1]; \
+				rec[2] = (EXTEND_COLOR(pxm->colors[nr].b) >> 16) - ctexel[2]; \
+				rec[3] = 0 - ctexel[3]; \
 			}
 
 			MAKE_PIXEL(0, ctexel, zero, *src);
@@ -224,7 +228,7 @@ FUNCNAME_LINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 			}
 
 			/*-- Lower half --*/
-			line_valuator += line_step;
+			line_valuator -= line_step;
 			MAKE_PIXEL((y+1 == pxm->index_yl), otherline, ctexel, src[pxm->index_xl]);
 			WRITE_YPART(1, Y_CALC_INTENSITY_NORMAL);
 
@@ -238,14 +242,69 @@ FUNCNAME_LINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 	}
 }
 
+
+
+/*----------------------*/
+/*** Trilinear filter ***/
+/*----------------------*/
+/* Broken... */
+
+
+void
+FUNCNAME_TRILINEAR(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
+{
+	int xfact = mode->xfact;
+	int yfact = mode->yfact;
+	int line_step = (yfact < 2)? 0 : 256 / (yfact & ~1);
+	int column_step = (xfact < 2)? 0 : 256 / (xfact & ~1);
+	int bytespp = mode->bytespp;
+	byte *src = pxm->index_data;
+	byte *dest = pxm->data;
+	byte *alpha_dest = pxm->alpha_map;
+	int using_alpha = pxm->colors_nr < GFX_PIC_COLORS;
+	int separate_alpha_map = (!mode->alpha_mask) && using_alpha;
+	unsigned int masks[4], shifts[4], zero[3];
+	int x,y;
+
+	zero[0] = 255;
+	zero[1] = zero[2] = 0;
+
+	if (separate_alpha_map) {
+		masks[3] = 0;
+		shifts[3] = 24;
+	}
+
+        assert(bytespp == COPY_BYTES);
+	assert(!PALETTE_MODE);
+
+	masks[0] = mode->red_mask;
+	masks[1] = mode->green_mask;
+	masks[2] = mode->blue_mask;
+	masks[3] = mode->alpha_mask;
+	shifts[0] = mode->red_shift;
+	shifts[1] = mode->green_shift;
+	shifts[2] = mode->blue_shift;
+	shifts[3] = mode->alpha_shift;
+
+	if (separate_alpha_map && !alpha_dest)
+		alpha_dest = pxm->alpha_map = malloc(pxm->index_xl * xfact * pxm->index_yl * yfact);
+
+}
+
+
+#undef WRITE_XPART_TRILINEAR
+#undef WRITE_YPART_TRILINEAR
 #undef WRITE_YPART
 #undef Y_CALC_INTENSITY_CENTER
 #undef Y_CALC_INTENSITY_NORMAL
 #undef WRITE_XPART
 #undef X_CALC_INTENSITY_CENTER
 #undef X_CALC_INTENSITY_NORMAL
+#undef X_CALC_INTENSITY_CENTER_TRILINEAR
+#undef X_CALC_INTENSITY_NORMAL_TRILINEAR
 #undef MAKE_PIXEL
 #undef FUNCNAME
 #undef FUNCNAME_LINEAR
+#undef FUNCNAME_TRILINEAR
 #undef SIZETYPE
 #undef EXTEND_COLOR

@@ -168,7 +168,8 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	int default_screen, num_aux_buffers;
 	int vistype = (bytespp == 1)? 3 /* PseudoColor */ : 4 /* TrueColor */;
 	int found_vistype = 0;
-	int red_shift, green_shift, blue_shift;
+	int red_shift, green_shift, blue_shift, alpha_shift;
+	unsigned int alpha_mask;
 	int xsize = xfact * 320;
 	int ysize = yfact * 200;
 	XSizeHints *size_hints;
@@ -268,11 +269,23 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
                                  bytespp << 3, ZPixmap, 0, malloc(23), 2,
                                  2, 8, 0);
 
+	alpha_mask = xvisinfo.red_mask | xvisinfo.green_mask | xvisinfo.blue_mask;
+	if (foo_image->bits_per_pixel == 32 && (!(alpha_mask & 0xff000000) || !(alpha_mask & 0xff))) {
+		if (alpha_mask & 0xff) {
+			alpha_mask = 0xff000000;
+			alpha_shift = 0;
+		} else { /* Lowest byte */
+			alpha_mask = 0x000000ff;
+			alpha_shift = 24;
+		}
+	} else {
+		alpha_mask = 0;
+		alpha_shift = 0;
+	}
+
 	drv->mode = gfx_new_mode(xfact, yfact, foo_image->bits_per_pixel >> 3,
-				 xvisinfo.red_mask, xvisinfo.green_mask, xvisinfo.blue_mask,
-				 0, /* alpha mask */
-				 red_shift, green_shift, blue_shift,
-				 0, /* alpha shift */
+				 xvisinfo.red_mask, xvisinfo.green_mask, xvisinfo.blue_mask, alpha_mask,
+				 red_shift, green_shift, blue_shift, alpha_shift,
 				 (bytespp == 1)? xvisinfo.colormap_size : 0);
 
         XDestroyImage(foo_image);

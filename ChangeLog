@@ -1,4 +1,19 @@
+2001-03-05  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/alpha_mvi_crossblit.c: Added "accellerated" MVI
+	crossblitter
+
+2001-03-04  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (animate_do_animation): Unclipped opening
+	animations
+
+	* src/gfx/sci_widgets.c (finish_titlebar_list): Fixed menu
+	priorities
+
 2001-03-03  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/gfx_pixmap_scale.c (WRITE_YPART): Fixed bilinear filter
 
 	* src/include/gfx_resource.h: Added a backup for the visual pic's
 	undithered data, to be used for cumulative drawing

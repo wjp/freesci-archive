@@ -73,7 +73,6 @@ process_sound_events(state_t *s) /* Get all sound events, apply their changes to
 
 				SCIkdebug(SCIkSOUND,"Received finished signal for %04x\n", obj);
 				PUT_SELECTOR(obj, state, _K_SOUND_STATUS_STOPPED);
-				//PUT_SELECTOR(obj, loop, -1);
 				break;
 
 			case SOUND_SIGNAL_PLAYING:

@@ -77,6 +77,7 @@ gfxr_free_view(gfx_driver_t *driver, gfxr_view_t *view)
 #define SIZETYPE guint8
 #define FUNCNAME _gfx_xlate_pixmap_unfiltered_1
 #define FUNCNAME_LINEAR _gfx_xlate_pixmap_linear_1
+#define FUNCNAME_TRILINEAR _gfx_xlate_pixmap_trilinear_1
 #define COPY_BYTES 1
 #include "gfx_pixmap_scale.c"
 #undef COPY_BYTES
@@ -84,6 +85,7 @@ gfxr_free_view(gfx_driver_t *driver, gfxr_view_t *view)
 #define SIZETYPE guint16
 #define FUNCNAME _gfx_xlate_pixmap_unfiltered_2
 #define FUNCNAME_LINEAR _gfx_xlate_pixmap_linear_2
+#define FUNCNAME_TRILINEAR _gfx_xlate_pixmap_trilinear_2
 #define COPY_BYTES 2
 #include "gfx_pixmap_scale.c"
 #undef COPY_BYTES
@@ -95,6 +97,7 @@ gfxr_free_view(gfx_driver_t *driver, gfxr_view_t *view)
 #define SIZETYPE guint32
 #define FUNCNAME _gfx_xlate_pixmap_unfiltered_3
 #define FUNCNAME_LINEAR _gfx_xlate_pixmap_linear_3
+#define FUNCNAME_TRILINEAR _gfx_xlate_pixmap_trilinear_3
 #define COPY_BYTES 3
 #include "gfx_pixmap_scale.c"
 #undef COPY_BYTES
@@ -106,6 +109,7 @@ gfxr_free_view(gfx_driver_t *driver, gfxr_view_t *view)
 #define SIZETYPE guint32
 #define FUNCNAME _gfx_xlate_pixmap_unfiltered_4
 #define FUNCNAME_LINEAR _gfx_xlate_pixmap_linear_4
+#define FUNCNAME_TRILINEAR _gfx_xlate_pixmap_trilinear_4
 #define COPY_BYTES 4
 #include "gfx_pixmap_scale.c"
 #undef COPY_BYTES
@@ -175,6 +179,38 @@ _gfx_xlate_pixmap_linear(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 
 }
 
+static inline void
+_gfx_xlate_pixmap_trilinear(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
+{
+	if (mode->palette || !scale) { /* fall back to unfiltered */
+		_gfx_xlate_pixmap_unfiltered(mode, pxm, scale);
+		return;
+	}
+
+	pxm->xl = pxm->index_xl * mode->xfact;
+	pxm->yl = pxm->index_yl * mode->yfact;
+
+	switch (mode->bytespp) {
+
+	case 1:_gfx_xlate_pixmap_trilinear_1(mode, pxm, scale);
+		break;
+
+	case 2:_gfx_xlate_pixmap_trilinear_2(mode, pxm, scale);
+		break;
+
+	case 3:_gfx_xlate_pixmap_trilinear_3(mode, pxm, scale);
+		break;
+
+	case 4:_gfx_xlate_pixmap_trilinear_4(mode, pxm, scale);
+		break;
+
+	default:
+		GFXERROR("Invalid mode->bytespp=%d\n", mode->bytespp);
+					
+	}
+
+}
+
 void
 gfx_xlate_pixmap(gfx_pixmap_t *pxm, gfx_mode_t *mode, gfx_xlate_filter_t filter)
 {
@@ -216,6 +252,9 @@ gfx_xlate_pixmap(gfx_pixmap_t *pxm, gfx_mode_t *mode, gfx_xlate_filter_t filter)
 		break;
 
 	case GFX_XLATE_FILTER_LINEAR: _gfx_xlate_pixmap_linear(mode, pxm, !(pxm->flags & GFX_PIXMAP_FLAG_SCALED_INDEX));
+		break;
+
+	case GFX_XLATE_FILTER_TRILINEAR: _gfx_xlate_pixmap_trilinear(mode, pxm, !(pxm->flags & GFX_PIXMAP_FLAG_SCALED_INDEX));
 		break;
 
 	default:

@@ -125,6 +125,8 @@ static name_value_pair filter_mode[] = {
 	{"linear", GFX_XLATE_FILTER_LINEAR},
 	{"bilinear", GFX_XLATE_FILTER_LINEAR},
 	{"bi-linear", GFX_XLATE_FILTER_LINEAR},
+	{"trilinear", GFX_XLATE_FILTER_TRILINEAR},
+	{"tri-linear", GFX_XLATE_FILTER_TRILINEAR},
 	{0, 0}
 };
 
