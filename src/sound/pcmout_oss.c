@@ -33,6 +33,7 @@ static pthread_t thread;
 static int run = 1;
 
 static gint16 *buffer;
+static guint16 buffer_size;
 
 static char *oss_device = "/dev/audio"; 
 
@@ -45,7 +46,7 @@ static void *sound_thread (void *arg)
 	int shift = (pcmout_stereo) ? 2: 1;
 
 	while(run) {
-		count = mix_sound(BUFFER_SIZE) << shift;  
+		count = mix_sound(buffer_size) << shift;  
 		b = buffer;
 
 		do {
@@ -58,12 +59,13 @@ static void *sound_thread (void *arg)
 	pthread_exit(0);
 }
 
-static int pcmout_oss_open(gint16 *b, guint16 rate, guint8 stereo) 
+static int pcmout_oss_open(gint16 *b, guint16 size, guint16 rate, guint8 stereo) 
 {
 	audio_buf_info info;
 	int i;
 
 	buffer = b;
+	buffer_size = size;
   
 	if ((oss_fd = open (oss_device, O_WRONLY)) == -1) {
 		fprintf(stderr, "Can't open %s\n", oss_device);

@@ -25,55 +25,34 @@
 ***************************************************************************/
 
 #include <kos/thread.h>
-#include <dc/sound/stream.h>
+#include <stream.h>
 #include <pcmout.h>
 
 static gint16 *buffer;
 static kthread_t *thread;
 
 int pcm_run;
+static guint16 pcm_rate;
+static guint8 pcm_stereo;
+static guint16 pcm_buffer_size;
 
-static void *send_audio(int size, int * size_out) 
+/* Sndstream buffer time in seconds. */
+#define DC_SNDSTREAM_BUF_TIME 0.3f
+
+static void
+*send_audio(int size, int * size_out) 
 {
-	static int callback_nr = 0;
-
-	/* The first two callbacks we need to supply the requested amount of
-	** bytes. This is done by return a pointer to a buffer of the requested
-	** size containing just zeroes
-	*/
-
-	switch(callback_nr)
-	{
-		static uint8 *buf;
-		case 0:	
-			{
-				int i;
-				buf = sci_malloc(size);
-				for (i = 0; i < size; i++) buf[i] = 0x00;
-			}
-		case 1:
-			callback_nr++;
-			*size_out = size;
-			return buf;
-		case 2:
-			free(buf);
-			callback_nr++;
-		case 3:
-			{
-				int count = mix_sound(BUFFER_SIZE) << (pcmout_stereo? 2:1);
-				if (count > size)
-					*size_out = size;
-				else
-					*size_out = count;
-				return buffer;
-			}
-	}
-
-	/* Gets rid of warning */
-	return 0;
+	int count;
+	count = mix_sound(pcm_buffer_size) << (pcm_stereo? 2:1);
+	if (count > size)
+		*size_out = size;
+	else
+		*size_out = count;
+	return buffer;
 }
 
-static void pcm_thread(void *p)
+static void
+pcm_thread(void *p)
 {
 	while (pcm_run)
 	{
@@ -82,29 +61,58 @@ static void pcm_thread(void *p)
 	}
 }
 
-static int pcmout_dc_open(gint16 *b, guint16 rate, guint8 stereo)
+static int
+pcmout_dc_open(gint16 *b, guint16 buffer_size, guint16 rate, guint8 stereo)
 {
+	int callback_chunk = buffer_size << (stereo? 2 : 1);
 	buffer = b;
 	pcm_run = 1;
-	snd_stream_init(send_audio);
+	pcm_rate = rate;
+	pcm_stereo = stereo;
+	pcm_buffer_size = buffer_size;
+	snd_stream_init(send_audio, (int)((rate << 1) *
+		DC_SNDSTREAM_BUF_TIME) / callback_chunk * callback_chunk,
+		buffer_size);
 	snd_stream_start(rate, stereo);
 	thread = thd_create((void *) pcm_thread, NULL);
 	return 0;
 }
 
-static int pcmout_dc_close()
+static int
+pcmout_dc_close()
+{
+	pcm_run = 0;
+	if (thread)
+		thd_wait(thread);
+	snd_stream_stop();
+	snd_stream_shutdown();
+
+	return 0;
+}
+
+int
+pcmout_dc_suspend()
 {
 	pcm_run = 0;
 	thd_wait(thread);
+	thread = NULL;
 	snd_stream_stop();
-	snd_stream_shutdown();
+	return 0;
+}
+
+int
+pcmout_dc_resume()
+{
+	pcm_run = 1;
+	snd_stream_start(pcm_rate, pcm_stereo);
+	thread = thd_create((void *) pcm_thread, NULL);
 	return 0;
 }
 
 pcmout_driver_t pcmout_driver_dc =
 {
 	"dc",
-	"0.1",
+	"0.2",
 	NULL,
 	&pcmout_dc_open,
 	&pcmout_dc_close

@@ -1198,6 +1198,7 @@ main(int argc, char** argv)
 	{
 	        pcmout_sample_rate = active_conf->pcmout_rate;
 	        pcmout_stereo = active_conf->pcmout_stereo;
+	        pcmout_buffer_size = active_conf->pcmout_buffer_size;
 	}
 
 	/* Configure the midiout driver */

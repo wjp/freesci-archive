@@ -258,6 +258,7 @@ standard_option standard_options[] = {
         OPT_STATICREF("pcmout_driver", pcmout_driver, parse_pcmout_driver),
         OPT_INT("pcmout_rate", pcmout_rate, 11025, 48000),
         OPT_NVP("pcmout_stereo", pcmout_stereo, yesno),
+	OPT_INT("pcmout_buffer_size", pcmout_buffer_size, 64, 8192),
 	OPT_STRING("console_log", console_log),
 	OPT_STRING("module_path", module_path),
 	OPT_STRING("gfx_driver", gfx_driver_name),
@@ -506,6 +507,7 @@ config_init(config_entry_t **_conf, char *conffile)
         conf->pcmout_driver = pcmout_find_driver(NULL);
         conf->pcmout_rate = 22050;
         conf->pcmout_stereo = 1;
+	conf->pcmout_buffer_size = 1024;
         conf->midiout_driver = midiout_find_driver(NULL);
         conf->midi_device = midi_find_device(NULL);
 	conf->sound_server = sound_server_find_driver(NULL);

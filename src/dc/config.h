@@ -152,7 +152,7 @@
 /* #undef UNCHECKED_MALLOCS */
 
 /* Version number of package */
-#define VERSION "0.3.4-devel"
+#define VERSION "0.3.4b-devel"
 
 /* Define if using the dmalloc debugging malloc package */
 /* #undef WITH_DMALLOC */

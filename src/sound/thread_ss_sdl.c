@@ -118,7 +118,7 @@ int sound_sdl_configure(state_t *s, char *option, char *value)
 }
 
 int sound_sdl_command(state_t *s, unsigned int command, unsigned int handle, 
-		      guint8 value)
+		      long value)
 {
   sound_server_state_t *ss_state = &sss;
 
@@ -500,7 +500,7 @@ int sound_sdl_restore(state_t *s, char *dirname)
 void sound_sdl_exit(state_t *s)
 {
   /* tell the soundserver to die */
-  global_sound_server->command(s, 0, SOUND_COMMAND_SHUTDOWN, 0);
+  global_sound_server->command(s, SOUND_COMMAND_SHUTDOWN, 0, 0);
 
   /* clean up */
 
@@ -546,13 +546,13 @@ sound_event_t *sound_sdl_dequeue(void)
 void
 sound_sdl_suspend(state_t *s)
 {
-	global_sound_server->command(s, 0, SOUND_COMMAND_SUSPEND_ALL, 0);
+	global_sound_server->command(s, SOUND_COMMAND_SUSPEND_ALL, 0, 0);
 }
 
 void
 sound_sdl_resume(state_t *s)
 {
-	global_sound_server->command(s, 0, SOUND_COMMAND_RESUME_ALL, 0);
+	global_sound_server->command(s, SOUND_COMMAND_RESUME_ALL, 0, 0);
 }
 
 sound_server_t sound_server_sdl = {

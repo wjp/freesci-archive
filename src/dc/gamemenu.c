@@ -670,9 +670,49 @@ int dc_write_config_file(char *fn) {
 		if (sel_freq) fputs("60Hz\n", cfile);
 		else fputs("50Hz\n", cfile);
 
-		fputs("midi_device = adlibemu\n", cfile);
+		if (options_nr[2]) {
+			fputs("pic0_suspend_sound = yes\n", cfile);
+		}
+
+		if (options_nr[1]) {
+			fputs("midi_device = adlibemu\n", cfile);
+			fputs("pcmout_driver = dc\n", cfile);
+		} else {
+			fputs("midi_device = null\n", cfile);
+			fputs("pcmout_driver = null\n", cfile);
+		}
+		
+		switch (options_nr[1]) {
+		case 1:
+			fputs("pcmout_rate = 11025\n", cfile);
+			fputs("pcmout_buffer_size = 128\n", cfile);
+			break;
+		case 2:
+			fputs("pcmout_rate = 16000\n", cfile);
+			fputs("pcmout_buffer_size = 192\n", cfile);
+			break;
+		case 3:
+			fputs("pcmout_rate = 22050\n", cfile);
+			fputs("pcmout_buffer_size = 256\n", cfile);
+		}
+		
+		fputs("pic0_dither_mode = ", cfile);
+		switch (options_nr[3]) {
+		case 0:
+			fputs("dither\n", cfile);
+			break;
+		case 1:
+			fputs("dither256\n", cfile);
+			break;
+		case 2:
+			fputs("flat\n", cfile);
+		}
+					
+		if (options_nr[4])
+			fputs("pic_antialiasing = simple", cfile);
+
 		fputs("pcmout_stereo = 0\n", cfile);
-		fputs("pcmout_rate = 11025\n", cfile);
+
 		fclose(cfile);
 		return 0;
 	}

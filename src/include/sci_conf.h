@@ -96,6 +96,7 @@ typedef struct {
 	sound_server_t *sound_server; /* The sound server */
         int pcmout_rate;  /* Sample rate */
         int pcmout_stereo;  /* Stereo? */
+	int pcmout_buffer_size; /* Buffer size (in frames) */
 
 	char *module_path; /* path to directories modules are loaded from */
 

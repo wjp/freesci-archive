@@ -27,6 +27,7 @@ static pthread_t thread;
 static int run = 1;
 
 static gint16 *buffer;
+static guint16 buffer_size;
 
 static snd_pcm_t *pcm_handle;
 
@@ -40,7 +41,7 @@ static void *sound_thread (void *arg)
   int count, err;
 
   while(run) {
-    count = mix_sound(BUFFER_SIZE);
+    count = mix_sound(buffer_size);
     //    printf("XXXX Fill buffer, %04x, count: %d \n", *buffer, count);
     if ((err = snd_pcm_writei(pcm_handle, buffer, count)) < 0) {
       snd_pcm_prepare(pcm_handle);
@@ -50,7 +51,7 @@ static void *sound_thread (void *arg)
   pthread_exit(0);
 }
 
-static int pcmout_alsa_open(gint16 *b, guint16 rate, guint8 stereo) 
+static int pcmout_alsa_open(gint16 *b, guint16 size, guint16 rate, guint8 stereo) 
 {
   int channels = (stereo) ? 2 : 1;
   int periods = 8;
@@ -64,6 +65,7 @@ static int pcmout_alsa_open(gint16 *b, guint16 rate, guint8 stereo)
 #endif
 
   buffer = b;
+  buffer_size = size;
 
   snd_pcm_hw_params_alloca(&hwparams);
 
@@ -107,7 +109,7 @@ static int pcmout_alsa_open(gint16 *b, guint16 rate, guint8 stereo)
   }
 
   /* buffer size, in frames */
-  if ((err = snd_pcm_hw_params_set_buffer_size(pcm_handle, hwparams, BUFFER_SIZE*periods)>>2) < 0) {
+  if ((err = snd_pcm_hw_params_set_buffer_size(pcm_handle, hwparams, size*periods)>>2) < 0) {
     printf("ALSA: Error setting buffersize.\n");
     return -1;
   }

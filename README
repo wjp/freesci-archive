@@ -400,11 +400,13 @@ This subsystem is responsible for getting PCM music and effects out.
 Its prefix is 'pcmout'.  Currently all sound is output in 16-bit mono.
 
 Options:
-pcmout_driver:  Defaults to 'sdl', can also be 'null' to disable pcmout
-                entirely.
-pcmout_rate:    Sample rate in Hz.  Defaults to 22050, can go up to
-                48000.
-pcmout_stereo:  1 for stereo, 0 for mono.  Defaults to stereo.
+pcmout_driver:       Defaults to 'sdl', can also be 'null' to disable pcmout
+                     entirely.
+pcmout_rate:         Sample rate in Hz.  Defaults to 22050, can go up to
+                     48000.
+pcmout_stereo:       1 for stereo, 0 for mono.  Defaults to stereo.
+pcmout_buffer_size:  Buffer size in frames. Range is from 64 to 8192.
+                     Defaults to 1024.
 
 2.2 Config file example:
 ------------------------

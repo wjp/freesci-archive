@@ -33,7 +33,7 @@ pthread_attr_t althreadattr;
 pthread_t althread;
 
 static gint16 *buffer;
-static gint16 largebuffer[BUFFER_SIZE*4];
+static guint16 buffer_size;
 
 void* althreadplay(void* arg) 
 {
@@ -44,11 +44,11 @@ void* althreadplay(void* arg)
    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 
    do {
-      nframes=mix_sound(BUFFER_SIZE);
+      nframes=mix_sound(buffer_size);
       if (alfd>0) {   /* untested */
          FD_ZERO(&alfdset);
          FD_SET(alfd,&alfdset);
-         alSetFillPoint(alport,BUFFER_SIZE>>1);
+         alSetFillPoint(alport,buffer_size>>1);
          select(alfd+1, NULL, &alfdset, NULL, (struct timeval *)&timeout);
       }
 
@@ -59,12 +59,13 @@ void* althreadplay(void* arg)
    pthread_exit(NULL);
 }
 
-static int pcmout_al_open(gint16 *b, guint16 rate, guint8 stereo) 
+static int pcmout_al_open(gint16 *b, guint16 size, guint16 rate, guint8 stereo) 
 {
    ALpv alparam;
    int  aldev, alitf;
    
    buffer=b;
+   buffer_size=size;
 
    alconfig=alNewConfig();
    if (!alconfig) {

@@ -1,3 +1,24 @@
+2004-02-05  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/Makefile.am: Updated Dreamcast EXTRA_DIST list.
+
+	* src/dc/config.h: Changed VERSION to 0.3.4b-devel.
+
+	* src/dc/stream.h: Added to repository.
+	* src/dc/aica_cmd_iface.h: Removed from repository.
+	* src/dc/snd_stream.c: Avoid unnecessary buffer copying. AICA buffer
+	size can now be set at run-time.
+
+	* README, src/config.l, src/main.c, src/include/pcmout.h,
+	src/include/sci_conf.h, src/sound/pcmout.c, src/sound/pcmout_al.c,
+	src/sound/pcmout_alsa.c, src/sound/pcmout_dc.c, src/sound/pcmout_oss.c,
+	src/sound/pcmout_sdl.c: Added 'pcmout_buffer_size' config option.
+
+	* src/sound/thread_ss_sdl.c: A few small bugfixes.
+
+	* src/dc/gamemenu.c, src/dc/options.h: Added sound and graphics
+	options to the Dreamcast menu.
+
 2003-12-27  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/savegame.cfsml (gamestate_save): Added a little more
