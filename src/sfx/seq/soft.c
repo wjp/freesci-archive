@@ -40,7 +40,7 @@ _sfx_pcm_feed_poll(sfx_pcm_feed_t *feed, byte *dest, int size)
 {
 	sfx_audio_buf_t *buf = (sfx_audio_buf_t *)feed->internal;
 
-	sfx_audbuf_read(buf, dest, feed->sample_size, size);
+	sfx_audbuf_read(buf, dest, size);
 	return size;
 }
 
@@ -66,7 +66,7 @@ sfx_init_sw_sequencer(sfx_sequencer_t *seq, int feeds, sfx_pcm_config_t pcm_conf
 	DATA->feeds = sci_malloc(sizeof(sfx_pcm_buffered_feed_t) * feeds);
 
 	for (i = 0; i < feeds; i++) {
-		sfx_audbuf_init(&DATA->feeds[i].buf);
+		sfx_audbuf_init(&DATA->feeds[i].buf, pcm_conf);
 		DATA->feeds[i].feed = sci_malloc(sizeof(sfx_pcm_feed_t));
 		DATA->feeds[i].feed->debug_name = seq->name;
 		DATA->feeds[i].feed->debug_nr = i;

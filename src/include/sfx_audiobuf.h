@@ -41,7 +41,9 @@
 #define _AUDIOBUF_H_
 
 #include <resource.h>
+#include <sfx_time.h>
 #include <sci_memory.h>
+#include <sfx_pcm.h>
 
 #define SFX_AUDIO_BUF_SIZE 8192	/* Must be multiple of framesize */
 #define SFX_AUDIO_MAX_FRAME 8	/* Max. individual sample size */
@@ -60,13 +62,18 @@ typedef struct {
 	unsigned char last_frame[SFX_AUDIO_MAX_FRAME];
 	/* Contains the last frame successfully read; used for buffer
 	** underruns to avoid crack before silance  */
+	sfx_timestamp_t read_timestamp; /* Timestamp for reading */
+	int samples_nr; /* Total number of samples currently in between reading and writing */
+	int framesize;
 } sfx_audio_buf_t;
 
 
 void
-sfx_audbuf_init(sfx_audio_buf_t *buf);
+sfx_audbuf_init(sfx_audio_buf_t *buf, sfx_pcm_config_t conf);
 /* Initialises an audio buffer
 ** Parameters: (sfx_audio_buf_t *) buf: The buffer to initialise
+**             (sfx_pcm_config_t) conf: The configuration for which the buffer should
+**                                      be set up
 ** Modifies  : (sfx_audio_buf_t) *buf
 */
 
@@ -79,26 +86,41 @@ sfx_audbuf_free(sfx_audio_buf_t *buf);
 */
 
 void
-sfx_audbuf_write(sfx_audio_buf_t *buf, unsigned char *src, int framesize,
-		 int frames);
+sfx_audbuf_write(sfx_audio_buf_t *buf, unsigned char *src, int frames);
 /* Store data in an audion buffer
 ** Parameters: (sfx_audio_buf_t *) buf: The buffer to write to
 **             (unsigned char *) src: Pointer to the data that should be
 **                                    written
-**             (int) framesize: Size of a single sample in bytes
 **             (int) frames: Number of samples to write
 ** Modifies  : (sfx_audio_buf_t) *buf
 */
 
 
+void
+sfx_audbuf_write_timestamp(sfx_audio_buf_t *buf, sfx_timestamp_t ts);
+/* Sets the most recently written timestamp for the buffer
+** Parameters: (sfx_audio_buf_t *) buf: The buffer to operate on
+**             (sfx_timestamp_t) ts: The timestamp to set
+** If a timestamp is already set, 'ts' is checked for consistency and
+** 'silent' frames are introduced as padding for future writes.
+*/
+
+
 int
-sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int framesize,
-		int frames);
+sfx_audbuf_read_timestamp(sfx_audio_buf_t *buf, sfx_timestamp_t *ts);
+/* Reads the timestamp describing the time right before the next sample being read
+** Parameters: (sfx_audio_buf_t *) buf: The buffer to read from
+** Returns   : (sfx_timestamp_t) *ts: The requested timestamp, or nothing
+**             (int) nonzero on success, zero if no timestamp is known
+*/
+
+
+int
+sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int frames);
 /* Read data from audio buffer
 ** Parameters: (sfx_audio_buf_t *) buf: The buffer to write to
 **             (unsigned char *) dest: Pointer to the place the read data
 **                                     should be written to
-**             (int) framesize: Size of a single sample in bytes
 **             (int) frames: Number of samples to write
 ** Returns   : (int) Number of samples actually read
 ** Affects   : (sfx_audio_buf_t) *buf

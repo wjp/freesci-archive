@@ -258,7 +258,11 @@ rt_pause(void)
 	play_pause_counter = play_pause_started;
 
 	play_paused = 1;
-	return seq->allstop();
+	if (!seq->allstop) {
+		sciprintf("[SFX] Cannot suspend sequencer, sound will continue for a bit\n");
+		return SFX_OK;
+	} else
+		return seq->allstop();
 }
 
 static int

@@ -1,3 +1,20 @@
+2003-12-27  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/scriptdebug.c (script_debug): Do not suspend and
+	resume sound repeatedly when stepping more than one step
+
+	* src/sfx/player/realtime.c (rt_pause): Allowed the real time
+	player's "pause" function not to segfault in the absence of the
+	sequencer's "allstop" function
+
+	* src/sfx/seq/soft-pcspeaker.c (sps_allstop): Added 'allstop'
+	implementation
+
+	* src/include/sfx_audiobuf.h: Cleaned up audio buffer API to use
+	PCM configuration data directly (causing a dependency on sfx_pcm.h
+	but significantly eased its use). Also added time stamping support
+	to the API.
+
 2003-12-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sfx/mixer/soft.c (mix_subscribe): Fixed 32 bit overflow in

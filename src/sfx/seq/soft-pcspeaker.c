@@ -65,7 +65,7 @@ sps_open(int patch_len, byte *patch, void *device)
 	fprintf(stderr, "init-Chanlast = %p\n", PCM_SW_CHANNEL(&sfx_sequencer_sw_pcspeaker, 0).last);
 
 	sfx_audbuf_write(&(PCM_SW_CHANNEL(&sfx_sequencer_sw_pcspeaker, 0)),
-			 (byte *) &zero, 2, 1);
+			 (byte *) &zero, 1);
 	return SFX_OK;
 }
 
@@ -163,7 +163,7 @@ sps_delay(int ticks)
 		}
 
 		sfx_audbuf_write(&(PCM_SW_CHANNEL(&sfx_sequencer_sw_pcspeaker, 0)),
-				 (byte *) &(sample_block[0]), 2, SAMPLE_BLOCK_SIZE);
+				 (byte *) &(sample_block[0]), SAMPLE_BLOCK_SIZE);
 	}
 	return SFX_OK;
 }
@@ -175,9 +175,16 @@ sps_volume(guint8 new_volume)
 	return SFX_OK;
 }
 
+int
+sps_allstop(void)
+{
+	note = 0;
+	return SFX_OK;
+}
+
 sfx_sequencer_t sfx_sequencer_sw_pcspeaker = {
 	"sw-pcspeaker",
-	"0.1",
+	"0.2",
 	SFX_DEVICE_NONE,
 	sps_set_option,
 	sps_open,
@@ -185,7 +192,7 @@ sfx_sequencer_t sfx_sequencer_sw_pcspeaker = {
 	sps_event,
 	sps_delay,
 	NULL,
-	NULL,
+	sps_allstop,
 	sps_volume,
 	NULL,
 	SFX_SEQ_PATCHFILE_NONE,

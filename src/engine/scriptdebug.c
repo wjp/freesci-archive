@@ -3305,12 +3305,13 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 	if (_debug_step_running)
 		_debug_step_running--;
 
-	/* Suspend music playing */
-	sfx_suspend(&s->sound, 1);
-
 	while (_debugstate_valid) {
 		int skipfirst = 0;
 		char *commandstring;
+
+		/* Suspend music playing */
+		sfx_suspend(&s->sound, 1);
+
 #ifdef WANT_CONSOLE
 #  ifndef FORCE_CONSOLE
 		if (!have_windowed) {
@@ -3344,10 +3345,10 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 		if (commandstring[0] != ':')
 			con_parse(s, commandstring + skipfirst);
 		sciprintf("\n");
-	}
 
-	/* Resume music playing */
-	sfx_suspend(&s->sound, 0);
+		/* Resume music playing */
+		sfx_suspend(&s->sound, 0);
+	}
 }
 
 

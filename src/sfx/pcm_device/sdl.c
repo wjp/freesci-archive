@@ -42,7 +42,7 @@ timer_sdl_internal_callback(void *userdata, byte *dest, int len)
 	if (sdl_sfx_timer_callback)
 		sdl_sfx_timer_callback(sdl_sfx_timer_data);
 
-	sfx_audbuf_read(&audio_buffer, dest, sample_size, len / sample_size);
+	sfx_audbuf_read(&audio_buffer, dest, len / sample_size);
 }
 
 
@@ -50,7 +50,6 @@ static int
 pcmout_sdl_init(sfx_pcm_device_t *self)
 {
 	SDL_AudioSpec a;
-	sfx_audbuf_init(&audio_buffer);
 
 	if (SDL_Init(SDL_INIT_AUDIO|SDL_INIT_NOPARACHUTE) != 0) {
 		fprintf (stderr, "[SND:SDL] Error while initialising: %s\n", SDL_GetError());
@@ -80,9 +79,8 @@ pcmout_sdl_init(sfx_pcm_device_t *self)
 
 	sample_size = SFX_PCM_SAMPLE_SIZE(self->conf);
 
+	sfx_audbuf_init(&audio_buffer, self->conf); 
 	SDL_PauseAudio (0);
-
-	sfx_audbuf_init(&audio_buffer);
 
 	return SFX_OK;
 }
@@ -90,7 +88,7 @@ pcmout_sdl_init(sfx_pcm_device_t *self)
 int
 pcmout_sdl_output(sfx_pcm_device_t *self, byte *buf, int count)
 {
-	sfx_audbuf_write(&audio_buffer, buf, SFX_PCM_SAMPLE_SIZE(self->conf), count);
+	sfx_audbuf_write(&audio_buffer, buf, count);
 	return SFX_OK;
 }
 

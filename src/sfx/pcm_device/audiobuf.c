@@ -38,14 +38,36 @@ sfx_audbuf_alloc_chunk(void)
 }
 
 void
-sfx_audbuf_init(sfx_audio_buf_t *buf)
+sfx_audbuf_init(sfx_audio_buf_t *buf, sfx_pcm_config_t pcm_conf)
 {
+	int framesize = SFX_PCM_SAMPLE_SIZE(pcm_conf);
+	byte silence[16];
+	int silencew = pcm_conf.format & ~SFX_PCM_FORMAT_LMASK;
+
+	/* Determine the correct 'silence' for the channel and install it */
+	/* Conservatively assume stereo */
+	if (pcm_conf.format & SFX_PCM_FORMAT_16) {
+		if (pcm_conf.format & SFX_PCM_FORMAT_LE) {
+			silence[0] = silencew & 0xff;
+			silence[1] = (silencew >> 8) & 0xff;
+		} else {
+			silence[0] = (silencew >> 8) & 0xff;
+			silence[1] = silencew & 0xff;
+		}
+		memcpy(silence + 2, silence, 2);
+	} else {
+		silence[0] = silencew;
+		silence[1] = silencew;
+	}
+
 	buf->last = buf->first = sfx_audbuf_alloc_chunk();
 	buf->unused = NULL;
-	memset(buf->last_frame, SFX_AUDIO_MAX_FRAME, 0); /* Initialise, in case
+	memcpy(buf->last_frame, silence, framesize);	 /* Initialise, in case we
 							 ** underrun before the
-							 ** first read  */
+							 ** first write  */
 	buf->read_offset = 0;
+	buf->framesize = framesize;
+	buf->read_timestamp.secs = -1; /* Mark as inactive */
 }
 
 static void
@@ -68,11 +90,10 @@ sfx_audbuf_free(sfx_audio_buf_t *buf)
 }
 
 void
-sfx_audbuf_write(sfx_audio_buf_t *buf, unsigned char *src, int framesize,
-		 int frames)
+sfx_audbuf_write(sfx_audio_buf_t *buf, unsigned char *src, int frames)
 {
 	/* In here, we compute PER BYTE */
-	int data_left = framesize * frames;
+	int data_left = buf->framesize * frames;
 
 
 	if (!buf->last) {
@@ -133,15 +154,14 @@ sfx_audbuf_write(sfx_audio_buf_t *buf, unsigned char *src, int framesize,
 
 	if (frames)
 	/* Backup last frame */
-		memcpy(buf->last_frame, src - framesize, framesize);
+		memcpy(buf->last_frame, src - buf->framesize, buf->framesize);
 }
 
 static int
 reported_buffer_underrun = 0;
 
 int
-sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int framesize,
-		int frames)
+sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int frames)
 {
 	int written = 0;
 	if (frames <= 0)
@@ -165,7 +185,7 @@ sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int framesize,
 #endif
 
 	while (frames) {
-		int data_needed = frames * framesize;
+		int data_needed = frames * buf->framesize;
 		int rdbytes = data_needed;
 		int rdframes;
 
@@ -188,7 +208,7 @@ sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int framesize,
 			buf->read_offset = 0;
 		}
 
-		rdframes = (rdbytes / framesize);
+		rdframes = (rdbytes / buf->framesize);
 		frames -= rdframes;
 		written += rdframes;
 
@@ -200,8 +220,8 @@ sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int framesize,
 				reported_buffer_underrun = 1;
 			}
 			do {
-				memcpy(dest, buf->last_frame, framesize);
-				dest += framesize;
+				memcpy(dest, buf->last_frame, buf->framesize);
+				dest += buf->framesize;
 			} while (--frames);
 		}
 
@@ -209,3 +229,9 @@ sfx_audbuf_read(sfx_audio_buf_t *buf, unsigned char *dest, int framesize,
 
 	return written;
 }
+
+void
+sfx_audbuf_write_timestamp(sfx_audio_buf_t *buf, sfx_timestamp_t ts);
+
+int
+sfx_audbuf_read_timestamp(sfx_audio_buf_t *buf, sfx_timestamp_t *ts);
