@@ -751,6 +751,11 @@ restore_sound_state(sound_server_state_t *ss_state)
 
 	midi_allstop();
 	_restore_midi_state(ss_state);
+
+	/* fix sound volume restore bugs in KQ4 and ARTHUR */
+	if (ss_state->master_volume == 0)
+		set_master_volume(100, ss_state);
+
 	change_song(ss_state->current_song, ss_state);
 /*
 	if (ss_state->current_song)

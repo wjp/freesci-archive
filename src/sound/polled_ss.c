@@ -128,7 +128,8 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 				if (ss_state->current_song->pos >= ss_state->current_song->size) {
 					fprintf(debug_stream, "Sound server: Error: Reached end of song while decoding prefix:\n");
 					dump_song(ss_state->current_song);
-					ss_state->current_song = NULL;
+					fprintf(debug_stream, "Suspending sound server\n");
+					suspend_all(ss_state);
 				}
 			}
 			ticks_to_wait += tempticks;
@@ -380,14 +381,14 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 
 					case SOUND_COMMAND_PRINT_CHANNELS: {
 #ifdef DEBUG_SOUND_SERVER
-//						print_channels_any(0, ss_state);
+						print_channels_any(0, ss_state);
 #endif
 						break;
 					}
 
 					case SOUND_COMMAND_PRINT_MAPPING: {
 #ifdef DEBUG_SOUND_SERVER
-//						print_channels_any(1, ss_state);
+						print_channels_any(1, ss_state);
 #endif
 						break;
 					}
@@ -467,8 +468,10 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 		if (ss_state->current_song && ss_state->current_song->data) { /* If we have a current song */
 			int newcmd;
 			guint8 param, param2 = 0;
+#ifdef DEBUG_SOUND_SERVER
 fprintf(stderr, "--NEW--[Handle %04x ---- pos = %04x]\n", ss_state->current_song->handle,
 ss_state->current_song->pos);
+#endif
 
 			newcmd = ss_state->current_song->data[ss_state->current_song->pos]; /* Retreive MIDI command */
 
@@ -482,20 +485,20 @@ ss_state->current_song->pos);
 					ss_state->current_song->loops,
 					ss_state->current_song->loopmark);
 				if ((--(ss_state->current_song->loops) != 0) && ss_state->current_song->loopmark) {
-//#ifdef DEBUG_SOUND_SERVER
+#ifdef DEBUG_SOUND_SERVER
 					fprintf(debug_stream, "Looping back from %d to %d on handle %04x\n",
 					        ss_state->current_song->pos, ss_state->current_song->loopmark,
 						ss_state->current_song->handle);
-//#endif
+#endif
 					ss_state->current_song->pos = ss_state->current_song->loopmark;
 					global_sound_server->queue_event(ss_state->current_song->handle,
 									 SOUND_SIGNAL_LOOP, ss_state->current_song->loops);
 
 				} else { /* Finished */
 
-//#ifdef DEBUG_SOUND_SERVER
+#ifdef DEBUG_SOUND_SERVER
 					fprintf(debug_stream, "Finishing handle %04x\n", ss_state->current_song->handle);
-//#endif
+#endif
 					ss_state->current_song->status = SOUND_STATUS_STOPPED;
 					ss_state->current_song->pos
 						= ss_state->current_song->loopmark

@@ -1,3 +1,14 @@
+2001-12-23  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/sound/event_ss.c:
+	* src/sound/polled_ss.c: Suspends sound on song decoding error (so can
+	play Hoyle).
+
+	* src/sound/soundserver.c (restore_sound_state): Now overrides master
+	volume with 100 if it restores as 0.
+
+	* src/win32/freesci.def: Added script_set_gamestate_save_dir.
+
 2001-12-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/polled_ss.c (sci0_polled_ss): Re-implemented end-of song

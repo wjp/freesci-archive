@@ -59,6 +59,7 @@ EXPORTS
   map_MIDI_instruments
   ;using_history DATA
   ;add_history
+  script_set_gamestate_save_dir
 
   gfxop_init
   gfxop_exit
@@ -83,7 +84,6 @@ EXPORTS
   midiout_driver_win32mci
   sound_server_find_driver
   sound_servers
-
 
   test_savegame
   sci_find_first

@@ -120,7 +120,8 @@ void do_sound(sound_server_state_t *sss)
 			if (sss->current_song->pos >= sss->current_song->size) {
 				fprintf(debug_stream, "Sound server: Error: Reached end of song while decoding prefix:\n");
 				dump_song(sss->current_song);
-				sss->current_song = NULL;
+				fprintf(debug_stream, "Suspending sound server\n");
+				suspend_all(sss);
 				return;
 			}
 
