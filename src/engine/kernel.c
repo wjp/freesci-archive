@@ -331,7 +331,7 @@ kalloc(state_t *s, int type, int space)
 		s->hunk[seeker].data = malloc(s->hunk[seeker].size = space);
 		s->hunk[seeker].type = type;
 	}
-
+fprintf(stderr,"Allocd %d on [%d]\n", space, seeker);
 	SCIkdebug(SCIkMEM, "Allocated %d at hunk %04x\n", space, seeker | (sci_memory << 11));
 
 	return (seeker | (sci_memory << 11));
@@ -379,7 +379,7 @@ kfree(state_t *s, int handle)
 		SCIkwarn(SCIkERROR, "Error: Attempt to kfree() non-allocated memory\n");
 		return 1;
 	}
-
+fprintf(stderr,"Freeing handle [%d]\n", handle);
 	free(s->hunk[handle].data);
 	s->hunk[handle].data = NULL;
 	s->hunk[handle].size = 0;

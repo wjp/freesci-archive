@@ -499,7 +499,21 @@ run_vm(state_t *s, int restoring)
     byte opcode, opnumber;
     int var_number; /* See description below */
 
+    int z, zz=0;
+    for (z =0; z < MAX_HUNK_BLOCKS; z++) {
+	    if (s->hunk[z].size < 0) {
+		    fprintf(stderr,"Hunk %d is inconsistant!\n", z);
+		    break;
+	    }
+	    else if (s->hunk[z].size)
+		    zz++;
+    }
+    if (zz > 12) {
+	    fprintf(stderr, "%d hunk handles allocated!\n", zz);
+    }
+
     #ifdef _DOS
+#error "Fixme: Polling the sound server each step will make things FSICKINGLY slow!!!"
     /* poll the sound server! (dos needs this because it's singletasking) */
     if(s->sfx_driver) {
         if(s->sfx_driver->poll) {

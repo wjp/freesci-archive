@@ -477,6 +477,8 @@ sci0_soundserver()
 	  sound_send_data((byte *)&success, sizeof(int));
 	  /* REPORT_STATUS(success); */
 
+	  song = newsong;
+
 	  free(dirname);
 	  /* restore some device state */
 	  if (newsong) {

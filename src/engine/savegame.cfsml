@@ -453,7 +453,7 @@ write_hunk_block(FILE *fh, hunk_block_t *foo)
 
 	if (foo->type == HUNK_TYPE_GFXBUFFER) {
 		fputs(HUNK_TYPE_GFX_SNAPSHOT_STRING, fh);
-		%CFSMLWRITE gfxw_snapshot_t ((gfxw_snapshot_t*)foo->data) INTO fh;
+		%CFSMLWRITE gfxw_snapshot_t (*(((gfxw_snapshot_t**)foo->data))) INTO fh;
 		return;
 
 	} else { /* Normal buffer */
@@ -485,11 +485,12 @@ read_hunk_block(FILE *fh, hunk_block_t *foo, char *lastval, int *line, int *hite
 	}
 
 	if (lastval[0] == HUNK_TYPE_GFX_SNAPSHOT_STRING[0]) { /* Graphical buffer */
-		gfxw_snapshot_t zot;
 		foo->type = HUNK_TYPE_GFXBUFFER;
-		foo->data = xalloc(sizeof (gfxw_snapshot_t));
+		foo->size = sizeof(gfxw_snapshot_t);
+		foo->data = xalloc(sizeof (gfxw_snapshot_t *));
+		*((gfxw_snapshot_t **)foo->data) = xalloc(sizeof (gfxw_snapshot_t));
 
-		%CFSMLREAD gfxw_snapshot_t &zot FROM fh ERRVAR *hiteof LINECOUNTER *line
+		%CFSMLREAD gfxw_snapshot_t (*(gfxw_snapshot_t**)(foo->data)) FROM fh ERRVAR *hiteof LINECOUNTER *line
 
 		return 0;
 

@@ -66,7 +66,8 @@ FUNCNAME(gfx_mode_t *mode, gfx_pixmap_t *pxm, int scale)
 			SIZETYPE col = result_colors[isalpha = *src++] << (EXTRA_BYTE_OFFSET * 8);
 			isalpha = (isalpha == 255) && using_alpha;
 
-			/* O(n) loops. There is an O(ln(n)) algorithm for this, but its slower for small n (which we're optimizing for here) */
+			/* O(n) loops. There is an O(ln(n)) algorithm for this, but its slower for small n (which we're optimizing for here).
+			** And, anyway, most of the time is spent in memcpy() anyway. */
 			for (widthc = 0; widthc < xfact; widthc++) {
 				memcpy(dest, &col, COPY_BYTES);
 				dest += COPY_BYTES;
