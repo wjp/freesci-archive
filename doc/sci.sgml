@@ -4807,19 +4807,31 @@ See <XREF LINKEND="LarsWindows"> for details on the windowing/Control system.
     <funcsynopsis><funcprototype><funcdef>
 kfunct 0x19: EditControl
     </funcdef><paramdef>
-HeapPtr Control</paramdef>
-    </funcprototype></funcsynopsis><para><simplelist><member><type>
+HeapPtr Control, HeapPtr Event</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+<member><type>
 (HeapPtr)
     </type>
 <parameter/Control/: A heap pointer to the Control to edit
-    </member></simplelist></para><para>
+    </member>
+<member><type>
+(HeapPtr)
+    </type>
+<parameter/Event/: The event to interpret
+    </member>
+</simplelist></para><para>
     Returns: <type>
 (void)
     </type>
     </para><para>
-This function will give control to the kernel and allow the editing of a type
+This function will apply the event provided to edit a type
 3 (Edit window) Control (see <XREF LINKEND="LarsWindows"> for a description
-of the control system). If it is called to edit a Control which is not of type
+of the control system). Normal keypresses are added to the area pointed to by
+Control::text, unless the total string length would be greater than
+Control::max. Cursor keys, backspace and a few other keys may be used to
+manipulate the control. In FreeSCI, some of the libreadline control keys can
+be used to edit and move the cursor as well.
+If it is called to edit a Control which is not of type
 3, it returns without error. Please note that the correct port (usually the
 window which the Control was drawn in) must be selected beforehand.
     </para>
