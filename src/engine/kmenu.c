@@ -108,7 +108,7 @@ struct {
 	int fgcolor, bgcolor;
 } _about_freesci_pages[ABOUT_FREESCI_PAGES_NR] = {
 	{"FreeSCI hackers and contributors",
-	 "Alexander R. Angas\nWin32 fixes and generic memory handler functions\n\n"
+	 "Alexander R. Angas\nDirectX 8 driver, Event sound server, Generic memory functions\n\n"
 	 "Anders Baden Nielsen\nPPC testing\n\n"
 	 "Bas Zoetekouw\nMan pages, debian package management, CVS maintenance\n\n"
 	 "Carl Muckenhoupt\nSources to the SCI resource viewer tools that started it all\n\n"

@@ -370,6 +370,39 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 }
 
 
+static void
+_gfxr_unscale_pixmap_index_data(gfx_pixmap_t *pxm, gfx_mode_t *mode)
+{
+	int xmod = mode->xfact; /* Step size horizontally */
+	int ymod = pxm->index_xl * mode->yfact; /* Vertical step size */
+	int maxpos = pxm->index_xl * pxm->index_yl;
+	int pos;
+	byte *dest = pxm->index_data;
+
+	if (!(pxm->flags & GFX_PIXMAP_FLAG_SCALED_INDEX))
+		return; /* It's not scaled! */
+
+	for (pos = 0; pos < maxpos; pos += ymod) {
+		int c;
+
+		for (c = 0; c < pxm->index_xl; c += xmod)
+			*dest++ = pxm->index_data[pos + c]; /* No overwrite since
+							    ** line and offset
+							    ** readers move much
+							    ** faster
+							    ** (proof by in-
+							    ** duction, trivial
+							    ** and left to the
+							    ** reader)  */
+	}
+
+	pxm->index_xl /= mode->xfact;
+	pxm->index_yl /= mode->yfact;
+	pxm->flags &= ~GFX_PIXMAP_FLAG_SCALED_INDEX;
+	fprintf(stderr, "Unscaled to %dx%d\n", pxm->index_xl, pxm->index_yl);
+}
+
+
 gfxr_pic_t *
 gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int flags,
 		int old_default_palette, int default_palette, int scaled)
@@ -404,6 +437,9 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 		}
 	}
 
+	if (state->options->pic0_unscaled) /* Unscale priority map, if we scaled it earlier */
+		_gfxr_unscale_pixmap_index_data(res->scaled_data.pic->priority_map, state->driver->mode);
+
 	if (scaled) {
 		res->lock_sequence_nr = state->options->buffer_pics_nr;
 
@@ -414,7 +450,10 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 
 	res->mode = MODE_INVALID; /* Invalidate */
 
-	pic = gfxr_pic_xlate_common(res, maps, scaled, 1, state->driver->mode, state->options->pic_xlate_filter, 1);
+	pic = gfxr_pic_xlate_common(res, maps, scaled, 1/*force*/, state->driver->mode, state->options->pic_xlate_filter, 1);
+
+	if (state->options->pic0_unscaled) /* Scale priority map again, if needed */
+		res->scaled_data.pic->priority_map = gfx_pixmap_scale_index_data(res->scaled_data.pic->priority_map, state->driver->mode);
 
 	if (scaled || state->options->pic0_unscaled && maps & GFX_MASK_VISUAL)
 		gfxr_antialiase(pic->visual_map, state->driver->mode,
@@ -422,6 +461,7 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 
 	return pic;
 }
+
 
 
 gfxr_view_t *

@@ -28,6 +28,7 @@
    20030113 - Submitted to CVS.
    20030115 - Fixed: memory leak in dx_grab_pixmap()
 			- Fixed: vertical line drawing
+   20030116 - Fixed: all known memory leaks
 			- TODO: implement size factor
 			- TODO: implement mouse
 			- TODO: improve LockRect call for draw_filled_rect
@@ -619,6 +620,9 @@ dx_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 		DODX( (dstt->GetSurfaceLevel(0, &dbuf)), dx_draw_pixmap );
 		DODX( (dx_state->g_pd3dDevice->CopyRects(sbuf, &srcRect, 1, dbuf, &dstPoint)), dx_draw_pixmap );
 
+		SAFE_RELEASE(sbuf);
+		SAFE_RELEASE(dbuf);
+
 		return GFX_OK;
 	}
 
@@ -646,6 +650,9 @@ dx_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 		       GFX_CROSSBLIT_FLAG_DATA_IS_HOMED);
 	DODX( (dbuf->UnlockRect()), dx_draw_pixmap );
 
+	SAFE_RELEASE(sbuf);
+	SAFE_RELEASE(dbuf);
+
 
 	// Copy from temp to visuals[bufnr]
 	RECT src2Rect = { 0, 0, dest.xl, dest.yl };
@@ -657,9 +664,9 @@ dx_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 	DODX( (dstt->GetSurfaceLevel(0, &dbuf)), dx_draw_pixmap );
 	DODX( (dx_state->g_pd3dDevice->CopyRects(sbuf, &src2Rect, 1, dbuf, &dst2Point)), dx_draw_pixmap );
 
-	// Clean up
+	SAFE_RELEASE(sbuf);
+	SAFE_RELEASE(dbuf);
 	SAFE_RELEASE(temp);
-	temp = NULL;
 
 	return GFX_OK;
 }
@@ -704,9 +711,8 @@ dx_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 		pxm->internal.handle = SCI_DX_HANDLE_GRABBED;
 		pxm->flags |= GFX_PIXMAP_FLAG_INSTALLED | GFX_PIXMAP_FLAG_EXTERNAL_PALETTE | GFX_PIXMAP_FLAG_PALETTE_SET;
 
-		// Clean up
-		SAFE_RELEASE(temp);
-		temp = NULL;
+		SAFE_RELEASE(backSrf);
+		SAFE_RELEASE(tempSrf);
 
 		break;
 	}
@@ -747,6 +753,9 @@ dx_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffer
 
 		DODX( (dx_state->g_pd3dDevice->CopyRects(sbuf, &srcRect, 1, dbuf, &dstPoint)), dx_update );
 
+		SAFE_RELEASE(sbuf);
+		SAFE_RELEASE(dbuf);
+
 		Render(drv);
 		break;
 
@@ -761,6 +770,9 @@ dx_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffer
 		DODX( (dstt->GetSurfaceLevel(0, &dbuf)), dx_update );
 
 		DODX( (dx_state->g_pd3dDevice->CopyRects(sbuf, &srcRect, 1, dbuf, &dstPoint)), dx_update );
+
+		SAFE_RELEASE(sbuf);
+		SAFE_RELEASE(dbuf);
 
 		break;
 
@@ -792,6 +804,9 @@ dx_set_static_buffer(struct _gfx_driver *drv, gfx_pixmap_t *pic,
 	DODX( (pii->GetSurfaceLevel(0, &pbf)), dx_set_static_buffer );
 	DODX( (vis->GetSurfaceLevel(0, &vbf)), dx_set_static_buffer );
 	DODX( (dx_state->g_pd3dDevice->CopyRects(pbf, NULL, 0, vbf, NULL)), dx_set_static_buffer );
+
+	SAFE_RELEASE(pbf);
+	SAFE_RELEASE(vbf);
 
 	// Copy priority map
 	gfx_copy_pixmap_box_i(dx_state->priority_maps[STATIC_PRI], priority, gfx_rect(0, 0, dx_state->xsize, dx_state->ysize));
@@ -830,19 +845,6 @@ dx_set_pointer(struct _gfx_driver *drv, gfx_pixmap_t *pointer)
 	DODX( (dx_state->g_pd3dDevice->SetCursorProperties(0, 0, pntSurf)), dx_set_pointer );
 	DODX( (dx_state->g_pd3dDevice->ShowCursor(TRUE)), dx_set_pointer );
 */
-	return GFX_OK;
-}
-
-
-/*** Palette operations ***/
-
-/* Manipulates a palette index in the hardware palette. */
-static int
-dx_set_palette(struct _gfx_driver *drv, int index, byte red, byte green,
-		      byte blue)
-{
-	sciprintf("WARNING: dx_set_palette() unimplemented\n");
-
 	return GFX_OK;
 }
 
@@ -1081,7 +1083,7 @@ gfx_driver_t gfx_driver_dx = {
 	SCI_GFX_DRIVER_VERSION,
 	NULL,	/* mode */
 	0, 0,	/* mouse pointer position */
-	/*GFX_CAPABILITY_MOUSE_POINTER | GFX_CAPABILITY_COLOR_MOUSE_POINTER | */ GFX_CAPABILITY_PIXMAP_REGISTRY | GFX_CAPABILITY_PIXMAP_GRABBING /*| GFX_CAPABILITY_MOUSE_SUPPORT*/,
+	/*GFX_CAPABILITY_MOUSE_POINTER | GFX_CAPABILITY_COLOR_MOUSE_POINTER | */ GFX_CAPABILITY_PIXMAP_REGISTRY | GFX_CAPABILITY_PIXMAP_GRABBING | GFX_CAPABILITY_FINE_LINES | GFX_CAPABILITY_WINDOWED /*| GFX_CAPABILITY_MOUSE_SUPPORT*/,
 	0,
 	dx_set_param,
 	dx_init_specific,
@@ -1095,8 +1097,8 @@ gfx_driver_t gfx_driver_dx = {
 	dx_grab_pixmap,
 	dx_update,
 	dx_set_static_buffer,
-	dx_set_pointer,
-	dx_set_palette,
+	NULL,//dx_set_pointer,
+	NULL,
 	dx_get_event,
 	dx_usleep,
 	NULL

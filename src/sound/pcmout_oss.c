@@ -106,11 +106,11 @@ static int pcmout_oss_open(gint16 *b, guint16 rate, guint8 stereo)
 		fprintf(stderr, "[PCM-OSS] Failed to set stereo to %d\n", stereo);
 		if (stereo)
 			return -1;
+		fprintf(stderr, "[PCM-OSS] Not fatal, continuing...\n");
 	}
 
 	pthread_create (&thread, NULL, sound_thread, NULL);
 	pthread_detach (thread);
-
 	return 0;
 }
 

@@ -526,17 +526,14 @@ sciprintf (char *fmt, ...)
 	va_list argp;
 	size_t bufsize = 256;
 	unsigned int i;
-	char *buf 	= (char *) sci_malloc (bufsize);
+	char *buf;
 
 	if (NULL == fmt) {
 		fprintf(stderr, "console.c: sciprintf(): NULL passed for parameter fmt\n");
 		return -1;
 	}
 
-	if (NULL == buf) {
-		fprintf(stderr, "console.c: sciprintf(): malloc failed for buf\n");
-		return -1;
-	}
+	buf = (char *) sci_malloc (bufsize);
 
 	va_start (argp, fmt);
 	while ((i = vsnprintf (buf, bufsize - 1, fmt, argp)) == -1
@@ -558,6 +555,8 @@ sciprintf (char *fmt, ...)
 	
 	if (_con_string_callback)
 		_con_string_callback(buf);
+
+	free(buf);
 
 	return 0;
 }

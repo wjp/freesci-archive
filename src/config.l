@@ -634,6 +634,8 @@ config_free(config_entry_t **conf, int entries)
 				sci_free((*conf)[i].resource_dir);
 			if ((*conf)[i].console_log)
 				sci_free((*conf)[i].console_log);
+			if ((*conf)[i].module_path)
+				sci_free((*conf)[i].module_path);
 		}
 
 		for (j = 0; j < FREESCI_DRIVER_SUBSYSTEMS_NR; j++) {
