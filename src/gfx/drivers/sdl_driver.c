@@ -34,6 +34,9 @@
 #ifndef SDL_DISABLE
 #  define SDL_DISABLE 0
 #endif
+#ifndef SDL_ALPHA_OPAQUE
+#  define SDL_ALPHA_OPAQUE 255
+#endif
 
 #define SCI_SDL_HANDLE_NORMAL 0
 #define SCI_SDL_HANDLE_GRABBED 1

@@ -155,6 +155,14 @@ getInt16(byte *d)
 */
 
 
+#ifndef HAVE_ISBLANK
+static inline int
+isblank(int foo)
+{
+	return (foo == ' ') || (foo == '\t');
+}
+#endif
+
 void *
 _XALLOC(size_t size, char *file, int line, char *funct);
 #ifdef __GNUC__
