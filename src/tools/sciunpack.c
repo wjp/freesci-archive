@@ -90,6 +90,7 @@ static int verbose = 0;
 static int with_header = 1;
 static int color_mode = 0;
 static int action = ACT_DEFAULT;
+static guint8 midimask = 0x01;  /* MT-32 */
 
 void
 print_resource_filename(FILE* file, int type, int number)
@@ -131,6 +132,7 @@ static struct option options[] = {
 	{"palette-dither256", no_argument, &color_mode, SCI_COLOR_DITHER256},
 #endif /* DRAW_GRAPHICS */
 	{"gamedir", required_argument, 0, 'd'},
+	{"midimask", required_argument, 0, 'M'},
 	{0, 0, 0, 0}};
 
 #endif /* HAVE_GETOPT_LONG */
@@ -152,9 +154,9 @@ int main(int argc, char** argv)
 	char *gamedir = NULL;
 
 #ifdef HAVE_GETOPT_LONG
-	while ((c = getopt_long(argc, argv, "WOVUvhLco:d:", options, &optindex)) > -1) {
+	while ((c = getopt_long(argc, argv, "WOVUvhLco:d:M:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_LONG */
-	while ((c = getopt(argc, argv, "WOVUvhLco:d:")) > -1) {
+	while ((c = getopt(argc, argv, "WOVUvhLco:d:M:")) > -1) {
 #endif /* !HAVE_GETOPT_LONG */
 
 		switch (c) {
@@ -189,6 +191,8 @@ int main(int argc, char** argv)
 			       " --version              Prints the version number\n"
 			       " --verbose     -v       Enables additional output\n"
 			       " --help        -h       Displays this help message\n"
+			       " --midimask    -M       What 'play mask' to use.  Defaults to MT-32 (0x01)\n"
+
 			       "Listing words:\n"
 			       " --sort-alpha		sort in alphabetical order\n"
 			       " --sort-group		sort in group order\n"
@@ -209,6 +213,7 @@ int main(int argc, char** argv)
 			       "  script resources:  Will be dissected and  stored in <number>.script\n"
 #ifdef DRAW_GRAPHICS
 			       "  picture resources: Will be converted to PNG, stored in <number>.png\n"
+
 #endif /* DRAW_GRAPHICS */
 			       );
 			exit(0);
@@ -244,6 +249,10 @@ int main(int argc, char** argv)
 
 		case 'c':
 			conversion = 1;
+			break;
+
+		case 'M':
+			midimask = (guint8) strtol(optarg, NULL, 0);
 			break;
 
 		case 0: /* getopt_long already did this for us */
@@ -411,7 +420,7 @@ void unpack_resource(int stype, int snr, char *outfilename)
 #ifdef HAVE_OBSTACK_H
 			if ((stype == sci_sound) && conversion) {
 				int midilength;
-				guint8 *outdata = makeMIDI0(found->data, &midilength);
+				guint8 *outdata = makeMIDI0(found->data, &midilength, midimask);
 				if (!outdata) {
 					fprintf(stderr,"MIDI conversion failed. Aborting...\n");
 					return;

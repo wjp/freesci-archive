@@ -211,11 +211,12 @@ extern DLLEXTERN sfx_driver_t *sfx_drivers[]; /* All available sound fx drivers,
 
 #ifdef HAVE_OBSTACK_H
 guint8 *
-makeMIDI0(const guint8 *src, int *size);
+makeMIDI0(const guint8 *src, int *size, guint8 flag);
 /* Turns a sound resource into a MIDI block.
 ** Parameters: src: points to the resource.data information
 **             size: points to an int which is set to contain the MIDI
 **                   block length.
+**             flag: The midi instrument's play flag.
 ** Returns   : (guint8 *) The malloc()ed MIDI block, or NULL if conversion
 **             failed.
 ** *FIXME*: Aborts in some cases if out of memory. This is OK while testing,

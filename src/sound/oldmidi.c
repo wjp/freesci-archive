@@ -658,7 +658,7 @@ obstack_1grow(stackp, 0x26); \
 obstack_1grow(stackp, 0x00)
 
 guint8 *
-makeMIDI0(const guint8 *src, int *size)
+makeMIDI0(const guint8 *src, int *size, guint8 flag)
 /* Generates a MIDI memory block (looking like a MIDI file).
 ** size is set to the total size of the memory block.
 ** Returns 0 on failure.
@@ -693,7 +693,7 @@ makeMIDI0(const guint8 *src, int *size)
   */
 
   for (chn=0; chn < 16; chn ++)
-    if ((chn > 0) && (chn < 9) && (src[(chn << 1) + 2] & 001))
+    if ((chn > 0) && (chn < 9) && (src[(chn << 1) + 2] & flag))
       muteflags[chn] = 1;
     else if ((chn == 9) && (src[(chn << 1) + 1] & 0x80))
       muteflags[chn] = 0;

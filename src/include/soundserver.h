@@ -91,6 +91,7 @@
 typedef struct _song {
 
   int flags[MIDI_CHANNELS]; /* Flags for each channel */
+  int polyphony[MIDI_CHANNELS]; /* # of simultaneous notes on each */
   int instruments[MIDI_CHANNELS]; /* Instrument number for each channel */
   int velocity[MIDI_CHANNELS]; /* Velocity for each channel (0 for "mute") */
   int pressure[MIDI_CHANNELS]; /* Channel pressure (MIDI Dx command) */

@@ -1,3 +1,18 @@
+2001-03-02  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/include/sound.h
+	  src/sound/oldmidi.c
+	  src/tools/sciunpack.c:  Will generate MIDI0 songs with the
+                                    appropriate 'play flag'.
+	* src/include/soundserver.h:  Added a polyphony count for each
+                                         channel
+
+	* src/sound/midi_mt32.c	
+	  src/include/midi_mt32.h
+	  src/sound/soundserver_null.c:  Tracks polyphony
+					 Adheres to the 'play flag' per
+                                            channel per device.
+
 2001-03-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/midiout_alsaraw.c: Compilation fixes for alsaraw

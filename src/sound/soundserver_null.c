@@ -298,7 +298,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    song->resetflag = param2;
 	    fprintf(ds, "Event 0x4c Reset on Stop set to %d for handle %04x\n", param2, song->handle);
 	  } else if (param == 0x4b) {
-	    /* set polyphony NYI */
+	    song->polyphony[command & 0x0f] = param2;
 	  } else if (param == 0x50) {
 	    midi_mt32_reverb(param2);
 	    fprintf(ds, "Midi reverb set to %d for handle %04x\n", param2, song->handle);
@@ -319,11 +319,12 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
 	  }
 	} else {  /* just your regular midi event.. */
-	  if (param2 == -1)
-	    midi_mt32_event2(command, param);
-	  else
-	    midi_mt32_event(command, param, param2);
-	  
+	  if (song->flags[command & 0x0f] & mt32_midi_playflag) { /* check play flag */
+	    if (param2 == -1)
+	      midi_mt32_event2(command, param);
+	    else
+	      midi_mt32_event(command, param, param2);
+	  }
 	}
       }
 

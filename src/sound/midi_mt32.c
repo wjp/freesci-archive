@@ -125,6 +125,7 @@ static struct {
 } mt32_reverb[11];
 
 unsigned short mt32_midi_patch = 001;
+guint8 mt32_midi_playflag = 0x01;
 
 int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
 {
