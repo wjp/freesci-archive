@@ -1,3 +1,9 @@
+2001-07-14  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/sound/midi_adlib.c, src/include/midi_device.h,
+          src/sound_midi_device.c, src/sound/Makefile.am:  Initial work
+          on an adlib (/dev/sequencer for now) sound target.
+
 2001-07-13  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
 
 	* configure.in: Added check for 'inline'

@@ -77,6 +77,7 @@ extern DLLEXTERN midi_device_t *midi_device;
 
 extern DLLEXTERN midi_device_t midi_device_mt32;
 extern DLLEXTERN midi_device_t midi_device_mt32gm;
+extern DLLEXTERN midi_device_t midi_device_adlib;
 
 extern DLLEXTERN midi_device_t *midi_devices[];
 
