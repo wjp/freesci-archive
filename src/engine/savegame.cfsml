@@ -313,6 +313,8 @@ RECORD synonym_t "synonym_t" {
 
 
 RECORD state_t "state_t" {
+  int savegame_version;
+
   byte restarting_flags;
   byte have_mouse_flag;
   byte pic_not_valid;
@@ -481,6 +483,7 @@ gamestate_save(state_t *s, char *dirname)
   int fd;
 
   _global_save_state = s;
+  s->savegame_version = FREESCI_SAVEGAME_VERSION;
 
   if (s->execution_stack_base) {
     sciprintf("Cannot save from below kernel function\n");
@@ -556,6 +559,7 @@ gamestate_restore(state_t *s, char *dirname)
 
   retval = (state_t *) xalloc(sizeof(state_t));
   retval->_heap = heap_new();
+  retval->savegame_version = -1;
 
   fh = fopen("state", "r");
   if (!fh) {
@@ -569,6 +573,19 @@ gamestate_restore(state_t *s, char *dirname)
   %CFSMLREAD state_t retval FROM fh ERRVAR read_eof;
 
   fclose(fh);
+
+  if ((retval->savegame_version < 0) || (retval->savegame_version > FREESCI_SAVEGAME_VERSION)) {
+
+    if (retval->savegame_version < 0)
+      sciprintf("Very old save game encountered- can't load\n");
+    else
+      sciprintf("Savegame version is %d- maximum supported is %0d\n", retval->savegame_version, FREESCI_SAVEGAME_VERSION);
+
+    chdir("..");
+    heap_del(retval->_heap);
+    free(retval);
+    return NULL;
+  }
 
   if (read_eof || ((fd = open("heap", O_RDONLY)) < 0)) {
     if (read_eof)

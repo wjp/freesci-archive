@@ -255,10 +255,10 @@ kernel_oops(struct _state *s, char *file, int line, char *reason);
 /******************** Priority macros ********************/
 
 #define VIEW_PRIORITY(y) (((y) < s->priority_first)? 0 : (((y) > s->priority_last)? 14 : 1\
-	+ ((((y) - s->priority_first) * 14) / (s->priority_last - s->priority_first))))
+	+ ((((y) - s->priority_first) * 13) / (s->priority_last - s->priority_first))))
 
 #define PRIORITY_BAND_FIRST(nr) ((((nr) == 0)? 0 :  \
-        ((s->priority_first) + ((nr) * (s->priority_last - s->priority_first)) / 14)))
+        ((s->priority_first) + ((nr) * (s->priority_last - s->priority_first)) / 13)))
 
 
 

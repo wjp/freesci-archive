@@ -60,6 +60,8 @@
 
 #define MAX_HOMEDIR_SIZE 255
 
+#define FREESCI_SAVEGAME_VERSION 0
+
 #define FREESCI_GAMEDIR ".freesci"
 #define FREESCI_CONFFILE "config"
 #define FREESCI_SAVEDIR_PREFIX "save_"
@@ -107,6 +109,8 @@ typedef struct
 
 typedef struct _state
 {
+  int savegame_version;
+
   byte *game_name; /* Designation of the primary object (which inherits from Game) */
 
   /* Non-VM information */

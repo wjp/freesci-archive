@@ -162,6 +162,7 @@ _reset_graphics_input(state_t *s)
       s->ports[i]->font = resource->data; /* let all ports default to the 'system' font */
       s->ports[i]->gray_text = 0;
       s->ports[i]->font_nr = font_nr;
+      s->ports[i]->priority = -1;
       s->ports[i]->color = 0;
       s->ports[i]->bgcolor = -1; /* All ports should be transparent */
   }

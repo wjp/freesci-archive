@@ -572,6 +572,9 @@ _cfsml_write_state_t(FILE *fh, state_t* foo)
 
 #line 315 "cfsml.pl"
   fprintf(fh, "{\n");
+  fprintf(fh, "savegame_version = ");
+    _cfsml_write_int(fh, &(foo->savegame_version));
+    fprintf(fh, "\n");
   fprintf(fh, "restarting_flags = ");
     _cfsml_write_byte(fh, &(foo->restarting_flags));
     fprintf(fh, "\n");
@@ -847,6 +850,11 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
         value = _cfsml_get_value(fh, line, hiteof);
       if (!value)
          return CFSML_FAILURE;
+      if (!strcmp(bar, "savegame_version")) {
+#line 553 "cfsml.pl"
+         if (_cfsml_read_int(fh, &(foo->savegame_version), value, line, hiteof))
+            return CFSML_FAILURE;
+      } else
       if (!strcmp(bar, "restarting_flags")) {
 #line 553 "cfsml.pl"
          if (_cfsml_read_byte(fh, &(foo->restarting_flags), value, line, hiteof))
@@ -2582,7 +2590,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
 
 /* Auto-generated CFSML declaration and function block ends here */
 /* Auto-generation performed by cfsml.pl 0.6.7 */
-#line 396 "CFSML input file"
+#line 398 "CFSML input file"
 
 
 
@@ -2596,7 +2604,7 @@ write_menubar_tp(FILE *fh, menubar_t **foo)
   _cfsml_write_menubar_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 406 "CFSML input file"
+#line 408 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2623,7 +2631,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 423 "CFSML input file"
+#line 425 "CFSML input file"
 
   }
   return *hiteof;
@@ -2639,7 +2647,7 @@ write_port_tp(FILE *fh, port_t **foo)
   _cfsml_write_port_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 434 "CFSML input file"
+#line 436 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2667,7 +2675,7 @@ read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof)
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 452 "CFSML input file"
+#line 454 "CFSML input file"
 
     res =  findResource(sci_font, (*foo)->font_nr);
     if (res)
@@ -2700,6 +2708,7 @@ gamestate_save(state_t *s, char *dirname)
   int fd;
 
   _global_save_state = s;
+  s->savegame_version = FREESCI_SAVEGAME_VERSION;
 
   if (s->execution_stack_base) {
     sciprintf("Cannot save from below kernel function\n");
@@ -2738,7 +2747,7 @@ gamestate_save(state_t *s, char *dirname)
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 518 "CFSML input file"
+#line 521 "CFSML input file"
 
   fclose(fh);
 
@@ -2780,6 +2789,7 @@ gamestate_restore(state_t *s, char *dirname)
 
   retval = (state_t *) xalloc(sizeof(state_t));
   retval->_heap = heap_new();
+  retval->savegame_version = -1;
 
   fh = fopen("state", "r");
   if (!fh) {
@@ -2803,9 +2813,22 @@ gamestate_restore(state_t *s, char *dirname)
     read_eof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 570 "CFSML input file"
+#line 574 "CFSML input file"
 
   fclose(fh);
+
+  if ((retval->savegame_version < 0) || (retval->savegame_version > FREESCI_SAVEGAME_VERSION)) {
+
+    if (retval->savegame_version < 0)
+      sciprintf("Very old save game encountered- can't load\n");
+    else
+      sciprintf("Savegame version is %d- maximum supported is %0d\n", retval->savegame_version, FREESCI_SAVEGAME_VERSION);
+
+    chdir("..");
+    heap_del(retval->_heap);
+    free(retval);
+    return NULL;
+  }
 
   if (read_eof || ((fd = open("heap", O_RDONLY)) < 0)) {
     if (read_eof)

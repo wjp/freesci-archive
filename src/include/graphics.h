@@ -417,6 +417,13 @@ get_font_height(byte *font);
 ** Returns   : (int) The pixel height attributed to that font
 */
 
+int
+get_font_entries_nr(byte *font);
+/* Returns the number of characters contained in the font
+** Parameters: (byte *) font: The font to examine
+** Returns   : (int) The number of characters stored in the font
+*/
+
 
 int
 get_text_width(char *text, byte *font);

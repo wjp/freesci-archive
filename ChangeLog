@@ -1,3 +1,26 @@
+2000-06-01  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kCanBeHere): Fixed clipping not to check for
+	the IGNORE_ACTOR flag on the object being clipped
+
+	* src/include/kernel.h (VIEW_PRIORITY): Fixed priorities once again
+
+	* src/graphics/input.c (sci_key_xlate): Improved key code translation
+
+	* src/engine/savegame.cfsml: Added some stuff to keep track of savegame
+	versions
+
+	* src/graphics/font.c (_text_draw_line): Fixed font drawing to draw up
+	to sizeof(unsigned long) pixels
+
+	* src/engine/game.c (_reset_graphics_input): Set default font priority
+	to -1 for the standard ports
+
+	* src/engine/scriptdebug.c (c_visible_map): Fixed set_vismap to
+	work in on-screen console mode
+	(c_showfont): Added 'showfont' command to display a complete font
+	set
+
 2000-05-28  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (_k_invoke_view_list): Implicit base

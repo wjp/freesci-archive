@@ -57,6 +57,11 @@ struct _state;
 #define MENU_TYPE_NORMAL 0
 #define MENU_TYPE_HBAR 1 /* Horizontal bar */
 
+/* Special characters used while building the menu bar */
+#define SCI_SPECIAL_CHAR_FUNCTION 'F'
+#define SCI_SPECIAL_CHAR_CTRL 3
+#define SCI_SPECIAL_CHAR_ALT 2
+
 /* Maximum number of bytes per SAID spec */
 #define MENU_SAID_SPEC_SIZE 64
 

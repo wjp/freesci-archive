@@ -41,12 +41,12 @@
 #include <ctype.h>
 #endif
 
-short maxchar; /* biggest available character number +1 (usually 0x80) */
-short lastwidth, lastheight;
-short maxheight;
-short lastx, lasty;
-short rowwidths[32];
-short rowheights[32];
+static int maxchar; /* biggest available character number +1 (usually 0x80) */
+static int lastwidth, lastheight;
+static int maxheight;
+static int lastx, lasty;
+static int rowwidths[32];
+static int rowheights[32];
 
 
 int
@@ -55,6 +55,11 @@ get_font_height(byte *font)
   return getInt16(font + FONT_FONTSIZE_OFFSET);
 }
 
+int
+get_font_entries_nr(byte *font)
+{
+  return getInt16(font + FONT_MAXCHAR_OFFSET);
+}
 
 int
 get_text_width(char *text, byte *font)
@@ -227,48 +232,48 @@ _draw_text0(picture_t dest, port_t *port, int x, int y, char *text, char *font,
 	y += rowheights[rowcounter++] + 1;
 	x = xhome + ((lastwidth - rowwidths[rowcounter]) >> 1);
       } else if (foo < maxchar) {
-	short xc;
-	short yc;
-	unsigned char xl, yl;
-	guint16 quux = getInt16((guint8 *) font+6+(foo<<1));
-
-	guint8 *foopos = font + quux;
+	int xc;
+	int yc;
+	int xl, yl;
+	int quux = getInt16((guint8 *) font+6+(foo<<1));
+	byte *foopos = font + quux;
 	int pos = x+ (y*SCI_SCREEN_WIDTH);
+	int bytes;
 
 	xl = *foopos;
 	yl = *(foopos+1);
 	foopos += 2;
-	if (xl < 9) /* 8 bit */
-	  for (yc = 0; yc < yl; yc++) {
-	    int poshome = pos;
-	    guint8 bitmask = *(foopos++);
-	    for (xc = 0; xc < xl; xc++) {
-	      if (bitmask & 0x80) {
-		dest->maps[0][pos] = color;
-		dest->maps[1][pos] = priority;
-	      }
-	      pos++;
-	      bitmask <<= 1;
-	    }
-	    pos = poshome + SCI_SCREEN_WIDTH;
+	bytes = (xl - 1) >> 3;
+	if (bytes > 3)
+	  fprintf(stderr,"%s L%d: Warning: Character %d occupies %d bytes\n", __FILE__, __LINE__, foo, bytes+1);
+
+	for (; yl; --yl) {
+	  int poshome = pos;
+	  int bc = bytes;
+	  unsigned long bitmask = *foopos++;
+	  unsigned long cmpmask = 1 << ((bc*8) + 7);
+
+	  while (bc--) {
+	    bitmask <<= 8;
+	    bitmask |= *foopos++;
 	  }
-	else { /* 16 bit */
-	  for (yc = 0; yc < yl; yc++) {
-	    int poshome = pos;
-	    guint16 bitmask = *(foopos+1) | *foopos << 8;
-	    /* interestingly, this bitmask is big-endian */
-	    foopos += 2;
-	    for (xc = 0; xc < xl; xc++) {
-	      if (bitmask & 0x8000) {
-		dest->maps[0][pos] = color;
-		dest->maps[1][pos] = priority;
-	      }
-	      bitmask <<= 1;
-	      pos++;
-	    }
-	    pos = poshome + SCI_SCREEN_WIDTH;
+
+	  for (xc = 0; xc < xl; xc++) {
+	    if (bitmask & cmpmask)
+	      dest->maps[0][pos] = color;
+	    /*	    else if (bgcolor >= 0) ## no bgcolor... ##
+		    dest->maps[0][pos] = bgcolor;*/
+
+	    if (priority >= 0)
+	      dest->maps[1][pos] = priority;
+
+	    pos++;
+	    cmpmask >>= 1;
 	  }
+
+	  pos = poshome + SCI_SCREEN_WIDTH;
 	}
+
 	x += xl;
       }
     }
@@ -287,61 +292,48 @@ _text_draw_line(picture_t dest, int x, int y, char *text, int textlen, char *fon
 
   while ((foo= *(text++)) && (textlen--))
     if (foo < maxchar) {
-      short xc;
-      short yc;
-      unsigned char xl, yl;
-      guint16 quux = getInt16((guint8 *) font+6+(foo<<1));
+	int xc;
+	int yc;
+	int xl, yl;
+	int quux = getInt16((guint8 *) font+6+(foo<<1));
+	byte *foopos = font + quux;
+	int pos = x+ (y*SCI_SCREEN_WIDTH);
+	int bytes;
 
-      guint8 *foopos = font + quux;
-      int pos = x+ (y*SCI_SCREEN_WIDTH);
+	xl = *foopos;
+	yl = *(foopos+1);
+	foopos += 2;
+	bytes = (xl - 1) >> 3;
+	if (bytes > 3)
+	  fprintf(stderr,"%s L%d: Warning: Character %d occupies %d bytes\n", __FILE__, __LINE__, foo, bytes+1);
 
-      xl = *foopos;
-      yl = *(foopos+1);
-
-      if (yl > line_height)
-	line_height = yl;
-
-      foopos += 2;
-      if (xl < 9) /* 8 bit */
-	for (yc = 0; yc < yl; yc++) {
+	for (; yl; --yl) {
 	  int poshome = pos;
-	  guint8 bitmask = *(foopos++);
-	  for (xc = 0; xc < xl; xc++) {
+	  int bc = bytes;
+	  unsigned long bitmask = *foopos++;
+	  unsigned long cmpmask = 1 << ((bc*8) + 7);
 
-	    if (bitmask & 0x80) {
+	  while (bc--) {
+	    bitmask <<= 8;
+	    bitmask |= *foopos++;
+	  }
+
+	  for (xc = 0; xc < xl; xc++) {
+	    if (bitmask & cmpmask)
 	      dest->maps[0][pos] = (pos &1)? c1:c2;
+	    else if (bgcolor >= 0)
+	      dest->maps[0][pos] = bgcolor;
+	    
+	    if (priority >= 0)
 	      dest->maps[1][pos] = priority;
-	    } else
-	      if (bgcolor > 0)
-		dest->maps[0][pos] = bgcolor; /* Background */
-
 	    pos++;
-	    bitmask <<= 1;
+	    cmpmask >>= 1;
 	  }
+
 	  pos = poshome + SCI_SCREEN_WIDTH;
 	}
-      else { /* 16 bit */
-	for (yc = 0; yc < yl; yc++) {
-	  int poshome = pos;
-	  guint16 bitmask = *(foopos+1) | *foopos << 8;
-	  /* interestingly, this bitmask is big-endian */
-	  foopos += 2;
-	  for (xc = 0; xc < xl; xc++) {
 
-	    if (bitmask & 0x8000) {
-	      dest->maps[0][pos] = (pos & 1)? c1:c2;
-	      dest->maps[1][pos] = priority;
-	    } else
-	      if (bgcolor > 0)
-		dest->maps[0][pos] = bgcolor; /* Background */
-
-	    bitmask <<= 1;
-	    pos++;
-	  }
-	  pos = poshome + SCI_SCREEN_WIDTH;
-	}
-      }
-      x += xl;
+	x += xl;
     }
 
   return line_height;

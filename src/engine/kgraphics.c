@@ -214,6 +214,8 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   case K_GRAPH_ADJUST_PRIORITY:
 
+    fprintf(stderr,"ADJP(%d,%d)\n", PARAM(1), PARAM(2));
+    SCIkdebug(SCIkGRAPHICS, "adjust_priority(%d, %d)\n", PARAM(1), PARAM(2));
     s->priority_first = PARAM(1) - 10;
     s->priority_last = PARAM(2) - 10;
     break;
@@ -576,9 +578,9 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   if (s->acc == 0)
     return; /* Can'tBeHere */
-  if ((signal & _K_VIEW_SIG_FLAG_DONT_RESTORE) || (signal & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))
+  if (signal & _K_VIEW_SIG_FLAG_DONT_RESTORE)/* || (signal & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))*/
   {
-    s->acc=signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE|_K_VIEW_SIG_FLAG_IGNORE_ACTOR); /* CanBeHere- it's either being disposed, or it ignores actors anyway */
+    s->acc=1;/*signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE|_K_VIEW_SIG_FLAG_IGNORE_ACTOR); /* CanBeHere- it's either being disposed, or it ignores actors anyway */
     return;
   }
   if (cliplist) {
@@ -1572,7 +1574,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int func
     } else /* DON'T calculate the priority */
       retval[i].priority = GET_SELECTOR(obj, priority);
 
-    s->pic_not_valid++; /* There ought to be some kind of check here... */
+    //    s->pic_not_valid++; /* There ought to be some kind of check here... */
 
     i++; /* Next object in the list */
 

@@ -233,7 +233,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 	right = malloc_ncpy(entries - string_len - 1, string_len);
 
 	if (right[0] == '#') {
-	  right[0] = 'F'; /* Function key */
+	  right[0] = SCI_SPECIAL_CHAR_FUNCTION; /* Function key */
 
 	  key = SCI_K_F1 + ((right[1] - '1') << 8);
 
@@ -245,10 +245,24 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 	    right[2] = 0;
 	  } else tag=0;	  
 	}
+	else if (right[0] == '@') { /* Alt key */
+	  right[0] = SCI_SPECIAL_CHAR_ALT; /* ALT */
+	  key = right[1];
+	  modifiers = SCI_EVM_ALT;
+
+	  if ((key >= 'a') && (key <= 'z'))
+	    right[1] = key - 'a' + 'A';
+
+	  if (right[2]=='=') {
+	    tag = atoi(right+3);
+	    right[2] = 0;
+	  } else tag=0;	  
+
+	}
 	else {
 
 	  if (right[0] == '^') {
-	    right[0] = '^'; /* Control key - there must be a replacement... */
+	    right[0] = SCI_SPECIAL_CHAR_CTRL; /* Control key - there must be a replacement... */
 	    key = right[1];
 	    modifiers = SCI_EVM_CTRL;
 

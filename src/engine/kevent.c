@@ -40,7 +40,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
   
   /*If there's a simkey pending, and the game wants a keyboard event, use the
    *simkey instead of a normal event*/
-  if (_kdebug_cheap_event_hack && (mask&SCI_EVT_KEYBOARD)) {
+  if (_kdebug_cheap_event_hack && (mask & SCI_EVT_KEYBOARD)) {
     PUT_SELECTOR(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
     s->acc=1;
     PUT_SELECTOR(obj, message, _kdebug_cheap_event_hack);
@@ -65,7 +65,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
     case SCI_EVT_KEYBOARD:
       {
 	if ((e.buckybits & SCI_EVM_LSHIFT) && (e.buckybits & SCI_EVM_RSHIFT)
-	    && (e.data == '-')) {
+	    && (e.data == '_')) {
 
 	  sciprintf("Debug mode activated\n");
 
