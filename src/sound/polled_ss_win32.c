@@ -33,11 +33,11 @@
 #include <engine.h>
 #include <soundserver.h>
 #include <sound.h>
-#include <sci_win32.h>
 
 
 #ifdef _WIN32
 
+#include <sci_win32.h>
 #include <windows.h>
 
 /* #define SSWIN_DEBUG 0 */
