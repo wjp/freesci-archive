@@ -693,22 +693,24 @@ c_hexgrep(state_t *s)
 
 int c_selectornames(state_t *s)
 {
-  int namectr;
-  char **snames = vocabulary_get_snames(&namectr, s->version);
-  int seeker = 0;
+	int namectr;
+	char **snames;
+	int seeker = 0;
 
-  if (!snames) {
-    sciprintf("No selector name table found!\n");
-    return 1;
-  }
+	snames = vocabulary_get_snames(&namectr, s? s->version : 0);
 
-  sciprintf("Selector names in numeric order:\n");
-  while (snames[seeker]) {
-    sciprintf("%03x: %s\n", seeker, snames[seeker]);
-    seeker++;
-  }
-  vocabulary_free_snames(snames);
-  return 0;
+	if (!snames) {
+		sciprintf("No selector name table found!\n");
+		return 1;
+	}
+
+	sciprintf("Selector names in numeric order:\n");
+	while (snames[seeker]) {
+		sciprintf("%03x: %s\n", seeker, snames[seeker]);
+		seeker++;
+	}
+	vocabulary_free_snames(snames);
+	return 0;
 }
 
 int

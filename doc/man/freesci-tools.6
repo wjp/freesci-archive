@@ -1,27 +1,15 @@
-.TH "FreeSCI tools" 6 "Sep 15, 2000" cvs20000914 FreeSCI
+.TH "FreeSCI tools" 6 "Jan 27, 2001" 0.3.1 FreeSCI
 
 .SH NAME
 .HP
-.BR classes 
-\- lists all SCI classes
-.HP
 .BR sciconsole 
 \- A command console for inspection of SCI data
-.HP
-.BR listwords 
-\- Lists all words (except for suffix alternatives) understood by the game
 .HP
 .BR scidisasm 
 \- Disassembles all script resources into .script files
 .HP
 .BR sciunpack 
 \- A tool for unpacking and converting SCI resource data
-.HP
-.BR scriptdump 
-\- disassembles all selector methods into SCI assembly
-.HP
-.BR vocabdump 
-\- Displays kernel function and selector names (obsolete)
 
 .SH DESCRIPTION
 .P
@@ -32,26 +20,11 @@ This man page describes the tools that come with FreeSCI. The main
 executable (which you're probably interesed in if you want to play SCI 
 games) is described in \fBsciv\fR(6).
 
-.BR CLASSES
-.P
-The \fBclasses\fR program lists all SCI classes in the resource files in
-the currect directory. It doesn't have any command line options.
-
 .BR SCICONSOLE
 .P
 The \fBsciconsole\fR program provides a command console for inspection
 of SCI data. It reads the SCI resource files from the current directory.
 There are no command line options.
-
-.BR LISTWORDS
-.P
-The \fBlistwords\fR tool lists all words (except for suffix alternatives) 
-understood by the game.
-It reads the SCI resource files from the current directory. 
-.P
-It has three command line options: \fB--version\fR prints the version
-and exists; \fB--sort-alpha\fR sorts the words in alphabetical ordering;
-\fB--sort-group\fR sorts the words in group ordering.
 
 .BR SCIDISASM
 .P
@@ -66,10 +39,10 @@ and exists; \fB--hexdump\fR hex dumps all script resources;
 
 .BR SCIUNPACK
 .P
-\fBsciunpack\fR is a tool  for  unpacking  and  converting SCI
+\fBsciunpack\fR is a tool  for  unpacking, printing,  and  converting SCI
 resource data
 .P
-Usage: \fBsciunpack\fR [\fIoptions\fR] <\fIresource.number\fR>
+Usage: \fBsciunpack\fR [\fIoperation\fR] [\fIoptions\fR] <\fIresource.number\fR>
 .P
 Alternatively, the resource type and number can be specified as two
 seperate options.
@@ -83,19 +56,41 @@ Available resources are: \fBview\fR, \fBpic\fR, \fBscript\fR,
 If * is specified instead of <number>, all resources of given type 
 will be unpacked.
 .P
-There are several options available:
+sciunpack supports the following operations:
+.TP
+.BR "--unpack, -U"
+This is the default action; it unpacks the specified resource.
+.TP
+.BR "--list, -L"
+Lists all available resources.
+.TP
+.BR "--words, -W"
+Prints all vocabulary words understood by the parser. See 
+.TP
+.BR "--objects, -O"
+Outputs the full object hierarchy
+.TP
+.BR "--vocab, -V"
+This operation goes through several relevant 'vocab' resources,
+interprets their contents, and prints them sequentially. First,
+all selector (variable/function) names are print, then all opcodes,
+followed by the names of all kernel functions, and finally the
+class ID/script lookup table.
 .TP
 .BR --version
 Prints the version number.
 .TP
+.BR  "--help, -h"   
+Displays a short help message.
+.P
+Also, there are several options available:
+.TP
 .BR "--verbose, -v"   
 Enables additional output.
 .TP
-.BR  "--help, -h"   
-Displays a short help message.
-.TP
-.BR  "--list, -l"       
-List all resources.
+.BR  "--convert, -c"
+Forces sound resources to be converted to General MIDI on some platforms,
+and script resources to be dissected.
 .TP
 .BR  "--output-file \fI<file>\fR, -o\fI<file>\fR"       
 Selects output file \fIfile\fR.
@@ -110,35 +105,23 @@ Forces the SCI header to be written (default).
 Prevents the two SCI header bytes from being.
 written
 .TP
-.BR  --palette-dither       
-Forces colors in 16 color games to be dithered.
+.BR  --sort-alpha
+Sorts in alphabetical order when listing words (\fI-W\fR)
 .TP
-.BR  --palette-interpolate  
-Does color interpolation when drawing picture resources.
-.TP
-.BR  --palette-dither256    
-Does dithering in 256 colors.
-.TP
-.BR  --no-conversion        
-Forces sound and pic resources not to be converted to General MIDI /
-Portable Network Graphics files.
-.TP
-.BR  --dissect              
-Dissects script resources, stores in <number>.script.
+.BR  --sort-group
+Sorts by group IDs when listing words (\fI-W\fR)
 .P
-As a default, 'resource.number' is the output filename, with the
-following exceptions:
+As a default, 'resource.number' is the output filename, unless conversion
+is enabled (\fI-c\fR). With conversion, a few resource types are treated
+specially:
 .IP -
 sound resources: will be converted to General MIDI, stored in
-\fI<number>.midi\fR
+\fI<number>.midi\fR (this only works on GNU libc systems)
 .IP -
-picture resources: Will be converted to PNG (Portable Network Graphics),
-stored in
-\fI<number>.png\fR
-.P
-This behaviour can be overridden with the --no-conversion switch.
+script resources: will be dissected and stored in
+\fI<number>.script\fR
 
-
+.TP
 .BR SCRIPTDUMP
 .P
 The \fIscriptdump\fR tool can be used to disassemble all selector  
@@ -155,7 +138,7 @@ is obsolete. You should rather use \fBsciconsole\fR.
 
 .SH AUTHORS
 .P
-This software is copyright (c) 1999,2000 by
+This software is copyright (c) 1999,2000,2001 by
 Christoph Reichenbach <\fIcreichen@rbg.informatik.tu-darmstadt.de\fR>,
 Carl Muckenhoupt <\fIcarl@wurb.com\fR>,
 Dmitry Jemerov <\fIyole@exch.nnz.spb.su\fR>, 
@@ -165,5 +148,6 @@ Lars Skovlund <\fIlskovlun@image.dk\fR>,
 Rickard Lind <\fIrpl@dd.chalmers.se\fR> and
 Rink Springer <\fIrink@springer.cx\fR>.
 .P
-This man page was written by Bas Zoetekouw <\fIbas@debian.org\fR>.
+This man page was written by Bas Zoetekouw <\fIbas@debian.org\fR> and
+Christoph Reichenbach.
 

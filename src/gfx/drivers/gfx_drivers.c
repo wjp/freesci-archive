@@ -68,7 +68,7 @@ gfx_find_driver(char *name)
 char *
 gfx_get_driver_name(int nr)
 {
-	return gfx_drivers[nr]->name;
+	return (gfx_drivers[nr])? gfx_drivers[nr]->name : NULL;
 }
 
 
