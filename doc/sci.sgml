@@ -648,9 +648,15 @@ KSetPort(temp);    /* Reactivate the old port */
       </Term><ListItem><Para>
         The vertical (Y) size of the image.
       </para>
-   </ListItem></VarListEntry><VarListEntry><Term>0x04 - 0x05
+   </ListItem></VarListEntry><VarListEntry><Term>0x04
       </Term><ListItem><Para>
-        - unknown -
+        The x placement modifier. This signed value determines the number of pixels a
+        view cell is moved to the right before it is drawn.
+      </para>
+   </ListItem></VarListEntry><VarListEntry><Term>0x05
+      </Term><ListItem><Para>
+        The y placement modifier. This signed value determines the number of pixels a
+        view cell is moved downwards before it is drawn.
       </para>
    </ListItem></VarListEntry><VarListEntry><Term>0x06
       </Term><ListItem><Para>

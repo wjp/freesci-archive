@@ -116,6 +116,9 @@ typedef struct {
 #define FONT_FONTSIZE_OFFSET 4
 /* Offset of the font size information in the font resource */
 
+#define FONT_MAXCHAR_OFFSET 2
+/* Offset of the maximum character value */
+
 /* The following flags are applicable to windows in SCI0: */
 #define WINDOW_FLAG_TRANSPARENT 0x01
 /* Window doesn't get filled with background color */

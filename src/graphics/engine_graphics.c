@@ -46,6 +46,7 @@ graph_clear_box(struct _state *s, int x, int y, int xl, int yl, int color)
 
   while (_yl--) {
     memset(s->pic[0] + pos, color, xl);
+
     pos += SCI_SCREEN_WIDTH;
   }
 
@@ -62,6 +63,7 @@ graph_update_box(struct _state *s, int x, int y, int xl, int yl)
   while (_yl--) {
     for (i=0; i < 3; i++)
       memcpy(s->pic[i] + pos, s->bgpic[i] + pos, xl);
+
     pos += SCI_SCREEN_WIDTH;
   }
 
@@ -89,7 +91,7 @@ graph_save_box(struct _state *s, int x, int y, int xl, int yl, int layers)
       pos = x + y * SCI_SCREEN_WIDTH;
 
       for (i = yl; i > 0; i--) {
-	memcpy(dest, s->pic[map] + pos, xl);
+	memcpy(dest, s->bgpic[map] + pos, xl);
 
 	pos += SCI_SCREEN_WIDTH;
 	dest += xl;
@@ -125,7 +127,7 @@ graph_restore_box(struct _state *s, int handle)
       pos = box->x + box->y * SCI_SCREEN_WIDTH;
 
       for (i = box->yl; i > 0; i--) {
-	memcpy(s->pic[map] + pos, src, box->xl);
+	memcpy(s->bgpic[map] + pos, src, box->xl);
 
 	pos += SCI_SCREEN_WIDTH;
 	src += box->xl;
@@ -148,7 +150,7 @@ graph_fill_port(struct _state *s, port_t *port, int color)
     return;
 
   while (_yl--) {
-    memset(s->pic[0] + pos, color, port->xmax - port->xmin + 1);
+    memset(s->bgpic[0] + pos, color, port->xmax - port->xmin + 1);
     pos += SCI_SCREEN_WIDTH;
   }
 }

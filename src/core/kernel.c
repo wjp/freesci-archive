@@ -37,15 +37,16 @@
 
 
 #define SCI_KERNEL_DEBUG
+/*#define SCI_KERNEL_NODES_DEBUG*/
 
 #ifdef SCI_KERNEL_DEBUG
 
 #ifdef __GNUC__
 #define SCIkdebug(format, param...) \
-        fprintf(stderr,"FSCI kernel (%s L%d): " format, __PRETTY_FUNCTION__, __LINE__, ## param);
+        fprintf(stderr,"FSCI kernel (%s L%d): " format, __PRETTY_FUNCTION__, __LINE__, ## param)
 #else /* !__GNUC__ */
 #define SCIkdebug(format, param...) \
-        fprintf(stderr,"FSCI kernel (L%d): " format, __LINE__, ## param);
+        fprintf(stderr,"FSCI kernel (L%d): " format, __LINE__, ## param)
 #endif /* !__GNUC__ */
 
 #else /* !SCI_KERNEL_DEBUG */
@@ -61,10 +62,10 @@
 #ifdef __GNUC__
 #define SCIkwarn(format, param...) \
         fprintf(stderr,"FSCI kernel (%s L%d): Warning: " format, __PRETTY_FUNCTION__, \
-	__LINE__, ## param);
+	__LINE__, ## param)
 #else /* !__GNUC__ */
 #define SCIkwarn(format, param...) \
-        fprintf(stderr,"FSCI kernel (L%d): Warning: " format, __LINE__, ## param);
+        fprintf(stderr,"FSCI kernel (L%d): Warning: " format, __LINE__, ## param)
 #endif /* !__GNUC__ */
 
 
@@ -97,10 +98,15 @@ kernel_oops(s, "Heap address space violation on read")  \
 : getInt16(s->heap + ((guint16)(address))))
 /* Reads a heap value if allowed */
 
-#define PUT_HEAP(address, value) if (((guint16)(address)) < 800) \
+#define UGET_HEAP(address) ((((guint16)(address)) < 800)? \
+kernel_oops(s, "Heap address space violation on read")  \
+: getUInt16(s->heap + ((guint16)(address))))
+/* Reads a heap value if allowed */
+
+#define PUT_HEAP(address, value) { if (((guint16)(address)) < 800) \
 kernel_oops(s, "Heap address space violation on write");        \
 else { s->heap[(guint16) address] = (value) &0xff;               \
- s->heap[((guint16)address) + 1] = ((value) >> 8) & 0xff;}
+ s->heap[((guint16)address) + 1] = ((value) >> 8) & 0xff;}}
 /* Sets a heap value if allowed */
 
 
@@ -142,6 +148,37 @@ int kIsObject(state* s)
 #define UPARAM_OR_ALT(x, alt) ((x < argc)? UPARAM(x) : (alt))
 /* Returns the parameter value or (alt) if not enough parameters were supplied */
 
+
+
+int
+read_selector(state_t *s, heap_ptr object, int selector_id)
+{
+  heap_ptr address;
+
+  if (lookup_selector(s, object, selector_id, &address) != SELECTOR_VARIABLE)
+    return 0;
+  else
+    return GET_HEAP(address);
+}
+
+
+void
+write_selector(state_t *s, heap_ptr object, int selector_id, int value)
+{
+  heap_ptr address;
+
+  if (lookup_selector(s, object, selector_id, &address) != SELECTOR_VARIABLE)
+    SCIkwarn("Selector '%s' of object at %04x could not be written to\n",
+	     s->selector_names[selector_id], object);
+  else
+    PUT_HEAP(address, value);
+
+  sciprintf("Selector '%s' is at %04x\n", s->selector_names[selector_id], address);
+}
+
+#define GET_SELECTOR(_object_, _selector_) read_selector(s, _object_, s->selector_map._selector_)
+#define PUT_SELECTOR(_object_, _selector_, _value_)\
+ write_selector(s, _object_, s->selector_map._selector_, _value_)
 
 /* Allocates a set amount of memory and returns a handle to it. */
 int
@@ -249,19 +286,21 @@ kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int i;
 
   if (GET_HEAP(old_offs + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
-    SCIkwarn("Attempt to clone non-object/class at %04x", old_offs);
+    SCIkwarn("Attempt to clone non-object/class at %04x failed", old_offs);
     return;
   }
 
   if (GET_HEAP(old_offs + SCRIPT_INFO_OFFSET) != SCRIPT_INFO_CLASS) {
     SCIkwarn("Attempt to clone something other than a class template at %04x\n", old_offs);
-    return;
+    if (sci_version < SCI_VERSION_01)
+      return;
+    SCIkwarn("Allowing clone process\n",0);
   }
 
   selectors = GET_HEAP(old_offs + SCRIPT_SELECTORCTR_OFFSET);
 
-  object_size = 8 + 4 + (selectors * 2);
-  /* 8: Pre-selector area; 4: Function area (zero overloaded methods) */
+  object_size = 8 + 2 + (selectors * 2);
+  /* 8: Pre-selector area; 2: Function area (zero overloaded methods) */
 
   new_offs = heap_allocate(s->_heap, object_size);
   new_offs += 2; /* Step over heap header */
@@ -271,8 +310,8 @@ kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   PUT_HEAP(new_offs + SCRIPT_INFO_OFFSET, SCRIPT_INFO_CLONE); /* Set this to be a clone */
 
-  functareaptr = selectors * 2; /* New function area */
-  PUT_HEAP(new_offs + functareaptr, 0); /* No functions */
+  functareaptr = selectors * 2 + 2; /* New function area */
+  PUT_HEAP(new_offs + functareaptr - 2, 0); /* No functions */
   PUT_HEAP(new_offs + SCRIPT_FUNCTAREAPTR_OFFSET, functareaptr);
 
   species = GET_HEAP(new_offs + SCRIPT_SPECIES_OFFSET);
@@ -404,6 +443,9 @@ void
 kNewList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr listbase = heap_allocate(s->_heap, 4);
+#ifdef SCI_KERNEL_NODES_DEBUG
+  CHECK_THIS_KERNEL_FUNCTION;
+#endif /* SCI_KERNEL_NODES_DEBUG */
 
   if (!listbase) {
     kernel_oops(s, "Out of memory while creating a list");
@@ -423,7 +465,9 @@ void
 kNewNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr nodebase = heap_allocate(s->_heap, 8);
-  /*  SCIkdebug("argc=%d; args = (%04x %04x)\n", argc, PARAM(0), PARAM(1)); */
+#ifdef SCI_KERNEL_NODES_DEBUG
+  CHECK_THIS_KERNEL_FUNCTION;
+#endif /* SCI_KERNEL_NODES_DEBUG */
 
   if (!nodebase) {
     kernel_oops(s, "Out of memory while creating a node");
@@ -447,6 +491,9 @@ kAddToEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr listbase = UPARAM(0);
   heap_ptr nodebase = UPARAM(1);
   heap_ptr old_lastnode = GET_HEAP(listbase + LIST_LAST_NODE);
+#ifdef SCI_KERNEL_NODES_DEBUG
+  CHECK_THIS_KERNEL_FUNCTION;
+#endif /* SCI_KERNEL_NODES_DEBUG */
 
   if (old_lastnode)
     PUT_HEAP(old_lastnode + LIST_NEXT_NODE, nodebase);
@@ -467,6 +514,9 @@ kAddToFront(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr listbase = UPARAM(0);
   heap_ptr nodebase = UPARAM(1);
   heap_ptr old_firstnode = GET_HEAP(listbase + LIST_FIRST_NODE);
+#ifdef SCI_KERNEL_NODES_DEBUG
+  CHECK_THIS_KERNEL_FUNCTION;
+#endif /* SCI_KERNEL_NODES_DEBUG */
 
   if (old_firstnode)
     PUT_HEAP(old_firstnode + LIST_PREVIOUS_NODE, nodebase);
@@ -486,8 +536,9 @@ kFindKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr node;
   word key = UPARAM(1);
-
+#ifdef SCI_KERNEL_NODES_DEBUG
   CHECK_THIS_KERNEL_FUNCTION;
+#endif /* SCI_KERNEL_NODES_DEBUG */
 
   node = GET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
 
@@ -496,6 +547,44 @@ kFindKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
   /* Aborts if either the list ends (node == 0) or the key is found */
 
   s->acc = node;
+}
+
+
+void
+kDeleteKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr list = UPARAM(0);
+  heap_ptr node;
+  word key = UPARAM(1);
+#ifdef SCI_KERNEL_NODES_DEBUG
+  CHECK_THIS_KERNEL_FUNCTION;
+#endif /* SCI_KERNEL_NODES_DEBUG */
+
+  node = UGET_HEAP(list + LIST_FIRST_NODE);
+
+  while (node && ((guint16) UGET_HEAP(node + LIST_NODE_KEY) != key))
+    node = GET_HEAP(node + LIST_NEXT_NODE);
+  /* Aborts if either the list ends (node == 0) or the key is found */
+
+  if (node) {
+    heap_ptr prev_node = UGET_HEAP(node + LIST_PREVIOUS_NODE);
+    heap_ptr next_node = UGET_HEAP(node + LIST_NEXT_NODE);
+
+    if (UGET_HEAP(list + LIST_FIRST_NODE) == node)
+      PUT_HEAP(list + LIST_FIRST_NODE, next_node);
+    if (UGET_HEAP(list + LIST_LAST_NODE) == node)
+      PUT_HEAP(list + LIST_LAST_NODE, prev_node);
+
+    if (next_node)
+      PUT_HEAP(next_node + LIST_PREVIOUS_NODE, prev_node);
+    if (prev_node)
+      PUT_HEAP(prev_node + LIST_NEXT_NODE, next_node);
+
+    heap_free(s->_heap, node - 2);
+
+  } else
+    SCIkwarn("DeleteKey %04x failed on %04x\n", key, list);
+    
 }
 
 
@@ -538,6 +627,9 @@ void
 kDisposeList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr address = PARAM(0) - 2; /* -2 to get the heap header */
+#ifdef SCI_KERNEL_NODES_DEBUG
+  CHECK_THIS_KERNEL_FUNCTION;
+#endif /* SCI_KERNEL_NODES_DEBUG */
 
   if (GET_HEAP(address) != 6) {
     SCIkwarn("Attempt to dispose non-list at %04x\n", address);
@@ -937,6 +1029,54 @@ kSetMenu(state_t *s, int funct_nr, int argc, heap_ptr argp)
   menubar_set_foobar(s->menubar, (index >> 8) - 1, (index & 0xff) - 1, PARAM(1), UPARAM(2));
 }
 
+void
+kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  struct tm* loc_time;
+  struct timeval time_prec;
+  time_t the_time;
+
+  if (argc) { /* Get seconds since last am/pm switch */
+    the_time = time(NULL);
+    loc_time = localtime(&the_time);
+    s->acc = loc_time->tm_sec + loc_time->tm_min * 60 + (loc_time->tm_hour % 12) * 3600;
+  } else { /* Get time since game started */
+    gettimeofday(&time_prec, NULL);
+    s-> acc = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
+      (time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
+  }
+}
+
+void
+kStrLen(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  s->acc = strlen(s->heap + PARAM(0));
+}
+
+
+void
+kGetFarText(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  resource_t *textres = findResource(sci_text, PARAM(0));
+  char *seeker;
+  int counter = PARAM(1);
+
+  if (!textres) {
+    SCIkwarn("text.%d does not exist\n", PARAM(0));
+    return;
+  }
+
+  seeker = textres->data;
+
+  while (counter--)
+    while (*seeker++)
+  /* The second parameter (counter) determines the number of the string inside the text
+  ** resource.
+  */
+
+  strcpy(s->heap + UPARAM(2), seeker); /* Copy the string */
+}
+
 
 
 /********************* Graphics ********************/
@@ -1022,13 +1162,73 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
     if (argc > 1)
       s->pic_animate = PARAM(1); /* The animation used during kAnimate() later on */
 
+    s->pic_not_valid = 1;
+
   } else
     SCIkwarn("Request to draw non-existing pic.%03d\n", PARAM(0));
 }
 
 
 void
-draw_object(state_t *s, heap_ptr object)
+kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int x, y, xstep, ystep, xsize, ysize;
+  int xbase, ybase, xend, yend;
+  int view, loop, cell;
+  resource_t *viewres;
+  heap_ptr object = PARAM(0);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  x = GET_SELECTOR(object, x);
+  y = GET_SELECTOR(object, y);
+  xstep = GET_SELECTOR(object, xStep);
+  ystep = GET_SELECTOR(object, yStep);
+  view = GET_SELECTOR(object, view);
+  loop = GET_SELECTOR(object, loop);
+  cell = GET_SELECTOR(object, cel);
+
+  viewres = findResource(sci_view, view);
+
+  if (!viewres)
+    xsize = ysize = 0;
+  else {
+    xsize = view0_cel_width(loop, cell, viewres->data);
+    ysize = view0_cel_height(loop, cell, viewres->data);
+  }
+
+  if ((xsize < 0) || (ysize < 0))
+    xsize = ysize = 0; /* Invalid view/loop */
+
+
+  xbase = x - xsize / 2;
+  ybase = y - ysize / 2;
+
+  /*  if (xstep) {
+    xend = xbase;
+    xbase += xstep;
+    } else*/ xend = xbase + xsize;
+
+  /*  if (ystep) {
+    yend = ybase;
+    ybase += ystep;
+    } else*/ yend = ybase + ysize;
+
+  PUT_SELECTOR(object, brLeft, xbase);
+  PUT_SELECTOR(object, brRight, xend);
+  PUT_SELECTOR(object, brTop, ybase);
+  PUT_SELECTOR(object, brBottom, ybase);
+
+  sciprintf("BaseSetter done.\n");
+
+} /* kBaseSetter */
+
+#define _K_DRAW_MODE_MIN 0    /* size does not affect placement */
+#define _K_DRAW_MODE_CENTER 1 /* center the specified axis */
+#define _K_DRAW_MODE_MAX 2    /* use right/bottom end for placement */
+
+void
+draw_object(state_t *s, heap_ptr object, int xmode, int ymode)
 {
   int x, y, view, loop, cel, priority;
   resource_t *viewres;
@@ -1065,23 +1265,43 @@ draw_object(state_t *s, heap_ptr object)
 
   priority = 0x22;
 
-  SCIkdebug("Drawing view %d, loop %d, cel %d to %d, %d, priority %d, at port #%d\n", view, loop, cel, x, y, priority, s->view_port);
+  SCIkdebug("Drawing from %04x to view %d, loop %d, cel %d to %d, %d, priority %d, at port #%d\n", object, view, loop, cel, x, y, priority, s->view_port);
   SCIkdebug("    width=%d, height=%d\n", view0_cel_width(loop, cel, viewres->data),
 	    view0_cel_height(loop, cel, viewres->data));
 
-  drawView0(s->bgpic, s->ports[s->view_port],
-	    x - (view0_cel_width(loop, cel, viewres->data) / 2),
-	    y - view0_cel_height(loop, cel, viewres->data),
-	    /* Coordinates are relative to the lower center */
+
+  switch (xmode) {
+  case _K_DRAW_MODE_MIN:
+      break;
+  case _K_DRAW_MODE_CENTER:
+      x -= view0_cel_width(loop, cel, viewres->data) / 2;
+      break;
+  case _K_DRAW_MODE_MAX:
+      x -= view0_cel_width(loop, cel, viewres->data);
+      break;
+  }
+
+  switch (ymode) {
+  case _K_DRAW_MODE_MIN:
+      break;
+  case _K_DRAW_MODE_CENTER:
+      y -= view0_cel_height(loop, cel, viewres->data) / 2;
+      break;
+  case _K_DRAW_MODE_MAX:
+      y -= view0_cel_height(loop, cel, viewres->data);
+      break;
+  }
+
+  drawView0(s->bgpic, s->ports[s->view_port], x, y,
 	    priority, loop, cel, viewres->data);
 }
 
+
 void
-kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
+_k_draw_node_list(state_t *s, heap_ptr list, int xmode, int ymode)
+     /* Draw a node list, with the specified axis modifiers (_K_DRAW_MODE_*) */
 {
-  heap_ptr list = PARAM(0);
   heap_ptr node = GET_HEAP(list + LIST_FIRST_NODE);
-  CHECK_THIS_KERNEL_FUNCTION;
 
   if (GET_HEAP(list - 2) != 0x6) { /* heap size check */
     SCIkwarn("Attempt to draw non-list at %04x\n", list);
@@ -1089,9 +1309,20 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
   while (node) {
-    draw_object(s, GET_HEAP(node + LIST_NODE_VALUE));
+    draw_object(s, GET_HEAP(node + LIST_NODE_VALUE), xmode, ymode);
     node = GET_HEAP(node + LIST_NEXT_NODE);
   }
+}
+
+
+void
+kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr list = PARAM(0);
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  _k_draw_node_list(s, list, _K_DRAW_MODE_CENTER /* X */, _K_DRAW_MODE_MAX /* Y */);
+  /* Draw relative to the bottom center */
 }
 
 
@@ -1158,10 +1389,14 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   wnd->priority = PARAM(6);
   wnd->color = PARAM(7);
   wnd->bgcolor = PARAM(8);
+  wnd->font = s->titlebar_port.font; /* Default to 'system' font */
 
   s->ports[window] = wnd;
 
   drawWindow(s->bgpic, s->ports[window], wnd->bgcolor, wnd->priority,
+	     s->heap + wnd->title, s->titlebar_port.font , wnd->flags); /* Draw window */
+
+  drawWindow(s->pic, s->ports[window], wnd->bgcolor, wnd->priority,
 	     s->heap + wnd->title, s->titlebar_port.font , wnd->flags); /* Draw window */
 
   s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_BOX,
@@ -1190,7 +1425,7 @@ kDrawMenuBar(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   CHECK_THIS_KERNEL_FUNCTION;
 
-  if (PARAM(1))
+  if (PARAM(0))
     menubar_draw(s->pic, &(s->titlebar_port) ,s->menubar, -1, s->titlebar_port.font);
   else
     draw_titlebar(s->pic, 0);
@@ -1232,8 +1467,11 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   CHECK_THIS_KERNEL_FUNCTION;
 
+  i = 0;
+  while (UPARAM(i) > 1000)
+      _k_draw_node_list(s, UPARAM(i++), _K_DRAW_MODE_CENTER, _K_DRAW_MODE_MAX);
 
-  if (!s->pic_not_valid /* FIXME! */) {
+  if (s->pic_not_valid) {
     SCIkdebug("Animating pic opening type %x\n", s->pic_animate);
 
     switch(s->pic_animate) {
@@ -1574,15 +1812,16 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			    port->xmax - port->xmin + 1, port->ymax - port->ymin + 1, 1);
 
 
-  graph_fill_port(s, port, port->bgcolor);
   SCIkdebug("Display: Commiting\n", 0);
+
+  if (s->view_port)
+    graph_fill_port(s, port, port->bgcolor);  /* Only fill if we aren't writing to the main view */
+
   text_draw(s->bgpic, port, text, width);
 
-  if (!s->pic_not_valid) {
-    s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_BOX, port->xmin, port->ymin,
-			 port->xmax - port->xmin + 1, port->ymax - port->ymin + 1);
-    s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0, 0, 0, 0);
-  }
+  if (!s->pic_not_valid) /* Refresh if drawn to valid picture */
+    graph_update_box(s, port->xmin, port->ymin,
+		     port->xmax - port->xmin + 1, port->ymax - port->ymin + 1);
 }
 
 
@@ -1652,8 +1891,13 @@ struct {
   {"CelHigh", kCelHigh },
   {"Display", kDisplay },
   {"Animate", kAnimate },
+  {"GetTime", kGetTime },
+  {"DeleteKey", kDeleteKey },
+  {"StrLen", kStrLen },
+  {"GetFarText", kGetFarText },
 
   /* Experimental functions */
+  {"BaseSetter", kBaseSetter},
   {"DoSound", kDoSound },
   {"Graph", kGraph },
   {"GetEvent", kGetEvent },

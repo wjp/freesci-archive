@@ -169,6 +169,8 @@ gint16 getInt16(guint8* d);
 ** Returns   : (gint16) The (possibly converted) 16 bit value
 */
 
+#define getUInt16(_x_) ((guint16) getInt16(_x_))
+
 void *
 _XALLOC(size_t size, char *file, int line, char *funct);
 #ifdef __GNUC__

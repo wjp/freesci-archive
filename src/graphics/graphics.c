@@ -441,10 +441,9 @@ int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
     dataptr = data+getInt16(lookup + (cell<<1));
     maxx = getInt16(dataptr);
     maxy = getInt16(dataptr+2);
-    fprintf(stderr,"Draw size= w=%d, h=%d\n", maxx, maxy);
 
-    /*    xp -= maxx/2;
-	  yp -= maxy;*/ /* Coordinates are relative to the lower center */
+    xp += (gint8) dataptr[4];
+    yp += (gint8) dataptr[5]; /* These two bytes contain relative offsets */
 
     minx = x = (xp < 0) ? 0 : xp;
     y = yp;

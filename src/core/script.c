@@ -750,6 +750,8 @@ script_find_selector(state_t *s, char *selectorname)
   return -1;
 }
 
+#define FIND_SELECTOR(_slc_, _slcstr_) map->_slc_ = script_find_selector(s, _slcstr_);
+
 void
 script_map_selectors(state_t *s, selector_map_t *map)
 {
@@ -762,4 +764,10 @@ script_map_selectors(state_t *s, selector_map_t *map)
   map->view = script_find_selector(s, "view");
   map->loop = script_find_selector(s, "loop");
   map->cel = script_find_selector(s, "cel");
+  FIND_SELECTOR(brLeft, "brLeft");
+  FIND_SELECTOR(brRight, "brRight");
+  FIND_SELECTOR(brTop, "brTop");
+  FIND_SELECTOR(brBottom, "brBottom");
+  FIND_SELECTOR(xStep, "xStep");
+  FIND_SELECTOR(yStep, "yStep");
 }

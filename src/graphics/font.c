@@ -177,6 +177,7 @@ _text_draw_line(picture_t dest, int x, int y, char *text, int textlen, char *fon
 {
   int line_height = 0;
   char foo;
+  int maxchar = getInt16(font + FONT_MAXCHAR_OFFSET);
 
   while ((foo= *(text++)) && (textlen--))
     if (foo < maxchar) {
@@ -232,6 +233,7 @@ _text_draw_gray_line(picture_t dest, int x, int y, char *text, int textlen, char
 {
   int line_height = 0;
   char foo;
+  int maxchar = getInt16(font + FONT_MAXCHAR_OFFSET);
 
   while ((foo= *(text++)) && (textlen--))
     if (foo < maxchar) {
@@ -293,22 +295,21 @@ text_draw(picture_t dest, port_t *port, char *text, int maxwidth)
   int last_text_count = 0;
   int last_breakpoint = 0;
   int last_breakpoint_width = 0;
+  int maxchar = getInt16(port->font + FONT_MAXCHAR_OFFSET);
   int line_height = getInt16(port->font + FONT_FONTSIZE_OFFSET);
   if (maxwidth < 0) maxwidth = 32767; /* Negative means unlimited; 32767 does, too. */
 
   do {
     foo = *text++;
-
     if (foo < maxchar) {
       guint16 quux = getInt16((guint8 *) port->font+6+(foo<<1));
       guint8 *foopos = port->font + quux;
 
       int xl = *foopos; /* Get width */
 
-      if ((width > maxwidth) || (foo == 10) || (foo == 0)) {
+      if ((width > maxwidth) || (foo == '\n') || (foo == 0)) {
 
-
-	if ((foo == 10) || (foo == 0)) { /* linefeed or end of text */
+	if ((foo == '\n') || (foo == 0)) { /* newline or end of text */
 
 	  last_breakpoint = last_text_count;
 	  last_breakpoint_width = width;
@@ -331,7 +332,6 @@ text_draw(picture_t dest, port_t *port, char *text, int maxwidth)
 	  x += maxwidth - last_breakpoint_width;
 	else if (port->alignment == ALIGN_TEXT_CENTER)
 	  x += ((maxwidth - last_breakpoint_width) / 2);
-
 
 	if (port->gray_text)
 	  _text_draw_gray_line(dest, x, y, last_text_base, last_breakpoint,

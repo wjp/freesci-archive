@@ -37,6 +37,7 @@
 #include <console.h>
 #include <vm.h>
 #include <menubar.h>
+#include <time.h>
 #ifdef HAVE_LIBGGI
 #include <ggi/ggi.h>
 #endif
@@ -111,6 +112,8 @@ typedef struct _state
 
   int priority_first; /* The line where priority zone 0 ends */
   int priority_last; /* The line where the highest priority zone starts */
+
+  struct timeval game_start_time; /* The time at which the interpreter was started */
 
   /* VM Information */
 

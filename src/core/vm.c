@@ -1121,7 +1121,7 @@ script_run(state_t *s)
 
   s->menubar = menubar_new(); /* Create menu bar */
 
-  s->game_time = 0;
+  gettimeofday(&(s->game_start_time), NULL); /* Get start time */
 
   s->mouse_pointer = NULL; /* No mouse pointer */
   s->pointer_x = (320 / 2); /* With centered x coordinate */
@@ -1133,7 +1133,7 @@ script_run(state_t *s)
 
   s->bgpic = allocEmptyPicture();
   s->pic = allocEmptyPicture();
-  s->pic_not_valid = 1; /* Picture is invalid */
+  s->pic_not_valid = 0; /* Picture is valid (cough) */
   s->pic_layer = 0; /* Other values only make sense for debugging */
   s->animation_delay = 500; /* Used in kAnimate for pic openings */
 
@@ -1168,7 +1168,10 @@ script_run(state_t *s)
     sciprintf("No text font was found.\n");
     return 1;
   }
-  s->titlebar_port.font = resource->data;
+  for (i = 0; i < 3; i++) {
+      s->ports[i]->font = resource->data; /* let all ports default to the 'system' font */
+      s->ports[i]->bgcolor = -1; /* All ports should be transparent */
+  }
 
   memset(s->hunk, sizeof(s->hunk), 0); /* Sets hunk to be unused */
   memset(s->clone_list, sizeof(s->clone_list), 0); /* No clones */

@@ -160,6 +160,7 @@ void heap_free(heap_t* h, int m)
 	/*Find the previous and next blocks*/
 	while(next < m)
 	{
+		previous = next;
 		assert(previous<0xffff);
 		next=get_next(h, previous);
 	}
