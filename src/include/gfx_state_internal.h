@@ -66,13 +66,24 @@ typedef enum {
 
 #define GFXW_NO_ID 0
 
+struct _gfxw_widget;
+struct _gfxw_container_widget;
+typedef int gfxw_op(struct _gfxw_widget *);
+typedef int gfxw_bin_op(struct _gfxw_widget *, struct _gfxw_widget *);
+
 #define WIDGET_COMMON \
    int magic; /* Extra check after typecasting */ \
    int flags; /* Widget flags */ \
    gfxw_widget_types_t type; \
    rect_t bounds; /* Boundaries */ \
    struct _gfxw_widget *next; /* Next widget in widget list */ \
-   int ID; /* Unique ID or GFXW_NO_ID */
+   int ID; /* Unique ID or GFXW_NO_ID */ \
+   struct _gfxw_container_widget *owner; /* The 'owner widget' */ \
+   gfxw_op *draw; /* Draw widget (if dirty) and anything else required for the display to be consistant */ \
+   gfxw_op *free; /* Remove widget (and any sub-widgets it may contain) */ \
+   gfxw_op *tag; /* Tag the specified widget */ \
+   gfxw_bin_op *compare_to; /* a.compare_to(a, b) returns <0 if a<b, =0 if a=b and >0 if a>b */ \
+   gfxw_bin_op *superarea_of; /* a superarea_of b <=> for each pixel of b there exists an opaque pixel in a at the same location */
 
 typedef struct _gfxw_widget {
 	WIDGET_COMMON
@@ -119,19 +130,29 @@ typedef struct {
 #define GFXW_IS_TEXT(widget) (widget->type == GFXW_TEXT)
 typedef struct {
 	WIDGET_COMMON
-	gfx_text_handle_t *text;
+	int font_nr;
+	char *text;
+	gfx_alignment_t halign, valign;
+	gfx_color_t color1, color2, bgcolor;
+	char single_line;
+	gfx_text_handle_t *text_handle;
 } gfxw_text_t;
 
 
 /* Container widgets */
 
+typedef int gfxw_container_op(struct _gfxw_container_widget *, gfxw_widget_t *);
+
 #define WIDGET_CONTAINER \
    WIDGET_COMMON \
    rect_t zone; /* The writeable zone (absolute) for contained objects */ \
    gfxw_widget_t *contents; \
-   gfxw_widget_t **lastp; /* Pointer to the 'next' pointer in the last entry in contents */
+   gfxw_widget_t **lastp; /* Pointer to the 'next' pointer in the last entry in contents */ \
+   gfxw_container_op *append_front; /* Append widget to the front, moving it to the top */
+   gfxw_container_op *append_back;
 
-typedef struct {
+
+typedef struct _gfxw_container_widget {
 	WIDGET_CONTAINER
 } gfxw_container_t;
 

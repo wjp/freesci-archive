@@ -25,7 +25,7 @@
 
 ***************************************************************************/
 
-#include <gfx_state.h>
+#include <gfx_widgets.h>
 
 #ifdef GFXW_DEBUG_WIDGETS
 gfxw_widget_t *debug_widgets[GFXW_DEBUG_WIDGETS];
@@ -70,7 +70,6 @@ _gfxw_debug_remove_widget(gfxw_widget_t *widget) {
 #define _gfxw_debug_add_widget(a)
 #define _gfxw_debug_remove_widget(a)
 #endif
-
 
 static gfxw_widget_t *
 _gfxw_new_widget(int size, int type)
@@ -126,9 +125,9 @@ _gfxw_unallocate_widget(gfx_state_t *state, gfxw_widget_t *widget)
 			BREAKPOINT();
 		} else
 
-		if (text->text) {
-			gfxop_free_text(state, text->text);
-			text->text = NULL;
+		if (text->text_handle) {
+			gfxop_free_text(state, text->text_handle);
+			text->text_handle = NULL;
 		}
 	}
 
@@ -327,14 +326,17 @@ _gfxw_widget_merge_if_equals(gfx_state_t *state, gfxw_widget_t *old, gfxw_widget
 
 			if (oldt->bounds.x == newt->bounds.x
 			    && oldt->bounds.y == newt->bounds.y) {
-				gfx_text_handle_t *swap = newt->text;
-				newt->text = oldt->text;
-				oldt->text = swap; /* This way, the old handle will be freed by the calling function */
+				gfx_text_handle_t *swap = newt->text_handle;
+				newt->text_handle = oldt->text_handle;
+				oldt->text_handle = swap; /* This way, the old handle will be freed by the calling function */
 				oldt->bounds = newt->bounds;
 
-				if (strcmp(oldt->text->text, newt->text->text)
-				    || oldt->text->width != newt->text->width
-				    || oldt->text->height != newt->text->height)
+				if (strcmp(oldt->text, newt->text)
+				    || oldt->font_nr != newt->font_nr
+				    || oldt->bounds.x != newt->bounds.x
+				    || oldt->bounds.y != newt->bounds.y
+				    || oldt->bounds.xl != newt->bounds.xl
+				    || oldt->bounds.yl != newt->bounds.yl)
 					oldt->flags |= GFXW_FLAG_DIRTY;
 
 				return 1;
@@ -559,8 +561,17 @@ static void
 _gfxw_draw_text(gfx_state_t *state, rect_t window, gfxw_text_t *text)
 {
 	rect_t text_box = windowize_box(window, text->bounds);
+
+	if (!text->text_handle) {
+		text->text_handle =
+			gfxop_new_text(state, text->font_nr, text->text, text->bounds.xl,
+				       text->halign, text->valign, text->color1,
+				       text->color2, text->bgcolor, text->single_line);
+
+	}
+
 fprintf(stderr,"Drawing text\n");
-	GFX_ASSERT(gfxop_draw_text(state, text->text, text_box));
+	GFX_ASSERT(gfxop_draw_text(state, text->text_handle, text_box));
 }
 
 static WIDGET_OPERATION(_gfxw_op_draw)
@@ -767,8 +778,15 @@ gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignme
 
 	widget->bounds = area;
 
-	widget->text = gfxop_new_text(state, font, text, area.xl, halign,
-				      valign, color1, color2, bgcolor, single_line);
+	widget->font_nr = font;
+	widget->text = text;
+	widget->halign = halign;
+	widget->valign = valign;
+	widget->color1 = color1;
+	widget->color2 = color2;
+	widget->bgcolor = bgcolor;
+	widget->single_line = single_line;
+	widget->text_handle = NULL;
 
 	widget->flags |= GFXW_FLAG_VISIBLE;
 
@@ -1005,11 +1023,13 @@ _gfxw_print_widget(gfxw_widget_t *widget)
 		break;
 	case GFXW_TEXT:
 		sciprintf("TEXT");
-		sciprintf("\"%s\"", text->text->text); /* Ummh.... maybe I *should* have named them differently ;-) */
+		sciprintf("\"%s\"", text->text);
 		break;
 	case GFXW_LIST:
 		sciprintf("LIST");
 		break;
+	case GFXW_VISUAL:
+		sciprintf("VISUAL");
 	case GFXW_PORT:
 		sciprintf("PORT");
 		sciprintf(" font=%d drawpos=(%d,%d)", port->font_nr, port->draw_pos.x, port->draw_pos.y);

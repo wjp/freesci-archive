@@ -27,7 +27,7 @@
 
 
 #include <resource.h>
-#include <gfx_state.h>
+#include <gfx_widgets.h>
 #include <gfx_resmgr.h>
 #include <gfx_options.h>
 

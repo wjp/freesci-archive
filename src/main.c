@@ -498,10 +498,17 @@ main(int argc, char** argv)
   gamestate->gfx_state = gfx_state;
   gfx_state->version = sci_version;
 
+
   if (gfxop_init_default(gfx_state, gfx_options)) { 
 	  fprintf(stderr,"Graphics initialization failed. Aborting...\n");
 	  exit(1);
   };
+  /*
+  if (gfxop_init(gfx_state, 3, 3, 4, gfx_options)) { 
+	  fprintf(stderr,"Graphics initialization failed. Aborting...\n");
+	  exit(1);
+  };
+  */
   /*------------*/
 
   if (game_init(gamestate)) { /* Initialize */

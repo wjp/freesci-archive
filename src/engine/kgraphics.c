@@ -26,7 +26,7 @@
 ***************************************************************************/
 
 #include <engine.h>
-#include <gfx_state.h>
+#include <gfx_widgets.h>
 #include <sci_graphics.h>
 #include <sci_widgets.h>
 
@@ -219,7 +219,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #warning "fixme!"
 #if 0
     graph_clear_box(s, port->xmin, port->ymin,
-		    port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
+v		    port->xmax - port->xmin + 1, port->ymax - port->ymin + 1,
 		    port->color);
     CHECK_THIS_KERNEL_FUNCTION;
 #endif

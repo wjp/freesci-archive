@@ -163,19 +163,12 @@ extern DLLEXTERN resource_t *resource_map;
 #ifndef _GET_INT_16
 #define _GET_INT_16
 
-#ifdef WORDS_BIGENDIAN
-
-gint16 getInt16(byte *d);
-
-#else /* !WORDS_BIGENDIAN */
-
 static inline gint16
 getInt16(byte *d)
 {
   return *d | (d[1] << 8);
 }
 
-#endif /* !WORDS_BIGENDIAN */
 #define getUInt16(d) (guint16)(getInt16(d))
 #endif
 /* Turns a little endian 16 bit value into a machine-dependant 16 bit value

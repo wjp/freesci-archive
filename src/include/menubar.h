@@ -30,7 +30,7 @@
 #define _SCI_MENUBAR_H_
 
 #include <gfx_operations.h>
-#include <gfx_state.h>
+#include <gfx_widgets.h>
 
 struct _state;
 

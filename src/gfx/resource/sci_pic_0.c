@@ -283,7 +283,7 @@ _gfxr_auxbuf_propagate_changes(gfxr_pic_t *pic, int bitmask)
 		clearmask |= (clearmask << 32);
 	}
 
-	for (i = 0; i < GFXR_AUX_MAP_SIZE / sizeof(long); i++) {
+	for (i = 0; i < GFXR_AUX_MAP_SIZE / sizeof(unsigned long); i++) {
 		unsigned long temp = *data & andmask;
 		temp >>= 3;
 		*data = (temp | *data) & clearmask;
@@ -330,7 +330,7 @@ _gfxr_auxbuf_fill_helper(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy,
 		}
 
 		if ((ytotal + xr) > 64000) { fprintf(stderr,"AARGH-%d\n", __LINE__); 
-		__asm__ __volatile__ ("bpt");
+		BREAKPOINT();
 		}
 
 		--xr;

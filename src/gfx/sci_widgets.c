@@ -26,7 +26,7 @@
 ***************************************************************************/
 
 #include <gfx_operations.h>
-#include <gfx_state.h>
+#include <gfx_widgets.h>
 #include <sci_widgets.h>
 #include <engine.h>
 

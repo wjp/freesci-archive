@@ -1,3 +1,13 @@
+2000-11-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/gfx_widgets.h: Renamed gfx_state.h to gfx_widgets.h
+
+	* src/include/gfx_state_internal.h (WIDGET_COMMON): Started writing
+	down ideas for a better widget implementation
+
+	* src/gfx/resource/sci_pic_0.c (_gfxr_auxbuf_fill_helper): Replaced
+	bpt assembler operation with a decent BREAKPOINT();
+
 2000-09-19  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kgraphics.c: Fixed small SCI01 pic goof
