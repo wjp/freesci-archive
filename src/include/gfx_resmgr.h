@@ -75,7 +75,8 @@ typedef struct {
 	int version; /* Interpreter version */
 	struct _gfx_options *options;
 	gfx_driver_t *driver;
-
+	gfx_pixmap_color_t *static_palette;
+	int static_palette_entries;
 	int lock_counter; /* Global lock counter; increased for each new resource allocated.
 			  ** The newly allocated resource will then be assigned the new value
 			  ** of the lock_counter, as will any resources referenced afterwards.

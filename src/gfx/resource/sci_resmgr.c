@@ -155,6 +155,22 @@ gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gf
 }
 
 
+void
+gfxr_palettize_view(gfxr_view_t *view, gfx_pixmap_color_t *source, int source_entries)
+{
+    int i;
+    
+    for (i=0;i<MIN(view->colors_nr,source_entries);i++)
+    {
+	if ((view->colors[i].r == 0) &&
+	    (view->colors[i].g == 0) &&
+	    (view->colors[i].b == 0))
+	{
+	    view->colors[i] = source[i];
+	}
+    }
+}
+
 gfxr_view_t *
 gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal, int palette)
 {
@@ -162,6 +178,7 @@ gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal, int pal
 	resource_t *res = scir_find_resource(resmgr, sci_view, nr, 0);
 	gfx_sci_options_t *sci_options = (gfx_sci_options_t *) internal;
 	int resid = GFXR_RES_ID(GFX_RESOURCE_TYPE_VIEW, nr);
+	gfxr_view_t *result;
 
 	if (!res || !res->data)
 		return NULL;
@@ -169,10 +186,13 @@ gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal, int pal
 	if (state->version < SCI_VERSION_01) palette=-1;
 
 	if (state->version < SCI_VERSION_01_VGA)
-		return gfxr_draw_view0(resid, res->data, res->size, palette);
+		result=gfxr_draw_view0(resid, res->data, res->size, palette);
 	else
-		return gfxr_draw_view1(resid, res->data, res->size); 
-
+		{
+		    result=gfxr_draw_view1(resid, res->data, res->size); 
+		    gfxr_palettize_view(result, state->static_palette, state->static_palette_entries);
+		}
+	return result;
 }
 
 

@@ -148,7 +148,17 @@ _reset_graphics_input(state_t *s)
 			gfxop_set_system_color(s->gfx_state, &(s->ega_colors[i]));
 		}
 	} else
-		if (gfxop_set_color(s->gfx_state, &(s->ega_colors[0]), 0, 0, 0, 0, -1, -1)) return 1; /* We usually need black */
+	{
+		resource = scir_find_resource(s->resmgr, sci_palette, 999, 1);
+		if (resource)
+		  {
+		    s->gfx_state->resstate->static_palette = 
+			gfxr_read_pal1(999, &s->gfx_state->resstate->static_palette_entries, 
+				      resource->data, resource->size);
+		    scir_unlock_resource(s->resmgr, resource, sci_palette, 999);
+		  } else
+		    sciprintf("Couldn't find the default palette!\n");
+	}						
 	transparent.mask = 0;
 
 	gfxop_fill_box(s->gfx_state, gfx_rect(0, 0, 320, 200), s->ega_colors[0]); /* Fill screen black */
