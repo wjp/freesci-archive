@@ -1162,6 +1162,11 @@ WARNING(fixme!)
 int
 c_gfx_current_port(state_t *s)
 {
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
 	if (!s->port)
 		sciprintf("none.\n");
 	else
@@ -1172,7 +1177,14 @@ c_gfx_current_port(state_t *s)
 int
 c_gfx_print_port(state_t *s)
 {
-	gfxw_port_t *port = s->port;
+	gfxw_port_t *port;
+
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	port = s->port;
 
 	if (cmd_paramlength > 0) {
 		if (s->visual) {
@@ -1194,6 +1206,11 @@ c_gfx_print_port(state_t *s)
 int
 c_gfx_print_visual(state_t *s)
 {
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
 	if (s->visual)
 		s->visual->print(GFXW(s->visual), 0);
 	else
@@ -1202,6 +1219,63 @@ c_gfx_print_visual(state_t *s)
 	return 0;
 }
 
+c_gfx_print_dynviews(state_t *s)
+{
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	if (!s->dyn_views)
+		sciprintf("No dynview list active.\n");
+	else
+		s->dyn_views->print(GFXW(s->dyn_views), 0);
+
+	return 0;
+}
+
+c_gfx_print_picviews(state_t *s)
+{
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	if (!s->pic_views)
+		sciprintf("No picview list active.\n");
+	else
+		s->pic_views->print(GFXW(s->pic_views), 0);
+
+	return 0;
+}
+
+#ifdef GFXW_DEBUG_WIDGETS
+extern gfxw_widget_t *debug_widgets[];
+extern int debug_widget_pos;
+c_gfx_print_widget(state_t *s)
+{
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	if (cmd_paramlength) {
+		int i;
+		for (i = 0; i < cmd_paramlength ; i++) {
+			int widget_nr = cmd_params[i].val;
+
+			sciprintf("===== Widget #%d:\n", widget_nr);
+			debug_widgets[widget_nr]->print(debug_widgets[widget_nr], 0);
+		}
+
+	} else if(debug_widget_pos>1)
+		sciprintf("Widgets 0-%d are active\n", debug_widget_pos-1);
+	else if (debug_widget_pos == 1)
+		sciprintf("Widget 0 is active\n");
+	else
+		sciprintf("No widgets are active\n");
+}
+#endif
 
 int
 c_disasm(state_t *s)
@@ -1970,6 +2044,12 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_gfx_print_port, "gfx_print_port", "i*", "Displays all information about the\n  specified port,"
 					 " or the current port\n  if no port was specified.");
 			con_hook_command(c_gfx_print_visual, "gfx_print_visual", "", "Displays all information about the\n  current widget state");
+			con_hook_command(c_gfx_print_dynviews, "gfx_print_dynviews", "", "Shows the dynview list");
+			con_hook_command(c_gfx_print_picviews, "gfx_print_picviews", "", "Shows the picview list");
+#ifdef GFXW_DEBUG_WIDGETS
+			con_hook_command(c_gfx_print_widget, "gfx_print_widget", "i*", "If called with no parameters, it\n  shows which widgets are active.\n"
+					 "  With parameters, it lists the\n  widget corresponding to the\n  numerical index specified (for\n  each parameter).");
+#endif
 
 			con_hook_int(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");
 			con_hook_int(&script_checkloads_flag, "script_checkloads_flag", "Set != 0 to display information\n"

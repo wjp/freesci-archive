@@ -837,6 +837,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		if (s->picture_port->contents) {
 			s->picture_port->free_contents(GFXWC(s->picture_port));
 			s->picture_port->contents = NULL;
+			s->dyn_views = s->pic_views = NULL;
 		}
 		GFX_ASSERT(gfxop_add_to_pic(s->gfx_state, pic_nr, 1, PARAM_OR_ALT(3, 0)));
 	} else {

@@ -1,3 +1,8 @@
+2000-12-18  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/scriptdebug.c: Added commands to view the dynviews,
+	picviews, and (if widget debug is enabled) widget list.
+
 2000-12-17  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/drivers/ggi_driver.c (ggi_init): Fixed a bug in the default

@@ -28,6 +28,7 @@
 #include <gfx_widgets.h>
 
 #ifdef GFXW_DEBUG_WIDGETS
+
 gfxw_widget_t *debug_widgets[GFXW_DEBUG_WIDGETS];
 int debug_widget_pos = 0;
 #define inline
@@ -61,7 +62,7 @@ _gfxw_debug_remove_widget(gfxw_widget_t *widget) {
 	}
 
 	if (found == 0) {
-		GFXERROR("Failed to remove widget!\n");
+		GFXERROR("Attempted removal of unregistered widget!\n");
 		BREAKPOINT();
 	}
 	GFXDEBUG("Removed widget: %d active now\n", debug_widget_pos);
@@ -1181,11 +1182,22 @@ _gfxwop_container_free(gfxw_widget_t *widget)
 	gfxw_container_t *container = (gfxw_container_t *) widget;
 	gfxw_widget_t *seeker = container->contents;
 
+fprintf(stderr,"OK in %s line %d\n", __FILE__, __LINE__);
 	while (seeker) {
 		gfxw_widget_t *next = seeker->next;
+fprintf(stderr,"OK in %s line %d\n", __FILE__, __LINE__);
 		seeker->free(seeker);
+fprintf(stderr,"OK in %s line %d\n", __FILE__, __LINE__);
 		seeker = next;
+fprintf(stderr,"OK in %s line %d\n", __FILE__, __LINE__);
 	}
+fprintf(stderr,"OK in %s line %d\n", __FILE__, __LINE__);
+
+fprintf(stderr,"OK in %s line %d\n", __FILE__, __LINE__);
+	recursively_free_dirty_rects(container->dirty);
+fprintf(stderr,"OK in %s line %d\n", __FILE__, __LINE__);
+	container->dirty = NULL;
+fprintf(stderr,"OK in %s line %d\n", __FILE__, __LINE__);
 
 	return _gfxwop_basic_free(widget);
 }
