@@ -1,3 +1,12 @@
+2000-05-15  Dmitry Jemerov  <yole@nnz.ru>
+
+	* src/engine/game.c (script_init_engine): Fixed the bug causing
+	"Invalid class number..." messages in script_init_engine() when
+	trying to load scripts with no classes.
+
+        * src/main.c: The version specification in the configuration
+        file didn't work. Fixed.
+
 2000-05-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kEditControl): Fixed a bug that would

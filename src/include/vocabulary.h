@@ -411,6 +411,15 @@ vocab_build_simple_parse_tree(parse_tree_node_t *nodes, result_word_t *words, in
 ** vocab_build_parse_tree (which /does/ build a syntax tree). Should be used in conjunction
 ** with vocab_match_simple().
 */
+
 #endif
+
+int
+vocab_gnf_parse(parse_tree_node_t *nodes, result_word_t *words, int words_nr,
+		parse_tree_branch_t *branch0, parse_rule_list_t *tlist, int verbose);
+
+void
+vocab_gnf_dump(parse_tree_branch_t *branches, int branches_nr);
+
 
 #endif

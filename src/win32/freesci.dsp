@@ -92,33 +92,22 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\core\cfsml.pl
+SOURCE=..\engine\cfsml.pl
 
 !IF  "$(CFG)" == "freesci - Win32 Release"
 
 # Begin Custom Build
-InputDir=\Src\freesci\src\core
-InputPath=..\core\cfsml.pl
+InputDir=\Src\freesci\src\engine
+InputPath=..\engine\cfsml.pl
 InputName=cfsml
 
-"..\core\savegame.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"..\engine\savegame.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	cd $(InputDir) 
 	d:\perl\bin\perl cfsml.pl < $(InputName).cfsml > $(InputName).c 
 	
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "freesci - Win32 Debug"
-
-# Begin Custom Build
-InputDir=\Src\freesci\src\core
-InputPath=..\core\cfsml.pl
-InputName=cfsml
-
-"..\core\savegame.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	cd $(InputDir) 
-	d:\perl\bin\perl cfsml.pl < $(InputName).cfsml > $(InputName).c 
-	
-# End Custom Build
 
 !ENDIF 
 
@@ -133,15 +122,15 @@ SOURCE=..\graphics\con_io.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\console.c
+SOURCE=..\scicore\console.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\decompress0.c
+SOURCE=..\scicore\decompress0.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\decompress1.c
+SOURCE=..\scicore\decompress1.c
 # End Source File
 # Begin Source File
 
@@ -153,7 +142,11 @@ SOURCE=..\graphics\font.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\game.c
+SOURCE=..\engine\game.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\engine\grammar.c
 # End Source File
 # Begin Source File
 
@@ -173,7 +166,7 @@ SOURCE=..\graphics\graphics_png.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\heap.c
+SOURCE=..\engine\heap.c
 # End Source File
 # Begin Source File
 
@@ -185,43 +178,43 @@ SOURCE=..\graphics\input_ggi.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\kernel.c
+SOURCE=..\engine\kernel.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\kevent.c
+SOURCE=..\engine\kevent.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\kfile.c
+SOURCE=..\engine\kfile.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\kgraphics.c
+SOURCE=..\engine\kgraphics.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\klists.c
+SOURCE=..\engine\klists.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\kmath.c
+SOURCE=..\engine\kmath.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\kmenu.c
+SOURCE=..\engine\kmenu.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\kscripts.c
+SOURCE=..\engine\kscripts.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\ksound.c
+SOURCE=..\engine\ksound.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\kstring.c
+SOURCE=..\engine\kstring.c
 # End Source File
 # Begin Source File
 
@@ -237,31 +230,64 @@ SOURCE=..\sound\midi.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\old_objects.c
+SOURCE=..\scicore\old_objects.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\resource.c
+SOURCE=..\scicore\resource.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\savegame.c
+SOURCE=..\engine\said.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\savegame.cfsml
+SOURCE=..\engine\savegame.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\script.c
+SOURCE=..\engine\savegame.cfsml
+
+!IF  "$(CFG)" == "freesci - Win32 Release"
+
+# Begin Custom Build
+InputDir=\Src\freesci\src\engine
+InputPath=..\engine\savegame.cfsml
+InputName=savegame
+
+"..\engine\savegame.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	cd $(InputDir) 
+	d:\perl\bin\perl cfsml.pl < $(InputName).cfsml > $(InputName).c 
+	
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "freesci - Win32 Debug"
+
+# Begin Custom Build
+InputDir=\Src\freesci\src\engine
+InputPath=..\engine\savegame.cfsml
+InputName=savegame
+
+"..\engine\savegame.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	cd $(InputDir) 
+	d:\perl\bin\perl cfsml.pl < $(InputName).cfsml > $(InputName).c 
+	
+# End Custom Build
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\scriptdebug.c
+SOURCE=..\scicore\script.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\simplesaid.c
+SOURCE=..\engine\scriptdebug.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\engine\simplesaid.c
 # End Source File
 # Begin Source File
 
@@ -269,23 +295,23 @@ SOURCE=..\sound\sound.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\state.c
+SOURCE=..\engine\state.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\tools.c
+SOURCE=..\scicore\tools.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\vm.c
+SOURCE=..\engine\vm.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\vocab.c
+SOURCE=..\scicore\vocab.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\core\vocab_debug.c
+SOURCE=..\scicore\vocab_debug.c
 # End Source File
 # Begin Source File
 

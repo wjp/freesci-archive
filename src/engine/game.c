@@ -251,11 +251,15 @@ script_init_engine(state_t *s, sci_version_t version)
 
       do {
 
-	while ((objtype = getInt16(script->data + seeker)) && (objtype != sci_obj_class)
-	       && (seeker < script->length))
-	  seeker += getInt16(script->data + seeker + 2);
-
-	if (objtype) { /* implies sci_obj_class */
+	while (seeker < script->length)
+        {
+          objtype = getInt16(script->data + seeker);
+          if (objtype == sci_obj_class || objtype == sci_obj_terminator) 
+            break;
+          seeker += getInt16(script->data + seeker + 2);
+        }
+        
+	if (objtype == sci_obj_class) {
 
 	  seeker -= SCRIPT_OBJECT_MAGIC_OFFSET; /* Adjust position; script home is base +8 bytes */
 
@@ -284,7 +288,7 @@ script_init_engine(state_t *s, sci_version_t version)
 	  seeker += getInt16(script->data + seeker + 2); /* Move to next */
 	}
 
-      } while (objtype != sci_obj_terminator);
+      } while (objtype != sci_obj_terminator && seeker >= script->length);
 
     }
   }
@@ -379,7 +383,7 @@ game_init(state_t *s)
   int i, font_nr;
 
   if (!script_instantiate(s, 0, 0)) {
-    sciprintf("script_init_engine(): Could not instantiate script 0\n");
+    sciprintf("game_init(): Could not instantiate script 0\n");
     return 1;
   }
 

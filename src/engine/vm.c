@@ -1423,9 +1423,10 @@ game_run(state_t **_s)
       script_abort_flag = 0;
       s->restarting_flags = SCI_GAME_WAS_RESTARTED | SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE;
 
-    } else
-      
-      if (successor = s->successor) {
+    } 
+    else {
+      successor = s->successor;
+      if (successor) {
 	script_abort_flag = 0;
 	game_exit(s);
 	free(s);
@@ -1434,8 +1435,8 @@ game_run(state_t **_s)
 	  send_calls = g_new(calls_struct_t, send_calls_allocated = 16);
 	SCI_MEMTEST;
       } else
-
 	game_is_finished = 1;
+    }
   } while (!game_is_finished);
 
   sciprintf(" Game::play() finished.\n");

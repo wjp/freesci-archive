@@ -514,7 +514,7 @@ sub create_reader
 	    print "         /* Prepare to restore static array */\n";
 	    print "         max = $size;\n";
 	  }
-	
+
 	  print "#line ", __LINE__, " \"cfsml.pl\"\n";
 	  print "         done = i = 0;\n";
 	  print "         do {\n";
@@ -902,7 +902,7 @@ while (<STDIN>) {
       my $mylinecounter = 0;
 
       my $idcounter = 5;
-	
+
       while ($idcounter < $tokens_nr) {
 	if ($tokens[$idcounter] eq "ERRVAR" and $tokens_nr >= $idcounter + 2) {
 	  $myeofvar = $tokens[$idcounter + 1];

@@ -184,7 +184,7 @@ main(int argc, char** argv)
   char *gamedir = NULL;
   char startdir[PATH_MAX+1];
   char *game_name;
-  sci_version_t cmd_version = 0;
+  sci_version_t version = 0, cmd_version = 0;
 
   getcwd(startdir, PATH_MAX);
 
@@ -309,6 +309,7 @@ main(int argc, char** argv)
     for (i = 1; i < conf_entries; i++)
       if (!strcasecmp(conf[i].name, game_name)) {
 	conf_nr = i;
+        version = conf[i].version;
       }
 
     if (!gamedir)
@@ -320,6 +321,9 @@ main(int argc, char** argv)
 	exit(1);
       }
   }
+
+  if (cmd_version)
+    version = cmd_version;
 
   if (gamedir)
     if (chdir (gamedir))
@@ -362,7 +366,7 @@ main(int argc, char** argv)
 
   gamestate = malloc(sizeof(state_t));
 
-  if (script_init_engine(gamestate, cmd_version)) { /* Initialize game state */
+  if (script_init_engine(gamestate, version)) { /* Initialize game state */
     fprintf(stderr,"Script initialization failed. Aborting...\n");
     return 1;
   }

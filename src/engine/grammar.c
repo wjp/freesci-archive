@@ -25,6 +25,7 @@
 
 #include <resource.h>
 #include <vocabulary.h>
+#include <console.h>
 #include <stdarg.h>
 #include <string.h>
 

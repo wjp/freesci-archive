@@ -154,6 +154,10 @@ SOURCE=..\include\engine.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\include\event.h
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\..\..\cygnus\cygwin-b20\src\include\getopt.h"
 # End Source File
 # Begin Source File
@@ -179,6 +183,10 @@ SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\history.h"
 # Begin Source File
 
 SOURCE=..\include\kdebug.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\kernel.h
 # End Source File
 # Begin Source File
 
