@@ -7,4 +7,4 @@ libscicore_a_SOURCES = console.c tools.c resource.c decompress0.c     \
 		 decompress01.c decompress1.c decompress11.c script.c \
 		 vocab.c vocab_debug.c old_objects.c modules.c        \
 		 sci_memory.c resource_map.c resource_patch.c         \
-		 fnmatch.c int_hashmap.c
+		 fnmatch.c int_hashmap.c versions.c

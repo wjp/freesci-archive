@@ -30,6 +30,7 @@
 #ifndef _SCI_VERSIONS_H_
 #define _SCI_VERSIONS_H_
 
+#include <scitypes.h>
 
 struct _state;
 
@@ -138,6 +139,21 @@ version_parse(char *vn);
 /* Parse a string containing an SCI version number
 ** Parameters: (char *) vn: The string to parse
 ** Returns   : (sci_version_t): The resulting version number
+*/
+
+int
+version_detect_from_executable(sci_version_t *result);
+/* Try to detect version from Sierra executable in cwd
+** Returns   : (int) 0 on failure, 1 on success
+**             (sci_version_t) *result: The version number detected on success
+*/
+
+char *
+version_guess_from_hashcode(sci_version_t *result, guint32 *code);
+/* Try to detect version from Sierra resource file(s) in cwd
+** Returns   : (char *) NULL on failure, the name of the associated game otherwise
+**             (sci_version_t) *result: The version number detected on success
+**             (guint32) *code: The resource hash  code
 */
 
 #endif /* !_SCI_VERSIONS_H_ */

@@ -27,6 +27,10 @@
 #ifndef SCI_TYPES
 #define SCI_TYPES
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #ifdef HAVE_DIRENT_H
 #  include <sys/types.h>
 #  include <dirent.h>

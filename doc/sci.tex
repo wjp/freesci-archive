@@ -100,7 +100,7 @@
 %\newtheorem*{notation}{Notation}
 %\newcommand{\ntt}{\normalfont\ttfamily}
 %\newcommand{\thmref}[1]{Theorem~\ref{#1}}
-%\newcommand{\secref}[1]{\S\ref{#1}}
+%\newcommand{\secref}[1]{§\ref{#1}}
 %\newcommand{\lemref}[1]{Lemma~\ref{#1}}
  \newcommand{\bysame}{\mbox{\rule{3em}{.4pt}}\,}
  \newcommand{\A}{\mathcal{A}}
@@ -609,6 +609,7 @@ Type 0x85 resources are 'memory' resources, which are only used internally.
 90: map: Map (purpose unknown)  \\
 91: hep: Heap resources: Dynamic script data  \\
 \end{tabular}
+
  Apparently, the script resource split introduced in SCI01 was incorporated into the actual resource layout in SCI1.
 
 % ------------------------   
@@ -1207,7 +1208,7 @@ END
  \hline 
 {{1}} & {{nodes}} & {{Number of nodes}} \tabularnewline
  \hline 
-{{2 + i*2}} & {{nodelist[i].value}} & {{Value of node \#i (0 $\le$; i $\le$ nodes)}} \tabularnewline
+{{2 + i*2}} & {{nodelist[i].value}} & {{Value of node \#i (0 $\leq$; i $\leq$ nodes)}} \tabularnewline
  \hline 
 {{3 + i*2}} & {{nodelist[i].siblings}} & {{Sibling nodes of node \#i}} \tabularnewline
  \hline 
@@ -5620,7 +5621,7 @@ This function adds a menu to the menu bar. The menu title is passed in the first
 ':': Menu item separator  \\
 "--!": Seperation line: This menu item is just a separator  \\
 '\#': Function key. This is replaced by an F for displaying  \\
-'\textasciicircum{}': Control key. This is replaced by \textbackslash 001 (CTRL) for displaying  \\
+'\textasciicircum{}': Control key. This is replaced by \textbackslash001 (CTRL) for displaying  \\
 \end{tabular}
 
 \subsubsection{Kernel function 0x23: DrawStatus(HeapPtr)}
@@ -6488,7 +6489,7 @@ Returns: (word) The length of the specified string.
 
 Returns: (HeapPtr) dest
 
-Copies a string, plus the trailing \textbackslash 0 terminator. The length of the string may be reduced with the optional length parameter. This function simply encapsulates the libc {\texttt{{strcpy(char *, char *)}}} and {\texttt{{strncpy(char *, char *, int)}}} fucntions.
+Copies a string, plus the trailing \textbackslash0 terminator. The length of the string may be reduced with the optional length parameter. This function simply encapsulates the libc {\texttt{{strcpy(char *, char *)}}} and {\texttt{{strncpy(char *, char *, int)}}} fucntions.
 \subsubsection{Kernel function 0x4c: Format(HeapPtr, String,...)}
 \label{id2509387}\hypertarget{id2509387}{}%
 
@@ -6619,7 +6620,7 @@ This function first retreives {\ttfamily\itshape{{obj}}}'s signal and illegalBit
 
 \begin{tabular}{l}
 illegalBits bitwise-AND the disjunction of all elements of $\{ 2^n | \exists \textrm{ a pixel with the color value n inside the control map zone delimited by obj's brRect}\}$ equals 0  \\
-$\nexists \textrm{pic} \in \textrm{clip\_list}. (\textrm{pic::signal} \& (\textrm{DONT\_RESTORE} \texttt{ | } \textrm{IGNORE\_ACTOR})) = 0 \wedge \textrm{pic::brRect} \cap \textrm{obj::brRect} \ne \emptyset$  \\
+$\nexists \textrm{pic} \in \textrm{clip\_list}. (\textrm{pic::signal} \& (\textrm{DONT\_RESTORE} \texttt{ | } \textrm{IGNORE\_ACTOR})) = 0 \land \textrm{pic::brRect} \cap \textrm{obj::brRect} \neq \emptyset$  \\
 \end{tabular}
  If both conditions are met, 1 is returned. Otherwise, 0 is returned.
 \subsubsection{Kernel function 0x52: OnControl(word, Point \docbooktolatexpipe{} Rect)}
@@ -7158,21 +7159,21 @@ The compression works in this way: Each string starts with a byte-sized copy cou
 Here is an example of the compression scheme: 
 
 \begin{tabular}{l}
-apple - 0,appl\textbackslash 0xE5  \\
+apple - 0,appl\textbackslash0xE5  \\
 \end{tabular}
 
 
 The byte count is 0 because we assume that "apple" is the first word beginning with an a (not likely, though!). 0xE5 is 0x65 (the ascii value for 'e') \docbooktolatexpipe{} 0x80. Watch now the next word: 
 
 \begin{tabular}{l}
-athlete - 1,thlet\textbackslash 0xE5  \\
+athlete - 1,thlet\textbackslash0xE5  \\
 \end{tabular}
 
 
 Here, the initial letter is identical to that of its predecessor, so the copy count is 1. Another example: 
 
 \begin{tabular}{l}
-atrocious - 2,rociou\textbackslash 0xF3  \\
+atrocious - 2,rociou\textbackslash0xF3  \\
 \end{tabular}
 
 \subsubsection{The suffix vocabulary (VOCAB.901)}
@@ -7402,14 +7403,14 @@ r = v_0 \to v_1 v_2 \ldots v_n
 
  there are semantic tags $\sigma_{r,1}, \sigma_{r,2} \ldots \sigma_{r,n} \in S$, as explained above. $T_{\Pi}$ is now constructed from the resulting derivation and the semantic tags assiociated with each non-terminal of the rule used. The construction algorithm is explained below with $T_{\Pi}$ being constructed from nodes, which have the following structure:
 \[
-\Node = \{\diamond\} \cup S \times V \times (\Node \cup \Gamma)*;
+\Node = \{\diamond\} \cup S × V × (\Node \cup \Gamma)*;
 \]
 
  Where S is the set of possible semantic values, and V is the set of non-terminals as defined in the grammar. We will also use the sequence $\gamma_{0}, \gamma_{1}, \gamma_{2} \ldots \gamma_{k-1}$, which will represent the word groups the input tokens belonged to (in the exact order they were accepted), and the sequence $r_{0}, r_{1}, r_{2} \ldots r_{l-1}$, which will be the list of rules used to create the left derivation tree as described in the previous section. 
 \begin{Verbatim}[]
 
-              Helper function sci_said_recursive: S \times V \times (V \cup \Sigma)* \to \Node
-              Parameters: s \in S, Rule r \in V \times (V \cup \Sigma): v0 \to v1 v2 ... vi
+              Helper function sci_said_recursive: S × V × (V \cup \Sigma)* \to \Node
+              Parameters: s \in S, Rule r \in V × (V \cup \Sigma): v0 \to v1 v2 ... vi
               cnmr = cnr
               \Node n := s, v0
               FOR j := 1 TO i
@@ -7618,29 +7619,29 @@ First, we need to describe a set of functions for traversing the nodes of $T_\Si
 \textrm{word}: \tuple{s, v, \gamma} \mapsto \gamma \\
 \\
 \textrm{children}: && \Node \to \Node* \\
-\textrm{children}: \tuple{s, v, n_{0}, n_{1} \ldots n_{i}} \mapsto \{ m | \forall m.m\in\{ n_{0}, n_{1} \ldots n_{i} \} \wedge m\in Node \} \\
+\textrm{children}: \tuple{s, v, n_{0}, n_{1} \ldots n_{i}} \mapsto \{ m | \forall m.m\in\{ n_{0}, n_{1} \ldots n_{i} \} \land m\in Node \} \\
 \\
 \textrm{all\_children}: && \Node \to \Node* \\
 \textrm{all\_children}: n \mapsto \textrm{children}(n) \cup \{ m \docbooktolatexpipe{} \exists l.l \in\textrm{all\_children}(n).m\in l \} \\
 \\
 \textrm{is\_word} : && \Node \to B \\
-\textrm{is\_word} : \tuple{s, v, n_{0}, n_{1} \ldots n_{i}} = \Btt \iff (i = 0) \wedge n_{0} \in \Gamma \\
-%\textrm{contains\_word}: && \Node \times S \times \Gamma \to B contains\_word(n, s, \gamma) = tt \gamma = 0xfff\label{id2519386}\begingroup\catcode`\#=12\footnote{
+\textrm{is\_word} : \tuple{s, v, n_{0}, n_{1} \ldots n_{i}} = \Btt \iff (i = 0) \land n_{0} \in \Gamma \\
+%\textrm{contains\_word}: && \Node × S × \Gamma \to B contains\_word(n, s, \gamma) = tt \gamma = 0xfff\label{id2519386}\begingroup\catcode`\#=12\footnote{
 %This is the so-called "anyword". Words with a word group of 0xfff match any other word.
-%}\endgroup\docbooktolatexmakefootnoteref{id2519386} \vee (\iff \exists m.m\in\textrm{all\_children}(n).(s = \textrm{second}(m)) \wedge (\textrm{is\_word}(m) \wedge (\textrm{word}(m) = \gamma))) \\
-\textrm{verify\_sentence\_part\_elements}: && \Node \times \Node \to B \\
-\textrm{verify\_sentence\_part\_elements}: && \tuple{n_{p}, n_{s}} \mapsto \Btt \iff (\textrm{first}(n_{s} = 152) \wedge ((\forall m.m \in \Node.\textrm{verify\_sentence\_part\_elements}(m, n_{s}) \iff \{ w \docbooktolatexpipe{} \exists t.t \in \textrm{all\_children}(m).w = \textrm{word}(t)\} = \emptyset) \vee \exists m \in \textrm{children}(n_{s}).\textrm{verify\_sentence\_part\_elements}(m, n_{s})) ) \vee ((\textrm{second}(n_{s}) = 153) \wedge (\exists m.m \in \textrm{children}(n_{s}).(\exists o \in \textrm{all\_children}(n_{s}).(\textrm{first}(o) = \textrm{first}(n_{p})) \wedge \textrm{word}(o) = \textrm{word}(m))) ) \vee ((\textrm{second}(n_{s}) \in \{144, 14c\}) \wedge (\exists m.m \in \textrm{children}(n_{s}).verify\_sentence\_part(m, n_{s}))) \\
+%}\endgroup\docbooktolatexmakefootnoteref{id2519386} \lor (\iff \exists m.m\in\textrm{all\_children}(n).(s = \textrm{second}(m)) \land (\textrm{is\_word}(m) \land (\textrm{word}(m) = \gamma))) \\
+\textrm{verify\_sentence\_part\_elements}: && \Node × \Node \to B \\
+\textrm{verify\_sentence\_part\_elements}: && \tuple{n_{p}, n_{s}} \mapsto \Btt \iff (\textrm{first}(n_{s} = 152) \land ((\forall m.m \in \Node.\textrm{verify\_sentence\_part\_elements}(m, n_{s}) \iff \{ w \docbooktolatexpipe{} \exists t.t \in \textrm{all\_children}(m).w = \textrm{word}(t)\} = \emptyset) \lor \exists m \in \textrm{children}(n_{s}).\textrm{verify\_sentence\_part\_elements}(m, n_{s})) ) \lor ((\textrm{second}(n_{s}) = 153) \land (\exists m.m \in \textrm{children}(n_{s}).(\exists o \in \textrm{all\_children}(n_{s}).(\textrm{first}(o) = \textrm{first}(n_{p})) \land \textrm{word}(o) = \textrm{word}(m))) ) \lor ((\textrm{second}(n_{s}) \in \{144, 14c\}) \land (\exists m.m \in \textrm{children}(n_{s}).verify\_sentence\_part(m, n_{s}))) \\
 \\
-\textrm{verify\_sentence\_part}: && \Node \times \Node \to B \\
-\textrm{verify\_sentence\_part}: && \tuple{n_{p}, n_{s}} \mapsto \Btt \iff \forall n.n \in \textrm{children}(n_{s}):\exists m.m\in\textrm{children}(n_{p}).(\textrm{first}(m) = \textrm{first}(n)) \wedge \textrm{verify\_sentence\_part\_elements}(n, m) \\
+\textrm{verify\_sentence\_part}: && \Node × \Node \to B \\
+\textrm{verify\_sentence\_part}: && \tuple{n_{p}, n_{s}} \mapsto \Btt \iff \forall n.n \in \textrm{children}(n_{s}):\exists m.m\in\textrm{children}(n_{p}).(\textrm{first}(m) = \textrm{first}(n)) \land \textrm{verify\_sentence\_part\_elements}(n, m) \\
 \\
-\textrm{verify\_sentence\_part\_brackets}: && \Node \times \Node \to B \\
-\textrm{verify\_sentence\_part\_brackets}: && \tuple{n_{p}, n_{s}} \mapsto \Btt \iff (\textrm{first}(n_{p}) = 152 \wedge (\forall m.m\in \Node.(\textrm{first}(m) = \textrm{first}(n_{s})) \wedge (\textrm{second}(m) = \textrm{second}(n_{s})). \textrm{verify\_sentence\_part}(n_{p}, m) \iff \{ w \docbooktolatexpipe{} \exists t.t \in \textrm{all\_children}(m).w = \textrm{word}(t)\} = \emptyset)) \vee ((\textrm{first}(n_{p}) \in \{141, 142, 143\}) \wedge \textrm{verify\_sentence\_part}(n_{p}, n_{s})) \\
+\textrm{verify\_sentence\_part\_brackets}: && \Node × \Node \to B \\
+\textrm{verify\_sentence\_part\_brackets}: && \tuple{n_{p}, n_{s}} \mapsto \Btt \iff (\textrm{first}(n_{p}) = 152 \land (\forall m.m\in \Node.(\textrm{first}(m) = \textrm{first}(n_{s})) \land (\textrm{second}(m) = \textrm{second}(n_{s})). \textrm{verify\_sentence\_part}(n_{p}, m) \iff \{ w \docbooktolatexpipe{} \exists t.t \in \textrm{all\_children}(m).w = \textrm{word}(t)\} = \emptyset)) \lor ((\textrm{first}(n_{p}) \in \{141, 142, 143\}) \land \textrm{verify\_sentence\_part}(n_{p}, n_{s})) \\
 \end{eqnarray}
 
  With these functions, we can now define an algorithm for augmenting $T_{\Pi}$ and $T_{\Sigma}$:
 
-Algorithm SCI-AUGMENT matched := $\Btt \textrm{claim\_on\_match} := \Btt \texttt{ FOREACH } n \in \textrm{root}(T_{\Sigma}) \texttt{ IF } ((\textrm{first}(n) = 14b) \wedge (\textrm{second}(n) = f900)) \texttt{ THEN } \textrm{claim\_on\_match} := \Bff \texttt{ ELSE IF } \neg \textrm{verify\_sentence\_part\_brackets}(n, \textrm{root}(T_{\Pi})) \texttt{ THEN } \textrm{matched} := \Bff \texttt{ END-FOREACH}$
+Algorithm SCI-AUGMENT matched := $\Btt \textrm{claim\_on\_match} := \Btt \texttt{ FOREACH } n \in \textrm{root}(T_{\Sigma}) \texttt{ IF } ((\textrm{first}(n) = 14b) \land (\textrm{second}(n) = f900)) \texttt{ THEN } \textrm{claim\_on\_match} := \Bff \texttt{ ELSE IF } ¬ \textrm{verify\_sentence\_part\_brackets}(n, \textrm{root}(T_{\Pi})) \texttt{ THEN } \textrm{matched} := \Bff \texttt{ END-FOREACH}$
 
 
 
@@ -8638,7 +8639,7 @@ This mask is a bitwise-OR of the constants {\texttt{{GFX\_\dbz{}MASK\_\dbz{}VISU
 \subsubsection{gfx\_mode\_t}
 \label{id2524405}\hypertarget{id2524405}{}%
 
-The FreeSCI graphics subsystem only supports a small subset of all possible graphics modes; specifically, it only supports modes where the integer value of each pixel can be stored in 8, 16, 24, or 32 bits. Color index mode is supported, but non-indexed mode has additional requirements: Each color aspect of red, green, and blue must be represented by a consecutive sub-vector \textless{}$v_{c}$, $v_{c+1}$, \ldots ,$v_{c+n-1}$\textgreater{} of the total color vector \textless{}$v_{0}$, $v_{1}$, \ldots ,$v_{b-1}$\textgreater{}, where $n$ and $c$ are non-negative integers, and $c+n \le b$ holds. With $v_{b}$ being the most significant bit of the total bit vector, we also require that for each {\texttt{{m}}} where 0 \textless{} m \textless{} n the bit $v_{c+m}$ should, if set, increase brightness about twice as much as setting $v_{c+m-1}$ would. This allows us to represent each color aspect by means of an AND bitmask and an integer shift value.
+The FreeSCI graphics subsystem only supports a small subset of all possible graphics modes; specifically, it only supports modes where the integer value of each pixel can be stored in 8, 16, 24, or 32 bits. Color index mode is supported, but non-indexed mode has additional requirements: Each color aspect of red, green, and blue must be represented by a consecutive sub-vector \textless{}$v_{c}$, $v_{c+1}$, \ldots ,$v_{c+n-1}$\textgreater{} of the total color vector \textless{}$v_{0}$, $v_{1}$, \ldots ,$v_{b-1}$\textgreater{}, where $n$ and $c$ are non-negative integers, and $c+n \leq b$ holds. With $v_{b}$ being the most significant bit of the total bit vector, we also require that for each {\texttt{{m}}} where 0 \textless{} m \textless{} n the bit $v_{c+m}$ should, if set, increase brightness about twice as much as setting $v_{c+m-1}$ would. This allows us to represent each color aspect by means of an AND bitmask and an integer shift value.
 
 This, along with a global palette and the scaling factors, is the core of the gfx\_mode\_t data. It also contains a shift values and an AND bitmask for alpha values; if these values are set to non-zero by the graphics driver, alpha channel information will be written to the same block of data the color values are written to when pixmaps are calculated. If they are not set, a separate 8bpp alpha data block will be added to the pixmaps.
 \subsubsection{gfx\_pixmap\_t}
