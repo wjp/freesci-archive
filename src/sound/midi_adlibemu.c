@@ -35,8 +35,10 @@ int midi_adlibemu_reset(void);
 
 //#define DEBUG_ADLIB
 //#define ADLIB_MONO
+#define SCI_VOLUME_SCALE
 
 /* portions shamelessly lifted from claudio's XMP */
+/* other portions lifted from sound/opl3.c in the Linux kernel */
 
 #define ADLIB_LEFT 0
 #define ADLIB_RIGHT 1
@@ -63,21 +65,33 @@ static int ym3812_note[13] = {
     0x1e5, 0x202, 0x220, 0x241, 0x263, 0x287,
     0x2ae
 };
+
+#ifdef SCI_VOLUME_SCALE
 static guint8 sci_adlib_vol_base[16] = {
   0x00, 0x11, 0x15, 0x19, 0x1D, 0x22, 0x26, 0x2A, 
   0x2E, 0x23, 0x37, 0x3B, 0x3F, 0x3F, 0x3F, 0x3F
 };
 static guint8 sci_adlib_vol_tables[16][64];
+#endif
 
-static int my_midi_fm_vol_table[64] = {
-   0,  8, 11, 13, 16, 17, 18, 21,
-   22, 24, 25, 26, 27, 28, 29, 30,
-   32, 32, 33, 34, 35, 36, 37, 38,
-   39, 40, 40, 41, 42, 43, 43, 44,
-   45, 45, 46, 47, 48, 48, 49, 49,
-   50, 51, 51, 52, 53, 53, 54, 54,
-   55, 55, 56, 56, 57, 57, 58, 58, 
-   59, 59, 60, 60, 61, 61, 62, 63
+/* ripped out of the linux kernel, of all places. */
+static gint8 fm_volume_table[128] = {
+  -64, -48, -40, -35, -32, -29, -27, -26,
+  -24, -23, -21, -20, -19, -18, -18, -17,
+  -16, -15, -15, -14, -13, -13, -12, -12,
+  -11, -11, -10, -10, -10, -9, -9, -8,
+  -8, -8, -7, -7, -7, -6, -6, -6,
+  -5, -5, -5, -5, -4, -4, -4, -4,
+  -3, -3, -3, -3, -2, -2, -2, -2,
+  -2, -1, -1, -1, -1, 0, 0, 0,
+  0, 0, 0, 1, 1, 1, 1, 1,
+  1, 2, 2, 2, 2, 2, 2, 2,
+  3, 3, 3, 3, 3, 3, 3, 4,
+  4, 4, 4, 4, 4, 4, 4, 5,
+  5, 5, 5, 5, 5, 5, 5, 5,
+  6, 6, 6, 6, 6, 6, 6, 6,
+  6, 7, 7, 7, 7, 7, 7, 7,
+  7, 7, 7, 8, 8, 8, 8, 8
 };
 
 /* back to your regularly scheduled definitions */
@@ -98,13 +112,17 @@ static guint8 adlib_master;
 /* initialise note/operator lists, etc. */
 void adlibemu_init_lists()
 {
-  int i,j;
+  int i;
+
+#ifdef SCI_VOLUME_SCALE
+  int j;
 
   for (i = 0 ; i < 16 ; i++) {
     for (j = 0; j < 64 ; j++) {
       sci_adlib_vol_tables[i][j] = ((guint16)sci_adlib_vol_base[i]) * j / 63;
     }
   }
+#endif
 
   for (i = 0; i < MIDI_CHANNELS ; i++) {
     pitch[i] = 8192;  /* center the pitch wheel */
@@ -177,36 +195,92 @@ void synth_setpatch (int voice, guint8 *data)
 
 void synth_setvolume_L (int voice, int volume)
 {
+  gint8 level1, level2;
+
+  level1 = ~adlib_reg_L[register_base[2]+register_offset[voice]] & 0x3f;
+  level2 = ~adlib_reg_L[register_base[3]+register_offset[voice]] & 0x3f;
+
+  if (level1) {
+#ifdef SCI_VOLUME_SCALE
+    level1 += sci_adlib_vol_tables[adlib_master][volume>>1];
+#else
+    level1 += fm_volume_table[volume];
+#endif
+  }
+
+  if (level2) {
+#ifdef SCI_VOLUME_SCALE
+    level2 += sci_adlib_vol_tables[adlib_master][volume>>1];
+#else
+    level2 += fm_volume_table[volume];
+#endif
+  }
+  
+  if (level1 > 0x3f)
+    level1 = 0x3f;
+  if (level1 < 0)
+    level1 = 0;
+
+  if (level2 > 0x3f)
+    level2 = 0x3f;
+  if (level2 < 0)
+    level2 = 0;
+
   /* algorithm-dependent; we may need to set both operators. */
   if (adlib_reg_L[register_base[10]+voice] & 1)
     opl_write_L(register_base[2]+register_offset[voice],
-	      (guint8)((63-volume) |
+	      (guint8)((~level1 &0x3f) |
 	       (adlib_reg_L[register_base[2]+register_offset[voice]]&0xc0)));
 
   opl_write_L(register_base[3]+register_offset[voice],
-	      (guint8)((63-volume) |
+	      (guint8)((~level2 &0x3f) |
 	       (adlib_reg_L[register_base[3]+register_offset[voice]]&0xc0)));
 
 }
 
 void synth_setvolume_R (int voice, int volume)
 {
+  gint8 level1, level2;
+
+  level1 = ~adlib_reg_R[register_base[2]+register_offset[voice]] & 0x3f;
+  level2 = ~adlib_reg_R[register_base[3]+register_offset[voice]] & 0x3f;
+
+  if (level1) {
+#ifdef SCI_VOLUME_SCALE
+    level1 += sci_adlib_vol_tables[adlib_master][volume>>1];
+#else
+    level1 += fm_volume_table[volume];
+#endif
+  }
+    
+  if (level2) {
+#ifdef SCI_VOLUME_SCALE
+    level2 += sci_adlib_vol_tables[adlib_master][volume>>1];
+#else
+    level2 += fm_volume_table[volume];
+#endif
+  }
+  
+  if (level1 > 0x3f)
+    level1 = 0x3f;
+  if (level1 < 0)
+    level1 = 0;
+
+  if (level2 > 0x3f)
+    level2 = 0x3f;
+  if (level2 < 0)
+    level2 = 0;
+
   /* now for the other side. */
   if (adlib_reg_R[register_base[10]+voice] & 1)
     opl_write_R(register_base[2]+register_offset[voice],
-		(guint8)((63-volume) |
+		(guint8)((~level1 &0x3f) |
 		 (adlib_reg_R[register_base[2]+register_offset[voice]]&0xc0)));
   
   opl_write_R(register_base[3]+register_offset[voice],
-	      (guint8)((63-volume) |
+	      (guint8)((~level2 &0x3f) |
 	       (adlib_reg_R[register_base[3]+register_offset[voice]]&0xc0)));
 
-}
-
-void synth_setvolume (int voice, int volume)
-{
-  synth_setvolume_L(voice, volume);
-  synth_setvolume_R(voice, volume);
 }
 
 void synth_setnote (int voice, int note, int bend)
@@ -311,8 +385,8 @@ int adlibemu_start_note(int chn, int note, int velocity)
   }
 
   /* Scale channel volume */
-  volume_L = velocity * vol[chn] / 128;
-  volume_R = velocity * vol[chn] / 128;
+  volume_L = velocity * vol[chn] / 127;
+  volume_R = velocity * vol[chn] / 127;
 
   /* Apply a pan */
 #ifndef ADLIB_MONO
@@ -321,24 +395,6 @@ int adlibemu_start_note(int chn, int note, int velocity)
   else if (pan[chn] < 0x3f) /* pan left; so we scale the right down.*/
     volume_R = volume_R / 0x3f * (0x3f - (0x3f-pan[chn]));
 #endif 
-
-  volume_R = volume_R >> 1;
-  volume_L = volume_L >> 1;
-
-  /* clip volume just in case */
-  if (volume_L > 63)
-    volume_L = 63;
-  if (volume_R > 63)
-    volume_R = 63;  
-
-  /* logarithmically scale */
-#if 1
-  volume_R = my_midi_fm_vol_table[volume_R];
-  volume_L = my_midi_fm_vol_table[volume_L];
-#else
-  volume_R = sci_adlib_vol_tables[adlib_master][volume_R];
-  volume_L = sci_adlib_vol_tables[adlib_master][volume_L];
-#endif
 
   inst = instr[chn];
 
@@ -389,8 +445,8 @@ void test_adlib () {
   opl_write(0xA0 + voice, 0x57);
   opl_write(0xB0 + voice, 0x2d);
 #else
-  synth_setvolume(voice, 0x50);
-  synth_setvolume(voice, 0x50);
+  synth_setvolume_L(voice, 0x50);
+  synth_setvolume_R(voice, 0x50);
   synth_setnote(voice, 0x30, 0);
 #endif
 
@@ -557,8 +613,11 @@ midi_device_t midi_device_adlibemu = {
   &midi_adlibemu_event,
   &midi_adlibemu_event2,
   &midi_adlibemu_reset,
-  //&midi_adlibemu_volume,
+#ifdef SCI_VOLUME_SCALE
+  &midi_adlibemu_volume,
+#else
   NULL,
+#endif
   &midi_adlibemu_reverb,
   003,		/* patch.003 */
   0x04,		/* playflag */
