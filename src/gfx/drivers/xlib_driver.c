@@ -1,5 +1,5 @@
 /***************************************************************************
- xlib_driver.h Copyright (C) 2000 Christoph Reichenbach
+ xlib_driver.c Copyright (C) 2000-2005 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -305,8 +305,8 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	UPDATE_NLS_CAPABILITY;
 
-	if (!S)
-		S = sci_malloc(sizeof(struct _xlib_state));
+	if (!drv->state /* = S */)
+		drv->state = sci_malloc(sizeof(struct _xlib_state));
 
 	flags |= SCI_XLIB_INSERT_MODE;
 

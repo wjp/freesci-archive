@@ -845,8 +845,8 @@ gp32_init_specific(struct _gfx_driver *drv, int xfact, int yfact,
 	sciprintf("Initialising video mode\n");
 
 	drv->state = NULL;
-	if (!S)
-		S = sci_malloc(sizeof(struct _gp32_state));
+	if (!drv->state /* = S */)
+		drv->state = sci_malloc(sizeof(struct _gp32_state));
 	if (!S)
 		return GFX_FATAL;
 
@@ -1153,7 +1153,7 @@ gp32_usec_sleep(struct _gfx_driver *drv, long usecs)
 gfx_driver_t
 gfx_driver_gp32 = {
 	"gp32",
-	"0.1",
+	"0.1a",
 	SCI_GFX_DRIVER_MAGIC,
 	SCI_GFX_DRIVER_VERSION,
 	NULL,
