@@ -30,6 +30,12 @@
 
 #include <stdio.h>
 
+/* Constants missing in KOS's errno.h */
+
+#ifndef EINTR
+#define EINTR 4
+#endif
+
 /* Functions missing from KOS */
 
 /* Implemented in dc.c */

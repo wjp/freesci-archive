@@ -84,6 +84,12 @@
 #  include <windows.h>
 #endif
 
+#ifdef _DREAMCAST
+#  include <dc.h>
+#  include <selectgame.h>
+#  define PATH_MAX 255
+#endif
+
 #ifdef _MSC_VER
 #  define MSVC_FUNCTYPECAST_KLUDGE (void *)
 #else
@@ -423,6 +429,17 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 	cl_options->sound_server_name = NULL;
 	cl_options->mouse = ON;
 	cl_options->show_rooms = 0;
+#ifdef _DREAMCAST
+
+	/* On the Dreamcast there is no command line, so we don't try to read
+	** any options and just set the savegame_name to NULL and return a
+	** game name of NULL.
+	*/
+	
+	savegame_name = NULL;	
+	return NULL;
+	
+#else /* !_DREAMCAST */
 #ifdef HAVE_GETOPT_LONG
 	while ((c = getopt_long(argc, argv, "lvrhmsDd:V:g:x:y:c:M:O:S:P:f:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_LONG */
@@ -582,6 +599,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 
 	return
 		argv[optind];
+#endif /* !_DREAMCAST */
 }
 
 
@@ -926,6 +944,10 @@ main(int argc, char** argv)
 	       "or any later version, at your option.\n"
 	       "It comes with ABSOLUTELY NO WARRANTY.\n");
 
+
+#ifdef _DREAMCAST
+	choose_game();
+#endif
 
 	if (game_name) {
 

@@ -117,6 +117,10 @@
 #  define perror(S) fprintf(stderr, S)
 #  define unlink fs_unlink
 #  define write fs_write
+#  define mkdir(D,M) fs_mkdir(D)
+#  define creat(D,M) fs_open(D, O_WRONLY)
+#  define putchar(C) fputc(C, stdout)
+#  define getc(S) fgetc(S)
 #endif
 
 #ifdef __BEOS__

@@ -42,6 +42,11 @@
 
 #endif
 
+#ifdef _DREAMCAST
+#  include <dc.h>
+#  define PATH_MAX 255
+#endif
+
 config_entry_t *conf;
 int cur_section=0; /* Size-1 and current section in conf */
 char *exported_conf_path; /* Path which the config file was found in */
@@ -471,9 +476,21 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_driver_name = NULL;
         conf->pcmout_driver = pcmout_find_driver(NULL);
         conf->pcmout_rate = 22050;
+#ifdef _DREAMCAST
+	/* On Dreamcast, default to mono for performance reasons. */
+	conf->pcmout_stereo = 0;
+#else
         conf->pcmout_stereo = 1;
+#endif
         conf->midiout_driver = midiout_find_driver(NULL);
+#ifdef _DREAMCAST
+	/* On Dreamcast, default to adlibemu, because the other midi devices
+	** have no Dreamcast drivers.
+	*/
+	conf->midi_device = midi_find_device("adlibemu");
+#else
         conf->midi_device = midi_find_device(NULL);
+#endif
 	conf->sound_server = sound_server_find_driver(NULL);
 
 	conf->x_scale = 0;

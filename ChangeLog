@@ -1,3 +1,22 @@
+2002-12-17  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/config.l, src/config.c: Defined PATH_MAX for Dreamcast.
+	(config_init): Set default Dreamcast pcm sound to mono, and default
+	Dreamcast midi device to adlibemu.
+
+	* src/main.c: Defined PATH_MAX for Dreamcast. (parse_arguments): On
+	Dreamcast, skip all command line parsing, as there is no command
+	line. (main): Added call to Dreamcast graphical game menu.
+
+	* src/dc/dc.h: Added define for EINTR constant, which is missing
+	from KOS's errno.h.
+
+	* src/include/resource.h: Added Dreamcast defines to rename some
+	standard functions to Dreamcast equivalents.
+
+	* src/sound/polled_ss.c (sci0_polled_ss) : Removed the fprintf() call
+	which was a result of an accidental commit.
+
 2002-12-16  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/dc.c, src/dc/dc.h, src/dc/bsearch.c, src/dc/snprintf.c:

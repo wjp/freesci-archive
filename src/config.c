@@ -9,10 +9,7 @@
 #define YY_FLEX_MINOR_VERSION 5
 
 #include <stdio.h>
-#ifndef _WIN32
-#include <unistd.h>
-#endif
-
+#include <errno.h>
 
 /* cfront 1.2 defines "c_plusplus" instead of "__cplusplus" */
 #ifdef c_plusplus
@@ -27,6 +24,12 @@
 #include <stdlib.h>
 #ifndef _WIN32
 #include <unistd.h>
+#else
+#ifndef YY_ALWAYS_INTERACTIVE
+#ifndef YY_NEVER_INTERACTIVE
+extern int isatty YY_PROTO(( int ));
+#endif
+#endif
 #endif
 
 /* Use prototypes in function declarations. */
@@ -625,6 +628,11 @@ char *yytext;
 
 #endif
 
+#ifdef _DREAMCAST
+#  include <dc.h>
+#  define PATH_MAX 255
+#endif
+
 config_entry_t *conf;
 int cur_section=0; /* Size-1 and current section in conf */
 char *exported_conf_path; /* Path which the config file was found in */
@@ -839,7 +847,7 @@ parse_option(char *option, int optlen, char *value);
 char *
 crop_value(char *yytext);
 
-#line 838 "lex.yy.c"
+#line 851 "config.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -939,9 +947,20 @@ YY_MALLOC_DECL
 			YY_FATAL_ERROR( "input in flex scanner failed" ); \
 		result = n; \
 		} \
-	else if ( ((result = fread( buf, 1, max_size, yyin )) == 0) \
-		  && ferror( yyin ) ) \
-		YY_FATAL_ERROR( "input in flex scanner failed" );
+	else \
+		{ \
+		errno=0; \
+		while ( (result = fread(buf, 1, max_size, yyin))==0 && ferror(yyin)) \
+			{ \
+			if( errno != EINTR) \
+				{ \
+				YY_FATAL_ERROR( "input in flex scanner failed" ); \
+				break; \
+				} \
+			errno=0; \
+			clearerr(yyin); \
+			} \
+		}
 #endif
 
 /* No semi-colon after return; correct usage is to write "yyterminate();" -
@@ -987,13 +1006,13 @@ YY_MALLOC_DECL
 YY_DECL
 	{
 	register yy_state_type yy_current_state;
-	register char *yy_cp = NULL, *yy_bp = NULL;
+	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 270 "config.l"
+#line 275 "config.l"
 
 
-#line 992 "lex.yy.c"
+#line 1016 "config.c"
 
 	if ( yy_init )
 		{
@@ -1078,7 +1097,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 272 "config.l"
+#line 277 "config.l"
 {
 	char *cleanup;
 	++yytext; /* Get over opening bracket */
@@ -1125,7 +1144,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 317 "config.l"
+#line 322 "config.l"
 {
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1138,7 +1157,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 327 "config.l"
+#line 332 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1151,7 +1170,7 @@ if (cur_section) {
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 337 "config.l"
+#line 342 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1163,7 +1182,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 347 "config.l"
+#line 352 "config.l"
 {
 /* driver parameters */
         char *subsys_name = yytext;
@@ -1195,7 +1214,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 377 "config.l"
+#line 382 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
@@ -1220,16 +1239,16 @@ case 7:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 398 "config.l"
+#line 403 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 400 "config.l"
+#line 405 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 402 "config.l"
+#line 407 "config.l"
 {
         yy_delete_buffer( YY_CURRENT_BUFFER );
         yyterminate();
@@ -1237,15 +1256,15 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 407 "config.l"
+#line 412 "config.l"
 printf("Unrecognized option: '%s'\n", yytext);
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 409 "config.l"
+#line 414 "config.l"
 ECHO;
 	YY_BREAK
-#line 1244 "lex.yy.c"
+#line 1268 "config.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2133,7 +2152,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 409 "config.l"
+#line 414 "config.l"
 
 
 int
@@ -2199,9 +2218,21 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_driver_name = NULL;
         conf->pcmout_driver = pcmout_find_driver(NULL);
         conf->pcmout_rate = 22050;
+#ifdef _DREAMCAST
+	/* On Dreamcast, default to mono for performance reasons. */
+	conf->pcmout_stereo = 0;
+#else
         conf->pcmout_stereo = 1;
+#endif
         conf->midiout_driver = midiout_find_driver(NULL);
+#ifdef _DREAMCAST
+	/* On Dreamcast, default to adlibemu, because the other midi devices
+	** have no Dreamcast drivers.
+	*/
+	conf->midi_device = midi_find_device("adlibemu");
+#else
         conf->midi_device = midi_find_device(NULL);
+#endif
 	conf->sound_server = sound_server_find_driver(NULL);
 
 	conf->x_scale = 0;
