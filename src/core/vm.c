@@ -172,9 +172,6 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
 
     selector = GET_HEAP(argp);
 
-    //if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-    //  selector*=2;
-
     argp += 2;
     argc = GET_HEAP(argp);
 
@@ -1061,7 +1058,9 @@ script_instantiate(state_t *s, int script_nr)
   s->scripttable[script_nr].localvar_offset = 0;
 
   if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
-    s->scripttable[script_nr].localvar_offset=heap_allocate(s->_heap,getUInt16(s->heap+script_basepos)*2);
+    int locals_size = getUInt16(script->data)*2;
+    s->scripttable[script_nr].localvar_offset=heap_allocate(s->_heap,locals_size);
+    sciprintf( "Old SCI version; assuming locals size %d\n", locals_size); 
     /* There won't be a localvar block in this case */
     memcpy(s->heap + script_basepos + 2, script->data + 2, script->length -2);
     pos = script_basepos + 2;

@@ -36,6 +36,7 @@ typedef struct {
 
   sci_version_t version; /* The version to emulate */
   int color_mode; /* The mode to use for pic drawing */
+  int unknown_count; /* The number of "unknown" kernel functions */ 
   gfx_driver_t *gfx_driver; /* The graphics driver to use */
   char *console_log; /* The file to which console output should be echoed */
   char debug_mode [80]; /* Characters specifying areas for which debug output should be enabled */

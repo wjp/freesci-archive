@@ -1,7 +1,7 @@
 /***************************************************************************
  scriptdebug.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
 
-
+	
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -223,6 +223,12 @@ c_scriptinfo(state_t *s)
   return 0;
 }
 
+char *selector_name(state_t *s, int selector)
+{
+  if (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER) selector>>=1;
+  return s->selector_names[selector];
+}
+
 heap_ptr
 disassemble(state_t *s, heap_ptr pos)
 /* Disassembles one command from the heap, returns address of next command or 0 if a ret was
@@ -336,7 +342,7 @@ disassemble(state_t *s, heap_ptr pos)
 	  name = "<invalid>";
 
 	sciprintf("  %s::%s[", name, (selector > s->selector_names_nr)
-		  ? "<invalid>" : s->selector_names[selector]);
+		  ? "<invalid>" : selector_name(s,selector));
 
 	switch (lookup_selector(s, called_obj_addr, selector, &selector_addr)) {
 	case SELECTOR_METHOD:
@@ -417,7 +423,7 @@ c_backtrace(state_t *s)
     if (call->selector >= -1) {/* Normal function */
       namepos = getInt16(s->heap + *(call->sendpp) + SCRIPT_NAME_OFFSET);
       sciprintf(" %x:  %s::%s(", i, s->heap + namepos, (call->selector == -1)? "<call[be]?>":
-		s->selector_names[call->selector]);
+		selector_name(s,call->selector));
     }
     else /* Kernel function */
       sciprintf(" %x:  k%s(", i, s->kernel_names[-(call->selector)-42]);
@@ -837,7 +843,7 @@ objinfo(state_t *s, heap_ptr pos)
       for (i = 0; i < selectors; i++) {
 	word selectorID = selectorIDoffset? getInt16(selectorIDoffset + i*2) : i;
 
-	sciprintf("  %s[%04x] = %04x\n", selectorIDoffset? s->selector_names[selectorID] : "<?>",
+	sciprintf("  %s[%04x] = %04x\n", selectorIDoffset? selector_name(s, selectorID) : "<?>",
 		  selectorID, 0xffff & getInt16(selectoroffset + i*2));
       }
     } /* if variable selectors are present */
@@ -849,7 +855,7 @@ objinfo(state_t *s, heap_ptr pos)
       for (i = 0; i < functions; i++) {
 	word selectorID = getInt16(functIDoffset + i*2);
 
-	sciprintf("  %s[%04x] at %04x\n", s->selector_names[selectorID], selectorID,
+	sciprintf("  %s[%04x] at %04x\n", s->selector_names[selectorID/2], selectorID,
 		  0xffff & getInt16(functoffset + i*2));
       }
     } /* if function selectors are present */
