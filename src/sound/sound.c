@@ -34,21 +34,6 @@
 #include <midi_device.h>
 #include <sys/types.h>
 
-#ifdef HAVE_SOCKETPAIR
-#include <sys/socket.h>
-
-#ifndef AF_LOCAL
-# ifdef AF_UNIX
-#  define AF_LOCAL AF_UNIX
-# else
-#  warn Neither AF_LOCAL nor AF_UNIX are defined!
-#  undef HAVE_SOCKETPAIR
-# endif
-#endif
-
-#endif /* HAVE_SOCKETPAIR */
-
-#include <signal.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #else /* !HAVE_UNISTD_H */
@@ -69,16 +54,8 @@ extern sfx_driver_t sound_sdl;
 extern sfx_driver_t sound_dos;
 #endif
 
-sfx_driver_t *soundserver;
-
-sound_event_t sound_eq_eoq_event = {0, SOUND_SIGNAL_END_OF_QUEUE, 0};
-sound_eq_t queue; /* The event queue */
-sound_eq_t inqueue; /* The in-event queue */
-
-int soundserver_dead = 0;
-
 sfx_driver_t *sfx_drivers[] = {
-#ifdef HAVE_SDL2
+#ifdef HAVE_SDL
   &sound_sdl,
 #endif
 #ifdef HAVE_FORK
@@ -91,76 +68,6 @@ sfx_driver_t *sfx_drivers[] = {
 #endif
   NULL
 };
-
-#ifdef HAVE_FORK
-
-void
-_sound_server_oops_handler(int signal)
-{
-	if (signal == SIGCHLD) {
-		fprintf(stderr, "Warning: Sound server died\n");
-		soundserver_dead = 1;
-	} else if (signal == SIGPIPE) {
-		fprintf(stderr, "Warning: Connection to sound server was severed\n");
-		soundserver_dead = 1;
-	} else
-		fprintf(stderr,"Warning: Signal handler cant' handle signal %d\n", signal);
-}
-
-
-int
-_make_pipe(int fildes[2])
-     /* Opens an IPC channel */
-{
-#ifdef HAVE_PIPE
-  if (pipe(fildes) == 0)
-    return 0; /* :-) */
-#endif
-#ifdef HAVE_SOCKETPAIR
-  if (socketpair(AF_LOCAL, SOCK_STREAM, 0, fildes) == 0)
-    return 0; /* :-) */
-#endif
-  return 1; /* :-( */
-}
-
-int
-sound_init_pipes(state_t *s)
-{
-  if (_make_pipe(s->sound_pipe_in)
-      || _make_pipe(s->sound_pipe_out)
-      || _make_pipe(s->sound_pipe_events)
-      || _make_pipe(s->sound_pipe_debug))
-    {
-      fprintf(stderr, "Could not create IPC connection to server\n");
-      return 1;
-    }
-
-  signal(SIGCHLD, &_sound_server_oops_handler);
-  signal(SIGPIPE, &_sound_server_oops_handler);
-
-  return 0;
-}
-
-void
-_sound_confirm_death(int signal)
-{
-  printf("Sound server shut down\n");
-}
-
-void
-sound_exit(state_t *s)
-{
-  signal(SIGPIPE, SIG_IGN); /* Ignore SIGPIPEs */
-  signal(SIGCHLD, &_sound_confirm_death);
-
-  sound_command(s, SOUND_COMMAND_SHUTDOWN, 0, 0); /* Kill server */
-
-  close(s->sound_pipe_in[1]);
-  close(s->sound_pipe_out[0]);
-  close(s->sound_pipe_events[0]);
-  close(s->sound_pipe_debug[0]); /* Close all pipe file descriptors */
-}
-
 
 void
 sound_suspend(state_t *s)
@@ -175,32 +82,27 @@ sound_resume(state_t *s)
 }
 
 static int
-_sound_expect_answer(state_t *s, char *timeoutmessage, int def_value)
+_sound_expect_answer(char *timeoutmessage, int def_value)
 {
-	GTimeVal timeout = {0, SOUND_SERVER_TIMEOUT};
+  int *success;
+  int retval;
+  int size;
 
-	int success;
-	fd_set fds;
-	FD_ZERO(&fds);
-	FD_SET(s->sound_pipe_out[0], &fds);
-	success = select(s->sound_pipe_out[0]+1, &fds, NULL, NULL, (struct timeval *)&timeout);
+  sound_get_data(&success,&size,sizeof(int));
+  
+  retval = *success;
+  free(success);
+  return retval;
 
-	if (!success) {
-		sciprintf(timeoutmessage);
-		return def_value;
-	}
-	else read(s->sound_pipe_out[0], &success, sizeof(int));
-
-	return success;
 }
 
 static int
 _sound_transmit_text_expect_anwer(state_t *s, char *text, int command, char *timeoutmessage)
 {
 	sound_command(s, command, 0, strlen(text) + 1);
-	write(s->sound_pipe_in[1], text, strlen(text) + 1);
+	sound_send_data(text, strlen(text) +1);
 
-	return _sound_expect_answer(s, timeoutmessage, 1);
+	return _sound_expect_answer(timeoutmessage, 1);
 }
 
 int
@@ -228,10 +130,8 @@ sound_command(state_t *s, int command, int handle, int parameter)
 
 	switch (command) {
 	case SOUND_COMMAND_INIT_SONG: {
-		byte *xfer_buf;
 		resource_t *song = findResource(sci_sound, parameter);
 		int len;
-		int finished = 0;
 
 		if (!song) {
 			sciprintf("Attempt to play invalid sound.%03d\n", parameter);
@@ -239,59 +139,8 @@ sound_command(state_t *s, int command, int handle, int parameter)
 		}
 
 		len = song->length;
-		sound_queue_command(s, event.handle, event.signal, event.value);
-
-		write(s->sound_pipe_in[1], &len, sizeof(int)); /* Write song length */
-
-		xfer_buf = song->data;
-		while (len || !finished) {
-			int status = _sound_expect_answer(s, "Sound/InitSong: Timeout while"
-							  " waiting for sound server during transfer\n",
-							  SOUND_SERVER_XFER_TIMEOUT);
-			int xfer_bytes = MIN(len, SOUND_SERVER_XFER_SIZE);
-
-			switch(status) {
-			case SOUND_SERVER_XFER_ABORT:
-				sciprintf("Sound/InitSong: Sound server aborted transfer\n");
-				len = xfer_bytes = 0;
-				break;
-
-			case SOUND_SERVER_XFER_OK:
-				finished = 1;
-				if (len) {
-					sciprintf("Sound/InitSong: Sound server reported OK with"
-						  " %d/%d bytes missing!\n", len, song->length);
-					len = xfer_bytes = 0;
-				}
-				break;
-
-			case SOUND_SERVER_XFER_WAITING:
-				if (!len) {
-					if (errcount++)
-						sciprintf("Sound/InitSong: Sound server waiting, but nothing"
-							  " left to be sent!\n");
-
-					if (errcount > 200)
-						return 1;
-				}
-				break;
-
-			case SOUND_SERVER_XFER_TIMEOUT:
-				len = xfer_bytes = 0;
-				finished = 1;
-				break;
-
-			default:
-				sciprintf("Sound/InitSong: Sound server in invalid state!\n");
-				break;
-			}
-
-			if (xfer_bytes) {
-				write(s->sound_pipe_in[1], xfer_buf, xfer_bytes); /* Transfer song */
-				xfer_buf += xfer_bytes;
-				len -= xfer_bytes;
-			}
-		}
+		sound_queue_command(event.handle, event.signal, event.value);
+		sound_send_data(song->data, len);
 		return 0;
 	}
 
@@ -311,7 +160,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 	case SOUND_COMMAND_STOP_ALL:
 	case SOUND_COMMAND_GET_NEXT_EVENT:
 	case SOUND_COMMAND_FADE_HANDLE:
-	  sound_queue_command(s, event.handle, event.signal, event.value);
+	  sound_queue_command(event.handle, event.signal, event.value);
 		return 0;
 
 		/* set the sound volume. */
@@ -320,7 +169,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 			s->sound_mute = parameter;
 		} else {
 			s->sound_volume = parameter;
-			sound_queue_command(s, event.handle, event.signal, event.value);
+			sound_queue_command(event.handle, event.signal, event.value);
 		}
 		/* deliberate fallthrough */
 	case SOUND_COMMAND_GET_VOLUME:
@@ -342,7 +191,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
 		/* let's send a volume change across the wire */
 		event.signal = SOUND_COMMAND_SET_VOLUME;
 		event.value = s->sound_volume;
-		sound_queue_command(s, event.handle, event.signal, event.value);
+		sound_queue_command(event.handle, event.signal, event.value);
 		/* deliberate fallthrough */
 		/* return the mute status */
 	case SOUND_COMMAND_GET_MUTE:
@@ -352,27 +201,14 @@ sound_command(state_t *s, int command, int handle, int parameter)
 			return 1;
 
 	case SOUND_COMMAND_TEST: {
-		fd_set fds;
-		GTimeVal timeout = {0, SOUND_SERVER_TIMEOUT};
-		int dummy, success;
-
-		sound_queue_command(s, event.handle, event.signal, event.value);
-
-		FD_ZERO(&fds);
-		FD_SET(s->sound_pipe_out[0], &fds);
-		success = select(s->sound_pipe_out[0]+1, &fds, NULL, NULL, (struct timeval *)&timeout);
-
-		if (success) {
-
-			read(s->sound_pipe_out[0], &dummy, sizeof(int)); /* Empty pipe */
-			return dummy; /* should be the polyphony */
-
-		} else {
-
-			fprintf(stderr,"Sound server timed out\n");
-			return 0;
-
-		}
+	  int *retval = NULL;
+	  int len = 0;
+	  
+	  sound_queue_command(event.handle, event.signal, event.value);
+	  sound_get_data(&retval,&len,sizeof(int));
+	  len = *retval ;
+	  free(retval);
+	  return len; /* should be the polyphony */
 	}    
 
 	default: sciprintf("Unknown sound command %d\n", command);
@@ -380,8 +216,6 @@ sound_command(state_t *s, int command, int handle, int parameter)
 	}
 
 }
-
-#endif /* HAVE_FORK */
 
 
 GTimeVal
@@ -610,6 +444,15 @@ sound_eq_queue_event(sound_eq_t *queue, int handle, int signal, int value)
 }
 
 sound_event_t *
+sound_eq_peek_event(sound_eq_t *queue)
+{
+  if (queue->last)
+    return queue->last->event;
+
+  return NULL;
+}
+
+sound_event_t *
 sound_eq_retreive_event(sound_eq_t *queue)
 {
   if (queue->last) {
@@ -763,27 +606,9 @@ int init_midi_device (state_t *s) {
   return 0;
 }
 
-void 
-sound_queue_event(int handle, int signal, int value) {
-  soundserver->queue_event(handle, signal, value);
-}
-
-void 
-sound_queue_command(state_t *s, int handle, int signal, int value) {
-  soundserver->queue_command(s, handle, signal, value);
-}
 
 
-sound_event_t *
-sound_get_command(struct timeval *wait_tvp) {
-  return soundserver->get_command(wait_tvp);
-}
 
-void sound_send_data(byte *data_ptr, int maxsend) {
-  return soundserver->send_data(data_ptr, maxsend);
-}
 
-void sound_get_data(byte **data_ptr, int *size, int maxlen){
-  return soundserver->get_data(data_ptr, size, maxlen);
-}
+
 

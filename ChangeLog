@@ -1,3 +1,17 @@
+2001-04-21  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/include/soundserver.h, src/sound/Makefile.am,
+	* src/sound/sound.c, src/sound/soundserver.c,
+	* src/sound/soundserver_null.c, src/sound/soundserver_sdl.c
+	* src/include/engine.h, src/engine/savegame.cfsml,
+	* src/engine/savegame.c
+
+ 	The soundserver code is finally abstracted out.  What a hatchet
+        job.  Not sure if teh _null server still works, but I'm sure
+        there are bugs all over the place anyway.   Savegames are untested,
+	and there are probably memory leaks and several unhandled cases all
+	over the place.  But it's conceptually complete!
+
 2001-04-21  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/drivers/xlib_driver.c (xlib_init_specific): Fixed xlib alpha
@@ -19,6 +33,13 @@
 
 	* src/gfx/antialias.c:
 	* src/gfx/resmgc.c: Added anti-aliasing option for pic0
+
+2001-04-20  Solomon Peachyh <pizza@shaftnet.org>
+
+	* src/sound/sound.c:  abstracted out debug output
+	* src/sound/soundserver_null.c:  cleaned up the event transfer
+                                         mechanism.
+ 	* src/sound/soundserver_sdl.c:  minor changes.
 
 2001-04-18  Solomon Peachy <pizza@shaftnet.org>
 

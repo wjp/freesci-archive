@@ -1146,11 +1146,12 @@ gamestate_restore(state_t *s, char *dirname)
 
 	/* Sound state: */
 	retval->sfx_driver = s->sfx_driver;
+/*
 	memcpy(&(retval->sound_pipe_in[0]), &(s->sound_pipe_in[0]), sizeof(int[2]));
 	memcpy(&(retval->sound_pipe_out[0]), &(s->sound_pipe_out[0]), sizeof(int[2]));
 	memcpy(&(retval->sound_pipe_events[0]), &(s->sound_pipe_events[0]), sizeof(int[2]));
 	memcpy(&(retval->sound_pipe_debug[0]), &(s->sound_pipe_debug[0]), sizeof(int[2]));
-
+*/
 	/* Time state: */
 	sci_get_current_time(&(retval->last_wait_time));
 	retval->game_start_time.tv_sec = time(NULL) - retval->game_time;

@@ -145,7 +145,6 @@ typedef struct {
 extern sound_event_t sound_eq_eoq_event; /* An "end of queue" event */
 
 extern sound_eq_t queue; /* The event queue */
-extern sound_eq_t inqueue; /* The event input queue */
 
 int
 sound_init_pipes(struct _state *s);
@@ -167,10 +166,6 @@ sound_map_instruments(struct _state *s);
 int
 sound_command(struct _state *s, int command, int handle, int parameter);
 /* Default implementation for command from the sfx_driver_t structure. */
-
-void
-sound_exit(struct _state *s);
-/* Default implementation for exit from the sfx_driver_t structure. */
 
 int
 sound_save(struct _state *s, char *dir);
@@ -335,6 +330,9 @@ sound_eq_retreive_event(sound_eq_t *queue);
 ** The return value must be free()d manually, if appropriate.
 */
 
+sound_event_t *
+sound_eq_peek_event(sound_eq_t *queue);
+
 void sci_midi_command(song_t *song, guint8 command, guint8 param,
                       guint8 param2, 
 		      int *ccc, FILE *ds);
@@ -367,9 +365,9 @@ typedef struct {
   ** Returns   : (void)
   */
 
-  sound_event_t* (*get_event)(struct _state *s);
+  sound_event_t* (*get_event)();
   /* Synchronizes the sound driver with the rest of the world.
-  ** Parameters: (state_t *) s: The state_t to operate on (it's getting boring)
+  ** Parameters: none
   ** Returns   : (sound_event_t *) Pointer to a dynamically allocated sound_event_t structure
   **                               containing the next event, or NULL if none is available
   ** This function should be called at least 60 times per second. It will return finish, loop,
@@ -379,16 +377,16 @@ typedef struct {
 void (*queue_event)(int handle, int signal, int value);
 /* XXX write me */
 
-sound_event_t* (*get_command)(struct timeval *wait_tvp);
+sound_event_t* (*get_command)(GTimeVal *wait_tvp);
 /* XXX write me */
 
-void (*queue_command)(struct _state *s, int handle, int signal, int value);
+void (*queue_command)(int handle, int signal, int value);
 /* XXX write me */
 
-void (*get_data)(byte **data_ptr, int *size, int maxlen);
+void (*get_data)(void **data_ptr, int *size, int maxlen);
 /* XXX write me */
 
-void (*send_data)(byte *data_ptr, int maxsend);
+void (*send_data)(void *data_ptr, int maxsend);
 /* XXX write me */
 
   int (*save)(struct _state *s, char *name);
@@ -407,8 +405,7 @@ void (*send_data)(byte *data_ptr, int maxsend);
 
   int (*command)(struct _state *s, int command, int handle, int parameter);
   /* Executes a sound command (one of SOUND_COMMAND_xxx).
-  ** Parameters: (state_t *) s: The current state
-  **             (int) command: The command to execute
+  ** Parameters: (int) command: The command to execute
   **             (int) handle: The handle to execute it on, if available
   **             (int) parameter: The function parameter
   */
@@ -437,13 +434,15 @@ void
 sound_queue_event(int handle, int signal, int value);
 
 void 
-sound_queue_command(struct _state *s, int handle, int signal, int value);
+sound_queue_command(int handle, int signal, int value);
 
-void sound_send_data(byte *data_ptr, int maxsend);
-void sound_get_data(byte **data_ptr, int *size, int maxlen);
+void sound_send_data(void *data_ptr, int maxsend);
+void sound_get_data(void **data_ptr, int *size, int maxlen);
 
 sound_event_t * 
-sound_get_command(struct timeval *wait_tvp);
+sound_get_command(GTimeVal *wait_tvp);
+
+void sci0_soundserver();
 
 FILE *ds;
 
