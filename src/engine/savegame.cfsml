@@ -215,6 +215,7 @@ RECORD gfxw_dyn_view_t EXTENDS gfxw_view_t {
 	int under_bits;
 	int signal;
 	int z;
+	int sequence;
 	int force_precedence;
 }
 
