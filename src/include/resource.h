@@ -324,6 +324,26 @@ sci_finish_find(sci_dir_t *dirent);
 ** the second operation is guaranteed to be a no-op.
 */
 
+FILE *
+sci_fopen(char *fname, char *mode);
+/* Opens a FILE* case-insensitively
+** Parameters: (char *) fname: Name of the file to open
+**             (char *) mode: Mode to open it with
+** Returns   : (FILE *) A valid file handle, or NULL on failure
+** Always refers to the cwd, cannot address subdirectories
+*/
+
+int
+sci_open(char *fname, int flags);
+/* Opens a file descriptor case-insensitively
+** Parameters: (char *) fname: Name of the file to open
+**             (int) flags: open(2) flags for the file
+** Returns   : (int) a file descriptor of the open file,
+**             or 0 on failure
+** Always refers to the cwd, cannot address subdirectories
+*/
+
+
 int
 sciprintf(char *fmt, ...);
 #define gfxprintf sciprintf

@@ -50,69 +50,6 @@ static struct _savegame_index_struct {
 /* This assumes modern stream implementations. It may break on DOS. */
 
 
-/* Attempts to find a matching case-insensitive file. Not particularly
-** fast, but it should be fairly portable.
-*/
-static FILE *
-fcaseopen(char *fname, char *mode)
-{
-	char *name		= NULL;
-	sci_dir_t dir;
-	FILE *retval	= NULL;
-
-	sci_init_dir(&dir);
-	name = sci_find_first(&dir, "*");
-
-	if (strchr(mode, 'w'))
-		return fopen(fname, mode);
-
-	if ((strchr(fname, '/')) || (strchr(fname, '\\')))
-	{
-		fprintf(stderr, "fcaseopen() does not support subdirs\n");
-		BREAKPOINT();
-	}
-
-	while (name && !retval)
-	{
-		if (!strcasecmp(fname, name))
-			retval = fopen(name, mode);
-		if (!retval)
-			name = sci_find_next(&dir);
-	}
-
-	sci_finish_find(&dir);
-	return retval;
-}
-
-static int
-caseopen(char *fname, int mode)
-{
-	char *name		= NULL;
-	sci_dir_t dir;
-	int retval		= 0;
-
-	if ((strchr(fname, '/')) || (strchr(fname, '\\')))
-	{
-		fprintf(stderr, "caseopen() does not support subdirs\n");
-		BREAKPOINT();
-	}
-
-	sci_init_dir(&dir);
-
-	name = sci_find_first(&dir, "*");
-
-	while (name && !retval) {
-		if (!strcasecmp(fname, name))
-			retval = open(name, mode);
-		if (!retval)
-			name = sci_find_next(&dir);
-	}
-
-	sci_finish_find(&dir);
-	return retval;
-}
-
-
 /* Attempts to mirror a file by copying it from the resource firectory
 ** to the working directory. Returns NULL if the file didn't exist.
 ** Otherwise, the new file is then opened for reading or writing.
@@ -125,7 +62,7 @@ f_open_mirrored(state_t *s, char *fname)
 	struct stat fstate;
 
 	chdir(s->resource_dir);
-	fd = caseopen(fname, O_RDONLY | O_BINARY);
+	fd = sci_open(fname, O_RDONLY | O_BINARY);
 	if (!fd) {
 		chdir(s->work_dir);
 		return NULL;
@@ -159,7 +96,7 @@ f_open_mirrored(state_t *s, char *fname)
 
 	close(fd);
 
-	return fcaseopen(fname, "r+");
+	return sci_fopen(fname, "r+");
 }
 
 
@@ -176,7 +113,7 @@ file_open(state_t *s, char *filename, int mode)
 
 	SCIkdebug(SCIkFILE, "Opening file %s with mode %d\n", filename, mode);
 	if ((mode == _K_FILE_MODE_OPEN_OR_FAIL) || (mode == _K_FILE_MODE_OPEN_OR_CREATE)) {
-		file = fcaseopen(filename, "r+"); /* Attempt to open existing file */
+		file = sci_fopen(filename, "r+"); /* Attempt to open existing file */
 		SCIkdebug(SCIkFILE, "Opening file %s with mode %d\n", filename, mode);
 		if (!file) {
 			SCIkdebug(SCIkFILE, "Failed. Attempting to copy from resource dir...\n");
@@ -189,7 +126,7 @@ file_open(state_t *s, char *filename, int mode)
 	}
 
 	if ((!file) && ((mode == _K_FILE_MODE_OPEN_OR_CREATE) || (mode == _K_FILE_MODE_CREATE))) {
-			file = fcaseopen(filename, "w+"); /* Attempt to create file */
+			file = sci_fopen(filename, "w+"); /* Attempt to create file */
 			SCIkdebug(SCIkFILE, "Creating file %s with mode %d\n", filename, mode);
 	}
 	if (!file) { /* Failed */
@@ -616,7 +553,7 @@ _k_find_savegame_by_name(char *game_id_file, char *name)
 	for (i = 0; i < MAX_SAVEGAME_NR; i++) {
 		if (!chdir((buf = _k_get_savedir_name(i)))) {
 			char namebuf[32]; /* Save game name buffer */
-			FILE *idfile = fcaseopen(game_id_file, "r");
+			FILE *idfile = sci_fopen(game_id_file, "r");
 
 			if (idfile) {
 				fgets(namebuf, 31, idfile);
@@ -745,7 +682,7 @@ update_savegame_indices(char *gfname)
 
 		if (!chdir(dirname)) {
 
-			if ((fd = caseopen(gfname, O_RDONLY)) > 0) {
+			if ((fd = sci_open(gfname, O_RDONLY)) > 0) {
 				_savegame_indices[_savegame_indices_nr].id = i;
 				_savegame_indices[_savegame_indices_nr++].timestamp = get_file_mtime(fd);
 				close(fd);
@@ -792,7 +729,7 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		if (!chdir(savedir_name)) {
 
 
-			if ((idfile = fcaseopen(gfname, "r"))) { /* Valid game ID file: Assume valid game */
+			if ((idfile = sci_fopen(gfname, "r"))) { /* Valid game ID file: Assume valid game */
 				char namebuf[SCI_MAX_SAVENAME_LENGTH]; /* Save game name buffer */
 				fgets(namebuf, SCI_MAX_SAVENAME_LENGTH-1, idfile);
 				if (strlen(namebuf) > 0) {
@@ -868,7 +805,7 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		chdir(savegame_dir);
 
-		if ((idfile = fcaseopen(game_id_file_name, "w"))) {
+		if ((idfile = sci_fopen(game_id_file_name, "w"))) {
 
 			fprintf(idfile, game_description);
 			fclose(idfile);

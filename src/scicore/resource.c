@@ -227,13 +227,14 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 			}
 		}
 
+		/* First try lower-case name */
 		sprintf(filename, "resource.%03i", resourceFileCounter);
 		resourceFile = open(filename, O_RDONLY|O_BINARY);
 
 		if (resourceFile <= 0) {
 			sprintf(filename, "RESOURCE.%03i", resourceFileCounter);
-			resourceFile = open(filename, O_RDONLY|O_BINARY);
-		}    /* Try alternative valid file name */
+			resourceFile = sci_open(filename, O_RDONLY|O_BINARY);
+		}    /* Try case-insensitively name */
 
 		resourceFileCounter++;
 #ifdef _SCI_RESOURCE_DEBUG

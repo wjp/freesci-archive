@@ -1,3 +1,11 @@
+2001-07-29  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/resource.c (resourceLoader): Resource files
+	are now read case-insensitively
+
+	* src/include/resource.h: Made sci_open() and sci_fopen()
+	global toolkit functionality
+
 2001-07-28  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (_k_view_list_dispose_loop): Test objectity of

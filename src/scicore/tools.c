@@ -501,6 +501,83 @@ sci_sched_yield()
 #endif /* !HAVE_SCHED_YIELD */
 
 
+static char *
+_fcaseseek(char *fname, sci_dir_t *dir)
+     /* Expects *dir to be uninitialized and the caller to
+     ** free it afterwards  */
+{
+	char *buf, *iterator;
+	char _buf[14];
+	char *retval = NULL, *name;
+
+	if ((strchr(fname, '/')) || (strchr(fname, '\\'))) {
+		fprintf(stderr, "fcaseopen() does not support subdirs\n");
+		BREAKPOINT();
+	}
+
+	if (strlen(fname) > 12) /* not a DOS file? */
+		buf = malloc(strlen(fname) + 1);
+	else
+		buf = _buf;
+
+	sci_init_dir(dir);
+
+	/* Replace all letters with '?' chars */
+	strcpy(buf, fname);
+	iterator = buf;
+	while (*iterator) {
+		if (isalpha(*iterator))
+			*iterator = '?';
+		iterator++;
+	}
+
+	name = sci_find_first(dir, buf);
+
+	while (name && !retval) {
+		if (!strcasecmp(fname, name))
+			retval = name;
+		else
+			name = sci_find_next(dir);
+	}
+
+	if (strlen(fname) > 12)
+		free(buf);
+
+	return retval;
+}
+
+
+FILE *
+sci_fopen(char *fname, char *mode)
+{
+	sci_dir_t dir;
+	char *name = _fcaseseek(fname, &dir);
+	FILE *file = NULL;
+
+	if (name)
+		file = fopen(name, mode);
+
+	sci_finish_find(&dir); /* Free memory */
+
+	return file;
+}
+
+int
+sci_open(char *fname, int flags)
+{
+	sci_dir_t dir;
+	char *name = _fcaseseek(fname, &dir);
+	int file = 0;
+
+	if (name)
+		file = open(name, flags);
+
+	sci_finish_find(&dir); /* Free memory */
+
+	return file;
+}
+
+
 /*-- Safe memory allocation --*/
 
 #ifdef SCI_SAFE_ALLOC
