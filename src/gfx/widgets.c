@@ -1057,6 +1057,8 @@ __gfxwop_container_print_contents(char *name, gfxw_widget_t *widget, int indenta
 		sciprintf("\n");
 		seeker = seeker->next;
 	}
+
+	return 0;
 }
 
 static int
@@ -1085,6 +1087,8 @@ __gfxwop_container_print(gfxw_widget_t *widget, int indentation)
 	}
 
 	__gfxwop_container_print_contents("contents", container->contents, indentation);
+
+	return 0;
 }
 
 
@@ -1204,7 +1208,7 @@ _gfxwop_container_tag(gfxw_widget_t *widget)
 		seeker->tag(seeker);
 		seeker = seeker->next;
 	}
-
+	return 0;
 }
 
 

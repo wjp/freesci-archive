@@ -122,7 +122,7 @@ typedef struct {
 	WIDGET_COMMON; \
 	point_t pos; /* Implies the value of 'bounds' in WIDGET_COMMON */ \
 	gfx_color_t color; \
-	int view, loop, cel; \
+	int view, loop, cel \
 
 #define GFXW_IS_VIEW(widget) ((widget)->type == GFXW_VIEW || (widget)->type == GFXW_STATIC_VIEW || (widget)->type == GFXW_DYN_VIEW)
 typedef struct {

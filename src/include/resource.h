@@ -299,18 +299,26 @@ sciprintf(char *fmt, ...);
 ** Implementation is in src/scicore/console.c
 */
 
-/* The following was stolen and adapted from glib.h, and is partially
+/* The following was originally based on glib.h code, which was
  * Copyright (C) 1995-1997  Peter Mattis, Spencer Kimball and Josh MacDonald
  */
-#if defined (__i386__) && defined (__GNUC__) && __GNUC__ >= 2
-#define BREAKPOINT()          {__asm__ __volatile__ ("int $03"); }
-#elif defined (__alpha__) && defined (__GNUC__) && __GNUC__ >= 2
-#define BREAKPOINT()          {__asm__ __volatile__ ("bpt"); }
+#if defined (__i386__)
+#  if defined (__GNUC__) && __GNUC__ >= 2
+#    define BREAKPOINT()          {__asm__ __volatile__ ("int $03"); }
+#  elif defined(_MSC_VER)
+#    define BREAKPOINT()          { __asm { int 03 } }
+#  endif /* !__GNUC__ && !_MSC_VER */
+#elif defined (__alpha__)
+#  if defined (__GNUC__) && __GNUC__ >= 2
+#    define BREAKPOINT()          {__asm__ __volatile__ ("bpt"); }
+#  elif defined(_MSC_VER)
+#    define BREAKPOINT()          { __asm { bpt } }
+#  endif /* !__GNUC__ && !_MSC_VER */
 #else   /* !__i386__ && !__alpha__ */
-#define BREAKPOINT() { fprintf(stderr, "Missed breakpoint in %s, line %d\n", __FILE__, __LINE__); exit(1); }
+#  define BREAKPOINT() { fprintf(stderr, "Missed breakpoint in %s, line %d\n", __FILE__, __LINE__); exit(1); }
 #endif  /* __i386__ */
 
-#define WARNING(foo) {void *i; i=42;}
+#define WARNING(foo) {char i; i = 500;}
 
 #endif
 

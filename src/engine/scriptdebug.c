@@ -1274,6 +1274,8 @@ c_gfx_print_widget(state_t *s)
 		sciprintf("Widget 0 is active\n");
 	else
 		sciprintf("No widgets are active\n");
+
+	return 0;
 }
 #endif
 

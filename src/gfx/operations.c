@@ -185,7 +185,7 @@ _gfxop_install_pixmap(gfx_driver_t *driver, gfx_pixmap_t *pxm)
 
 	if (driver->capabilities & GFX_CAPABILITY_PIXMAP_REGISTRY
 	    && !(pxm->flags & GFX_PIXMAP_FLAG_INSTALLED)) {
-		driver->register_pixmap(driver, pxm);
+		error = driver->register_pixmap(driver, pxm);
 
 		if (error) {
 			GFXERROR("driver->register_pixmap() returned error!\n");
@@ -1467,6 +1467,7 @@ gfxop_set_pointer_position(gfx_state_t *state, point_t pos)
 	state->driver->pointer_y = pos.y * state->driver->mode->yfact;
 
 	GFXOP_FULL_POINTER_REFRESH;
+	return 0;
 }
 
 sci_event_t
