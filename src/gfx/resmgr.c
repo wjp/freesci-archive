@@ -255,6 +255,8 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 	if (!tree)
 		return NULL;
 
+	hash |= (flags << 20) | ((default_palette & 0x7) << 28);
+
 	res = (gfx_resource_t *) sbtree_get(tree, nr);
 
 	if (!res || res->mode != hash) {

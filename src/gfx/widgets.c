@@ -1059,15 +1059,39 @@ _gfxwop_text_compare_to(gfxw_widget_t *widget, gfxw_widget_t *other)
 	return 1;
 }
 
+static inline int
+_calc_needmove(gfx_alignment_t align, int estsize, int realsize)
+{
+	switch (align) {
+	case ALIGN_TOP:
+		return 0;
+		break;
+
+	case ALIGN_CENTER:
+		return (estsize - realsize) / 2; /* need sign */
+		break;
+
+	case ALIGN_BOTTOM:
+		return estsize - realsize;
+		break;
+
+	default:
+		GFXERROR("Unexpected alignmend %d\n", align);
+		BREAKPOINT();
+		return -1;
+	}
+}
+
 gfxw_text_t *
 gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignment_t halign,
 	      gfx_alignment_t valign, gfx_color_t color1, gfx_color_t color2,
 	      gfx_color_t bgcolor, int text_flags)
 {
+	int canclip;
+	int canmove;
 	gfxw_text_t *widget = (gfxw_text_t *)
 		_gfxw_new_widget(sizeof(gfxw_text_t), GFXW_TEXT);
 
-	widget->bounds = area;
 
 	widget->font_nr = font;
 	widget->text = malloc(strlen(text) + 1);
@@ -1082,6 +1106,18 @@ gfxw_new_text(gfx_state_t *state, rect_t area, int font, char *text, gfx_alignme
 	strcpy(widget->text, text);
 
 	gfxop_get_text_params(state, font, text, area.xl, &(widget->width), &(widget->height));
+
+	/* FIXME: Window is too big
+	area.x += _calc_needmove(halign, area.xl, widget->width);
+	area.y += _calc_needmove(valign, area.yl, widget->height);
+	*/
+
+	if (halign == ALIGN_LEFT)
+		area.xl = widget->width;
+	if (valign == ALIGN_TOP)
+		area.yl = widget->height;
+
+	widget->bounds = area;
 
 	widget->flags |= GFXW_FLAG_VISIBLE;
 
@@ -1334,7 +1370,7 @@ _gfxwop_container_free_tagged(gfxw_container_t *container)
 		gfxw_widget_t *redshirt = *seekerp;
 
 		if (redshirt->flags & GFXW_FLAG_TAGGED) {
-			*seekerp = redshirt->next;
+			seekerp = &(redshirt->next);
 			redshirt->free(redshirt); /* He's dead, Jim. */
 		} else
 			seekerp = &((*seekerp)->next);
@@ -1405,7 +1441,7 @@ _gfxw_container_id_equals(gfxw_container_t *container, gfxw_widget_t *widget)
 
 	if ((*seekerp)->equals(*seekerp, widget)) {
 		widget->free(widget);
-		(*seekerp)->flags &= ~GFXW_FLAG_DIRTY;
+		(*seekerp)->flags &= ~GFXW_FLAG_TAGGED;
 		return 1;
 	} else {
 		(*seekerp)->free(*seekerp);
@@ -2091,8 +2127,3 @@ fprintf(stderr, "rest SNAPSHOT %08x (%d,%d) (%dx%d)\n", snapshot->serial, snapsh
 	snapshot->area.xl, snapshot->area.yl);
 	_gfxw_free_contents_appropriately(GFXWC(visual), snapshot);
 }
-
-
-
-
-

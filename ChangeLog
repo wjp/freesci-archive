@@ -1,5 +1,18 @@
 2000-12-31  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/kgraphics.c (kAnimate): Fixed usage of free_tagged()
+	for dynviews (and free_tagged() itself)
+
+	* src/gfx/widgets.c (_calc_needmove): Fixed snapshot problems with
+	text widgets claiming a greater size than they have
+
+	* src/gfx/operations.c (_gfxop_set_pointer): Fixed pointer issues in
+	CB1
+
+	* src/gfx/resmgr.c (gfxr_get_pic): Fixed problems with flags and
+	default palette not being accounted for when determining the
+	availability of a pre-rendered pic
+
 	* src/engine/kgraphics.c: Considerably simplified the use of widgets
 	in kgraphics.c
 

@@ -29,6 +29,7 @@
 
 #include <gfx_operations.h>
 
+#define POINTER_VISIBLE_BUT_CLIPPED 2
 
 /* Performs basic checks that apply to most functions */
 #define BASIC_CHECKS(error_retval) \
@@ -261,7 +262,13 @@ _gfxop_remove_pointer(gfx_state_t *state)
 	    && !state->mouse_pointer_in_hw
 	    && state->mouse_pointer_bg) {
 
+		if (state->mouse_pointer_visible == POINTER_VISIBLE_BUT_CLIPPED) {
+			state->mouse_pointer_visible = 0;
+			return GFX_OK;
+		}
+
 		state->mouse_pointer_visible = 0;
+
 		return
 			state->driver->draw_pixmap(state->driver, state->mouse_pointer_bg, GFX_NO_PRIORITY,
 						   gfx_rect(0, 0, state->mouse_pointer_bg->xl, state->mouse_pointer_bg->yl),
@@ -306,20 +313,22 @@ _gfxop_draw_pointer(gfx_state_t *state)
 
 		state->mouse_pointer_visible = 1;
 
+		state->old_pointer_draw_pos.x = x;
+		state->old_pointer_draw_pos.y = y;
+
 		retval = _gfxop_grab_pixmap(state, &(state->mouse_pointer_bg), x, y,
 					    ppxm->xl, ppxm->yl, GFX_NO_PRIORITY,
 					    &(state->pointer_bg_zone));
 
 		if (retval == GFX_ERROR) {
-			state->mouse_pointer_bg = NULL;
+			state->pointer_bg_zone = gfx_rect(320, 200, 0, 0);
+			state->mouse_pointer_visible = POINTER_VISIBLE_BUT_CLIPPED;
 			return GFX_OK;
 		}
 
 		if (retval)
 			return retval;
 
-		state->old_pointer_draw_pos.x = x;
-		state->old_pointer_draw_pos.y = y;
 		error = _gfxop_draw_pixmap(state->driver, ppxm, -1, -1,
 					   gfx_rect(0, 0, ppxm->xl, ppxm->yl),
 					   gfx_rect(x, y, ppxm->xl, ppxm->yl),
@@ -1414,7 +1423,11 @@ _gfxop_set_pointer(gfx_state_t *state, gfx_pixmap_t *pxm)
 	if (draw_old)
 		_gfxop_buffer_propagate_box(state, old_pointer_bounds, GFX_BUFFER_FRONT);
 
-	state->mouse_pointer_visible = (state->mouse_pointer != NULL);
+	if (state->mouse_pointer == NULL)
+		state->mouse_pointer_visible = 0;
+	else if (!state->mouse_pointer_visible)
+		state->mouse_pointer_visible = 1;
+	/* else don't touch it, as it might be VISIBLE_BUT_CLIPPED! */
 
 	return GFX_OK;
 }

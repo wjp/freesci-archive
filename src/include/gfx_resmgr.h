@@ -205,6 +205,8 @@ gfxr_interpreter_options_hash(gfx_resource_types_t type, int version, struct _gf
 ** while covering less may result in invalid cached data being used.
 ** Only positive values may be returned, as negative values are used internally by the generic
 ** resource manager code.
+** Also, only the lower 24 bits are available to the interpreter.
+** (Yes, this isn't really a "hash" in the traditional sense...)
 */
 
 int *

@@ -43,10 +43,10 @@ gfxr_interpreter_options_hash(gfx_resource_types_t type, int version, gfx_option
 		if (version >= SCI_VERSION_1)
 			return 0;
 		else
-			return (options->pic0_unscaled)? 0x10000000 :
-				(options->pic0_dither_mode << 24)
-				| (options->pic0_dither_pattern << 16)
-				| (options->pic0_brush_mode << 8)
+			return (options->pic0_unscaled)? 0x10000 :
+				(options->pic0_dither_mode << 12)
+				| (options->pic0_dither_pattern << 8)
+				| (options->pic0_brush_mode << 4)
 				| (options->pic0_line_mode);
 
 	case GFX_RESOURCE_TYPE_FONT:

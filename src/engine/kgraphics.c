@@ -143,7 +143,14 @@ graph_save_box(state_t *s, rect_t area)
 void
 graph_restore_box(state_t *s, int handle)
 {
-	gfxw_snapshot_t **ptr = (gfxw_snapshot_t **) kmem(s, handle);
+	gfxw_snapshot_t **ptr;
+
+	if (!handle) {
+		SCIkwarn(SCIkWARNING, "Attempt to restore box with zero handle\n");
+		return;
+	}
+
+	ptr = (gfxw_snapshot_t **) kmem(s, handle);
 
 	if (s->dyn_views) {
 		gfxw_container_t *parent = s->dyn_views->parent;
@@ -215,20 +222,20 @@ _ascertain_port_contents(gfxw_port_t *port)
 void
 kShow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->pic_visible_map = sci_ffs(UPARAM_OR_ALT(0, 1)) - 1;
+	s->pic_visible_map = sci_ffs(UPARAM_OR_ALT(0, 1)) - 1;
 
-  CHECK_THIS_KERNEL_FUNCTION;
-  s->pic_not_valid = 2;
+	CHECK_THIS_KERNEL_FUNCTION;
+	s->pic_not_valid = 2;
 }
 
 
 void
 kPicNotValid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  CHECK_THIS_KERNEL_FUNCTION;
-  s->acc = s->pic_not_valid;
-  if (argc)
-    s->pic_not_valid = PARAM(0);
+	CHECK_THIS_KERNEL_FUNCTION;
+	s->acc = s->pic_not_valid;
+	if (argc)
+		s->pic_not_valid = PARAM(0);
 }
 
 void
@@ -1509,8 +1516,6 @@ _k_make_view_list(state_t *s, gfxw_list_t *widget_list, heap_ptr list, int optio
 		BREAKPOINT();
 	};
 
-	widget_list->tag(GFXW(widget_list));
-
 	if (options & _K_MAKE_VIEW_LIST_CYCLE)
 		_k_invoke_view_list(s, list, funct_nr, argc, argp); /* Invoke all objects if requested */
 
@@ -1974,14 +1979,16 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (cast_list) {
 		s->dyn_view_port = s->port; /* The list is valid for view_port */
 
+		s->dyn_views->tag(GFXW(s->dyn_views));
 		_k_make_view_list(s, s->dyn_views, cast_list, (cycle? _K_MAKE_VIEW_LIST_CYCLE : 0)
 				  | _K_MAKE_VIEW_LIST_CALC_PRIORITY, funct_nr, argc, argp);
+		s->dyn_views->free_tagged(GFXWC(s->dyn_views)); /* Free obsolete dynviews */
+
 		/* Initialize pictures- Steps 3-9 in Lars' V 0.1 list */
 
 		/*		if (open_animation) {
 			sciprintf("Freeing tagged from ");
 			s->dyn_views->print(GFXW(s->dyn_views), 4);
-			s->dyn_views->free_tagged(GFXWC(s->dyn_views)); *//* Free obsolete dynviews *//*
 			sciprintf("result:--- ");
 			s->dyn_views->print(GFXW(s->dyn_views), 0);
 			sciprintf("======\n");

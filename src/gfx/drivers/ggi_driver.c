@@ -530,6 +530,7 @@ ggi_draw_pixmap(gfx_driver_t *drv, gfx_pixmap_t *pxm, int priority,
 	if (src.xl != dest.xl
 	    || src.yl != dest.yl) {
 		GFXERROR("Attempt to draw scaled view- not supported by this driver!\n");
+		BREAKPOINT();
 		return GFX_FATAL; /* Scaling not supported! */
 	}
 
