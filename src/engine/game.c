@@ -87,7 +87,7 @@ _free_vocabulary(state_t *s)
 
 	if (s->parser_words) {
 		vocab_free_words(s->parser_words, s->parser_words_nr);
-		vocab_free_suffices(s->parser_suffices, s->parser_suffices_nr);
+		vocab_free_suffices(s->resmgr, s->parser_suffices, s->parser_suffices_nr);
 		vocab_free_branches(s->parser_branches);
 		vocab_free_rule_list(s->parser_rules);
 	}
@@ -351,7 +351,7 @@ script_init_engine(state_t *s, sci_version_t version)
 			  " MAX_SAVE_DIR_SIZE %d\n",
 			  cwd, MAX_SAVE_DIR_SIZE);
 	else
-		strcpy(s->heap + s->save_dir + 2, cwd);
+		strcpy((char *)(s->heap + s->save_dir + 2), cwd);
 	sci_free(cwd);
 
 	save_ff(s->_heap); /* Save heap state */

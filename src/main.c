@@ -54,12 +54,11 @@
 #endif /* HAVE_READLINE_READLINE_H */
 
 #ifdef HAVE_GETOPT_H
-#	ifndef _MSC_VER
-#		include <getopt.h>
-#	else
-#		include <win32\getopt.h>
-#	endif
-
+#  ifndef _MSC_VER
+#    include <getopt.h>
+#  else
+#    include <win32\getopt.h>
+#  endif
 #endif /* HAVE_GETOPT_H */
 
 #ifdef HAVE_GETOPT_LONG
@@ -70,12 +69,18 @@
 
 
 #ifdef _WIN32
-#	include <direct.h>
-#	define PATH_MAX 255
-#	define WIN32_LEAN_AND_MEAN
-#	include <windows.h>
-#	define sleep Sleep
-#	define strcasecmp stricmp
+#  include <direct.h>
+#  define PATH_MAX 255
+#  define WIN32_LEAN_AND_MEAN
+#  include <windows.h>
+#  define sleep Sleep
+#  define strcasecmp stricmp
+#endif
+
+#ifdef _MSC_VER
+#  define MSVC_FUNCTYPECAST_KLUDGE (void *)
+#else
+#  define MSVC_FUNCTYPECAST_KLUDGE
 #endif
 
 #define ACTION_PLAY 0
@@ -905,17 +910,17 @@ main(int argc, char** argv)
 
 	if (cl_options.midiout_driver_name)
 		midiout_driver = old_lookup_driver((old_lookup_funct_t *)midiout_find_driver,
-						   (void *)list_midiout_drivers,
+						   MSVC_FUNCTYPECAST_KLUDGE list_midiout_drivers,
 						   "midiout driver", cl_options.midiout_driver_name);
 
 	if (cl_options.midi_device_name)
 		midi_device = old_lookup_driver((old_lookup_funct_t *)midi_find_device, 
-						(void *)list_midi_devices,
+						MSVC_FUNCTYPECAST_KLUDGE list_midi_devices,
 						"MIDI device", cl_options.midi_device_name);
 
 	if (cl_options.sound_server_name)
 		sound_server = old_lookup_driver((old_lookup_funct_t *)sound_server_find_driver,
-						 (void*)list_sound_servers,
+						 MSVC_FUNCTYPECAST_KLUDGE list_sound_servers,
 						 "sound server", cl_options.sound_server_name);
 
 	if (confs) {
@@ -942,7 +947,7 @@ main(int argc, char** argv)
 
 	gfx_driver = (gfx_driver_t *)
 		lookup_driver((lookup_funct_t *)gfx_find_driver, 
-				(void *)list_graphics_drivers,
+				MSVC_FUNCTYPECAST_KLUDGE list_graphics_drivers,
 				"graphics driver", gfx_driver_name, module_path);
 
 	if (!gfx_driver) {

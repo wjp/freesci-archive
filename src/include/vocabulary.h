@@ -260,10 +260,12 @@ vocab_get_suffices(resource_mgr_t *resmgr, int *suffices_nr);
 */
 
 void
-vocab_free_suffices(suffix_t **suffices, int suffices_nr);
+vocab_free_suffices(resource_mgr_t *resmgr, suffix_t **suffices, int suffices_nr);
 /* Frees suffices_nr suffices
-** Parameters: (suffix_t **) suffices: The suffixes to free
+** Parameters: (resource_mgr_t *) resmgr: The resource manager to free from
+**             (suffix_t **) suffices: The suffixes to free
 **             (int) suffices_nr: Number of entrie sin suffices
+** Returns   : (void)
 */
 
 parse_tree_branch_t *

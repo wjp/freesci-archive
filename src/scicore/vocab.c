@@ -247,7 +247,7 @@ vocab_get_suffices(resource_mgr_t *resmgr, int *suffices_nr)
 {
   int counter = 0;
   suffix_t **suffices;
-  resource_t *resource = scir_find_resource(resmgr, sci_vocab, VOCAB_RESOURCE_SUFFIX_VOCAB, 0);
+  resource_t *resource = scir_find_resource(resmgr, sci_vocab, VOCAB_RESOURCE_SUFFIX_VOCAB, 1);
   unsigned int seeker = 1;
 
   if (!resource) {
@@ -295,9 +295,12 @@ vocab_get_suffices(resource_mgr_t *resmgr, int *suffices_nr)
 
 
 void
-vocab_free_suffices(suffix_t **suffices, int suffices_nr)
+vocab_free_suffices(resource_mgr_t *resmgr, suffix_t **suffices, int suffices_nr)
 {
   int i;
+
+  scir_unlock_resource(resmgr, scir_find_resource(resmgr, sci_vocab, VOCAB_RESOURCE_SUFFIX_VOCAB, 0));
+
   for (i = 0; i < suffices_nr; i++)
     free(suffices[i]);
 

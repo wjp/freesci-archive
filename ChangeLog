@@ -1,3 +1,13 @@
+2001-09-24  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/vocab.c (vocab_get_suffices): Suffix vocabulary is now
+	locked in the resource manager during the entire game
+
+	* src/main.c (main): Removed a number of (void *) typecast on non-
+	MSVC++ systems
+
+	* configure.in: Added AC_CANONICAL_SYSTEM
+
 2001-09-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/said.y: Undid fix for SQ3 problem

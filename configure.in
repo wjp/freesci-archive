@@ -1,5 +1,7 @@
 AC_PREREQ(2.13)
 AC_INIT(acinclude.m4)
+
+AC_CANONICAL_SYSTEM
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(freesci, 0.3.2-devel)
 
@@ -190,6 +192,8 @@ AM_WITHOUT_MALLOC_CHECKS
 RPM_VERSION=`echo $VERSION | sed 's/\-/_/'`
 AC_SUBST(RPM_VERSION)
 
+SDL_CFLAGS="$CFLAGS $SDL_CFLAGS"
+
 AC_OUTPUT(Makefile    \
 	debian/Makefile \
 	desktop/Makefile \
@@ -210,3 +214,4 @@ AC_OUTPUT(Makefile    \
 	src/win32/Makefile \
 	src/sound/Makefile \
 	freesci.spec)
+

@@ -138,7 +138,7 @@ int getInt(unsigned char* d)
 int* vocabulary_get_classes(resource_mgr_t *resmgr, int* count)
 {
   resource_t* r;
-  unsigned int *c, i;
+  int *c, i;
 
   if((r = scir_find_resource(resmgr, sci_vocab, 996, 0)) == NULL) return 0;
 

@@ -1400,7 +1400,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 
 	int type = GET_SELECTOR(obj, type);
 	int state = GET_SELECTOR(obj, state);
-	unsigned int cursor;
+	int cursor;
 	int max;
 
 	if (text_offset == s->save_dir_copy) {

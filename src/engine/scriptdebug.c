@@ -356,7 +356,7 @@ enum {
 };
 
 int
-_parse_getinp(unsigned int *i, int *nr)
+_parse_getinp(int *i, int *nr)
 {
   char *token;
 
