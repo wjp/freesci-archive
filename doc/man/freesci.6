@@ -1,11 +1,35 @@
-.TH freesci 6 "Jul 13th, 2001" 0.3.2a FreeSCI
+.\" (C) Copyright 2001 Bas Zoetekouw and Christoph Reichenbach
+.\" (bas@debian.org and creichen@rbg.informatik.tu-darmstadt.de)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since FreeSCI is constantly changing, this manual page may be
+.\" incorrect or out-of-date.  The authors assume no responsibility for
+.\" errors or omissions, or for damages resulting from the use of the
+.\" information contained herein.  The authors may not have taken the same
+.\" level of care in the production of this manual, which is licensed free
+.\" of charge, as they might when working professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Modified Sun Dec 30 14:55:13 2001 by Bas Zoetekouw`
+.\"
+.TH freesci 6 "Dec 30th, 2001" "FreeSCI 0.3.3" FreeSCI
 
 .SH NAME
+freesci \- free interpreter for SCI bytecode
 
-\fBfreesci\fR \- FreeSCI's main executable; this loads, links and runs SCI bytecode,
-such as Sierra's famous adventures games.
 
 .SH DESCRIPTION
+.P
 FreeSCI is a portable interpreter for SCI games, such as the Space Quest
 series (starting with SQ3) or Leisure Suit Larry (2 and sequels); see
 below for a complete listing.
@@ -14,287 +38,352 @@ below for a complete listing.
 
 .SH SYNOPSIS
 .B freesci
-[ --gamedir \fIdir\fR, -d\fIdir\fR ]
-[ --run, -r ]
-[ --sci-version \fIversion\fR, -V\fIversion\fR ]
-[ --version, -v ]
-[ --debug, -D ]
-[ --help, -h ]
-[ --graphics \fIgfx\fR, -g\fIgfx\fR ]
-[ --scale-x \fIxfact\fR, -x \fIxfact\fR ]
-[ --scale-y \fIyfact\fR, -y \fIyfact\fR ]
-[ --color-depth \fIbpp\fR, -c \fIbpp\fR ]
-[ --disable-mouse, -m ]
-[ --midiout \fIsfx\fR, -O\fsfx\fR ]
-[ --mididevice \fIdevice\fR, -M\fIdevice\fR ]
-[ --sound-server \fIserver\fR, -S\fIserver\fR ]
-[ --list-savegames, -l ]
-[\fIgame\fR]
-[\fIsavegame\fR]
+[\fIoptions\fR] [\fIgame\fR [\fIsavegame\fR]]
 
 .SH OPTIONS
-.TP
-.BR "--gamedir \fIdir\fR, -\fBd\fR\fIdir\fR"
-With this option, games resources will be read from the directory
-\fIdir\fR. Default is the current directory, unless a directory has
-been specified in the config file (see below).
-.TP
-.BR "--run, -r"
-Do not start the debugger; only run the game (the default action).
-.TP
-.BR "--sci-version \fIversion\fR, -\fBV\fR\fIversion\fR"
-This option sets the SCI version for freesci to emulate. 
-Acceptable version numbers are of the form \fBx.yyy.zzz\fR, where
-\fBx\fR is the major number, \fByyy\fR is the minor number and \fBzzz\fR
-the patch level.
-Note that currectly only SCI0 (major/minor=0/000) games are supported.
-.BR
-Normally, the version will be autodetected from the game resource files.
-.TP
-.BR "--version, -v"
-Display version number and exit.
-.TP
-.BR "--debug, -D"
-Start up in debug mode.
-.TP
-.BR "--help, -h"
-Display a short help text and exit.
-.TP
-.BR "--graphics \fIgfx\fR, -\fBg\fR\fIgfx\fR"
-With this option, you can specify which graphics driver is to be used. 
-In this release, \fBggi\fR and plain \fBxlib\fR are supported.
-.TP
-.BR "--scale-x \fIxfact\fR, -\fBx\fR\fIxfact\fR"
-.BR "--scale-y \fIyfact\fR, -\fBy\fR\fIyfact\fR"
-These options allow to explicitly specify the horizontal and vertical
-scaling factors. The resulting size of the game window will be
-320*xfact x 200*yfact, plus any window decorations.
-.TP
-.BR "--color-depth \fIbpp\fR, -\fBc\fR\fIbpp\fR"
-This sets the number of bits to use per pixel. Some visuals/graphics
-drivers support several color depths, so that auto-detection may not
-yield the desired effects.
-.TP
-.BR "--disable-mouse, -m"
-Many SCI games handle the mouse pointer differently if no mouse is
-present in the system. This option instructs the interpreter to
-tell the games that no mouse is present whenever they ask for one;
-the actual effect depends on the individual game.
-.TP
-.BR "--midiout \fIdriver\fR, -\fBO\fR\fIdriver\fR"
-This is the output driver or interface to use. Currently, 'unixraw',
-'alsaraw', 'null', and 'ossseq' (an OSS sequencer driver)  may be
-available on your system, 'ossseq' being the default.
-.TP
-.BR "--mididevice \fIdriver\fR, -\fBM\fR\fIdriver\fR"
-SCI was designed to support a variety of physical output devices. FreeSCI
-currently only supports one of them, the Rolant MT-32 ('mt32', the default),
-but it also offers an MT-32 to General MIDI translation layer ('mt32gm').
-.TP
-.BR "--sound-server \fIserver\fR, -\fBS\fR\fIserver\fR"
-This option may be used to explicitly specify a sound server to use.
-The sound server is an asynchronous process or thread that issues sound
-output events and reports sound cues back to the interpreter; if you have
-both possibilities ('unix' and 'sdl') for your system, you may have to
-experiment to find out which works best for you. 
-.TP
-.BR "--list-savegames, -l"
-This option instructs the interpreter not to run the game, but rather to list
-all savegames stored for it, including their in-game descriptions where
-available.
-This is relevant to figure out savegame names for quickloads.
-The usual in-game savegames are labelled "save_0" through "save_j".
+
 .TP
 .BR \fIgame\fR
 An identifier describing the game to start. This identifier (GAME_ID) must be
 declared in the configuration file. If omitted, the interpreter will attempt
-to read resource files from the current working directory.
+to read resource files from the current working directory (or the
+directory specified by the \fB\-\-gamedir\fR option).
+
 .TP
 .BR \fIsavegame\fR
 If this option is specified after the game name, the interpreter will attempt
-to quickload the savegame with the specified ID. This is technically different
-from restoring a savegame from within the game (as it does not re-start the game
+to quickload the savegame with the specified ID (see the
+\fB\-\-list\-savegames\fR option). This is technically different
+from restoring a savegame from within the game (as it does not re\-start the game
 script state afterwards), but it should work just as well.
 
+.TP
+.BR "\-\-version, \-v"
+Display version number and exit.
+Also the supported graphics drivers, sound servers, midi and midiout
+drivers are reported.
+
+.TP
+.BR "\-\-help, \-h"
+Display a short help text and exit.
+
+.TP
+.BR "\-\-run, \-r"
+Do not start the debugger; only run the game. This is the default action.
+
+.TP
+.BR "\-\-debug, \-D"
+Start up in debug mode.
+
+.TP
+.BR "\-\-list\-savegames, \-l"
+This option instructs the interpreter not to run the game, but rather to list
+all savegames stored for it, including their in\-game descriptions where
+available.
+This is relevant to figure out savegame names for quickloads.
+The usual in\-game savegames are labelled \*(lqsave_0\*(rq through 
+\*(lqsave_j\*(rq.
+
+.TP
+.BR "\-\-gamedir \fIdir\fR, \-\fBd\fR\fIdir\fR"
+With this option, games resources will be read from the directory
+\fIdir\fR. Default is the current directory, unless a directory has
+been specified in the config file (see below).
+
+.TP
+.BR "\-\-sci\-version \fIversion\fR, \-\fBV\fR\fIversion\fR"
+This option sets the SCI version for freesci to emulate. 
+Acceptable version numbers are of the form \fIx.yyy.zzz\fR, where
+\fIx\fR is the major number, \fIyyy\fR is the minor number and \fIzzz\fR
+the patch level.
+.IP
+Note that currectly only SCI0 and SCI01 (major/minor=0/000) games are supported.
+.IP
+Normally, the version will be autodetected from the game resource files.
+
+.TP
+.BR "\-\-disable\-mouse, \-m"
+Many SCI games handle the mouse pointer differently if no mouse is
+present in the system. This option instructs the interpreter to
+tell the games that no mouse is present whenever they ask for one;
+the actual effect depends on the individual game.
+
+.TP
+.BR "\-\-scale\-x \fIxfact\fR, \-\fBx\fR\fIxfact\fR"
+.BR "\-\-scale\-y \fIyfact\fR, \-\fBy\fR\fIyfact\fR"
+These options allow to explicitly specify the horizontal and vertical
+scaling factors. The resulting size of the game window will be
+320*xfact x 200*yfact, plus any window decorations.
+
+.TP
+.BR "\-\-color\-depth \fIbpp\fR, \-\fBc\fR\fIbpp\fR"
+This sets the number of bits to use per pixel. Some visuals/graphics
+drivers support several color depths, so that auto\-detection may not
+yield the desired effects.
+
+.TP
+.BR "\-\-graphics \fIgfx\fR, \-\fBg\fR\fIgfx\fR"
+With this option, you can specify which graphics driver is to be used. 
+.IP
+In this release, \fBsdl\fR, \fBggi\fR and plain \fBxlib\fR are supported.
+
+.TP
+.BR "\-\-midiout \fIdriver\fR, \-\fBO\fR\fIdriver\fR"
+This is the output driver or interface to use. Currently, 
+\fIunixraw\fR,
+\fIalsaraw\fR, \fInull\fR, \fIossopl3\fR, and \fIossseq\fR (an OSS sequencer
+driver) may be available on your system, ossseq being the default.
+
+.TP
+.BR "\-\-mididevice \fIdriver\fR, \-\fBM\fR\fIdriver\fR"
+SCI was designed to support a variety of physical output devices. FreeSCI
+currently supports the Rolant MT\-32 (\fImt32\fR, the default), an Adlib
+device (\fIadlib\fR) and it also offers an MT\-32 to General MIDI translation 
+layer (\fImt32gm\fR).
+
+.TP
+.BR "\-\-sound\-server \fIserver\fR, \-\fBS\fR\fIserver\fR"
+This option may be used to explicitly specify a sound server to use.
+The sound server is an asynchronous process or thread that issues sound
+output events and reports sound cues back to the interpreter; if you have
+both possibilities (\fIunix\fR and \fIsdl\fR) for your system, you may have to
+experiment to find out which works best for you. 
+
 .SH CONFIG FILE
+
 .P
-FreeSCI will create a directory called \fI.freesci\fR in your home directory 
-(unless this directory already exists). If you run an SCI game, this 
-game will create another directory inside the \fI.freesci\fR directory, to 
-store its save games in.
+When run, FreeSCI will create a directory called \fI.freesci\fR in your
+home directory (unless this directory already exists). If you run an SCI
+game, this game will create another directory inside the \fI.freesci\fR
+directory, to store its save games in.
+
 .P
 Also, if a file called \fIconfig\fR exists in this directory, it will be read
 and parsed by the interpreter after the game has been loaded. This configuration
-file can be divided into a global section and various game-specific sections.
-Within the config file, comments must be preceeded by a hash '#' sign.
+file can be divided into a global section and various game\-specific sections.
+Within the config file, comments must be preceeded by a hash \*(lq#\*(rq sign.
+Empty lines are ignored.
+
 .P
-Game-specific sections are marked by a text string like \fB[GAME_ID]\fR, where
-\fIGAME_ID\fR is an ID to use for the game. If the section also contains a
-\fBresource_dir\fR entry, the ID may be passed to \fIfreesci\fR as a parameter to
-start the game by its name.
+Game\-specific sections are marked by a text string like \fB[GAME_ID]\fR,
+where \fIGAME_ID\fR is an ID to use for the game. If the section also
+contains a \fBresource_dir\fR entry, the ID may be passed to
+\fIfreesci\fR as a parameter to start the game by its name.
+
 .P
-The config file section before the first game-specific section is the global
-configuration section; anything specified here will be used as the setting for
-any game that does not explicitly request different settings.
+The config file section before the first game\-specific section is the
+global configuration section; anything specified here will be used as
+the setting for any game that does not explicitly request different
+settings.
+
 .P
 Here is a complete listing of all options supported:
-.IP \-
-\fBresource_dir\fR: Read the game's resource data from the specified 
-location. Must not be used in the generic part of the config file.
-.IP \-
-\fBversion = x.yyy.zzz\fR: emulate SCI version \fBx.yyy.zzz\fR. The version 
-number is sometimes printed on game discs, or can be found out by
-grepping your main executable for "0.000." (for SCI0 games). It is
-also displayed if the built-in debugger is activated in the Sierra SCI
-engine.
-.IP \-
-\fBconsole_log\fR: Sets a logging file for FreeSCI's console output (by default,
-this is disabled)
-.IP \-
-\fBmouse = yes \fR|\fB no\fR:
-Specifies whether the interpreter should report to the game that it has a mouse.
+
+.P
+GENERAL OPTIONS:
 
 .TP
-Graphics options:
+.BR resource_dir
+Read the game's resource data from the specified 
+location. Must not be used in the generic part of the config file.
 
-.IP \-
-\fBpic0_dither_mode = dither \fR|\fB flat \fR|\fB dither256\fR: (only one of 
-those three modes).
-\fBdither\fR: Draw in 16 colors, same as Sierra SCI.
-\fBflat\fR: Interpolate colors (256 colors). Improves some graphics.
-\fBdither256\fR: Dither in 256 colors. A compromise between dither and flat.
-.IP \-
-\fBpic0_dither_pattern = scaled \fR|\fB unscaled\fR:
-\fBscaled\fR: Perform picture dithering to blocks with a width of the horizontal
-and a height of the vertical scaling factor
-\fBunscaled\fR: Dither single pixels (same as scaled if the game is
-being run unscaled)
-.IP \-
-\fBpic0_brush_mode = scaled \fR|\fB ellipses \fR|\fB random-ellipses \fR|\fB more-random\fR:
-Affects how semi-random brushes (used mostly for dirt and foilage) are drawn in SCI0 background pictures:
-\fBscaled\fR: Scale every semi-random pixel to a rectangular block
-\fBellipses\fR: Scale every semi-random pixel to a filled ellipse
-\fBrandom-ellipses\fR: As ellipses, but slightly shift ellipse offset and size
-\fBmore-random\fR: Add more random pixels to the whole area
-.IP \-
-\fBpic0_line_mode = correct \fR|\fB fine\fR |\fB half\fR: Specify how lines are drawn when background
-pictures are rendered in SCI0:
-\fBcorrect\fR: Draw lines appropriately scaled
-\fBfine\fR: Don't scale lines (thin lines, may cause problems) 
-\fBhalf\fR: Draw lines at half width (may cause problems) 
-.IP \-
-\fBdirty_strategy = 1 \fR|\fB clusters\fR:
-The "dirty strategy" is the strategy used to collect modifications to the
-screen content. Modifying this may affect performance on slow or networked
-systems.
-\fB1\fR: Collect everything in one dirty region
-\fBclusters\fR: Cluster non-overlapping modified regions into a set of regions 
-.IP \-
-\fBpic0_scaled = yes \fR|\fB no\fR:
+.TP
+.BR "version = \fIx.yyy.zzz\fR"
+emulate SCI version \fIx.yyy.zzz\fR. The version 
+number is sometimes printed on game discs, or can be found out by
+grepping your main executable for "0.000." (for SCI0 games). It is
+also displayed if the built\-in debugger is activated in the Sierra SCI
+engine. See also the \fB\-\-sci\-version\fR command line option.
+
+.TP
+.BR console_log
+Sets a logging file for FreeSCI's console output (by default, this is 
+disabled).
+
+.TP 
+.BR "mouse = yes | no"
+Specifies whether the interpreter should report to the game that it has 
+a mouse.
+
+.TP
+GRAPHICS OPTIONS:
+
+.TP
+.BR "pic0_dither_mode = dither | flat | dither256"
+\fBdither\fR: draw in 16 colors, same as Sierra SCI;
+\fBflat\fR: interpolate colors (256 colors); this improves some
+graphics;
+\fBdither256\fR: dither in 256 colors; a compromise between dither and flat.
+
+.TP
+.BR "pic0_dither_pattern = scaled | unscaled"
+\fBscaled\fR: perform picture dithering to blocks with a width of the horizontal
+and a height of the vertical scaling factor;
+\fBunscaled\fR: dither single pixels (same as scaled if the game is
+being run unscaled).
+
+.TP
+.BR "pic0_brush_mode = scaled | ellipses | random\-ellipses | more\-random"
+Affects how semi\-random brushes (used mostly for dirt and foilage) are
+drawn in SCI0 background pictures. \fBscaled\fR: scale every semi\-random
+pixel to a rectangular block; \fBellipses\fR: scale every semi\-random
+pixel to a filled ellipse; \fBrandom\-ellipses\fR: as ellipses, but
+slightly shift ellipse offset and size; \fBmore\-random\fR: add more
+random pixels to the whole area.
+
+.TP
+.BR "pic0_line_mode = correct | fine | half"
+Specify how lines are drawn when background pictures are rendered in
+SCI0.  \fBcorrect\fR: draw lines appropriately scaled; \fBfine\fR: don't
+scale lines (thin lines, may cause problems); \fBhalf\fR: draw lines at
+half width (may cause problems).
+
+.TP
+.BR "dirty_strategy = 1 | clusters"
+The \*(lqdirty strategy\*(rq is the strategy used to collect
+modifications to the screen content. Modifying this may affect
+performance on slow or networked systems.  \fB1\fR: collect everything in
+one dirty region; \fBclusters\fR: cluster non\-overlapping modified regions
+into a set of regions.
+
+.TP
+.BR "pic0_scaled = yes | no"
 Whether SCI0 background pics should be scaled (may look better) or not
 (faster, looks more like the original games). By default, it is disabled.
-.IP \-
-\fBpic_buffer_size = #\fR:
+
+.TP
+.BR "pic_buffer_size = #"
 Number of background pics to store in an LRU buffer. Increasing this value
 will increase the amount of memory used, but may considerably speed up
 changing back to rooms you visited not too long ago.
-.IP \-
-\fBview_filter = none \fR|\fB linear \fR|\fB trilinear \fR:
-Specifies the way views (non-background images) are scaled
+
+.TP
+.BR "view_filter = none | linear | trilinear"
+Specifies the way views (non\-background images) are scaled
 (this obviously does not affect unscaled images):
-\fnone\fR: No filtering is performed (default)
-\flinear\fR: A simple linear filter is applied
-\ftrilinear\fR: Views are passed through a trilinear filter
-.IP \-
-\fBpic_filter\fR: Specifies scaling for background images; see \fBview_filter\fR
-for a list of possible options.
-.IP \-
-\fBcursor_filter\fR: Specifies scaling for mouse pointers; see \fBview_filter\fR
-for a list of possible options. This option does not apply to graphics drivers
-which handle the mouse pointer explicitly (currently, only the GGI driver is
-affected).
-.IP \-
-\fBtext_filter\fR: Specifies scaling for text; see \fBview_filter\fR
-for a list of possible options.
-.IP \-
-\fBpic_antialiasing = none \fR|\fB simple\fR: If activated, this option
-will do an extra pass over background images to anti-aliase them, usually
-improving the overall picture quality. This is set to 'none' by default.
-.IP \-
-\fBanimation_delay\fR: This chooses the amount of microseconds to wait between
-each sub-element of a transition animation (also see the next option). Setting
+\fBnone\fR: no filtering is performed (default);
+\fBlinear\fR: a simple linear filter is applied;
+\fBtrilinear\fR: views are passed through a trilinear filter.
+
+.TP
+.BR "pic_filter = none | linear | trilinear"
+Specifies scaling for background images; see \fBview_filter\fR
+for a description of the options.
+
+.TP
+.BR "cursor_filter = none | linear | trilinear"
+Specifies scaling for mouse pointers; see \fBview_filter\fR for a
+description of the options.  This option does not apply to graphics
+drivers which handle the mouse pointer explicitly (currently, only the
+GGI driver is affected).
+
+.TP
+.BR "text_filter = none | linear | trilinear"
+Specifies scaling for text; see \fBview_filter\fR
+for a description of the options.
+
+.TP
+.BR "pic_antialiasing = none | simple"
+If activated, this option will do an extra pass over background images
+to anti\-aliase them, usually improving the overall picture quality. This
+is set to \fBnone\fR by default.
+
+.TP
+.BR "animation_delay = #"
+This chooses the amount of microseconds to wait between
+each sub\-element of a transition animation (also see
+\fBanimation_granularity\fR). Setting
 this to zero will disable transition animations completely.
-The default is 5.
-.IP \-
-\fBanimation_granularity\fR: This sets the amount of steps to execute
+The default is \fB5\fR.
+
+.TP
+.BR "animation_granularity = #"
+This sets the amount of steps to execute
 simultaneously for each transition animation. If transition animations seem
 too slow on your system but you don't want to disable them completely, you
 might want to try increasing this value.
-The default is 4.
-.IP \-
-\fBalpha_threshold\fR: When using filtered images (specifically views, text,
-and cursors where used by the graphics driver), this value is used to determine
-when a part of the image should be drawn and when it should be omitted. The
-definition space of this value is 0 to 255, where larger values cause more to
-be drawn.
-This value does not affect unfiltered images or images drawn with alpha blending.
-Default is 129.
+The default is \fB4\fR.
 
 .TP
-Sound options:
-
-.IP \-
-\fBmidi_device\fR: Chooses the default MIDI device; this can be either "mt32" for
-plain MT-32 output, or "mt32gm" to use FreeSCI's MT32 -> General MIDI mapping
-algorithm.
-This defaults to mt32gm.
-.IP \-
-\fBmidiout_driver\fR: Selects the output device to use. Available options are
-"alsaraw" (using ALSA's raw MIDI output devices), "unixraw" (using /dev/midi-style
-raw MIDI output devices), "ossseq" (for OSS sequencer devices) and "win32mci"
-on Win32 systems.
-The default on UNIXish systems is ossseq.
-.IP \-
-\fBsound_server\fR: This chooses one of the asynchronous sound servers. For sound
-output, FreeSCI uses an asynchronous process or thread; currently two implementations
-of this mechanism are available: "unix", which forks off a separate process, and
-"sdl", which uses libsdl's threading mechanisms.
-Defaults to 'unix', where available.
+.BR "alpha_threshold = #"
+When using filtered images (specifically views, text, and cursors where
+used by the graphics driver), this value is used to determine when a
+part of the image should be drawn and when it should be omitted. The
+definition space of this value is \fB0\fR to \fB255\fR, where larger
+values cause more to be drawn.  This value does not affect unfiltered
+images or images drawn with alpha blending.  Default is \fB129\fR.
 
 .TP
-Driver-specific options (graphics drivers):
+SOUND OPTIONS:
 
-.IP \-
-\fBgfx.xlib.disable_shmem\fR: Can be used to disable support for MIT Shm support
+.TP
+.BR "midi_device = driver"
+Chooses the default MIDI device; this can be \fBmt32\fR for plain MT\-32
+output, or \fBmt32gm\fR to use FreeSCI's MT32 \-> General MIDI mapping
+algorithm. Also Adlib (\fBadlib\fR) is supported.  This defaults to
+\fBmt32gm\fR.
+
+.TP
+.BR "midiout_driver = driver"
+Selects the output device to use. Available options are \fBalsaraw\fR
+(using ALSA's raw MIDI output devices), \fBunixraw\fR (using
+/dev/midi\-style raw MIDI output devices), \fBossseq\fR (for OSS
+sequencer devices) and \fBwin32mci\fR on Win32 systems.  The default on
+UNIXish systems is \fBossseq\fR.
+
+.TP
+.BR "sound_server = server"
+This chooses one of the asynchronous sound servers. For sound output,
+FreeSCI uses an asynchronous process or thread; currently two
+implementations of this mechanism are available: \fBunix\fR, which forks
+off a separate process, and \fBsdl\fR, which uses libsdl's threading
+mechanisms.  Defaults to \fBunix\fR, where available.
+
+.TP
+DRIVER\-SPECIFIC OPTIONS (GRAPHICS DRIVERS):
+
+.TP
+.BR "gfx.xlib.disable_shmem = yes | no"
+Can be used to disable support for MIT Shm support
 on the X11 Windowing System in cases where detection fails.
 This is off by default, enabling SHM support.
-.IP \-
-\fBgfx.sdl.swap_caps_ctrl\fR: This option instructs the SDL driver to swap
-caps lock and ctrl when reading input.
-Disabled by default.
-.IP \-
-\fBgfx.sdl.fillscreen\fR:
-Toggles the SDL graphics driver's fullscreen option.
 
 .TP
-Driver-specific options (sound drivers):
+.BR "gfx.sdl.swap_caps_ctrl = yes | no"
+This option instructs the SDL driver to swap caps lock and ctrl when
+reading input.  Disabled by default.
 
-.IP \-
-\fBmidiout.alsaraw.card\fR: This specifies the ALSA card to use for raw MIDI
-output; the default is 0.
-.IP \-
-\fBmidiout.alsaraw.device\fR: Specifies the ALSA device, relative to the card,
-for raw MIDI output. It also defaults to 0.
-.IP \-
-\fBmidiout.unixraw.device\fR: Sets the device file to use for raw UNIX MIDI output.
-This defaults to "/dev/midi".
-.IP \-
-\fBmidiout.ossseq.device\fR: Selects the OSS sequencer device number; this defaults
-to 1.
-.IP \-
-\fBmidiout.ossseq.recorder\fR: Chooses a file the OSS sequencer should print debug
-output to. This is not particularly helpful for everyday use, and disabled by
+.TP
+.BR "gfx.sdl.fullscreen = yes | no"
+Toggles the SDL graphics driver's fullscreen option. Disabled by
 default.
+
+.TP
+DRIVER\-SPECIFIC OPTIONS (SOUND DRIVERS):
+
+.TP
+.BR "midiout.alsaraw.card = #"
+This specifies the ALSA card to use for raw MIDI output; the default is
+\fB0\fR.
+
+.TP
+.BR "midiout.alsaraw.device = #"
+Specifies the ALSA device, relative to the card, for raw MIDI output. It
+also defaults to \fR0\fR.
+
+.TP
+.BR "midiout.unixraw.device = device"
+Sets the device file to use for raw UNIX MIDI output.  This defaults to
+\fB/dev/midi\fR.
+
+.TP
+.BR "midiout.ossseq.device = #"
+Selects the OSS sequencer device number; this defaults to \fB1\fR.
+
+.TP
+.BR "midiout.ossseq.recorder = file"
+Chooses a file the OSS sequencer should print debug output to. This is
+not particularly helpful for everyday use, and disabled by default.
 
 
 .SH EXAMPLES
@@ -310,7 +399,7 @@ Here is an exemplary configuartion file:
 
 console_log = /home/user/.freesci/log
 pic_buffer_size = 4
-pic0_brush_mode = more-random
+pic0_brush_mode = more\-random
 pic_antialiasing = simple
 pic0_dither_mode = dither256
 pic0_scaled = yes
@@ -335,12 +424,11 @@ midiout.alsaraw.device=0
 midiout.unixraw.device=/dev/midi
 midiout.ossseq.device=1
 midiout.ossseq.recorder=/tmp/recorder
-[LSL3]
 
+[LSL3]
 resource_dir = /usr/share/freesci/lsl3
 
 [KQ4]
-
 resource_dir = /usr/share/freesci/kq4
 version = 0.000.502
 .RE
@@ -351,31 +439,37 @@ version = 0.000.502
 .P
 The following games have been tested with FreeSCI and are known to give
 some level of interactivity. In theory, FreeSCI should be able to let
-you complete all of these.
-.IP \-
-Hero's Quest / Quest for Glory 1
-.IP \-
-Space Quest 3
-.IP \-
-King's Quest 4
-.IP \-
-Leisure Suit Larry 2
-.IP \-
-Leisure Suit Larry 3
-.IP \-
-Police Quest 2
-.IP \-
+you complete all of these. Games marked with [c] have been completed
+using FreeSCI.
+
+.IP \(bu
+.PD 0
+Hero's Quest / Quest for Glory 1 [c]
+.IP \(bu
+Space Quest 3 [c]
+.IP \(bu
+King's Quest 1 (SCI version) [c]
+.IP \(bu
+King's Quest 4 [c]
+.IP \(bu
+Leisure Suit Larry 2 [c]
+.IP \(bu
+Leisure Suit Larry 3 [c]
+.IP \(bu
+Police Quest 2 [c]
+.IP \(bu
 Codename: Iceman
-.IP \-
-The Colonel's Bequest
-.IP \-
+.IP \(bu
+The Colonel's Bequest [c]
+.IP \(bu
 Conquest of Camelot
-.IP \-
+.IP \(bu
 The Fun Seeker's Guide (from the SQ Collector's Series)
-.IP \-
+.IP \(bu
 Hoyle's Book of Games (volume 1) (*)
-.IP \-
+.IP \(bu
 Hoyle's Book of Games (volume 2) (*)
+.PD 0.4v
 .P
 (*) Due to differences between the way Sierra SCI and FreeSCI
 handle graphical widgets, these games may cause an accumulation
@@ -385,39 +479,53 @@ some increased memory usage.
 
 
 .SH SEE ALSO
-.BR sciconsole (6),
-.BR scidisasm (6),
-.BR sciunpack (6),
-
+.BR scitools(6)
 
 .SH BUGS
 .P
 
 This release has the following limitations (plus some bugs):
-.IP \-
-Only SCI0 games are supported
-.IP \-
+.IP \(bu
+.PD 0
+Only SCI0 games (and some SCI01 games) are supported
+.IP \(bu
 The SCI debug functions aren't fully supported (and probably never
 will be, since FreeSCI uses its own debug functions).
-.P
+.PD 0.4v
 
+.P
 Please refer to http://freesci.linuxgames.com's bug list section for a
 listing of all known and current bugs.
 
 .SH AUTHORS
 .P
-FreeSCI is copyright (c) 1999,2000,2001 by
-Christoph Reichenbach <\fIcreichen@rbg.informatik.tu-darmstadt.de\fR>,
-Carl Muckenhoupt <\fIcarl@wurb.com\fR>,
-Dmitry Jemerov <\fIyole@exch.nnz.spb.su\fR>, 
-Magnus Reftel <\fId96reftl@dtek.chalmers.se\fR>,
-Petr Vyhnak <\fIpvyhnak@attglobal.net\fR>,
-Sergey Lapin <\fIslapin@karelia.ru\fR>,
-Lars Skovlund <\fIlskovlun@image.dk\fR>,
-Matt Hargett <\fImatt@use.net\fR>,
-Solomon Peachy <\fIpizza@shaftnet.org\fR>,
-Rickard Lind <\fIrpl@dd.chalmers.se\fR> and
-Rink Springer <\fIrink@springer.cx\fR>.
+FreeSCI is copyright (c) 1999,2000,2001 by the following people:
+
+.IP \(bu
+.PD 0
+Christoph Reichenbach <\fIcreichen@rbg.informatik.tu\-darmstadt.de\fR>
+.IP \(bu
+Carl Muckenhoupt <\fIcarl@wurb.com\fR>
+.IP \(bu
+Dmitry Jemerov <\fIyole@exch.nnz.spb.su\fR>
+.IP \(bu
+Magnus Reftel <\fId96reftl@dtek.chalmers.se\fR>
+.IP \(bu
+Petr Vyhnak <\fIpvyhnak@attglobal.net\fR>
+.IP \(bu
+Sergey Lapin <\fIslapin@karelia.ru\fR>
+.IP \(bu
+Lars Skovlund <\fIlskovlun@image.dk\fR>
+.IP \(bu
+Matt Hargett <\fImatt@use.net\fR>
+.IP \(bu
+Solomon Peachy <\fIpizza@shaftnet.org\fR>
+.IP \(bu
+Rickard Lind <\fIrpl@dd.chalmers.se\fR>
+.IP \(bu
+Rink Springer <\fIrink@springer.cx\fR>
+.PD 0.4v
+
 .P
 This man page was written by Bas Zoetekouw <\fIbas@debian.org\fR> and
 Christoph Reichenbach.
