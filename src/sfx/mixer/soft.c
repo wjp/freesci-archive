@@ -26,6 +26,7 @@
 ***************************************************************************/
 
 #include <sfx_mixer.h>
+#include <sci_memory.h>
 
 
 /*#define DEBUG 3*/
@@ -68,11 +69,11 @@ static int
 mix_init(sfx_pcm_mixer_t *self, sfx_pcm_device_t *device)
 {
 	self->dev = device;
-	P = malloc(sizeof(struct mixer_private));
+	P = sci_malloc(sizeof(struct mixer_private));
 	P->outbuf = P->writebuf = NULL;
 	P->lastbuf_len = 0;
-	P->compbuf_l = malloc(sizeof(gint32) * device->buf_size);
-	P->compbuf_r = malloc(sizeof(gint32) * device->buf_size);
+	P->compbuf_l = sci_malloc(sizeof(gint32) * device->buf_size);
+	P->compbuf_r = sci_malloc(sizeof(gint32) * device->buf_size);
 	P->played_this_second = 0;
 	P->paused = 0;
 #ifdef DEBUG
@@ -126,10 +127,10 @@ mix_subscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 
 	if (!self->feeds) {
 		self->feeds_allocd = 2;
-		self->feeds = malloc(sizeof(sfx_pcm_feed_state_t) * self->feeds_allocd);
+		self->feeds = sci_malloc(sizeof(sfx_pcm_feed_state_t) * self->feeds_allocd);
 	} else if (self->feeds_allocd == self->feeds_nr) {
 		self->feeds_allocd += 2;
-		self->feeds = realloc(self->feeds, sizeof(sfx_pcm_feed_state_t) * self->feeds_allocd);
+		self->feeds = sci_realloc(self->feeds, sizeof(sfx_pcm_feed_state_t) * self->feeds_allocd);
 	}
 
 	fs = self->feeds + self->feeds_nr++;
@@ -137,12 +138,16 @@ mix_subscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 
 	feed->sample_size = SFX_PCM_SAMPLE_SIZE(feed->conf);
 
-	fs->buf_size = (self->dev->buf_size
+	/*	fs->buf_size = (self->dev->buf_size
 			  * (feed->conf.rate
 			     + self->dev->conf.rate - 1))
 		/ self->dev->conf.rate;
+	*/
+	/* For the sake of people without 64 bit CPUs: */
+	fs->buf_size = (self->dev->buf_size *
+			(1 + (feed->conf.rate / self->dev->conf.rate)));
 
-	fs->buf = malloc(fs->buf_size * feed->sample_size);
+	fs->buf = sci_malloc(fs->buf_size * feed->sample_size);
 	fs->scount = urat(0, 1);
 	fs->spd = urat(feed->conf.rate, self->dev->conf.rate);
 	fs->scount.den = fs->spd.den;
@@ -171,7 +176,7 @@ mix_unsubscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 			feed->destroy(feed);
 
 			if (fs->buf)
-				free(fs->buf);
+				sci_free(fs->buf);
 
 			feed->debug_name = "DESTROYED";
 			
@@ -183,7 +188,7 @@ mix_unsubscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 			if (self->feeds_allocd > 8 && self->feeds_allocd > (self->feeds_nr << 1)) {
 				/* Limit memory waste */
 				self->feeds_allocd >>= 1;
-				self->feeds = realloc(self->feeds, sizeof(sfx_pcm_feed_t *) * self->feeds_allocd);
+				self->feeds = sci_realloc(self->feeds, sizeof(sfx_pcm_feed_t *) * self->feeds_allocd);
 			}
 
 			return;
@@ -203,16 +208,16 @@ mix_exit(sfx_pcm_mixer_t *self)
 		mix_unsubscribe(self, self->feeds[0].feed);
 
 	if (P->outbuf)
-		free(P->outbuf);
+		sci_free(P->outbuf);
 	if (P->writebuf)
-		free(P->writebuf);
+		sci_free(P->writebuf);
 
 	if (P->compbuf_l)
-		free(P->compbuf_l);
+		sci_free(P->compbuf_l);
 	if (P->compbuf_l)
-		free(P->compbuf_r);
+		sci_free(P->compbuf_r);
 
-	free(P);
+	sci_free(P);
 	P = NULL;
 
 #ifdef DEBUG
@@ -243,7 +248,7 @@ gint32 *xxx = lsrc;
 
  
 	if (!P->writebuf)
-		P->writebuf = malloc(self->dev->buf_size * sample_size);
+		P->writebuf = sci_malloc(self->dev->buf_size * sample_size);
 
 	if (conf.stereo) {
 		if (conf.stereo == SFX_PCM_STEREO_RL) {

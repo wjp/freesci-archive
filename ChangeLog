@@ -1,5 +1,11 @@
 2003-12-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sfx/mixer/soft.c (mix_subscribe): Fixed 32 bit overflow in
+	buffer size computation
+
+	* src/sfx/iterator.c (_base_handle_message): Fixed too much memory
+	being allocated and copied during iterator initialisation
+
 	* src/sfx/songlib.c (song_new): Initialise all songs to 'stopped'
 	by default
 

@@ -358,9 +358,9 @@ _base_handle_message(base_song_iterator_t *self, song_iterator_message_t msg)
 			break;
 
 		case _SIMSG_BASEMSG_CLONE: {
-			int tsize = sizeof(base_song_iterator_t) + self->size;
-			base_song_iterator_t *mem = sci_malloc(tsize);
-			memcpy(mem, self, tsize);
+			int tsize = sizeof(base_song_iterator_t);
+			base_song_iterator_t *mem = sci_malloc(sizeof(base_song_iterator_t));
+			memcpy(mem, self, sizeof(base_song_iterator_t));
 			mem->data = sci_malloc(mem->size);
 			memcpy(mem->data, self->data, self->size);
 			return (struct _song_iterator *) mem; /* Assume caller has another copy of this */
