@@ -601,6 +601,14 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 						success = soundsrv_restore_state(ds, dirname, songlib, &newsong,
 										 &ccc, &usecs, &ticks, &fadeticks);
+						/* restore the instrument state */
+						if (newsong) {
+						  int i;
+						  for (i = 0; i < MIDI_CHANNELS; i++) {
+						    if (newsong->instruments[i]) 
+						      midi_event2(0xc0 | i, newsong->instruments[i]);
+						  }
+						}
 
 						last_played.tv_sec -= secs = (usecs - last_played.tv_usec) / 1000000;
 						last_played.tv_usec -= (usecs + secs * 1000000);

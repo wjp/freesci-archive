@@ -1,3 +1,8 @@
+2001-03-10  Solomon Peachy <pizza@shaftnet.org>
+	
+	* src/sound/soundserver_null.c:  restore instrument map on game
+                                         restore.
+
 2001-03-10  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kOnControl): OnControl now considers
