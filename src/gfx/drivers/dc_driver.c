@@ -1,5 +1,5 @@
 /***************************************************************************
- dc_driver.c Copyright (C) 2002,2003 Walter van Niftrik
+ dc_driver.c Copyright (C) 2002-2004 Walter van Niftrik
 
 
  This program may be modified and copied freely according to the terms of
@@ -63,6 +63,10 @@ struct _dc_state {
 	/* PVR only */
 	/* Polygon header */
 	pvr_poly_hdr_t pvr_hdr;
+	/* Polygon header for virtual keyboard */
+	pvr_poly_hdr_t pvr_hdr_vkbd;
+	/* Texture for virtual keyboard */
+	uint16 *vkbd_txr;
 
 	/* Pointers to first and last event in the event queue */
 	struct dc_event_t *first_event;
@@ -82,6 +86,15 @@ struct _dc_state {
 	
 	/* Flag to stop the input thread. (!0 = run, 0 = stop) */
 	int run_thread;
+
+	/* Controller key repeat timer */
+	int timer;
+
+	/* Controller state */
+	unsigned int cont_state;
+
+	/* Virtual keyboard on/off flag */
+	int vkbd;
 };
 
 #define S ((struct _dc_state *)(drv->state))
@@ -129,6 +142,20 @@ pvr_init_gfx(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	/* Create polygon header from context */
 	pvr_poly_compile(&(S->pvr_hdr), &cxt);
+
+	/* Allocate and initialize texture RAM for virtual keyboard */
+	S->vkbd_txr = pvr_mem_malloc(512*64*bytespp*xfact*yfact);
+	memset(S->vkbd_txr, 0, 512*64*bytespp*xfact*yfact);
+
+	/* Create textured polygon context for virtual keyboard */
+	pvr_poly_cxt_txr(&cxt, PVR_LIST_TR_POLY, PVR_TXRFMT_RGB565 |
+		PVR_TXRFMT_NONTWIDDLED, 512*xfact, 64*yfact, S->vkbd_txr, 0);
+
+	/* Create polygon header from context for virtual keyboard */
+	pvr_poly_compile(&(S->pvr_hdr_vkbd), &cxt);
+
+	vkbd_init((uint16 *) S->vkbd_txr, 512);
+	vkbd_draw();
 }
 
 static void
@@ -155,10 +182,10 @@ pvr_do_frame(struct _gfx_driver *drv)
 	/* Create and submit vertices */
 	vert.flags = PVR_CMD_VERTEX;
 	vert.x = 0.0f;
-	vert.y = 614.0f;
+	vert.y = 480.0f;
 	vert.z = 1.0f;
 	vert.u = 0.0f;
-	vert.v = 1.0f;
+	vert.v = 0.78125f;
 	vert.argb = PVR_PACK_COLOR(1.0f, 1.0f, 1.0f, 1.0f);
 	vert.oargb = 0;
 	pvr_prim(&vert, sizeof(vert));
@@ -167,10 +194,10 @@ pvr_do_frame(struct _gfx_driver *drv)
 	vert.v = 0.0f;
 	pvr_prim(&vert, sizeof(vert));
 	
-	vert.x = 1024.0f;
-	vert.y = 614.0f;
-	vert.u = 1.0f;
-	vert.v = 1.0f;
+	vert.x = 640.0f;
+	vert.y = 480.0f;
+	vert.u = 0.625f;
+	vert.v = 0.78125f;
 	pvr_prim(&vert, sizeof(vert));
 	
 	vert.flags = PVR_CMD_VERTEX_EOL;
@@ -178,8 +205,48 @@ pvr_do_frame(struct _gfx_driver *drv)
 	vert.v = 0.0f;
 	pvr_prim(&vert, sizeof(vert));
 	
-	/* End list and scene */
+	/* End list */
 	pvr_list_finish();
+
+	/* Display virtual keyboard */
+	if (S->vkbd) {
+		/* Start an translucent polygon list */
+		pvr_list_begin(PVR_LIST_TR_POLY);
+	
+		/* Submit polygon header */
+		pvr_prim(&(S->pvr_hdr_vkbd), sizeof(S->pvr_hdr_vkbd));
+		
+		/* Create and submit vertices */
+		vert.flags = PVR_CMD_VERTEX;
+		vert.x = 0.0f;
+		vert.y = 480.0f;
+		vert.z = 1.0f;
+		vert.u = 0.0f;
+		vert.v = 0.625f;
+		vert.argb = PVR_PACK_COLOR(0.8f, 1.0f, 1.0f, 1.0f);
+		vert.oargb = 0;
+		pvr_prim(&vert, sizeof(vert));
+		
+		vert.y = 400.0f;
+		vert.v = 0.0f;
+		pvr_prim(&vert, sizeof(vert));
+		
+		vert.x = 640.0f;
+		vert.y = 480.0f;
+		vert.u = 0.625f;
+		vert.v = 0.625f;
+		pvr_prim(&vert, sizeof(vert));
+		
+		vert.flags = PVR_CMD_VERTEX_EOL;
+		vert.y = 400.0f;
+		vert.v = 0.0f;
+		pvr_prim(&vert, sizeof(vert));
+		
+		/* End list */
+		pvr_list_finish();
+	}
+
+	/* End scene */
 	pvr_scene_finish();
 }
 
@@ -197,8 +264,7 @@ vram_init_gfx(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	int vidres = 0, vidcol = 0;
 
 	/* Center screen vertically */
-	/* S->visual[2] = (byte *) vram_s+320*xfact*20*yfact*bytespp; */
-	S->visual[2] = (byte *) vram_s;
+	S->visual[2] = (byte *) vram_s+320*xfact*20*yfact*bytespp;
 
 	S->line_pitch[2] = 320*xfact*bytespp;
 
@@ -229,7 +295,28 @@ vram_init_gfx(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		
 	vid_set_mode(vidres, vidcol);
 
-	vkbd_init((uint16 *) (S->visual[2] + 320 * xfact * 200 * yfact * bytespp));
+	vkbd_init((uint16 *) (S->visual[2] + 320 * xfact * 200 * yfact * bytespp), 320);
+}
+
+static void
+vram_hide_keyboard(struct _gfx_driver *drv)
+/* Hides the virtual keyboard in VRAM rendering mode
+** Parameters: (_gfx_driver *) drv: The driver to use
+** Returns   : void
+*/
+{
+	vid_set_start(0);
+	memset4(S->visual[2] + 320 * XFACT * 200 * YFACT * BYTESPP, 0, 320 * XFACT * 40 * YFACT * BYTESPP);
+}
+
+static void
+vram_show_keyboard(struct _gfx_driver *drv)
+/* Displays the virtual keyboard in VRAM rendering mode
+** Parameters: (_gfx_driver *) drv: The driver to use
+** Returns   : void
+*/
+{
+	vid_set_start(320 * XFACT * 20 * YFACT * BYTESPP);
 	vkbd_draw();
 }
 
@@ -377,7 +464,7 @@ dc_input_thread(struct _gfx_driver *drv)
 		cont_state_t *cont;
 		uint8 key;
 		int skeys;	
-		int bucky = 0;
+		int bucky = 0, vkbd_bucky = 0;
 		sci_event_t event;
 
 		if (!(flags & SCI_DC_RENDER_PVR))
@@ -422,12 +509,10 @@ dc_input_thread(struct _gfx_driver *drv)
 				else bucky |= SCI_EVM_LSHIFT | SCI_EVM_RSHIFT;
 			}
 		
-			S->buckystate = bucky;
-
 			if ((key != lastkey) && (key != KBD_KEY_NONE)) {
 				event.type = SCI_EVT_KEYBOARD;
 				event.data = dc_map_key(&keystate, key);
-				event.buckybits = bucky;
+				event.buckybits = bucky | vkbd_bucky;
 				if (event.data) dc_add_event(drv, &event);
 			}		
 			lastkey = key;
@@ -453,7 +538,7 @@ dc_input_thread(struct _gfx_driver *drv)
 			  !(mstate & DC_MOUSE_LEFT)) {
 				event.type = SCI_EVT_MOUSE_PRESS;
 				event.data = 1;
-				event.buckybits = bucky;
+				event.buckybits = bucky | vkbd_bucky;
 				dc_add_event(drv, &event);
 				mstate |= DC_MOUSE_LEFT;
 			}
@@ -461,7 +546,7 @@ dc_input_thread(struct _gfx_driver *drv)
 			  !(mstate & DC_MOUSE_RIGHT)) {
 				event.type = SCI_EVT_MOUSE_PRESS;
 				event.data = 2;
-				event.buckybits = bucky;
+				event.buckybits = bucky | vkbd_bucky;
 				dc_add_event(drv, &event);
 				mstate |= DC_MOUSE_RIGHT;
 			}
@@ -469,7 +554,7 @@ dc_input_thread(struct _gfx_driver *drv)
 			  (mstate & DC_MOUSE_LEFT)) {
 				event.type = SCI_EVT_MOUSE_RELEASE;
 				event.data = 1;
-				event.buckybits = bucky;
+				event.buckybits = bucky | vkbd_bucky;
 				dc_add_event(drv, &event);
 				mstate &= ~DC_MOUSE_LEFT;
 			}
@@ -477,7 +562,7 @@ dc_input_thread(struct _gfx_driver *drv)
 			  (mstate & DC_MOUSE_RIGHT)) {
 				event.type = SCI_EVT_MOUSE_RELEASE;
 				event.data = 2;
-				event.buckybits = bucky;
+				event.buckybits = bucky | vkbd_bucky;
 				dc_add_event(drv, &event);
 				mstate &= ~DC_MOUSE_RIGHT;
 			}
@@ -495,69 +580,100 @@ dc_input_thread(struct _gfx_driver *drv)
 			S->pointer_dy += cont->joyy/20;
 			sem_signal(S->sem_pointer);
 
-			if ((cont->buttons & CONT_X) &&
+			if ((cont->ltrig > 5) &&
 			  !(mstate & DC_MOUSE_LEFT)) {
 				event.type = SCI_EVT_MOUSE_PRESS;
 				event.data = 1;
-				event.buckybits = bucky;
+				event.buckybits = bucky | vkbd_bucky;
 				dc_add_event(drv, &event);
 				mstate |= DC_MOUSE_LEFT;
 			}
-			if ((cont->buttons & CONT_Y) &&
+			if ((cont->rtrig > 5) &&
 			  !(mstate & DC_MOUSE_RIGHT)) {
 				event.type = SCI_EVT_MOUSE_PRESS;
 				event.data = 2;
-				event.buckybits = bucky;
+				event.buckybits = bucky | vkbd_bucky;
 				dc_add_event(drv, &event);
 				mstate |= DC_MOUSE_RIGHT;
 			}
-			if (!(cont->buttons & CONT_X) &&
+			if ((cont->ltrig <= 5) &&
 			  (mstate & DC_MOUSE_LEFT)) {
 				event.type = SCI_EVT_MOUSE_RELEASE;
 				event.data = 1;
-				event.buckybits = bucky;
+				event.buckybits = bucky | vkbd_bucky;
 				dc_add_event(drv, &event);
 				mstate &= ~DC_MOUSE_LEFT;
 			}
-			if (!(cont->buttons & CONT_Y) &&
+			if ((cont->rtrig <= 5) &&
 			  (mstate & DC_MOUSE_RIGHT)) {
 				event.type = SCI_EVT_MOUSE_RELEASE;
 				event.data = 2;
-				event.buckybits = bucky;
+				event.buckybits = bucky | vkbd_bucky;
 				dc_add_event(drv, &event);
 				mstate &= ~DC_MOUSE_RIGHT;
 			}
-			{
-				static int timer;
-				static unsigned int cstate;
-
-				if (timer > 0)
-					timer--;
-				if ((cont->buttons != cstate) || !timer) {
-					cstate = cont->buttons;
-					timer = 15;
-					if (cstate & CONT_DPAD_RIGHT)
+			if (S->timer > 0)
+				S->timer--;
+			if ((cont->buttons != S->cont_state) || !S->timer) {
+				S->cont_state = cont->buttons;
+				S->timer = 25;
+				if (cont->buttons & CONT_START) {
+					S->vkbd = S->vkbd ^ 1;
+					if (!(flags & SCI_DC_RENDER_PVR)) {
+						if(S->vkbd)
+							vram_show_keyboard(drv);
+						else
+							vram_hide_keyboard(drv);
+					}
+				}
+				if (S->vkbd) {
+					if (cont->buttons & CONT_DPAD_RIGHT)
 						vkbd_handle_input(KBD_RIGHT);
-					if (cstate & CONT_DPAD_LEFT)
+					if (cont->buttons & CONT_DPAD_LEFT)
 						vkbd_handle_input(KBD_LEFT);
-					if (cstate & CONT_DPAD_UP)
+					if (cont->buttons & CONT_DPAD_UP)
 						vkbd_handle_input(KBD_UP);
-					if (cstate & CONT_DPAD_DOWN)
+					if (cont->buttons & CONT_DPAD_DOWN)
 						vkbd_handle_input(KBD_DOWN);
-					if (cstate & CONT_A) {
-						int key = vkbd_get_key();
-						if (key)
-						{
+					if (cont->buttons & CONT_A) {
+						int vkbd_key;
+						if (vkbd_get_key(&vkbd_key, &vkbd_bucky)) {
 							event.type = SCI_EVT_KEYBOARD;
-							event.data = key;
-							event.buckybits = 0;
+							event.data = vkbd_key;
+							event.buckybits = bucky | vkbd_bucky;
 							dc_add_event(drv, &event);
 						}
 					}
 				}
+				else {
+					event.data = 0;
+					if (cont->buttons & CONT_DPAD_RIGHT)
+						event.data = SCI_K_RIGHT;
+					else if (cont->buttons & CONT_DPAD_LEFT)
+						event.data = SCI_K_LEFT;
+					else if (cont->buttons & CONT_DPAD_UP)
+						event.data = SCI_K_UP;
+					else if (cont->buttons & CONT_DPAD_DOWN)
+						event.data = SCI_K_DOWN;
+					event.type = SCI_EVT_KEYBOARD;
+					event.buckybits = bucky | vkbd_bucky;
+					if (event.data) dc_add_event(drv, &event);
+				}
+				event.data = 0;
+				if (cont->buttons & CONT_B)
+					event.data = SCI_K_ENTER;
+				else if (cont->buttons & CONT_X)
+					event.data = ' ';
+				else if (cont->buttons & CONT_Y)
+					event.data = SCI_K_ESC;
+				event.type = SCI_EVT_KEYBOARD;
+				event.buckybits = bucky | vkbd_bucky;
+				if (event.data) dc_add_event(drv, &event);
 			}
 		}
 		else drv->capabilities &= ~GFX_CAPABILITY_MOUSE_SUPPORT;
+
+		S->buckystate = bucky | vkbd_bucky;
 	}
 }
 
@@ -818,7 +934,10 @@ dc_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	S->pointer_dx = 0;
 	S->pointer_dy = 0;
-	
+	S->buckystate = 0;
+	S->timer = 0;
+	S->vkbd = 0;
+
 	switch(bytespp) {
 		case 2:	rmask = 0xF800;
 			gmask = 0x7E0;
@@ -878,10 +997,16 @@ dc_exit(struct _gfx_driver *drv)
 		sci_free(S->visual[1]);
 		sci_free(S->priority[0]);
 		sci_free(S->priority[1]);
+		if (flags & SCI_DC_RENDER_PVR) {
+			pvr_mem_free(S->visual[2]);
+			pvr_mem_free(S->vkbd_txr);
+		}
+
 		sciprintf("Waiting for input thread to exit... ");
 		S->run_thread = 0;
 		thd_wait(S->thread);
 		sciprintf("ok\n");
+
 		sciprintf("Freeing semaphores\n");
 		sem_destroy(S->sem_event);
 		sem_destroy(S->sem_pointer);

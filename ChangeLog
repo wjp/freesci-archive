@@ -1,3 +1,12 @@
+2004-07-02  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/keyboard.c, src/dc/keyboard.h,
+	src/gfx/drivers/dc_driver.c: Added implementation of Dreamcast
+	on-screen keyboard.
+
+	* src/engine/kfile.c: Use HAVE_*_H macro's for unistd.h and
+	dirent.h includes.
+
 2004-06-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/include/resource.h: (very) partially applied Ismail's patch

@@ -28,6 +28,8 @@
 #ifndef __KEYBOARD_H
 #define __KEYBOARD_H
 
+/* Virtual keyboard. Currently only 320x40, 16-bit colour. */
+
 #include <sys/types.h>
 
 #define KBD_RIGHT 0
@@ -35,9 +37,31 @@
 #define KBD_UP 2
 #define KBD_DOWN 3
 
-void vkbd_init(uint16 *ptr);
+void vkbd_init(uint16 *ptr, int line_pitch);
+/* Initialises the virtual keyboard
+** Parameters: (uint16 *) ptr: buffer where the keyboard is to be drawn.
+**             (int) line_pitch: line pitch of buffer in bytes.
+** Returns   : (void)
+*/
+
 void vkbd_draw(void);
+/* Draws the virtual keyboard in its current state.
+** Parameters: (void)
+** Returns   : (void)
+*/
+
 void vkbd_handle_input(int input);
-int vkbd_get_key();
+/* Handle cursor moves. Keyboard display is automatically updated.
+** Parameters: (int) input: cursor move to handle (see #defines above).
+** Returns   : (void)
+*/
+
+int vkbd_get_key(int *data, int *buckyb);
+/* Get keycode of currently selected key and buckstate. If a special key is
+** selected (e.g. the shift key), it will be dealt with appropriately.
+** Parameters: (int *) data: pointer to where keycode will be stored.
+**             (int *) bucky: pointer to where buckystate will be stored.
+** Returns   : (int) 1 when new data and bucky are available, 0 otherwise.
+*/
 
 #endif /* __KEYBOARD_H */
