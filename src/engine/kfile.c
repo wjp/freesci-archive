@@ -33,6 +33,10 @@
 #include <windows.h>
 #endif
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
 static int _savegame_indices_nr = -1; /* means 'uninitialized' */
 
 static struct _savegame_index_struct {
@@ -41,6 +45,57 @@ static struct _savegame_index_struct {
 } _savegame_indices[MAX_SAVEGAME_NR];
 
 /* This assumes modern stream implementations. It may break on DOS. */
+
+
+/* Attempts to mirror a file by copying it from the resource firectory
+** to the working directory. Returns NULL if the file didn't exist.
+** Otherwise, the new file is then opened for reading or writing.
+*/
+static FILE *
+f_open_mirrored(state_t *s, char *fname)
+{
+  int fd;
+  char *buf;
+  struct stat fstate;
+
+  chdir(s->resource_dir);
+  fd = open(fname, O_RDONLY | O_BINARY);
+  if (!fd) {
+    chdir(s->work_dir);
+    return NULL;
+  }
+
+  fstat(fd, &fstate);
+  if (fstate.st_size) {
+    buf = malloc(fstate.st_size);
+    read(fd, buf, fstate.st_size);
+  }
+
+  close(fd);
+
+  chdir(s->work_dir);
+
+  fd = creat(fname, 0600);
+
+  if (!fd) {
+    free(buf);
+    sciprintf("kfile.c: f_open_mirrored(): Warning: Could not create '%s' in '%s' (%d bytes to copy)\n",
+	      fname, s->work_dir, fstate.st_size);
+    return NULL;
+  }
+
+  if (fstate.st_size) {
+    if (write(fd, buf, fstate.st_size) < fstate.st_size)
+      sciprintf("kfile.c: f_open_mirrored(): Warning: Could not write all %d bytes to '%s' in '%s'\n",
+		fstate.st_size, fname, s->work_dir);
+    free(buf);
+  }
+
+  close(fd);
+
+  return fopen(fname, "r+");
+}
+
 
 #define _K_FILE_MODE_OPEN_OR_FAIL 0
 #define _K_FILE_MODE_OPEN_OR_CREATE 1
@@ -56,15 +111,23 @@ kFOpen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   SCIkdebug(SCIkFILE, "Opening file %s with mode %d\n", filename, mode);
   if ((mode == _K_FILE_MODE_OPEN_OR_FAIL) || (mode == _K_FILE_MODE_OPEN_OR_CREATE))
-{
-    file = fopen(filename, "r+"); /* Attempt to open existing file */
-    SCIkdebug(SCIkFILE, "Opening file %s with mode %d\n", filename, mode);
-}
+    {
+      file = fopen(filename, "r+"); /* Attempt to open existing file */
+      SCIkdebug(SCIkFILE, "Opening file %s with mode %d\n", filename, mode);
+      if (!file) {
+	SCIkdebug(SCIkFILE, "Failed. Attempting to copy from resource dir...\n");
+	file = f_open_mirrored(s, filename);
+	if (file)
+	  SCIkdebug(SCIkFILE, "Success!\n");
+	else
+	  SCIkdebug(SCIkFILE, "Not found.\n");
+      }
+    }
   if ((!file) && ((mode == _K_FILE_MODE_OPEN_OR_CREATE) || (mode == _K_FILE_MODE_CREATE)))
-{
-    file = fopen(filename, "w+"); /* Attempt to create file */
-    SCIkdebug(SCIkFILE, "Creating file %s with mode %d\n", filename, mode);
-}
+    {
+      file = fopen(filename, "w+"); /* Attempt to create file */
+      SCIkdebug(SCIkFILE, "Creating file %s with mode %d\n", filename, mode);
+    }
   if (!file) { /* Failed */
     SCIkdebug(SCIkFILE, "kFOpen() failed\n");
     s->acc = 0;
@@ -155,82 +218,15 @@ kFGets(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 /* kGetCWD(address):
 ** Writes the cwd to the supplied address and returns the address in acc.
-** This implementation tries to use a game-specific directory in the user's
-** home directory first.
 */
 void
 kGetCWD(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  char *homedir = getenv("HOME");
-  char _cwd[256];
-  char *cwd = &(_cwd[0]);
-  char *targetaddr = UPARAM(0) + s->heap;
+  heap_ptr offset = UPARAM(0);
+  char *targetaddr = s->heap + offset;
 
-  s->acc = PARAM(0);
-
-  if (!homedir) { /* We're probably not under UNIX if this happens */
-
-    if (!getcwd(cwd, 255))
-      cwd = "."; /* This might suffice */
-
-    memcpy(targetaddr, cwd, strlen(cwd) + 1);
-    return;
-  }
-
-  /* So we've got a home directory */
-
-  if (chdir(homedir)) {
-    fprintf(stderr,"Error: Could not enter home directory %s.\n", homedir);
-    perror("Reason");
-    exit(1); /* If we get here, something really bad is happening */
-  }
-
-  if (strlen(homedir) > MAX_HOMEDIR_SIZE) {
-    fprintf(stderr, "Your home directory path is too long. Re-compile FreeSCI with "
-	    "MAX_HOMEDIR_SIZE set to at least %i and try again.\n", strlen(homedir));
-    exit(1);
-  }
-
-  memcpy(targetaddr, homedir, strlen(homedir));
-  targetaddr += strlen(homedir); /* Target end of string for concatenation */
-  *targetaddr++ = '/';
-  *(targetaddr + 1) = 0;
-
-  if (chdir(FREESCI_GAMEDIR)) {
-    if (scimkdir(FREESCI_GAMEDIR, 0700)) {
-
-      SCIkwarn(SCIkWARNING, "Warning: Could not enter ~/"FREESCI_GAMEDIR"; save files"
-	      " will be written to ~/\n");
-
-      return;
-
-    }
-    else /* mkdir() succeeded */
-      chdir(FREESCI_GAMEDIR);
-  }
-
-  memcpy(targetaddr, FREESCI_GAMEDIR, strlen(FREESCI_GAMEDIR));
-  targetaddr += strlen(FREESCI_GAMEDIR);
-  *targetaddr++ = '/';
-  *targetaddr = 0;
-
-  if (chdir(s->game_name)) {
-    if (scimkdir(s->game_name, 0700)) {
-
-      fprintf(stderr,"Warning: Could not enter ~/"FREESCI_GAMEDIR"/%s; "
-	      "save files will be written to ~/"FREESCI_GAMEDIR"\n", s->game_name);
-
-      return;
-    }
-    else /* mkdir() succeeded */
-      chdir(s->game_name);
-  }
-
-  memcpy(targetaddr, s->game_name, strlen(s->game_name));
-  targetaddr += strlen(s->game_name);
-  *targetaddr++ = '/';
-  *targetaddr++ = 0;
-
+  s->acc = offset;
+  getcwd(targetaddr, PATH_MAX + 1);
 }
 
 #define K_DEVICE_INFO_GET_DEVICE 0
@@ -417,7 +413,7 @@ kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
       ++testpath[pathlen - 1];
   }
 
-  fd = creat(testpath, O_WRONLY);
+  fd = creat(testpath, 0600);
 
   if (fd == -1) {
     SCIkwarn(SCIkWARNING,"Could not test for disk space: %s\n", strerror(errno));

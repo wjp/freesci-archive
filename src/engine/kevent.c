@@ -55,6 +55,8 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
   oldy=s->pointer_y;
   e=getEvent(s);
 
+  s->parser_event = 0; /* Invalidate parser event */
+
   PUT_SELECTOR(obj, x, s->pointer_x);
   PUT_SELECTOR(obj, y, s->pointer_y);
   if((oldx!=s->pointer_x || oldy!=s->pointer_y) && s->have_mouse_flag)

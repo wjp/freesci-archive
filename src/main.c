@@ -131,6 +131,67 @@ get_readline_input(void)
 #endif /* HAVE_READLINE_READLINE_H */
 
 
+int
+init_directories(char *work_dir, char *game_id)
+{
+  char *homedir = getenv("HOME");
+
+  printf("Initializing directories...\n");
+  if (!homedir) { /* We're probably not under UNIX if this happens */
+
+    if (!getcwd(work_dir, PATH_MAX)) {
+      fprintf(stderr,"Cannot get the working directory!\n");
+      return 1;
+    }
+
+    return 0;
+  }
+
+  /* So we've got a home directory */
+
+  if (chdir(homedir)) {
+    fprintf(stderr,"Error: Could not enter home directory %s.\n", homedir);
+    perror("Reason");
+    return 1; /* If we get here, something really bad is happening */
+  }
+
+  if (strlen(homedir) > MAX_HOMEDIR_SIZE) {
+    fprintf(stderr, "Your home directory path is too long. Re-compile FreeSCI with "
+	    "MAX_HOMEDIR_SIZE set to at least %i and try again.\n", strlen(homedir));
+    return 1;
+  }
+
+  if (chdir(FREESCI_GAMEDIR)) {
+    if (scimkdir(FREESCI_GAMEDIR, 0700)) {
+
+      fprintf(stderr, "Warning: Could not enter ~/"FREESCI_GAMEDIR"; save files"
+	      " will be written to ~/\n");
+
+      return 0;
+
+    }
+    else /* mkdir() succeeded */
+      chdir(FREESCI_GAMEDIR);
+  }
+
+  if (chdir(game_id)) {
+    if (scimkdir(game_id, 0700)) {
+
+      fprintf(stderr,"Warning: Could not enter ~/"FREESCI_GAMEDIR"/%s; "
+	      "save files will be written to ~/"FREESCI_GAMEDIR"\n", game_id);
+
+      return;
+    }
+    else /* mkdir() succeeded */
+      chdir(game_id);
+  }
+
+  getcwd(work_dir, PATH_MAX);
+
+  return 0;
+}
+
+
 char *
 get_gets_input(void)
 {
@@ -186,6 +247,8 @@ main(int argc, char** argv)
   int optindex = 0;
   char *gamedir = NULL;
   char startdir[PATH_MAX+1];
+  char resource_dir[PATH_MAX+1];
+  char work_dir[PATH_MAX+1];
   char *game_name;
   sci_version_t version = 0, cmd_version = 0;
 
@@ -335,6 +398,8 @@ main(int argc, char** argv)
 	exit(1);
       }
 
+  getcwd(resource_dir, PATH_MAX); /* Store resource directory */
+
   printf ("Loading resources...\n");
   if ((i = loadResources(SCI_VERSION_AUTODETECT, 1))) {
     fprintf(stderr,"Error while loading resources: %s!\n", SCI_Error_Types[i]);
@@ -417,6 +482,13 @@ main(int argc, char** argv)
     fprintf(stderr,"Game initialization failed: Aborting...\n");
     return 1;
   }
+
+  if (init_directories(work_dir, gamestate->game_name)) {
+    fprintf(stderr,"Error resolving the working directory\n");
+    exit(1);
+  }
+  gamestate->resource_dir = resource_dir;
+  gamestate->work_dir = work_dir;
 
   if (!game_name)
     game_name = gamestate->game_name;

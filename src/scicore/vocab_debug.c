@@ -325,7 +325,7 @@ static char** vocabulary_get_knames0(int* names)
   }
 
   t[count+empty_to_add]=0;
-  *names=count + 1;
+  *names=count + empty_to_add;
   return t;
 }
 

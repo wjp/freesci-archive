@@ -2956,6 +2956,9 @@ gamestate_restore(state_t *s, char *dirname)
   retval->have_bp = s->have_bp;
   retval->bp_list = s->bp_list;
 
+  retval->resource_dir = s->resource_dir;
+  retval->work_dir = s->work_dir;
+
   retval->successor = NULL;
 
   chdir ("..");

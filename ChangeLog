@@ -1,3 +1,15 @@
+2000-06-08  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kfile.c (kFOpen): Added resource directory fallbacks
+	for external data files
+
+	* src/scicore/vocab_debug.c (vocabulary_get_knames0): Fixed bug that
+	would remove support for very early SCI games with lots of kernel
+	functions missing
+
+	* src/engine/kevent.c (kGetEvent): GetEvent() now invalidates the
+	parser event
+
 2000-06-06  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kstring.c (kParse): Fixed generic invoke_selector

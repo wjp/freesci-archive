@@ -72,7 +72,7 @@ extern gpointer g_malloc0(guint32 size);
 #define PACKAGE "freesci"
 
 /* Version number of package */
-#define VERSION "0.2.6"
+#define VERSION "0.3.0"
 
 /* directory separator */
 #define G_DIR_SEPARATOR_S "/"
