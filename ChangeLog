@@ -1,3 +1,7 @@
+2000-03-18  Lars Skovlund  <lskovlun@image.dk>
+
+	* Fixed priority drawing for Camelot
+
 2000-03-07  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kernel.c (kGameIsRestarting): Fixed some problems with the

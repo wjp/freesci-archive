@@ -928,19 +928,25 @@ void draw_pic0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	    x = *(ptr++);
 	    for (y=0; y<40; y++) colors[x][y] = *(ptr++);
 	    break;
-	  case 2:
-	    x = *(ptr++);
-	    for (y=0; y<40; y++) priorities[x][y] = *(ptr++);
+	  case 2:	/* This and the following cases only apply for monochrome displays - L.S. */
+	    ptr+=41; 
+	    break;
+	  case 3:	
+	    ptr++;
+	    break;
+	  case 4:
 	    break;
 	  case 5:
 	    ptr++;
 	    break;
+	  case 6:
+	    break;	   
 	  default:
-	    fprintf(stderr,"Unknown palette %02x", code);
+	    fprintf(stderr,"Unknown palette cmd %02x at %x\n", code, (int) ptr-(int) data);
 	    break;
 	}
 	break;
-      default: ;
+      default: { printf("Unknown pic command: 0x%02x at %x\n", code, (int) ptr-(int) data); }
     }
   }
 }
