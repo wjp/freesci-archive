@@ -464,8 +464,6 @@ free_kfunct_table(state_t *s);
 void
 script_free_engine(state_t *s)
 {
-	breakpoint_t *bp, *bp_next;
-
 	script_free_vm_memory(s);
 
 	sciprintf("Freeing state-dependant data\n");
@@ -473,6 +471,13 @@ script_free_engine(state_t *s)
 	free_kfunct_tables(s);
 
 	_free_vocabulary(s);
+
+}
+
+void
+script_free_breakpoints(state_t *s)
+{
+	breakpoint_t *bp, *bp_next;
 
 	/* Free breakpoint list */
 	bp = s->bp_list;
@@ -485,7 +490,6 @@ script_free_engine(state_t *s)
 
 	s->bp_list = NULL;
 }
-
 
 /*************************************************************/
 /* Game instance stuff: Init/Unitialize state-dependant data */
@@ -587,6 +591,8 @@ game_exit(state_t *s)
 		sci_free(s->execution_stack);
 	}
 
+	s->seg_manager.destroy(&s->seg_manager);
+	
 	if (s->synonyms_nr) {
 		sci_free(s->synonyms);
 		s->synonyms = NULL;

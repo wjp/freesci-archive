@@ -1,3 +1,11 @@
+2003-03-14  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kmath.c (kAbs): Fix compiler error.
+	* src/engine/seg_manager.c (_sm_deallocate): Taught segmgr to
+	deallocate more segment types.
+	* src/engine/vm.c (game_run): Make sure VM is completely
+	reinitialized on restarts.
+
 2003-03-08  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/vm.c: Forward port of VM fixes from the main branch.

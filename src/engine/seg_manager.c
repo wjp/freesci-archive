@@ -87,7 +87,7 @@ static void
 sm_free_script ( mem_obj_t* mem );
 
 static int
-_sm_deallocate (seg_manager_t* self, int seg);
+_sm_deallocate (seg_manager_t* self, int seg, int recursive);
 
 static byte*
 sm_dereference(seg_manager_t *self, reg_t ref, int *size);
@@ -230,7 +230,7 @@ void sm_destroy (seg_manager_t* self) {
 	/* free memory*/
 	for (i = 0; i < self->heap_size; i++) {
 		if (self->heap[i])
-			_sm_deallocate(self, i);
+			_sm_deallocate(self, i, 0);
 	}
 	sci_free (self->heap);
 	self->heap = NULL;
@@ -303,7 +303,7 @@ int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, in
 };
 
 static int
-_sm_deallocate (seg_manager_t* self, int seg)
+_sm_deallocate (seg_manager_t* self, int seg, int recursive)
 {
 	mem_obj_t *mobj;
 	VERIFY ( sm_check (self, seg), "invalid seg id" );
@@ -317,8 +317,8 @@ _sm_deallocate (seg_manager_t* self, int seg)
 		sm_free_script ( mobj );
 
 		mobj->data.script.buf = NULL;
-		if (mobj->data.script.locals_segment)
-			_sm_deallocate(self, mobj->data.script.locals_segment);
+		if (recursive && mobj->data.script.locals_segment)
+			_sm_deallocate(self, mobj->data.script.locals_segment, recursive);
 		break;
 
 	case MEM_OBJ_LOCALS:
@@ -331,7 +331,33 @@ _sm_deallocate (seg_manager_t* self, int seg)
 			sci_free(mobj->data.dynmem.buf);
 		mobj->data.dynmem.buf = NULL;
 		break;
-
+	case MEM_OBJ_SYS_STRINGS:
+		sys_string_free_all(&(mobj->data.sys_strings));
+		break;
+	case MEM_OBJ_STACK:
+		sci_free(mobj->data.stack.entries);
+		mobj->data.stack.entries = NULL;
+		break;
+	case MEM_OBJ_LISTS:
+		sci_free(mobj->data.lists.table);
+		mobj->data.lists.table = NULL;
+		mobj->data.lists.entries_nr = mobj->data.lists.max_entry = 0;
+		break;
+	case MEM_OBJ_NODES:
+		sci_free(mobj->data.nodes.table);
+		mobj->data.nodes.table = NULL;
+		mobj->data.nodes.entries_nr = mobj->data.nodes.max_entry = 0;
+		break;
+	case MEM_OBJ_CLONES:
+		sci_free(mobj->data.clones.table);
+		mobj->data.clones.table = NULL;
+		mobj->data.clones.entries_nr = mobj->data.clones.max_entry = 0;
+		break;
+	case MEM_OBJ_HUNK:
+		sci_free(mobj->data.hunks.table);
+		mobj->data.hunks.table = NULL;
+		mobj->data.hunks.entries_nr = mobj->data.hunks.max_entry = 0;
+		break;
 	default:
 		fprintf(stderr, "Deallocating segment type %d not supported!\n",
 			mobj->type);
@@ -345,7 +371,7 @@ _sm_deallocate (seg_manager_t* self, int seg)
 int sm_deallocate_script (seg_manager_t* self, struct _state *s, int script_nr) {
 	int seg = sm_seg_get( self, script_nr );
 
-	_sm_deallocate(self, seg);
+	_sm_deallocate(self, seg, 1);
 	return 1;
 };
 
@@ -1208,6 +1234,6 @@ sm_free_dynmem(seg_manager_t *self, reg_t addr)
 	    || self->heap[addr.segment]->type != MEM_OBJ_DYNMEM)
 		return 1; /* error */
 
-	_sm_deallocate(self, addr.segment);
+	_sm_deallocate(self, addr.segment, 1);
 	return 0; /* OK */
 }

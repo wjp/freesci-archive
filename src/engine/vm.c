@@ -2008,6 +2008,8 @@ _game_run(state_t *s, int restoring)
 			s->execution_stack_pos_changed = 0;
 
 			game_exit(s);
+			script_free_engine(s);
+			script_init_engine(s, s->version);
 			game_init(s);
 			_init_stack_base_with_selector(s, s->selector_map.play);
 			/* Call the play selector */
