@@ -254,10 +254,6 @@ get_class_address(state_t *s, int classnr, int lock)
 #define OBJ_SUPERCLASS(s, reg, mem) SEG_GET_HEAP2(s, reg.segment, reg.offset + SCRIPT_SUPERCLASS_OFFSET, mem)
 /* Returns an object's superclass */
 
-#define OBJ_ISCLASS(address) (SEG_GET_HEAP((address) + SCRIPT_INFO_OFFSET) & SCRIPT_INFO_CLASS)
-/* Is true if the object at the address is a class */
-
-
 /*inline*/ exec_stack_t *
 execute_method(state_t *s, word script, word pubfunct, stack_ptr_t sp,
 	       reg_t calling_obj, word argc, stack_ptr_t argp)
@@ -1656,7 +1652,7 @@ script_instantiate(state_t *s, int script_nr)
 	reg.offset = 0;
 
 	/* Set heap position (beyond the size word) */
-	s->seg_manager.set_lockers( &s->seg_manager, 0, reg.segment, SEG_ID );
+	s->seg_manager.set_lockers( &s->seg_manager, 1, reg.segment, SEG_ID );
 	s->seg_manager.set_export_table_offset( &s->seg_manager, 0, 0, reg.segment, SEG_ID );
 	s->seg_manager.set_synonyms_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
 	s->seg_manager.set_synonyms_nr( &s->seg_manager, 0, reg.segment, SEG_ID );
