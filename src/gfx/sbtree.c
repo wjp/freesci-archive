@@ -37,7 +37,7 @@
 typedef struct {
 	int key;
 	void *value;
-} cell_t;
+} sbcell_t;
 
 int
 int_compar(const void *a, const void *b)
@@ -47,7 +47,7 @@ int_compar(const void *a, const void *b)
 
 
 void
-insert_interval(cell_t *data, int start, int stop, int *keys, int plus)
+insert_interval(sbcell_t *data, int start, int stop, int *keys, int plus)
 {
 	int center = start + ((stop - start) >> 1);
 
@@ -68,7 +68,7 @@ sbtree_new(int size, int *keys)
 {
 	int table_size = 2;
 	int levels = 0;
-	cell_t *table;
+	sbcell_t *table;
 	sbtree_t *tree;
 	int i;
 
@@ -83,7 +83,7 @@ sbtree_new(int size, int *keys)
 	if (table_size > 1)
 		--table_size;
 
-	table = sci_calloc(sizeof(cell_t), table_size);
+	table = sci_calloc(sizeof(sbcell_t), table_size);
 	for (i = 0; i < table_size; i++)
 		table[i].key = NOT_A_KEY;
 
@@ -137,7 +137,7 @@ sbtree_foreach(sbtree_t *tree, void *args, void *(*operation)(sbtree_t *, const 
 							      const void *, void *))
 {
 	int i;
-	cell_t *cell = (cell_t *) tree->data;
+	sbcell_t *cell = (sbcell_t *) tree->data;
 
 	for (i = 0; i < tree->alloced_entries; i++) {
 		if (cell->key != NOT_A_KEY)
@@ -146,8 +146,8 @@ sbtree_foreach(sbtree_t *tree, void *args, void *(*operation)(sbtree_t *, const 
 	}
 }
 
-cell_t *
-locate(cell_t *start, int key, int level, int levels, int plus)
+sbcell_t *
+locate(sbcell_t *start, int key, int level, int levels, int plus)
 {
 	int comparison;
 
@@ -169,7 +169,7 @@ locate(cell_t *start, int key, int level, int levels, int plus)
 int
 sbtree_set(sbtree_t *tree, int key, void *value)
 {
-	cell_t *cell = locate((cell_t *) tree->data, key, 0, tree->levels, 1);
+	sbcell_t *cell = locate((sbcell_t *) tree->data, key, 0, tree->levels, 1);
 
 	if (cell)
 		cell->value = value;
@@ -183,7 +183,7 @@ sbtree_set(sbtree_t *tree, int key, void *value)
 void *
 sbtree_get(sbtree_t *tree, int key)
 {
-	cell_t *cell = locate((cell_t *) tree->data, key, 0, tree->levels, 1);
+	sbcell_t *cell = locate((sbcell_t *) tree->data, key, 0, tree->levels, 1);
 
 	if (cell)
 		return cell->value;
@@ -195,7 +195,7 @@ static void
 sbtree_print(sbtree_t *tree)
 {
 	int l, i;
-	cell_t *cells = (cell_t *) tree->data;
+	sbcell_t *cells = (sbcell_t *) tree->data;
 
 	fprintf(stderr,"\tTree:\n");
 	for (l = 0; l <= tree->levels; l++) {
