@@ -26,7 +26,6 @@
 ***************************************************************************/
 
 #include <engine.h>
-#include <kernel_compat.h>
 
 #define POLY_LAST_POINT 0x7777
 #define POLY_POINT_SIZE 4

@@ -32,7 +32,6 @@
 #include <kdebug.h>
 #include <uinput.h>
 #include <event.h>
-#include <heap.h>
 #include <console.h> /* sciprintf() */
 
 #ifdef HAVE_FNMATCH_H
@@ -64,36 +63,21 @@ typedef struct {
 
 /******************** Selector functionality ********************/
 
-#define GET_SELECTOR(_object_, _selector_) read_selector16(s, _object_, s->selector_map._selector_, __FILE__, \
-							 __LINE__)
 #define GET_SEL32(_o_, _slc_) read_selector(s, _o_, s->selector_map._slc_, __FILE__, __LINE__)
 #define GET_SEL32V(_o_, _slc_) (GET_SEL32(_o_, _slc_).offset)
 #define GET_SEL32SV(_o_, _slc_) ((gint16)(GET_SEL32(_o_, _slc_).offset))
 /* Retrieves a selector from an object
-** Parameters: (heap_ptr) object: The address of the object which the selector should be read from
+** Parameters: (reg_t) object: The address of the object which the selector should be read from
 **             (selector_name) selector: The selector to read
-** Returns   : (gint16) The selector value
+** Returns   : (gint16/guint16/reg_t) The selector value
 ** This macro halts on error. 'selector' must be a selector name registered in vm.h's
 ** selector_map_t and mapped in script.c.
 */
 
-#define UGET_SELECTOR(_object_, _selector_) \
- ((guint16) read_selector16(s, _object_, s->selector_map._selector_, __FILE__, __LINE__))
-/* Retrieves an unsigned selector value from an object
-** Parameters: (heap_ptr) object: The address of the object which the selector should be read from
-**             (selector_name) selector: The selector to read
-** Returns   : (guint16) The selector value
-** This macro halts on error. 'selector' must be a selector name registered in vm.h's
-** selector_map_t and mapped in script.c.
-*/
-
-
-#define PUT_SELECTOR(_object_, _selector_, _value_)\
- write_selector16(s, _object_, s->selector_map._selector_, _value_, __FILE__, __LINE__)
 #define PUT_SEL32(_o_, _slc_, _val_) write_selector(s, _o_, s->selector_map._slc_, _val_, __FILE__, __LINE__)
 #define PUT_SEL32V(_o_, _slc_, _val_) write_selector(s, _o_, s->selector_map._slc_, make_reg(0, _val_), __FILE__, __LINE__)
 /* Writes a selector value to an object
-** Parameters: (heap_ptr) object: The address of the object which the selector should be written to
+** Parameters: (reg_t) object: The address of the object which the selector should be written to
 **             (selector_name) selector: The selector to read
 **             (gint16) value: The value to write
 ** Returns   : (void)
@@ -107,13 +91,6 @@ typedef struct {
 /* Kludge for use with invoke_selector(). Used for compatibility with compilers that can't
 ** handle vararg macros.
 */
-
-
-/* functions used internally by macros */
-int
-read_selector16(struct _state *s,  heap_ptr object, selector_t selector_id, char *fname, int line);
-void
-write_selector16(struct _state *s, heap_ptr object, selector_t selector_id, int value, char *fname, int line);
 
 
 reg_t
@@ -159,7 +136,7 @@ kernel_lookup_text(struct _state *s, reg_t address, int index);
   int i;\
   sciprintf("Kernel CHECK: %s[%x](", s->kernel_names[funct_nr], funct_nr); \
   for (i = 0; i < argc; i++) { \
-    sciprintf("%04x", 0xffff & PARAM(i)); \
+    sciprintf("%04x", 0xffff & UKPV(i)); \
     if (i+1 < argc) sciprintf(", "); \
   } \
   sciprintf(")\n"); \
@@ -201,11 +178,6 @@ _SCIkprintf(FILE *file, char *format, ...);
 
 /******************** Kernel function parameter macros ********************/
 
-#define PARAM(x) ((gint16) getInt16(s->heap + argp + ((x)*2)))
-#define UPARAM(x) ((guint16) getInt16(s->heap + argp + ((x)*2)))
-
-#define PARAM_OR_ALT(x, alt) ((x < argc)? PARAM(x) : (alt))
-#define UPARAM_OR_ALT(x, alt) ((x < argc)? UPARAM(x) : (alt))
 /* Returns the parameter value or (alt) if not enough parameters were supplied */
 
 
@@ -312,7 +284,7 @@ extern abs_rect_t
 get_nsrect(struct _state *s, reg_t object, byte clip);
 /* Determines the now-seen rectangle of a view object
 ** Parameters: (state_t *) s: The state to use
-**             (heap_ptr) object: The object to check
+**             (reg_t) object: The object to check
 **             (byte) clip: Flag to determine wheter priority band
 **                          clipping should be performed
 ** Returns   : (abs_rect) The absolute rectangle describing the
@@ -405,23 +377,6 @@ lookup_list(struct _state *s, reg_t addr, char *file, int line);
 /* Generic description: */
 typedef reg_t kfunct(struct _state *s, int funct_nr, int argc, reg_t *argv);
 
-/* Old compatibility functions: */
-typedef void kfunct_old(struct _state *s, int funct_nr, int argc, heap_ptr argv);
-
-/* void
-** kFunct_old(state_t *s, int funct_nr, int argc, heap_ptr argp);
-** Kernel function 'Funct'
-** Parameters: (state_t *) s: The current state
-**             (int funct_nr): The function number (used almost exclusively in kstub)
-**             (int) argc: The number of script space arguments passed to the function
-**             (int) argp: The address of the first argument passed to the function
-** Returns   : (void)
-** Inside kernel functions, the convenience macros PARAM(), UPARAM(), PARAM_OR_ALT() and
-** UPARAM_OR_ALT() may be used to read the arguments. Return values must be stored in
-** s->acc, the accumulator.
-*/
-
-#define FREESCI_KFUNCT_OLD 0
 #define FREESCI_KFUNCT_GLUTTON 1
 
 typedef struct {
@@ -439,7 +394,6 @@ typedef struct {
 	char *name;
 	union {
 		kfunct_sig_pair_t new;
-		kfunct_old *old;
 	} data;
 } sci_kernel_function_t;
 

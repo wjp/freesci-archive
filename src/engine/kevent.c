@@ -91,11 +91,11 @@ sci_toupper(int c)
 	}
 }
 
-void
-kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kGetEvent(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int mask = UPARAM(0);
-	heap_ptr obj = UPARAM(1);
+	int mask = UKPV(0);
+	reg_t obj = argv[1];
 	sci_event_t e;
 	int oldx, oldy;
 
@@ -108,14 +108,13 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	/*If there's a simkey pending, and the game wants a keyboard event, use the
 	 *simkey instead of a normal event*/
 	if (_kdebug_cheap_event_hack && (mask & SCI_EVT_KEYBOARD)) {
-		PUT_SELECTOR(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
-		s->acc=1;
-		PUT_SELECTOR(obj, message, _kdebug_cheap_event_hack);
-		PUT_SELECTOR(obj, modifiers, SCI_EVM_NUMLOCK); /*Numlock on*/
-		PUT_SELECTOR(obj, x, s->gfx_state->pointer_pos.x);
-		PUT_SELECTOR(obj, y, s->gfx_state->pointer_pos.y);
+		PUT_SEL32V(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
+		PUT_SEL32V(obj, message, _kdebug_cheap_event_hack);
+		PUT_SEL32V(obj, modifiers, SCI_EVM_NUMLOCK); /*Numlock on*/
+		PUT_SEL32V(obj, x, s->gfx_state->pointer_pos.x);
+		PUT_SEL32V(obj, y, s->gfx_state->pointer_pos.y);
 		_kdebug_cheap_event_hack = 0;
-		return;
+		return make_reg(0, 1);
 	}
   
 	oldx=s->gfx_state->pointer_pos.x;
@@ -124,8 +123,8 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	s->parser_event = NULL_REG; /* Invalidate parser event */
 
-	PUT_SELECTOR(obj, x, s->gfx_state->pointer_pos.x);
-	PUT_SELECTOR(obj, y, s->gfx_state->pointer_pos.y);
+	PUT_SEL32V(obj, x, s->gfx_state->pointer_pos.x);
+	PUT_SEL32V(obj, y, s->gfx_state->pointer_pos.y);
 
 	/*  gfxop_set_pointer_position(s->gfx_state, gfx_point(s->gfx_state->pointer_pos.x, s->gfx_state->pointer_pos.y)); */
 
@@ -177,10 +176,10 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				if (!(e.buckybits & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT)) && (e.buckybits & SCI_EVM_CAPSLOCK))
 					e.data = sci_toupper(e.data);
 
-				PUT_SELECTOR(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
-				s->acc=1;
-				PUT_SELECTOR(obj, message, e.data);
-				PUT_SELECTOR(obj, modifiers, e.buckybits);
+				PUT_SEL32V(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
+				s->r_acc=make_reg(0, 1);
+				PUT_SEL32V(obj, message, e.data);
+				PUT_SEL32V(obj, modifiers, e.buckybits);
 
 			}
 		} break;
@@ -196,33 +195,35 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				default:break;
 				}
 
-				PUT_SELECTOR(obj, type, e.type);
-				PUT_SELECTOR(obj, message, 1);
-				PUT_SELECTOR(obj, modifiers, /*e.buckybits|*/extra_bits);
-				s->acc=1;
+				PUT_SEL32V(obj, type, e.type);
+				PUT_SEL32V(obj, message, 1);
+				PUT_SEL32V(obj, modifiers, e.buckybits|extra_bits);
+				s->r_acc=make_reg(0, 1);
 			}
 			return;
 		} break;
 
 		default: {
-			s->acc = 0; /* Unknown or no event */
+			s->r_acc = NULL_REG; /* Unknown or no event */
 		}
 		}
     
-	if ((s->acc) && (stop_on_event)) {
+	if ((s->r_acc.offset) && (stop_on_event)) {
 		stop_on_event = 0;
 		script_debug_flag = 1;
 	}  
+
+	return s->r_acc;
 }
 
-void
-kMapKeyToDir(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kMapKeyToDir(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr obj = UPARAM(0);
+	reg_t obj = argv[0];
 
-	if (GET_SELECTOR(obj, type) == SCI_EVT_KEYBOARD) { /* Keyboard */
+	if (GET_SEL32V(obj, type) == SCI_EVT_KEYBOARD) { /* Keyboard */
 		int mover = -1;
-		switch (GET_SELECTOR(obj, message)) {
+		switch (GET_SEL32V(obj, message)) {
 		case SCI_K_HOME: mover = 8; break;
 		case SCI_K_UP: mover = 1; break;
 		case SCI_K_PGUP: mover = 2; break;
@@ -237,48 +238,53 @@ kMapKeyToDir(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		}
 
 		if (mover >= 0) {
-			PUT_SELECTOR(obj, type, SCI_EVT_JOYSTICK);
-			PUT_SELECTOR(obj, message, mover);
-			s->acc = 1;
-		} else s->acc = 0;
+			PUT_SEL32V(obj, type, SCI_EVT_JOYSTICK);
+			PUT_SEL32V(obj, message, mover);
+			return make_reg(0, 1);
+		} else return NULL_REG;
 	}
 }
 
 
-void
-kGlobalToLocal(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kGlobalToLocal(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr obj = UPARAM_OR_ALT(0, 0);
+	reg_t obj = argc ? argv[0] : NULL_REG; /* Can this really happen? Lars */
 
-	if (obj) {
-		int x = GET_SELECTOR(obj, x);
-		int y = GET_SELECTOR(obj, y);
+	if (obj.segment) {
+		int x = GET_SEL32V(obj, x);
+		int y = GET_SEL32V(obj, y);
 
-		PUT_SELECTOR(obj, x, x - s->port->zone.x);
-		PUT_SELECTOR(obj, y, y - s->port->zone.y);
+		PUT_SEL32V(obj, x, x - s->port->zone.x);
+		PUT_SEL32V(obj, y, y - s->port->zone.y);
 	}
+
+	return s->r_acc;
+
 }
 
 
-void
-kLocalToGlobal(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kLocalToGlobal(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr obj = UPARAM_OR_ALT(0, 0);
+	reg_t obj = argc ? argv[0] : NULL_REG; /* Can this really happen? Lars */
 
-	if (obj) {
-		int x = GET_SELECTOR(obj, x);
-		int y = GET_SELECTOR(obj, y);
+	if (obj.segment) {
+		int x = GET_SEL32V(obj, x);
+		int y = GET_SEL32V(obj, y);
 
-		PUT_SELECTOR(obj, x, x + s->port->zone.x);
-		PUT_SELECTOR(obj, y, y + s->port->zone.y);
+		PUT_SEL32V(obj, x, x + s->port->zone.x);
+		PUT_SEL32V(obj, y, y + s->port->zone.y);
 	}
+
+	return s->r_acc;
 }
 
-void /* Not implemented */
-kJoystick(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t /* Not implemented */
+kJoystick(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	SCIkdebug(SCIkSTUB, "Unimplemented syscall 'Joystick()'\n", funct_nr);
-	s->acc = 0;
+	return NULL_REG;
 }
 
 

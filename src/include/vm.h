@@ -29,7 +29,6 @@
 
 
 #include <script.h>
-#include <heap.h>
 #include <vocabulary.h>
 #include <versions.h>
 #include <seg_manager.h>
@@ -606,7 +605,7 @@ script_instantiate(struct _state *s, int script_nr);
 /* Makes sure that a script and its superclasses get loaded to the heap
 ** Parameters: (state_t *) s: The state to operate on
 **             (int) script_nr: The script number to load
-** Returns   : (heap_ptr) The script's segment ID or 0 if out of heap
+** Returns   : (int) The script's segment ID or 0 if out of heap
 ** If the script already has been loaded, only the number of lockers is increased.
 ** All scripts containing superclasses of this script aret loaded recursively as well,
 ** unless 'recursive' is set to zero.
@@ -715,7 +714,7 @@ script_map_selectors(struct _state *s, selector_map_t *map);
 ** Called by script_run();
 */
 
-void
+int
 script_map_kernel(struct _state *s);
 /* Maps kernel functions
 ** Parameters: (state_t *) s: The state which the kernel_names are retreived from

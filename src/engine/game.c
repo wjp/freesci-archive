@@ -44,7 +44,6 @@
 #include <versions.h>
 #include <kernel.h>
 #include <kdebug.h>
-#include <kernel_compat.h>
 #include <kernel_types.h>
 
 #if !defined (_WIN32) && !defined (__BEOS__)
@@ -375,9 +374,6 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->script_000 = &(s->seg_manager.heap[s->script_000_segment]->data.script);
 
 
-	s->_heap = heap_new();
-	s->heap = s->_heap->start;
-
 	s->sys_strings = s->seg_manager.allocate_sys_strings(&s->seg_manager,
 							     &s->sys_strings_segment);
 	/* Allocate static buffer for savegame and CWD directories */
@@ -385,8 +381,6 @@ script_init_engine(state_t *s, sci_version_t version)
 
 	s->save_dir_copy = make_reg(s->sys_strings_segment, SYS_STRING_SAVEDIR);
 	s->save_dir_edit_offset = 0;
-
-	save_ff(s->_heap); /* Save heap state */
 
 	s->r_acc = s->r_prev = NULL_REG;
 	s->r_amp_rest = 0;
@@ -412,7 +406,7 @@ script_init_engine(state_t *s, sci_version_t version)
 	/* Allocate memory for file handles */
 
 	sci_init_dir(&(s->dirseeker));
-	s->dirseeker_outbuffer = 0;
+	s->dirseeker_outbuffer = NULL_REG;
 	/* Those two are used by FileIO for FIND_FIRST, FIND_NEXT */
 
 	sciprintf("Engine initialized\n");
@@ -428,12 +422,7 @@ void
 script_set_gamestate_save_dir(state_t *s)
 {
 	char *cwd = sci_getcwd();
-	if (strlen(cwd) > MAX_SAVE_DIR_SIZE)
-		sciprintf("Warning: cwd '%s' is longer than the"
-			  " MAX_SAVE_DIR_SIZE %d\n",
-			  cwd, MAX_SAVE_DIR_SIZE);
-	else
-		strcpy((char *)(s->heap + s->save_dir + 2), cwd);
+
 	sys_string_set(s->sys_strings, SYS_STRING_SAVEDIR, cwd);
 	sci_free(cwd);
 }
@@ -446,8 +435,6 @@ script_free_vm_memory(state_t *s)
 	sciprintf("Freeing VM memory\n");
 	s->save_dir_copy_buf = NULL;
 
-	heap_del(s->_heap);
-	s->_heap = NULL;
 	sci_free(s->classtable);
 	s->classtable = NULL;
 
@@ -504,7 +491,6 @@ int
 game_init(state_t *s)
 {
 #warning "Fixme: Use new VM instantiation code all over the place"
-	heap_ptr parser_handle;
 	reg_t game_obj; /* Address of the game object */
 	int i;
 	dstack_t *stack;
@@ -522,22 +508,13 @@ game_init(state_t *s)
 	s->parser_valid = 0; /* Invalidate parser */
 	s->parser_event = NULL_REG; /* Invalidate parser event */
 
-	parser_handle = heap_allocate(s->_heap, PARSE_HEAP_SIZE);
-
 	s->synonyms = NULL;
 	s->synonyms_nr = 0; /* No synonyms */
 
-	/* Initialize clone list */
-	memset(&(s->clone_list), 0, sizeof(heap_ptr) * SCRIPT_MAX_CLONES);
 	/* Initialize send_calls buffer */
 
 	if (!send_calls_allocated)
 		send_calls = sci_calloc(sizeof(calls_struct_t), send_calls_allocated = 16);
-
-	if (!parser_handle) {
-		sciprintf("game_init(): Insufficient heap space for parser word error block\n");
-		return 1;
-	}
 
 	if (s->gfx_state && _reset_graphics_input(s))
 		return 1;
@@ -558,8 +535,6 @@ game_init(state_t *s)
 	s->onscreen_console = 0; /* No onscreen console unless explicitly requested */
 
 	srand(time(NULL)); /* Initialize random number generator */
-
-	memset(s->clone_list, sizeof(s->clone_list), 0); /* No clones */
 
 	/*	script_dissect(0, s->selector_names, s->selector_names_nr); */
 	game_obj = script_lookup_export(s, 0, 0);
@@ -616,8 +591,6 @@ game_exit(state_t *s)
 #ifdef __GNUC__
 #warning "Free parser segment here"
 #endif
-	restore_ff(s->_heap); /* Restore former heap state */
-
 	if (send_calls_allocated) {
 		sci_free(send_calls);
 		send_calls_allocated = 0;

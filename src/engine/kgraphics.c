@@ -30,7 +30,6 @@
 #include <gfx_widgets.h>
 #include <sci_graphics.h>
 #include <sci_widgets.h>
-#include <kernel_compat.h>
 
 #undef DEBUG_LSRECT
 
@@ -279,23 +278,26 @@ graph_map_ega_color(state_t *s, int color, int priority, int control)
 /* --- */
 
 
-void
-kSetCursor(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kSetCursor(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 
-	if (PARAM_OR_ALT(1,1)) {
-		s->mouse_pointer_nr = PARAM(0);
+	if (SKPV_OR_ALT(1,1)) {
+		s->mouse_pointer_nr = SKPV(0);
 	} else
 		s->mouse_pointer_nr = GFXOP_NO_POINTER;
 
 	GFX_ASSERT(gfxop_set_pointer_cursor(s->gfx_state, s->mouse_pointer_nr));
 
 	if (argc > 2) {
-		point_t newpos = gfx_point(PARAM(2) + s->port->bounds.x,
-					   PARAM(3) + s->port->bounds.y);
+		point_t newpos = gfx_point(SKPV(2) + s->port->bounds.x,
+					   SKPV(3) + s->port->bounds.y);
 
 		GFX_ASSERT(gfxop_set_pointer_position(s->gfx_state, newpos));
 	}
+
+	return s->r_acc;
+
 }
 
 static inline void
@@ -305,21 +307,24 @@ _ascertain_port_contents(gfxw_port_t *port)
 		port->contents = (gfxw_widget_t *) gfxw_new_list(port->bounds, 0);
 }
 
-void
-kShow(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kShow(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	s->pic_visible_map = sci_ffs(UPARAM_OR_ALT(0, 1)) - 1;
+	s->pic_visible_map = sci_ffs(UKPV_OR_ALT(0, 1)) - 1;
 
 	s->pic_not_valid = 2;
+	return s->r_acc;
 }
 
 
-void
-kPicNotValid(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kPicNotValid(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	s->acc = s->pic_not_valid;
+	s->r_acc = make_reg(0, s->pic_not_valid);
 	if (argc)
-		s->pic_not_valid = (byte)PARAM(0);
+		s->pic_not_valid = (byte)UKPV(0);
+
+	return s->r_acc;
 }
 
 void
@@ -542,16 +547,16 @@ kTextSize(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 
 
-void
-kWait(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kWait(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	GTimeVal time;
-	int SleepTime = PARAM(0);
+	int SleepTime = UKPV(0);
 
 	sci_get_current_time (&time);
 
-	s->acc = ((time.tv_usec - s->last_wait_time.tv_usec) * 60 / 1000000) +
-		(time.tv_sec - s->last_wait_time.tv_sec) * 60;
+	s->r_acc = make_reg(0, ((time.tv_usec - s->last_wait_time.tv_usec) * 60 / 1000000) +
+		(time.tv_sec - s->last_wait_time.tv_sec) * 60);
 
 	memcpy(&(s->last_wait_time), &time, sizeof(GTimeVal));
 
@@ -560,34 +565,36 @@ kWait(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				 | KERNEL_OPT_FLAG_GOT_2NDEVENT);
 
 	GFX_ASSERT(gfxop_usleep(s->gfx_state, SleepTime * 1000000 / 60));
+
+	return s->r_acc;
 }
 
 
-void
-kCoordPri(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kCoordPri(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int y = PARAM(0);
+	int y = SKPV(0);
 
-	s->acc = VIEW_PRIORITY(y);
+	return make_reg(0, VIEW_PRIORITY(y));
 }
 
 
-void
-kPriCoord(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kPriCoord(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int priority = PARAM(0);
+	int priority = SKPV(0);
 
-	s->acc = PRIORITY_BAND_FIRST(priority);
+	return make_reg(0, PRIORITY_BAND_FIRST(priority));
 }
 
 
 
 void
-_k_dirloop(heap_ptr obj, word angle, state_t *s, int funct_nr,
-	   int argc, heap_ptr argp)
+_k_dirloop(reg_t obj, word angle, state_t *s, int funct_nr,
+	   int argc, reg_t *argv)
 {
-	int view = GET_SELECTOR(obj, view);
-	int signal = UGET_SELECTOR(obj, signal);
+	int view = GET_SEL32V(obj, view);
+	int signal = GET_SEL32V(obj, signal);
 	int loop;
 	int maxloops;
 
@@ -627,14 +634,14 @@ _k_dirloop(heap_ptr obj, word angle, state_t *s, int funct_nr,
 	} else if ((loop>1)&&(maxloops < 4))
 		return;
 
-	PUT_SELECTOR(obj, loop, loop);
+	PUT_SEL32V(obj, loop, loop);
 }
 
 
-void
-kDirLoop(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kDirLoop(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	_k_dirloop(UPARAM(0), UPARAM(1), s, funct_nr, argc, argp);
+	_k_dirloop(argv[0], UKPV(1), s, funct_nr, argc, argv);
 }
 
 #define GASEOUS_VIEW_MASK_ACTIVE (_K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)
@@ -804,12 +811,12 @@ kCanBeHere(state_t *s, int funct_nr, int argc, reg_t * argv)
 
 
 
-void
-kCelHigh(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kCelHigh(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int view = PARAM(0);
-	int loop = PARAM(1);
-	int cel = PARAM(2);
+	int view = SKPV(0);
+	int loop = SKPV(1);
+	int cel = SKPV(2);
 	int height, width;
 	point_t offset;
 
@@ -820,15 +827,15 @@ kCelHigh(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (gfxop_get_cel_parameters(s->gfx_state, view, loop, cel, &width, &height, &offset))
 		SCIkwarn(SCIkERROR, "Invalid loop (%d) or cel (%d) in view.%d (0x%x), or view invalid\n", loop, cel, view, view);
 	else
-		s->acc = height;
+		return make_reg(0, height);
 }
 
-void
-kCelWide(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kCelWide(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int view = PARAM(0);
-	int loop = PARAM(1);
-	int cel = PARAM(2);
+	int view = SKPV(0);
+	int loop = SKPV(1);
+	int cel = SKPV(2);
 	int height, width;
 	point_t offset;
 
@@ -839,16 +846,14 @@ kCelWide(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (gfxop_get_cel_parameters(s->gfx_state, view, loop, cel, &width, &height, &offset))
 		SCIkwarn(SCIkERROR, "Invalid loop (%d) or cel (%d) in view.%d (0x%x), or view invalid\n", loop, cel, view, view);
 	else
-		s->acc = width;
+		return make_reg(0, width);
 }
 
-
-
-void
-kNumLoops(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kNumLoops(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr obj = PARAM(0);
-	int view = GET_SELECTOR(obj, view);
+	reg_t obj = argv[0];
+	int view = GET_SEL32V(obj, view);
 	int loops_nr = gfxop_lookup_view_get_loops(s->gfx_state, view);
 
 
@@ -857,34 +862,34 @@ kNumLoops(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		return;
 	}
 
-	s->acc = loops_nr;
+	SCIkdebug(SCIkGRAPHICS, "NumLoops(view.%d) = %d\n", view, loops_nr);
 
-	SCIkdebug(SCIkGRAPHICS, "NumLoops(view.%d) = %d\n", view, s->acc);
+	return make_reg(0, loops_nr);
 }
 
 
-void
-kNumCels(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kNumCels(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr obj = PARAM(0);
-	int loop = UGET_SELECTOR(obj, loop);
-	int view = GET_SELECTOR(obj, view);
+	reg_t obj = argv[0];
+	int loop = GET_SEL32V(obj, loop);
+	int view = GET_SEL32V(obj, view);
 	int cel = 0xffff;
 
 
 	if (gfxop_check_cel(s->gfx_state, view, &loop, &cel)) { /* OK, this is a hack and there's a
 							       ** real function to calculate cel numbers... */
-		SCIkwarn(SCIkERROR, "view.%d (0x%x) not found\n", PARAM(0), PARAM(0));
+		SCIkwarn(SCIkERROR, "view.%d (0x%x) not found\n", view, view);
 		return;
 	}
 
-	s->acc = cel + 1;
+	SCIkdebug(SCIkGRAPHICS, "NumCels(view.%d, %d) = %d\n", view, loop, cel+1);
 
-	SCIkdebug(SCIkGRAPHICS, "NumCels(view.%d, %d) = %d\n", view, loop, s->acc);
+	return make_reg(0, cel + 1);
 }
 
-void
-kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kOnControl(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	int arg = 0;
 	int map, xstart, ystart;
@@ -895,22 +900,22 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		map = 4;
 	else {
 		arg = 1;
-		map = PARAM(0);
+		map = SKPV(0);
 	}
 
-	ystart = PARAM(arg+1);
-	xstart = PARAM(arg);
+	ystart = SKPV(arg+1);
+	xstart = SKPV(arg);
 
 	if (argc > 3) {
-		ylen = PARAM(arg+3) - ystart;
-		xlen = PARAM(arg+2) - xstart;
+		ylen = SKPV(arg+3) - ystart;
+		xlen = SKPV(arg+2) - xstart;
 		if (xlen > 1)
 			--xlen;
 		if (ylen > 1)
 			--ylen;
 	}
 
-	s->acc = gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart, ystart + 10, xlen, ylen), map);
+	return make_reg(0, gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart, ystart + 10, xlen, ylen), map));
 }
 
 void
@@ -918,27 +923,27 @@ _k_view_list_free_backgrounds(state_t *s, view_object_t *list, int list_nr);
 
 int sci01_priority_table_flags = 0;
 
-void
-kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kDrawPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int pic_nr = PARAM(0);
+	int pic_nr = SKPV(0);
 	int add_to_pic = 1;
-	int palette = PARAM_OR_ALT(3, 0);
+	int palette = SKPV_OR_ALT(3, 0);
 	gfx_color_t transparent = s->wm_port->bgcolor;
 
 
 	if (s->version < SCI_VERSION_FTU_NEWER_DRAWPIC_PARAMETERS) {
-		if (!PARAM_OR_ALT(2, 0))
+		if (!SKPV_OR_ALT(2, 0))
 			add_to_pic = 0;
 	} else
-		if (PARAM_OR_ALT(2, 1))
+		if (SKPV_OR_ALT(2, 1))
 			add_to_pic = 0;
 
 
 	gfxop_disable_dirty_frames(s->gfx_state);
 	s->old_screen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 10, 320, 190));
 
-	SCIkdebug(SCIkGRAPHICS,"Drawing pic.%03d\n", PARAM(0));
+	SCIkdebug(SCIkGRAPHICS,"Drawing pic.%03d\n", SKPV(0));
 
 	if (!s->pics) {
 		s->pics = sci_malloc(sizeof(drawn_pic_t) * (s->pics_nr = 8));
@@ -986,7 +991,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		s->pic_priority_table = NULL;
 
 	if (argc > 1)
-		s->pic_animate = PARAM(1); /* The animation used during kAnimate() later on */
+		s->pic_animate = SKPV(1); /* The animation used during kAnimate() later on */
 
 	s->dyn_views = NULL;
 	s->drop_views = NULL;
@@ -1000,6 +1005,8 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	s->pic_not_valid = 1;
 	s->pic_is_new = 1;
+
+	return s->r_acc;
 
 }
 
@@ -2226,19 +2233,18 @@ kAddToPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 }
 
 
-void
-kGetPort(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kGetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	s->acc = s->port->ID;
+	return make_reg(0, s->port->ID);
 }
 
 
-void
-kSetPort(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kSetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	unsigned int port_nr = PARAM(0);
+	unsigned int port_nr = SKPV(0);
 	gfxw_port_t *new_port;
-
 
 	new_port = gfxw_find_port(s->visual, port_nr);
 
@@ -2249,18 +2255,19 @@ kSetPort(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	s->port->draw(GFXW(s->port), gfxw_point_zero); /* Update the port we're leaving */
 	s->port = new_port;
+	return s->r_acc;
 }
 
 
-void
-kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kDrawCel(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int view = PARAM(0);
-	int loop = PARAM(1);
-	int cel = PARAM(2);
-	int x = PARAM(3);
-	int y = PARAM(4);
-	int priority = PARAM_OR_ALT(5, -1);
+	int view = SKPV(0);
+	int loop = SKPV(1);
+	int cel = SKPV(2);
+	int x = SKPV(3);
+	int y = SKPV(4);
+	int priority = SKPV_OR_ALT(5, -1);
 	gfxw_view_t *new_view;
 
 
@@ -2282,14 +2289,13 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	ADD_TO_CURRENT_BG_WIDGETS(new_view);
 	FULL_REDRAW();
+	return s->r_acc;
 }
 
-
-
-void
-kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kDisposeWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	unsigned int goner_nr = PARAM(0);
+	unsigned int goner_nr = SKPV(0);
 	gfxw_port_t *goner;
 	gfxw_port_t *pred;
 
@@ -2318,11 +2324,11 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		s->port = gfxw_find_default_port(s->visual);
 
 	gfxop_update(s->gfx_state);
+	return s->r_acc;
 }
 
-
-void
-kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kNewWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	gfxw_port_t *window;
 	int x, y, xl, yl, flags;
@@ -2330,27 +2336,29 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int priority;
 
 
-	y = PARAM(0);
-	x = PARAM(1);
-	yl = PARAM(2) - y;
-	xl = PARAM(3) - x;
+	y = SKPV(0);
+	x = SKPV(1);
+	yl = SKPV(2) - y;
+	xl = SKPV(3) - x;
 
 	y += s->wm_port->bounds.y - 1;
 
 	if (x+xl > 319)
 		x -= ((x+xl) - 319);
 
-	flags = PARAM(5);
+	flags = SKPV(5);
 
-	bgcolor = s->ega_colors[PARAM_OR_ALT(8, 15)];
-	priority = PARAM_OR_ALT(6, -1);
+	bgcolor = s->ega_colors[SKPV_OR_ALT(8, 15)];
+	priority = SKPV_OR_ALT(6, -1);
 	bgcolor.mask = GFX_MASK_VISUAL | ((priority >= 0)? GFX_MASK_PRIORITY : 0);
 	bgcolor.priority = priority;
 
-	SCIkdebug(SCIkGRAPHICS, "New window with params %d, %d, %d, %d\n", PARAM(0), PARAM(1), PARAM(2), PARAM(3));
+	SCIkdebug(SCIkGRAPHICS, "New window with params %d, %d, %d, %d\n", SKPV(0), SKPV(1), SKPV(2), SKPV(3));
 	window = sciw_new_window(s, gfx_rect(x, y, xl, yl), s->titlebar_port->font_nr,
-				 s->ega_colors[PARAM_OR_ALT(7, 0)], bgcolor, s->titlebar_port->font_nr,
-				 s->ega_colors[15], s->ega_colors[8], (char *) (s->heap + UPARAM(4)), flags);
+				 s->ega_colors[SKPV_OR_ALT(7, 0)], bgcolor, s->titlebar_port->font_nr,
+				 s->ega_colors[15], s->ega_colors[8], 
+				 kernel_dereference_bulk_pointer(s, argv[4], 0), 
+				 flags);
 
 	ADD_TO_CURRENT_PORT(window);
 	FULL_REDRAW();
@@ -2360,7 +2368,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	s->port = window; /* Set active port */
 
-	s->acc = window->ID;
+	return make_reg(0, window->ID);
 }
 
 
@@ -2943,11 +2951,11 @@ kAnimate(state_t *s, int funct_nr, int argc, reg_t *argv)
 #define SHAKE_DOWN 1
 #define SHAKE_RIGHT 2
 
-void
-kShakeScreen(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kShakeScreen(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int shakes = PARAM_OR_ALT(0, 1);
-	int directions = PARAM_OR_ALT(1, 1);
+	int shakes = SKPV_OR_ALT(0, 1);
+	int directions = SKPV_OR_ALT(1, 1);
 	gfx_pixmap_t *screen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 0, 320, 200));
 	int i;
 
@@ -2980,6 +2988,7 @@ kShakeScreen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	gfxop_free_pixmap(s->gfx_state, screen);
 	gfxop_update(s->gfx_state);
+	return s->r_acc;
 }
 
 #define K_DISPLAY_SET_COORDS 100
@@ -3143,8 +3152,8 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 		s->r_acc = graph_save_box(s, save_area);
 		text_handle->serial++; /* This is evil! */
 
-		SCIkdebug(SCIkGRAPHICS, "Saving (%d, %d) size (%d, %d) as %04x\n",
-			  save_area.x, save_area.y, save_area.xl, save_area.yl, s->acc);
+		SCIkdebug(SCIkGRAPHICS, "Saving (%d, %d) size (%d, %d) as "PREG"\n",
+			  save_area.x, save_area.y, save_area.xl, save_area.yl, s->r_acc);
 
 	}
 

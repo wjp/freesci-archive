@@ -484,7 +484,9 @@ kMenuSelect(state_t *s, int funct_nr, int argc, reg_t *argv)
 		} else
 			s->r_acc = NULL_REG;
 
-		SCIkdebug(SCIkMENU, "Menu: Claim -> %04x\n", s->acc);
+		SCIkdebug(SCIkMENU, "Menu: Claim -> %04x\n", s->r_acc.offset);
 	}
 	else s->r_acc = NULL_REG; /* Not claimed */
+
+	return s->r_acc;
 }

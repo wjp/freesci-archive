@@ -1,3 +1,10 @@
+2003-02-03  Lars Skovlund  <lskovlun@image.dk>
+
+	* Ported kernel functions all over the place.
+	* Got rid of the emulation layer.
+	* Removed some obsolete scriptdebug commands.
+	* Reverted Christoph's event patch from 2002-11-29.
+
 2003-02-02  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kmenu.c: Ported kernel functions.

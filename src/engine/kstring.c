@@ -29,7 +29,6 @@
 #include <sciresource.h>
 #include <engine.h>
 #include <vocabulary.h>
-#include <kernel_compat.h>
 
 #define CHECK_OVERFLOW1(pt, size) \
 	if (((pt) - (str_base)) + (size) > maxsize) { \
@@ -184,35 +183,31 @@ kSaid(state_t *s, int funct_nr, int argc, reg_t *argv)
 }
 
 
-void
-kSetSynonyms(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kSetSynonyms(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-#ifdef __GNUC__
-#warning "Re-implement kSetSynonyms()"
-#endif
-#if 0
-	heap_ptr list = UPARAM(0);
+	reg_t object = argv[0];
+	list_t *list;
+	node_t *node;
 	int script;
 	int synpos = 0;
 
-	SCIkASSERT(list > 800);
 	if (s->synonyms_nr)
 		free(s->synonyms);
 
 	s->synonyms_nr = 0;
 
-	list = UGET_SELECTOR(list, elements); /* Get the number of elements */
-	list = UGET_HEAP(list + LIST_FIRST_NODE); /* Get first list node */
+	list = LOOKUP_LIST(GET_SEL32(object, elements)); 
+	node = LOOKUP_NODE(list->first);
 
-	while (list) {
-		heap_ptr objpos = GET_HEAP(list + LIST_NODE_VALUE);
+	while (node) {
+		reg_t objpos = node->value;
 
-		script = UGET_SELECTOR(objpos, number);
-		SCIkASSERT(script <= 1000);
+		script = GET_SEL32V(objpos, number);
 
-		if (s->scripttable[script].heappos) {
+		if (s->scripttable[script].synonyms_nr) {
 
-			if (s->scripttable[script].synonyms_nr) {
+			if (s->scripttable[script].synonyms) {
 				int i;
 				if (s->synonyms_nr)
 					s->synonyms = sci_realloc(s->synonyms,
@@ -232,23 +227,23 @@ kSetSynonyms(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				} else
 
 					for (i = 0; i < s->scripttable[script].synonyms_nr; i++) {
-						s->synonyms[synpos].replaceant = UGET_HEAP(s->scripttable[script].synonyms_offset + i * 4);
-						s->synonyms[synpos].replacement = UGET_HEAP(s->scripttable[script].synonyms_offset + i * 4 + 2);
+						s->synonyms[synpos].replaceant = getInt16(s->scripttable[script].synonyms + i * 4);
+						s->synonyms[synpos].replacement = getInt16(s->scripttable[script].synonyms + i * 4 + 2);
 
 						synpos++;
 					}
-			}
+			} else SCIkwarn(SCIkWARNING, "Synonyms of script.%03d were requested, but script is not available\n");
 
-		} else SCIkwarn(SCIkWARNING, "Synonyms of script.%03d were requested, but script is not available\n");
+		} 
 
-		list = GET_HEAP(list + LIST_NEXT_NODE);
+		node = LOOKUP_NODE(node->succ);
 	}
 
 	SCIkdebug(SCIkPARSER, "A total of %d synonyms are active now.\n", s->synonyms_nr);
 
 	if (!s->synonyms_nr)
 		s->synonyms = NULL;
-#endif
+	return s->r_acc;
 }
 
 
@@ -284,7 +279,7 @@ kParse(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 		vocab_synonymize_tokens(words, words_nr, s->synonyms, s->synonyms_nr);
 
-		s->acc = 1;
+		s->r_acc = make_reg(0, 1);
 
 		if (s->debug_mode & (1 << SCIkPARSER_NR)) {
 			int i;
@@ -307,7 +302,7 @@ kParse(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 		if (syntax_fail) {
 
-			s->acc = 1;
+			s->r_acc = make_reg(0, 1);
 			PUT_SEL32V(event, claimed, 1);
 
 			invoke_selector(INV_SEL(s->game_obj, syntaxFail, 0), 2, s->parser_base, stringpos);
@@ -356,20 +351,25 @@ kStrEnd(state_t *s, int funct_nr, int argc, reg_t *argv)
 	return address;
 }
 
-void
-kStrCat(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kStrCat(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
+	char *s1 = kernel_dereference_bulk_pointer(s, argv[0], 0);
+	char *s2 = kernel_dereference_bulk_pointer(s, argv[1], 0);
 
-	strcat((char *) s->heap + UPARAM(0), (char *) s->heap + UPARAM(1));
+	strcat(s1, s2);
 }
 
-void
-kStrCmp(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kStrCmp(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
+	char *s1 = kernel_dereference_bulk_pointer(s, argv[0], 0);
+	char *s2 = kernel_dereference_bulk_pointer(s, argv[1], 0);
+
 	if (argc > 2)
-		s->acc = strncmp((char *) (s->heap + UPARAM(0)), (char *) (s->heap + UPARAM(1)), UPARAM(2));
+		return make_reg(0, strncmp(s1, s2, UKPV(2)));
 	else
-		s->acc = strcmp((char *) (s->heap + UPARAM(0)), (char *) (s->heap + UPARAM(1)));
+		return make_reg(0, strcmp(s1, s2));
 }
 
 
@@ -427,18 +427,18 @@ kStrAt(state_t *s, int funct_nr, int argc, reg_t *argv)
 }
 
 
-void
-kReadNumber(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kReadNumber(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	char *source = (char *) (s->heap + UPARAM(0));
+	char *source = kernel_dereference_bulk_pointer(s, argv[0], 0);
 
 	while (isspace(*source))
 		source++; /* Skip whitespace */
 
 	if (*source == '$') /* SCI uses this for hex numbers */
-		s->acc = (gint16)strtol(source + 1, NULL, 16); /* Hex */
+		return make_reg(0, (gint16)strtol(source + 1, NULL, 16)); /* Hex */
 	else
-		s->acc = (gint16)strtol(source, NULL, 10); /* Force decimal */
+		return make_reg(0, (gint16)strtol(source, NULL, 10)); /* Force decimal */
 }
 
 
@@ -622,23 +622,25 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 }
 
 
-void
-kStrLen(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kStrLen(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	s->acc = strlen((char *) (s->heap + UPARAM(0)));
+	char *str = kernel_dereference_bulk_pointer(s, argv[0], 0);
+
+	return make_reg(0, strlen(str));
 }
 
 
-void
-kGetFarText(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kGetFarText(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	resource_t *textres = scir_find_resource(s->resmgr, sci_text, UPARAM(0), 0);
+	resource_t *textres = scir_find_resource(s->resmgr, sci_text, UKPV(0), 0);
 	char *seeker;
-	int counter = PARAM(1);
+	int counter = UKPV(1);
 
 
 	if (!textres) {
-		SCIkwarn(SCIkERROR, "text.%d does not exist\n", PARAM(0));
+		SCIkwarn(SCIkERROR, "text.%d does not exist\n", UKPV(0));
 		return;
 	}
 
@@ -650,7 +652,7 @@ kGetFarText(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	** resource.
 	*/
 
-	s->acc = UPARAM(2);
-	strcpy((char *) (s->heap + UPARAM(2)), seeker); /* Copy the string and get return value */
+	strcpy(kernel_dereference_bulk_pointer(s, argv[2], 0), seeker); /* Copy the string and get return value */
+	return argv[2];
 }
 

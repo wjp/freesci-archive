@@ -28,13 +28,13 @@
 #include <sciresource.h>
 #include <engine.h>
 
-void
-kSetJump(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kSetJump(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr object = UPARAM(0);
-	int dx = PARAM(1);
-	int dy = PARAM(2);
-	int gy = PARAM(3);
+	reg_t object = argv[0];
+	int dx = SKPV(1);
+	int dy = SKPV(2);
+	int gy = SKPV(3);
 	int t1 = 1;
 	int t2;
 	int x = 0;
@@ -68,8 +68,8 @@ kSetJump(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	SCIkdebug(SCIkBRESEN, "SetJump for object at %x", object);
 	SCIkdebug(SCIkBRESEN, "xStep: %d, yStep: %d\n", x, y);
 
-	PUT_SELECTOR(object, xStep, x);
-	PUT_SELECTOR(object, yStep, y);
+	PUT_SEL32V(object, xStep, x);
+	PUT_SEL32V(object, yStep, y);
 
 }
 
@@ -267,61 +267,58 @@ kDoBresen(state_t *s, int funct_nr, int argc, reg_t *argv)
 }
 
 extern void
-_k_dirloop(heap_ptr obj, word angle, state_t *s, int funct_nr,
-	   int argc, heap_ptr argp);
+_k_dirloop(reg_t obj, word angle, state_t *s, int funct_nr,
+	   int argc, reg_t *argv);
 /* From kgraphics.c, used as alternative looper */
+
+int
+is_heap_object(state_t *s, reg_t pos);
+/* From kscripts.c */
 
 extern int
 get_angle(int xrel, int yrel);
 /* from kmath.c, used for calculating angles */
 
 
-void
-kDoAvoider(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kDoAvoider(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-#ifdef __GNUC__
-#warning "Fix DoAvoider() selector invocations"
-#endif
-#if 0
-	heap_ptr avoider = UPARAM(0);
-	heap_ptr client, looper, mover;
+	reg_t avoider = argv[0];
+	reg_t client, looper, mover;
 	int angle;
 	int dx, dy;
 	int destx, desty;
 
 
-	s->acc = -1;
+	s->r_acc = make_reg(0, -1);
 
-	if (!is_object(s, avoider)) {
+	if (!is_heap_object(s, avoider)) {
 		SCIkwarn(SCIkWARNING, "DoAvoider() where avoider %04x is not an object\n", avoider);
 		return;
 	}
 
-	client = GET_SELECTOR(avoider, client);
+	client = GET_SEL32(avoider, client);
 
-	if (!is_object(s, client)) {
+	if (!is_heap_object(s, client)) {
 		SCIkwarn(SCIkWARNING, "DoAvoider() where client %04x is not an object\n", client);
 		return;
 	}
 
-	looper = GET_SELECTOR(client, looper);
+	looper = GET_SEL32(client, looper);
 
-	mover = GET_SELECTOR(client, mover);
+	mover = GET_SEL32(client, mover);
 
-	if (!is_object(s, mover)) {
-		if (mover) {
+	if (!is_heap_object(s, mover)) {
+		if (mover.segment) {
 			SCIkwarn(SCIkWARNING, "DoAvoider() where mover %04x is not an object\n", mover);
 		}
 		return;
 	}
 
-	destx = GET_SELECTOR(mover, x);
-	desty = GET_SELECTOR(mover, y);
+	destx = GET_SEL32V(mover, x);
+	desty = GET_SEL32V(mover, y);
 
 	SCIkdebug(SCIkBRESEN, "Doing avoider %04x (dest=%d,%d)\n", avoider, destx, desty);
-
-	if (!mover)
-		return;
 
 	if (invoke_selector(INV_SEL(mover, doit, 1) , 0)) {
 		SCIkwarn(SCIkERROR, "Mover %04x of avoider %04x"
@@ -329,8 +326,8 @@ kDoAvoider(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		return;
 	}
 
-	mover = GET_SELECTOR(client, mover);
-	if (!mover) /* Mover has been disposed? */
+	mover = GET_SEL32(client, mover);
+	if (!mover.segment) /* Mover has been disposed? */
 		return; /* Return gracefully. */
 
 	if (invoke_selector(INV_SEL(client, isBlocked, 1) , 0)) {
@@ -339,19 +336,19 @@ kDoAvoider(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		return;
 	}
 
-	dx = destx - GET_SELECTOR(client, x);
-	dy = desty - GET_SELECTOR(client, y);
+	dx = destx - GET_SEL32V(client, x);
+	dy = desty - GET_SEL32V(client, y);
 	angle = get_angle(dx, dy);
 
 	SCIkdebug(SCIkBRESEN, "Movement (%d,%d), angle %d is %s blocked\n",
-		  dx, dy, angle, (s->acc)? "": "not");
+		  dx, dy, angle, (s->r_acc.offset)? "": "not");
 
-	if (s->acc) { /* isBlocked() returned non-zero */
+	if (s->r_acc.offset) { /* isBlocked() returned non-zero */
 		int rotation = (rand() & 1)? 45 : (360-45); /* Clockwise/counterclockwise */
-		int oldx = GET_SELECTOR(client, x);
-		int oldy = GET_SELECTOR(client, y);
-		int xstep = GET_SELECTOR(client, xStep);
-		int ystep = GET_SELECTOR(client, yStep);
+		int oldx = GET_SEL32V(client, x);
+		int oldy = GET_SEL32V(client, y);
+		int xstep = GET_SEL32V(client, xStep);
+		int ystep = GET_SEL32V(client, yStep);
 		int moves;
 
 		SCIkdebug(SCIkBRESEN, " avoider %04x\n", avoider);
@@ -360,8 +357,8 @@ kDoAvoider(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			int move_x = (int) (sin(angle * PI / 180.0) * (xstep));
 			int move_y = (int) (-cos(angle * PI / 180.0) * (ystep));
 
-			PUT_SELECTOR(client, x, oldx + move_x);
-			PUT_SELECTOR(client, y, oldy + move_y);
+			PUT_SEL32V(client, x, oldx + move_x);
+			PUT_SEL32V(client, y, oldy + move_y);
 
 			SCIkdebug(SCIkBRESEN, "Pos (%d,%d): Trying angle %d; delta=(%d,%d)\n",
 				  oldx, oldy, angle, move_x, move_y);
@@ -372,14 +369,14 @@ kDoAvoider(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				return;
 			}
 
-			PUT_SELECTOR(client, x, oldx);
-			PUT_SELECTOR(client, y, oldy);
+			PUT_SEL32V(client, x, oldx);
+			PUT_SEL32V(client, y, oldy);
 
-			if (s->acc) { /* We can be here */
+			if (s->r_acc.offset) { /* We can be here */
 				SCIkdebug(SCIkBRESEN, "Success\n");
-				PUT_SELECTOR(client, heading, angle);
-				s->acc = angle;
-				return;
+				PUT_SEL32V(client, heading, angle);
+
+				return make_reg(0, angle);
 			}
 
 			angle += rotation;
@@ -392,25 +389,26 @@ kDoAvoider(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			 avoider);
 
 	} else {
-		int heading = GET_SELECTOR(client, heading);
+		int heading = GET_SEL32V(client, heading);
 
 		if (heading == -1)
-			return; /* No change */
+			return s->r_acc; /* No change */
 
-		PUT_SELECTOR(client, heading, angle);
+		PUT_SEL32V(client, heading, angle);
 
-		s->acc = angle;
+		s->r_acc = make_reg(0, angle);
 
-		if (looper) {
+		if (looper.segment) {
 			if (invoke_selector(INV_SEL(looper, doit, 1), 2, angle, client)) {
 				SCIkwarn(SCIkERROR, "Looper %04x of avoider %04x doesn't"
 					 " have a doit() funcselector\n", looper, avoider);
-			} else return;
+			} else return s->r_acc;
 		}
 		/* No looper? Fall back to DirLoop */
 
-		_k_dirloop(client, (word)angle, s, funct_nr, argc, argp);
+		_k_dirloop(client, (word)angle, s, funct_nr, argc, argv);
 	}
-#endif
+
+	return s->r_acc;
 }
 

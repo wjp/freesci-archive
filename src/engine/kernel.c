@@ -30,85 +30,80 @@
 #ifdef _WIN32
 #	include <windows.h>
 #endif /* _WIN32 */
-#include <kernel_compat.h>
 
 #include <gfx_operations.h>
 #include <kernel_types.h>
 
-
-void kGameIsRestarting(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kGetCWD(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kSetCursor(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kShow(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kPicNotValid(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kRandom(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kAbs(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kSqrt(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kOnControl(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kHaveMouse(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kJoystick(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kGetAngle(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kGetDistance(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kDrawPic(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kGetPort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kSetPort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kNewWindow(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kDisposeWindow(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kCelWide(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kCelHigh(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kGetTime(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kStrLen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kGetFarText(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kReadNumber(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kStrCat(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kStrCmp(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-
-void kNumCels(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kNumLoops(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kDrawCel(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kDirLoop(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kCoordPri(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kPriCoord(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kValidPath(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kFOpen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kFPuts(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kFGets(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kFClose(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kTimesSin(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kTimesCos(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kCosMult(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kSinMult(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kTimesTan(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kTimesCot(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kMapKeyToDir(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kGlobalToLocal(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kLocalToGlobal(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kWait(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kCosDiv(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kSinDiv(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kShakeScreen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-#ifdef _WIN32
-void kDeviceInfo_Win32(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-#else
-void kDeviceInfo_Unix(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-#endif
-void kRestartGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kSetSynonyms(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kGetEvent(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kCheckFreeSpace(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kFlushResources(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kGetSaveFiles(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kSetDebug(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kSetJump(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kCheckSaveGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kSaveGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kRestoreGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kDoAvoider(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kFileIO(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kLock(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-
-
 /* New kernel functions */
+reg_t kStrLen(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kGetFarText(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kReadNumber(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kStrCat(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kStrCmp(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kSetSynonyms(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kLock(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kNumCels(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kNumLoops(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kDrawCel(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kCoordPri(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kPriCoord(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kShakeScreen(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kSetCursor(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kShow(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kPicNotValid(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kOnControl(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kDrawPic(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kGetPort(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kSetPort(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kNewWindow(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kDisposeWindow(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kCelWide(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kCelHigh(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kSetJump(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kDirLoop(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kDoAvoider(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kGetAngle(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kGetDistance(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kRandom(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kAbs(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kSqrt(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kTimesSin(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kTimesCos(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kCosMult(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kSinMult(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kTimesTan(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kTimesCot(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kCosDiv(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kSinDiv(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kValidPath(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kFOpen(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kFPuts(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kFGets(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kFClose(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kMapKeyToDir(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kGlobalToLocal(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kLocalToGlobal(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kWait(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kRestartGame(struct _state *s, int funct_nr, int argc, reg_t *argv);
+#ifdef _WIN32
+reg_t kDeviceInfo_Win32(struct _state *s, int funct_nr, int argc, reg_t *argv);
+#else
+reg_t kDeviceInfo_Unix(struct _state *s, int funct_nr, int argc, reg_t *argv);
+#endif
+reg_t kGetEvent(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kCheckFreeSpace(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kFlushResources(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kGetSaveFiles(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kSetDebug(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kCheckSaveGame(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kSaveGame(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kRestoreGame(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kFileIO(struct _state *s, int funct_nr, int argc, reg_t *argp);
+reg_t kGetTime(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kHaveMouse(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kJoystick(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kGameIsRestarting(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kGetCWD(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kSort(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kStrEnd(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kMemory(struct _state *s, int funct_nr, int argc, reg_t *argv);
@@ -187,47 +182,47 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*05*/	{KF_NEW, "DisposeClone", {new:{kDisposeClone, "o"}}},
 /*06*/	{KF_NEW, "IsObject", {new:{kIsObject, "."}}},
 /*07*/	{KF_NEW, "RespondsTo", {new:{kRespondsTo, ".i"}}},
-/*08*/	{KF_OLD, "DrawPic", {old:kDrawPic}},
-/*09*/	{KF_OLD, "Show", {old:kShow}},
-/*0a*/	{KF_OLD, "PicNotValid", {old:kPicNotValid}},
+/*08*/	{KF_NEW, "DrawPic", {new:{kDrawPic, "i*"}}},
+/*09*/	{KF_NEW, "Show", {new:{kShow, "i"}}},
+/*0a*/	{KF_NEW, "PicNotValid", {new:{kPicNotValid, "i*"}}},
 /*0b*/	{KF_NEW, "Animate", {new:{kAnimate, "LI*"}}}, /* More like (li?)? */
 /*0c*/	{KF_NEW, "SetNowSeen", {new:{kSetNowSeen, "oi*"}}}, /* The second parameter is ignored */
-/*0d*/	{KF_OLD, "NumLoops", {old:kNumLoops}},
-/*0e*/	{KF_OLD, "NumCels", {old:kNumCels}},
-/*0f*/	{KF_OLD, "CelWide", {old:kCelWide}},
-/*10*/	{KF_OLD, "CelHigh", {old:kCelHigh}},
-/*11*/	{KF_OLD, "DrawCel", {old:kDrawCel}},
+/*0d*/	{KF_NEW, "NumLoops", {new:{kNumLoops, "o"}}},
+/*0e*/	{KF_NEW, "NumCels", {new:{kNumCels, "o"}}},
+/*0f*/	{KF_NEW, "CelWide", {new:{kCelWide, "iii"}}},
+/*10*/	{KF_NEW, "CelHigh", {new:{kCelHigh, "iii"}}},
+/*11*/	{KF_NEW, "DrawCel", {new:{kDrawCel, "iiiiii*"}}},
 /*12*/	{KF_NEW, "AddToPic", {new:{kAddToPic, "Il*"}}},
-/*13*/	{KF_OLD, "NewWindow", {old:kNewWindow}},
-/*14*/	{KF_OLD, "GetPort", {old:kGetPort}},
-/*15*/	{KF_OLD, "SetPort", {old:kSetPort}},
-/*16*/	{KF_OLD, "DisposeWindow", {old:kDisposeWindow}},
+/*13*/	{KF_NEW, "NewWindow", {new:{kNewWindow, "iiiiZri*"}}},
+/*14*/	{KF_NEW, "GetPort", {new:{kGetPort, ""}}},
+/*15*/	{KF_NEW, "SetPort", {new:{kSetPort, "i"}}},
+/*16*/	{KF_NEW, "DisposeWindow", {new:{kDisposeWindow, "i"}}},
 /*17*/	{KF_NEW, "DrawControl", {new:{kDrawControl, "o"}}},
 /*18*/	{KF_NEW, "HiliteControl", {new:{kHiliteControl, "o"}}},
 /*19*/	{KF_NEW, "EditControl", {new:{kEditControl, "ZoZo"}}},
 /*1a*/	{KF_NEW, "TextSize", {new:{kTextSize, "rrii*r*"}}},
 /*1b*/	{KF_NEW, "Display", {new:{kDisplay, ".i.*"}}},
-/*1c*/	{KF_OLD, "GetEvent", {old:kGetEvent}},
-/*1d*/	{KF_OLD, "GlobalToLocal", {old:kGlobalToLocal}},
-/*1e*/	{KF_OLD, "LocalToGlobal", {old:kLocalToGlobal}},
-/*1f*/	{KF_OLD, "MapKeyToDir", {old:kMapKeyToDir}},
+/*1c*/	{KF_NEW, "GetEvent", {new:{kGetEvent, "io"}}},
+/*1d*/	{KF_NEW, "GlobalToLocal", {new:{kGlobalToLocal, "o"}}},
+/*1e*/	{KF_NEW, "LocalToGlobal", {new:{kLocalToGlobal, "o"}}},
+/*1f*/	{KF_NEW, "MapKeyToDir", {new:{kMapKeyToDir, "o"}}},
 /*20*/	{KF_NEW, "DrawMenuBar", {new:{kDrawMenuBar, "i"}}},
 /*21*/	{KF_NEW, "MenuSelect", {new:{kMenuSelect, "oi*"}}},
 /*22*/	{KF_NEW, "AddMenu", {new:{kAddMenu, "rr"}}},
 /*23*/	{KF_NEW, "DrawStatus", {new:{kDrawStatus, "Zri*"}}},
 /*24*/	{KF_NEW, "Parse", {new:{kParse, "ro"}}},
 /*25*/	{KF_NEW, "Said", {new:{kSaid, "Zr"}}},
-/*26*/	{KF_OLD, "SetSynonyms", {old:kSetSynonyms}},
-/*27*/	{KF_OLD, "HaveMouse", {old:kHaveMouse}},
-/*28*/	{KF_OLD, "SetCursor", {old:kSetCursor}},
-/*29*/	{KF_OLD, "FOpen", {old:kFOpen}},
-/*2a*/	{KF_OLD, "FPuts", {old:kFPuts}},
-/*2b*/	{KF_OLD, "FGets", {old:kFGets}},
-/*2c*/	{KF_OLD, "FClose", {old:kFClose}},
-/*2d*/	{KF_OLD, "SaveGame", {old:kSaveGame}},
-/*2e*/	{KF_OLD, "RestoreGame", {old:kRestoreGame}},
-/*2f*/	{KF_OLD, "RestartGame", {old:kRestartGame}},
-/*30*/	{KF_OLD, "GameIsRestarting", {old:kGameIsRestarting}},
+/*26*/	{KF_NEW, "SetSynonyms", {new:{kSetSynonyms, "o"}}},
+/*27*/	{KF_NEW, "HaveMouse", {new:{kHaveMouse, ""}}},
+/*28*/	{KF_NEW, "SetCursor", {new:{kSetCursor, "i*"}}},
+/*29*/	{KF_NEW, "FOpen", {new:{kFOpen, "ri"}}},
+/*2a*/	{KF_NEW, "FPuts", {new:{kFPuts, "ir"}}},
+/*2b*/	{KF_NEW, "FGets", {new:{kFGets, "rii"}}},
+/*2c*/	{KF_NEW, "FClose", {new:{kFClose, "i"}}},
+/*2d*/	{KF_NEW, "SaveGame", {new:{kSaveGame, "rir"}}},
+/*2e*/	{KF_NEW, "RestoreGame", {new:{kRestoreGame, "ri"}}},
+/*2f*/	{KF_NEW, "RestartGame", {new:{kRestartGame, ""}}},
+/*30*/	{KF_NEW, "GameIsRestarting", {new:{kGameIsRestarting, "i*"}}},
 /*31*/	{KF_NEW, "DoSound", {new:{kDoSound, "iIo*"}}},
 /*32*/	{KF_NEW, "NewList", {new:{kNewList, ""}}},
 /*33*/	{KF_NEW, "DisposeList", {new:{kDisposeList, "l"}}},
@@ -243,30 +238,30 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*3d*/	{KF_NEW, "AddToEnd", {new:{kAddToEnd, "ln"}}},
 /*3e*/	{KF_NEW, "FindKey", {new:{kFindKey, "l."}}},
 /*3f*/	{KF_NEW, "DeleteKey", {new:{kDeleteKey, "l."}}},
-/*40*/	{KF_OLD, "Random", {old:kRandom}},
-/*41*/	{KF_OLD, "Abs", {old:kAbs}},
-/*42*/	{KF_OLD, "Sqrt", {old:kSqrt}},
-/*43*/	{KF_OLD, "GetAngle", {old:kGetAngle}},
-/*44*/	{KF_OLD, "GetDistance", {old:kGetDistance}},
-/*45*/	{KF_OLD, "Wait", {old:kWait}},
-/*46*/	{KF_OLD, "GetTime", {old:kGetTime}},
+/*40*/	{KF_NEW, "Random", {new:{kRandom, "i*"}}},
+/*41*/	{KF_NEW, "Abs", {new:{kAbs, "i"}}},
+/*42*/	{KF_NEW, "Sqrt", {new:{kSqrt, "i"}}},
+/*43*/	{KF_NEW, "GetAngle", {new:{kGetAngle, "iiii"}}},
+/*44*/	{KF_NEW, "GetDistance", {new:{kGetDistance, "iiiii*"}}},
+/*45*/	{KF_NEW, "Wait", {new:{kWait, "i"}}},
+/*46*/	{KF_NEW, "GetTime", {new:{kGetTime, "i*"}}},
 /*47*/	{KF_NEW, "StrEnd", {new:{kStrEnd, "r"}}},
-/*48*/	{KF_OLD, "StrCat", {old:kStrCat}},
-/*49*/	{KF_OLD, "StrCmp", {old:kStrCmp}},
-/*4a*/	{KF_OLD, "StrLen", {old:kStrLen}},
+/*48*/	{KF_NEW, "StrCat", {new:{kStrCat, "rr"}}},
+/*49*/	{KF_NEW, "StrCmp", {new:{kStrCmp, "rri*"}}},
+/*4a*/	{KF_NEW, "StrLen", {new:{kStrLen, "r"}}},
 /*4b*/	{KF_NEW, "StrCpy", {new:{kStrCpy, "rri*"}}},
 /*4c*/	{KF_NEW, "Format", {new:{kFormat, "r.*"}}},
-/*4d*/	{KF_OLD, "GetFarText", {old:kGetFarText}},
-/*4e*/	{KF_OLD, "ReadNumber", {old:kReadNumber}},
+/*4d*/	{KF_NEW, "GetFarText", {new:{kGetFarText, "iir"}}},
+/*4e*/	{KF_NEW, "ReadNumber", {new:{kReadNumber, "r"}}},
 /*4f*/	{KF_NEW, "BaseSetter", {new:{kBaseSetter, "o"}}},
-/*50*/	{KF_OLD, "DirLoop", {old:kDirLoop}},
+/*50*/	{KF_NEW, "DirLoop", {new:{kDirLoop, "oi"}}},
 /*51*/	{KF_NEW, "CanBeHere", {new:{kCanBeHere, "ol*"}}},
-/*52*/	{KF_OLD, "OnControl", {old:kOnControl}},
+/*52*/	{KF_NEW, "OnControl", {new:{kOnControl, "i*"}}},
 /*53*/	{KF_NEW, "InitBresen", {new:{kInitBresen, "oi*"}}},
 /*54*/	{KF_NEW, "DoBresen", {new:{kDoBresen, "o"}}},
-/*55*/	{KF_OLD, "DoAvoider", {old:kDoAvoider}},
-/*56*/	{KF_OLD, "SetJump", {old:kSetJump}},
-/*57*/	{KF_OLD, "SetDebug", {old:kSetDebug}},
+/*55*/	{KF_NEW, "DoAvoider", {new:{kDoAvoider, "o"}}},
+/*56*/	{KF_NEW, "SetJump", {new:{kSetJump, "oiii"}}},
+/*57*/	{KF_NEW, "SetDebug", {new:{kSetDebug, "i*"}}},
 /*58*/	{KF_NONE, "InspectObj"},
 /*59*/	{KF_NONE, "ShowSends"},
 /*5a*/	{KF_NONE, "ShowObjs"},
@@ -276,49 +271,49 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*5e*/	{KF_NONE, "Profiler"},
 /*5f*/	{KF_NEW, "GetMenu", {new:{kGetMenu, "i."}}},
 /*60*/	{KF_NEW, "SetMenu", {new:{kSetMenu, "i.*"}}},
-/*61*/	{KF_OLD, "GetSaveFiles", {old:kGetSaveFiles}},
-/*62*/	{KF_OLD, "GetCWD", {old:kGetCWD}},
-/*63*/	{KF_OLD, "CheckFreeSpace", {old:kCheckFreeSpace}},
-/*64*/	{KF_OLD, "ValidPath", {old:kValidPath}},
-/*65*/	{KF_OLD, "CoordPri", {old:kCoordPri}},
+/*61*/	{KF_NEW, "GetSaveFiles", {new:{kGetSaveFiles, "rrr"}}},
+/*62*/	{KF_NEW, "GetCWD", {new:{kGetCWD, "r"}}},
+/*63*/	{KF_NEW, "CheckFreeSpace", {new:{kCheckFreeSpace, "r"}}},
+/*64*/	{KF_NEW, "ValidPath", {new:{kValidPath, "r"}}},
+/*65*/	{KF_NEW, "CoordPri", {new:{kCoordPri, "i"}}},
 /*66*/	{KF_NEW, "StrAt", {new:{kStrAt, "rii*"}}},
 #ifdef _WIN32
-/*67*/	{KF_OLD, "DeviceInfo", {old:kDeviceInfo_Win32}},
+/*67*/	{KF_NEW, "DeviceInfo", {new:{kDeviceInfo_Win32, "i.*"}},
 #else /* !_WIN32 */
-/*67*/	{KF_OLD, "DeviceInfo", {old:kDeviceInfo_Unix}},
+/*67*/	{KF_NEW, "DeviceInfo", {new:{kDeviceInfo_Unix, "i.*"}}},
 #endif
 /*68*/	{KF_NEW , "GetSaveDir", {new:{kGetSaveDir, ""}}},
-/*69*/	{KF_OLD, "CheckSaveGame", {old:kCheckSaveGame}},
-/*6a*/	{KF_OLD, "ShakeScreen", {old:kShakeScreen}},
-/*6b*/	{KF_OLD, "FlushResources", {old:kFlushResources}},
-/*6c*/	{KF_OLD, "TimesSin", {old:kTimesSin}},
-/*6d*/	{KF_OLD, "TimesCos", {old:kTimesCos}},
+/*69*/	{KF_NEW, "CheckSaveGame", {new:{kCheckSaveGame, ".*"}}},
+/*6a*/	{KF_NEW, "ShakeScreen", {new:{kShakeScreen, "ii*"}}},
+/*6b*/	{KF_NEW, "FlushResources", {new:{kFlushResources, "i"}}},
+/*6c*/	{KF_NEW, "TimesSin", {new:{kTimesSin, "ii"}}},
+/*6d*/	{KF_NEW, "TimesCos", {new:{kTimesCos, "ii"}}},
 /*6e*/	{KF_NONE, NULL},
 /*6f*/	{KF_NONE, NULL},
 /*70*/	{KF_NEW, "Graph", {new:{kGraph, ".*"}}},
-/*71*/	{KF_OLD, "Joystick", {old:kJoystick}},
+/*71*/	{KF_NEW, "Joystick", {new:{kJoystick, ".*"}}},
 /*72*/	{KF_NONE, NULL},
 /*73*/	{KF_NONE, NULL},
 
   /* Experimental functions */
-/*74*/	{KF_OLD, "FileIO", {old:kFileIO}},
+/*74*/	{KF_NEW, "FileIO", {new:{kFileIO, "i.*"}}},
 /*(?)*/	{KF_NEW, "Memory", {new:{kMemory, "i.*"}}},
 /*(?)*/	{KF_NEW, "Sort", {new:{kSort, "ooo"}}},
 /*(?)*/	{KF_NEW, "AvoidPath", {new:{kAvoidPath, "ii.*"}}},
-/*(?)*/	{KF_OLD, "Lock", {old:kLock}},
+/*(?)*/	{KF_NEW, "Lock", {new:{kLock, "iii"}}},
 
   /* Non-experimental Functions without a fixed ID */
 
-	{KF_OLD, "CosMult", {old:kTimesCos}},
-	{KF_OLD, "SinMult", {old:kTimesSin}},
-/*(?)*/	{KF_OLD, "CosDiv", {old:kCosDiv}},
-/*(?)*/	{KF_OLD, "PriCoord", {old:kPriCoord}},
-/*(?)*/	{KF_OLD, "SinDiv", {old:kSinDiv}},
-/*(?)*/	{KF_OLD, "TimesCot", {old:kTimesCot}},
-/*(?)*/	{KF_OLD, "TimesTan", {old:kTimesTan}},
+	{KF_NEW, "CosMult", {new:{kTimesCos, "ii"}}},
+	{KF_NEW, "SinMult", {new:{kTimesSin, "ii"}}},
+/*(?)*/	{KF_NEW, "CosDiv", {new:{kCosDiv, "ii"}}},
+/*(?)*/	{KF_NEW, "PriCoord", {new:{kPriCoord, "i"}}},
+/*(?)*/	{KF_NEW, "SinDiv", {new:{kSinDiv, "ii"}}},
+/*(?)*/	{KF_NEW, "TimesCot", {new:{kTimesCot, "ii"}}},
+/*(?)*/	{KF_NEW, "TimesTan", {new:{kTimesTan, "ii"}}},
 
   /* Special and NOP stuff */
-	{KF_OLD, NULL, {new:{k_Unknown, NULL}}},
+	{KF_NEW, NULL, {new:{k_Unknown, NULL}}},
 
 	{KF_TERMINATOR, NULL} /* Terminator */
 };
@@ -401,43 +396,39 @@ kfree(state_t *s, reg_t handle)
 
 char *old_save_dir;
 
-void
-kRestartGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kRestartGame(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	old_save_dir= sci_strdup((char *) s->heap+s->save_dir+2);
 	s->restarting_flags |= SCI_GAME_IS_RESTARTING_NOW;
 	s->restarting_flags &= ~SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE; /* This appears to help */
 	s->execution_stack_pos = s->execution_stack_base;
 	script_abort_flag = 1; /* Force vm to abort ASAP */
+	return NULL_REG;
 }
 
 
 /* kGameIsRestarting():
 ** Returns the restarting_flag in acc
 */
-void
-kGameIsRestarting(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kGameIsRestarting(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	s->acc = (s->restarting_flags & SCI_GAME_WAS_RESTARTED);
+	s->r_acc = make_reg(0, (s->restarting_flags & SCI_GAME_WAS_RESTARTED));
 
-	if ((old_save_dir)&&(s->save_dir))
-		{
-			strcpy((char *) s->heap + s->save_dir + 2, old_save_dir);
-			free(old_save_dir);
-			old_save_dir = NULL;
-		}
 	if (argc) {/* Only happens during replay */
-		if (!PARAM(0)) /* Set restarting flag */
+		if (!UKPV(0)) /* Set restarting flag */
 			s->restarting_flags &= ~SCI_GAME_WAS_RESTARTED;
 	}
+
+	return s->r_acc;
 }
 
-void
-kHaveMouse(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kHaveMouse(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 
-	s->acc = (s->have_mouse_flag
-		  && gfxop_have_mouse(s->gfx_state))? -1 : 0;
+	return make_reg (0, (s->have_mouse_flag
+		  && gfxop_have_mouse(s->gfx_state))? -1 : 0);
 }
 
 
@@ -467,9 +458,6 @@ k_Unknown(state_t *s, int funct_nr, int argc, reg_t *argv)
 		return NULL_REG;
 	} else switch(kfunct_mappers[funct_nr].type) {
 
-	case KF_OLD:
-		return kFsciEmu(s, funct_nr, argc, argv);
-
 	case KF_NEW:
 		return kfunct_mappers[funct_nr].data.new.fun(s, funct_nr, argc, argv);
 
@@ -481,15 +469,15 @@ k_Unknown(state_t *s, int funct_nr, int argc, reg_t *argv)
 }
 
 
-void
-kFlushResources(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kFlushResources(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	/* Nothing to do */
-  SCIkdebug(SCIkROOM, "Entering room number %d\n", UPARAM(0));
+  SCIkdebug(SCIkROOM, "Entering room number %d\n", UKPV(0));
 }
 
-void
-kSetDebug(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kSetDebug(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	sciprintf("Debug mode activated\n");
 
@@ -502,13 +490,13 @@ kSetDebug(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #define _K_NEW_GETTIME_TIME_24HOUR 2
 #define _K_NEW_GETTIME_DATE 3
 
-void
-kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kGetTime(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	struct tm* loc_time;
 	GTimeVal time_prec;
 	time_t the_time;
-
+	int retval;
 
 	/* Reset optimization flags: If this function is called,
 	** the game may be waiting for a timeout  */
@@ -534,39 +522,39 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	if (s->version<SCI_VERSION_FTU_NEW_GETTIME) { /* Use old semantics */
 		if (argc) { /* Get seconds since last am/pm switch */
-			s->acc = loc_time->tm_sec + loc_time->tm_min * 60 + (loc_time->tm_hour % 12) * 3600;
-			SCIkdebug(SCIkTIME, "GetTime(timeofday) returns %d\n", s->acc);
+			retval = loc_time->tm_sec + loc_time->tm_min * 60 + (loc_time->tm_hour % 12) * 3600;
+			SCIkdebug(SCIkTIME, "GetTime(timeofday) returns %d\n", retval);
 		} else { /* Get time since game started */
 			sci_get_current_time (&time_prec);
-			s-> acc = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
+			retval = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
 				(time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
-			SCIkdebug(SCIkTIME, "GetTime(elapsed) returns %d\n", s->acc);
+			SCIkdebug(SCIkTIME, "GetTime(elapsed) returns %d\n", retval);
 		}
 	} else {
-		int mode = UPARAM_OR_ALT(0, 0); /* The same strange method is still used for distinguishing
-						   mode 0 and the others. We assume that this is safe, though */
+		int mode = UKPV_OR_ALT(0, 0); /* The same strange method is still used for distinguishing
+					         mode 0 and the others. We assume that this is safe, though */
 		switch (mode) {
 		case _K_NEW_GETTIME_TICKS : {
 			sci_get_current_time (&time_prec);
-			s-> acc = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
-				(time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
-			SCIkdebug(SCIkTIME, "GetTime(elapsed) returns %d\n", s->acc);
+			retval = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
+				  (time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
+			SCIkdebug(SCIkTIME, "GetTime(elapsed) returns %d\n", retval);
 			break;
 		}
 		case _K_NEW_GETTIME_TIME_12HOUR : {
 			loc_time->tm_hour %= 12;
-			s->acc=(loc_time->tm_min<<6)|(loc_time->tm_hour<<12)|(loc_time->tm_sec);
-			SCIkdebug(SCIkTIME, "GetTime(12h) returns %d\n", s->acc);
+			retval=(loc_time->tm_min<<6)|(loc_time->tm_hour<<12)|(loc_time->tm_sec);
+			SCIkdebug(SCIkTIME, "GetTime(12h) returns %d\n", retval);
 			break;
 		}
 		case _K_NEW_GETTIME_TIME_24HOUR : {
-			s->acc=(loc_time->tm_min<<5)|(loc_time->tm_sec>>1)|(loc_time->tm_hour<<11);
-			SCIkdebug(SCIkTIME, "GetTime(24h) returns %d\n", s->acc);
+			retval=(loc_time->tm_min<<5)|(loc_time->tm_sec>>1)|(loc_time->tm_hour<<11);
+			SCIkdebug(SCIkTIME, "GetTime(24h) returns %d\n", retval);
 			break;
 		}
 		case _K_NEW_GETTIME_DATE : {
-			s->acc=(loc_time->tm_mon<<5)|loc_time->tm_mday|(loc_time->tm_year<<9);
-			SCIkdebug(SCIkTIME, "GetTime(date) returns %d\n", s->acc);
+			retval=(loc_time->tm_mon<<5)|loc_time->tm_mday|(loc_time->tm_year<<9);
+			SCIkdebug(SCIkTIME, "GetTime(date) returns %d\n", retval);
 			break;
 		}
 		default: {
@@ -575,6 +563,8 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		}
 		}
 	}
+
+	return make_reg(0, retval);
 }
 
 #define K_MEMORY_ALLOCATE_CRITICAL 	1
@@ -583,6 +573,7 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #define	K_MEMORY_MEMCPY			4
 #define K_MEMORY_PEEK			5
 #define K_MEMORY_POKE			6
+
 reg_t
 kMemory(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
@@ -782,16 +773,14 @@ kernel_compile_signature(char **s)
 	*s = result; /* Write back */
 }
 
-void
+int
 script_map_kernel(state_t *s)
 {
 	int functnr;
 	int mapped = 0;
-	int emulated = 0;
 	int ignored = 0;
 
 	s->kfunct_table = sci_malloc(sizeof(kfunct_sig_pair_t) * (s->kernel_names_nr + 1));
-	s->kfunct_emu_table = sci_malloc(sizeof(kfunct_old *) * (s->kernel_names_nr + 1));
 
 	for (functnr = 0; functnr < s->kernel_names_nr; functnr++) {
 		int seeker, found = -1;
@@ -810,16 +799,9 @@ script_map_kernel(state_t *s)
 		} else switch (kfunct_mappers[found].type) {
 
 		case KF_OLD:
-			/* emulation-map it */
-
-			sciprintf("Warning: Emulating kernel function %s[%x]!\n",
-				  s->kernel_names[functnr], functnr);
-			++emulated;
-			s->kfunct_table[functnr].signature = NULL;
-			s->kfunct_table[functnr].fun = kFsciEmu;
-			s->kfunct_emu_table[functnr] = kfunct_mappers[found].data.old;
-			break;
-
+			sciprintf("Emulated kernel function found.\nThis shouldn't happen anymore.");
+			return 1;
+			
 		case KF_NONE:
 			s->kfunct_table[functnr].signature = NULL;
 			++ignored;
@@ -835,13 +817,11 @@ script_map_kernel(state_t *s)
 	} /* for all functions requesting to be mapped */
 
 	sciprintf("Handled %d/%d kernel functions, mapping %d",
-		  mapped+ignored+emulated, s->kernel_names_nr, mapped);
+		  mapped+ignored, s->kernel_names_nr, mapped);
 	if (ignored)
-		sciprintf(", ignoring %d", ignored);
-	if (emulated)
-		sciprintf(" and emulating %d", emulated);
+		sciprintf(" and ignoring %d", ignored);
 	sciprintf(".\n");
-
+	return 0;
 }
 
 void
@@ -856,10 +836,7 @@ free_kfunct_tables(state_t *s)
 	sci_free(s->kfunct_table);
 	s->kfunct_table = NULL;
 
-	sci_free(s->kfunct_emu_table);
-	s->kfunct_emu_table = NULL;
 }
-
 int
 determine_reg_type(state_t *s, reg_t reg)
 {

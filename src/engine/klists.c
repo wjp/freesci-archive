@@ -28,8 +28,6 @@
 #include <engine.h>
 
 
-#define LOOKUP_NODE(addr) lookup_node(s, (addr), __FILE__, __LINE__)
-
 inline node_t *
 lookup_node(state_t *s, reg_t addr, char *file, int line)
 {
@@ -59,7 +57,6 @@ lookup_node(state_t *s, reg_t addr, char *file, int line)
 	return &(nt->table[addr.offset].entry);
 }
 
-#define LOOKUP_LIST(addr) _lookup_list(s, addr, __FILE__, __LINE__, 0)
 #define LOOKUP_NULL_LIST(addr) _lookup_list(s, addr, __FILE__, __LINE__, 1)
 
 

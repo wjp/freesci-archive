@@ -496,8 +496,8 @@ c_debuginfo(state_t *s)
 	if (s->execution_stack && s->execution_stack_pos >= 0)
 		eframe = s->execution_stack + s->execution_stack_pos;
 
-	sciprintf("acc="PREG"[%04x] prev="PREG" &rest=%x\n",
-		  PRINT_REG(s->r_acc), s->acc & 0xffff,
+	sciprintf("acc="PREG" prev="PREG" &rest=%x\n",
+		  PRINT_REG(s->r_acc),
 		  PRINT_REG(s->r_prev), *p_restadjust);
 	if (eframe)
 		sciprintf("pc="PREG" obj="PREG" fp="PSTK" sp="PSTK"\n",
@@ -568,33 +568,6 @@ c_stepover(state_t *s)
   return 0;
 }
 #endif
-
-int
-c_heapdump(state_t *s)
-{
-  if (!_debugstate_valid) {
-    sciprintf("Not in debug state\n");
-    return 1;
-  }
-
-  if (cmd_params[1].val < 0) {
-    cmd_params[0].val += cmd_params[1].val;
-    cmd_params[0].val = -cmd_params[0].val;
-  }
-  if (cmd_params[0].val < 0)
-    cmd_params[0].val = 0;
-  if (cmd_params[0].val > 0xffff) {
-    sciprintf("Heap index out of range\n");
-    return 1;
-  }
-  if (cmd_params[0].val + cmd_params[1].val > 0xffff) {
-    cmd_params[1].val = 0xffff - cmd_params[0].val;
-  }
-
-  sci_hexdump(s->heap + cmd_params[0].val, cmd_params[1].val, cmd_params[0].val);
-  return 0;
-}
-
 
 int
 c_sim_parse(state_t *s)
@@ -1103,44 +1076,6 @@ int prop_ofs_to_id(state_t *s, int prop_ofs, reg_t objp)
 
 
 	return getUInt16(selectoroffset + prop_ofs);
-}
-
-void
-print_objname_wrapper(int foo)
-{
-	if (foo == -1)
-		sciprintf("!invalid");
-	else if (foo == -2)
-		sciprintf("!non-object");}
-
-int
-print_objname(state_t *s, heap_ptr pos, int address)
-{
-	if ((pos < 4) || (pos > 0xfff0))
-		return -1;
-	else {
-		if ((getInt16(s->heap + pos + SCRIPT_OBJECT_MAGIC_OFFSET)) != SCRIPT_OBJECT_MAGIC_NUMBER)
-			return -2;
-		else {
-			word namepos = getUInt16(s->heap + pos + SCRIPT_NAME_OFFSET);
-			word type = getUInt16(s->heap + pos + SCRIPT_INFO_OFFSET);
-
-			if (type & SCRIPT_INFO_CLONE)
-				sciprintf("*");
-			else if (type & SCRIPT_INFO_CLASS)
-				sciprintf("%%");
-			else if (type != 0)
-				sciprintf("?[%04x]", type);
-
-			if (!namepos || !(*(s->heap + namepos)))
-				sciprintf("<???>");
-			else sciprintf((char *) s->heap + namepos);
-		}
-	}
-
-	if (address)
-		sciprintf(" @%04x\n", pos);
-        return 0;
 }
 
 reg_t
@@ -2310,34 +2245,12 @@ c_resource_id(state_t *s)
 }
 
 int
-c_heap_free(state_t *s)
-{
-	if (!_debugstate_valid) {
-		sciprintf("Not in debug state\n");
-		return 1;
-	}
-
-	heap_dump_free(s->_heap);
-	return 0;
-}
-
-int
-c_heap_dump_all(state_t *s)
-{
-	if (!_debugstate_valid) {
-		sciprintf("Not in debug state\n");
-		return 1;
-	}
-
-	heap_dump_all(s->_heap);
-	return 0;
-}
-
-int
 c_listclones(state_t *s)
 {
 	int i, j = 0;
+	/*
 	sciprintf("Listing all logged clones:\n");
+
 	for (i = 0; i < SCRIPT_MAX_CLONES; i++)
 		if (s->clone_list[i]) {
 			sciprintf("  Clone at %04x\n", s->clone_list[i]);
@@ -2345,6 +2258,8 @@ c_listclones(state_t *s)
 		}
 
 	sciprintf("Total of %d clones.\n", j);
+	*/
+	sciprintf("This function is temporarily disabled.\n");
 	return 0;
 }
 
@@ -2496,36 +2411,6 @@ c_gfx_debuglog(state_t *s)
 	return 0;
 }
 
-
-int
-show_list(state_t *s, heap_ptr list)
-{
-	heap_ptr prevnode = 0, node;
-	int nodectr = 0;
-
-	sciprintf("List at %04x:\n", list);
-	node = getUInt16(s->heap + list );
-
-	while (node) {
-		nodectr++;
-		sciprintf(" - Node at %04x: Key=%04x Val=%04x\n",node,
-			  getUInt16(s->heap + node + 4),getUInt16(s->heap + node + 6));
-		prevnode = node;
-		node = getUInt16(s->heap + node + 2); /* Next node */
-	}
-
-	if (prevnode != getUInt16(s->heap + list + 2)) /* Lastnode != registered lastnode? */
-		sciprintf("WARNING: List.LastNode %04x != last node %04x\n",
-			  getUInt16(s->heap + list + 2), prevnode);
-
-	if (nodectr)
-		sciprintf("%d registered nodes.\n", nodectr);
-	else
-		sciprintf("List is empty.\n");
-	return 0;
-}
-
-
 int
 c_dump_words(state_t *s)
 {
@@ -2549,89 +2434,6 @@ c_dump_words(state_t *s)
 
 	return 0;
 }
-
-int
-c_show_list(state_t *s)
-{
-	heap_ptr list = (guint16)cmd_params[0].val;
-	int size;
-
-	if (!s) {
-	  sciprintf("Not in debug state\n");
-	  return 1;
-	}
-
-	size = getUInt16(s->heap + list - 2);
-	if (size != 6 && size != 8) {
-		sciprintf("No list at %04x.\n", list);
-		return 1;
-	}
-
-	return
-		show_list(s, list);
-}
-
-
-int
-c_mem_info(state_t *s)
-{
-  int i, cnt = 0, allocd = 0;
-  if (!s) {
-    sciprintf("Not in debug state!\n");
-    return 1;
-  }
-
-  heap_meminfo(s->_heap);
-  sciprintf("Heap: Free:%04x  Max:%04x\n", heap_meminfo(s->_heap) & 0xffff, heap_largest(s->_heap) & 0xffff);
-
-#ifdef __GNUC__
-#warning "Make mem_info a little more useful"
-#endif
-
-  return 0;
-}
-
-
-int
-c_objs(state_t *s)
-{
-#ifdef __GNUC__
-#warning "Re-implement 'objs'"
-#endif
-#if 0
-	int i;
-
-	if (!s) {
-		sciprintf("Not in debug state\n");
-		return 1;
-	}
-
-	for (i = 0; i < 1000; i++)
-		if (s->scripttable[i].heappos) {
-			int seeker = s->scripttable[i].heappos;
-			int segment, size;
-
-			do {
-				segment = GET_HEAP(seeker);
-				size = GET_HEAP(seeker + 2);
-
-				if (segment == sci_obj_object || segment == sci_obj_class)
-					print_objname_wrapper(print_objname
-							      (s, (heap_ptr)(seeker - SCRIPT_OBJECT_MAGIC_OFFSET + 4)
-							       /* to compensate for the header */, 1));
-
-				seeker += size;
-			} while (segment && (seeker < 0xffff ));
-		}
-
-	for (i = 0; i < SCRIPT_MAX_CLONES; i++)
-		if (s->clone_list[i])
-			print_objname_wrapper(print_objname(s, s->clone_list[i], 1));
-
-#endif
-	return 0;
-}
-
 
 int
 c_simkey(state_t *s)
@@ -2662,13 +2464,14 @@ rr = GET_SELECTOR(pos, rr); \
 tt = GET_SELECTOR(pos, tt); \
 bb = GET_SELECTOR(pos, bb);
 
-static void
-viewobjinfo(state_t *s, heap_ptr pos)
-{
 #if 0
 #ifdef __GNUC__
 #warning "Re-implement viewobjinfo"
 #endif
+static void
+viewobjinfo(state_t *s, heap_ptr pos)
+{
+
 	char *signals[16] = {
 		"stop_update",
 		"updated",
@@ -2742,9 +2545,8 @@ viewobjinfo(state_t *s, heap_ptr pos)
 	for (i = 0; i < 16; i++)
 		if (signal & (1 << i))
 			sciprintf("  %04x: %s\n", 1 << i, signals[i]);
-#endif
 }
-
+#endif
 #undef GETRECT
 
 
@@ -3173,9 +2975,6 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 #if 0
 			con_hook_command(c_stepover, "so", "", "Executes one operation skipping over sends");
 #endif
-			con_hook_command(c_heapdump, "heapdump", "ii", "Dumps data from the heap\n"
-					 "\nEXAMPLE\n\n    heapdump 0x1200 42\n\n  Dumps 42 bytes starting at heap address\n"
-					 "  0x1200");
 			con_hook_command(c_disasm, "disasm", "!rs*", "Disassembles one or more commands\n\n"
 					 "USAGE\n\n  disasm [startaddr] <options>\n\n"
 					 "  Valid options are:\n"
@@ -3200,16 +2999,12 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_se, "se", "", "Steps forward until an SCI event is received.\n");
 			con_hook_command(c_listclones, "clonetable", "", "Lists all registered clones");
 			con_hook_command(c_set_acc, "set_acc", "!r", "Sets the accumulator");
-			con_hook_command(c_heap_free, "heapfree", "", "Shows the free heap");
-			con_hook_command(c_heap_dump_all, "heapdump_all", "", "Shows allocated/free zones on the\n  heap");
 			con_hook_command(c_sret, "sret", "", "Steps forward until ret is called\n  on the current execution"
 					 " stack\n  level.");
 			con_hook_command(c_resource_id, "resource_id", "i", "Identifies a resource number by\n"
 					 "  splitting it up in resource type\n  and resource number.");
 			con_hook_command(c_clear_screen, "clear_screen", "", "Clears the screen, shows the\n  background pic and picviews");
 			con_hook_command(c_redraw_screen, "redraw_screen", "", "Redraws the screen");
-			con_hook_command(c_show_list, "listinfo", "i", "Examines the list at the specified\n  heap address");
-			con_hook_command(c_mem_info, "meminfo", "", "Displays heap memory information");
 			con_hook_command(c_debuglog, "debuglog", "!s*", "Sets the debug log modes.\n  Possible parameters:\n"
 					 "  +x (sets debugging for x)\n  -x (unsets debugging for x)\n\nPossible values"
 					 " for x:\n  u: Unimpl'd/stubbed stuff\n  l: Lists and nodes\n  g: Graphics\n"
@@ -3260,10 +3055,6 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_gnf, "gnf", "", "Displays the Parse grammar\n  in strict GNF");
 			con_hook_command(c_set_parse_nodes, "set_parse_nodes", "s*", "Sets the contents of all parse nodes.\n"
 					 "  Input token must be separated by\n  blanks.");
-			con_hook_command(c_objs, "objs", "", "Lists all objects and classes from all\n  currently loaded scripts, plus\n"
-					 "  all clones.\n  Objects are not marked; clones are marked\n  with a preceeding '*', and classes\n"
-					 "  with a preceeding '%'\n"
-					 "\n\nSEE ALSO\n  clonetable\n");
 			con_hook_command(c_gfx_debuglog, "gfx_debuglog", "s*",
 					 "Sets or prints the gfx driver's debug\n"
 					 "settings\n\n"

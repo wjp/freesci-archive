@@ -1007,7 +1007,6 @@ main(int argc, char** argv)
 	}
 	gamestate->resource_dir = resource_dir;
 	gamestate->work_dir = work_dir;
-	gamestate->sound_object = 0;
 	gamestate->port_serial = 0;
 
 	if (!game_name)

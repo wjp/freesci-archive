@@ -27,7 +27,6 @@
 
 #include <sciresource.h>
 #include <engine.h>
-#include <kernel_compat.h>
 #include <kernel_types.h>
 
 reg_t
@@ -147,12 +146,13 @@ kLoad(state_t *s, int funct_nr, int argc, reg_t *argv)
 	return make_reg(0, ((restype << 11) | resnr)); /* Return the resource identifier as handle */
 }
 
-void
-kLock(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kLock(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int restype = UPARAM(0);
-	int resnr = UPARAM(1);
-	int state = UPARAM(2);
+	int restype = UKPV(0);
+	int resnr = UKPV(1);
+	int state = UKPV(2);
+
 	resource_t *which;
 
 	switch (state)
@@ -165,6 +165,7 @@ kLock(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		scir_unlock_resource(s->resmgr, which, resnr, restype);
 		break;
 	}
+	return s->r_acc;
 }
 
 /* kUnload():
@@ -305,7 +306,7 @@ kDisposeScript(state_t *s, int funct_nr, int argc, reg_t *argv)
 	return s->r_acc;
 }
 
-static int
+int
 is_heap_object(state_t *s, reg_t pos)
 {
 #ifdef __GNUC__

@@ -28,24 +28,25 @@
 #include <engine.h>
 
 
-void
-kRandom(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kRandom(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	s->acc = PARAM(0) + (int) ((PARAM(1) + 1.0 - PARAM(0)) * (rand() / (RAND_MAX + 1.0)));
+	return make_reg(0, 
+			SKPV(0) + (int) ((SKPV(1) + 1.0 - SKPV(0)) * (rand() / (RAND_MAX + 1.0))));
 }
 
 
-void
-kAbs(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kAbs(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	s->acc = abs(PARAM(0));
+	return make_reg(0, abs(SKPV(0)));
 }
 
 
-void
-kSqrt(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kSqrt(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	s->acc = (gint16) sqrt((float) abs(PARAM(0)));
+	return make_reg(0, (gint16) sqrt((float) abs(SKPV(0))));
 }
 
 
@@ -62,95 +63,95 @@ get_angle(int xrel, int yrel)
 	}
 }
 
-void
-kGetAngle(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kGetAngle(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int xrel = PARAM(2) - PARAM(0);
-	int yrel = PARAM(3) - PARAM(1);
+	int xrel = SKPV(2) - SKPV(0);
+	int yrel = SKPV(3) - SKPV(1);
 
-	s->acc = get_angle(xrel, yrel);
+	return make_reg(0, get_angle(xrel, yrel));
 }
 
 
-void
-kGetDistance(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kGetDistance(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int xrel = (int) (((float) PARAM(1) - PARAM_OR_ALT(3, 0))/cos(PARAM_OR_ALT(5, 0)* PI / 180.0)); /* This works because cos(0)==1 */
-	int yrel = PARAM(0) - PARAM_OR_ALT(2, 0); 
+	int xrel = (int) (((float) SKPV(1) - SKPV_OR_ALT(3, 0))/cos(SKPV_OR_ALT(5, 0)* PI / 180.0)); /* This works because cos(0)==1 */
+	int yrel = SKPV(0) - SKPV_OR_ALT(2, 0); 
 
-	s->acc = (gint16)sqrt((float) xrel*xrel + yrel*yrel);
+	return make_reg(0, (gint16)sqrt((float) xrel*xrel + yrel*yrel));
 }
 
-void
-kTimesSin(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kTimesSin(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int angle = PARAM(0);
-	int factor = PARAM(1);
+	int angle = SKPV(0);
+	int factor = SKPV(1);
 
-	s->acc = (int) (factor * 1.0 * sin(angle * PI / 180.0));
+	return make_reg(0, (int) (factor * 1.0 * sin(angle * PI / 180.0)));
 }
 
 
-void
-kTimesCos(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kTimesCos(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int angle = PARAM(0);
-	int factor = PARAM(1);
+	int angle = SKPV(0);
+	int factor = SKPV(1);
 
-	s->acc = (int) (factor * 1.0 * cos(angle * PI / 180.0));
+	return make_reg(0, (int) (factor * 1.0 * cos(angle * PI / 180.0)));
 }
 
-void
-kCosDiv(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kCosDiv(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int angle = PARAM(0);
-	int value = PARAM(1);
+	int angle = SKPV(0);
+	int value = SKPV(1);
 	double cosval = cos(angle * PI / 180.0);
 
 	if ((cosval < 0.0001) && (cosval > 0.0001)) {
 		SCIkwarn(SCIkWARNING,"Attepted division by zero\n");
-		s->acc = (gint16)0x8000;
+		return make_reg(0, (gint16)0x8000);
 	} else
-		s->acc = (gint16) (value/cosval);
+		return make_reg(0, (gint16) (value/cosval));
 }
 
-void
-kSinDiv(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kSinDiv(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int angle = PARAM(0);
-	int value = PARAM(1);
+	int angle = SKPV(0);
+	int value = SKPV(1);
 	double sinval = sin(angle * PI / 180.0);
 
 	if ((sinval < 0.0001) && (sinval > 0.0001)) {
 		SCIkwarn(SCIkWARNING,"Attepted division by zero\n");
-		s->acc = (gint16)0x8000;
+		return make_reg(0, (gint16)0x8000);
 	} else
-		s->acc = (gint16) (value/sinval);
+		return make_reg(0, (gint16) (value/sinval));
 }
 
-void
-kTimesTan(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kTimesTan(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int param = PARAM(0);
-	int scale = PARAM_OR_ALT(1, 1);
+	int param = SKPV(0);
+	int scale = SKPV_OR_ALT(1, 1);
 
 	param -= 90;
 	if ((param % 90) == 0) {
 		SCIkwarn(SCIkWARNING, "Attempted tan(pi/2)");
-		s->acc = (gint16)0x8000;
+		return make_reg(0, (gint16)0x8000);
 	} else
-		s->acc = (gint16) -(tan(param * PI / 180.0) * scale);
+		return make_reg(0, (gint16) -(tan(param * PI / 180.0) * scale));
 }
 
-void
-kTimesCot(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kTimesCot(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int param = PARAM(0);
-	int scale = PARAM_OR_ALT(1, 1);
+	int param = SKPV(0);
+	int scale = SKPV_OR_ALT(1, 1);
 
 	if ((param % 90) == 0) {
 		SCIkwarn(SCIkWARNING, "Attempted tan(pi/2)");
-		s->acc = (gint16)0x8000;
+		return make_reg(0, (gint16)0x8000);
 	} else
-		s->acc = (gint16) (tan(param * PI / 180.0) * scale);
+		return make_reg(0, (gint16) (tan(param * PI / 180.0) * scale));
 }

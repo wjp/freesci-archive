@@ -174,32 +174,6 @@ validate_write_var(reg_t *r, int type, int max, int index, int line, reg_t value
 
 /*==--------------------------==*/
 
-void
-check_heap_corruption(state_t *s, char *file, int line)
-{
-	byte *heap = s->_heap->start;
-	int pos = s->_heap->first_free;
-
-	fprintf(stderr, "\033[1m%s, L%d\033[0m|", file, line);
-	while (pos != 0xffff) {
-		int size = getUInt16(heap + pos);
-		int next = getUInt16(heap + pos + 2);
-		fprintf(stderr,"%04x(%04x) : ", pos, size);
-
-		if (next < 1000 || next > 0xffff || size + pos > 0xffff) {
-			fprintf(stderr, "\n\033[1m\033[31mHeap corrupt!\033[0m\n");
-			fprintf(stderr, "Start = %04x, bad = %04x after %04x\n",
-				s->_heap->first_free, next, pos);
-			fprintf(stderr, "Totalsize = %x\n", size + pos);
-			return;
-		}
-		pos = next;
-	}
-	fprintf(stderr,"\n");
-}
-
-#define CHECK_HEAP check_heap_corruption(s, __FILE__, __LINE__);
-
 int
 script_error(state_t *s, char *file, int line, char *reason)
 {
@@ -1740,7 +1714,6 @@ int
 script_instantiate(state_t *s, int script_nr)
 {
 	resource_t *script = scir_find_resource(s->resmgr, sci_script, script_nr, 0);
-	heap_ptr pos;
 	int objtype;
 	unsigned int objlength;
 	reg_t reg, reg_tmp;
@@ -1768,8 +1741,9 @@ script_instantiate(state_t *s, int script_nr)
 
 /* fprintf(stderr,"Allocing %d(0x%x)\n", script->size, script->size); */
 	if (!s->seg_manager.allocate_script( &s->seg_manager, s, script_nr, &seg_id )) { /* ALL YOUR SCRIPT BASE ARE BELONG TO US */
-		sciprintf("Not enough heap space for script size 0x%x of script 0x%x, has 0x%x\n",
-			  script->size, script_nr, heap_largest(s->_heap));
+		sciprintf("Not enough heap space for script size 0x%x of script 0x%x,"
+			  " should this happen?`\n",
+			  script->size, script_nr);
 		script_debug_flag = script_error_flag = 1;
 		return 0;
 	}

@@ -32,7 +32,6 @@
 
 #include <resource.h>
 #include <sciresource.h>
-#include <heap.h>
 #include <script.h>
 #include <vocabulary.h>
 #include <uinput.h>
@@ -117,12 +116,9 @@ typedef struct _state
 
 	long game_time; /* Counted at 60 ticks per second, reset during start time */
 
-	heap_ptr save_dir; /* Pointer to the allocated space for the save directory */
 	reg_t save_dir_copy; /* Last copy of the save dir */
 	int save_dir_edit_offset; /* For kEdit(): Display offset for editing the savedir */
 	char *save_dir_copy_buf; /* Temp savedir buffer for kEdit() */
-
-	heap_ptr sound_object; /* Some sort of object for sound management */
 
 	int mouse_pointer_nr; /* Mouse pointer resource, or -1 if disabled */
 
@@ -172,7 +168,7 @@ typedef struct _state
 	int file_handles_nr; /* maximum numer of allowed file handles */
 	FILE **file_handles; /* Array of file handles. Dynamically increased if required. */
 
-	heap_ptr dirseeker_outbuffer;
+	reg_t dirseeker_outbuffer;
 	sci_dir_t dirseeker;
 
 	/* VM Information */
@@ -188,11 +184,6 @@ typedef struct _state
 	int execution_stack_pos_changed;   /* Set to 1 if the execution stack position
 					   ** should be re-evaluated by the vm
 					   */
-
-	/* 16 bit kernel compatibility crap */
-	heap_t *_heap; /* The heap structure */
-	byte *heap; /* The actual heap data (equal to _heap->start) */
-	gint16 acc;  /* 16 bit compatibility accumulator for old kernel functions */
 
 	reg_t r_acc; /* Accumulator */
 	unsigned int r_amp_rest; /* &rest register (only used for save games) */
@@ -242,14 +233,11 @@ typedef struct _state
 	
 	seg_manager_t seg_manager;
 	
-	heap_ptr clone_list[SCRIPT_MAX_CLONES];
-
 	int selector_names_nr; /* Number of selector names */
 	char **selector_names; /* Zero-terminated selector name list */
 	int kernel_names_nr; /* Number of kernel function names */
 	char **kernel_names; /* List of kernel names */
 	kfunct_sig_pair_t *kfunct_table; /* Table of kernel functions */
-	kfunct_old **kfunct_emu_table; /* Emulated kernel functions */
 
 	opcode *opcodes;
 
