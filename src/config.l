@@ -58,7 +58,9 @@ struct {
 	void *(*check_driver)(char *name);
 } freesci_subsystems[FREESCI_DRIVER_SUBSYSTEMS_NR] = {
 	{"gfx", NULL},
+#ifdef __GNUC__
 #warning "sound"
+#endif
 #if 0
         {"pcm", parse_pcmout_driver},
 	{"midiout", parse_midiout_driver}
@@ -236,7 +238,9 @@ standard_option standard_options[] = {
 	OPT_INT("alpha_threshold", alpha_threshold, 0, 255),
 	OPT_INT("animation_delay", animation_delay, 0, 1000000),
 	OPT_INT("animation_granularity", animation_granularity, 1, 160),
+#ifdef __GNUC__
 #warning "Re-enable sound server config"
+#endif
 #if 0
 	OPT_STATICREF("midiout_driver", midiout_driver, parse_midiout_driver),
 	OPT_STATICREF("midi_device", midi_device, parse_midi_device),
@@ -476,7 +480,9 @@ config_init(config_entry_t **_conf, char *conffile)
 
 	conf->gfx_driver_name = NULL;
 
+#ifdef __GNUC__
 #warning "Re-enable sound stuff"
+#endif
 #if 0
         conf->pcmout_driver = pcmout_find_driver(NULL);
         conf->pcmout_rate = 22050;
@@ -651,7 +657,9 @@ parse_name(char *name, name_value_pair *nvps, char *what, int oldval)
 }
 
 
+#ifdef __GNUC__
 #warning "Re-enable sound stuff"
+#endif
 #if 0
 void *
 parse_sound_server(char *driver_name)

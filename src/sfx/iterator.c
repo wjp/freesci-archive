@@ -85,7 +85,7 @@ _common_init(base_song_iterator_t *self)
 #define SCI0_PCM_DATA_OFFSET 0x2c
 
 #define CHECK_FOR_END(offset_augment) \
-	if (self->offset + (offset_augment) >= self->size) { \
+	if (self->offset + (offset_augment) > self->size) { \
 		self->state = SI_STATE_FINISHED; \
 		fprintf(stderr, SIPFX "Reached end of song without terminator!\n"); \
                 return SI_FINISHED; \
@@ -164,6 +164,7 @@ _sci0_read_next_command(base_song_iterator_t *self, unsigned char *buf, int *res
 #endif
 
 		buf[0] = cmd;
+
 
 		CHECK_FOR_END(paramsleft);
 		memcpy(buf + 1, self->data + self->offset, paramsleft);

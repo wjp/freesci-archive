@@ -301,7 +301,9 @@ list_graphics_drivers()
 	printf("\n");
 }
 
+#ifdef __GNUC__
 #warning "Re-enable sound stuff"
+#endif
 #if 0
 static void
 list_pcmout_drivers()
@@ -512,7 +514,9 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 			printf("Supported graphics drivers: ");
 			list_graphics_drivers();
 
+#ifdef __GNUC__
 #warning "Re-enable sound stuff"
+#endif
 #if 0
 			printf("Supported sound servers: ");
 			list_sound_servers();
@@ -968,7 +972,9 @@ main(int argc, char** argv)
 
 	chdir(startdir);
 
+#ifdef __GNUC__
 #warning "sound"
+#endif
 #if 0
 	printf("Mapping instruments to General Midi\n");
 
@@ -1020,7 +1026,9 @@ main(int argc, char** argv)
 		free(cl_options.gfx_driver_name);
 	} /* else it's still NULL */
 
+#ifdef __GNUC__
 #warning "sound"
+#endif
 #if 0
 	if (cl_options.pcmout_driver_name)
 		pcmout_driver = old_lookup_driver((old_lookup_funct_t *)pcmout_find_driver,
@@ -1056,7 +1064,9 @@ main(int argc, char** argv)
 		memcpy(gfx_options, &(active_conf->gfx_options), sizeof(gfx_options_t)); /* memcpy so that console works */
 		if (!gfx_driver_name)
 			gfx_driver_name = active_conf->gfx_driver_name;
+#ifdef __GNUC__
 #warning "sound"
+#endif
 #if 0
 		if (!sound_server)
 			sound_server = active_conf->sound_server;
@@ -1152,7 +1162,9 @@ main(int argc, char** argv)
 		}
 	}
 
+#ifdef __GNUC__
 #warning "sound"
+#endif
 #if 0
 	/* Configure the pcmout driver */
 	{
@@ -1190,7 +1202,9 @@ main(int argc, char** argv)
 		return 1;
 	}
 
+#ifdef __GNUC__
 #warning "sound"
+#endif
 #if 0
 	if (!sound_server)
 		sound_server = sound_server_find_driver(NULL);
@@ -1199,7 +1213,9 @@ main(int argc, char** argv)
 	if (cl_options.show_rooms)
 	  set_debug_mode(gamestate, 1, "r");
 
+#ifdef __GNUC__
 #warning "sound"
+#endif
 #if 0
 	gamestate->sound_server = sound_server;
 
@@ -1242,7 +1258,9 @@ main(int argc, char** argv)
 
 	printf("Graphics: Using the %s driver %s\n",
 	       gfx_driver->name, gfx_driver->version);
+#ifdef __GNUC__
 #warning "sound"
+#endif
 #if 0
 	printf("MIDI-out: Using the %s driver %s\n",
 	       midiout_driver->name, midiout_driver->version);
@@ -1265,7 +1283,9 @@ main(int argc, char** argv)
 		game_restore(&gamestate, savegame_name);
 	else
 		game_run(&gamestate); /* Run the game */
+#ifdef __GNUC__
 #warning "sound"
+#endif
 #if 0
 	if (gamestate->sound_server)
 		gamestate->sound_server->exit(gamestate); /* Shutdown sound daemon first */

@@ -229,6 +229,12 @@ DECLARE_HEAPENTRY(list); /* list entries */
 /* hunk_table_t */
 DECLARE_HEAPENTRY(hunk);
 
+typedef struct {
+	int size;
+	char *description;
+	char *buf;
+} dynmem_t; /* Free-style memory */
+
 typedef struct _mem_obj {
 	int type;
         int segmgr_id; /* Internal value used by the seg_manager's hash map */
@@ -241,6 +247,7 @@ typedef struct _mem_obj {
 		list_table_t lists;
 		node_table_t nodes;
 		hunk_table_t hunks;
+		dynmem_t dynmem;
 	} data;
 } mem_obj_t;
 

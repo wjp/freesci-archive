@@ -1241,7 +1241,7 @@ run_vm(state_t *s, int restoring)
 			if (temp & 0x08)  /* Add accumulator offset if requested */
 				r_temp.offset += validate_arithmetic(s->r_acc);
 
-			r_temp.offset += opparams[1];  /* Add index */
+			r_temp.offset += opparams[1] << 2;  /* Add index */
 			/* That's the immediate address now */
 			s->r_acc = r_temp;
 			break;

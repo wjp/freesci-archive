@@ -392,10 +392,10 @@ vocab_get_any_group_word(int group, word_t **words, int words_nr);
 
 
 void
-vocab_decypher_said_block(struct _state *s, heap_ptr addr);
+vocab_decypher_said_block(struct _state *s, byte *pos);
 /* Decyphers a said block and dumps its content via sciprintf.
 ** Parameters: (state_t *) s: The state to use
-**             (heap_ptr) addr: The heap address to decypher
+**             (byte *) pos: Pointer to the data to dump
 ** For debugging only.
 */
 

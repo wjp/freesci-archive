@@ -31,6 +31,9 @@
 #define SYS_STRINGS_MAX 4
 
 #define SYS_STRING_SAVEDIR 0
+#define SYS_STRING_PARSER_BASE 1
+
+#define MAX_PARSER_BASE 64
 
 typedef struct {
 	char *name;

@@ -71,7 +71,8 @@ void dbg_print( char* msg, int i );		// for debug only
 #define MEM_OBJ_LISTS 6
 #define MEM_OBJ_NODES 7
 #define MEM_OBJ_HUNK 8
-#define MEM_OBJ_MAX MEM_OBJ_NODES /* For sanity checking */
+#define MEM_OBJ_DYNMEM 9
+#define MEM_OBJ_MAX MEM_OBJ_DYNMEM /* For sanity checking */
 typedef int mem_obj_enum;
 
 struct _mem_obj;
@@ -216,12 +217,13 @@ typedef struct _seg_manager_t {
 	list_t* (*alloc_list)(struct _seg_manager_t *self, reg_t *addr);
 	node_t* (*alloc_node)(struct _seg_manager_t *self, reg_t *addr);
 	hunk_t* (*alloc_hunk)(struct _seg_manager_t *self, char *hunk_type, int size, reg_t *addr);
+	unsigned char *(*alloc_dynmem)(struct _seg_manager_t *self, int size, char *description, reg_t *addr);
 
 	void (*free_clone)(struct _seg_manager_t *self, reg_t addr);
 	void (*free_list)(struct _seg_manager_t *self, reg_t addr);
 	void (*free_node)(struct _seg_manager_t *self, reg_t addr);
 	void (*free_hunk)(struct _seg_manager_t *self, reg_t addr);
-
+	int (*free_dynmem)(struct _seg_manager_t *self, reg_t addr);
 
 } seg_manager_t;
 

@@ -1,6 +1,21 @@
 2002-11-29  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/kevent.c (kGetEvent): Don't report insert mask on pointer
+	events, fixes movement in QfG2 (well, not really, but it seems to fix
+	the GetEvent() related part of the problem)
+
+	* src/engine/vm.c (script_uninstantiate): Remove class table entries
+
+	* src/engine/kernel.c (kMemory): Ported
+
+	* src/engine/kpathing.c (kAvoidPath): Ported
+
+	* src/engine/seg_manager.c (mem_obj_allocate): Clear pointers after
+	realloc, to prevent segfault during c_segtable
+
 	* src/engine/kstring.c (kStrAt, kStrCpy): Ported
+	(kSaid, kParse): Fixed the parser's claim mechanism by porting these
+	two
 
 	* src/engine/kernel.c (kMemory): Disabled kMemory()
 

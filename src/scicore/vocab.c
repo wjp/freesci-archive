@@ -439,35 +439,35 @@ vocab_lookup_word(char *word, int word_len,
 
 
 void
-vocab_decypher_said_block(state_t *s, heap_ptr addr)
+vocab_decypher_said_block(state_t *s, byte *addr)
 {
-  int nextitem;
+	int nextitem;
 
-  do {
-    nextitem = s->heap[addr++];
+	do {
+		nextitem = *addr++;
 
-    if (nextitem < 0xf0) {
-      nextitem = nextitem << 8 | s->heap[addr++];
-      sciprintf(" %s[%03x]", vocab_get_any_group_word(nextitem, s->parser_words, s->parser_words_nr),
-		nextitem);
+		if (nextitem < 0xf0) {
+			nextitem = nextitem << 8 | *addr++;
+			sciprintf(" %s[%03x]", vocab_get_any_group_word(nextitem, s->parser_words, s->parser_words_nr),
+				  nextitem);
 
-      nextitem = 42; /* Make sure that group 0xff doesn't abort */
-    } else switch(nextitem) {
-    case 0xf0: sciprintf(" ,"); break;
-    case 0xf1: sciprintf(" &"); break;
-    case 0xf2: sciprintf(" /"); break;
-    case 0xf3: sciprintf(" ("); break;
-    case 0xf4: sciprintf(" )"); break;
-    case 0xf5: sciprintf(" ["); break;
-    case 0xf6: sciprintf(" ]"); break;
-    case 0xf7: sciprintf(" #"); break;
-    case 0xf8: sciprintf(" <"); break;
-    case 0xf9: sciprintf(" >"); break;
-    case 0xff: break;
-    }
-  } while (nextitem != 0xff);
+			nextitem = 42; /* Make sure that group 0xff doesn't abort */
+		} else switch(nextitem) {
+		case 0xf0: sciprintf(" ,"); break;
+		case 0xf1: sciprintf(" &"); break;
+		case 0xf2: sciprintf(" /"); break;
+		case 0xf3: sciprintf(" ("); break;
+		case 0xf4: sciprintf(" )"); break;
+		case 0xf5: sciprintf(" ["); break;
+		case 0xf6: sciprintf(" ]"); break;
+		case 0xf7: sciprintf(" #"); break;
+		case 0xf8: sciprintf(" <"); break;
+		case 0xf9: sciprintf(" >"); break;
+		case 0xff: break;
+		}
+	} while (nextitem != 0xff);
 
-  sciprintf("\n");
+	sciprintf("\n");
 }
 
 
