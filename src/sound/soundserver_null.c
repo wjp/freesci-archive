@@ -283,8 +283,15 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	  else if (param == SCI_MIDI_RESET_ON_STOP) {
 	    song->resetflag = param2;
 	    fprintf(ds, "Event 0x4c Reset on Stop set to %d for handle %04x\n", param2, song->handle);
-	  } else if ((param == 0x4B)||(param == 0x4E)||(param == 0x50))
+	  } else if (param == 0x4b) {
+	    /* set polyphony */
+	  } else if ((param == 0x4E)||(param == 0x50)) {
 	    fprintf(ds, "Nonhandled MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
+	  } else if ((param != 0x01) && (param != 0x07) && (param != 0x0a) &&
+		     (param != 0x0b) && (param != 0x40) && (param != 0x79)) 
+	    /* CC changes in the MT32 */
+	    fprintf(ds, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
+	  
 	} else if (command == SCI_MIDI_SET_SIGNAL) {
 
 	  if (param == SCI_MIDI_SET_SIGNAL_LOOP)

@@ -446,7 +446,7 @@ menubar_get_attribute(state_t *s, int menu_nr, int item_nr, int attribute)
 	if ((menu_nr < 0) || (item_nr < 0))
 		return -1;
 
-	if ((menu_nr < menubar->menus_nr) || (item_nr < menubar->menus[menu_nr].items_nr))
+	if ((menu_nr >= menubar->menus_nr) || (item_nr >= menubar->menus[menu_nr].items_nr))
 		return -1;
 
 	item = menubar->menus[menu_nr].items + item_nr;
