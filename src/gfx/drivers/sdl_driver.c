@@ -36,6 +36,8 @@
 #	include <SDL.h>
 #endif
 
+#include "SDL_gfxPrimitives.h"
+
 #ifndef SDL_DISABLE
 #  define SDL_DISABLE 0
 #endif
@@ -348,90 +350,6 @@ sdl_map_color(gfx_driver_t *drv, gfx_color_t color)
 		     255 - color.alpha);
 }
 
-
-/* This code shamelessly lifted from the SDL_gfxPrimitives package */
-static void lineColor(SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color)
-{
-  int pixx, pixy;
-  int x,y;
-  int dx,dy;
-  int sx,sy;
-  int swaptmp;
-  Uint8 *pixel = NULL;
-
-  dx = x2 - x1;
-  dy = y2 - y1;
-  sx = (dx >= 0) ? 1 : -1;
-  sy = (dy >= 0) ? 1 : -1;
-
-  dx = sx * dx + 1;
-  dy = sy * dy + 1;
-  pixx = dst->format->BytesPerPixel;
-  pixy = dst->pitch;
-  pixel = ((Uint8*)dst->pixels) + pixx * (int)x1 + pixy * (int)y1;
-  pixx *= sx;
-  pixy *= sy;
-  if (dx < dy) {
-   swaptmp = dx; dx = dy; dy = swaptmp;
-   swaptmp = pixx; pixx = pixy; pixy = swaptmp;
-  }
-
-/* Draw */
-  x=0;
-  y=0;
-  switch(dst->format->BytesPerPixel) {
-   case 1:
-    for(; x < dx; x++, pixel += pixx) {
-     *pixel = color;
-     y += dy; 
-     if (y >= dx) {
-      y -= dx; pixel += pixy;
-     }
-    }
-    break;
-   case 2:
-    for (; x < dx; x++, pixel += pixx) {
-     *(Uint16*)pixel = color;
-     y += dy; 
-     if (y >= dx) {
-      y -= dx; 
-      pixel += pixy;
-     }
-    }
-    break;
-   case 3:
-    for(; x < dx; x++, pixel += pixx) {
-     if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-      pixel[0] = (color >> 16) & 0xff;
-      pixel[1] = (color >> 8) & 0xff;
-      pixel[2] = color & 0xff;
-     } else {
-      pixel[0] = color & 0xff;
-      pixel[1] = (color >> 8) & 0xff;
-      pixel[2] = (color >> 16) & 0xff;
-     }
-     y += dy; 
-     if (y >= dx) {
-      y -= dx; 
-      pixel += pixy;
-   }
-    }
-    break;
-   case 4: 
-     for(; x < dx; x++, pixel += pixx) {
-      *(Uint32*)pixel = color;
-      y += dy; 
-      if (y >= dx) {
-       y -= dx; 
-       pixel += pixy;
-      }
-     }
-     break;
-   default:
-     fprintf(stderr, "invalid depth\n");
-  }
-
-}
 
 static int
 sdl_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,

@@ -77,7 +77,10 @@ extern DLLEXTERN midi_device_t *midi_device;
 
 extern DLLEXTERN midi_device_t midi_device_mt32;
 extern DLLEXTERN midi_device_t midi_device_mt32gm;
+
+#ifdef HAVE_SYS_SOUNDCARD_H
 extern DLLEXTERN midi_device_t midi_device_adlib;
+#endif
 
 extern DLLEXTERN midi_device_t *midi_devices[];
 

@@ -24,7 +24,9 @@ midi_device_t *midi_device;
 midi_device_t *midi_devices[] = {
   &midi_device_mt32gm,
   &midi_device_mt32, 
+#ifdef HAVE_SYS_SOUNDCARD_H
   &midi_device_adlib, 
+#endif
   NULL
 };
 

@@ -1,3 +1,14 @@
+2001-07-14  Solomon Peachy <pizza@shaftnet.org>
+        * src/gfx/driver/sdl_driver.c, SDL_gfxPrimitives.c,
+          SDL_gfxPrimitives.h, SDL_gfxPrimitives_font.h:  Ripped out the
+        sdl line drawing code formerly ripped from the gfxPrimitives
+        library, and instead incorporated a much newer version of the
+        library into the build.
+
+	* src/sound/midi_adlib.c, src/sound/midi_device.c,
+          src/include/midi_device.h:  Many updates to the adlib driver.
+          Also it is no longer built when oss is not present.
+
 2001-07-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/scicore/vocab.c (vocab_lookup_word): Dashes in words are now

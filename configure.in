@@ -126,7 +126,7 @@ else
 	fi
 
 	if test x"$fsci_sdl_driver" = xyes; then
-		fsci_sdl_st="sdl_driver.o"
+		fsci_sdl_st="sdl_driver.o SDL_gfxPrimitives.o"
 		LIBS="$LIBS $SDL_LIBS"
 	fi
 
