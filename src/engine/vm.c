@@ -60,6 +60,12 @@ int bp_flag = 0;
 static reg_t _dummy_register = NULL_REG_INITIALIZER;
 
 
+static int jump_initialized = 0;
+#ifdef HAVE_SETJMP_H
+static jmp_buf vm_error_address;
+#endif
+
+
 /*-- validation functionality --*/
 
 #ifndef DISABLE_VALIDATIONS
@@ -89,13 +95,6 @@ validate_stack_addr(state_t *s, stack_ptr_t sp)
 		  sp, 0, s->stack_top - s->stack_base -1);
 	return 0;
 }
-
-
-static int jump_initialized = 0;
-#ifdef HAVE_SETJMP_H
-static jmp_buf vm_error_address;
-#endif
-
 
 
 static inline int
@@ -159,7 +158,7 @@ validate_write_var(reg_t *r, int type, int max, int index, int line, reg_t value
 #  define validate_read_var(r, t, m, i, l) ((r)[i])
 #  define validate_write_var(r, t, m, i, l, v) ((r)[i] = (v))
 #  define validate_property(o, p) (&((o)->variables[p]))
-#  define ASSERT_ARITHMETIC(v)
+#  define ASSERT_ARITHMETIC(v) (v).offset
 
 #endif
 
@@ -732,7 +731,9 @@ run_vm(state_t *s, int restoring)
 				/* No script? Implicit return via fake instruction buffer */
 				SCIkdebug(SCIkWARNING, "Running on non-existant script in segment %x!\n", xs->addr.pc.segment);
 				code_buf = _fake_return_buffer;
+#ifndef DISABLE_VALIDATIONS
 				code_buf_size = 2;
+#endif
 				xs->addr.pc.offset = 1;
 
 				scr = NULL;
@@ -771,8 +772,8 @@ run_vm(state_t *s, int restoring)
 						variables_max[VAR_LOCAL] = 0;
 					variables_max[VAR_TEMP] = xs->sp - xs->fp;
 					variables_max[VAR_PARAM] = xs->argc + 1;
-				}
 #endif
+				}
 				variables[VAR_TEMP] = xs->fp;
 				variables[VAR_PARAM] = xs->variables_argp;
 			}
