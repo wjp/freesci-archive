@@ -45,7 +45,7 @@
 #define K_CONTROL_EDIT 3
 #define K_CONTROL_ICON 4
 #define K_CONTROL_CONTROL 6
-#define K_CONTROL_SELECT_BOX 10
+#define K_CONTROL_BOX 10
 
 inline void
 _k_clip_loop_cel(int *loop, int *cel, byte *data)
@@ -1078,7 +1078,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
           PUT_SELECTOR(obj, cursor, cursor); /* Write back cursor position */
       }
 
-    case K_CONTROL_SELECT_BOX:
+    case K_CONTROL_BOX:
     case K_CONTROL_BUTTON:
       if (event) PUT_SELECTOR(event, claimed, 1);
       _k_draw_control(s, obj, 0);
@@ -1234,6 +1234,9 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
     if (entries_nr)
       free(entries_list);
   }
+  break;
+
+  case K_CONTROL_BOX:
   break;
 
   default:
@@ -1437,8 +1440,11 @@ static int _cmp_view_object(const void *obj1, const void *obj2) /* Used for qsor
   return (((view_object_t *)obj1)->y) - (((view_object_t *)obj2)->y);
 }
 
+#define _K_MAKE_VIEW_LIST_CYCLE 1
+#define _K_MAKE_VIEW_LIST_CALC_PRIORITY 2
+
 view_object_t *
-_k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_nr, int argc, int argp)
+_k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int funct_nr, int argc, int argp)
      /* Creates a view_list from a node list in heap space. Returns the list, stores the
      ** number of list entries in *list_nr. Calls doit for each entry if cycle is set.
      ** argc, argp, funct_nr should be the same as in the calling kernel function.
@@ -1448,8 +1454,8 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
   view_object_t *retval;
   int i;
 
-  if (cycle)
-    _k_invoke_view_list(s, list, funct_nr, argc, argp); /* Invoke all objects bif requested */
+  if (options & _K_MAKE_VIEW_LIST_CYCLE)
+    _k_invoke_view_list(s, list, funct_nr, argc, argp); /* Invoke all objects if requested */
 
   node = GET_HEAP(list + LIST_LAST_NODE);
   *list_nr = 0;
@@ -1534,7 +1540,8 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
       SCIkdebug(SCIkGRAPHICS, "Object at %04x has no signal selector\n", obj);
     }
 
-    if (!(UGET_HEAP(retval[i].signalp) & _K_VIEW_SIG_FLAG_FIX_PRI_ON)) { /* Calculate priority */
+    if ((options & _K_MAKE_VIEW_LIST_CALC_PRIORITY)
+	&& !(UGET_HEAP(retval[i].signalp) & _K_VIEW_SIG_FLAG_FIX_PRI_ON)) { /* Calculate priority */
       int _priority, y = retval[i].y;
       _priority = VIEW_PRIORITY(y);
 
@@ -1543,6 +1550,9 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
       retval[i].priority = _priority;
     } else /* DON'T calculate the priority */
       retval[i].priority = GET_SELECTOR(obj, priority);
+
+    if (retval[i].priority < 0)
+      retval[i].priority = 16;
 
     s->pic_not_valid++; /* There ought to be some kind of check here... */
 
@@ -1922,7 +1932,8 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
   if (cast_list) {
     s->dyn_view_port = s->view_port; /* The list is valid for view_port */
 
-    s->dyn_views = _k_make_view_list(s, cast_list, &(s->dyn_views_nr), cycle, funct_nr, argc, argp);
+    s->dyn_views = _k_make_view_list(s, cast_list, &(s->dyn_views_nr), (cycle? _K_MAKE_VIEW_LIST_CYCLE : 0)
+				     | _K_MAKE_VIEW_LIST_CALC_PRIORITY, funct_nr, argc, argp);
     /* Initialize pictures- Steps 3-9 in Lars' V 0.1 list */
 
     SCIkdebug(SCIkGRAPHICS, "Handling PicViews:\n");

@@ -63,17 +63,19 @@ typedef struct {
 #define SCI_K_ESC 27
 #define SCI_K_BACKSPACE 8
 #define SCI_K_ENTER 13
-#define SCI_K_END 79
-#define SCI_K_DOWN 80
-#define SCI_K_PGDOWN 81
-#define SCI_K_LEFT 75
-#define SCI_K_CENTER 53 /*Note: this is the same as '5'. Dunno what should be done here...*/
-#define SCI_K_RIGHT 77
-#define SCI_K_HOME 71
-#define SCI_K_UP 72
-#define SCI_K_PGUP 73
-#define SCI_K_INSERT 82
-#define SCI_K_DELETE 83
+
+#define SCI_K_END (79 << 8)
+#define SCI_K_DOWN (80 << 8)
+#define SCI_K_PGDOWN (81 << 8)
+#define SCI_K_LEFT (75 << 8)
+#define SCI_K_CENTER (53 << 8) /*Note: this is the same as '5'. Dunno what should be done here...*/
+#define SCI_K_RIGHT (77 << 8)
+#define SCI_K_HOME (71 << 8)
+#define SCI_K_UP (72 << 8)
+#define SCI_K_PGUP (73 << 8)
+#define SCI_K_INSERT (82 << 8)
+#define SCI_K_DELETE (83 << 8)
+
 #define SCI_K_F1 59
 #define SCI_K_F2 60
 #define SCI_K_F3 61

@@ -1,4 +1,12 @@
-2000-05-03  Christoph Reichenbach <jameson@linuxgames.com>
+2000-05-03  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (_k_make_view_list): Picviews no longer
+	have their priority implicitly calculated
+	(_k_make_view_list): Negative priorities are treated correctly now
+	for views
+
+	* src/include/uinput.h: Fixed key management to behave more like
+	Sierra SCI
 
 	* src/engine/kscripts.c: Write/read attempt to invalid selectors
 	will now dump more debug info

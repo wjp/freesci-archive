@@ -68,7 +68,7 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
       r.type=SCI_EVT_KEYBOARD;
       r.data=pending;
       pending=-1;
-      r.buckybits=buckybits;
+      r.buckybits=buckybits | SCI_EVM_NUMLOCK;
       return r;
     }
   
@@ -84,10 +84,29 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
       case evKeyRepeat:
 	retval.type = SCI_EVT_KEYBOARD;
         retval.data=-1;
+	retval.buckybits = 0;
         switch(event.key.label)
 	  {
 	  case GIIK_P4:
-	  case GIIK_Left: retval.data=0; pending=SCI_K_LEFT;; break;
+	  case GIIK_Left: retval.data=SCI_K_LEFT; retval.buckybits = SCI_EVM_NUMLOCK; break;
+	  case GIIK_P6:
+	  case GIIK_Right: retval.data=SCI_K_RIGHT; retval.buckybits = SCI_EVM_NUMLOCK;break;
+	  case GIIK_P8:
+	  case GIIK_Up: retval.data=SCI_K_UP; retval.buckybits = SCI_EVM_NUMLOCK;break;
+	  case GIIK_P2:
+	  case GIIK_Down: retval.data=SCI_K_DOWN; retval.buckybits = SCI_EVM_NUMLOCK;break;
+	  case GIIK_P7:
+	  case GIIK_Home: retval.data=SCI_K_HOME; retval.buckybits = SCI_EVM_NUMLOCK;break;
+	  case GIIK_P1:
+	  case GIIK_End: retval.data=SCI_K_END; retval.buckybits = SCI_EVM_NUMLOCK;break;
+	  case GIIK_P9:
+	  case GIIK_PageUp: retval.data=SCI_K_PGUP; retval.buckybits = SCI_EVM_NUMLOCK;break;
+	  case GIIK_P3:
+	  case GIIK_PageDown: retval.data=SCI_K_PGDOWN; retval.buckybits = SCI_EVM_NUMLOCK;break;
+	  case GIIK_P5: retval.data=SCI_K_CENTER; retval.buckybits = SCI_EVM_NUMLOCK;break;
+	    /*
+	  case GIIK_P4:
+	  case GIIK_Left: retval.data=0; pending=SCI_K_LEFT; break;
 	  case GIIK_P6:
 	  case GIIK_Right: retval.data=0; pending=SCI_K_RIGHT; break;
 	  case GIIK_P8:
@@ -103,6 +122,7 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
 	  case GIIK_P3:
 	  case GIIK_PageDown: retval.data=0; pending=SCI_K_PGDOWN; break;
 	  case GIIK_P5: retval.data=SCI_K_CENTER; break;
+	    */
 
 	  case GIIUC_Minus:
 	  case GIIK_PMinus: retval.data = '-'; break;
@@ -152,7 +172,7 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
 	    }
 	  }
         if(retval.data==-1) continue;
-        retval.buckybits=buckybits;
+        retval.buckybits |= buckybits;
 
         return retval;
 
