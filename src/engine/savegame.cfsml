@@ -864,6 +864,8 @@ read_pixmap_color(FILE *fh, gfx_pixmap_color_t *color, char *lastval, int *line,
 {
 	%CFSMLREAD gfx_pixmap_color_t (color) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
 
+        color->visual.index = GFX_COLOR_INDEX_UNMAPPED;
+
 	if (_global_save_state->gfx_state->driver->mode->palette)
 		if (gfx_alloc_color(_global_save_state->gfx_state->driver->mode->palette, color) < 0)
 			sciprintf("While restoring color index: Allocating color entry for (%02x,%02x,%02x) failed!\n",

@@ -1417,6 +1417,7 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
      /* disposes all list members flagged for disposal; funct_nr is the invoking kfunction */
 {
 	int i;
+        byte dropped_view = 0;
 	gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) list->contents;
 
 	while (widget) {
@@ -1446,6 +1447,7 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 				}
 				if (widget->flags & GFXW_FLAG_VISIBLE) {
 					ADD_TO_CURRENT_PICTURE_PORT(gfxw_set_id(GFXW(widget), GFXW_NO_ID));
+                                        dropped_view = 1;
 
 					widget->draw_bounds.y += s->dyn_views->bounds.y - widget->parent->bounds.y;
 					widget->draw_bounds.x += s->dyn_views->bounds.x - widget->parent->bounds.x;
@@ -1456,6 +1458,8 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 
 		widget = next;
 	}
+	if (dropped_view)
+	        reparentize_primary_widget_lists(s, s->port); /* move dynviews behind dropped view */
 }
 
 
@@ -1738,8 +1742,9 @@ _k_draw_view_list(state_t *s, gfxw_list_t *list, int flags)
 					_k_set_now_seen(s, widget->ID);
 
 					SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", widget->ID, signal);
-					SCIkdebug(SCIkGRAPHICS, "  to (%d,%d) v/l/c = (%d,%d,%d), pri=%d\n", widget->pos.x, widget->pos.y,
-						  widget->view, widget->loop, widget->cel, widget->color.priority);
+					SCIkdebug(SCIkGRAPHICS, "  to (%d,%d) v/l/c = (%d,%d,%d), pri=%d\n", widget->pos.x,
+						  widget->pos.y, widget->view, widget->loop, widget->cel,
+						  widget->color.priority);
 
 				}
 

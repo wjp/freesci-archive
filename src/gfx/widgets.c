@@ -1792,6 +1792,8 @@ static int
 _gfxwop_visual_free(gfxw_widget_t *widget)
 {
 	gfxw_visual_t *visual = (gfxw_visual_t *) widget;
+        gfxw_port_t *portrefs;
+        int retval;
 
 	if (!GFXW_IS_VISUAL(visual)) {
 		GFXERROR("_gfxwop_visual_free() called on non-visual!Widget was: ");
@@ -1799,9 +1801,12 @@ _gfxwop_visual_free(gfxw_widget_t *widget)
 		return 1;
 	}
 
-	free(visual->port_refs);
+        portrefs = visual->port_refs;
 
-	return _gfxwop_container_free(widget);
+	retval = _gfxwop_container_free(widget);
+
+	free(portrefs);
+        return;
 }
 
 static int
