@@ -311,7 +311,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	if (!S)
 		S = sci_malloc(sizeof(struct _xlib_state));
 
-	flags = SCI_XLIB_INSERT_MODE;
+	flags |= SCI_XLIB_INSERT_MODE;
 
 	S->display = XOpenDisplay(NULL);
 
