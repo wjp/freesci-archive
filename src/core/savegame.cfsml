@@ -335,6 +335,7 @@ RECORD state_t "state_t" {
   hunk_block_t hunk[STATIC MAX_HUNK_BLOCKS];
 
   menubar_tp menubar;
+  string status_bar_text;
 
   int priority_first;
   int priority_last;

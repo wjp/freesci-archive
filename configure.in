@@ -17,6 +17,12 @@ AC_CHECK_HEADERS(getopt.h)
 AC_CHECK_FUNCS(pipe socketpair fork sched_yield memfrob)
 AC_PATH_GGI
 AC_PATH_CURSES
+AC_PATH_X
+
+if test "no_x" != yes; then
+	AC_PATH_GLX
+fi
+
 AM_PROG_LEX
 AM_PATH_GLIB(1.2.0,[
 		CFLAGS="$CFLAGS $GLIB_CFLAGS"

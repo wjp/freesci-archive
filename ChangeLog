@@ -1,3 +1,15 @@
+1999-12-12  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kmenu.c (kMenuSelect): Added graphical menus
+
+	* src/core/kmenu.c (kMenuSelect): Added debug code, fixed minor bugs
+
+	* src/graphics/input_ggi.c (_sci_ggi_input_handler): Added ggi
+	Function key handling
+
+	* src/graphics/menubar.c: Fixed several veteran bugs in the menu
+	initialization, including one that tried to lowercase function keys
+
 1999-12-12  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/graphics/menubar.c (menubar_add_menu): Added tag value support

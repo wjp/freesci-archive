@@ -281,6 +281,62 @@ else
 	fi
 fi
 ])
+
+
+
+
+AC_DEFUN(AC_PATH_GLX,
+[
+AC_MSG_CHECKING([for glx])
+
+oldLDFLAGS=$LDFLAGS
+oldCFLAGS=$CFLAGS
+
+LDFLAGS="$LDFLAGS -L$x_libraries"
+CFLAGS="$CFLAGS -I$x_includes"
+
+found_glx=no
+AC_TRY_CPP([#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/Xos.h>
+#include <X11/Xatom.h>
+#include <GL/gl.h>
+#include <GL/glx.h>], [found_glx=yes])
+
+
+if test "$found_glx" = yes; then
+
+	found_glx=no
+
+	LDFLAGS="$LDFLAGS -lGL -lX11 -lXmu -lXi"
+	AC_TRY_LINK([#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/Xos.h>
+#include <X11/Xatom.h>
+#include <GL/gl.h>
+#include <GL/glx.h>], [glBegin(GL_TRIANGLE_STRIP);], [found_glx=yes])
+
+	if test "$found_glx" = yes; then
+
+		AC_MSG_RESULT([yes])
+		AC_DEFINE(HAVE_GLX)
+
+	else
+
+		AC_MSG_RESULT([no])
+		LDFLAGS=$oldLDFLAGS
+		CFLAGS=$oldCFLAGS
+
+	fi
+else
+
+	AC_MSG_RESULT([no])
+	LDFLAGS=$oldLDFLAGS
+	CFLAGS=$oldCFLAGS
+
+fi
+
+])
 # Like AC_CONFIG_HEADER, but automatically create stamp file.
 
 AC_DEFUN(AM_CONFIG_HEADER,

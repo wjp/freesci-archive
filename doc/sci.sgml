@@ -5558,6 +5558,7 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                      <member/g: Graphics/
                      <member/l: List and node handling/
                      <member/m: Memory management/
+                     <member/M: Menu system/
                      <member/p: The command parser/
                      <member/s: Base setter: Draws the bases of each actor as colored rectangles/
                      <member/u: Unimplemented functionality/

@@ -37,7 +37,7 @@ struct _state;
 /* This adds an "About FreeSCI" menu option to the first menu */
 
 
-#define MENU_HBAR_STRING "!--"
+#define MENU_HBAR_STRING "--!"
 /* The string used in SCI to determine an empty menu line */
 
 #define MENU_BORDER_SIZE 0
@@ -46,7 +46,7 @@ struct _state;
 #define MENU_LEFT_BORDER 5
 /* The number of pixels added to the left of the first menu */
 
-#define MENU_BOX_CENTER_PADDING 5
+#define MENU_BOX_CENTER_PADDING 10
 /* Number of pixels to leave in between the left and the right centered text content in boxes
 ** that use right centered content
 */
@@ -199,6 +199,55 @@ menubar_draw(picture_t pic, port_t *port, menubar_t *menubar, int activated, byt
 ** Returns   : (void)
 ** Use an illegal value for "activated" (like -1) in order not to activate any
 ** entry.
+*/
+
+void
+status_bar_draw(struct _state *s, char *text);
+/* Draws the menu bar
+** Parameters: (state_t *) s: The current state
+**             (char *) text: The text to draw
+** Returns   : (void)
+** If text is NULL, the title bar will be drawn all black.
+*/
+
+
+int
+menubar_draw_menu(struct _state *s, int menu, port_t *menu_port);
+/* Draws a complete menu
+** Parameters: (state_t *) s: The current state
+**             (int) menu: The menu to draw (starting at 0)
+**             (port_t *) menu_port: A port surrounding the menu background.
+** Returns   : (int) A hunk handle for use with graph_restore_box() to remove the menu
+** Menu port is filled in by this function.
+*/
+
+void
+menubar_draw_item(struct _state *s, port_t *port, int menu, int item, int active);
+/* Draws one menu item
+** Parameters: (state_t *) s: The current state
+**             (port_t *) port: The menu frame port (returned by menubar_draw_menu())
+**             (int) menu: The menu the item belongs to
+**             (int) item: The item number
+**             (int) active: Whether the item should be drawn as active
+** Returns   : (void)
+*/
+
+int
+menubar_item_valid(struct _state *s, int menu, int item);
+/* Determines whether the specified menu entry may be activated
+** Parameters: (state_t *) s: The current state
+**             (int x int) (menu, item): The menu item to check
+** Returns   : (int) 1 if the menu item may be selected, 0 otherwise
+*/
+
+
+int
+menubar_map_pointer(struct _state *s, int *menu_nr, int *item_nr, port_t *port);
+/* Maps the pointer position to a (menu,item) tuple.
+** Parameters: (state_t *) s: The current state
+**             ((int *) x (int *)) (menu_nr, item_nr): Pointers to the current menu/item tuple
+**             (port_t *) port: The port of the currently active menu (if any)
+** Returns   : (int) 1 if the pointer is outside a valid port, 0 otherwise.
 */
 
 #endif /* !_SCI_MENUBAR_H_ */

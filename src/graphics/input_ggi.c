@@ -129,7 +129,17 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
 	  case GIIUC_Tab: retval.data='\t'; break;
 	  case GIIUC_Space: retval.data=' '; break;
 	  case GIIUC_BackSpace: retval.data=SCI_K_BACKSPACE; break;
-
+	  case GIIK_F1: retval.data = SCI_K_F1; break;
+	  case GIIK_F2: retval.data = SCI_K_F2; break;
+	  case GIIK_F3: retval.data = SCI_K_F3; break;
+	  case GIIK_F4: retval.data = SCI_K_F4; break;
+	  case GIIK_F5: retval.data = SCI_K_F5; break;
+	  case GIIK_F6: retval.data = SCI_K_F6; break;
+	  case GIIK_F7: retval.data = SCI_K_F7; break;
+	  case GIIK_F8: retval.data = SCI_K_F8; break;
+	  case GIIK_F9: retval.data = SCI_K_F9; break;
+	  case GIIK_F10: retval.data = SCI_K_F10; break;
+	  case GIIUC_Escape: retval.data = SCI_K_ESC; break;
 
 	    /*FIXME: Add all special keys in a sane way*/
 	  default:
@@ -165,12 +175,25 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
         retval.type = SCI_EVT_MOUSE_PRESS;
         retval.data = event.pbutton.button;
         retval.buckybits=buckybits;
+
+	if (event.pbutton.button == GII_PBUTTON_LEFT)
+	  retval.buckybits |= SCI_EVM_CTRL;
+
+	if (event.pbutton.button == GII_PBUTTON_RIGHT)
+	  retval.buckybits |= SCI_EVM_LSHIFT | SCI_EVM_RSHIFT;
         return retval;
 	
       case evPtrButtonRelease:
         retval.type = SCI_EVT_MOUSE_RELEASE;
         retval.data = event.pbutton.button;
         retval.buckybits=buckybits;
+
+	if (event.pbutton.button == GII_PBUTTON_LEFT)
+	  retval.buckybits |= SCI_EVM_CTRL;
+
+	if (event.pbutton.button == GII_PBUTTON_RIGHT)
+	  retval.buckybits |= SCI_EVM_LSHIFT | SCI_EVM_RSHIFT;
+
         return retval; 
       
       case evPtrAbsolute:

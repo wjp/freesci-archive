@@ -1527,6 +1527,7 @@ game_init(state_t *s)
   }
 
   s->successor = NULL; /* No successor */
+  s->status_bar_text = NULL; /* Status bar is blank */
 
   fprintf(stderr," Script 0 at %04x\n", script0);
 
