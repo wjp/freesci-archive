@@ -1,5 +1,11 @@
 2003-01-25  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/dc/dc_save.c (store_files): Dreamcast fixes: Fixed a file
+	descriptor leak. Don't write to memorycard when a ramdisk read error
+	was detected.
+
+2003-01-25  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/engine/kfile.c (kCheckSaveGame): Made this function use the
 	savegame indices array.
 

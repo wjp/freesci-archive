@@ -332,10 +332,19 @@ static int store_files(char *src_dir, char *tar_dir, char *tar_name, char *desc,
 		strcpy(fn, src_dir);
 		strcat(fn, "/");
 		strcat(fn, entry->name);
-		if (dc_cat_write(outf, fn))
+		if (dc_cat_write(outf, fn)) {
 			sciprintf("%s, L%d: dc_cat_write() failed!\n", __FILE__, __LINE__);
+			sci_free(fn);
+			fs_close(d);
+			gzclose(outf);
+			dc_delete_temp_file();
+			return -1;
+		}
 		sci_free(fn);
 	}
+
+	fs_close(d);
+
 	if (gzclose(outf) < 0) {
 		sciprintf("%s, L%d: gzclose() failed!\n", __FILE__, __LINE__);
 		return -1;
