@@ -147,30 +147,12 @@ sound_sdl_get_command(GTimeVal *wait_tvp)
 {
 	sound_event_t *event	= NULL;
 
-	SDL_LockMutex(in_mutex);
-	if (!sound_eq_peek_event(&inqueue))
-	{
-		int ret	= 0; /* return value */
-
-		if (wait_tvp)
-			ret = SDL_CondWaitTimeout(in_cond, in_mutex, (wait_tvp->tv_usec >> 10));
-		else
-			ret = SDL_CondWait(in_cond, in_mutex); /* select() semantics */
-
-		/* This appears to be the best solution,
-		   the last parameter is in milliseconds, so we convert */
-
-		if (ret != 0)
-		{
-			SDL_UnlockMutex(in_mutex);
-			if (ret != SDL_MUTEX_TIMEDOUT) {
-				fprintf(stderr, "sound_sdl_get_command(): SDL_CondWait%s returned error (%d)\n", 
-					wait_tvp? "Timeout" : "", ret);
-			}
-			return NULL;
-		}
+	if (!sound_eq_peek_event(&inqueue)) {
+	  sci_sched_yield();
+	  return NULL;
 	}
 
+	SDL_LockMutex(in_mutex);
 	event = sound_eq_retreive_event(&inqueue);
 	SDL_UnlockMutex(in_mutex);
 

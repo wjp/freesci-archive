@@ -1,3 +1,13 @@
+2001-05-14  Solomon Peachy <pizza@shaftnet.org>
+	* src/config.l:  added a plugin_dir option
+
+	* src/include/sci_conf.h: added a plugin_dir option
+
+	* src/sound/soundserver_sdl.c:  change wait semantics for commands
+
+	* src/scicore/tools.c:  change sched_yield to a usleep(0) on
+             non-win32 platforms.  seems to solve SDL speed problems 
+
 2001-05-13  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/soundserver_sdl.c: Use more sophisticated (but badly
