@@ -33,6 +33,10 @@
 #include <stdio.h>
 #include "gp.h"
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 /* Render the mouse if they have one attached */
 static int mx = 320, my = 240;
 static int lmx[5] = {320, 320, 320, 320, 320},
@@ -100,10 +104,10 @@ void choose_game() {
 		/* Top Banner */
 		draw_poly_box(0.0f, 10.0f, 640.0f, 20.0f+(24.0f*2.0f)+10.0f, 90.0f, 
 			0.3f, 0.2f, 0.5f, 0.0f, 0.5f, 0.1f, 0.8f, 0.2f);
-		draw_poly_strf(5.0f, 20.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-			"                     FreeSCI                      ");
-		draw_poly_strf(5.0f, 48.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-			"          http://freesci.linuxgames.com           ");
+		draw_poly_strf(308.0f - (8+sizeof(VERSION)-1)/2.0f*12.0f, 20.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			"FreeSCI " VERSION);
+		draw_poly_strf(308.0f - 29.0f/2.0f*12.0f, 48.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			"http://freesci.linuxgames.com");
 
 		/* Game menu */
 		fexit = game_menu_render();

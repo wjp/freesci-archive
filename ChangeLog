@@ -1,3 +1,8 @@
+2002-12-19  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/selectgame.c (choose_game): Display FreeSCI VERSION on
+	Dreamcast game selection screen.
+
 2002-12-18  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/gfx/drivers/dc_driver.c (_dc_state, dc_init_specific,
