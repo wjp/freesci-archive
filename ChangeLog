@@ -1,3 +1,8 @@
+2002-06-18  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kernel.c (kHaveMouse): Bugfix: Correctly handle
+	mice not being available
+
 2002-06-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* tools.c (sci_gettime): Don't use extra call to time() to get

@@ -645,6 +645,13 @@ gfxop_exit(gfx_state_t *state)
 }
 
 
+int
+gfxop_have_mouse(gfx_state_t *state)
+{
+	return state->driver->capabilities & GFX_CAPABILITY_MOUSE_SUPPORT;
+}
+
+
 static int
 _gfxop_scan_one_bitmask(gfx_pixmap_t *pixmap, rect_t zone)
 {

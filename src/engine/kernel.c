@@ -31,6 +31,8 @@
 #	include <windows.h>
 #endif /* _WIN32 */
 
+#include <gfx_operations.h>
+
 
 sci_kernel_function_t kfunct_mappers[] = {
 	{"Load", kLoad},
@@ -437,7 +439,8 @@ kHaveMouse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	CHECK_THIS_KERNEL_FUNCTION;
 
-	s->acc = s->have_mouse_flag? -1 : 0;
+	s->acc = (s->have_mouse_flag
+		  && gfxop_have_mouse(s->gfx_state))? -1 : 0;
 }
 
 
