@@ -1417,12 +1417,14 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 }
 
 
-void
+int
 _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 			  int funct_nr, int argc, int argp)
      /* disposes all list members flagged for disposal; funct_nr is the invoking kfunction */
+     /* returns non-zero IFF views were dropped */
 {
 	int signal;
+	int dropped = 0;
 	gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) list->contents;
 
 	while (widget) {
@@ -1456,17 +1458,20 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 
 					widget->draw_bounds.y += s->dyn_views->bounds.y - widget->parent->bounds.y;
 					widget->draw_bounds.x += s->dyn_views->bounds.x - widget->parent->bounds.x;
+					dropped = 1;
 				}
 				else {
 					SCIkdebug(SCIkGRAPHICS, "Deleting view at %04x\n", widget->ID);
 					widget->flags |= GFXW_FLAG_VISIBLE;
-					gfxw_annihilate(widget);
+					gfxw_annihilate(GFXW(widget));
 				}
 			}
 		}
 
 		widget = next;
 	}
+
+	return dropped;
 }
 
 
@@ -1762,7 +1767,6 @@ _k_draw_view_list(state_t *s, gfxw_list_t *list, int flags)
 		widget = (gfxw_dyn_view_t *) widget->next;
 	} /* while (widget) */
 
-	FULL_REDRAW();
 }
 
 void
@@ -2010,15 +2014,15 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	assert_primary_widget_lists(s);
 
 	if (!s->dyn_views->contents /* Only reparentize empty dynview list */
-	     && ((GFXWC(s->port) != GFXWC(s->dyn_views->parent)) /* If dynviews are on other port... */
-		 || (s->dyn_views->next))) /* ... or not on top of the view list */
+	    && ((GFXWC(s->port) != GFXWC(s->dyn_views->parent)) /* If dynviews are on other port... */
+		|| (s->dyn_views->next))) /* ... or not on top of the view list */
 		reparentize_primary_widget_lists(s, s->port);
-
 
 	if (!cast_list)
 		s->dyn_views->tag(GFXW(s->dyn_views));
 
 	if (cast_list) {
+
 		s->dyn_views->tag(GFXW(s->dyn_views));
 		_k_make_view_list(s, &(s->dyn_views), cast_list, (cycle? _K_MAKE_VIEW_LIST_CYCLE : 0)
 				  | _K_MAKE_VIEW_LIST_CALC_PRIORITY, funct_nr, argc, argp);
@@ -2047,7 +2051,14 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		_k_draw_view_list(s, s->dyn_views, _K_DRAW_VIEW_LIST_DISPOSEABLE | _K_DRAW_VIEW_LIST_USE_SIGNAL);
 		_k_draw_view_list(s, s->dyn_views, _K_DRAW_VIEW_LIST_NONDISPOSEABLE | _K_DRAW_VIEW_LIST_USE_SIGNAL); /* Step 11 */
-		_k_view_list_dispose_loop(s, cast_list, s->dyn_views, funct_nr, argc, argp); /* Step 15 */
+
+		if (_k_view_list_dispose_loop(s, cast_list, s->dyn_views, funct_nr, argc, argp) /* Step 15 */
+		    && (GFXWC(s->port) == GFXWC(s->dyn_views->parent)) /* If dynviews are on the same port... */
+		    && (s->dyn_views->next)) /* ... and not on top of the view list...  */
+			reparentize_primary_widget_lists(s, s->port); /* ...then reparentize. */
+
+		FULL_REDRAW();
+
 	} /* if (cast_list) */
 
 

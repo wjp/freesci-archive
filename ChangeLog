@@ -1,5 +1,8 @@
 2001-01-22  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/kgraphics.c (kAnimate): Dropping a dynview in the
+	active port causes the dynview list to be re-parentized
+
 	* src/gfx/widgets.c (gfxw_annihilate): Disposing dynviews now
 	also disposes graphics drawn over them
 

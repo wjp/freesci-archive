@@ -2231,7 +2231,6 @@ gfxw_annihilate(gfxw_widget_t *widget)
 		snapshot.area.y += widget->parent->zone.y;
 		free_overdrawn = 1;
 		widget_priority = widget->widget_priority;
-		sciprintf("WP=%d\n", widget_priority);
 	}
 
 	widget->widfree(GFXW(widget));
