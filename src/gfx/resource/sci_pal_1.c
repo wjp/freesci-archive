@@ -26,6 +26,7 @@
 ***************************************************************************/
 /* SCI1 palette resource defrobnicator */
 
+#include <sci_memory.h>
 #include <gfx_system.h>
 #include <gfx_resource.h>
 

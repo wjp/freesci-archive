@@ -31,7 +31,7 @@
 #  pragma intrinsic( memcpy, memset )
 #endif
 
-
+#include <sci_memory.h>
 #include <gfx_system.h>
 #include <gfx_resource.h>
 #include <gfx_tools.h>

@@ -28,6 +28,7 @@
 #ifndef _SCI_GFX_SYSTEM_
 #define _SCI_GFX_SYSTEM_
 
+#include <sci_memory.h>
 #include <resource.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -301,7 +302,7 @@ typedef struct { /* gfx_pixmap_t: Pixel map */
 				    ** index 0xff is reserved for transparency.
 				    ** As a special exception, 256 colors are
 				    ** allowed for background pictures (which do
-				    ** not use transparency) 
+				    ** not use transparency)
 				    */
 	unsigned int flags;
 

@@ -25,6 +25,7 @@
 
 ***************************************************************************/
 
+#include <sci_memory.h>
 #include <assert.h>
 #include <math.h>
 #include <time.h>

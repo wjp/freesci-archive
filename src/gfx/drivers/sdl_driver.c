@@ -36,6 +36,7 @@
 #  pragma intrinsic( memcpy, memset )
 #endif
 
+#include <sci_memory.h>
 
 #include <gfx_driver.h>
 #ifdef HAVE_SDL
