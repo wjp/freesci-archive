@@ -1,3 +1,9 @@
+2003-02-15  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sfx/.cvsignore, src/sfx/device/.cvsignore,
+	src/sfx/player/.cvsignore, src/sfx/seq/.cvsignore,
+	src/sfx/timer/.cvsignore: Added to repository.
+
 2003-02-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kscripts.c (invoke_selector): Recover xstack from state
