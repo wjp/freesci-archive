@@ -160,7 +160,9 @@ static int
 xlib_error_handler(Display *display, XErrorEvent *error)
 {
 	char errormsg[256];
+#ifdef HAVE_MITSHM
 	x11_error = 1;
+#endif
 	XGetErrorText(display, error->error_code, errormsg, 255);
 	ERROR(" X11: %s\n", errormsg);
 	return 0;

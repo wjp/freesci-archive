@@ -7,7 +7,7 @@ You will need the following libraries tools to build freesci for Win32:
  * Visual C++ 5.0 or 6.0. (The projects provided are for version 6.0.
    Cygwin will be supported soon.)
  * glib for win32 (http://www.iki.fi/tml/gimp/win32/)
- * Hermes (http://hermes.terminal.at)
+ * Hermes (http://clanlib.org/hermes/)
  * Libraries from Cygwin beta 20 (http://sourceware.cygnus.com).
    Specifically, you need to have include.tar.bz2, libiberty.tar.bz2,
    and readline.tar.bz2.

@@ -27,6 +27,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#ifndef O_SYNC
+#  define O_SYNC 0
+#endif
+
 static int fd;
 static char *devicename = "/dev/midi00";
 

@@ -1,3 +1,12 @@
+2001-03-28  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/xlib_driver.c (xlib_error_handler): Made x11_error
+	setting ifdef'd
+
+	* src/sound/midiout_unixraw.c (O_SYNC): Added O_SYNC for BSD
+
+	* README.Win32: Updated Hermes URL
+
 2001-03-19  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* doc/man/sciv.6: Minor updates

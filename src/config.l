@@ -290,7 +290,7 @@ resource_dir[[:blank:]]*"="[[:blank:]]*.+  if (cur_section) {
 }
 
 
-debug_mode[[:blank:]]*"="[::blank:]]*.+  {
+debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
         yytext = strchr(yytext, '=') + 1;
 
         while (isspace(*yytext))
