@@ -691,15 +691,6 @@ augment_match_expression_p(parse_tree_node_t *saidt, int augment_pos,
 
 			cpos = aug_get_next_sibling(saidt, cpos, &cmajor, &cminor);
 
-			while (cpos && cmajor != WORD_TYPE_BASE) {
-				if (augment_match_expression_p(saidt, cpos,
-							       parset, parse_basepos,
-							       cmajor, cminor,
-							       base_words, base_words_nr,
-							       ref_words, ref_words_nr))
-					return 1;
-				cpos = aug_get_next_sibling(saidt, cpos, &cmajor, &cminor);
-			}
 		}
 		break;
 
@@ -735,15 +726,6 @@ augment_match_expression_p(parse_tree_node_t *saidt, int augment_pos,
 
 			cpos = aug_get_next_sibling(saidt, cpos, &cmajor, &cminor);
 
-			while (cpos && cmajor != WORD_TYPE_REF) {
-				if (augment_match_expression_p(saidt, cpos,
-							       parset, parse_basepos,
-							       cmajor, cminor,
-							       base_words, base_words_nr,
-							       ref_words, ref_words_nr))
-					return 1;
-				cpos = aug_get_next_sibling(saidt, cpos, &cmajor, &cminor);
-			}
 		}
 		break;
 

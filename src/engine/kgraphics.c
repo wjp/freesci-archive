@@ -588,7 +588,7 @@ _k_dirloop(heap_ptr obj, word angle, state_t *s, int funct_nr,
 	if (maxloops == GFX_ERROR) {
 		SCIkwarn(SCIkERROR, "Invalid view.%03d\n", view);
 		return;
-	} else if (maxloops != 4)
+	} else if (maxloops < 4)
 		return;
 
 	PUT_SELECTOR(obj, loop, loop);
@@ -1345,7 +1345,8 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 						text[cursor++] = key;
 					}
 
-					update_cursor_limits(&display_offset, &cursor, max_displayed);
+					if (max_displayed < max)
+						update_cursor_limits(&display_offset, &cursor, max_displayed);
 
 					if (text_offset == s->save_dir_copy)
 						s->save_dir_edit_offset = display_offset;
