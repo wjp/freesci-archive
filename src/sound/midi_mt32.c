@@ -42,11 +42,10 @@ int midi_mt32_reverb(short param);
 int midi_mt32_event(guint8 command, guint8 note, guint8 velocity, guint32 delta);
 int midi_mt32_allstop(void);
 
-static guint8 *data;
-static unsigned int length;
 static int type;
 static guint8 sysex_buffer[266] = {0xF0, 0x41, 0x10, 0x16, 0x12};
 static guint8 default_reverb;
+static char shutdown_msg[20];
 
 static gint8 patch_map[128] = {
   0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
@@ -180,7 +179,7 @@ int midi_mt32_defaults(guint8 volume, guint8 reverb) {
   return 0;
 }
 
-int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
+int midi_mt32_open(guint8 *data, unsigned int length)
 {
   guint8 unknown_sysex[6] = {0x16, 0x16, 0x16, 0x16, 0x16, 0x16};
   guint8 i, memtimbres;
@@ -188,8 +187,6 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
 
   if (midiout_open() < 0)
     return -1;
-  data = data_ptr;
-  length = data_length;
 
   midi_mt32_allstop();
 
@@ -200,6 +197,9 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
     /* Display MT-32 initialization message */
     printf("MT-32: Displaying Text: \"%.20s\"\n", data + 20);
     midi_mt32_poke(0x200000, data + 20, 20);
+
+    /* Cache a copy of the shutdown message */
+    memcpy(shutdown_msg, data + 40, 20);
 
     /* Write Patches (48 or 96) */
     memtimbres = data[491];
@@ -284,8 +284,8 @@ int midi_mt32_close(void)
 {
   midi_mt32_allstop();
   if (type == 0) {
-    printf("MT-32: Displaying Text: \"%.20s\"\n", data + 40);
-    midi_mt32_poke(0x200000, data + 40, 20);
+    printf("MT-32: Displaying Text: \"%.20s\"\n", shutdown_msg);
+    midi_mt32_poke(0x200000, shutdown_msg, 20);
   }
   return midiout_close();
 }

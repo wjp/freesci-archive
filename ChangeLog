@@ -1,3 +1,9 @@
+2002-09-22  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/sound/pcmout_alsa.c:  Remove unnedded variables.
+	* src/sound/midi-mt32.c:  Fix the use of free()ed memory.
+	* src/sound/thread_ss_sdl.c:  Removed some redundant code.
+
 2002-09-22  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/drivers/directfb_driver.c: Initial revision of

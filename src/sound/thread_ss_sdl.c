@@ -736,10 +736,6 @@ sci0_thread_ss(int reverse_stereo, sound_server_state_t *ss_state)
 	    /* find a new song to play now that the old one ran out */
 	    ss_state->current_song = ss_state->songlib[0];
 	    ss_state->current_song = song_lib_find_active(ss_state->songlib, ss_state->current_song);
-	    if (!current) {
-	      run = 0;
-	      continue;
-	    }
 
 	  } /* playback done; no looping. */
 	  

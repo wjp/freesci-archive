@@ -33,7 +33,6 @@ static gint16 *buffer;
 static snd_pcm_t *pcm_handle;
 
 static snd_pcm_hw_params_t *hwparams;
-static snd_pcm_sw_params_t *swparams;
 static snd_output_t *output;
 
 static char *alsa_device = "hw:0,0"; 
@@ -69,7 +68,6 @@ static int pcmout_alsa_open(gint16 *b, guint16 rate, guint8 stereo)
   buffer = b;
 
   snd_pcm_hw_params_alloca(&hwparams);
-  snd_pcm_sw_params_alloca(&swparams);
 
   if ((err = snd_output_stdio_attach(&output, stdout, 0)) < 0) {
     printf("Output failed:  %s\n", snd_strerror(err));
@@ -146,7 +144,6 @@ static int pcmout_alsa_close() {
   }
 
   snd_pcm_hw_params_free(hwparams);
-  snd_pcm_sw_params_free(swparams);
   return 0;
 }
 
