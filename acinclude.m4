@@ -781,10 +781,10 @@ AC_DEFUN(AM_WITH_MALLOC_DEBUG,
 [AC_MSG_CHECKING(whether to output debug info at every memory (de)allocation)
 AC_ARG_WITH(malloc-debug,
 [  --with-malloc-debug     output debug information at every memory
-                          (de)allocation],
-[if test "$withval" = yes; then
+                          (de)allocation.],
+[if test x"$with_malloc_debug" = xyes; then
   AC_MSG_RESULT(yes)
-  AC_DEFINE(MALLOC_DEBUG,1,
+  AC_DEFINE(MALLOC_DEBUG,,
             [Define if want to output debug info for every memory allocation])
 else
   AC_MSG_RESULT(no)
@@ -798,13 +798,31 @@ fi], [AC_MSG_RESULT(no)])
 
 AC_DEFUN(AM_WITHOUT_MALLOC_CHECKS,
 [AC_MSG_CHECKING(whether to check memory allocations for NULL)
-AC_ARG_WITH(out-malloc-checks,
-[  --without-malloc-checks do not check memory allocations for NULL],
-[if test "$withval" = yes; then
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(UNCHECKED_MALLOCS,1,
+AC_ARG_WITH(malloc-checks,
+[  --without-malloc-checks do not check memory allocations for NULL.],
+[if test x"$with_malloc_checks" = xno; then
+  AC_MSG_RESULT(no);
+  AC_DEFINE(UNCHECKED_MALLOCS,,
             [Defined if not checking memory allocations])
 else
-  AC_MSG_RESULT(no)
-fi], [AC_MSG_RESULT(no)])
+  AC_MSG_RESULT(yes)
+fi], [AC_MSG_RESULT(yes)])
+])
+
+## -------------------------------------------- ##
+## Check if --without-sound was given.          ##
+## From Alex Angas                              ##
+## -------------------------------------------- ##
+
+AC_DEFUN(AM_WITHOUT_SOUND,
+[AC_MSG_CHECKING(whether to compile with sound)
+AC_ARG_WITH(sound,
+[  --without-sound         Do not compile with sound.],
+[if test x"$with_sound" = xno; then
+  AC_MSG_RESULT(no);
+  AC_DEFINE(NO_SOUND,,
+            [Defined if not compiling a sound server])
+else
+  AC_MSG_RESULT(yes)
+fi], [AC_MSG_RESULT(yes)])
 ])

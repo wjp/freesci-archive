@@ -23,6 +23,7 @@ AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_FUNCS(pipe socketpair fork sched_yield memfrob ffs getopt_long isblank usleep)
 AM_PATH_ALSA(0.5.0, [AC_DEFINE(HAVE_ALSA)], [echo >/dev/null])
+AM_WITHOUT_SOUND
 AC_PATH_GGI
 #AC_CHECK_FSCI_DLOPEN
 SCIV_LDFLAGS=""
@@ -157,6 +158,8 @@ AC_SUBST(ac_png_libraries)
 AM_PROG_LEX
 AC_PROG_YACC
 
+AC_C_PARAMETRIZED_BIGENDIAN
+
 AC_ARG_WITH(efence,
 	[  --with-efence           link against libefence (for debugging)],
 	[LIBS="$LIBS -lefence"],
@@ -167,11 +170,14 @@ AC_ARG_WITH(Wall,
 	[CFLAGS="-Wall $CFLAGS"],
 	[])
 
+AC_ARG_WITH(E,
+	[  --with-E		  compile using -E (output from pre-processor only)],
+	[CFLAGS="-E $CFLAGS"],
+	[])
+
 AM_WITH_DMALLOC
 AM_WITH_MALLOC_DEBUG
 AM_WITHOUT_MALLOC_CHECKS
-
-AC_C_PARAMETRIZED_BIGENDIAN
 
 RPM_VERSION=`echo $VERSION | sed 's/\-/_/'`
 AC_SUBST(RPM_VERSION)

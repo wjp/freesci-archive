@@ -141,7 +141,7 @@ getHeapUInt16(unsigned char *base, int address)
 
 
 #define INV_SEL(_object_, _selector_, _noinvalid_) \
-  s, ##_object_,  s->selector_map.##_selector_, ##_noinvalid_, funct_nr, argp, argc, __FILE__, __LINE__
+  s, _object_,  s->selector_map._selector_, _noinvalid_, funct_nr, argp, argc, __FILE__, __LINE__
 /* Kludge for use with incoke_selector(). Used for compatibility with compilers that can't
 ** handle vararg macros.
 */

@@ -1,3 +1,12 @@
+2001-08-22  Alex Angas  <wgd@internode.on.net>
+
+	* ./acinclude.m4, ./configure.in: Fixed configure script so it actually
+	sets #defines now, and added --with-E to give pre-processor output.
+
+	* src/include/kernel.h (INV_SEL): Fixed compiler warnings.
+
+	* src/include/util.h (FLEXARRAY_PANIC): Fixed compiler warnings.
+
 2001-08-19  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/include/sciresource.h: LRU resmanager initial API definition

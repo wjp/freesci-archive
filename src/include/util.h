@@ -53,7 +53,7 @@
 
 /*Prints an error message and returns (from the function using the macro)*/
 #define FLEXARRAY_PANIC(message, errorcode) do{\
-	fprintf ##message;\
+	fprintf message;\
 	errorcode;\
 } while(0)
 
@@ -65,7 +65,7 @@
 
 /*Allocates an initial array*/
 #define FLEXARRAY_ALLOCATE_INITIAL(array, errorcode) do{\
-	(array).data=malloc(4*(array).itemsize);\
+	(array).data= sci_malloc(4*(array).itemsize);\
 	if((array).data==0) FLEXARRAY_PANIC_MEMORY(array, 4*(array).itemsize, errorcode);\
 	(array).size=4;\
 	(array).used=0;\
@@ -74,7 +74,7 @@
 /*Doubles the size of the allocated area*/
 #define FLEXARRAY_RESIZE(array, errorcode) do{\
 	int size=(array).size*2*(array).itemsize;\
-	(array).data=realloc((array).data, size);\
+	(array).data= sci_realloc((array).data, size);\
 	if((array).data==0) FLEXARRAY_PANIC_MEMORY(array, size, errorcode);\
 	(array).size*=2;\
 } while(0)
