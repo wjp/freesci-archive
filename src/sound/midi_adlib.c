@@ -184,8 +184,8 @@ int midi_adlib_open(guint8 *data_ptr, unsigned int data_length)
   struct sbi_instrument sbi;
 
   if (data_length < 1344) {
-    printf ("invalid patch.003");
-    return -1;
+	  sciprintf ("[ADLIB] invalid patch.003: Expected %d, got %d\n", 1344, data_length);
+	  return -1;
   }
 
   for (i = 0; i < 48; i++) 

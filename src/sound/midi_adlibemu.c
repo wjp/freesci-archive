@@ -463,10 +463,10 @@ int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
 {
   int i;
 
-  /* load up the patch.003 file, parse out the insturments */
-  if ((data_length < 1344) || (data_ptr == NULL)) {
-    printf ("ADLIB: invalid patch.003");
-    return -1;
+  /* load up the patch.003 file, parse out the instruments */
+  if (data_length < 1344) {
+	  sciprintf ("[ADLIBEMU] invalid patch.003: Expected %d, got %d\n", 1344, data_length);
+	  return -1;
   }
 
   for (i = 0; i < 48; i++)

@@ -136,9 +136,15 @@ fi
 AC_PATH_XTRA
 
 if test x"$have_x" = xyes; then
-	AC_CHECK_HEADERS(X11/Xft/Xft.h)
-	AC_CHECK_HEADERS(X11/extensions/Xrender.h, [X_LIBS="$XLIBS -lXrender -lXft"])
 	AC_CHECK_XSHM
+	AC_CHECK_HEADERS(X11/extensions/Xrender.h, [X_LIBS="$XLIBS -lXrender -lXft"])
+
+        PKG_CHECK_MODULES(XFT, xft)
+        X_LIBS="$X_LIBS $XFT_LIBS"
+        CFLAGS="$CFLAGS $XFT_CFLAGS"
+        CPPFLAGS="$CPPFLAGS $XFT_CFLAGS"
+
+	AC_CHECK_HEADERS(X11/Xft/Xft.h)
 fi
 
 AC_MSG_CHECKING(for Alpha hardware and gcc or ccc style __asm__)
