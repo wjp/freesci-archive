@@ -68,6 +68,13 @@ typedef struct {
 
 
 typedef struct {
+	gfx_line_mode_t line_mode; /* one of GFX_LINE_MODE_* */
+	gfx_brush_mode_t brush_mode;
+	rect_t pic_port_bounds;
+} gfxr_pic1_params_t;
+
+
+typedef struct {
 	int ID; /* pic number (NOT resource ID, just number) */
 	gfx_mode_t *mode;
 	gfx_pixmap_t *visual_map;

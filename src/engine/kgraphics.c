@@ -971,8 +971,8 @@ kDrawPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 	s->wm_port->widfree(GFXW(s->wm_port));
 	s->picture_port->widfree(GFXW(s->picture_port));
 
-	s->wm_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
-	s->picture_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
+	s->wm_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 200), s->ega_colors[0], transparent);
+	s->picture_port = gfxw_new_port(s->visual, NULL, s->gfx_state->options->pic_port_bounds, s->ega_colors[0], transparent);
 
 	s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));
 	s->visual->add(GFXWC(s->visual), GFXW(s->wm_port));
@@ -2284,19 +2284,36 @@ kGetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kSetPort(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	unsigned int port_nr = SKPV(0);
-	gfxw_port_t *new_port;
+        switch (argc) {
+	case 1 : {
+		unsigned int port_nr = SKPV(0);
+		gfxw_port_t *new_port;
 
-	new_port = gfxw_find_port(s->visual, port_nr);
+		new_port = gfxw_find_port(s->visual, port_nr);
 
-	if (!new_port) {
-		SCIkwarn(SCIkERROR, "Invalid port %04x requested\n", port_nr);
-		return NULL_REG;
+		if (!new_port) {
+			SCIkwarn(SCIkERROR, "Invalid port %04x requested\n", port_nr);
+			return NULL_REG;
+		}
+
+		s->port->draw(GFXW(s->port), gfxw_point_zero); /* Update the port we're leaving */
+		s->port = new_port;
+		return s->r_acc;
+	}
+	case 6 : {
+		s->gfx_state->options->pic_port_bounds = gfx_rect(UKPV(5), UKPV(4),
+								 UKPV(3), UKPV(2));
+		/* FIXME: Should really only invalidate all loaded pic resources here;
+		   this is overkill */
+		gfxr_free_all_resources(s->gfx_state->driver, s->gfx_state->resstate);
+		/* Not sure we need to use UKPV(1), UKPV(0) */
+		break;
+	}
+	default :
+		SCIkwarn(SCIkERROR, "SetPort was called with %d parameters\n", argc);
+		break;
 	}
 
-	s->port->draw(GFXW(s->port), gfxw_point_zero); /* Update the port we're leaving */
-	s->port = new_port;
-	return s->r_acc;
 }
 
 

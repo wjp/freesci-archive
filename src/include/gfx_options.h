@@ -74,6 +74,8 @@ typedef struct _gfx_options {
 	int dirty_frames;
 
 	int workarounds; /* Workaround flags- see below */
+	
+	rect_t pic_port_bounds;
 } gfx_options_t;
 
 /* SQ3 counts whitespaces towards the total text size, as does gfxop_get_text_params() if this is set: */

@@ -99,7 +99,7 @@ typedef struct {
         guint8 pcmout_stereo;  /* Stereo? */
 
 	char *module_path; /* path to directories modules are loaded from */
-
+	void *dummy; /* This is sad... */
 } config_entry_t;
 
 int

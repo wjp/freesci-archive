@@ -117,11 +117,11 @@ gfxr_init_pic1(gfx_mode_t *mode, int ID)
   buffer[linewidth * y + x] operation color;
 
 static void
-_gfxr_auxbuf_line_draw(gfxr_pic_t *pic, rect_t line, int color)
+_gfxr_auxbuf_line_draw(gfxr_pic_t *pic, rect_t line, int color, int sci_titlebar_size)
 {
 	int dx, dy, incrE, incrNE, d, finalx, finaly;
 	int x = line.x;
-	int y = line.y + SCI_TITLEBAR_SIZE;
+	int y = line.y + sci_titlebar_size;
 	unsigned char *buffer = pic->aux_map;
 	int linewidth = 320;
 
@@ -165,11 +165,11 @@ _gfxr_auxbuf_line_draw(gfxr_pic_t *pic, rect_t line, int color)
 }
 
 static void
-_gfxr_auxbuf_line_clear(gfxr_pic_t *pic, rect_t line, int color)
+_gfxr_auxbuf_line_clear(gfxr_pic_t *pic, rect_t line, int color, int sci_titlebar_size)
 {
 	int dx, dy, incrE, incrNE, d, finalx, finaly;
 	int x = line.x;
-	int y = line.y + SCI_TITLEBAR_SIZE;
+	int y = line.y + sci_titlebar_size;
 	unsigned char *buffer = pic->aux_map;
 	int linewidth = 320;
 	int color2 = color;
@@ -245,7 +245,7 @@ _gfxr_auxbuf_propagate_changes(gfxr_pic_t *pic, int bitmask)
 
 static void
 _gfxr_auxbuf_fill_helper(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy,
-			 int clipmask, int control)
+			 int clipmask, int control, int sci_titlebar_size)
 {
 	int xl, xr;
 	int oldytotal = y * 320;
@@ -258,7 +258,7 @@ _gfxr_auxbuf_fill_helper(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy,
 
 		y += dy;
 
-		if (y < SCI_TITLEBAR_SIZE || y > 199)
+		if (y < sci_titlebar_size || y > 199)
 			return;
 
 		xl = old_xl;
@@ -290,7 +290,7 @@ _gfxr_auxbuf_fill_helper(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy,
 			return;
 
 		/* Check whether we need to recurse on branches in the same direction */
-		if ((y > SCI_TITLEBAR_SIZE && dy < 0)
+		if ((y > sci_titlebar_size && dy < 0)
 		    || (y < 199 && dy > 0)) {
 
 			state = 0;
@@ -301,7 +301,7 @@ _gfxr_auxbuf_fill_helper(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy,
 				else if (!state) { /* recurse */
 					state = 1;
 					_gfxr_auxbuf_fill_helper(pic, xcont, old_xr,
-								 y - dy, dy, clipmask, control);
+								 y - dy, dy, clipmask, control, sci_titlebar_size);
 				}
 				++xcont;
 			}
@@ -316,7 +316,7 @@ _gfxr_auxbuf_fill_helper(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy,
 					state = xcont;
 				else if (state) { /* recurse */
 					_gfxr_auxbuf_fill_helper(pic, xcont, state,
-								 y, -dy, clipmask, control);
+								 y, -dy, clipmask, control, sci_titlebar_size);
 					state = 0;
 				}
 			}
@@ -330,7 +330,7 @@ _gfxr_auxbuf_fill_helper(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy,
 					state = xcont;
 				else if (state) { /* recurse */
 					_gfxr_auxbuf_fill_helper(pic, state, xcont,
-								 y, -dy, clipmask, control);
+								 y, -dy, clipmask, control, sci_titlebar_size);
 					state = 0;
 				}
 			}
@@ -351,7 +351,7 @@ _gfxr_auxbuf_fill_helper(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy,
 
 
 static void
-_gfxr_auxbuf_fill(gfxr_pic_t *pic, int x, int y, int clipmask, int control)
+_gfxr_auxbuf_fill(gfxr_pic_t *pic, int x, int y, int clipmask, int control, int sci_titlebar_size)
 {
 	/* Fills the aux buffer and the control map (if control != 0) */
 	int xl, xr;
@@ -388,11 +388,11 @@ _gfxr_auxbuf_fill(gfxr_pic_t *pic, int x, int y, int clipmask, int control)
 	if (control) /* Draw the same strip on the control map */
 		memset(pic->control_map->index_data + ytotal + xl, control, xr - xl + 1);
 
-	if (y > SCI_TITLEBAR_SIZE)
-		_gfxr_auxbuf_fill_helper(pic, xl, xr, y, -1, clipmask, control);
+	if (y > sci_titlebar_size)
+		_gfxr_auxbuf_fill_helper(pic, xl, xr, y, -1, clipmask, control, sci_titlebar_size);
 
 	if (y < 199)
-		_gfxr_auxbuf_fill_helper(pic, xl, xr, y, +1, clipmask, control);
+		_gfxr_auxbuf_fill_helper(pic, xl, xr, y, +1, clipmask, control, sci_titlebar_size);
 }
 
 
@@ -855,7 +855,7 @@ _gfxr_plot_aux_pattern(gfxr_pic_t *pic, int x, int y, int size, int circle, int 
 
 static void
 _gfxr_draw_pattern(gfxr_pic_t *pic, int x, int y, int color, int priority, int control, int drawenable,
-		   int pattern_code, int pattern_size, int pattern_nr, int brush_mode)
+		   int pattern_code, int pattern_size, int pattern_nr, int brush_mode, int sci_titlebar_size)
 {
 	int xsize = (pattern_size + 1) * pic->mode->xfact - 1;
 	int ysize = (pattern_size + 1) * pic->mode->yfact - 1;
@@ -863,15 +863,15 @@ _gfxr_draw_pattern(gfxr_pic_t *pic, int x, int y, int color, int priority, int c
 	rect_t boundaries;
 	int max_x = (pattern_code & PATTERN_FLAG_RECTANGLE)? 318 : 319; /* Rectangles' width is size+1 */
 
-	p0printf(stderr, "Pattern at (%d,%d) size %d, rand=%d, code=%02x\n", x, y, pattern_size, pattern_nr, pattern_code);
+	p0printf("Pattern at (%d,%d) size %d, rand=%d, code=%02x\n", x, y, pattern_size, pattern_nr, pattern_code);
 
-	y += SCI_TITLEBAR_SIZE;
+	y += sci_titlebar_size;
 
 	if (x - pattern_size < 0)
 		x = pattern_size;
 
-	if (y - pattern_size < SCI_TITLEBAR_SIZE)
-		y = SCI_TITLEBAR_SIZE + pattern_size;
+	if (y - pattern_size < sci_titlebar_size)
+		y = sci_titlebar_size + pattern_size;
 
 	if (x + pattern_size > max_x)
 		x = max_x - pattern_size;
@@ -885,8 +885,8 @@ _gfxr_draw_pattern(gfxr_pic_t *pic, int x, int y, int color, int priority, int c
 	if (scaled_x < xsize)
 		scaled_x = xsize;
 
-	if (scaled_y < ysize + SCI_TITLEBAR_SIZE * pic->mode->yfact)
-		scaled_y = ysize + SCI_TITLEBAR_SIZE * pic->mode->yfact;
+	if (scaled_y < ysize + sci_titlebar_size * pic->mode->yfact)
+		scaled_y = ysize + sci_titlebar_size * pic->mode->yfact;
 
 	if (scaled_x > (320 * pic->mode->xfact) - 1 - xsize)
 		scaled_x = (320 * pic->mode->xfact) - 1 - xsize;
@@ -987,7 +987,7 @@ _gfxr_draw_subline(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int
 static void
 _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color,
 		int priority, int control, int drawenable, int line_mode,
-		int cmd)
+		int cmd, int sci_titlebar_size)
 {
 	int scale_x = pic->mode->xfact;
 	int scale_y = pic->mode->yfact;
@@ -1008,8 +1008,8 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color,
 		return;
 	}
 
-	y += SCI_TITLEBAR_SIZE;
-	ey += SCI_TITLEBAR_SIZE;
+	y += sci_titlebar_size;
+	ey += sci_titlebar_size;
 
 	if (drawenable & GFX_MASK_CONTROL) {
 
@@ -1030,7 +1030,7 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color,
 		int mask2 = mask;
 		if (partially_white)
 			mask2 = mask &= ~GFX_MASK_VISUAL;
-		_gfxr_auxbuf_line_draw(pic, line, mask);
+		_gfxr_auxbuf_line_draw(pic, line, mask, sci_titlebar_size);
 	}
 
 	/* Calculate everything that is changed to TRANSPARENT */
@@ -1042,7 +1042,7 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color,
 			);
 
 	if (mask)
-		_gfxr_auxbuf_line_clear(pic, line, ~mask);
+		_gfxr_auxbuf_line_clear(pic, line, ~mask, sci_titlebar_size);
 
 	x *= scale_x;
 	y *= scale_y;
@@ -1126,10 +1126,11 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color,
 
 static void
 _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byte *bounds,
-		     int legalcolor, int legalmask, int color, int priority, int drawenable)
+		     int legalcolor, int legalmask, int color, int priority, int drawenable,
+		     int sci_titlebar_size)
 {
 	int linewidth = pic->mode->xfact * 320;
-	int miny = pic->mode->yfact * SCI_TITLEBAR_SIZE;
+	int miny = pic->mode->yfact * sci_titlebar_size;
 	int maxy = pic->mode->yfact * 200;
 	int xl, xr;
 	int oldytotal = y * linewidth;
@@ -1239,7 +1240,7 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
 				state = xcont;
 			else if (state) { /* recurse */
 				_gfxr_fill_recursive(pic, state, xcont, y - dy, dy, bounds, legalcolor,
-						     legalmask, color, priority, drawenable);
+						     legalmask, color, priority, drawenable, sci_titlebar_size);
 				state = 0;
 			}
 			++xcont;
@@ -1254,7 +1255,8 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
 					state = xcont;
 				else if (state) { /* recurse */
 					_gfxr_fill_recursive(pic, xcont, state, y, -dy, bounds,
-							     legalcolor, legalmask, color, priority, drawenable);
+							     legalcolor, legalmask, color, priority, drawenable,
+							     sci_titlebar_size);
 					state = 0;
 				}
 			}
@@ -1268,7 +1270,8 @@ _gfxr_fill_recursive(gfxr_pic_t *pic, int old_xl, int old_xr, int y, int dy, byt
 					state = xcont;
 				else if (state) { /* recurse */
 					_gfxr_fill_recursive(pic, state, xcont, y, -dy, bounds,
-							     legalcolor, legalmask, color, priority, drawenable);
+							     legalcolor, legalmask, color, priority, drawenable,
+							     sci_titlebar_size);
 					state = 0;
 				}
 			}
@@ -1366,7 +1369,8 @@ _gfxr_find_fill_point(gfxr_pic_t *pic, int min_x, int min_y, int max_x, int max_
 #undef TEST_POINT
 
 static void
-_gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int control, int drawenable)
+_gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int control, int drawenable, 
+	   int sci_titlebar_size)
 {
 	int linewidth = pic->mode->xfact * 320;
 	int x, y;
@@ -1392,7 +1396,8 @@ _gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int c
 	}
 
 	_gfxr_auxbuf_fill(pic, x_320, y_200, original_drawenable,
-			  (drawenable & GFX_MASK_CONTROL)? control : 0);
+			  (drawenable & GFX_MASK_CONTROL)? control : 0,
+			  sci_titlebar_size);
 	_gfxr_auxbuf_spread(pic, &min_x, &min_y, &max_x, &max_y);
 
 	if (_gfxr_find_fill_point(pic, min_x, min_y, max_x, max_y, x_320, y_200, color, drawenable, &x, &y)) {
@@ -1480,8 +1485,10 @@ _gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int c
 		if (drawenable & GFX_MASK_PRIORITY)
 			memset(pic->priority_map->index_data + ytotal + xl, priority, xr - xl + 1);
 
-		_gfxr_fill_recursive(pic, xl, xr, y, -1, bounds, legalcolor, legalmask, color, priority, drawenable);
-		_gfxr_fill_recursive(pic, xl, xr, y, +1, bounds, legalcolor, legalmask, color, priority, drawenable);
+		_gfxr_fill_recursive(pic, xl, xr, y, -1, bounds, legalcolor, legalmask, color, priority, drawenable, 
+				     sci_titlebar_size);
+		_gfxr_fill_recursive(pic, xl, xr, y, +1, bounds, legalcolor, legalmask, color, priority, drawenable,
+				     sci_titlebar_size);
 	}
 
 	/* Now finish the aux buffer */
@@ -1523,6 +1530,7 @@ _gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int c
   x = oldx + *((signed char *) resource + pos++);
 
 
+#if 0
 static void
 _gfxr_vismap_remove_artifacts_old(gfxr_pic_t *pic)
 {
@@ -1533,7 +1541,7 @@ _gfxr_vismap_remove_artifacts_old(gfxr_pic_t *pic)
 	int linewidth = 320 * pic->mode->xfact;
 	int maxx = 320 * pic->mode->xfact - 1;
 	int maxy = 200 * pic->mode->yfact - 1;
-	int miny = SCI_TITLEBAR_SIZE * pic->mode->yfact;
+	int miny = sci_titlebar_size * pic->mode->yfact;
 	int offset = linewidth * miny;
 	byte *vismap = pic->visual_map->index_data;
 	byte *primap = pic->priority_map->index_data;
@@ -1597,7 +1605,7 @@ _gfxr_vismap_remove_artifacts_old(gfxr_pic_t *pic)
 		}
 
 }
-
+#endif
 
 inline static void
 check_and_remove_artifact(byte *dest, byte* srcp, int legalcolor, byte l, byte r, byte u, byte d)
@@ -1638,7 +1646,7 @@ gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size
 
 void
 gfxr_draw_pic1(gfxr_pic_t *pic, int fill_normally, int default_palette, int size,
-	       byte *resource, gfxr_pic0_params_t *style, int resid)
+	       byte *resource, gfxr_pic1_params_t *style, int resid)
 {
 	int i;
 	int drawenable = GFX_MASK_VISUAL | GFX_MASK_PRIORITY;
@@ -1654,6 +1662,7 @@ gfxr_draw_pic1(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 	int pal, index;
 	int temp;
 	int line_mode = style->line_mode;
+	int sci_titlebar_size = style->pic_port_bounds.y;
 	int fill_count = 0;
 	byte op, opx;
 
@@ -1710,7 +1719,7 @@ gfxr_draw_pic1(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			GET_ABS_COORDS(x, y);
 
 			_gfxr_draw_pattern(pic, x, y, color, priority, control, drawenable, pattern_code,
-					   pattern_size, pattern_nr, style->brush_mode);
+					   pattern_size, pattern_nr, style->brush_mode, sci_titlebar_size);
 
 			while (*(resource + pos) < PIC_OP_FIRST) {
 				if (pattern_code & PATTERN_FLAG_USE_PATTERN) {
@@ -1721,7 +1730,7 @@ gfxr_draw_pic1(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 				GET_REL_COORDS(x, y);
 
 				_gfxr_draw_pattern(pic, x, y, color, priority, control, drawenable, pattern_code,
-						   pattern_size, pattern_nr, style->brush_mode);
+						   pattern_size, pattern_nr, style->brush_mode, sci_titlebar_size);
 			}
 			break;
 
@@ -1738,7 +1747,7 @@ gfxr_draw_pic1(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 #if 0
 				fprintf(stderr, " to %d,%d\n", x, y);
 #endif
-				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode, PIC_OP_MEDIUM_LINES);
+				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode, PIC_OP_MEDIUM_LINES, sci_titlebar_size);
 				oldx = x; oldy = y;
 			}
 			break;
@@ -1747,9 +1756,11 @@ gfxr_draw_pic1(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 		case PIC_OP_LONG_LINES:
 			p0printf("Long lines @%d\n", pos);
 			GET_ABS_COORDS(oldx, oldy);
+			p0printf("Coords %d, %d\n", oldx, oldy);
 			while (*(resource + pos) < PIC_OP_FIRST) {
 				GET_ABS_COORDS(x,y);
-				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode, PIC_OP_LONG_LINES);
+				p0printf("Coords %d, %d\n", x, y);
+				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode, PIC_OP_LONG_LINES, sci_titlebar_size);
 				oldx = x; oldy = y;
 			}
 			break;
@@ -1761,7 +1772,7 @@ gfxr_draw_pic1(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			x = oldx; y = oldy;
 			while (*(resource + pos) < PIC_OP_FIRST) {
 				GET_REL_COORDS(x,y);
-				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode, PIC_OP_SHORT_LINES);
+				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode, PIC_OP_SHORT_LINES, sci_titlebar_size);
 				oldx = x; oldy = y;
 			}
 			break;
@@ -1773,8 +1784,8 @@ gfxr_draw_pic1(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 				/*fprintf(stderr,"####################\n"); */
 				GET_ABS_COORDS(x, y);
 				p0printf("Abs coords %d,%d\n", x, y);
-				/*fprintf(stderr,"C=(%d,%d)\n", x, y + SCI_TITLEBAR_SIZE);*/
-				_gfxr_fill(pic, x, y + SCI_TITLEBAR_SIZE, (fill_normally)? color : 0, priority, control, drawenable);
+				/*fprintf(stderr,"C=(%d,%d)\n", x, y + sci_titlebar_size);*/
+				_gfxr_fill(pic, x, y + sci_titlebar_size, (fill_normally)? color : 0, priority, control, drawenable, sci_titlebar_size);
 
 				if (fill_count++ > SCI_PIC0_MAX_FILL) {
 					sci_sched_yield();
@@ -1803,7 +1814,7 @@ gfxr_draw_pic1(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 				GET_ABS_COORDS(x, y);
 
 				_gfxr_draw_pattern(pic, x, y, color, priority, control, drawenable, pattern_code,
-						   pattern_size, pattern_nr, style->brush_mode);
+						   pattern_size, pattern_nr, style->brush_mode, sci_titlebar_size);
 			}
 			break;
 
@@ -1831,7 +1842,7 @@ gfxr_draw_pic1(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			GET_ABS_COORDS(oldx, oldy);
 
 			_gfxr_draw_pattern(pic, oldx, oldy, color, priority, control, drawenable, pattern_code,
-					   pattern_size, pattern_nr, style->brush_mode);
+					   pattern_size, pattern_nr, style->brush_mode, sci_titlebar_size);
 
 			x = oldx; y = oldy;
 			while (*(resource + pos) < PIC_OP_FIRST) {
@@ -1843,7 +1854,7 @@ gfxr_draw_pic1(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 				GET_MEDREL_COORDS(x, y);
 
 				_gfxr_draw_pattern(pic, x, y, color, priority, control, drawenable, pattern_code,
-						   pattern_size, pattern_nr, style->brush_mode);
+						   pattern_size, pattern_nr, style->brush_mode, sci_titlebar_size);
 			}
 			break;
 
@@ -1887,7 +1898,11 @@ gfxr_draw_pic1(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 
 				gfx_xlate_pixmap(view, mode, GFX_XLATE_FILTER_NONE);
 
-				_gfx_crossblit_simple(pic->visual_map->index_data,
+				/* Hack hack */
+				if (view->index_yl + sci_titlebar_size > 200)
+					sci_titlebar_size = 0;
+
+				_gfx_crossblit_simple(pic->visual_map->index_data+(sci_titlebar_size*view->index_xl),
 						      view->index_data,
 						      320, view->index_xl,
 						      view->index_xl,

@@ -1,3 +1,11 @@
+2004-03-01  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/config.l: Add configuration option 'pic_port_bounds'.
+	* src/engine/kgraphics.c (kSetPort): Add special logic to change
+	the pic port bounds at run-time.
+	* src/gfx/resource/sci_pic_1.c: Make pic1 drawing (partially)
+	aware of pic port bounds.
+
 2004-02-29  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/iterator.c (_sci1_sample_init): Fix signedness issue,

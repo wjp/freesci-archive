@@ -211,6 +211,7 @@ static name_value_pair line_mode[] = {
 #define OPTION_TYPE_INVERSE_NVP 3
 #define OPTION_TYPE_STATICREF 4
 #define OPTION_TYPE_STRING 5
+#define OPTION_TYPE_RECT 6
 
 typedef struct {
 	int type;
@@ -221,7 +222,6 @@ typedef struct {
 	void * (*parse_funct)(char *);
 	int varoffset;
 } standard_option;
-
 
 #define OPT_END                               {OPTION_TYPE_NONE, NULL, 0, 0, NULL, 0}
 /* Terminates */
@@ -241,8 +241,12 @@ typedef struct {
 #define OPT_STATICREF(NAME, VARNAME, FUNCTN)  {OPTION_TYPE_STATICREF, NAME, 0, 0, NULL, FUNCTN, offsetof (config_entry_t, VARNAME)}
 /* Call FUNCTN() with the specified value, store resulting NULL* */
 
+#define OPT_RECT(NAME, VARNAME)  {OPTION_TYPE_RECT, NAME, 0, 0, NULL, NULL, offsetof (config_entry_t, VARNAME)}
+/* Read a rectangle */
+
 
 standard_option standard_options[] = {
+	OPT_RECT("pic_port_bounds", gfx_options.pic_port_bounds),
 	OPT_NVP("pic0_dither_mode", gfx_options.pic0_dither_mode, valid_modes),
 	OPT_NVP("color_mode", gfx_options.pic0_dither_mode, valid_modes),
 	OPT_NVP("pic0_dither_pattern", gfx_options.pic0_dither_pattern, dither_pattern),
@@ -299,6 +303,8 @@ DIGIT [0-9]
 PARAMTOKEN [[:alnum:]"."_\:\/-]*
 SCIVERSION {DIGIT}"."{DIGIT}{3}"."{DIGIT}{3}
 NUMTOKEN {DIGIT}+
+COORDTOKEN {NUMTOKEN},?[[:space:]]*
+RECTTOKEN {COORDTOKEN}{3}{NUMTOKEN}
 NUMPARAMTOKEN {NUMTOKEN}|{PARAMTOKEN}
 PATHTOKEN [[:alnum:]"/""\\""."]*
 NUMPATHPARAMTOKEN {NUMPARAMTOKEN}|{PATHTOKEN}
@@ -422,6 +428,25 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 	option_str_len = value_str - option_str;
 
 	while (!(isalnum(*value_str) || *value_str == '_' || *value_str == '"'))
+		++value_str;
+
+	value_str = crop_value(value_str);
+
+	parse_option(option_str, option_str_len, value_str);
+}
+
+{PARAMTOKEN}[[:blank:]]*"="[[:blank:]]*\"{RECTTOKEN}\" { /* Normal config option */
+	char *option_str = yytext;
+	char *value_str = yytext;
+	char *foo;
+	int option_str_len;
+
+	while (isalnum(*value_str) || *value_str == '_')
+		++value_str;
+
+	option_str_len = value_str - option_str;
+
+        while (!(isdigit(*value_str)||(*value_str == '"')))
 		++value_str;
 
 	value_str = crop_value(value_str);
@@ -597,6 +622,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_options.text_xlate_filter = GFX_XLATE_FILTER_NONE;
 	conf->gfx_options.dirty_frames = GFXOP_DIRTY_FRAMES_CLUSTERS;
 	conf->gfx_options.pic0_antialiasing = GFXR_ANTIALIASING_NONE;
+	conf->gfx_options.pic_port_bounds = gfx_rect(0,10,320,190);
 	for (i = 0; i < GFX_RESOURCE_TYPES_NR; i++) {
 		conf->gfx_options.res_conf.assign[i] = NULL;
 		conf->gfx_options.res_conf.mod[i] = NULL;
@@ -858,8 +884,6 @@ parse_option(char *option, int optlen, char *value)
 		return;
 	}
 
-
-
 	switch (opt->type) {
 
 	case OPTION_TYPE_INT: {
@@ -907,6 +931,33 @@ parse_option(char *option, int optlen, char *value)
 /* FUCKED HERE: cur_section = 0, opt->varoffset = 205 */
 			*((int *)(((char*)&(conf[cur_section])) + opt->varoffset)) = int_value; /* Store value */
 		}
+		break;
+	}
+
+
+	case OPTION_TYPE_RECT: {
+		char *seeker = value;
+
+		/* A rect_t is four integers */
+		int *result = (int *) ((char *) &(conf[cur_section]) + opt->varoffset);
+		int i;
+
+		for (i=0;i<4;i++)
+		{
+			*(result++) = strtol(seeker, &seeker, 10);
+			if (i < 3)
+			{
+				while (((*seeker == ',') || (*seeker == ' ')) &&
+				       (*seeker != 0))
+					seeker++;
+				if ((*seeker == 0) || (*seeker < '0') && (*seeker > '9'))
+				{
+					fprintf(stderr, "Option '%s' expects a rectangle\n", opt->name);
+					return;
+				}
+			}
+		}
+
 		break;
 	}
 

@@ -28,4 +28,5 @@
 
 typedef struct {
 	int sci0_palette;
+	rect_t pic_port_bounds;
 } gfx_sci_options_t;
