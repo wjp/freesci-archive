@@ -1,3 +1,9 @@
+2002-12-28  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kAnimate): Now distinguish between port-based
+	and pic-based aborts; restart after the latter and abort after the
+	former (if occured during ::doit)
+
 2002-12-21  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/include/midi_device.h: Put back ADLIB_VOICES define.

@@ -25,6 +25,9 @@
 
 ***************************************************************************/
 
+#define PIC_IS_NEW_PIC 1
+#define PIC_IS_NEW_PORT 2
+
 #include <sciresource.h>
 #include <engine.h>
 #include <gfx_widgets.h>
@@ -992,7 +995,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		s->priority_last = 190;
 
 	s->pic_not_valid = 1;
-	s->pic_is_new = 1;
+	s->pic_is_new = PIC_IS_NEW_PIC;
 
 }
 
@@ -1852,11 +1855,6 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 				SCIkdebug(SCIkGRAPHICS, "  invoking %04x::doit()\n", obj);
 				invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
 
-				if (s->pic_is_new) {
-					SCIkwarn(SCIkWARNING, "Warning: new pic"
-						 " or port used within Animate()!\n");
-					return;
-				}
 			}
 		}
 
@@ -2309,7 +2307,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	yl = PARAM(2) - y;
 	xl = PARAM(3) - x;
 
-	s->pic_is_new = 1; /* Well, it's different, at any rate... */
+	s->pic_is_new = PIC_IS_NEW_PORT; /* Well, it's different, at any rate... */
 	/* This is for Animate(), to inform it if one of its doit()s is responsible
 	** for the window being opened- in this case, we restart Animate().  */
 
@@ -2812,7 +2810,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		/* End of doit() recovery code */
 
 
-		if (s->pic_is_new) { /* Happens if DrawPic() is executed by a dynview (yes, that happens) */
+		if (s->pic_is_new == PIC_IS_NEW_PIC) { /* Happens if DrawPic() is executed by a dynview (yes, that happens) */
 			kAnimate(s, funct_nr, argc, argp); /* Tail-recurse */
 			return;
 		}
