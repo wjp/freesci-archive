@@ -1,3 +1,8 @@
+2004-02-29  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/iterator.c (_sci1_sample_init): Fix signedness issue,
+	similar to the one from yesterday.
+
 2004-02-28  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/iterator.c (_sci1_init): Change default hardware ID

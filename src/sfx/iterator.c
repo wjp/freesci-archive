@@ -680,7 +680,7 @@ _sci1_sample_init(sci1_song_iterator_t *self, int offset)
 			  self->data[offset + 1]);
 
 	rate = getInt16(self->data + offset + 2);
-	length = getInt16(self->data + offset + 4);
+	length = getUInt16(self->data + offset + 4);
 	begin = getInt16(self->data + offset + 6);
 	end = getInt16(self->data + offset + 8);
 
