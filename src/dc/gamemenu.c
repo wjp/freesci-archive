@@ -501,9 +501,9 @@ int game_menu_render() {
 				if (save_options(fn, &options_nr[0]))
 					sciprintf("%s, L%d: Saving options to VMU failed!\n", __FILE__, __LINE__);
 				sci_free(fn);
+				sci_free(vmu);
 			}
 			else sciprintf("%s, L%d: No VMU found!\n", __FILE__, __LINE__);
-			sci_free(vmu);
 			save_flag = 0;
 			load_queued = 0;
 			menu_state = 2;
