@@ -336,14 +336,6 @@ static void lineColor(SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 
   sx = (dx >= 0) ? 1 : -1;
   sy = (dy >= 0) ? 1 : -1;
 
-  /* Setup color */
-  colorptr=(Uint8 *)&color;
-  if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-    color=SDL_MapRGBA(dst->format, colorptr[0], colorptr[1], colorptr[2], colorptr[3]);
-  } else {
-    color=SDL_MapRGBA(dst->format, colorptr[3], colorptr[2], colorptr[1], colorptr[0]);
-  }
-
   dx = sx * dx + 1;
   dy = sy * dy + 1;
   pixx = dst->format->BytesPerPixel;
