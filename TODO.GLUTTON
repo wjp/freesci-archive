@@ -16,24 +16,19 @@ Dependancies: '.' means "dependancy has been resolved"
 --- fix registers			C	.	CR
 --- fix stack				B	.	CR
 --- fix script_t			D	.	CR
-[X] implement seg_mgr			E	.	X
-[2] fix script instantiation/uninst'n	E	.	X
+--- implement seg_mgr			E	.	X
+--- fix script instantiation/uninst'n	E	.	X
 --- implement script ID map		F		CR
-[X] fix vm					....E.	CR
---- fix send mechanism			G	...E.	CR
-[5] new kernel function interface	H	.	
+-- fix vm					......	CR
+--- fix send mechanism			G	.....	CR
+--- new kernel function interface	H	.	CR
 [4] fix global kernel function table		.	
-[X] provide compat code f. old kfuncts		...E.	
-[1] fix init code				...E..	
+--- provide compat code f. old kfuncts		.....	
+--- fix init code				......	
 [T] fix sound cues				..	CR
 --- disable savegames					CR
 
-Relevant TODO:
-	* Remove script.000 hack in game.c 
-
 Later TODO:
-	* Allocate some sort of stack
-	* Fix selector reading/writing/invocation
 	* Re-implement kClone/kDisposeClone
 	* Re-enable list code, including kSort
 	* Re-implement 'delete' and 'doit' calls in kgraphics

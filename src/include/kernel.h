@@ -1,5 +1,5 @@
 /***************************************************************************
- kernel.h Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+ kernel.h Copyright (C) 1999..2002 Christoph Reichenbach
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
@@ -206,7 +206,9 @@ _SCIkprintf(FILE *file, char *format, ...);
 /* Returns the parameter value or (alt) if not enough parameters were supplied */
 
 
-
+#define KP_ALT(x, alt) ((x < argc)? argv[x] : (alt))
+#define KP_UINT(x) ((guint16) x.offset)
+#define KP_SINT(x) ((gint16) x.offset)
 
 
 /******************** Resource Macros ********************/
@@ -362,12 +364,13 @@ process_sound_events(struct _state *s); /* Get all sound events, apply their cha
 /******************** Kernel functions ********************/
 
 /* Generic description: */
+typedef reg_t kfunct(struct _state *s, int funct_nr, int argc, reg_t *argv);
 
-
-typedef void kfunct(struct _state *s, int funct_nr, int argc, heap_ptr argv);
+/* Old compatibility functions: */
+typedef void kfunct_old(struct _state *s, int funct_nr, int argc, heap_ptr argv);
 
 /* void
-** kFunct(state_t *s, int funct_nr, int argc, heap_ptr argp);
+** kFunct_old(state_t *s, int funct_nr, int argc, heap_ptr argp);
 ** Kernel function 'Funct'
 ** Parameters: (state_t *) s: The current state
 **             (int funct_nr): The function number (used almost exclusively in kstub)
@@ -383,7 +386,6 @@ void kLoad(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kUnLoad(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGameIsRestarting(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kNewList(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kGetSaveDir(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetCWD(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetCursor(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kFindKey(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -502,15 +504,31 @@ void kAvoidPath(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kLock(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kMemory(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void k_Unknown(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+
+
+/* New kernel functions */
+reg_t kGetSaveDir(struct _state *s, int funct_nr, int argc, reg_t *argv);
+
 /* The Unknown/Unnamed kernel function */
-void kstub(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+reg_t kstub(struct _state *s, int funct_nr, int argc, reg_t *argv);
 /* for unimplemented kernel functions */
-void kNOP(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+reg_t kNOP(struct _state *s, int funct_nr, int argc, reg_t *argv);
 /* for kernel functions that don't do anything */
+reg_t kFsciEmu(struct _state *s, int funct_nr, int argc, reg_t *argv);
+/* Emulating "old" kernel functions on the heap */
+
+#define FREESCI_KFUNCT_OLD 0
+#define FREESCI_KFUNCT_GLUTTON 1
 
 typedef struct {
-  char *functname; /* String representation of the kernel function as in script.999 */
-  kfunct *kernel_function; /* The actual function */
+	char *signature;
+	kfunct *fun;
+} kfunct_sig_pair_t;
+
+typedef struct {
+	char *functname; /* String representation of the kernel function as in script.999 */
+	char *sig; /* kfunct signature */
+	kfunct *kernel_function; /* The actual function */
 } sci_kernel_function_t;
 
 extern sci_kernel_function_t kfunct_mappers[];

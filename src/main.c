@@ -154,7 +154,10 @@ char *old_input = NULL;
 char *
 get_readline_input(void)
 {
-	char *input = readline("> ");
+	char *input;
+
+	fflush(NULL);
+	input = readline("> ");
 
 	if (!input) { /* ^D */
 		c_quit(NULL);
@@ -256,6 +259,7 @@ get_gets_input(void)
 
 	putchar('>');
 
+	fflush(NULL);
 	while (!strchr(input, '\n'))
 		fgets(input, 1024, stdin);
 

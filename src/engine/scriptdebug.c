@@ -31,6 +31,10 @@
 #include <kdebug.h>
 #include <vocabulary.h>
 #include <kernel_compat.h>
+#ifdef HAVE_UNISTD_H
+/* Assume this is a sufficient precondition */
+#  include <signal.h>
+#endif
 
 int _debugstate_valid = 0; /* Set to 1 while script_debug is running */
 int _debug_step_running = 0; /* Set to >0 to allow multiple stepping */
@@ -46,11 +50,15 @@ reg_t _debug_seek_reg = NULL_REG_INITIALIZER;  /* Used for special seeks(2) */
 #define _DEBUG_SEEK_SPECIAL_CALLK 3 /* Step forward until a /special/ callk is found */
 #define _DEBUG_SEEK_SO 5 /* Step forward until specified PC (after the send command) and stack depth */
 
-reg_t *p_pc;
-stack_ptr_t *p_sp;
-stack_ptr_t *p_pp;
-reg_t *p_objp;
-unsigned int *p_restadjust;
+static reg_t *p_pc;
+static stack_ptr_t *p_sp;
+static stack_ptr_t *p_pp;
+static reg_t *p_objp;
+static unsigned int *p_restadjust;
+static seg_id_t *p_var_segs;
+static reg_t **p_vars;
+static reg_t **p_var_base;
+static int *p_var_max; /* May be NULL even in valid state! */
 
 int _kdebug_cheap_event_hack = 0;
 int _kdebug_cheap_soundcue_hack = -1;
@@ -100,12 +108,26 @@ c_segtable(state_t *s)
 				sciprintf("C  clones (%d allocd)", mobj->data.clones.clones_nr);
 				break;
 
+			case MEM_OBJ_LOCALS:
+				sciprintf("L  locals %03d)",
+					  mobj->data.locals.script_id);
+				break;
+
+			case MEM_OBJ_STACK:
+				sciprintf("D  data stack (%d)",
+					  mobj->data.stack.nr);
+				break;
+
+			case MEM_OBJ_SYS_STRINGS:
+				sciprintf("Y  system string table");
+				break;
+
 			default:
-				sciprintf("I  Invalid (type = %x)\n", mobj->type);
+				sciprintf("I  Invalid (type = %x)", mobj->type);
 				break;
 			}
 
-			sciprintf("  %d bytes\n", mobj->size);
+			sciprintf("  seg_ID = %d \n", mobj->segmgr_id);
 		}
 	}
 	sciprintf("\n");
@@ -130,7 +152,6 @@ _c_single_seg_info(state_t *s, mem_obj_t *mobj)
 
 	case MEM_OBJ_SCRIPT: {
 		int i;
-
 		script_t *scr = &(mobj->data.script);
 		sciprintf("script.%03d locked by %d, bufsize=%d (%x)\n",
 			  scr->nr, scr->lockers, scr->buf_size, scr->buf_size);
@@ -138,16 +159,43 @@ _c_single_seg_info(state_t *s, mem_obj_t *mobj)
 			  scr->exports_nr,
 			  ((byte *) scr->export_table) - ((byte *)scr->buf));
 		sciprintf("  Synynms: %4d\n", scr->synonyms_nr);
-		sciprintf("  Locals : %4d [%04x..%04x]\n",
-			  scr->locals_nr,
-			  scr->locals_offset,
-			  scr->locals_offset + (scr->locals_nr * 2));
+		sciprintf("  Locals : %4d in segment 0x%x\n",
+			  scr->locals_block->nr,
+			  scr->locals_segment);
 		sciprintf("  Objects: %4d\n",
 			  scr->objects_nr);
 		for (i = 0; i < scr->objects_nr; i++) {
 			sciprintf("    ");
 			print_obj_head(s, scr->objects + i);
 		}
+	}
+		break;
+
+	case MEM_OBJ_LOCALS: {
+		local_variables_t *locals = &(mobj->data.locals);
+		sciprintf("locals for script.%03d\n", locals->script_id);
+		sciprintf("  %d (0x%x) locals\n", locals->nr, locals->nr);
+	}
+		break;
+
+	case MEM_OBJ_STACK: {
+		dstack_t *stack = &(mobj->data.stack);
+		sciprintf("stack\n");
+		sciprintf("  %d (0x%x) entries\n", stack->nr, stack->nr);
+	}
+		break;
+
+	case MEM_OBJ_SYS_STRINGS: {
+		sys_strings_t *strings = &(mobj->data.sys_strings);
+		int i;
+
+		sciprintf("system string table\n");
+		for (i = 0; i < SYS_STRINGS_MAX; i++)
+			if (strings->strings[i].name)
+				sciprintf("  %s[%d]=\"%s\"\n",
+					  strings->strings[i].name,
+					  strings->strings[i].max_size,
+					  strings->strings[i].value);
 	}
 		break;
 
@@ -1136,51 +1184,209 @@ c_dumpnodes(state_t *s)
 static char *varnames[] = {"global", "local", "temp", "param"};
 static char *varabbrev = "gltp";
 
-#warning "Re-implement con:vmvarlist"
-#if 0
 int
 c_vmvarlist(state_t *s)
 {
-      exec_stack_t *stack = s->execution_stack+s->execution_stack_pos;
       int i;
+
       for (i=0;i<4;i++)
-	sciprintf("%s vars at %04x\n", varnames[i], stack->variables[i]);
+	      sciprintf("%s vars at "PREG"\n",
+			varnames[i],
+			make_reg(p_var_segs[i], p_vars[i] - p_var_base[i]));
       return 0;
 }
-#endif
 
-#warning "Re-implement con:vmvars"
-#if 0
 int
 c_vmvars(state_t *s)
 {
-  exec_stack_t *stack = s->execution_stack+s->execution_stack_pos;
-  char *vartype_pre = strchr(varabbrev, *cmd_params[0].str);
-  int vartype;
+	char *vartype_pre = strchr(varabbrev, *cmd_params[0].str);
+	int vartype;
+	int idx = cmd_params[1].val;
 
-  if (!vartype_pre) {
-	  sciprintf("Invalid variable type '%c'\n",
-		    *cmd_params[0].str);
-	  return 1;
-  }
-  vartype = vartype_pre - varabbrev;
+	if (!vartype_pre) {
+		sciprintf("Invalid variable type '%c'\n",
+			  *cmd_params[0].str);
+		return 1;
+	}
+	vartype = vartype_pre - varabbrev;
 
-  switch(cmd_paramlength) {
-  case 2:
-    {
-      sciprintf("%s var %d == %d (0x%04x)\n", varnames[vartype], cmd_params[1].val,
-		GET_HEAP(stack->variables[vartype]+(cmd_params[1].val<<1)),
-		UGET_HEAP(stack->variables[vartype]+(cmd_params[1].val<<1))
-		);
-      break;
-    }
-  case 3:
-    {
-      PUT_HEAP(stack->variables[vartype]+(cmd_params[1].val<<1),cmd_params[2].val);
-      break;
-    }
-  }
-  return 0;
+	if (idx < 0) {
+		sciprintf("Invalid: negative index\n");
+		return 1;
+	}
+	if ((p_var_max)
+		&& (p_var_max[vartype] <= idx)) {
+		sciprintf("Max. index is %d (0x%x)\n",
+			  p_var_max[vartype], p_var_max[vartype]);
+		return 1;
+	}
+
+	switch(cmd_paramlength) {
+	case 2:
+		sciprintf("%s var %d == "PREG"\n", varnames[vartype], idx,
+			  PRINT_REG(p_vars[vartype][idx]));
+		break;
+
+	case 3:
+		p_vars[vartype][idx] = cmd_params[2].reg;
+		break;
+
+	default:
+		sciprintf("Too many arguments\n");
+	}
+	return 0;
+}
+
+#ifdef HAVE_FORK
+static int _codebug_pid = 0;
+static int _codebug_stdin[2];
+static int _codebug_stdout[2];
+static int _codebug_commands[2]; /* sends commands to intermediate process */
+
+/* Codebugging uses two child processes:
+** The first one only performs output "coloring", its child process
+** is an actual secondary freesci process
+*/
+
+#define CODEBUG_BUFSIZE 512
+static char *_codebug_colstr = "\033[31m\033[1m";
+static char *_codebug_uncolstr = "\033[0m";
+
+static void
+codebug_send_command(char *cmd)
+{
+	if (_codebug_pid)
+		write(_codebug_commands[1], cmd, strlen(cmd));
+}
+
+static void
+_print_colored(int from_fd)
+{
+	char buf[CODEBUG_BUFSIZE + 64];
+	char *buf_offset;
+	int br;
+	int length_increment;
+
+	strcpy(buf, _codebug_colstr);
+	length_increment = strlen(_codebug_colstr);
+	buf_offset = buf + length_increment;
+	length_increment += strlen(_codebug_uncolstr);
+
+	do {
+		br = read(from_fd, buf_offset, CODEBUG_BUFSIZE);
+		if (br > 0) {
+			strcpy(buf_offset + br, _codebug_uncolstr);
+			/* Atomic write with colors to nullify risk of
+			** interference from fg process  */
+			write(1, buf, br + length_increment);
+		}
+	} while (br == CODEBUG_BUFSIZE);
+}
+
+void
+_codebug_kill_children()
+{
+	if (_codebug_pid)
+		kill(_codebug_pid, SIGTERM);
+}
+
+void
+_codebug_sighandler(int i)
+{
+	if (i == SIGPIPE || i == SIGTERM)
+		kill(_codebug_pid, SIGTERM);
+
+	write(1, _codebug_uncolstr, strlen(_codebug_uncolstr));
+	fprintf(stderr, "Child process failed, aborting!\n");
+	fprintf(stderr, "(if you're using the UNIX sound server, you'll probably get spurious"
+		" warnings regarding the sound server now...)\n");
+	exit(1);
+}
+
+static void
+do_codebug(char *path, char *datapath)
+{
+	pipe(_codebug_stdin);
+	pipe(_codebug_stdout);
+	close(_codebug_commands[1]);
+
+	_codebug_pid = fork();
+	if (_codebug_pid) {
+		fd_set fs;
+		int max_n;
+		
+		/* parent process */
+		close(_codebug_stdin[0]);
+		close(_codebug_stdout[1]);
+
+		max_n = _codebug_commands[0];
+		if (max_n < _codebug_stdout[0])
+			max_n = _codebug_stdout[0];
+
+		signal(SIGCHLD, _codebug_sighandler);
+		signal(SIGPIPE, _codebug_sighandler);
+		signal(SIGTERM, _codebug_sighandler);
+
+		while (1) { /* Until sigchild */
+			FD_ZERO(&fs);
+			FD_SET(_codebug_commands[0], &fs);
+			FD_SET(_codebug_stdout[0], &fs);
+
+			fflush(NULL);
+			select(max_n + 1, &fs, NULL, NULL, NULL);
+
+			if (FD_ISSET(_codebug_commands[0], &fs)) {
+				char buf[CODEBUG_BUFSIZE];
+				int br;
+				do {
+					br = read(_codebug_commands[0], buf, CODEBUG_BUFSIZE);
+					if (br > 0)
+						write(_codebug_stdin[1], buf, br);
+				} while (br == CODEBUG_BUFSIZE);
+			}
+
+			if (FD_ISSET(_codebug_stdout[0], &fs))
+				_print_colored(_codebug_stdout[0]);
+
+		}
+	} else {
+		/* child */
+		close(_codebug_stdin[1]);
+		close(_codebug_stdout[0]);
+
+		/* Re-associate stdin, stdout, stderr with i/o pipes */
+		dup2(_codebug_stdin[0], 0);
+		dup2(_codebug_stdout[1], 1);
+		dup2(_codebug_stdout[1], 2);
+
+		printf("Calling '%s' on data directory '%s'...\n", path, datapath);
+		execlp(path, path, "-D", "-gnull", "-Pnull", "-Onull", "-Mmt32gm",
+		       "--disable-readline", "-d", datapath, NULL);
+		perror("execlp of FreeSCI");
+		exit(1);
+	}
+}
+
+static int
+c_codebug(state_t *s)
+{
+	char *path = cmd_params[0].str;
+
+	if (_codebug_pid) {
+		sciprintf("Already codebugging!\n");
+		return 1;
+	}
+
+	pipe(_codebug_commands);
+	_codebug_pid = fork();
+
+	if (!_codebug_pid)
+		do_codebug(path, s->resource_dir); /* Do codebugging in a child process */
+	else {
+		close(_codebug_commands[0]);
+		sleep(1); /* Yield to the scheduler, at least a bit */
+		atexit(_codebug_kill_children);
+	}
 }
 #endif
 
@@ -2768,7 +2974,10 @@ c_sci_version(state_t *s)
 
 void
 script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *objp,
-	     unsigned int *restadjust, int bp)
+	     unsigned int *restadjust, 
+	     seg_id_t *segids, reg_t **variables,
+	     reg_t **variables_base, int *variables_nr,
+	     int bp)
 {
 	int have_windowed = s->gfx_state->driver->capabilities & GFX_CAPABILITY_WINDOWED;
 	/* Do we support a separate console? */
@@ -2790,6 +2999,10 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 	if (sci_debug_flags & _DEBUG_FLAG_LOGGING) {
 		int old_debugstate = _debugstate_valid;
 
+		p_var_segs = segids;
+		p_vars = variables;
+		p_var_max = variables_nr;
+		p_var_base = variables_base;
 		p_pc = pc;
 		p_sp = sp;
 		p_pp = pp;
@@ -2847,6 +3060,10 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 		p_pp = pp;
 		p_objp = objp;
 		p_restadjust = restadjust;
+		p_var_segs = segids;
+		p_vars = variables;
+		p_var_max = variables_nr;
+		p_var_base = variables_base;
 
 		c_debuginfo(s);
 		sciprintf("Step #%d\n", script_step_counter);
@@ -2857,15 +3074,9 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			_debug_commands_not_hooked = 0;
 
 			con_hook_command(c_debuginfo, "registers", "", "Displays all current register values");
-#warning "Re-enable con:vmvars hook"
-#if 0
-			con_hook_command(c_vmvars, "vmvars", "si*", "Displays or changes variables in the VM\n\nFirst parameter is either g(lobal), l(ocal), t(emp) or p(aram).\nSecond parameter is the var number\nThird parameter (if specified) is the value to set the variable to");
-#endif
+			con_hook_command(c_vmvars, "vmvars", "!sia*", "Displays or changes variables in the VM\n\nFirst parameter is either g(lobal), l(ocal), t(emp) or p(aram).\nSecond parameter is the var number\nThird parameter (if specified) is the value to set the variable to");
 			con_hook_command(c_sci_version, "sci_version", "", "Prints the SCI version currently being emulated");
-#warning "Re-enable con:vmvarlist"
-#if 0
-			con_hook_command(c_vmvarlist, "vmvarlist", "", "Displays the addresses of variables in the VM");
-#endif
+			con_hook_command(c_vmvarlist, "vmvarlist", "!", "Displays the addresses of variables in the VM");
 			con_hook_command(c_step, "s", "i*", "Executes one or several operations\n\nEXAMPLES\n\n"
 					 "    s 4\n\n  Execute 4 commands\n\n    s\n\n  Execute next command");
 #warning "Re-enable con:so hook"
@@ -3102,6 +3313,15 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "Examines an object\n\n"
 					 "SEE ALSO\n\n"
 					 "  addresses.3");
+#ifdef HAVE_FORK
+			con_hook_command(c_codebug, "codebug", "!s",
+					 "Starts codebugging mode\n\nUSAGE\n\n"
+					 "  codebug path/to/old/freesci\n\n"
+					 "  A different version of FreeSCI may be\n"
+					 "  spawned as a child process; all commands\n"
+					 "  send to this debugger will also be sent to\n"
+					 "  to the child process.\n\nSEE ALSO\n\n  codebugging.3");
+#endif
 
 
 			con_hook_int(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");
@@ -3111,6 +3331,38 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_int(&script_step_counter, "script_step_counter", "# of executed SCI operations\n");
 			con_hook_int(&sci_debug_flags, "debug_flags", "Debug flags:\n  0x0001: Log each command executed\n"
 				     "  0x0002: Break on warnings\n");
+
+			con_hook_page("codebugging",
+				      "Co-debugging allows to run two (sufficiently\n"
+				      "  recent) versions of FreeSCI concurrently,\n"
+				      "  with one acting as a client of the other.\n"
+				      "    Co-debugging can be started by calling\n"
+				      "  'codebug' (see codebug.1); note that the\n"
+				      "  argument passed to it must be a version of\n"
+				      "  FreeSCI that performs fflush(NULL) before\n"
+				      "  each read; only late 0.3.3-devel and later\n"
+				      "  have this property.\n\n"
+				      "  In co-debug mode, all commands are sent to\n"
+				      "  both programs, UNLESS one of the following\n"
+				      "  prefixes is used:\n\n"
+				      "    '.' : Only sends to the foreground version\n"
+				      "    ':' : Only sends to tbe background version\n\n"
+				      "  For example, when running 0.3.3 from within\n"
+				      "  0.6.0, \".version\" would determine the version\n"
+				      "  as 0.6.0, and \"0.3.3\" would be returned for\n"
+				      "  \":version\". Both versions would be print\n"
+				      "  if only \"version\" was invoked, each result\n"
+				      "  coming from a different process.\n\n"
+				      "COLORS\n\n"
+				      "  Whenever possible, the background process will\n"
+				      "  have its output marked by a non-default color\n"
+				      "  (usually red).\n\n"
+				      "TROUBLESHOOTING\n\n"
+				      "  If the background version appears to be silent,\n"
+				      "  make sure it is calling fflush(NULL) before\n"
+				      "  reading input.\n\n"
+				      "SEE ALSO\n\n"
+				      "  codebug.1");
 
 		} /* If commands were not hooked up */
 
@@ -3124,6 +3376,8 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 		(s->sound_server->suspend)(s);
 
 	while (_debugstate_valid) {
+		int skipfirst = 0;
+		char *commandstring;
 #ifdef WANT_CONSOLE
 #  ifndef FORCE_CONSOLE
 		if (!have_windowed) {
@@ -3132,14 +3386,30 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_gfx_show(s->gfx_state);
 			input = con_gfx_read(s->gfx_state);
 			con_gfx_hide(s->gfx_state);
-			con_parse(s, input);
+			commandstring = input;
+			sciprintf("> %s\n", commandstring);
 #  ifndef FORCE_CONSOLE
 		} else
 #  endif
 #endif
 #ifndef FORCE_CONSOLE
-			con_parse(s, _debug_get_input());
+			commandstring = _debug_get_input();
+
+		/* Check if a specific destination has been given */
+		if (commandstring
+		    && (commandstring[0] == '.'
+			|| commandstring[0] == ':'))
+			skipfirst = 1;
+
 #endif
+#ifdef HAVE_FORK
+		if (commandstring[0] != '.') {
+			codebug_send_command(commandstring + skipfirst);
+			codebug_send_command("\n");
+		}
+#endif
+		if (commandstring[0] != ':')
+			con_parse(s, commandstring + skipfirst);
 		sciprintf("\n");
 	}
 

@@ -34,14 +34,22 @@
 
 #include <gfx_operations.h>
 
+typedef struct {
+	char *functname;
+	kfunct_old *kernel_function;
+} sci_old_kernel_function_t;
 
 sci_kernel_function_t kfunct_mappers[] = {
+	{"GetSaveDir", "", kGetSaveDir},
+	{NULL, NULL, NULL} /* Terminator */
+};
+
+sci_old_kernel_function_t old_kfunct_mappers[] = {
 	{"Load", kLoad},
 	{"UnLoad", kUnLoad},
+	{"GetCWD", kGetCWD },
 	{"GameIsRestarting", kGameIsRestarting },
 	{"NewList", kNewList },
-	{"GetSaveDir", kGetSaveDir },
-	{"GetCWD", kGetCWD },
 	{"SetCursor", kSetCursor },
 	{"FindKey", kFindKey },
 	{"NewNode", kNewNode },
@@ -167,7 +175,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 
 #define SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR 0x75
 
-static kfunct * unknown_function_map[SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR] = { /* Map for unknown kernel functions */
+static kfunct_old * unknown_function_map[SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR] = { /* Map for unknown kernel functions */
 /*0x00*/ kLoad,
 /*0x01*/ kUnLoad,
 /*0x02*/ kScriptID,
@@ -253,7 +261,7 @@ static kfunct * unknown_function_map[SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR] = { /* Ma
 /*0x52*/ kOnControl,
 /*0x53*/ kInitBresen,
 /*0x54*/ kDoBresen,
-/*0x55*/ kNOP, /* DoAvoider */
+/*0x55*/ kDoAvoider,
 /*0x56*/ kSetJump,
 /*0x57*/ kSetDebug,
 /*0x58*/ NULL, /* kInspectObj */
@@ -276,7 +284,7 @@ static kfunct * unknown_function_map[SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR] = { /* Ma
 #else
 /*0x67*/ kDeviceInfo_Unix,
 #endif
-/*0x68*/ kGetSaveDir,
+/*0x68*/ NULL /*kGetSaveDir*/,
 /*0x69*/ kCheckSaveGame,
 /*0x6a*/ kShakeScreen,
 /*0x6b*/ kFlushResources,
@@ -471,7 +479,8 @@ kMemoryInfo(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 k_Unknown(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	kfunct *funct = (funct_nr >= SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR)? NULL : unknown_function_map[funct_nr];
+	kfunct_old *funct = (funct_nr >= SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR)? NULL :
+		unknown_function_map[funct_nr];
 
 	if (!funct) {
 		SCIkwarn(SCIkSTUB, "Unhandled Unknown function %04x\n", funct_nr);
@@ -631,27 +640,37 @@ kMemory(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 }
 
-void
-kstub(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kstub(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	int i;
 
-	SCIkwarn(SCIkWARNING, "Unimplemented syscall: %s[%x](", s->kernel_names[funct_nr], funct_nr);
+	SCIkwarn(SCIkWARNING, "Unimplemented syscall: %s[%x](",
+		 s->kernel_names[funct_nr], funct_nr);
 
 	for (i = 0; i < argc; i++) {
-		sciprintf("%04x", 0xffff & PARAM(i));
+		sciprintf(PREG, PRINT_REG(argv[i]));
 		if (i+1 < argc) sciprintf(", ");
 	}
 	sciprintf(")\n");
+	return NULL_REG;
 }
 
 
-void
-kNOP(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kNOP(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	SCIkwarn(SCIkWARNING, "Warning: Kernel function 0x%02x invoked: NOP\n", funct_nr);
+	return NULL_REG;
 }
 
+
+reg_t
+kFsciEmu(state_t *s, int funct_nr, int argc, reg_t *argv)
+{
+	SCIkwarn(SCIkWARNING, "Implement me: kFsciEmu()!\n");
+	return NULL_REG;
+}
 
 void
 script_map_kernel(state_t *s)
@@ -659,7 +678,8 @@ script_map_kernel(state_t *s)
 	int functnr;
 	int mapped = 0;
 
-	s->kfunct_table = sci_malloc(sizeof(kfunct *) * (s->kernel_names_nr + 1));
+	s->kfunct_table = sci_malloc(sizeof(kfunct_sig_pair_t) * (s->kernel_names_nr + 1));
+	s->kfunct_emu_table = sci_malloc(sizeof(kfunct_old *) * (s->kernel_names_nr + 1));
 
 	for (functnr = 0; functnr < s->kernel_names_nr; functnr++) {
 		int seeker, found = -1;
@@ -672,10 +692,34 @@ script_map_kernel(state_t *s)
 
 		if (found == -1) {
 
-			sciprintf("Warning: Kernel function %s[%x] unmapped\n", s->kernel_names[functnr], functnr);
-			s->kfunct_table[functnr] = kstub;
+			/* Try to emulation-map it */
 
-		} else s->kfunct_table[functnr] = kfunct_mappers[found].kernel_function;
+			for (seeker = 0; (found == -1) && old_kfunct_mappers[seeker].functname;
+			     seeker++)
+				if (strcmp(old_kfunct_mappers[seeker].functname,
+					   s->kernel_names[functnr]) == 0) {
+					found = seeker;
+					mapped++;
+				}
+
+			if (found == -1) {
+				sciprintf("Warning: Kernel function %s[%x] unmapped\n",
+					  s->kernel_names[functnr], functnr);
+				s->kfunct_table[functnr].signature = NULL;
+				s->kfunct_table[functnr].fun = kstub;
+			} else {
+				sciprintf("Warning: Emulating kernel function %s[%x]!\n",
+					  s->kernel_names[functnr], functnr);
+				s->kfunct_table[functnr].signature = NULL;
+				s->kfunct_table[functnr].fun = kFsciEmu;
+				s->kfunct_emu_table[functnr] =
+					old_kfunct_mappers[found].kernel_function;
+			}
+
+		} else {
+			s->kfunct_table[functnr].signature = kfunct_mappers[found].sig;
+			s->kfunct_table[functnr].fun = kfunct_mappers[found].kernel_function;
+		}
 
 	} /* for all functions requesting to be mapped */
 

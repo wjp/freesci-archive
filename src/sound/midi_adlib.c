@@ -55,7 +55,7 @@ static unsigned char oper_note[ADLIB_VOICES];
 static unsigned char oper_chn[ADLIB_VOICES];
 
 #if 0
-void seqbuf_dump()
+void seqbuf_dump() /* OSS upcall */
 {
   if (_seqbufptr)
     if (write(seqfd, _seqbuf, _seqbufptr) == -1) {
@@ -166,7 +166,7 @@ void adlib_start_note(int chn, int note, int velocity)
       if (oper_chn[free] == 255)
 	break;
 
-  printf("play operator %d/%d:  %d %d %d\n", free, free_voices, chn, note, velocity);
+  /*  printf("play operator %d/%d:  %d %d %d\n", free, free_voices, chn, note, velocity); */
 
   oper_chn[free] = chn;
   oper_note[free] = note;

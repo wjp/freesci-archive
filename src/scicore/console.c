@@ -1,5 +1,5 @@
 /***************************************************************************
- console.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+ console.c Copyright (C) 1999..2002 Christoph Reichenbach, TU Darmstadt
 
 
  This program may be modified and copied freely according to the terms of
@@ -464,7 +464,7 @@ parse_reg_t(state_t *s, char *str, reg_t *dest)
 					valid = (mobj->data.clones.clones[idx].next_free
 						 == CLONE_USED);
 				}
-#warning "Fixme: Returns invalid values for '?text1' in SQ3"
+
 				if (valid) {
 					char *objname = obj->base
 						+ obj->variables[SCRIPT_NAME_SELECTOR].offset;
@@ -511,14 +511,17 @@ parse_reg_t(state_t *s, char *str, reg_t *dest)
 	} else {
 		char *colon = strchr(str, ':');
 
-		if (!colon)
-			return 1;
-		*colon = 0;
-		offsetting = colon+1;
+		if (!colon) {
+			offsetting = str;
+			dest->segment = 0;
+		} else {
+			*colon = 0;
+			offsetting = colon+1;
 
-		dest->segment = strtol(str, &endptr, 16);
-		if (*endptr)
-			return 1;
+			dest->segment = strtol(str, &endptr, 16);
+			if (*endptr)
+				return 1;
+		}
 	}
 	if (offsetting) {
 		int val = strtol(offsetting, &endptr, 16);
@@ -541,7 +544,8 @@ con_parse (state_t *s, char *command)
 	int done = 0;			/* are we done yet? */
 	int cdone = 0;		/* Done with the current command? */
 	char *paramt;			/* parameter types */
-	char *cmd = (char *) sci_strdup (command);
+	char *cmd = (command && command[0]) ? (char *) sci_strdup (command) :
+		(char *) sci_strdup(" ");
 	char *_cmd = cmd;
 	int pos = 0;
 
@@ -1028,7 +1032,7 @@ static void
 _cmd_print_command(cmd_mm_entry_t *data, int full)
 {
 	char *paramseeker = ((cmd_command_t *) data)->param;
-	sciprintf ("%s (%s)\n", data->name, paramseeker);
+	sciprintf ("SYNOPSIS\n\n  %s ", data->name, paramseeker);
 
 	if (full) {
 
@@ -1065,7 +1069,7 @@ static void
 _cmd_print_var(cmd_mm_entry_t *data, int full)
 {
 	cmd_var_t *var = (cmd_var_t *) data;
-	sciprintf ("%s = %d\n", var->name, *(var->var.intp));
+	sciprintf ("VALUE\n\n  %s = %d\n", var->name, *(var->var.intp));
 
 	if (full)
 		sciprintf("\n\nDESCRIPTION\n\n  %s",
@@ -1188,7 +1192,7 @@ c_man (state_t * s)
 		return 1;
 	}
 
-	sciprintf ("-- %s: %s.%d\nSYNOPSIS:\n", cmd_mm[section - 1].name, name, section);
+	sciprintf ("-- %s: %s.%d\n", cmd_mm[section - 1].name, name, section);
 	cmd_mm[section - 1].print(entry, 1);
 
 	return 0;

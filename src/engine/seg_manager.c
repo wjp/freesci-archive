@@ -31,7 +31,6 @@
 #include <engine.h>
 
 #undef DEBUG_SEG_MANAGER /* Define to turn on debugging */
-
 #define GET_SEGID() 	if (flag == SCRIPT_ID) \
 				id = sm_seg_get (self, id); \
 			VERIFY ( sm_check (self, id), "invalid seg id" );
@@ -71,9 +70,42 @@ sm_get_synonyms(seg_manager_t *seg_manager, int id, int flag);
 static void
 sm_script_free_unused_objects(seg_manager_t *self, seg_id_t seg);
 
+static dstack_t *
+sm_allocate_stack(seg_manager_t *self, int size, seg_id_t *segid);
+
+static sys_strings_t *
+sm_allocate_sys_strings(seg_manager_t *self, seg_id_t *segid);
+
 /***--------------------------***/
 /** end of forward declarations */
 /***--------------------------***/
+
+
+static inline int
+find_free_id(seg_manager_t *self, int *id)
+{
+	char was_added = 0;
+	int retval;
+
+	while (!was_added) {
+		retval = int_hash_map_check_value(self->id_seg_map, self->reserved_id,
+						  1, &was_added);
+		*id = self->reserved_id--;
+		if (self->reserved_id < -1000000)
+			self->reserved_id = -10;
+		/* Make sure we don't underflow */
+	}
+
+	return retval;
+}
+
+static inline mem_obj_t *
+alloc_nonscript_segment(seg_manager_t *self, mem_obj_enum type, seg_id_t *segid)
+{ /* Allocates a non-script segment */
+	int id;
+	*segid = find_free_id(self, &id);
+	return mem_obj_allocate(self, *segid, id, type);
+}
 
 
 void sm_init(seg_manager_t* self) {
@@ -114,6 +146,9 @@ void sm_init(seg_manager_t* self) {
 	self->get_lockers = sm_get_lockers;
 	self->set_lockers = sm_set_lockers;
 
+	self->allocate_stack = sm_allocate_stack;
+	self->allocate_sys_strings = sm_allocate_sys_strings;
+
 	self->get_heappos = sm_get_heappos;
 
 	self->set_export_table_offset = sm_set_export_table_offset;
@@ -135,6 +170,7 @@ void sm_init(seg_manager_t* self) {
 
 	self->script_initialize_locals_zero = sm_script_initialize_locals_zero;
 	self->script_initialize_locals = sm_script_initialize_locals;
+
 };
 
 // destroy the object, free the memorys if allocated before
@@ -186,22 +222,8 @@ int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, in
 		return 1;
 	}
 
-	if (seg >= self->heap_size) {
-		if (seg >= self->heap_size * 2) {
-			sciprintf( "seg_manager.c: hash_map error or others??" );
-			return 0;
-		}
-		self->heap_size *= 2;
-		temp = sci_realloc ((void*)self->heap, self->heap_size * sizeof( mem_obj_t* ) );
-		if (!temp) {
-			sciprintf("seg_manager.c: Not enough memory space for script size" );
-			return 0;
-		}
-		self->heap = (mem_obj_t**)  temp;
-	}
-
 	// allocate the mem_obj_t
-	mem = mem_obj_allocate();
+	mem = mem_obj_allocate(self, seg, script_nr, MEM_OBJ_SCRIPT);
 	if (!mem) {
 		sciprintf("%s, %d, Not enough memory, ", __FILE__, __LINE__ );
 		return 0;
@@ -231,12 +253,10 @@ int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, in
 	scr->objects_nr = 0; /* No objects recorded yet */
 
 	scr->locals_offset = 0;
-	scr->locals_nr = 0;
+	scr->locals_block = NULL;
 
 	scr->nr = script_nr;
 
-	// hook it to the heap
-	self->heap[seg] = mem;
 	*seg_id = seg;
 	return 1;
 };
@@ -255,17 +275,36 @@ int sm_deallocate (seg_manager_t* self, struct _state *s, int script_nr) {
 void sm_update (seg_manager_t* self) {
 };
 
-mem_obj_t* mem_obj_allocate() {
-	mem_obj_t* mem = ( mem_obj_t* ) malloc( sizeof (mem_obj_t) );
+mem_obj_t*
+mem_obj_allocate(seg_manager_t *self, seg_id_t segid, int hash_id, mem_obj_enum type)
+{
+	mem_obj_t* mem = ( mem_obj_t* ) sci_calloc( sizeof (mem_obj_t), 1 );
 	if( !mem ) {
 		sciprintf( "seg_manager.c: invalid mem_obj " );
-		return 0;
+		return NULL;
 	}
-	mem->type = MEM_OBJ_SCRIPT;	// may need to handle non script buffer type at here
-	mem->data.script.buf = NULL;
-	mem->data.script.buf_size = 0;
-	mem->data.script.objects = NULL;
-	mem->data.script.objects_nr = 0;
+
+	if (segid >= self->heap_size) {
+		void *temp;
+
+		if (segid >= self->heap_size * 2) {
+			sciprintf( "seg_manager.c: hash_map error or others??" );
+			return NULL;
+		}
+		self->heap_size *= 2;
+		temp = sci_realloc ((void*)self->heap, self->heap_size * sizeof( mem_obj_t* ) );
+		if (!temp) {
+			sciprintf("seg_manager.c: Not enough memory space for script size" );
+			return NULL;
+		}
+		self->heap = (mem_obj_t**)  temp;
+	}
+
+	mem->segmgr_id = hash_id;
+	mem->type = type;
+
+	/* hook it to the heap */
+	self->heap[segid] = mem;
 	return mem;
 };
 
@@ -577,8 +616,12 @@ _relocate_block(reg_t *block, int block_location, int block_items, seg_id_t segm
 static inline int
 _relocate_local(script_t *scr, seg_id_t segment, int location)
 {
-	return _relocate_block(scr->locals, scr->locals_offset, scr->locals_nr,
-			       segment, location);
+	if (scr->locals_block)
+		return _relocate_block(scr->locals_block->locals, scr->locals_offset,
+				       scr->locals_block->nr,
+				       segment, location);
+	else
+		return 0; /* No hands, no cookies */
 }
 
 static inline int
@@ -622,8 +665,12 @@ sm_script_relocate(seg_manager_t *self, reg_t block)
 				sciprintf("While processing relocation block "PREG":\n",
 					  PRINT_REG(block));
 				sciprintf("Relocation failed for index %04x\n", pos);
-				sciprintf("- locals: %d at %04x\n", scr->locals_nr,
-					  scr->locals_offset);
+				if (scr->locals_block)
+					sciprintf("- locals: %d at %04x\n",
+						  scr->locals_block->nr,
+						  scr->locals_offset);
+				else
+					sciprintf("- No locals\n");
 				for (k = 0; k < scr->objects_nr; k++)
 					sciprintf("- obj#%d at %04x w/ %d vars\n",
 						  k,
@@ -710,6 +757,26 @@ sm_script_obj_init(seg_manager_t *self, reg_t obj_pos)
 	return obj;
 }
 
+static local_variables_t *
+_sm_alloc_locals_segment(seg_manager_t *self, script_t *scr, int count)
+{
+	if (!count) { /* No locals */
+		scr->locals_segment = 0;
+		scr->locals_block = NULL;
+		return NULL;
+	} else {
+		mem_obj_t *mobj = alloc_nonscript_segment(self, MEM_OBJ_LOCALS,
+							  &scr->locals_segment);
+		local_variables_t *locals = scr->locals_block = &(mobj->data.locals);
+
+		locals->script_id = scr->nr;
+		locals->locals = sci_calloc(sizeof(reg_t), count);
+		locals->nr = count;
+
+		return locals;
+	}
+}
+
 static void
 sm_script_initialize_locals_zero(seg_manager_t *self, seg_id_t seg, int count)
 {
@@ -721,10 +788,9 @@ sm_script_initialize_locals_zero(seg_manager_t *self, seg_id_t seg, int count)
 
 	scr = &(mobj->data.script);
 
-	scr->locals_nr = count;
 	scr->locals_offset = -count * 2; /* Make sure it's invalid */
-	if (count)
-		scr->locals = sci_calloc(sizeof(reg_t), count);
+
+	_sm_alloc_locals_segment(self, scr, count);
 }
 
 static void
@@ -733,6 +799,7 @@ sm_script_initialize_locals(seg_manager_t *self, reg_t location)
 	mem_obj_t *mobj = self->heap[location.segment];
 	int count;
 	script_t *scr;
+	local_variables_t *locals;
 
 	VERIFY( !(location.segment >= self->heap_size || mobj->type != MEM_OBJ_SCRIPT),
 		"Attempt to initialize locals in non-script\n" );
@@ -745,20 +812,18 @@ sm_script_initialize_locals(seg_manager_t *self, reg_t location)
 	count = getUInt16(scr->buf + location.offset - 2) >> 1;
 	/* half block size */
 
-	scr->locals_nr = count;
 	scr->locals_offset = location.offset;
 
 	VERIFY( location.offset + count * 2 + 1 < scr->buf_size,
 		"Locals extend beyond end of script\n" );
 
-	if (count) {
+	locals = _sm_alloc_locals_segment(self, scr, count);
+	if (locals) {
 		int i;
 		byte *base = scr->buf + location.offset;
 
-		scr->locals = sci_calloc(sizeof(reg_t), count);
-
 		for (i = 0; i < count; i++)
-			scr->locals[i].offset = getUInt16(base + i*2);
+			locals->locals[i].offset = getUInt16(base + i*2);
 	}
 }
 
@@ -785,3 +850,42 @@ sm_script_free_unused_objects(seg_manager_t *self, seg_id_t seg)
 		scr->objects_allocated = scr->objects_nr;
 	}
 }
+
+static inline char *dynprintf(char *msg, ...)
+{
+	va_list argp;
+	char *buf = malloc(strlen(msg) + 100);
+
+	va_start(argp, msg);
+	vsprintf(buf, msg, argp);
+	va_end(argp);
+
+	return buf;
+}
+
+
+static dstack_t *
+sm_allocate_stack(seg_manager_t *self, int size, seg_id_t *segid)
+{
+	mem_obj_t *memobj = alloc_nonscript_segment(self, MEM_OBJ_STACK, segid);
+	dstack_t *retval = &(memobj->data.stack);
+
+	retval->entries = sci_calloc(size, sizeof(reg_t));
+	retval->nr = size;
+
+	return retval;
+}
+
+static sys_strings_t *
+sm_allocate_sys_strings(seg_manager_t *self, seg_id_t *segid)
+{
+	mem_obj_t *memobj = alloc_nonscript_segment(self, MEM_OBJ_SYS_STRINGS, segid);
+	sys_strings_t *retval = &(memobj->data.sys_strings);
+	int i;
+
+	for (i = 0; i < SYS_STRINGS_MAX; i++)
+		retval->strings[i].name = NULL; /* Not reserved */
+
+	return retval;
+}
+

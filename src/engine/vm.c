@@ -593,6 +593,19 @@ static int jump_initialized = 0;
 static jmp_buf vm_error_address;
 #endif
 
+
+#ifdef DISABLE_VALIDATONS
+#  define kernel_signature_check(a, b, c, d) 0
+#else
+static inline int
+kernel_signature_check(state_t *s, char *sig, int argc, reg_t *regs)
+{
+#warning "Add signature checks"
+	return 0; /* All's well */
+}
+#endif
+
+
 void
 vm_handle_fatal_error(state_t *s, int line, char *file)
 {
@@ -670,17 +683,16 @@ run_vm(state_t *s, int restoring)
 
 #ifndef DISABLE_VALIDATIONS
 	/* Initialize maximum variable count */
-	variables_max[VAR_GLOBAL] = s->script_000->locals_nr;
-	variables_max[VAR_LOCAL] = local_script->locals_nr;
+	variables_max[VAR_GLOBAL] = s->script_000->locals_block->nr;
 #endif
 
 	variables_seg[VAR_GLOBAL] = s->script_000_segment;
-	variables_seg[VAR_LOCAL] = 
 	variables_seg[VAR_TEMP] = variables_seg[VAR_PARAM] = s->stack_segment;
 	variables_base[VAR_TEMP] = variables_base[VAR_PARAM] = s->stack_base;
 
 	/* SCI code reads the zeroeth argument to determine argc */
-	variables_base[VAR_GLOBAL] = variables[VAR_GLOBAL] = s->script_000->locals;
+	variables_base[VAR_GLOBAL] = variables[VAR_GLOBAL]
+		= s->script_000->locals_block->locals;
 
 
 	WRITE_VAR16(VAR_PARAM, 0, xs->argc);
@@ -701,10 +713,12 @@ run_vm(state_t *s, int restoring)
 			s->execution_stack_pos_changed = 0;
 			obj = obj_get(s, xs->objp);
 			local_script = script_locate_by_segment(s, obj->pos.segment);
-			variables_seg[VAR_LOCAL] = obj->pos.segment;
+			variables_seg[VAR_LOCAL] = local_script->locals_segment;
 
-			variables_base[VAR_LOCAL] = variables[VAR_LOCAL] = local_script->locals;
+			variables_base[VAR_LOCAL] = variables[VAR_LOCAL]
+				= local_script->locals_block->locals;
 #ifndef DISABLE_VALIDATIONS
+			variables_max[VAR_LOCAL] = local_script->locals_block->nr;
 			variables_max[VAR_TEMP] = xs->sp - xs->fp;
 			variables_max[VAR_PARAM] = xs->argc + 1;
 			variables[VAR_TEMP] = xs->fp;
@@ -727,7 +741,14 @@ run_vm(state_t *s, int restoring)
 		if (script_debug_flag || sci_debug_flags) {
 			xs->addr.pc.offset = pc_offset;
 			script_debug(s, &(xs->addr.pc), &(xs->sp), &(xs->fp),
-				     &(xs->objp), &restadjust, bp_flag);
+				     &(xs->objp), &restadjust,
+				     variables_seg, variables, variables_base,
+#ifdef DISABLE_VALIDATIONS
+				     NULL,
+#else
+				     variables_max,
+#endif
+				     bp_flag);
 			bp_flag = 0;
 		}
 
@@ -778,7 +799,6 @@ run_vm(state_t *s, int restoring)
 
 			}
 
-		sciprintf("opcode=%02x, opnum=%02x, pcoff=%04x\n", opcode, opnumber, old_pc_offset);
 
 		switch (opnumber) {
 
@@ -930,7 +950,8 @@ run_vm(state_t *s, int restoring)
 			stack_ptr_t call_base = xs->sp - argc;
 
 			xs_new = add_exec_stack_entry(s, make_reg(xs->addr.pc.segment,
-								  xs->addr.pc.offset + opparams[0]),
+								  xs->addr.pc.offset
+								  + opparams[0]),
 						      xs->sp, xs->objp,
 						      (validate_arithmetic(*call_base) >> 1)
 						      	+ restadjust,
@@ -943,38 +964,46 @@ run_vm(state_t *s, int restoring)
 		}
 
 		case 0x21: /* callk */
-#warning "Disabled VM operations: fixme"
-#if 0
-			xs->sp -= opparams[1]+2;
-    if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-    {
-      xs->sp -= restadjust * 2;
-      s->amp_rest = 0; /* We just used up the restadjust, remember? */
-    }
-      if (opparams[0] >= s->kernel_names_nr) {
+			xs->sp -= (opparams[1] >> 1)+1;
+			if (s->version >= SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
+				xs->sp -= restadjust;
+				s->r_amp_rest = 0; /* We just used up the restadjust, remember? */
+			}
 
-	sciprintf("Invalid kernel function 0x%x requested\n", opparams[0]);
-	script_debug_flag = script_error_flag = 1;
+			if (opparams[0] >= s->kernel_names_nr) {
 
-      } else {
+				sciprintf("Invalid kernel function 0x%x requested\n", opparams[0]);
+				script_debug_flag = script_error_flag = 1;
 
-	if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-	    s->kfunct_table[opparams[0]](s, opparams[0], GET_HEAP(xs->sp) + restadjust, xs->sp + 2); /* Call kernel function */ else
-	    s->kfunct_table[opparams[0]](s, opparams[0], GET_HEAP(xs->sp), xs->sp + 2); /* Call kernel function */
+			} else {
+				int argc = ASSERT_ARITHMETIC(xs->sp[0]);
 
-	/* Calculate xs again: The kernel function might have spawned a new VM */
-	xs = s->execution_stack + s->execution_stack_pos;
+				if (s->version >= SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+					argc += restadjust;
 
-	if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-	  restadjust = s->amp_rest;
+				if (s->kfunct_table[opparams[0]].signature
+				    && kernel_signature_check(s,
+							      s->kfunct_table[opparams[0]]
+							      .signature,
+							      argc, xs->sp + 1)) {
+					sciprintf("[VM] Invalid arguments to kernel call %x\n",
+						  opparams[0]);
+					script_debug_flag = script_error_flag = 1;
+				} else
+					s->r_acc = s->kfunct_table[opparams[0]]
+						.fun(s, opparams[0], argc, xs->sp + 1);
+				/* Call kernel function */
 
-      }
-#endif
-      sciprintf("\n--------------------------");
-      sciprintf("\nNot implemented yet: callk");
-      sciprintf("\n--------------------------\n");
+				/* Calculate xs again: The kernel function might
+				** have spawned a new VM  */
 
-      break;
+				xs = s->execution_stack + s->execution_stack_pos;
+
+				if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+					restadjust = s->r_amp_rest;
+
+			}
+			break;
 
 //    case 0x22: /* callb */
 //      temp = xs->sp;
@@ -1115,11 +1144,11 @@ run_vm(state_t *s, int restoring)
 				r_temp.offset += validate_arithmetic(s->r_acc);
 
 			r_temp.offset += opparams[1];  /* Add index */
+			/* That's the immediate address now */
 			break;
 
 
 		case 0x2e: /* selfID */
-			sciprintf("SelfID: objp = "PREG"\n", PRINT_REG(xs->objp));
 			s->r_acc = xs->objp;
 			break;
 
@@ -1775,8 +1804,7 @@ script_instantiate(state_t *s, int script_nr)
 
 	s->seg_manager.script_free_unused_objects(&s->seg_manager, reg.segment);
 
-	/*    if (script_nr == 0)   sci_hexdump(s->heap + script_basepos +2, script->size-2, script_basepos);*/
-	return reg.segment;		// instantiate successfully
+	return reg.segment;		/* instantiation successful */
 }
 
 
@@ -2020,7 +2048,7 @@ version_require_later_than(state_t *s, sci_version_t version)
 object_t *
 obj_get(state_t *s, reg_t offset)
 {
-	mem_obj_t *memobj = GET_SEGMENT(s->seg_manager, offset.segment, MEM_OBJ_SCRIPT | MEM_OBJ_CLONES);
+	mem_obj_t *memobj = GET_OBJ_SEGMENT(s->seg_manager, offset.segment);
 	object_t *obj = NULL;
 
 	if (memobj != NULL) {

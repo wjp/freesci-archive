@@ -221,6 +221,10 @@ typedef struct _state
 	int have_bp;  /* Bit mask specifying which types of breakpoints are used in bp_list */
 	int debug_mode; /* Contains flags for the various debug modes */
 
+	/* System strings */
+	seg_id_t sys_strings_segment;
+	sys_strings_t *sys_strings;
+
 	/* Parser data: */
 	word_t **parser_words;
 	int parser_words_nr;
@@ -250,7 +254,8 @@ typedef struct _state
 	char **selector_names; /* Zero-terminated selector name list */
 	int kernel_names_nr; /* Number of kernel function names */
 	char **kernel_names; /* List of kernel names */
-	kfunct **kfunct_table; /* Table of kernel functions */
+	kfunct_sig_pair_t *kfunct_table; /* Table of kernel functions */
+	kfunct_old **kfunct_emu_table; /* Emulated kernel functions */
 
 	opcode *opcodes;
 

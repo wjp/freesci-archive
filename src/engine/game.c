@@ -365,16 +365,13 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->script_000 = &(s->seg_manager.heap[s->script_000_segment]->data.script);
 
 
-#warning "Dirty stack initialization, fixme!"
-	s->stack_base = calloc(VM_STACK_SIZE, sizeof(reg_t));
-	s->stack_top = s->stack_base + VM_STACK_SIZE;
-
-/*-- end of warnings --*/
-
 	s->_heap = heap_new();
 	s->heap = s->_heap->start;
 
+	s->sys_strings = s->seg_manager.allocate_sys_strings(&s->seg_manager,
+							     &s->sys_strings_segment);
 	/* Allocate static buffer for savegame and CWD directories */
+	sys_string_acquire(s->sys_strings, SYS_STRING_SAVEDIR, "savedir", MAX_SAVE_DIR_SIZE);
 	s->save_dir = heap_allocate(s->_heap, MAX_SAVE_DIR_SIZE);
 	s->save_dir_copy = 0xffff;
 	s->save_dir_edit_offset = 0;
@@ -433,6 +430,7 @@ script_set_gamestate_save_dir(state_t *s)
 			  cwd, MAX_SAVE_DIR_SIZE);
 	else
 		strcpy((char *)(s->heap + s->save_dir + 2), cwd);
+	sys_string_set(s->sys_strings, SYS_STRING_SAVEDIR, cwd);
 	sci_free(cwd);
 }
 
@@ -504,8 +502,12 @@ game_init(state_t *s)
 	heap_ptr parser_handle;
 	reg_t game_obj; /* Address of the game object */
 	int i;
+	dstack_t *stack;
 
-#warning "Allocate stack segment here"
+	stack = s->seg_manager.allocate_stack(&s->seg_manager, VM_STACK_SIZE,
+					      &s->stack_segment);
+	s->stack_base = stack->entries;
+	s->stack_top = s->stack_base + VM_STACK_SIZE;
 
 	if (!script_instantiate(s, 0)) {
 		sciprintf("game_init(): Could not instantiate script 0\n");

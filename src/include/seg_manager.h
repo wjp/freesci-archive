@@ -30,6 +30,7 @@
 #define _SCI_SEG_MANAGER_H
 
 #include <int_hashmap.h>
+#include <sys_strings.h>
 #include <vm.h>
 
 #define DEFAULT_SCRIPTS 32
@@ -61,14 +62,25 @@ void dbg_print( char* msg, int i );		// for debug only
 	BREAKPOINT(); \
 	}
 
-#define MEM_OBJ_SCRIPT (1 << 0)
-#define MEM_OBJ_CLONES (1 << 1)
+#define MEM_OBJ_INVALID 0
+#define MEM_OBJ_SCRIPT 1
+#define MEM_OBJ_CLONES 2
+#define MEM_OBJ_LOCALS 3
+#define MEM_OBJ_STACK 4
+#define MEM_OBJ_SYS_STRINGS 5
+#define MEM_OBJ_MAX MEM_OBJ_SYS_STRINGS /* For sanity checking */
 typedef int mem_obj_enum;
 
 struct _mem_obj;
 
 #define GET_SEGMENT(mgr, index, rtype) ((index) >= 0 && (mgr).heap_size > index)?	\
-		(((mgr).heap[index]->type & rtype)? (mgr).heap[index]			\
+		(((mgr).heap[index]->type == rtype)? (mgr).heap[index]			\
+		: NULL) /* Type does not match */					\
+	: NULL /* Invalid index */
+
+#define GET_OBJ_SEGMENT(mgr, index) ((index) >= 0 && (mgr).heap_size > index)?		\
+		(((mgr).heap[index]->type == MEM_OBJ_SCRIPT				\
+		  || (mgr).heap[index]->type == MEM_OBJ_CLONES)? (mgr).heap[index]	\
 		: NULL) /* Type does not match */					\
 	: NULL /* Invalid index */
 
@@ -87,6 +99,20 @@ typedef struct _seg_manager_t {
 	int (*allocate_script) (struct _seg_manager_t* self, struct _state *s, int script_nr, int* seg_id);
 	int (*deallocate) (struct _seg_manager_t* self, struct _state *s, int script_nr);
 	void (*update) (struct _seg_manager_t* self);
+
+	dstack_t * (*allocate_stack) (struct _seg_manager_t *self, int size, seg_id_t *segid);
+	/* Allocates a data stack
+	** Parameters: (int) size: Number of stack entries to reserve
+	** Returns   : (dstack_t *): The physical stack
+	**             (seg_id_t) segid: Segment ID of the stack
+	*/
+
+	sys_strings_t * (*allocate_sys_strings) (struct _seg_manager_t *self, seg_id_t *segid);
+	/* Allocates a system string table
+	** Returns   : (dstack_t *): The physical stack
+	**             (seg_id_t) segid: Segment ID of the stack
+	** See also sys_string_acquire();
+	*/
 
 	// memory operations
 	void (*mset) (struct _seg_manager_t* self, int offset, int c, size_t n, int id, int flag);	// memset

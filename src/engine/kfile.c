@@ -521,10 +521,10 @@ kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #endif /* !_WIN32 */
 
 
-void
-kGetSaveDir(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kGetSaveDir(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-  s->acc = s->save_dir + 2; /* +2 to step over heap block size */
+	return make_reg(s->sys_strings_segment, SYS_STRING_SAVEDIR);
 }
 
 

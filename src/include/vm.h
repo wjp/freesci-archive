@@ -27,12 +27,14 @@
 
 /* VM and kernel declarations */
 
+
 #include <script.h>
 #include <heap.h>
 #include <vocabulary.h>
 #include <versions.h>
 #include <seg_manager.h>
 #include <vm_types.h>
+#include <sys_strings.h>
 
 #ifndef _SCI_VM_H
 #define _SCI_VM_H
@@ -141,6 +143,11 @@ typedef struct {
 	int type; /* Same as exec_stack_t.type */
 } calls_struct_t;
 
+typedef struct {
+	int script_id; /* Script ID this local variable block belongs to */
+	reg_t *locals;
+	int nr;
+} local_variables_t;
 
 typedef struct {
 	reg_t pos; /* Object offset within its script; for clones, this is their base */
@@ -185,10 +192,15 @@ typedef struct {
 	int objects_nr; /* Number of objects and classes */
 	int objects_allocated; /* Number of allocated objects */
 
-	int locals_offset; /* Offset of the local variables within the script */
-	reg_t *locals; /* Script-local variables */
-	int locals_nr; /* Number of these */
+	int locals_offset;
+	int locals_segment; /* The local variable segment */
+	local_variables_t *locals_block;
 } script_t;
+
+typedef struct {
+	int nr; /* Number of stack entries */
+	reg_t *entries;
+} dstack_t; /* Data stack */
 
 #define CLONE_USED -1
 
@@ -205,10 +217,13 @@ typedef struct {
 
 typedef struct _mem_obj {
 	int type;
-        int size;
+        int segmgr_id; /* Internal value used by the seg_manager's hash map */
 	union {
 		script_t script;
 		clone_table_t clones;
+		local_variables_t locals;
+		dstack_t stack;
+		sys_strings_t sys_strings;
 	} data;
 } mem_obj_t;
 
@@ -469,7 +484,10 @@ vm_handle_fatal_error(struct _state *s, int line, char *file);
 
 void
 script_debug(struct _state *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *objp,
-	     unsigned int *restadjust, int bp);
+	     unsigned int *restadjust,
+	     seg_id_t *segids, reg_t **variables, reg_t **variables_base,
+	     int *variables_nr,
+	     int bp);
 /* Debugger functionality
 ** Parameters: (state_t *) s: The state at which debugging should take place
 **             (reg_t *) pc: Pointer to the program counter
@@ -477,6 +495,11 @@ script_debug(struct _state *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_
 **             (stack_ptr_t *) pp: Pointer to the frame pointer
 **             (reg_t *) objp: Pointer to the object base pointer
 **             (unsigned int *) restadjust: Pointer to the &rest adjustment value
+**	       (seg_id_t *) segids: four-element array containing segment IDs for locals etc.
+**	       (reg_t **) variables: four-element array referencing registers for globals etc.
+**	       (reg_t **) variables_base: four-element array referencing
+**                                        register bases for temps etc.
+**	       (int *) variables_nr: four-element array giving sizes for params etc. (may be NULL)
 **             (int) bp: Flag, set to 1 when a breakpoint is triggered
 ** Returns   : (void)
 */

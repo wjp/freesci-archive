@@ -8,7 +8,8 @@ gfxdriverdir = $(libdir)/freesci/gfx
 #gfxdriver_LTLIBRARIES = @fsci_xlib_dl@ @fsci_ggi_dl@ @fsci_sdl_dl@
 
 noinst_LIBRARIES = libscidrivers.a
-libscidrivers_a_SOURCES = gfx_drivers.c xlib_driver.c ggi_driver.c sdl_driver.c directfb_driver.c
+libscidrivers_a_SOURCES = gfx_drivers.c xlib_driver.c ggi_driver.c sdl_driver.c directfb_driver.c \
+				null_driver.c
 #libscidrivers_a_OBJECTS = gfx_drivers.o @fsci_xlib_st@ @fsci_ggi_st@ @fsci_sdl_st@
 
 
