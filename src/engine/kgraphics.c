@@ -1465,7 +1465,9 @@ _k_invoke_view_list(state_t *s, heap_ptr list, int funct_nr, int argc, int argp)
 
 static int _cmp_view_object(const void *obj1, const void *obj2) /* Used for qsort() later on */
 {
-  int retval = (((view_object_t *)obj1)->y) - (((view_object_t *)obj2)->y);
+  int retval = (((view_object_t *)obj1)->real_y) - (((view_object_t *)obj2)->real_y);
+  if (retval == 0)
+    retval = (((view_object_t *)obj1)->z) - (((view_object_t *)obj2)->z);
   if (retval == 0)
     return (((view_object_t *)obj2)->index_nr) - (((view_object_t *)obj1)->index_nr);
   return retval;
@@ -1528,10 +1530,10 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int func
     }
 
     retval[i].obj = obj;
-    retval[i].index_nr = i;
 
     retval[i].x = GET_SELECTOR(obj, x);
-    retval[i].y = GET_SELECTOR(obj, y) - GET_SELECTOR(obj, z);
+    retval[i].y = (retval[i].real_y = GET_SELECTOR(obj, y)) - (retval[i].z = GET_SELECTOR(obj, z));
+    retval[i].index_nr = i;
 
     if (has_nsrect) {
       retval[i].nsLeft = GET_SELECTOR(obj, nsLeft);
