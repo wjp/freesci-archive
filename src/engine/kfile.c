@@ -711,7 +711,15 @@ kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		return;
 	}
 
-	if (savedir_nr > MAX_SAVEGAME_NR-1) {
+	if ((savedir_nr < 0) || (savedir_nr > MAX_SAVEGAME_NR-1)) {
+		_chdir_restoredir(workdir);
+		s->acc = 0;
+		return;
+	}
+
+	savedir_nr = _savegame_indices[savedir_nr].id;
+
+	if ((savedir_nr < 0) || (savedir_nr > MAX_SAVEGAME_NR-1)) {
 		_chdir_restoredir(workdir);
 		s->acc = 0;
 		return;

@@ -1,3 +1,8 @@
+2003-01-25  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/engine/kfile.c (kCheckSaveGame): Made this function use the
+	savegame indices array.
+
 2003-01-22  Rune Orsval  <u951663@daimi.au.dk>
 
 	* src/gfx/drivers/xlib_dirver.c (xlib_init_specific): Fixed
