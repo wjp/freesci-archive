@@ -516,7 +516,12 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			case 's': { /* Copy string */
 				char *tempsource = kernel_lookup_text(s, arguments[paramindex], arguments[paramindex + 1]);
 				int slen = strlen(tempsource);
-				int extralen = str_leng - slen;
+				int extralen;
+				
+				if (str_leng < slen)
+					str_leng = slen;
+				
+				extralen = str_leng - slen;
 				CHECK_OVERFLOW1(target, extralen);
 
 				if (arguments[paramindex] > 1000) /* Heap address? */
@@ -562,15 +567,14 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 						arguments[paramindex] = (~0xffff) | arguments[paramindex];
 
 				nrlen = sprintf(target, format_string, arguments[paramindex++]);
+
+				if ((str_leng > nrlen) && !align)
+					align = 1;
+				else if (str_leng < nrlen)
+					str_leng = nrlen;
+
+				CHECK_OVERFLOW1(target, str_leng);
 				target += nrlen;
-				if (str_leng > nrlen) {
-					int delta = str_leng - nrlen;
-					str_leng = 0;
-					memmove(target - nrlen + delta, target - nrlen, nrlen);
-					memset(target - nrlen, ' ', delta);
-					target += delta;
-				}
-				CHECK_OVERFLOW1(target, 0);
 
 				unsigned_var = 0;
 
@@ -592,8 +596,9 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				if (padding) {
 					if (align > 0) {
 						memmove(writestart + padding,
-							writestart, padding);
+							writestart, written);
 						memset(writestart, fillchar, padding);
+						target += padding;
 					} else {
 						memset(target, ' ', padding);
 						target += padding;
