@@ -54,6 +54,7 @@ extern sound_server_t sound_server_sdl;
 
 #ifdef _WIN32
 extern sound_server_t sound_server_win32p;
+extern sound_server_t sound_server_win32e_qp;
 extern sound_server_t sound_server_win32e;
 #endif
 
@@ -70,6 +71,7 @@ sound_server_t *sound_servers[] = {
 
 #  ifdef _WIN32
 	&sound_server_win32p,
+	&sound_server_win32e_qp,
 	&sound_server_win32e,
 #  endif
 
@@ -200,7 +202,7 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 		} else {
 			if (s->sound_mute > 0)
 				s->sound_volume = s->sound_mute;
-			s->sound_mute = 0;
+			s->sound_mute = MUTE_OFF;
 		}
 
 		/* let's send a volume change across the wire */
@@ -210,15 +212,15 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 
 		/* return the mute status */
 		if (s->sound_mute)
-			return 0;
+			return MUTE_ON;
 		else
-			return 1;
+			return MUTE_OFF;
 
 	} else if (command == SOUND_COMMAND_GET_MUTE) {
 		if (s->sound_mute)
-			return 0;
+			return MUTE_ON;
 		else
-			return 1;
+			return MUTE_OFF;
 
 	} else if (command == SOUND_COMMAND_TEST) {
 		int *retval = NULL;
@@ -585,7 +587,6 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 		}
 
 	} else if (command == SCI_MIDI_SET_SIGNAL) {
-
 		if (param == SCI_MIDI_SET_SIGNAL_LOOP) {
 			song->loopmark = song->pos;
 		} else if (param <= 127) {
@@ -594,7 +595,6 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 
 	} else {
 		/* just your regular midi event.. */
-
 		if (song->flags[command & 0x0f] & midi_playflag) {
 			switch (command & 0xf0) {
 
@@ -782,7 +782,7 @@ int init_midi_device (state_t *s) {
 	}
 
 	s->sound_volume = 0xc;
-	s->sound_mute = 0;
+	s->sound_mute = MUTE_OFF;
 
 	return 0;
 }

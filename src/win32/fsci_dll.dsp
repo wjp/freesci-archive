@@ -389,6 +389,10 @@ SOURCE=..\sound\event_ss_win32.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\sound\event_ss_win32_qp.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\sound\midi_adlib.c
 # End Source File
 # Begin Source File

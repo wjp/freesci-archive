@@ -38,7 +38,7 @@
 #include <sci_memory.h>
 
 HMIDIOUT devicename;				/* global handle to midiOut device */
-MIDIHDR midioutput;					/* used by midiOut* */
+MIDIHDR midioutput;					/* used to send midi data */
 int devicenum			= -1;		/* device number */
 
 
@@ -88,6 +88,7 @@ int midiout_win32mci_open(void)
 	MMRESULT ret;					/* return value of MCI calls */
 	MIDIOUTCAPS devicecaps;			/* device capabilities structure */
 	int loop				= 0;
+	int device_score = 0;
 
 	numdevs = midiOutGetNumDevs();
 
@@ -99,50 +100,123 @@ int midiout_win32mci_open(void)
 
 	fprintf(stderr, "MCI MIDI output devices found: %d \n",numdevs);
 
-
-	for (loop = 0; loop < numdevs; loop++)
-	{
-		ret = midiOutGetDevCaps(loop, &devicecaps, sizeof(devicecaps));
-		if (MMSYSERR_NOERROR != ret)
+	if (devicenum == -1)
+		for (loop = 0; loop < numdevs; loop++)
 		{
-			fprintf(stderr, "midiOutGetDevCaps: ");
-			return (_win32mci_print_error(ret));
-		}
+			ret = midiOutGetDevCaps(loop, &devicecaps, sizeof(devicecaps));
+			if (MMSYSERR_NOERROR != ret)
+			{
+				fprintf(stderr, "midiOutGetDevCaps: ");
+				return (_win32mci_print_error(ret));
+			}
 
-		fprintf(stderr, "MCI Device %d: ",loop);
-		fprintf(stderr, "%s, ", devicecaps.szPname);
-		/* which kind of device would be the best to default to? */
-		switch (devicecaps.wTechnology)
-		{
-			case MOD_FMSYNTH: fprintf(stderr, "FM synth, "); break;
-			case MOD_MAPPER: fprintf(stderr, "MIDI mapper, "); break;
+			fprintf(stderr, "MIDI Out %02d: ", loop);
+			fprintf(stderr, "[%s]\n             ", devicecaps.szPname);
+
+			/* which kind of device would be the best to default to? */
+			/*   ignore hardware ports because they may not be connected
+			**   midi mapper is what is selected in control panel and should be first preference
+			**   software synths will take a lot of cpu time so they should be lower
+			**   1. MOD_MAPPER
+			**   2. MOD_WAVETABLE
+			**   3. MOD_SQSYNTH
+			**   4. MOD_SYNTH
+			**   5. MOD_FMSYNTH
+			**   6. MOD_SWSYNTH
+			**   7. MOD_MIDIPORT
+			*/
+			switch (devicecaps.wTechnology)
+			{
+				case MOD_MAPPER:
+					fprintf(stderr, "MIDI mapper, ");
+					devicenum = loop;
+					device_score = 7;
+					break;
+
 #ifdef MOD_WAVETABLE
-			case MOD_WAVETABLE: fprintf(stderr, "Wavetable synth, "); break;
+				case MOD_WAVETABLE:
+					fprintf(stderr, "Hardware wavetable synth, ");
+					if (device_score < 6)
+					{
+						devicenum = loop;
+						device_score = 6;
+					}
+					break;
 #endif
-			case MOD_MIDIPORT: fprintf(stderr, "MIDI port, "); break;
-			case MOD_SYNTH: fprintf(stderr, "Generic synth, "); break;
-			default: fprintf(stderr, "Unknown synth, "); break;
-		}
+
+				case MOD_SQSYNTH:
+					fprintf(stderr, "Square wave synth, ");
+					if (device_score < 5)
+					{
+						devicenum = loop;
+						device_score = 5;
+					}
+					break;
+
+				case MOD_SYNTH:
+					fprintf(stderr, "Generic synth, ");
+					if (device_score < 4)
+					{
+						devicenum = loop;
+						device_score = 4;
+					}
+					break;
+
+				case MOD_FMSYNTH:
+					fprintf(stderr, "FM synth, ");
+					if (device_score < 3)
+					{
+						devicenum = loop;
+						device_score = 3;
+					}
+					break;
+
+				case MOD_SWSYNTH:
+					fprintf(stderr, "Software synth, ");
+					if (device_score < 2)
+					{
+						devicenum = loop;
+						device_score = 2;
+					}
+					break;
+
+				case MOD_MIDIPORT:
+					fprintf(stderr, "MIDI hardware port, ");
+					if (device_score < 1)
+					{
+						devicenum = loop;
+						device_score = 1;
+					}
+					break;
+
+				default:
+					fprintf(stderr, "Unknown synth, ");
+					if (devicenum == -1)
+					{
+						devicenum = loop;
+						device_score = 0;
+					}
+					break;
+			}
 
 		fprintf(stderr, "%d voices\n", devicecaps.wVoices);
 
 	}
 
-	if (-1 == devicenum)
-	{
-		devicenum = numdevs - 1;
-	}
-
 	ret = midiOutOpen(&devicename, devicenum, 0, 0, CALLBACK_NULL);
 	if (MMSYSERR_NOERROR != ret)
 	{
-		fprintf(stderr, "midiOutOpen of device #%d: ",devicenum);
+		fprintf(stderr, "midiOutOpen of device #%02d: ",devicenum);
 		return (_win32mci_print_error(ret));
-	} 
-		else
-		{
-			fprintf(stderr, "Successfully opened MCI MIDI device #%d\n",devicenum);
-		}
+	}
+	else
+	{
+		fprintf(stderr, "Successfully opened MCI MIDI device #%02d\n",devicenum);
+	}
+
+	/* set up midihdr struct */
+	memset(&midioutput, 0, sizeof(midioutput));
+	midioutput.dwBytesRecorded	= 1;	/* number of events that will be sent */
 
 	return 0;
 }
@@ -170,13 +244,11 @@ int midiout_win32mci_flush(void)
 int midiout_win32mci_write(guint8 *buffer, unsigned int count)
 {
 	MMRESULT ret;
-	unsigned int midioutputsize = 0;
+	unsigned int midioutputsize;
 
 	/* first, we populate the fields of the MIDIHDR */
 	midioutput.lpData			= buffer;		/* pointer to a MIDI event stream */
-	midioutput.dwBufferLength	= count;			/* size of buffer */
-	midioutput.dwBytesRecorded	= 1;		/* actual number of events */
-	midioutput.dwFlags			= 0;			/* MSDN sez to init this to zero */
+	midioutput.dwBufferLength	= count;		/* size of buffer */
 
 	midioutputsize = sizeof(midioutput);
 
@@ -218,7 +290,7 @@ int midiout_win32mci_write(guint8 *buffer, unsigned int count)
 
 midiout_driver_t midiout_driver_win32mci = {
   "win32mci",
-  "v0.01",
+  "0.1",
   &midiout_win32mci_set_parameter,
   &midiout_win32mci_open,
   &midiout_win32mci_close,

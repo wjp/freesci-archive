@@ -1,3 +1,25 @@
+2001-11-23  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/include/win32/messages.h: Removed SOUND_DATA message.
+
+	* src/sound/soundserver.h:
+	* src/sound/sound.c: Added MUTE_ON and MUTE_OFF constants.
+
+	* src/sound/polled_ss.c: Improved commenting (slightly).
+
+	* src/sound/event_ss.c: Cleaned up code that checks for running
+	status. Fixed SOUND_COMMAND_TEST.
+
+	* src/win32/fsci_dll.dsp:
+	* src/sound/event_ss_win32_qp.c: Added fast event ss Win32 sound
+	driver (buggy).
+
+	* src/sound/event_ss_win32.c: Fixed memory leak.
+
+	* src/sound/midiout_win32.c: Fixed MIDI device selection to no longer
+	be arbitrary when a device is not specified in the config file (see
+	source for details on device preferences).
+
 2001-11-21  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/engine/grammar.c:
@@ -10,7 +32,7 @@
 	* src/scicore/script.c:
 	* src/scicore/vocab.c: Changed C++ reserved words:
 	delete -> del, class -> w_class.
-	
+
 	* src/include/sound.h:
 	* src/include/soundserver.h:
 	* src/include/win32/messages.h:
@@ -19,10 +41,10 @@
 	* src/sound/polled_ss.c:
 	* src/sound/polled_ss_win32.c: Updates to allow for event sound
 	server.
-	
+
 	* src/sound/event_ss.c:
 	* src/sound/event_ss_win32.c: Event sound server with Win32 driver.
-	
+
 	* src/win32/fsci_dll.dsp: Increased warning level for sound server
 	files.
 

@@ -42,12 +42,8 @@
 
 static void do_sound(sound_server_state_t *sss)
 {
-	static unsigned int ticks_to_wait;	/* implicitly set to 0 initially */
-	/* number of ticks to wait before next MIDI command */
-
 	static midi_op_t cached_cmd;
-	static midi_op_t *ptr_cached_cmd;
-	/* cached MIDI command stored while waiting for ticks to == 0*/
+	/* cached MIDI command stored while waiting for ticks to == 0 */
 
 	/* if sound suspended do nothing */
 	if (sss->suspended)
@@ -82,24 +78,22 @@ static void do_sound(sound_server_state_t *sss)
 			midi_op_t this_cmd;
 			static unsigned char last_cmd;
 			unsigned char msg_type;
-			this_cmd.midi_cmd = 0;
-			this_cmd.delta_time = 0;
 
-			/* see if a waiting MIDI command is now ready */
-			if (ptr_cached_cmd)
+			/* see if there is a MIDI command waiting to be played */
+			if (cached_cmd.midi_cmd != 0)
 			{
-				if (ticks_to_wait > 0)
+				if (cached_cmd.delta_time > 0)
 				{
-					ticks_to_wait--;	/* maybe next time around! */
+					cached_cmd.delta_time--;	/* maybe next time around! */
 					return;
 
 				} else {
 					/* the tick is now so build midi cmd from cache */
 					this_cmd.delta_time = 0;
-					this_cmd.midi_cmd = ptr_cached_cmd->midi_cmd;
-					this_cmd.param1 = ptr_cached_cmd->param1;
-					this_cmd.param2 = ptr_cached_cmd->param2;
-					ptr_cached_cmd = 0;
+					this_cmd.midi_cmd = cached_cmd.midi_cmd;
+					this_cmd.param1 = cached_cmd.param1;
+					this_cmd.param2 = cached_cmd.param2;
+					cached_cmd.midi_cmd = 0;
 				}
 
 			} else {
@@ -147,12 +141,14 @@ static void do_sound(sound_server_state_t *sss)
 
 				} else if (msg_type >= '\xF') {
 					/* SysEx cancels running status */
-					ptr_cached_cmd = 0;
+					last_cmd = 0;
 
 					/* varying parameters - yay! */
+
+					/* this command is ignored */
 					if (this_cmd.midi_cmd == 0xF0)
 					{
-						/* keep looping until 0xF7 or non-SysEx/realtime category command */
+						/* keep looping until 0xF7 or SysEx */
 						while (
 						       (sss->current_song->data[(sss->current_song->pos) + 1] != 0xF7) ||
 						       ( (sss->current_song->data[(sss->current_song->pos) + 1] >= 0x80) &&
@@ -163,8 +159,7 @@ static void do_sound(sound_server_state_t *sss)
 
 					/* } else if (this_cmd.midi_cmd == 0xF1) { ...... */
 
-					} else if (this_cmd.midi_cmd == SCI_MIDI_EOT) {
-						/* end of track */
+					} else if (this_cmd.midi_cmd == SCI_MIDI_END_OF_TRACK) {	/* 0xFC */
 						if ((--(sss->current_song->loops) != 0) && sss->current_song->loopmark)
 						{
 							sss->current_song->pos = sss->current_song->loopmark;
@@ -181,7 +176,7 @@ static void do_sound(sound_server_state_t *sss)
 					}
 
 				} else {
-					fprintf(stderr, "ERROR: do_sound() MIDI command 0x%02X is not a command!\n", this_cmd.midi_cmd);
+					fprintf(stderr, "ERROR: do_sound() MIDI command 0x%02X is not recognised\n", this_cmd.midi_cmd);
 					exit(-1);
 				}
 			}
@@ -194,7 +189,6 @@ static void do_sound(sound_server_state_t *sss)
 				cached_cmd.midi_cmd = this_cmd.midi_cmd;
 				cached_cmd.param1 = this_cmd.param1;
 				cached_cmd.param2 = this_cmd.param2;
-				ptr_cached_cmd = &cached_cmd;
 				return;
 			}
 
@@ -225,7 +219,7 @@ sci0_event_ss(sound_server_state_t *ss_state)
 	/*** initialisation ***/
 	ss_state->songlib = &_songp;	/* song library (the local song cache) */
 	memset(ss_state->playing_notes, 0, 16 * sizeof(playing_notes_t));
-	memset(ss_state->mute_channel, 0, MIDI_CHANNELS * sizeof(byte));
+	memset(ss_state->mute_channel, MUTE_OFF, MIDI_CHANNELS * sizeof(byte));
 	ss_state->master_volume = 0;
 	ss_state->sound_cue = 127;
 
@@ -298,16 +292,16 @@ sci0_event_ss(sound_server_state_t *ss_state)
 						 (int)new_event->value, (word)new_event->handle);
 
 			} else if (new_event->signal == SOUND_COMMAND_MUTE_CHANNEL) {
-				set_channel_mute((int)new_event->value, 0, ss_state);
+				set_channel_mute((int)new_event->value, MUTE_ON, ss_state);
 
 			} else if (new_event->signal == SOUND_COMMAND_UNMUTE_CHANNEL) {
-				set_channel_mute((int)new_event->value, 1, ss_state);
+				set_channel_mute((int)new_event->value, MUTE_OFF, ss_state);
 
 			} else if (new_event->signal == SOUND_COMMAND_SET_VOLUME) {
 				set_master_volume((unsigned char)new_event->value, ss_state);
 
 			} else if (new_event->signal == SOUND_COMMAND_TEST) {
-				sound_check((int)new_event->value, ss_state);
+				sound_check(midi_polyphony, ss_state);
 
 			} else if (new_event->signal == SOUND_COMMAND_STOP_ALL) {
 				stop_all(ss_state);

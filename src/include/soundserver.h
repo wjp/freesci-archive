@@ -79,8 +79,8 @@
 
 #define MIDI_CHANNELS 16
 
-#define MUTE_ON  0
-#define MUTE_OFF 1
+#define MUTE_ON  1
+#define MUTE_OFF 0
 
 #define POLYPHONY(song, channel) song->data[(channel << 1) + 1]
 

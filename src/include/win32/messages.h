@@ -45,15 +45,6 @@
 /* LP == Long Parameter */
 
 
-/*** SOUND DATA ***/
-
-#define UM_SOUND_DATA_MSG                                "UM_SOUND_DATA-{4529B2CC-990C-4d24-9207-406EF6C8C3AA}"
-/* Used for transmission of data pointers
-** UP: pointer to data
-** LP: size of data
-*/
-
-
 /*** SOUND COMMANDS (sent to the sound server) ***/
 
 #define UM_SOUND_COMMAND_INIT_HANDLE_MSG                 "UM_SOUND_COMMAND_INIT_HANDLE-{4529B2CC-990C-4d24-9207-406EF6C8C3AA}"
@@ -82,7 +73,7 @@
 
 #define UM_SOUND_COMMAND_SET_MUTE_MSG                    "UM_SOUND_COMMAND_SET_MUTE-{4529B2CC-990C-4d24-9207-406EF6C8C3AA}"
 /* Mutes/unmutes sound (returns mute setting if SendMessage() is used)
-** UP: mutes sound if 0, unmutes otherwise (<= 32 bits)
+** UP: mutes sound if MUTE_ON, unmutes otherwise (<= 32 bits)
 ** LP: unused
 */
 
@@ -285,7 +276,6 @@
 		fprintf(stderr, "WARNING: Failed to register message #name\n");
 
 #define DECLARE_MESSAGES() \
-	DECLARE_USER_MESSAGE(SOUND_DATA) \
 	DECLARE_USER_MESSAGE(SOUND_COMMAND_INIT_HANDLE) \
 	DECLARE_USER_MESSAGE(SOUND_COMMAND_PLAY_HANDLE) \
 	DECLARE_USER_MESSAGE(SOUND_COMMAND_LOOP_HANDLE) \
