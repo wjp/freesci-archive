@@ -1221,14 +1221,8 @@ x_map_key(gfx_driver_t *drv, XEvent *key_event, char *character)
 		XLookupString(&(key_event->xkey), character, 1, &xkey, NULL);
 	}
 
-	if ((xkey >= 'A') && (xkey <= 'Z'))
-		return xkey;
-	if ((xkey >= 'a') && (xkey <= 'z'))
-		return xkey;
-	if ((xkey >= '0') && (xkey <= '9'))
-		return xkey;
-	if (xkey == ' ')
-		return xkey;
+	if ((xkey >= ' ') && (xkey <= '~'))
+		return xkey; /* All printable ASCII characters */
 
 	switch (xkey) {
 	case XK_KP_Add: return '+';

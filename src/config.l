@@ -75,13 +75,13 @@ struct {
 
 typedef struct _file_stack {
 	char *name;
-	FILE *file;
+	YY_BUFFER_STATE handle;
 	struct _file_stack *next;
 } file_stack_t;
 
-file_stack_t *file_stack = NULL;
-
-char *yy_filename = NULL;
+static file_stack_t *file_stack = NULL;
+static char *yy_filename = NULL;
+static YY_BUFFER_STATE yy_fsci_active_buffer;
 
 static int
 push_file(char *name);
@@ -500,7 +500,7 @@ push_file(char *name)
 
 	if (yyin) {
 		newfs = malloc(sizeof(struct _file_stack));
-		newfs->file = yyin;
+		newfs->handle = yy_fsci_active_buffer;
 		newfs->name = yy_filename;
 
 		newfs->next = file_stack;
@@ -508,7 +508,8 @@ push_file(char *name)
 	}
 
 	yy_filename = strdup(name);
-	yyin = newfile;
+	yy_fsci_active_buffer = yy_create_buffer(newfile, YY_BUF_SIZE);
+	yy_switch_to_buffer(yy_fsci_active_buffer);
 
 	return 0;
 }
@@ -518,24 +519,26 @@ pop_file()
 {
 	if (file_stack) {
 		void *goner = file_stack;
-
+		yy_delete_buffer(yy_fsci_active_buffer);
 		fclose(yyin);
-		yyin = file_stack->file;
+		yy_fsci_active_buffer = file_stack->handle;
+		yy_switch_to_buffer(yy_fsci_active_buffer);
+
 		free(yy_filename);
 		yy_filename = file_stack->name;
 		file_stack = file_stack->next;
 
 		free(goner);
-
 		return 0;
 	} else { 
-		if (yyin) {
-			fclose(yyin);
-			yyin = NULL;
-		}
 		if (yy_filename) {
 			free(yy_filename);
 			yy_filename = NULL;
+		}
+	        if (yyin) {
+			yy_delete_buffer(yy_fsci_active_buffer);
+			fclose(yyin);
+			yyin = NULL;
 		}
 		return 1; /* Done */
 	}

@@ -1,3 +1,11 @@
+2003-07-09  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/xlib_driver.c (x_map_key): Allow all printable
+	ASCII characters to be returned by the xlib driver
+
+	* src/config.l (push_file): Fixed use of included files to use lex
+	buffers instead of hacking around with yyin
+
 2003-07-08  Rune Orsval  <u951663@daimi.au.dk>
 
 	* src/gfx/drivers/xlib_driver.c (x_map_key): Handle the Space key correctly.
