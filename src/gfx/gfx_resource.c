@@ -142,7 +142,9 @@ gfx_xlate_pixmap(gfx_pixmap_t *pxm, gfx_mode_t *mode, gfx_xlate_filter_t filter)
 					i, pxm->colors_nr, pxm->colors[i].r, pxm->colors[i].g, pxm->colors[i].b);
 				pxm->colors[i].global_index = 0;
 			}
+			/*
 			GFXDEBUG("alloc(%02x/%02x/%02x) -> %d\n",  pxm->colors[i].r,pxm->colors[i].g,pxm->colors[i].b,pxm->colors[i].global_index);
+			*/
 		}
 
 		pxm->flags |= GFX_PIXMAP_FLAG_PALETTE_ALLOCATED;

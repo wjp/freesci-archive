@@ -359,6 +359,7 @@ gfxop_free_color(gfx_state_t *state, gfx_color_t *color);
 ** This function is a no-op in non-index mode, or if color is a system color.
 */
 
+
 /**********************/
 /* Pointer and IO ops */
 /**********************/

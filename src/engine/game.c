@@ -122,10 +122,12 @@ _reset_graphics_input(state_t *s)
   if (sci_version <= SCI_VERSION_01) {
     int i;
 
-    for (i = 0; i < 16; i++)
-      if (gfxop_set_color(s->gfx_state, &(s->ega_colors[i]), sci0_palette[i][0],
-			  sci0_palette[i][1], sci0_palette[i][2], 0, -1, -1))
-	return 1;
+    for (i = 0; i < 16; i++) {
+	    if (gfxop_set_color(s->gfx_state, &(s->ega_colors[i]), sci0_palette[i][0],
+				sci0_palette[i][1], sci0_palette[i][2], 0, -1, -1))
+		    return 1;
+	    gfxop_set_system_color(s->gfx_state, &(s->ega_colors[i]));
+    }
   } else
     if (gfxop_set_color(s->gfx_state, &(s->ega_colors[0]), 0, 0, 0, 0, -1, -1)) return 1; /* We usually need black */
 

@@ -670,7 +670,7 @@ ggi_set_palette(gfx_driver_t *drv, int index, byte red, byte green, byte blue)
 	color.g = (green << 8) | green;
 	color.b = (blue << 8) | blue;
 
-	fprintf(stderr,"Setting index %d to %04x %04x %04x\n", index, color.r, color.g, color.b);
+	/*	DEBUG_POINTER(stderr,"Setting index %d to %04x %04x %04x\n", index, color.r, color.g, color.b); */
 
 	if (ggiSetPalette(VISUAL, index, 1, &color) < 0)
 		return GFX_ERROR;

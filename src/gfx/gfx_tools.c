@@ -143,10 +143,11 @@ gfx_free_pixmap(gfx_driver_t *driver, gfx_pixmap_t *pxm)
 
 		if (driver->mode->palette
 		    && pxm->flags & GFX_PIXMAP_FLAG_PALETTE_ALLOCATED
-		    && !(pxm->flags & GFX_PIXMAP_FLAG_DONT_UNALLOCATE_PALETTE)) {
+		    && !(pxm->flags & GFX_PIXMAP_FLAG_DONT_UNALLOCATE_PALETTE)
+		    && !(pxm->flags & GFX_PIXMAP_FLAG_EXTERNAL_PALETTE)) {
 			int i;
 			int error = 0;
-GFXDEBUG("UNALLOCATING %d\n", pxm->colors_nr);
+			GFXDEBUG("UNALLOCATING %d\n", pxm->colors_nr);
 			for (i = 0; i < pxm->colors_nr; i++)
 				if (gfx_free_color(driver->mode->palette, pxm->colors + i))
 					error++;
@@ -266,8 +267,10 @@ gfx_alloc_color(gfx_palette_t *pal, gfx_pixmap_color_t *color)
 
 	
 	if (color->global_index != GFX_COLOR_INDEX_UNMAPPED) {
+#if 0
 		GFXDEBUG("Attempt to allocate color twice: index 0x%d (%02x/%02x/%02x)!\n",
 			 color->global_index, color->r, color->g, color->b);
+#endif
 		return GFX_OK;
 	}
 
@@ -323,6 +326,7 @@ gfx_free_color(gfx_palette_t *pal, gfx_pixmap_color_t *color)
 
 	if (color->global_index == GFX_COLOR_INDEX_UNMAPPED) {
 		GFXWARN("Attempt to free unmapped color %02x/%02x/%02x!\n", color->r, color->g, color->b);
+		BREAKPOINT();
 		return GFX_ERROR;
 	}
 

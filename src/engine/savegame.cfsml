@@ -605,6 +605,8 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
 }
 
 void
+_gfxw_set_ops_BOX(gfxw_widget_t *prim);
+void
 _gfxw_set_ops_RECT(gfxw_widget_t *prim);
 void
 _gfxw_set_ops_LINE(gfxw_widget_t *prim);
@@ -736,7 +738,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
 
 	if (!strcmp(lastval, "\\null\\")) {
 		*widget = NULL;
-		return;
+		return 0;
 		/* That was easy */
 	}
 

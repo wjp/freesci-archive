@@ -1,3 +1,11 @@
+2001-01-07  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/savegame.cfsml (read_any_widget): Missing prototype
+	and missing return value fixed, as suggested by Petr
+
+	* src/gfx/operations.c (gfxop_set_color): Fixed color problems
+	in color index mode
+
 2001-01-06  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kernel.c (kMemoryInfo): MemoryInfo mode 4, by

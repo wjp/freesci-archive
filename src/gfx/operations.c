@@ -127,8 +127,8 @@ _gfxop_grab_pixmap(gfx_state_t *state, gfx_pixmap_t **pxmp, int x, int y,
 	}
 
 	if (_gfxop_clip(zone, gfx_rect(0, 0,
-					320 * state->driver->mode->xfact,
-					200 * state->driver->mode->yfact)))
+				       320 * state->driver->mode->xfact,
+				       200 * state->driver->mode->yfact)))
 		return GFX_ERROR;
 
 	if (!*pxmp)
@@ -201,11 +201,10 @@ _gfxop_install_pixmap(gfx_driver_t *driver, gfx_pixmap_t *pxm)
 		int error;
 
 		for (i = 0; i < pxm->colors_nr; i++) {
-			fprintf(stderr,"_----------setting %d colors-------\n", i);
 			if ((error = driver->set_palette(driver, pxm->colors[i].global_index,
-						pxm->colors[i].r,
-						pxm->colors[i].g,
-						pxm->colors[i].b))) {
+							 pxm->colors[i].r,
+							 pxm->colors[i].g,
+							 pxm->colors[i].b))) {
 
 				GFXWARN("driver->set_palette(%d, %02x/%02x/%02x) failed!\n",
 					pxm->colors[i].global_index,
@@ -717,6 +716,12 @@ gfxop_set_color(gfx_state_t *state, gfx_color_t *color, int r, int g, int b, int
 		color->control = control;
 
 	if (mask & GFX_MASK_VISUAL) {
+
+		color->visual.r = r;
+		color->visual.g = g;
+		color->visual.b = b;
+		color->alpha = a;
+
 		if (PALETTE_MODE) {
 			pixmap_color.r = r;
 			pixmap_color.g = g;
@@ -733,11 +738,6 @@ gfxop_set_color(gfx_state_t *state, gfx_color_t *color, int r, int g, int b, int
 				}
 			}
 			color->visual.global_index = pixmap_color.global_index;
-		} else { /* normal color mode */
-			color->visual.r = r;
-			color->visual.g = g;
-			color->visual.b = b;
-			color->alpha = a;
 		}
 	}
 	return GFX_OK;
@@ -2020,6 +2020,8 @@ gfxop_grab_pixmap(gfx_state_t *state, rect_t area)
 	_gfxop_scale_rect(&area, state->driver->mode);
 	if (_gfxop_grab_pixmap(state, &pixmap, area.x, area.y, area.xl, area.yl, 0, &resultzone))
 		return NULL; /* area CUT the visual screen had a null or negative size */
+
+	pixmap->flags |= GFX_PIXMAP_FLAG_PALETTE_SET | GFX_PIXMAP_FLAG_DONT_UNALLOCATE_PALETTE;
 
 	return pixmap;
 }
