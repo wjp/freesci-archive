@@ -30,7 +30,7 @@
 #define _SCI_KDEBUG_H_
 
 struct _state;
-#define SCIk_DEBUG_MODES 13
+#define SCIk_DEBUG_MODES 14
 
 extern const char *SCIk_Debug_Names[SCIk_DEBUG_MODES];
 /* The various debug areas */
@@ -59,7 +59,7 @@ extern const char *SCIk_Debug_Names[SCIk_DEBUG_MODES];
 #define SCIkPARSER     s, __FILE__, __LINE__, SCIkPARSER_NR
 #define SCIkMENU       s, __FILE__, __LINE__, 11
 #define SCIkSAID       s, __FILE__, __LINE__, 12
-
+#define SCIkFILE       s, __FILE__, __LINE__, 13
 
 #define SCI_KERNEL_DEBUG
 

@@ -54,13 +54,19 @@ kFOpen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int retval = 1; /* Ignore file_handles[0] */
   FILE *file = NULL;
 
+  SCIkdebug(SCIkFILE, "Opening file %s with mode %d\n", filename, mode);
   if ((mode == _K_FILE_MODE_OPEN_OR_FAIL) || (mode == _K_FILE_MODE_OPEN_OR_CREATE))
+{
     file = fopen(filename, "r+"); /* Attempt to open existing file */
-
+    SCIkdebug(SCIkFILE, "Opening file %s with mode %d\n", filename, mode);
+}
   if ((!file) && ((mode == _K_FILE_MODE_OPEN_OR_CREATE) || (mode == _K_FILE_MODE_CREATE)))
+{
     file = fopen(filename, "w+"); /* Attempt to create file */
-
+    SCIkdebug(SCIkFILE, "Creating file %s with mode %d\n", filename, mode);
+}
   if (!file) { /* Failed */
+    SCIkdebug(SCIkFILE, "kFOpen() failed\n");
     s->acc = 0;
     return;
   }
@@ -81,6 +87,8 @@ void
 kFClose(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int handle = UPARAM(0);
+
+  SCIkdebug(SCIkFILE, "Closing file %d\n", handle);
 
   if (handle == 0) {
     SCIkwarn(SCIkERROR, "Attempt to close file handle 0\n");
@@ -103,6 +111,8 @@ void kFPuts(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int handle = UPARAM(0);
   char *data = UPARAM(1) + s->heap;
 
+  SCIkdebug(SCIkFILE, "FPuts'ing \"%s\" to handle %d\n", data, handle);
+
   if (handle == 0) {
     SCIkwarn(SCIkERROR, "Attempt to write to file handle 0\n");
     return;
@@ -124,6 +134,9 @@ kFGets(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int maxsize = UPARAM(1);
   int handle = UPARAM(2);
 
+  SCIkdebug(SCIkFILE, "FGets'ing %d bytes from handle %d\n", maxsize, handle);
+
+
   if (handle == 0) {
     SCIkwarn(SCIkERROR, "Attempt to read from file handle 0\n");
     return;
@@ -136,6 +149,7 @@ kFGets(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   fgets(dest, maxsize, s->file_handles[handle]);
 
+  SCIkdebug(SCIkFILE, "FGets'ed \"%s\"\n", dest);
 }
 
 
