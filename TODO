@@ -1,9 +1,10 @@
 TODO for 0.3.3:
 
 Primary goals:
-	* Add PCM output support and one driver to use it
+	* Support patch files once again
 
 Secondary goals:
+	+ Add PCM output support and one driver to use it
 	+ Re-implement on-screen console
 	+ operations.c: Add full support for state->visible_map
 	+ optimize pic drawing

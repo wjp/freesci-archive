@@ -63,6 +63,7 @@ typedef struct {
 
 TYPE word "word" LIKE int
 TYPE long "long" LIKE int
+TYPE short "short" LIKE int
 
 RECORD song_t "song_t" {
 
@@ -78,7 +79,7 @@ RECORD song_t "song_t" {
 	int loopmark;
 	long fading;
 
-	int reverb;
+	short reverb;
 	long maxfade;
 	int resetflag;
 	int polyphony[STATIC MIDI_CHANNELS];

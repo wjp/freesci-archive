@@ -154,6 +154,9 @@ reparentize_primary_widget_lists(state_t *s, gfxw_port_t *newport)
 inline int
 _find_view_priority(state_t *s, int y)
 {
+	if (s->version <= SCI_VERSION_LTU_PRIORITY_OB1)
+		++y;
+
 	if (s->pic_priority_table) { /* SCI01 priority table set? */
 		int j;
 		for (j = 0; j < 15; j++)
@@ -177,8 +180,12 @@ _find_priority_band(state_t *s, int nr)
 	}
 	if (s->pic_priority_table) /* SCI01 priority table set? */
 		return s->pic_priority_table[nr];
-	else
-		return SCI0_PRIORITY_BAND_FIRST(nr);
+	else {
+		int retval = SCI0_PRIORITY_BAND_FIRST(nr);
+		if (s->version <= SCI_VERSION_LTU_PRIORITY_OB1)
+			--retval;
+		return retval;
+	}
 }
 
 int
@@ -652,11 +659,6 @@ collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int use_nsrect, i
 	int y = GET_SELECTOR(other_obj, y);
 	abs_rect_t other_area;
 
-	if (other_obj == 0xb642) {
-		fprintf(stderr,"Door: p=%d, y=%d, real_p=%d\n",
-			other_priority, y, VIEW_PRIORITY(y));
-	}
-
 	if (use_nsrect) {
 #if 0
 		other_area.x = GET_SELECTOR(other_obj, nsLeft);
@@ -780,7 +782,10 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		while (node) { /* Check each object in the list against our bounding rectangle */
 			heap_ptr other_obj = UGET_HEAP(node + LIST_NODE_VALUE);
-			if (other_obj != obj) { /* Clipping against yourself is not recommended */
+
+			if (!is_object(s, other_obj)) {
+				SCIkdebug(SCIkWARNING, "CanBeHere() cliplist contains non-object %04x\n", other_obj);
+			} else if (other_obj != obj) { /* Clipping against yourself is not recommended */
 
 				if (collides_with(s, abs_zone, other_obj, 0, GASEOUS_VIEW_MASK_PASSIVE, funct_nr, argc, argp)) {
 					SCIkdebug(SCIkBRESEN, " -> %04x\n", s->acc);

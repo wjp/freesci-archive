@@ -15,3 +15,6 @@ messages, so that they are easily identifiable using the below list.
    place containing the reactor at the very beginning of the game).
    This does not currently cause a warning, but may do so in later
    VM implementations.
+
+4. PQ2 calls CanBeHere() with a disposed object in the clip list when
+   Keith enters the car.

@@ -138,7 +138,7 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 
 		len = song->size;
 
-		if (global_sound_server->flags & SOUNDSERVER_FLAG_PIPED)
+		if (!(global_sound_server->flags & SOUNDSERVER_FLAG_PIPED))
 		{
 			if (global_sound_server->send_data(song->data, len) != len) {
 				fprintf(debug_stream, "sound_command(): sound_send_data"

@@ -288,7 +288,7 @@ _find_view_priority(struct _state *s, int y);
 */
 
 #define SCI0_VIEW_PRIORITY(y) (((y) < s->priority_first)? 0 : (((y) > s->priority_last)? 14 : 1\
-	+ (((((y)+1) - s->priority_first) * 13) / (s->priority_last - s->priority_first))))
+	+ ((((y) - s->priority_first) * 13) / (s->priority_last - s->priority_first))))
 
 #define SCI0_PRIORITY_BAND_FIRST(nr) ((((nr) == 0)? 0 :  \
         ((s->priority_first) + (((nr)-1) * (s->priority_last - s->priority_first)) / 13)))

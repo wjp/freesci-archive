@@ -67,6 +67,11 @@ struct _state;
 ** with the opposite default value (obviously)
 */
 
+#define SCI_VERSION_LTU_PRIORITY_OB1 SCI_VERSION(0,000,590)
+/* First version not to have this: 0.000.602
+** Old versions change the priority map one pixel earlier
+*/
+
 #define SCI_VERSION_FTU_NEW_SCRIPT_HEADER SCI_VERSION(0,000,397)
 /* Last version known not to do this: 0.000.343
 ** Old SCI versions used two word header for script blocks (first word equal

@@ -141,7 +141,7 @@ sound_unix_init(state_t *s, int flags)
 
 	global_sound_server = &sound_server_unix;
 
-	global_sound_server->flags |= SOUND_SERVER_PIPED;
+	global_sound_server->flags |= SOUNDSERVER_FLAG_PIPED;
 
 	if (_make_pipe(fd_in)
 	    || _make_pipe(fd_out)
