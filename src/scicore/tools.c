@@ -377,7 +377,7 @@ sci_find_next(sci_dir_t *dir)
 		if (match->d_name[0] == '.')
 			continue;
 
-		if (!fnmatch(dir->mask_copy, match->d_name, FNM_PATHNAME))
+		if (!fnmatch(dir->mask_copy, match->d_name, 0))
 			return match->d_name;
 	}
 

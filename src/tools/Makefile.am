@@ -1,5 +1,5 @@
 INCLUDES = -I$(top_srcdir)/src/include @ac_png_includes@
-LDADD = ../scicore/libscicore.a -lc
+LDADD = ../scicore/libscicore.a
 EXTRA_DIST = sciunpack.h
 bin_PROGRAMS = sciunpack sciconsole scidisasm
 sciunpack_SOURCES = sciunpack.c listwords.c scriptdump.c vocabdump.c

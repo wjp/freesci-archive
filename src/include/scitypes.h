@@ -89,7 +89,7 @@ typedef struct {
 } GTimeVal;
 
 typedef struct {
-#ifdef _WIN32 && defined(_MSC_VER)
+#if defined(_WIN32) && defined(_MSC_VER)
 	long search;
 	struct _finddata_t fileinfo;
 #else

@@ -26,10 +26,12 @@
 ***************************************************************************/
 /* gfx driver test and verification program */
 
+#define DISABLE_SCI_MEMORY
+
 #ifdef _MSC_VER
-#include <unistd.h>
-#include <sys/time.h>
-#include <windows.h>
+#  include <unistd.h>
+#  include <sys/time.h>
+#  include <windows.h>
 #endif
 
 #include <assert.h>
@@ -52,8 +54,13 @@ sciprintf(char *fmt, ...)
 	return 0;
 }
 
+
+#ifdef FREESCI_PRIMARY_RESOURCE_H_
+#  include "../scicore/sci_memory.c"
+#endif
+
 void
-sci_gettime(int *seconds, int *useconds)
+sci_gettime(long *seconds, long *useconds)
 {
         struct timeval tv;
 
@@ -69,7 +76,6 @@ sci_gettime(int *seconds, int *useconds)
 	timeEndPeriod(0);
 #endif
 }
-
 
 static int xres = 1;
 static int yres = 1;
@@ -114,12 +120,12 @@ init_driver(gfx_driver_t *drv)
 	options->dirty_frames = GFXOP_DIRTY_FRAMES_CLUSTERS;
 
 	if (set_mode) {
-		if (gfxop_init(state, xres, yres, color_mode, options)) {
+		if (gfxop_init(state, xres, yres, color_mode, options, NULL)) {
 			printf("Custom initialization failed\n");
 			return 1;
 		}
 	} else {
-		if (gfxop_init_default(state, options)) {
+		if (gfxop_init_default(state, options, NULL)) {
 			printf("Default initialization failed\n");
 			return 1;
 		}
@@ -168,7 +174,8 @@ arrdup(int *src, int count)
 }
 
 int *
-gfxr_interpreter_get_resources(gfx_resource_types_t type, int version, int *entries_nr)
+gfxr_interpreter_get_resources(gfx_resstate_t *resstate, gfx_resource_types_t type,
+			       int version, int *entries_nr)
 {
 	switch (type) {
 
