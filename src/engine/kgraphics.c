@@ -754,6 +754,8 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
     if (argc > 1)
       s->pic_animate = PARAM(1); /* The animation used during kAnimate() later on */
 
+    s->priority_first = 42;
+    s->priority_last = 200;
     s->pic_not_valid = 1;
     s->pic_is_new = 1;
 
@@ -1179,7 +1181,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
       break;
     }
     graph_draw_control_text(s, s->ports[s->view_port], state & ~ SELECTOR_STATE_FRAMED,
-			    x, y, xl, yl, text, font_res->data,
+			    x, y, 0, xl, yl, text, font_res->data,
 			    (s->version < SCI_VERSION_FTU_CENTERED_TEXT_AS_DEFAULT)
 			    ? ALIGN_TEXT_LEFT : ALIGN_TEXT_CENTER);
     break;
@@ -1202,13 +1204,13 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
   case K_CONTROL_ICON:
 
     view_res = findResource(sci_view, view);
-    SCIkdebug(SCIkGRAPHICS, "drawing icon control %04x to %d,%d\n", obj, x, y);
+    SCIkdebug(SCIkGRAPHICS, "drawing icon control %04x to %d,%d\n", obj, x, y -1);
 
     if (!view_res) {
       SCIkwarn(SCIkERROR, "View.%03d not found!\n", font_nr);
       break;
     }
-    graph_draw_control_icon(s, s->ports[s->view_port], state, x, y, xl, yl,
+    graph_draw_control_icon(s, s->ports[s->view_port], state, x, y-1, xl, yl,
 			     view_res->data, loop, cel);
     break;
 
@@ -1772,7 +1774,7 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int cel = PARAM(2);
   int x = PARAM(3);
   int y = PARAM(4);
-  int priority = PARAM(5);
+  int priority = PARAM_OR_ALT(5, -1);
 
 
   CHECK_THIS_KERNEL_FUNCTION;
@@ -2340,6 +2342,7 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       SCIkdebug(SCIkGRAPHICS, "Display: restore_under(%04x)\n", UPARAM(argpt));
       graph_restore_box(s, UPARAM(argpt));
+      update_immediately = 1;
       argpt++;
       return;
 
@@ -2364,8 +2367,8 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     s->acc = graph_save_box(s, port->x + port->xmin, port->y + port->ymin, _width, _height, 3);
 
-    SCIkdebug(SCIkGRAPHICS, "Saving (%d, %d) size (%d, %d)\n",
-	      port->x + port->xmin, port->y + port->ymin, _width, _height);
+    SCIkdebug(SCIkGRAPHICS, "Saving (%d, %d) size (%d, %d) as %04x\n",
+	      port->x + port->xmin, port->y + port->ymin, _width, _height, s->acc);
 
   }
 
@@ -2381,9 +2384,11 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   _k_dyn_view_list_accept_change(s);
 
-  if ((!s->pic_not_valid)&&update_immediately) /* Refresh if drawn to valid picture */
+  if ((!s->pic_not_valid)&&update_immediately) { /* Refresh if drawn to valid picture */
     graph_update_box(s, port->xmin, port->ymin,
 		     port->xmax - port->xmin + 1, port->ymax - port->ymin + 1);
+    SCIkdebug(SCIkGRAPHICS, "Refreshing display...\n");
+  }
 
   *port=save;
 

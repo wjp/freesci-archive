@@ -235,16 +235,16 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 	if (right[0] == '#') {
 	  right[0] = 'F'; /* Function key */
 
-	  key = SCI_K_F1 + (right[1] - '1');
+	  key = SCI_K_F1 + ((right[1] - '1') << 8);
 
 	  if (right[1] == '0')
-	    key = 10; /* F10 */
+	    key = SCI_K_F10; /* F10 */
 
 	  if (right[2]=='=') {
 	    tag = atoi(right + 3);
 	    right[2] = 0;
 	  } else tag=0;	  
-	} 
+	}
 	else {
 
 	  if (right[0] == '^') {

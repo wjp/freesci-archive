@@ -126,6 +126,7 @@ yyerror(char *s)
 %token YY_LT        /* 0xf8 */
 %token YY_GT        /* 0xf9 */
 %token YY_BRACKETSO_LT /* special token used to imitate LR(2) behaviour */
+%token YY_BRACKETSO_SLASH /* special token used to imitate LR(2) behaviour */
 
 %%
 
@@ -156,7 +157,7 @@ leftspec :	/* empty */
 
 midspec :	 YY_SLASH expr
 			{ $$ = said_aug_branch(0x142, 0x14a, $2, SAID_BRANCH_NULL) }
-		| YY_BRACKETSO YY_SLASH expr YY_BRACKETSC
+		| YY_BRACKETSO_SLASH YY_SLASH expr YY_BRACKETSC
 			{ $$ = said_aug_branch(0x152, 0x142, said_aug_branch(0x142, 0x14a, $3, SAID_BRANCH_NULL), SAID_BRANCH_NULL) }
 		| YY_SLASH
 			{ $$ = SAID_BRANCH_NULL }
@@ -166,8 +167,10 @@ midspec :	 YY_SLASH expr
 
 rightspec :	 YY_SLASH expr
 			{ $$ = said_aug_branch(0x143, 0x14a, $2, SAID_BRANCH_NULL) }
-		| YY_BRACKETSO YY_SLASH expr YY_BRACKETSC
+		| YY_BRACKETSO_SLASH YY_SLASH expr YY_BRACKETSC
 			{ $$ = said_aug_branch(0x152, 0x143, said_aug_branch(0x143, 0x14a, $3, SAID_BRANCH_NULL), SAID_BRANCH_NULL) }
+		| YY_SLASH
+			{ $$ = SAID_BRANCH_NULL }
 		;
 
 
@@ -253,9 +256,13 @@ yylex(void)
     else {
       assert(retval >= SAID_FIRST);
       retval = parse_yy_token_lookup[retval - SAID_FIRST];
-      if (retval == YY_BRACKETSO
-	  && ((said_tokens[said_token] >> 8) == SAID_LT))
-	retval = YY_BRACKETSO_LT;
+      if (retval == YY_BRACKETSO) {
+	  if ((said_tokens[said_token] >> 8) == SAID_LT)
+	    retval = YY_BRACKETSO_LT;
+	  else
+	    if ((said_tokens[said_token] >> 8) == SAID_SLASH)
+	      retval = YY_BRACKETSO_SLASH;
+      }
     }
   }
 

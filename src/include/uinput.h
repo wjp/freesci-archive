@@ -76,16 +76,16 @@ typedef struct {
 #define SCI_K_INSERT (82 << 8)
 #define SCI_K_DELETE (83 << 8)
 
-#define SCI_K_F1 59
-#define SCI_K_F2 60
-#define SCI_K_F3 61
-#define SCI_K_F4 62
-#define SCI_K_F5 63
-#define SCI_K_F6 64
-#define SCI_K_F7 65
-#define SCI_K_F8 66
-#define SCI_K_F9 67
-#define SCI_K_F10 68
+#define SCI_K_F1 (59<<8)
+#define SCI_K_F2 (60<<8)
+#define SCI_K_F3 (61<<8)
+#define SCI_K_F4 (62<<8)
+#define SCI_K_F5 (63<<8)
+#define SCI_K_F6 (64<<8)
+#define SCI_K_F7 (65<<8)
+#define SCI_K_F8 (66<<8)
+#define SCI_K_F9 (67<<8)
+#define SCI_K_F10 (68<<8)
 
 /*Values for buckybits */
 #define SCI_EVM_RSHIFT          (1<<0)

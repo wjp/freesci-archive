@@ -326,7 +326,7 @@ graph_draw_control_button(struct _state *s, port_t *port, int state,
   graph_fill_box_custom(s, x + port->xmin, y + port->ymin, xl, yl,
 			port->bgcolor, -1, -1, 1); /* Clear button background */
   graph_draw_control_text(s, port, state,
-			   x, y, xl, yl, text, font, ALIGN_TEXT_CENTER);
+			   x, y, 0, xl, yl, text, font, ALIGN_TEXT_CENTER);
 
   if ((state & SELECTOR_STATE_SELECTABLE) && (state & SELECTOR_STATE_SELECTED))
     draw_frame(s->pic, port->xmin + x, port->ymin + y ,
@@ -339,7 +339,7 @@ graph_draw_control_button(struct _state *s, port_t *port, int state,
 
 void
 graph_draw_control_text(struct _state *s, port_t *port, int state,
-			 int x, int y, int xl, int yl,
+			 int x, int y, int ymod, int xl, int yl,
 			 char *text, byte *font, int alignment)
 {
   port_t oldport;
@@ -361,7 +361,7 @@ graph_draw_control_text(struct _state *s, port_t *port, int state,
   text_draw(s->pic, port, text, xl);
 
   if (state & (SELECTOR_STATE_FRAMED | SELECTOR_STATE_DITHER_FRAMED))
-      draw_frame(s->pic, port->xmin + x-1, port->ymin + y-1,
+      draw_frame(s->pic, port->xmin + x-1, port->ymin + y-1 + ymod,
 		 xl + 1, yl + 1, port->color | (port->color << 4),
 		 port->priority, (state & SELECTOR_STATE_DITHER_FRAMED));
 
@@ -382,7 +382,7 @@ graph_draw_control_edit(struct _state *s, port_t *port, int state,
 			port->bgcolor, -1, -1, 1); /* Clear box background */
 
   graph_draw_control_text(s, port, state,
-			   x, y, xl, yl, text, font, ALIGN_TEXT_LEFT);
+			   x, y, 1, xl, yl, text, font, ALIGN_TEXT_LEFT);
 
   if (time(NULL) & 1) { /* Blink cursor in 1s intervals */
     strncpy(temp, text, cursor);
@@ -433,7 +433,7 @@ graph_draw_control_icon(struct _state *s, port_t *port, int state,
 			 int x, int y, int xl, int yl,
 			 byte *data, int loop, int cel)
 {
-  draw_view0(s->pic, port, x, y, 16, loop, cel, 0, data);
+  draw_view0(s->pic, port, x, y, -1, loop, cel, 0, data);
 
   if (state & SELECTOR_STATE_FRAMED)
     draw_frame(s->pic, port->xmin + x-1, port->ymin + y-2,

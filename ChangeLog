@@ -1,5 +1,14 @@
 2000-05-21  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/graphics/engine_graphics.c (graph_draw_control_icon): Fixed bug in
+	icon control drawing using priority 16 rather than -1
+
+	* src/include/uinput.h: Fixed function key keycodes
+
+	* src/include/kernel.h (VIEW_PRIORITY): Fixed priority calculation
+
+	* src/engine/said.y: Another kludge to emulate LR(2) behaviour
+
 	* src/sound/soundserver_null.c (verify_pid): Process aliveness testing
 	is now done with kill() instead of examining /proc
 

@@ -622,13 +622,14 @@ graph_draw_control_button(struct _state *s, port_t *port, int state,
 
 void
 graph_draw_control_text(struct _state *s, port_t *port, int state,
-			int x, int y, int xl, int yl,
+			int x, int y, int ymod, int xl, int yl,
 			char *text, byte *font, int alignment);
 /* Draws a text selector.
 ** Parameters: (state_t *) s: The state to operate on
 **             (port_t *) port: The port to use
 **             (int) state: The selector state to use; a combination of the SELECTOR_STATE_* flags
 **             (int) x,y: The upper left corner of the selector
+**             (int) ymod: y shift of the frame relative to the text
 **             (int) xl,yl: Height and width of the selector in question
 **             (char *) text: The text
 **             (byte *) font: Pointer to the font to use
