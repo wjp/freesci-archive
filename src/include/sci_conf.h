@@ -77,7 +77,6 @@ typedef struct {
 	int alpha_threshold; /* Crossblitting alpha threshold */
 	int unknown_count; /* The number of "unknown" kernel functions */
 	char *resource_dir; /* Resource directory */
-	char *work_dir;     /* Working directory (save games, additional graphics) */
 	char *gfx_driver_name; /* The graphics driver to use */
 	char *console_log; /* The file to which console output should be echoed */
 	char debug_mode [80]; /* Characters specifying areas for which debug output should be enabled */

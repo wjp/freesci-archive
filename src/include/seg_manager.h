@@ -62,6 +62,7 @@ void dbg_print( char* msg, int i );		/* for debug only */
 	BREAKPOINT(); \
 	}
 
+
 #define MEM_OBJ_INVALID 0
 #define MEM_OBJ_SCRIPT 1
 #define MEM_OBJ_CLONES 2
@@ -82,8 +83,8 @@ struct _mem_obj;
 		: NULL) /* Type does not match */						\
 	: NULL /* Invalid index */
 
-#define GET_SEGMENT_ANY(mgr, index) ((index) > 0 && (mgr).heap_size > index)?		\
-		(((mgr).heap[index])? (mgr).heap[index]	\
+#define GET_SEGMENT_ANY(mgr, index) ((index) > 0 && (mgr).heap_size > index)?			\
+		(((mgr).heap[index])? (mgr).heap[index]						\
 		: NULL) /* Type does not match */						\
 	: NULL /* Invalid index */
 
@@ -251,6 +252,13 @@ int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, in
 **             (int) script_nr: The script number to load
 ** Returns   : 0 - allocate failure
 **             1 - allocate successfully, seg_id contains the allocated seg_id
+*/
+
+void
+sm_gc(seg_manager_t *self, struct _state *s);
+/* Perform garbage collection
+** Parameters: (state_t *) s: The state to operate on
+** Effects   : Unreachable objects in 's' are deallocated
 */
 
 int sm_deallocate_script (seg_manager_t* self, struct _state *s, int script_nr);

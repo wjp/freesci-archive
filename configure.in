@@ -222,7 +222,7 @@ else
 	fi
 
 	if test x"$fsci_directfb_driver" = xyes; then
-		fsci_ggi_st="directfb_driver.o"
+		fsci_dfb_st="directfb_driver.o"
 		LIBS="$LIBS $ac_directfb_libraries"
 	fi
 
@@ -240,9 +240,11 @@ fi
 AC_SUBST(fsci_xlib_dl)
 AC_SUBST(fsci_sdl_dl)
 AC_SUBST(fsci_ggi_dl)
+AC_SUBST(fsci_dfb_dl)
 AC_SUBST(fsci_xlib_st)
 AC_SUBST(fsci_sdl_st)
 AC_SUBST(fsci_ggi_st)
+AC_SUBST(fsci_dfb_st)
 
 dnl AC_SUBST(ac_xlib_o)
 dnl AC_SUBST(ac_sdl_o)

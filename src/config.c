@@ -1076,6 +1076,11 @@ char *yytext;
 #include <sci_conf.h>
 #include <stddef.h>
 
+/* unistd override for GNU flex for non-UNIX systems */
+#ifndef HAVE_UNISTD_H
+#  define YY_NO_UNISTD_H
+#endif
+
 #ifdef _MSC_VER
 #  include <ctype.h>
 #  include <direct.h>
@@ -1338,7 +1343,7 @@ crop_value(char *yytext);
 char *
 purge_comments(char *comments);
 
-#line 1342 "lex.yy.c"
+#line 1347 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -1489,10 +1494,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 311 "config.l"
+#line 316 "config.l"
 
 
-#line 1496 "lex.yy.c"
+#line 1501 "lex.yy.c"
 
 	if ( (yy_init) )
 		{
@@ -1577,7 +1582,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 313 "config.l"
+#line 318 "config.l"
 {
 	char *cleanup;
 	++yytext; /* Get over opening bracket */
@@ -1608,23 +1613,11 @@ YY_RULE_SETUP
 
 	conf[cur_section].resource_dir = sci_strdup(".");
 
-	if (dospath)
-		conf[cur_section].work_dir = sci_strdup(exported_conf_path);
-	else {
-		char *tmp = sci_malloc(strlen(exported_conf_path) + 2 + strlen(conf[cur_section].name));
-		strcpy(tmp, exported_conf_path);
-		strcat(tmp, "/");
-		strcat(tmp, conf[cur_section].name);
-
-		conf[cur_section].work_dir = tmp;
-		scimkdir(tmp, 0700); /* Make sure that the directory exists. */
-		/* This will be checked later, for the current game. */
-	}
 }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 358 "config.l"
+#line 351 "config.l"
 {
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1637,7 +1630,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 368 "config.l"
+#line 361 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1650,7 +1643,7 @@ if (cur_section) {
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 378 "config.l"
+#line 371 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1662,7 +1655,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 387 "config.l"
+#line 380 "config.l"
 {
 /* driver parameters */
 	char *subsys_name = yytext;
@@ -1694,7 +1687,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 417 "config.l"
+#line 410 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
@@ -1717,7 +1710,7 @@ YY_RULE_SETUP
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 436 "config.l"
+#line 429 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
@@ -1740,14 +1733,14 @@ YY_RULE_SETUP
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 456 "config.l"
+#line 449 "config.l"
 {
 	gfx_update_conf(&(conf[cur_section].gfx_options), purge_comments(yytext));
 }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 460 "config.l"
+#line 453 "config.l"
 {
 	char *filename = strchr(yytext, '<');
 	char *end = strchr(filename, '>');
@@ -1769,17 +1762,17 @@ case 10:
 (yy_c_buf_p) = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 477 "config.l"
+#line 470 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 11:
 /* rule 11 can match eol */
 YY_RULE_SETUP
-#line 479 "config.l"
+#line 472 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 481 "config.l"
+#line 474 "config.l"
 {
 	yy_delete_buffer(YY_CURRENT_BUFFER );
 	yyterminate();
@@ -1787,15 +1780,15 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 486 "config.l"
+#line 479 "config.l"
 printf("Unrecognized option: '%s'\n", yytext);
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 488 "config.l"
+#line 481 "config.l"
 ECHO;
 	YY_BREAK
-#line 1799 "lex.yy.c"
+#line 1792 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2759,7 +2752,7 @@ void yyfree (void * ptr )
 #undef YY_DECL_IS_OURS
 #undef YY_DECL
 #endif
-#line 488 "config.l"
+#line 481 "config.l"
 
 
 
@@ -2933,7 +2926,6 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->debug_mode [0] = '\0';
 	conf->name = NULL;
 	conf->resource_dir = NULL;
-	conf->work_dir = NULL;
         conf->module_path = sci_strdup(SCI_DEFAULT_MODULE_PATH);
 	conf->res_version = SCI_VERSION_AUTODETECT;
 
@@ -3047,7 +3039,6 @@ config_free(config_entry_t **conf, int entries)
 
 		if (i >= 1) {
 			sci_free((*conf)[i].name);
-			sci_free((*conf)[i].work_dir);
 			if ((*conf)[i].resource_dir)
 				sci_free((*conf)[i].resource_dir);
 			if ((*conf)[i].console_log)

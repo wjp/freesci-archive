@@ -38,6 +38,8 @@ static snd_seq_t *seq = NULL;
 static int queue = -1;
 static int delta = 0;
 static int port_out = -1;
+static int port_nr = 128;
+static int subport_nr = 0;
 
 static char *seq_name = "default";
 
@@ -74,7 +76,7 @@ _set_tempo(void)
 static int
 am_subscribe_to_ports(void)
 {
-	if ((port_out = snd_seq_connect_to(seq, port_out, 64, 0)) < 0) {
+	if ((port_out = snd_seq_connect_to(seq, port_out, port_nr, subport_nr)) < 0) {
 		fprintf(stderr, "[SFX] Could not connect to ALSA sequencer port: %s\n", snd_strerror(port_out));
 		return SFX_ERROR;
 	}

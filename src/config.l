@@ -33,6 +33,11 @@
 #include <sci_conf.h>
 #include <stddef.h>
 
+/* unistd override for GNU flex for non-UNIX systems */
+#ifndef HAVE_UNISTD_H
+#  define YY_NO_UNISTD_H
+#endif
+
 #ifdef _MSC_VER
 #  include <ctype.h>
 #  include <direct.h>
@@ -340,18 +345,6 @@ QUOTED_NUMPARAMTOKEN "\"".*"\""
 
 	conf[cur_section].resource_dir = sci_strdup(".");
 
-	if (dospath)
-		conf[cur_section].work_dir = sci_strdup(exported_conf_path);
-	else {
-		char *tmp = sci_malloc(strlen(exported_conf_path) + 2 + strlen(conf[cur_section].name));
-		strcpy(tmp, exported_conf_path);
-		strcat(tmp, "/");
-		strcat(tmp, conf[cur_section].name);
-
-		conf[cur_section].work_dir = tmp;
-		scimkdir(tmp, 0700); /* Make sure that the directory exists. */
-		/* This will be checked later, for the current game. */
-	}
 }
 
 
@@ -657,7 +650,6 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->debug_mode [0] = '\0';
 	conf->name = NULL;
 	conf->resource_dir = NULL;
-	conf->work_dir = NULL;
         conf->module_path = sci_strdup(SCI_DEFAULT_MODULE_PATH);
 	conf->res_version = SCI_VERSION_AUTODETECT;
 
@@ -771,7 +763,6 @@ config_free(config_entry_t **conf, int entries)
 
 		if (i >= 1) {
 			sci_free((*conf)[i].name);
-			sci_free((*conf)[i].work_dir);
 			if ((*conf)[i].resource_dir)
 				sci_free((*conf)[i].resource_dir);
 			if ((*conf)[i].console_log)

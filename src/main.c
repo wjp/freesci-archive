@@ -1212,13 +1212,9 @@ main(int argc, char** argv)
 		return 1;
 	}
 
-	if (confs && active_conf->work_dir)
-		gamestate->work_dir = work_dir;
-
-
 	if (chdir(gamestate->work_dir)) {
 		fprintf(stderr,"Error entering working directory '%s'\n",
-			active_conf->work_dir);
+			gamestate->work_dir);
 		exit(1);
 	}
 
@@ -1637,8 +1633,6 @@ static int game_select(cl_options_t cl_options, config_entry_t *confs, int conf_
 		return 1;
 	}
 
-	if (confs && confs->work_dir)
-		gamestate->work_dir = work_dir;
 
 	/* Now configure the graphics driver with the specified options */
 	{

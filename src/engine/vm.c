@@ -2225,11 +2225,11 @@ obj_get_name(struct _state *s, reg_t pos)
 sci_version_t
 version_parse(char *vn)
 {
-  int major = *vn - '0'; /* One version digit */
-  int minor = atoi(vn + 2);
-  int patchlevel = atoi(vn + 6);
+	int major = *vn - '0'; /* One version digit */
+	int minor = atoi(vn + 2);
+	int patchlevel = atoi(vn + 6);
 
-  return SCI_VERSION(major, minor, patchlevel);
+	return SCI_VERSION(major, minor, patchlevel);
 }
 
 
