@@ -243,6 +243,7 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
   heap_ptr fp = sp;
   int restadjust = 0; /* &rest adjusts the parameter count by this value */
   heap_ptr local_vars = getUInt16(s->heap + objp + SCRIPT_LOCALVARPTR_OFFSET);
+  int bp_flag = 0;
 
   heap_ptr variables[4] =
   { s->global_vars, local_vars, fp, argp }; /* Offsets of global, local, temp, and param variables */
@@ -261,6 +262,30 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
   script_exec_stack[script_exec_stackpos].argpp = &argp;
   script_exec_stack[script_exec_stackpos].selector = selector;
 
+  /* Check if a breakpoint is set on this method */
+  if (s->have_bp & BREAK_EXECUTE && selector != -1)
+  {
+    breakpoint_t *bp;
+    char method_name [256];
+
+    sprintf (method_name, "%s::%s",
+      s->heap + getUInt16 (s->heap + objp + SCRIPT_NAME_OFFSET),
+      s->selector_names [selector]);
+
+    bp = s->bp_list;
+    while (bp)
+    {
+      if (bp->type == BREAK_EXECUTE && !strcmp ((char *) bp->data, method_name))
+      {
+        sciprintf ("Break on %s\n", method_name);
+        script_debug_flag = 1;
+        bp_flag = 1;
+        break;
+      }
+      bp = bp->next;
+    }
+  }
+
   while (1) {
     heap_ptr old_pc = pc;
     heap_ptr old_sp = sp;
@@ -273,7 +298,10 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       return; /* Emergency */
 
     if (script_debug_flag)
-      script_debug(s, &pc, &sp, &fp, &objp, &restadjust);
+    {
+      script_debug(s, &pc, &sp, &fp, &objp, &restadjust, bp_flag);
+      bp_flag = 0;
+    }
     /* Debug if this has been requested */
 
     opcode = GET_OP_BYTE(); /* Get opcode */
@@ -1272,6 +1300,9 @@ game_init(state_t *s)
 
   s->debug_mode = 0x0; /* Disable all debugging */
 
+  s->bp_list = NULL; /* No breakpoints defined */
+  s->have_bp = 0;
+
   srand(time(NULL)); /* Initialize random number generator */
 
   i = 0;
@@ -1333,6 +1364,7 @@ int
 game_exit(state_t *s)
 {
   int i;
+  breakpoint_t *bp, *bp_next;
 
   sciprintf("Freeing vocabulary...\n");
   vocabulary_free_snames(s->selector_names);
@@ -1374,6 +1406,17 @@ game_exit(state_t *s)
 
   heap_free(s->_heap, s->stack_handle);
   heap_free(s->_heap, s->save_dir);
+
+  /* Free breakpoint list */
+  bp = s->bp_list;
+  while (bp)
+  {
+    bp_next = bp->next;
+    if (bp->type == BREAK_EXECUTE) free (bp->data);
+    free (bp);
+    bp = bp_next;
+  }
+  s->bp_list = NULL;
 
   return 0;
 }

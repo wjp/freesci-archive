@@ -439,14 +439,40 @@ c_disasm(void)
 int
 c_snk(void)
 {
+  int callk_index;
+  char *endptr;
+  
   if (!_debugstate_valid) {
     sciprintf("Not in debug state\n");
     return 1;
   }
 
   if (cmd_paramlength > 0) {
+    /* Try to convert the parameter to a number. If the conversion stops
+       before end of string, assume that the parameter is a function name
+       and scan the function table to find out the index. */
+    callk_index = strtoul (cmd_params [0].str, &endptr, 0);
+    if (*endptr != '\0')
+    {
+      int i;
+      
+      callk_index = -1;
+      for (i = 0; i < _s->kernel_names_nr; i++)
+        if (!strcmp (cmd_params [0].str, _s->kernel_names [i]))
+        {
+          callk_index = i;
+          break;
+        }
+
+      if (callk_index == -1)
+      {
+        sciprintf ("Unknown kernel function '%s'\n", cmd_params [0].str);
+        return 1;
+      }
+    }
+
     _debug_seeking = _DEBUG_SEEK_SPECIAL_CALLK;
-    _debug_seek_special = cmd_params[0].val;
+    _debug_seek_special = callk_index;
     _debugstate_valid = 0;
   } else {
     _debug_seeking = _DEBUG_SEEK_CALLK;
@@ -469,6 +495,7 @@ c_slog(void)
 
   _debug_seeking = _DEBUG_SEEK_LOGGING;
   _debugstate_valid = 0;
+  return 0;
 }
 
 int
@@ -477,6 +504,15 @@ c_sret(void)
   _debug_seeking = _DEBUG_SEEK_LEVEL_RET;
   _debug_seek_level = script_exec_stackpos;
   _debugstate_valid = 0;
+  return 0;
+}
+
+int
+c_go(void)
+{
+  _debug_seeking = 0;
+  _debugstate_valid = 0;
+  script_debug_flag = 0;
   return 0;
 }
 
@@ -787,11 +823,66 @@ c_accobj(void)
     objinfo(_s->acc);
 }
 
+int
+c_bpx(void)
+{
+  breakpoint_t *bp;
+
+  /* Note: We can set a breakpoint on a method that has not been loaded yet.
+     Thus, we can't check whether the command argument is a valid method name.
+     A breakpoint set on an invalid method name will just never trigger. */
+
+  if (_s->bp_list)
+  {
+    bp = _s->bp_list;
+    while (bp->next)
+      bp = bp->next;
+    bp->next = (breakpoint_t *) malloc (sizeof (breakpoint_t));
+    bp = bp->next;
+  }
+  else {
+    _s->bp_list = (breakpoint_t *) malloc (sizeof (breakpoint_t));
+    bp = _s->bp_list;
+  }
+
+  bp->type = BREAK_EXECUTE;
+  bp->data = malloc (strlen (cmd_params [0].str)+1);
+  strcpy ((char *) bp->data, cmd_params [0].str);
+  bp->next = NULL;
+  _s->have_bp |= BREAK_EXECUTE;
+
+  return 0;
+}
+
+int
+c_bplist(void)
+{
+  breakpoint_t *bp;
+  int i = 0;
+
+  bp = _s->bp_list;
+  while (bp)
+  {
+    sciprintf ("  #%i: ", i);
+    switch (bp->type)
+    {
+    case BREAK_EXECUTE:
+      sciprintf ("Execute %s\n", bp->data);
+      break;
+    }
+    
+    bp = bp->next;
+    i++;
+  }
+
+  return 0;
+}
+
 void
-script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp, int *restadjust)
+script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp, int *restadjust, int bp)
 {
 
-  if (_debug_seeking) { /* Are we looking for something special? */
+  if (_debug_seeking && !bp) { /* Are we looking for something special? */
     int op = s->heap[*pc] >> 1;
     int paramb1 = s->heap[*pc + 1]; /* Careful with that ! */
 
@@ -868,7 +959,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       cmdHook(c_classtable, "classtable", "", "Lists all available classes");
       cmdHook(c_stack, "stack", "i", "Dumps the specified number of stack elements");
       cmdHook(c_backtrace, "bt", "", "Dumps the send/self/super/call/calle/callb stack");
-      cmdHook(c_snk, "snk", "i*", "Steps forward until it hits the next\n  callk operation.\n"
+      cmdHook(c_snk, "snk", "s*", "Steps forward until it hits the next\n  callk operation.\n"
 	      "  If invoked with a parameter, it will\n  look for that specific callk.\n");
       cmdHook(c_listclones, "clonetable", "", "Lists all registered clones");
       cmdHook(c_set_acc, "set_acc", "i", "Sets the accumulator");
@@ -890,6 +981,9 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 	      "  Other useful values are:\n  1: Priority\n  2: Control\n  3: Auxiliary\n");
       cmdHook(c_simkey, "simkey", "i", "Simulates a keypress with the\n  specified scancode.\n");
       cmdHook(c_slog, "slog", "i*", "Step forward while printing\n  acc and the next instruction");
+      cmdHook(c_bpx, "bpx", "s", "Sets a breakpoint on the execution of specified method.\n");
+      cmdHook(c_bplist, "bplist", "", "Lists all breakpoints.\n");
+      cmdHook(c_go, "go", "", "Executes the script.\n");
 
       cmdHookInt(&script_exec_stackpos, "script_exec_stackpos", "Position on the execution stack\n");
       cmdHookInt(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");

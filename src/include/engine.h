@@ -168,6 +168,9 @@ typedef struct _state
 
   selector_map_t selector_map; /* Shortcut list for important selectors */
 
+  breakpoint_t *bp_list;   /* List of breakpoints */
+  int have_bp;  /* Bit mask specifying which types of breakpoints are used in bp_list */
+
 } state_t;
 
 #define STATE_T_DEFINED

@@ -1,5 +1,5 @@
 /***************************************************************************
- graphics_sdl.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+ graphics_ddraw.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
 
 
  This program may be modified and copied freely according to the terms of
@@ -58,6 +58,10 @@ static RGBQUAD color_table [256];
 
 static BOOL bFullscreen = FALSE, bActive = FALSE;
 static int scale=1;
+
+/* FIXME: It would be cleaner to store the state pointer in a window word,
+   but who really cares... */
+static state_t *_s;
 
 long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 int process_messages();
@@ -250,6 +254,8 @@ ddraw_init(state_t *s, struct _picture *pic)
   char buf [128];
   int32* pPal;
 
+  _s = s;
+  
   if (bFullscreen)
     scale = 1;
   else
@@ -496,9 +502,14 @@ void add_key_event (int data)
   int buckybits = 0;
   
   /* FIXME: If anyone cares, on Windows NT we can distinguish left and right shift */
-  if (GetAsyncKeyState (VK_SHIFT)) buckybits |= SCI_EVM_LSHIFT | SCI_EVM_RSHIFT;
-  if (GetAsyncKeyState (VK_CONTROL)) buckybits |= SCI_EVM_CTRL;
-  if (GetAsyncKeyState (VK_MENU)) buckybits |= SCI_EVM_ALT;
+  if (GetAsyncKeyState (VK_SHIFT)) 
+    buckybits |= SCI_EVM_LSHIFT | SCI_EVM_RSHIFT;
+  if (GetAsyncKeyState (VK_CONTROL)) 
+    buckybits |= SCI_EVM_CTRL;
+  if (GetAsyncKeyState (VK_MENU)) 
+    buckybits |= SCI_EVM_ALT;
+  if (GetKeyState (VK_CAPITAL) & 1)
+    buckybits |= SCI_EVM_CAPSLOCK;
   add_queue_event (SCI_EVT_KEYBOARD, data, buckybits);
 }
 
@@ -536,8 +547,8 @@ long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     /* messages converted to SCI events */
   case WM_MOUSEMOVE:
-    sci_pointer_x = LOWORD (lParam) / scale;
-    sci_pointer_y = HIWORD (lParam) / scale;
+    _s->pointer_x = LOWORD (lParam) / scale;
+    _s->pointer_y = HIWORD (lParam) / scale;
     break;
 
   case WM_LBUTTONDOWN: add_mouse_event (SCI_EVT_MOUSE_PRESS, 1, wParam);   break;
@@ -564,11 +575,30 @@ long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       MAP_KEY (VK_BACK,   SCI_K_BACKSPACE);
       MAP_KEY (VK_TAB,    '\t');
       MAP_KEY (VK_RETURN, '\r');
+
     default:
       if (wParam >= VK_F1 && wParam <= VK_F10)
         add_key_event (wParam - VK_F1 + SCI_K_F1);
       else if (wParam >= 'A' && wParam <= 'Z')
         add_key_event (wParam - 'A' + 97);
+      else if (wParam >= VK_NUMPAD0 && wParam <= VK_NUMPAD9)
+      {
+        if (GetKeyState (VK_NUMLOCK) & 1)
+          add_key_event (wParam - VK_NUMPAD0 + '0');
+        else
+          switch (wParam)
+          {
+            MAP_KEY (VK_NUMPAD0, SCI_K_INSERT);
+            MAP_KEY (VK_NUMPAD1, SCI_K_END);
+            MAP_KEY (VK_NUMPAD2, SCI_K_DOWN);
+            MAP_KEY (VK_NUMPAD3, SCI_K_PGDOWN);
+            MAP_KEY (VK_NUMPAD4, SCI_K_LEFT);
+            MAP_KEY (VK_NUMPAD6, SCI_K_RIGHT);
+            MAP_KEY (VK_NUMPAD7, SCI_K_HOME);
+            MAP_KEY (VK_NUMPAD8, SCI_K_UP);
+            MAP_KEY (VK_NUMPAD9, SCI_K_PGUP);
+          }
+      }
       else
         add_key_event (wParam);
     }
@@ -636,7 +666,7 @@ Win32_usleep (long usec)
 }
 
 void
-ddraw_wait (long usec)
+ddraw_wait (state_t *s, long usec)
 {
   /* For short waits, use high-precision, high-CPU-load wait. For longer
      waits, use low-precision, low-CPU-load wait. */

@@ -666,11 +666,8 @@ kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int disp_size;
   heap_ptr disp;
 
-  if ((script == 0) || (index == 0))
-    index++; /* Script 0 index 1 is reserved, so we skip it. Also, index==0 is used sometimes. */
-
   if (argc == 1)
-    index = 1;
+    index = 0;
 
   if (s->scripttable[script].heappos == 0)
     script_instantiate(s, script); /* Instantiate script if neccessary */
@@ -685,12 +682,12 @@ kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   disp_size = UGET_HEAP(disp);
 
-  if (index > disp_size) {
-    SCIkwarn(SCIkERROR, "Dispatch index too big: %d > %d\n", index, disp_size);
+  if (index > disp_size-1) {
+    SCIkwarn(SCIkERROR, "Dispatch index too big: %d > %d\n", index, disp_size-1);
     return;
   }
 
-  s->acc = UGET_HEAP(disp + index*2) + s->scripttable[script].heappos;
+  s->acc = UGET_HEAP(disp + 2 + index*2) + s->scripttable[script].heappos;
 }
 
 
@@ -1547,7 +1544,6 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int oldx, oldy;
   
   CHECK_THIS_KERNEL_FUNCTION;
-  SCIkdebug(SCIkSTUB, "kGetEvent: Stub\n");
   
   /*If there's a simkey pending, and the game wants a keyboard event, use the
    *simkey instead of a normal event*/
@@ -2498,7 +2494,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	  int yl = GET_SELECTOR(obj, nsBottom) - y + 1;
 	  int max = GET_SELECTOR(obj, max);
 	  int cursor = GET_SELECTOR(obj, cursor);
-	  int modifiers = GET_SELECTOR(obj, modifiers);
+	  int modifiers = GET_SELECTOR(event, modifiers);
 	  byte key = GET_SELECTOR(event, message);
 
 	  int font_nr = GET_SELECTOR(obj, font);
@@ -2572,7 +2568,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		if (textlen < max) {
 		  int i;
 
-		  for (i = textlen + 2; i--; i >= cursor)
+		  for (i = textlen + 2; i >= cursor; i--)
 		    text[i] = text[i - 1];
 		  text[cursor++] = key;
 

@@ -95,9 +95,6 @@ typedef struct {
 #define SCI_EVM_INSERT          (1<<7)
 
 
-extern int sci_pointer_x, sci_pointer_y;
-/* The current coordinates of the mouse pointer */
-
 extern int sci_have_pointer;
 /* Is 0 if no pointing device is present */
 

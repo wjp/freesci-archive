@@ -1,3 +1,21 @@
+1999-08-28  Dmitry Jemerov  <yole@exch.nnz.spb.su>
+
+        * src/core/scriptdebug.c (c_snk): Now it's possible to specify
+        not only function name, but also function index as snk parameter.
+
+        * src/include/vm.h, src/include/engine.h, src/core/scriptdebug.c,
+        src/core/vm.c: Added breakpoint support.
+
+        * src/core/kernel.c (kScriptID): Fixed a long-standing bug in
+        GetScriptID that was masked by an ugly patch: The dispatch table
+        index is 0-based, not 1-based. That fixes the EgoWaterViewer
+        problem in Codename: Iceman. (kEditControl): Event modifiers are
+        handled correctly. (kGetEvent) removed "stub" mark.
+
+        * src/graphics/graphics_ddraw.c: Added support for Caps Lock,
+        Num Lock and keypad keys. Again fixed to work with Magnus'
+        latest changes.
+
 1999-08-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/soundserver_null.c: Added support for sound command 0xc

@@ -161,6 +161,16 @@ typedef struct {
   int selector; /* The selector which was used to call or -1 if not applicable */
 } script_exec_stack_t;
 
+typedef struct _breakpoint {
+  int type;
+  void *data;
+  struct _breakpoint *next;
+} breakpoint_t;
+
+#define BREAK_EXECUTE 1
+/* Break when selector is executed. data contains (char *) selector name
+   (in the format Object::Method) */
+
 extern script_exec_stack_t script_exec_stack[];
 /* Pointers to values used for debugging purposes. */
 
@@ -228,7 +238,7 @@ execute(struct _state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, hea
 
 void
 script_debug(struct _state *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp,
-	     int *restadjust);
+	     int *restadjust, int bp);
 /* Debugger functionality
 ** Parameters: (state_t *) s: The state at which debugging should take place
 **             (heap_ptr *) pc: Pointer to the program counter
@@ -236,6 +246,7 @@ script_debug(struct _state *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_pt
 **             (heap_ptr *) pp: Pointer to the frame pointer
 **             (heap_ptr *) objp: Pointer to the object base pointer
 **             (int *) restadjust: Pointer to the &rest adjustment value
+**             (int) bp: Flag, set to 1 when a breakpoint is triggered
 ** Returns   : (void)
 */
 

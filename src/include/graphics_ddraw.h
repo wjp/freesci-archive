@@ -1,5 +1,5 @@
 /***************************************************************************
- graphics_sdl.h Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+ graphics_ddraw.h Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
 
 
  This program may be modified and copied freely according to the terms of
@@ -60,7 +60,7 @@ void
 ddraw_configure (char *key, char *value);
 
 void
-ddraw_wait (long usec);
+ddraw_wait (struct _state *s, long usec);
 
 sci_event_t
 ddraw_get_event (struct _state *s);
