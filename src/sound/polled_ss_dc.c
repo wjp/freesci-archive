@@ -223,7 +223,7 @@ sound_dc_save(state_t *s, char *dir)
 	/* we ignore the dir */
 
 	global_sound_server->queue_command(0, SOUND_COMMAND_SAVE_STATE, 2);
-	global_sound_server->send_data((byte *) ".", 2);
+	global_sound_server->send_data((byte *) "/ram", 5);
 
 	global_sound_server->get_data((byte **) &success, &size);
 	retval = *success;

@@ -8,11 +8,14 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/dc/bkg.o \
 	$(FSCI_BASE)/src/dc/bsearch.o \
 	$(FSCI_BASE)/src/dc/dc.o \
+	$(FSCI_BASE)/src/dc/dc_save.o \
 	$(FSCI_BASE)/src/dc/gamemenu.o \
 	$(FSCI_BASE)/src/dc/selectgame.o \
 	$(FSCI_BASE)/src/dc/snd_stream.o \
 	$(FSCI_BASE)/src/dc/snprintf.o \
+	$(FSCI_BASE)/src/dc/stdio.o \
 	$(FSCI_BASE)/src/dc/texture.o \
+	$(FSCI_BASE)/src/dc/vmu_pkg.o \
 	$(FSCI_BASE)/src/engine/game.o \
 	$(FSCI_BASE)/src/engine/grammar.o \
 	$(FSCI_BASE)/src/engine/heap.o \
@@ -91,9 +94,9 @@ all: $(BIN_TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-KOS_ALL_INCS := $(KOS_ALL_INCS) -I. -I$(FSCI_BASE)/src/include \
-	-I$(FSCI_BASE)/src/dc -I$(FSCI_BASE)/src/include/beos -D_DREAMCAST \
-	-DHAVE_CONFIG_H -DWANT_CONSOLE -DYY_NEVER_INTERACTIVE
+KOS_LOCAL_CFLAGS := -I. -I$(FSCI_BASE)/src/include -I$(FSCI_BASE)/src/dc \
+	-I$(FSCI_BASE)/src/include/beos -D_DREAMCAST -DHAVE_CONFIG_H \
+	-DWANT_CONSOLE -DYY_NEVER_INTERACTIVE
 
 clean: rm-elf rm-bin
 	-rm -f $(OBJS)
@@ -106,7 +109,7 @@ rm-bin:
 
 $(ELF_TARGET): $(OBJS)
 	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(ELF_TARGET) $(KOS_START) \
-		$(OBJS) $(OBJEXTRA) -lm $(KOS_LIBS)
+		$(OBJS) $(OBJEXTRA) -lm -lz $(KOS_LIBS)
 
 $(BIN_TARGET): $(ELF_TARGET)
-	sh-elf-objcopy -O binary $(ELF_TARGET) $(BIN_TARGET)
+	$(KOS_OBJCOPY) -O binary $(ELF_TARGET) $(BIN_TARGET)

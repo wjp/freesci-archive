@@ -254,6 +254,11 @@ init_directories(char *work_dir, char *game_id)
 			chdir(game_id);
 	}
 
+#ifdef _DREAMCAST
+	/* Set dreamcast work dir to ramdisk */
+	fs_chdir("/ram");
+#endif
+
 	getcwd(work_dir, PATH_MAX);
 
 	return 0;
@@ -1276,12 +1281,22 @@ main(int argc, char** argv)
 	gamestate->have_mouse_flag = (cl_options.mouse == DONTCARE)?
 		active_conf->mouse : cl_options.mouse;
 
+#ifdef _DREAMCAST
+	dc_retrieve_mirrored(gamestate->game_name);
+#endif
+
 	if (savegame_name)
 		game_restore(&gamestate, savegame_name);
 	else
 		game_run(&gamestate); /* Run the game */
 	if (gamestate->sound_server)
 		gamestate->sound_server->exit(gamestate); /* Shutdown sound daemon first */
+
+#ifdef _DREAMCAST
+	dc_delete_save_files("/ram");
+	dc_delete_temp_file();
+	dc_store_mirrored(gamestate->game_name);
+#endif
 
 	game_exit(gamestate);
 	script_free_engine(gamestate); /* Uninitialize game state */

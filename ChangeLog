@@ -1,3 +1,36 @@
+2003-01-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/main.c (init_directories): Set dreamcast work dir to "/ram".
+	(main): Retrieve mirrored files	on startup and save them on shutdown.
+	* src/dc/dc_save.c, src/dc/stdio.c, src/dc/vmu_pkg.c: Added to
+	repository.
+	* src/dc/Makefile: Adjusted to compile the files listed above.
+	* src/dc/config.h: Changed VERSION to 0.3.4-rc1.
+	* src/dc/dc.c: Fixed remove(). Added temporary (?) implementation of
+	fprintf().
+	* src/dc/dc.h: Added prototypes of functions in src/dc/dc_save.c and
+	fprintf().
+	* src/engine/kfile.c (kCheckFreeSpace): On Dreamcast, report that
+	there is always enough space. There is no practical way to determine
+	enough free memory card space. (_k_get_savedir_name): On Dreamcast,
+	report "/ram" as the savedir name independant of the number.
+	(_k_check_file): Retrieve the savegame that's about to be checked
+	from the memorycard. (update_savegame_indices, kGetSaveFiles,
+	kSaveGame, kRestoreGame): update_savegame_indices() now takes the game
+	id as a parameter instead of the game id filename.
+	(update_savegame_indices): Added Dreamcast implementation.
+	(kGetSaveFiles): On Dreamcast, load each savegame from memory card
+	to ram disk as it's about the be checked. (kSaveGame): On Dreamcast,
+	store files from ram disk to memory card after they have been
+	created.
+	* src/engine/savegame.c, src/engine/savegame.cfsml (gamestate_save):
+	On Dreamcast, avoid deleting the mirrored files which might also be
+	present on the ram disk.
+	* src/include/resource.h: On Dreamcast, avoid changing to parent
+	directory.
+	* src/sound/polled_ss_dc.c (sound_dc_save): Return "/ram" as save
+	directory.
+
 2003-01-12  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/pcmout.c: Made pcmout_oss depend on availability of

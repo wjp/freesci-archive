@@ -44,6 +44,10 @@
 #pragma warning( disable : 4101 )
 #endif
 
+#ifdef _DREAMCAST
+#include <dc.h>
+#endif
+
 #define HUNK_TYPE_GFX_SNAPSHOT_STRING "g\n"
 
 /* Missing:
@@ -1054,6 +1058,9 @@ gamestate_save(state_t *s, char *dirname)
 		return 1;
 	}
 
+#ifdef _DREAMCAST
+	dc_delete_save_files("/ram");
+#else /* !_DREAMCAST */
 	sci_init_dir(&dir);
 	filename = sci_find_first(&dir, "*");
 	while (filename) {
@@ -1062,6 +1069,7 @@ gamestate_save(state_t *s, char *dirname)
 		filename = sci_find_next(&dir);
 	}
 	sci_finish_find(&dir);
+#endif
 
 	if (s->sound_server) {
 		if ((s->sound_server->save)(s, dirname)) {

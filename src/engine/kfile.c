@@ -43,6 +43,10 @@
 #  include <dirent.h>
 #endif
 
+#ifdef _DREAMCAST
+#include <dc.h>
+#endif
+
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif
@@ -513,6 +517,17 @@ kGetSaveDir(state_t *s, int funct_nr, int argc, heap_ptr argp)
   s->acc = s->save_dir + 2; /* +2 to step over heap block size */
 }
 
+#ifdef _DREAMCAST
+
+void
+kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+	/* There is no practical way to detect enough memory card space,
+	so we just attempt to save no matter what. */
+	s->acc = 1;
+}
+
+#else /* !_DREAMCAST */
 
 void
 kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -573,8 +588,19 @@ kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
   free(testpath);
 }
 
+#endif
 
 /* Returns a dynamically allocated pointer to the name of the requested save dir */
+#ifdef _DREAMCAST
+
+char *
+_k_get_savedir_name(int nr)
+{
+	return strdup("/ram");
+}
+
+#else /* !_DREAMCAST */
+
 char *
 _k_get_savedir_name(int nr)
 {
@@ -589,6 +615,7 @@ _k_get_savedir_name(int nr)
 	return savedir_name;
 }
 
+#endif
 
 int
 _k_check_file(char *filename, int minfilesize)
@@ -690,6 +717,10 @@ kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		return;
 	}
 
+#ifdef _DREAMCAST
+	dc_retrieve_savegame((char *) s->game_name, savedir_nr);
+#endif
+
 	s->acc = test_savegame(s, (buf = _k_get_savedir_name(savedir_nr)), NULL, 0);
 
 	_chdir_restoredir(workdir);
@@ -736,11 +767,56 @@ _savegame_index_struct_compare(const void *a, const void *b)
 		- ((struct _savegame_index_struct *)a)->timestamp;
 }
 
+#ifdef _DREAMCAST
+
 static void
-update_savegame_indices(char *gfname)
+update_savegame_indices(char *game_id)
 {
 	int i;
-	int gfname_len = strlen(gfname);
+	char *vmu;
+
+	_savegame_indices_nr = 0;
+
+	if (!(vmu = dc_get_first_vmu())) {
+		sciprintf("%s, L%d: No VMU found!\n", __FILE__, __LINE__);
+		return;
+	}
+
+	fs_chdir(vmu);
+	sci_free(vmu);
+
+	for (i = 0; i < MAX_SAVEGAME_NR; i++) {
+		char *catname = dc_get_cat_name(game_id, i);
+		sci_dir_t dirent;
+		sci_init_dir(&dirent);
+
+		if (sci_find_first(&dirent, catname)) {
+			_savegame_indices[_savegame_indices_nr].id = i;
+			_savegame_indices[_savegame_indices_nr++].timestamp = 0;
+		}
+
+		sci_finish_find(&dirent);
+
+		sci_free(catname);
+	}
+
+	fs_chdir("/ram");
+
+	qsort(_savegame_indices, _savegame_indices_nr, sizeof(struct _savegame_index_struct),
+	      _savegame_index_struct_compare);
+
+}
+
+#else /* !_DREAMCAST */
+
+static void
+update_savegame_indices(char *game_id)
+{
+	int i;
+	char *gfname = sci_malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
+
+	strcpy(gfname, game_id);
+	strcat(gfname, FREESCI_ID_SUFFIX);
 
 	_savegame_indices_nr = 0;
 
@@ -761,11 +837,14 @@ update_savegame_indices(char *gfname)
 		free(dirname);
 	}
 
+	sci_free(gfname);
+
 	qsort(_savegame_indices, _savegame_indices_nr, sizeof(struct _savegame_index_struct),
 	      _savegame_index_struct_compare);
 
 }
 
+#endif
 
 void
 kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -782,8 +861,7 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	strcpy(gfname, game_id);
 	strcat(gfname, FREESCI_ID_SUFFIX); /* This file is used to identify in-game savegames */
 
-	update_savegame_indices(gfname);
-
+	update_savegame_indices(game_id);
 
 	SCIkASSERT(UPARAM(0) >= 800);
 	SCIkASSERT(nametarget >= 800);
@@ -795,6 +873,9 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		char *savedir_name = _k_get_savedir_name(_savegame_indices[i].id);
 		FILE *idfile;
 
+#ifdef _DREAMCAST
+		dc_retrieve_savegame(game_id, _savegame_indices[i].id);
+#endif
 		if (!chdir(savedir_name)) {
 
 
@@ -852,7 +933,7 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	strcpy(game_id_file_name, game_id);
 	strcat(game_id_file_name, FREESCI_ID_SUFFIX);
 
-	update_savegame_indices(game_id_file_name);
+	update_savegame_indices(game_id);
 
 	if (savedir_nr >= 0 && savedir_nr < _savegame_indices_nr)
 		/* Overwrite */
@@ -909,6 +990,9 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		chdir (G_DIR_PARENT_S);
 	}
 	free(game_id_file_name);
+#ifdef _DREAMCAST
+	if (dc_store_savegame(game_id, game_description, savedir_id) < 0) s->acc = 0;
+#endif
 	_chdir_restoredir(workdir);
 }
 
@@ -922,12 +1006,8 @@ kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	TEST_DIR_OR_QUIT(workdir);
 
 	if (_savegame_indices_nr < 0) {
-		char *game_id_file_name = sci_malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
-
-		strcpy(game_id_file_name, game_id);
-		strcat(game_id_file_name, FREESCI_ID_SUFFIX);
 		SCIkwarn(SCIkWARNING, "Savegame index list not initialized!\n");
-		update_savegame_indices(game_id_file_name);
+		update_savegame_indices(game_id);
 	}
 
 	savedir_nr = _savegame_indices[savedir_nr].id;

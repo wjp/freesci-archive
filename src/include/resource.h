@@ -171,6 +171,9 @@
 #if defined(__MORPHOS__)
 #  define G_DIR_CURRENT_S ""
 #  define G_DIR_PARENT_S "/"
+#elif defined(_DREAMCAST)
+#  define G_DIR_CURRENT_S fs_getwd()
+#  define G_DIR_PARENT_S fs_getwd() /* We should never change to parent dir. */
 #else
 #  define G_DIR_CURRENT_S "."
 #  define G_DIR_PARENT_S ".."

@@ -28,6 +28,10 @@
 /* Implements needed functions that are missing from KOS */
 
 #include <stdlib.h>
+#include <resource.h>
+#include <dc.h>
+
+#define FPRINTF_BUFSIZE 1024
 
 struct tm *localtime(const time_t *time_p)
 {
@@ -39,28 +43,54 @@ struct tm *localtime(const time_t *time_p)
 
 int remove(const char *pathname)
 {
-	file_t d;
-	d = fs_open(pathname, O_RDONLY | O_DIR);
-	if (d) {
-		/* pathname is a directory */
-
-		fs_close(d);
-		return fs_rmdir(pathname);
-	}
-
-	/* pathname is a file or does not exist */
-
+	/* Only works for files, but KOS doesn't support creating directories
+	** yet.
+	*/
 	return fs_unlink(pathname);
 }
 
-/* vfprintf implementation is only correct for an output length of 10000 chars
-** or less.
+/* vfprintf implementation is only correct for an output length of
+** FPRINTF_BUFSIZE chars or less.
 */
 int vfprintf(FILE *stream, const char *format, va_list ap)
 {
-	char s[10000];
-	vsnprintf((char *) &s, 10000, format, ap);
+	char *s = malloc(FPRINTF_BUFSIZE);
+
+	vsnprintf(s, FPRINTF_BUFSIZE, format, ap);
 	return fprintf(stream, "%s", s);
+}
+
+/* fprintf implementation is only correct for an output length of
+** FPRINTF_BUFSIZE chars or less.
+*/
+int fprintf(FILE *stream, const char *format, ...)
+{
+	va_list argp;
+	char *s = malloc(FPRINTF_BUFSIZE);
+	
+	int cnt;
+
+	if ((stream == stdout) || (stream == stderr)) {
+		va_start(argp, format);
+		vsnprintf(s, FPRINTF_BUFSIZE, format, argp);
+		va_end(argp);
+		
+		cnt = printf("%s", s);
+	}
+	else {
+		va_start(argp, format);
+		cnt = vsnprintf(s, FPRINTF_BUFSIZE, format, argp);
+		if (cnt > FPRINTF_BUFSIZE) {
+			sciprintf("Warning: fprintf() output truncated!\n");
+			cnt = FPRINTF_BUFSIZE;
+		}
+		va_end(argp);
+		
+		cnt = fwrite(s, 1, cnt, stream);
+	}
+
+	free(s);
+	return(cnt);
 }
 
 char *getcwd(char *buf, size_t size)

@@ -40,6 +40,9 @@
 #define getcwd _getcwd
 #endif
 
+#ifdef _DREAMCAST
+#include <dc.h>
+#endif
 
 #ifndef O_BINARY
 #define O_BINARY 0

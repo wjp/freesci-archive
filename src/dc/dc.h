@@ -36,12 +36,25 @@
 #define EINTR 4
 #endif
 
+/* Functions implemented in dc_save.c */
+
+char *dc_get_first_vmu();
+char *dc_get_cat_name();
+void dc_delete_save_files(char *);
+int dc_delete_temp_file();
+int dc_retrieve_savegame(char *, int);
+int dc_store_savegame(char *, char *, int);
+int dc_retrieve_mirrored(char *);
+int dc_store_mirrored(char *);
+
 /* Functions missing from KOS */
 
 /* Implemented in dc.c */
 struct tm *localtime(const time_t *);
 int remove(const char *);
 int vfprintf(FILE *, const char *, va_list);
+#undef fprintf
+int fprintf(FILE *, const char *, ...);
 char *getcwd(char *, size_t);
 char *strerror(int);
 
