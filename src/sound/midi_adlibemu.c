@@ -82,6 +82,7 @@ void adlibemu_init_lists()
     oper_note[i] = 255;
     oper_chn[i] = 255;
   }
+  free_voices = ADLIB_VOICES;
 
   memset(instr, 0, sizeof(instr));
   memset(pitch, 0, sizeof(instr));
@@ -188,7 +189,7 @@ int adlibemu_stop_note(int chn, int note, int velocity)
   
   free_voices++;
 
-  return op;
+  return 0;
 }
 
 int adlibemu_start_note(int chn, int note, int velocity)
@@ -202,7 +203,7 @@ int adlibemu_start_note(int chn, int note, int velocity)
 
   if (free_voices <= 0) {
     printf("ack, all voices full\n");  /* XXX implement overflow code */
-    return;
+    return -1;
   } else 
     for (op = 0; op < ADLIB_VOICES ; op++)
       if (oper_chn[op] == 255)
@@ -228,11 +229,12 @@ int adlibemu_start_note(int chn, int note, int velocity)
 	 adlib_reg[register_base[2]+register_offset[op]] & 0x3f,
 	 adlib_reg[register_base[3]+register_offset[op]] & 0x3f);
 
-  return;
+  return 0;
 }
 
 int test_adlib () {
 
+  int voice = 0;
 #if 0
   guint8 data[] = { 0x25, 0x21, 0x48, 0x48, 0xf0, 0xf2, 0xf0, 0xa5, 0x00, 0x00, 0x06 };
 #else
@@ -240,29 +242,38 @@ int test_adlib () {
 #endif
 
 #if 1
-  opl_write(0x20, data[0]);
-  opl_write(0x23, data[1]);
-  opl_write(0x40, data[2]);
-  opl_write(0x43, data[3]);
-  opl_write(0x60, data[4]);
-  opl_write(0x63, data[5]);
-  opl_write(0x80, data[6]);
-  opl_write(0x83, data[7]);
-  opl_write(0xe0, data[8]);
-  opl_write(0xe3, data[9]);
-  opl_write(0xc0, data[10]);
+  opl_write(register_base[0]+register_offset[voice], data[0]);
+  opl_write(register_base[1]+register_offset[voice], data[1]);
+  opl_write(register_base[2]+register_offset[voice], data[2]);
+  opl_write(register_base[3]+register_offset[voice], data[3]);
+  opl_write(register_base[4]+register_offset[voice], data[4]);
+  opl_write(register_base[5]+register_offset[voice], data[5]);
+  opl_write(register_base[6]+register_offset[voice], data[6]);
+  opl_write(register_base[7]+register_offset[voice], data[7]);
+  opl_write(register_base[8]+register_offset[voice], data[8]);
+  opl_write(register_base[9]+register_offset[voice], data[9]);
+  opl_write(register_base[10]+register_offset[voice], data[10]);
 #else
-  synth_setpatch(0, data);
+  synth_setpatch(voice, data);
 #endif
 
-#if 1
-  opl_write(0xA0, 0x57);
-  opl_write(0xB0, 0x2d);
+#if 0
+  opl_write(0xA0 + voice, 0x57);
+  opl_write(0xB0 + voice, 0x2d);
 #else
-  synth_setvolume(0, 0x50);
-  synth_setnote(0, 0x30, 0);
+  synth_setvolume(voice, 0x50);
+  synth_setnote(voice, 0x30, 0);
 #endif
 
+  /*
+  instr[0x0e] = 0x0a;
+  instr[0x03] = 0x26;
+
+  adlibemu_start_note(0x0e, 0x30, 0x40);
+  sleep(1);
+  adlibemu_start_note(0x03, 0x48, 0x40);
+  sleep(1);
+  */
 }
 
 int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
@@ -306,16 +317,19 @@ int midi_adlibemu_volume(guint8 volume)
 
 }
 
-int midi_adlibemu_reset(void) {
+int midi_adlibemu_reset(void)
+{
+  //  printf("AdlibEmu:  Reset\n");
   if (ym3812 == NULL)
     return -1;
 
   adlibemu_init_lists();
   OPLResetChip (ym3812);
+
   opl_write(0x01, 0x20);
   opl_write(0xBD, 0xc0);
 
-  test_adlib();
+  //  test_adlib();
   return 0;
 }
 
@@ -334,12 +348,10 @@ int midi_adlibemu_event(guint8 command, guint8 note, guint8 velocity)
 
   switch (oper) {    
   case 0x80:
-    adlibemu_stop_note(channel, note, velocity);
-    return 0;
+    return adlibemu_stop_note(channel, note, velocity);
   case 0x90:  /* noteon and noteoff */
-    adlibemu_start_note(channel,note,velocity);
-    return 0;
-  case 0xe0:    /* Pitch bend NYI */
+    return adlibemu_start_note(channel,note,velocity);
+  case 0xe0:    /* XXXX Pitch bend NYI */
     break;
   case 0xb0:    /* CC changes. */
     switch (note) {
