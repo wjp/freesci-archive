@@ -191,7 +191,7 @@ extract_mod_rule(char *src, gfx_res_mod_t *rule)
 	rule->type = GFX_RES_MULTIPLY_FIXED;
 
 	if (isdigit(*src) || *src == '.') {
-		f[0] = f[1] = f[2] = strtof(src, &endp);
+		f[0] = f[1] = f[2] = strtod(src, &endp);
 
 		if (*endp)
 			goto mod_error_label;
@@ -207,7 +207,7 @@ extract_mod_rule(char *src, gfx_res_mod_t *rule)
 					  *src);
 				goto mod_error_label;
 			}
-			f[i++] = strtof(src, &endp);
+			f[i++] = strtod(src, &endp);
 
 			src = endp;
 
