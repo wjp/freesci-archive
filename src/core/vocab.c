@@ -377,7 +377,7 @@ vocab_match_simple(state_t *s, heap_ptr addr)
   int listpos = 0;
 
   if (!s->parser_valid)
-    return 0;
+    return SAID_NO_MATCH;
 
   if (s->parser_valid == 2) { /* debug mode: sim_said */
     do {
@@ -388,28 +388,114 @@ vocab_match_simple(state_t *s, heap_ptr addr)
 	nextitem = nextitem << 8 | s->heap[addr++];
 	if (s->parser_nodes[listpos].type
 	    || nextitem != s->parser_nodes[listpos++].content.value)
-	  return 0;
+	  return SAID_NO_MATCH;
       } else {
 
 	if (nextitem == 0xff)
-	  return (s->parser_nodes[listpos++].type == -1); /* Finished? */
+	  return (s->parser_nodes[listpos++].type == -1)? SAID_FULL_MATCH : SAID_NO_MATCH; /* Finished? */
 
 	if (s->parser_nodes[listpos].type != 1
 	    || nextitem != s->parser_nodes[listpos++].content.value)
-	  return 0;
+	  return SAID_NO_MATCH;
 
       }
     } while (42);
   } else { /* normal simple match mode */
-    return 0; /* Still unimplemented */
-    do {
-      nextitem = s->heap[addr++];
-
-      if (nextitem < 0xf0) {
-	nextitem = nextitem << 8 | s->heap[addr++];
-      }
-    } while (42);
+    return vocab_simple_said_test(s, addr);
   }
+}
+
+
+static short _related_words[][2] = { /* 0 is backwards, 1 is forward */
+  {0x800, 0x180}, /* preposition */
+  {0x000, 0x180}, /* article */
+  {0x000, 0x180}, /* adjective */
+  {0x800, 0x000}, /* pronoun */
+  {0x800, 0x180}, /* noun */
+  {0x000, 0x800}, /* auxiliary verb */
+  {0x800, 0x800}, /* adverb */
+  {0x000, 0x180}, /* verb */
+  {0x000, 0x180} /* number */
+};
+
+vocab_build_simple_parse_tree(parse_tree_node_t *nodes, result_word_t *words, int words_nr)
+{
+  int i, length, pos = 0;
+
+  for (i = 0; i < words_nr; ++i) {
+    if (words[i].class != VOCAB_CLASS_ANYWORD) {
+      nodes[pos].type = words[i].class;
+      nodes[pos].content.value = words[i].group;
+      pos += 2; /* Link information is filled in below */
+    }
+  }
+  nodes[pos].type = -1; /* terminate */
+  length = pos >> 1;
+
+  /* now find all referenced words */
+#ifdef SCI_SIMPLE_SAID_DEBUG
+  sciprintf("Semantic references:\n");
+#endif
+
+  for (i = 0; i < length; i++) {
+    int j;
+    int searchmask;
+    int type;
+
+    pos = (i << 1);
+    type = ffs(nodes[pos].type);
+
+    if (type) {
+      int found = -1;
+
+      type -= 5; /* 1 because ffs starts counting at 1, 4 because nodes[pos].type is a nibble off */
+      if (type < 0)
+	type = 0;
+#ifdef SCI_SIMPLE_SAID_DEBUG
+      sciprintf("#%d: Word %04x: type %04x\n", i, nodes[pos].content.value, type);
+#endif
+
+      /* search backwards */
+      searchmask = _related_words[type][0];
+      if (searchmask) {
+	for (j = i-1; j >= 0; j--)
+	  if (nodes[j << 1].type & searchmask) {
+	    found = j << 1;
+	    break;
+	  }
+      }
+      nodes[pos+1].content.branches[0] = found;
+#ifdef SCI_SIMPLE_SAID_DEBUG
+      if (found > -1)
+	sciprintf("  %d <\n", found >> 1);
+#endif
+
+      /* search forward */
+      found = -1;
+      searchmask = _related_words[type][1];
+      if (searchmask) {
+	for (j = i+1; j < length; j++)
+	  if (nodes[j << 1].type & searchmask) {
+	    found = j << 1;
+	    break;
+	  }
+      }
+#ifdef SCI_SIMPLE_SAID_DEBUG
+      if (found > -1)
+	sciprintf("  > %d\n", found >> 1);
+#endif
+
+    } else {
+#ifdef SCI_SIMPLE_SAID_DEBUG
+      sciprintf("#%d: Untypified word\n", i); /* Weird, but not fatal */
+#endif
+      nodes[pos+1].content.branches[0] = -1;
+      nodes[pos+1].content.branches[1] = -1;
+    }
+  }
+#ifdef SCI_SIMPLE_SAID_DEBUG
+  sciprintf("/Semantic references.\n");
+#endif
 }
 #endif
 

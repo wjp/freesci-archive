@@ -729,8 +729,14 @@ _cfsml_write_state_t(FILE *fh, state_t* foo)
   fprintf(fh, "parser_base = ");
     write_heapptr(fh, &(foo->parser_base));
     fprintf(fh, "\n");
+  fprintf(fh, "parser_event = ");
+    write_heapptr(fh, &(foo->parser_event));
+    fprintf(fh, "\n");
   fprintf(fh, "global_vars = ");
     write_heapptr(fh, &(foo->global_vars));
+    fprintf(fh, "\n");
+  fprintf(fh, "parser_lastmatch_word = ");
+    _cfsml_write_int(fh, &(foo->parser_lastmatch_word));
     fprintf(fh, "\n");
   fprintf(fh, "parser_nodes = ");
     min = max = VOCAB_TREE_NODES;
@@ -1165,9 +1171,19 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
          if (read_heapptr(fh, &(foo->parser_base), value, line, hiteof))
             return CFSML_FAILURE;
       } else
+      if (!strcmp(bar, "parser_event")) {
+#line 553 "cfsml.pl"
+         if (read_heapptr(fh, &(foo->parser_event), value, line, hiteof))
+            return CFSML_FAILURE;
+      } else
       if (!strcmp(bar, "global_vars")) {
 #line 553 "cfsml.pl"
          if (read_heapptr(fh, &(foo->global_vars), value, line, hiteof))
+            return CFSML_FAILURE;
+      } else
+      if (!strcmp(bar, "parser_lastmatch_word")) {
+#line 553 "cfsml.pl"
+         if (_cfsml_read_int(fh, &(foo->parser_lastmatch_word), value, line, hiteof))
             return CFSML_FAILURE;
       } else
       if (!strcmp(bar, "parser_nodes")) {
@@ -1399,6 +1415,9 @@ _cfsml_write_view_object_t(FILE *fh, view_object_t* foo)
   fprintf(fh, "nsBottom = ");
     _cfsml_write_int(fh, &(foo->nsBottom));
     fprintf(fh, "\n");
+  fprintf(fh, "underBits = ");
+    _cfsml_write_int(fh, &(foo->underBits));
+    fprintf(fh, "\n");
   fprintf(fh, "}");
 }
 
@@ -1483,6 +1502,11 @@ _cfsml_read_view_object_t(FILE *fh, view_object_t* foo, char *lastval, int *line
       if (!strcmp(bar, "nsBottom")) {
 #line 553 "cfsml.pl"
          if (_cfsml_read_int(fh, &(foo->nsBottom), value, line, hiteof))
+            return CFSML_FAILURE;
+      } else
+      if (!strcmp(bar, "underBits")) {
+#line 553 "cfsml.pl"
+         if (_cfsml_read_int(fh, &(foo->underBits), value, line, hiteof))
             return CFSML_FAILURE;
       } else
 #line 560 "cfsml.pl"
@@ -2534,7 +2558,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
 
 /* Auto-generated CFSML declaration and function block ends here */
 /* Auto-generation performed by cfsml.pl 0.6.7 */
-#line 389 "CFSML input file"
+#line 393 "CFSML input file"
 
 
 
@@ -2548,7 +2572,7 @@ write_menubar_tp(FILE *fh, menubar_t **foo)
   _cfsml_write_menubar_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 399 "CFSML input file"
+#line 403 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2575,7 +2599,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 416 "CFSML input file"
+#line 420 "CFSML input file"
 
   }
   return *hiteof;
@@ -2591,7 +2615,7 @@ write_port_tp(FILE *fh, port_t **foo)
   _cfsml_write_port_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 427 "CFSML input file"
+#line 431 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2619,7 +2643,7 @@ read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof)
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 445 "CFSML input file"
+#line 449 "CFSML input file"
 
     res =  findResource(sci_font, (*foo)->font_nr);
     if (res)
@@ -2690,7 +2714,7 @@ gamestate_save(state_t *s, char *dirname)
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 511 "CFSML input file"
+#line 515 "CFSML input file"
 
   fclose(fh);
 
@@ -2755,7 +2779,7 @@ gamestate_restore(state_t *s, char *dirname)
     read_eof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 563 "CFSML input file"
+#line 567 "CFSML input file"
 
   fclose(fh);
 

@@ -304,7 +304,11 @@ kDisposeScript(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kIsObject(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->acc = is_object(s, UPARAM(0));
+  heap_ptr address = UPARAM(0);
+  if (address == 0xffff) /* Treated specially */
+    s->acc = 0;
+  else
+    s->acc = is_object(s, UPARAM(0));
 }
 
 void

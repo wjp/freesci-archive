@@ -706,6 +706,8 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     draw_pic0(s->pic, 1, PARAM_OR_ALT(3, 0), resource->data);
 
+    SCIkdebug(SCIkGRAPHICS,"Drawing pic.%03d\n", PARAM(0));
+
     if (argc > 1)
       s->pic_animate = PARAM(1); /* The animation used during kAnimate() later on */
 
@@ -1180,14 +1182,14 @@ _k_dyn_view_list_prepare_change(state_t *s)
     if (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE)) {
 
       if (list[i].underBitsp && !(signal & _K_VIEW_SIG_FLAG_DONT_RESTORE)) {
-	int under_bits = GET_HEAP(list[i].underBitsp);
+	int under_bits = list[i].underBits = GET_HEAP(list[i].underBitsp);
 
 	if (under_bits) {
 
 	  SCIkdebug(SCIkGRAPHICS, "Restoring BG for obj %04x with signal %04x\n", list[i].obj, signal);
 	  graph_restore_box(s, under_bits);
 
-	  PUT_HEAP(list[i].underBitsp, 0); /* Restore and mark as restored */
+	  PUT_HEAP(list[i].underBitsp, list[i].underBits = 0); /* Restore and mark as restored */
 	}
       }
     } /* if NOT (signal & _K_VIEW_SIG_FLAG_NO_UPDATE) */
@@ -1215,14 +1217,14 @@ _k_restore_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
     } else {
 
       if (list[i].underBitsp && !(signal & _K_VIEW_SIG_FLAG_DONT_RESTORE)) {
-	int under_bits = GET_HEAP(list[i].underBitsp);
+	int under_bits = list[i].underBits = GET_HEAP(list[i].underBitsp);
 
 	if (under_bits) {
 
 	  SCIkdebug(SCIkGRAPHICS, "Restoring BG for obj %04x with signal %04x\n", list[i].obj, signal);
 	  graph_restore_box(s, under_bits);
 
-	  PUT_HEAP(list[i].underBitsp, 0); /* Restore and mark as restored */
+	  PUT_HEAP(list[i].underBitsp, list[i].underBits = 0); /* Restore and mark as restored */
 	}
       }
       signal &= ~_K_VIEW_SIG_FLAG_UNKNOWN_6;
@@ -1241,15 +1243,16 @@ _k_view_list_free_backgrounds(state_t *s, view_object_t *list, int list_nr)
 {
   int i;
 
+  SCIkdebug(SCIkMEM, "Freeing bglist: %d entries\n", list_nr);
   for (i = 0; i < list_nr; i++)
     if (list[i].obj) {
-    int handle = GET_HEAP(list[i].underBitsp);
+    int handle = list[i].underBits;
     int signal = GET_HEAP(list[i].signalp);
 
     if (handle)
       kfree(s, handle);
 
-    PUT_HEAP(list[i].underBitsp, 0);
+    PUT_HEAP(list[i].underBitsp, list[i].underBits = 0);
   }
 }
 
@@ -1274,7 +1277,7 @@ _k_save_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
     handle = view0_backup_background(s, list[i].x, list[i].y,
 				     list[i].loop, list[i].cel, list[i].view);
 
-    PUT_HEAP(list[i].underBitsp, handle);
+    PUT_HEAP(list[i].underBitsp, list[i].underBits = handle);
   }
 }
 
@@ -1291,11 +1294,11 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, view_object_t *list, i
       if (UGET_HEAP(list[i].signalp) & _K_VIEW_SIG_FLAG_DISPOSE_ME) {
 
 	if (list[i].underBitsp) { /* Is there a bg picture left to clean? */
-	  word mem_handle = GET_HEAP(list[i].underBitsp);
+	  word mem_handle = list[i].underBits = GET_HEAP(list[i].underBitsp);
 
 	  if (mem_handle) {
 	    kfree(s, mem_handle);
-	    PUT_HEAP(list[i].underBitsp, 0);
+	    PUT_HEAP(list[i].underBitsp, list[i].underBits = 0);
 	  }
 	}
 
@@ -1410,7 +1413,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
 	!= SELECTOR_VARIABLE) {
       retval[i].underBitsp = 0;
       SCIkdebug(SCIkGRAPHICS, "Object at %04x has no underBits\n", obj);
-    }
+    } else retval[i].underBits = GET_HEAP(retval[i].underBitsp);
 
     if (lookup_selector(s, obj, s->selector_map.signal, &(retval[i].signalp))
 	!= SELECTOR_VARIABLE) {
@@ -1445,8 +1448,7 @@ _k_view_list_dispose(state_t *s, view_object_t **list_ptr, int *list_nr_ptr)
 {
   int i;
   view_object_t *list = *list_ptr;
-
-  if (!*list_nr_ptr)
+  if (!(*list_nr_ptr))
     return; /* Nothing to do :-( */
 
   _k_view_list_free_backgrounds(s, list, *list_nr_ptr);
@@ -1779,6 +1781,9 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
   CHECK_THIS_KERNEL_FUNCTION;
 
   process_sound_events(s); /* Take care of incoming events (kAnimate is called semi-regularly) */
+
+  if (!cast_list)
+    _k_view_list_dispose(s, &(s->dyn_views), &(s->dyn_views_nr)); /* Clear dynviews list */
 
   if (s->dyn_views_nr) {
     g_free(s->dyn_views);

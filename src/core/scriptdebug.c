@@ -620,7 +620,7 @@ c_dynviews(state_t *s)
   for (i=0;i<s->dyn_views_nr;i++)
   {
     sciprintf("Object at %04x with underBits %04x\n",s->dyn_views[i].obj,
-						     s->dyn_views[i].underBitsp);
+						     s->dyn_views[i].underBits);
   }
   return 0;
 }
@@ -996,6 +996,7 @@ c_show_list(state_t *s)
 int
 c_mem_info(state_t *s)
 {
+  int i, cnt = 0, allocd = 0;
   if (!s) {
     sciprintf("Not in debug state!\n");
     return 1;
@@ -1003,6 +1004,17 @@ c_mem_info(state_t *s)
 
   heap_meminfo(s->_heap);
   sciprintf("Heap: Free:%04x  Max:%04x\n", heap_meminfo(s->_heap) & 0xffff, heap_largest(s->_heap) & 0xffff);
+
+  sciprintf("Hunk:\n");
+  for (i = 0; i < MAX_HUNK_BLOCKS; i++)
+    if (s->hunk[i].size) {
+      sciprintf("#%d: %d bytes\n", i, s->hunk[i].size);
+      ++cnt;
+      allocd += s->hunk[i].size;
+    }
+
+  sciprintf("Hunk handles: %d (%d bytes total)\n", cnt, allocd);
+
   return 0;
 }
 

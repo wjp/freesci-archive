@@ -72,8 +72,12 @@ void
 kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr said_block = UPARAM(0);
+  int new_lastmatch;
 
   CHECK_THIS_KERNEL_FUNCTION;
+
+  if (argc != 1)
+    SCIkwarn(SCIkWARNING, "Said() called with %d parameters\n", argc);
 
   if (s->debug_mode & (1 << SCIkPARSER_NR)) {
     SCIkdebug(SCIkPARSER, "Said block:", 0);
@@ -82,11 +86,19 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 #ifdef SCI_SIMPLE_SAID_CODE
 
-  s->acc = vocab_match_simple(s, said_block);
+  s->acc = 0;
 
-  if ((s->debug_mode & (1 << SCIkPARSER_NR))
-      && s->acc)
-    sciprintf("Match.\n");
+  if ((new_lastmatch = vocab_match_simple(s, said_block)) != SAID_NO_MATCH) {
+
+    if (s->debug_mode & (1 << SCIkPARSER_NR))
+      sciprintf("Match.\n");
+    s->acc = 1;
+
+    if (new_lastmatch == SAID_FULL_MATCH) /* Finished matching? */
+      PUT_SELECTOR(s->parser_event, claimed, 1); /* claim event */
+    else /* partial match: Set new lastmatch word */
+      s->parser_lastmatch_word = new_lastmatch;
+  }
 
 #else /* !SCI_SIMPLE_SAID_CODE */
   SCIkdebug(SCIkSTUB,"stub\n");
@@ -163,6 +175,9 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr event = UPARAM(1);
   CHECK_THIS_KERNEL_FUNCTION;
 
+  s->parser_event = event;
+  s->parser_lastmatch_word = SAID_NO_MATCH;
+
   if (s->parser_valid == 2) {
     sciprintf("Parsing skipped: Parser in simparse mode\n");
     return;
@@ -196,14 +211,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
       syntax_fail = 1; /* Building a tree failed */
 
 #ifdef SCI_SIMPLE_SAID_CODE
-    {
-      int i;
-      for (i = 0; i < words_nr; ++i) {
-	s->parser_nodes[i].type = words[i].class;
-	s->parser_nodes[i].content.value = words[i].group;
-      }
-      s->parser_nodes[words_nr].type = -1; /* terminate */
-    }
+    vocab_build_simple_parse_tree(&(s->parser_nodes[0]), words, words_nr);
 #endif SCI_SIMPLE_SAID_CODE
 
     g_free(words);
@@ -219,8 +227,10 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     } else {
       s->parser_valid = 1;
+#ifndef SCI_SIMPLE_SAID_CODE
       if (s->debug_mode & (1 << SCIkPARSER_NR))
 	vocab_dump_parse_tree(s->parser_nodes);
+#endif /* !SCI_SIMPLE_SAID_CODE */
     }
 
   } else {

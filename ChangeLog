@@ -1,3 +1,21 @@
+2000-04-16  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kgraphics.c (_k_make_view_list): Fixed the "out of hunk"
+	problems once and for all (I hope) by keeping a copy of the underbits.
+
+	* src/core/kscripts.c (kIsObject): Caught IsObject(0xffff), thus
+	preventing an unaligned read.
+
+	* src/core/scriptdebug.c (c_mem_info): Added hunk information to
+	the meminfo console command
+
+	* src/core/simplesaid.c: Implemented a simple and preliminary almost-
+	Said() implementation that handles some of the basic expressions.
+
+	* src/core/kstring.c (kParse): A pointer to the event passed to
+	Parse() is now stored and later used in Said() to claim the event
+	on matches.
+
 2000-04-16  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/core/kgraphics.c (k_set_now_seen): Fixed warning messages caused

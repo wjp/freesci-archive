@@ -267,6 +267,7 @@ RECORD view_object_t {
   int nsLeft;
   int nsRight;
   int nsBottom;
+  int underBits;
 }
 
 
@@ -362,7 +363,10 @@ RECORD state_t "state_t" {
   heap_ptr stack_base;
   heap_ptr stack_handle;
   heap_ptr parser_base;
+  heap_ptr parser_event;
   heap_ptr global_vars;
+
+  int parser_lastmatch_word;
 
   parse_tree_node_t parser_nodes[STATIC VOCAB_TREE_NODES];
   int parser_valid;

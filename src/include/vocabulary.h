@@ -33,6 +33,8 @@
 
 /*#define VOCABULARY_DEBUG /**/
 #define SCI_SIMPLE_SAID_CODE /* Whether the simplified Said() matching should be used */
+/*#define SCI_SIMPLE_SAID_DEBUG /* uncomment to enable simple said debugging */
+
 
 #define SCRIPT_UNKNOWN_FUNCTION_STRING "[Unknown]"
 /* The string used to identify the "unknown" SCI0 function for each game */
@@ -93,6 +95,10 @@ extern char *class_names[]; /* Vocabulary class names */
 #define SAID_TERM    0xff
 
 #define SAID_FIRST SAID_COMMA
+
+/* There was no 'last matching word': */
+#define SAID_FULL_MATCH 0xffff
+#define SAID_NO_MATCH 0xfffe
 
 #define SAID_LONG(x) ((x) << 8)
 
@@ -331,11 +337,27 @@ vocab_synonymize_tokens(result_word_t *words, int words_nr, synonym_t *synonyms,
 #ifdef SIMPLE_SAID_CODE
 int
 vocab_match_simple(state_t *s, heap_ptr addr);
+int
+vocab_simple_said_test(state_t *s, heap_ptr addr);
 /* Does a simple match between the specified Said spec and the parse tree
 ** Parameters: (state_t *) s: The state to use (include the parse tree)
 **             (heap_ptr) addr: Address of the Said spec
-** Returns   : 1 on match, 0 if not matched
-** This function is not nearly as sophisticated as its SCI equivalent.
+** Returns   : SAID_FULL_MATCH, SAID_NO_MATCH, or the new lastmatch word index
+** Use vocab_match_simple(), as vocab_simple_said_test does not test for
+** a valid parser mode or handle Said debug mode.
+*/
+
+int
+vocab_build_simple_parse_tree(parse_tree_node_t *nodes, result_word_t *words, int words_nr);
+/* Builds a simplified parse tree from a list of words
+** Parameters: (parse_tree_node_t *) nodes: A node list to store the tree in (must have
+**                                          at least VOCAB_TREE_NODES entries)
+**             (result_word_t *) words: The words to build the tree from
+**             (int) words_nr: The number of words
+** Returns   : 0 on success, 1 if the tree couldn't be built in VOCAB_TREE_NODES nodes.
+** This function doesn't build a real tree, just a list, but it's a replacement for
+** vocab_build_parse_tree (which /does/ build a syntax tree). Should be used in conjunction
+** with vocab_match_simple().
 */
 #endif
 

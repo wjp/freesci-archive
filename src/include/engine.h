@@ -205,7 +205,10 @@ typedef struct _state
   heap_ptr stack_base;   /* The base position of the stack; used for debugging */
   heap_ptr stack_handle; /* The stack's heap handle */
   heap_ptr parser_base;  /* A heap area used by the parser for error reporting */
+  heap_ptr parser_event; /* The event passed to Parse() and later used by Said() */
   heap_ptr global_vars;  /* script 000 selectors */
+
+  int parser_lastmatch_word; /* Position of the input word the parser last matched on, or SAID_NO_MATCH */
 
   /* Debugger data: */
   breakpoint_t *bp_list;   /* List of breakpoints */

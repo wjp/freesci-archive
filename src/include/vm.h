@@ -164,6 +164,7 @@ typedef struct {
   heap_ptr obj;
   heap_ptr signalp;    /* Used only indirectly */
   heap_ptr underBitsp; /* The same goes for the handle storage */
+  int underBits; /* Copy of the underbits: Needed for cleanup */
 
   int x, y;
   int priority;

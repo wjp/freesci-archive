@@ -274,6 +274,8 @@ kalloc(state_t *s, int type, int space)
     s->hunk[seeker].type = type;
   }
 
+  SCIkdebug(SCIkMEM, "Allocated %d at hunk %04x\n", space, seeker | (sci_memory << 11));
+
   return (seeker | (sci_memory << 11));
 }
 
@@ -283,7 +285,7 @@ byte *
 kmem(state_t *s, int handle)
 {
   if ((handle >> 11) != sci_memory) {
-    SCIkwarn(SCIkERROR, "Error: kmem() without a handle\n");
+    SCIkwarn(SCIkERROR, "Error: kmem() without a handle (%04x)\n", handle);
     return 0;
   }
 
@@ -305,6 +307,8 @@ kfree(state_t *s, int handle)
     SCIkwarn(SCIkERROR, "Error: Attempt to kfree() non-handle\n");
     return 1;
   }
+
+  SCIkdebug(SCIkMEM, "Freeing hunk %04x\n", handle);
 
   handle &= 0x7ff;
 
