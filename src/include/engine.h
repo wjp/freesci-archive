@@ -148,7 +148,14 @@ typedef struct _state
 
   heap_ptr stack_base;   /* The base position of the stack; used for debugging */
   heap_ptr stack_handle; /* The stack's heap handle */
+  heap_ptr parser_base;  /* A heap area used by the parser for error reporting */
   heap_ptr global_vars;  /* script 000 selectors */
+
+  /* Parser data: */
+  word_t **parser_words;
+  int parser_words_nr;
+  suffix_t **parser_suffices;
+  int parser_suffices_nr;
 
   heap_ptr game_obj; /* Pointer to the game object */
 

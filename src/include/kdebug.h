@@ -29,7 +29,7 @@
 #ifndef _SCI_KDEBUG_H_
 #define _SCI_KDEBUG_H_
 
-#define SCIk_DEBUG_MODES 10
+#define SCIk_DEBUG_MODES 11
 
 static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
   "Stubs",
@@ -42,6 +42,7 @@ static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
   "Audio subsystem",
   "System graphics driver",
   "Base setter results",
+  "Parser"
 };
 /* The various debug areas */
 
@@ -52,6 +53,7 @@ static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
 #define SCIkSOUNDCHK_NR 7
 #define SCIkGFXDRIVER_NR 8
 #define SCIkBASESETTER_NR 9
+#define SCIkPARSER_NR 10
 
 #define SCIkERROR      s, __FILE__, __LINE__, SCIkERROR_NR
 #define SCIkWARNING    s, __FILE__, __LINE__, SCIkWARNING_NR
@@ -65,6 +67,7 @@ static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
 #define SCIkSOUND      s, __FILE__, __LINE__, SCIkSOUNDCHK_NR
 #define SCIkGFXDRIVER  s, __FILE__, __LINE__, SCIkGFXDRIVER_NR
 #define SCIkBASESETTER s, __FILE__, __LINE__, SCIkBASESETTER_NR
+#define SCIkPARSER     s, __FILE__, __LINE__, SCIkPARSER_NR
 
 
 #define SCI_KERNEL_DEBUG

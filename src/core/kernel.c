@@ -1053,7 +1053,15 @@ kFGets(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+  heap_ptr said_block = UPARAM(0);
+
   CHECK_THIS_KERNEL_FUNCTION;
+
+  if (s->debug_mode & (1 << SCIkPARSER_NR)) {
+    SCIkdebug(SCIkPARSER, "Said block:", 0);
+    vocab_decypher_said_block(s, said_block);
+  }
+
   SCIkdebug(SCIkSTUB,"stub\n");
   s->acc = 0; /* Never true */
 }
@@ -1437,6 +1445,8 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int color, priority, special;
   port_t *port = s->ports[s->view_port];
 
+  _k_dyn_view_list_prepare_change(s);
+
   switch(PARAM(0)) {
 
   case K_GRAPH_GET_COLORS_NR:
@@ -1485,8 +1495,11 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
     int x = PARAM(2);
     int y = PARAM(1);
 
+    SCIkdebug(SCIkGRAPHICS, "fill_box_any(%d, %d, %d, %d) map=%d (%d %d)\n",
+	      PARAM(1), PARAM(2), PARAM(3), PARAM(4), PARAM(5), PARAM(6), PARAM_OR_ALT(7, -1));
+
     graph_fill_box_custom(s, x + s->ports[s->view_port]->xmin, y + s->ports[s->view_port]->ymin,
-			  PARAM(4)-x, PARAM(3)-x, PARAM(6), PARAM_OR_ALT(7, -1),
+			  PARAM(4)-x, PARAM(3)-y, PARAM(6), PARAM_OR_ALT(7, -1),
 			  PARAM_OR_ALT(8, -1), UPARAM(5));
     CHECK_THIS_KERNEL_FUNCTION;
 
@@ -1498,6 +1511,9 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
     int x = PARAM(2);
     int y = PARAM(1);
 
+    SCIkdebug(SCIkGRAPHICS, "update_box(%d, %d, %d, %d)\n",
+	      PARAM(1), PARAM(2), PARAM(3), PARAM(4));
+
     (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_BOX, x, y + 10, PARAM(4)-x+1, PARAM(3)-y+1);
     CHECK_THIS_KERNEL_FUNCTION;
 
@@ -1506,13 +1522,17 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   case K_GRAPH_REDRAW_BOX:
     CHECK_THIS_KERNEL_FUNCTION;
+
+    SCIkdebug(SCIkGRAPHICS, "redraw_box(%d, %d, %d, %d)\n",
+	      PARAM(1), PARAM(2), PARAM(3), PARAM(4));
+
     SCIkwarn(SCIkWARNING, "KERNEL_GRAPH_REDRAW_BOX: stub\n");
     break;
 
   case K_GRAPH_ADJUST_PRIORITY:
 
-    s->priority_first = PARAM(1);
-    s->priority_last = PARAM(2);
+    s->priority_first = PARAM(1) - 10;
+    s->priority_last = PARAM(2) - 10;
     break;
 
   default:
@@ -1521,6 +1541,8 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
     SCIkdebug(SCIkSTUB, "Unhandled Graph() operation %04x\n", PARAM(0));
     
   }
+
+  _k_dyn_view_list_accept_change(s);
 }
 
 void
@@ -2472,6 +2494,7 @@ kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
  if (cursor) { \
   --cursor;    \
   memmove(text + cursor, text + cursor + 1, textlen - cursor +1); \
+  --textlen; \
 }
 
 
@@ -2509,14 +2532,17 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	  graph_fill_box_custom(s, x + port->xmin, y + port->ymin,
 				xl, yl, port->bgcolor, -1, 0, 1); /* Clear input box background */
 
+	  /*	  fprintf(stderr,"EditControl: mod=%04x, key=%04x, maxlen=%04x, cursor=%04x\n",
+		  modifiers, key, max, cursor);*/
+
 	  if (modifiers & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT | SCI_EVM_CAPSLOCK)) {
-	    modifiers &= !(SCI_EVM_RSHIFT | SCI_EVM_LSHIFT | SCI_EVM_CAPSLOCK);
+	    modifiers &= ~(SCI_EVM_RSHIFT | SCI_EVM_LSHIFT | SCI_EVM_CAPSLOCK);
 	    key = toupper(key);
 	  }
 
 	  if (modifiers & SCI_EVM_CTRL) {
 
-	    switch (key) {
+	    switch (tolower(key)) {
 	    case 'a': cursor = 0; break;
 	    case 'e': cursor = textlen; break;
 	    case 'f': if (cursor < textlen) ++cursor; break;
@@ -2529,13 +2555,13 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	  } else if (modifiers & SCI_EVM_ALT) { /* Ctrl has precedence over Alt */
 
-	    switch (key) {
+	    switch (tolower(key)) {
 	    case 'f': while ((cursor < textlen) && (text[cursor++] != ' ')); break;
 	    case 'b': while ((cursor > 0) && (text[--cursor - 1] != ' ')); break;
 	    }
 	    PUT_SELECTOR(event, claimed, 1);
 
-	  } else if (modifiers & SCI_EVM_NUMLOCK) { /* Used for cursor keys */
+	  } else if (modifiers & SCI_EVM_NUMLOCK) { /* Used for cursor keys (?) */
 
 	    switch(key) {
 	    case SCI_K_HOME: cursor = 0; break;

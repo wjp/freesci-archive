@@ -1217,6 +1217,7 @@ int
 game_init(state_t *s)
 {
   heap_ptr stack_handle = heap_allocate(s->_heap, VM_STACK_SIZE);
+  heap_ptr parser_handle = heap_allocate(s->_heap, PARSE_HEAP_SIZE);
   heap_ptr script0;
   heap_ptr game_obj; /* Address of the game object */
   heap_ptr game_init; /* Address of the init() method */
@@ -1229,6 +1230,11 @@ game_init(state_t *s)
     return 1;
   }
 
+  if (!parser_handle) {
+    sciprintf("script_init(): Insufficient heap space for parser word error block\n");
+    return 1;
+  }
+
   if (!(script0 = script_instantiate(s, 0))) {
     sciprintf("script_init(): Could not instantiate script 0\n");
     return 1;
@@ -1236,9 +1242,14 @@ game_init(state_t *s)
 
   fprintf(stderr," Script 0 at %04x\n", script0);
 
+  /* Init parser */
+  s->parser_words = vocab_get_words(&(s->parser_words_nr));
+  s->parser_suffices = vocab_get_suffices(&(s->parser_suffices_nr));
+
   s->restarting_flag = 0; /* We're not restarting here */
 
   s->stack_base = stack_handle + 2;
+  s->parser_base = parser_handle + 2;
   s->global_vars = s->scripttable[0].localvar_offset;
   /* Global variables are script 0's local variables */
 
@@ -1406,9 +1417,12 @@ game_exit(state_t *s)
 
   menubar_free(s->menubar);
 
+  vocab_free_words(s->parser_words, s->parser_words_nr);
+  vocab_free_suffices(s->parser_suffices, s->parser_suffices_nr);
 
   heap_free(s->_heap, s->stack_handle);
   heap_free(s->_heap, s->save_dir);
+  heap_free(s->_heap, s->parser_base - 2);
 
   /* Free breakpoint list */
   bp = s->bp_list;

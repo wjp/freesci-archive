@@ -65,12 +65,12 @@ write_pic_png(char *filename, guint8 *pic)
   if (sci_color_mode) { /* Interpolate the palette */
     int i;
     for (i=0; i< 255; i++) {
-      sci0_color_interpol[i].red = (sci0_png_palette[i & 0xf].red / 5)*3
-	+ (sci0_png_palette[((i & 0xf)+(i >> 4)) & 0xf].red / 5)*2;
-      sci0_color_interpol[i].green = (sci0_png_palette[i & 0xf].green / 5)*3
-	+ (sci0_png_palette[((i & 0xf)+(i >> 4)) & 0xf].green / 5)*2;
-      sci0_color_interpol[i].blue = (sci0_png_palette[i & 0xf].blue / 5)*3
-	+ (sci0_png_palette[((i & 0xf)+(i >> 4)) & 0xf].blue / 5)*2;
+      sci0_color_interpol[i].red = INTERCOL(sci0_png_palette[i & 0xf].red,
+					    (sci0_png_palette[i >> 4].red));
+      sci0_color_interpol[i].green = INTERCOL(sci0_png_palette[i & 0xf].green,
+					    (sci0_png_palette[i >> 4].green));
+      sci0_color_interpol[i].blue = INTERCOL(sci0_png_palette[i & 0xf].blue,
+					    (sci0_png_palette[i >> 4].blue));
     }
   }
 

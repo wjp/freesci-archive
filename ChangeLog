@@ -1,3 +1,10 @@
+1999-08-31  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/vocab.c: Implemented basic support for the standard and
+	suffixed vocabulary
+
+	* src/core/kernel.c (kEditControl): Fixed some bugs in this function
+
 1999-08-29  Dmitry Jemerov  <yole@exch.nnz.spb.su>
 
         * src/core/vm.c: Breakpoints on object methods do not trigger on
