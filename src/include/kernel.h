@@ -220,15 +220,18 @@ _SCIkprintf(FILE *file, char *format, ...);
 #define UKPV_OR_ALT(x,a) KP_UINT(KP_ALT(x, make_reg(0, a)))
 
 reg_t *
-kernel_dereference_pointer(struct _state *s, reg_t pointer, int entries);
+kernel_dereference_reg_pointer(struct _state *s, reg_t pointer, int entries);
+char *
+kernel_dereference_bulk_pointer(struct _state *s, reg_t pointer, int entries);
 /* Dereferences a heap pointer
 ** Parameters: (state_t *) s: The state to operate on
 **             (reg_t ) pointer: The pointer to dereference
 **             (int) entries: The number of values expected (for checking)
 **                            (use 0 for strings)
-** Returns   : (reg_t *): A physical reference to the address pointed
+** Returns   : (reg_t/char *): A physical reference to the address pointed
 **                        to, or NULL on error or if not enugh entries
 **                        were available
+** reg_t dereferenciation also assures alignedness of data.
 */
 
 /******************** Resource Macros ********************/

@@ -628,6 +628,7 @@ pointer_add(state_t *s, reg_t base, int offset)
 	switch (mobj->type) {
 
 	case MEM_OBJ_SCRIPT:
+	case MEM_OBJ_STACK:
 	case MEM_OBJ_DYNMEM:
 		base.offset += offset;
 		return base;
@@ -881,7 +882,29 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x02: /* sub */
-			s->r_acc = ACC_ARITHMETIC_L (POP() - /*acc*/);
+			r_temp = POP32();
+			if (r_temp.segment || s->r_acc.segment) {
+				reg_t r_ptr;
+				int offset;
+				/* Pointer arithmetics! */
+				if (s->r_acc.segment) {
+					if (r_temp.segment) {
+						sciprintf("Error: Attempt to subtract two pointers, stack="PREG" and acc="PREG"!\n",
+							  PRINT_REG(r_temp), PRINT_REG(s->r_acc));
+						script_debug_flag = script_error_flag = 1;
+					} else {
+						r_ptr = s->r_acc; 
+						offset = r_temp.offset;
+					}
+				} else {
+					r_ptr = r_temp;
+					offset = s->r_acc.offset;
+				}
+
+				s->r_acc = pointer_add(s, r_ptr, -offset);
+
+			} else
+				s->r_acc = make_reg(0, r_temp.offset - s->r_acc.offset);
 			break;
 
 		case 0x03: /* mul */
@@ -1243,6 +1266,7 @@ run_vm(state_t *s, int restoring)
 				r_temp.offset += validate_arithmetic(s->r_acc);
 
 			r_temp.offset += opparams[1];  /* Add index */
+			r_temp.offset *= sizeof(reg_t);
 			/* That's the immediate address now */
 			s->r_acc = r_temp;
 			break;

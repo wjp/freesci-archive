@@ -512,8 +512,8 @@ reg_t
 kTextSize(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	int width, height;
-	char *text = (char *) kernel_dereference_pointer(s, argv[1], 0);
-	reg_t *dest = kernel_dereference_pointer(s, argv[0], 4);
+	char *text = (char *) kernel_dereference_bulk_pointer(s, argv[1], 0);
+	reg_t *dest = kernel_dereference_reg_pointer(s, argv[0], 4);
 	int maxwidth = KP_UINT(KP_ALT(3,  NULL_REG));
 	int font_nr = KP_UINT(argv[2]);
 
@@ -1504,19 +1504,18 @@ _k_draw_control(state_t *s, reg_t obj, int inverse)
 		int lsTop = GET_SEL32V(obj, lsTop);
 		int list_top = 0;
 		int selection = 0;
-		int string_width = SCI_MAX_SAVENAME_LENGTH;
-		int phys_string_width = string_width << 1;
-		int virt_string_width = SCI_MAX_SAVENAME_LENGTH >> 1;
+		int entry_size = GET_SEL32V(obj, x);
 		int i;
 
-		SCIkdebug(SCIkGRAPHICS, "drawing list control %04x to %d,%d\n", obj, x, y);
-		cursor = GET_SEL32V(obj, cursor);
+		SCIkdebug(SCIkGRAPHICS, "drawing list control %04x to %d,%d, diff %d\n", obj, x, y,
+			  SCI_MAX_SAVENAME_LENGTH);
+		cursor = GET_SEL32V(obj, cursor) - text_pos.offset;
 
 		entries_nr = 0;
 		seeker = text;
 		while (seeker[0]) { /* Count string entries in NULL terminated string list */
 			++entries_nr;
-			seeker += phys_string_width;
+			seeker += entry_size;
 		}
 
 		if (entries_nr) { /* determine list_top, selection, and the entries_list */
@@ -1524,7 +1523,7 @@ _k_draw_control(state_t *s, reg_t obj, int inverse)
 			entries_list = sci_malloc(sizeof(char *) * entries_nr);
 			for (i = 0; i < entries_nr; i++) {
 				entries_list[i] = seeker;
-				seeker += virt_string_width;
+				seeker += entry_size	;
 				if ((seeker - text) == lsTop)
 					list_top = i + 1;
 				if ((seeker - text) == cursor)
@@ -1681,9 +1680,7 @@ _k_view_list_dispose_loop(state_t *s, list_t *list, gfxw_dyn_view_t *widget,
 				} else
 
 				if (widget->under_bitsp) { /* Is there a bg picture left to clean? */
-#ifdef __GNUC__
-#warning "FIXME: Treat memory handles as separate segment!"
-#endif
+
 					reg_t mem_handle = *((reg_t*)(widget->under_bitsp));
 
 					if (mem_handle.segment) {
@@ -3035,7 +3032,7 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	if (textp.segment) {
 		argpt = 1;
-		text = (char *) kernel_dereference_pointer(s, textp, 0);
+		text = (char *) kernel_dereference_bulk_pointer(s, textp, 0);
 	} else {
 		argpt = 2;
 		text = kernel_lookup_text(s, textp, index);

@@ -45,7 +45,7 @@ kernel_lookup_text(state_t *s, reg_t address, int index)
 	resource_t *textres;
 
 	if (address.segment)
-		return (char *) kernel_dereference_pointer(s, address, 0);
+		return (char *) kernel_dereference_bulk_pointer(s, address, 0);
 	else {
 		int textlen;
 		int _index = index;
@@ -119,8 +119,13 @@ reg_t
 kSaid(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	reg_t heap_said_block = argv[0];
-	byte *said_block = (byte *) kernel_dereference_pointer(s, heap_said_block, 0);
+	byte *said_block;
 	int new_lastmatch;
+
+	if (!heap_said_block.segment)
+		return NULL_REG;
+
+	said_block = (byte *) kernel_dereference_bulk_pointer(s, heap_said_block, 0);
 
 	if (!said_block) {
 		SCIkdebug(SCIkWARNING, "Said on non-string, pointer "PREG"\n", PRINT_REG(heap_said_block));
@@ -252,7 +257,7 @@ reg_t
 kParse(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	reg_t stringpos = argv[0];
-	char *string = (char *) kernel_dereference_pointer(s, stringpos, 0);
+	char *string = kernel_dereference_bulk_pointer(s, stringpos, 0);
 	int words_nr;
 	char *error;
 	result_word_t *words;
@@ -324,7 +329,7 @@ kParse(state_t *s, int funct_nr, int argc, reg_t *argv)
 		s->r_acc = make_reg(0, 0);
 		PUT_SEL32V(event, claimed, 1);
 		if (error) {
-			char *pbase_str = (char *) kernel_dereference_pointer(s, s->parser_base, 0);
+			char *pbase_str = kernel_dereference_bulk_pointer(s, s->parser_base, 0);
 			strcpy(pbase_str, error);
 			SCIkdebug(SCIkPARSER,"Word unknown: %s\n", error);
 			/* Issue warning: */
@@ -339,16 +344,16 @@ kParse(state_t *s, int funct_nr, int argc, reg_t *argv)
 }
 
 
-void
-kStrEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kStrEnd(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr address = UPARAM(0);
-	char *seeker = (char *) s->heap + address;
+	reg_t address = argv[0];
+	char *seeker = kernel_dereference_bulk_pointer(s, address, 0);
 
 	while (*seeker++)
-		++address;
+		++address.offset;
 
-	s->acc = address + 1; /* End of string */
+	return address;
 }
 
 void
@@ -371,8 +376,8 @@ kStrCmp(state_t *s, int funct_nr, int argc, heap_ptr argp)
 reg_t
 kStrCpy(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	char *dest = (char *) kernel_dereference_pointer(s, argv[0], 0);
-	char *src = (char *) kernel_dereference_pointer(s, argv[1], 0);
+	char *dest = (char *) kernel_dereference_bulk_pointer(s, argv[0], 0);
+	char *src = (char *) kernel_dereference_bulk_pointer(s, argv[1], 0);
 
 	if (!dest) {
 		SCIkdebug(SCIkWARNING, "Attempt to strcpy TO invalid pointer "PREG"!\n",
@@ -403,10 +408,10 @@ kStrCpy(state_t *s, int funct_nr, int argc, reg_t *argv)
 reg_t
 kStrAt(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	unsigned char *dest = (unsigned char *) kernel_dereference_pointer(s, argv[0], 0);
+	unsigned char *dest = (unsigned char *) kernel_dereference_bulk_pointer(s, argv[0], 0);
 
 	if (!dest) {
-		SCIkdebug(SCIkWARNING, "Attempt to strat at invalid pointer "PREG"!\n",
+		SCIkdebug(SCIkWARNING, "Attempt to StrAt at invalid pointer "PREG"!\n",
 			  PRINT_REG(argv[0]));
 		return NULL_REG;
 	}
@@ -448,7 +453,7 @@ kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	int *arguments;
 	reg_t dest = argv[0];
-	char *target = (char *) kernel_dereference_pointer(s, dest, 0);
+	char *target = (char *) kernel_dereference_bulk_pointer(s, dest, 0);
 	char *tstart = target;
 	reg_t position = argv[1]; /* source */
 	int index = UKPV(2);

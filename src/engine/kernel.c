@@ -64,7 +64,6 @@ void kGetTime(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kStrLen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetFarText(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kReadNumber(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kStrEnd(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kStrCat(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kStrCmp(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 
@@ -112,11 +111,12 @@ void kSaveGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kRestoreGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDoAvoider(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kFileIO(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kSort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kLock(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 
 
 /* New kernel functions */
+reg_t kSort(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kStrEnd(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kMemory(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kAvoidPath(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kParse(struct _state *s, int funct_nr, int argc, reg_t *argv);
@@ -216,7 +216,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*22*/	{KF_OLD, "AddMenu", {old:kAddMenu}},
 /*23*/	{KF_OLD, "DrawStatus", {old:kDrawStatus}},
 /*24*/	{KF_NEW, "Parse", {new:{kParse, "ro"}}},
-/*25*/	{KF_NEW, "Said", {new:{kSaid, "r"}}},
+/*25*/	{KF_NEW, "Said", {new:{kSaid, "Zr"}}},
 /*26*/	{KF_OLD, "SetSynonyms", {old:kSetSynonyms}},
 /*27*/	{KF_OLD, "HaveMouse", {old:kHaveMouse}},
 /*28*/	{KF_OLD, "SetCursor", {old:kSetCursor}},
@@ -250,7 +250,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*44*/	{KF_OLD, "GetDistance", {old:kGetDistance}},
 /*45*/	{KF_OLD, "Wait", {old:kWait}},
 /*46*/	{KF_OLD, "GetTime", {old:kGetTime}},
-/*47*/	{KF_OLD, "StrEnd", {old:kStrEnd}},
+/*47*/	{KF_NEW, "StrEnd", {new:{kStrEnd, "r"}}},
 /*48*/	{KF_OLD, "StrCat", {old:kStrCat}},
 /*49*/	{KF_OLD, "StrCmp", {old:kStrCmp}},
 /*4a*/	{KF_OLD, "StrLen", {old:kStrLen}},
@@ -616,8 +616,8 @@ kMemory(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	case K_MEMORY_MEMCPY : {
 		int size = UKPV(3);
-		char *dest = (char *) kernel_dereference_pointer(s, argv[1], size);
-		char *src = (char *) kernel_dereference_pointer(s, argv[2], size);
+		char *dest = kernel_dereference_bulk_pointer(s, argv[1], size);
+		char *src = kernel_dereference_bulk_pointer(s, argv[2], size);
 
 		if (dest && src)
 			memcpy(dest, src, size);
@@ -635,7 +635,7 @@ kMemory(state_t *s, int funct_nr, int argc, reg_t *argv)
 		}
 
 	case K_MEMORY_PEEK : {
-		char *ref = (char *) kernel_dereference_pointer(s, argv[1], 2);
+		char *ref = kernel_dereference_bulk_pointer(s, argv[1], 2);
 		if (ref)
 			return make_reg(0, getInt16(ref));
 		else {
@@ -647,7 +647,7 @@ kMemory(state_t *s, int funct_nr, int argc, reg_t *argv)
 		break;
 
 	case K_MEMORY_POKE : {
-		char *ref = (char *) kernel_dereference_pointer(s, argv[1], 2);
+		char *ref = kernel_dereference_bulk_pointer(s, argv[1], 2);
 
 		if (argv[2].segment) {
 			SCIkdebug(SCIkERROR, "Attempt to poke memory reference "PREG" to "PREG"!\n",
@@ -898,13 +898,13 @@ determine_reg_type(state_t *s, reg_t reg)
 			return 0;
 
 	case MEM_OBJ_LOCALS:
-		if (reg.offset < mobj->data.locals.nr)
+		if (reg.offset < mobj->data.locals.nr * sizeof(reg_t))
 			return KSIG_REF;
 		else
 			return 0;
 
 	case MEM_OBJ_STACK:
-		if (reg.offset < mobj->data.stack.nr)
+		if (reg.offset < mobj->data.stack.nr * sizeof(reg_t))
 			return KSIG_REF;
 		else
 			return 0;
@@ -973,72 +973,36 @@ kernel_matches_signature(state_t *s, char *sig, int argc, reg_t *argv)
 		return (*sig == 0 || (*sig & KSIG_ELLIPSIS));
 }
 
-reg_t *
-kernel_dereference_pointer(struct _state *s, reg_t pointer, int entries)
+static inline void *
+_kernel_dereference_pointer(struct _state *s, reg_t pointer, int entries, int align)
 {
-	mem_obj_t *mobj;
-	reg_t *base = NULL;
-	int count;
+	int maxsize;
+	void *retval = s->seg_manager.dereference(&s->seg_manager, pointer, &maxsize); 
 
-	if (!pointer.segment
-	    || (pointer.segment >= s->seg_manager.heap_size)
-	    || !s->seg_manager.heap[pointer.segment]) {
-		return NULL; /* Invalid */
-		SCIkdebug(SCIkERROR, "Attempt to dereference invalid pointer "PREG"!",
-			  PRINT_REG(pointer));
+	if (pointer.offset & (align-1)) {
+		SCIkdebug(SCIkERROR, "Unaligned pointer read: "PREG" expected with %d alignment!\n",
+			  PRINT_REG(pointer), align);
 		return NULL;
 	}
 
-	mobj = s->seg_manager.heap[pointer.segment];
-
-	switch (mobj->type) {
-
-	case MEM_OBJ_SCRIPT:
-		if (entries || pointer.offset > mobj->data.script.buf_size) {
-			SCIkdebug(SCIkERROR, "Attempt to dereference invalid pointer "PREG
-				  " into script segment (script size=%d, space requested=%d)\n",
-				  PRINT_REG(pointer), mobj->data.script.buf_size, entries);
-			return NULL;
-		}
-		return (reg_t *) (mobj->data.script.buf + pointer.offset);
-		break;
-
-	case MEM_OBJ_LOCALS:
-		count = mobj->data.locals.nr;
-		base = mobj->data.locals.locals;
-		break;
-
-	case MEM_OBJ_STACK:
-		count = mobj->data.stack.nr;
-		base = mobj->data.stack.entries;
-		break;
-
-	case MEM_OBJ_DYNMEM:
-		count = mobj->data.dynmem.size;
-		base = (reg_t *) mobj->data.dynmem.buf;
-		break;
-		
-	case MEM_OBJ_SYS_STRINGS:
-		if (pointer.offset < SYS_STRINGS_MAX
-		    && mobj->data.sys_strings.strings[pointer.offset].name)
-			return (reg_t *) (mobj->data.sys_strings.strings[pointer.offset].value);
-		else {
-			SCIkdebug(SCIkERROR, "Attempt to dereference invalid pointer "PREG"!\n",
-				  PRINT_REG(pointer));
-			return NULL;
-		}
-
-	default:
-		SCIkdebug(SCIkERROR, "Trying to dereference pointer "PREG" to inappropriate"
-			  " segment!\n",
-			  PRINT_REG(pointer));
-		return NULL;
-	}
-
-	if (pointer.offset + entries > count) {
+	if (entries > maxsize) {
 		SCIkdebug(SCIkERROR, "Trying to dereference pointer "PREG" beyond end of segment!\n",
 			  PRINT_REG(pointer));
 		return NULL;
-	} return
-		  base + pointer.offset;
+	}
+		return retval;
+
+}
+
+char *
+kernel_dereference_bulk_pointer(struct _state *s, reg_t pointer, int entries)
+{
+	return _kernel_dereference_pointer(s, pointer, entries, 1);
+}
+
+
+reg_t *
+kernel_dereference_reg_pointer(struct _state *s, reg_t pointer, int entries)
+{
+	return _kernel_dereference_pointer(s, pointer, entries, sizeof(reg_t));
 }

@@ -876,7 +876,7 @@ sm_script_initialize_locals(seg_manager_t *self, reg_t location)
 	VERIFY( location.offset + 1 < scr->buf_size,
 		"Locals beyond end of script\n" );
 
-	count = getUInt16(scr->buf + location.offset - 2) >> 1;
+	count = (getUInt16(scr->buf + location.offset - 2) - 4) >> 1;
 	/* half block size */
 
 	scr->locals_offset = location.offset;
@@ -1049,47 +1049,76 @@ DEFINE_ALLOC_DEALLOC(hunk, MEM_OBJ_HUNK);
 
 
 static byte *
-sm_dereference(seg_manager_t *self, reg_t reg, int *size)
+sm_dereference(seg_manager_t *self, reg_t pointer, int *size)
 {
-	mem_obj_t *mobj = self->heap[reg.segment];
-	VERIFY( sm_check (self, reg.segment), "Invalid seg id" );
+	mem_obj_t *mobj;
+	byte *base = NULL;
+	int count;
+
+	if (!pointer.segment
+	    || (pointer.segment >= self->heap_size)
+	    || !self->heap[pointer.segment]) {
+		sciprintf("Error: Attempt to dereference invalid pointer "PREG"!",
+			  PRINT_REG(pointer));
+		return NULL; /* Invalid */
+	}
+
+
+	mobj = self->heap[pointer.segment];
 
 	switch (mobj->type) {
 
 	case MEM_OBJ_SCRIPT:
+		if (pointer.offset > mobj->data.script.buf_size) {
+			sciprintf("Error: Attempt to dereference invalid pointer "PREG
+				  " into script segment (script size=%d)\n",
+				  PRINT_REG(pointer), mobj->data.script.buf_size);
+			return NULL;
+		}
 		if (size)
-			*size = mobj->data.script.buf_size - reg.offset;
-		return mobj->data.script.buf + reg.offset;
+			*size = mobj->data.script.buf_size - pointer.offset;
+		return (byte *) (mobj->data.script.buf + pointer.offset);
 		break;
 
-	case MEM_OBJ_LOCALS: /* Emulate for strings */
-		if (size)
-			*size = (mobj->data.locals.nr - reg.offset) * 2;
-		return (byte *)(mobj->data.locals.locals + reg.offset);
+	case MEM_OBJ_LOCALS:
+		count = mobj->data.locals.nr * sizeof(reg_t);
+		base = (byte *) mobj->data.locals.locals;
 		break;
 
-	case MEM_OBJ_STACK: /* Emulate for strings */
-		if (size)
-			*size = (mobj->data.stack.nr - reg.offset) * 2;
-		return (byte *)(mobj->data.stack.entries + reg.offset);
-		break;
-
-	case MEM_OBJ_SYS_STRINGS:
-		if (size)
-			*size = mobj->data.sys_strings.strings[reg.offset].max_size;
-		return mobj->data.sys_strings.strings[reg.offset].value;
+	case MEM_OBJ_STACK:
+		count = mobj->data.stack.nr * sizeof(reg_t);
+		base = (byte *) mobj->data.stack.entries;
 		break;
 
 	case MEM_OBJ_DYNMEM:
+		count = mobj->data.dynmem.size;
+		base = (byte *) mobj->data.dynmem.buf;
+		break;
+		
+	case MEM_OBJ_SYS_STRINGS:
 		if (size)
-			*size = mobj->data.dynmem.size - reg.offset;
-		return mobj->data.dynmem.buf + reg.offset;
+			*size = mobj->data.sys_strings.strings[pointer.offset].max_size;
+		if (pointer.offset < SYS_STRINGS_MAX
+		    && mobj->data.sys_strings.strings[pointer.offset].name)
+			return (byte *) (mobj->data.sys_strings.strings[pointer.offset].value);
+		else {
+			sciprintf("Error: Attempt to dereference invalid pointer "PREG"!\n",
+				  PRINT_REG(pointer));
+			return NULL;
+		}
 
 	default:
-		if (size)
-			*size = 0;
+		sciprintf("Error: Trying to dereference pointer "PREG" to inappropriate"
+			  " segment!\n",
+			  PRINT_REG(pointer));
 		return NULL;
 	}
+
+	if (size)
+		*size = count;
+
+	return
+		base + pointer.offset;
 }
 
 
