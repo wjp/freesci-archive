@@ -1,5 +1,5 @@
 /***************************************************************************
- dc.h Copyright (C) 2002 Walter van Niftrik
+ dc.h Copyright (C) 2002,2003 Walter van Niftrik
 
 
  This program may be modified and copied freely according to the terms of
@@ -30,7 +30,7 @@
 
 #include <stdio.h>
 
-/* Constants missing in KOS's errno.h */
+/* Constants missing from KOS's errno.h */
 
 #ifndef EINTR
 #define EINTR 4
@@ -38,14 +38,58 @@
 
 /* Functions implemented in dc_save.c */
 
+/* Returns a string with the VFS path to the first VMU.
+** Parameters: void.
+** Returns   : Pointer to VFS path string on success, NULL on error.
+*/
 char *dc_get_first_vmu();
-char *dc_get_cat_name();
-void dc_delete_save_files(char *);
+
+/* Constructs the save game filename as it'll go on the VMU.
+** Parameters: (char *) game_name: Game id of the current game.
+**             (int) nr: The current save game number.
+** Returns   : Pointer to save game name.
+*/
+char *dc_get_cat_name(char *game_name, int nr);
+
+/* Deletes all save game files from a directory.
+** Parameters: (char *) dir: Path of the directory to delete the save game
+**                files from.
+** Returns   : void.
+*/
+void dc_delete_save_files(char *dir);
+
+/* Deletes the temporary file which is used for constructing the save files.
+** Parameters: void.
+** Returns   : void.
+*/
 int dc_delete_temp_file();
-int dc_retrieve_savegame(char *, int);
-int dc_store_savegame(char *, char *, int);
-int dc_retrieve_mirrored(char *);
-int dc_store_mirrored(char *);
+
+/* Retrieves a save game from the first VMU and puts it on the ram disk.
+** Parameters: (char *) game_name: Game id of the current game.
+**             (int) nr: The number of the save game to retrieve.
+** Returns   : 0 on success, -1 on error.
+*/
+int dc_retrieve_savegame(char *game_name, int nr);
+
+/* Stores a save game from the ram disk on the first VMU.
+** Parameters: (char *) game_name: Game id of the current game.
+**             (char *) desc: Description of the save game.
+**             (int) nr: The number of the save game to store.
+** Returns   : 0 on success, -1 on error.
+*/
+int dc_store_savegame(char *game_name, char *desc, int nr);
+
+/* Retrieves the mirrored files from the first VMU to the ram disk.
+** Parameters: (char *) game_name: Game id of the current game.
+** Returns   : 0 on success, -1 on error.
+*/
+int dc_retrieve_mirrored(char *game_name);
+
+/* Stores the mirrored files from the ram disk on the first VMU.
+** Parameters: (char *) game_name: Game id of the current game.
+** Returns   : 0 on success, -1 on error.
+*/
+int dc_store_mirrored(char *game_name);
 
 /* Functions missing from KOS */
 

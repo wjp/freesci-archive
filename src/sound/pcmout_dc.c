@@ -29,9 +29,9 @@
 #include <pcmout.h>
 
 static gint16 *buffer;
+static kthread_t *thread;
 
 int pcm_run;
-int thread_exit;
 
 static void *send_audio(int size, int * size_out) 
 {
@@ -80,25 +80,22 @@ static void pcm_thread(void *p)
 		snd_stream_poll();
 		thd_pass();
 	}
-	thread_exit = 1;
 }
 
 static int pcmout_dc_open(gint16 *b, guint16 rate, guint8 stereo)
 {
 	buffer = b;
 	pcm_run = 1;
-	thread_exit = 0;
 	snd_stream_init(send_audio);
 	snd_stream_start(rate, stereo);
-	thd_create((void *) pcm_thread, NULL);
+	thread = thd_create((void *) pcm_thread, NULL);
 	return 0;
 }
 
 static int pcmout_dc_close()
 {
 	pcm_run = 0;
-	while (!thread_exit)
-		thd_pass();
+	thd_wait(thread);
 	snd_stream_stop();
 	snd_stream_shutdown();
 	return 0;

@@ -33,11 +33,15 @@
 #include <config.h>
 #endif
 
-/* Render the mouse if they have one attached */
 static int mx = 320, my = 240;
 static int lmx[5] = {320, 320, 320, 320, 320},
 	lmy[5] = {240, 240, 240, 240, 240};
-void mouse_render() {
+static void mouse_render()
+/* Renders the mouse pointer.
+** Parameters: void.
+** Returns   : void.
+*/
+{
 	int i;
 	int atall = 0;
 	
@@ -70,11 +74,9 @@ void mouse_render() {
 	}
 }
 
-/* This function is called from main()  */
 void choose_game() {
 	int fexit = 0;
-	FILE *cfile;
-
+	
 	/* Do basic setup */
 	pvr_init_defaults();
 
@@ -83,6 +85,8 @@ void choose_game() {
 
 	/* Setup background display */
 	bkg_setup();
+
+	load_option_list();
 
 	while (!fexit) {
 		pvr_wait_ready();
@@ -108,15 +112,10 @@ void choose_game() {
 
 		/* Game menu */
 		fexit = game_menu_render();
-		
-		/* File Information */
-		draw_poly_box(20.0f, 440.0f-96.0f+4, 640.0f-20.0f, 440.0f, 90.0f, 
-			0.3f, 0.2f, 0.5f, 0.0f, 0.5f, 0.1f, 0.8f, 0.2f);
-		
-		draw_poly_strf(30.0f,440.0f-96.0f+6+10.0f,100.0f,1.0f,1.0f,1.0f,1.0f,"D-PAD : Select game              L : Page up");
-		draw_poly_strf(30.0f,440.0f-96.0f+6+24.0f+10.0f,100.0f,1.0f,1.0f,1.0f,1.0f,"    A : Start game               R : Page down");
-		draw_poly_strf(30.0f,440.0f-96.0f+6+48.0f+10.0f,100.0f,1.0f,1.0f,1.0f,1.0f,"    Y : Rescan cd");
 
+		/* Button info */
+		render_button_info();
+		
 		/* Render the mouse if they move it.. it doesn't do anything
 		   but it's cool looking ^_^ */
 		mouse_render();
@@ -129,13 +128,7 @@ void choose_game() {
 		
 	}
 	
-	/* Write config file */
-	cfile = fopen("/ram/config", "w");
-	fputs("gfx.dc.render_mode = vram\n", cfile);
-	fputs("midi_device = adlibemu\n", cfile);
-	fputs("pcmout_stereo = 0\n", cfile);
-	fputs("pcmout_rate = 11025\n", cfile);
-	fclose(cfile);
-
+	dc_write_config_file("/ram/config");
+	
 	return;
 }

@@ -33,12 +33,28 @@
 
 #define DC_TEMP_FILE "/ram/freesci.tmp"
 
+/* The file header that is put before each file during the concatenation */
 struct file_hdr_t {
 	char filename[32];
 	int filesize;
 };
 
-static int dc_cat_write(gzFile outf, char *infname) {
+int dc_delete_temp_file() {
+	if (fs_unlink(DC_TEMP_FILE)) {
+		sciprintf("%s, L%d: fs_unlink(\"" DC_TEMP_FILE "\") failed!\n", __FILE__, __LINE__);
+		return -1;
+	}
+	return 0;
+}
+
+static int dc_cat_write(gzFile outf, char *infname)
+/* Adds a fileheader and a file's data to a compressed file at the current
+** file position.
+** Parameters: (gzFile) outf: The compressed file to write to.
+**             (char *) infname: The path and name of the file to add.
+** Returns   : 0 on success, -1 on error.
+*/
+{
 	file_t inf;
 	char *buf, *name;
 	struct file_hdr_t file_hdr;
@@ -92,7 +108,15 @@ static int dc_cat_write(gzFile outf, char *infname) {
 	return 0;
 }
 
-static int dc_cat_read(gzFile inf, char *outfdir) {
+static int dc_cat_read(gzFile inf, char *outfdir)
+/* Extracts a file from a concatenated compressed file. The current file
+** position must point to a file header.
+** Parameters: (gzFile) inf: The compressed file to read from.
+**             (char *) outfdir: The directory path where the file should be
+**               written.
+** Returns   : 0 on success, -1 on error.
+*/
+{
 	file_t outf;
 	char *buf, *outfname;
 	struct file_hdr_t file_hdr;
@@ -142,72 +166,28 @@ static int dc_cat_read(gzFile inf, char *outfdir) {
 	return 0;
 }
 
-static int dc_is_save_file(char *fn) {
+static int dc_is_save_file(char *fn)
+/* Determines whether a filename is one of FreeSCI's filenames that are used
+** for save ganes.
+** Parameters: (char *) fn: The filename to consider.
+** Returns   : 1 when the filename is used for save games, 0 otherwise.
+*/
+{
 	return !fnmatch("state", fn, 0) || !fnmatch("heap", fn, 0) ||
 		!fnmatch("hunk*", fn, 0) || !fnmatch("song.*", fn, 0) ||
 		!fnmatch("sound", fn, 0) || !fnmatch("*.id", fn, 0);
 }
 
-void dc_delete_save_files(char *dir) {
-	file_t d;
-	dirent_t *entry;
-	
-	if (!(d = fs_open(dir, O_RDONLY | O_DIR))) {
-		sciprintf("%s, L%d: fs_open(\"%s\", O_RDONLY | O_DIR) failed!\n", __FILE__, __LINE__, dir);
-		return;
-	}
-	
-	while ((entry = fs_readdir(d))) {
-		char *fn = sci_malloc(strlen(dir)+strlen(entry->name)+2);
-		strcpy(fn, dir);
-		strcat(fn, "/");
-		strcat(fn, entry->name);
-		if ((dc_is_save_file(entry->name)) && (fs_unlink(fn) < 0))
-			sciprintf("%s, L%d: fs_unlink(\"%s\") failed!\n", __FILE__, __LINE__, fn);
-		sci_free(fn);
-	}
-	
-	fs_close(d);
-}
-
-int dc_delete_temp_file() {
-	if (fs_unlink(DC_TEMP_FILE)) {
-		sciprintf("%s, L%d: fs_unlink(\"" DC_TEMP_FILE "\") failed!\n", __FILE__, __LINE__);
-		return -1;
-	}
-	return 0;
-}
-
-char *dc_get_cat_name(char *game_name, int nr) {
-	char suffices[] = "0123456789abcdefghijklmnopqrstuvwxyz";
-	char *save_name = sci_malloc(strlen(game_name) + 3);
-	strcpy(save_name, game_name);
-	save_name[strlen(game_name)] = '.';
-  	save_name[strlen(game_name) + 1] = suffices[nr];
-	save_name[strlen(game_name) + 2] = 0;
-	return save_name;
-}
-
-char *dc_get_first_vmu() {
-	sci_dir_t dirent;
-	char *olddir = strdup(fs_getwd());
-	char *vmu;
-	char *retval = NULL;
-	fs_chdir("/vmu");
-	sci_init_dir(&dirent);
-	vmu = sci_find_first(&dirent, "*");
-	if (vmu) {
-		retval = sci_malloc(5 + strlen(vmu) + 1);
-		strcpy(retval, "/vmu/");
-		strcat(retval, vmu);
-	}
-	sci_finish_find(&dirent);
-	fs_chdir(olddir);
-	sci_free(olddir);
-	return retval;
-}
-
-static int dc_package(char *infname, char *outdir, char *outname, char* desc) {
+static int dc_package(char *infname, char *outdir, char *outname, char* desc)
+/* Packages a file with a VMU header and stores it.
+** Parameters: (char *) infname: The filename of the file to package.
+**             (char *) outdir: The directory path to write the packaged file.
+**             (char *) outname: The filename the packaged file should get.
+**             (char *) desc: The description of the file to put in the
+**                      header.
+** Returns   : 0 on success, -1 on error.
+*/
+{
 	file_t inf, outf;
 	uint8 *data, *pkg_out;
 	vmu_pkg_t pkg;
@@ -278,7 +258,15 @@ static int dc_package(char *infname, char *outdir, char *outname, char* desc) {
 	return 0;
 }
 
-static int dc_depackage(char *infname, char *outfname) {
+static int dc_depackage(char *infname, char *outfname)
+/* Depackages a file with a VMU header and stores it.
+** Parameters: (char *) infname: The full path and filename of the file to
+**                      depackage.
+**             (char *) outfname: The full path and filename of where to
+**                      write the depackaged file.
+** Returns   : 0 on success, -1 on error.
+*/
+{
 	file_t inf, outf;
 	uint8 *data;
 	vmu_pkg_t pkg;
@@ -312,7 +300,21 @@ static int dc_depackage(char *infname, char *outfname) {
 	return 0;
 }
 
-static int store_files(char *src_dir, char *tar_dir, char *tar_name, char *desc, int mode) {
+static int store_files(char *src_dir, char *tar_dir, char *tar_name, char *desc, int mode)
+/* Concatenates files from a directory and creates a package that can be put
+** on a VMU.
+** Parameters: (char *) src_dir: The full path of the directory that contains
+**                      the files that should be stored.
+**             (char *) tar_dir: The full path of the directory where the
+**                      resulting file should be placed.
+**             (char *) tar_name: The file name that the resulting file should
+**                      get.
+**             (char *) desc: The description to use for the VMU header.
+**             (int) mode: 0: all files will be stored; 1: only FreeSCI save
+**                   files will be stored.
+** Returns   : 0 on success, -1 on error.
+*/
+{
 	gzFile outf;
 	file_t d;
 	dirent_t *entry;
@@ -359,7 +361,15 @@ static int store_files(char *src_dir, char *tar_dir, char *tar_name, char *desc,
 	return dc_delete_temp_file();
 }
 
-static int retrieve_files(char *fname, char *dir) {
+static int retrieve_files(char *fname, char *dir)
+/* Extracts all files from a packaged concatenated file.
+** Parameters: (char *) fname: The full path and filename of the concatenated
+**                      packaged file.
+**             (char *) dir: The full path of the directory where the
+**                      resulting files should be placed.
+** Returns   : 0 on success, -1 on error.
+*/
+{
 	gzFile inf;
 	if (dc_depackage(fname, DC_TEMP_FILE)) {
 		sciprintf("%s, L%d: dc_depackage(\"%s\", \"" DC_TEMP_FILE "\") failed!\n", __FILE__, __LINE__, fname);
@@ -375,6 +385,57 @@ static int retrieve_files(char *fname, char *dir) {
 		return -1;
 	}
 	return dc_delete_temp_file();
+}
+
+void dc_delete_save_files(char *dir) {
+	file_t d;
+	dirent_t *entry;
+	
+	if (!(d = fs_open(dir, O_RDONLY | O_DIR))) {
+		sciprintf("%s, L%d: fs_open(\"%s\", O_RDONLY | O_DIR) failed!\n", __FILE__, __LINE__, dir);
+		return;
+	}
+	
+	while ((entry = fs_readdir(d))) {
+		char *fn = sci_malloc(strlen(dir)+strlen(entry->name)+2);
+		strcpy(fn, dir);
+		strcat(fn, "/");
+		strcat(fn, entry->name);
+		if ((dc_is_save_file(entry->name)) && (fs_unlink(fn) < 0))
+			sciprintf("%s, L%d: fs_unlink(\"%s\") failed!\n", __FILE__, __LINE__, fn);
+		sci_free(fn);
+	}
+	
+	fs_close(d);
+}
+
+char *dc_get_cat_name(char *game_name, int nr) {
+	char suffices[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+	char *save_name = sci_malloc(strlen(game_name) + 3);
+	strcpy(save_name, game_name);
+	save_name[strlen(game_name)] = '.';
+  	save_name[strlen(game_name) + 1] = suffices[nr];
+	save_name[strlen(game_name) + 2] = 0;
+	return save_name;
+}
+
+char *dc_get_first_vmu() {
+	sci_dir_t dirent;
+	char *olddir = strdup(fs_getwd());
+	char *vmu;
+	char *retval = NULL;
+	fs_chdir("/vmu");
+	sci_init_dir(&dirent);
+	vmu = sci_find_first(&dirent, "*");
+	if (vmu) {
+		retval = sci_malloc(5 + strlen(vmu) + 1);
+		strcpy(retval, "/vmu/");
+		strcat(retval, vmu);
+	}
+	sci_finish_find(&dirent);
+	fs_chdir(olddir);
+	sci_free(olddir);
+	return retval;
 }
 
 int dc_retrieve_savegame(char *game_name, int nr) {

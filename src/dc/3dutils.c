@@ -24,6 +24,8 @@
  * SUCH DAMAGE.
  */
 
+/* Modified by Walter van Niftrik <w.f.b.w.v.niftrik@stud.tue.nl> */
+
 #include <stdarg.h>
 #include <stdio.h>
 #include "gp.h"
@@ -149,6 +151,30 @@ void draw_poly_strf(float x1, float y1, float z1, float a, float r,
 	}
 }
 
+/* Draw a horizontally centered set of textured polygons at the given depth
+   and color that represent a string of text. Only for video mode 640x480. */
+void draw_poly_strf_ctr(float y1, float z1, float a, float r, float g, float b,
+		char *fmt, ...) {
+	float x1;
+	va_list args;
+	char *s;
+	
+	va_start(args, fmt);
+	vsnprintf(strbuf, 1024, fmt, args);
+	va_end(args);
+
+	x1 = 320.0f - strlen(strbuf) * 6.0f;
+
+	pvr_prim(&util_txr_hdr, sizeof(util_txr_hdr));
+	s = strbuf;
+	while (*s) {
+		if (*s == ' ') {
+			x1 += 12.0f; s++;
+		} else {
+			draw_poly_char(x1+=12.0f, y1, z1, a, r, g, b, *s++);
+		}
+	}
+}
 
 /* Draw a polygon for a shaded box; wow, a nasty looking func =) */
 void draw_poly_box(float x1, float y1, float x2, float y2, float z,

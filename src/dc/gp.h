@@ -50,11 +50,35 @@ void rotate(int zang, int xang, int yang, float *x, float *y, float *z);
 void draw_poly_mouse(int ptrx, int ptry, float alpha);
 void draw_poly_char(float x1, float y1, float z1, float a, float r, float g, float b, int c);
 void draw_poly_strf(float x1, float y1, float z1, float a, float r, float g, float b, char *fmt, ...);
+void draw_poly_strf_ctr(float y1, float z1, float a, float r, float g, float b, char *fmt, ...);
 void draw_poly_box(float x1, float y1, float x2, float y2, float z,
 		float a1, float r1, float g1, float b1,
 		float a2, float r2, float g2, float b2);
 
 /* gamemenu.c */
+/* Renders the interface and handles controller input.
+** Parameters: void.
+** Returns   : 1 when the user has chosen a game, 0 otherwise.
+*/
 int game_menu_render();
+
+/* Renders the currently applicable button info.
+** Parameters: void.
+** Returns   : void.
+*/
+void render_button_info();
+
+/* Fills the option list with the defaults, and then overwrites
+** them (possible partially) when an option file is found.
+** Parameters: void.
+** Returns   : void.
+*/
+void load_option_list();
+
+/* Saves the currently set options to a file on the first VMU.
+** Parameters: void.
+** Returns   : 0 on success, -1 on error.
+*/
+int dc_write_config_file();
 
 #endif	/* __GP_H */

@@ -1,5 +1,5 @@
 /***************************************************************************
- selectgame.h Copyright (C) 2002,2003 Walter van Niftrik
+ options.h Copyright (C) 2003 Walter van Niftrik
 
 
  This program may be modified and copied freely according to the terms of
@@ -25,16 +25,19 @@
 
 ***************************************************************************/
 
-#ifndef __SELECTGAME_H
-#define __SELECTGAME_H
+#ifndef __OPTIONS_H
+#define __OPTIONS_H
 
-/* This function changes to the directory of the game that the user wants to
-** run. Currently implemented by a Dreamcast-specific graphical interface based
-** on Daniel Potter's GhettoPlay interface. It also creates a config file on
-** the ram disk, based on options the user has set in the interface.
-** Parameters: void.
-** Returns   : void.
-*/
-void choose_game(void);
+struct dc_option_t {
+	char *name;	/* Option name */
+	char *values;	/* Option values, each followed by `\0' */
+	char def;	/* Default option */
+};
 
-#endif	/* __SELECTGAME_H */
+#define NUM_DC_OPTIONS 1
+
+struct dc_option_t dc_options[NUM_DC_OPTIONS] = {
+/* 0 */		{ "Graphics Mode", "Frame Buffer\0PVR\0", 0 },
+};
+
+#endif  /* __OPTIONS_H */

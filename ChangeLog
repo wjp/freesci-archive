@@ -1,3 +1,15 @@
+2003-03-03  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/options.h: Added to repository.
+	* src/dc/3dutils.c, src/dc/dc.h, src/dc/dc_save.c,
+	src/dc/gamemenu.c, src/dc/gp.h, src/dc/selectgame.c,
+	src/dc/selectgame.h: Added an option to the Dreamcast game selection
+	interface to choose either frame buffer or pvr video mode. Added
+	some code commentary.
+
+	* src/sound/pcmout_dc.c: Now using a nicer way of waiting for thread
+	termination.
+
 2003-02-25  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/3dutils.c, src/dc/aica_cmd_iface.h, src/dc/bkg.c,
