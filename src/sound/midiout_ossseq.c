@@ -29,7 +29,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#undef DEBUG_OUTPUT;
+#undef DEBUG_OUTPUT
 
 static FILE *recorder = 0;
 static int recorder_count = 0;
