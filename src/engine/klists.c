@@ -170,7 +170,6 @@ kNewList(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	reg_t listbase;
 	list_t *l;
-
 	l = s->seg_manager.alloc_list(&s->seg_manager, &listbase);
 	l->first = l->last = NULL_REG;
 	SCIkdebug(SCIkNODES, "New listbase at "PREG"\n", PRINT_REG(listbase));

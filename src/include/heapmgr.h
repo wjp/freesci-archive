@@ -98,15 +98,15 @@ alloc_##ENTRY##_entry(ENTRY##_table_t *table)					\
 		table->table[oldff].next_free = oldff;				\
 		return oldff;							\
 	} else {								\
-		if (table->max_entry == table->entries_used) {			\
-			table->entries_used += INCREMENT;			\
+		if (table->max_entry == table->entries_nr) {			\
+			table->entries_nr += INCREMENT;				\
 										\
 			table->table = sci_realloc(table->table,		\
 						   sizeof(ENTRY##_entry_t)	\
-						   * table->entries_used);	\
+						   * table->entries_nr);	\
 		}								\
 		table->table[table->max_entry].next_free =			\
-			table->max_entry;					\
+			table->max_entry; /* Tag as 'valid' */			\
 		return table->max_entry++;					\
 	}									\
 }
