@@ -397,5 +397,4 @@ gfx_get_driver_name(int nr);
 */
 
 
-
 #endif /* !_SCI_GFX_DRIVER_H_ */

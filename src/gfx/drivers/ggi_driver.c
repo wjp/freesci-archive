@@ -100,16 +100,6 @@ typedef struct {
 
 
 static int
-string_truep(char *value)
-{
-	return (strcmp(value, "ok") ||
-		strcmp(value, "1") ||
-		strcmp(value, "true") ||
-		strcmp(value, "yes") ||
-		strcmp(value, "on"));
-}
-
-static int
 ggi_set_param(gfx_driver_t *drv, char *attribute, char *value)
 {
 	gfx_ggi_struct_t *meta = (gfx_ggi_struct_t *) drv->state;

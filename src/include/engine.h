@@ -151,6 +151,7 @@ typedef struct _state
 	gfxw_list_t *drop_views; /* A list Animate() can dump dropped dynviews into */
 
 	int animation_delay; /* A delay factor for pic opening animations. Defaults to 500. */
+	int animation_granularity; /* Number of animation steps to perform betwen updates for transition animations */
 
 	hunk_block_t hunk[MAX_HUNK_BLOCKS]; /* Hunk memory */
 

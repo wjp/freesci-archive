@@ -61,6 +61,7 @@ typedef struct {
 	subsystem_options_t *driver_options[FREESCI_DRIVER_SUBSYSTEMS_NR];
 
 	int animation_delay; /* Number of microseconds to wait between each pic transition animation cycle */
+	int animation_granularity; /* Granularity for pic transition animations */
 	int alpha_threshold; /* Crossblitting alpha threshold */
 	int unknown_count; /* The number of "unknown" kernel functions */ 
 	char *resource_dir; /* Resource directory */

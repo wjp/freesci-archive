@@ -213,6 +213,7 @@ standard_option standard_options[] = {
 	OPT_INT("pic_buffer_size", gfx_options.buffer_pics_nr, 0, 4096),
 	OPT_INT("alpha_threshold", alpha_threshold, 0, 255),
 	OPT_INT("animation_delay", animation_delay, 0, 1000000),
+	OPT_INT("animation_granularity", animation_granularity, 1, 160),
 	OPT_STATICREF("gfx_driver", gfx_driver, parse_gfx_driver),
 	OPT_STATICREF("midiout_driver", midiout_driver, parse_midiout_driver),
 	OPT_STATICREF("midi_device", midi_device, parse_midi_device),
@@ -432,6 +433,7 @@ config_init(config_entry_t **_conf, char *conffile)
 
 	conf->alpha_threshold = 0x81;
 	conf->animation_delay = 500;
+	conf->animation_granularity = 1;
 	conf->console_log = NULL;
 	conf->debug_mode [0] = '\0';
 	conf->name = NULL;

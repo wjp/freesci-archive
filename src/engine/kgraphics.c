@@ -2390,8 +2390,18 @@ static void
 animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	int i, remaining_checkers;
+	int update_counter;
+	int granularity0 = s->animation_granularity << 1;
+	int granularity1 = s->animation_granularity;
+	int granularity2 = s->animation_granularity >> 2;
+	int granularity3 = s->animation_granularity >> 4;
 	char checkers[32 * 19];
 	gfx_pixmap_t *newscreen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 10, 320, 190));
+
+	if (!granularity2)
+		granularity2 = 1;
+	if (!granularity3)
+		granularity3 = 1;
 
 	gfxop_set_clip_zone(s->gfx_state, gfx_rect_fullscreen);
 
@@ -2403,7 +2413,9 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	GFX_ASSERT(gfxop_draw_pixmap(s->gfx_state, s->old_screen, gfx_rect(0, 0, 320, 190), gfx_point(0, 10)));
 	gfxop_update_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
 
-	SCIkdebug(SCIkGRAPHICS, "Animating pic opening type %x\n", s->pic_animate);
+	sciprintf("Opening animation 0x%x with granularity %d/%d/%d/%d-- PLEASE REPORT ANY ERRORS ASAP!\n",
+		  s->pic_animate, granularity0, granularity1, granularity2, granularity3);
+	/*SCIkdebug(SCIkGRAPHICS, "Animating pic opening type %x\n", s->pic_animate);*/
 
 	gfxop_enable_dirty_frames(s->gfx_state);
 
@@ -2413,10 +2425,10 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	switch(s->pic_animate) {
 	case K_ANIMATE_BORDER_CLOSE_H_CENTER_OPEN_H :
 
-		for (i = 0; i < 160; i++) {
-			GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
+		for (i = 0; i < 160; i += granularity1) {
+			GRAPH_BLANK_BOX(s, i, 10, granularity1, 190, 0);
 			gfxop_update(s->gfx_state);
-			GRAPH_BLANK_BOX(s, 319-i, 10, 1, 190, 0);
+			GRAPH_BLANK_BOX(s, 319-i, 10, granularity1, 190, 0);
 			gfxop_update(s->gfx_state);
 			gfxop_usleep(s->gfx_state, s->animation_delay);
 			process_sound_events(s);
@@ -2424,10 +2436,10 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_ANIMATE_CENTER_OPEN_H :
 
-		for (i = 159; i >= 0; i--) {
-			GRAPH_UPDATE_BOX(s, i, 10, 1, 190);
+		for (i = 159; i >= 0; i -= granularity1) {
+			GRAPH_UPDATE_BOX(s, i, 10, granularity1, 190);
 			gfxop_update(s->gfx_state);
-			GRAPH_UPDATE_BOX(s, 319-i, 10, 1, 190);
+			GRAPH_UPDATE_BOX(s, 319-i, 10, granularity1, 190);
 			gfxop_update(s->gfx_state);
 			gfxop_usleep(s->gfx_state, s->animation_delay);
 			process_sound_events(s);
@@ -2437,10 +2449,10 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_ANIMATE_BORDER_CLOSE_V_CENTER_OPEN_V :
 		
-		for (i = 0; i < 95; i++) {
-			GRAPH_BLANK_BOX(s, 0, i + 10, 320, 1, 0);
+		for (i = 0; i < 95; i += granularity2) {
+			GRAPH_BLANK_BOX(s, 0, i + 10, 320, granularity2, 0);
 			gfxop_update(s->gfx_state);
-			GRAPH_BLANK_BOX(s, 0, 199 - i, 320, 1, 0);
+			GRAPH_BLANK_BOX(s, 0, 199 - i, 320, granularity2, 0);
 			gfxop_update(s->gfx_state);
 			gfxop_usleep(s->gfx_state, 2 * s->animation_delay);
 			process_sound_events(s);
@@ -2448,10 +2460,10 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_ANIMATE_CENTER_OPEN_V :
 
-		for (i = 94; i >= 0; i--) {
-			GRAPH_UPDATE_BOX(s, 0, i + 10, 320, 1);
+		for (i = 94; i >= 0; i -= granularity2) {
+			GRAPH_UPDATE_BOX(s, 0, i + 10, 320, granularity2);
 			gfxop_update(s->gfx_state);
-			GRAPH_UPDATE_BOX(s, 0, 199 - i, 320, 1);
+			GRAPH_UPDATE_BOX(s, 0, 199 - i, 320, granularity2);
 			gfxop_update(s->gfx_state);
 			gfxop_usleep(s->gfx_state, 2 * s->animation_delay);
 			process_sound_events(s);
@@ -2461,16 +2473,16 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_ANIMATE_LEFT_CLOSE_RIGHT_OPEN :
 
-		for(i = 0; i < 320; i++) {
-			GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
+		for(i = 0; i < 320; i += granularity0) {
+			GRAPH_BLANK_BOX(s, i, 10, granularity0, 190, 0);
 			gfxop_update(s->gfx_state);
 			gfxop_usleep(s->gfx_state, s->animation_delay / 2);
 			process_sound_events(s);
 		}
 
 	case K_ANIMATE_RIGHT_OPEN :
-		for(i = 319; i >= 0; i--) {
-			GRAPH_UPDATE_BOX(s, i, 10, 1, 190);
+		for(i = 319; i >= 0; i -= granularity0) {
+			GRAPH_UPDATE_BOX(s, i, 10, granularity0, 190);
 			gfxop_update(s->gfx_state);
 			gfxop_usleep(s->gfx_state, s->animation_delay / 2);
 			process_sound_events(s);
@@ -2480,8 +2492,8 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_ANIMATE_RIGHT_CLOSE_LEFT_OPEN :
 
-		for(i = 319; i >= 0; i--) {
-			GRAPH_BLANK_BOX(s, i, 10, 1, 190, 0);
+		for(i = 319; i >= 0; i -= granularity0) {
+			GRAPH_BLANK_BOX(s, i, 10, granularity0, 190, 0);
 			gfxop_update(s->gfx_state);
 			gfxop_usleep(s->gfx_state, s->animation_delay / 2);
 			process_sound_events(s);
@@ -2500,8 +2512,8 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_ANIMATE_TOP_CLOSE_BOTTOM_OPEN :
 
-		for (i = 10; i < 200; i++) {
-			GRAPH_BLANK_BOX(s, 0, i, 320, 1, 0);
+		for (i = 10; i < 200; i += granularity1) {
+			GRAPH_BLANK_BOX(s, 0, i, 320, granularity1, 0);
 			gfxop_update(s->gfx_state);
 			gfxop_usleep(s->gfx_state, s->animation_delay);
 			process_sound_events(s);
@@ -2509,8 +2521,8 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_ANIMATE_BOTTOM_OPEN :
 
-		for (i = 199; i >= 10; i--) {
-			GRAPH_UPDATE_BOX(s, 0, i, 320, 1);
+		for (i = 199; i >= 10; i-= granularity1) {
+			GRAPH_UPDATE_BOX(s, 0, i, 320, granularity1);
 			gfxop_update(s->gfx_state);
 			gfxop_usleep(s->gfx_state, s->animation_delay);
 			process_sound_events(s);
@@ -2520,8 +2532,8 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_ANIMATE_BOTTOM_CLOSE_TOP_OPEN :
 
-		for (i = 199; i >= 10; i--) {
-			GRAPH_BLANK_BOX(s, 0, i, 320, 1, 0);
+		for (i = 199; i >= 10; i-= granularity1) {
+			GRAPH_BLANK_BOX(s, 0, i, 320, granularity1, 0);
 			gfxop_update(s->gfx_state);
 			gfxop_usleep(s->gfx_state, s->animation_delay);
 			process_sound_events(s);
@@ -2529,8 +2541,8 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_ANIMATE_TOP_OPEN :
 
-		for (i = 10; i < 200; i++) {
-			GRAPH_UPDATE_BOX(s, 0, i, 320, 1);
+		for (i = 10; i < 200; i+= granularity1) {
+			GRAPH_UPDATE_BOX(s, 0, i, 320, granularity1);
 			gfxop_update(s->gfx_state);
 			gfxop_usleep(s->gfx_state, s->animation_delay);
 			process_sound_events(s);
@@ -2540,9 +2552,9 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_ANIMATE_CENTER_CLOSE_F_BORDER_OPEN_F :
 
-		for (i = 31; i >= 0; i--) {
-			int height = i * 3;
-			int width = i * 5;
+		for (i = 31; i >= 0; i -= granularity3) {
+			int height = i * 3 * granularity3;
+			int width = i * 5 * granularity3;
 
 			GRAPH_BLANK_BOX(s, width, 10 + height, 5, 190 - 2*height, 0);
 			gfxop_update(s->gfx_state);
@@ -2560,9 +2572,9 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_ANIMATE_BORDER_OPEN_F :
 
-		for (i = 0; i < 32; i++) {
-			int height = i * 3;
-			int width = i * 5;
+		for (i = 0; i < 32; i += granularity3) {
+			int height = i * 3 * granularity3;
+			int width = i * 5 * granularity3;
 
 			GRAPH_UPDATE_BOX(s, width, 10 + height, 5, 190 - 2*height);
 			gfxop_update(s->gfx_state);
@@ -2583,9 +2595,9 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_ANIMATE_BORDER_CLOSE_F_CENTER_OPEN_F :
 
-		for (i = 0; i < 32; i++) {
-			int height = i * 3;
-			int width = i * 5;
+		for (i = 0; i < 32; i += granularity3) {
+			int height = i * 3 * granularity3;
+			int width = i * 5 * granularity3;
 
 			GRAPH_BLANK_BOX(s, width, 10 + height, 5, 190 - 2*height, 0);
 			gfxop_update(s->gfx_state);
@@ -2603,9 +2615,9 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_ANIMATE_CENTER_OPEN_F :
 
-		for (i = 31; i >= 0; i--) {
-			int height = i * 3;
-			int width = i * 5;
+		for (i = 31; i >= 0; i -= granularity3) {
+			int height = i * 3 * granularity3;
+			int width = i * 5 * granularity3;
 
 			GRAPH_UPDATE_BOX(s, width, 10 + height, 5, 190 - 2*height);
 			gfxop_update(s->gfx_state);
@@ -2628,6 +2640,7 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		memset(checkers, 0, sizeof(checkers));
 		remaining_checkers = 19 * 32;
+		update_counter = granularity1;
 
 		while (remaining_checkers) {
 			int x, y, checker = 1 + (int) (1.0 * remaining_checkers*rand()/(RAND_MAX+1.0));
@@ -2641,7 +2654,11 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			y = i / 32;
 
 			GRAPH_BLANK_BOX(s, x * 10, 10 + y * 10, 10, 10, 0);
-			gfxop_update(s->gfx_state);
+			if (!(update_counter--)) {
+				gfxop_update(s->gfx_state);
+				update_counter = granularity1;
+			}
+
 			if (remaining_checkers & 1) {
 				gfxop_usleep(s->gfx_state, s->animation_delay / 4);
 			}
@@ -2654,6 +2671,7 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		memset(checkers, 0, sizeof(checkers));
 		remaining_checkers = 19 * 32;
+		update_counter = granularity1;
 
 		while (remaining_checkers) {
 			int x, y, checker = 1 + (int) (1.0 * remaining_checkers * rand()/(RAND_MAX+1.0));
@@ -2668,7 +2686,11 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 			GRAPH_UPDATE_BOX(s, x * 10, 10 + y * 10, 10, 10);
 
-			gfxop_update(s->gfx_state);
+			if (!(update_counter--)) {
+				gfxop_update(s->gfx_state);
+				update_counter = granularity1;
+			}
+
 			if (remaining_checkers & 1) {
 				gfxop_usleep(s->gfx_state, s->animation_delay / 4);
 			}

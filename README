@@ -173,6 +173,11 @@ time, the configuration file may contain:
 - animation_delay: A speed factor for transition animations. Default is 500.
   Set to 0 to disable transition animations.
 
+- animation_granularity: If transition animations are too slow on your system,
+  this option can be used to draw several steps of a transition animation
+  before updating the screen, resulting in a faster animation. The default is 1,
+  which causes transition behaviour identical to FreeSCI 0.3.1.
+
 - alpha_threshold: A value between 0 and 255 (defaults to 129) used by the
   built-in crossblitter to distinguish between "opaque" and "transparent"
   pixels. This only has any effect if pixmap filtering is enabled for any

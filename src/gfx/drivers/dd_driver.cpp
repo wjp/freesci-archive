@@ -241,7 +241,7 @@ dd_init_specific(gfx_driver_t *drv, int xres, int yres, int bpp)
 
 	drv->mode = gfx_new_mode(xres,yres,dd_desc.ddpfPixelFormat.dwRGBBitCount/8, 
 		dd_desc.ddpfPixelFormat.dwRBitMask,dd_desc.ddpfPixelFormat.dwGBitMask,dd_desc.ddpfPixelFormat.dwBBitMask,0, 
-		r_sh,g_sh,b_sh,0, dd_bpp2);
+		r_sh,g_sh,b_sh,0, dd_bpp2, 0);
 
 	tbytes = 320*xres*200*yres* (dd_desc.ddpfPixelFormat.dwRGBBitCount/8);
 

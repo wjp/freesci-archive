@@ -601,8 +601,8 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 		       S->priority[pribufnr]->index_xl, 1,
 		       GFX_CROSSBLIT_FLAG_DATA_IS_HOMED);
 
-  srect.x = src.x;
-  srect.y = src.y;
+  srect.x = 0;
+  srect.y = 0;
   drect.x = dest.x;
   drect.y = dest.y;
   
@@ -944,10 +944,10 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
 {
   SDL_Event event;
   int x_button_xlate[] = {0, 1, 3, 2, 4, 5};
-  struct timeval ctime, timeout_time, sleep_time;
+  GTimeVal ctime, timeout_time, sleep_time;
   int usecs_to_sleep;
   
-  gettimeofday(&timeout_time, NULL);
+  sci_get_current_time(&timeout_time);
   timeout_time.tv_usec += wait_usec;
   
   /* Calculate wait time */
@@ -995,14 +995,15 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
 	drv->pointer_y = event.motion.y;
 	break;
       case SDL_QUIT:
-	c_quit(NULL);
+	sci_event->type = SCI_EVT_QUIT;
+	return;
 	break;
       default:
 	ERROR("Received unhandled SDL event %04x\n", event.type);
       }
     }
 
-    gettimeofday(&ctime, NULL);
+    sci_get_current_time(&ctime);
     
     usecs_to_sleep = (timeout_time.tv_sec > ctime.tv_sec)? 1000000 : 0;
     usecs_to_sleep += timeout_time.tv_usec - ctime.tv_usec;

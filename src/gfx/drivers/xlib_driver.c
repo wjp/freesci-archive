@@ -169,16 +169,6 @@ xlib_error_handler(Display *display, XErrorEvent *error)
 	return 0;
 }
 
-int
-string_truep(char *value)
-{
-	return (strcmp(value, "ok") ||
-		strcmp(value, "1") ||
-		strcmp(value, "true") ||
-		strcmp(value, "yes") ||
-		strcmp(value, "on"));
-}
-
 static int
 xlib_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 {

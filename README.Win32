@@ -1,32 +1,34 @@
+Last updated 04-13-2001 by Matt Hargett <matt@use.net>
+
 The Win32 version of freesci is now almost at the same level of
 functionality as the Linux version. The main thing that is missing is MIDI
 support. Because of this, introductions of several games do not run
-automatically and have to be interrupted by a keypress.
+automatically and have to be interrupted by a keypress. Also,
+Hero's Quest 1 will not allow to you create a character for the
+same reason.
 
 You will need the following libraries tools to build freesci for Win32:
- * Visual C++ 5.0 or 6.0. (The projects provided are for version 6.0.
-   Cygwin will be supported soon.)
- * glib for win32 (http://www.iki.fi/tml/gimp/win32/)
- * Hermes (http://clanlib.org/hermes/)
- * Libraries from Cygwin beta 20 (http://sourceware.cygnus.com).
-   Specifically, you need to have include.tar.bz2, libiberty.tar.bz2,
-   and readline.tar.bz2.
- * flex and bison from Cygwin beta 20
- * libpng (http://www.cdrom.com/pub/png/) and zlib
-   (http://www.cdrom.com/pub/infozip/zlib/).
+ * Visual C++ 6.0 with Service Pack 5 for Visual Studio installed.
+ * The win32 platform SDK, and the DirectX SDK.
+ * The SDL library: http://www.libsdl.org . You really only need sdl.dll.
 
 The project files assume the following directory structure:
 
 <root>
-  \cygnus
-    \cygwin-b20
-      \src
-        \include
-        \libiberty
-        \readline
   \src
     \freesci
-    \glib
-    \libpng
-    \zlib
-    \Hermes
+      \src
+        \win32  
+    \sdl-1.2.0
+
+
+1. Go into the src\win32 directory and load the freesci workspace (freesci.dsw) into
+  Visual C++ 6.
+
+2. Rebuild all.
+
+3. The freesci.dll and sciv.exe binaries should be in freesci\src\win32\release. 
+  Copy them into your path for convenience. 
+  NOTE: sdl.dll MUST be in your path and/or in the same directory as freesci.dll.
+
+4. You should be good to go!

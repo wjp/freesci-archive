@@ -1398,6 +1398,24 @@ c_gfx_flush_resources(state_t *s)
 	return 0;
 }
 
+c_gfx_update_zone(state_t *s)
+{
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	return s->gfx_state->driver->update(s->gfx_state->driver,
+				     gfx_rect(cmd_params[0].val,
+					      cmd_params[1].val,
+					      cmd_params[2].val,
+					      cmd_params[3].val),
+				     gfx_point(cmd_params[0].val,
+					       cmd_params[1].val),
+					    GFX_BUFFER_FRONT
+					    );
+
+}
 
 int
 c_disasm(state_t *s)
@@ -2336,6 +2354,9 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_gfx_fill_screen, "gfx_fill_screen", "i", "Fills the screen with one\n  of the EGA colors\n");
 			con_hook_command(c_gfx_draw_rect, "gfx_draw_rect", "iiiii", "Draws a rectangle to the screen\n  with one of the EGA colors\n\nUSAGE\n\n"
 					 "  gfx_draw_rect <x> <y> <xl> <yl> <color>");
+			con_hook_command(c_gfx_update_zone, "gfx_update_zone", "iiii", "Propagates a rectangular area from\n  the back buffer to the front buffer"
+					 "\n\nUSAGE\n\n"
+					 "  gfx_update_zone <x> <y> <xl> <yl>");
 			con_hook_command(c_gfx_draw_viewobj, "draw_viewobj", "i", "Draws the nsRect and brRect of a\n  dynview object.\n\n  nsRect is green, brRect\n"
 					 "  is blue.\n");
 			con_hook_command(c_gfx_draw_cel, "gfx_draw_cel", "iii", "Draws a single view\n  cel to the center of the\n  screen\n\n"

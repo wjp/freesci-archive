@@ -914,6 +914,7 @@ main(int argc, char** argv)
 	if (conf[conf_nr].console_log)
 		open_console_file (conf[conf_nr].console_log);
 	gamestate->animation_delay = conf[conf_nr].animation_delay;
+	gamestate->animation_granularity = conf[conf_nr].animation_granularity;
 	gfx_crossblit_alpha_threshold = conf[conf_nr].alpha_threshold;
 
 	printf("Emulating SCI version %d.%03d.%03d\n",
