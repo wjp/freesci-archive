@@ -32,8 +32,8 @@
 #include <kernel_compat.h>
 
 #define CHECK_OVERFLOW1(pt, size) \
-	if (((pt) - ((char *)s->heap)) + (size) > 0xffff) { \
-		SCIkwarn(SCIkERROR, "String expansion exceeded heap boundaries"); \
+	if (((pt) - (str_base)) + (size) > maxsize) { \
+		SCIkwarn(SCIkERROR, "String expansion exceeded heap boundaries\n"); \
 		return;\
 	}
 
@@ -425,16 +425,17 @@ kReadNumber(state_t *s, int funct_nr, int argc, heap_ptr argp)
 ** Formats the text from text.textresnr (offset index_inside_res) or heap_text_addr according to
 ** the supplied parameters and writes it to the targ_address.
 */
-void
-kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kFormat(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	int *arguments;
-	int dest = UPARAM(0);
-	char *target = ((char *) s->heap) + dest;
+	reg_t dest = argv[0];
+	char *target = (char *) kernel_dereference_pointer(s, dest, 0);
 	char *tstart = target;
-	int position = UPARAM(1);
-	int index = UPARAM(2);
+	reg_t position = argv[1]; /* source */
+	int index = UKPV(2);
 	char *source;
+	char *str_base = target;
 	int mode = 0;
 	int paramindex = 0; /* Next parameter to evaluate */
 	char xfer;
@@ -442,17 +443,19 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int startarg;
 	int str_leng = 0; /* Used for stuff like "%13s" */
 	int unsigned_var = 0;
+	int maxsize = 4096; /* Arbitrary... */
 
 
-	source = kernel_lookup_text(s, position, index);
+	if (position.segment) {
+		source = (char *) kernel_dereference_pointer(s, position, 0);
+		startarg = 2;
+	} else {
+		startarg = 3; /* First parameter to use for formatting */
+		source = kernel_lookup_text(s, position.offset, index);
+	}
 
 	SCIkdebug(SCIkSTRINGS, "Formatting \"%s\"\n", source);
 
-	if (position < 1000) {
-		startarg = 3; /* First parameter to use for formatting */
-	} else  { /* position >= 1000 */
-		startarg = 2;
-	}
 
 	arguments = sci_malloc(sizeof(int) * argc);
 #ifdef SATISFY_PURIFY
@@ -460,7 +463,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #endif
 
 	for (i = startarg; i < argc; i++)
-		arguments[i-startarg] = UPARAM(i); /* Parameters are copied to prevent overwriting */
+		arguments[i-startarg] = UKPV(i); /* Parameters are copied to prevent overwriting */
 
 	while ((xfer = *source++)) {
 		if (xfer == '%') {
@@ -591,7 +594,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	free(arguments);
 
 	*target = 0; /* Terminate string */
-	s->acc = dest; /* Return target addr */
+	return dest; /* Return target addr */
 }
 
 

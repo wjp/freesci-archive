@@ -1,5 +1,12 @@
 2002-11-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/kgraphics.c (kDisplay): Bugfix in kDisplay
+
+	* src/engine/kstring.c (kFormat): Fixed formatting by porting it
+
+	* src/engine/vm.c (run_vm): Fixed call stack not being set correctly
+	for the 'call' opcode.
+
 	* src/engine/kernel.c: Added hunk memory again
 
 	* src/engine/kgraphics.c (kGraph, kDisplay): Ported those

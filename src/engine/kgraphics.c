@@ -1039,7 +1039,7 @@ set_base(state_t *s, reg_t object)
 		if (loop != oldloop) {
 			loop = 0;
 			PUT_SEL32V(object, loop, 0);
-			fprintf(stderr, "Resetting loop for "PREG"!\n", PRINT_REG(object));
+			SCIkdebug(SCIkGRAPHICS, "Resetting loop for "PREG"!\n", PRINT_REG(object));
 		}
 
 		if (cel != oldcel) {
@@ -3047,12 +3047,12 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	while (argpt < argc) {
 
-		switch(KP_UINT(argv[argpt++])) {
+		switch(UKPV(argpt++)) {
 
 		case K_DISPLAY_SET_COORDS:
 
-			area.x = KP_UINT(argv[argpt++]);
-			area.y = KP_UINT(argv[argpt++]);
+			area.x = UKPV(argpt++);
+			area.y = UKPV(argpt++);
 			SCIkdebug(SCIkGRAPHICS, "Display: set_coords(%d, %d)\n", area.x, area.y);
 			break;
 
@@ -3101,8 +3101,7 @@ kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 		case K_DISPLAY_WIDTH:
 
-			area.xl = KP_UINT(argv[argpt++]);
-			argpt++;
+			area.xl = UKPV(argpt++);
 			SCIkdebug(SCIkGRAPHICS, "Display: set_width(%d)\n", area.xl);
 			break;
 

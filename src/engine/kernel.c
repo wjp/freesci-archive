@@ -54,7 +54,6 @@ void kGetPort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetPort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kNewWindow(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDisposeWindow(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kFormat(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDrawStatus(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDrawMenuBar(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kAddMenu(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -139,6 +138,7 @@ reg_t kAddToPic(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kAnimate(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kDisplay(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kGraph(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kFormat(struct _state *s, int funct_nr, int argc, reg_t *argv);
 
 reg_t kLoad(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kUnLoad(struct _state *s, int funct_nr, int argc, reg_t *argv);
@@ -255,7 +255,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*49*/	{KF_OLD, "StrCmp", {old:kStrCmp}},
 /*4a*/	{KF_OLD, "StrLen", {old:kStrLen}},
 /*4b*/	{KF_OLD, "StrCpy", {old:kStrCpy}},
-/*4c*/	{KF_OLD, "Format", {old:kFormat}},
+/*4c*/	{KF_NEW, "Format", {new:{kFormat, "r.i.*"}}},
 /*4d*/	{KF_OLD, "GetFarText", {old:kGetFarText}},
 /*4e*/	{KF_OLD, "ReadNumber", {old:kReadNumber}},
 /*4f*/	{KF_NEW, "BaseSetter", {new:{kBaseSetter, "o"}}},

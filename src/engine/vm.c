@@ -1042,6 +1042,7 @@ run_vm(state_t *s, int restoring)
 						      call_base, NULL_SELECTOR, xs->objp,
 						      s->execution_stack_pos);
 			restadjust = 0; /* Used up the &rest adjustment */
+			xs->sp = call_base;
 
 			s->execution_stack_pos_changed = 1;
 			break;
