@@ -20,7 +20,6 @@
  Please contact the maintainer for bug reports or inquiries.
 
  Current Maintainer:
-
      Solomon Peachy <pizza@shaftnet.org>
 
 ***************************************************************************/
@@ -68,6 +67,8 @@ struct _sdl_state {
 #define DEBUGPTR if (drv->debug_flags & GFX_DEBUG_POINTER && ((debugline = __LINE__))) sdlprintf
 #define ERROR if ((debugline = __LINE__)) sdlprintf
 
+#define ALPHASURFACE (S->used_bytespp == 4)
+
 static int debugline = 0;
 
 static void
@@ -106,7 +107,7 @@ sdl_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 static int
 sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 {
-  int red_shift, green_shift, blue_shift, alpha_shift, alpha_mask;
+  int red_shift, green_shift, blue_shift, alpha_shift;
   int xsize = xfact * 320;
   int ysize = yfact * 200;
   int i;
@@ -126,16 +127,6 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 				SDL_HWSURFACE | SDL_SWSURFACE | 
 				SDL_HWPALETTE | SDL_DOUBLEBUF );
 
-  if (S->primary->format->BytesPerPixel == 4) {    
-    alpha_mask = 0xff000000;
-    S->SDL_alpha_shift = 24;
-    S->SDL_alpha_loss = 0;
-  } else {
-    alpha_mask = S->primary->format->Amask;
-    S->SDL_alpha_shift = S->primary->format->Ashift;
-    S->SDL_alpha_loss = S->primary->format->Aloss;
-  }
-
   if (!S->primary) {
     ERROR("Could not set up a primary SDL surface!\n");
     return GFX_FATAL;
@@ -148,8 +139,22 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
     return GFX_FATAL;
   }
 
+  S->used_bytespp = bytespp;
+
   printf("Using primary SDL surface of %d,%d @%d bpp (%04x)\n",  
 	 xsize, ysize, bytespp << 3, S->primary);
+
+  /*  if (S->primary->format->BytesPerPixel == 4) {    
+    S->alpha_mask = 0xff000000;
+    S->SDL_alpha_shift = 24;
+    S->SDL_alpha_loss = 0;
+    alpha_shift = 0;
+    } else { */
+    S->alpha_mask = S->primary->format->Amask;
+    S->SDL_alpha_shift = S->primary->format->Ashift;
+    S->SDL_alpha_loss = S->primary->format->Aloss;
+    alpha_shift = bytespp << 3;
+    /*   }*/
 
   /* clear palette */
   for (i = 0; i < 256; i++) {
@@ -173,7 +178,6 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   S->pointer_data[1] = NULL;
 
   S->buckystate = 0;
-  S->used_bytespp = bytespp;
 
   if (bytespp == 1)
     red_shift = green_shift = blue_shift = alpha_shift = 0;
@@ -187,7 +191,8 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	 S->primary->format->Rmask, 
 	 S->primary->format->Gmask,
 	 S->primary->format->Bmask, 
-	 S->primary->format->Amask,
+	 S->alpha_mask,
+	 /*	 S->primary->format->Amask,*/
 	 S->primary->format->Rshift,
 	 S->primary->format->Rloss,
 	 red_shift,
@@ -197,8 +202,11 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	 S->primary->format->Bshift,
 	 S->primary->format->Bloss,
 	 blue_shift,
+	 S->SDL_alpha_shift,
+	 S->SDL_alpha_loss,
+	 /*
 	 S->primary->format->Ashift,
-	 S->primary->format->Aloss,
+	 S->primary->format->Aloss, */
 	 alpha_shift);
 
   for (i = 0; i < 2; i++) {
@@ -221,13 +229,14 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 					S->primary->format->Gmask,
 					S->primary->format->Bmask, 
 					S->alpha_mask);
-    if (bytespp == 4)
-      SDL_SetAlpha(S->visual[i],SDL_SRCALPHA,SDL_ALPHA_OPAQUE);
     if (S->visual[i] == NULL) {
       ERROR("Could not set up visual buffers!\n");
       return GFX_FATAL;
     }
-    
+
+    if (ALPHASURFACE)
+     SDL_SetAlpha(S->visual[i],SDL_SRCALPHA,SDL_ALPHA_OPAQUE);
+
     if (SDL_FillRect(S->primary, NULL, SDL_MapRGB(S->primary->format, 0,0,0)))
       ERROR("Couldn't fill backbuffer!\n");
   }
@@ -235,15 +244,13 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   drv->mode = gfx_new_mode(xfact, yfact, bytespp,
 			   S->primary->format->Rmask, 
 			   S->primary->format->Gmask,
-			   S->primary->format->Bmask, 
+			   S->primary->format->Bmask,
 			   S->alpha_mask,
 			   red_shift, green_shift, blue_shift, alpha_shift,
 			   (bytespp == 1)? 256 : 0, 0); /*GFX_MODE_FLAG_REVERSE_ALPHA);*/
   
   return GFX_OK;
 }
-
-
 
 static int
 sdl_init(struct _gfx_driver *drv)
@@ -300,13 +307,12 @@ sdl_map_color(gfx_driver_t *drv, gfx_color_t color)
 
   if (drv->mode->palette)
     return color.visual.global_index;
-
-  return SDL_MapRGBA(S->primary->format,
+  
+  return SDL_MapRGBA(S->visual[0]->format,
 		     color.visual.r,
 		     color.visual.g,
 		     color.visual.b,
-		     color.alpha);
-
+		     255 - color.alpha);
 }
 
 
@@ -496,6 +502,9 @@ sdl_register_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 						S->primary->format->Bmask, 
 						S->alpha_mask);
 
+  if (ALPHASURFACE)
+      SDL_SetAlpha(pxm->internal.info, SDL_SRCALPHA,SDL_ALPHA_OPAQUE);
+
   pxm->internal.handle = SCI_SDL_HANDLE_NORMAL;
 
   DEBUGPXM("Registered surface %d/%d/%d at %p (%dx%d)\n", pxm->ID, pxm->loop, pxm->cel,
@@ -566,6 +575,10 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 			      S->primary->format->Gmask,
 			      S->primary->format->Bmask, 
 			      S->alpha_mask);
+
+  if (ALPHASURFACE)
+    SDL_SetAlpha(temp, SDL_SRCALPHA,SDL_ALPHA_OPAQUE);
+
   if (!temp) {
     ERROR("Failed to allocate SDL surface");
     return GFX_ERROR;
@@ -626,6 +639,9 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 				S->primary->format->Gmask,
 				S->primary->format->Bmask, 
 				S->alpha_mask);
+
+  if (ALPHASURFACE)
+      SDL_SetAlpha(temp, SDL_SRCALPHA,SDL_ALPHA_OPAQUE);
 
     if (!temp) {
       ERROR("Failed to allocate SDL surface");
@@ -694,24 +710,25 @@ sdl_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffe
   drect.w = src.xl;
   drect.h = src.yl;
 
-  if (SDL_BlitSurface(S->visual[data_source], &srect, 
-		      S->visual[data_dest], &drect))
-    ERROR("surface update failed!\n");
-
-  drect.x = dest.x;
-  drect.y = dest.y;
-  drect.w = src.xl;
-  drect.h = src.yl;
-
-  if (buffer == GFX_BUFFER_BACK && (src.x == dest.x) && (src.y == dest.y))
-    gfx_copy_pixmap_box_i(S->priority[0], S->priority[1], src);
-  else {
-    if (SDL_BlitSurface(S->visual[0], &srect, S->primary, &drect))
+  switch (buffer) {
+  case GFX_BUFFER_BACK:
+    if (SDL_BlitSurface(S->visual[data_source], &srect, 
+			S->visual[data_dest], &drect))
+      ERROR("surface update failed!\n");
+    
+    if ((src.x == dest.x) && (src.y == dest.y)) 
+      gfx_copy_pixmap_box_i(S->priority[0], S->priority[1], src);
+    break;
+  case GFX_BUFFER_FRONT:
+    if (SDL_BlitSurface(S->visual[data_source], &srect, S->primary, &drect))
       ERROR("primary surface update failed!\n");
+    SDL_Flip(S->primary);
+    break;
+  default:
+    GFXERROR("Invalid buffer %d in update!\n", buffer);
+    return GFX_ERROR;
   }
 
-  SDL_Flip(S->primary);
-  /*  SDL_UpdateRect(S->primary, 0,0,0,0); */
   return GFX_OK;
 }
 
