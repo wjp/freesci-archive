@@ -1,3 +1,8 @@
+2001-08-01  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/midiout_ossopl3.c: Ifdef'd ossopl3 usage dependant on
+	sys/soundcard.h
+
 2001-07-29  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/scicore/resource.c (resourceLoader): Resource files

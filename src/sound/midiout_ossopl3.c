@@ -63,6 +63,8 @@ Fmplay includes the following notice:
 /*  output is based on the general MIDI data derived from the MT32 patches.  */
 
 #include <midiout.h>
+
+#ifdef HAVE_SYS_SOUNDCARD_H
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -641,3 +643,5 @@ long usec(void)
 /*       } */
 /*       return(timev.tv_usec); */
 }
+
+#endif /* HAVE_SYS_SOUNDCARD_H */
