@@ -41,9 +41,19 @@ struct _state;
 
 
 typedef struct {
-  int type;
-  short data;
-  short buckybits;
+	short type;
+	short data;
+	short buckybits;
+	short character; /* for keyboard events: 'data' after applying
+			 ** the effects of 'buckybits', e.g. if
+			 **   type == SCI_EVT_KEYBOARD
+			 **   data == 'a'
+			 **   buckybits == SCI_EVM_LSHIFT
+			 ** then
+			 **   character == 'A'
+			 ** For 'Alt', characters are interpreted by their
+			 ** PC keyboard scancodes.
+			 */
 } sci_event_t;
 
 /*Values for type*/

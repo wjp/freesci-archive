@@ -29,88 +29,6 @@
 
 int stop_on_event;
 
-#define SCANCODE_ROWS_NR 3
-
-struct {
-	int offset;
-	char *keys;
-} scancode_rows[SCANCODE_ROWS_NR] = {
-	{0x10, "QWERTYUIOP[]"},
-	{0x1e, "ASDFGHJKL;'\\"},
-	{0x2c, "ZXCVBNM,./"}
-};
-
-int
-scancode(int ch) /* Calculates a PC keyboard scancode from a character */
-{
-	int row;
-	int c = toupper((char)ch);
-
-	for (row = 0; row < SCANCODE_ROWS_NR; row++) {
-		char *keys = scancode_rows[row].keys;
-		int offset = scancode_rows[row].offset;
-
-		while (*keys) {
-			if (*keys == c)
-				return offset << 8;
-
-			offset++;
-			keys++;
-		}
-	}
-
-	return ch; /* not found */
-}
-
-int
-sci_toupper(int c)
-{
-	char shifted_numbers[] = ")!@#$%^&*(";
-	c = toupper((char)c);
-
-	if (c >= 'A' && c <= 'Z')
-		return c;
-
-	if (c >= '0' && c <= '9')
-		return shifted_numbers[c-'0'];
-
-	switch (c) {
-	case SCI_K_TAB: return SCI_K_SHIFT_TAB;
-	case ']': return '}';
-	case '[': return '{';
-	case '`': return '~';
-	case '-': return '_';
-	case '=': return '+';
-	case ';': return ':';
-	case '\'': return '"';
-	case '\\': return '|';
-	case ',': return '<';
-	case '.': return '>';
-	case '/': return '?';
-	default: return c; /* No match */
-	}
-}
-
-
-static int
-sci_numlockify(int c)
-{
-	switch (c) {
-	case SCI_K_DELETE: return '.';
-	case SCI_K_INSERT: return '0';
-	case SCI_K_END: return '1';
-	case SCI_K_DOWN: return '2';
-	case SCI_K_PGDOWN: return '3';
-	case SCI_K_LEFT: return '4';
-	case SCI_K_CENTER: return '5';
-	case SCI_K_RIGHT: return '6';
-	case SCI_K_HOME: return '7';
-	case SCI_K_UP: return '8';
-	case SCI_K_PGUP: return '9';
-	default: return c; /* Unchanged */
-	}
-}
-
 void
 kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
@@ -189,20 +107,12 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 					s->visual->print(GFXW(s->visual), 0);
 
 			} else {
-				if (e.buckybits & SCI_EVM_ALT)
-					e.data = scancode(e.data); /* Scancodify if appropriate */
-
-				if ((e.buckybits & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT)) && !(e.buckybits & SCI_EVM_CAPSLOCK))
-					e.data = sci_toupper(e.data);
-				if (!(e.buckybits & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT)) && (e.buckybits & SCI_EVM_CAPSLOCK))
-					e.data = sci_toupper(e.data);
-
-				if (e.buckybits & SCI_EVM_NUMLOCK)
-					e.data = sci_numlockify(e.data);
 
 				PUT_SELECTOR(obj, type, SCI_EVT_KEYBOARD); /*Keyboard event*/
 				s->acc=1;
-				PUT_SELECTOR(obj, message, e.data);
+				PUT_SELECTOR(obj, message, e.character);
+				/* We only care about the translated
+				** character  */
 				PUT_SELECTOR(obj, modifiers, e.buckybits);
 
 			}

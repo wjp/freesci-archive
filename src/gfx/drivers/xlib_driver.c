@@ -203,7 +203,11 @@ xlib_error_handler(Display *display, XErrorEvent *error)
 	return 0;
 }
 
-#define UPDATE_NLS_CAPABILITY /* Unused in 0.3.4 */
+#define UPDATE_NLS_CAPABILITY 							\
+		if (flags & SCI_XLIB_NLS)					\
+			drv->capabilities |= GFX_CAPABILITY_KEYTRANSLATE;	\
+		else								\
+			drv->capabilities &= ~GFX_CAPABILITY_KEYTRANSLATE
 
 
 
@@ -304,7 +308,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	if (!S)
 		S = sci_malloc(sizeof(struct _xlib_state));
 
-	flags = SCI_XLIB_INSERT_MODE;
+	flags |= SCI_XLIB_INSERT_MODE;
 
 	S->display = XOpenDisplay(NULL);
 
@@ -1301,6 +1305,11 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 					    sci_event->buckybits = S->buckystate;
 					    sci_event->data =
 						    x_map_key(drv, &event, &ch);
+
+					    if (ch)
+						    sci_event->character = ch;
+					    else
+						    sci_event->character = sci_event->data;
 
 					    if (sci_event->data == SCI_K_INSERT)
 						    flags ^= SCI_XLIB_INSERT_MODE;

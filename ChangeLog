@@ -1,3 +1,9 @@
+2004-06-12  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/engine/kevent.c, src/gfx/operations.c,
+	src/gfx/drivers/xlib_driver.c, src/include/gfx_driver.h,
+	src/include/uinput.h: Backported glutton's keyboard event handling.
+
 2004-05-05  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/gamemenu.c (load_options): Small bug fix.

@@ -1571,6 +1571,89 @@ gfxop_set_pointer_position(gfx_state_t *state, point_t pos)
 	return 0;
 }
 
+#define SCANCODE_ROWS_NR 3
+
+struct {
+	int offset;
+	char *keys;
+} scancode_rows[SCANCODE_ROWS_NR] = {
+	{0x10, "QWERTYUIOP[]"},
+	{0x1e, "ASDFGHJKL;'\\"},
+	{0x2c, "ZXCVBNM,./"}
+};
+
+static int
+_gfxop_scancode(int ch)
+     /* Calculates a PC keyboard scancode from a character */
+{
+	int row;
+	int c = toupper((char)ch);
+
+	for (row = 0; row < SCANCODE_ROWS_NR; row++) {
+		char *keys = scancode_rows[row].keys;
+		int offset = scancode_rows[row].offset;
+
+		while (*keys) {
+			if (*keys == c)
+				return offset << 8;
+
+			offset++;
+			keys++;
+		}
+	}
+
+	return ch; /* not found */
+}
+
+static int
+_gfxop_toupper(int c)
+{
+	char shifted_numbers[] = ")!@#$%^&*(";
+	c = toupper((char)c);
+
+	if (c >= 'A' && c <= 'Z')
+		return c;
+
+	if (c >= '0' && c <= '9')
+		return shifted_numbers[c-'0'];
+
+	switch (c) {
+	case SCI_K_TAB: return SCI_K_SHIFT_TAB;
+	case ']': return '}';
+	case '[': return '{';
+	case '`': return '~';
+	case '-': return '_';
+	case '=': return '+';
+	case ';': return ':';
+	case '\'': return '"';
+	case '\\': return '|';
+	case ',': return '<';
+	case '.': return '>';
+	case '/': return '?';
+	default: return c; /* No match */
+	}
+}
+
+static int
+_gfxop_numlockify(int c)
+{
+	switch (c) {
+	case SCI_K_DELETE: return '.';
+	case SCI_K_INSERT: return '0';
+	case SCI_K_END: return '1';
+	case SCI_K_DOWN: return '2';
+	case SCI_K_PGDOWN: return '3';
+	case SCI_K_LEFT: return '4';
+	case SCI_K_CENTER: return '5';
+	case SCI_K_RIGHT: return '6';
+	case SCI_K_HOME: return '7';
+	case SCI_K_UP: return '8';
+	case SCI_K_PGUP: return '9';
+	default: return c; /* Unchanged */
+	}
+}
+
+
 sci_event_t
 gfxop_get_event(gfx_state_t *state, unsigned int mask)
 {
@@ -1614,6 +1697,30 @@ gfxop_get_event(gfx_state_t *state, unsigned int mask)
 		GFXERROR("Failed to update the mouse pointer!\n");
 		return error_event;
 	}
+
+	if (event.type == SCI_EVT_KEYBOARD
+	    && !(state->driver->capabilities & GFX_CAPABILITY_KEYTRANSLATE)) {
+		/* Do we still have to translate the key? */
+
+		event.character = event.data;
+
+		/* Scancodify if appropriate */
+		if (event.buckybits & SCI_EVM_ALT)
+			event.character = _gfxop_scancode(event.character);
+
+		/* Shift if appropriate */
+		else if (((event.buckybits & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT))
+			  && !(event.buckybits & SCI_EVM_CAPSLOCK))
+			 ||
+			 (!(event.buckybits & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT))
+			  && (event.buckybits & SCI_EVM_CAPSLOCK)))
+			event.character = _gfxop_toupper(event.character);
+
+		/* Numlockify if appropriate */
+		else if (event.buckybits & SCI_EVM_NUMLOCK)
+			event.data = _gfxop_numlockify(event.data);
+	}
+
 	return event;
 }
 
