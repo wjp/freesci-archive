@@ -65,8 +65,9 @@ kGetAngle(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kGetDistance(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int xrel = PARAM(1) - PARAM_OR_ALT(3, 0);
-  int yrel = (int) (((float) PARAM(0) - PARAM_OR_ALT(2, 0))/cos(PARAM_OR_ALT(5, 0))); /* This works because cos(0)==1 */
+  int xrel = (int) (((float) PARAM(1) - PARAM_OR_ALT(3, 0))/cos(PARAM_OR_ALT(5, 0)* PI / 180.0)); /* This works because cos(0)==1 */
+  int yrel = PARAM(0) - PARAM_OR_ALT(2, 0); 
+
   s->acc = sqrt((float) xrel*xrel + yrel*yrel);
 }
 
