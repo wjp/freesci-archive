@@ -600,6 +600,7 @@ gfxop_init(gfx_state_t *state, int xfact, int yfact, gfx_color_mode_t bpp,
 {
 	int color_depth = bpp? bpp : 1;
 	int initialized = 0;
+
 	BASIC_CHECKS(GFX_FATAL);
 
 	do {

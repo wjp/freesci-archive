@@ -23,7 +23,7 @@
 
 #ifdef HAVE_SDL
 
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(__APPLE__)
 #  include <sys/time.h>
 #  include <SDL/SDL.h>
 #else
@@ -138,7 +138,7 @@ pcmout_sdl_init(sfx_pcm_device_t *self)
 	a.format = AUDIO_S16LSB; /* FIXME */
 #endif
 	a.channels = 2; /* FIXME */
-	a.samples = 8192; /* FIXME */
+	a.samples = 2048; /* FIXME */
 	a.callback = timer_sdl_internal_callback;
 	a.userdata = NULL;
 

@@ -43,7 +43,7 @@
 #ifdef HAVE_SDL
 #include <gfx_tools.h>
 
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(__APPLE__)
 #	include <sys/time.h>
 #	include <SDL/SDL.h>
 #else
@@ -116,8 +116,8 @@ sdlerror(gfx_driver_t *drv, int line)
 static int
 sdl_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 {
-	if (!strncmp(attribute, "swap_ctrl_caps", 15) ||
-			!strncmp(attribute, "swap_caps_ctrl", 15)) {
+	if (!strncmp(attribute, "swap_ctrl_caps", 14) ||
+			!strncmp(attribute, "swap_caps_ctrl", 14)) {
 		if (string_truep(value))
 			flags |= SCI_SDL_SWAP_CTRL_CAPS;
 		else
@@ -125,7 +125,7 @@ sdl_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 		return GFX_OK;
 	}
 
-	if (!strncmp(attribute, "fullscreen", 11)) {
+	if (!strncmp(attribute, "fullscreen", 10)) {
 		if (string_truep(value))
 			flags |= SCI_SDL_FULLSCREEN;
 		else
@@ -133,6 +133,7 @@ sdl_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 
 		return GFX_OK;
 	}
+
 
 	SDLERROR("Attempt to set sdl parameter \"%s\" to \"%s\"\n", attribute, value);
 	return GFX_ERROR;
@@ -178,6 +179,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	S->primary = NULL;
 
 	i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF;
+
 	if (flags & SCI_SDL_FULLSCREEN) {
 		i |= SDL_FULLSCREEN;
 	}

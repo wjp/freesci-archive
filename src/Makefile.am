@@ -11,10 +11,11 @@ LDADD = engine/libsciengine.a gfx/libscigraphics.a \
 	gfx/resource/libsciresources.a gfx/drivers/libscidrivers.a \
 	sfx/libscisound.a scicore/libscicore.a \
 	sfx/player/libsciplayer.a \
-	sfx/device/libscisounddevice.a \
-	sfx/seq/libsciseq.a sfx/timer/libscitimer.a sfx/libscisoundlib.a \
+	sfx/seq/libsciseq.a sfx/timer/libscitimer.a \
 	sfx/pcm_device/libscipcm.a sfx/mixer/libscimixer.a \
 	sfx/softseq/libscisoftseq.a \
+	sfx/libscisoundlib.a \
+	sfx/device/libscisounddevice.a \
 	@ac_readline@ @ac_curses_libraries@ @ac_png_libraries@ -lm @SDL_LIBS@
 bin_PROGRAMS = freesci
 bin_SCRIPTS = sciv
