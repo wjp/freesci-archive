@@ -1,7 +1,20 @@
 2000-06-03  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/vm.c (run_vm): The 'call' operation now enforces the local
+	variable context it was called from
+
+	* src/graphics/font.c (text_draw): grayed-out text is now displayed
+	correctly
+
+	* src/graphics/menubar.c (menubar_add_menu): Menu items which were
+	last on the list and didn't have a right part weren't added correctly.
+	Fixed.
+
 	* src/engine/kstring.c (kFormat): Fixed kFormat() support for
 	minimum widths for numbers
+	(kSaid): Altered Said() to use the event::claimed selector rather
+	than an internal status variable to store whether the event has
+	been claimed
 
 	* src/engine/vm.c (_lookup_selector_functions): Cloned objects
 	didn't get their parent objects' selector functions checked. Fixed.

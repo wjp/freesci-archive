@@ -131,15 +131,17 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
     vocab_decypher_said_block(s, said_block);
   }
 
-  s->acc = 0;
-
-  if (s->parser_lastmatch_word == SAID_FULL_MATCH)
-    return; /* Matched before; we're not doing any more matching work today. */
+  if (GET_SELECTOR(s->parser_event, claimed)) {
+    s->acc = 0;
+    return;
+  }
 
 #ifdef SCI_SIMPLE_SAID_CODE
 
   s->acc = 0;
 
+  if (s->parser_lastmatch_word == SAID_FULL_MATCH)
+    return; /* Matched before; we're not doing any more matching work today. */
 
   if ((new_lastmatch = vocab_match_simple(s, said_block)) != SAID_NO_MATCH) {
 
@@ -168,7 +170,10 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     s->parser_lastmatch_word = new_lastmatch;
 
-  } else s->parser_lastmatch_word = SAID_NO_MATCH;
+  } else {
+    s->parser_lastmatch_word = SAID_NO_MATCH;
+    s->acc = 0;
+  }
 #endif /* !SCI_SIMPLE_SAID_CODE */
 }
 

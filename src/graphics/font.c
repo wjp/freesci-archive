@@ -320,7 +320,7 @@ _text_draw_line(picture_t dest, int x, int y, char *text, int textlen, char *fon
 
 	  for (xc = 0; xc < xl; xc++) {
 	    if (bitmask & cmpmask)
-	      dest->maps[0][pos] = (pos &1)? c1:c2;
+	      dest->maps[0][pos] = ((pos^yl) &1)? c1:c2;
 	    else if (bgcolor >= 0)
 	      dest->maps[0][pos] = bgcolor;
 	    
@@ -410,7 +410,7 @@ text_draw(picture_t dest, port_t *port, char *text, int maxwidth)
 	if (port->gray_text)
 	  _text_draw_line(dest, x, y, last_text_base, last_breakpoint,
 			  port->font, port->bgcolor | (port->color << 4),
-			  port->bgcolor | (port->color << 4),
+			  port->color | (port->bgcolor << 4),
 			  port->bgcolor | (port->bgcolor << 4),
 			  priority);
 		  else

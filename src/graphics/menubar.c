@@ -202,7 +202,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 	tag = atoi(entries++);
 	tracker =  *entries++;
       }
-      if ((tracker == '=') || (tracker == ':')) { /* End of entry */
+      if ((tracker == 0 && string_len > 0) || (tracker == '=') || (tracker == ':')) { /* End of entry */
 	int entrytype = MENU_TYPE_NORMAL;
 
 	if (!left)

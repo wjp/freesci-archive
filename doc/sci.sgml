@@ -5168,21 +5168,21 @@ kfunct 0x52: OnControl
         numsteps<subscript/y/ := |&delta;y / vy<subscript/max/|
 
         IF numsteps<subscript/x/ > numsteps<subscript/y/ THEN
-                mover::numsteps := numsteps<subscript/x/
+                numsteps := numsteps<subscript/x/
                 mover::b_xAxis := 1
                 &delta;<subscript/0/ := &delta;x
                 &delta;<subscript/1/ := &delta;y
                 s := client::yStep
         ELSE
-                mover::numsteps := numsteps<subscript/y/
+                numsteps := numsteps<subscript/y/
                 mover::b_xAxis := 0
                 &delta;<subscript/1/ := &delta;x
                 &delta;<subscript/0/ := &delta;y
                 s := client::xStep
         FI
 
-        mover::dx := &delta;x / mover::numsteps
-        mover::dy := &delta;y / mover::numsteps
+        mover::dx := &delta;x / numsteps
+        mover::dy := &delta;y / numsteps
 
         mover::b_di := - |&delta;<subscript/0/|
         mover::b_i1 := 2 * (|&delta;<subscript/1/| - |s * numsteps|) * |&delta;<subscript/0/|
@@ -6960,6 +6960,12 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                   This function does not automatically redraw the screen.
                 </para>
               </sect3>
+	      <sect3><title/showfont (fontnr)/
+		<para>
+		  This function will show all characters contained in a font and wait for a
+		  key or mouse button press.
+		</para>
+	      </title>
               <sect3><title/simkey (keynr)/
                 <para>
                   Simulates a keypress of a key with the specified key number. Modifiers are

@@ -464,6 +464,7 @@ run_vm(state_t *s, int restoring)
     {
       script_debug(s, &(xs->pc), &(xs->sp), &(xs->variables[VAR_TEMP]),
 		   &(xs->objp), &restadjust, bp_flag);
+      sciprintf("-- locals @ %04x\n", xs->variables[VAR_LOCAL]);
       bp_flag = 0;
     }
     /* Debug if this has been requested */
@@ -656,7 +657,7 @@ run_vm(state_t *s, int restoring)
       xs->sp -= temp;
       xs_new = add_exec_stack_entry(s, xs->pc + opparams[0], temp2, xs->objp,
 				    GET_HEAP(xs->sp) + restadjust,
-				    xs->sp, -1, xs->objp, s->execution_stack_pos, 0);
+				    xs->sp, -1, xs->objp, s->execution_stack_pos, xs->variables[VAR_LOCAL]);
       restadjust = 0; /* Used up the &rest adjustment */
 
       xs = xs_new;

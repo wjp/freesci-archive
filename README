@@ -15,9 +15,9 @@ This release has the following limitations (plus some bugs):
 It has the following improvements over Sierra SCI:
 - SCI0 background pictures can be rendered in 256 colors
 - saving and restoring the game state is possible from more places than the
-  Sierra SCI engine allowed
+  Sierra SCI engine allowed (using the debugger functions)
 - Better debugger (we think :-)
-- readline-style editing is supported in selectors
+- readline-style editing is supported in edit controls
 
 
 Please refer to 'NEWS' and the 'ChangeLog' for information about changes
@@ -139,9 +139,12 @@ level of interactivity:
 - Leisure Suit Larry 3
 - Police Quest 2
 - Codename: Iceman
-- The Colonel's Bequest
-- Conquest of Camelot
+- The Colonel's Bequest (*)
+- Conquest of Camelot (*)
 - The Fun Seeker's Guide (from the SQ Collector's Series)
+
+(*) These games are known to have major graphical problems. Fixing them will
+require a re-design of the graphics engine.
 
 In theory, FreeSCI should be able to let you complete all of these.
 
