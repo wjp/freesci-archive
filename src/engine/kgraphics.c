@@ -849,8 +849,11 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	SCIkdebug(SCIkBRESEN, "edgehit = %04x\n", edgehit);
 	if (s->acc == 0)
 		return; /* Can'tBeHere */
-	if (signal & (_K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR))
+
+	if (signal & (_K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)) {
 		s->acc= signal & (_K_VIEW_SIG_FLAG_REMOVE|_K_VIEW_SIG_FLAG_IGNORE_ACTOR); /* CanBeHere- it's either being disposed, or it ignores actors anyway */
+		return; /* CanBeHere */
+	}
 
 	if (cliplist) {
 		heap_ptr node = GET_HEAP(cliplist + LIST_FIRST_NODE);
