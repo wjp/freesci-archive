@@ -92,7 +92,7 @@ validate_stack_addr(state_t *s, stack_ptr_t sp)
 
 	script_debug_flag = script_error_flag = 1;
 	sciprintf("Stack index %d out of valid range [%d..%d]\n",
-		  sp, 0, s->stack_top - s->stack_base -1);
+		  sp - s->stack_base, 0, s->stack_top - s->stack_base -1);
 	return 0;
 }
 
