@@ -494,7 +494,7 @@ kMemoryInfo(state_t *s, int funct_nr, int argc, reg_t *argv)
 	case 2: /* Largest available hunk memory block */
 	case 3: /* Total amount of hunk memory */
 	case 4: /* Amount of free DOS paragraphs- SCI01 */
-		return make_reg(0, 0xe000); /* Must not be 0xffff, or some memory calculations will overflow */
+		return make_reg(0, 0x7fff); /* Must not be 0xffff, or some memory calculations will overflow */
 
 	default: SCIkwarn(SCIkWARNING, "Unknown MemoryInfo operation: %04x\n", argv[0].offset);
 	}

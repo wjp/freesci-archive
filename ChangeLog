@@ -2,6 +2,7 @@
 
 	* src/engine/vm.c (run_vm): Allowed unsigned comparisons between
 	pointers (always false if segments don't match)
+	(run_vm): Made &rest adjustment signed to fix a couple of bugs
 
 	* src/engine/kgraphics.c (_k_draw_control): Ported control drawing
 	(and the three related functions) to glutton

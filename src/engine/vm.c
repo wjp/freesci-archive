@@ -89,13 +89,26 @@ validate_stack_addr(state_t *s, stack_ptr_t sp)
 	return 0;
 }
 
+
+static int jump_initialized = 0;
+#ifdef HAVE_SETJMP_H
+static jmp_buf vm_error_address;
+#endif
+
+
+
 static inline int
 validate_arithmetic(reg_t reg)
 {
 	if (reg.segment) {
 		script_debug_flag = script_error_flag = 1;
 		sciprintf("Attempt to read arithmetic value from non-zero segment [%04x]\n", reg.segment);
-		BREAKPOINT();
+#ifdef HAVE_SETJMP_H
+		if (jump_initialized)
+			longjmp(vm_error_address, 0);
+		else
+#endif
+			BREAKPOINT();
 	}
 
 	return reg.offset;
@@ -107,7 +120,6 @@ validate_variable(reg_t *r, int type, int max, int index, int line)
 	char *names[4] = {"global", "local", "temp", "param"};
 
 	if (index < 0 || index >= max) {
-		script_debug_flag = script_error_flag = 1;
 		sciprintf("Attempt to use invalid %s variable %04x ", names[type], index);
 		if (max == 0)
 			sciprintf("(variable type invalid)");
@@ -577,12 +589,6 @@ add_exec_stack_entry(state_t *s, reg_t pc, stack_ptr_t sp, reg_t objp, int argc,
 }
 
 
-static int jump_initialized = 0;
-#ifdef HAVE_SETJMP_H
-static jmp_buf vm_error_address;
-#endif
-
-
 #ifdef DISABLE_VALIDATONS
 #  define kernel_matches_signature(a, b, c, d) 1
 #endif
@@ -628,8 +634,8 @@ run_vm(state_t *s, int restoring)
 	stack_ptr_t s_temp; /* Temporary stack pointer */
 	gint16 opparams[4]; /* opcode parameters */
 
-	unsigned int restadjust = s->r_amp_rest; /* &rest adjusts the parameter count
-						 ** by this value  */
+	int restadjust = s->r_amp_rest; /* &rest adjusts the parameter count
+					** by this value  */
 	/* Current execution data: */
 	exec_stack_t *xs = s->execution_stack + s->execution_stack_pos;
 	exec_stack_t *xs_new; /* Used during some operations */
@@ -976,7 +982,7 @@ run_vm(state_t *s, int restoring)
 		case 0x20: { /* call */
 			int argc = (opparams[1] >> 1) /* Given as offset, but we need count */
 				+ 1 + restadjust;
-			stack_ptr_t call_base = xs->sp -= argc;
+			stack_ptr_t call_base = xs->sp - argc;
 
 			xs->sp[1].offset += restadjust;
 			xs_new = add_exec_stack_entry(s, make_reg(xs->addr.pc.segment,
