@@ -420,7 +420,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 #ifdef DEBUG_SOUND_SERVER
 						fprintf(debug_stream, "Set volume to %d\n", event.value);
 #endif
-						master_volume = event.value * 100 / 15; /* scale to % */
+						master_volume = (unsigned char)(event.value * 100 / 15); /* scale to % */
 						midi_volume(master_volume);
 
 					} else if (event.signal == SOUND_COMMAND_SET_MUTE) {
@@ -672,14 +672,14 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 									    ** takes two parameters, read
 									    ** second parameter  */
 				else
-					param2 = -1; /* Waste processor cycles otherwise */
+					param2 = 0; /* Waste processor cycles otherwise */
 
 				song->pos += MIDI_cmdlen[command >> 4];
 
 				if (reverse_stereo
 				    && ((command & MIDI_CONTROL_CHANGE) == MIDI_CONTROL_CHANGE)
 				    && (param == MIDI_CC_PAN))
-					param2 = 0x7f - param2; /* Reverse stereo */
+					param2 = (unsigned char)(0x7f - param2); /* Reverse stereo */
 #ifdef DEBUG_SOUND_SERVER
 				if ((command & 0xf0) == 0xc0) /* Change instrument */
 					channel_instrument[command & 0xf] = param;

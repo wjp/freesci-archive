@@ -984,7 +984,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		}
 	}
 	if (sci01_priority_table_flags & 0x1)
-		s->pic_priority_table = NULL; 
+		s->pic_priority_table = NULL;
 
 	if (argc > 1)
 		s->pic_animate = PARAM(1); /* The animation used during kAnimate() later on */
@@ -1373,7 +1373,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 					if (text_offset == s->save_dir_copy)
 						s->save_dir_edit_offset = display_offset;
-     
+
 					cursor -= display_offset;
 
 					PUT_SELECTOR(event, claimed, 1);
@@ -1666,7 +1666,7 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_dyn_view_t *widge
 				}
 
 				if (tempid) {
-					if (invoke_selector(INV_SEL(tempid, delete, 1), 0))
+					if (invoke_selector(INV_SEL(tempid, del, 1), 0))
 						SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
 							 " a delete funcselector\n", tempid);
 					if (_k_animate_ran) {

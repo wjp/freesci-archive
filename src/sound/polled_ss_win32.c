@@ -45,7 +45,7 @@ static DWORD master_thread_id;
 
 static int reverse_stereo = 0;
 
-extern sound_server_t sound_server_win32;
+extern sound_server_t sound_server_win32p;
 
 /* Deadlock prevention */
 static CRITICAL_SECTION ev_cs, in_cs;
@@ -92,7 +92,7 @@ sound_win32_init(state_t *s, int flags)
 #endif
 
 	/* let app know what sound server we are running and yield to the scheduler */
-	global_sound_server = &sound_server_win32;
+	global_sound_server = &sound_server_win32p;
 	sci_sched_yield();
 
 	/* store a copy of the master thread id so we can use it with our mutices later */
@@ -410,8 +410,8 @@ sound_win32_save(state_t *s, char *dir)
 	return retval;
 }
 
-sound_server_t sound_server_win32 = {
-	"win32",
+sound_server_t sound_server_win32p = {
+	"win32p",
 	"0.2",
 	0,
 	&sound_win32_init,

@@ -112,7 +112,7 @@ extern DLLEXTERN char *class_names[]; /* Vocabulary class names */
 
 typedef struct {
 
-  int class; /* Word class */
+  int w_class; /* Word class */
   int group; /* Word group */
   char word[1]; /* The actual word */
 
@@ -151,7 +151,7 @@ typedef struct {
 
 typedef struct {
 
-  int class; /* Word class */
+  int w_class; /* Word class */
   int group; /* Word group */
 
 } result_word_t;

@@ -145,7 +145,7 @@ imap_set(unsigned int action, int instr, int value)
 			if ((value >= (0) && value <= (MIDI_mappings_nr - 1))
 			    || value == NOMAP
 			    || value == RHYTHM)
-				MIDI_mapping[instr].gm_instr = value;
+				MIDI_mapping[instr].gm_instr = (char)value;
 			else
 				fprintf(debug_stream, "Invalid instrument ID: %d\n", value);
 
@@ -204,7 +204,7 @@ init_handle(int priority, word song_handle, sound_server_state_t *ss_state)
 	byte *data;
 	/* temporary for storing pointer to new song's data */
 
-	int data_size;
+	int data_size = 1;
 	/* temporary for storing size of data */
 
 #ifdef DEBUG_SOUND_SERVER
@@ -303,7 +303,10 @@ stop_handle(word song_handle, sound_server_state_t *ss_state)
 			/* reset song position */
 			this_song->pos = 33;
 			this_song->loopmark = 33;
+			this_song->resetflag = 0;
 		}
+
+		global_sound_server->queue_event(song_handle, SOUND_SIGNAL_LOOP, -1);
 
 		global_sound_server->queue_event(song_handle, SOUND_SIGNAL_FINISHED, 0);
 
@@ -428,6 +431,7 @@ fade_handle(int ticks, word song_handle, sound_server_state_t *ss_state)
 
 	} else if (this_song) {
 		this_song->fading = ticks;
+		this_song->maxfade = ticks;
 
 	} else {
 		fprintf(debug_stream, "Attempt to fade invalid handle %04x\n", song_handle);
@@ -482,7 +486,7 @@ dispose_handle(word song_handle, sound_server_state_t *ss_state)
 }
 
 void
-set_channel_mute(int channel, int mute_setting, sound_server_state_t *ss_state)
+set_channel_mute(int channel, unsigned char mute_setting, sound_server_state_t *ss_state)
 {
 #ifdef DEBUG_SOUND_SERVER
 	fprintf(debug_stream, "Setting mute of channel %i to %i\n", channel, mute_setting);
@@ -515,7 +519,7 @@ sound_check(int mid_polyphony, sound_server_state_t *ss_state)
 	fprintf(debug_stream, "Received test signal, responding\n");
 #endif
 
-	global_sound_server->queue_command(mid_polyphony, SOUND_COMMAND_TEST, 0);
+	global_sound_server->send_data((byte *) &mid_polyphony, sizeof(int));
 }
 
 void

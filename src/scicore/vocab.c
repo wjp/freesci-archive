@@ -120,7 +120,7 @@ vocab_get_words_sci1(resource_mgr_t *resmgr, int *word_counter)
 
     /* Now decode class and group: */
     c = resource->data[seeker + 1];
-    words[counter]->class = ((resource->data[seeker]) << 4) | ((c & 0xf0) >> 4);
+    words[counter]->w_class = ((resource->data[seeker]) << 4) | ((c & 0xf0) >> 4);
     words[counter]->group = (resource->data[seeker + 2]) | ((c & 0x0f) << 8);
 
     ++counter;
@@ -185,12 +185,12 @@ vocab_get_words(resource_mgr_t *resmgr, int *word_counter)
 
     /* Now decode class and group: */
     c = resource->data[seeker + 1];
-    words[counter]->class = ((resource->data[seeker]) << 4) | ((c & 0xf0) >> 4);
+    words[counter]->w_class = ((resource->data[seeker]) << 4) | ((c & 0xf0) >> 4);
 
     if (c & 0xf0) {
 	    fprintf(stderr,"Unexpected class mask-");
 	    fprintf(stderr,"%s ", words[counter]->word);
-	    fprintf(stderr, " class mask = %03x\n", (words[counter]->class));
+	    fprintf(stderr, " class mask = %03x\n", (words[counter]->w_class));
     }
     words[counter]->group = (resource->data[seeker + 2]) | ((c & 0x0f) << 8);
 
@@ -384,7 +384,7 @@ vocab_lookup_word(char *word, int word_len,
 	if (dict_word) {
 		free(tempword);
 
-		retval->class = (*dict_word)->class;
+		retval->w_class = (*dict_word)->w_class;
 		retval->group = (*dict_word)->group;
 
 		return retval;
@@ -406,10 +406,10 @@ vocab_lookup_word(char *word, int word_len,
 
 				dict_word = bsearch(&tempword, words, words_nr, sizeof(word_t *), _vocab_cmp_words);
 
-				if ((dict_word) && ((*dict_word)->class & suffices[i]->class_mask)) { /* Found it? */
+				if ((dict_word) && ((*dict_word)->w_class & suffices[i]->class_mask)) { /* Found it? */
 					free(tempword);
 
-					retval->class = suffices[i]->result_class; /* Use suffix class */
+					retval->w_class = suffices[i]->result_class; /* Use suffix class */
 					retval->group = (*dict_word)->group;
 
 					return retval;
@@ -431,7 +431,7 @@ vocab_lookup_word(char *word, int word_len,
 		free(tempword);
 
 		retval->group = VOCAB_MAGIC_NUMBER_GROUP;
-		retval->class = VOCAB_CLASS_NUMBER;
+		retval->w_class = VOCAB_CLASS_NUMBER;
 
 		return(retval);
 	}

@@ -108,7 +108,7 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(type, "type");
   FIND_SELECTOR(state, "state");
   FIND_SELECTOR(doit, "doit");
-  FIND_SELECTOR(delete, "delete");
+  FIND_SELECTOR(del, "delete");
   FIND_SELECTOR(signal, "signal");
   FIND_SELECTOR(underBits, "underBits");
   FIND_SELECTOR(canBeHere, "canBeHere");
@@ -178,7 +178,7 @@ sci_hexdump(byte *data, int length, int offsetplus)
     for (j = 0; j < 38; j++)
       if (!tempstr[j])
 	tempstr[j] = ' '; /* get rid of sprintf's \0s */
-	  
+
     sciprintf("%s\n", tempstr);
   }
   return 0;
@@ -216,7 +216,7 @@ script_dump_object(char *data, int seeker, int objsize, char **snames, int sname
   }
 
 
-  sciprintf("Overloaded functions: %x\n", selectors = 
+  sciprintf("Overloaded functions: %x\n", selectors =
 	    overloads = getInt16((unsigned char *) data + seeker));
 
   seeker += 2;
@@ -233,7 +233,7 @@ script_dump_object(char *data, int seeker, int objsize, char **snames, int sname
   }
 }
 
-static void 
+static void
 script_dump_class(char *data, int seeker, int objsize, char **snames, int snames_nr)
 {
   int selectors, overloads, selectorsize;
@@ -243,7 +243,7 @@ script_dump_class(char *data, int seeker, int objsize, char **snames, int snames
 
   sciprintf("Class\n");
 
-  sci_hexdump((unsigned char *) data + seeker, objsize -4, seeker); 
+  sci_hexdump((unsigned char *) data + seeker, objsize -4, seeker);
 
   sciprintf("Name: %s\n", namepos? ((char *)data + namepos) : "<unknown>");
   sciprintf("Superclass: %x\n", superclass);
@@ -269,7 +269,7 @@ script_dump_class(char *data, int seeker, int objsize, char **snames, int snames
 
   seeker += selectorsize;
 
-  sciprintf("Overloaded functions: %x\n", selectors = 
+  sciprintf("Overloaded functions: %x\n", selectors =
 	    overloads = getInt16((unsigned char *) data + seeker));
 
   seeker += 2;
@@ -287,7 +287,7 @@ script_dump_class(char *data, int seeker, int objsize, char **snames, int snames
 }
 
 
-void 
+void
 script_dissect(resource_mgr_t *resmgr, int res_no, char **snames, int snames_nr)
 {
   int objectctr[11] = {0,0,0,0,0,0,0,0,0,0,0};
@@ -328,7 +328,7 @@ script_dissect(resource_mgr_t *resmgr, int res_no, char **snames, int snames_nr)
     objectctr[objtype]++;
 
     switch (objtype) {
-    case sci_obj_object: 
+    case sci_obj_object:
       script_dump_object ((char *) script->data, seeker, objsize, snames, snames_nr);
       break;
 
@@ -356,7 +356,7 @@ script_dissect(resource_mgr_t *resmgr, int res_no, char **snames, int snames_nr)
           sciprintf ("\n%04x: ", seeker);
         else if (nextitem >= 0xF0)
         {
-          switch (nextitem) 
+          switch (nextitem)
           {
           case 0xf0: sciprintf(", "); break;
           case 0xf1: sciprintf("& "); break;
@@ -371,7 +371,7 @@ script_dissect(resource_mgr_t *resmgr, int res_no, char **snames, int snames_nr)
           }
         }
         else {
-          nextitem = nextitem << 8 | script->data [seeker++];                    
+          nextitem = nextitem << 8 | script->data [seeker++];
           sciprintf ("%s[%03x] ", vocab_get_any_group_word (nextitem, words, word_count), nextitem);
         }
       }
@@ -390,7 +390,7 @@ script_dissect(resource_mgr_t *resmgr, int res_no, char **snames, int snames_nr)
     };
     break;
 
-    case sci_obj_class: 
+    case sci_obj_class:
       script_dump_class ((char *) script->data, seeker, objsize, snames, snames_nr);
       break;
 
@@ -422,7 +422,7 @@ script_dissect(resource_mgr_t *resmgr, int res_no, char **snames, int snames_nr)
       sciprintf("Unsupported!\n");
       return;
     }
-    
+
   }
 
   sciprintf("Script ends without terminator\n");

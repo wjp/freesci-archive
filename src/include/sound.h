@@ -173,6 +173,12 @@ unsigned int SOUND_SIGNAL_ABSOLUTE_CUE;
 #define MIDI_CONTROL_CHANGE 0xb0
 #define MIDI_CC_PAN 10
 
+typedef struct {
+	unsigned int delta_time;	/* number of ticks before send this command */
+	unsigned char midi_cmd;		/* command to send */
+	unsigned int param1;		/* first command parameter */
+	unsigned int param2;		/* second command parameter */
+} midi_op_t;
 
 #ifdef HAVE_OBSTACK_H
 guint8 *

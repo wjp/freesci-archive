@@ -710,7 +710,7 @@ c_list_words(state_t *s)
 	for (i = 0; i < words_nr; i++)
 		sciprintf("%4d: %03x [%03x] %s\n",
 			  i,
-			  words[i]->class,
+			  words[i]->w_class,
 			  words[i]->group,
 			  words[i]->word);
 
@@ -801,7 +801,7 @@ c_list (state_t * s)
 			int i;
 			for (i = 0; i < sci_invalid_resource; i++)
 				sciprintf ("%s\n", sci_resource_types[i]);
-			
+
 		}
 		else if (strcmp ("vars", cmd_params[0].str) == 0) {
 			unsigned int i;

@@ -1056,8 +1056,8 @@ main(int argc, char** argv)
 
 	if (gamestate->sound_server) {
 		int poly;
-		if (gamestate->sound_server->
-		    init(gamestate, (active_conf->reverse_stereo)?
+		if (gamestate->sound_server->init(
+			gamestate, (active_conf->reverse_stereo)?
 			 SOUNDSERVER_INIT_FLAG_REVERSE_STEREO : 0)) {
 
 			fprintf(stderr,"Sound server initialization failed- aborting.\n");
@@ -1070,6 +1070,7 @@ main(int argc, char** argv)
 		printf("Sound server reports polyphony %d\n", poly);
 
 		gamestate->sound_server->get_event(gamestate); /* Get init message */
+		/* FIXME: memory allocated that is not freed */
 	}
 
 	if (active_conf && active_conf->console_log)

@@ -468,7 +468,7 @@ c_parse(state_t *s)
     sciprintf("Parsed to the following blocks:\n");
 
     for (i = 0; i < words_nr; i++)
-      sciprintf("   Type[%04x] Group[%04x]\n", words[i].class, words[i].group);
+      sciprintf("   Type[%04x] Group[%04x]\n", words[i].w_class, words[i].group);
 
     if (vocab_gnf_parse(&(s->parser_nodes[0]), words, words_nr, s->parser_branches,
 			s->parser_rules, 1))
@@ -1817,7 +1817,7 @@ c_dump_words(state_t *s)
 
 	for (i = 0; i < s->parser_words_nr; i++) {
 		word_t *word = s->parser_words[i];
-		sciprintf("%s: C %03x G %03x\n", word->word, word->class, word->group);
+		sciprintf("%s: C %03x G %03x\n", word->word, word->w_class, word->group);
 	}
 	sciprintf("%d words\n", s->parser_words_nr);
 

@@ -279,7 +279,7 @@ _vsatisfy_rule(parse_rule_t *rule, result_word_t *input)
   dep = rule->data[rule->first_special];
 
   if (((dep & TOKEN_TERMINAL_CLASS)
-       && ((dep & 0xffff) & input->class))
+       && ((dep & 0xffff) & input->w_class))
       ||
       ((dep & TOKEN_TERMINAL_GROUP)
        && ((dep & 0xffff) & input->group))) {

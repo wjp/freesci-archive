@@ -147,7 +147,7 @@ typedef struct {
 	int text, font; /* Used by controls */
 	int type, state; /* Used by contols as well */
 	int doit; /* Called (!) by the Animate() system call */
-	int delete; /* Called by Animate() to dispose a view object */
+	int del; /* Called by Animate() to dispose a view object */
 	int signal; /* Used by Animate() to control a view's behaviour */
 	int underBits; /* Used by the graphics subroutines to store backupped BG pic data */
 

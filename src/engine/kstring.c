@@ -282,7 +282,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
       SCIkdebug(SCIkPARSER, "Parsed to the following blocks:\n", 0);
 
       for (i = 0; i < words_nr; i++)
-	SCIkdebug(SCIkPARSER, "   Type[%04x] Group[%04x]\n", words[i].class, words[i].group);
+	SCIkdebug(SCIkPARSER, "   Type[%04x] Group[%04x]\n", words[i].w_class, words[i].group);
     }
 
     if (vocab_build_parse_tree(&(s->parser_nodes[0]), words, words_nr, s->parser_branches,

@@ -53,7 +53,8 @@ extern sound_server_t sound_server_sdl;
 #endif
 
 #ifdef _WIN32
-extern sound_server_t sound_server_win32;
+extern sound_server_t sound_server_win32p;
+extern sound_server_t sound_server_win32e;
 #endif
 
 #ifdef _DOS
@@ -68,7 +69,8 @@ sound_server_t *sound_servers[] = {
 #  endif /* HAVE_FORK */
 
 #  ifdef _WIN32
-	&sound_server_win32,
+	&sound_server_win32p,
+	&sound_server_win32e,
 #  endif
 
 #  ifdef HAVE_SDL
@@ -125,8 +127,8 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 		return 1;
 
 	} else if (command == SOUND_COMMAND_INIT_HANDLE) {
-		resource_t *song = scir_find_resource(s->resmgr, sci_sound,
-						      parameter, 0);
+		resource_t *song = scir_find_resource(
+			s->resmgr, sci_sound, parameter, 0);
 		int len;
 
 		if (!song) {
@@ -135,11 +137,11 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 		}
 
 		len = song->size;
-		global_sound_server->queue_command(event.handle, event.signal, event.value);
 		if (global_sound_server->send_data(song->data, len) != len) {
 			fprintf(debug_stream, "sound_command(): sound_send_data"
 				" returned < count\n");
 		}
+		global_sound_server->queue_command(event.handle, event.signal, event.value);
 
 		return 0;
 
@@ -221,7 +223,6 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 	} else if (command == SOUND_COMMAND_TEST) {
 		int *retval = NULL;
 		int len = 0;
-
 		global_sound_server->queue_command(event.handle, event.signal, event.value);
 		global_sound_server->get_data((byte **)&retval, &len);
 		len = *retval;
@@ -310,6 +311,7 @@ song_new(word handle, byte *data, int size, int priority)
 		retval->polyphony[i] = data[1 + (i << 1)];
 		retval->flags[i] = data[2 + (i << 1)];
 	}
+
 	return retval;
 }
 
@@ -501,8 +503,6 @@ sound_eq_retreive_event(sound_eq_t *queue)
 }
 
 
-
-
 /** Two utility functions to modify playing note lists */
 
 static inline int
@@ -517,7 +517,7 @@ add_note_playing(playing_notes_t *playing, int note)
 			memcpy(playing->notes, &(playing->notes[1]), sizeof(byte) * (playing->polyphony - 1)); /* Yes, this sucks. */
 	} else playing->playing++;
 
-	playing->notes[playing->playing-1] = note;
+	playing->notes[playing->playing-1] = (unsigned char)note;
 
 	return retval;
 }
@@ -544,7 +544,6 @@ int MIDI_cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0};
 void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 param,
 		guint8 param2, int *ccc, playing_notes_t *playing)
 {
-
 	if (SCI_MIDI_CONTROLLER(command)) {
 		switch (param) {
 
@@ -624,7 +623,7 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 				}
 
 				if (song->velocity[command & 0x0f])  /* do we ignore velocities? */
-					param2 = song->velocity[command & 0x0f];
+					param2 = (unsigned char)song->velocity[command & 0x0f];
 
 				if (song->fading != -1) {           /* is the song fading? */
 					if (song->maxfade == 0)
@@ -758,6 +757,10 @@ void register_sound_messages() {
 #else
 	DECLARE_MESSAGES();
 #endif
+
+#ifdef _DEBUG
+	/* print_message_map(); */
+#endif
 }
 
 int init_midi_device (state_t *s) {
@@ -768,7 +771,7 @@ int init_midi_device (state_t *s) {
 	if (midi_patch == NULL) {
 		sciprintf(" Patch (%03d) could not be loaded. Initializing with defaults...\n", midi_patchfile);
 
-		if (midi_open(NULL, -1) < 0) {
+		if (midi_open(NULL, (unsigned int)-1) < 0) {
 			sciprintf(" The MIDI device failed to open cleanly.\n");
 			return -1;
 		}

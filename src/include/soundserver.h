@@ -578,8 +578,59 @@ sound_server_find_driver(char *name);
 /*********************************/
 
 void sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state);
-/* Starts the sci0 sound server.
-*/
+/* Starts the sci0 polled sound server. */
+
+void
+sci0_event_ss(sound_server_state_t *ss_state);
+/* Starts the sci0 event sound server. */
+
+void
+init_handle(int priority, word song_handle, sound_server_state_t *ss_state);
+
+void
+play_handle(int priority, word song_handle, sound_server_state_t *ss_state);
+
+void
+stop_handle(word song_handle, sound_server_state_t *ss_state);
+
+void
+suspend_handle(word song_handle, sound_server_state_t *ss_state);
+
+void
+resume_handle(word song_handle, sound_server_state_t *ss_state);
+
+void
+renice_handle(int priority, word song_handle, sound_server_state_t *ss_state);
+
+void
+fade_handle(int ticks, word song_handle, sound_server_state_t *ss_state);
+
+void
+loop_handle(int loops, word song_handle, sound_server_state_t *ss_state);
+
+void
+dispose_handle(word song_handle, sound_server_state_t *ss_state);
+
+void
+set_channel_mute(int channel, unsigned char mute_setting, sound_server_state_t *ss_state);
+
+void
+set_master_volume(guint8 new_volume, sound_server_state_t *ss_state);
+
+void
+sound_check(int mid_polyphony, sound_server_state_t *ss_state);
+
+void
+stop_all(sound_server_state_t *ss_state);
+
+void
+suspend_all(sound_server_state_t *ss_state);
+
+void
+resume_all(sound_server_state_t *ss_state);
+
+void
+set_reverse_stereo(int rs, sound_server_state_t *ss_state);
 
 void
 imap_set(unsigned int action, int instr, int value);
