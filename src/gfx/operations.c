@@ -1759,11 +1759,14 @@ gfxop_add_to_pic(gfx_state_t *state, int nr, int flags, int default_palette)
 		return GFX_ERROR;
 	}
 
-	if (!gfxr_add_to_pic(state->resstate, state->pic_nr, nr,
-			     state->visible_map, flags, default_palette, 1)) {
+	if (!(state->pic = gfxr_add_to_pic(state->resstate, state->pic_nr, nr,
+					   state->visible_map, flags, default_palette, 1))) {
 		GFXERROR("Could not add pic #%d to pic #%d!\n", state->pic_nr, nr);
 		return GFX_ERROR;
 	}
+	state->pic_unscaled = gfxr_add_to_pic(state->resstate, state->pic_nr, nr,
+					      state->visible_map, flags, default_palette, 1);
+
 	return _gfxop_set_pic(state);
 }
 

@@ -237,6 +237,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 			song->status = SOUND_STATUS_STOPPED;
 			midi_allstop();
 			song->pos = song->loopmark = 33; /* Reset position */
+			sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_LOOP, -1);
 			sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_FINISHED, 0);
 
 		}

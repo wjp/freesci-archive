@@ -361,10 +361,13 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 		}
 	}
 
-	res->lock_sequence_nr = state->options->buffer_pics_nr;
+	if (scaled) {
+		res->lock_sequence_nr = state->options->buffer_pics_nr;
 
-	gfxr_interpreter_calculate_pic(state, res->scaled_data.pic, need_unscaled? res->unscaled_data.pic : NULL,
+		gfxr_interpreter_calculate_pic(state, res->scaled_data.pic, need_unscaled? res->unscaled_data.pic : NULL,
 				       flags, default_palette, new_nr);
+	}
+
 	res->mode = MODE_INVALID; /* Invalidate */
 
 	return gfxr_pic_xlate_common(res, maps, scaled, 1, state->driver->mode, state->options->pic_xlate_filter);

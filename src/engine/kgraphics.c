@@ -837,6 +837,8 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	SCIkdebug(SCIkBRESEN,"Checking collision: (%d,%d) to (%d,%d), obj=%04x, sig=%04x, cliplist=%04x\n",
 		  x, y, xend, yend, obj, signal, cliplist);
 
+	sciprintf("zone=%d,%d + (%d,%d)\n", zone.x, zone.y, zone.xl, zone.yl);
+
 	s->acc = !(((word)GET_SELECTOR(obj, illegalBits))
 		   & (edgehit = gfxop_scan_bitmask(s->gfx_state, zone, GFX_MASK_CONTROL)));
 

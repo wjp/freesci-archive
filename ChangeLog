@@ -1,3 +1,11 @@
+2001-03-12  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/soundserver_null.c (sound_null_server): Sound server now
+	sends a loop -1 event before stopping faded song
+
+	* src/gfx/operations.c (gfxop_add_to_pic): Add-to pictures are now
+	requested explicitly after being added
+
 2001-03-11  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/sound/soundserver_null.c:  Correct SCI Fading implemented.
