@@ -1,3 +1,7 @@
+2001-03-13  Christoph Reichenbach  <jameson@theta.darmstadt.gmd.de>
+
+	* configure.in: Added X11 MIT-SHM detection
+
 2001-03-12  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/soundserver_null.c (sound_null_server): Sound server now

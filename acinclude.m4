@@ -171,6 +171,35 @@ AC_SUBST(ac_ggi_libraries)
 ])
 
 
+AC_DEFUN(AC_CHECK_XSHM,
+[
+AC_MSG_CHECKING([for the X11 MIT-SHM extension])
+
+AC_LANG_SAVE
+AC_LANG_C
+oldLIBS="$LIBS"
+LIBS="$LIBS -lXShm"
+AC_TRY_COMPILE([
+#include <X11/Xlib.h>
+#include <X11/extensions/XShm.h>
+], [
+int main(int argc, char **argv)
+{
+	Display *display;
+	XShmSegmentInfo foo;
+
+	XShmAttach(display, &foo);
+}
+],[
+	AC_MSG_RESULT(found.)
+	AC_DEFINE(HAVE_MITSHM)
+],[
+	AC_MSG_RESULT(not present.)
+	LIBS="$oldLIBS"
+])
+AC_LANG_RESTORE
+])
+
 ##
 ## Searching for curses/ncurses: Based on similar functions for qt
 ##

@@ -6,3 +6,5 @@
 #undef HAVE_GLX
 #undef HAVE_ALSA
 #undef HAVE_ALPHA_EV6_SUPPORT
+#undef HAVE_MITSHM
+

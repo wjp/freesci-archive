@@ -1,97 +1,98 @@
+/* config.h.  Generated automatically by configure.  */
 /* config.h.in.  Generated automatically from configure.in by autoheader.  */
 
 /* Define if your processor stores words with the most significant
    byte first (like Motorola and SPARC, unlike Intel and VAX).  */
-#undef WORDS_BIGENDIAN
+/* #undef WORDS_BIGENDIAN */
 
 /* Define if the X Window System is missing or not being used.  */
-#undef X_DISPLAY_MISSING
+/* #undef X_DISPLAY_MISSING */
 
 /* Define if lex declares yytext as a char * by default, not a char[].  */
-#undef YYTEXT_POINTER
+/* #undef YYTEXT_POINTER */
 
-#undef PACKAGE
-#undef VERSION
-#undef HAVE_LIBGGI
-#undef HAVE_LIBPNG
-#undef HAVE_CURSES
-#undef HAVE_GLX
-#undef HAVE_ALSA
-#undef HAVE_ALPHA_EV6_SUPPORT
-#undef HAVE_MITSHM
+#define PACKAGE "freesci"
+#define VERSION "0.3.1-devel"
+#define HAVE_LIBGGI 1
+/* #undef HAVE_LIBPNG */
+#define HAVE_CURSES 1
+/* #undef HAVE_GLX */
+/* #undef HAVE_ALSA */
+/* #undef HAVE_ALPHA_EV6_SUPPORT */
+#define HAVE_MITSHM 1
 
 /* The number of bytes in a int.  */
-#undef SIZEOF_INT
+#define SIZEOF_INT 4
 
 /* The number of bytes in a long.  */
-#undef SIZEOF_LONG
+#define SIZEOF_LONG 4
 
 /* The number of bytes in a short.  */
-#undef SIZEOF_SHORT
+#define SIZEOF_SHORT 2
 
 /* Define if you have the ffs function.  */
-#undef HAVE_FFS
+#define HAVE_FFS 1
 
 /* Define if you have the fork function.  */
-#undef HAVE_FORK
+#define HAVE_FORK 1
 
 /* Define if you have the getopt_long function.  */
-#undef HAVE_GETOPT_LONG
+#define HAVE_GETOPT_LONG 1
 
 /* Define if you have the memfrob function.  */
-#undef HAVE_MEMFROB
+#define HAVE_MEMFROB 1
 
 /* Define if you have the pipe function.  */
-#undef HAVE_PIPE
+#define HAVE_PIPE 1
 
 /* Define if you have the sched_yield function.  */
-#undef HAVE_SCHED_YIELD
+#define HAVE_SCHED_YIELD 1
 
 /* Define if you have the socketpair function.  */
-#undef HAVE_SOCKETPAIR
+#define HAVE_SOCKETPAIR 1
 
 /* Define if you have the <dirent.h> header file.  */
-#undef HAVE_DIRENT_H
+#define HAVE_DIRENT_H 1
 
 /* Define if you have the <fnmatch.h> header file.  */
-#undef HAVE_FNMATCH_H
+#define HAVE_FNMATCH_H 1
 
 /* Define if you have the <getopt.h> header file.  */
-#undef HAVE_GETOPT_H
+#define HAVE_GETOPT_H 1
 
 /* Define if you have the <limits.h> header file.  */
-#undef HAVE_LIMITS_H
+#define HAVE_LIMITS_H 1
 
 /* Define if you have the <obstack.h> header file.  */
-#undef HAVE_OBSTACK_H
+#define HAVE_OBSTACK_H 1
 
 /* Define if you have the <readline/history.h> header file.  */
-#undef HAVE_READLINE_HISTORY_H
+#define HAVE_READLINE_HISTORY_H 1
 
 /* Define if you have the <readline/readline.h> header file.  */
-#undef HAVE_READLINE_READLINE_H
+#define HAVE_READLINE_READLINE_H 1
 
 /* Define if you have the <sys/soundcard.h> header file.  */
-#undef HAVE_SYS_SOUNDCARD_H
+#define HAVE_SYS_SOUNDCARD_H 1
 
 /* Define if you have the <sys/time.h> header file.  */
-#undef HAVE_SYS_TIME_H
+#define HAVE_SYS_TIME_H 1
 
 /* Define if you have the <sys/uio.h> header file.  */
-#undef HAVE_SYS_UIO_H
+#define HAVE_SYS_UIO_H 1
 
 /* Define if you have the <unistd.h> header file.  */
-#undef HAVE_UNISTD_H
+#define HAVE_UNISTD_H 1
 
 /* Define if you have the asound library (-lasound).  */
-#undef HAVE_LIBASOUND
+/* #undef HAVE_LIBASOUND */
 
 /* Name of package */
-#undef PACKAGE
+#define PACKAGE "freesci"
 
 /* Version number of package */
-#undef VERSION
+#define VERSION "0.3.1-devel"
 
 /* Define if using the dmalloc debugging malloc package */
-#undef WITH_DMALLOC
+/* #undef WITH_DMALLOC */
 
