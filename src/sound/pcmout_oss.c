@@ -42,9 +42,10 @@ static void *sound_thread (void *arg)
 {
   int count, j;
   gint16 *b = buffer;
+  int shift = (pcmout_stereo) ? 2: 1;
 
   while(run) {
-    count = mix_sound(BUFFER_SIZE) << 2;  
+    count = mix_sound(BUFFER_SIZE) << shift;  
     b = buffer;
 
     do {

@@ -38,16 +38,17 @@ static void fill_audio (void *udata, guint8 *stream, int len)
 {
   Uint32 p;
   static Uint32 remain = 0, offset = 0;
+  int shift = (pcmout_stereo) ? 2: 1;
 
   //  printf("%d %d %d\n", len, remain, offset);
 
   /* mix_sound returns FRAMES, 1 frame = 4 bytes */
   memcpy (stream, (guint8 *) buffer + offset, p = remain);
   for (remain = 0, len -= p; remain < len; p += remain, len -= remain) {
-    remain = mix_sound(BUFFER_SIZE) << 2;
+    remain = mix_sound(BUFFER_SIZE) << shift;
     memcpy (stream + p, buffer, remain);
   }
-  remain = mix_sound (BUFFER_SIZE) << 2;
+  remain = mix_sound (BUFFER_SIZE) << shift;
   memcpy (stream + p, buffer, offset = len);
   remain -= offset;
 }
@@ -69,7 +70,7 @@ static int pcmout_sdl_open(gint16 *b, guint16 rate, guint8 stereo)
 #else
   a.format = AUDIO_S16LSB;
 #endif
-  a.channels = (stereo)? 2 : 1;
+  a.channels = (stereo) ? 2 : 1;
   a.samples = BUFFER_SIZE * 2;
   a.callback = fill_audio;
   a.userdata = NULL;
