@@ -1,3 +1,7 @@
+2001-11-18  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/sound.c (get_msg_value): Fixed strcmpi() -> strcasecmp()
+
 2001-11-17  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/polled_ss.c: Fixed warnings.

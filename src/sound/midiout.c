@@ -55,7 +55,6 @@ int midiout_close(void)
 
 int midiout_write_event(guint8 *buffer, unsigned int count)
 {
-
   if (buffer[0] == running_status)
     return midiout_driver->midiout_write(buffer + 1, count -1);
   else {
