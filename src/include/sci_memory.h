@@ -254,6 +254,8 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct);
 ** and using it improperly may cuase memory leaks. It conserves
 ** memory, though.  */
 
+#define SCI_REFCOUNT_TEST(f) sci_refcount_incref(f); sci_refcount_decref(f);
+
 extern void *
 sci_refcount_alloc(size_t length);
 /* Allocates "garbage" memory

@@ -106,6 +106,7 @@ pp_set_iterator(song_iterator_t *it, GTimeVal start_time)
 					  start_time.tv_usec,
 					  seq->pcm_conf.rate);
 	time_counter = 0;
+fprintf(stderr, "[play] Now running it %p\n", it);
 
 	if (play_it) {
 		fprintf(stderr, __FILE__": set_iterator: Attempted while iterator was set!\n");
@@ -135,7 +136,7 @@ pp_stop(void)
 	song_iterator_t *it = play_it;
 
 	play_it = NULL;
-
+fprintf(stderr, "[play] Now stopping it %p\n", it);
 	if (it)
 		songit_free(it);
 

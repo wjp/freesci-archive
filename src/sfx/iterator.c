@@ -378,6 +378,10 @@ _sci_midi_process_state(base_song_iterator_t *self, unsigned char *buf, int *res
 
 	switch (channel->state) {
 
+	case SI_STATE_PCM:
+		channel->state = SI_STATE_DELTA_TIME;
+		return SI_PCM;
+
 	case SI_STATE_UNINITIALISED:
 		fprintf(stderr, SIPFX "Attempt to read command from uninitialized iterator!\n");
 		self->init((song_iterator_t *) self);
@@ -475,15 +479,16 @@ _sci0_header_magic_p(unsigned char *data, int offset, int size)
 		&& (data[offset + 3] == 0x00);
 }
 
-static unsigned char *
-_sci0_check_pcm(sci0_song_iterator_t *self, int *size,
-		sfx_pcm_config_t *format)
+static sfx_pcm_feed_t *
+_sci0_check_pcm(sci0_song_iterator_t *self)
 {
 	unsigned int offset;
 	int tries = 2;
 	int found_it = 0;
 	unsigned char *pcm_data;
+	int size;
 	offset = SCI0_MIDI_OFFSET;
+	sfx_pcm_config_t format;
 
 	if (self->data[0] != 2)
 		return NULL;
@@ -491,11 +496,13 @@ _sci0_check_pcm(sci0_song_iterator_t *self, int *size,
 
 	while ((tries--) && (offset < self->size) && (!found_it)) {
 		/* Search through the garbage manually */
-		unsigned char *fc = memchr(self->data + offset, SCI0_END_OF_SONG,
-					self->size - offset);
+		unsigned char *fc = memchr(self->data + offset,
+					   SCI0_END_OF_SONG,
+					   self->size - offset);
 
 		if (!fc) {
-			fprintf(stderr, SIPFX "Warning: Playing unterminated song!\n");
+			fprintf(stderr, SIPFX "Warning: Playing unterminated"
+				" song!\n");
 			return NULL;
 		}
 
@@ -508,7 +515,8 @@ _sci0_check_pcm(sci0_song_iterator_t *self, int *size,
 	}
 
 	if (!found_it) {
-		fprintf(stderr, SIPFX "Warning: Song indicates presence of PCM, but"
+		fprintf(stderr, SIPFX
+			"Warning: Song indicates presence of PCM, but"
 			" none found (finally at offset %04x)\n", offset);
 
 		return NULL;
@@ -516,25 +524,32 @@ _sci0_check_pcm(sci0_song_iterator_t *self, int *size,
 
 	pcm_data = self->data + offset;
 
-	*size = getInt16(pcm_data + SCI0_PCM_SIZE_OFFSET);
+	size = getInt16(pcm_data + SCI0_PCM_SIZE_OFFSET);
 
 	/* Two of the format parameters are fixed by design: */
-	format->format = SFX_PCM_FORMAT_U8;
-	format->stereo = SFX_PCM_MONO;
-	format->rate = getInt16(pcm_data + SCI0_PCM_SAMPLE_RATE_OFFSET);
+	format.format = SFX_PCM_FORMAT_U8;
+	format.stereo = SFX_PCM_MONO;
+	format.rate = getInt16(pcm_data + SCI0_PCM_SAMPLE_RATE_OFFSET);
 
-	if (offset + SCI0_PCM_DATA_OFFSET + *size != self->size) {
-		int d = offset + SCI0_PCM_DATA_OFFSET + *size - self->size;
+	if (offset + SCI0_PCM_DATA_OFFSET + size != self->size) {
+		int d = offset + SCI0_PCM_DATA_OFFSET + size - self->size;
 
-		fprintf(stderr, SIPFX "Warning: PCM advertizes %d bytes of data, but %d"
-			  " bytes are trailing in the resource!\n",
-			  *size, self->size - (offset + SCI0_PCM_DATA_OFFSET));
+		fprintf(stderr, SIPFX
+			"Warning: PCM advertizes %d bytes of data, but %d"
+			" bytes are trailing in the resource!\n",
+			size, self->size - (offset + SCI0_PCM_DATA_OFFSET));
 
 		if (d > 0)
-			*size -= d; /* Fix this */
+			size -= d; /* Fix this */
 	}
 
-	return pcm_data + SCI0_PCM_DATA_OFFSET;
+	self->channel.state
+		= SI_STATE_FINISHED; /* Don't play both PCM and music */
+
+	return sfx_iterator_make_feed(self->data,
+				      offset + SCI0_PCM_DATA_OFFSET,
+				      size,
+				      format);
 }
 
 static song_iterator_t *
@@ -551,8 +566,8 @@ _sci0_handle_message(sci0_song_iterator_t *self, song_iterator_message_t msg)
 			int tsize = sizeof(sci0_song_iterator_t);
 			base_song_iterator_t *mem = sci_malloc(tsize);
 			memcpy(mem, self, tsize);
-			mem->data = sci_malloc(mem->size);
-			memcpy(mem->data, self->data, self->size);
+			sci_refcount_incref(mem->data);
+fprintf(stderr, "** CLONE INCREF for new %p from %p at %p\n", mem, self, mem->data);
 			return (struct _song_iterator *) mem; /* Assume caller has another copy of this */
 		}
 
@@ -614,13 +629,18 @@ _sci0_init(sci0_song_iterator_t *self)
 	self->active_channels = 1;
 	_base_init_channel(&(self->channel), 0, SCI0_MIDI_OFFSET, self->size);
 	self->delay_remaining = 0;
+
+	if (self->data[0] == 2) /* Do we have an embedded PCM? */
+		self->channel.state = SI_STATE_PCM;
 }
+
 
 static void
 _sci0_cleanup(sci0_song_iterator_t *self)
 {
+fprintf(stderr, "** FREEING it %p: data at %p\n", self, self->data);
 	if (self->data)
-		sci_free(self->data);
+		sci_refcount_decref(self->data);
 	self->data = NULL;
 }
 
@@ -905,27 +925,23 @@ _sci1_dump_state(sci1_song_iterator_t *self)
 }
 
 
-static unsigned char *
-_sci1_get_pcm(sci1_song_iterator_t *self,
-	      int *size, sfx_pcm_config_t *format)
+static sfx_pcm_feed_t *
+_sci1_get_pcm(sci1_song_iterator_t *self)
 {
 	if (self->next_sample
 	    && self->next_sample->delta <= 0) {
 		sci1_sample_t *sample = self->next_sample;
-		byte *retval = sample->data;
-
-#warning "MEMORY LEAK-- fixme (API change -> return iterator, refcounting!)"
-retval = memdup(retval, sample->size);
+		sfx_pcm_feed_t *feed
+			= sfx_iterator_make_feed(self->data,
+						 sample->data - self->data,
+						 sample->size,
+						 sample->format);
 
 		self->next_sample = self->next_sample->next;
 
-		if (format)
-			*format = sample->format;
-		if (size)
-			*size = sample->size;
 		sci_free(sample);
 
-		return retval;
+		return feed;
 	} else
 		return NULL;
 }
@@ -960,7 +976,9 @@ _sci1_process_next_command(sci1_song_iterator_t *self,
 
 			if (self->next_sample->announced) {
 				/* Already announced; let's discard it */
-				_sci1_get_pcm(self, NULL, NULL);
+				sfx_pcm_feed_t *feed
+					= _sci1_get_pcm(self);
+				feed->destroy(feed);
 			} else {
 				int delay = self->next_sample->delta;
 
@@ -1034,8 +1052,7 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 			memcpy(mem, self, tsize);
 			samplep = &(mem->next_sample);
 
-			mem->data = sci_malloc(mem->size);
-			memcpy(mem->data, self->data, self->size);
+			sci_refcount_incref(mem->data);
 
 			mem->delay_remaining += delta;
 
@@ -1180,12 +1197,10 @@ _ff_read_next_command(fast_forward_song_iterator_t *self,
 	}
 }
 
-static byte *
-_ff_check_pcm(fast_forward_song_iterator_t *self,
-	      int *size, sfx_pcm_config_t *format)
+static sfx_pcm_feed_t *
+_ff_check_pcm(fast_forward_song_iterator_t *self)
 {
-	return self->delegate->get_pcm(self->delegate,
-				       size, format);
+	return self->delegate->get_pcm_feed(self->delegate);
 }
 
 static song_iterator_t *
@@ -1228,17 +1243,219 @@ new_fast_forward_iterator(song_iterator_t *capsit, int delta)
 
 	it->delegate = capsit;
 	it->delta = delta;
+	it->death_listeners_nr = 0;
 
 	it->next = (int(*)(song_iterator_t *, unsigned char *, int *))
 		_ff_read_next_command;
-	it->get_pcm = (unsigned char*(*)(song_iterator_t *, int*, int *, int *))
+	it->get_pcm_feed = (sfx_pcm_feed_t *(*)(song_iterator_t *))
 		_ff_check_pcm;
-	it->handle_message = (song_iterator_t *(*)(song_iterator_t *, song_iterator_message_t))
+	it->handle_message = (song_iterator_t *(*)(song_iterator_t *,
+						   song_iterator_message_t))
 		_ff_handle_message;
 	it->init = (void(*)(song_iterator_t *))
 		_ff_init;
 	it->cleanup = NULL;
 
+
+	return (song_iterator_t *) it;
+}
+
+
+/********************/
+/*-- Tee iterator --*/
+/********************/
+
+
+static int
+_tee_read_next_command(tee_song_iterator_t *it, unsigned char *buf,
+		       int *result)
+{
+	song_iterator_t *theit;
+	int retsource; /* source from which we returned */
+	int rv;
+
+	if (it->active_left == 0)
+		return it->right->next(it->right, buf, result);
+	else if (it->active_right == 0)
+		return it->left->next(it->left, buf, result);
+
+	if (!it->has_next) {
+		it->has_next = TEE_RIGHT;
+		it->next_retval
+			= it->right->next(it->right, &(it->next_buf[0]),
+					  &(it->next_result));
+	}
+
+	theit = TEE_NOTIT(it->has_next); /* Read NOT
+					 ** from the one we
+					 ** already know */
+
+	rv = theit->next(theit, buf, result);
+	if (rv > it->next_retval) {
+		/* What we already have is better */
+		byte tempbuf[MAX_BUF_SIZE];
+		int tempresult;
+		int temprv;
+
+		if (it->next_retval >= 0)
+			rv -= it->next_retval;
+
+		/* Now swap everything */
+		temprv = rv;
+		rv = it->next_retval;
+		rv = temprv;
+
+		tempresult = it->next_result;
+		it->next_result = *result;
+		*result = tempresult;
+
+		memcpy(tempbuf, buf, MAX_BUF_SIZE);
+		memcpy(buf, it->next_buf, MAX_BUF_SIZE);
+		memcpy(it->next_buf, tempbuf, MAX_BUF_SIZE);
+		retsource = it->has_next;
+
+	} else {
+		if (rv > 0) /* implies that it->next_retval >= 0 */
+			it->next_retval -= rv;
+		retsource = (it->has_next == TEE_LEFT)? TEE_RIGHT : TEE_LEFT;
+	}
+
+	if (rv == SI_PCM)
+		it->reported_pcm = retsource;
+
+	if (rv == SI_FINISHED) {
+		((retsource == TEE_LEFT)?
+		 it->active_left : it->active_right)
+			= 0;
+
+		if (it->active_left || it->active_right)
+			return it->next((song_iterator_t *) it, buf, result);
+		else
+			return SI_FINISHED; /* Both are dead */
+	}
+
+	return rv;
+}
+
+static sfx_pcm_feed_t *
+_tee_check_pcm(tee_song_iterator_t *it)
+{
+	song_iterator_t *theit = TEE_IT(it->reported_pcm);
+	if (!it->reported_pcm)
+		return NULL;
+
+	it->reported_pcm = TEE_NONE;
+
+	return theit->get_pcm_feed(theit);
+}
+
+static song_iterator_t *
+_tee_handle_message(tee_song_iterator_t *self, song_iterator_message_t msg)
+{
+	if (msg.recipient == _SIMSG_BASE) {
+		switch (msg.type) {
+
+		case _SIMSG_BASEMSG_CLONE: {
+			tee_song_iterator_t *newit
+				= sci_malloc(sizeof(tee_song_iterator_t));
+			memcpy(newit, self, sizeof(tee_song_iterator_t));
+
+			if (newit->left)
+				newit->left =
+					songit_clone(newit->left, msg.args[0]);
+			if (newit->right)
+				newit->right =
+					songit_clone(newit->right, msg.args[0]);
+
+			return (song_iterator_t *) newit;
+		}
+
+		default:
+			break;
+		}
+	}
+	if (self->left)
+		songit_handle_message(&(self->left), msg);
+	if (self->right)
+		songit_handle_message(&(self->right), msg);
+
+	return NULL;
+}
+
+static void
+_tee_init(tee_song_iterator_t *it)
+{
+	it->active_left = 1;
+	it->active_right = 1;
+	it->has_next = TEE_NONE;
+	it->reported_pcm = TEE_NONE;
+	it->left->init(it->left);
+	it->left->init(it->right);
+}
+
+static void
+_tee_free(tee_song_iterator_t *it)
+{
+	if (it->right)
+		songit_free(it->right);
+
+	if (it->left)
+		songit_free(it->left);
+}
+
+static void
+songit_tee_death_notification(tee_song_iterator_t *self,
+			      song_iterator_t *corpse)
+{
+	if (corpse == self->left) {
+		self->active_left = 0;
+		self->left = NULL;
+	} else if (corpse == self->right) {
+		self->active_right = 0;
+		self->right = NULL;
+	} else {
+		BREAKPOINT();
+	}
+}
+
+
+song_iterator_t *
+songit_new_tee(song_iterator_t *left, song_iterator_t *right)
+{
+	tee_song_iterator_t *it = sci_malloc(sizeof(tee_song_iterator_t));
+
+	it->active_left = 1;
+	it->active_right = 1;
+
+	it->left = left;
+	it->right = right;
+	it->delegate = NULL;
+	it->death_listeners_nr = 0;
+
+	it->has_next = TEE_NONE;
+	it->reported_pcm = TEE_NONE;
+
+	it->next = (int(*)(song_iterator_t *, unsigned char *, int *))
+		_tee_read_next_command;
+
+	it->get_pcm_feed = (sfx_pcm_feed_t*(*)(song_iterator_t *))
+		_tee_check_pcm;
+
+	it->handle_message = (song_iterator_t *(*)(song_iterator_t *,
+						   song_iterator_message_t))
+		_tee_handle_message;
+
+	it->init = (void(*)(song_iterator_t *))
+		_tee_init;
+
+	song_iterator_add_death_listener((song_iterator_t *)it,
+					 left, (void (*)(void *, void*))
+					 songit_tee_death_notification);
+	song_iterator_add_death_listener((song_iterator_t *)it,
+					 right, (void (*)(void *, void*))
+					 songit_tee_death_notification);
+
+	it->cleanup = NULL;
 
 	return (song_iterator_t *) it;
 }
@@ -1252,6 +1469,9 @@ int
 songit_next(song_iterator_t **it, unsigned char *buf, int *result, int mask)
 {
 	int retval;
+
+	if (!*it)
+		return SI_FINISHED;
 
 	do {
 		retval = (*it)->next(*it, buf, result);
@@ -1300,7 +1520,7 @@ songit_new(unsigned char *data, unsigned int size, int type)
 
 		    it->next = (int(*)(song_iterator_t *, unsigned char *, int *))
 			    _sci0_read_next_command;
-		    it->get_pcm = (unsigned char*(*)(song_iterator_t *, int*, int *, int *))
+		    it->get_pcm_feed = (sfx_pcm_feed_t*(*)(song_iterator_t *))
 			    _sci0_check_pcm;
 		    it->handle_message = (song_iterator_t *(*)(song_iterator_t *, song_iterator_message_t))
 			    _sci0_handle_message;
@@ -1319,7 +1539,7 @@ songit_new(unsigned char *data, unsigned int size, int type)
 
 		    it->next = (int(*)(song_iterator_t *, unsigned char *, int *))
 			    _sci1_read_next_command;
-		    it->get_pcm = (unsigned char*(*)(song_iterator_t *, int*, int *, int *))
+		    it->get_pcm_feed = (sfx_pcm_feed_t*(*)(song_iterator_t *))
 			    _sci1_get_pcm;
 		    it->handle_message = (song_iterator_t *(*)(song_iterator_t *, song_iterator_message_t))
 			    _sci1_handle_message;
@@ -1335,9 +1555,10 @@ songit_new(unsigned char *data, unsigned int size, int type)
 	}
 
 	it->delegate = NULL;
+	it->death_listeners_nr = 0;
 
-	it->data = sci_malloc(size);
-	memcpy(it->data, data, size);
+	it->data = sci_refcount_memdup(data, size);
+fprintf(stderr, "** CREATING it %p: data at %p\n", it, it->data);
 	it->size = size;
 
 	it->init((song_iterator_t *) it);
@@ -1349,8 +1570,14 @@ void
 songit_free(song_iterator_t *it)
 {
 	if (it) {
+		int i;
+
 		if (it->cleanup)
 			it->cleanup(it);
+
+		for (i = 0; i < it->death_listeners_nr; i++)
+			it->death_listeners[i].notify(it->death_listeners[i].self, it);
+
 		sci_free(it);
 	}
 }
@@ -1392,6 +1619,46 @@ song_iterator_t *
 songit_clone(song_iterator_t *it, int delta)
 {
 	SIMSG_SEND(it, SIMSG_CLONE(delta));
+	it->death_listeners_nr = 0;
 	return it;
 }
 
+void
+song_iterator_add_death_listener(song_iterator_t *it,
+				 void *client,
+				 void (*notify) (void *self, void *notifier))
+{
+	if (it->death_listeners_nr >= SONGIT_MAX_LISTENERS) {
+		fprintf(stderr, "FATAL: Too many death listeners for song"
+			" iterator\n");
+		BREAKPOINT();
+		exit(1);
+	}
+
+	it->death_listeners[it->death_listeners_nr].notify = notify;
+	it->death_listeners[it->death_listeners_nr].self = client;
+}
+
+void
+song_iterator_remove_death_listener(song_iterator_t *it,
+				    void *client)
+{
+	int i;
+	for (i = 0; i < it->death_listeners_nr; i++) {
+		if (it->death_listeners[i].self == client) {
+			--it->death_listeners_nr;
+
+			/* Overwrite, if this wasn't the last one */
+			if (i+1  < it->death_listeners_nr)
+				it->death_listeners[i]
+					= it->death_listeners[it->death_listeners_nr];
+
+			return;
+		}
+	}
+
+	fprintf(stderr, "FATAL: Could not remove death listener from "
+		"song iterator\n");
+	BREAKPOINT();
+	exit(1);
+}

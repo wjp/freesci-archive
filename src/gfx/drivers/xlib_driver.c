@@ -40,10 +40,12 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <X11/extensions/XShm.h>
-#if defined(HAVE_X11_EXTENSIONS_XRENDER_H) && defined(HAVE_X11_XFT_XFT_H)
+#if defined(HAVE_X11_EXTENSIONS_XRENDER_H)
 #  define HAVE_RENDER
 #  include <X11/extensions/Xrender.h>
-#  include <X11/Xft/Xft.h>
+#  if defined(HAVE_X11_XFT_XFT_H)
+#    include <X11/Xft/Xft.h>
+#  endif
 #endif
 #include <errno.h>
 #endif
@@ -72,17 +74,17 @@ struct _xlib_state {
 	Pixmap visual[3];
 	gfx_pixmap_t *priority[2];
 #ifdef HAVE_MITSHM
-        XShmSegmentInfo *shm[4];
+	XShmSegmentInfo *shm[4];
 #endif
 	int use_render;
-#ifdef HAVE_RENDER
-	XftDraw *xftdraw;
-#endif
 	int buckystate;
 	XErrorHandler old_error_handler;
 	Cursor mouse_cursor;
 	byte *pointer_data[2];
-        int used_bytespp; /* bytes actually used to display stuff, rather than bytes occupied in data space */
+	int used_bytespp; /* bytes actually used to display stuff, rather than bytes occupied in data space */
+#ifdef HAVE_RENDER
+	Picture picture;
+#endif
 };
 
 #define S ((struct _xlib_state *)(drv->state))
@@ -273,6 +275,10 @@ static int
 xlib_draw_filled_rect(struct _gfx_driver *drv, rect_t rect,
                       gfx_color_t color1, gfx_color_t color2,
                       gfx_rectangle_fill_t shade_mode);
+static int
+xlib_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
+		 rect_t src, rect_t dest, gfx_buffer_t buffer);
+
 
 
 static int
@@ -290,7 +296,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	int xsize, ysize;
 	XSizeHints *size_hints;
 	XClassHint *class_hint;
-        XImage *foo_image = NULL;
+	XImage *foo_image = NULL;
 	int reverse_endian = 0;
 #ifdef HAVE_XM_MWMUTIL_H
 	PropMotifWmHints motif_hints;
@@ -347,7 +353,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 #endif
 
 	depth_mod = 0;
-	
+
 	do {
 		while ((((bytespp > 1) && (vistype >= 4))
 			|| ((bytespp == 1) && (vistype == 3)))
@@ -611,19 +617,17 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	/** X RENDER handling **/
 #ifdef HAVE_RENDER
 	S->use_render = x_have_render(S->display);
+
 	if (S->use_render) {
-		S->xftdraw = XftDrawCreate(S->display, (Drawable) S->visual[1],
-					   DefaultVisual(S->display,
-							 DefaultScreen(S->display)),
-					   S->colormap);
-
-		if (!S->xftdraw) {
-			S->use_render = 0;
-			ERROR("XftDrawCreate() failed!\n");
-		}
-	}
-
-	if (!S->use_render)
+		XRenderPictFormat * format
+			= XRenderFindVisualFormat (S->display,
+						   DefaultVisual(S->display,
+								 DefaultScreen(S->display)));
+		S->picture =  XRenderCreatePicture (S->display,
+						    (Drawable) S->visual[1],
+						    format,
+						    0, 0);
+	} else /* No Xrender */
 		drv->draw_filled_rect = xlib_draw_filled_rect;
 #else
 	S->use_render = 0;
@@ -646,7 +650,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	}
 #endif
 
-        S->used_bytespp = bytespp;
+	S->used_bytespp = bytespp;
 	S->old_error_handler = (XErrorHandler) XSetErrorHandler(xlib_error_handler);
 	S->pointer_data[0] = NULL;
 	S->pointer_data[1] = NULL;
@@ -659,7 +663,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 static void
 xlib_xdpy_info()
 {
-        int i;
+	int i;
 	XVisualInfo foo;
 	XVisualInfo *visuals;
 	int visuals_nr;
@@ -737,6 +741,9 @@ xlib_exit(struct _gfx_driver *drv)
 		    XFreePixmap(S->display, S->visual[i]);
 		}
 
+#ifdef HAVE_RENDER
+		XRenderFreePicture(S->display, S->picture);
+#endif
 		XFreeGC(S->display, S->gc);
 		XDestroyWindow(S->display, S->window);
 		XCloseDisplay(S->display);
@@ -752,7 +759,7 @@ xlib_exit(struct _gfx_driver *drv)
 
 static int
 xlib_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
-               gfx_line_mode_t line_mode, gfx_line_style_t line_style)
+	       gfx_line_mode_t line_mode, gfx_line_style_t line_style)
 {
 	int linewidth = (line_mode == GFX_LINE_MODE_FINE)? 1:
 		(drv->mode->xfact + drv->mode->yfact) >> 1;
@@ -798,8 +805,8 @@ xlib_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 
 static int
 xlib_draw_filled_rect(struct _gfx_driver *drv, rect_t rect,
-                      gfx_color_t color1, gfx_color_t color2,
-                      gfx_rectangle_fill_t shade_mode)
+		      gfx_color_t color1, gfx_color_t color2,
+		      gfx_rectangle_fill_t shade_mode)
 {
 
 	if (color1.mask & GFX_MASK_VISUAL) {
@@ -822,31 +829,19 @@ xlib_draw_filled_rect_RENDER(struct _gfx_driver *drv, rect_t rect,
 			     gfx_rectangle_fill_t shade_mode)
 {
 	if (color1.mask & GFX_MASK_VISUAL) {
-		XftColor fg;
+		XRenderColor fg;
 
-		fg.color.red = X_COLOR_EXT(color1.visual.r);
-		fg.color.green = X_COLOR_EXT(color1.visual.g);
-		fg.color.blue = X_COLOR_EXT(color1.visual.b);
-		fg.color.alpha = 0xffff - X_COLOR_EXT(color1.alpha);
+		fg.red = X_COLOR_EXT(color1.visual.r);
+		fg.green = X_COLOR_EXT(color1.visual.g);
+		fg.blue = X_COLOR_EXT(color1.visual.b);
+		fg.alpha = 0xffff - X_COLOR_EXT(color1.alpha);
 
-		fg.pixel = xlib_map_color(drv, color1);
-
-#if SUFFICIENTLY_NEW_X11 /* FIXME */
-		XftDrawRect(S->xftdraw, &fg, rect.x, rect.y,
-			    rect.xl, rect.yl);
-#else
-		{ /* Ugly hack: Based on Keith Packard's HelloX patch's hack */
-			XRenderPictFormat *format;
-			Picture            pict;
-
-			format = XRenderFindVisualFormat (S->display, DefaultVisual(S->display, DefaultScreen(S->display)));
-
-			pict =  XRenderCreatePicture (S->display,
-						      (Drawable) S->visual[1], format, 0, 0);
-			XRenderFillRectangle(S->display,PictOpOver,pict,&(&fg)->color,
-					     rect.x, rect.y, rect.xl, rect.yl);
-		}
-#endif
+		XRenderFillRectangle(S->display,
+				     PictOpOver,
+				     S->picture,
+				     &fg,
+				     rect.x, rect.y,
+				     rect.xl, rect.yl);
 	}
 
 	if (color1.mask & GFX_MASK_PRIORITY)
@@ -893,7 +888,7 @@ xlib_unregister_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 
 static int
 xlib_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
-                 rect_t src, rect_t dest, gfx_buffer_t buffer)
+		 rect_t src, rect_t dest, gfx_buffer_t buffer)
 {
 	int bufnr = (buffer == GFX_BUFFER_STATIC)? 2:1;
 	int pribufnr = bufnr -1;
@@ -923,7 +918,7 @@ xlib_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 			     (byte *) tempimg->data, tempimg->bytes_per_line,
 			     S->priority[pribufnr]->index_data,
 			     S->priority[pribufnr]->index_xl, 1,
-                             GFX_CROSSBLIT_FLAG_DATA_IS_HOMED);
+			     GFX_CROSSBLIT_FLAG_DATA_IS_HOMED);
 
 	XPutImage(S->display, S->visual[bufnr], S->gc, tempimg,
 		  0, 0, dest.x, dest.y, dest.xl, dest.yl);
@@ -932,9 +927,10 @@ xlib_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 	return GFX_OK;
 }
 
+
 static int
 xlib_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
-                 gfx_map_mask_t map)
+		 gfx_map_mask_t map)
 {
 
 	if (src.x < 0 || src.y < 0) {

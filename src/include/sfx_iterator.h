@@ -29,6 +29,7 @@
 #define _SCI_SFX_ITERATOR_H_
 
 #include <sfx_pcm.h>
+#include <listener.h>
 
 #define SI_FINISHED -1 /* Song finished playing */
 #define SI_LOOP -2 /* Song just looped */
@@ -74,12 +75,15 @@ typedef struct {
 
 #define INHERITS_SONG_ITERATOR \
 	int (*next) (song_iterator_t *self, unsigned char *buf, int *buf_size);			  \
-	unsigned char * (*get_pcm) (song_iterator_t *s, int *size, int *sample_rate, int *type);  \
+	sfx_pcm_feed_t * (*get_pcm_feed) (song_iterator_t *s);					  \
 	song_iterator_t * (* handle_message)(song_iterator_t *self, song_iterator_message_t msg); \
 	void (*init) (struct _song_iterator *self);						  \
 	void (*cleanup) (struct _song_iterator *self);						  \
-	struct _song_iterator *delegate
+	struct _song_iterator *delegate;							  \
+	listener_t death_listeners[SONGIT_MAX_LISTENERS];					  \
+	int death_listeners_nr									  \
 
+#define SONGIT_MAX_LISTENERS 2
 
 typedef struct _song_iterator {
 	int (*next) (struct _song_iterator *self,
@@ -101,14 +105,11 @@ typedef struct _song_iterator {
 	** PCM, but this must be done before any subsequent calls to next().
 	*/
 
-	unsigned char * (*get_pcm) (struct _song_iterator *self,
-				    int *size, sfx_pcm_config_t *format);
+	sfx_pcm_feed_t * (*get_pcm_feed) (struct _song_iterator *self);
 	/* Checks for the presence of a pcm sample
 	** Parameters: (song_iterator_t *) self
-	** Returns   : (byte *) NULL if no sample was found, a pointer to the
-	**                      PCM data otherwise
-	**             (int) *size: Number of samples stored in the return value
-	**             (sfx_pcm_config_t) *PCM data format
+	** Returns   : (sfx_pcm_feed_t *) NULL if no PCM data was found, a
+	**				  PCM feed otherwise
 	*/
 
 
@@ -144,10 +145,40 @@ typedef struct _song_iterator {
 	struct _song_iterator *delegate;
 	/* A delegate, for stacking song iterators */
 
+	/* Death listeners */
+	/* These are not reset during initialisation */
+	listener_t death_listeners[SONGIT_MAX_LISTENERS];
+	int death_listeners_nr;
+
 	/* See songit_* for the constructor and non-virtual member functions */
 
 } song_iterator_t;
 
+
+void
+song_iterator_add_death_listener(song_iterator_t *it,
+	     void *client,
+	     void (*notify) (void *self, void *notifier));
+/* Adds a death listener to a song iterator
+** Parameters: (song_iterator_t *) it: The iterator to add to
+**             (void *) client: The object wanting to be notified
+**             (void* x void* -> void) notify: The notification function
+**                                     to invoke
+** Effects:    Fatally terminates the program if no listener slots are
+**	       available
+** Death listeners are NOT cloned.
+*/
+
+void
+song_iterator_remove_death_listener(song_iterator_t *it,
+				    void *client);
+/* Removes a death listener from a song iterator
+** Parameters: (song_iterator_t *) it: The iterator to modify
+**             (void *) client: The object no longer wanting to be notified
+** Effects:    Fatally terminates the program if the listener was not
+**	       found
+** Death listeners are NOT cloned.
+*/
 
 /********************************/
 /*-- Song iterator operations --*/
@@ -193,6 +224,15 @@ songit_new(unsigned char *data, unsigned int size, int type);
 **             iterator, or NULL if 'type' was invalid or unsupported
 */
 
+song_iterator_t *
+songit_new_tee(song_iterator_t *left, song_iterator_t *right);
+/* Combines two iterators, returns the next event available from either
+** Parameters: (song_iterator_t *) left: One of the iterators
+**             (song_iterator_t *) right: The other iterator
+** Returns   : (song_iterator_t *) A combined iterator, as suggested above
+*/
+
+
 void
 songit_free(song_iterator_t *it);
 /* Frees a song iterator and the song it wraps
@@ -230,6 +270,7 @@ songit_clone(song_iterator_t *it, int delta);
 ** is typically maintained outside of the song iterator.
 */
 
+
 int
 sfx_play_iterator_pcm(song_iterator_t *it, unsigned long handle);
 /* Plays a song iterator that found a PCM through a PCM device, if possible
@@ -239,13 +280,6 @@ sfx_play_iterator_pcm(song_iterator_t *it, unsigned long handle);
 ** This assumes that the last call to 'it->next()' returned SI_PCM.
 */
 
-sfx_pcm_feed_t *
-sfx_iterator_feed(song_iterator_t *it);
-/* Creates a new PCM feed based on a PCM-typical song iterator
-** Parameters: (song_iterator_t) *it: The iterator to try to convert to a PCM feed
-** Returns   : (sfx_pcm_feed_t *) The resulting feed, or NULL it the iterator
-**                                did not admit conversion to a feed
-*/
 
 
 #endif

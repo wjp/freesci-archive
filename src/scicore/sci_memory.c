@@ -236,22 +236,31 @@ debug_win32_memory(int dbg_setting)
 #define REFCOUNT_MAGIC_DEAD_1 0x11dead11
 #define REFCOUNT_MAGIC_DEAD_2 0x22dead22
 
-#define REFCOUNT_CHECK(p) ((((guint32 *)p)[-3] == REFCOUNT_MAGIC_LIVE_2)    \
-			   && (((guint32 *)p)[-1] == REFCOUNT_MAGIC_LIVE_1))
+#define REFCOUNT_CHECK(p) ((((guint32 *)(p))[-3] == REFCOUNT_MAGIC_LIVE_2)    \
+			   && (((guint32 *)(p))[-1] == REFCOUNT_MAGIC_LIVE_1))
 
 #define REFCOUNT(p) (((guint32 *)p)[-2])
+
+#define TRACE_REFCOUNT
 
 
 extern void *
 sci_refcount_alloc(size_t length)
 {
 	guint32 *data = sci_malloc(REFCOUNT_OVERHEAD + length);
+#ifdef TRACE_REFCOUNT
+fprintf(stderr, "[] REF: Real-alloc at %p\n", data);
+#endif
+	data += 3;
 
 	data[-1] = REFCOUNT_MAGIC_LIVE_1;
 	data[-3] = REFCOUNT_MAGIC_LIVE_2;
 	REFCOUNT(data) = 1;
-
-	return data + 3;
+#ifdef TRACE_REFCOUNT
+fprintf(stderr, "[] REF: Alloc'd %p (ref=%d) OK=%d\n", data, REFCOUNT(data),
+	REFCOUNT_CHECK(data));
+#endif
+	return data;
 }
 
 extern void *
@@ -262,12 +271,19 @@ sci_refcount_incref(void *data)
 	} else
 		REFCOUNT(data)++;
 
+#ifdef TRACE_REFCOUNT
+fprintf(stderr, "[] REF: Inc'ing %p (now ref=%d)\n", data, REFCOUNT(data));
+#endif
 	return data;
 }
 
 extern void
 sci_refcount_decref(void *data)
 {
+#ifdef TRACE_REFCOUNT
+fprintf(stderr, "[] REF: Dec'ing %p (prev ref=%d) OK=%d\n", data, REFCOUNT(data),
+	REFCOUNT_CHECK(data));
+#endif
 	if (!REFCOUNT_CHECK(data)) {
 		BREAKPOINT();
 	} else if (--REFCOUNT(data) == 0) {
@@ -276,14 +292,20 @@ sci_refcount_decref(void *data)
 		fdata[-1] = REFCOUNT_MAGIC_DEAD_1;
 		fdata[-3] = REFCOUNT_MAGIC_DEAD_2;
 
+#ifdef TRACE_REFCOUNT
+fprintf(stderr, "[] REF: Freeing (%p)...\n", fdata - 3);
+#endif
 		sci_free(fdata - 3);
+#ifdef TRACE_REFCOUNT
+fprintf(stderr, "[] REF: Done.\n");
+#endif
 	}
 }
 
 extern void *
 sci_refcount_memdup(void *data, size_t len)
 {
-	void *dest = sci_refcount_alloc(data);
+	void *dest = sci_refcount_alloc(len);
 	memcpy(dest, data, len);
 	return dest;
 }

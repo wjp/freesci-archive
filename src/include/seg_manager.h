@@ -165,7 +165,7 @@ typedef struct _seg_manager_t {
 	int (*get_synonyms_nr) (struct _seg_manager_t* self, int id, int flag);
 
 	void (*set_variables) (struct _seg_manager_t* self, reg_t reg, int obj_index, reg_t variable_reg, int variable_index );
-	
+
 	guint16 (*validate_export_func)(struct _seg_manager_t* self, int pubfunct, int seg );
 
 	object_t* (*script_obj_init) (struct _seg_manager_t* self, reg_t obj_pos);
@@ -183,8 +183,8 @@ typedef struct _seg_manager_t {
 	*/
 
 	void (*set_export_width) (struct _seg_manager_t* self, int flag);
-        /* Tells the segment manager whether exports are wide (32-bit) or not.
-	   Parameters: (int) flag: 1 if exports are wide, 0 otherwise */
+	/* Tells the segment manager whether exports are wide (32-bit) or not.
+	** Parameters: (int) flag: 1 if exports are wide, 0 otherwise */
 
 	void (*script_relocate) (struct _seg_manager_t* self, reg_t block);
 	/* Processes a relocation block witin a script
@@ -213,7 +213,7 @@ typedef struct _seg_manager_t {
 	** frees up some additional memory.
 	*/
 
-  	byte *
+	byte *
 	(*dereference)(struct _seg_manager_t *self, reg_t reg, int *size);
 	/* Dereferences a raw memory pointer
 	** Parameters: (reg_t) reg: The reference to dereference

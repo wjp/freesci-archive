@@ -57,6 +57,7 @@
 #define SI_STATE_COMMAND 1 /* Now at a MIDI operation */
 #define SI_STATE_PENDING 2 /* Pending for loop */
 #define SI_STATE_FINISHED 3 /* End of song */
+#define SI_STATE_PCM 4 /* Should report a PCM next (-> DELTA_TIME) */
 
 
 /* Iterator types */
@@ -162,7 +163,7 @@ typedef struct {
 typedef struct {
 	INHERITS_SONG_ITERATOR;
 	int delta; /* Remaining time */
-} fast_forward_song_iterator_t ;
+} fast_forward_song_iterator_t;
 
 
 song_iterator_t *
@@ -174,6 +175,47 @@ new_fast_forward_iterator(song_iterator_t *it, int delta);
 **                               which skips all note commands and
 **                               delta times until 'delta' has been
 **                               used up
+*/
+
+/**********************************/
+/*--------- Fast Forward ---------*/
+/**********************************/
+
+#define MAX_BUF_SIZE 4
+
+#define TEE_NONE 0
+/* Otherwise, we detail where the 'next' is from: */
+#define TEE_LEFT 1
+#define TEE_RIGHT 2
+#define TEE_IT(selector) (((selector) == TEE_LEFT)? it->left : it->right)
+#define TEE_NOTIT(selector) (((selector) == TEE_RIGHT)? it->left : it->right)
+
+typedef struct {
+	INHERITS_SONG_ITERATOR;
+	song_iterator_t *left;
+	song_iterator_t *right;
+
+
+	int active_left, active_right;
+	int has_next; /* If a 'next' result is cached */
+	int reported_pcm; /* Did someone report a PCM? */
+
+	byte next_buf[MAX_BUF_SIZE];
+	int next_result;
+	int next_retval;
+} tee_song_iterator_t;
+
+
+sfx_pcm_feed_t *
+sfx_iterator_make_feed(byte *base_data, int offset,
+		       int size,
+		       sfx_pcm_config_t conf);
+/* Generates a feed for a song iterator
+** Parameters: (byte *) base_data: A refcounted memory chunk containing
+**                                 (among other things) PCM data
+**             (int) offset; Offset into base_data
+**             (int) size: Number of bytes to consider
+**             (pcm_data_internal_t) conf: PCM encoding
 */
 
 #endif /* !defined(_SFX_ITERATOR_INTERNAL_ */

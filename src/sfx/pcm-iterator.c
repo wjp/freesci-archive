@@ -39,9 +39,9 @@ static void
 pi_destroy(sfx_pcm_feed_t *self);
 
 typedef struct {
+	byte *base_data;
 	byte *data;
 	int frames_left;
-	song_iterator_t *it;
 } pcm_data_internal_t;
 
 
@@ -58,26 +58,25 @@ static sfx_pcm_feed_t pcm_it_prototype = {
 
 
 sfx_pcm_feed_t *
-sfx_iterator_feed(song_iterator_t *it)
+sfx_iterator_make_feed(byte *base_data,
+		       int offset,
+		       int size,
+		       sfx_pcm_config_t conf)
 {
 	sfx_pcm_feed_t *feed;
-	sfx_pcm_config_t conf;
 	pcm_data_internal_t *idat;
-	byte *data;
-	int size;
-
-	if (!it) { BREAKPOINT(); }
-
-	data = it->get_pcm(it, &size, &conf);
+	byte *data = base_data + offset;
 
 	if (!data) {
 		/* Now this is silly; why'd you call this function in the first place? */
 		return NULL;
 	}
+	sci_refcount_incref(base_data);
+
 	idat = sci_malloc(sizeof(pcm_data_internal_t));
+	idat->base_data = base_data;
 	idat->data = data;
 	idat->frames_left = size;
-	idat->it = it;
 	feed = sci_malloc(sizeof(sfx_pcm_feed_t));
 	*feed = pcm_it_prototype;
 	feed->internal = idat;
@@ -85,6 +84,7 @@ sfx_iterator_feed(song_iterator_t *it)
 
 	return feed;
 }
+
 
 static int
 pi_poll(sfx_pcm_feed_t *self, byte *dest, int size)
@@ -114,7 +114,7 @@ memset(dest, 0xff, data_len);
 static void
 pi_destroy(sfx_pcm_feed_t *self)
 {
-	songit_free(D->it);
+	sci_refcount_decref(D->base_data);
 	sci_free(D);
 	sci_free(self);
 }

@@ -316,7 +316,8 @@ _sm_deallocate (seg_manager_t* self, int seg, int recursive)
 
 		mobj->data.script.buf = NULL;
 		if (recursive && mobj->data.script.locals_segment)
-			_sm_deallocate(self, mobj->data.script.locals_segment, recursive);
+			_sm_deallocate(self, mobj->data.script.locals_segment,
+				       recursive);
 		break;
 
 	case MEM_OBJ_LOCALS:
@@ -1165,7 +1166,7 @@ sm_dereference(seg_manager_t *self, reg_t pointer, int *size)
 		count = mobj->data.dynmem.size;
 		base = (byte *) mobj->data.dynmem.buf;
 		break;
-		
+
 	case MEM_OBJ_SYS_STRINGS:
 		if (size)
 			*size = mobj->data.sys_strings.strings[pointer.offset].max_size;

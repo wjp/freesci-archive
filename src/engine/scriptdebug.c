@@ -2539,9 +2539,7 @@ c_is_sample(state_t *s)
 					      cmd_params[0].val,
 					      0);
 	song_iterator_t *songit;
-	byte *data;
-	int len;
-	sfx_pcm_config_t format;
+	sfx_pcm_feed_t *data;
 
 	if (!song) {
 		sciprintf("Not a sound resource.\n");
@@ -2555,12 +2553,13 @@ c_is_sample(state_t *s)
 		return 1;
 	}
 
-	if ((data = songit->get_pcm(songit, &len, &format))) {
-		sci_hexdump(data, len, 0);
-		sciprintf("\nIs sample (encoding %dHz/%s/%04x).\nSize:\t%d (0x%x)\n",
-			  format.rate, (format.stereo)?
-			  ((format.stereo == SFX_PCM_STEREO_LR)? "stereo-LR" : "stereo-RL") : "mono", format.format,
-			  len, len);
+	if ((data = songit->get_pcm_feed(songit))) {
+		sciprintf("\nIs sample (encoding %dHz/%s/%04x).\n",
+			  data->conf.rate, (data->conf.stereo)?
+			  ((data->conf.stereo == SFX_PCM_STEREO_LR)?
+			   "stereo-LR" : "stereo-RL") : "mono",
+			  data->conf.format);
+		data->destroy(data);
 	} else
 		sciprintf("Valid song, but not a sample.\n");
 

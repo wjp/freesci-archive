@@ -180,6 +180,8 @@ _update(sfx_state_t *self)
 		if (newsong && player) {
 			song_iterator_t *clonesong
 				= songit_clone(newsong->it, newsong->delay);
+fprintf(stderr, "Cloned %p to %p\n",
+		newsong->it, clonesong);
 
 			player->set_iterator(clonesong,
 					     self->wakeup_time);
@@ -192,18 +194,14 @@ static int _sfx_timer_active = 0; /* Timer toggle */
 int
 sfx_play_iterator_pcm(song_iterator_t *it, song_handle_t handle)
 {
-	song_iterator_t *clonesong = songit_clone(it, 0);
-	/* Delta of 0: We just hit a PCM right now */
-
 	if (mixer) {
-		sfx_pcm_feed_t *newfeed = sfx_iterator_feed(clonesong);
+		sfx_pcm_feed_t *newfeed = it->get_pcm_feed(it);
 		if (newfeed) {
 			newfeed->debug_nr = (int) handle;
 			mixer->subscribe(mixer, newfeed);
 			return 1;
 		}
 	}
-	songit_free(clonesong);
 	return 0;
 }
 
@@ -482,7 +480,8 @@ sfx_song_set_status(sfx_state_t *self, song_handle_t handle, int status)
 		break;
 
 	default:
-		fprintf(stderr, "%s L%d: Attempt to set invalid song state %d!\n", __FILE__, __LINE__, status);
+		fprintf(stderr, "%s L%d: Attempt to set invalid song"
+			" state %d!\n", __FILE__, __LINE__, status);
 		return;
 
 	}
@@ -506,7 +505,8 @@ void
 sfx_song_set_loops(sfx_state_t *self, song_handle_t handle, int loops)
 {
 	song_t *song = song_lib_find(self->songlib, handle);
-	song_iterator_message_t msg = songit_make_message(SIMSG_SET_LOOPS(loops));
+	song_iterator_message_t msg
+		= songit_make_message(SIMSG_SET_LOOPS(loops));
 	ASSERT_SONG(song);
 	songit_handle_message(&(song->it), msg);
 

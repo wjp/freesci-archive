@@ -1,3 +1,15 @@
+2004-02-22  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sfx/iterator.c: Fixed memory leak when generating PCM feeds
+	(using the new/untested refcounting memory facilities)
+
+2004-02-21  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* configure.in: Made dependence on libxft optional.
+
+	* src/gfx/drivers/xlib_driver.c: Made RENDER not depend on Xft,
+	although the includes are still used if available.
+
 2004-02-16  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sfx/iterator.c: Lots of changes and bug fixes in song
