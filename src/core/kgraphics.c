@@ -1540,7 +1540,6 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   s->ports[goner] = NULL; /* Mark as free */
 }
 
-#define VERIFY_STUFF if (!(s->graphics.glx_state->glx_window)) fprintf(stderr,"LOST GLX in line %d\n", __LINE__)
 
 void
 kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -1550,25 +1549,19 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int xlo, ylo;
 
   CHECK_THIS_KERNEL_FUNCTION;
-VERIFY_STUFF;
 
   while ((window < MAX_PORTS) && (s->ports[window]))
     ++window;
 
-VERIFY_STUFF;
   if (window == MAX_PORTS) {
     KERNEL_OOPS("Out of window/port handles in kNewWindow! Increase MAX_PORTS in engine.h\n");
     return;
   }
-VERIFY_STUFF;
 
   graph_update_port(s, s->ports[s->view_port]); /* Update the port we're leaving */
-VERIFY_STUFF;
 
   wnd = g_malloc0(sizeof(port_t));
-VERIFY_STUFF;
 
-VERIFY_STUFF;
   wnd->ymin = PARAM(0) + 10;
   wnd->xmin = PARAM(1);
   wnd->ymax = PARAM(2) + 10; /*  +10 because of the menu bar- SCI scripts don't count it */
@@ -1580,35 +1573,26 @@ VERIFY_STUFF;
   wnd->bgcolor = PARAM_OR_ALT(8, 15);
   wnd->font = s->titlebar_port.font; /* Default to 'system' font */
   wnd->font_nr = s->titlebar_port.font_nr;
-VERIFY_STUFF;
 
   wnd->alignment = ALIGN_TEXT_LEFT; /* FIXME?? */
 
   if (wnd->priority == -1)
     wnd->priority = 16; /* Max priority + 1*/
 
-VERIFY_STUFF;
   s->ports[window] = wnd;
-VERIFY_STUFF;
 
   xlo = wnd->xmin;
   ylo = wnd->ymin - ((wnd->flags & WINDOW_FLAG_TITLE)? 10 : 0);
   /* Windows with a title bar get positioned in a way ignoring the title bar. */
-VERIFY_STUFF;
 
   _k_dyn_view_list_prepare_change(s);
-VERIFY_STUFF;
-
 
   wnd->bg_handle = graph_save_box(s, xlo, ylo, wnd->xmax - xlo + 1, wnd->ymax - ylo + 1, 3);
-VERIFY_STUFF;
 
   draw_window(s->pic, s->ports[window], wnd->bgcolor, wnd->priority,
 	     s->heap + wnd->title, s->titlebar_port.font , wnd->flags); /* Draw window */
-VERIFY_STUFF;
 
   _k_dyn_view_list_accept_change(s);
-VERIFY_STUFF;
 
   /* Now sanitize the port values */
   if (wnd->xmin < 0)
@@ -1620,15 +1604,11 @@ VERIFY_STUFF;
   if (wnd->ymax > 199)
     wnd->ymax = 199;
 
-VERIFY_STUFF;
   graph_update_port(s, wnd); /* Update viewscreen */
-VERIFY_STUFF;
 
   s->view_port = window; /* Set active port */
-VERIFY_STUFF;
 
   s->acc = window;
-VERIFY_STUFF;
 }
 
 
