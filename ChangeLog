@@ -1,3 +1,13 @@
+2001-12-13  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/include/gfx_options.h:
+	* src/include/sci_conf.h: Fixed types and added note. Fixes crash with
+	reverse_stereo in config file.
+
+	* src/config.l:
+	* src/config.c: Recreated with correct filename specified in #line
+	for easier debugging.
+	
 2001-12-12  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/include/sci_memory.h:

@@ -341,7 +341,6 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
         char *subsys_name = yytext;
         char *driver_name;
 	char *option, *value;
-	char *foo;
 	char *p2;
 
         yytext = strchr(yytext, '.');
@@ -720,6 +719,7 @@ parse_option(char *option, int optlen, char *value)
 			if (opt->type == OPTION_TYPE_INVERSE_NVP)
 				int_value = !int_value;
 
+/* FUCKED HERE: cur_section = 0, opt->varoffset = 205 */
 			*((int *)(((char*)&(conf[cur_section])) + opt->varoffset)) = int_value; /* Store value */
 		}
 		break;

@@ -58,6 +58,11 @@ typedef struct _subsystem_options {
 } subsystem_options_t;
 
 typedef struct {
+	/* IMPORTANT: these values correspond directly to what's specified in
+	** config.l. Where an option is of type OPTION_TYPE_NVP or
+	** OPTION_TYPE_INVERSE_NVP, it is cast as an _integer_. Therefore it
+	** should not be any other type except for int here.
+	*/
 
 	char *name; /* Game identifier */
 	sci_version_t version; /* The version to emulate */
@@ -68,7 +73,7 @@ typedef struct {
 
 	int x_scale, y_scale, scale, color_depth; /* GFX subsystem initialization values */
 
-	long animation_delay; /* Number of microseconds to wait between each pic transition animation cycle */
+	int animation_delay; /* Number of microseconds to wait between each pic transition animation cycle */
 	int animation_granularity; /* Granularity for pic transition animations */
 	int alpha_threshold; /* Crossblitting alpha threshold */
 	int unknown_count; /* The number of "unknown" kernel functions */
@@ -77,10 +82,10 @@ typedef struct {
 	char *gfx_driver_name; /* The graphics driver to use */
 	char *console_log; /* The file to which console output should be echoed */
 	char debug_mode [80]; /* Characters specifying areas for which debug output should be enabled */
-	byte mouse; /* Whether the mouse should be active */
-	byte reverse_stereo;
+	int mouse; /* Whether the mouse should be active */
+	int reverse_stereo;
 
-	midiout_driver_t *midiout_driver ; /* the midiout method to use */
+	midiout_driver_t *midiout_driver; /* the midiout method to use */
 	midi_device_t *midi_device; /* the midi device to use */
 	sound_server_t *sound_server; /* The sound server */
 

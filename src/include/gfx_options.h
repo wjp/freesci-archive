@@ -41,7 +41,11 @@
 
 
 
-typedef struct _gfx_options { /* gfx_options_t: Contains all user options to the rendering pipeline */
+typedef struct _gfx_options {
+	/* gfx_options_t: Contains all user options to the rendering pipeline */
+	/* See note in sci_conf.h for config_entry_t before changing types of
+	** variables */
+
 	int buffer_pics_nr; /* Number of unused pics to buffer */
 
 	int correct_rendering; /* Whether to render slow, but correct (rather than
