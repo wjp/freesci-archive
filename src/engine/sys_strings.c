@@ -49,7 +49,7 @@ sys_string_acquire(sys_strings_t *strings, int index, char *name, int max_len)
 		BREAKPOINT();
 	}
 
-	str->name = name;
+	str->name = strdup(name);
 	str->max_size = max_len;
 	str->value = sci_malloc(max_len + 1);
 	str->value[0] = 0; /* Set to empty string */
@@ -68,4 +68,31 @@ sys_string_set(sys_strings_t *strings, int index, char *value)
 
 	strncpy(str->value, value, str->max_size);
 	str->value[str->max_size] = 0; /* Make sure to terminate */
+}
+
+void
+sys_string_free(sys_strings_t *strings, int index)
+{
+	sys_string_t *str = strings->strings + index;
+	
+	free(str->name);
+	str->name = NULL;
+
+	free(str->value);
+	str->value = NULL;
+	
+	str->max_size = 0;
+}
+
+void
+sys_string_free_all(sys_strings_t *strings)
+{
+	int i;
+
+	for (i=0;i<SYS_STRINGS_MAX;i++)
+	{
+		if (strings->strings[i].name)
+			sys_string_free(strings, i);
+	}
+
 }
