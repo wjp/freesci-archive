@@ -2059,6 +2059,7 @@ gfxw_new_port(gfxw_visual_t *visual, gfxw_port_t *predecessor, rect_t area, gfx_
 	widget->port_bg = NULL;
 	widget->parent = NULL;
 	widget->decorations = NULL;
+	widget->title_text = NULL;
 	widget->draw_pos = gfx_point(0, 0);
 	widget->gray_text = 0;
 	widget->color = fgcolor;

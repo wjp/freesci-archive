@@ -1798,6 +1798,9 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			
 	} else {
 
+		if (!list)
+			return;
+
 		pic_views = gfxw_new_list(s->picture_port->bounds, 0);
 
 		SCIkdebug(SCIkGRAPHICS, "Preparing picview list...\n");

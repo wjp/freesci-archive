@@ -812,6 +812,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
 		*widget = _gfxw_new_widget(sizeof(gfxw_port_t), expected_type);
 		GFXWC(*widget)->contents = NULL;
 		GFXWC(*widget)->dirty = NULL;
+		((gfxw_port_t *) (*widget))->title_text = NULL;
 		((gfxw_port_t *) (*widget))->decorations = NULL;
 		((gfxw_port_t *) (*widget))->port_bg = NULL;
 		%CFSMLREAD gfxw_port_t ((gfxw_port_t*)*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
@@ -1094,16 +1095,14 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->have_bp = s->have_bp;
 	retval->bp_list = s->bp_list;
 
+	retval->debug_mode = s->debug_mode;
+
 	retval->resource_dir = s->resource_dir;
 	retval->work_dir = s->work_dir;
 
 	retval->successor = NULL;
 
 	chdir ("..");
-
-	/* Old state cleanup */
-	if (s->visual)
-		s->visual->free(GFXW(s->visual));
 
 	return retval;
 }

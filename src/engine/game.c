@@ -376,8 +376,6 @@ script_free_engine(state_t *s)
 
   s->bp_list = NULL;
 
-  _free_graphics_input(s);
-
 }
 
 
@@ -540,6 +538,8 @@ game_exit(state_t *s)
       s->scripttable[i].heappos = 0; /* Mark all non-high scripts as 'not installed', except for 0 */
 
   menubar_free(s->menubar);
+
+  _free_graphics_input(s);
 
   return 0;
 }
