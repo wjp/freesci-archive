@@ -8,10 +8,12 @@ rem
 rem How to use:
 rem 0. Set your options below!
 rem 1. Tick 'Enable profiling' in Project Settings of project.
-rem 2. Rebuild project.
-rem 3. Go to Build / Profile...
-rem 4. Select custom and locate this batch file.
-rem 5. Click OK.
+rem 2. Similarly, tick 'Generate map file' (***and make sure that the location
+rem    of the map file is the same as the exe file***).
+rem 3. Rebuild project.
+rem 4. Go to Build / Profile...
+rem 5. Select custom and locate this batch file.
+rem 6. Click OK.
 
 rem
 rem Notes:
@@ -33,15 +35,22 @@ rem          LINE_COUNTING, LINE_COVERAGE
 set PROFILE_CHOICE=FUNCTION_TIMING
 
 rem
-rem Change to directory containing executable.
-cd ..\..\..\bin
+rem Change to directory containing executable (if needed).
+rem cd ..\..\..\bin
 
 rem
 rem Set executable extension of profile.
 set PROFILE_EXT=_profile.txt
 
 rem
+rem One extra DLL that is part of the application to profile.
+rem Do not include the .DLL extension.
+set PROFILE_DLL=fsci
+
+rem
 rem Set further options for prep parse 1 (e.g. /excall /inc ...).
+rem If the app is multi-threaded, declare the thread's main function as the
+rem starting function by adding the /SF switch.
 rem See MSDN documentation for the PREP command for more about this.
 set FURTHER_P1_OPTS=
 
@@ -59,53 +68,53 @@ rem START PROCESSING
 goto %PROFILE_CHOICE%
 
 :FUNCTION_TIMING
-echo Profiling function timing in %~1%.exe...
+echo Profiling function timing in %~1.exe...
 set PROFILE_FILE=%~1_ftime%PROFILE_EXT%
-set PREP1_OPTS=/NOLOGO /AT /STACK 6 /OM /FT %FURTHER_P1_OPTS% %1
-set PLIST_OPTS=/NOLOGO /TAB 2 %FURTHER_PLIST_OPTS% /SC %1
+set PREP1_OPTS=/NOLOGO /AT /STACK 6 /OM /FT %FURTHER_P1_OPTS%
+set PLIST_OPTS=/NOLOGO /TAB 2 %FURTHER_PLIST_OPTS% /ST
 goto PROCESS
 
 :FUNCTION_COUNTING
-echo Profiling function counting in %~1%.exe...
+echo Profiling function counting in %~1.exe...
 set PROFILE_FILE=%~1_fcount%PROFILE_EXT%
-set PREP1_OPTS=/NOLOGO /AT /STACK 6 /OM /FC %FURTHER_P1_OPTS% %1
-set PLIST_OPTS=/NOLOGO /TAB 2 %FURTHER_PLIST_OPTS% /SC %1
+set PREP1_OPTS=/NOLOGO /AT /STACK 6 /OM /FC %FURTHER_P1_OPTS%
+set PLIST_OPTS=/NOLOGO /TAB 2 %FURTHER_PLIST_OPTS% /SC
 goto PROCESS
 
 :FUNCTION_COVERAGE
-echo Profiling function coverage in %~1%.exe...
+echo Profiling function coverage in %~1.exe...
 set PROFILE_FILE=%~1_fcover%PROFILE_EXT%
-set PREP1_OPTS=/NOLOGO /AT /STACK 6 /OM /FV %FURTHER_P1_OPTS% %1
-set PLIST_OPTS=/NOLOGO /TAB 2 %FURTHER_PLIST_OPTS% /SC %1
+set PREP1_OPTS=/NOLOGO /AT /STACK 6 /OM /FV %FURTHER_P1_OPTS%
+set PLIST_OPTS=/NOLOGO /TAB 2 %FURTHER_PLIST_OPTS% /SC
 goto PROCESS
 
 :LINE_COUNTING
-echo Profiling line counting in %~1%.exe...
+echo Profiling line counting in %~1.exe...
 set PROFILE_FILE=%~1_lcount%PROFILE_EXT%
-set PREP1_OPTS=/NOLOGO /OM /LC %FURTHER_P1_OPTS% %1
-set PLIST_OPTS=/NOLOGO /TAB 2 %FURTHER_PLIST_OPTS% /SC %1
+set PREP1_OPTS=/NOLOGO /OM /LC %FURTHER_P1_OPTS%
+set PLIST_OPTS=/NOLOGO /TAB 2 /C 1 %FURTHER_PLIST_OPTS% /SC
 goto PROCESS
 
 :LINE_COVERAGE
-echo Profiling line coverage in %~1%.exe...
+echo Profiling line coverage in %~1.exe...
 set PROFILE_FILE=%~1_lcover%PROFILE_EXT%
-set PREP1_OPTS=/NOLOGO /OM /LV %FURTHER_P1_OPTS% %1
-set PLIST_OPTS=/NOLOGO /TAB 2 %FURTHER_PLIST_OPTS% /SC %1
+set PREP1_OPTS=/NOLOGO /OM /LV %FURTHER_P1_OPTS%
+set PLIST_OPTS=/NOLOGO /TAB 2 %FURTHER_PLIST_OPTS% /SC
 goto PROCESS
 
 :PROCESS
-PREP %PREP1_OPTS%
+PREP %PREP1_OPTS% %~1.exe %PROFILE_DLL%.dll
 if errorlevel == 1 goto ERROR
-PROFILE /NOLOGO %1 %2 %3 %4 %5 %6 %7 %8 %9
+PROFILE /NOLOGO %~1.exe %~2 %~3 %~4 %~5 %~6 %~7 %~8 %~9
 if errorlevel == 1 goto ERROR
-PREP /NOLOGO /M %1
+PREP /NOLOGO /M %~1
 if errorlevel == 1 goto ERROR
-PLIST %PLIST_OPTS% >%PROFILE_FILE%
+PLIST %PLIST_OPTS% %~1 >%PROFILE_FILE%
 goto done
 
 :ERROR
 echo.
-echo Profile not completed - an ERROR occurred.
+echo Profile not completed - an error occurred.
 goto end
 
 :done

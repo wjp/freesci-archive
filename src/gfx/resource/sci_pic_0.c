@@ -58,7 +58,6 @@ gfx_pixmap_color_t gfx_sci0_pic_colors[GFX_SCI0_PIC_COLORS_NR]; /* Initialized d
 
 static int _gfxr_pic0_colors_initialized = 0;
 
-
 /************************************/
 /************************************/
 /************************************/
@@ -860,7 +859,7 @@ _gfxr_plot_aux_pattern(gfxr_pic_t *pic, int x, int y, int size, int circle, int 
 
 	if (!circle) {
 		offset = -size;
-		width = (size << 1) + 2;
+		width = (size << 1) + 1;
 	}
 
 	for (i = -size; i <= size; i++) {
@@ -1785,7 +1784,6 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 		0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
 		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07
 	};
-
 	int palette[GFXR_PIC0_NUM_PALETTES][GFXR_PIC0_PALETTE_SIZE];
 	int priority_table[GFXR_PIC0_PALETTE_SIZE];
 	int i;

@@ -288,16 +288,17 @@ sciw_new_button_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int 
 	zone.x = 0;
 	zone.y = 0;
 
-        if (inverse)
-                list->add(GFXWC(list), GFXW(gfxw_new_box(NULL, gfx_rect(zone.x + 1, zone.y + 1, zone.xl - 2, zone.yl - 2),
+	if (inverse)
+                list->add(GFXWC(list), GFXW(gfxw_new_box(NULL, gfx_rect(zone.x + 1, zone.y + 1, zone.xl - 2, zone.yl),
 							 port->color, port->color, GFX_BOX_SHADE_FLAT)));
 
 	if (!inverse)
 		list = _sciw_add_text_to_list(list, port, gfx_rect(zone.x, zone.y + 2, zone.xl, zone.yl),
 					      text, font, ALIGN_CENTER, 0, inverse, GFXR_FONT_FLAG_EAT_TRAILING_LF, grayed_out);
 
-        list->add(GFXWC(list),
-                  GFXW(gfxw_new_rect(zone, *frame_col, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
+	if (!inverse)
+		list->add(GFXWC(list),
+			  GFXW(gfxw_new_rect(zone, *frame_col, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
 
         if (selected)
                 list->add(GFXWC(list),
@@ -307,6 +308,10 @@ sciw_new_button_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int 
 	if (inverse)
 		list = _sciw_add_text_to_list(list, port, gfx_rect(zone.x, zone.y + 2, zone.xl, zone.yl),
 					      text, font, ALIGN_CENTER, 0, inverse, GFXR_FONT_FLAG_EAT_TRAILING_LF, grayed_out);
+
+	if (inverse)
+		list->add(GFXWC(list),
+			  GFXW(gfxw_new_rect(zone, *frame_col, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
 
 	return list;
 }

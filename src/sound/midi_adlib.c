@@ -154,7 +154,7 @@ void adlib_init_lists()
     oper_chn[i] = 255;
     note_time[i] = 0;
   }
-};
+}
 
 int adlib_stop_note(int chn, int note, int velocity)
 {
@@ -190,7 +190,7 @@ int adlib_kill_one_note(int chn)
      
   if (free_voices >= ADLIB_VOICES) {
     printf("Free list empty but no notes playing\n"); 
-    return;
+    return 255;
   }	/* No notes playing */
 
   for (i = 0; i < ADLIB_VOICES ; i++) {
@@ -271,11 +271,11 @@ int midi_adlib_open(guint8 *data_ptr, unsigned int data_length)
   }
 
   for (i = 0; i < 48; i++) 
-    make_sbi(data_ptr+(28 * i), adlib_sbi[i]);
+    make_sbi((adlib_def *)(data_ptr+(28 * i)), adlib_sbi[i]);
 
   if (data_length > 1344)
     for (i = 48; i < 96; i++) 
-      make_sbi(data_ptr+2+(28 * i), adlib_sbi[i]);
+      make_sbi((adlib_def *)(data_ptr+2+(28 * i)), adlib_sbi[i]);
 
   memset(instr, 0, sizeof(instr));
  

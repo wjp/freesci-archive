@@ -197,8 +197,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 				PUT_SELECTOR(obj, message, 1);
 				PUT_SELECTOR(obj, modifiers, e.buckybits|extra_bits);
 				s->acc=1;
-			} else fprintf(stderr,"Not got evt %04x bec %04x\n",
-				       e.type, mask);
+			}
 			return;
 		} break;
 

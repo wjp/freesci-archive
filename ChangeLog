@@ -1,3 +1,13 @@
+2001-07-22  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/resource/sci_pic_0.c (_gfxr_plot_aux_pattern): When drawing
+	boxes, we now draw (size << 1) + 1 instead of +2, to avoid segfault
+
+	* src/sound/midi_adlib.c (midi_adlib_open): Silenced a few warnings
+
+	* src/gfx/sci_widgets.c (sciw_new_button_control): Fixed inverse button
+	display for good
+
 2001-07-22  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/gfx/drivers/sdl_driver.c:  Finally fixed the line
@@ -6,7 +16,7 @@
 
 2001-07-22  Christoph Reichenbach  <jameson@linuxgames.com>
 
-	* src/gfx/operations.c (gfxop_get_event): Implemented event cue
+	* src/gfx/operations.c (gfxop_get_event): Implemented event queue
 
 2001-07-22  Alex Angas  <wgd@adelaide.on.net>
 
