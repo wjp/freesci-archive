@@ -1,5 +1,19 @@
 2004-01-01  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/include/sfx_softseq.h: Extended API a bit with an 'allstop'
+	command
+
+	* src/sfx/softseq/SN76496.c: Added SN76496 (Tandy/PCJr 3-voice)
+	playback support
+
+	* src/sfx/softseq/pcspeaker.c: Added new implementation of the PC
+	speaker driver, using the 'polled' song player. This replaces the
+	earlier software sequencer stuff.
+
+	* src/sfx/player/polled.c: Added 'polled' song player,
+	which is polled by a PCM feed instead of being directly timer
+	driven (still uses the same API).
+
 	* src/engine/scriptdebug.c (c_is_sample): Addsd 'is-sample'
 	console command
 

@@ -134,7 +134,7 @@ pp_stop(void)
 	if (it)
 		songit_free(it);
 
-	seq->set_volume(seq, 0);
+	seq->allstop(seq);
 
 	return SFX_OK;
 }
@@ -161,6 +161,9 @@ pp_pause(void)
 static int
 pp_resume(void)
 {
+	if (!play_it)
+		return SFX_OK; /* Nothing to resume */
+
 	if (play_paused)
 		new_song = 1; /* Fake starting a new song, re-using the old
 			      ** time stamp (now long in the past) to indicate

@@ -31,7 +31,6 @@
 #include <sfx_softseq.h>
 
 #define FREQUENCY 94020
-#define VOLUME_FACTOR 
 
 static int volume = 0x0600;
 static int note = 0; /* Current halftone, or 0 if off */
@@ -152,6 +151,11 @@ sps_volume(sfx_softseq_t *self, int new_volume)
 	volume = new_volume << 4;
 }
 
+void
+sps_allstop(sfx_softseq_t *self)
+{
+	note = 0;
+}
 
 sfx_softseq_t sfx_softseq_pcspeaker = {
 	"pc-speaker",
@@ -162,6 +166,7 @@ sfx_softseq_t sfx_softseq_pcspeaker = {
 	sps_volume,
 	sps_event,
 	sps_poll,
+	sps_allstop,
 	NULL,
 	SFX_SEQ_PATCHFILE_NONE,
 	0x20,  /* PC speaker channel only */

@@ -93,6 +93,12 @@ typedef struct sfx_softseq {
 	** Returns   : (byte) *dest: 'len' samples must be written to this buffer
 	*/
 
+	void
+	(*allstop)(struct sfx_softseq *self);
+	/* Stops all sound generation
+	** Parameters: (sfx_softseq_t *) self: Self reference
+	*/
+
 	void *internal; /* Internal data, may be used by sfx_softseq_t inmplementors */
 
 	int patch_nr; /* Number of the patch file associated with this sequencer,

@@ -530,8 +530,6 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 	struct twochannel_data c_old = fs->ch_old;
 	struct twochannel_data c_new = fs->ch_new;
 
-#warning "Remove"
-int lastl = 0;
 	int samples_read;
 	int samples_left;
 	int write_offset; /* Iterator for translation */
@@ -694,20 +692,6 @@ int lastl = 0;
 			leftsum  /= (sample_steps);
 			rightsum /= (sample_steps);
 		}
-#if 0
-leftsum = c_new.left;
-rightsum = c_new.right;
- if (leftsum != 0x7f00)
-	 fprintf(stderr, "\tFoul in Denmark: %d at %d/%d from %d\n", leftsum, write_offset, len, lsrc[-1]);
-#if 0
-
- if ((lastl > 20000 || lastl < -20000) && leftsum == 0) {
-	 fprintf(stderr, "Found funny edge!\n");
-	 BREAKPOINT();
- }
- lastl = leftsum;
-#endif
-#endif
 
 
 #if (DEBUG >= 3)
