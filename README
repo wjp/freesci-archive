@@ -169,10 +169,10 @@ appearance):
 - i686-pc-linux-gnu
 - sparc-sun-solaris2.5
 - sgi-mips-irix6.2 (Indy R5000 using native cc, experimental)
+- alphaev67-debian-gnu-linux
 
 The following platforms used to be supported, but have not been tested for this
 release:
-- Alpha/Linux
 - ia32/Win32 (Visual C++)
 - ia32/FreeBSD
 - ia32/NetBSD

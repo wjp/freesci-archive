@@ -114,6 +114,8 @@ extern DLLEXTERN const char* SCI_Error_Types[];
 extern DLLEXTERN const char* SCI_Version_Types[];
 extern DLLEXTERN const char* Resource_Types[];
 extern DLLEXTERN const char* resource_type_suffixes[]; /* Suffixes for SCI1 patch files */
+extern DLLEXTERN const int sci_max_resource_nr[]; /* Highest possible resource numbers */
+
 
 enum ResourceTypes {
   sci_view=0, sci_pic, sci_script, sci_text,
@@ -160,7 +162,6 @@ extern DLLEXTERN resource_t *resource_map;
 
 #ifndef _GET_INT_16
 #define _GET_INT_16
-
 
 #ifdef WORDS_BIGENDIAN
 

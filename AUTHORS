@@ -1,7 +1,8 @@
-Authors of FreeSCI:
+Authors of FreeSCI (source code contributions):
 (see also the file THANKS)
 
-Carl Muckenhoupt: [carl@wurb.com]
+
+Carl Muckenhoupt: <carl@wurb.com>
 graphics/
 	graphics.c (parts of pic drawing)
 scicore/
@@ -10,7 +11,7 @@ scicore/
 
 
 
-Christoph Reichenbach: [creichen@rbg.informatik.tu-darmstadt.de]
+Christoph Reichenbach: <creichen@rbg.informatik.tu-darmstadt.de>
 [Maintenance]
 [Makefile.am, configure.in etc.]
 [Bug fixes]
@@ -68,7 +69,7 @@ sound/
 
 
 
-Dmitry Jemerov: [yole@exch.nnz.spb.su]
+Dmitry Jemerov: <yole@exch.nnz.spb.su>
 [win32 compatibility fixes all over the place]
 [Bug fixes]
 config.l (parts)
@@ -80,7 +81,7 @@ win32/*
 
 
 
-Lars Skovlund: [lskovlun@image.dk]
+Lars Skovlund: <lskovlun@image.dk>
 [Most research]
 [Major bugfixes]
 engine/
@@ -93,7 +94,7 @@ tools/
 
 
 
-Magnus Reftel: [d96reftl@dtek.chalmers.se]
+Magnus Reftel: <d96reftl@dtek.chalmers.se>
 python.tar.gz
 [Bug fixes]
 engine/
@@ -108,13 +109,13 @@ tools/
 
 
 
-Rickard Lind: [rpl@dd.chalmers.se]
+Rickard Lind: <rpl@dd.chalmers.se>
 sound/
 	midi.c (most of it)
 
 
 
-Rink Springer: [rink@springer.cx]
+Rink Springer: <rink@springer.cx>
 [makefile.dos and DOS compatibility fixes all over the place]
 [Bug fixes]
 scicore/
@@ -126,6 +127,6 @@ sound/
 
 
 
-Sergey Lapin: [slapin@karelia.ru]
+Sergey Lapin: <slapin@karelia.ru>
 scicore/
 	decompress1.c (parts)

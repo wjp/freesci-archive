@@ -79,6 +79,7 @@ const char *resource_type_suffixes[] = {"v56","p56","scr","tex","snd",
 					"bit","pal","cda","aud","syn",
 					"msg","map","hep"};
 
+const int sci_max_resource_nr[] = {63353, 1000, 1000, 16384, 65535};
 
 int sci_version = 0;
 

@@ -106,6 +106,12 @@ vocab_get_words(int *word_counter)
     /* Now decode class and group: */
     c = resource->data[seeker + 1];
     words[counter]->class = ((resource->data[seeker]) << 4) | ((c & 0xf0) >> 4);
+
+    if (c & 0xf0) {
+	    fprintf(stderr,"Unexpected class mask-");
+	    fprintf(stderr,"%s ", words[counter]->word);
+	    fprintf(stderr, " class mask = %03x\n", (words[counter]->class));
+    }
     words[counter]->group = (resource->data[seeker + 2]) | ((c & 0x0f) << 8);
 
     ++counter;

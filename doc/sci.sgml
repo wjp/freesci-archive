@@ -2577,6 +2577,7 @@ explained more thoroughly, errors corrected, etc. The first 23 instructions
 Because it is so hard to explain, I have made a transcription of it here:
 
 <programlisting>
+< <![CDATA[
 short *vars[4];
 
 int acc;
@@ -2585,6 +2586,7 @@ int lea(int vt, int vi)
 {
   return &((vars[(vt >> 1) & 3])[vt & 0x10 ? vi+acc : vi]);
 }
+]]>
 </programlisting>
 
            </para></listitem>
@@ -6965,7 +6967,7 @@ the maps using the cast list created by Animate, whereas the ShowBits call
 		  This function will show all characters contained in a font and wait for a
 		  key or mouse button press.
 		</para>
-	      </title>
+	      </sect3>
               <sect3><title/simkey (keynr)/
                 <para>
                   Simulates a keypress of a key with the specified key number. Modifiers are

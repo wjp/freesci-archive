@@ -6,3 +6,6 @@ documentation can be found in the subdirectories 'txt' and 'html'.
 The 'misc' subdirectory contains various bits and pieces from all over the
 'net, some insightful, others useless.
 
+'man' contains man pages for FreeSCI, donated by Bas Zoetekouw of the
+Debian project.
+

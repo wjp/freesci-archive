@@ -1,0 +1,166 @@
+.TH sciv 6 "Sep 15, 2000" cvs20000914 FreeSCI
+
+.SH NAME
+
+\- FreeSCI's main executable; this loads, links and runs SCI bytecode,
+such as Sierra's famous adventures games.
+
+.SH DESCRIPTION
+FreeSCI is a portable interpreter for SCI games, such as the Space Quest
+series (starting with SQ3) or Leisure Suit Larry (2 and sequels); see
+below for a complete listing.
+.P
+\fBsciv\fR is the main executable which loads, links and runs SCI bytecode.
+You'll need to run sciv in order to play SCI games.
+
+.SH SYNOPSIS
+.B sciv
+[ --gamedir \fIdir\fR, -d\fIdir\fR ]
+[ --run, -r ]
+[ --sci-version \fIversion\fR, -V\fIversion\fR ]
+[ --version, -v ]
+[ --debug, -D ]
+[ --help, -h ]
+[ --graphics \fIgfx\fR, -g\fIgfx\fR ]
+
+.SH OPTIONS
+.TP
+.BR "--gamedir \fIdir\fR, -\fBd\fR\fIdir\fR"
+With this option, games resources will be read from the directory
+\fIdir\fR. Default is the current directory, unless a directory has
+been specified in the config file (see below).
+.TP
+.BR "--run, -r"
+Do not start the debugger; only run the game (the default action).
+.TP
+.BR "--sci-version \fIversion\fR, -\fBV\fR\fIversion\fR"
+This option sets the SCI version for sciv to emulate. 
+Acceptable version numbers are of the form \fBx.yyy.zzz\fR, where
+\fBx\fR is the major number, \fByyy\fR is the minor number and \fBzzz\fR
+the patch level.
+Note that currectly only SCI0 (major/minor=0/000) games are supported.
+.RS
+Normally, the version will be autodetected from the game resource files.
+.TP
+.BR "--version, -v"
+Display version number and exit.
+.TP
+.BR "--debug, -D"
+Start up in debug mode.
+.TP
+.BR "--help, -h"
+Display a short help text and exit.
+.TP
+.BR "--graphics \fIgfx\fR, -\fBg\fR\fIgfx\fR"
+With this option, you can specify which graphics driver is to be used. 
+Currently, the following drivers are recognised: \fBglx\fR, \fBggi\fR, 
+\fBddraw\fR and \fBdgfx\fR. Depending on your build configuration, not
+all of these may be available.
+
+
+.SH CONFIG FILE
+.P
+FreeSCI will create a directory called \fI.freesci\fR in your home directory 
+(unless this directory already exists). If you run an SCI game, this 
+game will create another directory inside the \fI.freesci\fR directory, to 
+store its save games in.
+.P
+Also, if a file called \fIconfig\fR exists in this directory, it will be read
+and parsed by the interpreter after the game has been loaded. At this
+time, the configuration file may contain:
+.IP \-
+Comments preceeded by a hash '#' sign
+.IP \-
+\fBversion = x.yyy.zzz\fR: emulate SCI version \fBx.yyy.zzz\fR. The version 
+number is sometimes printed on game discs, or can be found out by
+grepping your main executable for "0.000." (for SCI0 games). It is
+also displayed if the built-in debugger is activated in the Sierra SCI
+engine.
+.IP \-
+\fBcolor_mode = dither \fR|\fB flat \fR|\fB dither256\fR: (only one of 
+those three modes).
+\fBdither\fR: Draw in 16 colors, same as Sierra SCI.
+\fBflat\fR: Interpolate colors (256 colors). Improves some graphics.
+\fBdither256\fR: Dither in 256 colors. A compromise between dither and flat.
+.IP \-
+\fB[GAME_ID]\fR: Commands following this line will only have an effect for
+the game with the specified game ID. (The game ID is printed during
+sciv startup, and is also used to create the save game directory).
+.IP \-
+\fBresource_dir\fR: Read the game's resource data from the specified 
+location. Must not be used in the generic part of the config file.
+
+.SH SUPPORTED GAMES
+.P
+The following games have been tested with FreeSCI and are known to give
+some level of interactivity. In theory, FreeSCI should be able to let
+you complete all of these.
+.IP \-
+Hero's Quest / Quest for Glory 1
+.IP \-
+Space Quest 3
+.IP \-
+King's Quest 4
+.IP \-
+Leisure Suit Larry 2
+.IP \-
+Leisure Suit Larry 3
+.IP \-
+Police Quest 2
+.IP \-
+Codename: Iceman
+.IP \-
+The Colonel's Bequest (*)
+.IP \-
+Conquest of Camelot (*)
+.IP \-
+The Fun Seeker's Guide (from the SQ Collector's Series)
+.IP \-
+Hoyle's Book of Games (volume 1)
+.IP \-
+Hoyle's Book of Games (volume 2)
+.P
+(*) These games are known to have major graphical problems. Fixing them
+will require a re-design of the graphics engine.
+
+
+.SH SEE ALSO
+.BR classes (6),
+.BR sciconsole (6),
+.BR listwords (6),
+.BR scidisasm (6),
+.BR sciunpack (6),
+.BR scriptdump (6),
+.BR vocabdump (6).
+
+
+.SH BUGS
+.P
+FreeSCI is incomplete. You will probably not be able to finish any SCI
+game with it for now (although there are reports of some games,
+especially Space Quest 3, to be working fine).  This release has the
+following limitations (plus some bugs):
+.IP \-
+Only SCI0 games are supported
+.IP \-
+Sound is not supported yet
+.IP \-
+The SCI debug functions aren't fully supported (and probably never
+will be, since FreeSCI uses its own debug functions).
+.IP \-
+Graphics are slow, especially on displays not using 8bpp color index mode.  
+.P
+
+.SH AUTHORS
+.P
+FreeSCI is copyright (c) 1999,2000 by
+Christoph Reichenbach <\fIcreichen@rbg.informatik.tu-darmstadt.de\fR>,
+Carl Muckenhoupt <\fIcarl@wurb.com\fR>,
+Dmitry Jemerov <\fIyole@exch.nnz.spb.su\fR>, 
+Magnus Reftel <\fId96reftl@dtek.chalmers.se\fR>,
+Sergey Lapin <\fIslapin@karelia.ru\fR>,
+Lars Skovlund <\fIlskovlun@image.dk\fR>,
+Rickard Lind <\fIrpl@dd.chalmers.se\fR> and
+Rink Springer <\fIrink@springer.cx\fR>.
+.P
+This man page was written by Bas Zoetekouw <\fIbas@debian.org\fR>.
