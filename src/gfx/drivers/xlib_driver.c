@@ -39,6 +39,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <X11/extensions/XShm.h>
+#include <errno.h>
 #endif
 
 #define SCI_XLIB_PIXMAP_HANDLE_NORMAL 0
@@ -320,12 +321,14 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	  if (-1 == shminfo.shmid) {
 	    have_shmem = 0;
 	    ERROR("System does not support SysV IPC, disabling XSHM\n");
+	    perror("reason");
 	    foo_image = NULL;
 	  }
 	  
 	  shminfo.shmaddr = (char *) shmat(shminfo.shmid, 0, 0);
 	  if ((void *) -1 == shminfo.shmaddr) {
 	      ERROR("Could not attach shared memory segment\n");
+	      perror("reason");
 	      if (foo_image)
 		XDestroyImage(foo_image);
 	      return GFX_FATAL;
@@ -340,7 +343,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	  if (x11_error) {
 	    have_shmem = 0;
-	    ERROR("System does not support Shared Pixmaps, disablinge\n");
+	    ERROR("System does not support Shared XImages, disabling\n");
 	    shmdt(shminfo.shmaddr);
 	    XDestroyImage(foo_image);
 	    foo_image = NULL;
@@ -376,6 +379,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	  if (have_shmem && have_shmem != 2) {
 	    ERROR("Shared memory pixmaps not supported.  Reverting\n");
+	    perror("reason");
 	    have_shmem = 0;
 	  }
 
@@ -393,11 +397,13 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	    if (S->shm[i]->shmid == -1) {
 	      have_shmem = 0;
 	      ERROR("System does not support SysV IPC, disabling XSHM\n");
+	      perror("reason");
 	    }
 	    if (have_shmem) {
 	      S->shm[i]->shmaddr = (char *) shmat(S->shm[i]->shmid, 0, 0);
 	      if (S->shm[i]->shmaddr == (void *) -1) {
 		ERROR("Could not attach shared memory segment\n");
+		perror("reason");
 		have_shmem = 0;
 	      }
 	    }
