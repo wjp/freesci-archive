@@ -44,6 +44,18 @@
       </authorblurb>
     </author>
 
+
+    <Author>
+     <Firstname/Rickard/<surname/Lind/
+      <authorblurb><para>
+	Rickard (<email/rpl@dd.chalmers.se/) contributed information about the sound SCI01
+	resources, and documented the patch.001 format. He also implemented the MT-32 to
+	GM MIDI mapper used in FreeSCI.
+      </para>
+      </authorblurb>
+    </author>
+
+
     <Author>
      <firstname/Dark/<surname/Minister/
       <authorblurb><para>
@@ -1044,57 +1056,64 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
      <Title/The SCI0 Sound Resource Format/
      <para> by <author><firstname/Ravi/<surname/I./</author>
      </para><para>
-       Revision 5, Jul. 5th, 1999
-     </para>
-     <sect2><Title/Preface/
-      <para>
-   Sierra's SCI0 sound resources contain the music and sound effects played
-   in the game. With the introduction of SCI, the company took advantage of
-   new sound hardware which allowed for far better music than the traditional
-   PC speaker could ever create. Sierra chose two devices to specifically
-   target: the MT-32, and the Adlib. The MT-32 is a MIDI synth while the
-   Adlib is a less expensive card based around the OPL2, a non-MIDI chip.
-   Anyone interested in Sierra music and its history can find information at
-   the Sierra Soundtrack Series (http://www.queststudios.com).
-      </para><para>
-   Music is stored as a series of MIDI events, and the sound resource is
-   basically just a MIDI file. Much of what I write here comes from outside
-   documents, and I would direct anyone seeking more information to a MIDI
-   specification. The MIDI resource page (http://www.midi.org/resource.htm)
-   on midi.org has some good links as well as tables with status and
-   control information.
-      </para><para>
-   Some people prefer the one-based numbering system for channel and program
-   numbers. I personally prefer the zero-based system, and use it here. If
-   you're familiar with channels 1-16, be aware that I will call them 0-15.
-   My intention is not to be deviant from other programs but to be more
-   accurate in representing the way information gets stored. The same is true
-   for programs 0-127 as opposed to 1-128. For whatever reason, convention
-   already holds that controls be numbered 0-127, so nothing in my treatment
-   of them should be abnormal.
-      </para><para>
-   Sierra changed its sound file format in the switch to SCI1. I refer only
-   to SCI0 sound files in this specification. Hybrid interpreters such as
-   the one used for Quest for Glory II are also excluded. Finally, SCI games
-   written for non-DOS systems may have different formats. This document
-   applies to Sierra's IBM games.
-      </para>
- </sect2><sect2><title/Sound Devices/
-  <para>
-   A gamer's sound hardware greatly affects how the music will sound. Devices
-   used by SCI0 can be broken into 3 categories:
-  <variablelist>
-      <varlistentry><term>MIDI Synths</term><listitem><para>
-                   These will generally give the best sound quality. MIDI
+	Revision 7, Jan. 7, 2000
+	</para>
+	<sect2><Title/Preface/
+	<para>
+	   Sierra's SCI0 sound resources contain the music and sound effects played
+	   in the game. With the introduction of SCI, the company took advantage of
+	   new sound hardware which allowed for far better music than the traditional
+	   PC speaker could ever create. Sierra chose two devices to specifically
+	   target: the MT-32, and the Adlib. The MT-32 is a MIDI synth while the
+	   Adlib is a less expensive card based around the OPL2, a non-MIDI chip.
+	   Anyone interested in Sierra music and its history can find information at
+	   the Sierra Soundtrack Series (http://www.queststudios.com).
+	</para><para>
+	   Music is stored as a series of MIDI events, and the sound resource is
+	   basically just a MIDI file. Much of what I write here comes from outside
+	   documents, and I would direct anyone seeking more information to a MIDI
+	   specification. The MIDI resource page (http://www.midi.org/resource.htm)
+	   on midi.org has some good links as well as tables with status and
+	   control information.
+	</para><para>
+	   Some people prefer the one-based numbering system for channel and program
+	   numbers. I personally prefer the zero-based system, and use it here. If
+	   you're familiar with channels 1-16, be aware that I will call them 0-15.
+	   My intention is not to be deviant from other programs but to be more
+	   accurate in representing the way information gets stored. The same is true
+	   for programs 0-127 as opposed to 1-128. For whatever reason, convention
+	   already holds that controls be numbered 0-127, so nothing in my treatment
+	   of them should be abnormal.
+	</para><para>
+	   Sierra changed its sound file format in the switch to SCI1. I refer only
+	   to SCI0 sound files in this specification. Hybrid interpreters such as
+	   the one used for Quest for Glory II are also excluded. Finally, SCI games
+	   written for non-DOS systems may have different formats. This document
+	   applies to Sierra's IBM games.
+	</para><para>
+	   Please post comments or questions to the SCI webboard:
+	      http://www.InsideTheWeb.com/mbs.cgi/mb173941
+	</para><para>
+	   You can contact me personally at ravi.i@softhome.net, but I would prefer
+	   that SCI messages be posted on the webboard so everyone can see them.
+	</para>
+	</sect2><sect2><Title/Sound Devices/
+	<para>
+	   A gamer's sound hardware greatly affects how the music will sound. Devices
+	   used by SCI0 can be broken into 3 categories:
+	<variablelist>
+		<varlistentry><term>MIDI Synths</term><listitem><para>
+		   These will generally give the best sound quality. MIDI
                    synths are polyphonic with defineable instruments through
                    patch files and full support for MIDI controls. The
                    General MIDI standard had not been written when Sierra
                    began writing SCI games, and as far as I know no SCI0 game
                    uses a GM driver or includes a GM track. This means that
                    synths had to be individually supported.
-            </para></listitem></varlistentry>
-      <varlistentry><term>Non-MIDI Synths</term><listitem><para>
-                   Generally not as good as MIDI synths, but also less
+		</para></listitem></varlistentry>
+
+		<varlistentry><term>Non-MIDI Synths</term><listitem><para>
+		   Generally not as good as MIDI synths, but also less
                    expensive. The OPLx family of chips are still very common
                    among home PC users thanks to the Adlib and SoundBlaster
                    cards. Synths are polyphonic with defineable instruments
@@ -1108,9 +1127,10 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
                    common way of accessing these devices, so they must be
                    individually supported. These days, however, most people
                    have an Adlib compatible card.
-            </para></listitem></varlistentry>
-      <varlistentry><term/Beepers/<listitem><para>
-                   Beepers produce very poor music and don't support instrument
+		</para></listitem></varlistentry>
+
+		<varlistentry><term>Beepers</term><listitem><para>
+		   Beepers produce very poor music and don't support instrument
                    definitions, but all PC users have one so supporting them
                    covers people without special sound hardware. The most
                    common device is the PC speaker, which is monophonic.
@@ -1120,267 +1140,331 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
                    also made easier because each channel is monophonic. To
                    play a chord on the Tandy, for example, each voice must be
                    put in a separate MIDI channel.
-       </para></listitem></varlistentry>
-   </variablelist>
-   </para><para>
-   With such a diverse group of devices to support, Sierra put a lot of the
-   work on the shoulders of the drivers. Functions for loding patch files,
-   handling events, pausing, etc. are all in the drivers. The interpreter
-   calls them as needed but does not concern itself at all with how they
-   get implemented.
-  </para><para>
-   Listed here are devices supported by the SCI0 interpreter with a little
-   information about each. There could very well be other hardware not listed
-   here, so please send in any missing information. Also, since the
-   interpreter is made to be device independent, this list could be easily
-   expanded. The process would require that a new driver be written and a
-   patch file created if appropriate. Since the driver is responsible for
-   choosing which patch file to use and then entering it into the device, the
-   second step would be quite easy.
-  </para><para>
-   <informaltable frame="all">
-    <tgroup cols="5">
-     <thead><row>
-      <entry/Device Name/
-      <entry/Driver/
-      <entry/Patch/
-      <entry/Poly/
-      <entry/Flag/
-     </row></thead>
-     <tbody>
-      <row>
-      <entry/    Roland MT-32      /<entry/  mt32    /<entry/   001   /<entry/   32   / <entry//
-     </row><row>
-      <entry/        Adlib         /<entry/  adl     /<entry/   003   /<entry/   9    /<entry/04h/
-     </row><row>
-      <entry/     PC Speaker       /<entry/  std     /<entry/    *    /<entry/   1    /<entry/20h/
-     </row><row>
-      <entry/  Tandy 1000 or PCJr   /<entry/  jr      /<entry/    *    /<entry/   3    /<entry/+/
-     </row><row>
-      <entry/  Tandy 1000 SL, TL   /<entry/  tandy   /<entry/    *    /<entry/   3    /<entry/+/
-     </row><row>
-      <entry/  IBM Music Feature   /<entry/  imf     /<entry/   002   /<entry/   8    /<entry//
-     </row><row>
-      <entry/    Yamaha FM-01      /<entry/  fb01    /<entry/   002   /<entry/   8    /<entry//
-     </row><row>
-      <entry/  CMS or Game Blaster  /<entry/  cms     /<entry/   101   /<entry/   12   /<entry//
-     </row><row>
-      <entry/  Casio MT540 or CT460   /<entry/  mt540   /<entry/   004   /<entry/   10   /<entry//
-     </row><row>
-      <entry/     Casio CSM-1      /<entry/          /<entry/   007   /<entry/        /<entry//
-     </row><row>
-      <entry/  Roland D110,D10,D20   /<entry/          /<entry/   000   /<entry/        /<entry//
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-              (thanks to Shane T. for providing some of this).
-              Blank fields are unknown, not unused.
-   <simplelist>
-            <member/*  when asked which patch to load, the PC and Tandy
-                  speaker drivers return 0xFFFF, which is a signal
-                  that they do not use patches/
-            <member/+  the Tandy drivers almost certainly use 10h for their
-                  play flag, but this is unconfirmed so I'll leave
-                  it out for now/
-   </simplelist>
+		</para></listitem></varlistentry>
+	</variablelist>
+	</para><para>
+	   With such a diverse group of devices to support, Sierra put a lot of the
+	   work on the shoulders of the drivers. Functions for loding patch files,
+	   handling events, pausing, etc. are all in the drivers. The interpreter
+	   calls them as needed but does not concern itself at all with how they
+	   get implemented.
+	</para><para>
+	   Listed here are devices supported by the SCI0 interpreter with a little
+	   information about each. There could very well be other hardware not listed
+	   here, so please send in any missing information. Also, since the
+	   interpreter is made to be device independent, this list could be easily
+	   expanded. The process would require that a new driver be written and a
+	   patch file created if appropriate. Since the driver is responsible for
+	   choosing which patch file to use and then entering it into the device, the
+	   second step would be quite easy.
+	  </para><para>
+	   <informaltable frame="all">
+	    <tgroup cols="5">
+	     <thead><row>
+	      <entry/Device Name/
+	      <entry/Driver/
+	      <entry/Patch/
+	      <entry/Poly/
+	      <entry/Flag/
+	     </row></thead>
+	     <tbody>
+	      <row>
+	      <entry/    Roland MT-32      /<entry/  mt32    /<entry/   001   /<entry/   32   / <entry//
+	     </row><row>
+	      <entry/        Adlib         /<entry/  adl     /<entry/   003   /<entry/   9    /<entry/04h/
+	     </row><row>
+	      <entry/     PC Speaker       /<entry/  std     /<entry/    *    /<entry/   1    /<entry/20h/
+	     </row><row>
+	      <entry/  Tandy 1000 or PCJr   /<entry/  jr      /<entry/    *    /<entry/   3    /<entry/+/
+	     </row><row>
+	      <entry/  Tandy 1000 SL, TL   /<entry/  tandy   /<entry/    *    /<entry/   3    /<entry/+/
+	     </row><row>
+	      <entry/  IBM Music Feature   /<entry/  imf     /<entry/   002   /<entry/   8    /<entry//
+	     </row><row>
+	      <entry/    Yamaha FM-01      /<entry/  fb01    /<entry/   002   /<entry/   8    /<entry//
+	     </row><row>
+	      <entry/  CMS or Game Blaster  /<entry/  cms     /<entry/   101   /<entry/   12   /<entry//
+	     </row><row>
+	      <entry/  Casio MT540 or CT460   /<entry/  mt540   /<entry/   004   /<entry/   10   /<entry//
+	     </row><row>
+	      <entry/     Casio CSM-1      /<entry/          /<entry/   007   /<entry/        /<entry//
+	     </row><row>
+	      <entry/  Roland D110,D10,D20   /<entry/          /<entry/   000   /<entry/        /<entry//
+	      </row>
+	     </tbody>
+	    </tgroup>
+	   </informaltable>
+	              (thanks to Shane T. for providing some of this).
+	              Blank fields are unknown, not unused.
+	   <simplelist>
+	            <member/*  when asked which patch to load, the PC and Tandy
+	                  speaker drivers return 0xFFFF, which is a signal
+	                  that they do not use patches/
+	            <member/+  the Tandy drivers almost certainly use 10h for their
+	                  play flag, but this is unconfirmed so I'll leave
+	                  it out for now/
+	   </simplelist>
+	</para><para>
+	   The driver field is the file name of the driver without the drv extension.
+	   Patch specifies which patch file the driver requests. Poly is the maximum
+	   number of voices which can be playing at once as reported by the driver.
+	   The play flag specifies which channels the device will play and gets
+	   explained in the header section.
+	</para>
+	</sect2><sect2><Title/File Format/
+	<para>
+	   Sound files follow the same format as all extracted SCI0 resources: the
+	   first two bytes of the file contain a magic number identifying the
+	   resource type and the rest of the file contains a dump of the uncompressed
+	   data. The identifier is the resource type (04h for sound) OR-ed with 80h
+	   and stored as a word. The result will be 84h 00h in extracted sound files.
+	</para><para>
+	   The sound resource data itself is a header with channel initialization
+	   followed by a series of MIDI events.
+	</para>
+	<sect3><Title/Header/
+		<para>
+		   The header provides the sound driver with 2 pieces of information about
+		   each channel. The first is a byte which specifies how many voices each
+		   logical MIDI channel will be playing. For MIDI synths, this information is
+		   not really necessary and is probably ignored. The same goes for beepers.
+		   This byte is only useful for non-MIDI synths which must know how many
+		   hardware channels each logical MIDI channel will need. This value is only
+		   an initial setting. Sound files can request changes to the mapping later
+		   with control changes.
+		</para><para>
+		   It's worth mentioning here that previous revisions of this specification
+		   said that some of the MIDI controls could be initialized using the first
+		   byte. I now believe this is a bug in the Adlib driver which happens when
+		   the value gets too large and causes overflows into other areas of memory.
+		   There should not be more requested channels than the device has hardware
+		   channels.
+		</para><para>
+		   The second byte describes how the user's sound harware should treat the
+		   channel. It is the combination of bit flags which may be OR-ed together.
+		   If the appropriate bit is set for the currently selected sound device, the
+		   channel will be played. If it is not, the channel will be silent. The
+		   driver decides which bit it will use as the play flag, and the table under
+		   Sound Devices lists the flag used by each driver. Drivers ignore the first
+		   byte (used to request hardware channels) on MIDI channels it won't play.
+		</para><para>
+		   Before the channel initialization is a byte which specifies whether the
+		   header holds information for 15 or 16 channels. A value of 0 means that
+		   there will be 16 channels and a value of 2 means that there will be 15
+		   channels. All other values are undefined and will render sound files
+		   unplayable.
+		</para><para>
+		   The header format:
+		   <simplelist>
+		      <member/1 byte  - number of channels code (usually 0, can also be 2)/
+		      <member/2 bytes - initialization for channel 0/
+		      <member/2 bytes - initialization for channel 1/
+		      <member/./
+		      <member/./
+		      <member/./
+		      <member/2 bytes - initialization for channel 15/
+		    </simplelist>
+		</para><para>
+		   Notice that the space for channel 15's initialization will always be
+		   present. If the number of channels code is 2, the last two bytes of the
+		   header will be ignored, but they are stil in the resource. The header is
+		   always 33 bytes in length.
+		</para></sect3><sect3><title/Events/
+		<para>
+		   The actual music is stored in a series of events. The generic form for an
+		   event is:
+		<simplelist>
+			<member/&lt;byte - delta time&gt; [byte - status] [byte - p1 [p2]]/
+		</simplelist>
+		</para><para>
+		   Delta time is the number of ticks to wait after executing the previous
+		   event before executing this event. Standard MIDI stores this as a variable
+		   length value. In sound resources, it will generally be one byte and the
+		   most significant bit is in fact used as part of the value. In cases where
+		   a single byte cannot hold a high enough delta time, sound resources use
+		   0xF8 one or more times in a row. The 0xF8 byte causes a delay of 0xF0 (240
+		   decimal) ticks before continuing playback. The sequence F8 F8 78 FC waits
+		   600 ticks then stops the sequence because of the FCh status. There are 60
+		   ticks per second, which is about 16667 microseconds between ticks.
+		</para><para>
+		   The status byte is basically a command. The most significant bit is always
+		   set. This feature is important because the status byte will not always be
+		   present. If you read a byte expecting it to be a status byte but the most
+		   significant bit is not set, that byte is actually a paramater and you
+		   should repeat the last status used. This is known as running status mode
+		   and appears to get used relatively often.
+		</para><para>
+		   There generic form for a status byte is (in bits) 1xxxcccc - The lower
+		   nibble designates which channel the message affects except when the upper
+		   nibble is 15. The upper nibble is the command, but as stated earlier, the
+		   most significant bit must be 1. That leaves space for 8 messages, most of
+		   which require at least one paramater. Paramaters will never have their
+		   most significant bit set.
+		</para>
+		</sect3><sect3><title/Status Reference/
+		<para>
+		<variablelist>
+			<varlistentry><term/8x n v/<listitem><para/
+			    Note off: Stop playing note n on channel x, releasing the key
+		            with velocity v. If a hold pedal is pressed, the note will
+		            continue to play after this status is received and end when the
+		            pedal is released. A zero velocity note on can also be used to
+		            stop playing a note./
+			</listitem></varlistentry>
 
-   The driver field is the file name of the driver without the drv extension.
-   Patch specifies which patch file the driver requests. Poly is the maximum
-   number of voices which can be playing at once as reported by the driver.
-   The play flag specifies which channels the device will play and gets
-   explained in the header section.
-  </para>
- </sect2>
- <sect2><Title/File Format/
-  <para>
-   Sound files follow the same format as all extracted SCI0 resources: the
-   first two bytes of the file contain a magic number identifying the
-   resource type and the rest of the file contains a dump of the uncompressed
-   data. The identifier is the resource type (04h for sound) OR-ed with 80h
-   and stored as a word. The result will be 84h 00h in extracted sound files.
- <footnote><para>Please note that FreeSCI's resource_t.data[] stores information
-   without the two-byte header.</para></footnote>
-  </para><para>  
-   The sound resource data itself is a header with channel initialization
-   followed by a series of MIDI events.
-  </para>
- </sect2>
- <sect2><Title/Header/
-  <para>
-   The header provides the sound driver with 2 pieces of information about
-   each channel. The first is a byte which specifies how many voices each
-   logical MIDI channel will be playing. For MIDI synths, this information is
-   not really necessary and is probably ignored. The same goes for beepers.
-   This byte is only useful for non-MIDI synths which must know how many
-   hardware channels each logical MIDI channel will need. This value is only
-   an initial setting. Sound files can request changes to the mapping later
-   with control changes.
-  </para><para>
-   It's worth mentioning here that previous revisions of this specification
-   said that some of the MIDI controls could be initialized using the first
-   byte. I now believe this is a bug in the Adlib driver which happens when
-   the value gets too large and causes overflows into other areas of memory.
-   There should not be more requested channels than the device has hardware
-   channels.
-  </para><para>
-   The second byte describes how the user's sound harware should treat the
-   channel. It is the combination of bit flags which may be OR-ed together.
-   If the appropriate bit is set for the currently selected sound device, the
-   channel will be played. If it is not, the channel will be silent. The
-   driver decides which bit it will use as the play flag, and the table under
-   Sound Devices lists the flag used by each driver. Drivers ignore the first
-   byte (used to request hardware channels) on MIDI channels it won't play.
-  </para><para>
-   Before the channel initialization is a byte which specifies whether the
-   header holds information for 15 or 16 channels. A value of 0 means that
-   there will be 16 channels and a value of 2 means that there will be 15
-   channels. All other values are undefined and will render sound files
-   unplayable.
-  </para><para>
-   The header format:
-   <simplelist>
-      <member/1 byte  - number of channels code (usually 0, can also be 2)/
-      <member/2 bytes - initialization for channel 0/
-      <member/2 bytes - initialization for channel 1/
-      <member/./
-      <member/./
-      <member/./
-      <member/2 bytes - initialization for channel 15/
-    </simplelist>
-   Notice that the space for channel 15's initialization will always be
-   present. If the number of channels code is 2, the last two bytes of the
-   header will be ignored, but they are stil in the resource. The header is
-   always 33 bytes in length.
-  </para>
-</sect2><sect2>
- <title/Events/
-  <para>
-   The actual music is stored in a series of events. The generic form for an
-   event is:
-  <simplelist>
-      <member/&lt;byte - delta time&gt; [byte - status] [byte - p1 [p2]]/
-  </simplelist>
-  </para><para>
-   Delta time is the number of ticks to wait after executing the previous
-   event before executing this event. Standard MIDI stores this as a variable
-   length value. In sound resources, it will be exactly one byte and the most
-   significant bit is in fact used as part of the value. There are 60 ticks
-   per second, which is about 16667 microseconds between ticks.
-  </para><para>
-   The status byte is basically a command. The most significant bit is always
-   set. This feature is important because the status byte will not always be
-   present. If you read a byte expecting it to be a status byte but the most
-   significant bit is not set, that byte is actually a paramater and you
-   should repeat the last status used. This is know as running status mode
-   and appears to get used relatively often.
-  </para><para>
-   There generic form for a status byte is (in bits) 1xxxcccc - The lower
-   nibble designates which channel the message affects. The upper nibble is
-   the command, but as stated earlier, the most significant bit must be 1.
-   That leaves space for 8 messages, most of which require at least one
-   paramater. Paramaters will never have their most significant bit set.
-  </para>
- </sect2>
- <sect2><title/Status Reference/
+			<varlistentry><term/9x n v/<listitem><para/
+			    Note on: Play note n on with velocity v on channel x. The
+		            velocity is the speed with which the key gets pressed, which
+		            basically means how loud the note should be played. Playing a
+		            note with velocity 0 is a way of turning the note off./
+			</listitem></varlistentry>
+
+			<varlistentry><term/Ax n p/<listitem><para/
+			    Key pressure (after-touch): Set key pressure to p for note n on
+		            channel x. This is to modify key pressure for a note that is
+		            already playing./
+			</listitem></varlistentry>
+
+			<varlistentry><term/Bx c s /<listitem><para>
+			    Control: Set control c to s on channel x. This can be confusing
+		            because there isn't just one meaning. Changing the settings on
+		            different controls will, of course, have different outcomes.
+			</para><para>
+		            Controls which handle any value are continuous controllers. They
+		            have a continuous range. Controls which are only on/off are
+		            switches. Their defined range is only 01h (OFF) and 7Fh (ON).
+		            However, in order to respond to all values, 01h-3Fh is treated as
+		            OFF and 40h-7Fh is treated as ON. While in practice they may only
+		            use bit 6 as a flag, my personal opinion is that values between
+		            01h and 7Fh should be avoided for the sake of clarity.
+			</para><para>
+		            Listed in this reference are the non-standard MIDI controls I've
+		            found in Sierra SCI0 sound files. Not all drivers support all
+		            controls.
+			</para><para>
+		            Control Refrence
+			<variablelist>
+				<varlistentry><term/4Bh/<listitem><para/
+					Channel mapping: When a channel sets this control, it
+		                        tells the driver how many notes it will be playing
+		                        at once, and therefore how many hardware channels it
+		                        occupies./
+				</listitem></varlistentry>
+
+				<varlistentry><term/4Ch/<listitem><para>
+					Reset on StopSound: An on/off switch where a value of
+		                        zero is off and a non-zero value is on. Note that
+		                        this is not the same as for standard MIDI control
+		                        switches. When this control is on, calling the sound
+		                        driver's StopSound subfunction will reset the sound
+		                        position to the beginning. The initial value is set
+		                        to off when a sound gets loaded.</para>
+				</listitem></varlistentry>
+
+               			<varlistentry><term/4Eh/<listitem><para/
+					Unknown: Experiments in setting and clearing it show
+		                        that a value of 0 will cause notes to be played
+		                        without regard for the velocity paramater while a
+		                        value of 1 will enable velocities./
+				</listitem></varlistentry>
+
+               			<varlistentry><term/60h/<listitem><para/
+					Cumulative cue: The interpreter can get cues from the
+		                        sound file, which sets the Sound object's signal
+		                        property. When a sound gets loaded, the inital cue is
+		                        set to 127. When a CC60 occurs, the new control value
+		                        is added to the current cue. If the cue were 130, for
+		                        example, a CC60 5 on any channel would make the new
+		                        cumulative cue equal 135./
+				</listitem></varlistentry>
+			</variablelist>
+			</para></listitem></varlistentry>
+
+			<varlistentry><term/Cx p/<listitem><para>
+				  Program change: Set program (patch / instrument / ect.) to p for
+				  channel x. This is a simple instrument change.
+			</para><para>
+			          Channel 15, however, includes two special cases of this status. If
+			          the new program is less than 127 the Sound object's signal property
+			          is set to the new program, making a non-cumulative cue. If the new
+			          program is equal to 127, then that exact position (not the start of
+			          the current tick) is set as the loop point. Normally, the driver
+			          loops to the beginning of the sound. If an explicit loop point is
+			          set, the sound will be replayed from the marked time instead.
+			</para><para>
+			          The actual time of the loop point is better explained with a short
+			          diagram:
+				<simplelist>
+				      <member/0x10 0x91 0x20 0x20      play a note on channel 1/
+			              <member/0x05 0x91 0x20 0x00      stop the previous note/
+			              <member/0x00 0x92 0x30 0x10      play a note on channel 2/
+			              <member/  [restart here]/
+			              <member/0x00 0xCF 0x7F           set loop point/
+			              <member/0x00 0xC8 0x05           set to program 5 on channel 8/
+			              <member/0x00 0xCF 0x13           set signal to 19/
+			              <member/0x20 0xFC                end of file, loop to marked location/
+				</simplelist>
+			</para><para>
+			          In both situations (p < 127 and p = 127), no actual program change
+			          takes place. Channel 15 is used for control, not playing music.
+			</para></listitem></varlistentry>
+
+   			<varlistentry><term/Dx p/<listitem><para/
+				  Pressure (after-touch): Set key pressure to p on channel x. This is
+			          similar to Ax but differs in its scope. Message Ax is applied on a
+			          per-note basis while message Dx is applied to an entire channel./
+			</listitem></varlistentry>
+
+			<varlistentry><term/Ex t b/<listitem><para/
+				    Pitch wheel: Set the pitch wheel to tb. The setting is actually
+			            a 14 bit number with the least significant 7 bits stored in b
+			            and the most significant 7 bits stored in t. (Remember the top
+			            bit can't be used for either byte.) The range of settings is
+			            0000h to 3FFFh. A setting of 2000h means the pitch wheel is
+			            centered. Larger values raise pitch and smaller values lower it./
+			</listitem></varlistentry>
+
+			<varlistentry><term/F0/<listitem><para>
+				Begin SysEx: Starts a system exclusive data block. The block must
+			        terminate with F7h.</para>
+			</listitem></varlistentry>
+
+			<varlistentry><term/F7/<listitem><para>
+				End SysEx: Ends a system exclusive data block. Normal sound data
+			        resumes at this point.</para>
+			</listitem></varlistentry>
+
+			<varlistentry><term/FC/<listitem><para>
+				Stop Sequence: This is a system real-time message which tells the
+			        sound driver to stop the current sound. The sound object's signal
+			        property gets set to FFFFh and the position moves to the loop point,
+			        which defaults to the beginning. Drivers allow this message to occur
+			        without a delta time, but I haven't seen any examples.</para>
+			</listitem></varlistentry>
+		</variablelist>
+		</para>
+	</sect3>
+	</sect2><sect2><title/Revision history/
   <para>
   <variablelist>
-   <varlistentry><term/8x n v/<listitem><para/Note off: Stop playing note n on channel x, releasing the key
-            with velocity v. If a hold pedal is pressed, the note will
-            continue to play after this status is received and end when the
-            pedal is released. A zero velocity note on can also be used to
-            stop playing a note./</listitem></varlistentry>
-   <varlistentry><term/9x n v/<listitem><para/Note on: Play note n on with velocity v on channebl x. The
-            velocity is the speed with which the key gets pressed, which
-            basically means how loud the note should be played. Playing a
-            note with velocity 0 is a way of turning the note off./</listitem></varlistentry>
-   <varlistentry><term/Ax n p/<listitem><para/Key pressure (after-touch): Set key pressure to p for note n on
-            channel x. This is to modify key pressure for a note that is
-            already playing./</listitem></varlistentry>
-   <varlistentry><term/Bx c s/<listitem><para>Control: Set control c to s on channel x. This can be confusing
-            because there isn't just one meaning. Changing the settings on
-            different controls will, of course, have different outcomes.
-         </para><para>
-            Controls which handle any value are continuous controllers. They
-            have a continuous range. Controls which are only on/off are
-            switches. Their defined range is only 01h (OFF) and 7Fh (ON).
-            However, in order to respond to all values, 01h-3Fh is treated as
-            OFF and 40h-7Fh is treated as ON. While in practice they may only
-            use bit 6 as a flag, my personal opinion is that values between
-            01h and 7Fh should be avoided for the sake of clarity.
-         </para><para>
-            I used to include a list of common controls with brief summaries
-            but now consider it outside the scope of this specification.
-            Instead of listing standard MIDI controls, here are some of the
-            non-standard controls used by drivers. These will be ignored by
-            real MIDI synths but are useful to non-MIDI synths. You should
-            know, however, that not all controls are supported in all
-            drivers. For that matter, most standard controls are unsupported
-            in non-MIDI synths. This was not a problem for Sierra, who could
-            package their drivers with the game, but could be a hardship for
-            new developers who want to write games for the original
-            interpreters. It should not be a problem on new interpreters
-            since they can make a more standardized solution to the problem
-            playing MIDI files on non-MIDI synths.
-         </para><para>
-            Control Refrence
-            <variablelist>
-               <varlistentry><term/4Bh/<listitem><para/
-                        Channel mapping: When a channel sets this control, it
-                        tells the  driver how many notes it will be playing
-                        at once, and therefore how many hardware channels it
-                        occupies./</listitem></varlistentry>
+   <varlistentry><term/Revision 7 - Jan. 7, 2000/
+	<listitem><para><itemizedlist>
+	      	<listitem><para/Added information about F8h delta times (thanks to Rickard Lind for
+			bringing these to my attention)/</listitem>
+      		<listitem><para/Reorganized Fx status information/</listitem>
+      		<listitem><para/Fixed major error in description of loop points (sorry)/</listitem>
+      		<listitem><para/Fixed typos/</listitem>
+     </itemizedlist></para></listitem></varlistentry>
 
-               <varlistentry><term/4Ch/<listitem><para/Unknown: untested/</listitem></varlistentry>
+   <varlistentry><term/Revision 6 - Sep. 17, 1999/
+	<listitem><para><itemizedlist>
+	      	<listitem><para/Added information about cues/</listitem>
+	      	<listitem><para/Updated control 60h information/</listitem>
+	      	<listitem><para/Added information about loop points/</listitem>
+	      	<listitem><para/Updated control 4Ch information/</listitem>
+	      	<listitem><para/Cleaned up control reference introduction/</listitem>
+     </itemizedlist></para></listitem></varlistentry>
 
-               <varlistentry><term/4Eh/<listitem><para/
-                        Unknown: Experiments in setting and clearing it show
-                        that a value of 0 will cause notes to be played
-                        without regard for the velocity paramater while a
-                        value of 1 will enable velocities./</listitem></varlistentry>
-            </variablelist>
-          </para></listitem></varlistentry>
-
-   <varlistentry><term/Cx p/<listitem><para/
-          Program change: Set program (patch, instrument etc.) to p for
-          channel x. This is a simple instrument change./</listitem></varlistentry>
-
-   <varlistentry><term/Dx p/<listitem><para/
-          Pressure (after-touch): Set key pressure to p on channel x. This is
-          similar to Ax but differs in its scope. Message Ax is applied on a
-          per-note basis while message Dx is applied to an entire channel./</listitem></varlistentry>
-
-   <varlistentry><term/Ex t b/<listitem><para/
-            Pitch wheel: Set the pitch wheel to tb. The setting is actually
-            a 14 bit number with the least significant 7 bits stored in b
-            and the most significant 7 bits stored in t. (Remember the top
-            bit can't be used for either byte.) The range of settings is
-            0000h to 3FFFh. A setting of 2000h means the pitch wheel is
-            centered. Larger values raise pitch and smaller values lower it./</listitem></varlistentry>
-
-   <varlistentry><term/Fx/<listitem><para>
-        These are *not* channel messages; the lower nibble does not signify
-        a channel. There are two types of messages with the upper nibble set
-        to all 1's: "System Common Messages" and "System Real-Time Messages".
-        The only one I've seen in sound resources is FCh, which is a
-        real-time message that means stop the current sequence. It is used at
-        the end of all sound files.
-     <footnote><para>
-       This does not conform to the MIDI specification, which requires a track
-       to terminate with the sequence 0xff 0x2f 0x00
-     </para></footnote>
-        The Adlib driver does, however, include
-        support for F0h, which signifies the start of system exclusive data.
-        System exclusive data must terminate with F7h, and the driver picks
-        up at this point to continue playback.
-        </para></listitem></varlistentry>
-  </variablelist>
- </para>
-</sect2>
-<sect2>
- <title/Revision history/
-  <para>
-  <variablelist>
    <varlistentry><term/Revision 5 - Jul. 5, 1999/
      <listitem><para><itemizedlist>
       <listitem><para/Rewrote much of the specification, trying to focus less on explaining
@@ -1440,7 +1524,8 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
   </variablelist>
   </para>
  </sect2>
-   </sect1>
+</sect1>
+
    <sect1>
     <title/Mapping instruments in FreeSCI/
     <sect2><Title/The Patch.002 resource/
@@ -4799,7 +4884,6 @@ allow for selective event retrieval, see later.
   <member/0x02 - Mouse button release event/
   <member/0x04 - Keyboard event/
   <member/0x40 - Movement (joystick) event/
-  <member/0x80 - Menu event/
 </simplelist>
 </para><para>
 This type is returned to the SCI event managers by the input device drivers
@@ -4893,13 +4977,6 @@ That is, the direction code starts at straight up (code 1), increasing
 with clockwise movement.
 </para>
 </sect3>
-
-<sect3><title/The Menu event/
-<para>
-  The menu event is a special event used by the interpreter to activate the
-  menu system. If the Menu event is passed to the MenuSelect() kernel function,
-  the menu is activated.
-</para>
 
 </sect2>
   </sect1>

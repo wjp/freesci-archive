@@ -31,27 +31,27 @@
 #include <soundserver.h>
 #include <sound.h>
 
-char *sound_dos_song;
-int  sound_dos_len;
+static char *sound_dos_song;
+static int  sound_dos_len;
 
-sound_eq_t sound_dos_queue; /* The event queue */
-song_t* modsong;
-song_t *song = NULL; /* The song we're playing */
+static sound_eq_t sound_dos_queue; /* The event queue */
+static song_t* modsong;
+static song_t *song = NULL; /* The song we're playing */
 
-int suspended = 0; /* Used to suspend the sound server */
-GTimeVal suspend_time; /* Time at which the sound server was suspended */
-GTimeVal last_played, wakeup_time;
+static int suspended = 0; /* Used to suspend the sound server */
+static GTimeVal suspend_time; /* Time at which the sound server was suspended */
+static GTimeVal last_played, wakeup_time;
 
-int command;
+static int command;
 
-int ticks = 0; /* Ticks to next command */
-int fadeticks = 0;
-int ccc = 127; /* cumulative cue counter */
-int sound_hack; /* non-zero if we should not pay attention to the waiting */
+static int ticks = 0; /* Ticks to next command */
+static int fadeticks = 0;
+static int ccc = 127; /* cumulative cue counter */
+static int sound_hack; /* non-zero if we should not pay attention to the waiting */
 
-song_t *_songp = NULL;
-songlib_t songlib = &_songp;   /* Song library */
-GTimeVal wait_tv;
+static song_t *_songp = NULL;
+static songlib_t songlib = &_songp;   /* Song library */
+static GTimeVal wait_tv;
 
 static int cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0};
 /* cmdlen[] is ripped from playmidi */
@@ -444,10 +444,16 @@ sound_dos_poll() {
   while (ticks==0) {
       int newcmd;
       int param;
+      int tempticks;
 
       gettimeofday((struct timeval *)&last_played, NULL);
 
-      ticks = song->data[(song->pos)++];
+      /* Handle length escape sequence */
+      while ((tempticks = song->data[(song->pos)++]) == SCI_MIDI_TIME_EXPANSION_PREFIX)
+	ticks += SCI_MIDI_TIME_EXPANSION_LENGTH;
+
+      ticks += tempticks;
+
       newcmd = song->data[song->pos];
 
       if (newcmd & 0x80) {

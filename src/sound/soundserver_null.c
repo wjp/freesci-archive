@@ -209,10 +209,18 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
       int newcmd;
       int param;
+      int tempticks;
 
       gettimeofday((struct timeval *)&last_played, NULL);
 
-      ticks = song->data[(song->pos)++];
+      ticks = 0;
+
+      /* Handle length escape sequence */
+      while ((tempticks = song->data[(song->pos)++]) == SCI_MIDI_TIME_EXPANSION_PREFIX)
+	ticks += SCI_MIDI_TIME_EXPANSION_LENGHT;
+
+      ticks += tempticks;
+
       newcmd = song->data[song->pos];
 
       if (newcmd & 0x80) {

@@ -1,3 +1,11 @@
+2000-01-09  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/soundserver_dos.c (sound_dos_poll): Added support for the
+	MIDI delay escape sequence
+
+	* src/sound/soundserver_null.c (sound_null_server): Added support for
+	the 0xf8 MIDI delay escape sequence
+
 2000-01-04  Christoph Reichenbach  <jameson@Linuxgames.com>
 
 	* Included Rink's DOS port. Haven't checked it, though.

@@ -51,6 +51,10 @@
 #define SCI_MIDI_SET_SIGNAL_LOOP 0x7f
 /* If this is the parameter of 0xcf, the loop point is set here */
 
+#define SCI_MIDI_TIME_EXPANSION_PREFIX 0xf8
+#define SCI_MIDI_TIME_EXPANSION_LENGHT 240
+
+
 
 /* INTERNAL SOUND COMMANDS */
 #define SOUND_COMMAND_MAPPINGS 100
