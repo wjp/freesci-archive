@@ -1,59 +1,130 @@
 This file contains any messages produced by compilers while
 running configure, to aid debugging if configure makes a mistake.
 
-configure:577: checking for a BSD compatible install
-configure:630: checking whether build environment is sane
-configure:687: checking whether make sets ${MAKE}
-configure:733: checking for working aclocal
-configure:746: checking for working autoconf
-configure:759: checking for working automake
-configure:772: checking for working autoheader
-configure:785: checking for working makeinfo
-configure:802: checking for gcc
-configure:915: checking whether the C compiler (gcc  ) works
-configure:931: gcc -o conftest    conftest.c  1>&5
-configure:957: checking whether the C compiler (gcc  ) is a cross-compiler
-configure:962: checking whether we are using GNU C
-configure:971: gcc -E conftest.c
-configure:990: checking whether gcc accepts -g
-configure:1024: checking for ranlib
-configure:1052: checking how to run the C preprocessor
-configure:1073: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1135: checking for sys/soundcard.h
-configure:1145: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1175: checking for obstack.h
-configure:1185: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1215: checking for dirent.h
-configure:1225: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1255: checking for unistd.h
-configure:1265: gcc -E  conftest.c >/dev/null 2>conftest.out
-configure:1294: checking for pipe
-configure:1322: gcc -o conftest -g -O2   conftest.c  1>&5
-configure:1294: checking for socketpair
-configure:1322: gcc -o conftest -g -O2   conftest.c  1>&5
-configure:1294: checking for fork
-configure:1322: gcc -o conftest -g -O2   conftest.c  1>&5
-configure:1348: checking for ggi
-configure:1482: checking for glib-config
-configure:1517: checking for GLIB - version >= 1.2.0
-configure:1616: gcc -o conftest -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include   conftest.c -L/usr/local/lib -lglib  1>&5
-configure:1709: checking for libpng
-configure:1789: checking whether byte ordering is bigendian
-configure:1807: gcc -c -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include  conftest.c 1>&5
-configure:1822: gcc -c -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include  conftest.c 1>&5
-configure: In function `main':
-configure:1817: `not' undeclared (first use in this function)
-configure:1817: (Each undeclared identifier is reported only once
-configure:1817: for each function it appears in.)
-configure:1817: parse error before `big'
+configure:573: checking for a BSD compatible install
+configure:642: checking whether build environment is sane
+configure:689: checking for working aclocal
+configure:702: checking for working autoconf
+configure:715: checking for working automake
+configure:728: checking for working autoheader
+configure:741: checking for working makeinfo
+configure:754: checking whether make sets ${MAKE}
+configure:784: checking for gcc
+configure:861: checking whether the C compiler (gcc  ) works
+configure:875: gcc -o conftest    conftest.c  1>&5
+configure:895: checking whether the C compiler (gcc  ) is a cross-compiler
+configure:900: checking whether we are using GNU C
+configure:909: gcc -E conftest.c
+configure:924: checking whether gcc accepts -g
+configure:954: checking for ranlib
+configure:981: checking how to run the C preprocessor
+configure:1002: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1045: checking for sys/soundcard.h
+configure:1055: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1051: sys/soundcard.h: No such file or directory
 configure: failed program was:
-#line 1811 "configure"
+#line 1050 "configure"
+#include "confdefs.h"
+#include <sys/soundcard.h>
+configure:1085: checking for obstack.h
+configure:1095: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1091: obstack.h: No such file or directory
+configure: failed program was:
+#line 1090 "configure"
+#include "confdefs.h"
+#include <obstack.h>
+configure:1125: checking for dirent.h
+configure:1135: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1165: checking for unistd.h
+configure:1175: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1205: checking for readline/readline.h
+configure:1215: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1211: readline/readline.h: No such file or directory
+configure: failed program was:
+#line 1210 "configure"
+#include "confdefs.h"
+#include <readline/readline.h>
+configure:1245: checking for readline/history.h
+configure:1255: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1251: readline/history.h: No such file or directory
+configure: failed program was:
+#line 1250 "configure"
+#include "confdefs.h"
+#include <readline/history.h>
+configure:1285: checking for getopt.h
+configure:1295: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1291: getopt.h: No such file or directory
+configure: failed program was:
+#line 1290 "configure"
+#include "confdefs.h"
+#include <getopt.h>
+configure:1324: checking for pipe
+configure:1352: gcc -o conftest -g -O2   conftest.c  1>&5
+configure:1324: checking for socketpair
+configure:1352: gcc -o conftest -g -O2   conftest.c  1>&5
+Undefined			first referenced
+ symbol  			    in file
+socketpair                          /var/tmp/cca002bk1.o
+ld: fatal: Symbol referencing errors. No output written to conftest
+configure: failed program was:
+#line 1329 "configure"
+#include "confdefs.h"
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char socketpair(); below.  */
+#include <assert.h>
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char socketpair();
+
+int main() {
+
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined (__stub_socketpair) || defined (__stub___socketpair)
+choke me
+#else
+socketpair();
+#endif
+
+; return 0; }
+configure:1324: checking for fork
+configure:1352: gcc -o conftest -g -O2   conftest.c  1>&5
+configure:1378: checking for ggi
+configure:1512: checking for glib-config
+configure:1543: checking for GLIB - version >= 1.2.0
+configure:1642: gcc -o conftest -g -O2 -I/home/jameson//lib/glib/include -I/home/jameson//include   conftest.c -L/home/jameson//lib -lglib  1>&5
+configure:1735: checking for libpng
+configure:1815: checking whether byte ordering is bigendian
+configure:1833: gcc -c -g -O2 -I/home/jameson//lib/glib/include -I/home/jameson//include  conftest.c 1>&5
+configure: In function `main':
+configure:1828: `bogus' undeclared (first use in this function)
+configure:1828: (Each undeclared identifier is reported only once
+configure:1828: for each function it appears in.)
+configure:1828: parse error before `endian'
+configure: failed program was:
+#line 1822 "configure"
 #include "confdefs.h"
 #include <sys/types.h>
 #include <sys/param.h>
 int main() {
 
-#if BYTE_ORDER != BIG_ENDIAN
- not big endian
+#if !BYTE_ORDER || !BIG_ENDIAN || !LITTLE_ENDIAN
+ bogus endian macros
 #endif
 ; return 0; }
+configure:1881: gcc -o conftest -g -O2 -I/home/jameson//lib/glib/include -I/home/jameson//include   -L/home/jameson//lib -lglib conftest.c  1>&5
+configure: failed program was:
+#line 1868 "configure"
+#include "confdefs.h"
+main () {
+  /* Are we little or big endian?  From Harbison&Steele.  */
+  union
+  {
+    long l;
+    char c[sizeof (long)];
+  } u;
+  u.l = 1;
+  exit (u.c[sizeof (long) - 1] == 1);
+}

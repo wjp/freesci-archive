@@ -481,6 +481,7 @@ makeMIDI0(const guint8 *src, int *size)
 ** Returns 0 on failure.
 */
 {
+#ifdef HAVE_OBSTACK_H
   struct obstack stack; /* This is where we store the temp results */
   struct obstack *stackp = &stack;
   char muteflags[16]; /* Remembers unmapped instruments */
@@ -593,6 +594,11 @@ makeMIDI0(const guint8 *src, int *size)
   *((guint32 *)(result + tracklength_index)) = pos;
 
   return result;
+#else /* !HAVE_OBSTACK_H */
+
+  return NULL;
+#endif  /* !HAVE_OBSTACK_H */
+
 }
 
 #undef MAP_INSTRUMENT(channel, sci_instrument)

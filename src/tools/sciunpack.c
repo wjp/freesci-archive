@@ -35,9 +35,13 @@
 
 #include <resource.h>
 #include <graphics.h>
-#include <getopt.h>
 #include <sound.h>
 #include <console.h>
+
+#ifdef HAVE_GETOPT_H
+#include <getopt.h>
+#endif /* HAVE_GETOPT_H */
+
 #ifdef HAVE_LIBPNG
 #include <graphics_png.h>
 #endif /* HAVE_LIBPNG */
@@ -54,6 +58,7 @@ static int verbose = 0;
 static int with_header = 1;
 static int dissect = 0;
 
+#ifdef HAVE_GETOPT_H
 static struct option options[] = {
   {"no-conversion", no_argument, &conversion, 0},
   {"version", no_argument, 0, 256},
@@ -68,6 +73,7 @@ static struct option options[] = {
   {"palette-dither256", no_argument, &sci_color_mode, SCI_COLOR_DITHER256},
   {"dissect", no_argument, &dissect, 1},
   {0, 0, 0, 0}};
+#endif /* HAVE_GETOPT_H */
 
 
 void unpack_resource(int stype, int snr, char *outfilename);
@@ -86,7 +92,11 @@ int main(int argc, char** argv)
   int optindex = 0;
   int c;
 
+#ifdef HAVE_GETOPT_H
   while ((c = getopt_long(argc, argv, "vhlo:", options, &optindex)) > -1) {
+#else /* !HAVE_GETOPT_H */
+  while ((c = getopt(argc, argv, "vhlo:")) > -1) {
+#endif /* !HAVE_GETOPT_H */
       
       switch (c)
 	{

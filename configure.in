@@ -9,6 +9,9 @@ AC_CHECK_HEADERS(sys/soundcard.h)
 AC_CHECK_HEADERS(obstack.h)
 AC_CHECK_HEADERS(dirent.h)
 AC_CHECK_HEADERS(unistd.h)
+AC_CHECK_HEADERS(readline/readline.h)
+AC_CHECK_HEADERS(readline/history.h)
+AC_CHECK_HEADERS(getopt.h)
 AC_CHECK_FUNCS(pipe socketpair fork)
 AC_PATH_GGI
 AM_PATH_GLIB(1.2.0,[

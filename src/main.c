@@ -31,11 +31,20 @@
 #include <console.h>
 #include <graphics.h>
 #include <sci_conf.h>
-#include <getopt.h>
 #include <kdebug.h>
 #include <vm.h>
+
+#ifdef HAVE_READLINE_READLINE_H
 #include <readline/readline.h>
+#ifdef HAVE_READLINE_HISTORY_H
 #include <readline/history.h>
+#endif /* HAVE_READLINE_HISTORY_H */
+#endif /* HAVE_READLINE_READLINE_H */
+
+#ifdef HAVE_GETOPT_H
+#include <getopt.h>
+#endif /* HAVE_GETOPT_H */
+
 
 #ifdef _WIN32
 #include <direct.h>
@@ -71,6 +80,7 @@ c_die(state_t *s)
 
 char *old_input = NULL;
 
+#ifdef HAVE_READLINE_READLINE_H
 char *
 get_readline_input(void)
 {
@@ -78,7 +88,11 @@ get_readline_input(void)
   if (strlen(input) == 0) {
     free (input);
   } else {
+
+#ifdef HAVE_READLINE_HISTORY_H
     add_history(input);
+#endif /* HAVE_READLINE_HISTORY_H */
+
     if (old_input) {
       free(old_input);
     }
@@ -87,7 +101,30 @@ get_readline_input(void)
 
   return old_input? old_input : "";
 }
+#endif /* HAVE_READLINE_READLINE_H */
 
+
+char *
+get_gets_input(void)
+{
+  char input[1024];
+
+  puts("> ");
+  fgets(input, 1024, stdin);
+
+  if (strlen(input) == 0) {
+    return old_input? old_input : "";
+  }
+
+  if (old_input)
+    free(old_input);
+
+  old_input = malloc(1024);
+  strcpy(old_input, input);
+  return input;
+}
+
+#ifdef HAVE_GETOPT_H
 static struct option options[] = {
   {"gamedir", required_argument, 0, 'd'},
   {"run", no_argument, &script_debug_flag, 1 },
@@ -96,6 +133,7 @@ static struct option options[] = {
   {"help", no_argument, 0, 'h'},
   {0,0,0,0}
 };
+#endif /* HAVE_GETOPT_H */
 
 int
 main(int argc, char** argv)
@@ -110,7 +148,12 @@ main(int argc, char** argv)
 
 
   strcpy (gamedir, ".");
+
+#ifdef HAVE_GETOPT_H
   while ((c = getopt_long(argc, argv, "rd:v:", options, &optindex)) > -1)
+#else /* !HAVE_GETOPT_H */
+  while ((c = getopt(argc, argv, "rd:v:")) > -1)
+#endif /* !HAVE_GETOPT_H */
   {
     switch (c)
     {
@@ -191,9 +234,15 @@ main(int argc, char** argv)
   con_visible_rows = 1; /* Fool the functions into believing that we *have* a display */
   sciprintf("FreeSCI, version "VERSION"\n");
 
+#ifdef HAVE_READLINE_HISTORY_H
   using_history(); /* Activate history for readline */
+#endif /* HAVE_READLINE_HISTORY_H */
 
+#ifdef HAVE_READLINE_READLINE_H
   _debug_get_input = get_readline_input; /* Use readline for debugging input */
+#else /* !HAVE_READLINE_READLINE_H */
+  _debug_get_input = get_gets_input; /* Use gets for debug input */
+#endif /* !HAVE_READLINE_READLINE_H */
 
 
   if (script_init_state(&gamestate, cmd_version)) { /* Initialize game state */

@@ -31,8 +31,13 @@
 #include <sound.h>
 #include <uinput.h>
 #include <console.h>
+
+#ifdef HAVE_READLINE_READLINE_H
 #include <readline/readline.h>
+#ifdef HAVE_READLINE_HISTORY_H
 #include <readline/history.h>
+#endif /* HAVE_READLINE_HISTORY_H */
+#endif /* HAVE_READLINE_READLINE_H */
 
 static int quit = 0;
 int sci_color_mode = 0; /* Required for linking */
@@ -79,16 +84,25 @@ main(int argc, char** argv)
   con_visible_rows = 1; /* Fool the functions into believing that we *have* a display */
   sciprintf("FreeSCI, version "VERSION"\n");
 
+#ifdef HAVE_READLINE_HISTORY_H
   using_history();
+#endif /* HAVE_READLINE_HISTORY_H */
 
   while (!quit) {
     char *command;
     int oldlength;
 
+#ifdef HAVE_READLINE_READLINE_H
     command = readline("$ ");
+#else /* !HAVE_READLINE_READLINE_H */
+    command = malloc(1024);
+    fgets(command, 1023, stdin);
+#endif /* !HAVE_READLINE_READLINE_H */
 
+#ifdef HAVE_READLINE_HISTORY_H
     if (strlen(command))
       add_history(command);
+#endif /* HAVE_READLINE_HISTORY_H */
 
     cmdParse(NULL, command);
 

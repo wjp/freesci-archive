@@ -70,7 +70,7 @@ int resourcecmp(const void *first, const void *second);
 gint16
 getInt16(unsigned char* address)
 {
-  return (gint16)((((guint16)address[1]) << 8) | (address[0]))
+  return (gint16)((((guint16)address[1]) << 8) | (address[0]));
 }
 #endif WORDS_BIGENDIAN
 
