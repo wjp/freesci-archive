@@ -19,7 +19,7 @@
 #define SIZEOF_INT 4
 
 /* The number of bytes in a long.  */
-#define SIZEOF_LONG 8
+#define SIZEOF_LONG 4
 
 /* The number of bytes in a short.  */
 #define SIZEOF_SHORT 2

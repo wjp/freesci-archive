@@ -155,8 +155,8 @@ gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
 {
 	int est_char_width = font->widths[(font->chars_nr > 'M')? 'M' : font->chars_nr - 1];
 	/* 'M' is typically among the widest chars */
-	int fragments_nr = 2 + (strlen(text) * est_char_width)*3 / (max_width << 1);
-	text_fragment_t *fragments = calloc(sizeof(text_fragment_t), fragments_nr);
+	int fragments_nr;
+	text_fragment_t *fragments;
 	int lineheight = font->line_height;
 	int maxheight = lineheight;
 	int last_breakpoint = 0;
@@ -166,6 +166,12 @@ gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
 	int current_fragment = 1;
 	char *breakpoint_ptr = NULL;
 	unsigned char foo;
+
+
+	if (max_width>1) fragments_nr = 2 + (strlen(text) * est_char_width)*3 / (max_width << 1); else fragments_nr = 1;
+
+	fragments = calloc(sizeof(text_fragment_t), fragments_nr);
+
 
 	fragments[0].offset = text;
 

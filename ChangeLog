@@ -1,3 +1,8 @@
+2001-01-18  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/gfx/font.c (gfxr_font_calculate_size): Made font renderer 
+	  accept NULL strings.
+
 2001-01-16  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/engine/ksound.h: Implemented _K_SOUND_VOLUME
