@@ -391,7 +391,7 @@ kDoAvoider(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		}
 		/* No looper? Fall back to DirLoop */
 
-		_k_dirloop(client, (unsigned short)angle, s, funct_nr, argc, argp);
+		_k_dirloop(client, (word)angle, s, funct_nr, argc, argp);
 	}
 }
 

@@ -1,3 +1,11 @@
+2002-01-04  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/resource.h (BREAKPOINT): Changed 'call_pal PAL_bpt' on Alpha
+	to 'call_pal 0x80.
+
+	* src/engine/kgraphics.c
+	* src/engine/kmovement.c: Fixed some typecasts
+
 2002-01-04  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/event_ss.c:
