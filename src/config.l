@@ -336,11 +336,12 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 }
 
 
-[[:alnum:]]+"."[[:alnum:]]+"."[[:alnum:]_]+[[:blank:]]*"="[[:blank:]]*{NUMPATHPARAMTOKEN} {
+[[:alnum:]]+"."[[:alnum:]]+"."[[:alnum:]_]+[[:blank:]]*"="[[:blank:]]*{NUMPATHPARAMTOKEN}[[:blank:]]* {
 /* driver parameters */
         char *subsys_name = yytext;
         char *driver_name;
 	char *option, *value;
+	char *foo;
 	char *p2;
 
         yytext = strchr(yytext, '.');
@@ -367,15 +368,15 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 	while (p2 > value && isspace (*p2))
                 *p2-- = 0;
 
-	
 	set_config_parameter(conf + cur_section, subsys_name, driver_name, option, value);
 
 }
 
 
-{PARAMTOKEN}[[:blank:]]*"="[[:blank:]]*{NUMPARAMTOKEN} { /* Normal config option */
+{PARAMTOKEN}[[:blank:]]*"="[[:blank:]]*{NUMPARAMTOKEN}[[:blank:]]* { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
+	char *foo;
 	int option_str_len;
 
 	while (isalnum(*value_str) || *value_str == '_')
@@ -385,6 +386,11 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 
 	while (!(isalnum(*value_str) || *value_str == '_'))
 		++value_str;
+
+	foo = value_str + 1;
+	while (*foo && !isblank(*foo))
+		++foo;
+	*foo = 0;
 
 	parse_option(option_str, option_str_len, value_str);
 }
@@ -434,6 +440,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_options.pic_xlate_filter = GFX_XLATE_FILTER_NONE;
 	conf->gfx_options.text_xlate_filter = GFX_XLATE_FILTER_NONE;
 	conf->gfx_options.dirty_frames = GFXOP_DIRTY_FRAMES_CLUSTERS;
+	conf->gfx_options.pic0_antialiasing = GFXR_ANTIALIASING_NONE;
 
 	conf->gfx_driver = gfx_find_driver(NULL);
         conf->midiout_driver = midiout_find_driver(NULL);

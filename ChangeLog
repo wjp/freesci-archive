@@ -1,3 +1,9 @@
+2001-04-24  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/cfsml.pl: Fixed heap corruption caused by staic references
+	to string pointers containing strings just read being freed instead
+	of the string pointers themselves
+
 2001-04-23  Solomon Peachy <pizza@shaftnet.org>
 	* src/sound/soundserver.c, src/sound/soundserver_unix.c,
 	  src/sound/soundserver_sdl.c:  Changed exit semantics so that
@@ -5,6 +11,10 @@
           the threaded server can exit cleanly.
 
 2001-04-23  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/resource.c: Optionalized resource files
+
+	* src/config.l (config_init): Default value for anti-aliasing
 
 	* src/gfx/resource/sci_pic_0.c (gfxr_remove_artifacts_pic0): 
 	Removing artifacts is now slightly more permissive

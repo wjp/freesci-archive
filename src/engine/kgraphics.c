@@ -1303,7 +1303,7 @@ get_nsrect(state_t *s, heap_ptr object, byte clip)
 
 	xbase = x - xmod - (xsize >> 1);
 	xend = xbase + xsize;
-	yend = y - ymod + 1; /* +1: Magic modifier */
+	yend = y - ymod + 1; /* +1: magic modifier */
 	ybase = yend - ysize;
 
 	retval.x = xbase;
@@ -1820,7 +1820,7 @@ _k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int nr, int funct_nr,
 	pos.x = GET_SELECTOR(obj, x);
 	pos.y = GET_SELECTOR(obj, y);
 
-	pos.y++; /* Sierra appears to do something like this */
+	pos.y++; /* magic: Sierra appears to do something like this */
 
 	z = GET_SELECTOR(obj, z);
 
@@ -2190,7 +2190,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		priority = PARAM(5);
 		control = PARAM(6);
 		
-		widget = GFXW(gfxw_new_dyn_view(s->gfx_state, gfx_point(x,y), 0, view, loop, cel,
+		widget = GFXW(gfxw_new_dyn_view(s->gfx_state, gfx_point(x,y+1 /* magic +1 */ ), 0, view, loop, cel,
 						priority, control, ALIGN_CENTER, ALIGN_BOTTOM, 0));
 		/*		draw_to_control_map(s, (gfxw_dyn_view_t *) widget, 1, funct_nr, argc, argp); */
 

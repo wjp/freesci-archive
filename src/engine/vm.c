@@ -1611,7 +1611,7 @@ game_restore(state_t **_s, char *game_name)
 	s = gamestate_restore(*_s, game_name);
 
 	if (!s) {
-		sciprintf("Restoring gamestate '%s' failed.\n", cmd_params[0].str);
+		sciprintf("Restoring gamestate '%s' failed.\n", game_name);
 		return 1;
 	}
 	_debugstate_valid = debug_state;

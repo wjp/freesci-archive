@@ -37,7 +37,7 @@
 
 static void FUNCTION_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per_src_line,
 			  int xl, int yl, byte *alpha, int bytes_per_alpha_line, int bytes_per_alpha_pixel,
-			  int alpha_test_mask, int alpha_min
+			  unsigned int alpha_test_mask, unsigned int alpha_min
 #ifdef USE_PRIORITY
 			  , byte *priority_buffer, int bytes_per_priority_line, int bytes_per_priority_pixel, int priority
 #endif /* USE_PRIORITY */
@@ -46,7 +46,6 @@ static void FUNCTION_NAME(byte *dest, byte *src, int bytes_per_dest_line, int by
 	int x, y;
 	int alpha_end = xl * bytes_per_alpha_pixel;
 
-byte *_dest = dest;
 
 	for (y = 0; y < yl; y++) {
 		int pixel_offset = 0;

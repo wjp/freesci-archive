@@ -53,6 +53,41 @@ sub create_string_functions
 
 #include <stdarg.h> /* We need va_lists */
 
+#ifdef CFSML_DEBUG_MALLOC
+static void
+_free(char *fln, char *fn, int lin, void *var)
+{
+    fprintf(stderr, "%s, %s, %d: Free %p\n", fln, fn, lin, var);
+    free(var);
+}
+static void *
+_malloc(char *fln, char *fn, int lin, int var)
+{
+    void *x = malloc(var);
+    fprintf(stderr, "%s, %s, %d: Malloc(%d)-> %p\n", fln, fn, lin, var, x);
+    return x;
+}
+static void*
+_calloc(char *fln, char *fn, int lin, int var)
+{
+    void *x = calloc(var, 1);
+    fprintf(stderr, "%s, %s, %d: Calloc(%d)-> %p\n", fln, fn, lin, var, x);
+    return x;
+}
+static void*
+_realloc(char *fln, char *fn, int lin, void *var, size_t si)
+{
+    void *x = realloc(var, si);
+    fprintf(stderr, "%s, %s, %d: Realloc(%d) %p->%p\n", fln, fn, lin, var, x);
+    return x;
+}
+
+#define free(var) _free(__FILE__, __FUNCTION__, __LINE__, var)
+#define malloc(var) _malloc(__FILE__, __FUNCTION__, __LINE__, var)
+#define calloc(var,z) _calloc(__FILE__, __FUNCTION__, __LINE__, var*z)
+#define realloc(var, si) _realloc(__FILE__, __FUNCTION__, __LINE__, var, si)
+#endif
+
 static void
 _cfsml_error(char *fmt, ...)
 {
@@ -81,13 +116,28 @@ _cfsml_free_pointer_references_recursively(struct _cfsml_pointer_refstruct *refs
 {
     if (!refs)
 	return;
+    #ifdef CFSML_DEBUG_MALLOC
+    SCI_MEMTEST;
+    #endif
 
     _cfsml_free_pointer_references_recursively(refs->next, free_pointers);
+    #ifdef CFSML_DEBUG_MALLOC
+    SCI_MEMTEST;
+
+    fprintf(stderr,"Freeing ptrref %p [%p] %s\n", refs->ptr, refs, free_pointers?
+	    "ALL": "cleanup only");
+    #endif
 
     if (free_pointers)
 	free(refs->ptr);
 
+    #ifdef CFSML_DEBUG_MALLOC
+    SCI_MEMTEST;
+    #endif
     free(refs);
+    #ifdef CFSML_DEBUG_MALLOC
+    SCI_MEMTEST;
+    #endif
 }
 
 static void
@@ -107,7 +157,10 @@ _cfsml_get_current_refpointer()
 static void _cfsml_register_pointer(void *ptr)
 {
     struct _cfsml_pointer_refstruct *newref = malloc(sizeof (struct _cfsml_pointer_refstruct));
-
+    #ifdef CFSML_DEBUG_MALLOC
+    SCI_MEMTEST;
+    fprintf(stderr,"Registering ptrref %p [%p]\n", ptr, newref);
+    #endif
     newref->next = *_cfsml_pointer_references_current;
     newref->ptr = ptr;
     *_cfsml_pointer_references_current = newref;
@@ -500,7 +553,7 @@ sub create_reader
       print "      lastval++; /* ...and skip the opening quotes locally */\n";
       print "    }\n";
       print "    *foo = _cfsml_unmangle_string(lastval);\n";
-      print "    _cfsml_register_pointer(foo);\n";
+      print "    _cfsml_register_pointer(*foo);\n";
       print "    return CFSML_SUCCESS;\n";
       print "  } else {\n";
       print "    *foo = NULL;\n";

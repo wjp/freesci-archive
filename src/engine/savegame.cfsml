@@ -487,11 +487,11 @@ read_hunk_block(FILE *fh, hunk_block_t *foo, char *lastval, int *line, int *hite
 	if (lastval[0] == HUNK_TYPE_GFX_SNAPSHOT_STRING[0]) { /* Graphical buffer */
 		gfxw_snapshot_t zot;
 		foo->type = HUNK_TYPE_GFXBUFFER;
-		foo->data = xalloc(42 + sizeof (gfxw_snapshot_t));
+		foo->data = xalloc(sizeof (gfxw_snapshot_t));
 
 		%CFSMLREAD gfxw_snapshot_t &zot FROM fh ERRVAR *hiteof LINECOUNTER *line
 
-		return 1;
+		return 0;
 
 	} else { /* Normal hunk */
 
@@ -979,13 +979,14 @@ gamestate_save(state_t *s, char *dirname)
 	sci_dir_t dir;
 	char *filename;
 	int fd;
-
+SCI_MEMTEST;
 	_global_save_state = s;
 	s->savegame_version = FREESCI_SAVEGAME_VERSION;
 	s->dyn_views_list_serial = (s->dyn_views)? s->dyn_views->serial : -2;
 	s->drop_views_list_serial = (s->drop_views)? s->drop_views->serial : -2;
 	s->port_serial = (s->port)? s->port->serial : -2;
 
+SCI_MEMTEST;
 	if (s->execution_stack_base) {
 		sciprintf("Cannot save from below kernel function\n");
 		return 1;
@@ -1020,7 +1021,9 @@ gamestate_save(state_t *s, char *dirname)
 	/* Calculate the time spent with this game */
 	s->game_time = time(NULL) - s->game_start_time.tv_sec;
 
+SCI_MEMTEST;
 	%CFSMLWRITE state_t s INTO fh;
+SCI_MEMTEST;
 
 	fclose(fh);
 

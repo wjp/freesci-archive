@@ -209,7 +209,7 @@ gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,
 	byte *src = pxm->data;
 	byte *alpha = pxm->alpha_map? pxm->alpha_map : pxm->data;
 	byte *priority_pos = priority_dest;
-	int alpha_mask, alpha_min;
+	unsigned int alpha_mask, alpha_min;
 	int bpp = mode->bytespp;
 	int bytes_per_alpha_pixel = pxm->alpha_map? 1 : bpp;
 	int bytes_per_alpha_line =  bytes_per_alpha_pixel * pxm->xl;

@@ -42,6 +42,7 @@
 /* Not defined on most systems */
 #endif
 
+#undef SCI_REQUIRE_RESOURCE_FILES
 
 
 const char* SCI_Version_Types[] = {
@@ -242,9 +243,11 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 #endif
 	} while ((resourceFile > 0) || (resourceFileCounter == 1));
 
+#ifndef SCI_REQUIRE_RESOURCE_FILES
 	if (!found_resfiles) {
 		return SCI_ERROR_NO_RESOURCE_FILES_FOUND;
 	}
+#endif
 
 #ifdef _SCI_RESOURCE_DEBUG
 	fprintf(stderr,"%i unique resources have been read.\n", max_resource);
@@ -256,8 +259,14 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
 			printf("One patch was applied.\n");
 		else if (pcount)
 			printf("%d patches were applied.\n", pcount);
-		else printf("No patches found.\n");
-	}
+		else {
+			printf("No patches found.\n");
+			if (!found_resfiles)
+				return SCI_ERROR_NO_RESOURCE_FILES_FOUND;
+		}
+	} else if (!found_resfiles)
+		return SCI_ERROR_NO_RESOURCE_FILES_FOUND;
+
 	else printf("Ignoring any patches.\n");
 
 	resource_map = malloc(max_resource * sizeof(resource_t));

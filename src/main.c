@@ -751,6 +751,15 @@ main(int argc, char** argv)
 	sci_version_t version = 0;
 	gfx_driver_t *gfx_driver = NULL;
 	sound_server_t *sound_server = NULL;
+	/*
+	state_t *s = malloc(sizeof (state_t));
+	chdir("/home/jameson/.freesci/CB1");
+	s = gamestate_restore(s, "xx");
+	if (!s) {
+		fprintf(stderr,"Nope.");
+	}
+	exit(0);
+	*/
 
 	game_name = parse_arguments(argc, argv, &cl_options, &savegame_name);
 

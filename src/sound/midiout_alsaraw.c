@@ -75,7 +75,7 @@ int midiout_alsaraw_open()
 		handle = NULL;
 		return -1;
 	}
-	fprintf(stderr,"DONE\n");
+
 	return 0;
 }
 #else
