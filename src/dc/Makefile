@@ -95,7 +95,7 @@ all: $(BIN_TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-KOS_LOCAL_CFLAGS := -I. -I$(FSCI_BASE)/src/include -I$(FSCI_BASE)/src/dc \
+KOS_LOCAL_CFLAGS := -I$(FSCI_BASE)/src/include -I$(FSCI_BASE)/src/dc \
 	-I$(FSCI_BASE)/src/include/beos -D_DREAMCAST -DHAVE_CONFIG_H \
 	-DWANT_CONSOLE -DYY_NEVER_INTERACTIVE
 
