@@ -72,6 +72,7 @@ get_class_address(state_t *s, int classnr)
   if (!s->classtable[classnr].scriptposp) {
     sciprintf("Attempt to dereference class %x, which doesn't exist\n", classnr);
     script_error_flag = script_debug_flag = 1;
+    return 0;
   } else {
     heap_ptr scriptpos = *(s->classtable[classnr].scriptposp);
 
@@ -168,7 +169,8 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
 
   return 
     add_exec_stack_entry(s, scriptpos + GET_HEAP(tableaddress + (pubfunct * 2)) - magic_ofs, sp, 
-			 calling_obj, argc, argp, -1, calling_obj, s->execution_stack_pos);
+			 calling_obj, argc, argp, -1, calling_obj, s->execution_stack_pos,
+			 s->scripttable[script].localvar_offset);
 }
 
 
@@ -319,7 +321,7 @@ sciprintf(")\n");
       retval =
 	add_exec_stack_entry(s, send_calls[send_calls_nr].address, sp, work_obj,
 			     send_calls[send_calls_nr].argc, send_calls[send_calls_nr].argp,
-			     send_calls[send_calls_nr].selector, send_obj, origin);
+			     send_calls[send_calls_nr].selector, send_obj, origin, 0);
 
 
   /* Now check the TOS to execute all varselector entries */
@@ -347,7 +349,7 @@ add_exec_stack_varselector(state_t *s, heap_ptr objp, int argc, heap_ptr argp, i
 			   heap_ptr address, int origin)
 {
   exec_stack_t *xstack = add_exec_stack_entry(s, address, 0, objp, argc, argp, selector,
-					      objp, origin);
+					      objp, origin, 0);
   /* Store selector address in pc */
 
   xstack->type = EXEC_STACK_TYPE_VARSELECTOR;
@@ -358,7 +360,7 @@ add_exec_stack_varselector(state_t *s, heap_ptr objp, int argc, heap_ptr argp, i
 
 exec_stack_t *
 add_exec_stack_entry(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr argp, 
-		     int selector, heap_ptr sendp, int origin)
+		     int selector, heap_ptr sendp, int origin, int localvarp)
 /* Returns new TOS element */
 {
   exec_stack_t *xstack;
@@ -371,7 +373,7 @@ add_exec_stack_entry(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int ar
 				   sizeof(exec_stack_t) * (s->execution_stack_size += 8));
 
   /*  sciprintf("Exec stack: [%d/%d], origin %d, at %p\n", s->execution_stack_pos,
-      s->execution_stack_size, origin, s->execution_stack); /* */
+      s->execution_stack_size, origin, s->execution_stack); */
 
   xstack = s->execution_stack + s->execution_stack_pos;
 
@@ -383,11 +385,14 @@ add_exec_stack_entry(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int ar
 
   xstack->variables[VAR_GLOBAL] = s->global_vars; /* Global variables */
 
-  if (objp) {
-    xstack->variables[VAR_LOCAL] = /* Local variables */
-      getUInt16(s->heap + objp + SCRIPT_LOCALVARPTR_OFFSET);
+  if (localvarp) {
+    xstack->variables[VAR_LOCAL] = localvarp;
   } else
-    xstack->variables[VAR_LOCAL] = 0; /* No object => no local variables */
+    if (objp) {
+      xstack->variables[VAR_LOCAL] = /* Local variables */
+	getUInt16(s->heap + objp + SCRIPT_LOCALVARPTR_OFFSET);
+    } else
+      xstack->variables[VAR_LOCAL] = 0; /* No object => no local variables */
 
   xstack->variables[VAR_TEMP] = sp; /* Temp variables */
   xstack->variables[VAR_PARAM] = argp; /* Parameters */
@@ -407,14 +412,13 @@ add_exec_stack_entry(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int ar
 void
 run_vm(state_t *s, int restoring)
 {
-  gint16 temp, temp2, temp3;
-  guint16 utemp, utemp2, utemp3;
+  gint16 temp, temp2;
+  guint16 utemp, utemp2;
   gint16 opparams[4]; /* opcode parameters */
 
   
   int restadjust = s->amp_rest; /* &rest adjusts the parameter count by this value */
   /* Current execution data: */
-  int exec_stack_pos_temp; /* Used inside send-like commands */
   exec_stack_t *xs = s->execution_stack + s->execution_stack_pos;
   exec_stack_t *xs_new; /* Used during some operations */
   
@@ -651,7 +655,7 @@ run_vm(state_t *s, int restoring)
 
       xs_new = add_exec_stack_entry(s, xs->pc + opparams[0], temp2, xs->objp,
 				    GET_HEAP(xs->sp) + restadjust,
-				    xs->sp, -1, xs->objp, s->execution_stack_pos);
+				    xs->sp, -1, xs->objp, s->execution_stack_pos, 0);
       restadjust = 0; /* Used up the &rest adjustment */
 
       xs = xs_new;
@@ -713,13 +717,14 @@ run_vm(state_t *s, int restoring)
 	  return; /* Hard return */
 	}
 
-	if (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR)
+	if (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR) {
 	  /* varselector access? */
 	  if (s->execution_stack[s->execution_stack_pos].argc) { /* write? */
 	    word temp = GET_HEAP(s->execution_stack[s->execution_stack_pos].variables[VAR_PARAM] + 2);
 	    PUT_HEAP(s->execution_stack[s->execution_stack_pos].pc, temp);
 	  } else /* No, read */
 	    s->acc = GET_HEAP(s->execution_stack[s->execution_stack_pos].pc);
+	}
 
 	/* No we haven't, so let's do a soft return */
 	--(s->execution_stack_pos);
@@ -1106,7 +1111,6 @@ _lookup_selector_functions(state_t *s, heap_ptr obj, int selectorid, heap_ptr *a
 int
 lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
 {
-  heap_ptr pc = 0;
   int species = OBJ_SPECIES(obj);
   int heappos = CLASS_ADDRESS(species);
   int varselector_nr = GET_HEAP(heappos + SCRIPT_SELECTORCTR_OFFSET);
@@ -1133,12 +1137,11 @@ lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
 /* Detects early SCI versions by their different script header */
 void script_detect_early_versions(state_t *s)
 {
-  int old_version = 0;
   int c;
   resource_t *script;
 
   for (c = 0; c < 1000; c++) {
-    if (script = findResource(sci_script, c)) {
+    if ((script = findResource(sci_script, c))) {
 
       int id = getInt16(script->data);
 
@@ -1248,7 +1251,6 @@ script_instantiate(state_t *s, int script_nr, int recursive)
       heap_ptr functarea;
       int functions_nr;
       int superclass;
-      heap_ptr name_addr;
 
       pos -= SCRIPT_OBJECT_MAGIC_OFFSET; /* Get into home position */
 
@@ -1307,8 +1309,10 @@ void
 script_uninstantiate(state_t *s, int script_nr)
 {
   heap_ptr handle = s->scripttable[script_nr].heappos;
+#if 0
   heap_ptr pos;
   int objtype, objlength;
+#endif
 
   if (!handle) {
     /*    sciprintf("Warning: unloading script 0x%x requested although not loaded\n", script_nr); */

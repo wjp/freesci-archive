@@ -1,3 +1,8 @@
+2000-05-20  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/vm.c (execute_method): The local variable block is now
+	set to the remote script when using calle
+
 2000-05-19  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/scicore/vocab.c (vocab_get_suffices): Fixed suffix vocabulary

@@ -93,7 +93,7 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int
 
   /* Write "kernel" call to the stack, for debugging: */
   xstack = 
-    add_exec_stack_entry(s, 0, 0, 0, k_argc, k_argp - 2, 0, 0, s->execution_stack_pos);
+    add_exec_stack_entry(s, 0, 0, 0, k_argc, k_argp - 2, 0, 0, s->execution_stack_pos, 0);
   xstack->selector = -42 - kfunct; /* Evil debugging hack to identify kernel function */
   xstack->type = EXEC_STACK_TYPE_KERNEL;
 

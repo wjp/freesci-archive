@@ -277,7 +277,7 @@ send_selector(struct _state *s, heap_ptr send_obj, heap_ptr work_obj,
 
 exec_stack_t *
 add_exec_stack_entry(struct _state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc,
-		     heap_ptr argp, int selector, heap_ptr sendp, int origin);
+		     heap_ptr argp, int selector, heap_ptr sendp, int origin, int localvarp);
 /* Adds an entry to the top of the execution stack
 ** Parameters: (state_t *) s: The state with which to execute
 **             (heap_ptr) pc: The initial program counter
@@ -290,6 +290,8 @@ add_exec_stack_entry(struct _state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, 
 **                               Equal to objp for anything but super.
 **             (int) origin: Number of the execution stack element this entry was created by
 **                           (usually the current TOS number, except for multiple sends).
+**             (int) localvarp: Pointer to the local variable block, or 0 to use the object's
+**                              local var block
 ** Returns   : (exec_stack_t *): A pointer to the new exec stack TOS entry
 */
 
