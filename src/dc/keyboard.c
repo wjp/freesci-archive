@@ -1,6 +1,6 @@
 /***************************************************************************
  keyboard.c Copyright (C) 2004 Walter van Niftrik
-                          2004 A. Schiffler
+                          2004 Ismail Khatib
 
 
  This program may be modified and copied freely according to the terms of

@@ -40,6 +40,8 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/gfx/drivers/gfx_drivers.o \
 	$(FSCI_BASE)/src/gfx/drivers/null_driver.o \
 	$(FSCI_BASE)/src/gfx/font.o \
+	$(FSCI_BASE)/src/gfx/font-5x8.o \
+	$(FSCI_BASE)/src/gfx/font-6x10.o \
 	$(FSCI_BASE)/src/gfx/gfx_console.o \
 	$(FSCI_BASE)/src/gfx/gfx_resource.o \
 	$(FSCI_BASE)/src/gfx/gfx_support.o \
@@ -58,6 +60,9 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/gfx/sci_widgets.o \
 	$(FSCI_BASE)/src/gfx/widgets.o \
 	$(FSCI_BASE)/src/main.o \
+	$(FSCI_BASE)/src/menu/game_select.o \
+	$(FSCI_BASE)/src/menu/game_select_init.o \
+	$(FSCI_BASE)/src/menu/game_select_screen.o \
 	$(FSCI_BASE)/src/scicore/console.o \
 	$(FSCI_BASE)/src/scicore/decompress0.o \
 	$(FSCI_BASE)/src/scicore/decompress01.o \

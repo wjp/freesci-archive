@@ -1,3 +1,9 @@
+2004-07-06  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/Makefile: Updated for recently added menu files.
+
+	* src/dc/keyboard.c: Fixed copyright message.
+
 2004-07-05  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/wince: Added Ismail's PocketPC patch
