@@ -214,13 +214,18 @@ menubar_add_menu(gfx_state_t *state, menubar_t *menubar, char *title, char *entr
 			}
 			if ((tracker == 0 && string_len > 0) || (tracker == '=') || (tracker == ':')) { /* End of entry */
 				int entrytype = MENU_TYPE_NORMAL;
+				char *inleft;
 
 				if (!left)
 					left = malloc_ncpy(entries - string_len - 1, string_len);
 
-				if (!strncmp(left, MENU_HBAR_STRING_1, strlen(MENU_HBAR_STRING_1))
-				    || !strncmp(left, MENU_HBAR_STRING_2, strlen(MENU_HBAR_STRING_2))
-				    || !strncmp(left, MENU_HBAR_STRING_3, strlen(MENU_HBAR_STRING_3)))
+				inleft = left;
+				while (isspace(*inleft))
+					inleft++; /* Seek beginning of actual string */
+
+				if (!strncmp(inleft, MENU_HBAR_STRING_1, strlen(MENU_HBAR_STRING_1))
+				    || !strncmp(inleft, MENU_HBAR_STRING_2, strlen(MENU_HBAR_STRING_2))
+				    || !strncmp(inleft, MENU_HBAR_STRING_3, strlen(MENU_HBAR_STRING_3)))
 					{
 						entrytype = MENU_TYPE_HBAR; /* Horizontal bar */
 						free(left);

@@ -1,3 +1,8 @@
+2001-02-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/menubar.c (menubar_add_menu): Search for beginning
+	of description string before checking for hbar
+
 2001-02-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/soundserver_null.c (sound_null_server): No longer
