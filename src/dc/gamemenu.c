@@ -683,16 +683,34 @@ int dc_write_config_file(char *fn) {
 		if (options_nr[2])
 			fprintf(cfile, "pic_antialiasing = simple\n");
 
-		if (options_nr[3] == 2) {
+		switch (options_nr[3]) {
+		case 0:
+			fprintf(cfile, "midi_device = adlibemu\n");
+			fprintf(cfile, "pcmout_driver = dc\n");
+			fprintf(cfile, "midiout_driver = null\n");
+			break;
+		case 1:
+			fprintf(cfile, "midi_device = mt32gm\n");
+			fprintf(cfile, "pcmout_driver = null\n");
+			fprintf(cfile, "midiout_driver = dcraw\n");
+			break;
+		case 2:
+			fprintf(cfile, "midi_device = mt32\n");
+			fprintf(cfile, "pcmout_driver = null\n");
+			fprintf(cfile, "midiout_driver = dcraw\n");
+			break;
+		case 3:
 			fprintf(cfile, "midi_device = null\n");
 			fprintf(cfile, "pcmout_driver = null\n");
-		} else
-			fprintf(cfile, "midi_device = adlibemu\n");
+			fprintf(cfile, "midiout_driver = null\n");
+		}
 
-		if (!options_nr[3])
+		if (options_nr[4])
+			fprintf(cfile, "pcmout_stereo = 1\n");
+		else
 			fprintf(cfile, "pcmout_stereo = 0\n");
 
-		switch (options_nr[4]) {
+		switch (options_nr[5]) {
 		case 0:
 			fprintf(cfile, "pcmout_rate = 16000\n");
 			fprintf(cfile, "pcmout_buffer_size = 192\n");

@@ -36,15 +36,16 @@ struct dc_option_t {
 /* 0 = stable, 1 = glutton */
 #define DC_OPTIONS_TAG_MAJOR 0
 /* Increase after every modification to the dc_options struct. */
-#define DC_OPTIONS_TAG_MINOR 0
-#define NUM_DC_OPTIONS 5
+#define DC_OPTIONS_TAG_MINOR 1
+#define NUM_DC_OPTIONS 6
 
 struct dc_option_t dc_options[NUM_DC_OPTIONS] = {
 /* 0 */		{ "Video Mode", "Letterboxed\0Full-Screen\0" },
 /* 1 */		{ "Dithering", "256 Color Dithering\0Interpolate\00016 Color Dithering\0" },
 /* 2 */		{ "Antialiasing", "Off\0On\0" },
-/* 3 */		{ "Sound Mode", "Mono\0Stereo\0Off\0" },
-/* 4 */		{ "Sound Quality", "16000Hz\00022050Hz\00011025Hz\0" },
+/* 3 */		{ "Music Mode", "Adlib Emulation\0External General MIDI\0External MT-32\0Off\0" },
+/* 4 */		{ "PCM Mode", "Mono\0Stereo\0" },
+/* 5 */		{ "PCM Quality", "16000Hz\00022050Hz\00011025Hz\0" },
 };
 
 #endif  /* __OPTIONS_H */

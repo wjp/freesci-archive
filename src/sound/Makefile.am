@@ -1,7 +1,8 @@
 INCLUDES = -I$(top_srcdir)/src/include
 AM_CFLAGS = $(SDL_CFLAGS)
 LDADD = -lc @ac_pthread_libraries@
-EXTRA_DIST = sfx_save.cfsml soundserver_dos.c polled_ss_dc.c pcmout_dc.c
+EXTRA_DIST = sfx_save.cfsml soundserver_dos.c polled_ss_dc.c            \
+		pcmout_dc.c midiout_dcraw.c
 noinst_LIBRARIES = libscisound.a
 libscisound_a_SOURCES = song_iterator.c oldmidi.c sound.c sfx_save.c	\
 		midi_mt32.c midiout.c midiout_unixraw.c 		\

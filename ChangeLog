@@ -1,3 +1,10 @@
+2004-07-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sound/midiout_dcraw.c: Added to repository.
+	* src/dc/Makefile, src/include/midiout.h, src/sound/Makefile.am,
+	src/sound/midiout.c: Added Dreamcast raw midi output driver.
+	* src/dc/gamemenu.c, src/dc/options.h: Added midi options.
+
 2004-07-02  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/keyboard.c, src/dc/keyboard.h,

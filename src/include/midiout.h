@@ -75,6 +75,10 @@ extern midiout_driver_t midiout_driver_sgimd;
 extern midiout_driver_t midiout_driver_fluidsynth;
 #endif
 
+#ifdef _DREAMCAST
+extern midiout_driver_t midiout_driver_dcraw;
+#endif
+
 extern DLLEXTERN midiout_driver_t *midiout_drivers[];
 
 int midiout_open();

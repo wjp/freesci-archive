@@ -80,6 +80,7 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/sound/midi_mt32.o \
 	$(FSCI_BASE)/src/sound/midi_mt32gm.o \
 	$(FSCI_BASE)/src/sound/midiout.o \
+	$(FSCI_BASE)/src/sound/midiout_dcraw.o \
 	$(FSCI_BASE)/src/sound/oldmidi.o \
 	$(FSCI_BASE)/src/sound/pcmout.o \
 	$(FSCI_BASE)/src/sound/pcmout_dc.o \
