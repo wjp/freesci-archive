@@ -59,6 +59,18 @@ gfx_pixmap_color_t gfx_sci0_pic_colors[GFX_SCI0_PIC_COLORS_NR]; /* Initialized d
 
 static int _gfxr_pic0_colors_initialized = 0;
 
+typedef struct _line_list_node {
+	rect_t line;
+	struct _line_list_node *next;
+} line_list_node_t;
+
+typedef struct {
+	line_list_node_t *list;
+} line_list_t;
+/* Line lists are used to track previously drawn lines so we can draw auxiliary
+** lines in certain cases
+*/
+
 /************************************/
 /************************************/
 /************************************/
@@ -127,6 +139,98 @@ gfxr_init_pic(gfx_mode_t *mode, int ID)
 	pic->undithered_buffer = NULL;
 
 	return pic;
+}
+
+
+static void
+free_line_list_node(line_list_node_t *node)
+{
+	if (node) {
+		free_line_list_node(node->next);
+		sci_free(node);
+	}
+}
+
+static void
+free_line_list(line_list_t *list)
+{
+	free_line_list_node(list->list);
+}
+
+static void
+init_line_list(line_list_t *list)
+{
+	list->list = NULL;
+}
+
+static void
+add_to_line_list(line_list_t *list, rect_t line)
+{
+	line_list_node_t *node = malloc(sizeof(line_list_node_t));
+	node->line = line;
+	node->next = list->list;
+	list->list = node;
+}
+
+static void
+_gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int priority, int control,
+		int drawenable, int line_mode, int cmd, line_list_t *line_list);
+
+
+int
+point_touches_line(int px, int py, rect_t line, point_t *intersection)
+{
+/*
+  l0 = (lx, ly) + (ldx, ldy) * i
+  l1 = (px, py) + (-ldy, ldx) * j    \ orthogonal to l0, starting at (px, py)
+
+  (lx, ly) - (px, py) = (-ldy, ldx) * j - (ldx, ldy) * i
+
+    Dx = lx - px
+    Dy = ly - py
+
+  Dx = -ldy * j - ldx * i
+
+             -ldx * i - Dx
+     ==> j = -------------
+                  ldx
+
+  Dy =  ldx * j - ldy * i
+
+     ==>
+
+  Dy = -ldx * i - Dx - ldy * i    \ Assumes that ldx != 0
+
+  Dx + Dy = i * (-ldx - ldy)
+
+     ==>
+
+        Dx + Dy
+  i = -----------
+      - ldx - ldy
+
+*/
+
+	int denominator = line.xl * line.yl * 2; /* Orthogonal lines */
+	/*	int numerator_x = -dy * (line.y, py) -  */
+	return 0;
+}
+
+static void
+draw_auxiliary_lines(gfxr_pic_t *pic, int x, int y, int color, int priority, int control,
+		     int drawenable, int line_mode, int cmd, line_list_t *line_list)
+{
+	line_list_node_t *node = line_list->list;
+
+	while (node) {
+		point_t point;
+
+		if (point_touches_line(x, y, node->line, &point))
+			_gfxr_draw_line(pic, x, y, point.x, point.y,
+					color, priority, control, drawenable,
+					line_mode, cmd, NULL);
+		node = node->next;
+	}
 }
 
 
@@ -1047,8 +1151,9 @@ _gfxr_draw_subline(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int
 }
 
 static void
-_gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int priority, int control,
-		int drawenable, int line_mode, int cmd)
+_gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color,
+		int priority, int control, int drawenable, int line_mode,
+		int cmd, line_list_t *line_list)
 {
 	int scale_x = pic->mode->xfact;
 	int scale_y = pic->mode->yfact;
@@ -1065,6 +1170,16 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int pr
 	    || ex > 319 || ey > 199 || ex < 0 || ey < 0) {
 		GFXWARN("While building pic: Attempt to draw line (%d,%d) to (%d,%d): cmd was %d\n", x, y, ex, ey, cmd);
 		return;
+	}
+
+	if (line_list) {
+		draw_auxiliary_lines(pic, x, y, color,
+				     priority, control, drawenable, line_mode,
+				     cmd, line_list);
+		draw_auxiliary_lines(pic, ex, ey, color,
+				     priority, control, drawenable, line_mode,
+				     cmd, line_list);
+		add_to_line_list(line_list, line);
 	}
 
 	y += SCI_TITLEBAR_SIZE;
@@ -1802,12 +1917,14 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 	int temp;
 	int line_mode = style->line_mode;
 	int fill_count = 0;
+	line_list_t line_list;
 	byte op, opx;
 
 #ifdef GFXR_DEBUG_PIC0
 	fillmagc = atoi(getenv("FOO"));
 	fillc = atoi(getenv("FOO2"));
 #endif /* GFXR_DEBUG_PIC0 */
+	init_line_list(&line_list);
 
 	/* Initialize palette */
 	for (i = 0; i < GFXR_PIC0_NUM_PALETTES; i++)
@@ -1910,7 +2027,10 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 #if 0
 				fprintf(stderr, " to %d,%d\n", x, y);
 #endif
-				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode, PIC_OP_MEDIUM_LINES);
+				_gfxr_draw_line(pic, oldx, oldy, x, y, color,
+						priority, control, drawenable,
+						line_mode, PIC_OP_MEDIUM_LINES,
+						&line_list);
 				oldx = x; oldy = y;
 			}
 			break;
@@ -1921,7 +2041,10 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			GET_ABS_COORDS(oldx, oldy);
 			while (*(resource + pos) < PIC_OP_FIRST) {
 				GET_ABS_COORDS(x,y);
-				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode, PIC_OP_LONG_LINES);
+				_gfxr_draw_line(pic, oldx, oldy, x, y, color,
+						priority, control, drawenable,
+						line_mode, PIC_OP_LONG_LINES,
+						&line_list);
 				oldx = x; oldy = y;
 			}
 			break;
@@ -1933,7 +2056,10 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			x = oldx; y = oldy;
 			while (*(resource + pos) < PIC_OP_FIRST) {
 				GET_REL_COORDS(x,y);
-				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode, PIC_OP_SHORT_LINES);
+				_gfxr_draw_line(pic, oldx, oldy, x, y, color,
+						priority, control, drawenable,
+						line_mode, PIC_OP_SHORT_LINES,
+						&line_list);
 				oldx = x; oldy = y;
 			}
 			break;
@@ -2122,6 +2248,7 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			case PIC_OPX_EMBEDDED_VIEW:
 				GFXWARN("Embedded view @%d\n", pos);
 				GFXWARN("-- not implemented- aborting --\n");
+				free_line_list(&line_list);
 				return;
 				break;
 
@@ -2129,11 +2256,13 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			case PIC_OPX_SET_PRIORITY_TABLE:
 				GFXWARN("Set priority table @%d\n", pos);
 				GFXWARN("-- not implemented- aborting --\n");
+				free_line_list(&line_list);
 				return;
 				break;
 
 
 			default: sciprintf("%s L%d: Warning: Unknown opx %02x\n", __FILE__, __LINE__, op);
+				free_line_list(&line_list);
 				return;
 			}
 			break;
@@ -2142,13 +2271,16 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			p0printf("Terminator\n");
 			/* WARNING( "ARTIFACT REMOVAL CODE is commented out!") */
 			/* _gfxr_vismap_remove_artifacts(); */
+			free_line_list(&line_list);
 			return;
 
 		default: GFXWARN("Unknown op %02x\n", op);
+			free_line_list(&line_list);
 			return;
 		}
 	}
 
+	free_line_list(&line_list);
 	GFXWARN("Reached end of pic resource %04x\n", resid);
 }
 

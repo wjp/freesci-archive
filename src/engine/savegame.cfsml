@@ -461,12 +461,19 @@ write_hunk_block(FILE *fh, hunk_block_t *foo)
 
 	} else { /* Normal buffer */
 
-		while ((hunkfile = open(filename, O_RDONLY)) > 0) {
+		while ((hunkfile = open(filename, O_RDONLY | O_BINARY)) > 0) {
 			close(hunkfile);
 			sprintf(filename + 5, "%d", ++filenr);
 		}
 
+
+		/* Visual C++ doesn't allow to specify O_BINARY with creat() */
+#ifdef _MSC_VER
+		hunkfile = open(filename, _O_CREAT | _O_BINARY | _O_RDWR);
+#else
 		hunkfile = creat(filename, 0600);
+#endif
+
 		assert (hunkfile > 0);
 
 		write(hunkfile, foo->data, foo->size);
@@ -501,7 +508,7 @@ read_hunk_block(FILE *fh, hunk_block_t *foo, char *lastval, int *line, int *hite
 
 		foo->type = HUNK_TYPE_ANY;
 
-		hunkfile = open(lastval, O_RDONLY);
+		hunkfile = open(lastval, O_RDONLY | O_BINARY);
 
 		foo->size = lseek(hunkfile, 0, SEEK_END);
 		lseek(hunkfile, 0, SEEK_SET);
@@ -1019,7 +1026,7 @@ gamestate_save(state_t *s, char *dirname)
 		}
 	}
 
-	fh = fopen("state", "w");
+	fh = fopen("state", "w" FO_BINARY);
 
 	/* Calculate the time spent with this game */
 	s->game_time = time(NULL) - s->game_start_time.tv_sec;
@@ -1032,7 +1039,14 @@ SCI_MEMTEST;
 
 	_gamestate_unfrob(s);
 
+
+	/* Visual C++ doesn't allow to specify O_BINARY with creat() */
+#ifdef _MSC_VER
+	fd = open("heap", _O_CREAT | _O_BINARY | _O_RDWR);
+#else
 	fd = creat("heap", 0600);
+#endif
+
 	write(fd, s->_heap->start, SCI_HEAP_SIZE);
 	close(fd);
 
@@ -1068,7 +1082,7 @@ gamestate_restore(state_t *s, char *dirname)
 	_global_save_state = retval;
 	retval->gfx_state = s->gfx_state;
 
-	fh = fopen("state", "r");
+	fh = fopen("state", "r" FO_BINARY);
 	if (!fh) {
 		heap_del(retval->_heap);
 		free(retval);
@@ -1101,7 +1115,7 @@ gamestate_restore(state_t *s, char *dirname)
 		return NULL;
 	}
 
-	if (read_eof || ((fd = open("heap", O_RDONLY)) < 0)) {
+	if (read_eof || ((fd = open("heap", O_RDONLY | O_BINARY)) < 0)) {
 		if (read_eof)
 			sciprintf("Error while reading gamestate '%s'\n", dirname);
 		else

@@ -148,7 +148,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	int i;
 
-#ifdef _WIN32 /* Win32 doesn't support mouse pointers greater than 64x64 */
+#ifdef _MSC_VER /* Win32 doesn't support mouse pointers greater than 64x64 */
 	if (xfact > 2 || yfact > 2)
 		drv->capabilities &= ~GFX_CAPABILITY_MOUSE_POINTER;
 #endif
@@ -170,6 +170,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		i |= SDL_FULLSCREEN;
 #ifdef _MSC_VER
 		ysize = yfact * 240;
+		drv->capabilities &= ~GFX_CAPABILITY_MOUSE_POINTER;
 #endif
 	}
 
@@ -221,7 +222,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	SDL_WM_SetCaption("FreeSCI", "freesci");
 
-	SDL_ShowCursor(SDL_DISABLE);
+	SDL_ShowCursor(SDL_ENABLE);
 	S->pointer_data[0] = NULL;
 	S->pointer_data[1] = NULL;
 

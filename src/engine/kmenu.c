@@ -346,17 +346,21 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 					break;
 
 				case SCI_K_LEFT:
-					if (menu_nr > 0) {
+					if (menu_nr > 0)
 						--menu_nr;
-						item_nr = _menu_go_down(s, menu_nr, -1);
-					}
+					else
+						menu_nr = s->menubar->menus_nr - 1;
+
+					item_nr = _menu_go_down(s, menu_nr, -1);
 					break;
 
 				case SCI_K_RIGHT:
-					if (menu_nr < (s->menubar->menus_nr - 1)) {
+					if (menu_nr < (s->menubar->menus_nr - 1))
 						++menu_nr;
-						item_nr = _menu_go_down(s, menu_nr, -1);
-					}
+					else
+						menu_nr = 0;
+
+					item_nr = _menu_go_down(s, menu_nr, -1);
 					break;
 
 				case SCI_K_UP:

@@ -78,8 +78,13 @@ f_open_mirrored(state_t *s, char *fname)
 
 	chdir(s->work_dir);
 
+	/* Visual C++ doesn't allow to specify O_BINARY with creat() */
+#ifdef _MSC_VER
+	fd = open(fname, _O_CREAT | _O_BINARY | _O_RDWR);
+#else
 	fd = creat(fname, 0600);
-
+#endif
+	
 	if (!fd && buf) {
 		free(buf);
 		sciprintf("kfile.c: f_open_mirrored(): Warning: Could not create '%s' in '%s' (%d bytes to copy)\n",
@@ -96,7 +101,7 @@ f_open_mirrored(state_t *s, char *fname)
 
 	close(fd);
 
-	return sci_fopen(fname, "r+");
+	return sci_fopen(fname, "r" FO_BINARY "+");
 }
 
 
@@ -113,7 +118,7 @@ file_open(state_t *s, char *filename, int mode)
 
 	SCIkdebug(SCIkFILE, "Opening file %s with mode %d\n", filename, mode);
 	if ((mode == _K_FILE_MODE_OPEN_OR_FAIL) || (mode == _K_FILE_MODE_OPEN_OR_CREATE)) {
-		file = sci_fopen(filename, "r+"); /* Attempt to open existing file */
+		file = sci_fopen(filename, "r" FO_BINARY "+"); /* Attempt to open existing file */
 		SCIkdebug(SCIkFILE, "Opening file %s with mode %d\n", filename, mode);
 		if (!file) {
 			SCIkdebug(SCIkFILE, "Failed. Attempting to copy from resource dir...\n");
@@ -126,7 +131,7 @@ file_open(state_t *s, char *filename, int mode)
 	}
 
 	if ((!file) && ((mode == _K_FILE_MODE_OPEN_OR_CREATE) || (mode == _K_FILE_MODE_CREATE))) {
-			file = sci_fopen(filename, "w+"); /* Attempt to create file */
+			file = sci_fopen(filename, "w" FO_BINARY "+"); /* Attempt to create file */
 			SCIkdebug(SCIkFILE, "Creating file %s with mode %d\n", filename, mode);
 	}
 	if (!file) { /* Failed */
@@ -220,7 +225,7 @@ void kFPuts(state_t *s, int funct_nr, int argc, heap_ptr argp)
   fputs_wrapper(s, handle, data);
 }
 
-void
+static void
 fgets_wrapper(state_t *s, char *dest, int maxsize, int handle)
 {
   SCIkdebug(SCIkFILE, "FGets'ing %d bytes from handle %d\n", maxsize, handle);
@@ -242,7 +247,7 @@ fgets_wrapper(state_t *s, char *dest, int maxsize, int handle)
 }
 
 
-void
+static void
 fread_wrapper(state_t *s, char *dest, int bytes, int handle)
 {
   SCIkdebug(SCIkFILE, "fread()'ing %d bytes from handle %d\n", bytes, handle);
@@ -261,7 +266,7 @@ fread_wrapper(state_t *s, char *dest, int bytes, int handle)
 }
 
 
-void
+static void
 fseek_wrapper(state_t *s, int handle, int offset, int whence)
 {
 
@@ -277,6 +282,34 @@ fseek_wrapper(state_t *s, int handle, int offset, int whence)
 
   s->acc=fseek(s->file_handles[handle], offset, whence);
 }
+
+
+static char *
+_chdir_savedir(state_t *s)
+{
+	char *cwd = sci_getcwd();
+	char *save_dir = (char *) s->heap + s->save_dir + 2;
+
+	if (chdir(save_dir)) {
+		sciprintf(__FILE__": Can't chdir to savegame dir '%s'\n", save_dir);
+		sci_free(cwd);
+		return NULL;
+	}
+
+	return cwd;
+}
+
+static void
+_chdir_restoredir(char *dir)
+{
+	if (chdir(dir)) {
+		sciprintf(__FILE__": Can't seemt to return to previous homedir '%s'\n",
+			  dir);
+	}
+	free(dir);
+}
+
+#define TEST_DIR_OR_QUIT(dir) if (!dir) { s->acc = 0; return; }
 
 
 void
@@ -618,23 +651,28 @@ kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	int savedir_nr = UPARAM(1);
 	char *buf = NULL;
+	char *workdir = _chdir_savedir(s);
+	TEST_DIR_OR_QUIT(workdir);
 
 
 	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (soundserver_dead) {
 		sciprintf("Soundserver is dead- cannot save game state!");
+		_chdir_restoredir(workdir);
 		s->acc = 0;
 		return;
 	}
 
 	if (savedir_nr > MAX_SAVEGAME_NR-1) {
+		_chdir_restoredir(workdir);
 		s->acc = 0;
 		return;
 	}
 
 	s->acc = test_savegame(s, (buf = _k_get_savedir_name(savedir_nr)), NULL, 0);
 
+	_chdir_restoredir(workdir);
 	free(buf);
 }
 
@@ -708,6 +746,8 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int gfname_len = strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1;
 	char *gfname = sci_malloc(gfname_len);
 	int i;
+	char *workdir = _chdir_savedir(s);
+	TEST_DIR_OR_QUIT(workdir);
 
 	strcpy(gfname, game_id);
 	strcat(gfname, FREESCI_ID_SUFFIX); /* This file is used to identify in-game savegames */
@@ -755,6 +795,8 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	free(gfname);
 	s->heap[nametarget] = 0; /* Terminate list */
+
+	_chdir_restoredir(workdir);
 }
 
 
@@ -766,10 +808,13 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int savedir_nr = UPARAM(1);
 	char *game_id_file_name = sci_malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
 	char *game_description = (char *) (UPARAM(2) + s->heap);
+	char *workdir = _chdir_savedir(s);
+	TEST_DIR_OR_QUIT(workdir);
 
 	if (soundserver_dead) {
 		sciprintf("Soundserver is dead- cannot save game state!");
 		s->acc = 0;
+		_chdir_restoredir(workdir);
 		return;
 	}
 
@@ -819,6 +864,7 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		chdir ("..");
 	}
 	free(game_id_file_name);
+	_chdir_restoredir(workdir);
 }
 
 
@@ -827,6 +873,8 @@ kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	char *game_id = (char *) (UPARAM(0) + s->heap);
 	int savedir_nr = UPARAM(1);
+	char *workdir = _chdir_savedir(s);
+	TEST_DIR_OR_QUIT(workdir);
 
 	if (_savegame_indices_nr < 0) {
 		char *game_id_file_name = sci_malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
@@ -861,6 +909,8 @@ kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		s->acc = 1;
 		sciprintf("Savegame #%d not found!\n", savedir_nr);
 	}
+
+	_chdir_restoredir(workdir);
 }
 
 

@@ -189,7 +189,7 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
 		seeker = seeker->next;
 	}
 
-	fh = fopen("sound", "w");
+	fh = fopen("sound", "w" FO_BINARY);
 
 	%CFSMLWRITE sound_lib_file_t &write_rec INTO fh;
 
@@ -236,7 +236,7 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
 		return 1;
 	}
 
-	fh = fopen("sound", "r");
+	fh = fopen("sound", "r" FO_BINARY);
 
 	if (!fh) {
 		fprintf(debugstream, "'%s/sound' not found!\n", dir);

@@ -1,3 +1,26 @@
+2001-09-17  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/sdl_driver.c (sdl_init_specific): Disabled mouse pointer
+	on fullscreen
+
+	* src/engine/kfile.c: Saved and restored the cwd to and from the savegame
+	dir in savegame kfunctions
+
+2001-09-16  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/resource.h (FO_BINARY): Introduced FO_BINARY, which is "b"
+	on Win32 and "" everywhere else
+
+	* Changed Matt's last updates to use it instead of "b" everywhere
+
+2001-09-16  Matt Hargett  <matt@use.net>
+
+        * savegame.cfsml: Add ifdef for WIN32 to workaround creat()
+        only using "translation" (ASCII) mode. Specify "b" flag
+        to fopen() and "O_BINARY" flag to open().
+
+        * kfile.c: Specify "b" flag to fopen().
+
 2001-09-15  Matt Hargett  <matt@use.net>
 
         * main.c: Fix compiler warning(s).
