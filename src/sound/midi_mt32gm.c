@@ -60,6 +60,8 @@ int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2)
 	case 0x80:  /* noteon and noteoff */
 		volume = param2;
 		param2 = (volume * MIDI_mapping[param].volume * global_volume) >> 11;
+		if (!param2)
+			oper &= 0x80;
 		if (channel == RHYTHM_CHANNEL)
 			xparam = MIDI_mapping[param].gm_rhythmkey;
 		break;
