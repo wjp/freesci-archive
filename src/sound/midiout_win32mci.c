@@ -245,6 +245,7 @@ int midiout_win32mci_write(guint8 *buffer, unsigned int count)
 {
     MMRESULT ret;
     unsigned int midioutputsize;
+	MIDIHDR midioutput;
 
     /* first, we populate the fields of the MIDIHDR */
     midioutput.lpData           = buffer;       /* pointer to a MIDI event str
