@@ -1215,6 +1215,7 @@ _gfxw_container_id_equals(gfxw_container_t *container, gfxw_widget_t *widget)
 
 	if (seeker->equals(seeker, widget)) {
 		widget->free(widget);
+		seeker->flags &= ~GFXW_FLAG_DIRTY;
 		return 1;
 	}
 }

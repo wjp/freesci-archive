@@ -577,11 +577,12 @@ a save game file.
 	SCI1 first goes through this list
 	to find the start of list for the correct resource type and remember this 
 	offset and the offset from the next entry
-	to know where it ends. The resulting interval is searched linearly; the data contained
-	within consists of 6-byte structures, 
+	to know where it ends. The resulting interval contains a sorted list of
+	6-byte structures, 
 	where the first LE 16 bit integer is the resource number, and the next LE 32 bit integer
 	contains the resource
 	file number in its high 4 bits and the absolute resource offset (in the indicated resource file) in its low 28 bits.
+	Because the list is sorted and its length is known, Sierra SCI can use binary search to locate the resource ID it is looking for.
       </para>
     </sect2>
     <sect2>
@@ -597,9 +598,9 @@ a save game file.
     </sect2>
   </sect1>
   <sect1>
-    <title>Compression algorithms</title>
+    <title>Decompression algorithms</title>
     <para>
-      The compression algorithms used in SCI are as follows:
+      The decompression algorithms used in SCI are as follows:
       <table frame="all">
 	<title>SCI0 compression algorithms</title>
 	<tgroup cols="2">
@@ -753,7 +754,7 @@ a save game file.
       </para>
     </sect2>
     <sect2>
-      <title>DEFLATE</title>
+      <title>Decompression algorithm DCL-IMPLODE</title>
       <para>
 	originally by <author><firstname>Petr</firstname> <surname>Vyhnak</surname></author>
       </para>
@@ -790,7 +791,7 @@ LOOP:
                          LENGTH = L1 + 2
                    if L1 &gt; 7
                          read more (L1-7) bits -&gt; L2
-                         LENGTH = L2 + M[L-7] + 2
+                         LENGTH = L2 + M[L1-7] + 2
 
                  - decode another number with Hufmann Tree #2 giving result 0x00..0x3F -&gt; D1
                    if LENGTH == 2
@@ -807,7 +808,7 @@ END LOOP
 
 	</programlisting>
 	The algorithm terminates as soon as it runs out of bits. The data structures used
-	are as folows:
+	are as follows:
 	</para>
 	<sect3>
 	  <title>M</title>
@@ -945,7 +946,7 @@ END LOOP
 	The algorithms listed as UNKNOWN-x have not yet been mapped to actual algorithms but
 	are known to be used by the games. For some of them, it is possible that they match
 	one of the algorithms described above, but have not yet been added to FreeSCI in an
-	appropriate way (refer to DEFLATE for a good example).
+	appropriate way (refer to DCL-IMPLODE for a good example).
       </para>
     </sect2>
   </sect1>
