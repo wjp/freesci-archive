@@ -73,7 +73,7 @@ sound_sdl_init(state_t *s, int flags)
 
   global_sound_server = &sound_server_sdl;
 
-  if (-1 == SDL_Init(SDL_INIT_EVENTTHREAD | SDL_INIT_NOPARACHUTE))
+  if (-1 == SDL_Init(SDL_INIT_EVENTTHREAD | SDL_INIT_NOPARACHUTE | SDL_INIT_TIMER))
   {
     fprintf(debug_stream, "sound_sdl_init(): SDL_Init() returned -1\n");
   }

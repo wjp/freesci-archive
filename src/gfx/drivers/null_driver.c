@@ -33,6 +33,7 @@ static int
 null_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 {
 	printf("[GFX-NULL] Setting '%s' <- '%s'\n", attribute, value);
+	return GFX_ERROR;
 }
 
 

@@ -105,7 +105,7 @@ _k_new_node(state_t *s, int value, int key)
 
 	if (!nodebase) {
 		KERNEL_OOPS("Out of memory while creating a node");
-		return;
+		return nodebase;
 	}
 
 	nodebase += 2; /* Jump over heap header */

@@ -50,8 +50,8 @@ static int sdl_reverse_stereo = 0;
 SDL_Thread *child = NULL;
 
 /* event queue */
-#define EVENT_MAX 20
-sound_event_t evqueue[EVENT_MAX];
+#define MAX_EVENTS 20
+sound_event_t evqueue[MAX_EVENTS];
 int evqueue_head;
 int evqueue_tail; 
 
@@ -512,7 +512,7 @@ void sound_sdl_enqueue(unsigned int handle, unsigned int signal, long value)
   evqueue[evqueue_head].signal = signal;
   evqueue[evqueue_head].value = value;
 
-  evqueue_head = (evqueue_head + 1) % EVENT_MAX;
+  evqueue_head = (evqueue_head + 1) % MAX_EVENTS;
 
   if (evqueue_head == evqueue_tail)
     fprintf(debug_stream, "Sound Event Queue filled up!  CRAP!\n");
@@ -534,7 +534,7 @@ sound_event_t *sound_sdl_dequeue(void)
   event->signal = evqueue[evqueue_tail].signal;
   event->value = evqueue[evqueue_tail].value;
 
-  evqueue_tail = (evqueue_tail + 1) % EVENT_MAX;
+  evqueue_tail = (evqueue_tail + 1) % MAX_EVENTS;
 
   return event;
 }
@@ -673,7 +673,6 @@ sci0_thread_ss(int reverse_stereo, sound_server_state_t *ss_state)
 	  	  
 	  sci_get_current_time((GTimeVal *)&ctime); /* Get current time, store in ctime */
 
-
 	  /* we have to deal with latency of sleep().. so only sleep if
 	     it'll be more than XXXX us. */
 #if !defined(MSC_VER)
@@ -681,7 +680,9 @@ sci0_thread_ss(int reverse_stereo, sound_server_state_t *ss_state)
 	  if ((wakeup_time.tv_usec - ctime.tv_usec) > 10000)
 	    usleep(0);
 #else
-	  sci_sched_yield();
+	timeBeginPeriod(0);
+	Sleep(5);
+	timeEndPeriod(0);
 #endif
 	  
 	  /* Exit when we've waited long enough */

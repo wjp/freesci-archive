@@ -630,10 +630,15 @@ int synth_mixer (gint16 *buffer, int count)
 {
   gint16 *ptr = buffer;
 
+  if (!ready) {
+      return 0;
+  }
+
   if (!buffer)
-    return 0;
-  if (!ready)
-    return 0;
+  {
+	  fprintf(stderr, "synth_mixer(): !buffer \n");
+      return 0;
+  }
 
 #if 0
   {

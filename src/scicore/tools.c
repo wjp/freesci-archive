@@ -487,7 +487,7 @@ sci_mkpath(char *path)
 {
         char *nextsep = NULL, *path_pos = path;
 
-	fprintf(stderr, "sci_mkpath: PATH='%d'\n", path);
+	fprintf(stderr, "sci_mkpath: PATH='%s'\n", path);
 
         if (chdir(G_DIR_SEPARATOR_S)) { /* Go to root */
                 sciprintf("Error: Could not change to root directory '%s'!\n",
@@ -537,10 +537,11 @@ sci_get_homedir()
 	if (!dr || !path)
 		return getenv("WINDIR");
 
-	strncpy(_path_buf, path, 4);
-	strncat(_path_buf, dr, MAX_PATH - 4);
+	strncpy((char *)_path_buf, dr, 4);
+	strncat((char *)_path_buf, path, MAX_PATH - 4);
 
-	return _path_buf;
+	return (char *)_path_buf;
+
 #elif defined(__unix__) || !defined(X_DISPLAY_MISSING) || defined (__BEOS__) || defined(MACOSX)
 	return getenv("HOME");
 #elif defined (_DREAMCAST)

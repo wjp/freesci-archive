@@ -798,7 +798,7 @@ renice_handle(int priority, word song_handle, sound_server_state_t *ss_state)
 	song_t *this_song;
 
 #ifdef DEBUG_SOUND_SERVER
-	fprintf(debug_stream, "Renice handle %04x to priority %i", song_handle);
+	fprintf(debug_stream, "Renice handle %04x to priority %i", song_handle, priority);
 	if (ss_state->current_song)
 		fprintf(debug_stream, " (currently playing is %04x)\n", ss_state->current_song->handle);
 	else

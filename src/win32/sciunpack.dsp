@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /Zi /Gf /Gy /I "..\include" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /FR /YX /FD /D VERSION=\"0.3.2-dev\" /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /Gf /Gy /I "..\include" /D "NDEBUG" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /FR /YX /FD /D VERSION=\"0.3.2-dev\" /c
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
 # ADD RSC /l 0x419 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -66,7 +66,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /GX /ZI /Od /I "..\include" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /YX /FD /D /GZ VERSION=\"0.3.2-dev\" /c
+# ADD CPP /nologo /W3 /GX /ZI /Od /I "..\include" /D "_DEBUG" /D PACKAGE=\"freesci\" /D "HAVE_GETOPT_H" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_SYS_STAT_H" /D "HAVE_FCNTL_H" /YX /FD /D /GZ VERSION=\"0.3.2-dev\" /c
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
 # ADD RSC /l 0x419 /d "_DEBUG"
 BSC32=bscmake.exe
