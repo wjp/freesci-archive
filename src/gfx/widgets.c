@@ -36,10 +36,10 @@
 #  define DDIRTY if (0) fprintf
 #endif
 
-#ifdef GFXW_DEBUG_WIDGETS
-
 #define MAX_SERIAL_NUMBER 0x7fffffff
 static int widget_serial_number_counter = 0x10000; /* Avoid confusion with IDs */
+
+#ifdef GFXW_DEBUG_WIDGETS
 
 gfxw_widget_t *debug_widgets[GFXW_DEBUG_WIDGETS];
 int debug_widget_pos = 0;
@@ -1365,10 +1365,7 @@ _gfxwop_container_draw_contents(gfxw_widget_t *widget, gfxw_widget_t *contents)
 		gfxw_widget_t *seeker = contents;
 
 		while (seeker) {
-#ifdef __GNUC__
-#warning "FIXME!"
-#endif
-			if (1 || gfx_rects_overlap(seeker->bounds, dirty->rect)) {
+			if (gfx_rects_overlap(seeker->bounds, dirty->rect)) {
 				if (GFXW_IS_CONTAINER(seeker)) {/* Propagate dirty rectangles /upwards/ */
 					DDIRTY(stderr,"container_draw_contents: propagate upwards (%d,%d,%d,%d ,0)\n", GFX_PRINT_RECT(dirty->rect));
 					((gfxw_container_t *)seeker)->add_dirty_abs((gfxw_container_t *)seeker, dirty->rect, 0);

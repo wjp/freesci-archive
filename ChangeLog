@@ -1,7 +1,14 @@
+2001-09-30  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/resmgr.c (gfxr_add_to_pic): Added picadd
+	usage of endianness adjustments
+
 2001-09-29  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/resource/sci_pic_0.c: Added two alternative palettes,
 	Amiga/AGI and grayscale
+	(_gfxr_draw_pattern): Patterns near the right edge of the screen
+	are now moved to the left correctly
 
 	* src/engine/game.c (_reset_graphics_input): Got rid of the EGA
 	palette copy, used that of the gfx resources instead

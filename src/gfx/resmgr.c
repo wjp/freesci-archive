@@ -403,8 +403,6 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 		gfxr_antialiase(pic->visual_map, state->driver->mode,
 				state->options->pic0_antialiasing);
 
-	gfxr_endianness_adjust(pic->visual_map, state->driver->mode);
-
 	return pic;
 }
 

@@ -48,7 +48,7 @@ if (!state->driver) { \
 #define DRAW_POINTER { int __x = _gfxop_draw_pointer(state); if (__x) { GFXERROR("Drawing the mouse pointer failed!\n"); return __x;} }
 #define REMOVE_POINTER { int __x = _gfxop_remove_pointer(state); if (__x) { GFXERROR("Removing the mouse pointer failed!\n"); return __x;} }
 
-#undef DEBUG_DIRTY
+/* #define GFXOP_DEBUG_DIRTY */
 
 /* Internal operations */
 
@@ -387,9 +387,7 @@ _gfxop_update_box(gfx_state_t *state, rect_t box)
 {
 	int retval;
 	_gfxop_scale_rect(&box, state->driver->mode);
-#ifdef DEBUG_DIRTY
-fprintf(stderr,"U [%d,%d][%d,%d]\n", box.x, box.x+box.xl, box.y, box.y+box.yl);
-#endif
+
 	if ((retval = _gfxop_buffer_propagate_box(state, box, GFX_BUFFER_FRONT))) {
 		GFXERROR("Error occured while propagating box (%d,%d,%d,%d) to front buffer\n",
 			 box.x, box.y, box.xl, box.yl);
@@ -424,7 +422,10 @@ gfxdr_add_dirty(gfx_dirty_rect_t *base, rect_t box, int strategy)
 		box.y += box.yl;
 		box.yl = - box.yl;
 	}
-
+#ifdef GFXOP_DEBUG_DIRTY
+	fprintf(stderr, "Adding new dirty (%d %d %d %d)\n",
+		GFX_PRINT_RECT(box));
+#endif
 	if (_gfxop_clip(&box, gfx_rect(0, 0, 320, 200)))
 		return base;
 
@@ -441,10 +442,7 @@ gfxdr_add_dirty(gfx_dirty_rect_t *base, rect_t box, int strategy)
 		struct _dirty_rect **rectp = &(base);
 
 		while (*rectp) {
-#ifdef __GNUC__
-#warning "FIXME!"
-#endif
-			if (1 || gfx_rects_overlap((*rectp)->rect, box)) {
+			if (gfx_rects_overlap((*rectp)->rect, box)) {
 				struct _dirty_rect *next = (*rectp)->next;
 				box = gfx_rects_merge((*rectp)->rect, box);
 				free(*rectp);
@@ -498,6 +496,10 @@ _gfxop_clear_dirty_rec(gfx_state_t *state, struct _dirty_rect *rect)
 	if (!rect)
 		return GFX_OK;
 
+#ifdef GFXOP_DEBUG_DIRTY
+	fprintf(stderr, "\tClearing dirty (%d %d %d %d)\n",
+		GFX_PRINT_RECT(rect->rect));
+#endif
 	retval = _gfxop_update_box(state, rect->rect);
 	retval |= _gfxop_clear_dirty_rec(state, rect->next);
 
@@ -1695,7 +1697,8 @@ _gfxop_draw_cel_buffer(gfx_state_t *state, int nr, int loop, int cel,
 		GFXWARN("Attempt to draw loop/cel %d/%d in invalid view %d\n", loop, cel, nr);
 		return GFX_ERROR;
 	}
-
+/*fprintf(stderr,"Drawing %d/%d/%d to (%d,%d) clip(%d,%d,%d,%d)\n",
+  nr, loop, cel, pos.x, pos.y, GFX_PRINT_RECT(state->clip_zone));*/
 	pxm = view->loops[loop].cels[cel];
 
 	old_x = pos.x -= pxm->xoffset;

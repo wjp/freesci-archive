@@ -102,7 +102,7 @@ gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gf
 	if (need_unscaled)
 		gfxr_draw_pic0(unscaled_pic, flags, default_palette, res->size, res->data, &basic_style, res->id);
 
-	if (scaled_pic->undithered_buffer)
+	if (scaled_pic && scaled_pic->undithered_buffer)
 		memcpy(scaled_pic->visual_map->index_data, scaled_pic->undithered_buffer, scaled_pic->undithered_buffer_size);
 
 	gfxr_draw_pic0(scaled_pic, flags, default_palette, res->size, res->data, &style, res->id);

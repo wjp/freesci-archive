@@ -973,8 +973,9 @@ _gfxr_draw_pattern(gfxr_pic_t *pic, int x, int y, int color, int priority, int c
 	int ysize = (pattern_size + 1) * pic->mode->yfact - 1;
 	int scaled_x, scaled_y;
 	rect_t boundaries;
+	int max_x = (pattern_code & PATTERN_FLAG_RECTANGLE)? 318 : 319; /* Rectangles' width is size+1 */
 
-	p0printf("Pattern at (%d,%d) size %d, rand=%d, code=%02x\n", x, y, pattern_size, pattern_nr, pattern_code);
+	p0printf(stderr, "Pattern at (%d,%d) size %d, rand=%d, code=%02x\n", x, y, pattern_size, pattern_nr, pattern_code);
 
 	y += SCI_TITLEBAR_SIZE;
 
@@ -984,8 +985,8 @@ _gfxr_draw_pattern(gfxr_pic_t *pic, int x, int y, int color, int priority, int c
 	if (y - pattern_size < SCI_TITLEBAR_SIZE)
 		y = SCI_TITLEBAR_SIZE + pattern_size;
 
-	if (x + pattern_size > 319)
-		x = 319 - pattern_size;
+	if (x + pattern_size > max_x)
+		x = max_x - pattern_size;
 
 	if (y + pattern_size > 199)
 		y = 199 - pattern_size;

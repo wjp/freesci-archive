@@ -33,7 +33,7 @@
 
 /* Enable the next line to keep a list of pointers to all widgets, with up to the specified amount
 ** of members (/SLOW/) */
-#define GFXW_DEBUG_WIDGETS 2048
+/* #define GFXW_DEBUG_WIDGETS 2048 */
 
 /* Our strategy for dirty rectangle management */
 #define GFXW_DIRTY_STRATEGY GFXOP_DIRTY_FRAMES_CLUSTERS
