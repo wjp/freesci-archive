@@ -1,5 +1,9 @@
 2003-01-26  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/dc/dc.h, src/scicore/tools.c: Dreamcast build fix.
+
+2003-01-26  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/engine/kstring.c (kFormat): Fixed a segfault related to "%-nd"
 	and others.
 

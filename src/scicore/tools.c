@@ -44,6 +44,8 @@
 
 #ifdef _DREAMCAST
 #  include <arch/timer.h>
+#  include <dc.h>
+#  include <kos/thread.h>
 #endif
 
 #ifdef HAVE_MEMFROB

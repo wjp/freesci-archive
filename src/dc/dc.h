@@ -51,19 +51,12 @@ int dc_store_mirrored(char *);
 
 /* Implemented in dc.c */
 struct tm *localtime(const time_t *);
-int remove(const char *);
-int vfprintf(FILE *, const char *, va_list);
 #undef fprintf
 int fprintf(FILE *, const char *, ...);
 char *getcwd(char *, size_t);
-char *strerror(int);
 
 /* Implemented in bsearch.c */
 void *bsearch(const void *, const void *, size_t, size_t,
 	int (*)(const void *, const void *));
-
-/* Implemented in snprintf.c */
-int snprintf(char *, size_t, const char *, ...);
-int vsnprintf(char *, size_t, const char *, va_list);
 
 #endif  /* __DC_H */
