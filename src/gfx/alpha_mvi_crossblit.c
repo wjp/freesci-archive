@@ -30,7 +30,7 @@
 #include <gfx_tools.h>
 
 
-#ifdef __alpha__
+#ifdef HAVE_ALPHA_EV6_SUPPORT
 
 #ifdef __DECC
 #  include "c_asm.h"

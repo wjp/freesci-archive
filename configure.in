@@ -58,9 +58,9 @@ if test x"$have_x" = xyes; then
 	if test x"$x_libraries" != xNONE; then
 		if test x"$x_libraries" != x; then
 			LIBS="-L$x_libraries $LIBS"
-			AC_CHECK_LIB(Xi, XGrabDevice, [X_LIBS="$X_LIBS -lXi"])
-			AC_CHECK_LIB(X11, XOpenDisplay, [X_LIBS="$X_LIBS -lX11"])
 		fi
+		AC_CHECK_LIB(Xi, XGrabDevice, [X_LIBS="$X_LIBS -lXi"])
+		AC_CHECK_LIB(X11, XOpenDisplay, [X_LIBS="$X_LIBS -lX11"])
 	fi
 fi
 
