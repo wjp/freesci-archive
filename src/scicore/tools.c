@@ -49,7 +49,7 @@ int script_debug_flag = 0; /* Defaulting to running mode */
 int sci_debug_flags = 0; /* Special flags */
 
 
-#define MEMTEST_HARDNESS 15
+#define MEMTEST_HARDNESS 31
 
 int
 memtest(char *where, ...)
@@ -109,6 +109,14 @@ memtest(char *where, ...)
 		free(blocks[i]);
 	fprintf(stderr,"Memtest succeeded!\n");
 	return 0;
+}
+
+void *
+memdup(void *src, int size)
+{
+	void *b = malloc(size);
+	memcpy(b, src, size);
+	return b;
 }
 
 int sci_ffs(int _mask)

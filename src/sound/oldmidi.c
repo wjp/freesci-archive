@@ -908,7 +908,6 @@ _lookup_rhythm_key(char *iname)
 int
 map_MIDI_instruments(resource_mgr_t *resmgr)
 {
-  resource_t *patch1 = scir_find_resource(resmgr, sci_patch, 1, 0);
   int memtimbres;
   int patches;
   int i;
@@ -916,6 +915,9 @@ map_MIDI_instruments(resource_mgr_t *resmgr)
   guint8 *patchpointer;
   guint32 pos;
   FILE *logfile;
+  resource_t *patch1;
+
+  patch1 = scir_find_resource(resmgr, sci_patch, 1, 0);
 
   for (i = 0; i < 128; i++) {
     MIDI_mapping[i].gm_instr = MT32_PresetTimbreMaps[i].gm_instr;

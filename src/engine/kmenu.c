@@ -131,11 +131,11 @@ struct {
 	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research\n\n"
 	 "Rink Springer\nPort to the DOS platform, several bug fixes\n\n"
 	 "Robey Pointer\nBug tracking system hosting\n\n"
-	 "Sergey Lapin\nPort of Carl's type 2 decompression code\n\n",
+	 "Sergey Lapin\nPort of Carl's type 2 decompression code",
 	 0, 15},
-	{"Special Thanks"
-	 "\n\n Special Thanks\nto the linuxgames.com and telefragged.com crew\nfor hosting us\n\n"
-	 "Bob Heitman and Corey Cole for their support",
+	{"Special Thanks",
+	 "\nSpecial Thanks\n\n\nto the linuxgames.com and telefragged.com crew\nfor hosting us\n\n"
+	 "To Bob Heitman and Corey Cole for their support",
 	 0, 15}
 };
 

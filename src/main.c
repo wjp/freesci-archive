@@ -860,9 +860,11 @@ main(int argc, char** argv)
 	getcwd(resource_dir, PATH_MAX); /* Store resource directory */
 
 	sciprintf("Loading resources...\n");
+
 	resmgr = scir_new_resource_manager(resource_dir,
 					   SCI_VERSION_AUTODETECT,
 					   1, 128*1024);
+
 	if (!resmgr) {
 		printf("No resources found in '%s'.\nAborting...\n",
 		       resource_dir);
@@ -874,6 +876,7 @@ main(int argc, char** argv)
 	chdir(startdir);
 
 	printf("Mapping instruments to General Midi\n");
+
 	map_MIDI_instruments(resmgr);
 
 

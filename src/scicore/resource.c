@@ -195,7 +195,6 @@ scir_new_resource_manager(char *dir, int version,
 			free(caller_cwd);
 			return NULL;
 		}
-
 		sci0_read_resource_patches(dir,
 					   &mgr->resources,
 					   &mgr->resources_nr);
