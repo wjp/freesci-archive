@@ -31,10 +31,6 @@
 #	include <windows.h>
 #endif /* _WIN32 */
 
-/* The following two undefs are needed for MacOS X, which breaks our
-** build with these macros:  */
-#undef IsObject
-#undef StrCpy
 
 sci_kernel_function_t kfunct_mappers[] = {
 	{"Load", kLoad},

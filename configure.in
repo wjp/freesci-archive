@@ -64,6 +64,12 @@ cygwin*)
 	AC_CHECK_LIB(cygwin, usleep)
 	LIBS="-lwinmm $LIBS"
 	;;
+
+darwin*)
+	CFLAGS="-no-cpp-precomp $CFLAGS"
+	# Disable Apple's broken preprocessor
+	;;
+
 esac
 
 AC_CHECK_FUNCS(memchr fnmatch pipe socketpair fork sched_yield memfrob ffs getopt_long isblank usleep)
