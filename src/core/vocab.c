@@ -777,7 +777,7 @@ vocab_build_parse_tree(parse_tree_node_t *nodes, result_word_t *words, int words
 
 
 void
-_vocab_recursive_ptree_dump(parse_tree_node_t *nodes, int nr, int prevnr)
+_vocab_recursive_ptree_dump_treelike(parse_tree_node_t *nodes, int nr, int prevnr)
 {
   if ((nr > VOCAB_TREE_NODES) || (nr < prevnr)) {
     sciprintf("Error(%04x)", nr);
@@ -794,13 +794,13 @@ _vocab_recursive_ptree_dump(parse_tree_node_t *nodes, int nr, int prevnr)
     sciprintf("<");
 
     if (lbranch)
-      _vocab_recursive_ptree_dump(nodes, lbranch, nr);
+      _vocab_recursive_ptree_dump_treelike(nodes, lbranch, nr);
     else sciprintf("NULL");
 
     sciprintf(",");
 
     if (rbranch)
-      _vocab_recursive_ptree_dump(nodes, rbranch, nr);
+      _vocab_recursive_ptree_dump_treelike(nodes, rbranch, nr);
     else sciprintf("NULL");
 
     sciprintf(">");
@@ -808,10 +808,47 @@ _vocab_recursive_ptree_dump(parse_tree_node_t *nodes, int nr, int prevnr)
 }
 
 void
+_vocab_recursive_ptree_dump(parse_tree_node_t *nodes, int nr, int prevnr)
+{
+  int lbranch = nodes[nr].content.branches[0];
+  int rbranch = nodes[nr].content.branches[1];
+
+  if (nodes[nr].type == PARSE_TREE_NODE_LEAF) {
+    sciprintf("vocab_dump_parse_tree: Error: consp is nil for element %03x\n", nr);
+    return;
+  }
+
+  if ((nr > VOCAB_TREE_NODES) || (nr < prevnr)) {
+    sciprintf("Error(%04x))", nr);
+    return;
+  }
+
+  if (lbranch) {
+    if (nodes[lbranch].type == PARSE_TREE_NODE_BRANCH) {
+      sciprintf("(");
+      _vocab_recursive_ptree_dump(nodes, lbranch, nr);
+      sciprintf(")");
+    } else
+      sciprintf("%04x", nodes[lbranch].content.value);
+  } else sciprintf ("nil");
+
+  sciprintf(" ");
+
+  if (rbranch) {
+    if (nodes[rbranch].type == PARSE_TREE_NODE_BRANCH)
+      _vocab_recursive_ptree_dump(nodes, rbranch, nr);
+    else
+      sciprintf("%04x", nodes[rbranch].content.value);
+  } else sciprintf("nil");
+}
+
+void
 vocab_dump_parse_tree(parse_tree_node_t *nodes)
 {
+  _vocab_recursive_ptree_dump_treelike(nodes, 0, 0);
+  sciprintf("\n(");
   _vocab_recursive_ptree_dump(nodes, 0, 0);
-  sciprintf("\n");
+  sciprintf(")\n");
 }
 
 void

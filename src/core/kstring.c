@@ -108,7 +108,7 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
 #else /* !SCI_SIMPLE_SAID_CODE */
-  SCIkdebug(SCIkSTUB,"stub\n");
+  said(s, s->heap + said_block); /* Build and display a parse tree */
   s->acc = 0; /* Never true */
 #endif /* !SCI_SIMPLE_SAID_CODE */
 }

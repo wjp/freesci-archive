@@ -183,7 +183,7 @@ yylex(void)
   } else {
     retval >>= 8;
 
-    if (retval == SAID_END)
+    if (retval == SAID_TERM)
       retval = 0;
     else {
       assert(retval >= SAID_FIRST);
@@ -318,9 +318,9 @@ said_parse_spec(state_t *s, byte *spec)
     else
       said_tokens[said_tokens_nr++] = SAID_LONG(nextitem);
 
-  } while ((nextitem != SAID_END) && (said_tokens_nr < MAX_SAID_TOKENS));
+  } while ((nextitem != SAID_TERM) && (said_tokens_nr < MAX_SAID_TOKENS));
 
-  if (nextitem == SAID_END)
+  if (nextitem == SAID_TERM)
     yyparse();
   else {
     sciprintf("Error: SAID spec is too long\n");

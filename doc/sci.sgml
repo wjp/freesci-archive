@@ -1615,10 +1615,13 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
       <simplelist>
        <member/Type 1: Object/
        <member/Type 2: Code/
+       <member/Type 3: Synonym word lists/
+       <member/Type 4: Said specs/
        <member/Type 5: Strings/
        <member/Type 6: Class/
        <member/Type 7: Exports/
        <member/Type 8: Relocation table/
+       <member/Type 9: Preload text (a flag, rather than a real section)/
        <member/Type 10: Local variables/
       </simplelist>
       </para><para>
