@@ -409,7 +409,8 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	    }
 	    memset(S->shm[i], 0, sizeof(XShmSegmentInfo));
 	    
-	    S->shm[i]->shmid = shmget(IPC_PRIVATE, (xsize * ysize * bytespp),
+	    S->shm[i]->shmid = shmget(IPC_PRIVATE, xsize * ysize * 
+					     (bytespp >= 3)? 4 : bytespp,
 				      IPC_CREAT | IPC_EXCL | 0666);
 	    S->shm[i]->readOnly = False;
 	    
@@ -491,7 +492,7 @@ static int
 xlib_init(struct _gfx_driver *drv)
 {
         int i;
-	for (i = 1; i <= 4; i++) 
+	for (i = 4; i > 0; i--) 
 		if (!xlib_init_specific(drv, 2, 2, i))
 			return GFX_OK;
 
