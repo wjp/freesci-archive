@@ -107,7 +107,9 @@ int midiout_win32mci_open()
 		{
 			case MOD_FMSYNTH: fprintf(stderr, "FM synth, "); break;
 			case MOD_MAPPER: fprintf(stderr, "MIDI mapper, "); break;
+#ifdef MOD_WAVETABLE
 			case MOD_WAVETABLE: fprintf(stderr, "Wavetable synth, "); break;
+#endif
 			case MOD_MIDIPORT: fprintf(stderr, "MIDI port, "); break;
 			case MOD_SYNTH: fprintf(stderr, "Generic synth, "); break;
 			default: fprintf(stderr, "Unknown synth, "); break;

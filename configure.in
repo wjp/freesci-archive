@@ -59,6 +59,12 @@ else
 	esac
 fi
 
+case "${target_os}" in
+cygwin*)
+	AC_CHECK_LIB(cygwin, usleep)
+	LIBS="-lwinmm $LIBS"
+	;;
+esac
 
 AC_CHECK_FUNCS(fnmatch pipe socketpair fork sched_yield memfrob ffs getopt_long isblank usleep)
 AM_PATH_ALSA(0.5.0, [AC_DEFINE(HAVE_ALSA)], [echo >/dev/null])
@@ -192,7 +198,7 @@ dnl AC_SUBST(ac_sdl_o)
 dnl AC_SUBST(ac_ggi_o)
 
 AC_CHECK_LIB(m, cos, [LIB_M="-lm"], [LIB_M=""])
-#AC_CHECK_LIB(c, sprintf, [LIB_C="-lc"], [LIB_C=""])
+dnl AC_CHECK_LIB(c, sprintf, [LIB_C="-lc"], [LIB_C=""])
 LIBS="$LIBS $LIB_M"  # libc is added later, during the efence check
 
 AC_PATH_PNG

@@ -43,6 +43,7 @@ not, write to the Free Software Foundation, Inc.,
 
 /* Match STRING against the filename pattern PATTERN,
    returning zero if it matches, FNM_NOMATCH if not.  */
-extern int fnmatch __P((char *, char *, int));
+/* extern int fnmatch __P((char *, char *, int)); */
+extern int fnmatch (char *, char *, int);
 
 #endif /* _FNMATCH_H */

@@ -1,3 +1,7 @@
+2001-09-25  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* Applied Claudio's CYGWIN patch
+
 2001-09-24  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* configure.in: Use savegame.c line numbers when building with dmalloc

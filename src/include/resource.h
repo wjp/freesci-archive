@@ -173,7 +173,7 @@ typedef guint16 word;
 
 /**** FUNCTION DECLARATIONS ****/
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 #    define scimkdir(arg1,arg2) mkdir(arg1)
 #else
 #    define scimkdir(arg1,arg2) mkdir(arg1,arg2)

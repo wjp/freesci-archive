@@ -5,5 +5,5 @@ bin_PROGRAMS = sciunpack sciconsole scidisasm
 sciunpack_SOURCES = sciunpack.c listwords.c scriptdump.c vocabdump.c
 sciunpack_LDADD = ../sound/libscisound.a ../scicore/libscicore.a @ac_glx_libraries@ @ac_glx_libraries@ @ac_png_libraries@
 scidisasm_SOURCES = scidisasm.c
-sciconsole_LDADD = ../sound/libscisound.a ../scicore/libscicore.a @ac_curses_libraries@ -lc @ac_readline@ @ac_curses_libraries@ -lc -lm
+sciconsole_LDADD = ../sound/libscisound.a ../scicore/libscicore.a @ac_curses_libraries@ @ac_readline@ @ac_curses_libraries@ -lm
 sciconsole_SOURCES = sciconsole.c

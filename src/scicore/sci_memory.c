@@ -40,7 +40,7 @@
 /* y on: suppress creation of frame pointers on stack */
 /* s off: disable minimize size code */
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 #	include <crtdbg.h>
 #	ifndef SATISFY_PURIFY
 #		pragma optimize( "s", off )
@@ -125,7 +125,7 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 
 /********** Win32 functions **********/
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 void
 debug_win32_memory(int dbg_setting)
 {

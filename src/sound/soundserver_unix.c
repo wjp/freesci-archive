@@ -27,13 +27,14 @@
 /* Sound server using standard UNIX IPC */
 
 
+
 #include <engine.h>
+
+#ifdef HAVE_SYSV_IPC
 #include <soundserver.h>
 #include <sciresource.h>
 #include <midi_device.h>
 
-
-#ifdef HAVE_SYSV_IPC
 
 #include <signal.h>
 #include <sound.h>

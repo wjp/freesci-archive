@@ -34,7 +34,8 @@
 #include <soundserver.h>
 #include <sound.h>
 
-#ifdef WINVER
+/* #ifdef WINVER */
+#ifdef _WIN32
 
 #include <windows.h>
 

@@ -27,8 +27,10 @@
 
 #include <engine.h>
 
-#ifdef WIN32
-#  define PATH_MAX 255
+#ifdef _WIN32
+#  ifndef PATH_MAX
+#    define PATH_MAX 255
+#  endif
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
 #else
@@ -400,7 +402,11 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, heap_ptr argp)
     GetFullPathName (path1_s, sizeof (dir_buffer)-1, dir_buffer, NULL);
     GetFullPathName (path2_s, sizeof (dir_buffer2)-1, dir_buffer2, NULL);
 
+#ifdef _MSC_VER
     s->acc = !stricmp (path1_s, path2_s);
+#else
+    s->acc = !strcasecmp (path1_s, path2_s);
+#endif
   }
   break;
 

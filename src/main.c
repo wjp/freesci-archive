@@ -69,12 +69,14 @@
 
 
 #ifdef _WIN32
-#  include <direct.h>
-#  define PATH_MAX 255
+#  ifdef _MSC_VER
+#    include <direct.h>
+#    define PATH_MAX 255
+#    define sleep Sleep
+#    define strcasecmp stricmp
+#  endif
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
-#  define sleep Sleep
-#  define strcasecmp stricmp
 #endif
 
 #ifdef _MSC_VER
@@ -1103,7 +1105,6 @@ main(int argc, char** argv)
 
 	game_exit(gamestate);
 
-SCI_MEMTEST;
 	script_free_engine(gamestate); /* Uninitialize game state */
 
 	scir_free_resource_manager(resmgr);
