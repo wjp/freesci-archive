@@ -4,3 +4,4 @@
 #undef HAVE_LIBPNG
 #undef HAVE_CURSES
 #undef HAVE_GLX
+#undef HAVE_ALSA

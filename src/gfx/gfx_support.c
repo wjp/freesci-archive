@@ -193,6 +193,7 @@ _gfx_crossblit_simple(byte *dest, byte *src, int dest_line_width, int src_line_w
 	}
 }
 
+#if 0
 #ifdef __alpha__
 #  define FUNCT_NAME alpha_mvi_crossblit_32
 #    include "alpha_mvi_crossblit.c"
@@ -204,6 +205,7 @@ _gfx_crossblit_simple(byte *dest, byte *src, int dest_line_width, int src_line_w
 #  undef PRIORTY
 #  undef FUNCT_NAME
 #endif /* __alpha__ */
+#endif
 
 int
 gfx_crossblit_pixmap(gfx_mode_t *mode, gfx_pixmap_t *pxm, int priority,

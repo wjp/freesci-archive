@@ -13,6 +13,7 @@
 #undef HAVE_LIBPNG
 #undef HAVE_CURSES
 #undef HAVE_GLX
+#undef HAVE_ALSA
 
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
@@ -79,6 +80,9 @@
 
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
+
+/* Define if you have the asound library (-lasound).  */
+#undef HAVE_LIBASOUND
 
 /* Name of package */
 #undef PACKAGE

@@ -52,10 +52,10 @@ typedef struct {
 } name_value_pair;
 
 static int
-_parse_name(char *name, name_value_pair* nvps, char *what, int oldval); /* Parses a string with a name value pair */
+parse_name(char *name, name_value_pair* nvps, char *what, int oldval); /* Parses a string with a name value pair */
 
-static gfx_driver_t *
-_parse_gfx_driver(char *s); /* Parses a graphics driver */
+static void *
+parse_gfx_driver(char *s); /* Parses a graphics driver */
 
 static name_value_pair valid_modes[] = {
 	{"default", GFXR_DITHER_MODE_D16},
@@ -137,10 +137,70 @@ static name_value_pair line_mode[] = {
 	{0, 0}
 };
 
+#define BAD_INT_VALUE -33333333
+
+/* Types of options */
+#define OPTION_TYPE_NONE 0
+#define OPTION_TYPE_INT 1
+#define OPTION_TYPE_NVP 2
+#define OPTION_TYPE_INVERSE_NVP 3
+#define OPTION_TYPE_STATICREF 4
+
+typedef struct {
+	int type;
+	char *name;
+	int min;
+	int max;
+	name_value_pair *nvp;
+	void * (*parse_funct)(char *);
+	int varoffset;
+} standard_option;
+
+
+#define OPT_END                               {OPTION_TYPE_NONE, NULL, 0, 0, NULL, 0}
+/* Terminates */
+
+#define OPT_INT(NAME, VARNAME, MIN, MAX)      {OPTION_TYPE_INT, NAME, MIN, MAX, NULL, NULL, (char *)&(conf->VARNAME) - ((char *) conf)}
+/* Read INT from the interval [MIN, MAX] */
+
+#define OPT_NVP(NAME, VARNAME, NVP)           {OPTION_TYPE_NVP, NAME, 0, 0, NVP, NULL, (char *)&(conf->VARNAME) - ((char *)conf)}
+/* Read (name,value) pair from NVP */
+
+#define OPT_INVERSE_NVP(NAME, VARNAME, NVP)   {OPTION_TYPE_INVERSE_NVP, NAME, 0, 0, NVP, NULL, (char *)&(conf->VARNAME) - ((char *)conf)}
+/* Read NVP and negate result */
+
+#define OPT_STATICREF(NAME, VARNAME, FUNCTN)  {OPTION_TYPE_STATICREF, NAME, 0, 0, NULL, FUNCTN, (char *)&(conf->VARNAME) - ((char *)conf)}
+/* Call FUNCTN() with the specified value, store resulting NULL* */
+
+
+standard_option standard_options[] = {
+	OPT_NVP("pic0_dither_mode", gfx_options.pic0_dither_mode, valid_modes),
+	OPT_NVP("color_mode", gfx_options.pic0_dither_mode, valid_modes),
+	OPT_NVP("pic0_dither_pattern", gfx_options.pic0_dither_pattern, dither_pattern),
+	OPT_NVP("pic0_brush_mode", gfx_options.pic0_brush_mode, brush_mode),
+	OPT_NVP("pic0_line_mode", gfx_options.pic0_line_mode, line_mode),
+	OPT_NVP("dirty_strategy", gfx_options.dirty_frames, dirty_strategy),
+	OPT_INVERSE_NVP("pic0_scaled", gfx_options.pic0_unscaled, yesno),
+	OPT_NVP("pic_filter", gfx_options.pic_xlate_filter, filter_mode),
+	OPT_NVP("text_filter", gfx_options.text_xlate_filter, filter_mode),
+	OPT_NVP("view_filter", gfx_options.view_xlate_filter, filter_mode),
+	OPT_NVP("cursor_filter", gfx_options.cursor_xlate_filter, filter_mode),
+	OPT_NVP("mouse", mouse, yesno),
+	OPT_INT("pic_buffer_size", gfx_options.buffer_pics_nr, 0, 4096),
+	OPT_INT("alpha_threshold", alpha_threshold, 0, 255),
+	OPT_INT("animation_delay", animation_delay, 0, 1000000),
+	OPT_STATICREF("gfx_driver", gfx_driver, parse_gfx_driver),
+	OPT_END
+};
+
+
+static void
+parse_option(char *option, int optlen, char *value);
+
 %}
 
 DIGIT [0-9]
-PARAMTOKEN [[:alpha:]][[:alnum:]_]*
+PARAMTOKEN [[:alpha:]][[:alnum:]_-]*
 SCIVERSION {DIGIT}"."{DIGIT}{3}"."{DIGIT}{3}
 NUMTOKEN {DIGIT}+
 NUMPARAMTOKEN {NUMTOKEN}|{PARAMTOKEN}
@@ -188,152 +248,6 @@ NUMPARAMTOKEN {NUMTOKEN}|{PARAMTOKEN}
 	}
 }
 
-pic0_dither_mode[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
-	yytext = strchr(yytext, '=') + 1;
-
-	while (isspace(*yytext))
-		yytext++;
-	conf[cur_section].gfx_options.pic0_dither_mode = 
-		_parse_name(yytext, valid_modes, "color mode", conf[cur_section].gfx_options.pic0_dither_mode);
-}
-
-color_mode[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} { /* Deprecated: For backward compatibility */
-	yytext = strchr(yytext, '=') + 1;
-
-	while (isspace(*yytext))
-		yytext++;
-	conf[cur_section].gfx_options.pic0_dither_mode =
-		_parse_name(yytext, valid_modes, "color mode", conf[cur_section].gfx_options.pic0_dither_mode);
-}
-
-pic0_dither_pattern[[:blank:]]*"="[[:blank:]]*{NUMPARAMTOKEN} {
-	yytext = strchr(yytext, '=') + 1;
-
-	while (isspace(*yytext))
-		yytext++;
-	conf[cur_section].gfx_options.pic0_dither_pattern =
-		_parse_name(yytext, dither_pattern, "SCI0 pic dither pattern", conf[cur_section].gfx_options.pic0_dither_pattern);
-}
-
-pic0_brush_mode[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
-	yytext = strchr(yytext, '=') + 1;
-
-	while (isspace(*yytext))
-		yytext++;
-	conf[cur_section].gfx_options.pic0_brush_mode =
-		_parse_name(yytext, brush_mode, "SCI0 pic brush mode", conf[cur_section].gfx_options.pic0_brush_mode);
-}
-
-pic0_line_mode[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
-	yytext = strchr(yytext, '=') + 1;
-
-	while (isspace(*yytext))
-		yytext++;
-	conf[cur_section].gfx_options.pic0_line_mode =
-		_parse_name(yytext, line_mode, "SCI0 pic line mode", conf[cur_section].gfx_options.pic0_line_mode);
-}
-
-dirty_strategy[[:blank:]]*"="[[:blank:]]*{NUMPARAMTOKEN} {
-	yytext = strchr(yytext, '=') + 1;
-
-	while (isspace(*yytext))
-		yytext++;
-	conf[cur_section].gfx_options.dirty_frames =
-		_parse_name(yytext, dirty_strategy, "dirty strategy", conf[cur_section].gfx_options.dirty_frames);
-}
-
-pic0_scaled[[:blank:]]*"="[[:blank:]]*{NUMPARAMTOKEN} {
-	yytext = strchr(yytext, '=') + 1;
-
-	while (isspace(*yytext))
-		yytext++;
-	conf[cur_section].gfx_options.pic0_unscaled =
-		!_parse_name(yytext, yesno, "pic0 scaling", !conf[cur_section].gfx_options.pic0_unscaled);
-}
-
-pic_filter[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
-	yytext = strchr(yytext, '=') + 1;
-
-	while (isspace(*yytext))
-		yytext++;
-	conf[cur_section].gfx_options.pic_xlate_filter =
-		_parse_name(yytext, filter_mode, "pic filter", conf[cur_section].gfx_options.pic_xlate_filter);
-}
-
-text_filter[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
-	yytext = strchr(yytext, '=') + 1;
-
-	while (isspace(*yytext))
-		yytext++;
-	conf[cur_section].gfx_options.text_xlate_filter =
-		_parse_name(yytext, filter_mode, "text filter", conf[cur_section].gfx_options.text_xlate_filter);
-}
-
-view_filter[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
-	yytext = strchr(yytext, '=') + 1;
-
-	while (isspace(*yytext))
-		yytext++;
-	conf[cur_section].gfx_options.view_xlate_filter =
-		_parse_name(yytext, filter_mode, "view filter", conf[cur_section].gfx_options.view_xlate_filter);
-}
-
-cursor_filter[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
-	yytext = strchr(yytext, '=') + 1;
-
-	while (isspace(*yytext))
-		yytext++;
-	conf[cur_section].gfx_options.cursor_xlate_filter =
-		_parse_name(yytext, filter_mode, "cursor filter", conf[cur_section].gfx_options.cursor_xlate_filter);
-}
-
-mouse[[:blank:]]*"="[[:blank:]]*{NUMPARAMTOKEN} {
-	yytext = strchr(yytext, '=') + 1;
-
-	while (isspace(*yytext))
-		yytext++;
-	conf[cur_section].mouse =
-		!_parse_name(yytext, yesno, "mouse", !conf[cur_section].mouse);
-}
-
-pic_buffer_size[[:blank:]]*"="[[:blank:]]*{NUMTOKEN} {
-	int val;
-	yytext = strchr(yytext, '=') + 1;
-
-	while (isspace(*yytext))
-		yytext++;
-
-	val = atoi(yytext);
-	if (val < 0) {
-		printf("No negative values allowed for pic buffer size\n");
-	} else conf[cur_section].gfx_options.buffer_pics_nr = val;
-}
-
-alpha_threshold[[:blank:]]*"="[[:blank:]]*{NUMTOKEN} {
-	int val;
-	yytext = strchr(yytext, '=') + 1;
-
-	while (isspace(*yytext))
-		yytext++;
-
-	val = atoi(yytext);
-	if (val < 0) {
-		printf("No negative values allowed for alpha_threshold\n");
-	} else conf[cur_section].alpha_threshold = val;
-}
-
-animation_delay[[:blank:]]*"="[[:blank:]]*{NUMTOKEN} {
-	int val;
-	yytext = strchr(yytext, '=') + 1;
-
-	while (isspace(*yytext))
-		yytext++;
-
-	val = atoi(yytext);
-	if (val < 0) {
-		printf("No negative values allowed for animation_delay\n");
-	} else conf[cur_section].animation_delay = val;
-}
 
 version[[:blank:]]*"="[[:blank:]]*{SCIVERSION} { /***** End of graphics *****/
 
@@ -367,15 +281,6 @@ resource_dir[[:blank:]]*"="[[:blank:]]*.+  if (cur_section) {
 	conf[cur_section].resource_dir = strdup(yytext);
 }
 
-
-gfx_driver[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
-	yytext = strchr(yytext, '=') + 1;
-
-	while (isspace(*yytext))
-		yytext++;
-
-	conf[cur_section].gfx_driver = _parse_gfx_driver(yytext);
-}
 
 debug_mode[[:blank:]]*"="[::blank:]]*.+  {
         yytext = strchr(yytext, '=') + 1;
@@ -424,6 +329,22 @@ debug_mode[[:blank:]]*"="[::blank:]]*.+  {
 }
 
 
+{PARAMTOKEN}[[:blank:]]*"="[[:blank:]]*{NUMPARAMTOKEN} { /* Normal config option */
+	char *option_str = yytext;
+	char *value_str = yytext;
+	int option_str_len;
+
+	while (isalnum(*value_str) || *value_str == '_')
+		++value_str;
+
+	option_str_len = value_str - option_str;
+
+	while (!(isalnum(*value_str) || *value_str == '_'))
+		++value_str;
+
+	parse_option(option_str, option_str_len, value_str);
+}
+
 
 
 "#".+$ /* Ignore comments */
@@ -435,7 +356,7 @@ debug_mode[[:blank:]]*"="[::blank:]]*.+  {
         yyterminate();
 }
 
-.* printf("Unrecognized option: %s\n", yytext);
+.* printf("Unrecognized option: '%s'\n", yytext);
 
 %%
 
@@ -584,7 +505,7 @@ config_free(config_entry_t **conf, int entries)
 
 
 static int
-_parse_name(char *name, name_value_pair *nvps, char *what, int oldval)
+parse_name(char *name, name_value_pair *nvps, char *what, int oldval)
 {
 	int i = 0;
 
@@ -601,15 +522,90 @@ _parse_name(char *name, name_value_pair *nvps, char *what, int oldval)
 }
 
 
-static gfx_driver_t *
-_parse_gfx_driver(char *driver_name)
+static void *
+parse_gfx_driver(char *driver_name)
 {
 	gfx_driver_t *retval = gfx_find_driver(driver_name);
 
 	if (retval)
-		return retval;
+		return (void *) retval;
 	/* not found - return default */
 
 	printf ("Unknown graphics driver %s\n", driver_name);
-	return conf->gfx_driver;
+	return (void *) conf->gfx_driver;
 }
+
+
+static void
+parse_option(char *option, int optlen, char *value)
+{
+	int optindex = 0;
+	standard_option *opt = NULL;
+
+	while (!opt && standard_options[optindex].type)
+		if (optlen == strlen(standard_options[optindex].name)
+		    && !strncmp(standard_options[optindex].name, option, optlen))
+			opt = &(standard_options[optindex]);
+		else
+			optindex++;
+
+
+	if (!opt) {
+		fprintf(stderr,"Invalid option '%s'\n", option);
+		return;
+	}
+
+
+
+	switch (opt->type) {
+
+	case OPTION_TYPE_INT: {
+		char *foo;
+		int int_value = strtol(value, &foo, 0);
+
+		if (*foo) {
+			fprintf(stderr, "Option '%s' expects numeric value; encountered '%s'\n",
+				opt->name, value);
+			return;
+		}
+
+		if (int_value < opt->min) {
+			fprintf(stderr, "Option '%s' expects value >= %d; encountered '%s'\n", opt->name, opt->min, value);
+			return;
+		}
+
+		if (int_value < opt->max) {
+			fprintf(stderr, "Option '%s' expects value <= %d; encountered '%s'\n", opt->name, opt->max, value);
+			return;
+		}
+
+		*((int *)(((char *)&(conf[cur_section])) + opt->varoffset)) = int_value; /* Store value */
+
+		break;
+	}
+
+	case OPTION_TYPE_INVERSE_NVP:
+	case OPTION_TYPE_NVP: {
+		int int_value = parse_name(value, opt->nvp, opt->name, BAD_INT_VALUE);
+
+		if (int_value != BAD_INT_VALUE) {
+
+			if (opt->type == OPTION_TYPE_INVERSE_NVP)
+				int_value = !int_value;
+
+			*((int *)(((char*)&(conf[cur_section])) + opt->varoffset)) = int_value; /* Store value */
+		}
+		break;
+	}
+
+
+	case OPTION_TYPE_STATICREF: {
+		*((void **)(((char *)&(conf[cur_section])) + opt->varoffset)) = opt->parse_funct(value);
+		break;
+	}
+
+	default:
+		fprintf(stderr, "INTERNAL ERROR in %s, parse_option(), line %d\n", __FILE__, __LINE__);
+	}
+}
+

@@ -1,3 +1,9 @@
+2001-03-01  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/config.l: Simplified config.l management
+
+	* configure.in: Added check for ALSA (originally by Chris Lansdown)
+
 2001-03-01  Solomon Peachy <pizza@shaftnet.org>
 	* sound/midi_mt32.c:  Fixed a overflow problem with reverb.
 	                      All sysex-generating events now
@@ -10,9 +16,6 @@
 	* sound/midiout_unixraw.c:  Better debug output.
 	* sound/soundserver_null.c: Better debug output.
 				    Error checking on midi_writes
-
-2001-03-01  Solomon Peachy <pizza@shaftnet.org>
-
 	* include/midiout.h
 	  sound/Makefile.am
 	  sound/midiout_unixraw.c:  Added in the unixraw driver.

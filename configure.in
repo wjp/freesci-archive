@@ -23,6 +23,7 @@ AC_CHECK_SIZEOF(short)
 AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_FUNCS(pipe socketpair fork sched_yield memfrob ffs getopt_long)
+AM_PATH_ALSA(0.4.0, [AC_DEFINE(HAVE_ALSA)], [echo >/dev/null])
 AC_PATH_GGI
 AC_PATH_CURSES
 AC_PATH_X
