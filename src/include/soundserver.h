@@ -40,6 +40,7 @@
 #define SOUND_TICK 1000000 / 60
 /* Approximately 16666 microseconds */
 
+const int MIDI_cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0};
 
 /* INTERNAL SOUND COMMANDS */
 #define SOUND_COMMAND_MAPPINGS 100

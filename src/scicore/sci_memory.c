@@ -155,7 +155,7 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct)
 {
 	void *res;
 	char *strres;
-	int rlen = MIN(strlen(src), length) + 1;
+	int rlen = (int)MIN(strlen(src), length) + 1;
 #ifdef MALLOC_DEBUG
 	INFO_MEMORY("_SCI_STRNDUP()", 0, file, line, funct);
 #endif

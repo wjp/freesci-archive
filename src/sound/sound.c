@@ -585,7 +585,6 @@ sound_eq_retreive_event(sound_eq_t *queue)
 
 /* process the actual midi events */
 
-const int MIDI_cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0};
 /* Taken from playmidi */
 
 void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 param,

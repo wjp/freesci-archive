@@ -22,6 +22,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="1"
 				InlineFunctionExpansion="2"
+				OptimizeForProcessor="2"
 				AdditionalIncludeDirectories="..\..\..\SDL\include,..\include,..\include\win32"
 				PreprocessorDefinitions="NDEBUG;HAVE_MEMCHR;PACKAGE=\&quot;FreeSCI\&quot;;X_DISPLAY_MISSING;HAVE_SDL;_WINDOWS;_USRDLL;FREESCI_EXPORTS;VERSION=__TIMESTAMP__;WIN32;_CONSOLE;HAVE_STRING_H;WANT_CONSOLE"
 				StringPooling="TRUE"
@@ -116,7 +117,8 @@
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/fsci.pdb"
 				ImportLibrary=".\Debug/fsci.lib"
-				TargetMachine="1"/>
+				TargetMachine="1"
+				FixedBaseAddress="1"/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="_DEBUG"
@@ -161,7 +163,7 @@
 				PreprocessorDefinitions="NDEBUG;PACKAGE=\&quot;FreeSCI\&quot;;VERSION=\&quot;0.3.4\&quot;;WIN32;_CONSOLE;HAVE_SDL;HAVE_GETOPT_H;HAVE_USLEEP;HAVE_SYS_STAT_H;HAVE_FCNTL_H;HAVE_STRING_H;SATISFY_PURIFY;YY_NO_UNISTD_H;WANT_CONSOLE;X_DISPLAY_MISSING;HAVE_MEMCHR"
 				StringPooling="TRUE"
 				BasicRuntimeChecks="0"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				BufferSecurityCheck="FALSE"
 				RuntimeTypeInfo="TRUE"
 				UsePrecompiledHeader="2"
@@ -863,37 +865,14 @@
 				</File>
 				<File
 					RelativePath="..\gfx\gfx_console.c">
-				</File>
-				<File
-					RelativePath="..\gfx\gfx_crossblit.c">
 					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="TRUE">
+						Name="Release|Win32">
 						<Tool
 							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="TRUE">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Purify|Win32"
-						ExcludedFromBuild="TRUE">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							BasicRuntimeChecks="3"
-							BrowseInformation="1"/>
+							GlobalOptimizations="TRUE"
+							FavorSizeOrSpeed="2"
+							OptimizeForProcessor="2"
+							PreprocessorDefinitions="WANT_CONSOLE"/>
 					</FileConfiguration>
 				</File>
 				<File
@@ -2271,6 +2250,51 @@
 			</File>
 			<File
 				RelativePath="..\include\script.h">
+			</File>
+			<File
+				RelativePath="..\include\sfx_adlib.h">
+			</File>
+			<File
+				RelativePath="..\include\sfx_audiobuf.h">
+			</File>
+			<File
+				RelativePath="..\include\sfx_core.h">
+			</File>
+			<File
+				RelativePath="..\include\sfx_device.h">
+			</File>
+			<File
+				RelativePath="..\include\sfx_engine.h">
+			</File>
+			<File
+				RelativePath="..\include\sfx_iterator.h">
+			</File>
+			<File
+				RelativePath="..\include\sfx_iterator_internal.h">
+			</File>
+			<File
+				RelativePath="..\include\sfx_mixer.h">
+			</File>
+			<File
+				RelativePath="..\include\sfx_pcm.h">
+			</File>
+			<File
+				RelativePath="..\include\sfx_player.h">
+			</File>
+			<File
+				RelativePath="..\include\sfx_sequencer.h">
+			</File>
+			<File
+				RelativePath="..\include\sfx_softseq.h">
+			</File>
+			<File
+				RelativePath="..\include\sfx_songlib.h">
+			</File>
+			<File
+				RelativePath="..\include\sfx_time.h">
+			</File>
+			<File
+				RelativePath="..\include\sfx_timer.h">
 			</File>
 			<File
 				RelativePath="..\include\sound.h">

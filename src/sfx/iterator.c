@@ -910,7 +910,6 @@ _sci1_dump_state(sci1_song_iterator_t *self)
 	sciprintf("------------------------------------------\n");
 }
 
-
 #define COMMAND_INDEX_NONE -1
 #define COMMAND_INDEX_PCM -2
 
@@ -924,7 +923,7 @@ _sci1_command_index(sci1_song_iterator_t *self)
 	for (i = 0; i < self->channels_nr; i++)
 		if ((self->channels[i].state != SI_STATE_PENDING)
 		    && (self->channels[i].state != SI_STATE_FINISHED))  {
-
+ 
 			if ((self->channels[i].state == SI_STATE_DELTA_TIME)
 			    && (self->channels[i].delay == 0))
 				return i;
@@ -1479,7 +1478,6 @@ _tee_check_pcm(tee_song_iterator_t *it)
 {
 	static int pcm_masks[2] = {TEE_LEFT_PCM, TEE_RIGHT_PCM};
 	int i;
-	song_iterator_t *theit = NULL;
 
 	for (i = TEE_LEFT; i <= TEE_RIGHT; i++)
 		if (it->status & pcm_masks[i]) {
@@ -1637,20 +1635,20 @@ songit_new_tee(song_iterator_t *left, song_iterator_t *right, int may_destroy)
 				it->channel_mask |= (1 << firstfree);
 			}
 		}
-//#ifdef DEBUG_TEE_ITERATOR
+#ifdef DEBUG_TEE_ITERATOR
 	if (incomplete_map) {
+		int c;
 		fprintf(stderr, "[songit-tee <%08lx,%08lx>] Channels:"
 			" %04x <- %04x | %04x\n",
 			left->ID, right->ID,
 			it->channel_mask,
 			left->channel_mask, right->channel_mask);
-		int c;
 		for (c =0 ; c < 2; c++)
 			for (i =0 ; i < 16; i++)
 				fprintf(stderr, "  map [%d][%d] -> %d\n",
 					c, i, it->children[c].channel_remap[i]);
 	}
-//#endif
+#endif
 
 
 	it->next = (int(*)(song_iterator_t *, unsigned char *, int *))
@@ -1880,6 +1878,8 @@ song_iterator_add_death_listener(song_iterator_t *it,
 
 	it->death_listeners[it->death_listeners_nr].notify = notify;
 	it->death_listeners[it->death_listeners_nr].self = client;
+
+	it->death_listeners_nr++;
 }
 
 void

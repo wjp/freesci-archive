@@ -341,6 +341,9 @@ _gfxop_draw_pointer(gfx_state_t *state)
 		state->old_pointer_draw_pos.x = x;
 		state->old_pointer_draw_pos.y = y;
 
+		/* FIXME: we are leaking the mouse_pointer_bg, but freeing it causes weirdness in jones
+		 * we should reuse the buffer instead of malloc/free for better performance */
+
 		retval = _gfxop_grab_pixmap(state, &(state->mouse_pointer_bg), x, y,
 					    ppxm->xl, ppxm->yl, 0,
 					    &(state->pointer_bg_zone));
