@@ -495,7 +495,7 @@ kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   if (fd == -1) {
     SCIkwarn(SCIkWARNING,"Could not test for disk space: %s\n", strerror(errno));
-    SCIkwarn(SCIkWARNING," -Test path was '%s'\n", testpath);
+    SCIkwarn(SCIkWARNING,"Test path was '%s'\n", testpath);
     free(testpath);
     s->acc = 0;
     return;

@@ -1,5 +1,10 @@
 2001-09-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/game.c (script_init_engine): Savegame directory is
+	now preserved during restart.
+	(script_init_engine): Locked vocab.996 while using it and allocating
+	scripts
+
 	* src/gfx/operations.c (_gfxop_draw_pointer): Fixed parameter to
 	correctly grab pixmap on the visual (rather than priority) map,
 	fixes emulated mouse pointers

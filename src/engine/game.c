@@ -235,7 +235,7 @@ suggested_script(resource_t *res, int class)
 int
 script_init_engine(state_t *s, sci_version_t version)
 {
-	resource_t *vocab996 = scir_find_resource(s->resmgr, sci_vocab, 996, 0);
+	resource_t *vocab996 = scir_find_resource(s->resmgr, sci_vocab, 996, 1);
 	int i;
 	int scriptnr;
 	int seeker;
@@ -332,9 +332,15 @@ script_init_engine(state_t *s, sci_version_t version)
 
 		}
 	}
+	scir_unlock_resource(s->resmgr, vocab996);
+	vocab996 = NULL;
 
 	s->_heap = heap_new();
 	s->heap = s->_heap->start;
+
+	/* Allocate static buffer for savegame and CWD directories */
+	s->save_dir = heap_allocate(s->_heap, MAX_HOMEDIR_SIZE + strlen(FREESCI_GAMEDIR)
+				    + MAX_GAMEDIR_SIZE + 4); /* +4 for the three slashes and trailing \0 */
 
 	save_ff(s->_heap); /* Save heap state */
 
@@ -385,6 +391,8 @@ script_free_vm_memory(state_t *s)
 	int i;
 
 	sciprintf("Freeing VM memory\n");
+
+	heap_free(s->_heap, s->save_dir);
 
 	for (i = 0; i < MAX_HUNK_BLOCKS; i++)
 		if (s->hunk[i].size) {
@@ -523,9 +531,6 @@ game_init(state_t *s)
 	memset(s->hunk, sizeof(s->hunk), 0); /* Sets hunk to be unused */
 	memset(s->clone_list, sizeof(s->clone_list), 0); /* No clones */
 
-	s->save_dir = heap_allocate(s->_heap, MAX_HOMEDIR_SIZE + strlen(FREESCI_GAMEDIR)
-				    + MAX_GAMEDIR_SIZE + 4); /* +4 for the three slashes and trailing \0 */
-
 	/*	script_dissect(0, s->selector_names, s->selector_names_nr); */
 	game_obj = script0 + GET_HEAP(s->scripttable[0].export_table_offset + 2);
 	/* The first entry in the export table of script 0 points to the game object */
@@ -586,7 +591,6 @@ game_exit(state_t *s)
 			s->scripttable[i].heappos = 0;
 
 	heap_free(s->_heap, s->stack_handle);
-	heap_free(s->_heap, s->save_dir);
 	heap_free(s->_heap, s->parser_base - 2);
 	restore_ff(s->_heap); /* Restore former heap state */
 

@@ -414,6 +414,7 @@ void
 _scir_unalloc(resource_t *res)
 {
 	sci_free(res->data);
+	res->data = NULL;
 	res->status = SCI_STATUS_NOMALLOC;
 }
 
