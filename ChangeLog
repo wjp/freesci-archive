@@ -1,3 +1,8 @@
+2003-01-12  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/directfb_driver.c (_scidfb_init_input): Ported to
+	new directfb API, improved checks
+
 2003-01-13  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* Makefile.am, src/Makefile.am, src/gfx/drivers/Makefile.am,

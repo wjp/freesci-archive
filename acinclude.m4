@@ -246,7 +246,7 @@ AC_MSG_CHECKING([for directfb])
 
 ac_directfb_so=""
 
-_ac_directfb_includes="-I/usr/include -I/usr/local/include"
+_ac_directfb_includes="-I/usr/include -I/usr/include/directfb -I/usr/local/include -I/usr/local/include/directfb"
 _ac_directfb_libraries="-L/usr/lib -L/usr/local/lib -L/usr/local/directfb/lib"
 
 
@@ -275,9 +275,9 @@ if test x"$with_directfb" = xno; then
 	ac_directfb_includes=""
 else
 
-	AC_CHECK_INCLUDE_PATH([directfb/directfb.h],[$_ac_ggi_includes],[], ac_directfb_includes)
+	AC_CHECK_INCLUDE_PATH([directfb.h],[$_ac_directfb_includes],[], ac_directfb_includes)
 	AC_CHECK_LINK_PATH([DirectFBInit(0, 0);],$_ac_directfb_libraries,["-ldirectfb"],
-			 [$ac_directfb_includes],[#include <directfb/directfb.h>], ac_directfb_libraries)
+			 [$ac_directfb_includes],[#include <directfb.h>], ac_directfb_libraries)
 
 	if test "$ac_directfb_includes" = no || test "$ac_directfb_libraries" = no; then
 

@@ -38,7 +38,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <directfb/directfb.h>
+#include <directfb.h>
 #include <unistd.h>
 
 #define SCIDFB_DRIVER_VERSION "0.4"
@@ -147,9 +147,11 @@ scidfb_mode_callback(unsigned int width, unsigned int height, unsigned int bpp, 
 
 
 static DFBEnumerationResult
-scidfb_layer_callback(unsigned int layer_id, DFBDisplayLayerCapabilities caps, void *resultp)
+scidfb_layer_callback(DFBDisplayLayerID layer_id, DFBDisplayLayerDescription descr,
+		      void *resultp)
 {
 	unsigned int *results = (unsigned int *) resultp;
+	DFBDisplayLayerCapabilities caps = descr.caps;
 
 	if (!(caps & DLCAPS_SURFACE))
 		return DFENUM_OK; /* We need a surface */
@@ -205,14 +207,14 @@ scidfb_find_layer()
 
 	results[1] = 0;
 	SCIDFB_CHECKED(scidfb_framebuffer->EnumDisplayLayers(scidfb_framebuffer,
-						      scidfb_layer_callback, &results));
+							     scidfb_layer_callback, &results));
 
 	if (!results[1])
 		return GFX_FATAL; /* No decent layer! */
 	else {
 		SCIDFB_CHECKED(scidfb_framebuffer->GetDisplayLayer(scidfb_framebuffer,
-							    results[0],
-							    &scidfb_layer));
+								   results[0],
+								   &scidfb_layer));
 		
 		return GFX_OK;
 	}
@@ -251,11 +253,12 @@ _scidfb_init_input(int *found_keyboard, int *found_mouse)
 	}
 
 	
-	SCIDFB_CHECKED(scidfb_framebuffer->CreateEventBuffer(scidfb_framebuffer,
-							     DICAPS_KEYS
-							     | DICAPS_AXES
-							     | DICAPS_BUTTONS,
-							     &scidfb_input_buffer));
+	SCIDFB_CHECKED(scidfb_framebuffer->CreateInputEventBuffer(scidfb_framebuffer,
+								  DICAPS_KEYS
+								  | DICAPS_AXES
+								  | DICAPS_BUTTONS,
+								  DFB_TRUE,
+								  &scidfb_input_buffer));
 }
 
 static int
@@ -421,7 +424,7 @@ scidfb_xlate_key(DFBInputDeviceKeyIdentifier key, int keysym)
 	case DIKI_KP_9: return SCI_K_PGUP;
 
 	default:
-
+		break;
 	}
 	return 0; /* Could not map key */
 }

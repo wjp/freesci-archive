@@ -40,22 +40,22 @@ static int oss_fd;
 
 static void *sound_thread (void *arg)
 {
-  int count, j;
-  gint16 *b = buffer;
-  int shift = (pcmout_stereo) ? 2: 1;
+	int count, j;
+	gint16 *b = buffer;
+	int shift = (pcmout_stereo) ? 2: 1;
 
-  while(run) {
-    count = mix_sound(BUFFER_SIZE) << shift;  
-    b = buffer;
+	while(run) {
+		count = mix_sound(BUFFER_SIZE) << shift;  
+		b = buffer;
 
-    do {
-      if ((j = write (oss_fd, b, count)) > 0) {
-	count -= j;
-	b += j;
-      }
-    } while (count);
-  }
-  pthread_exit(0);
+		do {
+			if ((j = write (oss_fd, b, count)) > 0) {
+				count -= j;
+				b += j;
+			}
+		} while (count);
+	}
+	pthread_exit(0);
 }
 
 static int pcmout_oss_open(gint16 *b, guint16 rate, guint8 stereo) 

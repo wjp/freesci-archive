@@ -1,5 +1,7 @@
 EXTRA_DIST = dc_driver.c
-INCLUDES = -I$(top_srcdir)/src/include @ac_ggi_includes@ @ac_png_includes@ @X_CFLAGS@
+INCLUDES = -I$(top_srcdir)/src/include @ac_ggi_includes@ @ac_png_includes@ @X_CFLAGS@ \
+		@ac_directfb_includes@
+
 AM_CFLAGS = $(SDL_CFLAGS)
 LDADD =  $(LDADD_ALL)
 
@@ -11,8 +13,8 @@ gfxdriverdir = $(libdir)/freesci/gfx
 noinst_LIBRARIES = libscidrivers.a
 libscidrivers_a_SOURCES = gfx_drivers.c xlib_driver.c ggi_driver.c sdl_driver.c directfb_driver.c \
 				null_driver.c
-#libscidrivers_a_OBJECTS = gfx_drivers.o @fsci_xlib_st@ @fsci_ggi_st@ @fsci_sdl_st@
-
+#libscidrivers_a_OBJECTS = gfx_drivers.o @fsci_xlib_st@ @fsci_ggi_st@ \
+#                         @fsci_sdl_st@
 
 #xlib_driver_la_LDFLAGS = -rpath $(gfxdriverdir) -module -no-undefined \
 #			 -export-symbols $(srcdir)/EXPORTS_xlib
