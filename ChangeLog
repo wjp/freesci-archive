@@ -1,5 +1,8 @@
 2003-02-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/kscripts.c (invoke_selector): Recover xstack from state
+	before using it
+
 	* configure.in: Applied Bas' fix for Debian freetype dirs
 
 	* src/engine/kscripts.c (kDisposeClone): NULL pointers in freed
