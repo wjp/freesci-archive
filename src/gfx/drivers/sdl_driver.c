@@ -371,8 +371,8 @@ sdl_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
     rect_t newline;
 
     scolor = sdl_map_color(drv, color);
-    newline.xl = line.xl;
-    newline.yl = line.yl;
+    newline.xl = line.x;
+    newline.yl = line.y;
 
     /* XXXX line_style = 
        (line_style == GFX_LINE_STYLE_NORMAL)? LineSolid : LineOnOffDash; 
@@ -382,7 +382,10 @@ sdl_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
       for (yc = -linewidth; yc++; yc <= linewidth) {
 	newline.x = line.x + xc;
 	newline.y = line.y + yc;
-	lineColor(S->visual[1], line.x, line.y, line.xl, line.yl, scolor);
+	newline.xl = line.x + line.xl + xc;
+	newline.yl = line.y + line.yl + yc;
+	lineColor(S->visual[1], newline.x, newline.y,
+		  newline.xl, newline.yl, scolor);
       }
   }
 
@@ -602,7 +605,7 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
     return GFX_ERROR;
   }
   
-  return GFX_ERROR;
+  return GFX_OK;
 }
 
 

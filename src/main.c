@@ -836,7 +836,7 @@ main(int argc, char** argv)
 		set_debug_mode (gamestate, 1, conf[conf_nr].debug_mode);
 
 
-#if 1
+#if 0
 	{
 		int j;
 		for (j =0; j < conf_entries; j++) {
@@ -849,10 +849,10 @@ main(int argc, char** argv)
 
 				while (subsys) {
 					driver_option_t *opt;
-					fprintf(stderr, "    {%s}\n", subsys->name);
+					fprintf(stderr, "    {%p,%s}\n", subsys->name,subsys->name);
 					opt = subsys->options;
 					while (opt) {
-						fprintf(stderr, "\t'%s' = '%s'\n", opt->option, opt->value);
+						fprintf(stderr, "\t%p'%s' = %p'%s'\n", opt->option, opt->option, opt->value,opt->value);
 						opt = opt->next;
 					}
 					subsys = subsys->next;

@@ -27,8 +27,9 @@ int midi_mt32_event(guint8 command, guint8 param, guint8 param2);
 int midi_mt32_event2(guint8 command, guint8 param);
 int midi_mt32_allstop(void);
 
-/* gm mapping of mt-32 */
+static int global_volume = 12;
 
+/* gm mapping of mt-32 */
 int midi_mt32gm_open(guint8 *data_ptr, unsigned int data_length)
 {
 	int i;
@@ -40,7 +41,7 @@ int midi_mt32gm_open(guint8 *data_ptr, unsigned int data_length)
 
 int midi_mt32gm_close()
 {
-  return midiout_close();
+	return midiout_close();
 }
 
 
@@ -58,7 +59,7 @@ int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2)
 	case 0x90:
 	case 0x80:  /* noteon and noteoff */
 		volume = param2;
-		param2 = (volume * MIDI_mapping[param].volume) >> 7;
+		param2 = (volume * MIDI_mapping[param].volume * global_volume) >> 11;
 		if (channel == RHYTHM_CHANNEL)
 			xparam = MIDI_mapping[param].gm_rhythmkey;
 		break;
@@ -126,8 +127,8 @@ int midi_mt32gm_event2(guint8 command, guint8 param)
 
 int midi_mt32gm_volume(guint8 volume)
 {
-  printf("MT32GM: Volume control not supported\n");
-  return 0;
+	global_volume = volume;
+	return 0;
 }
 
 int midi_mt32gm_reverb(short param)

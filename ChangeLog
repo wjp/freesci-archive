@@ -1,5 +1,12 @@
 2001-04-08  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/gfx/drivers/sdl_driver.c (sdl_draw_line): Fixed lines
+
+	* src/sound/midi_mt32gm.c (midi_mt32gm_volume): Added volume controls
+	to GM output
+
+	* src/config.l (config_free): Fixed segfault
+
 	* src/gfx/drivers/xlib_driver.c (x_get_event): xlib driver now uses
 	X11 modifier bits rather than tracking modifiers manually
 

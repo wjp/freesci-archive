@@ -541,19 +541,22 @@ config_free(config_entry_t **conf, int entries)
 	if ((*conf)->console_log)
 		free((*conf)->console_log);
 
-	for (i = 1; i < entries; i++) {
+	for (i = 0; i < entries; i++) {
 		int j;
 
-		free ((*conf)[i].name);
-		free ((*conf)[i].work_dir);
-		if ((*conf)[i].resource_dir)
-			free ((*conf)[i].resource_dir);
-		if ((*conf)[i].console_log)
-			free((*conf)[i].console_log);
+		if (i >= 1) {
+			free ((*conf)[i].name);
+			free ((*conf)[i].work_dir);
+			if ((*conf)[i].resource_dir)
+				free ((*conf)[i].resource_dir);
+			if ((*conf)[i].console_log)
+				free((*conf)[i].console_log);
+		}
 
-		for (j = 0; j < FREESCI_DRIVER_SUBSYSTEMS_NR; j++)
-			if ((*conf)->driver_options[j])
-				config_free_driver_subsystem((*conf)->driver_options[j]);
+		for (j = 0; j < FREESCI_DRIVER_SUBSYSTEMS_NR; j++) {
+			if ((*conf)[i].driver_options[j])
+				config_free_driver_subsystem((*conf)[i].driver_options[j]);
+		}
 	}
 
 	free (*conf);
@@ -762,7 +765,7 @@ copy_subsystem_options(config_entry_t *dest, config_entry_t *src)
 
 static void
 set_config_parameter(config_entry_t *conf, char *subsystem_name, char *driver_name,
-		       char *option, char *value)
+		     char *option, char *value)
 {
 	subsystem_options_t **subsys_optionsp;
 	driver_option_t **driver_optionsp;
