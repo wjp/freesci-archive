@@ -1,3 +1,7 @@
+2001-04-13  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (animate_do_animation): Misc. fixes
+
 2001-04-12  Matt Hargett  <matt@use.net>
 	
 	* src/gfx/drivers/dd_driver.cpp (dd_init_specific): Mode init fix

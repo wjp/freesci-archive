@@ -1107,6 +1107,8 @@ gamestate_restore(state_t *s, char *dirname)
 
 	/* Now copy all current state information */
 	/* Graphics and input state: */
+	retval->animation_delay = s->animation_delay;
+	retval->animation_granularity = s->animation_granularity;
 	retval->gfx_state = s->gfx_state;
 	gfxop_set_pointer_cursor(s->gfx_state, retval->mouse_pointer_nr);
 

@@ -396,5 +396,24 @@ gfx_get_driver_name(int nr);
 ** with 0 <= nr' < nr so that gfx_get_driver_name(nr') == NULL.
 */
 
+/*** Utility functions for set_parameter implementations */
+
+int
+string_truep(char *value);
+/* Tests whether a string expresses truth
+** Parameters: (char *) value: The value to test
+** Returns   : non-zero iff 'value' contans a string expressing something
+** along the lines of "yes"
+*/
+
+int
+string_falsep(char *value);
+/* Tests whether a string expresses falsehood
+** Parameters: (char *) value: The value to test
+** Returns   : non-zero iff 'value' contans a string expressing something
+** along the lines of "no"
+*/
+
+
 
 #endif /* !_SCI_GFX_DRIVER_H_ */

@@ -257,23 +257,6 @@ sciprintf(char *fmt, ...);
 */
 
 
-int
-string_truep(char *value);
-/* Tests whether a string expresses truth
-** Parameters: (char *) value: The value to test
-** Returns   : non-zero iff 'value' contans a string expressing something
-** along the lines of "yes"
-*/
-
-int
-string_falsep(char *value);
-/* Tests whether a string expresses falsehood
-** Parameters: (char *) value: The value to test
-** Returns   : non-zero iff 'value' contans a string expressing something
-** along the lines of "no"
-*/
-
-
 /* The following was originally based on glib.h code, which was
  * Copyright (C) 1995-1997  Peter Mattis, Spencer Kimball and Josh MacDonald
  */
