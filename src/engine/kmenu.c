@@ -110,7 +110,7 @@ struct {
 	 "Christopher T. Lansdown\nCVS maintenance, Alpha compatibility fixes",
 	 0, 15},
 	{"More FreeSCI hackers and contributors",
-	 "Claudio Matsuoka\nCVS snapshots, daily builds, bug reports\n\n"
+	 "Claudio Matsuoka\nCVS snapshots, daily builds, BeOS and cygwin ports\n\n"
 	 "Dark Minister\nSCI research (bytecode and parser)\n\n"
 	 "Dmitry Jemerov\nPort to the Win32 platform, numerous bugfixes\n\n"
 	 "Emmanuel Jeandel\nBugfixes and bug reports\n\n"
