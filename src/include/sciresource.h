@@ -64,17 +64,20 @@
 /*** INITIALIZATION RESULT TYPES ***/
 #define SCI_ERROR_IO_ERROR 1
 #define SCI_ERROR_EMPTY_OBJECT 2
-#define SCI_ERROR_NO_RESOURCE_FILES_FOUND 3
-/* neither resource.000 nor resource.001 were found */
-#define SCI_ERROR_UNKNOWN_COMPRESSION 4
-#define SCI_ERROR_DECOMPRESSION_OVERFLOW 5
+#define SCI_ERROR_INVALID_RESMAP_ENTRY 3
+/* Invalid resource.map entry */
+#define SCI_ERROR_RESMAP_NOT_FOUND 4
+#define SCI_ERROR_NO_RESOURCE_FILES_FOUND 5
+/* No resource at all was found */
+#define SCI_ERROR_UNKNOWN_COMPRESSION 6
+#define SCI_ERROR_DECOMPRESSION_OVERFLOW 7
 /* decompression failed: Buffer overflow (wrong SCI version?)  */
-#define SCI_ERROR_DECOMPRESSION_INSANE 6
+#define SCI_ERROR_DECOMPRESSION_INSANE 8
 /* sanity checks failed during decompression */
-#define SCI_ERROR_RESOURCE_TOO_BIG 7
+#define SCI_ERROR_RESOURCE_TOO_BIG 9
 /* Resource size exceeds SCI_MAX_RESOURCE_SIZE */
-#define SCI_ERROR_UNSUPPORTED_VERSION 8
-#define SCI_ERROR_INVALID_SCRIPT_VERSION 9
+#define SCI_ERROR_UNSUPPORTED_VERSION 10
+#define SCI_ERROR_INVALID_SCRIPT_VERSION 11
 
 #define SCI_ERROR_CRITICAL SCI_ERROR_NO_RESOURCE_FILES_FOUND
 /* the first critical error number */
@@ -228,7 +231,24 @@ scir_free_resource_manager(resource_mgr_t *mgr);
 ** Returns   : (void)
 */
 
+/**--- Resource map decoding functions ---*/
+
+int
+sci0_read_resource_map(resource_t **resources, int *resource_nr_p);
+/* Reads the resource.map file from a local directory
+** Parameters: (resource_t **) resources: Pointer to a pointer
+**                                        that will be set to the
+**                                        location of the resources
+**                                        (in one large chunk)
+**             (int *) resource_nr_p: Pointer to an int the number of resources
+**                                    read is stored in
+** Returns   : (int) 0 on success, an SCI_ERROR_* code otherwise
+*/
+
+
 /**--- Decompression functions ---**/
+
+
 
 int decompress0(resource_t *result, int resh);
 /* Decrypts resource data and stores the result for SCI0-style compression.

@@ -1,3 +1,8 @@
+2001-09-13  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/operations.c (_gfxop_scan_one_bitmask): Bitmask
+	scan now compensates for higher-resolution pixmaps
+
 2001-08-29  Matt Hargett  <matt@use.net>
 
         * README.Win32: Update to reflect current sources.

@@ -627,17 +627,24 @@ static int
 _gfxop_scan_one_bitmask(gfx_pixmap_t *pixmap, rect_t zone)
 {
 	int retval = 0;
-	int startindex = (pixmap->index_xl * zone.y) + zone.x;
+	int pixmap_xscale = pixmap->index_xl / 320;
+	int pixmap_yscale = pixmap->index_yl / 200;
+	int line_width = pixmap_yscale * pixmap->index_xl;
+	int startindex = (line_width * zone.y) + (zone.x * pixmap_xscale);
 
+	startindex += pixmap_xscale >> 1; /* Center on X */
+	startindex += (pixmap_yscale >> 1) * pixmap->index_xl; /* Center on Y */
+
+	fprintf(stderr,"Scanning bitmask size %d,%d\n", pixmap->index_xl, pixmap->index_yl);
 	if (_gfxop_clip(&zone, gfx_rect(0, 0, pixmap->index_xl, pixmap->index_yl)))
 		return 0;
 
 	while (zone.yl--) {
 		int i;
-		for (i = 0; i < zone.xl; i++)
+		for (i = 0; i < (zone.xl * pixmap_xscale); i += pixmap_xscale)
 			retval |= (1 << ((pixmap->index_data[startindex + i]) & 0xf));
 
-		startindex += pixmap->index_xl;
+		startindex += line_width;
 	}
 
 	return retval;

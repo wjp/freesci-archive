@@ -6,3 +6,8 @@ libscicore_a_SOURCES = console.c tools.c resource.c decompress0.c     \
 		 decompress01.c decompress1.c decompress11.c script.c \
 		 vocab.c vocab_debug.c old_objects.c modules.c        \
 		 sci_memory.c resource_map.c
+
+check_PROGRAMS = resmap_test
+
+resmap_test:
+	$(COMPILE) -I../.. -I../include -DHAVE_CONFIG_H -DTEST_RESOURCE_MAP $(top_srcdir)/src/scicore/resource_map.c libscicore.a -o $(top_builddir)/src/scicore/resmap_test

@@ -45,15 +45,6 @@
 #undef SCI_REQUIRE_RESOURCE_FILES
 
 
-resource_t *
-sci0_read_resource_map(int *resource_nr_p);
-/* Reads the resource.map file from a local directory
-** Parameters: (int *) resource_nr_p: Pointer to an int the number of resources
-**                                    read is stored in
-** Returns   : (resource_t *) The resources in one large chunk, or NULL on error
-*/
-
-
 const char* SCI_Version_Types[] = {
 	"SCI version undetermined (Autodetect failed / not run)",
 	"SCI version 0.xxx",
@@ -70,7 +61,9 @@ const char* SCI_Error_Types[] = {
 	"No error",
 	"I/O error",
 	"Resource is empty (size 0)",
-	"resource.000 or resource.001 not found",
+	"resource.map entry is invalid",
+	"resource.map file not found",
+	"No resource files found",
 	"Unknown compression method",
 	"Decompression failed: Decompression buffer overflow",
 	"Decompression failed: Sanity check failed",
@@ -485,8 +478,33 @@ void freeResources()
 /*------------------------------------------------*/
 
 resource_mgr_t *
-scir_new_resource_manager(char *dir, int version, char allow_patches, int max_memory)
+scir_new_resource_manager(char *dir, int version,
+			  char allow_patches, int max_memory)
 {
+	int resource_ok;
+	resource_mgr_t *mgr = sci_malloc(sizeof(resource_mgr_t));
+
+	mgr->max_memory = max_memory;
+	mgr->sci_version = version;
+
+	mgr->memory_locked = 0;
+	mgr->memory_lru = 0;
+
+	mgr->resource_path = dir;
+	resource_ok =
+		sci0_read_resource_map(&mgr->resources,
+				       &mgr->resources_nr);
+
+	if (!resource_ok) {
+		sci_free(mgr);
+		return NULL;
+	}
+
+	mgr->lru_first = NULL;
+	mgr->lru_last = NULL;
+
+	mgr->allow_patches = allow_patches;
+
 	return NULL;
 }
 
