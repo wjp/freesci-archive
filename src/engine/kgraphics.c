@@ -2398,6 +2398,8 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #define K_ANIMATE_CLOSE_CHECKERS_OPEN_CHECKERS 17 /* close random checkboard, reopen */
 #define K_ANIMATE_SCROLL_LEFT 0x28
 #define K_ANIMATE_SCROLL_RIGHT 0x29
+#define K_ANIMATE_SCROLL_DOWN 0x2a
+#define K_ANIMATE_SCROLL_UP 0x2b
 
 #define K_ANIMATE_OPEN_SIMPLE 100 /* No animation */
 
@@ -2783,6 +2785,38 @@ animate_do_animation(state_t *s, int funct_nr, int argc, reg_t *argv)
 						     gfx_point(319-i, 10)));
 			GFX_ASSERT(gfxop_draw_pixmap(s->gfx_state, s->old_screen,
 						     gfx_rect(i, 0, 320 - i, 190),
+						     gfx_point(0, 10)));
+			gfxop_update(s->gfx_state);
+
+			gfxop_usleep(s->gfx_state, s->animation_delay >> 3);
+		}
+		GRAPH_UPDATE_BOX(s, 0, 10, 320, 190);
+		break;
+
+	case K_ANIMATE_SCROLL_UP :
+
+		for (i = 0; i < 189; i += granularity0) {
+			GFX_ASSERT(gfxop_draw_pixmap(s->gfx_state, newscreen,
+						     gfx_rect(0, 190 - i, 320, i),
+						     gfx_point(0, 10)));
+			GFX_ASSERT(gfxop_draw_pixmap(s->gfx_state, s->old_screen,
+						     gfx_rect(0, 0, 320, 190 - i),
+						     gfx_point(0, 10 + i)));
+			gfxop_update(s->gfx_state);
+
+			gfxop_usleep(s->gfx_state, s->animation_delay >> 3);
+		}
+		GRAPH_UPDATE_BOX(s, 0, 10, 320, 190);
+		break;
+
+	case K_ANIMATE_SCROLL_DOWN :
+
+		for (i = 0; i < 189; i += granularity0) {
+			GFX_ASSERT(gfxop_draw_pixmap(s->gfx_state, newscreen,
+						     gfx_rect(0, 0, 320, i),
+						     gfx_point(0, 200 - i)));
+			GFX_ASSERT(gfxop_draw_pixmap(s->gfx_state, s->old_screen,
+						     gfx_rect(0, i, 320, 190 - i),
 						     gfx_point(0, 10)));
 			gfxop_update(s->gfx_state);
 

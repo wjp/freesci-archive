@@ -1,3 +1,8 @@
+2002-11-23  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (animate_do_animation): Added scrolling up
+	and down as transition animations
+
 2002-11-23  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/resource/sci_resmgr.c (gfxr_interpreter_get_view):
