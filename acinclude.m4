@@ -190,7 +190,7 @@ else
 		AC_SUBST(ac_graphics_ggi_libfile)
 		ac_graphics_ggi_libobjects="graphics_ggi.o"
 		AC_SUBST(ac_graphics_ggi_libobjects)
-		AC_DEFINE(HAVE_LIBGGI)
+		AC_DEFINE([HAVE_LIBGGI], [1], [Define to 1 if you have the `ggi' library (-lggi).])
 		fsci_ggi_driver="yes"
 	fi
 fi
@@ -230,7 +230,7 @@ else
 	else
 		AC_MSG_RESULT([found]);
 
-		AC_DEFINE(HAVE_PTHREADS)
+		AC_DEFINE([HAVE_PTHREADS], [1], [Define to 1 if you have the `pthread' library (-lpthread).])
 	fi
 fi
 
@@ -292,7 +292,7 @@ else
 		AC_SUBST(ac_graphics_directfb_libfile)
 		ac_graphics_directfb_libobjects="graphics_directfb.o"
 		AC_SUBST(ac_graphics_directfb_libobjects)
-		AC_DEFINE(HAVE_DIRECTFB)
+		AC_DEFINE([HAVE_DIRECTFB], [1], [Define to 1 if you have the `directfb' library (-ldirectfb).])
 		fsci_directfb_driver="yes"
 	fi
 fi
@@ -320,7 +320,7 @@ AC_TRY_COMPILE([
 	XShmAttach(display, &foo);
 ],[
 	AC_MSG_RESULT(found.)
-	AC_DEFINE(HAVE_MITSHM)
+	AC_DEFINE([HAVE_MITSHM], [1], [Define to 1 if you have MITSHM support.])
 ],[
 	AC_MSG_RESULT(not present.)
 	X_LIBS="$oldLIBS"
@@ -380,7 +380,7 @@ if test "$ac_curses_includes" = no || test "$ac_curses_libraries" = no; then
 else
 
 	AC_MSG_RESULT([found $ac_curses_libraries]);
-	AC_DEFINE(HAVE_CURSES)
+	AC_DEFINE([HAVE_CURSES], [1], [Define to 1 if you have the `curses' library (-lcurses).])
 
 fi
 

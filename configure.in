@@ -68,7 +68,7 @@ cygwin*)
 	;;
 
 darwin*)
-	AC_DEFINE(MACOSX)
+	AC_DEFINE([MACOSX], [1], [Define to 1 if you use Mac OS X.])
 	CFLAGS="-no-cpp-precomp $CFLAGS"
 	# Disable Apple's broken preprocessor
 	;;
@@ -76,7 +76,7 @@ darwin*)
 esac
 
 AC_CHECK_FUNCS(memchr fnmatch pipe socketpair fork sched_yield memf	rob ffs getopt_long isblank usleep)
-AM_PATH_ALSA(0.5.0, [AC_DEFINE(HAVE_ALSA)], [echo >/dev/null])
+AM_PATH_ALSA(0.5.0, [AC_DEFINE([HAVE_ALSA], [1], [Define to 1 if you have ALSA.])], [echo >/dev/null])
 AC_CHECK_HEADERS(sys/asoundlib.h alsa/asoundlib.h)
 AM_WITHOUT_SOUND
 AC_PATH_GGI
@@ -92,7 +92,6 @@ if test "${ac_cv_header_dmedia_midi_h}" = "yes"; then
 	case ${host_os} in
 	irix*)
 		found_sound=yes
-		AC_DEFINE(HAVE_DMEDIA_MIDI_H)
 		LIBS="-lmd $LIBS"
 	esac
 fi
@@ -103,7 +102,6 @@ if test "${ac_cv_header_dmedia_audio_h}" = "yes"; then
 	case ${host_os} in
 	irix*)
 		found_sound=yes
-		AC_DEFINE(HAVE_DMEDIA_AUDIO_H)
 		LIBS="-laudio -lpthread $LIBS"
 	esac
 fi
@@ -111,14 +109,13 @@ fi
 AC_CHECK_HEADERS(fluidsynth.h)
 
 if test "${ac_cv_header_fluidsynth_h}" = "yes"; then
-	AC_DEFINE(HAVE_FLUIDSYNTH_H)
 	LIBS="-lfluidsynth $LIBS"
 fi
 
 AC_ARG_WITH(sdl, [  --without-sdl           Do not build the SDL driver])
 if test x"$with_sdl" != xno; then
 	AM_PATH_SDL(1.1.8, 	[
-					AC_DEFINE(HAVE_SDL)
+					AC_DEFINE([HAVE_SDL], [1], [Define to 1 if you have the `SDL' library (-lSDL).])
 					fsci_sdl_driver="yes"
 				],
 				[
@@ -148,8 +145,7 @@ if test x"$have_x" = xyes; then
 	        CPPFLAGS="$CPPFLAGS -I/usr/include/freetype2"
 	        CPFLAGS="$CPFLAGS -I/usr/include/freetype2"
 	fi
-	AC_CHECK_HEADER(X11/Xft/Xft.h, [HAVE_X11_XFT_XFT_H=1
-	                                AC_DEFINE(HAVE_X11_XFT_XFT_H)])
+	AC_CHECK_HEADER([X11/Xft/Xft.h])
 	AC_CHECK_LIB(Xft, XftDisplayInfoGet, [X_LIBS="$XLIBS -lXft"])
 	AC_CHECK_HEADERS(X11/extensions/Xrender.h, [X_LIBS="$XLIBS -lXrender"])
 	AC_CHECK_LIB(fontconfig, FcInit, [X_LIBS="$X_LIBS -lfontconfig"])
@@ -171,7 +167,7 @@ AC_TRY_COMPILE([], [
 ], [
 	AC_MSG_RESULT(found.)
 	ev6_cpu="-mcpu=ev6"
-	AC_DEFINE(HAVE_ALPHA_EV6_SUPPORT)
+	AC_DEFINE([HAVE_ALPHA_EV6_SUPPORT], [1], [Define to 1 if you have Alpha EV6 or PCA56 hardware.])
 ],
 [
 	AC_MSG_RESULT(not present.);
@@ -262,10 +258,6 @@ if test x"$have_x" = xyes; then
    AC_CHECK_HEADERS([Xm/MwmUtil.h],[],[],[#include <X11/X.h>])
 fi
 
-if test "${ac_cv_header_Xm_MwmUtil_h}" = "yes"; then
-	AC_DEFINE(HAVE_XM_MWMUTIL_H)
-fi
-
 #AC_PATH_PNG
 AC_SUBST(ac_png_includes)
 AC_SUBST(ac_png_libraries)
@@ -291,17 +283,14 @@ AC_ARG_WITH(E,
 
 AC_ARG_WITH(console,
 	[  --with-console	  Build with on-screen console support],
-	[WANT_CONSOLE=64
-	 AC_DEFINE(WANT_CONSOLE)],
+	[AC_DEFINE(WANT_CONSOLE)],
 	[])
 
 AC_ARG_WITH(forced-console,
 	[  --with-forced-console  Enforce usage of on-screen console on all gfx drivers],
 	[
-	 WANT_CONSOLE=64
-	 AC_DEFINE(WANT_CONSOLE)
-	 FORCE_CONSOLE=1
-	 AC_DEFINE(FORCE_CONSOLE)],
+	 AC_DEFINE([WANT_CONSOLE], [1], [Define to 1 if you want to build with on-screen console support.])
+	 AC_DEFINE([FORCE_CONSOLE], [1], [Define to 1 if you want to enforce usage of on-screen console on all gfx drivers.])],
 	[])
 
 CFSML_FLAGS=""

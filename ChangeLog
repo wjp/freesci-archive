@@ -1,3 +1,9 @@
+2004-08-14  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* acconfig.h: Removed from repository.
+	* acinclude.m4, configure.in: Several small changes in order to
+	get rid of the autoconf warnings when reconfiguring.
+
 2004-08-01  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/menu/game_select.c (game_select_resource_found): Look for
