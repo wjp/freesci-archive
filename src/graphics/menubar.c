@@ -33,6 +33,38 @@
 #include <menubar.h>
 #include <engine.h>
 
+/*
+static int __active = 0;
+
+inline void*
+__my_malloc(long size, char *function, int line)
+{
+  void *retval = malloc(size);
+  __active++;
+  fprintf(stderr,"[%d] line %d, %s: malloc(%d) -> %p\n", __active, line, function, size, retval);
+  return retval;
+}
+
+inline void*
+__my_realloc(void *origin, long size, char *function, int line)
+{
+  void *retval = realloc(origin, size);
+  fprintf(stderr,"line %d, %s: realloc(%p, %d) -> %p\n", line, function, origin, size, retval);
+  return retval;
+}
+
+inline void
+__my_free(void *origin, char *function, int line)
+{
+  free(origin);
+  fprintf(stderr,"[%d] line %d, %s: free(%p)\n", __active, line, function, origin);
+  __active--;
+}
+
+#define malloc(x) __my_malloc(x, __PRETTY_FUNCTION__, __LINE__)
+#define realloc(x,y) __my_realloc(x,y, __PRETTY_FUNCTION__, __LINE__)
+#define free(x) __my_free(x, __PRETTY_FUNCTION__, __LINE__)
+*/
 
 char *
 malloc_cpy(char *source)
@@ -169,6 +201,8 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 
 	if (strncmp(left, MENU_HBAR_STRING, 3) == 0) {
 	  entrytype = MENU_TYPE_HBAR; /* Horizontal bar */
+	  free(left);
+	  left = NULL;
 	}
 
 	c_width = _menubar_add_menu_item(menu, entrytype, left, NULL, font, 0, 0, 0,

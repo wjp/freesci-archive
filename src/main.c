@@ -360,6 +360,13 @@ main(int argc, char** argv)
     fprintf(stderr,"Game initialization failed: Aborting...\n");
     return 1;
   }
+  /*
+  for (i = 0; i < 1000; i++) {
+    game_exit(gamestate);
+    printf("gamecheck loop %d\n", i);
+    game_init(gamestate);
+  }
+  */
 
   if (!game_name)
     game_name = gamestate->game_name;
@@ -401,6 +408,11 @@ main(int argc, char** argv)
       return 1;
     } 
     else gamestate->gfx_driver = gfx_drivers[j];
+  }
+
+  if (gamestate->gfx_driver == NULL) {
+    fprintf(stderr,"No graphics driver active. Aborting...\n");
+    exit(1);
   }
 
   if (strlen (conf[conf_nr].debug_mode))

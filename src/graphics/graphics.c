@@ -97,6 +97,7 @@ gfx_driver_t *gfx_drivers[] =
 
 int sci_color_mode = SCI_COLOR_DITHER;
 
+
 gfx_driver_t *
 graph_get_default_driver()
 {

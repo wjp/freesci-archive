@@ -131,6 +131,9 @@ sci_kernel_function_t kfunct_mappers[] = {
   {"FlushResources", kFlushResources },
   {"SetDebug", kSetDebug },
   {"GetSaveFiles", kGetSaveFiles },
+  {"CheckSaveGame", kCheckSaveGame },
+  {"SaveGame", kSaveGame },
+  {"RestoreGame", kRestoreGame },
 
   /* Experimental functions */
   {"RestartGame", kRestartGame },

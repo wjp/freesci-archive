@@ -194,7 +194,7 @@ sound_resume(state_t *s)
 
 
 int
-_sound_transmit_text_expect_anwer(state_t *s, char *text, int command, char *timeoutmessage)
+_sound_transmit_text_expect_answer(state_t *s, char *text, int command, char *timeoutmessage)
 {
   fd_set fds;
   GTimeVal timeout = {0, SOUND_SERVER_TIMEOUT};
@@ -219,15 +219,15 @@ _sound_transmit_text_expect_anwer(state_t *s, char *text, int command, char *tim
 int
 sound_save(state_t *s, char *dir)
 {
-  return _sound_transmit_text_expect_anwer(s, dir, SOUND_COMMAND_SAVE_STATE,
-					   "Sound server timed out while saving\n");
+  return _sound_transmit_text_expect_answer(s, dir, SOUND_COMMAND_SAVE_STATE,
+					    "Sound server timed out while saving\n");
 }
 
 int
 sound_restore(state_t *s, char *dir)
 {
-  return _sound_transmit_text_expect_anwer(s, dir, SOUND_COMMAND_RESTORE_STATE,
-					   "Sound server timed out while restoring\n");
+  return _sound_transmit_text_expect_answer(s, dir, SOUND_COMMAND_RESTORE_STATE,
+					    "Sound server timed out while restoring\n");
 }
 
 int

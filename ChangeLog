@@ -1,3 +1,23 @@
+1999-12-22  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kfile.c (kRestoreGame): Implemented RestoreGame(). Fixed
+	some related bugs. Saving/Restoring still doesn't work cleanly, but
+	it's slowly getting better.
+
+	* src/include/soundserver.h (SOUND_SERVER_TIMEOUT): Increased sound
+	timeout by 4900%. Restoring appears to take more than 2 ms on my box...
+
+	* src/core/cfsml.pl (create_string_functions): Fixed a bug that would
+	allocate one byte too few.
+
+1999-12-21  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kfile.c (kCheckSaveGame): Implemented CheckSaveGame()
+	(kSaveGame): Implemented SaveGame()
+
+	* src/main.c (main): Added check for graphics driver- abort if none is
+	present.
+
 1999-12-19  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/said.y (main): First implementation of the Said grammar

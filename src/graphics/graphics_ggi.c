@@ -287,7 +287,7 @@ graphics_draw_region_ggi(ggi_visual_t vis, byte *data,
 
     if ((yc < pointer_y) || (yc >= pointer_end_y))
       pointer_row = -1;
-    else if (pointer) pointer_row = (yc - pointer_y) * pointer->size_y;
+    else if (pointer) pointer_row = (yc - pointer_y) * pointer->size_x;
 
     if ((!pointer_x_affected) || (pointer_row == -1))
       for (xc=x; xc<xend; xc++)

@@ -536,7 +536,6 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    int size = event.value;
 	    int success = 1;
 	    int usecs, secs;
-
 	    while (size > 0) {
 	      int received = read(fd_in, dirptr, MIN(size, SSIZE_MAX));
 
@@ -549,7 +548,6 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	      dirptr += received;
 	      size -= received;
 	    }
-
 	    g_get_current_time(&last_played);
 
 	    success = soundsrv_restore_state(ds, dirname, songlib, &song,

@@ -428,18 +428,128 @@ _k_get_savedir_name(int nr)
   return savedir_name;
 }
 
+
+int
+_k_check_file(char *filename, int minfilesize)
+     /* Returns 0 if the file exists and is big enough */
+{
+  struct stat state;
+
+  if (stat(filename, &state))
+    return 1;
+
+  return (state.st_size < minfilesize);
+}
+
+int
+_k_find_savegame_by_name(char *game_id_file, char *name)
+{
+  int savedir_nr = -1;
+  int i;
+
+  for (i = 0; i < 16; i++) {
+    if (!chdir(_k_get_savedir_name(i))) {
+      char namebuf[32]; /* Save game name buffer */
+      FILE *idfile = fopen(game_id_file, "r");
+
+      if (idfile) {
+	fgets(namebuf, 31, idfile);
+	if (strlen(namebuf) > 0)
+	  if (namebuf[strlen(namebuf) - 1] == '\n')
+	    namebuf[strlen(namebuf) - 1] = 0; /* Remove trailing newlines */
+
+	if (strcmp(name, namebuf) == 0) {
+	  sciprintf("Save game name matched entry %d\n", i);
+	  savedir_nr = i;
+	}
+
+	fclose(idfile);
+      }
+
+      chdir("..");
+    }
+  }
+}
+
+void
+kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  char *game_id = UPARAM(0) + s->heap;
+  char *game_id_file = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
+  int savedir_nr = UPARAM(1);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  strcpy(game_id_file, game_id);
+  strcat(game_id_file, FREESCI_ID_SUFFIX);
+
+  if (savedir_nr > 15) {
+    s->acc = 0;
+    free(game_id_file);
+    return;
+  }
+
+  s->acc = 1;
+
+  if (chdir(_k_get_savedir_name(savedir_nr))) {
+    s->acc = 0; /* Couldn't enter savedir */
+}  else {
+    int fh;
+
+    if (_k_check_file(FREESCI_FILE_HEAP, SCI_HEAP_SIZE))
+      s->acc = 0;
+    if (_k_check_file(FREESCI_FILE_STATE, 1))
+      s->acc = 0;
+    if (_k_check_file(game_id_file, 1))
+      s->acc = 0;
+
+    chdir ("..");
+  }
+
+  free(game_id_file);
+}
+
+
+void
+kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  char *game_id = UPARAM(0) + s->heap;
+  int savedir_nr = UPARAM(1);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  if (savedir_nr > -1) {
+    state_t *newstate = gamestate_restore(s, _k_get_savedir_name(savedir_nr));
+
+    if (newstate) {
+
+      s->successor = newstate;
+      script_abort_flag = 1; /* Abort current game */
+      game_exit(s);
+
+    } else {
+      sciprintf("Restoring failed.\n");
+    }
+
+  } else {
+    s->acc = 1;
+    sciprintf("Savegame #%d not found!\n", savedir_nr);
+  }
+}
+
+
 void
 kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   char *game_id = UPARAM(0) + s->heap;
   heap_ptr nametarget = UPARAM(1);
   heap_ptr nameoffsets = UPARAM(2);
-  int gfname_len = strlen(game_id) + 4;
+  int gfname_len = strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1;
   char *gfname = malloc(gfname_len);
   int i;
 
   strcpy(gfname, game_id);
-  strcat(gfname, ".id"); /* This file is used to identify in-game savegames */
+  strcat(gfname, FREESCI_ID_SUFFIX); /* This file is used to identify in-game savegames */
 
   CHECK_THIS_KERNEL_FUNCTION;
 
@@ -470,10 +580,10 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	++s->acc; /* Increase number of files found */
 
-	PUT_HEAP(nametarget, nameoffsets); /* Write down the addres of the identifier string */
-	nametarget += 2; /* Make sure the next ID string address is written to the next pointer */
-	strcpy(s->heap + nameoffsets, namebuf); /* Copy identifier string */
-	nameoffsets += strlen(namebuf) + 1; /* Increase name offset pointer accordingly */
+	PUT_HEAP(nameoffsets, i); /* Write down the savegame number */
+	nameoffsets += 2; /* Make sure the next ID string address is written to the next pointer */
+	strcpy(s->heap + nametarget, namebuf); /* Copy identifier string */
+	nametarget += strlen(namebuf) + 1; /* Increase name offset pointer accordingly */
 
 	fclose(idfile);
       }
@@ -483,6 +593,44 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
   free(gfname);
+}
+
+
+void
+kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  char *game_id = UPARAM(0) + s->heap;
+  char *savegame_dir = _k_get_savedir_name(UPARAM(1));
+  char *game_description = UPARAM(2) + s->heap;
+
+  CHECK_THIS_KERNEL_FUNCTION;
+  s->acc = 1;
+
+  if (gamestate_save(s, savegame_dir)) {
+    sciprintf("Saving the game failed.\n");
+    s->acc = 0;
+  } else {
+    FILE *idfile;
+    char *game_id_file_name = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
+
+    strcpy(game_id_file_name, game_id);
+    strcat(game_id_file_name, FREESCI_ID_SUFFIX);
+
+    chdir(savegame_dir);
+
+    if ((idfile = fopen(game_id_file_name, "w"))) {
+
+      fprintf(idfile, game_description);
+      fclose(idfile);
+
+    } else {
+      sciprintf("Creating the game ID file failed.\n");
+      sciprintf("You can still restore from inside the debugger with \"restore_game %s\"\n", savegame_dir);
+      s->acc = 0;
+    }
+
+    chdir ("..");
+  }
 }
 
 

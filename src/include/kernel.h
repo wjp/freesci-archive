@@ -426,6 +426,9 @@ void kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp);
 void kFlushResources(state_t *s, int funct_nr, int argc, heap_ptr argp);
 void kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp);
 void kSetDebug(state_t *s, int funct_nr, int argc, heap_ptr argp);
+void kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp);
+void kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp);
+void kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp);
 void k_Unknown(state_t *s, int funct_nr, int argc, heap_ptr argp);
 /* The Unknown/Unnamed kernel function */
 void kstub(state_t *s, int funct_nr, int argc, heap_ptr argp);

@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # The C File Storage Meta Language "reference" implementation
 # This implementation is supposed to conform to version
-$version = "0.6.6";
+$version = "0.6.7";
 # of the spec. Please contact the maintainer if it doesn't.
 #
 # cfsml.pl Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
@@ -229,7 +229,7 @@ if ($debug) {
 }
 
 print <<'EOF3';
-  return (char *) g_realloc(retval, strlen(retval));
+  return (char *) g_realloc(retval, strlen(retval) + 1);
   /* Re-allocate; this value might be used for quite some while (if we are
   ** restoring a string)
   */

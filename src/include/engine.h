@@ -66,6 +66,11 @@
 #define FREESCI_FILE_CONTROL_MAP "control_map.png"
 #define FREESCI_FILE_AUXILIARY_MAP "auxiliary_map.png"
 
+#define FREESCI_FILE_STATE "state"
+#define FREESCI_FILE_HEAP "heap"
+#define FREESCI_ID_SUFFIX ".id"
+/* Used for <gamename>.id files ("real" save games) */
+
 #define MAX_GAMEDIR_SIZE 32 /* Used for subdirectory inside of "~/.freesci/" */
 
 #define MAX_HUNK_BLOCKS 256 /* Used for SCI "far memory"; only used for sci_memory in FreeSCI */
