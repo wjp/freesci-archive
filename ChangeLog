@@ -1,3 +1,7 @@
+1999-12-29  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* contrib/midi.c: Added Rickard's midi.c
+
 1999-12-22  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kfile.c (kRestoreGame): Implemented RestoreGame(). Fixed

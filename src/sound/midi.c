@@ -30,405 +30,473 @@
 #include <engine.h>
 #include <stdarg.h>
 
-#define SCI_SOUND_MIDI0_NOMAP
-#define MAX_MIDI_MAPS 4
-/* Maximum amount of emulated MIDI instrument banks */
-
-gint8 MIDI_map_default[128] = {
-#ifdef SCI_SOUND_MIDI0_NOMAP
-  0X00, 0X01, 0X02, 0X03, 0X04, 0X05, 0X06, 0X07, 0X08, 0X09, 0X0A, 0X0B, 0X0C, 0X0D, 0X0E, 0X0F,
-  0X10, 0X11, 0X12, 0X13, 0X14, 0X15, 0X16, 0X17, 0X18, 0X19, 0X1A, 0X1B, 0X1C, 0X1D, 0X1E, 0X1F,
-  0X20, 0X21, 0X22, 0X23, 0X24, 0X25, 0X26, 0X27, 0X28, 0X29, 0X2A, 0X2B, 0X2C, 0X2D, 0X2E, 0X2F,
-  0X30, 0X31, 0X32, 0X33, 0X34, 0X35, 0X36, 0X37, 0X38, 0X39, 0X3A, 0X3B, 0X3C, 0X3D, 0X3E, 0X3F,
-  0X40, 0X41, 0X42, 0X43, 0X44, 0X45, 0X46, 0X47, 0X48, 0X49, 0X4A, 0X4B, 0X4C, 0X4D, 0X4E, 0X4F,
-  0X50, 0X51, 0X52, 0X53, 0X54, 0X55, 0X56, 0X57, 0X58, 0X59, 0X5A, 0X5B, 0X5C, 0X5D, 0X5E, 0X5F,
-  0X60, 0X61, 0X62, 0X63, 0X64, 0X65, 0X66, 0X67, 0X68, 0X69, 0X6A, 0X6B, 0X6C, 0X6D, 0X6E, 0X6F,
-  0X70, 0X71, 0X72, 0X73, 0X74, 0X75, 0X76, 0X77, 0X78, 0X79, 0X7A, 0X7B, 0X7C, 0X7D, 0X7E, 0X7F};
-#else /* !SCI_SOUND_MIDI0_NOMAP */
-  0X00, 0X01, 0X02, 0X2b, 0x38, 0x39, 0x3c, 0X2b, 0X2c, 0X09, 0x09, 0X0B, 0X0C, 0X0D, 0X0E, 0X0F,
-  0X10, 0X11, 0X12, 0X13, 0X14, 0X15, 0X16, 0x20, 0X18, 0X19, 0X1A, 0X1B, 0X1C, 0x18, 0x30, 0X1F,
-  0X20, 0X21, 0X22, 0X23, 0X24, 0X25, 0X26, 0X27, 0X28, 0X29, 0X2A, 0X2B, 0X2C, 0X2D, 0X2E, 0X2F,
-  0X30, 0X31, 0X32, 0X33, 0X34, 0X35, 0X36, 0X37, 0X38, 0X39, 0X3A, 0X3B, 0X3C, 0X3D, 0X3E, 0X3F,
-  0X40, 0X41, 0X42, 0X43, 0X44, 0X45, 0X46, 0X47, 0X48, 0X49, 0X4A, 0X4B, 0X4C, 0X4D, 0X4E, 0X4F,
-  0X50, 0X51, 0X52, 0X53, 0X54, 0X55, 0X56, 0X57, 0X58, 0X59, 0X5A, 0X5B, 0X5C, 0X5D, 0X36, 0X5F,
-  0X60, 0X61, 0X62, 0X63, 0X64, 0X65, 0X66, 0X67, 0X68, 0X69, 0X6A, 0X6B, 0X6C, 0X6D, 0X6E, 0X6F,
-  0X70, 0X71, 0X72, 0X73, 0X74, 0X75, 0X76, 0X77, 0X78, 0X79, 0X7A, 0X7B, 0X7C, 0X7D, 0X7E, 0X7F};
-#endif /* !SCI_SOUND_MIDI0_NOMAP */
-/* The map above is obsolete.
-*/
-
-
-
-static gint8 MIDI_map[MAX_MIDI_MAPS][128];
-
+static struct {
+gint8 gm_instr;
+int keyshift;
+int finetune;
+int bender_range;
+} MIDI_patchmap[128];
+static gint8 MIDI_rhythmkey[128];
 
 static char *GM_Instrument_Names[] = {
-  /*00*/  "Acoustic Grand Piano",
-  /*01*/  "Bright Acoustic Piano",
-  /*02*/  "Electric Grand Piano",
-  /*03*/  "Honky-Tonk",
-  /*04*/  "Rhodes Piano",
-  /*05*/  "Chorused Piano",
-  /*06*/  "Harpsichord",
-  /*07*/  "Clavinet",
-  /*08*/  "Celesta",
-  /*09*/  "Glockenspiel",
-  /*0a*/  "Music Box",
-  /*0b*/  "Vibraphone",
-  /*0c*/  "Marimba",
-  /*0d*/  "Xylophone",
-  /*0e*/  "Tubular Bells",
-  /*0f*/  "Dulcimer",
-  /*10*/  "Hammond Organ",
-  /*11*/  "Percussive Organ",
-  /*12*/  "Rock Organ",
-  /*13*/  "Church Organ",
-  /*14*/  "Reed Organ",
-  /*15*/  "Accordion",
-  /*16*/  "Harmonica",
-  /*17*/  "Tango Accordion",
-  /*18*/  "Acoustic Guitar (Nylon)",
-  /*19*/  "Acoustic Guitar (Steel)",
-  /*1a*/  "Electric Guitar (Jazz)",
-  /*1b*/  "Electric Guitar (Clean)",
-  /*1c*/  "Electric Guitar (Muted)",
-  /*1d*/  "Overdriven Guitar",
-  /*1e*/  "Distortion Guitar",
-  /*1f*/  "Guitar Harmonics",
-  /*20*/  "Acoustic Bass",
-  /*21*/  "Electric Bass (Finger)",
-  /*22*/  "Electric Bass (Pick)",
-  /*23*/  "Fretless Bass",
-  /*24*/  "Slap Bass 1",
-  /*25*/  "Slap Bass 2",
-  /*26*/  "Synth Bass 1",
-  /*27*/  "Synth Bass 2",
-  /*28*/  "Violin",
-  /*29*/  "Viola",
-  /*2a*/  "Cello",
-  /*2b*/  "Contrabass",
-  /*2c*/  "Tremolo Strings",
-  /*2d*/  "Pizzicato Strings",
-  /*2e*/  "Orchestral Harp",
-  /*2f*/  "Timpani",
-  /*30*/  "String Ensemble 1",
-  /*31*/  "String Ensemble 2",
-  /*32*/  "Synth Strings 1",
-  /*33*/  "Synth Strings 2",
-  /*34*/  "Choir Aahs",
-  /*35*/  "Voice Oohs",
-  /*36*/  "Synth Voice",
-  /*37*/  "Orchestra Hit",
-  /*38*/  "Trumpet",
-  /*39*/  "Trombone",
-  /*3a*/  "Tuba",
-  /*3b*/  "Muted Trumpet",
-  /*3c*/  "French Horn",
-  /*3d*/  "Brass Section",
-  /*3e*/  "Synth Brass 1",
-  /*3f*/  "Synth Brass 2",
-  /*40*/  "Soprano Sax",
-  /*41*/  "Alto Sax",
-  /*42*/  "Tenor Sax",
-  /*43*/  "Baritone Sax",
-  /*44*/  "Oboe",
-  /*45*/  "English Horn",
-  /*46*/  "Bassoon",
-  /*47*/  "Clarinet",
-  /*48*/  "Piccolo",
-  /*49*/  "Flute",
-  /*4a*/  "Recorder",
-  /*4b*/  "Pan Flute",
-  /*4c*/  "Blown Bottle",
-  /*4d*/  "Shakuhachi",
-  /*4e*/  "Whistle",
-  /*4f*/  "Ocarina",
-  /*50*/  "Lead 1 - Square Wave",
-  /*51*/  "Lead 2 - Saw Tooth",
-  /*52*/  "Lead 3 - Calliope",
-  /*53*/  "Lead 4 - Chiflead",
-  /*54*/  "Lead 5 - Charang",
-  /*55*/  "Lead 6 - Voice",
-  /*56*/  "Lead 7 - Fifths",
-  /*57*/  "Lead 8 - Bass+Lead",
-  /*58*/  "Pad 1 - New Age",
-  /*59*/  "Pad 2 - Warm",
-  /*5a*/  "Pad 3 - Polysynth",
-  /*5b*/  "Pad 4 - Choir",
-  /*5c*/  "Pad 5 - Bow",
-  /*5d*/  "Pad 6 - Metallic",
-  /*5e*/  "Pad 7 - Halo",
-  /*5f*/  "Pad 8 - Sweep",
-  /*60*/  "FX 1 - Rain",
-  /*61*/  "FX 2 - Soundtrack",
-  /*62*/  "FX 3 - Crystal",
-  /*63*/  "FX 4 - Atmosphere",
-  /*64*/  "FX 5 - Brightness",
-  /*65*/  "FX 6 - Goblins",
-  /*66*/  "FX 7 - Echoes",
-  /*67*/  "FX 8 - Sci-fi",
-  /*68*/  "Sitar",
-  /*69*/  "Banjo",
-  /*6a*/  "Shamisen",
-  /*6b*/  "Koto",
-  /*6c*/  "Kalimba",
-  /*6d*/  "Bagpipe",
-  /*6e*/  "Fiddle",
-  /*6f*/  "Shannai",
-  /*70*/  "Tinkle Bell",
-  /*71*/  "Agogo",
-  /*72*/  "Steel Drum",
-  /*73*/  "Wook Block",
-  /*74*/  "Taiko Drum",
-  /*75*/  "Melodic Tom",
-  /*76*/  "Synth Drum",
-  /*77*/  "Reverse Cymbal",
-  /*78*/  "Guitar Fret Noise",
-  /*79*/  "Breath Noise",
-  /*7a*/  "Seashore",
-  /*7b*/  "Bird Tweet",
-  /*7c*/  "Telephone",
-  /*7d*/  "Helicopter",
-  /*7e*/  "Applause",
-  /*7f*/  "Gunshot"
-};
 
+ /*000*/  "Acoustic Grand Piano",
+ /*001*/  "Bright Acoustic Piano",
+ /*002*/  "Electric Grand Piano",
+ /*003*/  "Honky-tonk Piano",
+ /*004*/  "Electric Piano 1",
+ /*005*/  "Electric Piano 2",
+ /*006*/  "Harpsichord",
+ /*007*/  "Clavinet",
+ /*008*/  "Celesta",
+ /*009*/  "Glockenspiel",
+ /*010*/  "Music Box",
+ /*011*/  "Vibraphone",
+ /*012*/  "Marimba",
+ /*013*/  "Xylophone",
+ /*014*/  "Tubular Bells",
+ /*015*/  "Dulcimer",
+ /*016*/  "Drawbar Organ",
+ /*017*/  "Percussive Organ",
+ /*018*/  "Rock Organ",
+ /*019*/  "Church Organ",
+ /*020*/  "Reed Organ",
+ /*021*/  "Accordion",
+ /*022*/  "Harmonica",
+ /*023*/  "Tango Accordion",
+ /*024*/  "Acoustic Guitar (nylon)",
+ /*025*/  "Acoustic Guitar (steel)",
+ /*026*/  "Electric Guitar (jazz)",
+ /*027*/  "Electric Guitar (clean)",
+ /*028*/  "Electric Guitar (muted)",
+ /*029*/  "Overdriven Guitar",
+ /*030*/  "Distortion Guitar",
+ /*031*/  "Guitar Harmonics",
+ /*032*/  "Acoustic Bass",
+ /*033*/  "Electric Bass (finger)",
+ /*034*/  "Electric Bass (pick)",
+ /*035*/  "Fretless Bass",
+ /*036*/  "Slap Bass 1",
+ /*037*/  "Slap Bass 2",
+ /*038*/  "Synth Bass 1",
+ /*039*/  "Synth Bass 2",
+ /*040*/  "Violin",
+ /*041*/  "Viola",
+ /*042*/  "Cello",
+ /*043*/  "Contrabass",
+ /*044*/  "Tremolo Strings",
+ /*045*/  "Pizzicato Strings",
+ /*046*/  "Orchestral Harp",
+ /*047*/  "Timpani",
+ /*048*/  "String Ensemble 1",
+ /*049*/  "String Ensemble 2",
+ /*050*/  "SynthStrings 1",
+ /*051*/  "SynthStrings 2",
+ /*052*/  "Choir Aahs",
+ /*053*/  "Voice Oohs",
+ /*054*/  "Synth Voice",
+ /*055*/  "Orchestra Hit",
+ /*056*/  "Trumpet",
+ /*057*/  "Trombone",
+ /*058*/  "Tuba",
+ /*059*/  "Muted Trumpet",
+ /*060*/  "French Horn",
+ /*061*/  "Brass Section",
+ /*062*/  "SynthBrass 1",
+ /*063*/  "SynthBrass 2",
+ /*064*/  "Soprano Sax",
+ /*065*/  "Alto Sax",
+ /*066*/  "Tenor Sax",
+ /*067*/  "Baritone Sax",
+ /*068*/  "Oboe",
+ /*069*/  "English Horn",
+ /*070*/  "Bassoon",
+ /*071*/  "Clarinet",
+ /*072*/  "Piccolo",
+ /*073*/  "Flute",
+ /*074*/  "Recorder",
+ /*075*/  "Pan Flute",
+ /*076*/  "Blown Bottle",
+ /*077*/  "Shakuhachi",
+ /*078*/  "Whistle",
+ /*079*/  "Ocarina",
+ /*080*/  "Lead 1 (square)",
+ /*081*/  "Lead 2 (sawtooth)",
+ /*082*/  "Lead 3 (calliope)",
+ /*083*/  "Lead 4 (chiff)",
+ /*084*/  "Lead 5 (charang)",
+ /*085*/  "Lead 6 (voice)",
+ /*086*/  "Lead 7 (fifths)",
+ /*087*/  "Lead 8 (bass+lead)",
+ /*088*/  "Pad 1 (new age)",
+ /*089*/  "Pad 2 (warm)",
+ /*090*/  "Pad 3 (polysynth)",
+ /*091*/  "Pad 4 (choir)",
+ /*092*/  "Pad 5 (bowed)",
+ /*093*/  "Pad 6 (metallic)",
+ /*094*/  "Pad 7 (halo)",
+ /*095*/  "Pad 8 (sweep)",
+ /*096*/  "FX 1 (rain)",
+ /*097*/  "FX 2 (soundtrack)",
+ /*098*/  "FX 3 (crystal)",
+ /*099*/  "FX 4 (atmosphere)",
+ /*100*/  "FX 5 (brightness)",
+ /*101*/  "FX 6 (goblins)",
+ /*102*/  "FX 7 (echoes)",
+ /*103*/  "FX 8 (sci-fi)",
+ /*104*/  "Sitar",
+ /*105*/  "Banjo",
+ /*106*/  "Shamisen",
+ /*107*/  "Koto",
+ /*108*/  "Kalimba",
+ /*109*/  "Bag pipe",
+ /*110*/  "Fiddle",
+ /*111*/  "Shannai",
+ /*112*/  "Tinkle Bell",
+ /*113*/  "Agogo",
+ /*114*/  "Steel Drums",
+ /*115*/  "Woodblock",
+ /*116*/  "Taiko Drum",
+ /*117*/  "Melodic Tom",
+ /*118*/  "Synth Drum",
+ /*119*/  "Reverse Cymbal",
+ /*120*/  "Guitar Fret Noise",
+ /*121*/  "Breath Noise",
+ /*122*/  "Seashore",
+ /*123*/  "Bird Tweet",
+ /*124*/  "Telephone Ring",
+ /*125*/  "Helicopter",
+ /*126*/  "Applause",
+ /*127*/  "Gunshot"
+};
 
 #define MIDI_PERCUSSIONS 9
 /* This is the MIDI channel used for percussion instruments */
 
 /* The GM Percussion map is downwards compatible to the MT32 map, which is used in SCI */
 static char *GM_Percussion_Names[] = {
-  /*00*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  /*10*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  /*20*/  0, 0, 0, /* The preceeding percussions are not covered by the GM standard */
-  /*23*/  "Bass Drum",
-  /*24*/  "Bass Drum 1",
-  /*25*/  "Side Stick",
-  /*26*/  "Acoustic Snare",
-  /*27*/  "Hand Clap",
-  /*28*/  "Electric Snare",
-  /*29*/  "Low Floor Tom",
-  /*2a*/  "Closed Hi-Hat",
-  /*2b*/  "High Floor Tom",
-  /*2c*/  "Pedal Hi-Hat",
-  /*2d*/  "Low Tom",
-  /*2e*/  "Open Hi-Hat",
-  /*2f*/  "Low-Mid Tom",
-  /*30*/  "Hi-Mid Tom",
-  /*31*/  "Crash Cymbal 1",
-  /*32*/  "High Tom",
-  /*33*/  "Ride Cymbal 1",
-  /*34*/  "Chinese Cymbal",
-  /*35*/  "Ride Bell",
-  /*36*/  "Tambourine",
-  /*37*/  "Splash Cymbal",
-  /*38*/  "Cowbell",
-  /*39*/  "Crash Cymbal 2",
-  /*3a*/  "Vibraslap",
-  /*3b*/  "Ride Cymbal 2",
-  /*3c*/  "Hi Bongo",
-  /*3d*/  "Low Bongo",
-  /*3e*/  "Mute Hi Conga",
-  /*3f*/  "Open Hi Conga",
-  /*40*/  "Low Conga",
-  /*41*/  "High Timbale"
-  /*42*/  "Low Timbale"
-  /*43*/  "High Agogo",
-  /*44*/  "Low Agogo",
-  /*45*/  "Cabasa",
-  /*46*/  "Maracas",
-  /*47*/  "Short Whistle",
-  /*48*/  "Long Whistle",
-  /*49*/  "Short Guiro",
-  /*4a*/  "Long Guiro",
-  /*4b*/  "Claves",
-  /*4c*/  "Hi Wood Block",
-  /*4d*/  "Low Wood Block",
-  /*4e*/  "Mute Cuica",
-  /*4f*/  "Open Cuica",
-  /*50*/  "Mute Triangle",
-  /*51*/  "Open Triangle"
+  /*00*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  /*10*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  /*20*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  /*30*/  0, 0, 0, 0,
+/* The preceeding percussions are not covered by the GM standard */
+  /*34*/  "Acoustic Bass Drum",
+  /*35*/  "Bass Drum 1",
+  /*36*/  "Side Stick",
+  /*37*/  "Acoustic Snare",
+  /*38*/  "Hand Clap",
+  /*39*/  "Electric Snare",
+  /*40*/  "Low Floor Tom",
+  /*41*/  "Closed Hi-Hat",
+  /*42*/  "High Floor Tom",
+  /*43*/  "Pedal Hi-Hat",
+  /*44*/  "Low Tom",
+  /*45*/  "Open Hi-Hat",
+  /*46*/  "Low-Mid Tom",
+  /*47*/  "Hi-Mid Tom",
+  /*48*/  "Crash Cymbal 1",
+  /*49*/  "High Tom",
+  /*50*/  "Ride Cymbal 1",
+  /*51*/  "Chinese Cymbal",
+  /*52*/  "Ride Bell",
+  /*53*/  "Tambourine",
+  /*54*/  "Splash Cymbal",
+  /*55*/  "Cowbell",
+  /*56*/  "Crash Cymbal 2",
+  /*57*/  "Vibraslap",
+  /*58*/  "Ride Cymbal 2",
+  /*59*/  "Hi Bongo",
+  /*60*/  "Low Bongo",
+  /*61*/  "Mute Hi Conga",
+  /*62*/  "Open Hi Conga",
+  /*63*/  "Low Conga",
+  /*64*/  "High Timbale",
+  /*65*/  "Low Timbale",
+  /*66*/  "High Agogo",
+  /*67*/  "Low Agogo",
+  /*68*/  "Cabasa",
+  /*69*/  "Maracas",
+  /*70*/  "Short Whistle",
+  /*71*/  "Long Whistle",
+  /*72*/  "Short Guiro",
+  /*73*/  "Long Guiro",
+  /*74*/  "Claves",
+  /*75*/  "Hi Wood Block",
+  /*76*/  "Low Wood Block",
+  /*77*/  "Mute Cuica",
+  /*78*/  "Open Cuica",
+  /*79*/  "Mute Triangle",
+  /*80*/  "Open Triangle"
 };
 
-#define INSTR_NOT_FOUND -1
-#define INSTR_NOT_MAPPED -2
+/*******************************************
+ * Fancy instrument mappings begin here... *
+ *******************************************/
+
+#define MAP_NOT_FOUND -1
+#define NOMAP -2
 
 static struct {
 char *name;
-int gm_instr;
-} SCI0_patch2_instrmaps[] = {
-{"       ", INSTR_NOT_MAPPED},
-{"SnareDr", INSTR_NOT_MAPPED}, /* percussion */
-{"HiHat  ", INSTR_NOT_MAPPED}, /* percussion */
-{"Kick D.", INSTR_NOT_MAPPED}, /* percussion */
-{"Tom Tom", INSTR_NOT_MAPPED}, /* percussion */
-{"Trump2 ", 0x38},
-{"T-Bone2", 0x39},
-{"FHorn  ", 0x3c},
-{"StrSct1", 0x2c}, /* ? */
-{"Timpani", 0x2f},
-{"CBass  ", 0x2b},
-{"Glock  ", 0x09},
-{"Flute  ", 0x49},
-{"Tuba   ", 0x3a},
-{"BrsSect", 0x3d},
-{"Pizz   ", 0x2d}, /* ? */
-{"AcouBas", 0x20},
-{"Sax 2  ", 0x42}, /* ? */
-{"EnglHrn", 0x45},
-{"PipeOrg", 0x13}, /* ? */
-{"PanPipe", 0x4b},
-{"Clarint", 0x47},
-{"BassPiz", 0x22}, /* ?? */
-{"Conga  ", INSTR_NOT_MAPPED},
-{"Sitar  ", 0x68},
-{"Fantasy", 0x63},
-{"Guitar ", 0x18}, /* ? */
-{"Choral ", 0x34}, /* ? */
-{"SynBas1", 0x26},
-{"GameSnd", 0x50}, /* ? */
-{"Calliop", 0x52},
-{"Claw   ", INSTR_NOT_MAPPED},
-{"Flames ", INSTR_NOT_MAPPED},
-{"Swords ", INSTR_NOT_MAPPED},
-{"Armor  ", INSTR_NOT_MAPPED},
-{"Splat  ", INSTR_NOT_MAPPED},
-{"Fall   ", INSTR_NOT_MAPPED},
-{"Crash  ", INSTR_NOT_MAPPED},
-{"Laser  ", 0x67}, /* ??? */
-{"Vase   ", INSTR_NOT_MAPPED},
-{"Spit   ", INSTR_NOT_MAPPED},
-{"Ninga  ", INSTR_NOT_MAPPED},
-{"Flame2 ", INSTR_NOT_MAPPED},
-{"Crackle", INSTR_NOT_MAPPED},
-{"Slurp  ", INSTR_NOT_MAPPED},
-{"Knifstk", INSTR_NOT_MAPPED},
-{"Pft    ", INSTR_NOT_MAPPED},
-{"Poof   ", INSTR_NOT_MAPPED},
-{"Firdart", INSTR_NOT_MAPPED},
-{"Lghtblt", INSTR_NOT_MAPPED},
-{"Rasp   ", INSTR_NOT_MAPPED},
-{"Explode", INSTR_NOT_MAPPED},
-{"Lock   ", INSTR_NOT_MAPPED},
-{"Buildup", INSTR_NOT_MAPPED},
-{"Boing  ", INSTR_NOT_MAPPED},
-{"Flame2 ", INSTR_NOT_MAPPED},
-{"Thunder", INSTR_NOT_MAPPED},
-{"Meeps  ", INSTR_NOT_MAPPED},
-{"RimShot", INSTR_NOT_MAPPED},
-{"CSTLGat", 0x72}, /* ??? */
-{"Agogo  ", 0x71},
-{"SchoolD", INSTR_NOT_MAPPED},
-{"Whistle", 0x4e},
-{"SnBrass", 0x3d}, /* PQ2 */
-{"SnBass4", 0x27},
-{"SndTrk ", INSTR_NOT_MAPPED},
-{"WarmBel", 0x63},
-{"EchoPan", 0x57}, /* ? */
-{"DrSolo ", INSTR_NOT_MAPPED},
-{"SQ Bass", 0x25}, /* ??? */
-{"EGuit 2", 0x1b}, /* ? */
-{"IceRain", INSTR_NOT_MAPPED},
-{"Cello 2", 0x2a},
-{"OrchHit", 0x37},
-{"English", 0x45},
-{"TBone 2", 0x39},
-{"Chorale", 0x5b}, /* ? */
-{"Koto   ", 0x6b},
-{"FunnyVx", INSTR_NOT_MAPPED},
-{"ElOboe ", 0x44}, /* ? */
-{"Taiko  ", 0x74},
-{"SlapBas", 0x24},
-{"Shakuha", 0x4d},
-{"HonkyT ", 0x03},
-{"Marimba", 0x0c},
-{"EOrgan2", 0x12}, /* ? */
-{"E Bass1", 0x21},
-{"Bassoon", 0x46},
-{"Sho    ", INSTR_NOT_MAPPED},
-{"EchoBel", INSTR_NOT_MAPPED},
-{"ElPerc2", INSTR_NOT_MAPPED},
-{"SquareW", 0x50},
-{"Fretles", 0x23}, /* ?? */
-{"NoteJam", INSTR_NOT_MAPPED},
-{"ElPerc1", INSTR_NOT_MAPPED},
-{"Trumpt1", 0x38},
-{"DeepSnr", INSTR_NOT_MAPPED},
-{"Xylophn", 0x0d},
-{"HarmoPn", 0x16}, /* ?? */
-{"EdoorLk", INSTR_NOT_MAPPED},
-{"AirLock", INSTR_NOT_MAPPED},
-{"Clang  ", INSTR_NOT_MAPPED},
-{"Blades ", INSTR_NOT_MAPPED},
-{"TrshGun", INSTR_NOT_MAPPED},
-{"Snake  ", INSTR_NOT_MAPPED},
-{"Jello  ", INSTR_NOT_MAPPED},
-{"Liftoff", INSTR_NOT_MAPPED},
-{"Guard  ", INSTR_NOT_MAPPED},
-{"TrkDoor", INSTR_NOT_MAPPED},
-{"Scanner", INSTR_NOT_MAPPED},
-{"Machine", INSTR_NOT_MAPPED},
-{"Burp   ", INSTR_NOT_MAPPED},
-{"Motor  ", INSTR_NOT_MAPPED},
-{"Flift  ", INSTR_NOT_MAPPED},
-{"Takeoff", INSTR_NOT_MAPPED},
-{"EQuake ", INSTR_NOT_MAPPED},
-{"ContraB", 0x2b},
-{"Telepho", 0x7c},
-{"RD Cymb", INSTR_NOT_MAPPED},
-{"Hollow ", 0x66}, /* ? */
-{"Bells  ", 0x70}, /* ? */
-{"Piano  ", 0x00},
-{"POrgan1", 0x11}, /* ? */
-{"SynClv1", 0x07}, /* ? */
-{"Honkey2", 0x03},
-{"NewEP3 ", 0x58}, /* ?? */
-{"POrgan2", 0x11}, /* ? */
-{"COrgan2", 0x13}, /* ? */
-{"NewEP  ", 0x03},
-{"SynLead", 0x51}, /* ?? */
-{"Clarine", 0x47},
-{"Synvoic", 0x36},
-{"RichSt3", 0x30},
-{"RECRDR1", 0x4a},
-{"Oboe   ", 0x44},
-{"Bass 2 ", 0x20},
-{"SoloVio", 0x29},
-{"Cello1 ", 0x2a},
-{"Strings", 0x31}, /* ? */
-{"Fuzz Gt", 0x78}, /* ? */
-{"Banjo  ", 0x69},
-{"Stadium", INSTR_NOT_MAPPED},
-{"FunkBas", INSTR_NOT_MAPPED},
-{"Bass 2 ", 0x20},
-{"Trumpet", 0x38},
-{"Trombon", 0x39},
-{"FrenchH", 0x3c},
-{"Trumpt2", 0x38},
-{"Flugelh", 0x00},
-{"Glasses", 0x0e}, /* ?? */
+gint8 gm_instr;
+} MT32_PresetTimbreMaps[] = {
+/*000*/  {"Acou Piano 1", 0},
+/*001*/  {"Acou Piano 2", 1},
+/*002*/  {"Acou Piano 3", 2},
+/*003*/  {"Elec Piano 1", 4},
+/*004*/  {"Elec Piano 2", 5},
+/*005*/  {"Elec Piano 3", 4},
+/*006*/  {"Elec Piano 4", 5},
+/*007*/  {"Honkytonk", 3},
+/*008*/  {"Elec Org 1", 16},
+/*009*/  {"Elec Org 2", 17},
+/*010*/  {"Elec Org 3", 18},
+/*011*/  {"Elec Org 4", 18},
+/*012*/  {"Pipe Org 1", 19},
+/*013*/  {"Pipe Org 2", 19},
+/*014*/  {"Pipe Org 3", 20},
+/*015*/  {"Accordion", 21},
+/*016*/  {"Harpsi 1", 6},
+/*017*/  {"Harpsi 2", 6},
+/*018*/  {"Harpsi 3", 6},
+/*019*/  {"Clavi 1", 7},
+/*020*/  {"Clavi 2", 7},
+/*021*/  {"Clavi 3", 7},
+/*022*/  {"Celesta 1", 8},
+/*023*/  {"Celesta 2", 8},
+/*024*/  {"Syn Brass 1", 62},
+/*025*/  {"Syn Brass 2", 63},
+/*026*/  {"Syn Brass 3", 62},
+/*027*/  {"Syn Brass 4", 63},
+/*028*/  {"Syn Bass 1", 38},
+/*029*/  {"Syn Bass 2", 39},
+/*030*/  {"Syn Bass 3", 38},
+/*031*/  {"Syn Bass 4", 39},
+/*032*/  {"Fantasy", 88},
+/*033*/  {"Harmo Pan", 89},
+/*034*/  {"Chorale", 52},
+/*035*/  {"Glasses", 113},
+/*036*/  {"Soundtrack", 97},
+/*037*/  {"Atmosphere", 96},
+/*038*/  {"Warm Bell", 91},
+/*039*/  {"Funny Vox", 85},
+/*040*/  {"Echo Bell", 39},
+/*041*/  {"Ice Rain", 101},
+/*042*/  {"Oboe 2001", 68},
+/*043*/  {"Echo Pan", 95},
+/*044*/  {"Doctor Solo", 86},
+/*045*/  {"Schooldaze", 103},
+/*046*/  {"Bellsinger", 88},
+/*047*/  {"Square Wave", 80},
+/*048*/  {"Str Sect 1", 48},
+/*049*/  {"Str Sect 2", 49},
+/*050*/  {"Str Sect 3", 50},
+/*051*/  {"Pizzicato", 45},
+/*052*/  {"Violin 1", 40},
+/*053*/  {"Violin 2", 40},
+/*054*/  {"Cello 1", 42},
+/*055*/  {"Cello 2", 42},
+/*056*/  {"Contrabass", 43},
+/*057*/  {"Harp 1", 46},
+/*058*/  {"Harp 2", 46},
+/*059*/  {"Guitar 1", 24},
+/*060*/  {"Guitar 2", 25},
+/*061*/  {"Elec Gtr 1", 26},
+/*062*/  {"Elec Gtr 2", 27},
+/*063*/  {"Sitar", 104},
+/*064*/  {"Acou Bass 1", 32},
+/*065*/  {"Acou Bass 2", 33},
+/*066*/  {"Elec Bass 1", 34},
+/*067*/  {"Elec Bass 2", 39},
+/*068*/  {"Slap Bass 1", 36},
+/*069*/  {"Slap Bass 2", 37},
+/*070*/  {"Fretless 1", 35},
+/*071*/  {"Fretless 2", 35},
+/*072*/  {"Flute 1", 73},
+/*073*/  {"Flute 2", 73},
+/*074*/  {"Piccolo 1", 72},
+/*075*/  {"Piccolo 2", 72},
+/*076*/  {"Recorder", 74},
+/*077*/  {"Pan Pipes", 75},
+/*078*/  {"Sax 1", 64},
+/*079*/  {"Sax 2", 65},
+/*080*/  {"Sax 3", 66},
+/*081*/  {"Sax 4", 67},
+/*082*/  {"Clarinet 1", 71},
+/*083*/  {"Clarinet 2", 71},
+/*084*/  {"Oboe", 68},
+/*085*/  {"Engl Horn", 69},
+/*086*/  {"Bassoon", 70},
+/*087*/  {"Harmonica", 22},
+/*088*/  {"Trumpet 1", 56},
+/*089*/  {"Trumpet 2", 56},
+/*090*/  {"Trombone 1", 57},
+/*091*/  {"Trombone 2", 57},
+/*092*/  {"Fr Horn 1", 60},
+/*093*/  {"Fr Horn 2", 60},
+/*094*/  {"Tuba", 58},
+/*095*/  {"Brs Sect 1", 61},
+/*096*/  {"Brs Sect 2", 61},
+/*097*/  {"Vibe 1", 11},
+/*098*/  {"Vibe 2", 11},
+/*099*/  {"Syn Mallet", 12},
+/*100*/  {"Windbell", 88},
+/*101*/  {"Glock", 9},
+/*102*/  {"Tube Bell", 14},
+/*103*/  {"Xylophone", 13},
+/*104*/  {"Marimba", 12},
+/*105*/  {"Koto", 107},
+/*106*/  {"Sho", 111},
+/*107*/  {"Shakuhachi", 77},
+/*108*/  {"Whistle 1", 78},
+/*109*/  {"Whistle 2", 78},
+/*110*/  {"Bottleblow", 121},
+/*111*/  {"Breathpipe", 121},
+/*112*/  {"Timpani", 47},
+/*113*/  {"Melodic Tom", 117},
+/*114*/  {"Deep Snare", 127},
+/*115*/  {"Elec Perc 1", 115},
+/*116*/  {"Elec Perc 2", 118},
+/*117*/  {"Taiko", 116},
+/*118*/  {"Taiko   Rim", 118},
+/*119*/  {"Cymbal", 126},
+/*120*/  {"Castanets", 121},
+/*121*/  {"Triangle", 121},
+/*122*/  {"Orche Hit", 55},
+/*123*/  {"Telephone", 124},
+/*124*/  {"Bird Tweet", 123},
+/*125*/  {"One Note Jam", 125},
+/*126*/  {"Water Bells", 98},
+/*127*/  {"Jungle Tune", 127}
+};
 
-{"Glocken", 0x70},
-{"Vibes1 ", 0x0b},
-{"WaterB ", 0x62}, /* ? */
-{"TubeBel", 0x0e},
-{"EPno 1n", 0x04},
-{"Fant MS", 0x58}, /* ? */
-{"BottleB", 0x4c},
-{"Gunshot", 0x7f},
-{"StrSec3", 0x30},
-{"OBXaBrt", 0x3e},
-{"OBXa MS", 0x3f},
-{"Sbrass3", 0x3d},
-{"UprtBas", 0x20},
-{"StrSec1", 0x30},
-{"StrSec2", 0x31},
-{"Guitar2", 0x19},
-{"Busy   ", 0x50}, /* ?? */
-{"WoodBlk", INSTR_NOT_MAPPED}, /* percussion */
-{"JungleT", 0x54},
-{0,0}
+static struct {
+char *name;
+gint8 gm_instr;
+gint8 gm_rhythmkey;
+} MT32_RhythmTimbreMaps[] = {
+/*00*/  {"Acou BD", NOMAP, 34},
+/*01*/  {"Acou SD", NOMAP, 37},
+/*02*/  {"Acou Hi Tom", NOMAP, 49},
+/*03*/  {"Acou Mid Tom", NOMAP, 46},
+/*04*/  {"Acou Low Tom", NOMAP, 40},
+/*05*/  {"Elec SD", NOMAP, 39},
+/*06*/  {"Clsd Hi Hat", NOMAP, 41},
+/*07*/  {"Open Hi Hat 1", NOMAP, 45},
+/*08*/  {"Crash Cym", NOMAP, 48},
+/*09*/  {"Ride Cym", NOMAP, 50},
+/*10*/  {"Rim Shot", NOMAP, 36},
+/*11*/  {"Hand Clap", NOMAP, 38},
+/*12*/  {"Cowbell", NOMAP, 55},
+/*13*/  {"Mt High Conga", NOMAP, 61},
+/*14*/  {"High Conga", NOMAP, 62},
+/*15*/  {"Low Conga", NOMAP, 63},
+/*16*/  {"High Timbale", NOMAP, 64},
+/*17*/  {"Low Timbale", NOMAP, 65},
+/*18*/  {"High Bongo", NOMAP, 59},
+/*19*/  {"Low Bongo", NOMAP, 60},
+/*20*/  {"High Agogo", 113, 66},
+/*21*/  {"Low Agogo", 113, 67},
+/*22*/  {"Tambourine", NOMAP, 53},
+/*23*/  {"Claves", NOMAP, 74},
+/*24*/  {"Maracas", NOMAP, 69},
+/*25*/  {"Smba Whis L", 78, 71},
+/*26*/  {"Smba Whis S", 78, 70},
+/*27*/  {"Cabasa", NOMAP, 68},
+/*28*/  {"Quijada", NOMAP, 72},
+/*29*/  {"Open Hi Hat 2", NOMAP, 43}
+};
+
+static gint8 MT32_PresetRhythmKeymap[] = {
+NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP,
+NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP,
+NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP,
+NOMAP, NOMAP, NOMAP, NOMAP, 34, 34, 36, 37, 38, 39,
+40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+50, NOMAP, NOMAP, 53, NOMAP, 55, NOMAP, NOMAP, NOMAP, 59,
+60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+70, 71, 72, NOMAP, 74, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP,
+NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP,
+NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP,
+NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP,
+NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP,
+NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP, NOMAP
+};
+
+static struct {
+char *name;
+gint8 gm_instr;
+gint8 gm_rhythm_key;
+} MT32_MemoryTimbreMaps[] = {
+{"AccPnoKA2 ", 1, NOMAP},
+{"Acou BD   ", NOMAP, 34},
+{"Acou SD   ", NOMAP, 37},
+{"AcouPnoKA ", 0, NOMAP},
+{"BASS      ", 32, NOMAP},
+{"BASSOONPCM", 70, NOMAP},
+{"BEACH WAVE", 122, NOMAP},
+{"BagPipes  ", 109, NOMAP},
+{"BassoonKA ", 70, NOMAP},
+{"Bird Tweet", 123, NOMAP},
+{"BrsSect MS", 61, NOMAP},
+{"CLAPPING  ", 126, NOMAP},
+{"Cabasa    ", NOMAP, 68},
+{"CelticHarp", 46, NOMAP},
+{"Chicago MS", 90, NOMAP},
+{"Chorale MS", 52, NOMAP},
+{"ClarinetMS", 71, NOMAP},
+{"Claves    ", NOMAP, 74},
+{"CoolPhone ", 124, NOMAP},
+{"CrshCymbMS", NOMAP, 48},
+{"CymSwellMS", NOMAP, 54},
+{"DirtGtr MS", 30, NOMAP},
+{"DirtGtr2MS", 29, NOMAP},
+{"E Bass  MS", 33, NOMAP},
+{"ElecGtr MS", 27, NOMAP},
+{"EnglHornMS", 69, NOMAP},
+{"FantasiaKA", 88, NOMAP},
+{"Fantasy   ", 88, NOMAP},
+{"Fantasy2MS", 88, NOMAP},
+{"Filter  MS", 93, NOMAP},
+{"Filter2 MS", 93, NOMAP},
+{"Flute   MS", 73, NOMAP},
+{"FogHorn MS", 58, NOMAP},
+{"FrHorn1 MS", 60, NOMAP},
+{"Glock   MS", 9, NOMAP},
+{"Harpsi 1  ", 6, NOMAP},
+{"Koto      ", 107, NOMAP},
+{"OCEANSOUND", 122, NOMAP},
+{"Oboe 2001 ", 68, NOMAP},
+{"Ocean   MS", 122, NOMAP},
+{"PianoCrank", 3, NOMAP},
+{"PiccoloKA ", 72, NOMAP},
+{"PinkBassMS", 39, NOMAP},
+{"RecorderMS", 74, NOMAP},
+{"Red Baron ", 125, NOMAP},
+{"RevCymb MS", 119, NOMAP},
+{"RifleShot ", 127, NOMAP},
+{"RimShot MS", NOMAP, 36},
+{"SQ Bass MS", 38, NOMAP},
+{"SlapBassMS", 36, NOMAP},
+{"Sonar   MS", 94, NOMAP},
+{"Soundtrk2 ", 97, NOMAP},
+{"SqurWaveMS", 80, NOMAP},
+{"StabBassMS", 34, NOMAP},
+{"StrSect1MS", 48, NOMAP},
+{"String  MS", 46, NOMAP},
+{"Syn-Choir ", 52, NOMAP},
+{"Syn Brass4", 63, NOMAP},
+{"SynBass MS", 38, NOMAP},
+{"T-Bone2 MS", 57, NOMAP},
+{"Taiko     ", 116, NOMAP},
+{"Taiko Rim ", 118, NOMAP},
+{"TriangleMS", NOMAP, 80},
+{"Trumpet 1 ", 56, NOMAP},
+{"WaterBells", 98, NOMAP},
+{"Wind    MS", 121, NOMAP},
+{"Wind2   MS", 121, NOMAP},
+{"WtrFall MS", 96, NOMAP},
+{0, 0}
 };
 
 
@@ -446,8 +514,8 @@ SCIsdebug(char *format, ...)
 const char MIDI_Header[4] = "MThd";
 /* Starts every MIDI header */
 
-const char MIDI_Header_data[10] = {0, 0, 0, 6, /* Length of block */
-				   0, 1, /* file format */
+const char MIDI_Header_data[10] = { 0, 0, 0, 6,
+                                   0, 1, /* file format */
 				   0, 1, /* number of tracks */
 				   0, 30}; /* beats per minute (educated guess) */
 /* This contains the information (and block length) found in
@@ -461,18 +529,60 @@ const char MIDI_Track[4] = "MTrk";
 const char MIDI_NOP[4] = {0xff, 0x01, 0x01, 0x00};
 /* text command with length 1 */
 
+#define MIDI_TIMESTAMP(deltatime) \
+if (deltatime > 0x1FFFFF) \
+  obstack_1grow(stackp, deltatime & 0xFFFFFFF>> 21 | 0x80); \
+if (deltatime > 0x3FFF) \
+  obstack_1grow(stackp, deltatime & 0x1FFFFF >> 14 | 0x80); \
+if (deltatime > 0x7F) \
+  obstack_1grow(stackp, deltatime & 0x3FFF >> 7 | 0x80); \
+obstack_1grow(stackp, deltatime & 0x7F) \
 
-#define MAP_INSTRUMENT(channel, sci_instrument)  /* Maps sci_instrument to channel if appropriate */ \
-if ((channel == MIDI_PERCUSSIONS) || (MIDI_map[(sci_instrument) / 48][(sci_instrument) % 48] >= 0)) { \
-    obstack_1grow(stackp,0xc0 | channel); /* set instrument 'pos' to... */     \
-    obstack_1grow(stackp, MIDI_map[(sci_instrument) / 48 ][(sci_instrument % 48)]); /* this. */   \
-    muteflags[channel] = 0; \
-} else { \
-  muteflags[channel] = 1; /* Mute instrument if if isn't mapped */ \
-  obstack_grow(stackp, &MIDI_NOP, sizeof(MIDI_NOP)); /* Do nothing */ \
-}
-
-
+#define SETUP_INSTRUMENT(channel, sci_instrument) \
+MIDI_TIMESTAMP(0); \
+obstack_1grow(stackp, 0xb0 | channel); \
+obstack_1grow(stackp, 0x65); \
+obstack_1grow(stackp, 0x00); \
+MIDI_TIMESTAMP(0); \
+obstack_1grow(stackp, 0xb0 | channel); \
+obstack_1grow(stackp, 0x64); \
+obstack_1grow(stackp, 0x02); \
+MIDI_TIMESTAMP(0); \
+obstack_1grow(stackp, 0xb0 | channel); \
+obstack_1grow(stackp, 0x06); \
+obstack_1grow(stackp, MIDI_patchmap[sci_instrument].keyshift); \
+MIDI_TIMESTAMP(0); \
+obstack_1grow(stackp, 0xb0 | channel); \
+obstack_1grow(stackp, 0x65); \
+obstack_1grow(stackp, 0x00); \
+MIDI_TIMESTAMP(0); \
+obstack_1grow(stackp, 0xb0 | channel); \
+obstack_1grow(stackp, 0x64); \
+obstack_1grow(stackp, 0x01); \
+MIDI_TIMESTAMP(0); \
+obstack_1grow(stackp, 0xb0 | channel); \
+obstack_1grow(stackp, 0x06); \
+obstack_1grow(stackp, MIDI_patchmap[sci_instrument].finetune & 0x3FFF >> 7); \
+MIDI_TIMESTAMP(0); \
+obstack_1grow(stackp, 0xb0 | channel); \
+obstack_1grow(stackp, 0x26); \
+obstack_1grow(stackp, MIDI_patchmap[sci_instrument].finetune & 0x7F); \
+MIDI_TIMESTAMP(0); \
+obstack_1grow(stackp, 0xb0 | channel); \
+obstack_1grow(stackp, 0x65); \
+obstack_1grow(stackp, 0x00); \
+MIDI_TIMESTAMP(0); \
+obstack_1grow(stackp, 0xb0 | channel); \
+obstack_1grow(stackp, 0x64); \
+obstack_1grow(stackp, 0x00); \
+MIDI_TIMESTAMP(0); \
+obstack_1grow(stackp, 0xb0 | channel); \
+obstack_1grow(stackp, 0x06); \
+obstack_1grow(stackp, MIDI_patchmap[sci_instrument].bender_range); \
+MIDI_TIMESTAMP(0); \
+obstack_1grow(stackp, 0xb0 | channel); \
+obstack_1grow(stackp, 0x26); \
+obstack_1grow(stackp, 0x00)
 
 guint8 *
 makeMIDI0(const guint8 *src, int *size)
@@ -486,6 +596,9 @@ makeMIDI0(const guint8 *src, int *size)
   struct obstack *stackp = &stack;
   char muteflags[16]; /* Remembers unmapped instruments */
   guint32 pos; /* position in src */
+  guint32 pending_delay = 0;
+  int status, laststatus = 0;
+
   int EOT = 0; /* end of track reached */
   guint8 *result; /* Herein will be the final results */
   int tracklength_index; /* (guint32) result[tracklength_index] (big endian)
@@ -505,77 +618,135 @@ makeMIDI0(const guint8 *src, int *size)
   */
 
   for (pos = 0; pos < 0x10; pos++) {
-    obstack_1grow(stackp, 0); /* don't wait */
-    MAP_INSTRUMENT(pos, src[(pos << 1) + 1]);
-  }
+    if (pos != MIDI_PERCUSSIONS) {
+      if (MIDI_patchmap[src[(pos << 1) + 1]].gm_instr >= 0) {
+	SCIsdebug("Channel: %0d, Patch: %d\n", pos, src[(pos << 1) + 1]);
+        MIDI_TIMESTAMP(0);
+        obstack_1grow(stackp, 0xc0 | pos);
+        obstack_1grow(stackp, MIDI_patchmap[src[(pos << 1) + 1]].gm_instr);
+	SETUP_INSTRUMENT(pos, src[(pos << 1) + 1]); 
+        muteflags[pos] = 0;
+      } else
+	SCIsdebug("(Channel: %0d, Patch: %d)\n", pos, src[(pos << 1) + 1]);
+	muteflags[pos] = 1;
+    } else
+      muteflags[pos] = 0;
+  };
 
   pos = 0x21; /* skip the header */
 
   while (!EOT) {
-    int command; /* MIDI command */
-    int commandlength; /* length of the command block */
-    int alt = 0; /* don't copy */
 
-    /* MIDI delay */
-    if (src[pos] > 0x7f) {
-      /* Sierra uses the all bits to store length information, but the MIDI
-      ** standard allows only 7 bits of information per byte (since
-      ** the MSB is used to signal that the next byte contains additional
-      ** delay information).
-      */
-	obstack_1grow(stackp, 0x81);
-	obstack_1grow(stackp, src[pos] & 0x7f);
-    } else obstack_1grow(stackp, src[pos]);
-    pos++;
+    pending_delay += src[pos];
+    pos++;    
 
-    /* MIDI commands */
     if (src[pos] & 0x80) {
-      commandlength = 1;
-      command = src[pos];
-    } else commandlength = 0;
-    /* else we've got the 'running status' mode */
-
-    if (command < 0x90) commandlength += 2; /* Note Off */
-    else if (command < 0xa0) commandlength += 2; /* Note On */
-    else if (command < 0xb0) commandlength += 2; /* Polyphonic Key Pressure */
-    else if (command < 0xc0) commandlength += 2; /* Controller Change */
-    else if (command < 0xd0) { /* Program Change: Set instr. mapping */
-      commandlength += 1;
-      alt += 1; /* copying is handled here */
-      MAP_INSTRUMENT(command & 0xf, src[pos+1]);
-    } else if (command < 0xe0) commandlength += 1; /* Channel Key Pressure */
-    else if (command < 0xf0) commandlength += 2; /* pitch bend */
-    else if (command == 0xfc) { /* End of Track (is this official?) */
-      alt = 1;
+      status = src[pos];
+      pos++;
+    };
+    
+    if (status < 0xb0) {
+    /* Note Off (8x), Note On (9x), Aftertouch (Ax) */
+      if ((status & 0x0f) == MIDI_PERCUSSIONS) {
+	if (MIDI_rhythmkey[src[pos]] >= 0) {
+          MIDI_TIMESTAMP(pending_delay);
+	  pending_delay = 0;
+	  if (status != laststatus)
+	    obstack_1grow(stackp, status);
+	  laststatus = status;
+	  obstack_1grow(stackp, MIDI_rhythmkey[src[pos]]);
+	  obstack_1grow(stackp, src[pos + 1]);
+        };
+      } else if (muteflags[status & 0x0f] == 0) {
+	MIDI_TIMESTAMP(pending_delay);
+	pending_delay = 0;
+	if (status != laststatus)
+	  obstack_1grow(stackp, status);
+	laststatus = status;
+	obstack_1grow(stackp, src[pos]);
+	obstack_1grow(stackp, src[pos + 1]);
+      };
+      pos += 2;
+    } else if (status < 0xc0) {
+    /* Controller */
+      if (muteflags[status & 0x0f] == 0) {
+	MIDI_TIMESTAMP(pending_delay);
+	pending_delay = 0;
+	if (status != laststatus)
+	  obstack_1grow(stackp, status);
+	laststatus = status;
+	obstack_1grow(stackp, src[pos]);
+	obstack_1grow(stackp, src[pos + 1]);
+      };
+      pos +=2;
+    } else if (status < 0xd0) {
+    /* Program (patch) Change */
+      if (((status & 0xf) != MIDI_PERCUSSIONS) && (MIDI_patchmap[src[pos]].gm_instr >= 0)) {
+	SCIsdebug("Channel: %d, Patch: %d\n", status & 0xf, src[pos]);
+	MIDI_TIMESTAMP(pending_delay);
+	pending_delay = 0;
+	if (status != laststatus)
+	  obstack_1grow(stackp, status);
+	laststatus = status;
+	obstack_1grow(stackp, MIDI_patchmap[src[pos]].gm_instr);
+	SETUP_INSTRUMENT(status & 0xf, src[pos]);
+	muteflags[status & 0x0f] = 0;
+      } else {
+        SCIsdebug("(Channel: %d, Patch: %d)\n", status & 0xf, src[pos]);
+        muteflags[status & 0x0f] = 1;
+      };
+      pos++;
+    } else if (status < 0xe0) {
+    /* Channel Pressure */
+      if (muteflags[status & 0xF] == 0) {
+	MIDI_TIMESTAMP(pending_delay);
+	pending_delay = 0;
+	if (status != laststatus)
+	  obstack_1grow(stackp, status);
+	laststatus = status;
+	obstack_1grow(stackp, src[pos]);
+      };
+      pos++;
+    } else if (status < 0xf0) {
+    /* Pitch Wheel */
+      if (!muteflags[status & 0xF] == 0) {
+	MIDI_TIMESTAMP(pending_delay);
+	pending_delay = 0;
+	if (status != laststatus)
+	  obstack_1grow(stackp, status);
+	laststatus = status;
+	obstack_1grow(stackp, src[pos]);
+	obstack_1grow(stackp, src[pos + 1]);
+      };
+      pos += 2;
+    } else if (status == 0xfc) {
+    /* End of Track (is this official?) */
+      MIDI_TIMESTAMP(pending_delay);
+      pending_delay = 0;
       obstack_1grow(stackp, 0xff);
       obstack_1grow(stackp, 0x2f);
       obstack_1grow(stackp, 0x00);
       EOT = 1;
-    } else if (command == 0xff) { /* Meta command */
-      switch (src[pos+1]) {
-      case 0x2f: EOT = 1; /* End of Track */
-	commandlength += 2; /* FIXME: This assumes that src[pos+2] == 0 */
+    } else if (status == 0xff) { /* Meta command */
+      switch (src[pos]) {
+      case 0x2f:
+	MIDI_TIMESTAMP(pending_delay);
+	pending_delay = 0;
+        obstack_1grow(stackp, status);
+        obstack_1grow(stackp, src[pos]);
+        obstack_1grow(stackp, 0x00);
+	EOT = 1;
 	break;
-      default: SCIsdebug("Illegal or unsupported MIDI meta instruction: FF %02x\n",
+      default:
+	SCIsdebug("Illegal or unsupported MIDI meta instruction: FF %02x\n",
 			 src[pos+1]);
-      return NULL;
+	return NULL;
       }
     } else {
-      SCIsdebug("Illegal or unsupported MIDI extended instruction: %02x\n", command);
+      SCIsdebug("Illegal or unsupported MIDI extended instruction: %02x\n", status);
       return NULL;
-    }
-
-    if ((command < 0xf0) && (muteflags[command & 0x0f])) {
-      alt = 1; /* If a channel command was sent to a muted channel, NOP instead */
-      if ((command & 0xf0) != 0xc0)
-	obstack_grow(stackp, &MIDI_NOP, sizeof(MIDI_NOP)); 
-    }
-
-    if (!alt)
-      obstack_grow(stackp, src + pos, commandlength);
-
-    pos += commandlength;
-  }
+    };
+  };
 
   *size = obstack_object_size(stackp);
 
@@ -601,40 +772,62 @@ makeMIDI0(const guint8 *src, int *size)
 
 }
 
-#undef MAP_INSTRUMENT(channel, sci_instrument)
+#undef MIDI_TIMESTAMP(deltatime)
+#undef SETUP_INSTRUMENT(channel, sci_instrument)
 
-
-int
+gint8
 _lookup_instrument(char *iname)
 {
   int i = 0;
 
-  while (SCI0_patch2_instrmaps[i].name) {
-    if (g_strncasecmp(iname, SCI0_patch2_instrmaps[i].name, 7) == 0)
-      return SCI0_patch2_instrmaps[i].gm_instr;
+  while (MT32_MemoryTimbreMaps[i].name) {
+    if (g_strncasecmp(iname, MT32_MemoryTimbreMaps[i].name, 10) == 0)
+      return MT32_MemoryTimbreMaps[i].gm_instr;
     i++;
   }
-  return INSTR_NOT_FOUND;
+  return MAP_NOT_FOUND;
 }
 
+gint8
+_lookup_rhythm_key(char *iname)
+{
+  int i = 0;
+
+  while (MT32_MemoryTimbreMaps[i].name) {
+    if (g_strncasecmp(iname, MT32_MemoryTimbreMaps[i].name, 10) == 0)
+      return MT32_MemoryTimbreMaps[i].gm_rhythm_key;
+    i++;
+  }
+  return MAP_NOT_FOUND;
+}
 
 int
 mapMIDIInstruments(void)
 {
-  resource_t *patch2 = findResource(sci_patch, 2);
-  int banks;
-  int i, instrctr, bankctr;
+  resource_t *patch1 = findResource(sci_patch, 1);
+  int memtimbres;
+  int patches;
+  int i;
+  int group, number, keyshift, finetune, bender_range;
+  guint32 pos;
   FILE *logfile;
 
-  for (i = 0; i < MAX_MIDI_MAPS; i++)
-    memcpy(MIDI_map[i], MIDI_map_default, sizeof(MIDI_map_default));
+  for (i = 0; i < 128; i++) {
+    MIDI_patchmap[i].gm_instr = MT32_PresetTimbreMaps[i].gm_instr;
+    MIDI_patchmap[i].keyshift = 0x40;
+    MIDI_patchmap[i].finetune = 0x2000;
+    MIDI_patchmap[i].bender_range = 0x0c;
+  };
+
+  for (i = 0; i < 128; i++)
+    MIDI_rhythmkey[i] = MT32_PresetRhythmKeymap[i];
 
   if (sci_version > SCI_VERSION_1)
     return 0;
 
-  if (!patch2) {
+  if (!patch1) {
     if (sci_version < SCI_VERSION_1) {
-      fprintf(stderr,"No patch.002 found: MIDI mapping magic failed!\n");
+      fprintf(stderr,"No patch.001 found: using default MT-32 mapping magic!\n");
       return 1;
     }
     return 0;
@@ -643,40 +836,69 @@ mapMIDIInstruments(void)
   if (!(logfile = fopen("freesci_instr", "a")))
     perror("While trying to open freesci_instr");
 
-  banks = patch2->length / (0x40 * 48);
+  memtimbres = *(patch1->data + 0x1EB);
+  pos = 0x1EC + memtimbres * 0xF6;
 
-  SCIsdebug("MIDI mapping magic: %d instrument banks detected\n", banks);
+  if (patch1->length > pos && \
+      ((0x100 * *(patch1->data + pos) + *(patch1->data +pos + 1)) == 0xABCD)) {
+    patches = 96;
+    pos += 2 + 8 * 48;
+  } else 
+    patches = 48;
 
-  for (bankctr = 0; bankctr < banks; bankctr++)
-    for (instrctr = 0; instrctr < 48; instrctr++)
-      {
-	char *instrname = patch2->data
-	  + (bankctr * ((0x40 * 48) + 2))
-	  + (instrctr * 0x40);
-	int instr = _lookup_instrument(instrname);
+  SCIsdebug("MIDI mapping magic: %d MT-32 Patches detected\n", patches);
+  SCIsdebug("MIDI mapping magic: %d MT-32 Memory Timbres\n", memtimbres);
 
-	if (instr >= 0) {
+  for (i = 0; i < patches; i++) {
+    if (i < 48) {
+      group = *(patch1->data + 0x6B + 8 * i);
+      number = *(patch1->data + 0x6B + 8 * i + 1);
+      keyshift = *(patch1->data + 0x6B + 8 * i + 2);
+      finetune = *(patch1->data + 0x6B + 8 * i + 3);
+      bender_range = *(patch1->data + 0x6B + 8 * i + 4);
 
-	  MIDI_map[bankctr][instrctr] = instr;
+    } else {
+      group = *(patch1->data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2);
+      number = *(patch1->data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2 + 1);
+      keyshift = *(patch1->data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2 + 2);
+      finetune = *(patch1->data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2 + 3);
+      bender_range = *(patch1->data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2 + 4);
+    };
 
-	} else {
-	  instrname[7] = 0; /* Evil */
-	  MIDI_map[bankctr][instrctr] = INSTR_NOT_MAPPED;
-	  SCIsdebug("MIDI Bank %d: Instrument #%d (\"%s\"): ",
-		    bankctr, instrctr, instrname);
+    switch (group) {
+      case 0:
+        MIDI_patchmap[i].gm_instr = MT32_PresetTimbreMaps[number].gm_instr;
+	break;
+      case 1:
+        MIDI_patchmap[i].gm_instr = MT32_PresetTimbreMaps[number + 64].gm_instr;
+        break;
+      case 2:
+        MIDI_patchmap[i].gm_instr = _lookup_instrument(patch1->data + 0x1EC + number * 0xF6);
+        break;
+      case 3:
+        MIDI_patchmap[i].gm_instr = MT32_RhythmTimbreMaps[number].gm_instr;
+        break;
+      default:
+        break;
+    };
+    MIDI_patchmap[i].keyshift = 0x40 + (keyshift & 0x3F - 24);
+    MIDI_patchmap[i].finetune = 0x2000 + (finetune & 0x7F - 50);
+    MIDI_patchmap[i].bender_range = bender_range & 0x1F;
+  };
 
-	  if (instr == INSTR_NOT_FOUND) {
-	    SCIsdebug("Unknown instrument\n");
-
-	    if (logfile)
-	      fprintf(logfile,"{\"%s\", INSTR_NOT_MAPPED},\n", instrname);
-
-	  } else if (instr == INSTR_NOT_MAPPED) {
-	    SCIsdebug("Not mapped\n");
-	  } else SCIsdebug("Invalid condition %d\n", instr);
-	}
-      }
-
+  if (patch1->length > pos && \
+      ((0x100 * *(patch1->data + pos) + *(patch1->data + pos + 1)) == 0xDCBA)) {
+    for (i = 0; i < 64 ; i++) {
+      number = *(patch1->data + pos + 4 * i + 2);
+      if (number < 64)
+	MIDI_rhythmkey[i + 23] = _lookup_rhythm_key(patch1->data + 0x1EC + number * 0xF6);
+      else if (number < 94)
+        MIDI_rhythmkey[i + 23] = MT32_RhythmTimbreMaps[number - 64].gm_rhythmkey;
+      else
+	MIDI_rhythmkey[i + 23] = NOMAP;
+    };
+  };
+  
   if (logfile)
     fclose(logfile);
   return 0;

@@ -16,9 +16,12 @@ Everything from python.tar.gz
 Sergey Lapin: [slapin@karelia.ru]
 parts of core/decompress1.c
 
+Rickard Lind: [rpl@dd.chalmers.se]
+most of sound/midi.c
+
 Christoph Reichenbach: [creichen@rbg.informatik.tu-darmstadt.de]
-graphics/graphics_ggi.c graphics/font.c graphics/mcursor.c core/resource.c core/vm.c tools/sciunpack.c sound/*  console/*.c tools/console.c graphics/input*.c graphics/window.c graphics/engine_graphics.c main.c config.l
+graphics/graphics_ggi.c graphics/font.c graphics/mcursor.c core/resource.c core/vm.c tools/sciunpack.c sound/sound*  console/*.c tools/console.c graphics/input*.c graphics/window.c graphics/engine_graphics.c main.c config.l
 core/kernel.c core/savegame.cfsml core/cfsml.pl
 parts of core/decompress.c
 parts of graphics/graphics.c
-
+minor parts of sound/midi.c
