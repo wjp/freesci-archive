@@ -1720,60 +1720,6 @@ game_restore(state_t **_s, char *game_name)
 
 
 void
-version_require_earlier_than(state_t *s, sci_version_t version)
-{
-  if (s->version_lock_flag)
-    return;
-
-  if (version <= s->min_version) {
-    sciprintf("Version autodetect conflict: Less than %d.%03d.%03d was requested, but "
-	      "%d.%03d.%03d is the current minimum\n",
-	      SCI_VERSION_MAJOR(version), SCI_VERSION_MINOR(version), SCI_VERSION_PATCHLEVEL(version),
-	      SCI_VERSION_MAJOR(s->min_version), SCI_VERSION_MINOR(s->min_version),
-	      SCI_VERSION_PATCHLEVEL(s->min_version));
-    return;
-  }
-  else if (version < s->max_version) {
-    s->max_version = version -1;
-    if (s->max_version < s->version)
-      s->version = s->max_version;
-  }
-}
-
-
-void
-version_require_later_than(state_t *s, sci_version_t version)
-{
-  if (s->version_lock_flag)
-    return;
-
-  if (version > s->max_version) {
-    sciprintf("Version autodetect conflict: More than %d.%03d.%03d was requested, but less than"
-	      "%d.%03d.%03d is required ATM\n",
-	      SCI_VERSION_MAJOR(version), SCI_VERSION_MINOR(version), SCI_VERSION_PATCHLEVEL(version),
-	      SCI_VERSION_MAJOR(s->max_version), SCI_VERSION_MINOR(s->max_version),
-	      SCI_VERSION_PATCHLEVEL(s->max_version));
-    return;
-  }
-  else if (version > s->min_version) {
-    s->min_version = version;
-    if (s->min_version > s->version)
-      s->version = s->min_version;
-  }
-}
-
-sci_version_t
-version_parse(char *vn)
-{
-  int major = *vn - '0'; /* One version digit */
-  int minor = atoi(vn + 2);
-  int patchlevel = atoi(vn + 6);
-
-  return SCI_VERSION(major, minor, patchlevel);
-}
-
-
-void
 quit_vm()
 {
 	script_abort_flag = 1; /* Terminate VM */

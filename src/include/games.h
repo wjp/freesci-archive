@@ -36,35 +36,31 @@ typedef struct _sci_game {
   char *name;
 } sci_game_t;
 
-#define SCI_GAMES_COUNT 26
-
 sci_game_t sci_games[] = {
-  { 0x01684e20, SCI_VERSION(0,000,685), "ARTHUR" },
-  { 0x00a9a8d0, SCI_VERSION(0,000,631), "CB1" },
-  { 0x032efe2a, SCI_VERSION(0,000,631), "CB1" }, /* ver. 1.000.046 */
-  { 0x010a46ae, SCI_VERSION(0,000,519), "cardGames" },
-  { 0x009f17fb, SCI_VERSION(0,000,572), "solitare" },
-  { 0x00d441c7, SCI_VERSION(0,000,668), "iceMan" },
-  { 0x02bd7be8, SCI_VERSION(0,000,502), "KQ4" },
-  { 0x013249ee, SCI_VERSION(0,000,274), "KQ4" },
-  { 0x00e8b382, SCI_VERSION(0,000,409), "LSL2" },
-  { 0x03082081, SCI_VERSION(0,000,572), "LSL3" },
-  { 0x00e2e755, SCI_VERSION(0,000,572), "LSL3" },
-  { 0x00798ae3, SCI_VERSION(0,000,530), "LSL3" }, /* Demo version */
-  { 0x032e674b, SCI_VERSION(0,000,395), "PQ2" },
-  { 0x032eaeff, SCI_VERSION(0,000,490), "PQ2" },
-  { 0x009b0cd2, SCI_VERSION(0,000,566), "HQ" },
-  { 0x02e5c05f, SCI_VERSION(0,000,629), "HQ" },
-  { 0x0117a04f, SCI_VERSION(0,000,453), "SQ3" },
-  { 0x0117da25, SCI_VERSION(0,000,453), "SQ3" }, /* 1.0 U */
-  { 0x033bc19e, SCI_VERSION(0,000,453), "SQ3" }, /* 1.0 V */
-  { 0x00cb0bf2, SCI_VERSION(0,000,453), "SQ3-Astro" },
-  { 0x05a8efaf, SCI_VERSION(1,000,172), "Trial" }, /* unknown as yet v1.102 */
-  { 0x05a71cde, SCI_VERSION(1,000,172), "Trial" }, /* unknown as yet */
-  { 0x0223e42c, SCI_VERSION(1,000,172), "Trial" }, /* also 1.000.072 v1.105 */
-  { 0x05a8efaf, SCI_VERSION(1,000,172), "Trial" }, /* unknown as yet */
-  { 0x014291d1, SCI_VERSION(0,000,999), "KQ1E" }, /* S.old.010 1.000.051 */
-  { 0x03aff799, SCI_VERSION(0,000,999), "KQ1E" }, /* S.old.010 */
+	{ 0x94EA377B, SCI_VERSION(0,000,685), "CB1" },
+	{ 0xFD9EE7BD, SCI_VERSION(0,000,685), "Camelot" },
+	{ 0x2829987F, SCI_VERSION(0,000,685), "Camelot" },
+	{ 0x980CEAD3, SCI_VERSION(0,000,629), "Demo Quest" },
+	{ 0x3DB972CA, SCI_VERSION(0,000,572), "Hoyle 2" },
+	{ 0xC0B37651, SCI_VERSION(0,000,685), "Iceman" },
+	{ 0xDABA6B8A, SCI_VERSION(0,000,999), "KQ1" }, /* S.old.010 */
+	{ 0x270E37F3, SCI_VERSION(0,000,274), "KQ4" },
+	{ 0x685F1205, SCI_VERSION(0,000,502), "KQ4" },
+	{ 0x13DD3CD2, SCI_VERSION(0,000,343), "LSL2" },
+	{ 0x0C848403, SCI_VERSION(0,000,409), "LSL2" },
+	{ 0xC48FE83A, SCI_VERSION(0,000,572), "LSL3" },
+	{ 0xC14E3A2A, SCI_VERSION(0,000,395), "PQ2" },
+	{ 0x4BD66036, SCI_VERSION(0,000,490), "PQ2" },
+	{ 0x7132D6D8, SCI_VERSION(0,000,629), "QfG1" },
+	{ 0xF8F4913F, SCI_VERSION(0,000,685), "SQ3" },
+	{ 0x34FBC324, SCI_VERSION(0,000,999), "SQ3/DE" }, /* S.old.114 */
+
+	/* Undetermined Amiga versions: */
+/*	{ 0x8AE5F854, SCI_VERSION(), "ARTHUR" }, */
+/*	{ 0x9FB7015B, SCI_VERSION(), "CB1" }, */
+/*	{ 0x560CEDD5, SCI_VERSION(), "iceMan" }, */
+
+	{ 0, 0, NULL } /* terminator */
 };
 
 #endif /* _SCI_GAMES_H_ */

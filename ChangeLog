@@ -1,3 +1,14 @@
+2005-02-12  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/include/games.h: Listed a handful of games for the new
+	hashing algorithm
+
+	* src/scicore/versions.c: Relocated version management code into
+	separate file
+	(version_detect_from_executable): Added code for detecting SCI
+	version from binary executable string
+	(version_guess_from_hashcode): Changed hashing function
+
 2005-01-26  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/gfx/resource/sci_picfill_aux.c (AUXBUF_FILL_HELPER): Added a

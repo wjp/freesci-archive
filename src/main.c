@@ -34,7 +34,6 @@
 #include <sci_conf.h>
 #include <kdebug.h>
 #include <sys/types.h>
-#include <games.h>
 #include <game_select.h>
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
@@ -873,49 +872,6 @@ list_savegames(state_t *s)
 	sciprintf("-----------------\n");
 }
 
-int 
-guess_version() 
-{
-	int i, len = 0;
-	int fd = -1;
-	int crc = 0;
-	guint8 *buff;
-	sci_version_t version = 0;
-
-	if (!IS_VALID_FD(fd = sci_open("resource.001", O_RDONLY|O_BINARY)))
-		return version;
-
-	buff = sci_malloc(8192);
-
-	for (len = 1; len > 0; ) {
-		memset(buff, 0x00, 8192);
-		len = read(fd, buff, 8192);
-		for (i = 0; i < len; i++)
-			crc += *(buff + i);
-	}
-
-	for (i = 0 ; i < SCI_GAMES_COUNT ; i++) {
-		if (sci_games[i].id == crc) {
-			version = sci_games[i].version;
-			sciprintf("Detected game id: 0x%08x (%s) interpreter %d.%03d.%03d\n",
-				  crc, sci_games[i].name,
-				  SCI_VERSION_MAJOR(version), SCI_VERSION_MINOR(version), 
-				  SCI_VERSION_PATCHLEVEL(version));
-			break;
-		}
-	}
-	if (i == SCI_GAMES_COUNT) {
-		sciprintf("Unrecognized game id: 0x%08x\n", crc);
-	}
-
-	if (fd > 0)
-		close(fd);
-
-	sci_free(buff);
-
-	return version;
-}
-
 int
 main(int argc, char** argv)
 {
@@ -998,13 +954,55 @@ main(int argc, char** argv)
 			return 0;
 		else
 			active_conf = confs + conf_nr;
-fprintf(stderr, "CONF # = %d\n", conf_nr);
 	}
 
 	if (cl_options.version)
 		version = cl_options.version;
-	else
-		version = guess_version();
+	else {
+		int got_version = version_detect_from_executable(&version);
+		unsigned int code;
+		sci_version_t hash_version;
+		char *game_name = version_guess_from_hashcode(&hash_version, &code);
+
+		if (got_version) {
+			sciprintf("Interpreter version: %d.%03d.%03d (by executable scan)\n",
+				  SCI_VERSION_MAJOR(version),
+				  SCI_VERSION_MINOR(version),
+				  SCI_VERSION_PATCHLEVEL(version));
+
+			if (!game_name)
+				sciprintf("Could not identify game by hash code: %08X\n"
+					  "Please report the preceding two lines and the name of the game you were trying\n"
+					  "to run to the FreeSCI development team to help other users!\n",
+					  code);
+			else if (hash_version != version)
+				sciprintf("UNEXPECTED INCONSISTENCY: Hash code %08X indicates game version %d.%03d.%03d,\n"
+					  "  but analysis of the executable yields %d.%03d.%03d (for game '%s').\n"
+					  "  Please report this!\n"
+					  "Proceeding with result of the executable analysis.\n",
+					  code,
+					  SCI_VERSION_MAJOR(hash_version),
+					  SCI_VERSION_MINOR(hash_version),
+					  SCI_VERSION_PATCHLEVEL(hash_version),
+					  SCI_VERSION_MAJOR(version),
+					  SCI_VERSION_MINOR(version),
+					  SCI_VERSION_PATCHLEVEL(version));
+		} else {
+			if (game_name) {
+				version = hash_version;
+				sciprintf("Interpreter version: %d.%03d.%03d (by hash)\n",
+					  SCI_VERSION_MAJOR(version),
+					  SCI_VERSION_MINOR(version),
+					  SCI_VERSION_PATCHLEVEL(version));
+			} else
+				sciprintf("Could not determine interpreter version; hash code %08X.\n",
+					  code);
+
+		}
+
+		if (game_name)
+			sciprintf("Game identified as '%s'\n", game_name);
+	}
 
 	getcwd(resource_dir, PATH_MAX); /* Store resource directory */
 

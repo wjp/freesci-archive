@@ -503,8 +503,3 @@ sci_sched_yield();
 
 #endif
 
-
-
-
-
-
