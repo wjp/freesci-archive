@@ -51,13 +51,14 @@ int script_step_counter = 0; /* Counts the number of steps executed */
 
 extern int _debug_step_running; /* scriptdebug.c */
 extern int _debug_seeking; /* scriptdebug.c */
-
+extern int _weak_validations; /* scriptdebug.c */
 
 
 calls_struct_t *send_calls = NULL;
 int send_calls_allocated = 0;
 int bp_flag = 0;
 static reg_t _dummy_register = NULL_REG_INITIALIZER;
+
 
 /*-- validation functionality --*/
 
@@ -101,7 +102,8 @@ static inline int
 validate_arithmetic(reg_t reg)
 {
 	if (reg.segment) {
-		script_debug_flag = script_error_flag = 1;
+		if (!_weak_validations)
+			script_debug_flag = script_error_flag = 1;
 		sciprintf("Attempt to read arithmetic value from non-zero segment [%04x]\n", reg.segment);
 #ifdef HAVE_SETJMP_H
 		if (jump_initialized)
@@ -126,7 +128,8 @@ validate_variable(reg_t *r, int type, int max, int index, int line)
 		else
 			sciprintf("(out of range [%d..%d])", 0, max-1);
 		sciprintf(" in %s, line %d\n", __FILE__, line);
-		script_debug_flag = script_error_flag = 1;
+		if (!_weak_validations)
+			script_debug_flag = script_error_flag = 1;
 
 		return 1;
 	}
@@ -311,10 +314,9 @@ execute_method(state_t *s, word script, word pubfunct, stack_ptr_t sp,
   }
 #endif
 
-  return
-	  add_exec_stack_entry(s, make_reg( seg, temp ),
-			       sp, calling_obj, argc, argp, -1, calling_obj,
-			       s->execution_stack_pos);
+	return add_exec_stack_entry(s, make_reg( seg, temp ),
+				 sp, calling_obj, argc, argp, -1, calling_obj,
+				 s->execution_stack_pos, seg);
 }
 
 
@@ -516,7 +518,8 @@ send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
 						     send_calls[send_calls_nr].argc,
 						     send_calls[send_calls_nr].argp,
 						     send_calls[send_calls_nr].selector,
-						     send_obj, origin);
+						     send_obj, origin,
+						     SCI_XS_CALLEE_LOCALS);
 
 	_exec_varselectors(s);
 
@@ -530,7 +533,7 @@ add_exec_stack_varselector(state_t *s, reg_t objp, int argc, stack_ptr_t argp,
 			   selector_t selector, reg_t *address, int origin)
 {
 	exec_stack_t *xstack = add_exec_stack_entry(s, NULL_REG, address, objp, argc, argp,
-						    selector, objp, origin);
+						    selector, objp, origin, SCI_XS_CALLEE_LOCALS);
 	/* Store selector address in sp */
 
 	xstack->addr.varp = address;
@@ -542,8 +545,10 @@ add_exec_stack_varselector(state_t *s, reg_t objp, int argc, stack_ptr_t argp,
 
 exec_stack_t *
 add_exec_stack_entry(state_t *s, reg_t pc, stack_ptr_t sp, reg_t objp, int argc,
-		     stack_ptr_t argp, selector_t selector, reg_t sendp, int origin)
+		     stack_ptr_t argp, selector_t selector, reg_t sendp, int origin,
+		     seg_id_t locals_segment)
 /* Returns new TOS element for the execution stack*/
+/* locals_segment may be -1 if derived from the called object */
 {
 	exec_stack_t *xstack = NULL;
 
@@ -561,14 +566,19 @@ add_exec_stack_entry(state_t *s, reg_t pc, stack_ptr_t sp, reg_t objp, int argc,
 	xstack = s->execution_stack + s->execution_stack_pos;
 
 	xstack->objp = objp;
-	xstack->local_segment = 0;
-	if (objp.segment) {
-		object_t *obj = obj_get(s, objp);
-		if (obj)
-			xstack->local_segment = obj->pos.segment;
-		else
-			sciprintf("Warning: Object "PREG", base of exec stack entry, does not exist\n",
-				  PRINT_REG(objp));
+	if (locals_segment != SCI_XS_CALLEE_LOCALS)
+		xstack->local_segment = locals_segment;
+	else {
+		xstack->local_segment = 0;
+
+		if (objp.segment) {
+			object_t *obj = obj_get(s, objp);
+			if (obj)
+				xstack->local_segment = obj->pos.segment;
+			else
+				sciprintf("Warning: Object "PREG", base of exec stack entry, does not exist\n",
+					  PRINT_REG(objp));
+		}
 	}
 	xstack->sendp = sendp;
 	xstack->addr.pc = pc;
@@ -1040,7 +1050,7 @@ run_vm(state_t *s, int restoring)
 						      (validate_arithmetic(*call_base))
 						      	+ restadjust,
 						      call_base, NULL_SELECTOR, xs->objp,
-						      s->execution_stack_pos);
+						      s->execution_stack_pos, xs->local_segment);
 			restadjust = 0; /* Used up the &rest adjustment */
 			xs->sp = call_base;
 

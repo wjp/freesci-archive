@@ -142,6 +142,14 @@ struct {
 	 "Sergey Lapin\nPort of Carl's type 2 decompression code\n\n"
 	 "Solomon Peachy\nSDL ports and much of the sound subsystem",
 	 0, 15},
+
+	/* To add:
+	** -------
+	** Vyacheslav Dikonov
+	** Gary Nutt
+	** Xiaojun Chen
+	** Sean Terrell */
+
 	{"Special Thanks",
 	 "\nSpecial Thanks\n\n\nto the linuxgames.com and telefragged.com crew\nfor hosting us\n\n"
 	 "To Bob Heitman and Corey Cole for their support",

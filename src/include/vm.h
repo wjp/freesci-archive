@@ -448,9 +448,12 @@ send_selector(struct _state *s, reg_t send_obj, reg_t work_obj,
 */
 
 
+#define SCI_XS_CALLEE_LOCALS -1
+
 exec_stack_t *
 add_exec_stack_entry(struct _state *s, reg_t pc, stack_ptr_t sp, reg_t objp, int argc,
-		     stack_ptr_t argp, selector_t selector, reg_t sendp, int origin);
+		     stack_ptr_t argp, selector_t selector, reg_t sendp, int origin,
+		     seg_id_t local_segment);
 /* Adds an entry to the top of the execution stack
 ** Parameters: (state_t *) s: The state with which to execute
 **             (reg_t) pc: The initial program counter
@@ -464,6 +467,8 @@ add_exec_stack_entry(struct _state *s, reg_t pc, stack_ptr_t sp, reg_t objp, int
 **                       Equal to objp for anything but super.
 **             (int) origin: Number of the execution stack element this entry was created by
 **                       (usually the current TOS number, except for multiple sends).
+**             (seg_id_t) local_segment: The segment to use for local variables,
+**                        or SCI_XS_CALLEE_LOCALS to use obj's segment.
 ** Returns   : (exec_stack_t *): A pointer to the new exec stack TOS entry
 */
 

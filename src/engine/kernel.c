@@ -67,8 +67,6 @@ void kReadNumber(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kStrEnd(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kStrCat(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kStrCmp(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kStrCpy(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kStrAt(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 
 void kNumCels(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kNumLoops(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -123,6 +121,8 @@ void kMemory(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 
 
 /* New kernel functions */
+reg_t kStrCpy(struct _state *s, int funct_nr, int argc, reg_t *argp);
+reg_t kStrAt(struct _state *s, int funct_nr, int argc, reg_t *argp);
 reg_t kEditControl(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kDrawControl(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kHiliteControl(struct _state *s, int funct_nr, int argc, reg_t *argv);
@@ -254,7 +254,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*48*/	{KF_OLD, "StrCat", {old:kStrCat}},
 /*49*/	{KF_OLD, "StrCmp", {old:kStrCmp}},
 /*4a*/	{KF_OLD, "StrLen", {old:kStrLen}},
-/*4b*/	{KF_OLD, "StrCpy", {old:kStrCpy}},
+/*4b*/	{KF_NEW, "StrCpy", {new:{kStrCpy, "rri*"}}},
 /*4c*/	{KF_NEW, "Format", {new:{kFormat, "r.*"}}},
 /*4d*/	{KF_OLD, "GetFarText", {old:kGetFarText}},
 /*4e*/	{KF_OLD, "ReadNumber", {old:kReadNumber}},
@@ -281,7 +281,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*63*/	{KF_OLD, "CheckFreeSpace", {old:kCheckFreeSpace}},
 /*64*/	{KF_OLD, "ValidPath", {old:kValidPath}},
 /*65*/	{KF_OLD, "CoordPri", {old:kCoordPri}},
-/*66*/	{KF_OLD, "StrAt", {old:kStrAt}},
+/*66*/	{KF_NEW, "StrAt", {new:{kStrAt, "rii*"}}},
 #ifdef _WIN32
 /*67*/	{KF_OLD, "DeviceInfo", {old:kDeviceInfo_Win32}},
 #else /* !_WIN32 */
@@ -587,11 +587,13 @@ void
 kMemory(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 
+	sciprintf("Warning: Memory(%d) invoked!\n", UPARAM(0));
+
 	switch (PARAM(0)) {
 
 	case K_MEMORY_ALLOCATE_CRITICAL :
 
-		s->acc=heap_allocate(s->_heap, UPARAM(1))+2;
+  //		s->acc=heap_allocate(s->_heap, UPARAM(1))+2;
 		if (!s->acc)
 			{
 				SCIkwarn(SCIkERROR, "Critical heap allocation failed\n");
@@ -601,33 +603,34 @@ kMemory(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_MEMORY_ALLOCATE_NONCRITICAL :
 
-		s->acc=heap_allocate(s->_heap, UPARAM(1))+2;
+  //		s->acc=heap_allocate(s->_heap, UPARAM(1))+2;
 		break;
 
 	case K_MEMORY_FREE :
 
-		heap_free(s->_heap, UPARAM(1)-2);
+  //		heap_free(s->_heap, UPARAM(1)-2);
 		break;
 
 	case K_MEMORY_MEMCPY :
 		{
 
-			int dest = UPARAM(1);
+  /*			int dest = UPARAM(1);
 			int src = UPARAM(2);
 			int n = UPARAM(3);
 
 			memcpy(s->heap + dest, s->heap + src, n);
+  */
 			break;
 		}
 
 	case K_MEMORY_PEEK :
 
-		s->acc=GET_HEAP(UPARAM(1));
+  //		s->acc=GET_HEAP(UPARAM(1));
 		break;
 
 	case K_MEMORY_POKE :
 
-		PUT_HEAP(UPARAM(1), UPARAM(2));
+  //		PUT_HEAP(UPARAM(1), UPARAM(2));
 		break;
 
 	}

@@ -60,6 +60,11 @@ termination, as shown in the trivial case!
 The polygons can _not_ be expected to be convex, but they can be
 expected to be closed and not to self-intersect. 
 
+[CR]: The three types are:
+ - completely blocking
+ - blocking unless the start or end point is within the polygon
+ - direction inducing: blocking on edges except for vertices (leaving
+             (enough room to pass through)
 */
 
 void

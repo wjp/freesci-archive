@@ -1,8 +1,8 @@
 #!/usr/bin/wish
 #################################################################################
 #                                                                               #
-#   fsconf.tcl, a GUI for FreeSci's configuration file			     	#
-#   Copyright (C) 2001 Rune Orsval					     	#
+#   Freesci-setup, a GUI for FreeSci's configuration file		     	#
+#   Copyright (C) 2001 Rune Orsval, fixed by Vyacheslav Dikonov		     	#
 #									     	#
 #   This program is free software; you can redistribute it and/or modify     	#
 #   it under the terms of version 2 of the GNU General Public License as        #
@@ -29,15 +29,17 @@ proc new_game {} {
     entry .newgame.entry -textvariable name
     frame .newgame.buttonframe
     button .newgame.buttonframe.ok -text Ok -command {
-	if {$name != ""} {
+	set name [string map {\  _} $name]
+	if {$name != "" && [lsearch $games $name] == -1} {
 	    lappend games $name
 	    setdefault $name
 	    set currentgame $name
 	}
+	set name [string map {_ \ } $name]
 	destroy .newgame
     }
     button .newgame.buttonframe.cancel -text Cancel -command {destroy .newgame}
-    pack .newgame.label .newgame.entry .newgame.buttonframe
+    pack .newgame.label .newgame.entry .newgame.buttonframe -padx 12 -pady 4
     pack .newgame.buttonframe.ok .newgame.buttonframe.cancel -side left
     grab set .newgame
     focus .newgame.entry
@@ -49,10 +51,10 @@ proc show_help {option} {
     global template
     toplevel .help
     wm title .help "FreeSci configuration help - $option"
-    message .help.msg -text $template($option,help)
-    pack .help.msg
+    message .help.msg -aspect 400 -text $template($option,help)
+    pack .help.msg -padx 8 -pady 2
     button .help.ok -text "Ok" -command {destroy .help}
-    pack .help.ok
+    pack .help.ok -pady 4
     grab .help
     tkwait window .help
 }
@@ -60,10 +62,10 @@ proc show_help {option} {
 proc show_about {} {
     toplevel .about
     wm title . "About FreeSci configuration"
-    message .about.msg -aspect 300 -text "fsconf.tcl - a graphical configuration program for FreeSci\nfsconf.tcl written by Rune Orsval\nThis program is distributed under GNU General Public license version 2"
-    pack .about.msg
+    message .about.msg -aspect 400 -text "FreeSCI-Setup - a graphical configuration tool for FreeSci written by Rune Orsval.\n\nThis program is distributed under GNU General Public license version 2"
+    pack .about.msg -padx 8 -pady 2
     button .about.ok -text "Ok" -command {destroy .about}
-    pack .about.ok
+    pack .about.ok -pady 4
     grab .about
     tkwait window .about
 }
@@ -73,7 +75,6 @@ proc saveit {} {
 
     set f [open $env(HOME)/.freesci/config w]
     foreach game $games {
-    #	puts $game
 	if [string compare "$game" "Global"] {
 	    set printgame 1
 	} else {
@@ -82,10 +83,13 @@ proc saveit {} {
 	foreach option $options {
 	    if $configuration($game,$option,selected) {
 		if $printgame {
+		    puts $f ""
 		    puts $f "\[$game\]"
 		    set printgame 0
 		}
-		puts $f "$option = $configuration($game,$option,value)"
+		if {$configuration($game,$option,value) != ""} {
+		    puts $f "$option=$configuration($game,$option,value)"
+		}
 	    }
 	}
     }
@@ -169,41 +173,38 @@ proc setdefault {game} {
 
 # Read ~/.freesci/config #
 set path $env(HOME)/.freesci
-if [file isdirectory $path] {
-    if [file exists $path/config] {
-	set f [open $path/config r]
-	set game Global
-	set games $game
-	setdefault $game
-	while {![eof $f]} {
-	    gets $f line
-	    if [string match {*=*} $line] {
-		scan $line {%[^=]=%[^=]} a b
-		set option [string trim $a]
-		set configuration($game,$option,selected) 1
-		set configuration($game,$option,value) [string trim $b]
-	    } elseif [string match {\[*\]} $line] {
-		scan $line {[%[^]]]} game
-		lappend games $game
-		setdefault $game
-	    }
+if ![file isdirectory $path] {
+    file mkdir $path
+}
+if [file exists $path/config] {
+    set f [open $path/config r]
+    set game Global
+    set games $game
+    setdefault $game
+    while {![eof $f]} {
+	gets $f line
+	if [string match {*=*} $line] {
+	    scan $line {%[^=]=%[^=]} a b
+	    set option [string trim $a]
+	    set configuration($game,$option,selected) 1
+	    set configuration($game,$option,value) [string trim $b]
+	} elseif [string match {\[*\]} $line] {
+	    scan $line {[%[^]]]} game
+	    lappend games $game
+	    setdefault $game
 	}
-	close $f
-    } else {
-	set games "";
     }
+    close $f
+} else {
+    set game Global
+    set games $game
+    setdefault $game
 }
 
-#foreach game $games {
-#    foreach option $options {
-	#	puts "$game, $option"
-	#	puts "$configuration($game,$option,selected), $configuration($game,$option,value)"
-#    }
-#}
 
 menu .m -tearoff 0
 
-menu .m.file -tearoff 0
+menu .m.file -tearoff 1
 .m add cascade -label "File" -menu .m.file
 .m.file add command -label "Save" -accelerator "(C-x C-s)" -command {saveit}
 bind . <Control-x><Control-s> {saveit}
@@ -211,13 +212,13 @@ bind . <Control-x><Control-s> {saveit}
 .m.file add command -label "Quit" -command {exit} -accelerator "(C-x C-c)"
 bind . <Control-x><Control-c> exit
 
-menu .m.help -tearoff 0
+menu .m.help -tearoff 1
 .m add cascade -label "Help" -menu .m.help
 .m.help add command -label "About" -command {show_about}
 .m.help add separator
 foreach option $options {
     if [string length $template($option,help)] {
-	.m.help add command -label $option -command "show_help $option"
+	.m.help add command -label [string totitle [string map {_ \ } $option]] -command "show_help $option"
     }
 }
 
@@ -227,51 +228,69 @@ set currentgame Global
 
 while {1} {
 
-    frame .games -relief raised -borderwidth 1
-    pack .games -fill x
-    label .games.gamelabel -text "Choose game or global settings:"
-    pack .games.gamelabel -in .games -side top -anchor w
+    frame .main
+    pack  .main
+
+    frame .main.games
+    pack .main.games -padx 4 -pady 4 -anchor w -in .main
+    label .main.games.gamelabel -text "Choose game or global settings:"
+    pack .main.games.gamelabel -side top -anchor w -in .main.games
     set incol 3
     foreach i $games {
 	if "$incol == 3" {
-	    frame .games.fr$i
-	    pack .games.fr$i -side left -in .games
-	    set currentframe .games.fr$i
+	    frame .main.games.fr$i
+	    pack .main.games.fr$i -side left -anchor n -pady 2 -in .main.games
+	    set currentframe .main.games.fr$i
 	    set incol 1
 	} else {
 	    set incol [expr $incol + 1]
 	}
-	radiobutton .games.rb$i -text $i -variable currentgame -value $i
-	pack .games.rb$i -in $currentframe -anchor w
+	radiobutton .main.games.rb$i -text [string map {_ " "} $i ] -variable currentgame -value $i
+	pack .main.games.rb$i -in $currentframe -anchor w
     }
 
-    frame .options -relief raised -borderwidth 1
-    pack  .options -fill both
-    frame .options.optionlabelframe
-    pack  .options.optionlabelframe -side top -in .options -fill x
-    label .options.varoptionlabel -textvariable currentgame
-    label .options.optionlabel -text options:
-    pack  .options.varoptionlabel .options.optionlabel -side left -in .options.optionlabelframe 
+    frame .main.options -relief groove -borderwidth 4
+    pack  .main.options -padx 4 -pady 4 -in .main
+    frame .main.options.optionlabelframe
+    pack  .main.options.optionlabelframe -side top -anchor w -in .main.options
+    label .main.options.varoptionlabel -text [string map {_ \ } $currentgame]
+    label .main.options.optionlabel -text options:
+    pack  .main.options.varoptionlabel .main.options.optionlabel -side left -in .main.options.optionlabelframe 
+
+    set incol 16
+    set c 0
+    set r 0
     foreach i $options {
 	if [string compare Global $currentgame]||![string compare all $template($i,area)] {
-	    frame .options.fr$i
-	    pack .options.fr$i -fill x -in .options
-	    checkbutton .options.cb$i -text $i -variable configuration($currentgame,$i,selected)
-	    pack .options.cb$i -in .options.fr$i -side left 
-	    if [string compare $template($i,type) text] {
-		#		puts $configuration($currentgame,$i,value)
-		eval tk_optionMenu .options.op$i configuration($currentgame,$i,value) $template($i,values)
-		pack .options.op$i -in .options.fr$i -side right
+
+	    if "$incol == 16" {
+	        set c [expr $c + 1]
+		frame .main.options.cf$c
+		pack  .main.options.cf$c -side left -anchor n -padx 4 -pady 2 -in .main.options
+    		set currentframe .main.options.cf$c
+		set incol 1
 	    } else {
-		entry .options.op$i -textvariable configuration($currentgame,$i,value)
-		pack .options.op$i -in .options.fr$i -side right
+	        set incol [expr $incol + 1]
+	    }
+	    
+	    set r [expr $r + 1]
+	    frame $currentframe.fr$r
+	    pack $currentframe.fr$r -in $currentframe -fill x
+
+	    checkbutton $currentframe.cb$r -text [string totitle [string map {_ \ } $i]] -variable configuration($currentgame,$i,selected)
+	    pack $currentframe.cb$r -in $currentframe.fr$r -side left 
+	    if [string compare $template($i,type) text] {
+		eval tk_optionMenu $currentframe.op$r configuration($currentgame,$i,value) $template($i,values)
+		pack $currentframe.op$r -in $currentframe.fr$r -side right
+	    } else {
+		entry $currentframe.op$r -textvariable configuration($currentgame,$i,value)
+		pack $currentframe.op$r -in $currentframe.fr$r -side right -pady 4
 	    }
 	}
     }
     
     tkwait variable currentgame
-    destroy .options
-    destroy .games
+    destroy .main
 }
 
 tkwait window .

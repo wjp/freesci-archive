@@ -1,3 +1,13 @@
+2002-11-29  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kstring.c (kStrAt, kStrCpy): Ported
+
+	* src/engine/kernel.c (kMemory): Disabled kMemory()
+
+	* src/engine/scriptdebug.c (script_debug): Added 'sg' debug command
+	for stepping until a global variable is changed (does not handle
+	indirect changes by writes from kernel functions).
+
 2002-11-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/sci_widgets.c (sciw_new_window): Moved titled windows down by

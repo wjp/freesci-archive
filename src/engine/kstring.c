@@ -378,31 +378,51 @@ kStrCmp(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
-void
-kStrCpy(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kStrCpy(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr dest = UPARAM(0);
-	heap_ptr src = UPARAM(1);
+	char *dest = kernel_dereference_pointer(s, argv[0], 0);
+	char *src = kernel_dereference_pointer(s, argv[1], 0);
 
-	s->acc = PARAM(0);
+	if (!dest) {
+		SCIkdebug(SCIkWARNING, "Attempt to strcpy TO invalid pointer "PREG"!\n",
+			  PRINT_REG(argv[0]));
+		return NULL_REG;
+	}
+	if (!src) {
+		SCIkdebug(SCIkWARNING, "Attempt to strcpy FROM invalid pointer "PREG"!\n",
+			  PRINT_REG(argv[1]));
+		return NULL_REG;
+	}
 
 	if (argc > 2)
-		strncpy((char *) (s->heap + dest), (char *) (s->heap + src), UPARAM(2));
+		strncpy(dest, src, UKPV(2));
 	else
-		strcpy((char *) (s->heap + dest), (char *) (s->heap + src));
+		strcpy(dest, src);
 
+	return argv[0];
 }
 
 
-void
-kStrAt(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kStrAt(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr address = UPARAM(0) + UPARAM(1);
+	char *dest = kernel_dereference_pointer(s, argv[0], 0);
 
-	s->acc = s->heap[address];
+	if (!dest) {
+		SCIkdebug(SCIkWARNING, "Attempt to strat at invalid pointer "PREG"!\n",
+			  PRINT_REG(argv[0]));
+		return NULL_REG;
+	}
+
+	dest += KP_UINT(argv[1]);
+
+	s->r_acc = make_reg(0, *dest);
 
 	if (argc > 2)
-		s->heap[address] = (byte)UPARAM(2); /* Request to modify this char */
+		*dest = KP_SINT(argv[2]); /* Request to modify this char */
+
+	return s->r_acc;
 }
 
 

@@ -43,6 +43,7 @@ int _debug_commands_not_hooked = 1; /* Commands not hooked to the console yet? *
 int _debug_seeking = 0; /* Stepping forward until some special condition is met */
 int _debug_seek_level = 0; /* Used for seekers that want to check their exec stack depth */
 int _debug_seek_special = 0;  /* Used for special seeks(1) */
+int _weak_validations = 0; /* Some validation errors are reduced to warnings if non-0 */
 reg_t _debug_seek_reg = NULL_REG_INITIALIZER;  /* Used for special seeks(2) */
 
 #define _DEBUG_SEEK_NOTHING 0
@@ -50,6 +51,7 @@ reg_t _debug_seek_reg = NULL_REG_INITIALIZER;  /* Used for special seeks(2) */
 #define _DEBUG_SEEK_LEVEL_RET 2 /* Step forward until returned from this level */
 #define _DEBUG_SEEK_SPECIAL_CALLK 3 /* Step forward until a /special/ callk is found */
 #define _DEBUG_SEEK_SO 5 /* Step forward until specified PC (after the send command) and stack depth */
+#define _DEBUG_SEEK_GLOBAL 6 /* Step forward until one specified global variable is modified */
 
 static reg_t *p_pc;
 static stack_ptr_t *p_sp;
@@ -2199,6 +2201,16 @@ c_disasm(state_t *s)
 
 
 int
+c_sg(state_t *s)
+{
+	_debug_seeking = _DEBUG_SEEK_GLOBAL;
+	_debug_seek_special = cmd_params[0].val;
+	_debugstate_valid = 0;
+
+	return 0;
+}
+
+int
 c_snk(state_t *s)
 {
 	int callk_index;
@@ -3041,6 +3053,9 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 		sciprintf("%d: acc="PREG"  ", script_step_counter, PRINT_REG(s->r_acc));
 		_debugstate_valid = 1;
 		disassemble(s, *pc, 0, 1);
+		if (_debug_seeking == _DEBUG_SEEK_GLOBAL)
+			sciprintf("Global %d (0x%x) = "PREG"\n", _debug_seek_special,
+				  _debug_seek_special, PRINT_REG(s->script_000->locals_block->locals[_debug_seek_special]));
 
 		_debugstate_valid = old_debugstate;
 
@@ -3055,8 +3070,11 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			script_t *scr = &(memobj->data.script);
 			byte *code_buf = scr->buf;
 			int code_buf_size = scr->buf_size;
-			int op = pc->offset >= code_buf_size? 0 : code_buf[pc->offset] >> 1;
+			int opcode = pc->offset >= code_buf_size? 0 : code_buf[pc->offset];
+			int op = opcode >> 1;
 			int paramb1 = pc->offset + 1 >= code_buf_size? 0 : code_buf[pc->offset + 1];
+			int paramf1 = (opcode & 1)? paramb1 :
+				(pc->offset + 2 >= code_buf_size? 0 : getInt16(code_buf + pc->offset + 1));
 
 			switch (_debug_seeking) {
 
@@ -3078,6 +3096,19 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 				if (!REG_EQ(*pc,_debug_seek_reg) ||
 				    s->execution_stack_pos != _debug_seek_level)
 					return;
+				break;
+
+			case _DEBUG_SEEK_GLOBAL:
+
+				if (op < op_sag)
+					return;
+				if ((op & 0x3) > 1)
+					return; /* param or temp */
+				if ((op & 0x3) && s->execution_stack[s->execution_stack_pos].local_segment > 0)
+					return; /* locals and not running in script.000 */
+				if (paramf1 != _debug_seek_special)
+					return; /* CORRECT global? */
+
 				break;
 
 			} /* switch(_debug_seeking) */
@@ -3294,6 +3325,10 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "  addresses.3, type.1");
 			con_hook_command(c_vr, "vr", "!a",
 					 "Examines an arbitrary reference\n\n");
+			con_hook_command(c_sg, "sg", "!i",
+					 "Steps until the global variable with the\n"
+					 "specified index is modified.\n\nSEE ALSO\n\n"
+					 "  s.1, snk.1, so.1, bpx.1");
 #ifdef HAVE_FORK
 			con_hook_command(c_codebug, "codebug", "!s",
 					 "Starts codebugging mode\n\nUSAGE\n\n"
@@ -3318,6 +3353,8 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_int(&script_step_counter, "script_step_counter", "# of executed SCI operations\n");
 			con_hook_int(&sci_debug_flags, "debug_flags", "Debug flags:\n  0x0001: Log each command executed\n"
 				     "  0x0002: Break on warnings\n");
+			con_hook_int(&_weak_validations, "weak_validations", "Set != 0 to turn some validation errors\n"
+				     "  into warnings\n");
 
 			con_hook_page("codebugging",
 				      "Co-debugging allows to run two (sufficiently\n"
