@@ -793,11 +793,11 @@ list_savegames(state_t *s)
 int
 main(int argc, char** argv)
 {
-	config_entry_t *active_conf		= {0};
-	config_entry_t *confs			= {0};
-	cl_options_t cl_options;
-	int conf_entries			= -1; /* Number of config entries */
-	int conf_nr				= -1; /* Element of conf to use */
+	config_entry_t *active_conf;	/* Active configuration used */
+	config_entry_t *confs = {0};	/* Configuration read from config file (if it exists) */
+	cl_options_t cl_options;		/* Command line options */
+	int conf_entries	= -1;		/* Number of config entries */
+	int conf_nr			= -1;		/* Element of conf to use */
 	FILE *console_logfile			= NULL;
 	char startdir[PATH_MAX+1] = "";
 	char resource_dir[PATH_MAX+1] = "";
@@ -908,7 +908,8 @@ main(int argc, char** argv)
 	if (!game_name)
 		game_name = (char *) gamestate->game_name;
 
-	if (!confs) { /* Unless the configuration has been read... */
+	/* If no game-specific configuration has been read, then read the non-specific config from file */
+	if (!confs) {
 		conf_nr = read_config(game_name, &confs, &conf_entries, &version);
 		active_conf = confs + conf_nr;
 	}
@@ -1071,8 +1072,9 @@ main(int argc, char** argv)
 	if (gamestate->sound_server) {
 		int poly;
 		if (gamestate->sound_server->init(
-			gamestate, (active_conf->reverse_stereo)?
-			 SOUNDSERVER_INIT_FLAG_REVERSE_STEREO : 0)) {
+			gamestate,
+			((active_conf->reverse_stereo) ? SOUNDSERVER_INIT_FLAG_REVERSE_STEREO : 0)))
+		{
 
 			fprintf(stderr,"Sound server initialization failed- aborting.\n");
 			return 1;

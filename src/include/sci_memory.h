@@ -119,20 +119,15 @@
 
 #ifdef UNCHECKED_MALLOCS
 
-#define ALLOC_MEM(alloc_statement, size, filename, linenum, funcname, debug)\
+#define ALLOC_MEM(alloc_statement, size, filename, linenum, funcname)\
 do {\
-	if (debug)\
-		INFO_MEMORY(alloc_statement, size, filename, linenum, funcname);\
 	alloc_statement;\
 } while (0);
 
 #else /* !UNCHECKED_MALLOCS */
 
-#define ALLOC_MEM(alloc_statement, size, filename, linenum, funcname, debug)\
+#define ALLOC_MEM(alloc_statement, size, filename, linenum, funcname)\
 do {\
-	if (debug)\
-		INFO_MEMORY(alloc_statement, size, filename, linenum, funcname)\
-\
 	if (size < 0)\
 	{\
 		PANIC_MEMORY(size, filename, linenum, funcname, "Cannot allocate negative bytes of memory!")\
@@ -168,7 +163,7 @@ do {\
 /********** memory allocation routines **********/
 
 extern scim_inline void *
-_SCI_MALLOC(size_t size, char *file, int line, char *funct, int debug);
+_SCI_MALLOC(size_t size, char *file, int line, char *funct);
 /* Allocates the specified amount of memory.
 ** Parameters: (size_t) size: Number of bytes to allocate
 **             (char *) file: Filename this routine is called from
@@ -177,14 +172,13 @@ _SCI_MALLOC(size_t size, char *file, int line, char *funct, int debug);
 **                            (use __LINE__)
 **             (char *) funct: Function this routine is called from
 **                            (use __PRETTY_FUNCTION__ if available)
-**             (int) debug: If true, outputs debug information
 ** Returns   : (void *) A pointer to the allocated memory chunk
 ** To free this string, use the sci_free() command.
 ** If the call fails, behaviour is dependent on the definition of SCI_ALLOC.
 */
 
 extern scim_inline void *
-_SCI_CALLOC(size_t num, size_t size, char *file, int line, char *funct, int debug);
+_SCI_CALLOC(size_t num, size_t size, char *file, int line, char *funct);
 /* Allocates num * size bytes of zeroed-out memory.
 ** Parameters: (size_t) num: Number of elements to allocate
 **             (size_t) size: Amount of memory per element to allocate
@@ -195,7 +189,7 @@ _SCI_CALLOC(size_t num, size_t size, char *file, int line, char *funct, int debu
 */
 
 extern scim_inline void *
-_SCI_REALLOC(void *ptr, size_t size, char *file, int line, char *funct, int debug);
+_SCI_REALLOC(void *ptr, size_t size, char *file, int line, char *funct);
 /* Increases the size of an allocated memory chunk.
 ** Parameters: (void *) ptr: The original pointer
 **             (size_t) size: New size of the memory chunk
@@ -209,7 +203,7 @@ _SCI_REALLOC(void *ptr, size_t size, char *file, int line, char *funct, int debu
 */
 
 extern scim_inline void
-_SCI_FREE(void *ptr, char *file, int line, char *funct, int debug);
+_SCI_FREE(void *ptr, char *file, int line, char *funct);
 /* Frees previously allocated memory chunks
 ** Parameters: (void *) ptr: The pointer to free
 **             Please see _SCI_MALLOC() for details on other parameters.
@@ -217,7 +211,7 @@ _SCI_FREE(void *ptr, char *file, int line, char *funct, int debug);
 */
 
 extern scim_inline void *
-_SCI_MEMDUP(void *src, size_t size, char *file, int line, char *funct, int debug);
+_SCI_MEMDUP(void *src, size_t size, char *file, int line, char *funct);
 /* Duplicates a chunk of memory
 ** Parameters: (void *) src: Pointer to the data to duplicate
 **             (size_t) size: Number of bytes to duplicate
@@ -229,7 +223,7 @@ _SCI_MEMDUP(void *src, size_t size, char *file, int line, char *funct, int debug
 */
 
 extern scim_inline char *
-_SCI_STRDUP(const char *src, char *file, int line, char *funct, int debug);
+_SCI_STRDUP(const char *src, char *file, int line, char *funct);
 /* Duplicates a string.
 ** Parameters: (const char *) src: The original pointer
 **             Please see _SCI_MALLOC() for details on other parameters.
@@ -241,7 +235,7 @@ _SCI_STRDUP(const char *src, char *file, int line, char *funct, int debug);
 
 
 extern scim_inline char *
-_SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, int debug);
+_SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct);
 /* Copies a string into a newly allocated memory part, up to a certain length.
 ** Parameters: (char *) src: The source string
 **             (int) length: The maximum length of the string (not counting
@@ -262,155 +256,68 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 #	define sci_free free
 #	define sci_strdup strdup
 #	define sci_strndup strndup
-#	ifdef __GNUC__
-#		ifndef MALLOC_DEBUG
-#			define sci_memdup(src, size)\
-				_SCI_MEMDUP(src, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
-#		else
-#			define sci_memdup(src, size)\
-				_SCI_MEMDUP(src, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
-#		endif
-#	else
-#		ifndef MALLOC_DEBUG
-#			define sci_memdup(src, size)\
-				_SCI_MEMDUP(src, size, __FILE__, __LINE__, "", 0)
-#		else
-#			define sci_memdup(src, size)\
-				_SCI_MEMDUP(src, size, __FILE__, __LINE__, "", 1)
-#		endif
-#	endif
+#	define sci_memdup memdup
 #else
 
 #	ifdef __GNUC__
-#		ifndef MALLOC_DEBUG
-#			define sci_malloc(size)\
-				_SCI_MALLOC(size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
-#		else
-#			define sci_malloc(size)\
-				_SCI_MALLOC(size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
-#		endif
+#		define sci_malloc(size)\
+			_SCI_MALLOC(size, __FILE__, __LINE__, __PRETTY_FUNCTION__)
 #	else
-#		ifndef MALLOC_DEBUG
-#			define sci_malloc(size)\
-				_SCI_MALLOC(size, __FILE__, __LINE__, "", 0)
-#		else
-#			define sci_malloc(size)\
-				_SCI_MALLOC(size, __FILE__, __LINE__, "", 1)
-#		endif
+#		define sci_malloc(size)\
+			_SCI_MALLOC(size, __FILE__, __LINE__, "")
+#	endif
+
+#	ifdef __GNUC__
+#		define sci_calloc(num, count)\
+			_SCI_CALLOC(num, count, __FILE__, __LINE__, __PRETTY_FUNCTION__)
+#	else
+#		define sci_calloc(num, count)\
+			_SCI_CALLOC(num, count, __FILE__, __LINE__, "")
 #	endif
 
 
 #	ifdef __GNUC__
-#		ifndef MALLOC_DEBUG
-#			define sci_calloc(num, count)\
-				_SCI_CALLOC(num, count, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
-#		else
-#			define sci_calloc(num, count)\
-				_SCI_CALLOC(num, count, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
-#		endif
+#		define sci_realloc(ptr, size)\
+			_SCI_REALLOC(ptr, size, __FILE__, __LINE__, __PRETTY_FUNCTION__)
 #	else
-#		ifndef MALLOC_DEBUG
-#			define sci_calloc(num, count)\
-				_SCI_CALLOC(num, count, __FILE__, __LINE__, "", 0)
-#		else
-#			define sci_calloc(num, count)\
-				_SCI_CALLOC(num, count, __FILE__, __LINE__, "", 1)
-#		endif
+#		define sci_realloc(ptr, size)\
+			_SCI_REALLOC(ptr, size, __FILE__, __LINE__, "")
 #	endif
 
 
 #	ifdef __GNUC__
-#		ifndef MALLOC_DEBUG
-#			define sci_realloc(ptr, size)\
-				_SCI_REALLOC(ptr, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
-#		else
-#			define sci_realloc(ptr, size)\
-				_SCI_REALLOC(ptr, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
-#		endif
+#		define sci_free(ptr)\
+			_SCI_FREE(ptr, __FILE__, __LINE__, __PRETTY_FUNCTION__)
 #	else
-#		ifndef MALLOC_DEBUG
-#			define sci_realloc(ptr, size)\
-				_SCI_REALLOC(ptr, size, __FILE__, __LINE__, "", 0)
-#		else
-#			define sci_realloc(ptr, size)\
-				_SCI_REALLOC(ptr, size, __FILE__, __LINE__, "", 1)
-#		endif
+#		define sci_free(ptr)\
+			_SCI_FREE(ptr, __FILE__, __LINE__, "")
 #	endif
 
 
 #	ifdef __GNUC__
-#		ifndef MALLOC_DEBUG
-#			define sci_free(ptr)\
-				_SCI_FREE(ptr, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
-#		else
-#			define sci_free(ptr)\
-				_SCI_FREE(ptr, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
-#		endif
+#		define sci_memdup(src, size)\
+			_SCI_MEMDUP(src, size, __FILE__, __LINE__, __PRETTY_FUNCTION__)
 #	else
-#		ifndef MALLOC_DEBUG
-#			define sci_free(ptr)\
-				_SCI_FREE(ptr, __FILE__, __LINE__, "", 0)
-#		else
-#			define sci_free(ptr)\
-				_SCI_FREE(ptr, __FILE__, __LINE__, "", 1)
-#		endif
+#		define sci_memdup(src, size)\
+			_SCI_MEMDUP(src, size, __FILE__, __LINE__, "")
 #	endif
 
 
 #	ifdef __GNUC__
-#		ifndef MALLOC_DEBUG
-#			define sci_memdup(src, size)\
-				_SCI_MEMDUP(src, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
-#		else
-#			define sci_memdup(src, size)\
-				_SCI_MEMDUP(src, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
-#		endif
+#		define sci_strdup(src)\
+			_SCI_STRDUP(src, __FILE__, __LINE__, __PRETTY_FUNCTION__)
 #	else
-#		ifndef MALLOC_DEBUG
-#			define sci_memdup(src, size)\
-				_SCI_MEMDUP(src, size, __FILE__, __LINE__, "", 0)
-#		else
-#			define sci_memdup(src, size)\
-				_SCI_MEMDUP(src, size, __FILE__, __LINE__, "", 1)
-#		endif
+#		define sci_strdup(src)\
+			_SCI_STRDUP(src, __FILE__, __LINE__, "")
 #	endif
 
 
 #	ifdef __GNUC__
-#		ifndef MALLOC_DEBUG
-#			define sci_strdup(src)\
-				_SCI_STRDUP(src, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
-#		else
-#			define sci_strdup(src)\
-				_SCI_STRDUP(src, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
-#		endif
+#		define sci_strndup(src, length)\
+			_SCI_STRNDUP(src, length, __FILE__, __LINE__, __PRETTY_FUNCTION__)
 #	else
-#		ifndef MALLOC_DEBUG
-#			define sci_strdup(src)\
-				_SCI_STRDUP(src, __FILE__, __LINE__, "", 0)
-#		else
-#			define sci_strdup(src)\
-				_SCI_STRDUP(src, __FILE__, __LINE__, "", 1)
-#		endif
-#	endif
-
-
-#	ifdef __GNUC__
-#		ifndef MALLOC_DEBUG
-#			define sci_strndup(src, length)\
-				_SCI_STRNDUP(src, length, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
-#		else
-#			define sci_strndup(src, length)\
-				_SCI_STRNDUP(src, length, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
-#		endif
-#	else
-#		ifndef MALLOC_DEBUG
-#			define sci_strndup(src, length)\
-				_SCI_STRNDUP(src, length, __FILE__, __LINE__, "", 0)
-#		else
-#			define sci_strndup(src, length)\
-				_SCI_STRNDUP(src, length, __FILE__, __LINE__, "", 1)
-#		endif
+#		define sci_strndup(src, length)\
+			_SCI_STRNDUP(src, length, __FILE__, __LINE__, "")
 #	endif
 #endif
 

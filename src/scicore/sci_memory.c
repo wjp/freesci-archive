@@ -32,7 +32,7 @@
 
 ***************************************************************************/
 
-#include "sci_memory.h"
+#include <sci_memory.h>
 
 /* set optimisations for Win32: */
 /* g on: enable global optimizations */
@@ -51,69 +51,114 @@
 
 
 inline void *
-_SCI_MALLOC(size_t size, char *file, int line, char *funct, int debug)
+_SCI_MALLOC(size_t size, char *file, int line, char *funct)
 {
 	void *res;
-	ALLOC_MEM((res = malloc(size)), size, file, line, funct, debug)
+#ifdef MALLOC_DEBUG
+	INFO_MEMORY("_SCI_MALLOC()", size, file, line, funct);
+#endif
+	ALLOC_MEM((res = malloc(size)), size, file, line, funct)
 	return res;
 }
 
 
 inline void *
-_SCI_CALLOC(size_t num, size_t size, char *file, int line, char *funct, int debug)
+_SCI_CALLOC(size_t num, size_t size, char *file, int line, char *funct)
 {
 	void *res;
-	ALLOC_MEM((res = calloc(num, size)), num * size, file, line, funct, debug)
+#ifdef MALLOC_DEBUG
+	INFO_MEMORY("_SCI_CALLOC()", size, file, line, funct);
+#endif
+	ALLOC_MEM((res = calloc(num, size)), num * size, file, line, funct)
 	return res;
 }
 
 
 inline void *
-_SCI_REALLOC(void *ptr, size_t size, char *file, int line, char *funct, int debug)
+_SCI_REALLOC(void *ptr, size_t size, char *file, int line, char *funct)
 {
 	void *res;
-	ALLOC_MEM((res = realloc(ptr, size)), size, file, line, funct, debug)
+#ifdef MALLOC_DEBUG
+	INFO_MEMORY("_SCI_REALLOC()", size, file, line, funct);
+#endif
+	ALLOC_MEM((res = realloc(ptr, size)), size, file, line, funct)
 	return res;
 }
 
 
 inline void
-_SCI_FREE(void *ptr, char *file, int line, char *funct, int debug)
+_SCI_FREE(void *ptr, char *file, int line, char *funct)
 {
-	if (debug)
+#ifdef MALLOC_DEBUG
+	INFO_MEMORY("_SCI_FREE()", size, file, line, funct);
+#endif
+	if (!ptr)
+	{
 		fprintf(stderr, "_SCI_FREE() [%s (%s) : %u]\n",
 			file, funct, line);
-	assert(ptr);
+		fprintf(stderr, " attempt to free NULL pointer\n");
+		BREAKPOINT();
+	}
 	free(ptr);
 }
 
 
 inline void *
-_SCI_MEMDUP(void *ptr, size_t size, char *file, int line, char *funct, int debug)
+_SCI_MEMDUP(void *ptr, size_t size, char *file, int line, char *funct)
 {
 	void *res;
-	ALLOC_MEM((res = malloc(size)), size, file, line, funct, debug)
+#ifdef MALLOC_DEBUG
+	INFO_MEMORY("_SCI_MEMDUP()", size, file, line, funct);
+#endif
+	if (!ptr)
+	{
+		fprintf(stderr, "_SCI_MEMDUP() [%s (%s) : %u]\n",
+			file, funct, line);
+		fprintf(stderr, " attempt to memdup NULL pointer\n");
+		BREAKPOINT();
+	}
+	ALLOC_MEM((res = malloc(size)), size, file, line, funct)
 	memcpy(res, ptr, size);
 	return res;
 }
 
 
 inline char *
-_SCI_STRDUP(const char *src, char *file, int line, char *funct, int debug)
+_SCI_STRDUP(const char *src, char *file, int line, char *funct)
 {
 	void *res;
-	ALLOC_MEM((res = strdup(src)), strlen(src), file, line, funct, debug)
+#ifdef MALLOC_DEBUG
+	INFO_MEMORY("_SCI_STRDUP()", size, file, line, funct);
+#endif
+	if (!src)
+	{
+		fprintf(stderr, "_SCI_STRDUP() [%s (%s) : %u]\n",
+			file, funct, line);
+		fprintf(stderr, " attempt to strdup NULL pointer\n");
+		BREAKPOINT();
+	}
+	ALLOC_MEM((res = strdup(src)), strlen(src), file, line, funct)
 	return res;
 }
 
 
 inline char *
-_SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, int debug)
+_SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct)
 {
 	void *res;
 	char *strres;
 	int rlen = MIN(strlen(src), length) + 1;
-	ALLOC_MEM((res = malloc(rlen)), rlen, file, line, funct, debug)
+#ifdef MALLOC_DEBUG
+	INFO_MEMORY("_SCI_STRNDUP()", size, file, line, funct);
+#endif
+	if (!src)
+	{
+		fprintf(stderr, "_SCI_STRNDUP() [%s (%s) : %u]\n",
+			file, funct, line);
+		fprintf(stderr, " attempt to strndup NULL pointer\n");
+		BREAKPOINT();
+	}
+	ALLOC_MEM((res = malloc(rlen)), rlen, file, line, funct)
 
 	strres = res;
 	strncpy(strres, src, rlen);

@@ -1,3 +1,11 @@
+2001-12-12  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/include/sci_memory.h:
+	* src/scicore/sci_memory.c: Now checks for invalid pointers on memdup,
+	strdup, strndup, and free.
+
+	* src/main.c: Added a bit of commenting.
+	
 2001-12-12  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/main.c (main): Made 'free' conditional, could be NULL
