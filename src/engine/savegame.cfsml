@@ -398,6 +398,8 @@ RECORD state_t "state_t" {
 
 	menubar_tp menubar;
 	string status_bar_text;
+	int status_bar_foreground;
+	int status_bar_background;
 
 	int priority_first;
 	int priority_last;

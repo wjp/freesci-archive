@@ -59,7 +59,7 @@
 
 
 void
-sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text);
+sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text, int fgcolor, int bgcolor);
 /* Sets the contents of a port used as status bar
 ** Parmeters: (state_t *) s: The affected game state
 **            (gfxw_port_t *) status_bar: The status bar port

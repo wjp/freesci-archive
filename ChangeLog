@@ -1,3 +1,9 @@
+2002-04-23  Lars Skovlund  <lskovlun@image.dk>
+
+	* Added support for colored title bars, controllable via a kernel call
+	DrawStatus(text, fgcolor, bgcolor). A debugger command, statusbar,
+	has also been added.
+
 2002-04-08  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (set_base): Removed obsolete debug messages

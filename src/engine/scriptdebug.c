@@ -2435,6 +2435,21 @@ c_se(state_t *s)
 }
 
 int
+c_statusbar(state_t *s) 
+{
+	if (!s) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	s->titlebar_port->color=s->ega_colors[cmd_params[0].val];
+	s->titlebar_port->bgcolor=s->ega_colors[cmd_params[1].val];
+
+	s->status_bar_foreground=cmd_params[0].val;        
+	s->status_bar_background=cmd_params[1].val;        
+}
+
+int
 c_sci_version(state_t *s)
 {
 	if (!s) {
@@ -2572,6 +2587,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_visible_map, "set_vismap", "i", "Sets the visible map.\n  Default is 0 (visual).\n"
 					 "  Other useful values are:\n  1: Priority\n  2: Control\n  3: Auxiliary\n");
 			con_hook_command(c_simkey, "simkey", "i", "Simulates a keypress with the\n  specified scancode.\n");
+			con_hook_command(c_statusbar, "statusbar", "ii", "Sets the colors of the status bar. Also controllable from the script.\n");
 			con_hook_command(c_bpx, "bpx", "s", "Sets a breakpoint on the execution of\n  the specified method.\n\n  EXAMPLE:\n"
 					 "  bpx ego::doit\n\n  May also be used to set a breakpoint\n  that applies whenever an object\n"
 					 "  of a specific type is touched:\n  bpx foo::\n");

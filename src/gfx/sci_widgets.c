@@ -48,14 +48,14 @@ clear_titlebar(gfxw_port_t *titlebar)
 static gfxw_list_t *
 make_titlebar_list(state_t *s, rect_t bounds, gfxw_port_t *status_bar)
 {
-	gfx_color_t white = s->ega_colors[0xf];
+	gfx_color_t color = status_bar->bgcolor;
 	gfxw_list_t *list;
 	gfxw_box_t *bgbox;
 
 
 	list = gfxw_new_list(status_bar->bounds, 0);
 	bgbox = gfxw_new_box(s->gfx_state, gfx_rect(0, 0, status_bar->bounds.xl, status_bar->bounds.yl - 1),
-			     white, white, GFX_BOX_SHADE_FLAT);
+			     color, color, GFX_BOX_SHADE_FLAT);
 
 	list->add((gfxw_container_t *) list, (gfxw_widget_t *) bgbox);
 
@@ -76,11 +76,12 @@ finish_titlebar_list(state_t *s, gfxw_list_t *list, gfxw_port_t *status_bar)
 }
 
 void
-sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text)
+sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text, int fgcolor, int bgcolor)
 {
 	gfx_state_t *state;
 	gfxw_list_t *list;
-	gfx_color_t white = s->ega_colors[0xf];
+	gfx_color_t bg = status_bar->bgcolor;
+	gfx_color_t fg = status_bar->color;
 	gfx_color_t black = s->ega_colors[0];
 
 	if (!status_bar->visual) {
@@ -100,7 +101,7 @@ sciw_set_status_bar(state_t *s, gfxw_port_t *status_bar, char *text)
 	if (text) {
 		gfxw_text_t *textw = gfxw_new_text(state, gfx_rect(0, 0, status_bar->bounds.xl, status_bar->bounds.yl),
 						   status_bar->font_nr, text, ALIGN_LEFT, ALIGN_CENTER,
-						   black, black, white, GFXR_FONT_FLAG_NO_NEWLINES);
+						   fg, fg, bg, GFXR_FONT_FLAG_NO_NEWLINES);
 
 		list = make_titlebar_list(s, status_bar->bounds, status_bar);
 

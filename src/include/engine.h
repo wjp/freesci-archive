@@ -144,6 +144,8 @@ typedef struct _state
 
 	char *status_bar_text; /* Text on the status bar, or NULL if the title bar is blank */
 
+        int status_bar_foreground, status_bar_background;
+
 	long game_time; /* Counted at 60 ticks per second, reset during start time */
 
 	heap_ptr save_dir; /* Pointer to the allocated space for the save directory */
@@ -274,8 +276,6 @@ typedef struct _state
 
 	/* Backwards compatibility crap */
 	int port_ID;
-
-
 
 	struct _state *successor; /* Successor of this state: Used for restoring */
 

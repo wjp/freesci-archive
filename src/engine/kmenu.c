@@ -63,6 +63,14 @@ void
 kDrawStatus(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	heap_ptr text = PARAM(0);
+	int fgcolor = UPARAM_OR_ALT(1, s->status_bar_foreground);
+	int bgcolor = UPARAM_OR_ALT(2, s->status_bar_background);
+
+	s->titlebar_port->color=s->ega_colors[fgcolor];
+	s->titlebar_port->bgcolor=s->ega_colors[bgcolor];
+
+	s->status_bar_foreground=fgcolor;
+	s->status_bar_background=bgcolor;
 
 	if (s->status_bar_text)
 		free(s->status_bar_text);
@@ -72,7 +80,7 @@ kDrawStatus(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (text)
 		s->status_bar_text = sci_strdup((char *) s->heap + text);
 
-	sciw_set_status_bar(s, s->titlebar_port, s->status_bar_text);
+	sciw_set_status_bar(s, s->titlebar_port, s->status_bar_text, fgcolor, bgcolor);
 
 	gfxop_update(s->gfx_state);
 }
@@ -86,7 +94,7 @@ kDrawMenuBar(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (PARAM(0))
 		sciw_set_menubar(s, s->titlebar_port, s->menubar, -1);
 	else
-		sciw_set_status_bar(s, s->titlebar_port, NULL);
+		sciw_set_status_bar(s, s->titlebar_port, NULL, 0, 0);
 
 	s->titlebar_port->draw(GFXW(s->titlebar_port), gfx_point(0, 0));
 	gfxop_update(s->gfx_state);
@@ -436,7 +444,7 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			port->widfree(GFXW(port));
 			port = NULL;
 
-			sciw_set_status_bar(s, s->titlebar_port, s->status_bar_text);
+			sciw_set_status_bar(s, s->titlebar_port, s->status_bar_text, s->status_bar_foreground, s->status_bar_background);
 			gfxop_update(s->gfx_state);
 		}
 		FULL_REDRAW;

@@ -538,6 +538,8 @@ game_init(state_t *s)
 
 	s->successor = NULL; /* No successor */
 	s->status_bar_text = NULL; /* Status bar is blank */
+	s->status_bar_foreground = 0;
+	s->status_bar_background = 15;
 
 	fprintf(stderr," Script 0 at %04x\n", script0);
 
