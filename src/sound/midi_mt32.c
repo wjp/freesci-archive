@@ -197,7 +197,9 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
     midi_mt32_sysex_delay();
     printf("MT-32: Setting up reverb levels\n");
     memcpy(mt32_reverb,data+ 0x4c, 3 * 11);
-    midi_mt32_reverb(default_reverb);
+    printf("MT-32: Setting default volume\n");
+    /*    midi_mt32_reverb(default_reverb); */
+    midi_mt32_volume(data[0x3f]);
     midi_mt32_sysex_delay();
     return 0;
   } else if (type == 1) {
@@ -209,6 +211,8 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
     for (i = 0; i < 4; i++)
       memcpy(velocity_map[i], data + 641 + i * 128, 128);
     memcpy(rhythmkey_map, data + 384, 128);
+    memcpy(mt32_reverb,data+ 0x4c, 3 * 11);
+    midi_mt32_volume(data[0x3f]);
     return 0;
   }
   return -1;
@@ -245,9 +249,12 @@ int midi_mt32_reverb(short param)
   if (param == -1)
     param = default_reverb;
 
-  midi_mt32_poke(0x100001, &mt32_reverb->mode, 1);
-  midi_mt32_poke(0x100002, &mt32_reverb->time, 1);
-  midi_mt32_poke(0x100003, &mt32_reverb->level, 1);
+  midi_mt32_poke(0x100001, &mt32_reverb[param].mode, 1);
+  midi_mt32_sysex_delay();
+  midi_mt32_poke(0x100002, &mt32_reverb[param].time, 1);
+  midi_mt32_sysex_delay();
+  midi_mt32_poke(0x100003, &mt32_reverb[param].level, 1);
+  midi_mt32_sysex_delay();
 
   return 0;
 }
