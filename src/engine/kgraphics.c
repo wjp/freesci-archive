@@ -1041,7 +1041,7 @@ set_base(state_t *s, reg_t object)
 		if (loop != oldloop) {
 			loop = 0;
 			PUT_SEL32V(object, loop, 0);
-			fprintf(stderr, "Resetting loop for %04x!\n", object);
+			fprintf(stderr, "Resetting loop for "PREG"!\n", PRINT_REG(object));
 		}
 
 		if (cel != oldcel) {

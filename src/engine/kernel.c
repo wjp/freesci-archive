@@ -190,7 +190,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*09*/	{KF_OLD, "Show", {old:kShow}},
 /*0a*/	{KF_OLD, "PicNotValid", {old:kPicNotValid}},
 /*0b*/	{KF_NEW, "Animate", {new:{kAnimate, "LI*"}}}, /* More like l?i? */
-/*0c*/	{KF_NEW, "SetNowSeen", {new:{kSetNowSeen, "o"}}},
+/*0c*/	{KF_NEW, "SetNowSeen", {new:{kSetNowSeen, "oi*"}}},
 /*0d*/	{KF_OLD, "NumLoops", {old:kNumLoops}},
 /*0e*/	{KF_OLD, "NumCels", {old:kNumCels}},
 /*0f*/	{KF_OLD, "CelWide", {old:kCelWide}},
@@ -946,18 +946,20 @@ kernel_matches_signature(state_t *s, char *sig, int argc, reg_t *argv)
 		return 1;
 
 	while (*sig && argc) {
-		int type = determine_reg_type(s, *argv);
+		if (*sig != KSIG_ANY) {
+			int type = determine_reg_type(s, *argv);
 
-		if (!type && *sig != KSIG_ANY) {
-			sciprintf("[KERN] Could not determine type of ref "PREG";"
-				  " failing signature check\n",
-				  PRINT_REG(*argv));
-			return 0;
+			if (!type) {
+				sciprintf("[KERN] Could not determine type of ref "PREG";"
+					  " failing signature check\n",
+					  PRINT_REG(*argv));
+				return 0;
+			}
+
+			if (!(type & *sig))
+				return 0;
+
 		}
-
-		if (!(type & *sig))
-			return 0;
-
 		if (!(*sig & KSIG_ELLIPSIS))
 			++sig;
 		++argv;

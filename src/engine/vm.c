@@ -1538,10 +1538,11 @@ _lookup_selector_function(state_t *s, int seg_id, object_t *obj, selector_t sele
 		index = _class_locate_funcselector(obj, selector_id);
 
 		if (index >= 0) {
-			*fptr = make_reg(obj->pos.segment,
-					 getUInt16((byte *)
-						   (obj->base_method + index
-						    + obj->methods_nr + 1)));
+			if (fptr)
+				*fptr = make_reg(obj->pos.segment,
+						 getUInt16((byte *)
+							   (obj->base_method + index
+							    + obj->methods_nr + 1)));
 			return SELECTOR_METHOD;
 		} else {
 			seg_id = obj->variables[SCRIPT_SUPERCLASS_SELECTOR].segment;

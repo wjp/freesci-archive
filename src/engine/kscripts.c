@@ -73,6 +73,7 @@ invoke_selector(state_t *s, reg_t object, int selector_id, int noinvalid, int kf
 	int i;
 	int framesize = 2 + 1 * argc;
 	reg_t address;
+	int slc_type;
 	stack_ptr_t stackframe = k_argp + k_argc;
 
 	exec_stack_t *xstack; /* Execution stack */
@@ -80,13 +81,17 @@ invoke_selector(state_t *s, reg_t object, int selector_id, int noinvalid, int kf
 	stackframe[0] = make_reg(0, selector_id);  /* The selector we want to call */
 	stackframe[1] = make_reg(0, argc); /* Argument count */
 
-	if (lookup_selector(s, object, selector_id, NULL, &address) != SELECTOR_METHOD) {
+	slc_type = lookup_selector(s, object, selector_id, NULL, &address);
+
+	if (slc_type == SELECTOR_NONE) {
 		SCIkwarn(SCIkERROR, "Selector '%s' of object at "PREG" could not be invoked (%s L%d)\n",
 			 s->selector_names[selector_id], PRINT_REG(object), fname, line);
 		if (noinvalid == 0)
 			KERNEL_OOPS("Not recoverable: VM was halted\n");
 		return 1;
 	}
+	if (slc_type == SELECTOR_VARIABLE) /* Swallow silently */
+		return;
 
 	va_start(argp, argc);
 	for (i = 0; i < argc; i++) {
