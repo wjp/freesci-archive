@@ -54,9 +54,9 @@
 
 
 /*** RESOURCE STATUS TYPES ***/
-#define SCI_STATUS_ALLOCATED 0
-#define SCI_STATUS_LOCKED 1 /* Allocated and in use */
-#define SCI_STATUS_NOMALLOC 2
+#define SCI_STATUS_NOMALLOC 0
+#define SCI_STATUS_ALLOCATED 1
+#define SCI_STATUS_LOCKED 2 /* Allocated and in use */
 
 #define SCI_RES_FILE_NR_PATCH -1 /* Resource was read from a patch file rather than from a resource */
 
@@ -87,8 +87,7 @@
 #define SCI_VERSION_1_LATE 4
 #define SCI_VERSION_1_1 5
 #define SCI_VERSION_32 6
-#define SCI_VERSION_LAST SCI_VERSION_1_LATE
-/* The last supported SCI version */
+#define SCI_VERSION_LAST SCI_VERSION_1_LATE /* The last supported SCI version */
 
 #define SCI_VERSION_1 SCI_VERSION_1_EARLY
 
@@ -111,7 +110,6 @@ enum ResourceTypes {
 /* Used for autodetection */
 
 
-
 struct resource_index_struct {
 	unsigned short resource_id;
 	unsigned int resource_location;
@@ -119,7 +117,7 @@ struct resource_index_struct {
 
 typedef struct resource_index_struct resource_index_t;
 
-typedef struct resource_struct {
+typedef struct _resource_struct {
 	unsigned char *data;
 
 	unsigned short number;
@@ -129,8 +127,8 @@ typedef struct resource_struct {
 	unsigned char status;
 	unsigned char file; /* Number of the resource file this resource is stored in */
 
-	int file_offset; /* Offset in file */
-	int lockers; /* Number of places where this resource was locked */
+	unsigned short lockers; /* Number of places where this resource was locked */
+	unsigned int file_offset; /* Offset in file */
 	struct _resource_struct *next; /* Position marker for the LRU queue */
 	struct _resource_struct *prev;
 } resource_t; /* for storing resources in memory */
@@ -280,6 +278,26 @@ int decrypt2(guint8* dest, guint8* src, int length, int complength);
 int decrypt4(guint8* dest, guint8* src, int length, int complength);
 /* DCL inflate- implemented in decompress1.c
 */
+
+/**** Internal #defines ****/
+
+/* Resource type encoding */
+#define SCI0_B1_RESTYPE_MASK  0xf8
+#define SCI0_B1_RESTYPE_SHIFT 3
+#define SCI0_B3_RESFILE_MASK  0xfd
+#define SCI0_B3_RESFILE_SHIFT 2
+
+#define SCI0_RESID_GET_TYPE(bytes) \
+    (((bytes)[1] & SCI0_B1_RESTYPE_MASK) >> SCI0_B1_RESTYPE_SHIFT)
+#define SCI0_RESID_GET_NUMBER(bytes) \
+    ((((bytes)[1] & ~SCI0_B1_RESTYPE_MASK) << 8) | ((bytes)[0]))
+#define SCI0_RESFILE_GET_FILE(bytes) \
+    (((bytes)[3] & SCI0_B3_RESFILE_MASK) >> SCI0_B3_RESFILE_SHIFT)
+#define SCI0_RESFILE_GET_OFFSET(bytes) \
+    ((((bytes)[3] & ~SCI0_B3_RESFILE_MASK) << 24) \
+      | (((bytes)[2]) << 16) \
+      | (((bytes)[1]) << 8) \
+      | (((bytes)[0]) << 0))
 
 #endif
 

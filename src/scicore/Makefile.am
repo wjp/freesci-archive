@@ -5,4 +5,4 @@ noinst_LIBRARIES = libscicore.a
 libscicore_a_SOURCES = console.c tools.c resource.c decompress0.c     \
 		 decompress01.c decompress1.c decompress11.c script.c \
 		 vocab.c vocab_debug.c old_objects.c modules.c        \
-		 sci_memory.c
+		 sci_memory.c resource_map.c

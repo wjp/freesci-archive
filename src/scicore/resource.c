@@ -45,6 +45,15 @@
 #undef SCI_REQUIRE_RESOURCE_FILES
 
 
+resource_t *
+sci0_read_resource_map(int *resource_nr_p);
+/* Reads the resource.map file from a local directory
+** Parameters: (int *) resource_nr_p: Pointer to an int the number of resources
+**                                    read is stored in
+** Returns   : (resource_t *) The resources in one large chunk, or NULL on error
+*/
+
+
 const char* SCI_Version_Types[] = {
 	"SCI version undetermined (Autodetect failed / not run)",
 	"SCI version 0.xxx",
@@ -445,4 +454,32 @@ void freeResources()
 		max_resource = 0;
 		return;
 	}
+}
+
+
+
+/*------------------------------------------------*/
+/** Resource manager constructors and operations **/
+/*------------------------------------------------*/
+
+resource_mgr_t *
+scir_new_resource_manager(char *dir, int version, char allow_patches, int max_memory)
+{
+	return NULL;
+}
+
+void
+scir_free_resource_manager(resource_mgr_t *mgr)
+{
+}
+
+resource_t *
+scir_find_resource(resource_mgr_t *mgr, int type, int number, int lock)
+{
+	return NULL;
+}
+
+void
+scir_unlock_resource(resource_mgr_t *mgr, resource_t *res)
+{
 }
