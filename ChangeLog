@@ -1,3 +1,13 @@
+2002-03-08  Rainer Canavan <rainer@canavan.de>
+	* src/sound/Makefile.am
+        * src/sound/midiout.c
+        * src/sound/midiout_irixmd.c:  Added a driver for the SCI dmedia 
+        MIDI subsystem.  Needs integration into the autoconf structure.
+
+2002-03-07  Solomon Peachy <pizza@shaftnet.org>
+	* src/gfx/driver/xlib_driver.c:  Fix for MIT_SHM prematurely
+        detaching segments.
+
 2002-03-06  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/scriptdebug.c: Renamed some variables to prevent clashes
