@@ -86,6 +86,7 @@ c_debuginfo(state_t *s)
   return 0;
 }
 
+
 int
 c_step(state_t *s)
 {
@@ -163,6 +164,74 @@ c_heapdump(state_t *s)
   }
 
   sci_hexdump(s->heap + cmd_params[0].val, cmd_params[1].val, cmd_params[0].val);
+  return 0;
+}
+
+
+int
+c_sim_parse(state_t *s)
+{
+  int i;
+  char *operators = ",&/()[]#<>";
+
+  if (!_debugstate_valid) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  if (cmd_paramlength == 0) {
+    s->parser_valid = 0;
+    return 0;
+  }
+
+  for (i = 0; i < cmd_paramlength; i++) {
+    int flag = 0;
+    char *token = cmd_params[i].str;
+
+    if (strlen(token) == 1) {/* could be an operator */
+      int j = 0;
+      while (operators[j] && (operators[j] != token[0]))
+	j++;
+      if (operators[j]) {
+	s->parser_nodes[i].type = 1;
+	s->parser_nodes[i].content.value = j + 0xf0;
+	flag = 1; /* found an operator */
+      }
+    }
+
+    if (!flag) {
+      char *openb = strchr(token, '['); /* look for opening braces */
+      result_word_t *result;
+
+      if (openb)
+	*openb = 0; /* remove them and the rest */
+
+      result = vocab_lookup_word(token, strlen(token),
+				 s->parser_words, s->parser_words_nr,
+				 s->parser_suffices, s->parser_suffices_nr);
+
+      if (result) {
+	s->parser_nodes[i].type = 0;
+	s->parser_nodes[i].content.value = result->group;
+	free(result);
+      } else { /* group name was specified directly? */
+	int val = strtol(token, NULL, 0); 
+	if (val) {
+	  s->parser_nodes[i].type = 0;
+	  s->parser_nodes[i].content.value = val;
+	} else { /* invalid and not matched */
+	  sciprintf("Couldn't interpret '%s'\n", token);
+	  s->parser_valid = 0;
+	  return 1;
+	}
+      }
+    }
+
+  }
+
+  s->parser_nodes[cmd_paramlength].type = -1; /* terminate */
+
+  s->parser_valid = 2;
   return 0;
 }
 
@@ -1328,6 +1397,14 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       con_hook_command(c_dynviews, "dynviews", "", "Lists the currently active dynamic views");
       con_hook_command(c_viewinfo, "viewinfo", "i", "Displays the number of loops\n  and cels of each loop"
 		       " for the\n  specified view resource.");
+#ifdef SCI_SIMPLE_SAID_CODE
+      con_hook_command(c_sim_parse, "simparse", "s*", "Simulates a parsed entity.\n\nUSAGE\n  Call this"
+		       " function with a list of\n  Said operators, words, and word group"
+		       "\n  numbers to match Said() specs\n  that look identical.\n"
+		       "\n  Note that opening braces and\n  everything behind them are\n"
+		       "\n  removed from all non-operator\n  parameter tokens.\n"
+		       "\n  simparse without parameters\n  removes the entity.\n");
+#endif SCI_SIMPLE_SAID_CODE
 
       con_hook_int(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");
       con_hook_int(&script_checkloads_flag, "script_checkloads_flag", "Set != 0 to display information\n"

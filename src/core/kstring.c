@@ -80,9 +80,18 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
     vocab_decypher_said_block(s, said_block);
   }
 
+#ifdef SCI_SIMPLE_SAID_CODE
+
+  s->acc = vocab_match_simple(s, said_block);
+
+  if ((s->debug_mode & (1 << SCIkPARSER_NR))
+      && s->acc)
+    sciprintf("Match.\n");
+
+#else /* !SCI_SIMPLE_SAID_CODE */
   SCIkdebug(SCIkSTUB,"stub\n");
-  
   s->acc = 0; /* Never true */
+#endif /* !SCI_SIMPLE_SAID_CODE */
 }
 
 
@@ -153,10 +162,17 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
   result_word_t *words;
   heap_ptr event = UPARAM(1);
   CHECK_THIS_KERNEL_FUNCTION;
+
+  if (s->parser_valid == 2) {
+    sciprintf("Parsing skipped: Parser in simparse mode\n");
+    return;
+  }
+
   words = vocab_tokenize_string(string, &words_nr,
 				s->parser_words, s->parser_words_nr,
 				s->parser_suffices, s->parser_suffices_nr,
 				&error);
+  s->parser_valid = 0; /* not valid */
 
   if (words) {
 
@@ -179,6 +195,17 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			       s->parser_branches_nr))
       syntax_fail = 1; /* Building a tree failed */
 
+#ifdef SCI_SIMPLE_SAID_CODE
+    {
+      int i;
+      for (i = 0; i < words_nr; ++i) {
+	s->parser_nodes[i].type = words[i].class;
+	s->parser_nodes[i].content.value = words[i].group;
+      }
+      s->parser_nodes[words_nr].type = -1; /* terminate */
+    }
+#endif SCI_SIMPLE_SAID_CODE
+
     g_free(words);
 
     if (syntax_fail) {
@@ -191,6 +218,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
       SCIkdebug(SCIkPARSER, "Tree building failed\n");
 
     } else {
+      s->parser_valid = 1;
       if (s->debug_mode & (1 << SCIkPARSER_NR))
 	vocab_dump_parse_tree(s->parser_nodes);
     }

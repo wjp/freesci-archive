@@ -1,3 +1,8 @@
+2000-04-14  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/scriptdebug.c (c_sim_parse): Implemented a 'simparse'
+	console command.
+
 2000-04-14  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/core/graphics.c: Got rid of the KQ1 pic-related error messages

@@ -32,6 +32,7 @@
 #include <versions.h>
 
 /*#define VOCABULARY_DEBUG /**/
+#define SCI_SIMPLE_SAID_CODE /* Whether the simplified Said() matching should be used */
 
 #define SCRIPT_UNKNOWN_FUNCTION_STRING "[Unknown]"
 /* The string used to identify the "unknown" SCI0 function for each game */
@@ -147,7 +148,7 @@ typedef struct {
 
 typedef struct {
 
-  int type;  /* leaf or branch */
+  short type;  /* leaf or branch */
 
   union {
 
@@ -239,6 +240,22 @@ vocab_free_branches(parse_tree_branch_t *parser_branches);
 */
 
 result_word_t *
+vocab_lookup_word(char *word, int word_len,
+		  word_t **words, int words_nr,
+		  suffix_t **suffices, int suffices_nr);
+/* Looks up a single word in the words and suffixes list
+** Parameters: (char *) word: Pointer to the word to look up
+**             (int) word_len: Length of the word to look up
+**             (word_t **) words: List of words
+**             (int) words_nr: Number of elements in 'words'
+**             (suffix_t **) suffices: List of suffices
+**             (int) suffices_nr: Number of entries in 'suffices'
+** Returns   : (result_word_t *) A malloc'd result_word_t, or NULL if the word
+** could not be found.
+*/
+
+
+result_word_t *
 vocab_tokenize_string(char *sentence, int *result_nr,
 		      word_t **words, int words_nr,
 		      suffix_t **suffices, int suffices_nr,
@@ -309,5 +326,17 @@ vocab_synonymize_tokens(result_word_t *words, int words_nr, synonym_t *synonyms,
 **             (synonym_t *) synonyms: Synonym list
 **             (int) synonyms_nr: Number of synonyms in the list
 */
+
+
+#ifdef SIMPLE_SAID_CODE
+int
+vocab_match_simple(state_t *s, heap_ptr addr);
+/* Does a simple match between the specified Said spec and the parse tree
+** Parameters: (state_t *) s: The state to use (include the parse tree)
+**             (heap_ptr) addr: Address of the Said spec
+** Returns   : 1 on match, 0 if not matched
+** This function is not nearly as sophisticated as its SCI equivalent.
+*/
+#endif
 
 #endif

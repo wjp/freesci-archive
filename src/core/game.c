@@ -49,6 +49,8 @@ _init_vocabulary(state_t *s) /* initialize vocabulary and related resources */
 {
   sciprintf("Initializing vocabulary\n");
 
+  s->parser_valid = 0; /* Invalidate parser */
+
   if (s->parser_words = vocab_get_words(&(s->parser_words_nr))) {
     s->parser_suffices = vocab_get_suffices(&(s->parser_suffices_nr));
     s->parser_branches = vocab_get_branches(&(s->parser_branches_nr));

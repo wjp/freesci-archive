@@ -369,6 +369,50 @@ vocab_decypher_said_block(state_t *s, heap_ptr addr)
 }
 
 
+#ifdef SCI_SIMPLE_SAID_CODE
+int
+vocab_match_simple(state_t *s, heap_ptr addr)
+{
+  int nextitem;
+  int listpos = 0;
+
+  if (!s->parser_valid)
+    return 0;
+
+  if (s->parser_valid == 2) { /* debug mode: sim_said */
+    do {
+      sciprintf("DEBUGMATCH: ");
+      nextitem = s->heap[addr++];
+
+      if (nextitem < 0xf0) {
+	nextitem = nextitem << 8 | s->heap[addr++];
+	if (s->parser_nodes[listpos].type
+	    || nextitem != s->parser_nodes[listpos++].content.value)
+	  return 0;
+      } else {
+
+	if (nextitem == 0xff)
+	  return (s->parser_nodes[listpos++].type == -1); /* Finished? */
+
+	if (s->parser_nodes[listpos].type != 1
+	    || nextitem != s->parser_nodes[listpos++].content.value)
+	  return 0;
+
+      }
+    } while (42);
+  } else { /* normal simple match mode */
+    return 0; /* Still unimplemented */
+    do {
+      nextitem = s->heap[addr++];
+
+      if (nextitem < 0xf0) {
+	nextitem = nextitem << 8 | s->heap[addr++];
+      }
+    } while (42);
+  }
+}
+#endif
+
 result_word_t *
 vocab_tokenize_string(char *sentence, int *result_nr,
 		      word_t **words, int words_nr,
