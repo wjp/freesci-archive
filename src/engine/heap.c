@@ -28,11 +28,6 @@ static void set_next(heap_t* h, int block_pos, int next)
 }
 
 
-/*static int getInt16(byte* src)
-{
-	return src[0]|((src[1])<<8);
-	}*/
-
 static unsigned int get_size(heap_t* h, int block_pos)
 {
 	assert_in_range(block_pos);

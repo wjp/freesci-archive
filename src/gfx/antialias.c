@@ -49,7 +49,7 @@ antialiase_simple(gfx_pixmap_t *pixmap, int mask[], int shift_const, gfx_mode_t 
 		unsigned long last_pixel;
 
 		memcpy(lastline[y & 1], data_p, line_size);
-		lastline_p = lastline[!(y & 1)];
+		lastline_p = lastline[(y & 1)^1];
 
 		for (x = 0; x < pixmap->xl; x++) {
 			unsigned long result = 0;
@@ -73,7 +73,7 @@ antialiase_simple(gfx_pixmap_t *pixmap, int mask[], int shift_const, gfx_mode_t 
 					if ((y_mode == 0 && y > 0)
 					    || (y_mode == 1 && y+1 < pixmap->yl)) {
 
-						char *src = (y_mode)? lastline_p : data_p;
+						char *src = (y_mode)? data_p + line_size : lastline_p;
 
 						if (x > 0) {
 							memcpy(&reader, src - bytespp, bytespp);

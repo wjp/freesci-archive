@@ -1,3 +1,15 @@
+2001-04-27  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kCanBeHere): Disabled dynview checks
+	(kCanBeHere): Clip rectangles are now read as signed values
+
+	* src/engine/kstring.c (kSaid): Reverted to old Said() implementation
+
+2001-04-26  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/antialias.c (antialiase_simple): Fixed bug found by Matt
+	(invalid conditions for color values)
+
 2001-04-25  Matt Hargett  <matt@use.net>
 
 	* Fixed some format string problems reported by Insure++.

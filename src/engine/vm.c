@@ -869,7 +869,7 @@ run_vm(state_t *s, int restoring)
 	temp = xs->sp;
 	xs->sp -= (opparams[1] + (restadjust * 2)); /* Adjust stack */
 
-	xs_new = send_selector(s, get_class_address(s,opparams[0]), xs->objp,
+	xs_new = send_selector(s, get_class_address(s, opparams[0]), xs->objp,
 			       temp, opparams[1], restadjust, xs->sp);
 	restadjust = 0;
 

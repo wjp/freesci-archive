@@ -812,15 +812,15 @@ collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int use_nsrect, i
 	abs_rect_t other_area;
 
 	if (use_nsrect) {
-		other_area.x = UGET_SELECTOR(other_obj, nsLeft);
-		other_area.xend = UGET_SELECTOR(other_obj, nsRight);
-		other_area.y = UGET_SELECTOR(other_obj, nsTop);
-		other_area.yend = UGET_SELECTOR(other_obj, nsBottom);
+		other_area.x = GET_SELECTOR(other_obj, nsLeft);
+		other_area.xend = GET_SELECTOR(other_obj, nsRight);
+		other_area.y = GET_SELECTOR(other_obj, nsTop);
+		other_area.yend = GET_SELECTOR(other_obj, nsBottom);
 	} else {
-		other_area.x = UGET_SELECTOR(other_obj, brLeft);
-		other_area.xend = UGET_SELECTOR(other_obj, brRight);
-		other_area.y = UGET_SELECTOR(other_obj, brTop);
-		other_area.yend = UGET_SELECTOR(other_obj, brBottom);
+		other_area.x = GET_SELECTOR(other_obj, brLeft);
+		other_area.xend = GET_SELECTOR(other_obj, brRight);
+		other_area.y = GET_SELECTOR(other_obj, brTop);
+		other_area.yend = GET_SELECTOR(other_obj, brBottom);
 	}
 
 	other_area = nsrect_clip(s, y, other_area, other_priority);
@@ -861,10 +861,10 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	rect_t zone;
 	word edgehit;
 
-	abs_zone.x = UGET_SELECTOR(obj, brLeft);
-	abs_zone.xend = UGET_SELECTOR(obj, brRight);
-	abs_zone.y = UGET_SELECTOR(obj, brTop);
-	abs_zone.yend = UGET_SELECTOR(obj, brBottom);
+	abs_zone.x = GET_SELECTOR(obj, brLeft);
+	abs_zone.xend = GET_SELECTOR(obj, brRight);
+	abs_zone.y = GET_SELECTOR(obj, brTop);
+	abs_zone.yend = GET_SELECTOR(obj, brBottom);
 
 	zone = gfx_rect(abs_zone.x + port->zone.x, abs_zone.y + port->zone.y,
 			abs_zone.xend - abs_zone.x, abs_zone.yend - abs_zone.y);
@@ -886,7 +886,8 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->acc = 0;
 
 	/* Check against static places on the control map */
-	if (s->dyn_views) {
+WARNING("FIXME");
+	if (0 && s->dyn_views) {
 		gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) s->dyn_views->contents;
 
 		SCIkdebug(SCIkBRESEN, "Checking vs dynviews:\n");
