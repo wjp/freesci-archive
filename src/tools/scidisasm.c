@@ -215,6 +215,7 @@ disasm_init (disasm_state_t *d)
   d->kernel_names = vocabulary_get_knames (&d->kernel_names_nr);
   d->words = vocab_get_words (&d->word_count);
   d->scripts = NULL;
+  d->old_header = 0;
 
   classes=vocabulary_get_classes (&d->class_count);
   g_free (classes);
@@ -429,8 +430,8 @@ script_dump_object(disasm_state_t *d, script_state_t *s,
   {
     sciprintf(".object\n");
     sciprintf("Name: %s\n", name);
-    sciprintf("Superclass: %s  [%x]", get_class_name (d, superclass), superclass);
-    sciprintf("Species: %s  [%x]", get_class_name (d, species), species);
+    sciprintf("Superclass: %s  [%x]\n", get_class_name (d, superclass), superclass);
+    sciprintf("Species: %s  [%x]\n", get_class_name (d, species), species);
 
     sciprintf("-info-:%x\n", getInt16(data + 12 + seeker) & 0xffff);
 
@@ -519,7 +520,7 @@ script_dump_class(disasm_state_t *d, script_state_t *s,
   {
     sciprintf (".class\n");
     sciprintf("Name: %s\n", name);
-    sciprintf("Superclass: %s  [%x]", get_class_name (d, superclass), superclass);
+    sciprintf("Superclass: %s  [%x]\n", get_class_name (d, superclass), superclass);
     sciprintf("Species: %x\n", species);
     sciprintf("-info-:%x\n", getInt16(data + 12 + seeker) & 0xffff);
 
@@ -548,14 +549,14 @@ script_dump_class(disasm_state_t *d, script_state_t *s,
 
   seeker += selectorsize;
 
-  overloads = getInt16(data + seeker);
+  selectors = overloads = getInt16(data + seeker);
 
   sciprintf("Overloaded functions: %x\n", overloads);
 
   seeker += 2;
 
   while (overloads--) {
-    word selector = getInt16(data + (seeker));
+    word selector = getInt16(data + (seeker)) & 0xffff;
     if (d->old_header) selector >>= 1;
 
     if (pass_no == 1)
@@ -753,6 +754,7 @@ script_disassemble_code(disasm_state_t *d, script_state_t *s,
       case Script_SVariable:
       case Script_Variable:
       case Script_Global:
+      case Script_Param:
       case Script_SRelative:
       case Script_Property:
         if (opsize)
@@ -797,6 +799,10 @@ script_disassemble_code(disasm_state_t *d, script_state_t *s,
   
           case Script_Global:
             sciprintf (" global_%d", param_value);
+            break;
+
+          case Script_Param:
+            sciprintf (" param_%d", param_value);
             break;
 
           case Script_SRelative:

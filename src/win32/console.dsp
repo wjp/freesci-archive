@@ -85,15 +85,7 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\console\commands.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\console\console.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\console\console_font.c
+SOURCE=..\core\console.c
 # End Source File
 # Begin Source File
 

@@ -44,6 +44,7 @@ typedef enum {
   Script_SRelative,
   Script_Property,
   Script_Global,
+  Script_Param,
   Script_End
 } opcode_format;
 

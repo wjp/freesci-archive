@@ -445,7 +445,7 @@ sciprintf(char *fmt, ...)
     con_outputbuflen = con_outputbufpos;
 
   con_outputlookback = con_outputbufpos;
-  free(buf);
+  g_free(buf);
 }
 
 

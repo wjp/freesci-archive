@@ -489,6 +489,7 @@ run_vm(state_t *s, int restoring)
       case Script_Variable: 
       case Script_Property:
       case Script_Global:
+      case Script_Param:
         opparams[temp] = GET_OP_FLEX(); break;
 
       case Script_SVariable: 

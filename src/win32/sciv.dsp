@@ -95,6 +95,14 @@ SOURCE=..\console\commands.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\graphics\con_font.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\graphics\con_io.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\config.c
 # End Source File
 # Begin Source File
@@ -134,11 +142,7 @@ InputName=config
 # End Source File
 # Begin Source File
 
-SOURCE=..\console\console.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\console\console_font.c
+SOURCE=..\core\console.c
 # End Source File
 # Begin Source File
 

@@ -1,3 +1,12 @@
+1999-12-17  Dmitry Jemerov  <yole@nnz.ru>
+
+	* src/core/script.h, src/core/script.c: New opcode parameter type
+	Script_Param.
+	* Updated references accordingly.
+
+	* src/tools/scidisasm.c: Fixed two major bugs. Function parameters
+	are printed as param_<number>.
+
 1999-12-15  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/graphics/con_io.c (con_input): Fixed cursor key handling.
