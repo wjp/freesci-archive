@@ -87,8 +87,8 @@ extern int cmd_paramlength;
 extern cmd_param_t *cmd_params;
 /* The parameters passed to a function called by the parser */
 
-extern gamestate_t *con_gamestate;
-/* The gamestate as used by some of the console commands */
+extern struct _state *con_gamestate;
+/* The game state as used by some of the console commands */
 
 
 /*** FUNCTION DEFINITIONS ***/

@@ -39,8 +39,12 @@
 
 
 
+typedef struct _state
+{
+  /* Non-VM information */
 
-typedef struct {
+  int restarting_flag; /* Flag used for restarting */
+  int have_mouse_flag; /* Do we have a hardware pointing device? */
 
   int pointer_nr; /* Mouse pointer number */
   int pounter_x, pointer_y; /* Mouse pointer coordinates */
@@ -54,10 +58,30 @@ typedef struct {
   picture_t bgpic; /* The background picture */
   picture_t pic; /* The foreground picture */
 
-  state_t vm_state; /* Heap and VM status */
-  byte* heap; /* Pointer to the heap stored in vm_state, for ease of use */
+  /* VM Information */
 
-} gamestate_t;
+  heap_t *_heap; /* The heap structure */
+  byte *heap; /* The actual heap data (equal to _heap->start) */
+  gint16 acc; /* Accumulator */
+  gint16 prev; /* previous comparison result */
 
+  heap_ptr stack_base; /* The base position of the stack; used for debugging */
+  heap_ptr global_vars; /* script 000 selectors */
+
+  int classtable_size; /* Number of classes in the table- for debugging */
+  class_t *classtable; /* Table of all classes */
+  script_t scripttable[1000]; /* Table of all scripts */
+
+  int selector_names_nr; /* Number of selector names */
+  char **selector_names; /* Zero-terminated selector name list */
+  int kernel_names_nr; /* Number of kernel function names */
+  char **kernel_names; /* List of kernel names */
+  kfunct **kfunct_table; /* Table of kernel functions */
+
+  opcode *opcodes;
+
+  selector_map_t selector_map; /* Shortcut list for important selectors */
+
+} state_t;
 
 #endif /* !_SCI_ENGINE_H */

@@ -117,7 +117,7 @@ enum ResourceTypes {
   sci_sound, sci_memory, sci_vocab, sci_font,
   sci_cursor, sci_patch, sci_bitmap, sci_palette,
   sci_cdaudio, sci_audio, sci_sync, sci_message,
-  sci_map, sci_heap, sci_invalid_resource
+  sci_map, sci_heap, sci_invalid_resource,
 };
 
 static const int sci0_last_resource = sci_patch;

@@ -48,7 +48,8 @@
 /* Types of selectors as returned by grep_selector() below */
 
 
-struct _state;
+struct _state; /* engine.h */
+
 
 typedef void kfunct(struct _state *s, int funct_nr, int argc, heap_ptr argv);
 /* Kernel functions take the current state, the function number (for kstub()),
@@ -84,33 +85,6 @@ typedef struct
   int init; /* Init function */
   int play; /* Play function (first function to be called) */
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
-
-typedef struct _state
-{
-  heap_t *_heap; /* The heap structure */
-  byte *heap; /* The actual heap data (equal to _heap->start) */
-  gint16 acc; /* Accumulator */
-  gint16 prev; /* previous comparison result */
-
-  heap_ptr stack_base; /* The base position of the stack; used for debugging */
-  heap_ptr global_vars; /* script 000 selectors */
-
-  int classtable_size; /* Number of classes in the table- for debugging */
-  class_t *classtable; /* Table of all classes */
-  script_t scripttable[1000]; /* Table of all scripts */
-
-  int selector_names_nr; /* Number of selector names */
-  char **selector_names; /* Zero-terminated selector name list */
-  int kernel_names_nr; /* Number of kernel function names */
-  char **kernel_names; /* List of kernel names */
-  kfunct **kfunct_table; /* Table of kernel functions */
-
-  opcode *opcodes;
-
-  selector_map_t selector_map; /* Shortcut list for important selectors */
-
-} state_t;
-
 
 
 typedef struct {
@@ -149,13 +123,13 @@ extern char *(*_debug_get_input)(void);
 /* The function used to get input for debugging */
 
 
-typedef int kernel_function(state_t* s);
+typedef int kernel_function(struct _state* s);
 
 extern kernel_function* kfuncs[];
 extern int max_instance;
 
 void
-execute_method(state_t *s, word script, word pubfunct, heap_ptr sp, heap_ptr calling_obj,
+execute_method(struct _state *s, word script, word pubfunct, heap_ptr sp, heap_ptr calling_obj,
 	       word argc, heap_ptr argp);
 /* Executes function pubfunct of the specified script.
 ** Parameters: (state_t *) s: The state which is to be executed with
@@ -167,7 +141,8 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp, heap_ptr cal
 */
 
 void
-execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr argp, int selector);
+execute(struct _state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr argp,
+	int selector);
 /* Executes the code on s->heap[pc] until it hits a 'ret' command
 ** Parameters: (state_t *) s: The state with which to execute
 **             (heap_ptr) pc: The initial program counter
@@ -181,7 +156,8 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
 */
 
 void
-script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp, int *restadjust);
+script_debug(struct _state *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp,
+	     int *restadjust);
 /* Debugger functionality
 ** Parameters: (state_t *) s: The state at which debugging should take place
 **             (heap_ptr *) pc: Pointer to the program counter
@@ -193,21 +169,21 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 */
 
 int
-script_init_state(state_t *s);
+script_init_state(struct _state *s);
 /* Initializes a state_t block
 ** Parameters: (state_t *) s: The state to initialize
 ** Returns   : 0 on success, 1 if vocab.996 (the class table) is missing or corrupted
 */
 
 void
-script_free_state(state_t *s);
+script_free_state(struct _state *s);
 /* Frees all additional memory associated with a state_t block
 ** Parameters: (state_t *) s: The state_t whose elements should be cleared
 ** Returns   : (void)
 */
 
 int
-lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address);
+lookup_selector(struct _state *s, heap_ptr obj, int selectorid, heap_ptr *address);
 /* Looks up a selector and returns its type and value
 ** Parameters: (state_t *) s: The state_t to use
 **             (heap_ptr) obj: Address of the object to look the selector up in
@@ -223,7 +199,7 @@ lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address);
 
 
 heap_ptr
-script_instantiate(state_t *s, int script_nr);
+script_instantiate(struct _state *s, int script_nr);
 /* Makes sure that a script and its superclasses get loaded to the heap
 ** Parameters: (state_t *) s: The state to operate on
 **             (int) script_nr: The script number to load
@@ -234,7 +210,7 @@ script_instantiate(state_t *s, int script_nr);
 */
 
 void
-script_uninstantiate(state_t *s, int script_nr);
+script_uninstantiate(struct _state *s, int script_nr);
 /* Decreases the numer of lockers of a script and unloads it if that number reaches zero
 ** Parameters: (state_t *) s: The state to operate on
 **             (int) script_nr: The script number that is requestet to be unloaded
@@ -244,7 +220,7 @@ script_uninstantiate(state_t *s, int script_nr);
 */
 
 int
-script_run(state_t *s);
+script_run(struct _state *s);
 /* Runs an SCI game
 ** Parameters: (state_t *) s: The state to operate on
 ** Returns   : (int): 0 on success, 1 if an error occured.
@@ -255,7 +231,7 @@ script_run(state_t *s);
 
 
 void
-script_map_selectors(state_t *s, selector_map_t *map);
+script_map_selectors(struct _state *s, selector_map_t *map);
 /* Maps special selectors
 ** Parameters: (state_t *) s: The state from which the selector information should be taken
 **             (selector_map_t *) map: Pointer to the selector map to map
@@ -264,7 +240,7 @@ script_map_selectors(state_t *s, selector_map_t *map);
 */
 
 void
-script_map_kernel(state_t *s);
+script_map_kernel(struct _state *s);
 /* Maps kernel functions
 ** Parameters: (state_t *) s: The state which the kernel_names are retreived from
 ** Returns   : (void)
