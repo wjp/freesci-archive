@@ -176,7 +176,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	 S->primary->format->Bmask, 
 	 S->primary->format->Amask,
 	 red_shift, green_shift, blue_shift, alpha_shift);
-  fflush(stdout);
+
   for (i = 0; i < 2; i++) {
     S->priority[i] = gfx_pixmap_alloc_index_data(gfx_new_pixmap(xsize, ysize, GFX_RESID_NONE, -i, -777));
     if (!S->priority[i]) {
@@ -223,8 +223,6 @@ sdl_init(struct _gfx_driver *drv)
 {
   int depth = 0;
 
-  drv->debug_flags = 0xffffffff;
-
   if (SDL_Init(SDL_INIT_VIDEO)) {
     DEBUGB("Failed to init SDL\n");
     return GFX_FATAL;
@@ -261,8 +259,6 @@ sdl_exit(struct _gfx_driver *drv)
 	free(S->pointer_data[i]);
 	S->pointer_data[i] = NULL;
       }
-
-
     
   }
   SDL_Quit();
@@ -516,9 +512,6 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
     return GFX_ERROR;
   }
 
-  DEBUGU("Drawing %d (%d,%d)(%dx%d) to (%d,%d) on (%d)\n", pxm, src.x, src.y,
-	 src.xl, src.yl, dest.x, dest.y, bufnr);
-
   srect.x = src.x;
   srect.y = src.y;
   srect.w = src.xl;
@@ -527,6 +520,9 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
   drect.y = dest.y;
   drect.w = dest.xl;
   drect.h = dest.yl;
+
+  DEBUGU("Drawing %d (%d,%d)(%dx%d) onto (%d,%d)\n", pxm, srect.x, srect.y,
+	 srect.w, srect.h, drect.x, drect.y);
   
   if (pxm->internal.handle == SCI_SDL_HANDLE_GRABBED) {
     if (SDL_BlitSurface((SDL_Surface *)pxm->internal.info, &srect , 
@@ -561,8 +557,13 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 		       S->priority[pribufnr]->index_data,
 		       S->priority[pribufnr]->index_xl, 1,
 		       GFX_CROSSBLIT_FLAG_DATA_IS_HOMED);
+
+  drect.x = dest.x;
+  drect.y = dest.y;
+  drect.w = dest.xl;
+  drect.h = dest.yl;
   
-  if(SDL_BlitSurface(temp, &drect, S->visual[bufnr], &srect))
+  if(SDL_BlitSurface(temp, &srect, S->visual[bufnr], &drect))
     ERROR("blt failed");
 
   SDL_FreeSurface(temp);
@@ -679,8 +680,6 @@ sdl_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffe
       ERROR("primary surface update failed!\n");
   }
 
-  SDL_UpdateRect(S->visual[data_source], 0,0,0,0);
-  SDL_UpdateRect(S->visual[data_dest], 0,0,0,0);
   SDL_UpdateRect(S->primary, 0,0,0,0);
   return GFX_OK;
 }
@@ -1007,7 +1006,7 @@ gfx_driver_sdl = {
 	0, 0,
 	GFX_CAPABILITY_MOUSE_SUPPORT | GFX_CAPABILITY_MOUSE_POINTER |
 	GFX_CAPABILITY_PIXMAP_REGISTRY | GFX_CAPABILITY_PIXMAP_GRABBING,
-	GFX_DEBUG_POINTER | GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC,
+	0, /*GFX_DEBUG_POINTER | GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC, */
 	sdl_set_parameter,
 	sdl_init_specific,
 	sdl_init,
