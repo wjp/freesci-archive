@@ -222,6 +222,11 @@ extern gfx_driver_t *gfx_drivers[];
 #define SELECTOR_STATE_DISABLED 4
 #define SELECTOR_STATE_SELECTED 8
 
+#define GRAPHICS_VIEW_USE_ADJUSTMENT 1
+/* Adjust view cel according to adjustment values stored in the cel */
+#define GRAPHICS_VIEW_CENTER_BASE 2
+/* Interpret coordinates as the coordinates of the bottom center, not the upper left */
+
 
 #define SCI_SCREEN_WIDTH 320
 #define SCI_SCREEN_HEIGHT 200
@@ -274,7 +279,7 @@ void clear_picture(picture_t pic, int fgcol);
 */
 
 int draw_view0(picture_t dest, port_t *port, int x, int y, short priority,
-	      short group, short index, guint8 *data);
+	      short group, short index, int mode, guint8 *data);
 /* Draws a specified element of a view resource to a picture.
 ** Parameters: (picture_t) dest: The picture_t to draw to.
 **             (port_t *) port: The viewport to draw to (NULL for the WM port)
@@ -285,8 +290,9 @@ int draw_view0(picture_t dest, port_t *port, int x, int y, short priority,
 **                               values range from 0 to 15.
 **             (short) group: A view resource consists of one or more groups of
 **                            images, which usually form an animation. Use this
-**                            value to determine the group.
-**             (short) index: The picture index inside the specified group.
+**                            value to determine the group (loop).
+**             (short) index: The picture index inside the specified group (cel).
+**             (int) mode: Flags for drawing (GRAPHICS_VIEW_*)
 **             (guint8*) data: The data to draw (usually resource_t.data).
 ** Returns   : (int) 0 on success, -1 if the specified group could not be
 **             found, or -2 if the index inside the group is invalid.
@@ -629,6 +635,21 @@ graph_draw_selector_control(struct _state *s, port_t *port, int state,
 **             (int) x,y: The upper left corner of the selector
 **             (int) xl,yl: Height and width of the selector in question
 ** Returns   : (void)
+*/
+
+void
+graph_fill_box_custom(struct _state *s, int x, int y, int xl, int yl,
+		      int color, int priority, int control, int layers);
+/* Fills a box with color, priority, and control values
+** Parameters: (state_t *s): The state to use
+**             (int) x,y: Upper left corner of the box to draw
+**             (int) xl, yl: width and height of the box
+**             (int) color, priority, control: The values to fill the box with
+**             (int) layers: Bit 0: Fill visual map
+**                           Bit 1: Fill priority map
+**                           Bit 2: Fill control map
+** Returns   : (void)
+** No updating is done.
 */
 
 

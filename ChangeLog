@@ -1,3 +1,22 @@
+1999-08-26  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/soundserver_null.c: Added support for sound command 0xc
+	(assumed to be "Stop All") to both ends of the pipes.
+
+	* src/sound/sound.c (song_lib_remove): Fixed one more evil bug that
+	caused circular references.
+
+	* src/sound/soundserver_null.c (sound_null_server): Removed a possible
+	segfault reason for the null sound server.
+
+	* src/core/kernel.c: Improved (fixed?) priority mapping
+
+	* src/sound/soundserver_null.c (sound_null_server): Changed
+	cues according to Ravi's directions
+
+	* src/core/kernel.c (kEditControl): Edit preliminary EditControl.
+	(kGraph): Implemented FILL_BOX_ANY and UPDATE_BOX
+
 1999-08-26  Dmitry Jemerov  <yole@exch.nnz.spb.su>
         * src/core/kernel.c (kFOpen) using UPARAM(0) instead of
         PARAM(0) (fixes a crash in LSL3). (kOnControl) now supports

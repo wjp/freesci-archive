@@ -432,10 +432,10 @@ _k_dyn_view_list_accept_change(state_t *s);
      /* Removes all views in anticipation of a new window or text */
 
 #define VIEW_PRIORITY(y) (((y) < s->priority_first)? 0 : (((y) > s->priority_last)? 15 : 1\
-	+ ((((y) - s->priority_first) * 14) / (s->priority_last - s->priority_first))))
+	+ ((((y) - s->priority_first) * 15) / (s->priority_last - s->priority_first))))
 
-#define PRIORITY_BAND_FIRST(nr) (((nr) == 0)? 0 :  \
-        ((s->priority_first) + ((nr) * (s->priority_last - s->priority_first)) / 14))
+#define PRIORITY_BAND_FIRST(nr) ((((nr) == 0)? 0 :  \
+        ((s->priority_first) + ((nr) * (s->priority_last - s->priority_first)) / 15))-10)
 
 
 
@@ -1275,6 +1275,7 @@ kTimesCos(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #define _K_SOUND_UPDATE 9
 #define _K_SOUND_FADE 10
 #define _K_SOUND_CHECK_DRIVER 11
+#define _K_SOUND_STOP_ALL 12
 
 void
 kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -1301,6 +1302,7 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
     case 9: sciprintf("[Signal: Obj changed]"); break;
     case 10: sciprintf("[Fade(?)]"); break;
     case 11: sciprintf("[ChkDriver]"); break;
+    case 12: sciprintf("[StopAll]"); break;
     }
 
     sciprintf("(");
@@ -1376,6 +1378,11 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
       s->acc = s->sfx_driver->command(s, SOUND_COMMAND_TEST, 0, 0);
       break;
 
+    case _K_SOUND_STOP_ALL:
+
+      s->acc = s->sfx_driver->command(s, SOUND_COMMAND_STOP_ALL, 0, 0);
+      break;
+
     default:
       SCIkwarn(SCIkWARNING, "Unhandled DoSound command: %x\n", command);
 
@@ -1444,15 +1451,29 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
     CHECK_THIS_KERNEL_FUNCTION;
     break;
 
-  case K_GRAPH_FILL_BOX_ANY:
-    CHECK_THIS_KERNEL_FUNCTION;
-    SCIkwarn(SCIkWARNING, "KERNEL_GRAPH_FILL_BOX_ANY: stub\n");
-    break;
+  case K_GRAPH_FILL_BOX_ANY: {
 
-  case K_GRAPH_UPDATE_BOX:
+    int x = PARAM(2);
+    int y = PARAM(1);
+
+    graph_fill_box_custom(s, x + s->ports[s->view_port]->xmin, y + s->ports[s->view_port]->ymin,
+			  PARAM(4)-x, PARAM(3)-x, PARAM(6), PARAM_OR_ALT(7, -1),
+			  PARAM_OR_ALT(8, -1), UPARAM(5));
     CHECK_THIS_KERNEL_FUNCTION;
-    SCIkwarn(SCIkWARNING, "KERNEL_GRAPH_UPDATE_BOX: stub\n");
-    break;
+
+  }
+  break;
+
+  case K_GRAPH_UPDATE_BOX: {
+
+    int x = PARAM(2);
+    int y = PARAM(1);
+
+    (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_BOX, x, y + 10, PARAM(4)-x+1, PARAM(3)-y+1);
+    CHECK_THIS_KERNEL_FUNCTION;
+
+  }
+  break;
 
   case K_GRAPH_REDRAW_BOX:
     CHECK_THIS_KERNEL_FUNCTION;
@@ -1530,6 +1551,11 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
         s->acc=1;
         PUT_SELECTOR(obj, message, e.data);
         PUT_SELECTOR(obj, modifiers, s->buckybits);
+
+	if ((s->buckybits & SCI_EVM_LSHIFT) && (s->buckybits & SCI_EVM_RSHIFT)
+	    && (e.data == '-'))
+	  script_debug_flag = 1; /* Enter debug mode */
+
       } break;
     case SCI_EVT_CLOCK:
       {
@@ -1556,32 +1582,37 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	    PUT_SELECTOR(obj, modifiers, s->buckybits|extra_bits);
 	    s->acc=1;
 	  }
-      }
-    default: s->acc=0;
+	  return;
+	} break;
+      default:
+	{
+	  s->acc = 0; /* Unknown event */
+	}
     }
 }
 
 void
 kMapKeyToDir(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr obj = UPARAM(0); /* FIXME: Replace numbers with defines */
+  heap_ptr obj = UPARAM(0);
 
-  if (GET_SELECTOR(obj, type) == 4) { /* Keyboard */
+  if (GET_SELECTOR(obj, type) == SCI_EVT_KEYBOARD) { /* Keyboard */
     int mover = -1;
     switch (GET_SELECTOR(obj, message)) {
-    case 71: mover = 8; break;
-    case 72: mover = 1; break;
-    case 73: mover = 2; break;
-    case 75: mover = 7; break;
+    case SCI_K_HOME: mover = 8; break;
+    case SCI_K_UP: mover = 1; break;
+    case SCI_K_PGUP: mover = 2; break;
+    case SCI_K_LEFT: mover = 7; break;
+    case SCI_K_CENTER:
     case 76: mover = 0; break;
-    case 77: mover = 3; break;
-    case 79: mover = 6; break;
-    case 80: mover = 5; break;
-    case 81: mover = 4; break;
+    case SCI_K_RIGHT: mover = 3; break;
+    case SCI_K_END: mover = 6; break;
+    case SCI_K_DOWN: mover = 5; break;
+    case SCI_K_PGDOWN: mover = 4; break;
     }
 
     if (mover >= 0) {
-      PUT_SELECTOR(obj, type, 64);
+      PUT_SELECTOR(obj, type, SCI_EVT_JOYSTICK);
       PUT_SELECTOR(obj, message, mover);
       s->acc = 1;
     } else s->acc = 0;
@@ -2388,13 +2419,83 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #define K_CONTROL_ICON 4
 #define K_CONTROL_CONTROL 6
 
-
+void
+_k_draw_control(state_t *s, heap_ptr obj);
 
 
 void
 kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr obj = PARAM(0);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  _k_dyn_view_list_prepare_change(s);
+  _k_draw_control(s, obj);
+  _k_dyn_view_list_accept_change(s);
+}
+
+
+void
+kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr obj = UPARAM(0);
+  heap_ptr event = UPARAM(1);
+
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  if (obj) {
+    word ct_type = GET_SELECTOR(obj, type);
+    if (ct_type) {
+      if ((ct_type == K_CONTROL_EDIT) && event && (GET_SELECTOR(event, type) == SCI_EVT_KEYBOARD)) {
+	  int x = GET_SELECTOR(obj, nsLeft);
+	  int y = GET_SELECTOR(obj, nsTop);
+	  int xl = GET_SELECTOR(obj, nsRight) - x + 1;
+	  int yl = GET_SELECTOR(obj, nsBottom) - y + 1;
+	  int max = GET_SELECTOR(obj, max);
+	  int cursor = GET_SELECTOR(obj, cursor);
+	  int modifiers = GET_SELECTOR(obj, modifiers);
+	  byte key = GET_SELECTOR(event, message);
+
+	  int font_nr = GET_SELECTOR(obj, font);
+	  char *text = s->heap + UGET_SELECTOR(obj, text);
+
+	  port_t *port = s->ports[s->view_port];
+
+	  graph_fill_box_custom(s, x + port->xmin, y + port->ymin,
+				xl, yl, port->bgcolor, -1, 0, 1); /* Clear input box background */
+
+	  if (modifiers & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT | SCI_EVM_CAPSLOCK)) {
+	    modifiers &= !(SCI_EVM_RSHIFT | SCI_EVM_LSHIFT | SCI_EVM_CAPSLOCK);
+	    key = toupper(key);
+	  }
+
+	  if (modifiers & SCI_EVM_CTRL) {
+
+
+	  } else if (modifiers & SCI_EVM_ALT) { /* Ctrl has precedence over Alt */
+
+
+	  } else
+	    if ((key < 128) && (strlen(text) < max)) {
+	      text[cursor++] = key;
+	      text[cursor] = 0; /* Terminate string */
+	      PUT_SELECTOR(event, claimed, 1);
+
+	      PUT_SELECTOR(obj, cursor, cursor); /* Write back cursor position */
+	    }
+
+      }
+
+      _k_draw_control(s, obj);
+    }
+  }
+}
+
+
+void
+_k_draw_control(state_t *s, heap_ptr obj)
+{
   int x = GET_SELECTOR(obj, nsLeft);
   int y = GET_SELECTOR(obj, nsTop);
   int xl = GET_SELECTOR(obj, nsRight) - x + 1;
@@ -2411,10 +2512,6 @@ kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   resource_t *font_res;
   resource_t *view_res;
-
-  CHECK_THIS_KERNEL_FUNCTION;
-
-  _k_dyn_view_list_prepare_change(s);
 
   switch (type) {
 
@@ -2469,8 +2566,6 @@ kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
   default:
     SCIkwarn(SCIkWARNING, "Unknown control type: %d at %04x\n", type, obj);
   }
-
-  _k_dyn_view_list_accept_change(s);
 
   if (!s->pic_not_valid)
     graph_update_port(s, s->ports[s->view_port]);
@@ -2605,7 +2700,7 @@ void
 _k_invoke_view_list(state_t *s, heap_ptr list, int funct_nr, int argc, int argp)
      /* Invokes all elements of a view list. funct_nr is the number of the calling funcion. */
 {
-  heap_ptr node = GET_HEAP(list + LIST_FIRST_NODE);
+  heap_ptr node = GET_HEAP(list + LIST_LAST_NODE);
 
   while (node) {
     heap_ptr obj = UGET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
@@ -2613,7 +2708,7 @@ _k_invoke_view_list(state_t *s, heap_ptr list, int funct_nr, int argc, int argp)
     if (!(GET_SELECTOR(obj, signal) & _K_VIEW_SIG_FLAG_FROZEN))
       invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
 
-    node = UGET_HEAP(node + LIST_NEXT_NODE);
+    node = UGET_HEAP(node + LIST_PREVIOUS_NODE);
   }
 
 }
@@ -2737,6 +2832,9 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int use_signal)
 {
   int i;
 
+  if (s->view_port != s->dyn_view_port)
+    return; /* Return if the pictures are meant for a different port */
+
   for (i = 0; i < list_nr; i++) {
     word signal = (use_signal)? GET_HEAP(list[i].signalp) : 0;
 
@@ -2745,9 +2843,8 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int use_signal)
 			      !(signal & _K_VIEW_SIG_FLAG_HIDDEN))) {
       SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", list[i].obj, signal);
       draw_view0(s->pic, s->ports[s->view_port],
-		 list[i].x - view0_cel_width(list[i].loop, list[i].cel, list[i].view) / 2,
-		 list[i].y - view0_cel_height(list[i].loop, list[i].cel, list[i].view),
-		 list[i].priority, list[i].loop, list[i].cel, list[i].view);
+		 list[i].x, list[i].y, list[i].priority, list[i].loop, list[i].cel,
+		 GRAPHICS_VIEW_CENTER_BASE | GRAPHICS_VIEW_USE_ADJUSTMENT, list[i].view);
     }
 
     if (use_signal) {
@@ -2789,6 +2886,9 @@ _k_dyn_view_list_accept_change(state_t *s)
 
   int oldvp = s->view_port;
 
+  if (s->view_port != s->dyn_view_port)
+    return; /* Return if the pictures are meant for a different port */
+
   s->view_port = 0; /* WM Viewport */
   _k_save_view_list_backgrounds(s, list, list_nr);
   s->view_port = oldvp;
@@ -2799,9 +2899,8 @@ _k_dyn_view_list_accept_change(state_t *s)
     if (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE) && !(signal & _K_VIEW_SIG_FLAG_HIDDEN)) {
       SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", list[i].obj, signal);
       draw_view0(s->pic, &(s->wm_port),
-		 list[i].x - view0_cel_width(list[i].loop, list[i].cel, list[i].view) / 2,
-		 list[i].y - view0_cel_height(list[i].loop, list[i].cel, list[i].view),
-		 list[i].priority, list[i].loop, list[i].cel, list[i].view);
+		 list[i].x, list[i].y, list[i].priority, list[i].loop, list[i].cel,
+		 GRAPHICS_VIEW_CENTER_BASE | GRAPHICS_VIEW_USE_ADJUSTMENT, list[i].view);
     }
   }
 
@@ -2869,7 +2968,7 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
     return;
   }
 
-  draw_view0(s->pic, s->ports[s->view_port], x, y, priority, loop, cel, view->data);
+  draw_view0(s->pic, s->ports[s->view_port], x, y, priority, loop, cel, 0, view->data);
 }
 
 
@@ -2886,15 +2985,16 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   _k_dyn_view_list_prepare_change(s);
   graph_restore_box(s, s->ports[goner]->bg_handle);
+
+  if (goner == s->view_port) /* Are we killing the active port? */
+    s->view_port = 0; /* Set wm_port as active port if so */
+
   _k_dyn_view_list_accept_change(s);
 
   graph_update_port(s, s->ports[goner]);
 
   free(s->ports[goner]);
   s->ports[goner] = NULL; /* Mark as free */
-
-  if (goner == s->view_port) /* Did we kill the active port? */
-    s->view_port = 0; /* Set wm_port as active port if so */
 }
 
 
@@ -2916,8 +3016,6 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
   wnd = calloc(sizeof(port_t), 1);
-
-fprintf(stderr,"Window(%d, %d), (%d, %d)\n", PARAM(1), PARAM(0), PARAM(3), PARAM(2));
 
   wnd->ymin = PARAM(0) + 10;
   wnd->xmin = PARAM(1);
@@ -2955,7 +3053,7 @@ fprintf(stderr,"Window(%d, %d), (%d, %d)\n", PARAM(1), PARAM(0), PARAM(3), PARAM
   if (wnd->xmin < 0)
     wnd->xmin = 0;
   if (wnd->xmax > 319)
-    wnd->xmin = 319;
+    wnd->xmax = 319;
   if (wnd->ymin < 10)
     wnd->ymin = 10;
   if (wnd->ymax > 199)
@@ -3040,6 +3138,8 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
   if (cast_list) {
+    s->dyn_view_port = s->view_port; /* The list is valid for view_port */
+
     s->dyn_views = _k_make_view_list(s, cast_list, &(s->dyn_views_nr), cycle, funct_nr, argc, argp);
     /* Initialize pictures- Steps 3-9 in Lars' V 0.1 list */
 
@@ -3067,6 +3167,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_clear_box(s, i, 10, 1, 190, 0);
 	graph_clear_box(s, 319-i, 10, 1, 190, 0);
 	(*s->gfx_driver->Wait)(s->animation_delay);
+	process_sound_events(s);
       }
 
     case K_ANIMATE_CENTER_OPEN_H :
@@ -3075,6 +3176,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_update_box(s, i, 10, 1, 190);
 	graph_update_box(s, 319-i, 10, 1, 190);
 	(*s->gfx_driver->Wait)(s->animation_delay);
+	process_sound_events(s);
       }
       break;
 
@@ -3085,6 +3187,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_clear_box(s, 0, i + 10, 320, 1, 0);
 	graph_clear_box(s, 0, 199 - i, 320, 1, 0);
 	(*s->gfx_driver->Wait)(2 * s->animation_delay);
+	process_sound_events(s);
       }
 
     case K_ANIMATE_CENTER_OPEN_V :
@@ -3093,6 +3196,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_update_box(s, 0, i + 10, 320, 1);
 	graph_update_box(s, 0, 199 - i, 320, 1);
 	(*s->gfx_driver->Wait)(2 * s->animation_delay);
+	process_sound_events(s);
       }
       break;
 
@@ -3102,12 +3206,14 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for(i = 0; i < 320; i++) {
 	graph_clear_box(s, i, 10, 1, 190, 0);
 	(*s->gfx_driver->Wait)(s->animation_delay / 2);
+	process_sound_events(s);
       }
 
     case K_ANIMATE_RIGHT_OPEN :
       for(i = 319; i >= 0; i--) {
 	graph_update_box(s, i, 10, 1, 190);
 	(*s->gfx_driver->Wait)(s->animation_delay / 2);
+	process_sound_events(s);
       }
       break;
 
@@ -3117,6 +3223,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for(i = 319; i >= 0; i--) {
 	graph_clear_box(s, i, 10, 1, 190, 0);
 	(*s->gfx_driver->Wait)(s->animation_delay / 2);
+	process_sound_events(s);
       }
 
     case K_ANIMATE_LEFT_OPEN :
@@ -3124,6 +3231,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for(i = 0; i < 320; i++) {
 	graph_update_box(s, i, 10, 1, 190);
 	(*s->gfx_driver->Wait)(s->animation_delay / 2);
+	process_sound_events(s);
       }
       break;
 
@@ -3133,6 +3241,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 10; i < 200; i++) {
 	graph_clear_box(s, 0, i, 320, 1, 0);
 	(*s->gfx_driver->Wait)(s->animation_delay);
+	process_sound_events(s);
       }
 
     case K_ANIMATE_BOTTOM_OPEN :
@@ -3140,6 +3249,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 199; i >= 10; i--) {
 	graph_update_box(s, 0, i, 320, 1);
 	(*s->gfx_driver->Wait)(s->animation_delay);
+	process_sound_events(s);
       }
       break;
 
@@ -3149,6 +3259,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 199; i >= 10; i--) {
 	graph_clear_box(s, 0, i, 320, 1, 0);
 	(*s->gfx_driver->Wait)(s->animation_delay);
+	process_sound_events(s);
       }
 
     case K_ANIMATE_TOP_OPEN :
@@ -3156,6 +3267,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 10; i < 200; i++) {
 	graph_update_box(s, 0, i, 320, 1);
 	(*s->gfx_driver->Wait)(s->animation_delay);
+	process_sound_events(s);
       }
       break;
 
@@ -3173,6 +3285,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_clear_box(s, width, 200 - 3 - height, 320 - 2*width, 3, 0);
 
 	(*s->gfx_driver->Wait)(4 * s->animation_delay);
+	process_sound_events(s);
       }
 
     case K_ANIMATE_BORDER_OPEN_F :
@@ -3188,6 +3301,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_update_box(s, width, 200 - 3 - height, 320 - 2*width, 3);
 
 	(*s->gfx_driver->Wait)(4 * s->animation_delay);
+	process_sound_events(s);
       }
 
       break;
@@ -3206,6 +3320,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_clear_box(s, width, 200 - 3 - height, 320 - 2*width, 3, 0);
 
 	(*s->gfx_driver->Wait)(7 * s->animation_delay);
+	process_sound_events(s);
       }
 
     case K_ANIMATE_CENTER_OPEN_F :
@@ -3221,6 +3336,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_update_box(s, width, 200 - 3 - height, 320 - 2 * width, 3);
 
 	(*s->gfx_driver->Wait)(7 * s->animation_delay);
+	process_sound_events(s);
       }
 
       break;
@@ -3247,6 +3363,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	  s->gfx_driver->Wait(s->animation_delay / 8);
 
 	--remaining_checkers;
+	process_sound_events(s);
       }
 
     case K_ANIMATE_OPEN_CHECKERS :
@@ -3271,6 +3388,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	  s->gfx_driver->Wait(s->animation_delay / 8);
 
 	--remaining_checkers;
+	process_sound_events(s);
       }
 
       break;
@@ -3538,6 +3656,7 @@ struct {
 
   /* Experimental functions */
   {"Said", kSaid },
+  {"EditControl", kEditControl },
   {"BaseSetter", kBaseSetter},
   {"DoSound", kDoSound },
   {"Graph", kGraph },

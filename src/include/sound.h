@@ -140,6 +140,8 @@ extern sfx_driver_t *sfx_drivers[]; /* All available sound fx drivers, NULL-term
 /* Fades the sound playing under HANDLE so that it will be finished in PARAMETER ticks */
 #define SOUND_COMMAND_TEST 11
 /* Returns 0 if sound playing works, 1 if it doesn't. */
+#define SOUND_COMMAND_STOP_ALL 12
+/* Stops all playing tracks and returns appropriate signals. */
 
 
 #define SOUND_SIGNAL_CUMULATIVE_CUE 0

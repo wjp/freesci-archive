@@ -184,11 +184,13 @@ sound_command(state_t *s, int command, int handle, int parameter)
     }
 
     len = song->length;
-
     write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
     write(s->sound_pipe_in[1], &len, sizeof(int)); /* Write song length */
     write(s->sound_pipe_in[1], song->data, len); /* Transfer song */
 
+    for (len = 0; len < 10000000; len++);
+    sleep(2);
+    usleep(2000);
 
     return 0;
   }
@@ -204,6 +206,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
   case SOUND_COMMAND_RENICE_HANDLE:
   case SOUND_COMMAND_SHUTDOWN:
   case SOUND_COMMAND_MAPPINGS:
+  case SOUND_COMMAND_STOP_ALL:
     write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
     return 0;
 
@@ -304,13 +307,13 @@ song_lib_add(songlib_t songlib, song_t *song)
   song_t *seeker;
   int pri = song->priority;
 
-  if (songlib[0] == NULL) {
-    songlib[0] = song;
+  if (*songlib == NULL) {
+    *songlib = song;
     song->next = NULL;
     return;
   }
 
-  seeker = songlib[0];
+  seeker = *songlib;
 
   while (seeker->next && (seeker->next->priority > pri))
     seeker = seeker->next;
@@ -323,7 +326,7 @@ song_lib_add(songlib_t songlib, song_t *song)
 song_t *
 song_lib_find(songlib_t songlib, word handle)
 {
-  song_t *seeker = songlib[0];
+  song_t *seeker = *songlib;
 
   while (seeker && (seeker->handle != handle))
     seeker = seeker->next;
@@ -335,41 +338,45 @@ song_lib_find(songlib_t songlib, word handle)
 song_t *
 song_lib_find_active(songlib_t songlib, song_t *last_played_song)
 {
-  song_t *seeker = songlib[0];
+  song_t *seeker = *songlib;
 
   if (last_played_song)
     if (last_played_song->status == SOUND_STATUS_PLAYING)
       return last_played_song; /* This one was easy... */
-
   while (seeker && (seeker->status != SOUND_STATUS_WAITING)
-	 && (seeker->status != SOUND_STATUS_PLAYING))
+	 && (seeker->status != SOUND_STATUS_PLAYING)) {
     seeker = seeker->next;
+  }
 
   return seeker;
 }
-
-
 
 int
 song_lib_remove(songlib_t songlib, word handle)
 {
   int retval;
-  song_t *goner = songlib[0];
+  song_t *goner = *songlib;
+
+  if (!goner)
+    return -1;
 
   if (goner->handle == handle)
-    songlib[0] = goner->next;
+    *songlib = goner->next;
 
-  else while ((goner->next) && (goner->next->handle != handle))
-    goner = goner->next;
+  else {
+      while ((goner->next) && (goner->next->handle != handle))
+	goner = goner->next;
 
-  if (goner->next) {/* Found him? */
-    song_t * oldnext = goner->next;
+      if (goner->next) {/* Found him? */
+	song_t *oldnext = goner->next;
 
-    goner->next = goner->next->next;
-    goner = oldnext;
-  } else return -1; /* No. */
+	goner->next = goner->next->next;
+	goner = oldnext;
+      } else return -1; /* No. */
+    }
 
   retval = goner->status;
+
   free(goner->data);
   free(goner);
 
@@ -379,17 +386,21 @@ song_lib_remove(songlib_t songlib, word handle)
 
 void
 song_lib_resort(songlib_t songlib, song_t *song)
-{
-  if (songlib[0] == song)
-    songlib[0] = song->next;
+{ 
+  if (*songlib == song)
+    *songlib = song->next;
   else {
-    song_t *seeker = songlib[0];
+    song_t *seeker = *songlib;
 
     while (seeker->next && (seeker->next != song))
       seeker = seeker->next;
 
-    if (seeker->next)
+    if (seeker->next) {
+      song_t *oldnext = seeker->next;
+
       seeker->next = seeker->next->next;
+
+    }
   }
 
   song_lib_add(songlib, song);

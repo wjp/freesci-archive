@@ -69,9 +69,6 @@ main(int argc, char** argv)
     sciprintf("Could not load objects\n");
   }
 
-  printf("Sound output interface: %s\n",
-	 SCI_sound_interfaces[initSound(SCI_SOUND_INTERFACE_AUTODETECT)]);
-
   cmdHook(&c_quit, "quit", "", "console: Quits");
 
   con_passthrough = 1; /* enables all sciprintf data to be sent to stdout */

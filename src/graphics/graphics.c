@@ -500,7 +500,7 @@ view0_cel_count(int loop, byte *data)
 }
 
 int draw_view0(picture_t dest, port_t *port, int xp, int yp, short _priority,
-	      short group, short index, guint8 *data)
+	      short group, short index, int mode, guint8 *data)
 {
   gint8 *dataptr,*lookup;
   gint16 nloops, ncells, loop, cell;
@@ -549,11 +549,18 @@ int draw_view0(picture_t dest, port_t *port, int xp, int yp, short _priority,
     transparency = dataptr[-1];
     reverse = (getInt16(data+2)>>(loop-1)) & 1;
 
-    if (reverse)
-      xp -= xoffs;
-    else
-      xp += xoffs;
-    yp += yoffs;
+    if (mode & GRAPHICS_VIEW_USE_ADJUSTMENT) {
+      if (reverse)
+	xp -= xoffs;
+      else
+	xp += xoffs;
+      yp += yoffs;
+    }
+
+    if (mode & GRAPHICS_VIEW_CENTER_BASE) {
+      xp -= maxx/2;
+      yp -= maxy;
+    }
 
     minx = x = (xp < 0) ? 0 : xp;
     y = yp;

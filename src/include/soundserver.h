@@ -88,7 +88,7 @@ typedef struct _song {
 } song_t;
 
 
-typedef song_t *songlib_t[1];
+typedef song_t **songlib_t;
 
 
 int

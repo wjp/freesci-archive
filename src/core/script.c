@@ -814,6 +814,9 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(owner, "owner");
   FIND_SELECTOR(handle, "handle");
   FIND_SELECTOR(number, "number");
+  FIND_SELECTOR(max, "max");
+  FIND_SELECTOR(cursor, "cursor");
+  FIND_SELECTOR(claimed, "claimed");
 }
 
 int

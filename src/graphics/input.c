@@ -47,7 +47,6 @@ sci_event_t getEvent (state_t *s)
     return s->gfx_driver->GetEvent(s);
   else {
     fprintf(stderr,"SCI Input:Warning: No input handler active!\n");
-    /* usleep(sci_clock_time); */
     return loop; /* Not much of a replacement... */
   }
 }

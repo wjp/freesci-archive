@@ -116,15 +116,38 @@ static int cmdlen[16] =
 
 
 void
+song_lib_dump(songlib_t songlib, int line)
+{
+  song_t *seeker = *songlib;
+
+  fprintf(stderr,"L%d:", line);
+  do {
+    fprintf(stderr,"    %p", seeker);
+
+    if (seeker) {
+      fprintf(stderr,"[%04x]->", seeker->handle);
+      seeker = seeker->next;
+    }
+    fprintf(stderr,"\n");
+  } while (seeker);
+  fprintf(stderr,"\n");
+	    
+}
+
+#define CHECK song_lib_dump(songlib, __LINE__)
+
+void
 sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 {
   FILE *ds = fdopen(fd_debug, "w"); /* We want to output text to it */
   fd_set input_fds;
   GTimeVal last_played, wakeup_time, ctime;
-  songlib_t songlib;   /* Song library */
+  song_t *_songp;
+  songlib_t songlib = &_songp;   /* Song library */
   song_t *song = NULL; /* The song we're playing */
   int debugging = 0;   /* Debugging enabled? */
   int command = 0;
+  int ccc = 127; /* cumulative cue counter */
 
   songlib[0] = NULL;
 
@@ -138,7 +161,6 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
     int fadeticks = 0;
 
     fflush(ds);
-
     if (fadeticks) {
 
       fadeticks--;
@@ -151,14 +173,11 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
       _send_event(fd_events, song->handle, SOUND_SIGNAL_FINISHED, 0);
 
     }
-
     song = song_lib_find_active(songlib, song);
-
     if (song == NULL) {
       gettimeofday(&last_played, NULL);
       ticks = 60; /* Wait a second for new commands, then collect your new ticks here. */
     }
-
     while (ticks == 0) {
 
       int newcmd;
@@ -195,7 +214,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	}
 
       } else if (command == SCI_MIDI_CUMULATIVE_CUE)
-	_send_event(fd_events, song->handle, SOUND_SIGNAL_CUMULATIVE_CUE, 0);
+	_send_event(fd_events, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param + ++ccc);
       else if (command == SCI_MIDI_SET_SIGNAL) {
 
 	if (param == SCI_MIDI_SET_SIGNAL_LOOP)
@@ -215,7 +234,6 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
       }
 
     }
-
     do {
       int got_input;
 
@@ -243,12 +261,25 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    int size, totalsize;
 	    int received;
 
+
 	    if (debugging)
 	      fprintf(ds, "Receiving song for handle %04x: ", event.handle);
-
 	    if (modsong) {
-
 	      int lastmode = song_lib_remove(songlib, event.handle);
+
+	      if (modsong) {
+
+		int lastmode = song_lib_remove(songlib, event.handle);
+		if (lastmode == SOUND_STATUS_PLAYING) {
+		  song = songlib[0]; /* Force song detection to start with the highest priority song */
+		  _send_event(fd_events, event.handle, SOUND_SIGNAL_FINISHED, 0);
+		}
+
+	      }
+
+	      if (modsong == song)
+		song = NULL;
+
 	      if (lastmode == SOUND_STATUS_PLAYING) {
 		song = songlib[0]; /* Force song detection to start with the highest priority song */
 		_send_event(fd_events, event.handle, SOUND_SIGNAL_FINISHED, 0);
@@ -281,9 +312,10 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 	    if (debugging)
 	      fprintf(ds, "OK\n");
-
 	    modsong = song_new(event.handle, data, totalsize, event.value);
 	    song_lib_add(songlib, modsong);
+
+	    ccc = 127; /* Reset ccc */
 
 	    _send_event(fd_events, event.handle, SOUND_SIGNAL_INITIALIZED, 0);
 
@@ -296,8 +328,9 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	      fprintf(ds, "Playing handle %04x\n", event.handle);
 	    if (modsong) {
 
-	      modsong->status = SOUND_STATUS_WAITING;
+	      modsong->status = SOUND_STATUS_PLAYING;
 	      _send_event(fd_events, event.handle, SOUND_SIGNAL_PLAYING, 0);
+	      song = modsong; /* Play this song */
 
 	    } else
 	      fprintf(ds, "Attempt to play invalid handle %04x\n", event.handle);
@@ -318,7 +351,6 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    if (debugging)
 	      fprintf(ds, "Disposing handle %04x\n", event.value, event.handle);
 	    if (modsong) {
-
 	      int lastmode = song_lib_remove(songlib, event.handle);
 	      if (lastmode == SOUND_STATUS_PLAYING) {
 		song = songlib[0]; /* Force song detection to start with the highest priority song */
@@ -408,6 +440,27 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    write(fd_out, &i, sizeof(int)); /* Confirm test request */
 
 	  } break;
+
+	  case SOUND_COMMAND_STOP_ALL: {
+
+	    song_t *seeker = *songlib;
+
+	    while (seeker) {
+
+	      if ((seeker->status == SOUND_STATUS_WAITING)
+		  || (seeker->status == SOUND_STATUS_PLAYING)) {
+
+		seeker->status = SOUND_STATUS_STOPPED;
+		_send_event(fd_events, seeker->handle, SOUND_SIGNAL_FINISHED, 0);
+
+	      }
+
+	      seeker = seeker->next;
+	    }
+
+	    song = NULL;
+	  }
+	  break;
 
 	  case SOUND_COMMAND_SHUTDOWN:
 	    fprintf(stderr,"Sound server: Received shutdown signal\n");

@@ -34,6 +34,9 @@
 #ifdef _MSC_VER
 #include <ctype.h>
 #include <direct.h>
+
+#define strcasecmp stricmp
+
 #endif
 
 config_entry_t *conf;
@@ -114,7 +117,7 @@ gfx_driver[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} if (our_section) {
 
   yytext = strchr(yytext, '.');
   *yytext++ = 0;
-  if (!stricmp (p, conf->gfx_driver->Name))
+  if (!strcasecmp (p, conf->gfx_driver->Name))
   {
     p = yytext;
     yytext = strchr(yytext, '=');

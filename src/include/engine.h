@@ -120,6 +120,7 @@ typedef struct _state
   int pic_animate; /* The animation used by Animate() to display the picture */
 
   int pic_views_nr, dyn_views_nr; /* Number of entries in the pic_views and dyn_views lists */
+  int dyn_view_port; /* Port the dyn_views are valid for */
   view_object_t *pic_views, *dyn_views; /* Pointers to pic and dynamic view lists */
 
   int animation_delay; /* A delay factor for pic opening animations. Defaults to 500. */

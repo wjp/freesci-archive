@@ -134,6 +134,9 @@ typedef struct
   int owner, handle;
   int cue;
   int number;
+
+  int max, cursor, claimed; /* Used by EditControl */
+
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {

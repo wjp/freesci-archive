@@ -336,7 +336,7 @@ libggi_shutdown(state_t *s)
 void
 libggi_wait(long usec)
 {
-  struct timeval tv = {0, time};
+  struct timeval tv = {0, usec};
 
   select(0, NULL, NULL, NULL, &tv);
 }

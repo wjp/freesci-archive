@@ -35,6 +35,9 @@
 #include <unistd.h>
 #endif
 
+
+struct _state;
+
 #define SCI_INPUT_DEFAULT_CLOCKTIME 100000
 #define SCI_INPUT_DEFAULT_REDRAWTIME 30000
 
@@ -70,8 +73,7 @@ typedef struct {
 #define SCI_K_DOWN 80
 #define SCI_K_PGDOWN 81
 #define SCI_K_LEFT 75
-#define SCI_K_CENTER 53 /*Note: this is the same as '5'. Dunno what should be do
-ne here...*/
+#define SCI_K_CENTER 53 /*Note: this is the same as '5'. Dunno what should be done here...*/
 #define SCI_K_RIGHT 77
 #define SCI_K_HOME 71
 #define SCI_K_UP 72

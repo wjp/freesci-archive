@@ -53,9 +53,24 @@ graph_clear_box(struct _state *s, int x, int y, int xl, int yl, int color)
   (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_BOX, x, y, xl, yl);
 }
 
-
 void
 graph_update_box(struct _state *s, int x, int y, int xl, int yl)
+{
+  int pos = y * SCI_SCREEN_WIDTH + x;
+  int i, _yl = yl;
+
+  while (_yl--) {
+    memcpy(s->pic->view + pos, s->pic->maps[s->pic_visible_map] + pos, xl);
+    pos += SCI_SCREEN_WIDTH;
+  }
+
+  (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_BOX, x, y, xl, yl);
+}
+
+
+void
+graph_fill_box_custom(struct _state *s, int x, int y, int xl, int yl,
+		      int color, int priority, int control, int layers)
 {
   int pos = 0;
   int i, _yl = yl;
@@ -82,11 +97,14 @@ graph_update_box(struct _state *s, int x, int y, int xl, int yl)
     return;
 
   while (_yl--) {
-    memcpy(s->pic->view + pos, s->pic->maps[s->pic_visible_map] + pos, xl);
+    if (layers & 1)
+      memset(s->pic->maps[0] + pos, SCI_MAP_EGA_COLOR(s->pic, color), xl);
+    if ((layers & 2) && (priority >= 0))
+      memset(s->pic->maps[1] + pos, priority, xl);
+    if (layers & 4)
+      memset(s->pic->maps[2] + pos, control, xl);
     pos += SCI_SCREEN_WIDTH;
   }
-
-  (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_BOX, x, y, xl, yl);
 }
 
 int
@@ -300,7 +318,8 @@ graph_draw_selector_button(struct _state *s, port_t *port, int state,
     draw_frame(s->pic, port->xmin + x, port->ymin + y -1,
 	       xl - 1, yl - 1, port->bgcolor, port->priority);
 
-  graph_draw_selector_text(s, port, state, x, y, xl, yl, text, font, ALIGN_TEXT_CENTER);
+  graph_draw_selector_text(s, port, state,
+			   x, y, xl, yl, text, font, ALIGN_TEXT_CENTER);
 }
 
 
@@ -334,7 +353,8 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
 			 int x, int y, int xl, int yl,
 			 char *text, byte *font)
 {
-  graph_draw_selector_text(s, port, state, x, y, xl, yl, text, font, ALIGN_TEXT_LEFT);
+  graph_draw_selector_text(s, port, state,
+			   x, y, xl, yl, text, font, ALIGN_TEXT_LEFT);
 }
 
 
@@ -343,7 +363,12 @@ graph_draw_selector_icon(struct _state *s, port_t *port, int state,
 			 int x, int y, int xl, int yl,
 			 byte *data, int loop, int cel)
 {
-  draw_view0(s->pic, port, x, y, 16, loop, cel, data);
+  draw_view0(s->pic, port, x, y, 16, loop, cel, GRAPHICS_VIEW_USE_ADJUSTMENT, data);
+
+  if (state & SELECTOR_STATE_FRAMED)
+    draw_frame(s->pic, port->xmin + x-1, port->ymin + y-2,
+	       xl + 1, yl + 1, port->color, port->priority);
+
 }
 
 

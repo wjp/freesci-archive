@@ -40,7 +40,7 @@ int script_debug_flag = 1; /* Defaulting to debug mode */
 int script_abort_flag = 0; /* Set to 1 to abort execution */
 int script_exec_stackpos = -1; /* 0 means that one script is active */
 int script_error_flag = 0; /* Set to 1 if an error occured, reset each round by the VM */
-int script_checkloads_flag = 1; /* Print info when scripts get (un)loaded */
+int script_checkloads_flag = 0; /* Print info when scripts get (un)loaded */
 int script_step_counter = 0; /* Counts the number of executed steps */
 
 script_exec_stack_t script_exec_stack[SCRIPT_MAX_EXEC_STACK];
