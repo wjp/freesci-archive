@@ -59,12 +59,12 @@ kGetMenu(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
-void
-kDrawStatus(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kDrawStatus(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	heap_ptr text = PARAM(0);
-	int fgcolor = UPARAM_OR_ALT(1, s->status_bar_foreground);
-	int bgcolor = UPARAM_OR_ALT(2, s->status_bar_background);
+	reg_t text = argv[0];
+	int fgcolor = SKPV_OR_ALT(1, s->status_bar_foreground);
+	int bgcolor = SKPV_OR_ALT(2, s->status_bar_background);
 
 	s->titlebar_port->color=s->ega_colors[fgcolor];
 	s->titlebar_port->bgcolor=s->ega_colors[bgcolor];
@@ -77,12 +77,14 @@ kDrawStatus(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	s->status_bar_text = NULL;
 
-	if (text)
-		s->status_bar_text = sci_strdup((char *) s->heap + text);
+	if (text.segment)
+		s->status_bar_text = sci_strdup(kernel_dereference_bulk_pointer(s, text, 0));
 
 	sciw_set_status_bar(s, s->titlebar_port, s->status_bar_text, fgcolor, bgcolor);
 
 	gfxop_update(s->gfx_state);
+
+	return s->r_acc;
 }
 
 

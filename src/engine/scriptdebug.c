@@ -1315,6 +1315,11 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 			int argc = ((*p_sp)[- stackframe - 1]).offset;
 			int i;
 
+			if (s->version >= SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+				argc += (*p_restadjust);
+
+
+
 			sciprintf(" Kernel params: (");
 
 			for (i = 0; i < argc; i++) {

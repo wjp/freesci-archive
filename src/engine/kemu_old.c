@@ -73,6 +73,7 @@ identify_value(state_t *s, reg_t reg, heap_ptr firstfree)
 	switch (type) {
 
 	case KSIG_ARITHMETIC: /* trivial */
+		retval.emudat_size = 0;
 		break;
 
 	case KSIG_OBJECT:
@@ -235,6 +236,7 @@ kFsciEmu(state_t *s, int _funct_nr, int argc, reg_t *argv)
 
 		shadow_args = sci_malloc(sizeof(emu_param_t) * (argc + 1
 								/* Prevents stupid warning */));
+		memset(shadow_args, 0, sizeof(emu_param_t) * (argc + 1));
 
 		SCIkdebug(SCIkEMU, "Emulating kernel call %s[%x] w/ %d arguments at HP:%04x\n",
 			  s->kernel_names[funct_nr], funct_nr, argc, argp);

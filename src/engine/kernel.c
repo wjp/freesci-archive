@@ -214,7 +214,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*20*/	{KF_OLD, "DrawMenuBar", {old:kDrawMenuBar}},
 /*21*/	{KF_OLD, "MenuSelect", {old:kMenuSelect}},
 /*22*/	{KF_OLD, "AddMenu", {old:kAddMenu}},
-/*23*/	{KF_OLD, "DrawStatus", {old:kDrawStatus}},
+/*23*/	{KF_NEW, "DrawStatus", {new:{kDrawStatus, "Zri*"}}},
 /*24*/	{KF_NEW, "Parse", {new:{kParse, "ro"}}},
 /*25*/	{KF_NEW, "Said", {new:{kSaid, "Zr"}}},
 /*26*/	{KF_OLD, "SetSynonyms", {old:kSetSynonyms}},
