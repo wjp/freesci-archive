@@ -44,7 +44,7 @@
 #include <kernel.h>
 #include <kdebug.h>
 
-#if !defined (_WIN32) && !defined (__BEOS__)
+#if !defined (_WIN32) && !defined (__BEOS__) && !defined (_DREAMCAST)
 #include <sys/resource.h>
 #endif
 

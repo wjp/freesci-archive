@@ -33,6 +33,8 @@
 #  endif
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
+#elif defined (_DREAMCAST)
+#  define PATH_MAX 255
 #else
 #  include <unistd.h>
 #  include <dirent.h>
@@ -61,7 +63,7 @@ f_open_mirrored(state_t *s, char *fname)
 {
 	int fd;
 	char *buf = NULL;
-	struct stat fstate;
+	int fsize;
 
 	chdir(s->resource_dir);
 	fd = sci_open(fname, O_RDONLY | O_BINARY);
@@ -70,10 +72,10 @@ f_open_mirrored(state_t *s, char *fname)
 		return NULL;
 	}
 
-	fstat(fd, &fstate);
-	if (fstate.st_size) {
-		buf = sci_malloc(fstate.st_size);
-		read(fd, buf, fstate.st_size);
+	fsize = sci_fd_size(fd);
+	if (fsize > 0) {
+		buf = sci_malloc(fsize);
+		read(fd, buf, fsize);
 	}
 
 	close(fd);
@@ -90,16 +92,16 @@ f_open_mirrored(state_t *s, char *fname)
 	if (!IS_VALID_FD(fd) && buf) {
 		free(buf);
 		sciprintf("kfile.c: f_open_mirrored(): Warning: Could not create '%s' in '%s' (%d bytes to copy)\n",
-			  fname, s->work_dir, fstate.st_size);
+			  fname, s->work_dir, fsize);
 		return NULL;
 	}
 
-	if (fstate.st_size) {
+	if (fsize > 0) {
 		int ret;
-		ret = write(fd, buf, fstate.st_size);
-		if (ret < fstate.st_size) {
+		ret = write(fd, buf, fsize);
+		if (ret < fsize) {
 			sciprintf("kfile.c: f_open_mirrored(): Warning: Could not write all %ld bytes to '%s' in '%s' (only wrote %ld)\n",
-				  (long)fstate.st_size, fname, s->work_dir, ret);
+				  (long)fsize, fname, s->work_dir, ret);
 		}
 
 		free(buf);
@@ -692,6 +694,16 @@ kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
+#ifdef _DREAMCAST
+static long
+get_file_mtime(int fd)
+{
+	/* FIXME (Dreamcast): Not yet implemented */
+	return 0;
+}
+
+#else
+
 #define get_file_mtime(fd) get_file_mtime_Unix(fd)
 /* Returns the time of the specified file's last modification
 ** Parameters: (int) fd: The file descriptor of the file in question
@@ -712,7 +724,7 @@ get_file_mtime_Unix(int fd) /* returns the  */
 
 	return fd_stat.st_ctime;
 }
-
+#endif
 
 static int
 _savegame_index_struct_compare(const void *a, const void *b)

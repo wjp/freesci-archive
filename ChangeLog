@@ -1,3 +1,13 @@
+2002-12-12  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/engine/game.c, src/engine/vm.c: Prevented inclusion of 
+	<sys/resource.h> for Dreamcast port.
+
+	* src/engine/kfile.c: Defined PATH_MAX for Dreamcast port.
+	(f_open_mirrored): Replaced a call to fstat() by a call to
+	sci_fd_size(). (get_file_mtime): Added a temporary Dreamcast function
+	that always returns 0.
+
 2002-12-11  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/dc/3dutils.c, src/dc/bkg.c, src/dc/gamemenu.c, src/dc/gp.h,
