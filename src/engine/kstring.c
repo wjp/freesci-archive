@@ -386,7 +386,13 @@ kStrCpy(state_t *s, int funct_nr, int argc, reg_t *argv)
 	}
 
 	if (argc > 2)
-		strncpy(dest, src, UKPV(2));
+	{
+		int length = SKPV(2);
+
+		if (length>=0)
+			strncpy(dest, src, length); else
+				memcpy(dest, src, -length); 
+	}
 	else
 		strcpy(dest, src);
 

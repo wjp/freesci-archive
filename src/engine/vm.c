@@ -1179,7 +1179,7 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x28: /* class */
-			s->r_acc = get_class_address(s, opparams[0], SCRIPT_GET_LOAD);
+			s->r_acc = get_class_address(s, (unsigned) opparams[0], SCRIPT_GET_LOAD);
 			break;
 
 		case 0x2a: /* self */
