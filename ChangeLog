@@ -1,5 +1,9 @@
 2001-03-18  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/scriptdebug.c (prop_ofs_to_id): Now uses the new obj
+	offsets
+	(c_gfx_draw_viewobj): Added draw_viewobj command
+
 	* src/engine/kgraphics.c (set_base): Now uses xStep as well.
 
 2001-03-17  Christoph Reichenbach  <jameson@linuxgames.com>

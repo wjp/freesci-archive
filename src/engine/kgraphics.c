@@ -656,14 +656,22 @@ initialize_bresen(state_t *s, int funct_nr, int argc, heap_ptr argp, heap_ptr mo
 
 		PUT_SELECTOR(mover, b_xAxis, _K_BRESEN_AXIS_Y);
 		PUT_SELECTOR(mover, b_incr, (deltay < 0)? -1 : 1);
+		/*
 		i1 = 2 * (abs(deltay) - abs(deltay_step * numsteps)) * abs(deltax_step);
+		bdi = -abs(deltax);
+		*/
+		i1 = 2*(abs(deltay) - abs(deltay_step * (numsteps - 1))) * abs(deltax_step);
 		bdi = -abs(deltax);
 
 	} else { /* Bresenham on x */
 
 		PUT_SELECTOR(mover, b_xAxis, _K_BRESEN_AXIS_X);
 		PUT_SELECTOR(mover, b_incr, (deltax < 0)? -1 : 1);
+		/*
 		i1= 2 * (abs(deltax) - abs(deltax_step * numsteps)) * abs(deltay_step);
+		bdi = -abs(deltay);
+		*/
+		i1 = 2*(abs(deltax) - abs(deltax_step * (numsteps - 1))) * abs(deltay_step);
 		bdi = -abs(deltay);
 
 	}
@@ -718,7 +726,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	bdelta = GET_SELECTOR(mover, b_incr);
 	axis = GET_SELECTOR(mover, b_xAxis);
 
-	if ((bdi += bi1) >= 0) {
+	if ((bdi += bi1) > 0) {
 		bdi += bi2;
 
 		if (axis == _K_BRESEN_AXIS_X)
@@ -788,16 +796,21 @@ set_base(struct _state *s, heap_ptr object);
 inline abs_rect_t
 get_nsrect(struct _state *s, heap_ptr object, byte clip);
 
+static inline abs_rect_t
+nsrect_clip(state_t *s, int y, abs_rect_t retval, int priority);
 
 static inline int
 collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int funct_nr, int argc, heap_ptr argp)
 {
 	int other_signal = UGET_SELECTOR(other_obj, signal);
+	int y = GET_SELECTOR(other_obj, y);
 	abs_rect_t other_area;
 	other_area.x = UGET_SELECTOR(other_obj, nsLeft);
 	other_area.xend = UGET_SELECTOR(other_obj, nsRight);
 	other_area.y = UGET_SELECTOR(other_obj, nsTop);
 	other_area.yend = UGET_SELECTOR(other_obj, nsBottom);
+
+	other_area = nsrect_clip(s, y, other_area, other_signal);
 
 	SCIkdebug(SCIkBRESEN, "OtherSignal=%04x, z=%04x obj=%04x\n", other_signal,
 		  (other_signal & GASEOUS_VIEW_MASK), other_obj);
@@ -1219,6 +1232,25 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 } /* kBaseSetter */
 
 
+static inline abs_rect_t
+nsrect_clip(state_t *s, int y, abs_rect_t retval, int priority)
+{
+	int pri_top;
+
+	if (priority == -1)
+		priority = VIEW_PRIORITY(y);
+
+	pri_top = PRIORITY_BAND_FIRST(priority);
+
+	if (retval.y < pri_top)
+		retval.y = pri_top;
+
+	if (retval.yend < retval.y)
+		retval.y = retval.yend - 1;
+
+	return retval;
+}
+
 inline abs_rect_t
 get_nsrect(state_t *s, heap_ptr object, byte clip)
 {
@@ -1266,18 +1298,7 @@ get_nsrect(state_t *s, heap_ptr object, byte clip)
 
 	if (clip) {
 		int priority = GET_SELECTOR(object, priority);
-		int pri_top;
-
-		if (priority == -1)
-			priority = VIEW_PRIORITY(y);
-
-		pri_top = PRIORITY_BAND_FIRST(priority);
-
-		if (retval.y < pri_top)
-			retval.y = pri_top;
-
-		if (retval.yend < retval.y)
-			retval.y = retval.yend - 1;
+		return nsrect_clip(s, y, retval, priority);
 	}
 
 	return retval;

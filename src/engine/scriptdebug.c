@@ -58,6 +58,10 @@ int _kdebug_cheap_soundcue_hack = -1;
 
 char inputbuf[256] = "";
 
+#define LOOKUP_SPECIES(species) (\
+   (species >= 1000)? species : *(s->classtable[species].scriptposp) \
+                                + s->classtable[species].class_offset)
+
 char *
 _debug_get_input_default(void)
 {
@@ -623,25 +627,24 @@ char *selector_name(state_t *s, int selector)
 
 int prop_ofs_to_id(state_t *s, int prop_ofs, int objp)
 {
-    word species = getInt16(s->heap + objp + SCRIPT_SPECIES_OFFSET);
-    word type = getInt16(s->heap + objp + SCRIPT_INFO_OFFSET);
-    byte *selectorIDoffset;
+	word species = getInt16(s->heap + objp + SCRIPT_SPECIES_OFFSET);
+	word type = getInt16(s->heap + objp + SCRIPT_INFO_OFFSET);
+	byte *selectorIDoffset;
 
-    int selectors = getInt16(s->heap + objp + SCRIPT_SELECTORCTR_OFFSET);
+	int selectors = getInt16(s->heap + objp + SCRIPT_SELECTORCTR_OFFSET);
 
-    byte *selectoroffset = (byte *) s->heap + objp + SCRIPT_SELECTOR_OFFSET;
+	byte *selectoroffset = (byte *) s->heap + objp + SCRIPT_SELECTOR_OFFSET;
 
-    if (type & SCRIPT_INFO_CLASS)
-      selectorIDoffset = selectoroffset + selectors * 2;
-    else
-      selectorIDoffset =
-	s->heap
-	+ *(s->classtable[species].scriptposp)
-	+ s->classtable[species].class_offset
-	+ SCRIPT_SELECTOR_OFFSET
-	+ selectors * 2;
+	if (type & SCRIPT_INFO_CLASS)
+		selectorIDoffset = selectoroffset + selectors * 2;
+	else
+		selectorIDoffset =
+			s->heap
+			+ LOOKUP_SPECIES(species)
+			+ SCRIPT_SELECTOR_OFFSET
+			+ selectors * 2;
 
-      return (getInt16(selectorIDoffset + prop_ofs));
+	return (getInt16(selectorIDoffset + prop_ofs));
 
 }  
 
@@ -1274,6 +1277,91 @@ c_gfx_draw_rect(state_t *s)
 	return 0;
 }
 
+#define GETRECT(ll, rr, tt, bb) \
+ll = GET_SELECTOR(pos, ll); \
+rr = GET_SELECTOR(pos, rr); \
+tt = GET_SELECTOR(pos, tt); \
+bb = GET_SELECTOR(pos, bb);
+
+int
+c_gfx_draw_viewobj(state_t *s)
+{
+	heap_ptr pos = cmd_params[0].val;
+	int is_view;
+	int x, y, z, priority;
+	int nsLeft, nsRight, nsBottom, nsTop;
+	int brLeft, brRight, brBottom, brTop;
+
+	if (!s) {
+		sciprintf("Not in debug state!\n");
+		return 1;
+	}
+
+	if ((pos < 4) || (pos > 0xfff0)) {
+		sciprintf("Invalid address.\n");
+		return 1;
+	}
+
+	if ((getInt16(s->heap + pos + SCRIPT_OBJECT_MAGIC_OFFSET)) != SCRIPT_OBJECT_MAGIC_NUMBER) {
+		sciprintf("Not an object.\n");
+		return 0;
+	}
+
+
+	is_view =
+		(lookup_selector(s, pos, s->selector_map.x, NULL) == SELECTOR_VARIABLE)
+		&&
+		(lookup_selector(s, pos, s->selector_map.brLeft, NULL) == SELECTOR_VARIABLE)
+		&&
+		(lookup_selector(s, pos, s->selector_map.signal, NULL) == SELECTOR_VARIABLE)
+		&&
+		(lookup_selector(s, pos, s->selector_map.nsTop, NULL) == SELECTOR_VARIABLE);
+
+	if (!is_view) {
+		sciprintf("Not a dynamic View object.\n");
+		return 0;
+	}
+
+	x = GET_SELECTOR(pos, x);
+	y = GET_SELECTOR(pos, y);
+	priority = GET_SELECTOR(pos, priority);
+	GETRECT(brLeft, brRight, brBottom, brTop);
+	GETRECT(nsLeft, nsRight, nsBottom, nsTop);
+	gfxop_set_clip_zone(s->gfx_state, gfx_rect_fullscreen);
+
+	brTop += 10;
+	brBottom += 10;
+	nsTop += 10;
+	nsBottom += 10;
+
+	gfxop_fill_box(s->gfx_state, gfx_rect(nsLeft, nsTop,
+					      nsRight - nsLeft + 1,
+					      nsBottom - nsTop + 1),
+		       s->ega_colors[2]);
+
+	gfxop_fill_box(s->gfx_state, gfx_rect(brLeft, brTop,
+					      brRight - brLeft + 1,
+					      brBottom - brTop + 1),
+		       s->ega_colors[1]);
+
+
+	gfxop_fill_box(s->gfx_state, gfx_rect(x-1, y-1,
+					      3, 3),
+		       s->ega_colors[0]);
+
+	gfxop_fill_box(s->gfx_state, gfx_rect(x-1, y,
+					      3, 1),
+		       s->ega_colors[priority]);
+
+	gfxop_fill_box(s->gfx_state, gfx_rect(x, y-1,
+					      1, 3),
+		       s->ega_colors[priority]);
+
+	gfxop_update(s->gfx_state);
+
+	return 0;
+}
+
 
 int
 c_gfx_flush_resources(state_t *s)
@@ -1812,9 +1900,7 @@ objinfo(state_t *s, heap_ptr pos)
 		else
 			selectorIDoffset =
 				s->heap
-				+ species
-/*				+ *(s->classtable[species].scriptposp)
-				+ s->classtable[species].class_offset*/
+				+ LOOKUP_SPECIES(species)
 				+ SCRIPT_SELECTOR_OFFSET
 				+ selectors * 2;
 
@@ -2229,6 +2315,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_gfx_fill_screen, "gfx_fill_screen", "i", "Fills the screen with one\n  of the EGA colors\n");
 			con_hook_command(c_gfx_draw_rect, "gfx_draw_rect", "iiiii", "Draws a rectangle to the screen\n  with one of the EGA colors\n\nUSAGE\n\n"
 					 "  gfx_draw_rect <x> <y> <xl> <yl> <color>");
+			con_hook_command(c_gfx_draw_viewobj, "draw_viewobj", "i", "Draws the nsRect and brRect of a\n  dynview object.\n\n  nsRect is green, brRect\n"
+					 "  is blue.\n");
 			con_hook_command(c_gfx_draw_cel, "gfx_draw_cel", "iii", "Draws a single view\n  cel to the center of the\n  screen\n\n"
 					 "USAGE\n  gfx_draw_cel <view> <loop> <cel>\n");
 			con_hook_command(c_gfx_priority, "gfx_priority", "i*", "Prints information about priority\n  bands\nUSAGE\n\n  gfx_priority\n\n"
