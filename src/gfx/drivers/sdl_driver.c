@@ -170,7 +170,7 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
     alpha_shift = S->primary->format->Ashift;
   }
 
-  printf("%04x %04x %04x %04x %d %d %d %d\n",
+  printf("%08x %08x %08x %08x %d %d %d %d\n",
 	 S->primary->format->Rmask, 
 	 S->primary->format->Gmask,
 	 S->primary->format->Bmask, 
@@ -544,10 +544,10 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
     return GFX_ERROR;
   }  
 
+  srect.x = dest.x;
+  srect.y = dest.y;
   drect.x = 0;
   drect.y = 0;
-  drect.w = dest.xl;
-  drect.h = dest.yl;
 
   if(SDL_BlitSurface(S->visual[bufnr], &srect, temp, &drect))
     ERROR("blt failed");
@@ -558,10 +558,10 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 		       S->priority[pribufnr]->index_xl, 1,
 		       GFX_CROSSBLIT_FLAG_DATA_IS_HOMED);
 
+  srect.x = src.x;
+  srect.y = src.y;
   drect.x = dest.x;
   drect.y = dest.y;
-  drect.w = dest.xl;
-  drect.h = dest.yl;
   
   if(SDL_BlitSurface(temp, &srect, S->visual[bufnr], &drect))
     ERROR("blt failed");
@@ -585,7 +585,6 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
     ERROR("Attempt to grab pixmap to unallocated memory\n");
     return GFX_ERROR;
   }
-
   switch (map) {
     
   case GFX_MASK_VISUAL: {
@@ -623,6 +622,10 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
     pxm->flags |= GFX_PIXMAP_FLAG_INSTALLED | GFX_PIXMAP_FLAG_EXTERNAL_PALETTE | GFX_PIXMAP_FLAG_PALETTE_SET;
     free(pxm->data);
     pxm->data = (byte *) temp->pixels;
+
+    DEBUGPXM("Grabbed surface %p (%dx%d)(%dx%d)\n",
+	     pxm->internal.info, srect.x, srect.y, pxm->xl, pxm->yl);
+
     break; 
   }
     
@@ -634,7 +637,7 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
     ERROR("Attempt to grab pixmap from invalid map 0x%02x\n", map);
     return GFX_ERROR;
   }
-  
+
   return GFX_OK;
 }
 
