@@ -1,3 +1,17 @@
+2002-12-08  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sound/pcmout_dc.c, src/sound/pcmout.c: Added initial revision of
+	Dreamcast pcmout driver.
+	* src/include/pcmout.h: For Dreamcast, use a BUFFER_SIZE of 2048. For
+	some reason the Dreamcast's streaming sound driver doesn't work with
+	the default size of 1024.
+	* src/dc/snd_stream.c, src/dc/aica_cmd_iface.h: Imported the Dreamcast
+	streaming sound driver from KallistiOS. The main reason for this is
+	to reduce the sound latency by decreasing the buffer size (which is
+	hardcoded in the sourcecode).
+	* src/dc/README.KOS: The KallistiOS (KOS) license. src/dc/snd_stream.c
+	and src/dc/aica_cmd_iface.h use this license.
+
 2002-11-29  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* conf/freesci-setup: Updated version from Vyacheslav Dikonov

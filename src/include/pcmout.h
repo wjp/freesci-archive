@@ -35,7 +35,12 @@ typedef struct _pcmout_driver {
 	int (*pcmout_close)(void);
 } pcmout_driver_t;
 
+#ifdef _DREAMCAST
+/* A buffer size of 1024 doesn't work on the Dreamcast */
+#define BUFFER_SIZE 2048
+#else
 #define BUFFER_SIZE 1024
+#endif
 
 extern DLLEXTERN pcmout_driver_t *pcmout_driver;
 

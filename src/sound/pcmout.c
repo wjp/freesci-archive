@@ -35,6 +35,9 @@ pcmout_driver_t *pcmout_drivers[] = {
 #	ifdef HAVE_DMEDIA_AUDIO_H
 		&pcmout_driver_al,
 #	endif
+#	ifdef _DREAMCAST
+		&pcmout_driver_dc,
+#	endif
 #endif
 	&pcmout_driver_null,
 	NULL
