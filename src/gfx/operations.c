@@ -1378,25 +1378,28 @@ gfxop_disable_dirty_frames(gfx_state_t *state)
 static int
 _gfxop_full_pointer_refresh(gfx_state_t *state)
 {
-	rect_t pointer_bounds		= {0};
-	rect_t old_pointer_bounds	= {0};
+	rect_t pointer_bounds;
+	rect_t old_pointer_bounds	= {0, 0, 0, 0};
 	int new_x			= state->driver->pointer_x;
 	int new_y			= state->driver->pointer_y;
 
 	if (new_x != state->old_pointer_draw_pos.x
 	    || new_y != state->old_pointer_draw_pos.y) {
+		point_t pp_new = gfx_point(new_x / state->driver->mode->xfact,
+					   new_y / state->driver->mode->yfact);
 
 		if (!_gfxop_get_pointer_bounds(state, &pointer_bounds)) {
 			memcpy(&old_pointer_bounds, &(state->pointer_bg_zone), sizeof(rect_t));
 			REMOVE_POINTER;
-			state->pointer_pos.x = state->driver->pointer_x / state->driver->mode->xfact;
-			state->pointer_pos.y = state->driver->pointer_y / state->driver->mode->yfact;
+			state->pointer_pos = pp_new;
+
 			DRAW_POINTER;
 			if (_gfxop_buffer_propagate_box(state, pointer_bounds, GFX_BUFFER_FRONT)) return 1;
 			if (_gfxop_buffer_propagate_box(state, old_pointer_bounds, GFX_BUFFER_FRONT)) return 1;
 
 			state->old_pointer_draw_pos = gfx_point(new_x, new_y);
-		}
+		} else
+			state->pointer_pos = pp_new;
 	}
 	return 0;
 }

@@ -45,6 +45,9 @@
 #include <gfx_operations.h>
 
 int
+sci0_palette;
+
+int
 sciprintf(char *fmt, ...)
 {
 	va_list argp;
@@ -54,6 +57,15 @@ sciprintf(char *fmt, ...)
 	return 0;
 }
 
+
+void *
+memdup(void *mem, size_t size)
+{
+	void *r = malloc(size);
+	if (r)
+		memcpy(r, mem, size);
+	return r;
+}
 
 #ifdef FREESCI_PRIMARY_RESOURCE_H_
 #  include "../scicore/sci_memory.c"
@@ -159,7 +171,7 @@ int test_fonts[TEST_FONTS_NR] = {0};
 int test_cursors[TEST_CURSORS_NR] = {0, 1};
 
 int
-gfxr_interpreter_options_hash(gfx_resource_types_t type, int version, gfx_options_t *options)
+gfxr_interpreter_options_hash(gfx_resource_types_t type, int version, gfx_options_t *options, void *internal)
 {
 	return 0;
 }
@@ -175,7 +187,7 @@ arrdup(int *src, int count)
 
 int *
 gfxr_interpreter_get_resources(gfx_resstate_t *resstate, gfx_resource_types_t type,
-			       int version, int *entries_nr)
+			       int version, int *entries_nr, void *internal)
 {
 	switch (type) {
 
@@ -239,7 +251,7 @@ gfx_pixmap_color_t pic_colors[PIC_COLORS_NR] = {
 };
 
 gfxr_pic_t *
-gfxr_interpreter_init_pic(int version, gfx_mode_t *mode, int ID)
+gfxr_interpreter_init_pic(int version, gfx_mode_t *mode, int ID, void *internal)
 {
 	gfxr_pic_t *pic = sci_malloc(sizeof(gfxr_pic_t));
 
@@ -269,7 +281,7 @@ gfxr_interpreter_init_pic(int version, gfx_mode_t *mode, int ID)
 
 
 void
-gfxr_interpreter_clear_pic(int version, gfxr_pic_t *pic)
+gfxr_interpreter_clear_pic(int version, gfxr_pic_t *pic, void *internal)
 {
 	memset(pic->visual_map->index_data, 0x00, 320 * 200);
 	memset(pic->priority_map->index_data, 0, 320 * pic->mode->xfact * 200 * pic->mode->yfact);
@@ -280,7 +292,7 @@ gfxr_interpreter_clear_pic(int version, gfxr_pic_t *pic)
 
 int
 gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gfxr_pic_t *unscaled_pic,
-			       int flags, int default_palette, int nr)
+			       int flags, int default_palette, int nr, void *internal)
 {
 	gfxr_pic_t *pic = scaled_pic;
 	int i, x, y, pos;
@@ -354,7 +366,7 @@ gfx_pixmap_color_t view_colors[VIEW_COLORS_NR] = {
 };
 
 gfxr_view_t *
-gfxr_interpreter_get_view(gfx_resstate_t *state, int nr)
+gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal)
 {
 	gfxr_view_t *view;
 	gfxr_loop_t *loop;
@@ -422,7 +434,7 @@ gfxr_interpreter_get_view(gfx_resstate_t *state, int nr)
 extern byte builtin_font[];
 
 gfx_bitmap_font_t *
-gfxr_interpreter_get_font(gfx_resstate_t *state, int nr)
+gfxr_interpreter_get_font(gfx_resstate_t *state, int nr, void *internal)
 {
 	gfx_bitmap_font_t *font;
 	int i;
@@ -438,7 +450,7 @@ gfxr_interpreter_get_font(gfx_resstate_t *state, int nr)
 	font->row_size = (BUILTIN_CHARS_WIDTH + 7) >> 3;
 	font->height = font->line_height = BUILTIN_CHARS_HEIGHT;
 	font->char_size = ((BUILTIN_CHARS_WIDTH + 7) >> 3) * BUILTIN_CHARS_HEIGHT;
-	font->data = sci_memdup(builtin_font, font->char_size * BUILTIN_CHARS_NR);
+	font->data = memdup(builtin_font, font->char_size * BUILTIN_CHARS_NR);
 
 	printf(">> resource manager retreived font #%d\n", nr);
 
@@ -452,7 +464,7 @@ gfx_pixmap_color_t _cursor_colors[3] = {
 };
 
 gfx_pixmap_t *
-gfxr_interpreter_get_cursor(gfx_resstate_t *state, int nr)
+gfxr_interpreter_get_cursor(gfx_resstate_t *state, int nr, void *internal)
 {
 	gfx_pixmap_t *cursor;
 	int xl, yl, x, y;
@@ -525,13 +537,13 @@ gfxr_interpreter_get_cursor(gfx_resstate_t *state, int nr)
 }
 
 gfx_pixmap_color_t *
-gfxr_interpreter_get_palette(int version, int *colors_nr)
+gfxr_interpreter_get_palette(int version, int *colors_nr, void *internal)
 {
 	return NULL;
 }
 
 int
-gfxr_interpreter_needs_multicolored_pointers(int version)
+gfxr_interpreter_needs_multicolored_pointers(int version, void *internal)
 {
 	return multicolored_pointers;
 }
@@ -1081,6 +1093,7 @@ int
 c_quit(void *S)
 {
   exit(0);
+  return 0; /* hahaha */
 }
 
 int

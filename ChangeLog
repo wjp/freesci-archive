@@ -1,5 +1,12 @@
 2002-01-04  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/main.c (main): Extended Copyright to 2002
+
+	* src/gfx/operations.c (_gfxop_full_pointer_refresh): Update pointer
+	position even if no pointer is visible to the operational layer
+
+	* src/gfx/gfx_test.c: Small API fixes to get it to compile again
+
 	* src/include/resource.h (BREAKPOINT): Changed 'call_pal PAL_bpt' on Alpha
 	to 'call_pal 0x80.
 

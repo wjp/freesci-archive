@@ -1,0 +1,11 @@
+Here's the second attempt at a FreeSCI configuration tool. New features in this version are:
+
+- data structure (as opposed to a zillion global variables)
+- game names are no longer hard-coded
+- no global resource dir
+- help texts explaining the various options (stolen from the man page)
+- the script will now look for the template file in both ~/.freesci/ /usr/local/share/ and /usr/share/
+
+The only step necessary for installation: copy config.template to one of the above directories.
+
+/Rune

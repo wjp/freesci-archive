@@ -187,6 +187,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		case SCI_EVT_MOUSE_RELEASE:
 		case SCI_EVT_MOUSE_PRESS: {
 			int extra_bits=0;
+
 			if(mask & e.type) {
 				switch(e.data) {
 				case 2: extra_bits=SCI_EVM_LSHIFT|SCI_EVM_RSHIFT; break;

@@ -2634,7 +2634,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 					 "  sndmap bender <instr> <range>\n"
 					 "    Selects a bender range\n\n"
 					 "  sndmap volume <instr> <vol>\n"
-					 "    Specifies a relativel volime for the\n"
+					 "    Specifies a relative volume for the\n"
 					 "    instrument (0-128)\n\n"
 					 "SEE ALSO\n"
 					 "  snd\n");
