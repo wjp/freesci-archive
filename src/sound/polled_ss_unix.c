@@ -82,6 +82,9 @@ sound_unix_server_verify_ppid()
 static int
 checked_write(int file, byte *buf, size_t size)
 {
+	if (soundserver_dead)
+		return size;
+
 	if (!file) {
 		fprintf(debug_stream,"Soundserver UNIX: Attempt to use fd0 for write!\n");
 		BREAKPOINT();
@@ -94,13 +97,13 @@ void
 _sound_server_oops_handler(int signal)
 {
 	if (signal == SIGCHLD) {
-		fprintf(debug_stream, "Warning: Sound server died\n");
+		fprintf(stderr, "Warning: Sound server died\n");
 		soundserver_dead = 1;
 	} else if (signal == SIGPIPE) {
-		fprintf(debug_stream, "Warning: Connection to sound server was severed\n");
+		fprintf(stderr, "Warning: Connection to sound server was severed\n");
 		soundserver_dead = 1;
 	} else
-		fprintf(debug_stream,"Warning: Signal handler cant' handle signal %d\n", signal);
+		fprintf(stderr, "Warning: Signal handler cant' handle signal %d\n", signal);
 }
 
 int

@@ -1,3 +1,8 @@
+2001-12-15  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/polled_ss_unix.c (_sound_server_oops_handler): Print to
+	stderr on error
+
 2001-12-13  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/include/gfx_options.h:

@@ -520,7 +520,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -933,7 +933,7 @@ int min, max, i;
        return CFSML_FAILURE;
     }
     if (!assignment) {
-      if (!strcmp(token, "}"))
+      if (!strcmp(token, "}")) 
          closed = 1;
       else {
         _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
@@ -1380,7 +1380,7 @@ soundsrv_restore_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
 
 	for (i = 0; i < read_rec.songs_nr; i++) {
 
-		next = sci_malloc(sizeof(song_t));
+		next = sci_malloc(sizeof(song_t));	
 		memcpy(next, &(read_rec.songs[i]), sizeof(song_t));
 		next->next = NULL;
 		if (i > 0)

@@ -662,21 +662,7 @@ collides_with(state_t *s, abs_rect_t area, heap_ptr other_obj, int use_nsrect, i
 	abs_rect_t other_area;
 
 	if (use_nsrect) {
-#if 0
-		other_area.x = GET_SELECTOR(other_obj, nsLeft);
-		other_area.xend = GET_SELECTOR(other_obj, nsRight);
-		other_area.y = GET_SELECTOR(other_obj, nsTop);
-		other_area.yend = GET_SELECTOR(other_obj, nsBottom);
-#else
-#  if 1
 		other_area = get_nsrect(s, other_obj, 0);
-#  else
-		other_area.x = GET_SELECTOR(other_obj, lsLeft);
-		other_area.xend = GET_SELECTOR(other_obj, lsRight);
-		other_area.y = GET_SELECTOR(other_obj, lsTop);
-		other_area.yend = GET_SELECTOR(other_obj, lsBottom);
-#  endif
-#endif
 	} else {
 		other_area.x = GET_SELECTOR(other_obj, brLeft);
 		other_area.xend = GET_SELECTOR(other_obj, brRight);
