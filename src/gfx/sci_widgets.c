@@ -458,6 +458,32 @@ sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char 
 	arr_down[0] = SCI_SPECIAL_CHAR_ARROW_DOWN;
 	arr_up[1] = arr_down[1] = 0;
 
+	zone.x = 1;
+	zone.y = 11;
+
+	/* Draw text */
+
+	for (i = list_top; columns-- && i < entries_nr; i++) {
+
+		if (i != selection)
+			list->add(GFXWC(list),
+				  GFXW(gfxw_new_text(port->visual->gfx_state, gfx_rect(zone.x, zone.y, zone.xl - 2, font_height),
+						     font_nr, entries_list[i], ALIGN_LEFT, ALIGN_TOP,
+						     port->color, port->color, port->bgcolor, GFXR_FONT_FLAG_NO_NEWLINES)));
+		else {
+			list->add(GFXWC(list), GFXW(gfxw_new_box(port->visual->gfx_state, gfx_rect(zone.x, zone.y, zone.xl - 1, font_height),
+								 port->color, port->color, GFX_BOX_SHADE_FLAT)));
+			list->add(GFXWC(list),
+				  GFXW(gfxw_new_text(port->visual->gfx_state, gfx_rect(zone.x, zone.y, zone.xl - 2, font_height),
+						     font_nr, entries_list[i], ALIGN_LEFT, ALIGN_TOP,
+						     port->bgcolor, port->bgcolor, port->color, GFXR_FONT_FLAG_NO_NEWLINES)));
+		}
+
+		zone.y += font_height;
+	}
+
+	/* Draw frames */
+
 	zone.x = 0;
 	zone.y = 0;
 
@@ -478,28 +504,6 @@ sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char 
 		list->add(GFXWC(list),
 			  GFXW(gfxw_new_rect(gfx_rect(zone.x, zone.y + 10, zone.xl, zone.yl - 10),
 					     port->color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
-	}
-
-	zone.x = 1;
-	zone.y = 11;
-
-	for (i = list_top; columns-- && i < entries_nr; i++) {
-
-		if (i != selection)
-			list->add(GFXWC(list),
-				  GFXW(gfxw_new_text(port->visual->gfx_state, gfx_rect(zone.x, zone.y, zone.xl - 2, font_height),
-						     font_nr, entries_list[i], ALIGN_LEFT, ALIGN_TOP,
-						     port->color, port->color, port->bgcolor, GFXR_FONT_FLAG_NO_NEWLINES)));
-		else {
-			list->add(GFXWC(list), GFXW(gfxw_new_box(port->visual->gfx_state, gfx_rect(zone.x, zone.y, zone.xl - 1, font_height),
-								 port->color, port->color, GFX_BOX_SHADE_FLAT)));
-			list->add(GFXWC(list),
-				  GFXW(gfxw_new_text(port->visual->gfx_state, gfx_rect(zone.x, zone.y, zone.xl - 2, font_height),
-						     font_nr, entries_list[i], ALIGN_LEFT, ALIGN_TOP,
-						     port->bgcolor, port->bgcolor, port->color, GFXR_FONT_FLAG_NO_NEWLINES)));
-		}
-
-		zone.y += font_height;
 	}
 
 	/* Add up arrow */

@@ -111,7 +111,8 @@ static int sci0_palette[16][3] = {
 static int
 _init_graphics_input(state_t *s)
 {
-
+	s->pics = NULL;
+	s->pics_nr = 0;
 	return 0;
 }
 
@@ -175,6 +176,8 @@ _reset_graphics_input(state_t *s)
 	s->titlebar_port->bgcolor.mask |= GFX_MASK_PRIORITY;
 	s->titlebar_port->bgcolor.priority = 11;
 
+	s->pics_drawn_nr = 0;
+
 	s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));
 	s->visual->add(GFXWC(s->visual), GFXW(s->wm_port));
 	s->visual->add(GFXWC(s->visual), GFXW(s->titlebar_port));
@@ -208,6 +211,9 @@ _free_graphics_input(state_t *s)
 	s->visual = NULL;
 	s->dyn_views = NULL;
 	s->port = NULL;
+
+	free(s->pics);
+	s->pics = NULL;
 }
 
 

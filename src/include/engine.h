@@ -45,7 +45,7 @@
 #include <kernel.h>
 #include <gfx_state_internal.h>
 
-#define FREESCI_SAVEGAME_VERSION 1
+#define FREESCI_SAVEGAME_VERSION 2
 
 #define FREESCI_GAMEDIR ".freesci"
 #define FREESCI_CONFFILE "config"
@@ -79,6 +79,12 @@ typedef struct
 #define SCI_GAME_WAS_RESTARTED 1
 #define SCI_GAME_IS_RESTARTING_NOW 2
 #define SCI_GAME_WAS_RESTARTED_AT_LEAST_ONCE 4
+
+typedef struct {
+	int nr;
+	int palette;
+} drawn_pic_t;
+
 
 typedef struct _state
 {
@@ -124,8 +130,8 @@ typedef struct _state
 
 	int mouse_pointer_nr; /* Mouse pointer resource, or -1 if disabled */
 
+	int port_serial; /* Port serial number, for save/restore */
 	gfxw_port_t *port; /* The currently active port */
-	int port_ID; /* Only used for save/restore, equal to port->ID */
 
 	gfx_color_t ega_colors[16]; /* The 16 EGA colors- for SCI0(1) */
 
@@ -152,6 +158,10 @@ typedef struct _state
 
 	int priority_first; /* The line where priority zone 0 ends */
 	int priority_last; /* The line where the highest priority zone starts */
+
+	int pics_drawn_nr;
+	int pics_nr;
+	drawn_pic_t *pics;
 
 	GTimeVal game_start_time; /* The time at which the interpreter was started */
 	GTimeVal last_wait_time; /* The last time the game invoked Wait() */
@@ -233,6 +243,11 @@ typedef struct _state
 	opcode *opcodes;
 
 	selector_map_t selector_map; /* Shortcut list for important selectors */
+
+	/* Backwards compatibility crap */
+	int port_ID;
+
+
 
 	struct _state *successor; /* Successor of this state: Used for restoring */
 

@@ -1008,6 +1008,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	int pic_nr = PARAM(0);
 	int add_to_pic = 1;
+	int palette = PARAM_OR_ALT(3, 0);
 	gfx_color_t transparent = s->wm_port->bgcolor;
 
 	CHECK_THIS_KERNEL_FUNCTION;
@@ -1026,10 +1027,24 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	SCIkdebug(SCIkGRAPHICS,"Drawing pic.%03d\n", PARAM(0));
 
+	if (!s->pics) {
+		s->pics = malloc(sizeof(drawn_pic_t) * (s->pics_nr = 8));
+		s->pics_drawn_nr = 0;
+	}
+
 	if (add_to_pic) {
-		GFX_ASSERT(gfxop_add_to_pic(s->gfx_state, pic_nr, 1, PARAM_OR_ALT(3, 0)));
+		if (s->pics_nr == s->pics_drawn_nr) {
+			s->pics_nr += 4;
+			s->pics = realloc(s->pics, sizeof(drawn_pic_t) * s->pics_nr);
+		}
+		s->pics[s->pics_drawn_nr].palette = palette;
+		s->pics[s->pics_drawn_nr++].nr = pic_nr;
+		GFX_ASSERT(gfxop_add_to_pic(s->gfx_state, pic_nr, 1, palette));
 	} else {
-		GFX_ASSERT(gfxop_new_pic(s->gfx_state, pic_nr, 1, PARAM_OR_ALT(3, 0)));
+		s->pics_drawn_nr = 1;
+		s->pics[0].nr = pic_nr;
+		s->pics[0].palette = palette;
+		GFX_ASSERT(gfxop_new_pic(s->gfx_state, pic_nr, 1, palette));
 	}
 
 	s->wm_port->widfree(GFXW(s->wm_port));

@@ -910,6 +910,9 @@ _gfxwop_dyn_view_equals(gfxw_widget_t *widget, gfxw_widget_t *other)
 	if (!_color_equals(wview->color, oview->color))
 		return 0;
 
+	if (wview->flags != oview->flags)
+		return 0;
+
 	return 1;
 }
 

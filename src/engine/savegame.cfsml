@@ -44,8 +44,9 @@
 ** - File input/output state (this is likely not to happen)
 */
 
-state_t *_global_save_state;
+static state_t *_global_save_state;
 /* Needed for some graphical stuff. */
+#define FILE_VERSION _global_save_state->savegame_version
 
 
 void
@@ -274,7 +275,7 @@ RECORD gfxw_dyn_view_t EXTENDS gfxw_view_t {
 	int under_bits;
 	int signal;
 	int z;
-	int force_precedence; /* * */
+	int force_precedence;
 }
 
 RECORD gfxw_text_t EXTENDS gfxw_widget_t {
@@ -402,6 +403,11 @@ RECORD synonym_t "synonym_t" {
 }
 
 
+RECORD drawn_pic_t "drawn_pic_t" {
+	int nr;
+	int palette;
+}
+
 RECORD state_t "state_t" {
 	int savegame_version;
 
@@ -417,10 +423,10 @@ RECORD state_t "state_t" {
 
 	int mouse_pointer_nr;
 
-	int port_ID;
-	gfx_color_t ega_colors[STATIC 16]; /* They're constants */
+	int port_serial;
 
 	int dyn_views_list_serial;
+	int drop_views_list_serial;
 
 	any_widget_p visual;
 
@@ -436,6 +442,8 @@ RECORD state_t "state_t" {
 
 	int priority_first;
 	int priority_last;
+
+	drawn_pic_t pics[DYNAMIC pics_nr, MAXWRITE pics_drawn_nr];
 
 	byte version_lock_flag;
 	sci_version_t version;
@@ -474,6 +482,11 @@ RECORD state_t "state_t" {
 
 	POINTER _heap->base RELATIVETO _heap->start;
 	POINTER game_name RELATIVETO _heap->start;
+
+
+	/* Backwards compatibility crap */
+	int port_ID;
+	gfx_color_t ega_colors[16];
 }
 
 %END CFSML
@@ -701,6 +714,8 @@ full_widget_tree_traversal(gfxw_widget_t *widget, gfxw_container_t *parent, gfxw
 		break;
 
 	case GFXW_LIST:
+		if (widget->serial == _global_save_state->drop_views_list_serial)
+			_global_save_state->drop_views = (gfxw_list_t *) widget;
 		_gfxw_set_ops_LIST(GFXWC(widget), 0);
 		break;
 
@@ -715,6 +730,8 @@ full_widget_tree_traversal(gfxw_widget_t *widget, gfxw_container_t *parent, gfxw
 		break;
 
 	case GFXW_PORT:
+		if (widget->serial == _global_save_state->port_serial)
+			_global_save_state->port = (gfxw_port_t *) widget;
 		_gfxw_set_ops_PORT(GFXWC(widget));
 		break;
 	}
@@ -779,6 +796,8 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
 	case GFXW_DYN_VIEW:
 		*widget = _gfxw_new_widget(sizeof(gfxw_dyn_view_t), expected_type);
 		%CFSMLREAD gfxw_dyn_view_t ((gfxw_dyn_view_t*)*widget) FROM fh ERRVAR *hiteof LINECOUNTER *line;
+		if (FILE_VERSION == 1)
+			((gfxw_dyn_view_t *) widget)->force_precedence = 0;
 		break;
 
 	case GFXW_TEXT:
@@ -828,6 +847,8 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
 		break;
 
 	}
+
+	(*widget)->flags |= GFXW_FLAG_DIRTY;
 
 	while ((nextchar = fgetc(fh)) != '>') {
 		if (nextchar == EOF)
@@ -920,6 +941,8 @@ gamestate_save(state_t *s, char *dirname)
 	_global_save_state = s;
 	s->savegame_version = FREESCI_SAVEGAME_VERSION;
 	s->dyn_views_list_serial = (s->dyn_views)? s->dyn_views->serial : -2;
+	s->drop_views_list_serial = (s->drop_views)? s->drop_views->serial : -2;
+	s->port_serial = (s->port)? s->port->serial : -2;
 
 	if (s->execution_stack_base) {
 		sciprintf("Cannot save from below kernel function\n");
@@ -979,8 +1002,6 @@ gamestate_restore(state_t *s, char *dirname)
 	int read_eof = 0;
 	state_t *retval;
 
-	_global_save_state = s;
-
 	if (chdir (dirname)) {
 		sciprintf("Game state '%s' does not exist\n", dirname);
 		return NULL;
@@ -996,6 +1017,8 @@ gamestate_restore(state_t *s, char *dirname)
 	retval = (state_t *) xalloc(sizeof(state_t));
 	retval->_heap = heap_new();
 	retval->savegame_version = -1;
+	_global_save_state = retval;
+	retval->gfx_state = s->gfx_state;
 
 	fh = fopen("state", "r");
 	if (!fh) {
@@ -1006,14 +1029,16 @@ gamestate_restore(state_t *s, char *dirname)
 
 	retval->amp_rest = 0; /* Backwards compatibility */
 	retval->dyn_views = NULL;
+	retval->drop_views = NULL;
+	retval->port = NULL;
 
 	%CFSMLREAD-ATOMIC state_t retval FROM fh ERRVAR read_eof;
 
 	fclose(fh);
 
-	if ((retval->savegame_version < FREESCI_SAVEGAME_VERSION) || (retval->savegame_version > FREESCI_SAVEGAME_VERSION)) {
+	if ((retval->savegame_version < 1) || (retval->savegame_version > FREESCI_SAVEGAME_VERSION)) {
 
-		if (retval->savegame_version < 0)
+		if (retval->savegame_version < 1)
 			sciprintf("Old savegame version detected- can't load\n");
 		else
 			sciprintf("Savegame version is %d- maximum supported is %0d\n", retval->savegame_version, FREESCI_SAVEGAME_VERSION);
@@ -1054,6 +1079,40 @@ gamestate_restore(state_t *s, char *dirname)
 	/* Now copy all current state information */
 	/* Graphics and input state: */
 	retval->gfx_state = s->gfx_state;
+	gfxop_set_pointer_cursor(s->gfx_state, retval->mouse_pointer_nr);
+
+	memcpy(retval->ega_colors, s->ega_colors, 16 * sizeof(gfx_color_t));
+
+	if (FILE_VERSION > 1 && retval->pics_drawn_nr) {
+		gfxop_new_pic(s->gfx_state, retval->pics[0].nr, 1, retval->pics[0].palette);
+		for (i = 1; i < retval->pics_drawn_nr; i++)
+			gfxop_add_to_pic(s->gfx_state, retval->pics[i].nr, 1, retval->pics[i].palette);
+	} else {
+		if (FILE_VERSION == 1) {
+			retval->pics = malloc(sizeof(drawn_pic_t) * (retval->pics_nr = 8));
+			retval->pics_drawn_nr = 0;
+		}
+		gfxop_set_clip_zone(s->gfx_state, gfx_rect_fullscreen);
+		gfxop_fill_box(s->gfx_state, gfx_rect_fullscreen, s->ega_colors[0]);
+		gfxop_update(s->gfx_state);
+	}
+	gfxop_update_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
+	gfxop_clear_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
+
+	if (retval->visual) {
+		retval->visual->print(GFXWC(retval->visual), 1);
+		gfxop_set_clip_zone(retval->gfx_state, gfx_rect_fullscreen);
+		retval->visual->gfx_state = retval->gfx_state;
+		retval->visual->add_dirty_abs(GFXWC(retval->visual), gfx_rect_fullscreen, 1);
+		retval->visual->draw(GFXW(retval->visual), gfxw_point_zero);
+	}
+	gfxop_update_box(s->gfx_state, gfx_rect(0, 0, 320, 200));
+
+	if (!retval->port && FILE_VERSION > 1) {
+		fprintf(stderr,"Found no valid port for port serial number %08x!\n", retval->port_serial);
+		retval->visual->print(GFXW(retval->visual), 0);
+		return NULL;
+	}
 
 	/* Sound state: */
 	retval->sfx_driver = s->sfx_driver;

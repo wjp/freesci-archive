@@ -1,5 +1,9 @@
 2001-02-26  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/savegame.cfsml (gamestate_restore): Fixed savegames.
+	Updated savegame version number to 2. Savegames now also remember the
+	active port and background pics.
+
 	* src/gfx/sci_widgets.c (sciw_set_menubar): Fixed menubar line
 
 	* src/gfx/widgets.c (_gfxwop_container_set_visual): List widgets
