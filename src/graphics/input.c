@@ -26,8 +26,9 @@
 ***************************************************************************/
 
 #include <uinput.h>
+#include <engine.h>
 
-sci_event_t (*_sci_input_handler)(void);
+/*sci_event_t (*_sci_input_handler)(void);*/
 
 int sci_pointer_x, sci_pointer_y;
 
@@ -37,16 +38,16 @@ long sci_clock_time = SCI_INPUT_DEFAULT_CLOCKTIME;
 long sci_redraw_time = SCI_INPUT_DEFAULT_REDRAWTIME;
 
 
-sci_event_t getEvent()
+sci_event_t getEvent (state_t *s)
 {
   sci_event_t loop;
   loop.type = SCI_EV_CLOCK;
 
-  if (_sci_input_handler)
-    return _sci_input_handler();
+  if (s->gfx_driver->GetEvent)
+    return s->gfx_driver->GetEvent(s);
   else {
     fprintf(stderr,"SCI Input:Warning: No input handler active!\n");
-    usleep(sci_clock_time);
+    /* usleep(sci_clock_time); */
     return loop; /* Not much of a replacement... */
   }
 }

@@ -59,6 +59,12 @@ struct _state;
 ** with the opposite default value (obviously)
 */
 
+#define SCI_VERSION_FTU_NEW_SCRIPT_HEADER SCI_VERSION(0,000,397)
+/* Last version known not to do this: 0.000.343
+** Old SCI versions used two word header for script blocks (first word equal
+** to 0x82, meaning of the second one unknown). New SCI versions used one
+** word header.
+*/
 
 
 typedef int sci_version_t;

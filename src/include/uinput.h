@@ -30,8 +30,8 @@
 #define _SCI_UINPUT_H
 
 #include <stdio.h>
-/* [DJ] FIXME: move check for HAVE_UNISTD_H and HAVE_TIME_H to autoconf */
-#ifndef _MSC_VER
+
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
@@ -102,7 +102,7 @@ typedef struct {
 
 
 
-extern sci_event_t (*_sci_input_handler)(void);
+/*extern sci_event_t (*_sci_input_handler)(void);*/
 /* The input handler for the main window */
 
 extern int sci_pointer_x, sci_pointer_y;
@@ -118,9 +118,9 @@ extern long sci_redraw_time;
 
 
 
-sci_event_t getEvent();
+sci_event_t getEvent (struct _state *s);
 /* Returns the next SCI_EV_* event
-** Parameters: (void)
+** Parameters: (struct state *) Current game state
 ** Returns   : (sci_event_t) The next event, which may be any of the
 **             existing events.
 */

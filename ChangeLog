@@ -1,7 +1,60 @@
+1999-08-25  Dmitry Jemerov  <yole@exch.nnz.spb.su>
+        * src/main.c (main): Added support for command line options.
+        Added options --gamedir (-d), --run (-r), --sci-version (-v).
+        * src/*/graphics*.*, kernel/kernel.c, kernel/resource.c:
+        Converted sci_usleep() to a graphics driver-specific function
+        (gfx_driver.Wait()).
+        * src/core/kernel.c, src/include/kdebug.h: SCIkdebug/SCIkwarn
+        output is also echoed to console_log file. Added new debug
+        message category, SCIkGFXDRIVER. Moved debugging function
+        prototypes to the header file.
+        * src/core/scriptdebug.c: Added support for SCIkGFXDRIVER to
+        c_debuglog(). Moved part of c_debuglog() to a separate function
+        set_debug_mode().
+        * src/graphics/graphics_ddraw.c: Converted all debugging output
+        to SCIkdebug/SCIkwarn. Added support for fullscreen mode. Added
+        event processing code.
+        * src/include/sci_conf.h, src/main.c, src/config.l: Added
+        debug_mode parameter.
+        * src/tools/vocabdump.c: now prints selector indexes; added
+        printing of class table.
+        * src/core/script.c (printMethod): when disassembling the
+        <class> opcode, the correct class name is printed.
+        * src/include/versions.h, src/core/vm.c: Added support
+        (version-dependent) for 4 byte script headers.
+
 1999-08-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kernel.c (kDoSound): Added sound debugging.
 	(kLocalToGlobal): Implemented kLocalToGlobal, kGlobalToLocal.
+
+1999-08-23  Dmitry Jemerov  <yole@exch.nnz.spb.su>
+
+        * core/kernel.c: implemented Win32 replacement for the ffs
+        function
+	* graphics/engine_graphics.c (graph_update_box): fixed coordinate
+        adjustment problem causing a crash in the LSL3 intro
+        * tools/vocabdump.c: vocabdump now prints kernel function indexes;
+        added missing vocabulary_free_snames()
+        * console/commands.c, core/script.c: moved code of c_dissectscript()
+        into a separate function script_dissect(); moved sci_hexdump()
+        to script.c. Implemented dumping of string blocks in more human
+        readable way.
+        * include/console.h, console/console.c (sciprintf): added
+        possibility of echoing sciprintf() output to a text file
+        * tools/sciunpack.c: Added --dissect flag allowing to dump script
+        resources to human readable text. Added possibility to specify
+        "*" instead of resource number to unpack all resources of given
+        type.
+        * config.l, include/graphics.h, include/graphics_ddraw.h,
+        graphics/graphics_ddraw.c, graphics/graphics_ggi.c:
+        Implemented driver-specific configuration parameters.
+        * include/graphics.h, graphics/graphics_ddraw.c,
+        graphics/graphics_ggi.c: Copied new color interpolation code
+        from the libggi driver to the DirectDraw driver.
+        * config.l, main.c: Implemented console_log config parameter
+        specifying the file to which console output should be echoed.
+        * main.c: Added myself to the copyrights. :-)
 
 1999-08-20  Christoph Reichenbach  <jameson@linuxgames.com>
 

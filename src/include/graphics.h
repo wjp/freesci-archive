@@ -34,6 +34,7 @@
 
 #include <resource.h>
 #include <vm.h>
+#include <uinput.h>
 
 
 struct _picture {
@@ -161,6 +162,18 @@ typedef struct
   ** Calls to Configure come _before_ Initialize.
   */
   void (*Configure) (char *key, char *value);
+
+  /* Suspends execution for the specified amount of microseconds.
+  ** Parameters: usec: time to wait in microseconds
+  */
+  void (*Wait) (long usec);
+
+  /* Returns the next SCI_EV_* event
+  ** Parameters: (struct state *) Current game state
+  ** Returns   : (sci_event_t) The next event, which may be any of the
+  **             existing events.
+  */
+  sci_event_t (*GetEvent) (struct _state *s);
 
 } gfx_driver_t;
 

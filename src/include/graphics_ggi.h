@@ -60,6 +60,9 @@ libggi_shutdown(struct _state *s);
 void
 libggi_redraw (struct _state *s, int command, int x, int y, int xl, int yl);
 
+void
+libggi_wait (long usec);
+
 int
 initInputGII(void);
 /* Installs an input handler for stdin over libgii

@@ -31,11 +31,22 @@
 #include <console.h>
 #include <graphics.h>
 #include <sci_conf.h>
+#include <getopt.h>
+#include <kdebug.h>
+#include <vm.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#ifdef _WIN32
+#include <direct.h>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#define sleep Sleep
+#endif
+
 static int quit = 0;
 static state_t gamestate; /* The main game state */
+
 
 extern int _debugstate_valid;
 extern int _debug_seeking;
@@ -48,6 +59,7 @@ c_quit(void)
   _debugstate_valid = 0;
   _debug_seeking = 0;
   _debug_step_running = 0;
+  return 0;
 }
 
 int
@@ -76,14 +88,23 @@ get_readline_input(void)
   return old_input? old_input : "";
 }
 
+static struct option options[] = {
+  {"gamedir", required_argument, 0, 'd'},
+  {"run", no_argument, &script_debug_flag, 1 },
+  {"sci-version", required_argument, 0, 'v'},
+  {0,0,0,0}
+};
 
 int
 main(int argc, char** argv)
 {
   resource_t *resource;
   config_entry_t conf;
-  int i;
+  int i, c;
   FILE *console_logfile = NULL;
+  int optindex = 0;
+  char gamedir [256], startdir [256];
+  sci_version_t cmd_version = 0;
 
   printf("FreeSCI "VERSION" Copyright (C) 1999 Dmitry Jemerov, Christopher T. Lansdown,\n"
 	 "Sergey Lapin, Carl Muckenhoupt, Christoph Reichenbach, Magnus Reftel\n"
@@ -92,7 +113,47 @@ main(int argc, char** argv)
 	 "or any later version, at your option.\n"
 	 "It comes with ABSOLUTELY NO WARRANTY.\n");
 
+  strcpy (gamedir, ".");
+  while ((c = getopt_long(argc, argv, "rd:v:", options, &optindex)) > -1)
+  {
+    switch (c)
+    {
+    case 'r':
+      script_debug_flag=0;
+      break;
+
+    case 'd':
+      strcpy (gamedir, optarg);
+      break;
+
+    case 'v':
+      {
+        int major = *optarg - '0'; /* One version digit */
+        int minor = atoi(optarg + 2);
+        int patchlevel = atoi(optarg + 6);
+
+        cmd_version = SCI_VERSION(major, minor, patchlevel);
+      }
+      break;
+
+    case 0: /* getopt_long already did this for us */
+    case '?':
+      /* getopt_long already printed an error message. */
+      break;
+
+    default:
+      return -1;
+    }
+  }
+  
   sci_color_mode = SCI_COLOR_DITHER256;
+
+  getcwd (startdir, sizeof (startdir)-1);
+  if (chdir (gamedir))
+  {
+    printf ("Error changing to game directory %s\n", gamedir);
+    exit(-1);
+  }
 
   if (i = loadResources(SCI_VERSION_AUTODETECT, 1)) {
     fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);
@@ -115,25 +176,32 @@ main(int argc, char** argv)
   _debug_get_input = get_readline_input; /* Use readline for debugging input */
 
 
-  if (script_init_state(&gamestate)) { /* Initialize game state */
+  if (script_init_state(&gamestate, cmd_version)) { /* Initialize game state */
     fprintf(stderr,"Initialization failed. Aborting...\n");
     return 1;
   }
-  gamestate.have_mouse_flag = 0; /* Assume that no pointing device is present */
+  gamestate.have_mouse_flag = 1; /* Assume that a pointing device is present */
 
   game_init(&gamestate); /* Initialize */
 
+  chdir (startdir);
   config_init(&conf, gamestate.game_name, NULL);
+  chdir (gamedir);
 
   gamestate.version = conf.version;
   sci_color_mode = conf.color_mode;
   gamestate.gfx_driver = conf.gfx_driver;
+  if (strlen (conf.debug_mode))
+    set_debug_mode (&gamestate, 1, conf.debug_mode);
 
   gamestate.sfx_driver = sfx_drivers[0];
   
-  gamestate.sfx_driver->init(&gamestate);
-  sleep(1);
-  gamestate.sfx_driver->get_event(&gamestate); /* Get init message */
+  if (gamestate.sfx_driver)
+  {
+    gamestate.sfx_driver->init(&gamestate);
+    sleep(1);
+    gamestate.sfx_driver->get_event(&gamestate); /* Get init message */
+  }
 
   if (conf.console_log)
   {
@@ -142,7 +210,7 @@ main(int argc, char** argv)
   }
 
   /* initialize graphics */
-  if ((*gamestate.gfx_driver->Initialize)(&gamestate, gamestate.pic)) { 
+  if (gamestate.gfx_driver->Initialize(&gamestate, gamestate.pic)) { 
     fprintf(stderr,"Graphics initialization failed. Aborting...\n");
     exit(1);
   };
@@ -154,11 +222,12 @@ main(int argc, char** argv)
 
   game_run(&gamestate); /* Run the game */
 
-  gamestate.sfx_driver->exit(&gamestate); /* Shutdown sound daemon first */
+  if (gamestate.sfx_driver)
+    gamestate.sfx_driver->exit(&gamestate); /* Shutdown sound daemon first */
 
   game_exit(&gamestate);
 
-  (*gamestate.gfx_driver->Shutdown)(&gamestate); /* Close graphics */
+  gamestate.gfx_driver->Shutdown(&gamestate); /* Close graphics */
 
   script_free_state(&gamestate); /* Uninitialize game state */
 
@@ -167,6 +236,8 @@ main(int argc, char** argv)
 
   if (console_logfile)
     fclose (console_logfile);
+
+  chdir (startdir);
 
   return 0;
 }

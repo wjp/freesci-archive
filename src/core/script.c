@@ -7,6 +7,7 @@
 #include <vm.h>
 #include <assert.h>
 
+/* #define SCRIPT_DEBUG */
 
 #ifdef SCI_CONSOLE
 #define printf sciprintf
@@ -165,8 +166,9 @@ static void printMethod(object* obj, int meth, int indent)
 				if(op.arg1>max_object) printf("<no such class %02X>", op.arg1);
 				else
 				{
-					if(fobjects.data[op.arg1]==0) printf("<null object>");
-					else printf("%s", fobjects.data[op.arg1]->name);
+					/* [DJ] op.arg1+1 adjusts for the <root> object */
+                                        if(fobjects.data[op.arg1+1]==0) printf("<null object>");
+					else printf("%s", fobjects.data[op.arg1+1]->name);
 				}
 			} break;
 			case 0x44:
@@ -724,7 +726,10 @@ int loadObjects()
 	for(i=0; i<1000; i++) positions[i]=0;
 	for(i=0; i<class_count; i++)
 	{
-		if(read_class(classes[i], positions)==0)
+#ifdef SCRIPT_DEBUG
+                printf ("\n\nReading class 0x%02X\n", i);
+#endif
+                if(read_class(classes[i], positions)==0)
 		{
 			#ifdef SCRIPT_DEBUG
 			fprintf(stderr, "Failed to load class %d, which is a parent.\n", i);

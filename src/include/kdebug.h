@@ -26,7 +26,10 @@
 ***************************************************************************/
 /* Kernel debug defines */
 
-#define SCIk_DEBUG_MODES 8
+#ifndef _SCI_KDEBUG_H_
+#define _SCI_KDEBUG_H_
+
+#define SCIk_DEBUG_MODES 9
 
 static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
   "Stubs",
@@ -35,8 +38,9 @@ static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
   "Character handling",
   "Memory management",
   "Function parameter checks",
-  "Bresenham algorithms"
-  "Audio subsystem"
+  "Bresenham algorithms",
+  "Audio subsystem",
+  "System graphics driver"
 };
 /* The various debug areas */
 
@@ -45,14 +49,67 @@ static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
 #define SCIkSTUB_NR 0
 #define SCIkFUNCCHK_NR 5
 #define SCIkSOUNDCHK_NR 7
+#define SCIkGFXDRIVER_NR 8
 
-#define SCIkERROR    s, __LINE__, SCIkERROR_NR
-#define SCIkWARNING  s, __LINE__, SCIkWARNING_NR
-#define SCIkSTUB     s, __LINE__, SCIkSTUB_NR
-#define SCIkNODES    s, __LINE__, 1
-#define SCIkGRAPHICS s, __LINE__, 2
-#define SCIkSTRINGS  s, __LINE__, 3
-#define SCIkMEM      s, __LINE__, 4
-#define SCIkFUNCCHK  s, __LINE__, SCIkFUNCCHK_NR
-#define SCIkBRESEN   s, __LINE__, 6
-#define SCIkSOUND    s, __LINE__, SCIkSOUNDCHK_NR
+#define SCIkERROR     s, __FILE__, __LINE__, SCIkERROR_NR
+#define SCIkWARNING   s, __FILE__, __LINE__, SCIkWARNING_NR
+#define SCIkSTUB      s, __FILE__, __LINE__, SCIkSTUB_NR
+#define SCIkNODES     s, __FILE__, __LINE__, 1
+#define SCIkGRAPHICS  s, __FILE__, __LINE__, 2
+#define SCIkSTRINGS   s, __FILE__, __LINE__, 3
+#define SCIkMEM       s, __FILE__, __LINE__, 4
+#define SCIkFUNCCHK   s, __FILE__, __LINE__, SCIkFUNCCHK_NR
+#define SCIkBRESEN    s, __FILE__, __LINE__, 6
+#define SCIkSOUND     s, __FILE__, __LINE__, SCIkSOUNDCHK_NR
+#define SCIkGFXDRIVER s, __FILE__, __LINE__, SCIkGFXDRIVER_NR
+
+
+#define SCI_KERNEL_DEBUG
+
+#ifdef SCI_KERNEL_DEBUG
+
+#ifdef __GNUC__
+
+#define SCIkdebug(arguments...) _SCIGNUkdebug(__PRETTY_FUNCTION__,  ## arguments)
+
+#else /* !__GNUC__ */
+
+#define SCIkdebug _SCIkdebug
+
+#endif /* !__GNUC__ */
+
+#else /* !SCI_KERNEL_DEBUG */
+
+#define SCIkdebug 1? (void)0 : _SCIkdebug
+
+#endif /* !SCI_KERNEL_DEBUG */
+
+
+
+#ifdef __GNUC__
+
+#define SCIkwarn(arguments...) _SCIGNUkdebug(__PRETTY_FUNCTION__, ## arguments)
+
+#else /* !__GNUC__ */
+
+#define SCIkwarn _SCIkwarn
+
+#endif /* !__GNUC__ */
+
+void
+_SCIkwarn(state_t *s, char *file, int line, int area, char *format, ...);
+void
+_SCIkdebug(state_t *s, char *file, int line, int area, char *format, ...);
+void
+_SCIGNUkdebug(char *funcname, state_t *s, char *file, int line, int area, char *format, ...);
+
+/* If mode=1, enables debugging for specified areas. If mode=0, disables
+** debugging for specified areas.
+** Valid area characters: ulgcmfbad
+*/
+
+void
+set_debug_mode (struct _state *s, int mode, char *areas);
+
+
+#endif

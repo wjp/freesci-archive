@@ -512,13 +512,50 @@ c_listclones(void)
   return 0;
 }
 
+void
+set_debug_mode (struct _state *s, int mode, char *areas)
+{
+  char modechars[] = "ulgcmfbad"; /* Valid parameter chars */
+  char *parser;
+  int seeker;
+  char frob;
+
+  parser = areas;
+  while (frob = *parser) {
+    seeker = 0;
+
+    if (frob == '*') { /* wildcard */
+      if (mode) /* set all */
+	s->debug_mode = 0xffffffff;
+      else /* unset all */
+	s->debug_mode = 0;
+
+      parser++;
+      continue;
+    }
+
+    while (modechars[seeker] && (modechars[seeker] != frob))
+      seeker++;
+
+    if (modechars[seeker] == '\0') {
+      sciprintf("Invalid log mode parameter: %c\n", frob);
+      return;
+    }
+
+    if (mode) /* Set */
+      s->debug_mode |= (1 << seeker);
+    else /* UnSet */
+      s->debug_mode &= ~(1 << seeker);
+
+    parser++;
+  }
+}
 
 int
 c_debuglog(void)
 {
   int i;
   char *parser;
-  char modechars[] = "ulgcmfba"; /* Valid parameter chars */
 
   if (!_debugstate_valid) {
     sciprintf("Not in debug state\n");
@@ -535,8 +572,6 @@ c_debuglog(void)
 
   for (i = 0; i < cmd_paramlength; i++) {
     int mode;
-    int seeker;
-    char frob;
 
     if (cmd_params[i].str[0] == '+')
       mode = 1;
@@ -548,35 +583,7 @@ c_debuglog(void)
 	return 1;
       }
 
-    parser = cmd_params[i].str + 1;
-    while (frob = *parser) {
-      seeker = 0;
-
-      if (frob == '*') { /* wildcard */
-	if (mode) /* set all */
-	  _s->debug_mode = 0xffffffff;
-	else /* unset all */
-	  _s->debug_mode = 0;
-
-	parser++;
-	continue;
-      }
-
-      while (modechars[seeker] && (modechars[seeker] != frob))
-	seeker++;
-
-      if (modechars[seeker] == '\0') {
-	sciprintf("Invalid log mode parameter: %c\n", frob);
-	return 1;
-      }
-
-      if (mode) /* Set */
-	_s->debug_mode |= (1 << seeker);
-      else /* UnSet */
-	_s->debug_mode &= ~(1 << seeker);
-
-      parser++;
-    }
+    set_debug_mode(_s, mode, cmd_params [i].str + 1);
   }
 
   return 0;

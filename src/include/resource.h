@@ -193,16 +193,6 @@ _XALLOC(size_t size, char *file, int line, char *funct);
 */
 
 
-void
-sci_usleep(long time);
-/* Suspends execution for the specified amount of microseconds.
-** Parameters: (long) time: The time to sleep
-** Returns   : (void): Nothing
-** This is intended to be a portable sleep call. Under UNIX, it uses select();
-** the Win32 implementation uses MsgWait().
-*/
-
-
 int loadResources(int version, int allow_patches);
 /* Reads and parses all resource files in the current directory.
 ** Parameters: version: The SCI version to look for; use SCI_VERSION_AUTODETECT

@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.5\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.5\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "HAVE_OBSTACK_H" /YX /FD /c
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
 # ADD RSC /l 0x419 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -65,7 +65,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\hermes\src" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.5\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\include" /I "..\..\..\glib" /I "\cygnus\cygwin-b20\src" /I "\cygnus\cygwin-b20\src\include" /I "..\..\..\hermes\src" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D PACKAGE=\"freesci\" /D VERSION=\"0.2.5\" /D "HAVE_DDRAW" /D "HAVE_STRING_H" /D "HAVE_OBSTACK_H" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
 # ADD RSC /l 0x419 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -149,7 +149,37 @@ SOURCE=..\graphics\graphics_ddraw.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\graphics\graphics_ggi.c
+
+!IF  "$(CFG)" == "sciv - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "sciv - Win32 Debug"
+
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=..\core\heap.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\graphics\input.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\graphics\input_ggi.c
+
+!IF  "$(CFG)" == "sciv - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "sciv - Win32 Debug"
+
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -209,14 +239,6 @@ SOURCE=..\yywrap.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=..\include\config.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\glib\config.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\include\console.h
 # End Source File
 # Begin Source File
@@ -230,6 +252,10 @@ SOURCE=..\include\graphics.h
 # Begin Source File
 
 SOURCE=..\include\graphics_ddraw.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\graphics_ggi.h
 # End Source File
 # Begin Source File
 
@@ -258,6 +284,10 @@ SOURCE=..\include\script.h
 # Begin Source File
 
 SOURCE=..\include\sound.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\soundserver.h
 # End Source File
 # Begin Source File
 
@@ -358,6 +388,14 @@ SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\tilde.h"
 # Begin Source File
 
 SOURCE="..\..\..\..\cygnus\cygwin-b20\src\readline\chardefs.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\..\cygnus\cygwin-b20\src\libiberty\getopt.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\..\..\cygnus\cygwin-b20\src\libiberty\getopt1.c"
 # End Source File
 # Begin Source File
 

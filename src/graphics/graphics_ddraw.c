@@ -37,6 +37,7 @@
 #include <uinput.h>
 #include <engine.h>
 #include <vm.h>
+#include <kdebug.h>
 
 #include <Hermes.h>
 
@@ -55,6 +56,14 @@ static HermesFormat *hfDest;
 
 static RGBQUAD color_table [256];
 
+static BOOL bFullscreen = FALSE, bActive = FALSE;
+static int scale=1;
+
+long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+int process_messages();
+void init_event_queue();
+void free_event_queue();
+
 /*** Graphics driver ***/
 
 gfx_driver_t gfx_driver_ddraw = 
@@ -63,7 +72,9 @@ gfx_driver_t gfx_driver_ddraw =
   ddraw_init,
   ddraw_shutdown,
   ddraw_redraw,
-  ddraw_configure
+  ddraw_configure,
+  ddraw_wait,
+  ddraw_get_event
 };
 
 /*** Initialization and window stuff ***/
@@ -93,30 +104,6 @@ void initColors()
     color_table [i].rgbBlue  = INTERCOL(vcal[i & 0xf].rgbBlue, vcal[i >> 4].rgbBlue);
     color_table [i].rgbReserved = 0;
   }
-}
-
-long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-  switch (message)
-  {
-  case WM_MOVE:
-  case WM_SIZE:
-    {
-      POINT pnt;
-      pnt.x = 0; pnt.y = 0;
-      ClientToScreen (hMainWnd, &pnt);
-      WndXStart = pnt.x;
-      WndYStart = pnt.y;
-    }
-    break;
-
-  case WM_DESTROY:
-    script_abort_flag = 1;
-    PostQuitMessage (0);
-    break;
-  }
-
-  return DefWindowProc (hWnd, message, wParam, lParam);
 }
 
 #define SPRINTF_DDERR(x,y) case x : sprintf (buf, y); break
@@ -231,13 +218,25 @@ static void TraceLastDDrawError (HRESULT hResult, char *buf)
 }
 
 int
-DDrawFailure (HRESULT hr)
+DDrawFailure (state_t *s, HRESULT hr)
 {
   char buf [128];
+
   TraceLastDDrawError (hr, buf);
-  printf ("DirectDraw operation failed: %s\n", buf);
+  SCIkdebug (SCIkERROR, "DirectDraw operation failed: %s\n", buf);
+
   return 1;
 }
+
+#define DDCHECK(x) \
+do { \
+  hr=x; \
+  if (hr != DD_OK) { \
+    TraceLastDDrawError (hr, buf); \
+    SCIkdebug (SCIkERROR, "DirectDraw operation failed: %s\n", buf);  \
+    return 1; \
+  } \
+} while(0)
 
 int
 ddraw_init(state_t *s, struct _picture *pic)
@@ -250,6 +249,11 @@ ddraw_init(state_t *s, struct _picture *pic)
   RECT rc;
   char buf [128];
   int32* pPal;
+
+  if (bFullscreen)
+    scale = 1;
+  else
+    scale = 2;
 
   /* Register window class */
   wc.style         = CS_HREDRAW | CS_VREDRAW;
@@ -265,8 +269,9 @@ ddraw_init(state_t *s, struct _picture *pic)
   RegisterClass (&wc);
 
   /* Create and show window */
-  SetRect (&rc, 0, 0, SCI_SCREEN_WIDTH*2, SCI_SCREEN_HEIGHT*2);
-  AdjustWindowRectEx (&rc, WS_OVERLAPPEDWINDOW, FALSE, 0);
+  SetRect (&rc, 0, 0, SCI_SCREEN_WIDTH*scale, SCI_SCREEN_HEIGHT*scale);
+  if (!bFullscreen)
+    AdjustWindowRectEx (&rc, WS_OVERLAPPEDWINDOW, FALSE, 0);
 
   sprintf (buf, "%s - %s %s", s->game_name, PACKAGE, VERSION);
 
@@ -274,7 +279,7 @@ ddraw_init(state_t *s, struct _picture *pic)
     0,
     "freesci.WndClass",
     buf,
-    WS_OVERLAPPEDWINDOW,
+    bFullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW,
     0,
     0,
     rc.right-rc.left,
@@ -292,41 +297,40 @@ ddraw_init(state_t *s, struct _picture *pic)
   SetFocus (hMainWnd);
 
   /* Initialize DirectDraw for windowed mode, create the surface and 
-     attach cliprgbr */
+     attach clipper */
   if (!pDD)
-  {
-    hr=DirectDrawCreate (NULL, &pDD, NULL);
-    if (!pDD) return DDrawFailure (hr);
-  }
+    DDCHECK (DirectDrawCreate (NULL, &pDD, NULL));
 
-  hr=IDirectDraw_SetCooperativeLevel (pDD, hMainWnd, DDSCL_NORMAL);
-  if (hr != DD_OK) return DDrawFailure (hr);
+  if (bFullscreen)
+  {
+    DDCHECK (IDirectDraw_SetCooperativeLevel (pDD, hMainWnd, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN));
+    DDCHECK (IDirectDraw_SetDisplayMode (pDD, 320, 200, 8));
+  }
+  else
+    DDCHECK (IDirectDraw_SetCooperativeLevel (pDD, hMainWnd, DDSCL_NORMAL));
 
   ddsd.dwSize = sizeof (DDSURFACEDESC);
   ddsd.dwFlags = DDSD_CAPS;
   ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
 
-  hr=IDirectDraw_CreateSurface (pDD, &ddsd, &pPrimary, NULL);
-  if (hr != DD_OK) return DDrawFailure (hr);
+  DDCHECK (IDirectDraw_CreateSurface (pDD, &ddsd, &pPrimary, NULL));
 
   memset (&ddsd, 0, sizeof (DDSURFACEDESC));
   ddsd.dwSize = sizeof (DDSURFACEDESC);
   ddsd.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
   ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
-  ddsd.dwWidth = SCI_SCREEN_WIDTH*2;
-  ddsd.dwHeight = SCI_SCREEN_HEIGHT*2;
 
-  hr=IDirectDraw_CreateSurface (pDD, &ddsd, &pBuffer, NULL);
-  if (hr != DD_OK) return DDrawFailure (hr);
+  ddsd.dwWidth = SCI_SCREEN_WIDTH * scale;
+  ddsd.dwHeight = SCI_SCREEN_HEIGHT * scale;
 
-  hr=IDirectDraw_CreateClipper (pDD, 0, &pClipper, NULL);
-  if (hr != DD_OK) return DDrawFailure (hr);
+  DDCHECK (IDirectDraw_CreateSurface (pDD, &ddsd, &pBuffer, NULL));
 
-  hr=IDirectDrawClipper_SetHWnd (pClipper, 0, hMainWnd);
-  if (hr != DD_OK) return DDrawFailure (hr);
-
-  hr=IDirectDrawSurface_SetClipper (pPrimary, pClipper);
-  if (hr != DD_OK) return DDrawFailure (hr);
+  if (!bFullscreen)
+  {
+    DDCHECK (IDirectDraw_CreateClipper (pDD, 0, &pClipper, NULL));
+    DDCHECK (IDirectDrawClipper_SetHWnd (pClipper, 0, hMainWnd));
+    DDCHECK (IDirectDrawSurface_SetClipper (pPrimary, pClipper));
+  }
 
   /* Find out the pixel format of the primary surface */
   ddpf.dwSize = sizeof (DDPIXELFORMAT);
@@ -334,7 +338,7 @@ ddraw_init(state_t *s, struct _picture *pic)
 
   initColors();
 
-  if (ddpf.dwFlags & DDPF_PALETTEINDEXED8)
+  if (bFullscreen || (ddpf.dwFlags & DDPF_PALETTEINDEXED8))
   {
     /* The RGBQUAD and PALETTEENTRY structure have different order of RGB
        bytes. The order in RGBQUAD corresponds to what Hermes understands,
@@ -350,11 +354,8 @@ ddraw_init(state_t *s, struct _picture *pic)
       pe [i].peFlags = 0;
     }
 
-    hr=IDirectDraw_CreatePalette (pDD, DDPCAPS_8BIT | DDPCAPS_ALLOW256, pe, &pPalette, NULL);
-    if (hr != DD_OK) return DDrawFailure (hr);
-    
-    hr=IDirectDrawSurface_SetPalette (pPrimary, pPalette);
-    if (hr != DD_OK) return DDrawFailure (hr);
+    DDCHECK (IDirectDraw_CreatePalette (pDD, DDPCAPS_8BIT | DDPCAPS_ALLOW256, pe, &pPalette, NULL));
+    DDCHECK (IDirectDrawSurface_SetPalette (pPrimary, pPalette));
   }
 
   /* Initialize Hermes */
@@ -374,16 +375,9 @@ ddraw_init(state_t *s, struct _picture *pic)
     ddpf.dwRBitMask, ddpf.dwGBitMask, ddpf.dwBBitMask, 0, 
     ((ddpf.dwFlags & DDPF_PALETTEINDEXED8) != 0));
  
-  /* Set graphics callback */
-  /*s->graphics_callback = graphics_callback_ddraw;*/
-
   /* Process initial messages */
-  while (PeekMessage (&msg, NULL, 0, 0, PM_NOREMOVE))
-  {
-    if (!GetMessage (&msg, NULL, 0, 0)) return 0;
-    TranslateMessage (&msg);
-    DispatchMessage(&msg);
-  }
+  init_event_queue();
+  process_messages();
 
   return 0;
 }
@@ -391,7 +385,7 @@ ddraw_init(state_t *s, struct _picture *pic)
 void
 ddraw_shutdown(state_t *s)
 {
-  printf ("Closing DirectDraw\n");
+  SCIkdebug (SCIkGFXDRIVER, "Closing DirectDraw\n");
   /* Deinitialize Hermes */
   Hermes_ConverterReturn (hhConverter);
   Hermes_PaletteReturn (hhPalette);
@@ -416,7 +410,7 @@ ddraw_shutdown(state_t *s)
     {
       IDirectDrawSurface_Release (pBuffer);
       pBuffer = NULL;
-    }
+    }      
 
     if (pPrimary)
     {
@@ -426,24 +420,166 @@ ddraw_shutdown(state_t *s)
     IDirectDraw_Release (pDD);
     pDD = NULL;
   }
+  free_event_queue();
 }
 
 /*** Input and message handling stuff ***/
 
+/* Circular queue for events received by WndProc and not yet fetched by GetEvent() */
+
+sci_event_t *event_queue = NULL;
+int queue_size, queue_first, queue_last;
+
+void init_event_queue()
+{
+  queue_size = 256;
+  event_queue = (sci_event_t *) malloc (queue_size * sizeof (sci_event_t));
+  queue_first=0;
+  queue_last=0;
+}
+
+void free_event_queue()
+{
+  if (event_queue) free(event_queue);
+}
+
+void add_queue_event(unsigned char type, char key)
+{
+  if ((queue_last+1) % queue_size == queue_first)
+  {
+    /* Reallocate queue */
+    int i, event_count;
+    sci_event_t *new_queue;
+
+    new_queue = (sci_event_t *) malloc (queue_size * 2 * sizeof (sci_event_t));
+    event_count = (queue_last - queue_first) % queue_size;
+    for (i=0; i<event_count; i++)
+      new_queue [i] = event_queue [(queue_first+i) % queue_size];
+    free (event_queue);
+    event_queue = new_queue;
+    queue_size *= 2;
+    queue_first = 0;
+    queue_last = event_count;
+  }
+
+  event_queue [queue_last].key = key;
+  event_queue [queue_last++].type = type;
+  if (queue_last == queue_size) queue_last=0;
+}
+
+sci_event_t get_queue_event()
+{
+  if (queue_first == queue_size) queue_first = 0;
+  if (queue_first == queue_last)
+  {
+    sci_event_t noevent;
+    noevent.key = 0;
+    noevent.type = SCI_EV_NOEVENT;
+    return noevent;
+  }
+  else return event_queue [queue_first++];
+}
+
+#define MAP_KEY(x,y) case x: add_queue_event (SCI_EV_SPECIAL_KEY, y); break
+
+long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+  switch (message)
+  {
+    /* system messages */
+  case WM_ACTIVATEAPP:
+    bActive = wParam;
+    break;
+
+  case WM_SETCURSOR:
+    if (bFullscreen && bActive)
+      SetCursor (NULL);
+    break;
+
+  case WM_MOVE:
+  case WM_SIZE:
+    {
+      POINT pnt;
+      pnt.x = 0; pnt.y = 0;
+      ClientToScreen (hMainWnd, &pnt);
+      WndXStart = pnt.x;
+      WndYStart = pnt.y;
+    }
+    break;
+
+  case WM_DESTROY:
+    script_abort_flag = 1;
+    PostQuitMessage (0);
+    break;
+
+    /* messages converted to SCI events */
+  case WM_MOUSEMOVE:
+    sci_pointer_x = LOWORD (lParam) / scale;
+    sci_pointer_y = HIWORD (lParam) / scale;
+    break;
+
+  case WM_LBUTTONDOWN:
+    add_queue_event (SCI_EV_MOUSE_CLICK, 1);
+    break;
+
+  case WM_RBUTTONDOWN:
+    add_queue_event (SCI_EV_MOUSE_CLICK, 2);
+    break;
+
+  case WM_MBUTTONDOWN:
+    add_queue_event (SCI_EV_MOUSE_CLICK, 3);
+    break;
+
+  case WM_KEYDOWN:
+    switch (wParam)
+    {
+      MAP_KEY (VK_ESCAPE, SCI_K_ESC);
+      MAP_KEY (VK_END,    SCI_K_END);
+      MAP_KEY (VK_DOWN,   SCI_K_DOWN);
+      MAP_KEY (VK_NEXT,   SCI_K_PGDOWN);
+      MAP_KEY (VK_LEFT,   SCI_K_LEFT);
+      MAP_KEY (VK_RIGHT,  SCI_K_RIGHT);
+      MAP_KEY (VK_HOME,   SCI_K_HOME);
+      MAP_KEY (VK_UP,     SCI_K_UP);
+      MAP_KEY (VK_PRIOR,  SCI_K_PGUP);
+      MAP_KEY (VK_INSERT, SCI_K_INSERT);
+      MAP_KEY (VK_DELETE, SCI_K_DELETE);
+    case VK_BACK:   add_queue_event (SCI_EV_CTRL_KEY, 'H'); break;
+    case VK_TAB:    add_queue_event (SCI_EV_CTRL_KEY, 'I'); break;
+    case VK_RETURN: add_queue_event (SCI_EV_CTRL_KEY, 'M'); break;
+    default:
+      if (wParam >= VK_F1 && wParam <= VK_F10)
+        add_queue_event (SCI_EV_SPECIAL_KEY, wParam - VK_F1 + SCI_K_F1);
+      else
+        add_queue_event (SCI_EV_KEY, wParam);
+    }
+    break;
+  }
+
+  return DefWindowProc (hWnd, message, wParam, lParam);
+}
+
+int process_messages()
+{
+  MSG msg;
+
+  while (PeekMessage (&msg, NULL, 0, 0, PM_NOREMOVE))
+  {
+    if (!GetMessage (&msg, NULL, 0, 0)) return 0;
+    TranslateMessage (&msg);
+    DispatchMessage(&msg);
+  }
+  return 1;
+}
+
 void
 MsgWait (int WaitTime)
 {
-  MSG msg;
   DWORD dwRet=0;
   long dwWait;
   DWORD StartTime=timeGetTime();
 
-  while (PeekMessage (&msg, NULL, 0, 0, PM_NOREMOVE))
-  {
-    if (!GetMessage (&msg, NULL, 0, 0)) return;
-    TranslateMessage (&msg);
-    DispatchMessage(&msg);
-  }
+  if (!process_messages()) return;
 
   if (WaitTime > 0) 
   {
@@ -451,12 +587,7 @@ MsgWait (int WaitTime)
   
     while (dwRet != WAIT_TIMEOUT)
     {
-      while (PeekMessage (&msg, NULL, 0, 0, PM_NOREMOVE))
-      {
-        if (!GetMessage (&msg, NULL, 0, 0)) return;
-        TranslateMessage (&msg);
-        DispatchMessage(&msg);
-      }
+      if (!process_messages()) return;
       dwWait=WaitTime-(timeGetTime()-StartTime);
       if (dwWait <= 0) break;
       dwRet=MsgWaitForMultipleObjects (0, NULL, FALSE, dwWait, QS_ALLINPUT);
@@ -485,10 +616,29 @@ Win32_usleep (long usec)
   }
 }
 
+void
+ddraw_wait (long usec)
+{
+  /* For short waits, use high-precision, high-CPU-load wait. For longer
+     waits, use low-precision, low-CPU-load wait. */
+  if (usec <= 1000)
+    Win32_usleep (usec);
+  else
+    MsgWait (usec / 1000);
+}
+
+sci_event_t
+ddraw_get_event(state_t *s)
+{
+  process_messages();
+  return get_queue_event();
+}
+
 /*** Graphics callback ***/
 
 void
-graphics_draw_region_ddraw(byte *data,
+graphics_draw_region_ddraw(state_t *s,
+                           byte *data,
                            int sx, int sy,
                            int pitch,
                            int *color_key,
@@ -569,14 +719,15 @@ graphics_draw_region_ddraw(byte *data,
     sx, sy, xl, yl,
     pitch,
     ddsd.lpSurface,
-    0, 0, xl*2, yl*2,
+    0, 0, xl*scale, yl*scale,
     ddsd.lPitch))
-    printf ("Hermes copy failed\n");
+    SCIkdebug (SCIkWARNING, "Hermes copy failed\n");
   
   IDirectDrawSurface_Unlock (pBuffer, NULL);
 
-  SetRect (&rcDest, WndXStart+x*2, WndYStart+y*2, WndXStart+(x+xl)*2, WndYStart+(y+yl)*2);
-  SetRect (&rcSrc, 0, 0, xl*2, yl*2);
+  SetRect (&rcDest, WndXStart+x*scale, WndYStart+y*scale, 
+                    WndXStart+(x+xl)*scale, WndYStart+(y+yl)*scale);
+  SetRect (&rcSrc, 0, 0, xl*scale, yl*scale);
   if (!color_key)
     hr=IDirectDrawSurface_Blt (pPrimary, &rcDest, pBuffer, &rcSrc, DDBLT_WAIT, NULL);
   else
@@ -590,9 +741,9 @@ graphics_draw_region_ddraw(byte *data,
 
   if (hr != DD_OK) 
   {
-    DDrawFailure (hr);
-    printf ("src rect (%d,%d)-(%d,%d)\n", rcSrc.left, rcSrc.top, rcSrc.right, rcSrc.bottom);
-    printf ("dest rect (%d,%d)-(%d,%d)\n", rcDest.left, rcDest.top, rcDest.right, rcDest.bottom);
+    DDrawFailure (s, hr);
+    SCIkdebug (SCIkGFXDRIVER, "src rect (%d,%d)-(%d,%d)\n", rcSrc.left, rcSrc.top, rcSrc.right, rcSrc.bottom);
+    SCIkdebug (SCIkGFXDRIVER, "dest rect (%d,%d)-(%d,%d)\n", rcDest.left, rcDest.top, rcDest.right, rcDest.bottom);
   }
 }
 
@@ -614,33 +765,33 @@ ddraw_redraw (struct _state *s, int command, int x, int y, int xl, int yl)
 
   switch (command) {
   case GRAPHICS_CALLBACK_REDRAW_ALL:
-    graphics_draw_region_ddraw(s->pic->view,
+    graphics_draw_region_ddraw(s, s->pic->view,
 			       0, 0, SCI_SCREEN_WIDTH, NULL,
                                0, 0, SCI_SCREEN_WIDTH, SCI_SCREEN_HEIGHT);
     break;
 
   case GRAPHICS_CALLBACK_REDRAW_BOX:
     if (xl > 0 && yl > 0)
-      graphics_draw_region_ddraw(s->pic->view, /* Draw box */
+      graphics_draw_region_ddraw(s, s->pic->view, /* Draw box */
                                  x, y, SCI_SCREEN_WIDTH, NULL,
                                  x, y, xl, yl);
     break;
 
   case GRAPHICS_CALLBACK_REDRAW_POINTER:
     if (s->last_pointer_size_x > 0 && s->last_pointer_size_y > 0)
-      graphics_draw_region_ddraw(s->pic->view, /* Remove old pointer */
+      graphics_draw_region_ddraw(s, s->pic->view, /* Remove old pointer */
                                  s->last_pointer_x,s->last_pointer_y, SCI_SCREEN_WIDTH, NULL,
 			         s->last_pointer_x,s->last_pointer_y,
 			         s->last_pointer_size_x, s->last_pointer_size_y);
     break;
 default:
-    fprintf(stderr,"graphics_callback_ddraw: Invalid command %d\n", command);
+    SCIkdebug(SCIkWARNING,"graphics_callback_ddraw: Invalid command %d\n", command);
     return;
   }
 
   /* Redraw mouse pointer, if present */
   if (s->mouse_pointer)
-    graphics_draw_region_ddraw(s->mouse_pointer->bitmap,
+    graphics_draw_region_ddraw(s, s->mouse_pointer->bitmap,
                                0, 0, s->mouse_pointer->size_x, &s->mouse_pointer->color_key,
                                s->pointer_x, s->pointer_y,
                                s->mouse_pointer->size_x, s->mouse_pointer->size_y);
@@ -654,7 +805,11 @@ default:
 void 
 ddraw_configure (char *key, char *value)
 {
-  printf ("DDraw configuration: key %s, value %s.\n", key, value);
+  if (!stricmp (key, "fullscreen"))
+  {
+    if (!stricmp (value, "yes")) bFullscreen = TRUE;
+    else bFullscreen = FALSE;
+  }
 }
 
 

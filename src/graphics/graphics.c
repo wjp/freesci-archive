@@ -151,12 +151,12 @@ void free_picture(picture_t picture)
 {
   int i;
 
-  g_free(picture->view);
+  free(picture->view);
 
   for (i=0; i<4; i++)
-    g_free(picture->maps[i]);
+    free(picture->maps[i]);
 
-  g_free(picture);
+  free(picture);
 }
 
 void clear_picture(picture_t pic, int fgcol)

@@ -34,7 +34,6 @@
 #include <resource.h>
 #include <assert.h>
 
-#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -74,20 +73,6 @@ getInt16(unsigned char* address)
   return (gint16)((((guint16)address[1]) << 8) | (address[0]))
 }
 #endif WORDS_BIGENDIAN
-
-
-void
-sci_usleep(long time)
-{
-#ifdef _WIN32
-  MsgWait (time * 1000);
-#else /* !_WIN32 */
-  struct timeval tv = {0, time};
-
-  select(0, NULL, NULL, NULL, &tv);
-#endif /* !_WIN32 */
-}
-
 
 
 int loadResources(int version, int allow_patches)

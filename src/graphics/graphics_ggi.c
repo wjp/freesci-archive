@@ -37,6 +37,7 @@
 #include <uinput.h>
 #include <engine.h>
 #include <math.h>
+#include <sys/time.h>
 
 ggi_pixel egacol[256];
 char colors_uninitialized = 1;
@@ -47,7 +48,7 @@ int sci_default_visual_size;
 
 extern int _sci_ggi_double_visual;
 extern ggi_visual_t _sci_ggi_last_visual;
-sci_event_t _sci_ggi_input_handler();
+sci_event_t _sci_ggi_input_handler(state_t *s);
 void initInputGGI();
 /* those are from input_ggi.c */
 
@@ -63,7 +64,9 @@ gfx_driver_t gfx_driver_libggi =
   libggi_init,
   libggi_shutdown,
   libggi_redraw,
-  NULL
+  NULL,
+  libggi_wait,
+  _sci_ggi_input_handler
 };
 
 void initColors(ggi_visual_t visual)
@@ -328,6 +331,14 @@ libggi_shutdown(state_t *s)
 {
   ggiClose(s->graphics.ggi_visual);
   ggiExit();
+}
+
+void
+libggi_wait(long usec)
+{
+  struct timeval tv = {0, time};
+
+  select(0, NULL, NULL, NULL, &tv);
 }
   
 

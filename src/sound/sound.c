@@ -61,6 +61,8 @@ sfx_driver_t *sfx_drivers[] = {
 
 
 
+#ifdef HAVE_FORK
+
 void
 _sound_server_oops_handler(int signal)
 {
@@ -105,8 +107,6 @@ sound_init_pipes(state_t *s)
 
   return 0;
 }
-
-
 
 sound_event_t *
 sound_get_event(state_t *s)
@@ -236,6 +236,8 @@ sound_command(state_t *s, int command, int handle, int parameter)
 
 }
 
+#endif /* HAVE_FORK */
+
 
 GTimeVal
 song_sleep_time(GTimeVal *lastslept, int ticks)
@@ -244,7 +246,7 @@ song_sleep_time(GTimeVal *lastslept, int ticks)
   long timetosleep = ticks * SOUND_TICK; /* Time to sleep in us */
   long timeslept; /* Time already slept */
 
-  gettimeofday(&tv, NULL);
+  g_get_current_time(&tv);
   timeslept = 1000000 * (tv.tv_sec - lastslept->tv_sec) +
     tv.tv_usec - lastslept->tv_usec;
 

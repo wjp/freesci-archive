@@ -38,9 +38,10 @@ static int quit = 0;
 int sci_color_mode = 0; /* Required for linking */
 
 int
-c_quit()
+c_quit(void)
 {
   quit = 1;
+  return 0;
 }
 
 int
@@ -68,6 +69,9 @@ main(int argc, char** argv)
     sciprintf("Could not load objects\n");
   }
 
+  printf("Sound output interface: %s\n",
+	 SCI_sound_interfaces[initSound(SCI_SOUND_INTERFACE_AUTODETECT)]);
+
   cmdHook(&c_quit, "quit", "", "console: Quits");
 
   con_passthrough = 1; /* enables all sciprintf data to be sent to stdout */
@@ -89,8 +93,6 @@ main(int argc, char** argv)
 
     free(command);
   }
-
-  clear_history();
 
   freeResources();
   return 0;

@@ -38,6 +38,7 @@ int main(int argc, char** argv)
   char **names;
   opcode *opcodes;
   int i, count;
+  int *classes;
 
   if ((argc > 1) && ((argc == 2) && (strcmp("--version", argv[1])==0))) {
     printf("vocabdump for "PACKAGE", version "VERSION"\n");
@@ -53,9 +54,9 @@ int main(int argc, char** argv)
     return 0;
   }; /* i = 0 */
 
-  printf("Vocabulary:\n");
+  printf("Selectors:\n");
   names = vocabulary_get_snames();
-  while (names[i]) printf("%s\n", names[i++]);
+  while (names[i]) printf("0x%02X: %s\n", i, names[i++]);
   vocabulary_free_snames(names);
 
   i = 0;
@@ -75,6 +76,15 @@ int main(int argc, char** argv)
   {
     for (i=0; i<count; i++) printf("0x%02X: %s\n", i, names[i]);
     vocabulary_free_knames(names);
+  }
+
+  classes = vocabulary_get_classes(&count);
+  printf ("\nClasses:\n");
+  if (classes == 0) printf("Error loading classes\n");
+  else
+  {
+    for (i=0; i<count; i++) printf("0x%02X: script %i\n", i, classes [i]);
+    free(classes);
   }
   
   freeResources();

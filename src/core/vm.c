@@ -30,6 +30,7 @@
 #include <script.h>
 #include <vm.h>
 #include <engine.h>
+#include <versions.h>
 
 
 /* #define VM_DEBUG_SEND */
@@ -866,7 +867,7 @@ lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
 
 
 int
-script_init_state(state_t *s)
+script_init_state(state_t *s, sci_version_t version)
 {
   resource_t *vocab996 = findResource(sci_vocab, 996);
   int scriptnr;
@@ -880,6 +881,11 @@ script_init_state(state_t *s)
   s->acc = s->prev = 0;
 
   s->global_vars = 0; /* Set during launch time */
+
+  if (!version)
+    s->version = SCI_VERSION_DEFAULT_SCI0;
+  else
+    s->version = version;
 
   if (!vocab996)
     s->classtable_size = 20;
@@ -897,8 +903,11 @@ script_init_state(state_t *s)
       size = getInt16(script->data);
       if (size == script->length)
 	seeker = 2;
+      else if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+        seeker = 2;
       else
 	seeker = 0;
+
 
       do {
 
@@ -980,7 +989,9 @@ script_instantiate(state_t *s, int script_nr)
     return 0;
   }
 
-  handle += 2; /* Get beyond the size word */
+  handle += 2; /* Get beyond the type word */
+  if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
+    handle += 2; /* Get beyond unknown word */
 
   s->scripttable[script_nr].heappos = handle; /* Set heap position */
   s->scripttable[script_nr].lockers = 1; /* Locked by one */
@@ -1221,8 +1232,6 @@ game_init(state_t *s)
   g_get_current_time(&(s->game_start_time)); /* Get start time */
   memcpy(&(s->last_wait_time), &(s->game_start_time), sizeof(GTimeVal));
   /* Use start time as last_wait_time */
-
-  s->version = SCI_VERSION_DEFAULT_SCI0;
 
   s->mouse_pointer = NULL; /* No mouse pointer */
   s->pointer_x = (320 / 2); /* With centered x coordinate */

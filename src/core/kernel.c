@@ -48,8 +48,6 @@ extern int _kdebug_cheap_soundcue_hack;
 #ifdef _WIN32
 
 #define scimkdir(arg1,arg2) mkdir(arg1)
-void MsgWait (int WaitTime);
-void Win32_usleep (long usec);
 
 int sci_ffs(int _mask)
 {
@@ -73,91 +71,76 @@ int sci_ffs(int _mask)
 
 #endif
 
-
-
-#define SCI_KERNEL_DEBUG
-
-#ifdef SCI_KERNEL_DEBUG
-
-#ifdef __GNUC__
-
-#define SCIkdebug(arguments...) _SCIGNUkdebug(__PRETTY_FUNCTION__,  ## arguments)
-
-#else /* !__GNUC__ */
-
-#define SCIkdebug _SCIkdebug
-
-#endif /* !__GNUC__ */
-
-#else /* !SCI_KERNEL_DEBUG */
-
-#define SCIkdebug 1? (void)0 : _SCIkdebug
-
-#endif /* !SCI_KERNEL_DEBUG */
-
-
-
-#ifdef __GNUC__
-
-#define SCIkwarn(arguments...) _SCIGNUkdebug(__PRETTY_FUNCTION__, ## arguments)
-
-#else /* !__GNUC__ */
-
-#define SCIkwarn _SCIkwarn
-
-#endif /* !__GNUC__ */
-
 /******************** Debug functions ********************/
 
 void
-_SCIkwarn(state_t *s, int line, int area, char *format, ...)
+_SCIkvprintf(FILE *file, char *format, va_list args)
+{
+  vfprintf(file, format, args);
+  if (con_file) vfprintf(con_file, format, args);
+}
+
+void
+_SCIkprintf(FILE *file, char *format, ...)
+{
+  va_list args;
+
+  va_start(args, format);
+  _SCIkvprintf(file, format, args);
+  va_end (args);
+}
+
+
+void
+_SCIkwarn(state_t *s, char *file, int line, int area, char *format, ...)
 {
   va_list args;
 
   if (area == SCIkERROR_NR)
-    fprintf(stderr, "ERROR: ");
+    _SCIkprintf(stderr, "ERROR: ");
   else
-    fprintf(stderr, "Warning: ");
+    _SCIkprintf(stderr, "Warning: ");
 
   va_start(args, format);
-  vfprintf(stderr, format, args);
+  _SCIkvprintf(stderr, format, args);
   va_end(args);
+  fflush(NULL);
 }
 
 void
-_SCIkdebug(state_t *s, int line, int area, char *format, ...)
+_SCIkdebug(state_t *s, char *file, int line, int area, char *format, ...)
 {
   va_list args;
 
   if (s->debug_mode & (1 << area)) {
-    printf(" kernel: (L%d):", line);
+    _SCIkprintf(stdout, " kernel: (%s L%d): ", file, line);
     va_start(args, format);
-    printf(format, args);
+    _SCIkvprintf(stdout, format, args);
     va_end(args);
     fflush(NULL);
   }
 }
 
 void
-_SCIGNUkdebug(char *funcname, state_t *s, int line, int area, char *format, ...)
+_SCIGNUkdebug(char *funcname, state_t *s, char *file, int line, int area, char *format, ...)
 {
   va_list xargs;
   int error = ((area == SCIkWARNING_NR) || (area == SCIkERROR_NR));
 
   if (error || (s->debug_mode & (1 << area))) { /* Is debugging enabled for this area? */
 
-    fprintf(stderr, "FSCI kernel: ");
+    _SCIkprintf(stderr, "FSCI: ");
 
     if (area == SCIkERROR_NR)
-      fprintf(stderr, "ERROR in %s ", funcname);
+      _SCIkprintf(stderr, "ERROR in %s ", funcname);
     else if (area == SCIkWARNING_NR)
-      fprintf(stderr, "%s: Warning ", funcname);
-    else fprintf(stderr, funcname);
+      _SCIkprintf(stderr, "%s: Warning ", funcname);
+    else _SCIkprintf(stderr, funcname);
 
-    fprintf(stderr, "(L%d): ", line);
+    _SCIkprintf(stderr, "(%s L%d): ", file, line);
 
     va_start(xargs, format);
-    vfprintf(stderr, format, xargs);
+    _SCIkvprintf(stderr, format, xargs);
     va_end(xargs);
 
   }
@@ -1545,7 +1528,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
     keycode=_kdebug_cheap_event_hack;
     _kdebug_cheap_event_hack = 0;
   } else {
-    sci_event_t e=getEvent();
+    sci_event_t e=getEvent(s);
     switch(e.type)
       {
       case SCI_EV_KEY:
@@ -2025,13 +2008,7 @@ kWait(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   memcpy(&(s->last_wait_time), &time, sizeof(GTimeVal));
 
-#ifdef _WIN32
-  if (SleepTime)
-    MsgWait (SleepTime * 1000 / 60);
-#else
-  sci_usleep(SleepTime * 1000000 / 60);
-#endif
-
+  (*s->gfx_driver->Wait)(SleepTime * 1000000 / 60);
 }
 
 
@@ -3173,7 +3150,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 0; i < 160; i++) {
 	graph_clear_box(s, i, 10, 1, 190, 0);
 	graph_clear_box(s, 319-i, 10, 1, 190, 0);
-	sci_usleep(s->animation_delay);
+	(*s->gfx_driver->Wait)(s->animation_delay);
       }
 
     case K_ANIMATE_CENTER_OPEN_H :
@@ -3181,7 +3158,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 159; i >= 0; i--) {
 	graph_update_box(s, i, 10, 1, 190);
 	graph_update_box(s, 319-i, 10, 1, 190);
-	sci_usleep(s->animation_delay);
+	(*s->gfx_driver->Wait)(s->animation_delay);
       }
       break;
 
@@ -3191,7 +3168,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 0; i < 95; i++) {
 	graph_clear_box(s, 0, i + 10, 320, 1, 0);
 	graph_clear_box(s, 0, 199 - i, 320, 1, 0);
-	sci_usleep(2 * s->animation_delay);
+	(*s->gfx_driver->Wait)(2 * s->animation_delay);
       }
 
     case K_ANIMATE_CENTER_OPEN_V :
@@ -3199,7 +3176,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 94; i >= 0; i--) {
 	graph_update_box(s, 0, i + 10, 320, 1);
 	graph_update_box(s, 0, 199 - i, 320, 1);
-	sci_usleep(2 * s->animation_delay);
+	(*s->gfx_driver->Wait)(2 * s->animation_delay);
       }
       break;
 
@@ -3208,13 +3185,13 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for(i = 0; i < 320; i++) {
 	graph_clear_box(s, i, 10, 1, 190, 0);
-	sci_usleep(s->animation_delay / 2);
+	(*s->gfx_driver->Wait)(s->animation_delay / 2);
       }
 
     case K_ANIMATE_RIGHT_OPEN :
       for(i = 319; i >= 0; i--) {
 	graph_update_box(s, i, 10, 1, 190);
-	sci_usleep(s->animation_delay / 2);
+	(*s->gfx_driver->Wait)(s->animation_delay / 2);
       }
       break;
 
@@ -3223,14 +3200,14 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for(i = 319; i >= 0; i--) {
 	graph_clear_box(s, i, 10, 1, 190, 0);
-	sci_usleep(s->animation_delay / 2);
+	(*s->gfx_driver->Wait)(s->animation_delay / 2);
       }
 
     case K_ANIMATE_LEFT_OPEN :
 
       for(i = 0; i < 320; i++) {
 	graph_update_box(s, i, 10, 1, 190);
-	sci_usleep(s->animation_delay / 2);
+	(*s->gfx_driver->Wait)(s->animation_delay / 2);
       }
       break;
 
@@ -3239,14 +3216,14 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for (i = 10; i < 200; i++) {
 	graph_clear_box(s, 0, i, 320, 1, 0);
-	sci_usleep(s->animation_delay);
+	(*s->gfx_driver->Wait)(s->animation_delay);
       }
 
     case K_ANIMATE_BOTTOM_OPEN :
 
       for (i = 199; i >= 10; i--) {
 	graph_update_box(s, 0, i, 320, 1);
-	sci_usleep(s->animation_delay);
+	(*s->gfx_driver->Wait)(s->animation_delay);
       }
       break;
 
@@ -3255,14 +3232,14 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for (i = 199; i >= 10; i--) {
 	graph_clear_box(s, 0, i, 320, 1, 0);
-	sci_usleep(s->animation_delay);
+	(*s->gfx_driver->Wait)(s->animation_delay);
       }
 
     case K_ANIMATE_TOP_OPEN :
 
       for (i = 10; i < 200; i++) {
 	graph_update_box(s, 0, i, 320, 1);
-	sci_usleep(s->animation_delay);
+	(*s->gfx_driver->Wait)(s->animation_delay);
       }
       break;
 
@@ -3279,7 +3256,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_clear_box(s, width, 10 + height, 320 - 2*width, 3, 0);
 	graph_clear_box(s, width, 200 - 3 - height, 320 - 2*width, 3, 0);
 
-	sci_usleep(4 * s->animation_delay);
+	(*s->gfx_driver->Wait)(4 * s->animation_delay);
       }
 
     case K_ANIMATE_BORDER_OPEN_F :
@@ -3294,7 +3271,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_update_box(s, width, 10 + height, 320 - 2*width, 3);
 	graph_update_box(s, width, 200 - 3 - height, 320 - 2*width, 3);
 
-	sci_usleep(4 * s->animation_delay);
+	(*s->gfx_driver->Wait)(4 * s->animation_delay);
       }
 
       break;
@@ -3312,7 +3289,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_clear_box(s, width, 10 + height, 320 - 2*width, 3, 0);
 	graph_clear_box(s, width, 200 - 3 - height, 320 - 2*width, 3, 0);
 
-	sci_usleep(7 * s->animation_delay);
+	(*s->gfx_driver->Wait)(7 * s->animation_delay);
       }
 
     case K_ANIMATE_CENTER_OPEN_F :
@@ -3327,7 +3304,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_update_box(s, width, 10 + height, 320 - 2 * width, 3);
 	graph_update_box(s, width, 200 - 3 - height, 320 - 2 * width, 3);
 
-	sci_usleep(7 * s->animation_delay);
+	(*s->gfx_driver->Wait)(7 * s->animation_delay);
       }
 
       break;
@@ -3350,9 +3327,8 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	y = i / 32;
 
 	graph_clear_box(s, x * 10, 10 + y * 10, 10, 10, 0);
-
-	if (remaining_checkers & 1)
-	  sci_usleep(s->animation_delay / 8);
+        if (remaining_checkers & 1)
+	  s->gfx_driver->Wait(s->animation_delay / 8);
 
 	--remaining_checkers;
       }
@@ -3376,7 +3352,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_update_box(s, x * 10, 10 + y * 10, 10, 10);
 
 	if (remaining_checkers & 1)
-	  sci_usleep(s->animation_delay / 8);
+	  s->gfx_driver->Wait(s->animation_delay / 8);
 
 	--remaining_checkers;
       }

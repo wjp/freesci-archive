@@ -123,7 +123,7 @@ ggi_visual_t _sci_ggi_last_visual;
   ((later.tv_sec == earlier.tv_sec)? (later.tv_usec >= earlier.tv_usec) \
     : (later.tv_sec >= earlier.tv_sec))
 
-sci_event_t _sci_ggi_input_handler()
+sci_event_t _sci_ggi_input_handler(state_t *s)
 {
   sci_event_t event_redraw, event_loop;
   struct timeval temptime = {0,0};
@@ -246,8 +246,6 @@ void initInputGGI()
   gettimeofday(&_sci_ggi_redraw_loopt, NULL);
   _sci_ggi_loopt = _sci_ggi_redraw_loopt;
   /* reset timers, leave them at current time to send redraw events ASAP */
-
-  _sci_input_handler = &_sci_ggi_input_handler;
 
 }
 

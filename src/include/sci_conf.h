@@ -38,6 +38,7 @@ typedef struct {
   int color_mode; /* The mode to use for pic drawing */
   gfx_driver_t *gfx_driver; /* The graphics driver to use */
   char *console_log; /* The file to which console output should be echoed */
+  char debug_mode [80]; /* Characters specifying areas for which debug output should be enabled */
 
 } config_entry_t;
 
