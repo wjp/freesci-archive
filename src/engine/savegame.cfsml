@@ -1202,6 +1202,12 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->file_handles_nr = 2;
 	retval->file_handles = sci_calloc(2, sizeof(FILE *));
 
+	strcpy(retval->save_dir_copy_buf, s->save_dir_copy_buf);
+	fprintf(stderr, "savedir '%s' <= '%s'\n",
+		retval->heap + retval->save_dir + 2,
+		s->heap + s->save_dir + 2);
+	strcpy(retval->heap + retval->save_dir + 2, s->heap + s->save_dir + 2);
+
 	/* static parser information: */
 	retval->parser_rules = s->parser_rules;
 	retval->parser_words_nr = s->parser_words_nr;
@@ -1220,6 +1226,11 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->opcodes = s->opcodes;
 
 	memcpy(&(retval->selector_map), &(s->selector_map), sizeof(selector_map_t));
+
+	/* Copy version information */
+	retval->version = s->version;
+	retval->max_version = s->max_version;
+	retval->min_version = s->min_version;
 
 	/* Copy breakpoint information from current game instance */
 	retval->have_bp = s->have_bp;

@@ -238,6 +238,7 @@ suggested_script(resource_t *res, unsigned int class)
 	return getInt16(res->data + offset);
 }
 
+
 /* Architectural stuff: Init/Unintialize engine */
 int
 script_init_engine(state_t *s, sci_version_t version)
@@ -249,7 +250,6 @@ script_init_engine(state_t *s, sci_version_t version)
 	int classnr;
 	int size;
 	int magic_offset; /* For strange scripts in older SCI versions */
-	char *cwd;
 
 	s->max_version = SCI_VERSION(9,999,999); /* :-) */
 	s->min_version = 0; /* Set no real limits */
@@ -353,15 +353,6 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->save_dir_copy_buf = sci_malloc(MAX_SAVE_DIR_SIZE);
 	s->save_dir_copy_buf[0] = 0; /* Terminate string */
 
-	cwd = sci_getcwd();
-	if (strlen(cwd) > MAX_SAVE_DIR_SIZE)
-		sciprintf("Warning: cwd '%s' is longer than the"
-			  " MAX_SAVE_DIR_SIZE %d\n",
-			  cwd, MAX_SAVE_DIR_SIZE);
-	else
-		strcpy((char *)(s->heap + s->save_dir + 2), cwd);
-	sci_free(cwd);
-
 	save_ff(s->_heap); /* Save heap state */
 
 	s->acc = s->amp_rest = s->prev = 0;
@@ -404,6 +395,19 @@ script_init_engine(state_t *s, sci_version_t version)
 	return 0;
 }
 
+
+void
+script_set_gamestate_save_dir(state_t *s)
+{
+	char *cwd = sci_getcwd();
+	if (strlen(cwd) > MAX_SAVE_DIR_SIZE)
+		sciprintf("Warning: cwd '%s' is longer than the"
+			  " MAX_SAVE_DIR_SIZE %d\n",
+			  cwd, MAX_SAVE_DIR_SIZE);
+	else
+		strcpy((char *)(s->heap + s->save_dir + 2), cwd);
+	sci_free(cwd);
+}
 
 void
 script_free_vm_memory(state_t *s)

@@ -896,6 +896,8 @@ main(int argc, char** argv)
 		exit(1);
 	}
 
+	script_set_gamestate_save_dir(gamestate); /* Set the CWD as the savegame dir */
+
 	if (sciv_action == ACTION_LIST_SAVEGAMES) {
 		list_savegames(gamestate);
 		exit(0);

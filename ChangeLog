@@ -1,5 +1,17 @@
 2001-12-21  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sound/polled_ss_unix.c (_sound_server_suspension_handler):
+	Added signal handler to handle SIGTSTP and SIGCONT in order not to kill
+	the sound server upon ^Z
+
+	* src/main.c (main): Set the save_dir to the CWD _after_ changing into
+	the game-specific subdirectory
+
+	* src/engine/savegame.cfsml (gamestate_restore): Current interpreter
+	version now overrides savegame interpreter version
+	(gamestate_restore): Take the current save path from the current
+	one when restoring
+
 	* src/include/kernel.h:
 	* src/engine/kgraphics.c (_k_prepare_view_list): Introduced
 	internal FREESCI_STOPUPD flag to keep track of views that were stop-

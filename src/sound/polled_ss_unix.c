@@ -61,7 +61,7 @@
 
 static int x_fd_in = 0, x_fd_out = 0;
 static int x_fd_events = 0, x_fd_debug = 0;
-static pid_t ppid;
+static pid_t ppid, server_pid = 0;
 
 
 static int
@@ -106,6 +106,39 @@ _sound_server_oops_handler(int signal)
 		fprintf(stderr, "Warning: Signal handler cant' handle signal %d\n", signal);
 }
 
+/* --- Signal handlers for TSTP and CONT --- */
+
+static void
+_sound_server_suspension_handler(int signr)
+{
+	/* Horror! Romance! Suspension! The ultimate signal handler experience! */
+	int other_signal;
+
+	if (signr == SIGCONT)
+		other_signal = SIGTSTP;
+	else if (signr == SIGTSTP)
+		other_signal = SIGCONT;
+	else {
+		fprintf(stderr, "%s L%d: Signal handler not prepared for signal %d!\n", __FILE__, __LINE__, signr);
+		return;
+	}
+
+	if (server_pid && getpid() != server_pid) {
+		/* Pass the signal on to the sound server, if it's running
+		** and we really are the main process */
+		kill(server_pid, signr);
+
+		/* Prepare for handling the complementary signal */
+		signal(other_signal, &_sound_server_suspension_handler);
+
+	}
+	/* Now invoke the default handler to stop/resume the process */
+	signal(signr, SIG_DFL);
+	kill(getpid(), signr);
+}
+
+/* --- -- --- */
+
 int
 _make_pipe(int fildes[2])
      /* Opens an IPC channel */
@@ -139,7 +172,6 @@ _sound_server_sigpipe_handler(int signal)
 int
 sound_unix_init(state_t *s, int flags)
 {
-	int child_pid;
 	int fd_in[2], fd_out[2], fd_events[2], fd_debug[2];
 
 	global_sound_server = &sound_server_unix;
@@ -163,16 +195,16 @@ sound_unix_init(state_t *s, int flags)
 	if (init_midi_device(s) < 0)
 	  return -1;
 
-	child_pid = fork();
+	server_pid = fork();
 
-	if (child_pid < 0) {
+	if (server_pid < 0) {
 		fprintf(debug_stream,"UNIX Sound server init failed: fork() failed\n");
 		/* If you get this message twice, something funny has happened :-> */
 
 		return 1; /* Forking failed */
 	}
 
-	if (child_pid) { /* Parent process */
+	if (server_pid) { /* Parent process */
 
 		x_fd_out = fd_in[1];
 		x_fd_in = fd_out[0];
@@ -183,6 +215,10 @@ sound_unix_init(state_t *s, int flags)
 		close(fd_out[1]);
 		close(fd_events[1]);
 		close(fd_debug[1]); /* Close pipes at the other end */
+
+		/* Handle Terminal SToP and CONTinue
+		** (^Z and 'bg'/'fg') in the main process  */
+		signal(SIGTSTP, &_sound_server_suspension_handler);
 
 	} else {/* Sound server */
 
@@ -397,7 +433,11 @@ sound_unix_send_data(byte *data_ptr, int maxsend)
 void
 sound_unix_exit(state_t *s)
 {
+	int i;
+
 	signal(SIGPIPE, SIG_IGN); /* Ignore SIGPIPEs */
+	signal(SIGTSTP, SIG_DFL);
+	signal(SIGCONT, SIG_DFL);
 	signal(SIGCHLD, &_sound_confirm_death);
 
 	global_sound_server->queue_command(0, SOUND_COMMAND_SHUTDOWN, 0); /* Kill server */

@@ -414,6 +414,8 @@ sci_mkpath(char *path)
 {
         char *nextsep = NULL, *path_pos = path;
 
+	fprintf(stderr, "sci_mkpath: PATH='%d'\n", path);
+
         if (chdir(G_DIR_SEPARATOR_S)) { /* Go to root */
                 sciprintf("Error: Could not change to root directory '%s'!\n",
 			  G_DIR_SEPARATOR_S);
@@ -433,7 +435,8 @@ sci_mkpath(char *path)
 				if (scimkdir(path_pos, 0700) || chdir(path_pos)) {
 					sciprintf("Error: Could not create subdirectory '%s' in",
 						  path_pos);
-					*nextsep = G_DIR_SEPARATOR_S[0];
+					if (nextsep)
+						*nextsep = G_DIR_SEPARATOR_S[0];
 					sciprintf(" '%s'!\n", path);
 					return -2;
 				}

@@ -382,6 +382,13 @@ script_init_engine(struct _state *s, sci_version_t version);
 */
 
 void
+script_set_gamestate_save_dir(struct _state *s);
+/* Sets the gamestate's save_dir to the CWD
+** Parameters: (state_t *) s: The state to set
+** Returns   : (void)
+*/
+
+void
 script_free_engine(struct _state *s);
 /* Frees all additional memory associated with a state_t block
 ** Parameters: (state_t *) s: The state_t whose elements should be cleared
