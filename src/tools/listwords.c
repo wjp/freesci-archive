@@ -29,82 +29,59 @@
 
 ***************************************************************************/
 
+#include "sciunpack.h"
 #include <engine.h>
 #include <kernel.h>
-
-#define SORT_METHOD_ALPHA 0
-#define SORT_METHOD_GROUP 1
-
-#define DEFAULT_SORTING SORT_METHOD_ALPHA
 
 int
 _vocab_cmp_group(const void *word1, const void *word2)
 {
 #define fw (* ((word_t **) word1))
 #define sw (* ((word_t **) word2))
-  if (fw->group<sw->group)
-    return -1;
-  else if (fw->group==sw->group)
-    return 0;
-  else
-    return 1;
+	if (fw->group<sw->group)
+		return -1;
+	else if (fw->group==sw->group)
+		return 0;
+	else
+		return 1;
 }
 
-int main(int argc, char** argv)
+int vocab_sort = DEFAULT_SORTING;
+
+int
+vocab_print(void)
 {
-  int i, b, words_nr, counter;
-  int sort = DEFAULT_SORTING;
-  word_t **words, **tracker;
+	int i, b, words_nr, counter;
+	word_t **words, **tracker;
 
-   if ((argc > 1) && ((argc == 2) && (strcmp("--version", argv[1])==0))) {
-    printf("listwords for "PACKAGE", version "VERSION"\n");
-    exit(-1);
-  } else if (argc > 1) {
-    if (strcmp("--sort-alpha", argv[1])==0) sort=SORT_METHOD_ALPHA; else
-    if (strcmp("--sort-group", argv[1])==0) sort=SORT_METHOD_GROUP; else
-    {
-    printf("Usage:\nlistwords [<sort-method>] 	  dumps all words in the parser vocabulary\n"
-           "\nsort-method is:\n\n"
-	   "	--sort-alpha		sort in alphabetical order\n"
-	   "	--sort-group		sort in group order\n");
-    return 0; }
-  }
+	tracker = words = vocab_get_words(&words_nr);
 
-  if ((i = loadResources(SCI_VERSION_AUTODETECT, 1))) {
-    fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);
-    return 0;
-  }; /* i = 0 */
+	counter=words_nr;
 
-  tracker = words = vocab_get_words(&words_nr);
+	if (vocab_sort==SORT_METHOD_GROUP)
+		qsort(words, words_nr, sizeof(word_t *), _vocab_cmp_group); /* Sort entries */
 
-  counter=words_nr;
-
-  if (sort==SORT_METHOD_GROUP)
-    qsort(words, words_nr, sizeof(word_t *), _vocab_cmp_group); /* Sort entries */
-
-  while (counter--)
-    {
-      printf("%s (class %03x, group %03x) ", &tracker[0]->word,
-	     tracker[0]->class, tracker[0]->group);
+	while (counter--) {
+		printf("%s (class %03x, group %03x) ", &tracker[0]->word,
+		       tracker[0]->class, tracker[0]->group);
       
-        if ((tracker[0]->class>=0xf00)||
-	    (tracker[0]->class==0)) 
-        printf("anyword\n"); else
-	while (tracker[0]->class)
-	  {
-	    b=sci_ffs(tracker[0]->class)-1;
-	    tracker[0]->class&=~(1<<b);
-            printf("%s", class_names[b]);
-	    if (tracker[0]->class)
-	      printf("|"); else
-	      printf("\n");
-          }    
-      tracker++;
-    }
+		if ((tracker[0]->class>=0xf00)||
+		    (tracker[0]->class==0)) 
+			printf("anyword\n"); else
+				while (tracker[0]->class) {
+					b=sci_ffs(tracker[0]->class)-1;
+					tracker[0]->class&=~(1<<b);
+					printf("%s", class_names[b]);
+					if (tracker[0]->class)
+						printf("|"); else
+							printf("\n");
+				}    
+		tracker++;
+	}
 
-  vocab_free_words(words, words_nr);
+	vocab_free_words(words, words_nr);
 
-  return 0;
+	return 0;
 }
 
 

@@ -31,60 +31,43 @@
 
 #include <engine.h>
 
-int main(int argc, char** argv)
+int
+vocab_dump()
 {
-  char **names;
-  opcode *opcodes;
-  int i, count;
-  int *classes;
+	char **names;
+	opcode *opcodes;
+	int i, count;
+	int *classes;
 
-  if ((argc > 1) && ((argc == 2) && (strcmp("--version", argv[1])==0))) {
-    printf("vocabdump for "PACKAGE", version "VERSION"\n");
-    exit(-1);
-  } else if (argc > 1) {
-    printf("Usage:\nvocabdump   dumps all selector, kernel, and opcode"
-	   " names.\n");
-    return 0;
-  }
+	printf("Selectors:\n");
+	names = vocabulary_get_snames(NULL, 0);
+	while (names[i]) printf("0x%02X: %s\n", i, names[i++]);
+	vocabulary_free_snames(names);
 
-  if ((i = loadResources(SCI_VERSION_AUTODETECT, 1))) {
-    fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);
-    return 0;
-  }; /* i = 0 */
+	i = 0;
+	printf("\nOpcodes:\n");
+	opcodes = vocabulary_get_opcodes();
+	while ((i < 256) && (opcodes[i].name)) {
+		printf("%s: Type %i, Number %i\n", opcodes[i].name,
+		       opcodes[i].type, opcodes[i].number);
+		i++;
+	}
 
-  printf("Selectors:\n");
-  names = vocabulary_get_snames(NULL, 0);
-  while (names[i]) printf("0x%02X: %s\n", i, names[i++]);
-  vocabulary_free_snames(names);
+	names = vocabulary_get_knames(&count);
+	printf("\nKernel names:\n");
+	if (names == 0) printf("Error loading kernel names\n");
+	else {
+		for (i=0; i<count; i++) printf("0x%02X: %s\n", i, names[i]);
+		vocabulary_free_knames(names);
+	}
 
-  i = 0;
-  printf("\nOpcodes:\n");
-  opcodes = vocabulary_get_opcodes();
-  while ((i < 256) && (opcodes[i].name))
-  {
-    printf("%s: Type %i, Number %i\n", opcodes[i].name,
-           opcodes[i].type, opcodes[i].number);
-    i++;
-  }
-
-  names = vocabulary_get_knames(&count);
-  printf("\nKernel names:\n");
-  if (names == 0) printf("Error loading kernel names\n");
-  else
-  {
-    for (i=0; i<count; i++) printf("0x%02X: %s\n", i, names[i]);
-    vocabulary_free_knames(names);
-  }
-
-  classes = vocabulary_get_classes(&count);
-  printf ("\nClasses:\n");
-  if (classes == 0) printf("Error loading classes\n");
-  else
-  {
-    for (i=0; i<count; i++) printf("0x%02X: script %i\n", i, classes [i]);
-    free(classes);
-  }
+	classes = vocabulary_get_classes(&count);
+	printf ("\nClasses:\n");
+	if (classes == 0) printf("Error loading classes\n");
+	else {
+		for (i=0; i<count; i++) printf("0x%02X: script %i\n", i, classes [i]);
+		free(classes);
+	}
   
-  freeResources();
-  return 0;
+	return 0;
 }

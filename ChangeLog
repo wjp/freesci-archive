@@ -1,3 +1,8 @@
+2001-01-23  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/tools/Makefile.am: Merged 'sciunpack' with 'listwords',
+	'scriptdump', and 'vocabdump'. Got rid of 'classes'.
+
 2001-01-22  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kAnimate): Dropping a dynview in the
