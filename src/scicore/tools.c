@@ -44,12 +44,14 @@ int script_debug_flag = 0; /* Defaulting to running mode */
 int sci_debug_flags = 0; /* Special flags */
 
 
+#define MEMTEST_HARDNESS 15
+
 int
 memtest(char *where, ...)
 {
 	va_list argp;
 	int i;
-	void *blocks[32];
+	void *blocks[MEMTEST_HARDNESS + 1];
 	fprintf(stderr,"Memtesting ");
 
 	va_start(argp, where);
@@ -57,7 +59,7 @@ memtest(char *where, ...)
 	va_end(argp);
 
 	fprintf(stderr,"\n");
-	for (i = 0; i < 31; i++) {
+	for (i = 0; i < MEMTEST_HARDNESS; i++) {
 		blocks[i] = malloc(1 + i);
 #ifdef HAVE_MEMFROB
 		memfrob(blocks[i], 1 + i);
@@ -65,10 +67,10 @@ memtest(char *where, ...)
 		memset(blocks[i], 42, 1 + i);
 #endif
 	}
-	for (i = 0; i < 31; i++)
+	for (i = 0; i < MEMTEST_HARDNESS; i++)
 		free(blocks[i]);
 
-	for (i = 0; i < 31; i++) {
+	for (i = 0; i < MEMTEST_HARDNESS; i++) {
 		blocks[i] = malloc(5 + i*5);
 #ifdef HAVE_MEMFROB
 		memfrob(blocks[i], 5 + i*5);
@@ -76,10 +78,10 @@ memtest(char *where, ...)
 		memset(blocks[i], 42, 5 + i*5);
 #endif
 	}
-	for (i = 0; i < 31; i++)
+	for (i = 0; i < MEMTEST_HARDNESS; i++)
 		free(blocks[i]);
 
-	for (i = 0; i < 31; i++) {
+	for (i = 0; i < MEMTEST_HARDNESS; i++) {
 		blocks[i] = malloc(5 + i*100);
 #ifdef HAVE_MEMFROB
 		memfrob(blocks[i], 5 + i*100);
@@ -87,10 +89,10 @@ memtest(char *where, ...)
 		memset(blocks[i], 42, 5 + i*100);
 #endif
 	}
-	for (i = 0; i < 31; i++)
+	for (i = 0; i < MEMTEST_HARDNESS; i++)
 		free(blocks[i]);
 
-	for (i = 0; i < 31; i++) {
+	for (i = 0; i < MEMTEST_HARDNESS; i++) {
 		blocks[i] = malloc(5 + i*1000);
 #ifdef HAVE_MEMFROB
 		memfrob(blocks[i], 5 + i * 1000);
@@ -98,7 +100,7 @@ memtest(char *where, ...)
 		memset(blocks[i], 42, 5 + i * 1000);
 #endif
 	}
-	for (i = 0; i < 31; i++)
+	for (i = 0; i < MEMTEST_HARDNESS; i++)
 		free(blocks[i]);
 	fprintf(stderr,"Memtest succeeded!\n");
 	return 0;
@@ -349,4 +351,73 @@ sci_get_homedir()
 #else
 #  error Please add a $HOME policy for your platform!
 #endif
+}
+
+
+void *
+sci_memdup(void *src, size_t size)
+{
+	void *rei; /* The clone */
+
+	if (size <= 0) {
+		fprintf(stderr,"Attempt to memdup %d bytes!\n", size);
+		BREAKPOINT();
+		return NULL; /* For archs where BREAKPOINT() fails */
+	}
+
+	rei = malloc(size);
+
+	if (!rei)
+		return NULL;
+
+	memcpy(rei, src, size);
+	return rei;
+}
+
+
+sci_queue_t *
+sci_init_queue(sci_queue_t *queue)
+{
+	queue->start = queue->end = NULL;
+	return queue;
+}
+
+sci_queue_t *
+sci_add_to_queue(sci_queue_t *queue, void *data, int type)
+{
+	sci_queue_node_t *node = malloc(sizeof(sci_queue_node_t));
+
+	node->next = NULL;
+	node->data = data;
+	node->type = type;
+
+	if (queue->start)
+		queue->start->next = node;
+
+	queue->start = node;
+
+	if (!queue->end)
+		queue->end = node;
+
+	return queue;
+}
+
+void *
+sci_get_from_queue(sci_queue_t *queue, int *type)
+{
+	sci_queue_node_t *node = queue->end;
+	if (node) {
+		void *retval = node->data;
+		if (type)
+			*type = node->type;
+
+		queue->end = node->next;
+
+		if (queue->end == NULL) /* Queue empty? */
+			queue->start = NULL;
+
+		free(node);
+		return retval;
+	}
+	return NULL;
 }

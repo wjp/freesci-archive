@@ -189,6 +189,56 @@ _XALLOC(size_t size, char *file, int line, char *funct);
 
 #define SCI_MEMTEST memtest(__FILE__ ": line %d", __LINE__)
 
+void *
+sci_memdup(void *src, size_t size);
+/* Duplicates a chunk of memory
+** Parameters: (void *) src: Pointer to the data to duplicate
+**             (size_t) size: Number of bytes to duplicate
+** Returns   : (void *) An appropriately allocated duplicate, or NULL on error
+** Please try to avoid data duplication unless absolutely neccessary!
+*/
+
+/*-- queues --*/
+
+typedef struct _sci_queue_node {
+	void *data;
+	int type;
+	struct _sci_queue_node *next;
+} sci_queue_node_t;
+
+typedef struct {
+	sci_queue_node_t *start; /* Where things go in */
+	sci_queue_node_t *end;   /* Where they come out */
+} sci_queue_t;
+
+sci_queue_t *
+sci_init_queue(sci_queue_t *queue);
+/* Initializes an SCI queue
+** Parameters: (sci_queue_t *) queue: Pointer to the queue to initialize
+** Returns   : (sci_queue_t *) queue
+*/
+
+sci_queue_t *
+sci_add_to_queue(sci_queue_t *queue, void *data, int type);
+/* Adds an entry to an initialized SCI queue
+** Parameters: (sci_queue_t *) queue: The queue to add to
+**             (void *) data: The data to contain
+**             (int) type: Some metadata, e.g. size of the data block
+** Returns   : (sci_queue_t *) queue
+** The meaning of the 'type' field may be determined individually.
+*/
+
+void *
+sci_get_from_queue(sci_queue_t *queue, int *type);
+/* Reads an entry from an SCI queue
+** Parameters: (sci_queue_t *) queue: The queue to remove from
+**             (int *) type: A pointer to a variable to write the metadata
+**                     into, or NULL to omit this step
+** Returns   : (void *) The data block contained, or NULL if none was inside
+*/
+
+/* --- */
+
 int
 memtest(char *location, ...);
 /* Allocates, manipulates, and frees some memory

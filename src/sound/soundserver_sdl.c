@@ -31,25 +31,24 @@
 #include <SDL_thread.h>
 #endif
 
-SDL_Thread *child;
-SDL_mutex *out_mutex;
-SDL_mutex *in_mutex;
-SDL_cond *in_cond;
+static SDL_Thread *child;
+static SDL_mutex *out_mutex;
+static SDL_mutex *in_mutex;
+static SDL_cond *in_cond;
 
-Uint32 master;
+static Uint32 master;
 
 
-byte *sound_data_serv = NULL;
-byte *sound_data_game = NULL;
-int sound_data_size = 0;
-SDL_mutex *data_mutex;
-SDL_cond *datain_cond;
-SDL_cond *dataout_cond;
+static int sound_data_size = 0;
 
 extern sound_server_t sound_server_sdl;
 
-sound_eq_t inqueue; /* The in-event queue */
-sound_eq_t queue; /* The event queue */
+static SDL_mutex *bulk_mutices[2];
+static sci_queue_t bulk_queues[2];
+static SDL_cond *bulk_conds[2];
+
+static sound_eq_t inqueue; /* The in-event queue */
+static sound_eq_t queue; /* The event queue */
 
 int 
 sdl_soundserver_init(void *args) 
@@ -61,28 +60,36 @@ sdl_soundserver_init(void *args)
 int
 sound_sdl_init(state_t *s)
 {
+  int i;
+
   global_sound_server = &sound_server_sdl;
 
+  SDL_Init(SDL_INIT_EVENTTHREAD | SDL_INIT_NOPARACHUTE);
   master = SDL_ThreadID();
 
   if (init_midi_device(s) < 0)
     return -1;
+
 
   /* spawn thread */
 
   out_mutex = SDL_CreateMutex();
   in_mutex = SDL_CreateMutex();
   in_cond = SDL_CreateCond();
-  data_mutex = SDL_CreateMutex();
-  datain_cond = SDL_CreateCond();
-  dataout_cond = SDL_CreateCond();
+
+  for (i = 0; i < 2; i++) {
+    bulk_conds[i] = SDL_CreateCond();
+    sci_init_queue(&(bulk_queues[i]));
+    bulk_mutices[i] = SDL_CreateMutex();
+  }
 
   ds = stderr; 
+
   sound_eq_init(&inqueue);
   sound_eq_init(&queue);
 
-  child = SDL_CreateThread( &sdl_soundserver_init, s);
-  SDL_CondSignal(datain_cond);
+  child = SDL_CreateThread( sdl_soundserver_init, s);
+
   return 0;
 }
 
@@ -96,10 +103,12 @@ sound_event_t *
 sound_sdl_get_event(state_t *s)
 {
   sound_event_t *event = NULL;
-  if (!sound_eq_peek_event(&queue))
-    return NULL;
-
   SDL_LockMutex(out_mutex);
+
+  if (!sound_eq_peek_event(&queue)) {
+	  SDL_UnlockMutex(out_mutex);
+	  return NULL;
+  }
 
   event = sound_eq_retreive_event(&queue);
 
@@ -135,80 +144,61 @@ sound_sdl_queue_command(int handle, int signal, int value)
 sound_event_t *
 sound_sdl_get_command(GTimeVal *wait_tvp)
 {
-	sound_event_t *event = NULL;
+  sound_event_t *event = NULL;
 
-	/* SDL_LockMutex(in_mutex); */
-	if (!sound_eq_peek_event(&inqueue)) {
-	  if (wait_tvp)
-	    usleep(wait_tvp->tv_usec >> 4);
-	  /*	  if(SDL_CondWaitTimeout(in_cond, in_mutex, 10))  */
-	    return NULL;
-	}
-	SDL_LockMutex(in_mutex);
+  SDL_LockMutex(in_mutex);
+  /* SDL_LockMutex(in_mutex); */
+  if (!sound_eq_peek_event(&inqueue)) {
+    SDL_UnlockMutex(in_mutex);
+    if (wait_tvp)
+      usleep(wait_tvp->tv_usec >> 4);
+    /*	  if(SDL_CondWaitTimeout(in_cond, in_mutex, 10))  */
+    return NULL;
+  }
 
-	event = sound_eq_retreive_event(&inqueue);
+  event = sound_eq_retreive_event(&inqueue);
 
-	SDL_UnlockMutex(in_mutex);
+  SDL_UnlockMutex(in_mutex);
 
-	return event;
+  return event;
 }
 
 int
 sound_sdl_get_data(byte **data_ptr, int *size, int maxlen)
 {
-  SDL_cond *cond;
-  byte **sound_data;
-
-  cond = (SDL_ThreadID() == master) ? datain_cond : dataout_cond ;
-  sound_data = (SDL_ThreadID() == master) ? &sound_data_serv : &sound_data_game;
+  int index = (SDL_ThreadID() == master);
+  SDL_mutex *mutex = bulk_mutices[index];
+  SDL_cond *cond = bulk_conds[index];
+  sci_queue_t *queue = &(bulk_queues[index]);
+  void *data;
 
   /* we ignore maxlen */
 
-  SDL_LockMutex(data_mutex);
-  while (*sound_data == NULL) 
-    SDL_CondWait(cond, data_mutex);
+  SDL_LockMutex(mutex);
 
-  *data_ptr = *sound_data;
-  *size = sound_data_size;
-  *sound_data = NULL;
+  while (!(data = sci_get_from_queue(queue, size))) 
+    SDL_CondWait(cond, mutex);
 
-  /*  printf("%d got %d bytes ",SDL_ThreadID(), sound_data_size); */
-  fflush(stdout);
+  SDL_UnlockMutex(mutex);
 
-  SDL_UnlockMutex(data_mutex);
+  *data_ptr = (byte *) data;
 
-  cond = (SDL_ThreadID() == master) ? dataout_cond : datain_cond ;
-
-
-  SDL_CondSignal(cond);
   return *size;
 }
 
 int
 sound_sdl_send_data(byte *data_ptr, int maxsend) 
 {
-  SDL_cond *cond;
-  byte *data;
-  byte **sound_data;
+  int index = 1 - (SDL_ThreadID() == master);
+  SDL_mutex *mutex = bulk_mutices[index];
+  SDL_cond *cond = bulk_conds[index];
+  sci_queue_t *queue = &(bulk_queues[index]);
 
-  cond = (SDL_ThreadID() == master) ? datain_cond : dataout_cond ;
-  sound_data = (SDL_ThreadID() == master) ? &sound_data_game : &sound_data_serv;
+  SDL_LockMutex(mutex);
 
-  SDL_LockMutex(data_mutex);
-  while(*sound_data != NULL) 
-    SDL_CondWait(cond, data_mutex);
+  sci_add_to_queue(queue, sci_memdup(data_ptr, maxsend), maxsend);
 
-  data = xalloc(maxsend);
-  memcpy(data, data_ptr, maxsend);
-  sound_data_size = maxsend;
-  /* printf("%d wrote %d bytes ",SDL_ThreadID(), maxsend); */
-  fflush(stdout);
-
-  *sound_data = data;
-
-  SDL_UnlockMutex(data_mutex);
-
-  cond = (SDL_ThreadID() == master) ? dataout_cond : datain_cond ;
+  SDL_UnlockMutex(mutex);
 
   SDL_CondSignal(cond);
   return maxsend;
@@ -217,17 +207,24 @@ sound_sdl_send_data(byte *data_ptr, int maxsend)
 void 
 sound_sdl_exit(state_t *s) 
 {
+  int i;
   sound_command(s, SOUND_COMMAND_SHUTDOWN, 0, 0); /* Kill server */
 
   /* clean up */
   SDL_WaitThread(child, NULL);
   SDL_DestroyMutex(out_mutex);
   SDL_DestroyMutex(in_mutex);
-  SDL_DestroyMutex(data_mutex);
   SDL_DestroyCond(in_cond);
-  SDL_DestroyCond(datain_cond);
-  SDL_DestroyCond(dataout_cond);
   
+  for (i = 0; i < 2; i++) {
+    void *data;
+    SDL_DestroyCond(bulk_conds[i]);
+    SDL_DestroyMutex(bulk_mutices[i]);
+
+    while (data = sci_get_from_queue(&(bulk_queues[i]), NULL))
+      free(data); /* Flush queues */
+  }
+
 }
 
 

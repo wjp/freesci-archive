@@ -894,7 +894,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	/* Check against static places on the control map */
 WARNING("FIXME");
-	if (s->dyn_views) {
+	if (0 && s->dyn_views) {
 		gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) s->dyn_views->contents;
 
 		SCIkdebug(SCIkBRESEN, "Checking vs dynviews:\n");

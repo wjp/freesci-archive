@@ -1,4 +1,10 @@
-2001-04-30  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+2001-04-30  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/soundserver_sdl.c: New queued bulk data transfer
+	implementation
+
+	* src/gfx/resource/sci_pic_0.c (_gfxr_draw_line): Pic line drawing now
+	draws to the correct target coordinates
 
 	* src/gfx/resource/sci_pic_0.c (_gfxr_draw_subline): Added extra checks
 	for invalid lines

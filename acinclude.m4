@@ -730,7 +730,7 @@ AC_ARG_WITH(dmalloc,
   AC_MSG_RESULT(yes)
   AC_DEFINE(WITH_DMALLOC,1,
             [Define if using the dmalloc debugging malloc package])
-  LIBS="$LIBS -ldmalloc"
+  LIBS="$LIBS -ldmallocth"
   LDFLAGS="$LDFLAGS -g"
 else
   AC_MSG_RESULT(no)

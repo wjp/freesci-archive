@@ -121,8 +121,10 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	heap_ptr obj = UPARAM_OR_ALT(1, 0);
 
 	CHECK_THIS_KERNEL_FUNCTION;
+SCI_MEMTEST;
 
 	if (SCI_VERSION_MAJOR(s->version) != 0) return; /* Can't do much else ATM */ 
+SCI_MEMTEST;
   
 	if (s->debug_mode & (1 << SCIkSOUNDCHK_NR)) {
 		int i;
@@ -155,6 +157,7 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 
 
+SCI_MEMTEST;
 	if (s->sound_server)
 		switch (command) {
 		case _K_SOUND_INIT:

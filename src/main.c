@@ -980,7 +980,7 @@ main(int argc, char** argv)
 
 	if (gamestate->sound_server) {
 		if (gamestate->sound_server->init(gamestate)) {
-			fprintf(stderr,"Sound server initialization failed- aborting.");
+			fprintf(stderr,"Sound server initialization failed- aborting.\n");
 			return 1;
 		}
 		sched_yield(); /* Specified by POSIX 1b. If it doesn't work on your
