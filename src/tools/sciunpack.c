@@ -189,8 +189,10 @@ int main(int argc, char** argv)
 
   if (!outfilename) {
     outfilename = fnamebuffer;
-    if ((stype == sci_sound) && conversion)
-      sprintf(outfilename,"%03d.midi", snr);
+    if ((stype == sci_sound) && conversion) {
+	mapMIDIInstruments();
+	sprintf(outfilename,"%03d.midi", snr);
+    }
 #ifdef HAVE_LIBPNG
     else if ((stype == sci_pic) && conversion)
       sprintf(outfilename,"%03d.png", snr);

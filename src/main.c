@@ -29,8 +29,11 @@
 #include <sound.h>
 #include <uinput.h>
 #include <console.h>
+#include <graphics.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+
+#include <graphics_ggi.h>
 
 static int quit = 0;
 static state_t gamestate; /* The main game state */
@@ -68,6 +71,7 @@ int
 main(int argc, char** argv)
 {
   resource_t *resource;
+  ggi_visual_t visual;
   int i;
 
   printf("FreeSCI "VERSION" Copyright (C) 1999 Christopher T. Lansdown, Sergey Lapin,\n"
@@ -88,13 +92,16 @@ main(int argc, char** argv)
   printf("Sound output interface: %s\n",
 	 SCI_sound_interfaces[initSound(SCI_SOUND_INTERFACE_AUTODETECT)]);
 
+  printf("Mapping instruments to General Midi\n");
+  mapMIDIInstruments();
+
   cmdHook(&c_quit, "quit", "", "console: Quits");
 
   con_passthrough = 1; /* enables all sciprintf data to be sent to stdout */
   con_visible_rows = 1; /* Fool the functions into believing that we *have* a display */
   sciprintf("FreeSCI, version "VERSION"\n");
 
-  using_history();
+  using_history(); /* Activate history for readline */
 
   _debug_get_input = get_readline_input; /* Use readline for debugging input */
 

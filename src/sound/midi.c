@@ -642,6 +642,7 @@ mapMIDIInstruments(void)
 
 	} else {
 	  instrname[7] = 0; /* Evil */
+	  MIDI_map[bankctr][instrctr] = INSTR_NOT_MAPPED;
 	  SCIsdebug("MIDI Bank %d: Instrument #%d (\"%s\"): ",
 		    bankctr, instrctr, instrname);
 

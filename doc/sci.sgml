@@ -42,6 +42,14 @@
       </authorblurb>
     </author>
 
+    <Author>
+     <firstname/Dark/<surname/Minister/
+      <authorblurb><para>
+        Dark Minister, whoever he may be, was the first one to document
+        parts of the SCI instruction set, and the Send() system call.
+      </para></authorblurb>
+    </author>
+
     <Othercredit>
      <FirstName>Carl</firstname>
      <SurName>Muckenhoupt</surname>
@@ -313,7 +321,7 @@ like Palettes, scaled bitmap images and several new compression algorithms.
  </Chapter>
 
  <Chapter>
- <Title/Graphics resources/
+ <Title/The Graphics subsystem/
  <sect1>
  <Title/General stuff/
  <para>
@@ -688,9 +696,9 @@ typedef struct
 }
 </programlisting>
 </para><para>
-It will be seen from this that rectangle coordinates in SCI are not normal-
-ly represented in the usual (x,y,width,height) fashion. So pay close atten-
-tion to this structure! Also, it is not passed as a pointer, but rather as
+It will be seen from this that rectangle coordinates in SCI are not normally
+ represented in the usual (x,y,width,height) fashion. So pay close attention
+ to this structure! Also, it is not passed as a pointer, but rather as
 the four values in order. This is particularly true of SCI objects, where
 the property names nsTop etc. actually form a Rect structure which can be
 used directly by the interpreter.
@@ -817,16 +825,82 @@ the Dialog object manually.
 </para><note><para>
 Note that the internal debugger uses the same window calls as the SCI 
 script.
-That is why the screen messes up if you step through drawing code - the de-
-bugger has activated the Debug window port, and "forgets" to switch back
+That is why the screen messes up if you step through drawing code - the debugger has
+ activated the Debug window port, and "forgets" to switch back
 while stepping across instructions. Thus, all graphics commands are
 redirected to the debug window port. Not a pretty sight.
 
 </para></note>
 </sect1>
+<sect1 ID="LARSPICSANDMOVEMENT">
+  <Title/Pictures and movement control/
+   <para>By<author><firstname/Lars/<surname/Skovlund/</author></para>
+   <para/Version 1.0, 24. July 1999/
+   <para>
+A pic in SCI consists of three layers (called maps - they are unrelated to
+the map resources found in SCI1 gamers). The visual map, used for the
+picture which appears on the user's screen. The priority map which tells the
+interpreter which things go in front of which in the three-dimensional room.
+Without the priority map, a room would just be a flat, painted surface.
+The control map decides where game characters (called actors) can walk and
+where special events occur. These special events are triggered by a game
+character walking on a particular spot. Where the visual map is almost
+always very complex and using dithered fills etc., the latter two consist of
+large areas of solid color.
+</para><para>
+Many functions which need to access these maps do so by using a bit-field.
+The bits are laid out as follows (but don't set more than one at a time!)
+<simplelist>
+<member/bit 0 - Visual/
+<member/bit 1 - Priority/
+<member/bit 2 - Control/
+</simplelist>
+</para><para>
+It is important to understand that, although being represented as colors on
+the screen, a priority/control "color" should be considered a number.
+The colors map to values according to the standard EGA color values.
+</para><para>
+Every animated object in SCI has a priority. As the object moves, its pri-
+ority changes according to the so-called priority bands, explained next
+(it is, however, possible for a script to lock the priority of a view).
+The picture window is divided vertically into 16 priority bands. The
+priority of an animated object is determined by the position of its
+"base rectangle" in one of these bands. Things are drawn in order of
+ascending priority, so objects with priority 15 are guaranteed to be in 
+front
+of everything else. The default priority mapping gives priority 0 a fairly
+large space, the 42 topmost rows (including the menu bar which AFAIK is 10) 
+in the picture. All other priority
+bands have the same size. A script can choose to alter this mapping,
+specifying the amount of space to assign to priority 0, and the number of 
+the
+last row to include in the mapping calculation.
+</para><para>
+In most rooms, it is desirable to limit actor movement, confining the
+actor to a specific part of the screen. In other cases, special events
+are triggered by movement into a specific screen area. On some occasions,
+even room switches are implemented using control polygons. While the meaning
+of priorities is determined by the kernel, the meaning of control values
+is entirely up to the script. It is more or less a standard, however, that
+actors can't walk on white control areas.
+</para><para>
+As the control map is not consulted by the interpreter itself (except in a
+few cases), scripts need a way to do so. That way is called OnControl, and
+it is a kernel call. Supplied with a point or a rectangle, it returns a bit
+mask containing the control values of all the pixels in the desired region.
+If a specific control value is encountered, it is used as a bit number, and
+that bit is set in the output mask.
+</para><para>
+This bit mask system is also used in another place, namely the illegalBits
+selector of the Act (actor) class. The illegalBits selector determines in
+which areas the actor may not walk.
+</para><para>
+The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
+</para>
+</sect1>
 </chapter>
 
-<chapter>
+<Chapter>
   <Title/The Sound subsystem/
    <sect1>
      <Title/The SCI0 Sound Resource Format/
@@ -1374,7 +1448,7 @@ redirected to the debug window port. Not a pretty sight.
        provisions for it, and it does not appear to be used in the existing SCI bytecode./</footnote>:
        <simplelist>
         <member>Calling exported functions (<function/calle/, <function/callb/)</member>
-        <member>Calling selector methods (<function/send/, <function/self/, <function/super/)></member>
+        <member>Calling selector methods (<function/send/, <function/self/, <function/super/)</member>
         <member>Calling PC-relative addresses (<function/call/)</member>
        </simplelist>
     </para><para>
@@ -1705,38 +1779,215 @@ with clockwise movement.
 </sect2>
   </sect1>
   <sect1 ID="VM">
-    <Title/The SCI virtual machine/
+    <Title/The Sierra PMachine/
       <para>
-         SCI uses a virtual machine, called the <literal/P-Machine/, to execute instructions
-         stored in the script resources. These instructions are stored as a sequence of opcodes
-         in the methods of each class, and are executed sequentially.
+        <author><firstname/Lars/ <surname/Skovlund/ </author>,
+        <author><firstname/Dark/ <surname/Minister/ </author> and
+        <author><firstname/Christoph/ <surname/Reichenbach/ </author>
       </para><para>
-         Most opcodes take either an 8 bit or a 16 bit little-endian value as their sole
-         parameter; differentiating between these two modes is done in bit 0 of the opcode.
-         If bit 0 is set, a byte (<literal/B/) parameter comes next, if it isn't set, a 16
-         bit value (word, or <literal/W/), follows. The actual operation number is then referred
-         to in the upper 7 bits of the opcode.
+         Version 1.0, 6. July 1999 </para>
+      <para>
+This document describes thee design of the Sierra PMachine (the virtual CPU
+used for executing SCI programs). It is a special CPU, in the sense that it
+is designed for object oriented programs.
+</para><para>
+There are three kinds of memory in SCI: Variables, objects, and stack space.
+The stack space is used in a Last-In-First-Out manner, and is primarily used
+for temporary space in a routine, as well as passing data from one routine
+to another. Note that the stack space is used bottom-up by the original in-
+terpreter, instead of the more usual top-down. I don't know if this has any
+significance for us.
+</para><para>
+Scripts are loaded into the PMachine by creating a memory imagee of it on 
+the
+heap. For this reason, the script file format may seem a bit obscure at
+times. It is optimized for in-memory performance, not readability. It should
+be mentioned here that a lot of fixup stuff is done by the interpreter.
+In the script files, all addresses are specified as script-relative. These
+are converted to absolute offsets. The species and superClass fields of all
+objects are converted into pointers to the actual class etc.
+</para><para>
+There are four types of variables. These are called global, local, 
+temporary,
+and parameter. All four types are simple arrays of 16-bit words. A pointer 
+is
+kept for each type, pointing to the list that is currently active. In fact,
+only the global variable list is constant in memory. The other pointers are
+changed frequently, as scripts are loaded/unloaded, routines called, etc.
+The variables are always referenced as an index into the variable list.
+I'll explain the four types below - the names in parantheses will be used
+occasionally in the rest of the text:
+</para>
+<sect2><Title/Local variables (LocalVar)/
+<para>
+This variable type is called "local" because it belongs to a specific 
+script.
+Each script may have its own set of local variables, defined by script block
+type 10. As long as the code from a specific script is running, the local
+variables for that script are "active" (pointed to by the mentioned 
+pointer).
+</para></sect2>
+<sect2><Title/Global variables/
+<para>
+These, like the local variables, reside in script space (in fact, they are
+the local variables of script 0!). But the pointer to them remains constant
+for the whole duration of the program.
+</para></sect2>
+<sect2><Title/Temporary variables/
+<para>
+These are allocated by specific subroutines in a script. They reside on the
+PMachine stack and are allocated by the link opcode. The temp variables are
+automatically discarded when the subroutine returns.
+</para></sect2>
+<sect2><Title/Parameter variables/
+<para>
+These variables also reside on the stack. They contain information passed
+from one routine to another. Any routine in SCI is capable of taking a
+variable number of parameters, if need be. This is possible because a list
+size is pushed as the first thing before calling a routine. In addition to
+this, a frame size is passed to the call* functions.
+</para></sect2>
+<sect2><Title/Objects/
+<para>
+While two adjacent variables may be entirely unrelated, the contents of an
+object is always related to one task. The object, like the variable tables,
+provides storage space. This storage space is called properties. Depending
+on the instructions used, a property can be referred to by index into the
+object structure, or by property IDs (PIDs). For instance, the name property
+has the PID 17h, but the offset 6. The property IDs are assigned by the SCI
+compiler, and it is the "compatible" way of accessing object data. Whereas
+the offset method is used only internally by an object to access its own
+data, the PID method is used externally by objects to read/write the data
+fields of other objects. The PID method is also used to call methods in an
+object, either by the object itself, by another object, or by the SCI inter-
+preter. Yes, this really happens sometimes.
+</para></sect2>
+<sect2><Title/The PMachine "registers"/
+<para>
+The PMachine can be said to have a number of registers, although none of 
+them
+can be accessed explicitly by script code. They are used/changed implicitly
+by the script opcodes:
+<simplelist>
+  <member/Acc - the accumulator. Used for result storage and input for a number of
+  opcodes./
+  <member>IP - the instruction pointer.<Footnote><para/FreeSCI calls this the "Program Counter"
+          or PC, which is the more general term./</footnote>
+          Points to the currently executing instruction</member>
+  <member/Vars - an array of 4 values, pointing to the current variables of each
+  mentioned type/
+  <member/Object - points to the currently executing object./
+  <member/SP - the current stack pointer. Note that the stack in the original SCI
+  interpreter is used bottom-up instead of the more usual top-down./
+</simplelist>
+</para><para>
+The PMachine, apart from the actual instruction pointer, keeps a record of
+which object is currently executing.
+</para></sect2>
+<sect2><title/The instruction set/
+<para>
+The PMachine CPU potentially has 128 instructions (however, a couple of 
+these
+are invalid and generate an error). Some of these instructions have a flag
+which specify whether the opcode has byte- or word-sized operands (I will
+refer to this as variably-sized parameters, as opposed to constant
+parameters). Other instructions have only one calling form. These
+instructions simply disregard the operand size flag. Ideally, however, all
+script instructions should be prepared to take variably-sized operands.
+Yet another group of instructions take both a constant parameter and a
+variably-sized parameter. The format of an opcode byte is as follows:
+<informaltable frame="all">
+ <tgroup cols="2">
+  <tbody>
+   <row>
+    <entry/bit 7-1/<entry/        opcode number/
+   </row><row>
+    <entry/bit 0/<entry/            operand size flag/
+   </row>
+  </tbody>
+ </tgroup>
+</informaltable>
+</para>
+<sect3><title/Relative addresses/
+<para>
+Certain instructions (in particular, branching ones) take relative addresses
+as a parameter. The actual address is calculated based on the instruction
+after the branching instruction itself. In this example, the bnt
+instruction, if the branch is made, jumps over the ldi instruction.
+<programlisting>
+        eq?
+        bnt +2
+        ldi byte 2
+        push
+</programlisting>
+<note><para/Relative addresses are signed values./</note>
+</para></sect3>
+<sect3><title/Dispatch addresses/
+<para>
+The callb and calle instructions take a so-called dispatch index as a
+parameter. This index is used to look up an actual script address, using the
+so-called dispatch table. The dispatch table is located in script block type
+7 in the script file. It is a series of words - the first one, as in so many
+other places in the script file, is the number of entries.
+</para></sect3>
+<sect3><title/Frame sizes/
+<para>
+In every call instruction, a value is included which determines the size of
+the parameter list, as an offset into the stack. This value discounts the
+list size pushed by the SCI code. For instance, consider this example from
+real SCI code:
+
+<programlisting>
+     pushi 3 ; three parameters passed
+     pushi 4 ; the screen flag
+     pTos x ; push the x property
+     pTos y ; push the y property
+     callk OnControl, 6
+</programlisting>
+
+Notice that, although the callk line specifies 6 bytes of parameters, the
+kernel routine has access to the list size (which is at offset 8)!
+</para></sect3>
+<sect3><title/PErrors/
+<para>
+These are internal errors in the interpreter. They are usually caused by
+buggy script code. The PErrors end up displaying an "Oops!" box in the
+original interpreter (it is interesting to see how Sierra likes to believe
+that PErrors are caused by the user - judging by the message "You did
+something we weren't expecting"!). In the original interpreter, specifying
+-d on the command line causes it to give more detailed information about
+PErrors, as well as activating the internal debugger if one occurs.
+</para></sect3>
+<sect3><Title/Class numbers and adresses/
+<para>
+The key to finding a specific class lies in the class table. This class
+table resides in VOCAB.996, and contains the numbers of scripts that carry
+classes. If a script has more than one class defintion, the script number
+is repeated as necessary. Notice how each script number is followed by a
+zero word? When the interpreter loads a script, it checks to see if the
+script has classes. If it does, a pointer to the object structure is put in
+this empty space.
+</para></sect3>
+<sect3><title/The instructions/
+<para>
+The instructions are described below. I have used Dark Minister's text on
+the subject as a starting point, but many things have changed; stuff
+explained more thoroughly, errors corrected, etc. The first 23 instructions
+(up to, but not including, bt) take no parameters.
       </para><para>
-         The P-machine has only one directly accessible register, the accumulator (acc). Other,
-         not directly accessible registers, are the stack pointer (sp), the frame pointer (pp),
-         and, of course, the program counter (pc). Between calls, all registers except for the
-         accumulator are preserved. The stack, which is used by most of the operations
-         in one way or another, has a total size of 0x0800 16 bit little endian ints (0x1000 bytes).
-      </para><para>
-         To ease the description of the following opcode descriptions, two terms shall be defined:
+         These functions are used in the pseudocode explanations:
          <simplelist>
-           <member/pop(): tmp = *sp; sp -= 2; return tmp/
-           <member/push(x): sp += 2; *sp = x; return x/
+           <member/pop(): sp -= 2; return *sp;/
+           <member/push(x): *sp = x; sp += 2; return x;/
          </simplelist>
          The following rules apply to opcodes:
          <simplelist>
            <member/Parameters are signed, unless stated otherwise. Sign extension is performed./
            <member/Jumps are relative to the posisition of the next operation./
-           <member/*sp refers to the TOS (Top Of Stack) element./
+           <member/*TOS refers to the TOS (Top Of Stack) element./
            <member/"tmp" refers to a temporary register that is used for explanation purposes only./
          </simplelist>
       </para>
-         <sect2><Title/The P-Machine opcodes/
           <itemizedlist>
            <listitem><para>
               <simplelist>
@@ -1863,7 +2114,8 @@ with clockwise movement.
                 <member>op 0x1b: eq?  (1 byte)</member>
               </simplelist>
               Equals?:
-                 <programlisting/acc = (acc == pop());/
+                 <programlisting/prev = acc;
+                                 acc = (acc == pop());/
 
            </para></listitem>
            <listitem><para>
@@ -1871,8 +2123,9 @@ with clockwise movement.
                 <member>op 0x1c: ne?  (1 byte)</member>
                 <member>op 0x1d: ne?  (1 byte)</member>
               </simplelist>
-              Does not equal?
-                 <programlisting/acc = !(acc == pop());/
+              Is not equal to?
+                 <programlisting/prev = acc;
+                                 acc = !(acc == pop());/
 
            </para></listitem>
            <listitem><para>
@@ -1881,7 +2134,8 @@ with clockwise movement.
                 <member>op 0x1f: gt?  (1 byte)</member>
               </simplelist>
               Greater than?
-                 <programlisting/acc = (pop() > acc);/
+                 <programlisting/prev = acc;
+                                 acc = (pop() > acc);/
 
            </para></listitem>
            <listitem><para>
@@ -1890,7 +2144,8 @@ with clockwise movement.
                 <member>op 0x21: ge?  (1 byte)</member>
               </simplelist>
               Greater than or equal to?
-                 <programlisting/acc = (pop() >= acc);/
+                 <programlisting/prev = acc;
+                                 acc = (pop() >= acc);/
 
            </para></listitem>
            <listitem><para>
@@ -1899,7 +2154,8 @@ with clockwise movement.
                 <member>op 0x23: lt?  (1 byte)</member>
               </simplelist>
               Less than?
-                 <programlisting/acc = (pop() < acc);/
+                 <programlisting/prev = acc;
+                                 acc = (pop() < acc);/
 
            </para></listitem>
            <listitem><para>
@@ -1908,7 +2164,8 @@ with clockwise movement.
                 <member>op 0x25: le?  (1 byte)</member>
               </simplelist>
               Less than or equal to?
-                 <programlisting/acc = (pop() <= acc);/
+                 <programlisting/prev = acc;
+                                 acc = (pop() <= acc);/
 
            </para></listitem>
            <listitem><para>
@@ -2019,7 +2276,7 @@ with clockwise movement.
                 <member>op 0x3d: dup  (1 byte)</member>
               </simplelist>
               Duplicate TOS element
-                 <programlisting/push(*sp);/
+                 <programlisting/push(*TOS);/
 
            </para></listitem>
            <listitem><para>
@@ -2035,10 +2292,14 @@ with clockwise movement.
                 <member>op 0x40: call W relpos, B framesize  (4 bytes)</member>
                 <member>op 0x41: call B relpos, B framesize  (3 bytes)</member>
               </simplelist>
-              Call inside current method
-                 <programlisting/{start new execution loop with the following parameters:}
-                                 pp = sp - framesize;
-                                 pc += relpos;/
+              Call inside script.
+              <programlisting/(See description below)
+                              sp -= (framesize + 2 + &amp;rest_modifier);
+                              &amp;rest_modifier = 0;/
+              This calls a script subroutine at the relative position
+              <parameter/relpos/, setting up the ParmVar pointer first.
+              ParmVar points to sp-<parameter/framesize/ (but see also the &amp;rest operation).
+              The number of parameters is stored at word offset -1 relative to ParmVar.
 
            </para></listitem>
            <listitem><para>
@@ -2047,8 +2308,9 @@ with clockwise movement.
                 <member>op 0x43: callk B kfunct, B kparams  (3 bytes)</member>
               </simplelist>
               Call kernel function (see <XREF LINKEND="Kfunctions">)
-                 <programlisting/sp -= (kparams + 2);
-                                 {call kernel function [kfunct] with *sp parameters}/
+                 <programlisting/sp -= (kparams + 2 + &amp;rest_modifier);
+                                 &amp;rest_modifier = 0;
+                                 (call kernel function <parameter/kfunct/)/
 
            </para></listitem>
            <listitem><para>
@@ -2057,11 +2319,12 @@ with clockwise movement.
                 <member>op 0x45: callb B dispindex, B framesize  (3 bytes)</member>
               </simplelist>
               Call base script
-                 <programlisting/{see below, called with:}
-                                 pp = sp - framesize/
+                 <programlisting/(See description below)
+                              sp -= (framesize + 2 + &amp;rest_modifier);
+                              &amp;rest_modifier = 0;/
               This operation starts a new execution loop at the beginning of script 0, public
-              method [dispindex] (Each script comes with a dispatcher list (type 7) that
-              identifies public methods).
+              method <parameter/dispindex/ (Each script comes with a dispatcher list (type 7) that
+              identifies public methods). Parameters are handled as in the call operation.
 
            </para></listitem>
            <listitem><para>
@@ -2070,11 +2333,13 @@ with clockwise movement.
                 <member>op 0x47: calle B script, B dispindex, B framesize  (4 bytes)</member>
               </simplelist>
               Call external script
-                 <programlisting/{see below, called with:}
-                                 pp = sp - framesize/
+                 <programlisting/(See description below)
+                              sp -= (framesize + 2 + &amp;rest_modifier);
+                              &amp;rest_modifier = 0;/
               This operation starts a new execution loop at the beginning of script
-              [script]s public method [dispindex]. The dispatcher list
+              <parameter/script/s public method <parameter/dispindex/. The dispatcher list
               (the script's type 7 object) is used to dereference the requested method.
+              Parameters are handled as described for the call operation.
 
            </para></listitem>
            <listitem><para>
@@ -2082,15 +2347,40 @@ with clockwise movement.
                 <member>op 0x48: ret  (1 byte)</member>
                 <member>op 0x49: ret  (1 byte)</member>
               </simplelist>
-              Return: returns from an execution loop.
+              Return: returns from an execution loop started by call, calle, callb, send, self or
+              super.
               
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0x4a: send (? bytes)</member>
-                <member>op 0x4b: send (? bytes)</member>
+                <member>op 0x4a: send B framesize (2 bytes)</member>
+                <member>op 0x4b: send B framesize (2 bytes)</member>
               </simplelist>
+              Send for one or more selectors. This is the most complex SCI operation (together with
+              self and class).
+            </para><para>
+              Send looks up the supplied selector(s) in the object pointed to by the accumulator.
+              If the selector is a variable selector, it is read (to the accumulator) if it was sent
+              for with zero parameters. If a parameter was supplied, this selector is set to that
+              parameter. Method selectors are called with the specified parameters.
+            </para><para>
+              The selector(s) and parameters are retreived from the stack frame. Send first looks up
+              the selector ID at the bottom of the frame, then retreives the number of parameters,
+              and, eventually, the parameters themselves. This algorithm is iterated until all of
+              the stack frame has been "used up". Example:
+            <programlisting/; This is an example for usage of the SCI send operation
+                            pushi x      ; push the selector ID of x
+                            push1        ; 1 parameter: x is supposed to be set
+                            pushi 42     ; That's the value x will get set to
+                            pushi moveTo ; In this example, moveTo is a method selector.
+                            push2        ; It will get called with two parameters-
+                            push         ; The accumulator...
+                            lofss 17     ; ...and PC-relative address 17.
+                            pushi foo    ; Let's assume that foo is another variable selector.
+                            push0        ; This will read foo and return the value in acc.
+                            send 12      ; This operation does three quite different things./
+                            
 
            </para></listitem>
            <listitem><para>
@@ -2108,6 +2398,7 @@ with clockwise movement.
                 <member>op 0x50: class B function  (3 bytes)</member>
                 <member>op 0x51: class W function  (2 bytes)</member>
               </simplelist>
+              Get class address.
               Sets the accumulator to the memory address of the specified <parameter/function/
               of the current object.
 
@@ -2122,694 +2413,338 @@ with clockwise movement.
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0x54: class W class (3 bytes)</member>
-                <member>op 0x55: class B class (2 bytes)</member>
+                <member>op 0x54: self B stackframe (2 bytes)</member>
+                <member>op 0x55: self B stackframe (2 bytes)</member>
               </simplelist>
-                Loads the heap address of the specified class to the accumulator.
+              Send to self. This operation is the same as the send operation, except that it
+              sends to the current object instead of the object pointed to by the accumulator.
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0x56:  ( bytes)</member>
-                <member>op 0x57:  ( bytes)</member>
+                <member>op 0x56: super W class, B stackframe (4 bytes)</member>
+                <member>op 0x57: super B class, B stackframe (3 bytes)</member>
               </simplelist>
-                 <programlisting//
+              Send to any class. This operation is the same as the send operation, except that it
+              sends to an arbitrary <parameter/class/.
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0x58:  ( bytes)</member>
-                <member>op 0x59:  ( bytes)</member>
+                <member>op 0x58: &amp;rest W paramindex  (3 bytes)</member>
+                <member>op 0x59: &amp;rest B paramindex  (2 bytes)</member>
               </simplelist>
-                 <programlisting//
+    Pushes all or part of the ParmVar list on the stack. The number specifies
+    the first parameter variable to be pushed.
+    I'll give a small example. Suppose we have two functions:
+</para><para>
+    function a(y,z)
+    and
+    function b(x,y,z)
+</para><para>
+    function b wants to call function a with its own y and z parameters. Easy
+    job, using the the normal lsp instruction. Now suppose that both function
+    a and b are designed to take a variable number of parameters:
+</para><para>
+    function a(y,z,...)
+    and
+    function b(x,y,z,...)
+</para><para>
+    Since lsp does not support register indirection, we can't just push the
+    variables in a loop (as we would in C). Instead this function is used.
+    In this case, the instruction would be &amp;rest 2, since we want the copying
+    to start from y, the second parameter.
 
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x5a:  ( bytes)</member>
-                <member>op 0x5b:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x5c:  ( bytes)</member>
-                <member>op 0x5d:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x5e:  ( bytes)</member>
-                <member>op 0x5f:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x60:  ( bytes)</member>
-                <member>op 0x61:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x62:  ( bytes)</member>
-                <member>op 0x63:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x64:  ( bytes)</member>
-                <member>op 0x65:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x66:  ( bytes)</member>
-                <member>op 0x67:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x68:  ( bytes)</member>
-                <member>op 0x69:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x6a:  ( bytes)</member>
-                <member>op 0x6b:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x6c:  ( bytes)</member>
-                <member>op 0x6d:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x6e:  ( bytes)</member>
-                <member>op 0x6f:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x70:  ( bytes)</member>
-                <member>op 0x71:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x72:  ( bytes)</member>
-                <member>op 0x73:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x74:  ( bytes)</member>
-                <member>op 0x75:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x76:  ( bytes)</member>
-                <member>op 0x77:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x78:  ( bytes)</member>
-                <member>op 0x79:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x7a:  ( bytes)</member>
-                <member>op 0x7b:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x7c:  ( bytes)</member>
-                <member>op 0x7d:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x7e:  ( bytes)</member>
-                <member>op 0x7f:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x80:  ( bytes)</member>
-                <member>op 0x81:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x82:  ( bytes)</member>
-                <member>op 0x83:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x84:  ( bytes)</member>
-                <member>op 0x85:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x86:  ( bytes)</member>
-                <member>op 0x87:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x88:  ( bytes)</member>
-                <member>op 0x89:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x8a:  ( bytes)</member>
-                <member>op 0x8b:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x8c:  ( bytes)</member>
-                <member>op 0x8d:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x8e:  ( bytes)</member>
-                <member>op 0x8f:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x90:  ( bytes)</member>
-                <member>op 0x91:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x92:  ( bytes)</member>
-                <member>op 0x93:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x94:  ( bytes)</member>
-                <member>op 0x95:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x96:  ( bytes)</member>
-                <member>op 0x97:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x98:  ( bytes)</member>
-                <member>op 0x99:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x9a:  ( bytes)</member>
-                <member>op 0x9b:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x9c:  ( bytes)</member>
-                <member>op 0x9d:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0x9e:  ( bytes)</member>
-                <member>op 0x9f:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xa0:  ( bytes)</member>
-                <member>op 0xa1:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xa2:  ( bytes)</member>
-                <member>op 0xa3:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xa4:  ( bytes)</member>
-                <member>op 0xa5:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xa6:  ( bytes)</member>
-                <member>op 0xa7:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xa8:  ( bytes)</member>
-                <member>op 0xa9:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xaa:  ( bytes)</member>
-                <member>op 0xab:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xac:  ( bytes)</member>
-                <member>op 0xad:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xae:  ( bytes)</member>
-                <member>op 0xaf:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xb0:  ( bytes)</member>
-                <member>op 0xb1:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xb2:  ( bytes)</member>
-                <member>op 0xb3:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xb4:  ( bytes)</member>
-                <member>op 0xb5:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xb6:  ( bytes)</member>
-                <member>op 0xb7:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xb8:  ( bytes)</member>
-                <member>op 0xb9:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xba:  ( bytes)</member>
-                <member>op 0xbb:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xbc:  ( bytes)</member>
-                <member>op 0xbd:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xbe:  ( bytes)</member>
-                <member>op 0xbf:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xc0:  ( bytes)</member>
-                <member>op 0xc1:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xc2:  ( bytes)</member>
-                <member>op 0xc3:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xc4:  ( bytes)</member>
-                <member>op 0xc5:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xc6:  ( bytes)</member>
-                <member>op 0xc7:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xc8:  ( bytes)</member>
-                <member>op 0xc9:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xca:  ( bytes)</member>
-                <member>op 0xcb:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xcc:  ( bytes)</member>
-                <member>op 0xcd:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xce:  ( bytes)</member>
-                <member>op 0xcf:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
-
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xd0:  ( bytes)</member>
-                <member>op 0xd1:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xd2:  ( bytes)</member>
-                <member>op 0xd3:  ( bytes)</member>
+                <member>op 0x5a: lea W type, W index ( bytes)</member>
+                <member>op 0x5b: lea B type, B index ( bytes)</member>
               </simplelist>
-                 <programlisting//
+              Load Effective Address
+</para><para>
+    The variable type is a bit-field used as follows:
+  <variablelist>
+   <varlistentry><term/bit 0/<listitem><para/      unused/</listitem></varlistentry>
+   <varlistentry><term/bit 1-2/<listitem><para>  the number of the variable list to use
+           <simplelist>
+                       <member/       0 - globalVar/
+                       <member/       2 - localVar/
+                       <member/       4 - tempVar/
+                       <member/       6 - parmVar/
+           </simplelist>
+         </para></listitem></varlistentry>
+  <varlistentry><term/bit 3/<listitem><para/      unused/</listitem></varlistentry>
+  <varlistentry><term/bit 4/<listitem><para/      set if the accumulator is to be used as additional index/</listitem></varlistentry>
+  </variablelist>
+Because it is so hard to explain, I have made a transcription of it here:
 
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xd4:  ( bytes)</member>
-                <member>op 0xd5:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
+<programlisting>
+short *vars[4];
 
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xd6:  ( bytes)</member>
-                <member>op 0xd7:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
+int acc;
 
-           </para></listitem>
-           <listitem><para>
-              <simplelist>
-                <member>op 0xd8:  ( bytes)</member>
-                <member>op 0xd9:  ( bytes)</member>
-              </simplelist>
-                 <programlisting//
+int lea(int vt, int vi)
+{
+  return &((vars[(vt >> 1) & 3])[vt & 0x10 ? vi+acc : vi]);
+}
+</programlisting>
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xda:  ( bytes)</member>
-                <member>op 0xdb:  ( bytes)</member>
+                <member>op 0x5c: selfID  (1 bytes)</member>
+                <member>op 0x5d: selfID  (1 bytes)</member>
               </simplelist>
-                 <programlisting//
+              Get 'self' identity: SCI uses heap pointers to identify objects, so this operation
+              sets the accumulator to the address of the current object.
+                 <programlisting/acc = object/
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xdc:  ( bytes)</member>
-                <member>op 0xdd:  ( bytes)</member>
+                <member>op 0x5e</member>
+                <member>op 0x5f</member>
               </simplelist>
-                 <programlisting//
+              These opcodes don't exist in SCI.
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xde:  ( bytes)</member>
-                <member>op 0xdf:  ( bytes)</member>
+                <member>op 0x60: pprev  (1 bytes)</member>
+                <member>op 0x61: pprev  (1 bytes)</member>
               </simplelist>
-                 <programlisting//
+              Push prev: Pushes the value of the prev register, set by the last comparison
+              bytecode (eq?, lt?, etc.), on the stack.
+                 <programlisting/push(prev)/
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xe0:  ( bytes)</member>
-                <member>op 0xe1:  ( bytes)</member>
+                <member>op 0x62: pToa W offset  (3 bytes)</member>
+                <member>op 0x63: pToa B offset  (2 bytes)</member>
               </simplelist>
-                 <programlisting//
+              Property To Accumulator:
+    Copies the value of the specified property (in the current object) to the
+    accumulator. The property is specified as an offset into the object 
+structure.
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xe2:  ( bytes)</member>
-                <member>op 0xe3:  ( bytes)</member>
+                <member>op 0x64: aTop W offset  (3 bytes)</member>
+                <member>op 0x65: aTop B offset  (2 bytes)</member>
               </simplelist>
-                 <programlisting//
+              Accumulator To Property:
+    Copies the value of the accumulator into the specified property (in the
+    current object). The property number is specified as an offset into the
+    object structure.
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xe4:  ( bytes)</member>
-                <member>op 0xe5:  ( bytes)</member>
+                <member>op 0x66: pTos W offset  (3 bytes)</member>
+                <member>op 0x67: pTos B offset  (2 bytes)</member>
               </simplelist>
-                 <programlisting//
+              Property To Stack:
+    Same as pToa, but pushes the property value on the stack instead.
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xe6:  ( bytes)</member>
-                <member>op 0xe7:  ( bytes)</member>
+                <member>op 0x68: sTop W offset  (3 bytes)</member>
+                <member>op 0x69: sTop B offset  (2 bytes)</member>
               </simplelist>
-                 <programlisting//
+              Stack To Property:
+    Same as aTop, but gets the new property value from the stack instead.
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xe8:  ( bytes)</member>
-                <member>op 0xe9:  ( bytes)</member>
+                <member>op 0x6a: ipToa W offset  (3 bytes)</member>
+                <member>op 0x6b: ipToa B offset  (2 bytes)</member>
               </simplelist>
-                 <programlisting//
+              Incement Property and copy To Accumulator:
+    Increments the value of the specified property of the current object
+    and copies it into the accumulator. The property number is specified as
+    an offset into the object structure.
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xea:  ( bytes)</member>
-                <member>op 0xeb:  ( bytes)</member>
+                <member>op 0x6c: dpToa W offset  (3 bytes)</member>
+                <member>op 0x6d: dpToa B offset  (2 bytes)</member>
               </simplelist>
-                 <programlisting//
+              Decrepent Property and copy to Accumulator:
+    Decrements the value of the specified property of the current object
+    and copies it into the accumulator. The property number is specified as
+    an offset into the object structure.
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xec:  ( bytes)</member>
-                <member>op 0xed:  ( bytes)</member>
+                <member>op 0x6e: ipTos W offset  (3 bytes)</member>
+                <member>op 0x6f: ipTos B offset  (2 bytes)</member>
               </simplelist>
-                 <programlisting//
+              Increment Property and push to Stack
+    Same as ipToa, but pushes the result on the stack instead.
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xee:  ( bytes)</member>
-                <member>op 0xef:  ( bytes)</member>
+                <member>op 0x70: dpTos W offset  (3 bytes)</member>
+                <member>op 0x71: dpTos B offset  (2 bytes)</member>
               </simplelist>
-                 <programlisting//
+              Decrement Property and push to stack:
+    Same as dpToa, but pushes the result on the stack instead.
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xf0:  ( bytes)</member>
-                <member>op 0xf1:  ( bytes)</member>
+                <member>op 0x72: lofsa W offset  (3 bytes)</member>
+                <member>op 0x73: lofsa B offset  (2 bytes)</member>
               </simplelist>
-                 <programlisting//
+              Load Offset to Accumulator:
+              <programlisting>acc = pc + <parameter>offset</parameter></programlisting>
+              Adds a value to the post-operation pc and stores the result in the accumulator.
+             
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xf2:  ( bytes)</member>
-                <member>op 0xf3:  ( bytes)</member>
+                <member>op 0x74: lofss W offset  (3 bytes)</member>
+                <member>op 0x75: lofss B offset  (2 bytes)</member>
               </simplelist>
-                 <programlisting//
+              Load Offset to Stack:
+              <programlisting>push(pc + <parameter>offset</parameter>)</programlisting>
+              Adds a value to the post-operation pc and pushes the result on the stack.
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xf4:  ( bytes)</member>
-                <member>op 0xf5:  ( bytes)</member>
+                <member>op 0x76: push0  (1 bytes)</member>
+                <member>op 0x77: push0  (1 bytes)</member>
               </simplelist>
-                 <programlisting//
+              Push 0:
+                 <programlisting/push(0)/
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xf6:  ( bytes)</member>
-                <member>op 0xf7:  ( bytes)</member>
+                <member>op 0x78: push1  (1 bytes)</member>
+                <member>op 0x79: push1  (1 bytes)</member>
               </simplelist>
-                 <programlisting//
+              Push 1:
+                 <programlisting/push(1)/
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xf8:  ( bytes)</member>
-                <member>op 0xf9:  ( bytes)</member>
+                <member>op 0x7a: push2  (1 bytes)</member>
+                <member>op 0x7b: push2  (1 bytes)</member>
               </simplelist>
-                 <programlisting//
+              Push 2:
+                 <programlisting/push(2)/
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xfa:  ( bytes)</member>
-                <member>op 0xfb:  ( bytes)</member>
+                <member>op 0x7c: pushSelf  (1 bytes)</member>
+                <member>op 0x7d: pushSelf  (1 bytes)</member>
               </simplelist>
-                 <programlisting//
+              Push self:
+                 <programlisting/push(object)/
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xfc:  ( bytes)</member>
-                <member>op 0xfd:  ( bytes)</member>
+                <member>op 0x7e</member>
+                <member>op 0x7f</member>
               </simplelist>
-                 <programlisting//
+              These operations don't exist in SCI.
 
            </para></listitem>
            <listitem><para>
               <simplelist>
-                <member>op 0xfe:  ( bytes)</member>
-                <member>op 0xff:  ( bytes)</member>
+                <member>op 0x80 - 0xfe: [ls+-][as][gltp]i? W index  (3 bytes)</member>
+                <member>op 0x81 - 0xff: [ls+-][as][gltp]i? B index  (2 bytes)</member>
               </simplelist>
-                 <programlisting//
+              The remaining SCI operations work on one of the four variable types. The variable
+              index is retreived by taking the heap pointer for the specified variable type, adding
+              the <parameter/index/ and possibly the accumulator, and executing the operation according
+              to the following table:
+              <variablelist>
+                <varlistentry>
+                 <term/Bit 0/
+                 <listitem><para>
+                   Used as with all other opcodes with variably-sized parameters:
+                   <simplelist>
+                    <member/0: 16 bit parameter/
+                    <member/1: 8 bit parameter/
+                   </simplelist>
+                 </para></listitem>
+                </varlistentry>
+                <varlistentry>
+                 <term/Bits 1,2/
+                 <listitem><para>
+                   The type of variable to operate on:
+                   <simplelist>
+                    <member/0: Global/
+                    <member/1: Local/
+                    <member/2: Temporary/
+                    <member/3: Parameter/
+                   </simplelist>
+                 </para></listitem>
+                </varlistentry>
+                <varlistentry>
+                 <term/ Bit 3/
+                 <listitem><para>
+                   Whether to use the accumulator or the stack for operations:
+                   <simplelist>
+                    <member/0: Accumulator/
+                    <member/1: Stack/
+                   </simplelist>
+                 </para></listitem>
+                </varlistentry>
+                <varlistentry>
+                 <term/Bit 4/
+                 <listitem><para>
+                   Whether to use the accumulator as a modifier to the supplied index:
+                   <simplelist>
+                    <member/0: Don't use accumulator as an additional index/
+                    <member/1: Use the accumulator as an additional index/
+                   </simplelist>
+                 </para></listitem>
+                </varlistentry>
+                <varlistentry>
+                 <term/Bits 5,6/
+                 <listitem><para>
+                   The type of execution to perform:
+                   <simplelist>
+                    <member/0: Load the variable to the accumulator or stack/
+                    <member/1: Store the accumulator or stack in the variable/
+                    <member/2: Increment the variable, then load it into acc or on the stack/
+                    <member/3: Decrement the variable, then load it into acc or on the stack/
+                   </simplelist>
+                 </para></listitem>
+                </varlistentry>
+                <varlistentry>
+                 <term/Bit 7/
+                 <listitem><para>
+                   Always 1 (identifier for these opcodes)
+                 </para></listitem>
+                </varlistentry>
+              </variablelist>
+              Example: "sagi 2" would Store the Accumulator in the Global variable indexed with
+              2 plus the current accumulator value (this rarely makes sense, obviously). "+sp 6"
+              would increment the parameter at offset 6 (the third parameter, not counting the
+              argument counter), and push it on the stack.
 
            </para></listitem>
           </itemizedlist>
-         </sect2>
+         </sect3>
+     </sect2>
   </sect1>
 
   <sect1 ID="Kfunctions">
@@ -2866,6 +2801,8 @@ types:
 <member><Type/(DblList)/: As <Type/(HeapPtr)/; interpreted as offset of a doubly linked list</member>
 <member><Type/(&amp;FarPtr)/: As <Type/(HeapPtr)/; interpreted as the 32 bit pointer stored at
            the referenced heap address</member>
+<member><Type/(Point)/: A sequence of two <Type/(word)/s to describe a point on the screen, with
+the y coordinate being the first in the sequence.</member>
 <member><Type/(Rect)/: A sequence of four <Type/(word)/s describing a rectangle. If you read
 "(Rect) foo", think "(word) foo_ymin, (word) foo_xmin, (word) foo_ymax, (word) foo_xmax" instead.
 </member>
@@ -3423,6 +3360,30 @@ Draws Title bar
 
 <sect3><Title/Kernel function 0x25: Said(2)/<para></para></sect3>
 
+  <sect3 ID="KONCONTROL">
+         <title/Kernel function 0x52: OnControl(word, Point | Rect)/
+       <funcsynopsis><funcprototype><funcdef>
+kfunct 0x52: OnControl
+       </funcdef><paramdef>word map, Point|Rect area</paramdef>
+         </funcprototype></funcsynopsis>
+       <para><simplelist>
+          <member><type/(word)/ map: The map to check (bit 0: visual, bit 1: priority, bit 2: special)
+            </member>
+          <member><type/(Point) or (Rect)/ Area: The point or rectangle that is to be scanned</member>
+       </simplelist></para>
+       <para>
+         Returns: <type/(word)/ The resulting bitfield
+       </para>
+       <para>
+         This function scans the indicated point or area on the specified <parameter/map/, and sets
+         the bit corresponding to each color value found correspondingly. For example, if scanning
+         map 4 (special) would touch two areas, one with color value 1 and one with color value 10,
+         the resulting return value would be 0x0402 (binary 0000010000000010).
+         See also <xref linkend="LARSPICSANDMOVEMENT">.
+       </para>
+     </sect3>
+
+
   <sect3>
 <Title/Kernel function 0x57: SetDebug()/
     <funcsynopsis><funcprototype><funcdef>
@@ -3437,6 +3398,26 @@ to pressing LShift-RShift-PadMinus.
     </para>
   </sect3>
 
+        <sect3>
+        <Title/Kernel function 0x62: GetCWD(HeapPtr)/
+                <funcsynopsis><funcprototype><funcdef>
+                        kfunct 0x62: GetCWD
+                </funcdef><paramdef>HeapPtr/ address</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(HeapPtr)/ address: The address to write to</member>
+                   </simplelist></para>
+                <para>
+                        Returns: <type/(HeapPtr)/ The supplied address
+                </para><para>
+                        This function retreives the current working directory (CWD) and stores
+                        its string representation at the location pointed to by the supplied
+                        parameter.
+                        <note><para>FreeSCI returns a sub-directory of the user's home directory,
+                          if applicable, instead of the cwd.</para></note>
+                </para>
+        </sect3>
+                
 
 	<sect3>
 	<Title/Kernel function 0x68: GetSaveDir()/
@@ -3444,13 +3425,15 @@ to pressing LShift-RShift-PadMinus.
 			kfunct 0x68: GetSaveDir
 		</funcdef><paramdef></paramdef></funcprototype></funcsynopsis>
 		<para>
-			Returns: <type>HeapPtr</type>
+			Returns: <type>(HeapPtr)</type>
 		</para><para>
 			This function returns the heap position allocated to store the string
 			representation of the save game directory. This heap space is
 			allocated automatically during startup.
 		</para>
 	</sect3>
+
+
 
  </sect2>
 </sect1>

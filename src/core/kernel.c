@@ -44,13 +44,27 @@
 #else /* !__GNUC__ */
 #define SCIkdebug(format, param...) \
         fprintf(stderr,"FSCI kernel (L%d): " format, __LINE__, ## param);
-#endif
+#endif /* !__GNUC__ */
 
 #else /* !SCI_KERNEL_DEBUG */
 
 #define SCIkdebug(format, param...)
 
 #endif /* !SCI_KERNEL_DEBUG */
+
+
+
+
+
+#ifdef __GNUC__
+#define SCIkwarn(format, param...) \
+        fprintf(stderr,"FSCI kernel (%s L%d): Warning: " format, __PRETTY_FUNCTION__, \
+	__LINE__, ## param);
+#else /* !__GNUC__ */
+#define SCIkwarn(format, param...) \
+        fprintf(stderr,"FSCI kernel (L%d): Warning: " format, __LINE__, ## param);
+#endif /* !__GNUC__ */
+
 
 
 /******************** Resource Macros ********************/
@@ -153,6 +167,9 @@ int kIsObject(state* s)
 
 #define PARAM(x) ((guint16) getInt16(s->heap + argp + ((x)*2)))
 
+#define PARAM_OR_ALT(x, alt) ((x < argc)? PARAM(x) : (alt))
+/* Returns the parameter value or (alt) if not enough parameters were supplied */
+
 
 /* kLoad(restype, resnr):
 ** Loads an arbitrary resource of type 'restype' with resource numbber 'resnr'
@@ -160,8 +177,35 @@ int kIsObject(state* s)
 void
 kLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->acc = (PARAM(0) << 11) | PARAM(1); /* Return the resource identifier */
-  /* FIXME: Add support for sci_memory */
+    int restype = PARAM(0);
+    int resnr = PARAM(1);
+
+    s->acc = ((restype << 11) | resnr); /* Return the resource identifier as handle */
+
+    if (restype == sci_memory) { /* Request to dynamically allocate hunk memory for later use */
+	int seeker;
+
+	for (seeker = 0; seeker < MAX_HUNK_BLOCKS; seeker++)
+	    if (s->hunk[seeker].size == resnr) {
+		SCIkwarn("Attempt to re-allocate 'memory.%d'\n", resnr);
+		return; /* I have a baaad feeling about this... */
+	    }
+
+	/* Not allocated yet */
+
+	seeker = 0;
+	while ((seeker < MAX_HUNK_BLOCKS) && (s->hunk[seeker].size))
+	    seeker++;
+
+	if (seeker == MAX_HUNK_BLOCKS)
+
+	    kernel_oops(s, "Out of hunk handles! Try increasing MAX_HUNK_BLOCKS in engine.h");
+
+	else
+	    s->hunk[seeker].data = malloc(s->hunk[seeker].size = resnr);
+	/* Requested memory size is equal to resource number for sci_memory */
+
+    }; /* End of "If we are supposed to actually allocate memory" */
 }
 
 /* kUnload():
@@ -170,8 +214,20 @@ kLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kUnLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  /* Do nothing */
-  /* FIXME: Add support for sci_memory */
+    int restype = PARAM(0);
+    int resnr = PARAM(1);
+
+    if (restype == sci_memory) {
+	int seeker;
+	for (seeker = 0; seeker < MAX_HUNK_BLOCKS; seeker++)
+	    if (s->hunk[seeker].size == resnr) {
+		free(s->hunk[seeker].data);
+		s->hunk[seeker].size = 0;
+		return;
+	    }
+
+	SCIkwarn("Attemt to unallocate nonexisting 'memory.%d'", resnr);
+    }
 }
 
 
@@ -384,6 +440,22 @@ kSetCursor(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
 void
+kShow(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+    s->pic_not_valid = 0;
+}
+
+
+void
+kPicNotValid(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+    s->acc = s->pic_not_valid;
+    if (argc)
+	s->pic_not_valid = PARAM(0);
+}
+
+
+void
 kstub(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int i;
@@ -413,6 +485,8 @@ struct {
   {"NewNode", kNewNode },
   {"AddToFront", kAddToFront },
   {"AddToEnd", kAddToEnd },
+  {"Show", kShow },
+  {"PicNotValid", kPicNotValid },
   {0,0} /* Terminator */
 };
 
@@ -422,7 +496,7 @@ script_map_kernel(state_t *s)
 {
   int functnr;
 
-  s->kfunct_table = malloc(sizeof(kfunct *) * s->kernel_names_nr);
+  s->kfunct_table = malloc(sizeof(kfunct *) * (s->kernel_names_nr + 1));
 
   for (functnr = 0; functnr < s->kernel_names_nr; functnr++) {
     int seeker, found = -1;

@@ -308,43 +308,49 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       break;
 
     case 0x0d: /* eq? */
-      s->acc = s->prev = (POP() == s->acc);
+      s->prev = s->acc;
+      s->acc = (POP() == s->acc);
       break;
 
     case 0x0e: /* ne? */
-      s->acc = s->prev = (POP() != s->acc);
+      s->prev = s->acc;
+      s->acc = (POP() != s->acc);
       break;
 
     case 0x0f: /* gt? */
-      s->acc = s->prev = (POP() > s->acc);
+      s->prev = s->acc;
+      s->acc = (POP() > s->acc);
       break;
 
     case 0x10: /* ge? */
-      s->acc = s->prev = (POP() >= s->acc);
+      s->prev = s->acc;
+      s->acc = (POP() >= s->acc);
       break;
 
     case 0x11: /* lt? */
-      s->acc = s->prev = (POP() < s->acc);
+      s->prev = s->acc;
+      s->acc = (POP() < s->acc);
       break;
 
     case 0x12: /* le? */
-      s->acc = s->prev = (POP() <= s->acc);
+      s->prev = s->acc;
+      s->acc = (POP() <= s->acc);
       break;
 
     case 0x13: /* ugt? */
-      s->acc = s->prev = ((guint16)(POP()) > ((guint16)(s->acc)));
+      s->acc = ((guint16)(POP()) > ((guint16)(s->acc)));
       break;
 
     case 0x14: /* uge? */
-      s->acc = s->prev = ((guint16)(POP()) >= ((guint16)(s->acc)));
+      s->acc = ((guint16)(POP()) >= ((guint16)(s->acc)));
       break;
 
     case 0x15: /* ult? */
-      s->acc = s->prev = ((guint16)(POP()) < ((guint16)(s->acc)));
+      s->acc = ((guint16)(POP()) < ((guint16)(s->acc)));
       break;
 
     case 0x16: /* ule? */
-      s->acc = s->prev = ((guint16)(POP()) <= ((guint16)(s->acc)));
+      s->acc = ((guint16)(POP()) <= ((guint16)(s->acc)));
       break;
 
     case 0x17: /* bt */
@@ -484,7 +490,7 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       break;
 
     case 0x2e: /* selfID */
-      s->acc = objp + 8; /* The original SCI sets the object beginning 8 bytes ahead of FreeSCI */
+      s->acc = objp;
       break;
 
     case 0x30: /* pprev */
@@ -536,11 +542,11 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
       break;
 
     case 0x39: /* lofsa */
-      s->acc = opparams[0] + old_pc + SCRIPT_LOFS_MAGIC;
+      s->acc = opparams[0] + pc;
       break;
 
     case 0x3a: /* lofss */
-      PUSH(opparams[0] + old_pc + SCRIPT_LOFS_MAGIC);
+      PUSH(opparams[0] + pc);
       break;
 
     case 0x3b: /* push0 */
@@ -1048,6 +1054,7 @@ script_run(state_t *s)
   heap_ptr game_obj; /* Address of the game object */
   heap_ptr game_init; /* Address of the init() method */
   heap_ptr functarea;
+  int i;
 
   if (!stack_handle) {
     sciprintf("script_run(): Insufficient heap space for stack\n");
@@ -1081,6 +1088,13 @@ script_run(state_t *s)
   /* Maps the kernel functions */
 
   s->mouse_pointer = NULL; /* No mouse pointer */
+
+  s->bgpic = allocEmptyPicture();
+  s->pic = allocEmptyPicture();
+  s->pic_not_valid = 0; /* Picture is valid (cough) */
+
+  memset(s->hunk, sizeof(s->hunk), 0); /* Sets hunk to be unused */
+
   s->save_dir = heap_allocate(s->_heap, MAX_HOMEDIR_SIZE + strlen(FREESCI_GAMEDIR)
 			      + MAX_GAMEDIR_SIZE + 4); /* +4 for the three slashes and trailing \0 */
 
@@ -1116,6 +1130,15 @@ script_run(state_t *s)
   vocabulary_free_knames(s->kernel_names);
   free(s->opcodes);
   free(s->kfunct_table);
+
+  freePicture(s->bgpic);
+  freePicture(s->pic);
+
+  for (i = 0; i < MAX_HUNK_BLOCKS; i++)
+      if (s->hunk[i].size) {
+	  free(s->hunk[i].data);
+	  s->hunk[i].size = 0;
+      }
 
   s->selector_names = NULL;
   s->kernel_names = NULL;
