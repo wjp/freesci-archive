@@ -1,5 +1,13 @@
+2000-06-11  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (_k_make_view_list): Picviews no longer leave
+	white control zones if their signal flag "IGNORE ACTOR" is set
+
 2000-06-10  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/vm.c: superClass properties are now set to the address of
+	the super class even for static objects and classes
+	
 	* src/graphics/con_io.c (con_input): Fixed cursor key support for the
 	on-screen console
 

@@ -1604,13 +1604,15 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int func
 	bottom = foo;
       }
 
-      SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n", retval[i].nsLeft, top,
-			     retval[i].nsRight, bottom);
-      graph_fill_box_custom(s, left + s->ports[s->view_port]->xmin,
-			    top + s->ports[s->view_port]->ymin,
-			    right - left + 1,
-			    bottom - top + 1,
-			    0, 0, 15, 4); /* Fill control map rectangle */
+      if (!(retval[i].signalp && (GET_HEAP(retval[i].signalp) & _K_VIEW_SIG_FLAG_IGNORE_ACTOR))) {
+	SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n", retval[i].nsLeft, top,
+		  retval[i].nsRight, bottom);
+	graph_fill_box_custom(s, left + s->ports[s->view_port]->xmin,
+			      top + s->ports[s->view_port]->ymin,
+			      right - left + 1,
+			      bottom - top + 1,
+			      0, 0, 15, 4); /* Fill control map rectangle */
+      }
     }
 
       /*    s->pic_not_valid++; *//* There ought to be some kind of check here... */
