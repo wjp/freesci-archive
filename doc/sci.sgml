@@ -4993,11 +4993,67 @@ Numbers beginning with a '$' are interpreted as hexadecimal numbers.
     </para>
 </sect3>
 
-<!-- fixme -->
-<sect3><Title/Kernel function 0x4f: BaseSetter(?)/<para></para></sect3>
+	<sect3>
+	<Title/Kernel function 0x4f: BaseSetter(HeapPtr)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x4f: BaseSetter
+		</funcdef><paramdef>HeapPtr view_obj</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(HeapPtr)/ view_obj: The view object whose base is to be set</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+                        This method is used to set the bounding rectangle of a view. The bounding rectangle
+                        is specified by the set {brLeft, brRight, brTop, brBottom} of selectors, which indicate
+                        the window-relative boundary points of the object's bounding rectangle. The rectangle defined
+                        here is used for colission detection, among other things.
+                </para><para>
+                        The algorithm employed by FreeSCI to determine these values appears to be either identical or
+                        very close to the original algorithm; it depends several of the object's selectors (x, y, z,
+	        	ystep, view) the width and height of the view indicated by its (view, loop, cel) selectors, and
+			that view's horizontal and vertical pixel offset modifyers (xmod, ymod).
+			The algorithm works as follows:
+<programlisting>
+	brLeft := x - xmod - width / 2
+	brRight := brLeft + width
+	brBottom := y - z - ymod + 1
+	brTop := brBottom - ystep
+</programlisting>
+		</para>
+	</sect3>
 
-<!-- fixme -->
-<sect3><Title/Kernel function 0x50: DirLoop(?)/<para></para></sect3>
+	<sect3>
+	<Title/Kernel function 0x50: DirLoop(HeapPtr, word)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x50: DirLoop
+		</funcdef><paramdef>HeapPtr object, word angle</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(HeapPtr)/ object: The object whose loop selector is to be set</member>
+                       <member><type/(word)/ angle: The angle which is to be used as a base to choose the loop angle</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			This function sets the loop selector of the specified object to a value implied by the 'angle' parameter,
+			according to the following table:
+			<informaltable>
+				<tgroup cols="2">
+					<thead>
+						<row><entry><parameter/angle/</entry><entry/loop value/</row>
+					</thead>
+					<tbody>
+						<row><entry/angle &lt; 45 || angle &gt;= 314/<entry/3/</row>
+						<row><entry/angle &gt;= 45 &amp;&amp; angle &lt; 135/<entry/0/</row>
+						<row><entry/angle &gt;= 135 &amp;&amp; angle &lt; 225/<entry/2/</row>
+						<row><entry/angle &gt;= 225 &amp;&amp; angle &lt; 314/<entry/1/</row>
+					</tbody>
+				</tgroup>
+			</informaltable>
+		</para>
+	</sect3>
 
 <!-- fixme -->
 <sect3><Title/Kernel function 0x51: CanBeHere(?)/<para></para></sect3>
@@ -5064,8 +5120,22 @@ to pressing LShift-RShift-PadMinus.
 <!-- fixme -->
 <sect3><Title/Kernel function 0x5b: ShowFree(?)/<para></para></sect3>
 
-<!-- fixme -->
-<sect3><Title/Kernel function 0x5c: MemoryInfo(?)/<para></para></sect3>
+	<sect3>
+	<Title/Kernel function 0x5c: MemoryInfo(word)/
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x5c: word mode
+		</funcdef><paramdef>word mode</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ mode: 0 or 1 (see below)</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word)</type> The amount of free memory on the heap, in bytes
+		</para><para>
+                        This function returns the total amount of free memory on the heap if mode == 0.
+                        If mode equals 1, the total size of the largest chunk of heap memory is returned.
+		</para>
+	</sect3>
 
 <!-- fixme -->
 <sect3><Title/Kernel function 0x5d: StackUsage(?)/<para></para></sect3>

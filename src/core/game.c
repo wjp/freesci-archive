@@ -508,6 +508,10 @@ game_exit(state_t *s)
     send_calls_allocated = 0;
   }
 
+  for (i = 1; i < 1000; i++)
+    if (s->scripttable[i].heappos > s->_heap->first_free)
+      s->scripttable[i].heappos = 0; /* Mark all non-high scripts as 'not installed', except for 0 */
+
   menubar_free(s->menubar);
 
   return 0;

@@ -1,3 +1,10 @@
+2000-04-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/game.c (game_exit): Fixed restarting in KQ4 by resetting
+	the list of installed scripts
+
+	* doc/sci.sgml: Added BaseSetter(), MemInfo(), DirLoop() to the docs
+
 2000-04-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/savegame.cfsml: Made sure synonyms are stored in
