@@ -380,10 +380,8 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	    printf("AIEEEE!  Malloc failed!\n");
 	    return GFX_FATAL;
 	  }
-
+	  memset(S->shm[i], 0, sizeof(XShmSegmentInfo));
 	  if (have_shmem) {
-	    memset(S->shm[i], 0, sizeof(XShmSegmentInfo));
-
 	    S->shm[i]->shmid = shmget(IPC_PRIVATE, (xsize * ysize * bytespp),
 				      IPC_CREAT | IPC_EXCL | 0777);
 	    if (S->shm[i]->shmid == -1) {
@@ -397,25 +395,22 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		have_shmem = 0;
 	      }
 	    }
-	    if (have_shmem)	    
+	    if (!XShmAttach(S->display, S->shm[i])) {
+	      printf("ARGH!  Can't attach\n");
+	      have_shmem = 0;
+	    }
+	    if (have_shmem) {	    
 	      S->visual[i] = XShmCreatePixmap(S->display, S->window, 
 					      S->shm[i]->shmaddr,
 					      S->shm[i], xsize, ysize, 
 					      bytespp << 3);
+	      S->shm[i]->readOnly = False;
+	    }
 	    if (!S->visual[i]) {
 	      free(S->shm[i]);
 	      have_shmem = 0;
 	    }
 
-	    if (have_shmem) {
-	      S->shm[i]->readOnly = False;
-
-	      if (!XShmAttach(S->display, S->shm[i])) {
-		printf("ARGH!  Can't attach\n");
-		have_shmem = 0;
-	      }
-	    }
-	    shmctl(S->shm[i]->shmid, IPC_RMID, 0);
 	    XSync(S->display, False);
 
 	    if (x11_error) {
@@ -427,6 +422,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	      x11_error = 0;
 	    }
 
+	    shmctl(S->shm[i]->shmid, IPC_RMID, 0);
 	    XSetErrorHandler(old_handler);
 	  }
 	  if (!have_shmem)
