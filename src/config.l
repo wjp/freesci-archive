@@ -38,18 +38,12 @@
 #  include <direct.h>
 
 #  define strcasecmp stricmp
-#  define PATH_MAX 255
 
 #endif
 
 
 #ifdef _DREAMCAST
 #  include <dc.h>
-#  define PATH_MAX 255
-#endif
-
-#ifdef __MORPHOS__
-#  define PATH_MAX 255
 #endif
 
 config_entry_t *conf;
@@ -68,7 +62,7 @@ struct {
 	void *(*check_driver)(char *name);
 } freesci_subsystems[FREESCI_DRIVER_SUBSYSTEMS_NR] = {
 	{"gfx", NULL},
-        {"pcm", parse_pcmout_driver},
+	{"pcm", parse_pcmout_driver},
 	{"midiout", parse_midiout_driver}
 };
 
@@ -255,9 +249,9 @@ standard_option standard_options[] = {
 	OPT_STATICREF("midiout_driver", midiout_driver, parse_midiout_driver),
 	OPT_STATICREF("midi_device", midi_device, parse_midi_device),
 	OPT_STATICREF("sound_server", sound_server, parse_sound_server),
-        OPT_STATICREF("pcmout_driver", pcmout_driver, parse_pcmout_driver),
-        OPT_INT("pcmout_rate", pcmout_rate, 11025, 48000),
-        OPT_NVP("pcmout_stereo", pcmout_stereo, yesno),
+	OPT_STATICREF("pcmout_driver", pcmout_driver, parse_pcmout_driver),
+	OPT_INT("pcmout_rate", pcmout_rate, 11025, 48000),
+	OPT_NVP("pcmout_stereo", pcmout_stereo, yesno),
 	OPT_INT("pcmout_buffer_size", pcmout_buffer_size, 64, 8192),
 	OPT_STRING("console_log", console_log),
 	OPT_STRING("module_path", module_path),
@@ -268,6 +262,15 @@ standard_option standard_options[] = {
 	OPT_INT("color_depth", color_depth, 8, 32),
 	OPT_END
 };
+
+
+static void
+configure_default(config_entry_t *conf);
+/* Write default configuration into 'conf' */
+
+static void
+configure_platform(config_entry_t *conf);
+/* Platform-specific config changes to 'conf' */
 
 
 static void
@@ -327,6 +330,7 @@ QUOTED_NUMPARAMTOKEN "\"".*"\""
 
 	conf[cur_section].resource_dir = sci_strdup(".");
 
+#ifndef ARM_WINCE
 	if (dospath)
 		conf[cur_section].work_dir = sci_strdup(exported_conf_path);
 	else {
@@ -339,6 +343,7 @@ QUOTED_NUMPARAMTOKEN "\"".*"\""
 		scimkdir(tmp, 0700); /* Make sure that the directory exists. */
 		/* This will be checked later, for the current game. */
 	}
+#endif
 
 }
 
@@ -366,10 +371,10 @@ resource_dir[[:blank:]]*"="[[:blank:]]*.+	if (cur_section) {
 
 debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 
-        yytext = strchr(yytext, '=') + 1;
+	yytext = strchr(yytext, '=') + 1;
 
-        while (isspace(*yytext))
-                yytext++;
+	while (isspace(*yytext))
+		yytext++;
 
 	strcpy (conf[cur_section].debug_mode, yytext);
 }
@@ -377,17 +382,17 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 
 [[:alnum:]]+"."[[:alnum:]]+"."[[:alnum:]_]+[[:blank:]]*"="[[:blank:]]*({NUMPARAMTOKEN}|{QUOTED_NUMPARAMTOKEN})[[:blank:]]* {
 /* driver parameters */
-        char *subsys_name = yytext;
-        char *driver_name;
+	char *subsys_name = yytext;
+	char *driver_name;
 	char *option, *value;
 	char *p2;
 
 
-        yytext = strchr(yytext, '.');
-        *yytext++ = 0;
-        driver_name = yytext;
 	yytext = strchr(yytext, '.');
-        *yytext++ = 0;
+	*yytext++ = 0;
+	driver_name = yytext;
+	yytext = strchr(yytext, '.');
+	*yytext++ = 0;
 
 
 	option = yytext;
@@ -435,8 +440,8 @@ debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
 
 <<EOF>> {
 
-        yy_delete_buffer( YY_CURRENT_BUFFER );
-        yyterminate();
+	yy_delete_buffer( YY_CURRENT_BUFFER );
+	yyterminate();
 }
 
 .* printf("Unrecognized option: '%s'\n", yytext);
@@ -487,53 +492,11 @@ config_init(config_entry_t **_conf, char *conffile)
 	memset(conf, 0, sizeof(config_entry_t));
 #endif
 
-/**** Default config: */
-	conf->gfx_options.workarounds = 0;
-	conf->gfx_options.buffer_pics_nr = 0;
-	conf->gfx_options.correct_rendering = 1;
-	conf->gfx_options.pic0_unscaled = 1;
-	conf->gfx_options.pic0_dither_mode = GFXR_DITHER_MODE_D256;
-	conf->gfx_options.pic0_dither_pattern = GFXR_DITHER_PATTERN_SCALED;
-	conf->gfx_options.pic0_brush_mode = GFX_BRUSH_MODE_RANDOM_ELLIPSES;
-	conf->gfx_options.pic0_line_mode = GFX_LINE_MODE_CORRECT;
-	conf->gfx_options.cursor_xlate_filter = GFX_XLATE_FILTER_NONE;
-	conf->gfx_options.view_xlate_filter = GFX_XLATE_FILTER_NONE;
-	conf->gfx_options.pic_xlate_filter = GFX_XLATE_FILTER_NONE;
-	conf->gfx_options.text_xlate_filter = GFX_XLATE_FILTER_NONE;
-	conf->gfx_options.dirty_frames = GFXOP_DIRTY_FRAMES_CLUSTERS;
-	conf->gfx_options.pic0_antialiasing = GFXR_ANTIALIASING_NONE;
+	/* Set default configuration */
+	configure_default(conf);
+	/* Platform-specific default config override */
+	configure_platform(conf);
 
-	conf->gfx_driver_name = NULL;
-        conf->pcmout_driver = pcmout_find_driver(NULL);
-        conf->pcmout_rate = 22050;
-        conf->pcmout_stereo = 1;
-	conf->pcmout_buffer_size = 1024;
-        conf->midiout_driver = midiout_find_driver(NULL);
-        conf->midi_device = midi_find_device(NULL);
-	conf->sound_server = sound_server_find_driver(NULL);
-
-	conf->x_scale = 0;
-	conf->y_scale = 0;
-	conf->scale = 0;
-	conf->color_depth = 0;
-
-	conf->mouse = 1;
-	conf->reverse_stereo = 0;
-
-	conf->version = 0;
-
-	conf->alpha_threshold = 0x90;
-	conf->animation_delay = 5;
-	conf->animation_granularity = 4;
-	conf->console_log = NULL;
-	conf->debug_mode [0] = '\0';
-	conf->name = NULL;
-	conf->resource_dir = NULL;
-	conf->work_dir = NULL;
-        conf->module_path = sci_strdup(SCI_DEFAULT_MODULE_PATH);
-
-	for (i = 0; i < FREESCI_DRIVER_SUBSYSTEMS_NR; i++)
-		conf->driver_options[i] = NULL;
 /**** Default config ends */
 
 
@@ -949,4 +912,68 @@ set_config_parameter(config_entry_t *conf, char *subsystem_name, char *driver_na
 	}
 
 	(*driver_optionsp)->value = sci_strdup(value);
+}
+
+
+static void
+configure_default(config_entry_t *conf)
+{
+	int i;
+
+	conf->gfx_options.workarounds = 0;
+	conf->gfx_options.buffer_pics_nr = 0;
+	conf->gfx_options.correct_rendering = 1;
+	conf->gfx_options.pic0_unscaled = 1;
+	conf->gfx_options.pic0_dither_mode = GFXR_DITHER_MODE_D256;
+	conf->gfx_options.pic0_dither_pattern = GFXR_DITHER_PATTERN_SCALED;
+	conf->gfx_options.pic0_brush_mode = GFX_BRUSH_MODE_RANDOM_ELLIPSES;
+	conf->gfx_options.pic0_line_mode = GFX_LINE_MODE_CORRECT;
+	conf->gfx_options.cursor_xlate_filter = GFX_XLATE_FILTER_NONE;
+	conf->gfx_options.view_xlate_filter = GFX_XLATE_FILTER_NONE;
+	conf->gfx_options.pic_xlate_filter = GFX_XLATE_FILTER_NONE;
+	conf->gfx_options.text_xlate_filter = GFX_XLATE_FILTER_NONE;
+	conf->gfx_options.dirty_frames = GFXOP_DIRTY_FRAMES_CLUSTERS;
+	conf->gfx_options.pic0_antialiasing = GFXR_ANTIALIASING_NONE;
+
+	conf->gfx_driver_name = NULL;
+	conf->pcmout_driver = pcmout_find_driver(NULL);
+	conf->pcmout_rate = 22050;
+	conf->pcmout_stereo = 1;
+	conf->pcmout_buffer_size = 1024;
+	conf->midiout_driver = midiout_find_driver(NULL);
+	conf->midi_device = midi_find_device(NULL);
+	conf->sound_server = sound_server_find_driver(NULL);
+
+	conf->x_scale = 0;
+	conf->y_scale = 0;
+	conf->scale = 0;
+	conf->color_depth = 0;
+
+	conf->mouse = 1;
+	conf->reverse_stereo = 0;
+
+	conf->version = 0;
+
+	conf->alpha_threshold = 0x90;
+	conf->animation_delay = 5;
+	conf->animation_granularity = 4;
+	conf->console_log = NULL;
+	conf->debug_mode [0] = '\0';
+	conf->name = NULL;
+	conf->resource_dir = NULL;
+	conf->work_dir = NULL;
+	conf->module_path = sci_strdup(SCI_DEFAULT_MODULE_PATH);
+
+	for (i = 0; i < FREESCI_DRIVER_SUBSYSTEMS_NR; i++)
+		conf->driver_options[i] = NULL;
+}
+
+void
+configure_platform(config_entry_t *conf)
+{
+#if defined(ARM_WINCE)
+	/* on Windows CE, default to lower audio quality for performance */
+	conf->pcmout_rate = 11025;
+	conf->pcmout_stereo = 0; /* Only one tape recorder in our nose */
+#endif;
 }

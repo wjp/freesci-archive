@@ -33,10 +33,7 @@
 #  endif
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
-#elif defined (_DREAMCAST)
-#  define PATH_MAX 255
 #elif defined (__MORPHOS__)
-#  define PATH_MAX 255
 #  include <sys/stat.h>
 #else
 #  include <unistd.h>
@@ -44,7 +41,7 @@
 #endif
 
 #ifdef _DREAMCAST
-#include <dc.h>
+#  include <dc.h>
 #endif
 
 #ifndef O_BINARY

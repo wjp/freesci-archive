@@ -39,11 +39,11 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %doc AUTHORS ChangeLog COPYING INSTALL NEWS 
 %doc THANKS TODO doc/sci.sgml
 %doc README*
+%{_bindir}/freesci
 %{_bindir}/sciv
 %{_bindir}/sciconsole
 %{_bindir}/scidisasm
 %{_bindir}/sciunpack
-%{_libdir}/libsciengine.a
 %{_mandir}/man6/
 
 %clean
