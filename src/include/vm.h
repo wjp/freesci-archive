@@ -90,10 +90,17 @@
 
 #define SCRIPT_SPECIES_OFFSET 8 -8
 /* Script-relative offset of the species ID */
-#define SCRIPT_SPECIES_SELECTOR 0
 
 #define SCRIPT_SUPERCLASS_OFFSET 10 -8
+
+/*---------------------------------*/
+/* Script selector index variables */
+/*---------------------------------*/
+#define SCRIPT_SPECIES_SELECTOR 0
 #define SCRIPT_SUPERCLASS_SELECTOR 1
+#define SCRIPT_INFO_SELECTOR 2
+#define SCRIPT_NAME_SELECTOR 3
+
 
 #define SCRIPT_LOFS_MAGIC 3
 /* Magic adjustment value for lofsa and lofss */
@@ -138,8 +145,9 @@ typedef struct {
 
 typedef struct {
 	int variables_nr;
-	reg_t variables[1];
-} object_varselectors_t;
+	byte *base_data; /* Pointer to the physical location of the underlying data in script_t */
+	reg_t *variables;
+} object_t;
 
 #define VM_OBJECT_SET_INDEX(ptr, index) { ((byte *) (ptr))[0] = (index) & 0xff; ((byte *) (ptr))[1] = ((index) >> 8) & 0xff; }
 #define VM_OBJECT_GET_INDEX(ptr) (getUInt16(((byte *)(ptr)) + SCRIPT_LOCALVARPTR_OFFSET))
@@ -154,7 +162,7 @@ typedef struct {
 	int synonyms_nr; /* Number of entries in the synonyms block */
 	int lockers; /* Number of classes and objects that require this script */
 
-	object_varselectors_t *objects; /* Table for objects, contains local variables */
+	object_t *objects; /* Table for objects, contains property variables */
 			/* Indexed by the value stored at SCRIPT_LOCALVARPTR_OFFSET, see VM_OBJECT_[GS]ET_INDEX() */
 	int objects_nr; /* Number of objects and classes */
 
@@ -164,11 +172,11 @@ typedef struct {
 
 typedef struct {
 	reg_t origin; /* Used for empty offset tracking */
-	object_varselectors_t props;
+	object_t props;
 } clone_t;
 
 typedef struct {
-	int clones_nr;
+	int clones_nr; /* Number of allocated clones */
 	int first_free_clone; /* Kept in a linked list using clones[idx].origin.offset */
 	clone_t *clones;
 } clone_table_t;
@@ -647,6 +655,26 @@ kfree(struct _state *s, int handle);
 ** Parameters: (state_t *) s: Pointer to the state_t to operate on
 **             (handle) space: The space to allocate
 ** Returns   : (int) 0 on success, 1 otherwise
+*/
+
+char *
+obj_get_name(struct _state *s, reg_t pos);
+/* Determines the name of an object
+** Parameters: (state_t *) s: Pointer to the state_t to operate on
+**             (reg_t) pos: Location of the object whose name we want to
+**                          inspect
+** Returns   : (char *) A name for that object, or a string describing
+**                      an error that occured while looking it up
+** The string is stored in a static buffer and need not be freed (neither
+** may it be modified).
+*/
+
+object_t *
+obj_get(struct _state *s, reg_t offset);
+/* Retreives an object from the specified location
+** Parameters: (state_t *) s: Pointer to the state_t to operate on
+**             (reg_t) offset: The object's offset
+** Returns   : (object_t *) The object in question, or NULL if there is none
 */
 
 int
