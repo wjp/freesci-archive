@@ -1116,22 +1116,30 @@ _gfxr_draw_line(gfxr_pic_t *pic, int x, int y, int ex, int ey, int color, int pr
 			}
 
 			for (xc = 0; xc < width; xc++)
-				_gfxr_draw_subline(pic, x + xc + x_offset, y + y_offset,
-						   ex + xc, ey, color, priority, drawenable);
+				_gfxr_draw_subline(pic,
+						   x + xc + x_offset, y + y_offset,
+						   ex + xc + x_offset, ey + y_offset,
+						   color, priority, drawenable);
 
 			if (height > 0)
 				for (xc = 0; xc < width; xc++)
-					_gfxr_draw_subline(pic, x + xc + x_offset, y + height - 1 + y_offset,
-							   ex + xc, ey + height - 1, color, priority, drawenable);
+					_gfxr_draw_subline(pic,
+							   x + xc + x_offset, y + height - 1 + y_offset,
+							   ex + xc + x_offset, ey + height - 1 + y_offset,
+							   color, priority, drawenable);
 
 			if (height > 1) {
 				for (yc = 1; yc < height - 1; yc++)
-					_gfxr_draw_subline(pic, x + x_offset, y + yc + height,
-							   ex, ey + yc, color, priority, drawenable);
+					_gfxr_draw_subline(pic,
+							   x + x_offset, y + yc + y_offset,
+							   ex + x_offset, ey + yc + y_offset,
+							   color, priority, drawenable);
 				if (width > 0)
 					for (yc = 1; yc < height - 1; yc++)
-						_gfxr_draw_subline(pic, x + width - 1 + x_offset, y + yc + y_offset,
-								   ex + width - 1, ey + yc, color, priority, drawenable);
+						_gfxr_draw_subline(pic,
+								   x + width - 1 + x_offset, y + yc + y_offset,
+								   ex + width - 1 + x_offset, ey + yc + y_offset,
+								   color, priority, drawenable);
 			}
 		}
 	}
