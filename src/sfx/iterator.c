@@ -28,15 +28,13 @@
 
 #include <stdio.h>
 #include <sfx_iterator.h>
+#include <resource.h>
+#include <sci_memory.h>
 
 #define SCI_SONG_ITERATOR_TYPE_SCI0 0
 #define SCI_SONG_ITERATOR_TYPE_SCI1 1
 
 #define SIPFX __FILE__" : "
-
-
-extern void *sci_malloc(size_t size);
-extern void sci_free(void *ref);
 
 
 static const int MIDI_cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0};

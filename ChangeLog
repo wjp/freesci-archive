@@ -1,5 +1,12 @@
 2002-11-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/kernel.c: Added hunk memory again
+
+	* src/engine/kgraphics.c (kGraph, kDisplay): Ported those
+
+	* src/include/kernel.h (SKPV, UKPV, SKPV_OR_ALT, UKPV_OR_ALT): Added
+	new macros for easier access to value parameters
+
 	* src/engine/kgraphics.c (animate_do_animation): Added scrolling up
 	and down as transition animations
 

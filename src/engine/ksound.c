@@ -79,15 +79,52 @@
 #define _K_SCI1_SOUND_REVERB 19 /* Get/Set */
 #define _K_SCI1_SOUND_UPDATE_VOL_PRI 20
 
+#define FROBNICATE_HANDLE(reg) ((reg).segment << 16 | (reg).offset)
+#define DEFROBNICATE_HANDLE(handle) (make_reg((handle & 0xffff) >> 16, handle & 0xffff))
+
+
+static song_iterator_t *
+build_iterator(state_t *s, int song_nr)
+{
+	resource_t *song = scir_find_resource(s->resmgr, sci_sound, song_nr, 0);
+
+	if (!song)
+		return NULL;
+
+	return songit_new(song->data, song->size, SCI_SONG_ITERATOR_TYPE_SCI0);
+}
+
 void
 process_sound_events(state_t *s) /* Get all sound events, apply their changes to the heap */
 {
-	/*
-	sound_event_t *event = NULL;
+	int result;
+	song_handle_t handle;
+	int cue;
 
-	if (s->sound_server == NULL)
-		return;
+	while ((result = sfx_poll(&s->sound, &handle, &cue))) {
+		reg_t obj = DEFROBNICATE_HANDLE(handle);
 
+		switch (result) {
+
+		case SI_LOOP:
+			PUT_SEL32V(obj, signal, -1);
+			break;
+
+		case SI_CUE:
+			PUT_SEL32V(obj, signal, cue + 1);
+			break;
+
+		case SI_FINISHED:
+			PUT_SEL32V(obj, state, _K_SOUND_STATUS_STOPPED);
+			break;
+
+		default:
+			sciprintf("Unexpected result from sfx_poll: %d\n", result);
+			break;
+		}
+	}
+
+	       /*
 	while ((event = s->sound_server->get_event(s))) {
 		heap_ptr obj = event->handle;
 

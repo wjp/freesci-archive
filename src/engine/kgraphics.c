@@ -196,10 +196,10 @@ _find_priority_band(state_t *s, int nr)
 	}
 }
 
-int
+reg_t
 graph_save_box(state_t *s, rect_t area)
 {
-	int handle = kalloc(s, HUNK_TYPE_GFXBUFFER, sizeof(gfxw_snapshot_t *));
+	reg_t handle = kalloc(s, "graph_save_box()", sizeof(gfxw_snapshot_t *));
 	gfxw_snapshot_t **ptr = (gfxw_snapshot_t **) kmem(s, handle);
 
 	*ptr = gfxw_make_snapshot(s->visual, area);
@@ -209,12 +209,12 @@ graph_save_box(state_t *s, rect_t area)
 
 
 void
-graph_restore_box(state_t *s, int handle)
+graph_restore_box(state_t *s, reg_t handle)
 {
 	gfxw_snapshot_t **ptr;
 	int port_nr = s->port->ID;
 
-	if (!handle) {
+	if (!handle.segment) {
 		SCIkwarn(SCIkWARNING, "Attempt to restore box with zero handle\n");
 		return;
 	}
@@ -325,36 +325,34 @@ kPicNotValid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 _k_redraw_box(state_t *s, int x1, int y1, int x2, int y2)
 {
-SCIkwarn(SCIkWARNING, "_k_redraw_box: Fixme!");
-#if 0
 	int i;
 
-  view_object_t *list = s->dyn_views;
+	sciprintf("_k_redraw_box(): Unimplemented!\n");
+#if 0
+	view_object_t *list = s->dyn_views;
 
-  sciprintf("Reanimating %d views\n", s->dyn_views_nr);
+	sciprintf("Reanimating views\n", s->dyn_views_nr);
 
 
-  for (i=0;i<s->dyn_views_nr;i++)
-  {
-    list[i].underBits=graph_save_box(s,
-	       list[i].nsLeft,
-	       list[i].nsTop,
-	       list[i].nsRight-list[i].nsLeft,
-	       list[i].nsBottom-list[i].nsTop,
-	       SCI_MAP_VISUAL | SCI_MAP_PRIORITY);
-    draw_view0(s->pic, s->ports[0],
-	       list[i].nsLeft, list[i].nsTop,
-	       list[i].priority, list[i].loop,
-	       list[i].cel, 0, list[i].view);
-  }
+	for (i=0;i<s->dyn_views_nr;i++) {
+		*(list[i].underBitsp) = graph_save_box(s,
+						       list[i].nsLeft,
+						       list[i].nsTop,
+						       list[i].nsRight-list[i].nsLeft,
+						       list[i].nsBottom-list[i].nsTop,
+						       SCI_MAP_VISUAL | SCI_MAP_PRIORITY);
+		draw_view0(s->pic, s->ports[0],
+			   list[i].nsLeft, list[i].nsTop,
+			   list[i].priority, list[i].loop,
+			   list[i].cel, 0, list[i].view);
+	}
 
-  graph_update_box(s, x1, y1, x2-x1, y2-y1);
+	graph_update_box(s, x1, y1, x2-x1, y2-y1);
 
-  for (i=0;i<s->dyn_views_nr;i++)
-  {
-    graph_restore_box(s, list[i].underBits);
-    list[i].underBits=0;
-  }
+	for (i=0;i<s->dyn_views_nr;i++)	{
+		graph_restore_box(s, *(list[i].underBitsp));
+		list[i].underBits=0;
+	}
 #endif
 }
 
@@ -381,19 +379,19 @@ _k_graph_rebuild_port_with_color(state_t *s, gfx_color_t newbgcolor)
 }
 
 
-void
-kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kGraph(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	rect_t area;
 	gfxw_port_t *port = s->port;
 	int redraw_port = 0;
 
-	area = gfx_rect(PARAM(2), PARAM(1) , PARAM(4), PARAM(3));
+	area = gfx_rect(SKPV(2), SKPV(1) , SKPV(4), SKPV(3));
 
 	area.xl = area.xl - area.x; /* Since the actual coordinates are absolute */
 	area.yl = area.yl - area.y;
 
-	switch(PARAM(0)) {
+	switch(SKPV(0)) {
 
 	case K_GRAPH_GET_COLORS_NR:
 
@@ -402,10 +400,10 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_GRAPH_DRAW_LINE: {
 
-		gfx_color_t gfxcolor = graph_map_ega_color(s, PARAM(5) & 0xf, PARAM_OR_ALT(6, -1), PARAM_OR_ALT(7, -1));
+		gfx_color_t gfxcolor = graph_map_ega_color(s, SKPV(5) & 0xf, SKPV_OR_ALT(6, -1), SKPV_OR_ALT(7, -1));
 
 		SCIkdebug(SCIkGRAPHICS, "draw_line((%d, %d), (%d, %d), col=%d, p=%d, c=%d, mask=%d)\n",
-			  PARAM(2), PARAM(1), PARAM(4), PARAM(3), PARAM(5), PARAM_OR_ALT(6, -1), PARAM_OR_ALT(7, -1),
+			  SKPV(2), SKPV(1), SKPV(4), SKPV(3), SKPV(5), SKPV_OR_ALT(6, -1), SKPV_OR_ALT(7, -1),
 			  gfxcolor.mask);
 
 		redraw_port = 1;
@@ -419,13 +417,13 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		area.x += s->port->zone.x;
 		area.y += s->port->zone.y;
 
-		s->acc = graph_save_box(s, area);
+		s->r_acc = graph_save_box(s, area);
 		break;
 
 	case K_GRAPH_RESTORE_BOX:
 
-		graph_restore_box(s, PARAM(1));
-	break;
+		graph_restore_box(s, argv[1]);
+		break;
 
 	case K_GRAPH_FILL_BOX_BACKGROUND:
 
@@ -445,13 +443,13 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_GRAPH_FILL_BOX_ANY: {
 
-		gfx_color_t color = graph_map_ega_color(s, PARAM(6), PARAM_OR_ALT(7, -1), PARAM_OR_ALT(8, -1));
+		gfx_color_t color = graph_map_ega_color(s, SKPV(6), SKPV_OR_ALT(7, -1), SKPV_OR_ALT(8, -1));
 
-		color.mask = (byte)UPARAM(5);
+		color.mask = (byte)UKPV(5);
 
 		SCIkdebug(SCIkGRAPHICS, "fill_box_any((%d, %d), (%d, %d), col=%d, p=%d, c=%d, mask=%d)\n",
-			  PARAM(2), PARAM(1), PARAM(4), PARAM(3), PARAM(6), PARAM_OR_ALT(7, -1), PARAM_OR_ALT(8, -1),
-			  UPARAM(5));
+			  SKPV(2), SKPV(1), SKPV(4), SKPV(3), SKPV(6), SKPV_OR_ALT(7, -1), SKPV_OR_ALT(8, -1),
+			  UKPV(5));
 
 		ADD_TO_CURRENT_BG_WIDGETS(gfxw_new_box(s->gfx_state, area, color, color, GFX_BOX_SHADE_FLAT));
 
@@ -461,7 +459,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	case K_GRAPH_UPDATE_BOX: {
 
 		SCIkdebug(SCIkGRAPHICS, "update_box(%d, %d, %d, %d)\n",
-			  PARAM(1), PARAM(2), PARAM(3), PARAM(4));
+			  SKPV(1), SKPV(2), SKPV(3), SKPV(4));
 
 		area.x += s->port->zone.x;
 		area.y += s->port->zone.y;
@@ -475,7 +473,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
 		SCIkdebug(SCIkGRAPHICS, "redraw_box(%d, %d, %d, %d)\n",
-			  PARAM(1), PARAM(2), PARAM(3), PARAM(4));
+			  SKPV(1), SKPV(2), SKPV(3), SKPV(4));
 
 		area.x += s->port->zone.x;
 		area.y += s->port->zone.y;
@@ -491,14 +489,14 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_GRAPH_ADJUST_PRIORITY:
 
-		SCIkdebug(SCIkGRAPHICS, "adjust_priority(%d, %d)\n", PARAM(1), PARAM(2));
-		s->priority_first = PARAM(1) - 10;
-		s->priority_last = PARAM(2) - 10;
+		SCIkdebug(SCIkGRAPHICS, "adjust_priority(%d, %d)\n", SKPV(1), SKPV(2));
+		s->priority_first = SKPV(1) - 10;
+		s->priority_last = SKPV(2) - 10;
 		break;
 
 	default:
 
-		SCIkdebug(SCIkSTUB, "Unhandled Graph() operation %04x\n", PARAM(0));
+		SCIkdebug(SCIkSTUB, "Unhandled Graph() operation %04x\n", SKPV(0));
 
 	}
 
@@ -1672,7 +1670,7 @@ _k_view_list_dispose_loop(state_t *s, list_t *list, gfxw_dyn_view_t *widget,
 		if (GFXW_IS_DYN_VIEW(widget) && (widget->ID != GFXW_NO_ID)) {
 			if ((signal = (((reg_t *)widget->signalp)->offset & _K_VIEW_SIG_FLAG_DISPOSE_ME))) {
 				reg_t obj = make_reg(widget->ID, widget->subID);
-				unsigned int under_bits = 0;
+				reg_t under_bits = NULL_REG;
 
 				if (!is_object(s, obj)) {
 					SCIkwarn(SCIkERROR, "Non-object "PREG" present"
@@ -1685,9 +1683,9 @@ _k_view_list_dispose_loop(state_t *s, list_t *list, gfxw_dyn_view_t *widget,
 #ifdef __GNUC__
 #warning "FIXME: Treat memory handles as separate segment!"
 #endif
-					word mem_handle = widget->under_bits = ((reg_t*)(widget->under_bitsp))->offset;
+					reg_t mem_handle = *((reg_t*)(widget->under_bitsp));
 
-					if (mem_handle) {
+					if (mem_handle.segment) {
 						if (!kfree(s, mem_handle)) {
 							*((reg_t*)(widget->under_bitsp)) = make_reg(0, widget->under_bits = 0);
 						} else {
@@ -1711,9 +1709,9 @@ _k_view_list_dispose_loop(state_t *s, list_t *list, gfxw_dyn_view_t *widget,
 					}
 
 					if (widget->under_bitsp)
-						under_bits = ((reg_t*)(widget->under_bitsp))->offset;
+						under_bits = *((reg_t*)(widget->under_bitsp));
 
-					if (under_bits) {
+					if (under_bits.segment) {
 						*((reg_t*)(widget->under_bitsp)) = make_reg(0, 0);
 						graph_restore_box(s, under_bits);
 					}
@@ -1764,7 +1762,8 @@ _k_make_dynview_obj(state_t *s, reg_t obj, int options, int nr, int funct_nr, in
 	int cel, loop, view_nr = GET_SEL32SV(obj, view);
 	int palette;
 	int has_nsrect = lookup_selector(s, obj, s->selector_map.nsBottom, NULL, NULL) == SELECTOR_VARIABLE;
-	int under_bits, signal;
+	int signal;
+	reg_t under_bits;
 	reg_t *under_bitsp, *signalp;
 	point_t pos;
 	int z;
@@ -1809,9 +1808,10 @@ _k_make_dynview_obj(state_t *s, reg_t obj, int options, int nr, int funct_nr, in
 	if (lookup_selector(s, obj, s->selector_map.underBits, &(under_bitsp), NULL)
 	    != SELECTOR_VARIABLE) {
 		under_bitsp = NULL;
-		under_bits = 0;
+		under_bits = NULL_REG;
 		SCIkdebug(SCIkGRAPHICS, "Object at "PREG" has no underBits\n", PRINT_REG(obj));
-	} else under_bits = ((reg_t *)under_bitsp)->offset;
+	} else
+		under_bits = *((reg_t *)under_bitsp);
 
 	if (lookup_selector(s, obj, s->selector_map.signal, &(signalp), NULL)
 	    != SELECTOR_VARIABLE) {
@@ -1829,7 +1829,7 @@ _k_make_dynview_obj(state_t *s, reg_t obj, int options, int nr, int funct_nr, in
 	if (widget) {
 
 		widget = (gfxw_dyn_view_t *) gfxw_set_id(GFXW(widget), obj.segment, obj.offset);
-		widget = gfxw_dyn_view_set_params(widget, under_bits,
+		widget = gfxw_dyn_view_set_params(widget, under_bits.segment,
 						  under_bitsp, signal, signalp);
 		widget->flags |= GFXW_FLAG_IMMUNE_TO_SNAPSHOTS; /* Only works the first time 'round */
 
@@ -3006,12 +3006,12 @@ kShakeScreen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #define K_DONT_UPDATE_IMMEDIATELY 121
 
 
-void
-kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kDisplay(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	int argpt;
-	int textp = UPARAM(0);
-	int index = UPARAM(1);
+	reg_t textp = argv[0];
+	int index = KP_UINT(argv[1]);
 	int temp;
 	int save_under = 0;
 	gfx_color_t transparent	= {0};
@@ -3032,33 +3032,39 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	bg_color = &(port->bgcolor);
 
 
-	text = kernel_lookup_text(s, textp, index);
-
-	if (textp < 1000)
-		argpt = 2;
-	else
+	if (textp.segment) {
 		argpt = 1;
+		text = (char *) kernel_dereference_pointer(s, textp, 0);
+	} else {
+		argpt = 2;
+		text = kernel_lookup_text(s, textp.offset, index);
+	}
+
+	if (!text) {
+		SCIkdebug(SCIkERROR, "Display with invalid reference "PREG"!\n", PRINT_REG(textp));
+		return NULL_REG;
+	}
 
 	while (argpt < argc) {
 
-		switch(PARAM(argpt++)) {
+		switch(KP_UINT(argv[argpt++])) {
 
 		case K_DISPLAY_SET_COORDS:
 
-			area.x = PARAM(argpt++);
-			area.y = PARAM(argpt++);
+			area.x = KP_UINT(argv[argpt++]);
+			area.y = KP_UINT(argv[argpt++]);
 			SCIkdebug(SCIkGRAPHICS, "Display: set_coords(%d, %d)\n", area.x, area.y);
 			break;
 
 		case K_DISPLAY_SET_ALIGNMENT:
 
-			halign = PARAM(argpt++);
+			halign = KP_SINT(argv[argpt++]);
 			SCIkdebug(SCIkGRAPHICS, "Display: set_align(%d)\n", halign);
 			break;
 
 		case K_DISPLAY_SET_COLOR:
 
-			temp = PARAM(argpt++);
+			temp = KP_SINT(argv[argpt++]);
 			SCIkdebug(SCIkGRAPHICS, "Display: set_color(%d)\n", temp);
 			if (temp >= 0 && temp <= 15)
 				color0 = &(s->ega_colors[temp]);
@@ -3070,7 +3076,7 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		case K_DISPLAY_SET_BGCOLOR:
 
-			temp = PARAM(argpt++);
+			temp = KP_SINT(argv[argpt++]);
 			SCIkdebug(SCIkGRAPHICS, "Display: set_bg_color(%d)\n", temp);
 			if (temp >= 0 && temp <= 15)
 				bg_color = &(s->ega_colors[temp]);
@@ -3082,20 +3088,20 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		case K_DISPLAY_SET_GRAYTEXT:
 
-			gray = PARAM(argpt++);
+			gray = KP_SINT(argv[argpt++]);
 			SCIkdebug(SCIkGRAPHICS, "Display: set_graytext(%d)\n", gray);
 			break;
 
 		case K_DISPLAY_SET_FONT:
 
-			font_nr = PARAM(argpt++);
+			font_nr = KP_UINT(argv[argpt++]);
 
 			SCIkdebug(SCIkGRAPHICS, "Display: set_font(\"font.%03d\")\n", font_nr);
 			break;
 
 		case K_DISPLAY_WIDTH:
 
-			area.xl = PARAM(argpt);
+			area.xl = KP_UINT(argv[argpt++]);
 			argpt++;
 			SCIkdebug(SCIkGRAPHICS, "Display: set_width(%d)\n", area.xl);
 			break;
@@ -3108,8 +3114,8 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		case K_DISPLAY_RESTORE_UNDER:
 
-			SCIkdebug(SCIkGRAPHICS, "Display: restore_under(%04x)\n", UPARAM(argpt));
-			graph_restore_box(s, UPARAM(argpt));
+			SCIkdebug(SCIkGRAPHICS, "Display: restore_under(%04x)\n", UKPV(argpt));
+			graph_restore_box(s, argv[argpt++]);
 			update_immediately = 1;
 			argpt++;
 			return;
@@ -3122,7 +3128,7 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			break;
 
 		default:
-			SCIkdebug(SCIkGRAPHICS, "Unknown Display() command %x\n", PARAM(argpt-1));
+			SCIkdebug(SCIkGRAPHICS, "Unknown Display() command %x\n", UKPV(argpt-1));
 			return;
 		}
 	}
@@ -3147,7 +3153,7 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		save_area.x += port->bounds.x;
 		save_area.y += port->bounds.y;
 
-		s->acc = graph_save_box(s, save_area);
+		s->r_acc = graph_save_box(s, save_area);
 		text_handle->serial++; /* This is evil! */
 
 		SCIkdebug(SCIkGRAPHICS, "Saving (%d, %d) size (%d, %d) as %04x\n",
@@ -3164,4 +3170,6 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		FULL_REDRAW();
 		SCIkdebug(SCIkGRAPHICS, "Refreshing display...\n");
 	}
+
+	return s->r_acc;
 }

@@ -129,17 +129,16 @@ is_object(state_t *s, reg_t object)
 /* kLoad(restype, resnr):
 ** Loads an arbitrary resource of type 'restype' with resource number 'resnr'
 */
-void
-kLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kLoad(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-    int restype = UPARAM(0);
-    int resnr = UPARAM(1);
+	int restype = KP_UINT(argv[0]);
+	int resnr = KP_UINT(argv[1]);
 
-    s->acc = ((restype << 11) | resnr); /* Return the resource identifier as handle */
-
-    if (restype == sci_memory)/* Request to dynamically allocate hunk memory for later use */
-      s->acc = kalloc(s, HUNK_TYPE_ANY, restype);
-
+	if (restype == sci_memory)/* Request to dynamically allocate hunk memory for later use */
+		return kalloc(s, "kLoad()", resnr);
+	
+	return make_reg(0, ((restype << 11) | resnr)); /* Return the resource identifier as handle */
 }
 
 void
@@ -165,15 +164,16 @@ kLock(state_t *s, int funct_nr, int argc, heap_ptr argp)
 /* kUnload():
 ** Unloads an arbitrary resource of type 'restype' with resource numbber 'resnr'
 */
-void
-kUnLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+kUnLoad(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-    int restype = UPARAM(0);
-    int resnr = UPARAM(1);
+	int restype = KP_UINT(argv[0]);
+	reg_t resnr = argv[1];
 
-    if (restype == sci_memory)
-      kfree(s, resnr);
+	if (restype == sci_memory)
+		kfree(s, resnr);
 
+	return s->r_acc;
 }
 
 

@@ -232,6 +232,15 @@ _free_graphics_input(state_t *s)
 	s->pics = NULL;
 }
 
+/*------------------------------------------------------------*/
+
+int
+game_init_sound(state_t *s)
+{
+	sfx_init(&s->sound);
+	return 0;
+}
+
 
 /* Maps a class ID to the script the corresponding class is contained in */
 /* Returns the script number suggested by vocab.996, or -1 if there's none */

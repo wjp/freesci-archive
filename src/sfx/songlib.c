@@ -26,6 +26,8 @@
 
 #include <stdio.h>
 #include <sfx_engine.h>
+#include <resource.h>
+#include <sci_memory.h>
 
 #define debug_stream stderr
 

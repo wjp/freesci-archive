@@ -44,6 +44,7 @@
 #include <kernel.h>
 #include <gfx_state_internal.h>
 #include <seg_manager.h>
+#include <sfx_engine.h>
 
 #define FREESCI_SAVEGAME_VERSION 5
 
@@ -64,8 +65,6 @@
 
 #define MAX_GAMEDIR_SIZE 32 /* Used for subdirectory inside of "~/.freesci/" */
 #define MAX_SAVEGAME_NR 20 /* Maximum number of savegames */
-
-#define MAX_HUNK_BLOCKS 256 /* Used for SCI "far memory"; only used for sci_memory in FreeSCI */
 
 #define MAX_SAVE_DIR_SIZE MAX_HOMEDIR_SIZE + STRLEN_FREESCI_GAMEDIR + MAX_GAMEDIR_SIZE + 4
 /* +4 for the three slashes and trailing \0 */
@@ -98,6 +97,7 @@ typedef struct _state
 	gfx_state_t *gfx_state; /* Graphics state and driver */
 	gfx_pixmap_t *old_screen; /* Old screen content: Stored during kDrawPic() for kAnimate() */
 
+	sfx_state_t sound; /* sound subsystem */
 	unsigned int sound_volume; /* 0x0 -> 0xf Current volume of sound system */
  	unsigned int sound_mute; /* 0 = not, else == saved value */
 
@@ -148,8 +148,6 @@ typedef struct _state
 
 	long animation_delay; /* A delay factor for pic opening animations. Defaults to 500. */
 	int animation_granularity; /* Number of animation steps to perform betwen updates for transition animations */
-
-	seg_id_t hunk[MAX_HUNK_BLOCKS]; /* Hunk memory blocks */
 
 	menubar_t *menubar; /* The menu bar */
 

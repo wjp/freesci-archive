@@ -132,6 +132,10 @@ c_segtable(state_t *s)
 				sciprintf("N  nodes (%d)", mobj->data.nodes.entries_used);
 				break;
 
+			case MEM_OBJ_HUNK:
+				sciprintf("H  hunk (%d)", mobj->data.hunks.entries_used);
+				break;
+
 			default:
 				sciprintf("I  Invalid (type = %x)", mobj->type);
 				break;
@@ -286,6 +290,20 @@ _c_single_seg_info(state_t *s, mem_obj_t *mobj)
 
 	case MEM_OBJ_NODES: {
 		sciprintf("nodes (total %d)\n", mobj->data.nodes.entries_used);
+	}
+
+	case MEM_OBJ_HUNK: {
+		int i;
+		hunk_table_t *ht =
+			&(mobj->data.hunks);
+
+		sciprintf("hunk  (total %d)\n", mobj->data.hunks.entries_used);
+		for (i = 0; i < ht->max_entry; i++)
+			if (ENTRY_IS_VALID(ht, i)) {
+				sciprintf("    [%04x] %d bytes at %p, type=%s\n",
+					  i, ht->table[i].entry.size, ht->table[i].entry.mem,
+					  ht->table[i].entry.type);
+				}
 	}
 		break;
 
@@ -3244,11 +3262,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 		_debug_step_running--;
 
 	/* Suspend music playing */
-#warning "Suspend music when entering debugger"
-#if 0
-	if (s->sound_server)
-		(s->sound_server->suspend)(s);
-#endif
+	sfx_suspend(&s->sound, 1);
 
 	while (_debugstate_valid) {
 		int skipfirst = 0;
@@ -3288,12 +3302,8 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 		sciprintf("\n");
 	}
 
-/* Resume music playing */
-#warning "Re-enable music when leaving debugger"
-#if 0
-	if (s->sound_server)
-		(s->sound_server->resume)(s);
-#endif
+	/* Resume music playing */
+	sfx_suspend(&s->sound, 0);
 }
 
 

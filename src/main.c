@@ -956,7 +956,7 @@ main(int argc, char** argv)
 
 	resmgr = scir_new_resource_manager(resource_dir,
 					   SCI_VERSION_AUTODETECT,
-					   1, 128*1024);
+					   1, 256*1024);
 
 	if (!resmgr) {
 		printf("No resources found in '%s'.\nAborting...\n",
@@ -1182,6 +1182,11 @@ main(int argc, char** argv)
 
 	if (game_init_graphics(gamestate)) { /* Init interpreter graphics */
 		fprintf(stderr,"Game initialization failed: Error in GFX subsystem. Aborting...\n");
+		return 1;
+	}
+
+	if (game_init_sound(gamestate)) {
+		fprintf(stderr,"Game initialization failed: Error in sound subsystem. Aborting...\n");
 		return 1;
 	}
 

@@ -213,6 +213,12 @@ _SCIkprintf(FILE *file, char *format, ...);
 #define KP_UINT(x) ((guint16) x.offset)
 #define KP_SINT(x) ((gint16) x.offset)
 
+
+#define SKPV(x) KP_SINT(argv[x])
+#define UKPV(x) KP_UINT(argv[x])
+#define SKPV_OR_ALT(x,a) KP_UINT(KP_ALT(x, make_reg(0, a)))
+#define UKPV_OR_ALT(x,a) KP_UINT(KP_ALT(x, make_reg(0, a)))
+
 reg_t *
 kernel_dereference_pointer(struct _state *s, reg_t pointer, int entries);
 /* Dereferences a heap pointer

@@ -616,6 +616,32 @@ script_locate_by_segment(state_t *s, seg_id_t seg)
 	return NULL;
 }
 
+
+static reg_t
+pointer_add(state_t *s, reg_t base, int offset)
+{
+	mem_obj_t *mobj = GET_SEGMENT_ANY(s->seg_manager, base.segment);
+
+	if (!mobj) {
+		script_debug_flag = script_error_flag = 1;
+		sciprintf("[VM] Error: Attempt to add %d to invalid pointer "PREG"!", offset, PRINT_REG(base));
+		return NULL_REG;
+	}
+
+	switch (mobj->type) {
+
+	case MEM_OBJ_SCRIPT:
+		base.offset += offset;
+		return base;
+		break;
+
+	default:
+		sciprintf("[VM] Error: Attempt to add %d to pointer "PREG": Pointer arithmetics of this type unsupported!", offset, PRINT_REG(base));
+		return NULL_REG;
+
+	}
+}
+
 static byte _fake_return_buffer[2] = {op_ret << 1, op_ret << 1};
 
 void
@@ -829,7 +855,29 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x01: /* add */
-			s->r_acc = ACC_ARITHMETIC_L (POP() + /*acc*/);
+			r_temp = POP32();
+			if (r_temp.segment || s->r_acc.segment) {
+				reg_t r_ptr;
+				int offset;
+				/* Pointer arithmetics! */
+				if (s->r_acc.segment) {
+					if (r_temp.segment) {
+						sciprintf("Error: Attempt to add two pointers, stack="PREG" and acc="PREG"!\n",
+							  PRINT_REG(r_temp), PRINT_REG(s->r_acc));
+						script_debug_flag = script_error_flag = 1;
+					} else {
+						r_ptr = s->r_acc; 
+						offset = r_temp.offset;
+					}
+				} else {
+					r_ptr = r_temp;
+					offset = r_temp.offset;
+				}
+
+				s->r_acc = pointer_add(s, r_ptr, offset);
+
+			} else
+				s->r_acc = make_reg(0, r_temp.offset + s->r_acc.offset);
 			break;
 
 		case 0x02: /* sub */

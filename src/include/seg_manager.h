@@ -70,6 +70,7 @@ void dbg_print( char* msg, int i );		// for debug only
 #define MEM_OBJ_SYS_STRINGS 5
 #define MEM_OBJ_LISTS 6
 #define MEM_OBJ_NODES 7
+#define MEM_OBJ_HUNK 8
 #define MEM_OBJ_MAX MEM_OBJ_NODES /* For sanity checking */
 typedef int mem_obj_enum;
 
@@ -77,6 +78,11 @@ struct _mem_obj;
 
 #define GET_SEGMENT(mgr, index, rtype) ((index) > 0 && (mgr).heap_size > index)?		\
 		(((mgr).heap[index] && (mgr).heap[index]->type == rtype)? (mgr).heap[index]	\
+		: NULL) /* Type does not match */						\
+	: NULL /* Invalid index */
+
+#define GET_SEGMENT_ANY(mgr, index) ((index) > 0 && (mgr).heap_size > index)?		\
+		(((mgr).heap[index])? (mgr).heap[index]	\
 		: NULL) /* Type does not match */						\
 	: NULL /* Invalid index */
 
@@ -96,6 +102,7 @@ typedef struct _seg_manager_t {
 	seg_id_t clones_seg_id; /* ID of the (a) clones segment */
 	seg_id_t lists_seg_id; /* ID of the (a) list segment */
 	seg_id_t nodes_seg_id; /* ID of the (a) node segment */
+	seg_id_t hunks_seg_id; /* ID of the (a) hunk segment */
 
 	/* member methods */
 	void (*init) (struct _seg_manager_t* self);
@@ -208,10 +215,12 @@ typedef struct _seg_manager_t {
 	clone_t* (*alloc_clone)(struct _seg_manager_t *self, reg_t *addr);
 	list_t* (*alloc_list)(struct _seg_manager_t *self, reg_t *addr);
 	node_t* (*alloc_node)(struct _seg_manager_t *self, reg_t *addr);
+	hunk_t* (*alloc_hunk)(struct _seg_manager_t *self, char *hunk_type, int size, reg_t *addr);
 
 	void (*free_clone)(struct _seg_manager_t *self, reg_t addr);
 	void (*free_list)(struct _seg_manager_t *self, reg_t addr);
 	void (*free_node)(struct _seg_manager_t *self, reg_t addr);
+	void (*free_hunk)(struct _seg_manager_t *self, reg_t addr);
 
 
 } seg_manager_t;

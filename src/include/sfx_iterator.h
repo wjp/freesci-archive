@@ -44,6 +44,8 @@
 #define SCI_MIDI_SET_SIGNAL_LOOP 0x7F
 /* If this is the parameter of 0xCF, the loop point is set here */
 
+#define SCI_MIDI_CONTROLLER(status) ((status & 0xF0) == 0xB0)
+
 /* States */
 
 #define SI_STATE_UNINITIALIZED -1

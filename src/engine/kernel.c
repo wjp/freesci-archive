@@ -36,8 +36,6 @@
 #include <kernel_types.h>
 
 
-void kLoad(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kUnLoad(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGameIsRestarting(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetCWD(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetCursor(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -63,16 +61,16 @@ void kAddMenu(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetMenu(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kCelWide(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kCelHigh(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kDisplay(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetTime(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kStrLen(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetFarText(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kReadNumber(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kStrEnd(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kStrCat(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kStrCmp(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kStrCpy(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kStrAt(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kReadNumber(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+
 void kNumCels(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kNumLoops(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDrawCel(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -107,7 +105,6 @@ void kRestartGame(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSaid(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kDoSound(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSetSynonyms(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void kGraph(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetEvent(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGetMenu(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kMenuSelect(struct _state *s, int funct_nr, int argc, heap_ptr argp);
@@ -140,7 +137,11 @@ reg_t kDoBresen(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kBaseSetter(struct _state *s, int funct_nr, int argc, reg_t *argp);
 reg_t kAddToPic(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kAnimate(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kDisplay(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kGraph(struct _state *s, int funct_nr, int argc, reg_t *argv);
 
+reg_t kLoad(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t kUnLoad(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kScriptID(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kDisposeScript(struct _state *s, int funct_nr, int argc, reg_t *argv);
 reg_t kIsObject(struct _state *s, int funct_nr, int argc, reg_t *argv);
@@ -178,9 +179,9 @@ reg_t kFsciEmu(struct _state *s, int funct_nr, int argc, reg_t *argv);
 
 
 sci_kernel_function_t kfunct_mappers[] = {
-/*00*/	{KF_OLD, "Load", {old:kLoad}},
-/*01*/	{KF_OLD, "UnLoad", {old:kUnLoad}},
-/*02*/	{KF_NEW, "ScriptID", {new:{kScriptID, "ii*"}}},
+/*00*/	{KF_NEW, "Load", {new:{kLoad, "ii"}}},
+/*01*/	{KF_NEW, "UnLoad", {new:{kUnLoad, "i."}}},
+/*02*/	{KF_NEW, "ScriptID", {new:{kScriptID,  "ii*"}}},
 /*03*/	{KF_NEW, "DisposeScript", {new:{kDisposeScript, "i"}}},
 /*04*/	{KF_NEW, "Clone", {new:{kClone, "o"}}},
 /*05*/	{KF_NEW, "DisposeClone", {new:{kDisposeClone, "o"}}},
@@ -189,8 +190,8 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*08*/	{KF_OLD, "DrawPic", {old:kDrawPic}},
 /*09*/	{KF_OLD, "Show", {old:kShow}},
 /*0a*/	{KF_OLD, "PicNotValid", {old:kPicNotValid}},
-/*0b*/	{KF_NEW, "Animate", {new:{kAnimate, "LI*"}}}, /* More like l?i? */
-/*0c*/	{KF_NEW, "SetNowSeen", {new:{kSetNowSeen, "oi*"}}},
+/*0b*/	{KF_NEW, "Animate", {new:{kAnimate, "LI*"}}}, /* More like (li?)? */
+/*0c*/	{KF_NEW, "SetNowSeen", {new:{kSetNowSeen, "oi*"}}}, /* The second parameter is ignored */
 /*0d*/	{KF_OLD, "NumLoops", {old:kNumLoops}},
 /*0e*/	{KF_OLD, "NumCels", {old:kNumCels}},
 /*0f*/	{KF_OLD, "CelWide", {old:kCelWide}},
@@ -205,7 +206,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*18*/	{KF_NEW, "HiliteControl", {new:{kHiliteControl, "o"}}},
 /*19*/	{KF_NEW, "EditControl", {new:{kEditControl, "ZoZo"}}},
 /*1a*/	{KF_NEW, "TextSize", {new:{kTextSize, "rrii*"}}},
-/*1b*/	{KF_OLD, "Display", {old:kDisplay}},
+/*1b*/	{KF_NEW, "Display", {new:{kDisplay, ".i.*"}}},
 /*1c*/	{KF_OLD, "GetEvent", {old:kGetEvent}},
 /*1d*/	{KF_OLD, "GlobalToLocal", {old:kGlobalToLocal}},
 /*1e*/	{KF_OLD, "LocalToGlobal", {old:kLocalToGlobal}},
@@ -294,7 +295,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*6d*/	{KF_OLD, "TimesCos", {old:kTimesCos}},
 /*6e*/	{KF_NONE, NULL},
 /*6f*/	{KF_NONE, NULL},
-/*70*/	{KF_OLD, "Graph", {old:kGraph}},
+/*70*/	{KF_NEW, "Graph", {new:{kGraph, ".*"}}},
 /*71*/	{KF_OLD, "Joystick", {old:kJoystick}},
 /*72*/	{KF_NONE, NULL},
 /*73*/	{KF_NONE, NULL},
@@ -355,84 +356,42 @@ kernel_oops(state_t *s, char *file, int line, char *reason)
 	return 0;
 }
 
-#warning "Re-implement hunk space (1)!"
+
 /* Allocates a set amount of memory for a specified use and returns a handle to it. */
-int
-kalloc(state_t *s, int type, int space)
+reg_t
+kalloc(state_t *s, char *type, int space)
 {
-#if 0
-	int seeker = 0;
+	reg_t reg;
 
-	while ((seeker < MAX_HUNK_BLOCKS) && (s->hunk[seeker].size))
-		seeker++;
+	s->seg_manager.alloc_hunk(&s->seg_manager, type, space, &reg);
+	SCIkdebug(SCIkMEM, "Allocated %d at hunk "PREG" (%s)\n", space, PRINT_REG(reg), type);
 
-	if (seeker == MAX_HUNK_BLOCKS)
-		KERNEL_OOPS("Out of hunk handles! Try increasing MAX_HUNK_BLOCKS in engine.h");
-	else {
-		s->hunk[seeker].data = sci_malloc(s->hunk[seeker].size = space);
-		s->hunk[seeker].type = type;
-	}
-
-	SCIkdebug(SCIkMEM, "Allocated %d at hunk %04x\n", space, seeker | (sci_memory << 11));
-
-	return (seeker | (sci_memory << 11));
-#endif
+	return reg;
 }
 
 
-#warning "Re-implement hunk space (2)!"
 /* Returns a pointer to the memory indicated by the specified handle */
 byte *
-kmem(state_t *s, int handle)
+kmem(state_t *s, reg_t handle)
 {
-#if 0
-	if ((handle >> 11) != sci_memory) {
-		SCIkwarn(SCIkERROR, "Error: kmem() without a handle (%04x)\n", handle);
-		return 0;
-	}
+	mem_obj_t *mobj = GET_SEGMENT(s->seg_manager, handle.segment, MEM_OBJ_HUNK);
+	hunk_table_t *ht = &(mobj->data.hunks);
 
-	handle &= 0x7ff;
-
-	if ((handle < 0) || (handle >= MAX_HUNK_BLOCKS)) {
+	if (!mobj || !ENTRY_IS_VALID(ht, handle.offset)) {
 		SCIkwarn(SCIkERROR, "Error: kmem() with invalid handle\n");
-		return 0;
+		return NULL;
 	}
 
-	return (byte *) s->hunk[handle & 0x7ff].data;
-#endif
+	return (byte *) ht->table[handle.offset].entry.mem;
 }
 
-#warning "Re-implement hunk space (3)!"
 /* Frees the specified handle. Returns 0 on success, 1 otherwise. */
 int
-kfree(state_t *s, int handle)
+kfree(state_t *s, reg_t handle)
 {
-#if 0
-	if ((handle >> 11) != sci_memory) {
-		SCIkwarn(SCIkERROR, "Attempt to kfree() non-handle (%04x)\n", handle);
-		return 1;
-	}
-
-	SCIkdebug(SCIkMEM, "Freeing hunk %04x\n", handle);
-
-	handle &= 0x7ff;
-
-	if ((handle < 0) || (handle >= MAX_HUNK_BLOCKS)) {
-		SCIkwarn(SCIkERROR, "Error: Attempt to kfree() with invalid handle\n");
-		return 1;
-	}
-
-	if (s->hunk[handle].size == 0) {
-		SCIkwarn(SCIkERROR, "Error: Attempt to kfree() non-allocated memory\n");
-		return 1;
-	}
-
-	free(s->hunk[handle].data);
-	s->hunk[handle].data = NULL;
-	s->hunk[handle].size = 0;
+	s->seg_manager.free_hunk(&s->seg_manager, handle);
 
 	return 0;
-#endif
 }
 
 

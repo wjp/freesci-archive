@@ -88,10 +88,13 @@ sm_dereference(seg_manager_t *self, reg_t ref, int *size);
 static clone_t *sm_alloc_clone(seg_manager_t *self, reg_t *addr);
 static list_t *sm_alloc_list(seg_manager_t *self, reg_t *addr);
 static node_t *sm_alloc_node(seg_manager_t *self, reg_t *addr);
+static hunk_t *sm_real_alloc_hunk(seg_manager_t *self, char *, int size, reg_t *addr);
+static hunk_t *sm_alloc_hunk(seg_manager_t *self, reg_t *addr);
 
 static void sm_free_clone(seg_manager_t *self, reg_t addr);
 static void sm_free_list(seg_manager_t *self, reg_t addr);
 static void sm_free_node(seg_manager_t *self, reg_t addr);
+static void sm_free_hunk(seg_manager_t *self, reg_t addr);
 
 
 /***--------------------------***/
@@ -140,6 +143,7 @@ void sm_init(seg_manager_t* self) {
 	self->clones_seg_id = 0;
 	self->lists_seg_id = 0;
 	self->nodes_seg_id = 0;
+	self->hunks_seg_id = 0;
 
 	/*  initialize the heap pointers*/
 	for (i = 0; i < self->heap_size; i++) {
@@ -197,10 +201,12 @@ void sm_init(seg_manager_t* self) {
 	self->alloc_clone = sm_alloc_clone;
 	self->alloc_list = sm_alloc_list;
 	self->alloc_node = sm_alloc_node;
+	self->alloc_hunk = sm_real_alloc_hunk;
 
 	self->free_clone = sm_free_clone;
 	self->free_list = sm_free_list;
 	self->free_node = sm_free_node;
+	self->free_hunk = sm_free_hunk;
 };
 
 /* destroy the object, free the memorys if allocated before */
@@ -254,7 +260,7 @@ int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, in
 		mem->data.script.buf_size = script->size;
 	}
 	mem->data.script.buf = (char*) sci_malloc (mem->data.script.buf_size);
-	dbg_print( "mem->data.script.buf ", mem->data.script.buf );
+	dbg_print( "mem->data.script.buf ", (int) mem->data.script.buf );
 	if (!mem->data.script.buf) {
 		sm_free_script ( mem );
 		sciprintf("seg_manager.c: Not enough memory space for script size" );
@@ -951,6 +957,21 @@ guint16 sm_validate_export_func(struct _seg_manager_t* self, int pubfunct, int s
 	return offset;
 };
 
+static hunk_t *
+sm_real_alloc_hunk(seg_manager_t *self, char *hunk_type, int size, reg_t *reg)
+{
+	hunk_t *h = sm_alloc_hunk(self, reg);
+
+	if (!h)
+		return NULL;
+
+	h->mem = sci_malloc(size);
+	h->size = size;
+	h->type = hunk_type;
+
+	return h;
+}
+
 static void
 _clone_cleanup(clone_t *clone)
 {
@@ -958,9 +979,17 @@ _clone_cleanup(clone_t *clone)
 		sci_free(clone->variables); /* Free the dynamically allocated memory part */
 }
 
+static void
+_hunk_cleanup(hunk_t *hunk)
+{
+	if (hunk->mem)
+		free (hunk->mem);
+}
+
 DEFINE_HEAPENTRY(list, 8, 4);
 DEFINE_HEAPENTRY(node, 32, 16);
 DEFINE_HEAPENTRY_WITH_CLEANUP(clone, 16, 4, _clone_cleanup);
+DEFINE_HEAPENTRY_WITH_CLEANUP(hunk, 4, 4, _hunk_cleanup);
 
 #define DEFINE_ALLOC_DEALLOC(TYPE, SEGTYPE) \
 static TYPE##_t *										  \
@@ -1001,6 +1030,7 @@ sm_free_##TYPE(seg_manager_t *self, reg_t addr)							  \
 DEFINE_ALLOC_DEALLOC(clone, MEM_OBJ_CLONES);
 DEFINE_ALLOC_DEALLOC(list, MEM_OBJ_LISTS);
 DEFINE_ALLOC_DEALLOC(node, MEM_OBJ_NODES);
+DEFINE_ALLOC_DEALLOC(hunk, MEM_OBJ_HUNK);
 
 
 

@@ -117,10 +117,6 @@
 #define SELECTOR_METHOD 2
 /* Types of selectors as returned by grep_selector() below */
 
-/* kalloc types: */
-#define HUNK_TYPE_ANY 0
-#define HUNK_TYPE_GFXBUFFER 1 /* Graphical buffer */
-
 typedef struct {
 	int script; /* number of the script the class is in, -1 for non-existing */
 	reg_t reg; /* offset; script-relative offset, segment: 0 if not instantiated */  
@@ -217,12 +213,20 @@ typedef struct _list_struct {
 	reg_t last;
 } list_t;
 
+typedef struct {
+	void *mem;
+	unsigned int size;
+	char *type;
+} hunk_t;
+
 /* clone_table_t */
 DECLARE_HEAPENTRY(clone);
 /* node_table_t */
 DECLARE_HEAPENTRY(node);
 /* list_table_t */
 DECLARE_HEAPENTRY(list); /* list entries */
+/* hunk_table_t */
+DECLARE_HEAPENTRY(hunk);
 
 typedef struct _mem_obj {
 	int type;
@@ -235,6 +239,7 @@ typedef struct _mem_obj {
 		sys_strings_t sys_strings;
 		list_table_t lists;
 		node_table_t nodes;
+		hunk_table_t hunks;
 	} data;
 } mem_obj_t;
 
@@ -649,6 +654,15 @@ game_init_graphics(struct _state *s);
 ** the graphics data.
 */
 
+int
+game_init_sound(struct _state *s);
+/* Initializes the sound part of an SCI game
+** Parameters: (state_t *) s: The state to initialize the sound in
+** Returns   : (int) 0 on success, 1 if an error occured
+** This function may only be called if game_init() did not initialize
+** the graphics data.
+*/
+
 
 int
 game_run(struct _state **s);
@@ -710,30 +724,30 @@ script_detect_early_versions(struct _state *s);
 ** Returns   : (void)
 */
 
-int
-kalloc(struct _state *s, int type, int space);
+reg_t
+kalloc(struct _state *s, char *type, int space);
 /* Allocates "kernel" memory and returns a handle suitable to be passed on to SCI scripts
 ** Parameters: (state_t *) s: Pointer to the state_t to operate on
-**             (int) type: One of HUNK_TYPE_(ANY|GFXBUFFER)
+**             (char *) type: A free-form type description string (static)
 **             (int) space: The space to allocate
-** Returns   : (int) The handle
+** Returns   : (reg_t) The handle
 */
 
 
 byte *
-kmem(struct _state *s, int handle);
+kmem(struct _state *s, reg_t handle);
 /* Returns a pointer to "kernel" memory based on the handle
 ** Parameters: (state_t *) s: Pointer to the state_t to operate on
-**             (int) handle: The handle to use
+**             (reg_t) handle: The handle to use
 ** Returns   : (byte *) A pointer to the allocated memory
 */
 
 
 int
-kfree(struct _state *s, int handle);
+kfree(struct _state *s, reg_t handle);
 /* Frees all "kernel" memory associated with a handle
 ** Parameters: (state_t *) s: Pointer to the state_t to operate on
-**             (handle) space: The space to allocate
+**             (reg_t) handle: The handle to free
 ** Returns   : (int) 0 on success, 1 otherwise
 */
 
