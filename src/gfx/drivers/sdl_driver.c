@@ -324,7 +324,7 @@ sdl_init(struct _gfx_driver *drv)
 	int depth = 0;
 	int i;
 
-	if (SDL_Init(SDL_INIT_VIDEO)) {
+	if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE)) {
 		DEBUGB("Failed to init SDL\n");
 		return GFX_FATAL;
 	}

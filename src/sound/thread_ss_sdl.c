@@ -85,6 +85,7 @@ int sound_sdl_init(state_t *s, int flags)
 
   if (SDL_Init(SDL_INIT_EVENTTHREAD | SDL_INIT_NOPARACHUTE) < 0) {
     fprintf(debug_stream, "sound_sdl_init(): SDL_Init() returned -1\n");
+    return -1;
   }
 
   /* open up the output devices */

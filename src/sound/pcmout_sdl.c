@@ -30,21 +30,18 @@
 
 static gint16 *buffer;
 
-/* SDL wants its buffer to be filled completely and we generate sound
- * in smaller chunks. So we fill SDL's buffer and keep the remaining
- * sound in the mixer buffer to be used in the next call.
- */
+/* SDL wants its buffer to be filled completely, so we generate samples
+   to fill the whole buffer.
+*/
 static void fill_audio (void *udata, guint8 *stream, int len)
 {
-  int p, remain;
+  int remain = 0;
   int shift = (pcmout_stereo) ? 2: 1;
 
-  p = 0;
-
   while (len > 0) {
-    remain = mix_sound(len) << shift;
-    memcpy(stream + p, buffer, remain);
-    p += remain;
+    remain = mix_sound(len >> shift) << shift;
+    memcpy(stream, buffer, remain);
+    stream += remain;
     len -= remain;
   }
 }
@@ -55,7 +52,7 @@ static int pcmout_sdl_open(gint16 *b, guint16 rate, guint8 stereo)
   
   buffer = b;
 
-  if (SDL_Init(SDL_INIT_AUDIO) != 0) {
+  if (SDL_Init(SDL_INIT_AUDIO|SDL_INIT_NOPARACHUTE) != 0) {
     fprintf (stderr, "SDL: %s\n", SDL_GetError());
     return -1;
   }
