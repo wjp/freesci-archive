@@ -38,7 +38,7 @@ sound_server_t *global_sound_server = NULL;
 int soundserver_dead = 0;
 
 
-static int
+static void
 sound_server_print_channels_any(FILE *ds, int *channel_instrument,
 				byte *mute_channel, int flag)
 {
@@ -54,14 +54,14 @@ sound_server_print_channels_any(FILE *ds, int *channel_instrument,
 		}
 }
 
-static int
+static void
 sound_server_print_channels(FILE *ds, int *channel_instrument,
 			    byte *mute_channel)
 {
 	sound_server_print_channels_any(ds, channel_instrument, mute_channel, 0);
 }
 
-static int
+static void
 sound_server_print_mapped_channels(FILE *ds, int *channel_instrument,
 				   byte *mute_channel)
 {
@@ -230,7 +230,6 @@ sci0_soundserver()
 	case SOUND_COMMAND_INIT_SONG: {
 	  byte *data, *datptr;
 	  int size, totalsize = 0;
-	  int received, left_of_block;
 
 	  if (debugging)
 	    fprintf(ds, "Receiving song for handle %04x: ", event.handle);
