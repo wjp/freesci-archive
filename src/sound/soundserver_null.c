@@ -233,6 +233,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 			ticks = 1; /* Just fade for this tick */
 
 		} else if (song && (song->fading == 0)) { /* Finished fading? */
+		  printf("song %04x faded out \n", song->handle);
 			song->status = SOUND_STATUS_STOPPED;
 			midi_allstop();
 			song->pos = song->loopmark = 33; /* Reset position */
@@ -463,8 +464,8 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 					      fprintf(ds, "Suspending paused song\n");
 					    }
 					  }
-
 					  /*
+
 					    if (debugging)
 					    fprintf(ds, "Suspending handle %04x (value %04x)\n", event.handle, event.value);
 					 
@@ -475,8 +476,8 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 					    
 					    } else
 					    fprintf(ds, "Attempt to suspend invalid handle %04x\n", event.handle);
-					    
-					  */
+					  */ /* Old code. */
+
 					}
 					  break;
 
@@ -524,17 +525,18 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 						if (debugging)
 						  fprintf(ds, "Fading %d on handle %04x\n", event.value, event.handle);
-						/*
+
 						if (song) {
 						  song->fading = event.value;
 						  song->maxfade = event.value;
 						} 
-						*/
 
+						/*
 						if (modsong) 
 						modsong->fading = event.value;
 						else
 						fprintf(ds, "Attempt to fade on invalid handle %04x\n", event.handle);
+						*/
 						break;
 
 					case SOUND_COMMAND_TEST: {
@@ -758,12 +760,14 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 			}
 
 			if (song->fading >= 0) {
+
 				fadeticks = ticks;
 				ticks = !!ticks;
 				song->fading -= fadeticks;
 
-				if (song->fading < 0)
+				if (song->fading < 0) 
 					song->fading = 0; /* Faded out after the ticks have run out */
+
 			}
 
 		}
@@ -844,7 +848,7 @@ void sci_midi_command(song_t *song, guint8 command,
 	    song->maxfade = 1;
 
 	  param2 *= (song->fading) / (song->maxfade);  /* scale the velocity */
-	  printf("fading %d %d\n", song->fading, song->maxfade);
+	  /*	  printf("fading %d %d\n", song->fading, song->maxfade);*/
 	}
 
       case 0xb0:  /* program control */

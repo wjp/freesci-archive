@@ -1,3 +1,7 @@
+2001-03-11  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/sound/soundserver_null.c:  Correct SCI Fading implemented.
+
 2001-03-11  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kOnControl): Removed invalid fix
