@@ -42,18 +42,16 @@ find_config(char *game_name, config_entry_t *conf, int conf_entries,
 int
 game_select_resource_found(void)
 {
-	int found = 0;
-	sci_dir_t dirent;
-	sci_init_dir(&dirent);
+	int fd;
 
-	if (sci_find_first(&dirent, "resource.map"))
+	fd = sci_open("resource.map", O_RDONLY | O_BINARY);
+	if (IS_VALID_FD(fd))
 	{
-		found = 1;
+		close(fd);
+		return 1;
 	}
 
-	sci_finish_find(&dirent);
-
-	return found;
+	return 0;
 }
 
 int

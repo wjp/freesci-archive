@@ -1,3 +1,9 @@
+2004-08-01  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/menu/game_select.c (game_select_resource_found): Look for
+	resource.map with sci_open(), the filename may contain uppercase
+	characters.
+
 2004-07-08  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/main.c: Restore cwd after calling	config_init(). Two small
