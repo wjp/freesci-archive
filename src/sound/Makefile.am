@@ -7,5 +7,5 @@ sfx_save.c: sfx_save.cfsml
 	cat sfx_save.cfsml | ../engine/cfsml.pl -f savegame.cfsml > sfx_save.c
 
 datadir = $(prefix)/share/games/freesci
-data_DATA = std.o3 drums.o3 std.sb drums.sb
+data_DATA =
 
