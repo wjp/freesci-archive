@@ -86,6 +86,7 @@ int midiout_alsaraw_open()
 
 	if ((err = snd_rawmidi_open(&handle, card, device, SND_RAWMIDI_OPEN_OUTPUT)) < 0) {
 		fprintf(stderr, "OL Open failed (%i): /dev/snd/midiC%iD%i\n", err, card, device);
+		fprintf(stderr, "If you're using ALSA 0.9.0 or newer, please re-compile or submit a bug report!\n");
 		handle = NULL;
 		return -1;
 	}

@@ -98,6 +98,8 @@ static name_value_pair valid_modes[] = {
 static name_value_pair yesno[] = {
 	{"yes", 1},
 	{"no", 0},
+	{"true", 1},
+	{"false", 0},
 	{"1", 1},
 	{"0", 0},
 	{"ok", 1},

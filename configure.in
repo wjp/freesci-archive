@@ -176,6 +176,7 @@ AC_SUBST(RPM_VERSION)
 
 AC_OUTPUT(Makefile    \
 	debian/Makefile \
+	desktop/Makefile \
 	doc/Makefile \
         doc/misc/Makefile \
         doc/man/Makefile \
