@@ -287,6 +287,7 @@ kDisposeScript(state_t *s, int funct_nr, int argc, reg_t *argv)
 	int script = argv[0].offset;
 
 	script_uninstantiate(s, script);
+	return s->r_acc;
 }
 
 static int
@@ -302,7 +303,7 @@ kIsObject(state_t *s, int funct_nr, int argc, reg_t *argv)
 	if (argv[0].offset == 0xffff) /* Treated specially */
 		return NULL_REG;
 	else
-		s->acc = is_heap_object(s, argv[0]);
+		return make_reg(0, is_heap_object(s, argv[0]));
 }
 
 reg_t

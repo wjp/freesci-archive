@@ -1,3 +1,8 @@
+2002-11-19  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kmovement.c (kInitBresen): Fixed default for step size
+	(kDoBresen): Fixed
+
 2002-11-18  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/include/heapmgr.h (alloc_<T>_entry): Fixed a memory

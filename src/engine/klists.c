@@ -471,7 +471,7 @@ kDeleteKey(state_t *s, int funct_nr, int argc, reg_t *argv)
 	list_t *l = LOOKUP_LIST(argv[0]);
 
 	if (IS_NULL_REG(node_pos))
-		return make_reg(0, 1);  /* Signal failure */
+		return NULL_REG; /* Signal falure */
 
 	n = LOOKUP_NODE(node_pos);
 	if (REG_EQ(l->first, node_pos))
@@ -486,7 +486,7 @@ kDeleteKey(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	s->seg_manager.free_node(&s->seg_manager, node_pos);
 
-	return NULL_REG; /* Signal success */
+	return make_reg(0, 1); /* Signal success */
 }
 
 

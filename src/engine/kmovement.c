@@ -129,7 +129,7 @@ initialize_bresen(state_t *s, int funct_nr, int argc, reg_t *argv, reg_t mover, 
 	PUT_SEL32V(mover, dx, deltax_step);
 	PUT_SEL32V(mover, dy, deltay_step);
 
-	SCIkdebug(SCIkBRESEN, "Init bresen for mover %04x: d=(%d,%d)\n", mover, deltax, deltay);
+	SCIkdebug(SCIkBRESEN, "Init bresen for mover "PREG": d=(%d,%d)\n", PRINT_REG(mover), deltax, deltay);
 	SCIkdebug(SCIkBRESEN, "    steps=%d, mv=(%d, %d), i1= %d, i2=%d\n",
 		  numsteps, deltax_step, deltay_step, i1, bdi*2);
 
@@ -148,7 +148,8 @@ kInitBresen(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	int deltax = GET_SEL32SV(mover, x) - GET_SEL32SV(client, x);
 	int deltay = GET_SEL32SV(mover, y) - GET_SEL32SV(client, y);
-	initialize_bresen(s, funct_nr, argc, argv, mover, KP_UINT(KP_ALT(1, NULL_REG)), deltax, deltay);
+
+	initialize_bresen(s, funct_nr, argc, argv, mover, KP_UINT(KP_ALT(1, make_reg(0, 1))), deltax, deltay);
 
 	return s->r_acc;
 }
@@ -238,10 +239,8 @@ kDoBresen(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	invoke_selector(INV_SEL(client, canBeHere, 0), 0);
 
-	if (s->r_acc.offset) { /* Contains the return value */
-		s->r_acc = make_reg(0, completed);
-	}
-	else {
+	if (!s->r_acc.offset) { /* Contains the return value */
+
 		signal = GET_SEL32V(client, signal);
 
 		PUT_SEL32V(client, x, oldx);
@@ -250,13 +249,14 @@ kDoBresen(state_t *s, int funct_nr, int argc, reg_t *argv)
 		PUT_SEL32V(client, signal, (signal | _K_VIEW_SIG_FLAG_HIT_OBSTACLE));
 
 		SCIkdebug(SCIkBRESEN, "Finished mover "PREG" by collision\n", PRINT_REG(mover));
-		s->r_acc = make_reg(0, completed = 1);
+		completed = 1;
 	}
 
 	if (SCI_VERSION_MAJOR(s->version)>0)
-		if (completed) invoke_selector(INV_SEL(mover, moveDone, 0), 0);
+		if (completed)
+			invoke_selector(INV_SEL(mover, moveDone, 0), 0);
 
-	return s->r_acc;
+	return make_reg(0, completed);
 }
 
 extern void

@@ -3027,7 +3027,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 		p_pp = pp;
 		p_objp = objp;
 		p_restadjust = restadjust;
-		sciprintf("acc="PREG"  ", PRINT_REG(s->r_acc));
+		sciprintf("%d: acc="PREG"  ", script_step_counter, PRINT_REG(s->r_acc));
 		_debugstate_valid = 1;
 		disassemble(s, *pc, 0, 1);
 

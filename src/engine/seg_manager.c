@@ -494,7 +494,7 @@ int sm_check (seg_manager_t* self, int seg) {
 		return 0;
 	}
 	if (!self->heap[seg]) {
-		sciprintf("seg_manager.c: seg is removed from memory, but not removed from hash_map " );
+		sciprintf("seg_manager.c: seg %x is removed from memory, but not removed from hash_map\n", seg );
 		return 0;
 	}
 	return 1;

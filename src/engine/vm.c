@@ -650,16 +650,9 @@ run_vm(state_t *s, int restoring)
 	setjmp(vm_error_address);
 	jump_initialized = 1;
 #endif
-//
-//
-//  if (restoring) {
-//
-//
-//  } else {
-//
-//    s->execution_stack_base = s->execution_stack_pos;
-//
-//  }
+
+	if (!restoring)
+		s->execution_stack_base = s->execution_stack_pos;
 
 #ifndef DISABLE_VALIDATIONS
 	/* Initialize maximum variable count */
@@ -700,35 +693,45 @@ run_vm(state_t *s, int restoring)
 			s->execution_stack_pos_changed = 0;
 			obj = obj_get(s, xs->objp);
 
-			if (!obj)
-				sciprintf("Attempt to run on non-existant obj "PREG"\n", PRINT_REG(xs->objp));
-			/* aaaand segfault! */
+			if (!obj) {
+				SCIkdebug(SCIkWARNING, "Attempt to run on non-existant obj "PREG"\n", PRINT_REG(xs->objp));
+			}
 
 			local_script = script_locate_by_segment(s, xs->local_segment);
-			variables_seg[VAR_LOCAL] = local_script->locals_segment;
+			if (!local_script) {
+				SCIkdebug(SCIkERROR, "Could not find local script.%03d!\n", xs->local_segment);
+				script_debug_flag = script_error_flag = 1;
+			} else {
+				variables_seg[VAR_LOCAL] = local_script->locals_segment;
 
-			if (local_script->locals_block)
-				variables_base[VAR_LOCAL] = variables[VAR_LOCAL]
-					= local_script->locals_block->locals;
-			else
-				variables_base[VAR_LOCAL] = variables[VAR_LOCAL]
-					= NULL;
+				if (local_script->locals_block)
+					variables_base[VAR_LOCAL] = variables[VAR_LOCAL]
+						= local_script->locals_block->locals;
+				else
+					variables_base[VAR_LOCAL] = variables[VAR_LOCAL]
+						= NULL;
 #ifndef DISABLE_VALIDATIONS
-			if (local_script->locals_block)
-				variables_max[VAR_LOCAL] = local_script->locals_block->nr;
-			else
-				variables_max[VAR_LOCAL] = 0;
-			variables_max[VAR_TEMP] = xs->sp - xs->fp;
-			variables_max[VAR_PARAM] = xs->argc + 1;
+				if (local_script->locals_block)
+					variables_max[VAR_LOCAL] = local_script->locals_block->nr;
+				else
+					variables_max[VAR_LOCAL] = 0;
+				variables_max[VAR_TEMP] = xs->sp - xs->fp;
+				variables_max[VAR_PARAM] = xs->argc + 1;
+			}
 #endif
 			variables[VAR_TEMP] = xs->fp;
 			variables[VAR_PARAM] = xs->variables_argp;
 
 			scr = script_locate_by_segment(s, xs->addr.pc.segment);
-			code_buf = scr->buf;
+			if (scr) {
+				code_buf = scr->buf;
 #ifndef DISABLE_VALIDATIONS
-			code_buf_size = scr->buf_size;
+				code_buf_size = scr->buf_size;
 #endif
+			} else {
+				SCIkdebug(SCIkERROR, "Could not find code script.%03d!\n", xs->addr.pc.segment);
+				script_debug_flag = script_error_flag = 1;
+			}
 		}
 
 		script_error_flag = 0; /* Set error condition to false */
@@ -944,7 +947,7 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x1e: /* dup */
-			PUSH32(xs->sp[-1]);
+			PUSH32(xs->sp[0]);
 			break;
 
 		case 0x1f: /* link */
@@ -1054,6 +1057,7 @@ run_vm(state_t *s, int restoring)
 
 					--(s->execution_stack_pos);
 
+					s->execution_stack_pos_changed = 1;
 					s->r_amp_rest = restadjust; /* Update &rest */
 					return; /* "Hard" return */
 				}
@@ -1864,8 +1868,6 @@ script_uninstantiate(state_t *s, int script_nr)
 			reg.offset -= SCRIPT_OBJECT_MAGIC_OFFSET;
 
 			superclass = OBJ_SUPERCLASS(s, reg, MEM_OBJ_SCRIPT); /* Get superclass... */
-
-			fprintf(stderr, "SuperClass = %04x from pos %04x\n", superclass, reg.offset);
 
 			if (superclass >= 0) {
 				int superclass_script = s->classtable[superclass].script;
