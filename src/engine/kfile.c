@@ -370,7 +370,6 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, heap_ptr argp)
   char dir_buffer [MAX_PATH], dir_buffer2 [MAX_PATH];
   int mode = UPARAM(0);
 
-  CHECK_THIS_KERNEL_FUNCTION;
 
   switch(mode) {
 
@@ -445,7 +444,6 @@ kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int mode = UPARAM(0);
 
-  CHECK_THIS_KERNEL_FUNCTION;
 
   switch(mode) {
 
@@ -678,7 +676,6 @@ kCheckSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	TEST_DIR_OR_QUIT(workdir);
 
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (soundserver_dead) {
 		sciprintf("Soundserver is dead- cannot save game state!");
@@ -777,7 +774,6 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	update_savegame_indices(gfname);
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	SCIkASSERT(UPARAM(0) >= 800);
 	SCIkASSERT(nametarget >= 800);
@@ -879,7 +875,6 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	savegame_dir = _k_get_savedir_name(savedir_id);
 
-	CHECK_THIS_KERNEL_FUNCTION;
 	s->acc = 1;
 
 	if (gamestate_save(s, savegame_dir)) {
@@ -927,7 +922,6 @@ kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	savedir_nr = _savegame_indices[savedir_nr].id;
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (savedir_nr > -1) {
 		char *savedir_name = _k_get_savedir_name(savedir_nr);
@@ -1040,7 +1034,6 @@ kFileIO(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int func_nr = UPARAM(0);
 
-  CHECK_THIS_KERNEL_FUNCTION;
 
   switch (func_nr) {
 

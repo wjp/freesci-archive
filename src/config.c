@@ -22,14 +22,8 @@
 #ifdef __cplusplus
 
 #include <stdlib.h>
-#ifndef _Win32
+#ifndef _WIN32
 #include <unistd.h>
-#else
-#ifndef YY_ALWAYS_INTERACTIVE
-#ifndef YY_NEVER_INTERACTIVE
-extern int isatty YY_PROTO(( int ));
-#endif
-#endif
 #endif
 
 /* Use prototypes in function declarations. */
@@ -824,6 +818,7 @@ standard_option standard_options[] = {
 	OPT_STATICREF("sound_server", sound_server, parse_sound_server),
         OPT_STATICREF("pcmout_driver", pcmout_driver, parse_pcmout_driver),
         OPT_INT("pcmout_rate", pcmout_rate, 11025, 48000),
+        OPT_INT("pcmout_stereo", pcmout_rate, 0, 1),
 	OPT_STRING("console_log", console_log),
 	OPT_STRING("module_path", module_path),
 	OPT_STRING("gfx_driver", gfx_driver_name),
@@ -841,7 +836,7 @@ parse_option(char *option, int optlen, char *value);
 char *
 crop_value(char *yytext);
 
-#line 845 "lex.yy.c"
+#line 840 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -1003,10 +998,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 269 "config.l"
+#line 270 "config.l"
 
 
-#line 1010 "lex.yy.c"
+#line 1005 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -1091,7 +1086,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 271 "config.l"
+#line 272 "config.l"
 {
 	char *cleanup;
 	++yytext; /* Get over opening bracket */
@@ -1138,7 +1133,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 316 "config.l"
+#line 317 "config.l"
 {
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1151,7 +1146,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 326 "config.l"
+#line 327 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1164,7 +1159,7 @@ if (cur_section) {
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 336 "config.l"
+#line 337 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1176,7 +1171,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 346 "config.l"
+#line 347 "config.l"
 {
 /* driver parameters */
         char *subsys_name = yytext;
@@ -1208,7 +1203,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 376 "config.l"
+#line 377 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
@@ -1233,16 +1228,16 @@ case 7:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 397 "config.l"
+#line 398 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 399 "config.l"
+#line 400 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 401 "config.l"
+#line 402 "config.l"
 {
         yy_delete_buffer( YY_CURRENT_BUFFER );
         yyterminate();
@@ -1250,15 +1245,15 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 406 "config.l"
+#line 407 "config.l"
 printf("Unrecognized option: '%s'\n", yytext);
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 408 "config.l"
+#line 409 "config.l"
 ECHO;
 	YY_BREAK
-#line 1262 "lex.yy.c"
+#line 1257 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -1820,7 +1815,7 @@ YY_BUFFER_STATE b;
 	}
 
 
-#ifndef _Win32
+#ifndef _WIN32
 #include <unistd.h>
 #else
 #ifndef YY_ALWAYS_INTERACTIVE
@@ -2146,7 +2141,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 408 "config.l"
+#line 409 "config.l"
 
 
 int
@@ -2212,6 +2207,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->gfx_driver_name = NULL;
         conf->pcmout_driver = pcmout_find_driver(NULL);
         conf->pcmout_rate = 22050;
+        conf->pcmout_stereo = 1;
         conf->midiout_driver = midiout_find_driver(NULL);
         conf->midi_device = midi_find_device(NULL);
 	conf->sound_server = sound_server_find_driver(NULL);

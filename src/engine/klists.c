@@ -264,7 +264,6 @@ kEmptyList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	heap_ptr list = UPARAM(0);
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (!sane_listp(s, list))
 		SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
@@ -281,7 +280,6 @@ kAddAfter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	heap_ptr firstnode = UPARAM(1);
 	heap_ptr newnode = UPARAM(2);
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (!sane_listp(s, list))
 		SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);

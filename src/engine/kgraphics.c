@@ -309,7 +309,6 @@ kShow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	s->pic_visible_map = sci_ffs(UPARAM_OR_ALT(0, 1)) - 1;
 
-	CHECK_THIS_KERNEL_FUNCTION;
 	s->pic_not_valid = 2;
 }
 
@@ -317,7 +316,6 @@ kShow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kPicNotValid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	CHECK_THIS_KERNEL_FUNCTION;
 	s->acc = s->pic_not_valid;
 	if (argc)
 		s->pic_not_valid = (byte)PARAM(0);
@@ -434,7 +432,6 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		port = s->port;
 
 		redraw_port = 1;
-		CHECK_THIS_KERNEL_FUNCTION;
 		break;
 
 	case K_GRAPH_FILL_BOX_FOREGROUND:
@@ -443,7 +440,6 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		port = s->port;
 
 		redraw_port = 1;
-		CHECK_THIS_KERNEL_FUNCTION;
 		break;
 
 	case K_GRAPH_FILL_BOX_ANY: {
@@ -457,7 +453,6 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			  UPARAM(5));
 
 		ADD_TO_CURRENT_BG_WIDGETS(gfxw_new_box(s->gfx_state, area, color, color, GFX_BOX_SHADE_FLAT));
-		CHECK_THIS_KERNEL_FUNCTION;
 
 	}
 	break;
@@ -471,14 +466,12 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		area.y += s->port->zone.y;
 
 		gfxop_update_box(s->gfx_state, area);
-		CHECK_THIS_KERNEL_FUNCTION;
 
 	}
 	break;
 
 	case K_GRAPH_REDRAW_BOX: {
 
-		CHECK_THIS_KERNEL_FUNCTION;
 
 		SCIkdebug(SCIkGRAPHICS, "redraw_box(%d, %d, %d, %d)\n",
 			  PARAM(1), PARAM(2), PARAM(3), PARAM(4));
@@ -504,7 +497,6 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	default:
 
-		CHECK_THIS_KERNEL_FUNCTION;
 		SCIkdebug(SCIkSTUB, "Unhandled Graph() operation %04x\n", PARAM(0));
 
 	}
@@ -851,7 +843,6 @@ kNumLoops(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int view = GET_SELECTOR(obj, view);
 	int loops_nr = gfxop_lookup_view_get_loops(s->gfx_state, view);
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (loops_nr < 0) {
 		SCIkwarn(SCIkERROR, "view.%d (0x%x) not found\n", view, view);
@@ -872,7 +863,6 @@ kNumCels(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int view = GET_SELECTOR(obj, view);
 	int cel = 0xffff;
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (gfxop_check_cel(s->gfx_state, view, &loop, &cel)) { /* OK, this is a hack and there's a
 							       ** real function to calculate cel numbers... */
@@ -892,7 +882,6 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int map, xstart, ystart;
 	int xlen = 1, ylen = 1;
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (argc == 2 || argc == 4)
 		map = 4;
@@ -930,7 +919,6 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int palette = PARAM_OR_ALT(3, 0);
 	gfx_color_t transparent = s->wm_port->bgcolor;
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (s->version < SCI_VERSION_FTU_NEWER_DRAWPIC_PARAMETERS) {
 		if (!PARAM_OR_ALT(2, 0))
@@ -1112,7 +1100,6 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	heap_ptr object = PARAM(0);
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	_k_base_setter(s, object);
 
@@ -1223,7 +1210,6 @@ kSetNowSeen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	heap_ptr object = PARAM(0);
 
-	CHECK_THIS_KERNEL_FUNCTION;
 	_k_set_now_seen(s, object);
 
 } /* kSetNowSeen */
@@ -1240,7 +1226,6 @@ kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	heap_ptr obj = UPARAM(0);
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	_k_draw_control(s, obj, 0);
 	FULL_REDRAW();
@@ -1252,7 +1237,6 @@ kHiliteControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	heap_ptr obj = UPARAM(0);
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	_k_draw_control(s, obj, 1);
 }
@@ -1292,7 +1276,6 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	heap_ptr obj = UPARAM(0);
 	heap_ptr event = UPARAM(1);
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (obj) {
 		word ct_type = GET_SELECTOR(obj, type);
@@ -2168,7 +2151,6 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	gfxw_list_t *pic_views;
 	heap_ptr list = PARAM(0);
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	assert_primary_widget_lists(s);
 
@@ -2231,7 +2213,6 @@ kSetPort(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	unsigned int port_nr = PARAM(0);
 	gfxw_port_t *new_port;
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	new_port = gfxw_find_port(s->visual, port_nr);
 
@@ -2256,7 +2237,6 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int priority = PARAM_OR_ALT(5, -1);
 	gfxw_view_t *new_view;
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (!view) {
 		SCIkwarn(SCIkERROR, "Attempt to draw non-existing view.%03n\n", view);
@@ -2287,7 +2267,6 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	gfxw_port_t *goner;
 	gfxw_port_t *pred;
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	goner = gfxw_find_port(s->visual, goner_nr);
 	if ((goner_nr < 3) || (goner == NULL)) {
@@ -2324,7 +2303,6 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	gfx_color_t bgcolor	= {0};
 	int priority;
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	y = PARAM(0);
 	x = PARAM(1);
@@ -2802,7 +2780,6 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int old_pnv = s->pic_not_valid; /* Backup old value */
 	int open_animation = 0;
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	process_sound_events(s); /* Take care of incoming events (kAnimate is called semi-regularly) */
 	_k_animate_ran = 1; /* Used by some of the invoked functions to check for recursion, which may,
@@ -2979,7 +2956,6 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	color0 = &(port->color);
 	bg_color = &(port->bgcolor);
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	text = kernel_lookup_text(s, textp, index);
 

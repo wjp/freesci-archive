@@ -196,6 +196,15 @@ typedef struct {
 /* Same size */
 	int _0_;
 #endif
+
+	int vol;
+	int pri;
+	
+	int min;	/* SMPTE time format */
+	int sec;
+	int frame;
+
+	int dataInc;
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {

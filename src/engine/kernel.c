@@ -419,7 +419,6 @@ kRestartGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kGameIsRestarting(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	CHECK_THIS_KERNEL_FUNCTION;
 	s->acc = (s->restarting_flags & SCI_GAME_WAS_RESTARTED);
 
 	if ((old_save_dir)&&(s->save_dir))
@@ -437,7 +436,6 @@ kGameIsRestarting(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kHaveMouse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	s->acc = (s->have_mouse_flag
 		  && gfxop_have_mouse(s->gfx_state))? -1 : 0;
@@ -465,7 +463,6 @@ k_Unknown(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	kfunct *funct = (funct_nr >= SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR)? NULL : unknown_function_map[funct_nr];
 
 	if (!funct) {
-		CHECK_THIS_KERNEL_FUNCTION;
 		SCIkwarn(SCIkSTUB, "Unhandled Unknown function %04x\n", funct_nr);
 	} else funct(s, funct_nr, argc, argp);
 }
@@ -499,7 +496,6 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	GTimeVal time_prec;
 	time_t the_time;
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	/* Reset optimization flags: If this function is called,
 	** the game may be waiting for a timeout  */
@@ -577,7 +573,6 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kMemory(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	switch (PARAM(0)) {
 
@@ -643,7 +638,6 @@ kstub(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kNOP(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	CHECK_THIS_KERNEL_FUNCTION;
 	SCIkwarn(SCIkWARNING, "Warning: Kernel function 0x%02x invoked: NOP\n", funct_nr);
 }
 

@@ -118,7 +118,6 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr said_block = UPARAM(0);
   int new_lastmatch;
 
-  CHECK_THIS_KERNEL_FUNCTION;
 
   if (is_object(s, said_block)) {
     SCIkwarn(SCIkWARNING, "Attempt to apply Said() to object %04x\n", said_block);
@@ -256,7 +255,6 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
   char *error;
   result_word_t *words;
   heap_ptr event = UPARAM(1);
-  CHECK_THIS_KERNEL_FUNCTION;
 
   s->parser_event = event;
   s->parser_lastmatch_word = SAID_NO_MATCH;
@@ -350,7 +348,6 @@ kStrEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kStrCat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	strcat((char *) s->heap + UPARAM(0), (char *) s->heap + UPARAM(1));
 }
@@ -370,7 +367,6 @@ kStrCpy(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 	heap_ptr dest = UPARAM(0);
 	heap_ptr src = UPARAM(1);
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	s->acc = PARAM(0);
 
@@ -456,7 +452,6 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int str_leng = 0; /* Used for stuff like "%13s" */
 	int unsigned_var = 0;
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	source = kernel_lookup_text(s, position, index);
 
@@ -623,7 +618,6 @@ kGetFarText(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	char *seeker;
 	int counter = PARAM(1);
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (!textres) {
 		SCIkwarn(SCIkERROR, "text.%d does not exist\n", PARAM(0));

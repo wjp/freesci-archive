@@ -96,7 +96,6 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	heap_ptr obj = UPARAM(1);
 	sci_event_t e;
 	int oldx, oldy;
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (s->kernel_opt_flags & KERNEL_OPT_FLAG_GOT_2NDEVENT) {
 		/* Penalty time- too many requests to this function without
@@ -276,7 +275,6 @@ kLocalToGlobal(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void /* Not implemented */
 kJoystick(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	CHECK_THIS_KERNEL_FUNCTION;
 	SCIkdebug(SCIkSTUB, "Unimplemented syscall 'Joystick()'\n", funct_nr);
 	s->acc = 0;
 }

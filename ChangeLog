@@ -1,3 +1,9 @@
+2002-09-22  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/ksound.c (kDoSound): Added stubs for SCI01.
+	* src/engine/* (kernel functions): Removed calls to
+	CHECK_THIS_KERNEL FUNCTION.
+
 2002-09-22  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/sound/pcmout_*, src/config.l, src/main.c,

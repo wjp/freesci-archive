@@ -99,6 +99,10 @@ struct _state;
    clobbered the old songs.
 */
 
+#define SCI_VERSION_FTU_DOSOUND_VARIANT_1 SCI_VERSION(1,000,000)
+#define SCI_VERSION_FTU_DOSOUND_VARIANT_2 SCI_VERSION(1,000,510)
+
+
 typedef int sci_version_t;
 
 struct _state;

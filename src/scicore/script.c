@@ -156,6 +156,12 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(mode, "mode");
   FIND_SELECTOR(caller, "caller");
   FIND_SELECTOR(moveDone, "moveDone");
+  FIND_SELECTOR(vol, "vol");
+  FIND_SELECTOR(pri, "pri");
+  FIND_SELECTOR(min, "min");
+  FIND_SELECTOR(sec, "sec");
+  FIND_SELECTOR(frame, "frame");
+  FIND_SELECTOR(dataInc, "dataInc");
 }
 
 int

@@ -40,7 +40,6 @@ kSetJump(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int x = 0;
 	int y = 0;
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	if ((dx)&&(abs(dy)>dx)) t1=(2*abs(dy))/dx;
 
@@ -276,7 +275,6 @@ kDoAvoider(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int dx, dy;
 	int destx, desty;
 
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	s->acc = -1;
 

@@ -89,7 +89,6 @@ kDrawStatus(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kDrawMenuBar(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-	CHECK_THIS_KERNEL_FUNCTION;
 
 	if (PARAM(0))
 		sciw_set_menubar(s, s->titlebar_port, s->menubar, -1);
