@@ -338,7 +338,9 @@ RECORD script_t "script_t" {
 	heap_ptr heappos;
 	heap_ptr localvar_offset;
 	heap_ptr export_table_offset;
+	heap_ptr synonyms_offset;
 	int lockers;
+	int synonyms_nr;
 }
 
 
