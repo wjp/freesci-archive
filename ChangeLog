@@ -1,3 +1,7 @@
+2001-05-28  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* doc/sci.sgml: Added documentation for scripts
+
 2001-05-27  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/drivers/xlib_driver.c (xlib_draw_filled_rect_RENDER): Added

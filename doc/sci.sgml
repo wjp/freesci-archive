@@ -2774,9 +2774,9 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
   <sect1>
   <Title/Introduction/
    <sect2>
-   <Title/Script resources and the VM/
+   <Title/Script resources/
     <para>
-      Like any processor, the SCI virtual machine is useless without code to execute.
+      Like any processor, the SCI virtual machine is virtually useless without code to execute.
       This code is provided by script resources, which constitute the logic behind any
       SCI game.
     </para><para>
@@ -2785,9 +2785,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
       other memory spaces have to be used implicitly or explicitly by using kernel calls.
       The heap also contains a stack, which is heavily used by SCI bytecode.
     </para><para>
-      Each script resource may contain one or several of various script objects, listed
-      here<footnote><para/Other types are used as well, but they are addressed directly by the
-      SCI bytecode, so their meaning has not been thoroughly investigated yet/</footnote>:
+      Each script resource may contain one or several of various script objects, listed here:
       <simplelist>
        <member/Type 1: Object/
        <member/Type 2: Code/
@@ -2800,6 +2798,14 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
        <member/Type 9: Preload text (a flag, rather than a real section)/
        <member/Type 10: Local variables/
       </simplelist>
+      </para><para>
+	Standard SCI0 scripts (of post-0.000.396 SCI0, approximately) consist of a four-byte
+	header, followed by a list of bytes:
+	<simplelist>
+	  <member><literal>[00][01]</literal>: Block type as LE 16 bit value, or 0 to terminate script resource</member>
+	  <member><literal>[02][03]</literal>: Block size as LE 16 bit value; includes header size</member>
+	  <member><literal>[04]...</literal>: Data</member>
+	</simplelist>
       </para><para>
        The code blocks contain the SCI bytecode that actually gets executed. The export block
        (of which there may be only one (or none at all)) contains script-relative pointers to
@@ -2814,10 +2820,112 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
        selectors (see below). Also, each object or class knows which class it inherits from and
        which class it was instantiated from (in the case of objects).
       </para><para>
-       Also of note is the relocation table (type 8). It contains script-relative pointers to other
-       script-relative pointers that have to be translated to absolute (heap-relative) pointers
-       during script loading<footnote><para/Thanks to Francois Boyer for this information/</footnote>.
+	Note that all script segments are optional and 16 bit aligned; they are described in more detail below:
+      </para><para>
     </para>
+      <sect3><title>Object segments</title>
+      <para>
+	Objects look like this (LE 16 bit values):
+	<simplelist>
+	  <member><literal>[00][01]</literal>: Magic number 0x1234</member>
+	  <member><literal>[02][03]</literal>: Local variable offset (filled in at run-time)</member>
+	  <member><literal>[04][05]</literal>: Number of variable selectors (= #vs)</member>
+	  <member><literal>[06][07]</literal>: The 'species' selector</member>
+	  <member><literal>[08][09]</literal>: The 'superClass' selector</member>
+	  <member><literal>[0a][0b]</literal>: The '--info--' selector</member>
+	  <member><literal>[0c][0d]</literal>: The 'name' selector (object/class name)</member>
+	  <member><literal>[0e]...</literal>: (#vs-4) more variable selectors</member>
+	  <member><literal>[06+ #vs*2][07+ #vs*2]</literal>: Number of function selectors</member>
+	  <member><literal>[08+ #vs*2]...</literal>: Function selector code pointers</member>
+	</simplelist>
+	For objects, the selectors are simply values for the selector IDs specified in their species
+	class (which is either present by its offset (in-memory) or class ID (in-script)- the same
+	for the species' superclass (superClass selector)). Info typically has one of the following
+	values (although this does not appear to be relevant for SCI):
+	<simplelist>
+	  <member><literal>0x0000</literal>: Normal (statical) object</member>
+	  <member><literal>0x0001</literal>: Clone</member>
+	  <member><literal>0x8000</literal>: Class</member>
+	</simplelist>
+	Other values are used, but do not appear to be of relevance<footnote><para>See SQ3's inventory objects for an example</para></footnote>.
+      </para>
+      <sect3><title>Code segments</title>
+      <para>
+	Code segments contain free-form SCI bytecode. Pointers into this code are held by objects, classes,
+	and export entries; these entries are, in turn, referenced in the export segment.
+      </para>
+      <sect3><title>Synonym word list segments</title>
+      <para>
+	Inside these, synonyms for certain words may be found. A synonym is a tuple
+	(a, b), where both a and b are word groups, and b is the replacement for a
+	if this synonym is in use. They are stored as 16 bit LE values in sequence
+	(first a, then b).
+	Synonyms must be set explicitly by the kernel function SetSynonyms() (as described
+	<xref linkend="kfunct-set-synonyms">). It is not possible to select
+	  synonyms selectively.
+      </para>
+      <sect3><title>Said spec segments</title>
+      <para>
+	This section contains said specs (explained in <xref linkend="CRSaidSpec" />), tightly grouped.
+      </para>
+      <sect3><title>String segments</title>
+      <para>
+	This segment contains a sequence of asciiz strings describing class and object names, debug information,
+	and (occasionally) game text.
+      </para>
+      <sect3><title>Class segments</title>
+      <para>
+	Classes look almost like objects:
+	<simplelist>
+	  <member><literal>[00][01]</literal>: Magic number 0x1234</member>
+	  <member><literal>[02][03]</literal>: Local variable offset (filled in at run-time)</member>
+	  <member><literal>[04][05]</literal>: Number of variable selectors (= #vs)</member>
+	  <member><literal>[06][07]</literal>: The 'species' selector</member>
+	  <member><literal>[08][09]</literal>: The 'superClass' selector</member>
+	  <member><literal>[0a][0b]</literal>: The '--info--' selector</member>
+	  <member><literal>[0c][0d]</literal>: The 'name' selector (object/class name)</member>
+	  <member><literal>[0e]...</literal>: (#vs-4) more variable selectors</member>
+	  <member><literal>[06+ #vs*2][07+ #vs*2]</literal>: Selector ID of the first varselector (0)</member>
+	  <member><literal>[08+ #vs*2]...</literal>: Selector ID of the second etc. varselectors</member>
+	  <member><literal>[06+ #vs*4][07+ #vs*4]</literal>: Number of function selectors (#fs)</member>
+	  <member><literal>[08+ #vs*4]...</literal>: Function selector code pointers</member>
+	  <member><literal>[06+ #vs*4 + #fs*2][07+ #vs*4 + #fs*2]</literal>: 0</member>
+	  <member><literal>[08+ #vs*4 + #fs*2]...</literal>: Selector ID of the first etc. funcselectors</member>
+	</simplelist>
+	Simply put, they look like objects with each selector section followed by a list of selector IDs.
+      </para>
+      <sect3><title>Export segments</title>
+      <para>
+	External symbols are contained herein, the number of which is described by the first
+	(16 bit LE) value in the segment. All the values that follow point to addresses that
+	the program counter will jump to when a <literal>calle</literal> (see <xref linkend="op-calle" />)
+	operation is invoked. An exception is script 0, entry 0, which points to the first object
+	whose 'play' method should be invoked during startup (a magical entry point like C's 'main())' function).
+      </para>
+      <sect3><title>Relocation tables</title>
+      <para>
+	This section contains script-relative pointers pointing to pointers inside the script.
+	These refer to script-relative addresses and need to be relocated when the script is
+	loaded to the heap; this is done by adding the offset of the first byte of the script
+	on the heap to each of the values referenced in this section
+	<footnote><para/Thanks to Francois Boyer for this information/</footnote>.
+      </para><para>
+	The section itself starts with a 16 bit LE value containing the number of pointers that
+	follow, with each of the script-relative 16 bit pointers beyond having semantics as
+	described above
+      </para>
+      <sect3><title>The Preload Text flag</title>
+      <para>
+	This is an actual script section, although it is always of size 4 (i.e. only consists of the
+	script header). It is only checked for presence; if <literal>script.x</literal> is loaded and contains this
+	section, the <literal>text.x</literal> resource is also loaded implicitly along with it
+	<footnote><para>This is ignored by FreeSCI ATM, since all resources are present in memory all the time.</para></footnote>
+      </para>
+      <sect3><title>Local variable segments</title>
+      <para>
+	This section contains the script's local variable segment, which consists of a sequence of
+	16 bit little-endian values.
+      </para>
    </sect2>
    <sect2>
    <Title/Selectors/
@@ -2903,7 +3011,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
            <listitem><para>
               Parameters are stored on the stack below the current stack frame, as they technically
               belong to the calling function. They can be modified, if neccessary.
-              <footnote><para/Obviously, SCI uses a call-by-value model/</footnote>
+              <footnote><para/Obviously, SCI uses a call-by-value model for primitives and call-by-reference for objects/</footnote>
            </para></listitem>
          </varlistentry>
        </variablelist>
@@ -3599,7 +3707,7 @@ explained more thoroughly, errors corrected, etc. The first 23 instructions
               identifies public methods). Parameters are handled as in the call operation.
 
            </para></listitem>
-           <listitem><para>
+           <listitem><para id="op-calle">
               <simplelist>
                 <member>op 0x46: calle W script, B dispindex, B framesize  (5 bytes)</member>
                 <member>op 0x47: calle B script, B dispindex, B framesize  (4 bytes)</member>
@@ -5047,7 +5155,7 @@ See <XREF LINKEND="LarsDMParser"> and <XREF LINKEND="LarsEvents"> for details.
     </para>
 </sect3>
 
-<sect3><Title/Kernel function 0x26: SetSynonyms(DblList)/
+<sect3 id="kfunct-set-synonyms"><Title/Kernel function 0x26: SetSynonyms(DblList)/
 		<funcsynopsis><funcprototype><funcdef>
 			kfunct 0x26: SetSynonyms 
 		</funcdef><paramdef>HeapPtr list</paramdef></funcprototype></funcsynopsis>
