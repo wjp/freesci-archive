@@ -34,7 +34,7 @@
 #include <console.h>
 #ifdef SCI_CONSOLE
 
-static guint8 _font[];
+extern guint8 _font[];
 
 inline void
 drawChar(picture_t pic, int cpos, int col, guint8 character)

@@ -591,7 +591,7 @@ _lookup_instrument(char *iname)
   int i = 0;
 
   while (SCI0_patch2_instrmaps[i].name) {
-    if (strncasecmp(iname, SCI0_patch2_instrmaps[i].name, 7) == 0)
+    if (g_strncasecmp(iname, SCI0_patch2_instrmaps[i].name, 7) == 0)
       return SCI0_patch2_instrmaps[i].gm_instr;
     i++;
   }

@@ -29,30 +29,40 @@
 #include <vm.h>
 #include <engine.h>
 #include <math.h>
+#include <kdebug.h>
 
+#ifdef _MSC_VER
+#include <direct.h>
+#include <ctype.h>
+#endif
 
 #ifndef PI
 #define PI 3.14159265358979323846
 #endif /* !PI */
 
+#ifdef _WIN32
+#define scimkdir(arg1,arg2) mkdir(arg1)
+#else
+#define scimkdir(arg1,arg2) mkdir(arg1,arg2)
+#endif
 
 #define SCI_KERNEL_DEBUG
-/*#define SCI_KERNEL_NODES_DEBUG*/
-#define SCI_KERNEL_DRAW_DEBUG
 
 #ifdef SCI_KERNEL_DEBUG
 
 #ifdef __GNUC__
-#define SCIkdebug(format, param...) \
-        fprintf(stderr,"FSCI kernel (%s L%d): " format, __PRETTY_FUNCTION__, __LINE__, ## param)
+
+#define SCIkdebug(arguments...) _SCIGNUkdebug(__PRETTY_FUNCTION__,  ## arguments)
+
 #else /* !__GNUC__ */
-#define SCIkdebug(format, param...) \
-        fprintf(stderr,"FSCI kernel (L%d): " format, __LINE__, ## param)
+
+#define SCIkdebug _SCIkdebug
+
 #endif /* !__GNUC__ */
 
 #else /* !SCI_KERNEL_DEBUG */
 
-#define SCIkdebug(format, param...)
+#define SCIkdebug 1? (void)0 : _SCIkdebug
 
 #endif /* !SCI_KERNEL_DEBUG */
 
@@ -61,14 +71,69 @@
 
 
 #ifdef __GNUC__
-#define SCIkwarn(format, param...) \
-        fprintf(stderr,"FSCI kernel (%s L%d): Warning: " format, __PRETTY_FUNCTION__, \
-	__LINE__, ## param)
+
+#define SCIkwarn(arguments...) _SCIGNUkdebug(__PRETTY_FUNCTION__, ## arguments)
+
 #else /* !__GNUC__ */
-#define SCIkwarn(format, param...) \
-        fprintf(stderr,"FSCI kernel (L%d): Warning: " format, __LINE__, ## param)
+
+#define SCIkwarn _SCIkwarn
+
 #endif /* !__GNUC__ */
 
+/******************** Debug functions ********************/
+
+void
+_SCIkwarn(state_t *s, int line, int area, char *format, ...)
+{
+  va_list args;
+
+  if (area == SCIkERROR_NR)
+    fprintf(stderr, "ERROR: ");
+  else
+    fprintf(stderr, "Warning: ");
+
+  va_start(args, format);
+  vfprintf(stderr, format, args);
+  va_end(args);
+}
+
+void
+_SCIkdebug(state_t *s, int line, int area, char *format, ...)
+{
+  va_list args;
+
+  if (s->debug_mode & (1 << area)) {
+    printf(" kernel: (L%d):", line);
+    va_start(args, format);
+    printf(format, args);
+    va_end(args);
+    fflush(NULL);
+  }
+}
+
+void
+_SCIGNUkdebug(char *funcname, state_t *s, int line, int area, char *format, ...)
+{
+  va_list xargs;
+  int error = ((area == SCIkWARNING_NR) || (area == SCIkERROR_NR));
+
+  if (error || (s->debug_mode & (1 << area))) { /* Is debugging enabled for this area? */
+
+    fprintf(stderr, "FSCI kernel: ");
+
+    if (area == SCIkERROR_NR)
+      fprintf(stderr, "ERROR in %s ", funcname);
+    else if (area == SCIkWARNING_NR)
+      fprintf(stderr, "%s: Warning ", funcname);
+
+    fprintf(stderr, "(L%d): ", line);
+
+    va_start(xargs, format);
+    vfprintf(stderr, format, xargs);
+    va_end(xargs);
+
+  }
+}
 
 
 /******************** Resource Macros ********************/
@@ -111,8 +176,9 @@ else { s->heap[(guint16) address] = (value) &0xff;               \
  s->heap[((guint16)address) + 1] = ((value) >> 8) & 0xff;}}
 /* Sets a heap value if allowed */
 
+#ifdef SCI_KERNEL_DEBUG
 
-#define CHECK_THIS_KERNEL_FUNCTION {\
+#define CHECK_THIS_KERNEL_FUNCTION if (s->debug_mode && (1 << SCIkFUNCCHK_NR)) {\
   int i;\
   sciprintf("Kernel CHECK: %s[%x](", s->kernel_names[funct_nr], funct_nr); \
   for (i = 0; i < argc; i++) { \
@@ -122,6 +188,11 @@ else { s->heap[(guint16) address] = (value) &0xff;               \
   sciprintf(")\n"); \
 } \
 
+#else /* !SCI_KERNEL_DEBUG */
+
+#define CHECK_THIS_KERNEL_FUNCTION
+
+#endif /* !SCI_KERNEL_DEBUG */
 
 #define PARAM(x) ((gint16) getInt16(s->heap + argp + ((x)*2)))
 #define UPARAM(x) ((guint16) getInt16(s->heap + argp + ((x)*2)))
@@ -150,12 +221,12 @@ write_selector(state_t *s, heap_ptr object, int selector_id, int value)
   heap_ptr address;
 
   if ((selector_id < 0) || (selector_id > s->selector_names_nr)) {
-    SCIkwarn("Attempt to write to invalid selector of object at %04x.\n", object);
+    SCIkwarn(SCIkERROR, "Attempt to write to invalid selector of object at %04x.\n", object);
     return;
   }
 
   if (lookup_selector(s, object, selector_id, &address) != SELECTOR_VARIABLE)
-    SCIkwarn("Selector '%s' of object at %04x could not be written to\n",
+    SCIkwarn(SCIkWARNING, "Selector '%s' of object at %04x could not be written to\n",
 	     s->selector_names[selector_id], object);
   else
     PUT_HEAP(address, value);
@@ -176,13 +247,13 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid,
   PUT_HEAP(stackframe + 2, argc); /* The number of arguments */
 
   if (lookup_selector(s, object, selector_id, &address) != SELECTOR_METHOD) {
-    SCIkwarn("Selector '%s' of object at %04x could not be invoked\n",
+    SCIkwarn(SCIkERROR, "Selector '%s' of object at %04x could not be invoked\n",
 	     s->selector_names[selector_id], object);
     if (noinvalid == 0)
       KERNEL_OOPS("Not recoverable: VM was halted\n");
     return 1;
   }
-  
+
 
   va_start(argp, argc);
   for (i = 0; i < argc; i++)
@@ -195,19 +266,20 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid,
 }
 
 
+
 #define GET_SELECTOR(_object_, _selector_) read_selector(s, _object_, s->selector_map._selector_)
 #define UGET_SELECTOR(_object_, _selector_) \
  ((guint16) read_selector(s, _object_, s->selector_map._selector_))
 #define PUT_SELECTOR(_object_, _selector_, _value_)\
  write_selector(s, _object_, s->selector_map._selector_, _value_)
 
-#ifndef __GNUC__
-#error "ATM, This file requires a compiler that can handle varargs macros!"
-#endif /* !__GNUC__ */
-
+/*
 #define INVOKE_SELECTOR(_object_, _selector_, _noinvalid_, _args_...) \
  invoke_selector(s, _object_, s->selector_map._selector_, _noinvalid_, argp + (argc * 2), ## _args_)
+*/
 
+#define INV_SEL(_object_, _selector_, _noinvalid_) \
+  s, ##_object_,  s->selector_map.##_selector_, ##_noinvalid_, argp + (argc * 2)
 
 
 /* Allocates a set amount of memory and returns a handle to it. */
@@ -229,18 +301,18 @@ kalloc(state_t *s, int space)
 
 
 /* Returns a pointer to the memory indicated by the specified handle */
-inline byte *
+byte *
 kmem(state_t *s, int handle)
 {
   if ((handle >> 11) != sci_memory) {
-    sciprintf("Error: kmem() without a handle\n");
+    SCIkwarn(SCIkERROR, "Error: kmem() without a handle\n");
     return 0;
   }
 
   handle &= 0x7ff;
 
   if ((handle < 0) || (handle >= MAX_HUNK_BLOCKS)) {
-    sciprintf("Error: kmem() with invalid handle\n");
+    SCIkwarn(SCIkERROR, "Error: kmem() with invalid handle\n");
     return 0;
   }
 
@@ -252,19 +324,19 @@ int
 kfree(state_t *s, int handle)
 {
   if ((handle >> 11) != sci_memory) {
-    sciprintf("Error: Attempt to kfree() non-handle\n");
+    SCIkwarn(SCIkERROR, "Error: Attempt to kfree() non-handle\n");
     return 1;
   }
 
   handle &= 0x7ff;
 
   if ((handle < 0) || (handle >= MAX_HUNK_BLOCKS)) {
-    sciprintf("Error: Attempt to kfree() with invalid handle\n");
+    SCIkwarn(SCIkERROR, "Error: Attempt to kfree() with invalid handle\n");
     return 1;
   }
 
   if (s->hunk[handle].size == 0) {
-    sciprintf("Error: Attempt to kfree() non-allocated memory\n");
+    SCIkwarn(SCIkERROR, "Error: Attempt to kfree() non-allocated memory\n");
     return 1;
   }
 
@@ -274,6 +346,12 @@ kfree(state_t *s, int handle)
   return 0;
 }
 
+
+void
+sci_usleep(long time)
+{
+  /* NOP- this will be replaced as soon as input management is in place */
+}
 
 char *
 _kernel_lookup_text(state_t *s, int address, int index)
@@ -288,7 +366,7 @@ _kernel_lookup_text(state_t *s, int address, int index)
     textres = findResource(sci_text, address);
 
     if (!textres) {
-      SCIkwarn("text.%03d not found\n", address);
+      SCIkwarn(SCIkERROR, "text.%03d not found\n", address);
       return NULL; /* Will probably segfault */
     }
 
@@ -301,7 +379,7 @@ _kernel_lookup_text(state_t *s, int address, int index)
     if (textlen)
       return seeker;
     else {
-      SCIkwarn("Index %d out of bounds in text.%03d\n", _index, address);
+      SCIkwarn(SCIkERROR, "Index %d out of bounds in text.%03d\n", _index, address);
       return 0;
     }
 
@@ -378,13 +456,8 @@ kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int i;
 
   if (GET_HEAP(old_offs + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
-    SCIkwarn("Attempt to clone non-object/class at %04x failed", old_offs);
+    SCIkwarn(SCIkERROR, "Attempt to clone non-object/class at %04x failed", old_offs);
     return;
-  }
-
-  if (GET_HEAP(old_offs + SCRIPT_INFO_OFFSET) != SCRIPT_INFO_CLASS) {
-    SCIkwarn("Attempt to clone something other than a class template at %04x\n", old_offs);
-    SCIkwarn("Allowing clone process\n",0);
   }
 
   selectors = GET_HEAP(old_offs + SCRIPT_SELECTORCTR_OFFSET);
@@ -414,7 +487,7 @@ kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   if (i < SCRIPT_MAX_CLONES)
     s->clone_list[i] = new_offs; /* Log this clone */
-  else SCIkwarn("Could not log clone at %04x\n", new_offs);
+  else SCIkwarn(SCIkWARNING, "Could not log clone at %04x\n", new_offs);
 }
 
 
@@ -425,7 +498,7 @@ kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int i;
 
   if (GET_HEAP(offset + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
-    SCIkwarn("Attempt to dispose non-class/object at %04x\n", offset);
+    SCIkwarn(SCIkERROR, "Attempt to dispose non-class/object at %04x\n", offset);
     return;
   }
 
@@ -439,7 +512,7 @@ kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
   while ((i < SCRIPT_MAX_CLONES) && (s->clone_list[i] != offset)) i++;
   if (i < SCRIPT_MAX_CLONES)
     s->clone_list[i] = 0; /* un-log clone */
-  else SCIkwarn("Could not remove log entry from clone at %04x\n", offset);
+  else SCIkwarn(SCIkWARNING, "Could not remove log entry from clone at %04x\n", offset);
 
   offset += SCRIPT_OBJECT_MAGIC_OFFSET; /* Step back to beginning of object */
 
@@ -469,10 +542,8 @@ kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   disp = s->scripttable[script].export_table_offset;
 
-  fprintf(stderr,"exports at %04x\n", disp);
-
   if (!disp) {
-    SCIkdebug("Script 0x%x does not have a dispatch table\n", script);
+    SCIkdebug(SCIkERROR, "Script 0x%x does not have a dispatch table\n", script);
     s->acc = 0;
     return;
   }
@@ -480,7 +551,7 @@ kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp)
   disp_size = UGET_HEAP(disp);
 
   if (index > disp_size) {
-    SCIkwarn("Dispatch index too big: %d > %d\n", index, disp_size);
+    SCIkwarn(SCIkERROR, "Dispatch index too big: %d > %d\n", index, disp_size);
     return;
   }
 
@@ -553,9 +624,7 @@ kNewList(state_t *s, int funct_nr, int argc, heap_ptr argp)
   PUT_HEAP(listbase + LIST_FIRST_NODE, 0); /* No first node */
   PUT_HEAP(listbase + LIST_LAST_NODE, 0); /* No last node */
 
-#ifdef SCI_KERNEL_NODES_DEBUG
-  sciprintf("New listbase at %04x\n", listbase);
-#endif /* SCI_KERNEL_NODES_DEBUG */
+  SCIkdebug(SCIkNODES, "New listbase at %04x\n", listbase);
 
   s->acc = listbase; /* Return list base address */
 }
@@ -581,9 +650,7 @@ kNewNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
   PUT_HEAP(nodebase + LIST_NODE_KEY, PARAM(0));
   PUT_HEAP(nodebase + LIST_NODE_VALUE, PARAM(1));
 
-#ifdef SCI_KERNEL_NODES_DEBUG
-  sciprintf("New nodebase at %04x\n", nodebase);
-#endif /* SCI_KERNEL_NODES_DEBUG */
+  SCIkdebug(SCIkNODES, "New nodebase at %04x\n", nodebase);
 
   s->acc = nodebase; /* Return node base address */
 }
@@ -686,9 +753,8 @@ kDeleteKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     heap_free(s->_heap, node - 2);
 
-  } else
-    SCIkwarn("DeleteKey %04x failed on %04x\n", key, list);
-    
+  }
+
 }
 
 
@@ -736,7 +802,7 @@ kDisposeList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #endif /* SCI_KERNEL_NODES_DEBUG */
 
   if (GET_HEAP(address) != 6) {
-    SCIkwarn("Attempt to dispose non-list at %04x\n", address);
+    SCIkwarn(SCIkERROR, "Attempt to dispose non-list at %04x\n", address);
   } else heap_free(s->_heap, address);
 
 }
@@ -787,12 +853,12 @@ kFClose(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int handle = UPARAM(0);
 
   if (handle == 0) {
-    SCIkwarn("Attempt to close file handle 0\n",0);
+    SCIkwarn(SCIkERROR, "Attempt to close file handle 0\n");
     return;
   }
 
   if ((handle >= s->file_handles_nr) || (s->file_handles[handle] == NULL)) {
-    SCIkwarn("Attempt to close invalid/unused file handle %d\n", handle,0);
+    SCIkwarn(SCIkERROR, "Attempt to close invalid/unused file handle %d\n", handle);
     return;
   }
 
@@ -808,12 +874,12 @@ void kFPuts(state_t *s, int funct_nr, int argc, heap_ptr argp)
   char *data = UPARAM(1) + s->heap;
 
   if (handle == 0) {
-    SCIkwarn("Attempt to write to file handle 0\n",0);
+    SCIkwarn(SCIkERROR, "Attempt to write to file handle 0\n");
     return;
   }
 
   if ((handle >= s->file_handles_nr) || (s->file_handles[handle] == NULL)) {
-    SCIkwarn("Attempt to write to invalid/unused file handle %d\n", handle,0);
+    SCIkwarn(SCIkERROR, "Attempt to write to invalid/unused file handle %d\n", handle);
     return;
   }
 
@@ -829,12 +895,12 @@ kFGets(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int maxsize = UPARAM(2);
 
   if (handle == 0) {
-    SCIkwarn("Attempt to read from file handle 0\n",0);
+    SCIkwarn(SCIkERROR, "Attempt to read from file handle 0\n");
     return;
   }
 
   if ((handle >= s->file_handles_nr) || (s->file_handles[handle] == NULL)) {
-    SCIkwarn("Attempt to read from invalid/unused file handle %d\n", handle,0);
+    SCIkwarn(SCIkERROR, "Attempt to read from invalid/unused file handle %d\n", handle);
     return;
   }
 
@@ -851,7 +917,7 @@ kMemoryInfo(state_t *s, int funct_nr, int argc, heap_ptr argp)
   switch (PARAM(0)) {
   case 0: s->acc = heap_meminfo(s->_heap); break;
   case 1: s->acc = heap_largest(s->_heap); break;
-  default: SCIkwarn("Unknown MemoryInfo operation: %04x\n", PARAM(0));
+  default: SCIkwarn(SCIkWARNING, "Unknown MemoryInfo operation: %04x\n", PARAM(0));
   }
 }
 
@@ -874,7 +940,7 @@ kGetCWD(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   if (!homedir) { /* We're probably not under UNIX if this happens */
 
-    if (!getcwd(cwd, 255)) 
+    if (!getcwd(cwd, 255))
       cwd = "."; /* This might suffice */
 
     memcpy(targetaddr, cwd, strlen(cwd) + 1);
@@ -901,7 +967,7 @@ kGetCWD(state_t *s, int funct_nr, int argc, heap_ptr argp)
   *(targetaddr + 1) = 0;
 
   if (chdir(FREESCI_GAMEDIR))
-    if (mkdir(FREESCI_GAMEDIR, 0700)) {
+    if (scimkdir(FREESCI_GAMEDIR, 0700)) {
 
       fprintf(stderr,"Warning: Could not enter ~/"FREESCI_GAMEDIR"; save files"
 	      " will be written to ~/\n");
@@ -918,7 +984,7 @@ kGetCWD(state_t *s, int funct_nr, int argc, heap_ptr argp)
   *targetaddr = 0;
 
   if (chdir(s->game_name))
-    if (mkdir(s->game_name, 0700)) {
+    if (scimkdir(s->game_name, 0700)) {
 
       fprintf(stderr,"Warning: Could not enter ~/"FREESCI_GAMEDIR"/%s; "
 	      "save files will be written to ~/"FREESCI_GAMEDIR"\n", s->game_name);
@@ -960,7 +1026,7 @@ kSetCursor(state_t *s, int funct_nr, int argc, heap_ptr argp)
   if (argc > 2) {
     s->pointer_x = PARAM(2) + s->ports[s->view_port]->xmin;
     s->pointer_y = PARAM(3) + s->ports[s->view_port]->ymin; /* Port-relative */
-  } 
+  }
 
   s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0); /* Update mouse pointer */
 }
@@ -1053,7 +1119,7 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr obj = UPARAM_OR_ALT(1, 0);
 
   CHECK_THIS_KERNEL_FUNCTION;
-  sciprintf("kDoSound: Stub\n");
+  SCIkdebug(SCIkSTUB, "kDoSound: Stub\n");
 
   if (obj > 1000) {
     PUT_SELECTOR(obj, state, 2); /* Set state to a magic value */
@@ -1129,17 +1195,17 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   case K_GRAPH_FILL_BOX_ANY:
     CHECK_THIS_KERNEL_FUNCTION;
-    SCIkwarn("KERNEL_GRAPH_FILL_BOX_ANY: stub\n",0);
+    SCIkwarn(SCIkWARNING, "KERNEL_GRAPH_FILL_BOX_ANY: stub\n");
     break;
 
   case K_GRAPH_UPDATE_BOX:
     CHECK_THIS_KERNEL_FUNCTION;
-    SCIkwarn("KERNEL_GRAPH_UPDATE_BOX: stub\n",0);
+    SCIkwarn(SCIkWARNING, "KERNEL_GRAPH_UPDATE_BOX: stub\n");
     break;
 
   case K_GRAPH_REDRAW_BOX:
     CHECK_THIS_KERNEL_FUNCTION;
-    SCIkwarn("KERNEL_GRAPH_REDRAW_BOX: stub\n",0);
+    SCIkwarn(SCIkWARNING, "KERNEL_GRAPH_REDRAW_BOX: stub\n");
     break;
 
   case K_GRAPH_ADJUST_PRIORITY:
@@ -1151,7 +1217,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
   default:
 
     CHECK_THIS_KERNEL_FUNCTION;
-    sciprintf("Unhandled Graph() operation %04x\n", PARAM(0));
+    SCIkdebug(SCIkSTUB, "Unhandled Graph() operation %04x\n", PARAM(0));
 
   }
 }
@@ -1163,7 +1229,7 @@ k_Unknown(state_t *s, int funct_nr, int argc, heap_ptr argp)
   case 0x70: kGraph(s, funct_nr, argc, argp); break;
   default: {
     CHECK_THIS_KERNEL_FUNCTION;
-    sciprintf("Unhandled Unknown function %04x\n", funct_nr);
+    SCIkdebug(SCIkSTUB, "Unhandled Unknown function %04x\n", funct_nr);
   }
   }
 }
@@ -1172,7 +1238,7 @@ void
 kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   CHECK_THIS_KERNEL_FUNCTION;
-  sciprintf("kGetEvent: Stub\n");
+  SCIkdebug(SCIkSTUB, "kGetEvent: Stub\n");
 
   s->acc = 0; /* No event */
 }
@@ -1289,7 +1355,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   arguments = malloc(sizeof(int) * argc);
   for (i = startarg; i < argc; i++)
-    arguments[i-3] = UPARAM(i); /* Parameters are copied to prevent overwriting */ 
+    arguments[i-3] = UPARAM(i); /* Parameters are copied to prevent overwriting */
 
 
   while (xfer = *source++) {
@@ -1384,7 +1450,7 @@ kTextSize(state_t *s, int funct_nr, int argc, heap_ptr argp)
     maxwidth = MAX_TEXT_WIDTH_MAGIC_VALUE;
 
   if (!fontres) {
-    SCIkwarn("font.%03d not found!\n", UPARAM(2));
+    SCIkwarn(SCIkERROR, "font.%03d not found!\n", UPARAM(2));
     return;
   }
 
@@ -1417,7 +1483,7 @@ void
 kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   struct tm* loc_time;
-  struct timeval time_prec;
+  GTimeVal time_prec;
   time_t the_time;
 
   if (argc) { /* Get seconds since last am/pm switch */
@@ -1425,7 +1491,7 @@ kGetTime(state_t *s, int funct_nr, int argc, heap_ptr argp)
     loc_time = localtime(&the_time);
     s->acc = loc_time->tm_sec + loc_time->tm_min * 60 + (loc_time->tm_hour % 12) * 3600;
   } else { /* Get time since game started */
-    gettimeofday(&time_prec, NULL);
+    g_get_current_time (&time_prec);
     s-> acc = ((time_prec.tv_usec - s->game_start_time.tv_usec) * 60 / 1000000) +
       (time_prec.tv_sec - s->game_start_time.tv_sec) * 60;
   }
@@ -1446,7 +1512,7 @@ kGetFarText(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int counter = PARAM(1);
 
   if (!textres) {
-    SCIkwarn("text.%d does not exist\n", PARAM(0));
+    SCIkwarn(SCIkERROR, "text.%d does not exist\n", PARAM(0));
     return;
   }
 
@@ -1464,14 +1530,14 @@ kGetFarText(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kWait(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  struct timeval time;
+  GTimeVal time;
 
-  gettimeofday(&time, NULL);
+  g_get_current_time (&time);
 
   s-> acc = ((time.tv_usec - s->last_wait_time.tv_usec) * 60 / 1000000) +
     (time.tv_sec - s->last_wait_time.tv_sec) * 60;
 
-  memcpy(&(s->last_wait_time), &time, sizeof(struct timeval));
+  memcpy(&(s->last_wait_time), &time, sizeof(GTimeVal));
 }
 
 
@@ -1531,13 +1597,13 @@ kDirLoop(state_t *s, int funct_nr, int argc, heap_ptr argp)
     return;
 
   if (!viewres) {
-    SCIkwarn("Invalid view.%03d\n", view);
+    SCIkwarn(SCIkERROR, "Invalid view.%03d\n", view);
     PUT_SELECTOR(obj, loop, 0xffff); /* Invalid */
     return;
   }
 
   if (angle > 360) {
-    SCIkwarn("Invalid angle %d\n", angle);
+    SCIkwarn(SCIkERROR, "Invalid angle %d\n", angle);
     PUT_SELECTOR(obj, loop, 0xffff);
     return;
   }
@@ -1559,7 +1625,7 @@ kDirLoop(state_t *s, int funct_nr, int argc, heap_ptr argp)
   maxloops = view0_loop_count(viewres->data);
 
   if (loop >= maxloops) {
-    SCIkwarn("With view.%03d: loop %d > maxloop %d\n", loop, maxloops);
+    SCIkwarn(SCIkWARNING, "With view.%03d: loop %d > maxloop %d\n", view, loop, maxloops);
     loop = -1;
   }
 
@@ -1661,7 +1727,8 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   PUT_SELECTOR(client, x, x);
   PUT_SELECTOR(client, y, y);
 
-  INVOKE_SELECTOR(client, canBeHere, 0, 0);
+  /*INVOKE_SELECTOR(client, canBeHere, 0, 0);*/
+  invoke_selector(INV_SEL(client, canBeHere, 0), 0);
 
   if (s->acc) /* Contains the return value */
     return;
@@ -1739,13 +1806,13 @@ kCelHigh(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int result;
 
   if (!viewres) {
-    SCIkwarn("view.%d (0x%x) not found\n", PARAM(0), PARAM(0));
+    SCIkwarn(SCIkERROR, "view.%d (0x%x) not found\n", PARAM(0), PARAM(0));
     return;
   }
 
   s->acc = result = view0_cel_height(PARAM(1), PARAM(2), viewres->data);
   if (result < 0)
-    SCIkwarn("Invalid loop (%d) or cel (%d) in view.%d (0x%x)\n", PARAM(1), PARAM(2), PARAM(0));
+    SCIkwarn(SCIkERROR, "Invalid loop (%d) or cel (%d) in view.%d (0x%x)\n", PARAM(1), PARAM(2), PARAM(0), PARAM(0));
 }
 
 void
@@ -1755,13 +1822,13 @@ kCelWide(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int result;
 
   if (!viewres) {
-    SCIkwarn("view.%d (0x%x) not found\n", PARAM(0), PARAM(0));
+    SCIkwarn(SCIkERROR, "view.%d (0x%x) not found\n", PARAM(0), PARAM(0));
     return;
   }
 
   s->acc = result = view0_cel_width(PARAM(1), PARAM(2), viewres->data);
   if (result < 0)
-    SCIkwarn("Invalid loop (%d) or cel (%d) in view.%d (0x%x)\n", PARAM(1), PARAM(2), PARAM(0));
+    SCIkwarn(SCIkERROR, "Invalid loop (%d) or cel (%d) in view.%d (0x%x)\n", PARAM(1), PARAM(2), PARAM(0), PARAM(0));
 }
 
 
@@ -1775,7 +1842,7 @@ kNumLoops(state_t *s, int funct_nr, int argc, heap_ptr argp)
   CHECK_THIS_KERNEL_FUNCTION;
 
   if (!viewres) {
-    SCIkwarn("view.%d (0x%x) not found\n", PARAM(0), PARAM(0));
+    SCIkwarn(SCIkERROR, "view.%d (0x%x) not found\n", PARAM(0), PARAM(0));
     return;
   }
 
@@ -1793,7 +1860,7 @@ kNumCels(state_t *s, int funct_nr, int argc, heap_ptr argp)
   CHECK_THIS_KERNEL_FUNCTION;
 
   if (!viewres) {
-    SCIkwarn("view.%d (0x%x) not found\n", PARAM(0), PARAM(0));
+    SCIkwarn(SCIkERROR, "view.%d (0x%x) not found\n", PARAM(0), PARAM(0));
     return;
   }
 
@@ -1827,7 +1894,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
   CHECK_THIS_KERNEL_FUNCTION;
 
   if (resource) {
-    
+
     if (s->version < SCI_VERSION_FTU_NEWER_DRAWPIC_PARAMETERS) {
       if (!PARAM_OR_ALT(2, 0)) clear_picture(s->pic, 15);
     } else
@@ -1844,7 +1911,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
     _k_view_list_free_backgrounds(s, s->dyn_views, s->dyn_views_nr);
 
   } else
-    SCIkwarn("Request to draw non-existing pic.%03d\n", PARAM(0));
+    SCIkwarn(SCIkERROR, "Request to draw non-existing pic.%03d\n", PARAM(0));
 }
 
 
@@ -1897,7 +1964,7 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
   PUT_SELECTOR(object, brTop, ybase);
   PUT_SELECTOR(object, brBottom, yend);
 
-  sciprintf("BaseSetter done.\n");
+  SCIkdebug(SCIkGRAPHICS, "BaseSetter done.\n");
 
 } /* kBaseSetter */
 
@@ -1941,7 +2008,7 @@ kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     font_res  = findResource(sci_font, font_nr);
     if (!font_res) {
-      SCIkwarn("Font.%03d not found!\n", font_nr);
+      SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
       return;
     }
     graph_draw_selector_button(s, s->ports[s->view_port], state, x, y, xl, yl, text, font_res->data);
@@ -1951,7 +2018,7 @@ kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     font_res  = findResource(sci_font, font_nr);
     if (!font_res) {
-      SCIkwarn("Font.%03d not found!\n", font_nr);
+      SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
       return;
     }
     graph_draw_selector_text(s, s->ports[s->view_port], state, x, y, xl, yl, text, font_res->data,
@@ -1963,17 +2030,17 @@ kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     font_res  = findResource(sci_font, font_nr);
     if (!font_res) {
-      SCIkwarn("Font.%03d not found!\n", font_nr);
+      SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
       return;
     }
     graph_draw_selector_edit(s, s->ports[s->view_port], state, x, y, xl, yl, text, font_res->data);
     break;
 
   case K_CONTROL_ICON:
-    
+
     view_res = findResource(sci_view, view);
     if (!view_res) {
-      SCIkwarn("View.%03d not found!\n", font_nr);
+      SCIkwarn(SCIkERROR, "View.%03d not found!\n", font_nr);
       return;
     }
     graph_draw_selector_icon(s, s->ports[s->view_port], state, x, y, xl, yl,
@@ -1986,7 +2053,7 @@ kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
     break;
 
   default:
-    SCIkwarn("Unknown control type: %d at %04x\n", type, obj);
+    SCIkwarn(SCIkWARNING, "Unknown control type: %d at %04x\n", type, obj);
   }
 
   if (!s->pic_not_valid)
@@ -2062,7 +2129,7 @@ _k_save_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
 
     if (GET_HEAP(list[i].underBitsp))
       continue; /* Don't overwrite an existing backup */
-    
+
     handle = view0_backup_background(s, list[i].x, list[i].y,
 				     list[i].loop, list[i].cel, list[i].view);
 
@@ -2078,9 +2145,10 @@ _k_view_list_dispose_loop(state_t *s, view_object_t *list, int list_nr, int argc
 
   for (i = 0; i < list_nr; i++) {
     if (UGET_HEAP(list[i].signalp) & _K_VIEW_SIG_FLAG_DISPOSE_ME)
-      if (INVOKE_SELECTOR(list[i].obj, delete, 1, 0))
-	sciprintf("Object at %04x requested deletion, but does not have a delete funcselector\n",
-		  list[i].obj);
+      /*if (INVOKE_SELECTOR(list[i].obj, delete, 1, 0))*/
+      if (invoke_selector(INV_SEL(list[i].obj, delete, 1), 0))
+	SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
+		 " a delete funcselector\n", list[i].obj);
   }
 }
 
@@ -2098,7 +2166,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int argc, 
   *list_nr = 0;
 
   if (GET_HEAP(list - 2) != 0x6) { /* heap size check */
-    SCIkwarn("Attempt to draw non-list at %04x\n", list);
+    SCIkwarn(SCIkWARNING, "Attempt to draw non-list at %04x\n", list);
     return NULL; /* Return an empty list */
   }
 
@@ -2123,9 +2191,9 @@ sciprintf("Doing ");
 
     if (cycle)
       if (!(GET_SELECTOR(obj, signal) & _K_VIEW_SIG_FLAG_FROZEN))
-	INVOKE_SELECTOR(obj, doit, 1, 0); /* Call obj::doit() if neccessary */
+	/*INVOKE_SELECTOR(obj, doit, 1, 0);*/
+        invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
 
-sciprintf("%d/%d ", i, *list_nr);
     if (i == (*list_nr)) {
       (*list_nr)++;
       retval = realloc(retval, *list_nr * sizeof(view_object_t));
@@ -2146,7 +2214,7 @@ sciprintf("%d/%d ", i, *list_nr);
     retval[i].cel = GET_SELECTOR(obj, cel);
 
     if (!viewres) {
-      SCIkwarn("Attempt to draw invalid view.%03d!\n", view_nr);
+      SCIkwarn(SCIkERROR, "Attempt to draw invalid view.%03d!\n", view_nr);
       retval[i].view = NULL;
     } else {
       retval[i].view = viewres->data;
@@ -2165,13 +2233,13 @@ sciprintf("%d/%d ", i, *list_nr);
     if (lookup_selector(s, obj, s->selector_map.underBits, &(retval[i].underBitsp))
 	!= SELECTOR_VARIABLE) {
       retval[i].underBitsp = 0;
-      SCIkwarn("Object at %04x has no underBits\n", obj);
+      SCIkdebug(SCIkGRAPHICS, "Object at %04x has no underBits\n", obj);
     }
 
     if (lookup_selector(s, obj, s->selector_map.signal, &(retval[i].signalp))
 	!= SELECTOR_VARIABLE) {
       retval[i].signalp = 0;
-      SCIkwarn("Object at %04x has no signal selector\n", obj);
+      SCIkdebug(SCIkGRAPHICS, "Object at %04x has no signal selector\n", obj);
     }
 
     if (!(UGET_HEAP(retval[i].signalp) & _K_VIEW_SIG_FLAG_FIX_PRI_ON)) { /* Calculate priority */
@@ -2191,7 +2259,7 @@ sciprintf("%d/%d ", i, *list_nr);
       retval[i].priority = GET_SELECTOR(obj, priority);
 
     s->pic_not_valid++; /* There ought to be some kind of check here... */
-    
+
     i++; /* Next object in the list */
     node = UGET_HEAP(node + LIST_NEXT_NODE); /* Next node */
   }
@@ -2212,7 +2280,7 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int use_signal)
     word signal = (use_signal)? GET_HEAP(list[i].signalp) : 0;
 
     /* Now, if we either don't use signal OR if signal allows us to draw, do so: */
-    if ((use_signal == 0) || (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE) && 
+    if ((use_signal == 0) || (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE) &&
 			      !(signal & _K_VIEW_SIG_FLAG_HIDDEN))) {
       draw_view0(s->pic, s->ports[s->view_port],
 		 list[i].x - view0_cel_width(list[i].loop, list[i].cel, list[i].view) / 2,
@@ -2260,14 +2328,14 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
   if (s->pic_views_nr)
     free(s->pic_views);
 
-  SCIkdebug("Preparing list...\n",0);
+  SCIkdebug(SCIkGRAPHICS, "Preparing list...\n");
   s->pic_views = _k_make_view_list(s, list, &(s->pic_views_nr), 0, argc, argp);
   /* Store pic views for later re-use */
 
-  SCIkdebug("Drawing list...\n",0);
+  SCIkdebug(SCIkGRAPHICS, "Drawing list...\n");
   _k_draw_view_list(s, s->pic_views, s->pic_views_nr, 0);
   /* Draw relative to the bottom center */
-  SCIkdebug("Returning.\n",0);
+  SCIkdebug(SCIkGRAPHICS, "Returning.\n");
 }
 
 
@@ -2284,7 +2352,7 @@ kSetPort(state_t *s, int funct_nr, int argc, heap_ptr argp)
   unsigned int newport = PARAM(0);
 
   if ((newport >= MAX_PORTS) || (s->ports[newport] == NULL)) {
-    SCIkwarn("Invalid port %04x requested\n", newport);
+    SCIkwarn(SCIkERROR, "Invalid port %04x requested\n", newport);
     return;
   }
 
@@ -2304,7 +2372,7 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
   CHECK_THIS_KERNEL_FUNCTION;
 
   if (!view) {
-    SCIkwarn("Attempt to draw non-existing view.%03n\n", PARAM(0));
+    SCIkwarn(SCIkERROR, "Attempt to draw non-existing view.%03n\n", PARAM(0));
     return;
   }
 
@@ -2319,7 +2387,7 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   unsigned int goner = PARAM(0);
 
   if ((goner >= MAX_PORTS) || (goner < 3) ||(s->ports[goner] == NULL)) {
-    SCIkwarn("Removal of invalid window %04x requested\n", goner);
+    SCIkwarn(SCIkERROR, "Removal of invalid window %04x requested\n", goner);
     return;
   }
 
@@ -2381,7 +2449,7 @@ kDrawStatus(state_t *s, int funct_nr, int argc, heap_ptr argp)
     draw_titlebar(s->pic, 0xf);
     draw_text0(s->pic, &(s->titlebar_port), 1, 1,
 	       ((char *)s->heap) + PARAM(0), s->titlebar_port.font, 0);
-  } else 
+  } else
     draw_titlebar(s->pic, 0);
 
   graph_update_port(s, &(s->titlebar_port));
@@ -2457,9 +2525,8 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
   open_animation = (s->pic_is_new) && (s->pic_not_valid);
 
   if (open_animation) {
-#ifdef SCI_KERNEL_DRAW_DEBUG
-    SCIkdebug("Animating pic opening type %x\n", s->pic_animate);
-#endif /* SCI_KERNEL_DRAW_DEBUG */
+
+    SCIkdebug(SCIkGRAPHICS, "Animating pic opening type %x\n", s->pic_animate);
 
     switch(s->pic_animate) {
     case K_ANIMATE_BORDER_CLOSE_H_CENTER_OPEN_H :
@@ -2467,7 +2534,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 0; i < 160; i++) {
 	graph_clear_box(s, i, 10, 1, 190, 0);
 	graph_clear_box(s, 319-i, 10, 1, 190, 0);
-	usleep(3 * s->animation_delay);
+	sci_usleep(3 * s->animation_delay);
       }
 
     case K_ANIMATE_CENTER_OPEN_H :
@@ -2475,7 +2542,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 159; i >= 0; i--) {
 	graph_update_box(s, i, 10, 1, 190);
 	graph_update_box(s, 319-i, 10, 1, 190);
-	usleep(3 * s->animation_delay);
+	sci_usleep(3 * s->animation_delay);
       }
       break;
 
@@ -2485,7 +2552,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 0; i < 95; i++) {
 	graph_clear_box(s, 0, i + 10, 320, 1, 0);
 	graph_clear_box(s, 0, 199 - i, 320, 1, 0);
-	usleep(5 * s->animation_delay);
+	sci_usleep(5 * s->animation_delay);
       }
 
     case K_ANIMATE_CENTER_OPEN_V :
@@ -2493,7 +2560,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
       for (i = 94; i >= 0; i--) {
 	graph_update_box(s, 0, i + 10, 320, 1);
 	graph_update_box(s, 0, 199 - i, 320, 1);
-	usleep(5 * s->animation_delay);
+	sci_usleep(5 * s->animation_delay);
       }
       break;
 
@@ -2502,13 +2569,13 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for(i = 0; i < 320; i++) {
 	graph_clear_box(s, i, 10, 1, 190, 0);
-	usleep(s->animation_delay);
+	sci_usleep(s->animation_delay);
       }
 
     case K_ANIMATE_RIGHT_OPEN :
       for(i = 319; i >= 0; i--) {
 	graph_update_box(s, i, 10, 1, 190);
-	usleep(s->animation_delay);
+	sci_usleep(s->animation_delay);
       }
       break;
 
@@ -2517,14 +2584,14 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for(i = 319; i >= 0; i--) {
 	graph_clear_box(s, i, 10, 1, 190, 0);
-	usleep(s->animation_delay);
+	sci_usleep(s->animation_delay);
       }
 
     case K_ANIMATE_LEFT_OPEN :
 
       for(i = 0; i < 320; i++) {
 	graph_update_box(s, i, 10, 1, 190);
-	usleep(s->animation_delay);
+	sci_usleep(s->animation_delay);
       }
       break;
 
@@ -2533,14 +2600,14 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for (i = 10; i < 200; i++) {
 	graph_clear_box(s, 0, i, 320, 1, 0);
-	usleep(2 * s->animation_delay);
+	sci_usleep(2 * s->animation_delay);
       }
 
     case K_ANIMATE_BOTTOM_OPEN :
 
       for (i = 199; i >= 10; i--) {
 	graph_update_box(s, 0, i, 320, 1);
-	usleep(2 * s->animation_delay);
+	sci_usleep(2 * s->animation_delay);
       }
       break;
 
@@ -2549,14 +2616,14 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       for (i = 199; i >= 10; i--) {
 	graph_clear_box(s, 0, i, 320, 1, 0);
-	usleep(2 * s->animation_delay);
+	sci_usleep(2 * s->animation_delay);
       }
 
     case K_ANIMATE_TOP_OPEN :
 
       for (i = 10; i < 200; i++) {
 	graph_update_box(s, 0, i, 320, 1);
-	usleep(2 * s->animation_delay);
+	sci_usleep(2 * s->animation_delay);
       }
       break;
 
@@ -2573,7 +2640,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_clear_box(s, width, 10 + height, 320 - 2*width, 3, 0);
 	graph_clear_box(s, width, 200 - 3 - height, 320 - 2*width, 3, 0);
 
-	usleep(7 * s->animation_delay);
+	sci_usleep(7 * s->animation_delay);
       }
 
     case K_ANIMATE_BORDER_OPEN_F :
@@ -2588,7 +2655,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_update_box(s, width, 10 + height, 320 - 2*width, 3);
 	graph_update_box(s, width, 200 - 3 - height, 320 - 2*width, 3);
 
-	usleep(7 * s->animation_delay);
+	sci_usleep(7 * s->animation_delay);
       }
 
       break;
@@ -2606,7 +2673,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_clear_box(s, width, 10 + height, 320 - 2*width, 3, 0);
 	graph_clear_box(s, width, 200 - 3 - height, 320 - 2*width, 3, 0);
 
-	usleep(7 * s->animation_delay);
+	sci_usleep(7 * s->animation_delay);
       }
 
     case K_ANIMATE_CENTER_OPEN_F :
@@ -2621,7 +2688,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_update_box(s, width, 10 + height, 320 - 2 * width, 3);
 	graph_update_box(s, width, 200 - 3 - height, 320 - 2 * width, 3);
 
-	usleep(7 * s->animation_delay);
+	sci_usleep(7 * s->animation_delay);
       }
 
       break;
@@ -2644,7 +2711,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	y = i / 32;
 
 	graph_clear_box(s, x * 10, 10 + y * 10, 10, 10, 0);
-	usleep(s->animation_delay / 2);
+	sci_usleep(s->animation_delay / 2);
 
 	--remaining_checkers;
       }
@@ -2666,7 +2733,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	y = i / 32;
 
 	graph_update_box(s, x * 10, 10 + y * 10, 10, 10);
-	usleep(s->animation_delay / 2);
+	sci_usleep(s->animation_delay / 2);
 
 	--remaining_checkers;
       }
@@ -2732,31 +2799,31 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       port->x = PARAM(argpt++);
       port->y = PARAM(argpt++);
-      SCIkdebug("Display: set_coords(%d, %d)\n", port->x, port->y);
+      SCIkdebug(SCIkGRAPHICS, "Display: set_coords(%d, %d)\n", port->x, port->y);
       break;
 
     case K_DISPLAY_SET_ALIGNMENT:
 
       port->alignment = PARAM(argpt++);
-      SCIkdebug("Display: set_align(%d)\n", port->alignment);
+      SCIkdebug(SCIkGRAPHICS, "Display: set_align(%d)\n", port->alignment);
       break;
 
     case K_DISPLAY_SET_COLOR:
 
       port->color = PARAM(argpt++);
-      SCIkdebug("Display: set_color(%d)\n", port->color);
+      SCIkdebug(SCIkGRAPHICS, "Display: set_color(%d)\n", port->color);
       break;
 
     case K_DISPLAY_SET_BGCOLOR:
 
       port->bgcolor = PARAM(argpt++);
-      SCIkdebug("Display: set_bg_color(%d)\n", port->bgcolor);
+      SCIkdebug(SCIkGRAPHICS, "Display: set_bg_color(%d)\n", port->bgcolor);
       break;
 
     case K_DISPLAY_SET_GRAYTEXT:
 
       port->gray_text = PARAM(argpt++);
-      SCIkdebug("Display: set_align(%d)\n", port->alignment);
+      SCIkdebug(SCIkGRAPHICS, "Display: set_align(%d)\n", port->alignment);
       break;
 
     case K_DISPLAY_SET_FONT:
@@ -2767,32 +2834,32 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	port->font = font_resource->data;
       else port->font = NULL;
 
-      SCIkdebug("Display: set_font(\"font.%03d\")\n", PARAM(argpt - 1));
+      SCIkdebug(SCIkGRAPHICS, "Display: set_font(\"font.%03d\")\n", PARAM(argpt - 1));
       break;
 
     case K_DISPLAY_WIDTH:
 
       width = PARAM(argpt);
       argpt++;
-      SCIkdebug("Display: set_width(%d)\n", width);
+      SCIkdebug(SCIkGRAPHICS, "Display: set_width(%d)\n", width);
       break;
 
     case K_DISPLAY_SAVE_UNDER:
 
       save_under = 1;
-      SCIkdebug("Display: set_save_under()\n", 0);
+      SCIkdebug(SCIkGRAPHICS, "Display: set_save_under()\n");
       break;
 
     case K_DISPLAY_RESTORE_UNDER:
 
-      SCIkdebug("Display: restore_under(%04x)\n", UPARAM(argpt));
+      SCIkdebug(SCIkGRAPHICS, "Display: restore_under(%04x)\n", UPARAM(argpt));
       graph_restore_box(s, UPARAM(argpt));
       argpt++;
       return;
 
     default:
-      SCIkdebug("Unknown Display() command %x\n", PARAM(argpt-1));
-      SCIkdebug("Display: set_align(%d)\n", port->alignment);
+      SCIkdebug(SCIkGRAPHICS, "Unknown Display() command %x\n", PARAM(argpt-1));
+      SCIkdebug(SCIkGRAPHICS, "Display: set_align(%d)\n", port->alignment);
       return;
     }
   }
@@ -2805,13 +2872,13 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     s->acc = graph_save_box(s, port->x + port->xmin, port->y + port->ymin, _width, _height, 1);
 
-    sciprintf("Saving (%d, %d) size (%d, %d)\n",
+    SCIkdebug(SCIkGRAPHICS, "Saving (%d, %d) size (%d, %d)\n",
 	      port->x + port->xmin, port->y + port->ymin, _width, _height);
 
   }
 
 
-  SCIkdebug("Display: Commiting\n", 0);
+  SCIkdebug(SCIkGRAPHICS, "Display: Commiting\n");
 
   if (s->view_port)
     graph_fill_port(s, port, port->bgcolor);  /* Only fill if we aren't writing to the main view */
@@ -2829,13 +2896,15 @@ kstub(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int i;
 
-  sciprintf("Stub: %s[%x](", s->kernel_names[funct_nr], funct_nr);
+  SCIkdebug(SCIkSTUB, "Stub: %s[%x](", s->kernel_names[funct_nr], funct_nr);
 
-  for (i = 0; i < argc; i++) {
-    sciprintf("%04x", 0xffff & PARAM(i));
-    if (i+1 < argc) sciprintf(", ");
+  if (s->debug_mode & (1 << SCIkSTUB_NR)) {
+    for (i = 0; i < argc; i++) {
+      sciprintf("%04x", 0xffff & PARAM(i));
+      if (i+1 < argc) sciprintf(", ");
+    }
+    sciprintf(")\n");
   }
-  sciprintf(")\n");
 }
 
 

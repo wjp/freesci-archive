@@ -13,7 +13,7 @@
 /* Yeah, I shouldn't be doing this ;-) [CJR] */
 #endif
 
-FLEXARRAY(object*,) fobjects;
+FLEXARRAY_NOEXTRA(object*) fobjects;
 
 
 static opcode* opcodes;

@@ -29,6 +29,7 @@
 #include <resource.h>
 #include <vm.h>
 #include <console.h>
+#include <kdebug.h>
 
 int _debugstate_valid = 0; /* Set to 1 while script_debug is running */
 int _debug_step_running = 0; /* Set to >0 to allow multiple stepping */
@@ -53,7 +54,7 @@ int *_restadjust;
 char inputbuf[256] = "";
 
 char *
-_debug_get_input_default()
+_debug_get_input_default(void)
 {
   char newinpbuf[256];
 
@@ -70,25 +71,27 @@ char *(*_debug_get_input)(void) = _debug_get_input_default;
 
 
 int
-c_debuginfo()
+c_debuginfo(void)
 {
   sciprintf("pc=%04x acc=%04x o=%04x fp=%04x sp=%04x\n", *_pc & 0xffff, _s->acc & 0xffff,
 	    *_objp & 0xffff, *_pp & 0xffff, *_sp & 0xffff);
   sciprintf("prev=%x sbase=%04x globls=%04x &restmod=%x\n",
 	    _s->prev & 0xffff, _s->stack_base & 0xffff, _s->global_vars & 0xffff,
 	    *_restadjust & 0xffff);
+  return 0;
 }
 
 int
-c_step()
+c_step(void)
 {
   _debugstate_valid = 0;
   if (cmd_paramlength && (cmd_params[0].val > 0))
     _debug_step_running = cmd_params[0].val;
+  return 0;
 }
 
 int
-c_heapdump()
+c_heapdump(void)
 {
   if (!_debugstate_valid) {
     sciprintf("Not in debug state\n");
@@ -110,11 +113,12 @@ c_heapdump()
   }
 
   sci_hexdump(_s->heap + cmd_params[0].val, cmd_params[1].val, cmd_params[0].val);
+  return 0;
 }
 
 
 int
-c_classtable()
+c_classtable(void)
 {
   int i;
   heap_ptr spos; /* scriptpos */
@@ -130,10 +134,11 @@ c_classtable()
       sciprintf(" Class 0x%x at %04x (script 0x%x)\n", i, spos + _s->classtable[i].class_offset,
 		_s->classtable[i].script);
 
+  return 0;
 }
 
 int
-c_stack()
+c_stack(void)
 {
   int i;
 
@@ -145,10 +150,11 @@ c_stack()
   for (i = cmd_params[0].val ; i > 0; i--)
     sciprintf("[sp-%04x] = %04x\n", i * 2, 0xffff & getInt16(_s->heap + *_sp - i*2));
 
+  return 0;
 }
 
 int
-c_scriptinfo()
+c_scriptinfo(void)
 {
   int i;
 
@@ -163,6 +169,8 @@ c_scriptinfo()
       sciprintf("%03x at %04x, locals at %04x\n   exports at %04x, %d lockers\n",
 		i, _s->scripttable[i].heappos, _s->scripttable[i].localvar_offset,
 		_s->scripttable[i].export_table_offset, _s->scripttable[i].lockers);
+
+  return 0;
 }
 
 heap_ptr
@@ -318,7 +326,7 @@ disassemble(state_t *s, heap_ptr pos)
 
 
 int
-c_backtrace()
+c_backtrace(void)
 {
   int i;
 
@@ -354,22 +362,25 @@ c_backtrace()
     sciprintf(")\n    obj@%04x pc=%04x sp=%04x fp=%04x\n", *(call->objpp), *(call->pcp),
 	      *(call->spp), *(call->ppp));
   }
+  return 0;
 }
 
 int
-c_refresh_screen()
+c_refresh_screen(void)
 {
   _s->graphics_callback(_s, GRAPHICS_CALLBACK_REDRAW_ALL,0,0,0,0);
+  return 0;
 }
 
 int
-c_redraw_screen()
+c_redraw_screen(void)
 {
   graph_update_box(_s, 0, 0, 320, 200);
+  return 0;
 }
 
 int
-c_disasm()
+c_disasm(void)
 {
   int vpc = cmd_params[0].val;
 
@@ -379,20 +390,21 @@ c_disasm()
   }
 
   if (vpc < 0)
-    return;
+    return 0;
 
   if (cmd_paramlength > 1)
     if (cmd_params[1].val < 0)
-      return;
+      return 0;
 
   do {
     vpc = disassemble(_s, vpc);
   } while ((vpc < 0xfff2) && (cmd_paramlength > 1) && (cmd_params[1].val--));
+  return 0;
 }
 
 
 int
-c_snk()
+c_snk(void)
 {
   if (!_debugstate_valid) {
     sciprintf("Not in debug state\n");
@@ -407,19 +419,21 @@ c_snk()
     _debug_seeking = _DEBUG_SEEK_CALLK;
     _debugstate_valid = 0;
   }
+  return 0;
 }
 
 int
-c_sret()
+c_sret(void)
 {
   _debug_seeking = _DEBUG_SEEK_LEVEL_RET;
   _debug_seek_level = script_exec_stackpos;
   _debugstate_valid = 0;
+  return 0;
 }
 
 
 int
-c_set_acc()
+c_set_acc(void)
 {
   if (!_debugstate_valid) {
     sciprintf("Not in debug state\n");
@@ -427,18 +441,20 @@ c_set_acc()
   }
 
   _s->acc = cmd_params[0].val;
+  return 0;
 }
 
 int
-c_resource_id()
+c_resource_id(void)
 {
   int id = cmd_params[0].val;
 
   sciprintf("%s.%d (0x%x)\n", Resource_Types[id >> 11], id &0x7ff, id & 0x7ff);
+  return 0;
 }
 
 int
-c_heap_free()
+c_heap_free(void)
 {
   if (!_debugstate_valid) {
     sciprintf("Not in debug state\n");
@@ -446,10 +462,11 @@ c_heap_free()
   }
 
   heap_dump_free(_s->_heap);
+  return 0;
 }
 
 int
-c_listclones()
+c_listclones(void)
 {
   int i, j = 0;
   sciprintf("Listing all logged clones:\n");
@@ -460,10 +477,11 @@ c_listclones()
     }
 
   sciprintf("Total of %d clones.\n", j);
+  return 0;
 }
 
 int
-c_show_list()
+c_show_list(void)
 {
   heap_ptr list = cmd_params[0].val;
   heap_ptr prevnode = 0, node;
@@ -476,7 +494,7 @@ c_show_list()
 
   if (getInt16(_s->heap + list - 2) != 6) { /* List is hmalloc()'d to size 6 */
     sciprintf("No list at %04x.\n", list);
-    return;
+    return 1;
   }
 
   sciprintf("List at %04x:\n", list);
@@ -498,6 +516,7 @@ c_show_list()
     sciprintf("%d registered nodes.\n", nodectr);
   else
     sciprintf("List is empty.\n");
+  return 0;
 }
 
 
@@ -598,21 +617,21 @@ objinfo(heap_ptr pos)
 }
 
 int
-c_heapobj()
+c_heapobj(void)
 {
   return
     objinfo(cmd_params[0].val);
 }
 
 int
-c_obj()
+c_obj(void)
 {
   return
     objinfo(*_objp);
 }
 
 int
-c_accobj()
+c_accobj(void)
 {
   return
     objinfo(_s->acc);

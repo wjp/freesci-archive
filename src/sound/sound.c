@@ -25,6 +25,7 @@
 
 ***************************************************************************/
 
+#include <stdarg.h>
 #include <sound.h>
 #ifdef HAVE_GSI
 #include <gsi/gsi_interface.c>
@@ -37,9 +38,19 @@ int sci_sound_uninitializer_registered = 0;
 /* Ha! Now _that_ is an evil variable name! ;-) */
 /* Stores whether atexit(&sciSoundCleanup) has been run yet */
 
+void _SCIsdebug(const char *format, ...)
+{
+#ifdef SCI_SOUND_DEBUG
+  va_list va;
+
+  va_start(va, format);
+  vfprintf(stderr, format, va);
+  va_end (va);
+#endif
+}
 
 void
-sciSoundCleanup()
+sciSoundCleanup(void)
 {
   switch (sci_sound_interface) {
   case SCI_SOUND_INTERFACE_GSI:
@@ -132,6 +143,9 @@ playSound(guint8 *data, int loop)
     }
     break;
 #endif /* HAVE_GSI */
+  default:      /* [DJ] shut up compiler warning */
+    return 1;
+    break;
   }
 }
 

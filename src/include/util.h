@@ -13,6 +13,14 @@
 	extra\
 }
 
+/* [DJ] Declare a flexarray type without extra fields - Visual C++ complains
+** when the FLEXARRAY macro is used and extra parameter is not specified
+*/
+#define FLEXARRAY_NOEXTRA(type) struct{\
+	type* data;\
+	int used, size, itemsize;\
+}
+
 /*Initialize a flexarray*/
 #define FLEXARRAY_INIT(type, array) do {(array).itemsize=sizeof(type); (array).size=0; (array).used=0;} while(0)
 

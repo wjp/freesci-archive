@@ -129,6 +129,7 @@ int decrypt3(guint8 *dest, guint8 *src, int length, int complength)
       return 0;
   }
   }
+  return 0;     /* [DJ] shut up compiler warning */
 }
 
 

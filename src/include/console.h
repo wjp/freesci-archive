@@ -102,7 +102,6 @@ sciprintf(char *fmt, ...);
 ** Returns   : (void)
 */
 
-
 char *
 consoleInput(sci_event_t *event);
 /* Handles an input event
@@ -198,26 +197,28 @@ cmdHookInt(int *pointer, char *name, char *description);
 ** The internal list of int references is used by some of the basic commands.
 */
 
+int
+sci_hexdump(byte *data, int length, int offsetplus);
 
 /***************************************************************************/
 /* console commands */
 
-int c_version(); /* displays the package and version number */
-int c_list(); /* lists various types of things */
-int c_man(); /* 'manual page' */
-int c_set(); /* sets an int variable */
-int c_print(); /* prints a variable */
-int c_play(); /* plays a sound resource */
-int c_playloop(); /* plays a sound resource looping */
-int c_nosound(); /* stops sound output */
-int c_volume(); /* sets the sound output volume */
-int c_size(); /* displays the size of a resource */
-int c_dump(); /* gives a hex dump of a resource */
-int c_objinfo(); /* shows some info about one class */
-int c_objmethods(); /* Disassembles all methods of a class */
-int c_hexgrep(); /* Searches a string in one resource or resource class */
-int c_selectornames(); /* Displays all selector names */
-int c_kernelnames(); /* Displays all kernel function names */
-int c_dissectscript(); /* Splits a script into objects and explains them */
+int c_version(void); /* displays the package and version number */
+int c_list(void); /* lists various types of things */
+int c_man(void); /* 'manual page' */
+int c_set(void); /* sets an int variable */
+int c_print(void); /* prints a variable */
+int c_play(void); /* plays a sound resource */
+int c_playloop(void); /* plays a sound resource looping */
+int c_nosound(void); /* stops sound output */
+int c_volume(void); /* sets the sound output volume */
+int c_size(void); /* displays the size of a resource */
+int c_dump(void); /* gives a hex dump of a resource */
+int c_objinfo(void); /* shows some info about one class */
+int c_objmethods(void); /* Disassembles all methods of a class */
+int c_hexgrep(void); /* Searches a string in one resource or resource class */
+int c_selectornames(void); /* Displays all selector names */
+int c_kernelnames(void); /* Displays all kernel function names */
+int c_dissectscript(void); /* Splits a script into objects and explains them */
 
 #endif /* _SCI_CONSOLE_H_ */ 

@@ -41,7 +41,12 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+/* [DJ] FIXME: move check for HAVE_UNISTD_H to autoconf */
+#ifndef _MSC_VER
 #include <unistd.h>
+#else
+#include <io.h>
+#endif
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -226,5 +231,8 @@ int decompress1(resource_t *result, int resh);
 **               encountered.
 */
 
+int decrypt2(guint8* dest, guint8* src, int length, int complength);
+/* Huffman token decryptor - defined in decompress0.c and used in decompress1.c
+*/
 
 #endif

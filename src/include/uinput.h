@@ -30,8 +30,10 @@
 #define _SCI_UINPUT_H
 
 #include <stdio.h>
+/* [DJ] FIXME: move check for HAVE_UNISTD_H and HAVE_TIME_H to autoconf */
+#ifndef _MSC_VER
 #include <unistd.h>
-#include <sys/time.h>
+#endif
 
 
 #define SCI_INPUT_DEFAULT_CLOCKTIME 100000

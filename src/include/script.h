@@ -36,7 +36,7 @@ typedef struct object_
 	struct object_* parent;
 	char* name;
 
-	FLEXARRAY(struct object_*,) children;
+	FLEXARRAY_NOEXTRA(struct object_*) children;
 
 	/*No flexarray, size the size is known from the start*/
 	script_method** methods;

@@ -53,6 +53,15 @@ void initInputGGI();
 
 uint8 _sci_xfer[640 * 4]; /* Transfer buffer for GGI */
 
+void graphInit()
+{
+  ggiInit();
+}
+
+void graphExit()
+{
+  ggiExit();
+}
 
 void initColors(ggi_visual_t visual)
 {
@@ -306,14 +315,14 @@ default:
 
 
 int
-open_visual_ggi(state_t *s)
+graphOpen(state_t *s)
 {
   s->graphics.ggi_visual = openVisual();
   return (!(s->graphics_callback = graphics_callback_ggi));
 }
 
 void
-close_visual_ggi(state_t *s)
+graphClose(state_t *s)
 {
   ggiClose(s->graphics.ggi_visual);
 }

@@ -84,6 +84,8 @@ typedef struct _state
   byte pic_not_valid; /* Is 0 if the background picture is "valid" */
   byte pic_is_new;    /* Set to 1 if a picture has just been loaded */
 
+  int debug_mode; /* Contains flags for the various debug modes */
+
   long game_time; /* Counted at 60 ticks per second, reset during start time */
 
   heap_ptr save_dir; /* Pointer to the allocated space for the save directory */
@@ -118,8 +120,8 @@ typedef struct _state
   int priority_first; /* The line where priority zone 0 ends */
   int priority_last; /* The line where the highest priority zone starts */
 
-  struct timeval game_start_time; /* The time at which the interpreter was started */
-  struct timeval last_wait_time; /* The last time the game invoked Wait() */
+  GTimeVal game_start_time; /* The time at which the interpreter was started */
+  GTimeVal last_wait_time; /* The last time the game invoked Wait() */
 
   byte version_lock_flag; /* Set to 1 to disable any autodetection mechanisms */
   sci_version_t version; /* The approximated patchlevel of the version to emulate */

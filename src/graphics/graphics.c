@@ -30,17 +30,40 @@
 
 ***************************************************************************/
 
-#include "unistd.h"
+#include <config.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#else /* !HAVE_UNISTD_H */
+#ifdef _MSC_VER
+#include <io.h>
+#else /* no unistd.h, no io.h? */
+#error "Fix graphics.c to include your local equivalent of unistd.h"
+#endif /* error */
+#endif /* !HAVE_UNISTD_H */
+
 #include "glib.h"
 #include "stdio.h"
+#include <stdarg.h>
 #include "graphics.h"
 
 #define DEBUG_DRAWPIC
 
+void _drawpicmsg(const char* format, ...)
+{
 #ifdef DEBUG_DRAWPIC
-#define DRAWPICMSG(a...) fprintf(stderr, a...);
+  va_list va;
+
+  va_start(va, format);
+  vfprintf(stderr, format, va);
+  va_end(va);
+#endif
+}
+
+
+#ifdef DEBUG_DRAWPIC
+#define DRAWPICMSG _drawpicmsg
 #else
-#define DRAWPICMSG(a...)
+#define DRAWPICMSG 1 ? (void)0 : _drawpicmsg
 #endif
 
 int sci_color_mode = SCI_COLOR_DITHER;

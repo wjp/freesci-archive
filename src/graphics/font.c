@@ -34,6 +34,11 @@
 */
 
 #include "graphics.h"
+#include <console.h>
+
+#ifdef _MSC_VER
+#include <ctype.h>
+#endif
 
 short maxchar; /* biggest available character number +1 (usually 0x80) */
 short lastwidth, lastheight;

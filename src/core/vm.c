@@ -30,7 +30,6 @@
 #include <script.h>
 #include <vm.h>
 #include <engine.h>
-#include <sys/time.h>
 
 
 /* #define VM_DEBUG_SEND */
@@ -1201,8 +1200,8 @@ game_init(state_t *s)
 
   s->menubar = menubar_new(); /* Create menu bar */
 
-  gettimeofday(&(s->game_start_time), NULL); /* Get start time */
-  memcpy(&(s->last_wait_time), &(s->game_start_time), sizeof(struct timeval));
+  g_get_current_time(&(s->game_start_time)); /* Get start time */
+  memcpy(&(s->last_wait_time), &(s->game_start_time), sizeof(GTimeVal));
   /* Use start time as last_wait_time */
 
   s->version = SCI_VERSION_DEFAULT_SCI0;
@@ -1243,6 +1242,7 @@ game_init(state_t *s)
   s->priority_first = 42; /* Priority zone 0 ends here */
   s->priority_last = 200; /* The highest priority zone (15) starts here */
 
+  s->debug_mode == 0xffffffff; /* Enable all debugging */
 
   srand(time(NULL)); /* Initialize random number generator */
 
@@ -1287,6 +1287,7 @@ game_init(state_t *s)
 
   s->game_obj = game_obj;
   s->stack_handle = stack_handle;
+  return 0;
 }
   
 int
@@ -1297,6 +1298,7 @@ game_run(state_t *s)
   putInt16(s->heap + s->stack_base + 2, 0);                    /* ... with 0 arguments. */
   send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base); /* Engage! */
   sciprintf(" Game::play() finished.\n");
+  return 0;
 }
 
 int

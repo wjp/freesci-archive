@@ -1,5 +1,5 @@
-SUBDIRS = core include graphics sound console tools
-EXTRA_DIST = README config.l python.tar.gz
+SUBDIRS = core include graphics sound console tools win32
+EXTRA_DIST = README yywrap.c config.l python.tar.gz
 INCLUDES = -I$(top_srcdir)/src/include @ac_glib_includes@
 LDADD = -lefence -lfl -lglib -lm -lc -lggi -lgii -lreadline -lcurses core/libscicore.a graphics/libscigraphics.a sound/libscisound.a console/libsciconsole.a
 bin_PROGRAMS = sciv

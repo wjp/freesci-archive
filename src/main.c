@@ -34,15 +34,13 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#include <graphics_ggi.h>
-
 static int quit = 0;
 static state_t gamestate; /* The main game state */
 
 
 
 int
-c_quit()
+c_quit(void)
 {
   exit(0); /* Force exit */
 }
@@ -51,7 +49,7 @@ c_quit()
 char *old_input = NULL;
 
 char *
-get_readline_input()
+get_readline_input(void)
 {
   char *input = readline("> ");
   if (strlen(input) == 0) {
@@ -72,7 +70,6 @@ int
 main(int argc, char** argv)
 {
   resource_t *resource;
-  ggi_visual_t visual;
   config_entry_t conf;
   int i;
 
@@ -83,7 +80,7 @@ main(int argc, char** argv)
 	 "or any later version, at your option.\n"
 	 "It comes with ABSOLUTELY NO WARRANTY.\n");
 
-  ggiInit();
+  graphInit();
 
   sci_color_mode = SCI_COLOR_DITHER256;
 
@@ -116,8 +113,8 @@ main(int argc, char** argv)
   }
   gamestate.have_mouse_flag = 0; /* Assume that no pointing device is present */
 
-  if (open_visual_ggi(&gamestate)) { /* initialize graphics */
-    fprintf(stderr,"GGI initialization failed. Aborting...\n");
+  if (graphOpen(&gamestate)) { /* initialize graphics */
+    fprintf(stderr,"Graphics initialization failed. Aborting...\n");
     exit(1);
   };
 
@@ -135,15 +132,13 @@ main(int argc, char** argv)
   game_run(&gamestate); /* Run the game */
   game_exit(&gamestate);
 
-  close_visual_ggi(&gamestate); /* Close graphics */
+  graphClose(&gamestate); /* Close graphics */
 
   script_free_state(&gamestate); /* Uninitialize game state */
 
-  clear_history();
-
   freeResources();
 
-  ggiExit();
+  graphExit();
 
   return 0;
 }

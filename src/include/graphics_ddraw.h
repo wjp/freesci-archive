@@ -1,5 +1,5 @@
 /***************************************************************************
- graphics_ggi.h Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+ graphics_sdl.h Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
 
 
  This program may be modified and copied freely according to the terms of
@@ -28,24 +28,40 @@
    990402 - created (CJR)
 
 ***************************************************************************/
-/* Graphics for GGI */
+/* Graphics for SDL */
 
-#ifndef _SCI_GRAPHICS_GGI_H_
-#define _SCI_GRAPHICS_GGI_H_
+#ifndef _SCI_GRAPHICS_SDL_H_
+#define _SCI_GRAPHICS_SDL_H_
 
 #include <config.h>
-#ifdef HAVE_LIBGGI
+#ifdef HAVE_LIBSDL
 
 #include "graphics.h"
-#include "ggi/ggi.h"
+//#include "ggi/ggi.h"
 
 #define SCI_VISUAL_NORMAL 0
 #define SCI_VISUAL_DOUBLE 1
 
-extern ggi_visual_t sci_default_visual;
+//extern ggi_visual_t sci_default_visual;
 /* The default visual. This isn't used by the library itself. */
-extern int sci_default_visual_size;
+//extern int sci_default_visual_size;
 /* The default visual's size. Not used by the library itself */
+
+
+int
+open_visual_ggi(struct _state *s);
+/* Opens a ggi visual and sets all callbacks to ggi-specific functions
+** Parameter: (state_t *) s: Pointer to the affected state_t
+** Returns  : (int) 0 on success, 1 otherwise
+*/
+
+void
+close_visual_ggi(struct _state *s);
+/* Closes a ggi visual on a state_t
+** Parameter: (state_t *) s: Pointer to the affected state_t
+** Returns  : (void)
+*/
+
 
 int
 initInputGII(void);
@@ -58,5 +74,5 @@ initInputGII(void);
 */
 
 
-#endif /* HAVE_LIBGGI */
-#endif /* !_SCI_GRAPHICS_GGI_H */
+#endif /* HAVE_LIBSDL */
+#endif /* !_SCI_GRAPHICS_SDL_H */

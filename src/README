@@ -19,3 +19,4 @@ libraries/interfaces/daemons.
 
 tools/ contains all 'tools' for working with SCI resource data.
 
+win32/ contains the workspace and projects for Visual C++.

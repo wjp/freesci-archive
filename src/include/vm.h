@@ -198,6 +198,10 @@ execute_method(struct _state *s, word script, word pubfunct, heap_ptr sp, heap_p
 */
 
 void
+send_selector(struct _state *s, heap_ptr send_obj, heap_ptr work_obj,
+	      heap_ptr sp, int framesize, word restmod, heap_ptr argp);
+
+void
 execute(struct _state *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr argp,
 	int selector);
 /* Executes the code on s->heap[pc] until it hits a 'ret' command

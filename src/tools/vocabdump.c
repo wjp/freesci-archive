@@ -32,7 +32,6 @@
 #include <resource.h>
 #include <vocabulary.h>
 
-
 int main(int argc, char** argv)
 {
   resource_t *resource;

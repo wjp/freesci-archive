@@ -36,7 +36,16 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef HAVE_DIRENT_H
 #include <dirent.h>
+#endif
+
+#ifndef O_BINARY
+#define O_BINARY 0
+/* Not defined on some systems */
+#endif
+
 
 int sci_version = 0;
 
@@ -48,9 +57,23 @@ struct singly_linked_resources_struct {
   struct singly_linked_resources_struct *next;
 };
 
+int resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int allow_patches);
+
 void killlist(struct singly_linked_resources_struct *rs);
 
+int loadResourcePatches(struct singly_linked_resources_struct *resourcelist);
+
 int resourcecmp(const void *first, const void *second);
+
+
+#ifdef WORDS_BIGENDIAN
+gint16
+getInt16(unsigned char* address)
+{
+  return (gint16)((((guint16)address[1]) << 8) | (address[0]))
+}
+#endif WORDS_BIGENDIAN
+
 
 int loadResources(int version, int allow_patches)
 {
@@ -141,7 +164,7 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
   base.resource = 0;
 
   do {
-    if (resourceFileCounter > 0) {
+    if (resourceFileCounter > 0 && resourceFile > 0) {
       int decomperr;
       resource = malloc(sizeof(resource_t));
 
@@ -175,11 +198,11 @@ resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int
     }
 
     sprintf(filename, "resource.%03i", resourceFileCounter);
-    resourceFile = open(filename, O_RDONLY);
+    resourceFile = open(filename, O_RDONLY|O_BINARY);
 
     if (resourceFile <= 0) {
       sprintf(filename, "RESOURCE.%03i", resourceFileCounter);
-      resourceFile = open(filename, O_RDONLY);
+      resourceFile = open(filename, O_RDONLY|O_BINARY);
     }    /* Try alternative valid file name */
 
     resourceFileCounter++;

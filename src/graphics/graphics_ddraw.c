@@ -1,5 +1,5 @@
 /***************************************************************************
- graphics_ggi.h Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+ graphics_sdl.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
 
 
  This program may be modified and copied freely according to the terms of
@@ -25,38 +25,35 @@
 
  History:
 
-   990402 - created (CJR)
+    990819 - created [DJ]
 
 ***************************************************************************/
-/* Graphics for GGI */
-
-#ifndef _SCI_GRAPHICS_GGI_H_
-#define _SCI_GRAPHICS_GGI_H_
 
 #include <config.h>
-#ifdef HAVE_LIBGGI
+#ifdef HAVE_DDRAW
 
-#include "graphics.h"
-#include "ggi/ggi.h"
+#include <graphics_ddraw.h>
+#include <uinput.h>
+#include <engine.h>
 
-#define SCI_VISUAL_NORMAL 0
-#define SCI_VISUAL_DOUBLE 1
+void graphInit()
+{
+}
 
-extern ggi_visual_t sci_default_visual;
-/* The default visual. This isn't used by the library itself. */
-extern int sci_default_visual_size;
-/* The default visual's size. Not used by the library itself */
+void graphExit()
+{
+}
 
 int
-initInputGII(void);
-/* Installs an input handler for stdin over libgii
-** Parameters: (void)
-** Returns   : (int) 0 on success, 1 on failure
-** This command won't work if used after a visual has been opened, since
-** only one input handler may be used.
-** The handler installed by this function does not create mouse events.
-*/
+graphOpen(state_t *s)
+{
+  return 0;
+}
 
+void
+graphClose(state_t *s)
+{
+}
+  
 
-#endif /* HAVE_LIBGGI */
-#endif /* !_SCI_GRAPHICS_GGI_H */
+#endif /* HAVE_DDRAW */

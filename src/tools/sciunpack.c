@@ -1,5 +1,5 @@
 /***************************************************************************
- unpack.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+ sciunpack.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
 
 
  This program may be modified and copied freely according to the terms of
@@ -35,6 +35,12 @@
 #ifdef HAVE_LIBPNG
 #include <graphics_png.h>
 #endif /* HAVE_LIBPNG */
+
+#ifdef _MSC_VER
+/* [DJ] fchmod is not in Visual C++ RTL - and probably not needed,anyway */
+#define fchmod(file,mode)
+
+#endif
 
 static int conversion = 1;
 static int list = 0;

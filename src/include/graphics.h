@@ -185,6 +185,25 @@ extern int sci_color_mode;
 
 /*** FUNCTION DECLARATIONS ***/
 
+/* [DJ] Graphics functions common for all graphics libraries: */
+
+void graphInit();
+void graphExit();
+
+int
+graphOpen(struct _state *s);
+/* Opens a visual and sets all callbacks to graphics library-specific functions
+** Parameter: (state_t *) s: Pointer to the affected state_t
+** Returns  : (int) 0 on success, 1 otherwise
+*/
+
+void
+graphClose(struct _state *s);
+/* Closes a ggi visual on a state_t
+** Parameter: (state_t *) s: Pointer to the affected state_t
+** Returns  : (void)
+*/
+
 picture_t alloc_empty_picture(int resolution, int colordepth);
 /* Creates an initialized but empty picture buffer.
 ** Paramters: (int) resolution: One of the SCI_RESOLUTION macros to determine the internal resolution

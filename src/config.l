@@ -29,10 +29,22 @@
 #include <sci_conf.h>
 #include <graphics.h>
 #include <engine.h>
+#include <glib.h>
+
+#ifdef _MSC_VER
+#include <ctype.h>
+#include <direct.h>
+#endif
 
 config_entry_t *conf;
 char *name;
 char *workname;
+
+#ifdef _WIN32
+#define scimkdir(arg1,arg2) mkdir(arg1)
+#else
+#define scimkdir(arg1,arg2) mkdir(arg1,arg2)
+#endif
 
 int
 _parse_color_mode(char *s); /* Parses the color mode string */
@@ -116,7 +128,7 @@ config_init(config_entry_t *_conf, char *_name, char *conffile)
       }
 
       if (chdir(FREESCI_GAMEDIR))
-	if (mkdir(FREESCI_GAMEDIR, 0700)) {
+	if (scimkdir(FREESCI_GAMEDIR, 0700)) {
 
 	  fprintf(stderr,"Warning: Could not enter/create ~/"FREESCI_GAMEDIR"\n");
 	  return;
@@ -167,7 +179,7 @@ _parse_color_mode(char *mode) /* Parses the color mode string */
   int i = 0;
 
   while (valid_modes[i].name) {
-    if (strcasecmp(mode, valid_modes[i].name))
+    if (g_strcasecmp(mode, valid_modes[i].name))
       return valid_modes[i].value;
     i++;
   }

@@ -336,6 +336,7 @@ cmdHook(int command(void), char *name, char *param, char *description)
   _cmd_command_count++;
 
   _lists_need_sorting = 1;
+  return 0;
 }
 
 
@@ -363,6 +364,7 @@ cmdHookInt(int *pointer, char *name, char *description)
   _cmd_var_count++;
 
   _lists_need_sorting = 1;
+  return 0;
 }
 
 
@@ -390,7 +392,7 @@ int getResourceNumber(char *resid)
 }
 
 int
-c_version()
+c_version(void)
 {
   sciprintf(""PACKAGE", version "VERSION"\n");
   sciprintf("Running %s\n", SCI_Version_Types[sci_version]);
@@ -398,7 +400,7 @@ c_version()
 }
 
 int
-c_list()
+c_list(void)
 {
   if (_lists_need_sorting)
     cmdSortAll();
@@ -445,11 +447,12 @@ c_list()
     }
 
   } else sciprintf("list can only be used with one argument");
+  return 0;
 }
 
 
 int
-c_man()
+c_man(void)
 {
   int i;
   for (i = 0; i < _cmd_command_count; i++)
@@ -476,60 +479,71 @@ c_man()
       sciprintf("-- VARIABLE: (int) %s\n\nDESCRIPTION:\n  %s\n",
 		_cmd_vars[i].name,
 		_cmd_vars[i].description);
+  return 0;
 }
 
 int
-c_set()
+c_set(void)
 {
   int i;
 
   for (i = 0; i < _cmd_var_count; i++)
     if (strcmp(cmd_params[0].str, _cmd_vars[i].name) == 0)
       *(_cmd_vars[i].var.intp) = cmd_params[1].val;
+  
+  return 0;
 }
 
 int
-c_print()
+c_print(void)
 {
   int i;
 
   for (i = 0; i < _cmd_var_count; i++)
     if (strcmp(cmd_params[0].str, _cmd_vars[i].name) == 0)
       sciprintf("%d",*(_cmd_vars[i].var.intp));
+
+  return 0;
 }
 
 int
-c_play()
+c_play(void)
 {
   resource_t *resource = findResource(sci_sound, cmd_params[0].val);
 
   if (resource == NULL) sciprintf("sound.%03d not found!\n", cmd_params[0].val);
   else playSound(resource->data, SCI_SOUND_NOLOOP);
+  
+  return 0;
 }
 
 int
-c_playloop()
+c_playloop(void)
 {
   resource_t *resource = findResource(sci_sound, cmd_params[0].val);
 
   if (resource == NULL) sciprintf("sound.%03d not found!\n", cmd_params[0].val);
   else playSound(resource->data, SCI_SOUND_LOOP);
+
+  return 0;
 }
 
 int
-c_nosound()
+c_nosound(void)
 {
   stopSound();
+  return 0;
 }
 
 int
-c_volume()
+c_volume(void)
 {
   setSoundVolume(cmd_params[0].val);
+  return 0;
 }
 
 int
-c_size()
+c_size(void)
 {
   int res = getResourceNumber(cmd_params[0].str);
   if (res == -1)
@@ -541,6 +555,7 @@ c_size()
     } else
       sciprintf("Resource %s.%03d not found\n", cmd_params[0].str, cmd_params[1].val);
   }
+  return 0;
 }
 
 
@@ -568,10 +583,11 @@ sci_hexdump(byte *data, int length, int offsetplus)
 	  
     sciprintf("%s\n", tempstr);
   }
+  return 0;
 }
 
 int
-c_dump()
+c_dump(void)
 {
   int res = getResourceNumber(cmd_params[0].str);
 
@@ -584,11 +600,12 @@ c_dump()
     else
       sciprintf("Resource %s.%03d not found\n", cmd_params[0].str, cmd_params[1].val);
   }
+  return 0;
 }
 
 
 int
-c_hexgrep()
+c_hexgrep(void)
 {
   int i, seeklen, resnr, restype, resmax;
   unsigned char *seekstr;
@@ -665,6 +682,7 @@ int c_selectornames()
     seeker++;
   }
   vocabulary_free_snames(snames);
+  return 0;
 }
 
 int
@@ -684,6 +702,7 @@ c_kernelnames()
     sciprintf("%03x: %s\n", seeker, knames[seeker]);
 
   vocabulary_free_knames(knames);
+  return 0;
 }
 
 int
@@ -875,6 +894,7 @@ c_dissectscript()
   sciprintf("Script ends without terminator\n");
 
   vocabulary_free_snames(snames);
+  return 0;
 }
 
 #endif /* SCI_CONSOLE */

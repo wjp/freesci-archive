@@ -41,22 +41,29 @@
 
 #define SCI_SOUND_DEBUG
 
+void _SCIsdebug(const char *format, ...);
 #ifdef SCI_SOUND_DEBUG
-#define SCIsdebug(format, param...) \
-        fprintf(stderr, "SCI sound:" format, ## param);
+#define SCIsdebug _SCIsdebug
 #else /* !SCI_SOUND_DEBUG */
-#define SCIsdebug(format, param...)
+#define SCIsdebug 1 ? (void)0 : _SCIsdebug
 #endif /* !SCI_SOUND_DEBUG */
 
+/* [DJ] SCIswarn cannot be used with more than one parameter: Visual C++
+** doesn't support ... in macro parameter lists, and since __FILE__ is
+** used, I cannot circumvent it the same way as I did for SCIsdebug.
+** If needed, it is possible to define similar macros with any number
+** of parametes.
+*/
+
 #ifdef __GNUC__
-#define SCIswarn(format, param...) \
+#define SCIswarn(format, param) \
         fprintf(stderr, "FSCI sound: file %s %d (%s): " format, \
 		__FILE__, \
 		__LINE__, \
 		__PRETTY_FUNCTION__, \
 		## param);
 #else /* !__GNUC__ */
-#define SCIswarn(format, param...) \
+#define SCIswarn(format, param) \
         fprintf(stderr, "FSCI sound: file %s %d: " format, \
 		__FILE__, \
 		__LINE__, \
