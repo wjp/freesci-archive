@@ -1,3 +1,10 @@
+2001-08-13  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/xlib_driver.c (xlib_init): Added listing of
+	X11 visuals if initialization fails 
+
+	* src/engine/scriptdebug.c (c_vmvars): Fixed vmvars fix
+
 2001-08-11  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/operations.c (gfxdr_add_dirty): Patched visualization bug

@@ -914,13 +914,15 @@ int
 c_vmvars(state_t *s)
 {
   exec_stack_t *stack = s->execution_stack+s->execution_stack_pos;
-  int vartype = strchr(varabbrev, *cmd_params[0].str)-varabbrev;
+  char *vartype_pre = strchr(varabbrev, *cmd_params[0].str);
+  int vartype;
 
-  if (!vartype) {
+  if (!vartype_pre) {
 	  sciprintf("Invalid variable type '%c'\n",
 		    *cmd_params[0].str);
 	  return 1;
   }
+  vartype = vartype_pre - varabbrev;
 
   switch(cmd_paramlength) {
   case 2:

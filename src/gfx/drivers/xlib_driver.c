@@ -569,17 +569,55 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 }
 
 
+static void
+xlib_xdpy_info()
+{
+        int i;
+	XVisualInfo foo;
+	XVisualInfo *visuals;
+	int visuals_nr;
+	Display *display = XOpenDisplay(NULL);
+	char *vis_classes[6] = {"StaticGray", "GrayScale", "StaticColor",
+			    "PseudoColor", "TrueColor", "DirectColor"};
+
+	printf("Visuals provided by X11 server:\n");
+	visuals = XGetVisualInfo(display, VisualNoMask, &foo, &visuals_nr);
+
+	if (!visuals_nr) {
+		printf("  None!\n");
+	}
+
+	for (i = 0; i < visuals_nr; i++) {
+		XVisualInfo *visual = visuals + i;
+		printf("%d:\t%d bpp %s(%d)\n"
+		       "\tR:%08x G:%08x B:%08x\n"
+		       "\tbits_per_rgb=%d\n"
+		       "\tcolormap_size=%d\n\n",
+		       i,
+		       visual->depth,
+		       (visual->class < 0 || visual->class >5)?
+		       "INVALID" : vis_classes[visual->class],
+		       visual->class,
+		       visual->red_mask, visual->green_mask, visual->blue_mask,
+		       visual->bits_per_rgb, visual->colormap_size);
+
+	}
+
+	if (visuals)
+		XFree(visuals);
+}
 
 static int
 xlib_init(struct _gfx_driver *drv)
 {
-        int i;
+	int i;
+
 	for (i = 4; i > 0; i--) 
 		if (!xlib_init_specific(drv, 2, 2, i))
 			return GFX_OK;
 
-	DEBUGB("Failed to find visual!\n");
-    
+	fprintf(stderr, "Could not find supported mode!\n");
+	xlib_xdpy_info();
 
 	return GFX_FATAL;
 }
