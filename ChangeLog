@@ -1,3 +1,8 @@
+2000-11-26  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* doc/sci.sgml: Added Petr's stuff, added a chapter about resource
+	files, minor updates and fixes
+
 2000-11-25  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* THANKS: Added Petr Vyhnak

@@ -212,6 +212,9 @@ sciw_new_text_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int fo
 	gfxw_list_t *list = gfxw_new_list(_move_rect(zone, gfx_point(port->zone.x, port->zone.y)), 0);
 	gfx_color_t *color1, *color2, *bgcolor;
 
+	zone.x = 0;
+	zone.y = 0;
+
 	if (inverse) {
 		color1 = color2 = &(port->bgcolor);
 		bgcolor = &(port->color);
@@ -224,7 +227,7 @@ sciw_new_text_control(gfxw_port_t *port, int ID, rect_t zone, char *text, int fo
 	}
 
 	list->add(GFXWC(list), GFXW(gfxw_new_text(port->visual->gfx_state, zone,
-						  font, text, ALIGN_CENTER, align,
+						  font, text, align, ALIGN_TOP,
 						  *color1, *color2, *bgcolor, 0)));
 	if (framed)
 		list->add(GFXWC(list),

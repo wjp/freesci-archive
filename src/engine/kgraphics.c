@@ -1994,10 +1994,12 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	CHECK_THIS_KERNEL_FUNCTION;
 
-	y = PARAM(0) + 10;
+	y = PARAM(0);
 	x = PARAM(1);
-	yl = PARAM(2) - y + 2;
-	xl = PARAM(3) - x + 1;
+	yl = PARAM(2) - y;
+	xl = PARAM(3) - x;
+
+	y += s->wm_port->bounds.y - 1;
 
 	if (x+xl > 319)
 		x -= ((x+xl) - 319);
@@ -2009,8 +2011,9 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	bgcolor.mask = GFX_MASK_VISUAL | ((priority >= 0)? GFX_MASK_PRIORITY : 0);
 	bgcolor.priority = priority;
 
-SCI_MEMTEST;
+	SCI_MEMTEST;
 
+	SCIkdebug(SCIkGRAPHICS, "New window with params %d, %d, %d, %d\n", PARAM(0), PARAM(1), PARAM(2), PARAM(3));
 	window = sciw_new_window(s, gfx_rect(x, y, xl, yl), s->titlebar_port->font_nr, 
 				 s->ega_colors[PARAM_OR_ALT(7, 0)], bgcolor, s->titlebar_port->font_nr,
 				 s->ega_colors[15], s->ega_colors[8], s->heap + UPARAM(4), flags);

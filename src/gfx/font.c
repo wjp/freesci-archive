@@ -253,7 +253,7 @@ gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
 	*height = maxheight;
 	*lines = current_fragment;
 
-	fragments[current_fragment-1].length = text - fragments[current_fragment-1].offset;
+	fragments[current_fragment-1].length = text - fragments[current_fragment-1].offset - 1;
 
 	return fragments;
 }

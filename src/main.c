@@ -505,7 +505,7 @@ main(int argc, char** argv)
 	  exit(1);
   };
   */
-  if (gfxop_init(gfx_state, 3, 3, 4, gfx_options)) { 
+  if (gfxop_init(gfx_state, 1, 1, 4, gfx_options)) { 
 	  fprintf(stderr,"Graphics initialization failed. Aborting...\n");
 	  exit(1);
   };

@@ -59,6 +59,14 @@
 
 
     <Author>
+     <firstname/Petr/<surname/Vyhnak/
+      <authorblurb><para>
+	Petr described the deflate-like algorithm required to decompress resources in
+	SCI1.1-style games, and the general resource format.
+      </para></authorblurb>
+    </author>
+
+    <Author>
      <firstname/Dark/<surname/Minister/
       <authorblurb><para>
         Dark Minister, whoever he may be, was the first one to document
@@ -324,21 +332,67 @@ a save game file.
 <sect1>
 <title/SCI01 extensions/
 <para>
-SCI01 differs only in very few respects: It uses different compression
-algorithms (all of which are supported since FreeSCI 0.2.1), and a
-different type of sound resources, which may contain digitized sound effects
-(samples). The basic music data, however, still resembles MIDI data. It has not
-been examined yet.
+  SCI01 differs only in very few respects: It uses different compression
+  algorithms (all of which are supported since FreeSCI 0.2.1), and a
+  different type of sound resources, which may contain digitized sound effects
+  (samples). The basic music data, however, still resembles MIDI data.
+</para>
+<para>
+  Also, scripts are split into two parts when loaded: A dynamic part, which
+  resides in the heap as before, and a static part, which is stored externally
+  to conserve heap space.
+  <footnote>
+    <para>
+      The background for this is that heap space started running out in Quest for Glory 2.
+      In order to compensate for this, changes were made to both the script library and the
+      interpreter.
+    </para>
+  </footnote>
 </para>
 </sect1>
 
 
 <sect1>
-<title/SCI1 extensions/
+  <title/SCI1 extensions/
 <para>
-SCI1, which is not covered by FreeSCI at the moment, introduces new concepts
-like Palettes, scaled bitmap images and several new compression algorithms.
+  SCI1, which is not covered by FreeSCI at the moment, introduces new concepts
+  like Palettes, scaled bitmap images and several new compression algorithms.
+  In SCI1.0, the resource limit was first increased to 16383
+  <footnote>
+    <para>
+      This <emphasis>appears</emphasis> to be the limit- none of the
+      SCI1.0 games I tested used resource numbers beyond 16383
+    </para>
+  </footnote>
+  , and then to 65535 in SCI1. Because of the inherent limitations of the FAT file
+  system the primary target OS of Sierra's SCI interpreter was limited to, patch
+  file names were altered accordingly, with the resource number (not padded) before
+  the dot and a three-letter resource ID behind it; examples are "0.scr" or "100.v56".
 </para>
+<para>
+  The complete list of suffixes is as follows:
+  <simplelist>
+    <member>80: v56: 256 color views</member>
+    <member>81: p56: 256 color background pictures</member>
+    <member>82: scr: Scripts (static data)</member>
+    <member>83: tex: Texts (apparently deprecated in favor of messages)</member>
+    <member>84: snd: Sound data (MIDI music)</member>
+    <member>86<footnote><para>Type 0x85 resources are 'memory' resources, which are only used internally.</para></footnote>
+      :voc: Vocabulary (not used)</member>
+    <member>87: fon: Fonts</member>
+    <member>88: cur: Mouse cursors (deprecated in favor of v56-based cursors)</member>
+    <member>89: pat: Audio patch files</member>
+    <member>8a: bit: Bitmap files (purpose unknown)</member>
+    <member>8b: pal: 256 color palette files</member>
+    <member>8c: cda: CD Audio resources</member>
+    <member>8d: aud: Audio resources (probably sound effects)</member>
+    <member>8e: syn: Sync (purpose unknown)</member>
+    <member>8f: msg: Message resources: Text plus metadata</member>
+    <member>90: map: Map (purpose unknown)</member>
+    <member>91: hep: Heap resources: Dynamic script data</member>
+  </simplelist>
+  Apparently, the script resource split introduced in SCI01 was incorporated into the actual resource layout
+  in SCI1.
 </sect1>
 
 <sect1><title/Sierra SCI games/
@@ -462,11 +516,442 @@ like Palettes, scaled bitmap images and several new compression algorithms.
     </sect2>
 
 </sect1>
+</chapter>
+
+<chapter>
+  <title>Resource files</title>
+  <para>
+  with major contributions from <author><firstname>Petr</firstname> <surname>Vyhnak</surname></author>
+  </para><para>
+    In order to allow games to be both distributeable and playable from
+    several floppy disks, SCI was designed to support multi-volume data.
+    The data itself could therefore be spread into separate files,
+    with some of the more common resources present in more than one of
+    them. The global index for these files was a "resource.map" file,
+    which was read during startup and present on the same disk as the
+    interpreter itself. This file contained a linear lookup table that
+    mapped resource type/number tuples to a set of resource number/
+    offset tuples, which they could subsequently be read from.
+  </para>
+  <sect1>
+    <title>SCI0 resources</title>
+    <sect2>
+      <title>resource.map</title>
+      <para>
+	The SCI0 map file format is pretty simple:
+	It consists of 6-byte entries, terminated by the sequence 0xffff ffff ffff.
+	The first 2 bytes, interpreted as little endian 16 bit integer, encode
+	resource type (high 5 bits) and number (low 11 bits). The next 4 bytes
+	are a 32 bit LE integer that contains the resource file number in the high 6 bits,
+	and the absolute offset within the file in the low 26 bits.
+	SCI0 performs a linear search to find the resource; however, multiple entries may
+	match the search, since resources may be present more than once (the inverse
+	mapping is not injective).
+      </para>
+    </sect2>
+    <sect2>
+      <title>resource.nr</title>
+      <para>
+	SCI0 resource entries start with a four-tuple of little endian 16 bit words,
+	which we will call (<literal/id/, <literal/comp_size/, <literal/decomp_size/, <literal/method/).
+	<literal>id</literal> has the usual SCI0 semantics (high 5 are the resource type, low 11 are
+	  its number). <literal>comp_size</literal> and <literal>decomp_size</literal> are the
+	  size of the compressed and the decompressed resource, respectively. The compressed size
+	  actually starts counting at the record position of <literal>decomp_size</literal>, so
+	  it counts four bytes in addition to the actual content. <literal>method</literal>, finally,
+	  is the compression method used to store the data.
+      </para>
+    </sect2>
+  </sect1>
+  <sect1>
+    <title>SCI1 resources</title>
+    <sect2>
+      <title>resource.map</title>
+      <para>
+	The SCI1 resource.map starts with an array of 3-byte structures where the 1st 
+	byte is
+	the resource type (0x80 ... 0x91) and next 2 bytes (interpreted as little-endian 16 bit integer) represent the absolute offset
+	of the resource's lookup table (within resource.map). This first array is terminated by a
+	3-byte entry with has 0xFF as a type
+	and the offset pointing to the first byte after the last resource type's lookup table.
+	SCI1 first goes through this list
+	to find the start of list for the correct resource type and remember this 
+	offset and the offset from the next entry
+	to know where it ends. The resulting interval is searched linearly; the data contained
+	within consists of 6-byte structures, 
+	where the first LE 16 bit integer is the resource number, and the next LE 32 bit integer
+	contains the resource
+	file number in its high 4 bits and the absolute resource offset (in the indicated resource file) in its low 28 bits.
+      </para>
+    </sect2>
+    <sect2>
+      <title>resource.nr</title>
+      <para>
+	Later versions of SCI1 changed the resource file structure slightly:
+	The resource header now contains a byte describing the resource's type, and a four-tuple
+	(<literal/res_nr/, <literal/comp_size/, <literal/decomp_size/, <literal/method/), where
+	<literal>comp_size</literal>, <literal>decomp_size</literal>, and <literal>method</literal> have
+	  the same meanings as before (with the exception of <literal>method</literal> referring to different algorithms),
+	  while res_nr is simply the resource's number.
+      </para>
+    </sect2>
+  </sect1>
+  <sect1>
+    <title>Compression algorithms</title>
+    <para>
+      The compression algorithms used in SCI are as follows:
+      <table frame="all">
+	<title>SCI0 compression algorithms</title>
+	<tgroup cols="2">
+	  <thead>
+	    <row>
+	      <entry>method</entry>
+	      <entry>algorithm</entry>
+	    </row>
+	  </thead>
+	  <tbody>
+	    <row>
+	      <entry>0</entry>
+	      <entry>uncompressed</entry>
+	    </row>
+	    <row>
+	      <entry>1</entry>
+	      <entry>LZW</entry>
+	    </row>
+	    <row>
+	      <entry>2</entry>
+	      <entry>HUFFMAN</entry>
+	    </row>
+	  </tbody>
+	</tgroup>
+      </table>
+
+      <table frame="all">
+	<title>SCI01 compression algorithms</title>
+	<tgroup cols="2">
+	  <thead>
+	    <row>
+	      <entry>method</entry>
+	      <entry>algorithm</entry>
+	    </row>
+	  </thead>
+	  <tbody>
+	    <row>
+	      <entry>0</entry>
+	      <entry>uncompressed</entry>
+	    </row>
+	    <row>
+	      <entry>1</entry>
+	      <entry>LZW</entry>
+	    </row>
+	    <row>
+	      <entry>2</entry>
+	      <entry>COMP3</entry>
+	    </row>
+	    <row>
+	      <entry>3</entry>
+	      <entry>HUFFMAN</entry>
+	    </row>
+	  </tbody>
+	</tgroup>
+      </table>
 
 
- </Chapter>
+      <table frame="all">
+	<title>SCI1.0 compression algorithms</title>
+	<tgroup cols="2">
+	  <thead>
+	    <row>
+	      <entry>method</entry>
+	      <entry>algorithm</entry>
+	    </row>
+	  </thead>
+	  <tbody>
+	    <row>
+	      <entry>0</entry>
+	      <entry>uncompressed</entry>
+	    </row>
+	    <row>
+	      <entry>1</entry>
+	      <entry>LZW</entry>
+	    </row>
+	    <row>
+	      <entry>2</entry>
+	      <entry>COMP3</entry>
+	    </row>
+	    <row>
+	      <entry>3</entry>
+	      <entry>UNKNOWN-0</entry>
+	    </row>
+	    <row>
+	      <entry>4</entry>
+	      <entry>UNKNOWN-1</entry>
+	    </row>
+	  </tbody>
+	</tgroup>
+      </table>
 
- <Chapter>
+
+      <table frame="all">
+	<title>SCI1.1 compression algorithms</title>
+	<tgroup cols="2">
+	  <thead>
+	    <row>
+	      <entry>method</entry>
+	      <entry>algorithm</entry>
+	    </row>
+	  </thead>
+	  <tbody>
+	    <row>
+	      <entry>0</entry>
+	      <entry>uncompressed</entry>
+	    </row>
+	    <row>
+	      <entry>18</entry>
+	      <entry>UNKNOWN-2</entry>
+	    </row>
+	    <row>
+	      <entry>19</entry>
+	      <entry>UNKNOWN-3</entry>
+	    </row>
+	    <row>
+	      <entry>20</entry>
+	      <entry>UNKNOWN-4</entry>
+	    </row>
+	  </tbody>
+	</tgroup>
+      </table>
+
+    </para>
+    <sect2>
+      <title>Decompression algorithm LZW</title>
+      <para>
+	The LZW algorithm itself, when used for compression or decompression in an apparatus (sic)
+	designed for compression and decompression, has been patented by Unisys in Japan, Europe, and
+	the United States. Fortunately, FreeSCI only needs LZW decompression, which means that it
+	does not match the description of the apparatus as given above. (Further, patents on
+	software are (at the time of this writing) not enforceable in Europe, where the FreeSCI
+	implementation of the LZW decompressor was written).
+      </para>
+      <para>
+	<!-- fixme -->
+	  WriteMe.
+      </para>
+    </sect2>
+    <sect2>
+      <title>Decompression algorithm HUFFMAN</title>
+      <para>
+	<!-- fixme -->
+	  WriteMe.
+      </para>
+    </sect2>
+    <sect2>
+      <title>Decompression algorithm COMP3</title>
+      <para>
+	<!-- fixme -->
+	  WriteMe.
+      </para>
+    </sect2>
+    <sect2>
+      <title>DEFLATE</title>
+      <para>
+	originally by <author><firstname>Petr</firstname> <surname>Vyhnak</surname></author>
+      </para>
+      <note><para>
+	This algorithm has not yet been implemented in FreeSCI. It matches one or more of the
+	UNKNOWN algorithms.
+      </para></note>
+      <para>
+	This algorithm is based on the Deflate algorithm described in the Internet RFC 1951 (see also
+	RFC 1950 for related material).
+      </para>
+      <para>
+	The algorithm is quite similar to the explode algorithm (ZIP method #6 - implode ) but 
+	there are differences.
+	<programlisting>
+	/* The first 2 bytes are parameters */
+
+P1 = ReadByte(); /* 0 or 1 */
+	/* I think this means 0=binary and 1=ascii file, but in RESOURCEs I saw always 0 */
+
+P2 = ReadByte();
+	/* must be 4,5 or 6 and it is a parameter for the decompression algorithm */
+
+
+/* Now, a bit stream follows, which is decoded as described below: */
+
+
+LOOP:
+     read 1 bit (take bits from the lowest value (LSB) to the MSB i.e. bit 0, bit 1 etc ...)
+         - if the bit is 0 read 8 bits and write it to the output as it is.
+         - if the bit is 1 we have here a length/distance pair:
+                 - decode a number with Hufmman Tree #1; variable bit length, result is 0x00 .. 0x0F -&gt; L1
+                   if L1 &lt;= 7:
+                         LENGTH = L1 + 2
+                   if L1 &gt; 7
+                         read more (L1-7) bits -&gt; L2
+                         LENGTH = L2 + M[L-7] + 2
+
+                 - decode another number with Hufmann Tree #2 giving result 0x00..0x3F -&gt; D1
+                   if LENGTH == 2
+                         D1 = D1 &lt;&lt; 2
+                         read 2 bits -&gt; D2
+                   else
+                         D1 = D1 &lt;&lt; P2  // the parameter 2
+                         read P2 bits -&gt; D2
+
+                   DISTANCE = (D1 | D2) + 1
+
+                 - now copy LENGTH bytes from (output_ptr-DISTANCE) to output_ptr
+END LOOP
+
+	</programlisting>
+	The algorithm terminates as soon as it runs out of bits. The data structures used
+	are as folows:
+	</para>
+	<sect3>
+	  <title>M</title>
+	  <para>
+	    M is a constant array defined as M[0] = 7,  M[n+1] = M[n]+ 2^n.
+	    That means M[1] = 8, M[2] = 0x0A, M[3] = 0x0E, M[4] = 0x16, M[5] = 0x26, etc.
+	  </para>
+	</sect3>
+
+	<sect3>
+	  <title>Huffman Tree #1</title>
+	  <para>
+	    The first huffman tree contains the length values. It is described by the following table:
+
+	    <informaltable>
+	      <tgroup cols="2">
+		<thead>
+		  <row>
+		    <entry>value (hex)</entry>
+		    <entry>code (binary)</entry>
+		  </row>
+		</thead>
+		<tbody>
+		  <row> <entry>0</entry> <entry>101</entry> </row>
+		  <row> <entry>1</entry> <entry>11</entry> </row>
+		  <row> <entry>2</entry> <entry>100</entry> </row>
+		  <row> <entry>3</entry> <entry>011</entry> </row>
+		  <row> <entry>4</entry> <entry>0101</entry> </row>
+		  <row> <entry>5</entry> <entry>0100</entry> </row>
+		  <row> <entry>6</entry> <entry>0011</entry> </row>
+		  <row> <entry>7</entry> <entry>0010 1</entry> </row>
+		  <row> <entry>8</entry> <entry>0010 0</entry> </row>
+		  <row> <entry>9</entry> <entry>0001 1</entry> </row>
+		  <row> <entry>a</entry> <entry>0001 0</entry> </row>
+		  <row> <entry>b</entry> <entry>0000 11</entry> </row>
+		  <row> <entry>c</entry> <entry>0000 10</entry> </row>
+		  <row> <entry>d</entry> <entry>0000 01</entry> </row>
+		  <row> <entry>e</entry> <entry>0000 001</entry> </row>
+		  <row> <entry>f</entry> <entry>0000 000</entry> </row>
+		</tbody>
+	      </tgroup>
+	    </informaltable>
+	    where bits should be read from the left to the right.
+	  </para>
+	</sect3>
+
+	<sect3>
+	  <title>Huffman Tree #2</title>
+	  <para>
+	    The second huffman code tree contains the distance values. It can be built from the following table:
+	    <informaltable>
+	      <tgroup cols="2">
+		<thead>
+		  <row>
+		    <entry>value (hex)</entry>
+		    <entry>code (binary)</entry>
+		  </row>
+		</thead>
+		<tbody>
+		  <row> <entry>00</entry> <entry>11</entry> </row>
+		  <row> <entry>01</entry> <entry>1011</entry> </row>
+		  <row> <entry>02</entry> <entry>1010</entry> </row>
+		  <row> <entry>03</entry> <entry>1001 1</entry> </row>
+		  <row> <entry>04</entry> <entry>1001 0</entry> </row>
+		  <row> <entry>05</entry> <entry>1000 1</entry> </row>
+		  <row> <entry>06</entry> <entry>1000 0</entry> </row>
+		  <row> <entry>07</entry> <entry>0111 11</entry> </row>
+		  <row> <entry>08</entry> <entry>0111 10</entry> </row>
+		  <row> <entry>09</entry> <entry>0111 01</entry> </row>
+		  <row> <entry>0a</entry> <entry>0111 00</entry> </row>
+		  <row> <entry>0b</entry> <entry>0110 11</entry> </row>
+		  <row> <entry>0c</entry> <entry>0110 10</entry> </row>
+		  <row> <entry>0d</entry> <entry>0110 01</entry> </row>
+		  <row> <entry>0e</entry> <entry>0110 00</entry> </row>
+		  <row> <entry>0f</entry> <entry>0101 11</entry> </row>
+		  <row> <entry>10</entry> <entry>0101 10</entry> </row>
+		  <row> <entry>11</entry> <entry>0101 01</entry> </row>
+		  <row> <entry>12</entry> <entry>0101 00</entry> </row>
+		  <row> <entry>13</entry> <entry>0100 11</entry> </row>
+		  <row> <entry>14</entry> <entry>0100 10</entry> </row>
+		  <row> <entry>15</entry> <entry>0100 01</entry> </row>
+		  <row> <entry>16</entry> <entry>0100 001</entry> </row>
+		  <row> <entry>17</entry> <entry>0100 000</entry> </row>
+		  <row> <entry>18</entry> <entry>0011 111</entry> </row>
+		  <row> <entry>19</entry> <entry>0011 110</entry> </row>
+		  <row> <entry>1a</entry> <entry>0011 101</entry> </row>
+		  <row> <entry>1b</entry> <entry>0011 100</entry> </row>
+		  <row> <entry>1c</entry> <entry>0011 011</entry> </row>
+		  <row> <entry>1d</entry> <entry>0011 010</entry> </row>
+		  <row> <entry>1e</entry> <entry>0011 001</entry> </row>
+		  <row> <entry>1f</entry> <entry>0011 000</entry> </row>
+		  <row> <entry>20</entry> <entry>0010 111</entry> </row>
+		  <row> <entry>21</entry> <entry>0010 110</entry> </row>
+		  <row> <entry>22</entry> <entry>0010 101</entry> </row>
+		  <row> <entry>23</entry> <entry>0010 100</entry> </row>
+		  <row> <entry>24</entry> <entry>0010 011</entry> </row>
+		  <row> <entry>25</entry> <entry>0010 010</entry> </row>
+		  <row> <entry>26</entry> <entry>0010 001</entry> </row>
+		  <row> <entry>27</entry> <entry>0010 000</entry> </row>
+		  <row> <entry>28</entry> <entry>0001 111</entry> </row>
+		  <row> <entry>29</entry> <entry>0001 110</entry> </row>
+		  <row> <entry>2a</entry> <entry>0001 101</entry> </row>
+		  <row> <entry>2b</entry> <entry>0001 100</entry> </row>
+		  <row> <entry>2c</entry> <entry>0001 011</entry> </row>
+		  <row> <entry>2d</entry> <entry>0001 010</entry> </row>
+		  <row> <entry>2e</entry> <entry>0001 001</entry> </row>
+		  <row> <entry>2f</entry> <entry>0001 000</entry> </row>
+		  <row> <entry>30</entry> <entry>0000 1111</entry> </row>
+		  <row> <entry>31</entry> <entry>0000 1110</entry> </row>
+		  <row> <entry>32</entry> <entry>0000 1101</entry> </row>
+		  <row> <entry>33</entry> <entry>0000 1100</entry> </row>
+		  <row> <entry>34</entry> <entry>0000 1011</entry> </row>
+		  <row> <entry>35</entry> <entry>0000 1010</entry> </row>
+		  <row> <entry>36</entry> <entry>0000 1001</entry> </row>
+		  <row> <entry>37</entry> <entry>0000 1000</entry> </row>
+		  <row> <entry>38</entry> <entry>0000 0111</entry> </row>
+		  <row> <entry>39</entry> <entry>0000 0110</entry> </row>
+		  <row> <entry>3a</entry> <entry>0000 0101</entry> </row>
+		  <row> <entry>3b</entry> <entry>0000 0100</entry> </row>
+		  <row> <entry>3c</entry> <entry>0000 0011</entry> </row>
+		  <row> <entry>3d</entry> <entry>0000 0010</entry> </row>
+		  <row> <entry>3e</entry> <entry>0000 0001</entry> </row>
+		  <row> <entry>3f</entry> <entry>0000 0000</entry> </row>
+		</tbody>
+	      </tgroup>
+	    </informaltable>
+	    where bits should be read from the left to the right.
+	  </para>
+	</sect3>
+
+    </sect2>
+    <sect2>
+      <title>Decompression algorithm UNKNOWN</title>
+      <para>
+	The algorithms listed as UNKNOWN-x have not yet been mapped to actual algorithms but
+	are known to be used by the games. For some of them, it is possible that they match
+	one of the algorithms described above, but have not yet been added to FreeSCI in an
+	appropriate way (refer to DEFLATE for a good example).
+      </para>
+    </sect2>
+  </sect1>
+</chapter>
+
+<chapter>
  <Title/The Graphics subsystem/
  <sect1>
  <Title/General stuff/
@@ -649,7 +1134,7 @@ KSetPort(temp);    /* Reactivate the old port */
    <sect2>
          <title>Color mapping for the SCI0 mouse pointer</title>
    <para>
-   <InformalTable frame="all">
+   <informaltable frame="all">
          <tgroup cols="2">
            <thead>
              <row>
