@@ -972,7 +972,10 @@ kDrawPic(state_t *s, int funct_nr, int argc, reg_t *argv)
 	s->wm_port->widfree(GFXW(s->wm_port));
 	s->picture_port->widfree(GFXW(s->picture_port));
 
-	s->wm_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
+	/* FIXME: Not how it's supposed to be; good enough for release */
+	s->wm_port = gfxw_new_port(s->visual, NULL, s->gfx_state->options->pic_port_bounds, s->ega_colors[0], transparent);
+
+	/* but this is correct */
 	s->picture_port = gfxw_new_port(s->visual, NULL, s->gfx_state->options->pic_port_bounds, s->ega_colors[0], transparent);
 
 	s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));

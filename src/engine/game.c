@@ -183,9 +183,12 @@ _reset_graphics_input(state_t *s)
 
 	s->visual = gfxw_new_visual(s->gfx_state, font_nr);
 
-	s->wm_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
-	s->titlebar_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 10), s->ega_colors[0], s->ega_colors[15]);
+	/* FIXME: Not how it's supposed to be; good enough for release */
+	s->wm_port = gfxw_new_port(s->visual, NULL, s->gfx_state->options->pic_port_bounds, s->ega_colors[0], transparent);
+
+	/* but this is correct */
 	s->picture_port = gfxw_new_port(s->visual, NULL, s->gfx_state->options->pic_port_bounds, s->ega_colors[0], transparent);
+	s->titlebar_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 10), s->ega_colors[0], s->ega_colors[15]);
 	s->titlebar_port->color.mask |= GFX_MASK_PRIORITY;
 	s->titlebar_port->color.priority = 11;
 	s->titlebar_port->bgcolor.mask |= GFX_MASK_PRIORITY;

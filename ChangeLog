@@ -1,3 +1,8 @@
+2004-03-14  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/kgraphics.c (kDrawPic): Temporary work-around for
+	port problem.
+
 2004-03-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/doc/sci.tex: Added a slightly revised version of Johannes
