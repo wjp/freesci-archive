@@ -179,6 +179,7 @@ _sci0_read_next_command(base_song_iterator_t *self, unsigned char *buf, int *res
 			if (self->loops) {
 				*result = --self->loops;
 				self->offset = self->loop_offset;
+				self->state = SI_STATE_COMMAND;
 				return SI_LOOP;
 			} else {
 				self->state = SI_STATE_FINISHED;
@@ -187,7 +188,7 @@ _sci0_read_next_command(base_song_iterator_t *self, unsigned char *buf, int *res
 
 		} else if (cmd == SCI_MIDI_SET_SIGNAL) {
 			if (buf[1] == SCI_MIDI_SET_SIGNAL_LOOP) {
-				self->loop_offset = self->offset;
+				self->loop_offset = self->offset - 1 - paramsleft;
 				return /* Execute next command */
 					_sci0_read_next_command(self, buf,
 								result);
@@ -333,12 +334,19 @@ _sci0_check_pcm(base_song_iterator_t *self, int *size, int *sample_rate, int *ty
 static song_iterator_t *
 _base_handle_message(base_song_iterator_t *self, song_iterator_message_t msg)
 {
-	if (msg.recipient = _SIMSG_BASE) {
+	if (msg.recipient == _SIMSG_BASE) {
 		switch (msg.type) {
 
 		case _SIMSG_BASEMSG_SET_LOOPS:
 			self->loops = msg.args[0];
 			break;
+
+		case _SIMSG_BASEMSG_CLONE: {
+			int tsize = sizeof(base_song_iterator_t) + self->size;
+			void *mem = sci_malloc(tsize);
+			memcpy(mem, self, tsize);
+			return mem; /* Assume caller has another copy of this */
+		}
 
 		default:
 			return NULL;
@@ -362,7 +370,8 @@ _sci0_init(base_song_iterator_t *self)
 static void
 _sci0_cleanup(base_song_iterator_t *self)
 {
-	free(self->data);
+	if (self->data)
+		sci_free(self->data);
 	self->data = NULL;
 }
 
@@ -379,7 +388,8 @@ songit_new(unsigned char *data, unsigned int size, int type)
 
 	it->delegate = NULL;
 
-	it->data = data;
+	it->data = sci_malloc(size);
+	memcpy(it->data, data, size);
 	it->size = size;
 
 	if (!data || size < 33) {
