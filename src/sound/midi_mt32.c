@@ -277,7 +277,7 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
   return -1;
 }
 
-int midi_mt32_close()
+int midi_mt32_close(void)
 {
   midi_mt32_allstop();
   if (type == 0) {

@@ -367,7 +367,7 @@ sci0_soundserver(int reverse_stereo)
 							fprintf(ds, "Attempt to stop invalid handle %04x\n", event.handle);
 						}
 
-					break;
+						break;
 
 					case SOUND_COMMAND_SUSPEND_HANDLE: {
 						song_t *seeker = *songlib;

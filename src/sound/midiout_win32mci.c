@@ -136,7 +136,7 @@ int midiout_win32mci_open()
 	return 0;
 }
 
-int midiout_win32mci_close()
+int midiout_win32mci_close(void)
 {
 	MMRESULT ret;
 

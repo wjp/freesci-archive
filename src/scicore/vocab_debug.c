@@ -138,7 +138,7 @@ int getInt(unsigned char* d)
 int* vocabulary_get_classes(resource_mgr_t *resmgr, int* count)
 {
   resource_t* r;
-  int *c, i;
+  unsigned int *c, i;
 
   if((r = scir_find_resource(resmgr, sci_vocab, 996, 0)) == NULL) return 0;
 
@@ -272,7 +272,7 @@ static char** _vocabulary_get_knames0alt(int *names, resource_t *r)
 {
   int mallocsize = 32;
   char **retval = sci_malloc(sizeof (char *) * mallocsize);
-  int i = 0, index = 0;
+  unsigned int i = 0, index = 0;
 
   while (index < r->size) {
 
@@ -355,7 +355,7 @@ static char** vocabulary_get_knames0(resource_mgr_t *resmgr, int* names)
 static char** vocabulary_get_knames1(resource_mgr_t *resmgr, int *count)
 {
   char** t=NULL;
-  int size=64, used=0, pos=0;
+  unsigned int size=64, used=0, pos=0;
   resource_t* r = scir_find_resource(resmgr, sci_vocab, VOCAB_RESOURCE_KNAMES, 0);
 
   while(pos<r->size)

@@ -1,3 +1,36 @@
+2001-09-22  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/sdl_driver.c (sdl_create_cursor_data): SDL pointer
+	is now set to transparent 1x1 pixel image when doing pointer
+	emulation
+
+2001-09-22  Matt Hargett  <matt@use.net>
+
+	* main.c (main): Eliminate VC++ warnings by explicity casting
+	function pointers as (void *).
+
+	* game.c: Fix signed/unsigned comparison warnings.
+
+	* kgraphics.c: Ditto.
+
+	* script.c: Ditto.
+
+	* vocab.c: Ditto.
+
+	* vocab_debug.c: Ditto.
+
+	* old_objects.c: Ditto. Minor reformatting.
+
+	* midi_mt32.c: Explicitly define function arguments as void to
+	eliminate VC++ warnings.
+
+	* midi_mt32gm.c: Ditto.
+       
+	* midiout.c: Ditto.
+       
+	* midiout_win32mci.c: Ditto. Fix build for default VC++ 6.0
+	install. Default to MIDI Mapper as device, if available.   
+
 2001-09-21  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/said.y: Updated grammar to support nested brackets

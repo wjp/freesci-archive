@@ -44,7 +44,7 @@ int midi_mt32gm_open(guint8 *data_ptr, unsigned int data_length)
 	return midi_mt32_allstop();
 }
 
-int midi_mt32gm_close()
+int midi_mt32gm_close(void)
 {
 	return midiout_close();
 }
@@ -121,8 +121,7 @@ int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2)
 			return 0;
 
 		volume = param2;
-		param2 = (volume * MIDI_mapping[param].volume * global_volume)
-			>> (7 + 4);
+		param2 = (volume * MIDI_mapping[param].volume * global_volume) >> (7 + 4);
 
 		if (channel == RHYTHM_CHANNEL)
 			xparam = MIDI_mapping[param].gm_rhythmkey;

@@ -74,7 +74,7 @@ word_t **
 vocab_get_words_sci1(resource_mgr_t *resmgr, int *word_counter)
 {
   int counter = 0;
-  int seeker;
+  unsigned int seeker;
   word_t **words;
 
   char currentword[256] = ""; /* They're not going to use words longer than 255 ;-) */
@@ -248,7 +248,7 @@ vocab_get_suffices(resource_mgr_t *resmgr, int *suffices_nr)
   int counter = 0;
   suffix_t **suffices;
   resource_t *resource = scir_find_resource(resmgr, sci_vocab, VOCAB_RESOURCE_SUFFIX_VOCAB, 0);
-  int seeker = 1;
+  unsigned int seeker = 1;
 
   if (!resource) {
     fprintf(stderr,"Could not find suffix vocabulary!\n");

@@ -430,10 +430,10 @@ static int get_method_location(unsigned char* obj, int i)
 /*Returns the position of the first frame of type 'type' in resource 'r',
  *starting from the frame starting at 'start', or -1 on failure.
  */
-static int find_frame(resource_t* r, int type, int start)
+static int find_frame(resource_t* r, int type, unsigned int start)
 {
 	int t=-1;
-	int pos=start;
+	unsigned int pos = start;
 	unsigned char* frame;
 
 	assert(start<=r->size-4);
@@ -448,21 +448,26 @@ static int find_frame(resource_t* r, int type, int start)
 	if(pos==0 && r->size>=6 && \
 	   !((0<getInt16(r->data)) && (10>getInt16(r->data)))) pos=2;
 #else
-	if(pos==0) pos=2;
+	if(pos == 0) 
+		pos = 2;
 #endif
-	frame=r->data+pos;
+	frame = r->data + pos;
 	while(1)
 	{
-		#ifdef SCRIPT_DEBUG
+#ifdef SCRIPT_DEBUG
 		printf("offset = %#x\n", pos);
 		dump(frame, 32);
-		#endif
-		t=get_type(frame);
-		if(t==type) break;
-		if(t==0) return -1;
+#endif
+		t = get_type(frame);
+		if(t == type) 
+			break;
+
+		if(t == 0) 
+			return -1;
 
 		pos+=get_length(frame);
-		if(pos>r->size-2) return -1;
+		if(pos > (r->size - 2)) 
+			return -1;
 		frame+=get_length(frame);
 	}
 

@@ -220,7 +220,7 @@ _free_graphics_input(state_t *s)
 
 /* Returns the script number suggested by vocab.996, or -1 if there's none */
 static int
-suggested_script(resource_t *res, int class)
+suggested_script(resource_t *res, unsigned int class)
 {
 	int offset;
 	if (class >= res->size >> 2)
@@ -238,7 +238,7 @@ script_init_engine(state_t *s, sci_version_t version)
 	resource_t *vocab996 = scir_find_resource(s->resmgr, sci_vocab, 996, 1);
 	int i;
 	int scriptnr;
-	int seeker;
+	unsigned int seeker;
 	int classnr;
 	int size;
 	int magic_offset; /* For strange scripts in older SCI versions */
@@ -281,7 +281,7 @@ script_init_engine(state_t *s, sci_version_t version)
 			do {
 
 				while (seeker < script->size)	{
-					int lastseeker = seeker;
+					unsigned int lastseeker = seeker;
 					objtype = getInt16(script->data + seeker);
 					if (objtype == sci_obj_class || objtype == sci_obj_terminator)
 						break;

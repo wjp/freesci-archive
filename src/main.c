@@ -877,16 +877,17 @@ main(int argc, char** argv)
 
 	if (cl_options.midiout_driver_name)
 		midiout_driver = old_lookup_driver((old_lookup_funct_t *)midiout_find_driver,
-						   list_midiout_drivers,
+						   (void *)list_midiout_drivers,
 						   "midiout driver", cl_options.midiout_driver_name);
 
 	if (cl_options.midi_device_name)
-		midi_device = old_lookup_driver((old_lookup_funct_t *)midi_find_device, list_midi_devices,
+		midi_device = old_lookup_driver((old_lookup_funct_t *)midi_find_device, 
+						(void *)list_midi_devices,
 						"MIDI device", cl_options.midi_device_name);
 
 	if (cl_options.sound_server_name)
 		sound_server = old_lookup_driver((old_lookup_funct_t *)sound_server_find_driver,
-						 list_sound_servers,
+						 (void*)list_sound_servers,
 						 "sound server", cl_options.sound_server_name);
 
 	if (confs) {
@@ -912,8 +913,9 @@ main(int argc, char** argv)
 	}
 
 	gfx_driver = (gfx_driver_t *)
-		lookup_driver((lookup_funct_t *)gfx_find_driver, list_graphics_drivers,
-			      "graphics driver", gfx_driver_name, module_path);
+		lookup_driver((lookup_funct_t *)gfx_find_driver, 
+				(void *)list_graphics_drivers,
+				"graphics driver", gfx_driver_name, module_path);
 
 	if (!gfx_driver) {
 		if (gfx_driver_name)
