@@ -44,7 +44,7 @@ int
 scancode(int ch) /* Calculates a PC keyboard scancode from a character */
 {
 	int row;
-	int c = toupper(ch);
+	int c = toupper((char)ch);
 
 	for (row = 0; row < SCANCODE_ROWS_NR; row++) {
 		char *keys = scancode_rows[row].keys;
@@ -66,7 +66,7 @@ static int
 sci_toupper(int c)
 {
 	char shifted_numbers[] = ")!@#$%^&*(";
-	c = toupper(c);
+	c = toupper((char)c);
 
 	if (c >= 'A' && c <= 'Z')
 		return c;

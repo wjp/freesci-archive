@@ -1045,11 +1045,13 @@ set_base(state_t *s, heap_ptr object)
 		if (loop != oldloop) {
 			loop = 0;
 			PUT_SELECTOR(object, loop, 0);
+			fprintf(stderr, "Resetting loop for %04x!\n", object);
 		}
 
 		if (cel != oldcel) {
 			cel = 0;
 			PUT_SELECTOR(object, cel, 0);
+			fprintf(stderr, "Resetting cel for %04x!\n", object);
 		}
 
 		gfxop_get_cel_parameters(s->gfx_state, view, loop, cel,
@@ -1314,7 +1316,7 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 				if (modifiers & SCI_EVM_CTRL) {
 
-					switch (tolower(key)) {
+					switch (tolower((char)key)) {
 					case 'a': cursor = 0; break;
 					case 'e': cursor = textlen; break;
 					case 'f': if (cursor < textlen) ++cursor; break;
