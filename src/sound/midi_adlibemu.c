@@ -103,6 +103,9 @@ static int free_voices = ADLIB_VOICES;
 static guint8 oper_note[ADLIB_VOICES];
 static guint8 oper_chn[ADLIB_VOICES];
 
+static FM_OPL *ym3812_L = NULL;
+static FM_OPL *ym3812_R = NULL;
+
 static guint8 adlib_reg_L[256];
 static guint8 adlib_reg_R[256];
 static guint8 adlib_master;
@@ -144,15 +147,15 @@ void adlibemu_init_lists()
 static inline int opl_write_L (int a, int v)
 {
   adlib_reg_L[a] = v;
-  YM3812Write(ADLIB_LEFT, 0x388, a);
-  return YM3812Write(ADLIB_LEFT, 0x389, v);
+  OPLWrite (ym3812_L, 0x388, a);
+  return OPLWrite (ym3812_L, 0x389, v);
 }
 
 static inline int opl_write_R (int a, int v)
 {
   adlib_reg_R[a] = v;
-  YM3812Write(ADLIB_RIGHT, 0x388, a);
-  return YM3812Write(ADLIB_RIGHT, 0x389, v);
+  OPLWrite (ym3812_R, 0x388, a);
+  return OPLWrite (ym3812_R, 0x389, v);
 }
 
 static inline int opl_write(int a, int v)
@@ -503,10 +506,10 @@ static int synth_mixer (gint16 *buffer, int count)
 #endif
 
   if (pcmout_stereo) {
-    YM3812UpdateOne (ADLIB_LEFT, ptr, count, 1);
-    YM3812UpdateOne (ADLIB_RIGHT, ptr+1, count, 1);
+    YM3812UpdateOne (ym3812_L, ptr, count, 1);
+    YM3812UpdateOne (ym3812_R, ptr+1, count, 1);
   } else {
-    YM3812UpdateOne (ADLIB_LEFT, ptr, count, 0);
+    YM3812UpdateOne (ym3812_L, ptr, count, 0);
   }
 
   return count;
@@ -529,8 +532,10 @@ int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
     for (i = 48; i < 96; i++)
       make_sbi((adlib_def *)(data_ptr+2+(28 * i)), adlib_sbi[i]);
 
-  if (YM3812Init(ADLIB_LEFT, OPL_INTERNAL_FREQ, pcmout_sample_rate) ||
-      YM3812Init(ADLIB_RIGHT, OPL_INTERNAL_FREQ, pcmout_sample_rate)) {
+  OPLBuildTables(FMOPL_ENV_BITS_HQ, FMOPL_EG_ENT_HQ);
+
+  if (!(ym3812_L = OPLCreate (OPL_TYPE_YM3812, OPL_INTERNAL_FREQ, pcmout_sample_rate)) ||
+      !(ym3812_R = OPLCreate (OPL_TYPE_YM3812, OPL_INTERNAL_FREQ, pcmout_sample_rate))) {
     printf ("ADLIB:  Emulator init failed!\n");
     return -1;
   }
@@ -545,7 +550,13 @@ int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
 
 int midi_adlibemu_close()
 {
-  YM3812Shutdown();
+  FM_OPL *opl = ym3812_L;
+  ym3812_L = NULL;
+  OPLDestroy(opl);
+  opl = ym3812_R;
+  ym3812_R = NULL;
+  OPLDestroy(opl);
+
   // XXX deregister with pcm layer.
   return 0;
 }
@@ -558,8 +569,8 @@ int midi_adlibemu_reset(void)
 
   adlibemu_init_lists();
 
-  YM3812ResetChip(ADLIB_LEFT);
-  YM3812ResetChip(ADLIB_RIGHT);
+  OPLResetChip (ym3812_L);
+  OPLResetChip (ym3812_R);
 
   opl_write(0x01, 0x20);
   opl_write(0xBD, 0xc0);

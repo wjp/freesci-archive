@@ -18,3 +18,4 @@
 #undef WANT_CONSOLE
 #undef FORCE_CONSOLE
 #undef HAVE_PTHREADS
+#undef HAVE_X11_XFT_XFT_H

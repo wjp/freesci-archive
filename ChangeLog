@@ -1,3 +1,9 @@
+2004-04-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* Some configure.in changes to reflect Xft nondependencies/nonpresence
+
+	* Reverted to fmopl 0.37a (Patch by Walter) to avoid licencing issues
+
 2004-02-05  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/Makefile.am: Updated Dreamcast EXTRA_DIST list.
