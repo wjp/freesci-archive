@@ -26,6 +26,7 @@
 ***************************************************************************/
 
 #include <sfx_timer.h>
+#include <string.h>
 
 #ifdef HAVE_SETITIMER
 extern sfx_timer_t sfx_timer_sigalrm;

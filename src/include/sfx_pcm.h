@@ -28,7 +28,7 @@
 #ifndef _SFX_PCM_H_
 #define _SFX_PCM_H_
 
-#include <sfx_engine.h>
+#include <sfx_core.h>
 #include <sfx_timer.h>
 #include <sfx_time.h>
 

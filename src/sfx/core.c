@@ -113,7 +113,9 @@ static void
 _update(sfx_state_t *self)
 {
 	song_t *newsong = song_lib_find_active(self->songlib, self->song);
+
 	if (newsong != self->song) {
+
 		_freeze_time(self); /* Store song delay time */
 
 		if (player)
@@ -152,9 +154,27 @@ _update(sfx_state_t *self)
 		self->song = newsong;
 		_thaw_time(self); /* Recover song delay time */
 
-		if (newsong && player)
-			player->set_iterator(songit_clone(newsong->it),
-					     self->wakeup_time);
+		if (newsong && (player || mixer)) {
+			song_iterator_t *clonesong = songit_clone(newsong->it);
+
+			if (mixer) {
+				sfx_pcm_feed_t *newfeed = sfx_iterator_feed(clonesong);
+				if (newfeed) {
+					clonesong = NULL;
+					newfeed->debug_nr = (int) newsong->handle;
+					mixer->subscribe(mixer, newfeed);
+				}
+			}
+
+			if (player && clonesong) {
+				player->set_iterator(clonesong,
+						     self->wakeup_time);
+				clonesong = NULL;
+			}
+
+			if (clonesong)
+				songit_free(clonesong);
+		}
 	}
 }
 

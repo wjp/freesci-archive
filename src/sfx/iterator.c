@@ -284,7 +284,7 @@ _sci0_header_magic_p(unsigned char *data, int offset, int size)
 }
 
 static unsigned char *
-_sci0_check_pcm(base_song_iterator_t *self, int *size, int *sample_rate, int *type)
+_sci0_check_pcm(base_song_iterator_t *self, int *size, sfx_pcm_config_t *format)
 {
 	unsigned int offset;
 
@@ -331,7 +331,11 @@ _sci0_check_pcm(base_song_iterator_t *self, int *size, int *sample_rate, int *ty
 	}
 
 	*size = getInt16(self->data + offset + SCI0_PCM_SIZE_OFFSET);
-	*sample_rate = getInt16(self->data + offset + SCI0_PCM_SAMPLE_RATE_OFFSET);
+
+	/* Two of the format parameters are fixed by design: */
+	format->format = SFX_PCM_FORMAT_U8;
+	format->stereo = SFX_PCM_MONO;
+	format->rate = getInt16(self->data + offset + SCI0_PCM_SAMPLE_RATE_OFFSET);
 
 	if (offset + SCI0_PCM_DATA_OFFSET + *size != self->size) {
 		int d = offset + SCI0_PCM_DATA_OFFSET + *size - self->size;

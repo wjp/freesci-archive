@@ -30,6 +30,7 @@
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <sys/soundcard.h>
+#include <sfx_iterator.h> /* for some MIDI information */
 
 #if 1
 SEQ_DEFINEBUF(2048);

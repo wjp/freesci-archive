@@ -28,9 +28,7 @@
 #ifndef _SFX_ENGINE_H_
 #define _SFX_ENGINE_H_
 
-#define SFX_OK 0
-#define SFX_ERROR -1
-
+#include <sfx_core.h>
 #include <sfx_songlib.h>
 #include <sciresource.h>
 

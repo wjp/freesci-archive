@@ -26,7 +26,7 @@
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif /* HAVE_CONFIG_H */
-#include <scitypes.h>
+#include <sfx_core.h>
 #include <stdio.h>
 #include <sfx_device.h>
 #include <sfx_sw_sequencer.h>

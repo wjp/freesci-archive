@@ -28,6 +28,8 @@
 #ifndef _SCI_SFX_ITERATOR_H_
 #define _SCI_SFX_ITERATOR_H_
 
+#include <sfx_pcm.h>
+
 #define MIDI_RHYTHM_CHANNEL 9
 
 /* Special SCI sound stuff */
@@ -117,16 +119,13 @@ typedef struct _song_iterator {
 	*/
 
 	unsigned char * (*get_pcm) (struct _song_iterator *self,
-				    int *size, int *sample_rate, int *type);
+				    int *size, sfx_pcm_config_t *format);
 	/* Checks for the presence of a pcm sample
 	** Parameters: (song_iterator_t *) self
 	** Returns   : (byte *) NULL if no sample was found, a pointer to the
 	**                      PCM data otherwise
-	**             (int) *size: Return variable for the sample size
-	**             (int) *sample_rate: Return variable for the sample rate
-	**                                 in (Hz)
-	**             (int) *PCM data type
-	** Only unsigned mono 8 bit PCMs (AFMT_U8) are supported ATM.
+	**             (int) *size: Number of samples stored in the return value
+	**             (sfx_pcm_config_t) *PCM data format
 	*/
 
 
@@ -248,5 +247,14 @@ songit_clone(song_iterator_t *it);
 ** Returns   : (song_iterator_t *) A shallow clone of 'it'.
 ** This performs a clone on the bottom-most part (containing the actual song data) _only_. 
 */
+
+sfx_pcm_feed_t *
+sfx_iterator_feed(song_iterator_t *it);
+/* Creates a new PCM feed based on a PCM-typical song iterator
+** Parameters: (song_iterator_t) *it: The iterator to try to convert to a PCM feed
+** Returns   : (sfx_pcm_feed_t *) The resulting feed, or NULL it the iterator
+**                                did not admit conversion to a feed
+*/
+
 
 #endif

@@ -26,6 +26,7 @@
 ***************************************************************************/
 
 #include <sfx_mixer.h>
+#include <string.h>
 
 extern sfx_pcm_mixer_t sfx_pcm_mixer_soft_linear;
 

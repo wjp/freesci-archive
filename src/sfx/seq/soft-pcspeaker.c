@@ -209,7 +209,7 @@ sfx_sequencer_t sfx_sequencer_sw_pcspeaker = {
 	SFX_SEQ_PATCHFILE_NONE,
 	0x20,  /* PC speaker channel only */
 	0,
-	1,
+	1, /* # of voices */
 	0,
 	NULL /* Initialised later */
 };

@@ -158,7 +158,8 @@ mix_subscribe(sfx_pcm_mixer_t *self, sfx_pcm_feed_t *feed)
 	fs->spd = urat(feed->conf.rate, self->dev->conf.rate);
 	fs->scount.den = fs->spd.den;
 	fs->mode = SFX_PCM_FEED_MODE_ALIVE;
-	fs->pending_review = 1;
+	/* If the feed can't provide us with timestamps, we don't need to wait for it to do so */
+	fs->pending_review = (feed->get_timestamp)? 1 : 0;
 
 	fs->sample_bufstart = 0;
 
@@ -530,7 +531,6 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 	int samples_left;
 
 	int delay_samples = 0; /* Number of samples (dest buffer) at the beginning we skip */
-
 	/* First, compute the number of samples we want to retreive */
 	samples_nr = fs->spd.val * len;
 	/* A little complicated since we must consider partial samples */
@@ -548,7 +548,6 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 		if (f->get_timestamp)
 			newmode = f->get_timestamp(f, ts);
 
-
 		switch (newmode) {
 
 		case PCM_FEED_TIMESTAMP: {
@@ -563,6 +562,7 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 			else
 				if (delay_samples > len)
 					delay_samples = len;
+			fs->pending_review = 0;
 		}
 			break;
 
@@ -721,7 +721,10 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 #endif
 
 	if (samples_read < samples_nr) {
-		fs->pending_review = 1;
+		if (f->get_timestamp) /* Can resume? */
+			fs->pending_review = 1;
+		else
+			fs->mode = SFX_PCM_FEED_MODE_DEAD; /* Done. */
 	}
 }
 

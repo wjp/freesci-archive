@@ -28,7 +28,7 @@
 #ifndef _FREESCI_SFX_TIMER_H_
 #define _FREESCI_SFX_TIMER_H_
 
-#include <sfx_engine.h>
+#include <sfx_core.h>
 
 typedef struct {
 	char *name;

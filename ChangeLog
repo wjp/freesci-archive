@@ -1,3 +1,13 @@
+2003-12-29  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sfx/pcm-iterator.c:  Added support for PCM sound effects in
+	song iterators
+
+	* src/sfx/mixer/soft.c (mix_compute_input_linear): Cancelled
+	pending stream review after previous review was successful
+	(getting rid of some crackling noises caused by continuous
+	re-positioning baed on minor timing inaccuracites)
+
 2003-12-28  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sfx/mixer/soft.c (mix_compute_input_linear): Fixed some

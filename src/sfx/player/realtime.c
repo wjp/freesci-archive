@@ -29,8 +29,6 @@
 ** enough, I guess.  */
 
 #include <sfx_player.h>
-#include <sfx_timer.h>
-#include <sfx_time.h>
 #include <sfx_sequencer.h>
 
 static sfx_sequencer_t *seq;

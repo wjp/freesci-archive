@@ -566,7 +566,7 @@ delay_init(void)
 }
 
 static int
-midi_mt32_reset_timer(sfx_timestamp_t ts)
+midi_mt32_reset_timer(GTimeVal ts)
 {
 	if (mt32_init_delay) { /* We might still have to wait for initialisation to complete */
 		delay_init();

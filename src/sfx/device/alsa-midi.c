@@ -42,7 +42,7 @@ static int port_out = -1;
 static char *seq_name = "default";
 
 static void
-_set_tempo()
+_set_tempo(void)
 {
 	int resolution = 60;
 	int tempo = 1;
@@ -72,7 +72,7 @@ _set_tempo()
 
 
 static int
-am_subscribe_to_ports()
+am_subscribe_to_ports(void)
 {
 	if ((port_out = snd_seq_connect_to(seq, port_out, 64, 0)) < 0) {
 		fprintf(stderr, "[SFX] Could not connect to ALSA sequencer port: %s\n", snd_strerror(port_out));
