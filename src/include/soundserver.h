@@ -54,9 +54,13 @@
 #define SCI_MIDI_EOT 0xfc
 /* End of track command */
 #define SCI_MIDI_CONTROLLER(status) ((status & 0xf0) == 0xb0)
-#define SCI_MIDI_CUMULATIVE_CUE 0x60
-#define SCI_MIDI_RESET_ON_STOP 0x4c
+
 #define SCI_MIDI_SET_SIGNAL 0xcf
+#define SCI_MIDI_SET_POLYPHONY 0x4b
+#define SCI_MIDI_RESET_ON_STOP 0x4c
+#define SCI_MIDI_SET_VELOCITY 0x4e
+#define SCI_MIDI_SET_REVERB 0x50
+#define SCI_MIDI_CUMULATIVE_CUE 0x60
 
 #define SCI_MIDI_SET_SIGNAL_LOOP 0x7f
 /* If this is the parameter of 0xcf, the loop point is set here */
@@ -327,5 +331,10 @@ sound_eq_retreive_event(sound_eq_t *queue);
 ** Returns   : (sound_event_t *): A pointer to the oldest event on the queue, or NULL of there is none
 ** The return value must be free()d manually, if appropriate.
 */
+
+void sci_midi_command(song_t *song, guint8 command, guint8 param,
+                      guint8 param2, 
+		      int *ccc, FILE *ds);
+/* performs a regular midi event in the song. */
 
 #endif /* !_SCI_SOUND_SERVER_H_ */

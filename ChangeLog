@@ -1,3 +1,15 @@
+2001-03-08  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/include/soundserver.h   : added SCI midi event defines
+	* src/sound/midi_mt32gm.c     : source cleanup.
+	* src/sound/soundserver_null.c: 
+		mute at end of fade.
+		treat 0x0000 as 'fade current'
+		treat SUSPEND as a switch (operates on paused songs)
+		Strip out midi event code into its own function
+	* src/sound/sound.c           : Fixed a case where calling
+                unmute would mute the sound if it was never muted first.
+
 2001-03-06  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (_k_view_list_dispose_loop): dispose_loop

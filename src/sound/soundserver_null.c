@@ -43,6 +43,8 @@
 #include <sciresource.h>
 #include <midi_device.h>
 
+sound_eq_t queue; /* The event queue */
+
 void
 sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug);
 
@@ -195,7 +197,6 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	int ccc = 127; /* cumulative cue counter */
 	int suspended = 0; /* Used to suspend the sound server */
 	GTimeVal suspend_time; /* Time at which the sound server was suspended */
-	sound_eq_t queue; /* The event queue */
 	int ppid = getppid(); /* Get parent PID */
 
 	resource_t *midi_patch;
@@ -228,8 +229,8 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 			ticks = 1; /* Just fade for this tick */
 
 		} else if (song && (song->fading == 0)) { /* Finished fading? */
-
 			song->status = SOUND_STATUS_STOPPED;
+			midi_allstop();
 			song->pos = song->loopmark = 33; /* Reset position */
 			sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_FINISHED, 0);
 
@@ -435,18 +436,45 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 						break;
 
-					case SOUND_COMMAND_SUSPEND_HANDLE:
+					case SOUND_COMMAND_SUSPEND_HANDLE: {
 
-						if (debugging)
-							fprintf(ds, "Suspending handle %04x (value %04x)\n", event.handle, event.value);
-						if (modsong) {
+					  song_t *seeker = *songlib;
 
-							modsong->status = SOUND_STATUS_SUSPENDED;
-							sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_PAUSED, 0);
+					  if (event.handle) {
+					    while (seeker && (seeker->status != SOUND_STATUS_SUSPENDED))
+					      seeker = seeker->next;
+					    if (seeker) {
+					      seeker->status = SOUND_STATUS_WAITING;
+					      if (debugging)
+						fprintf(ds, "Un-suspending paused song\n");
+					    }
+					  } else {
+					    while (seeker && (seeker->status != SOUND_STATUS_WAITING)) {
+					      if (seeker->status == SOUND_STATUS_SUSPENDED)
+						return;
+					      seeker = seeker->next;
+					    }
+					    if (seeker) {
+					      seeker->status = SOUND_STATUS_SUSPENDED;
+					      fprintf(ds, "Suspending paused song\n");
+					    }
+					  }
 
-						} else
-							fprintf(ds, "Attempt to suspend invalid handle %04x\n", event.handle);
-						break;
+					  /*
+					    if (debugging)
+					    fprintf(ds, "Suspending handle %04x (value %04x)\n", event.handle, event.value);
+					 
+					    if (modsong) {
+					    
+					    modsong->status = SOUND_STATUS_SUSPENDED;
+					    sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_PAUSED, 0);
+					    
+					    } else
+					    fprintf(ds, "Attempt to suspend invalid handle %04x\n", event.handle);
+					    
+					  */
+					}
+					  break;
 
 					case SOUND_COMMAND_RESUME_HANDLE:
 
@@ -489,11 +517,18 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 					case SOUND_COMMAND_FADE_HANDLE:
 
 						if (debugging)
-							fprintf(ds, "Fading %d on handle %04x\n", event.value, event.handle);
-						if (modsong)
-							modsong->fading = event.value;
+						  fprintf(ds, "Fading %d on handle %04x\n", event.value, event.handle);
+
+						/*
+						if (song) 
+						  song->fading = event.value;
+						*/
+
+						if (modsong) 
+						modsong->fading = event.value;
 						else
-							fprintf(ds, "Attempt to fade on invalid handle %04x\n", event.handle);
+						fprintf(ds, "Attempt to fade on invalid handle %04x\n", event.handle);
+
 						break;
 
 					case SOUND_COMMAND_TEST: {
@@ -672,11 +707,11 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 			if (command == SCI_MIDI_EOT) {
 
 				if (--(song->loops) != 0) {
-
-					fprintf(ds, "looping back from %d to %d on handle %04x\n",
+				  if (debugging)
+				        fprintf(ds, "looping back from %d to %d on handle %04x\n",
 						song->pos, song->loopmark, song->handle);
-					song->pos = song->loopmark;
-					sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_LOOP, song->loops);
+				  song->pos = song->loopmark;
+				  sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_LOOP, song->loops);
 
 				} else { /* Finished */
 
@@ -694,46 +729,15 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 				param = song->data[song->pos];
 	
 				if (cmdlen[command >> 4] == 2)
-					param2 = song->data[song->pos + 1];
+				  param2 = song->data[song->pos + 1];
+				else
+				  param2 = -1;
 
 				song->pos += cmdlen[command >> 4];
 
-				if (SCI_MIDI_CONTROLLER(command)) { 
-					if (param == SCI_MIDI_CUMULATIVE_CUE)
-						sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, ccc += param2);
-					else if (param == SCI_MIDI_RESET_ON_STOP) {
-						song->resetflag = param2;
-						fprintf(ds, "Event 0x4c Reset on Stop set to %d for handle %04x\n", param2, song->handle);
-					} else if (param == 0x4b) {
-						song->polyphony[command & 0x0f] = param2;
-					} else if (param == 0x50) {
-						midi_reverb(param2);
-						if (debugging)
-							fprintf(ds, "Midi reverb set to %d for handle %04x\n", param2, song->handle);
-					} else if (param == 0x4E) {
-						fprintf(ds, "Nonhandled MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
-					} else if ((param != 0x01) && (param != 0x07) && (param != 0x0a) &&
-						   (param != 0x0b) && (param != 0x40) && (param != 0x79)) 
-						fprintf(ds, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
-	  
-				} else if (command == SCI_MIDI_SET_SIGNAL) {
+				sci_midi_command(song, command, param, param2, 
+						 &ccc, ds);
 
-					if (param == SCI_MIDI_SET_SIGNAL_LOOP) {
-						song->loopmark = song->pos;
-						fprintf(ds, "Loop mark set to %d for handle %04x\n", song->pos, song->handle);
-					} else if (param <= 127) {
-					  if (debugging)
-					    fprintf(ds, "Absolute Cue?? %02x %02x at %d for handle %04x\n", command, param, song->pos, song->handle);
-						sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
-					}
-				} else {  /* just your regular midi event.. */
-				  if (song->flags[command & 0x0f] & midi_playflag) { 
-						if (param2 == -1)
-							midi_event2(command, param);
-						else
-						  midi_event(command, param, param2);
-				  }
-				}
 			}
 
 			if (song->fading >= 0) {
@@ -754,3 +758,85 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	}
 	_exit(0); /* Exit gracefully without cleanup */
 }
+
+/* process the actual midi events */
+void sci_midi_command(song_t *song, guint8 command, 
+		      guint8 param, guint8 param2, 
+		      int *ccc,
+		      FILE *ds)
+{
+  
+  if (SCI_MIDI_CONTROLLER(command)) {
+    switch (param) {
+
+    case SCI_MIDI_CUMULATIVE_CUE:
+      *ccc += param2;
+      sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, *ccc);
+      break;
+    case SCI_MIDI_RESET_ON_STOP:
+      song->resetflag = param2;
+      break;
+    case SCI_MIDI_SET_POLYPHONY:
+      song->polyphony[command & 0x0f] = param2;
+      break;
+    case SCI_MIDI_SET_REVERB:
+      midi_reverb(param2);
+      break;
+    case SCI_MIDI_SET_VELOCITY:
+      if (!param)
+	song->velocity[command & 0x0f] = 127;
+      break;
+
+    case 0x01: /* modulation */
+    case 0x07: /* volume */
+    case 0x0a: /* panpot */
+    case 0x0b: /* expression */
+    case 0x40: /* hold */
+    case 0x79: /* reset all */
+      break; 
+    default:
+      fprintf(ds, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
+      break;
+    }
+
+  } else if (command == SCI_MIDI_SET_SIGNAL) {
+
+    if (param == SCI_MIDI_SET_SIGNAL_LOOP) {
+      song->loopmark = song->pos;
+    } else if (param <= 127) {
+      sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
+    }
+
+  } else {  
+    /* just your regular midi event.. */
+    
+    if (song->flags[command & 0x0f] & midi_playflag) { 
+      switch (command & 0xf0) {
+
+      case 0xc0:  /* program change */
+	midi_event2(command, param);
+	break;
+      case 0x80:  /* note on */
+      case 0x90:  /* note off */
+      /*
+      if ((song->fading != -1) && 
+	  ((command & 0xf0) == 0x90)) {
+	if (maxfade == 0)
+	  maxfade = 1;
+	param2 = param2 * fadeticks / maxfade;
+	printf("fading %d %d\n", fadeticks, maxfade);
+	} */
+      case 0xb0:  /* program control */
+      case 0xe0:  /* pitch bend */
+	midi_event(command, param, param2);
+	break;
+      default:
+	fprintf(ds, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
+      }
+    }
+  }  
+}
+
+
+
+
