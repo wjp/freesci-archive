@@ -46,7 +46,14 @@
      <firstname/Dark/<surname/Minister/
       <authorblurb><para>
         Dark Minister, whoever he may be, was the first one to document
-        parts of the SCI instruction set, and the Send() system call.
+        parts of the SCI instruction set, and the Said() system call.
+      </para></authorblurb>
+    </author>
+
+    <Author>
+     <firstname/Francois/<surname/Boyer/
+      <authorblurb><para>
+        Francos Boyer contributed several detailed descriptions of SCI kernel functions.
       </para></authorblurb>
     </author>
 
@@ -67,16 +74,16 @@
       Please contact the author if you find that anything is being described
       incorrectly or missing.
       <warning><para>
-        This version of the documentation is *very* incomplete and covers only a few
-        limited parts of SCI0.
+        This version of the documentation is incomplete and covers only some parts
+        of SCI0.
       </para></warning>
     </Para></Abstract>
 
-    <ReleaseInfo/This document is still far from complete and does almost only SCI0./
+    <ReleaseInfo/This document is still incomplete and covers almost only SCI0./
 
     <LegalNotice>
      <Para>
-     Copyright (C) 1999 Christoph Reichenbach, Lars Skovlund, Ravi I.
+     Copyright (C) 1999 by the authors
      </Para>
      <Para>
    Permission is hereby granted, free of charge, to any person obtaining a
@@ -100,7 +107,7 @@
        The Sierra Creative Interpreter was originally developed by Sierra On-Line, Inc.
        "Sierra On-Line Inc. (TM)" is a registered trademark of Sierra On-Line, Inc.
        "Quest for Glory: So You Want To Be A Hero", "Quest For Glory 2: Trial By Fire"
-       and "Space Quest 3: Pirates of Pestulon" are trademarks of Sierra On-Line, Inc.
+       and "Space Quest 3: The Pirates of Pestulon" are trademarks of Sierra On-Line, Inc.
      </Para>
     </LegalNotice>
 
@@ -1375,6 +1382,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
    </sect1>
 </chapter>
 
+
 <Chapter>
  <Title/The SCI virtual machine/
   <sect1>
@@ -1400,7 +1408,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
        <member/Type 5: Strings/
        <member/Type 6: Class/
        <member/Type 7: Exports/
-       <member/Type 8: Pointers/
+       <member/Type 8: Relocation table/
        <member/Type 10: Local variables/
       </simplelist>
       </para><para>
@@ -1416,6 +1424,10 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
        actually get called by the SCI bytecode. Therefore, they also have their own space for
        selectors (see below). Also, each object or class knows which class it inherits from and
        which class it was instantiated from (in the case of objects).
+      </para><para>
+       Also of note is the relocation table (type 8). It contains script-relative pointers to other
+       script-relative pointers that have to be translated to absolute (heap-relative) pointers
+       during script loading<footnote><para/Thanks to Francois Boyer for this information/</footnote>.
     </para>
    </sect2>
    <sect2>
@@ -1649,141 +1661,6 @@ interpreter terminates.
      </sect2>
   </sect1>
 
-
-  <sect1 ID="LarsEvents">
-   <Title/Event handling in SCI/
-    <para>
-     By <Author><FirstName/Lars/<SurName/Skovlund/</author>
-    </para><para/Version 1.0, 12. July 1999/
-<para>
-This article will deal with the event manager in SCI. Like several other
-key parts of the interpreter, this one actively communicates with the SCI
-application. It directly writes to objects of the Event class, but more on
-that later.
-</para><para>
-The different input devices are polled differently:
-<itemizedlist>
-<listitem><para>The keyboard is typically polled at each timer tick (which is 60 hz).</para>
-</listitem>
-<listitem><para>SCI sets up a callback for the PC mouse driver, meaning that
-the mouse driver "polls itself" and sends information to the interpreter.
-On non-MS-DOS platforms, this would probably be done in the timer handler.
-<footnote><para>The default FreeSCI event mechanism uses libgii, which is completely
-event-based.</para></footnote></para></listitem>
-<listitem><para>The joystick is only polled when the script wants to.</para></listitem>
-</itemizedlist>
-</para><para>
-Some parts of the event mechanism (in particular, keyboard management) are
-very PC specific, and a conversion will no doubt have to take place on other
-platforms.
-</para>
- <sect2>
-  <title/Event types and modifiers/
-   <para>
-There are three types of events, distinguished by their "type" property.
-The possible values are listed below; they are laid out as a bitfield to
-allow for selective event retrieval, see later.
-<simplelist>
-  <member/0 - Null event/
-  <member/1 - Mouse button event/
-  <member/2 - Mouse button release event/
-  <member/4 - Keyboard event/
-  <member/64 - Movement (joystick) event/
-</simplelist>
-</para><para>
-This type is returned to the SCI event managers by the input device drivers
-along with a "message" and a set of "modifiers". This is the basic event
-structure, although some event types contain extra information. The latter
-field is a direct copy of the BIOS shift flags, laid out as follows:
-</para><para>
-<simplelist>
-<member/bit 7 - Insert active/
-<member/bit 6 - Caps lock active/
-<member/bit 5 - Num lock active/
-<member/bit 4 - Scroll lock active/
-<member/bit 3 - Alt key pressed/
-<member/bit 2 - Ctrl key pressed/
-<member/bit 1 - Left shift key pressed/
-<member/bit 0 - Right shift key pressed/
-</simplelist>
-</para><para>
-It is obvious, then, that these keys by themselves don't generate any
-keyboard events. They can, however, be combined with other keys or mouse
-clicks to produce "shift-click" events, for instance.
-</para>
-<sect3><title/The null events/
-<para>
-These are generated when a script wants to see an event, but there isn't one
-to give. The current tick count and mouse position. The tick count, as 
-explained in
-another document, is the time passed since the interpreter started, measured
-in 1/60ths of a second. It doesn't seem to be copied into the event object,
-however.
-</para>
-</sect3>
-
-<sect3>
- <title/The mouse events/
-<para>
-The mouse position is returned in extra fields in the event record.
-</para><para>
-If the middle or right button is pressed, this is reflected by the 
-modifiers,
-in addition to the mouse event. The middle button is translated to the Ctrl
-key (i.e. set modifiers bit 2), the right button "holds down" both shift 
-keys
-(setting bits 1 and 0). Every SCI interpreter (at least from 0.000.572 and
-up) does this, but to my knowledge it is used only in QfG2, where either
-a shift-click or a right-click is equivalent to typing "look ...".
-</para></sect3>
-
-<sect3><title/The keyboard event/
-<para>
-The keyboard driver also generates events. When a key is pressed, a keyboard
-event is generated, with the message field set to the scan code of the
-pressed key. It should be simple enough, right? Not quite so. The script may
-want to know if a direction key was pressed, and if so, which. It may call
-the KMapKeyToDir kernel function for this. KMapKeyToDir takes a keyboard
-event as input and converts it to a movement event, which is described next.
-</para>
-</sect3>
-
-<sect3>
-<title/The movement event/
-<para>
-The movement event is only generated by the joystick driver. However, on
-request, the keyboard driver can convert keyboard events into movement 
-events
-as described above. The message field is just a direction code, mapped as
-follows:
-<informaltable frame="all">
-    <tgroup cols="3">
-     <tbody>
-       <row>
-        <entry/8/
-        <entry/1/
-        <entry/2/
-       </row>
-       <row>
-        <entry/7/
-        <entry/Center/
-        <entry/3/
-       </row>
-       <row>
-        <entry/6/
-        <entry/5/
-        <entry/4/
-       </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-</para><para>
-That is, the direction code starts at straight up (code 1), increasing
-with clockwise movement.
-</para>
-</sect3>
-</sect2>
-  </sect1>
   <sect1 ID="VM">
     <Title/The Sierra PMachine/
       <para>
@@ -2755,7 +2632,7 @@ structure.
 
   <sect1 ID="Kfunctions">
    <Title/Kernel functions/
-<note><para/Thanks to Lars Skovlund for additional information!/</note>
+<note><para/Thanks to Lars Skovlund and Francois Boyer for additional information!/</note>
 <para>
 In SCI0, calls to the SCI kernel are initiated by using the <function>callk</function> opcode.
 <function>callk</function> has the opcode <literal>0x42</literal>
@@ -2805,6 +2682,7 @@ types:
 <member><Type/(word)/: 16 bit signed little endian integer</member>
 <member><Type/(HeapPtr)/: As <Type/(word)/; interpreted as a pointer to a heap address</member>
 <member><Type/(DblList)/: As <Type/(HeapPtr)/; interpreted as offset of a doubly linked list</member>
+<member><Type/(Node)/: As <Type/(HeapPtr)/; interpreted as offset of a list node</member>
 <member><Type/(&amp;FarPtr)/: As <Type/(HeapPtr)/; interpreted as the 32 bit pointer stored at
            the referenced heap address</member>
 <member><Type/(Point)/: A sequence of two <Type/(word)/s to describe a point on the screen, with
@@ -2812,6 +2690,9 @@ the y coordinate being the first in the sequence.</member>
 <member><Type/(Rect)/: A sequence of four <Type/(word)/s describing a rectangle. If you read
 "(Rect) foo", think "(word) foo_ymin, (word) foo_xmin, (word) foo_ymax, (word) foo_xmax" instead.
 </member>
+<member><Type/(String)/: If greater than or equal to 1000, this is the heap address of a text string.
+If less than 1000, it is the number of a text resource, and immediately followed by another word
+that contains the number of the string inside the text resource.</member>
 </simplelist>
 </para><para>
 Parameters in brackets (like "[foo]") are optional.
@@ -2844,7 +2725,9 @@ A <Type/HeapPtr/ pointing to an actual pointer on the heap.
     </para><para>
 Loads a resource. The returned HeapPtr points to a special point on the heap
 where a pointer (32 bits) to the memory location of the specified resource
-is located.
+is located. If the resource type equals sci_memory, the resource number is
+interpreted as a memory size instead; the specified number of bytes is allocated
+dynamically, and a handle returned.
     </para>
   </sect3>
 
@@ -2866,11 +2749,12 @@ word ResType, word ResNr</paramdef>
 <parameter/ResNr/: The resource number
     </member></simplelist></para><para>
     Returns: <type>
-v(void)
+(void)
     </type>
     </para><para>
 This function unloads a resource identified by its ResType and ResNr, NOT by the HeapPtr
-it has been loaded to.
+it has been loaded to, except for sci_memory resources, where the parameters are the
+memory resource type and the handle.
     </para>
   </sect3>
 
@@ -2880,9 +2764,9 @@ it has been loaded to.
   <sect3>
 <Title/Kernel function 0x02:ScriptID(word, word)/
     <funcsynopsis><funcprototype><funcdef>
-? kfunct 0x02: ScriptID
+kfunct 0x02: ScriptID
     </funcdef><paramdef>
-word ScriptNr, word ObjNr</paramdef>
+word ScriptNr, word DispatchNr</paramdef>
     </funcprototype></funcsynopsis><para><simplelist><member><type>
 (word)
     </type>
@@ -2890,15 +2774,15 @@ word ScriptNr, word ObjNr</paramdef>
     </member><member><type>
 (word)
     </type>
-<parameter/ObjNr/: Number of the Object inside the script to reference
+<parameter/DispatchNr/: Number of the Dispatch entry inside the script to reference
     </member></simplelist></para><para>
     Returns: <type>
 (HeapPtr)
     </type>:
-The address of the object
+The address pointed to by the specified element of the dispatch/exports table (script block
+type #7)
     </para><para>
-This function loads a script and (apparently) returns the address of the object
-ObjNr in the accumulator.
+This function returns the address pointed to by an element of a script's dispatch table.
     </para>
   </sect3>
 
@@ -2908,7 +2792,7 @@ ObjNr in the accumulator.
   <sect3>
 <Title/Kernel function 0x03: DisposeScript(word ScriptNumber)/
     <funcsynopsis><funcprototype><funcdef>
-? kfunct 0x03: DisposeScript
+kfunct 0x03: DisposeScript
     </funcdef><paramdef>
 word ScriptNumber</paramdef>
     </funcprototype></funcsynopsis><para><simplelist><member><type>
@@ -2920,35 +2804,86 @@ word ScriptNumber</paramdef>
 (void)
     </type>
     </para><para>
-Unknown. I assume that this function flags a script to be disposed after
-the VM returns from processing it (this function is usually called immediately
-before a 'ret' operation is executed, inside the "dispose" method of some
-objects).
+Disposes a script. Unloads it, removes its entries from the class table, and frees the
+associated heap memory.
     </para>
   </sect3>
 
 
-<sect3><Title/Kernel function 0x04: Clone(2)/<para></para>
+<sect3><Title/Kernel function 0x04: Clone(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x04:Clone
+    </funcdef><paramdef>
+HeapPtr object</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/object/: The object to clone
+    </member></simplelist></para><para>
+    Returns: <type>
+(HeapPtr)
+    </type>
+The address of the clone
+    </para><para>
+This function clones a Class or Object by copying it as a whole and mofifying the -info-
+selector so that it contains 1. Objects with -info- set to 0x8000 (Classes) are stripped of
+their selector name area, and both Objects and Classes are stripped of the function selector
+area.
+    </para>
 </sect3>
 
 
-<sect3><Title/Kernel function 0x05: DisposeClone(?)/<para></para>
+
+<sect3><Title/Kernel function 0x05: DisposeClone(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x05: DisposeClone
+    </funcdef><paramdef>
+HeapPtr clone</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/clone/: The clone to dispose
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+Frees all memory associated with a cloned object (as produced by Clone()).
+    </para>
 </sect3>
 
 
-<sect3><Title/Kernel function 0x06: IsObject(2)/<para></para>
+<sect3><Title/Kernel function 0x06: IsObject(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x06: IsObject
+    </funcdef><paramdef>
+HeapPtr suspected_object</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/suspected_object/: The address of something that is suspected to be an object.
+    </member></simplelist></para><para>
+    Returns: <type>
+(int)
+    </type>
+1 if there is an object at the specified address, 0 if not.
+    </para><para>
+This function checks whether the supplied heap pointer is valid and returns 0 if not, then
+proceeds to testing whether an object is at the indexed heap position. If it is, 1 is returned,
+0 otherwise.
+    </para>
 </sect3>
 
 
 <sect3><Title/Kernel function 0x07: RespondsTo(?)/<para></para>
 </sect3>
 
-  <sect3>
-<Title/Kernel function 0x08: DrawPic(word, word, word, word)/
+  <sect3 ID="KDrawPic">
+<Title/Kernel function 0x08: DrawPic(word[, word, word, word])/
     <funcsynopsis><funcprototype><funcdef>
-? kfunct 0x08: DrawPic
+kfunct 0x08: DrawPic
     </funcdef><paramdef>
-word PicNr, word &lt;unknown&gt;, word Flags, word DefaultPalette</paramdef>
+word PicNr[, word Animation, word Flags, word DefaultPalette]</paramdef>
     </funcprototype></funcsynopsis><para><simplelist><member><type>
 (word)
     </type>
@@ -2956,15 +2891,42 @@ word PicNr, word &lt;unknown&gt;, word Flags, word DefaultPalette</paramdef>
     </member><member><type>
 (word)
     </type>
-<parameter/&lt;unknown&gt;/
+<parameter/Animation/: One of the following animation modes:<msgtext>
+   <simplelist>
+<member/ -1: Display instantly/
+<member/  0: horizontally open from center/
+<member/  1: vertically open from center/
+<member/  2: open from right/
+<member/  3: open from left/
+<member/  4: open from bottom/
+<member/  5: open from top/
+<member/  6: open from edges to center/
+<member/  7: open from center to edges/
+<member/  8: open random checkboard/
+<member/  9: horizontally close to center, reopen from center/
+<member/ 10: vertically close to center, reopen from center/
+<member/ 11: close to right, reopen from right/
+<member/ 12: close to left,  reopen from left/
+<member/ 13: close to bottom, reopen from bottom/
+<member/ 14: close to top, reopen from top/
+<member/ 15: close from center to edges, reopen from edges to center/
+<member/ 16: close from edges to center, reopen from center to edges/
+<member/ 17: close random checkboard, reopen/
+   </simplelist></msgtext>
+  The animation is executed when kAnimate() (see <XREF LINKEND="KAnimate">) is invoked.
+  If not specified, it is assumed to be the same animation as last time.
+
     </member><member><type>
 (word)
     </type>
 <parameter/Flags/:<msgtext>
      <simplelist>
-        <member><type/Bit 0/: Allow pic resource fill command?</member>
+        <member><type/Bit 0/: Clear screen before drawing</member>
         <member><type/Bit 1-f/: unknown, probably unused</member>
-     </simplelist></msgtext>
+     </simplelist></msgtext>If not specified, it defaults to 1.<msgtext>
+<note><para/Some interpreter versions older than 0.000.502 interpret this
+parameter inversely, and have 0 as a default./
+</note></msgtext>
     </member><member><type>
 (word)
     </type>
@@ -3020,12 +2982,12 @@ background picture should be considered "valid" by the other kernel functions.
   </sect3>
 
 
-  <sect3>
-<Title/Kernel function 0x0b: Animate([DblList], word)/
+  <sect3 ID="KAnimate">
+<Title/Kernel function 0x0b: Animate([DblList], [word])/
     <funcsynopsis><funcprototype><funcdef>
-?? kfunct 0x0b: Animate
+kfunct 0x0b: Animate
     </funcdef><paramdef>
-[DblList ViewList], &lt;unknown&gt;</paramdef>
+[DblList ViewList], [word cycle]</paramdef>
     </funcprototype></funcsynopsis><para><simplelist><member>[<type>
 (DblList)
     </type>
@@ -3040,12 +3002,10 @@ background picture should be considered "valid" by the other kernel functions.
     </type>
     </para><para>
 This function draws a background picture plus some views to the foreground.
-If the first parameter is 0 or not present, it does not add any views; other-
-wise, it does add them (they probably are some kind of doubly linked list).
-The purpose of the second parameter is unknown, as it does not seem to affect
-anything.
-This method does allow for special effects while transferring a picture; the
-"how" remains a mystery, though.
+If the background picture had not been drawn previously, it is animated with
+the animation style set during kDrawPic (see <XREF LINKEND="KDrawPic">).
+Drawing the views is a rather complex issue. Refer to <XREF LINKEND="LarsAnim">
+for its description.
     </para>
   </sect3>
 
@@ -3070,17 +3030,108 @@ DblList ViewList</paramdef>
     </para>
   </sect3>
 
-<sect3><Title/Kernel function 0x0d: NumLoops(?)/<para></para></sect3>
+<sect3><Title/Kernel function 0x0d: NumLoops(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x0d: NumLoops
+    </funcdef><paramdef>
+HeapPtr object</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/object/: The object which the view selector should be taken from
+    </member></simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The number of loops in the view
+    </para><para>
+This function looks up the view selector in the specified object, loads the
+view resource associated with it, and checks for the number of animation loops
+in the view.
+    </para>
+</sect3>
 
-<sect3><Title/Kernel function 0x0e: NumCells(?)/<para></para></sect3>
+<sect3><Title/Kernel function 0x0e: NumCels(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x0e: NumCels
+    </funcdef><paramdef>
+HeapPtr object</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+HeapPtr
+    </type>
+<parameter/object/: The object which the selectors should be taken from
+    </member></simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The number of cels in the loop
+    </para><para>
+This function looks up one specific loop in a specific view (both are taken
+from selectors with the same name from the object pointed to by the parameter)
+and returns the number of cels (animation frames) in it.
+    </para>
+</sect3>
 
-<sect3><Title/Kernel function 0x0f: CellWide(?)/<para></para></sect3>
+<sect3><Title/Kernel function 0x0f: CelWide(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x0f: CelWide
+    </funcdef><paramdef>
+HeapPtr object</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/object/: The object to retreive the selectors from
+    </member></simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The cel's width
+    </para><para>
+This function looks up the width of a specific cel. cel, frame, and view are
+retreived from the selectors of the specified object.
+    </para>
+</sect3>
 
-<sect3><Title/Kernel function 0x10: CellHigh(?)/<para></para></sect3>
+<sect3><Title/Kernel function 0x10: CelHigh(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x10: CelHigh
+    </funcdef><paramdef>
+HeapPtr object</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/object/: The object to retreive the selectors from
+    </member></simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The height of the cel
+    </para><para>
+View, loop, and cel number are retreived from the object passed as parameter.
+    </para>
+</sect3>
 
 <sect3><Title/Kernel function 0x11: DrawCell(?)/<para></para></sect3>
 
-<sect3><Title/Kernel function 0x12: AddToPic(2)/<para></para></sect3>
+<sect3><Title/Kernel function 0x12: AddToPic(DblList)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x12: AddToPic
+    </funcdef><paramdef>
+DblList picviews</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(DblList)
+    </type>
+<parameter/picviews/: A doubly linked list of PicViews, i.e. objects that are drawn statically onto
+the background picture
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function stores the list of PicViews for later use by the Animate() syscall.
+See <XREF LINKEND="KAnimate"> for more details.
+    </para>
+</sect3>
 
 <sect3 ID="KNewWindow"><Title/Kernel function 0x13: NewWindow(Rect, HeapPtr, word, word, word, word)/
     <funcsynopsis><funcprototype><funcdef>
@@ -3262,9 +3313,79 @@ window which the Control was drawn in) must be selected beforehand.
 
 
 
-<sect3><Title/Kernel function 0x1a: TextSize(?)/<para></para></sect3>
+<sect3><Title/Kernel function 0x1a: TextSize(HeapPtr, HeapPtr, word[, word])/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x1a: TextSize
+    </funcdef><paramdef>
+HeapPtr dest, HeapPtr src, word font[, word maxwidth]</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+    <member><type>
+(HeapPtr)</type>
+<parameter/dest/: The destination to write the rectangle to
+    </member>
+    <member><type>
+(HeapPtr)</type>
+<parameter/src/: A pointer to the string to analyze
+    </member>
+    <member><type>
+(word)</type>
+<parameter/font/: The number of the font resource to use for this check
+    </member>
+    <member><type>
+(word)</type>
+<parameter/maxwidth/: The maximum width to allow for the text (defaults to 192)
+    </member>
+    </simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function calculates the width and height the specified text will require to
+be displayed with the specified font and the specified maximum width. The result will
+be written to the (you guessed it) specified destination on the heap. The result is a
+rectangle structure: The first four bytes equal to zero, the next word is the height,
+and the last word is the width.
+    </para>
+</sect3>
 
-<sect3><Title/Kernel function 0x1b: Display(?)/<para></para></sect3>
+
+
+<sect3><Title/Kernel function 0x1b: Display(String, word...)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x1b: Display
+    </funcdef><paramdef>
+String text, word commands...</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+    </type>
+(String)
+<parameter/text/: The text to work with
+</member><member><type/(word)/
+<parameter/commands.../: A sequence of commands with parameters:
+<msgtext><simplelist>
+<member/100: 2 params, (X,Y) coord of where to write on the port./
+<member/101: 1 param, -1, 0 or 1 (align right (-1), left (0) or center (1)/
+<member/102: 1 param, set the text color./
+<member/103: 1 param, set the background color (-1 to draw text with transparent
+background)/
+<member/104: 1 param, set the "gray text" flag (1 to draw disabled items)/
+<member/105: 1 param, (resource number) set the font/
+<member/106: 1 param, set the width of the text (the text wraps to fit in that width)/
+<member/107: no param, set the "save under" flag, to save a copy of the pixels before
+writing the text (the handle to the saved pixels is returned)/
+<member/108: 1 param, (handle to stored pixels) restore under.  With this command, the
+text and all other parameters are ignored./
+</simplelist></msgtext>
+</member></simplelist></para><para>
+    Returns: <type>
+(void) or (&amp;FarPtr)
+    </type>(see above)
+    </para><para>
+This function executes the specified commands, then draws the supplied text to the active
+port (unless command 108 was executed).
+    </para>
+</sect3>
+
+
 
 <sect3 ID="KGetEvent"><Title/Kernel function 0x1c: GetEvent(word, HeapPtr)/
     <funcsynopsis><funcprototype><funcdef>
@@ -3331,6 +3452,7 @@ window which the Control was drawn in) must be selected beforehand.
 </sect3>
 
 
+
 <sect3 ID="KMapKeyToDir"><Title/Kernel function 0x1f: MapKeyToDir(HeapPtr Event)/
     <funcsynopsis><funcprototype><funcdef>
        kfunct 0x1f: MapKeyToDir
@@ -3350,21 +3472,861 @@ window which the Control was drawn in) must be selected beforehand.
    </para>
 </sect3>
 
-<sect3><Title/Kernel function 0x20: DrawMenuBar(?)/<para></para></sect3>
+
+
+
+<sect3><Title/Kernel function 0x20: DrawMenuBar(word)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x20: DrawMenuBar
+    </funcdef><paramdef>
+word mode</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(word)
+    </type>
+<parameter/mode/: 1 to draw, 0 to clear
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+Either draws or clears (overdraws with black) the menu bar.
+    </para>
+</sect3>
+
+
+
 
 <sect3><Title/Kernel function 0x21: MenuSelect(?)/<para></para></sect3>
 
-<sect3><Title/Kernel function 0x22: AddMenu(?)/<para></para></sect3>
 
-<sect3><Title/Kernel function 0x23: DrawStatus(?)/
-<para>
-Draws Title bar
-</para>
+
+<sect3><Title/Kernel function 0x22: AddMenu(HeapPtr, HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x22: AddMenu
+    </funcdef><paramdef>
+HeapPtr title, HeapPtr content</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+    <member><type>
+(HeapPtr)
+    </type>
+<parameter/title/: The menu title
+    </member>
+    <member><type>
+(HeapPtr)
+    </type>
+<parameter/content/: The menu options
+    </member>
+    </simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function adds a menu to the menu bar. The menu title is passed in the first parameter,
+the second parameter contains a heap pointer to the menu entries. They are contained in one
+single string; the following special characters/character combinations are used:
+<simplelist>
+  <member/'`': Right justify the following text/
+  <member/':': Menu item separator/
+  <member/"--!": Seperation line: This menu item is just a separator/
+  <member/'#': Function key. This is replaced by an F for displaying/
+  <member/'^': Control key. This is replaced by \001 (CTRL) for displaying/
+</simplelist>
+    </para>
 </sect3>
 
-<sect3><Title/Kernel function 0x24: Parse(?)/<para></para></sect3>
 
-<sect3><Title/Kernel function 0x25: Said(2)/<para></para></sect3>
+
+<sect3><Title/Kernel function 0x23: DrawStatus(HeapPtr)/
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x23: DrawStatus
+    </funcdef><paramdef>
+HeapPtr text</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist><member><type>
+(HeapPtr)
+    </type>
+<parameter/text/: The text to draw
+    </member></simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+Draws the specified text to the title bar
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x24: Parse(HeapPtr, HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x24: Parse
+    </funcdef><paramdef>
+HeapPtr event, HeapPtr input</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+    <member><type>
+(HeapPtr)
+    </type>
+<parameter/event/: The event to generate
+    </member>
+    <member><type>
+(HeapPtr)
+    </type>
+<parameter/input/: The input line to parse
+    </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+1 on success, 0 otherwise
+    </para><para>
+This function parses the input line and generates a parse event (type 0x80).
+See <XREF LINKEND="LarsDMParser"> and <XREF LINKEND="LarsEvents"> for details.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x25: Said(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x:25: Said
+    </funcdef><paramdef>
+HeapPtr said_block</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(HeapPtr)</type>
+<parameter/said_block/: Pointer to a Said block
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+1 if the line last parsed meets the criteria of the supplied said_block,
+0 otherwise.
+    </para><para>
+This function is only invoked after Parse() was called, and works on output
+generated by this function.
+See <XREF LINKEND="LarsDMParser"> and <XREF LINKEND="LarsEvents"> for details.
+    </para>
+</sect3>
+
+
+<sect3><Title/Kernel function 0x27: HaveMouse() /<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x27: HaveMouse
+    </funcdef><paramdef>
+</paramdef>
+    </funcprototype></funcsynopsis><para>
+    </para><para>
+    Returns: <type>
+(word)
+    </type>
+1 if a mouse is available, 0 if not.
+    </para><para>
+This function simply returns a flag containing the availability of a pointing device.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x28: SetCursor(word, word[, Point])/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x28: SetCursor
+    </funcdef><paramdef>
+word resource, word visible[, Point coordinates]</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(word)</type>
+<parameter/resource/: The cursor resource to use for drawing the mouse pointer
+  </member>
+  <member><type>
+(word)</type>
+<parameter/visible/: 1 if the mouse pointer should be visible, 0 if not
+  </member>
+  <member><type>
+(Point)</type>
+<parameter/coordinates/: The coordinates (relative to the wm-port) to move the mouse pointer to
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function can change the appearance and position of the mouse pointer. If no position is provided,
+the position remains unchanged.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x30: GameIsRestarting()/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x30: GameIsRestarting
+    </funcdef><paramdef>
+</paramdef>
+    </funcprototype></funcsynopsis><para>
+    </para><para>
+    Returns: <type>
+(word)
+    </type>
+1 if the game is restarting, 0 if not
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x32: NewList()/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x32: NewList
+    </funcdef><paramdef>
+</paramdef>
+    </funcprototype></funcsynopsis><para>
+    </para><para>
+    Returns: <type>
+(DblList)
+    </type>
+The address of a new node list on the heap
+    </para><para>
+This function allocates and initializes a node list containing no elements.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x33: DisposeList(DblList)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x33: DisposeList
+    </funcdef><paramdef>
+NodeList list</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(NodeList)</type>
+<parameter/list/: The list to dispose
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+Frees all memory associated to a list
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x34: NewNode(word, word)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x34: NewNode
+    </funcdef><paramdef>
+word key, word value</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(word)</type>
+<parameter/key/: The node key (used for searching the list)
+  </member>
+  <member><type>
+(word)</type>
+<parameter/value/: The node value
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(Node)
+    </type>
+A new node
+    </para><para>
+This function allocates a new node and initializes it with the key and value passed as parameters.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x35: FirstNode(DblList)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x35: FirstNode
+    </funcdef><paramdef>
+DblList list</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(DblList)</type>
+<parameter/list/: The list to examine
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(Node)
+    </type>
+The first node of the list, or 0 if the list is empty
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x36: LastNode(DblList)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x36: LastNode
+    </funcdef><paramdef>
+DblList list</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(DblList)</type>
+<parameter/list/: The list to examine
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(Node)
+    </type>
+The last node of the list, or 0 if the list is empty
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x38: NextNode(Node)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x38: NextNode
+    </funcdef><paramdef>
+Node node</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(Node)</type>
+<parameter/node/: The node whose succcessor is to be found
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(Node)
+    </type>
+The node following the supplied node, or 0 if none is available
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x39: PrevNode(Node)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x39: PrevNode
+    </funcdef><paramdef>
+Node node</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(Node)</type>
+<parameter/node/: The node whose predecessor is to be determined
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(Node)
+    </type>
+The supplied node's predecessor, or 0 if the node has no predecessor
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x3a: NodeValue(Node)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x3a: NodeValue
+    </funcdef><paramdef>
+Node node</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(Node)</type>
+<parameter/node/: The node whose value is to be determined
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The value associated with the specified node
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x3c: AddToFront(DblList, Node)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x3c: AddToFront
+    </funcdef><paramdef>
+DblList list, Node node</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(DblList)</type>
+<parameter/list/: The list the node is to be added to
+  </member>
+  <member><type>
+(Node)</type>
+<parameter/node/: The node to add
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function adds a node to the beginning of a doubly linked list.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x3d: AddToEnd(DblList, Node)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x3d: AddToEnd
+    </funcdef><paramdef>
+DblList list, Node node</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(DblList)</type>
+<parameter/list/: The list to add the node to
+  </member>
+  <member><type>
+(Node)</type>
+<parameter/node/: The node to add to the list
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function adds the specified node to the end of the specified list.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x3e: FindKey(DblList, word)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x3e: FindKey 
+    </funcdef><paramdef>
+DblList list, word key</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(DblList)</type>
+<parameter/list/: The list in which the key is to be sought
+  </member>
+  <member><type>
+(word)</type>
+<parameter/key/: The key to seek
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(Node)
+    </type>
+The node containing the key, or 0 if no node contains it
+    </para><para>
+This function searches for a specific key in the nodes of a doubly linked list.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x3f: DeleteKey(DblList, word)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x3f:
+    </funcdef><paramdef>
+DblList list, word key</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(DblList)</type>
+<parameter/list/: The list to examine
+  </member>
+  <member><type>
+(word)</type>
+<parameter/key/: The key to find
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(void)
+    </type>
+    </para><para>
+This function searches in the supplied list for the specified key and removes the
+node containing it, if any can be found.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x40: Random(word, word)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x40: Random
+    </funcdef><paramdef>
+word min, word max</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(word)</type>
+<parameter/min/: The minimum result
+  </member>
+  <member><type>
+(word)</type>
+<parameter/max/: The maximum result
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+A random number between min and max (inclusive)
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x41: Abs(word)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x41: Abs
+    </funcdef><paramdef>
+word value</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(word)</type>
+<parameter/value/: The value to absolutize
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The absolute value of the specified parameter
+    </para><para>
+This function interprets the supplied value as a signed value and returns its absolute
+value.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x42: Sqrt(word)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x42: Sqrt
+    </funcdef><paramdef>
+word value</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(word)</type>
+<parameter/value/: The value to draw the square root out of
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The square root of the supplied value
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x43: GetAngle(Point, Point)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x43: GetAngle
+    </funcdef><paramdef>
+Point origin, Point destination</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(Point)</type>
+<parameter/origin/: The point to look from
+  </member>
+  <member><type>
+(Point)</type>
+<parameter/destination/: The point to look to
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+A positive angle between the two points, relative to the screen coordinate axis.
+    </para><para>
+This function returns approximately the following value:
+-(180.0/PI * atan2(destination.y - origin.y, destination.x - origin.x)) + 180;
+Where atan2(double, double) is the libm function.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x44: GetDistance(Point, Point)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x44: GetDistance
+    </funcdef><paramdef>
+Point foo, Point bar</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(Point)</type>
+<parameter/foo/: A point in two-dimensional integer space
+  </member>
+  <member><type>
+(Point)</type>
+<parameter/bar/: Another two-dimensional integer point
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(int)
+    </type>
+The euklidian distance between the points foo and bar
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x45: Wait(word)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x45: Wait
+    </funcdef><paramdef>
+word ticks</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(word)</type>
+<parameter/ticks/: The number of game ticks (60 Hz beats) to wait
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The time passed in between the finish of the last Wait() syscall
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x46: GetTime([word])/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x46: GetTime
+    </funcdef><paramdef>
+word mode</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(wrod)</type>
+<parameter/mode/: If this parameter is supplied, the time of day is returned.
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+Either the time of day in seconds, or the elapsed number of ticks since the
+interpreter started.
+    </para><para>
+This function is somewhat strange, because it determines its behaviour not by
+the value of a parameter passed, but by its presence instead. Please note that the
+time of day in this case does not distinguish between am and pm.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x47: StrEnd(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x47: StrEnd
+    </funcdef><paramdef>
+HeapPtr string</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(HeapPtr)</type>
+<parameter/string/: The string whose terminator should be found
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(HeapPtr)
+    </type>
+The address of the null terminator of the indexed string
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x48: StrCat(HeapPtr, HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x48: StrCat
+    </funcdef><paramdef>
+HeapPtr dest, HeapPtr source</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(HeapPtr)</type>
+<parameter/dest/: The string whose end is appended to
+  </member>
+  <member><type>
+(HeapPtr)</type>
+<parameter/source/: The string to append
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(HeapPtr)
+    </type>
+dest
+    </para><para>
+This function concatenates two strings on the heap.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x49: StrCmp(HeapPtr, HeapPtr[, word])/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x49:
+    </funcdef><paramdef>
+HeapPtr foo, HeapPtr bar[, word length]</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(HeapPtr)</type>
+<parameter/foo/: The one string to compare
+  </member>
+  <member><type>
+(HeapPtr)</type>
+<parameter/bar/: The other string to compare
+  </member>
+  <member><type>
+(int)</type>
+<parameter/width/: The maximum number of characters to compare
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+-1 if foo is less than bar, 0 if both are equal, 1 if foo is greater than bar
+    </para><para>
+This function simply encapsulates the libc <function/strcmp(char *, char *)/ and
+<function/strncmp(char *, char *, int)/ functions.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x4a: StrLen(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x4a: StrLen
+    </funcdef><paramdef>
+HeapPtr string</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(HeapPtr)</type>
+<parameter/string/: The string whose length should be calculated
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The length of the specified string.
+    </para><para>
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x4b: StrCpy(HeapPtr, HeapPtr[, word])/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x4b: StrCpy
+    </funcdef><paramdef>
+HeapPtr dest, HeapPtr src[, word length]</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(HeapPtr)</type>
+<parameter/dest/: The destination to copy the string to
+  </member>
+  <member><type>
+(HeapPtr)</type>
+<parameter/src/: The source from which the string is to be copied
+  </member>
+  <member><type>
+(word)</type>
+<parameter/length/: The maximum length of the string to copy
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(HeapPtr)
+    </type>
+dest
+    </para><para>
+Copies a string, plus the trailing \0 terminator. The length of the string may be reduced
+with the optional length parameter. This function simply encapsulates the libc
+<function/strcpy(char *, char *)/ and
+<function/strncpy(char *, char *, int)/ fucntions.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x4c: Format(HeapPtr, String,...)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x4c: Format
+    </funcdef><paramdef>
+HeapPtr dest, String format, parameters...</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(HeapPtr)</type>
+<parameter/dest/: The heap destination to write to
+  </member>
+  <member><type>
+(String)</type>
+<parameter/format/: The format to use
+  </member>
+  <member><type>
+(misc)</type>
+<parameter/parameters/: The values and strings to insert
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(HeapPtr)
+    </type>
+dest
+    </para><para>
+This syscall acts as a frontend to the libc <function/sprintf(char *, char *)/ function.
+    </para>
+</sect3>
+
+
+
+<sect3><Title/Kernel function 0x4d: GetFarText(word, word, HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x4d: GetFarText
+    </funcdef><paramdef>
+word resnr, word stringnr, HeapPtr dest</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(word)</type>
+<parameter/resnr/: Number of the text resource to retreive the text from
+  </member>
+  <member><type>
+(word)</type>
+<parameter/stringnr/: Number of the string inside the resource to retreive
+  </member>
+  <member><type>
+(HeapPtr)</type>
+<parameter/dest/: The destination to write the text to
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(HeapPtr)
+    </type>
+dest
+    </para><para>
+Retreives a string from a text resource and puts it on the heap.
+    </para>
+</sect3>
+
+
+<sect3><Title/Kernel function 0x4e: ReadNumber(HeapPtr)/<para></para>
+    <funcsynopsis><funcprototype><funcdef>
+kfunct 0x4e: ReadNumber
+    </funcdef><paramdef>
+HeapPtr src</paramdef>
+    </funcprototype></funcsynopsis><para><simplelist>
+  <member><type>
+(HeapPtr)</type>
+<parameter/src/: The address of the string to interpret as a number
+  </member>
+    </simplelist></para><para>
+    Returns: <type>
+(word)
+    </type>
+The numeric value of the supplied string
+    </para><para>
+This function acts as a frontend to the libc <function/atoi(char *)/ function, with one exception:
+Numbers beginning with a '$' are interpreted as hexadecimal numbers.
+    </para>
+</sect3>
+
+
 
   <sect3 ID="KONCONTROL">
          <title/Kernel function 0x52: OnControl(word, Point | Rect)/
@@ -3443,7 +4405,1010 @@ to pressing LShift-RShift-PadMinus.
 
  </sect2>
 </sect1>
+</Chapter>
 
+
+<Chapter>
+  <Title/SCI in action/
+  <sect1 ID="LarsEvents">
+   <Title/Event handling in SCI/
+    <para>
+     By <Author><FirstName/Lars/<SurName/Skovlund/</author>
+    </para><para/Version 1.0, 12. July 1999/
+<para>
+This article will deal with the event manager in SCI. Like several other
+key parts of the interpreter, this one actively communicates with the SCI
+application. It directly writes to objects of the Event class, but more on
+that later.
+</para><para>
+The different input devices are polled differently:
+<itemizedlist>
+<listitem><para>The keyboard is typically polled at each timer tick (which is 60 hz).</para>
+</listitem>
+<listitem><para>SCI sets up a callback for the PC mouse driver, meaning that
+the mouse driver "polls itself" and sends information to the interpreter.
+On non-MS-DOS platforms, this would probably be done in the timer handler.
+<footnote><para>The default FreeSCI event mechanism uses libgii, which is completely
+event-based.</para></footnote></para></listitem>
+<listitem><para>The joystick is only polled when the script wants to.</para></listitem>
+</itemizedlist>
+</para><para>
+Some parts of the event mechanism (in particular, keyboard management) are
+very PC specific, and a conversion will no doubt have to take place on other
+platforms.
+</para>
+ <sect2>
+  <title/Event types and modifiers/
+   <para>
+There are three types of events, distinguished by their "type" property.
+The possible values are listed below; they are laid out as a bitfield to
+allow for selective event retrieval, see later.
+<simplelist>
+  <member/0 - Null event/
+  <member/1 - Mouse button event/
+  <member/2 - Mouse button release event/
+  <member/4 - Keyboard event/
+  <member/64 - Movement (joystick) event/
+</simplelist>
+</para><para>
+This type is returned to the SCI event managers by the input device drivers
+along with a "message" and a set of "modifiers". This is the basic event
+structure, although some event types contain extra information. The latter
+field is a direct copy of the BIOS shift flags, laid out as follows:
+</para><para>
+<simplelist>
+<member/bit 7 - Insert active/
+<member/bit 6 - Caps lock active/
+<member/bit 5 - Num lock active/
+<member/bit 4 - Scroll lock active/
+<member/bit 3 - Alt key pressed/
+<member/bit 2 - Ctrl key pressed/
+<member/bit 1 - Left shift key pressed/
+<member/bit 0 - Right shift key pressed/
+</simplelist>
+</para><para>
+It is obvious, then, that these keys by themselves don't generate any
+keyboard events. They can, however, be combined with other keys or mouse
+clicks to produce "shift-click" events, for instance.
+</para>
+<sect3><title/The null events/
+<para>
+These are generated when a script wants to see an event, but there isn't one
+to give. The current tick count and mouse position. The tick count, as 
+explained in
+another document, is the time passed since the interpreter started, measured
+in 1/60ths of a second. It doesn't seem to be copied into the event object,
+however.
+</para>
+</sect3>
+
+<sect3>
+ <title/The mouse events/
+<para>
+The mouse position is returned in extra fields in the event record.
+</para><para>
+If the middle or right button is pressed, this is reflected by the 
+modifiers,
+in addition to the mouse event. The middle button is translated to the Ctrl
+key (i.e. set modifiers bit 2), the right button "holds down" both shift 
+keys
+(setting bits 1 and 0). Every SCI interpreter (at least from 0.000.572 and
+up) does this, but to my knowledge it is used only in QfG2, where either
+a shift-click or a right-click is equivalent to typing "look ...".
+</para></sect3>
+
+<sect3><title/The keyboard event/
+<para>
+The keyboard driver also generates events. When a key is pressed, a keyboard
+event is generated, with the message field set to the scan code of the
+pressed key. It should be simple enough, right? Not quite so. The script may
+want to know if a direction key was pressed, and if so, which. It may call
+the KMapKeyToDir kernel function for this. KMapKeyToDir takes a keyboard
+event as input and converts it to a movement event, which is described next.
+</para>
+</sect3>
+
+<sect3>
+<title/The movement event/
+<para>
+The movement event is only generated by the joystick driver. However, on
+request, the keyboard driver can convert keyboard events into movement 
+events
+as described above. The message field is just a direction code, mapped as
+follows:
+<informaltable frame="all">
+    <tgroup cols="3">
+     <tbody>
+       <row>
+        <entry/8/
+        <entry/1/
+        <entry/2/
+       </row>
+       <row>
+        <entry/7/
+        <entry/Center/
+        <entry/3/
+       </row>
+       <row>
+        <entry/6/
+        <entry/5/
+        <entry/4/
+       </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+</para><para>
+That is, the direction code starts at straight up (code 1), increasing
+with clockwise movement.
+</para>
+</sect3>
+</sect2>
+  </sect1>
+  <sect1 ID="LarsDMParser">
+     <Title/The Parser/
+        <sect2>
+          <Title/Vocabulary file formats/
+             <para>By <author><firstname/Lars/<surname/Skovlund/</author>
+</para><para>
+Version 1.0, 30. July 1999
+</para>
+<sect3><title/The main vocabulary (VOCAB.000)/
+<para>
+The file begins with a list of 26 offsets. Each index corresponds to a 
+letter
+in the (English) alphabet, and points to the first word starting with that
+letter. The offset is set to 0 if no words start with that letter.
+If an input word starts with an alphabetical letter, this table is
+used to speed up the vocabulary searching - though not strictly necessary,
+this speeds up the lookup process somewhat.
+</para><para>
+After the offset table are the actual words. A word defition consists of
+two parts: The actual text of the word, compressed in a special way, and a
+24-bit (yes, three bytes) ID. The ID divided in 2 12-bit quantities, a
+word class (grammatically speaking) mask, and a group number.
+The class mask is used, among other things, for throwing away unnecessary
+words. "Take book", for instance, is a valid sentence in parser'ese, while 
+it
+isn't in English.
+</para><para>
+The possible values are arranged as a bit field to allow for
+class masks, see later. Only one bit is actually tested by the interpreter.
+If a word class equals to 0xff ("anyword"), the word is excluded (allowing for
+parser'ese). The values go like this:
+<simplelist>
+<member/1 - preposition/
+<member/2 - article/
+<member/4 - qualifying adjective/
+<member/8 - relative pronoun/
+<member/16 - noun/
+<member/32 - indicative verb (such as "is", "went" as opposed to _do_ this or
+that, which is imperative)/
+<member/64 - adverb/
+<member/128 - imperative verb/
+<member/256 - number (not found in the vocabulary, set internally)/
+<member/2048 - ??? (used in the suffix vocabulary)/
+</simplelist>
+</para><para>
+The group number is used to implement synonyms (words with the same
+meaning), as well as by the Said instruction to identify words. There is 
+also
+a way of using synonyms in code, see the appropriate document.
+</para><para>
+The compression works in this way: Each string starts with a byte-sized copy
+count. This many characters are retained from the previous string. The
+actual text comes after, in normal low-ascii. The last character in the text
+has its high bit set (no null termination!).
+</para><para>
+Here is an example of the compression scheme:
+<simplelist>
+<member/  apple - 0,appl\0xE5/
+</simplelist>
+</para><para>
+The byte count is 0 because we assume that "apple" is the first word
+beginning with an a (not likely, though!). 0xE5 is 0x65 (the ascii value
+for 'e') | 0x80. Watch now the next word:
+<simplelist>
+<member/  athlete - 1,thlet\0xE5/
+</simplelist>
+</para><para>
+Here, the initial letter is identical to that of its predecessor, so the
+copy count is 1. Another example:
+<simplelist>
+<member/  atrocious - 2,rociou\0xF3/
+</simplelist>
+</para>
+</sect3>
+<sect3>
+<Title/The suffix vocabulary (VOCAB.901)/
+<note><para/
+Note: You may need to consult a grammar book to fully understand the
+following discussion./</note>
+<para>
+The suffix vocabulary is structurally much simpler. It consists of
+variably-sized records with this layout:
+<informaltable frame="all">
+    <tgroup cols="2">
+     <tbody>
+       <row>
+        <entry/NULL-TERMINATED/
+        <entry/Suffix string/
+       </row>
+       <row>
+        <entry/WORD/
+        <entry/The class mask for the suffix/
+       </row>
+       <row>
+        <entry/NULL-TERMINATED/
+        <entry/Reduced string/
+       </row>
+       <row>
+        <entry/WORD/
+        <entry/The output word class/
+       </row>
+     </tbody>
+    </tgroup>
+</informaltable>
+</para><para>
+The suffix vocabulary is used by the interpreter in order to parse compound
+words, and other words which consist of more than one part. For
+instance, a simple plural noun like "enemies" is reduced to its singular
+form "enemy", "stunning" is converted to "stun" etc. The point is that the
+interpreter gets a second chance at figuring out the meaning if the word
+can not be identified as entered. A word which changes its class does
+might end up as a different word class, the correct class is always 
+retained.
+Thus, "carefully", an adverb, is reduced to its adjectival form "careful",
+and found in the vocabulary as such, but it is still marked as an adverb.
+</para><para>
+The suffix vocabulary consists of variably-sized records with this layout:
+<informaltable frame="all">
+    <tgroup cols="2">
+     <tbody>
+       <row>
+         <entry/NULL-TERMINATED/
+         <entry/Suffix string/
+       </row>
+       <row>
+         <entry/WORD/
+         <entry/The output word class/
+       </row>
+       <row>
+         <entry/NULL-TERMINATED/
+         <entry/Reduced string/
+       </row>
+       <row>
+         <entry/WORD/
+         <entry/The allowed class mask for the reduced word/
+       </row>
+     </tbody>
+    </tgroup>
+</informaltable>
+</para><para>
+An asterisk (*) represents the word stem. Taking the above example with
+"enemies", the interpreter finds this record:
+<simplelist>
+<member/  *ies/
+<member/  1/
+<member/  *y/
+<member/  1/
+</simplelist>
+word class 1 being a noun.
+</para><para>
+The interpreter then tries to replace "enemies" with "enemy" and finds that
+word in the vocabulary. "Enemy" is a noun (class 1), which it is also
+supposed to be, according to the suffix vocabulary. Since we succeeded,
+the word class is set to the output value (which is, incidentally, also 1).
+</para>
+<sect4><Title/Numbers/
+<para>
+If the word turns out to be a number (written with numbers, that is), and
+that number is not listed explicitly in the vocabulary, it gets an ID of
+0xFFD, and a word class of 0x100.
+</para>
+</sect4>
+</sect3>
+<sect3><Title/The tree vocabulary (VOCAB.900)/
+<para>
+This vocabulary is used solely for building parse trees. It consists of a
+series of word values which end up in the data nodes on the tree. It doesn't 
+make much
+sense without the original parsing code.
+</para>
+</sect3>   
+    </sect2>
+    <sect2><Title/The black box: The magic behind Sierra's text parser/
+    <para>By <author><firstname/Lars/<surname/Skovlund/</author>
+</para><para>
+Version 0.1, 30. July 1999. Incomplete!
+</para><para>
+This document describes the process of parsing user input and relating it
+to game actions. This document does not describe the process of the user
+typing his command; only the "behind-the-scenes" work is described, hence
+the title.
+</para><para>
+The process of parsing is two-fold, mainly for speed reasons. The Parse
+kernel function takes the actual input string and generates a special
+"said" event (type 0x80) from it. This function is only called once per
+line. Parse can either accept or reject the input. <note><para/A rejection can only
+occur if Parse fails to identify a word in the sentence./</note> Even if Parse
+accepts the sentence, it does not need to make sense. Still, syntax checks
+are made - see later.
+</para><para>
+Assuming that the parsing succeeded, the User object (which encapsulates the
+parser) then goes on to call the relevant event handlers. These event hand-
+lerrs in turn call the Said kernel function. This function is potentially
+called hundreds or even thousands of times, so it must execute as quickly
+as possible. Said simply determines from the pre-parsed input line whether
+or not a specific command is desired.
+</para><para>
+The Parse function must always work on an internal copy of the actual 
+string,
+because the user must be able to recall his exact last input using the F3
+key. The parser's first step is to convert the input line to pure lower 
+case.
+This is because the vocabulary words are entered in lower case. The parser
+then searches the main vocabulary (VOCAB.000), hoping to find the word.
+</para><para>
+This doesn't necessarily happen yet. Consider, for example, the meaning of
+the word "carefully", which does not appear in the vocabulary, but is found
+anyway. This is due to the so-called suffix vocabulary, which is discussed
+in another document.
+</para><para>
+If the word still can't be found, the interpreter copies the failing word
+into a buffer temporarily allocated on the heap (remember, the interpreter
+operates on its own local buffers). It then calls the Game::wordFail method
+which prints an appropriate message. The interpreter then deallocates the
+buffer and exits (it does, however, still return an event. The claimed
+property of that event is set to TRUE to indicate that the event has already
+been responded to (error message printed)).
+</para><para>
+If the interpreter succeeds in identifying all the words, it then goes on to
+check the syntax of the sentence - it builds a parse tree. See the appropri-
+ate document.
+</para><para>
+If the syntax of the sentence is invalid, the interpreter calls
+Game::syntaxFail, passing the entire input line. As for the error situation,
+the event is claimed.
+</para><para>
+As mentioned in the beginning of this text, this function generates an
+event. This event, apart from its type id, does not contain any data. 
+Rather,
+all pertinent data is kept in the interpreter.
+</para><para>
+The Said kernel function is called for each command which the game might 
+respond to at any given time. Its only parameter is a pointer to a said 
+information block which resides in script space. This block has already been
+described by Dark Minister (see <XREF LINKEND="DMSaidBlock">).
+</para><para>
+The Said function first does some sanity checking on the event pointer which
+Parse stored earlier. It must be a said event (type property), and it must
+not have been handled by an earlier call to Said (claimed property).
+</para><para>
+It then word-extends the passed said block into a temporary buffer
+(command codes are byte-sized, remember?). This is supposedly just for
+convenience/speed, and not really needed.
+    </para>
+   </sect2>
+   <sect2 ID="DMSaidBlock"><Title/Parameter block of the Said() function/
+      <para>By <author><firstname/Dark/<surname/Minister/</author>
+</para><para>
+ When the interpreter analyses the parameters of the function 'said',
+it reads the information byte by byte, if the byte is greater or equal
+to F0h then this is a modifier, else it is a word that refers to a word
+group number.
+<example><title/Example:/<para>
+<informaltable frame="none">
+   <tgroup cols="2">
+     <tbody>
+       <row>
+        <entry//
+        <entry/F2 03 F3 F0 06 87/
+       </row>
+       <row>
+        <entry/equals/
+        <entry/F2 03F3 F0 0687/
+       </row>
+      </tbody>
+    </tgroup>
+</informaltable>
+</para></example>
+</para>
+
+<sect3><Title/The modifiers/
+<para>
+<simplelist>
+<member/F0h : ||/
+
+<member/F2h : ~/
+<member/F3h : (/
+<member/F4h : )/
+<member/F5h : [/
+<member/F6h : ]/
+
+<member/F8h : &amp;&amp;/
+<member/F9h : .../
+
+<member/FFh : &lt;end of paramaters&gt;/
+</simplelist>
+</para>
+<para>
+The modifier "~" (F2h) is used to mean that one word or more
+is preceding.
+</para><para>
+The modifier "..." (F9h) is used to mean that one word or more
+is succeeding.
+</para><para>
+The modifier pair "[" and "]" (F5h and F6h) is used to
+indicate that the word(s) between the pair is(are) optional.
+</para><para>
+The other modifiers are implicite.
+<footnote><para/The difference between "foo &amp;&amp; bar" and "foo bar" is that "foo bar" requests
+the sequence "foo bar", while "foo &amp;&amp; bar" would allow for "foo" and "bar" in any order./
+</footnote>
+<note>
+<para>
+The modifier symbols are not the ones used by Sierra, they are of my
+own. I hope they will be taken as a standard.
+<footnote><para/Two of the symbols have been changed: AND became &amp;&amp;, OR became ||./</footnote>
+    </para></note>
+</para>
+</sect3>
+
+
+<sect3><Title/Examples/
+<example><Title/Example :/
+<para>
+"look bed" could be something like :
+<programlisting>
+if (said("look bed") {
+</programlisting>
+but this will not accept something like : "look the red bed",
+for this sentence to work, you need to do something like :
+<programlisting>
+if (said("look ...") && said("~ bed")) {
+</programlisting>
+but a more efficient way to use this is like that :
+<programlisting>
+if (said("look ...")) {
+
+   if (said("~ bed")) { print("This is a bed"); }
+   if (said("~ lamp")) { print("This is a lamp."); }
+
+   /* etc */
+}
+</programlisting>
+</para></example>
+
+<example><title/Another example :/
+<para>
+"wear clothes" and "put on clothes" can be put in the same parameters :
+<programlisting>
+if (said("wear || ( put && on ) clothes") {
+</programlisting>
+</para></example>
+
+<example><title/Yet another example :/
+<para>
+If you want to accept either "look drawer" or "look at drawer" you
+can use something like :
+
+<programlisting>
+if (said("look [ && at ] ~ drawer")) {
+</programlisting>
+</para>
+
+</example>
+</sect3>
+  </sect2>
+  </sect1>
+  <sect1 ID="LarsAnim"><title/Views and animation in SCI/
+    <para>by <author><firstname/Lars/<surname/Skovlund/</author>
+</para><para>
+Version 0.1, 8. August 1999
+</para><para>
+This chapter deals with a rather complex subject within SCI. The subsystem
+described here is one of the "bad boys" in SCI, since it calls functions in
+user space, as well as changing the value of various selectors. This
+document is not necessarily complete. There are several things I have not
+covered - because they are better off in a separate document, or simply
+because I haven't yet figured that part out. IOW, this stuff is incomplete.
+Things may change.
+</para><para>
+After drawing a pic on the screen (which is DrawPic's job, that doesn't
+surprise now, does it?), some views have to be added to it. There are two
+ways of doing this; the AddToPic and the Animate call. While AddToPic is
+used for static views, Animate lets each animated view in the cast list
+perform an "animation cycle".
+</para><para>
+An animation cycle is done entirely in SCI code (with the aid of some kernel
+calls). It involves two other objects; the mover and the cycler. The mover
+is responsible for controlling the motion of an actor towards a specific
+point, while the cycler changes the image of the actor, making him appear to
+walk, for instance.
+</para><para>
+The behaviour of a view is controlled by its signal property. This property
+contains a bitfield which describes a lot of animation-related stuff. The
+bits can be roughly divided into two groups; the script and interpreter bits
+(I had called them Option and State bits at first, but that is not entirely
+accurate). The first group allows the script to influence the drawing pro-
+cess somewhat, the other are used internally by the interpreter. The two
+groups overlap a bit, though.
+<simplelist>
+<member/bit 0 - A view updating process has ended/
+<member/bit 1 - The view object is being updated/
+<member/bit 2 (noUpd) - Don't actually draw the view/
+<member/bit 3 - The view is hidden from sight. Often, if an actor is supposed to
+enter and exit a room (such as the guards in the plazas in QfG2), this bit 
+is
+used. When he's supposed to enter the room, bit 3 in his signal is cleared.
+When he leaves, bit 3 is set, but his SCI object is not deleted./
+<member/bit 4 (fixPriOn) - if this bit is set, the priority of the view never
+changes (if it isn't, the interpreter recalculates the priority
+automagically)./
+<member/bit 7 - The view should be removed from the screen (an interpreter bit -
+its corresponding script bit is bit 3). If bit 3 isn't set as well, the
+view reappears on the next frame./
+<member/bit 8 - deactivates the mover object of the view (it is "frozen" - the view
+can still turn, however)./
+<member/bit 9 (isExtra) - ??? probably reserved for script use ???/
+<member/bit 10 - the view hit an obstacle on the last animation cycle/
+<member/bit 11 - Meaningful for actors only. Means that the actor does not turn, 
+even
+though he is walking the "wrong way"./
+<member/bit 12 - the view cycler is disabled. This makes ego float instead of
+walk./
+<member/bit 13 (ignoreHorizon) - Meaningful for actors only. Moving the actor 
+towards
+the edges of the screen doesn't cause a room switch. At least, that's what I
+thought it would do. It doesn't. Hmmm. :-(/
+<member/bit 14 (ignrAct) - Actors can walk in the rectangle occupied by the view.
+The behaviour of this bit is odd, and best expressed by example. The Guild
+Master in QfG1 has his bit 14 set. This means that ego (or someone else) can
+walk all the way to his chair (try sneaking in on him from behind). If we
+clear this bit, we can't sneak in on him./
+<member/bit 15 - The view should be disposed/
+</simplelist>
+The unlisted bits are probably all interpreter bits. They don't seem to have
+an effect when set. Many bits seem to be involved in the decision whether to
+display a view or not. I have not completely figured this out.
+<footnote><para>
+The bit names I have written come from some debug information I got from
+QfG2 - type "suck blue frog" then Ctrl-W to save the cast list!</para></footnote>
+</para>
+<para>
+Animate (see <XREF LINKEND="KAnimate">) can be called in two ways:
+<simplelist>
+<member/Animate(DblList cast, bool cycle)/
+<member/Animate()/
+</simplelist>
+If the second syntax is used, the two parameters are assumed to be zero.
+</para><para>
+The cast list is just a list of the views to draw. Animate creates a backup
+of this list for updating purposes. However, this backup cast list isn't 
+just
+a normal copy. The interpreter copies some selectors from the view
+(view, loop, cel, nsRect) and places them in a special data structure. This
+indicates to me that there is a possibility that the view objects may be
+deleted even though an update is anticipated.
+</para><para>
+The general pseudocode for Animate goes as follows:
+<programlisting>
+  1. Kill the backup cast list.
+  2. If the cast pointer is NULL, just redraw the current map and exit.
+  3. For each non-frozen view (bit 8 clear), let it run an animation cycle
+     (by calling View::doit)
+  6. For all views, perform steps 7-9.
+  7. If the loop or cel property has overflowed, it is reset to 0
+  8. Recalculate the priority of the view (only if signal bit 4 is clear).
+  9. If the signal property indicates that we need to, increase (not set)
+     the PicNotValid flag (several bits are involved in this;
+     the exact combinations are a mess to figure out, I'll do it on 
+     request).
+  10. If PicNotValid != 0, draw all the static views (PicViews).
+  11. Draw all non-PicViews, saving their rectangles first and storing a 
+      memory handle in the underBits selector.
+  12. Create a backup of the cast data.
+  13. Remove the appropriate views from screen.
+  14. Dispose the views which have their signal bit 15 set (calling
+      View::delete)
+</programlisting>
+</para><para>
+The algorithm for drawing PicViews is basically several loops:
+(repeat all of the steps for each view)
+<programlisting>
+  1. If signal bit 2 is clear, jump to 4
+  2. If bit 0 is set, clear it and set bit 2 instead.
+  3. Continue with the next view.
+  4. If signal bit 7 is set, jump to 8.
+  5. If PicNotValid == 1, jump to 7.
+  6. Restore the view rectangle using the memory handle stored in UnderBits
+     (must be != 0, of course).
+  7. Free the memory used by underBits and zero out the selector afterwards.
+  8. Clear bit 6 of the signal
+  9. If bit 1 is set, clear it and bit 2.
+</programlisting><programlisting>
+  1. Load and draw the view
+  2. Clear signal bits 0, 1, 2, 6.
+  3. If signal bit 14 is set, skip to the next rectangle
+  4. Copy the view nsRect into a temporary variable.
+  5. Find the start of the priority band specified by the priority selector.
+  6. If it is greater than the nsRect top, set the top of our temp rectangle
+     to the nsRect top.
+  7. If the top is now below the bottom, set the top = the bottom.
+  8. Draw the temp rectangle onto the control map using white color.
+</programlisting>
+</para>
+<note><para>
+The ReAnimate subfunction (0x0D) of the Graph kernel call redraws parts of
+the maps using the cast list created by Animate, whereas the ShowBits call
+(0x0C) copies parts of the active map to the physical screen.
+</para></note>
+
+  </sect1>
+</Chapter>
+
+
+<Chapter>
+  <Title/FreeSCI/
+     <Sect1>
+        <Title/Basic differences to Sierra's SCI/
+       <para>
+          Sierra's SCI engine, written back in the late 80s, was designed and built to be
+          fast and efficient. Some evil compromises were made (especially in the animation
+          cycle) that sacrificed cleanness for extra cycles. Also, it was designed to use only
+          a very limited amount of memory, which led to more compromises.
+       </para><para>
+          The primary design goal of FreeSCI, on the other hand, was Portability. Written in
+          the late 90s, memory constraints were practically nonexistant, since all game data
+          could easily be stored in memory<footnote><para>This is not true for the speech support
+          some of the later SCI1 and SCI32/SCIWin come with, of course. At the time of this writing,
+          SCI1 support is still non-existant, but later versions of FreeSCI will have to allow
+          for dynamical loading of cdaudio resources.</para></footnote>. Thus, resource loading
+          and hunk memory management is of no importance to FreeSCI. The kernel call "Load", which
+          is used to load a resource to hunk space, simply returns the resource identifier of the
+          resource it is supposed to load, as opposed to a pointer to a pointer to hunk memory.
+       </para><para>
+          Apart from that, FreeSCI simply abuses the fact that SCI was designed to be used by
+          various different graphics adapters and sound devices. The graphics and sound
+          commands each had to be interpreted by the currently active sound and graphics drivers,
+          and FreeSCI does nothing more than to interpret them in its own way.
+       </para><para>
+          Of course, FreeSCI has to accomodate for versions differences between different SCI builds.
+          These are generally minor issues (like the default alignment of text), but they have to
+          be taken care of in one single program, as opposed to several builds as in the case of
+          Sierra's SCI (some SCI games still ship with old versions of the interpreter, because they
+          assume default values that were changed later on).
+       </para><para>
+          Finally, there is the built-in debugger. Sierra SCI used a quick and efficient design, while
+          FreeSCI provides a Command-line interface to the debugger, and several additional commands.
+          <footnote><para>The FreeSCI debugger still lacks some features of Sierra's debugger, like
+          editing variables. These can be refitted easily, though.</para></footnote>
+       </para>
+     </Sect1>
+     <Sect1>
+        <Title/The built-in debugger/
+           <Sect2>
+              <Title/Concepts and basic functionality/
+              <para>
+                 The built-in debugger takes advantage of a built-in command interpreter (which
+                 is not to be confused with the SCI command interpreter). It's appearance is
+                 going to vary in between versions (at the time of this writing, it runs on the
+                 terminal FreeSCI was started on, in text mode; later versions will likely integrate
+                 the debugger to the graphics screen), but all versions of FreeSCI will come with
+                 a working debugger<footnote><para/That's what I hope, anyway./</footnote>. Consult the
+                 documentation of your specific release for details on how to invoke it, if it is not
+                 activated automatically.
+              </para><para>
+                 If activated, the debugger is called in between operation fetching and operation
+                 execution. It will show the command that is to be executed next, predicting the
+                 action done by send, super, and self calls where possible, and displaying any
+                 parameters to calling operations. It will also display the current register values
+                 and the number of operations that have been executed. It then waits for user input.
+              </para><para>
+                 In order to simply execute the next operation, execute the "<function/s/" command.
+                 This will do one step of execution. If you want to execute more than one command,
+                 invoke "<function/s [number-of-steps]/". Other ways to step forward are
+                 "<function/snk/" (Step until the Next Kernel function is invoked) and "function/sret/"
+                 (Step until the interpreter RETurns from this function).
+              </para><para>
+                 Speaking of functions, the FreeSCI interpreter also keeps a list of the call stack.
+                 This is similar to what the Sierra SCI interpreter provides as the "send stack", but
+                 it also includes call, calle and callb commands. Please note that callk commands are
+                 not included (some kernel functions actually call functions in user space). To
+                 display this list, invoke "<function/bt/". This function will list all calls on
+                 the stack, the parameters they carried, from where they were invoked, and the called
+                 object<footnote><para>This is note quite correct: The object listed is, in fact, the
+                 object which is used as the base object for execution. This only makes a difference
+                 if the <function/super/ operation is executed, but it may be confusing. Consider it
+                 a bug.</para></footnote> and selector (where applicable).
+              </para><para>
+                 Selectors are not only used for functions, of course, they are also used as
+                 variables. To inspect the selectors of the current object, use the "<function/obj/"
+                 operation. Sometimes you might want to inspect how a send operation influenced an
+                 object; do so by calling "<function/accobj/", which will show the selectors of the
+                 object indexed by the accumulator register (as used in sends).
+              </para><para>
+                 For a complete listing of debugging commands, refer to the next chapter.
+              </para>
+           </Sect2>
+           <Sect2>
+              <Title/Debugger commands/
+              <para>
+                 The FreeSCI built-in debugger provides the following commands:
+              </para>
+              <sect3><Title/accobj/
+                <para>
+                   The send operation requires a target object, which needs to be stored in the
+                   accumulator. This operation makes it possible to check if there is an object
+                   at the location indexed by acc, and, if it is, dump the type of object (Class,
+                   Object, or Clone), the object's name, and some other interesting stuff (selector
+                   names and values, funcselector names and addresses).
+                </para>
+              </sect3>
+              <sect3><Title/bt/
+                <para>
+                   Backtrace: Shows the execution stack, bundled with call parameters and selector
+                   names where appropriate.
+                </para>
+              </sect3>
+              <sect3><Title/classtable/
+                <para>
+                   One of the nice things about FreeSCI is that it doesn't hide its class table as
+                   Sierra SCI appears to do. With this command, you have the power to unravel the
+                   mysteries of classes and superclasses at your fingertips.
+                </para>
+              </sect3>
+              <sect3><Title/clonetable/
+                <para>
+                   FreeSCI doesn't take Clone()ing lightly. It carefully notes which clone was
+                   created and tracks its current position. This function allows you to find them
+                   all, and in the darkness bind them.
+                </para>
+              </sect3>
+              <sect3><Title/disasm (address) [number]/
+                <para>
+                   The debugger is able to disassemble code parts on the fly. Just give it an
+                   <parameter/address/ to dissassemble (and a <parameter/number/ of commands to
+                   dump, if you're feeling bold enough to look at more than one of them
+                   simultaneously). Unfortunately, it can only do send prediction and parameter
+                   resolution if it is disassembling the PC.
+                </para>
+              </sect3>
+              <sect3><Title/heapdump (address) (number)/
+                <para>
+                   Invoking this function will spit out <parameter/number/ bytes, starting at
+                   <parameter/address/.
+                </para>
+              </sect3>
+              <sect3><Title/heapfree/
+                <para>
+                   Dumps a list of the free heap space (free, not gratis).
+                </para>
+              </sect3>
+              <sect3><Title/heapobj (address)/
+                <para>
+                   This is the same as <function/accobj/, but it can interpret any object on the
+                   heap. Note that the "home" address of objects (as used here) are 8 bytes into
+                   the object structure (which starts with the magic number 0x34 0x12), and points
+                   to the first (zeroeth?) selector.
+                </para>
+              </sect3>
+              <sect3><Title/listinfo (address)/
+                <para>
+                   So FreeSCI doesn't have an interactive list debugger as in Sierra SCI. But it has
+                   something better<footnote><para/Well, this is debatable./</footnote>: A list
+                   dumper, which lists all list elements, keys, and heap positions.
+                </para>
+              </sect3>
+              <sect3><Title/obj/
+                <para>
+                   This is, in essence, the same function as <function/accobj/, but it checks the
+                   current base object as opposed to the object indexed by the accumulator.
+                </para>
+              </sect3>
+              <sect3><Title/redraw_screen/
+                <para>
+                   This function retrieves the background picture, puts it on the foreground, and
+                   redraws everything. It's not inherently useful, though.
+                </para>
+              </sect3>
+              <sect3><Title/refresh_screen/
+                <para>
+                   This should never do anything. If it does, it's a bug. Refreshing the screen
+                   calls the graphics_callback function to update the whole screen from the foreground
+                   picture. Both are supposed to be identical, though.
+                </para>
+              </sect3>
+              <sect3><Title/registers/
+                <para>
+                   This function will show the current values of the program counter, the
+                   accumulator, the frame pointer, the stack pointer, the prev register,
+                   and the &amp;rest modifier. It will also print the addresses of the current
+                   base object, of the global variables, and of the stack.
+                </para>
+              </sect3>
+              <sect3><Title/resource_id (number)/
+                <para>
+                   FreeSCI packs resource type and number into the usual resource id combination.
+                   Use this little helper function to unpack it.
+                </para>
+              </sect3>
+              <sect3><Title/s [number]/
+                <para>
+                   This function will execute <parameter/number/ steps, or one if number was not
+                   specified.
+                </para>
+              </sect3>
+              <sect3><Title/set_acc (number)/
+                <para>
+                   Frobbing the accumulator is not recommended, but it may be fun at times. Use this
+                   command to set your favourite register to an arbitrary value and watch things blow
+                   up.
+                </para>
+              </sect3>
+              <sect3><Title/snk [number]/
+                <para>
+                   Another step command: Step until the interpreter hits a callk command. If you're
+                   hunting for a very specific kernel call, just add its number as a parameter.
+                   Syscall hunting has never been so easy.
+                </para>
+              </sect3>
+              <sect3><Title/sret/
+                <para>
+                   Step until RETurning. If you're bored of the function you're debugging, just invoke
+                   this command. It will step forward until the current function returns.
+                </para>
+              </sect3>
+              <sect3><Title/stack (number)/
+                <para>
+                   Can't remember what you pushed on that stack, and in which order? This command
+                   will display as many stack elements as you want, starting at the TOS.
+                </para>
+              </sect3>
+           </Sect2>
+     </Sect1>
+     <Sect1>
+        <Title/Kernel hacking/
+        <para>
+           Kernel functions are the bridge between the abstract virtual machine, and the world of
+           real programs. The VM may be able to solve RPN equations in the blink of an eye, but
+           what good is this if it can't read input or produce output?<footnote><para/It could be used
+           to produce benchmarks./</footnote>
+        </para><para>
+           All of the kernel functions are stored in src/core/kernel.c. Since kernel function mapping
+           is done during runtime by string comparison, each kernel function and its name have to be
+           registered in the array kfunct_mappers[]. Note that each version of the SCI interpreter
+           (at least each pre-1.000.000 version) comes with one unidentified kernel function, which
+           is handled by <function/k_Unknown/.
+        </para>
+        <sect2>
+           <Title/Kernel basics/
+           <para>
+              Each kernel function is declared like this:
+              <programlisting>
+              void
+              kFooBar(state_t *s, int funct_nr, int argc, heap_ptr argp);
+              </programlisting>
+              So this is how you should start. The four parameters (think of them as the
+              Four Accessories of a kernel function) mean the following:
+              <simplelist>
+                <member/state_t *s: A pointer to the state you are operating on./
+                <member/int funct_nr: The number of this function. Mostly irrelevant./
+                <member/int argc: The number of arguments./
+                <member/heap_ptr argp: Heap pointer to the first argument./
+              </simplelist>
+              "s" contains a lot of important and interesting data. Have a look at src/include/engine.h
+              for a complete description. What you will probably need mostly will be the heap,
+              (s->heap), a unsigned char pointer, and the accumulator (s->acc), a word (guint16),
+              which is used to return values to the SCI program.
+           </para><para>
+              Some kernel functions don't even need to refer to the heap. However, most of them are
+              passed at least one, if not more parameters. This may sound shocking to you, but there
+              is an easy way to work around the neccessity of peeling them off the heap manually:
+              Use the PARAM macros. They are used as follows:
+              <simplelist>
+                <member/PARAM(x): Returns the value of the parameter x. Does not check for validity./
+                <member/UPARAM(x): Same as PARAM(x), but casts the parameter to be unsigned./
+                <member/PARAM_OR_ALT(x, y): Checks if PARAM(x) is valid and returns it, or returns
+                        y if PARAM(x) is invalid./
+                <member/UPARAM_OR_ALT(x, y): PARAM_OR_ALT(x, y) unsigned./ 
+              </simplelist>
+              Several kernel functions assume default values if a specific parameter is not present.
+              Use the U?PARAM_OR_ALT(x, y) macros to detect this case, and you'll rarely have to care
+              about using argc directly.
+           </para>
+        </sect2>
+        <sect2>
+           <Title/Hunk and heap/
+           <para>
+              Accessing the heap for both reading and writing is surprisingly important for the kernel,
+              especially when it has to deal with functions that would usually belong into user space,
+              like handling of doubly-linked lists. To ease this, three macros are available:
+              <simplelist>
+                 <member/GET_HEAP(x) - reads a signed SCI word (gint16) from heap address x/
+                 <member/UGET_HEAP(x) - reads an unsigned SCI word (guint16)/
+                 <member/PUT_HEAP(x, foo) - writes the value foo to the specified heap address/
+              </simplelist>
+           </para><para>
+              Some kernel functions, especially graphical kernel functions, additionally require
+              the usage of what Sierra referred to as "hunk space". This is dynamically allocated
+              memory; it can even be allocated and unallocated manually from SCI scripts by using
+              the Load() and UnLoad() system calls (this is the sci_memory resource). To allow usage
+              of this kind of memory, three functions have been provided:
+              <simplelist>
+                 <member/int kalloc(state_t *, space) - allocate space bytes and return a handle/
+                 <member/byte *kmem(state_t *, handle) - resolve a handle and return the memory
+                         address it points to/
+                 <member/int kfree(state_t *, handle) - unallocate memory associated with a handle.
+                         Returns 0 on success, 1 otherwise/
+              </simplelist>
+           </para>
+        </sect2>
+        <sect2>
+           <Title/Error handling and debugging/
+           <para>
+              Error handling and debugging probably are the most important aspects of program
+              writing. FreeSCI provides three macros for printing debug output:
+              <simplelist>
+                  <member/SCIkwarn(text, ...) - Print a warning message/
+                  <member/SCIkdebug(text, ...) - Print a debug message/
+                  <member/CHECK_THIS_KERNEL_FUNCTION - print the function name and parameters/
+              </simplelist>
+              The difference between SCIkwarn and SCIkdebug is that the latter can be easily
+              removed (by commenting out the #define SCI_KERNEL_DEBUG on or about line 39). In
+              practice this means that SCIkwarn should be used for warning or error messages in cases
+              where it is likely that the vm or the kernel function are doing something wrong;
+              e.g. if the program refers to a non-existant resource file, if a node list command
+              does not come with a pointer to a node list, or if the number of parameters is
+              insufficient. These messages are important and may point to misperceptions of details
+              of the SCI engine. SCIkdebug, on the other hand, is your every-day "flood me with
+              information until I'm blind" debug macro.
+           </para><para>
+              Sometimes it may happen that something goes wrong inside the kernel; e.g. a kernel
+              function runs out of memory handles, or an internal variable somehow was set to an
+              invalid value. In this case, <function/kernel_oops(state_t *, char *)/ should be used.
+              It prints an error message and halts the VM, which none of the macros does.
+           </para>
+        </sect2>
+        <sect2>
+           <Title/Selectors/
+           <para>
+              Selectors are very important for some of the kernel functions. BaseSetter(), Animate(),
+              Display(), GetEvent() and others take data from or write directly to selectors of
+              a specified object (passed as a parameter or retreived from a node list). Selector
+              support is not complete as of this writing (there still is no easy way to call a function
+              selector<footnote><para/Some of you may run amok when they read this- calling user space
+              functions from kernel space should not be handled so lightly, I agree. Still, that's The
+              Way Sierra Used To Do Things (TWSUTDT); and, from a performace point of view, it does
+              make some sense./</footnote>, which is done by Parse() and Animate()), but there already
+              are facilities to ease reading and writing of selectors. To prepare the usage of
+              selectors, a variable has do be declared (in src/include/vm.h, selector_map_t). This
+              variable will carry the numeric selector ID during run time. Now, the selector has to
+              be mapped- this is happens once during initialization, to save time. It is performed
+              by script_map_selectors(), which is located at the end of src/core/script.c (just use
+              the "FIND_SELECTOR" macro).
+           </para><para>
+              If everything went right, accessing selectors should be really easy now. Just use the
+              GET_SELECTOR(obj, selector) and PUT_SELECTOR(obj, selector, value) macros, where obj
+              is a heap_ptr pointing to the object you want to read from or write to, and selector
+              is the name of the selector to use. Example:
+              <programlisting>
+              void
+              kSwapXY(state_t *s, int funct_nr, int argc, heap_ptr argp)
+              {
+                int posx, posy;
+                heap_ptr obj = PARAM(0);
+
+                posx = GET_SELECTOR(obj, x);
+                posy = GET_SELECTOR(obj, y); /* x and y are defined in selector_map_t */
+
+                PUT_SELECTOR(obj, y, posx);
+                PUT_SELECTOR(obj, x, posy);
+              }
+              </programlisting>
+           </para>
+        </sect2>
+     </Sect1>
 </Chapter>
 
 </Book>
