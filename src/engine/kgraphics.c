@@ -104,6 +104,10 @@ static void
 assert_primary_widget_lists(state_t *s)
 {
 	if (!s->dyn_views) {
+		rect_t bounds = s->picture_port->bounds;
+
+		bounds.y++; /* SCI draws dynviews one pixel below their coordinates */
+		bounds.yl--;
 
 		if (!s->pic_views) {
 			s->pic_views = gfxw_new_list(s->picture_port->bounds, 0);
@@ -115,7 +119,7 @@ assert_primary_widget_lists(state_t *s)
 		s->bg_widgets = gfxw_new_list(s->picture_port->bounds, 0);
 		ADD_TO_CURRENT_PICTURE_PORT(s->bg_widgets);
 
-		s->dyn_views = gfxw_new_list(s->picture_port->bounds, GFXW_LIST_SORTED);
+		s->dyn_views = gfxw_new_list(bounds, GFXW_LIST_SORTED);
 		ADD_TO_CURRENT_PICTURE_PORT(s->dyn_views);
 	}
 }
@@ -2279,18 +2283,24 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kShakeScreen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int shakes = PARAM_OR_ALT(0, 1);
-  int i;
-WARNING(fixme)
-#if 0
-  for (i = 0; i < shakes; i++) {
-    (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_ALL, 0, -10,0,0);
-    gfxop_usleep(s->gfx_state, 15000);
-    (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_ALL, 0, 10,0,0);
-    gfxop_usleep(s->gfx_state, 15000);
-  }
-  (*s->gfx_driver->Redraw)(s, GRAPHICS_CALLBACK_REDRAW_ALL, 0,0,0,0);
-#endif
+	int shakes = PARAM_OR_ALT(0, 1);
+	gfx_pixmap_t *screen = gfxop_grab_pixmap(s->gfx_state, gfx_rect(0, 0, 320, 200));
+	int i;
+
+	fprintf(stderr, "Shaking %d times\n", shakes);
+
+	for (i = 0; i < shakes; i++) {
+		gfxop_draw_box(s->gfx_state, gfx_rect(0, 190, 320, 10), s->ega_colors[0], s->ega_colors[0], GFX_BOX_SHADE_FLAT);
+		gfxop_draw_pixmap(s->gfx_state, screen, gfx_rect(0, 10, 320, 190), gfx_point(0, 0));
+		gfxop_update(s->gfx_state);
+
+		gfxop_draw_box(s->gfx_state, gfx_rect(0, 0, 320, 10), s->ega_colors[0], s->ega_colors[0], GFX_BOX_SHADE_FLAT);
+		gfxop_draw_pixmap(s->gfx_state, screen, gfx_rect(0, 0, 320, 190), gfx_point(0, 10));
+		gfxop_update(s->gfx_state);
+	}
+
+	gfxop_draw_pixmap(s->gfx_state, screen, gfx_rect(0, 0, 320, 200), gfx_point(0, 0));
+	gfxop_update(s->gfx_state);
 }
 
 #define K_DISPLAY_SET_COORDS 100

@@ -1697,7 +1697,6 @@ gfxop_new_pic(gfx_state_t *state, int nr, int flags, int default_palette)
 	state->tag_mode = 1;
 
 	state->pic = gfxr_get_pic(state->resstate, nr, state->visible_map, flags, default_palette, 1);
-
 	if (state->driver->mode->xfact == 1 && state->driver->mode->yfact == 1)
 		state->pic_unscaled = state->pic;
 	else

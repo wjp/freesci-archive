@@ -232,10 +232,11 @@ gfxr_free_tagged_resources(gfx_driver_t *driver, gfx_resstate_t *state)
 static gfxr_pic_t *
 gfxr_pic_xlate_common(gfx_resource_t *res, int maps, int scaled, int force, gfx_mode_t *mode, int filter)
 {
+
 	XLATE_AS_APPROPRIATE(GFX_MASK_VISUAL, visual_map);
 	XLATE_AS_APPROPRIATE(GFX_MASK_PRIORITY, priority_map);
 	XLATE_AS_APPROPRIATE(GFX_MASK_CONTROL, control_map);
-		
+
 	return res->scaled_data.pic;
 }
 #undef XLATE_AS_APPROPRIATE
@@ -275,7 +276,6 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 			}
 			gfxr_interpreter_clear_pic(state->version, unscaled_pic);
 		}
-fprintf(stderr, "Calculating pic!\n");
 		if (gfxr_interpreter_calculate_pic(state, pic, unscaled_pic, flags, default_palette, nr)) {
 			gfxr_free_pic(state->driver, pic);
 			if (unscaled_pic)
@@ -287,7 +287,6 @@ fprintf(stderr, "Calculating pic!\n");
 			res = malloc(sizeof(gfx_resource_t));
 			res->ID = ((restype << 16) | nr);
 			res->lock_sequence_nr = state->options->buffer_pics_nr;
-			res->mode = hash;
 			sbtree_set(tree, nr, (void *) res);
 		} else {
 			gfxr_free_pic(state->driver, res->scaled_data.pic);
@@ -295,6 +294,7 @@ fprintf(stderr, "Calculating pic!\n");
 				gfxr_free_pic(state->driver, res->unscaled_data.pic);
 		}
 
+		res->mode = hash;
 		res->scaled_data.pic = pic;
 		res->unscaled_data.pic = unscaled_pic;
 	} else {

@@ -128,6 +128,7 @@ gfxr_init_pic(gfx_mode_t *mode, int ID)
 void
 gfxr_clear_pic0(gfxr_pic_t *pic)
 {
+	memset(pic->visual_map->index_data, 0x00, (320 * pic->mode->xfact * SCI_TITLEBAR_SIZE * pic->mode->yfact));
 	memset(pic->visual_map->index_data + (320 * pic->mode->xfact * SCI_TITLEBAR_SIZE * pic->mode->yfact),
 	       0xff, pic->mode->xfact * 320 * pic->mode->yfact * (200 - SCI_TITLEBAR_SIZE)); /* white */
 	memset(pic->priority_map->index_data + (320 * pic->mode->xfact * SCI_TITLEBAR_SIZE * pic->mode->yfact),

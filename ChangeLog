@@ -1,3 +1,14 @@
+2000-12-28  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (assert_primary_widget_lists): Fixed OB1 bug for
+	dynviews (not a bug, actually)
+
+	* src/gfx/resmgr.c (gfxr_get_pic): Fixed missing mode hash which used to
+	cause a segfault in the sq3 intro
+
+	* src/gfx/resource/sci_pic_0.c (gfxr_clear_pic0): Fixed missing cleanup
+	caused by the last patch
+
 2000-12-25  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/resource/sci_pic_0.c (gfxr_clear_pic0): Fixed problems with

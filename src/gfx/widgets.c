@@ -325,8 +325,8 @@ _gfxw_set_ops(gfxw_widget_t *widget, gfxw_point_op *draw, gfxw_op *free, gfxw_op
 	widget->set_visual = _gfxwop_basic_set_visual;
 }
 
-static void
-_gfxw_remove_widget(gfxw_container_t *container, gfxw_widget_t *widget)
+void
+gfxw_remove_widget_from_container(gfxw_container_t *container, gfxw_widget_t *widget)
 {
 	gfxw_widget_t **seekerp = &(container->contents);
 
@@ -355,6 +355,7 @@ _gfxw_remove_widget(gfxw_container_t *container, gfxw_widget_t *widget)
 		container->nextpp = seekerp;
 
 	*seekerp = widget->next; /* Remove it */
+	widget->parent = NULL;
 }
 
 static int
@@ -368,7 +369,7 @@ _gfxwop_basic_free(gfxw_widget_t *widget)
 		else
 			widget->parent->add_dirty_rel(widget->parent, widget->bounds, 1);
 
-		_gfxw_remove_widget(widget->parent, widget);
+		gfxw_remove_widget_from_container(widget->parent, widget);
 	}
 	
 	_gfxw_unallocate_widget(state, widget);
@@ -1958,3 +1959,4 @@ gfxw_show_widget(gfxw_widget_t *widget)
 
 	return widget;
 }
+

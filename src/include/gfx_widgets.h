@@ -406,4 +406,12 @@ gfxw_remove_port(gfxw_visual_t *visual, gfxw_port_t *port);
 ** Returns   : (gfxw_port_t *) port's parent port, or NULL if it had none
 */
 
+void
+gfxw_remove_widget_from_container(gfxw_container_t *container, gfxw_widget_t *widget);
+/* Removes the widget from the specified port
+** Parameters: (gfxw_container_t *) container: The container it should be removed from
+**             (gfxw_widget_t *) widget: The widget to remove
+** Returns   : (void)
+*/
+
 #endif /* !_GFX_WIDGETS_H_ */

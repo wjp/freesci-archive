@@ -246,6 +246,7 @@ gfxop_draw_box(gfx_state_t *state, rect_t box, gfx_color_t color1, gfx_color_t c
 **             (gfx_color_t) color1: The primary color to use for drawing
 **             (gfx_color_t) color2: The secondary color to draw in
 **             (gfx_box_shade_t) shade_type: The shading system to use
+**                               (e.g. GFX_BOX_SHADE_FLAT)
 ** Returns   : (int) GFX_OK or GFX_FATAL
 ** The draw mask, control, and priority values are derived from color1.
 */
