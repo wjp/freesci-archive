@@ -248,6 +248,32 @@ SOURCE=..\core\resource.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\core\said.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\core\said.y
+
+!IF  "$(CFG)" == "sciv - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "sciv - Win32 Debug"
+
+# Begin Custom Build
+InputDir=\Src\freesci\src\core
+InputPath=..\core\said.y
+InputName=said
+
+"..\core\said.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	cd $(InputDir) 
+	bison -y -o$(InputName).c $(InputName).y 
+	
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=..\core\savegame.c
 # End Source File
 # Begin Source File
@@ -273,13 +299,12 @@ InputName=savegame
 
 USERDEP__SAVEG="..\core\cfsml.pl"	
 # Begin Custom Build
-ProjDir=.
+InputDir=\Src\freesci\src\core
 InputPath=..\core\savegame.cfsml
 InputName=savegame
 
-"savegame.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	cd $(ProjDir) 
-	cd ..\core 
+"..\core\savegame.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	cd $(InputDir) 
 	d:\perl\bin\perl cfsml.pl < $(InputName).cfsml > $(InputName).c 
 	
 # End Custom Build

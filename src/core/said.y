@@ -24,7 +24,7 @@
     Christoph Reichenbach (CJR) [jameson@linuxgames.com]
 
 ***************************************************************************/
- 
+
 %{
 
 #include <engine.h>
@@ -66,6 +66,16 @@ said_wgroup_branch(wgroup_t);
 
 static said_spec_t
 said_top_branch(tree_t);
+
+static int
+yylex(void);
+
+static int
+yyerror(char *s)
+{
+  said_parse_error = strdup(s);
+  return 1; /* Abort */
+}
 
 %}
 
@@ -156,14 +166,6 @@ more_after:	  /* empty */
 
 %%
 
-static int
-yyerror(char *s)
-{
-  said_parse_error = strdup(s);
-  return 1; /* Abort */
-}
-
-
 int
 parse_yy_token_lookup[] = {YY_COMMA, YY_AMP, YY_SLASH, YY_PARENO, YY_PARENC, YY_BRACKETSO, YY_BRACKETSC,
 			   YY_HASH, YY_LT, YY_GT};
@@ -189,7 +191,6 @@ yylex(void)
 
   return retval;
 }
-
 
 #define SAID_NEXT_NODE ((said_tree_pos == 0) || (said_tree_pos >= VOCAB_TREE_NODES))? said_tree_pos = 0 : said_tree_pos++
 
