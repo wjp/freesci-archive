@@ -1093,6 +1093,13 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
           PUT_SELECTOR(obj, cursor, cursor); /* Write back cursor position */
       }
 
+    case K_CONTROL_BOX:
+    case K_CONTROL_BUTTON:
+      if (event) PUT_SELECTOR(event, claimed, 1);
+      _k_draw_control(s, obj, 0);
+      s->acc = 0;
+      break;
+
     case K_CONTROL_TEXT: {
       int state = GET_SELECTOR(obj, state);
       PUT_SELECTOR(obj, state, state | SELECTOR_STATE_DITHER_FRAMED);
@@ -1100,13 +1107,6 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
       PUT_SELECTOR(obj, state, state);
     }
     break;
-
-    case K_CONTROL_BOX:
-    case K_CONTROL_BUTTON:
-      if (event) PUT_SELECTOR(event, claimed, 1);
-      _k_draw_control(s, obj, 0);
-      s->acc = 0;
-      break;
 
     default:
       SCIkwarn(SCIkWARNING, "Attempt to edit control type %d\n", ct_type);

@@ -352,13 +352,13 @@ _vocab_add_rule(parse_rule_list_t *list, parse_rule_t *rule)
 
   if (!list)
     return new_elem;
-  else if (term < list->terminal) {
+  else/* if (term < list->terminal) {
       new_elem->next = list;
       return new_elem;
-  } else {
+      } else*/ {
     parse_rule_list_t *seeker = list;
 
-    while (seeker->next && seeker->next->terminal <= term) {
+    while (seeker->next/* && seeker->next->terminal <= term*/) {
       if (seeker->next->terminal == term)
 	if (_rules_equal_p(seeker->next->rule, rule)) {
 	  _vfree(rule);
@@ -482,11 +482,14 @@ _vocab_build_gnf(parse_tree_branch_t *branches, int branches_nr, int verbose)
       ntseeker = ntseeker->next;
     }
 
-    new_tlist = _vocab_merge_rule_lists(new_tlist, tlist);
+    /*    new_tlist = _vocab_merge_rule_lists(new_tlist, tlist);
     if (tlist)
-      free(tlist);
+    free(tlist);*/
+    tlist = _vocab_merge_rule_lists(tlist, new_tlist);
+    if (new_tlist)
+      free(new_tlist);
 
-    tlist = new_tlist;
+    //    tlist = new_tlist;
     new_tlist = new_new_tlist;
 
     termrules = _vocab_rule_list_length(new_new_tlist);

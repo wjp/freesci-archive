@@ -1,3 +1,10 @@
+2000-05-15  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kEditControl): Fixed a bug that would
+	cause edit boxes to be dotted at all times
+
+	* src/engine/grammar.c (_vocab_add_rule): More fixes to Parse()
+
 2000-05-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/said.y: Significant improvements in Said() tree building.

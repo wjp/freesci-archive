@@ -338,7 +338,7 @@ kstub(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int i;
 
-  SCIkwarn(SCIkWARNING, "Unimpl'd syscall: %s[%x](", s->kernel_names[funct_nr], funct_nr);
+  SCIkwarn(SCIkWARNING, "Unimplemented syscall: %s[%x](", s->kernel_names[funct_nr], funct_nr);
 
   for (i = 0; i < argc; i++) {
     sciprintf("%04x", 0xffff & PARAM(i));

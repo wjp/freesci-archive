@@ -381,7 +381,6 @@ graph_draw_control_edit(struct _state *s, port_t *port, int state,
   graph_fill_box_custom(s, x + port->xmin, y + port->ymin + 1, xl, yl,
 			port->bgcolor, -1, -1, 1); /* Clear box background */
 
-
   graph_draw_control_text(s, port, state,
 			   x, y, xl, yl, text, font, ALIGN_TEXT_LEFT);
 

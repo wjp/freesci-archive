@@ -146,8 +146,14 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
 #else /* !SCI_SIMPLE_SAID_CODE */
-  said(s, s->heap + said_block); /* Build and display a parse tree */
-  s->acc = 0; /* Never true */
+  if (said(s, s->heap + said_block, (s->debug_mode & (1 << SCIkPARSER_NR)))) { /* Build and possibly display a parse tree */
+    if (s->debug_mode & (1 << SCIkPARSER_NR))
+      sciprintf("Match.\n");
+
+    s->acc = 1;
+    PUT_SELECTOR(s->parser_event, claimed, 1);
+  } else s->acc = 0;
+  //  s->acc = vocab_augment_trees(s, s->parser_nodes);
 #endif /* !SCI_SIMPLE_SAID_CODE */
 }
 

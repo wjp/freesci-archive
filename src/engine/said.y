@@ -436,8 +436,10 @@ said_parse_spec(state_t *s, byte *spec)
 
 
 int
-said(state_t *s, byte *spec)
+said(state_t *s, byte *spec, int verbose)
 {
+  parse_tree_node_t *parse_tree = s->parser_nodes;
+
   if (s->parser_valid) {
 
     if (said_parse_spec(s, spec)) {
@@ -446,13 +448,15 @@ said(state_t *s, byte *spec)
       return 0;
     }
 
-    vocab_dump_parse_tree("Said-tree", said_tree); /* Nothing better to do yet */
+    if (verbose)
+      vocab_dump_parse_tree("Said-tree", said_tree); /* Nothing better to do yet */
     return 0;
 
   }
 
   return 0;
 }
+
 
 
 #ifdef SAID_DEBUG_PROGRAM
