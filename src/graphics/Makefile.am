@@ -1,4 +1,4 @@
-INCLUDES = -I$(top_srcdir)/src/include @ac_ggi_includes@ @ac_png_includes@
+INCLUDES = -I$(top_srcdir)/src/include @ac_ggi_includes@ @ac_png_includes@ @X_CFLAGS@
 EXTRA_DIST = graphics_ddraw.c graphics_dgfx.c
 LDADD = $(LDADD_ALL)
 lib_LIBRARIES = libscigraphics.a

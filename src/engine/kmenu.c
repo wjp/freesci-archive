@@ -102,7 +102,7 @@ struct {
 	{"FreeSCI hackers and contributors",
 	 "Bas Zoetekouw\nMan pages and debian package management\n\n"
 	 "Carl Muckenhoupt\nSources to the SCI resource viewer tools that started it all\n\n"
-	 "Chris Kehler\n\n"
+	 "Chris Kehler\nMakefile enhancements\n"
 	 "Christoph Reichenbach\nProject & Website maintenance, UN*X code\n\n"
 	 "Christopher T. Lansdown\nCVS maintenance, Alpha compatibility fixes\n\n"
 	 "Claudio Matsuoka\nCVS snapshots, daily builds, bug reports\n\n"

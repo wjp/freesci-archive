@@ -995,6 +995,8 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	s->acc = gfxop_scan_bitmask(s->gfx_state, gfx_rect(xstart, ystart + 10, xlen, ylen), map);
 
+
+	/* Apparently invalid
 	if (s->dyn_views) {
 		gfxw_dyn_view_t *view = (gfxw_dyn_view_t *) s->dyn_views->contents;
 		abs_rect_t rect;
@@ -1004,13 +1006,16 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		rect.xend = xstart + xlen;
 		rect.yend = ystart + ylen;
 
-		while (view && !s->acc & 0x8000)
-			if (collides_with(s, rect, view->ID, funct_nr, argc, argp))
+		while (view && !(s->acc & 0x8000))
+			if (collides_with(s, rect, view->ID, funct_nr, argc, argp)) {
+				sciprintf("  (%d,%d,%d,%d) collides with obj at %04x\n",
+					  rect.x, rect.y, rect.xend, rect.yend, view->ID);
 				s->acc |= 0x8000;
-			else
+			} else
 				view = (gfxw_dyn_view_t *) view->next;
 		
 	}
+	*/
 
 	/*  { */
 /*  		int x, y; */

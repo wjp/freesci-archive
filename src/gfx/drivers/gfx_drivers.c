@@ -35,7 +35,7 @@ extern gfx_driver_t gfx_driver_ggi;
 #endif
 
 
-#ifdef HAVE_X11_XLIB_H
+#ifndef X_DISPLAY_MISSING
 extern gfx_driver_t gfx_driver_xlib;
 #endif
 
@@ -49,7 +49,7 @@ static gfx_driver_t *gfx_drivers[] = {
 #ifdef HAVE_LIBGGI
   &gfx_driver_ggi,
 #endif
-#ifdef HAVE_X11_XLIB_H
+#ifndef X_DISPLAY_MISSING
   &gfx_driver_xlib,
 #endif
 #ifdef HAVE_DDRAW
@@ -64,7 +64,7 @@ gfx_find_driver(char *name)
 	int retval = 0;
 
 	if (!name) { /* Find default driver */
-#ifdef HAVE_X11_XLIB_H
+#ifndef X_DISPLAY_MISSING
 		if (getenv("DISPLAY"))
 			return &gfx_driver_xlib;
 #endif

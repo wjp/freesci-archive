@@ -60,11 +60,11 @@ static midiout_driver_t *midiout_drivers[] = {
   NULL
 };
 
-int midiout_flush();
 int midiout_open();
 int midiout_close();
 int midiout_write_event(guint8 *buffer, unsigned int count);
 int midiout_write_block(guint8 *buffer, unsigned int count);
+int midiout_flush();
 
 struct _midiout_driver *midiout_find_driver(char *name);
 

@@ -14,7 +14,6 @@ AC_CHECK_HEADERS(obstack.h)
 AC_CHECK_HEADERS(dirent.h)
 AC_CHECK_HEADERS(unistd.h)
 AC_CHECK_HEADERS(fnmatch.h)
-AC_CHECK_HEADERS(X11/Xlib.h)
 AC_CHECK_HEADERS(readline/readline.h, [	ac_readline="-lreadline" ], [ ac_readline="" ])
 AC_SUBST(ac_readline)
 AC_CHECK_HEADERS(readline/history.h)
@@ -26,7 +25,7 @@ AC_CHECK_FUNCS(pipe socketpair fork sched_yield memfrob ffs getopt_long)
 AM_PATH_ALSA(0.5.0, [AC_DEFINE(HAVE_ALSA)], [echo >/dev/null])
 AC_PATH_GGI
 AC_PATH_CURSES
-AC_PATH_X
+AC_PATH_XTRA
 
 AC_MSG_CHECKING(for Alpha hardware and gcc style __asm__)
 AC_TRY_COMPILE([], [

@@ -445,8 +445,8 @@ int midi_mt32_patch001_type1_length(guint8 *data, unsigned int length)
 
 int midi_mt32_sysex_delay()
 {
-  usleep(320 * 63); /* One MIDI byte is 320us, 320us * 63 > 20ms */
-  return 0;
+	usleep(320 * 63); /* One MIDI byte is 320us, 320us * 63 > 20ms */
+	return 0;
 }
 
 /* the driver struct */

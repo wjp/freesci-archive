@@ -26,7 +26,7 @@
 ***************************************************************************/
 
 #include <gfx_driver.h>
-#ifdef HAVE_X11_XLIB_H
+#ifndef X_DISPLAY_MISSING
 #include <gfx_tools.h>
 
 #include <X11/Xlib.h>
@@ -956,4 +956,4 @@ gfx_driver_xlib = {
 	NULL
 };
 
-#endif /* HAVE_XLIB */
+#endif /* X_DISPLAY_MISSING */

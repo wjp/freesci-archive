@@ -1,4 +1,4 @@
-INCLUDES = -I$(top_srcdir)/src/include @ac_ggi_includes@
+INCLUDES = -I$(top_srcdir)/src/include
 LDADD = -lc
 EXTRA_DIST = sfx_save.cfsml soundserver_dos.c
 noinst_LIBRARIES = libscisound.a

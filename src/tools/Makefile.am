@@ -1,9 +1,9 @@
-INCLUDES = -I$(top_srcdir)/src/include @ac_ggi_includes@ @ac_png_includes@
+INCLUDES = -I$(top_srcdir)/src/include @ac_png_includes@
 LDADD = ../scicore/libscicore.a -lc
 EXTRA_DIST = sciunpack.h
 bin_PROGRAMS = sciunpack sciconsole scidisasm
 sciunpack_SOURCES = sciunpack.c listwords.c scriptdump.c vocabdump.c
-sciunpack_LDADD = ../sound/libscisound.a ../scicore/libscicore.a @ac_glx_libraries@ @ac_glx_libraries@ @ac_png_libraries@ @ac_ggi_libraries@
+sciunpack_LDADD = ../sound/libscisound.a ../scicore/libscicore.a @ac_glx_libraries@ @ac_glx_libraries@ @ac_png_libraries@
 scidisasm_SOURCES = scidisasm.c
 sciconsole_LDADD = ../sound/libscisound.a ../scicore/libscicore.a @ac_curses_libraries@ -lc @ac_readline@ @ac_curses_libraries@ -lc -lm
 sciconsole_SOURCES = sciconsole.c

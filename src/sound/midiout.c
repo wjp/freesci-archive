@@ -24,11 +24,6 @@ midiout_driver_t *midiout_driver = NULL;
 
 static unsigned char running_status = 0;
 
-int midiout_flush()
-{
-  return midiout_driver->midiout_open();
-}
-
 int midiout_open()
 {
   return midiout_driver->midiout_open();
@@ -58,6 +53,11 @@ int midiout_write_block(guint8 *buffer, unsigned int count)
   return midiout_driver->midiout_write(buffer, count);
 }
 
+int midiout_flush()
+{
+	return midiout_driver->midiout_flush();
+}
+
 /* the midiout_null sound driver */
 
 int midiout_null_open()
@@ -66,16 +66,16 @@ int midiout_null_open()
   return 0;
 }
 
-int midiout_null_flush()
-{
-  return 0;
-}
-
-
 int midiout_null_close()
 {
   printf("Closed null sound device\n");
   return 0;
+}
+
+int midiout_null_flush()
+{
+	printf("Flushing null sound device\n");
+	return 0;
 }
 
 int midiout_null_write(guint8 *buffer, unsigned int count)
