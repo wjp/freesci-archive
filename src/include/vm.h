@@ -110,6 +110,7 @@ typedef struct
 {
   int init; /* Init function */
   int play; /* Play function (first function to be called) */
+  int replay; /* Replay function */
   int x, y, z; /* Coordinates */
   int priority;
   int view, loop, cel; /* Description of a specific image */

@@ -494,8 +494,8 @@ _cfsml_write_state_t(FILE *fh, state_t* foo)
 
 #line 315 "cfsml.pl"
   fprintf(fh, "{\n");
-  fprintf(fh, "restarting_flag = ");
-    _cfsml_write_byte(fh, &(foo->restarting_flag));
+  fprintf(fh, "restarting_flags = ");
+    _cfsml_write_byte(fh, &(foo->restarting_flags));
     fprintf(fh, "\n");
   fprintf(fh, "have_mouse_flag = ");
     _cfsml_write_byte(fh, &(foo->have_mouse_flag));
@@ -745,9 +745,9 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
         value = _cfsml_get_value(fh, line, hiteof);
       if (!value)
          return CFSML_FAILURE;
-      if (!strcmp(bar, "restarting_flag")) {
+      if (!strcmp(bar, "restarting_flags")) {
 #line 553 "cfsml.pl"
-         if (_cfsml_read_byte(fh, &(foo->restarting_flag), value, line, hiteof))
+         if (_cfsml_read_byte(fh, &(foo->restarting_flags), value, line, hiteof))
             return CFSML_FAILURE;
       } else
       if (!strcmp(bar, "have_mouse_flag")) {

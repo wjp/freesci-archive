@@ -1528,7 +1528,7 @@ game_init(state_t *s)
   } else
     sciprintf("Assuming that this game does not use a parser.\n");
 
-  s->restarting_flag = 0; /* We're not restarting here */
+  s->restarting_flags = SCI_GAME_IS_NOT_RESTARTING;
 
   s->stack_base = stack_handle + 2;
   s->parser_base = parser_handle + 2;
@@ -1655,6 +1655,7 @@ game_init(state_t *s)
 
   s->game_obj = game_obj;
   s->stack_handle = stack_handle;
+
   return 0;
 }
   
@@ -1663,6 +1664,7 @@ game_run(state_t **_s)
 {
   state_t *successor = NULL;
   state_t *s = *_s;
+  int game_is_finished = 0;
 
   sciprintf(" Calling %s::play()\n", s->game_name);
   putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector... */
@@ -1673,13 +1675,37 @@ game_run(state_t **_s)
   /* and ENGAGE! */
 
   do {
+    save_ff(s->_heap); /* Save heap state */
     run_vm(s, (successor)? 1 : 0);
-    if (successor = s->successor) {
+
+    if (s->restarting_flags & SCI_GAME_IS_RESTARTING_NOW) { /* Restart was requested? */
+
+      free(s->execution_stack);
+      s->execution_stack = NULL;
+      s->execution_stack_pos = -1;
+      s->execution_stack_pos_changed = 0;
+      restore_ff(s->_heap); /* Restore old heap state */
+
+      sciprintf(" Restarting game\n");
+      putInt16(s->heap + s->stack_base, s->selector_map.replay); /* Call the replay selector */
+      putInt16(s->heap + s->stack_base + 2, 0);
+      send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
+
       script_abort_flag = 0;
-      free(s);
-      *_s = s = successor;
-    }
-  } while (successor);
+
+      s->restarting_flags = SCI_GAME_WAS_RESTARTED;
+
+    } else
+      
+      if (successor = s->successor) {
+	script_abort_flag = 0;
+	free(s);
+	*_s = s = successor;
+      } else
+
+	game_is_finished = 1;
+
+  } while (!game_is_finished);
 
   sciprintf(" Game::play() finished.\n");
   return 0;

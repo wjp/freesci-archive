@@ -349,14 +349,12 @@ libggi_redraw(struct _state *s, int command, int x, int y, int xl, int yl)
       int i;
 
       if (y < 0) {
-	fprintf(stderr, "shaking downwards; pic at %p\n", s->pic->view);
 	graphics_draw_region_ggi(vis, s->pic->view + (320 * y),
 				 0, -y, 320, 200+y,
 				 s->mouse_pointer, s->pointer_x, s->pointer_y);
 	lines_to_clear = -y;
 	first_line_to_clear = 0;
       } else { /* y > 0 */
-	fprintf(stderr, "shaking upwards; pic at %p\n", s->pic->view);
 	graphics_draw_region_ggi(vis, s->pic->view + (320 * y),
 				 0, 0, 320, 200-y,
 				 s->mouse_pointer, s->pointer_x, s->pointer_y);

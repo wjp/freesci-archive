@@ -88,6 +88,11 @@ typedef struct
 } glx_state_t;
 #endif
 
+/* values for state_t.restarting_flag */
+#define SCI_GAME_IS_NOT_RESTARTING 0
+#define SCI_GAME_WAS_RESTARTED 1
+#define SCI_GAME_IS_RESTARTING_NOW 2
+
 typedef struct _state
 {
   byte *game_name; /* Designation of the primary object (which inherits from Game) */
@@ -113,8 +118,8 @@ typedef struct _state
   int sound_pipe_events[2]; /* Sound events returned by the server: Engine <= Sound server */
   int sound_pipe_debug[2]; /* Text pipeline for debug data Engine: <= Sound server */
 
-  byte restarting_flag; /* Flag used for restarting */
-  byte have_mouse_flag; /* Do we have a hardware pointing device? */
+  byte restarting_flags; /* Flags used for restarting */
+  byte have_mouse_flag;  /* Do we have a hardware pointing device? */
 
   byte pic_not_valid; /* Is 0 if the background picture is "valid" */
   byte pic_is_new;    /* Set to 1 if a picture has just been loaded */

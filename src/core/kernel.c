@@ -575,6 +575,14 @@ kUnLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 void
+kRestartGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  s->restarting_flags |= SCI_GAME_IS_RESTARTING_NOW;
+  script_abort_flag = 1; /* Force vm to abort ASAP */
+}
+
+
+void
 kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr old_offs = UPARAM(0);
@@ -732,7 +740,7 @@ kIsObject(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kGameIsRestarting(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->acc = s->restarting_flag;
+  s->acc = (s->restarting_flags & SCI_GAME_WAS_RESTARTED);
 }
 
 void
@@ -3306,6 +3314,7 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int x = PARAM(3);
   int y = PARAM(4);
   int priority = PARAM(5);
+  int maxloops, maxcels;
 
   if (priority < 0)
     priority = 16;
@@ -3316,6 +3325,14 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
     SCIkwarn(SCIkERROR, "Attempt to draw non-existing view.%03n\n", PARAM(0));
     return;
   }
+
+  maxloops = view0_loop_count(view->data) - 1;
+  if (loop >= maxloops)
+    loop = maxloops;
+
+  maxcels = view0_cel_count(loop, view->data) - 1;
+  if (cel >= maxcels)
+    cel = maxcels;
 
   SCIkdebug(SCIkGRAPHICS, "DrawCel((%d,%d), (view.%d, %d, %d), p=%d)\n", x, y, PARAM(0), loop,
 	    cel, priority);
@@ -4042,6 +4059,7 @@ struct {
   {"BaseSetter", kBaseSetter },
   {"Parse", kParse },
   {"ShakeScreen", kShakeScreen },
+  {"RestartGame", kRestartGame },
 
   /* Experimental functions */
   {"Said", kSaid },

@@ -32,7 +32,7 @@ configure:1426: checking for memfrob
 configure:1480: checking for ggi
 configure:1527: gcc -E   conftest.c >/dev/null 2>conftest.out
 configure:1569: gcc -o conftest -g -O2    -lgii -lgg   conftest.c  1>&5
-/tmp/cc67HFuz.o: In function `main':
+/tmp/ccS7inxw.o: In function `main':
 /home/jameson/work/port/freesci/configure:1565: undefined reference to `ggiInit'
 collect2: ld returned 1 exit status
 configure: failed program was:
@@ -47,7 +47,7 @@ configure:1569: gcc -o conftest -g -O2  -lggi  -lgii -lgg   conftest.c  1>&5
 configure:1616: checking for (n)curses
 configure:1671: gcc -E   conftest.c >/dev/null 2>conftest.out
 configure:1712: gcc -o conftest -g -O2      conftest.c  1>&5
-/tmp/ccIiXNHd.o: In function `main':
+/tmp/cc6m0lhM.o: In function `main':
 /home/jameson/work/port/freesci/configure:1708: undefined reference to `initscr'
 collect2: ld returned 1 exit status
 configure: failed program was:
@@ -68,15 +68,8 @@ configure:2017: checking for GLIB - version >= 1.2.0
 configure:2116: gcc -o conftest -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include   conftest.c -L/usr/local/lib -lglib  1>&5
 configure:2209: checking for libpng
 configure:2256: gcc -E   conftest.c >/dev/null 2>conftest.out
-configure:2252: png.h: No such file or directory
-configure: failed program was:
-#line 2250 "configure"
-#include "confdefs.h"
-
-#include <png.h>
-configure:2256: gcc -E  -I/usr/local/foo/include conftest.c >/dev/null 2>conftest.out
-configure:2297: gcc -o conftest -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include   -I/usr/local/foo/include   -L/usr/local/lib -lglib conftest.c  1>&5
-/tmp/ccdZObly.o: In function `main':
+configure:2297: gcc -o conftest -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include      -L/usr/local/lib -lglib conftest.c  1>&5
+/tmp/cckqm3WL.o: In function `main':
 /home/jameson/work/port/freesci/configure:2293: undefined reference to `png_info_init'
 collect2: ld returned 1 exit status
 configure: failed program was:
@@ -86,5 +79,5 @@ configure: failed program was:
 int main() {
 png_info_init((png_infop)0);
 ; return 0; }
-configure:2297: gcc -o conftest -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include  -lpng -I/usr/local/foo/include   -L/usr/local/lib -lglib conftest.c  1>&5
+configure:2297: gcc -o conftest -g -O2 -I/usr/local/lib/glib/include -I/usr/local/include  -lpng    -L/usr/local/lib -lglib conftest.c  1>&5
 configure:2361: checking whether byte ordering is bigendian

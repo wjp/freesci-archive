@@ -768,6 +768,7 @@ script_map_selectors(state_t *s, selector_map_t *map)
 {
   map->init = script_find_selector(s, "init");
   map->play = script_find_selector(s, "play");
+  FIND_SELECTOR(replay, "replay");
   map->x = script_find_selector(s, "x");
   map->y = script_find_selector(s, "y");
   map->z = script_find_selector(s, "z");

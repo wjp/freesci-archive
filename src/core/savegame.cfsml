@@ -295,7 +295,7 @@ RECORD port_t "port_t" {
 
 
 RECORD state_t "state_t" {
-  byte restarting_flag;
+  byte restarting_flags;
   byte have_mouse_flag;
   byte pic_not_valid;
   byte pic_is_new;
