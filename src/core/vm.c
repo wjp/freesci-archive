@@ -98,8 +98,8 @@ script_error(s, __LINE__, "Heap address space violation on read")   \
 
 #define PUT_HEAP(address, value) if (((guint16)(address)) < 800) \
 script_error(s, __LINE__, "Heap address space violation on write");        \
-else { s->heap[(guint16) address] = (value) &0xff;               \
- s->heap[((guint16)address) + 1] = ((value) >> 8) & 0xff;}
+else { s->heap[(guint16)(address)] = (value) &0xff;               \
+ s->heap[((guint16)(address)) + 1] = ((value) >> 8) & 0xff;}
 /* Sets a heap value if allowed */
 
 #define CLASS_ADDRESS(classnr) (((classnr < 0) || (classnr >= s->classtable_size)) ?              \
@@ -1045,7 +1045,6 @@ lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
   /* Number of variable selectors */
 
   int i;
-
   for (i = 0; i < varselector_nr * 2; i += 2)
     if (GET_HEAP(heappos + SCRIPT_SELECTOR_OFFSET + varselector_nr * 2 + i) == selectorid)
       { /* Found it? */

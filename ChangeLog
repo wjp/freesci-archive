@@ -1,3 +1,11 @@
+1999-11-26  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kernel.c: Killed the bugs that caused background buffers
+	to run out and made QfG1 stop with the PC set to 0 in the main menu
+	sometimes. Yes, those two bugs were related- both were "missing
+	compatibility features" caused by the dynamic view list not being
+	cleared when DrawPic was called.
+
 1999-11-25  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kernel.c (_k_make_view_list): Potential fix for the

@@ -166,13 +166,25 @@ extern resource_t *resource_map;
 #ifndef _GET_INT_16
 #define _GET_INT_16
 
+
 #ifdef WORDS_BIGENDIAN
-gint16 getInt16(guint8* d);
-#else
+
+#define getInt16(d) (gint16)GUINT16_SWAP_LE_BE(*((guint16 *)(d)))
+#define getUInt16(d) GUINT16_SWAP_LE_BE(*((guint16 *)(d)))
+
+#else /* !WORDS_BIGENDIAN */
+
 #define getInt16(d) (*((gint16 *)(d)))
+#define getUInt16(d) (*((guint16 *)(d)))
+
+#endif /* !WORDS_BIGENDIAN */
+//gint16 getInt16(guint8* d);
+//#else
+//#define getInt16(d) (*((gint16 *)(d)))
+//#endif
+//#endif
+//#define getUInt16(_x_) ((guint16) getInt16(_x_))
 #endif
-#endif
-#define getUInt16(_x_) ((guint16) getInt16(_x_))
 /* Turns a little endian 16 bit value into a machine-dependant 16 bit value
 ** Parameters: d: Pointer to the memory position from which to read
 ** Returns   : (gint16) The (possibly converted) 16 bit value

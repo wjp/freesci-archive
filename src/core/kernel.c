@@ -186,8 +186,8 @@ KERNEL_OOPS("Heap address space violation on read")  \
 
 #define PUT_HEAP(address, value) { if (((guint16)(address)) < 800) \
 KERNEL_OOPS("Heap address space violation on write");        \
-else { s->heap[(guint16) address] = (value) &0xff;               \
- s->heap[((guint16)address) + 1] = ((value) >> 8) & 0xff;}}
+else { s->heap[((guint16)(address))] = (value) &0xff;               \
+ s->heap[((guint16)(address)) + 1] = ((value) >> 8) & 0xff;}}
 /* Sets a heap value if allowed */
 
 #ifdef SCI_KERNEL_DEBUG
@@ -572,7 +572,6 @@ kUnLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 }
 
-
 void
 kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
@@ -627,6 +626,7 @@ kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
   if (i < SCRIPT_MAX_CLONES)
     s->clone_list[i] = new_offs; /* Log this clone */
   else SCIkwarn(SCIkWARNING, "Could not log clone at %04x\n", new_offs);
+
 }
 
 
@@ -657,6 +657,10 @@ kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
   if (i < SCRIPT_MAX_CLONES)
     s->clone_list[i] = 0; /* un-log clone */
   else SCIkwarn(SCIkWARNING, "Could not remove log entry from clone at %04x\n", offset);
+
+  for (i = 0; i < s->dyn_views_nr; i++)
+    if (s->dyn_views[i].obj == offset) /* Is it in the dyn_view list? */
+      s->dyn_views[i].obj = 0; /* Remove it from there */
 
   offset += SCRIPT_OBJECT_MAGIC_OFFSET; /* Step back to beginning of object */
 
@@ -2503,6 +2507,8 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 void
 _k_view_list_free_backgrounds(state_t *s, view_object_t *list, int list_nr);
+void
+_k_view_list_dispose(state_t *s, view_object_t **list_ptr, int *list_nr_ptr);
 
 void
 kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -2515,12 +2521,12 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
     if (s->version < SCI_VERSION_FTU_NEWER_DRAWPIC_PARAMETERS) {
       if (!PARAM_OR_ALT(2, 0)) {
 	clear_picture(s->pic, 15);
-	_k_view_list_free_backgrounds(s, s->dyn_views, s->dyn_views_nr);
+	_k_view_list_dispose(s, &(s->dyn_views), &(s->dyn_views_nr));
       }
     } else
       if (PARAM_OR_ALT(2, 1)) {
 	clear_picture(s->pic, 15);
-	_k_view_list_free_backgrounds(s, s->dyn_views, s->dyn_views_nr);
+	_k_view_list_dispose(s, &(s->dyn_views), &(s->dyn_views_nr));
       }
 
     draw_pic0(s->pic, 1, PARAM_OR_ALT(3, 0), resource->data);
@@ -2853,7 +2859,8 @@ _k_dyn_view_list_prepare_change(state_t *s)
   int list_nr = s->dyn_views_nr;
   int i;
 
-  for (i = 0; i < list_nr; i++) {
+  for (i = 0; i < list_nr; i++) 
+    if (list[i].obj) {
     word signal = GET_HEAP(list[i].signalp);
 
     if (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE)) {
@@ -2879,7 +2886,8 @@ _k_restore_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
 {
   int i;
 
-  for (i = 0; i < list_nr; i++) {
+  for (i = 0; i < list_nr; i++)
+    if (list[i].obj) {
     word signal = GET_HEAP(list[i].signalp);
     SCIkdebug(SCIkGRAPHICS, "Trying to restore with signal = %04x\n", signal);
 
@@ -2919,7 +2927,8 @@ _k_view_list_free_backgrounds(state_t *s, view_object_t *list, int list_nr)
 {
   int i;
 
-  for (i = 0; i < list_nr; i++) {
+  for (i = 0; i < list_nr; i++)
+    if (list[i].obj) {
     int handle = GET_HEAP(list[i].underBitsp);
     int signal = GET_HEAP(list[i].signalp);
 
@@ -2936,7 +2945,8 @@ _k_save_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
 {
   int i;
 
-  for (i = 0; i < list_nr; i++) {
+  for (i = 0; i < list_nr; i++)
+    if (list[i].obj) {
     int handle;
 
     if (!(list[i].underBitsp))
@@ -2961,7 +2971,8 @@ _k_view_list_dispose_loop(state_t *s, view_object_t *list, int list_nr,
 {
   int i;
 
-  for (i = 0; i < list_nr; i++) {
+  for (i = 0; i < list_nr; i++)
+    if (list[i].obj) {
     if (UGET_HEAP(list[i].signalp) & _K_VIEW_SIG_FLAG_DISPOSE_ME)
       if (invoke_selector(INV_SEL(list[i].obj, delete, 1), 0))
 	SCIkwarn(SCIkWARNING, "Object at %04x requested deletion, but does not have"
@@ -3100,6 +3111,24 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
   return retval;
 }
 
+
+void
+_k_view_list_dispose(state_t *s, view_object_t **list_ptr, int *list_nr_ptr)
+     /* Unallocates all list element data, frees the list */
+{
+  int i;
+  view_object_t *list = *list_ptr;
+
+  if (!*list_nr_ptr)
+    return; /* Nothing to do :-( */
+
+  _k_view_list_free_backgrounds(s, list, *list_nr_ptr);
+
+  free (list);
+  *list_ptr = NULL;
+  *list_nr_ptr = 0;
+}
+
 void
 _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int use_signal)
      /* Draws list_nr members of list to s->pic. If use_signal is set, do some magic with the
@@ -3111,7 +3140,8 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int use_signal)
   if (s->view_port != s->dyn_view_port)
     return; /* Return if the pictures are meant for a different port */
 
-  for (i = 0; i < list_nr; i++) {
+  for (i = 0; i < list_nr; i++) 
+    if (list[i].obj) {
     word signal = (use_signal)? GET_HEAP(list[i].signalp) : 0;
 
     /* Now, if we either don't use signal OR if signal allows us to draw, do so: */
@@ -3169,7 +3199,8 @@ _k_dyn_view_list_accept_change(state_t *s)
   _k_save_view_list_backgrounds(s, list, list_nr);
   s->view_port = oldvp;
 
-  for (i = 0; i < list_nr; i++) {
+  for (i = 0; i < list_nr; i++)
+    if (list[i].obj) {
     word signal = GET_HEAP(list[i].signalp);
 
     if (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE) && !(signal & _K_VIEW_SIG_FLAG_HIDDEN)) {

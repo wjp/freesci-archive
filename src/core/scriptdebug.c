@@ -930,9 +930,10 @@ objinfo(state_t *s, heap_ptr pos)
 	+ selectors * 2;
 
     functIDoffset = s->heap + pos + SCRIPT_FUNCTAREAPTR_MAGIC
-      + getInt16(s->heap + pos + SCRIPT_FUNCTAREAPTR_OFFSET);
+      + getUInt16(s->heap + pos + SCRIPT_FUNCTAREAPTR_OFFSET);
 
     functions = getInt16(functIDoffset - 2);
+    sciprintf("%d functions starting at pos(%04x) + %d + funcoffs(pos + %d)\n", functions, pos, SCRIPT_FUNCTAREAPTR_MAGIC, SCRIPT_FUNCTAREAPTR_OFFSET);
 
     functoffset = functIDoffset + 2 + functions * 2;
 
@@ -954,7 +955,12 @@ objinfo(state_t *s, heap_ptr pos)
       for (i = 0; i < functions; i++) {
 	word selectorID = getInt16(functIDoffset + i*2);
 
-	sciprintf("  %s[%04x] at %04x\n", s->selector_names[selectorID/2], selectorID,
+	if (selectorID > s->selector_names_nr) {
+	  sciprintf("Invalid selector number: %04x!\n", selectorID);
+	  return;
+	}
+
+	sciprintf("  %s[%04x] at %04x\n", s->selector_names[selectorID], selectorID,
 		  0xffff & getInt16(functoffset + i*2));
       }
     } /* if function selectors are present */
@@ -1093,6 +1099,11 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
   if (sci_debug_flags & _DEBUG_FLAG_LOGGING) {
     int old_debugstate = _debugstate_valid;
 
+    _pc = pc;
+    _sp = sp;
+    _pp = pp;
+    _objp = objp;
+    _restadjust = restadjust;
     sciprintf("acc=%04x  ", s->acc & 0xffff);
     _debugstate_valid = 1;
     disassemble(s, *pc);
