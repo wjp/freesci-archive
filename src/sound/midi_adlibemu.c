@@ -30,6 +30,7 @@
 #include "fmopl.h"
 
 /* #define DEBUG_ADLIB */
+/* #define ADLIB_MONO */
 
 /* shamelessly lifted from claudio's XMP */
 
@@ -116,7 +117,7 @@ static inline int opl_write_R (int a, int v)
 static inline int opl_write(int a, int v)
 {
   opl_write_L(a,v);
-  opl_write_R(a,v);
+  return opl_write_R(a,v);
 }
 
 /*
@@ -281,10 +282,12 @@ int adlibemu_start_note(int chn, int note, int velocity)
   volume_L = velocity * vol[chn] / 128;     /* Scale channel volume */
   volume_R = velocity * vol[chn] / 128;     /* Scale channel volume */
 
+#ifndef ADLIB_MONO
   if (pan[chn] > 0x3f)  /* pan right; so we scale the left down. */
     volume_L = volume_L / 0x3f * (0x3f - (pan[chn] - 0x3f));
   else if (pan[chn] < 0x3f) /* pan left; so we scale the right down.*/
     volume_R = volume_R / 0x3f * (0x3f - (0x3f-pan[chn]));
+#endif 
 
   volume_R = my_midi_fm_vol_table[volume_R];  /* scale logarithmically */
   volume_L = my_midi_fm_vol_table[volume_L];  /* scale logarithmically */
