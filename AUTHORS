@@ -195,8 +195,10 @@ sound/
 	midiout.c (various changes)
 	midiout_alsaraw.c (various changes)
 	midiout_unixraw.c (various changes)
+	pcmout
 	polled_ss_sdl.c
 	soundserver.c (abstaction part)
+	midi_adlibemu.c
 	
 gfx/drivers/
 	sdl_driver.c

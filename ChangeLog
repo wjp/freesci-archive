@@ -1,3 +1,16 @@
+2002-09-16  Solomon Peachy <pizza@shaftnet.org>
+
+	* AUTHORS, src/engine/kmenu.c:   Add my name for blame
+          assignment purposes.
+	* README:  Minor documentation update.
+	* src/sound/pcmout.h:  Return a "full" buffer length even if we
+	  don't have the adlib emulator running.  Fixes high CPU
+	  utilization in the PCM subsystem.
+	* src/sound/fmopl.c, src/sound/fmopl.h:  Write directly to the
+	  interleaved output buffer.
+	* src/sound/midi_adlibemu.c:  Mangled to use the Sierra SCI
+	  volume tables, and implemented Pitch Bend, disabled for now.
+
 2002-09-16  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/include/resource.h (IS_VALID_FD): Macro added for portability.

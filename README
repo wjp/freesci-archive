@@ -11,7 +11,6 @@ This release has the following limitations (plus some bugs):
 - Only SCI0 games are supported
 - The SCI debug functions aren't fully supported (and probably never will be,
   since we're using our own debug functions)
-- Sound is only supported on systems that support sequencer or raw MIDI output
 
 It has the following improvements over Sierra SCI:
 - Support for various filters and extended drawing operations for graphics

@@ -140,7 +140,8 @@ struct {
 	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research\n\n"
 	 "Rink Springer\nPort to the DOS platform, several bug fixes\n\n"
 	 "Robey Pointer\nBug tracking system hosting\n\n"
-	 "Sergey Lapin\nPort of Carl's type 2 decompression code",
+	 "Sergey Lapin\nPort of Carl's type 2 decompression code\n\n"
+	 "Solomon Peachy\nSDL ports and much of the sound subsystem",
 	 0, 15},
 	{"Special Thanks",
 	 "\nSpecial Thanks\n\n\nto the linuxgames.com and telefragged.com crew\nfor hosting us\n\n"

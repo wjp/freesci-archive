@@ -2039,7 +2039,7 @@ void YM3812SetUpdateHandler(int which,OPL_UPDATEHANDLER UpdateHandler,int param)
 ** '*buffer' is the output buffer pointer
 ** 'length' is the number of samples that should be generated
 */
-void YM3812UpdateOne(int which, INT16 *buffer, int length)
+void YM3812UpdateOne(int which, INT16 *buffer, int length, int interleave)
 {
 	FM_OPL		*OPL = OPL_YM3812[which];
 	UINT8		rhythm = OPL->rhythm&0x20;
@@ -2099,7 +2099,10 @@ void YM3812UpdateOne(int which, INT16 *buffer, int length)
 		#endif
 
 		/* store to sound buffer */
-		buf[i] = lt;
+			  if (interleave)
+			    buf[i*2] = lt;
+			  else
+			    buf[i] = lt;
 
 		advance(OPL);
 	}

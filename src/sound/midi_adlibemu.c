@@ -33,10 +33,9 @@
 
 int midi_adlibemu_reset(void);
 
-/* #define DEBUG_ADLIB */
-/* #define ADLIB_MONO */
-/* #define ADLIB_LINEAR_VOLUME */
-/* #define ADLIB_NO_SHIFT_VOLUME */ 
+//#define DEBUG_ADLIB
+//#define ADLIB_MONO
+//#define ADLIB_PITCH_BEND
 
 /* portions shamelessly lifted from claudio's XMP */
 
@@ -66,6 +65,13 @@ static int ym3812_note[13] = {
     0x2ae
 };
 
+static guint8 sci_adlib_vol_base[16] = {
+  0x00, 0x11, 0x15, 0x19, 0x1D, 0x22, 0x26, 0x2A, 
+  0x2E, 0x23, 0x37, 0x3B, 0x3F, 0x3F, 0x3F, 0x3F
+};
+static guint8 sci_adlib_vol_tables[16][64];
+
+
 /* logarithmic relationship between midi and FM volumes */
 static int my_midi_fm_vol_table[128] = {
    0,  11, 16, 19, 22, 25, 27, 29, 32, 33, 35, 37, 39, 40, 42, 43,
@@ -79,10 +85,21 @@ static int my_midi_fm_vol_table[128] = {
    123, 123, 124, 124, 125, 125, 126, 126, 127
 };
 
+static int my_midi_fm_vol_table2[64] = {
+   0,  8, 11, 13, 16, 17, 18, 21,
+   22, 24, 25, 26, 27, 28, 29, 30,
+   32, 32, 33, 34, 35, 36, 37, 38,
+   39, 40, 40, 41, 42, 43, 43, 44,
+   45, 45, 46, 47, 48, 48, 49, 49,
+   50, 51, 51, 52, 53, 53, 54, 54,
+   55, 55, 56, 56, 57, 57, 58, 58, 
+   59, 59, 60, 60, 61, 61, 62, 63
+};
+
 /* back to your regularly scheduled definitions */
 
 static guint8 instr[MIDI_CHANNELS];
-static guint8 pitch[MIDI_CHANNELS];
+static guint16 pitch[MIDI_CHANNELS];
 static guint8 vol[MIDI_CHANNELS];
 static guint8 pan[MIDI_CHANNELS];
 static int free_voices = ADLIB_VOICES;
@@ -91,20 +108,34 @@ static guint8 oper_chn[ADLIB_VOICES];
 
 static guint8 adlib_reg_L[256];
 static guint8 adlib_reg_R[256];
+static guint8 adlib_master;
+
 
 /* initialise note/operator lists, etc. */
 void adlibemu_init_lists()
 {
+  int i,j;
+
+  for (i = 0 ; i < 16 ; i++) {
+    for (j = 0; j < 64 ; j++) {
+      sci_adlib_vol_tables[i][j] = ((guint16)sci_adlib_vol_base[i]) * j / 63;
+    }
+  }
+
+  for (i = 0; i < MIDI_CHANNELS ; i++) {
+    pitch[i] = 8192;  /* center the pitch wheel */
+  }
+
   free_voices = ADLIB_VOICES;
 
   memset(instr, 0, sizeof(instr));
-  memset(pitch, 0, sizeof(pitch));
   memset(vol, 0x7f, sizeof(vol));
   memset(pan, 0x3f, sizeof(pan));
   memset(adlib_reg_L, 0, sizeof(adlib_reg_L));
   memset(adlib_reg_R, 0, sizeof(adlib_reg_R));
   memset(oper_chn, 0xff, sizeof(oper_chn));
   memset(oper_note, 0xff, sizeof(oper_note));
+  adlib_master=12;
 }
 
 /* more shamelessly lifted from xmp and adplug.  And altered.  :) */
@@ -162,36 +193,28 @@ void synth_setpatch (int voice, guint8 *data)
 
 void synth_setvolume_L (int voice, int volume)
 {
-#ifndef ADLIB_NO_SHIFT_VOLUME
-  volume = volume >> 1;  /* adlib is 6-bit, midi is 7-bit */
-#endif
-
   /* algorithm-dependent; we may need to set both operators. */
   if (adlib_reg_L[register_base[10]+voice] & 1)
     opl_write_L(register_base[2]+register_offset[voice],
-	      ((63-volume) |
+	      (guint8)((63-volume) |
 	       (adlib_reg_L[register_base[2]+register_offset[voice]]&0xc0)));
 
   opl_write_L(register_base[3]+register_offset[voice],
-	      ((63-volume) |
+	      (guint8)((63-volume) |
 	       (adlib_reg_L[register_base[3]+register_offset[voice]]&0xc0)));
 
 }
 
 void synth_setvolume_R (int voice, int volume)
 {
-#ifndef ADLIB_NO_SHIFT_VOLUME
-  volume = volume >> 1;  /* adlib is 6-bit, midi is 7-bit */
-#endif
-
   /* now for the other side. */
   if (adlib_reg_R[register_base[10]+voice] & 1)
     opl_write_R(register_base[2]+register_offset[voice],
-		((63-volume) |
+		(guint8)((63-volume) |
 		 (adlib_reg_R[register_base[2]+register_offset[voice]]&0xc0)));
   
   opl_write_R(register_base[3]+register_offset[voice],
-	      ((63-volume) |
+	      (guint8)((63-volume) |
 	       (adlib_reg_R[register_base[3]+register_offset[voice]]&0xc0)));
 
 }
@@ -204,19 +227,30 @@ void synth_setvolume (int voice, int volume)
 
 void synth_setnote (int voice, int note, int bend)
 {
-    int n, fre, oct;
+    int n, fre, oct, delta;
 
+    delta = 0;
+#if defined(ADLIB_PITCH_BEND)
+    if (bend > 8192) {
+      // pitch bend up.
+      bend -= 8192;
+      delta = (ym3812_note[n+1] - ym3812_note[n]) * bend / 8192; 
+    } else if (bend < 8192) {
+      // bend down.
+      delta = (ym3812_note[n-1] - ym3812_note[n]) * bend / 8192;
+    }
+#endif
     n = note % 12;
-    fre = ym3812_note[n] + (ym3812_note[n + 1] - ym3812_note[n]) * bend / 100;
+    fre = ym3812_note[n] + delta;
+
     oct = note / 12 - 1;
 
     if (oct < 0)
-        oct = 0;
+      oct = 0;
 
     opl_write(0xa0 + voice, fre & 0xff);
     opl_write(0xb0 + voice,
         0x20 | ((oct << 2) & 0x1c) | ((fre >> 8) & 0x03));
-
 #ifdef DEBUG_ADLIB
     printf("-- %02x %02x\n", adlib_reg_L[0xa0+voice], adlib_reg_L[0xb0+voice]);
 #endif
@@ -256,8 +290,6 @@ int adlibemu_stop_note(int chn, int note, int velocity)
   opl_write_L(0xb0+op,(adlib_reg_L[0xb0+op] & 0xdf));
   opl_write_R(0xb0+op,(adlib_reg_R[0xb0+op] & 0xdf));
 
-  /*   synth_setnote(op, note, pitch[chn]);  */
-
   oper_chn[op] = 255;
   oper_note[op] = 255;
 
@@ -292,9 +324,11 @@ int adlibemu_start_note(int chn, int note, int velocity)
     return -1;
   }
 
-  volume_L = velocity * vol[chn] / 128;     /* Scale channel volume */
-  volume_R = velocity * vol[chn] / 128;     /* Scale channel volume */
+  /* Scale channel volume */
+  volume_L = velocity * vol[chn] / 128;
+  volume_R = velocity * vol[chn] / 128;
 
+  /* Apply a pan */
 #ifndef ADLIB_MONO
   if (pan[chn] > 0x3f)  /* pan right; so we scale the left down. */
     volume_L = volume_L / 0x3f * (0x3f - (pan[chn] - 0x3f));
@@ -302,9 +336,22 @@ int adlibemu_start_note(int chn, int note, int velocity)
     volume_R = volume_R / 0x3f * (0x3f - (0x3f-pan[chn]));
 #endif 
 
-#ifndef ADLIB_LINEAR_VOLUME
-  volume_R = my_midi_fm_vol_table[volume_R];  /* scale logarithmically */
-  volume_L = my_midi_fm_vol_table[volume_L];  /* scale logarithmically */
+  volume_R = volume_R >> 1;
+  volume_L = volume_L >> 1;
+
+  /* clip volume just in case */
+  if (volume_L > 63)
+    volume_L = 63;
+  if (volume_R > 63)
+    volume_R = 63;  
+
+  /* logarithmically scale */
+#if 1
+  volume_R = my_midi_fm_vol_table2[volume_R];
+  volume_L = my_midi_fm_vol_table2[volume_L];
+#else
+  volume_R = sci_adlib_vol_tables[adlib_master][volume_R];
+  volume_L = sci_adlib_vol_tables[adlib_master][volume_L];
 #endif
 
   inst = instr[chn];
@@ -448,7 +495,9 @@ int midi_adlibemu_event(guint8 command, guint8 note, guint8 velocity, guint32 de
     return adlibemu_stop_note(channel, note, velocity);
   case 0x90:  /* noteon and noteoff */
     return adlibemu_start_note(channel, note, velocity);
-  case 0xe0:    /* XXXX Pitch bend NYI */
+  case 0xe0:   /* Pitch bend */
+    pitch[channel] = (note & 0x7f) | ((velocity & 0x7f) << 7);
+    printf("ADLIB:  Pitch bend %04x %02x %02x\n", pitch[channel], note, velocity);
     break;
   case 0xb0:    /* CC changes. */
     switch (note) {
@@ -498,6 +547,21 @@ int midi_adlibemu_event2(guint8 command, guint8 param, guint32 delta)
   return 0;
 }
 
+int midi_adlibemu_volume(guint8 volume)
+{
+  guint16 i;
+
+  i = (guint16)volume * 15 / 100;
+
+  adlib_master=i;
+
+#ifdef DEBUG_ADLIB
+  printf("ADLIB: master volume set to %d\n", adlib_master);
+#endif
+
+  return 0;
+}
+
 /* the driver struct */
 
 midi_device_t midi_device_adlibemu = {
@@ -508,6 +572,7 @@ midi_device_t midi_device_adlibemu = {
   &midi_adlibemu_event,
   &midi_adlibemu_event2,
   &midi_adlibemu_reset,
+  //&midi_adlibemu_volume,
   NULL,
   &midi_adlibemu_reverb,
   003,		/* patch.003 */
@@ -521,9 +586,7 @@ midi_device_t midi_device_adlibemu = {
 */
 int synth_mixer (gint16 *buffer, int count)
 {
-  int i;
   gint16 *ptr = buffer;
-  static gint16 databuf[BUFFER_SIZE];
 
   if (count > BUFFER_SIZE)
     count = BUFFER_SIZE;
@@ -533,21 +596,8 @@ int synth_mixer (gint16 *buffer, int count)
   if (!ready)
     return 0;
 
-  YM3812UpdateOne (ADLIB_LEFT, databuf, count); 
-
-  for (i = 0; i < count ; i++) {
-    *ptr = databuf[i];
-    ptr += 2;
-  }
-
-  ptr = buffer;
-  ptr++;
-
-  YM3812UpdateOne (ADLIB_RIGHT, databuf, count); 
-  for (i = 0; i < count ; i++) {
-    *ptr = databuf[i];
-    ptr+=2;
-  }
+  YM3812UpdateOne (ADLIB_LEFT, ptr, count, 1); 
+  YM3812UpdateOne (ADLIB_RIGHT, ptr+1, count, 1);   
 
   return count;
 }

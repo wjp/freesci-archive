@@ -65,7 +65,13 @@ int synth_mixer (gint16* tmp_bk, int samples);
 /* returns # of frames, not bytes */
 int mix_sound(int count)
 {
-	return synth_mixer(snd_buffer, count);
+	int i;
+	i = synth_mixer(snd_buffer, count);
+
+	if (i <= 0)
+		i = count;
+
+	return i;
 }
 
 /* the pcmout_null sound driver */
