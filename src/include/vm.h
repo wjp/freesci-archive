@@ -221,13 +221,13 @@ typedef struct {
 } hunk_t;
 
 /* clone_table_t */
-DECLARE_HEAPENTRY(clone);
+DECLARE_HEAPENTRY(clone)
 /* node_table_t */
-DECLARE_HEAPENTRY(node);
+DECLARE_HEAPENTRY(node)
 /* list_table_t */
-DECLARE_HEAPENTRY(list); /* list entries */
+DECLARE_HEAPENTRY(list) /* list entries */
 /* hunk_table_t */
-DECLARE_HEAPENTRY(hunk);
+DECLARE_HEAPENTRY(hunk)
 
 typedef struct {
 	int size;

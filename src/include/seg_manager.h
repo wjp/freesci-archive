@@ -45,10 +45,10 @@
 /* SCRIPT_ID must be 0 */
 typedef enum {
 	SCRIPT_ID,
-	SEG_ID,
+	SEG_ID
 } id_flag;
 
-void dbg_print( char* msg, int i );		// for debug only
+void dbg_print( char* msg, int i );		/* for debug only */
 
 /* verify the the given condition is true, output the message if condition is false, and exit
 ** Parameters:
@@ -95,9 +95,9 @@ struct _mem_obj;
 	: NULL /* Invalid index */
 
 typedef struct _seg_manager_t {
-	int_hash_map_t* id_seg_map; // id - script id; seg - index of heap
+	int_hash_map_t* id_seg_map; /* id - script id; seg - index of heap */
 	struct _mem_obj** heap;
-	int heap_size;		// size of the heap
+	int heap_size;		/* size of the heap */
 	int reserved_id;
 
 	seg_id_t clones_seg_id; /* ID of the (a) clones segment */
@@ -129,13 +129,13 @@ typedef struct _seg_manager_t {
 	** See also sys_string_acquire();
 	*/
 
-	// memory operations
-	void (*mset) (struct _seg_manager_t* self, int offset, int c, size_t n, int id, int flag);	// memset
-	// dst - inside the seg_manager, its an offset, src - the same as dst; memcpy
+	/* memory operations */
+	void (*mset) (struct _seg_manager_t* self, int offset, int c, size_t n, int id, int flag);	/* memset */
+	/* dst - inside the seg_manager, its an offset, src - the same as dst; memcpy */
 	void (*mcpy_in_in) (struct _seg_manager_t* self, int dst, const int src, size_t n, int id, int flag);
-	// dst - inside the seg_manager, its an offset, src - absolute address, outside seg_manager; memcpy
+	/* dst - inside the seg_manager, its an offset, src - absolute address, outside seg_manager; memcpy */
 	void (*mcpy_in_out) (struct _seg_manager_t* self, int dst, const void* src, size_t n, int id, int flag);
-	// dst - absolute address, outside seg_manager; src - inside the seg_manager, its an offset, memcpy
+	/* dst - absolute address, outside seg_manager; src - inside the seg_manager, its an offset, memcpy */
 	void (*mcpy_out_in) (struct _seg_manager_t* self, void* dst, const int src, size_t n, int id, int flag);
 
 	gint16 (*get_heap) (struct _seg_manager_t* self, reg_t reg, mem_obj_enum mem_type );
@@ -227,7 +227,7 @@ typedef struct _seg_manager_t {
 
 } seg_manager_t;
 
-// implementation of seg_manager method
+/* implementation of seg_manager method */
 void sm_init (seg_manager_t* self);
 /* initialize the member variables
 */
@@ -246,7 +246,7 @@ int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, in
 
 int sm_deallocate_script (seg_manager_t* self, struct _state *s, int script_nr);
 void sm_update (seg_manager_t* self);
-// memory operations
+/* memory operations */
 void sm_object_init (object_t* object); 
 mem_obj_t* mem_obj_allocate();
 void sm_free( mem_obj_t* mem );
@@ -260,14 +260,14 @@ void sm_put_heap (seg_manager_t* self, reg_t reg, gint16 value, mem_obj_enum mem
 
 int sm_isloaded (seg_manager_t* self, int id, int flag);
 
-// if flag = 0, id - script id
-// otherwise,   id - seg id
+/* if flag = 0, id - script id
+** otherwise,   id - seg id  */
 void sm_increment_lockers (seg_manager_t* self, int id, int flag);
 void sm_decrement_lockers (seg_manager_t* self, int id, int flag);
 int sm_get_lockers (seg_manager_t* self, int id, int flag);
 void sm_set_lockers (seg_manager_t* self, int lockers, int id, int flag);
 
-int sm_get_heappos (struct _seg_manager_t* self, int id, int flag);	// return 0
+int sm_get_heappos (struct _seg_manager_t* self, int id, int flag);	/* return 0 */
 
 void sm_set_export_table_offset (struct _seg_manager_t* self, int offset,
 				 int magic_offset, int id, int flag);
@@ -288,10 +288,11 @@ guint16 sm_validate_export_func(struct _seg_manager_t* self, int pubfunct, int s
    return the pubfunction pointer, or 0 if invalid
 **/
 
-// validate the seg
-// return:
-//	0 - invalid seg
-//	1 - valid seg
+/* validate the seg
+** return:
+**	0 - invalid seg
+**	1 - valid seg
+*/
 int sm_check (seg_manager_t* self, int seg);
 
 #endif

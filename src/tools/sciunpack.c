@@ -37,10 +37,11 @@
 
 #include <sciresource.h>
 #include <engine.h>
-#include <sound.h>
 #include <console.h>
 
 /* #define DRAW_GRAPHICS */
+
+#undef HAVE_OBSTACK_H
 
 #ifdef _MSC_VER
 #  include <direct.h>
@@ -384,7 +385,9 @@ void unpack_resource(int stype, int snr, char *outfilename)
 	if (!outfilename) {
 		outfilename = fnamebuffer;
 		if ((stype == sci_sound) && conversion) {
+#ifdef HAVE_OBSTACK_H
 			map_MIDI_instruments(resmgr);
+#endif
 			sprintf(outfilename,"%03d.midi", snr);
 		}
 #ifdef DRAW_GRAPHICS
