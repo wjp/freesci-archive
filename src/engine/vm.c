@@ -284,7 +284,9 @@ execute_method(state_t *s, word script, word pubfunct, stack_ptr_t sp,
 		return NULL;
 	}
 
+#ifdef __GNUC__
 #warning "Re-enable execute_method debug"
+#endif
 #if 0
   /* Check if a breakpoint is set on this method */
   if (s->have_bp & BREAK_EXPORT)

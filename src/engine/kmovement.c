@@ -272,7 +272,9 @@ get_angle(int xrel, int yrel);
 void
 kDoAvoider(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+#ifdef __GNUC__
 #warning "Fix DoAvoider() selector invocations"
+#endif
 #if 0
 	heap_ptr avoider = UPARAM(0);
 	heap_ptr client, looper, mover;

@@ -514,7 +514,9 @@ typedef struct
 void
 kSort(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+#ifdef __GNUC__
 #warning "Fix kSort()"
+#endif
 #if 0
 	heap_ptr source = UPARAM(0);
 	heap_ptr dest = UPARAM(1);

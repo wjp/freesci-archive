@@ -520,7 +520,9 @@ c_step(state_t *s)
 	return 0;
 }
 
+#ifdef __GNUC__
 #warning "Re-implement con:so"
+#endif
 #if 0
 int
 c_stepover(state_t *s)
@@ -1043,7 +1045,9 @@ c_stack(state_t *s)
 	return 0;
 }
 
+#ifdef __GNUC__
 #warning "Re-implement con:scriptinfo"
+#endif
 #if 0
 int
 c_scriptinfo(state_t *s)
@@ -2055,7 +2059,9 @@ bb = GET_SELECTOR(pos, bb);
 int
 c_gfx_draw_viewobj(state_t *s)
 {
+#ifdef __GNUC__
 #warning "Re-implement con:gfx_draw_viewobj"
+#endif
 #if 0
 	heap_ptr pos = (heap_ptr) (cmd_params[0].val);
 	int is_view;
@@ -2572,7 +2578,9 @@ c_mem_info(state_t *s)
   heap_meminfo(s->_heap);
   sciprintf("Heap: Free:%04x  Max:%04x\n", heap_meminfo(s->_heap) & 0xffff, heap_largest(s->_heap) & 0xffff);
 
+#ifdef __GNUC__
 #warning "Make mem_info a little more useful"
+#endif
 
   return 0;
 }
@@ -2581,7 +2589,9 @@ c_mem_info(state_t *s)
 int
 c_objs(state_t *s)
 {
+#ifdef __GNUC__
 #warning "Re-implement 'objs'"
+#endif
 #if 0
 	int i;
 
@@ -2650,7 +2660,9 @@ static void
 viewobjinfo(state_t *s, heap_ptr pos)
 {
 #if 0
+#ifdef __GNUC__
 #warning "Re-implement viewobjinfo"
+#endif
 	char *signals[16] = {
 		"stop_update",
 		"updated",
@@ -3147,7 +3159,9 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_vmvarlist, "vmvarlist", "!", "Displays the addresses of variables in the VM");
 			con_hook_command(c_step, "s", "i*", "Executes one or several operations\n\nEXAMPLES\n\n"
 					 "    s 4\n\n  Execute 4 commands\n\n    s\n\n  Execute next command");
+#ifdef __GNUC__
 #warning "Re-enable con:so hook"
+#endif
 #if 0
 			con_hook_command(c_stepover, "so", "", "Executes one operation skipping over sends");
 #endif
@@ -3160,7 +3174,9 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "  bwt  : Print byte/word tag\n"
 					 "  c<x> : Disassemble <x> bytes\n"
 					 "  bc   : Print bytecode\n\n");
+#ifdef __GNUC__
 #warning "Re-enable con:scriptinfo hook"
+#endif
 #if 0
 			con_hook_command(c_scriptinfo, "scripttable", "", "Displays information about all\n  loaded scripts");
 #endif
@@ -3212,7 +3228,9 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_go, "go", "", "Executes the script.\n");
 			con_hook_command(c_dumpnodes, "dumpnodes", "i", "shows the specified number of nodes\n"
 					 "  from the parse node tree");
+#ifdef __GNUC__
 #warning "Re-enable savegames"
+#endif
 #if 0
 			con_hook_command(c_save_game, "save_game", "s", "Saves the current game state to\n  the hard disk");
 			con_hook_command(c_restore_game, "restore_game", "s", "Restores a saved game from the\n  hard disk");
@@ -3220,7 +3238,9 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_restart_game, "restart", "s*", "Restarts the game.\n\nUSAGE\n\n  restart [-r] [-p]"
 					 " [--play] [--replay]\n\n  There are two ways to restart an SCI\n  game:\n"
 					 "  play (-p) calls the game object's play()\n    method\n  replay (-r) calls the replay() method");
+#ifdef __GNUC__
 #warning "Re-enable con:viewinfo"
+#endif
 #if 0
 			con_hook_command(c_viewinfo, "viewinfo", "ii", "Displays the number of loops\n  and cels of each loop"
 					 " for the\n  specified view resource and palette.");
@@ -3292,7 +3312,9 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_gfx_update_zone, "gfx_update_zone", "iiii", "Propagates a rectangular area from\n  the back buffer to the front buffer"
 					 "\n\nUSAGE\n\n"
 					 "  gfx_update_zone <x> <y> <xl> <yl>");
+#ifdef __GNUC__
 #warning "Re-enable con:draw_viewobj"
+#endif
 #if 0
 			con_hook_command(c_gfx_draw_viewobj, "draw_viewobj", "i", "Draws the nsRect and brRect of a\n  dynview object.\n\n  nsRect is green, brRect\n"
 					 "  is blue.\n");

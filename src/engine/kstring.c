@@ -182,7 +182,9 @@ kSaid(state_t *s, int funct_nr, int argc, reg_t *argv)
 void
 kSetSynonyms(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+#ifdef __GNUC__
 #warning "Re-implement kSetSynonyms()"
+#endif
 #if 0
 	heap_ptr list = UPARAM(0);
 	int script;

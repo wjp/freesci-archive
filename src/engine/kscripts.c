@@ -302,7 +302,9 @@ kDisposeScript(state_t *s, int funct_nr, int argc, reg_t *argv)
 static int
 is_heap_object(state_t *s, reg_t pos)
 {
+#ifdef __GNUC__
 #warning "Optimize me!"
+#endif
 	return obj_get(s, pos) != NULL;
 }
 

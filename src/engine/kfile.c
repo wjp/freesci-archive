@@ -380,7 +380,9 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, heap_ptr argp)
     char *input_s = s->heap + output;
     char *output_s = s->heap + output;
 
+#ifdef __GNUC__
 #warning "Re-implement sanity checks upon 32 bit conversion (1)"
+#endif
 #if 0
     SCIkASSERT(input >= HEAP_MIN);
     SCIkASSERT(output >= HEAP_MIN);
@@ -396,7 +398,9 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, heap_ptr argp)
     heap_ptr output = UPARAM(2);
     char *output_s = s->heap + output;
 
+#ifdef __GNUC__
 #warning "Re-implement sanity checks upon 32 bit conversion (2)"
+#endif
 #if 0
     SCIkASSERT(output >= HEAP_MIN);
 #endif
@@ -413,7 +417,9 @@ kDeviceInfo_Win32(state_t *s, int funct_nr, int argc, heap_ptr argp)
     char *path1_s = s->heap + path1;
     char *path2_s = s->heap + path2;
 
+#ifdef __GNUC__
 #warning "Re-implement sanity checks upon 32 bit conversion (3)"
+#endif
 #if 0
     SCIkASSERT(path1 >= HEAP_MIN);
     SCIkASSERT(path2 >= HEAP_MIN);
@@ -461,7 +467,9 @@ kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, heap_ptr argp)
     heap_ptr output = UPARAM(2);
     char *output_s = (char *) s->heap + output;
 
+#ifdef __GNUC__
 #warning "Re-implement sanity checks upon 32 bit conversion (4)"
+#endif
 #if 0
     SCIkASSERT(output >= HEAP_MIN);
 #endif
@@ -474,7 +482,9 @@ kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, heap_ptr argp)
     heap_ptr output = UPARAM(1);
     char *output_s = (char *) s->heap + output;
 
+#ifdef __GNUC__
 #warning "Re-implement sanity checks upon 32 bit conversion (5)"
+#endif
 #if 0
     SCIkASSERT(output >= HEAP_MIN);
 #endif
@@ -489,7 +499,9 @@ kDeviceInfo_Unix(state_t *s, int funct_nr, int argc, heap_ptr argp)
     char *path1_s = (char *) s->heap + path1;
     char *path2_s = (char *) s->heap + path2;
 
+#ifdef __GNUC__
 #warning "Re-implement sanity checks upon 32 bit conversion (6)"
+#endif
 #if 0
     SCIkASSERT(path1 >= HEAP_MIN);
     SCIkASSERT(path2 >= HEAP_MIN);

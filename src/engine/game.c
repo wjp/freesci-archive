@@ -613,7 +613,9 @@ game_exit(state_t *s)
 
 	sciprintf("Freeing miscellaneous data...\n");
 
+#ifdef __GNUC__
 #warning "Free parser segment here"
+#endif
 	restore_ff(s->_heap); /* Restore former heap state */
 
 	if (send_calls_allocated) {
@@ -621,7 +623,9 @@ game_exit(state_t *s)
 		send_calls_allocated = 0;
 	}
 
+#ifdef __GNUC__
 #warning "Free scripts here"
+#endif
 
 	menubar_free(s->menubar);
 
