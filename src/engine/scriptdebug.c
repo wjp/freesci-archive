@@ -1503,6 +1503,18 @@ int c_bpdel(state_t *s)
   return 0;
 }
 
+int
+c_gnf(state_t *s)
+{
+  if (!s) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  vocab_gnf_foo(s->parser_branches, s->parser_branches_nr);
+  return 0;
+}
+
 void
 script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *objp,
 	     int *restadjust, int bp)
@@ -1638,6 +1650,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 		       "  are used to build Parse trees).");
       con_hook_command(c_parse, "parse", "s", "Parses a sequence of words and prints\n  the resulting parse tree.\n"
 		       "  The word sequence must be provided as a\n  single string.");
+      con_hook_command(c_gnf, "gnf", "", "Displays the Parse grammar\n  in strict GNF");
       con_hook_command(c_set_parse_nodes, "set_parse_nodes", "s*", "Sets the contents of all parse nodes.\n"
 		       "  Input token must be separated by\n  blanks.");
 #ifdef SCI_SIMPLE_SAID_CODE
