@@ -64,7 +64,7 @@ sci_res_read_entry(byte *buf, resource_t *res, int use_sci_01v)
 	return 0;
 }
 
-inline int sci1_res_type(int ofs, int *types)
+inline int sci1_res_type(int ofs, int *types, int lastrt)
 {
 	int i, last = -1;
 
@@ -76,10 +76,10 @@ inline int sci1_res_type(int ofs, int *types)
 			last=i;
 		}
 
-	return last;
+	return lastrt;
 }
 
-int sci1_parse_header(int fd, int *types)
+int sci1_parse_header(int fd, int *types, int *lastrt)
 {
 	unsigned char rtype;
 	unsigned char offset[2];
@@ -96,9 +96,12 @@ int sci1_parse_header(int fd, int *types)
 		if (rtype!=0xff)
 		{
 			types[rtype&0x7f]=(offset[1]<<8)|(offset[0]);
+			*lastrt = rtype&0x7f;
 		}
 		size+=3;
 	} while (read_ok && (rtype != 0xFF));
+
+	sciprintf("Palettes at %d\n", types[sci_palette]);
 
 	if (!read_ok) return 0;
 	
@@ -117,6 +120,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 	int resources_total_read = 0;
 	int next_entry;
 	int max_resfile_nr = 0;
+	
 	byte buf[SCI0_RESMAP_ENTRIES_SIZE];
 	fd = sci_open(RESOURCE_MAP_FILENAME, O_RDONLY | O_BINARY);
 
@@ -242,6 +246,7 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 	int *types = sci_malloc(sizeof(int) * sci1_last_resource);
 	int i;
 	byte buf[SCI1_RESMAP_ENTRIES_SIZE];
+	int lastrt;
 
 	fd = sci_open(RESOURCE_MAP_FILENAME, O_RDONLY | O_BINARY);
 
@@ -250,7 +255,7 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 
 	memset(types, 0, sizeof(int) * sci1_last_resource);
 
-	if (!(ofs = header_size = sci1_parse_header(fd, types)))
+	if (!(ofs = header_size = sci1_parse_header(fd, types, &lastrt)))
 	{
 		close(fd);
 		return SCI_ERROR_INVALID_RESMAP_ENTRY;
@@ -280,7 +285,7 @@ sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 		}
 
 		res = &(resources[resource_index]);
-		res->type = sci1_res_type(ofs, types);
+		res->type = sci1_res_type(ofs, types, lastrt);
 		res->number= SCI1_RESFILE_GET_NUMBER(buf);
 		res->status = SCI_STATUS_NOMALLOC;
 		res->file = SCI1_RESFILE_GET_FILE(buf);

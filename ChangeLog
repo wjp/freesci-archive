@@ -1,3 +1,8 @@
+2004-12-20  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/gfx/resource: Rudimentary global palette suppor added.
+	* src/scicore/resource_map.c: Fix boundary case.
+
 2004-08-15  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* acconfig.h: Removed from repository.
