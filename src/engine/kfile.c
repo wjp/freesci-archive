@@ -540,6 +540,7 @@ kCheckFreeSpace(state_t *s, int funct_nr, int argc, reg_t *argv)
     return NULL_REG;
   }
 
+  memset(buf, 0, sizeof(buf));
   for (i = 0; i < 1024; i++) /* Check for 1 MB */
     if (write(fd, buf, 1024) < 1024)
       failed = 1;

@@ -80,10 +80,10 @@ kDrawStatus(state_t *s, int funct_nr, int argc, reg_t *argv)
 	s->status_bar_foreground=fgcolor;
 	s->status_bar_background=bgcolor;
 
-	if (s->status_bar_text)
-		free(s->status_bar_text);
-
-	s->status_bar_text = NULL;
+	if (NULL != s->status_bar_text) {
+		sci_free(s->status_bar_text);
+		s->status_bar_text = NULL;
+	}
 
 	if (text.segment)
 		s->status_bar_text = sci_strdup(kernel_dereference_bulk_pointer(s, text, 0));
