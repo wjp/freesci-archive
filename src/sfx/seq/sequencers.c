@@ -26,7 +26,6 @@
 ***************************************************************************/
 
 #include <sfx_sequencer.h>
-#include <resource.h>
 
 
 #ifdef HAVE_SYS_SOUNDCARD_H

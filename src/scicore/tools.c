@@ -26,7 +26,6 @@
 
 
 #include <engine.h>
-#include <kdebug.h>
 #ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>
 #endif
@@ -514,7 +513,7 @@ sci_mkpath(char *path)
 
 
 char *
-sci_get_homedir()
+sci_get_homedir(void)
 {
 #ifdef _WIN32
 	char *_path_buf = malloc(MAX_PATH);
@@ -592,7 +591,7 @@ sci_get_from_queue(sci_queue_t *queue, int *type)
 #  include <sched.h>
 
 void
-sci_sched_yield()
+sci_sched_yield(void)
 {
 	sched_yield();
 }
@@ -695,7 +694,7 @@ sci_open(char *fname, int flags)
 }
 
 char *
-sci_getcwd()
+sci_getcwd(void)
 {
 	int size = 0;
 	char *cwd = NULL;

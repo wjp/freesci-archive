@@ -127,7 +127,7 @@ struct gfx_picture; /* forward declarations for graphics.h */
 /********** function definitions *********/
 
 menubar_t *
-menubar_new();
+menubar_new(void);
 /* Creates a new menubar struct
 ** Parameters: (void)
 ** Returns   : (menubar_t *) A pointer to the new menubar entity

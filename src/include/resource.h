@@ -400,7 +400,7 @@ sciprintf(char *fmt, ...);
 */
 
 char *
-sci_getcwd();
+sci_getcwd(void);
 /* Returns the current working directory, malloc'd.
 ** Parameters: (void)
 ** Returns   : (char *) a malloc'd cwd, or NULL if it couldn't be determined.
@@ -408,7 +408,7 @@ sci_getcwd();
 
 
 char *
-sci_get_homedir();
+sci_get_homedir(void);
 /* Returns the user's home directory
 ** Parameters: (void)
 ** Returns   : (char *) Pointer to a static buffer containing the user's home,
@@ -445,7 +445,7 @@ int sci_ffs(int _mask);
 
 
 void
-sci_sched_yield();
+sci_sched_yield(void);
 /* Yields the running process/thread to the scheduler
 ** Parameters: (void)
 ** Returns   : after a while.

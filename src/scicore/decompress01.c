@@ -50,7 +50,7 @@ static gint16 curtoken, endtoken;
 
 guint32 gbits(int numbits,  guint8 * data, int dlen);
 
-void decryptinit3()
+void decryptinit3(void)
 {
 	int i;
 	lastchar = lastbits = bitstring = stakptr = 0;

@@ -128,7 +128,7 @@ typedef struct {
 extern gfx_mode_t mode_1x1_color_index;
 
 void
-gfxr_init_static_palette();
+gfxr_init_static_palette(void);
 /* Initializes the static 256 color palette
 ** Parameters: (void)
 ** Returns   : (void)

@@ -58,7 +58,7 @@ typedef struct {
 	*/
 
 	int
-	(*exit)();
+	(*exit)(void);
 	/* Stops the timer
 	** Returns   : (int) SFX_OK on success, SFX_ERROR on failure
 	** All resources allocated with the timer should be freed as an effect

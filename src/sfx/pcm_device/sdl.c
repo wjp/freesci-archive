@@ -128,7 +128,7 @@ timer_sdl_init(void (*callback)(void *data), void *data)
 }
 
 static int
-timer_sdl_stop()
+timer_sdl_stop(void)
 {
 	sdl_sfx_timer_callback = NULL;
 

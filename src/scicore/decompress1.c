@@ -280,7 +280,7 @@ decrypt4(guint8* dest, guint8* src, int length, int complength)
 
 
 
-void decryptinit3();
+void decryptinit3(void);
 int decrypt3(guint8* dest, guint8* src, int length, int complength);
 int decompress1(resource_t *result, int resh, int early);
 

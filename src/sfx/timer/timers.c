@@ -26,7 +26,6 @@
 ***************************************************************************/
 
 #include <sfx_timer.h>
-#include <stdio.h>
 
 #ifdef HAVE_SETITIMER
 extern sfx_timer_t sfx_timer_sigalrm;
@@ -49,7 +48,7 @@ sfx_find_timer(char *name)
 	} else {
 		int n = 0;
 		while (sfx_timers[n]
-		       && strcasecmp(sfx_timers[n], name))
+		       && strcasecmp(sfx_timers[n]->name, name))
 			++n;
 
 		return sfx_timers[n];

@@ -65,7 +65,7 @@ sps_open(int patch_len, byte *patch, void *device)
 }
 
 static int
-sps_close()
+sps_close(void)
 {
 	sfx_exit_sw_sequencer(&sfx_sequencer_sw_pcspeaker);
 	return SFX_OK;

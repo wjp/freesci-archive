@@ -32,8 +32,8 @@
 #include <sciresource.h>
 
 /*#define VOCABULARY_DEBUG */
-/*#define SCI_SIMPLE_SAID_CODE *//* Whether the simplified Said() matching should be used */
-/*#define SCI_SIMPLE_SAID_DEBUG *//* uncomment to enable simple said debugging */
+/*#define SCI_SIMPLE_SAID_CODE */ /* Whether the simplified Said() matching should be used */
+/*#define SCI_SIMPLE_SAID_DEBUG */ /* uncomment to enable simple said debugging */
 
 
 #define SCRIPT_UNKNOWN_FUNCTION_STRING "[Unknown]"

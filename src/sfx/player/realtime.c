@@ -39,7 +39,7 @@ extern sfx_player_t sfx_player_realtime;
 /* Playing mechanism */
 
 static inline GTimeVal
-current_time()
+current_time(void)
 {
 	GTimeVal tv;
 	sci_get_current_time(&tv);
@@ -87,8 +87,9 @@ play_song(song_iterator_t *it, GTimeVal *wakeup_time, int writeahead_time)
 	int result;
 
 	if (play_paused) {
-fprintf(stderr, "PAUSED\n");
 		GTimeVal ct;
+		sci_get_current_time(&ct);
+
 		*wakeup_time =
 			add_time_delta(*wakeup_time, delta_time(play_pause_counter, ct));
 		play_pause_counter = ct;
@@ -123,7 +124,7 @@ fprintf(stderr, "PAUSED\n");
 }
 
 static void
-rt_timer_callback()
+rt_timer_callback(void)
 {
 	if (play_it && !play_it_done) {
 		if (!play_moredelay) {
@@ -217,14 +218,14 @@ rt_set_iterator(song_iterator_t *it, GTimeVal start_time)
 }
 
 static int
-rt_fade_out()
+rt_fade_out(void)
 {
 	fprintf(stderr, __FILE__": Attempt to fade out- not implemented yet\n");
 	return SFX_ERROR;
 }
 
 static int
-rt_stop()
+rt_stop(void)
 {
 	song_iterator_t *it = play_it;
 
@@ -249,7 +250,7 @@ rt_send_iterator_message(song_iterator_message_t msg)
 }
 
 static int
-rt_pause()
+rt_pause(void)
 {
 	sci_get_current_time(&play_pause_started);
 	/* Also, indicate that we haven't modified the time counter
@@ -261,14 +262,14 @@ rt_pause()
 }
 
 static int
-rt_resume()
+rt_resume(void)
 {
 	play_paused = 0;
 	return SFX_OK;
 }
 
 static int
-rt_exit()
+rt_exit(void)
 {
 	int retval = SFX_OK;
 

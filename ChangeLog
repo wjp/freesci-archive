@@ -1,4 +1,16 @@
+2003-12-26  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sfx/mixer/soft.c (mix_compute_buf_len): Nasty bug in new
+	code fixed, thanks to Matt and Walter
+
 2003-12-25  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sfx/mixer/soft.c (mix_compute_buf_len): Changed soft mixer
+	behaviour to handle gaps in the output stream gracefully
+
+	* src/engine/kgraphics.c: Forward-ported Matt's bugfixes to the
+	Animate() process
+	(kOnControl): Removed ad-hoc OnControl change
 
 	* src/sfx/seq/soft-pcspeaker.c (sps_delay): OB1 bug in PCM
 	sequencing fixed

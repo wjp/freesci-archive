@@ -270,7 +270,7 @@ gamestate_restore(state_t *s, char *dirname);
 */
 
 void
-other_libs_exit();
+other_libs_exit(void);
 /* Called directly before FreeSCI ends to allow libraries to clean up
 */
 

@@ -32,7 +32,6 @@
 #include <sci_memory.h>
 #include <sfx_mixer.h>
 #include <sfx_sequencer.h>
-#include <sfx_sw_sequencer.h>
 
 #define DATA seq->sw_seq_data
 

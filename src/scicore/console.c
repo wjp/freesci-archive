@@ -29,10 +29,7 @@
 
 #include <sci_memory.h>
 #include <engine.h>
-#include <console.h>
 #ifdef SCI_CONSOLE
-#include <sciresource.h>
-#include <script.h>
 
 state_t *con_gamestate = NULL;
 
@@ -46,7 +43,7 @@ typedef cmd_mm_entry_t cmd_page_t; /* Simple info page */
 typedef struct {
 	char *name;
 	char *description;
-	int (*command) ();
+	int (*command) (state_t *);
 	char *param;
 } cmd_command_t;
 
@@ -124,14 +121,14 @@ static void (*_con_pixmap_callback)(gfx_pixmap_t *) = NULL;
 int
 c_dm_stats (state_t * s)
 {
-	dmalloc_log_stats ();
+	dmalloc_log_stats();
 	return 0;
 }
 
 int
 c_dm_log_unfreed (state_t * s)
 {
-	dmalloc_log_unfreed ();
+	dmalloc_log_unfreed();
 	return 0;
 }
 
@@ -159,14 +156,14 @@ c_dm_debug (state_t * s)
 		dmalloc_debug (newval);
 	}
 	else
-		sciprintf ("dmalloc_debug is at 0x%lx\n", dmalloc_debug_current ());
+		sciprintf ("dmalloc_debug is at 0x%lx\n", dmalloc_debug_current());
 	return 0;
 }
 
 int
 c_dm_mark (state_t * s)
 {
-	unsigned long mark = dmalloc_mark ();
+	unsigned long mark = dmalloc_mark();
 
 	dmalloc_message ("------------- MARK 0x%lx ---------------\n", mark);
 	sciprintf ("mark 0x%lx\n", mark);
@@ -193,7 +190,7 @@ c_dm_print (state_t * s)
 }
 
 void
-con_init_dmalloc ()
+con_init_dmalloc()
 {
 	con_hook_command (c_dm_stats, "dm_stats", "",
 			  "Prints memory usage stats\n  to the dmalloc output file\n\n  dm_stats");
@@ -218,7 +215,7 @@ con_init_dmalloc ()
 #else /* WITH_DMALLOC */
 
 void
-con_init_dmalloc ()
+con_init_dmalloc (void)
 {
 }
 
@@ -328,7 +325,7 @@ con_init (void)
 			      "    ?obj.idx may be used to disambiguate 'obj'\n"
 			      "    by the index 'idx'.\n");
 
-		con_init_dmalloc ();
+		con_init_dmalloc();
 
 		con_hook_int (&con_passthrough, "con_passthrough",
 			      "scicon->stdout passthrough");
@@ -550,7 +547,7 @@ con_parse (state_t *s, char *command)
 	int pos = 0;
 
 	if (!_cmd_initialized)
-		con_init ();
+		con_init();
 
 	while (!done) {
 		cmd_command_t *command_todo;
@@ -698,7 +695,7 @@ con_parse (state_t *s, char *command)
 					}
 
 					if (carry == 1) {
-						command_todo->command (s);
+						command_todo->command(s);
 					}
 				}
 			}
@@ -852,7 +849,7 @@ sciprintf (char *fmt, ...)
 {
 	va_list argp;
 	size_t bufsize = 256;
-	unsigned int i;
+	int i;
 	char *buf 	= (char *) sci_malloc (bufsize);
 
 	if (NULL == fmt) {
@@ -904,7 +901,7 @@ con_set_pixmap_callback(void(*callback)(gfx_pixmap_t *))
 }
 
 int
-con_can_handle_pixmaps()
+con_can_handle_pixmaps(void)
 {
 	return _con_pixmap_callback != NULL;
 }
@@ -942,7 +939,7 @@ open_console_file (char *filename)
 }
 
 void
-close_console_file ()
+close_console_file (void)
 {
   if (con_file != NULL)
   {
@@ -1105,7 +1102,7 @@ int
 c_list (state_t * s)
 {
 	if (_lists_need_sorting)
-		con_sort_all ();
+		con_sort_all();
 
 	if (cmd_paramlength == 0)
 		{

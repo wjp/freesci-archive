@@ -170,7 +170,7 @@ con_hasopt(char *opt);
 */
 
 int
-con_can_handle_pixmaps();
+con_can_handle_pixmaps(void);
 /* Determines whether the console supports pixmap inserts
 ** Returns   : (int) non-zero iff pixmap inserts are supported
 */
@@ -207,7 +207,7 @@ con_hook_int(int *pointer, char *name, char *description);
 
 
 void
-con_gfx_init();
+con_gfx_init(void);
 /* Initializes the gfx console
 */
 
@@ -245,7 +245,7 @@ open_console_file(char *filename);
 */
 
 void
-close_console_file();
+close_console_file(void);
 /* Closes the console output file.
 ** Parameters: (void)
 ** Returns   : (void)

@@ -709,7 +709,7 @@ game_exit(struct _state *s);
 */
 
 void
-quit_vm();
+quit_vm(void);
 /* Instructs the virtual machine to abort
 ** Paramteres: (void)
 ** Returns   : (void)

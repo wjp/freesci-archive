@@ -104,7 +104,6 @@ _sci0_read_next_command(base_song_iterator_t *self, unsigned char *buf, int *res
 		fprintf(stderr, SIPFX "Attempt to read command from uninitialized iterator!\n");
 		self->init((song_iterator_t *) self);
 		return self->next((song_iterator_t *) self, buf, result);
-		return 0;
 
 	case SI_STATE_FINISHED:
 		return SI_FINISHED;

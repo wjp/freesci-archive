@@ -25,9 +25,7 @@
 
 #ifdef HAVE_SYS_SOUNDCARD_H
 
-#include <string.h>
 #include <sfx_adlib.h>
-#include <sfx_engine.h>
 
 #include <sys/ioctl.h>
 #include <sys/time.h>
@@ -51,7 +49,7 @@ static unsigned char oper_note[ADLIB_VOICES];
 static unsigned char oper_chn[ADLIB_VOICES];
 
 #if 1
-void seqbuf_dump() /* OSS upcall */
+void seqbuf_dump(void) /* OSS upcall */
 {
 	if (_seqbufptr)
 		if (write(seqfd, _seqbuf, _seqbufptr) == -1) {
@@ -63,7 +61,7 @@ void seqbuf_dump() /* OSS upcall */
 #endif
 
 /* initialise note/operator lists, etc. */
-void adlib_init_lists()
+void adlib_init_lists(void)
 {
 	int i;
 	for(i = 0 ; i < ADLIB_VOICES ; i++) {
@@ -239,7 +237,7 @@ midi_adlib_open(int data_length, byte *data_ptr, void *seq)
 
 
 static int
-midi_adlib_close()
+midi_adlib_close(void)
 {
 	SEQ_DUMPBUF();
 	return close(seqfd);

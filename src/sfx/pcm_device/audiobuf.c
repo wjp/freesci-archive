@@ -28,7 +28,7 @@
 #include <sfx_audiobuf.h>
 
 static sfx_audio_buf_chunk_t *
-sfx_audbuf_alloc_chunk()
+sfx_audbuf_alloc_chunk(void)
 {
 	sfx_audio_buf_chunk_t *ch = sci_malloc(sizeof(sfx_audio_buf_chunk_t));
 	ch->used = 0;
@@ -64,7 +64,7 @@ sfx_audbuf_free(sfx_audio_buf_t *buf)
 	sfx_audbuf_free_chain(buf->first);
 	sfx_audbuf_free_chain(buf->unused);
 	buf->first = buf->last = buf->unused = NULL;
-	buf->read_offset = 0xdeadbeef;
+	buf->read_offset = (int) 0xdeadbeef;
 }
 
 void

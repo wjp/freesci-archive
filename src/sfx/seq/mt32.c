@@ -26,12 +26,8 @@
 
 #ifdef HAVE_SYS_SOUNDCARD_H
 
-#include <string.h>
-#include <sfx_engine.h>
-
 #include <sys/ioctl.h>
 #include <sys/time.h>
-#include <sys/soundcard.h>
 
 static int delta = 0; /* Accumulated delta time */
 static midi_writer_t *midi_writer = NULL;
@@ -43,7 +39,7 @@ static int midi_mt32_write_block(guint8 *data, unsigned int count);
 static int midi_mt32_patch001_type(guint8 *data, unsigned int length);
 static int midi_mt32_patch001_type0_length(guint8 *data, unsigned int length);
 static int midi_mt32_patch001_type1_length(guint8 *data, unsigned int length);
-static int midi_mt32_sysex_delay();
+static int midi_mt32_sysex_delay(void);
 static int midi_mt32_volume(guint8 volume);
 static int midi_mt32_reverb(int param);
 static int midi_mt32_event(byte command, int argc, byte *argv);
@@ -516,7 +512,7 @@ midi_mt32_patch001_type1_length(guint8 *data, unsigned int length)
 }
 
 static int
-midi_mt32_sysex_delay()
+midi_mt32_sysex_delay(void)
 {
   /* Under Win32, we won't get any sound, in any case... */
 #ifdef HAVE_USLEEP
@@ -547,7 +543,7 @@ midi_mt32_event(byte command, int argc, byte *argv)
 
 
 static void
-delay_init()
+delay_init(void)
 {/* Wait for MT-32 initialisation to complete */
 	long endsec = mt32_init_sec, uendsec = mt32_init_usec;
 	long sec, usec;
@@ -570,7 +566,7 @@ delay_init()
 }
 
 static int
-midi_mt32_reset_timer()
+midi_mt32_reset_timer(void)
 {
 	if (mt32_init_delay) { /* We might still have to wait for initialisation to complete */
 		delay_init();

@@ -73,7 +73,6 @@ mix_init(sfx_pcm_mixer_t *self, sfx_pcm_device_t *device)
 	P->lastbuf_len = 0;
 	P->compbuf_l = malloc(sizeof(gint32) * device->buf_size);
 	P->compbuf_r = malloc(sizeof(gint32) * device->buf_size);
-fprintf(stderr, "-- ALLOCD size %d\n", device->buf_size);
 	P->played_this_second = 0;
 	P->paused = 0;
 #ifdef DEBUG
@@ -240,8 +239,9 @@ mix_compute_output(sfx_pcm_mixer_t *self, int outplen)
 	gint32 *lsrc = P->compbuf_l;
 	gint32 *rsrc = P->compbuf_r;
 	int sample_size = SFX_PCM_SAMPLE_SIZE(conf);
+gint32 *xxx = lsrc;
 
-
+ 
 	if (!P->writebuf)
 		P->writebuf = malloc(self->dev->buf_size * sample_size);
 
@@ -360,6 +360,7 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_samples)
 		P->max_delta = 0;
 		P->delta_observations = 0;
 		P->played_this_second = self->dev->buf_size;
+		*skip_samples = 0;
 		return self->dev->buf_size;
 	}
 
@@ -626,8 +627,8 @@ mix_compute_input_linear(sfx_pcm_mixer_t *self, int add_result, sfx_pcm_feed_sta
 
 	/* Save whether we have a partial sample still stored */
 	fs->sample_bufstart = samples_left + ((fs->scount.nom != 0)? 1 : 0);
-#if (DEBUF >= 2)
-	sciprintf("[soft-mix] Leaving %d over", fs->sample_bufstart);
+#if (DEBUG >= 2)
+	sciprintf("[soft-mix] Leaving %d over\n", fs->sample_bufstart);
 #endif
 
 	if (samples_read < samples_nr)

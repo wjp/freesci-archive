@@ -29,8 +29,6 @@
 
 #ifdef HAVE_SETITIMER
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <sys/time.h>
 #include <signal.h>
 
@@ -52,7 +50,7 @@ sigalrm_set_option(char *name, char *value)
 
 
 static int
-sigalrm_start()
+sigalrm_start(void)
 {
 	struct itimerval itimer;
 
@@ -90,7 +88,7 @@ sigalrm_init(void (*callback)(void *), void *data)
 
 
 static int
-sigalrm_stop()
+sigalrm_stop(void)
 {
 	struct itimerval itimer;
 

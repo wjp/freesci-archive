@@ -31,7 +31,7 @@
 
 #define DDEBUG if (0) printf
 
-void decryptinit3();
+void decryptinit3(void);
 int decrypt3(guint8* dest, guint8* src, int length, int complength);
 int decrypt4(guint8* dest, guint8* src, int length, int complength);
 
@@ -79,8 +79,8 @@ int decompress11(resource_t *result, int resh)
 	    (compressedLength > SCI_MAX_RESOURCE_SIZE))
 		return SCI_ERROR_RESOURCE_TOO_BIG;
 
-	if (compressedLength > 0/*4*/)
-		compressedLength -= 0/*4*/;
+	if (compressedLength > 0)
+		compressedLength -= 0;
 	else { /* Object has size zero (e.g. view.000 in sq3) (does this really exist?) */
 		result->data = 0;
 		result->status = SCI_STATUS_NOMALLOC;

@@ -32,7 +32,6 @@
 
 #include <sci_memory.h>
 #include <sciresource.h>
-#include <assert.h>
 #include <vocabulary.h> /* For SCI version auto-detection */
 
 #include <ctype.h>

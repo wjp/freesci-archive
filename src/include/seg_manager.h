@@ -257,7 +257,7 @@ int sm_deallocate_script (seg_manager_t* self, struct _state *s, int script_nr);
 void sm_update (seg_manager_t* self);
 /* memory operations */
 void sm_object_init (object_t* object); 
-mem_obj_t* mem_obj_allocate();
+mem_obj_t* mem_obj_allocate(seg_manager_t *self, seg_id_t segid, int hash_id, mem_obj_enum type);
 void sm_free( mem_obj_t* mem );
 void sm_mset (seg_manager_t* self, int offset, int c, size_t n, int id, int flag);
 void sm_mcpy_in_in (seg_manager_t* self, int dst, const int src, size_t n, int id, int flag);

@@ -26,7 +26,6 @@
 
 #include <stdio.h>
 #include <sfx_engine.h>
-#include <resource.h>
 #include <sci_memory.h>
 
 #define debug_stream stderr
@@ -253,7 +252,7 @@ song_lib_dump(songlib_t songlib, int line)
 		fprintf(debug_stream,"    %p", seeker);
 
 		if (seeker) {
-			fprintf(debug_stream,"[%04x,p=%d]->", seeker->handle, seeker->priority);
+			fprintf(debug_stream,"[%04lx,p=%d]->", seeker->handle, seeker->priority);
 			seeker = seeker->next;
 		}
 		fprintf(debug_stream,"\n");

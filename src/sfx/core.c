@@ -28,10 +28,8 @@
 
 #include <stdio.h>
 #include <sfx_timer.h>
-#include <sfx_engine.h>
 #include <sfx_player.h>
 #include <sfx_mixer.h>
-#include <sfx_pcm.h>
 
 /*#define DEBUG_CUES*/
 #ifdef DEBUG_CUES
@@ -46,7 +44,7 @@ static sfx_timer_t *timer = NULL;
 #define MILLION 1000000
 
 int
-sfx_get_player_polyphony()
+sfx_get_player_polyphony(void)
 {
 	if (player)
 		return player->polyphony;
@@ -170,7 +168,7 @@ _sfx_timer_callback(void *data)
 		** the audio buffer  */
 
 		if (player)
-			player->maintenance(player);
+			player->maintenance();
 
 		if (mixer)
 			mixer->process(mixer);

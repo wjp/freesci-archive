@@ -66,13 +66,13 @@ typedef struct {
 	*/
 
 	int
-	(*fade_out)();
+	(*fade_out)(void);
 	/* Fades out the currently playing song (within two seconds
 	** Returns   : (int) SFX_OK on success, SFX_ERROR on failure
 	*/
 
 	int
-	(*stop)();
+	(*stop)(void);
 	/* Stops the currently playing song and deletes the associated iterator
 	** Returns   : (int) SFX_OK on success, SFX_ERROR on failure
 	*/
@@ -88,25 +88,25 @@ typedef struct {
 	*/
 
 	int
-	(*pause)(); /* OPTIONAL -- may be NULL */
+	(*pause)(void); /* OPTIONAL -- may be NULL */
 	/* Pauses song playing
 	** Returns   : (int) SFX_OK on success, SFX_ERROR on failure
 	*/
 
 	int
-	(*resume)(); /* OPTIONAL -- may be NULL */
+	(*resume)(void); /* OPTIONAL -- may be NULL */
 	/* Resumes song playing after a pause
 	** Returns   : (int) SFX_OK on success, SFX_ERROR on failure
 	*/
 
 	int
-	(*exit)();
+	(*exit)(void);
 	/* Stops the player
 	** Returns   : (int) SFX_OK on success, SFX_ERROR on failure
 	*/
 
 	void
-	(*maintenance)(); /* OPTIONAL -- may be NULL */
+	(*maintenance)(void); /* OPTIONAL -- may be NULL */
 	/* Regularly called maintenance function
 	** This function is called frequently and regularly (if present), it can be
 	** used to emit sound.
@@ -124,7 +124,7 @@ sfx_find_player(char *name);
 */
 
 int
-sfx_get_player_polyphony();
+sfx_get_player_polyphony(void);
 /* Determines the polyphony of the player in use
 ** Returns   : (int) Number of voices the active player can emit
 */
