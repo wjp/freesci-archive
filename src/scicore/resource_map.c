@@ -37,6 +37,7 @@
 #define RESOURCE_MAP_FILENAME "resource.map"
 
 #define SCI0_RESMAP_ENTRIES_SIZE 6
+#define SCI1_RESMAP_ENTRIES_SIZE 6
 
 
 int
@@ -51,6 +52,48 @@ sci0_read_entry(byte *buf, resource_t *res)
 
 	return 0;
 }
+
+inline int sci1_res_type(int ofs, int *types)
+{
+	int i, last = -1;
+
+	for (i=0;i<sci1_last_resource;i++)
+		if (types[i])
+		{
+			if (types[i]>ofs)
+				return last;
+			last=i;
+		}
+
+	return last;
+}
+
+int sci1_parse_header(int fd, int *types)
+{
+	unsigned char rtype;
+	unsigned char offset[2];
+	int read_ok;
+	int size = 0;
+
+	do
+	{
+		read_ok = read(fd, &rtype, 1);
+		if (!read_ok) break;
+		read_ok = read(fd, &offset, 2);
+		if (read_ok<2) 
+			read_ok=0;
+		if (rtype!=0xff)
+		{
+			types[rtype&0x7f]=(offset[1]<<8)|(offset[0]);
+		}
+		size+=3;
+	} while (read_ok && (rtype != 0xFF));
+
+	if (!read_ok) return 0;
+	
+	return size;
+}
+
 
 int
 sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
@@ -163,6 +206,89 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 	return 0;
 }
 
+int
+sci1_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
+{
+	struct stat fd_stat;
+	int fd;
+	resource_t *resources;
+	int resources_nr;
+	int resource_index = 0;
+	int max_resfile_nr = 0;
+	int ofs, header_size;
+	int *types = sci_malloc(sizeof(int) * sci1_last_resource);
+	int i;
+	byte buf[SCI1_RESMAP_ENTRIES_SIZE];
+	fd = sci_open(RESOURCE_MAP_FILENAME, O_RDONLY | O_BINARY);
+
+	if (!IS_VALID_FD(fd))
+		return SCI_ERROR_RESMAP_NOT_FOUND;
+
+	memset(types, 0, sizeof(int) * sci1_last_resource);
+
+	if (!(ofs=header_size=sci1_parse_header(fd, types)))
+		return SCI_ERROR_INVALID_RESMAP_ENTRY;
+
+	if (fstat(fd, &fd_stat)) {
+		perror("Error occured while trying to stat resource.map");
+		return SCI_ERROR_RESMAP_NOT_FOUND;
+	}
+
+	resources_nr = (fd_stat.st_size - header_size) / SCI1_RESMAP_ENTRIES_SIZE;
+
+	resources = sci_calloc(resources_nr, sizeof(resource_t));
+
+	for (i=0;i<resources_nr;i++)
+	{	
+		int read_ok = read(fd, &buf, SCI1_RESMAP_ENTRIES_SIZE);	
+		int j;
+		resource_t *res;
+		int addto = resource_index;
+		int fresh = 1;
+
+		if (read_ok < SCI1_RESMAP_ENTRIES_SIZE)
+		{
+			perror("While reading from resource.map");
+			break;
+		}
+
+		res = &(resources[resource_index]);
+		res->type = sci1_res_type(ofs, types);
+		res->number= SCI1_RESFILE_GET_NUMBER(buf);
+		res->status = SCI_STATUS_NOMALLOC;
+		res->file = SCI1_RESFILE_GET_FILE(buf);
+		res->file_offset = SCI1_RESFILE_GET_OFFSET(buf);
+		res->id = res->number | (res->type << 16);
+
+		if (resources[resource_index].file > max_resfile_nr)
+			max_resfile_nr =
+				resources[resource_index].file;
+		
+		for (j = 0; i < resource_index; i++)
+			if (resources[resource_index].id ==
+			    resources[i].id) {
+				addto = i;
+				fresh = 0;
+			}
+
+		_scir_add_altsource(resources + addto,
+				    resources[resource_index].file,
+				    resources[resource_index].file_offset);
+		
+		if (fresh)
+			++resource_index;
+
+		ofs += SCI1_RESMAP_ENTRIES_SIZE;
+	}
+
+	close(fd);
+	free(types);
+
+	*resource_p = resources;
+	*resource_nr_p = resource_index;
+	return 0;
+		
+}
 
 
 #ifdef TEST_RESOURCE_MAP

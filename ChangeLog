@@ -1,3 +1,10 @@
+2003-02-08  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/scicore/resource*: Add support for SCI1 resource maps and patches.
+	* src/engine/kscripts.c (kScriptID):  Support wide export tables.
+	* src/engine/kgraphics.c (kGraph): Color mode is now independent of
+	lofs absoluteness.
+
 2003-02-07  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/include/sciresource.h: Added new resmgr version

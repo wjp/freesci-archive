@@ -100,6 +100,11 @@ struct _state;
    clobbered the old songs.
 */
 
+#define SCI_VERSION_FTU_256_COLORS SCI_VERSION(1,000,175)
+/* FIXME: This shouldn't be a version number.
+ * But it'll do for now.
+ */
+
 #define SCI_VERSION_FTU_LOFS_ABSOLUTE SCI_VERSION(1,000,200)
 /* First version known to do this: ?
    In later versions (SCI1 and beyond), the argument of lofs[as]

@@ -292,7 +292,7 @@ kScriptID(state_t *s, int funct_nr, int argc, reg_t *argv)
 		return NULL_REG;
 	}
 
-	return make_reg(scriptid, getUInt16((byte*)(scr->export_table + index)));
+	return make_reg(scriptid, s->seg_manager.validate_export_func(&s->seg_manager, index, scriptid));
 }
 
 

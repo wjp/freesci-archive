@@ -115,6 +115,7 @@ enum ResourceTypes {
 };
 
 #define sci0_last_resource sci_patch
+#define sci1_last_resource sci_message
 /* Used for autodetection */
 
 
@@ -241,7 +242,20 @@ scir_free_resource_manager(resource_mgr_t *mgr);
 
 int
 sci0_read_resource_map(char *path, resource_t **resources, int *resource_nr_p);
-/* Reads the resource.map file from a local directory
+/* Reads the SCI0 resource.map file from a local directory
+** Parameters: (char *) path: (unused)
+**             (resource_t **) resources: Pointer to a pointer
+**                                        that will be set to the
+**                                        location of the resources
+**                                        (in one large chunk)
+**             (int *) resource_nr_p: Pointer to an int the number of resources
+**                                    read is stored in
+** Returns   : (int) 0 on success, an SCI_ERROR_* code otherwise
+*/
+
+int
+sci1_read_resource_map(char *path, resource_t **resources, int *resource_nr_p);
+/* Reads the SCI1 resource.map file from a local directory
 ** Parameters: (char *) path: (unused)
 **             (resource_t **) resources: Pointer to a pointer
 **                                        that will be set to the
@@ -263,9 +277,31 @@ sci0_sprintf_patch_file_name(char *string, resource_t *res);
 ** Returns   : (void)
 */
 
+void
+sci1_sprintf_patch_file_name(char *string, resource_t *res);
+/* Prints the name of a matching patch to a string buffer
+** Parameters: (char *) string: The buffer to print to
+**             (resource_t *) res: Resource containing the number and type of the
+**                                 resource whose name is to be print
+** Returns   : (void)
+*/
+
 int
 sci0_read_resource_patches(char *path, resource_t **resources, int *resource_nr_p);
 /* Reads SCI0 patch files from a local directory
+** Parameters: (char *) path: (unused)
+**             (resource_t **) resources: Pointer to a pointer
+**                                        that will be set to the
+**                                        location of the resources
+**                                        (in one large chunk)
+**             (int *) resource_nr_p: Pointer to an int the number of resources
+**                                    read is stored in
+** Returns   : (int) 0 on success, an SCI_ERROR_* code otherwise
+*/
+
+int
+sci1_read_resource_patches(char *path, resource_t **resources, int *resource_nr_p);
+/* Reads SCI1 patch files from a local directory
 ** Parameters: (char *) path: (unused)
 **             (resource_t **) resources: Pointer to a pointer
 **                                        that will be set to the
@@ -384,6 +420,23 @@ _scir_add_altsource(resource_t *res, int file, unsigned int file_offset);
       | (((bytes)[2]) << 16) \
       | (((bytes)[1]) << 8) \
       | (((bytes)[0]) << 0))
+
+#define SCI1_B5_RESFILE_MASK 0xf0
+#define SCI1_B5_RESFILE_SHIFT 4
+
+#define SCI1_RESFILE_GET_FILE(bytes) \
+  (((bytes)[5] & SCI1_B5_RESFILE_MASK) >> SCI1_B5_RESFILE_SHIFT)
+
+#define SCI1_RESFILE_GET_OFFSET(bytes) \
+    ((((bytes)[5] & ~SCI1_B5_RESFILE_MASK) << 24) \
+      | (((bytes)[4]) << 16) \
+      | (((bytes)[3]) << 8) \
+      | (((bytes)[2]) << 0))
+
+#define SCI1_RESFILE_GET_NUMBER(bytes) \
+      ((((bytes)[1]) << 8) \
+      | (((bytes)[0]) << 0))
+
 
 #endif
 

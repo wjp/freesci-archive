@@ -52,13 +52,14 @@ const char* sci_version_types[] = {
 	"SCI version undetermined (Autodetect failed / not run)",
 	"SCI version 0.xxx",
 	"SCI version 0.xxx w/ 1.000 compression",
+	"SCI version 1.000 w/ 0.xxx resource.map",
 	"SCI version 1.000 (early)",
 	"SCI version 1.000 (late)",
 	"SCI version 1.001",
 	"SCI WIN/32"
 };
 
-const int sci_max_resource_nr[] = {65536, 1000, 1000, 1000, 8192};
+const int sci_max_resource_nr[] = {65536, 1000, 1000, 1000, 8192, 8192, 8192, 65536};
 
 const char* sci_error_types[] = {
 	"No error",
@@ -106,12 +107,11 @@ static patch_sprintf_funct *patch_sprintfers[] = {
 	NULL,
 	&sci0_sprintf_patch_file_name,
 	&sci0_sprintf_patch_file_name,
-	&sci0_sprintf_patch_file_name,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL
+	&sci1_sprintf_patch_file_name,
+	&sci1_sprintf_patch_file_name,
+	&sci1_sprintf_patch_file_name,
+	&sci1_sprintf_patch_file_name,
+	&sci1_sprintf_patch_file_name
 };
 
 
@@ -224,6 +224,10 @@ scir_new_resource_manager(char *dir, int version,
 		}
 
 		if (!resource_error)
+			if (version == SCI_VERSION_01_VGA)
+			sci1_read_resource_patches(dir,
+						   &mgr->resources,
+						   &mgr->resources_nr); else
 			sci0_read_resource_patches(dir,
 						   &mgr->resources,
 						   &mgr->resources_nr);
@@ -231,6 +235,44 @@ scir_new_resource_manager(char *dir, int version,
 		resmap_version = SCI_VERSION_0;
 	}
 
+	if ((version == SCI_VERSION_1_EARLY)||
+	    (version == SCI_VERSION_1_LATE))
+	{
+		resource_error =
+			sci1_read_resource_map(dir,
+					       &mgr->resources,
+					       &mgr->resources_nr);
+
+		if (resource_error >= SCI_ERROR_CRITICAL) {
+			sciprintf("Resmgr: Error while loading resource map: %s\n",
+				  sci_error_types[resource_error]);
+			if (resource_error == SCI_ERROR_RESMAP_NOT_FOUND)
+				sciprintf("Running SCI games without a resource map is not supported ATM\n");
+			sci_free(mgr);
+			chdir(caller_cwd);
+			free(caller_cwd);
+			return NULL;
+		}
+
+		if (resource_error == SCI_ERROR_RESMAP_NOT_FOUND) {
+			/* fixme: Try reading w/o resource.map */
+			resource_error = SCI_ERROR_NO_RESOURCE_FILES_FOUND;
+		}
+
+		if (resource_error == SCI_ERROR_NO_RESOURCE_FILES_FOUND) {
+			/* Initialize empty resource manager */
+			_scir_init_trivial(mgr);
+			resource_error = 0;
+		}
+
+		if (!resource_error)
+			sci1_read_resource_patches(dir,
+						   &mgr->resources,
+						   &mgr->resources_nr);
+
+		resmap_version = SCI_VERSION_1;
+	}
+		
 
 	/* ADDME: Try again with sci1_read_resource_map() */
 	if (!mgr->resources || !mgr->resources_nr) {
