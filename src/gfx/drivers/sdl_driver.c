@@ -870,7 +870,7 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
   int rkey = keysym.unicode & 0x7f;
 
   if ((skey >= SDLK_a) && (skey <= SDLK_z))
-      return ('a' + (skey - SDLK_a));
+    return ('a' + (skey - SDLK_a));
 
   if ((skey >= SDLK_0) && (skey <= SDLK_9))
     return ('0' + (skey - SDLK_0));
@@ -941,7 +941,7 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
   case SDLK_KP_MULTIPLY: return '*';
   case SDLK_EQUALS:
   case SDLK_KP_EQUALS: return '=';
-    
+
   case SDLK_COMMA:
   case SDLK_PERIOD:
   case SDLK_BACKSLASH:
@@ -949,11 +949,15 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
   case SDLK_QUOTE:
   case SDLK_LEFTBRACKET:
   case SDLK_RIGHTBRACKET:
-  case SDLK_BACKQUOTE:
   case SDLK_LESS:
   case SDLK_GREATER:
-  case SDLK_SPACE:   return rkey;
-    
+  case SDLK_SPACE:  return rkey; 
+
+  case SDLK_BACKQUOTE:
+    if (keysym.mod & KMOD_CTRL)
+      return '`';
+    else
+      return rkey;    
   }
 
   sciprintf("Unknown SDL keysym: %04x (%d) \n", skey, rkey);
@@ -992,9 +996,9 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
 	S->buckystate = (((modifiers & KMOD_CAPS)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0)
 			 | ((modifiers & KMOD_CTRL)? SCI_EVM_CTRL : 0)
 			 | ((modifiers & KMOD_ALT)? SCI_EVM_ALT : 0)
-			 | ((modifiers & KMOD_NUM) ? SCI_EVM_NUMLOCK : 0))
-	  ^ (  ((modifiers & KMOD_RSHIFT)? SCI_EVM_RSHIFT : 0) 
-	       |((modifiers & KMOD_LSHIFT)? SCI_EVM_LSHIFT : 0));
+			 | ((modifiers & KMOD_NUM) ? SCI_EVM_NUMLOCK : 0)
+			 | ((modifiers & KMOD_RSHIFT)? SCI_EVM_RSHIFT : 0)
+			 | ((modifiers & KMOD_LSHIFT)? SCI_EVM_LSHIFT : 0));
 
 	sci_event->buckybits = S->buckystate;
 	sci_event->data = sdl_map_key(drv, event.key.keysym);
