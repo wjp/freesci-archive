@@ -490,7 +490,8 @@ song_new(word handle, byte *data, int size, int priority)
   retval->priority = priority;
   retval->size = size;
 
-  retval->pos = retval->loopmark = 33; /* The first 33 bytes are header data */
+  retval->pos = 33;
+  retval->loopmark = 0; /* The first 33 bytes are header data */
   retval->fading = -1; /* Not fading */
   retval->maxfade = 1; /* placeholder */
   retval->loops = 0; /* No fancy additional loops */
