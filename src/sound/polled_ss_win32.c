@@ -63,9 +63,7 @@ DWORD WINAPI
 win32p_soundserver_init(LPVOID lpP)
 {
 	sound_server_state_t sss;
-#ifdef SATISFY_PURIFY
 	memset(&sss, 0, sizeof(sound_server_state_t));
-#endif
 
 #ifdef SSWIN_DEBUG
 	fprintf(stdout, "SSWIN_DEBUG: TID%u - CHILD thread ID, win32_soundserver_init()\n", GetCurrentThreadId());
