@@ -50,9 +50,9 @@ _init_vocabulary(state_t *s) /* initialize vocabulary and related resources */
 
 	s->parser_lastmatch_word = SAID_NO_MATCH;
 
-	if ((s->parser_words = vocab_get_words(&(s->parser_words_nr)))) {
-		s->parser_suffices = vocab_get_suffices(&(s->parser_suffices_nr));
-		s->parser_branches = vocab_get_branches(&(s->parser_branches_nr));
+	if ((s->parser_words = vocab_get_words(s->resmgr, &(s->parser_words_nr)))) {
+		s->parser_suffices = vocab_get_suffices(s->resmgr, &(s->parser_suffices_nr));
+		s->parser_branches = vocab_get_branches(s->resmgr, &(s->parser_branches_nr));
 
 		/* Now build a GNF grammar out of this */
 		s->parser_rules = vocab_build_gnf(s->parser_branches, s->parser_branches_nr);
@@ -63,9 +63,9 @@ _init_vocabulary(state_t *s) /* initialize vocabulary and related resources */
 	}
 
 
-	s->opcodes = vocabulary_get_opcodes();
+	s->opcodes = vocabulary_get_opcodes(s->resmgr);
 
-	if (!(s->selector_names = vocabulary_get_snames(NULL, s->version))) {
+	if (!(s->selector_names = vocabulary_get_snames(s->resmgr, NULL, s->version))) {
 		sciprintf("_init_vocabulary(): Could not retreive selector names (vocab.997)!\n");
 		return 1;
 	}
@@ -125,7 +125,7 @@ _reset_graphics_input(state_t *s)
 	gfx_color_t transparent	= {0};
 	sciprintf("Initializing graphics\n");
 
-	if (sci_version <= SCI_VERSION_01) {
+	if (s->resmgr->sci_version <= SCI_VERSION_01) {
 		int i;
 
 		for (i = 0; i < 16; i++) {
@@ -158,7 +158,7 @@ _reset_graphics_input(state_t *s)
 
 	font_nr = -1;
 	do {
-		resource = findResource(sci_font, ++font_nr);
+		resource = scir_test_resource(s->resmgr, sci_font, ++font_nr);
 	} while ((!resource) && (font_nr < 999));
 
 	if (!resource) {
@@ -235,7 +235,7 @@ suggested_script(resource_t *res, int class)
 int
 script_init_engine(state_t *s, sci_version_t version)
 {
-	resource_t *vocab996 = findResource(sci_vocab, 996);
+	resource_t *vocab996 = scir_find_resource(s->resmgr, sci_vocab, 996, 0);
 	int i;
 	int scriptnr;
 	int seeker;
@@ -267,7 +267,8 @@ script_init_engine(state_t *s, sci_version_t version)
 
 	for (scriptnr = 0; scriptnr < 1000; scriptnr++) {
 		int objtype = 0;
-		resource_t *script = findResource(sci_script, scriptnr);
+		resource_t *script = scir_find_resource(s->resmgr, sci_script,
+							scriptnr, 0);
 
 		if (script) {
 			size = getInt16(script->data);
@@ -346,7 +347,7 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->global_vars = 0; /* Set during launch time */
 
 
-	s->kernel_names = vocabulary_get_knames(&s->kernel_names_nr);
+	s->kernel_names = vocabulary_get_knames(s->resmgr, &s->kernel_names_nr);
 	script_map_kernel(s);
 	/* Maps the kernel functions */
 

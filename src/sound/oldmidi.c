@@ -906,9 +906,9 @@ _lookup_rhythm_key(char *iname)
 }
 
 int
-mapMIDIInstruments(void)
+map_MIDI_instruments(resource_mgr_t *resmgr)
 {
-  resource_t *patch1 = findResource(sci_patch, 1);
+  resource_t *patch1 = scir_find_resource(resmgr, sci_patch, 1, 0);
   int memtimbres;
   int patches;
   int i;
@@ -936,7 +936,7 @@ mapMIDIInstruments(void)
   */
 
   if (!patch1) {
-    if (sci_version < SCI_VERSION_1) {
+    if (resmgr->sci_version < SCI_VERSION_1) {
       fprintf(stderr,"No patch.001 found: using default MT-32 mapping magic!\n");
       return 1;
     }

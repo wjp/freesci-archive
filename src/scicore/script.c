@@ -288,11 +288,11 @@ script_dump_class(char *data, int seeker, int objsize, char **snames, int snames
 
 
 void 
-script_dissect(int res_no, char **snames, int snames_nr)
+script_dissect(resource_mgr_t *resmgr, int res_no, char **snames, int snames_nr)
 {
   int objectctr[11] = {0,0,0,0,0,0,0,0,0,0,0};
   int _seeker = 0;
-  resource_t *script = findResource(sci_script, res_no);
+  resource_t *script = scir_find_resource(resmgr, sci_script, res_no, 0);
   word_t **words;
   int word_count;
 
@@ -301,7 +301,7 @@ script_dissect(int res_no, char **snames, int snames_nr)
     return;
   }
 
-  words=vocab_get_words (&word_count);
+  words=vocab_get_words (resmgr, &word_count);
 
   while (_seeker < script->size) {
     int objtype = getInt16(script->data + _seeker);

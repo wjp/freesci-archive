@@ -29,11 +29,13 @@
 
 ***************************************************************************/
 
-#ifndef SCIRESOURCE_H_
-#define SCIRESOURCE_H_
+#ifndef _SCIRESOURCE_H_
+#define _SCIRESOURCE_H_
 
 /*#define _SCI_RESOURCE_DEBUG */
 /*#define _SCI_DECOMPRESS_DEBUG*/
+
+#define findResource "Error: Using findResource!"
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -170,36 +172,7 @@ typedef struct {
 	unsigned char allow_patches;
 } resource_mgr_t;
 
-extern DLLEXTERN resource_t *resource_map;
-
 /**** FUNCTION DECLARATIONS ****/
-
-/**--- Old resource manager ---**/
-
-int loadResources(int version, int allow_patches);
-/* Reads and parses all resource files in the current directory.
-** Parameters: version: The SCI version to look for; use SCI_VERSION_AUTODETECT
-**                      in the default case.
-**             allow_patches: Set to 1 if external patches (those look like
-**                            "view.101" or "script.093") should be applied
-** Returns   : (int) Always 0.
-** TODO: Add some error checking.
-*/
-
-void freeResources();
-/* Frees all allocated resource memory.
-** Parameters: none
-** Returns   : (void)
-*/
-
-resource_t * findResource(unsigned short type,
-                          unsigned short number);
-/* Searches for a resource with the specified resource type and number.
-** Parameters: type: The resource type (one of ResourceTypes)
-**             number: The resource number (the "042" in "view.042")
-** Returns   : (resource_t *) pointing to the resource, or NULL
-**             if it could not be found.
-*/
 
 /**--- New Resource manager ---**/
 

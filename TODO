@@ -1,7 +1,6 @@
 TODO for 0.3.3:
 
 Primary goals:
-	* Add LRU resource manager
 	* Add PCM output support and one driver to use it
 
 Secondary goals:

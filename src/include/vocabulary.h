@@ -30,6 +30,7 @@
 
 #include <heap.h>
 #include <versions.h>
+#include <sciresource.h>
 
 /*#define VOCABULARY_DEBUG */
 /*#define SCI_SIMPLE_SAID_CODE *//* Whether the simplified Said() matching should be used */
@@ -50,6 +51,8 @@ typedef struct opcode_
   char* name;
 } opcode;
 
+#define VOCAB_RESOURCE_OPCODES 998
+#define VOCAB_RESOURCE_KNAMES 999
 
 #define VOCAB_RESOURCE_SCI0_MAIN_VOCAB 0
 #define VOCAB_RESOURCE_SCI0_PARSE_TREE_BRANCHES 900
@@ -191,14 +194,14 @@ typedef struct {
 
 /*FIXME: These need freeing functions...*/
 
-int* vocabulary_get_classes();
+int* vocabulary_get_classes(resource_mgr_t *resmgr, int *count);
 
-int vocabulary_get_class_count();
+int vocabulary_get_class_count(resource_mgr_t *resmgr);
 
 /**
  * Returns a null terminated array of selector names.
  */
-char** vocabulary_get_snames(int *pcount, sci_version_t version);
+char** vocabulary_get_snames(resource_mgr_t *resmgr, int *pcount, sci_version_t version);
 /**
  * Frees the aforementioned array
  */
@@ -207,7 +210,7 @@ void vocabulary_free_snames(char **snames_list);
 /**
  * Returns a null terminated array of opcodes.
  */
-opcode* vocabulary_get_opcodes();
+opcode* vocabulary_get_opcodes(resource_mgr_t *resmgr);
 
 void
 vocabulary_free_opcodes(opcode *opcodes);
@@ -224,15 +227,16 @@ vocabulary_free_opcodes(opcode *opcodes);
  * The returned array has the same format regardless of the format of the
  * name table of the resource (the format changed between version 0 and 1).
  */
-char** vocabulary_get_knames(int* count);
+char** vocabulary_get_knames(resource_mgr_t *resmgr, int* count);
 void vocabulary_free_knames(char** names);
 
 
 
 word_t **
-vocab_get_words(int *word_counter);
+vocab_get_words(resource_mgr_t *resmgr, int *word_counter);
 /* Gets all words from the main vocabulary
-** Parameters: (int *) word_counter: The int which the number of words is stored in
+** Parameters: (resource_mgr_t *) resmr: The resource manager to read from
+**             (int *) word_counter: The int which the number of words is stored in
 ** Returns   : (word_t **): A list of all words, dynamically allocated
 */
 
@@ -247,9 +251,11 @@ vocab_free_words(word_t **words, int words_nr);
 
 
 suffix_t **
-vocab_get_suffices(int *suffices_nr);
+vocab_get_suffices(resource_mgr_t *resmgr, int *suffices_nr);
 /* Gets all suffixes from the suffix vocabulary
-** Parameters: (int *) suffices_nr: The variable to store the number of suffices in
+** Parameters: (resource_mgr_t*) resmgr: Resource manager the resources are
+**                               read from
+**             (int *) suffices_nr: The variable to store the number of suffices in
 ** Returns   : (suffix_t **): A list of suffixes
 */
 
@@ -261,11 +267,13 @@ vocab_free_suffices(suffix_t **suffices, int suffices_nr);
 */
 
 parse_tree_branch_t *
-vocab_get_branches(int *branches_nr);
-/* Retrieves all parse tree branches from the resource data
-** Parameters: (int *) branches_nr: Pointer to the variable which the number of entries is to be
+vocab_get_branches(resource_mgr_t *resmgr, int *branches_nr);
+/* Retrieves all grammar rules from the resource data
+** Parameters: (resource_mgr_t*) resmgr: Resource manager the rules are
+**                               read from
+**             (int *) branches_nr: Pointer to the variable which the number of entries is to be
 **                     stored in
-** Returns   : (parse_tree_branch_t *): The branches, or NULL on error
+** Returns   : (parse_tree_branch_t *): The rules, or NULL on error
 */
 
 void

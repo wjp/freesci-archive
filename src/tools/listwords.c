@@ -54,7 +54,7 @@ vocab_print(void)
 	int b, words_nr, counter;
 	word_t **words, **tracker;
 
-	tracker = words = vocab_get_words(&words_nr);
+	tracker = words = vocab_get_words(resmgr, &words_nr);
 
 	counter=words_nr;
 

@@ -33,6 +33,7 @@
 #include <sci_memory.h>
 #include <sciresource.h>
 #include <assert.h>
+#include <vocabulary.h> /* For SCI version auto-detection */
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -43,7 +44,7 @@
 #endif
 
 #undef SCI_REQUIRE_RESOURCE_FILES
-#define SCI_VERBOSE_RESMGR
+#define SCI_VERBOSE_RESMGR 1
 
 
 const char* sci_version_types[] = {
@@ -83,22 +84,6 @@ const char *sci_resource_type_suffixes[] = {"v56","p56","scr","tex","snd",
 					    "msg","map","hep"};
 
 
-int sci_version = 0;
-
-int max_resource = 0;
-resource_t *resource_map;
-
-struct singly_linked_resources_struct {
-	resource_t *resource;
-	struct singly_linked_resources_struct *next;
-};
-
-int resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int allow_patches);
-
-void killlist(struct singly_linked_resources_struct *rs);
-
-int loadResourcePatches(struct singly_linked_resources_struct *resourcelist);
-
 int resourcecmp(const void *first, const void *second);
 
 
@@ -114,217 +99,7 @@ static decomp_funct *decompressors[] = {
 	NULL
 };
 
-
-int loadResources(int version, int allow_patches)
-{
-	int autodetect = (version == SCI_VERSION_AUTODETECT);
-	int retval;
-
-	max_resource = 0;
-
-	if ((version < SCI_VERSION_AUTODETECT) || (version > SCI_VERSION_LAST))
-		return SCI_ERROR_UNSUPPORTED_VERSION;
-
-	sci_version = (autodetect)? SCI_VERSION_0 : version;
-
-	do {
-#ifdef _SCI_RESOURCE_DEBUG
-		if (autodetect) fprintf(stderr, "Autodetect: Trying %s\n", SCI_Version_Types[sci_version]);
-#endif
-		if ((retval = resourceLoader(decompressors[sci_version], autodetect, allow_patches))) {
-			freeResources();
-			if (autodetect == ((retval == SCI_ERROR_UNKNOWN_COMPRESSION)
-					   || (retval == SCI_ERROR_DECOMPRESSION_OVERFLOW)
-					   || (retval == SCI_ERROR_DECOMPRESSION_INSANE))) {
-				++sci_version;
-
-			} else return retval;
-		} else return 0;
-	} while (autodetect && sci_version <= SCI_VERSION_LAST);
-
-	return SCI_ERROR_UNSUPPORTED_VERSION;
-}
-
-
-
-void
-_addResource(struct singly_linked_resources_struct *base, resource_t *resource, int priority)
-/* Tries to add [resource] to the [base] list. If an element with the same id already
-** exists, [resource] will be discarded and free()d if ([priority]==0), otherwise
-** the other resource will be free()d and replaced by the new [resource].
-*/
-{
-	struct singly_linked_resources_struct *seeker	= {0};
-
-	if (!base->resource) {
-		base->resource = resource;
-		max_resource++;
-	} else {
-		seeker = base;
-
-		while (seeker && seeker->next) {
-			if (seeker->resource->number == resource->number
-			    && seeker->resource->type == resource->type) {
-				if (priority) { /* replace the old resource */
-					free(seeker->resource->data);
-					free(seeker->resource);
-					seeker->resource = resource;
-					return;
-				}
-				else 
-					seeker = 0;
-			} 
-			else {
-				seeker = seeker->next; 
-			}
-		}
-
-		if (seeker) {
-
-			seeker->next = sci_malloc(sizeof(struct singly_linked_resources_struct));
-#ifdef SATISFY_PURIFY
-			memset(seeker->next, 0, sizeof(struct singly_linked_resources_struct));
-#endif
-			seeker->next->resource = resource;
-			seeker->next->next = 0;
-			max_resource++;
-
-		} else {
-
-			free(resource->data);
-			free(resource);
-
-		}
-	}
-}
-
-
-int
-resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int allow_patches)
-{
-	int resourceFile = 0;
-	int resourceFileCounter = 0;
-	resource_t *resource	= NULL;
-	char filename[13]		= {0};
-	int resourceCounter		= 0;
-	struct singly_linked_resources_struct *seeker	= {0};
-	struct singly_linked_resources_struct base	= {0};
-	int found_resfiles = 0;
-
-	base.next = 0;
-	base.resource = 0;
-
-	do {
-		if (resourceFileCounter > 0 && resourceFile > 0) {
-			int decomperr;
-			resource = sci_malloc(sizeof(resource_t));
-#ifdef SATISFY_PURIFY
-			memset(resource, 0, sizeof(resource_t));
-#endif
-			while (!(decomperr = (*decompress)(resource, resourceFile))) {
-
-				_addResource(&base, resource, 0);
-				found_resfiles = 1;
-
-				resource = sci_malloc(sizeof(resource_t));
-			}
-			free(resource);
-			close(resourceFile);
-			if (decomperr >= SCI_ERROR_CRITICAL) {
-#ifdef _SCI_RESOURCE_DEBUG
-				fprintf(stderr,"SCI Error: %s in '%s'!\n",
-					SCI_Error_Types[decomperr], filename);
-#endif
-				killlist(&base); /* Free resources */
-				max_resource = 0;
-				return decomperr;
-			}
-		}
-
-		/* First try lower-case name */
-		sprintf(filename, "resource.%03i", resourceFileCounter);
-		resourceFile = open(filename, O_RDONLY|O_BINARY);
-
-		if (resourceFile <= 0) {
-			sprintf(filename, "RESOURCE.%03i", resourceFileCounter);
-			resourceFile = sci_open(filename, O_RDONLY|O_BINARY);
-		}    /* Try case-insensitively name */
-
-		resourceFileCounter++;
-#ifdef _SCI_RESOURCE_DEBUG
-		if (resourceFile > 0) fprintf(stderr, "Reading %s...\n", filename);
-		else if (resourceFileCounter > 1) fprintf(stderr, "Completed.\n");
-#endif
-	} while ((resourceFile > 0) || (resourceFileCounter == 1));
-
-#ifndef SCI_REQUIRE_RESOURCE_FILES
-	if (!found_resfiles) {
-		return SCI_ERROR_NO_RESOURCE_FILES_FOUND;
-	}
-#endif
-
-#ifdef _SCI_RESOURCE_DEBUG
-	fprintf(stderr,"%i unique resources have been read.\n", max_resource);
-#endif
-
-	if (allow_patches) {
-		int pcount = loadResourcePatches(&base);
-		if (pcount == 1)
-			printf("One patch was applied.\n");
-		else if (pcount)
-			printf("%d patches were applied.\n", pcount);
-		else {
-			printf("No patches found.\n");
-			if (!found_resfiles)
-				return SCI_ERROR_NO_RESOURCE_FILES_FOUND;
-		}
-	} else if (!found_resfiles)
-		return SCI_ERROR_NO_RESOURCE_FILES_FOUND;
-
-	else printf("Ignoring any patches.\n");
-
-	resource_map = sci_malloc(max_resource * sizeof(resource_t));
-#ifdef SATISFY_PURIFY
-	memset(resource_map, 0, max_resource * sizeof(resource_t));
-#endif
-
-	seeker = &base;
-
-	resourceCounter = 0;
-
-	if (base.resource)
-		while (seeker) {
-			memcpy(resource_map + resourceCounter, seeker->resource,
-			       sizeof(resource_t));
-			resourceCounter++;
-			seeker = seeker->next;
-		}
-
-	if(resourceCounter != max_resource) {
-		fprintf(stderr,"Internal error: resourceCounter=%d != max_resource=%d!\n",
-			resourceCounter, max_resource);
-		exit(1);
-	}
-	qsort(resource_map, max_resource, sizeof(resource_t),
-	      resourcecmp);
-
-	killlist(&base);
-
-	return 0;
-}
-
-
-void killlist(struct singly_linked_resources_struct *rs)
-{
-	if (rs->next) {
-		killlist(rs->next);
-		free(rs->next);
-		rs->next = NULL;
-	}
-	free(rs->resource);
-}
-
-
+#if 0
 int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
      /* Adds external patch files to an unprepared list of resources
      ** (as used internally by loadResources). It will override any
@@ -428,6 +203,7 @@ int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
 
 	return counter;
 }
+#endif
 
 
 int resourcecmp (const void *first, const void *second)
@@ -442,38 +218,6 @@ int resourcecmp (const void *first, const void *second)
 		return (((resource_t *)first)->type <
 			((resource_t *)second)->type)? -1 : 1;
 }
-
-resource_t *findResource(unsigned short type, unsigned short number)
-{
-	resource_t binseeker, *retval;
-	binseeker.type = type;
-	binseeker.number = number;
-	retval = (resource_t *)
-		bsearch(&binseeker, resource_map, max_resource, sizeof(resource_t),
-			resourcecmp);
-
-	if (retval && retval->status == SCI_STATUS_NOMALLOC) {
-		fprintf(stderr,"Warning: Dereferenced unallocated resource!\n");
-		return NULL;
-	} else
-		return retval;
-}
-
-void freeResources()
-{
-	if (resource_map) {
-		int i;
-
-		for (i=0; i < max_resource; i++) {
-			if (!resource_map[i].status) sci_free(resource_map[i].data);
-		}
-		free(resource_map);
-		max_resource = 0;
-		return;
-	}
-}
-
-
 
 /*------------------------------------------------*/
 /** Resource manager constructors and operations **/
@@ -497,7 +241,13 @@ scir_new_resource_manager(char *dir, int version,
 	int resource_error = 0;
 	resource_mgr_t *mgr = sci_malloc(sizeof(resource_mgr_t));
 	char *caller_cwd = sci_getcwd();
-	chdir(dir);
+	int resmap_version = version;
+
+	if (chdir(dir)) {
+		sciprintf("Resmgr: Directory '%s' is invalid!\n", dir);
+		free(caller_cwd);
+		return NULL;
+	}
 
 	mgr->max_memory = max_memory;
 
@@ -515,13 +265,15 @@ scir_new_resource_manager(char *dir, int version,
 					       &mgr->resources_nr);
 
 		if (resource_error >= SCI_ERROR_CRITICAL) {
+			sciprintf("Resmgr: Error while loading resource map: %s\n",
+				  sci_error_types[resource_error]);
 			sci_free(mgr);
 			chdir(caller_cwd);
 			free(caller_cwd);
 			return NULL;
 		}
 
-		mgr->sci_version = SCI_VERSION_0;
+		resmap_version = SCI_VERSION_0;
 	}
 
 	/* FIXME: Check for certain vocab files to determine
@@ -530,7 +282,7 @@ scir_new_resource_manager(char *dir, int version,
 	/* ADDME: Try again with sci1_read_resource_map() */
 
 	if (!mgr->resources) {
-		sciprintf("Could not retreive a resource list!\n");
+		sciprintf("Resmgr: Could not retreive a resource list!\n");
 		sci_free(mgr);
 		chdir(caller_cwd);
 		free(caller_cwd);
@@ -540,10 +292,28 @@ scir_new_resource_manager(char *dir, int version,
 	mgr->lru_first = NULL;
 	mgr->lru_last = NULL;
 
-	qsort(resource_map, max_resource, sizeof(resource_t),
+	qsort(mgr->resources, mgr->resources_nr, sizeof(resource_t),
 	      resourcecmp); /* Sort resources */
 
 	mgr->allow_patches = allow_patches;
+
+	if (version == SCI_VERSION_AUTODETECT)
+		switch (resmap_version) {
+		case SCI_VERSION_0:
+			if (scir_test_resource(mgr, sci_vocab,
+					       VOCAB_RESOURCE_SCI0_MAIN_VOCAB)) {
+				sciprintf("Resmgr: Detected SCI0\n");
+				version = SCI_VERSION_0;
+			} else {
+				sciprintf("Resmgr: Detected SCI01\n");
+				version = SCI_VERSION_01;
+			} break;
+
+		default:
+			sciprintf("Resmgr: Warning: While autodetecting: Couldn't"
+				  " determine SCI version!\n");
+		}
+
 	mgr->sci_version = version;
 
 	chdir(caller_cwd);
@@ -653,7 +423,7 @@ _scir_remove_from_lru(resource_mgr_t *mgr, resource_t *res)
 {
 	if (res->status != SCI_STATUS_ENQUEUED) {
 		sciprintf("Resmgr: Oops: trying to remove resource that isn't"
-			  " enqueued");
+			  " enqueued\n");
 		return;
 	}
 
@@ -676,17 +446,47 @@ _scir_add_to_lru(resource_mgr_t *mgr, resource_t *res)
 {
 	if (res->status != SCI_STATUS_ALLOCATED) {
 		sciprintf("Resmgr: Oops: trying to enqueue resource with state"
-			  " %d", res->status);
+			  " %d\n", res->status);
 		return;
 	}
 
 	res->prev = NULL;
 	res->next = mgr->lru_first;
 	mgr->lru_first = res;
+	if (!mgr->lru_last)
+		mgr->lru_last = res;
+	if (res->next)
+		res->next->prev = res;
 
 	mgr->memory_lru += res->size;
+#if (SCI_VERBOSE_RESMGR > 1)
+	fprintf(stderr, "Adding %s.%03d (%d bytes) to lru control: %d bytes total\n",
+		sci_resource_types[res->type], res->number, res->size,
+		mgr->memory_lru);
+	
+#endif
 
 	res->status = SCI_STATUS_ENQUEUED;
+}
+
+static void
+_scir_print_lru_list(resource_mgr_t *mgr)
+{
+	int mem = 0;
+	int entries = 0;
+	resource_t *res = mgr->lru_first;
+
+	while (res) {
+		fprintf(stderr,"\t%s.%03d: %d bytes\n",
+			sci_resource_types[res->type], res->number,
+			res->size);
+		mem += res->size;
+		++entries;
+		res = res->next;
+	}
+
+	fprintf(stderr,"Total: %d entries, %d bytes (mgr says %d)\n",
+		entries, mem, mgr->memory_lru);
 }
 
 static void
@@ -695,6 +495,13 @@ _scir_free_old_resources(resource_mgr_t *mgr, int last_invulnerable)
 	while (mgr->max_memory < mgr->memory_lru
 	       && (!last_invulnerable || mgr->lru_first != mgr->lru_last)) {
 		resource_t *goner = mgr->lru_last;
+		if (!goner) {
+			fprintf(stderr,"Internal error: mgr->lru_last is NULL!\n");
+			fprintf(stderr,"LRU-mem= %d\n", mgr->memory_lru);
+			fprintf(stderr,"lru_first = %p\n", mgr->lru_first);
+			_scir_print_lru_list(mgr);
+		}
+
 		_scir_remove_from_lru(mgr, goner);
 		_scir_unalloc(goner);
 #ifdef SCI_VERBOSE_RESMGR
@@ -724,10 +531,9 @@ scir_find_resource(resource_mgr_t *mgr, int type, int number, int lock)
 	if (!retval)
 		return NULL;
 
-	if (!retval->status) {
+	if (!retval->status)
 		_scir_load_resource(mgr, retval);
-		mgr->memory_lru += retval->size;
-	} else if (retval->status == SCI_STATUS_ENQUEUED)
+	else if (retval->status == SCI_STATUS_ENQUEUED)
 			_scir_remove_from_lru(mgr, retval);
 	/* Unless an error occured, the resource is now either
 	** locked or allocated, but never queued or freed.  */
@@ -741,7 +547,7 @@ scir_find_resource(resource_mgr_t *mgr, int type, int number, int lock)
 
 		++retval->lockers;
 
-	} else { /* Don't lock it */
+	} else if (retval->status != SCI_STATUS_LOCKED) { /* Don't lock it */
 		if (retval->status == SCI_STATUS_ALLOCATED)
 			_scir_add_to_lru(mgr, retval);
 	}
@@ -751,7 +557,7 @@ scir_find_resource(resource_mgr_t *mgr, int type, int number, int lock)
 	if (retval->data)
 		return retval;
 	else {
-		sciprintf("Resmgr: Failed to read %s.%03\n",
+		sciprintf("Resmgr: Failed to read %s.%03d\n",
 			  sci_resource_types[retval->type], retval->number);
 		return NULL;
 	}
@@ -775,6 +581,7 @@ scir_unlock_resource(resource_mgr_t *mgr, resource_t *res)
 	}
 
 	if (!--res->lockers) { /* No more lockers? */
+		res->status = SCI_STATUS_ALLOCATED;
 		mgr->memory_locked -= res->size;
 		_scir_add_to_lru(mgr, res);
 	}

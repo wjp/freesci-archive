@@ -135,12 +135,12 @@ int getInt(unsigned char* d)
   return d[0] | (d[1]<<8);
 }
 
-int* vocabulary_get_classes(int* count)
+int* vocabulary_get_classes(resource_mgr_t *resmgr, int* count)
 {
   resource_t* r;
   int *c, i;
 
-  if((r=findResource(sci_vocab, 996))==0) return 0;
+  if((r = scir_find_resource(resmgr, sci_vocab, 996, 0)) == NULL) return 0;
 
   c= sci_malloc(sizeof(int)*r->size/2);
   for(i=2; i<r->size; i+=4)
@@ -152,21 +152,21 @@ int* vocabulary_get_classes(int* count)
   return c;
 }
 
-int vocabulary_get_class_count()
+int vocabulary_get_class_count(resource_mgr_t *resmgr)
 {
   resource_t* r;
-  if((r=findResource(sci_vocab, 996))==0) return 0;
+  if((r = scir_find_resource(resmgr, sci_vocab, 996, 0))==0) return 0;
   return r->size/4;
 }
 
-char** vocabulary_get_snames(int* pcount, sci_version_t version)
+char** vocabulary_get_snames(resource_mgr_t *resmgr, int* pcount, sci_version_t version)
 {
   char** t;
   int count;
   int i,j;
   int magic;
 
-  resource_t* r=findResource(sci_vocab, 997);
+  resource_t* r = scir_find_resource(resmgr, sci_vocab, 997, 0);
 
   if (!r) /* No such resource? */
     return NULL;
@@ -214,15 +214,15 @@ vocabulary_free_snames(char **snames_list)
   free(snames_list);
 }
 
-opcode* vocabulary_get_opcodes()
+opcode* vocabulary_get_opcodes(resource_mgr_t *resmgr)
 {
 	opcode* o;
 	int count, i=0;
-	resource_t* r=findResource(sci_vocab, 998);
+	resource_t* r = scir_find_resource(resmgr, sci_vocab, VOCAB_RESOURCE_OPCODES, 0);
 
 	/* if the resource couldn't be loaded, leave */
 	if (r == NULL) {
-		fprintf(stderr,"unable to load vocab.998\n");
+		fprintf(stderr,"unable to load vocab.%03d\n", VOCAB_RESOURCE_OPCODES);
 		return NULL;
 	}
 
@@ -301,11 +301,11 @@ static char** _vocabulary_get_knames0alt(int *names, resource_t *r)
 }
 
 
-static char** vocabulary_get_knames0(int* names)
+static char** vocabulary_get_knames0(resource_mgr_t *resmgr, int* names)
 {
   char** t;
   int count, i, index=2, empty_to_add = 1;
-  resource_t* r=findResource(sci_vocab, 999);
+  resource_t* r = scir_find_resource(resmgr, sci_vocab, VOCAB_RESOURCE_KNAMES, 0);
 
   if (!r) { /* No kernel name table found? Fall back to default table */
     t = sci_malloc ((SCI0_KNAMES_DEFAULT_ENTRIES_NR + 1) * sizeof(char*));
@@ -352,11 +352,11 @@ static char** vocabulary_get_knames0(int* names)
 }
 
 /*NOTE: Untested*/
-static char** vocabulary_get_knames1(int *count)
+static char** vocabulary_get_knames1(resource_mgr_t *resmgr, int *count)
 {
   char** t=NULL;
   int size=64, used=0, pos=0;
-  resource_t* r=findResource(sci_vocab, 999);
+  resource_t* r = scir_find_resource(resmgr, sci_vocab, VOCAB_RESOURCE_KNAMES, 0);
 
   while(pos<r->size)
     {
@@ -377,14 +377,14 @@ static char** vocabulary_get_knames1(int *count)
   return t;
 }
 
-char** vocabulary_get_knames(int* count)
+char** vocabulary_get_knames(resource_mgr_t *resmgr, int* count)
 {
-	switch(sci_version)
+	switch(resmgr->sci_version)
 	{
 		case SCI_VERSION_0:
-		case SCI_VERSION_01: return vocabulary_get_knames0(count);
+		case SCI_VERSION_01: return vocabulary_get_knames0(resmgr, count);
 		case SCI_VERSION_1:
-		case SCI_VERSION_32: return vocabulary_get_knames1(count);
+		case SCI_VERSION_32: return vocabulary_get_knames1(resmgr, count);
 		default: return 0;
 	}
 }

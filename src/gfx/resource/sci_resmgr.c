@@ -80,7 +80,8 @@ int
 gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gfxr_pic_t *unscaled_pic,
 			       int flags, int default_palette, int nr)
 {
-	resource_t *res = findResource(sci_pic, nr);
+	resource_mgr_t *resmgr = (resource_mgr_t *) state->misc_payload;
+	resource_t *res = scir_find_resource(resmgr, sci_pic, nr, 0);
 	int need_unscaled = unscaled_pic != NULL;
 	gfxr_pic0_params_t style, basic_style;
 
@@ -122,7 +123,8 @@ gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gf
 gfxr_view_t *
 gfxr_interpreter_get_view(gfx_resstate_t *state, int nr)
 {
-	resource_t *res = findResource(sci_view, nr);
+	resource_mgr_t *resmgr = (resource_mgr_t *) state->misc_payload;
+	resource_t *res = scir_find_resource(resmgr, sci_view, nr, 0);
 
 	if (!res || !res->data)
 		return NULL;
@@ -139,7 +141,8 @@ gfxr_interpreter_get_view(gfx_resstate_t *state, int nr)
 gfx_bitmap_font_t *
 gfxr_interpreter_get_font(gfx_resstate_t *state, int nr)
 {
-	resource_t *res = findResource(sci_font, nr);
+	resource_mgr_t *resmgr = (resource_mgr_t *) state->misc_payload;
+	resource_t *res = scir_find_resource(resmgr, sci_font, nr, 0);
 
 	if (!res || !res->data)
 		return NULL;
@@ -151,7 +154,8 @@ gfxr_interpreter_get_font(gfx_resstate_t *state, int nr)
 gfx_pixmap_t *
 gfxr_interpreter_get_cursor(gfx_resstate_t *state, int nr)
 {
-	resource_t *res = findResource(sci_cursor, nr);
+	resource_mgr_t *resmgr = (resource_mgr_t *) state->misc_payload;
+	resource_t *res = scir_find_resource(resmgr, sci_cursor, nr, 0);
 
 	if (!res || !res->data)
 		return NULL;
@@ -169,8 +173,10 @@ gfxr_interpreter_get_cursor(gfx_resstate_t *state, int nr)
 
 
 int *
-gfxr_interpreter_get_resources(gfx_resource_types_t type, int version, int *entries_nr)
+gfxr_interpreter_get_resources(gfx_resstate_t *state, gfx_resource_types_t type,
+			       int version, int *entries_nr)
 {
+	resource_mgr_t *resmgr = (resource_mgr_t *) state->misc_payload;
 	int restype;
 	int *resources;
 	int count = 0;
@@ -200,7 +206,7 @@ gfxr_interpreter_get_resources(gfx_resource_types_t type, int version, int *entr
 	resources = sci_malloc(sizeof(int) * top);
 
 	for (i = 0; i < top; i++)
-		if (findResource(restype, i))
+		if (scir_test_resource(resmgr, restype, i))
 			resources[count++] = i;
 
 	*entries_nr = count;

@@ -78,17 +78,21 @@ typedef struct {
 	int tag_lock_counter; /* lock counter value at tag time */
 
 	sbtree_t *resource_trees[GFX_RESOURCE_TYPES_NR];
+	void *misc_payload;
 } gfx_resstate_t;
 
 
 
 gfx_resstate_t *
-gfxr_new_resource_manager(int version, struct _gfx_options *options, gfx_driver_t *driver);
+gfxr_new_resource_manager(int version, struct _gfx_options *options,
+			  gfx_driver_t *driver, void *misc_payload);
 /* Allocates and initializes a new resource manager
 ** Parameters: (int) version: Interpreter version
 **             (gfx_options_t *): Pointer to all relevant drawing options
 **             (gfx_driver_t *): The graphics driver (needed for capability flags and the mode
 **                               structure)
+**             (void *) misc_payload: Additional information for the interpreter's
+**                      resource loaders
 ** Returns   : (gfx_resstate_t *): A newly allocated resource manager
 ** The options are considered to be read-only, as they belong to the overlying state object.
 */
@@ -219,9 +223,10 @@ gfxr_interpreter_options_hash(gfx_resource_types_t type, int version, struct _gf
 */
 
 int *
-gfxr_interpreter_get_resources(gfx_resource_types_t type, int version, int *entries_nr);
+gfxr_interpreter_get_resources(gfx_resstate_t *state, gfx_resource_types_t type, int version, int *entries_nr);
 /* Retreives all resources of a specified type that are available from the interpreter
-** Parameters: (gfx_respirce_types_t) type: The resource type to query
+** Parameters: (gfx_resstate_t *) state: The relevant resource state
+**             (gfx_respirce_types_t) type: The resource type to query
 **             (int) version: The interpreter type and version
 **             (int *) entries_nr: The variable the number of entries will eventually be stored in
 ** Returns   : (int *) An array of resource numbers

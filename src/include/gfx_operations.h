@@ -146,22 +146,26 @@ typedef struct {
 /**************************/
 
 int
-gfxop_init_default(gfx_state_t *state, gfx_options_t *options);
+gfxop_init_default(gfx_state_t *state, gfx_options_t *options, void *misc_info);
 /* Initializes a graphics mode suggested by the graphics driver
 ** Parameters: (gfx_state_ t *) state: The state to initialize in that mode
 **             (gfx_options_t *) options: Rendering options
+**             (void *) misc_info: Additional information for the interpreter
+**                      part of the resource loader
 ** Returns   : (int) GFX_OK on success, GFX_FATAL otherwise
 */
 
 int
 gfxop_init(gfx_state_t *state, int xfact, int yfact, gfx_color_mode_t bpp,
-	   gfx_options_t *options);
+	   gfx_options_t *options, void *misc_info);
 /* Initializes a custom graphics mode
 ** Parameters: (gfx_state_t *) state: The state to initialize
 **             (int x int) xfact, yfact: Horizontal and vertical scale factors
 **             (gfx_color_mode_t) bpp: Bytes per pixel to initialize with, or
 **                                     0 (GFX_COLOR_MODE_AUTO) to auto-detect
 **             (gfx_options_t *) options: Rendering options
+**             (void *) misc_info: Additional information for the interpreter
+**                      part of the resource loader
 ** Returns   : (int) GFX_OK on success, GFX_ERROR if that particular mode is
 **                   unavailable, or GFX_FATAL if the graphics driver is unable
 **                   to provide any useful graphics support

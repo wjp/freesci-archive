@@ -42,7 +42,7 @@ kernel_lookup_text(state_t *s, int address, int index)
   if (address < 1000) {
     int textlen;
     int _index = index;
-    textres = findResource(sci_text, address);
+    textres = scir_find_resource(s->resmgr, sci_text, address, 0);
 
     if (!textres) {
       SCIkwarn(SCIkERROR, "text.%03d not found\n", address);
@@ -334,44 +334,44 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kStrEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr address = UPARAM(0);
-  char *seeker = (char *) s->heap + address;
+	heap_ptr address = UPARAM(0);
+	char *seeker = (char *) s->heap + address;
 
-  while (*seeker++)
-    ++address;
+	while (*seeker++)
+		++address;
 
-  s->acc = address + 1; /* End of string */
+	s->acc = address + 1; /* End of string */
 }
 
 void
 kStrCat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  strcat((char *) s->heap + UPARAM(0), (char *) s->heap + UPARAM(1));
+	strcat((char *) s->heap + UPARAM(0), (char *) s->heap + UPARAM(1));
 }
 
 void
 kStrCmp(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  if (argc > 2)
-    s->acc = strncmp((char *) (s->heap + UPARAM(0)), (char *) (s->heap + UPARAM(1)), UPARAM(2));
-  else
-    s->acc = strcmp((char *) (s->heap + UPARAM(0)), (char *) (s->heap + UPARAM(1)));
+	if (argc > 2)
+		s->acc = strncmp((char *) (s->heap + UPARAM(0)), (char *) (s->heap + UPARAM(1)), UPARAM(2));
+	else
+		s->acc = strcmp((char *) (s->heap + UPARAM(0)), (char *) (s->heap + UPARAM(1)));
 }
 
 
 void
 kStrCpy(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  if (argc > 2)
-    strncpy((char *) (s->heap + UPARAM(0)), (char *) (s->heap + UPARAM(1)), UPARAM(2));
-  else
-    strcpy((char *) (s->heap + UPARAM(0)), (char *) (s->heap + UPARAM(1)));
+	if (argc > 2)
+		strncpy((char *) (s->heap + UPARAM(0)), (char *) (s->heap + UPARAM(1)), UPARAM(2));
+	else
+		strcpy((char *) (s->heap + UPARAM(0)), (char *) (s->heap + UPARAM(1)));
 
-  s->acc = PARAM(0);
+	s->acc = PARAM(0);
 
 }
 
@@ -379,27 +379,27 @@ kStrCpy(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kStrAt(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr address = UPARAM(0) + UPARAM(1);
+	heap_ptr address = UPARAM(0) + UPARAM(1);
 
-  s->acc = s->heap[address];
+	s->acc = s->heap[address];
 
-  if (argc > 2)
-    s->heap[address]=UPARAM(2); /* Request to modify this char */
+	if (argc > 2)
+		s->heap[address]=UPARAM(2); /* Request to modify this char */
 }
 
 
 void
 kReadNumber(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  char *source = (char *) (s->heap + UPARAM(0));
+	char *source = (char *) (s->heap + UPARAM(0));
 
-  while (isspace(*source))
-    source++; /* Skip whitespace */
+	while (isspace(*source))
+		source++; /* Skip whitespace */
 
-  if (*source == '$') /* SCI uses this for hex numbers */
-    s->acc = strtol(source + 1, NULL, 16); /* Hex */
-  else
-    s->acc = strtol(source, NULL, 10); /* Force decimal */
+	if (*source == '$') /* SCI uses this for hex numbers */
+		s->acc = strtol(source + 1, NULL, 16); /* Hex */
+	else
+		s->acc = strtol(source, NULL, 10); /* Force decimal */
 }
 
 
@@ -545,33 +545,33 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kStrLen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->acc = strlen((char *) (s->heap + UPARAM(0)));
+	s->acc = strlen((char *) (s->heap + UPARAM(0)));
 }
 
 
 void
 kGetFarText(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  resource_t *textres = findResource(sci_text, UPARAM(0));
-  char *seeker;
-  int counter = PARAM(1);
+	resource_t *textres = scir_find_resource(s->resmgr, sci_text, UPARAM(0), 0);
+	char *seeker;
+	int counter = PARAM(1);
 
-  CHECK_THIS_KERNEL_FUNCTION;
+	CHECK_THIS_KERNEL_FUNCTION;
 
-  if (!textres) {
-    SCIkwarn(SCIkERROR, "text.%d does not exist\n", PARAM(0));
-    return;
-  }
+	if (!textres) {
+		SCIkwarn(SCIkERROR, "text.%d does not exist\n", PARAM(0));
+		return;
+	}
 
-  seeker = (char *) textres->data;
+	seeker = (char *) textres->data;
 
-  while (counter--)
-    while (*seeker++);
-  /* The second parameter (counter) determines the number of the string inside the text
-  ** resource.
-  */
+	while (counter--)
+		while (*seeker++);
+	/* The second parameter (counter) determines the number of the string inside the text
+	** resource.
+	*/
 
-  s->acc = UPARAM(2);
-  strcpy((char *) (s->heap + UPARAM(2)), seeker); /* Copy the string and get return value */
+	s->acc = UPARAM(2);
+	strcpy((char *) (s->heap + UPARAM(2)), seeker); /* Copy the string and get return value */
 }
 

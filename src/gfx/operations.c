@@ -511,7 +511,7 @@ _gfxop_clear_dirty_rec(gfx_state_t *state, struct _dirty_rect *rect)
 
 
 static int
-_gfxop_init_common(gfx_state_t *state, gfx_options_t *options)
+_gfxop_init_common(gfx_state_t *state, gfx_options_t *options, void *misc_payload)
 {
 	state->options = options;
 
@@ -520,7 +520,10 @@ _gfxop_init_common(gfx_state_t *state, gfx_options_t *options)
 					  &(state->static_palette_entries))))
 		_gfxop_alloc_colors(state, state->static_palette, state->static_palette_entries);
 
-	if (!((state->resstate = gfxr_new_resource_manager(state->version, state->options, state->driver)))) {
+	if (!((state->resstate = gfxr_new_resource_manager(state->version,
+							   state->options,
+							   state->driver,
+							   misc_payload)))) {
 		GFXERROR("Failed to initialize resource manager!\n");
 		return GFX_FATAL;
 	}
@@ -562,18 +565,19 @@ _gfxop_init_common(gfx_state_t *state, gfx_options_t *options)
 }
 
 int
-gfxop_init_default(gfx_state_t *state, gfx_options_t *options)
+gfxop_init_default(gfx_state_t *state, gfx_options_t *options, void *misc_info)
 {
 	BASIC_CHECKS(GFX_FATAL);
 	if (state->driver->init(state->driver))
 		return GFX_FATAL;
 
-	return _gfxop_init_common(state, options);
+	return _gfxop_init_common(state, options, misc_info);
 }
 
 
 int
-gfxop_init(gfx_state_t *state, int xfact, int yfact, gfx_color_mode_t bpp, gfx_options_t *options)
+gfxop_init(gfx_state_t *state, int xfact, int yfact, gfx_color_mode_t bpp,
+	   gfx_options_t *options, void *misc_info)
 {
 	int color_depth = bpp? bpp : 1;
 	int initialized = 0;
@@ -589,7 +593,7 @@ gfxop_init(gfx_state_t *state, int xfact, int yfact, gfx_color_mode_t bpp, gfx_o
 	if (!initialized)
 		return GFX_FATAL;
 
-	return _gfxop_init_common(state, options);
+	return _gfxop_init_common(state, options, misc_info);
 }
 
 

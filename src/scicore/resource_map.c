@@ -180,7 +180,7 @@ main(int argc, char **argv)
 
 			printf("#%04d:\tRESOURCE.%03d:%8d\t%s.%03d\n",
 			       i, res->file, res->file_offset,
-			       Resource_Types[res->type],
+			       sci_resource_types[res->type],
 			       res->number);
 		}
 	} else

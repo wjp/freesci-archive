@@ -32,12 +32,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <engine.h>
+#include "sciunpack.h"
 
 int script_dump()
 {
 	con_passthrough = 1;
 
-	if(loadObjects())
+	if(loadObjects(resmgr))
 	{
 		fprintf(stderr, "Unable to load object hierarchy\n");
 		return 1;

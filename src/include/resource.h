@@ -149,11 +149,6 @@ typedef guint8 byte;
 typedef guint16 word;
 
 
-extern DLLEXTERN int sci_version;
-/* The version we are currently working with */
-
-extern DLLEXTERN int max_resource;
-
 #define MAX_HOMEDIR_SIZE 255
 
 

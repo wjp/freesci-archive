@@ -1,6 +1,8 @@
 #ifndef OLD_OBJECTS_H
 #define OLD_OBJECTS_H
 
+#include <sciresource.h>
+
 typedef FLEXARRAY(script_opcode,int number;) script_method;
 
 typedef struct object_
@@ -37,7 +39,7 @@ int max_object;
 #define SCRIPT_PRINT_SELECTORS  3
 void printObject(object* obj, int flags);
 
-int loadObjects();
+int loadObjects(resource_mgr_t *resmgr);
 void freeObject(object*);
 
 extern char* globals[];

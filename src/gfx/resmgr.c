@@ -43,7 +43,8 @@ struct param_struct {
 
 
 gfx_resstate_t *
-gfxr_new_resource_manager(int version, gfx_options_t *options, gfx_driver_t *driver)
+gfxr_new_resource_manager(int version, gfx_options_t *options,
+			  gfx_driver_t *driver, void *misc_payload)
 {
 	gfx_resstate_t *state = sci_malloc(sizeof(gfx_resstate_t));
 	int i;
@@ -51,12 +52,13 @@ gfxr_new_resource_manager(int version, gfx_options_t *options, gfx_driver_t *dri
 	state->version = version;
 	state->options = options;
 	state->driver = driver;
+	state->misc_payload = misc_payload;
 
 	state->tag_lock_counter = state->lock_counter = 0;
 	for (i = 0; i < GFX_RESOURCE_TYPES_NR; i++) {
 		sbtree_t *tree;
 		int entries_nr;
-		int *resources = gfxr_interpreter_get_resources(i, version, &entries_nr);
+		int *resources = gfxr_interpreter_get_resources(state, i, version, &entries_nr);
 
 		if (!resources)
 			state->resource_trees[i] = NULL;

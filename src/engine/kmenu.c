@@ -149,10 +149,12 @@ about_freesci(state_t *s)
 
 	i = 999;
 	while (!bodyfont_res && (i > -1))
-		bodyfont_res = findResource(sci_font, i--);
+		bodyfont_res = scir_test_resource(s->resmgr, sci_font, i--);
 
-	if (i == -1)
+	if (i == -1) {
+		sciprintf("Sorry, couldn't find a font...\n");
 		return;
+	}
 
 	bodyfont = i+1;
 	for (page = 0; page < ABOUT_FREESCI_PAGES_NR; ++page) {

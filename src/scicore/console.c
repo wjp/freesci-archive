@@ -271,8 +271,6 @@ con_init (void)
 
     con_hook_int (&con_passthrough, "con_passthrough",
 		  "scicon->stdout passthrough");
-    con_hook_int (&sci_version, "sci_version",
-		  "Interpreter version (see resource.h)");
   }
 }
 
@@ -689,9 +687,14 @@ getResourceNumber (char *resid)
 int
 c_version (state_t * s)
 {
-  sciprintf ("FreeSCI, version " VERSION "\n");
-  sciprintf ("Running %s\n", sci_version_types[sci_version]);
-  return 0;
+	if (NULL == s) {
+		sciprintf("console.c: c_version: NULL passed for parameter s\n");
+		return -1;
+	}
+
+	sciprintf ("FreeSCI, version " VERSION "\n");
+	sciprintf ("Running %s\n", sci_version_types[s->resmgr->sci_version]);
+	return 0;
 }
 
 int
@@ -747,7 +750,7 @@ c_list (state_t * s)
       {
 	int i;
 	for (i = 0; i < 1000; i++)
-	  if (findResource (res, i))
+	  if (scir_test_resource (s->resmgr, res, i))
 	    sciprintf ("%s.%03d\n", sci_resource_types[res], i);
       }
 
@@ -839,7 +842,7 @@ c_size (state_t * s)
     sciprintf ("Resource type '%s' is not valid\n", cmd_params[0].str);
   else
   {
-    resource_t *resource = findResource (res, cmd_params[1].val);
+    resource_t *resource = scir_find_resource(s->resmgr, res, cmd_params[1].val, 0);
     if (resource)
     {
       sciprintf ("Size: %d\n", resource->size);
@@ -861,7 +864,7 @@ c_dump (state_t * s)
     sciprintf ("Resource type '%s' is not valid\n", cmd_params[0].str);
   else
   {
-    resource_t *resource = findResource (res, cmd_params[1].val);
+    resource_t *resource = scir_find_resource(s->resmgr, res, cmd_params[1].val, 0);
     if (resource)
       sci_hexdump (resource->data, resource->size, 0);
     else
@@ -916,7 +919,7 @@ c_hexgrep (state_t * s)
   }
 
   for (; resnr <= resmax; resnr++)
-    if ((script = findResource (restype, resnr)))
+    if ((script = scir_find_resource(s->resmgr, restype, resnr, 0)))
     {
       int seeker = 0, seekerold = 0;
       int comppos = 0;
@@ -971,7 +974,7 @@ c_selectornames (state_t * s)
     return -1;
   }
 
-  snames = vocabulary_get_snames (&namectr, s ? s->version : 0);
+  snames = vocabulary_get_snames (s->resmgr, &namectr, s ? s->version : 0);
 
   if (!snames)
   {
@@ -993,11 +996,10 @@ int
 c_kernelnames (state_t * s)
 {
   int knamectr;
-  char **knames = vocabulary_get_knames (&knamectr);
+  char **knames = vocabulary_get_knames (s->resmgr, &knamectr);
   int seeker = 0;
 
-  if (NULL == s)
-  {
+  if (NULL == s) {
     sciprintf("console.c: c_kernelnames NULL passed for parameter s\n");
     return -1;
   }
@@ -1025,7 +1027,7 @@ c_dissectscript (state_t * s)
     return -1;
   }
 
-  script_dissect (cmd_params[0].val, s->selector_names, s->selector_names_nr);
+  script_dissect (s->resmgr, cmd_params[0].val, s->selector_names, s->selector_names_nr);
   return 0;
 }
 

@@ -42,6 +42,7 @@
 #define obstack_chunk_free free
 
 #include <resource.h>
+#include <sciresource.h>
 
 #ifdef HAVE_OBSTACK_H
 #include <obstack.h>
@@ -184,9 +185,9 @@ makeMIDI0(const guint8 *src, int *size, guint8 flag);
 
 
 int
-mapMIDIInstruments(void);
+map_MIDI_instruments(resource_mgr_t *resmgr);
 /* Automagically detects MIDI instrument mappings
-** Parameters: (void)
+** Parameters: (resource_mgr_t *) resmgr: The resource manager to read from
 ** Returns   : (int) 0 on success, 1 on failure
 ** This function requires patch.002 to be present, or it will fail. However,
 ** for SCI1 and later, it will expect MIDI information to be stored as GM,

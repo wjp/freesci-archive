@@ -75,11 +75,11 @@
 
 #ifdef _WIN32
 #  undef inline /* just to be sure it is not defined */
-#  define inline __inline
-#endif
-
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199900L
-#  define inline
+#  define scim_inline __inline
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199900L
+#  define scim_inline
+#else
+#  define scim_inline inline
 #endif
 
 /********** macros for error messages **********/
@@ -164,7 +164,7 @@ do {\
 
 /********** memory allocation routines **********/
 
-extern inline void *
+extern scim_inline void *
 _SCI_MALLOC(size_t size, char *file, int line, char *funct, int debug);
 /* Allocates the specified amount of memory.
 ** Parameters: (size_t) size: Number of bytes to allocate
@@ -180,7 +180,7 @@ _SCI_MALLOC(size_t size, char *file, int line, char *funct, int debug);
 ** If the call fails, behaviour is dependent on the definition of SCI_ALLOC.
 */
 
-extern inline void *
+extern scim_inline void *
 _SCI_CALLOC(size_t num, size_t size, char *file, int line, char *funct, int debug);
 /* Allocates num * size bytes of zeroed-out memory.
 ** Parameters: (size_t) num: Number of elements to allocate
@@ -191,7 +191,7 @@ _SCI_CALLOC(size_t num, size_t size, char *file, int line, char *funct, int debu
 ** See _SCI_MALLOC() for more information if call fails.
 */
 
-extern inline void *
+extern scim_inline void *
 _SCI_REALLOC(void *ptr, size_t size, char *file, int line, char *funct, int debug);
 /* Increases the size of an allocated memory chunk.
 ** Parameters: (void *) ptr: The original pointer
@@ -205,7 +205,7 @@ _SCI_REALLOC(void *ptr, size_t size, char *file, int line, char *funct, int debu
 ** See _SCI_MALLOC() for more information if call fails.
 */
 
-extern inline void
+extern scim_inline void
 _SCI_FREE(void *ptr, char *file, int line, char *funct, int debug);
 /* Frees previously allocated memory chunks
 ** Parameters: (void *) ptr: The pointer to free
@@ -213,7 +213,7 @@ _SCI_FREE(void *ptr, char *file, int line, char *funct, int debug);
 ** Returns   : (void)
 */
 
-extern inline void *
+extern scim_inline void *
 _SCI_MEMDUP(void *src, size_t size, char *file, int line, char *funct, int debug);
 /* Duplicates a chunk of memory
 ** Parameters: (void *) src: Pointer to the data to duplicate
@@ -225,7 +225,7 @@ _SCI_MEMDUP(void *src, size_t size, char *file, int line, char *funct, int debug
 ** See _SCI_MALLOC() for more information if call fails.
 */
 
-extern inline char *
+extern scim_inline char *
 _SCI_STRDUP(const char *src, char *file, int line, char *funct, int debug);
 /* Duplicates a string.
 ** Parameters: (const char *) src: The original pointer
@@ -237,7 +237,7 @@ _SCI_STRDUP(const char *src, char *file, int line, char *funct, int debug);
 */
 
 
-extern inline char *
+extern scim_inline char *
 _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, int debug);
 /* Copies a string into a newly allocated memory part, up to a certain length.
 ** Parameters: (char *) src: The source string

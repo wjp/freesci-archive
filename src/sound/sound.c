@@ -21,7 +21,7 @@
 
  Current Maintainer:
 
-		Christoph Reichenbach (CJR) [creichen@rbg.informatik.tu-darmstadt.de]
+   Christoph Reichenbach (CJR) [creichen@rbg.informatik.tu-darmstadt.de]
 
 ***************************************************************************/
 
@@ -165,7 +165,8 @@ sound_command(state_t *s, int command, int handle, int parameter)
 
 	switch (command) {
 	case SOUND_COMMAND_INIT_SONG: {
-		resource_t *song = findResource(sci_sound, parameter);
+		resource_t *song = scir_find_resource(s->resmgr, sci_sound,
+						      parameter, 0);
 		int len;
 
 		if (!song) {
@@ -706,7 +707,7 @@ song_lib_dump(songlib_t songlib, int line)
 int init_midi_device (state_t *s) {
 	resource_t *midi_patch;
 
-	midi_patch = findResource(9,midi_patchfile);
+	midi_patch = scir_find_resource(s->resmgr, sci_patch, midi_patchfile, 0);
 
 	if (midi_patch == NULL) {
 		sciprintf(" Patch (%03d) could not be loaded. Initializing with defaults...\n", midi_patchfile);

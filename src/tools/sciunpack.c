@@ -92,10 +92,12 @@ static int color_mode = 0;
 static int action = ACT_DEFAULT;
 static guint8 midimask = 0x01;  /* MT-32 */
 
+resource_mgr_t *resmgr;
+
 void
 print_resource_filename(FILE* file, int type, int number)
 {
-	if (sci_version < SCI_VERSION_1)
+	if (resmgr->sci_version < SCI_VERSION_1)
 		fprintf(file, "%s.%03d", sci_resource_types[type], number);
 	else
 		fprintf(file, "%d.%s", number, sci_resource_type_suffixes[type]);
@@ -104,7 +106,7 @@ print_resource_filename(FILE* file, int type, int number)
 void
 sprint_resource_filename(char* buf, int type, int number)
 {
-	if (sci_version < SCI_VERSION_1)
+	if (resmgr->sci_version < SCI_VERSION_1)
 		sprintf(buf, "%s.%03d", sci_resource_types[type], number);
 	else
 		sprintf(buf, "%d.%s", number, sci_resource_type_suffixes[type]);
@@ -298,12 +300,14 @@ int main(int argc, char** argv)
 			exit(1);
 		}
 
-	if ((i = loadResources(SCI_VERSION_AUTODETECT, 0))) {
-		fprintf(stderr,"SCI Error: %s!\n", sci_error_types[i]);
-		return 1;
-	};
+	if (!(resmgr = scir_new_resource_manager(gamedir, SCI_VERSION_AUTODETECT,
+						 0, 1024*128))) {
+		fprintf(stderr,"Could not find any resources; quitting.\n");
+		exit(1);
+	}
 
-	if (verbose) printf("Autodetect determined: %s\n", sci_version_types[sci_version]);
+	if (verbose) printf("Autodetect determined: %s\n",
+			    sci_version_types[resmgr->sci_version]);
 
 
 	switch (action) {
@@ -312,17 +316,21 @@ int main(int argc, char** argv)
 		int i;
 
 		if (verbose) {
-			for (i=0; i<max_resource; i++) {
+			for (i=0; i < resmgr->resources_nr; i++) {
 				printf("%i: ",i);
-				print_resource_filename(stdout, resource_map[i].type, resource_map[i].number);
-				printf("   has size %i\n", resource_map[i].size);
+				print_resource_filename(stdout,
+							resmgr->resources[i].type,
+							resmgr->resources[i].number);
+				printf("   has size %i\n", resmgr->resources[i].size);
 			}
 
 			fprintf(stderr," Reading complete. Actual resource count is %i\n",
-				max_resource);
+				resmgr->resources_nr);
 		} else {
-			for (i=0; i<max_resource; i++) {
-				print_resource_filename(stdout, resource_map[i].type, resource_map[i].number);
+			for (i=0; i<resmgr->resources_nr; i++) {
+				print_resource_filename(stdout,
+							resmgr->resources[i].type,
+							resmgr->resources[i].number);
 				printf("\n");
 			}
 		}
@@ -333,9 +341,9 @@ int main(int argc, char** argv)
 
 		if (!strcmp (resourcenumber_string, "*")) {
 			int i;
-			for (i=0; i<max_resource; i++)
-				if (resource_map[i].type == stype)
-					unpack_resource (stype, resource_map[i].number, NULL);
+			for (i=0; i<resmgr->resources_nr; i++)
+				if (resmgr->resources[i].type == stype)
+					unpack_resource (stype, resmgr->resources[i].number, NULL);
 		} else {
 			snr = atoi(resourcenumber_string);
 			unpack_resource(stype, snr, outfilename);
@@ -361,7 +369,7 @@ int main(int argc, char** argv)
 	}
 
 
-	freeResources();
+	scir_free_resource_manager(resmgr);
 	return retval;
 }
 
@@ -371,7 +379,7 @@ void unpack_resource(int stype, int snr, char *outfilename)
 	char fnamebuffer[12]; /* stores default file name */
 	resource_t *found;
 
-	if ((stype == sci_sound) && conversion && (sci_version > SCI_VERSION_0)) {
+	if ((stype == sci_sound) && conversion && (resmgr->sci_version > SCI_VERSION_0)) {
 		fprintf(stderr,"MIDI conversion is only supported for SCI version 0\n");
 		conversion = 0;
 	}
@@ -379,7 +387,7 @@ void unpack_resource(int stype, int snr, char *outfilename)
 	if (!outfilename) {
 		outfilename = fnamebuffer;
 		if ((stype == sci_sound) && conversion) {
-			mapMIDIInstruments();
+			map_MIDI_instruments(resmgr);
 			sprintf(outfilename,"%03d.midi", snr);
 		}
 #ifdef DRAW_GRAPHICS
@@ -396,7 +404,7 @@ void unpack_resource(int stype, int snr, char *outfilename)
 		printf("...\n");
 	}
 
-	if ((found = findResource(stype, snr))) {
+	if ((found = scir_find_resource(resmgr, stype, snr, 0))) {
 
 #ifdef DRAW_GRAPHICS
 		if ((stype == sci_pic) && conversion) {
@@ -412,7 +420,7 @@ void unpack_resource(int stype, int snr, char *outfilename)
 		if ((stype == sci_script) && conversion) {
 			sprintf (outfilename, "%03d.script", snr);
                         open_console_file (outfilename);
-			script_dissect(snr, NULL, 0);
+			script_dissect(resmgr, snr, NULL, 0);
                         close_console_file();
 		} else {
 

@@ -1,5 +1,9 @@
 2001-09-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* Adjusted all files to use new LRU resource manager
+	
+	* Adjusted all files for removal of old global variables
+
 	* Adjusted all files for the array name changes
 	
 	* src/scicore/resource.c: resource manager theoretically

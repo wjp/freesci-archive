@@ -1214,6 +1214,8 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->work_dir = s->work_dir;
 	retval->kernel_opt_flags = 0;
 
+	retval->resmgr = s->resmgr;
+
 	retval->successor = NULL;
 
 	chdir ("..");

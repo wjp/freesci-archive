@@ -71,7 +71,7 @@ _vocab_cmp_words(const void *word1, const void *word2)
 /* FIXME: Unify this with the SCI0 routine */
 
 word_t **
-vocab_get_words_sci1(int *word_counter)
+vocab_get_words_sci1(resource_mgr_t *resmgr, int *word_counter)
 {
   int counter = 0;
   int seeker;
@@ -80,7 +80,8 @@ vocab_get_words_sci1(int *word_counter)
   char currentword[256] = ""; /* They're not going to use words longer than 255 ;-) */
   int currentwordpos = 0;
 
-  resource_t *resource = findResource(sci_vocab, VOCAB_RESOURCE_SCI1_MAIN_VOCAB);
+  resource_t *resource = scir_find_resource(resmgr, sci_vocab,
+					    VOCAB_RESOURCE_SCI1_MAIN_VOCAB, 0);
   vocab_version = 1;
 
   if (!resource) {
@@ -137,7 +138,7 @@ vocab_get_words_sci1(int *word_counter)
 
 
 word_t **
-vocab_get_words(int *word_counter)
+vocab_get_words(resource_mgr_t *resmgr, int *word_counter)
 {
   int counter = 0;
   int seeker;
@@ -146,11 +147,12 @@ vocab_get_words(int *word_counter)
   char currentword[256] = ""; /* They're not going to use words longer than 255 ;-) */
   int currentwordpos = 0;
 
-  resource_t *resource = findResource(sci_vocab, VOCAB_RESOURCE_SCI0_MAIN_VOCAB);
+  resource_t *resource = scir_find_resource(resmgr, sci_vocab,
+					    VOCAB_RESOURCE_SCI0_MAIN_VOCAB, 0);
 
   if (!resource) {
     fprintf(stderr,"SCI0: Could not find a main vocabulary, trying SCI01.\n");
-    return vocab_get_words_sci1(word_counter); /* NOT critical: SCI1 games and some demos don't have one! */
+    return vocab_get_words_sci1(resmgr, word_counter); /* NOT critical: SCI1 games and some demos don't have one! */
   }
 
   seeker = 52; /* vocab.000 starts with 26 16-bit pointers which we don't use */
@@ -241,11 +243,11 @@ inverse_16(unsigned int foo)
 }
 
 suffix_t **
-vocab_get_suffices(int *suffices_nr)
+vocab_get_suffices(resource_mgr_t *resmgr, int *suffices_nr)
 {
   int counter = 0;
   suffix_t **suffices;
-  resource_t *resource = findResource(sci_vocab, VOCAB_RESOURCE_SUFFIX_VOCAB);
+  resource_t *resource = scir_find_resource(resmgr, sci_vocab, VOCAB_RESOURCE_SUFFIX_VOCAB, 0);
   int seeker = 1;
 
   if (!resource) {
@@ -312,9 +314,10 @@ vocab_free_branches(parse_tree_branch_t *parser_branches)
 
 
 parse_tree_branch_t *
-vocab_get_branches(int *branches_nr)
+vocab_get_branches(resource_mgr_t * resmgr, int *branches_nr)
 {
-  resource_t *resource = findResource(sci_vocab, VOCAB_RESOURCE_PARSE_TREE_BRANCHES);
+  resource_t *resource = scir_find_resource(resmgr, sci_vocab,
+					    VOCAB_RESOURCE_PARSE_TREE_BRANCHES, 0);
   parse_tree_branch_t *retval;
   int i;
 

@@ -588,9 +588,10 @@ init_console()
 
 
 static int
-init_gamestate(state_t *gamestate, sci_version_t version)
+init_gamestate(state_t *gamestate, resource_mgr_t *resmgr, sci_version_t version)
 {
 	int errc;
+	gamestate->resmgr = resmgr;
 
 	if ((errc = script_init_engine(gamestate, version))) { /* Initialize game state */
 		int recovered = 0;
@@ -637,11 +638,11 @@ init_gamestate(state_t *gamestate, sci_version_t version)
 }
 
 static int
-init_gfx(cl_options_t *cl_options, gfx_driver_t *driver)
+init_gfx(cl_options_t *cl_options, gfx_driver_t *driver, resource_mgr_t *resmgr)
 {
 	gfx_state->driver = driver;
 	gamestate->gfx_state = gfx_state;
-	gfx_state->version = sci_version;
+	gfx_state->version = resmgr->sci_version;
 
 	if (cl_options->scale_y > 0 && !cl_options->scale_x)
 		cl_options->scale_x = cl_options->scale_y;
@@ -653,7 +654,7 @@ init_gfx(cl_options_t *cl_options, gfx_driver_t *driver)
 		if (cl_options->color_depth > 0) {
 			if (gfxop_init(gfx_state, cl_options->scale_x,
 				       cl_options->scale_y, cl_options->color_depth,
-				       gfx_options)) {
+				       gfx_options, resmgr)) {
 				fprintf(stderr,"Graphics initialization failed. Aborting...\n");
 				return 1;
 			}
@@ -661,7 +662,7 @@ init_gfx(cl_options_t *cl_options, gfx_driver_t *driver)
 			cl_options->color_depth = 4;
 			while (gfxop_init(gfx_state, cl_options->scale_x,
 					  cl_options->scale_y, cl_options->color_depth,
-					  gfx_options) && --cl_options->color_depth);
+					  gfx_options, resmgr) && --cl_options->color_depth);
 
 			if (!cl_options->color_depth) {
 				fprintf(stderr,"Could not find a matching color depth. Aborting...\n");
@@ -669,7 +670,7 @@ init_gfx(cl_options_t *cl_options, gfx_driver_t *driver)
 			}
 		}
 
-	} else if (gfxop_init_default(gfx_state, gfx_options)) {
+	} else if (gfxop_init_default(gfx_state, gfx_options, resmgr)) {
 		fprintf(stderr,"Graphics initialization failed. Aborting...\n");
 		return 1;
 	}
@@ -769,8 +770,11 @@ main(int argc, char** argv)
 	char *savegame_name = NULL;
 	sci_version_t version			= 0;
 	gfx_driver_t *gfx_driver		= NULL;
-	sound_server_t *sound_server	= NULL;
-	char *module_path				= SCI_DEFAULT_MODULE_PATH;
+	sound_server_t *sound_server = NULL;
+	char *module_path			= SCI_DEFAULT_MODULE_PATH;
+	resource_mgr_t *resmgr;
+
+	init_console(); /* So we can get any output */
 
 	game_name = parse_arguments(argc, argv, &cl_options, &savegame_name);
 
@@ -813,30 +817,29 @@ main(int argc, char** argv)
 
 	getcwd(resource_dir, PATH_MAX); /* Store resource directory */
 
-	printf ("Loading resources...\n");
-	if ((errc = loadResources(SCI_VERSION_AUTODETECT, 1))) {
-		fprintf(stderr,"Error while loading resources: %s!\n",
-			sci_error_types[errc]);
+	sciprintf("Loading resources...\n");
+	resmgr = scir_new_resource_manager(resource_dir,
+					   SCI_VERSION_AUTODETECT,
+					   1, 128*1024);
+	if (!resmgr) {
+		printf("No resources found in '%s'.\nAborting...\n",
+		       resource_dir);
 		exit(1);
-	};
-
-	printf("SCI resources loaded.\n");
+	}
 
 	check_features();
 
 	chdir(startdir);
 
 	printf("Mapping instruments to General Midi\n");
-	mapMIDIInstruments();
+	map_MIDI_instruments(resmgr);
 
-
-	init_console();
 
 	sciprintf("FreeSCI, version "VERSION"\n");
 
 	gamestate = sci_malloc(sizeof(state_t));
 
-	if (init_gamestate(gamestate, version))
+	if (init_gamestate(gamestate, resmgr, version))
 		return 1;
 
 	gamestate->gfx_state = NULL;
@@ -996,7 +999,7 @@ main(int argc, char** argv)
 	}
 
 
-	if (init_gfx(&cl_options, gfx_driver))
+	if (init_gfx(&cl_options, gfx_driver, resmgr))
 		return 1;
 
 
@@ -1067,7 +1070,7 @@ main(int argc, char** argv)
 
 	script_free_engine(gamestate); /* Uninitialize game state */
 
-	freeResources();
+	scir_free_resource_manager(resmgr);
 
 	if (conf_entries >= 0)
 		config_free(&confs, conf_entries);

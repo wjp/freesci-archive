@@ -28,12 +28,15 @@
 #ifndef SCI_UNPACK_H_
 #define SCI_UNPACK_H_
 
+#include <sciresource.h>
+
 #define SORT_METHOD_ALPHA 0
 #define SORT_METHOD_GROUP 1
 
 #define DEFAULT_SORTING SORT_METHOD_ALPHA
 
 extern int vocab_sort; /* Sorting strategy for vocab */
+extern resource_mgr_t *resmgr;
 
 int
 vocab_print(void);

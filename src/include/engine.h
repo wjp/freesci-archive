@@ -32,6 +32,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <resource.h>
+#include <sciresource.h>
 #include <heap.h>
 #include <script.h>
 #include <vocabulary.h>
@@ -95,6 +96,7 @@ typedef struct _state
 
 	char *resource_dir; /* Directory the resource files are kept in */
 	char *work_dir; /* Directory the game metadata should be written to */
+	resource_mgr_t *resmgr; /* The resource manager */
 
 	unsigned char *game_name; /* Designation of the primary object (which inherits from Game) */
 

@@ -354,7 +354,7 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_GRAPH_GET_COLORS_NR:
 
-		s->acc = (sci_version < SCI_VERSION_1) ? 0x10 : 0x100; /* number of colors */
+		s->acc = (s->resmgr->sci_version < SCI_VERSION_1) ? 0x10 : 0x100; /* number of colors */
 		break;
 
 	case K_GRAPH_DRAW_LINE: {

@@ -52,56 +52,59 @@ c_quit(state_t *s)
 int
 main(int argc, char** argv)
 {
-  int i;
+	int i;
+	resource_mgr_t *resmgr;
 
-  printf("console.c Copyright (C) 1999 Christoph Reichenbach\n"
-	 "This program is free software. You can copy and/or modify it freely\n"
-	 "according to the terms of the GNU general public license, v2.0\n"
-	 "or any later version, at your option.\n"
-	 "It comes with ABSOLUTELY NO WARRANTY.\n");
+	printf("console.c Copyright (C) 1999 Christoph Reichenbach\n"
+	       "This program is free software. You can copy and/or modify it freely\n"
+	       "according to the terms of the GNU general public license, v2.0\n"
+	       "or any later version, at your option.\n"
+	       "It comes with ABSOLUTELY NO WARRANTY.\n");
 
-  if ((i = loadResources(SCI_VERSION_AUTODETECT, 1))) {
-    fprintf(stderr,"SCI Error: %s!\n", sci_error_types[i]);
-    exit(-1);
-  };
-  printf("SCI resources loaded.\n");
+	if (!(resmgr = scir_new_resource_manager(sci_getcwd(), SCI_VERSION_AUTODETECT,
+						 1, 1024*128))) {
+		fprintf(stderr,"Could not find any resources; quitting.\n");
+		exit(1);
+	}
+	printf("SCI resources loaded.\n");
 
-  /*  if (loadObjects()) {
-    fprintf(stderr,"Could not load objects\n");
-    sciprintf("Could not load objects\n");
-    }*/
+	/*  if (loadObjects()) {
+	    fprintf(stderr,"Could not load objects\n");
+	    sciprintf("Could not load objects\n");
+	    }*/
 
-  con_hook_command(&c_quit, "quit", "", "console: Quits");
+	con_hook_command(&c_quit, "quit", "", "console: Quits");
 
-  /*con_set_passthrough (1);*/ con_passthrough = 1;  /* enables all sciprintf data to be sent to stdout */
-  sciprintf("FreeSCI, version "VERSION"\n");
+	/*con_set_passthrough (1);*/ con_passthrough = 1;  /* enables all sciprintf data to be sent to stdout */
+	sciprintf("FreeSCI, version "VERSION"\n");
 
 #ifdef HAVE_READLINE_HISTORY_H
-  using_history();
+	using_history();
 #endif /* HAVE_READLINE_HISTORY_H */
 
-  while (!quit) {
-    char *command;
+	while (!quit) {
+		char *command;
 
 #ifdef HAVE_READLINE_READLINE_H
-    command = readline("$ ");
+		command = readline("$ ");
 #else /* !HAVE_READLINE_READLINE_H */
-    command = sci_malloc(1024);
-    fgets(command, 1023, stdin);
-    if (command [strlen (command)-1] == '\n')
-      command [strlen (command)-1] = 0;
+		command = sci_malloc(1024);
+		fgets(command, 1023, stdin);
+		if (command [strlen (command)-1] == '\n')
+			command [strlen (command)-1] = 0;
 #endif /* !HAVE_READLINE_READLINE_H */
 
 #ifdef HAVE_READLINE_HISTORY_H
-    if (strlen(command))
-      add_history(command);
+		if (strlen(command))
+			add_history(command);
 #endif /* HAVE_READLINE_HISTORY_H */
 
-    con_parse(NULL, command);
+		con_parse(NULL, command);
 
-    free(command);
-  }
+		free(command);
+	}
 
-  freeResources();
-  return 0;
+	free(resmgr->resource_path);
+	scir_free_resource_manager(resmgr);
+	return 0;
 }

@@ -30,6 +30,7 @@
 ***************************************************************************/
 
 #include <engine.h>
+#include "sciunpack.h"
 
 int
 vocab_dump()
@@ -40,7 +41,7 @@ vocab_dump()
 	int *classes;
 
 	printf("Selectors:\n");
-	names = vocabulary_get_snames(NULL, 0);
+	names = vocabulary_get_snames(resmgr, NULL, 0);
 	while (names[i]) {
 		printf("0x%02X: %s\n", i, names[i]);
 		i++;
@@ -49,14 +50,14 @@ vocab_dump()
 
 	i = 0;
 	printf("\nOpcodes:\n");
-	opcodes = vocabulary_get_opcodes();
+	opcodes = vocabulary_get_opcodes(resmgr);
 	while ((i < 256) && (opcodes[i].name)) {
 		printf("%s: Type %i, Number %i\n", opcodes[i].name,
 		       opcodes[i].type, opcodes[i].number);
 		i++;
 	}
 
-	names = vocabulary_get_knames(&count);
+	names = vocabulary_get_knames(resmgr, &count);
 	printf("\nKernel names:\n");
 	if (names == 0) printf("Error loading kernel names\n");
 	else {
@@ -64,7 +65,7 @@ vocab_dump()
 		vocabulary_free_knames(names);
 	}
 
-	classes = vocabulary_get_classes(&count);
+	classes = vocabulary_get_classes(resmgr, &count);
 	printf ("\nClasses:\n");
 	if (classes == 0) printf("Error loading classes\n");
 	else {

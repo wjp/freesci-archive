@@ -474,9 +474,9 @@ static int find_frame(resource_t* r, int type, int start)
 /*FIXME: lots of things are identical to read_object and read_class. Some of
  *these would benefit from being put in separate functions.*/
 
-static object* read_object(int script, int positions[1000])
+static object* read_object(resource_mgr_t *resmgr, int script, int positions[1000])
 {
-	resource_t* r=findResource(sci_script, script);
+	resource_t* r = scir_find_resource(resmgr, sci_script, script, 0);
 	unsigned char* raw;
 	int pos;
 	object* obj;
@@ -569,9 +569,9 @@ static object* read_object(int script, int positions[1000])
 	return obj;
 }
 
-static object* read_class(int script, int positions[1000])
+static object* read_class(resource_mgr_t *resmgr, int script, int positions[1000])
 {
-	resource_t* r=findResource(sci_script, script);
+	resource_t* r = scir_find_resource(resmgr, sci_script, script, 0);
 	unsigned char* raw;
 	int pos;
 	object* obj;
@@ -650,7 +650,7 @@ void freeObject(object* obj)
 	free(obj);
 }
 
-static int objects_init()
+static int objects_init(resource_mgr_t *resmgr)
 {
 	FLEXARRAY_INIT(object*, fobjects);
 	max_object=0;
@@ -659,27 +659,27 @@ static int objects_init()
 	object_root->name="<root>";
 	add_object(object_root);
 
-	opcodes=vocabulary_get_opcodes();
-	knames=vocabulary_get_knames(&knames_count);
-	snames=vocabulary_get_snames(NULL, 0);
+	opcodes=vocabulary_get_opcodes(resmgr);
+	knames=vocabulary_get_knames(resmgr, &knames_count);
+	snames=vocabulary_get_snames(resmgr, NULL, 0);
 
 	return 0;
 }
 
-int loadObjects()
+int loadObjects(resource_mgr_t *resmgr)
 {
 	int i;
 	int *classes, class_count;
 	int positions[1000];
 
-	if(objects_init())
+	if(objects_init(resmgr))
 	{
 		#ifdef SCRIPT_DEBUG
 		perror("objects_init");
 		#endif
 		return 1;
 	}
-	classes=vocabulary_get_classes(&class_count);
+	classes=vocabulary_get_classes(resmgr, &class_count);
 
 	for(i=0; i<1000; i++) positions[i]=0;
 	for(i=0; i<class_count; i++)
@@ -687,7 +687,7 @@ int loadObjects()
 #ifdef SCRIPT_DEBUG
                 printf ("\n\nReading class 0x%02X\n", i);
 #endif
-                if(read_class(classes[i], positions)==0)
+                if(read_class(resmgr, classes[i], positions)==0)
 		{
 			#ifdef SCRIPT_DEBUG
 			fprintf(stderr, "Failed to load class %d, which is a parent.\n", i);
@@ -697,7 +697,7 @@ int loadObjects()
 	}
 
 	for(i=0; i<1000; i++) positions[i]=0;
-	for(i=0; i<1000; i++) while(read_object(i, positions));
+	for(i=0; i<1000; i++) while(read_object(resmgr, i, positions));
 
 	object_map=fobjects.data;
 	max_object=fobjects.used;

@@ -21,7 +21,7 @@
 #ifndef SCRIPT_H
 #define SCRIPT_H
 
-#include <resource.h>
+#include <sciresource.h>
 #include <util.h>
 
 /*#define SCRIPT_DEBUG */
@@ -50,7 +50,7 @@ enum {
   sci_obj_localvars
 } script_object_types;
 
-void script_dissect(int res_no, char **snames, int snames_nr);
+void script_dissect(resource_mgr_t *resmgr, int res_no, char **snames, int snames_nr);
 
 /* Opcode formats as used by script.c */
 typedef enum {

@@ -1285,7 +1285,7 @@ void script_detect_early_versions(state_t *s)
 	resource_t *script = {0};
 
 	for (c = 0; c < 1000; c++) {
-		if ((script = findResource(sci_script, c))) {
+		if ((script = scir_find_resource(s->resmgr, sci_script, c, 0))) {
 
 			int id = getInt16(script->data);
 
@@ -1301,7 +1301,7 @@ void script_detect_early_versions(state_t *s)
 heap_ptr
 script_instantiate(state_t *s, int script_nr, int recursive)
 {
-	resource_t *script = findResource(sci_script, script_nr);
+	resource_t *script = scir_find_resource(s->resmgr, sci_script, script_nr, 0);
 	heap_ptr pos;
 	int objtype;
 	unsigned int objlength;
