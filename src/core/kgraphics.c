@@ -1953,6 +1953,7 @@ kShakeScreen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #define K_DISPLAY_WIDTH 106
 #define K_DISPLAY_SAVE_UNDER 107
 #define K_DISPLAY_RESTORE_UNDER 108
+#define K_DONT_UPDATE_IMMEDIATELY 121
 
 
 void
@@ -1968,6 +1969,7 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
   resource_t *font_resource;
   port_t *port = s->ports[s->view_port];
   port_t save;
+  int update_immediately = 1;
 
   save=*port;
   port->alignment = ALIGN_TEXT_LEFT;
@@ -2014,7 +2016,7 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
     case K_DISPLAY_SET_GRAYTEXT:
 
       port->gray_text = PARAM(argpt++);
-      SCIkdebug(SCIkGRAPHICS, "Display: set_align(%d)\n", port->alignment);
+      SCIkdebug(SCIkGRAPHICS, "Display: set_graytext(%d)\n", port->gray_text);
       break;
 
     case K_DISPLAY_SET_FONT:
@@ -2051,9 +2053,15 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
       argpt++;
       return;
 
+    case K_DONT_UPDATE_IMMEDIATELY:
+    
+      update_immediately=0;
+      SCIkdebug(SCIkGRAPHICS, "Display: set_dont_update()\n");
+      argpt++;
+      break;
+      
     default:
       SCIkdebug(SCIkGRAPHICS, "Unknown Display() command %x\n", PARAM(argpt-1));
-      SCIkdebug(SCIkGRAPHICS, "Display: set_align(%d)\n", port->alignment);
       return;
     }
   }
@@ -2083,7 +2091,7 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   _k_dyn_view_list_accept_change(s);
 
-  if (!s->pic_not_valid) /* Refresh if drawn to valid picture */
+  if ((!s->pic_not_valid)&&update_immediately) /* Refresh if drawn to valid picture */
     graph_update_box(s, port->xmin, port->ymin,
 		     port->xmax - port->xmin + 1, port->ymax - port->ymin + 1);
 
