@@ -89,6 +89,9 @@ AM_WITH_DMALLOC
 
 AC_C_PARAMETRIZED_BIGENDIAN
 
+FREESCI_VERSION="`(cd $srcdir ; pwd) |sed -e 's/.*-//'`"
+AC_SUBST(FREESCI_VERSION)
+
 AC_OUTPUT(Makefile    \
 	debian/Makefile \
 	doc/Makefile \
@@ -104,13 +107,5 @@ AC_OUTPUT(Makefile    \
 	src/include/win32/Makefile \
 	src/tools/Makefile \
 	src/win32/Makefile \
-	src/sound/Makefile)
-
-
-
-
-
-
-
-
-
+	src/sound/Makefile \
+	freesci.spec)
