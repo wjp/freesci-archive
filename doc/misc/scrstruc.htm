@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><HTML><HTML>
+<HEAD><TITLE>SCI Decoding - Script structure</TITLE></HEAD>
+<BODY BGCOLOR="#B0B0B0" LINK="#0000D0">
+<HR><H1 ALIGN=CENTER>Script structure</H3>
+<HR>
+<P>
+This is the structure for an unencoded script file, you can extract
+a script file from the <TT>RESOURCE.*</TT> files with the SCI Decoder
+disponible on Baf's page (look at the links section).
+</P>
+
+<PRE>
+<B>Script structure : </B>
+
+   <B>1st two bytes</B> : 82h 00h
+      They seem to always have these values.
+
+   <B>3rd byte</B>      : Start of the first script block.
+
+
+Script <B>block</B> structure :
+
+   <B>1st two bytes</B> : Block type
+      Type range from 0 to 10. 
+      (1=Object, 2=Code, 5=Strings, 8=Pointers to strings)
+
+   <B>2nd two bytes</B> : Length of block
+      Total block size, starting from the first byte
+   
+   <B>5th byte</B>      : Start of block data
+
+
+</PRE>
+<P><B>Rem.:</B> There's no index to the script blocks, the blocks are
+chained, you need to calculate their positions by starting with the
+first one, adding its length to the pointer, then reading the second
+one, etc.</P>
+<P>You can look at my C++ program that display the code section of a
+script file :<BR>
+<A HREF="scr_code.cpp">scr_code.cpp</A></P>
+<HR>
+<P><A HREF="index.htm">Return to the main page</A></P>
+<HR>
+</BODY>
+
+</HTML>

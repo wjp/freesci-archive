@@ -1,0 +1,48 @@
+                    POLICE QUEST II PATCH MAP
+
+Patch Name and Number    Description Of Sound
+
+6.  SynBrass1            Brass Section
+7.  Glock                High Bell Sound
+8.  Vibe1                Vibes
+9.  Koto                 Plucked String
+10. Timpani              Timpani
+11. WaterBell            Bell W/Echo
+12. Tube Bell            Tubular Bell
+13. Gun Shot             Gun Shot
+14. Echo Bell            Echoing Bell Sound
+15. ElecPiano1           Rhodes Piano
+16. AcouPiano1           Acoustic Grand Piano
+17. AcouPiano1           Acoustic Grand Piano
+18. ElecPiano2           Rhodes Piano
+19. Fantasy              Bell/Flute
+20. Fantasy              Bell/Flute
+21. BottleBlow           Heavy Breath Flute
+22. Sax1                 Alto Sax Solo
+23. ElecPerc2            Simmons Toms
+24. Clarinet1            Solo Clarinet
+25. StrSect3             Analog String Section
+26. OBXA                 Bright Oberheim Brass
+27. OBXA                 Bright Oberheim Brass
+28. SynBrass3            Brass Section
+29. SoundTrack           Warm String in 5th's (Slow Attack/Release)
+30. AcouBass1            Jazz Standup Bass
+31. StrSect1             String Section W/Hard Attack
+32. StrSect2             String Section W/Med Attack
+33. ContraBass           Solo Low String Arco
+34. ElecGtr2             Picked Clean Strat Funk
+35. Guitar2              Classical Acoustic Guitar
+36. SynBass1             Seq Bass Hard Attack, Short Release
+37. Fretless             Fretless Bass
+38. SlapBass2            Electric Bass Thumb Technique
+39. Telephone            Telephone Ringing
+40. BusySignal           Telephone Busy Signal
+41. Trumpet1             Solo Trumpet
+42. AcouPiano1           Acoustic Grand Piano
+43. FrHorn1              Solo French Horn
+44. Trumpet2             Solo Trumpet (Classical)
+45. Trombone             Solo Trombone
+46. Ice Rain             Tinkling Bell Sound
+47. Claves               High Wood Block
+48. JungleTune           Instrument Attack Loop
+

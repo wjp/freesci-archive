@@ -1,0 +1,111 @@
+  
+<HTML>
+<HEAD>
+<BASE target="_top">
+<TITLE>
+SCI Decoding - Portion of a SCI sourcecode
+</TITLE>
+
+<META HTTP-EQUIV="Expires" CONTENT="0">
+<META HTTP-EQUIV="Last-Modified" CONTENT="0">
+<META HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate">
+<META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+theHost = "members.xoom.com";
+theWord = "_XOOM";
+
+function doRewrite () {
+
+  var numLinks = self.thePage.document.links.length;
+  var pageDoc = self.thePage.document;
+  var pageHost = pageDoc.location.hostname;
+  var pagePath = "" + pageDoc.location.pathname;
+  pagePath = pagePath.toLowerCase();
+  var theNewWord = "" + theWord;
+  var theWordLen = theNewWord.length;
+
+  for (var i = 0; i < numLinks; i++) {
+    var theLink = self.thePage.document.links[i];
+
+    var linkPath = "" + theLink.pathname;
+    var linkHost = theLink.hostname;
+    var targetPath = "" + theLink.pathname;
+    targetPath = targetPath.toLowerCase();
+
+    if (linkHost != pageHost) {
+        theLink.target="_top";
+        continue;
+    }
+    if (pagePath != targetPath) {
+        if(theLink.hash.indexOf("##") > -1) {
+            var newHash = "" + theLink.hash;
+            theLink.hash = newHash.substring(2);
+            continue;
+        }
+        if (theLink.hash != "") {
+           continue;
+        }
+
+       if (linkPath.indexOf(theWord) > -1) {
+         var newPath = "" + theLink.pathname;
+         var stringLen = newPath.length;
+         theLink.pathname = newPath.substring(theWordLen+1, stringLen);
+       }
+       theLink.target="_top";
+    }
+
+    else {
+        if (theLink.hash != "") {
+           continue;
+        }
+
+         theLink.hostname = theHost;
+         if (linkPath.indexOf(theWord) > -1)  {
+             var newPath = "" + theLink.pathname;
+             var stringLen = newPath.length;
+             theLink.pathname = newPath.substring(theWordLen+1, stringLen);
+         }
+         theLink.target = "_top";
+      }
+  }
+}
+
+
+function iterate () {
+  for (var i = 0; i < 6; i++) {
+     setTimeout("doRewrite()", 1000);
+  }
+}
+
+
+
+function errortrap(msg,url,line) {return true;}
+
+onerror=errortrap;
+setTimeout("iterate()", 1000);
+// -->
+</SCRIPT>
+</HEAD>
+
+
+
+
+<FRAMESET rows="36,*" marginwidth="0" marginheight="0" framespacing=0 frameborder=no border=0 onLoad="doRewrite();">
+      <FRAME marginwidth="0" marginheight="0" src="http://xb.xoom.com/xb.odt" name=pb scrollbars=no scrolling=no framespacing=0 frameborder=no border=0>
+      <FRAME marginwidth="5" marginheight="2" src="/_XOOM/darkminister/scrsrc.htm" name=thePage framespacing=0 frameborder=no border=0>
+</FRAMESET>
+
+<NOFRAMES>
+<h1 align=center>Frame ALERT!</h1>
+<p>
+This document is designed to be viewed using
+Frame features. If you are seeing this message, please consider
+upgrading to a frames-compatible browser.
+</p>
+
+</NOFRAMES>
+
+</HTML>
+

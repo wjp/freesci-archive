@@ -1,0 +1,8 @@
+TODO for version 0.2.3:
+
+- Merge Magnus' Python class browser into the main tree
+- Use 'gamestate_t' everywhere to store the game state
+- Add a (dis)assembler/debugger tool for the command line
+- Fix MIDI mapping to remove unmapped instruments, add remaining ones
+  to the instrument list, allow in-game editing of instrument lists, and
+  use doc/misc/pq2map.txt to improve the current maps.

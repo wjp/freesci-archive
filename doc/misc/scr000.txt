@@ -1,0 +1,572 @@
+//
+// ----- script 000 of Space Quest III -----
+//
+// by Dark Minister (dark_minister@hotmail.com)
+//
+// The syntax is nearly the same as C++ with the following extended
+// syntaxes :
+//
+// - To define an object :
+// object [object_name] : [object_superclass] {
+// }
+// Note : the constructor is a function with the same name as object_name
+//
+// - To send information to an object :
+// sendto [object_name] {
+//    [selector_name] = [value];
+//    // or/and
+//    [selector_name]([parameters]);
+// }
+// Note : this is very similar to Pascal 'with [object_name] do'
+//
+// - The keyword 'self' is equivalent to C++ 'this'
+// Note : I am using 'self' because that is the term used by SCI
+//
+// - To create temporary variables
+// link [variable_name][[number_of_variables]];
+// Ex. : link temp[10];  // creates 10 temporary variables
+//
+// Note : Function 0 of script 255 is used to display a dialog box
+//
+//
+
+#define egoID         global[0]
+#define gameID        global[1]
+#define quit_flag     global[4]
+#define debug_mode    global[14]
+#define score         global[15]
+#define max_score     global[16]
+#define normal_font   global[22]
+#define game_version  global[28]
+#define songID        global[153]
+
+object statusCode : Code {
+   doit(param1) {
+      script[255].func[0](Format(param1,0,0,score,max_score,0,1,
+         "Space Quest III",0,1));
+   }
+}
+
+object ego : Ego {
+   ego() {
+      yStep = 2;
+      signal = 0x2000;
+      illegalBits = 0x8000;
+      xStep = 3;
+   }
+}
+
+object longSong : Sound {
+   longSong() {
+      number = 1;
+      loop = 1;
+   }
+}
+
+object logFile : "gamefile.sh" {
+}
+
+object SQ3 : Game {
+   init() {
+      Game.init();
+      global[598] = Kernel70h(2);         // Kernel func 70h has no name
+      game_version = "1.0U - 4/13/89";
+      global[193] = 1;
+      sendto longSong {
+         owner = self;
+         init();
+      }
+      songID = longSong;
+      sendto User {
+         blocks = 0;
+         canControl(0);
+         x = -1;
+         y = 160;
+      }
+      egoID = ego;
+      User.alterEgo = ego;
+      SL.code = statusCode;
+      gameID.setSpeed(5);
+      TheMenuBar.init();
+      // call ?
+      global[54] = 1;
+      ScriptID(984);
+      max_score = 738;
+      normal_font = 300;
+      sendto Inv {
+         add("Glowing Gem");
+         add(Wire);
+         add(Ladder);
+         add(Reactor);
+         add("Orat on a Stick");
+         add("ThermoWeave Underwear");
+         add("Astro Chicken Flight Hat");
+         add("Monolith Decoder Ring");
+         add(Buckazoids);
+         add("Metal Pole");
+         add("Thermal Detonator");
+         add(Keycard);
+         add(Coveralls);
+         add(Vaporizer);
+         add("Elmo's picture");
+         add("a copy of Elmo's picture");
+         add("Invisibility Belt");
+         add("Bag of Fast Food");
+      }
+      if (GameIsRestarting()) {
+         TheMenuBar.draw();
+         SL.enable();
+         global[125] = 2;
+         self.newRoom(777);
+      }
+      else {
+         TheMenuBar.state = 1;
+         global[125] = 900;
+         self.newRoom(777);
+      }
+   } // end of init()
+
+   doit() {
+      link temp[1];
+
+      if ((global[11] != 900) && (global[11] != 1) && (global[11] != 155)) {
+         temp[0] = HaveMouse();
+         if (!global[592]) {
+            if (global[159]) {
+               global[230] = 69;
+            }
+            else {
+               if (User.controls == 0) {
+                  temp[0] = 1;
+                  global[230] = score;
+               }
+               else {
+                  global[230] = global[20];
+               }
+            }
+            if (global[19] != global[230]) {
+               self.setCursor(global[230],temp[0]);
+            }
+         }
+      }
+      if (global[251] != 1) {
+         global[251] = 0;
+         global[252] = 1;
+         calc.init();
+      }
+      if (global[197]) {
+         global[159] = 0;
+         sendto songID {
+            number = Random(23,24);
+            loop = 1;
+            priority = 500;
+            play();
+         }
+         switch (global[188]) {
+            case 1 :
+               global[320] = "Deceleration Trauma";
+               global[259] = "It wouldn't be so bad, except for the sudden "
+                             "stop at the end.  Next time, don't get so "
+                             "close to the edge.";
+               break;
+            case 2 :
+               global[320] = "New, Improved Quick Tanning Method";
+               global[259] = "You never did care for fondue.  Next time, "
+	                     "don't get so close to the edge.";
+               break;
+            case 3 :
+               global[320] = "Rats!";
+               global[259] = "You may not be Purina Rat Chow, but you'll "
+                             "do!";
+               break;
+            case 4 :
+               global[320] = "It Slices, It Dices...";
+               global[259] = "You're a less-than-choice cut, Wilco!";
+               break;
+            case 5 :
+               global[320] = "Decompression Blues";
+               global[259] = "Sudden Decompression Sucks!";
+               break;
+            case 6 :
+               global[320] = "A Slimmer, Trimmer You!";
+               global[259] = "A quick, but painful, way to shed those "
+	                     "extra inches.";
+               break;
+            case 7 :
+               global[320] = "Learn to Drive That Thing!";
+               global[259] = "Your radar is designed to avoid just such "
+	                     "an occurrence.";
+               break;
+            case 8 :
+               global[320] = "One Way to Lower Your Blood Pressure.";
+               global[259] = "A brave but fatal attempt at arterial art.";
+               break;
+            case 9 :
+               global[320] = "You have blown your `cover'.";
+               global[259] = "You have demonstrated a surprising lack of "
+	                     "janitorial skill.  Perhaps this would be an "
+			     "opportune time to `brush up' on your "
+			     "technique with Space Quest I and II.";
+               break;
+            case 10 :
+               global[320] = "You have taken the big plunge.";
+               global[259] = "That's one small step for man... One giant "
+	                     "leap for janitor-kind.";
+               break;
+            case 11 :
+               global[320] = "Sunbathing Not Recommended";
+               global[259] = "It's so hot you could fry a Vorlian "
+	                     "phlegmsnake egg.";
+               break;
+            case 12 :
+               global[320] = "Don't Trust Guys in Black Spacesuits";
+               global[259] = "A pulselaser blast to the forehead is not "
+	                     "your idea of fun.  Fortunately, it didn't "
+			     "hit anything important.";
+               break;
+            case 13 :
+               global[320] = "Down for the Count";
+               global[259] = "Better hang out at the gym more often.";
+               break;
+            case 14 :
+               global[320] = "Hole In One!";
+               global[259] = "Hope you enjoy your new flow-through "
+	                     "ventilation system.";
+               break;
+            case 15 :
+               global[320] = "Just Like Mom Used to Make";
+               global[259] = "As your life sputters to a close, you decide "
+	                     "to cut down on desserts.";
+               break;
+            case 20 :
+               global[320] = "Be More Careful With Explosives";
+               global[259] = "Didn't mom always tell you not to play with "
+	                     "firecrackers?";
+               break;
+            default :
+               global[320] = "Congratulations On Your Recent Death !";
+               global[259] = "Thanks for playing Space Quest ]I[. As "
+	                     "usual, you've been a real hoot.";
+         }
+         switch (script[255].proc[0](/* ??? */)) {
+            case 1 :
+	       gameID.restore();
+               break;
+            case 2 :
+	       gameID.restart();
+               break;
+            case 3 :
+	       quit_flag = 1;
+         }
+      }
+      else {
+         global[219] = 0;
+         global[223] = 0;
+         global[198] = GetTime(1);
+         if (global[198] != global[199]) {
+            global[199] = global[198];
+            global[226] += 1;
+            global[219] = 1;
+            if (global[226] > 60) {
+               global[227]++;
+               global[226] = 0;
+               global[223] = 1;
+               if (global[227] == 60) {
+                  global[228]++;
+                  global[227] = 0;
+               }
+            }
+         }
+      }
+      Game.doit();
+   } // end of doit()
+
+   replay() {
+      TheMenuBar.draw();
+      SL.enable();
+      SetMenu(0x0502,110,DoSound(4) ? "Turn Off" : "Turn On");
+      Game.replay();
+   }
+
+   startRoom() {
+      DisposeScript(985);
+      if (debug_mode) {
+         debug_mode = 0;
+         SetDebug();
+      }
+      if ((MemoryInfo > /* ??? */) && (global[200])) {
+         if (script[255].func[0](/* ??? */)) {
+            SetDebug();
+         }
+      }
+      Game.startRoom(param1);
+   }
+
+   handleEvent(param1) {
+      link temp[59];
+
+      if (!param1.claimed) {
+         Game.handleEvent(param1);
+         if (global[252] == 1) {
+            param1.claimed = 1;
+            global[252] = 0;
+            calc.dispose();
+         }
+         switch (param1.type) {
+            case 0x80 :
+               if (Said("tp anyword")) {
+                  if (!global[200]) {
+                     param1.claimed = 0;
+                  else {
+                     User.canControl(1);
+                     global[100] = 0;
+                     // etc. etc.
+                  }
+               else {
+                  // etc. etc.
+               }
+	    case 1 :
+               if (global[200]) {
+                  temp[5] = param1.x;
+                  temp[6] = param1.y;
+                  temp[7] = param1.modifiers;
+                  if (temp[7] == 10) {
+                     param1.claimed = 1;
+                     User.alterEgo.setMotion(JumpTo,temp[5],temp[6]);
+                  }
+                  else {
+                     if (temp[7] & 3) {
+                        param1.claimed = 1;
+
+               }
+      }
+   } // end of handleEvent()
+
+   wordFail(param1) {
+      link temp[100];
+
+      script[255].func[0](Format(/* ??? */,0,31,param1));
+   }
+
+   syntaxFail() {
+      script[255].func[0](0,32);
+   }
+
+   pragmaFail() {
+      link temp[100];
+
+      script[255].func[0](0,33);
+   }
+} // end of object SQ3
+
+object "Glowing Gem" : InvI {
+   "Glowing Gem"() {
+      said = "~ gem [ AND glowing ] ~";
+      description = "You are still carrying the piece of orium you picked "
+         "up on Labion during your last adventure. However, it has long "
+	 "since lost its glow.";
+      view = 242;
+   }
+}
+
+object Wire : InvI {
+   Wire() {
+      said = "~ cable";
+      description = "It's a piece of SQ-approved electrical wire.";
+      owner = 6;
+      view = 242;
+      cel = 1;
+   }
+}
+
+object Ladder : InvI {
+   Ladder() {
+      said = "~ ladder ~";
+      description = "This is a ladder. The evenly spaced rungs allow "
+                    "altitude adjustment.";
+      owner = 15;
+      view = 242;
+      cel = 2;
+   }
+}
+
+object Reactor : InvI {
+   Reactor() {
+      said =  "~ reactor ~";
+      description = "This is an auxiliary reactor.";
+      owner = 15;
+      view = 242;
+      cel = 3;
+   }
+}
+
+object "Orat on a Stick" : InvI {
+   "Orat on a Stick"() {
+      said = "~ orat-on-a-stick OR stick";
+      description = "Orat on a Stick! You can open his mouth, and close "
+                    "his mouth! Hours of fun for all!";
+      owner = 470;
+      view = 242;
+      cel = 8;
+   }
+}
+
+object "ThermoWeave Underwear" : InvI {
+   "ThermoWeave Underwear"() {
+      said = "~ thermoweave";
+      owner = "ThermoWeave Shorts.  They keep you cool, and they're oh, "
+              "so stylish.";
+      owner = 470;
+      view = 242;
+      cel = 9;
+   }
+}
+
+object "Astro Chicken Flight Hat" : InvI {
+   "Astro Chicken Flight Hat"() {
+      said = "~ hat";
+      description = "Wow! Your Official Astro Chicken Flight Hat!  Man, "
+                    "the babes'll really dig you in this!";
+      owner = 470;
+      view = 242;
+      cel = 6;
+   }
+}
+
+object "Monolith Decoder Ring" : InvI {
+   "Monolith Decoder Ring"() {
+      said = "~ ring OR prize";
+      description = "With this ring, you can decode any secret message!  "
+                    "Well, almost any secret message.";
+      owner = 29;
+      view = 242;
+      cel = 5;
+   }
+}
+
+object Buckazoids : InvI {
+   Buckazoids() {
+      said = "~ money";
+      view = 242;
+      cel = 7;
+   }
+   showSelf() {
+      script[255].func[0](Format("You possess %d of these nifty monetary "
+         "units known as `Buckazoids'.",0,34,global[154]),82,view,loop,cel);
+   }
+}
+
+object "Metal Pole" : InvI {
+   "Metal Pole"() {
+      said = "~ pole";
+      description = "A handy metal pole.";
+      owner = 69;
+      view = 242;
+      cel = 11;
+   }
+}
+
+object "Thermal Detonator" : InvI {
+   "Thermal Detonator"() {
+      said = "~ thermal";
+      description = "Used for blowing stuff to little bits.   It has an "
+                    "impact switch, so in other words...DON'T DROP IT!";
+      owner = 69;
+      view = 242;
+      cel = 12;
+   }
+}
+
+object Keycard : InvI {
+   Keycard() {
+      said = "~ keycard";
+      description = "Elmo Pug's personal keycard for opening locked doors.";
+      owner = 93;
+      view = 242;
+      loop = 1;
+   }
+}
+
+object Coveralls : InvI {
+   Coveralls() {
+      said = "~ clothing";
+      description = "A pair of janitor's coveralls. Used for looking the "
+                    "part.";
+      owner = 90;
+      view = 242;
+      cel = 14;
+   }
+}
+
+object Vaporizer : InvI {
+   Vaporizer() {
+      said = "~ vaporizer";
+      description = "Mr. Garbage: a janitor's best friend. Designed to "
+                    "vaporize all nonorganic biodegradable matter (i.e. "
+		    "trash).";
+      owner = 90;
+      view = 242;
+      cel = 15;
+   }
+}
+
+object "Elmo's picture" : InvI {
+   "Elmo's picture"() {
+      said = "~ painting";
+      description = "A fine likeness of Elmo Pug's mug. Elmo Pug is the "
+                    "dashing young owner of ScumSoft, Inc.";
+      owner = 92;
+      view = 242;
+      cel = 13;
+   }
+}
+
+object "a copy of Elmo's picture" : InvI {
+   "a copy of Elmo's picture"() {
+      said = "~ photocopy";
+      description = "A fine likeness of a likeness of Elmo Pug's mug.";
+      owner = 92;
+      view = 242;
+      cel = 13;
+   }
+}
+
+object "Invisibility Belt" : InvI {
+   "Invisibility Belt"() {
+      said = "~ belt";
+      description = "Terminator's invisibility belt.";
+      owner = -1;
+      view = 242;
+      cel = 10;
+   }
+}
+
+object "Bag of Fast Food" : InvI {
+   "Bag of Fast Food"() {
+      said = "~ bag OR supper";
+      description = "A bag chock-full of gastric delights!";
+      owner = -1;
+      view = 242;
+      cel = 4;
+   }
+}
+
+object calc : Prop {
+   calc() {
+      yStep = 2;
+   }
+   init() {
+      Prop.init();
+      view = 27;
+      setLoop(0);
+      setCel(0);
+      ignoreActors(1);
+      setPri(15);
+      posn(159,94);
+      stopUpd();
+   }
+}
+
+//
+// END of script
+//

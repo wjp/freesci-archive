@@ -1,0 +1,628 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN"><HTML>
+<HEAD><TITLE>SCI Decoding - Opcode glossary</TITLE>
+</HEAD><BODY BGCOLOR="#B0B0B0" LINK="#0000D0">
+<HR><H1 ALIGN=CENTER>Opcode glossary</H1>
+<H2 ALIGN=CENTER>(bytecodes)</H2>
+<HR>
+<PRE>
+<B><BIG>bnot</B></BIG> (<B>b</B>oolean <B>not</B>)
+   Effectuates a 'boolean not' on the accumulator.
+
+   Pseudo: <B>acc = acc XOR 00FFh</B>
+
+
+<B><BIG>add</B></BIG> (<B>add</B>ition)
+   Pops a value from the stack and adds it to the accumulator.
+
+   Pseudo: <B>acc = acc + pop</B>
+
+
+<B><BIG>sub</B></BIG> (<B>sub</B>straction)
+   Pops a value from the stack and substracts the accumulator with it.
+
+   Pseudo: <B>acc = acc - pop</B>
+
+
+<B><BIG>mul</B></BIG> (<B>mul</B>tiplication)
+   Pops a value from the stack and multiplies the accumulator with it.
+
+   Pseudo: <B>acc = acc * pop</B>
+
+
+<B><BIG>div</B></BIG> (<B>div</B>ision)
+   Pops a value from the stack, divides it with the value in the accumulator
+   and put the result in the accumulator.
+
+   Pseudo: <B>acc = pop / acc</B>
+
+
+<B><BIG>mod</B></BIG> (<B>mod</B>ulo)
+   Pops a value from the stack, effectuates a modulo on it with the value in
+   the accumulator and puts the result in the accumulator.
+
+   Pseudo: <B>acc = pop MODULO acc</B>
+
+
+<B><BIG>shr</B></BIG> (<B>sh</B>ift <B>r</B>ight)
+   Pops a value from the stack, shift its value right by the number of bits
+   specified in the accumulator and puts the result in the accumulator.
+
+   Pseudo: <B>acc = pop SHR acc</B>
+
+
+<B><BIG>shl</B></BIG> (<B>sh</B>ift <B>l</B>eft)
+   Pops a value from the stack, shift its value left by the number of bits
+   specified in the accumulator and puts the result in the accumulator.
+
+   Pseudo: <B>acc = pop SHL acc</B>
+
+
+<B><BIG>xor</B></BIG> (e<B>x</B>clusive <B>or</B>)
+   Pops a value from the stack and effectuates an exclusive OR on the
+   accumulator with it.
+
+   Pseudo: <B>acc = acc XOR pop</B>
+
+
+<B><BIG>and</B></BIG>
+   Pops a value from the stack and effectuates a AND on the accumulator
+   with it.
+
+   Pseudo: <B>acc = acc AND pop</B>
+
+
+<B><BIG>or</B></BIG>
+   Pops a value from the stack and effectuates a OR on the accumulator
+   with it.
+
+   Pseudo: <B>acc = acc OR pop</B>
+
+
+<B><BIG>neg</B></BIG> (<B>neg</B>ate)
+   Negates the accumulator.
+
+   Pseudo: <B>acc = -acc</B>
+
+
+<B><BIG>not</B></BIG>
+   If the value of the accumulator is not zero then it puts 0 (false) in the
+   accumulator, else it puts 1 (true) in the accumulator.
+
+   Pseudo: <B>if acc &LT&GT 0 then
+              acc = 0
+           else
+              acc = 1</B>
+
+
+<B><BIG>eq?</B></BIG> (<B>eq</B>ual<B>?</B>)
+   Pops a value from the stack, if it is equal to the value of the accumulator
+   then it puts 1 (true) in the accumulator, else it puts 0 (false) in the
+   accumulator.
+
+   Pseudo: <B>if acc = pop then
+              acc = 1
+           else
+              acc = 0</B>
+
+
+<B><BIG>ne?</B></BIG> (<B>n</B>ot <B>e</B>qual<B>?</B>)
+   Pops a value from the stack, if it is not equal to the value in the
+   accumulator then it puts 1 (true) in the accumulator, else it puts
+   0 (false) in the accumulator.
+
+   Pseudo: <B>if acc &LT&GT pop then
+              acc = 1
+           else
+              acc = 0</B>
+
+
+<B><BIG>gt?</B></BIG> (<B>g</B>reater <B>t</B>han<B>?</B>)
+   Pops a value from the stack, if it is greater than the value in the
+   accumulator then it puts 1 (true) in the accumulator, else it puts
+   0 (false) in the accumulator.
+
+   Pseudo: <B>if pop &GT acc then
+              acc = 1
+           else
+              acc = 0</B>
+
+
+<B><BIG>ge?</B></BIG> (<B>g</B>reater or <B>e</B>qual<B>?</B>)
+   Pops a value from the stack, if it is greater or equal than the value in
+   the accumulator then it puts 1 (true) in the accumulator, else it puts
+   0 (false) in the accumulator.
+
+   Pseudo: <B>if pop &GT= acc then
+              acc = 1
+           else
+              acc = 0</B>
+
+
+<B><BIG>lt?</B></BIG> (<B>l</B>ess <B>t</B>han<B>?</B>)
+   Pops a value from the stack, if it is less than the value in the
+   accumulator then it puts 1 (true) in the accumulator, else it puts
+   0 (false) in the accumulator.
+
+   Pseudo: <B>if pop &LT acc then
+              acc = 1
+           else
+              acc = 0</B>
+
+
+<B><BIG>le?</B></BIG> (<B>l</B>ess or <B>e</B>qual<B>?</B>)
+   Pops a value from the stack, if it is less or equal than the value in the 
+   accumulator then it puts 1 (true) in the accumulator, else it puts
+   0 (false) in the accumulator.
+
+   Pseudo: <B>if pop &LT= acc then
+              acc = 1
+           else
+              acc = 0</B>
+
+
+<B><BIG>ugt?</B></BIG> (<B>u</B>nsigned <B>g</B>reater <B>t</B>han<B>?</B>)
+   Same as <B>gt?</B>, except that the comparison is done on unsigned numbers.
+
+
+<B><BIG>uge?</B></BIG> (<B>u</B>nsigned <B>g</B>reater or <B>e</B>qual<B>?</B>)
+   Same as <B>ge?</B>, except that the comparison is done on unsigned numbers.
+
+
+<B><BIG>ult?</B></BIG> (<B>u</B>nsigned <B>l</B>ess <B>t</B>han<B>?</B>)
+   Same as <B>lt?</B>, except that the comparison is done on unsigned numbers.
+
+
+<B><BIG>ule?</B></BIG> (<B>u</B>nsigned <B>l</B>ess or <B>e</B>qual<B>?</B>)
+   Same as <B>le?</B>, except that the comparison is done on unsigned numbers.
+
+
+<B><BIG>bt</B></BIG> (<B>b</B>oolean <B>t</B>rue)
+   If the accumulator is true (not equal to 0) then jumps to the specified
+   address.
+
+   Pseudo: <B>if acc &LT&GT 0 then goto destination address</B>
+
+
+<B><BIG>bnt</B></BIG> (<B>b</B>oolean <B>n</B>ot <B>t</B>rue)
+   If the accumulator is not true (equal to 0) then jumps to the specified
+   address.
+
+   Pseudo: <B>if acc = 0 then goto destination address</B>
+
+
+<B><BIG>jmp</B></BIG> (<B>j</B>u<B>mp</B>)
+   Jumps to the specified address.
+
+
+<B><BIG>ldi</B></BIG> (<B>l</B>oa<B>d i</B>mmediate)
+   Loads the accumulator with a specified value.
+
+   Pseudo: <B>acc = immediate value</B>
+
+
+<B><BIG>push</B></BIG>
+   Pushes the value of the accumulator on the stack.
+
+
+<B><BIG>pushi</B></BIG> (<B>push</B> <B>i</B>mmediate)
+   Pushes a specified value on the stack.
+
+
+<B><BIG>toss</B></BIG>
+   Pops a value from the stack and tosses it.
+
+
+<B><BIG>dup</B></BIG>
+   Duplicates the value at the top of the stack. In other words, pushes the
+   value at the top of the stack on the stack.
+
+
+<B><BIG>link</B></BIG>
+   Creates a specified number of temporary variables.
+
+
+<B><BIG>call</B></BIG>
+   Calls a script subroutine.
+
+
+<B><BIG>callk</B></BIG> (<B>call</B> <B>k</B>ernel)
+   Calls a kernel (interpreter) function.
+
+
+<B><BIG>callb</B></BIG> (<B>call</B> <B>b</B>egin)
+   Calls a script subroutine situated in script 0.
+
+
+<B><BIG>calle</B></BIG> (<B>call</B> <B>e</B>xternal)
+   Calls a script subroutine situated in another (external) script.
+
+
+<B><BIG>ret</B></BIG> (<B>ret</B>urn)
+   Returns from a <B>call</B>, <B>callb</B>, <B>calle</B>, <B>send</B>, <B>self</B> or <B>super</B> instruction.
+
+
+<B><BIG>send</B></BIG>
+   Accesses one or more variables or calls one or more functions of an object.
+
+
+<B><BIG>class</B></BIG>
+   Loads the class address of a specified class number in the accumulator.
+
+   Pseudo: <B>acc = class address</B>
+
+
+<B><BIG>self</B></BIG>
+   Calls one or more functions of the current object.
+   
+
+<B><BIG>super</B></BIG> 
+   Accesses one or more variables or calls one or more functions of the class
+   (superclass) from which the current object inherits.   
+
+
+<B><BIG>&rest</B></BIG>
+   <I>Unknown bytecode. It seems to push value on the stack...</I>
+
+
+<B><BIG>lea</B></BIG> (<B>l</B>oad <B>e</B>ffective <B>a</B>ddress)
+   <I>Unknown bytecode.</I>
+
+
+<B><BIG>selfID</B></BIG>
+   Puts the address of the current object in the accumulator.
+
+
+<B><BIG>pprev</B></BIG> (<B>p</B>ush <B>prev</B>ious)
+   Pushes the result of the last comparison bytecode (<B>eq?</B>, <B>lt?</B>, etc.) on the
+   stack.
+
+
+<B><BIG>pToa</B></BIG> (<B>p</B>ointer <B>To a</B>ccumulator)
+   Copies the value of the selector (at the pointer) of the current object in
+   the accumulator.
+
+
+<B><BIG>aTop</B></BIG> (<B>a</B>ccumulator <B>To p</B>ointer)
+   Copies the value of the accumulator in the selector (at the pointer) of the
+   current object.
+
+
+<B><BIG>pTos</B></BIG> (<B>p</B>ointer <B>To s</B>tack)
+   Pushes the value of the selector (at the pointer) of the current object on
+   the stack.
+
+
+<B><BIG>sTop</B></BIG> (<B>s</B>tack <B>To p</B>ointer)
+   Pops the value on the stack and puts it in the selector (at the pointer)
+   of the current object.
+
+
+<B><BIG>ipToa</B></BIG> (<B>i</B>ncrement <B>p</B>ointer <B>To a</B>ccumulator)
+   Increments the value of the selector (at the pointer) of the current object
+   and copies it in the accumulator.
+
+
+<B><BIG>dpToa</B></BIG> (<B>d</B>ecrement <B>p</B>ointer <B>To a</B>ccumalator)
+   Decrements the value of the selector (at the pointer) of the current object
+   and copies it in the accumulator.
+
+
+<B><BIG>ipTos</B></BIG> (<B>i</B>ncrement <B>p</B>ointer <B>To s</B>tack)
+   Increments the value of the selector (at the pointer) of the current object
+   and pushes it on the stack.
+
+
+<B><BIG>dpTos</B></BIG> (<B>d</B>ecrement <B>p</B>ointer <B>To s</B>tack)
+   Decrements the value of the selector (at the pointer) of the current object
+   and pushes it on the stack.
+
+
+<B><BIG>lofsa</B></BIG> (<B>l</B>oad <B>of</B>f<B>s</B>et <B>a</B>ccumulator)
+   Calculates an address from an offset and puts it in the accumulator.
+
+
+<B><BIG>lofss</B></BIG> (<B>l</B>oad <B>of</B>f<B>s</B>et <B>s</B>tack)
+   Calculates an address from an offset and pushes it on the stack.
+
+
+<B><BIG>push0</B></BIG> (<B>push 0</B>)
+   Pushes the value 0 on the stack.
+
+
+<B><BIG>push1</B></BIG> (<B>push 1</B>)
+   Pushes the value 1 on the stack.
+
+
+<B><BIG>push2</B></BIG> (<B>push 2</B>)
+   Pushes the value 2 on the stack.
+
+
+<B><BIG>pushSelf</B></BIG> (<B>push Self</B>)
+   Pushes the address of the current object on the stack.
+
+
+<B><BIG>lag</B></BIG> (<B>l</B>oad <B>a</B>ccumulator <B>g</B>lobal)
+   Loads a specified global variable in the accumulator.
+
+
+<B><BIG>lal</B></BIG> (<B>l</B>oad <B>a</B>ccumulator <B>l</B>ocal)
+   Loads a specified local variable in the accumulator.
+
+
+<B><BIG>lat</B></BIG> (<B>l</B>oad <B>a</B>ccumulator <B>t</B>emporary)
+   Loads a specified temporary variable in the accumulator.
+
+
+<B><BIG>lap</B></BIG> (<B>l</B>oad <B>a</B>ccumulator <B>p</B>arameter)
+   Loads a specified function parameter variable in the accumulator.
+
+
+<B><BIG>lsg</B></BIG> (<B>l</B>oad <B>s</B>tack <B>g</B>lobal)
+   Pushes a specified global variable on the stack.
+
+
+<B><BIG>lsl</B></BIG> (<B>l</B>oad <B>s</B>tack <B>l</B>ocal)
+   Pushes a specified local variable on the stack.
+
+
+<B><BIG>lst</B></BIG> (<B>l</B>oad <B>s</B>tack <B>t</B>emporary)
+   Pushes a specified temporary variable on the stack.
+
+
+<B><BIG>lsp</B></BIG> (<B>l</B>oad <B>s</B>tack <B>p</B>arameter)
+   Pushes a specified function parameter variable on the stack.
+
+
+<B><BIG>lagi</B></BIG> (<B>l</B>oad <B>a</B>ccumulator <B>g</B>lobal <B>i</B>ndex)
+   Loads a specified indexed global variable in the accumulator.
+
+
+<B><BIG>lali</B></BIG> (<B>l</B>oad <B>a</B>ccumulator <B>l</B>ocal <B>i</B>ndex)
+   Loads a specified indexed local variable in the accumulator.
+
+
+<B><BIG>lati</B></BIG> (<B>l</B>oad <B>a</B>ccumulator <B>t</B>emporary <B>i</B>ndex)
+   Loads a specified indexed temporary variable in the accumulator.
+
+
+<B><BIG>lapi</B></BIG> (<B>l</B>oad <B>a</B>ccumulator <B>p</B>arameter <B>i</B>ndex)
+   Loads a specified indexed function parameter variable in the accumulator.
+
+
+<B><BIG>lsgi</B></BIG> (<B>l</B>oad <B>s</B>tack <B>g</B>lobal <B>i</B>ndex)
+   Pushes a specified indexed global variable on the stack.   
+
+
+<B><BIG>lsli</B></BIG> (<B>l</B>oad <B>s</B>tack <B>l</B>ocal <B>i</B>ndex)
+   Pushes a specified indexed local variable on the stack.   
+
+
+<B><BIG>lsti</B></BIG> (<B>l</B>oad <B>s</B>tack <B>t</B>emporary <B>i</B>ndex)
+   Pushes a specified indexed temporary variable on the stack.   
+
+
+<B><BIG>lspi</B></BIG> (<B>l</B>oad <B>s</B>tack <B>p</B>arameter <B>i</B>ndex)
+   Pushes a specified indexed function parameter variable on the stack.   
+
+
+<B><BIG>sag</B></BIG> (<B>s</B>tore <B>a</B>ccumulator <B>g</B>lobal)
+   Stores the value of the accumulator in a specified global variable.
+
+
+<B><BIG>sal</B></BIG> (<B>s</B>tore <B>a</B>ccumulator <B>l</B>ocal)
+   Stores the value of the accumulator in a specified local variable.
+
+
+<B><BIG>sat</B></BIG> (<B>s</B>tore <B>a</B>ccumulator <B>t</B>emporary)
+   Stores the value of the accumulator in a specified temporary variable.
+
+
+<B><BIG>sap</B></BIG> (<B>s</B>tore <B>a</B>ccumulator <B>p</B>arameter)
+   Stores the value of the accumulator in a specified function parameter
+   variable.
+
+
+<B><BIG>ssg</B></BIG> (<B>s</B>tore <B>s</B>tack <B>g</B>lobal)
+   Pops a value from the stack and puts it in a specified global variable.
+
+
+<B><BIG>ssl</B></BIG> (<B>s</B>tore <B>s</B>tack <B>l</B>ocal)
+   Pops a value from the stack and puts it in a specified local variable.
+
+
+<B><BIG>sst</B></BIG> (<B>s</B>tore <B>s</B>tack <B>t</B>emporary)
+   Pops a value from the stack and puts it in a specified temporary variable.
+
+
+<B><BIG>ssp</B></BIG> (<B>s</B>tore <B>s</B>tack <B>p</B>arameter)
+   Pops a value from the stack and puts it in a specified function parameter
+   variable.
+
+
+<B><BIG>sagi</B></BIG> (<B>s</B>tore <B>a</B>ccumulator <B>g</B>lobal <B>i</B>ndex)
+   Stores the value of the accumulator in a specified indexed global variable.
+
+
+<B><BIG>sali</B></BIG> (<B>s</B>tore <B>a</B>ccumulator <B>l</B>ocal <B>i</B>ndex)
+   Stores the value of the accumulator in a specified indexed local variable.
+
+
+<B><BIG>sati</B></BIG> (<B>s</B>tore <B>a</B>ccumulator <B>t</B>emporary <B>i</B>ndex)
+   Stores the value of the accumulator in a specified indexed temporary
+   variable.
+
+
+<B><BIG>sapi</B></BIG> (<B>s</B>tore <B>a</B>ccumulator <B>p</B>arameter <B>i</B>ndex)
+   Stores the value of the accumulator in a specified indexed function
+   parameter variable.
+
+
+<B><BIG>ssgi</B></BIG> (<B>s</B>tore <B>s</B>tack <B>g</B>lobal <B>i</B>ndex)
+   Pops a value from the stack and puts it in a specified indexed global
+   variable.
+
+
+<B><BIG>ssli</B></BIG> (<B>s</B>tore <B>s</B>tack <B>l</B>ocal <B>i</B>ndex)
+   Pops a value from the stack and puts it in a specified indexed local
+   variable.
+
+
+<B><BIG>ssti</B></BIG> (<B>s</B>tore <B>s</B>tack <B>t</B>emporary <B>i</B>ndex)
+   Pops a value from the stack and puts it in a specified indexed temporary
+   variable.
+
+
+<B><BIG>sspi</B></BIG> (<B>s</B>tore <B>s</B>tack <B>p</B>arameter <B>i</B>ndex)
+   Pops a value from the stack and puts it in a specified indexed function
+   parameter variable.
+
+
+<B><BIG>+ag</B></BIG> (+<B>a</B>ccumulator <B>g</B>lobal)
+   Increments a specified global variable and loads it in the accumulator.
+
+
+<B><BIG>+al</B></BIG> (+<B>a</B>ccumulator <B>l</B>ocal)
+   Increments a specified local variable and loads it in the accumulator.
+
+
+<B><BIG>+at</B></BIG> (+<B>a</B>ccumulator <B>t</B>emporary)
+   Increments a specified temporary variable and loads it in the accumulator.
+
+
+<B><BIG>+ap</B></BIG> (+<B>a</B>ccumulator <B>p</B>arameter)
+   Increments a specified function parameter variable and loads it in the
+   accumulator.
+
+
+<B><BIG>+sg</B></BIG> (+<B>s</B>tack <B>g</B>lobal)
+   Increments a specified global variable and pushes it on the stack.
+
+
+<B><BIG>+sl</B></BIG> (+<B>s</B>tack <B>l</B>ocal)
+   Increments a specified local variable and pushes it on the stack.
+
+
+<B><BIG>+st</B></BIG> (+<B>s</B>tack <B>t</B>emporary)
+   Increments a specified temporary variable and pushes it on the stack.
+
+
+<B><BIG>+sp</B></BIG> (+<B>s</B>tack <B>p</B>arameter)
+   Increments a specified function parameter variable and pushes it on the
+   stack.
+
+
+<B><BIG>+agi</B></BIG> (+<B>a</B>ccumulator <B>g</B>lobal <B>i</B>ndex)
+   Increments a specified indexed global variable and loads it in the
+   accumulator.
+
+
+<B><BIG>+ali</B></BIG> (+<B>a</B>ccumulator <B>l</B>ocal <B>i</B>ndex)
+   Increments a specified indexed local variable and loads it in the
+   accumulator.
+
+
+<B><BIG>+ati</B></BIG> (+<B>a</B>ccumulator <B>t</B>emporary <B>i</B>ndex)
+   Increments a specified indexed temporary variable and loads it in the
+   accumulator.
+
+
+<B><BIG>+api</B></BIG> (+<B>a</B>ccumulator <B>p</B>arameter <B>i</B>ndex)
+   Increments a specified indexed function parameter variable and loads it in
+   the accumulator.
+
+
+<B><BIG>+sgi</B></BIG> (+<B>s</B>tack <B>g</B>lobal <B>i</B>ndex)
+   Increments a specified indexed global variable and pushes it on the stack.
+
+
+<B><BIG>+sli</B></BIG> (+<B>s</B>tack <B>l</B>ocal <B>i</B>ndex)
+   Increments a specified indexed local variable and pushes it on the stack.
+
+
+<B><BIG>+sti</B></BIG> (+<B>s</B>tack <B>t</B>emporary <B>i</B>ndex)
+   Increments a specified indexed temporary variable and pushes it on the
+   stack.
+
+
+<B><BIG>+spi</B></BIG> (+<B>s</B>tack <B>p</B>arameter <B>i</B>ndex)
+   Increments a specified indexed function parameter variable and pushes it on
+   the stack.
+
+
+<B><BIG>-ag</B></BIG> (-<B>a</B>ccumulator <B>g</B>lobal)
+   Decrements a specified global variable and loads it in the accumulator.
+
+
+<B><BIG>-al</B></BIG> (-<B>a</B>ccumulator <B>l</B>ocal)
+   Decrements a specified local variable and loads it in the accumulator.
+
+
+<B><BIG>-at</B></BIG> (-<B>a</B>ccumulator <B>t</B>emporary)
+   Decrements a specified temporary variable and loads it in the accumulator.
+
+
+<B><BIG>-ap</B></BIG> (-<B>a</B>ccumulator <B>p</B>arameter)
+   Decrements a specified function parameter variable and loads it in the
+   accumulator.
+
+
+<B><BIG>-sg</B></BIG> (-<B>s</B>tack <B>g</B>lobal)
+   Decrements a specified global variable and pushes it on the stack.
+
+
+<B><BIG>-sl</B></BIG> (-<B>s</B>tack <B>l</B>ocal)
+   Decrements a specified local variable and pushes it on the stack.
+
+
+<B><BIG>-st</B></BIG> (-<B>s</B>tack <B>t</B>emporary)
+   Decrements a specified temporary variable and pushes it on the stack.
+
+
+<B><BIG>-sp</B></BIG> (-<B>s</B>tack <B>p</B>arameter)
+   Decrements a specified function parameter variable and pushes it on the
+   stack.
+
+
+<B><BIG>-agi</B></BIG> (-<B>a</B>ccumulator <B>g</B>lobal <B>i</B>ndex)
+   Decrements a specified indexed global variable and loads it in the
+   accumulator.
+
+
+<B><BIG>-ali</B></BIG> (-<B>a</B>ccumulator <B>l</B>ocal <B>i</B>ndex)
+   Decrements a specified indexed local variable and loads it in the
+   accumulator.
+
+
+<B><BIG>-ati</B></BIG> (-<B>a</B>ccumulator <B>t</B>emporary <B>i</B>ndex)
+   Decrements a specified indexed temporary variable and loads it in the
+   accumulator.
+
+
+<B><BIG>-api</B></BIG> (-<B>a</B>ccumulator <B>p</B>arameter <B>i</B>ndex)
+   Decrements a specified indexed function parameter variable and loads it in
+   the accumulator.
+
+
+<B><BIG>-sgi</B></BIG> (-<B>s</B>tack <B>g</B>lobal <B>i</B>ndex)
+   Decrements a specified indexed global variable and pushes it on the stack.
+
+
+<B><BIG>-sli</B></BIG> (-<B>s</B>tack <B>l</B>ocal <B>i</B>ndex)
+   Decrements a specified indexed local variable and pushes it on the stack.
+
+
+<B><BIG>-sti</B></BIG> (-<B>s</B>tack <B>t</B>emporary <B>i</B>ndex)
+   Decrements a specified indexed temporary variable and pushes it on the
+   stack.
+
+
+<B><BIG>-spi</B></BIG> (-<B>s</B>tack <B>p</B>arameter <B>i</B>ndex)
+   Decrements a specified indexed function parameter variable and pushes it on
+   the stack.
+
+</PRE>
+</DL>
+<HR>
+<P><A HREF="index.htm">Return to the main page</A></P>
+<HR>
+</BODY>

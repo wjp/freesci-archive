@@ -1,0 +1,229 @@
+1999-06-28  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/console/commands.c (c_hexgrep): Added a function for non-regexp
+	grepping for particular hex sequences. Also added a new parameter type
+	for bytes in hexadecimal representation and changed the '*' parameter
+	type to repeat the last param type 0 or more types.
+	(c_list): Fixed another braindead bug reported by Chris Lansdown.
+
+1999-06-27  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/core/resource.c (loadResourcePatches): Added loading of
+	resource patches (can be overridden when calling loadResources())
+
+	* src/core/heap.c: Added Magnus' implementation of the SCI heap.
+	Still needs to be hooked up to libscicore.
+
+	* Accidently killed some files. Entries to the changelog have been
+	lost; here's a quick summary:
+
+	* Applied fixes from Magnus for the VM/Vocab/Script stuff
+
+	* Applied fixes from Chris Lansdown for configure.in and resource.c
+
+	* Forced tools/console.c to use libreadline instead of libgii.
+	This still needs to be checked for, so that we can evade to gets()
+	if readline is not available.
+
+	* Fixed cursor drawing for SCI0 based on Chris Lansdown's hints
+
+	* Modified graphics code to allow for multilayered pictures (like
+	the SQ3 title screen, which consists of the "Space Quest 3" logo
+	and the "the Pirates of Pestulon" thing, which is a separate pic
+	resource)
+
+	* Renamed picture resources to pic resources for Resource_Types;
+	this is because SCI0 calls them pics and not pictures.
+
+1999-06-18  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* configure.in: Uses AM_PATH_GLIB now instead of the home-made
+	AC_PATH_GLIB.
+
+	* src/tools/sciunpack.c (main): Unpacking behaviour now equals Carl
+	Muckenhoupt's SCI decoder's behaviour, i.e. it writes an SCI header
+	before the SCI data block. This means that the resulting files can
+	be directly used as patches.
+
+	* src/core/decompress1.c (decompress1): Thanks to a hint from Ravi
+	at the SCI message board, decompression now works for all SCI01
+	resources. This means that QfG2 will, in theory, should be supported
+	for the public release (without sound support, however).
+
+1999-06-14  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/core/vocabulary.c (_vocabulary_get_knames0alt): Added a new
+	function to deal with non-standard vocab.999 resources.
+
+1999-06-13  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/graphics/graphics.c (clearpage): Changed default background
+	color to 15, which fixes several problems and is consistant with the
+	way Sierra used to do things (TWSUTDT).
+
+1999-06-12  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/sound/midi.c: Added MIDI mapping magic. It's still not perfect,
+	but much better (and more extensible) than the previous solution.
+
+1999-06-10  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/graphics/mcursor.c: Fixed both cursor drawing functions to
+	properly clip. SCI1 cursors are now displayed correctly, too (tested
+	this with a small hack that allowed loading the QG2 resources without
+	decompressing picture resources)
+
+1999-06-09  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/graphics/graphics_ggi.c (initColors): Fixed a small bug that
+	would prevent color 0xff to be set correctly in 256 color mode.
+
+1999-06-08  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* Decided to release 0.2.0. The actual release date will proabably be
+	tomorrow, though.
+
+	* src/tools/console.c: Added a text-based command console. It doesn't
+	work the way it's supposed to, though- libgii(stdin) appears to
+	deliver events in a different fashion than libggi does.
+	
+	* src/console/console.c: A number of commands has been added to the
+	command console in the last few days. While the command console
+	doesn't beat the bash (yet ;-), it's in a state where working with it
+	is possible. As long as working is limited to inspecting and frobbing
+	valies, and calling some pre-defined commands.
+
+1999-06-07  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/sound/sound.c: Fixed a bug when setting the gsi volume (the
+	request would be prepared but not flushed).
+
+1999-06-06  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/console/console.c: Finished the first phase of work on the
+	command console. It should now be possible to hook up commands to
+	it.
+
+1999-06-05  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/graphics/input_ggi.c: Completed (?) work on the ggi input
+	driver.
+
+1999-06-04  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/include/uinput.h: Added an input interface of sorts. It's
+	supposed to be portable to non-ggi interfaces, but I'm not sure if
+	it will work for all of them. Well, making things as portable and
+	universal as possible is one of the design goals, so I should try
+	to look for any possible alternatives and include some way to use
+	them.
+	I'll get back to this right after I finish my research on the cure
+ 	for cancer and the TransWarp drive.
+
+	* src/graphics/graphics_ggi.c (displayPicture): After noticing the
+	significant lack of redraw speed in some preliminary input tests, I
+	redid the display code, using ggiPutHLine(). The resulting speedup
+	was considerable. Also made displayPicture() autodetect if the visual
+	is double-sized, so displayDoublePicture() won't be necessary in the
+	future.
+
+1999-06-02  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* Merged Magnus' patches to the vocab and script resource handlers.
+	Now this rocks- both vocab and script dumping appear to work without
+	any problems!
+
+	* src/graphics/mcursor.c (drawMouseCursor0): Added a drawing function
+	for SCI0 mouse cursors.
+
+1999-05-29  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/graphics/graphics.c: Added support for 'interpolated mode' when
+	drawing the graphics. Both graphics_ggi.c and graphics_png.c have been
+	updated to support this.
+
+	* src/core/resource.c (loadResources): Fixed a nasty but stupid bug
+	that made the last release unuseable.
+
+1999-05-24  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/sound/sound.c: Added some general functions to ease interfacing
+	with different sound systems (currently, only GSI is supported).
+
+	* src/graphics/graphics_png.c: Added support for picture_ts to be
+	stored as .png files. Practical use for this is limited, though.
+
+	* src/tools/sciunpack.c (main): Created sciunpack to merge unpack and
+	resourcelist. This tool includes functions for converting sound
+	and picture resources to midi and png files, respectively.
+
+	* Changed several function names to improve clarity. All functions
+	succeeded by a zero are only applicable to SCI0 resources.
+
+1999-05-23  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/sound/midi.c (makeMIDI0): Preliminary MIDI support has been
+	added. However, Sierra appears to use a proprietary MIDI instrument
+	mapping scheme (which comes at no surprise; AFAIK the GM specification
+	wasn't comissioned until somewhen in 199x), and therefore the
+	instruments (including percussions) appear to be somewhat messy.
+	Fixing this instrument mapping will be an ongoing task.
+
+1999-05-13  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/graphics/graphics.c (drawView): Performance of drawView() has
+	been improved. It's not perfect yet (even if color==transparency,
+	each pixel is checked), but it should be *much* better than its
+	predecessor.
+	Also, I think that I found the "reversed" flag which some of the
+	views apparently use to draw the same data in two different ways.
+
+	* Fixed several endianness bugs (mainly in font.c and graphics.c).
+	qg1demo now runs on sparc-solaris 2.5, although the colors are messed
+	up.
+
+	* src/core/resource.c (loadResources): Allowed resource.000 not to
+	exist (loading starts at resource.001 in this case). This situation
+	can be found in SQ3.
+
+	* src/core/decompress.c (decompress): Added check for objects with
+	size zero to avoid segfault.
+
+1999-05-10  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* configure.in : Added support for passing the location of ggi
+	during configure time.
+
+1999-05-09  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* src/graphics/graphics.c (main): Fixed a bug with transparency:
+	contrary to my prior expectations, all sprites DO carry a trans-
+	parency value. Also made the line and fill functions behave more
+	like the original. So far, I've had no problems with lines, but
+	filling still gives me headaches.
+
+1999-05-08  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* Improved error handling for the resource loader and parts of the
+	decompression stuff.
+
+	* Moved all of the (u)int* types to g(u)int*, which are exported by
+	glib.
+
+1999-05-05  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* Released 0.1.1
+
+	* Kicked autoconf and automake until they would tell me the byte
+	sizes of the various data types. Together with Magnus' machine-
+	independent getInt (now called getInt16) the new data types should
+	greatly improve portability.
+
+	* Merged Magnus' script and vocabulary resource code into the
+	distribution. Wrote some small testing utilities for them.
+
+1999-04-03  Christoph Reichenbach  <creichen@rbg.informatik.tu-darmstadt.de>
+
+	* First public release.
+	
+

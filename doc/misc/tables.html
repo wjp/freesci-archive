@@ -1,0 +1,53 @@
+<HTML>
+<HEAD>
+<STYLE>
+a:link, a:visited, a:active { 
+	text-decoration: none; 
+	font-weight:	bold;
+}
+</STYLE>
+  <TITLE>Modelo Frame</TITLE>
+</HEAD>
+<BODY BACKGROUND="" BGCOLOR="#8cc8ff" TEXT="#000000" LINK="#0000a0" VLINK="#400080" ALINK="#ff0000" FACE="Arial">
+<FONT FACE="Arial">
+<DL>
+  <DL>
+    <DT><B> <FONT SIZE="+1">SCI INTERNAL TABLES</FONT></B>
+    <DT>&nbsp;
+  </DL>
+ <DL>
+  <DT>This document deals with some of the VOCAB.xxx files, namely the ones with ID 996-999. These are used, not for the parser, but for the debugger. When the debugger (which is integrated into the SCI interpreter) needs to know the name of an instruction (opcode), selector or kernel call, it looks in these files. There is also a class table, which contains the ID's of scripts which contain global classes.<BR><BR>
+
+  <DT><B>Generally</B>
+   <DL><DT><BR>
+    All extracted resource files start with a resource type marker (a word). They range from $80 to $8B (in SCI0). For VOCABs, this is $86. You can check this number to verify that it is indeed a file of the type you need, or you can skip it. For VOCAB files there is not much point in this, though; the ones I describe here all have different formats. The type marker is not a part of the data stream itself; for this reason, all file offsets discount this word (i.e. add two to the offset value). The following descriptions assume that you skip this word (file offset 0 = first byte after the marker).
+   </DL><BR><BR>
+
+  <DT><B>VOCAB.996: The class table</B>
+   <DL><DT><BR>
+    This file is just a bunch of 16-bit words, always alternating between a script number and a zero word. As previously said, the scripts listed in this file (and only those) contain global classes. If you load the scripts sequentially and build a list of the classes (ONLY) inserted in order, you can quickly determine which superclass an object has, for instance. Also, the argument to the class bytecode instruction can be resolved this way.
+   </DL><BR><BR>
+
+  <DT><B>VOCAB.997: The selector names</B>
+   <DL><DT><BR>
+    This file and the next two have very similar formats. They all start with a word, specifying the number of strings in the file (N), followed by an offset list with N word-sized items. At each offset there is a word, specifying the length of the following string (which is not null-terminated!). Again, the offsets can be assembled into a list which supplies selector names, for class listings or "intelligent" code dumpers.
+   </DL><BR><BR>
+
+  <DT><B>VOCAB.998: The opcode names</B>
+   <DL><DT><BR>
+    These haven't changed in SCI's lifetime (since 1988), but the format is included here for completeness. Essentially the same format as VOCAB.997, the VOCAB.998 shows only one difference. The length word specifies two bytes more than the actual length; the extra space is located <U>before</U> the string, as a word-sized bitmapped field. Only the two least significant bits seem to beused - they probably tell the debugger how to treat each instruction; Further info wanted.
+   </DL><BR><BR>
+
+  <DT><B>VOCAB.999: The kernel function names</B>
+   <DL><DT><BR>
+    For SCI0 games, this file works exactly like VOCAB.997; for SCI1, the format is different (as well as the file's contents; many new kernel functions were added, others deleted in SCI1). The VOCAB.999 format for SCI1 games is very simple; it's just a bunch of adjacent null-terminated strings. This is the only difference between the EGA and the VGA versions of my code dumper.
+   </DL><BR><BR>
+
+ </DL>
+</DL>
+
+<BR><FONT FACE="Arial"><DIV align="center"><A HREF="../home.html">Main</A> | <A HREF="../specs.html">Specifications</A> | <A HREF="../programs.html">Programs</A> | <A HREF="../sdp.html">Project</A> | <A HREF="../sci.html">SCI</A> | <A HREF="../links.html">Links</A></FONT><BR><BR>
+
+</FONT>
+</BODY>
+</HTML>

@@ -1,0 +1,38 @@
+
+AC_INIT(acinclude.m4)
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(freesci, 0.2.2)
+
+AC_PROG_CC
+AC_PROG_RANLIB
+AC_CHECK_HEADERS(gsi/gsi_interface.c)
+AC_CHECK_HEADERS(sys/soundcard.h)
+AC_PATH_GGI
+AM_PATH_GLIB(0.9.7,[
+		CFLAGS="$CFLAGS $GLIB_CFLAGS"
+		LDFLAGS="$LDFLAGS $GLIB_LIBS"
+		AC_SUBST(ac_glib_includes)
+		AC_SUBST(ac_glib_libraries)
+	], 
+	[
+#if glib was't found
+		AC_MSG_ERROR([You must install glib to compile this package!])
+	])
+
+AC_PATH_PNG
+
+#LDFLAGS="-lefence $LDFLAGS"
+
+AC_C_BIGENDIAN
+
+AC_OUTPUT(Makefile    \
+	doc/Makefile \
+        doc/misc/Makefile \
+	src/Makefile  \
+	src/core/Makefile \
+	src/graphics/Makefile \
+	src/include/Makefile \
+	src/tools/Makefile \
+	src/console/Makefile \
+	src/sound/Makefile \
+	src/demo/Makefile)

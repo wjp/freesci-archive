@@ -1,0 +1,120 @@
+<HTML>
+<HEAD>
+<STYLE>
+a:link, a:visited, a:active { 
+	text-decoration: none; 
+	font-weight:	bold;
+}
+</STYLE>
+  <TITLE>Modelo Frame</TITLE>
+</HEAD>
+<BODY BACKGROUND="" BGCOLOR="#8cc8ff" TEXT="#000000" LINK="#0000a0" VLINK="#400080" ALINK="#ff0000">
+<FONT FACE="Arial">
+<DL>
+  <DL>
+    <DT><B> <FONT SIZE="+1">WORD FILE STRUCTURE</FONT></B>
+    <DT>&nbsp;
+  </DL>
+ <DL>
+
+   <DT><B>Structure</B>
+   <DL><DT><BR>
+     
+     <DT><B>File vocab.000</B>
+     <DL><DT><BR>
+At the start of the file is a series of word offsets.<BR>
+The first 26 offsets are offsets to the first word of each alphabet letter.<BR>
+<BR>
+<TABLE BORDER="0">
+<TR><TD>Ex. :<TD>1st offset points to the first word beginning with an 'a'.</TR>
+<TR><TD><TD>2nd offset points to the first word beginning with a 'b'.</TR>
+<TR><TD><TD>etc.</TR>
+</TABLE>
+<BR>
+Note : Words are in alphabetical order.<BR>
+     </DL><BR><BR> 
+
+     <DT><B>Word structure</B>
+     <DL><DT><BR>
+<TABLE BORDER="0">
+<FONT FACE="Arial">
+<TR><TD>[Number of characters identical to the previous word (0 if first word)]<TD>(byte)</TR>
+<TR><TD>[String]<TD>(X byte(s))</TR>
+<TR><TD>[Word type]<TD>(byte)</TR>
+<TR><TD>[Word group number]<TD>(reversed word)</TR>
+</FONT></TABLE>
+<BR>
+   <B>Notes :</B><BR>
+<DL><DT>
+<BR>
+   [<I>String</I>]:<BR><BR>
+<DL><DT>If first word, complete string.<BR>
+                 if not first word, differences with the previous word.<BR>
+
+<BR>
+                 <B>IMPORTANT</B> : The last character of the string has bit 7 set<BR>
+</DL>
+<BR>
+   [<I>Word type</I>] :<BR>
+<BR>
+<DL><DT>
+Grammatical function of word<BR>
+<BR>
+                 Known types :<BR>
+<BR>
+<DL><DT>00h (Useless word)<BR>
+                 01h preposition<BR>
+                 02h article<BR>
+                 04h qualifying adjective<BR>
+                 08h relative pronoun<BR>
+                 10h noun<BR>
+                 20h conjugated verb<BR>
+                 40h adverb<BR>
+                 80h imperative verb<BR>
+                 FFh (anyword)<BR>
+<BR>                                       
+                 Note : I am a French-speaker, thus it might not be the correct terms<BR>
+</DL>
+</DL>
+
+<BR>
+<BR>
+</DL>
+   [<I>Word group number</I>] : Used with the function 'said' parameters block of scripts<BR>
+
+     </DL><BR><BR>
+
+   </DL>
+
+   <DT><B>Example</B>
+   <DL><DT><BR>
+     If we have two words, let's say 'animal' and 'animalism', it will look like that :
+<FONT FACE=""><PRE>
+   00h 61h 6Eh 69h 6Dh 61h ECh 10h 00h 01h
+    |  'a' 'n' 'i' 'm' 'a' 'l'  |   |___|____0001h = Word group number
+    |                       |   |
+    |__0, first word        |   |__10h = noun
+                            |
+                            |__'l' = 6Ch, but remember, last char has bit 7 set
+
+
+   06h 69h 73h EDh 10h 00h 02h
+    |  'i' 's' 'm'  |   |___|____0002h = Word group number
+    |           |   |
+    |           |   |__10h = noun
+    |           |
+    |           |__'m' = 6Dh, but remember, last char has bit 7 set
+    |                         
+    |__6 characters identical to previous word 'animal'
+</PRE></FONT>
+   </DL><BR><BR>
+
+
+ </DL>
+</DL>
+
+<BR><FONT FACE="Arial"><DIV align="center"><A HREF="../home.html">Main</A> | <A HREF="../specs.html">Specifications</A> | <A HREF="../programs.html">Programs</A> | <A HREF="../sdp.html">Project</A> | <A HREF="../sci.html">SCI</A> | <A HREF="../links.html">Links</A></FONT><BR><BR>
+
+</FONT>
+</BODY>
+</HTML>

@@ -1,0 +1,125 @@
+
+<!-- <SERVICE NAME="watermark"> -->
+<SCRIPT LANGUAGE="javascript1.2" SRC="http://www.geocities.com/include/watermark/v2/lib.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript1.2">
+<!--
+var args= new Array;
+
+assignArrays("Business & Money", "Business_and_Money");
+
+assignArrays("Resources", "Business_and_Money/Resources");
+
+//-->
+</SCRIPT>
+<SCRIPT LANGUAGE="javascript1.2" SRC="http://www.geocities.com/include/watermark/v2/ns.js">
+</SCRIPT>
+<!-- </SERVICE> -->
+<html>
+
+<head><title>Resource Maps</title></head>
+
+<body>
+
+<style type="text/css">
+<!--
+A:link {text-decoration: none}
+A:visited {text-decoration: none}
+A:active {text-decoration: none}
+--> </STYLE>
+
+<center><h1>Resource Maps</h1></center>
+<center><a href="index.html">back to the table of contents</a></center>
+<p><hr><p>
+
+<a name="whatis"><h2>What is a resource?</h2></a>
+Resources are the building blocks of an SCI game. Graphics, sounds,
+animations, scripts, etc. are all resources. In SCI there are 18
+resource types: view, picture, script, text, sound, memory, vocabulary,
+font, cursor, patch, bitmap, palette, cdaudio, audio, sync(?), message,
+map, and heap. I believe that some of these were only introduced later
+with the SCI1 engine, meaning that not all of them are available in an
+SCI0 game.
+<br><br><br><br>
+
+<a name="aboutmap"><h2>About the resource map</h2></a>
+The SCI interpreter needs some way of organizing the individual
+resources. The way Sierra accomplished this was through a file known
+as <b>resource.map</b> The resource map is merely a listing of all
+resources which make up a game. The resources themselves are stored in
+what I call resource packages. These are the familiar files with names
+like <b>resource.001</b> and <b>resource.002</b>.
+<br><br><br><br>
+
+<a name="format"><h2>The <b>resource.map</b> format</h2></a>
+Resource maps are just a bunch of 6 byte structures in a row. The last
+structure is set to FFFFFFFFFFFF and signifies the end of the file. All
+other structures list a resource and its location. The structures have
+the format:
+<ul>
+<li>Resource Identifier (2 bytes)
+    <ul>
+    <li>11 bit resource number   (bits 00-10)
+    <li>5 bit resource type      (bits 11-15)
+    </ul>
+<li>Resource Location (4 bytes)
+    <ul>
+    <li>26 bit file offset       (bits 00-25)
+    <li>6 bit package number     (bits 26-31)
+    </ul>
+</ul>
+The four fields (resource type, resource number, package number, file
+offset) are meaningful individually, but may also be grouped in pairs
+as the list shows.
+<p>
+The resource type is the numerical value (0-17) for one of the 18
+resource types previously listed. The resource number is used to name
+individual resources of the same type. (eg, <b>view.000</b> through
+<b>view.032</b>) The interesting thing is that the same resource may
+be listed multiple times. In the early SCI days it was still possible
+to play the game straight off the floppy disks. To prevent excessive
+disk swapping, Sierra put the same resource in multiple resource
+packages. Each resource will have a listing for each of its instances.
+The resource type and resource number combine to form a 16 bit resource
+identifier.
+<p>
+A word about nomenclature: Carl Muckenhoupt used the name "file number"
+instead of "resource number" in his SCI Decoder. When resources are
+saved individually, they get saved as type.number, like
+<b>script.000</b>. I made the change because I think the term "resource
+number" is clearer. The lurking danger with this is possible confusion
+between a resource's <i>number</i> and its <i>identifier</i>. I will
+retain the naming system whenever talking about about a resource as an
+individual file, but I will continue to call its extension the resource
+number.
+<p>
+The package number is the extension for the resource package containing
+the resource. A resource listed with package number 1 would be found in
+<b>resource.001</b>. The file offset is merely the offset in bytes of
+the listed resource in the resource package. The package number and
+file offset combine to form a 32 bit location which completely
+describes how to find the resource.
+<br><br><br><br>
+
+<p><hr><p>
+<center><a href="index.html">back to the table of contents</a></center>
+
+</body>
+
+</html>
+
+<!-- <SERVICE NAME="pop"> -->
+<SCRIPT LANGUAGE="javascript">
+<!-- 
+var cuid= "16033"; var keywords= "none"; 
+// -->
+</SCRIPT>
+<SCRIPT LANGUAGE="javascript" SRC="http://adforce.imgis.com/?addyn|2.0|25|12996|1|16|key=none;misc=135692609;">
+<!--
+var urlOfNewPop= "http://www.geocities.com/ad_container/pop.html?cuid="+cuid+"&keywords="+keywords; oldPop= window.open(urlOfNewPop, '_popIt', 'width=515,height=125'); if (oldPop.location.href != urlOfNewPop) {  if ((navigator.appName == "Netscape") && (parseInt(navigator.appVersion) == 3)) { setTimeout("oldPop.close()", 750); setTimeout("window.open(urlOfNewPop, '_popIt', 'width=515,height=125')", 1700); } else { oldPop.close(); setTimeout("window.open(urlOfNewPop, '_popIt', 'width=515,height=125')", 1000); } } 
+// -->
+</SCRIPT>
+<!-- </SERVICE> -->
+
+<!-- <SERVICE NAME="watermark"> -->
+<DIV CLASS="GeoBrandingV2" ID="GeoBrandingV2" STYLE="position:absolute;top:1;visibility:hide;" ALIGN="right"><A HREF="http://www.geocities.com/?source=watermark&browser=NS" TARGET="_top"><IMG SRC="http://pic.geocities.com/images/watermark/v1/geocities.gif" ALT="Click Here!" WIDTH="107" HEIGHT="41" BORDER="0"></A></DIV>
+<!-- </SERVICE> -->

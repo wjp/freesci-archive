@@ -1,0 +1,424 @@
+Obj 0
+  Obj 516c
+    Code 51be
+      egoBase 2ba8
+      statusCode 2cb8
+      DNKR 9658
+    Collect 537a
+      List 54f8          
+        Set 5594
+          EventHandler 5614
+            regions 89e4
+            sounds 89c8
+            keyHandler 2d00
+            dirHandler 2d20
+            mouseHandler 2d3c
+            cast 8934
+            features 8950
+            locales 8a00
+            addToPics 8a28
+            sFeatures 89a8
+          timers 8a64
+        Dialog 8244
+          SRDialog 6c8a
+            Save 6d3a
+            Restore 6ce6
+          GetReplaceName 6ed2
+        Controls 8316
+          controls 8a48
+    Script 579c
+      TalkObj
+        hermitTalk
+      Shooter
+        shoot1
+        shoot2
+        shoot3
+        shoot4
+        shoot5
+        shoot6
+      firstEntrance b32e
+      scorpS b5e0
+      sayRights b02e
+      putEyes c338
+      opener c3aa
+      boneTalk c4f0
+      openGate c5f2
+      walkEm cba4
+      flyAway ceae
+      frogIn d006
+      overTheHill bfae
+      flyAway c06a
+      nestBurn c1d4
+      burnUp c37a
+      throwIt c568
+      pickItUp c71a
+      lassoNest c8cc
+      nestDown ca48
+      treeFall cbf4
+      flutter cc88
+      outOfHouse cd04
+      guardPatrols b4ee
+      guardGreets b618
+      guardStopToTalk b6fc
+      timeout b7e8
+      guardResumesPatrol b9ec
+      openGate bba2
+      closeGateSafe
+      closeGate
+      egoClimbsWall
+      egoClimbsDown
+      egoLeavesCastle
+      normalEntry
+      comeBackLittleEgo
+      intro
+      intro2
+      startFight
+      Dodge
+      Duck
+      Thrust
+      Slash
+      ParryUp
+      ParryDown
+      Leap
+      horseEats
+      snadsOfTime
+      goToWork
+      egoRakes
+      endRake
+      getPaid
+      sleeper
+      sleepyIntro
+      aDustScript
+      guardSleeps
+      guardAwakes
+      guardThreatens
+      lGuardTrumpets
+      rGuardTrumpets
+      lGuardTalks
+      rGuardTalks
+      leaveHall
+      standStill
+      riseDownLeft
+      riseUpLeft
+      riseUpRight
+      peekABoo
+      getHimNorth
+      getHimSouth
+      riserGetsUp
+      gotHim
+      safeIntro
+      fallInHole
+      getRoot
+      spitIt
+      smashIt
+      throwIt
+      rockHitsIt
+      lassoSeed
+      openUp
+      bounceAndLook
+      antwerpFollow
+      antwerpPushes
+      fightAntwerp
+      sMoveRock
+      sMagicRock
+      bareHandAttack
+      antwerpAway
+      antwerped
+      splat
+      inWest
+      inEast
+      northDelay
+      spellDelay
+      aFallScript
+      sprayScript
+      aRippleScript
+      firstMsg
+      goOnIn
+      throwIt
+      answerKnock
+      getWater
+      squashed
+      safeTP
+      deadlyTP
+      knockScript
+      periScript
+      flockScript
+      rip1Script
+      rip2Script
+      aFightScript
+      cheetaurHurt
+    Event 582a
+      uEvt 4a86
+    Sound 6736
+      contMusic 2c2a
+      endBattle 2c54
+      music 2c7e
+      tpSound b664
+      tromp b68e
+      whoosh b4fa
+      portSound
+      swordMusic
+      rakeMusic
+      ghostMusic
+      spitSound
+      gulpSound
+      antSound
+      antHits
+      antFalls
+      antSplats
+      babyBoing
+      rm82Sound
+      splashSound
+      tromp
+      cheetMusic
+    ^G 74e8
+      MenuBar a8cc
+    ^G 76a6
+      DText 7766
+        textI 70a2
+        text1 70d2
+        text2 7102
+        oldName 7132
+      DIcon 77e6
+      DButton 788c
+        okI 7018
+        cancelI 7046
+        changeDirI 7074
+        button1 7194
+        button2 71c2
+      DEdit 7922
+        editI 6fe6
+        newName 7162
+      DSelector 7c70
+        selectorI 6fae
+    Cycle 9914
+      Fwd 9990
+        Walk 99e6
+        StopWalk 9832
+          egoSW 3aa8
+      CT 9aca
+        End 9b30
+        Beg 9b94
+    Motion 9d06
+      MoveTo 9dba
+        Path
+          RelPath
+      Chase
+      Wander
+    Feature 58c4
+      PV 5916
+        RPicView
+        wanted af2a
+        forThe af54
+        village af7e
+        emblem afa8
+        nail1 afd2
+        nail2 affc
+        nail3 b026
+        healerSign b062
+        etching
+        gravestone
+        leaf0
+        leaf1
+        leaf2
+        leaf3
+        northBush
+        southBush
+      View 5bca
+        Prop 5d88
+          Act 63f0
+            Ego 4eb0
+              ego 2a8e
+                egoObj 2bc4
+            TargActor c684
+              smallMonster b284
+              antwerp
+            Skilled
+              WeaponMaster
+                theMaster
+              Monster
+                cheetaur
+              Warrior
+                warrior
+            TP b600
+            a1
+            a2
+            a3
+            a4
+            a5
+            aDustCloud
+            aRipple
+            antwerp
+            backLeg b218
+            backFoot b27c
+            bird b326
+            bonehead c1c6
+            castleBars
+            centaur
+            dirt b344
+            dust
+            eyes b3a8
+            fireDart af36
+            flyingSeed
+            fred af2a
+            frontLeg b150
+            frontFoot b1b4
+            gate b2e0
+            geese
+            guard
+            guardHead
+            hermit
+            hut b088
+            hutDoor b0ec
+            longOne
+            magicLasso af9a
+            nest b492
+            periscope
+            reflection
+            ripple1
+            ripple2
+            rock affe
+            scorp b050
+            stableMan
+            wing1 afc0
+            wing2 b024
+          Extra d3ac
+            horseHead
+            horseTail
+            tail
+            skull1 b40c
+            skull2 b470
+            skull3 b4d4
+            skull4 b538
+            skull5 b59c
+          Door d08a
+            healerDoor b278
+            hermitDoor
+          ring b226
+          rightGuard
+          leftGuard
+          horse
+          glass
+          sand
+          lGuard
+          rGuard
+          rGuardHead
+          lGuardHead
+          door1
+          door2
+          torch
+          flower0
+          flower1
+          flower2
+          flower3
+          Magic
+          ladder
+          spray
+          wave
+          waterFalling
+          waterfall
+          leftArm
+          rightArm
+          tail
+          chest
+          aHand
+        aShield
+        archer1
+        archer2
+        archer3
+        archer4
+        archer5
+        archer6
+        castleDoor
+        castleGate
+        closeupEgo
+        frame
+        guardBody
+        head
+        hemitHead
+        hollowLog
+        lBush
+        mandrake
+        manure1
+        manure2
+        manure3
+        rBush
+        spearman1
+        spearman2
+        spearman3
+      RFeature
+        onCastleGate
+        onCastle
+        onLGateHouse
+        onRGateHouse
+        onMountain
+        onM1
+        onM2
+        onM3
+        onBarracks
+        onFence
+        onMountains
+        onTrees
+        onWall1
+        onWall2
+        onWall3
+        onTrees1
+        onTrees2
+        onWeed1
+        onWeed2
+        onWeed3
+        onWeed4
+        onWeed5
+        onCastle
+        onStones
+        onRug
+      TargFeature
+    Blk 653a
+      Cage 65a8
+    User 4ccc
+    SysWindow 6802
+      hSW 2d58
+      aWin a494
+      rightsWin af7e
+    Inventory 9e9c
+    Game 9008
+      HQ 38c6
+    Rgn 913c
+      Rm 93f6
+        rm16
+        rm22 bd44
+        rm54 bf16
+        rm37 b39c
+        rm38
+        rm39
+        rm40
+        rm41
+        rm52
+        rm53
+        rm64
+        rm65 b284
+        notice2Room b4d6
+        speedChecker b060
+        rm84
+        rm85
+        EncRoom
+          rm79
+          rm81
+        rm82
+        rm87
+        rm91
+        Arena
+          cheetaurArena
+        EndGame
+      Cemetery
+      Encounter
+    Locale 9498
+      Castle
+      Forest
+    SL 9508
+    RU 9624
+    StatusBar
+    CharSheet
+    InvSheet
+    gamefile.sh
+      hq1 hero.sav

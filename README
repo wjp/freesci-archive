@@ -1,0 +1,63 @@
+Thanks for downloading this release of FreeSCI!
+
+This is an early development version. Please do not confuse this with a
+working SCI engine.
+
+The FreeSCI distribution currently consists of tools and libraries to allow
+the platform-independant usage of SCI resource files. The current goal is
+to build an SCI virtual machine which is capable of running at least the
+older SCI0 games (like Space Quest 3, King's Quest 4 or Leisure Suit Larry 2
+((C) Sierra On-Line, Inc.)) In this process, support for the various
+SCI resources will be built and improved, as well as tested. Feel free to
+contribute in any way you wish, be it source code, documentation, or bug
+reports.
+
+Please refer to 'NEWS' and the 'ChangeLog' for information about changes
+in this and previous versions.
+
+To build the package, type the following:
+
+configure
+make
+
+Required 'non-standard' libraries:
+ * glib
+
+GGI (http://www.ggi-project.org) is required for the demos, and generally
+for graphics display.
+
+GSI (http://www.xs4all.nl/~whs/gsi/gsi.html) is required for sound support.
+The sound stuff should build without it, though; of course, only MIDI data
+/generation/ will work without gsi.
+
+libpng (http://www.cdrom.com/pub/png/) is required if you want to be able to
+store images as .png files. It will not become a necessity for the complete
+FreeSCI engine.
+
+Successful builds have been reported for the following platforms:
+- i686-pc-linux-gnu
+- sparc-sun-solaris2.5
+- DEC Alpha running Linux
+
+For a list of what's left to be done, please refer to the web site at: 
+http://freesci.linuxgames.com
+
+
+Please note that most of the documentation found in the doc/misc subdirectory
+is random information copied from the SCI Decoding Project homepage and
+from homepages of various of its members.
+Some of the source code contained in the doc/ directory, namely sd.c, sde.c,
+sdv.c, script.java and decrypt.c, was created by Carl Muckenhoupt who has
+given permission for it or parts of it to be ported and/or included in this
+distribution.
+Other source code, such as scr000.txt and scr_code.cpp, was copied from public
+sources without the knowledge of its authors.
+
+In order to do something useful, you need all of the resource files of any
+SCI0 game in your current working directory before running one of the programs
+from this package. These resource files and everything they contain are
+property and copyrighted by Sierra On-Line (which in turn is a trademark
+of Sierra On-Line, Inc.).
+"Space Quest 3: The Pirates of Pestulon" and "Quest for Glory 1: So You Want
+To Be A Hero" are trademarks of Sierra On-Line, Inc.
+

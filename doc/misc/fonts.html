@@ -1,0 +1,51 @@
+<HTML>
+ <HEAD>
+  <META NAME="GENERATOR" CONTENT="TXT2HTML By Rainer De Temple">
+  <TITLE>fonts.htm</TITLE>
+ </HEAD>
+ <BODY BGCOLOR="#C0C0C0">
+  <TT>
+SCI Font Resource Specification
+<BR>December 1998, By Rainer De Temple
+<BR>------------------------------------------------------------------------------
+<BR>
+<BR>byte      0 | Resource Type(87)
+<BR>bytes   1-3 | Always 0 (Unused in this type)
+<BR>bytes   4-5 | Number of chars in font (usually 0x0080)
+<BR>bytes   6-7 | Height of font(???)
+<BR>bytes   8-? | Locations in file of each char - 2 (ie 0x0135 is really 0x137)
+<BR>bytes   ?-? | Font data
+<BR>
+<BR>For each character:
+<BR>byte      0 | Width of char
+<BR>byte      1 | Height of char
+<BR>bytes   2-? | Binary data of font, 1 byte per row if width < 0x0A else 2 bytes
+<BR>
+<BR>Example:
+<BR>
+<BR>This is the Sierra logo, usually the second character(0x01) in a normal font:
+<BR>
+<BR>0x08  | The width (9 pixels)
+<BR>0x08  | The height (9 pixels)
+<BR>0x3C  | 0 0 1 1 1 1 0 0
+<BR>0x7E  | 0 1 1 1 1 1 1 0
+<BR>0xE7  | 1 1 1 0 0 1 1 1
+<BR>0xE3  | 1 1 1 0 0 0 1 1
+<BR>0xC9  | 1 1 0 0 1 0 0 1
+<BR>0x85  | 1 0 0 0 0 1 0 1
+<BR>0x04  | 0 0 0 0 0 1 0 0
+<BR>0x00  | 0 0 0 0 0 0 0 0 
+<BR>
+<BR>You may have noticed that the height is greater than the amount of data given.
+<BR>If this is the case, then the character is put at the bottom. (So in this
+<BR>character, there is a blank line at the top and bottom.)
+<BR>The reason the width is 9 pixels, is because there is one pixel(space) between
+<BR>each character in a sentence.
+<BR>
+<BR>-Rainer De Temple
+<BR>rdt@cnl.com.au
+<hr>
+<br><a href="sci.html">Back to main page.</a>
+  </TT>
+ </BODY>
+</HTML>

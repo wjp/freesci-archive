@@ -1,0 +1,317 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+   <TITLE>Brian Provinciano's SCI Cursor Specs</TITLE>
+</HEAD>
+<BODY BGCOLOR="#C0C0C0">
+
+<H2 ALIGN=CENTER><B>SCI Cursor Specs</B></H2>
+
+<P><BR>
+By Brian Provinciano &lt;bri_da_man@hotmail.com&gt; <BR>
+Version 1.03 December 21st, 1998 
+<HR WIDTH="100%"></P>
+
+<P>The SCI cusrsor consists of the colours black, white and transparent.The
+cursors, which are 16 x 16 pixels (128 in all), are not drawn as ordinarypictures.
+Each byte represents 8 pixels (half of a row) and each byte representsa
+pattern. The cursor contains 70 bytes, the first six bytes the header,and
+the 64 bytes left represent the patterns.</P>
+
+<P><I>*Useful note - In binary, a 0 represents transparent, and a 1 representscolor.</I></P>
+
+<P>
+<HR WIDTH="100%"></P>
+
+<H3><B>Byte Structure</B></H3>
+
+<P>There are 70 bytes in total. The first 6 bytes are the header, and theother
+64 are the actual picture.</P>
+
+<P><B>Byte 1: </B>0x88 - always seems to be this. Can't be changed.<BR>
+<B>Byte 2:</B> 0x00 - always seems to be this. Can't be changed. If changed,the
+cursor will look very odd. See example:</P>
+
+<CENTER><TABLE>
+<TR>
+<TD>
+<H5 ALIGN=CENTER><IMG SRC="./images/scimc2.gif" HEIGHT=32 WIDTH=32><BR>
+The cursor normally</H5>
+</TD>
+
+<TD>
+<H5 ALIGN=CENTER><IMG SRC="./images/crsr-odd.gif" HEIGHT=32 WIDTH=32><BR>
+The cursor with byte two changed from 00</H5>
+</TD>
+</TR>
+</TABLE></CENTER>
+
+<P><B>Bytes 3-6:</B> 0x00 in SCI0 games, but not always in SCI1 games.If
+they are not 00 and are changed to 00, it makes no difference.<BR>
+<B>Bytes 7-38:</B> This is where you enter in info on how the picture isdrawn.
+These bytes draw in the patterns with the colours black and transparent.A
+complete picture can be drawn leaving the rest of the bytes (39-70) blankif
+you are just using the colours black and transparent in your cursor.<BR>
+<B>Bytes 39-70:</B> This is where you can draw more over top of what youhave
+already drawn. These bytes draw in the the patterns with the coloursblack
+and white. As an example, the regular mouse cursor in an SCI gamehas the
+black part of the cursor drawn in the bytes 7-38 and then the whiteinside
+it is drawn in bytes 39-70. Look at picture below.</P>
+
+<CENTER><TABLE>
+<TR>
+<TD WIDTH="200">
+<H5 ALIGN=CENTER><IMG SRC="./images/scimc1.gif" HEIGHT=32 WIDTH=32><BR>
+The SCI mouse cursor with bytes 1-38 used</H5>
+</TD>
+
+<TD WIDTH="200">
+<H5 ALIGN=CENTER><IMG SRC="./images/scimc2.gif" HEIGHT=32 WIDTH=32><BR>
+The SCI mouse cursor with all 70 bytes used (white part added)</H5>
+</TD>
+</TR>
+</TABLE></CENTER>
+
+<P>
+<HR WIDTH="100%"><B>Patterns</B></P>
+
+<CENTER><TABLE BORDER=1 >
+<TR>
+<TD WIDTH="150">
+<CENTER><P><B>Variable Byte</B></P></CENTER>
+</TD>
+
+<TD WIDTH="150">
+<CENTER><P><B>Pattern</B></P></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER><P>0x0</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P><IMG SRC="./images/f-0.gif" HEIGHT=8 WIDTH=64></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER><P>0x1</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P><IMG SRC="./images/f-1.gif" HEIGHT=8 WIDTH=64></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER><P>0x2</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P><IMG SRC="./images/f-2.gif" HEIGHT=8 WIDTH=64></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER><P>0x3</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P><IMG SRC="./images/f-3.gif" HEIGHT=8 WIDTH=64></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER><P>0x4</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P><IMG SRC="./images/f-4.gif" HEIGHT=8 WIDTH=64></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER><P>0x5</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P><IMG SRC="./images/f-5.gif" HEIGHT=8 WIDTH=64></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER><P>0x6</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P><IMG SRC="./images/f-6.gif" HEIGHT=8 WIDTH=64></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER><P>0x7</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P><IMG SRC="./images/f-7.gif" HEIGHT=8 WIDTH=64></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER><P>0x8</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P><IMG SRC="./images/f-8.gif" HEIGHT=8 WIDTH=64></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER><P>0x9</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P><IMG SRC="./images/f-9.gif" HEIGHT=8 WIDTH=64></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER><P>0xA</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P><IMG SRC="./images/f-a.gif" HEIGHT=8 WIDTH=64></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER><P>0xB</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P><IMG SRC="./images/f-b.gif" HEIGHT=8 WIDTH=64></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER><P>0xC</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P><IMG SRC="./images/f-c.gif" HEIGHT=8 WIDTH=64></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER><P>0xD</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P><IMG SRC="./images/f-d.gif" HEIGHT=8 WIDTH=64></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER><P>0xE</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P><IMG SRC="./images/f-e.gif" HEIGHT=8 WIDTH=64></CENTER>
+</TD>
+</TR>
+
+<TR>
+<TD>
+<CENTER><P>0xF</P></CENTER>
+</TD>
+
+<TD>
+<CENTER><P><IMG SRC="./images/f-f.gif" HEIGHT=8 WIDTH=64></CENTER>
+</TD>
+</TR>
+</TABLE></CENTER>
+
+<P><B><I>Note -</I></B> This does not contain a picture of every pattern,because
+that in not necessary.</P>
+
+<H3>Other options</H3>
+
+<P><I>*Examples use variable F</I></P>
+
+<UL>
+<LI>To use these patterns using black in the place of white/transparentand
+white/transparent in the place of black, change F to 0 (F = white/transparent,0
+= black).</LI>
+
+<LI>If you want to use the mirror of a pattern look at the example.<BR>
+Mirror example:</LI>
+
+<CENTER><TABLE>
+<TR>
+<TD>0xF4 = <IMG SRC="./images/f-4.gif" HEIGHT=8 WIDTH=64></TD>
+
+<TD>0x4F = <IMG SRC="./images/f-4-mror.gif" HEIGHT=8 WIDTH=64></TD>
+</TR>
+</TABLE></CENTER>
+
+<LI>Note that the patterns use only four of the eight pixels in each group.to
+use the pattern part twice in the eight cels, use the variable twicein
+one byte (i.e. CC or 45). Look at the example:</LI>
+
+<CENTER><TABLE>
+<TR>
+<TD><I>Normally:<BR>
+</I>0xFC = <IMG SRC="./images/f-c.gif" HEIGHT=8 WIDTH=64> 
+<P><I>Using two variables:<BR>
+</I>0xCC = <IMG SRC="./images/c-c.gif" HEIGHT=8 WIDTH=64></P>
+</TD>
+
+<TD><I>Normally:<BR>
+</I>0xF4 = <IMG SRC="./images/f-4.gif" HEIGHT=8 WIDTH=64> <BR>
+0xF5 = <IMG SRC="./images/f-5.gif" HEIGHT=8 WIDTH=64> 
+<P><I>Using two variables:<BR>
+</I>0x45 = <IMG SRC="./images/4-5.gif" HEIGHT=8 WIDTH=64></P>
+</TD>
+</TR>
+</TABLE></CENTER>
+</UL>
+
+<P>
+<HR WIDTH="100%"></P>
+
+<H3><B>Other SCI cursor Structure to Know</B></H3>
+
+<P>If you are using a hex editor such as Ultra Edit or Hex Workshop, know that
+the pixels begin to be drawn at the top right hand corner of the cursor and
+goes towards the left, then on the next row starts at the left and heads
+right etc. See the example:</P>
+
+<P>e.g.<BR>
+<IMG SRC="./images/cont-row.gif" HEIGHT=44 WIDTH=200>etc...</P>
+
+<P>
+<HR WIDTH="100%"></P>
+
+<P><B><I>End of structure</I></B>
+
+<P><BR>
+</P>
+
+</BODY>
+</HTML>

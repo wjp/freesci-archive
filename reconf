@@ -1,0 +1,9 @@
+#!/bin/sh
+rm -f config.cache
+autoheader
+aclocal
+autoconf
+autoheader
+acconfig
+automake -a
+exit

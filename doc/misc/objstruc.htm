@@ -1,0 +1,104 @@
+<HTML>
+<HEAD>
+<STYLE>
+a:link, a:visited, a:active { 
+	text-decoration: none; 
+	font-weight:	bold;
+}
+</STYLE>
+  <TITLE>Modelo Frame</TITLE>
+</HEAD>
+<BODY BACKGROUND="" BGCOLOR="#8cc8ff" TEXT="#000000" LINK="#0000a0" VLINK="#400080" ALINK="#ff0000" FACE="Arial">
+<FONT FACE="Arial">
+<DL>
+  <DL>
+    <DT><B> <FONT SIZE="+1">OBJECT STRUCTURE</FONT></B>
+    <DT>&nbsp;
+  </DL>
+ <DL>
+<DT><B>Structure</B>
+   <DL><DT><BR>
+
+   <DT><B>Header area</B>
+   <DL><DT><BR>
+<U>byte 00-01</U> : Data block type (object = 1)<br>
+<U>byte 02-03</U> : Length of data block<br>
+<U>byte 04-05</U> : ID (always 1234h)<br>
+<U>byte 06-07</U> : Pointer to the local variables pointer - 4 bytes<br>
+             <DL><DT><I>(in script file, set to 0000h (initialized at run-time))</I></DL>
+<U>byte 08-09</U> : Pointer to the Function area + 2 bytes<br>
+             <DL><DT><I>(in script file, offset to the Function area)</I></DL>
+<U>byte 10-11</U> : Number of selectors<br>
+   </DL><BR><BR>
+
+   <DT><B>Selector area</B>
+   <DL><DT><BR>
+<U>byte 12-13</U> : Species<br>
+<U>byte 14-15</U> : Superclass<br>
+<U>byte 16-17</U> : -info- (purpose unknown)<br>
+<U>byte 18-19</U> : Pointer to the name of the object<br>
+<U>byte 20-21</U> : First selector value<br>
+<U>byte 22-23</U> : Second selector value<br>
+<U>byte 24-25</U> : ...<br>
+<U>byte ??-??</U> : Last selector value<br>
+   </DL><BR><BR>
+
+   <DT><B>Function area</B>
+   <DL><DT><BR>
+<U>byte ??-??</U> : Number of overloaded member functions<br>
+<U>byte ??-??</U> : No of the first overloaded member function<br>
+<U>byte ??-??</U> : ...<br>
+<U>byte ??-??</U> : No of the last overloaded member function<br>
+<U>byte ??-??</U> : Pointer to the superclass Pointer Area + 2 bytes<br>
+             <DL><DT><I>(in script file, set to 0000h (initialized at run-time))</I></DL>
+<U>byte ??-??</U> : Pointer to code of the first overloaded member function<br>
+             <DL><DT><I>(in script file, offset to the code)</I></DL>
+<U>byte ??-??</U> : ...<br>
+<U>byte ??-??</U> : Pointer to code of the last overloaded member function<br>
+   </DL><BR><BR>
+   </DL>
+
+   <DT><B>Example</B>
+   <DL><DT><BR>
+From SCRIPT.044 of Colonel's Bequest<br>
+Object lamp1 of the first scene (room 44)<br><br>
+   <DT><B>Header area</B>
+   <DL><DT><BR>
+<U>byte 00-01</U> : 0001h  Data block type (object = 1)<br>
+<U>byte 02-03</U> : 0052h  Length of data block (82 bytes)<br>
+<U>byte 04-05</U> : 1234h  ID<br>
+<U>byte 06-07</U> : 0000h<br>
+<U>byte 08-09</U> : 0040h  Offset to the Function area + 2 bytes<br>
+<U>byte 10-11</U> : 001Fh  Number of selectors (31)<br>
+   </DL><BR><BR>
+
+   <DT><B>Selector area</B>
+   <DL><DT><BR>
+<U>byte 12-13</U> : 0027h  Species<br>
+<U>byte 14-15</U> : 0027h  Superclass ('Prop')<br>
+<U>byte 16-17</U> : 0000h  -info-<br>
+<U>byte 18-19</U> : 1647h  Offset to the name of the object ('lamp1')<br>
+<U>byte 20-21</U> : 001Eh  First selector value ('y' position = 30)<br>
+<U>byte 22-23</U> : 00F0h  Second selector value ('x' position = 240)<br>
+...<br>
+<U>byte 72-73</U> : 0000h  Last selector value ('timer' = 0)<br>
+   </DL><BR><BR>
+
+   <DT><B>Function area</B>
+   <DL><DT><BR>
+<U>byte 74-75</U> : 0001h  Number of overloaded member functions (1)<br>
+<U>byte 76-77</U> : 006Fh  No of the first overloaded member function ('HandleEvent')<br>
+<U>byte 78-79</U> : 0000h  Will be class 'Prop' at run-time<br>
+<U>byte 80-81</U> : 0ED0h  Offset to code of 'HandleEvent'<br>
+   </DL><BR><BR>
+   </DL><BR><BR>
+
+
+ </DL>
+</DL>
+
+<BR><FONT FACE="Arial"><DIV align="center"><A HREF="../home.html">Main</A> | <A HREF="../specs.html">Specifications</A> | <A HREF="../programs.html">Programs</A> | <A HREF="../sdp.html">Project</A> | <A HREF="../sci.html">SCI</A> | <A HREF="../links.html">Links</A></FONT><BR><BR>
+
+</FONT>
+</BODY>
+</HTML>

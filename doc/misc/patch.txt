@@ -1,0 +1,76 @@
+Old System Patches shipped on Disk:
+
+Patch.001      MT-32 (LAPC-I, CM32-L, CM64)
+Patch.002      IMF/FB01
+Patch.003      Adlib/SoundBlaster
+Patch.004      Casio MT540/CT460
+Patch.007      Casio CSM-1
+Patch.101      CMS
+
+BBS Support:
+
+Patch.000      D110/10/20
+
+New System Patches Shipped on Disk:
+
+Patch.001      MT-32 (LAPC-I, CM32-L, CM64)
+Patch.003      Adlib/SoundBlaster
+Patch.101      CMS
+
+BBS Support:
+
+Patch.002      IMF/FB01
+
+
+MIDI.EXE sysex  loader is used to  load patches for other  devices. Devices
+supported in this manner:
+
+Roland  D110       (Patches named: KQ5D110, QFG2D110, etc...)
+Roland  D10/20     (Patches named: KQ5D20, QFG2D20, etc...)
+EMU     Proteus/1  (Patches named: KQ5PRO1, QFG2PRO1, etc...)
+EMU     Proteus/2  (Patches named: KQ5PRO2, QFG2PRO2, etc...)
+
+These patches  must be loaded  into the device  before playing the  game by
+using MIDI.EXE.  D-110/10/20's must always be  set to unit #18  in order to
+receive the  sysex massage. EMU Proteus/1  & Proteus/2 must be  set to Unit
+00. Run MIDI and load the appropriate  patch. Run the Sierra game using the
+MT-32 driver.
+
+
+NOTE: Casio  is not supported as  of yet in the  new system. However, there
+are  plans  to  support  some  of  their  devices  in the future. The Music
+Department will keep  the BBS up to date as  new drivers and patches become
+available.
+
+OLD SYSTEM
+
+          PATCH#
+GAME      000       001       002       003       004       007       101
+Camelot   X         X         X         X         X         X         X
+CB        X
+Hoyles    X
+ICE       X                   X         X
+KQ1                           X
+KQ4       X                                                           X
+LL2       X                                                           X
+LL3       X
+MG                            X
+Oils      X
+PQ2       X                                                           X
+QFG1      X
+Silph     X
+Sorc      X         X         X         X         X         X         X
+SQ3       X                                                 X         X
+
+
+NEW SYSTEM Extra Patches/Drivers
+
+          Device
+GAME      D110      D10/20    Prot1     Prot2     IMF
+Jones     X                                       X
+KQ5       X         X         X         X         X
+QFG2      X         X         X         X         X
+Stellar   X
+Thex2     X                                       X
+
+

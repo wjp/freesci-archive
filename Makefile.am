@@ -1,0 +1,2 @@
+SUBDIRS = doc src
+EXTRA_DIST = reconf THANKS TODO

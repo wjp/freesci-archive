@@ -1,0 +1,295 @@
+<!DOCTYPE Book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
+        <!ENTITY lt "<">
+        <!ENTITY gt ">">
+        <!ENTITY amp "&">
+]>
+
+
+<Book>
+
+  <Title>The Sierra Creative Interpreter</Title>
+
+  <TitleAbbrev>SCI Documentation</TitleAbbrev>
+
+
+  <BookInfo>
+
+    <Author>
+     <FirstName>Christoph</>
+     <SurName>Reichenbach</>
+     <AuthorBlurb><Para>
+       Christoph Reichenbach (<Email>creichen@rbg.informatik.tu-darmstadt.de</Email>)
+       maintains this document and the FreeSCI interpreter.
+     </Para></AuthorBlurb>
+    </Author>
+
+    <Othercredit>
+     <FirstName>Carl</>
+     <SurName>Muckenhoupt</>
+     <AuthorBlurb><Para>
+      Carl Muckenhoupt (<Email>carl@wurb.com</Email>), author of the original SCI
+      decoding utilities for DOS, discovered most of the decompression and graphics
+      stuff (picture and view resources) described here.
+     </Para></AuthorBlurb>
+    </Othercredit>
+
+    <Abstract><Para>
+      This book describes the Sierra Creative Interpreter, versions 0.xxx, 1.xxx,
+      2.xxx  and SCI32/SCIWin to the extent known to the general public, as well as the
+      FreeSCI interpreter for those games.
+      Please contact the author if you find that anything is being described
+      incorrectly or missing.
+      <warning>
+        This version of the documentation is *very* incomplete and covers only a few
+        limited parts of SCI0.
+      </warning>
+    </Para></Abstract>
+
+    <ReleaseInfo/This document is still far from complete and does almost only SCI0./
+
+    <LegalNotice>
+     <Para>
+     Copyright (C) 1999 Christoph Reichenbach
+     </Para>
+     <Para>
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this documentation to deal in the Documentation without restriction,
+   including without limitation the rights to use, copy, modify, merge, publish,
+   distribute, sublicense, and/or sell copies of the Documentation, and to permit
+   persons to whom the Documentation is furnished to do so, subject to the following
+   conditions:
+</Para>
+<Para>
+   The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Documentation.
+</Para><Para>
+   THE DOCUMENTATION IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+   THE AUTHOR(S) BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+   IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+   CONNECTION WITH THE DOCUMENTATION OR THE USE OR OTHER DEALINGS IN THE DOCUMENTATION.
+     </Para><Para>
+       The Sierra Creative Interpreter was originally developed by Sierra On-Line, Inc.
+       "Sierra On-Line Inc. (TM)" is a registered trademark of Sierra On-Line, Inc.
+       "Quest for Glory: So You Want To Be A Hero", "Quest For Glory 2: Trial By Fire"
+       and "Space Quest 3: Pirates of Pestulon" are trademarks of Sierra On-Line, Inc.
+     </Para>
+    </LegalNotice>
+
+  </BookInfo>
+
+  <Preface>
+  <Title/Preface/
+   <para>
+    Throughout the documentation, the term SCI will be used to describe the original
+    Sierra Creative Interpreter, in any version. SCI0 will refer to all games using the
+    SCI version 0.xxx, except for those games who use the 'in-between' game engine
+    referred to as SCI01 (such as Quest for Glory 2). SCI1 will refer to the interpreter
+    version 1.xxx, and SCI2 to interpreter version 2.xxx.
+    FreeSCI will refer specifically to either implementation details of the FreeSCI
+    engine or to extensions of the original SCI engine specific to FreeSCI.
+   </para>
+   <para>
+   I would like to take this opportunity to thank the members of the FreeSCI
+   and SCI Decoding Projects and their supporters, as well as Carl Muckenhoupt,
+   who took the first steps of SCI decoding, for their valuable help and
+   support.
+   </para>
+   </Preface>
+
+
+
+ <Chapter>
+ <Title/The Cursor resource/
+
+  <para>
+  This resource stores a simple bitmap describing the shape and texture of the
+  mouse pointer. All information stored herein is little endian in byte order.
+  </para><para>
+  <VariableList>
+   <VarListEntry><Term>0x00 - 0x01
+        </Term><ListItem><Para> 
+        X coordinate of the mouse cursor hot spot as a 16 bit integer.
+	This variable is not used in SCI0.
+        </para>
+   </ListItem></VarListEntry><VarListEntry><Term>0x02 - 0x03
+        </Term><ListItem><Para>
+        Y coordinate of the mouse cursor hot spot as a 16 bit integer.
+	Only 0x03 is used in SCI0; here, if set, the hot spot is at (8,8),
+	if not set, it is located at (0,0).
+        </para>
+   </ListItem></VarListEntry><VarListEntry><Term>0x04 - 0x23
+        </Term><ListItem><Para>
+        This is a list of 16 unsigned 16 bit integers constituting bitmasks for the
+        mouse cursor's transparency map, with the MSB representing the leftmost
+        pixel.
+        </para>
+   </ListItem></VarListEntry><VarListEntry><Term>0x24 - 0x43
+        </Term><ListItem><Para>
+        This is another list of 16 unsigned 16 bit integers. Each of them represents
+        another bitmask, determining whether the mouse cursor pixel should be drawn
+        in black (not set) or white (set). 
+        </para>
+   </ListItem></VarListEntry></VariableList>
+   To determine whether or not to draw a pixel, and, if it is to be drawn, in which
+   color it should be drawn in, the corresponding bits of both bitmask lists mentioned
+   above have to be examined. In the table below, A represents a bit from
+   the first list, and B the corresponding bit from the lower list.
+   <InformalTable frame="all">
+         <title>Color mapping for the SCI0 mouse pointer</title>
+         <tgroup cols="2">
+           <thead>
+             <row>
+               <entry>AB</entry>
+               <entry>Result</entry>
+             </row>
+           </thead>
+           <tbody>
+             <row>
+               <entry>00</entry>
+               <entry>Transparent</entry>
+             </row>
+             <row>
+               <entry>01</entry>
+               <entry>Transparent</entry>
+             </row>
+             <row>
+               <entry>10</entry>
+               <entry>0x00 (Black)</entry>
+             </row>
+             <row>
+               <entry>11</entry>
+               <entry>0x0f (White)</entry>
+             </row>
+           </tbody>
+         </tgroup>
+       </InformalTable>
+   Since this method of doing things wastes one combination, the table was changed for
+   SCI01 and SCI1:
+   <InformalTable frame="all">
+         <title>Color mapping for the SCI1 mouse pointer</title>
+         <tgroup cols="2">
+           <thead>
+             <row>
+               <entry>AB</entry>
+               <entry>Result</entry>
+             </row>
+           </thead>
+           <tbody>
+             <row>
+               <entry>00</entry>
+               <entry>Transparent</entry>
+             </row>
+             <row>
+               <entry>01</entry>
+               <entry>0x0f (White)</entry>
+             </row>
+             <row>
+               <entry>10</entry>
+               <entry>0x00 (Black)</entry>
+             </row>
+             <row>
+               <entry>11</entry>
+               <entry>0x07 (Light Gray)</entry>
+             </row>
+           </tbody>
+         </tgroup>
+       </InformalTable>
+  </para>
+ </Chapter>
+
+
+<Chapter>
+  <Title/The SCI0 View Resource/
+   <para>
+    In SCI0, Views are collections of images or sprites. Each View resource
+    contains a number of groups, which, in turn, contain one or more images.
+    Usually, those groups contain a number of consecutive animation frames.
+    It appears to be customary to store related animations or images in a
+    single frame. For example, the basic movements of all protagonists (four
+    or eight animation cycles (depending on the game)) are stored inside of
+    a single View resource.
+    Please note that the byte order of the following data is always little endian.
+
+
+ <para>
+ <VariableList> <Title/The View Resource/
+   <VarListEntry><Term>0x00 - 0x01
+      </Term><ListItem><para>
+        The number of image groups available.
+      </para>
+   </ListItem></VarListEntry><VarListEntry><Term>0x02 - 0x03
+      </Term><ListItem><Para>
+        A bitmask containing the 'mirrored' flag for each of the groups,
+        with the LSB containing the 'mirrored' flag for group 0.
+      </para>
+   </ListItem></VarListEntry><VarListEntry><Term>0x04 - 0x07
+      </Term><ListItem><Para>
+        - unknown -
+      </para>
+   </ListItem></VarListEntry><VarListEntry><Term>0x08...
+      </Term><ListItem><Para>
+        A list of indices pointing to the start of the cell list for each
+        image group. The number of entries is equal to the number of cells
+        as described in 0x00 - 0x01.
+   </para></ListItem></VarListEntry>
+ </VariableList>
+ </para>
+
+
+ <para>
+  <VariableList> <Title/Cell List/
+    <VarListEntry><Term>0x00 - 0x01
+       </Term><ListItem><Para>
+         The number of image cells available for this group.
+       </para>
+    </ListItem></VarListEntry><VarListEntry><Term>0x02 - 0x03
+       </Term><ListItem><Para>
+         - unknown -
+       </para>
+    </ListItem></VarListEntry><VarListEntry><Term>0x04...
+       </Term><ListItem><Para>
+         A list of 16 bit pointers indexing the start of the image cell
+         structure for each image cell. The pointers are relative to the
+         beginning of the resource data.
+    </para></ListItem></VarListEntry>
+  </VariableList>
+ </para>
+
+
+ 
+ <para>
+ <VariableList><Title/Image Cell/
+   <VarListEntry><Term>0x00 - 0x01
+      </Term><ListItem><Para>
+        The horizontal (X) size of the image.
+      </para>
+   </ListItem></VarListEntry><VarListEntry><Term>0x02 - 0x03
+      </Term><ListItem><Para>
+        The vertical (Y) size of the image.
+      </para>
+   </ListItem></VarListEntry><VarListEntry><Term>0x04 - 0x05
+      </Term><ListItem><Para>
+        - unknown -
+      </para>
+   </ListItem></VarListEntry><VarListEntry><Term>0x06
+      </Term><ListItem><Para>
+        The color key, i.e. the color number used for transparency in
+        this cell.
+      </para>
+   </ListItem></VarListEntry><VarListEntry><Term>0x07...
+      </Term><ListItem><Para>
+        A list of combined color/repeat count entries. Each byte contains
+        a color entry (low nibble) and a repeat count (high nibble).
+        If the color is equal to the color key from index 0x06, then
+        no drawing should be performed, although [repeat] pixels still need
+        to be skipped. It is not known whether this list is terminated;
+        the FreeSCI drawing algorithm stops drawing as soon as the rectangle
+        defined in the first two cell entries has been filled.
+   </para></ListItem></VarListEntry>
+ </VariableList>
+ </para>
+</Chapter>
+
+</Book>

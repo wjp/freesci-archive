@@ -1,0 +1,278 @@
+make  all-recursive
+make[1]: Entering directory `/home/raistlin/freesci-0.2.2'
+Making all in doc
+make[2]: Entering directory `/home/raistlin/freesci-0.2.2/doc'
+Making all in misc
+make[3]: Entering directory `/home/raistlin/freesci-0.2.2/doc/misc'
+make[3]: Nothing to be done for `all'.
+make[3]: Leaving directory `/home/raistlin/freesci-0.2.2/doc/misc'
+make[3]: Entering directory `/home/raistlin/freesci-0.2.2/doc'
+make[3]: Nothing to be done for `all-am'.
+make[3]: Leaving directory `/home/raistlin/freesci-0.2.2/doc'
+make[2]: Leaving directory `/home/raistlin/freesci-0.2.2/doc'
+Making all in src
+make[2]: Entering directory `/home/raistlin/freesci-0.2.2/src'
+Making all in core
+make[3]: Entering directory `/home/raistlin/freesci-0.2.2/src/core'
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include     -Wall -I/usr/lib/glib/include -c resource.c
+resource.c: In function `loadResources':
+resource.c:66: warning: implicit declaration of function `resourceLoader'
+resource.c:66: warning: suggest parentheses around assignment used as truth value
+resource.c:65: warning: suggest explicit braces to avoid ambiguous `else'
+resource.c:76: warning: suggest parentheses around assignment used as truth value
+resource.c:75: warning: suggest explicit braces to avoid ambiguous `else'
+resource.c: In function `resourceLoader':
+resource.c:199: warning: implicit declaration of function `loadResourcePatches'
+resource.c: In function `loadResourcePatches':
+resource.c:251: warning: suggest parentheses around assignment used as truth value
+resource.c: In function `_XALLOC':
+resource.c:376: warning: int format, different type arg (arg 6)
+../../src/include/resource.h: At top level:
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include     -Wall -I/usr/lib/glib/include -c decompress0.c
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include     -Wall -I/usr/lib/glib/include -c decompress1.c
+decompress1.c: In function `decrypt3':
+decompress1.c:70: warning: unused variable `orgdest'
+decompress1.c:132: warning: control reaches end of non-void function
+decompress1.c: In function `decompress1':
+decompress1.c:240: warning: implicit declaration of function `decrypt2'
+../../src/include/resource.h: At top level:
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include     -Wall -I/usr/lib/glib/include -c vocabulary.c
+In file included from vocabulary.c:3:
+../../src/include/vocabulary.h:4: warning: `/*' within comment
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include     -Wall -I/usr/lib/glib/include -c script.c
+In file included from script.c:2:
+../../src/include/script.h:7: warning: `/*' within comment
+In file included from script.c:3:
+../../src/include/vocabulary.h:4: warning: `/*' within comment
+script.c: In function `decode_method':
+script.c:343: warning: type defaults to `int' in declaration of `count'
+../../src/include/resource.h: At top level:
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include     -Wall -I/usr/lib/glib/include -c kernel.c
+In file included from kernel.c:1:
+../../src/include/script.h:7: warning: `/*' within comment
+kernel.c: In function `kClone':
+kernel.c:18: warning: implicit declaration of function `putInt16'
+kernel.c: In function `kDisposeClone':
+kernel.c:38: warning: implicit declaration of function `h_free'
+../../src/include/resource.h: At top level:
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include     -Wall -I/usr/lib/glib/include -c vm.c
+In file included from vm.c:1:
+../../src/include/script.h:7: warning: `/*' within comment
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+rm -f libscicore.a
+ar cru libscicore.a resource.o decompress0.o decompress1.o vocabulary.o script.o kernel.o vm.o 
+ranlib libscicore.a
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include     -Wall -I/usr/lib/glib/include -c heap.c
+gcc  -Wall -I/usr/lib/glib/include -L/usr/lib -lglib -o heap  heap.o  
+make[3]: Leaving directory `/home/raistlin/freesci-0.2.2/src/core'
+Making all in include
+make[3]: Entering directory `/home/raistlin/freesci-0.2.2/src/include'
+make[3]: Nothing to be done for `all'.
+make[3]: Leaving directory `/home/raistlin/freesci-0.2.2/src/include'
+Making all in graphics
+make[3]: Entering directory `/home/raistlin/freesci-0.2.2/src/graphics'
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include  -I/usr/local/include     -Wall -I/usr/lib/glib/include -c graphics.c
+graphics.c: In function `ditherto':
+graphics.c:164: warning: unused variable `ty'
+graphics.c:164: warning: unused variable `tx'
+graphics.c:163: warning: unused variable `temp'
+graphics.c: In function `drawView0':
+graphics.c:366: warning: unused variable `i'
+../../src/include/resource.h: At top level:
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include  -I/usr/local/include     -Wall -I/usr/lib/glib/include -c font.c
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include  -I/usr/local/include     -Wall -I/usr/lib/glib/include -c mcursor.c
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include  -I/usr/local/include     -Wall -I/usr/lib/glib/include -c graphics_ggi.c
+graphics_ggi.c: In function `displayPicture':
+graphics_ggi.c:188: warning: unused variable `pos'
+graphics_ggi.c: In function `displayPictureDouble':
+graphics_ggi.c:216: warning: unused variable `pos'
+../../src/include/resource.h: At top level:
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include  -I/usr/local/include     -Wall -I/usr/lib/glib/include -c graphics_png.c
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include  -I/usr/local/include     -Wall -I/usr/lib/glib/include -c input.c
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include  -I/usr/local/include     -Wall -I/usr/lib/glib/include -c input_ggi.c
+input_ggi.c: In function `initInputGII':
+input_ggi.c:415: warning: implicit declaration of function `atexit'
+rm -f libscigraphics.a
+ar cru libscigraphics.a graphics.o font.o mcursor.o graphics_ggi.o graphics_png.o input.o input_ggi.o 
+ranlib libscigraphics.a
+make[3]: Leaving directory `/home/raistlin/freesci-0.2.2/src/graphics'
+Making all in sound
+make[3]: Entering directory `/home/raistlin/freesci-0.2.2/src/sound'
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include    -Wall -I/usr/lib/glib/include -c midi.c
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+../../src/include/sound.h:85: warning: `SCI_sound_interfaces' defined but not used
+midi.c:62: warning: `GM_Instrument_Names' defined but not used
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include    -Wall -I/usr/lib/glib/include -c sound.c
+sound.c: In function `initSound':
+sound.c:66: warning: statement with no effect
+sound.c: In function `playSound':
+sound.c:136: warning: control reaches end of non-void function
+../../src/include/resource.h: At top level:
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+../../src/include/sound.h:85: warning: `SCI_sound_interfaces' defined but not used
+rm -f libscisound.a
+ar cru libscisound.a midi.o sound.o 
+ranlib libscisound.a
+make[3]: Leaving directory `/home/raistlin/freesci-0.2.2/src/sound'
+Making all in console
+make[3]: Entering directory `/home/raistlin/freesci-0.2.2/src/console'
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include  -I/usr/local/include     -Wall -I/usr/lib/glib/include -c console.c
+console.c: In function `drawConsole':
+console.c:318: warning: unused variable `pixel'
+../../src/include/resource.h: At top level:
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include  -I/usr/local/include     -Wall -I/usr/lib/glib/include -c console_font.c
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include  -I/usr/local/include     -Wall -I/usr/lib/glib/include -c commands.c
+commands.c: In function `cmdParse':
+commands.c:144: warning: unused variable `escape'
+commands.c: In function `cmdHook':
+commands.c:333: warning: control reaches end of non-void function
+commands.c: In function `cmdHookInt':
+commands.c:360: warning: control reaches end of non-void function
+commands.c: In function `c_list':
+commands.c:442: warning: control reaches end of non-void function
+commands.c: In function `c_man':
+commands.c:473: warning: control reaches end of non-void function
+commands.c: In function `c_set':
+commands.c:483: warning: control reaches end of non-void function
+commands.c: In function `c_print':
+commands.c:493: warning: control reaches end of non-void function
+commands.c: In function `c_play':
+commands.c:502: warning: control reaches end of non-void function
+commands.c: In function `c_playloop':
+commands.c:511: warning: control reaches end of non-void function
+commands.c: In function `c_nosound':
+commands.c:517: warning: control reaches end of non-void function
+commands.c: In function `c_volume':
+commands.c:523: warning: control reaches end of non-void function
+commands.c: In function `c_size':
+commands.c:538: warning: control reaches end of non-void function
+commands.c: In function `c_dump':
+commands.c:578: warning: control reaches end of non-void function
+commands.c: In function `c_hexgrep':
+commands.c:608: warning: suggest parentheses around assignment used as truth value
+../../src/include/resource.h: At top level:
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/sound.h:85: warning: `SCI_sound_interfaces' defined but not used
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include  -I/usr/local/include     -Wall -I/usr/lib/glib/include -c commands_scr.c
+In file included from commands_scr.c:32:
+../../src/include/script.h:7: warning: `/*' within comment
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+rm -f libsciconsole.a
+ar cru libsciconsole.a console.o console_font.o commands.o commands_scr.o 
+ranlib libsciconsole.a
+make[3]: Leaving directory `/home/raistlin/freesci-0.2.2/src/console'
+Making all in demo
+make[3]: Entering directory `/home/raistlin/freesci-0.2.2/src/demo'
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include  -I/usr/local/include    -Wall -I/usr/lib/glib/include -c demo.c
+demo.c: In function `c_quit':
+demo.c:45: warning: control reaches end of non-void function
+demo.c: In function `c_redraw':
+demo.c:51: warning: control reaches end of non-void function
+demo.c: In function `c_drawadd':
+demo.c:62: warning: control reaches end of non-void function
+demo.c: In function `main':
+demo.c:97: warning: suggest parentheses around assignment used as truth value
+demo.c:105: warning: implicit declaration of function `loadObjects'
+demo.c:160: warning: suggest parentheses around assignment used as truth value
+demo.c:68: warning: unused variable `font'
+../../src/include/resource.h: At top level:
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+gcc  -Wall -I/usr/lib/glib/include -L/usr/lib -lglib -o demo  demo.o -lglib -lc -lggi -lgii ../core/libscicore.a ../graphics/libscigraphics.a ../sound/libscisound.a ../console/libsciconsole.a -L/usr/local/lib -lggi -lgii 
+make[3]: Leaving directory `/home/raistlin/freesci-0.2.2/src/demo'
+Making all in tools
+make[3]: Entering directory `/home/raistlin/freesci-0.2.2/src/tools'
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include  -I/usr/local/include    -Wall -I/usr/lib/glib/include -c sciunpack.c
+sciunpack.c: In function `main':
+sciunpack.c:138: warning: suggest parentheses around assignment used as truth value
+sciunpack.c:155: warning: suggest parentheses around assignment used as truth value
+sciunpack.c:204: warning: suggest parentheses around assignment used as truth value
+../../src/include/sound.h: At top level:
+../../src/include/sound.h:85: warning: `SCI_sound_interfaces' defined but not used
+gcc  -Wall -I/usr/lib/glib/include -L/usr/lib -lglib -o sciunpack  sciunpack.o -lc -lglib ../core/libscicore.a ../sound/libscisound.a ../graphics/libscigraphics.a   
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include  -I/usr/local/include    -Wall -I/usr/lib/glib/include -c scriptdump.c
+In file included from scriptdump.c:2:
+../../src/include/script.h:7: warning: `/*' within comment
+In file included from scriptdump.c:3:
+../../src/include/vocabulary.h:4: warning: `/*' within comment
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+gcc  -Wall -I/usr/lib/glib/include -L/usr/lib -lglib -o scriptdump  scriptdump.o -L../core -lscicore -L../console -lsciconsole  
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include  -I/usr/local/include    -Wall -I/usr/lib/glib/include -c vocabdump.c
+In file included from vocabdump.c:33:
+../../src/include/vocabulary.h:4: warning: `/*' within comment
+vocabdump.c: In function `main':
+vocabdump.c:38: warning: unused variable `resource'
+../../src/include/resource.h: At top level:
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+gcc  -Wall -I/usr/lib/glib/include -L/usr/lib -lglib -o vocabdump  vocabdump.o -lc ../core/libscicore.a 
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include  -I/usr/local/include    -Wall -I/usr/lib/glib/include -c classes.c
+In file included from classes.c:4:
+../../src/include/vocabulary.h:4: warning: `/*' within comment
+../../src/include/resource.h:78: warning: `SCI_Error_Types' defined but not used
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+gcc  -Wall -I/usr/lib/glib/include -L/usr/lib -lglib -o classes  classes.o -lc ../core/libscicore.a 
+gcc -DHAVE_CONFIG_H -I. -I. -I../.. -I../../src/include  -I/usr/local/include    -Wall -I/usr/lib/glib/include -c console.c
+console.c: In function `c_quit':
+console.c:44: warning: control reaches end of non-void function
+console.c: In function `main':
+console.c:60: warning: suggest parentheses around assignment used as truth value
+console.c:66: warning: implicit declaration of function `loadObjects'
+console.c:84: warning: unused variable `oldlength'
+console.c:49: warning: unused variable `resource'
+../../src/include/resource.h: At top level:
+../../src/include/resource.h:99: warning: `SCI_Version_Types' defined but not used
+../../src/include/resource.h:108: warning: `Resource_Types' defined but not used
+gcc  -Wall -I/usr/lib/glib/include -L/usr/lib -lglib -o console  console.o -lc -lglib -lreadline -lcurses ../core/libscicore.a ../sound/libscisound.a ../console/libsciconsole.a    
+make[3]: Leaving directory `/home/raistlin/freesci-0.2.2/src/tools'
+make[3]: Entering directory `/home/raistlin/freesci-0.2.2/src'
+make[3]: Nothing to be done for `all-am'.
+make[3]: Leaving directory `/home/raistlin/freesci-0.2.2/src'
+make[2]: Leaving directory `/home/raistlin/freesci-0.2.2/src'
+make[2]: Entering directory `/home/raistlin/freesci-0.2.2'
+make[2]: Leaving directory `/home/raistlin/freesci-0.2.2'
+make[1]: Leaving directory `/home/raistlin/freesci-0.2.2'

@@ -1,0 +1,215 @@
+So this is the 0.2.2 release. Well, it's mostly a bug fix release, though
+a few things have been added. Most notably, Magnus Reftel was able to build
+a heap based on Lars Skovlund's specs (Lars built a heap as well, but we
+decided not to use it in order to remain as far as possible from the original
+code (Lars had used disassembled code as a basis for his work)). Thanks to
+Lars for his work, anyway- he helped to understand us most of the memory
+management stuff.
+The heap still has to be integrated, but that'll have time until later.
+Other user-visible changes include several bug fixes resulting in at least
+partial Linux-Alpha support, a change to sciunpack which makes the tool
+add the two-byte header SCI0 games expect (to ease abusing the original
+SCI engines for experimental purposes), a resource grepper for the command
+line, and, yes, the end of GII involvement in tools/console.c. It now
+operates by using libreadline (which requires libcurses) for input operations;
+IMHO, it's much more useable now.
+
+At the moment, it looks as if we're going CVS thanks to Chris Lansdown's
+generous offer; this should result in better and more recent updates. There
+will still be "official" development releases, though, for those people who
+don't want to get entangled in the dark side of CVS. Also, the helpful
+guys from Linuxgames.com and Telefragged, who are hosting us now, are working
+to get a mailing list up and running; this should be beneficial to develop-
+ment as well.
+
+
+
+--- 0.2.1: ---
+
+Another version has been thrown out of the window into the cold night
+outside... Well, here are the news and changes:
+The picture drawing stuff has had some bugs fixed; it works /almost/
+perfectly now. It should only take one more improvement of the filling
+code to get things absolutely right.
+Sound is now mapped automagically. This means that initializing the sound
+engine will abuse the patch.002 resource to create a midi mapping. It's
+far from being perfect (for example, instruments that aren't mapped are
+mapped to the GM equivalent of their instrument number, which is sub-
+ideal). More work will be required, but this appears to be heading in the
+right direction. (Unfortunately, neither Camelot nor QfG2 have a patch.002;
+some other way of mapping instruments will have to be figured out for
+them).
+All types of SCI01 compression are now supported (as well as the SCI1
+cursors). So QfG2 support will be very close once the VM's up and running :-)
+(Thanks to Ravi from the SCI message board, who noted that the missing
+SCI1 type 1 compression simply is SCI0 type 2 compression ;)
+Speaking of the VM, Magnus has done some major research and implementation
+sessions which resulted in both improved object loading code and in the
+beginning of the VM (including several of the SCI opcodes and three kernel
+functions). The structure looks good, so this will soon become a real
+VM :-)
+He has built a python-based class browser as well. It hasn't been merged
+yet, but it should compile stand-alone (the source is located in
+src/python.tar.gz). Swig (http://www.swig.org) is required for compilation.
+
+
+
+--- 0.2.0: ---
+
+Sooo... what's new for this version? Well, several things are.
+First off, Magnus' code disassembly and class analysis code has reached
+the stage where everything that's known has been added, so it's time to
+experiment with it. This means that work on the VM, the heart of all this,
+can start immediately :-)
+As a matter of fact, it has already started, but don't let that tiny fact
+distract you from this dramatical moment.
+Also, some input stuff (using ggi/gii) has been written. However, per-
+formance sucked badly when I tested it with the current display routines,
+so the displaying was re-written to take advantage of some of libggi's
+more advanced features. Performance is much better now, the mouse pointer
+should move almost fluently on most modern machines.
+To have a look at it (and to check out the on-screen command console),
+try qg1demo. CTRL-` (with ` being the same apostrophe that you use to
+bring up the Quake console brings it up. Try the 'list' and 'man' commands
+to find out what you can do.
+As for the sound: I now believe that some of the patch resources contain
+names for the instruments used in the game. This fact might be used to
+create better midi maps :-)
+They appear to contain sound effects as well; if we want those to work,
+it'll be neccessary to write an internal midi player, or to use gsi's
+upcoming software synth feature.
+
+
+
+--- 0.1.5: ---
+
+So the last version didn't work; the auto-detection code reported that
+the resources were not loaded successfully even though they were.
+Sorry for not double-checking this code.
+However, these are development releases, so something like this may very well
+happen again.
+Anyway, this release is just a small fix of those problems (and a few other
+problems related to gsi which made freesci programs behave unfriendly towars
+other gsi-using programs). Also, a new way of drawing graphics has been
+added- 'interpolation mode'.
+Originally, Sierra simulated having more than 16 colors by using simple
+dithering techniques. In 'dithering mode', i.e. if sci_graphics_interpolate
+is 0, freesci programs will render pictures in an (almost) identical way.
+However, if sci_graphics_interpolate is set to something else, picture
+resources will be drawn in 256 colors, each of which is calculated by inter-
+polating the rgb values of the two original EGA colors that were used for
+dithering (to be precise, dithering color 0 is taken to be slightly more
+important (3/5) than color 1 (2/5))
+I can't say for sure which way looks better, so, in the future, both modes
+will be supported (with dithered mode being given preferrence).
+You can compare the results of drawing in either mode on the screenshots
+page of the freesci homepage.
+
+
+
+--- 0.1.4: ---
+
+The good news is: Sound support is in. The bad news is: It doesn't work.
+Not completely, anyway; Sierra adheres somewhat to the MIDI specs (some minor
+quirks, most of which Ravi already discovered), but they appear to have
+used a proprietary MIDI instrument mapping. This isn't really surprising;
+AFAIK GM wasn't written at the time they released the first SCI0 games.
+Anyway, sound support can be found in the new subdirectory src/sound.
+Sound can be extracted or even played (if GSI is available), but the
+results sound somewhat different to what we used to expect.
+The instrument map is located in src/sound/midi.c; please feel free to
+modify and test it in whatever way you seem fit. BTW, it is absolutely
+possible that each Sierra game uses a different instrument mapping, or
+that parts of these can be found in the mysterious 'patch' resources.
+Also, percussions don't seem to work exactly as in the original games
+(try QfG1s sound.001).
+A good way to proceed might be to extract the music files from the QfG 1
+remake and compare them to the originals- since the music file format has
+changed between SCI0 and SCI01, this might both reveal the differences and
+eventually produce useable instrument mappings (if QfG1 uses GM maps...)
+Another piece of good news: SCI1 decompression works, at least for methods
+2 and 3 (and, of course, 0). Method 1 (which is used in SCI01) doesn't,
+but it's possible that this is just a variant of the SCI0 method 1 (plain
+SCI0 method 1 doesn't quite work). Method 4 hasn't been ported yet, but
+DOS source code from Carl's decoder is available.
+(FYI: Since I haven't been able to completely decompress something, I'm
+not absolutely sure if these methods work. Please try them as hard as you
+can.)
+On the tools front, unpack and resourcelist have been merged into sciunpack,
+which comes with facilities to convert sound resources to midi files and
+pictures into png files (the new graphics/graphics_png.c could also be used
+to make screenshots from a running SCI game if we had one running).
+And, while I'm at it, the ggi people have fixed the endianness bug that made
+colors look screwed when displaying from big endian machines to little
+endian machines. If you happen to use both little endian and big endian
+machines, you should upgrade your version of libggi.
+
+Addendum: If you want to see the sound player in action (and have your GSI
+set up correctly), try the QfG1 demo. It doesn't loop the music as it should
+yet, but it proves that GSI support *is* working ;-)
+(BTW: The "Erana's Peace" theme currently is the best-working song. You should
+not expect the other MIDIs to sound nearly as good.)
+
+
+
+--- 0.1.3: ---
+
+Even more portability fixes. FreeSCI has now been successfully tested on
+sparc-sun-solaris2.5 over an X connection. However, the colors are messed
+up; I *think* that it could be a bug in libggi; this is currently under
+investigation.
+Views should draw much faster now. Also, they are reversed if a certain
+flag is set.
+A cause for a segfault/coredump in decompress.c has been cured: It would
+behave strangely if a resource had a size of 0, which, apparently, is
+possible.
+resource.c now starts at resource.001, if resource.000 is not available.
+Some games (SQ3) seem to come without a resource.000, so this was
+neccessary. BTW, SQ3 appears to work now.
+It is now possible to specify the locations of libggi and libglib (as
+well as their header files) during configure time.
+
+
+
+--- 0.1.2: ---
+
+Additional portability fixes; test runs on big-endian machines will happen
+Real Soon Now.
+The data types gu?int(8|16) from glib.h now superceed the u?int(8|16) types
+generated by autoconf magic.
+Stability fixes all over resource.c and decompress.c (those were badly needed)
+seem to prevent any memory leaks, at least on my machine.
+Configure now accepts additional paths for ggi. Although configure --help
+claims so, those aren't specific to ggi- yet.
+On the graphics front, crashes caused by the filling code re-filling any white
+objects (like clouds) seem to have disappeared, even though filling isn't
+perfect yet (this appears to derive from a bug deep down in the understanding
+of how the oritginal SCI interpreter handles filling). Lines now seem to behave
+exactly like their Sierra ancestors, so the Infamous Incomplete Image of the
+brigands' fortress from QG1 is now obsolete. This means that graphics should
+generally be *much* better.
+
+
+--- 0.1.1: ---
+
+New portability stuff (using automake/autoconf) has been introduced.
+The data types (u)int8 and (u)int16 can now be used to specify (unsigned)
+8 or 16 bit data types. (u)int8 currently only checks if char is 8 bit and
+aborts if it isn't, however.
+am/ac also define BIGENDIAN_WORDS if we are in a big-endian world. Magnus'
+getInt16() (formerly getInt()) should be used whenever two resource bytes
+are converted into an int16; this function is defined as a macro if we
+are little-endian, but it also properly translates those two bytes if we
+are not.
+The /src/test directory now contains two new utilities: scriptdump and voc-
+dump. While scriptdump appears to work nicely, I've had problems with
+vocdump (testing qg1). It only works for kernel message table 1.
+Magnus reports that he's had problems with qg1, too, but that Conquest of
+Camelot works properly.
+For those interested in looking into it, the sources are in
+src/core/vocabulary.c.
+Background graphics still don't work perfectly. But I'll have to look into
+this at a later time.
+By the way, the core and graphics files now get build as libraries. It
+looks somewhat nicer this way.
+

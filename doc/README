@@ -1,0 +1,8 @@
+FreeSCI: Documentation
+
+In this directory all basic SGML documentation is stored. Other forms of
+documentation can be found in the subdirectories 'txt' and 'html'.
+
+The 'misc' subdirectory contains various bits and pieces from all over the
+'net, some insightful, others useless.
+

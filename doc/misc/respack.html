@@ -1,0 +1,235 @@
+
+<!-- <SERVICE NAME="watermark"> -->
+<SCRIPT LANGUAGE="javascript1.2" SRC="http://www.geocities.com/include/watermark/v2/lib.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript1.2">
+<!--
+var args= new Array;
+
+assignArrays("Computers & Technology", "Computers_and_Technology");
+
+//-->
+</SCRIPT>
+<SCRIPT LANGUAGE="javascript1.2" SRC="http://www.geocities.com/include/watermark/v2/ns.js">
+</SCRIPT>
+<!-- </SERVICE> -->
+<html>
+
+<head><title>Resource Maps</title></head>
+
+<body>
+
+<style type="text/css">
+<!--
+A:link {text-decoration: none}
+A:visited {text-decoration: none}
+A:active {text-decoration: none}
+--> </STYLE>
+
+<center><h1>Resource Packagess</h1></center>
+<center><a href="index.html">back to the table of contents</a></center>
+<p><hr><p>
+
+<a name="format"><h2>The resource package format</h2></a>
+Resource packages have no header for the file as a whole. Packages are
+just a bunch of resources one after another. The resources themselves
+do have a small 8 byte header made up of 4 2-byte values. The headers
+have the format:
+<ul>
+<li>Resource Identifier (2 bytes)
+    <ul>
+    <li>11 bit resource number   (bits 00-10)
+    <li>5 bit resource type      (bits 11-15)
+    </ul>
+<li>Encoded Length + 4 (2 bytes)
+<li>Resource Length (2 bytes)
+<li>Encoding Method (2 bytes)
+</ul>
+The resource identifier is the same as was listed under the resource
+map. It can be used to double-check the existance of a resource.
+<p>
+The next field is the length of the encoded resource + 4. I'm not
+entirely sure what the point of the +4 is. My best guess is that if a
+program reads resources directly from the resource map, adding this
+value to the current file offset after reading the value will bring the
+file offset to the next resource.
+<p>
+The resource length is the length in bytes of the unencoded resource.
+<p>
+The encoding method lists how the resource has been compressed.
+Recognized values are 0 (unencoded), 1, and 2.
+<br><br><br><br>
+
+<a name="encode"><h2>Encoding methods</h2></a>
+As I've said, there are 3 recognized encoding types. Method 0 is no
+compression. The resource can be lifted straight out of the package. I
+don't fully understand method 1 yet and I won't comment on it until I
+do. Method 2 is similar to Huffman coding but differs in some respects.
+(At least from the way I learned it)
+<br><br><br><br>
+
+<a name="encode1"><h2>Method 1</h2></a>
+No comment.
+<br><br><br><br>
+
+<a name="encode2"><h2>Method 2</h2></a>
+To quote Baf, "This is basically byte-token huffman coding, except that
+a prefix of 1 signals a literal byte. In fact, most bytes are literal;
+only extremely common ones are put in the huffman tree." Don't worry if
+that lost you; I won't assume you know Huffman coding. It would
+probably help if you did, though.
+<p>
+The basic premise behind this method is that the most common bytes in a
+chunk of data can be replaced with short codes. The more often a
+specific byte appears, the shorter its code should be. Rare bytes will
+not get a code at all. Bytes which do get codes are listed in a binary
+tree.
+<p>
+The codes themselves are listed in a bit stream. They are interpreted
+by scanning down a binary tree. A 1 in the bit stream means take the
+right child of the current node. A 0 in the bit stream means take the
+left child of the current node. When you come to a leaf node, you have
+finished one complete code. The leaf node will contain the byte which
+should replace the code. Then, if there are any more bits left in the
+stream, repeat the process beginning at the root of the tree.
+<p>
+Most values are not included in the tree. These literal bytes are
+included directly in the bit stream with the codes. In his SCI Decoder,
+Baf interprets any command to take the right child of the current node
+when the current node has a left child but no right child as a signal
+that the next 8 bits in the stream form a literal byte. Based on his
+comments and common sense, however, I suspect that all literal bytes
+get prefixed with a single bit 1. That is, the root node will never
+have a right child, so all codes begin with 0 and all literals begin
+with 1.
+<p>
+Let's practice decoding something. Here's an example tree:
+<pre>
+
+                0
+               /
+              1
+            /   \
+           2     3
+          / \   /
+         4   5  6
+        / \  B  C
+       7   8
+       A   D
+
+</pre>
+The nodes are listed by number so I can reference them easily. Leaf
+nodes have a letter listed underneath them. This letter is the piece of
+data which got replaced by the code. Using this tree, we'll decode the
+stream 0010000010101001011.
+<p>
+Okay, start at the root and read the first bit from the stream. It's a
+0, so we go down to the left child (node #1). Its not a leaf node, so
+read the next bit. It's another 0. Once again we go down the left child
+and find ourselves at node #2. Node #2 is not a leaf node either, so
+read the next bit, which is a 1. That brings us to node #5, which is a
+leaf node. Having reached the end of one branch, we get the piece of
+data represented by the code (that's a B represented by 001) and put it
+in our data buffer. Now we continue the process with the rest of the
+stream, starting at the root (node #0). Reading from the stream, we go
+from node #0 to node #1 to node #4 to node #7. Node #7 is a leaf node,
+so we put its data (an A represented by 0000) into the data buffer. Our
+data buffer now holds BA. Continue the process. We go from node #0 to
+node #1 to node #3 to node #6, which is a C represented by the code
+010. Our data buffer holds BAC. The next bit in the stream is a 1.
+Normally a 1 tells us to take the right child of the current node, but
+look at the tree. We're at the root, and it has no right child. Here,
+the 1 from the bit stream is not a command to traverse the tree but is
+a prefix signaling that the next 8 bits from the stream will be a
+literal byte. We read the next 8 bits and insert them into our data
+buffer. The next 8 bits are 01001011. This is the ASCII code for 'K',
+so I'll use a K to represent this in our data buffer. Our finished
+buffer holds BACK.
+<p>
+The sample tree also illustrates the idea that there may be more than
+one way to prefix a literal byte. Compare our last stream with this new
+one (spaces provided only to make it easier to read):
+<pre>
+
+         old: 001 0000 010 101001011
+         new: 001 0000 010 01101001011
+
+</pre>
+We can easily see that the first three characters will be the same, but
+look at the last part. It starts with a 0, which makes it look like a
+code instead of a literal prefix. Follow it down the tree. We read a 0,
+so we go to node #1. It's not a leaf node, so read the next bit. It's a
+1, so we go to node #3. It's not a leaf node, so read the next bit. The
+next bit is a 1, but node #3 has no right child. Baf's SCI Decoder
+would treat this sequence (011) like an elaborate literal prefix. I
+have no idea whether or not Sierra's official specification allows for
+literals to be prefixed in this way. In any case, it's a bad form which
+should be avoided if you're doing the encoding yourself. It's wasteful
+and unoptomized.
+<p>
+I hope I didn't lose you in that. I'm not sure how well I explained it.
+If it confused you, try finding some other resource which explains
+Huffman coding better and come back after reading it.
+<p>
+Now that we know how this compression technique applies to Sierra's
+resources, the only thing left is to know how encoded resources get
+saved. The format is:
+<ul>
+<li>Number of nodes in the tree (1 byte)
+<li>Terminator (1 byte)
+<li>Nodes (2 bytes each)
+<li>Bit stream (variable length)
+</ul>
+The number of nodes in the tress is simply the number of nodes in the
+Huffman tree.
+<p>
+The terminator is a special byte which will be found as a literal in
+the bit stream. It signifies the end of the stream and should not be
+put in the data buffer. Stop decoding when you reach this byte as a
+literal in the stream (as opposed to getting it from the tree).
+<p>
+The nodes are two bytes each. They are already in order; your program
+should not attempt to construct a tree from them. Instead, leave them
+in an array. The first byte contains the pointers to the left and right
+children. The upper four bits are the location of the left child as an
+offset from the current node. The offset is in nodes, not bytes. If our
+example tree were listed in order (node #0 first in the file, node #1
+next, etc.) then the left child pointer for node #0 would be 1. The
+left child pointer for node #1 would also be 1. The left child pointer
+for node #2 would be 2. The left child pointer for node #4 would be
+3. The left child pointer for node #3 would be another 3. A pointer
+cannot be negative, so a node's children must be listed after that node
+in the file. If a node has no left child then its left child pointer is
+0. The lower four bits of the first byte are a pointer to the right
+child of the current node and follow the same rules as the left child
+pointer. A leaf node, then, would have 0 for the entire first byte. The
+second byte in the node is the data which gets put in the data buffer
+if the code were to end on that node. The second byte is only
+meaningful on leaf nodes but all nodes have a space for it.
+<p>
+The bit stream comes last. It can be variable size. It ends with the
+terminator byte listed as a literal.
+<br><br><br><br>
+
+<p><hr><p>
+<center><a href="index.html">back to the table of contents</a></center>
+
+</body>
+
+</html>
+
+<!-- <SERVICE NAME="pop"> -->
+<SCRIPT LANGUAGE="javascript">
+<!-- 
+var cuid= "10197"; var keywords= "none"; 
+// -->
+</SCRIPT>
+<SCRIPT LANGUAGE="javascript" SRC="http://adforce.imgis.com/?addyn|2.0|25|12998|1|16|key=none;misc=752779326;">
+<!--
+var urlOfNewPop= "http://www.geocities.com/ad_container/pop.html?cuid="+cuid+"&keywords="+keywords; oldPop= window.open(urlOfNewPop, '_popIt', 'width=515,height=125'); if (oldPop.location.href != urlOfNewPop) {  if ((navigator.appName == "Netscape") && (parseInt(navigator.appVersion) == 3)) { setTimeout("oldPop.close()", 750); setTimeout("window.open(urlOfNewPop, '_popIt', 'width=515,height=125')", 1700); } else { oldPop.close(); setTimeout("window.open(urlOfNewPop, '_popIt', 'width=515,height=125')", 1000); } } 
+// -->
+</SCRIPT>
+<!-- </SERVICE> -->
+
+<!-- <SERVICE NAME="watermark"> -->
+<DIV CLASS="GeoBrandingV2" ID="GeoBrandingV2" STYLE="position:absolute;top:1;visibility:hide;" ALIGN="right"><A HREF="http://www.geocities.com/?source=watermark&browser=NS" TARGET="_top"><IMG SRC="http://pic.geocities.com/images/watermark/v1/geocities.gif" ALT="Click Here!" WIDTH="107" HEIGHT="41" BORDER="0"></A></DIV>
+<!-- </SERVICE> -->
