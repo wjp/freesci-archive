@@ -754,7 +754,7 @@ a save game file.
       </para>
     </sect2>
     <sect2>
-      <title>Decompression algorithm DCL-IMPLODE</title>
+      <title>Decompression algorithm DCL-EXPLODE</title>
       <para>
 	originally by <author><firstname>Petr</firstname> <surname>Vyhnak</surname></author>
       </para>
@@ -946,7 +946,7 @@ END LOOP
 	The algorithms listed as UNKNOWN-x have not yet been mapped to actual algorithms but
 	are known to be used by the games. For some of them, it is possible that they match
 	one of the algorithms described above, but have not yet been added to FreeSCI in an
-	appropriate way (refer to DCL-IMPLODE for a good example).
+	appropriate way (refer to DCL-EXPLODE for a good example).
       </para>
     </sect2>
   </sect1>

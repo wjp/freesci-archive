@@ -105,10 +105,14 @@
 #define SCI_VERSION_AUTODETECT 0
 #define SCI_VERSION_0 1
 #define SCI_VERSION_01 2
-#define SCI_VERSION_1 3
-#define SCI_VERSION_32 4
-#define SCI_VERSION_LAST SCI_VERSION_01
+#define SCI_VERSION_1_EARLY 3
+#define SCI_VERSION_1_LATE 4
+#define SCI_VERSION_1_1 5
+#define SCI_VERSION_32 6
+#define SCI_VERSION_LAST SCI_VERSION_1_LATE
 /* The last supported SCI version */
+
+#define SCI_VERSION_1 SCI_VERSION_1_EARLY
 
 extern DLLEXTERN const char* SCI_Error_Types[];
 extern DLLEXTERN const char* SCI_Version_Types[];
@@ -234,16 +238,29 @@ int decompress01(resource_t *result, int resh);
 **               encountered.
 */
 
-int decompress1(resource_t *result, int resh);
-/* Decrypts resource data and stores the result for SCI1-style compression.
+int decompress1e(resource_t *result, int resh);
+/* Decrypts resource data and stores the result for early SCI1-style compression.
 ** Parameters : result: The resource_t the decompressed data is stored in.
 **              resh  : File handle of the resource file
 ** Returns    : (int) 0 on success, one of SCI_ERROR_* if a problem was
 **               encountered.
 */
 
+int decompress1l(resource_t *result, int resh);
+/* Decrypts resource data and stores the result for late SCI1-style compression.
+** Parameters : result: The resource_t the decompressed data is stored in.
+**              resh  : File handle of the resource file
+** Returns    : (int) 0 on success, one of SCI_ERROR_* if a problem was
+**               encountered.
+*/
+
+
 int decrypt2(guint8* dest, guint8* src, int length, int complength);
 /* Huffman token decryptor - defined in decompress0.c and used in decompress01.c
+*/
+
+int decrypt4(guint8* dest, guint8* src, int length, int complength);
+/* DCL inflate- implemented in decompress1.c
 */
 
 

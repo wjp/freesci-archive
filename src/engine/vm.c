@@ -1172,21 +1172,20 @@ lookup_selector(state_t *s, heap_ptr obj, int selectorid, heap_ptr *address)
 /* Detects early SCI versions by their different script header */
 void script_detect_early_versions(state_t *s)
 {
-  int c;
-  resource_t *script;
+	int c;
+	resource_t *script;
 
-  for (c = 0; c < 1000; c++) {
-    if ((script = findResource(sci_script, c))) {
+	for (c = 0; c < 1000; c++) {
+		if ((script = findResource(sci_script, c))) {
 
-      int id = getInt16(script->data);
+			int id = getInt16(script->data);
 
-      if (id > 15) {
-	version_require_earlier_than(s, SCI_VERSION_FTU_NEW_SCRIPT_HEADER);
-	return;
-      }
-    }
-  }
-
+			if (id > 15) {
+				version_require_earlier_than(s, SCI_VERSION_FTU_NEW_SCRIPT_HEADER);
+				return;
+			}
+		}
+	}
 }
 
 

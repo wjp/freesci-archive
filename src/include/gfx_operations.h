@@ -462,7 +462,7 @@ gfxop_get_cel_parameters(gfx_state_t *state, int nr, int loop, int cel,
 **             (int *) height: The variable the height will be stored in
 **             (point_t *) offset: The variable the cel's x/y offset will be stored in
 ** Returns   : (int) GFX_OK if the lookup succeeded, GFX_ERROR if the nr/loop/cel
-** combination was invalid
+**             combination was invalid
 */
 
 int
