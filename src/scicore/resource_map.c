@@ -138,7 +138,9 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 		_scir_free_resources(resources, resources_nr);
 		return SCI_ERROR_INVALID_RESMAP_ENTRY;
 	} else {
-		/* Check whehter the highest resfile used exists */
+#if 0
+/* Check disabled, Mac SQ3 thinks it has resource.004 but doesn't need it -- CR */
+		/* Check whether the highest resfile used exists */
 		char filename_buf[14];
 		sprintf(filename_buf, "resource.%03d", max_resfile_nr);
 		fd = sci_open(filename_buf, O_RDONLY);
@@ -149,6 +151,7 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p)
 			return SCI_ERROR_INVALID_RESMAP_ENTRY;
 		} else
 			close(fd);
+#endif
 	}
 
 	if (resource_index < resources_nr)

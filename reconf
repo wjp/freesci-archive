@@ -4,6 +4,5 @@ autoheader
 aclocal
 autoconf
 autoheader
-acconfig
 automake -a
 exit

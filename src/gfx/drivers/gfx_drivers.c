@@ -120,6 +120,9 @@ gfx_find_driver(char *path, char *name)
 		if (getenv("DISPLAY"))
 			return &gfx_driver_xlib;
 #endif
+#if defined (MACOSX) && defined(HAVE_SDL)
+		return &gfx_driver_sdl;
+#endif
 		return gfx_drivers[0];
 	}
 
