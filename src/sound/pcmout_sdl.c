@@ -81,6 +81,7 @@ static int pcmout_sdl_open(guint16 *b, guint16 rate) {
 static int pcmout_sdl_close() {
   SDL_PauseAudio (1);
   SDL_CloseAudio();
+  return 0;
 }
 
 pcmout_driver_t pcmout_driver_sdl = {
