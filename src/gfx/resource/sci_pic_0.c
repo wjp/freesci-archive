@@ -148,6 +148,7 @@ gfxr_init_pic(gfx_mode_t *mode, int ID)
 	gfxr_pic_t *pic = sci_malloc(sizeof(gfxr_pic_t));
 
 	pic->mode = mode;
+	pic->ID = ID;
 
 	pic->control_map = gfx_pixmap_alloc_index_data(gfx_new_pixmap(320, 200, ID, 2, 0));
 

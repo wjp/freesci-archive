@@ -42,6 +42,10 @@ typedef enum {
 	GFX_RESOURCE_TYPES_NR /* Number of resource types that are to be supported */
 } gfx_resource_types_t;
 
+#define GFXR_RES_ID(type, index) ((type) << 16 | (index))
+#define GFXR_RES_TYPE(id) (id >> 16)
+#define GFXR_RES_NR(id) (id & 0xffff)
+
 
 typedef struct gfx_resource_struct {
 	int ID; /* Resource ID */

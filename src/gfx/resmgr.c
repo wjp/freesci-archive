@@ -291,11 +291,11 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 			need_unscaled = 0;
 			pic = gfxr_interpreter_init_pic(state->version,
 							&mode_1x1_color_index,
-							(restype << 16) | nr,
+							GFXR_RES_ID(restype, nr),
 							state->misc_payload);
 		} else pic = gfxr_interpreter_init_pic(state->version,
 						       state->driver->mode,
-						       (restype << 16) | nr,
+						       GFXR_RES_ID(restype, nr),
 						       state->misc_payload);
 
 		if (!pic) {
@@ -308,7 +308,7 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 		if (need_unscaled) {
 			unscaled_pic = gfxr_interpreter_init_pic(state->version,
 								 &mode_1x1_color_index,
-								 (restype << 16) | nr,
+								 GFXR_RES_ID(restype, nr),
 								 state->misc_payload);
 			if (!unscaled_pic) {
 				GFXERROR("Failed to allocate unscaled pic!\n");
@@ -332,7 +332,7 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 
 		if (!res) {
 			res = sci_malloc(sizeof(gfx_resource_t));
-			res->ID = ((restype << 16) | nr);
+			res->ID = GFXR_RES_ID(restype, nr);
 			res->lock_sequence_nr = state->options->buffer_pics_nr;
 			sbtree_set(tree, nr, (void *) res);
 		} else {
@@ -451,7 +451,7 @@ gfxr_get_view(gfx_resstate_t *state, int nr, int *loop, int *cel, int palette)
 		if (!res) {
 			res = sci_malloc(sizeof(gfx_resource_t));
 			res->scaled_data.view = NULL;
-			res->ID = ((restype << 16) | nr);
+			res->ID = GFXR_RES_ID(restype, nr);
 			res->lock_sequence_nr = state->tag_lock_counter;
 			res->mode = hash;
 			sbtree_set(tree, nr, (void *) res);
@@ -516,7 +516,7 @@ gfxr_get_font(gfx_resstate_t *state, int nr, int scaled)
 		if (!res) {
 			res = sci_malloc(sizeof(gfx_resource_t));
 			res->scaled_data.font = NULL;
-			res->ID = ((restype << 16) | nr);
+			res->ID = GFXR_RES_ID(restype, nr);
 			res->lock_sequence_nr = state->tag_lock_counter;
 			res->mode = hash;
 			sbtree_set(tree, nr, (void *) res);
@@ -561,7 +561,7 @@ gfxr_get_cursor(gfx_resstate_t *state, int nr)
 		if (!res) {
 			res = sci_malloc(sizeof(gfx_resource_t));
 			res->scaled_data.pointer = NULL;
-			res->ID = ((restype << 16) | nr);
+			res->ID = GFXR_RES_ID(restype, nr);
 			res->lock_sequence_nr = state->tag_lock_counter;
 			res->mode = hash;
 			sbtree_set(tree, nr, (void *) res);

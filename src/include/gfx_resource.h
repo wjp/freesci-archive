@@ -68,7 +68,7 @@ typedef struct {
 
 
 typedef struct {
-	int ID; /* pic number */
+	int ID; /* pic number (NOT resource ID, just number) */
 	gfx_mode_t *mode;
 	gfx_pixmap_t *visual_map;
 	gfx_pixmap_t *priority_map;

@@ -73,7 +73,7 @@ gfxr_interpreter_init_pic(int version, gfx_mode_t *mode, int ID, void *internal)
 {
 	gfx_sci_options_t *sci_options = (gfx_sci_options_t *) internal;
 
-	return gfxr_init_pic(mode, ID);
+	return gfxr_init_pic(mode, GFXR_RES_NR(ID));
 }
 
 
