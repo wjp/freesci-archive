@@ -5,14 +5,14 @@ Rickard Lind <rpl@dd.chalmers.se>, 2000-12-30
 Step 1:
 
 D rename "src/sound/midi.c" in freesci to "oldmidi.c" and still use it
-* move my "midi*" and "midiout*" to "src/sound"
+D move my "midi*" and "midiout*" to "src/sound"
 D change all "glib.h" to the real thing
 	
 Step 2:
 
-* implement all note-playing, volume changing, reverb etc in "midi_mt32.*"
+D implement all note-playing, volume changing, reverb etc in "midi_mt32.*"
   use disassembled sierra SCI1.1 driver as the main source of inspiration
-* change "soundserver_null.c" to use the new device driver for MT-32
+D change "soundserver_null.c" to use the new device driver for MT-32
 * use "~/.freesci/config" to set ALSA/OSS and other options 
 
 Step 3:
