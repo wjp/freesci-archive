@@ -93,7 +93,7 @@ c_step(state_t *s)
 {
   _debugstate_valid = 0;
   if (cmd_paramlength && (cmd_params[0].val > 0))
-    _debug_step_running = cmd_params[0].val;
+    _debug_step_running = cmd_params[0].val - 1;
   return 0;
 }
 
