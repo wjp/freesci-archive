@@ -312,7 +312,7 @@ _cfsml_get_identifier(FILE *fd, int *line, int *hiteof, int *assignment)
 EOF
 
 if ($debug) {
-    print "  printf(\"idenditifier is '%s'\\n\", retval);\n";
+    print "  printf(\"identifier is '%s'\\n\", retval);\n";
 }
 
   $firstline = __LINE__;
@@ -453,7 +453,7 @@ sub create_writer
     elsif ($types{$type}{'type'} eq $type_string) {
 	write_line_pp(__LINE__, 0);
 	print "  if (!(*save_struc))\n";
-	print "    fprintf(fh, \"\\\\null\\\\\");";
+	print "    fprintf(fh, \"\\\\null\\\\\");\n";
 	print "  else {\n";
 	print "    char *token = _cfsml_mangle_string((char *) *save_struc);\n";
 	print "    fprintf(fh, \"\\\"%s\\\"\", token);\n";
@@ -505,7 +505,7 @@ sub create_writer
       } elsif ($n->{'type'} eq $type_abspointer) { # Absolute pointer
 
 	  print "    if (!save_struc->$n->{'name'})\n";
-	  print "      fprintf(fh, \"\\\\null\\\\\");";
+	  print "      fprintf(fh, \"\\\\null\\\\\");\n";
 	  print "    else \n";
 	  print "      $types{$n->{'reftype'}}{'writer'}";
 	  print "(fh, save_struc->$n->{'name'});\n";
@@ -523,7 +523,7 @@ sub create_writer
       print "  fprintf(fh, \"}\");\n";
     }
     else {
-      print STDERR "Warning: Attemt to create_writer for invalid type '$types{$type}{'type'}'\n";
+      print STDERR "Warning: Attempt to create_writer for invalid type '$types{$type}{'type'}'\n";
     }
     print "}\n\n";
 
@@ -563,6 +563,10 @@ sub create_reader
     if ($types{$type}{'type'} eq $type_integer) {
 	write_line_pp(__LINE__, 0);
 	print "\n  *save_struc = strtol(lastval, &token, 0);\n";
+	print "  if ( (*save_struc == 0) && (token == lastval) ) {\n";
+	print "     _cfsml_error(\"strtol failed at line %d\\n\", *line);\n";
+	print "     return CFSML_FAILURE;\n";
+	print "  }\n";
 	print "  if (*token != 0) {\n";
 	print "     _cfsml_error(\"Non-integer encountered while parsing int value at line %d\\n\",";
 	print " *line);\n";
@@ -603,8 +607,10 @@ sub create_reader
 	print "  do {\n";
 	print "    char *value;\n";
 	print "    token = _cfsml_get_identifier(fh, line, hiteof, &assignment);\n\n";
-	print "    if (!token)\n";
+	print "    if (!token) {\n";
+	print "       _cfsml_error(\"Expected token at line %d\\n\", *line);\n";
 	print "       return CFSML_FAILURE;\n";
+	print "    }\n";
 	print "    if (!assignment) {\n";
 	print "      if (!strcmp(token, \"}\")) \n";
 	print "         closed = 1;\n";
@@ -616,8 +622,11 @@ sub create_reader
 	print "      value = \"\";\n";
 	print "      while (!value || !strcmp(value, \"\"))\n";
 	print "        value = _cfsml_get_value(fh, line, hiteof);\n";
-	print "      if (!value)\n";
-	print "         return CFSML_FAILURE;\n";
+	print "      if (!value) {\n";
+	print "        _cfsml_error(\"Expected token at line %d\\n\", *line);\n";
+	print "        return CFSML_FAILURE;\n";
+	print "      }\n";
+#	print "    }\n";
 
 
       foreach $n (@{$records{$type}}) { # Now take care of all record elements
@@ -639,8 +648,10 @@ sub create_reader
 	  $reader = $types{'int'}{'reader'}; # Read relpointer as int
 
 	  write_line_pp(__LINE__, 0);
-	  print "         if ($reader(fh, &(reladdresses[$reladdress]), value, line, hiteof))\n";
+	  print "         if ($reader(fh, &(reladdresses[$reladdress]), value, line, hiteof)) {\n";
+	  print "            _cfsml_error(\"Expected token at line %d\\n\", *line);\n";
 	  print "            return CFSML_FAILURE;\n";
+	  print "         }\n";
 
 	  # Make sure that the resulting variable is interpreted correctly
 	  $reladdress_resolver .= "  save_struc->$n->{'name'} =".
@@ -655,7 +666,7 @@ sub create_reader
 	    # begin with [, since this is either the only character in the line, or it starts
 	    # the "amount of memory to allocate" block
 	    print "            _cfsml_error(\"Opening brackets expected at line %d\\n\", *line);\n";
-	    print "            return CFSML_FAILURE;\n;";
+	    print "            return CFSML_FAILURE;\n";
 	    print "         }\n";
 
 	  if ($n->{'array'} eq 'dynamic') {
@@ -667,7 +678,7 @@ sub create_reader
 	    print "         if (max < 0) {\n";
 	    print "            _cfsml_error(\"Invalid number of elements to allocate for dynamic ";
 	    print "array '%s' at line %d\\n\", token, *line);\n";
-	    print "            return CFSML_FAILURE;\n;";
+	    print "            return CFSML_FAILURE;\n";
 	    print "         }\n\n";
 
 	    print "         if (max) {\n";
@@ -689,12 +700,15 @@ sub create_reader
 	    print "         done = i = 0;\n";
 	    print "         do {\n";
 	    if ($type eq $type_record) {
-		print "           if (!(value = _cfsml_get_value(fh, line, hiteof)))\n";
+		print "           if (!(value = _cfsml_get_value(fh, line, hiteof))) {\n";
 	    } else {
-		print "           if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))\n";
+		print "           if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL))) {\n";
 	    }
 	    write_line_pp(__LINE__, 0);
+	    
+	    print "              _cfsml_error(\"Token expected at line %d\\n\", *line);\n";
 	    print "              return 1;\n";
+	    print "           }\n";
 	    print "           if (strcmp(value, \"]\")) {\n";
 	    print "             if (i == max) {\n";
 	    print "               _cfsml_error(\"More elements than space available (%d) in '%s' at ";
@@ -702,8 +716,10 @@ sub create_reader
 	    print "               return CFSML_FAILURE;\n";
 	    print "             }\n";
 	    my $helper = "[i++]";
-	    print "             if ($reader(fh, &(save_struc->$name$helper), value, line, hiteof))\n";
+	    print "             if ($reader(fh, &(save_struc->$name$helper), value, line, hiteof)) {\n";
+	    print "                _cfsml_error(\"Token expected by $reader() for $name$helper at line %d\\n\", *line);\n";
 	    print "                return CFSML_FAILURE;\n";
+	    print "             }\n";
 	    print "           } else done = 1;\n";
 	    print "         } while (!done);\n";
 
@@ -723,14 +739,18 @@ sub create_reader
 	    print "        if (strcmp(value, \"\\\\null\\\\\")) { /* null pointer? */\n";
 	    print "           save_struc->$name = sci_malloc(sizeof ($type));\n";
 	    print "           _cfsml_register_pointer(save_struc->$name);\n";
-	    print "           if ($reader(fh, save_struc->$name, value, line, hiteof))\n";
+	    print "           if ($reader(fh, save_struc->$name, value, line, hiteof)) {\n";
+	    print "              _cfsml_error(\"Token expected by $reader() for $name at line %d\\n\", *line);\n";
 	    print "              return CFSML_FAILURE;\n";
+	    print "           }\n";
 	    print "        } else save_struc->$name = NULL;\n";
 	}
 	else { # It's a simple variable or a struct
 	    write_line_pp(__LINE__, 0);
-	    print "         if ($reader(fh, &(save_struc->$name), value, line, hiteof))\n";
+	    print "         if ($reader(fh, &(save_struc->$name), value, line, hiteof)) {\n";
+	    print "            _cfsml_error(\"Token expected by $reader() for $name at line %d\\n\", *line);\n";
 	    print "            return CFSML_FAILURE;\n";
+	    print "         }\n";
 	}
 	print "      } else\n";
 
@@ -739,7 +759,7 @@ sub create_reader
 	print "       {\n";
 	print "          _cfsml_error(\"Assignment to invalid identifier '%s' in line %d\\n\",";
 	print " token, *line);\n";
-	print "          return CFSML_FAILURE;";
+	print "          return CFSML_FAILURE;\n";
 	print "       }\n";
 	print "     }\n";
 

@@ -369,10 +369,7 @@ suspend_handle(word song_handle, sound_server_state_t *ss_state)
 #endif
 			}
 		}
-
-	} else {
-		fprintf(debug_stream, "suspend_handle(): Attempt to suspend invalid sound handle %04x\n", song_handle);
-	}
+	}	/* else ignore */
 }
 
 void

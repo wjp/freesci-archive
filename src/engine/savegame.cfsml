@@ -1030,7 +1030,7 @@ gamestate_save(state_t *s, char *dirname)
 		}
 	}
 
-	fh = fopen("state", "w" FO_BINARY);
+	fh = fopen("state", "w" FO_TEXT);
 
 	/* Calculate the time spent with this game */
 	s->game_time = time(NULL) - s->game_start_time.tv_sec;
@@ -1086,7 +1086,7 @@ gamestate_restore(state_t *s, char *dirname)
 	_global_save_state = retval;
 	retval->gfx_state = s->gfx_state;
 
-	fh = fopen("state", "r" FO_BINARY);
+	fh = fopen("state", "r" FO_TEXT);
 	if (!fh) {
 		heap_del(retval->_heap);
 		free(retval);

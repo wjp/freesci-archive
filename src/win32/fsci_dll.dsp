@@ -70,7 +70,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "FSCI_DLL_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /Gi /GR /GX /ZI /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "_WINDOWS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D "_DEBUG" /D VERSION=__TIMESTAMP__ /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /Gi /GR /GX /Zi /Od /I "..\..\..\SDL\include" /I "..\include" /I "..\include\win32" /D PACKAGE=\"FreeSCI\" /D "X_DISPLAY_MISSING" /D "HAVE_SDL" /D "_WINDOWS" /D "_USRDLL" /D "FREESCI_EXPORTS" /D VERSION=__TIMESTAMP__ /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0xc09 /d "_DEBUG"
@@ -332,6 +332,10 @@ SOURCE=..\scicore\resource.c
 # Begin Source File
 
 SOURCE=..\scicore\resource_map.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\scicore\resource_patch.c
 # End Source File
 # Begin Source File
 

@@ -553,44 +553,29 @@ typedef struct {
 	playing_notes_t playing_notes[MIDI_CHANNELS];	/* keeps track of polyphony */
 	byte mute_channel[MIDI_CHANNELS];	/* which channels are muted */
 	int reverse_stereo;	/* reverse stereo setting */
+	unsigned int sound_cue;	/* cumulative cue counter */
 
 	/* note: only present in polled sound server and not currently used */
 	unsigned long usecs_to_sleep;
-	unsigned int ticks_to_fade;
-	unsigned int sound_cue;	/* cumulative cue counter */
 } sound_server_state_t;
 
 
 int
-soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *curr_song,
-		    int soundcue, long usecs_to_sleep,
-			long ticks_to_wait, long ticks_to_fade, int master_volume);
+soundsrv_save_state(FILE *debugstream, char *dir, sound_server_state_t *sss);
 /* Stores the sound server state to a file
 ** Parameters: (FILE *) debugstream: The stream which all errors are sent to
 **             (char *) dir: The name of the directory to enter and write to
-**             (songlib_t) songlib: The song library to write
-**             (song_t *) curr_song: Pointer to the currently active song
-**             (int) soundcue: Status of the sound cue variable
-**             (long) usecs_to_sleep: Milliseconds the sound server has to sleep before the next tick
-**             (long) ticks_to_wait: Ticks the sound server has to wait before the next event
-**             (long) ticks_to_fade: Now obsolete
+**             (ss_state*) sss: Sound server state to save
 ** Returns   : (int) 0 on success, 1 otherwise
 */
 
 
 int
-soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t **curr_song,
-		       int *soundcue, long *usecs_to_sleep,
-			   long *ticks_to_wait, long *ticks_to_fade, int *master_volume);
+soundsrv_restore_state(FILE *debugstream, char *dir, sound_server_state_t *sss);
 /* Restores the sound state written to a directory
 ** Parameters: (FILE *) debugstream: The stream to write all debug information to
 **             (char *) dir: The directory to enter and read from
-**             (songlib_t) songlib: The song library to overwrite (if successful)
-**             (song_t **) curr_song: The "currently active song" pointer to overwrite
-**             (int *) soundcue: The sound cue variable to set
-**             (long *) usecs_to_sleep: The "milliseconds left to sleep" variable to set
-**             (long *) ticks_to_wait: The "ticks left to wait" variable to set
-**             (long *) ticks_to_fade: Now obsolete
+**             (ss_state*) sss: Sound server state to restore into
 ** Returns   : (int) 0 on success, 1 otherwise
 ** If restoring failed, an error message will be written to debugstream, and the
 ** variables pointed to in the parameter list will be left untouched.

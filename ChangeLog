@@ -1,3 +1,21 @@
+2001-12-11  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/engine/cfsml.pl: Added more error messages.
+	
+	* src/include/resource.h:
+	* src/engine/savegame.cfsml:
+	* src/engine/savegame.c:
+	* src/sound/sfx_save.cfsml:
+	* src/sound/sfx_save.c: Now processes text files in text mode.
+	
+	* src/sound/polled_ss.c:
+	* src/sound/soundserver.c:
+	* src/include/soundserver.h: Made polled sound server use sound server
+	state struct. soundsrv_save_state() and soundsrv_restore_state() now
+	take this struct as a parameter.
+	
+	* src/win32/fsci_dll.dsp: Added resource_patch.c to project.
+
 2001-12-10  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/scicore/resource_patch.c: Added support for resource patches

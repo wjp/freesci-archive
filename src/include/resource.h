@@ -94,7 +94,7 @@
 #endif /* !_WIN32 */
 
 #ifdef __BEOS__
-#  include <kernel/OS.h> 
+#  include <kernel/OS.h>
 #  define usleep snooze
 #endif
 
@@ -165,6 +165,12 @@ typedef guint16 word;
 #  define FO_BINARY "b"
 #else
 #  define FO_BINARY ""
+#endif
+
+#ifdef _WIN32
+#  define FO_TEXT "t"
+#else
+#  define FO_TEXT ""
 #endif
 
 #ifndef O_BINARY
