@@ -101,9 +101,6 @@ gp32_main()
 	/* Set CPU speed to 133Mhz. */
 	gp_setCpuspeed(133);
 
-	/* Init SMC library and RTC. */
-	newlib_init();
-
 	/* Call freesci's main(). */
 	exit(freesci_main(1, argv));
 }

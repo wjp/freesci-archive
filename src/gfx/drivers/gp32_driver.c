@@ -242,6 +242,9 @@ input_handler(void)
 			input_mode(S->mode);
 		}
 		if (S->mode == GP32_MODE_VKBD) {
+			event.type = SCI_EVT_KEYBOARD;
+			event.buckybits = S->vkbd_bucky;
+			event.data = 0;
 			if (buttons & BUTTON_RIGHT)
 				vkbd_handle_input(KBD_RIGHT);
 			if (buttons & BUTTON_LEFT)
@@ -253,17 +256,23 @@ input_handler(void)
 			if (buttons & BUTTON_A) {
 				int vkbd_key;
 				if (vkbd_get_key(&vkbd_key, &S->vkbd_bucky)) {
-					event.type = SCI_EVT_KEYBOARD;
-					event.data = vkbd_key;
 					event.buckybits = S->vkbd_bucky;
-					gp32_add_event(&event);
+					event.data = vkbd_key;
 				}
 			}
+			else if (buttons & BUTTON_B)
+				event.data = SCI_K_BACKSPACE;
+			else if (buttons & BUTTON_R)
+				event.data = SCI_K_ENTER;
+			else if (buttons & BUTTON_L)
+				event.data = SCI_K_ESC;
+			if (event.data)
+				gp32_add_event(&event);
 			draw_keyboard();
 		}
 		else if (S->mode == GP32_MODE_KBD) {
 			event.type = SCI_EVT_KEYBOARD;
-			event.buckybits = S->vkbd_bucky;
+			event.buckybits = 0;
 			event.data = 0;
 			if (buttons & BUTTON_RIGHT)
 				event.data = SCI_K_RIGHT;
@@ -273,16 +282,16 @@ input_handler(void)
 				event.data = SCI_K_UP;
 			else if (buttons & BUTTON_DOWN)
 				event.data = SCI_K_DOWN;
-			else if (buttons & BUTTON_A)
+			else if ((buttons & BUTTON_A) || (buttons & BUTTON_R))
 				event.data = SCI_K_ENTER;
-			else if (buttons & BUTTON_B)
+			else if ((buttons & BUTTON_B) || (buttons & BUTTON_L))
 				event.data = SCI_K_ESC;
 			if (event.data)
 				gp32_add_event(&event);
 		}
 	}
 	if (S->mode == GP32_MODE_MOUSE) {
-		event.buckybits = S->vkbd_bucky;
+		event.buckybits = 0;
 		int step = (buttons & BUTTON_L ? 2 : 1);
 		if (buttons & BUTTON_RIGHT)
 			S->pointer_dx += step;
@@ -872,7 +881,7 @@ gp32_get_event(struct _gfx_driver *drv)
 
 	gp_enableIRQ();
 	event.type = SCI_EVT_NONE;
-	event.buckybits = S->vkbd_bucky;
+	event.buckybits = 0;
 	return event;
 }
 

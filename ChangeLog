@@ -1,5 +1,12 @@
 2005-01-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/gfx/drivers/gp32_driver.c: Changed button bindings.
+	* README.GP32: Updated.
+
+	* src/gp32/wrap.c (gp32_main): Minor change for latest newlib patch.
+
+2005-01-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* README.GP32: Added section on BLU+ support.
 
 	* src/engine/savegame.c (gamestate_save),

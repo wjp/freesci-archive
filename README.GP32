@@ -1,6 +1,6 @@
 FreeSCI - GP32
 
-Last update: 2005-01-02
+Last update: 2005-01-04
 
 
 Index
@@ -174,8 +174,8 @@ There are three input modes, you can cycle between them with the START button.
 This mode is indicated by a 'K' in the lower-right corner of the screen.
 
 Directional pad - Cursor keys
-A               - Enter key
-B               - Escape key
+A or R          - Enter key
+B or L          - Escape key
 
 2.2.2  Controlling the mouse
 ----------------------------
@@ -185,7 +185,7 @@ This mode is indicated by an 'M' in the lower-right corner of the screen.
 Directional pad - Mouse cursor
 A               - Left mouse button
 B               - Right mouse button
-L               - Hold down to increase speed of mouse cursor.
+L               - Hold down to increase speed of mouse cursor
 
 2.2.3  The virtual keyboard
 ---------------------------
@@ -193,8 +193,11 @@ L               - Hold down to increase speed of mouse cursor.
 This mode will present you with a full virtual keyboard in the bottom part of
 the screen.
 
-Directional pad - Select key
+Directional pad - Moves key selector
 A               - Press currently selected key
+B               - Backspace key
+R               - Enter key
+L               - Escape key
 
 
 3      Bugs and other known issues
