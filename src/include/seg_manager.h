@@ -151,6 +151,8 @@ typedef struct _seg_manager_t {
 	int (*get_localvar_offset) (struct _seg_manager_t* self, int id, int flag);
 	
 	void (*set_variables) (struct _seg_manager_t* self, reg_t reg, int obj_index, reg_t variable_reg, int variable_index );
+	
+	guint16 (*validate_export_func)(struct _seg_manager_t* self, int pubfunct, int seg );
 
 	object_t* (*script_obj_init) (struct _seg_manager_t* self, reg_t obj_pos);
 	/* Initializes an object within the segment manager
@@ -244,6 +246,11 @@ void sm_set_localvar_offset (struct _seg_manager_t* self, int offset, int id, in
 int sm_get_localvar_offset (struct _seg_manager_t* self, int id, int flag);
 
 void sm_set_variables (struct _seg_manager_t* self, reg_t reg, int obj_index, reg_t variable_reg, int variable_index );
+
+guint16 sm_validate_export_func(struct _seg_manager_t* self, int pubfunct, int seg );
+/* validate the pubfunct is in the export table, also validate the function pointer is not out of the buffer
+   return the pubfunction pointer, or 0 if invalid
+**/
 
 // validate the seg
 // return:

@@ -162,6 +162,8 @@ void sm_init(seg_manager_t* self) {
 
 	self->set_localvar_offset = sm_set_localvar_offset;
 	self->get_localvar_offset = sm_get_localvar_offset;
+	
+	self->validate_export_func = sm_validate_export_func;
 
 	self->set_variables = sm_set_variables;
 	self->script_obj_init = sm_script_obj_init;
@@ -889,3 +891,17 @@ sm_allocate_sys_strings(seg_manager_t *self, seg_id_t *segid)
 	return retval;
 }
 
+guint16 sm_validate_export_func(struct _seg_manager_t* self, int pubfunct, int seg ) {
+	script_t* script; 
+	guint16 offset;
+	VERIFY ( sm_check (self, seg), "invalid seg id" );
+	script = &self->heap[seg]->data.script;
+	if( script->exports_nr <= pubfunct ) {
+		sciprintf( "pubfunct is invalid" );
+		return 0;
+	}
+	offset = getUInt16( (byte*)(script->export_table + pubfunct) ); 
+	VERIFY ( offset < script->buf_size, "invalid export function pointer" );
+
+	return offset;
+};

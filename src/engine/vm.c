@@ -263,34 +263,23 @@ get_class_address(state_t *s, int classnr, int lock)
 execute_method(state_t *s, word script, word pubfunct, stack_ptr_t sp,
 	       reg_t calling_obj, word argc, stack_ptr_t argp)
 {
-#warning "Re-enable execute_method"
-#if 0
-  heap_ptr tableaddress;
-  heap_ptr scriptpos;
-  int exports_nr;
+  int seg;
   int magic_ofs;
+  guint16 temp;
 
-  if (s->seg_manager.isloaded (&s->seg_manager, script_nr)) /* Script not present yet? */
+  if (!s->seg_manager.isloaded (&s->seg_manager, script, SCRIPT_ID)) /* Script not present yet? */
       script_instantiate(s, script);
-
-  scriptpos = s->scripttable[script].heappos;
-  tableaddress = s->scripttable[script].export_table_offset;
-
-  if (tableaddress == 0) {
-    sciprintf("Error: Script 0x%x has no exports table; call[be] not possible\n", script);
-    script_error_flag = script_debug_flag = 1;
-    return NULL;
+  seg = s->seg_manager.seg_get( &s->seg_manager, script );
+  temp = s->seg_manager.validate_export_func( &s->seg_manager, pubfunct, seg );
+  VERIFY( temp, "Invalid pubfunct in export table" );
+  if( !temp ) {
+  	sciprintf("Request for invalid exported function 0x%x of script 0x%x\n", pubfunct, script);
+	script_error_flag = script_debug_flag = 1;
+	return NULL;
   }
 
-  exports_nr = GET_HEAP(tableaddress);
-
-  tableaddress += 2; /* Points to the first actual function pointer */
-  if (pubfunct >= exports_nr) {
-    sciprintf("Request for invalid exported function 0x%x of script 0x%x\n", pubfunct, script);
-    script_error_flag = script_debug_flag = 1;
-    return NULL;
-  }
-
+#warning "Re-enable execute_method debug"
+#if 0
   /* Check if a breakpoint is set on this method */
   if (s->have_bp & BREAK_EXPORT)
   {
@@ -312,15 +301,15 @@ execute_method(state_t *s, word script, word pubfunct, stack_ptr_t sp,
       bp = bp->next;
     }
   }
+#endif
 
   if (s->version<SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
     magic_ofs=2; else
     magic_ofs=0;
 
   return
-    add_exec_stack_entry(s, (heap_ptr)(scriptpos + GET_HEAP(tableaddress + (pubfunct * 2)) - magic_ofs),
+    add_exec_stack_entry(s, make_reg( seg, temp ),
 		 sp, calling_obj, (int)argc, argp, -1, calling_obj, s->execution_stack_pos);
-#endif
 }
 
 
@@ -1016,6 +1005,27 @@ run_vm(state_t *s, int restoring)
 					restadjust = s->r_amp_rest;
 
 			}
+			break;
+		case 0x22: /* callb */
+			s_temp = xs->sp;
+			xs->sp->offset -= (opparams[1] + (restadjust * 2) + 2);
+			xs_new = execute_method(s, 0, opparams[0], s_temp, xs->objp,
+				xs->sp[0].offset + restadjust,
+				xs->sp);
+			restadjust = 0; /* Used up the &rest adjustment */
+			if (xs_new)    /* in case of error, keep old stack */
+				s->execution_stack_pos_changed = 1;
+			break;
+			
+		case 0x23: /* calle */
+			s_temp = xs->sp;
+			xs->sp->offset -= opparams[2] + 2 + (restadjust*2);
+			xs_new = execute_method(s, opparams[0], opparams[1], s_temp, xs->objp,
+				xs->sp[0].offset + restadjust, xs->sp);
+			restadjust = 0; /* Used up the &rest adjustment */
+			
+			if (xs_new)  /* in case of error, keep old stack */
+				s->execution_stack_pos_changed = 1;
 			break;
 
 //    case 0x22: /* callb */
