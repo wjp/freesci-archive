@@ -71,7 +71,7 @@ typedef struct opcode_
 #define VOCAB_CLASS_INDICATIVE_VERB 0x20
 #define VOCAB_CLASS_ADVERB 0x40
 #define VOCAB_CLASS_IMPERATIVE_VERB 0x80
-#define VOCAB_CLASS_NUMBER 0x100
+#define VOCAB_CLASS_NUMBER 0x001
 
 extern DLLEXTERN char *class_names[]; /* Vocabulary class names */
 

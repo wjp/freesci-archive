@@ -1,3 +1,25 @@
+2001-10-15  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/widgets.c (_gfxwop_container_draw_contents): Do not do
+	modify area offsets for containers (which have absolute coordinates).
+
+2001-10-14  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/resource.c (_scir_add_altsource): Fixed a bug in the
+	alternative source list
+
+	* doc/sci.sgml: Updated docs to list word types in big endian order
+	(as used in FreeSCI), since this appears to make more sense
+
+	* src/include/vocabulary.h (VOCAB_CLASS_NUMBER): Changed vocab class
+	for numbers to 1, which seems to be correct after recent doc changes
+
+	* TODO: Removed entries for SCI01 gfx and parser word type swapping
+
+	* src/scicore/console.c (c_list_words): Merged syscall and selector
+	listings into the 'list' function. Added 'list words' and 'list
+	suffices'.
+
 2001-10-10  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kDrawPic): Added support for priority table

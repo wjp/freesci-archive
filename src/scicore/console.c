@@ -260,10 +260,6 @@ con_init (void)
 		      " as hexadecimal numbers.\n\n"
 		      "EXAMPLES:\n  hexgrep script e8 03 c8 00\n"
 		      "  hexgrep pic.042 fe");
-    con_hook_command (&c_selectornames, "selectornames", "",
-		      "Displays all selector names and numbers.");
-    con_hook_command (&c_kernelnames, "kernelnames", "",
-		      "Displays all syscall names and numbers.");
     con_hook_command (&c_dissectscript, "dissectscript", "i",
 		      "Examines a script.");
 
@@ -698,68 +694,134 @@ c_version (state_t * s)
 }
 
 int
+c_list_words(state_t *s)
+{
+	word_t **words;
+	int words_nr;
+	int i;
+
+	words = vocab_get_words(s->resmgr, &words_nr);
+
+	if (!words) {
+		sciprintf("No vocabulary.\n");
+		return 0;
+	}
+
+	for (i = 0; i < words_nr; i++)
+		sciprintf("%4d: %03x [%03x] %s\n",
+			  i,
+			  words[i]->class,
+			  words[i]->group,
+			  words[i]->word);
+
+	vocab_free_words(words, words_nr);
+}
+
+int
+c_list_suffices(state_t *s)
+{
+	suffix_t **suffices;
+	int suffices_nr;
+	int i;
+	char word_buf[256], alt_buf[256];
+
+	suffices = vocab_get_suffices(s->resmgr, &suffices_nr);
+
+	if (!suffices) {
+		sciprintf("No suffix vocabulary.\n");
+		return 0;
+	}
+
+	for (i = 0; i < suffices_nr; i++) {
+		suffix_t *suf = suffices[i];
+
+		strncpy(word_buf, suf->word_suffix,
+			suf->word_suffix_length);
+		word_buf[suf->word_suffix_length] = 0;
+		strncpy(alt_buf, suf->alt_suffix,
+			suf->alt_suffix_length);
+		alt_buf[suf->alt_suffix_length] = 0;
+
+		sciprintf("%4d: (%03x) -%12s  =>  -%12s (%03x)\n",
+			  i, suf->class_mask, word_buf,
+			  alt_buf, suf->result_class);
+	}
+
+	vocab_free_suffices(s->resmgr, suffices, suffices_nr);
+}
+
+
+int
 c_list (state_t * s)
 {
-  if (_lists_need_sorting)
-    con_sort_all ();
+	if (_lists_need_sorting)
+		con_sort_all ();
 
-  if (cmd_paramlength == 0)
-  {
-    sciprintf ("usage: list [type]\nwhere type is one of the following:\n"
-	       "cmds       - lists all commands\n"
-	       "restypes   - lists all resource types\n"
-	       "vars       - lists all variables\n"
-	       "[resource] - lists all [resource]s");
-  }
-  else if (cmd_paramlength == 1)
-  {
+	if (!s) {
+		sciprintf("You need a state to do that!\n");
+		return 1;
+	}
 
-    if (strcmp ("cmds", cmd_params[0].str) == 0)
-    {
+	if (cmd_paramlength == 0)
+		{
+			sciprintf ("usage: list [type]\nwhere type is one of the following:\n"
+				   "cmds       - lists all commands\n"
+				   "vars       - lists all variables\n"
+				   "\n"
+				   "restypes   - lists all resource types\n"
+				   "selectors  - lists all selectors\n"
+				   "syscalls   - lists all kernel functions\n"
+				   "words      - lists all kernel words\n"
+				   "suffixes   - lists all suffix replacements\n"
+				   "[resource] - lists all [resource]s");
+		}
+	else if (cmd_paramlength == 1) {
 
-      unsigned int i;
-      for (i = 0; i < _cmd_command_count; i++)
-	sciprintf ("%s (%s)\n", _cmd_commands[i].name,
-		   _cmd_commands[i].param);
+		if (strcmp ("cmds", cmd_params[0].str) == 0) {
+			unsigned int i;
+			for (i = 0; i < _cmd_command_count; i++)
+				sciprintf ("%s (%s)\n", _cmd_commands[i].name,
+					   _cmd_commands[i].param);
 
-    }
-    else if (strcmp ("restypes", cmd_params[0].str) == 0)
-    {
+		}
+		else if (!strcmp("selectors", cmd_params[0].str))
+			return c_selectornames(s);
+		else if (!strcmp("syscalls", cmd_params[0].str))
+			return c_kernelnames(s);
+		else if (!strcmp("suffixes", cmd_params[0].str)
+			 || !strcmp("suffices", cmd_params[0].str)
+			 || !strcmp("sufficos", cmd_params[0].str))
+			/* sufficos: Accusative Plural of 'suffix' */
+			return c_list_suffices(s);
+		else if (!strcmp("words", cmd_params[0].str))
+			return c_list_words(s);
+		else if (strcmp ("restypes", cmd_params[0].str) == 0) {
+			int i;
+			for (i = 0; i < sci_invalid_resource; i++)
+				sciprintf ("%s\n", sci_resource_types[i]);
+			
+		}
+		else if (strcmp ("vars", cmd_params[0].str) == 0) {
+			unsigned int i;
 
-      int i;
-      for (i = 0; i < sci_invalid_resource; i++)
-	sciprintf ("%s\n", sci_resource_types[i]);
-
-    }
-    else if (strcmp ("vars", cmd_params[0].str) == 0)
-    {
-
-      unsigned int i;
-      for (i = 0; i < _cmd_var_count; i++)
-	sciprintf ("%s = %d\n", _cmd_vars[i].name, *(_cmd_vars[i].var.intp));
-
-    }
-    else
-    {
-
-      int res = getResourceNumber (cmd_params[0].str);
-      if (res == -1)
-	sciprintf ("Unknown resource type: '%s'\n", cmd_params[0].str);
-
-      else
-      {
-	int i;
-	for (i = 0; i < 1000; i++)
-	  if (scir_test_resource (s->resmgr, res, i))
-	    sciprintf ("%s.%03d\n", sci_resource_types[res], i);
-      }
-
-    }
-
-  }
-  else
-    sciprintf ("list can only be used with one argument");
-  return 0;
+			for (i = 0; i < _cmd_var_count; i++)
+				sciprintf ("%s = %d\n", _cmd_vars[i].name, *(_cmd_vars[i].var.intp));
+		}
+		else {
+			int res = getResourceNumber (cmd_params[0].str);
+			if (res == -1)
+				sciprintf ("Unknown resource type: '%s'\n", cmd_params[0].str);
+			else {
+				int i;
+				for (i = 0; i < 1000; i++)
+					if (scir_test_resource (s->resmgr, res, i))
+						sciprintf ("%s.%03d\n", sci_resource_types[res], i);
+			}
+		}
+	}
+	else
+		sciprintf ("list can only be used with one argument");
+	return 0;
 }
 
 

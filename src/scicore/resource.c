@@ -225,7 +225,7 @@ _scir_add_altsource(resource_t *res, int file, unsigned int file_offset)
 
 	rsrc->next = res->alt_sources;
 	rsrc->file = file;
-	rsrc->file_offset = file;
+	rsrc->file_offset = file_offset;
 	res->alt_sources = rsrc;
 }
 

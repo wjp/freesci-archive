@@ -1362,6 +1362,7 @@ _gfxwop_container_draw_contents(gfxw_widget_t *widget, gfxw_widget_t *contents)
 	gfx_dirty_rect_t *dirty = container->dirty;
 	gfx_state_t *gfx_state = (widget->visual)? widget->visual->gfx_state : ((gfxw_visual_t *) widget)->gfx_state;
 	int draw_ports;
+	rect_t nullzone = {0,0,0,0};
 
 	if (!contents)
 		return 0;
@@ -1370,7 +1371,9 @@ _gfxwop_container_draw_contents(gfxw_widget_t *widget, gfxw_widget_t *contents)
 		gfxw_widget_t *seeker = contents;
 
 		while (seeker) {
-			if (_gfxw_dirty_rect_overlaps_normal_rect(container->zone, seeker->bounds, dirty->rect)) {
+			if (_gfxw_dirty_rect_overlaps_normal_rect(GFXW_IS_CONTAINER(seeker)? nullzone : container->zone,
+								  /* Containers have absolute coordinates, reflect this. */
+								  seeker->bounds, dirty->rect)) {
 				if (GFXW_IS_CONTAINER(seeker)) {/* Propagate dirty rectangles /upwards/ */
 					DDIRTY(stderr,"container_draw_contents: propagate upwards (%d,%d,%d,%d ,0)\n", GFX_PRINT_RECT(dirty->rect));
 					((gfxw_container_t *)seeker)->add_dirty_abs((gfxw_container_t *)seeker, dirty->rect, 0);
@@ -1385,15 +1388,14 @@ _gfxwop_container_draw_contents(gfxw_widget_t *widget, gfxw_widget_t *contents)
 		dirty = dirty->next;
 	}
 
-
 	/* The draw loop is executed twice: Once for normal data, and once for ports. */
 	for (draw_ports = 0; draw_ports < 2; draw_ports++) {
 
 		dirty = container->dirty;
 
 		while (dirty) {
-			gfxw_widget_t *seeker = contents;
 
+			gfxw_widget_t *seeker = contents;
 			while (seeker && (draw_ports || !GFXW_IS_PORT(seeker))) {
 				rect_t small_rect;
 				byte draw_noncontainers;

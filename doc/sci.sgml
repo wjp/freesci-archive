@@ -4374,21 +4374,21 @@ class masks, see later. Only one bit is actually tested by the interpreter.
 If a word class equals to 0xff ("anyword"), the word is excluded (allowing for
 parser'ese). The values go like this:
 <simplelist>
-<member/0x001 - preposition/
-<member/0x002 - article/
-<member/0x004 - qualifying adjective/
-<member/0x008 - relative pronoun/
-<member/0x010 - noun/
-<member/0x020 - indicative verb (such as "is", "went" as opposed to _do_ this or
-that, which is imperative)/
-<member/0x040 - adverb/
-<member/0x080 - imperative verb/
-<member/0x100 - number (not found in the vocabulary, set internally)/
-<member/0x200 - special/
-<member/0x400 - special/
-<member>0x800 - special<footnote><para>The three special classes are apparently used for words
+<member/0x001 - number (not found in the vocabulary, set internally)/
+<member/0x002 - special/
+<member/0x004 - special/
+<member>0x008 - special<footnote><para>The three special classes are apparently used for words
 with very specific semantics, such as "if", "not", "and" etc. It is unknown as of yet whether they
 receive special treatment by the parser.</para></footnote></member>
+<member/0x010 - preposition/
+<member/0x020 - article/
+<member/0x040 - qualifying adjective/
+<member/0x080 - relative pronoun/
+<member/0x100 - noun/
+<member/0x200 - indicative verb (such as "is", "went" as opposed to _do_ this or
+that, which is imperative)/
+<member/0x400 - adverb/
+<member/0x800 - imperative verb/
 </simplelist>
 </para><para>
 The group number is used to implement synonyms (words with the same
@@ -4490,11 +4490,11 @@ An asterisk (*) represents the word stem. Taking the above example with
 "enemies", the interpreter finds this record:
 <simplelist>
 <member/  *ies/
-<member/  1/
+<member/  0x100/
 <member/  *y/
-<member/  1/
+<member/  0x100/
 </simplelist>
-word class 1 being a noun.
+word class 0x100 being a noun.
 </para><para>
 The interpreter then tries to replace "enemies" with "enemy" and finds that
 word in the vocabulary. "Enemy" is a noun (class 1), which it is also

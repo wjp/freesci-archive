@@ -2640,8 +2640,6 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 					 "SEE ALSO\n"
 					 "  debuglog\n");
 
-
-
 #ifdef SCI_SIMPLE_SAID_CODE
 			con_hook_command(c_sim_parse, "simparse", "s*", "Simulates a parsed entity.\n\nUSAGE\n  Call this"
 					 " function with a list of\n  Said operators, words, and word group"
