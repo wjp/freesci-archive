@@ -688,18 +688,19 @@ makeMIDI0(const guint8 *src, int *size)
 
   while (!EOT) {
 
-    if (src[pos] >= 0xf8) {
-      SCIsdebug("[%04x] Special: %02x ", pos, src[pos]);
-      while (src[pos + 1] >= 0xf8) {
-	SCIsdebug("%02x ", src[pos + 1]);
+    if ((src[pos] >= 0xf0) && (src[pos] != 0xf8)) {
+      SCIsdebug("[%04x] Unknown instead of delta-time: %02x\n", pos, src[pos]);
+      pos++;
+    };
+
+    if (src[pos] == 0xf8)
+      while (src[pos] == 0xf8) {
+	pending_delay += 0xf0;
 	pos++;
       };
-      SCIsdebug("%02x (assume: delay = 0)\n", src[pos + 1]);
-      pos += 2;
-    } else {
-      pending_delay += src[pos];
-      pos++;    
-    };
+
+    pending_delay += src[pos];
+    pos++;    
 
     if (src[pos] & 0x80) {
       status = src[pos];
@@ -958,7 +959,7 @@ mapMIDIInstruments(void)
 	  break;
       };
       MIDI_mapping[i].keyshift = 0x40 + ((int) (keyshift & 0x3F) - 24);
-      MIDI_mapping[i].finetune = 0x2000 + ((int) (finetune & 0x7F) - 50);
+      MIDI_mapping[i].finetune = 0x2000 + (((int) (finetune & 0x7F) - 50) * 0x2000) / 100;
       MIDI_mapping[i].bender_range = (int) (bender_range & 0x1F);
     };
   };
