@@ -32,6 +32,7 @@
 #include <gfx_tools.h>
 
 #define V1_LOOPS_NR_OFFSET 0
+#define V1_MIRROR_MASK 2
 #define V1_PALETTE_OFFSET 6
 #define V1_FIRST_LOOP_OFFSET 8
 
@@ -39,14 +40,14 @@
 #define V1_RLE_BG 0x40 /* background fill */
 
 gfx_pixmap_t *
-gfxr_draw_cel1(int id, int loop, int cel, byte *resource, int size, gfxr_view_t *view)
+gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size, gfxr_view_t *view)
 {
 	int xl = get_int_16(resource);
 	int yl = get_int_16(resource + 2);
 	int xhot = get_int_16(resource + 4);
 	int yhot = get_int_16(resource + 6);
 	int pos = 8;
-	int writepos = 0;
+	int writepos = mirrored? xl : 0;
 	int pixmap_size = xl * yl;
 	gfx_pixmap_t *retval = gfx_pixmap_alloc_index_data(gfx_new_pixmap(xl, yl, id, loop, cel));
 	byte *dest = retval->index_data;
@@ -67,52 +68,111 @@ gfxr_draw_cel1(int id, int loop, int cel, byte *resource, int size, gfxr_view_t 
 		return NULL;
 	}
 
-	while (writepos < pixmap_size && pos < size) {
-		int op = resource[pos++];
-		int bytes;
-		int readbytes = 0;
+	if (mirrored) {
+		int linebase = 0;
 
-		if (op & V1_RLE) {
-			bytes = op & 0x3f;
-			op &= (V1_RLE | V1_RLE_BG);
-			readbytes = (op & V1_RLE_BG)? 0 : 1;
-		} else {
-			readbytes = bytes = op & 0x7f;
-			op = 0;
-		}
+		while (linebase < pixmap_size && pos < size) {
+			int op = resource[pos++];
+			int bytes;
+			int readbytes = 0;
+			int color;
 
-		if (pos + readbytes > size) {
-			gfx_free_pixmap(NULL, retval);
-			GFXERROR("View %02x:(%d/%d) requires %d bytes to be read when %d are available at pos %d\n",
-				 id, loop, cel, readbytes, size - pos, pos - 1);
-			return NULL;
-		}
-
-		if (bytes + writepos > pixmap_size) {
-			GFXWARN("View %02x:(%d/%d) describes more bytes than needed: %d/%d bytes at rel. offset 0x%04x\n",
-				id, loop, cel, bytes + writepos, pixmap_size, pos - 1);
-			bytes = pixmap_size - writepos;
-		}
-
-		if (op) {
-			if (op & V1_RLE_BG)
-				memset(dest + writepos, GFX_COLOR_INDEX_TRANSPARENT, bytes);
-			else {
-				int color = resource[pos++];
-				memset(dest + writepos, color, bytes);
+			if (op & V1_RLE) {
+				bytes = op & 0x3f;
+				op &= (V1_RLE | V1_RLE_BG);
+				readbytes = (op & V1_RLE_BG)? 0 : 1;
+			} else {
+				readbytes = bytes = op & 0x7f;
+				op = 0;
 			}
-		} else {
-			memcpy(dest + writepos, resource + pos, bytes);
-			pos += bytes;
+
+			if (pos + readbytes > size) {
+				gfx_free_pixmap(NULL, retval);
+				GFXERROR("View %02x:(%d/%d) requires %d bytes to be read when %d are available at pos %d\n",
+					 id, loop, cel, readbytes, size - pos, pos - 1);
+				return NULL;
+			}
+/*
+			if (writepos - bytes < 0) {
+				GFXWARN("View %02x:(%d/%d) describes more bytes than needed: %d/%d bytes at rel. offset 0x%04x\n",
+					id, loop, cel, writepos - bytes, pixmap_size, pos - 1);
+				bytes = pixmap_size - writepos;
+			}
+*/			
+			if (op&&!(op & V1_RLE_BG)) color = resource[pos++];
+			while (bytes--)
+			{
+				if (op) {
+					if (op & V1_RLE_BG) {
+						writepos--;
+						*(dest + writepos) = GFX_COLOR_INDEX_TRANSPARENT;
+					} else {
+						writepos--;
+						*(dest + writepos) = color;
+					}
+				} else {
+					writepos--;
+					*(dest + writepos) = *(resource + pos);
+					pos++;
+				}
+				if (writepos == linebase)
+				{
+					writepos+=2*xl;
+					linebase+=xl;
+				}
+			}
+		}
+	}
+        else {
+		while (writepos < pixmap_size && pos < size) {
+			int op = resource[pos++];
+			int bytes;
+			int readbytes = 0;
+
+			if (op & V1_RLE) {
+				bytes = op & 0x3f;
+				op &= (V1_RLE | V1_RLE_BG);
+				readbytes = (op & V1_RLE_BG)? 0 : 1;
+			} else {
+				readbytes = bytes = op & 0x7f;
+				op = 0;
+			}
+
+			if (pos + readbytes > size) {
+				gfx_free_pixmap(NULL, retval);
+				GFXERROR("View %02x:(%d/%d) requires %d bytes to be read when %d are available at pos %d\n",
+					 id, loop, cel, readbytes, size - pos, pos - 1);
+				return NULL;
+			}
+
+			if (writepos + bytes > pixmap_size) {
+				GFXWARN("View %02x:(%d/%d) describes more bytes than needed: %d/%d bytes at rel. offset 0x%04x\n",
+					id, loop, cel, writepos-bytes, pixmap_size, pos - 1);
+				bytes = pixmap_size - writepos;
+			}
+
+			if (op) {
+				if (op & V1_RLE_BG)
+					memset(dest + writepos, GFX_COLOR_INDEX_TRANSPARENT, bytes);
+				else {
+					int color = resource[pos++];
+					memset(dest + writepos, color, bytes);
+				}
+			} else {
+				memcpy(dest + writepos, resource + pos, bytes);
+				pos += bytes;
+			}
+			writepos += bytes;
+
 		}
 
-		writepos += bytes;
-	}
+	};
+
 	return retval;
 }
 
 static int
-gfxr_draw_loop1(gfxr_loop_t *dest, int id, int loop, byte *resource, int offset, int size, gfxr_view_t *view)
+gfxr_draw_loop1(gfxr_loop_t *dest, int id, int loop, int mirrored, byte *resource, int offset, int size, gfxr_view_t *view)
 {
 	int i;
 	int cels_nr = get_int_16(resource + offset);
@@ -138,7 +198,7 @@ gfxr_draw_loop1(gfxr_loop_t *dest, int id, int loop, byte *resource, int offset,
 			GFXERROR("View %02x:(%d/%d) supposed to be at illegal offset 0x%04x\n", id, loop, i, cel_offset);
 			cel = NULL;
 		} else
-			cel = gfxr_draw_cel1(id, loop, i, resource + cel_offset, size - cel_offset, view);
+			cel = gfxr_draw_cel1(id, loop, i, mirrored, resource + cel_offset, size - cel_offset, view);
 
 		if (!cel) {
 			dest->cels_nr = i;
@@ -164,6 +224,7 @@ gfxr_draw_view1(int id, byte *resource, int size)
 	int i;
 	int palette_offset;
 	gfxr_view_t *view;
+	int mirror_mask;
 
 	if (size < V1_FIRST_LOOP_OFFSET + 8) {
 		GFXERROR("Attempt to draw empty view %04x\n", id);
@@ -176,6 +237,7 @@ gfxr_draw_view1(int id, byte *resource, int size)
 
 	view->loops_nr = resource[V1_LOOPS_NR_OFFSET];
 	palette_offset = get_uint_16(resource + V1_PALETTE_OFFSET);
+	mirror_mask = get_uint_16(resource + V1_MIRROR_MASK);
 
 	if (view->loops_nr * 2 + V1_FIRST_LOOP_OFFSET > size) {
 		GFXERROR("View %04x: Not enough space in resource to accomodate for the claimed %d loops\n", id, view->loops_nr);
@@ -214,7 +276,8 @@ gfxr_draw_view1(int id, byte *resource, int size)
 			error_token = 1;
 		}
 
-		if (error_token || gfxr_draw_loop1(view->loops + i, id, i, resource, loop_offset, size, view)) {
+		if (error_token || gfxr_draw_loop1(view->loops + i, id, i, mirror_mask & (1<<i), 
+						   resource, loop_offset, size, view)) {
 			/* An error occured */
 			view->loops_nr = i;
 			gfxr_free_view(NULL, view);

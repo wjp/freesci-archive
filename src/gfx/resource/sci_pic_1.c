@@ -1634,7 +1634,7 @@ check_and_remove_artifact(byte *dest, byte* srcp, int legalcolor, byte l, byte r
 
 
 extern gfx_pixmap_t *
-gfxr_draw_cel1(int id, int loop, int cel, byte *resource, int size, gfxr_view_t *view);
+gfxr_draw_cel1(int id, int loop, int cel, int mirrored, byte *resource, int size, gfxr_view_t *view);
 
 void
 gfxr_draw_pic1(gfxr_pic_t *pic, int fill_normally, int default_palette, int size,
@@ -1879,7 +1879,7 @@ gfxr_draw_pic1(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 				GET_ABS_COORDS(posx, posy);
 				bytesize = (*(resource + pos))+(*(resource + pos + 1) << 8);
 				pos+=2;
-				view = gfxr_draw_cel1(-1,-1,-1, resource + pos, bytesize, NULL);
+				view = gfxr_draw_cel1(-1,-1,-1, 0, resource + pos, bytesize, NULL);
 				pos+=bytesize;
 
 				view->colors = pic->visual_map->colors;
