@@ -244,7 +244,9 @@ AC_CHECK_LIB(m, cos, [LIB_M="-lm"], [LIB_M=""])
 dnl AC_CHECK_LIB(c, sprintf, [LIB_C="-lc"], [LIB_C=""])
 LIBS="$LIBS $LIB_M"  # libc is added later, during the efence check
 
-AC_CHECK_HEADERS(Xm/MwmUtil.h)
+if test x"$have_x" = xyes; then
+   AC_CHECK_HEADERS([Xm/MwmUtil.h],[],[],[#include <X11/X.h>])
+fi
 
 if test "${ac_cv_header_Xm_MwmUtil_h}" = "yes"; then
 	AC_DEFINE(HAVE_XM_MWMUTIL_H)
