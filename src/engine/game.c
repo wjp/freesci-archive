@@ -32,9 +32,8 @@
 #	pragma message("for this build to be successful. Download MS SDKs from:")
 #	pragma message("www.microsoft.com/msdownload/platformsdk/sdkupdate")
 #	pragma message("***********************************************************")
-#	include <ntverp.h>
-#	if !defined(VER_PRODUCTBUILD) || (VER_PRODUCTBUILD < 2601)
-#		error *** BUILD FAILED: Need more recent SDKs ***
+#	if (WINVER < 0x500)
+#		error *** BUILD FAILED: Need more recent SDKs or fix your SDK paths in Tools Options ***
 #	endif
 #endif
 
