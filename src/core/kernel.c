@@ -2227,16 +2227,17 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   if (s->acc) { /* Contains the return value */
     s->acc = GET_SELECTOR(mover, completed);
     return;
-  } else { /* Yep, this isn't really neccessary */
+  } else { /* Yep, the 'else' isn't really neccessary */
     word signal = GET_SELECTOR(client, signal);
 
     PUT_SELECTOR(client, x, oldx);
     PUT_SELECTOR(client, y, oldy);
     PUT_SELECTOR(mover, completed, 1);
 
-    PUT_SELECTOR(client, signal, signal | _K_VIEW_SIG_FLAG_HIT_OBSTACLE);
+    PUT_SELECTOR(client, signal, (signal | _K_VIEW_SIG_FLAG_HIT_OBSTACLE));
 
     SCIkdebug(SCIkBRESEN, "Finished mover %04x\n", mover);
+    s->acc = 1;
   }
 
 }
@@ -2259,9 +2260,9 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
   word edgehit;
 
   signal = GET_SELECTOR(obj, signal);
+  SCIkdebug(SCIkBRESEN,"Checking collision: (%d,%d) to (%d,%d)\n",
+	    x, y, xend, yend);
 
-  /*fprintf(stderr,"CanBeHere: %04x vs. illegal=%04x\n", graph_on_control(s, x, y + 10, xl, yl, SCI_MAP_CONTROL), ((word)GET_SELECTOR(obj, illegalBits)));
-   */
   s->acc = !(((word)GET_SELECTOR(obj, illegalBits))
 	     & (edgehit = graph_on_control(s, x, y + 10, xl, yl, SCI_MAP_CONTROL)));
 
@@ -2282,6 +2283,8 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	int other_y = GET_SELECTOR(other_obj, brTop);
 	int other_xend = GET_SELECTOR(other_obj, brRight);
 	int other_yend = GET_SELECTOR(other_obj, brBottom);
+	SCIkdebug(SCIkBRESEN, "  against (%d,%d) to (%d, %d)\n",
+		  other_x, other_y, other_xend, other_yend);
 
 	if ((((other_x >= x) && (other_x <= xend)) /* Other's left boundary inside of our object? */
 	    || ((other_xend >= x) && (other_xend <= xend))) /* ...right boundary... ? */
@@ -2289,6 +2292,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	    (((other_y >= y) && (other_y <= yend)) /* Other's top boundary inside of our object? */
 	    || ((other_yend >= y) && (other_yend <= yend)))) /* ...bottom boundary... ? */
 	  return;
+	SCIkdebug(SCIkBRESEN, " (no)\n");
 
       } /* if (other_obj != obj) */
       node = GET_HEAP(node + LIST_NEXT_NODE); /* Move on */

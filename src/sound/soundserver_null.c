@@ -29,6 +29,7 @@
 
 #include <engine.h>
 #include <soundserver.h>
+#include <signal.h>
 
 
 void
@@ -71,6 +72,8 @@ sound_null_init(state_t *s)
     close(fd_out[0]);
     close(fd_events[0]);
     close(fd_debug[0]); /* Close pipes at the other end */
+
+    signal(SIGPIPE, SIG_DFL); /* Die on sigpipe */
 
     sound_null_server(fd_in[0], fd_out[1], fd_events[1], fd_debug[1]); /* Run the sound server */
   }

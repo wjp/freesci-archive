@@ -3,12 +3,12 @@
 
 /* Define if your processor stores words with the most significant
    byte first (like Motorola and SPARC, unlike Intel and VAX).  */
-#define WORDS_BIGENDIAN 1
+/* #undef WORDS_BIGENDIAN */
 
 #define PACKAGE "freesci"
 #define VERSION "0.2.5"
 #define HAVE_LIBGGI 1
-/* #undef HAVE_LIBPNG */
+#define HAVE_LIBPNG 1
 
 /* Define if you have the fork function.  */
 #define HAVE_FORK 1
@@ -17,25 +17,32 @@
 #define HAVE_PIPE 1
 
 /* Define if you have the socketpair function.  */
-/* #undef HAVE_SOCKETPAIR */
+#define HAVE_SOCKETPAIR 1
 
 /* Define if you have the <dirent.h> header file.  */
 #define HAVE_DIRENT_H 1
 
 /* Define if you have the <getopt.h> header file.  */
-/* #undef HAVE_GETOPT_H */
+#define HAVE_GETOPT_H 1
 
 /* Define if you have the <obstack.h> header file.  */
-/* #undef HAVE_OBSTACK_H */
+#define HAVE_OBSTACK_H 1
 
 /* Define if you have the <readline/history.h> header file.  */
-/* #undef HAVE_READLINE_HISTORY_H */
+#define HAVE_READLINE_HISTORY_H 1
 
 /* Define if you have the <readline/readline.h> header file.  */
-/* #undef HAVE_READLINE_READLINE_H */
+#define HAVE_READLINE_READLINE_H 1
 
 /* Define if you have the <sys/soundcard.h> header file.  */
-/* #undef HAVE_SYS_SOUNDCARD_H */
+#define HAVE_SYS_SOUNDCARD_H 1
 
 /* Define if you have the <unistd.h> header file.  */
 #define HAVE_UNISTD_H 1
+
+/* Name of package */
+#define PACKAGE "freesci"
+
+/* Version number of package */
+#define VERSION "0.2.5"
+
