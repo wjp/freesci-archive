@@ -64,6 +64,12 @@ static pid_t ppid;
 
 #ifdef HAVE_FORK
 
+static int
+verify_pid(int pid) /* Checks if the specified PID is in use */
+{
+	return kill(pid, 0);
+}
+
 static void
 sound_unix_server_verify_ppid()
 {
@@ -215,12 +221,6 @@ sound_unix_queue_event(int handle, int signal, int value)
 
 	checked_write(x_fd_events, (byte *)&event, sizeof(sound_event_t));
 
-}
-
-static int
-verify_pid(int pid) /* Checks if the specified PID is in use */
-{
-	return kill(pid, 0);
 }
 
 static int get_event_error_counter = 0;
