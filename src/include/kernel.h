@@ -290,14 +290,14 @@ process_sound_events(struct _state *s); /* Get all sound events, apply their cha
 #define SCI_MAX_SAVENAME_LENGTH 0x24
 
 /* Flags for the signal selector */
-#define _K_VIEW_SIG_FLAG_UPDATE_ENDED   0x0001
-#define _K_VIEW_SIG_FLAG_UPDATING       0x0002
+#define _K_VIEW_SIG_FLAG_STOP_UPDATE    0x0001
+#define _K_VIEW_SIG_FLAG_UPDATED        0x0002
 #define _K_VIEW_SIG_FLAG_NO_UPDATE      0x0004
 #define _K_VIEW_SIG_FLAG_HIDDEN         0x0008
 #define _K_VIEW_SIG_FLAG_FIX_PRI_ON     0x0010
-#define _K_VIEW_SIG_FLAG_UNKNOWN_5      0x0020
-#define _K_VIEW_SIG_FLAG_UNKNOWN_6      0x0040
-#define _K_VIEW_SIG_FLAG_DONT_RESTORE   0x0080
+#define _K_VIEW_SIG_FLAG_ALWAYS_UPDATE  0x0020
+#define _K_VIEW_SIG_FLAG_FORCE_UPDATE   0x0040
+#define _K_VIEW_SIG_FLAG_REMOVE         0x0080
 #define _K_VIEW_SIG_FLAG_FROZEN         0x0100
 #define _K_VIEW_SIG_FLAG_IS_EXTRA       0x0200
 #define _K_VIEW_SIG_FLAG_HIT_OBSTACLE   0x0400
@@ -306,6 +306,8 @@ process_sound_events(struct _state *s); /* Get all sound events, apply their cha
 #define _K_VIEW_SIG_FLAG_IGNORE_HORIZON 0x2000
 #define _K_VIEW_SIG_FLAG_IGNORE_ACTOR   0x4000
 #define _K_VIEW_SIG_FLAG_DISPOSE_ME     0x8000
+
+#define _K_VIEW_SIG_FLAG_FREESCI_PRIVATE 0x10000000
 
 
 /* Sound status */

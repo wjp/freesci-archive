@@ -63,8 +63,13 @@ gfx_find_driver(char *name)
 {
 	int retval = 0;
 
-	if (!name)
+	if (!name) { /* Find default driver */
+#ifdef HAVE_X11_XLIB_H
+		if (getenv("DISPLAY"))
+			return &gfx_driver_xlib;
+#endif
 		return gfx_drivers[0];
+	}
 
 	while (gfx_drivers[retval] && strcasecmp(name, gfx_drivers[retval]->name))
 		retval++;

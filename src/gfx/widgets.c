@@ -879,7 +879,7 @@ _gfxwop_dyn_view_print(gfxw_widget_t *widget, int indentation)
 	_gfxw_print_widget(widget, indentation);
 
 	sciprintf("DYNVIEW");
-	sciprintf(" z=%d seq=%d (%d/%d/%d)@(%d,%d)[p:%d,c:%d]; sig[%04x@%04x]", view->z, 
+	sciprintf(" SORT=%d z=%d seq=%d (%d/%d/%d)@(%d,%d)[p:%d,c:%d]; sig[%04x@%04x]", view->force_precedence, view->z, 
 		  view->sequence, view->view, view->loop, view->cel, view->pos.x, view->pos.y,
 		  (view->color.mask & GFX_MASK_PRIORITY)? view->color.priority : -1,
 		  (view->color.mask & GFX_MASK_CONTROL)? view->color.control : -1,
@@ -908,6 +908,9 @@ _gfxwop_dyn_view_equals(gfxw_widget_t *widget, gfxw_widget_t *other)
 		return 0;
 
 	if (!_color_equals(wview->color, oview->color))
+		return 0;
+
+	if (wview->signal != oview->signal)
 		return 0;
 
 	return 1;

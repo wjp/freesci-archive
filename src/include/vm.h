@@ -182,7 +182,7 @@ typedef struct
 
   int elements; /* Used by SetSynonyms() */
 
-  int lsTop; /* Used by scroll list controls */
+  int lsTop, lsBottom, lsRight, lsLeft; /* Used by Animate() subfunctions and scroll list controls */
 
   int baseSetter; /* Alternative baseSetter */
 

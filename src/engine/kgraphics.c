@@ -431,7 +431,6 @@ kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	case K_GRAPH_ADJUST_PRIORITY:
 
-		fprintf(stderr,"ADJP(%d,%d)\n", PARAM(1), PARAM(2));
 		SCIkdebug(SCIkGRAPHICS, "adjust_priority(%d, %d)\n", PARAM(1), PARAM(2));
 		s->priority_first = PARAM(1) - 10;
 		s->priority_last = PARAM(2) - 10;
@@ -790,8 +789,8 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	SCIkdebug(SCIkBRESEN, "edgehit = %04x\n", edgehit);
 	if (s->acc == 0)
 		return; /* Can'tBeHere */
-	if (signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR))
-		s->acc= signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE|_K_VIEW_SIG_FLAG_IGNORE_ACTOR); /* CanBeHere- it's either being disposed, or it ignores actors anyway */
+	if (signal & (_K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR))
+		s->acc= signal & (_K_VIEW_SIG_FLAG_REMOVE|_K_VIEW_SIG_FLAG_IGNORE_ACTOR); /* CanBeHere- it's either being disposed, or it ignores actors anyway */
 
 	if (cliplist) {
 		heap_ptr node = GET_HEAP(cliplist + LIST_FIRST_NODE);
@@ -804,8 +803,9 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 				int other_signal = GET_SELECTOR(other_obj, signal);
 				SCIkdebug(SCIkBRESEN, "OtherSignal=%04x, z=%04x obj=%04x\n", other_signal,
-					  (other_signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)), other_obj);
-				if ((other_signal & (_K_VIEW_SIG_FLAG_DONT_RESTORE | _K_VIEW_SIG_FLAG_IGNORE_ACTOR | _K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_HIDDEN)) == 0) {
+					  (other_signal & (_K_VIEW_SIG_FLAG_DISPOSE_ME | _K_VIEW_SIG_FLAG_IGNORE_ACTOR)), other_obj);
+				if ((other_signal & (_K_VIEW_SIG_FLAG_DISPOSE_ME | _K_VIEW_SIG_FLAG_IGNORE_ACTOR |
+						     _K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_HIDDEN)) == 0) {
 					/* check whether the other object ignores actors */
 
 					int other_x = GET_SELECTOR(other_obj, brLeft);
@@ -966,8 +966,7 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 void
 _k_view_list_free_backgrounds(state_t *s, view_object_t *list, int list_nr);
-void
-_k_view_list_dispose(state_t *s, gfxw_list_t **list_ptr);
+
 
 void
 kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -1477,22 +1476,67 @@ draw_to_control_map(state_t *s, gfxw_dyn_view_t *view, int pri_top_management, i
 	}
 }
 
+
+static void
+_k_view_list_do_postdraw(state_t *s, gfxw_list_t *list)
+{
+	gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) list->contents;
+
+	while (widget) {
+		int obj = widget->ID;
+
+		if (widget->signal & (_K_VIEW_SIG_FLAG_FREESCI_PRIVATE | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_NO_UPDATE) == _K_VIEW_SIG_FLAG_FREESCI_PRIVATE) {
+			int has_nsrect = lookup_selector(s, obj, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
+
+			if (has_nsrect) {
+				int temp;
+
+				temp = GET_SELECTOR(obj, nsLeft);
+				PUT_SELECTOR(obj, lsLeft, temp);
+
+				temp = GET_SELECTOR(obj, nsRight);
+				PUT_SELECTOR(obj, lsRight, temp);
+
+				temp = GET_SELECTOR(obj, nsTop);
+				PUT_SELECTOR(obj, lsTop, temp);
+
+				temp = GET_SELECTOR(obj, nsBottom);
+				PUT_SELECTOR(obj, lsBottom, temp);
+			}
+
+			if (widget->signal & _K_VIEW_SIG_FLAG_HIDDEN)
+				widget->signal |= _K_VIEW_SIG_FLAG_REMOVE;
+		}
+
+		if (widget->signalp) {
+			widget->signal &= 0xffff;
+			PUT_HEAP(widget->signalp, widget->signal); /* Write back signal */
+		}
+
+		widget = (gfxw_dyn_view_t *) widget->next;
+	}
+}
+
 static int _k_animate_ran = 0;
 
 int
-_k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
+_k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_dyn_view_t *widget,
 			  int funct_nr, int argc, int argp)
      /* disposes all list members flagged for disposal; funct_nr is the invoking kfunction */
      /* returns non-zero IFF views were dropped */
 {
 	int signal;
 	int dropped = 0;
-	gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) list->contents;
 
 	_k_animate_ran = 0;
 
-	while (widget) {
-		gfxw_dyn_view_t *next = (gfxw_dyn_view_t *) widget->next;
+	if (widget) {
+		int retval;
+		/* Recurse: */
+		retval = _k_view_list_dispose_loop(s, list_addr, (gfxw_dyn_view_t *) widget->next, funct_nr, argc, argp);
+
+		if (retval == -1) /* Bail out on annihilation, rely on re-start from Animate() */
+			return -1;
 
 		if (GFXW_IS_DYN_VIEW(widget) && (widget->ID != GFXW_NO_ID)) {
 			if ((signal = (UGET_HEAP(widget->signalp))) & _K_VIEW_SIG_FLAG_DISPOSE_ME) {
@@ -1519,7 +1563,7 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 
 				if (!(signal & _K_VIEW_SIG_FLAG_HIDDEN)) {
 					SCIkdebug(SCIkGRAPHICS, "Adding view at %04x to background\n", widget->ID);
-					if (!(gfxw_remove_id(list, widget->ID) == GFXW(widget))) {
+					if (!(gfxw_remove_id(widget->parent, widget->ID) == GFXW(widget))) {
 						SCIkwarn(SCIkERROR, "Attempt to remove view with ID %04x from list failed!\n", widget->ID);
 						BREAKPOINT();
 					}
@@ -1535,41 +1579,14 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 					SCIkdebug(SCIkGRAPHICS, "Deleting view at %04x\n", widget->ID);
 					widget->flags |= GFXW_FLAG_VISIBLE;
 					gfxw_annihilate(GFXW(widget));
-					next = (gfxw_dyn_view_t *) list->contents; /* Restart */
+					return -1; /* restart: Done in Animate() */
 				}
 			}
 		}
 
-		widget = next;
 	}
 
 	return dropped;
-}
-
-
-void
-_k_invoke_view_list(state_t *s, heap_ptr list, int funct_nr, int argc, int argp)
-     /* Invokes all elements of a view list. funct_nr is the number of the calling funcion. */
-{
-	heap_ptr node = GET_HEAP(list + LIST_LAST_NODE);
-
-	while (node) {
-		heap_ptr obj = UGET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
-		word signal = GET_SELECTOR(obj, signal);
-
-		if (lookup_selector(s, obj, s->selector_map.baseSetter, NULL) == SELECTOR_METHOD)
-			invoke_selector(INV_SEL(obj, baseSetter, 1), 0); /* SCI-implemented base setter */
-		else
-			_k_base_setter(s, obj);
-
-    
-		PUT_SELECTOR(obj, signal, signal | _K_VIEW_SIG_FLAG_UPDATING);
-
-		if (!(signal & _K_VIEW_SIG_FLAG_FROZEN))
-			invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
-
-		node = UGET_HEAP(node + LIST_PREVIOUS_NODE);
-	}
 }
 
 
@@ -1586,7 +1603,7 @@ _k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int nr, int funct_nr,
 	int under_bits, signal;
 	heap_ptr under_bitsp, signalp;
 	point_t pos;
-	int z, priority, _priority;
+	int z;
 	gfxw_dyn_view_t *widget;
 
 	SCIkdebug(SCIkGRAPHICS, " - Adding %04x\n", obj);
@@ -1629,31 +1646,13 @@ _k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int nr, int funct_nr,
 		SCIkdebug(SCIkGRAPHICS, "    with signal = %04x\n", signal);
 	}
 
-	_priority = VIEW_PRIORITY((pos.y - 1)); /* Accomodate difference between interpreter and gfx engine */
-
-	if (has_nsrect
-	    && !(UGET_HEAP(signalp) & _K_VIEW_SIG_FLAG_FIX_PRI_ON)) { /* Calculate priority */
-
-		if (options & _K_MAKE_VIEW_LIST_CALC_PRIORITY)
-			PUT_SELECTOR(obj, priority, _priority);
-
-		priority = _priority;
-	} else /* DON'T calculate the priority */
-		priority = GET_SELECTOR(obj, priority);
-
-	if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP && priority <= 0)
-		priority = _priority; /* Always for picviews */
-
 	widget = gfxw_new_dyn_view(s->gfx_state, pos, z, view_nr, loop, cel,
-				   priority, -1, ALIGN_CENTER, ALIGN_BOTTOM, nr);
+				   -1, -1, ALIGN_CENTER, ALIGN_BOTTOM, nr);
 
 	if (widget) {
 
 		widget = (gfxw_dyn_view_t *) gfxw_set_id(GFXW(widget), obj);
 		widget = gfxw_dyn_view_set_params(widget, under_bits, under_bitsp, signal, signalp);
-
-		if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP)
-			draw_to_control_map(s, widget, 1, funct_nr, argc, argp);
 
 		return widget;
 		/*    s->pic_not_valid++; *//* There ought to be some kind of check here... */
@@ -1679,9 +1678,6 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 		BREAKPOINT();
 	};
 
-	if (options & _K_MAKE_VIEW_LIST_CYCLE)
-		_k_invoke_view_list(s, list, funct_nr, argc, argp); /* Invoke all objects if requested */
-
 	assert_primary_widget_lists(s);
 	/* In case one of the views' doit() does a DrawPic... */
 
@@ -1703,6 +1699,11 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 
 		if (widget) {
 			GFX_ASSERT((*widget_list)->add(GFXWC(*widget_list), GFXW(widget)));
+
+			if (options & _K_MAKE_VIEW_LIST_CYCLE) {
+				if (!(widget->signal & _K_VIEW_SIG_FLAG_FROZEN))
+					invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
+			}
 		}
 
 		node = UGET_HEAP(node + LIST_PREVIOUS_NODE); /* Next node */
@@ -1710,20 +1711,129 @@ _k_make_view_list(state_t *s, gfxw_list_t **widget_list, heap_ptr list, int opti
 }
 
 
-void
-_k_view_list_dispose(state_t *s, gfxw_list_t **list_ptr)
-     /* Unallocates all list element data, frees the list */
+static void
+_k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, int argc, heap_ptr argp)
 {
-	gfxw_list_t *list = *list_ptr;
+	gfxw_dyn_view_t *view = (gfxw_dyn_view_t *) list->contents;
 
-	if (!(*list_ptr))
-		return; /* Nothing to do :-( */
+	while (view) {
+		heap_ptr obj = view->ID;
+		int priority, _priority;
+		int has_nsrect = (view->ID <=0)? 0 : lookup_selector(s, view->ID, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
+		int oldsignal = view->signal;
 
-	SCIkwarn(SCIkERROR,"DISPOSING DISPLAY LIST! This shouldn't happen anymore!\n");
-	BREAKPOINT();
+		_k_set_now_seen(s, view->ID);
+		_priority = VIEW_PRIORITY((view->pos.y - 1)); /* Accomodate difference between interpreter and gfx engine */
 
-	list->widfree(GFXW(list));
-	*list_ptr = NULL;
+		if (has_nsrect
+		    && !(UGET_HEAP(view->signalp) & _K_VIEW_SIG_FLAG_FIX_PRI_ON)) { /* Calculate priority */
+
+			if (options & _K_MAKE_VIEW_LIST_CALC_PRIORITY)
+				PUT_SELECTOR(obj, priority, _priority);
+
+			priority = _priority;
+		} else /* DON'T calculate the priority */
+			priority = GET_SELECTOR(obj, priority);
+
+		if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP && priority <= 0)
+			priority = _priority; /* Always for picviews */
+
+		view->color.priority = priority;
+		if (priority > -1)
+			view->color.mask |= GFX_MASK_PRIORITY;
+		else
+			view->color.mask &= ~GFX_MASK_PRIORITY;
+		
+		if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP)
+			draw_to_control_map(s, view, 1, funct_nr, argc, argp);
+
+
+		/* Extreme Pattern Matching ugliness ahead... */
+		if ((view->signal & _K_VIEW_SIG_FLAG_NO_UPDATE
+		     && (  /* Brainwashed by LISP */
+			 (view->signal & (_K_VIEW_SIG_FLAG_UPDATED | _K_VIEW_SIG_FLAG_FORCE_UPDATE))
+			 || ((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_REMOVE)) == _K_VIEW_SIG_FLAG_REMOVE)
+			 || ((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_REMOVE | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)) == _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)
+			 || ((view->signal & (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)) == (_K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE))
+			 )
+		     )
+		    ||
+		    (!(view->signal & _K_VIEW_SIG_FLAG_NO_UPDATE)
+		     && (!!(view->signal & _K_VIEW_SIG_FLAG_STOP_UPDATE) ^ !!(view->signal & _K_VIEW_SIG_FLAG_ALWAYS_UPDATE))
+		     )
+		    ) {
+			view->signal |= _K_VIEW_SIG_FLAG_FREESCI_PRIVATE;
+			s->pic_not_valid++;
+		}
+
+		SCIkdebug(SCIkGRAPHICS, "  dv[%04x]: signal %04x -> %04x\n", view->ID, oldsignal, view->signal);
+
+		view->signal &= ~_K_VIEW_SIG_FLAG_STOP_UPDATE;
+
+		view = (gfxw_dyn_view_t *) view->next;
+	}
+}
+
+
+static void
+_k_raise_topmost_in_view_list(state_t *s, gfxw_list_t *list, gfxw_dyn_view_t *view)
+{
+	if (view) {
+		gfxw_dyn_view_t *next = (gfxw_dyn_view_t *) view->next;
+
+		if ((view->signal & (_K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_HIDDEN | _K_VIEW_SIG_FLAG_ALWAYS_UPDATE)) == 0)
+			view->force_precedence = 2;
+
+		gfxw_remove_widget_from_container(view->parent, GFXW(view));
+
+		if (view->signal & _K_VIEW_SIG_FLAG_HIDDEN)
+			gfxw_hide_widget(GFXW(view));
+ 		else
+			gfxw_show_widget(GFXW(view));
+
+		list->add(GFXWC(list), GFXW(view));
+
+		_k_raise_topmost_in_view_list(s, list, next);
+	}
+}
+
+
+static void
+_k_redraw_view_list(state_t *s, gfxw_list_t *list)
+{
+	gfxw_dyn_view_t *view = (gfxw_dyn_view_t *) list->contents;
+
+	while (view) {
+
+		SCIkdebug(SCIkGRAPHICS, "  dv[%04x]: signal %04x\n", view->ID, view->signal);
+
+		if ((view->signal & (_K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_STOP_UPDATE)) == _K_VIEW_SIG_FLAG_STOP_UPDATE)
+			view->signal |= _K_VIEW_SIG_FLAG_NO_UPDATE;
+		else {
+			view->signal &= ~_K_VIEW_SIG_FLAG_FORCE_UPDATE;
+			if (view->signal & _K_VIEW_SIG_FLAG_UPDATED)
+				view->signal &= ~(_K_VIEW_SIG_FLAG_UPDATED | _K_VIEW_SIG_FLAG_NO_UPDATE);
+		}
+
+		SCIkdebug(SCIkGRAPHICS, "    at substep 6: signal %04x\n", view->signal);
+
+		view->signal &= ~(_K_VIEW_SIG_FLAG_STOP_UPDATE | _K_VIEW_SIG_FLAG_UPDATED
+				  | _K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_FORCE_UPDATE);
+
+		SCIkdebug(SCIkGRAPHICS, "    at substep 11/14: signal %04x\n", view->signal);
+
+		if (!(view->signal & _K_VIEW_SIG_FLAG_NO_UPDATE)) {
+			if (view->signal & _K_VIEW_SIG_FLAG_HIDDEN)
+				view->signal |= _K_VIEW_SIG_FLAG_REMOVE;
+			else
+				view->signal &= ~_K_VIEW_SIG_FLAG_REMOVE;
+		} else if (!(view->signal & _K_VIEW_SIG_FLAG_HIDDEN))
+			view->force_precedence = 1;
+
+		SCIkdebug(SCIkGRAPHICS, "    -> signal %04x\n", view->signal);
+
+		view = (gfxw_dyn_view_t *) view->next;
+	}
 }
 
 
@@ -1757,22 +1867,9 @@ _k_draw_view_list(state_t *s, gfxw_list_t *list, int flags)
 			    || ((flags & _K_DRAW_VIEW_LIST_DISPOSEABLE) && (signal & _K_VIEW_SIG_FLAG_DISPOSE_ME))
 			    || ((flags & _K_DRAW_VIEW_LIST_NONDISPOSEABLE) && !(signal & _K_VIEW_SIG_FLAG_DISPOSE_ME))) {
 
-				/* Now, if we either don't use signal OR if signal allows us to draw, do so: */
-				if (!(flags & _K_DRAW_VIEW_LIST_USE_SIGNAL) || (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE) &&
-										!(signal & _K_VIEW_SIG_FLAG_HIDDEN))) {
-
-					_k_set_now_seen(s, widget->ID);
-
-					SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", widget->ID, signal);
-					SCIkdebug(SCIkGRAPHICS, "  to (%d,%d) v/l/c = (%d,%d,%d), pri=%d\n", widget->pos.x,
-						  widget->pos.y, widget->view, widget->loop, widget->cel,
-						  widget->color.priority);
-
-				}
-
 				if (flags & _K_DRAW_VIEW_LIST_USE_SIGNAL) {
-					signal &= ~(_K_VIEW_SIG_FLAG_UPDATE_ENDED | _K_VIEW_SIG_FLAG_UPDATING |
-						    _K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_UNKNOWN_6);
+					signal &= ~(_K_VIEW_SIG_FLAG_STOP_UPDATE | _K_VIEW_SIG_FLAG_UPDATED |
+						    _K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_FORCE_UPDATE);
 					/* Clear all of those flags */
 
 					if (signal & _K_VIEW_SIG_FLAG_HIDDEN)
@@ -1831,7 +1928,8 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		pic_views = gfxw_new_list(s->picture_port->bounds, 0);
 
 		SCIkdebug(SCIkGRAPHICS, "Preparing picview list...\n");
-		_k_make_view_list(s, &pic_views, list, _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP, funct_nr, argc, argp);
+		_k_make_view_list(s, &pic_views, list, 0, funct_nr, argc, argp);
+		_k_prepare_view_list(s, pic_views, _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP, funct_nr, argc, argp);
 		/* Store pic views for later re-use */
 
 		SCIkdebug(SCIkGRAPHICS, "Drawing picview list...\n");
@@ -2313,36 +2411,31 @@ animate_do_animation(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		GRAPH_UPDATE_BOX(s, 0, 10, 320, 190);
 	}
 
-	s->pic_not_valid = 0;
-
 	GFX_ASSERT(gfxop_free_pixmap(s->gfx_state, s->old_screen));
 	GFX_ASSERT(gfxop_free_pixmap(s->gfx_state, newscreen));
 	s->old_screen = NULL;
 
 }
 
+
 void
 kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
      /* Animations are supposed to take a maximum of s->animation_delay milliseconds. */
 {
-	int i, remaining_checkers;
 	heap_ptr cast_list = UPARAM_OR_ALT(0, 0);
 	int cycle = UPARAM_OR_ALT(1, 0);
+	int old_pnv = s->pic_not_valid; /* Backup old value */
 	int open_animation = 0;
 
 	CHECK_THIS_KERNEL_FUNCTION;
 
 	process_sound_events(s); /* Take care of incoming events (kAnimate is called semi-regularly) */
+	_k_animate_ran = 1; /* Used by some of the invoked functions to check for recursion, which may,
+			    ** after all, damage the cast list  */
 
-	_k_animate_ran = 1;
+
 	open_animation = (s->pic_is_new) && (s->pic_not_valid);
 	s->pic_is_new = 0;
-
-	if (open_animation) {
-		gfxop_clear_box(s->gfx_state, gfx_rect(0, 10, 320, 190)); /* Propagate pic */
-		s->visual->add_dirty_abs(GFXWC(s->visual), gfx_rect_fullscreen, 0);
-		/* Mark screen as dirty so picviews will be drawn correctly */
-	}
 
 	assert_primary_widget_lists(s);
 
@@ -2351,13 +2444,10 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		|| (s->dyn_views->next))) /* ... or not on top of the view list */
 		reparentize_primary_widget_lists(s, s->port);
 
-	if (!cast_list)
-		s->dyn_views->tag(GFXW(s->dyn_views));
-
 	if (cast_list) {
+		gfxw_list_t *templist = gfxw_new_list(s->dyn_views->bounds, 0);
 
-		s->dyn_views->tag(GFXW(s->dyn_views));
-		_k_make_view_list(s, &(s->dyn_views), cast_list, (cycle? _K_MAKE_VIEW_LIST_CYCLE : 0)
+		_k_make_view_list(s, &(templist), cast_list, (cycle? _K_MAKE_VIEW_LIST_CYCLE : 0)
 				  | _K_MAKE_VIEW_LIST_CALC_PRIORITY, funct_nr, argc, argp);
 
 		if (s->pic_is_new) { /* Happens if DrawPic() is executed by a dynview (yes, that happens) */
@@ -2365,43 +2455,50 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			return;
 		}
 
+		SCIkdebug(SCIkGRAPHICS, "Handling Dynviews (..step 9 inclusive):\n");
+		_k_prepare_view_list(s, templist, _K_MAKE_VIEW_LIST_CALC_PRIORITY, funct_nr, argc, argp);
+
+		if (s->pic_not_valid) {
+			SCIkdebug(SCIkGRAPHICS, "PicNotValid=%d -> Subalgorithm:\n");
+			_k_redraw_view_list(s, s->dyn_views);
+		}
+
+		_k_raise_topmost_in_view_list(s, s->dyn_views, (gfxw_dyn_view_t *) templist->contents);
+
+		templist->widfree(GFXW(templist));
 		s->dyn_views->free_tagged(GFXWC(s->dyn_views)); /* Free obsolete dynviews */
-
-		/* Initialize pictures- Steps 3-9 in Lars' V 0.1 list */
-
-		/*		if (open_animation) {
-			sciprintf("Freeing tagged from ");
-			s->dyn_views->print(GFXW(s->dyn_views), 4);
-			sciprintf("result:--- ");
-			s->dyn_views->print(GFXW(s->dyn_views), 0);
-			sciprintf("======\n");
-		}*/
-
-		SCIkdebug(SCIkGRAPHICS, "Handling PicViews:\n");
-		/*		if (s->pic_not_valid)
-				_k_draw_view_list(s, s->pic_views, 0);*/ /* Step 10 */
-		SCIkdebug(SCIkGRAPHICS, "Handling Dyn:\n");
-
-		_k_draw_view_list(s, s->dyn_views, _K_DRAW_VIEW_LIST_DISPOSEABLE | _K_DRAW_VIEW_LIST_USE_SIGNAL);
-		_k_draw_view_list(s, s->dyn_views, _K_DRAW_VIEW_LIST_NONDISPOSEABLE | _K_DRAW_VIEW_LIST_USE_SIGNAL); /* Step 11 */
-
-		if (_k_view_list_dispose_loop(s, cast_list, s->dyn_views, funct_nr, argc, argp) /* Step 15 */
-		    && (GFXWC(s->port) == GFXWC(s->dyn_views->parent)) /* If dynviews are on the same port... */
-		    && (s->dyn_views->next)) /* ... and not on top of the view list...  */
-			reparentize_primary_widget_lists(s, s->port); /* ...then reparentize. */
-
-		FULL_REDRAW();
 
 	} /* if (cast_list) */
 
-
 	if (open_animation) {
+		gfxop_clear_box(s->gfx_state, gfx_rect(0, 10, 320, 190)); /* Propagate pic */
+		s->visual->add_dirty_abs(GFXWC(s->visual), gfx_rect_fullscreen, 0);
+		/* Mark screen as dirty so picviews will be drawn correctly */
+		FULL_REDRAW();
+
 		animate_do_animation(s, funct_nr, argc, argp);
 		return;
 	} /* if (open_animation) */
 
+	if (cast_list) {
+		int retval;
+		int reparentize = 0;
+
+		s->pic_not_valid = 0;
+
+		_k_view_list_do_postdraw(s, s->dyn_views);
+
+		/* _k_view_list_dispose_loop() returns -1 if it requested a re-start, so we do just that. */
+		while ((retval = _k_view_list_dispose_loop(s, cast_list, (gfxw_dyn_view_t *) s->dyn_views->contents, funct_nr, argc, argp) < 0))
+			reparentize = 1;
+
+		if ((reparentize | retval)
+		    && (GFXWC(s->port) == GFXWC(s->dyn_views->parent)) /* If dynviews are on the same port... */
+		    && (s->dyn_views->next)) /* ... and not on top of the view list...  */
+			reparentize_primary_widget_lists(s, s->port); /* ...then reparentize. */
+	}
+
 	FULL_REDRAW();
-	s->pic_not_valid = 0;
 
 }
 
