@@ -172,3 +172,26 @@ offset  data description
  0094	  02 MIDI Track channel 2
  0095	  01 One note playing on track
  0096	     MIDI Track data like SCI0
+
+Addendum (provided by Lars Skovlund)
+------------------------------------
+
+First of all, tracks do not loop individually. No loop signals are
+reported.
+
+Absolute cues are generally stored in the signal selector, and
+cumulative cues are generally stored in the dataInc selector, with
+some interesting twists: 
+
+1. The server's record of the absolute cue value is reset as part of
+   UPDATE_CUES.
+2. When a cumulative cue is reported to the VM object, it will be
+   placed in _both_ fields. In such a case, a constant of 0x7f will be
+   added to the _signal_ selector only, to be able to distinguish the
+   two kinds of cue (this has already been coded).
+3. The above only happens if the sound does not use absolute cues
+   (i.e. if the signal is 0 a priori). Note that, because of 1)
+   above, this does not cause problems neither with successive
+   cumulative cues nor with mixed cumulative/absolute cues.
+4. A signal of 0xff will stop the sound object playing. This may be
+   for purely internal purposes.

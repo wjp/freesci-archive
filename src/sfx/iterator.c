@@ -297,6 +297,8 @@ _sci0_read_next_command(base_song_iterator_t *self, unsigned char *buf, int *res
 			return ticks;
 	}
 
+	  /* continute otherwise... */
+
 	case SI_STATE_COMMAND:
 		return _parse_sci_midi(self, buf, result,
 				       &(self->offset), &(self->loops),
@@ -471,9 +473,12 @@ typedef struct  {
 	int channel_delay[MIDI_CHANNELS];	/* Number of ticks before the specified channel is next used */
 	int channel_offset[MIDI_CHANNELS];      /* Offset into the data chunk */
 	int channel_end[MIDI_CHANNELS];		/* Last allowed byte in track */
-	int channel_loops[MIDI_CHANNELS];	/* # of times to loop this channel */
 	int channel_id[MIDI_CHANNELS];		/* Actual channel number */
 	byte channel_last_cmd[MIDI_CHANNELS];	/* Actual channel number */
+	unsigned int channel_not_loop_waiting;  /* Bits for each channel are
+						** set iff they're not waiting
+						** for other channels to finish
+						** looping  */
 
 	/* Invariant: Whenever channel_delay[i] == 0, channel_offset[i] points
 	** to a delta time object. */
@@ -491,9 +496,20 @@ typedef struct  {
 	}
 
 #define SCI1_CHANDATA(chan, offset) self->data[self->channel_offset[chan] + (offset)]
+#define SCI1_NOT_LOOP_WAITING(chan) (self->channel_not_loop_waiting & (1 << (chan)))
 
 static inline void
 _sci1_set_channel_delay(sci1_song_iterator_t *self, int chan);
+
+static inline void
+_sci1_resume_all_channels_from_waiting_to_loop(sci1_song_iterator_t *self)
+{
+	int i;
+
+	self->channel_not_loop_waiting = 0;
+	for (i = 0; i < self->channels_nr; i++)
+		self->channel_not_loop_waiting |= (1 << i);
+}
 
 static int
 _sci1_sample_init(sci1_song_iterator_t *self, int offset)
@@ -597,8 +613,6 @@ _sci1_song_init(sci1_song_iterator_t *self)
 					= offset + end;
 				self->channel_delay[self->channels_nr]
 					= 0; /* Start with delta time */
-				self->channel_loops[self->channels_nr]
-					= self->loops;
 				self->polyphony[self->channels_nr]
 					= SCI1_CHANDATA(self->channels_nr, -1);
 				self->channel_id[self->channels_nr]
@@ -640,6 +654,8 @@ _sci1_song_init(sci1_song_iterator_t *self)
 		seeker = seeker->next;
 	}
 
+	_sci1_resume_all_channels_from_waiting_to_loop(self);
+
 	return 0; /* Success */
 }
 
@@ -648,7 +664,8 @@ _sci1_get_smallest_delta(sci1_song_iterator_t *self)
 {
 	int i, d = -1;
 	for (i = 0; i < self->channels_nr; i++)
-		if (d == -1 || self->channel_delay[i] < d)
+		if (SCI1_NOT_LOOP_WAITING(i) &&
+		    (d == -1 || self->channel_delay[i] < d))
 			d = self->channel_delay[i];
 
 	if (self->next_sample && self->next_sample->delta < d)
@@ -657,7 +674,7 @@ _sci1_get_smallest_delta(sci1_song_iterator_t *self)
 		return d;
 }
 
-static inline int
+static inline void
 _sci1_update_delta(sci1_song_iterator_t *self, int delta)
 {
 	int i;
@@ -666,16 +683,17 @@ _sci1_update_delta(sci1_song_iterator_t *self, int delta)
 		self->next_sample->delta -= delta;
 
 	for (i = 0; i < self->channels_nr; i++)
-		if (0 == (self->channel_delay[i] -= delta)) {
-			int offset;
-			_parse_ticks(self->data + self->channel_offset[i],
-				     &offset,
-				     self->channel_end[i]
-				     - self->channel_offset[i]);
+		if (SCI1_NOT_LOOP_WAITING(i))
+			if (0 == (self->channel_delay[i] -= delta)) {
+				int offset;
+				_parse_ticks(self->data + self->channel_offset[i],
+					     &offset,
+					     self->channel_end[i]
+					     - self->channel_offset[i]);
 
-			/* Advance over delta time */
-			self->channel_offset[i] += offset;
-		}
+				/* Advance over delta time */
+				self->channel_offset[i] += offset;
+			}
 }
 
 static inline int /* Determine the channel # of the next active event, or -1 */
@@ -683,7 +701,8 @@ _sci1_command_index(sci1_song_iterator_t *self)
 {
 	int i;
 	for (i = 0; i < self->channels_nr; i++)
-		if (!self->channel_delay[i])
+		if (SCI1_NOT_LOOP_WAITING(i) &&
+		    !self->channel_delay[i])
 			return i;
 	return -1;
 }
@@ -698,21 +717,9 @@ _sci1_retire_channel(sci1_song_iterator_t *self, int chan)
 			= self->channel_end[self->channels_nr];
 		self->channel_delay[chan]
 			= self->channel_delay[self->channels_nr];
-		self->channel_loops[chan]
-			= self->channel_loops[self->channels_nr];
 		self->channel_id[chan]
 			= self->channel_id[self->channels_nr];
 	}
-}
-
-static inline void
-_sci1_set_loops(sci1_song_iterator_t *self)
-{
-	int i;
-
-	for (i = 0; i < self->channels_nr; i++)
-		if (self->channel_loops[i] > self->loops)
-			self->loops = self->channel_loops[i];
 }
 
 static inline void
@@ -774,6 +781,8 @@ _sci1_get_pcm(sci1_song_iterator_t *self,
 	    && self->state == SI_STATE_PCMWAIT) {
 		sci1_sample_t *sample = self->next_sample;
 		byte *retval = sample->data;
+		self->next_sample = self->next_sample->next;
+
 		if (format)
 			*format = sample->format;
 		if (size)
@@ -836,6 +845,7 @@ _sci1_read_next_command(sci1_song_iterator_t *self,
 	case SI_STATE_COMMAND: {
 		int chan = _sci1_command_index(self);
 		int run_result;
+		int looping = self->loops? 3 : 0;
 
 		if (self->next_sample && self->next_sample->delta == 0) {
 			self->state = SI_STATE_PCMWAIT;
@@ -852,7 +862,10 @@ _sci1_read_next_command(sci1_song_iterator_t *self,
 		run_result = _parse_sci_midi((base_song_iterator_t *) self,
 					     buf, result,
 					     &(self->channel_offset[chan]),
-					     &(self->channel_loops[chan]),
+					     &looping,
+					     /* Pass in a temporary variable--
+					     ** SCI1 only specifies WHETHER
+					     ** we loop at all  */
 					     &(self->channel_last_cmd[chan]),
 					     0);
 
@@ -870,15 +883,16 @@ _sci1_read_next_command(sci1_song_iterator_t *self,
 							       buf, result);
 
 		case SI_LOOP: {
-			/* Issue loop event iff all tracks have looped */
-			int oldloops = self->loops;
-			_sci1_set_loops(self);
-			_sci1_set_channel_delay(self, chan);
-			if (self->loops < oldloops)
-				return SI_LOOP;
+			if (self->channel_not_loop_waiting)
+				/* There are still channels
+				** unprepared for the loop  */
+				self->channel_not_loop_waiting &= ~(1 << chan);
 			else
-				return _sci1_read_next_command(self,
-							       buf, result);
+				_sci1_resume_all_channels_from_waiting_to_loop(self);
+			fprintf(stderr, "LOOP for %d/%d -> %04x\n", chan,
+				self->channels_nr, self->channel_not_loop_waiting);
+
+			return SI_LOOP;
 		}
 
 		case SI_CUE: /* Let's hope that we only get these once */
@@ -915,16 +929,30 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 		case _SIMSG_BASEMSG_CLONE: {
 			int tsize = sizeof(sci1_song_iterator_t);
 			sci1_song_iterator_t *mem = sci_malloc(sizeof(sci1_song_iterator_t));
-			sci1_sample_t **samplep = &(mem->next_sample);
+			sci1_sample_t **samplep;
+/* 			fprintf(stderr, "Cloning %p -> %p (%d,n*%d)\n", self, mem, sizeof(sci1_song_iterator_t), sizeof(sci1_sample_t)); */
 
 			memcpy(mem, self, sizeof(sci1_song_iterator_t));
+			samplep = &(mem->next_sample);
+
 			mem->data = sci_malloc(mem->size);
 			memcpy(mem->data, self->data, self->size);
+
+/* 			{ */
+/* 				sci1_sample_t *seeker = self->next_sample; */
+/* 				while (seeker) { */
+/* 					fprintf(stderr, "next = (%p)%p\n", self, seeker); */
+/* 					seeker = seeker->next; */
+/* 				} */
+/* 			} */
 
 			/* Clone chain of samples */
 			while (*samplep) {
 				sci1_sample_t *newsample
 					= sci_malloc(sizeof(sci1_sample_t));
+/* 				fprintf(stderr, "copying (%p)%p -> (%p)%p\n", self, *samplep, mem, newsample); */
+				memcpy(newsample, *samplep,
+				       sizeof(sci1_sample_t));
 				*samplep = newsample;
 				samplep = &(newsample->next);
 			}
@@ -949,18 +977,6 @@ _sci1_handle_message(sci1_song_iterator_t *self,
 		default:
 			_base_handle_message((base_song_iterator_t *)self,
 					     msg);
-			switch (msg.type) {
-			case _SIMSG_BASEMSG_SET_LOOPS: {
-				int i;
-				for (i = 0; i < self->channels_nr; i++)
-					self->channel_loops[i] = self->loops;
-			}	break;
-
-			default:
-				break;
-			}
-			break;
-
 		}
 		return (song_iterator_t *) self;
 	}

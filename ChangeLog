@@ -1,3 +1,13 @@
+2004-02-05  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sfx/iterator.c (_sci1_handle_message): memcpy'd cloned PCM
+	samples
+	(_sci1_get_pcm): Fixed dumb bug when freeing sample
+	(_sci1_resume_all_channels_from_waiting_to_loop): Now, looping
+	only occurs after all streams have finished.
+
+	* src/sfx/doc/sound01.txt: Added information from Lars' e-mail.
+
 2004-02-03  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/ksound.c (kDoSound_SCI01): Misc. fixes: Command
@@ -9,7 +19,7 @@
 	* src/engine/ksound.c (kDoSound_SCI0): Added support for SCI1 song
 	playing
 
-	* src/sfx/iterator.c: Added SCI1 song iterators 
+	* src/sfx/iterator.c: Added SCI1 song iterators
 
 	* src/sfx/player/polled.c (play_song): Added PCM playing support
 
@@ -33,7 +43,7 @@
 
 2004-01-04  Lars Skovlund  <lskovlun@image.dk>
 
-	* src/sfx/pcm_device/alsa.c: Build fix for older versions of ALSA. 
+	* src/sfx/pcm_device/alsa.c: Build fix for older versions of ALSA.
 
 2004-01-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
