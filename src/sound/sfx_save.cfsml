@@ -84,7 +84,6 @@ typedef struct {
 
 TYPE word "word" LIKE int
 TYPE long "long" LIKE int
-TYPE short "short" LIKE int
 
 RECORD song_t "song_t" {
 
@@ -167,7 +166,7 @@ soundsrv_save_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
 	}
 
 #ifdef DEBUG_SOUND_SERVER
-	fprintf(debugstream, "Saving game to %s\n", dir);
+	fprintf(debugstream, "Saving game...\n");
 #endif
 
 	write_rec.sound_version = SOUND_SAVEGAME_VERSION;
@@ -433,6 +432,8 @@ recover_version2(FILE *fh, sound_lib_file_ver2_t *rec,
 
 	/* Everything is well, so free all songs to make way for the new ones */
 	song_lib_free(sss->songlib);
+	if (sss->current_song)
+		sss->current_song->data = NULL;
 	sss->current_song = NULL;
 
 #ifdef DEBUG_SOUND_SERVER
@@ -525,7 +526,7 @@ soundsrv_restore_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
 	rewind(fh);
 
 #ifdef DEBUG_SOUND_SERVER
-	fprintf(debugstream, "Restoring game from %s\n", dir);
+	fprintf(debugstream, "Restoring game...\n", dir);
 	fprintf(debugstream, " Save game version: %i\n", sound_version);
 #endif
 

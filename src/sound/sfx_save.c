@@ -378,12 +378,6 @@ _cfsml_read_sound_lib_file_ver2_t(FILE *fh, sound_lib_file_ver2_t* save_struc, c
 
 #line 431 "sfx_save.cfsml"
 static void
-_cfsml_write_short(FILE *fh, short* save_struc);
-static int
-_cfsml_read_short(FILE *fh, short* save_struc, char *lastval, int *line, int *hiteof);
-
-#line 431 "sfx_save.cfsml"
-static void
 _cfsml_write_long(FILE *fh, long* save_struc);
 static int
 _cfsml_read_long(FILE *fh, long* save_struc, char *lastval, int *line, int *hiteof);
@@ -1219,32 +1213,6 @@ int min, max, i;
 
 #line 444 "sfx_save.cfsml"
 static void
-_cfsml_write_short(FILE *fh, short* save_struc)
-{
-  fprintf(fh, "%li", (long) *save_struc);
-}
-
-#line 538 "sfx_save.cfsml"
-static int
-_cfsml_read_short(FILE *fh, short* save_struc, char *lastval, int *line, int *hiteof)
-{
-  char *token;
-#line 564 "sfx_save.cfsml"
-
-  *save_struc = strtol(lastval, &token, 0);
-  if ( (*save_struc == 0) && (token == lastval) ) {
-     _cfsml_error("strtol failed at line %d\n", *line);
-     return CFSML_FAILURE;
-  }
-  if (*token != 0) {
-     _cfsml_error("Non-integer encountered while parsing int value at line %d\n", *line);
-     return CFSML_FAILURE;
-  }
-  return CFSML_SUCCESS;
-}
-
-#line 444 "sfx_save.cfsml"
-static void
 _cfsml_write_long(FILE *fh, long* save_struc)
 {
   fprintf(fh, "%li", (long) *save_struc);
@@ -1324,7 +1292,7 @@ _cfsml_read_word(FILE *fh, word* save_struc, char *lastval, int *line, int *hite
 
 /* Auto-generated CFSML declaration and function block ends here */
 /* Auto-generation performed by cfsml.pl 0.8.2 */
-#line 147 "sfx_save.cfsml"
+#line 146 "sfx_save.cfsml"
 
 
 /* Sound state saving reference implementation */
@@ -1348,7 +1316,7 @@ soundsrv_save_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
 	}
 
 #ifdef DEBUG_SOUND_SERVER
-	fprintf(debugstream, "Saving game to %s\n", dir);
+	fprintf(debugstream, "Saving game...\n");
 #endif
 
 	write_rec.sound_version = SOUND_SAVEGAME_VERSION;
@@ -1436,7 +1404,7 @@ soundsrv_save_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
   _cfsml_write_sound_lib_file_ver2_t(fh, &write_rec);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 254 "sfx_save.cfsml"
+#line 253 "sfx_save.cfsml"
 
 	fclose(fh);
 	fprintf(debugstream, "Finished all writing.\n");
@@ -1512,7 +1480,7 @@ recover_version1(FILE *fh, sound_lib_file_ver1_t *rec,
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 300 "sfx_save.cfsml"
+#line 299 "sfx_save.cfsml"
 	fclose(fh);
 
 	if (error) {
@@ -1643,7 +1611,7 @@ recover_version2(FILE *fh, sound_lib_file_ver2_t *rec,
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 401 "sfx_save.cfsml"
+#line 400 "sfx_save.cfsml"
 	fclose(fh);
 
 	if (error) {
@@ -1679,6 +1647,8 @@ recover_version2(FILE *fh, sound_lib_file_ver2_t *rec,
 
 	/* Everything is well, so free all songs to make way for the new ones */
 	song_lib_free(sss->songlib);
+	if (sss->current_song)
+		sss->current_song->data = NULL;
 	sss->current_song = NULL;
 
 #ifdef DEBUG_SOUND_SERVER
@@ -1771,7 +1741,7 @@ soundsrv_restore_state(FILE *debugstream, char *dir, sound_server_state_t *sss)
 	rewind(fh);
 
 #ifdef DEBUG_SOUND_SERVER
-	fprintf(debugstream, "Restoring game from %s\n", dir);
+	fprintf(debugstream, "Restoring game...\n", dir);
 	fprintf(debugstream, " Save game version: %i\n", sound_version);
 #endif
 

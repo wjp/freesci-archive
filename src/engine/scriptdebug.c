@@ -753,7 +753,7 @@ disassemble(state_t *s, heap_ptr pos)
 	param_value = 0xffff & (s->heap[retval] | (s->heap[retval+1] << 8));
 	retval += 2;
       }
-      sciprintf (opsize? " %02x  [%04x]" : " %04x  [%04x]", param_value, retval+(short) param_value);
+      sciprintf (opsize? " %02x  [%04x]" : " %04x  [%04x]", param_value, retval+(heap_ptr) param_value);
       break;
 
     case Script_End: retval = 0;

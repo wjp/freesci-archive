@@ -1,5 +1,5 @@
 /***************************************************************************
- event_ss_win32.c Copyright (C) 2001 Alexander R Angas
+ event_ss_win32.c Copyright (C) 2001,2002 Alexander R Angas, Matt Hargett
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
@@ -55,9 +55,9 @@ static HANDLE child_thread;
 static HANDLE time_keeper, sound_data_event, thread_created_event;
 static UINT time_keeper_id;
 static DWORD sound_timer;
+
 LARGE_INTEGER freq;	/* number of ticks per usec in  high performance counters */
 LARGE_INTEGER now, end;
-
 
 static state_t *gs;
 
@@ -455,6 +455,14 @@ void
 sound_win32e_queue_event(unsigned int handle, unsigned int signal, long value)
 {
 	/* posts message to main thread queue */
+#ifdef DEBUG_SOUND_SERVER
+	if (signal > sizeof(emap))
+	{
+		fprintf(debug_stream, "sound_win32e_queue_event(): Signal out of range: %u\n", signal);
+		BREAKPOINT();
+	}
+#endif
+
 	if (PostMessage(main_wnd, emap[signal], handle, value) == 0)
 	{
 		fprintf(debug_stream, "sound_win32e_queue_event(): PostMessage() failed, GetLastError() returned %u\n", GetLastError());
@@ -466,6 +474,14 @@ void
 sound_win32e_queue_command(unsigned int handle, unsigned int signal, long value)
 {
 	/* posts message to sound server queue */
+#ifdef DEBUG_SOUND_SERVER
+	if (signal > sizeof(emap))
+	{
+		fprintf(debug_stream, "sound_win32e_queue_event(): Signal out of range: %u\n", signal);
+		BREAKPOINT();
+	}
+#endif
+
 	if (PostMessage(sound_wnd, emap[signal], handle, value) == 0)
 	{
 		fprintf(debug_stream, "sound_win32e_queue_command(): PostMessage() failed, GetLastError() returned %u\n", GetLastError());

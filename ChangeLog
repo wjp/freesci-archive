@@ -1,3 +1,17 @@
+2002-01-13  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/engine/scriptdebug.c:
+	* src/include/resource.h:
+	* src/scicore/script.c: Fixes to warnings fixes.
+
+	* src/gfx/operations.c:
+	* src/engine/vm.c: Warnings fixes.
+
+	* src/sound/event_ss_win32.c: Attempt to catch unrecognised sound
+	signals.
+
+	* src/sound/sfx_save.cfsml: Minor clean ups.
+
 2002-01-11  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/midiout_alsaraw.c: Better detection for ALSA 0.9

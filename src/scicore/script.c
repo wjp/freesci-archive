@@ -351,7 +351,7 @@ script_dissect(resource_mgr_t *resmgr, int res_no, char **snames, int snames_nr)
       sciprintf ("%04x: ", seeker);
       while (seeker < _seeker)
       {
-        unsigned short nextitem=script->data [seeker++];
+        unsigned char nextitem=script->data [seeker++];
         if (nextitem == 0xFF)
           sciprintf ("\n%04x: ", seeker);
         else if (nextitem >= 0xF0)
