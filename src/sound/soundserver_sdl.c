@@ -52,6 +52,7 @@ static SDL_cond *bulk_conds[2];
 static sound_eq_t inqueue; /* The in-event queue */
 static sound_eq_t ev_queue; /* The event queue */
 
+
 int 
 sdl_soundserver_init(void *args) 
 {
@@ -66,7 +67,13 @@ sound_sdl_init(state_t *s)
 
   global_sound_server = &sound_server_sdl;
 
-  SDL_Init(SDL_INIT_EVENTTHREAD | SDL_INIT_NOPARACHUTE);
+  if (-1 == SDL_Init(SDL_INIT_EVENTTHREAD | SDL_INIT_NOPARACHUTE))
+  {
+    fprintf(stderr, "sound_sdl_init(): SDL_Init() returned -1\n");
+  }
+
+  sci_sched_yield();
+
   master = SDL_ThreadID();
 
   if (init_midi_device(s) < 0)
@@ -105,16 +112,29 @@ sound_event_t *
 sound_sdl_get_event(state_t *s)
 {
   sound_event_t *event = NULL;
-  SDL_LockMutex(out_mutex);
 
-  if (!sound_eq_peek_event(&ev_queue)) {
-	  SDL_UnlockMutex(out_mutex);
+  if (-1 == SDL_LockMutex(out_mutex))
+  {
+    fprintf(stderr, "sound_sdl_get_event(): SDL_LockMutex() returned -1\n");
+  }
+
+  if (!sound_eq_peek_event(&ev_queue)) 
+  {
+    if (-1 == SDL_UnlockMutex(out_mutex))
+	{
+      fprintf(stderr, "sound_sdl_get_event(): SDL_UnlockMutex() returned -1\n");
+	}
+
 	  return NULL;
   }
 
   event = sound_eq_retreive_event(&ev_queue);
 
-  SDL_UnlockMutex(out_mutex);
+  if (-1 == SDL_UnlockMutex(out_mutex))
+  {
+    fprintf(stderr, "sound_sdl_get_event(): SDL_UnlockMutex() returned -1\n");
+  }
+
   /*
   if (event)
     printf("got %04x %d %d\n", event->handle, event->signal, event->value);
@@ -125,28 +145,47 @@ sound_sdl_get_event(state_t *s)
 void 
 sound_sdl_queue_event(int handle, int signal, int value)
 {
-  SDL_LockMutex(out_mutex);
+  if (-1 == SDL_LockMutex(out_mutex))
+  {
+    fprintf(stderr, "sound_sdl_queue_event(): SDL_UnlockMutex() returned -1\n");
+  }
 
   sound_eq_queue_event(&ev_queue, handle, signal, value);
   /*  printf("set %04x %d %d\n", handle, signal, value); */
+  if (-1 == SDL_UnlockMutex(out_mutex))
+  {
+    fprintf(stderr, "sound_sdl_queue_event(): SDL_UnlockMutex() returned -1\n");
+  }
   SDL_UnlockMutex(out_mutex);
 }
 
 void 
 sound_sdl_queue_command(int handle, int signal, int value)
 {
-  SDL_LockMutex(in_mutex);
+
+  if (-1 == SDL_LockMutex(in_mutex))
+  {
+    fprintf(stderr, "sound_sdl_queue_command(): SDL_LockMutex() returned -1\n");
+  }
 
   sound_eq_queue_event(&inqueue, handle, signal, value);
   
-  SDL_UnlockMutex(in_mutex);
-  SDL_CondSignal(in_cond);
+  if (-1 == SDL_UnlockMutex(in_mutex))
+  {
+    fprintf(stderr, "sound_sdl_queue_command(): SDL_UnlockMutex() returned -1\n");
+  }
+
+  if (-1 == SDL_CondSignal(in_cond))
+  {
+    fprintf(stderr, "sound_sdl_queue_command(): SDL_CondSignal() returned -1\n");
+  }
 }
 
 sound_event_t *
 sound_sdl_get_command(GTimeVal *wait_tvp)
 {
 	sound_event_t *event	= NULL;
+
 
 	if (!sound_eq_peek_event(&inqueue)) {
 #ifdef _MSC_VER
@@ -157,9 +196,15 @@ sound_sdl_get_command(GTimeVal *wait_tvp)
 	  return NULL;
 	}
 
-	SDL_LockMutex(in_mutex);
+	if (-1 == SDL_LockMutex(in_mutex))
+	{
+		fprintf(stderr, "sound_sdl_get_command(): SDL_LockMutex() returned -1\n");
+	}
 	event = sound_eq_retreive_event(&inqueue);
-	SDL_UnlockMutex(in_mutex);
+	if (-1 == SDL_UnlockMutex(in_mutex))
+	{
+		fprintf(stderr, "sound_sdl_get_command(): SDL_UnlockMutex() returned -1\n");
+	}
 
 	return event;
 }
@@ -175,12 +220,19 @@ sound_sdl_get_data(byte **data_ptr, int *size, int maxlen)
 
   /* we ignore maxlen */
 
-  SDL_LockMutex(mutex);
+  if (-1 == SDL_LockMutex(mutex))
+  {
+    fprintf(stderr, "sound_sdl_get_data(): SDL_LockMutex() returned -1\n");
+  }
+
 
   while (!(data = sci_get_from_queue(queue, size))) 
     SDL_CondWait(cond, mutex);
 
-  SDL_UnlockMutex(mutex);
+  if (-1 == SDL_UnlockMutex(mutex))
+  {
+    fprintf(stderr, "sound_sdl_get_data(): SDL_UnlockMutex() returned -1\n");
+  }
 
   *data_ptr = (byte *) data;
 
@@ -195,13 +247,23 @@ sound_sdl_send_data(byte *data_ptr, int maxsend)
   SDL_cond *cond = bulk_conds[index];
   sci_queue_t *queue = &(bulk_queues[index]);
 
-  SDL_LockMutex(mutex);
+  if (-1 == SDL_LockMutex(mutex))
+  {
+    fprintf(stderr, "sound_sdl_send_data(): SDL_LockMutex() returned -1\n");
+  }
 
   sci_add_to_queue(queue, sci_memdup(data_ptr, maxsend), maxsend);
 
-  SDL_UnlockMutex(mutex);
+  if (-1 == SDL_UnlockMutex(mutex))
+  {
+    fprintf(stderr, "sound_sdl_send_data(): SDL_UnlockMutex() returned -1\n");
+  }
 
-  SDL_CondSignal(cond);
+  if (-1 == SDL_CondSignal(cond))
+  {
+    fprintf(stderr, "sound_sdl_send_data(): SDL_CondSignal() returned -1\n");
+  }
+
   return maxsend;
 }
 
@@ -209,6 +271,7 @@ void
 sound_sdl_exit(state_t *s) 
 {
   int i;
+
   sound_command(s, SOUND_COMMAND_SHUTDOWN, 0, 0); /* Kill server */
 
   /* clean up */
@@ -218,7 +281,7 @@ sound_sdl_exit(state_t *s)
   SDL_DestroyCond(in_cond);
   
   for (i = 0; i < 2; i++) {
-    void *data;
+    void *data	= NULL;
     SDL_DestroyCond(bulk_conds[i]);
     SDL_DestroyMutex(bulk_mutices[i]);
 
@@ -232,7 +295,7 @@ sound_sdl_exit(state_t *s)
 int
 sound_sdl_save(state_t *s, char *dir)
 {
-  int *success;
+  int *success	= NULL;
   int retval;
   int size;
   /* we ignore the dir */

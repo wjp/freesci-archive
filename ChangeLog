@@ -1,3 +1,8 @@
+2001-06-06  Matt Hargett  <matt@use.net>
+
+        * Add checks for return values of all SDL calls.
+        * Initialize some pointers to NULL upon declaration.
+
 2001-06-05  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/klists.c (kNodeValue): Worked around a bug in
@@ -5,6 +10,11 @@
 	* src/engine/vm.c (run_vm): Disabled warning on excessive 
 	hunk allocations.
 	* BUGS-IN-GAMES: New file.
+
+2001-06-03  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* configure.in (RPM_VERSION): Replaced '-' with '_' in version numbers
+	when generating freesci.spec
 
 2001-06-02  Lars Skovlund  <lskovlun@image.dk>
 

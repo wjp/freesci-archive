@@ -4639,6 +4639,7 @@ EOF
 fi
 
 
+RPM_VERSION=`echo $VERSION | sed 's/\-/_/'`
 
 
 trap '' 1 2 15
@@ -4847,6 +4848,7 @@ s%@LEX@%$LEX%g
 s%@LEXLIB@%$LEXLIB%g
 s%@LEX_OUTPUT_ROOT@%$LEX_OUTPUT_ROOT%g
 s%@YACC@%$YACC%g
+s%@RPM_VERSION@%$RPM_VERSION%g
 
 CEOF
 EOF

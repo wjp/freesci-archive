@@ -741,7 +741,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	}
 
 	PUT_SELECTOR(mover, b_di, bdi);
-	PUT_SELECTOR(mover, b_movCnt, movcnt - 1);
+	/*	PUT_SELECTOR(mover, b_movCnt, movcnt - 1); */
 
 	x += dx;
 	y += dy;

@@ -4,7 +4,6 @@ Primary goals:
 	* Fix DoAvoider
 	* Fix DoBresen in the CB1 intros
 	* Add LRU resource manager
-	* Add graphical config file manager
 	* Add PCM output support and one driver to use it
 	* Add reverse-stereo option
 

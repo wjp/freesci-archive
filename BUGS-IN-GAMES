@@ -9,3 +9,9 @@ messages, so that they are easily identifiable using the below list.
 
 2. Quest for Glory 1 displays the warning "List node at x is not sane
    anymore" when the dinosaur snaps at you during the intro. 
+
+3. Space Quest 3 calls functions from a script which has already been
+   unloaded when Roger climbs up the ladder from the rat cave (the
+   place containing the reactor at the very beginning of the game).
+   This does not currently cause a warning, but may do so in later
+   VM implementations.
