@@ -33,11 +33,15 @@
 #include "options.h"
 #include "dc.h"
 
+#define info_y 120.0f
+
 /* Game entries */
 typedef struct {
 	char	fn[256];	/* Game name */
 	char	dir[256];	/* Full directory path */
 } game;
+
+char *freq_select[] = {"50Hz", "60Hz", "Test"};
 
 /* Used to count the number of queued scenes. This is done to make sure that the
 ** image on the screen is current before calling a function which will block
@@ -66,13 +70,21 @@ static int sel_option = 0;
 ** screen.
 */
 static int top_option = 0;
+/* frequency selector index of the currently selected option */
+static int sel_freq = 1;
+/* Number of frequency selector options. Always 3. */
+static int num_freq = 3;
+/* freq_select array index of the option which is currently displayed first on
+** the screen. Always 0.
+*/
+static int top_freq = 0;
 
 /* Pointers to properties of the currently displayed data, either games list or
 ** options list.
 */
-static int *num_entries = &num_games;
-static int *selected = &sel_game;
-static int *top = &top_game;
+static int *num_entries;
+static int *selected;
+static int *top;
 
 /* Counts frames. Used for delay purposes in the controller code */
 static int framecnt = 0;
@@ -80,34 +92,54 @@ static int framecnt = 0;
 static float throb = 0.2f, dthrob = 0.01f;
 
 /* Current state of menu:
-** 0: Drive lid open.
-** 1: Searching the CD for SCI games
-** 2: Displaying game list
-** 3: Running selected game
-** 4: Displaying option list
-** 5: Saving options to VMU
-** 6: Waiting for CD lid to open
-** 7: Waiting for Dreamcast to finish scanning the disc
-** 8: Drive empty.
+**  0: Drive lid open.
+**  1: Searching the CD for SCI games
+**  2: Displaying game list
+**  3: Running selected game
+**  4: Displaying option list
+**  5: Saving options to VMU
+**  6: Waiting for CD lid to open
+**  7: Waiting for Dreamcast to finish scanning the disc
+**  8: Drive empty.
+**  9: 50Hz/60Hz selector for PAL console
+** 10: Testing 60Hz mode for 5 seconds
 **
 ** State changes: 0->{7}, 1->{2,6}, 2->{0,3,4}, 4->{2,5}, 5->{2}, 6->{0}
-**                7->{0,1,8}, 8->{0}
+**                7->{0,1,8}, 8->{0}, 9->{0,1,10}, 10->{9}
 */
 static int menu_state;
 
-/* Flag which indicated whether the options have been altered */
+/* Flag which indicates whether the options have been altered */
 static int save_flag = 0;
 
-void init_menu_state()
+static void menu_restart()
 {
 	int status;
-	
+
 	cdrom_get_status(&status, NULL);
-	
+
 	if ((status == CD_STATUS_PAUSED) || (status == CD_STATUS_STANDBY))
 		menu_state = 1;
 	else
 		menu_state = 0;
+
+	num_entries = &num_games;
+	top = &top_game;
+	selected = &sel_game;
+}
+
+void init_menu_state()
+{
+	/* On PAL consoles without a VGA box, display the 50Hz/60Hz selector */
+	if ((flashrom_get_region() == FLASHROM_REGION_EUROPE) &&
+	  vid_check_cable()) {
+		num_entries = &num_freq;
+		top = &top_freq;
+		selected = &sel_freq;
+		menu_state = 9;
+		return;
+	}
+	else menu_restart();
 }
 
 static int load_options(char *infname, char *options)
@@ -138,7 +170,7 @@ static int load_options(char *infname, char *options)
 	}
 	for (j = 0; (j < NUM_DC_OPTIONS) && (j < pkg.data_len); j++)
 		options[j] = pkg.data[j];
-	
+
 	fs_close(inf);
 	return 0;
 }
@@ -257,7 +289,7 @@ static void draw_options()
 ** Returns   : void.
 */
 {
-	float y = 92.0f;
+	float y = 92.0f + 28.0f;
 	int i, esel;
 
 	draw_poly_strf_ctr(y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f, "Options");
@@ -265,7 +297,7 @@ static void draw_options()
 	y += 2*24.0f;
 
 	/* Draw all the options */	
-	for (i=0; i<8 && (top_option+i)<NUM_DC_OPTIONS; i++) {
+	for (i=0; i<7 && (top_option+i)<NUM_DC_OPTIONS; i++) {
 		draw_poly_strf(32.0f, y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 		  "%-20s %s", dc_options[top_option+i].name,
 		  options_str[top_option+i]);
@@ -274,8 +306,8 @@ static void draw_options()
 	
 	/* Put a highlight bar under one of them */
 	esel = (sel_option - top_option);
-	draw_poly_box(31.0f, 92.0f+2*24.0f+esel*24.0f - 1.0f,
-		609.0f, 92.0f+2*24.0f+esel*24.0f + 25.0f, 95.0f,
+	draw_poly_box(31.0f, 92.0f+28.0f+2*24.0f+esel*24.0f - 1.0f,
+		609.0f, 92.0f+28.0f+2*24.0f+esel*24.0f + 25.0f, 95.0f,
 		throb, throb, 0.2f, 0.2f, throb, throb, 0.2f, 0.2f);
 }
 
@@ -285,7 +317,7 @@ static void draw_listing()
 ** Returns   : void.
 */
 {
-	float y = 92.0f;
+	float y = 92.0 + 28.0f;
 	int i, esel;
 
 	draw_poly_strf_ctr(y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f, "Games");
@@ -293,7 +325,7 @@ static void draw_listing()
 	y += 2*24.0f;
 
 	/* Draw all the game titles */	
-	for (i=0; i<8 && (top_game+i)<num_games; i++) {
+	for (i=0; i<7 && (top_game+i)<num_games; i++) {
 		draw_poly_strf(32.0f, y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 			games[top_game+i].fn);
 		y += 24.0f;
@@ -301,13 +333,39 @@ static void draw_listing()
 	
 	/* Put a highlight bar under one of them */
 	esel = (sel_game - top_game);
-	draw_poly_box(31.0f, 92.0f+2*24.0f+esel*24.0f - 1.0f,
-		609.0f, 92.0f+2*24.0f+esel*24.0f + 25.0f, 95.0f,
+	draw_poly_box(31.0f, 92.0f+28.0f+2*24.0f+esel*24.0f - 1.0f,
+		609.0f, 92.0f+28.0f+2*24.0f+esel*24.0f + 25.0f, 95.0f,
+		throb, throb, 0.2f, 0.2f, throb, throb, 0.2f, 0.2f);
+}
+
+static void draw_selector()
+/* Draws the 50Hz/60Hz selector on the screen.
+** Parameters: void.
+** Returns   : void.
+*/
+{
+	float y = 92.0 + 28.0f;
+	int i;
+
+	draw_poly_strf_ctr(y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f, "Display Mode");
+
+	y += 48.0f;
+
+	/* Draw all frequency options */	
+	for (i=0; i<num_freq; i++) {
+		draw_poly_strf_ctr(y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			freq_select[i]);
+		y += 24.0f;
+	}
+	
+	/* Put a highlight bar under one of them */
+	draw_poly_box(31.0f, 92.0f+28.0f+48.0f+sel_freq*24.0f - 1.0f,
+		609.0f, 92.0f+28.0f+48.0f+sel_freq*24.0f + 25.0f, 95.0f,
 		throb, throb, 0.2f, 0.2f, throb, throb, 0.2f, 0.2f);
 }
 
 static void check_controller()
-/* Checks controller imput and changes menu state accordingly.
+/* Checks controller input and changes menu state accordingly.
 ** Parameters: void.
 ** Returns   : void.
 */
@@ -337,7 +395,7 @@ static void check_controller()
 		if ((framecnt - down_moved) > 10) {
 			if (*selected < (*num_entries - 1)) {
 				(*selected)++;
-				if (*selected >= (*top+8)) {
+				if (*selected >= (*top+7)) {
 					(*top)++;
 				}
 			}
@@ -346,7 +404,7 @@ static void check_controller()
 	}
 	if (cond.ltrig > 0) {
 		if ((framecnt - up_moved) > 10) {
-			*selected -= 8;
+			*selected -= 7;
 
 			if (*selected < 0) *selected = 0;
 			if (*selected < *top) *top = *selected;
@@ -355,10 +413,10 @@ static void check_controller()
 	}
 	if (cond.rtrig > 0) {
 		if ((framecnt - down_moved) > 10) {
-			*selected += 8;
+			*selected += 7;
 			if (*selected > (*num_entries - 1))
 				*selected = *num_entries - 1;
-			if (*selected >= (*top+8))
+			if (*selected >= (*top+7))
 				*top = *selected;
 			down_moved = framecnt;
 		}
@@ -382,6 +440,17 @@ static void check_controller()
 				else options_nr[sel_option]++;
 				save_flag = 1;
 			}
+			else if (menu_state == 9)
+			{
+				if (sel_freq == 0) menu_restart();
+				else if (sel_freq == 1) {
+					vid_set_mode(DM_640x480, PM_RGB565);
+					menu_restart();
+				}
+				else if (sel_freq == 2) {
+					menu_state = 10;
+				}
+			}
 		}
 		a_pressed = framecnt;
 	}
@@ -396,7 +465,7 @@ static void check_controller()
 					menu_state = 5;
 				else menu_state = 2;
 			}
-			else {
+			else if (menu_state != 9) {
 				num_entries = &num_options;
 				top = &top_option;
 				selected = &sel_option;
@@ -423,16 +492,29 @@ void render_button_info() {
 	}
 }
 
+void render_scroll(float speed, float y, float z, float a, float r, float g, float b, char *s)
+/* Renders a scrolling text.
+** Parameters: void.
+** Returns   : void.
+*/
+{
+	static float coord = 640.0f;
+	draw_poly_strf(coord, y, z, a , r, g ,b, s);
+	coord -= speed;
+	if (coord < strlen(s)*-12.0f)
+		coord = 640.0f;
+}
+
 int game_menu_render() {
 	/* Draw a background box */
-	draw_poly_box(30.0f, 80.0f, 610.0f, 440.0f-96.0f, 90.0f, 
+	draw_poly_box(30.0f, 80.0f+28.0f, 610.0f, 440.0f-96.0f, 90.0f, 
 		0.2f, 0.8f, 0.5f, 0.0f, 0.2f, 0.8f, 0.8f, 0.2f);
 		
 	if (menu_state == 0) {
 		int status;
-		draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+		draw_poly_strf(32.0f, info_y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 			"The drive lid is open.");
-		draw_poly_strf(32.0f, 92.0f+24.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+		draw_poly_strf(32.0f, info_y+24.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 			"Please insert a game cd.");
 		cdrom_get_status(&status, NULL);
 		if (status == CD_STATUS_BUSY) menu_state = 7;
@@ -441,12 +523,11 @@ int game_menu_render() {
 
 	else if (menu_state == 1) {
 		if (load_queued < 4) {
-			draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			draw_poly_strf(32.0f, info_y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 				"Searching cd for SCI games...");
 			load_queued++;
 			return 0;
 		} else {
-			iso_ioctl(0,NULL,0);
 			load_game_list("/cd");
 			load_queued = 0;
 			if (num_games == 0) menu_state = 6;
@@ -457,7 +538,7 @@ int game_menu_render() {
 	
 	else if (menu_state == 3) {
 		if (load_queued < 4) {
-			draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			draw_poly_strf(32.0f, info_y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 				"Starting game, please wait...");
 			load_queued++;
 			return 0;
@@ -488,7 +569,7 @@ int game_menu_render() {
 	
 	else if (menu_state == 5) {
 		if (load_queued < 4) {
-			draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			draw_poly_strf(32.0f, info_y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 				"Saving options, please wait...");
 			load_queued++;
 		}
@@ -501,9 +582,9 @@ int game_menu_render() {
 				if (save_options(fn, &options_nr[0]))
 					sciprintf("%s, L%d: Saving options to VMU failed!\n", __FILE__, __LINE__);
 				sci_free(fn);
+				sci_free(vmu);
 			}
 			else sciprintf("%s, L%d: No VMU found!\n", __FILE__, __LINE__);
-			sci_free(vmu);
 			save_flag = 0;
 			load_queued = 0;
 			menu_state = 2;
@@ -513,9 +594,9 @@ int game_menu_render() {
 	
 	else if (menu_state == 6) {
 		int status;
-		draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+		draw_poly_strf(32.0f, info_y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 			"No SCI games found!");
-		draw_poly_strf(32.0f, 92.0f+24.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+		draw_poly_strf(32.0f, info_y + 24.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 			"Please insert a game cd.");
 		cdrom_get_status(&status, NULL);
 		if (status == CD_STATUS_OPEN) menu_state = 0;
@@ -524,7 +605,7 @@ int game_menu_render() {
 
 	else if (menu_state == 7) {
 		int status;
-		draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+		draw_poly_strf(32.0f, info_y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 			"Scanning cd...");
 		cdrom_get_status(&status, NULL);
 		if (status == CD_STATUS_PAUSED) menu_state = 1;
@@ -535,13 +616,32 @@ int game_menu_render() {
 
 	else if (menu_state == 8) {
 		int status;
-		draw_poly_strf(32.0f, 92.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+		draw_poly_strf(32.0f, info_y, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 			"The drive is empty!");
-		draw_poly_strf(32.0f, 92.0f+24.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+		draw_poly_strf(32.0f, info_y + 24.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 			"Please insert a game cd.");
 		cdrom_get_status(&status, NULL);
 		if (status == CD_STATUS_OPEN) menu_state = 0;
 		return 0;
+	}
+	else if (menu_state == 9) {
+		/* Draw frequency selector */
+		draw_selector();
+	}
+	else if (menu_state == 10) {
+		static int cnt = 60*5;
+		if (cnt == 60*5) vid_set_mode(DM_640x480, PM_RGB565);
+		if (--cnt) {
+			draw_poly_strf_ctr(info_y+3*24.0, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+				"Testing 60Hz Display Mode");
+			draw_poly_strf_ctr(info_y+5*24.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+				"%i", cnt/60+1);
+		}
+		else {
+			vid_set_mode(DM_640x480_PAL_IL, PM_RGB565);
+			cnt = 60*5;
+			menu_state = 9;
+		}
 	}
 
 	/* Adjust the throbber */
@@ -562,12 +662,34 @@ int game_menu_render() {
 int dc_write_config_file(char *fn) {
 	FILE *cfile;
 	if ((cfile = fopen(fn, "w"))) {
-		fputs("gfx.dc.render_mode = ", cfile);
-		if (options_nr[0] == 0) fputs("vram\n", cfile);
-		else fputs("pvr\n", cfile);
-		fputs("midi_device = adlibemu\n", cfile);
-		fputs("pcmout_stereo = 0\n", cfile);
-		fputs("pcmout_rate = 11025\n", cfile);
+		fprintf(cfile, "[game]\n");
+		fprintf(cfile, "resource_dir = %s\n", games[*selected].dir);
+		fprintf(cfile, "gfx.dc.render_mode = %s\n", options_nr[0]? "pvr" : "vram");
+		fprintf(cfile, "gfx.dc.refresh_rate = %s\n", sel_freq? "60Hz" : "50Hz");
+		fprintf(cfile, "pic0_dither_mode = ");		
+		switch (options_nr[1]) {
+		case 0:
+			fprintf(cfile, "dither\n");
+			break;
+		case 1:
+			fprintf(cfile, "dither256\n");
+			break;
+		case 2:
+			fprintf(cfile, "flat\n");
+		}
+					
+		if (options_nr[2])
+			fprintf(cfile, "pic_antialiasing = simple");
+
+		if (options_nr[3])
+			fprintf(cfile, "version = %s\n", options_str[3]);
+
+		if (options_nr[4])
+			fprintf(cfile, "resource_version = %s\n", options_str[4]);
+
+		if (options_nr[5])
+			fprintf(cfile, "pic_port_bounds = \"0, 0, 320, 200\"\n");
+
 		fclose(cfile);
 		return 0;
 	}

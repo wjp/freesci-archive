@@ -31,7 +31,6 @@
 #include <dc/maple/mouse.h>
 #include <dc/maple/keyboard.h>
 #include <dc/maple/controller.h>
-#include <dc/video.h>
 #include <dc/pvr.h>
 
 #include <sci_memory.h>
@@ -45,7 +44,8 @@ struct dc_event_t {
 	struct dc_event_t *next;
 };
 
-#define SCI_DC_RENDER_PVR	(1 << 0)
+#define SCI_DC_RENDER_PVR	(1 << 0) /* 0 = VRAM rendering, 1 = PVR */
+#define SCI_DC_REFRESH_50HZ	(1 << 1) /* 0 = 60Hz refresh rate, 1 = 50Hz */
 
 static int flags = 0;
 
@@ -109,7 +109,10 @@ pvr_init_gfx(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	pvr_poly_cxt_t cxt;
 
 	/* Initialize PVR to defaults and set background color to black */
-	vid_set_mode(DM_640x480, PM_RGB565);
+
+	if (flags & SCI_DC_REFRESH_50HZ) vid_set_mode(DM_640x480_PAL_IL, PM_RGB565);
+	else vid_set_mode(DM_640x480, PM_RGB565);
+	
 	pvr_init_defaults();
 	pvr_set_bg_color(0,0,0);
 
@@ -206,7 +209,14 @@ vram_init_gfx(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 			vidcol = PM_RGB888;
 	}
 
-	switch (xfact) {
+	if (flags & SCI_DC_REFRESH_50HZ) switch (xfact) {
+		case 1:
+			vidres = DM_320x240_PAL;
+			break;
+		case 2:
+			vidres = DM_640x480_PAL_IL;
+	}
+	else switch (xfact) {
 		case 1:
 			vidres = DM_320x240;
 			break;
@@ -309,7 +319,6 @@ dc_map_key(int *keystate, uint8 key)
 		case KBD_KEY_F8:		return SCI_K_F8;
 		case KBD_KEY_F9:		return SCI_K_F9;
 		case KBD_KEY_F10:		return SCI_K_F10;
-		case KBD_KEY_F12:		vid_screen_shot("/pc/tmp/freesci.raw");
 		case KBD_KEY_PAD_PLUS:		return '+';
 		case KBD_KEY_SLASH:
 		case KBD_KEY_PAD_DIVIDE:	return '/';
@@ -703,6 +712,24 @@ dc_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 		else if (!stricmp(value, "pvr")) {
 			flags |= SCI_DC_RENDER_PVR;
 			return GFX_OK;
+		}
+		else {
+			sciprintf("Fatal error: Invalid value `%s' specified for attribute `render_mode'\n", value);
+			return GFX_FATAL;
+		}
+	}
+	if (!stricmp(attribute, "refresh_rate")) {
+		if (!stricmp(value, "60Hz")) {
+			flags &= ~SCI_DC_REFRESH_50HZ;
+			return GFX_OK;
+		}
+		else if (!stricmp(value, "50Hz")) {
+			flags |= SCI_DC_REFRESH_50HZ;
+			return GFX_OK;
+		}
+		else {
+			sciprintf("Fatal error: Invalid value `%s' specified for attribute `refresh_rate'\n", value);
+			return GFX_FATAL;
 		}
 	}
 	

@@ -1,3 +1,20 @@
+2004-04-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/main.c: Forward ported the '-f' commandline option from the
+	stable branch. Added Dreamcast config file handling.
+
+	* src/dc/.cvsignore, src/dc/stream.h: Added to repository.
+	* src/dc/aica_cmd_iface.h: Removed from repository.
+	* src/Makefile.am: Updated EXTRA_DIST to include Dreamcast files.
+
+	* src/dc/Makefile, src/dc/config.h, src/dc/dc.h, src/dc/gamemenu.c,
+	src/dc/options.h, src/dc/selectgame.c, src/dc/selectgame.h,
+	src/dc/snd_stream.c, src/gfx/drivers/dc_driver.c: Forward ported
+	latest versions from the stable branch. Added options to Dreamcast
+	menu to set version, resource_version and pic_port_bounds.
+
+	* src/include/sfx_core.h: Fixed include of config.h.
+
 2004-04-03  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/resmgr.c (gfxr_get_font): Remove test code which caused

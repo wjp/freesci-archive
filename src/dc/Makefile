@@ -38,8 +38,11 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/gfx/drivers/gfx_drivers.o \
 	$(FSCI_BASE)/src/gfx/drivers/null_driver.o \
 	$(FSCI_BASE)/src/gfx/font.o \
+	$(FSCI_BASE)/src/gfx/font-5x8.o\
+	$(FSCI_BASE)/src/gfx/font-6x10.o\
 	$(FSCI_BASE)/src/gfx/gfx_console.o \
 	$(FSCI_BASE)/src/gfx/gfx_resource.o \
+	$(FSCI_BASE)/src/gfx/gfx_res_options.o \
 	$(FSCI_BASE)/src/gfx/gfx_support.o \
 	$(FSCI_BASE)/src/gfx/gfx_tools.o \
 	$(FSCI_BASE)/src/gfx/menubar.o \
@@ -77,17 +80,30 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 	$(FSCI_BASE)/src/sfx/iterator.o \
 	$(FSCI_BASE)/src/sfx/songlib.o \
 	$(FSCI_BASE)/src/sfx/core.o \
+	$(FSCI_BASE)/src/sfx/adlib.o \
+	$(FSCI_BASE)/src/sfx/pcm-iterator.o \
+	$(FSCI_BASE)/src/sfx/time.o \
 	$(FSCI_BASE)/src/sfx/player/players.o \
 	$(FSCI_BASE)/src/sfx/player/realtime.o \
+	$(FSCI_BASE)/src/sfx/player/polled.o \
 	$(FSCI_BASE)/src/sfx/device/devices.o \
 	$(FSCI_BASE)/src/sfx/timer/timers.o \
-	$(FSCI_BASE)/src/sfx/seq/sequencers.o
+	$(FSCI_BASE)/src/sfx/seq/sequencers.o \
+	$(FSCI_BASE)/src/sfx/mixer/mixers.o \
+	$(FSCI_BASE)/src/sfx/mixer/soft.o \
+	$(FSCI_BASE)/src/sfx/pcm_device/pcm_devices.o \
+	$(FSCI_BASE)/src/sfx/pcm_device/audiobuf.o \
+	$(FSCI_BASE)/src/sfx/softseq/softsequencers.o \
+	$(FSCI_BASE)/src/sfx/softseq/SN76496.o \
+	$(FSCI_BASE)/src/sfx/softseq/fmopl.o \
+	$(FSCI_BASE)/src/sfx/softseq/opl2.o \
+	$(FSCI_BASE)/src/sfx/softseq/pcspeaker.o
 
 all: $(BIN_TARGET)
 
 include $(KOS_BASE)/Makefile.rules
 
-KOS_LOCAL_CFLAGS := -I. -I$(FSCI_BASE)/src/include -I$(FSCI_BASE)/src/dc \
+KOS_LOCAL_CFLAGS := -I$(FSCI_BASE)/src/dc -I. -I$(FSCI_BASE)/src/include \
 	-I$(FSCI_BASE)/src/include/beos -D_DREAMCAST -DHAVE_CONFIG_H \
 	-DWANT_CONSOLE -DYY_NEVER_INTERACTIVE
 

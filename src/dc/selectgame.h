@@ -1,5 +1,5 @@
 /***************************************************************************
- selectgame.h Copyright (C) 2002 Walter van Niftrik
+ selectgame.h Copyright (C) 2002,2003 Walter van Niftrik
 
 
  This program may be modified and copied freely according to the terms of
@@ -24,12 +24,16 @@
    Walter van Niftrik <w.f.b.w.v.niftrik@stud.tue.nl>
 
 ***************************************************************************/
+
 #ifndef __SELECTGAME_H
 #define __SELECTGAME_H
 
 /* This function changes to the directory of the game that the user wants to
 ** run. Currently implemented by a Dreamcast-specific graphical interface based
-** on Daniel Potter's GhettoPlay interface.
+** on Daniel Potter's GhettoPlay interface. It also creates a config file on
+** the ram disk, based on options the user has set in the interface.
+** Parameters: void.
+** Returns   : void.
 */
 void choose_game(void);
 

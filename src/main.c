@@ -134,6 +134,7 @@ static gfx_options_t static_gfx_options; /* see below */
 static state_t *gamestate; /* The main game state */
 static gfx_state_t *gfx_state = &static_gfx_state; /* The graphics state */
 static gfx_options_t *gfx_options = &static_gfx_options; /* Graphics options */
+static char *commandline_config_file = NULL;
 
 int
 c_quit(state_t *s)
@@ -419,6 +420,7 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 		{"disable-mouse", no_argument, 0, 'm'},
 		{"list-savegames", no_argument, 0, 'l'},
 		{"show-rooms", no_argument, 0, 's'},
+		{"config-file", required_argument, 0, 'f'},
 		{0,0,0,0}
 	};
 
@@ -442,17 +444,20 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 
 	/* On the Dreamcast there is no command line, so we don't try to read
 	** any options and just set the savegame_name to NULL and return a
-	** game name of NULL.
+	** game name of NULL. We set the path to the config file to
+	** "/ram/config", this file is created by the Dreamcast game
+	** selection menu.
 	*/
 
 	savegame_name = NULL;
+	commandline_config_file = sci_strdup("/ram/config");
 	return NULL;
 
 #else /* !_DREAMCAST */
 #ifdef HAVE_GETOPT_LONG
-	while ((c = getopt_long(argc, argv, "lvhmsDr:d:V:g:x:y:c:M:O:S:P:", options, &optindex)) > -1) {
+	while ((c = getopt_long(argc, argv, "lvhmsDr:d:V:g:x:y:c:M:O:S:P:f:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_LONG */
-	while ((c = getopt(argc, argv, "lvhmsDr:d:V:g:x:y:c:M:O:S:P:")) > -1) {
+	while ((c = getopt(argc, argv, "lvhmsDr:d:V:g:x:y:c:M:O:S:P:f:")) > -1) {
 #endif /* !HAVE_GETOPT_LONG */
 		switch (c) {
 
@@ -473,6 +478,10 @@ parse_arguments(int argc, char **argv, cl_options_t *cl_options, char **savegame
 				free(cl_options->gamedir);
 
 			cl_options->gamedir = sci_strdup(optarg);
+			break;
+
+		case 'f':
+			commandline_config_file = sci_strdup(optarg);
 			break;
 
 		case 'V': {
@@ -619,7 +628,7 @@ read_config(char *game_name, config_entry_t **conf, int *conf_entries,
 {
 	int i, conf_nr = 0;
 
-	*conf_entries = config_init(conf, NULL);
+	*conf_entries = config_init(conf, commandline_config_file);
 
 	for (i = 1; i < *conf_entries; i++)
 		if (!strcasecmp((*conf)[i].name, game_name)) {
@@ -951,6 +960,7 @@ main(int argc, char** argv)
 
 #ifdef _DREAMCAST
 	choose_game();
+	game_name = "game";
 #endif
 
 	if (game_name) {
@@ -1349,6 +1359,9 @@ main(int argc, char** argv)
 	gfxop_exit(gfx_state);
 
 	sci_free(gamestate);
+
+	if (commandline_config_file)
+		sci_free(commandline_config_file);
 
 #ifdef WITH_DMALLOC
 	fprintf(stderr,"--- Everything but the two console buffers should have been freed now ---\n");

@@ -34,10 +34,15 @@ struct dc_option_t {
 	char def;	/* Default option */
 };
 
-#define NUM_DC_OPTIONS 1
+#define NUM_DC_OPTIONS 6
 
 struct dc_option_t dc_options[NUM_DC_OPTIONS] = {
-/* 0 */		{ "Graphics Mode", "Frame Buffer\0PVR\0", 0 },
+/* 0 */		{ "Graphics", "Letterboxed\0Full-Screen\0", 0 },
+/* 1 */		{ "Dithering", "16 Color Dithering\000256 Color Dithering\0Interpolate\0", 1 },
+/* 2 */		{ "Antialiasing", "Off\0On\0", 0 },
+/* 3 */		{ "SCI Version", "Autodetect\0001.000.172\0001.000.200\0", 0 },
+/* 4 */		{ "Resource Version", "Autodetect\0002\0003\0005\0", 0 },
+/* 5 */		{ "Pic port bounds", "Default\0Full-Screen\0", 0 }
 };
 
 #endif  /* __OPTIONS_H */

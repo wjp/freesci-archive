@@ -33,9 +33,9 @@
 #include <dc/g2bus.h>
 #include <dc/spu.h>
 #include <dc/sound/sound.h>
-#include <dc/sound/stream.h>
+#include <stream.h>
 
-#include "aica_cmd_iface.h"
+#include <../sound/arm/aica_cmd_iface.h>
 
 /*
 
@@ -53,13 +53,15 @@ for more sound data and load it up. That's about it.
 
 /* The last write position in the playing buffer */
 static int last_write_pos = 0;
-static int curbuffer = 0;
 
 /* the address of the sound ram from the SH4 side */
 #define SPU_RAM_BASE            0xa0800000
 
-/* buffer size in bytes */
-#define BUFFER_SIZE		0x04000
+/* buffer size per channel in bytes */
+static int buffer_size;
+
+/* callback chunk size in frames, must be power of 2 */
+static int chunk_size;
 
 /* Stream data location in AICA RAM */
 static uint32			spu_ram_sch1, spu_ram_sch2;
@@ -117,38 +119,14 @@ static void sep_data(void *buffer, int len) {
 
 /* Prefill buffers -- do this before calling start() */
 void snd_stream_prefill() {
-	void *buf;
-	int got;
+	spu_memset(spu_ram_sch1, 0, buffer_size);
+	spu_memset(spu_ram_sch2, 0, buffer_size);
 
-	if (!str_get_data) return;
-
-	/* Load first buffer */
-	/* XXX Note: This will not work if the full data size is less than
-	   BUFFER_SIZE or BUFFER_SIZE/2. */
-	if (stereo)
-		buf = str_get_data(BUFFER_SIZE, &got);
-	else
-		buf = str_get_data((BUFFER_SIZE/2), &got);
-	sep_data(buf, (BUFFER_SIZE/2));
-	spu_memload(spu_ram_sch1 + (BUFFER_SIZE/2)*0, (uint8*)sep_buffer[0], (BUFFER_SIZE/2));
-	spu_memload(spu_ram_sch2 + (BUFFER_SIZE/2)*0, (uint8*)sep_buffer[1], (BUFFER_SIZE/2));
-
-	/* Load second buffer */
-	if (stereo)
-		buf = str_get_data(BUFFER_SIZE, &got);
-	else
-		buf = str_get_data((BUFFER_SIZE/2), &got);
-	sep_data(buf, (BUFFER_SIZE/2));
-	spu_memload(spu_ram_sch1 + (BUFFER_SIZE/2)*1, (uint8*)sep_buffer[0], (BUFFER_SIZE/2));
-	spu_memload(spu_ram_sch2 + (BUFFER_SIZE/2)*1, (uint8*)sep_buffer[1], (BUFFER_SIZE/2));
-
-	/* Start with playing on buffer 0 */
 	last_write_pos = 0;
-	curbuffer = 0;
 }
 
 /* Initialize stream system */
-int snd_stream_init(void* (*callback)(int, int *)) {
+int snd_stream_init(void* (*callback)(int, int *), int buf_size, int ch_size) {
 	/* Start off with queueing disabled */
 	snd_stream_queueing = 0;
 
@@ -158,10 +136,14 @@ int snd_stream_init(void* (*callback)(int, int *)) {
 	if (initted)
 		return 0;
 
+	buffer_size = buf_size;
+
+	chunk_size = ch_size;
+
 	/* Create stereo seperation buffers */
 	if (!sep_buffer[0]) {
-		sep_buffer[0] = memalign(32, (BUFFER_SIZE/2));
-		sep_buffer[1] = memalign(32, (BUFFER_SIZE/2));
+		sep_buffer[0] = memalign(32, (buffer_size >> 1));
+		sep_buffer[1] = memalign(32, (buffer_size >> 1));
 	}
 
 	/* Finish loading the stream driver */
@@ -170,8 +152,8 @@ int snd_stream_init(void* (*callback)(int, int *)) {
 		return -1;
 	}
 
-	spu_ram_sch1 = snd_mem_malloc(BUFFER_SIZE*2);
-	spu_ram_sch2 = spu_ram_sch1 + BUFFER_SIZE;
+	spu_ram_sch1 = snd_mem_malloc(buffer_size << 1);
+	spu_ram_sch2 = spu_ram_sch1 + (buffer_size);
 
 	initted = 1;
 
@@ -223,10 +205,10 @@ void snd_stream_start(uint32 freq, int st) {
 	chan->cmd = AICA_CH_CMD_START;
 	chan->base = spu_ram_sch1;
 	chan->type = AICA_SM_16BIT;
-	chan->length = (BUFFER_SIZE/2);
+	chan->length = (buffer_size >> 1);
 	chan->loop = 1;
 	chan->loopstart = 0;
-	chan->loopend = (BUFFER_SIZE/2);
+	chan->loopend = (buffer_size >> 1);
 	chan->freq = freq;
 	chan->vol = 240;
 	chan->pan = 0;
@@ -269,7 +251,7 @@ void snd_stream_stop() {
 }
 
 /* Poll streamer to load more data if neccessary */
-int snd_stream_poll() {
+int snd_stream_poll(int size) {
 	uint32		ch0pos, ch1pos;
 	int		realbuffer;
 	int		current_play_pos;
@@ -283,12 +265,12 @@ int snd_stream_poll() {
 	ch0pos = g2_read_32(SPU_RAM_BASE + AICA_CHANNEL(0) + offsetof(aica_channel_t, pos));
 	ch1pos = g2_read_32(SPU_RAM_BASE + AICA_CHANNEL(1) + offsetof(aica_channel_t, pos));
 
-	if (ch0pos >= (BUFFER_SIZE/2)) {
+	if (ch0pos >= (buffer_size >> 1)) {
 		dbglog(DBG_ERROR, "snd_stream_poll: chan0.pos = %ld (%08lx)\n", ch0pos, ch0pos);
 		return -1;
 	}
 	
-	realbuffer = !((ch0pos < (BUFFER_SIZE/4)) && (ch1pos < (BUFFER_SIZE/4)));
+	realbuffer = !((ch0pos < (buffer_size >> 2)) && (ch1pos < (buffer_size >> 2)));
 
 	current_play_pos = (ch0pos < ch1pos)?(ch0pos):(ch1pos);
 
@@ -297,9 +279,12 @@ int snd_stream_poll() {
 	if (last_write_pos <= current_play_pos)
 		needed_samples = current_play_pos - last_write_pos;
 	else
-		needed_samples = (BUFFER_SIZE/2) - last_write_pos;
-	/* round it a little bit */
-	needed_samples &= ~0x3ff;
+		needed_samples = (buffer_size >> 1) - last_write_pos;
+
+	if (needed_samples >= chunk_size)
+		needed_samples = chunk_size;
+	else
+		needed_samples = 0;
 	/* printf("last_write_pos %6i, current_play_pos %6i, needed_samples %6i\n",last_write_pos,current_play_pos,needed_samples); */
 
 	if (needed_samples > 0) {
@@ -330,8 +315,8 @@ int snd_stream_poll() {
 		spu_memload(spu_ram_sch2 + (last_write_pos * 2), (uint8*)sep_buffer[1], needed_samples * 2);
 
 		last_write_pos += needed_samples;
-		if (last_write_pos >= (BUFFER_SIZE/2))
-			last_write_pos -= (BUFFER_SIZE/2);
+		if (last_write_pos >= (buffer_size >> 1))
+			last_write_pos -= (buffer_size >> 1);
 	}
 	return 0;
 }
