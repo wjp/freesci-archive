@@ -282,10 +282,6 @@ SOURCE=..\gfx\sci_widgets.c
 
 SOURCE=..\gfx\widgets.c
 # End Source File
-# Begin Source File
-
-SOURCE=..\gfx\wrapper.c
-# End Source File
 # End Group
 # Begin Group "scicore"
 
@@ -391,10 +387,7 @@ SOURCE=.\usleep.c
 
 SOURCE=..\include\event.h
 # End Source File
-# Begin Source File
 
-SOURCE=c:\cygwin\usr\include\getopt.h
-# End Source File
 # End Group
 # Begin Group "Header Files"
 

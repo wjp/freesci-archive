@@ -1,0 +1,9 @@
+FreeSCI: Documentation
+
+The 'sci' subdirectory contains the SCI specifications in html format, as
+far as they are known to man. The same document is included as text
+file, too.
+
+The 'misc' subdirectory contains various bits and pieces from all over the
+'net, some insightful, others useless.
+

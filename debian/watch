@@ -1,0 +1,2 @@
+#site				dir		pattern			version		script
+ftp://ftp.linuxgames.com	/freesci/	freesci-(.*).tar.gz	debian		uupdate

@@ -346,7 +346,7 @@ sci_get_homedir()
 {
 #ifdef _WIN32
 	return getenv("WINDIR");
-#elif __unix__
+#elif defined(__unix__)
 	return getenv("HOME");
 #else
 #  error Please add a $HOME policy for your platform!

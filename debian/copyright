@@ -1,0 +1,21 @@
+This package was debianized by Bas Zoetekouw <bas@debian.org> on
+Thu,  1 Jun 2000 20:21:35 +0200.
+
+It was downloaded from http://freesci.linuxgames.com/
+
+Upstream Maintainer: Christoph Reichenbach (CJR) <jameson@linuxgames.com>
+
+This software is copyright (c) 1999,2000 by:
+ - Christoph Reichenbach <creichen@rbg.informatik.tu-darmstadt.de>
+ - Carl Muckenhoupt <carl@wurb.com>
+ - Dmitry Jemerov <yole@exch.nnz.spb.su> 
+ - Magnus Reftel <d96reftl@dtek.chalmers.se>
+ - Sergey Lapin <slapin@karelia.ru>
+ - Lars  Skovlund  <lskovlun@image.dk>
+ - Rickard  Lind <rpl@dd.chalmers.se>
+ - Rink Springer <rink@springer.cx>
+
+You are free to distribute this software under the terms of the GNU
+General Public License, version 2.0.  
+On Debian systems, the complete text of the GNU General Public License
+can be found in /usr/share/common-licenses/GPL file.

@@ -49,6 +49,12 @@
 #  include <config.h>
 #endif
 
+#ifndef __unix__
+#  if defined(__OpenBSD__) || defined(__NetBSD__)
+#    define __unix__
+#  endif
+#endif
+
 #ifdef __DECC
 #  include <c_asm.h>
 #endif

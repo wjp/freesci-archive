@@ -1,0 +1,78 @@
+freesci (0.3.2-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Bas Zoetekouw <bas@debian.org>  Mon,  7 May 2001 10:44:43 +0200
+
+freesci (0.3.1.pre0.3.2-2) unstable; urgency=low
+
+  * Brought the package up-to-date with Policy version 3.5.2.
+  * Cleaned up debian/rules.
+
+ -- Bas Zoetekouw <bas@debian.org>  Wed,  4 Apr 2001 19:52:34 +0200
+
+freesci (0.3.1.pre0.3.2-1) unstable; urgency=low
+
+  * New upstream release.
+  * Added flex as a build-dependency.
+
+ -- Bas Zoetekouw <bas@debian.org>  Sun, 25 Mar 2001 18:04:07 +0200
+
+freesci (0.3.1-3) unstable; urgency=low
+
+  * OK, I forgot to sign 0.3.1-2. Let's try again. 
+
+ -- Bas Zoetekouw <bas@debian.org>  Thu,  8 Feb 2001 16:19:02 +0100
+
+freesci (0.3.1-2) unstable; urgency=low
+
+  * Built against newer libraries.  
+
+ -- Bas Zoetekouw <bas@debian.org>  Wed,  7 Feb 2001 13:00:05 +0000
+
+freesci (0.3.1-1) unstable; urgency=low
+
+  * New upstream release (closes: #81420, #82570)
+
+ -- Bas Zoetekouw <bas@debian.org>  Fri,  2 Feb 2001 10:37:28 +0100
+
+freesci (0.3.0.cvs20001212-1) unstable; urgency=low
+
+  * New upstream release
+  
+ -- Bas Zoetekouw <bas@debian.org>  Tue, 12 Dec 2000 15:47:20 +0100
+   
+   freesci (0.3.0.cvs20000914-2) unstable; urgency=low
+
+  * Put my right email address in the control file (closes: #75650)
+  * FreeSCI won't work om m86k architectures, because libggi is not
+    available on this platform. I changed the Architecture-line in the
+    control file accordingly. Thanks to Roman Hodek for pointing this
+    out to me. (closes: #72403)
+
+ -- Bas Zoetekouw <bas@debian.org>  Thu, 26 Oct 2000 21:20:58 +0200
+
+freesci (0.3.0.cvs20000914-1) unstable; urgency=low
+
+  * New upstream release
+  * Wrote manpages for sciv and the freesci tools (closes: #69742)
+
+ -- Bas Zoetekouw <bas@debian.org>  Fri, 15 Sep 2000 14:56:41 +0200
+
+freesci (0.3.0-1) unstable; urgency=low
+
+  * New upstream release
+  * Corrected some minor syntax errors in doc/sci.sgml
+  * Put the SCI documentation in a seperate package: freesci-doc
+
+ -- Bas Zoetekouw <bas@A-Es2.uu.nl>  Sat, 29 Jul 2000 14:34:00 +0200
+
+freesci (0.2.5-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Bas Zoetekouw <bas@A-Es2.uu.nl>  Thu,  1 Jun 2000 20:21:35 +0200
+
+Local variables:
+mode: debian-changelog
+End:

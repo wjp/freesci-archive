@@ -1,3 +1,10 @@
+2001-05-08  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* debian/Makefile.am: Added debian/ subdir
+
+	* src/include/resource.h: Define __unix__ on OpenBSD and NetBSD, unless
+	defined already
+
 2001-05-07  Christoph Reichenbach  <jameson@theta.darmstadt.gmd.de>
 
 	* src/win32/Makefile.am (EXTRA_DIST): Added various Win32 files to

@@ -257,7 +257,7 @@ gfx_pixmap_scale_index_data(gfx_pixmap_t *pixmap, gfx_mode_t *mode);
 */
 
 
-#ifdef __alpha__
+#ifdef HAVE_ALPHA_EV6_SUPPORT
 
 extern int axp_have_mvi; /* set to 1 iff the local system has the MVI instruction set extension */
 

@@ -2,7 +2,7 @@
 AC_PREREQ(2.13)
 AC_INIT(acinclude.m4)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(freesci, 0.3.2)
+AM_INIT_AUTOMAKE(freesci, 0.3.2a)
 
 AC_PROG_CC
 AC_PROG_RANLIB
@@ -55,10 +55,10 @@ AC_SUBST(ev6_cpu)
 
 
 if test x"x_libraries" != x; then
-	x_libraries="-L$x_libraries"
-	X_LIBS="$X_LIBS -lXi -lX11"
+	LIBS="-L$x_libraries $LIBS"
+	AC_CHECK_LIB(Xi, XGrabDevice, [X_LIBS="$X_LIBS -lXi"])
+	AC_CHECK_LIB(X11, XOpenDisplay, [X_LIBS="$X_LIBS -lX11"])
 fi
-AC_SUBST(x_libraries)
 
 dnl if test "no_x" != yes; then
 dnl 	AC_PATH_GLX
@@ -86,6 +86,7 @@ AM_WITH_DMALLOC
 AC_C_PARAMETRIZED_BIGENDIAN
 
 AC_OUTPUT(Makefile    \
+	debian/Makefile \
 	doc/Makefile \
         doc/misc/Makefile \
         doc/man/Makefile \
@@ -96,6 +97,7 @@ AC_OUTPUT(Makefile    \
 	src/gfx/drivers/Makefile \
 	src/gfx/resource/Makefile \
 	src/include/Makefile \
+	src/include/win32/Makefile \
 	src/tools/Makefile \
 	src/win32/Makefile \
 	src/sound/Makefile)
