@@ -149,7 +149,7 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 
 gfxr_pic_t *
 gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int flags,
-		int default_palette, int scaled);
+		int old_default_palette, int default_palette, int scaled);
 /* Retreives a displayable (translated) pic resource written ontop of an existing pic
 ** Parameters: (gfx_resstate_t *) state: The resource state
 **             (int) old_nr: Number of the pic resource to write on

@@ -124,6 +124,8 @@ typedef struct {
 	int disable_dirty; /* Set to 1 to disable dirty rect accounting */
 
 	int pic_nr; /* Number of the current pic */
+	int palette_nr; /* Palette number of the current pic */
+	
 	gfxr_pic_t *pic, *pic_unscaled; /* The background picture and its unscaled equivalent */
 
 	struct _dirty_rect *dirty_rects; /* Dirty rectangles */

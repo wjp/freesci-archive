@@ -332,7 +332,7 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 
 gfxr_pic_t *
 gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int flags,
-		int default_palette, int scaled)
+		int old_default_palette, int default_palette, int scaled)
 {
 	int restype = GFX_RESOURCE_TYPE_PIC;
 	sbtree_t *tree = state->resource_trees[restype];
@@ -351,7 +351,7 @@ gfxr_add_to_pic(gfx_resstate_t *state, int old_nr, int new_nr, int maps, int fla
 	if (!res ||
 	    (res->mode != MODE_INVALID
 	     && res->mode != hash)) {
-		gfxr_get_pic(state, old_nr, 0, flags, default_palette, scaled);
+		gfxr_get_pic(state, old_nr, 0, flags, old_default_palette, scaled);
 
 		res = (gfx_resource_t *) sbtree_get(tree, old_nr);
 

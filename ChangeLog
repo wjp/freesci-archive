@@ -1,3 +1,8 @@
+2001-04-15  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/operations.c: Now keeps track of palette numbers for
+	use when overdrawing pics.
+
 2001-04-14  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/main.c: Added quickrestore and --list-savegames options
