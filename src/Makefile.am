@@ -5,7 +5,8 @@ AM_CFLAGS = $(SDL_CFLAGS)
 LDADD = engine/libsciengine.a gfx/libscigraphics.a \
 	gfx/resource/libsciresources.a gfx/drivers/libscidrivers.a \
 	sound/libscisound.a scicore/libscicore.a @MORPHOS_LIBS@ \
-	@ac_readline@ @ac_curses_libraries@ @ac_png_libraries@ -lm @SDL_LIBS@
+	@ac_readline@ @ac_curses_libraries@ @ac_png_libraries@  \
+	@ac_pthread_libraries@ -lm @SDL_LIBS@
 bin_PROGRAMS = freesci
 bin_SCRIPTS = sciv
 freesci_SOURCES = config.l main.c

@@ -200,7 +200,45 @@ AC_SUBST(ac_ggi_libraries)
 ])
 
 ##
-## Customizing functions for libggi: Based on similar functions for qt
+## Customizing functions for libpthread: Based on similar functions for qt
+##
+AC_DEFUN(AC_PATH_PTHREAD,
+[
+AC_MSG_CHECKING([for POSIX thread library])
+
+ac_pthread_so=""
+
+_ac_pthread_includes="-I/usr/include -I/usr/local/include"
+_ac_pthread_libraries="-L/usr/lib -L/usr/local/lib"
+
+
+AC_ARG_WITH(pthread,
+    [  --without-pthread           Don't use POSIX threads])
+
+if test x"$with_pthread" = xno; then
+	AC_MSG_RESULT([disabled]);
+	ac_pthread_libraries=""
+else
+
+	AC_CHECK_LINK_PATH([pthread_create();],$_ac_pthread_libraries,["-lpthread"],
+			 [],[], ac_pthread_libraries)
+
+	if test "$ac_pthread_libraries" = no; then
+
+		AC_MSG_RESULT([failed])
+		ac_pthread_libraries=""
+	else
+		AC_MSG_RESULT([found]);
+
+		AC_DEFINE(HAVE_PTHREADS)
+	fi
+fi
+
+AC_SUBST(ac_pthread_libraries)
+])
+
+##
+## Customizing functions for libdirectfb: Based on similar functions for qt
 ##
 AC_DEFUN(AC_PATH_DIRECTFB,
 [

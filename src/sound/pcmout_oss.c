@@ -19,7 +19,7 @@
 
 #include <pcmout.h>
 
-#ifdef HAVE_SYS_SOUNDCARD_H
+#if defined(HAVE_SYS_SOUNDCARD_H) && defined(HAVE_PTHREADS)
 #include <sys/soundcard.h>
 
 #include <sys/ioctl.h>

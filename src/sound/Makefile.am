@@ -1,6 +1,6 @@
 INCLUDES = -I$(top_srcdir)/src/include
 AM_CFLAGS = $(SDL_CFLAGS)
-LDADD = -lc
+LDADD = -lc @ac_pthread_libraries@
 EXTRA_DIST = sfx_save.cfsml soundserver_dos.c
 noinst_LIBRARIES = libscisound.a
 libscisound_a_SOURCES = song_iterator.c oldmidi.c sound.c sfx_save.c	\

@@ -17,4 +17,4 @@
 #undef HAVE_DIRECTFB
 #undef WANT_CONSOLE
 #undef FORCE_CONSOLE
-
+#undef HAVE_PTHREADS

@@ -1,3 +1,8 @@
+2003-01-12  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/pcmout.c: Made pcmout_oss depend on availability of
+	POSIX threads
+
 2003-01-09  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* Applied MorphOS patches by Ruediger Hanke.

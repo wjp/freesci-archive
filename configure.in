@@ -75,10 +75,11 @@ darwin*)
 
 esac
 
-AC_CHECK_FUNCS(memchr fnmatch pipe socketpair fork sched_yield memfrob ffs getopt_long isblank usleep)
+AC_CHECK_FUNCS(memchr fnmatch pipe socketpair fork sched_yield memf	rob ffs getopt_long isblank usleep)
 AM_PATH_ALSA(0.5.0, [AC_DEFINE(HAVE_ALSA)], [echo >/dev/null])
 AM_WITHOUT_SOUND
 AC_PATH_GGI
+AC_PATH_PTHREAD
 AC_PATH_DIRECTFB
 #AC_CHECK_FSCI_DLOPEN
 SCIV_LDFLAGS=""
