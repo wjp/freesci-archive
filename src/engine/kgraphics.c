@@ -1007,6 +1007,7 @@ set_base(state_t *s, heap_ptr object)
 	int x, y, original_y, z, ystep, xsize, ysize;
 	int xbase, ybase, xend, yend;
 	int view, loop, cel;
+	int oldloop, oldcel;
 	int xmod = 0, ymod = 0;
 	abs_rect_t retval;
 
@@ -1033,13 +1034,25 @@ set_base(state_t *s, heap_ptr object)
 
 
 	view = GET_SELECTOR(object, view);
-	loop = sign_extend_byte(GET_SELECTOR(object, loop));
-	cel = sign_extend_byte(GET_SELECTOR(object, cel));
+	oldloop = loop = sign_extend_byte(GET_SELECTOR(object, loop));
+	oldcel = cel = sign_extend_byte(GET_SELECTOR(object, cel));
 
 	if (gfxop_check_cel(s->gfx_state, view, &loop, &cel)) {
 		xsize = ysize = xmod = ymod = 0;
 	} else {
 		point_t offset = gfx_point(0, 0);
+
+		if (loop != oldloop) {
+			loop = 0;
+			PUT_SELECTOR(object, loop, 0);
+			fprintf(stderr, "Resetting loop for %04x!\n", object);
+		}
+
+		if (cel != oldcel) {
+			cel = 0;
+			PUT_SELECTOR(object, cel, 0);
+			fprintf(stderr, "Resetting cel for %04x!\n", object);
+		}
 
 		gfxop_get_cel_parameters(s->gfx_state, view, loop, cel,
 					 &xsize, &ysize, &offset);
@@ -1047,6 +1060,7 @@ set_base(state_t *s, heap_ptr object)
 		xmod = offset.x;
 		ymod = offset.y;
 	}
+
 
 	xbase = x - xmod - (xsize >> 1);
 	xend = xbase + xsize;
@@ -1769,8 +1783,9 @@ _k_make_dynview_obj(state_t *s, heap_ptr obj, int options, int nr, int funct_nr,
 	if (oldloop != loop)
 		PUT_SELECTOR(obj, loop, loop);
 
-	if (oldcel != cel)
+	if (oldcel != cel) {
 		PUT_SELECTOR(obj, cel, cel);
+	}
 
 	if (lookup_selector(s, obj, s->selector_map.underBits, &(under_bitsp))
 	    != SELECTOR_VARIABLE) {

@@ -126,6 +126,12 @@
                    mysteries of classes and superclasses at your fingertips.
                 </para>
               </sect3>
+              <sect3><Title/clear_screen/
+                <para>
+	  Clears the screen background from all dynviews, i.e. only picviews, dropped dynviews and
+	  the background pic resource are displayed.
+                </para>
+              </sect3>
               <sect3><Title/clonetable/
                 <para>
                    FreeSCI doesn't take Clone()ing lightly. It carefully notes which clone was
@@ -218,6 +224,24 @@
 		Prints the port ID of the current port.
 	      </para>
 	      </sect3>
+	      <sect3>
+		<title>gfx_debuglog [mode]</title>
+		<para>
+	  Toggles debug flags for the graphics driver. Using "+x", the flag 'x'
+	  can be enabled, "-x" disables it. Multiple flags can be set at once,
+	  e.g. "+abc" or "-abc".
+	  With no parameters, all flags currently
+	  enabled are displayed. Note that, depending on the graphics driver in use,
+	  some flags might not be used.
+	  The list of supported flags follows.
+	  <simplelist>
+	    <member>b: Basic driver features</member>
+	    <member>p: Pointing device management</member>
+	    <member>u: Screen updates</member>
+	    <member>x: Pixmap operations</member>
+	  </simplelist>
+		</para>
+	      </sect3>
 	      <sect3><title>gfx_draw_cel (view) (loop) (cel)</title>
 	      <para>
 		Draws a single cel to the center of the screen (augmented by the cel's delta-x and -y values). Depending on your
@@ -283,6 +307,11 @@
 	      <para>
 		If no parameter is supplied, the start and end values of the priority line list will be print. Otherwise, this function
 		prints the first line of the specified priority region.
+	      </para>
+	      </sect3>
+	      <sect3><title>gfx_propagate_rect (x) (y) (width) (height) (buffer)</title>
+	      <para>
+	  Propagates a rectangular zone from the back buffer (0) or static buffer (1) to the next higher buffer.
 	      </para>
 	      </sect3>
 	      <sect3><title>gfx_show_map [nr]</title>
@@ -451,6 +480,11 @@
                   game data is stored. See <xref linkend="freesci-savegames"> for details about this.
                 </para>
               </sect3>
+	      <sect3><title/sci_version/
+		<para>
+	      Prints the SCI interpreter version currently being emulated
+		</para>
+	      </sect3>
 	      <sect3><title/scripttable/
 		<para>
 		  Lists all scripts that have been loaded, their positions in memory, and the position
@@ -464,7 +498,7 @@
 	      </sect3>
 	      <sect3><title/set (variable, int)/
 		<para>
-		  Sets the specified variable to a new value. Most commonly used to set color_mode.
+		  Sets the specified variable to a new value.
 		</para>
 	      </sect3>
               <sect3><Title/set_acc (number)/
@@ -586,18 +620,62 @@
 		</para>
 	      </sect3>
 	      <sect3>
-		<title>sndmap ...</title>
-		<para>
-		  Executes sound mapping commands.
-		</para>
-	      </sect3>
-	      <sect3>
 		<title>snd songid</title>
 		<para>
 		  Retreives the numerical ID of the song currently playing from the sound
 		  server. Songs started with 'snd play' have a song ID of 42.
 		</para>
 	      </sect3>
+	      <sect3>
+		<title>sndmap ...</title>
+		<para>
+		  Executes MT32 to GM sound mapping commands.
+		</para>
+	      </sect3>
+
+	      <sect3>
+		<title>sndmap mute (instr)</title>
+		<para>
+		  Mutes the specified instrument
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>sndmap percussion (instr) (gm-percussion)</title>
+		<para>
+	          Maps the specified instrument to a GM percussion instrument
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>sndmap instrument (instr) (gm-instrument)</title>
+		<para>
+	          Maps the instrument to a normal GM instrument
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>sndmap shift (instr) (shift-value)</title>
+		<para>
+                  Sets the shift value for the instrument
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>sndmap finetune (instr) (val)</title>
+		<para>
+	          Fine-tunes the instrument, as via the MIDI command
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>sndmap bender (instr) (bender)</title>
+		<para>
+	          Chooses a bender range for the instrument
+		</para>
+	      </sect3>
+	      <sect3>
+		<title>sndmap volume (instr) (vol)</title>
+		<para>
+	          Sets a relative instrument volume, ranging from 0 to 128.
+		</para>
+	      </sect3>
+
               <sect3><Title/snk [number]/
                 <para>
                    Another step command: Step until the interpreter hits a callk command. If you're

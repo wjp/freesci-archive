@@ -1,4 +1,4 @@
-Thanks for downloading the third alpha release of FreeSCI!
+Thanks for downloading the fourth alpha release of FreeSCI!
 
 FreeSCI is a portable interpreter for SCI games, such as the Space Quest
 series (starting with SQ3) or Leisure Suit Larry (2 and sequels); see
@@ -36,8 +36,8 @@ README.Win32
 0 Building FreeSCI
 ==================
 
-Please see the platform-specific readme file applicable to your system for instructions on how to do this,
-or download a binary version.
+Please see the platform-specific readme file applicable to your system for
+instructions on how to do this, or download a binary version.
 
 
 1 Running FreeSCI
@@ -77,7 +77,8 @@ To invoke the FreeSCI debugger, do one of these three things:
 - press Ctrl-` (the Quake console key) and wait
 - As above, but press LShift-RShift-PadMinus instead
 
-The debugger will also activate if a script error is encountered. Once activated, execution of game scripts will cease until explicitly resumed.
+The debugger will also activate if a script error is encountered. Once
+activated, execution of game scripts will cease until explicitly resumed.
 
 Here are two of the most simple commands:
 - 'quit'- Terminates execution of the interpreter
@@ -97,7 +98,9 @@ FreeSCI will create a directory called .freesci in a platform-specific location
 
 This directory stores FreeSCI data files such as saved games. If a file called
 'config' exists in this directory, it will be read and parsed by the interpreter
-after the game has been loaded. This file may be used to specify a variety of configuration options.
+after the game has been loaded. This file may be used to specify a variety of
+configuration options.
+
 
 Currently, the configuration file may contain:
 
@@ -236,7 +239,7 @@ Currently, the configuration file may contain:
   in. Directories are separated with the platform's default directory
   separator (':' on UNIX) and are searched in order of appearance.
   Default is '/usr/local/lib:/usr/lib'.
-  --- module support is currently disabled ---
+  --- module support is currently not available ---
 
 - reverse_stereo: Whether stereo sound output should reverse its output
   channels
@@ -382,23 +385,31 @@ resource_dir = /home/bob/stuff/misc/other/games/more/sierra/old/sq/3
 The following games have been tested with FreeSCI and are known to work to some
 extent:
 + Hero's Quest / Quest for Glory 1
-  (Completed by Emmanuel Jeandel with a post- 0.3.1 development snapshot)
+  (completed by Emmanuel Jeandel with a post- 0.3.1 development snapshot)
 + Space Quest 3
   (completed by Jason Cragg with a post- 0.3.0 development snapshot)
-- King's Quest 4
-- Leisure Suit Larry 2
++ King's Quest 4
+  (completed by Bas Zoetekouw with a pre- 0.3.3 development snapshot)
++ Leisure Suit Larry 2
+  (completed by Erian McKinley with a pre- 0.3.3 development snapshot)
 + Leisure Suit Larry 3
-  (Completed by Christina Mengert and Micheal Solberg with a post- 0.3.1
+  (completed by Christina Mengert and Micheal Solberg with a post- 0.3.1
    development snapshot)
-- Police Quest 2
++ Police Quest 2
+  (completed by Magnus Kristiansen with a post- 0.3.2a development snapshot)
 - Codename: Iceman
-- The Colonel's Bequest
-- Conquest of Camelot
++ The Colonel's Bequest
+  (completed by Rune Orsval with FreeSCI 0.3.2a)
++ Conquest of Camelot
+  (completed by Erian McKinley with a pre- 0.3.3 development snapshot)
 - The Fun Seeker's Guide (from the SQ Collector's Series)
 - Hoyle's Book of Games (volume 1) (*)
 - Hoyle's Book of Games (volume 2)
 
 In theory, FreeSCI should be able to let you complete all of these.
+
+King's Quest I (SCI version) is not officially supported but was still completed
+by James Albert with a pre-0.3.3 CVS snapshot.
 
 (*) Due to differences between the way Sierra SCI and FreeSCI handle graphical
 widgets, Hoyle's Book of Games may consume a lot of memory rather quickly. We
@@ -410,18 +421,19 @@ are hoping to resolve these issues at least partially very soon.
 
 Successful builds for the 0.3.3 release were reported for the following
 platforms (in order of appearance):
-- Alpha EV67/Debian GNU/Linux/gcc		tested extensively
-- Alpha EV67/Debian GNU/Linux/ccc		tested
-- IA32/SuSE 6.3 Linux/gcc			tested
+- Alpha EV67/Debian GNU/Linux/gcc		tested
+- Alpha EV67/Debian GNU/Linux/ccc		tested extensively
+- IA32/Debian GNU/Linux/gcc			tested
 - IA32/Windows 9x and NT/Visual C++             tested extensively
 - Sparc/Sun/Solaris/gcc				tested
-- Alpha EV6/Compaq/Tru64/cc			built
+- IA32/Slackware 7.1/Linux/gcc			tested
 - Alpha EV6//FreeBSD/gcc			built
-- IA64/GNU/Linux64/gcc				built
+- Alpha EV6/Compaq/Tru64 5.1/cc			built
+- IA64/SuSE/Linux/gcc				built
 - IA32//FreeBSD/gcc				built
+- Alpha EV6//OpenBSD/gcc			built
 - IA32//NetBSD/gcc				built
-- IA32/RedHat Linux 7.x/gcc                     tested
-- IA32/Mandrake Linux 7.x, 8.x/gcc              tested
+
 
 The following platform used to be supported, but no longer is:
 

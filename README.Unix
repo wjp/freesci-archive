@@ -53,8 +53,8 @@ and everything else.
 Location of the .freesci directory
 ----------------------------------
 On UNIX systems, a directory called .freesci is created in the home directory
-(see README for more details). The home directory is whatever is contained in your HOME
-environment variable.
+(see README for more details). The home directory is whatever is contained in
+your HOME environment variable.
 
 
 Alpha notes

@@ -49,7 +49,10 @@ scicore/
 	decompress01.c (parts)
 	decompress1.c (parts)
 	decompress11.c
+	modules.c
 	resource.c
+	resource_map.c
+	resource_patch.c
 	script.c
 	tools.c
 	vocab.c (parts)
@@ -66,6 +69,7 @@ engine/
 	klists.c
 	kmath.c
 	kmenu.c
+	kmovement.c
 	kscripts.c
 	ksound.c
 	kstring.c
@@ -78,7 +82,9 @@ engine/
 	cfsml.pl
 sound/
 	sound.c (most of it)
-	soundserver_unix.c (most of it)
+	polled_ss.c (parts)
+	polled_ss_unix.c (parts)
+	song_iterator.c
 	sfx_save.cfsml
 	oldmidi.c (minor parts)
 tools/
@@ -189,10 +195,11 @@ sound/
 	midiout.c (various changes)
 	midiout_alsaraw.c (various changes)
 	midiout_unixraw.c (various changes)
-	sdl_driver.c
+	polled_ss_sdl.c
 	soundserver.c (abstaction part)
 	
 gfx/drivers/
+	sdl_driver.c
 	xlib_driver.c (added MIT-SHM)
 
 
@@ -204,6 +211,7 @@ Matt Hargett: <matt@use.net>
 [Cleanups and assertions all over the place]
 sound/
 	midiout_win32mci.c
+	event_ss_win32.c (parts)
 win32/
 	classes.dsp (updates)
 	console.dsp (updates)
@@ -218,14 +226,20 @@ win32/
 
 Rune Orsval: <u951663@daimi.au.dk>
 conf/
-	freesci-config
+	freesci-setup
 	config.template
 
 
 Alexander R. Angas: <wgd@adelaide.on.net>
-Win32 optimizations and updates in many files
-memory function intermediate layer
+[Win32 optimizations and updates in many files]
+[Sound server restructuring]
 scicore/
 	sci_memory.c
+sound/
+	polled_ss.c (parts)
+	event_ss.c
+	event_ss_win32.c
+	polled_ss.c (parts)
+	polled_ss_sdl.c (parts)
 include/
 	sci_memory.h

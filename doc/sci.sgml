@@ -1676,7 +1676,7 @@ KSetPort(temp);    /* Reactivate the old port */
   </para>
   <para>
     <table frame="all">
-      <title></title>
+      <title>The SCI font resource data structure</title>
       <tgroup cols="2">
 	<thead>
 	  <row>
@@ -1715,7 +1715,7 @@ KSetPort(temp);    /* Reactivate the old port */
     interpreter how far to move downwards when displaying a line of text. The
     characters referenced to starting at offset 6 are encoded as follows:
     <table frame="all">
-      <title></title>
+      <title>The SCI font resource character data structure</title>
       <tgroup cols="2">
 	<thead>
 	  <row>
@@ -2979,7 +2979,6 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	External symbols are contained herein, the number of which is described by the first
 	(16 bit LE) value in the segment. All the values that follow point to addresses that
 	the program counter will jump to when a <literal>calle</literal>
-	(see <xref linkend="op-calle">)
 	operation is invoked. An exception is script 0, entry 0, which points to the first object
 	whose 'play' method should be invoked during startup (a magical entry point like C's 'main())' function).
       </para>
@@ -5168,7 +5167,7 @@ convenience/speed, and not really needed.
   <sect1 ID="LarsAnim"><title/Views and animation in SCI/
     <para>by <author><firstname/Lars/<surname/Skovlund/</author>
 </para><para>
-Version 0.1, 8. August 1999
+Version 0.2, 4. January 2002, with notes by Christoph Reichenbach
 </para><para>
 This chapter deals with a rather complex subject within SCI. The subsystem
 described here is one of the "bad boys" in SCI, since it calls functions in
@@ -5197,41 +5196,164 @@ bits can be roughly divided into two groups; the script and interpreter bits
 accurate). The first group allows the script to influence the drawing pro-
 cess somewhat, the other are used internally by the interpreter. The two
 groups overlap a bit, though.
-<simplelist>
-<member/bit 0 - A view updating process has ended/
-<member/bit 1 - The view object is being updated/
-<member/bit 2 (noUpd) - Don't actually draw the view/
-<member/bit 3 - The view is hidden from sight. Often, if an actor is supposed to
-enter and exit a room (such as the guards in the plazas in QfG2), this bit 
-is
-used. When he's supposed to enter the room, bit 3 in his signal is cleared.
-When he leaves, bit 3 is set, but his SCI object is not deleted./
-<member/bit 4 (fixPriOn) - if this bit is set, the priority of the view never
-changes (if it isn't, the interpreter recalculates the priority
-automagically)./
-<member/bit 7 - The view should be removed from the screen (an interpreter bit -
-its corresponding script bit is bit 3). If bit 3 isn't set as well, the
-view reappears on the next frame./
-<member/bit 8 - deactivates the mover object of the view (it is "frozen" - the view
-can still turn, however)./
-<member/bit 9 (isExtra) - ??? probably reserved for script use ???/
-<member/bit 10 - the view hit an obstacle on the last animation cycle/
-<member/bit 11 - Meaningful for actors only. Means that the actor does not turn, 
-even
-though he is walking the "wrong way"./
-<member/bit 12 - the view cycler is disabled. This makes ego float instead of
-walk./
-<member/bit 13 (ignoreHorizon) - Meaningful for actors only. Moving the actor 
-towards
-the edges of the screen doesn't cause a room switch. At least, that's what I
-thought it would do. It doesn't. Hmmm. :-(/
-<member/bit 14 (ignrAct) - Actors can walk in the rectangle occupied by the view.
-The behaviour of this bit is odd, and best expressed by example. The Guild
-Master in QfG1 has his bit 14 set. This means that ego (or someone else) can
-walk all the way to his chair (try sneaking in on him from behind). If we
-clear this bit, we can't sneak in on him./
-<member/bit 15 - The view should be disposed/
-</simplelist>
+
+	<table frame="all">
+	  <title>SCI and FreeSCI signal bits</title>
+	  <tgroup cols="4">
+	    <thead>
+	      <row>
+		<entry>Bit #</entry>
+		<entry>Name</entry>
+		<entry>FreeSCI constant</entry>
+		<entry>Meaning</entry>
+	      </row>
+	    </thead>
+	    <tbody>
+	      <row>
+		<entry>0</entry>
+		<entry></entry>
+		<entry>_K_VIEW_SIG_FLAG_STOP_UPDATE</entry>
+		<entry>A view updating process has ended</entry>
+	      </row>
+	      <row>
+		<entry>1</entry>
+		<entry></entry>
+		<entry>_K_VIEW_SIG_FLAG_UPDATED</entry>
+		<entry>The view object is being updated</entry>
+	      </row>
+	      <row>
+		<entry>2</entry>
+		<entry>noUpd</entry>
+		<entry>_K_VIEW_SIG_FLAG_NO_UPDATE</entry>
+		<entry>Don't actually draw the view</entry>
+	      </row>
+	      <row>
+		<entry>3</entry>
+		<entry></entry>
+		<entry>_K_VIEW_SIG_FLAG_HIDDEN</entry>
+		<entry>The view is hidden from sight. Often, if an actor is supposed to
+		  enter and exit a room (such as the guards in the plazas in QfG2), this bit 
+		  is used. When he's supposed to enter the room, bit 3 in his signal is cleared.
+		  When he leaves, bit 3 is set, but his SCI object is not deleted.
+		</entry>
+	      </row>
+	      <row>
+		<entry>4</entry>
+		<entry>fixPriOn</entry>
+		<entry>_K_VIEW_SIG_FLAG_FIX_PRI_ON</entry>
+		<entry>if this bit is set, the priority of the view never
+		  changes (if it isn't, the interpreter recalculates the priority
+		  automagically).
+		</entry>
+	      </row>
+	      <row>
+		<entry>5</entry>
+		<entry></entry>
+		<entry>_K_VIEW_SIG_FLAG_ALWAYS_UPDATE</entry>
+		<entry></entry>
+	      </row>
+	      <row>
+		<entry>6</entry>
+		<entry></entry>
+		<entry>_K_VIEW_SIG_FLAG_FORCE_UPDATE</entry>
+		<entry></entry>
+	      </row>
+	      <row>
+		<entry>7</entry>
+		<entry></entry>
+		<entry>_K_VIEW_SIG_FLAG_REMOVE</entry>
+		<entry>The view should be removed from the screen (an interpreter bit -
+		  its corresponding script bit is bit 3). If bit 3 isn't set as well, the
+		  view reappears on the next frame.
+		</entry>
+	      </row>
+	      <row>
+		<entry>8</entry>
+		<entry></entry>
+		<entry>_K_VIEW_SIG_FLAG_FROZEN</entry>
+		<entry>Deactivates the mover object of the view (it is "frozen" - the view
+		  can still turn, however).
+		</entry>
+	      </row>
+	      <row>
+		<entry>9</entry>
+		<entry>isExtra</entry>
+		<entry>_K_VIEW_SIG_FLAG_IS_EXTRA</entry>
+		<entry></entry>
+	      </row>
+	      <row>
+		<entry>10</entry>
+		<entry></entry>
+		<entry>_K_VIEW_SIG_FLAG_HIT_OBSTACLE</entry>
+		<entry>The view hit an obstacle on the last animation cycle</entry>
+	      </row>
+	      <row>
+		<entry>11</entry>
+		<entry></entry>
+		<entry>_K_VIEW_SIG_FLAG_DOESNT_TURN</entry>
+		<entry>Meaningful for actors only. Means that the actor does not turn, 
+		  even though he is walking the "wrong way".
+		</entry>
+	      </row>
+	      <row>
+		<entry>12</entry>
+		<entry></entry>
+		<entry>_K_VIEW_SIG_FLAG_NO_CYCLER</entry>
+		<entry>The view cycler is disabled. This makes the view float instead of walk.</entry>
+	      </row>
+	      <row>
+		<entry>13</entry>
+		<entry>ignoreHorizon</entry>
+		<entry>_K_VIEW_SIG_FLAG_IGNORE_HORIZON</entry>
+		<entry></entry>
+	      </row>
+	      <row>
+		<entry>14</entry>
+		<entry>ignrAct</entry>
+		<entry>_K_VIEW_SIG_FLAG_IGNORE_ACTOR</entry>
+		<entry>Actors can walk in the rectangle occupied by the view.
+		  The behaviour of this bit is odd, and best expressed by example. The Guild
+		  Master in QfG1 has his bit 14 set. This means that ego (or someone else) can
+		  walk all the way to his chair (try sneaking in on him from behind). If we
+		  clear this bit, we can't sneak in on him.
+		</entry>
+	      </row>
+	      <row>
+		<entry>15</entry>
+		<entry></entry>
+		<entry>_K_VIEW_SIG_FLAG_DISPOSE_ME</entry>
+		<entry>The view should be disposed</entry>
+	      </row>
+	      <row>
+		<entry>
+		  <footnote id="animate-flags-freesci">
+		    <para>
+		      This flag is used internally in FreeSCI; it can't be found in the view
+		      objects, only in their copies in the dynview widget list.
+		    </para>
+		  </footnote>
+		</entry>
+		<entry></entry>
+		<entry>_K_VIEW_SIG_FLAG_FREESCI_PRIVATE</entry>
+		<entry>Used as an intermediate result by the interpreter; marks
+		  views that are going to have their nsRect/lsRect regions redrawn
+		  (for the test in the main draw algorithm's step 17.1., below)
+		</entry>
+	      </row>
+	      <row>
+		<entry><footnoteref linkend="animate-flags-freesci"></entry>
+		<entry></entry>
+		<entry>_K_VIEW_SIG_FLAG_FRESCI_STOPUPD</entry>
+		<entry>View has been 'stopupdated'. This flag is set whenever
+		  the view has the STOP_UPDATE bit set, and cleared as soon as
+		  it moves again. Stopupdated views are collided against differently
+		  than normal views.</entry>
+	      </row>
+	    </tbody>
+	  </tgroup>
+	</table>
+		
+
 The unlisted bits are probably all interpreter bits. They don't seem to have
 an effect when set. Many bits seem to be involved in the decision whether to
 display a view or not. I have not completely figured this out.
@@ -5257,50 +5379,86 @@ deleted even though an update is anticipated.
 </para><para>
 The general pseudocode for Animate goes as follows:
 <programlisting>
-  1. Kill the backup cast list.
-  2. If the cast pointer is NULL, just redraw the current map and exit.
-  3. For each non-frozen view (bit 8 clear), let it run an animation cycle
-     (by calling View::doit)
-  6. For all views, perform steps 7-9.
-  7. If the loop or cel property has overflowed, it is reset to 0
-  8. Recalculate the priority of the view (only if signal bit 4 is clear).
-  9. If the signal property indicates that we need to, increase (not set)
-     the PicNotValid flag (several bits are involved in this;
-     the exact combinations are a mess to figure out, I'll do it on 
-     request).
-  10. If PicNotValid != 0, draw all the static views (PicViews).
-  11. Draw all non-PicViews, saving their rectangles first and storing a 
-      memory handle in the underBits selector.
-  12. Create a backup of the cast data.
-  13. Remove the appropriate views from screen.
-  14. Dispose the views which have their signal bit 15 set (calling
-      View::delete)
+0. Backup PicNotValid: PicNotValid' := PicNotValid
+1. If we don't have a new cast:
+    1.1. if PicNotValid is set:
+        1.1.1. Redraw picture with opening animation
+    1.2. exit
+2. For each view in the cast list:
+    2.1. If view is not frozen:
+	2.1.1. call view::doit(), performing an animation cycle
+3. Prepare a list of y coordinates by traversing the cast list
+4. For each view in the cast list:
+    4.1. If the view resource view::view has not been loaded yet:
+	4.1.1. Load view.nr, where nr=view::view
+5. For each view in the cast list:
+    5.1. If view::loop is invalid, set view::loop := 0
+    5.2. If view::cel is invalid, set view::cel := 0
+6. Sort the cast list, first by y, then by z
+7. For each view in the cast list: Update view::nsRect (SetNowSeen())
+8. For each view in the cast list: Unless the views' priority is fixed, recalculate it
+9. For each view in the cast list:
+    9.1. If NO_UPDATE is set for the view:
+	9.1.1. If the following holds:
+            9.1.1.1.     (VIEW_UPDATED || FORCE_UPDATE)
+            9.1.1.2.  || (!(VIEW_UPDATED || FORCE_UPDATE) && !IS_HIDDEN && REMOVE_VIEW)
+            9.1.1.3.  || (!(VIEW_UPDATED || FORCE_UPDATE) && !IS_HIDDEN && !REMOVE_VIEW && ALWAYS_UPDATE)
+            9.1.1.4.  || (!(VIEW_UPDATED || FORCE_UPDATE) && IS_HIDDEN && ALWAYS_UPDATE)
+	    9.1.1.5. then increase PicNotValid by one.
+	9.1.2. Clear the STOP_UPDATE flag
+    9.2. otherwise:
+	9.2.1. If (STOP_UPDATE and !ALWAYS_UPDATE) or (!STOP_UPDATE and ALWAYS_UPDATE)
+            9.2.1.1. Increase PicNotValid by one
+	9.2.2. Clear the FORCE_UPDATE flag
+10. If PicNotValid is now greater than zero, call the sub-algorithm described separately
+11. For each view: If NO_UPDATE, IS_HIDDEN and ALWAYS_UPDATE are not set:
+    11.1. [12] Save the area covered by the view's nsRect, store the handle in view::underBits
+    11.2. [13] Draw the view object
+    11.3. [14] If the view IS_HIDDEN, clear the REMOVE_VIEW bit (don't need to hide it twice)
+    11.4. [15] Insert the view into the backup cast list
+16. If PicNotValid', our copy of the initial value of PicNotValid, is non-zero:
+    16.1. Refresh entire screen with opening animation
+    16.2. PicNotValid := 0
+17. For each view in the cast list:
+    17.1. [18] If the view was changed in step 10 and neither REMOVE_VIEW nor NO_UPDATE is set:
+        17.1.1. [19] Redraw the nsRect and lsRect areas
+        17.1.2. [20] Copy the nsRect to the lsRect
+        17.1.3. [21] If IS_HIDDEN, set REMOVE_VIEW as well
+22. For each view in the reverse cast list:
+    22.1. [23] If neither NO_UPDATE nor REMOVE_VIEW is set:
+        22.1.1. Restore the underbits
+        22.1.2. Clear the underbits
+    22.2. [24] if DISPOSE_ME is set, call view::dispose to dispose it
 </programlisting>
-</para><para>
-The algorithm for drawing PicViews is basically several loops:
-(repeat all of the steps for each view)
+
+With the sub-algorithm being:
+
 <programlisting>
-  1. If signal bit 2 is clear, jump to 4
-  2. If bit 0 is set, clear it and set bit 2 instead.
-  3. Continue with the next view.
-  4. If signal bit 7 is set, jump to 8.
-  5. If PicNotValid == 1, jump to 7.
-  6. Restore the view rectangle using the memory handle stored in UnderBits
-     (must be != 0, of course).
-  7. Free the memory used by underBits and zero out the selector afterwards.
-  8. Clear bit 6 of the signal
-  9. If bit 1 is set, clear it and bit 2.
-</programlisting><programlisting>
-  1. Load and draw the view
-  2. Clear signal bits 0, 1, 2, 6.
-  3. If signal bit 14 is set, skip to the next rectangle
-  4. Copy the view nsRect into a temporary variable.
-  5. Find the start of the priority band specified by the priority selector.
-  6. If it is greater than the nsRect top, set the top of our temp rectangle
-     to the nsRect top.
-  7. If the top is now below the bottom, set the top = the bottom.
-  8. Draw the temp rectangle onto the control map using white color.
+1. For each view from the cast list:
+    1.1. [2] If NO_UPDATE is set:
+        1.1.1. [3] If REMOVE_VIEW is set:
+            1.1.1.1. If PicNotValid is 0, restore the area covered by view::underBits
+            1.1.1.2. Free view::underBits
+        1.1.2. [4] Clear FORCE_UPDATE
+        1.1.3. [5] If VIEW_UPDATED is set: Clear VIEW_UPDATED and NO_UPDATE
+    1.2. otherwise (if NO_UPDATE is not set):
+        1.2.1. Clear STOP_UPDATE
+        1.2.2. Set NO_UPDATE
+6. For each view from the cast list:
+    6.1. [7] Draw the view
+    6.2. [8] If ALWAYS_UPDATE, clear STOP_UPDATE, VIEW_UPDATED, NO_UPDATE, FORCE_UPDATE
+    6.3. [9] Clip the nsRect against the boundaries of the "natural" priority band of the view
+    6.4. [10] If IGNORE_ACTOR is clear, fill the area found in 6.3. with 0xf on the control map
+11. For each view from the view list:
+    11.1. if NO_UPDATE is set:
+        11.1.1. [12] If IS_HIDDEN, then set REMOVE_VIEW, otherwise:
+            11.1.1.1. clear REMOVE_VIEW
+            11.1.1.2. [13] Save the area covered by the nsRect in the underBits
+14. For each view from the cast list:
+    14.1. If NO_UPDATE is set and IS_HIDDEN is clear:
+        14.1.1. [15] Draw the view
 </programlisting>
+
 </para>
 <note><para>
 The ReAnimate subfunction (0x0D) of the Graph kernel call redraws parts of

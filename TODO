@@ -1,19 +1,19 @@
-TODO for 0.3.3:
+TODO for 0.3.4:
 
 Primary goals:
-	-- ALL DONE --
+	* Auto-detect version number from Sierra's executable
+	* Add PCM output support and one driver to use it
+	* Re-implement on-screen console
+	* operations.c: Add full support for state->visible_map
+	* optimize pic drawing
+	* Add graphical game selection screen
 
 Secondary goals:
-	+ Add PCM output support and one driver to use it
-	+ Re-implement on-screen console
-	+ operations.c: Add full support for state->visible_map
-	+ optimize pic drawing
-	+ Add graphical game selection screen
 	* docs: Mention words with class set to zero (no word).
+	* grammar.c: Replace proto-Earley parser with backtracking Earley
 
 Bonus goals:
-	+ grammar.c: Replace proto-Earley parser with backtracking Earley
-	* Add glx graphics driver
+	+ Add glx graphics driver
 
 
 *: Normal goal
