@@ -1,3 +1,12 @@
+2004-08-15  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* acconfig.h: Removed from repository.
+	* acinclude.m4, configure.in: Several small changes in order to
+	get rid of the autoconf warnings when reconfiguring.
+
+	* src/main.c (game_select_resource_found): Look for resource.map
+	with sci_open(), the filename may contain uppercase characters.
+
 2004-08-02  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/vm.c (validate_property): Prevent segfaults when
