@@ -187,6 +187,26 @@ c_classtable(state_t *s)
   return 0;
 }
 
+int
+c_viewinfo(state_t *s)
+{
+  resource_t *view = findResource(sci_view, cmd_params[0].val);
+  int loops, i;
+
+  sciprintf("Resource view.%d ", cmd_params[0].val);
+
+  if (!view)
+    sciprintf("does not exist.\n");
+  else {
+    loops = view0_loop_count(view->data);
+
+    sciprintf("has %d loops:\n", loops);
+
+    for (i = 0; i < loops-1; i++)
+      sciprintf("Loop %d: %d cels.\n", i, view0_cel_count(i, view->data));
+  }
+  
+}
 
 int
 c_save_game(state_t *s)
@@ -1214,6 +1234,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 	      "  from the parse node tree");
       cmdHook(c_save_game, "save_game", "s", "Saves the current game state to\n  the hard disk");
       cmdHook(c_restore_game, "restore_game", "s", "Restores a saved game from the\n  hard disk");
+      cmdHook(c_viewinfo, "viewinfo", "i", "Displays the number of loops\n  and cels of each loop"
+	      " for the\n  specified view resource.");
 
       cmdHookInt(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");
       cmdHookInt(&script_checkloads_flag, "script_checkloads_flag", "Set != 0 to display information\n"

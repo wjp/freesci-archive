@@ -1,3 +1,10 @@
+1999-12-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/vm.c (send_selector): Fixed a stale pointer bug related to
+	the execution stack
+
+	* src/core/scriptdebug.c (c_viewinfo): Added 'viewinfo' debug command
+
 1999-12-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/config.l (_parse_color_mode): Fixed braindead strcasecmp() bug.

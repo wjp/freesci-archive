@@ -268,9 +268,11 @@ sciprintf(")\n");
   */
   for (; send_calls_nr >= 0; send_calls_nr--)
     if (send_calls[send_calls_nr].type == EXEC_STACK_TYPE_VARSELECTOR) /* Write/read variable? */
-      add_exec_stack_varselector(s, work_obj, send_calls[send_calls_nr].argc,
-				 send_calls[send_calls_nr].argp, send_calls[send_calls_nr].selector, 
-				 send_calls[send_calls_nr].address, origin);
+      retval = add_exec_stack_varselector(s, work_obj, send_calls[send_calls_nr].argc,
+					  send_calls[send_calls_nr].argp,
+					  send_calls[send_calls_nr].selector, 
+					  send_calls[send_calls_nr].address, origin);
+
     else
       retval =
 	add_exec_stack_entry(s, send_calls[send_calls_nr].address, sp, work_obj,
@@ -293,6 +295,7 @@ sciprintf(")\n");
     --(s->execution_stack_pos);
   }
 
+  retval = s->execution_stack + s->execution_stack_pos;
   return retval;
 }
 
@@ -636,6 +639,8 @@ run_vm(state_t *s, int restoring)
 	s->kfunct_table[opparams[0]]
 	  (s, opparams[0], GET_HEAP(xs->sp) + restadjust, xs->sp + 2); /* Call kernel function */
 
+	/* Calculate xs again: The kernel function might have spawned a new VM */
+	xs = s->execution_stack + s->execution_stack_pos;
 	restadjust = s->amp_rest;
 
       }
@@ -1010,6 +1015,10 @@ run_vm(state_t *s, int restoring)
       script_error(s, __LINE__, "Illegal opcode");
 
     } /* switch(opcode >> 1) */
+
+    if (xs != s->execution_stack + s->execution_stack_pos) {
+      sciprintf("Error: xs is stale; last command was %02x\n", opnumber);
+    }
 
     if (script_error_flag) {
       _debug_step_running = 0; /* Stop multiple execution */
