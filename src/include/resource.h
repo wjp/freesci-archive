@@ -47,6 +47,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <glib.h>
 
 #define SCI_MAX_RESOURCE_SIZE 0x0400000
@@ -122,6 +123,9 @@ enum ResourceTypes {
 static const int sci0_last_resource = sci_patch;
 /* Used for autodetection */
 
+
+typedef guint8 byte;
+typedef guint16 word;
 
 struct resource_index_struct {
   unsigned short resource_id;

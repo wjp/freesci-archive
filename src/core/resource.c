@@ -1,0 +1,381 @@
+/***************************************************************************
+ resource.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+
+
+ This program may be modified and copied freely according to the terms of
+ the GNU general public license (GPL), as long as the above copyright
+ notice and the licensing information contained herein are preserved.
+
+ Please refer to www.gnu.org for licensing details.
+
+ This work is provided AS IS, without warranty of any kind, expressed or
+ implied, including but not limited to the warranties of merchantibility,
+ noninfringement, and fitness for a specific purpose. The author will not
+ be held liable for any damage caused by this work or derivatives of it.
+
+ By using this source code, you agree to the licensing terms as stated
+ above.
+
+
+ Please contact the maintainer for bug reports or inquiries.
+
+ Current Maintainer:
+
+    Christoph Reichenbach (CJR) [creichen@rbg.informatik.tu-darmstadt.de]
+
+ History:
+
+   990327 - created (CJR)
+
+***************************************************************************/
+/* Resource library */
+
+
+#include <resource.h>
+#include <assert.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+
+int sci_version = 0;
+
+int max_resource;
+resource_t *resource_map;
+
+struct singly_linked_resources_struct {
+  resource_t *resource;
+  struct singly_linked_resources_struct *next;
+};
+
+void killlist(struct singly_linked_resources_struct *rs);
+
+int resourcecmp(const void *first, const void *second);
+
+int loadResources(int version, int allow_patches)
+{
+  int autodetect = (version == SCI_VERSION_AUTODETECT);
+  int retval;
+
+  if ((version < SCI_VERSION_AUTODETECT) || (version > SCI_VERSION_LAST))
+    return SCI_ERROR_UNSUPPORTED_VERSION;
+
+  sci_version = (autodetect)? SCI_VERSION_0 : version;
+
+  if (sci_version == SCI_VERSION_0)
+    if (retval = resourceLoader(&decompress0, autodetect, allow_patches)) {
+      freeResources();
+      if ((retval == SCI_ERROR_UNKNOWN_COMPRESSION) ||
+	  (retval == SCI_ERROR_DECOMPRESSION_OVERFLOW)) {
+	sci_version = SCI_VERSION_01;
+      } else return retval;
+    } else return 0;
+
+  if ((sci_version == SCI_VERSION_01) ||
+      (sci_version == SCI_VERSION_1))
+    if (retval = resourceLoader(&decompress1, autodetect, allow_patches)) {
+      freeResources();
+      return retval;
+    } else return 0;
+  return SCI_ERROR_UNSUPPORTED_VERSION;
+
+}
+
+
+
+void
+_addResource(struct singly_linked_resources_struct *base, resource_t *resource, int priority)
+/* Tries to add [resource] to the [base] list. If an element with the same id already
+** exists, [resource] will be discarded and free()d if ([priority]==0), otherwise
+** the other resource will be free()d and replaced by the new [resource].
+*/
+{
+  struct singly_linked_resources_struct *seeker;
+  //  fprintf(stderr," >>base>>%p\n", base);
+
+  if (!base->resource) { base->resource = resource; max_resource++; }
+  else {
+    seeker = base;
+
+    //  fprintf(stderr," >>>base>>%p\n", base);
+    while (seeker && seeker->next) {
+      if (seeker->resource->id == resource->id) {
+	if (priority) { /* replace the old resource */
+	  free(seeker->resource->data);
+	  free(seeker->resource);
+	  seeker->resource = resource;
+	  return;
+	} else seeker = 0;
+      } else seeker = seeker->next;
+    }
+
+    if (seeker) {
+
+      seeker->next = malloc(sizeof(struct singly_linked_resources_struct));
+      seeker->next->resource = resource;
+      seeker->next->next = 0;
+      max_resource++;
+
+    } else {
+
+      free(resource->data);
+      free(resource);
+
+    }
+  }
+}
+
+
+int
+resourceLoader(int decompress(resource_t *result, int resh), int autodetect, int allow_patches)
+{
+  int resourceFile;
+  int resourceFileCounter=0;
+  resource_t *resource;
+  char filename[13];
+  int resourceCounter;
+  struct singly_linked_resources_struct *seeker;
+  struct singly_linked_resources_struct base;
+
+  base.next = 0;
+  base.resource = 0;
+
+  do {
+    if (resourceFileCounter > 0) {
+      int decomperr;
+      resource = malloc(sizeof(resource_t));
+
+      while (!(decomperr = (*decompress)(resource, resourceFile))) {
+
+	if (autodetect) {
+	  if (resource->type > sci0_last_resource) {
+	    if (sci_version == SCI_VERSION_0) return 1;
+	    /* Abort if we are using the wrong decompression scheme */
+
+	    else if (sci_version == SCI_VERSION_01)
+	      sci_version = SCI_VERSION_1;
+	    /* Better check. One day we might ("...") get to SCI32 */
+	  } /* autodetect */
+
+	}
+
+	_addResource(&base, resource, 0);
+
+	resource = malloc(sizeof(resource_t));
+      }
+      free(resource);
+      close(resourceFile);
+      if (decomperr >= SCI_ERROR_CRITICAL) {
+#ifdef _SCI_RESOURCE_DEBUG
+	fprintf(stderr,"SCI Error: %s in '%s'!\n",
+		SCI_Error_Types[decomperr], filename);
+#endif	
+	return decomperr;
+      }
+    }
+
+    sprintf(filename, "resource.%03i", resourceFileCounter);
+    resourceFile = open(filename, O_RDONLY);
+
+    if (resourceFile <= 0) {
+      sprintf(filename, "RESOURCE.%03i", resourceFileCounter);
+      resourceFile = open(filename, O_RDONLY);
+    }    /* Try alternative valid file name */
+
+    resourceFileCounter++;
+#ifdef _SCI_RESOURCE_DEBUG
+    if (resourceFile > 0) fprintf(stderr, "Reading %s...\n", filename);
+    else if (resourceFileCounter > 1) fprintf(stderr, "Completed.\n");
+#endif
+  } while ((resourceFile > 0) || (resourceFileCounter == 1));
+
+  if (resourceFileCounter == 2) return SCI_ERROR_NO_RESOURCE_FILES_FOUND;
+
+#ifdef _SCI_RESOURCE_DEBUG
+  fprintf(stderr,"%i unique resources have been read.\n", max_resource);
+#endif
+
+  if (allow_patches) {
+    int pcount = loadResourcePatches(&base);
+    if (pcount == 1)
+      printf("One patch was applied.\n");
+    else if (pcount)
+      printf("%d patches were applied.\n", pcount);
+    else printf("No patches found.\n");
+  }
+  else printf("Ignoring any patches.\n");
+
+  resource_map = malloc(max_resource * sizeof(resource_t));
+
+  seeker = &base;
+
+  resourceCounter = 0;
+
+  if (base.resource)
+    while (seeker) {
+      memcpy(resource_map + resourceCounter, seeker->resource,
+	     sizeof(resource_t));
+      resourceCounter++;
+      seeker = seeker->next;
+  }
+
+  assert(resourceCounter == max_resource);
+
+  qsort(resource_map, max_resource, sizeof(resource_t),
+    resourcecmp);
+
+  killlist(&base);
+
+  return 0;
+}
+
+
+void killlist(struct singly_linked_resources_struct *rs)
+{
+  if (rs->next) killlist(rs->next);
+  free(rs->next);
+}
+
+
+int loadResourcePatches(struct singly_linked_resources_struct *resourcelist)
+     /* Adds external patch files to an unprepared list of resources
+     ** (as used internally by loadResources). It will override any
+     ** resources from the original resource files, freeing their memory
+     ** in the process.
+     */
+{
+  DIR *directory = opendir(".");
+  struct dirent *entry;
+  int counter = 0;
+
+  while (entry = readdir(directory)) {
+    int restype = sci_invalid_resource;
+    int resnumber;
+    int i;
+    int resname_len;
+    char *endptr;
+
+    for (i = sci_view; i < sci_invalid_resource; i++)
+      if (strncmp(Resource_Types[i], entry->d_name, strlen(Resource_Types[i])) == 0)
+	restype = i;
+
+    if (restype != sci_invalid_resource) {
+
+      resname_len = strlen(Resource_Types[restype]);
+      if (entry->d_name[resname_len] != '.')
+	restype = sci_invalid_resource;
+      else {
+	resnumber = strtol(entry->d_name + 1 + resname_len,
+			   &endptr, 10); /* Get resource number */
+	if ((*endptr != '\0') || (resname_len+1 == strlen(entry->d_name)))
+	  restype = sci_invalid_resource;
+
+	if ((resnumber < 0) || (resnumber > 1000))
+	  restype = sci_invalid_resource;
+      }
+    }
+
+    if (restype != sci_invalid_resource) {
+      struct stat filestat;
+
+      printf("Patching \"%s\": ", entry->d_name);
+
+      if (stat(entry->d_name, &filestat))
+	perror("""__FILE__"": (""__LINE__""): stat()");
+      else {
+	int file;
+	guint8 filehdr[2];
+	resource_t *newrsc;
+
+	if (filestat.st_size < 3) {
+	  printf("File too small\n");
+	  continue; /* next file */
+	}
+
+	file = open(entry->d_name, O_RDONLY);
+	if (!file)
+	  perror("""__FILE__"": (""__LINE__""): open()");
+	else {
+
+	  read(file, filehdr, 2);
+	  if ((filehdr[0] & 0x7f) != restype) {
+	    printf("Resource type mismatch\n");
+	    close(file);
+	  } else {
+
+	    newrsc = malloc(sizeof(resource_t));
+	    newrsc->length = filestat.st_size - 2;
+	    newrsc->id = restype << 11 | resnumber;
+	    newrsc->number = resnumber;
+	    newrsc->type = restype;
+
+	    newrsc->data = malloc(newrsc->length);
+	    read(file, newrsc->data, newrsc->length);
+	    close(file);
+
+	    _addResource(resourcelist, newrsc, 1); /* Add and overwrite old stuff */
+
+	    printf("OK\n");
+
+	    counter++;
+	  }
+	}
+      }
+    }
+    
+  }
+
+  return counter;
+}
+
+
+int resourcecmp (const void *first, const void *second)
+{
+  if (((resource_t *)first)->type == 
+      ((resource_t *)second)->type)
+    return (((resource_t *)first)->number < 
+	    ((resource_t *)second)->number)? -1 : 
+    !(((resource_t *)first)->number ==
+      ((resource_t *)second)->number);
+  else
+    return (((resource_t *)first)->type <
+	    ((resource_t *)second)->type)? -1 : 1;
+}
+
+resource_t *findResource(unsigned short type, unsigned short number)
+{
+  resource_t binseeker;
+  binseeker.type = type;
+  binseeker.number = number;
+  return (resource_t *)
+    bsearch(&binseeker, resource_map, max_resource, sizeof(resource_t),
+	    resourcecmp);
+}
+
+void freeResources()
+{
+  if (resource_map) {
+    int i;
+
+    for (i=0; i < max_resource; i++) {
+      if (!resource_map[i].status) free(resource_map[i].data);
+    }
+    free(resource_map);
+    return;
+  }
+}
+
+
+void *
+_XALLOC(size_t size, char *file, int line, char *funct)
+{
+  void *memblock;
+
+  if (!(memblock = malloc(size))) {
+    fprintf(stderr,"file %s %d (%s): XALLOC(%d) failed.\n",
+	    file, line, funct, size);
+    exit(-1);
+  }
+
+  return memblock;
+}
