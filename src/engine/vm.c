@@ -1281,8 +1281,11 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 
       /*      fprintf(stderr,"functs (%x) area @ %x\n", functions_nr, functarea); */
 
+      /* This sets the local variable pointer: */
       PUT_HEAP(pos + SCRIPT_LOCALVARPTR_OFFSET, s->scripttable[script_nr].localvar_offset);
-      /* This sets the local variable pointer */
+      /* Now set the superclass address: */
+      if (superclass > -1)
+	PUT_HEAP(pos + SCRIPT_SUPERCLASS_OFFSET, get_class_address(s, superclass));
 
       functarea += 2 + functions_nr * 2;
       /* Move over the selector IDs to the actual addresses */

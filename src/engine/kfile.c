@@ -441,7 +441,7 @@ kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
 char *
 _k_get_savedir_name(int nr)
 {
-  char suffices[] = "0123456789abcdef";
+  char suffices[] = "0123456789abcdefghijklmnopqrstuvwxyz";
   char *savedir_name = malloc(strlen(FREESCI_SAVEDIR_PREFIX) + 2);
   assert(nr >= 0);
   assert(nr < MAX_SAVEGAME_NR);

@@ -1,3 +1,11 @@
+2000-06-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/graphics/con_io.c (con_input): Fixed cursor key support for the
+	on-screen console
+
+	* src/engine/scriptdebug.c (c_objs): Added the 'objs' console command
+	to list all objects and clones by name
+
 2000-06-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/graphics/menubar.c (menubar_draw_menu): Backing up the menu

@@ -85,7 +85,7 @@ con_input(sci_event_t *event)
 
   if (event->type == SCI_EVT_KEYBOARD) {
     
-    if ((event->buckybits & (SCI_EVM_NUMLOCK | SCI_EVM_CTRL | SCI_EVM_ALT)) == 0) {
+    if ((event->buckybits & (SCI_EVM_CTRL | SCI_EVM_ALT)) == 0) {
       if (((event->data >= '0') && (event->data < '@'))
 	  || ((event->data >= 'a') && (event->data <= 'z'))
 	  || (event->data == ' ')
@@ -111,6 +111,14 @@ con_input(sci_event_t *event)
 	    case '0': _inpbuf[con_cursor] = ')'; break;
 	    case '-': _inpbuf[con_cursor] = '_'; break;
 	    case '=': _inpbuf[con_cursor] = '+'; break;
+	    case ';': _inpbuf[con_cursor] = ':'; break;
+	    case '\'': _inpbuf[con_cursor] = '"'; break;
+	    case '\\': _inpbuf[con_cursor] = '|'; break;
+	    case '[': _inpbuf[con_cursor] = '{'; break;
+	    case ']': _inpbuf[con_cursor] = '}'; break;
+	    case ',': _inpbuf[con_cursor] = '<'; break;
+	    case '.': _inpbuf[con_cursor] = '>'; break;
+	    case '/': _inpbuf[con_cursor] = '?'; break;
 
 	    default:
 	      _inpbuf[con_cursor] = toupper(event->data);

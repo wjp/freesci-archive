@@ -664,6 +664,34 @@ int prop_ofs_to_id(state_t *s, int prop_ofs, int objp)
 
 }  
 
+void
+print_objname(state_t *s, heap_ptr pos)
+{
+  if ((pos < 4) || (pos > 0xfff0))
+    sciprintf("!invalid");
+  else {
+    if ((getInt16(s->heap + pos + SCRIPT_OBJECT_MAGIC_OFFSET)) != SCRIPT_OBJECT_MAGIC_NUMBER)
+      sciprintf("!non-object");
+    else {
+      word namepos = getUInt16(s->heap + pos + SCRIPT_NAME_OFFSET);
+      word type = getUInt16(s->heap + pos + SCRIPT_INFO_OFFSET);
+
+      if (type & SCRIPT_INFO_CLONE)
+	sciprintf("*");
+      else if (type & SCRIPT_INFO_CLASS)
+	sciprintf("%%");
+      else if (type != 0)
+	sciprintf("?[%04x]", type);
+
+      if (!namepos || !(*(s->heap + namepos)))
+	sciprintf("<???>");
+      else sciprintf(s->heap + namepos);
+    }
+  }
+
+  sciprintf(" @%04x\n", pos);
+}
+
 heap_ptr
 disassemble(state_t *s, heap_ptr pos)
 /* Disassembles one command from the heap, returns address of next command or 0 if a ret was
@@ -1419,6 +1447,40 @@ c_mem_info(state_t *s)
 
 
 int
+c_objs(state_t *s)
+{
+  int i;
+
+  if (!s) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  for (i = 0; i < 1000; i++)
+    if (s->scripttable[i].heappos) {
+      int seeker = s->scripttable[i].heappos;
+      int segment, size;
+
+      do {
+	segment = GET_HEAP(seeker);
+	size = GET_HEAP(seeker + 2);
+
+	if (segment == sci_obj_object || segment == sci_obj_class)
+	  print_objname(s, seeker - SCRIPT_OBJECT_MAGIC_OFFSET + 4 /* to compensate for the header */);
+
+	seeker += size;
+      } while (segment && (seeker < 0xffff ));
+    }
+
+  for (i = 0; i < SCRIPT_MAX_CLONES; i++)
+    if (s->clone_list[i])
+      print_objname(s, s->clone_list[i]);
+
+  return 0;
+}
+
+
+int
 c_simkey(state_t *s)
 {
   _kdebug_cheap_event_hack = cmd_params[0].val;
@@ -1455,10 +1517,8 @@ objinfo(state_t *s, heap_ptr pos)
     sciprintf("Class");
   else if (type == 0)
     sciprintf("Object");
-  else {
-    sciprintf("Not an object.\n");
-    return 0;
-  }
+  else
+    sciprintf("Weird object");
 
   {
     word selectors, functions;
@@ -1834,6 +1894,10 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       con_hook_command(c_set_parse_nodes, "set_parse_nodes", "s*", "Sets the contents of all parse nodes.\n"
 		       "  Input token must be separated by\n  blanks.");
       con_hook_command(c_showfont, "showfont", "i", "Displays all characters of the specified font");
+      con_hook_command(c_objs, "objs", "", "Lists all objects and classes from all\n  currently loaded scripts, plus\n"
+		       "  all clones.\n  Objects are not marked; clones are marked\n  with a preceeding '*', and classes\n"
+		       "  with a preceeding '%'\n"
+		       "\n\nSEE ALSO\n  clonetable\n");
 #ifdef SCI_SIMPLE_SAID_CODE
       con_hook_command(c_sim_parse, "simparse", "s*", "Simulates a parsed entity.\n\nUSAGE\n  Call this"
 		       " function with a list of\n  Said operators, words, and word group"
