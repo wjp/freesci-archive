@@ -1,3 +1,8 @@
+2001-04-27  Solomon Peachy <pizza@shaftnet.org>
+	
+	* src/engine/vm.c:  Added a workaround to a compiler bug that
+                            resulted in massive heap corruption.
+
 2001-04-27  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kCanBeHere): Disabled dynview checks

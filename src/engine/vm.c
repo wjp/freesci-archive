@@ -866,11 +866,13 @@ run_vm(state_t *s, int restoring)
       if ((opparams[0] < 0) || (opparams[0] >= s->classtable_size))
 	script_error(s, __FILE__, __LINE__, "Invalid superclass in object");
       else {
+        int kludge;
+
 	temp = xs->sp;
 	xs->sp -= (opparams[1] + (restadjust * 2)); /* Adjust stack */
-
-	xs_new = send_selector(s, get_class_address(s, opparams[0]), xs->objp,
-			       temp, opparams[1], restadjust, xs->sp);
+        kludge = get_class_address(s, opparams[0]);
+	/* kludge necessary due to compiler bugs (egcs 2.91.66, at least) */
+	xs_new = send_selector(s, kludge, xs->objp, temp, opparams[1], restadjust, xs->sp);
 	restadjust = 0;
 
 	if (xs_new) xs = xs_new;
