@@ -539,8 +539,6 @@ game_init(state_t *s)
 	s->status_bar_foreground = 0;
 	s->status_bar_background = 15;
 
-	fprintf(stderr," Script 0 at %04x\n", script0);
-
 #warning "Initialize parser base to a segment of its own"
 #if 0
 	s->parser_base = parser_handle + 2;
@@ -564,6 +562,8 @@ game_init(state_t *s)
 	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
 		game_obj -= 2; /* Adjust for alternative header */
 
+#warning "Re-enable game obj check"
+#if 0
 	if (GET_HEAP(game_obj + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
 		sciprintf("game_init(): Game object is not at 0x%x\n", game_obj);
 		return 1;
@@ -578,11 +578,16 @@ game_init(state_t *s)
 		s->game_name[MAX_GAMEDIR_SIZE - 1] = 0; /* Fix length with brute force */
 		sciprintf(" Designation too long; was truncated to \"%s\"\n", s->game_name);
 	}
+#endif
+#warning "Fix game name hack"
+	s->game_name = "GLUTTON";
 
 #warning "Fixme: Init game_obj correctly!"
 #if 0
 	s->game_obj = game_obj;
 #endif
+#warning "Evil startup hack: Fix"
+	s->game_obj = make_reg(0x42, getUInt16(s->script_000->buf + 4));
 
 	/* Mark parse tree as unused */
 	s->parser_nodes[0].type = PARSE_TREE_NODE_LEAF;
