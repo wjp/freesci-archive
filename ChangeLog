@@ -1,3 +1,12 @@
+2001-03-18  Solomon Peachy <pizza@shaftnet.org>
+
+	* src/sound/soundserver_null.c:  Fixed a dangling else on the
+                                         fading code.  oops.  :)
+	* src/sound/midi_mt32.c:  Now programs the MT-32 with the
+                           default rhythm map, partial reserve, reverb,
+			   and volume.
+	                   if said data is not in patch.001
+
 2001-03-18  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/scriptdebug.c (prop_ofs_to_id): Now uses the new obj

@@ -107,6 +107,29 @@ static gint8 rhythmkey_map[128] = {
   -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
   -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
   -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+
+/* timbre, volume, panpot, reverb.  keys 24-87 (64 keys)*/
+static guint8 default_rhythm_keymap[256] = { /* MT-32 default */
+  0x7f,0x64,7,1,  0x7f,0x64,7,1,  0x7f,0x64,7,1, 0x7f,0x64,7,1, /* 24-27 */
+  0x7f,0x64,7,1,  0x7f,0x64,7,1,  0x7f,0x64,7,1, 0x7f,0x64,7,1, 
+  0x7f,0x64,7,1,  0x7f,0x64,7,1,  0x7f,0x64,7,1, 0x40,0x64,7,1,  
+  0x40,0x64,7,1,  0x4a,0x64,6,1,  0x41,0x64,7,1, 0x4b,0x64,8,1,
+  0x45,0x64,6,1,  0x44,0x64,11,1, 0x46,0x64,6,1, 0x44,0x64,11,1,
+  0x5d,0x64,6,1,  0x43,0x64,8,1,  0x47,0x64,6,1, 0x43,0x64,8,1,
+  0x42,0x64,3,1,  0x48,0x64,6,1,  0x42,0x64,3,1, 0x49,0x64,8,1,
+  0x7f,0x64,7,1,  0x7f,0x64,7,1,  0x56,0x64,9,1, 0x7f,0x64,7,1,
+  0x4c,0x64,7,1,  0x7f,0x64,7,1,  0x7f,0x64,7,1, 0x7f,0x64,7,1,
+  0x52,0x64,2,1,  0x53,0x64,4,1,  0x4d,0x64,8,1, 0x4e,0x64,9,1,
+  0x4f,0x64,10,1, 0x50,0x64,7,1,  0x51,0x64,5,1, 0x54,0x64,2,1,
+  0x55,0x64,2,1,  0x5b,0x64,9,1,  0x58,0x64,4,1, 0x5a,0x64,9,1,
+  0x59,0x64,9,1,  0x5c,0x64,10,1, 0x7f,0x64,7,1, 0x57,0x64,12,1,
+  0x7f,0x64,7,1,  0x7f,0x64,7,1,  0x7f,0x64,7,1, 0x7f,0x64,7,1,
+  0x7f,0x64,7,1,  0x7f,0x64,7,1,  0x7f,0x64,7,1, 0x7f,0x64,7,1,
+  0x7f,0x64,7,1,  0x7f,0x64,7,1,  0x7f,0x64,7,1, 0x7f,0x64,7,1  /* 84-87 */
+};
+
+static guint8 default_partial_reserve[9] = {  /* MT-32 DEFAULT */
+  3, 10, 6, 4, 3, 0, 0, 0, 6 };
 /* static struct {
   gint8 sci_patch;
   gint8 sci_volume;
@@ -124,6 +147,35 @@ static struct {
   guint8 level;
 } mt32_reverb[11];
 
+
+/* send default rhythm map and reserve */
+int midi_mt32_defaults(guint8 volume, guint8 reverb) {
+  printf("MT-32: Writing Default Rhythm key map\n");
+  midi_mt32_poke(0x030110, default_rhythm_keymap, 256);  
+  midi_mt32_sysex_delay();  
+
+  printf("MT-32: Writing Default Partial Reserve\n");
+  midi_mt32_poke(0x100004, default_partial_reserve, 9);
+  midi_mt32_sysex_delay();
+
+  if (reverb) {
+    mt32_reverb[0].mode = 0;
+    mt32_reverb[0].time = 5;
+    mt32_reverb[0].level = 3;
+    default_reverb = 0;    
+
+    printf("MT-32: Setting up default reverb levels\n");
+    midi_mt32_reverb(default_reverb);
+  }
+
+  if (volume) {
+    printf("MT-32: Setting default volume (%d)\n", volume);
+    midi_mt32_volume(volume);
+  }
+
+  return 0;
+}
+
 int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
 {
   guint8 unknown_sysex[6] = {0x16, 0x16, 0x16, 0x16, 0x16, 0x16};
@@ -132,7 +184,6 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
 
   if (midiout_open() < 0)
     return -1;
-
   data = data_ptr;
   length = data_length;
 
@@ -186,6 +237,8 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
       printf("MT-32: Writing Partial Reserve\n");
       midi_mt32_poke(0x100004, data + block3 + 258, 9);
       midi_mt32_sysex_delay();
+    } else {
+      midi_mt32_defaults(0,0);  /* send default keymap/reserve */
     }
     /* Display MT-32 initialization done message */
     printf("MT-32: Displaying Text: \"%.20s\"\n", data);
@@ -217,7 +270,7 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
     memcpy(rhythmkey_map, data + 384, 128);
 
     printf("MT-32: Setting up reverb levels\n");
-    default_reverb = data[0x3e]; /* damn endian-ness */
+    default_reverb = data[0x3e]; 
     memcpy(mt32_reverb,data+ 0x4a, 3 * 11);
     midi_mt32_reverb(default_reverb);
 
@@ -228,6 +281,10 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
     midi_mt32_poke(0x200000, data, 20);
     midi_mt32_sysex_delay();
     return 0;
+  } else if (type == 2) {
+    midi_mt32_poke(0x200000, "   FreeSCI Rocks!  ", 20);
+    midi_mt32_sysex_delay();
+    return midi_mt32_defaults(0x0c,1);  /* send defaults in absence of patch data */
   }
   return -1;
 }
@@ -265,9 +322,6 @@ int midi_mt32_allstop(void)
 int midi_mt32_reverb(short param)
 {
   guint8 buffer[3];
-
-  if (data == NULL) /* no patch data == no reverb */
-    return 0;
 
   if (param == -1)
     param = default_reverb;
@@ -399,7 +453,7 @@ int midi_mt32_write_block(guint8 *data, unsigned int count)
 int midi_mt32_patch001_type(guint8 *data, unsigned int length)
 {
   if (data == NULL)  /* kq4 doesn't have a patch */
-    return -1;
+    return 2;
 
   /* length test */
   if (length < 1155)

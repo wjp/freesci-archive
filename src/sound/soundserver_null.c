@@ -76,9 +76,12 @@ sound_null_init(state_t *s)
 
 	if (midi_patch == NULL) {
 		sciprintf("gack!  That patch (%03d) didn't load!\n", midi_patchfile);
-		if (midi_open(NULL, -1) < 0)
-			sciprintf("gack! The midi device failed to open cleanly!\n");
-		return -1;
+
+		if (midi_open(NULL, -1) < 0) {
+		  sciprintf("gack! The midi device failed to open cleanly!\n");
+		  return -1;
+		}
+
 	} else if (midi_open(midi_patch->data, midi_patch->length) < 0) {
 		sciprintf("gack! The midi device failed to open cleanly!\n");
 		return -1;
@@ -527,16 +530,17 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 						if (debugging)
 						  fprintf(ds, "Fading %d on handle %04x\n", event.value, event.handle);
 
-						if (event.handle == 0x0000) 
+						if (event.handle == 0x0000) {
 						  if (song) {
 						    song->fading = event.value;
 						    song->maxfade = event.value;
-						  } else if (modsong) {
-						    modsong->fading = event.value;
-						  } else {
-						    fprintf(ds, "Attempt to fade on invalid handle %04x\n", event.handle);
 						  }
-
+						} else if (modsong) {
+						    modsong->fading = event.value;
+						} else {
+						  fprintf(ds, "Attempt to fade on invalid handle %04x\n", event.handle);
+						}
+						
 						break;
 
 					case SOUND_COMMAND_TEST: {
