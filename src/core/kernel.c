@@ -287,7 +287,7 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int
   xstack = 
     send_selector(s, object, object, stackframe + framesize, framesize, argc, stackframe);
 
-  run_vm(s); /* Start a new vm */
+  run_vm(s, 0); /* Start a new vm */
 
   --(s->execution_stack_pos); /* Get rid of the extra stack entry */
 
@@ -320,9 +320,9 @@ is_object(state_t *s, heap_ptr offset)
   s, ##_object_,  s->selector_map.##_selector_, ##_noinvalid_, funct_nr, argp + (argc * 2)
 
 
-/* Allocates a set amount of memory and returns a handle to it. */
+/* Allocates a set amount of memory for a specified use and returns a handle to it. */
 int
-kalloc(state_t *s, int space)
+kalloc(state_t *s, int type, int space)
 {
   int seeker = 0;
 
@@ -331,8 +331,10 @@ kalloc(state_t *s, int space)
 
   if (seeker == MAX_HUNK_BLOCKS)
     KERNEL_OOPS("Out of hunk handles! Try increasing MAX_HUNK_BLOCKS in engine.h");
-  else
+  else {
     s->hunk[seeker].data = malloc(s->hunk[seeker].size = space);
+    s->hunk[seeker].type = type;
+  }
 
   return (seeker | (sci_memory << 11));
 }
@@ -550,7 +552,7 @@ kLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
     s->acc = ((restype << 11) | resnr); /* Return the resource identifier as handle */
 
     if (restype == sci_memory)/* Request to dynamically allocate hunk memory for later use */
-      s->acc = kalloc(s, restype);
+      s->acc = kalloc(s, HUNK_TYPE_ANY, restype);
 
 }
 
@@ -1242,10 +1244,15 @@ kSetCursor(state_t *s, int funct_nr, int argc, heap_ptr argp)
   free_mouse_cursor(s->mouse_pointer);
 
   if (PARAM(1)) {
-    byte *data = findResource(sci_cursor, PARAM(0))->data;
-    if (data)
+    resource_t *resource = findResource(sci_cursor, PARAM(0));
+    byte *data = (resource)? resource->data : NULL;
+    if (data) {
       s->mouse_pointer = calc_mouse_cursor(data);
-    else s->mouse_pointer = NULL;
+      s->mouse_pointer_nr = PARAM(0);
+    } else {
+      s->mouse_pointer = NULL;
+      s->mouse_pointer_nr = -1;
+    }
 
   } else
     s->mouse_pointer = NULL;
@@ -3009,8 +3016,10 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
     if (!viewres) {
       SCIkwarn(SCIkERROR, "Attempt to draw invalid view.%03d!\n", view_nr);
       retval[i].view = NULL;
+      retval[i].view_nr = 0;
     } else {
       retval[i].view = viewres->data;
+      retval[i].view_nr = view_nr;
 
       if ((retval[i].loop > view0_loop_count(viewres->data))) {
 	  retval[i].loop = 0;
@@ -3257,6 +3266,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   wnd->color = PARAM_OR_ALT(7, 0);
   wnd->bgcolor = PARAM_OR_ALT(8, 15);
   wnd->font = s->titlebar_port.font; /* Default to 'system' font */
+  wnd->font_nr = s->titlebar_port.font_nr;
 
   wnd->alignment = ALIGN_TEXT_LEFT; /* FIXME?? */
 
@@ -3315,6 +3325,10 @@ void
 kDrawMenuBar(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   CHECK_THIS_KERNEL_FUNCTION;
+
+  if (!s->titlebar_port.font) {
+    SCIkwarn(SCIkERROR, "No titlebar font is set: %d\n", s->titlebar_port.font_nr);
+  }
 
   if (PARAM(0))
     menubar_draw(s->pic, &(s->titlebar_port) ,s->menubar, -1, s->titlebar_port.font);
@@ -3659,6 +3673,7 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int textp = UPARAM(0);
   int index = UPARAM(1);
   int width = -1;
+  int temp;
   int save_under = 0;
   char *text;
   resource_t *font_resource;
@@ -3713,11 +3728,14 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     case K_DISPLAY_SET_FONT:
 
-      font_resource = findResource(sci_font, PARAM(argpt++));
+      font_resource = findResource(sci_font, temp = PARAM(argpt++));
+
+      port->font_nr = temp;
 
       if (font_resource)
 	port->font = font_resource->data;
-      else port->font = NULL;
+      else
+	port->font = NULL;
 
       SCIkdebug(SCIkGRAPHICS, "Display: set_font(\"font.%03d\")\n", PARAM(argpt - 1));
       break;
@@ -3763,7 +3781,7 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
 
-  SCIkdebug(SCIkGRAPHICS, "Display: Commiting\n");
+  SCIkdebug(SCIkGRAPHICS, "Display: Commiting text '%s'\n", text);
 
   _k_dyn_view_list_prepare_change(s);
 

@@ -142,6 +142,15 @@ extern sfx_driver_t *sfx_drivers[]; /* All available sound fx drivers, NULL-term
 /* Returns 0 if sound playing works, 1 if it doesn't. */
 #define SOUND_COMMAND_STOP_ALL 12
 /* Stops all playing tracks and returns appropriate signals. */
+#define SOUND_COMMAND_SAVE_STATE 13
+/* Saves the current state of the sound engine. Followed by a zero-terminated
+** directory name with a length as specified by PARAMETER (including the \0)
+** where the information should be placed.
+*/
+#define SOUND_COMMAND_RESTORE_STATE 14
+/* Inverse of SOUND_COMMAND_SAVE_STATE (13): Restore sound state from zero terminated
+** directory following the command, size specified in PARAMETER (incl. trailing \0).
+*/
 
 
 #define SOUND_SIGNAL_CUMULATIVE_CUE 0

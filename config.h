@@ -5,6 +5,9 @@
    byte first (like Motorola and SPARC, unlike Intel and VAX).  */
 /* #undef WORDS_BIGENDIAN */
 
+/* Define if lex declares yytext as a char * by default, not a char[].  */
+#define YYTEXT_POINTER 1
+
 #define PACKAGE "freesci"
 #define VERSION "0.2.5"
 #define HAVE_LIBGGI 1

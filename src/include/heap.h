@@ -30,6 +30,8 @@
 
 #include <resource.h>
 
+#define SCI_HEAP_SIZE 0x10000
+
 typedef guint16 heap_ptr;
 
 

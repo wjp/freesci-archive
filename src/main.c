@@ -51,10 +51,11 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #define sleep Sleep
+#define strcasecmp stricmp
 #endif
 
 static int quit = 0;
-static state_t gamestate; /* The main game state */
+static state_t *gamestate; /* The main game state */
 
 
 extern int _debugstate_valid;
@@ -140,15 +141,18 @@ int
 main(int argc, char** argv)
 {
   resource_t *resource;
-  config_entry_t conf;
+  config_entry_t *conf = NULL;
+  int conf_entries; /* Number of config entries */
+  int conf_nr; /* Element of conf to use */
   int i, c;
   FILE *console_logfile = NULL;
   int optindex = 0;
-  char gamedir [256], startdir [256];
+  char *gamedir = NULL;
+  char startdir[PATH_MAX+1];
+  char *game_name;
   sci_version_t cmd_version = 0;
 
-
-  strcpy (gamedir, ".");
+  getcwd(startdir, PATH_MAX);
 
 #ifdef HAVE_GETOPT_H
   while ((c = getopt_long(argc, argv, "rd:v:", options, &optindex)) > -1)
@@ -159,11 +163,14 @@ main(int argc, char** argv)
     switch (c)
     {
     case 'r':
-      script_debug_flag=0;
+      script_debug_flag = 0;
       break;
 
     case 'd':
-      strcpy (gamedir, optarg);
+      if (gamedir)
+	free(gamedir);
+
+      gamedir = strdup (optarg);
       break;
 
     case 'V':
@@ -186,8 +193,8 @@ main(int argc, char** argv)
       return 0;
     
     case 'h':
-      printf("Usage: sciv [OPTION]...\n"
-             "Run a sierra SCI game.\n"
+      printf("Usage: sciv [options] [game name]\n"
+             "Run a Sierra SCI game.\n"
              "\n"
              "  --gamedir dir	-ddir  read game resources from dir\n"
              "  --run		-r     do not start the debugger\n"
@@ -195,6 +202,10 @@ main(int argc, char** argv)
              "  --version	-v     display version information and exit\n"
 	     "  --debug                Start up with the debugger enabled\n"
              "  --help	        -h     display this help text and exit\n"
+	     "\n"
+	     "The game name, if provided, must be equal to a game name as specified in the "
+	     "FreeSCI config file.\n"
+	     "It is overridden by --gamedir.\n"
              );
       return 0;
 
@@ -210,21 +221,44 @@ main(int argc, char** argv)
 	 "or any later version, at your option.\n"
 	 "It comes with ABSOLUTELY NO WARRANTY.\n");
 
-  
-  sci_color_mode = SCI_COLOR_DITHER256;
 
-  getcwd (startdir, sizeof (startdir)-1);
-  if (chdir (gamedir))
-  {
-    printf ("Error changing to game directory %s\n", gamedir);
-    exit(1);
+  if (optind == argc)
+    game_name = NULL;
+  else {
+    game_name = argv[optind];
+
+    conf_entries = config_init(&conf, NULL);
+
+    conf_nr = 0;
+
+    for (i = 1; i < conf_entries; i++)
+      if (!strcasecmp(conf[i].name, game_name)) {
+	conf_nr = i;
+      }
+
+    if (!gamedir)
+      if (chdir(conf[conf_nr].resource_dir)) {
+	if (conf_nr)
+	  fprintf(stderr,"Error entering '%s' to load resource data\n", conf[conf_nr].resource_dir);
+	else
+	  fprintf(stderr,"Game '%s' isn't registered in your config file.\n", game_name);
+	exit(1);
+      }
   }
 
+  if (gamedir)
+    if (chdir (gamedir))
+      {
+	printf ("Error changing to game directory '%s'\n", gamedir);
+	exit(1);
+      }
+
   if (i = loadResources(SCI_VERSION_AUTODETECT, 1)) {
-    fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);
+    fprintf(stderr,"Error while loading resources: %s!\n", SCI_Error_Types[i]);
     exit(1);
   };
   printf("SCI resources loaded.\n");
+  chdir (startdir);
 
   printf("Mapping instruments to General Midi\n");
   mapMIDIInstruments();
@@ -246,72 +280,98 @@ main(int argc, char** argv)
   _debug_get_input = get_gets_input; /* Use gets for debug input */
 #endif /* !HAVE_READLINE_READLINE_H */
 
+  gamestate = malloc(sizeof(state_t));
 
-  if (script_init_state(&gamestate, cmd_version)) { /* Initialize game state */
+  if (script_init_state(gamestate, cmd_version)) { /* Initialize game state */
     fprintf(stderr,"Script initialization failed. Aborting...\n");
     return 1;
   }
-  gamestate.have_mouse_flag = 1; /* Assume that a pointing device is present */
 
-  if (game_init(&gamestate)) { /* Initialize */
+  gamestate->have_mouse_flag = 1; /* Assume that a pointing device is present */
+
+  if (game_init(gamestate)) { /* Initialize */
     fprintf(stderr,"Game initialization failed: Aborting...\n");
     return 1;
   }
 
-  chdir (startdir);
-  config_init(&conf, gamestate.game_name, NULL);
-  chdir (gamedir);
 
-  if (conf.version!=SCI_VERSION_LAST_SCI0) gamestate.version = conf.version;
-  sci_color_mode = conf.color_mode;
-  gamestate.gfx_driver = conf.gfx_driver;
-  if (strlen (conf.debug_mode))
-    set_debug_mode (&gamestate, 1, conf.debug_mode);
+  if (!conf) { /* Unless the configuration has been read... */
+    conf_entries = config_init(&conf, NULL);
 
-  gamestate.sfx_driver = sfx_drivers[0];
-  
-  if (gamestate.sfx_driver)
-  {
-    gamestate.sfx_driver->init(&gamestate);
-    sleep(1);
-    gamestate.sfx_driver->get_event(&gamestate); /* Get init message */
+    conf_nr = 0;
+
+    for (i = 1; i < conf_entries; i++)
+      if (!strcasecmp(conf[i].name, game_name)) {
+	conf_nr = i;
+      }
   }
 
-  if (conf.console_log)
+  if (chdir(conf[conf_nr].work_dir)) {
+    fprintf(stderr,"Error entering working directory '%s'\n", conf[conf_nr].work_dir);
+    exit(1);
+  }
+
+  if (conf[conf_nr].version)
+    gamestate->version = conf[conf_nr].version;
+
+  sci_color_mode = conf[conf_nr].color_mode;
+  gamestate->gfx_driver = conf[conf_nr].gfx_driver;
+  if (strlen (conf[conf_nr].debug_mode))
+    set_debug_mode (gamestate, 1, conf[conf_nr].debug_mode);
+
+  /* Now configure the graphics driver with the specified options */
+  for (i = 0; i < conf[conf_nr].gfx_config_nr; i++)
+    (conf[conf_nr].gfx_driver->Configure)(conf[conf_nr].gfx_config[i].option,
+					  conf[conf_nr].gfx_config[i].value);
+
+  gamestate->sfx_driver = sfx_drivers[0];
+  
+  if (gamestate->sfx_driver)
   {
-    console_logfile = fopen (conf.console_log, "w");
+    gamestate->sfx_driver->init(gamestate);
+    sched_yield(); /* Specified by POSIX 1b. If it doesn't work on your
+		   ** system, make up an #ifdef'd version of it above.
+		   */
+    gamestate->sfx_driver->get_event(gamestate); /* Get init message */
+  }
+
+  if (conf[conf_nr].console_log)
+  {
+    console_logfile = fopen (conf[conf_nr].console_log, "w");
     con_file = console_logfile;
   }
 
   /* initialize graphics */
-  if (gamestate.gfx_driver->Initialize(&gamestate, gamestate.pic)) { 
+  if (gamestate->gfx_driver->Initialize(gamestate, gamestate->pic)) { 
     fprintf(stderr,"Graphics initialization failed. Aborting...\n");
     exit(1);
   };
 
   printf("Emulating SCI version %d.%03d.%03d\n",
-	 gamestate.version >> 20,
-	 (gamestate.version >> 10) & 0x3ff,
-	 gamestate.version & 0x3ff);
+	 SCI_VERSION_MAJOR(gamestate->version),
+	 SCI_VERSION_MINOR(gamestate->version),
+	 SCI_VERSION_PATCHLEVEL(gamestate->version));
 
   game_run(&gamestate); /* Run the game */
+  
+    if (gamestate->sfx_driver)
+    gamestate->sfx_driver->exit(gamestate); /* Shutdown sound daemon first */
 
-  if (gamestate.sfx_driver)
-    gamestate.sfx_driver->exit(&gamestate); /* Shutdown sound daemon first */
+  game_exit(gamestate);
 
-  game_exit(&gamestate);
+  gamestate->gfx_driver->Shutdown(gamestate); /* Close graphics */
 
-  gamestate.gfx_driver->Shutdown(&gamestate); /* Close graphics */
-
-  script_free_state(&gamestate); /* Uninitialize game state */
+  script_free_state(gamestate); /* Uninitialize game state */
+  free(gamestate);
 
   freeResources();
 
+  config_free(&conf, conf_entries);
 
   if (console_logfile)
     fclose (console_logfile);
 
-  chdir (startdir);
+  chdir (startdir); /* ? */
 
   return 0;
 }

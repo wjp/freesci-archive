@@ -47,16 +47,19 @@ struct _picture {
   int bytespl;     /* Bytes per line */
   int view_offs;   /* Offset of the first pixel below the title bar */
 
-  int size;        /* Total pic size (of one map) */
+  int size;        /* Total pic size (of the view map) */
   int view_size;   /* Total pic size not counting the title bar */
 
   int ega_colors[16]; /* The 16 EGA colors- this must be filled in by the
 		      ** graphics implementation.
 		      */
 
+  int colbits[3], coloffs[3], colshift[3], colmask[3]; /* Number of bits and bit offset for RGB */
+
   /* Translation stuff: */
   int xfact, yfact; /* Factors for calculating coordinates */
 };
+
 
 typedef struct _picture* picture_t;
 /* Used for storing "picture" resources (the background images). These
@@ -80,6 +83,7 @@ typedef struct {
   gint16 priority, bgcolor, color; /* Priority/color values as usual */
 
   byte *font; /* Font data */
+  int font_nr; /* Font number */
   byte gray_text; /* Set to 1 to "gray out" text */
 
   int bg_handle; /* Background picture handle for restoring */
@@ -193,7 +197,7 @@ extern gfx_driver_t *gfx_drivers[];
 #define ALIGN_TEXT_CENTER 1
 
 #define MAX_TEXT_WIDTH_MAGIC_VALUE 192
-/* This is the real width of a text with a specified width of 192 */
+/* This is the real width of a text with a specified width of 0 */
 
 
 #define FONT_FONTSIZE_OFFSET 4
@@ -226,6 +230,7 @@ extern gfx_driver_t *gfx_drivers[];
 /* Adjust view cel according to adjustment values stored in the cel */
 #define GRAPHICS_VIEW_CENTER_BASE 2
 /* Interpret coordinates as the coordinates of the bottom center, not the upper left */
+
 
 
 #define SCI_SCREEN_WIDTH 320
@@ -676,6 +681,24 @@ graph_on_control(struct _state *s, int x, int y, int xl, int yl, int map);
 ** This function performs clipping.
 ** Example: using it on an area of a control map where only color values 15,2  and 0 are used would
 ** result in 0x8005 being returned (i.e. bits 15, 2, and 0 would be set).
+*/
+
+int
+graph_png_save_box(struct _state *s, byte *mem);
+/* Stores a memory resource buffer containing graphical data to the harddisk
+** Parameters: (state_t *) s: The state_t containing the pic information for writing
+**             (byte *) mem: The memory to write
+** Returns   : (int) A "handle" number >0 if reading succeeded, <0 otherwise
+** This function will write the buffer into up to three separate png files.
+*/
+
+byte *
+graph_png_load_box(struct _state *s, int handle, int *size);
+/* Restores a buffer saved with graph_png_save_box()
+** Parameters: (state_t *) s: The state_t containing the graphical meta-information for loading
+**             (int) handle: Handle number of the resource to restore
+**             (int *) size: Variable to store the allocated size of the structure in
+** Returns   : (byte *) A pointer to the memory structure containing the restored structure
 */
 
 #endif

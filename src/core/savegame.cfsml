@@ -1,0 +1,651 @@
+/***************************************************************************
+ savegame.cfsml Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+
+
+ This program may be modified and copied freely according to the terms of
+ the GNU general public license (GPL), as long as the above copyright
+ notice and the licensing information contained herein are preserved.
+
+ Please refer to www.gnu.org for licensing details.
+
+ This work is provided AS IS, without warranty of any kind, expressed or
+ implied, including but not limited to the warranties of merchantibility,
+ noninfringement, and fitness for a specific purpose. The author will not
+ be held liable for any damage caused by this work or derivatives of it.
+
+ By using this source code, you agree to the licensing terms as stated
+ above.
+
+
+ Please contact the maintainer for bug reports or inquiries.
+
+ Current Maintainer:
+
+    Christoph Reichenbach (CJR) [jameson@linuxgames.com]
+
+***************************************************************************/
+/* Savegame handling for state_t structs. Makes heavy use of cfsml magic. */
+/* DON'T EDIT savegame.c ! Only modify savegame.cfsml, if something needs
+** to be changed. Refer to freesci/docs/misc/cfsml.spec if you don't understand
+** savegame.cfsml. If this doesn't solve your problem, contact the maintainer.
+*/
+
+#include <engine.h>
+#include <assert.h>
+#include <heap.h>
+#include <dirent.h>
+
+
+/* Missing:
+** - SFXdriver
+** - File input/output state (this is likely not to happen)
+*/
+
+state_t *_global_save_state;
+/* Needed for graphical hunk writing. */
+
+
+void
+write_heapptr(FILE *fh, heap_ptr *foo)
+{
+  fprintf(fh, "0x%04x", *foo);
+}
+
+int
+read_heapptr(FILE *fh, heap_ptr *foo, char *lastval, int *line, int *hiteof)
+{
+  *foo = strtol(lastval, NULL, 0);
+  return 0;
+}
+
+void
+write_sci_version(FILE *fh, sci_version_t *foo)
+{
+  fprintf(fh, "%d.%03d.%03d", SCI_VERSION_MAJOR(*foo), SCI_VERSION_MINOR(*foo),
+	  SCI_VERSION_PATCHLEVEL(*foo));
+}
+
+int
+read_sci_version(FILE *fh, sci_version_t *foo, char *lastval, int *line, int *hiteof)
+{
+  *foo = version_parse(lastval);
+  return 0;
+}
+
+void
+write_hunk_block(FILE *fh, hunk_block_t *foo)
+{
+  char filename[14] = "hunk.0";
+  int filenr = 0;
+  int hunkfile;
+
+  if (!foo->size) {
+    fputs("\\null\\", fh);
+    return; /* Don't write empty blocks */
+  }
+
+  if (foo->type == HUNK_TYPE_GFXBUFFER) {
+
+    int handle = graph_png_save_box(_global_save_state, foo->data);
+
+    if (handle >= 0)
+      sprintf(filename, "buffer.%d", handle);
+    else
+      strcpy(filename, "\\ERROR\\"); /* Treat as empty */
+
+  } else { /* Normal buffer */
+
+    while ((hunkfile = open(filename, O_RDONLY)) > 0) {
+      close(hunkfile);
+      sprintf(filename + 5, "%d", ++filenr);
+    }
+
+    hunkfile = creat(filename, O_WRONLY);
+    assert (hunkfile > 0);
+
+    write(hunkfile, foo->data, foo->size);
+
+    close(hunkfile);
+  }
+
+  fputs(filename, fh);
+}
+
+int
+read_hunk_block(FILE *fh, hunk_block_t *foo, char *lastval, int *line, int *hiteof)
+{
+  int hunkfile;
+
+  if (lastval[0] == '\\') { /* Nothing written? */
+    foo->size = 0;
+    return 0;
+  }
+
+  if (lastval[0] == 'b') { /* Graphical buffer */
+    int bufnum;
+
+    foo->type = HUNK_TYPE_GFXBUFFER;
+
+    sscanf(lastval, "buffer.%d", &bufnum);
+    foo->data = graph_png_load_box(_global_save_state, bufnum, &(foo->size));
+
+    if (!foo->data)
+      return 1;
+
+  } else { /* Normal hunk */
+
+    foo->type = HUNK_TYPE_ANY;
+
+    hunkfile = open(lastval, O_RDONLY);
+
+    foo->size = lseek(hunkfile, 0, SEEK_END);
+    lseek(hunkfile, 0, SEEK_SET);
+
+    foo->data = (char *) xalloc(foo->size);
+    read(hunkfile, foo->data, foo->size);
+    close(hunkfile);
+
+    return 0;
+  }
+
+  return 0;
+}
+
+void
+write_PTN(FILE *fh, parse_tree_node_t *foo)
+{
+  if (foo->type == PARSE_TREE_NODE_LEAF)
+    fprintf(fh, "L%d", foo->content.value);
+  else
+    fprintf(fh, "B(%d,%d)", foo->content.branches[0], foo->content.branches[1]);
+}
+
+int
+read_PTN(FILE *fh, parse_tree_node_t *foo, char *lastval, int *line, int *hiteof)
+{
+  if (lastval[0] == 'L') {
+    if (sscanf(lastval, "L %d", &(foo->content.value)) < 1)
+      return 1; /* Failed to parse everything */
+    return 0;
+  } else if (lastval[0] == 'B') {
+    if (sscanf(lastval, "B ( %d , %d )", &(foo->content.branches[0]), &(foo->content.branches[1])) < 2)
+      return 1; /* Failed to parse everything */
+    return 0;
+  } else return 1; /* failure to parse anything */
+}
+
+
+void
+write_menubar_tp(FILE *fh, menubar_t **foo);
+int
+read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof);
+
+void
+write_port_tp(FILE *fh, port_t **foo);
+int
+read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof);
+
+
+
+%CFSML
+
+TYPE byte "byte" LIKE int;
+TYPE long "long" LIKE int;
+TYPE gint16 "gint16" LIKE int;
+TYPE heap_ptr "heap_ptr" USING write_heapptr read_heapptr;
+TYPE sci_version_t "sci_version_t" USING write_sci_version read_sci_version;
+
+TYPE hunk_block_t "hunk_block_t" USING write_hunk_block read_hunk_block;
+TYPE parse_tree_node_t "parse_tree_node_t" USING write_PTN read_PTN;
+
+TYPE menubar_tp "menubar_t*" USING write_menubar_tp read_menubar_tp;
+TYPE port_tp "port_t*" USING write_port_tp read_port_tp;
+
+
+RECORD menu_item_t "menu_item_t" {
+  int type;
+  string left;
+  string right;
+
+  int rightsize;
+  int foo;
+  int bar;
+}
+
+RECORD menu_t "menu_t" {
+  string title;
+  int title_width;
+  int width;
+
+  menu_item_t items[DYNAMIC items_nr];
+}
+
+RECORD menubar_t "menubar_t" {
+  menu_t menus[DYNAMIC menus_nr];
+}
+
+RECORD exec_stack_t "exec_stack_t" {
+  heap_ptr objp;
+  heap_ptr sendp;
+  heap_ptr pc;
+  heap_ptr sp;
+  int argc;
+  heap_ptr variables[STATIC 4];
+  int selector;
+  int origin;
+  heap_ptr type;
+}
+
+RECORD class_t "class_t" {
+  int script;
+  int class_offset;
+}
+
+RECORD view_object_t {
+  int x;
+  int y;
+  int priority;
+  int view_nr;
+  int loop;
+  int cel;
+  int nsTop;
+  int nsLeft;
+  int nsRight;
+  int nsBottom;
+}
+
+
+RECORD script_t "script_t" {
+  heap_ptr heappos;
+  heap_ptr localvar_offset;
+  heap_ptr export_table_offset;
+  int lockers;
+}
+
+RECORD port_t "port_t" {
+  gint16 ymin;
+  gint16 xmin;
+  gint16 ymax;
+  gint16 xmax;
+
+  heap_ptr title;
+  gint16 flags;
+  int alignment;
+  int x;
+  int y;
+
+  int font_nr;
+
+  gint16 priority;
+  gint16 bgcolor;
+  gint16 color;
+
+  byte gray_text;
+  int bg_handle;
+}
+
+
+RECORD state_t "state_t" {
+  byte restarting_flag;
+  byte have_mouse_flag;
+  byte pic_not_valid;
+  byte pic_is_new;
+  byte onscreen_console;
+
+  int mouse_pointer_nr;
+
+  int debug_mode;
+  long game_time;
+  heap_ptr save_dir;
+  heap_ptr sound_object;
+
+  int last_pointer_x;
+  int last_pointer_y;
+  int last_pointer_size_x;
+  int last_pointer_size_y;
+
+  int view_port;
+  port_tp ports[MAX_PORTS];
+
+  int pic_visible_map;
+  int pic_animate;
+
+  int dyn_view_port;
+
+  view_object_t pic_views[DYNAMIC pic_views_nr];
+  view_object_t dyn_views[DYNAMIC dyn_views_nr];
+
+  int animation_delay;
+
+  hunk_block_t hunk[STATIC MAX_HUNK_BLOCKS];
+
+  menubar_tp menubar;
+
+  int priority_first;
+  int priority_last;
+
+  byte version_lock_flag;
+  sci_version_t version;
+  sci_version_t max_version;
+  sci_version_t min_version;
+ 
+  exec_stack_t execution_stack[DYNAMIC execution_stack_size, MAXWRITE execution_stack_pos];
+
+  gint16 acc;
+  gint16 prev;
+
+  heap_ptr stack_base;
+  heap_ptr stack_handle;
+  heap_ptr parser_base;
+  heap_ptr global_vars;
+
+  parse_tree_node_t parser_nodes[STATIC VOCAB_TREE_NODES];
+
+  heap_ptr game_obj;
+
+  class_t classtable[DYNAMIC classtable_size];
+
+  script_t scripttable[STATIC 1000];
+
+  heap_ptr clone_list[STATIC SCRIPT_MAX_CLONES];
+
+  int _heap->first_free;
+  int _heap->old_ff;
+
+  POINTER _heap->base RELATIVETO _heap->start;
+  POINTER game_name RELATIVETO _heap->start;
+
+} 
+
+%END CFSML
+
+
+
+
+void
+write_menubar_tp(FILE *fh, menubar_t **foo)
+{
+  if (*foo) {
+
+    %CFSMLWRITE menubar_t (*foo) INTO fh;
+
+  } else { /* Nothing to write */
+    fputs("\\null\\", fh);
+  }
+}
+
+
+int
+read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof)
+{
+
+  if (lastval[0] == '\\') {
+    *foo = NULL; /* No menu bar */
+  } else {
+
+    *foo = (menubar_t *) malloc(sizeof(menubar_t));
+    %CFSMLREAD menubar_t (*foo) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+
+  }
+  return *hiteof;
+}
+
+void
+write_port_tp(FILE *fh, port_t **foo)
+{
+  if (*foo) {
+
+    %CFSMLWRITE port_t (*foo) INTO fh;
+
+  } else { /* Nothing to write */
+    fputs("\\null\\", fh);
+  }
+}
+
+
+int
+read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof)
+{
+  resource_t *res;
+
+  if (lastval[0] == '\\') {
+    *foo = NULL; /* No port */
+  } else {
+
+    *foo = (port_t *) malloc(sizeof(port_t));
+    %CFSMLREAD port_t (*foo) FROM fh ERRVAR *hiteof FIRSTTOKEN lastval LINECOUNTER *line;
+
+    res =  findResource(sci_font, (*foo)->font_nr);
+    if (res)
+      (*foo)->font = res->data;
+    else
+      (*foo)->font = NULL;
+
+  }
+  return *hiteof;
+}
+
+
+
+/* This function is called to undo some strange stuff done in preparation
+** to writing a gamestate to disk
+*/
+void
+_gamestate_unfrob(state_t *s)
+{ /* Remnant of ancient times. May be restored to its full glory one day. */
+  s->heap = s->_heap->start;
+}
+
+
+int
+gamestate_save(state_t *s, char *dirname)
+{
+  FILE *fh;
+  DIR *dir;
+  struct dirent* dirent;
+  int fd;
+
+  _global_save_state = s;
+
+  mkdir (dirname, 0700);
+
+  if (s->execution_stack_base) {
+    sciprintf("Cannot save from below kernel function\n");
+    return 1;
+  }
+
+  if (chdir (dirname)) {
+    sciprintf("Could not enter directory '%s'\n", dirname);
+    return 1;
+  }
+
+  dir = opendir(".");
+  while ((dir) && (dirent = readdir(dir))) 
+    if (strcmp(dirent->d_name, "..") && strcmp(dirent->d_name, ".")) {
+      unlink(dirent->d_name); /* Delete all files in directory */
+  }
+  closedir(dir);
+
+  fh = fopen("state", "w");
+
+  /* Calculate the time spent with this game */
+  s->game_time = time(NULL) - s->game_start_time.tv_sec;
+
+  %CFSMLWRITE state_t s INTO fh;
+
+  fclose(fh);
+
+  _gamestate_unfrob(s);
+
+  fd = creat("heap", 0600);
+  write(fd, s->_heap->start, SCI_HEAP_SIZE);
+  close(fd);
+
+  png_save_pic(s->pic);
+
+  chdir ("..");
+  return 0;
+}
+
+
+state_t *
+gamestate_restore(state_t *s, char *dirname)
+{
+  FILE *fh;
+  int fd;
+  int i;
+  int read_eof = 0;
+  state_t *retval;
+
+  _global_save_state = s;
+
+  if (chdir (dirname)) {
+    sciprintf("Game state '%s' does not exist\n", dirname);
+    return NULL;
+  }
+
+  retval = (state_t *) xalloc(sizeof(state_t));
+  retval->_heap = heap_new();
+
+  fh = fopen("state", "r");
+  if (!fh) {
+    heap_del(retval->_heap);
+    free(retval);
+    return NULL;
+  }
+
+  %CFSMLREAD state_t retval FROM fh ERRVAR read_eof;
+
+  fclose(fh);
+
+  if (read_eof || ((fd = open("heap", O_RDONLY)) < 0)) {
+    if (read_eof)
+      sciprintf("Error while reading gamestate '%s'\n", dirname);
+    else
+      sciprintf("Heap file does not exist for game state '%s'\n", dirname);
+    chdir("..");
+    heap_del(retval->_heap);
+    free(retval);
+    return NULL;
+  }
+
+  read(fd, retval->_heap->start, SCI_HEAP_SIZE);
+  close(fd);
+
+  if (png_load_pic(s->pic)) {
+    sciprintf("Picture data does not exist for game state '%s'\n", dirname);
+    chdir("..");
+    heap_del(retval->_heap);
+    free(retval);
+    return NULL;
+  }
+
+  retval->pic = s->pic; /* Continue using that pic */
+
+  _gamestate_unfrob(retval);
+
+  /* Set exec stack base to zero */
+  retval->execution_stack_base = 0;
+
+  /* Set the class table pointers to the script positions */
+  for (i = 0; i < retval->classtable_size; i++)
+    retval->classtable[i].scriptposp = &(retval->scripttable[retval->classtable[i].script].heappos);
+
+  /* Set views in pic_views */
+  for (i = 0; i < retval->pic_views_nr; i++) {
+    resource_t *res = findResource(sci_view, retval->pic_views[i].view_nr);
+    retval->pic_views[i].view = (res? res->data : NULL);
+  }
+
+  /* Set views in dyn_views */
+  for (i = 0; i < retval->dyn_views_nr; i++) {
+    resource_t *res = findResource(sci_view, retval->dyn_views[i].view_nr);
+    retval->dyn_views[i].view = (res? res->data : NULL);
+  }
+
+  /* Now set all standard ports */
+  memcpy(&(retval->wm_port), retval->ports[0], sizeof(port_t));
+  memcpy(&(retval->titlebar_port), retval->ports[1], sizeof(port_t));
+  memcpy(&(retval->picture_port), retval->ports[2], sizeof(port_t));
+
+  for (i = 0; i < 3; i++)
+    free(retval->ports[i]); /* Free those ports... */
+
+  /* ...and let them point to where they belong */
+  retval->ports[0] = &(retval->wm_port);
+  retval->ports[1] = &(retval->titlebar_port);
+  retval->ports[2] = &(retval->picture_port);
+
+  /* Map port fonts */
+  for (i = 0; i < MAX_PORTS; i++)
+    if (retval->ports[i]) {
+      resource_t *resource = findResource(sci_font, retval->ports[i]->font_nr);
+      if (resource)
+	retval->ports[i]->font = resource->data;
+  }
+
+  /* Now copy all current state information */
+  /* Graphics and input state: */
+  retval->gfx_driver = s->gfx_driver;
+  memcpy(&(retval->graphics), &(s->graphics), sizeof (s->graphics));
+
+  /* Sound state: */
+  retval->sfx_driver = s->sfx_driver;
+  memcpy(&(retval->sound_pipe_in[0]), &(s->sound_pipe_in[0]), sizeof(int[2]));
+  memcpy(&(retval->sound_pipe_out[0]), &(s->sound_pipe_out[0]), sizeof(int[2]));
+  memcpy(&(retval->sound_pipe_events[0]), &(s->sound_pipe_events[0]), sizeof(int[2]));
+  memcpy(&(retval->sound_pipe_debug[0]), &(s->sound_pipe_debug[0]), sizeof(int[2]));
+
+  /* Time state: */
+  g_get_current_time(&(retval->last_wait_time));
+  retval->game_start_time.tv_sec = time(NULL) - retval->game_time;
+  retval->game_start_time.tv_usec = 0;
+
+  /* File IO state: */ 
+  retval->file_handles_nr = 2;
+  retval->file_handles = calloc(2, sizeof(FILE *));
+
+  /* static parser information: */
+  retval->parser_words_nr = s->parser_words_nr;
+  retval->parser_words = s->parser_words;
+  retval->parser_suffices_nr = s->parser_suffices_nr;
+  retval->parser_suffices = s->parser_suffices;
+  retval->parser_branches_nr = s->parser_branches_nr;
+  retval->parser_branches = s->parser_branches;
+
+  /* static VM/Kernel information: */
+  retval->selector_names_nr = s->selector_names_nr;
+  retval->selector_names = s->selector_names;
+  retval->kernel_names_nr = s->kernel_names_nr;
+  retval->kernel_names = s->kernel_names;
+  retval->kfunct_table = s->kfunct_table;
+  retval->opcodes = s->opcodes;
+
+  /* Mouse pointer */
+  retval->pointer_x = s->pointer_x;
+  retval->pointer_y = s->pointer_y;
+  if (retval->mouse_pointer_nr == -1)
+    retval->mouse_pointer = NULL;
+  else {
+    resource_t *resource = findResource(sci_cursor, retval->mouse_pointer_nr);
+    byte *data = (resource)? resource->data : NULL;
+    if (data)
+      retval->mouse_pointer = calc_mouse_cursor(data);
+    else {
+      retval->mouse_pointer = NULL;
+      retval->mouse_pointer_nr = -1;
+    }
+  }
+
+  memcpy(&(retval->selector_map), &(s->selector_map), sizeof(selector_map_t));
+
+  /* Copy breakpoint information from current game instance */
+  retval->have_bp = s->have_bp;
+  retval->bp_list = s->bp_list;
+
+
+
+  chdir ("..");
+
+  return retval;
+}

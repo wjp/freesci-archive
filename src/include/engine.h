@@ -51,6 +51,10 @@
 #define FREESCI_GAMEDIR ".freesci"
 #define FREESCI_CONFFILE "config"
 #define FREESCI_CONFFILE_DOS "freesci.cfg"
+#define FREESCI_FILE_VISUAL_MAP "visual_map.png"
+#define FREESCI_FILE_PRIORITY_MAP "priority_map.png"
+#define FREESCI_FILE_CONTROL_MAP "control_map.png"
+#define FREESCI_FILE_AUXILIARY_MAP "auxiliary_map.png"
 
 #define MAX_GAMEDIR_SIZE 32 /* Used for subdirectory inside of "~/.freesci/" */
 
@@ -58,16 +62,16 @@
 
 #define MAX_PORTS 16 /* Maximum number of view ports */
 
-
 typedef struct
 {
-    int size;
-    char *data;
+  int size;
+  int type; /* See above */
+  char *data;
 } hunk_block_t; /* Used to store dynamically allocated "far" memory */
 
 typedef struct _state
 {
-  char *game_name; /* Designation of the primary object (which inherits from Game) */
+  byte *game_name; /* Designation of the primary object (which inherits from Game) */
 
   /* Non-VM information */
 
@@ -93,6 +97,7 @@ typedef struct _state
   byte pic_not_valid; /* Is 0 if the background picture is "valid" */
   byte pic_is_new;    /* Set to 1 if a picture has just been loaded */
   byte onscreen_console;  /* Use the onscreen console for debugging */
+  byte *osc_backup; /* Backup of the pre-onscreen console screen data */
 
   int debug_mode; /* Contains flags for the various debug modes */
 
@@ -106,6 +111,7 @@ typedef struct _state
   int last_pointer_x, last_pointer_y; /* Mouse pointer coordinates as last drawn */
   int last_pointer_size_x, last_pointer_size_y; /* Mouse pointer size as last used */
   mouse_pointer_t *mouse_pointer; /* The current mouse pointer, or NULL if disabled */
+  int mouse_pointer_nr; /* Mouse pointer resource */
 
   int view_port; /* The currently active view port */
   port_t *ports[MAX_PORTS]; /* A list of all available ports */
@@ -151,6 +157,9 @@ typedef struct _state
 				 ** This variable contains the stack base for the
 				 ** current vm.
 				 */
+  int execution_stack_pos_changed;   /* Set to 1 if the execution stack position
+				     ** should be re-evaluated by the vm
+				     */
 
   heap_t *_heap; /* The heap structure */
   byte *heap; /* The actual heap data (equal to _heap->start) */
@@ -192,8 +201,27 @@ typedef struct _state
   breakpoint_t *bp_list;   /* List of breakpoints */
   int have_bp;  /* Bit mask specifying which types of breakpoints are used in bp_list */
 
+  struct _state *successor; /* Successor of this state: Used for restoring */
+
 } state_t;
 
 #define STATE_T_DEFINED
+
+
+int
+gamestate_save(state_t *s, char *dirname);
+/* Saves a game state to the hard disk in a portable way
+** Parameters: (state_t *) s: The state to save
+**             (char *) dirname: The subdirectory to store it in
+** Returns   : (int) 0 on success, 1 otherwise
+*/
+
+state_t *
+gamestate_restore(state_t *s, char *dirname);
+/* Restores a game state from a directory
+** Parameters: (state_t *) s: An older state from the same game
+**             (char *) dirname: The subdirectory to restore from
+** Returns   : (state_t *) NULL on failure, a pointer to a valid state_t otherwise
+*/
 
 #endif /* !_SCI_ENGINE_H */

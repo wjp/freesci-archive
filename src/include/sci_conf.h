@@ -33,26 +33,45 @@
 #include <graphics.h>
 
 typedef struct {
+  char *option;
+  char *value;
+} gfx_option_t;
 
+typedef struct {
+
+  char *name; /* Game identifier */
   sci_version_t version; /* The version to emulate */
   int color_mode; /* The mode to use for pic drawing */
   int unknown_count; /* The number of "unknown" kernel functions */ 
+  char *resource_dir; /* Resource directory */
+  char *work_dir;     /* Working directory (save games, additional graphics) */
   gfx_driver_t *gfx_driver; /* The graphics driver to use */
+  gfx_option_t *gfx_config; /* Graphics subsystem configuration options */
+  int gfx_config_nr; /* Number of options */
   char *console_log; /* The file to which console output should be echoed */
   char debug_mode [80]; /* Characters specifying areas for which debug output should be enabled */
 
 } config_entry_t;
 
 
-void
-config_init(config_entry_t *conf, char *name, char *conffile);
-/* Initializes the config entry based on information found in the config file.
-** Parameters: (config_entry_t *) conf: Pointer to the configuration entry to initialize
-**             (char *) name: The name of the game to initialize it for
+int
+config_init(config_entry_t **conf, char *conffil);
+/* Initializes the config entry structurre based on information found in the config file.
+** Parameters: (config_entry_t **) conf: See below
 **             (char *) conffile: Filename of the config file, or NULL to use the default name
+** Returns   : (int) The number of config file entries found
 ** This function reads the ~/.freesci/config file, parses it, and inserts the appropriate
-** data into conf.
-** Not threadsafe. Uses flex.
+** data into *conf. *conf will be malloc'd to be an array containing default information in [0]
+** and game-specific data in each of the subsequent record entries.
+** Not threadsafe. Uses flex-generated code.
+*/
+
+void
+config_free(config_entry_t **conf, int entries);
+/* Frees a config entry structure
+** Parameters: (config_entry_t **) conf: Pointer to the pointer to the first entry of the list
+**             (int) entries: Number of entries to free
+** Returns   : (void)
 */
 
 #endif /* !_SCI_CONFIG_H */

@@ -28,6 +28,7 @@
 
 
 #include <engine.h>
+#include <graphics_png.h>
 
 
 typedef struct {
@@ -138,7 +139,9 @@ graph_save_box(struct _state *s, int x, int y, int xl, int yl, int layers)
   if ((xl < 0) || (yl < 0))
     return 0;
 
-  handle = kalloc(s, xl * yl * 3 +  5*(sizeof(int))); /* Three layers plus x, y, xl, yl, layers */
+  handle = kalloc(s, HUNK_TYPE_GFXBUFFER, xl * yl * 3 +  5*(sizeof(int)));
+  /* Three layers plus x, y, xl, yl, layers */
+
   box = (_graph_memrect_t *) kmem(s, handle);
   dest = &(box->data[0]);
 
@@ -469,3 +472,114 @@ graph_on_control(state_t *s, int x, int y, int xl, int yl, int _map)
 
   return retval;
 }
+
+
+int
+graph_png_save_box(state_t *s, byte *mem)
+{
+  char filename[20];
+  int layer, i;
+  int handle = 0;
+  byte *data;
+
+  _graph_memrect_t *box = (_graph_memrect_t *) mem;
+
+  if (!box)
+    return -1;
+
+  data = &(box->data[0]);
+
+  i = 1;
+  while (!handle) { /* Find an empty handle */
+    int exists = 0;
+
+    for (layer = 1; layer < 5; layer <<= 1) {
+      FILE *fh;
+
+      sprintf(filename, "buffer_%d.%d", i, layer);
+      if (fh = fopen(filename, "r")) {
+	fclose(fh);
+	exists = 1;
+      }
+    }
+
+    if (!exists)
+      handle = i;
+    else ++i;
+  }
+
+  for (layer = 1; layer < 5; layer <<= 1) {
+    sprintf(filename, "buffer_%d.%d", handle, layer);
+    unlink(filename); /* Kill it just in case... */
+
+    if (layer & box->layers) {
+      if (png_save_buffer(s->pic, filename, box->x, box->y, /* Try to save */
+			  box->xl, box->yl, data, (layer != 1)))
+	return -1;
+      if (layer == 1) { /* If on layer 1, we're working on an actual picture */
+	data += (box->xl * box->yl * s->pic->xfact * s->pic->yfact * s->pic->bytespp);
+      } else
+	data += (box->xl * box->yl); /* Else it's a simple byte map */
+    }
+  }
+
+  return handle;
+}
+
+
+byte *
+graph_png_load_box(state_t *s, int handle, int *alloc_size)
+{
+  _graph_memrect_t *box;
+  int x, y, xl, yl, i;
+  char filename[20];
+  int layer;
+  int layers = 0;
+  byte *data[3] = {NULL, NULL, NULL};
+  byte *datap;
+  int sizes[3] = {0, 0, 0};
+  int totalsize = 0;
+
+  for (i = 0; i < 3; i++) {
+    layer = 1 << i;
+
+    sprintf(filename, "buffer_%d.%d", handle, layer);
+
+      if (data[i] = png_load_buffer(s->pic, filename, &x, &y, /* Try to load */
+				    &xl, &yl, &(sizes[i]), (layer != 1))) {
+	layers |= layer;
+	totalsize += sizes[i];
+      }
+  }
+
+  if (!layers) /* Nothing read */
+    return NULL;
+
+  box = (_graph_memrect_t *) malloc(*alloc_size = (sizeof(int) * 5 + totalsize));
+
+  box->x = x;
+  box->y = y;
+  box->xl = xl;
+  box->yl = yl;
+  box->layers = layers;
+
+  datap = &(box->data[0]);
+  for (i = 0; i < 3; i++) /* Concatenate all graphics information */
+    if (data[i]) {
+      memcpy(datap, data[i], sizes[i]);
+      datap += sizes[i];
+
+      free(data[i]);
+    }
+
+  return (byte *) box;
+}
+
+
+/*
+  ((defun foo (bar baz)
+  (cond ((endp baz) '(anywhere))
+  (t (append (list (first bar)) (cons (car baz) (foo (rest bar) (cdr baz)))))
+  ))
+  (foo (nthcdr 3 (foo '(at divine emacs) '(however looks evaluate))) '(like can lisp))
+ */

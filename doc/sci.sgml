@@ -5145,6 +5145,21 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                    names and values, funcselector names and addresses).
                 </para>
               </sect3>
+              <sect3><title/bpdel (index)/
+                <para>
+                  Deletes a breakpoint from the specified index of the list of active breakpoints.
+                </para>
+              </sect3>
+              <sect3><title/bplist/
+                <para>
+                  Lists all active breakpoints.
+                </para>
+              </sect3>
+              <sect3><title/bpx (method)/
+                <para>
+                  Adds a breakpoint to the specified method.
+                </para>
+              </sect3>
               <sect3><Title/bt/
                 <para>
                    Backtrace: Shows the execution stack, bundled with call parameters and selector
@@ -5165,6 +5180,32 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                    all, and in the darkness bind them.
                 </para>
               </sect3>
+              <sect3><title/debuglog [mode]/
+                <para>
+                   FreeSCI keeps an internal list of flags for specific areas of the game that
+                   should be watched more closely. The 'debuglog' command activates or deactivates
+                   debug output for each of those areas. Each area is described by a letter; to
+                   activate debugging for that area, use "debuglog +x", where x is the area you
+                   want to debug. "debuglog -x" deactivates debugging for that area. To activate or
+                   deactivate multiple areas, concatenate their single-letter descriptions. Run
+                   "debuglog" without parameters to get a listing of all active modes. The modes
+                   and describing letters are listed below.
+                    <simplelist>
+                     <member/a: The audio subsystem/
+                     <member/b: The Bresenham line algorithm functions/
+                     <member/c: Character and string handling/
+                     <member/d: System graphics display and management/
+                     <member/f: Function calls/
+                     <member/g: Graphics/
+                     <member/l: List and node handling/
+                     <member/m: Memory management/
+                     <member/p: The command parser/
+                     <member/s: Base setter: Draws the bases of each actor as colored rectangles/
+                     <member/u: Unimplemented functionality/
+                     <member/*: Everything at once. Use with care./
+                   </simplelist>
+                </para>
+              </sect3>
               <sect3><Title/disasm (address) [number]/
                 <para>
                    The debugger is able to disassemble code parts on the fly. Just give it an
@@ -5172,6 +5213,17 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                    dump, if you're feeling bold enough to look at more than one of them
                    simultaneously). Unfortunately, it can only do send prediction and parameter
                    resolution if it is disassembling the PC.
+                </para>
+              </sect3>
+              <sect3><title/dumpnodes (index)/
+                <para>
+                  Lists up to <parameter/index/ nodes of the parse tree.
+                </para>
+              </sect3>
+              <sect3><title/go/
+                <para>
+                  Deactivates debug mode and runs the game. Debug mode can be re-activated in the
+                  usual ways.
                 </para>
               </sect3>
               <sect3><Title/heapdump (address) (number)/
@@ -5227,6 +5279,12 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                    base object, of the global variables, and of the stack.
                 </para>
               </sect3>
+              <sect3><title/restore_game (name)/
+                <para>
+                  Tries to restore a game state from the specified directory. See <xref
+                  linkend="freesci-savegames"> for details about this.
+                </para>
+              </sect3>
               <sect3><Title/resource_id (number)/
                 <para>
                    FreeSCI packs resource type and number into the usual resource id combination.
@@ -5239,11 +5297,38 @@ the maps using the cast list created by Animate, whereas the ShowBits call
                    specified.
                 </para>
               </sect3>
+              <sect3><title/save_game (name)/
+                <para>
+                  Saves the current game state to a directory with the specified <parameter/name/.
+                  The directory is created automatically; everything inside is deleted, and the
+                  game data is stored. See <xref linkend="freesci-savegames"> for details about this.
+                </para>
+              </sect3>
               <sect3><Title/set_acc (number)/
                 <para>
                    Frobbing the accumulator is not recommended, but it may be fun at times. Use this
                    command to set your favourite register to an arbitrary value and watch things blow
                    up.
+                </para>
+              </sect3>
+              <sect3><title/set_vismap (mapnr)/
+                <para>
+                  Sets the visual display map. Mapnr can be any of the following:
+                  <simplelist>
+                    <member/0: Visual map/
+                    <member/1: Priority map/
+                    <member/2: Control map/
+                    <member>4: Auxiliary map
+                        <footnote><para/Not really meaningful; only used while pic
+                                        resources are drawn./</footnote></member>
+                  </simplelist>
+                  This function does not automatically redraw the screen.
+                </para>
+              </sect3>
+              <sect3><title/simkey (keynr)/
+                <para>
+                  Simulates a keypress of a key with the specified key number. Modifiers are
+                  not applied.
                 </para>
               </sect3>
               <sect3><Title/snk [number]/
@@ -5267,6 +5352,114 @@ the maps using the cast list created by Animate, whereas the ShowBits call
               </sect3>
            </Sect2>
      </Sect1>
+     <sect1 id = "freesci-savegames">
+        <title/Save games/
+        <para>
+           FreeSCI attempts to store savegames portably; for this reason, most of the game data
+           is saved as plain text, while the graphics are written to png<footnote>
+           <para/Portable Network Graphics. A very portable graphics format with lossless compression,
+           a free reference implementation, and dozens of useful features./</footnote> files.
+        </para>
+        <sect2><Title/Savegame directory policy/
+           <para>
+             The general FreeSCI directory policy is simple: If there is a $HOME, use
+             ~/.freesci/[game name]/ as your playground, if there is no home, use the current
+             working directory. Save games are true to that policy. Each save game has a directory
+             associated with itself, and this directory is relative to the directory mentioned above.
+             For example, if you execute "save_game frobnitz" in SQ3 on your *BSD box while
+             your $HOME is set to /home/rogerw, the save game files would be written to
+             /home/rogerw/.freesci/SQ3/frobnitz/.
+           </para>
+        </sect2>
+        <sect2><Title/Files/
+           <sect3><Title/state/
+             <para>
+               This is the main save file. It contains huge amounts of text data, which are
+               an almost-complete replication of the game internal state_t structure. The code
+               used to read and write this file is automatically generated by a script called
+               cfsml.pl, and it is believed to be rather flexible; i.e. you should be able to
+               insert blank lines, comment lines, (Using the hash ('#') sign), move assignements
+               around, and change values. The identifiers used in this file are identical to the
+               identifiers used in the c code.
+             </para>
+           </sect3>
+           <sect3><Title/heap/
+             <para>
+               This is a binary copy of the heap data. Heap data is internally structured to be
+               identical to SCI heap data (little endian, 16 bit), so it is portable to all platforms.
+             </para>
+           </sect3>
+           <sect3><Title/buffer*/
+             <para>
+               These are png files containing the various graphical buffers used in the game.
+               buffer_x.1 is the visual buffer, buffer_x.2 is the priority buffer, and buffer_x.4
+               is the control buffer. Any combination of these three buffers is possible.
+             </para>
+             <para>
+               Control and priority buffers contain a grayscale gradient palette.
+             </para>
+           </sect3>
+           <sect3><Title/hunk*/
+             <para>
+               These files contain raw hunk data. SCI code may allocate raw hunk data, but
+               it can't do anything with it (except unallocate it again). It is unlikely that you
+               are going to encounter a hunk file in normal SCI code. This may change for later SCI
+               versions.
+             </para>
+           </sect3>
+           <sect3><Title/*map.png/
+             <para>
+               The four maps of the main picture are stored in four separate png files:
+               <simplelist>
+                 <member/visual_map.png/
+                 <member/priority_map.png/
+                 <member/control_map.png/
+                 <member/auxiliary_map.png/
+               </simplelist>
+               The meanings of those files should be rather obvious.
+             </para>
+             <para>
+               visual_map.png contains regular palette or color information, so it is, in fact,
+               a screenshot of the game (the mouse pointer is not shown, since it is not stored
+               in the display maps). The other three png files each contain a greyscale gradient
+               palette.
+             </para>
+           </sect3>
+        </sect2>
+        <sect2><Title/Caveats/
+           <para>
+               FreeSCI's file saving and restoration functionality isn't perfect. Please be aware
+               of the following flaws and limitations before you dig out your flame thrower:
+           </para>
+           <sect3><Title/File handles/
+              <para>
+                Open file handles are NOT stored or loaded. If you try to save the game with
+                the built-in debugger while file handles are still open, you will be warned
+                about this and saving will abort, unless you preceed your save directory name
+                with an underscore ('_').
+              </para>
+           </sect3>
+           <sect3><Title/Audio/
+              <para>
+                The state of the audio subsystem is not written to disk or restored. This is
+                only temporary, though.
+              </para>
+           </sect3>
+           <sect3><Title/Kernel functions/
+              <para>
+                 SCI kernel functions are able to call the virtual machine. In practice, this
+                 means that you may have two or more vm function calls on your system stack;
+                 it is not easily possible to store the game state in this case. FreeSCI does not
+                 allow it, and, as far as I know, no Sierra SCI code ever tries to do that.
+              </para>
+              <para>
+                 To determine whether or not this applies to you, run
+                 "bt" in the debugger; the "base" number in the first line must be zero, or you won't
+                 be able to save the game (restoring should work, though).
+              </para>
+           </sect3>
+        </sect2>
+     </sect1>
      <Sect1>
         <Title/Kernel hacking/
         <para>

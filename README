@@ -34,18 +34,12 @@ src/sciv - The main executable; this loads, links and runs SCI bytecode.
 
 
 Required 'non-standard' libraries:
- * glib
- * GGI (http://www.ggi-project.org)
+ * glib (ftp://ftp.gtk.org)
+ * libpng (http://www.cdrom.com/pub/png)
+ * GGI (ftp://ftp.ggi-project.org)
 
-
-GSI (http://www.xs4all.nl/~whs/gsi/gsi.html) is required for sound support.
-The sound stuff should build without it, though; of course, only MIDI data
-/generation/ will work without gsi.
-
-libpng (http://www.cdrom.com/pub/png/) is required if you want to be able to
-store images as .png files. It will not become a necessity for the complete
-FreeSCI engine.
-
+libpng is a new requirement (it was previously listed as "not being
+neccessary", sorry for that.
 
 
 Running it
@@ -95,6 +89,8 @@ time, the configuration file may contain:
 - [GAME_ID]: Commands following this line will only have an effect for
   the game with the specified game ID. (The game ID is printed during
   sciv startup, and is also used to create the save game directory).
+- resource_dir: Read the game's resource data from the specified location.
+  Must not be used in the generic part of the config file.
 
 Example:
 ------------------------
@@ -108,11 +104,13 @@ color_mode = flat
 [Glory]
 
 color_mode = dither256
+resource_dir = /usr/local/share/freesci/qg1
 # Quest for glory looks better in that mode
 
 [SQ3]
 
 version = 0.000.453
+resource_dir = /home/bob/stuff/misc/other/games/more/sierra/old/sq/3
 # This SQ3 version is ancient
 -----------------------
 

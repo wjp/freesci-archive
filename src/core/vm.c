@@ -354,12 +354,13 @@ add_exec_stack_entry(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int ar
 
 
 void
-run_vm(state_t *s)
+run_vm(state_t *s, int restoring)
 {
   gint16 temp, temp2, temp3;
   gint16 opparams[4]; /* opcode parameters */
 
   int bp_flag = 0;
+
 
   int restadjust = 0; /* &rest adjusts the parameter count by this value */
   /* Current execution data: */
@@ -367,8 +368,15 @@ run_vm(state_t *s)
   exec_stack_t *xs_new; /* Used during some operations */
   
   int old_execution_stack_base = s->execution_stack_base;
-  s->execution_stack_base = s->execution_stack_pos;
 
+  if (restoring) {
+
+
+  } else {
+
+    s->execution_stack_base = s->execution_stack_pos;
+
+  }
   
   /* SCI code reads the zeroeth argument to determine argc */
   PUT_HEAP(xs->variables[VAR_PARAM], xs->argc);
@@ -402,6 +410,11 @@ run_vm(state_t *s)
     heap_ptr old_sp = xs->sp;
     byte opcode, opnumber;
     int var_number; /* See description below */
+
+    if (s->execution_stack_pos_changed) {
+      xs = s->execution_stack + s->execution_stack_pos;
+      s->execution_stack_pos_changed = 0;
+    }
 
     script_error_flag = 0; /* Set error condition to false */
 
@@ -1069,6 +1082,7 @@ int
 script_init_state(state_t *s, sci_version_t version)
 {
   resource_t *vocab996 = findResource(sci_vocab, 996);
+  int i;
   int scriptnr;
   int seeker;
   int classnr;
@@ -1076,7 +1090,18 @@ script_init_state(state_t *s, sci_version_t version)
   resource_t *script;
   int magic_offset; /* For strange scripts in older SCI versions */
 
-  s->max_version = 0xfffffff; /* :-) */
+  /* Initialize script table */
+  for (i = 0; i < 1000; i++)
+    s->scripttable[i].heappos = 0;
+  /* Initialize hunk data */
+  for (i = 0; i < MAX_HUNK_BLOCKS; i++)
+    s->hunk[i].size = 0;
+  /* Initialize ports */
+  memset(s->ports, 0, sizeof(port_t *) * MAX_PORTS);
+  /* Initialize clone list */
+  memset(&(s->clone_list), 0, sizeof(heap_ptr) * SCRIPT_MAX_CLONES);
+
+  s->max_version = SCI_VERSION(9,999,999); /* :-) */
   s->min_version = 0; /* Set no real limits */
   s->version = SCI_VERSION_DEFAULT_SCI0;
 
@@ -1165,7 +1190,37 @@ script_init_state(state_t *s, sci_version_t version)
 void
 script_free_state(state_t *s)
 {
+  int i;
+
+  sciprintf("Freeing state-dependant data\n");
+  for (i = 0; i < MAX_HUNK_BLOCKS; i++)
+      if (s->hunk[i].size) {
+	  free(s->hunk[i].data);
+	  s->hunk[i].size = 0;
+      }
+
+  for (i = 3; i < MAX_PORTS; i++) /* Ports 0,1,2 are fixed */
+    if (s->ports[i]) {
+      free(s->ports[i]);
+      s->ports[i] = 0;
+    }
+
+  if (s->pic_views)
+    free(s->pic_views);
+  if (s->dyn_views)
+    free(s->dyn_views);
+
+  /* Close all opened file handles */
+  for (i = 1; i < s->file_handles_nr; i++)
+    if (s->file_handles[i])
+      fclose(s->file_handles[i]);
+
+  free(s->file_handles);
+
   heap_del(s->_heap);
+
+  menubar_free(s->menubar);
+
   free(s->classtable);
 }
 
@@ -1179,7 +1234,6 @@ script_instantiate(state_t *s, int script_nr)
   unsigned int objlength;
   heap_ptr script_basepos;
   int magic_pos_adder; /* Usually 0; 2 for older SCI versions */
-
   if (!script) {
     sciprintf("Script 0x%x requested but not found\n", script_nr);
     /*    script_debug_flag = script_error_flag = 1; */
@@ -1405,7 +1459,7 @@ game_init(state_t *s)
   heap_ptr game_init; /* Address of the init() method */
   heap_ptr functarea;
   resource_t *resource;
-  int i;
+  int i, font_nr;
 
   if (!stack_handle) {
     sciprintf("script_init(): Insufficient heap space for stack\n");
@@ -1421,6 +1475,8 @@ game_init(state_t *s)
     sciprintf("script_init(): Could not instantiate script 0\n");
     return 1;
   }
+
+  s->successor = NULL; /* No successor */
 
   fprintf(stderr," Script 0 at %04x\n", script0);
 
@@ -1470,6 +1526,7 @@ game_init(state_t *s)
   /* Use start time as last_wait_time */
 
   s->mouse_pointer = NULL; /* No mouse pointer */
+  s->mouse_pointer_nr = -1; /* No mouse pointer resource */
   s->pointer_x = (320 / 2); /* With centered x coordinate */
   s->pointer_y = 150; /* And an y coordinate somewhere down the screen */
   s->last_pointer_x = 0;
@@ -1514,10 +1571,10 @@ game_init(state_t *s)
 
   srand(time(NULL)); /* Initialize random number generator */
 
-  i = 0;
+  font_nr = -1;
   do {
-    resource = findResource(sci_font, i++);
-  } while ((!resource) && (i < 1000));
+    resource = findResource(sci_font, ++font_nr);
+  } while ((!resource) && (font_nr < 999));
 
   if (!resource) {
     sciprintf("No text font was found.\n");
@@ -1525,6 +1582,9 @@ game_init(state_t *s)
   }
   for (i = 0; i < 3; i++) {
       s->ports[i]->font = resource->data; /* let all ports default to the 'system' font */
+      s->ports[i]->gray_text = 0;
+      s->ports[i]->font_nr = font_nr;
+      s->ports[i]->color = 0;
       s->ports[i]->bgcolor = -1; /* All ports should be transparent */
   }
 
@@ -1562,8 +1622,11 @@ game_init(state_t *s)
 }
   
 int
-game_run(state_t *s)
+game_run(state_t **_s)
 {
+  state_t *successor = NULL;
+  state_t *s = *_s;
+
   sciprintf(" Calling %s::play()\n", s->game_name);
   putInt16(s->heap + s->stack_base, s->selector_map.play); /* Call the play selector... */
   putInt16(s->heap + s->stack_base + 2, 0);                    /* ... with 0 arguments. */
@@ -1571,10 +1634,15 @@ game_run(state_t *s)
   /* Now: Register the first element on the execution stack- */
   send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
   /* and ENGAGE! */
-  run_vm(s);
 
-  if (s->execution_stack)
-    free(s->execution_stack);
+  do {
+    run_vm(s, (successor)? 1 : 0);
+    if (successor = s->successor) {
+      script_abort_flag = 0;
+      free(s);
+      *_s = s = successor;
+    }
+  } while (successor);
 
   sciprintf(" Game::play() finished.\n");
   return 0;
@@ -1585,6 +1653,9 @@ game_exit(state_t *s)
 {
   int i;
   breakpoint_t *bp, *bp_next;
+
+  if (s->execution_stack)
+    free(s->execution_stack);
 
   sciprintf("Freeing vocabulary...\n");
   vocabulary_free_snames(s->selector_names);
@@ -1601,27 +1672,7 @@ game_exit(state_t *s)
   sciprintf("Freeing graphics data...\n");
   free_picture(s->pic);
 
-  for (i = 0; i < MAX_HUNK_BLOCKS; i++)
-      if (s->hunk[i].size) {
-	  free(s->hunk[i].data);
-	  s->hunk[i].size = 0;
-      }
-
-  for (i = 3; i < MAX_PORTS; i++) /* Ports 0,1,2 are fixed */
-    if (s->ports[i]) {
-      free(s->ports[i]);
-      s->ports[i] = 0;
-    }
-
-  if (s->pic_views)
-    free(s->pic_views);
-  if (s->dyn_views)
-    free(s->dyn_views);
-
   sciprintf("Freeing miscellaneous data...\n");
-  free(s->file_handles);
-
-  menubar_free(s->menubar);
 
   if (s->parser_words) {
     vocab_free_words(s->parser_words, s->parser_words_nr);
@@ -1691,3 +1742,12 @@ version_require_later_than(state_t *s, sci_version_t version)
   }
 }
 
+sci_version_t
+version_parse(char *vn)
+{
+  int major = *vn - '0'; /* One version digit */
+  int minor = atoi(vn + 2);
+  int patchlevel = atoi(vn + 6);
+
+  return SCI_VERSION(major, minor, patchlevel);
+}

@@ -50,7 +50,7 @@ heap_t* heap_new()
 	heap_t* h;
 	if((h=malloc(sizeof(heap_t)))==0) return 0;
 
-	if((h->start=calloc(0xffff, 1))==0)
+	if((h->start=calloc(SCI_HEAP_SIZE, 1))==0)
 	{
 		free(h);
 		return 0;

@@ -1,3 +1,15 @@
+1999-11-12  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/savegame.cfsml : Implemented saving/restoring the game
+	state. Everything seems to save and restore cleanly, except for the
+	sound driver (saving/restoring still needs to be implemented there).
+
+1999-11-07  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/config.l (config_init): Added another config option,
+	"resource_dir", to the config file parser. This makes it possible
+	to run a game with a command like "sciv lsl2".
+
 1999-10-20  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/vm.c (run_vm): Re-implemented parts of the vm so that

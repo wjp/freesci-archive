@@ -76,6 +76,9 @@ s%@ac_graphics_ggi_libfile@%graphics_ggi.c%g
 s%@ac_graphics_ggi_libobjects@%graphics_ggi.o%g
 s%@ac_ggi_includes@%-I/usr/local/include%g
 s%@ac_ggi_libraries@%-L/usr/local/lib -lggi -lgii%g
+s%@LEX@%flex%g
+s%@LEXLIB@%-lfl%g
+s%@LEX_OUTPUT_ROOT@%lex.yy%g
 s%@GLIB_CONFIG@%/usr/local/bin/glib-config%g
 s%@ac_glib_includes@%%g
 s%@ac_glib_libraries@%%g
@@ -269,6 +272,9 @@ CEOF
 ${ac_dA}HAVE_LIBGGI${ac_dB}HAVE_LIBGGI${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_LIBGGI${ac_uB}HAVE_LIBGGI${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_LIBGGI${ac_eB}HAVE_LIBGGI${ac_eC}1${ac_eD}
+${ac_dA}YYTEXT_POINTER${ac_dB}YYTEXT_POINTER${ac_dC}1${ac_dD}
+${ac_uA}YYTEXT_POINTER${ac_uB}YYTEXT_POINTER${ac_uC}1${ac_uD}
+${ac_eA}YYTEXT_POINTER${ac_eB}YYTEXT_POINTER${ac_eC}1${ac_eD}
 ${ac_dA}HAVE_LIBPNG${ac_dB}HAVE_LIBPNG${ac_dC}1${ac_dD}
 ${ac_uA}HAVE_LIBPNG${ac_uB}HAVE_LIBPNG${ac_uC}1${ac_uD}
 ${ac_eA}HAVE_LIBPNG${ac_eB}HAVE_LIBPNG${ac_eC}1${ac_eD}

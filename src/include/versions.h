@@ -91,5 +91,11 @@ version_require_later_than(struct _state *s, sci_version_t version);
 **             (sci_version_t) version: The version that we're later than
 */
 
+sci_version_t
+version_parse(char *vn);
+/* Parse a string containing an SCI version number
+** Parameters: (char *) vn: The string to parse
+** Returns   : (sci_version_t): The resulting version number
+*/
 
 #endif /* !_SCI_VERSIONS_H_ */

@@ -187,6 +187,90 @@ c_classtable(state_t *s)
   return 0;
 }
 
+
+int
+c_save_game(state_t *s)
+{
+  int omit_check = cmd_params[0].str[0] == '_';
+  int i;
+
+  if (!s) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  if (!omit_check) {
+    int result = 0;
+    for (i = 0; i < s->file_handles_nr; i++)
+      if (s->file_handles[i])
+	result++;
+
+    if (result) {
+      sciprintf("Game state has %d open file handles.\n", result);
+      sciprintf("Save to '_%s' to ignore this check.\nGame was NOT saved.\n", cmd_params[0].str);
+      return 1;
+    }
+  }
+
+  if (s->onscreen_console)
+    con_restore_screen(s, s->osc_backup);
+
+  if (gamestate_save(s, cmd_params[0].str)) {
+    sciprintf("Saving the game state to '%s' failed\n", cmd_params[0].str);
+  }
+
+  if (s->onscreen_console) {
+    s->osc_backup = con_backup_screen(s);
+  }
+
+  return 0;
+}
+
+
+int
+c_restore_game(state_t *s)
+{
+  state_t *newstate;
+
+  if (!s) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  if (s->onscreen_console)
+    con_restore_screen(s, s->osc_backup);
+
+  newstate = gamestate_restore(s, cmd_params[0].str);
+
+  if (newstate) {
+
+    s->successor = newstate; /* Set successor */
+    graph_update_box(newstate, 0, 0, 320, 200); /* Redraw screen */
+    sciprintf("Game '%s' was restored.\n", cmd_params[0].str);
+    script_abort_flag = 1; /* Abort game */
+    _debugstate_valid = 0;
+
+    if (s->onscreen_console) {
+      newstate->onscreen_console = 1;
+      s->osc_backup = con_backup_screen(s);
+    } else
+      newstate->onscreen_console = 0;
+
+    script_free_state(s); /* Clear old state */
+    return 0;
+
+  } else {
+
+    if (s->onscreen_console)
+      s->osc_backup = con_backup_screen(s);
+
+    sciprintf("Restoring gamestate '%s' failed.\n", cmd_params[0].str);
+    return 1;
+  }
+
+}
+
+
 int
 c_stack(state_t *s)
 {
@@ -1105,6 +1189,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       cmdHook(c_go, "go", "", "Executes the script.\n");
       cmdHook(c_dumpnodes, "dumpnodes", "i", "shows the specified number of nodes\n"
 	      "  from the parse node tree");
+      cmdHook(c_save_game, "save_game", "s", "Saves the current game state to\n  the hard disk");
+      cmdHook(c_restore_game, "restore_game", "s", "Restores a saved game from the\n  hard disk");
 
       cmdHookInt(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");
       cmdHookInt(&script_checkloads_flag, "script_checkloads_flag", "Set != 0 to display information\n"
@@ -1123,26 +1209,26 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 
   if (s->onscreen_console) {
 
-    byte *backup = con_backup_screen(s);
+    s->osc_backup = con_backup_screen(s);
     con_visible_rows = 20;
 
     while (_debugstate_valid) {
       sci_event_t event = (s->gfx_driver->GetEvent(s));
       char *commandbuf;
 
-      con_draw(s, backup);
+      con_draw(s, s->osc_backup);
 
       if ((event.buckybits & SCI_EVM_CTRL) && (event.data == '`')) /* UnConsole command? */
 	_debugstate_valid = 0;
       else
       if (commandbuf = consoleInput(&event)) {
+	sciprintf(" >%s\n", commandbuf);
 	cmdParse(s, commandbuf);
-	sciprintf(" >%s\n", s);
       }
 
     }
 
-    con_restore_screen(s, backup);
+    con_restore_screen(s, s->osc_backup);
 
   } else {
 

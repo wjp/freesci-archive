@@ -9,6 +9,8 @@
 #ifndef _SCI_VM_H
 #define _SCI_VM_H
 
+#define SAVE_GAME_VERSION 1
+
 #define VM_STACK_SIZE 0x1000
 /* Number of bytes to be allocated for the stack */
 
@@ -66,6 +68,10 @@
 #define SELECTOR_VARIABLE 1
 #define SELECTOR_METHOD 2
 /* Types of selectors as returned by grep_selector() below */
+
+/* kalloc types: */
+#define HUNK_TYPE_ANY 0
+#define HUNK_TYPE_GFXBUFFER 1 /* Graphical buffer */
 
 
 struct _state; /* engine.h */
@@ -150,7 +156,7 @@ typedef struct {
   int x, y;
   int priority;
   byte *view;
-  int loop, cel;
+  int view_nr, loop, cel; /* view_nr is ised for save/restore */
   int nsTop, nsLeft, nsRight, nsBottom;
 } view_object_t;
 
@@ -284,9 +290,10 @@ add_exec_stack_varselector(struct _state *s, heap_ptr objp, int argc, heap_ptr a
 
 
 void
-vm_run(struct _state *s);
+run_vm(struct _state *s, int restoring);
 /* Executes the code on s->heap[pc] until it hits a 'ret' operation while (stack_base == stack_pos)
 ** Parameters: (state_t *) s: The state to use
+**             (int) restoring: 1 if s has just been restored, 0 otherwise
 ** Returns   : (void)
 ** This function will execute SCI bytecode. It requires s to be set up
 ** correctly.
@@ -348,6 +355,7 @@ script_instantiate(struct _state *s, int script_nr);
 ** The complementary function is "script_uninstantiate()" below.
 */
 
+
 void
 script_uninstantiate(struct _state *s, int script_nr);
 /* Decreases the numer of lockers of a script and unloads it if that number reaches zero
@@ -356,6 +364,24 @@ script_uninstantiate(struct _state *s, int script_nr);
 ** Returns   : (void)
 ** This function will recursively unload scripts containing its superclasses, if those
 ** aren't locked by other scripts as well.
+*/
+
+
+int
+game_save_state(struct _state *s, char *name, int coredump);
+/* Saves the game state to the harddisk
+** Parameters: (state_t *) s: The game state to save
+**             (char *) name: Name of the subdirectory (relative to s->save_dir)
+**             (int) coredump: Set to non-zero in order to write additional debug information
+** Returns   : (int) 0 on success, 1 otherwise
+*/
+
+
+struct _state *
+game_restore_state(char *name);
+/* Restores the game state from a file
+** Parameters: (char *) name: Name of the saved game state to restore
+** Returns   : (state_t *): The restored game state, or NULL on failure
 */
 
 
@@ -369,13 +395,14 @@ game_init(struct _state *s);
 
 
 int
-game_run(struct _state *s);
+game_run(struct _state **s);
 /* Runs an SCI game
-** Parameters: (state_t *) s: The state to operate on
+** Parameters: (state_t **) s: Pointer to the pointer of the state to operate on
 ** Returns   : (int): 0 on success, 1 if an error occured.
 ** This is the main function for SCI games. It takes a valid state, loads script 0 to it,
 ** finds the game object, allocates a stack, and runs the init method of the game object.
 ** In layman's terms, this runs an SCI game.
+** By the way, *s may be changed during the game, e.g. if a game state is restored.
 */
 
 
@@ -407,9 +434,10 @@ script_map_kernel(struct _state *s);
 
 
 int
-kalloc(struct _state *s, int space);
+kalloc(struct _state *s, int type, int space);
 /* Allocates "kernel" memory and returns a handle suitable to be passed on to SCI scripts
 ** Parameters: (state_t *) s: Pointer to the state_t to operate on
+**             (int) type: One of HUNK_TYPE_(ANY|GFXBUFFER)
 **             (int) space: The space to allocate
 ** Returns   : (int) The handle
 */
