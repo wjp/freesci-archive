@@ -258,8 +258,10 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 		int len = 0;
 		global_sound_server->queue_command(event.handle, event.signal, event.value);
 		global_sound_server->get_data((byte **)&retval, &len);
-		len = *retval;
-		free(retval);
+                if(retval) { /* or check if get_data has failed */
+		  len = *retval;
+		  free(retval);
+                }
 		return len; /* should be the polyphony */
 	}
 
