@@ -27,7 +27,7 @@ AC_PATH_GGI
 AC_PATH_CURSES
 AC_PATH_XTRA
 
-if test x"$have_x" == xyes; then
+if test x"$have_x" = xyes; then
 	AC_CHECK_XSHM
 fi
 

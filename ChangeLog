@@ -1,3 +1,20 @@
+2001-04-05  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* configure.in: Ungnuified pre-XSHM X11 check
+
+	* src/gfx/sci_widgets.c (un_prioritize): Changed menus to be drawn
+	without priorities
+
+2001-04-04  Matt Hargett  <matt@use.net>
+
+        * vm.c: Added NULL pointer checks on pointers passed into
+        interfaces. Initialized new pointers to NULL.
+
+        * resource.h: Changed sciprintf to be void to be consistent
+        with documentation.
+
+        * console.c: Ditto.
+
 2001-04-04  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* (many files): Added appropriate typecasts to fix compiler warnings

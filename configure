@@ -3074,7 +3074,7 @@ fi
 fi
 
 
-if test x"$have_x" == xyes; then
+if test x"$have_x" = xyes; then
 	
 echo $ac_n "checking for the X11 MIT-SHM extension""... $ac_c" 1>&6
 echo "configure:3081: checking for the X11 MIT-SHM extension" >&5

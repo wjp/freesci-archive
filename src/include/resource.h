@@ -238,7 +238,7 @@ sci_finish_find(sci_dir_t *dirent);
 ** the second operation is guaranteed to be a no-op.
 */
 
-int
+void
 sciprintf(char *fmt, ...);
 #define gfxprintf sciprintf
 /* Prints a string to the console stack

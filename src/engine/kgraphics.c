@@ -796,7 +796,7 @@ set_base(struct _state *s, heap_ptr object);
 abs_rect_t
 get_nsrect(struct _state *s, heap_ptr object, byte clip);
 
-static abs_rect_t
+static inline abs_rect_t
 nsrect_clip(state_t *s, int y, abs_rect_t retval, int priority);
 
 static int

@@ -2047,7 +2047,7 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 
 		case PIC_OP_TERMINATE:
 			p0printf("Terminator\n");
-WARNING( "ARTIFACT REMOVAL CODE is commented out!")
+			/* WARNING( "ARTIFACT REMOVAL CODE is commented out!") */
 			/* _gfxr_vismap_remove_artifacts(); */
 			return;
 			break;

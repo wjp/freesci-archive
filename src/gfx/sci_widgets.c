@@ -585,13 +585,27 @@ sciw_new_menu(state_t *s, gfxw_port_t *status_bar, menubar_t *menubar, int selec
 
 #define MAGIC_ID_OFFSET 0x2000
 
+static inline gfx_color_t
+un_prioritize(gfx_color_t col)
+{
+	col.priority = -1;
+	col.mask &= ~GFX_MASK_PRIORITY;
+
+	return col;
+}
+
 gfxw_widget_t *
 _make_menu_entry(menu_item_t *item, int offset, int width, gfxw_port_t *port, gfx_color_t color, gfx_color_t bgcolor, int ID, int gray)
 {
 	rect_t area = gfx_rect(MENU_BOX_LEFT_PADDING, 0, width - MENU_BOX_LEFT_PADDING, 10);
 	rect_t list_area = gfx_rect(port->zone.x, area.y + offset + port->zone.y, width, area.yl);
 	gfxw_list_t *list = (gfxw_list_t *) gfxw_set_id(GFXW(gfxw_new_list(list_area, 0)), ID);
-	gfx_color_t xcolor = gray? color : bgcolor;
+	gfx_color_t xcolor;
+
+	color = un_prioritize(color);
+	bgcolor = un_prioritize(bgcolor);
+
+	xcolor = gray? color : bgcolor;
 
 	list->add(GFXWC(list), GFXW(gfxw_new_box(port->visual->gfx_state, area, bgcolor, bgcolor, GFX_BOX_SHADE_FLAT)));
 	list->add(GFXWC(list), GFXW(gfxw_new_text(port->visual->gfx_state, area, port->font_nr, item->text, ALIGN_LEFT, ALIGN_CENTER,
@@ -612,6 +626,9 @@ _make_menu_hbar(int offset, int width, gfxw_port_t *port, gfx_color_t color, gfx
 	rect_t area = gfx_rect(0, 0, width, 10);
 	rect_t list_area = gfx_rect(area.x + port->zone.x, area.y + offset + port->zone.y, area.xl, area.yl);
 	gfxw_list_t *list = (gfxw_list_t *) gfxw_set_id(GFXW(gfxw_new_list(list_area, 0)), ID);
+
+	color = un_prioritize(color);
+	bgcolor = un_prioritize(bgcolor);
 
 	list->add(GFXWC(list), GFXW(gfxw_new_box(port->visual->gfx_state, area, bgcolor, bgcolor, GFX_BOX_SHADE_FLAT)));
 	list->add(GFXWC(list), GFXW(gfxw_new_line(gfx_rect(0, 5, width, 0), color,

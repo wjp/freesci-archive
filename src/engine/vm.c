@@ -64,6 +64,12 @@ script_error(state_t *s, char *file, int line, char *reason)
 static inline void
 putInt16(byte *addr, word value)
 {
+  if (NULL == addr)
+  {
+    sciprintf("vm.c: putInt16(): NULL passed for \"addr\"\n");
+    return;
+  }
+
   addr[0] = value &0xff;
   addr[1] = value >> 8;
 }
@@ -71,6 +77,12 @@ putInt16(byte *addr, word value)
 inline heap_ptr
 get_class_address(state_t *s, int classnr)
 {
+  if (NULL == s)
+  {
+    sciprintf("vm.c: get_class_address(): NULL passed for \"s\"\n");
+    return;
+  }
+
   if (!s->classtable[classnr].scriptposp) {
     sciprintf("Attempt to dereference class %x, which doesn't exist\n", classnr);
     script_error_flag = script_debug_flag = 1;
@@ -193,6 +205,12 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
 
 	/* The selector calls we catch are stored below: */
 	int send_calls_nr = -1;
+
+        if (NULL == s)
+        {
+                sciprintf("vm.c: exec_stack_t(): NULL passed for \"s\"\n");
+                return NULL;
+        }
 
 	framesize += restmod * 2;
 
@@ -389,7 +407,13 @@ add_exec_stack_entry(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int ar
 		     int selector, heap_ptr sendp, int origin, int localvarp)
 /* Returns new TOS element */
 {
-  exec_stack_t *xstack;
+  exec_stack_t *xstack = NULL;
+
+  if (NULL == s)
+  {
+    sciprintf("vm.c: add_exec_stack_entry(): NULL passed for \"s\"\n");
+    return NULL;
+  }
 
   if (!s->execution_stack)
     s->execution_stack = malloc(sizeof(exec_stack_t) * (s->execution_stack_size = 16));
@@ -442,7 +466,6 @@ run_vm(state_t *s, int restoring)
   guint16 utemp, utemp2;
   gint16 opparams[4]; /* opcode parameters */
 
-  
   int restadjust = s->amp_rest; /* &rest adjusts the parameter count by this value */
   /* Current execution data: */
   exec_stack_t *xs = s->execution_stack + s->execution_stack_pos;
@@ -450,6 +473,13 @@ run_vm(state_t *s, int restoring)
   
   int old_execution_stack_base = s->execution_stack_base;
 
+  if (NULL == s)
+  {
+    sciprintf("vm.c: run_vm(): NULL passed for \"s\"\n");
+    return;
+  }
+
+ 
   if (restoring) {
 
 
@@ -1224,6 +1254,12 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 	if (!script) {
 		sciprintf("Script 0x%x requested but not found\n", script_nr);
 		/*    script_debug_flag = script_error_flag = 1; */
+		return 0;
+	}
+
+        if (NULL == s)
+	{
+                sciprintf("vm.c: script_instantiate(): NULL passed for \"s\"\n");
 		return 0;
 	}
 

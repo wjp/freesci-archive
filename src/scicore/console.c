@@ -385,7 +385,7 @@ con_hook_int(int *pointer, char *name, char *description)
 /****************************************/
 
 
-int
+void
 sciprintf(char *fmt, ...)
 {
   va_list argp;
@@ -453,7 +453,7 @@ sciprintf(char *fmt, ...)
   con_outputlookback = con_outputbufpos;
   free(buf);
 
-  return 0;
+  return;
 }
 
 
