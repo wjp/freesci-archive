@@ -1,3 +1,8 @@
+2004-04-08  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/sound/fmopl.c: Declare inline functions the way we did
+	previously.
+
 2004-04-07  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/drivers/xlib_driver.c: Backported (copied) the Xft-free
