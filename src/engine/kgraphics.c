@@ -762,7 +762,8 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		SCIkdebug(SCIkBRESEN, "Checking vs dynviews:\n");
 
 	        while (widget) {
-			if (widget->ID && widget->ID != obj)
+			if (widget->ID && widget->ID != obj
+			    && is_object(s, widget->ID))
 				if (collides_with(s, abs_zone, widget->ID, 1, GASEOUS_VIEW_MASK_ACTIVE, funct_nr, argc, argp))
 					return;
 			widget = (gfxw_dyn_view_t *) widget->next;
