@@ -72,7 +72,7 @@ int midiout_alsaraw_open()
 	sprintf(devname, "hw:%d,%d", card, device);
 
 	if ((err = snd_rawmidi_open(NULL, &handle, devname, 0)) < 0) {
-		fprintf(stderr, "Open failed (%i): /dev/snd/midiC%iD%i\n", err, card, device);
+		fprintf(stderr, "NW Open failed (%i): /dev/snd/midiC%iD%i\n", err, card, device);
 		handle = NULL;
 		return -1;
 	}
@@ -85,11 +85,11 @@ int midiout_alsaraw_open()
 	int err;
 
 	if ((err = snd_rawmidi_open(&handle, card, device, SND_RAWMIDI_OPEN_OUTPUT)) < 0) {
-		fprintf(stderr, "Open failed (%i): /dev/snd/midiC%iD%i\n", err, card, device);
+		fprintf(stderr, "OL Open failed (%i): /dev/snd/midiC%iD%i\n", err, card, device);
 		handle = NULL;
 		return -1;
 	}
-	return 0;
+	return closed = 0;
 }
 #endif /* ALSA prior to 0.9.0 */
 

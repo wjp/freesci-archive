@@ -431,11 +431,11 @@ platforms (in order of appearance):
 - IA32/SuSE 6.3 Linux/gcc			tested
 - IA32/Windows 9x/NT/2k/Visual C++              tested
 - Sparc/Sun/Solaris/gcc				tested
-
-The following platforms used to be supported and are expected to work:
-- Alpha EV6/Compaq/Tru64/cc
-- Alpha EV6//FreeBSD/gcc
-- IA64/GNU/Linux64/gcc
+- Alpha EV6/Compaq/Tru64/cc			built
+- Alpha EV6//FreeBSD/gcc			built
+- IA64/GNU/Linux64/gcc				built
+- IA32//FreeBSD/gcc				built
+- IA32//NetBSD/gcc				built
 
 The following platform used to be supported, but no longer is:
 
