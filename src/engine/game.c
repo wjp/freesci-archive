@@ -396,7 +396,7 @@ script_init_engine(state_t *s, sci_version_t version)
 	/* Maps the kernel functions */
 
 	if (_init_vocabulary(s)) return 1;
-	if (s->selector_map.cantBeHere)
+	if (s->selector_map.cantBeHere != -1)
 		version_require_later_than(s, SCI_VERSION_FTU_INVERSE_CANBEHERE);
 
 	s->restarting_flags = SCI_GAME_IS_NOT_RESTARTING;
