@@ -191,13 +191,14 @@ _sci0_read_next_command(base_song_iterator_t *self, unsigned char *buf, int *res
 
 		if (cmd == SCI_MIDI_EOT) {
 			/* End of track? */
-			if (self->loops) {
+			if (self->loops > 1) {
 				*result = --self->loops;
 				self->offset = self->loop_offset;
 				self->last_cmd = 0;
 				self->state = SI_STATE_COMMAND;
 				return SI_LOOP;
 			} else {
+				self->loops = 0;
 				self->state = SI_STATE_FINISHED;
 				return SI_FINISHED;
 			}

@@ -118,11 +118,11 @@ song_lib_add(songlib_t songlib, song_t *song)
 	*seeker = song;
 }
 
-void /* Recursively free a chain of songs */
-_sonfree_chain(song_t *song)
+static void /* Recursively free a chain of songs */
+_songfree_chain(song_t *song)
 {
 	if (song) {
-		_sonfree_chain(song->next);
+		_songfree_chain(song->next);
 		songit_free(song->it);
 		song->it = NULL;
 		free(song);
@@ -140,7 +140,8 @@ song_lib_init(songlib_t *songlib)
 void
 song_lib_free(songlib_t songlib)
 {
-	_sonfree_chain(*(songlib.lib));
+	_songfree_chain(*(songlib.lib));
+	*(songlib.lib) = NULL;
 }
 
 
@@ -163,10 +164,6 @@ song_t *
 song_lib_find_active(songlib_t songlib, song_t *last_played_song)
 {
 	song_t *seeker = *(songlib.lib);
-
-	if (last_played_song)
-		if (last_played_song->status == SOUND_STATUS_PLAYING)
-			return last_played_song; /* That one was easy... */
 
 	while (seeker) {
 		if ((seeker->status == SOUND_STATUS_WAITING) ||

@@ -73,6 +73,23 @@ sfx_poll(sfx_state_t *self, song_handle_t *handle, int *cue);
 **             (int) *cue: The sound cue number (if SI_CUE), or the loop number (if SI_LOOP)
 */
 
+int
+sfx_get_volume(sfx_state_t *self);
+/* Determines the current global volume settings
+** Returns   : (int) The global volume, between 0 (silent) and 127 (max. volume)
+*/
+
+void
+sfx_set_volume(sfx_state_t *self, int volume);
+/* Determines the current global volume settings
+** Parameters: (int) volume: The new global volume, between 0 and 127 (see above)
+*/
+
+void
+sfx_all_stop(sfx_state_t *self);
+/* Stops all songs currently playing, purges song library
+*/
+
 
 /*****************/
 /*  Song basics  */

@@ -1,3 +1,10 @@
+2004-01-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sfx/iterator.c (_sci0_read_next_command): Song iterators now
+	loop one less time, as in Sierra SCI
+
+	* src/sfx/core.c (sfx_all_stop): Implemented 'allstop' command
+
 2004-01-04  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kernel.c (script_map_kernel): Unknown kernel calls

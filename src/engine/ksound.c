@@ -112,14 +112,21 @@ process_sound_events(state_t *s) /* Get all sound events, apply their changes to
 		switch (result) {
 
 		case SI_LOOP:
+			SCIkdebug(SCIkSOUND, "[process-sound] Song "PREG" looped (to %d)\n",
+				  PRINT_REG(obj), cue);
 			PUT_SEL32V(obj, signal, -1);
 			break;
 
 		case SI_CUE:
+			SCIkdebug(SCIkSOUND, "[process-sound] Song "PREG" received cue %d\n",
+				  PRINT_REG(obj), cue);
 			PUT_SEL32V(obj, signal, cue);
 			break;
 
 		case SI_FINISHED:
+			SCIkdebug(SCIkSOUND, "[process-sound] Song "PREG" finished\n",
+				  PRINT_REG(obj));
+			PUT_SEL32V(obj, signal, -1);
 			PUT_SEL32V(obj, state, _K_SOUND_STATUS_STOPPED);
 			break;
 
@@ -128,66 +135,6 @@ process_sound_events(state_t *s) /* Get all sound events, apply their changes to
 			break;
 		}
 	}
-
-	       /*
-	while ((event = s->sound_server->get_event(s))) {
-		heap_ptr obj = event->handle;
-
-		if (is_object(s, obj))
-		{
-			int signal = GET_SELECTOR(obj, signal);
-			
-			switch(event->signal)
-			{
-			case SOUND_SIGNAL_CUMULATIVE_CUE:
-				SCIkdebug(SCIkSOUND,"Received cumulative cue for %04x\n", obj);
-				PUT_SEL32V(obj, signal, signal + 1);
-				break;
-
-			case SOUND_SIGNAL_LOOP:
-				SCIkdebug(SCIkSOUND,"Received loop signal for %04x\n", obj);
-				PUT_SEL32V(obj, signal, -1);
-				break;
-
-			case SOUND_SIGNAL_FINISHED:
-				SCIkdebug(SCIkSOUND,"Received finished signal for %04x\n", obj);
-				PUT_SEL32V(obj, state, _K_SOUND_STATUS_STOPPED);
-				break;
-
-			case SOUND_SIGNAL_PLAYING:
-				SCIkdebug(SCIkSOUND,"Received playing signal for %04x\n", obj);
-				PUT_SEL32V(obj, state, _K_SOUND_STATUS_PLAYING);
-				break;
-
-			case SOUND_SIGNAL_PAUSED:
-				SCIkdebug(SCIkSOUND,"Received pause signal for %04x\n", obj);
-				PUT_SEL32V(obj, state, _K_SOUND_STATUS_PAUSED);
-				break;
-
-			case SOUND_SIGNAL_RESUMED:
-				SCIkdebug(SCIkSOUND,"Received resume signal for %04x\n", obj);
-				PUT_SEL32V(obj, state, _K_SOUND_STATUS_PAUSED);
-				break;
-
-			case SOUND_SIGNAL_INITIALIZED:
-				PUT_SEL32V(obj, state, _K_SOUND_STATUS_INITIALIZED);
-				SCIkdebug(SCIkSOUND,"Received init signal for %04x\n", obj);
-				break;
-
-			case SOUND_SIGNAL_ABSOLUTE_CUE:
-				SCIkdebug(SCIkSOUND,"Received absolute cue %d for %04x\n", event->value, obj);
-				PUT_SEL32V(obj, signal, event->value);
-				break;
-
-			default:
-				SCIkwarn(SCIkERROR, "Unknown sound signal: %d\n", event->signal);
-				break;
-			}
-		}
-
-		free(event);
-	}
-	*/
 }
 
 
@@ -298,13 +245,12 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 	case _K_SCI0_SOUND_VOLUME: {
 		/* range from 0x0 to 0xf */
 		/* parameter optional. If present, set.*/
-		/*int vol = UPARAM_OR_ALT(1, -1);
+		int vol = SKPV_OR_ALT(1, -1);
 
 		if (vol != -1)
-		s->acc = s->sound_server->command(s, SOUND_COMMAND_SET_VOLUME, 0, vol);
+			sfx_set_volume(&s->sound, vol << 0xf);
 		else
-		s->acc = s->sound_server->command(s, SOUND_COMMAND_GET_VOLUME, 0, 0);
-		*/
+			s->r_acc = make_reg(0, sfx_get_volume(&s->sound) >> 0xf);
 	}
 		break;
 
@@ -323,11 +269,10 @@ kDoSound_SCI0(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	case _K_SCI0_SOUND_GET_POLYPHONY:
 		s->r_acc = make_reg(0, sfx_get_player_polyphony());
-		/*s->acc = s->sound_server->command(s, SOUND_COMMAND_TEST, 0, 0);*/
 		break;
 
 	case _K_SCI0_SOUND_STOP_ALL:
-		/*s->acc = s->sound_server->command(s, SOUND_COMMAND_STOP_ALL, 0, 0);*/
+		sfx_all_stop(&s->sound);
 		break;
 
 	default:

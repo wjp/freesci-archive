@@ -74,8 +74,9 @@ static inline reg_t *
 validate_property(object_t *obj, int index)
 {
 	if (index < 0 || index >= obj->variables_nr) {
-		sciprintf("Invalid property #%d (out of [0..%d] requested!\n", index,
-			  obj->variables_nr);
+		if (sci_debug_flags & 4)
+			sciprintf("[VM] Invalid property #%d (out of [0..%d] requested!\n", index,
+				  obj->variables_nr);
 
 		_dummy_register = NULL_REG;
 		return &_dummy_register;
@@ -91,8 +92,9 @@ validate_stack_addr(state_t *s, stack_ptr_t sp)
 		return sp;
 
 	script_debug_flag = script_error_flag = 1;
-	sciprintf("Stack index %d out of valid range [%d..%d]\n",
-		  sp - s->stack_base, 0, s->stack_top - s->stack_base -1);
+	if (sci_debug_flags & 4)
+		sciprintf("[VM] Stack index %d out of valid range [%d..%d]\n",
+			  sp - s->stack_base, 0, s->stack_top - s->stack_base -1);
 	return 0;
 }
 
@@ -103,7 +105,8 @@ validate_arithmetic(reg_t reg)
 	if (reg.segment) {
 		if (!_weak_validations)
 			script_debug_flag = script_error_flag = 1;
-		sciprintf("Attempt to read arithmetic value from non-zero segment [%04x]\n", reg.segment);
+		if (sci_debug_flags & 4)
+			sciprintf("[VM] Attempt to read arithmetic value from non-zero segment [%04x]\n", reg.segment);
 		return 0;
 	}
 
@@ -116,7 +119,7 @@ validate_variable(reg_t *r, int type, int max, int index, int line)
 	char *names[4] = {"global", "local", "temp", "param"};
 
 	if (index < 0 || index >= max) {
-		sciprintf("Attempt to use invalid %s variable %04x ", names[type], index);
+		sciprintf("[VM] Attempt to use invalid %s variable %04x ", names[type], index);
 		if (max == 0)
 			sciprintf("(variable type invalid)");
 		else
@@ -196,7 +199,7 @@ get_class_address(state_t *s, int classnr, int lock, reg_t caller)
 	if (classnr < 0
 	    || s->classtable_size <= classnr
 	    || class->script < 0) {
-		sciprintf("Attempt to dereference class %x, which doesn't exist (max %x)\n",
+		sciprintf("[VM] Attempt to dereference class %x, which doesn't exist (max %x)\n",
 			  classnr, s->classtable_size);
 		script_error_flag = script_debug_flag = 1;
 		return NULL_REG;
@@ -205,7 +208,7 @@ get_class_address(state_t *s, int classnr, int lock, reg_t caller)
 			script_get_segment(s, class->script, lock);
 
 			if (!class->reg.segment) {
-				sciprintf("Trying to instantiate class %x by instantiating script 0x%x (%03d) failed;"
+				sciprintf("[VM] Trying to instantiate class %x by instantiating script 0x%x (%03d) failed;"
 					  " switching to baffled mode.\n", classnr, class->script);
 				script_error_flag = script_debug_flag = 1;
 				return NULL_REG;

@@ -3305,7 +3305,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_int(&script_abort_flag, "script_abort_flag", "Set != 0 to abort execution\n");
 			con_hook_int(&script_step_counter, "script_step_counter", "# of executed SCI operations\n");
 			con_hook_int(&sci_debug_flags, "debug_flags", "Debug flags:\n  0x0001: Log each command executed\n"
-				     "  0x0002: Break on warnings\n");
+				     "  0x0002: Break on warnings\n  \0x0004: Print VM warnings\n");
 			con_hook_int(&_weak_validations, "weak_validations", "Set != 0 to turn some validation errors\n"
 				     "  into warnings\n");
 

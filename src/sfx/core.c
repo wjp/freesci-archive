@@ -457,7 +457,6 @@ sfx_song_set_status(sfx_state_t *self, song_handle_t handle, int status)
 		return;
 
 	}
-
 	song->status = status;
 	_update(self);
 }
@@ -486,4 +485,25 @@ sfx_song_set_loops(sfx_state_t *self, song_handle_t handle, int loops)
 	if (player/* && player->send_iterator_message*/)
 		/* FIXME: The above should be optional! */
 		player->iterator_message(msg);
+}
+
+int
+sfx_get_volume(sfx_state_t *self)
+{
+	fprintf(stderr, "FIXME: Implement volume\n");
+	return 0;
+}
+
+void
+sfx_set_volume(sfx_state_t *self, int volume)
+{
+	fprintf(stderr, "FIXME: Implement volume\n");
+}
+
+void
+sfx_all_stop(sfx_state_t *self)
+{
+
+	song_lib_free(self->songlib);
+	_update(self);
 }
