@@ -915,7 +915,7 @@ main(int argc, char** argv)
 
 	/* gcc doesn't warn about (void *)s being typecast. If your compiler doesn't like these
 	** implicit casts, don't hesitate to typecast appropriately.  */
-	gfx_driver_name = cl_options.gfx_driver_name;
+	gfx_driver_name = sci_strdup(cl_options.gfx_driver_name);
 	free(cl_options.gfx_driver_name);
 
 	if (cl_options.midiout_driver_name)

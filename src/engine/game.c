@@ -32,7 +32,11 @@
 #include <kdebug.h>
 
 #ifdef HAVE_SDL
+#ifndef _MSC_VER
+#include <SDL/SDL.h>
+#else 
 #include <SDL.h>
+#endif
 #endif
 
 #if !defined (_WIN32) && !defined (__BEOS__)
