@@ -35,12 +35,14 @@ _sci_try_open_module(char *filename, char *path, char *struct_name, void **handl
 	char *fullname = malloc(strlen(path) + strlen(DIR_SEPARATOR_STR)
 				+ strlen(filename));
 	sci_module_t *module;
-
+fprintf(stderr,"Trying module %s at %s\n", filename, path);
 	strcpy(fullname, path);
 	strcat(fullname, DIR_SEPARATOR_STR);
 	strcat(fullname, filename);
 
+fprintf(stderr,"Total name is %s\n", fullname);
 	*handle = dlopen(fullname, RTLD_NOW);
+fprintf(stderr,"Could not open because: %s\n", dlerror());
 	free(fullname);
 
 	if (!*handle)

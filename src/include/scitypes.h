@@ -66,13 +66,13 @@
 #  endif
 #endif /* !TYPE_32 */
 
-typedef TYPE_8 gint8;
+typedef signed TYPE_8 gint8;
 typedef unsigned TYPE_8 guint8;
 
-typedef TYPE_16 gint16;
+typedef signed TYPE_16 gint16;
 typedef unsigned TYPE_16 guint16;
 
-typedef TYPE_32 gint32;
+typedef signed TYPE_32 gint32;
 typedef unsigned TYPE_32 guint32;
 
 #undef TYPE_8

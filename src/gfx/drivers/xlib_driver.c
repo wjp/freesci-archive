@@ -39,6 +39,11 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <X11/extensions/XShm.h>
+#if defined(HAVE_X11_EXTENSIONS_XRENDER_H) && defined(HAVE_X11_XFT_XFT_H)
+#  define HAVE_RENDER
+#  include <X11/extensions/Xrender.h>
+#  include <X11/Xft/Xft.h>
+#endif
 #include <errno.h>
 #endif
 
@@ -48,6 +53,7 @@
 #define SCI_XLIB_SWAP_CTRL_CAPS (1 << 0)
 #define SCI_XLIB_INSERT_MODE    (1 << 1)
 
+#define X_COLOR_EXT(c) ((c << 8) | c)
 
 int flags;
 
@@ -61,6 +67,10 @@ struct _xlib_state {
 	gfx_pixmap_t *priority[2];
 #ifdef HAVE_MITSHM
         XShmSegmentInfo *shm[4];
+#endif
+	int use_render;
+#ifdef HAVE_RENDER
+	XftDraw *xftdraw;
 #endif
 	int buckystate;
 	XErrorHandler old_error_handler;
@@ -100,6 +110,24 @@ static int check_for_xshm(Display *display)
   }
   return 0;
 
+}
+#endif
+
+#ifdef HAVE_RENDER
+static int x_have_render(Display *display)
+{
+	int ignore, retval;
+
+	printf("Checking for X11 RENDER extension:");
+
+	retval = XQueryExtension(display, "RENDER", &ignore, &ignore, &ignore);
+
+	if (retval)
+		printf(" found.\n");
+	else
+		printf(" not found.\n");
+
+	return retval;
 }
 #endif
 
@@ -213,6 +241,11 @@ x_empty_cursor(Display *display, Drawable drawable) /* Generates an empty X curs
 
 	return retval;
 }
+
+static int
+xlib_draw_filled_rect(struct _gfx_driver *drv, rect_t rect,
+                      gfx_color_t color1, gfx_color_t color2,
+                      gfx_rectangle_fill_t shade_mode);
 
 
 static int
@@ -488,6 +521,29 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	  XFillRectangle(S->display, S->visual[i], S->gc, 0, 0, xsize, ysize);
 	}
 
+	/** X RENDER handling **/
+#ifdef HAVE_RENDER
+	S->use_render = x_have_render(S->display);
+	if (S->use_render) {
+		S->xftdraw = XftDrawCreate(S->display, (Drawable) S->visual[1],
+					   DefaultVisual(S->display,
+							 DefaultScreen(S->display)),
+					   S->colormap);
+
+		if (!S->xftdraw) {
+			S->use_render = 0;
+			ERROR("XftDrawCreate() failed!\n");
+		}
+	}
+
+	if (!S->use_render)
+		drv->draw_filled_rect = xlib_draw_filled_rect;
+#else
+	S->use_render = 0;
+#endif
+	/** End of X RENDER handling **/
+
+
 	drv->mode = gfx_new_mode(xfact, yfact, bytespp_physical,
 				 xvisinfo.red_mask, xvisinfo.green_mask,
 				 xvisinfo.blue_mask, alpha_mask,
@@ -626,6 +682,47 @@ xlib_draw_filled_rect(struct _gfx_driver *drv, rect_t rect,
 
 	return GFX_OK;
 }
+
+#ifdef HAVE_RENDER
+static int
+xlib_draw_filled_rect_RENDER(struct _gfx_driver *drv, rect_t rect,
+			     gfx_color_t color1, gfx_color_t color2,
+			     gfx_rectangle_fill_t shade_mode)
+{
+	if (color1.mask & GFX_MASK_VISUAL) {
+		XftColor fg;
+
+		fg.color.red = X_COLOR_EXT(color1.visual.r);
+		fg.color.green = X_COLOR_EXT(color1.visual.g);
+		fg.color.blue = X_COLOR_EXT(color1.visual.b);
+		fg.color.alpha = 0xffff - X_COLOR_EXT(color1.alpha);
+
+		fg.pixel = xlib_map_color(drv, color1);
+
+#if SUFFICIENTLY_NEW_X11 /* FIXME */
+		XftDrawRect(S->xftdraw, &fg, rect.x, rect.y,
+			    rect.xl, rect.yl);
+#else
+		{ /* Ugly hack: Based on Keith Packard's HelloX patch's hack */
+			XRenderPictFormat *format;
+			Picture            pict;
+			
+			format = XRenderFindVisualFormat (S->display, DefaultVisual(S->display, DefaultScreen(S->display)));
+			
+			pict =  XRenderCreatePicture (S->display,
+						      (Drawable) S->visual[1], format, 0, 0);
+			XRenderFillRectangle(S->display,PictOpOver,pict,&(&fg)->color,
+					     rect.x, rect.y, rect.xl, rect.yl);
+		}
+#endif
+	}
+
+	if (color1.mask & GFX_MASK_PRIORITY)
+		gfx_draw_box_pixmap_i(S->priority[0], rect, color1.priority);
+
+	return GFX_OK;
+}
+#endif
 
   /*** Pixmap operations ***/
 
@@ -1184,7 +1281,11 @@ gfx_driver_xlib = {
 	xlib_init,
 	xlib_exit,
 	xlib_draw_line,
+#ifdef HAVE_RENDER
+	xlib_draw_filled_rect_RENDER,
+#else
 	xlib_draw_filled_rect,
+#endif
 	xlib_register_pixmap,
 	xlib_unregister_pixmap,
 	xlib_draw_pixmap,

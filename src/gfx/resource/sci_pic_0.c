@@ -1609,7 +1609,7 @@ _gfxr_fill(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, int c
     y = oldy - (temp & 0x7f); \
   else \
     y = oldy + temp; \
-  x = oldx + *((char *) resource + pos++);
+  x = oldx + *((signed char *) resource + pos++);
 
 
 static void
@@ -1903,7 +1903,14 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 			p0printf("Medium lines @%d\n", pos);
 			GET_ABS_COORDS(oldx, oldy);
 			while (*(resource + pos) < PIC_OP_FIRST) {
+#if 0
+				fprintf(stderr,"Medium-line: [%04x] from %d,%d, data %02x %02x (dx=%d)", pos, oldx, oldy,
+					0xff & resource[pos], 0xff & resource[pos+1], *((signed char *) resource + pos + 1));
+#endif
 				GET_MEDREL_COORDS(oldx, oldy);
+#if 0
+				fprintf(stderr, " to %d,%d\n", x, y);
+#endif
 				_gfxr_draw_line(pic, oldx, oldy, x, y, color, priority, control, drawenable, line_mode, PIC_OP_MEDIUM_LINES);
 				oldx = x; oldy = y;
 			}

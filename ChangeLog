@@ -1,3 +1,14 @@
+2001-05-27  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/xlib_driver.c (xlib_draw_filled_rect_RENDER): Added
+	support for translucent windows on X11 (if the RENDER extension is
+	present). Right now, we're using Keith Packard's hack to work around
+	some XFree86 4.0.3 bugs.
+
+	* src/include/resource.h:
+	* src/engine/cfsml.pl (create_string_functions): Fixed several
+	places where chars were used instead of ints
+
 2001-05-24  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/vm.c: Squashed a localvar allocation bug in 

@@ -199,7 +199,6 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 						      black, black, GFX_BOX_SHADE_FLAT));
 		}
 
-
 		/* Draw frame */
 
 		if (gfxop_set_color(state, &black, 0, 0, 0, 0, bgcolor.priority, -1)) {
