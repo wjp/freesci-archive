@@ -157,19 +157,6 @@ AC_SUBST(ac_png_libraries)
 AM_PROG_LEX
 AC_PROG_YACC
 
-RPM_VERSION=`echo $VERSION | sed 's/\-/_/'`
-AC_SUBST(RPM_VERSION)
-
-
-########################################################
-# Compile-time features
-########################################################
-
-
-AM_WITH_DMALLOC
-
-AC_C_PARAMETRIZED_BIGENDIAN
-
 AC_ARG_WITH(efence,
 	[  --with-efence           link against libefence (for debugging)],
 	[LIBS="$LIBS -lefence"],
@@ -180,26 +167,14 @@ AC_ARG_WITH(Wall,
 	[CFLAGS="-Wall $CFLAGS"],
 	[])
 
+AM_WITH_DMALLOC
+AM_WITH_MALLOC_DEBUG
+AM_WITHOUT_MALLOC_CHECKS
 
-AC_ARG_WITH(alloc, [  --with-alloc=M          Choose alloc method:
-                            0: Default C functions
-                            1: Exit immediately if out of memory
-	                    2: If out of memory, re-try indefinitely])
-if test x"$with_alloc" != xno; then
-	SCI_ALLOC = "$with_alloc"
-	if test $with_alloc == 1; then
-		AC_DEFINE(SCI_ALLOC, 1)
-	fi
-	if test $with_alloc == 2; then
-		AC_DEFINE(SCI_ALLOC, 2)
-	fi
-	if test $with_alloc == 0; then
-		AC_MSG_ERROR($with_alloc is not a valid alloc mode.);
-	fi
-fi
-                     
+AC_C_PARAMETRIZED_BIGENDIAN
 
-
+RPM_VERSION=`echo $VERSION | sed 's/\-/_/'`
+AC_SUBST(RPM_VERSION)
 
 AC_OUTPUT(Makefile    \
 	debian/Makefile \

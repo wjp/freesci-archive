@@ -25,22 +25,28 @@
 
  History:
 
-   20010807 - assembled from the various memory allocation functions lying
+   20010815 - assembled from the various memory allocation functions lying
               about, namely console.c (extra dmalloc stuff), menubar.c
-			  (for malloc_cpy -> strdup, malloc_ncpy -> strndup).
-			  -- Alex Angas
+              (for malloc_cpy -> strdup, malloc_ncpy -> strndup).
+                -- Alex Angas
 
 ***************************************************************************/
 
 #include "sci_memory.h"
 
-#ifdef WITH_DMALLOC
-#include <dmalloc.h>
-#endif
+/* set optimisations for Win32: */
+/* g on: enable global optimizations */
+/* t on: use fast code */
+/* y on: suppress creation of frame pointers on stack */
+/* s off: disable minimize size code */
 
 #ifdef _WIN32
 #include <crtdbg.h>
-#pragma intrinsic( memcpy, strlen )
+#	ifdef NDEBUG
+#		pragma optimize( "s", off )
+#		pragma optimize( "gty", on )
+#		pragma intrinsic( memcpy, strlen )
+#	endif
 #endif
 
 
@@ -74,7 +80,6 @@ _SCI_REALLOC(void *ptr, size_t size, char *file, int line, char *funct, int debu
 inline void
 _SCI_FREE(void *ptr, char *file, int line, char *funct, int debug)
 {
-	void *res;
 	if (debug)
 		fprintf(stderr, "_SCI_FREE() [%s:(%s)%u]\n",
 			file, funct, line);
@@ -148,7 +153,7 @@ debug_win32_memory(int dbg_setting)
 		PANIC((stderr, "Invalid value for debug_win32_memory!\n"));
 		BREAKPOINT();
 	}
-		
+
 	if (dbg_setting <= 0)
 	{
 		/* turn off above */

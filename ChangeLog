@@ -1,3 +1,11 @@
+2001-08-18  Alex Angas  <wgd@internode.on.net>
+
+        * src/scicore/sci_memory.c, src/include/sci_memory.h: Minor
+        rearrangement, decent support for configure script.
+
+        * ./acinclude.m4, ./configure.in: Changed support for #defines in
+        sci_memory library in the configure script.
+	
 2001-08-18  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/drivers/xlib_driver.c: Now sets the name of the window class.

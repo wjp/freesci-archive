@@ -760,14 +760,50 @@ int main (int argc, char *argv[])
 AC_DEFUN(AM_WITH_DMALLOC,
 [AC_MSG_CHECKING(if malloc debugging is wanted)
 AC_ARG_WITH(dmalloc,
-[  --with-dmalloc          use dmalloc, available at
-                          http://dmalloc.com],
+[  --with-dmalloc          use dmalloc, available at http://dmalloc.com],
 [if test "$withval" = yes; then
   AC_MSG_RESULT(yes)
   AC_DEFINE(WITH_DMALLOC,1,
             [Define if using the dmalloc debugging malloc package])
   LIBS="$LIBS -ldmallocth"
   LDFLAGS="$LDFLAGS -g"
+else
+  AC_MSG_RESULT(no)
+fi], [AC_MSG_RESULT(no)])
+])
+
+## ------------------------------------------- ##
+## Check if --with-malloc-debug was given.     ##
+## From Alex Angas                             ##
+## ------------------------------------------- ##
+
+AC_DEFUN(AM_WITH_MALLOC_DEBUG,
+[AC_MSG_CHECKING(whether to output debug info at every memory (de)allocation)
+AC_ARG_WITH(malloc-debug,
+[  --with-malloc-debug     output debug information at every memory
+                          (de)allocation],
+[if test "$withval" = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(MALLOC_DEBUG,1,
+            [Define if want to output debug info for every memory allocation])
+else
+  AC_MSG_RESULT(no)
+fi], [AC_MSG_RESULT(no)])
+])
+
+## -------------------------------------------- ##
+## Check if --without-malloc-checks was given.  ##
+## From Alex Angas                              ##
+## -------------------------------------------- ##
+
+AC_DEFUN(AM_WITHOUT_MALLOC_CHECKS,
+[AC_MSG_CHECKING(whether to check memory allocations for NULL)
+AC_ARG_WITH(out-malloc-checks,
+[  --without-malloc-checks do not check memory allocations for NULL],
+[if test "$withval" = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(UNCHECKED_MALLOCS,1,
+            [Defined if not checking memory allocations])
 else
   AC_MSG_RESULT(no)
 fi], [AC_MSG_RESULT(no)])

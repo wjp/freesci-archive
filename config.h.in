@@ -1,4 +1,4 @@
-/* config.h.in.  Generated automatically from configure.in by autoheader 2.13.  */
+/* config.h.in.  Generated automatically from configure.in by autoheader.  */
 
 /* Define as __inline if that's what the C compiler calls it.  */
 #undef inline
@@ -23,8 +23,8 @@
 #undef HAVE_ALPHA_EV6_SUPPORT
 #undef HAVE_MITSHM
 #undef HAVE_SDL
-#undef HAVE_DLOPEN
-#undef SCI_ALLOC
+#undef MALLOC_DEBUG
+#undef UNCHECKED_MALLOCS
 
 /* The number of bytes in a int.  */
 #undef SIZEOF_INT
@@ -112,4 +112,10 @@
 
 /* Define if using the dmalloc debugging malloc package */
 #undef WITH_DMALLOC
+
+/* Define if want to output debug info for every memory allocation */
+#undef MALLOC_DEBUG
+
+/* Defined if not checking memory allocations */
+#undef UNCHECKED_MALLOCS
 

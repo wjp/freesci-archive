@@ -8,5 +8,6 @@
 #undef HAVE_ALPHA_EV6_SUPPORT
 #undef HAVE_MITSHM
 #undef HAVE_SDL
-#undef HAVE_DLOPEN
-#undef SCI_ALLOC
+#undef MALLOC_DEBUG
+#undef UNCHECKED_MALLOCS
+

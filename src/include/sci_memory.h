@@ -27,8 +27,8 @@
 
    20010815 - assembled from the various memory allocation functions lying
               about, namely resource.h, tools.c (for repeated allocation
-			  attempts), menubar.h (for malloc_cpy, malloc_ncpy).
-			  -- Alex Angas
+              attempts), menubar.h (for malloc_cpy, malloc_ncpy).
+                -- Alex Angas
 
 ***************************************************************************/
 
@@ -41,12 +41,12 @@
  * Usage notes:
  **************
  *
- * Define SCI_ALLOC_DEBUG to output debug information whenever a memory
+ * Define MALLOC_DEBUG to output debug information whenever a memory
  * allocation function is called.
  *
  * Make sure you #define it before any #includes.
  *
- * #define SCI_ALLOC_DEBUG
+ * #define MALLOC_DEBUG
  * #include <...>
  *
  **************
@@ -54,25 +54,16 @@
  * Define WITH_DMALLOC to use the dmalloc debug library, available from
  * http://dmalloc.com/
  *
+ **************
+ *
+ * Sets behaviour if memory allocation call fails.
+ * UNCHECKED_MALLOCS:  use C library routine without checks
+ * (nothing defined):  check mallocs and exit immediately on fail (recommended)
+ *
  ** -- Alex Angas
  **
  **/
 
-
-/* set optimisations for Win32: */
-/* g on: enable global optimizations */
-/* t on: use fast code */
-/* y on: suppress creation of frame pointers on stack */
-/* s off: disable minimize size code */
-
-#ifdef _WIN32
-#include <windows.h>
-#define sleep Sleep
-#	ifdef NDEBUG
-#		pragma optimize( "s", off )
-#		pragma optimize( "gty", on )
-#	endif
-#endif
 
 #include <stdio.h>
 #include <assert.h>
@@ -87,98 +78,84 @@
 #endif
 
 
-/********** #defines and macro definitions **********/
-
-/*
- * Sets behaviour if memory allocation call fails.
- * SCI_ALLOC undefined: used standard C routine anyway
- * SCI_ALLOC 1: exit immediately
- * SCI_ALLOC 2: attempt to allocate memory indefinitely
- */
-/* #define SCI_ALLOC 1 */
-
-
 /********** macros for error messages **********/
 
 /*
  * Prints an error message.
  */
 #define PANIC(prn)\
-do {\
-	fprintf prn;\
-} while (0);
+	fprintf prn;
 
 /*
  * Called if memory allocation fails.
  */
 #ifdef WITH_DMALLOC
 #define PANIC_MEMORY(size, filename, linenum, funcname, more_info)\
-do {\
 	PANIC((stderr, "Memory allocation of %lu bytes failed\n"\
 		" [%s (%s) : %u]\n " #more_info "\n %s\n",\
-		size, filename, funcname, linenum, dmalloc_strerror(dmalloc_errno)))\
-} while (0);
+		size, filename, funcname, linenum, dmalloc_strerror(dmalloc_errno)))
 #else
 #define PANIC_MEMORY(size, filename, linenum, funcname, more_info)\
-do{\
-	PANIC((stderr, "Memory allocation of %lu bytes failed\n"\
+	PANIC((stderr, "Memory allocation of %lu bytes\n"\
 		" [%s (%s) : %u]\n " #more_info "\n %s\n",\
-		size, filename, funcname, linenum, strerror(errno)))\
-} while (0);
+		size, filename, funcname, linenum, strerror(errno)))
 #endif
 
 
-/********** macros for memory allocation **********/
+/********** the memory allocation macros **********/
 
-#ifndef SCI_ALLOC
+#define INFO_MEMORY(alloc_statement, size, filename, linenum, funcname)\
+	fprintf(stderr, "ALLOC_MEM(%lu bytes) [%s (%s) : %u] "\
+		#alloc_statement "\n",\
+		size, filename, funcname, linenum);
 
-#define ALLOC_MEM(alloc_statement, size, filename, linenum, funcname, debug)\
-	alloc_statement;
 
-#else	/* SCI_ALLOC */
+#ifdef UNCHECKED_MALLOCS
 
 #define ALLOC_MEM(alloc_statement, size, filename, linenum, funcname, debug)\
 do {\
 	if (debug)\
-		fprintf(stderr, "ALLOC_MEM(%lu bytes) [%s (%s) : %u] "\
-			#alloc_statement "\n",\
-			size, filename, funcname, linenum);\
+		INFO_MEMORY(alloc_statement, size, filename, linenum, funcname);\
+	alloc_statement;\
+} while (0);
+
+#else /* !UNCHECKED_MALLOCS */
+
+#define ALLOC_MEM(alloc_statement, size, filename, linenum, funcname, debug)\
+do {\
+	if (debug)\
+		INFO_MEMORY(alloc_statement, size, filename, linenum, funcname)\
 \
-	if (size <= 0)\
+	if (size < 0)\
 	{\
-		PANIC_MEMORY(size, filename, linenum, funcname, "Cannot allocate negative or zero memory!");\
-		BREAKPOINT();\
+		PANIC_MEMORY(size, filename, linenum, funcname, "Cannot allocate negative bytes of memory!")\
+		BREAKPOINT()\
+	}\
+	else if (size == 0)\
+	{\
+		PANIC_MEMORY(size, filename, linenum, funcname, "WARNING: allocating zero bytes of memory.")\
 	}\
 \
 	alloc_statement; /* attempt to allocate the memory */\
 \
 	if (res == NULL)\
 	{\
-		if (SCI_ALLOC == 1)\
+		/* exit immediately */\
+		PANIC_MEMORY(size, filename, linenum, funcname, "Failed! Exiting...")\
+		BREAKPOINT()\
+\
+		/* attempt to allocate memory indefinitely\
+		do\
 		{\
-			/* SCI_ALLOC 1: exit immediately */\
-			PANIC_MEMORY(size, filename, linenum, funcname, "Exiting...");\
-			BREAKPOINT();\
-		}\
-		else if (SCI_ALLOC == 1)\
-		{\
-			do\
-			{\
-				/* SCI_ALLOC 2: attempt to allocate memory indefinitely */\
-				PANIC_MEMORY(size, filename, linenum, funcname, "Trying again...");\
-				sleep(1000);\
-				alloc_statement;\
-			} while (res == NULL);\
-		}\
-		else\
-		{\
-			PANIC((stderr, "Unrecognised value for SCI_ALLOC!"));\
-			BREAKPOINT();\
-		}\
+			PANIC_MEMORY(size, filename, linenum, funcname, "Failed! Trying again...");\
+			sleep(1000);\
+			alloc_statement;\
+		} while (res == NULL);\
+		*/\
 	}\
 } while (0);
 
-#endif /* SCI_ALLOC */
+#endif /* !UNCHECKED_MALLOCS */
 
 
 /********** memory allocation routines **********/
@@ -272,7 +249,7 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 /********** macro definitions for routines **********/
 
 #ifdef __GNUC__
-#	ifndef SCI_ALLOC_DEBUG
+#	ifndef MALLOC_DEBUG
 #		define sci_malloc(size)\
 			_SCI_MALLOC(size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
 #	else
@@ -280,7 +257,7 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 			_SCI_MALLOC(size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
 #	endif
 #else
-#	ifndef SCI_ALLOC_DEBUG
+#	ifndef MALLOC_DEBUG
 #		define sci_malloc(size)\
 			_SCI_MALLOC(size, __FILE__, __LINE__, "", 0)
 #	else
@@ -291,7 +268,7 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 
 
 #ifdef __GNUC__
-#	ifndef SCI_ALLOC_DEBUG
+#	ifndef MALLOC_DEBUG
 #		define sci_calloc(num, count)\
 			_SCI_CALLOC(num, count, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
 #	else
@@ -299,7 +276,7 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 			_SCI_CALLOC(num, count, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
 #	endif
 #else
-#	ifndef SCI_ALLOC_DEBUG
+#	ifndef MALLOC_DEBUG
 #		define sci_calloc(num, count)\
 			_SCI_CALLOC(num, count, __FILE__, __LINE__, "", 0)
 #	else
@@ -310,7 +287,7 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 
 
 #ifdef __GNUC__
-#	ifndef SCI_ALLOC_DEBUG
+#	ifndef MALLOC_DEBUG
 #		define sci_realloc(ptr, size)\
 			_SCI_REALLOC(ptr, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
 #	else
@@ -318,7 +295,7 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 			_SCI_REALLOC(ptr, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
 #	endif
 #else
-#	ifndef SCI_ALLOC_DEBUG
+#	ifndef MALLOC_DEBUG
 #		define sci_realloc(ptr, size)\
 			_SCI_REALLOC(ptr, size, __FILE__, __LINE__, "", 0)
 #	else
@@ -329,7 +306,7 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 
 
 #ifdef __GNUC__
-#	ifndef SCI_ALLOC_DEBUG
+#	ifndef MALLOC_DEBUG
 #		define sci_free(ptr)\
 			_SCI_FREE(ptr, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
 #	else
@@ -337,7 +314,7 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 			_SCI_FREE(ptr, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
 #	endif
 #else
-#	ifndef SCI_ALLOC_DEBUG
+#	ifndef MALLOC_DEBUG
 #		define sci_free(ptr)\
 			_SCI_FREE(ptr, __FILE__, __LINE__, "", 0)
 #	else
@@ -348,7 +325,7 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 
 
 #ifdef __GNUC__
-#	ifndef SCI_ALLOC_DEBUG
+#	ifndef MALLOC_DEBUG
 #		define sci_memdup(src, size)\
 			_SCI_MEMDUP(src, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
 #	else
@@ -356,7 +333,7 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 			_SCI_MEMDUP(src, size, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
 #	endif
 #else
-#	ifndef SCI_ALLOC_DEBUG
+#	ifndef MALLOC_DEBUG
 #		define sci_memdup(src, size)\
 			_SCI_MEMDUP(src, size, __FILE__, __LINE__, "", 0)
 #	else
@@ -367,7 +344,7 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 
 
 #ifdef __GNUC__
-#	ifndef SCI_ALLOC_DEBUG
+#	ifndef MALLOC_DEBUG
 #		define sci_strdup(src)\
 			_SCI_STRDUP(src, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
 #	else
@@ -375,7 +352,7 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 			_SCI_STRDUP(src, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
 #	endif
 #else
-#	ifndef SCI_ALLOC_DEBUG
+#	ifndef MALLOC_DEBUG
 #		define sci_strdup(src)\
 			_SCI_STRDUP(src, __FILE__, __LINE__, "", 0)
 #	else
@@ -386,7 +363,7 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 
 
 #ifdef __GNUC__
-#	ifndef SCI_ALLOC_DEBUG
+#	ifndef MALLOC_DEBUG
 #		define sci_strndup(src, length)\
 			_SCI_STRNDUP(src, length, __FILE__, __LINE__, __PRETTY_FUNCTION__, 0)
 #	else
@@ -394,7 +371,7 @@ _SCI_STRNDUP(const char *src, size_t length, char *file, int line, char *funct, 
 			_SCI_STRNDUP(src, length, __FILE__, __LINE__, __PRETTY_FUNCTION__, 1)
 #	endif
 #else
-#	ifndef SCI_ALLOC_DEBUG
+#	ifndef MALLOC_DEBUG
 #		define sci_strndup(src, length)\
 			_SCI_STRNDUP(src, length, __FILE__, __LINE__, "", 0)
 #	else
