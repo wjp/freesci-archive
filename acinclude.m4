@@ -125,6 +125,8 @@ AC_DEFUN(AC_PATH_GGI,
 [
 AC_MSG_CHECKING([for ggi])
 
+ac_ggi_so=""
+
 _ac_ggi_includes="-I/usr/include -I/usr/local/include"
 _ac_ggi_libraries="-L/usr/lib -L/usr/local/lib -L/usr/local/ggi/lib"
 
@@ -173,6 +175,7 @@ else
 		ac_graphics_ggi_libobjects="graphics_ggi.o"
 		AC_SUBST(ac_graphics_ggi_libobjects)
 		AC_DEFINE(HAVE_LIBGGI)
+		ac_ggi_o="ggi_driver.la"
 	fi
 fi
 

@@ -34,6 +34,12 @@
 #include <midiout.h>
 #include <midi_device.h>
 
+#ifdef _WIN32
+#  define MODULE_NAME_SUFFIX "_driver.dll"
+#else
+#  define MODULE_NAME_SUFFIX "_driver.so"
+#endif
+
 #define FREESCI_DRIVER_SUBSYSTEMS_NR 2
 
 #define FREESCI_DRIVER_SUBSYSTEM_GFX 0
@@ -75,11 +81,11 @@ typedef struct {
 	midi_device_t *midi_device; /* the midi device to use */
 	sound_server_t *sound_server; /* The sound server */
 
-	char *plugin_dir; /* directory to load plugins */
+	char *module_dir; /* directory modules are loaded from */
 
 } config_entry_t;
 
-#define SCI_DEFAULT_PLUGIN_DIR "/usr/share/freesci/"
+#define SCI_DEFAULT_MODULE_DIR "/usr/local/lib/freesci/:/usr/lib/freesci/"
 
 int
 config_init(config_entry_t **conf, char *conffil);
@@ -141,5 +147,19 @@ get_driver_options(config_entry_t *config, int subsystem, char *name);
 **             found
 */
 
+#if 0
+void *
+find_module(char *path, char *module_name, char *module_suffix);
+/* Tries to find a module in the specified path
+** Parameters: (char *) path: The path to search in (specified in config)
+**             (char *) module_name: Name of the module to look for
+**             (char *) module_suffix: Module structure to look for
+** More precisely, the module "module_name" + MODULE_NAME_SUFFIX is
+** looked for in all members of the path. If it is found, 
+
+** FIXME: First need to add generic module architecture
+
+*/
+#endif
 
 #endif /* !_SCI_CONFIG_H */

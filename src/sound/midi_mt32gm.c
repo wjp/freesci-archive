@@ -37,7 +37,10 @@ static int mt32gm_channel_map[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 int midi_mt32gm_open(guint8 *data_ptr, unsigned int data_length)
 {
 	if (midiout_open() < 0)
+	{
+		fprintf(stderr, "midi_mt32gm_open(): midiout_open failed\n");
 		return -1;
+	}
 	return midi_mt32_allstop();
 }
 
@@ -59,6 +62,12 @@ midi_mt32gm_print_instrument(FILE *file, int index)
 {
 	MIDI_map_t *map = MIDI_mapping + index;
 
+	if (NULL == file)
+	{
+		fprintf(stderr, "midi_mt32gm_print_instrument(): NULL passed for file\n");
+		return;
+	}
+	
 	if (index < 0 || index >= MIDI_mappings_nr) {
 		fprintf(file, "Instr #%d: <invalid>\n", index);
 		return;
@@ -95,7 +104,7 @@ int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2)
 {
 	guint8 channel;
 	guint8 oper;
-	long volume;
+	unsigned long volume;
 	int xparam = param;
 
 	channel = command & 0x0f;

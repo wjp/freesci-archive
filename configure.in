@@ -5,7 +5,8 @@ AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(freesci, 0.3.2-devel)
 
 AC_PROG_CC
-AC_PROG_RANLIB
+AC_LIBTOOL_DLOPEN
+AM_PROG_LIBTOOL
 AC_CHECK_HEADERS(limits.h)
 AC_CHECK_HEADERS(sys/uio.h)
 AC_CHECK_HEADERS(sys/soundcard.h)
@@ -27,10 +28,17 @@ AC_PATH_GGI
 
 AC_ARG_WITH(sdl, [  --without-sdl           Do not build the SDL driver])
 if test x"$with_sdl" != xno; then
-	AM_PATH_SDL(1.1.8, [AC_DEFINE(HAVE_SDL)])
+	AM_PATH_SDL(1.1.8, 	[
+					AC_DEFINE(HAVE_SDL)
+					ac_sdl_o="sdl_driver.la"
+				],
+				[
+					ac_sdl_o=""
+				])
 else
 	AC_MSG_CHECKING([for SDL])
 	AC_MSG_RESULT([disabled]) # Well, we should give some kind of feedback...
+	ac_sdl_so=""
 fi
 
 AC_PATH_CURSES
@@ -61,6 +69,7 @@ AC_TRY_COMPILE([], [
 AC_SUBST(ev6_cpu)
 
 
+ac_xlib_o=""
 if test x"$have_x" = xyes; then
 	if test x"$x_libraries" != xNONE; then
 		if test x"$x_libraries" != x; then
@@ -68,6 +77,8 @@ if test x"$have_x" = xyes; then
 		fi
 		AC_CHECK_LIB(Xi, XGrabDevice, [X_LIBS="$X_LIBS -lXi"])
 		AC_CHECK_LIB(X11, XOpenDisplay, [X_LIBS="$X_LIBS -lX11"])
+
+		ac_xlib_o="xlib_driver.la"
 	fi
 fi
 
@@ -75,6 +86,10 @@ dnl if test "no_x" != yes; then
 dnl 	AC_PATH_GLX
 dnl fi
 AC_SUBST(ac_glx_libraries)
+
+AC_SUBST(ac_xlib_o)
+AC_SUBST(ac_sdl_o)
+AC_SUBST(ac_ggi_o)
 
 #AC_PATH_PNG
 AC_SUBST(ac_png_includes)

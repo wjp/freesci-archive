@@ -325,14 +325,14 @@ resource_dir[[:blank:]]*"="[[:blank:]]*.+  if (cur_section) {
 	conf[cur_section].resource_dir = strdup(yytext);
 }
 
-plugin_dir[[:blank:]]*"="[[:blank:]]*.+  if (cur_section) {
+module_dir[[:blank:]]*"="[[:blank:]]*.+  {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
 		yytext++;
 
-	free(conf[cur_section].plugin_dir);
+	free(conf[cur_section].module_dir);
 
-	conf[cur_section].plugin_dir = strdup(yytext);
+	conf[cur_section].module_dir = strdup(yytext);
 }
 
 debug_mode[[:blank:]]*"="[[:blank:]]*.+  {
@@ -468,7 +468,7 @@ config_init(config_entry_t **_conf, char *conffile)
 	conf->name = NULL;
 	conf->resource_dir = NULL;
 	conf->work_dir = NULL;
-        conf->plugin_dir = SCI_DEFAULT_PLUGIN_DIR;
+        conf->module_dir = strdup(SCI_DEFAULT_MODULE_DIR);
 
 	for (i = 0; i < FREESCI_DRIVER_SUBSYSTEMS_NR; i++)
 		conf->driver_options[i] = NULL;

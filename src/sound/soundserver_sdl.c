@@ -167,11 +167,11 @@ sound_sdl_get_command(GTimeVal *wait_tvp)
 int
 sound_sdl_get_data(byte **data_ptr, int *size, int maxlen)
 {
-  int index = (SDL_ThreadID() == master);
-  SDL_mutex *mutex = bulk_mutices[index];
-  SDL_cond *cond = bulk_conds[index];
-  sci_queue_t *queue = &(bulk_queues[index]);
-  void *data;
+  int index				= (SDL_ThreadID() == master);
+  SDL_mutex *mutex		= bulk_mutices[index];
+  SDL_cond *cond		= bulk_conds[index];
+  sci_queue_t *queue	= &(bulk_queues[index]);
+  void *data			= NULL;
 
   /* we ignore maxlen */
 

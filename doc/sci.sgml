@@ -6376,7 +6376,20 @@ kfunct 0x52: OnControl
         </sect3>
 
 <!-- fixme -->
-<sect3><Title/Kernel function 0x54: DoBresen(?)/<para></para></sect3>
+<sect3><Title/Kernel function 0x54: DoBresen()/
+	<funcsynopsis><funcprototype><funcdef>
+		kfunct 0x55: DoBresen
+	</funcdef><paramdef></paramdef></funcprototype></funcsynopsis>
+	<para>
+		Returns: <type>(void)</type>
+	</para>
+	<para>
+		Executes the Bresenham algorithm on the values calculated by
+		InitBresen, and counts down the number of steps. It then
+		invokes CanBeHere() on the resulting coordinates, and sets
+		the new coordinates if it actually Can Be There.
+	</para></sect3>
+
 
         <sect3>
         <title/Kernel function 0x55: DoAvoider()/

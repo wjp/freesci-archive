@@ -1,3 +1,51 @@
+2001-05-19  Matt Hargett  <matt@use.net>
+
+        * sci.sgml: Add some documentation for DoBresen.
+
+        * widgets.c(_gfxw_debug_remove_widget): Change memcpy to memmove.
+
+        * midi_mt32.c(midi_mt32_write_block): Check return value of
+        midiout_write_block.
+
+        * (midi_mt32_patch001_type): Add NULL check for song parameter.
+
+        * midi_mt32gm.c(midi_mt32gm_open): Print an error if
+        midiout_open() fails.
+
+        * (midi_mt32gm_print_instrument): Add NULL check for file
+        parameter.
+
+        * (midi_mt32gm_event): Change volume from long to unsigned long to
+        eliminate warnings.
+
+        * midiout_win32mci.c: Change win32mci_lastwrote to unsigned int
+        to eliminate warnings.
+
+        * (midiout_win32mci_flush): Add Sleep to try and fix reported
+        SysEx loading bugs.
+
+        * (midiout_win32mci_write): Correct usage of count. Get rid of
+        unnecessary Sleep.
+
+        * sound.c(_sound_expect_answer): Put length of text into variable
+        "count" for clarity. Check return value of sound_send_data().
+
+        * (sound_command): Check return value of sound_send_data().
+
+        * (song_new): Change i to unsigned int to eliminate warnings.
+
+        * (song_lib_add): Initialize pointers to NULL upon delcaration.
+        Add NULL pointer check for song parameter.
+
+        * soundserver.c: Minor reformatting.
+
+        * soundserver_sdl.c(sound_sdl_get_data): Minor reformatting.
+
+2001-05-19  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/gfx_drivers.c (gfx_try_open_module): Added
+	tracer bullet dlopen() support
+
 2001-05-17  Matt Hargett <matt@use.net>
 
         * Fixed usage of "count".

@@ -59,8 +59,8 @@ _gfxw_debug_remove_widget(gfxw_widget_t *widget) {
 	int found = 0;
 	for (i = 0; i < debug_widget_pos; i++) {
 		if (debug_widgets[i] == widget) {
-			memcpy(debug_widgets + i, debug_widgets + i + 1,
-			       (sizeof (gfxw_widget_t *)) * (debug_widget_pos - i - 1));
+			memmove(debug_widgets + i, debug_widgets + i + 1,
+				(sizeof (gfxw_widget_t *)) * (debug_widget_pos - i - 1));
 			debug_widgets[debug_widget_pos--] = NULL;
 			found++;
 		}

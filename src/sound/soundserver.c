@@ -156,7 +156,8 @@ sci0_soundserver()
 
   fprintf(ds, "NULL Sound server initialized\n");
 
-  while (!soundserver_dead) {
+  while (!soundserver_dead) 
+  {
     sound_event_t *event_temp;
     GTimeVal wait_tv;
     int ticks = 0; /* Ticks to next command */
@@ -176,12 +177,14 @@ sci0_soundserver()
 
     }
     song = song_lib_find_active(songlib, song);
-    if (song == NULL) {
+    if (song == NULL) 
+	{
       sci_get_current_time((GTimeVal *)&last_played);
       ticks = 60; /* Wait a second for new commands, then collect your new ticks here. */
     }
-    if (ticks == 0) {
-      int tempticks;
+    if (ticks == 0) 
+	{
+	int tempticks;
 
       sci_get_current_time((GTimeVal *)&last_played);
 

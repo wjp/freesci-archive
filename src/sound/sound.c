@@ -117,8 +117,14 @@ _sound_expect_answer(char *timeoutmessage, int def_value)
 static int
 _sound_transmit_text_expect_anwer(state_t *s, char *text, int command, char *timeoutmessage)
 {
-	sound_command(s, command, 0, strlen(text) + 1);
-	sound_send_data(text, strlen(text) +1);
+	int count;
+
+	count = strlen(text) + 1;
+	sound_command(s, command, 0, count);
+	if (sound_send_data(text, count) != count)
+	{
+		fprintf(stderr, "_sound_transmit_text_expect_anwer(): sound_send_data returned < count\n");
+	}
 
 	return _sound_expect_answer(timeoutmessage, 1);
 }
@@ -158,7 +164,12 @@ sound_command(state_t *s, int command, int handle, int parameter)
 
 		len = song->length;
 		sound_queue_command(event.handle, event.signal, event.value);
-		sound_send_data(song->data, len);
+		if (sound_send_data(song->data, len) != len)
+		{
+			fprintf(stderr, "sound_command(): sound_send_data returned < count\n");
+		}
+
+		
 		return 0;
 	}
 
@@ -251,8 +262,9 @@ GTimeVal
 song_sleep_time(GTimeVal *lastslept, int ticks)
 {
   GTimeVal tv;
-  long timetosleep = ticks * SOUND_TICK; /* Time to sleep in us */
+  long timetosleep;
   long timeslept; /* Time already slept */
+  timetosleep = ticks * SOUND_TICK; /* Time to sleep in us */
 
   sci_get_current_time(&tv);
   timeslept = 1000000 * (tv.tv_sec - lastslept->tv_sec) +
@@ -291,7 +303,7 @@ song_t *
 song_new(word handle, byte *data, int size, int priority)
 {
   song_t *retval = xalloc(sizeof(song_t));
-  int i;
+  unsigned int i;
 
   retval->data = data;
   retval->handle = handle;
@@ -325,10 +337,17 @@ song_new(word handle, byte *data, int size, int priority)
 void
 song_lib_add(songlib_t songlib, song_t *song)
 {
-  song_t *seeker;
-  int pri = song->priority;
+  song_t *seeker	= NULL;
+  int pri			= song->priority;
 
-  if (*songlib == NULL) {
+  if (NULL == song)
+  {
+    sciprintf("song_lib_add(): NULL passed for song\n");
+	return;
+  }
+
+  if (*songlib == NULL) 
+  {
     *songlib = song;
     song->next = NULL;
 

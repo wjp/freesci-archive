@@ -1004,6 +1004,8 @@ ggi_usleep(gfx_driver_t* drv, int usec)
 gfx_driver_t gfx_driver_ggi = {
 	"ggi",
 	GGI_DRIVER_VERSION,
+	SCI_GFX_DRIVER_MAGIC,
+	SCI_GFX_DRIVER_VERSION,
 	NULL,
 	0,0,
 	GFX_CAPABILITY_PIXMAP_GRABBING,

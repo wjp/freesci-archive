@@ -26,10 +26,23 @@
 ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-  #include <config.h>
+#  include <config.h>
 #endif
 #include <gfx_driver.h>
+#include <dlfcn.h>
 
+
+#ifndef MODULES_HAVE_FINALLY_BEEN_CLEANED_UP
+#  include <soundserver.h>
+#  include <gfx_tools.h>
+#  include <sci_conf.h>
+#endif
+
+
+#undef HAVE_LIBGGI
+#undef HAVE_LIBXLIB
+#undef HAVE_SDL
+#define X_DISPLAY_MISSING
 #ifdef HAVE_LIBGGI
 extern gfx_driver_t gfx_driver_ggi;
 #endif
@@ -63,10 +76,75 @@ static gfx_driver_t *gfx_drivers[] = {
 	NULL
 };
 
+#define DRIVER_SUBDIR "/lib/freesci/gfx/"
+#define DRIVER_PREFIX "gfx_driver_"
+
+static struct _gfx_driver *
+gfx_try_open_module(char *name, char *dir)
+{
+	char *buf = malloc(strlen(dir) + strlen(DRIVER_SUBDIR)
+			   + strlen(MODULE_NAME_SUFFIX) + strlen(name) + 1);
+	char *driver_name = malloc(strlen(DRIVER_PREFIX)
+				   + strlen(name) + 1);
+	void *handle;
+	gfx_driver_t *driver;
+
+
+	strcpy(buf, dir);
+	strcat(buf, DRIVER_SUBDIR);
+	strcat(buf, name);
+	strcat(buf, MODULE_NAME_SUFFIX);
+
+	strcpy(driver_name, DRIVER_PREFIX);
+	strcat(driver_name, name);
+
+	handle = dlopen(buf, RTLD_NOW);
+	if (!handle) {
+		fprintf(stderr,"Failed to open gfx driver '%s' at %s: %s.\n",
+			name, buf, dlerror());
+
+		free(buf);
+		free(driver_name);
+		return NULL;
+	}
+
+	driver = (gfx_driver_t *) dlsym(handle, driver_name);
+	if (!driver) {
+		fprintf(stderr,"Failed to find gfx driver '%s' as '%s' in %s.\n",
+			name, driver_name, buf);
+		driver = NULL;
+	}
+
+	if (driver && driver->sci_driver_magic != SCI_GFX_DRIVER_MAGIC) {
+		fprintf(stderr,"Failure: gfx driver '%s' as '%s' in %s is not"
+			" a valid gfx driver.\n",
+			name, driver_name, buf);
+		driver = NULL;
+	}
+
+	if (driver && driver->sci_driver_version != SCI_GFX_DRIVER_VERSION) {
+		fprintf(stderr,"Failure: gfx driver '%s' as '%s' in %s has"
+			" invalid version %d != %d expected.\n",
+			name, driver_name, buf,
+			driver->sci_driver_version, SCI_GFX_DRIVER_VERSION);
+		driver = NULL;
+	}
+
+	free(buf);
+	free(driver_name);
+
+	return driver;
+}
+
 struct _gfx_driver *
 gfx_find_driver(char *name)
 {
 	int retval = 0;
+
+	if (!name)
+		name = "xlib";
+
+	return gfx_try_open_module(name, "/usr/local");
 
 	if (!name) { /* Find default driver */
 #ifndef X_DISPLAY_MISSING
@@ -111,3 +189,7 @@ string_falsep(char *value)
 		strcasecmp(value, "no") ||
 		strcasecmp(value, "off"));
 }
+
+
+
+

@@ -432,7 +432,14 @@ int midi_mt32_write_block(guint8 *data, unsigned int count)
     i++;
   }
   if (count >= block_start)
-    midiout_write_block(data + block_start, count - block_start);
+  {
+    if (midiout_write_block(data + block_start, count - block_start) != (count - block_start))
+	{
+		fprintf(stderr, "midi_mt32_write_block(): midiout_write_block failed!\n");
+		return 1;
+	}
+  }
+
   return 0;
 }
 
@@ -458,6 +465,13 @@ int midi_mt32_patch001_type(guint8 *data, unsigned int length)
 int midi_mt32_patch001_type0_length(guint8 *data, unsigned int length)
 {
   unsigned int pos = 492 + 246 * data[491];
+
+  if (NULL == data)
+  {
+    fprintf(stderr, "midi_mt32_patch001_type0_length(): NULL passed for data\n");
+	return 1;
+  }
+
 /*  printf("timbres %d (post = %04x)\n",data[491], pos);*/
 
   if ((length >= (pos + 386)) && (data[pos] == 0xAB) && (data[pos + 1] == 0xCD))
