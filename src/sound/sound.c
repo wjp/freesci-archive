@@ -404,6 +404,7 @@ _sonfree_chain(song_t *song)
 {
 	if (song) {
 		_sonfree_chain(song->next);
+		free(song->data);
 		free(song);
 	}
 }

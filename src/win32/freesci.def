@@ -106,3 +106,4 @@ EXPORTS
   _SCI_STRDUP
   _SCI_FREE
   sci01_priority_table_flags
+  con_gfx_init

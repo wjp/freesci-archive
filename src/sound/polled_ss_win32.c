@@ -200,6 +200,10 @@ sound_win32p_get_event(state_t *s)
 		/* Get event from queue if there is one */
 		if (sound_eq_peek_event(&ev_queue))
 			event = sound_eq_retreive_event(&ev_queue);
+		else {
+			sci_sched_yield();
+		}
+			
 	}
 	__finally
 	{

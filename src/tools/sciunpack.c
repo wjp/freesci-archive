@@ -230,7 +230,7 @@ int main(int argc, char** argv)
 
 		switch (c) {
 		case 256:
-			printf("sciunpack ("PACKAGE") "VERSION"\n");
+			printf("sciunpack");
 			printf("This program is copyright (C) 1999, 2000, 2001 Christoph Reichenbach,\n"
 			       " Lars Skovlund, Magnus Reftel\n"
 			       "It comes WITHOUT WARRANTY of any kind.\n"

@@ -1134,6 +1134,7 @@ gamestate_restore(state_t *s, char *dirname)
 	retval->savegame_version = -1;
 	_global_save_state = retval;
 	retval->gfx_state = s->gfx_state;
+	retval->old_screen = NULL;
 
 	fh = fopen("state", "r" FO_TEXT);
 	if (!fh) {

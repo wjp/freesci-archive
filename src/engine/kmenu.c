@@ -72,10 +72,10 @@ kDrawStatus(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->status_bar_foreground=fgcolor;
 	s->status_bar_background=bgcolor;
 
-	if (s->status_bar_text)
-		free(s->status_bar_text);
-
-	s->status_bar_text = NULL;
+	if (NULL != s->status_bar_text) {
+		sci_free(s->status_bar_text);
+		s->status_bar_text = NULL;
+	}
 
 	if (text)
 		s->status_bar_text = sci_strdup((char *) s->heap + text);

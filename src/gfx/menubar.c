@@ -88,19 +88,19 @@ menubar_free(menubar_t *menubar)
 
 		for (j = 0; j < menu->items_nr; j++) {
 			if (menu->items[j].keytext)
-				free (menu->items[j].keytext);
+				sci_free (menu->items[j].keytext);
 			if (menu->items[j].text)
-				free (menu->items[j].text);
+				sci_free (menu->items[j].text);
 		}
 
-		free(menu->items);
-		free(menu->title);
+		sci_free(menu->items);
+		sci_free(menu->title);
 	}
 
 	if (menubar->menus_nr)
-		free (menubar->menus);
+		sci_free (menubar->menus);
 
-	free(menubar);
+	sci_free(menubar);
 }
 
 

@@ -540,6 +540,7 @@ kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int failed = 0;
   int pathlen;
 
+  memset(buf, 0, sizeof(buf));
   strcpy(testpath, path);
   strcat(testpath, "freesci.foo");
   pathlen = strlen(testpath);
@@ -1001,6 +1002,7 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #ifdef _DREAMCAST
 	if (dc_store_savegame(game_id, game_description, savedir_id) < 0) s->acc = 0;
 #endif
+	sci_free(savegame_dir);
 	_chdir_restoredir(workdir);
 }
 

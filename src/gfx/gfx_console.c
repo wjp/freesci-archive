@@ -31,7 +31,6 @@
 
 #ifdef WANT_CONSOLE
 #  define CON_MAX_CLUSTERS 16
-
 #define CON_CLUSTER_SIZE 64
 
 /* Number of console entries stored = CON_MAX_CLUSTERS * CON_CLUSTER_SIZE */
