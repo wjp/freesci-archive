@@ -154,7 +154,7 @@ sci0_soundserver()
   memset(&ctime, 0, sizeof(GTimeVal));
   sci_get_current_time(&last_played);
 
-  fprintf(ds, "NULL Sound server initialized\n");
+  fprintf(ds, "Sound server initialized\n");
 
   while (!soundserver_dead) 
   {

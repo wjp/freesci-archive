@@ -1019,13 +1019,16 @@ main(int argc, char** argv)
 	gamestate->sound_server = sound_server;
 
 	if (gamestate->sound_server) {
+		int poly;
 		if (gamestate->sound_server->init(gamestate)) {
 			fprintf(stderr,"Sound server initialization failed- aborting.\n");
 			return 1;
 		}
-		sched_yield(); /* Specified by POSIX 1b. If it doesn't work on your
-			       ** system, make up an #ifdef'd version of it above.
-			       */
+		sci_sched_yield();
+		poly = gamestate->sound_server->command(gamestate, SOUND_COMMAND_TEST, 0, 0);
+
+		printf("Sound server reports polyphony %d\n", poly);
+
 		gamestate->sound_server->get_event(gamestate); /* Get init message */
 	}
 

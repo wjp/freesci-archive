@@ -1,5 +1,8 @@
 2001-05-29  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/main.c (main): Added sound server sync by checking polyphony
+	before starting vm
+
 	* src/gfx/drivers/gfx_drivers.c (gfx_find_driver): Added support for
 	systems without dlopen()/with explicit --without-modules
 
