@@ -1,13 +1,13 @@
 Summary: A portable interpreter for SCI games
 Name: freesci
-Version: 0.3.1
+Version: 0.3.2
 Release: 1
 Group: Games/Adventure
 Copyright: GPL
 Source: ftp://ftp.shaftnet.org/pub/freesci/freesci-%{version}.tar.bz2
 Buildroot: /var/tmp/%{name}-%{version}-%{release}-root
-Prereq: ggi
-BuildPrereq:  ggi-devel
+Prereq: ggi, SDL >= 1.1.8
+BuildPrereq:  ggi-devel, SDL-devel >= 1.1.8
 
 %description
 FreeSCI is a portable interpreter for SCI games, such as the Space Quest
@@ -38,7 +38,8 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %defattr(-,root,root)
 %doc AUTHORS ChangeLog COPYING INSTALL NEWS 
 %doc THANKS TODO doc/sci.sgml
-# %doc freesci-bugs
+%doc freesci-bugs
+%doc README*
 %{_bindir}/sciv
 %{_bindir}/sciconsole
 %{_bindir}/scidisasm
