@@ -412,12 +412,19 @@ sfx_init(sfx_state_t *self, resource_mgr_t *resmgr, int flags)
 		if (!timer) {
 			fprintf(stderr, "[SFX] " __FILE__": Could not find timing mechanism\n");
 			fprintf(stderr, "[SFX] Disabled sound support\n");
+			pcm_device = NULL;
+			player = NULL;
+			mixer = NULL;
 			return;
 		}
 
 		if (timer->init(_sfx_timer_callback, NULL)) {
 			fprintf(stderr, "[SFX] " __FILE__": Timer failed to initialize\n");
 			fprintf(stderr, "[SFX] Disabled sound support\n");
+			timer = NULL;
+			pcm_device = NULL;
+			player = NULL;
+			mixer = NULL;
 			return;
 		}
 

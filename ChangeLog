@@ -1,5 +1,10 @@
 2004-04-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/sfx/core.c (sfx_init): Set pcm_device, player, mixer and timer
+	to NULL if no timer was found or timer init failed.
+
+2004-04-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/main.c: Forward ported the '-f' commandline option from the
 	stable branch. Added Dreamcast config file handling.
 
