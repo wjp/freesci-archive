@@ -365,7 +365,8 @@ sound_command(state_t *s, int command, int handle, int parameter)
       s->sound_mute = s->sound_volume;
       s->sound_volume = 0;
     } else {  // restore sound
-      s->sound_volume = s->sound_mute;
+      if (s->sound_mute > 0)
+        s->sound_volume = s->sound_mute;
       s->sound_mute = 0;
     }
     /* let's send a volume change across the wire */
