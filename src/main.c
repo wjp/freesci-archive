@@ -798,7 +798,6 @@ main(int argc, char** argv)
 	cl_options_t cl_options;
 	int conf_entries			= -1; /* Number of config entries */
 	int conf_nr				= -1; /* Element of conf to use */
-	int errc;
 	FILE *console_logfile			= NULL;
 	char startdir[PATH_MAX+1] = "";
 	char resource_dir[PATH_MAX+1] = "";
@@ -921,7 +920,7 @@ main(int argc, char** argv)
 						   "midiout driver", cl_options.midiout_driver_name);
 
 	if (cl_options.midi_device_name)
-		midi_device = old_lookup_driver((old_lookup_funct_t *)midi_find_device, 
+		midi_device = old_lookup_driver((old_lookup_funct_t *)midi_find_device,
 						MSVC_FUNCTYPECAST_KLUDGE list_midi_devices,
 						"MIDI device", cl_options.midi_device_name);
 
@@ -953,7 +952,7 @@ main(int argc, char** argv)
 	}
 
 	gfx_driver = (gfx_driver_t *)
-		lookup_driver((lookup_funct_t *)gfx_find_driver, 
+		lookup_driver((lookup_funct_t *)gfx_find_driver,
 				MSVC_FUNCTYPECAST_KLUDGE list_graphics_drivers,
 				"graphics driver", gfx_driver_name, module_path);
 
@@ -1027,6 +1026,7 @@ main(int argc, char** argv)
 	}
 
 	/* Configure the midiout driver */
+	register_sound_messages();
 	{
 		driver_option_t *option = get_driver_options(active_conf, FREESCI_DRIVER_SUBSYSTEM_MIDIOUT, midiout_driver->name);
 		while (option) {
@@ -1065,7 +1065,7 @@ main(int argc, char** argv)
 		}
 		sci_sched_yield();
 
-		poly = gamestate->sound_server->command(gamestate, SOUND_COMMAND_TEST, 0, 0);
+		poly = gamestate->sound_server->command(gamestate, get_msg_value("SOUND_COMMAND_TEST"), 0, 0);
 
 		printf("Sound server reports polyphony %d\n", poly);
 

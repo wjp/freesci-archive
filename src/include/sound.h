@@ -53,7 +53,7 @@ typedef struct {
 
 	int handle; /* The handle which the data is for; 0 if it's system data */
 
-	int signal; /* Description of value */
+	unsigned int signal; /* Description of value */
 	int value;
 
 } sound_event_t;
@@ -70,97 +70,103 @@ extern int soundserver_dead;
 ** map to heap addresses.
 */
 
-#define SOUND_COMMAND_INIT_SONG 0
+
+unsigned int SOUND_DATA;
+/* Used for transferring data.
+*/
+
+unsigned int SOUND_COMMAND_INIT_HANDLE;
 /* Loads a song, priority specified as PARAMETER, under the specified HANDLE.
 ** Followed by PARAMETER bytes containing the song.
 */
-#define SOUND_COMMAND_PLAY_HANDLE 1
+unsigned int SOUND_COMMAND_PLAY_HANDLE;
 /* Plays the sound stored as the HANDLE at priority PARAMETER. */
-#define SOUND_COMMAND_SET_LOOPS 2
+unsigned int SOUND_COMMAND_LOOP_HANDLE;
 /* Sets the amount of loops (PARAMETER) for the song at HANDLE to play. */
-#define SOUND_COMMAND_DISPOSE_HANDLE 3
+unsigned int SOUND_COMMAND_DISPOSE_HANDLE;
 /* Disposes the song from the specified HANDLE. Stops playing if the song is active. */
-#define SOUND_COMMAND_SET_MUTE 4
+unsigned int SOUND_COMMAND_SET_MUTE;
 /* Mutes sound if PARAMETER is 0, unmutes if PARAMETER != 0. */
-#define SOUND_COMMAND_STOP_HANDLE 5
+unsigned int SOUND_COMMAND_GET_MUTE;
+/* Return the mute status of the system */
+unsigned int SOUND_COMMAND_STOP_HANDLE;
 /* Stops playing the song associated with the specified HANDLE. */
-#define SOUND_COMMAND_SUSPEND_HANDLE 6
+unsigned int SOUND_COMMAND_SUSPEND_HANDLE;
 /* Suspends sound playing for sound with the specified HANDLE. */
-#define SOUND_COMMAND_RESUME_HANDLE 7
+unsigned int SOUND_COMMAND_RESUME_HANDLE;
 /* Resumes sound playing for sound with the specified HANDLE. */
-#define SOUND_COMMAND_SET_VOLUME 8
+unsigned int SOUND_COMMAND_SET_VOLUME;
 /* Sets the global sound volume to the specified level (0-15) */
-#define SOUND_COMMAND_RENICE_HANDLE 9
+unsigned int SOUND_COMMAND_RENICE_HANDLE;
 /* Sets the priority of the sound playing under the HANDLE to PARAMETER */
-#define SOUND_COMMAND_FADE_HANDLE 10
+unsigned int SOUND_COMMAND_FADE_HANDLE;
 /* Fades the sound playing under HANDLE so that it will be finished in PARAMETER ticks */
-#define SOUND_COMMAND_TEST 11
+unsigned int SOUND_COMMAND_TEST;
 /* Returns 0 if sound playing works, 1 if it doesn't. */
-#define SOUND_COMMAND_STOP_ALL 12
+unsigned int SOUND_COMMAND_STOP_ALL;
 /* Stops all playing tracks and returns appropriate signals. */
-#define SOUND_COMMAND_SAVE_STATE 13
+unsigned int SOUND_COMMAND_SHUTDOWN;
+/* Tells the sound server to die. Used by the default exit implementation.
+** The server must not reply to this.
+*/
+unsigned int SOUND_COMMAND_SAVE_STATE;
 /* Saves the current state of the sound engine. Followed by a zero-terminated
 ** directory name with a length as specified by PARAMETER (including the \0)
 ** where the information should be placed. Returns one int (0 for success,
 ** 1 for failure)
 */
-#define SOUND_COMMAND_RESTORE_STATE 14
-/* Inverse of SOUND_COMMAND_SAVE_STATE (13): Restore sound state from zero terminated
+unsigned int SOUND_COMMAND_RESTORE_STATE;
+/* Inverse of SOUND_COMMAND_SAVE_STATE: Restore sound state from zero terminated
 ** directory following the command, size specified in PARAMETER (incl. trailing \0).
 ** Returns one int (0 for success, 1 for failure)
 */
-#define SOUND_COMMAND_SUSPEND_SOUND 15
+unsigned int SOUND_COMMAND_SUSPEND_ALL;
 /* Halt all sound execution (issued when the interpreter is stopped for debugging) */
-#define SOUND_COMMAND_RESUME_SOUND 16
+unsigned int SOUND_COMMAND_RESUME_ALL;
 /* Resume all sound execution (issued when the interpreter is re-enabled after debugging) */
-#define SOUND_COMMAND_GET_NEXT_EVENT 17
+/*unsigned int SOUND_COMMAND_GET_NEXT_EVENT;*/
 /* Request that the next event on the sound server should be transmitted */
-#define SOUND_COMMAND_GET_MUTE 18
-/* return the mute status of the system */
-#define SOUND_COMMAND_GET_VOLUME 19
+unsigned int SOUND_COMMAND_GET_VOLUME;
 /* retrn the global sound volume */
-#define SOUND_COMMAND_PRINT_SONGID 20
+unsigned int SOUND_COMMAND_PRINT_SONG_INFO;
 /* Prints the current song ID to the debug stream */
-#define SOUND_COMMAND_PRINT_CHANNELS 21
+unsigned int SOUND_COMMAND_PRINT_CHANNELS;
 /* Prints the current channel status to the debug stream */
-#define SOUND_COMMAND_PRINT_MAPPING 22
+unsigned int SOUND_COMMAND_PRINT_MAPPING;
 /* Prints all current MT-32 -> GM instrument mappings to the debug stream */
-#define SOUND_COMMAND_INSTRMAP_SET_INSTRUMENT 23
+unsigned int SOUND_COMMAND_IMAP_SET_INSTRUMENT;
 /* Sets the 'gm_instr' part of an instrument mapping */
-#define SOUND_COMMAND_INSTRMAP_SET_KEYSHIFT 24
+unsigned int SOUND_COMMAND_IMAP_SET_KEYSHIFT;
 /* Sets the 'keyshift' part of an instrument mapping */
-#define SOUND_COMMAND_INSTRMAP_SET_FINETUNE 25
+unsigned int SOUND_COMMAND_IMAP_SET_FINETUNE;
 /* Sets the 'finetune' part of an instrument mapping */
-#define SOUND_COMMAND_INSTRMAP_SET_BENDER_RANGE 26
+unsigned int SOUND_COMMAND_IMAP_SET_BENDER_RANGE;
 /* Sets the 'bender range' part of an instrument mapping */
-#define SOUND_COMMAND_INSTRMAP_SET_PERCUSSION 27
+unsigned int SOUND_COMMAND_IMAP_SET_PERCUSSION;
 /* Sets the 'gm_rhythmkey' part of an instrument mapping */
-#define SOUND_COMMAND_INSTRMAP_SET_VOLUME 28
+unsigned int SOUND_COMMAND_IMAP_SET_VOLUME;
 /* Sets the 'volume' part of an instrument mapping */
-#define SOUND_COMMAND_MUTE_CHANNEL 29
+unsigned int SOUND_COMMAND_MUTE_CHANNEL;
 /* Mutes one of the output channels */
-#define SOUND_COMMAND_UNMUTE_CHANNEL 30
+unsigned int SOUND_COMMAND_UNMUTE_CHANNEL;
 /* Un-mutes one of the output channels */
 
-
-#define SOUND_SIGNAL_CUMULATIVE_CUE 0
+unsigned int SOUND_SIGNAL_CUMULATIVE_CUE;
 /* Request for the specified HANDLE's signal to be increased */
-#define SOUND_SIGNAL_LOOP 1
+unsigned int SOUND_SIGNAL_LOOP;
 /* Finished a loop: VALUE is the number of loops remaining for the HANDLEd sound */
-#define SOUND_SIGNAL_FINISHED 2
+unsigned int SOUND_SIGNAL_FINISHED;
 /* HANDLE has finished playing and was removed from the sound list */
-#define SOUND_SIGNAL_PLAYING 3
+unsigned int SOUND_SIGNAL_PLAYING;
 /* Playing HANDLE */
-#define SOUND_SIGNAL_PAUSED 4
+unsigned int SOUND_SIGNAL_PAUSED;
 /* Pausing HANDLE */
-#define SOUND_SIGNAL_RESUMED 5
+unsigned int SOUND_SIGNAL_RESUMED;
 /* Resuming HANDLE after it was paused */
-#define SOUND_SIGNAL_INITIALIZED 6
+unsigned int SOUND_SIGNAL_INITIALIZED;
 /* HANDLE has been successfully initialized */
-#define SOUND_SIGNAL_ABSOLUTE_CUE 7
+unsigned int SOUND_SIGNAL_ABSOLUTE_CUE;
 /* Set the HANDLE's signal to a fixed VALUE */
-#define SOUND_SIGNAL_END_OF_QUEUE 0xff
-/* All sound signals have been transmitted. */
 
 
 /* MIDI defines */
@@ -198,6 +204,19 @@ map_MIDI_instruments(resource_mgr_t *resmgr);
 int
 init_midi_device(struct _state *s);
 /* sets up the midi device; loads the patch, etc. */
+
+void
+register_sound_messages();
+/* Initialises the various SOUND_COMMAND and SOUND_SIGNAL variables. */
+
+unsigned int
+get_msg_value(char *msg);
+/* Returns the value for the given sound message. Required to get the correct
+** value from the main procedure.
+** Parameters: (char *) msg: Sound message in words (not case sensitive)
+** Returns   : (unsigned int) The message value
+*/
+
 
 #define MAP_NOT_FOUND -1
 #define NOMAP -2

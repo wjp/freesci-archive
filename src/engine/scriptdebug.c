@@ -1940,44 +1940,44 @@ c_snd(state_t *s)
 	}
 
 	if (!strcmp(op, "stop")) {
-		sound_command(s, SOUND_COMMAND_SUSPEND_SOUND, 0, 0);
+		sound_command_default(s, SOUND_COMMAND_SUSPEND_ALL, 0, 0);
 	} else if (!strcmp(op, "resume")) {
-		sound_command(s, SOUND_COMMAND_RESUME_SOUND, 0, 0);
+		sound_command_default(s, SOUND_COMMAND_RESUME_ALL, 0, 0);
 	} else if (!strcmp(op, "play")) {
 		ASSERT_PARAMS(1);
-		if (!sound_command(s, SOUND_COMMAND_INIT_SONG, 42, cmd_params[1].val)); {
-			sound_command(s, SOUND_COMMAND_PLAY_HANDLE, 42, 1000);
+		if (!sound_command_default(s, SOUND_COMMAND_INIT_HANDLE, 42, cmd_params[1].val)); {
+			sound_command_default(s, SOUND_COMMAND_PLAY_HANDLE, 42, 1000);
 		}
 	} else if (!strcmp(op, "mute_channel")) {
 		ASSERT_PARAMS(1);
-		sound_command(s, SOUND_COMMAND_MUTE_CHANNEL, 0, cmd_params[1].val);
+		sound_command_default(s, SOUND_COMMAND_MUTE_CHANNEL, 0, cmd_params[1].val);
 	} else if (!strcmp(op, "unmute_channel")) {
 		ASSERT_PARAMS(1);
-		sound_command(s, SOUND_COMMAND_UNMUTE_CHANNEL, 0, cmd_params[1].val);
+		sound_command_default(s, SOUND_COMMAND_UNMUTE_CHANNEL, 0, cmd_params[1].val);
 	} else if (!strcmp(op, "mute")) {
 		int i;
 
 		for (i = 0; i < 16; i++)
-			sound_command(s, SOUND_COMMAND_MUTE_CHANNEL, 0, i);
+			sound_command_default(s, SOUND_COMMAND_MUTE_CHANNEL, 0, i);
 	} else if (!strcmp(op, "unmute")) {
 		int i;
 
 		for (i = 0; i < 16; i++)
-			sound_command(s, SOUND_COMMAND_UNMUTE_CHANNEL, 0, i);
+			sound_command_default(s, SOUND_COMMAND_UNMUTE_CHANNEL, 0, i);
 	} else if (!strcmp(op, "solo")) {
 		int i;
 
 		ASSERT_PARAMS(1);
 		for (i = 0; i < 16; i++)
-			sound_command(s, i == cmd_params[1].val?
+			sound_command_default(s, i == cmd_params[1].val?
 				      SOUND_COMMAND_UNMUTE_CHANNEL :
 				      SOUND_COMMAND_MUTE_CHANNEL, 0, i);
 	} else if (!strcmp(op, "printmap")) {
-		sound_command(s, SOUND_COMMAND_PRINT_MAPPING, 0, 0);
+		sound_command_default(s, SOUND_COMMAND_PRINT_MAPPING, 0, 0);
 	} else if (!strcmp(op, "printchannels")) {
-		sound_command(s, SOUND_COMMAND_PRINT_CHANNELS, 0, 0);
+		sound_command_default(s, SOUND_COMMAND_PRINT_CHANNELS, 0, 0);
 	} else if (!strcmp(op, "songid")) {
-		sound_command(s, SOUND_COMMAND_PRINT_SONGID, 0, 0);
+		sound_command_default(s, SOUND_COMMAND_PRINT_SONG_INFO, 0, 0);
 	} else {
 		sciprintf("Invalid sound command %s\n", op);
 		return 1;
@@ -2000,26 +2000,26 @@ c_sndmap(state_t *s)
 	}
 
 	if (!strcmp(op, "mute")) {
-		sound_command(s, SOUND_COMMAND_INSTRMAP_SET_INSTRUMENT, instr, NOMAP);
+		sound_command_default(s, SOUND_COMMAND_IMAP_SET_INSTRUMENT, instr, NOMAP);
 	} else if (!strcmp(op, "percussion")) {
 		ASSERT_PARAMS(2);
-		sound_command(s, SOUND_COMMAND_INSTRMAP_SET_INSTRUMENT, instr, RHYTHM);
-		sound_command(s, SOUND_COMMAND_INSTRMAP_SET_PERCUSSION, instr, cmd_params[2].val);
+		sound_command_default(s, SOUND_COMMAND_IMAP_SET_INSTRUMENT, instr, RHYTHM);
+		sound_command_default(s, SOUND_COMMAND_IMAP_SET_PERCUSSION, instr, cmd_params[2].val);
 	} else if (!strcmp(op, "instrument")) {
 		ASSERT_PARAMS(2);
-		sound_command(s, SOUND_COMMAND_INSTRMAP_SET_INSTRUMENT, instr, cmd_params[2].val);
+		sound_command_default(s, SOUND_COMMAND_IMAP_SET_INSTRUMENT, instr, cmd_params[2].val);
 	} else if (!strcmp(op, "shift")) {
 		ASSERT_PARAMS(2);
-		sound_command(s, SOUND_COMMAND_INSTRMAP_SET_KEYSHIFT, instr, cmd_params[2].val);
+		sound_command_default(s, SOUND_COMMAND_IMAP_SET_KEYSHIFT, instr, cmd_params[2].val);
 	} else if (!strcmp(op, "finetune")) {
 		ASSERT_PARAMS(2);
-		sound_command(s, SOUND_COMMAND_INSTRMAP_SET_FINETUNE, instr, cmd_params[2].val);
+		sound_command_default(s, SOUND_COMMAND_IMAP_SET_FINETUNE, instr, cmd_params[2].val);
 	} else if (!strcmp(op, "bender")) {
 		ASSERT_PARAMS(2);
-		sound_command(s, SOUND_COMMAND_INSTRMAP_SET_BENDER_RANGE, instr, cmd_params[2].val);
+		sound_command_default(s, SOUND_COMMAND_IMAP_SET_BENDER_RANGE, instr, cmd_params[2].val);
 	} else if (!strcmp(op, "volume")) {
 		ASSERT_PARAMS(2);
-		sound_command(s, SOUND_COMMAND_INSTRMAP_SET_VOLUME, instr, cmd_params[2].val);
+		sound_command_default(s, SOUND_COMMAND_IMAP_SET_VOLUME, instr, cmd_params[2].val);
 	} else {
 		sciprintf("Invalid sound mapping command %s\n", op);
 		sciprintf("Valid commands: mute, percussion, instrument, shift, finetune,\n"

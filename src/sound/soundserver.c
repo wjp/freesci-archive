@@ -122,14 +122,14 @@ dump_song(song_t *song)
 }
 
 
-#define SOUNDSERVER_INSTRMAP_CHANGE(ELEMENT, VAL_MIN, VAL_MAX, ELEMENT_NAME) \
+#define SOUNDSERVER_IMAP_CHANGE(ELEMENT, VAL_MIN, VAL_MAX, ELEMENT_NAME) \
 		if (value >= (VAL_MIN) && value <= (VAL_MAX)) \
 			MIDI_mapping[instr].ELEMENT = value; \
 		else \
 			fprintf(debug_stream, "Invalid %s: %d\n", ELEMENT_NAME, value) \
 
 void
-imap_set(int action, int instr, int value)
+imap_set(unsigned int action, int instr, int value)
 {
 #ifdef DEBUG_SOUND_SERVER
 	fprintf(debug_stream, "Changing instrument map - instr %i, action %i, value %i\n", instr, action, value);
@@ -141,42 +141,35 @@ imap_set(int action, int instr, int value)
 		return;
 	}
 
-	switch (action) {
-		case SOUND_COMMAND_INSTRMAP_SET_INSTRUMENT:
+	if (action == SOUND_COMMAND_IMAP_SET_INSTRUMENT) {
 			if ((value >= (0) && value <= (MIDI_mappings_nr - 1))
 			    || value == NOMAP
 			    || value == RHYTHM)
 				MIDI_mapping[instr].gm_instr = value;
 			else
 				fprintf(debug_stream, "Invalid instrument ID: %d\n", value);
-			break;
 
-		case SOUND_COMMAND_INSTRMAP_SET_KEYSHIFT:
-			SOUNDSERVER_INSTRMAP_CHANGE(keyshift, -128, 127,
+	} else if (action == SOUND_COMMAND_IMAP_SET_KEYSHIFT) {
+			SOUNDSERVER_IMAP_CHANGE(keyshift, -128, 127,
 				"key shift");
-			break;
 
-		case SOUND_COMMAND_INSTRMAP_SET_FINETUNE:
-			SOUNDSERVER_INSTRMAP_CHANGE(finetune, -32768, 32767,
+	} else if (action == SOUND_COMMAND_IMAP_SET_FINETUNE) {
+			SOUNDSERVER_IMAP_CHANGE(finetune, -32768, 32767,
 			    "finetune value");
-			break;
 
-		case SOUND_COMMAND_INSTRMAP_SET_BENDER_RANGE:
-			SOUNDSERVER_INSTRMAP_CHANGE(bender_range, -128, 127,
+	} else if (action == SOUND_COMMAND_IMAP_SET_BENDER_RANGE) {
+			SOUNDSERVER_IMAP_CHANGE(bender_range, -128, 127,
 			    "bender range");
-			break;
 
-		case SOUND_COMMAND_INSTRMAP_SET_PERCUSSION:
-			SOUNDSERVER_INSTRMAP_CHANGE(gm_rhythmkey, 0, 79,
+	} else if (action == SOUND_COMMAND_IMAP_SET_PERCUSSION) {
+			SOUNDSERVER_IMAP_CHANGE(gm_rhythmkey, 0, 79,
 			    "percussion instrument");
-			break;
 
-		case SOUND_COMMAND_INSTRMAP_SET_VOLUME:
-			SOUNDSERVER_INSTRMAP_CHANGE(volume, 0, 100,
+	} else if (action == SOUND_COMMAND_IMAP_SET_VOLUME) {
+			SOUNDSERVER_IMAP_CHANGE(volume, 0, 100,
 			    "instrument volume");
-			break;
 
-		default:
+	} else {
 			fprintf(debug_stream, "imap_set(): Internal error: "
 				"Invalid action %d!\n", action);
 	}
@@ -187,7 +180,7 @@ change_song(song_t *new_song, sound_server_state_t *ss_state)
 {
 	if (new_song)
 	{
-		int i;
+		guint8 i;
 		for (i = 0; i < MIDI_CHANNELS; i++) {
 			/* lingering notes are usually intended */
 			ss_state->playing_notes[i].polyphony = MAX(1, MIN(POLYPHONY(new_song, i),
@@ -195,7 +188,7 @@ change_song(song_t *new_song, sound_server_state_t *ss_state)
 			ss_state->playing_notes[i].playing = 0;
 
 			if (new_song->instruments[i])
-				midi_event2(0xc0 | i, new_song->instruments[i]);
+				midi_event2((guint8)(0xc0 | i), new_song->instruments[i]);
 		}
 	}
 	ss_state->current_song = new_song;
@@ -205,15 +198,15 @@ change_song(song_t *new_song, sound_server_state_t *ss_state)
 void
 init_handle(int priority, word song_handle, sound_server_state_t *ss_state)
 {
-#if 0
 	song_t *this_song;
 	/* pointer to song for this instruction */
-	resource_t *new_song = scir_find_resource(game_state->resmgr, sci_sound,
-						      priority, 0);
 
-/*
-	DECLARE_MESSAGES();
-*/
+	byte *data;
+	/* temporary for storing pointer to new song's data */
+
+	int data_size;
+	/* temporary for storing size of data */
+
 #ifdef DEBUG_SOUND_SERVER
 	fprintf(debug_stream, "Initialising song with handle %04x and priority %i\n", song_handle, priority);
 #endif
@@ -230,11 +223,8 @@ init_handle(int priority, word song_handle, sound_server_state_t *ss_state)
 		 * song_lib_find_active() */
 		if (last_mode == SOUND_STATUS_PLAYING)
 		{
-/*
-			if (PostMessage(main_wnd, UM_SOUND_SIGNAL_FINISHED,
-				0, song_handle) == 0)
-				fprintf(debug_stream, "Message post failed in sound server\n");
-*/
+			global_sound_server->queue_event(song_handle, SOUND_SIGNAL_FINISHED, 0);
+
 			/* play highest priority song */
 			change_song(ss_state->songlib[0], ss_state);
 		}
@@ -248,7 +238,8 @@ init_handle(int priority, word song_handle, sound_server_state_t *ss_state)
 		}
 	}
 
-	this_song = song_new(song_handle, new_song->data, new_song->size, priority);	/* Create new song */
+	global_sound_server->get_data(&data, &data_size);
+	this_song = song_new(song_handle, data, data_size, priority);	/* Create new song */
 
 	/* enable rhythm channel if requested by the hardware */
 	if (midi_playrhythm)
@@ -257,21 +248,15 @@ init_handle(int priority, word song_handle, sound_server_state_t *ss_state)
 	song_lib_add(ss_state->songlib, this_song);	/* add to song library */
 
 	ss_state->sound_cue = 127;	/* reset ss_state->sound_cue */
-/*
-	if (PostMessage(main_wnd, UM_SOUND_SIGNAL_INITIALIZED,
-		0, song_handle) == 0)
-		fprintf(debug_stream, "Message post failed in sound server\n");
-		*/
-#endif
+
+	global_sound_server->queue_event(song_handle, SOUND_SIGNAL_INITIALIZED, 0);
 }
 
 void
 play_handle(int priority, word song_handle, sound_server_state_t *ss_state)
 {
 	song_t *this_song;
-/*
-	DECLARE_MESSAGES();
-*/
+
 #ifdef DEBUG_SOUND_SERVER
 	fprintf(debug_stream, "Playing handle %04x and priority %i\n", song_handle, priority);
 #endif
@@ -282,11 +267,9 @@ play_handle(int priority, word song_handle, sound_server_state_t *ss_state)
 	{
 		midi_allstop();
 		this_song->status = SOUND_STATUS_PLAYING;
-/*
-		if (PostMessage(main_wnd, UM_SOUND_SIGNAL_PLAYING,
-			0, song_handle) == 0)
-			fprintf(debug_stream, "Message post failed in sound server\n");
-*/
+
+		global_sound_server->queue_event(song_handle, SOUND_SIGNAL_PLAYING, 0);
+
 #ifdef DEBUG_SOUND_SERVER
 		/* play this song and reset instrument mappings */
 		memset(channel_instrument, -1, sizeof(channel_instrument));
@@ -303,9 +286,7 @@ void
 stop_handle(word song_handle, sound_server_state_t *ss_state)
 {
 	song_t *this_song;
-/*
-	DECLARE_MESSAGES();
-*/
+
 #ifdef DEBUG_SOUND_SERVER
 	fprintf(debug_stream, "Stopping handle %04x\n", song_handle);
 #endif
@@ -323,11 +304,9 @@ stop_handle(word song_handle, sound_server_state_t *ss_state)
 			this_song->pos = 33;
 			this_song->loopmark = 33;
 		}
-/*
-		if (PostMessage(main_wnd, UM_SOUND_SIGNAL_FINISHED,
-			0, song_handle) == 0)
-			fprintf(debug_stream, "Message post failed in sound server\n");
-*/
+
+		global_sound_server->queue_event(song_handle, SOUND_SIGNAL_FINISHED, 0);
+
 	} else {
 		fprintf(debug_stream, "Attempt to stop invalid handle %04x\n", song_handle);
 	}
@@ -381,9 +360,7 @@ void
 resume_handle(word song_handle, sound_server_state_t *ss_state)
 {
 	song_t *this_song;
-/*
-	DECLARE_MESSAGES();
-*/
+
 #ifdef DEBUG_SOUND_SERVER
 	fprintf(debug_stream, "Resuming handle %04x\n", song_handle);
 #endif
@@ -396,11 +373,6 @@ resume_handle(word song_handle, sound_server_state_t *ss_state)
 		{
 			/* set this handle as ready and waiting */
 			this_song->status = SOUND_STATUS_WAITING;
-			/*
-			if (PostMessage(main_wnd, UM_SOUND_SIGNAL_WAITING,
-				0, song_handle) == 0)
-				fprintf(debug_stream, "Message post failed in sound server\n");
-				*/
 
 		} else {
 			fprintf(debug_stream, "Attempt to resume handle %04x not suspended\n",
@@ -486,9 +458,7 @@ void
 dispose_handle(word song_handle, sound_server_state_t *ss_state)
 {
 	song_t *this_song;
-/*
-	DECLARE_MESSAGES();
-*/
+
 #ifdef DEBUG_SOUND_SERVER
 	fprintf(debug_stream, "Disposing handle %04x\n", song_handle);
 #endif
@@ -502,11 +472,8 @@ dispose_handle(word song_handle, sound_server_state_t *ss_state)
 		{
 			/* force song detection to start with the highest priority song */
 			change_song(ss_state->songlib[0], ss_state);
-/*
-			if (PostMessage(main_wnd, UM_SOUND_SIGNAL_FINISHED,
-				0, song_handle) == 0)
-				fprintf(debug_stream, "Message post failed in sound server\n");
-*/
+
+			global_sound_server->queue_event(song_handle, SOUND_SIGNAL_FINISHED, 0);
 		}
 
 	} else {
@@ -544,25 +511,18 @@ set_master_volume(guint8 new_volume, sound_server_state_t *ss_state)
 void
 sound_check(int mid_polyphony, sound_server_state_t *ss_state)
 {
-/*
-	DECLARE_MESSAGES();
 #ifdef DEBUG_SOUND_SERVER
 	fprintf(debug_stream, "Received test signal, responding\n");
 #endif
 
-	if (PostMessage(main_wnd, UM_SOUND_SIGNAL_TEST,
-		mid_polyphony, 0) == 0)
-		fprintf(debug_stream, "Message post failed in sound server\n");
-*/
+	global_sound_server->queue_command(mid_polyphony, SOUND_COMMAND_TEST, 0);
 }
 
 void
 stop_all(sound_server_state_t *ss_state)
 {
 	song_t **seeker = ss_state->songlib;
-/*
-	DECLARE_MESSAGES();
-*/
+
 #ifdef DEBUG_SOUND_SERVER
 	fprintf(debug_stream, "Stopping all songs\n");
 #endif
@@ -574,11 +534,8 @@ stop_all(sound_server_state_t *ss_state)
 			 ((*seeker)->status == SOUND_STATUS_PLAYING) )
 		{
 			(*seeker)->status = SOUND_STATUS_STOPPED;	/* stop song */
-/*
-			if (PostMessage(main_wnd, UM_SOUND_SIGNAL_FINISHED,
-				0, seeker->handle) == 0)
-				fprintf(debug_stream, "Message post failed in sound server\n");
-*/
+
+			global_sound_server->queue_event((*seeker)->handle, SOUND_SIGNAL_FINISHED, 0);
 		}
 		(*seeker) = (*seeker)->next;
 	}

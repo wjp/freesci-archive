@@ -53,60 +53,45 @@ process_sound_events(state_t *s) /* Get all sound events, apply their changes to
 		heap_ptr obj = event->handle;
 
 		if (is_object(s, obj))
-			switch (event->signal) {
-			case SOUND_SIGNAL_CUMULATIVE_CUE: {
+		{
+			if (event->signal == SOUND_SIGNAL_CUMULATIVE_CUE) {
 				int signal = GET_SELECTOR(obj, signal);
 				SCIkdebug(SCIkSOUND,"Received cumulative cue for %04x\n", obj);
 
 				PUT_SELECTOR(obj, signal, signal + 1);
-			}
-			break;
 
-			case SOUND_SIGNAL_LOOP:
-
+			} else if (event->signal == SOUND_SIGNAL_LOOP) {
 				SCIkdebug(SCIkSOUND,"Received loop signal for %04x\n", obj);
 				PUT_SELECTOR(obj, signal, -1);
-				break;
 
-			case SOUND_SIGNAL_FINISHED:
-
+			} else if (event->signal == SOUND_SIGNAL_FINISHED) {
 				SCIkdebug(SCIkSOUND,"Received finished signal for %04x\n", obj);
 				PUT_SELECTOR(obj, state, _K_SOUND_STATUS_STOPPED);
-				break;
 
-			case SOUND_SIGNAL_PLAYING:
-
+			} else if (event->signal == SOUND_SIGNAL_PLAYING) {
 				SCIkdebug(SCIkSOUND,"Received playing signal for %04x\n", obj);
 				PUT_SELECTOR(obj, state, _K_SOUND_STATUS_PLAYING);
-				break;
 
-			case SOUND_SIGNAL_PAUSED:
-
+			} else if (event->signal == SOUND_SIGNAL_PAUSED) {
 				SCIkdebug(SCIkSOUND,"Received pause signal for %04x\n", obj);
 				PUT_SELECTOR(obj, state, _K_SOUND_STATUS_PAUSED);
-				break;
 
-			case SOUND_SIGNAL_RESUMED:
-
+			} else if (event->signal == SOUND_SIGNAL_RESUMED) {
 				SCIkdebug(SCIkSOUND,"Received resume signal for %04x\n", obj);
 				PUT_SELECTOR(obj, state, _K_SOUND_STATUS_PAUSED);
-				break;
 
-			case SOUND_SIGNAL_INITIALIZED:
-
+			} else if (event->signal == SOUND_SIGNAL_INITIALIZED) {
 				PUT_SELECTOR(obj, state, _K_SOUND_STATUS_INITIALIZED);
 				SCIkdebug(SCIkSOUND,"Received init signal for %04x\n", obj);
-				break;
 
-			case SOUND_SIGNAL_ABSOLUTE_CUE:
-
+			} else if (event->signal == SOUND_SIGNAL_ABSOLUTE_CUE) {
 				SCIkdebug(SCIkSOUND,"Received absolute cue %d for %04x\n", event->value, obj);
 				PUT_SELECTOR(obj, signal, event->value);
-				break;
 
-			default:
+			} else {
 				SCIkwarn(SCIkERROR, "Unknown sound signal: %d\n", event->signal);
 			}
+		}
 
 		free(event);
 	}
@@ -121,8 +106,8 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	CHECK_THIS_KERNEL_FUNCTION;
 
-	if (SCI_VERSION_MAJOR(s->version) != 0) return; /* Can't do much else ATM */ 
-  
+	if (SCI_VERSION_MAJOR(s->version) != 0) return; /* Can't do much else ATM */
+
 	if (s->debug_mode & (1 << SCIkSOUNDCHK_NR)) {
 		int i;
 
@@ -157,13 +142,13 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (s->sound_server)
 		switch (command) {
 		case _K_SOUND_INIT:
-			s->sound_server->command(s, SOUND_COMMAND_INIT_SONG, obj, GET_SELECTOR(obj, number));
+			s->sound_server->command(s, SOUND_COMMAND_INIT_HANDLE, obj, GET_SELECTOR(obj, number));
 			break;
 
 		case _K_SOUND_PLAY:
 
 			s->sound_server->command(s, SOUND_COMMAND_PLAY_HANDLE, obj, 0);
-			s->sound_server->command(s, SOUND_COMMAND_SET_LOOPS, obj, GET_SELECTOR(obj, loop));
+			s->sound_server->command(s, SOUND_COMMAND_LOOP_HANDLE, obj, GET_SELECTOR(obj, loop));
 			break;
 
 		case _K_SOUND_NOP:
@@ -219,7 +204,7 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		case _K_SOUND_UPDATE:
 
 			s->sound_server->command(s, SOUND_COMMAND_RENICE_HANDLE, obj, GET_SELECTOR(obj, priority));
-			s->sound_server->command(s, SOUND_COMMAND_SET_LOOPS, obj, GET_SELECTOR(obj, loop));
+			s->sound_server->command(s, SOUND_COMMAND_LOOP_HANDLE, obj, GET_SELECTOR(obj, loop));
 			break;
 
 		case _K_SOUND_FADE:
@@ -228,7 +213,7 @@ kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 			break;
 
 		case _K_SOUND_CHECK_DRIVER:
-		  
+
 			s->acc = s->sound_server->command(s, SOUND_COMMAND_TEST, 0, 0);
 			break;
 

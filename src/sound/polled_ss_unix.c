@@ -1,5 +1,5 @@
 /***************************************************************************
- soundserver_unix.c Copyright (C) 1999 Christoph Reichenbach
+ polled_ss_unix.c Copyright (C) 1999 Christoph Reichenbach
 
 
  This program may be modified and copied freely according to the terms of
@@ -212,7 +212,7 @@ sound_unix_configure(state_t *s, char *option, char *value)
 }
 
 void
-sound_unix_queue_event(int handle, int signal, int value)
+sound_unix_queue_event(unsigned int handle, unsigned int signal, long value)
 {
 	sound_event_t event;
 
@@ -272,7 +272,7 @@ sound_unix_get_event(state_t *s)
 }
 
 void
-sound_unix_queue_command(int handle, int signal, int value)
+sound_unix_queue_command(unsigned int handle, unsigned int signal, long value)
 {
 	sound_event_t event;
 
@@ -316,7 +316,7 @@ sound_unix_get_command(GTimeVal *wait_tvp)
 }
 
 int
-sound_unix_get_data(byte **data_ptr, int *size, int maxlen)
+sound_unix_get_data(byte **data_ptr, int *size)
 {
 	int len = 0;
 	fd_set fds;
@@ -395,7 +395,7 @@ sound_unix_exit(state_t *s)
 	signal(SIGPIPE, SIG_IGN); /* Ignore SIGPIPEs */
 	signal(SIGCHLD, &_sound_confirm_death);
 
-	sound_command(s, SOUND_COMMAND_SHUTDOWN, 0, 0); /* Kill server */
+	global_sound_server->queue_command(0, SOUND_COMMAND_SHUTDOWN, 0); /* Kill server */
 
 	close(x_fd_in);
 	close(x_fd_out);
@@ -422,11 +422,11 @@ sound_server_t sound_server_unix = {
 	&sound_unix_queue_command,
 	&sound_unix_get_data,
 	&sound_unix_send_data,
-	&sound_save,
-	&sound_restore,
-	&sound_command,
-	&sound_suspend,
-	&sound_resume,
+	&sound_save_default,
+	&sound_restore_default,
+	&sound_command_default,
+	&sound_suspend_default,
+	&sound_resume_default,
 	&sound_unix_poll
 };
 

@@ -69,11 +69,6 @@
 /* PARAMETER sound mappings are incoming. First comes an int describing their byte size,
 ** then PARAMETER blocks of this size, all of them valid General MIDI commands for channel 0.
 */
-#define SOUND_COMMAND_SHUTDOWN -1
-/* Tells the sound server to die. Used by the default exit implementation.
-** The server must not reply to this.
-*/
-
 
 #define SOUND_STATUS_STOPPED   0
 #define SOUND_STATUS_PLAYING   1
@@ -189,7 +184,7 @@ typedef struct _song {
 	long fading;   /* Ticks left until faded out, or -1 if not fading */
 	long maxfade;  /* Total ticks in the fade (used to calculate volume */
 
-	int reverb;   /* current reverb setting */
+	short reverb;   /* current reverb setting */
 
 	byte *data;   /* dynamically allocated data */
 	int file_nr;  /* Temporarily used to save and restore song data */
@@ -234,23 +229,23 @@ extern sound_eq_t queue; /* The event queue */
 
 
 int
-sound_command(struct _state *s, int command, int handle, int parameter);
-/* Default implementation for command from the sound_server_t structure. */
+sound_command_default(struct _state *s, unsigned int command, unsigned int handle, long parameter);
+/* Interface for other parts of FreeSCI to command the sound server (such as scriptdebug) */
 
 int
-sound_save(struct _state *s, char *dir);
+sound_save_default(struct _state *s, char *dir);
 /* Default implementation for saving the sound status */
 
 int
-sound_restore(struct _state *s, char *dir);
+sound_restore_default(struct _state *s, char *dir);
 /* Default implementation for restoring the sound state */
 
 void
-sound_suspend(struct _state *s);
+sound_suspend_default(struct _state *s);
 /* Default implementation for suspending sound output */
 
 void
-sound_resume(struct _state *s);
+sound_resume_default(struct _state *s);
 /* Default implementation for resuming sound output after it was suspended */
 
 
@@ -375,7 +370,7 @@ sound_eq_init(sound_eq_t *queue);
 */
 
 void
-sound_eq_queue_event(sound_eq_t *queue, int handle, int signal, int value);
+sound_eq_queue_event(sound_eq_t *queue, unsigned int handle, unsigned int signal, long value);
 /* Queues an event into an event queue.
 ** Parameters: (sound_eq_t *) queue: The queue to add the event to
 **             (int x int x int) (handle, signal, value): The event data to queue
@@ -456,16 +451,18 @@ typedef struct {
 	** and cue events, which can be written directly to the sound objects.
 	*/
 
-	void (*queue_event)(int handle, int signal, int value);
+	void (*queue_event)(unsigned int handle, unsigned int signal, long value);
 	/* XXX write me */
 
 	sound_event_t* (*get_command)(GTimeVal *wait_tvp);
 	/* XXX write me */
 
-	void (*queue_command)(int handle, int signal, int value);
-	/* XXX write me */
+	void (*queue_command)(unsigned int handle, unsigned int signal, long value);
+	/* Called by (*command) (see below) to queue the command. The sound server
+	** uses this function directly and does not go via (*command).
+	*/
 
-	int (*get_data)(byte **data_ptr, int *size, int maxlen);
+	int (*get_data)(byte **data_ptr, int *size);
 	/* XXX write me */
 
 	int (*send_data)(byte *data_ptr, int maxsend);
@@ -485,11 +482,12 @@ typedef struct {
 	** Returns   : (int) 0 on success, 1 otherwise
 	*/
 
-	int (*command)(struct _state *s, int command, int handle, int parameter);
-	/* Executes a sound command (one of SOUND_COMMAND_xxx).
+	int (*command)(struct _state *s, unsigned int command, unsigned int param1, long param2);
+	/* Executes a sound command (one of SOUND_COMMAND_xxx). Used by other
+	** parts of FreeSCI such as the kernel to control the sound server.
 	** Parameters: (int) command: The command to execute
-	**             (int) handle: The handle to execute it on, if available
-	**             (int) parameter: The function parameter
+	**             (unsigned int) param1: First parameter (traditionally the song handle)
+	**             (long) param2: Second parameter
 	*/
 
 	void (*suspend)(struct _state *s);
@@ -584,7 +582,7 @@ void sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state);
 */
 
 void
-imap_set(int action, int instr, int value);
+imap_set(unsigned int action, int instr, int value);
 /* Alters the instrument mappings
 ** Parameters: (int) action: What to do to the instrument mapping
 **             (int) instr: Instrument to change

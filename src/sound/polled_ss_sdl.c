@@ -1,5 +1,5 @@
 /***************************************************************************
- soundserver_sdl.c Copyright (C) 2001 Solomon Peachy
+ polled_ss_sdl.c Copyright (C) 2001 Solomon Peachy
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
@@ -150,7 +150,7 @@ sound_sdl_get_event(state_t *s)
 }
 
 void
-sound_sdl_queue_event(int handle, int signal, int value)
+sound_sdl_queue_event(unsigned int handle, unsigned int signal, long value)
 {
   if (-1 == SDL_LockMutex(out_mutex))
   {
@@ -168,7 +168,7 @@ sound_sdl_queue_event(int handle, int signal, int value)
 }
 
 void
-sound_sdl_queue_command(int handle, int signal, int value)
+sound_sdl_queue_command(unsigned int handle, unsigned int signal, long value)
 {
 
   if (-1 == SDL_LockMutex(in_mutex))
@@ -225,15 +225,13 @@ sound_sdl_get_command(GTimeVal *wait_tvp)
 }
 
 int
-sound_sdl_get_data(byte **data_ptr, int *size, int maxlen)
+sound_sdl_get_data(byte **data_ptr, int *size)
 {
   int index				= (SDL_ThreadID() == master);
   SDL_mutex *mutex		= bulk_mutices[index];
   SDL_cond *cond		= bulk_conds[index];
   sci_queue_t *queue	= &(bulk_queues[index]);
   void *data			= NULL;
-
-  /* we ignore maxlen */
 
   if (-1 == SDL_LockMutex(mutex))
   {
@@ -286,7 +284,7 @@ sound_sdl_exit(state_t *s)
 {
   int i;
 
-  sound_command(s, SOUND_COMMAND_SHUTDOWN, 0, 0); /* Kill server */
+  global_sound_server->queue_command(0, SOUND_COMMAND_SHUTDOWN, 0); /* Kill server */
 
   /* clean up */
   SDL_WaitThread(child, NULL);
@@ -314,10 +312,10 @@ sound_sdl_save(state_t *s, char *dir)
   int size;
   /* we ignore the dir */
 
-  sound_command(s, SOUND_COMMAND_SAVE_STATE, 0, 2);
+  global_sound_server->queue_command(0, SOUND_COMMAND_SAVE_STATE, 2);
   global_sound_server->send_data((byte *) ".", 2);
 
-  global_sound_server->get_data((byte **) &success, &size, sizeof(int));
+  global_sound_server->get_data((byte **) &success, &size);
   retval = *success;
   free(success);
   return retval;
@@ -337,10 +335,10 @@ sound_server_t sound_server_sdl = {
 	&sound_sdl_get_data,
 	&sound_sdl_send_data,
 	&sound_sdl_save,
-	&sound_restore,
-	&sound_command,
-	&sound_suspend,
-	&sound_resume
+	&sound_restore_default,
+	&sound_command_default,
+	&sound_suspend_default,
+	&sound_resume_default
 };
 
 #endif

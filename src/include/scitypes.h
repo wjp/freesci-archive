@@ -36,7 +36,7 @@
 #  include <io.h>
 #endif
 
-#if defined(WIN32) && defined(_MSC_VER)
+#if defined(_WIN32) && defined(_MSC_VER)
 #  define TYPE_16 short
 #  define TYPE_32 int
 #endif

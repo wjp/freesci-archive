@@ -1,3 +1,36 @@
+2001-11-17  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/sound/polled_ss.c: Fixed warnings.
+
+	* src/sound/polled_ss_sdl.c:
+	* src/sound/polled_ss_unix.c:
+	* src/sound/polled_ss_win32.c:
+	* src/sound/soundserver.h:
+	* src/sound/soundserver.c: Renames of sound_command() to
+	sound_command_default(). Slightly different data types for
+	queue_event() and queue_command() routines to allow for Windows
+	messages. Warnings fixes.
+
+	* src/engine/scriptdebug.c: Rename of calls to sound_command().
+
+	* src/include/sound.h:
+	* src/sound/sound.c: Added facility to use Windows messages. Warnings
+	fixes.
+
+	* src/include/win32/messages.h: New file.
+
+	* src/engine/ksound.c: Forced to change case statement to if/else.
+
+	* src/main.c: SOUND_COMMAND_TEST gets correct message value.
+
+	* src/win32/freesci.def: Added register_sound_messages and
+	get_msg_value that need to be exported.
+
+	* src/win32/fsci_dll.dsp:
+	* src/win32/sciv.dsp: Added a couple of header files.
+
+	* src/include/scitypes.h: Changed #if defined(WIN32) to _WIN32.
+
 2001-11-14  Alexander R Angas  <wgd@internode.on.net>
 
 	* src/sound/polled_ss.c: Fixed mute_channel array not being
@@ -136,7 +169,7 @@
 	* src/engine/scriptdebug.c (c_gfx_propagate_rect): Added
 	gfx_propagate rect.
 	Improved redraw_screen.
-	
+
 	* src/gfx/resmgr.c (gfxr_add_to_pic): Added picadd
 	usage of endianness adjustments
 
@@ -218,11 +251,11 @@
 	eliminate VC++ warnings.
 
 	* midi_mt32gm.c: Ditto.
-       
+
 	* midiout.c: Ditto.
-       
+
 	* midiout_win32mci.c: Ditto. Fix build for default VC++ 6.0
-	install. Default to MIDI Mapper as device, if available.   
+	install. Default to MIDI Mapper as device, if available.
 
 2001-09-21  Christoph Reichenbach  <jameson@linuxgames.com>
 
@@ -363,11 +396,11 @@
 	fixes emulated mouse pointers
 
 	* Adjusted all files to use new LRU resource manager
-	
+
 	* Adjusted all files for removal of old global variables
 
 	* Adjusted all files for the array name changes
-	
+
 	* src/scicore/resource.c: resource manager theoretically
 	functional
 
@@ -432,7 +465,7 @@
         * resource.c (_addResource): Ditto.
 
         * soundserver.c (sci0_soundserver): Ditto.
-	
+
         * widgets.c: Ditto. Eliminate signed/unsigned compiler warnings.
         Eliminate redefinition of inline.
 
@@ -451,7 +484,7 @@
         to be used. (Eliminates a hundred warnings in VC++.)
 
         * midiout_win32mci.c: Add include for sci_memory.h.
-	
+
 2001-09-10  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/sfx_save.cfsml: Fixed song_t structure definitions
@@ -460,22 +493,22 @@
 2001-09-08  Alex Angas  <wgd@internode.on.net>
 
 	* ./DEBUGGING.Win32: Removed.
-	
+
 	* ./README.Win32: Updated.
-	
+
 	* ./THANKS: Updated to include the old Sierra employees I'm aware of
 	that gave us leads or tried to otherwise help.
-	
+
 	* src/sound/soundserver_win32.c: Fixed CreateThread() problem under
 	Win9x. Added GetLastError() output on Win32 function failures.
-	
+
 	* src/sound/midiout.c: Moved the null sound driver to be the least
 	likely used.
 
 2001-09-06  Alex Angas  <wgd@internode.on.net>
 
 	* src/sound/soundserver.c: Did some very initial commenting.
-	
+
 	* src/include/midiout.h: Added #include <sci_memory.h>.
 
 	* src/win32/sciv.dsp, src/win32/fsci_dll.dsp: Changed SDL directory to
@@ -483,7 +516,7 @@
 
 	* src/engine/kernel.c (kGetTime): Added check of return value for
 	timeEndPeriod().
-	
+
 	* src/scicore/tools.c (sci_gettime): Removed extra timeBeginPeriod
 	call and added check of return value for timeEndPeriod().
 
@@ -498,9 +531,9 @@
 2001-09-03  Alex Angas  <wgd@internode.on.net>
 
 	* src/sound/soundserver_win32.c: New Win32 sound server.
-	
+
 	* src/sound/sound.c: Added support for Win32 sound server.
-	
+
 	* src/sound/soundserver_sdl.c: Fixed some minor errors with locking
 	and unlocking mutices.
 
@@ -535,7 +568,7 @@
 
         * ./acinclude.m4, ./configure.in: Changed support for #defines in
         sci_memory library in the configure script.
-	
+
 2001-08-18  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/gfx/drivers/xlib_driver.c: Now sets the name of the window class.
@@ -574,11 +607,11 @@
 	linkage problem.
 
 	* ./portable_howto.txt: Added message about not using #warning.
-	
+
 2001-08-13  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/drivers/xlib_driver.c (xlib_init): Added listing of
-	X11 visuals if initialization fails 
+	X11 visuals if initialization fails
 
 	* src/engine/scriptdebug.c (c_vmvars): Fixed vmvars fix
 
@@ -640,7 +673,7 @@
 
 	* src/main.c (main): Fixed text wrapping and output of FreeSCI
 	version number which did not work on Win32 (and maybe other platforms).
-	
+
 2001-08-04  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/scicore/tools.c (sci_fopen): Fixed usage of sci_fopen() to work
@@ -695,7 +728,7 @@
 2001-07-25  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kmovement.c (kDoAvoider): Fixed angle calculation
-	
+
 	* src/engine/kmovement.c (kDoAvoider): Initial DoAvoider()
 	implementation
 
@@ -717,7 +750,7 @@
         to Sleep(1).
 
 	* freesci.def: Get rid of deprecated functions.
-	
+
 2001-07-22  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/resource/sci_pic_0.c (_gfxr_plot_aux_pattern): When drawing
@@ -825,7 +858,7 @@
 
 	* configure.in: Added check for 'inline'
 
-	* src/main.c (init_directories): 
+	* src/main.c (init_directories):
 	* src/scicore/tools.c (sci_get_homedir): Now assumes that any non-Win32
 	is UNIX, to fix builds on some non-gcc UNIX compilers
 
@@ -921,7 +954,7 @@
 
 	* src/engine/klists.c (kNodeValue): Worked around a bug in
 	Codename: Iceman.
-	* src/engine/vm.c (run_vm): Disabled warning on excessive 
+	* src/engine/vm.c (run_vm): Disabled warning on excessive
 	hunk allocations.
 	* BUGS-IN-GAMES: New file.
 
@@ -977,7 +1010,7 @@
 
 2001-05-24  Lars Skovlund  <lskovlun@image.dk>
 
-	* src/engine/vm.c: Squashed a localvar allocation bug in 
+	* src/engine/vm.c: Squashed a localvar allocation bug in
 	the handling code for old interpreter versions.
 
 2001-05-22  Christoph Reichenbach  <jameson@linuxgames.com>
@@ -1109,7 +1142,7 @@
 	* src/sound/soundserver_sdl.c:  change wait semantics for commands
 
 	* src/scicore/tools.c:  change sched_yield to a usleep(0) on
-             non-win32 platforms.  seems to solve SDL speed problems 
+             non-win32 platforms.  seems to solve SDL speed problems
 
 2001-05-13  Christoph Reichenbach  <jameson@linuxgames.com>
 
@@ -1121,7 +1154,7 @@
 
 2001-05-12  Matt Hargett  <matt@use.net>
 
-        * main.c: Cleanup to eliminate "unused variable" warnings on  
+        * main.c: Cleanup to eliminate "unused variable" warnings on
         VC++.
 
         * sciv.dsp: Update VERSION.
@@ -1211,7 +1244,7 @@
 	* doc/sci.sgml: Updates.
 
 05-03-2001  Matt Hargett  <matt@use.net>
-	
+
         * midiout_win32mci.c (_win32mci_print_error): New function.
 
 	* (all): Changed error reporting in all functions to use new function.
@@ -1270,7 +1303,7 @@
 	explanations
 
 2001-04-27  Solomon Peachy <pizza@shaftnet.org>
-	
+
 	* src/engine/vm.c:  Added a workaround to a compiler bug that
                             resulted in massive heap corruption.
 
@@ -1319,11 +1352,11 @@
 
 	* src/config.l (config_init): Default value for anti-aliasing
 
-	* src/gfx/resource/sci_pic_0.c (gfxr_remove_artifacts_pic0): 
+	* src/gfx/resource/sci_pic_0.c (gfxr_remove_artifacts_pic0):
 	Removing artifacts is now slightly more permissive
 
 2001-04-23  Matt Hargett  <matt@use.net>
-	
+
 	* Updated project/workspace files to define HAVE_USLEEP.
 
 	* Updated win32mci drivers, getting near functional!
@@ -1419,7 +1452,7 @@
 	blending support on Alpha.
 
 2001-04-21  Matt Hargett  <matt@use.net>
-	
+
 	* Updated README to include trilinear filtering options, and put Win32
         back on the list of working platforms.
 
@@ -1445,7 +1478,7 @@
 2001-04-18  Solomon Peachy <pizza@shaftnet.org>
 
 	* acconfig.h,acinclude.m4,aclocal.m4,config.h.in,configure,
-          configure.in,src/gfx/drivers/gfx_drivers.c, 
+          configure.in,src/gfx/drivers/gfx_drivers.c,
           src/gfx/drivers/sdl_driver.c:
              Changed the flags for SDL's detection. HAVE_SDL is only
              defined when the version is great enough.
@@ -1540,7 +1573,7 @@
 	* src/engine/kgraphics.c (animate_do_animation): Misc. fixes
 
 2001-04-12  Matt Hargett  <matt@use.net>
-	
+
 	* src/gfx/drivers/dd_driver.cpp (dd_init_specific): Mode init fix
 
 2001-04-13  Christoph Reichenbach  <jameson@linuxgames.com>
@@ -1651,7 +1684,7 @@
 	SDL 1.1.3
 
 2001-04-07  Solomon Peachy <pizza@shaftnet.org>
-	
+
 	* src/gfx/drivers/gfx_drivers.c
 	* src/gfx/drivers/sdl_driver.c
 	* src/gfx/drivers/xlib_driver.c
@@ -1698,7 +1731,7 @@
 	src/Makefile.am
 	src/gfx/drivers/Makefile.am
 	src/gfx/drivers/sdl_driver.c
-	
+
 	* Added SDL support to the autoconf system
 	* a roughtly 50% complete SDL gfx target.  #ifdef'ed out for
           now.

@@ -422,6 +422,14 @@ SOURCE=..\sound\soundserver.c
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Group "win32"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\include\win32\messages.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\include\console.h
