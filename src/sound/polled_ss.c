@@ -117,7 +117,7 @@ sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state)
 			/* Just played a note (see bottom of the big outer loop), so we
 			** reset the timer */
 
-			ticks_to_wait = 0; /* Number of ticks until the next song is played */
+			ticks_to_wait = 0; /* Number of ticks until the next note is played */
 
 			old_songpos = ss_state->current_song->pos;	/* Keep a backup of the current song position,
 										** in case we are interrupted and want to resume
@@ -553,6 +553,7 @@ ss_state->current_song->pos);
 						(unsigned char)command,
 						param,
 						param2,
+						ticks_to_wait,
 						&ss_state->sound_cue);
 				}
 			}
@@ -575,7 +576,7 @@ ss_state->current_song->pos);
 				for (i = 0; i < MIDI_CHANNELS; i++) {
 					if (newsong->instruments[i])
 						midi_event2((guint8)(MIDI_INSTRUMENT_CHANGE | i),
-							(guint8)newsong->instruments[i]);
+							(guint8)newsong->instruments[i], 0);
 				}
 			}
 			if (ss_state->current_song)	/* Muting active song: Un-play the last note/MIDI event */

@@ -32,15 +32,44 @@
 /* This is the actual API. */
 
 int midi_open(guint8 *data_ptr, unsigned int data_length);
-int midi_close(void);
+/* Opens MIDI out device.
+** Parameters: (guint8 *) data_ptr: Patch data for MIDI synths
+**             (unsigned int) data_length: Length of data contained within data_ptr
+**             (void *) other_data: Driver-specific data
+** Returns   : (int) Success code
+*/
 
+int midi_close();
+/* Closes MIDI out device.
+** Parameters: none
+** Returns   : (int) Success code
+*/
+
+/*
 int midi_noteoff(guint8 channel, guint8 note, guint8 velocity);
 int midi_noteon(guint8 channel, guint8 note, guint8 velocity);
-int midi_event(guint8 command, guint8 note, guint8 velocity);
-int midi_event2(guint8 command, guint8 param);
+*/
+
+int midi_event(guint8 command, guint8 note, guint8 velocity, guint32 other_data);
+/* Sends MIDI event with two parameters to MIDI device
+** Parameters: (guint8) command: MIDI status / command
+**             (guint8) note: Note / parameter 1
+**             (guint8) velocity: Velocity / parameter 2
+**             (guint32) other_data: Driver-specific data
+** Returns   : (int) Success code
+*/
+
+int midi_event2(guint8 command, guint8 param, guint32 other_data);
+/* Sends MIDI event with one parameter to MIDI device
+** Parameters: (guint8) command: MIDI status / command
+**             (guint8) param: Parameter 1
+**             (guint32) other_data: Driver-specific data
+** Returns   : (int) Success code
+*/
+
 
 int midi_volume(guint8 volume);
-int midi_allstop(void);
+int midi_allstop();
 int midi_reverb(short param);
 
 /* the struct */
@@ -50,11 +79,11 @@ typedef struct _midi_device {
 	char *version;
 
 	int (*open)(guint8 *data_ptr, unsigned int data_length);
-	int (*close)(void);
+	int (*close)();
 
-	int (*event)(guint8 command, guint8 param, guint8 param2);
-	int (*event2)(guint8 command, guint8 param);
-	int (*allstop)(void);
+	int (*event)(guint8 command, guint8 param, guint8 param2, guint32 other_data);
+	int (*event2)(guint8 command, guint8 param, guint32 other_data);
+	int (*allstop)();
 
 	int (*volume)(guint8 volume);
 	int (*reverb)(short param);
@@ -63,7 +92,7 @@ typedef struct _midi_device {
 	guint8 playflag;
 	guint8 playrhythm;
 	gint8 polyphony;
- 
+
 } midi_device_t;
 
 #define midi_playflag (midi_device->playflag)
@@ -150,7 +179,3 @@ void make_sbi(adlib_def *one, guint8 *buffer);
 /* Converts a raw SCI adlib instrument into the adlib register format. */
 
 #endif /* _MIDI_DEVICE_H_ */
-
-
-
-

@@ -45,6 +45,7 @@ int midi_close (void) {
 	return midi_device->close();
 }
 
+/*
 int midi_noteoff(guint8 channel, guint8 note, guint8 velocity) {
 	return midi_device->event(0x80 & channel, note, velocity);
 }
@@ -52,17 +53,18 @@ int midi_noteoff(guint8 channel, guint8 note, guint8 velocity) {
 int midi_noteon(guint8 channel, guint8 note, guint8 velocity) {
 	return midi_device->event(0x90 & channel, note, velocity);
 }
+*/
 
-int midi_event(guint8 command, guint8 param, guint8 param2) {
+int midi_event(guint8 command, guint8 param, guint8 param2, guint32 other_data) {
 	if (mididebug)
 		printf("MIDI: Event	%02x %02x %02x\n", command, param, param2);
-	return midi_device->event(command, param, param2);
+	return midi_device->event(command, param, param2, other_data);
 }
 
-int midi_event2(guint8 command, guint8 param) {
+int midi_event2(guint8 command, guint8 param, guint32 other_data) {
 	if (mididebug)
 		printf("MIDI: Event	%02x %02x\n", command, param);
-	return midi_device->event2(command, param);
+	return midi_device->event2(command, param, other_data);
 }
 
 int midi_volume(guint8 volume) {
@@ -125,12 +127,12 @@ void make_sbi(adlib_def *one, guint8 *buffer)
   buffer[1] |= (one->freqmod2 & 0xf);
   buffer[2] |= ((one->keyscale1 & 0x3) << 6);
   buffer[2] |= (one->volume1 & 0x3f);
-  buffer[3] |= ((one->keyscale2 & 0x3) << 6); 
+  buffer[3] |= ((one->keyscale2 & 0x3) << 6);
   buffer[3] |= (one->volume2 & 0x3f);
   buffer[4] |= ((one->attackrate1 & 0xf) << 4);
-  buffer[4] |= (one->decayrate1 & 0xf);  
+  buffer[4] |= (one->decayrate1 & 0xf);
   buffer[5] |= ((one->attackrate2 & 0xf) << 4);
-  buffer[5] |= (one->decayrate2 & 0xf);  
+  buffer[5] |= (one->decayrate2 & 0xf);
   buffer[6] |= ((one->sustainvol1 & 0xf) << 4);
   buffer[6] |= (one->releaserate1 & 0xf);
   buffer[7] |= ((one->sustainvol2 & 0xf) << 4);

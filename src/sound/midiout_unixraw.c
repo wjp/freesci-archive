@@ -1,7 +1,6 @@
 /***************************************************************************
  midiout_unixraw.c Copyright (C) 2000 Rickard Lind
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -63,7 +62,7 @@ int midiout_unixraw_close()
   return 0;
 }
 
-int midiout_unixraw_flush()
+int midiout_unixraw_flush(guint8 code)
 {
   /* opened with O_SYNC; already flushed.. */
   usleep (320 * unixraw_lastwrote);  /* delay to make sure all was written */
@@ -73,7 +72,7 @@ int midiout_unixraw_flush()
 int midiout_unixraw_write(guint8 *buffer, unsigned int count)
 {
   int rval = 0;
-  /*  printf("writing %d (%d)-- %02x %02x %02x\n", count, fd, 
+  /*  printf("writing %d (%d)-- %02x %02x %02x\n", count, fd,
       buffer[0], buffer[1], buffer[2]); */
   rval = write(fd, buffer, count);
   if (rval != count) {

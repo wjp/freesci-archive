@@ -1,5 +1,5 @@
 /***************************************************************************
- midi_mt32.c Copyright (C) 2001 Solomon Peachy
+ midi_mt32gm.c Copyright (C) 2001 Solomon Peachy
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
@@ -65,7 +65,7 @@ midi_mt32gm_print_instrument(FILE *file, int index)
 		fprintf(stderr, "midi_mt32gm_print_instrument(): NULL passed for file\n");
 		return;
 	}
-	
+
 	if (index < 0 || index >= MIDI_mappings_nr) {
 		fprintf(file, "Instr #%d: <invalid>\n", index);
 		return;
@@ -98,7 +98,7 @@ midi_mt32gm_print_instrument(FILE *file, int index)
 }
 
 static int _notes = 0;
-int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2)
+int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2, guint32 other_data)
 {
 	guint8 channel;
 	guint8 oper;
@@ -145,7 +145,7 @@ int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2)
 	return midi_mt32_event(oper | channel, xparam, param2);
 }
 
-int midi_mt32gm_event2(guint8 command, guint8 param)
+int midi_mt32gm_event2(guint8 command, guint8 param, guint32 other_data)
 {
 	guint8 channel;
 	guint8 oper;
@@ -199,7 +199,7 @@ int midi_mt32gm_volume(guint8 volume)
 {
   /* Universal SysEx */
   guint8 buffer[8] = {0xf0, 0x7f, 0x7f, 0x04, 0x02, 0x00, 0x00, 0xf7};
-  
+
   int value = volume * 0x4000 / 100;
   buffer[5] = volume & 0x7f;  /* bits 0-6 */
   buffer[6] = (volume >> 7) & 0x7f; /* bits 7-13 */

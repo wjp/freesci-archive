@@ -1,7 +1,6 @@
 /***************************************************************************
  sound.h (C) 1999,2000,01 Christoph Reichenbach, TU Darmstadt
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -192,6 +191,7 @@ extern int soundserver_dead;
 
 #define MIDI_PARAMETERS_TWO(typ)  ( ((typ >= '\x8') && (typ <= '\xB'))  || (typ == '\xE') )
 #define MIDI_PARAMETERS_ONE(typ)  ( (typ >= '\xC') && (typ <= '\xD') )
+#define MIDI_RUNNING_STATUS(typ)  ( (typ < '\x8') )
 
 #define SCI_MUTE_ON  0
 #define SCI_MUTE_OFF 1

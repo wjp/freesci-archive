@@ -40,7 +40,7 @@ static int register_offset[12] = {
   /* Channel           1     2     3     4     5     6     7     8     9  */
   /* Operator 1 */   0x00, 0x01, 0x02, 0x08, 0x09, 0x0A, 0x10, 0x11, 0x12, 0x18, 0x19, 0x20
 
-}; 
+};
 
 static int ym3812_note[13] = {
     0x157, 0x16b, 0x181, 0x198, 0x1b0, 0x1ca,
@@ -112,9 +112,9 @@ void synth_setpatch (int voice, guint8 *data)
   int i, x;
 
   opl_write(0xBD, 0);
-  
+
   for (i = 0; i < 10; i++)
-    opl_write(register_base[i] + register_offset[voice], data[i]); 
+    opl_write(register_base[i] + register_offset[voice], data[i]);
 
   opl_write (register_base[10] + voice, data[10]);
 
@@ -132,13 +132,13 @@ void synth_setpatch (int voice, guint8 *data)
 void synth_setvolume (int voice, int volume)
 {
   volume = volume >> 1;  /* adlib is 6-bit, midi is 7-bit */
-  
+
   /* algorithm-dependent; we may need to set both operators. */
   if (adlib_reg[register_base[10]+voice] & 1)
-    opl_write(register_base[2]+register_offset[voice], 
-	      ((63-volume) | 
+    opl_write(register_base[2]+register_offset[voice],
+	      ((63-volume) |
 	       (adlib_reg[register_base[2]+register_offset[voice]]&0xc0)));
-  
+
   opl_write(register_base[3]+register_offset[voice],
 	    ((63-volume) |
 	     (adlib_reg[register_base[3]+register_offset[voice]]&0xc0)));
@@ -172,7 +172,7 @@ void synth_setnote (int voice, int note, int bend)
 int adlibemu_stop_note(int chn, int note, int velocity)
 {
   int i, op=255;
-  
+
   for (i=0;i<ADLIB_VOICES && op==255;i++) {
     if (oper_chn[i] == chn)
       if (oper_note[i] == note)
@@ -191,7 +191,7 @@ int adlibemu_stop_note(int chn, int note, int velocity)
 
   oper_chn[op] = 255;
   oper_note[op] = 255;
-  
+
   free_voices++;
 
   return 0;
@@ -208,7 +208,7 @@ int adlibemu_start_note(int chn, int note, int velocity)
   if (free_voices <= 0) {
     printf("ack, all voices full\n");  /* XXX implement overflow code */
     return -1;
-  } else 
+  } else
     for (op = 0; op < ADLIB_VOICES ; op++)
       if (oper_chn[op] == 255)
 	break;
@@ -216,19 +216,19 @@ int adlibemu_start_note(int chn, int note, int velocity)
   volume = velocity * vol[chn] / 128;     /* Scale channel volume */
   volume = volume * master_volume / 100;  /* apply master volume */
   volume = my_midi_fm_vol_table[volume];  /* scale logarithmically */
-  
+
   inst = instr[chn];
 
   synth_setpatch(op, adlib_sbi[inst]);
   synth_setvolume(op, volume);
-  synth_setnote(op, note, pitch[chn]); 
+  synth_setnote(op, note, pitch[chn]);
 
   oper_chn[op] = chn;
   oper_note[op] = note;
   free_voices--;
 
 #if 0
-  printf("play voice %d (%d rem):  C%02x N%02x V%02x/%02x P%02x (%02x/%02x)\n", op, free_voices, chn, note, velocity, volume, inst, 
+  printf("play voice %d (%d rem):  C%02x N%02x V%02x/%02x P%02x (%02x/%02x)\n", op, free_voices, chn, note, velocity, volume, inst,
 	 adlib_reg[register_base[2]+register_offset[op]] & 0x3f,
 	 adlib_reg[register_base[3]+register_offset[op]] & 0x3f);
 #endif
@@ -294,7 +294,7 @@ int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
     make_sbi((adlib_def *)(data_ptr+(28 * i)), adlib_sbi[i]);
 
   if (data_length > 1344)
-    for (i = 48; i < 96; i++) 
+    for (i = 48; i < 96; i++)
       make_sbi((adlib_def *)(data_ptr+2+(28 * i)), adlib_sbi[i]);
 
   ym3812 = OPLCreate (OPL_TYPE_YM3812, 3579545, 44100);
@@ -346,14 +346,14 @@ int midi_adlibemu_reverb(short param)
   return 0;
 }
 
-int midi_adlibemu_event(guint8 command, guint8 note, guint8 velocity)
+int midi_adlibemu_event(guint8 command, guint8 note, guint8 velocity, guint32 other_data)
 {
   guint8 channel, oper;
 
   channel = command & 0x0f;
   oper = command & 0xf0;
 
-  switch (oper) {    
+  switch (oper) {
   case 0x80:
     return adlibemu_stop_note(channel, note, velocity);
   case 0x90:  /* noteon and noteoff */
@@ -376,15 +376,15 @@ int midi_adlibemu_event(guint8 command, guint8 note, guint8 velocity)
     printf("ADLIB: Unknown event %02x\n", command);
     return 0;
   }
-  
+
   return 0;
 }
 
-int midi_adlibemu_event2(guint8 command, guint8 param)
+int midi_adlibemu_event2(guint8 command, guint8 param, guint32 other_data)
 {
   guint8 channel;
   guint8 oper;
-  
+
   channel = command & 0x0f;
   oper = command & 0xf0;
   switch (oper) {

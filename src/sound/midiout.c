@@ -1,7 +1,6 @@
 /***************************************************************************
  midiout.c Copyright (C) 2000 Rickard Lind
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -42,9 +41,9 @@ midiout_driver_t *midiout_drivers[] = {
 
 static unsigned char running_status = 0;
 
-int midiout_open(void)
+int midiout_open(void *other_data)
 {
-  return midiout_driver->midiout_open();
+  return midiout_driver->midiout_open(other_data);
 }
 
 
@@ -53,31 +52,31 @@ int midiout_close(void)
   return midiout_driver->midiout_close();
 }
 
-int midiout_write_event(guint8 *buffer, unsigned int count)
+int midiout_write_event(guint8 *buffer, unsigned int count, guint32 other_data)
 {
   if (buffer[0] == running_status)
-    return midiout_driver->midiout_write(buffer + 1, count -1);
+    return midiout_driver->midiout_write(buffer + 1, count - 1, other_data);
   else {
   running_status = buffer[0];
-    return midiout_driver->midiout_write(buffer, count);
+    return midiout_driver->midiout_write(buffer, count, other_data);
   }
 
 }
 
-int midiout_write_block(guint8 *buffer, unsigned int count)
+int midiout_write_block(guint8 *buffer, unsigned int count, guint32 other_data)
 {
   running_status = 0;
-  return midiout_driver->midiout_write(buffer, count);
+  return midiout_driver->midiout_write(buffer, count, other_data);
 }
 
-int midiout_flush(void)
+int midiout_flush(guint8 code)
 {
-	return midiout_driver->midiout_flush();
+	return midiout_driver->midiout_flush(code);
 }
 
 /* the midiout_null sound driver */
 
-int midiout_null_open(void)
+int midiout_null_open(void *other_data)
 {
   printf("Opened null midiout device\n");
   return 0;
@@ -89,13 +88,13 @@ int midiout_null_close(void)
   return 0;
 }
 
-int midiout_null_flush(void)
+int midiout_null_flush(guint8 code)
 {
 	printf("Flushing null sound device\n");
 	return 0;
 }
 
-int midiout_null_write(guint8 *buffer, unsigned int count)
+int midiout_null_write(guint8 *buffer, unsigned int count, guint32 other_data)
 {
 
   /*  printf("Got %d bytes to write to null device\n", count); */

@@ -1,7 +1,6 @@
 /***************************************************************************
  soundserver.h (C) 1999, 2000 Christoph Reichenbach, TU Darmstadt
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -408,13 +407,14 @@ sound_eq_peek_event(sound_eq_t *queue);
 */
 
 void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 param,
-		      guint8 param2, int *ccc);
+		      guint8 param2, guint32 other_data, int *ccc);
 /* Performs a regular midi event in the song.
 ** Parameters: (FILE *) debugstream: The stream to write all debug information to
 **             (song_t *) song: The song to play the event from
 **             (guint8) command: MIDI command
 **             (guint8) param: MIDI command parameter 1
 **             (guint8) param2: MIDI command parameter 2
+**             (guint32) other_data: Driver-specific data
 **             (int *) ccc: Cumulative cue counter
 */
 

@@ -1,7 +1,6 @@
 /***************************************************************************
  midiout_win32mci.c Copyright (C) 2000 Rickard Lind
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -83,7 +82,7 @@ midiout_win32mci_set_parameter(struct _midiout_driver *drv, char *attribute, cha
 	return 0;
 }
 
-int midiout_win32mci_open(void)
+int midiout_win32mci_open(void *other_data)
 {
 	int numdevs				= 0;	/* total number of MIDIout devices */
 	MMRESULT ret;					/* return value of MCI calls */
@@ -234,13 +233,13 @@ int midiout_win32mci_close(void)
 	return 0;
 }
 
-int midiout_win32mci_flush(void)
+int midiout_win32mci_flush(guint8 code)
 {
 	sleep(0);
     return 0;
 }
 
-int midiout_win32mci_write(guint8 *buffer, unsigned int count)
+int midiout_win32mci_write(guint8 *buffer, unsigned int count, guint32 other_data)
 {
     MMRESULT ret;
     unsigned int midioutputsize;

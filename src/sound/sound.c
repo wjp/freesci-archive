@@ -1,7 +1,6 @@
 /***************************************************************************
  sound.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -571,7 +570,7 @@ const int MIDI_cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0};
 /* Taken from playmidi */
 
 void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 param,
-		guint8 param2, int *ccc)
+		guint8 param2, guint32 other_data, int *ccc)
 {
 	if (SCI_MIDI_CONTROLLER(command)) {
 		switch (param) {
@@ -607,7 +606,7 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 		case 0x0b: /* expression */
 		case 0x40: /* hold */
 		case 0x79: /* reset all */
-			midi_event(command, param, param2);
+			midi_event(command, param, param2, other_data);
 			break;
 		default:
 			fprintf(debug_stream, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
@@ -628,7 +627,7 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 
 			case MIDI_INSTRUMENT_CHANGE:  /* program change */
 				song->instruments[command & 0xf] = param;
-				midi_event2(command, param);
+				midi_event2(command, param, other_data);
 				break;
 
 			case MIDI_NOTE_OFF:
@@ -649,7 +648,7 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 			case MIDI_CONTROL_CHANGE:
 			case MIDI_CHANNEL_PRESSURE:
 			case MIDI_PITCH_BEND:
-				midi_event(command, param, param2);
+				midi_event(command, param, param2, other_data);
 				break;
 			default:
 				fprintf(debug_stream, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);

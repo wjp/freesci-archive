@@ -1,7 +1,6 @@
 /***************************************************************************
  midiout_alsaraw.c Copyright (C) 2000 Rickard Lind
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -43,7 +42,7 @@ static int
 midiout_alsaraw_set_parameter(struct _midiout_driver *drv, char *attribute, char *value)
 {
 	char *testptr;
-	
+
 	if (!strcasecmp(attribute, "card")) {
 		card = strtol(value, &testptr, 0);
 		if (*testptr) {
@@ -124,7 +123,7 @@ int midiout_alsaraw_write(guint8 *buffer, unsigned int count)
 
 
 #ifdef ALSA_09
-int midiout_alsaraw_flush()
+int midiout_alsaraw_flush(guint8 code)
 {
 	if (!handle)
 		return 0;
@@ -135,7 +134,7 @@ int midiout_alsaraw_flush()
 		return 0;
 }
 #else
-int midiout_alsaraw_flush()
+int midiout_alsaraw_flush(guint8 code)
 {
 	if (!handle)
 		return 0;

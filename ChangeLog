@@ -1,3 +1,35 @@
+2002-01-18  Alexander R Angas <wgd@internode.on.net>
+
+	* src/sound/pcmout.c: Fixed Win32 crash on exit.
+
+	* src/sound/event_ss.c:
+	* src/sound/soundserver.c: Moved do_sound() to soundserver.c.
+
+	* src/sound/fmopl.c: Disabled most compilation warnings.
+
+	* src/include/midi_device.h:
+	* src/include/midiout.h:
+	* src/include/soundserver.h:
+	* src/sound/midi_adlibemu.c:
+	* src/sound/midi_device.c:
+	* src/sound/midi_mt32.c:
+	* src/sound/midi_mt32gm.c:
+	* src/sound/midiout.c:
+	* src/sound/midiout_alsaraw.c:
+	* src/sound/midiout_ossopl3.c:
+	* src/sound/midiout_ossseq.c:
+	* src/sound/midiout_unixraw.c:
+	* src/sound/midiout_win32mci.c:
+	* src/sound/polled_ss.c:
+	* src/sound/sound.c: Altered API to allow more data to flow down to
+	the MIDI driver.
+
+	* src/include/sound.h: Added running status #define.
+
+	* src/win32/fsci_dll.dsp:
+	* src/win32/sciunpack.dsp:
+	* src/win32/sciv.dsp: Put HAVE_MEMCHR in all configurations.
+
 2002-01-15  Solomon Peachy <pizza@shaftnet.org>
 	* src/sound/midi_mt32gm.c:  Added aftertouch to midi event list.
  	* src/sound/midi_adlib.c, src/sound/midi_adlibemu.c:  Master
@@ -14,7 +46,7 @@
         * src/include/midi_device.h, src/sound/fmopl.c,
           src/sound/fmopl.h, src/sound/midi_device.c: Misc fixes.
         * src/sound/polled_ss_unix.c:  Move initialization of pcm and
-        midi out to after the fork().                      
+        midi out to after the fork().
         * src/sound/sound.c:  Fix the initialization of song flags.
 
 2002-01-14 Lars Skovlund <lskovlun@image.dk>
@@ -36,7 +68,7 @@
 	  src/sound/polled_ss_win32.c, src/main.c, src/config.c,
           src/config.l, src/sound/Makefile.am, src/sound/pcmout_sdl.c:
         Added the logistical framework for a pcm-out subsystem.
-	* src/sound/Makefile.am, src/sound/midi_adlibemu.c, 
+	* src/sound/Makefile.am, src/sound/midi_adlibemu.c,
 	  src/sound/midi_adlib.c, src/sound/midi_device.c,
 	  src/sound/fmopl.c, src/sound/fmopl.h:  Added an adlib emulator
          midi device.  Still a work in progress.

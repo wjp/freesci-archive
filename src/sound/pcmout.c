@@ -40,8 +40,10 @@ int pcmout_open()
 
 int pcmout_close(void)
 {
-  sci_free(snd_buffer);
-  return pcmout_driver->pcmout_close();
+	if (snd_buffer)
+		sci_free(snd_buffer);
+
+	return pcmout_driver->pcmout_close();
 }
 
 void synth_mixer (void* tmp_bk, int count);

@@ -1,7 +1,6 @@
 /***************************************************************************
  midiout_ossopl3.c Copyright (C) 2001 Rune Orsval
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -89,7 +88,7 @@ Fmplay includes the following notice:
 
 
 int fmloaded[256]; /* sound blaster sound data */
-int wantopl3 = FALSE;  
+int wantopl3 = FALSE;
 int reverb = FALSE;
 int csound = TRUE;
 struct synth_info info;
@@ -115,13 +114,13 @@ int nhead=0, ntail=0, nlen=0;
 unsigned char oper_note[32];
 
 double notetime[256];          /* beginning of the note */
-double begtime;                /*time at the beginning */ 
+double begtime;                /*time at the beginning */
 
 /*the precision on the time (1000 mean 1/1000s, 100 mean 1/100s) */
 int precision = 1e6/100;
 /*the instrument number in csound: can be change by program change*/
 int instr = 1;
- 
+
 /* all those function came from jam.c */
 void init_lists();
 void init_sequencer();
@@ -190,14 +189,14 @@ int midiout_ossopl3_open()
     sciprintf("Cannot get %s info.", devicename);
     exit(-1);
   };
-  
+
   for (i = 0; i < n; i++) {
     info.device = i;
     if (ioctl (seqfd, SNDCTL_SYNTH_INFO, &info) == -1) {
       sciprintf("Cannot get %s info.", devicename);
       exit(-1);
     }
-    
+
     if (info.synth_type == SYNTH_TYPE_FM
 	&& info.synth_subtype == FM_TYPE_OPL3)
       sb_dev = i;
@@ -237,7 +236,7 @@ int midiout_ossopl3_close()
   return 0;
 }
 
-int midiout_ossopl3_flush()
+int midiout_ossopl3_flush(guint8 code)
 {
   /* opened with O_SYNC; already flushed.. */
   usleep (320 * ossopl3_lastwrote);  /* delay to make sure all was written */
@@ -275,7 +274,7 @@ void loadfm()
     int sbfd;
     int i;
     int n;
-    int voice_size; 
+    int voice_size;
     int data_size;
 
     char buf[160];
@@ -284,13 +283,13 @@ void loadfm()
     for (i = 0; i < 256; i++)
 	fmloaded[i] = 0;
     srand(getpid());         /* why ? */
-    
-    if (wantopl3) 
+
+    if (wantopl3)
     {
 	 voice_size = 60;
 	 sprintf(buf,"%s/%s", patchpath, O3MELODIC);
-    } 
-    else 
+    }
+    else
     {
 	 voice_size = 52;
 	 sprintf(buf,"%s/%s", patchpath, SBMELODIC);
@@ -304,52 +303,52 @@ void loadfm()
 	 exit(1);
       }
     instr.device = sb_dev;
-    
-    for (i = 0; i < 128; i++) 
+
+    for (i = 0; i < 128; i++)
     {
 	 if (read(sbfd, buf, voice_size) != voice_size)
 	      printf("Read error \n");
 	 instr.channel = i;
-	 
-	 if (strncmp(buf, "4OP", 3) == 0) 
+
+	 if (strncmp(buf, "4OP", 3) == 0)
 	 {
 	      instr.key = OPL3_PATCH;
 	      data_size = 22;
-	 } 
-	 else 
+	 }
+	 else
 	 {
 	      instr.key = FM_PATCH;
 	      data_size = 11;
 	 }
-	 
+
 	 fmloaded[i] = instr.key;
-	 
+
 	 adjustfm(buf, instr.key);
 	 for (n = 0; n < 32; n++)
 	      instr.operators[n] = (n < data_size) ? buf[36 + n] : 0;
-	 
+
 	 SEQ_WRPATCH(&instr, sizeof(instr));
     }
     close(sbfd);
-    
+
     if (wantopl3)
 	 sprintf(buf,"%s/%s", patchpath, O3DRUMS);
     else
 	 sprintf(buf,"%s/%s", patchpath, SBDRUMS);
 
     sbfd = open(buf, O_RDONLY, 0);
-    
+
     for (i = 128; i < 175; i++)    {
 	 if (read(sbfd, buf, voice_size) != voice_size)
 	      printf("Read error\n");
 	 instr.channel = i;
-	 
-	 if (strncmp(buf, "4OP", 3) == 0) 
+
+	 if (strncmp(buf, "4OP", 3) == 0)
 	 {
 	      instr.key = OPL3_PATCH;
 	      data_size = 22;
-	 } 
-	 else 
+	 }
+	 else
 	 {
 	      instr.key = FM_PATCH;
 	      data_size = 11;
@@ -359,7 +358,7 @@ void loadfm()
 	 adjustfm(buf, instr.key);
 	 for (n = 0; n < 32; n++)
 	      instr.operators[n] = (n < data_size) ? buf[n + 36] : 0;
-	 
+
 	 SEQ_WRPATCH(&instr, sizeof(instr));
     }
     close(sbfd);
@@ -370,13 +369,13 @@ void adjustfm(char *buf, int key)
 {
     unsigned char pan = ((rand() % 3) + 1) << 4;
 
-    if (key == FM_PATCH) 
+    if (key == FM_PATCH)
     {
 	 buf[39] &= 0xc0;
 	 if (buf[46] & 1)
 	      buf[38] &= 0xc0;
 	 buf[46] = (buf[46] & 0xcf) | pan;
-	 if (reverb) 
+	 if (reverb)
 	 {
 	      unsigned val;
 	      val = buf[43] & 0x0f;
@@ -384,8 +383,8 @@ void adjustfm(char *buf, int key)
 		   val--;
 	      buf[43] = (buf[43] & 0xf0) | val;
 	 }
-    } 
-    else 
+    }
+    else
     {
 	 int mode;
 	 if (buf[46] & 1)
@@ -418,36 +417,36 @@ void adjustfm(char *buf, int key)
 }
 
 /*
- * code adapted from midithru.c 
+ * code adapted from midithru.c
  */
 
 void stop_note(int note, int velocity)
 {
   int i, op=255;
-  
+
   for (i=0;i<num_voices && op==255;i++) {
     if (oper_note[i]== note) op=i;
   }
 
-  if (op==255) 
+  if (op==255)
     {
 /*        printf("Note %d off, note not started\n", note); */
 /*        printf("%d, %d\n", flen, nlen); */
       return;	/* Has already been killed ??? */
     }
-  
+
   SEQ_STOP_NOTE(sb_dev, op, note, velocity);
   SEQ_DUMPBUF();
-  
+
   oper_note[op] = 255;
-  
+
   free_list[ftail]=op;
   flen++;
   ftail = (ftail+1) % num_voices;
-  
+
   for (i=0;i<16;i++)
     if (note_list[i] == op) note_list[i] = 255;
-  
+
   while (nlen && note_list[nhead] == 255) {
       nlen--;
       nhead = (nhead+1) % 256;
@@ -458,48 +457,48 @@ void stop_note(int note, int velocity)
 void kill_one_note()
 {
      int oldest;
-     
+
      if (!nlen) {
-	  printf("Free list empty but no notes playing\n"); 
+	  printf("Free list empty but no notes playing\n");
 	  return;
      }	/* No notes playing */
-     
+
      oldest = note_list[nhead];
      nlen--;
      nhead = (nhead+1) % 256;
-     
+
      printf("Killing oper %d, note %d\n", oldest, oper_note[oldest]);
-     
-     if (oldest== 255) 
+
+     if (oldest== 255)
 	  return;	/* Was already stopped. Why? */
-  
+
      stop_note(oper_note[oldest], 127);
 }
 
 void start_note(int note, int velocity)
 {
-     int free;    
+     int free;
      /* for the csound output */
      notetime[note] = sec() + rint(usec()/precision)*(precision/1e6);
-     
+
      if (!flen) kill_one_note();
-     
+
      if (!flen) {printf("** no free voices\n");return;}	/* Panic??? */
-     
+
      free = free_list[fhead];
      flen--;
      fhead = (fhead+1) % num_voices;
-     
+
      note_list[ntail] = free;
-     
+
      if (nlen>255) {
 	  nlen=0;	/* Overflow -> hard reset */
      }
      nlen++;
      ntail = (ntail+1) % 256;
-     
+
      oper_note[free] = note;
-     
+
      SEQ_SET_PATCH(sb_dev, free, pgm);
      SEQ_PITCHBEND(sb_dev, free, bender);
      SEQ_START_NOTE(sb_dev, free, note, velocity);
@@ -537,7 +536,7 @@ void do_buf()
 {
      int ch = buf[0] & 0x0f;
      int value;
-     
+
      switch (buf[0] & 0xf0) {
      case 0x90:	/* Note on */
 /*         printf("note\n"); */
@@ -548,13 +547,13 @@ void do_buf()
 	 stop_note(buf[1], buf[2]);
        bufp=1;
        break;
-       
+
      case 0xb0:	/* Control change */
 /*         printf("control\n"); */
        if (bufp < 3) break;
        bufp=1;
        break;
-       
+
      case 0x80:	/* Note off */
 /*         printf("off\n"); */
 /*    printf("off: bufp = %i\n", bufp); */
@@ -564,7 +563,7 @@ void do_buf()
        bufp=1;
 /*         printf("off2\n"); */
        break;
-       
+
      case 0xe0:	/* Pitch bender */
 /*         printf("bend\n"); */
        if (bufp < 3) break;
@@ -572,7 +571,7 @@ void do_buf()
        pitch_bender(ch, value);
        bufp=1;
        break;
-       
+
      case 0xc0:	/* Pgm change */
 /*         printf("pgm\n"); */
        if (bufp < 2) break;
@@ -580,14 +579,14 @@ void do_buf()
        instr = pgm;
        bufp=0;
        break;
-       
+
      case 0xd0:	/* Channel pressure */
 /*         printf("pressure\n"); */
        if (bufp < 2) break;
        channel_pressure(ch, buf[1]);
        bufp=1;
-       break;	  
-       
+       break;
+
      default:
 /*         printf(".\n"); */
        bufp=0;
@@ -613,13 +612,13 @@ void read_midi(int fd)
       } else
 	if(bufp) {
 	  buf[bufp++] = p[1];
-	  if ((buf[0] & 0xf0) == 0x90 || (buf[0] & 0xf0) == 0x80 
+	  if ((buf[0] & 0xf0) == 0x90 || (buf[0] & 0xf0) == 0x80
 	      || (buf[0] & 0xf0) == 0xb0 || (buf[0] & 0xf0) == 0xe0) {
 	    if(bufp==3) do_buf();
 	  } else if ((buf[0] & 0xf0) == 0xc0 || (buf[0] & 0xf0) == 0xd0) {
-	    if(bufp==2) do_buf();	    
+	    if(bufp==2) do_buf();
 	  };
-	    
+
 	};
     };
   };

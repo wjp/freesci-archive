@@ -1,7 +1,6 @@
 /***************************************************************************
  midiout.h Copyright (C) 2000 Rickard Lind
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -32,10 +31,10 @@ typedef struct _midiout_driver {
 	char *name;
 	char *version;
 	int (*set_parameter)(struct _midiout_driver *drv, char *attribute, char *value);
-	int (*midiout_open)(void);
-	int (*midiout_close)(void);
-	int (*midiout_write)(guint8 *data, unsigned int);
-	int (*midiout_flush)(void);
+	int (*midiout_open)();
+	int (*midiout_close)();
+	int (*midiout_write)(guint8 *data, unsigned int, guint32);
+	int (*midiout_flush)(guint8);
 } midiout_driver_t;
 
 extern DLLEXTERN midiout_driver_t *midiout_driver;
@@ -63,11 +62,10 @@ extern DLLEXTERN midiout_driver_t *midiout_drivers[];
 
 int midiout_open();
 int midiout_close();
-int midiout_write_event(guint8 *buffer, unsigned int count);
-int midiout_write_block(guint8 *buffer, unsigned int count);
-int midiout_flush();
+int midiout_write_event(guint8 *buffer, unsigned int count, guint32 other_data);
+int midiout_write_block(guint8 *buffer, unsigned int count, guint32 other_data);
+int midiout_flush(guint8);
 
 struct _midiout_driver *midiout_find_driver(char *name);
 
 #endif /* _MIDIOUT_H_ */
-

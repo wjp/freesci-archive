@@ -1,7 +1,6 @@
 /***************************************************************************
  midi_mt32.c Copyright (C) 2000,2001 Rickard Lind, Solomon Peachy
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -40,7 +39,7 @@ int midi_mt32_patch001_type1_length(guint8 *data, unsigned int length);
 int midi_mt32_sysex_delay();
 int midi_mt32_volume(guint8 volume);
 int midi_mt32_reverb(short param);
-int midi_mt32_event(guint8 command, guint8 note, guint8 velocity);
+int midi_mt32_event(guint8 command, guint8 note, guint8 velocity, guint32 other_data);
 int midi_mt32_allstop(void);
 
 static guint8 *data;
@@ -304,7 +303,7 @@ int midi_mt32_allstop(void)
 {
   int i;
   for (i = 0; i < 16; i++)
-    midi_mt32_event((guint8)(0xb0 | i), 0x7b, 0x00);
+    midi_mt32_event((guint8)(0xb0 | i), 0x7b, 0x00, 0);
 
   return 0;
 }
@@ -328,6 +327,7 @@ int midi_mt32_reverb(short param)
   return 0;
 }
 
+/*
 int midi_mt32_noteoff(guint8 channel, guint8 note, guint8 velocity)
 {
   return midi_mt32_event(channel | 0x80, note, velocity);
@@ -344,8 +344,9 @@ int midi_mt32_noteon(guint8 channel, guint8 note, guint8 velocity)
 
   return midi_mt32_event(channel | 0x90, note, velocity);
 }
+*/
 
-int midi_mt32_event(guint8 command, guint8 note, guint8 velocity)
+int midi_mt32_event(guint8 command, guint8 note, guint8 velocity, guint32 other_data)
 {
   guint8 buffer[3] = {0,0,0};
 
@@ -353,18 +354,18 @@ int midi_mt32_event(guint8 command, guint8 note, guint8 velocity)
   buffer[1] = note;
   buffer[2] = velocity;
 
-  return midiout_write_event(buffer, 3);
+  return midiout_write_event(buffer, 3, other_data);
 
 }
 
-int midi_mt32_event2(guint8 command, guint8 param)
+int midi_mt32_event2(guint8 command, guint8 param, guint32 other_data)
 {
   guint8 buffer[2] = {0,0};
 
   buffer[0] = command;
   buffer[1] = param;
 
-  return midiout_write_event(buffer, 2);
+  return midiout_write_event(buffer, 2, other_data);
 }
 
 int midi_mt32_poke(guint32 address, guint8 *data, unsigned int count)
@@ -384,8 +385,8 @@ int midi_mt32_poke(guint32 address, guint8 *data, unsigned int count)
   sysex_buffer[count + 8] = checksum & 0x7F;
   sysex_buffer[count + 9] = 0xF7;
 
-  i = midiout_write_block(sysex_buffer, count + 10);
-  midiout_flush();
+  i = midiout_write_block(sysex_buffer, count + 10, 0);
+  midiout_flush(0);
   midi_mt32_sysex_delay();
 
   return i;
@@ -412,8 +413,8 @@ int midi_mt32_poke_gather(guint32 address, guint8 *data1, unsigned int count1,
   sysex_buffer[count1 + count2 + 8] = checksum & 0x7F;
   sysex_buffer[count1 + count2 + 9] = 0xF7;
 
-  i = midiout_write_block(sysex_buffer, count1 + count2 + 10);
-  midiout_flush();
+  i = midiout_write_block(sysex_buffer, count1 + count2 + 10, 0);
+  midiout_flush(0);
   midi_mt32_sysex_delay();
   return i;
 }
@@ -425,11 +426,11 @@ int midi_mt32_write_block(guint8 *data, unsigned int count)
 
   while (i < count) {
     if ((data[i] == 0xF0) && (i != block_start)) {
-      midiout_write_block(data + block_start, i - block_start);
+      midiout_write_block(data + block_start, i - block_start, 0);
       block_start = i;
     }
     if (data[i] == 0xF7) {
-      midiout_write_block(data + block_start, i - block_start + 1);
+      midiout_write_block(data + block_start, i - block_start + 1, 0);
       midi_mt32_sysex_delay();
       block_start = i + 1;
     }
@@ -437,7 +438,7 @@ int midi_mt32_write_block(guint8 *data, unsigned int count)
   }
   if (count >= block_start)
   {
-    if (midiout_write_block(data + block_start, count - block_start) != (count - block_start))
+    if (midiout_write_block(data + block_start, count - block_start, 0) != (count - block_start))
 	{
 		fprintf(stderr, "midi_mt32_write_block(): midiout_write_block failed!\n");
 		return 1;

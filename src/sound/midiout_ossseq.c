@@ -1,7 +1,6 @@
 /***************************************************************************
  midiout_ossseq.c Copyright (C) 2001 Christoph Reichenbach
 
-
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
  notice and the licensing information contained herein are preserved.
@@ -80,7 +79,7 @@ int midiout_ossseq_close()
 	return 0;
 }
 
-int midiout_ossseq_flush()
+int midiout_ossseq_flush(guint8 code)
 {
 	return 0;
 }
