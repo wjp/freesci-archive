@@ -1,3 +1,8 @@
+2002-08-04  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* doc/scidocbook-html.dsl ($html-body-start$): Added. This formats
+	our online docs.
+
 2002-08-02  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/sound/fmopl.c:  Fixes for 12-voice adlib mode.

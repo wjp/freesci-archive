@@ -4,6 +4,7 @@
         <!ENTITY amp "&">
 	<!ENTITY kernel-functions-doc SYSTEM "sci-kernel.sgml">
 	<!ENTITY freesci-doc SYSTEM "freesci.sgml">
+	<!ENTITY game-list SYSTEM "game-list.sgml">
 ]>
 
 
@@ -39,7 +40,7 @@
 
 
     <Author>
-     <Firstname/Ravi/<surname/I./
+     <Firstname/Ravi/<surname/Iyengar/
       <authorblurb><para>
        Ravi (<email/ravi.i@softhome.net/), the SCI Decoding Project's sound specialist,
        contributed information about the
@@ -59,6 +60,14 @@
       </authorblurb>
     </author>
 
+
+    <Author>
+     <firstname/Vladimir/<surname/Gneushev/
+      <authorblurb><para>
+	Vladimir contributed game information, compression schemes, and the SCI1/SCI32 graphics
+	format. 
+      </para></authorblurb>
+    </author>
 
     <Author>
      <firstname/Petr/<surname/Vyhnak/
@@ -109,7 +118,7 @@
 
     <LegalNotice>
      <Para>
-     Copyright (C) 1999, 2000, 2001 by the authors
+     Copyright (C) 1999, 2000, 2001, 2002 by the authors
      </Para>
      <Para>
    Permission is hereby granted, free of charge, to any person obtaining a
@@ -390,124 +399,37 @@ re-use or overload the functions of their superclasses.
 
 <sect1><title/Sierra SCI games/
   <para>
-     <author><firstname/Paul David/<surname/Doherty/</author>
-  </para>
-   <sect2><title/SCI0 games/
-      <para>
-        <informaltable frame="all">
-            <tgroup cols="3">
-               <thead>
-                 <row>
-                  <entry/Game name/
-                  <entry/Game ID/
-                  <entry/Version numbers/
-                 </row>
-               </thead>
-               <tbody>
-  <row><entry/Season's Greetings (1988)/<entry/DEMO/<entry/0.000.294/</row>
-  <row><entry/Leisure Suit Larry Goes Looking For Love (In Several Wrong Places)/
-             <entry/LSL2/<entry/0.000.343, 0.000.409/</row>
-  <row><entry/Police Quest 2: The Vengeance/<entry/PQ2/<entry/0.000.395, 0.000.490/</row>
-  <row><entry/Space Quest 3: The Pirates of Pestulon/<entry/SQ3/<entry/0.000.453, 0.000.685/</row>
-  <row><entry/King's Quest IV: The Perils of Rosella/<entry/KQ4/<entry/0.000.502/</row>
-  <row><entry/Fun Seeker's Guide/<entry/emc/<entry/0.000.506/</row>
-  <row><entry/Hoyle's Book of Games 1/<entry/cardGames/<entry/0.000.530, 0.000.685/</row>
-  <row><entry/Hero's Quest: So you want to be a hero/<entry/HQ/<entry/0.000.566/</row>
-  <row><entry/Leisure Suit Larry 3: Passionate Patti In Pursuit Of The Pulsating Pectorals!/
-             <entry/LSL3/<entry/0.000.572/</row>
-  <row><entry/Quest for Glory I: So you want to be a hero/<entry/Glory/<entry/0.000.629/</row>
-  <row><entry/The Colonel's Bequest/<entry/CB1/<entry/0.000.631/</row>
-  <row><entry/Codename: Iceman/<entry/iceMan/<entry/0.000.668, 0.000.685/</row>
-  <row><entry/Conquest of Camelot/<entry/ARTHUR/<entry/0.000.685/</row>
-               </tbody>
-           </tgroup>
-         </informaltable>
-     </para>
-    </sect2>
+     <author><firstname/Paul David/<surname/Doherty/</author>, <author><firstname/Vladimir/<surname/Gneushev/</author>
+</para><para>
+  The listing here is almost certainly incomplete. Thanks to the information provided by Vladimir, game information now includes
+  some features of certain versions the interpreter shipped with, they are listed below:
+  <informaltable frame="all">
+  <tgroup cols="2">
+          <thead><row>
+		<entry/Symbol/
+		<entry/Meaning/
+	  </row></thead>
+	<tbody>
+	<row>
+		<entry/<emphasis>Rn</emphasis>/<entry/Resource patches identified by name (script.256)/
+	</row><row>
+		<entry/<emphasis>Re</emphasis>/<entry/Resource patches identified by extension (256.scr)/
+	</row><row>
+		<entry/<emphasis>Dd</emphasis>/<entry/Built-in debugger/
+	</row><row>
+		<entry/<emphasis>D*</emphasis>/<entry/Interpreter binary shipped with debug symbols/
+	</row><row>
+		<entry/<emphasis>Ss</emphasis>/<entry/Scripts consist of script resources only/
+	</row><row>
+		<entry/<emphasis>Sh</emphasis>/<entry/Scripts use heap and script resources/
+	</row><row>
+		<entry/<emphasis>Sc</emphasis>/<entry/Scripts use 'csc' resources/
+	</row>
+	</tbody>
+  </tgroup>
+  </informaltable>
 
-   <sect2><title/SCI01 games/
-      <para>
-        <informaltable frame="all">
-            <tgroup cols="3">
-               <thead>
-                 <row>
-                  <entry/Game name/
-                  <entry/Game ID/
-                  <entry/Version numbers/
-                 </row>
-               </thead>
-               <tbody>
-  <row><entry/King's Quest I: Quest for the crown (SCI remake)/<entry/KQ1/<entry/S.old.010/</row>
-  <row><entry/Quest for Glory II: Trial by fire/<entry/Trial/<entry/1.000.072/</row>
-  <row><entry/[Christmas greeting card 1990]/<entry/?/<entry/1.000.172, 1.000.174/</row>
-               </tbody>
-           </tgroup>
-         </informaltable>
-     </para>
-    </sect2>
-
-
-   <sect2><title/SCI1.0 games/
-      <para>
-        <informaltable frame="all">
-            <tgroup cols="3">
-               <thead>
-                 <row>
-                  <entry/Game name/
-                  <entry/Game ID/
-                  <entry/Version numbers/
-                 </row>
-               </thead>
-               <tbody>
-  <row><entry/Jones in the fast lane (VGA version)/<entry/?/<entry/x.yyy.zzz/</row>
-  <row><entry/Conquest of the Longbow/<entry/?/<entry/1.000.168/</row>
-  <row><entry/Leisure Suit Larry In The Land Of The Lounge Lizards/
-             <entry/?/<entry/1.000.577/</row>
-  <row><entry/King's Quest V: Absence makes the heart go yonder (french)/
-             <entry/?/<entry/1.000.784/</row>
-  <row><entry/Space Qust 1: The Sarien Encounter (VGA remake)/<entry/?/<entry/T.A00.081/</row>
-  <row><entry/Leisure Suit Larry 5: Passionate Patti Does A Little Undercover Work/
-             <entry/?/<entry/T.A00.169/</row>
-  <row><entry/Police Quest 3: The Kindred/<entry/?/<entry/T.A00.178/</row>
-               </tbody>
-           </tgroup>
-         </informaltable>
-     </para>
-    </sect2>
-
-   <sect2><title/SCI1.1 games/
-      <para>
-        <informaltable frame="all">
-            <tgroup cols="3">
-               <thead>
-                 <row>
-                  <entry/Game name/
-                  <entry/Game ID/
-                  <entry/Version numbers/
-                 </row>
-               </thead>
-               <tbody>
-  <row><entry/Police Quest 1: The Death Angel (VGA remake)/<entry/?/<entry/1.001.029/</row>
-  <row><entry/Quest for Glory III: Wages of War (aka Seekers of the Lost City)/
-             <entry/?/<entry/1.001.050/</row>
-  <row><entry/King's Quest VI: To heir is human (german version)/<entry/?/<entry/1.001.054/</row>
-  <row><entry/[Christmas greeting card 1992]/<entry/?/<entry/1.001.055/</row>
-  <row><entry/Space Quest IV: Roger Wilco and the Time Rippers/<entry/?/<entry/1.001.064/</row>
-  <row><entry/Space Quest V: The Next Mutation/<entry/?/<entry/1.001.068/</row>
-  <row><entry/Freddy Pharkas: Frontier Pharmacist (demo)/<entry/?/<entry/1.001.069/</row>
-  <row><entry/Laura Bow and the Dagger of Amon Ra/<entry/?/<entry/1.001.072/</row>
-  <row><entry/Leisure Suit Larry 6/<entry/?/<entry/1.001.113/</row>
-  <row><entry/Quest for Glory 1: So you want to be a hero (VGA remake)/<entry/?/<entry/L.rry.021/</row>
-  <row><entry/Quest for Glory 3: Der Lohn des Krieges (german version)/
-              <entry/?/<entry/L.rry.083/</row>
-  <row><entry/Freddy Pharkas, Frontier Pharmacist/<entry/?/<entry/1.cfs.081/</row>
-  <row><entry/King's Quest VI: To heir is human/<entry/?/<entry/1.cfs.158/</row>
-  <row><entry/Pepper's Adventures/<entry/?/<entry/?/</row>
-               </tbody>
-           </tgroup>
-         </informaltable>
-     </para>
-    </sect2>
+  &game-list;
 
 </sect1>
 </chapter>
@@ -717,7 +639,7 @@ re-use or overload the functions of their superclasses.
 	</tgroup>
       </table>
 
-	As reported by Vladimir Gneushev, SCI32 uses DCL-EXPLODE explicitly, determining
+	As reported by Vladimir Gneushev, SCI32 uses STACpack (as described in RFC 1974) explicitly, determining
 	whether there is a need for compression by comparing the size of the compressed
 	data block with that of the uncompressed.
 
@@ -848,8 +770,7 @@ END
       </para></note>
       <para>
 	This algorithm is based on the Deflate algorithm described in the Internet RFC 1951 (see also
-	RFC 1950 for related material). In particular, Vladimir Gneushev reports it is the algorithm
-	described in RFC 1974.
+	RFC 1950 for related material).
       </para>
       <para>
 	The algorithm is quite similar to the explode algorithm (ZIP method #6 - implode ) but 
@@ -2234,7 +2155,7 @@ redirected to the debug window port. Not a pretty sight.
    <para/Version 1.0, 24. July 1999/
    <para>
 A pic in SCI consists of three layers (called maps - they are unrelated to
-the map resources found in SCI1 gamers). The visual map, used for the
+the map resources found in SCI1 games). The visual map, used for the
 picture which appears on the user's screen. The priority map which tells the
 interpreter which things go in front of which in the three-dimensional room.
 Without the priority map, a room would just be a flat, painted surface.
@@ -2300,7 +2221,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
   <Title/The Sound subsystem/
    <sect1>
      <Title/The SCI0 Sound Resource Format/
-     <para> by <author><firstname/Ravi/<surname/I./</author>
+     <para> by <author><firstname/Ravi/<surname/Iyengar/</author>
      </para><para>
 	Revision 10, Mar. 11, 2002
 	</para>
@@ -2389,7 +2310,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
                    put in a separate MIDI channel.
 		</para></listitem></varlistentry>
 
-		<varlistenetry><term>Wave Devices</term><listitem><para>Wave devices play digital sound data. Sierra's versions of
+		<varlistentry><term>Wave Devices</term><listitem><para>Wave devices play digital sound data. Sierra's versions of
                    SCI never used them to play music, but they could be used in
                    conjunction with one of the above devices to add special
                    sound effects to a game.
