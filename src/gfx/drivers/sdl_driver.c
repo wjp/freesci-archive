@@ -52,6 +52,9 @@ struct _sdl_state {
   int buckystate;
   int flags;
   byte *pointer_data[2];
+  int alpha_mask;
+  int SDL_alpha_shift;
+  int SDL_alpha_loss;
 };
 
 #define S ((struct _sdl_state *)(drv->state))
@@ -103,7 +106,7 @@ sdl_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 static int
 sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 {
-  int red_shift, green_shift, blue_shift, alpha_shift;
+  int red_shift, green_shift, blue_shift, alpha_shift, alpha_mask;
   int xsize = xfact * 320;
   int ysize = yfact * 200;
   int i;
@@ -122,6 +125,16 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   S->primary = SDL_SetVideoMode(xsize, ysize, bytespp << 3, 
 				SDL_HWSURFACE | SDL_SWSURFACE | 
 				SDL_HWPALETTE | SDL_DOUBLEBUF );
+
+  if (S->primary->format->BytesPerPixel == 4) {    
+    alpha_mask = 0xff000000;
+    S->SDL_alpha_shift = 24;
+    S->SDL_alpha_loss = 0;
+  } else {
+    alpha_mask = S->primary->format->Amask;
+    S->SDL_alpha_shift = S->primary->format->Ashift;
+    S->SDL_alpha_loss = S->primary->format->Aloss;
+  }
 
   if (!S->primary) {
     ERROR("Could not set up a primary SDL surface!\n");
@@ -168,7 +181,6 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
     red_shift = 24 - S->primary->format->Rshift + S->primary->format->Rloss;
     green_shift = 24 - S->primary->format->Gshift + S->primary->format->Gloss;
     blue_shift = 24 - S->primary->format->Bshift + S->primary->format->Bloss;
-    alpha_shift = 24 - S->primary->format->Ashift + S->primary->format->Aloss;
   }
 
   printf("%08x %08x %08x %08x %d/%d=%d %d/%d=%d %d/%d=%d %d/%d=%d\n",
@@ -199,15 +211,18 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   }
 
   /* create the visual buffers */
-  for (i = 0; i < 3; i++) {  /* XXX SDL_SRCALPHA ??? */
+  for (i = 0; i < 3; i++) { 
     S->visual[i] = NULL;
-    S->visual[i] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SWSURFACE, 
+    S->visual[i] = SDL_CreateRGBSurface(SDL_SRCALPHA,
+					/* SDL_HWSURFACE | SDL_SWSURFACE, */
 					xsize, ysize, 
 					bytespp << 3, 
 					S->primary->format->Rmask, 
 					S->primary->format->Gmask,
 					S->primary->format->Bmask, 
-					S->primary->format->Amask);
+					S->alpha_mask);
+    if (bytespp == 4)
+      SDL_SetAlpha(S->visual[i],SDL_SRCALPHA,SDL_ALPHA_OPAQUE);
     if (S->visual[i] == NULL) {
       ERROR("Could not set up visual buffers!\n");
       return GFX_FATAL;
@@ -221,9 +236,9 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 			   S->primary->format->Rmask, 
 			   S->primary->format->Gmask,
 			   S->primary->format->Bmask, 
-			   S->primary->format->Amask,
+			   S->alpha_mask,
 			   red_shift, green_shift, blue_shift, alpha_shift,
-			   (bytespp == 1)? 256 : 0, GFX_MODE_FLAG_REVERSE_ALPHA);
+			   (bytespp == 1)? 256 : 0, 0); /*GFX_MODE_FLAG_REVERSE_ALPHA);*/
   
   return GFX_OK;
 }
@@ -479,7 +494,7 @@ sdl_register_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 						S->primary->format->Rmask, 
 						S->primary->format->Gmask,
 						S->primary->format->Bmask, 
-						S->primary->format->Amask);
+						S->alpha_mask);
 
   pxm->internal.handle = SCI_SDL_HANDLE_NORMAL;
 
@@ -550,7 +565,7 @@ sdl_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 			      S->primary->format->Rmask, 
 			      S->primary->format->Gmask,
 			      S->primary->format->Bmask, 
-			      S->primary->format->Amask);
+			      S->alpha_mask);
   if (!temp) {
     ERROR("Failed to allocate SDL surface");
     return GFX_ERROR;
@@ -610,7 +625,7 @@ sdl_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
 				S->primary->format->Rmask, 
 				S->primary->format->Gmask,
 				S->primary->format->Bmask, 
-				S->primary->format->Amask);
+				S->alpha_mask);
 
     if (!temp) {
       ERROR("Failed to allocate SDL surface");
