@@ -101,12 +101,12 @@ get_text_size(char *text, byte *font, int max_allowed_width, int *width, int *he
   int last_break_width = 0;
 
   if (max_allowed_width < 0)
-    max_allowed_width = 32768;
+    max_allowed_width = 32767;
 
   while ((foo = *text++)) {
     if ((foo == '\n') || (foo == 0x0d)) {
 
-      if (foo == '\n')
+      if (foo == '\n' && *text)
 	maxheight += lineheight;
 
       if (localmaxwidth > maxwidth)
@@ -117,15 +117,14 @@ get_text_size(char *text, byte *font, int max_allowed_width, int *width, int *he
       guint16 quux = getInt16((guint8 *) font+6+(foo<<1));
       guint8 *foopos = font + quux;
 
-      if (isspace(*(text-1))) {
+      localmaxwidth += *foopos;
+
+      if (*text == ' ') {
 	last_breakpoint = localmaxwidth;
 	last_break_width = *foopos;
       }
 
-      localmaxwidth += *foopos;
-
       if (localmaxwidth > max_allowed_width) {
-
 	maxheight += lineheight;
 	
 	if (last_breakpoint == 0) { /* Text block too long and without whitespace? */

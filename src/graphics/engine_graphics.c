@@ -97,7 +97,7 @@ graph_fill_box_custom(struct _state *s, int x, int y, int xl, int yl,
   int _yl = yl;
 
   if (priority < 0)
-    priority = 16;
+      priority = 16;
 
   if (x < 0) {
     xl += x;
@@ -109,13 +109,19 @@ graph_fill_box_custom(struct _state *s, int x, int y, int xl, int yl,
     y = 0;
   }
 
+  if (x >= SCI_SCREEN_WIDTH)
+    x = SCI_SCREEN_WIDTH - 1;
+
+  if (y >= SCI_SCREEN_HEIGHT)
+    y = SCI_SCREEN_HEIGHT - 1;
+
   pos = y * SCI_SCREEN_WIDTH + x;
 
   if (x + xl >= s->pic->xres)
-    xl = s->pic->xres - x;
+    xl = s->pic->xres - x - 1;
 
   if (y + yl >= s->pic->yres)
-    yl = s->pic->yres - y;
+    yl = s->pic->yres - y - 1;
 
   if ((xl <= 0) || (yl <= 0))
     return;

@@ -388,7 +388,7 @@ sciprintf(char *fmt, ...)
   char *mbuf;
 
   va_start(argp, fmt);
-  while ((i = g_vsnprintf(buf, bufsize-1, fmt, argp)) == -1 || (i > bufsize - 1)) {
+  while ((i = g_vsnprintf(buf, bufsize-1, fmt, argp)) == -1 || (i >= bufsize - 2)) {
     /* while we're out of space... */
     va_end(argp);
     va_start(argp, fmt); /* reset argp */

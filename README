@@ -1,4 +1,4 @@
-Thanks for downloading this development release of FreeSCI!
+Thanks for downloading the first alpha release of FreeSCI!
 
 FreeSCI is a portable interpreter for SCI games, such as the Space Quest
 series (starting with SQ3) or Leisure Suit Larry (2 and sequels); see
@@ -11,6 +11,9 @@ This release has the following limitations (plus some bugs):
   since we're using our own debug functions).
 - Sound is not supported yet
 - Graphics are slow, especially on displays not using 8bpp color index mode.
+- There are known graphical issues related to windows with underlying
+  animations, and text removal. These will be addressed by a re-implementation
+  of the graphics subsystem.
 
 It has the following improvements over Sierra SCI:
 - SCI0 background pictures can be rendered in 256 colors

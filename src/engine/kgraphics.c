@@ -259,6 +259,7 @@ kTextSize(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
   get_text_size(text, fontres->data, maxwidth? maxwidth : MAX_TEXT_WIDTH_MAGIC_VALUE, &width, &height);
+  SCIkdebug(SCIkSTRINGS, "GetTextSize '%s' -> %dx%d\n", text, width, height);
 
   PUT_HEAP(dest + 0, 0);
   PUT_HEAP(dest + 2, 0);
@@ -324,11 +325,7 @@ kDirLoop(state_t *s, int funct_nr, int argc, heap_ptr argp)
     return;
   }
 
-  if (angle > 360) {
-    SCIkwarn(SCIkERROR, "Invalid angle %d\n", angle);
-    PUT_SELECTOR(obj, loop, 0xffff);
-    return;
-  }
+  angle %= 360;
 
   if (angle < 45)
     loop = 3;
@@ -888,28 +885,10 @@ void _k_set_now_seen(state_t *s, heap_ptr object)
   else
     view0_base_modify(loop, cell, viewres->data, &xmod, &ymod);
 
-  xbase = x + xmod - (xsize) / 2;
+  xbase = x + xmod - (xsize) >> 1;
   xend = xbase + xsize;
   yend = y + ymod + 1; /* +1: Magic modifier */
   ybase = yend - ysize;
-  /*  if (object == 0x756) {
-    int nsl, nsr, nst, nsb, brl, brr, brt, brb;
-    nsl = GET_SELECTOR(object, nsLeft);
-    nsr = GET_SELECTOR(object, nsRight);
-    nst = GET_SELECTOR(object, nsTop);
-    nsb = GET_SELECTOR(object, nsBottom);
-
-    brl = GET_SELECTOR(object, brLeft);
-    brr = GET_SELECTOR(object, brRight);
-    brt = GET_SELECTOR(object, brTop);
-    brb = GET_SELECTOR(object, brBottom);
-        if (nsl != xbase
-	|| nsr != xend
-	|| nst != ybase
-	|| nsb != yend)
-          fprintf(stderr,">>O@%04x (%d,%d,%d)+(%d,%d) (%dx%d) [(%d %d)(%d %d)] => [(%d %d)(%d %d)] {(%d %d)(%d %d)}\n",
-	    object, x, y, z, xmod, ymod, xsize, ysize, nsl, nsr, nst, nsb, xbase, xend, ybase, yend, brl, brr, brt, brb);
-  }*/
 
   PUT_SELECTOR(object, nsLeft, xbase);
   PUT_SELECTOR(object, nsRight, xend);
@@ -1519,6 +1498,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int func
     heap_ptr obj = GET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
     int view_nr = GET_SELECTOR(obj, view);
     int has_nsrect = lookup_selector(s, obj, s->selector_map.nsBottom, NULL) == SELECTOR_VARIABLE;
+    int _priority;
     resource_t *viewres = findResource(sci_view, view_nr);
 
     SCIkdebug(SCIkGRAPHICS, " - Adding %04x\n", obj);
@@ -1578,10 +1558,10 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int func
       SCIkdebug(SCIkGRAPHICS, "Object at %04x has no signal selector\n", obj);
     }
 
+    _priority = VIEW_PRIORITY(retval[i].y);
+
     if (has_nsrect
 	&& !(UGET_HEAP(retval[i].signalp) & _K_VIEW_SIG_FLAG_FIX_PRI_ON)) { /* Calculate priority */
-      int _priority, y = retval[i].y;
-      _priority = VIEW_PRIORITY(y);
 
       if (options & _K_MAKE_VIEW_LIST_CALC_PRIORITY)
 	PUT_SELECTOR(obj, priority, _priority);
@@ -1590,12 +1570,33 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int func
     } else /* DON'T calculate the priority */
       retval[i].priority = GET_SELECTOR(obj, priority);
 
-    if (has_nsrect && (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP)) {
-      int top = PRIORITY_BAND_FIRST(retval[i].priority);
-      int bottom = retval[i].nsBottom;
+    if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP) {
+      int pri_top = PRIORITY_BAND_FIRST(_priority);
+      int top, bottom, right, left;
 
-      if (top < retval[i].nsTop)
+      if (retval[i].priority <= 0)
+	retval[i].priority = _priority; /* Picviews always get their priority set */
+
+      if (has_nsrect) {
 	top = retval[i].nsTop;
+	bottom = retval[i].nsBottom;
+	left = retval[i].nsLeft;
+	right = retval[i].nsRight;
+      } else {
+	int width, height, magicx = 0, magicy = 0;
+
+	width = view0_cel_width(retval[i].loop, retval[i].cel, retval[i].view);
+	height = view0_cel_height(retval[i].loop, retval[i].cel, retval[i].view);
+	view0_base_modify(retval[i].loop, retval[i].cel, retval[i].view, &magicx, &magicy);
+
+	left = retval[i].x + magicx - (width >> 1);
+	right = left + width;
+	bottom = retval[i].y + magicy + 1;
+	top = bottom - height;
+      }
+
+      if (top < pri_top)
+	top = pri_top;
 
       if (bottom < top) {
 	int foo = top;
@@ -1605,9 +1606,9 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int func
 
       SCIkdebug(SCIkGRAPHICS,"    adding control block (%d,%d)to(%d,%d)\n", retval[i].nsLeft, top,
 			     retval[i].nsRight, bottom);
-      graph_fill_box_custom(s, retval[i].nsLeft + s->ports[s->view_port]->xmin,
+      graph_fill_box_custom(s, left + s->ports[s->view_port]->xmin,
 			    top + s->ports[s->view_port]->ymin,
-			    retval[i].nsRight - retval[i].nsLeft + 1,
+			    right - left + 1,
 			    bottom - top + 1,
 			    0, 0, 15, 4); /* Fill control map rectangle */
     }
@@ -1891,6 +1892,18 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   wnd->predecessor = s->view_port;
 
   wnd->alignment = ALIGN_TEXT_LEFT; /* FIXME?? */
+
+  if (wnd->ymax > 199) {
+    int correction =  wnd->ymax - 199;
+    wnd->ymin -= correction;
+    wnd->ymax -= correction;
+  }
+
+  if (wnd->ymax > 319) {
+    int correction = wnd->xmax - 319;
+    wnd->xmin -= correction;
+    wnd->xmax -= correction;
+  }
 
   if (wnd->priority == -1)
     wnd->priority = 16; /* Max priority + 1*/

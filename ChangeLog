@@ -1,3 +1,17 @@
+2000-06-05  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/console.c (sciprintf): Fixed support for classic libc
+	vsnprintf
+
+	* src/engine/kgraphics.c (_k_make_view_list): Internal priority is
+	now set for picviews if the original priority was less than or equal
+	to zero
+
+	* src/graphics/font.c (get_text_size): Algorithm now works like the
+	draw_text algorithm, fixing some window size problems
+
+	* src/engine/kgraphics.c (kDirLoop): Angles are now modded by 360
+
 2000-06-04  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kOnControl): Fixed OnControl() to test one
