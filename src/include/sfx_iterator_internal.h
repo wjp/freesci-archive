@@ -106,7 +106,7 @@ typedef struct {
 	unsigned char *data;									\
 												\
 	int loops; /* Number of loops remaining */						\
-	int recover_delay;									\
+	int recover_delay
 
 typedef struct _base_song_iterator {
 	INHERITS_BASE_SONG_ITERATOR;
