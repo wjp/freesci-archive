@@ -1,4 +1,4 @@
-SUBDIRS = win32
+SUBDIRS = win32 beos
 EXTRA_DIST = old_objects.h graphics_glx.h kernel.h event.h    \
 	soundserver.h kdebug.h sci_conf.h resource.h script.h \
 	vocabulary.h sound.h uinput.h console.h script.h vm.h \

@@ -38,6 +38,9 @@
 /* Define if you have the ffs function.  */
 #undef HAVE_FFS
 
+/* Define if you have the fnmatch function.  */
+#undef HAVE_FNMATCH
+
 /* Define if you have the fork function.  */
 #undef HAVE_FORK
 

@@ -5,9 +5,4 @@ noinst_LIBRARIES = libscicore.a
 libscicore_a_SOURCES = console.c tools.c resource.c decompress0.c     \
 		 decompress01.c decompress1.c decompress11.c script.c \
 		 vocab.c vocab_debug.c old_objects.c modules.c        \
-		 sci_memory.c resource_map.c
-
-check_PROGRAMS = resmaptest
-
-resmaptest:
-	$(COMPILE) -I../.. -I../include -DHAVE_CONFIG_H -DTEST_RESOURCE_MAP $(top_srcdir)/src/scicore/resource_map.c libscicore.a -o $(top_builddir)/src/scicore/resmaptest
+		 sci_memory.c resource_map.c fnmatch.c

@@ -20,7 +20,7 @@
 
  Current Maintainer:
 
-		Christoph Reichenbach (CJR) [creichen@rbg.informatik.tu-darmstadt.de]
+    Christoph Reichenbach (CJR) [creichen@rbg.informatik.tu-darmstadt.de]
 
 ***************************************************************************/
 
@@ -43,7 +43,7 @@ int soundserver_dead = 0;
 
 static void
 sound_server_print_channels_any(FILE *ds, int *channel_instrument,
-								byte *mute_channel, int flag)
+				byte *mute_channel, int flag)
 {
 	int i;
 

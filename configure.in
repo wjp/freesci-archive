@@ -25,7 +25,7 @@ if test "$cross_compiling" != "yes"; then
   AC_CHECK_SIZEOF(long)
 fi
 
-AC_CHECK_FUNCS(pipe socketpair fork sched_yield memfrob ffs getopt_long isblank usleep)
+AC_CHECK_FUNCS(fnmatch pipe socketpair fork sched_yield memfrob ffs getopt_long isblank usleep)
 AM_PATH_ALSA(0.5.0, [AC_DEFINE(HAVE_ALSA)], [echo >/dev/null])
 AM_WITHOUT_SOUND
 AC_PATH_GGI
@@ -156,6 +156,10 @@ dnl AC_SUBST(ac_xlib_o)
 dnl AC_SUBST(ac_sdl_o)
 dnl AC_SUBST(ac_ggi_o)
 
+AC_CHECK_LIB(m, cos, [LIB_M="-lm"], [LIB_M=""])
+AC_CHECK_LIB(c, sprintf, [LIB_C="-lc"], [LIB_C=""])
+LIBS="$LIBS $LIB_M"  # libc is added later, during the efence check
+
 AC_PATH_PNG
 AC_SUBST(ac_png_includes)
 AC_SUBST(ac_png_libraries)
@@ -167,7 +171,7 @@ AC_C_PARAMETRIZED_BIGENDIAN
 AC_ARG_WITH(efence,
 	[  --with-efence           link against libefence (for debugging)],
 	[LIBS="$LIBS -lefence"],
-	[LIBS="$LIBS -lc"])
+	[LIBS="$LIBS $LIB_C"])
 
 AC_ARG_WITH(Wall,
 	[  --with-Wall		  compile using -Wall],
@@ -201,6 +205,7 @@ AC_OUTPUT(Makefile    \
 	src/gfx/resource/Makefile \
 	src/include/Makefile \
 	src/include/win32/Makefile \
+	src/include/beos/Makefile \
 	src/tools/Makefile \
 	src/win32/Makefile \
 	src/sound/Makefile \

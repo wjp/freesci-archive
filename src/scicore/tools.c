@@ -29,12 +29,15 @@
 #include <engine.h>
 #include <kdebug.h>
 #ifdef HAVE_SYS_TIME_H
-#	include <sys/time.h>
+#  include <sys/time.h>
 #endif
 #ifdef _MSC_VER
-#	include <sys/timeb.h>
-#	include <windows.h>
-#	define sleep Sleep
+#  include <sys/timeb.h>
+#  include <windows.h>
+#  define sleep Sleep
+#endif
+#ifdef __BEOS__
+#  include <beos/fnmatch.h>
 #endif
 
 
@@ -442,7 +445,7 @@ sci_get_homedir()
 {
 #ifdef _WIN32
 	return getenv("WINDIR");
-#elif defined(__unix__) || !defined(X_DISPLAY_MISSING)
+#elif defined(__unix__) || !defined(X_DISPLAY_MISSING) || defined (__BEOS__)
 	return getenv("HOME");
 #else
 #  error Please add a $HOME policy for your platform!

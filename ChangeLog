@@ -1,6 +1,10 @@
 2001-09-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
-	* Applied Win32 patch from Claudio Matsuoka
+	* src/gfx/drivers/sdl_driver.c (sdl_init_specific): Only disable mouse
+	movement events if we're not emulating the pointer (Thanks, Matt)
+	Fall back to emulation on BeOS
+
+	* Applied BeOS patches from Claudio Matsuoka
 
 2001-09-22  Christoph Reichenbach  <jameson@linuxgames.com>
 

@@ -93,6 +93,10 @@
 #  define DLLEXTERN
 #endif /* !_WIN32 */
 
+#ifdef __BEOS__
+#  include <kernel/OS.h> 
+#  define usleep snooze
+#endif
 
 #ifdef _MSC_VER
 #	include <sys/timeb.h>

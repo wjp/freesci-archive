@@ -162,6 +162,9 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	if (xfact > 2 || yfact > 2)
 		drv->capabilities &= ~GFX_CAPABILITY_MOUSE_POINTER;
 #endif
+#ifdef __BEOS__ /* BeOS has been reported not to work well with the mouse pointer at all */
+	drv->capabilities &= ~GFX_CAPABILITY_MOUSE_POINTER;
+#endif
 
 	if (!S)
 		S = sci_malloc(sizeof(struct _sdl_state));
@@ -232,9 +235,10 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	/* create an input event mask */
 	SDL_EventState(SDL_ACTIVEEVENT, SDL_IGNORE);
-	SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 	SDL_EventState(SDL_VIDEORESIZE, SDL_IGNORE);
 	SDL_EventState(SDL_KEYUP, SDL_IGNORE);
+	if (drv->capabilities & GFX_CAPABILITY_MOUSE_POINTER)
+		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 
 	SDL_WM_SetCaption("FreeSCI", "freesci");
 

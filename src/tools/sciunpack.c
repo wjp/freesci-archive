@@ -61,18 +61,11 @@
 #  endif /* HAVE_LIBPNG */
 #endif /* DRAW_GRAPHICS */
 
-#ifdef _MSC_VER
+#if defined (_MSC_VER) || defined (__BEOS__) || defined(_DOS)
 /* [DJ] fchmod is not in Visual C++ RTL - and probably not needed,anyway */
-#  define fchmod(file,mode)
-#  define CREAT_OPTIONS O_BINARY
-
-#endif
-
-#ifdef _DOS
 /* [RS] (see comment above, but read MS-DOS instead of Visual C++ RTL) */
 #  define fchmod(file,mode)
 #  define CREAT_OPTIONS O_BINARY
-
 #endif
 
 #ifndef CREAT_OPTIONS

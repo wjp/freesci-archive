@@ -315,7 +315,7 @@ AC_ARG_WITH(png-libraries,
     ])
 
 OLDLIBS="$LIBS"
-LIBS="$LIBS -lpng -lm"
+LIBS="$LIBS -lpng"
 AC_CHECK_INCLUDE_PATH([png.h],[$_ac_png_includes],[], ac_png_includes)
 AC_CHECK_LINK_PATH([png_info_init(0);],$_ac_png_libraries,["-lpng"],
 		 [$ac_png_includes],[#include <png.h>], ac_png_libraries)
