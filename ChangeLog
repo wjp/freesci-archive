@@ -1,3 +1,11 @@
+2001-08-11  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/operations.c (gfxdr_add_dirty): Patched visualization bug
+	(badly)
+
+	* src/engine/scriptdebug.c (c_gfx_debuglog): Added gfx_debuglog
+	function
+
 2001-08-06  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (collides_with): OB1 fix

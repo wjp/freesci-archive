@@ -1,0 +1,9 @@
+[Desktop Entry]
+Comment[C]=FreeSCI
+Exec=/usr/games/freesci -d %d
+Icon=/usr/share/icons/hicolor/48x48/apps/freesci.png
+Name=FreeSCI
+Name[C]=FreeSCI
+Terminal=true
+Type=Application
+Version=1.0

@@ -1657,6 +1657,83 @@ c_debuglog(state_t *s)
 	return 0;
 }
 
+#define GFX_DEBUG_MODES 4
+
+int
+c_gfx_debuglog(state_t *s)
+{
+	int i;
+	gfx_driver_t *drv = s->gfx_state->driver;
+	struct {
+		char *name;
+		char id;
+		int flag;
+	} gfx_debug_mode[GFX_DEBUG_MODES] = {
+		{ "Mouse Pointer", 'p', GFX_DEBUG_POINTER},
+		{ "Updates", 'u', GFX_DEBUG_UPDATES},
+		{ "Pixmap operations", 'x', GFX_DEBUG_PIXMAPS},
+		{ "Basic operations", 'b', GFX_DEBUG_BASIC},
+	};
+
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	if (cmd_paramlength == 0) {
+		int j;
+
+		sciprintf("Logging in GFX driver:\n");
+		if (!drv->debug_flags)
+			sciprintf("  (nothing)\n");
+
+		for (j = 0; j < GFX_DEBUG_MODES; j++)
+			if (drv->debug_flags
+			    & gfx_debug_mode[j].flag) {
+				sciprintf("  - %s (%c)\n",
+					  gfx_debug_mode[j].name,
+					  gfx_debug_mode[j].id);
+			}
+
+	} else for (i = 0; i < cmd_paramlength; i++) {
+		int mode;
+		int j = 0;
+		int flags = 0;
+
+		if (cmd_params[i].str[0] == '-')
+			mode = 0;
+		else if (cmd_params[i].str[0] == '+')
+			mode = 1;
+		else {
+			sciprintf("Mode spec must start with '+' or '-'\n");
+			return 1;
+		}
+
+		while (cmd_params[i].str[++j]) {
+			int k;
+			int flag = 0;
+
+			for (k = 0; !flag && k < GFX_DEBUG_MODES; k++)
+				if (gfx_debug_mode[k].id == cmd_params[i].str[j])
+					flag = gfx_debug_mode[k].flag;
+
+			if (!flag) {
+				sciprintf("Invalid/unknown mode flag '%c'\n",
+					  cmd_params[i].str[j]);
+				return 1;
+			}
+			flags |= flag;
+		}
+
+		if (mode) /* + */
+			drv->debug_flags |= flags;
+		else /* - */
+			drv->debug_flags &= ~flags;
+	}
+
+	return 0;
+}
+
 
 int
 show_list(state_t *s, heap_ptr list)
@@ -2419,7 +2496,9 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 					 "  b: Bresenham details\n  a: Audio\n  d: System gfx management\n  s: Base setter"
 					 "\n  p: Parser\n  M: The menu system\n  S: Said specs\n  F: File I/O\n  t: GetTime\n"
 					 "  *: Everything\n\n"
-					 "  If invoked withour parameters,\n  it will list all activated\n  debug options.");
+					 "  If invoked withour parameters,\n  it will list all activated\n  debug options.\n\n"
+					 "SEE ALSO\n"
+					 "  gfx_debuglog\n");
 			con_hook_command(c_visible_map, "set_vismap", "i", "Sets the visible map.\n  Default is 0 (visual).\n"
 					 "  Other useful values are:\n  1: Priority\n  2: Control\n  3: Auxiliary\n");
 			con_hook_command(c_simkey, "simkey", "i", "Simulates a keypress with the\n  specified scancode.\n");
@@ -2506,6 +2585,26 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 					 "    instrument (0-128)\n\n"
 					 "SEE ALSO\n"
 					 "  snd\n");
+			con_hook_command(c_gfx_debuglog, "gfx_debuglog", "s*",
+					 "Sets or prints the gfx driver's debug\n"
+					 "settings\n\n"
+					 "USAGE\n\n"
+					 "  gfx_debuglog {[+|-][p|u|x|b]+}*\n\n"
+					 "  gfx_debuglog\n\n"
+					 "    Prints current settings\n\n"
+					 "  gfx_debuglog +X\n\n"
+					 "    Activates all debug features listed in X\n\n"
+					 "  gfx_debuglog -X\n\n"
+					 "    Deactivates the debug features listed in X\n\n"
+					 "  Debug features:\n"
+					 "    p: Pointer\n"
+					 "    u: Updates\n"
+					 "    x: Pixmaps\n"
+					 "    b: Basic features\n\n"
+					 "SEE ALSO\n"
+					 "  debuglog\n");
+
+
 
 #ifdef SCI_SIMPLE_SAID_CODE
 			con_hook_command(c_sim_parse, "simparse", "s*", "Simulates a parsed entity.\n\nUSAGE\n  Call this"
@@ -2620,8 +2719,6 @@ WARNING(fixme!)
 	if (s->sound_server)
 		(s->sound_server->resume)(s);
 }
-
-
 
 
 

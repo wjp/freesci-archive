@@ -442,7 +442,8 @@ gfxdr_add_dirty(gfx_dirty_rect_t *base, rect_t box, int strategy)
 		struct _dirty_rect **rectp = &(base);
 
 		while (*rectp) {
-			if (gfx_rects_overlap((*rectp)->rect, box)) {
+#warning "FIXME!"
+			if (1 || gfx_rects_overlap((*rectp)->rect, box)) {
 				struct _dirty_rect *next = (*rectp)->next;
 				box = gfx_rects_merge((*rectp)->rect, box);
 				free(*rectp);
