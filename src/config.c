@@ -852,7 +852,7 @@ parse_option(char *option, int optlen, char *value);
 char *
 crop_value(char *yytext);
 
-#line 856 "lex.yy.c"
+#line 856 "config.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -1017,7 +1017,7 @@ YY_DECL
 #line 286 "config.l"
 
 
-#line 1021 "lex.yy.c"
+#line 1021 "config.c"
 
 	if ( yy_init )
 		{
@@ -1269,7 +1269,7 @@ YY_RULE_SETUP
 #line 425 "config.l"
 ECHO;
 	YY_BREAK
-#line 1273 "lex.yy.c"
+#line 1273 "config.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2278,7 +2278,7 @@ config_init(config_entry_t **_conf, char *conffile)
 
 			/* So we've got a home directory */
 			if (chdir(homedir)) {
-				fprintf(stderr,"Warning: Could not enter home directory!\n");
+				fprintf(stderr,"Warning: Could not enter home directory: %s\n", homedir);
 				return 1;
 			}
 

@@ -33,6 +33,9 @@
 #  endif
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
+#  include <sys/types.h>
+#  include <sys/stat.h>
+#  define stat _stat
 #elif defined (_DREAMCAST)
 #  include <dc.h>
 #  define PATH_MAX 255

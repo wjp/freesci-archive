@@ -542,7 +542,7 @@ config_init(config_entry_t **_conf, char *conffile)
 
 			/* So we've got a home directory */
 			if (chdir(homedir)) {
-				fprintf(stderr,"Warning: Could not enter home directory!\n");
+				fprintf(stderr,"Warning: Could not enter home directory: %s\n", homedir);
 				return 1;
 			}
 

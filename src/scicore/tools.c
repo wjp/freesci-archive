@@ -34,6 +34,8 @@
 #  include <sys/timeb.h>
 #  include <windows.h>
 #  include <sci_win32.h>
+#  include <sys/types.h>
+#  include <sys/stat.h>
 #endif
 #if !defined(HAVE_FNMATCH) && !defined(_MSC_VER)
 #  include <beos/fnmatch.h>
