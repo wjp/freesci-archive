@@ -69,14 +69,19 @@ inline void putInt16(byte *addr, word value)
 inline heap_ptr
 get_class_address(state_t *s, int classnr)
 {
-  heap_ptr scriptpos = *(s->classtable[classnr].scriptposp);
+  if (!s->classtable[classnr].scriptposp) {
+    sciprintf("Attempt to dereference class %x, which doesn't exist\n", classnr);
+    script_error_flag = script_debug_flag = 1;
+  } else {
+    heap_ptr scriptpos = *(s->classtable[classnr].scriptposp);
 
-  if (!scriptpos) {
-    script_instantiate(s, s->classtable[classnr].script, 1);
-    scriptpos = *(s->classtable[classnr].scriptposp);
+    if (!scriptpos) {
+      script_instantiate(s, s->classtable[classnr].script, 1);
+      scriptpos = *(s->classtable[classnr].scriptposp);
+    }
+
+    return scriptpos + s->classtable[classnr].class_offset;
   }
-
-  return scriptpos + s->classtable[classnr].class_offset;
 }
 
 /* Operating on the stack */

@@ -4,7 +4,7 @@
 #include <resource.h>
 #include <util.h>
 
-/*#define SCRIPT_DEBUG /**/
+/*#define SCRIPT_DEBUG */
 
 #define SCI_SCRIPTS_NR 1000
 

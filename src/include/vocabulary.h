@@ -31,9 +31,9 @@
 #include <heap.h>
 #include <versions.h>
 
-/*#define VOCABULARY_DEBUG /**/
-/*#define SCI_SIMPLE_SAID_CODE /* Whether the simplified Said() matching should be used */
-/*#define SCI_SIMPLE_SAID_DEBUG /* uncomment to enable simple said debugging */
+/*#define VOCABULARY_DEBUG */
+/*#define SCI_SIMPLE_SAID_CODE *//* Whether the simplified Said() matching should be used */
+/*#define SCI_SIMPLE_SAID_DEBUG *//* uncomment to enable simple said debugging */
 
 
 #define SCRIPT_UNKNOWN_FUNCTION_STRING "[Unknown]"
@@ -99,6 +99,7 @@ extern DLLEXTERN char *class_names[]; /* Vocabulary class names */
 /* There was no 'last matching word': */
 #define SAID_FULL_MATCH 0xffff
 #define SAID_NO_MATCH 0xfffe
+#define SAID_PARTIAL_MATCH 0xfffd
 
 #define SAID_LONG(x) ((x) << 8)
 
@@ -136,7 +137,7 @@ typedef struct {
   int word_suffix_length; /* String length of the other suffix */
 
   char *alt_suffix; /* The alternative suffix */
-  char word_suffix[2]; /* The suffix as used in the word vocabulary */
+  char *word_suffix; /* The suffix as used in the word vocabulary */
 
 } suffix_t;
 

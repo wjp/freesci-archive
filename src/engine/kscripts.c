@@ -74,7 +74,7 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int
   exec_stack_t *xstack; /* Execution stack */
 
   PUT_HEAP(stackframe, selector_id); /* The selector we want to call */
-  PUT_HEAP(stackframe + 2, argc); /* The number of arguments */
+  PUT_HEAP((stackframe + 2), argc); /* The number of arguments */
 
   if (lookup_selector(s, object, selector_id, &address) != SELECTOR_METHOD) {
     SCIkwarn(SCIkERROR, "Selector '%s' of object at %04x could not be invoked (%s L%d)\n",
@@ -112,7 +112,9 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid, int
 int
 is_object(state_t *s, heap_ptr offset)
 {
-  if (offset < 1000)
+  if (offset & 1) /* objects are always at even addresses */
+    return 0;
+  else if (offset < 1000)
     return 0;
   else
     return (GET_HEAP(offset + SCRIPT_OBJECT_MAGIC_OFFSET) == SCRIPT_OBJECT_MAGIC_NUMBER);
@@ -229,7 +231,6 @@ kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
   underBits = GET_SELECTOR(offset, underBits);
   if (underBits) {
     SCIkwarn(SCIkWARNING,"Clone %04x was cleared with underBits set\n", offset);
-    /* kfree(s, underBits); /* Views may dispose without cleaning up */
   }
 
   i = 0;

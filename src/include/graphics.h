@@ -151,7 +151,7 @@ typedef struct {
 
 typedef struct
 {
-  char *Name;    /* Name of the driver (can be specified in the configuration file)
+  char *Name;    /* Name of the driver (can be specified in the configuration file) */
 
   /* Initializes graphics
   ** Parameters: (state_t *) s: Pointer to the affected state_t

@@ -115,6 +115,12 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   CHECK_THIS_KERNEL_FUNCTION;
 
+  if (is_object(s, said_block)) {
+    SCIkwarn(SCIkWARNING, "Attempt to apply Said() to object %04x\n", said_block);
+    s->acc = 0;
+    return;
+  }
+
   if (!said_block) { s->acc=0; return; }
 
   if (argc != 1)
@@ -146,12 +152,17 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
 #else /* !SCI_SIMPLE_SAID_CODE */
-  if (said(s, s->heap + said_block, (s->debug_mode & (1 << SCIkPARSER_NR)))) { /* Build and possibly display a parse tree */
+  if ((new_lastmatch = said(s, s->heap + said_block, (s->debug_mode & (1 << SCIkPARSER_NR))))
+      != SAID_NO_MATCH) { /* Build and possibly display a parse tree */
+
     if (s->debug_mode & (1 << SCIkPARSER_NR))
       sciprintf("Match.\n");
 
     s->acc = 1;
-    PUT_SELECTOR(s->parser_event, claimed, 1);
+
+    if (new_lastmatch != SAID_PARTIAL_MATCH)
+      PUT_SELECTOR(s->parser_event, claimed, 1);
+
   } else s->acc = 0;
   //  s->acc = vocab_augment_trees(s, s->parser_nodes);
 #endif /* !SCI_SIMPLE_SAID_CODE */
@@ -326,8 +337,6 @@ kStrCat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kStrCmp(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int length;
-
   if (argc > 2)
     s->acc = strncmp(s->heap + UPARAM(0), s->heap + UPARAM(1), UPARAM(2));
   else
@@ -338,8 +347,6 @@ kStrCmp(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kStrCpy(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int length;
-
   CHECK_THIS_KERNEL_FUNCTION;
 
   if (argc > 2)
@@ -393,7 +400,6 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
   char *target = ((char *) s->heap) + dest;
   int position = UPARAM(1);
   int index = UPARAM(2);
-  resource_t *resource;
   char *source;
   int mode = 0;
   int paramindex = 0; /* Next parameter to evaluate */
@@ -401,7 +407,6 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int i;
   int startarg;
   int str_leng; /* Used for stuff like "%13s" */
-  char *abstarget = target;
 
   CHECK_THIS_KERNEL_FUNCTION;
 
@@ -419,7 +424,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
   for (i = startarg; i < argc; i++)
     arguments[i-startarg] = UPARAM(i); /* Parameters are copied to prevent overwriting */
 
-  while (xfer = *source++) {
+  while ((xfer = *source++)) {
     if (xfer == '%') {
       if (mode == 1)
 	*target++ = '%'; /* Literal % by using "%%" */
@@ -443,7 +448,7 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	  while (extralen-- > 0)
 	    *target++ = ' '; /* Format into the text */
 
-	  while (*target++ = *tempsource++);
+	  while ((*target++ = *tempsource++));
 
 	  target--; /* Step back on terminator */
 	  mode = 0;
@@ -486,15 +491,15 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	    str_leng = (str_leng * 10) + (xfer - '0');
 	  else {
 	    *target = '%';
-	    *target++;
+	    target++;
 	    *target = xfer;
-	    *target++;
+	    target++;
 	    mode = 0;
 	  } /* if (!isdigit(xfer)) */
 	}
       } else { /* mode != 1 */
 	*target = xfer;
-	*target++;
+	target++;
       }
     }
   }

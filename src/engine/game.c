@@ -242,7 +242,6 @@ script_init_engine(state_t *s, sci_version_t version)
     resource_t *script = findResource(sci_script, scriptnr);
 
     if (script) {
-
       size = getInt16(script->data);
       if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
         magic_offset = seeker = 2;
@@ -252,12 +251,12 @@ script_init_engine(state_t *s, sci_version_t version)
       do {
 
 	while (seeker < script->length)
-        {
-          objtype = getInt16(script->data + seeker);
-          if (objtype == sci_obj_class || objtype == sci_obj_terminator) 
-            break;
-          seeker += getInt16(script->data + seeker + 2);
-        }
+	  {
+	    objtype = getInt16(script->data + seeker);
+	    if (objtype == sci_obj_class || objtype == sci_obj_terminator) 
+	      break;
+	    seeker += getInt16(script->data + seeker + 2);
+	  }
         
 	if (objtype == sci_obj_class) {
 
@@ -278,7 +277,6 @@ script_init_engine(state_t *s, sci_version_t version)
 
 	    s->classtable_size = classnr + 1; /* Adjust maximum number of entries */
 	  }
-
 	  s->classtable[classnr].class_offset = seeker + 4 - magic_offset;
 	  s->classtable[classnr].script = scriptnr;
 	  s->classtable[classnr].scriptposp = &(s->scripttable[scriptnr].heappos);
@@ -288,7 +286,7 @@ script_init_engine(state_t *s, sci_version_t version)
 	  seeker += getInt16(script->data + seeker + 2); /* Move to next */
 	}
 
-      } while (objtype != sci_obj_terminator && seeker >= script->length);
+      } while (objtype != sci_obj_terminator && seeker <= script->length);
 
     }
   }
@@ -311,6 +309,8 @@ script_init_engine(state_t *s, sci_version_t version)
   s->file_handles_nr = 5;
   s->file_handles = g_new0(FILE *, s->file_handles_nr);
   /* Allocate memory for file handles */
+  sciprintf("Engine initialized\n");
+  sciprintf("s->classtable_size = %d\n", s->classtable_size);
 
   return 0;
 }

@@ -48,6 +48,24 @@
 #endif
 
 
+
+const char* SCI_Version_Types[] = {
+  "SCI version undetermined (Autodetect failed / not run)",
+  "SCI version 0.xxx",
+  "SCI version 0.xxx w/ 1.xxx compression",
+  "SCI version 1.xxx",
+  "SCI WIN/32"
+};
+
+
+const char* Resource_Types[] = {"view","pic","script","text","sound",
+				"memory","vocab","font","cursor",
+				"patch","bitmap","palette","cdaudio",
+				"audio","sync","message","map","heap"};
+/* These are the 18 resource types supported by SCI1 */
+
+
+
 int sci_version = 0;
 
 int max_resource;

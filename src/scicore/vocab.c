@@ -162,7 +162,7 @@ vocab_get_suffices(int *suffices_nr)
   int counter = 0;
   suffix_t **suffices;
   resource_t *resource = findResource(sci_vocab, VOCAB_RESOURCE_SUFFIX_VOCAB);
-  int seeker = 0;
+  int seeker = 1;
 
   if (!resource) {
     fprintf(stderr,"Could not find suffix vocabulary!\n");
@@ -173,32 +173,30 @@ vocab_get_suffices(int *suffices_nr)
 
   while ((seeker < resource->length-1) && (resource->data[seeker + 1] != 0xff)) {
 
-    char *alt_suffix = resource->data + seeker + 1;
+    char *alt_suffix = resource->data + seeker;
     int alt_len = strlen(alt_suffix);
     char *word_suffix;
     int word_len;
 
     suffices = g_realloc(suffices, sizeof(suffix_t *) * (counter + 1));
 
-    seeker += alt_len + 2; /* Hit end of string */
+    seeker += alt_len + 1; /* Hit end of string */
     word_suffix = resource->data + seeker + 3; /* Beginning of next string +1 (ignore '*') */
     word_len = strlen(word_suffix);
 
-    suffices[counter] = g_malloc(sizeof(suffix_t) + alt_len + word_len);
+    suffices[counter] = g_malloc(sizeof(suffix_t));
     /* allocate enough memory to store the strings */
 
-    strcpy(&(suffices[counter]->word_suffix[0]), word_suffix);
-    strcat(&(suffices[counter]->word_suffix[0]), alt_suffix);
+    suffices[counter]->word_suffix = word_suffix;
+    suffices[counter]->alt_suffix = alt_suffix;
 
-    suffices[counter]->alt_suffix = &(suffices[counter]->word_suffix[word_len]);
     suffices[counter]->alt_suffix_length = alt_len;
     suffices[counter]->word_suffix_length = word_len;
     suffices[counter]->class_mask = inverse_16(getInt16(resource->data + seeker)); /* Inverse endianness */
     
-    seeker += word_len + 2; /* Hit end of string */
-    suffices[counter]->result_class = getInt16(resource->data + seeker);
-
-    seeker += 4; /* Next entry */
+    seeker += word_len + 4;
+    suffices[counter]->result_class = inverse_16(getInt16(resource->data + seeker));
+    seeker += 3; /* Next entry */
 
     ++counter;
 
@@ -213,8 +211,11 @@ vocab_get_suffices(int *suffices_nr)
 void
 vocab_free_suffices(suffix_t **suffices, int suffices_nr)
 {
-  vocab_free_words((word_t **) suffices, suffices_nr);
-  /* They were allocated the same way, so they can be freed in the same way */
+  int i;
+  for (i = 0; i < suffices_nr; i++)
+    free(suffices[i]);
+
+  free(suffices);
 }
 
 
@@ -630,6 +631,6 @@ vocab_synonymize_tokens(result_word_t *words, int words_nr, synonym_t *synonyms,
 
   for (i = 0; i < words_nr; i++)
     for(sync = 0; sync < synonyms_nr; sync++)
-      if (words[i].class = synonyms[sync].replaceant)
+      if (words[i].class == synonyms[sync].replaceant)
 	words[i].class = synonyms[sync].replacement;
 }

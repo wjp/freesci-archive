@@ -1,3 +1,14 @@
+2000-05-19  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/vocab.c (vocab_get_suffices): Fixed suffix vocabulary
+
+2000-05-18  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/game.c (script_init_engine): Fixed a rampaging >=
+	by replacing it with a <=.
+
+	* src/engine/said.y (said): Implemented the augmenting algorithm
+
 2000-05-15  Dmitry Jemerov  <yole@nnz.ru>
 
 	* src/engine/game.c (script_init_engine): Fixed the bug causing

@@ -32,8 +32,8 @@
 #ifndef _SCI_RESOURCE_H_
 #define _SCI_RESOURCE_H_
 
-/*#define _SCI_RESOURCE_DEBUG /**/
-/*#define _SCI_DECOMPRESS_DEBUG /**/
+/*#define _SCI_RESOURCE_DEBUG */
+/*#define _SCI_DECOMPRESS_DEBUG */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -121,20 +121,8 @@ static const char* SCI_Error_Types[] = {
 #define SCI_VERSION_LAST SCI_VERSION_01
 /* The last supported SCI version */
 
-static const char* SCI_Version_Types[] = {
-  "SCI version undetermined (Autodetect failed / not run)",
-  "SCI version 0.xxx",
-  "SCI version 0.xxx w/ 1.xxx compression",
-  "SCI version 1.xxx",
-  "SCI WIN/32"
-};
-
-
-static const char* Resource_Types[] = {"view","pic","script","text","sound",
-				       "memory","vocab","font","cursor",
-				       "patch","bitmap","palette","cdaudio",
-				       "audio","sync","message","map","heap"};
-/* These are the 18 resource types supported by SCI1 */
+extern const char* SCI_Version_Types[];
+extern const char* Resource_Types[];
 
 enum ResourceTypes {
   sci_view=0, sci_pic, sci_script, sci_text,
@@ -144,7 +132,7 @@ enum ResourceTypes {
   sci_map, sci_heap, sci_invalid_resource,
 };
 
-static const int sci0_last_resource = sci_patch;
+#define sci0_last_resource sci_patch
 /* Used for autodetection */
 
 
