@@ -268,6 +268,12 @@ script_init_engine(state_t *s, sci_version_t version)
 	int size;
 	int magic_offset; /* For strange scripts in older SCI versions */
 
+	if (scir_find_resource(s->resmgr, sci_heap, 0, 0))
+	    {
+		sciprintf("SCI1.1 games are not supported yet, sorry!\n");
+		return 1;
+	    }
+
 	s->max_version = SCI_VERSION(9,999,999); /* :-) */
 	s->min_version = 0; /* Set no real limits */
 	s->version = SCI_VERSION_DEFAULT_SCI0;

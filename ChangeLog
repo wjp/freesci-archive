@@ -1,3 +1,10 @@
+2004-03-11  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/game.c (script_init_engine): Abort gracefully when
+	encountering an SCI1.1 game.
+	* src/scicore/resource.c (sci1_res_type): Fix stupid OB1 bug.
+	* src/include/sciresource.h: Bump the value of sci1_last_resource.
+
 2004-03-10  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kevent.c (kGetEvent): In SCI1 games, don't report the

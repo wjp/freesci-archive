@@ -115,7 +115,7 @@ enum ResourceTypes {
 };
 
 #define sci0_last_resource sci_patch
-#define sci1_last_resource sci_message
+#define sci1_last_resource sci_heap
 /* Used for autodetection */
 
 

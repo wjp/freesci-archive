@@ -55,7 +55,7 @@ inline int sci1_res_type(int ofs, int *types)
 {
 	int i, last = -1;
 
-	for (i=0;i<sci1_last_resource;i++)
+	for (i=0;i<=sci1_last_resource;i++)
 		if (types[i])
 		{
 			if (types[i]>ofs)
