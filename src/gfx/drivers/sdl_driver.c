@@ -254,9 +254,12 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 #ifdef ARM_WINCE
 	i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF | SDL_NOFRAME;
+#endif
+#ifdef _WIN32	
+	i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE;
 #else	
 	i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF;
-#endif	
+#endif
 		if (flags & SCI_SDL_FULLSCREEN) {
 		i |= SDL_FULLSCREEN;
 	}
@@ -598,13 +601,17 @@ sdl_init(struct _gfx_driver *drv)
 	}
 	SDL_EnableUNICODE(SDL_ENABLE);
 
+#ifdef _WIN32
+	i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE;
+#else
 	i = SDL_HWSURFACE | SDL_SWSURFACE | SDL_HWPALETTE | SDL_DOUBLEBUF;
+#endif
 	if (flags & SCI_SDL_FULLSCREEN) {
 		i |= SDL_FULLSCREEN;
 	}
 
-	depth = SDL_VideoModeOK(640,400, 32, i);
-	if (depth && (! sdl_init_specific(drv, 2, 2, depth >> 3 )))
+	depth = SDL_VideoModeOK(XFACT*320,YFACT*200, 32, i);
+	if (depth && (! sdl_init_specific(drv, XFACT, YFACT, depth >> 3 )))
 		return GFX_OK;
 
 	DEBUGB("Failed to find visual!\n");
@@ -1927,3 +1934,4 @@ gfx_driver_sdl = {
 #ifdef _WIN32
 //#pragma optimize( "", on )
 #endif
+
