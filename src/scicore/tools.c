@@ -247,7 +247,7 @@ void sci_gettime(long *seconds, long *useconds)
 	}
 
 	*seconds = tm/1000;
-	*useconds = tm*1000;
+	*useconds = (tm%1000)*1000;
 }
 #else
 #  error "You need to provide a microsecond resolution sci_gettime implementation for your platform!"
