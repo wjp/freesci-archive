@@ -43,6 +43,33 @@ short rowwidths[32];
 short rowheights[32];
 
 
+int
+get_text_width(char *text, byte *font)
+/* Similar to getTextParams, but threadsafe and less informative */
+{
+  unsigned char foo;
+  int maxwidth = 0;
+  int localmaxwidth = 0;
+
+  while (foo = *text++) {
+    if (foo == '\n') {
+      if (localmaxwidth > maxwidth)
+	maxwidth = localmaxwidth;
+      localmaxwidth = 0;
+    } else { /* foo != '\n' */
+      guint16 quux = getInt16((guint8 *) font+6+(foo<<1));
+      guint8 *foopos = font + quux;
+      localmaxwidth += *foopos;
+    }
+  }
+
+  if (localmaxwidth > maxwidth)
+    return localmaxwidth;
+
+  return maxwidth;
+}
+
+
 void getTextParams(char *text, char *font)
 /* sets lastwidth and lastheight properly */
 {

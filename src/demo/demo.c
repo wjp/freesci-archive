@@ -69,7 +69,7 @@ int main(int argc, char** argv)
   int noobj = 0;
   resource_t *resource, *font;
   port_t clipframe = {150, 120, 180, 200};
-  port_t winframe = {12, 110, 46, 209};
+  port_t winframe = {22, 110, 56, 209};
   int boxcol = 15, boxpri = 12, boxflags = 0;
 
   int pointernr = 999; /* mouse pointer ID */
@@ -78,8 +78,9 @@ int main(int argc, char** argv)
   int view_nr = 4, view_loop = 4, view_cell = 1;
 
   int conmode = 0;
-  /*  char* mytext = "You pause for a moment to reflect\n"
+  /* char* mytext = "You pause for a moment to reflect\n"
       "upon the new support for sound resources."; */
+  char box_title[] = {'a', 29, 30, 31, 32, 33, 34, 35, 36, 37, 'z#', 0};
   int i;
 
   for (i = 1; i< argc; i++)
@@ -206,7 +207,7 @@ int main(int argc, char** argv)
 
       resource = findResource(sci_font, 0);
       if (resource)
-	drawWindow(pic, &winframe, boxcol, boxpri, "Title", resource->data, boxflags);
+	drawWindow(pic, &winframe, boxcol, boxpri, box_title, resource->data, boxflags);
 
       resource = findResource(sci_view, view_nr); /* Hero */
       if (resource)

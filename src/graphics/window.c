@@ -54,14 +54,31 @@ void drawBox(picture_t dest, short x, short y, short xl, short yl, char color, c
 }
 
 void
-drawTitlebar(picture_t dest, int color)
+draw_titlebar(picture_t dest, int color)
 {
   int i;
 
   for (i = 0; i < 10; i++) {
-    memset(dest[0] + i * 320, (i == 9)? 0 : color, 319);
-    dest[0][i*320] = 0;
+    memset(dest[0] + i * 320, (i == 9)? 0 : color, 320);
     memset(dest[1] + i * 320, 10, 320); /* Priority for the menubar */
+  }
+}
+
+
+void
+draw_titlebar_section(picture_t dest, int start, int length, int color)
+{
+  int i;
+
+  if (start > 319)
+    return;
+
+  if (start + length > 319)
+    length = 320 - start;
+
+  for (i = 0; i < 10; i++) {
+    memset(dest[0] + i * 320 + start, (i == 9)? 0 : color, length);
+    memset(dest[1] + i * 320 + start, 10, length); /* Priority for the menubar */
   }
 }
 

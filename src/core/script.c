@@ -755,4 +755,11 @@ script_map_selectors(state_t *s, selector_map_t *map)
 {
   map->init = script_find_selector(s, "init");
   map->play = script_find_selector(s, "play");
+  map->x = script_find_selector(s, "x");
+  map->y = script_find_selector(s, "y");
+  map->z = script_find_selector(s, "z");
+  map->priority = script_find_selector(s, "priority");
+  map->view = script_find_selector(s, "view");
+  map->loop = script_find_selector(s, "loop");
+  map->cel = script_find_selector(s, "cel");
 }

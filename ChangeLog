@@ -1,3 +1,9 @@
+1999-08-03  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/graphics/graphics.c (drawView0): Fixed a bug that would over-
+	write the port border (and mess up a lot of other things).
+	Threadsafed the whole graphics stuff.
+
 1999-08-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/scriptdebug.c (c_sret): Successfully tested the new sret

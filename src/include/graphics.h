@@ -206,6 +206,26 @@ int drawView0(picture_t dest, port_t *port, int x, int y, short priority,
 **             found, or -2 if the index inside the group is invalid.
 */
 
+int
+view0_cel_width(int loop, int cel, byte *data);
+/* Returns the width of an SCI0 view cell.
+** Parameters: (int) loop: The loop to examine
+**             (int) cel: The cell
+**             (byte *): The view data
+** Returns   : (int) The width, or -1 if loop or cel were invalid.
+*/
+
+
+int
+view0_cel_height(int loop, int cel, byte *data);
+/* Returns the height of an SCI0 view cell.
+** Parameters: (int) loop: The loop to examine
+**             (int) cel: The cell
+**             (byte *): The view data
+** Returns   : (int) The height, or -1 if loop or cel were invalid.
+*/
+
+
 void drawBox(picture_t dest, short x, short y, short xl, short yl, char color, char priority);
 /* Draws a simple box.
 ** Parameters: (picture_t) dest: The picture_t to draw to.
@@ -218,12 +238,51 @@ void drawBox(picture_t dest, short x, short y, short xl, short yl, char color, c
 */
 
 
-void drawTitlebar(picture_t dest, int color);
+void dither_line(picture_t dest, int x1, int y1, short x2, short y2,
+		 int col1, int col2, int priority, int special, char drawenable);
+/* Draws a line.
+** Parameters: (picture_t) dest: The picture_t to draw to
+**             (int) x1, y1: Start position
+**             (int) x2, y2: End position
+**             (int) col1, col2: The two colors used for foreground dithering
+**             (int) priority: The priority to draw with
+**             (int) special: The special color to draw with
+**             (char) drawenable: Bit 0: Enable visual map drawing
+**                                Bit 1: Enable priority map drawing
+**                                Bit 2: Enable special map drawing
+** Returns   : (void)
+*/
+
+
+int
+get_text_width(char *text, byte *font);
+/* Returns the width of the specified text in the specified font.
+** Parameters: (char *) text: The text to check
+**             (byte *) font: The font to check it with
+** Returns   : (int) The width of the longest line of the text in the specified font.
+** The '\n' character is treated as usual (newline), so that the provided text may
+** contain of several lines of text. In this case, the length of the longest line is
+** returned.
+*/
+
+
+void draw_titlebar(picture_t dest, int color);
 /* Fills the title bar with the specified color
 ** Parameters: (picture_t) dest: The picture_t to draw to
 **             (int) color: The color which the titlebar should be filled with (usually 0 or 0xf)
 ** Returns   : (void)
 */
+
+void
+draw_titlebar_section(picture_t dest, int start, int length, int color);
+/* Fills a section of the title bar with the specified color
+** Parameters: (picture_t) dest: The picture_t to draw to
+**             (int) start: The x coordinate to start at
+**             (int) length: The length of the block to draw
+**             (int) color: The color which the titlebar should be filled with (usually 0 or 0xf)
+** Returns   : (void)
+*/
+
 
 void drawWindow(picture_t dest, port_t *port, char color, char priority,
 		char *title, guint8 *titlefont, gint16 flags);

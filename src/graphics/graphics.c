@@ -84,16 +84,15 @@ void clearPicture(picture_t pic, int fgcol)
 /***************************************************************************/
 /* The following code is was taken directly from Carl Muckenhoupt's sde.c. */
 /* It is used with permission and has been ported to plot to picture_ts    */
-/* instead of directly to the graphics ram.                                */
+/* instead of directly to the graphics RAM.                                */
+/* Also, it has been made thread-safe.                                     */
 /***************************************************************************/
 
-int curx, cury, col1 = 0, col2 = 0;
-char priority = 0, special=0;
-char drawenable;
-picture_t buffers = 0;
+  int col1, col2, priority, special;
+  unsigned int curx, cury;
 
-
-inline void putpix(int x, int y, short color, short screen)
+inline void putpix(picture_t buffers, int x, int y, short color, short screen,
+		   int col1, int col2, int priority, int special, char drawenable)
 {
   int pos;
 
@@ -115,7 +114,8 @@ inline void putpix(int x, int y, short color, short screen)
 #define GETPIX(x, y, screen)  (buffers[(screen)][(x)+((y)*320)])
 #endif /* !SCI_GRAPHICS_ALLOW_256 */
 
-inline void plot(int x, int y)
+inline void plot(picture_t buffers, int x, int y,
+		 int col1, int col2, int priority, int special,  char drawenable)
 {
   int pos;
 
@@ -149,16 +149,17 @@ inline void plot(int x, int y)
    incrE = ((deltanonlinear) > 0) ? -(deltanonlinear) : (deltanonlinear);  \
    d = nonlinearstart-1;  \
    while (linearvar != (linearend)) { \
-     plot(x,y); \
+     plot(buffers, x,y, col1, col2, priority, special, drawenable); \
      linearvar += linearmod; \
      if ((d+=incrE) < 0) { \
        d += incrNE; \
        nonlinearvar += nonlinearmod; \
      }; \
    }; \
-   plot(x,y);
+   plot(buffers, x,y, col1, col2, priority, special, drawenable);
 
-void ditherto(short x1, short y1)
+void dither_line(picture_t buffers, int curx, int cury, short x1, short y1,
+		 int col1, int col2, int priority, int special, char drawenable)
 {
   short temp, dx, dy, incrE, incrNE, d, x, y, finalx, finaly;
   short tc1 = col1, tc2 = col2, tx = curx, ty = cury;
@@ -218,7 +219,8 @@ int _fill_bgcol, _fill_bgcol1, _fill_bgcol2;
 			       ((col1 != 15) && (col2 != 15))))
 
 
-void fillhelp(gint16 xstart, gint16 xend, gint16 y, gint16 direction)
+void fillhelp(picture_t buffers, gint16 xstart, gint16 xend, gint16 y, gint16 direction,
+	      int col1, int col2, int priority, int special, char drawenable)
 {
   gint16 register xright = xstart, xleft = xstart;
 
@@ -228,9 +230,11 @@ void fillhelp(gint16 xstart, gint16 xend, gint16 y, gint16 direction)
       while (xleft > 0 && !FILLBOUNDARY(xleft-1, y+10)) xleft--;
       for (xright = xleft; xright < 320 && !FILLBOUNDARY(xright, y+10);
 	   xright++)
-	plot(xright, y);
-      if (xleft < xstart) fillhelp(xleft, xstart, y, -direction);
-      fillhelp(xleft, xright-1, y, direction);
+	plot(buffers, xright, y, col1, col2, priority, special, drawenable);
+      if (xleft < xstart) fillhelp(buffers, xleft, xstart, y, -direction,
+				   col1, col2, priority, special, drawenable);
+      fillhelp(buffers, xleft, xright-1, y, direction,
+	       col1, col2, priority, special, drawenable);
     }
     while (xright <= xend) {
       while (FILLBOUNDARY(xright, y+10)) {
@@ -239,37 +243,45 @@ void fillhelp(gint16 xstart, gint16 xend, gint16 y, gint16 direction)
       }
       xleft = xright;
       while (xright<320 && !FILLBOUNDARY(xright, y+10)) {
-	plot(xright, y);
+	plot(buffers, xright, y, col1, col2, priority, special, drawenable);
 	xright++;
       }
-      fillhelp(xleft, xright-1, y, direction);
+      fillhelp(buffers, xleft, xright-1, y, direction,
+	       col1, col2, priority, special, drawenable);
     }
     xright--;
-    if (xright > xend) fillhelp(xend, xright, y, -direction);
+    if (xright > xend)
+      fillhelp(buffers, xend, xright, y, -direction,
+	       col1, col2, priority, special, drawenable);
   }
 }
 
-void ditherfill(gint16 x, gint16 y)
+void ditherfill(picture_t buffers, gint16 x, gint16 y,
+		int col1, int col2, int priority, int special, char drawenable)
 {
-  gint16 register xstart, xend, old_drawenable = drawenable;
+  gint16 xstart, xend, old_drawenable = drawenable;
 
   if (GETPIX(x, y+2, 1) == priority) drawenable &= ~2;
   if (GETPIX(x, y+2, 2) == special) drawenable &= ~4;
 
   if (FILLBOUNDARY(x, y+10)) return;
   for (xstart = x; xstart >= 0 && !FILLBOUNDARY(xstart, y+10); xstart--)
-    plot(xstart, y);
+    plot(buffers, xstart, y, col1, col2, priority, special, drawenable);
   xstart++;
   for (xend = x+1; xend < 320 && !FILLBOUNDARY(xend, y+10); xend++)
-    plot(xend, y);
+    plot(buffers, xend, y,
+	 col1, col2, priority, special, drawenable);
   xend--;
-  fillhelp(xstart, xend, y, 1);
-  fillhelp(xstart, xend, y, -1);
+  fillhelp(buffers, xstart, xend, y, 1,
+	   col1, col2, priority, special, drawenable);
+  fillhelp(buffers, xstart, xend, y, -1,
+	   col1, col2, priority, special, drawenable);
   drawenable = old_drawenable;
 }
 
 unsigned char patcode, patnum;
-void plotpattern(int x, int y)
+void plotpattern(picture_t buffers, int x, int y,
+		 int col1, int col2, int priority, int special, char drawenable)
 {
   static gint8 circles[][30] = { /* bitmaps for circle patterns */
     {0x80},
@@ -316,11 +328,12 @@ void plotpattern(int x, int y)
   if (patcode & 0x10) { /* rectangle */
     for (l=y-size; l<=y+size; l++) for (k=x-size; k<=x+size+1; k++) {
       if (patcode & 0x20) {
-	if ((junq[junqbit>>3] >> (7-(junqbit & 7))) & 1) plot(k, l);
+	if ((junq[junqbit>>3] >> (7-(junqbit & 7))) & 1) plot(buffers, k, l, col1, col2,
+							      priority, special, drawenable);
 	junqbit++;
 	if (junqbit == 0xff) junqbit=0;
       }
-      else plot(k, l);
+      else plot(buffers, k, l, col1, col2, priority, special, drawenable);
     }
   }
   else { /* circle */
@@ -328,17 +341,58 @@ void plotpattern(int x, int y)
     for (l=y-size; l<=y+size; l++) for (k=x-size; k<=x+size+1; k++) {
       if ((circles[patcode&7][circlebit>>3] >> (7-(circlebit & 7))) & 1) {
 	if (patcode & 0x20) {
-	  if ((junq[junqbit>>3] >> (7-(junqbit & 7))) & 1) plot(k, l);
+	  if ((junq[junqbit>>3] >> (7-(junqbit & 7))) & 1) plot(buffers, k, l,	col1, col2,
+								priority, special,  drawenable);
 	  junqbit++;
 	  if (junqbit == 0xff) junqbit=0;
 	}
-	else plot(k, l);
+	else plot(buffers, k, l, col1, col2, priority, special, drawenable);
       }
       circlebit++;
     }
   }
 }
 
+int
+view0_cel_width(int loop, int cel, byte *data)
+{
+  int loops_nr = getInt16(data);
+  int lookup, cels_nr;
+
+  if ((loop >= loops_nr) || (loop < 0))
+    return -1;
+
+  lookup = getInt16(data+8+(loop<<1));
+  cels_nr = getInt16(data + lookup);
+
+  if ((cel < 0) || (cel >= cels_nr))
+    return -1;
+
+  lookup += 4 + (cel << 1);
+
+  return getInt16(data + lookup);
+}
+
+
+int
+view0_cel_height(int loop, int cel, byte *data)
+{
+  int loops_nr = getInt16(data);
+  int lookup, cels_nr;
+
+  if ((loop >= loops_nr) || (loop < 0))
+    return -1;
+
+  lookup = getInt16(data+8+(loop<<1));
+  cels_nr = getInt16(data + lookup);
+
+  if ((cel < 0) || (cel >= cels_nr))
+    return -1;
+
+  lookup += 6 + (cel << 1);
+
+  return getInt16(data + lookup);
+}
 
 
 
@@ -352,13 +406,16 @@ int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
   guint8 reverse;
   gint16 *test;
   gint16 absx = xp, absy = 10 + yp, clipmaxx = 319, clipmaxy = 199;
+  char drawenable = 1;
+  int col1, col2, priority, special;
+
+  group++; index++; /* Both start at 0, but we need them to start at 1 */
 
   if (port) {
     clipmaxy = port->ymax - port->ymin;
     clipmaxx = port->xmax - port->xmin + 1;
   }
 
-  drawenable = 1;
   if (data == 0) return -3;
   nloops = getInt16(data);
   if (group > nloops) return -1;
@@ -366,7 +423,6 @@ int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
   if (index < 1) return -2;
   loop = group;
   cell = index;
-  buffers = dest;
   {
     int blindtop, blindleft, blindright; /* zones outside of the picture */
     int homepos;
@@ -379,6 +435,9 @@ int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
     dataptr = data+getInt16(lookup + (cell<<1));
     maxx = getInt16(dataptr);
     maxy = getInt16(dataptr+2);
+
+    xp -= maxx/2;
+    yp -= maxy; /* Coordinates are relative to the lower center */
 
     minx = x = (xp < 0) ? 0 : xp;
     y = yp;
@@ -406,7 +465,7 @@ int drawView0(picture_t dest, port_t *port, int xp, int yp, short _priority,
       xp = 0;
     } else blindleft = 0;
 
-    blindright = maxx-(clipmaxx + 1);
+    blindright = maxx-clipmaxx;
 
     if (maxx > clipmaxx) maxx = clipmaxx;
 
@@ -519,14 +578,13 @@ void drawPicture0(picture_t dest, int flags, int defaultPalette, guint8 *data)
   gint8 colors[4][40], priorities[4][40];
   guint8 code;
   short x, y;
+  char drawenable = 3;
 
 
-  buffers = dest;
   ptr = data;
   if (data == 0) return;
   priority = 0;
   col1 = col2 = 0;
-  drawenable = 3;
   patcode = patnum = 0;
   for (x=0; x<4; x++) for (y=0; y<40; y++) {
     colors[x][y] = startcolors[y];
@@ -557,7 +615,7 @@ void drawPicture0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	if (patcode & 0x20) patnum = *(ptr++) >> 1 & 0x7f;
 	x = ((*ptr & 0xf0) << 4) | (0xff & ptr[1]);
 	y = ((*ptr & 0x0f) << 8) | (0xff & ptr[2]);
-	plotpattern(x, y);
+	plotpattern(dest, x, y, col1, col2, priority, special, drawenable);
 	ptr += 3;
 	while (*((guint8 *)ptr) < 0xf0) {
 	  if (patcode & 0x20) patnum = *(ptr++) >> 1 & 0x7f;
@@ -565,7 +623,7 @@ void drawPicture0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	  else x += ((*ptr & 0x70) >> 4);
 	  if (*ptr & 0x08) y -= (*ptr & 0x07);
 	  else y += (*ptr & 0x07);
-	  plotpattern(x, y);
+	  plotpattern(dest, x, y, col1, col2, priority, special, drawenable);
 	  ptr++;
 	}
 	break;
@@ -577,7 +635,9 @@ void drawPicture0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	  if (ptr[0] & 0x80) y = cury - (ptr[0] & 0x7f);
 	  else y = cury + ptr[0];
 	  x = curx+ptr[1];
-	  ditherto(x, y);
+	  dither_line(dest, curx, cury, x, y, col1, col2, priority, special, drawenable);
+	  curx = x;
+	  cury = y;
 	  ptr += 2;
 	}
 	break;
@@ -587,7 +647,9 @@ void drawPicture0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	while (*((guint8 *)ptr) < 0xf0) {
 	  x = ((*ptr & 0xf0) << 4) | (0xff & ptr[1]);
 	  y = ((*ptr & 0x0f) << 8) | (0xff & ptr[2]);
-	  ditherto(x, y);
+	  dither_line(dest, curx, cury, x, y, col1, col2, priority, special, drawenable);
+	  curx = x;
+	  cury = y;
 	  ptr += 3;
 	}
 	break;
@@ -600,7 +662,9 @@ void drawPicture0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	  else x = curx + ((*ptr & 0x70) >> 4);
 	  if (*ptr & 0x08) y = cury - (*ptr & 0x07);
 	  else y = cury + (*ptr & 0x07);
-	  ditherto(x, y);
+	  dither_line(dest, curx, cury, x, y, col1, col2, priority, special, drawenable);
+	  curx = x;
+	  cury = y;
 	  ptr++;
 	}
 	break;
@@ -617,7 +681,7 @@ void drawPicture0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	  while (*((guint8 *)ptr) < 0xf0) {
 	    x = ((*ptr & 0xf0) << 4) | (0xff & ptr[1]);
 	    y = ((*ptr & 0x0f) << 8) | (0xff & ptr[2]);
-	    ditherfill(x, y);
+	    ditherfill(dest, x, y, col1, col2, priority, special, drawenable);
 	    ptr += 3;
 	  }
 
@@ -635,7 +699,7 @@ void drawPicture0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	  if (patcode & 0x20) patnum = *(ptr++) >> 1 & 0x7f;
 	  x = ((*ptr & 0xf0) << 4) | (0xff & ptr[1]);
 	  y = ((*ptr & 0x0f) << 8) | (0xff & ptr[2]);
-	  plotpattern(x, y);
+	  plotpattern(dest, x, y, col1, col2, priority, special, drawenable);
 	  ptr += 3;
 	}
 	break;
@@ -653,14 +717,14 @@ void drawPicture0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	cury = (*ptr & 0x0f) << 8;
 	x = curx | (0xff & *(ptr+1));
 	y = cury | (0xff & *(ptr+2));
-	plotpattern(x, y);
+	plotpattern(dest, x, y, col1, col2, priority, special, drawenable);
 	ptr += 3;
 	while (*((guint8 *)ptr) < 0xf0) {
 	  if (patcode & 0x20) patnum = *(ptr++) >> 1 & 0x7f;
 	  if (ptr[0] & 0x80) y -= (ptr[0] & 0x7f);
 	  else y += ptr[0];
 	  x += ptr[1];
-	  plotpattern(x, y);
+	  plotpattern(dest, x, y, col1, col2, priority, special, drawenable);
 	  ptr += 2;
 	}
 	break;

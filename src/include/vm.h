@@ -100,6 +100,9 @@ typedef struct
 {
   int init; /* Init function */
   int play; /* Play function (first function to be called) */
+  int x, y, z; /* Coordinates (You probably didn't expect this) */
+  int priority;
+  int view, loop, cel; /* Description of a specific image */
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 

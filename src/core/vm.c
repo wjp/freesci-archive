@@ -1106,6 +1106,8 @@ script_run(state_t *s)
   script_map_kernel(s);
   /* Maps the kernel functions */
 
+  s->menubar = menubar_new(); /* Create menu bar */
+
   s->game_time = 0;
 
   s->mouse_pointer = NULL; /* No mouse pointer */
@@ -1207,6 +1209,8 @@ script_run(state_t *s)
   s->opcodes = NULL;
   s->kfunct_table = NULL;
   /* Make sure to segfault if any of those are dereferenced */
+
+  menubar_free(s->menubar);
 
   heap_free(s->_heap, stack_handle);
   heap_free(s->_heap, s->save_dir);

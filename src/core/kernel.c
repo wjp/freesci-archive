@@ -23,10 +23,6 @@
 
     Christoph Reichenbach (CJR) [jameson@linuxgames.com]
 
- History:
-
-   000000 - created (CJR)
-
 ***************************************************************************/
 
 #include <script.h>
@@ -147,8 +143,69 @@ int kIsObject(state* s)
 /* Returns the parameter value or (alt) if not enough parameters were supplied */
 
 
+/* Allocates a set amount of memory and returns a handle to it. */
+int
+kalloc(state_t *s, int space)
+{
+  int seeker = 0;
+
+  while ((seeker < MAX_HUNK_BLOCKS) && (s->hunk[seeker].size))
+    seeker++;
+
+  if (seeker == MAX_HUNK_BLOCKS)
+    kernel_oops(s, "Out of hunk handles! Try increasing MAX_HUNK_BLOCKS in engine.h");
+  else
+    s->hunk[seeker].data = malloc(s->hunk[seeker].size = space);
+
+  return seeker | (sci_memory << 11);
+}
+
+
+/* Returns a pointer to the memory indicated by the specified handle */
+inline byte *
+kmem(state_t *s, int handle)
+{
+  if ((handle >> 11) != sci_memory) {
+    sciprintf("Error: kmem() without a handle\n");
+    return 0;
+  }
+
+  if ((handle < 0) || (handle >= MAX_HUNK_BLOCKS)) {
+    sciprintf("Error: kmem() with invalid handle\n");
+    return 0;
+  }
+
+  return s->hunk[handle & 0x7ff].data;
+}
+
+/* Frees the specified handle. Returns 0 on success, 1 otherwise. */
+int
+kfree(state_t *s, int handle)
+{
+  if ((handle >> 11) != sci_memory) {
+    sciprintf("Error: Attempt to kfree() non-handle\n");
+    return 1;
+  }
+
+  if ((handle < 0) || (handle >= MAX_HUNK_BLOCKS)) {
+    sciprintf("Error: Attempt to kfree() with invalid handle\n");
+    return 1;
+  }
+
+  if (s->hunk[handle].size == 0) {
+    sciprintf("Error: Attempt to kfree() non-allocated memory\n");
+    return 1;
+  }
+
+  free(s->hunk[handle].data);
+  s->hunk[handle].size = 0;
+
+  return 0;
+}
+
+
 /* kLoad(restype, resnr):
-** Loads an arbitrary resource of type 'restype' with resource numbber 'resnr'
+** Loads an arbitrary resource of type 'restype' with resource number 'resnr'
 */
 void
 kLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -158,30 +215,9 @@ kLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     s->acc = ((restype << 11) | resnr); /* Return the resource identifier as handle */
 
-    if (restype == sci_memory) { /* Request to dynamically allocate hunk memory for later use */
-	int seeker;
+    if (restype == sci_memory)/* Request to dynamically allocate hunk memory for later use */
+      s->acc = kalloc(s, restype);
 
-	for (seeker = 0; seeker < MAX_HUNK_BLOCKS; seeker++)
-	    if (s->hunk[seeker].size == resnr) {
-		SCIkwarn("Attempt to re-allocate 'memory.%d'\n", resnr);
-		return; /* I have a baaad feeling about this... */
-	    }
-
-	/* Not allocated yet */
-
-	seeker = 0;
-	while ((seeker < MAX_HUNK_BLOCKS) && (s->hunk[seeker].size))
-	    seeker++;
-
-	if (seeker == MAX_HUNK_BLOCKS)
-
-	    kernel_oops(s, "Out of hunk handles! Try increasing MAX_HUNK_BLOCKS in engine.h");
-
-	else
-	    s->hunk[seeker].data = malloc(s->hunk[seeker].size = resnr);
-	/* Requested memory size is equal to resource number for sci_memory */
-
-    }; /* End of "If we are supposed to actually allocate memory" */
 }
 
 /* kUnload():
@@ -193,17 +229,9 @@ kUnLoad(state_t *s, int funct_nr, int argc, heap_ptr argp)
     int restype = UPARAM(0);
     int resnr = UPARAM(1);
 
-    if (restype == sci_memory) {
-	int seeker;
-	for (seeker = 0; seeker < MAX_HUNK_BLOCKS; seeker++)
-	    if (s->hunk[seeker].size == resnr) {
-		free(s->hunk[seeker].data);
-		s->hunk[seeker].size = 0;
-		return;
-	    }
+    if (restype == sci_memory)
+      kfree(s, resnr);
 
-	SCIkwarn("Attemt to unallocate nonexisting 'memory.%d'", resnr);
-    }
 }
 
 
@@ -229,8 +257,8 @@ kClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   selectors = GET_HEAP(old_offs + SCRIPT_SELECTORCTR_OFFSET);
 
-  object_size = 8 + 2 + (selectors * 2);
-  /* 8: Pre-selector area; 2: Function area (zero overloaded methods) */
+  object_size = 8 + 4 + (selectors * 2);
+  /* 8: Pre-selector area; 4: Function area (zero overloaded methods) */
 
   new_offs = heap_allocate(s->_heap, object_size);
   new_offs += 2; /* Step over heap header */
@@ -331,8 +359,6 @@ kIsObject(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr offset = PARAM(0);
 
-  CHECK_THIS_KERNEL_FUNCTION;
-
   if (offset < 100)
     s->acc = 0;
   else
@@ -372,7 +398,6 @@ void
 kNewList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr listbase = heap_allocate(s->_heap, 4);
-  CHECK_THIS_KERNEL_FUNCTION;
 
   if (!listbase) {
     kernel_oops(s, "Out of memory while creating a list");
@@ -393,7 +418,6 @@ kNewNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr nodebase = heap_allocate(s->_heap, 8);
   /*  SCIkdebug("argc=%d; args = (%04x %04x)\n", argc, PARAM(0), PARAM(1)); */
-  CHECK_THIS_KERNEL_FUNCTION;
 
   if (!nodebase) {
     kernel_oops(s, "Out of memory while creating a node");
@@ -417,7 +441,6 @@ kAddToEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr listbase = UPARAM(0);
   heap_ptr nodebase = UPARAM(1);
   heap_ptr old_lastnode = GET_HEAP(listbase + LIST_LAST_NODE);
-  CHECK_THIS_KERNEL_FUNCTION;
 
   if (old_lastnode)
     PUT_HEAP(old_lastnode + LIST_NEXT_NODE, nodebase);
@@ -438,7 +461,6 @@ kAddToFront(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr listbase = UPARAM(0);
   heap_ptr nodebase = UPARAM(1);
   heap_ptr old_firstnode = GET_HEAP(listbase + LIST_FIRST_NODE);
-  CHECK_THIS_KERNEL_FUNCTION;
 
   if (old_firstnode)
     PUT_HEAP(old_firstnode + LIST_PREVIOUS_NODE, nodebase);
@@ -458,9 +480,8 @@ kFindKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr node;
   word key = UPARAM(1);
-  CHECK_THIS_KERNEL_FUNCTION;
 
-  /*  SCIkdebug("argc=%d; args = (%04x %04x %04x)\n", argc, PARAM(0), PARAM(1), PARAM(2)); */
+  CHECK_THIS_KERNEL_FUNCTION;
 
   node = GET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
 
@@ -475,7 +496,6 @@ kFindKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kFirstNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  CHECK_THIS_KERNEL_FUNCTION;
   s->acc = GET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
 }
 
@@ -483,7 +503,6 @@ kFirstNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kLastNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  CHECK_THIS_KERNEL_FUNCTION;
   s->acc = GET_HEAP(UPARAM(0) + LIST_LAST_NODE);
 }
 
@@ -491,7 +510,6 @@ kLastNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kPrevNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  CHECK_THIS_KERNEL_FUNCTION;
   s->acc = GET_HEAP(UPARAM(0) + LIST_PREVIOUS_NODE);
 }
 
@@ -499,7 +517,6 @@ kPrevNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kNextNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  CHECK_THIS_KERNEL_FUNCTION;
   s->acc = GET_HEAP(UPARAM(0) + LIST_NEXT_NODE);
 }
 
@@ -507,7 +524,6 @@ kNextNode(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kNodeValue(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  CHECK_THIS_KERNEL_FUNCTION;
   s->acc = GET_HEAP(UPARAM(0) + LIST_NODE_VALUE);
 }
 
@@ -516,7 +532,6 @@ void
 kDisposeList(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr address = PARAM(0) - 2; /* -2 to get the heap header */
-  CHECK_THIS_KERNEL_FUNCTION;
 
   if (GET_HEAP(address) != 6) {
     SCIkwarn("Attempt to dispose non-list at %04x\n", address);
@@ -627,7 +642,6 @@ kGetSaveDir(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kSetCursor(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  CHECK_THIS_KERNEL_FUNCTION;
   free_mouse_cursor(s->mouse_pointer);
 
   if (PARAM(1)) {
@@ -825,8 +839,59 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
   *target = 0; /* Terminate string */
 }
 
+void
+kAddMenu(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  menubar_add_menu(s->menubar, s->heap + UPARAM(0), s->heap + UPARAM(1), s->title_font);
+}
+
+
+void
+kSetMenu(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int index = UPARAM(0);
+
+  menubar_set_foobar(s->menubar, (index >> 8) - 1, (index & 0xff) - 1, PARAM(1), UPARAM(2));
+}
+
+
 
 /********************* Graphics ********************/
+
+void
+kCelHigh(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  resource_t *viewres = findResource(sci_view, PARAM(0));
+  int result;
+
+  if (!viewres) {
+    SCIkwarn("view.%d (0x%x) not found\n", PARAM(0), PARAM(0));
+    return;
+  }
+
+  s->acc = result = view0_cel_height(PARAM(1), PARAM(2), viewres->data);
+  if (result < 0)
+    SCIkwarn("Invalid loop (%d) or cel (%d) in view.%d (0x%x)\n", PARAM(1), PARAM(2), PARAM(0));
+}
+
+void
+kCelWide(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  resource_t *viewres = findResource(sci_view, PARAM(0));
+  int result;
+
+  if (!viewres) {
+    SCIkwarn("view.%d (0x%x) not found\n", PARAM(0), PARAM(0));
+    return;
+  }
+
+  s->acc = result = view0_cel_width(PARAM(1), PARAM(2), viewres->data);
+  if (result < 0)
+    SCIkwarn("Invalid loop (%d) or cel (%d) in view.%d (0x%x)\n", PARAM(1), PARAM(2), PARAM(0));
+}
+
+
+
 
 void
 kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -874,16 +939,66 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
-/*void
+void
+draw_object(state_t *s, heap_ptr object)
+{
+  int x, y, view, loop, cel, priority;
+  resource_t *viewres;
+  int i;
+  struct {
+    int *target;
+    int selector;
+  } value_getters[] = {
+    {&x, s->selector_map.x},
+    {&y, s->selector_map.y},
+    {&view, s->selector_map.view},
+    {&loop, s->selector_map.loop},
+    {&cel, s->selector_map.cel},
+    {&priority, s->selector_map.priority}
+  };
+
+  for (i = 0; i < 6; i++) {
+    heap_ptr address;
+
+    if (lookup_selector(s, object, value_getters[i].selector, &address) != SELECTOR_VARIABLE) {
+      SCIkwarn("Attempt to get varselector from 0x%04x failed\n", object);
+      return;
+    }
+
+    *(value_getters[i].target) = GET_HEAP(address);
+  }
+
+  viewres = findResource(sci_view, view);
+
+  if (!viewres) {
+    SCIkwarn("Resource view.%03d (0x%x) not found for drawing!\n", view, view);
+    return;
+  }
+
+  priority = 0x22;
+
+  SCIkdebug("Drawing view %d, loop %d, cel %d to %d, %d, priority %d, at port #%d\n", view, loop, cel, x, y, priority, s->view_port);
+
+  drawView0(s->bgpic, s->ports[s->view_port], x, y, priority, loop, cel, viewres->data);
+}
+
+void
 kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  resource_t *resource = findResource(sci_pic, PARAM(0));
+  heap_ptr list = PARAM(0);
+  heap_ptr node = GET_HEAP(list + LIST_FIRST_NODE);
+  CHECK_THIS_KERNEL_FUNCTION;
 
-  if (resource)
-    drawPicture0(s->bgpic, PARAM(2), PARAM(3), resource->data);
-  else
-    SCIkwarn("Request to add non-existing pic.%03d", PARAM(0));
-}*/
+  if (GET_HEAP(list - 2) != 0x6) { /* heap size check */
+    SCIkwarn("Attempt to draw non-list at %04x\n", list);
+    return;
+  }
+
+  while (node) {
+    draw_object(s, GET_HEAP(node + LIST_NODE_VALUE));
+    node = GET_HEAP(node + LIST_NEXT_NODE);
+  }
+}
 
 
 void
@@ -954,8 +1069,10 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	     s->heap + wnd->title, s->title_font , wnd->flags); /* Draw window */
 
   s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_BOX,
-		       wnd->xmin - 1, wnd->ymin - 1,
+		       wnd->xmin - 1, wnd->ymin - (wnd->flags & WINDOW_FLAG_TITLE)? 11 : 1,
 		       wnd->xmax + 2, wnd->ymin + 2); /* Update screen */
+
+  s->view_port = window; /* Set active port */
 
   s->acc = window;
 }
@@ -963,13 +1080,38 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kDrawStatus(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  drawTitlebar(s->pic, 0xf);
+  draw_titlebar(s->pic, 0xf);
   drawText0(s->pic, &(s->titlebar_port), 1, 1, ((char *)s->heap) + PARAM(0), s->title_font, 0);
 
   s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_BOX,
 		       0, 0, 319, 9);
 }
 
+void
+kDrawMenuBar(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  if (PARAM(1))
+    menubar_draw(s->pic, &(s->titlebar_port) ,s->menubar, -1, s->title_font);
+  else
+    draw_titlebar(s->pic, 0);
+
+  s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_BOX,
+		       0, 0, 319, 9);
+}
+
+
+void
+kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  memcpy(s->pic[0] + 320 * 10, s->bgpic[0] + 320 * 10, 320 * 190);
+
+  s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_ALL,
+		       0, 0, 0, 0);
+}
 
 
 void
@@ -1023,16 +1165,22 @@ struct {
   {"DrawPic", kDrawPic },
   {"DisposeList", kDisposeList },
   {"DisposeScript", kDisposeScript },
-  /*  {"AddToPic", kAddToPic }, */
   {"GetPort", kGetPort },
   {"SetPort", kSetPort },
   {"NewWindow", kNewWindow },
   {"DisposeWindow", kDisposeWindow },
   {"IsObject", kIsObject },
   {"Format", kFormat },
-  {"DrawStatus", kDrawStatus },
+  {"DrawStatus", kDrawStatus }, /* <= last published */
+  {"DrawMenuBar", kDrawMenuBar },
+  {"AddMenu", kAddMenu },
+  {"SetMenu", kSetMenu },
+  {"AddToPic", kAddToPic },
+  {"CelWide", kCelWide },
+  {"CelHigh", kCelHigh },
 
   /* Experimental functions */
+  {"Animate", kAnimate },
   {"DoSound", kDoSound },
   {"Graph", kGraph },
   {"GetEvent", kGetEvent },

@@ -36,6 +36,7 @@
 #include <uinput.h>
 #include <console.h>
 #include <vm.h>
+#include <menubar.h>
 #ifdef HAVE_LIBGGI
 #include <ggi/ggi.h>
 #endif
@@ -104,6 +105,8 @@ typedef struct _state
   picture_t pic; /* The foreground picture */
 
   hunk_block_t hunk[MAX_HUNK_BLOCKS]; /* Hunk memory */
+
+  menubar_t *menubar; /* The menu bar */
 
   /* VM Information */
 
