@@ -736,6 +736,118 @@ SOURCE=..\include\graphics_ddraw.h
 SOURCE=..\include\win32\messages.h
 # End Source File
 # End Group
+# Begin Group "SDL"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\begin_code.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\close_code.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_active.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_audio.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_byteorder.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_cdrom.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_copying.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_endian.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_error.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_events.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_getenv.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_joystick.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_keyboard.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_keysym.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_main.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_mouse.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_mutex.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_opengl.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_quit.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_rwops.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_syswm.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_thread.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_timer.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_types.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_version.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SDL\include\SDL_video.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\include\console.h
