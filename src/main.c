@@ -1139,14 +1139,15 @@ main(int argc, char** argv)
 		}
 		sci_sched_yield();
 
+		if (!soundserver_dead) {
 		poly = gamestate->sound_server->command(gamestate, get_msg_value("SOUND_COMMAND_TEST"), 0, 0);
 
 		printf("Sound server reports polyphony %d\n", poly);
 
 		gamestate->sound_server->command(gamestate, get_msg_value("SOUND_COMMAND_SET_VOLUME"), 0, 0xc);
 
-
-
+		}
+		
 		gamestate->sound_server->get_event(gamestate); /* Get init message */
 
 		/* FIXME: memory allocated that is not freed */
