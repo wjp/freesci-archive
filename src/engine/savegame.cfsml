@@ -1262,6 +1262,11 @@ gamestate_restore(state_t *s, char *dirname)
 
 	retval->resmgr = s->resmgr;
 
+	if (retval->savegame_version < 5) {
+	        retval->status_bar_foreground = 0;
+	        retval->status_bar_background = 15;
+	}
+
 	if (retval->savegame_version < 3) {
 		char *cwd = sci_getcwd();
 

@@ -65,7 +65,7 @@
 	} while (0);
 #endif
 
-#define FREESCI_SAVEGAME_VERSION 4
+#define FREESCI_SAVEGAME_VERSION 5
 
 #define FREESCI_GAMEDIR ".freesci"
 #define STRLEN_FREESCI_GAMEDIR 8
