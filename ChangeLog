@@ -1,3 +1,9 @@
+2001-04-23  Solomon Peachy <pizza@shaftnet.org>
+	* src/sound/soundserver.c, src/sound/soundserver_unix.c,
+	  src/sound/soundserver_sdl.c:  Changed exit semantics so that
+          we exit at the top level when told to shut down.  This way
+          the threaded server can exit cleanly.
+
 2001-04-23  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/resource/sci_pic_0.c (gfxr_remove_artifacts_pic0): 

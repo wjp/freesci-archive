@@ -33,10 +33,6 @@
 #include <midi_device.h>
 #include <sys/types.h>
 
-#ifdef _MSC_VER
-#	include <winsock2.h>
-#endif
-
 sound_server_t *global_sound_server = NULL;
 
 int soundserver_dead = 0;
@@ -133,7 +129,6 @@ sound_server_change_instrmap(FILE *output, int action, int instr, int value)
 void
 sci0_soundserver()
 {
-  fd_set input_fds;
   GTimeVal last_played, wakeup_time, ctime;
   byte mute_channel[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
   int channel_instrument_orig[16] = {-1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1};
@@ -152,7 +147,7 @@ sci0_soundserver()
 
   fprintf(ds, "NULL Sound server initialized\n");
 
-  while (1) {
+  while (!soundserver_dead) {
     sound_event_t *event_temp;
     GTimeVal wait_tv;
     int ticks = 0; /* Ticks to next command */
@@ -586,7 +581,8 @@ sci0_soundserver()
 	case SOUND_COMMAND_SHUTDOWN:
 	  fprintf(stderr,"Sound server: Received shutdown signal\n");
 	  midi_close();
-	  _exit(0);
+	  soundserver_dead = 1;
+	  break;
 
 	default:
 	  fprintf(ds, "Received invalid signal: %d\n", event.signal);
@@ -686,7 +682,7 @@ sci0_soundserver()
     
     song = newsong;
   }
-  _exit(0); /* Exit gracefully without cleanup */
+  /* implicitly quit */
 }
 
 void 

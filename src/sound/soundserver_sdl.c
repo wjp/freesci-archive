@@ -138,11 +138,11 @@ sound_sdl_get_command(GTimeVal *wait_tvp)
 {
 	sound_event_t *event = NULL;
 
-	if (!sound_eq_peek_event(&inqueue)) {
-		usleep(wait_tvp->tv_usec);
-		return NULL;
-	}
 	SDL_LockMutex(in_mutex);
+	if (!sound_eq_peek_event(&inqueue)) {
+	  /*	  if(SDL_CondWaitTimeout(in_cond, in_mutex, 10)) */
+	    return NULL;
+	}
 
 	event = sound_eq_retreive_event(&inqueue);
 
@@ -216,6 +216,16 @@ void
 sound_sdl_exit(state_t *s) 
 {
   sound_command(s, SOUND_COMMAND_SHUTDOWN, 0, 0); /* Kill server */
+
+  /* clean up */
+  SDL_WaitThread(child, NULL);
+  SDL_DestroyMutex(out_mutex);
+  SDL_DestroyMutex(in_mutex);
+  SDL_DestroyMutex(data_mutex);
+  SDL_DestroyCond(in_cond);
+  SDL_DestroyCond(datain_cond);
+  SDL_DestroyCond(dataout_cond);
+  
 }
 
 

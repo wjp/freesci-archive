@@ -192,6 +192,7 @@ sound_unix_init(state_t *s)
 		ppid = getppid(); /* Get parent PID */
 
 		sci0_soundserver();
+		_exit(0); /* quit */
 	}
 
 	return 0;
