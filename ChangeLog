@@ -1,3 +1,11 @@
+2003-01-19  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/console.c (sciprintf): Fixed fix for memory leak to pass
+	"leaked" memory to gfx console if present
+
+	* src/gfx/gfx_console.c (CON_MAX_CLUSTERS): Fixed segfault when
+	running out of buffers
+
 2003-01-19  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/include/games.h (sci_games): Added SQ3 1.0 U.

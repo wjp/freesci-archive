@@ -30,9 +30,9 @@
 #include <console.h>
 
 #ifdef WANT_CONSOLE
-#  define CON_MAX_CLUSTERS 64
+#  define CON_MAX_CLUSTERS 16
 
-#define CON_CLUSTER_SIZE 16
+#define CON_CLUSTER_SIZE 64
 
 /* Number of console entries stored = CON_MAX_CLUSTERS * CON_CLUSTER_SIZE */
 
@@ -146,7 +146,7 @@ _con_redraw(gfx_state_t *state, int update_display_field, int update_input_field
 
 static void
 free_con_buffer(con_buffer_t *buf);
-/* Frees the specified con buffer and all of its successors
+/* Frees the specified con buffer and all of its predecessors
 ** Parameters: (con_buffer_t *) buf: The buffer to free
 ** Pixmaps are freed if neccessary, using the last used gfx state for con_gfx_show().
 */
@@ -335,9 +335,9 @@ _add_into_con_buffer(gfx_pixmap_t *pixmap, char *text)
 			con_buffer_tail = con_buffer_tail->next;
 			free_con_buffer(con_buffer_tail->prev);
 		} else {
-			fprintf(stderr,"WARNING: During cleanup, con_buffer_tail ran out!");
-			con_buffer_tail = con_buffer = NULL;
+			fprintf(stderr,"WARNING: During cleanup, con_buffer_tail ran out!\n");
 			free_con_buffer(con_buffer_tail->prev);
+			con_buffer_tail = con_buffer = NULL;
 		}
 	}
 }
@@ -1143,12 +1143,14 @@ _con_free_entry_pixmaps(gfx_state_t *state, con_entry_t *entry)
 	}
 }
 
+
+static void
+_free_con_buffer(con_buffer_t *buf);
+
 static void
 free_con_buffer(con_buffer_t *buf)
-/* Frees a con buffer and all of its successors */
+/* Frees a con buffer and all of its predecessors */
 {
-	int i;
-
 	/* First, make sure we're not destroying the current display */
 	if (!con.locked_to_end) {
 		con_buffer_t *seeker = con.pos.buf;
@@ -1157,17 +1159,24 @@ free_con_buffer(con_buffer_t *buf)
 
 		if (seeker) {
 			if (seeker->prev)
-				con.pos.buf = seeker->prev;
+				con.pos.buf = seeker->next;
 			else
 				con.locked_to_end = 1;
 		}
 	}
+	_free_con_buffer(buf);
+}
+
+static void
+_free_con_buffer(con_buffer_t *buf)
+{
+	int i;
 
 	if (buf) {
-		con_buffer_t *next = buf->next;
+		con_buffer_t *prev = buf->prev;
 
-		if (buf->prev)
-			buf->prev->next = NULL;
+		if (buf->next)
+			buf->next->prev = NULL;
 		for (i = 0; i < CON_CLUSTER_SIZE; i++)
 			if (CON_ENTRY_USED(buf->entries[i])) {
 				if (buf->entries[i].text)
@@ -1179,8 +1188,8 @@ free_con_buffer(con_buffer_t *buf)
 		sci_free(buf);
 		--con_buffer_clusters;
 
-		if (next)
-			free_con_buffer(next);
+		if (prev)
+			_free_con_buffer(prev);
 	}
 }
 

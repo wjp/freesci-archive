@@ -476,7 +476,7 @@ sci_sched_yield();
 #  endif /* !__i386__ && !__alpha__ */
 #endif
 #ifndef BREAKPOINT
-#  define BREAKPOINT() { fprintf(stderr, "Missed breakpoint in %s, line %d\n", __FILE__, __LINE__); exit(1); }
+#  define BREAKPOINT() { fprintf(stderr, "Missed breakpoint in %s, line %d\n", __FILE__, __LINE__); *((int *)NULL) = 42; }
 #endif  /* !BREAKPOINT() */
 
 #define WARNING(foo) {char i; i = 500;}
