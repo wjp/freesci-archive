@@ -601,6 +601,14 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 						success = soundsrv_restore_state(ds, dirname, songlib, &newsong,
 										 &ccc, &usecs, &ticks, &fadeticks);
+						last_played.tv_sec -= secs = (usecs - last_played.tv_usec) / 1000000;
+						last_played.tv_usec -= (usecs + secs * 1000000);
+
+						/* Return return value */
+						REPORT_STATUS(success);
+
+						free(dirname);
+
 						/* restore the instrument state */
 						if (newsong) {
 						  int i;
@@ -610,13 +618,6 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 						  }
 						  midi_reverb(newsong->reverb);
 						}
-
-						last_played.tv_sec -= secs = (usecs - last_played.tv_usec) / 1000000;
-						last_played.tv_usec -= (usecs + secs * 1000000);
-
-						/* Return return value */
-						REPORT_STATUS(success);
-						free(dirname);
 					}
 					break;
 
