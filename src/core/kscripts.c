@@ -226,8 +226,10 @@ kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
   underBits = GET_SELECTOR(offset, underBits);
-  if (underBits)
-    kfree(s, underBits); /* Views may dispose without cleaning up */
+  if (underBits) {
+    SCIkwarn(SCIkWARNING,"Clone %04x was cleared with underBits set\n", offset);
+    /* kfree(s, underBits); /* Views may dispose without cleaning up */
+  }
 
   i = 0;
   while ((i < SCRIPT_MAX_CLONES) && (s->clone_list[i] != offset)) i++;

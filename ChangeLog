@@ -1,3 +1,9 @@
+2000-04-13  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kscripts.c (kDisposeClone): underBits are no longer freed
+	automatically, as suggested by Lars. Stabilizes KQ1 and does not seem
+	to harm any other games.
+
 2000-04-13  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/tools/listwords.c: Added this nifty little program.

@@ -791,7 +791,7 @@ kSetNowSeen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   heap_ptr object = PARAM(0);
 
   CHECK_THIS_KERNEL_FUNCTION;
-  SCIkdebug(SCIkWARNING, "Warning: Experimental kernel function SetNowSeen(%04x) invoked\n", object);
+  /*  SCIkdebug(SCIkWARNING, "Warning: Experimental kernel function SetNowSeen(%04x) invoked\n", object);*/
 
   x = GET_SELECTOR(object, x);
   y = GET_SELECTOR(object, y);
@@ -2035,6 +2035,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
     default:
+      SCIkwarn(SCIkWARNING, "Unknown opening animation 0x%02x\n", s->pic_animate);
       graph_update_box(s, 0, 10, 320, 190);
     }
 
