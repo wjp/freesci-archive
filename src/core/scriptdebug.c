@@ -37,7 +37,7 @@ int _debug_commands_not_hooked = 1; /* Commands not hooked to the console yet? *
 int _debug_seeking = 0; /* Stepping forward until some special condition is met */
 int _debug_seek_level = 0; /* Used for seekers that want to check their exec stack depth */
 int _debug_seek_special = 0; /* Used for special seeks */
-int _debug_flags = 0; /* Special flags */
+int sci_debug_flags = 0; /* Special flags */
 
 #define _DEBUG_SEEK_NOTHING 0
 #define _DEBUG_SEEK_CALLK 1 /* Step forward until callk is found */
@@ -1090,10 +1090,17 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 	     int *restadjust, int bp)
 {
 
-  if (_debug_flags & _DEBUG_FLAG_LOGGING) {
+  if (sci_debug_flags & _DEBUG_FLAG_LOGGING) {
+    int old_debugstate = _debugstate_valid;
+
     sciprintf("acc=%04x  ", s->acc & 0xffff);
     _debugstate_valid = 1;
     disassemble(s, *pc);
+
+    _debugstate_valid = old_debugstate;
+
+    if (!script_debug_flag)
+      return;
   }
 
   if (_debug_seeking && !bp) { /* Are we looking for something special? */
@@ -1199,7 +1206,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 		 "  when scripts are loaded or unloaded");
       cmdHookInt(&script_abort_flag, "script_abort_flag", "Set != 0 to abort execution\n");
       cmdHookInt(&script_step_counter, "script_step_counter", "# of executed SCI operations\n");
-      cmdHookInt(&_debug_flags, "debug_flags", "Debug flags:\n  0x0001: Log each command executed\n");
+      cmdHookInt(&sci_debug_flags, "debug_flags", "Debug flags:\n  0x0001: Log each command executed\n");
 
     } /* If commands were not hooked up */
 

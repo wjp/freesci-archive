@@ -166,6 +166,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
   int command = 0;
   int ccc = 127; /* cumulative cue counter */
   int suspended = 0; /* Used to suspend the sound server */
+  GTimeVal suspend_time; /* Time at which the sound server was suspended */
 
   gettimeofday((struct timeval *)&last_played, NULL);
 
@@ -251,8 +252,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
     }
     do {
-      struct timeval suspend_time; /* Used for suspend mode */
-      struct timeval *wait_tvp;
+      GTimeVal *wait_tvp;
       int got_input;
 
       if (!suspended) {
@@ -549,12 +549,12 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 	  case SOUND_COMMAND_RESUME_SOUND: {
 
-	    struct timeval wakeup_time;
+	    GTimeVal resume_time;
 
-	    gettimeofday(&wakeup_time, NULL);
+	    gettimeofday(&resume_time, NULL);
 	    /* Modify last_played relative to wakeup_time - suspend_time */
-	    last_played.tv_sec += wakeup_time.tv_sec - suspend_time.tv_sec - 1; 
-	    last_played.tv_usec += wakeup_time.tv_usec - suspend_time.tv_usec + 1000000;
+	    last_played.tv_sec += resume_time.tv_sec - suspend_time.tv_sec - 1; 
+	    last_played.tv_usec += resume_time.tv_usec - suspend_time.tv_usec + 1000000;
 
 	    /* Make sure that 0 <= tv_usec <= 999999 */
 	    last_played.tv_sec -= last_played.tv_usec / 1000000;

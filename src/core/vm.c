@@ -32,6 +32,8 @@
 #include <engine.h>
 #include <versions.h>
 
+extern int sci_debug_flags; /* from scriptdebug.c */
+
 
 /* #define VM_DEBUG_SEND */
 
@@ -423,7 +425,7 @@ run_vm(state_t *s, int restoring)
     if (script_abort_flag)
       return; /* Emergency */
 
-    if (script_debug_flag)
+    if (script_debug_flag || sci_debug_flags)
     {
       script_debug(s, &(xs->pc), &(xs->sp), &(xs->variables[VAR_TEMP]),
 		   &(xs->objp), &restadjust, bp_flag);
@@ -1207,9 +1209,9 @@ script_free_state(state_t *s)
       s->ports[i] = 0;
     }
 
-  if (s->pic_views)
+  if (s->pic_views_nr)
     free(s->pic_views);
-  if (s->dyn_views)
+  if (s->dyn_views_nr)
     free(s->dyn_views);
 
   /* Close all opened file handles */

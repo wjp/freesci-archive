@@ -1,3 +1,9 @@
+1999-11-25  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kernel.c (_k_make_view_list): Potential fix for the
+	Attack Of The 15' Killer Woman bug in Iceman. One of our better
+	ones; it'd be almost sad to loose that one ;->
+
 1999-11-25  Rink Springer <rink@rink.cx>
 
         * src/core/vocab_debug.c (vocabulary_get_opcodes): Added check for NULL

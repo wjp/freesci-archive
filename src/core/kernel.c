@@ -2543,7 +2543,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int x, y, ystep, xsize, ysize;
+  int x, y, original_y, z, ystep, xsize, ysize;
   int xbase, ybase, xend, yend;
   int view, loop, cell;
   resource_t *viewres;
@@ -2552,7 +2552,11 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
   CHECK_THIS_KERNEL_FUNCTION;
 
   x = GET_SELECTOR(object, x);
-  y = GET_SELECTOR(object, y);
+  original_y = y = GET_SELECTOR(object, y);
+  z = GET_SELECTOR(object, z);
+
+  y -= z; /* Subtract z offset */
+
   ystep = GET_SELECTOR(object, yStep);
   view = GET_SELECTOR(object, view);
   loop = GET_SELECTOR(object, loop);
@@ -2583,7 +2587,7 @@ kBaseSetter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
   if (s->debug_mode & (1 << SCIkBASESETTER_NR)) {
-    graph_clear_box(s, xbase, ybase + 10, xend-xbase+1, yend-ybase+1, VIEW_PRIORITY(y));
+    graph_clear_box(s, xbase, ybase + 10, xend-xbase+1, yend-ybase+1, VIEW_PRIORITY(original_y));
     (*s->gfx_driver->Wait)(s, 100000);
   }
 
@@ -3036,7 +3040,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
     retval[i].obj = obj;
 
     retval[i].x = GET_SELECTOR(obj, x);
-    retval[i].y = GET_SELECTOR(obj, y);
+    retval[i].y = GET_SELECTOR(obj, y) - GET_SELECTOR(obj, z);
 
     retval[i].nsLeft = GET_SELECTOR(obj, nsLeft);
     retval[i].nsRight = GET_SELECTOR(obj, nsRight);
