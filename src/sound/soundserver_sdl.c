@@ -146,16 +146,16 @@ sound_sdl_get_command(GTimeVal *wait_tvp)
 {
   sound_event_t *event = NULL;
 
-  SDL_LockMutex(in_mutex);
   /* SDL_LockMutex(in_mutex); */
   if (!sound_eq_peek_event(&inqueue)) {
-    SDL_UnlockMutex(in_mutex);
+    /*    SDL_UnlockMutex(in_mutex); */
     if (wait_tvp)
       usleep(wait_tvp->tv_usec >> 4);
     /*	  if(SDL_CondWaitTimeout(in_cond, in_mutex, 10))  */
     return NULL;
   }
 
+  SDL_LockMutex(in_mutex);
   event = sound_eq_retreive_event(&inqueue);
 
   SDL_UnlockMutex(in_mutex);
