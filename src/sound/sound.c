@@ -55,19 +55,21 @@ extern sound_server_t sound_server_dos;
 #endif
 
 sound_server_t *sound_servers[] = {
-#ifdef HAVE_FORK
-  /* Assume that sound_null works on any box that has fork() */
-  &sound_server_unix,
-#endif /* HAVE_FORK */
+#ifndef NO_SOUND
+#  ifdef HAVE_FORK
+	/* Assume that sound_null works on any box that has fork() */
+	&sound_server_unix,
+#  endif /* HAVE_FORK */
 
-#ifdef HAVE_SDL
-  &sound_server_sdl,
-#endif
+#  ifdef HAVE_SDL
+	&sound_server_sdl,
+#  endif
 
-#ifdef _DOS
-  &sound_server_dos,
-#endif
-  NULL
+#  ifdef _DOS
+	&sound_server_dos,
+#  endif
+#endif /* NO_SOUND */
+	NULL
 };
 
 sound_server_t *

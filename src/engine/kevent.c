@@ -119,7 +119,7 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
   
 	oldx=s->gfx_state->pointer_pos.x;
 	oldy=s->gfx_state->pointer_pos.y;
-	e = gfxop_get_event(s->gfx_state);
+	e = gfxop_get_event(s->gfx_state, mask);
 
 	s->parser_event = 0; /* Invalidate parser event */
 

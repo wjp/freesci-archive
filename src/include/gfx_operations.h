@@ -33,6 +33,7 @@
 #include <gfx_tools.h>
 #include <gfx_options.h>
 #include <gfx_system.h>
+#include <uinput.h>
 
 #define GFXOP_NO_POINTER -1
 
@@ -85,6 +86,11 @@ typedef struct _dirty_rect {
 } gfx_dirty_rect_t;
 
 
+typedef struct _gfx_event {
+	sci_event_t event;
+	struct _gfx_event *next;
+} gfx_input_event_t;
+
 typedef struct {
 	int version; /* Interpreter version */
 
@@ -125,7 +131,9 @@ typedef struct {
 
 	int pic_nr; /* Number of the current pic */
 	int palette_nr; /* Palette number of the current pic */
-	
+
+	gfx_input_event_t *events;
+
 	gfxr_pic_t *pic, *pic_unscaled; /* The background picture and its unscaled equivalent */
 
 	struct _dirty_rect *dirty_rects; /* Dirty rectangles */
@@ -406,10 +414,12 @@ gfxop_set_pointer_position(gfx_state_t *state, point_t pos);
 */
 
 sci_event_t
-gfxop_get_event(gfx_state_t *state);
+gfxop_get_event(gfx_state_t *state, unsigned int mask);
 /* Retreives the next input event from the driver
 ** Parameters: (gfx_state_t *) state: The affected state
-** Returns   : (sci_event_t) The next event in the driver's event queue
+**             (int) mask: The event mask to poll from (see uinput.h)
+** Returns   : (sci_event_t) The next event in the driver's event queue, or
+**             a NONE event if no event matching the mask was found.
 */
 
 

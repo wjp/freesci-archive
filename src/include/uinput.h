@@ -42,8 +42,8 @@ struct _state;
 
 typedef struct {
   int type;
-  int data;
-  int buckybits;
+  short data;
+  short buckybits;
 } sci_event_t;
 
 /*Values for type*/
@@ -58,6 +58,7 @@ typedef struct {
 #define SCI_EVT_QUIT            (1<<11)
 /* The QUIT event may be used to signal an external 'quit' command being
 ** issued to the gfx driver.  */
+#define SCI_EVT_ANY             0xffff
 
 
 

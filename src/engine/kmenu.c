@@ -191,7 +191,7 @@ about_freesci(state_t *s)
 		gfxop_update(s->gfx_state);
 
 		while (cont) {
-			event = gfxop_get_event(s->gfx_state);
+			event = gfxop_get_event(s->gfx_state, SCI_EVT_ANY);
 
 			if (event.type == SCI_EVT_MOUSE_RELEASE || event.type == SCI_EVT_MOUSE_PRESS)
 				--cont;
@@ -315,7 +315,7 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		old_menu = -1;
 
 		while (menu_mode) {
-			sci_event_t event = gfxop_get_event(s->gfx_state);
+			sci_event_t event = gfxop_get_event(s->gfx_state, SCI_EVT_ANY);
 
 			claimed = 0;
 

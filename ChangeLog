@@ -1,3 +1,29 @@
+2001-07-22  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/operations.c (gfxop_get_event): Implemented event cue
+
+2001-07-22  Alex Angas  <wgd@adelaide.on.net>
+
+	* src/win32_profiler.bat: Now profiles fsci.dll (and DLLs in general).
+	(NOTE:	RESUBMISSION.)
+
+	* src/sound/sound.c: Added NO_SOUND compiler directive to disable
+	sound server. (NOTE: RESUBMISSION.)
+
+	* src/engine/kernel.c (kRestartGame): Fixed crash when sound server
+	is disabled.
+
+	* src/engine/scriptdebug.c: Fixed compilation problem on Win32 (Sleep
+	define).
+
+	* src/win32/sciv.dsp: Turned debug info back on in release builds.
+	Generating map file for profiling in release builds.
+
+	* src/win32/fsci_dll.dsp: As for sciv.dsp.
+
+	* src/win32/freesci.dsw: Removed SDL_gfxPrimitives from compilation
+	files.
+
 2001-07-21  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kShakeScreen): Fixed ShakeScreen default

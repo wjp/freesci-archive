@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
 # ADD CPP /nologo /W3 /GX /Zi /O1 /Ob2 /I "..\..\..\SDL-1.2.1\include" /I "..\include" /I "..\include\win32" /D "HAVE_SDL" /D "NDEBUG" /D PACKAGE=\"FreeSCI\" /D VERSION=__TIMESTAMP__ /D "HAVE_GETOPT_H" /D "HAVE_USLEEP" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_STRING_H" /D "HAVE_DDRAW" /FD /c
-# SUBTRACT CPP /Gy /Fr
+# SUBTRACT CPP /Fr
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -51,8 +51,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 Release\fsci.lib ..\..\..\SDL-1.2.1\lib\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ddraw.lib /nologo /subsystem:console /machine:I386 /out:"..\..\bin\freesci.exe" /FIXED:NO
-# SUBTRACT LINK32 /pdb:none /debug
+# ADD LINK32 Release\fsci.lib ..\..\..\SDL-1.2.1\lib\SDL.lib winmm.lib kernel32.lib user32.lib gdi32.lib advapi32.lib uuid.lib ddraw.lib /nologo /subsystem:console /map:"..\..\bin\freesci.map" /debug /machine:I386 /out:"..\..\bin\freesci.exe" /FIXED:NO
+# SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "sciv - Win32 Debug"
 

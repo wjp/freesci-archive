@@ -87,6 +87,14 @@
 #  define DLLEXTERN
 #endif /* !_WIN32 */
 
+
+#ifdef _MSC_VER
+#	include <sys/timeb.h>
+#	include <windows.h>
+#	define sleep Sleep
+#endif
+
+
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>

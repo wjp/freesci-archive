@@ -49,8 +49,8 @@
 #define SCI_SDL_SWAP_CTRL_CAPS (1 << 0)
 #define SCI_SDL_FULLSCREEN (1 << 2)
 
-int string_truep(char *value); 
-int flags = 0;
+extern int string_truep(char *value); 
+static int flags = 0;
 
 struct _sdl_state {
   int used_bytespp;

@@ -537,6 +537,7 @@ _gfxop_init_common(gfx_state_t *state, gfx_options_t *options)
 	state->options = options;
 	state->mouse_pointer_in_hw = 0;
 	state->disable_dirty = 0;
+	state->events = NULL;
 
 	state->pic = state->pic_unscaled = NULL;
 
@@ -545,6 +546,7 @@ _gfxop_init_common(gfx_state_t *state, gfx_options_t *options)
 	state->tag_mode = 0;
 
 	state->dirty_rects = NULL;
+
 
 	return GFX_OK;
 }
@@ -1503,24 +1505,44 @@ gfxop_set_pointer_position(gfx_state_t *state, point_t pos)
 }
 
 sci_event_t
-gfxop_get_event(gfx_state_t *state)
+gfxop_get_event(gfx_state_t *state, unsigned int mask)
 {
 	sci_event_t error_event = { SCI_EVT_ERROR, 0, 0 };
 	sci_event_t event;
+	gfx_input_event_t **seekerp = &(state->events);
 
 	BASIC_CHECKS(error_event);
-
 	if (_gfxop_remove_pointer(state)) {
 		GFXERROR("Failed to remove pointer before processing event!\n");
 	}
 
-	event = state->driver->get_event(state->driver);
+	while (*seekerp && !((*seekerp)->event.type & mask))
+		seekerp = &((*seekerp)->next);
+
+	if (*seekerp) {
+		gfx_input_event_t *goner = *seekerp;
+		event = goner->event;
+		*seekerp = goner->next;
+		free(goner);
+	} else {
+		event.type = 0;
+
+		do {
+			if (event.type) {
+				*seekerp = malloc(sizeof(gfx_input_event_t));
+				(*seekerp)->next = NULL;
+				(*seekerp)->event = event;
+				seekerp = &((*seekerp)->next);
+			}
+			event = state->driver->get_event(state->driver);
+
+		} while (event.type && !(event.type & mask));
+	}
 
 	if (_gfxop_full_pointer_refresh(state)) {
 		GFXERROR("Failed to update the mouse pointer!\n");
 		return error_event;
 	}
-
 	return event;
 }
 
