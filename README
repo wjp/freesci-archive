@@ -1,4 +1,4 @@
-Thanks for downloading the fourth alpha release of FreeSCI!
+Thanks for downloading the fifth alpha release of FreeSCI!
 
 FreeSCI is a portable interpreter for SCI games, such as the Space Quest
 series (starting with SQ3) or Leisure Suit Larry (2 and sequels); see
@@ -8,7 +8,8 @@ FreeSCI is still incomplete. You should be able to finish some SCI games with
 it, though- the list of games below contains information about games that
 were completed.
 This release has the following limitations (plus some bugs):
-- Only SCI0 games are supported
+- Only SCI0 games are supported (later versions are being worked on separately
+  in the experimental "glutton" branch)
 - The SCI debug functions aren't fully supported (and probably never will be,
   since we're using our own debug functions)
 
@@ -105,10 +106,11 @@ Currently, the configuration file may contain:
 
 - Comments preceeded by a hash '#' sign
 
-- [GAME_ID]: Commands following this line will only have an effect for
-  the game with the specified game ID. (The game ID is printed during
-  sciv startup, and is also used to create the save game directory).
-  You can use this to provide game-specific configuration options.
+- [LABEL]: Commands following this line will only have an effect for
+  the game with this label. You will usually use this in conjunction with
+  'resource_dir' to tell FreeSCI where your games reside, so you can start
+  them up by name (or, rather, by label) without having to memorize (and
+  type in) the exact location.
 
 - console_log: Specifies a console log file which keeps track of all output
   print with the function sciprintf().
@@ -204,10 +206,9 @@ Currently, the configuration file may contain:
   before updating the screen, resulting in a faster animation. The default is 4,
   which causes transition behaviour identical to FreeSCI 0.3.1.
 
-- alpha_threshold: A value between 0 and 255 (defaults to 129) used by the
-  built-in crossblitter to distinguish between "opaque" and "transparent"
-  pixels. This only has any effect if pixmap filtering is enabled for any
-  resource type.
+- alpha_threshold: A value between 0 and 255 used by the built-in crossblitter
+  to distinguish between "opaque" and "transparent" pixels. This only has any
+  effect if pixmap filtering is enabled for any resource type.
   Smaller values will cause fewer parts of the picture to be displayed,
   which may result e.g. in text being unreadable, while larger values may
   cause too many pixels to be drawn, resulting in bulky images.
@@ -231,8 +232,6 @@ Currently, the configuration file may contain:
   * unix: A forked-off sound server
   Generally, the sdl sound server (default) should provide better performance,
   if available.
-
--- NEW OPTIONS since the 0.3.2a release --
 
 - module_path: A list of directories modules (gfx drivers etc.) are searched
   in. Directories are separated with the platform's default directory
@@ -293,6 +292,22 @@ a Sun keyboard. Default is 'false'.
 - fullscreen = true | false
 kinda self-explanatory, eh?  :)
 
+2.1.1.4 DirectX driver:
+-----------------------
+The DirectX driver does not support any options at this time.
+
+2.1.1.5 DirectFB driver:
+------------------------
+The DirectFB driver does not support any options at this time.
+
+2.1.1.6 Dreamcast driver:
+--------------------
+The Dreamcast driver does not support any options at this time.
+
+2.1.1.7 NULL driver:
+--------------------
+The NULL driver does not support any options at this time.
+
 2.1.2 Midiout subsystem
 -----------------------
 This subsystem is responsible for addressing the sound hardware. Its prefix is
@@ -329,7 +344,7 @@ Options:
   preceeding 0-byte. Useful for debugging.
 
 2.1.2.4 Win32 MCI driver:
------------------------
+-------------------------
 This driver (ID 'win32mci') handles output to MCI MIDI Output devices in
 Windows 95/98/NT4/2000. 
 
@@ -347,6 +362,20 @@ Options:
 - device: Defaults to /dev/sequencer
 - patchpath:  Location to the instrument data (drums.o3, std.o3).
               Defaults to /etc/midi
+
+2.1.2.6 Adlib driver:
+---------------------
+This driver ('adlib') uses the OSS/Free interface to the OPL/2 chip present
+in AdLib (TM), SoundBlaster (TM) and many other cards. It plays back music
+and sound the same way Sierra did.
+
+2.1.2.7 AdlibEMU driver:
+------------------------
+The 'adlibemu' driver uses the PCM subsystem to play back sound. It emulates
+a stereo variant of a beefed-up OPL/2 chip that supports a few more voices
+than the original OPL/2 did. Note, however, that this is computationally more
+expensive than the "regular" adlib driver.
+  You will need a working PCM driver for this.
 
 2.1.3 PCM subsystem
 -------------------
@@ -429,21 +458,9 @@ are hoping to resolve these issues at least partially very soon.
 4 Platform support
 ==================
 
-Successful builds for the 0.3.3 release were reported for the following
+Successful builds for the 0.3.4 release were reported for the following
 platforms (in order of appearance):
-- Alpha EV67/Debian GNU/Linux/gcc		tested
-- Alpha EV67/Debian GNU/Linux/ccc		tested extensively
-- IA32/Debian GNU/Linux/gcc			tested
-- IA32/Windows 9x and NT/Visual C++             tested extensively
-- Sparc/Sun/Solaris/gcc				tested
-- IA32/Slackware 7.1/Linux/gcc			tested
-- Alpha EV6//FreeBSD/gcc			built
-- Alpha EV6/Compaq/Tru64 5.1/cc			built
-- IA64/SuSE/Linux/gcc				built
-- IA32//FreeBSD/gcc				built
-- Alpha EV6//OpenBSD/gcc			built
-- IA32//NetBSD/gcc				built
-
+- PPC/Debian GNU/Linux/gcc			tested
 
 The following platform used to be supported, but no longer is:
 
@@ -467,8 +484,9 @@ Other source code, such as scr000.txt and scr_code.cpp, was copied from public
 sources without the knowledge of its authors.
 
 
-Sierra game resource files and everything they contain are property and copyrighted by Sierra On-Line (which in turn is a registerd
-trademark of Sierra On-Line, Inc.).
+Sierra game resource files and everything they contain are property and
+copyrighted by Sierra On-Line (which in turn is a registerd trademark of
+Sierra On-Line, Inc.).
 
 Space Quest, Quest for Glory, King's Quest, Leisure Suit Larry, Police Quest,
 Codename: Iceman, Conquest of Camelot, and The Colonel's Bequest are registered
