@@ -676,7 +676,7 @@ void sm_set_variables (struct _seg_manager_t* self, reg_t reg, int obj_index, re
 };
 
 
-static /* inline */ int
+static inline int
 _relocate_block(reg_t *block, int block_location, int block_items, seg_id_t segment, int location)
 {
 	int rel = location - block_location;
@@ -700,7 +700,7 @@ _relocate_block(reg_t *block, int block_location, int block_items, seg_id_t segm
 	return 1;
 }
 
-static /* inline */ int
+static inline int
 _relocate_local(script_t *scr, seg_id_t segment, int location)
 {
 	if (scr->locals_block)
@@ -711,7 +711,7 @@ _relocate_local(script_t *scr, seg_id_t segment, int location)
 		return 0; /* No hands, no cookies */
 }
 
-static /* inline */ int
+static inline int
 _relocate_object(object_t *obj, seg_id_t segment, int location)
 {
 	return _relocate_block(obj->variables, obj->pos.offset, obj->variables_nr,

@@ -970,6 +970,8 @@ main(int argc, char** argv)
 		exit(1);
 	}
 
+	script_adjust_opcode_formats(resmgr->sci_version);
+	
 	check_features();
 
 	chdir(startdir);

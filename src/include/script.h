@@ -67,6 +67,7 @@ typedef enum {
   Script_Local,
   Script_Temp,
   Script_Param,
+  Script_Offset,
   Script_End
 } opcode_format;
 
@@ -197,5 +198,7 @@ typedef enum { /* FIXME */
 } sci_opcodes;
 
 extern DLLEXTERN opcode_format formats[128][4];
+
+void script_adjust_opcode_formats(int res_version);
 
 #endif

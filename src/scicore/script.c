@@ -66,6 +66,24 @@ opcode_format formats[128][4]={
   {Script_Global, 0}, {Script_Local, 0}, {Script_Temp, 0}, {Script_Param, 0}
 };
 
+void script_adjust_opcode_formats(int res_version)
+{
+	switch (res_version)
+	{
+		case SCI_VERSION_0:
+		case SCI_VERSION_01:
+			break;
+		case SCI_VERSION_01_VGA:
+		case SCI_VERSION_1_EARLY:
+		case SCI_VERSION_1_LATE:
+			formats[op_lofsa][0]=Script_Offset;
+			formats[op_lofss][0]=Script_Offset;
+			break;
+		default:
+			sciprintf("script_adjust_opcode_formats(): Unknown script version %d\n", res_version);
+	}
+}
+	
 int
 script_find_selector(state_t *s, char *selectorname)
 {

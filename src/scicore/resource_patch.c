@@ -179,6 +179,9 @@ sci1_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 		  if (endptr != dot)
 			  restype = sci_invalid_resource;
 
+		  if (*(dot + 4) != '\0')
+			  restype = sci_invalid_resource;
+		  
 		  if ((resnumber < 0) || (resnumber > 1000))
 			  restype = sci_invalid_resource;
 		}

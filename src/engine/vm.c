@@ -812,6 +812,9 @@ run_vm(state_t *s, int restoring)
 			case Script_SRelative:
 				opparams[temp] = GET_OP_SIGNED_FLEX(); break;
 
+			case Script_Offset:
+				opparams[temp] = GET_OP_FLEX(); break;
+				
 			case Script_None:
 			case Script_End:
 				break;

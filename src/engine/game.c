@@ -60,11 +60,12 @@ extern int bp_flag;
 static int
 _init_vocabulary(state_t *s) /* initialize vocabulary and related resources */
 {
-	sciprintf("Initializing vocabulary\n");
-
 	s->parser_lastmatch_word = SAID_NO_MATCH;
+	s->parser_rules = NULL;
 
-	if ((s->parser_words = vocab_get_words(s->resmgr, &(s->parser_words_nr)))) {
+	sciprintf("Initializing vocabulary\n");	
+	
+	if ((s->resmgr->sci_version < SCI_VERSION_01_VGA)&&(s->parser_words = vocab_get_words(s->resmgr, &(s->parser_words_nr)))) {
 		s->parser_suffices = vocab_get_suffices(s->resmgr, &(s->parser_suffices_nr));
 		if ((s->parser_branches = vocab_get_branches(s->resmgr, &(s->parser_branches_nr))))
 		    /* Now build a GNF grammar out of this */

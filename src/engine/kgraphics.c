@@ -2307,7 +2307,7 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, reg_t *argv)
 		return;
 	}
 
-	if (GFXWC(s->dyn_views->parent) == GFXWC(goner)) {
+	if (s->dyn_views && GFXWC(s->dyn_views->parent) == GFXWC(goner)) {
 		reparentize_primary_widget_lists(s, (gfxw_port_t *) goner->parent);
 	}
 

@@ -1209,6 +1209,17 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 
 			break;
 
+		case Script_Offset:
+			if (opsize)
+				param_value = scr[retval.offset++];
+			else {
+				param_value = 0xffff & (scr[retval.offset]
+							| (scr[retval.offset+1] << 8));
+				retval.offset += 2;
+			}
+			sciprintf (opsize? " %02x  [%04x]" : " %04x", param_value);
+			break;
+
 		case Script_SRelative:
 			if (opsize)
 				param_value = scr[retval.offset++];

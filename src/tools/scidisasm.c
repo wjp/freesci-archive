@@ -33,6 +33,8 @@
 #  include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#define MALLOC_DEBUG
+
 #include <sciresource.h>
 #include <engine.h>
 #include <console.h>
@@ -141,11 +143,12 @@ int main(int argc, char** argv)
 	int c;
 	disasm_state_t disasm_state;
 	char *gamedir = NULL;
+	int res_version = SCI_VERSION_AUTODETECT;
 
 #ifdef HAVE_GETOPT_LONG
-	while ((c = getopt_long(argc, argv, "vhxd:", options, &optindex)) > -1) {
+	while ((c = getopt_long(argc, argv, "vhxr:d:", options, &optindex)) > -1) {
 #else /* !HAVE_GETOPT_H */
-	while ((c = getopt(argc, argv, "vhxd:")) > -1) {
+	while ((c = getopt(argc, argv, "vhxr:d:")) > -1) {
 #endif /* !HAVE_GETOPT_H */
 
 		switch (c)
@@ -173,6 +176,10 @@ int main(int argc, char** argv)
 				gamedir= sci_strdup (optarg);
 				break;
 
+			case 'r':
+				res_version = atoi(optarg);
+				break;
+				
 			case 0: /* getopt_long already did this for us */
 			case '?':
 				/* getopt_long already printed an error message. */
@@ -191,7 +198,7 @@ int main(int argc, char** argv)
 			}
 
 	printf ("Loading resources...\n");
-	if (!(resmgr = scir_new_resource_manager(sci_getcwd(), SCI_VERSION_AUTODETECT,
+	if (!(resmgr = scir_new_resource_manager(sci_getcwd(), res_version,
 						 1, 1024*128))) {
 		fprintf(stderr,"Could not find any resources; quitting.\n");
 		exit(1);
@@ -199,6 +206,8 @@ int main(int argc, char** argv)
 
 	disasm_init (&disasm_state);
 
+	script_adjust_opcode_formats(resmgr->sci_version);
+	
 	printf ("Performing first pass...\n");
 	for (i=0; i < resmgr->resources_nr; i++)
 		if (resmgr->resources[i].type == sci_script)
@@ -748,6 +757,7 @@ script_disassemble_code(disasm_state_t *d, script_state_t *s,
 			case Script_Param:
 			case Script_SRelative:
 			case Script_Property:
+			case Script_Offset:
 				if (opsize)
 					param_value = data [seeker++];
 				else {
@@ -798,6 +808,38 @@ script_disassemble_code(disasm_state_t *d, script_state_t *s,
 
 					case Script_Param:
 						sciprintf (" param_%d", param_value);
+						break;
+
+					case Script_Offset:
+						dest=(short) param_value;
+						dest_name=script_find_name (s, dest, NULL);
+						if (dest_name)
+							sciprintf (" %s", dest_name);
+						else
+							sciprintf (" %04x", dest);
+
+						if (verbose)
+							sciprintf (opsize? "   [%02x] " : "   [%04x] ", param_value);
+
+						if (opcode == op_lofsa || opcode == op_lofss){
+							int atype=script_get_area_type (s, dest, &area_data);
+							if (atype == area_string) {
+								strncpy (buf, (char *) &data [dest], sizeof (buf)-1);
+								buf [sizeof (buf)-1] = 0;
+								if (strlen (buf) > 40){
+									buf [40] = 0;
+									strcat (buf, "...");
+								}
+								sciprintf ("\t\t; \"%s\"", buf);
+							}
+							else if (atype == area_said) {
+								sciprintf ("\t\t; said \"");
+								script_dump_said_string (d, data, dest);
+								sciprintf ("\"\n");
+							}
+							else if (atype == area_object)
+								sciprintf ("\t\t; object <%s>", area_data);
+						}
 						break;
 
 					case Script_SRelative:

@@ -1,3 +1,17 @@
+2003-02-09  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/game.c (_init_vocabulary): SCI1 games no longer load
+	their parser vocabularies even if they are present.
+	* src/engine/kgraphics.c (kDisposeWindow): Fixed a segfault.
+	* src/engine/script.c (script_adjust_opcode_formats): Added
+	functionality to take care of opcode differences between
+	interpreters.
+	* src/engine/seg_manager.c: Re-inlined some functions.
+	* src/engine/script.h: Added opcode format for absolute offsets,
+	plus support in various places.
+	* src/engine/scidisasm.c (main): Support -r flag.
+	* src/scicore/console.c (sciprintf): Incorporated leak fix from
+	the stable branch.
 
 2003-02-08  Lars Skovlund  <lskovlun@image.dk>
 
