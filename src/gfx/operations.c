@@ -29,6 +29,15 @@
 #include <sci_memory.h>
 #include <gfx_operations.h>
 
+#undef GFXW_DEBUG_DIRTY /* Enable to debug stuff relevant for dirty rects
+			 ** in widget management  */
+
+#ifdef GFXW_DEBUG_DIRTY
+#  define DDIRTY fprintf(stderr, "%s:%5d| ", __FILE__, __LINE__); fprintf
+#else
+#  define DDIRTY if (0) fprintf
+#endif
+
 #define POINTER_VISIBLE_BUT_CLIPPED 2
 
 /* Performs basic checks that apply to most functions */
@@ -243,6 +252,12 @@ _gfxop_draw_pixmap(gfx_driver_t *driver, gfx_pixmap_t *pxm, int priority, int co
 
 	error = _gfxop_install_pixmap(driver, pxm);
 	if (error) return error;
+
+	DDIRTY(stderr, "\\-> Drawing to actual %d %d %d %d\n", 
+	       clipped_dest.x / driver->mode->xfact,
+	       clipped_dest.y / driver->mode->yfact,
+	       clipped_dest.xl / driver->mode->xfact,
+	       clipped_dest.yl / driver->mode->yfact);
 
 	error = driver->draw_pixmap(driver, pxm, priority, src, clipped_dest,
 				    static_buf? GFX_BUFFER_STATIC : GFX_BUFFER_BACK);
@@ -703,6 +718,8 @@ gfxop_set_clip_zone(gfx_state_t *state, rect_t zone)
 {
 	int xfact, yfact;
 	BASIC_CHECKS(GFX_ERROR);
+
+	DDIRTY(stderr, "-- Setting clip zone %d %d %d %d\n", GFX_PRINT_RECT(zone));
 
 	xfact = state->driver->mode->xfact;
 	yfact = state->driver->mode->yfact;
@@ -1268,13 +1285,19 @@ _gfxop_buffer_propagate_box(gfx_state_t *state, rect_t box, int buffer)
 	return GFX_OK;
 }
 
-
+extern int sci0_palette;
 int
 gfxop_clear_box(gfx_state_t *state, rect_t box)
 {
 	BASIC_CHECKS(GFX_FATAL);
 	REMOVE_POINTER;
 	_gfxop_add_dirty(state, box);
+	DDIRTY(stderr, "[]  clearing box %d %d %d %d\n", GFX_PRINT_RECT(box));
+	if (box.x == 29
+	    && box.y == 77
+	    && (sci0_palette == 1)) {
+		BREAKPOINT();
+	}
 	_gfxop_scale_rect(&box, state->driver->mode);
 
 	return _gfxop_buffer_propagate_box(state, box, GFX_BUFFER_BACK);

@@ -891,7 +891,7 @@ _gfxwop_pic_view_draw(gfxw_widget_t *widget, point_t pos)
 					 view->color));
 
 	GFX_ASSERT(gfxop_clear_box(view->visual->gfx_state,
-				   _move_rect(view->draw_bounds,
+				   _move_rect(view->bounds,
 					      pos)));
 
 	widget->draw = _gfxwop_draw_nop; /* No more drawing needs to be done */
