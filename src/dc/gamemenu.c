@@ -168,9 +168,18 @@ static int load_options(char *infname, char *options)
 		fs_close(inf);
 		return -1;
 	}
-	for (j = 0; (j < NUM_DC_OPTIONS) && (j < pkg.data_len); j++)
-		options[j] = pkg.data[j];
-	
+	if ((pkg.data_len != NUM_DC_OPTIONS+2) ||
+			(pkg.data[0] != DC_OPTIONS_TAG_MAJOR) ||
+			(pkg.data[1] != DC_OPTIONS_TAG_MINOR)) {
+		sciprintf("%s, L%d: Option file version doesn't match!\n",
+			__FILE__, __LINE__);
+		sci_free(data);
+		fs_close(inf);
+		return -1;
+	}
+	for (j = 0; j < NUM_DC_OPTIONS; j++)
+		options[j] = pkg.data[j+2];
+
 	fs_close(inf);
 	return 0;
 }
@@ -186,15 +195,19 @@ static int save_options(char *outfile, char *options)
 	uint8 *pkg_out;
 	vmu_pkg_t pkg;
 	int pkg_size;
+	uint8 data[NUM_DC_OPTIONS+2];
 	
 	strcpy(pkg.desc_short, "FreeSCI");
 	strcpy(pkg.desc_long, "Configuration");
 	strcpy(pkg.app_id, "FreeSCI");
+	data[0] = DC_OPTIONS_TAG_MAJOR;
+	data[1] = DC_OPTIONS_TAG_MINOR;
+	memcpy(data+2, options_nr, NUM_DC_OPTIONS);
 	pkg.icon_cnt = 0;
 	pkg.icon_anim_speed = 0;
 	pkg.eyecatch_type = VMUPKG_EC_NONE;
-	pkg.data = options_nr;
-	pkg.data_len = NUM_DC_OPTIONS;
+	pkg.data = data;
+	pkg.data_len = NUM_DC_OPTIONS+2;
 	if (vmu_pkg_build(&pkg, &pkg_out, &pkg_size) < 0) {
 		sciprintf("%s, L%d: vmu_pkg_build() failed!\n", __FILE__, __LINE__);
 		return -1;
@@ -218,9 +231,9 @@ void load_option_list() {
                          
 	/* Load defaults */
 	for (i = 0; i < NUM_DC_OPTIONS; i++)
-		options_nr[i] = dc_options[i].def;
+		options_nr[i] = 0;
 
-	/* Overwrite with max. NUM_DC_OPTIONS from save file */
+	/* Overwrite with data from option file */
 	if ((vmu = dc_get_first_vmu())) {
 		char *fn = sci_malloc(strlen(vmu) + 9);
 		strcpy(fn, vmu);
@@ -236,15 +249,8 @@ void load_option_list() {
 	for (i = 0; i < NUM_DC_OPTIONS; i++) {
 		int j;
 		options_str[i] = dc_options[i].values;
-		for (j = 0; (j < options_nr[i]) && (*options_str[i] != '\0')
-		  ; j++)
+		for (j = 0; j < options_nr[i]; j++)
 			options_str[i] += strlen(options_str[i]) + 1;
-		if (*options_str[i] == '\0') {
-			options_nr[i] = dc_options[i].def;
-			options_str[i] = dc_options[i].values;
-			for (j = 0; j < options_nr[i]; j++)
-				options_str[i] += strlen(options_str[i]) + 1;
-		}
 	}
 
 	num_options = NUM_DC_OPTIONS;
@@ -662,56 +668,45 @@ int game_menu_render() {
 int dc_write_config_file(char *fn) {
 	FILE *cfile;
 	if ((cfile = fopen(fn, "w"))) {
-		fputs("gfx.dc.render_mode = ", cfile);
-		if (options_nr[0] == 0) fputs("vram\n", cfile);
-		else fputs("pvr\n", cfile);
-
-		fputs("gfx.dc.refresh_rate = ", cfile);
-		if (sel_freq) fputs("60Hz\n", cfile);
-		else fputs("50Hz\n", cfile);
-
-		if (options_nr[2]) {
-			fputs("pic0_suspend_sound = yes\n", cfile);
-		}
-
-		if (options_nr[1]) {
-			fputs("midi_device = adlibemu\n", cfile);
-			fputs("pcmout_driver = dc\n", cfile);
-		} else {
-			fputs("midi_device = null\n", cfile);
-			fputs("pcmout_driver = null\n", cfile);
-		}
-		
+		fprintf(cfile, "gfx.dc.render_mode = %s\n", options_nr[0]? "pvr" : "vram");
+		fprintf(cfile, "gfx.dc.refresh_rate = %s\n", sel_freq? "60Hz" : "50Hz");
+		fprintf(cfile, "pic0_dither_mode = ");
 		switch (options_nr[1]) {
-		case 1:
-			fputs("pcmout_rate = 11025\n", cfile);
-			fputs("pcmout_buffer_size = 128\n", cfile);
-			break;
-		case 2:
-			fputs("pcmout_rate = 16000\n", cfile);
-			fputs("pcmout_buffer_size = 192\n", cfile);
-			break;
-		case 3:
-			fputs("pcmout_rate = 22050\n", cfile);
-			fputs("pcmout_buffer_size = 256\n", cfile);
-		}
-		
-		fputs("pic0_dither_mode = ", cfile);
-		switch (options_nr[3]) {
 		case 0:
-			fputs("dither\n", cfile);
+			fprintf(cfile, "dither256\n");
 			break;
 		case 1:
-			fputs("dither256\n", cfile);
+			fprintf(cfile, "flat\n");
 			break;
 		case 2:
-			fputs("flat\n", cfile);
+			fprintf(cfile, "dither\n");
 		}
-					
-		if (options_nr[4])
-			fputs("pic_antialiasing = simple", cfile);
 
-		fputs("pcmout_stereo = 0\n", cfile);
+		if (options_nr[2])
+			fprintf(cfile, "pic_antialiasing = simple\n");
+
+		if (options_nr[3] == 2) {
+			fprintf(cfile, "midi_device = null\n");
+			fprintf(cfile, "pcmout_driver = null\n");
+		} else
+			fprintf(cfile, "midi_device = adlibemu\n");
+
+		if (!options_nr[3])
+			fprintf(cfile, "pcmout_stereo = 0\n");
+
+		switch (options_nr[4]) {
+		case 0:
+			fprintf(cfile, "pcmout_rate = 16000\n");
+			fprintf(cfile, "pcmout_buffer_size = 192\n");
+			break;
+		case 1:
+			fprintf(cfile, "pcmout_rate = 22050\n");
+			fprintf(cfile, "pcmout_buffer_size = 256\n");
+			break;
+		case 2:
+			fprintf(cfile, "pcmout_rate = 11025\n");
+			fprintf(cfile, "pcmout_buffer_size = 128\n");
+		}
 
 		fclose(cfile);
 		return 0;

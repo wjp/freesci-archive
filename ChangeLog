@@ -1,3 +1,15 @@
+2004-04-26  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/gamemenu.c, src/dc/options.h: Added Dreamcast option for
+	stereo sound. Added version tag to option file.
+
+	* src/dc/selectgame.c (choose_game): Updated website URL.
+
+	* src/dc/config.h: Removed from repository.
+	* src/dc/config.h.in: Added to repository.
+	* src/dc/.cvsignore: Updated.
+	* src/dc/Makefile: Include current date in VERSION.
+
 2004-04-15  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/Makefile.am: Updated Dreamcast EXTRA_DIST list.

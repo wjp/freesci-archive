@@ -31,17 +31,20 @@
 struct dc_option_t {
 	char *name;	/* Option name */
 	char *values;	/* Option values, each followed by `\0' */
-	char def;	/* Default option */
 };
 
+/* 0 = stable, 1 = glutton */
+#define DC_OPTIONS_TAG_MAJOR 0
+/* Increase after every modification to the dc_options struct. */
+#define DC_OPTIONS_TAG_MINOR 0
 #define NUM_DC_OPTIONS 5
 
 struct dc_option_t dc_options[NUM_DC_OPTIONS] = {
-/* 0 */		{ "Graphics", "Letterboxed\0Full-Screen\0", 0 },
-/* 1 */		{ "Sound", "Off\0Low Quality\0Medium Quality\0High Quality\0", 2 },
-/* 2 */		{ "Silent Room Loading", "Off\0On\0", 0 },
-/* 3 */		{ "Background Dithering", "16 Color Dithering\000256 Color Dithering\0Interpolate\0", 1 },
-/* 4 */		{ "Background Antialiasing", "Off\0On\0", 0 }
+/* 0 */		{ "Video Mode", "Letterboxed\0Full-Screen\0" },
+/* 1 */		{ "Dithering", "256 Color Dithering\0Interpolate\00016 Color Dithering\0" },
+/* 2 */		{ "Antialiasing", "Off\0On\0" },
+/* 3 */		{ "Sound Mode", "Mono\0Stereo\0Off\0" },
+/* 4 */		{ "Sound Quality", "16000Hz\00022050Hz\00011025Hz\0" },
 };
 
 #endif  /* __OPTIONS_H */
