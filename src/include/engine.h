@@ -160,6 +160,7 @@ typedef struct _state
   int parser_suffices_nr;
   parse_tree_branch_t *parser_branches;
   int parser_branches_nr;
+  parse_tree_node_t parser_nodes[VOCAB_TREE_NODES]; /* The parse tree */
 
   heap_ptr game_obj; /* Pointer to the game object */
 

@@ -39,6 +39,14 @@ typedef struct opcode_
 #define VOCAB_MAGIC_NUMBER_GROUP 0xffe
 /* This word class is used for numbers */
 
+#define VOCAB_TREE_NODES 500
+/* Number of nodes for each parse_tree_node structure */
+
+#define VOCAB_TREE_NODE_LAST_WORD_STORAGE 0x140
+#define VOCAB_TREE_NODE_COMPARE_TYPE 0x146
+#define VOCAB_TREE_NODE_COMPARE_GROUP 0x14d
+#define VOCAB_TREE_NODE_FORCE_STORAGE 0x154
+
 typedef struct {
 
   int class; /* Word class */
@@ -78,6 +86,22 @@ typedef struct {
 
 } parse_tree_branch_t;
 
+#define PARSE_TREE_NODE_LEAF 0
+#define PARSE_TREE_NODE_BRANCH 1
+
+
+typedef struct {
+
+  int type;  /* leaf or branch */
+
+  union {
+
+    int value;  /* For leaves */
+    short branches[2]; /* For branches */
+
+  } content;
+
+} parse_tree_node_t;
 
 
 /*FIXME: These need freeing functions...*/
@@ -175,5 +199,26 @@ vocab_tokenize_string(char *sentence, int *result_nr,
 ** if not, *error points to a malloc'd copy of the offending word.
 ** The returned list may contain anywords.
 */
+
+int
+vocab_build_parse_tree(parse_tree_node_t *nodes, result_word_t *words, int words_nr,
+		       parse_tree_branch_t *branches, int branches_nr);
+/* Builds a parse tree from a list of words
+** Parameters: (parse_tree_node_t *) nodes: A node list to store the tree in (must have
+**                                          at least VOCAB_TREE_NODES entries)
+**             (result_word_t *) words: The words to build the tree from
+**             (int) words_nr: The number of words
+**             (parse_tree_branch_t *) branches: The branches which the tree should be built with
+**             (int) branches_nr: Number of branches
+** Returns   : 0 on success, 1 if the tree couldn't be built in VOCAB_TREE_NODES nodes.
+*/
+
+void
+vocab_dump_parse_tree(parse_tree_node_t *nodes);
+/* Prints a parse tree
+** Parameters: (parse_tree_node_t *) nodes: The nodes containing the parse tree
+** Returns   : (void)
+*/
+
 
 #endif

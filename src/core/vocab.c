@@ -86,7 +86,7 @@ vocab_get_words(int *word_counter)
 
     /* Now decode class and group: */
     c = resource->data[seeker + 1];
-    words[counter]->class = resource->data[seeker] | ((c & 0xf0) << 4);
+    words[counter]->class = ((resource->data[seeker]) << 4) | ((c & 0xf0) >> 4);
     words[counter]->group = (resource->data[seeker + 2]) | ((c & 0x0f) << 8);
 
     ++counter;
@@ -229,7 +229,7 @@ vocab_get_branches(int *branches_nr)
     retval[i].id = getInt16(base);
 
     for (k = 0; k < 9; k++)
-      retval[i].data[k] = getInt16(base + 2 + 2*k);
+      retval[i].data[k] = getUInt16(base + 2 + 2*k);
 
     retval[i].data[9] = 0; /* Always terminate */
   }
@@ -412,4 +412,249 @@ vocab_tokenize_string(char *sentence, int *result_nr,
   }
 
   return retval;
+}
+
+
+inline int
+_vocab_ptree_next_branch(parse_tree_branch_t *branches, int branches_nr, int current, int id)
+     /* Looks for the next branch with a specific ID */
+{
+  current++;
+
+  while ((current < branches_nr) && (branches[current].id != id))
+    current++;
+
+  return (current >= branches_nr) ? -1 : current;
+}
+
+
+inline int
+_vocab_ptree_add_final(parse_tree_node_t *nodes, int pos, int storage_code, int value)
+{
+/** sciprintf("adding FINAL leafbranch (%04x, %04x) at %03x\n", storage_code, value, pos);*/
+  nodes[pos].type = PARSE_TREE_NODE_BRANCH;
+  nodes[pos].content.branches[0] = pos+1;
+  nodes[pos].content.branches[1] = pos+2;
+
+  nodes[pos+1].type = PARSE_TREE_NODE_LEAF;
+  nodes[pos+1].content.value = storage_code;
+
+  nodes[pos+2].type = PARSE_TREE_NODE_LEAF;
+  nodes[pos+2].content.value = value;
+
+  return pos+2;
+}
+
+inline int
+_vocab_ptree_add_storage_list(parse_tree_node_t *nodes, int pos, int storage_code, int list_nr)
+     /* Adds storage nodes for new branches:
+     **       ___pos__
+     **      /        \
+     **  storage_code  []
+     **               /  \
+     **        list_nr    pos+4 (return value)
+     */
+{
+/** sciprintf("Adding BRANCH (%04x, %04x) from %03x to %03x\n", storage_code, list_nr, pos, pos+4);*/
+  nodes[pos].type = PARSE_TREE_NODE_BRANCH;
+  nodes[pos].content.branches[0] = pos + 1;
+  nodes[pos].content.branches[1] = pos + 2;
+
+  nodes[pos + 1].type = PARSE_TREE_NODE_LEAF;
+  nodes[pos + 1].content.value = storage_code;
+
+  nodes[pos + 2].type = PARSE_TREE_NODE_BRANCH;
+  nodes[pos + 2].content.branches[0] = pos + 3;
+  nodes[pos + 2].content.branches[1] = pos + 4;
+
+  nodes[pos + 3].type = PARSE_TREE_NODE_LEAF;
+  nodes[pos + 3].content.value = list_nr;
+
+  nodes[pos + 4].type = PARSE_TREE_NODE_BRANCH;
+  nodes[pos + 4].content.branches[0] = 0;
+  nodes[pos + 4].content.branches[1] = 0;
+
+  return pos + 4;
+}
+#define VOCAB_TREE_NODE_LAST_WORD_STORAGE 0x140
+#define VOCAB_TREE_NODE_COMPARE_TYPE 0x146
+#define VOCAB_TREE_NODE_COMPARE_GROUP 0x14d
+#define VOCAB_TREE_NODE_FORCE_STORAGE 0x154
+
+#define OUT_OF_NODES 2
+
+int
+_vocab_ptree_try_branches(parse_tree_node_t *nodes, result_word_t *words, int words_nr,
+			  parse_tree_branch_t *branches, int branches_nr,
+			  int branch_id, int *curr_word, int *last_node, int storage_code,
+			  int parent_node, int last_branch, int linkside, int ourfirstnode)
+     /* Returns 0 on success, 1 otherwise */
+{
+  int branch_nr = _vocab_ptree_next_branch(branches, branches_nr, last_branch, branch_id);
+  int prev_lastnode = *last_node;
+
+  /* Node tree overflow is imminent */
+  if (*last_node + 5 > VOCAB_TREE_NODES) {
+    sciprintf("Out of nodes while building parse tree (%d)\n", *last_node);
+    return OUT_OF_NODES;
+  }
+
+  if (parent_node + 1>= 0) { /* Must be a branch node */
+    nodes[parent_node].content.branches[linkside] = ourfirstnode;
+/** sciprintf("Linking %03x to parent node %03x\n", ourfirstnode, parent_node); */
+  }
+
+  while (branch_nr >= 0) {
+
+    int branchpos = 0;
+    int command, data;
+    int this_branch_is_bad = 0;
+    int descends = 0; /* This branch tries to descend => don't finish it */
+
+    parse_tree_branch_t *branch = &(branches[branch_nr]);
+/** sciprintf("--Checking branch %d at node %03x\n", branch_nr, *last_node);*/
+    do {
+
+      command = branch->data[branchpos];
+      data = branch->data[branchpos+1];
+      branchpos += 2;
+/** sciprintf("id=%04x cmd=%04x dat=%04x\n", branch_id, command, data);*/
+      if (command >= 0)
+
+	if (((command == 0) && (!descends)) || (command <= VOCAB_TREE_NODE_LAST_WORD_STORAGE)) {
+	  /* Store current word here */
+
+	  *last_node = _vocab_ptree_add_final(nodes, *last_node + 1,
+					      command, words[(*curr_word)++].group);
+	  return 0;
+
+	} else if (command < VOCAB_TREE_NODE_COMPARE_TYPE) { /* Continue on branch */
+	  int result;
+	  int old_last_node = *last_node;
+
+	  descends = 1; /* We're descending */
+
+	  /* Add branches for next subtree */
+	  *last_node = _vocab_ptree_add_storage_list(nodes, *last_node + 1, command, data);
+/** sciprintf("descending\n"); */
+	  if ((result = _vocab_ptree_try_branches(nodes, words, words_nr,
+						 branches, branches_nr,
+						 data, curr_word, last_node, command,
+						 old_last_node, branch_nr, 0, old_last_node + 1)) == 0)
+	    return 0; /* Return if succeeded */
+
+	  *last_node = old_last_node; /* No success, so remove branch */
+/** sciprintf("returned without success\n");*/
+
+	  if (result == OUT_OF_NODES)
+	    return OUT_OF_NODES;
+
+	} else if (command == VOCAB_TREE_NODE_COMPARE_TYPE) {
+
+	  if (!(data & words[*curr_word].class));
+	    this_branch_is_bad = 1;
+
+	} else if (command == VOCAB_TREE_NODE_COMPARE_GROUP) {
+
+	  if (!(data & words[*curr_word].group));
+	    this_branch_is_bad = 1;
+
+	} else if (command == VOCAB_TREE_NODE_FORCE_STORAGE) {
+
+	  *last_node = _vocab_ptree_add_final(nodes, *last_node, command, data);
+	  return 0;
+
+	} else {
+	  sciprintf("Unknown parse tree command: %04x, param %04x, in branch %d\n",
+		    command, data, branch_nr);
+	  return 1;
+	}
+
+    } while (command && !this_branch_is_bad);
+
+
+
+    branch_nr = _vocab_ptree_next_branch(branches, branches_nr, branch_nr, branch_id);
+
+  }
+
+  return 1; /* Found no matching branches */
+}
+
+
+int
+vocab_build_parse_tree(parse_tree_node_t *nodes, result_word_t *words, int words_nr,
+		       parse_tree_branch_t *branches, int branches_nr)
+{
+  int lastnode = -1;
+  int nextword_forknode = -1; /* The node which the next word will be linked to */
+
+  int first_branchstore = 0x141;
+  int first_branchid = branches[0].id;
+
+  int curr_word = 0;
+
+
+  if (words_nr <= 0)
+    return 1;
+
+  while (curr_word < words_nr) {
+
+    /* Add initial branch */
+    int overnext_word_forknode = 
+      lastnode = _vocab_ptree_add_storage_list(nodes, lastnode + 1, first_branchstore, first_branchid);
+/** sciprintf("======== Parsing word %d of %d to %03x at node %03x\n", curr_word, words_nr-1, nextword_forknode, lastnode);*/
+
+    /* Try to interpret branches */
+    if (_vocab_ptree_try_branches(nodes, words, words_nr,
+				  branches, branches_nr,
+				  first_branchid, &curr_word, &lastnode, first_branchstore,
+				  nextword_forknode, -1, 1, lastnode + 1))
+      return 1; /* Appending failed for one => parsing failed for all */
+
+    nextword_forknode = overnext_word_forknode;
+
+  }
+
+  return 0;
+
+}
+
+
+void
+_vocab_recursive_ptree_dump(parse_tree_node_t *nodes, int nr, int prevnr)
+{
+  if ((nr > VOCAB_TREE_NODES) || (nr < prevnr)) {
+    sciprintf("Error(%04x)", nr);
+    return;
+  }
+
+  if (nodes[nr].type == PARSE_TREE_NODE_LEAF)
+    /*    sciprintf("[%03x]%04x", nr, nodes[nr].content.value); */
+    sciprintf("%04x", nodes[nr].content.value);
+  else {
+    int lbranch = nodes[nr].content.branches[0];
+    int rbranch = nodes[nr].content.branches[1];
+    /*    sciprintf("<[%03x]",nr); */
+    sciprintf("<");
+
+    if (lbranch)
+      _vocab_recursive_ptree_dump(nodes, lbranch, nr);
+    else sciprintf("NULL");
+
+    sciprintf(",");
+
+    if (rbranch)
+      _vocab_recursive_ptree_dump(nodes, rbranch, nr);
+    else sciprintf("NULL");
+
+    sciprintf(">");
+  }
+}
+
+void
+vocab_dump_parse_tree(parse_tree_node_t *nodes)
+{
+  _vocab_recursive_ptree_dump(nodes, 0, 0);
+  sciprintf("\n");
 }

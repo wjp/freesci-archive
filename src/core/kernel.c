@@ -1088,6 +1088,8 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   if (words) {
 
+    int syntax_fail = 0;
+
     s->acc = 1;
 
     if (s->debug_mode & (1 << SCIkPARSER_NR)) {
@@ -1099,16 +1101,33 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	SCIkdebug(SCIkPARSER, "   Type[%04x] Group[%04x]\n", words[i].class, words[i].group);
     }
 
+    if (vocab_build_parse_tree(&(s->parser_nodes[0]), words, words_nr, s->parser_branches,
+			       s->parser_branches_nr))
+      syntax_fail = 1; /* Building a tree failed */
+
     free(words);
+
+    if (syntax_fail) {
+
+      s->acc = 1;
+      PUT_SELECTOR(event, type, 0);
+      invoke_selector(INV_SEL(s->game_obj, syntaxFail, 0), 1, s->parser_base); /* Issue warning */
+      SCIkdebug(SCIkPARSER, "Tree building failed\n");
+
+    } else {
+      if (s->debug_mode & (1 << SCIkPARSER_NR))
+	vocab_dump_parse_tree(s->parser_nodes);
+    }
 
   } else {
 
     s->acc = 0;
+    PUT_SELECTOR(event, type, 0);
     if (error) {
 
       strcpy(s->heap + s->parser_base, error);
       fprintf(stderr,"Word unknown: %s\n", error);
-      /*      invoke_selector(INV_SEL(event, wordFail, 0), 1, s->parser_base); */
+      invoke_selector(INV_SEL(s->game_obj, wordFail, 0), 1, s->parser_base); /* Issue warning */
       free(error);
     }
   }
@@ -3564,7 +3583,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	graph_clear_box(s, x * 10, 10 + y * 10, 10, 10, 0);
         if (remaining_checkers & 1)
-	  s->gfx_driver->Wait(s, s->animation_delay / 8);
+	  s->gfx_driver->Wait(s, s->animation_delay / 4);
 
 	--remaining_checkers;
 	process_sound_events(s);
@@ -3589,7 +3608,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	graph_update_box(s, x * 10, 10 + y * 10, 10, 10);
 
 	if (remaining_checkers & 1)
-	  s->gfx_driver->Wait(s, s->animation_delay / 8);
+	  s->gfx_driver->Wait(s, s->animation_delay / 4);
 
 	--remaining_checkers;
 	process_sound_events(s);
@@ -3860,10 +3879,10 @@ struct {
   {"CosDiv", kCosDiv },
   {"SinDiv", kSinDiv },
   {"BaseSetter", kBaseSetter},
+  {"Parse", kParse },
 
   /* Experimental functions */
   {"Said", kSaid },
-  {"Parse", kParse },
   {"EditControl", kEditControl },
   {"DoSound", kDoSound },
   {"Graph", kGraph },

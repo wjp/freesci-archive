@@ -374,6 +374,29 @@ disassemble(state_t *s, heap_ptr pos)
   return retval;
 }
 
+int
+c_dumpnodes(state_t *s)
+{
+  int end = MIN(cmd_params[0].val, VOCAB_TREE_NODES);
+  int i;
+
+
+  if (!_debugstate_valid) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  for (i = 0; i < end; i++) {
+    sciprintf(" Node %03x: ", i);
+    if (s->parser_nodes[i].type == PARSE_TREE_NODE_LEAF)
+      sciprintf("Leaf: %04x\n", s->parser_nodes[i].content.value);
+    else
+      sciprintf("Branch: ->%04x, ->%04x\n", s->parser_nodes[i].content.branches[0],
+		s->parser_nodes[i].content.branches[1]);
+  }
+
+}
+
 
 int
 c_backtrace(state_t *s)
@@ -1061,6 +1084,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       cmdHook(c_bplist, "bplist", "", "Lists all breakpoints.\n");
       cmdHook(c_bpdel, "bpdel", "i", "Deletes a breakpoint with specified index.");
       cmdHook(c_go, "go", "", "Executes the script.\n");
+      cmdHook(c_dumpnodes, "dumpnodes", "i", "shows the specified number of nodes\n"
+	      "  from the parse node tree");
 
       cmdHookInt(&script_exec_stackpos, "script_exec_stackpos", "Position on the execution stack\n");
       cmdHookInt(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");

@@ -1275,6 +1275,10 @@ game_init(state_t *s)
   if (s->parser_words = vocab_get_words(&(s->parser_words_nr))) {
     s->parser_suffices = vocab_get_suffices(&(s->parser_suffices_nr));
     s->parser_branches = vocab_get_branches(&(s->parser_branches_nr));
+
+    /* Mark parse tree as unused */
+    s->parser_nodes[0].type = PARSE_TREE_NODE_LEAF;
+    s->parser_nodes[0].content.value = 0;
   } else
     sciprintf("Assuming that this game does not use a parser.\n");
 
