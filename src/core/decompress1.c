@@ -210,8 +210,8 @@ int decompress1(resource_t *result, int resh)
     return SCI_ERROR_EMPTY_OBJECT;
   }
 
-  buffer = XALLOC(compressedLength);
-  result->data = XALLOC(result->length);
+  buffer = xalloc(compressedLength);
+  result->data = xalloc(result->length);
 
   if (read(resh, buffer, compressedLength) != compressedLength) {
     free(result->data);

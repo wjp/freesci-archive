@@ -129,8 +129,6 @@ draw_titlebar(picture_t dest, int color)
 
   color = SCI_MAP_EGA_COLOR(dest, color);
 
-  fprintf(stderr, "Drawing titlebar at %04x\n", color);
-
   for (i = 0; i < 10; i++) {
     memset(dest->maps[0] + i * 320, (i == 9)? 0 : color, 320);
     memset(dest->maps[1] + i * 320, 10, 320); /* Priority for the menubar */

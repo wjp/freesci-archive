@@ -1,5 +1,5 @@
 /***************************************************************************
- config.h Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+ sci_conf.h Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
 
 
  This program may be modified and copied freely according to the terms of
@@ -37,6 +37,7 @@ typedef struct {
   sci_version_t version; /* The version to emulate */
   int color_mode; /* The mode to use for pic drawing */
   gfx_driver_t *gfx_driver; /* The graphics driver to use */
+  char *console_log; /* The file to which console output should be echoed */
 
 } config_entry_t;
 

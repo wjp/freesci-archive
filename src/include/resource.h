@@ -41,11 +41,12 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-/* [DJ] FIXME: move check for HAVE_UNISTD_H to autoconf */
-#ifndef _MSC_VER
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #else
+#ifdef _WIN32
 #include <io.h>
+#endif
 #endif
 #include <errno.h>
 #include <fcntl.h>
@@ -169,26 +170,38 @@ gint16 getInt16(guint8* d);
 #define getInt16(d) (*((gint16 *)(d)))
 #endif
 #endif
+#define getUInt16(_x_) ((guint16) getInt16(_x_))
 /* Turns a little endian 16 bit value into a machine-dependant 16 bit value
 ** Parameters: d: Pointer to the memory position from which to read
 ** Returns   : (gint16) The (possibly converted) 16 bit value
+** getUInt16 returns the int unsigned.
 */
 
-#define getUInt16(_x_) ((guint16) getInt16(_x_))
 
 void *
 _XALLOC(size_t size, char *file, int line, char *funct);
 #ifdef __GNUC__
-#define XALLOC(size) \
+#define xalloc(size) \
         _XALLOC((size), __FILE__, __LINE__, __PRETTY_FUNCTION__)
 #else /* !__GNUC__ */
-#define XALLOC(size) \
+#define xalloc(size) \
         _XALLOC((size), __FILE__, __LINE__, "")
 #endif /* !__GNUC__ */
 /* Tries to allocate memory, prints an error message if not successful.
 ** Parameters: size: Number of bytes to allocate
 ** Returns   : (void *) The address of the allocated memory block
 */
+
+
+void
+sci_usleep(long time);
+/* Suspends execution for the specified amount of microseconds.
+** Parameters: (long) time: The time to sleep
+** Returns   : (void): Nothing
+** This is intended to be a portable sleep call. Under UNIX, it uses select();
+** the Win32 implementation uses MsgWait().
+*/
+
 
 int loadResources(int version, int allow_patches);
 /* Reads and parses all resource files in the current directory.

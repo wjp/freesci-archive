@@ -51,9 +51,13 @@ int max_object;
 
 #define SCRIPT_PRINT_METHODS	1
 #define SCRIPT_PRINT_CHILDREN	2
+#define SCRIPT_PRINT_SELECTORS  3
 void printObject(object* obj, int flags);
+
 int loadObjects();
 void freeObject(object*);
+
+void script_dissect(int res_no);
 
 /* Opcode formats as used by script.c */
 typedef enum {

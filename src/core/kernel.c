@@ -43,12 +43,34 @@
 extern int _kdebug_cheap_event_hack;
 extern int _kdebug_cheap_soundcue_hack;
 
+/*** Portability kludges ***/
+
 #ifdef _WIN32
+
 #define scimkdir(arg1,arg2) mkdir(arg1)
 void MsgWait (int WaitTime);
 void Win32_usleep (long usec);
+
+int sci_ffs(int _mask)
+{
+  int retval = 0;
+
+  if (!_mask) return 0;
+  retval++;
+  while (! (_mask & 1))
+  {
+    retval++;
+    _mask >>= 1;
+  }
+  
+  return retval;
+}
+
 #else
+
 #define scimkdir(arg1,arg2) mkdir(arg1,arg2)
+#define sci_ffs ffs
+
 #endif
 
 
@@ -363,14 +385,6 @@ kfree(state_t *s, int handle)
 }
 
 
-void
-sci_usleep(long time)
-{
-  struct timeval tv = {0, time};
-
-  select(0, NULL, NULL, NULL, &tv);
-}
-
 char *
 _kernel_lookup_text(state_t *s, int address, int index)
      /* Returns the string the script intended to address */
@@ -430,13 +444,11 @@ void
 _k_dyn_view_list_accept_change(state_t *s);
      /* Removes all views in anticipation of a new window or text */
 
-
 #define VIEW_PRIORITY(y) (((y) < s->priority_first)? 0 : (((y) > s->priority_last)? 15 : 1\
 	+ ((((y) - s->priority_first) * 14) / (s->priority_last - s->priority_first))))
 
 #define PRIORITY_BAND_FIRST(nr) (((nr) == 0)? 0 :  \
         ((s->priority_first) + ((nr) * (s->priority_last - s->priority_first)) / 14))
-
 
 /*****************************************/
 /************* Kernel functions **********/
@@ -1089,7 +1101,7 @@ kSetCursor(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kShow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->pic_visible_map = ffs(UPARAM_OR_ALT(0, 1)) - 1;
+  s->pic_visible_map = sci_ffs(UPARAM_OR_ALT(0, 1)) - 1;
 
   CHECK_THIS_KERNEL_FUNCTION;
   s->pic_not_valid = 2;
@@ -1172,15 +1184,44 @@ kTimesCos(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kDoSound(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+  word command = UPARAM(0);
   heap_ptr obj = UPARAM_OR_ALT(1, 0);
 
   CHECK_THIS_KERNEL_FUNCTION;
   SCIkdebug(SCIkSTUB, "kDoSound: Stub\n");
 
+  if (s->debug_mode & (1 << SCIkSOUNDCHK_NR)) {
+    int i;
+
+    SCIkdebug(SCIkSOUND, "Command 0x%x", command);
+    switch (command) {
+    case 0: sciprintf("[InitObj]"); break;
+    case 1: sciprintf("[Play]"); break;
+    case 2: sciprintf("[NOP]"); break;
+    case 3: sciprintf("[DisposeHandle]"); break;
+    case 4: sciprintf("[SetSoundOn(?)]"); break;
+    case 5: sciprintf("[Stop]"); break;
+    case 6: sciprintf("[Suspend]"); break;
+    case 7: sciprintf("[Resume]"); break;
+    case 8: sciprintf("[Get(Set?)Volume]"); break;
+    case 9: sciprintf("[Signal: Obj changed]"); break;
+    case 10: sciprintf("[Fade(?)]"); break;
+    case 11: sciprintf("[ChkDriver]"); break;
+    }
+
+    sciprintf("(");
+    for (i = 1; i < argc; i++) {
+      sciprintf("%04x", UPARAM(i));
+      if (i + 1 < argc)
+	sciprintf(", ");
+    }
+    sciprintf(")\n");
+  }
+
   if (obj > 1000) {
     if (sci_version < SCI_VERSION_01)
       PUT_SELECTOR(obj, state, 2); /* Set state to a magic value */
-    PUT_SELECTOR(obj, signal, _kdebug_cheap_soundcue_hack);
+    PUT_SELECTOR(obj, signal, -1);
   }
 
   switch (PARAM(0)) {
@@ -1341,6 +1382,37 @@ kMapKeyToDir(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
   }
 }
+
+
+void
+kGlobalToLocal(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr obj = UPARAM_OR_ALT(0, 0);
+
+  if (obj) {
+    int x = GET_SELECTOR(obj, x);
+    int y = GET_SELECTOR(obj, y);
+
+    PUT_SELECTOR(obj, x, x - s->ports[s->view_port]->xmin);
+    PUT_SELECTOR(obj, y, y - s->ports[s->view_port]->ymin);
+  }
+}
+
+
+void
+kLocalToGlobal(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr obj = UPARAM_OR_ALT(0, 0);
+
+  if (obj) {
+    int x = GET_SELECTOR(obj, x);
+    int y = GET_SELECTOR(obj, y);
+
+    PUT_SELECTOR(obj, x, x + s->ports[s->view_port]->xmin);
+    PUT_SELECTOR(obj, y, y + s->ports[s->view_port]->ymin);
+  }
+}
+
 
 void
 kStrEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -2642,6 +2714,14 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   wnd->bgcolor = PARAM_OR_ALT(8, 15);
   wnd->font = s->titlebar_port.font; /* Default to 'system' font */
 
+  /* [DJ] the title bar adjustment should be added only when the window
+     has a title */
+  if (wnd->flags & WINDOW_FLAG_TITLE)
+  {
+    wnd->ymin += 10;
+    wnd->ymax += 10;
+  }
+
   wnd->alignment = ALIGN_TEXT_LEFT; /* FIXME?? */
 
   if (wnd->priority == -1)
@@ -3227,6 +3307,8 @@ struct {
   {"TimesCos", kTimesCos },
   {"CosMult", kTimesCos },
   {"MapKeyToDir", kMapKeyToDir },
+  {"GlobalToLocal", kGlobalToLocal },
+  {"LocalToGlobal", kLocalToGlobal },
 
   /* Experimental functions */
   {"Wait", kWait },

@@ -806,4 +806,228 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(message, "message");
   FIND_SELECTOR(modifiers, "modifiers");
   FIND_SELECTOR(cue, "cue");
+  FIND_SELECTOR(owner, "owner");
+  FIND_SELECTOR(handle, "handle");
+}
+
+int
+sci_hexdump(byte *data, int length, int offsetplus)
+{
+  char tempstr[40];
+  int i;
+  for (i = 0; i < length; i+= 8) {
+    int j;
+
+    sprintf(tempstr, "%04x:                                 ", i + offsetplus);
+    for (j = 0; j < MIN(8, length - i); j++)
+      sprintf(tempstr + 6 + (j*3) + (j > 3), "%02x  ", data[i+j]);
+    for (j = 0; j < MIN(8, length - i); j++) {
+      int thechar;
+      thechar = data[i+j];
+      sprintf(tempstr + 31 + j, "%c",
+	      ((thechar < ' ') || (thechar > 127))? '.' : thechar );
+    }
+
+    for (j = 0; j < 38; j++)
+      if (!tempstr[j])
+	tempstr[j] = ' '; /* get rid of sprintf's \0s */
+	  
+    sciprintf("%s\n", tempstr);
+  }
+  return 0;
+}
+
+void script_dissect(int res_no)
+{
+  char **snames = vocabulary_get_snames();
+  int objectctr[11] = {0,0,0,0,0,0,0,0,0,0,0};
+  int _seeker = 0;
+  resource_t *script = findResource(sci_script, res_no);
+
+  if (!script) {
+    sciprintf("Script not found!\n");
+    return;
+  }
+
+  while (_seeker < script->length) {
+    int objtype = getInt16(script->data + _seeker);
+    int objsize;
+    int seeker = _seeker + 4;
+
+    if (!objtype) {
+      sciprintf("End of script object (#0) encountered.\n");
+      sciprintf("Classes: %i, Objects: %i, Export: %i,\n Var: %i (all base 10)",
+		objectctr[6], objectctr[1], objectctr[7], objectctr[10]);
+      vocabulary_free_snames(snames);
+      return;
+    }
+
+    sciprintf("\n");
+
+    objsize = getInt16(script->data + _seeker + 2);
+
+    sciprintf("Obj type #%x, size 0x%x: ", objtype, objsize);
+
+    _seeker += objsize;
+
+    objectctr[objtype]++;
+
+    switch (objtype) {
+    case sci_obj_object: {
+      int selectors, overloads, selectorsize;
+      int species = getInt16(script->data + 8 + seeker);
+      int superclass = getInt16(script->data + 10 + seeker);
+      int namepos = getInt16(script->data + 14 + seeker);
+      int nameseeker, i = 0;
+
+      sciprintf("Object\n");
+
+      sci_hexdump(script->data + seeker, objsize -4, seeker);
+      /*-4 because the size includes the two-word header */
+
+      sciprintf("Name: %s\n", namepos? ((char *)script->data + namepos) : "<unknown>");
+      sciprintf("Superclass: %x\n", superclass);
+      sciprintf("Species: %x\n", species);
+      sciprintf("-info-:%x\n", getInt16(script->data + 12 + seeker) & 0xffff);
+
+      sciprintf("Function area offset: %x\n", getInt16(script->data + seeker + 4));
+      sciprintf("Selectors [%x]:\n",
+		selectors = (selectorsize = getInt16(script->data + seeker + 6)));
+
+      seeker += 8;
+
+      while (selectors--) {
+	sciprintf("  [#%03x] = 0x%x\n", i++, getInt16(script->data + seeker) & 0xffff);
+
+	seeker += 2;
+      }
+
+
+      sciprintf("Overloaded functions: %x\n", selectors = 
+		overloads = getInt16(script->data + seeker));
+
+      seeker += 2;
+
+      if (overloads < 100)
+      while (overloads--) {
+	int selector = getInt16(script->data + (seeker));
+
+	sciprintf("  [%03x] %s: @", selector & 0xffff, (snames)? snames[selector] : "<?>");
+	sciprintf("%04x\n", getInt16(script->data + seeker + selectors*2 + 2) & 0xffff);
+
+	seeker += 2;
+      }
+
+    };
+    break;
+
+    case sci_obj_code: {
+      sciprintf("Code\n");
+      sci_hexdump(script->data + seeker, objsize -4, seeker);
+    };
+    break;
+
+    case 3:
+    case 4: {
+      sciprintf("<unknown>\n");
+      sci_hexdump(script->data + seeker, objsize -4, seeker);
+    };
+    break;
+
+    case sci_obj_strings: {
+      sciprintf("Strings\n");
+      while (script->data [seeker])
+      {
+        sciprintf ("%02x  %s\n", seeker, script->data+seeker);
+        seeker += strlen (script->data+seeker)+1;
+      }
+      seeker++; /* the ending zero byte */
+    };
+    break;
+
+    case sci_obj_class: {
+      int selectors, overloads, selectorsize;
+      int species = getInt16(script->data + 8 + seeker);
+      int superclass = getInt16(script->data + 10 + seeker);
+      int namepos = getInt16(script->data + 14 + seeker);
+      int nameseeker;
+
+      sciprintf("Class\n");
+
+      sci_hexdump(script->data + seeker, objsize -4, seeker); 
+
+      sciprintf("Name: %s\n", namepos? ((char *)script->data + namepos) : "<unknown>");
+      sciprintf("Superclass: %x\n", superclass);
+      sciprintf("Species: %x\n", species);
+      sciprintf("-info-:%x\n", getInt16(script->data + 12 + seeker) & 0xffff);
+
+      sciprintf("Function area offset: %x\n", getInt16(script->data + seeker + 4));
+      sciprintf("Selectors [%x]:\n",
+		selectors = (selectorsize = getInt16(script->data + seeker + 6)));
+
+      seeker += 8;
+      selectorsize <<= 1;
+
+      while (selectors--) {
+	int selector = getInt16(script->data + (seeker) + selectorsize);
+
+	sciprintf("  [%03x] %s = 0x%x\n", 0xffff & selector, (snames)? snames[selector] : "<?>",
+		  getInt16(script->data + seeker) & 0xffff);
+
+	seeker += 2;
+      }
+
+      seeker += selectorsize;
+
+      sciprintf("Overloaded functions: %x\n", selectors = 
+		overloads = getInt16(script->data + seeker));
+
+      seeker += 2;
+
+      while (overloads--) {
+	int selector = getInt16(script->data + (seeker));
+
+	sciprintf("  [%03x] %s: @", selector & 0xffff, (snames)? snames[selector] : "<?>");
+	sciprintf("%04x\n", getInt16(script->data + seeker + selectors*2 + 2) & 0xffff);
+
+	seeker += 2;
+      }
+
+    };
+    break;
+
+    case sci_obj_exports: {
+      sciprintf("Exports\n");
+      sci_hexdump(script->data + seeker, objsize -4, seeker);
+    };
+    break;
+
+    case sci_obj_pointers: {
+      sciprintf("Pointers\n");
+      sci_hexdump(script->data + seeker, objsize -4, seeker);
+    };
+    break;
+
+    case 9: {
+      sciprintf("<unknown>\n");
+      sci_hexdump(script->data + seeker, objsize -4, seeker);
+    };
+    break;
+
+    case sci_obj_localvars: {
+      sciprintf("Local vars\n");
+      sci_hexdump(script->data + seeker, objsize -4, seeker);
+    };
+    break;
+
+    default:
+      sciprintf("Unsupported!\n");
+      return;
+    }
+    
+  }
+
+  sciprintf("Script ends without terminator\n");
+
+  vocabulary_free_snames(snames);
 }

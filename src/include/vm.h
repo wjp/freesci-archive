@@ -130,6 +130,7 @@ typedef struct
 
   int message, modifiers; /* Used by GetEvent */
 
+  int owner, handle;
   int cue;
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 

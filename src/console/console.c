@@ -37,6 +37,7 @@ int con_row_counter = 0;
 int con_visible_rows = 0;
 int con_cursor = 1;
 int con_passthrough = 0;
+FILE *con_file;
 
 char _commandbuf[SCI_CONSOLE_INPUT_BUFFER][SCI_CONSOLE_MAX_INPUT];
 char _outputbuf[SCI_CONSOLE_OUTPUT_BUFFER][SCI_CONSOLE_LINE_WIDTH];
@@ -66,7 +67,7 @@ void *_xmalloc(size_t size)
 void sciprintf(char *fmt, ...)
 {
   va_list argp;
-  size_t bufsize = 80;
+  size_t bufsize = 256;
   int i;
   char *buf = (char *) _xmalloc(bufsize);
   char *mbuf;
@@ -84,6 +85,8 @@ void sciprintf(char *fmt, ...)
 
   if (con_passthrough)
     printf("%s",buf);
+  if (con_file)
+    fprintf(con_file, "%s", buf);
 
   mbuf = buf;
 

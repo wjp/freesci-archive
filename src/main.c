@@ -72,9 +72,10 @@ main(int argc, char** argv)
   resource_t *resource;
   config_entry_t conf;
   int i;
+  FILE *console_logfile = NULL;
 
-  printf("FreeSCI "VERSION" Copyright (C) 1999 Christopher T. Lansdown, Sergey Lapin,\n"
-	 "Carl Muckenhoupt, Christoph Reichenbach, Magnus Reftel\n"
+  printf("FreeSCI "VERSION" Copyright (C) 1999 Dmitry Jemerov, Christopher T. Lansdown,\n"
+	 "Sergey Lapin, Carl Muckenhoupt, Christoph Reichenbach, Magnus Reftel\n"
 	 "This program is free software. You can copy and/or modify it freely\n"
 	 "according to the terms of the GNU general public license, v2.0\n"
 	 "or any later version, at your option.\n"
@@ -119,6 +120,12 @@ main(int argc, char** argv)
   sci_color_mode = conf.color_mode;
   gamestate.gfx_driver = conf.gfx_driver;
 
+  if (conf.console_log)
+  {
+    console_logfile = fopen (conf.console_log, "w");
+    con_file = console_logfile;
+  }
+
   /* initialize graphics */
   if ((*gamestate.gfx_driver->Initialize)(&gamestate, gamestate.pic)) { 
     fprintf(stderr,"Graphics initialization failed. Aborting...\n");
@@ -138,6 +145,9 @@ main(int argc, char** argv)
   script_free_state(&gamestate); /* Uninitialize game state */
 
   freeResources();
+
+  if (console_logfile)
+    fclose (console_logfile);
 
   return 0;
 }

@@ -408,6 +408,7 @@ c_visible_map(void)
   }
 
   _s->pic_visible_map = cmd_params[0].val;
+  return 0;
 }
 
 int
@@ -517,7 +518,7 @@ c_debuglog(void)
 {
   int i;
   char *parser;
-  char modechars[] = "ulgcmfb"; /* Valid parameter chars */
+  char modechars[] = "ulgcmfba"; /* Valid parameter chars */
 
   if (!_debugstate_valid) {
     sciprintf("Not in debug state\n");
@@ -635,12 +636,14 @@ int
 c_simkey(void)
 {
   _kdebug_cheap_event_hack = cmd_params[0].val;
+  return 0;
 }
 
 int
 c_simsoundcue(void)
 {
   _kdebug_cheap_soundcue_hack = cmd_params[0].val;
+  return 0;
 }
 
 int
@@ -842,8 +845,8 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       cmdHook(c_debuglog, "debuglog", "s*", "Sets the debug log modes.\n  Possible parameters:\n"
 	      "  +x (sets debugging for x)\n  -x (unsets debugging for x)\n\nPossible values for x:\n"
 	      "  u: Unimpl'd/stubbed stuff\n  l: Lists and nodes\n  g: Graphics\n  c: Character"
-	      " handling\n  m: Memory management\n  f: Function call checks\n  b: Bresenham details"
-	      "  *: Everything\n\n"
+	      " handling\n  m: Memory management\n  f: Function call checks\n  b: Bresenham details\n"
+	      "  a: Audio\n  *: Everything\n\n"
 	      "  If invoked withour parameters,\n  it will list all activated\n  debug options.");
       cmdHook(c_visible_map, "set_vismap", "i", "Sets the visible map.\n  Default is 0 (visual).\n"
 	      "  Other useful values are:\n  1: Priority\n  2: Control\n  3: Auxiliary\n");

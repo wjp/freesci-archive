@@ -56,6 +56,9 @@ ddraw_shutdown(struct _state *s);
 void
 ddraw_redraw (struct _state *s, int command, int x, int y, int xl, int yl);
 
+void
+ddraw_configure (char *key, char *value);
+
 
 #endif /* HAVE_DDRAW */
 #endif /* !_SCI_GRAPHICS_DDRAW_H */

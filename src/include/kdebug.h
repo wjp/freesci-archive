@@ -26,7 +26,7 @@
 ***************************************************************************/
 /* Kernel debug defines */
 
-#define SCIk_DEBUG_MODES 7
+#define SCIk_DEBUG_MODES 8
 
 static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
   "Stubs",
@@ -36,6 +36,7 @@ static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
   "Memory management",
   "Function parameter checks",
   "Bresenham algorithms"
+  "Audio subsystem"
 };
 /* The various debug areas */
 
@@ -43,6 +44,7 @@ static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
 #define SCIkWARNING_NR -1
 #define SCIkSTUB_NR 0
 #define SCIkFUNCCHK_NR 5
+#define SCIkSOUNDCHK_NR 7
 
 #define SCIkERROR    s, __LINE__, SCIkERROR_NR
 #define SCIkWARNING  s, __LINE__, SCIkWARNING_NR
@@ -53,3 +55,4 @@ static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
 #define SCIkMEM      s, __LINE__, 4
 #define SCIkFUNCCHK  s, __LINE__, SCIkFUNCCHK_NR
 #define SCIkBRESEN   s, __LINE__, 6
+#define SCIkSOUND    s, __LINE__, SCIkSOUNDCHK_NR

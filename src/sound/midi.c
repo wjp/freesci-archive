@@ -569,7 +569,7 @@ makeMIDI0(const guint8 *src, int *size)
 	    pos, *size);
 
 
-  result = XALLOC(*size);
+  result = xalloc(*size);
   memcpy(result, obstack_finish(stackp), *size);
   obstack_free(stackp, NULL);
 

@@ -85,6 +85,10 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=..\console\console.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\core\decompress0.c
 # End Source File
 # Begin Source File
@@ -113,7 +117,15 @@ SOURCE=..\tools\sciunpack.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\core\script.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\sound\sound.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\core\vocabulary.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -122,6 +134,14 @@ SOURCE=..\sound\sound.c
 # Begin Source File
 
 SOURCE=..\include\config.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\console.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\engine.h
 # End Source File
 # Begin Source File
 
@@ -137,6 +157,10 @@ SOURCE=..\include\heap.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\include\menubar.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\include\resource.h
 # End Source File
 # Begin Source File
@@ -146,6 +170,10 @@ SOURCE=..\include\script.h
 # Begin Source File
 
 SOURCE=..\include\sound.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\uinput.h
 # End Source File
 # Begin Source File
 

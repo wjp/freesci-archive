@@ -111,6 +111,8 @@ typedef struct {
 #define SCI_MAP_EGA_COLOR(pic, col) (pic->bytespp == 1)? (col | (col << 4)) : pic->ega_colors[col]
 /* Macro for color mapping */
 
+#define INTERCOL(a, b) ((int) sqrt((((3.3 * (a))*(a)) + ((1.7 * (b))*(b))) / 5.0))
+/* Macro for color interpolation */
 
 /****************************************************************************************/
 
@@ -151,11 +153,18 @@ typedef struct
   */
   void (*Redraw) (struct _state *s, int command, int x, int y, int xl, int yl);
 
+  /* Sets a driver configuration parameter specified in the config file.
+  ** Parameters: key:   parameter name from config file
+  **             value: parameter value from config file
+  ** This function is optional. If it is equal to NULL, all configuration
+  ** parameters for this driver will be ignored.
+  ** Calls to Configure come _before_ Initialize.
+  */
+  void (*Configure) (char *key, char *value);
+
 } gfx_driver_t;
 
-
 extern gfx_driver_t *gfx_drivers[];
-
 
 #define SCI_COLOR_DITHER 0
 /* Standard mode */

@@ -34,8 +34,10 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <resource.h>
+#include <graphics.h>
 #include <getopt.h>
 #include <sound.h>
+#include <console.h>
 #ifdef HAVE_LIBPNG
 #include <graphics_png.h>
 #endif /* HAVE_LIBPNG */
@@ -50,6 +52,7 @@ static int conversion = 1;
 static int list = 0;
 static int verbose = 0;
 static int with_header = 1;
+static int dissect = 0;
 
 static struct option options[] = {
   {"no-conversion", no_argument, &conversion, 0},
@@ -63,18 +66,19 @@ static struct option options[] = {
   {"palette-dither", no_argument, &sci_color_mode, SCI_COLOR_DITHER},
   {"palette-interpolate", no_argument, &sci_color_mode, SCI_COLOR_INTERPOLATE},
   {"palette-dither256", no_argument, &sci_color_mode, SCI_COLOR_DITHER256},
+  {"dissect", no_argument, &dissect, 1},
   {0, 0, 0, 0}};
 
 
+void unpack_resource(int stype, int snr, char *outfilename);
+
 int main(int argc, char** argv)
 {
-  char fnamebuffer[12]; /* stores default file name */
-  resource_t *found;
   int i;
   int stype = -1;
   int snr;
-  char *outfilename = 0;
   char *resourcenumber_string = 0;
+  char *outfilename = 0;
   int optindex = 0;
   int c;
 
@@ -92,6 +96,8 @@ int main(int argc, char** argv)
 	case 'h':
 	  printf("Usage: sciunpack [options] <resource.number>\n"
 		 "    or sciunpack [options] <resource> <number>\n"
+                 "    If * is specified instead of <number>, \n"
+                 "    all resources of given type will be unpacked.\n"
 		 "\nAvailable options:\n"
 		 " --version              Prints the version number\n"
 		 " --verbose     -v       Enables additional output\n"
@@ -104,10 +110,13 @@ int main(int argc, char** argv)
 		 " --palette-interpolate  Does color interpolation when drawing picture resources\n"
 		 " --palette-dither256    Does dithering in 256 colors\n"
 		 " --no-conversion        Does not convert special resources\n"
+                 " --dissect              Dissects script resources, stores in <number>.script\n"
 		 "\nAs a default, 'resource.number' is the output filename, with the following\n"
 		 "exceptions:\n"
-		 "  sound resources:   Will be converted to MIDI, stored in number.midi\n"
-		 "  picture resources: Will be converted to PNG, stored in number.png\n"
+		 "  sound resources:   Will be converted to MIDI, stored in <number>.midi\n"
+#ifdef HAVE_LIBPNG
+		 "  picture resources: Will be converted to PNG, stored in <number>.png\n"
+#endif
 		 "\nThis behaviour can be overridden with the --no-conversion switch.\n");
 	  exit(0);
 	  
@@ -186,7 +195,26 @@ int main(int argc, char** argv)
     return 0;
   }
 
-  snr = atoi(resourcenumber_string);
+  if (!strcmp (resourcenumber_string, "*"))
+  {
+    int i;
+    for (i=0; i<max_resource; i++)
+      if (resource_map[i].type == stype)
+        unpack_resource (stype, resource_map[i].number, NULL);
+  } else {
+    snr = atoi(resourcenumber_string);
+    unpack_resource(stype, snr, outfilename);
+  }
+
+  freeResources();
+  return 0;
+}
+  
+
+void unpack_resource(int stype, int snr, char *outfilename)
+{
+  char fnamebuffer[12]; /* stores default file name */
+  resource_t *found;
 
   if ((stype == sci_sound) && conversion && (sci_version > SCI_VERSION_0)) {
     fprintf(stderr,"MIDI conversion is only supported for SCI version 0\n");
@@ -222,7 +250,16 @@ int main(int argc, char** argv)
       free_picture(pic);
     } else 
 #endif /* HAVE_LIBPNG */
-      {
+    if ((stype == sci_script) && dissect) {
+      FILE *f;
+
+      sprintf (outfilename, "%03d.script", snr);
+      f=fopen (outfilename, "wt");
+      con_file=f;
+      script_dissect(snr);
+      fclose (f);
+    } else 
+    {
 
       int outf = creat(outfilename, O_RDONLY);
 
@@ -231,7 +268,7 @@ int main(int argc, char** argv)
 	guint8 *outdata = makeMIDI0(found->data, &midilength);
 	if (!outdata) {
 	  fprintf(stderr,"MIDI conversion failed. Aborting...\n");
-	  return 1;
+	  return;
 	}
 	if (verbose) printf("MIDI conversion from %d bytes of sound resource"
 			    " to a %d bytes MIDI file.\n",found->length,
@@ -258,9 +295,4 @@ int main(int argc, char** argv)
     }
 
   } else printf("Resource not found.\n");
-
-  freeResources();
-  return 0;
 }
-  
-

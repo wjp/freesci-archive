@@ -62,10 +62,9 @@ gfx_driver_t gfx_driver_libggi =
   "libggi",
   libggi_init,
   libggi_shutdown,
-  libggi_redraw
+  libggi_redraw,
+  NULL
 };
-
-#define INTERCOL(a, b) ((int) sqrt((((3.3 * (a))*(a)) + ((1.7 * (b))*(b))) / 5.0))
 
 void initColors(ggi_visual_t visual)
 {

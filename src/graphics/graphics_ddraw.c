@@ -32,6 +32,7 @@
 #include <config.h>
 #ifdef HAVE_DDRAW
 
+#include <math.h>
 #include <graphics_ddraw.h>
 #include <uinput.h>
 #include <engine.h>
@@ -61,7 +62,8 @@ gfx_driver_t gfx_driver_ddraw =
   "ddraw",
   ddraw_init,
   ddraw_shutdown,
-  ddraw_redraw
+  ddraw_redraw,
+  ddraw_configure
 };
 
 /*** Initialization and window stuff ***/
@@ -86,12 +88,9 @@ void initColors()
   }
   
   for (i=0; i< 256; i++) {
-    color_table [i].rgbRed = (vcal[i & 0xf].rgbRed / 5)*3
-      + (vcal[i >> 4].rgbRed / 5)*2;
-    color_table [i].rgbGreen = (vcal[i & 0xf].rgbGreen / 5)*3
-      + (vcal[i >> 4].rgbGreen / 5)*2;
-    color_table [i].rgbBlue = (vcal[i & 0xf].rgbBlue / 5)*3
-      + (vcal[i >> 4].rgbBlue / 5)*2;
+    color_table [i].rgbRed   = INTERCOL(vcal[i & 0xf].rgbRed, vcal[i >> 4].rgbRed);
+    color_table [i].rgbGreen = INTERCOL(vcal[i & 0xf].rgbGreen, vcal[i >> 4].rgbGreen);
+    color_table [i].rgbBlue  = INTERCOL(vcal[i & 0xf].rgbBlue, vcal[i >> 4].rgbBlue);
     color_table [i].rgbReserved = 0;
   }
 }
@@ -651,5 +650,12 @@ default:
   s->last_pointer_x = mp_x;
   s->last_pointer_y = mp_y; /* Update mouse pointer status */
 }
+
+void 
+ddraw_configure (char *key, char *value)
+{
+  printf ("DDraw configuration: key %s, value %s.\n", key, value);
+}
+
 
 #endif /* HAVE_DDRAW */

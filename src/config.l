@@ -38,7 +38,7 @@
 
 config_entry_t *conf;
 char *name;
-char *workname;
+int our_section=1;
 
 #ifdef _WIN32
 #define scimkdir(arg1,arg2) mkdir(arg1)
@@ -65,11 +65,11 @@ SCIVERSION {DIGIT}"."{DIGIT}{3}"."{DIGIT}{3}
 
 "["[[:alnum:]]+"]" {
   if (strncmp(yytext + 1, name, yyleng -2) == 0) /* Are we looking for this entry? */
-    workname = name;
-  else workname = 0;
+    our_section = 1;
+  else our_section = 0;
 }
 
-color_mode[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} if (workname == name) {
+color_mode[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} if (our_section) {
   yytext = strchr(yytext, '=') + 1;
 
   while (isspace(*yytext))
@@ -78,7 +78,7 @@ color_mode[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} if (workname == name) {
   conf->color_mode = _parse_color_mode(yytext);
 }
 
-version[[:blank:]]*"="[[:blank:]]*{SCIVERSION}  if (workname == name) {
+version[[:blank:]]*"="[[:blank:]]*{SCIVERSION}  if (our_section) {
   yytext = strchr(yytext, '=') + 1;
 
   while (isspace(*yytext))
@@ -87,13 +87,53 @@ version[[:blank:]]*"="[[:blank:]]*{SCIVERSION}  if (workname == name) {
   conf->version = _parse_version_nr(yytext);
 }
 
-gfx_driver[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} if (workname == name) {
+console_log[[:blank:]]*"="[[:blank:]]*.+  if (our_section) {
+  yytext = strchr (yytext, '=') + 1;
+
+  while (isspace(*yytext))
+    yytext++;
+
+  if (conf->console_log) free (conf->console_log);
+  conf->console_log = (char *) malloc (strlen (yytext)+1);
+  strcpy (conf->console_log, yytext);
+}
+
+
+gfx_driver[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} if (our_section) {
   yytext = strchr(yytext, '=') + 1;
 
   while (isspace(*yytext))
     yytext++;
 
   conf->gfx_driver = _parse_gfx_driver(yytext);
+}
+
+[[:alnum:]]+"."[[:alnum:]]+[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} if (our_section) {
+  char *p=yytext;
+  char *p2;
+
+  yytext = strchr(yytext, '.');
+  *yytext++ = 0;
+  if (!stricmp (p, conf->gfx_driver->Name))
+  {
+    p = yytext;
+    yytext = strchr(yytext, '=');
+    *yytext++ = 0;
+
+    p2 = yytext-2;                    /* trim right spaces */
+    while (p2 > p && isspace (*p2))
+      *p2-- = 0;
+
+    while (isspace(*yytext))
+      yytext++;
+
+    p2=yytext+strlen (yytext);        /* trim right spaces */
+    while (p2 > p && isspace (*p2))
+      *p2-- = 0;
+
+    if (conf->gfx_driver->Configure)
+      (*conf->gfx_driver->Configure)(p, yytext);
+  }
 }
 
 
@@ -126,6 +166,8 @@ config_init(config_entry_t *_conf, char *_name, char *conffile)
     conf->version = SCI_VERSION_DEFAULT_SCI01;
 
   conf->gfx_driver = graph_get_default_driver();
+
+  conf->console_log = NULL;
 /**** Default config ends */
 
   if (conffile)
@@ -157,9 +199,9 @@ config_init(config_entry_t *_conf, char *_name, char *conffile)
       strcat(conf_path, "/");
       strcat(conf_path, FREESCI_CONFFILE);
     }
-  } /* !conffile /
+  } /* !conffile */
 
-  workname = name; /* Initialize work name to allow writing to conf */
+  our_section = 1;
 
   if (!(yyin = fopen(conf_path, "r"))) {
     printf("No configuration file found; using defaults.\n");

@@ -57,7 +57,7 @@ graph_clear_box(struct _state *s, int x, int y, int xl, int yl, int color)
 void
 graph_update_box(struct _state *s, int x, int y, int xl, int yl)
 {
-  int pos = y * SCI_SCREEN_WIDTH + x;
+  int pos = 0;
   int i, _yl = yl;
 
   if (x < 0) {
@@ -69,6 +69,8 @@ graph_update_box(struct _state *s, int x, int y, int xl, int yl)
     yl += y;
     y = 0;
   }
+
+  pos = y * SCI_SCREEN_WIDTH + x;
 
   if (x + xl >= s->pic->xres)
     xl = s->pic->xres - x;

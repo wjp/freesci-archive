@@ -56,7 +56,7 @@ int main(int argc, char** argv)
   printf("Vocabulary:\n");
   names = vocabulary_get_snames();
   while (names[i]) printf("%s\n", names[i++]);
-  /* TODO: free names */
+  vocabulary_free_snames(names);
 
   i = 0;
   printf("\nOpcodes:\n");
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
   if (names == 0) printf("Error loading kernel names\n");
   else
   {
-    for (i=0; i<count; i++) printf("%s\n", names[i]);
+    for (i=0; i<count; i++) printf("0x%02X: %s\n", i, names[i]);
     vocabulary_free_knames(names);
   }
   
