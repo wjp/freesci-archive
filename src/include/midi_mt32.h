@@ -37,8 +37,8 @@ int midi_mt32_event2(guint8 command, guint8 param);
 
 int midi_mt32_volume(guint8 volume);
 int midi_mt32_allstop(void);
+int midi_mt32_reverb(short param);
 
-int midi_mt32_poke(guint32 address, guint8 *data, unsigned int count);
 int midi_mt32_poke_gather(guint32 address, guint8 *data1, unsigned int count1,
                           guint8 *data2, unsigned int count2);
 

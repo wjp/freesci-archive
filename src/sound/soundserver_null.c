@@ -286,7 +286,6 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 	param = song->data[song->pos];
 	
-	/*	if (SCI_MIDI_CONTROLLER(command);  all are 3 bytes long..*/
 	if (cmdlen[command >> 4] == 2)
 	  param2 = song->data[song->pos + 1];
 
@@ -302,6 +301,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    /* set polyphony NYI */
 	  } else if (param == 0x50) {
 	    midi_mt32_reverb(param2);
+	    fprintf(ds, "Midi reverb set to %d for handle %04x\n", param2, song->handle);
 	  } else if (param == 0x4E) {
 	    fprintf(ds, "Nonhandled MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
 	  } else if ((param != 0x01) && (param != 0x07) && (param != 0x0a) &&
@@ -438,6 +438,9 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 		  song_lib_add(songlib, modsong);
 
 		  ccc = 127; /* Reset ccc */
+
+		  /* set default reverb */
+		  midi_mt32_reverb(-1);
 
 		  sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_INITIALIZED, 0);
 

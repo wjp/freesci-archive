@@ -1,5 +1,11 @@
 2001-02-28  Solomon Peachy <pizza@shaftnet.org>
 
+	* include/midi_mt32.h
+	  sound/midi_mt32.c
+	  sound/soundserver_null.c:   Added reverb support
+
+2001-02-28  Solomon Peachy <pizza@shaftnet.org>
+
 	* include/Makefile.am
           sound/Makefile.am:        New files added to build.
 	* include/sound.h:          Beginnings of sound driver.

@@ -39,6 +39,7 @@ static guint8 *data;
 static unsigned int length;
 static int type;
 static guint8 sysex_buffer[266] = {0xF0, 0x41, 0x10, 0x16, 0x12};
+static  guint8 default_reverb;
 
 static gint8 patch_map[128] = {
   0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
@@ -117,6 +118,12 @@ static gint8 rhythmkey_map[128] = {
 } channel[16]; */
 static guint8 master_volume;
 
+static struct {
+  guint8 mode;
+  guint8 time;
+  guint8 level;
+} mt32_reverb[10];
+
 unsigned short mt32_midi_patch = 001;
 
 int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
@@ -139,7 +146,7 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
     printf("MT-32: Displaying Text: \"%.20s\"\n", data + 20);
     midi_mt32_poke(0x200000, data + 20, 20);
     midi_mt32_sysex_delay();
-    
+
     /* Write Patches (48 or 96) */
     memtimbres = data[491];
     block2 = (memtimbres * 246) + 492;
@@ -188,6 +195,10 @@ int midi_mt32_open(guint8 *data_ptr, unsigned int data_length)
     printf("MT-32: Writing {F0 41 10 16 12 52 00 0A 16 16 16 16 16 16 20 F7}\n");
     midi_mt32_poke(0x52000A, unknown_sysex, 6);
     midi_mt32_sysex_delay();
+    printf("MT-32: Setting up reverb levels\n");
+    memcpy(mt32_reverb,data+ 0x4c, 3 * 11);
+    midi_mt32_reverb(default_reverb);
+    midi_mt32_sysex_delay();
     return 0;
   } else if (type == 1) {
     midi_mt32_write_block(data + 1155, (data[1154] << 8) + data[1153]);
@@ -229,9 +240,15 @@ int midi_mt32_allstop(void)
   return 0;
 }
 
-int midi_mt32_reverb(guint8 param)
+int midi_mt32_reverb(short param)
 {
-  printf("MT32: reberb set NYI\n");
+  if (param == -1)
+    param = default_reverb;
+
+  midi_mt32_poke(0x100001, &mt32_reverb->mode, 1);
+  midi_mt32_poke(0x100002, &mt32_reverb->time, 1);
+  midi_mt32_poke(0x100003, &mt32_reverb->level, 1);
+
   return 0;
 }
 
@@ -242,16 +259,19 @@ int midi_mt32_noteoff(guint8 channel, guint8 note, guint8 velocity)
 
 int midi_mt32_noteon(guint8 channel, guint8 note, guint8 velocity)
 {
+  if (channel == RHYTHM_CHANNEL) {
+    if (rhythmkey_map[note] == -1)
+      return 0;
+    else
+      note = rhythmkey_map[note];
+    }
+
   return midi_mt32_event(channel | 0x90, note, velocity);
 }
 
 int midi_mt32_event(guint8 command, guint8 note, guint8 velocity)
 {
   guint8 buffer[3] = {0,0,0};
-  /*  if (channel == RHYTHM_CHANNEL)
-    if (rhythmkey_map[note] == -1)
-      return 0;
-      else  */
 
   buffer[0] = command;
   buffer[1] = note;
