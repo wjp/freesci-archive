@@ -40,10 +40,12 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <X11/extensions/XShm.h>
-#if defined(HAVE_X11_EXTENSIONS_XRENDER_H) && defined(HAVE_X11_XFT_XFT_H)
+#if defined(HAVE_X11_EXTENSIONS_XRENDER_H)
 #  define HAVE_RENDER
 #  include <X11/extensions/Xrender.h>
-#  include <X11/Xft/Xft.h>
+#  if defined(HAVE_X11_XFT_XFT_H)
+#    include <X11/Xft/Xft.h>
+#  endif
 #endif
 #include <errno.h>
 #endif
@@ -57,6 +59,7 @@
 
 #define SCI_XLIB_SWAP_CTRL_CAPS (1 << 0)
 #define SCI_XLIB_INSERT_MODE    (1 << 1)
+#define SCI_XLIB_NLS		(1 << 2) /* Non-US keyboard support, sacrificing shortcut keys */
 
 #define X_COLOR_EXT(c) ((c << 8) | c)
 
@@ -71,17 +74,17 @@ struct _xlib_state {
 	Pixmap visual[3];
 	gfx_pixmap_t *priority[2];
 #ifdef HAVE_MITSHM
-        XShmSegmentInfo *shm[4];
+	XShmSegmentInfo *shm[4];
 #endif
 	int use_render;
-#ifdef HAVE_RENDER
-	XftDraw *xftdraw;
-#endif
 	int buckystate;
 	XErrorHandler old_error_handler;
 	Cursor mouse_cursor;
 	byte *pointer_data[2];
-        int used_bytespp; /* bytes actually used to display stuff, rather than bytes occupied in data space */
+	int used_bytespp; /* bytes actually used to display stuff, rather than bytes occupied in data space */
+#ifdef HAVE_RENDER
+	Picture picture;
+#endif
 };
 
 #define S ((struct _xlib_state *)(drv->state))
@@ -203,6 +206,14 @@ xlib_error_handler(Display *display, XErrorEvent *error)
 	return 0;
 }
 
+#define UPDATE_NLS_CAPABILITY 							\
+		if (flags & SCI_XLIB_NLS)					\
+			drv->capabilities |= GFX_CAPABILITY_KEYTRANSLATE;	\
+		else								\
+			drv->capabilities &= ~GFX_CAPABILITY_KEYTRANSLATE
+
+
+
 static int
 xlib_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 {
@@ -213,7 +224,21 @@ xlib_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
 		else
 			flags &= ~SCI_XLIB_SWAP_CTRL_CAPS;
 
+
 		return GFX_OK;
+	}
+
+	if (!strncmp(attribute, "localised_keyboard", 18)
+	    || !strncmp(attribute, "localized_keyboard", 18)) {
+		if (string_truep(value))
+			flags |= SCI_XLIB_NLS;
+		else
+			flags &= ~SCI_XLIB_NLS;
+
+		UPDATE_NLS_CAPABILITY;
+
+		return GFX_OK;
+
 	}
 
 	if (!strncmp(attribute, "disable_shmem", 14)) {
@@ -250,6 +275,10 @@ static int
 xlib_draw_filled_rect(struct _gfx_driver *drv, rect_t rect,
                       gfx_color_t color1, gfx_color_t color2,
                       gfx_rectangle_fill_t shade_mode);
+static int
+xlib_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
+		 rect_t src, rect_t dest, gfx_buffer_t buffer);
+
 
 
 static int
@@ -267,18 +296,20 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	int xsize, ysize;
 	XSizeHints *size_hints;
 	XClassHint *class_hint;
-        XImage *foo_image = NULL;
+	XImage *foo_image = NULL;
 	int reverse_endian = 0;
 #ifdef HAVE_XM_MWMUTIL_H
 	PropMotifWmHints motif_hints;
 	Atom prop, proptype;
 #endif
-	struct _xlib_state **S_alt = ((struct _xlib_state **)&(drv->state)); /* pointer to S, workaround for HP-UX cc */
 
 	int i;
 
+
+	UPDATE_NLS_CAPABILITY;
+
 	if (!S)
-	  *S_alt = sci_malloc(sizeof(struct _xlib_state));
+		S = sci_malloc(sizeof(struct _xlib_state));
 
 	flags = SCI_XLIB_INSERT_MODE;
 
@@ -322,7 +353,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 #endif
 
 	depth_mod = 0;
-	
+
 	do {
 		while ((((bytespp > 1) && (vistype >= 4))
 			|| ((bytespp == 1) && (vistype == 3)))
@@ -586,19 +617,17 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	/** X RENDER handling **/
 #ifdef HAVE_RENDER
 	S->use_render = x_have_render(S->display);
+
 	if (S->use_render) {
-		S->xftdraw = XftDrawCreate(S->display, (Drawable) S->visual[1],
-					   DefaultVisual(S->display,
-							 DefaultScreen(S->display)),
-					   S->colormap);
-
-		if (!S->xftdraw) {
-			S->use_render = 0;
-			ERROR("XftDrawCreate() failed!\n");
-		}
-	}
-
-	if (!S->use_render)
+		XRenderPictFormat * format
+			= XRenderFindVisualFormat (S->display,
+						   DefaultVisual(S->display,
+								 DefaultScreen(S->display)));
+		S->picture =  XRenderCreatePicture (S->display,
+						    (Drawable) S->visual[1],
+						    format,
+						    0, 0);
+	} else /* No Xrender */
 		drv->draw_filled_rect = xlib_draw_filled_rect;
 #else
 	S->use_render = 0;
@@ -621,7 +650,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	}
 #endif
 
-        S->used_bytespp = bytespp;
+	S->used_bytespp = bytespp;
 	S->old_error_handler = (XErrorHandler) XSetErrorHandler(xlib_error_handler);
 	S->pointer_data[0] = NULL;
 	S->pointer_data[1] = NULL;
@@ -634,7 +663,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 static void
 xlib_xdpy_info()
 {
-        int i;
+	int i;
 	XVisualInfo foo;
 	XVisualInfo *visuals;
 	int visuals_nr;
@@ -642,17 +671,11 @@ xlib_xdpy_info()
 	char *vis_classes[6] = {"StaticGray", "GrayScale", "StaticColor",
 			    "PseudoColor", "TrueColor", "DirectColor"};
 
-	if (!display) {
-		printf("No X11 server display found!\n");
-		return;
-	}
-
 	printf("Visuals provided by X11 server:\n");
 	visuals = XGetVisualInfo(display, VisualNoMask, &foo, &visuals_nr);
 
-	if (!visuals || !visuals_nr) {
+	if (!visuals_nr) {
 		printf("  None!\n");
-		return;
 	}
 
 	for (i = 0; i < visuals_nr; i++) {
@@ -718,12 +741,15 @@ xlib_exit(struct _gfx_driver *drv)
 		    XFreePixmap(S->display, S->visual[i]);
 		}
 
+#ifdef HAVE_RENDER
+		XRenderFreePicture(S->display, S->picture);
+#endif
 		XFreeGC(S->display, S->gc);
 		XDestroyWindow(S->display, S->window);
 		XCloseDisplay(S->display);
 		XSetErrorHandler((XErrorHandler) (S->old_error_handler));
 		sci_free(S);
-		/* S \equiv */ drv->state = NULL; /* Could write 'S', but HP-UX doesn't like that */
+		S = NULL;
 		gfx_free_mode(drv->mode);
 	}
 }
@@ -733,7 +759,7 @@ xlib_exit(struct _gfx_driver *drv)
 
 static int
 xlib_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
-               gfx_line_mode_t line_mode, gfx_line_style_t line_style)
+	       gfx_line_mode_t line_mode, gfx_line_style_t line_style)
 {
 	int linewidth = (line_mode == GFX_LINE_MODE_FINE)? 1:
 		(drv->mode->xfact + drv->mode->yfact) >> 1;
@@ -779,8 +805,8 @@ xlib_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 
 static int
 xlib_draw_filled_rect(struct _gfx_driver *drv, rect_t rect,
-                      gfx_color_t color1, gfx_color_t color2,
-                      gfx_rectangle_fill_t shade_mode)
+		      gfx_color_t color1, gfx_color_t color2,
+		      gfx_rectangle_fill_t shade_mode)
 {
 
 	if (color1.mask & GFX_MASK_VISUAL) {
@@ -803,31 +829,19 @@ xlib_draw_filled_rect_RENDER(struct _gfx_driver *drv, rect_t rect,
 			     gfx_rectangle_fill_t shade_mode)
 {
 	if (color1.mask & GFX_MASK_VISUAL) {
-		XftColor fg;
+		XRenderColor fg;
 
-		fg.color.red = X_COLOR_EXT(color1.visual.r);
-		fg.color.green = X_COLOR_EXT(color1.visual.g);
-		fg.color.blue = X_COLOR_EXT(color1.visual.b);
-		fg.color.alpha = 0xffff - X_COLOR_EXT(color1.alpha);
+		fg.red = X_COLOR_EXT(color1.visual.r);
+		fg.green = X_COLOR_EXT(color1.visual.g);
+		fg.blue = X_COLOR_EXT(color1.visual.b);
+		fg.alpha = 0xffff - X_COLOR_EXT(color1.alpha);
 
-		fg.pixel = xlib_map_color(drv, color1);
-
-#if SUFFICIENTLY_NEW_X11 /* FIXME */
-		XftDrawRect(S->xftdraw, &fg, rect.x, rect.y,
-			    rect.xl, rect.yl);
-#else
-		{ /* Ugly hack: Based on Keith Packard's HelloX patch's hack */
-			XRenderPictFormat *format;
-			Picture            pict;
-
-			format = XRenderFindVisualFormat (S->display, DefaultVisual(S->display, DefaultScreen(S->display)));
-
-			pict =  XRenderCreatePicture (S->display,
-						      (Drawable) S->visual[1], format, 0, 0);
-			XRenderFillRectangle(S->display,PictOpOver,pict,&(&fg)->color,
-					     rect.x, rect.y, rect.xl, rect.yl);
-		}
-#endif
+		XRenderFillRectangle(S->display,
+				     PictOpOver,
+				     S->picture,
+				     &fg,
+				     rect.x, rect.y,
+				     rect.xl, rect.yl);
 	}
 
 	if (color1.mask & GFX_MASK_PRIORITY)
@@ -874,7 +888,7 @@ xlib_unregister_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm)
 
 static int
 xlib_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
-                 rect_t src, rect_t dest, gfx_buffer_t buffer)
+		 rect_t src, rect_t dest, gfx_buffer_t buffer)
 {
 	int bufnr = (buffer == GFX_BUFFER_STATIC)? 2:1;
 	int pribufnr = bufnr -1;
@@ -904,7 +918,7 @@ xlib_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 			     (byte *) tempimg->data, tempimg->bytes_per_line,
 			     S->priority[pribufnr]->index_data,
 			     S->priority[pribufnr]->index_xl, 1,
-                             GFX_CROSSBLIT_FLAG_DATA_IS_HOMED);
+			     GFX_CROSSBLIT_FLAG_DATA_IS_HOMED);
 
 	XPutImage(S->display, S->visual[bufnr], S->gc, tempimg,
 		  0, 0, dest.x, dest.y, dest.xl, dest.yl);
@@ -913,9 +927,10 @@ xlib_draw_pixmap(struct _gfx_driver *drv, gfx_pixmap_t *pxm, int priority,
 	return GFX_OK;
 }
 
+
 static int
 xlib_grab_pixmap(struct _gfx_driver *drv, rect_t src, gfx_pixmap_t *pxm,
-                 gfx_map_mask_t map)
+		 gfx_map_mask_t map)
 {
 
 	if (src.x < 0 || src.y < 0) {
@@ -1129,22 +1144,15 @@ x_unmap_key(gfx_driver_t *drv, int keycode)
 {
 	KeySym xkey = XKeycodeToKeysym(S->display, keycode, 0);
 
-
 	return 0;
 }
 
-
 int
-x_map_key(gfx_driver_t *drv, int keycode)
+x_map_key(gfx_driver_t *drv, XEvent *key_event, char *character)
 {
-	KeySym xkey = XKeycodeToKeysym(S->display, keycode, 0);
+        KeySym xkey = XKeycodeToKeysym(S->display, key_event->xkey.keycode, 0);
 
-	if ((xkey >= 'A') && (xkey <= 'Z'))
-		return xkey;
-	if ((xkey >= 'a') && (xkey <= 'z'))
-		return xkey;
-	if ((xkey >= '0') && (xkey <= '9'))
-		return xkey;
+	*character = 0;
 
 	if (flags & SCI_XLIB_SWAP_CTRL_CAPS) {
 		switch (xkey) {
@@ -1153,7 +1161,8 @@ x_map_key(gfx_driver_t *drv, int keycode)
 		}
 	}
 
-	switch (xkey) {
+	switch(xkey) {
+
 	case XK_BackSpace: return SCI_K_BACKSPACE;
 	case XK_Tab: return 9;
 	case XK_Escape: return SCI_K_ESC;
@@ -1214,28 +1223,28 @@ x_map_key(gfx_driver_t *drv, int keycode)
 	case XK_Shift_L:/* S->buckystate |= SCI_EVM_LSHIFT; return 0; */
 	case XK_Shift_R:/* S->buckystate |= SCI_EVM_RSHIFT; return 0; */
 		return 0;
+	default:
+		break;
+	}
 
 
+	if (flags & SCI_XLIB_NLS) {
+		/* Localised key lookup */
+		XLookupString(&(key_event->xkey), character, 1, &xkey, NULL);
+	}
+
+	if ((xkey >= ' ') && (xkey <= '~'))
+		return xkey; /* All printable ASCII characters */
+
+	switch (xkey) {
 	case XK_KP_Add: return '+';
 	case XK_KP_Divide: return '/';
 	case XK_KP_Subtract: return '-';
 	case XK_KP_Multiply: return '*';
-
-	case ',':
-	case '.':
-	case '/':
-	case '\\':
-	case ';':
-	case '\'':
-	case '[':
-	case ']':
-	case '`':
-	case '-':
-	case '=':
-	case '<':
-	case ' ':
-		return xkey;
 	}
+
+	if (*character)
+		return xkey; /* Should suffice for all practical purposes */
 
 	sciprintf("Unknown X keysym: %04x\n", xkey);
 	return 0;
@@ -1273,6 +1282,7 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 			} else 
 				hasnext_event = XCheckWindowEvent(display, window, eventmask, &event);
 
+			
 			if (hasnext_event) 
 				switch (event.type) {
 
@@ -1284,6 +1294,7 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 
 				    case KeyPress: {
 					    int modifiers = event.xkey.state;
+					    char ch = 0;
 					    sci_event->type = SCI_EVT_KEYBOARD;
 
 					    S->buckystate = ((flags & SCI_XLIB_INSERT_MODE)? SCI_EVM_INSERT : 0)
@@ -1295,7 +1306,13 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 						    ^ ((modifiers & ShiftMask)? SCI_EVM_LSHIFT | SCI_EVM_RSHIFT : 0);
 
 					    sci_event->buckybits = S->buckystate;
-					    sci_event->data = x_map_key(drv, event.xkey.keycode);
+					    sci_event->data =
+						    x_map_key(drv, &event, &ch);
+
+					    if (ch)
+						    sci_event->character = ch;
+					    else
+						    sci_event->character = sci_event->data;
 
 					    if (sci_event->data == SCI_K_INSERT)
 						    flags ^= SCI_XLIB_INSERT_MODE;
@@ -1395,7 +1412,7 @@ xlib_usec_sleep(struct _gfx_driver *drv, long usecs)
 gfx_driver_t
 gfx_driver_xlib = {
 	"xlib",
-	"0.4",
+	"0.6",
 	SCI_GFX_DRIVER_MAGIC,
 	SCI_GFX_DRIVER_VERSION,
 	NULL,
@@ -1403,7 +1420,7 @@ gfx_driver_xlib = {
 	GFX_CAPABILITY_STIPPLED_LINES | GFX_CAPABILITY_MOUSE_SUPPORT
 	| GFX_CAPABILITY_MOUSE_POINTER | GFX_CAPABILITY_PIXMAP_REGISTRY
 	| GFX_CAPABILITY_PIXMAP_GRABBING | GFX_CAPABILITY_FINE_LINES
-	| GFX_CAPABILITY_WINDOWED,
+	| GFX_CAPABILITY_WINDOWED | GFX_CAPABILITY_KEYTRANSLATE,
 	0/*GFX_DEBUG_POINTER | GFX_DEBUG_UPDATES | GFX_DEBUG_PIXMAPS | GFX_DEBUG_BASIC*/,
 	xlib_set_parameter,
 	xlib_init_specific,

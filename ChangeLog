@@ -1,3 +1,8 @@
+2004-04-07  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/xlib_driver.c: Backported (copied) the Xft-free
+	Glutton xlib driver to solve linkage problems
+
 2004-04-06  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* Some configure.in changes to reflect Xft nondependencies/nonpresence
