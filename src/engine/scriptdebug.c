@@ -29,6 +29,7 @@
 #include <engine.h>
 #include <console.h>
 #include <kdebug.h>
+#include <vocabulary.h>
 
 int _debugstate_valid = 0; /* Set to 1 while script_debug is running */
 int _debug_step_running = 0; /* Set to >0 to allow multiple stepping */
@@ -284,6 +285,190 @@ c_viewinfo(state_t *s)
     }
   }
   
+  return 0;
+}
+
+int
+c_list_sentence_fragments(state_t *s)
+{
+  int i;
+
+  if (!s) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  for (i = 0; i < s->parser_branches_nr; i++) {
+    int j = 0;
+
+    sciprintf("R%02d: [%x] ->", i, s->parser_branches[i].id);
+    while ((j < 10) && s->parser_branches[i].data[j]) {
+      int dat = s->parser_branches[i].data[j++];
+
+      switch (dat) {
+      case VOCAB_TREE_NODE_COMPARE_TYPE:
+	dat = s->parser_branches[i].data[j++];
+	sciprintf(" C(%x)", dat);
+	break;
+
+      case VOCAB_TREE_NODE_COMPARE_GROUP:
+	dat = s->parser_branches[i].data[j++];
+	sciprintf(" WG(%x)", dat);
+	break;
+
+      case VOCAB_TREE_NODE_FORCE_STORAGE:
+	dat = s->parser_branches[i].data[j++];
+	sciprintf(" FORCE(%x)", dat);
+	break;
+
+      default:
+	if (dat > VOCAB_TREE_NODE_LAST_WORD_STORAGE) {
+	  int dat2 = s->parser_branches[i].data[j++];
+	  sciprintf(" %x[%x]", dat, dat2);
+	} else
+	  sciprintf(" ?%x?", dat);
+      }
+    }
+    sciprintf("\n");
+  }
+
+  sciprintf("%d rules.\n", s->parser_branches_nr);
+  return 0;
+}
+
+enum {
+  _parse_eoi,
+  _parse_token_pareno,
+  _parse_token_parenc,
+  _parse_token_nil,
+  _parse_token_number
+};
+
+int
+_parse_getinp(int *i, int *nr)
+{
+  char *token;
+
+  if (*i == cmd_paramlength)
+    return _parse_eoi;
+
+  token = cmd_params[(*i)++].str;
+
+  if (!strcmp(token,"("))
+    return _parse_token_pareno;
+
+  if (!strcmp(token,")"))
+    return _parse_token_parenc;
+
+  if (!strcmp(token,"nil"))
+    return _parse_token_nil;
+
+  *nr = strtol(token, NULL, 0);
+  return _parse_token_number;
+}
+
+int
+_parse_nodes(state_t *s, int *i, int *pos, int type, int nr)
+{
+  int nexttk, nextval, newpos, oldpos;
+
+  if (type == _parse_token_nil)
+    return 0;
+
+  if (type == _parse_token_number) {
+    s->parser_nodes[*pos += 1].type = PARSE_TREE_NODE_LEAF;
+    s->parser_nodes[*pos].content.value = nr; 
+    return *pos;
+  }
+  if (type == _parse_eoi) {
+    sciprintf("Unbalanced parentheses\n");
+    return -1;
+  }
+  if (type == _parse_token_parenc) {
+    sciprintf("Syntax error at token %d\n", *i);
+    return -1;
+  }
+  s->parser_nodes[oldpos = ++(*pos)].type = PARSE_TREE_NODE_BRANCH;
+  
+  nexttk = _parse_getinp(i, &nextval);
+  if ((newpos = s->parser_nodes[oldpos].content.branches[0] = _parse_nodes(s, i, pos, nexttk, nextval)) == -1)
+    return -1;
+
+  nexttk = _parse_getinp(i, &nextval);
+  if ((newpos = s->parser_nodes[oldpos].content.branches[1] = _parse_nodes(s, i, pos, nexttk, nextval)) == -1)
+    return -1;
+
+  if (_parse_getinp(i, &nextval) != _parse_token_parenc)
+    sciprintf("Expected ')' at token %d\n", *i);
+  return oldpos;
+}
+
+int
+c_set_parse_nodes(state_t *s)
+{
+  int i = 0;
+  int foo, bar;
+  int pos = -1;
+
+  if (!s) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  bar = _parse_getinp(&i, &foo);
+  if (_parse_nodes(s, &i, &pos, bar, foo) == -1)
+    return 1;
+
+  vocab_dump_parse_tree("debug-parse-tree", s->parser_nodes);
+  return 0;
+}
+
+int
+c_parse(state_t *s)
+{
+  result_word_t *words;
+  int words_nr;
+  char *error;
+  char *string;
+
+  if (!s) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  string = cmd_params[0].str;
+  sciprintf("Parsing '%s'\n", string);
+  words = vocab_tokenize_string(string, &words_nr,
+				s->parser_words, s->parser_words_nr,
+				s->parser_suffices, s->parser_suffices_nr,
+				&error);
+  if (words) {
+
+    int i, syntax_fail = 0;
+
+    vocab_synonymize_tokens(words, words_nr, s->synonyms, s->synonyms_nr);
+
+    sciprintf("Parsed to the following blocks:\n");
+
+    for (i = 0; i < words_nr; i++)
+      sciprintf("   Type[%04x] Group[%04x]\n", words[i].class, words[i].group);
+
+    if (vocab_build_parse_tree(&(s->parser_nodes[0]), words, words_nr, s->parser_branches,
+			       s->parser_branches_nr))
+      syntax_fail = 1; /* Building a tree failed */
+
+    g_free(words);
+
+    if (syntax_fail)
+      sciprintf("Building a tree failed.\n");
+    else
+      vocab_dump_parse_tree("debug-parse-tree", s->parser_nodes);
+
+  } else {
+    
+      sciprintf("Unknown word: '%s'\n", error);
+      g_free(error);
+  }
   return 0;
 }
 
@@ -1447,7 +1632,14 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       con_hook_command(c_dynviews, "dynviews", "", "Lists the currently active dynamic views");
       con_hook_command(c_picviews, "picviews", "", "Lists the currently active picture views");
       con_hook_command(c_viewinfo, "viewinfo", "i", "Displays the number of loops\n  and cels of each loop"
-		       " for the\n  specified view resource.");
+		       " for the\n  specified view resource.\n\n  Output:\n    C(x): Check word type against x\n"
+		       "    WG(x): Check word group against mask x\n    FORCE(x): Force storage node x\n");
+      con_hook_command(c_list_sentence_fragments, "list_sentence_fragments", "", "Lists all sentence fragments (which\n"
+		       "  are used to build Parse trees).");
+      con_hook_command(c_parse, "parse", "s", "Parses a sequence of words and prints\n  the resulting parse tree.\n"
+		       "  The word sequence must be provided as a\n  single string.");
+      con_hook_command(c_set_parse_nodes, "set_parse_nodes", "s*", "Sets the contents of all parse nodes.\n"
+		       "  Input token must be separated by\n  blanks.");
 #ifdef SCI_SIMPLE_SAID_CODE
       con_hook_command(c_sim_parse, "simparse", "s*", "Simulates a parsed entity.\n\nUSAGE\n  Call this"
 		       " function with a list of\n  Said operators, words, and word group"

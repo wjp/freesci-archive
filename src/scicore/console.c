@@ -192,6 +192,7 @@ con_parse(state_t *s, char *command)
       case '"': quote ^= 1;
 	memmove(cmd + pos, cmd + pos + 1, strlen(cmd + pos));
 	pos--;
+	break;
       default:
 	if (!onvar) {
 	  onvar = 1;

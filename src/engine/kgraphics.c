@@ -399,13 +399,10 @@ kSetJump(state_t *s, int funct_nr, int argc, heap_ptr argp)
 #define _K_BRESEN_AXIS_Y 1
 
 void
-kInitBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
+initialize_bresen(state_t *s, int funct_nr, int argc, heap_ptr argp, heap_ptr mover, int step_factor,
+		  int deltax, int deltay)
 {
-  heap_ptr mover = PARAM(0);
   heap_ptr client = GET_SELECTOR(mover, client);
-  int step_factor = PARAM_OR_ALT(1, 1);
-  int deltax = GET_SELECTOR(mover, x) - GET_SELECTOR(client, x);
-  int deltay = GET_SELECTOR(mover, y) - GET_SELECTOR(client, y);
   int stepx = GET_SELECTOR(client, xStep) * step_factor;
   int stepy = GET_SELECTOR(client, yStep) * step_factor;
   int numsteps_x = stepx? (abs(deltax) + stepx-1) / stepx : 0;
@@ -457,6 +454,17 @@ kInitBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 }
 
+void
+kInitBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr mover = UPARAM(0);
+  heap_ptr client = GET_SELECTOR(mover, client);
+
+  int deltax = GET_SELECTOR(mover, x) - GET_SELECTOR(client, x);
+  int deltay = GET_SELECTOR(mover, y) - GET_SELECTOR(client, y);
+  initialize_bresen(s, funct_nr, argc, argp, mover, PARAM_OR_ALT(1, 1), deltax, deltay);
+}
+
 
 void
 kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -467,18 +475,39 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   int x = GET_SELECTOR(client, x);
   int y = GET_SELECTOR(client, y);
-  int oldx = x, oldy = y;
-  int destx = GET_SELECTOR(mover, x);
-  int desty = GET_SELECTOR(mover, y);
-  int dx = GET_SELECTOR(mover, dx);
-  int dy = GET_SELECTOR(mover, dy);
-  int bdi = GET_SELECTOR(mover, b_di);
-  int bi1 = GET_SELECTOR(mover, b_i1);
-  int bi2 = GET_SELECTOR(mover, b_i2);
-  int movcnt = GET_SELECTOR(mover, b_movCnt);
-  int bdelta = GET_SELECTOR(mover, b_incr);
-  int axis = GET_SELECTOR(mover, b_xAxis);
+  int oldx, oldy, destx, desty, dx, dy, bdi, bi1, bi2, movcnt, bdelta, axis;
+
   int completed = 0;
+  heap_ptr chased_obj;
+  int distance, extended = 0;
+  if ((s->selector_map.who > -1)
+      && (lookup_selector(s, mover, s->selector_map.who, NULL) == SELECTOR_VARIABLE)) {
+    int deltax = 0, deltay = 0;
+    distance = GET_SELECTOR(mover, distance);
+    chased_obj = GET_SELECTOR(mover, who);
+    extended = 1;
+
+    if (chased_obj) {
+      deltax = (destx = GET_SELECTOR(chased_obj, x)) - x;
+      deltay = (desty = GET_SELECTOR(chased_obj, y)) - y;
+      PUT_SELECTOR(mover, x, destx);
+      PUT_SELECTOR(mover, y, desty);
+    }
+    initialize_bresen(s, funct_nr, argc, argp, mover, 1, deltax, deltay);
+  }
+
+  oldx = x;
+  oldy = y;
+  destx = GET_SELECTOR(mover, x);
+  desty = GET_SELECTOR(mover, y);
+  dx = GET_SELECTOR(mover, dx);
+  dy = GET_SELECTOR(mover, dy);
+  bdi = GET_SELECTOR(mover, b_di);
+  bi1 = GET_SELECTOR(mover, b_i1);
+  bi2 = GET_SELECTOR(mover, b_i2);
+  movcnt = GET_SELECTOR(mover, b_movCnt);
+  bdelta = GET_SELECTOR(mover, b_incr);
+  axis = GET_SELECTOR(mover, b_xAxis);
 
   PUT_SELECTOR(mover, b_movCnt, movcnt + 1);
 
@@ -495,18 +524,36 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   x += dx;
   y += dy;
-  if ((((x <= destx) && (oldx >= destx)) || ((x >= destx) && (oldx <= destx)))
-      && (((y <= desty) && (oldy >= desty)) || ((y >= desty) && (oldy <= desty))))
-    /* Whew... in short: If we have reached or passed our target position */
-    {
-      x = destx;
-      y = desty;
 
-      if (s->selector_map.completed > -1)
-	PUT_SELECTOR(mover, completed, completed = 1); /* Finish! */
+  if (extended) {
 
-      SCIkdebug(SCIkBRESEN, "Finished mover %04x\n", mover);
-    }
+    destx -= x;
+    desty -= y;
+
+    if (((destx*destx)+(desty*desty)) <= (distance*distance)) {
+	x = destx;
+	y = desty;
+	
+	if (s->selector_map.completed > -1)
+	  PUT_SELECTOR(mover, completed, completed = 1); /* Finish! */
+
+	SCIkdebug(SCIkBRESEN, "Finished mover %04x by extended distance check\n", mover);    }
+
+  } else { /* !extended */
+
+    if ((((x <= destx) && (oldx >= destx)) || ((x >= destx) && (oldx <= destx)))
+	&& (((y <= desty) && (oldy >= desty)) || ((y >= desty) && (oldy <= desty))))
+      /* Whew... in short: If we have reached or passed our target position */
+      {
+	x = destx;
+	y = desty;
+	
+	if (s->selector_map.completed > -1)
+	  PUT_SELECTOR(mover, completed, completed = 1); /* Finish! */
+
+	SCIkdebug(SCIkBRESEN, "Finished mover %04x\n", mover);
+      }
+  }
 
   PUT_SELECTOR(client, x, x);
   PUT_SELECTOR(client, y, y);
@@ -541,7 +588,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  heap_ptr obj = PARAM(0);
+  heap_ptr obj = UPARAM(0);
   heap_ptr cliplist = UPARAM_OR_ALT(1, 0);
   word retval;
   word signal;
@@ -2365,9 +2412,9 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   _k_dyn_view_list_accept_change(s);
 
-  /*  if ((!s->pic_not_valid)&&update_immediately) /* Refresh if drawn to valid picture */
-  /*    graph_update_box(s, port->xmin, port->ymin,
-	port->xmax - port->xmin + 1, port->ymax - port->ymin + 1);*/
+  if ((!s->pic_not_valid)&&update_immediately) /* Refresh if drawn to valid picture */
+    graph_update_box(s, port->xmin, port->ymin,
+		     port->xmax - port->xmin + 1, port->ymax - port->ymin + 1);
 
   *port=save;
 

@@ -260,6 +260,9 @@ vocab_get_branches(int *branches_nr)
     retval[i].data[9] = 0; /* Always terminate */
   }
 
+  if (!retval[*branches_nr - 1].id) /* branch lists may be terminated by empty rules */
+    --(*branches_nr);
+
   return retval;
 }
 
@@ -704,8 +707,8 @@ _vocab_ptree_try_branches(parse_tree_node_t *nodes, result_word_t *words, int wo
 
 
 int
-vocab_build_parse_tree(parse_tree_node_t *nodes, result_word_t *words, int words_nr,
-		       parse_tree_branch_t *branches, int branches_nr)
+vocab_build_parse_tree_old(parse_tree_node_t *nodes, result_word_t *words, int words_nr,
+			   parse_tree_branch_t *branches, int branches_nr)
 {
   int lastnode = -1;
   int nextword_forknode = -1; /* The node which the next word will be linked to */
@@ -741,6 +744,179 @@ vocab_build_parse_tree(parse_tree_node_t *nodes, result_word_t *words, int words
 }
 
 
+
+/************ New Parse() implementation *************/
+
+static int
+_vbpt_pareno(parse_tree_node_t *nodes, int *pos, int base)
+/* Opens parentheses */
+{
+  nodes[base].content.branches[0] = *pos+1;
+  nodes[++(*pos)].type = PARSE_TREE_NODE_BRANCH;
+  nodes[*pos].content.branches[0] = 0;
+  nodes[*pos].content.branches[1] = 0;
+  //  sciprintf("(");
+  return *pos;
+}
+
+
+static int
+_vbpt_parenc(parse_tree_node_t *nodes, int *pos, int paren)
+/* Closes parentheses for appending */
+{
+  nodes[paren].content.branches[1] = ++(*pos);
+  nodes[*pos].type = PARSE_TREE_NODE_BRANCH;
+  nodes[*pos].content.branches[0] = 0;
+  nodes[*pos].content.branches[1] = 0;
+  //  sciprintf(")");
+  return *pos;
+}
+
+
+static int
+_vbpt_append(parse_tree_node_t *nodes, int *pos, int base, int value)
+/* writes one value to an existing base node and creates a successor node for writing */
+{
+  nodes[base].content.branches[0] = ++(*pos);
+  nodes[*pos].type = PARSE_TREE_NODE_LEAF;
+  nodes[*pos].content.value = value;
+  nodes[base].content.branches[1] = ++(*pos);
+  nodes[*pos].type = PARSE_TREE_NODE_BRANCH;
+  nodes[*pos].content.branches[0] = 0;
+  nodes[*pos].content.branches[1] = 0;
+  //  sciprintf("%03x ", value);
+  return *pos;
+}
+
+
+static int
+_vbpt_terminate(parse_tree_node_t *nodes, int *pos, int base, int value)
+     /* Terminates, overwriting a nextwrite forknode */
+{
+  nodes[base].type = PARSE_TREE_NODE_LEAF;
+  nodes[base].content.value = value;
+  //  sciprintf("%03x)", value);
+  return *pos;
+}
+
+static int
+_vbpt_try_branch(parse_tree_node_t *nodes, result_word_t *words, int words_nr,
+		 parse_tree_branch_t *branches, int branches_nr,
+		 int *words_terminated, /* words which already matched a terminal expression */
+		 int nonterminal, /* The nonterminal we must use */
+		 int *searchstart, /* The minimal position of a rule expanding 'nonterminal' */
+		 int sibling_tokens, /* number of nonterminals parallel to this branch */
+		 int openpos, /* position of the opening node */
+		 int pos /* position in the parse tree */
+		 )
+{
+  int i, tokens_nr = 0;
+  parse_tree_branch_t *branch;
+  int old_words_terminated = *words_terminated;
+sciprintf("Rec %03x\n", nonterminal);
+  while ((*searchstart < branches_nr) && (branches[*searchstart].id != nonterminal))
+    ++(*searchstart);
+
+  if (*searchstart >= branches_nr) /* found no rules */
+    return 0;
+
+  branch = branches + *searchstart;
+  while ((tokens_nr < 10) && branch->data[tokens_nr])
+    tokens_nr += 2;
+  //sciprintf("R%02d: wtn=%d, tn=%d, st=%d > words_nr=%d?\n", *searchstart, *words_terminated, tokens_nr, sibling_tokens, words_nr);
+
+
+  if ((*words_terminated) + (tokens_nr >> 1) + sibling_tokens > words_nr) /* The resulting word would become too big */
+    return 0;
+  //sciprintf("Obviously not.\n");
+  for (i = 0; i < tokens_nr; i+=2) {
+    int type = branch->data[i];
+    int content = branch->data[i + 1];
+
+    if (type == VOCAB_TREE_NODE_COMPARE_TYPE) {
+      sciprintf("CType w%d vs %04x\n", *words_terminated, content);
+      if (words[*words_terminated].class & content)
+	_vbpt_terminate(nodes, &pos, openpos, words[(*words_terminated)++].group);
+      else {
+	*words_terminated = old_words_terminated;
+	return 0;
+      }
+      sciprintf("Term\n");
+
+    } else if (type == VOCAB_TREE_NODE_COMPARE_GROUP) {
+      if (words[*words_terminated].group == content)
+	_vbpt_terminate(nodes, &pos, openpos, words[(*words_terminated)++].group);
+      else {
+	*words_terminated = old_words_terminated;
+	return 0;
+      }
+
+    } else if (type == VOCAB_TREE_NODE_FORCE_STORAGE) {
+      openpos = _vbpt_terminate(nodes, &pos, openpos, content);
+    } else {
+      int seekpos = 1;
+      int result;
+      int recnode = _vbpt_pareno(nodes, &pos, openpos);
+      recnode = _vbpt_append(nodes, &pos, recnode, type);
+      recnode = _vbpt_append(nodes, &pos, recnode, content);
+
+      do {
+	result = _vbpt_try_branch(nodes, words, words_nr, branches, branches_nr,
+				  words_terminated, content,
+				  &seekpos, (tokens_nr >> 1) - 1, recnode, pos);
+sciprintf("returned, seekpos=%d\n", seekpos);
+	++seekpos;
+      } while (!result && (seekpos < branches_nr));
+
+      if (!result) {
+	*words_terminated = old_words_terminated;
+	return 0;
+      }
+
+    }
+  }
+
+  sciprintf("Success with R%02d\n", *searchstart);
+  return pos; /* return success */
+  
+}
+
+int
+vocab_build_parse_tree(parse_tree_node_t *nodes, result_word_t *words, int words_nr,
+		       parse_tree_branch_t *branches, int branches_nr)
+{
+  int seeker = 1;
+  int finished_words = 0;
+
+  nodes[0].type = PARSE_TREE_NODE_BRANCH;
+  nodes[0].content.branches[0] = 1;
+  nodes[0].content.branches[1] = 2;
+
+  nodes[1].type = PARSE_TREE_NODE_LEAF;
+  nodes[1].content.value = 0x141;
+
+  nodes[2].type = PARSE_TREE_NODE_BRANCH;
+  nodes[2].content.branches[0] = 0;
+  nodes[2].content.branches[1] = 0;
+
+  while ((finished_words != words_nr) && (seeker < branches_nr)) {
+    int pos = 2;
+    int startpos = _vbpt_append(nodes, &pos, 2, branches[0].id);
+    int firstid = branches[0].data[1];
+    //    startpos = _vbpt_pareno(nodes, &pos, startpos);
+    finished_words = 0;
+
+    if (!_vbpt_try_branch(nodes, words, words_nr, branches, branches_nr,
+			  &finished_words,  firstid,
+			  &seeker, 0, startpos, pos))
+      finished_words = -1;
+sciprintf("returned MAIN %d/%d, seeker=%d\n", finished_words, words_nr, seeker);
+    ++seeker;
+  }
+
+  return !(finished_words == words_nr);
+}
+
 void
 _vocab_recursive_ptree_dump_treelike(parse_tree_node_t *nodes, int nr, int prevnr)
 {
@@ -751,7 +927,7 @@ _vocab_recursive_ptree_dump_treelike(parse_tree_node_t *nodes, int nr, int prevn
 
   if (nodes[nr].type == PARSE_TREE_NODE_LEAF)
     /*    sciprintf("[%03x]%04x", nr, nodes[nr].content.value); */
-    sciprintf("%d", nodes[nr].content.value);
+    sciprintf("%x", nodes[nr].content.value);
   else {
     int lbranch = nodes[nr].content.branches[0];
     int rbranch = nodes[nr].content.branches[1];
@@ -794,7 +970,7 @@ _vocab_recursive_ptree_dump(parse_tree_node_t *nodes, int nr, int prevnr)
       _vocab_recursive_ptree_dump(nodes, lbranch, nr);
       sciprintf(")");
     } else
-      sciprintf("%d", nodes[lbranch].content.value);
+      sciprintf("%x", nodes[lbranch].content.value);
   } else sciprintf ("nil");
 
   sciprintf(" ");
@@ -803,7 +979,7 @@ _vocab_recursive_ptree_dump(parse_tree_node_t *nodes, int nr, int prevnr)
     if (nodes[rbranch].type == PARSE_TREE_NODE_BRANCH)
       _vocab_recursive_ptree_dump(nodes, rbranch, nr);
     else
-      sciprintf("%d", nodes[rbranch].content.value);
+      sciprintf("%x", nodes[rbranch].content.value);
   } else sciprintf("nil");
 }
 

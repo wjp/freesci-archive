@@ -1,3 +1,8 @@
+2000-05-07  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kDoBresen): Monsters now chase the player
+	in QfG1
+
 2000-05-06  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/graphics/engine_graphics.c (graph_update_box): Fixed display bug

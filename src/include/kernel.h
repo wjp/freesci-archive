@@ -277,12 +277,10 @@ _k_dyn_view_list_accept_change(struct _state *s);
 
 
 
-/******************** Sound functions ********************/
+/******************** Misc functions ********************/
 
 void
 process_sound_events(struct _state *s); /* Get all sound events, apply their changes to the heap */
-
-
 
 
 /******************** Constants ********************/

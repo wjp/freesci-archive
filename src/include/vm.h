@@ -155,6 +155,7 @@ typedef struct
 
   int baseSetter; /* Alternative baseSetter */
 
+  int who, distance; /* Used for 'chasing' movers */
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {
