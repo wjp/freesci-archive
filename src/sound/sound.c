@@ -178,7 +178,18 @@ sound_command(state_t *s, int command, int handle, int parameter)
 	case SOUND_COMMAND_STOP_ALL:
 	case SOUND_COMMAND_GET_NEXT_EVENT:
 	case SOUND_COMMAND_FADE_HANDLE:
-	  sound_queue_command(event.handle, event.signal, event.value);
+	case SOUND_COMMAND_PRINT_SONGID:
+	case SOUND_COMMAND_PRINT_CHANNELS:
+	case SOUND_COMMAND_PRINT_MAPPING:
+	case SOUND_COMMAND_INSTRMAP_SET_INSTRUMENT:
+	case SOUND_COMMAND_INSTRMAP_SET_KEYSHIFT:
+	case SOUND_COMMAND_INSTRMAP_SET_FINETUNE:
+	case SOUND_COMMAND_INSTRMAP_SET_BENDER_RANGE:
+	case SOUND_COMMAND_INSTRMAP_SET_PERCUSSION:
+	case SOUND_COMMAND_INSTRMAP_SET_VOLUME:
+	case SOUND_COMMAND_MUTE_CHANNEL:
+	case SOUND_COMMAND_UNMUTE_CHANNEL:
+		sound_queue_command(event.handle, event.signal, event.value);
 		return 0;
 
 		/* set the sound volume. */

@@ -64,6 +64,15 @@ static pid_t ppid;
 
 #ifdef HAVE_FORK
 
+static void
+sound_unix_server_verify_ppid()
+{
+	if (verify_pid(ppid)) {
+		fprintf(stderr,"FreeSCI Sound server: Parent process is dead, terminating\n");
+		_exit(1); /* Die semi-ungracefully */
+	}
+}
+
 static int
 checked_write(int file, byte *buf, size_t size)
 {
@@ -203,7 +212,7 @@ sound_unix_queue_event(int handle, int signal, int value)
 	event.signal = signal;
 	event.value = value;
 
-	checked_write(x_fd_events, &event, sizeof(sound_event_t));
+	checked_write(x_fd_events, (byte *)&event, sizeof(sound_event_t));
 
 }
 
@@ -225,10 +234,7 @@ sound_unix_get_event(state_t *s)
 	char debug_buf[65];
 	sound_event_t *event = xalloc(sizeof(sound_event_t));
 
-  	if (verify_pid(ppid)) {
-		fprintf(stderr,"FreeSCI Sound server: Parent process is dead, terminating\n");
-		_exit(1); /* Die semi-ungracefully */
-	}
+	sound_unix_server_verify_ppid();
 
 
 	FD_ZERO(&inpfds);
@@ -275,7 +281,7 @@ sound_unix_queue_command(int handle, int signal, int value)
 	fprintf(stderr, "SIG: writing %04x %d %d\n",
 		event.handle, event.signal, event.value);
 	*/
-	checked_write(x_fd_out, &event, sizeof(sound_event_t));
+	checked_write(x_fd_out, (byte *)&event, sizeof(sound_event_t));
 
 }
 
@@ -284,6 +290,8 @@ sound_unix_get_command(GTimeVal *wait_tvp)
 {
 	fd_set input_fds;
 	sound_event_t *event = NULL;
+
+	sound_unix_server_verify_ppid();
 
 	FD_ZERO(&input_fds);
 	FD_SET(x_fd_in, &input_fds);
@@ -314,6 +322,8 @@ sound_unix_get_data(byte **data_ptr, int *size, int maxlen)
 	int remaining_size;
 	byte *data_ptr_pos;
 	GTimeVal timeout = {0, SOUND_SERVER_TIMEOUT};
+
+	sound_unix_server_verify_ppid();
 
 	FD_ZERO(&fds);
 	FD_SET(fd, &fds); 
@@ -364,7 +374,7 @@ sound_unix_send_data(byte *data_ptr, int maxsend)
 	int fd = x_fd_out;
 	int to_go = maxsend;
 
-	len = checked_write(fd, &maxsend, sizeof(int));
+	len = checked_write(fd, (byte *)&maxsend, sizeof(int));
 
 	while (to_go) {
 		len = checked_write(fd, data_ptr, to_go);

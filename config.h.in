@@ -54,6 +54,9 @@
 /* Define if you have the socketpair function.  */
 #undef HAVE_SOCKETPAIR
 
+/* Define if you have the usleep function.  */
+#undef HAVE_USLEEP
+
 /* Define if you have the <dirent.h> header file.  */
 #undef HAVE_DIRENT_H
 

@@ -82,7 +82,27 @@ extern DLLEXTERN midi_device_t *midi_devices[];
 
 struct _midi_device *midi_find_device(char *name);
 
+
+/*** MT32->GM mapping API ***/
+
+void
+midi_mt32gm_print_instrument(FILE *file, int index);
+/* Prints a description of an instrument
+** Parameters: (FILE *) file: The file to write to
+**             (int) index: Index of the instrument to
+**                          inspect
+** Returns   : (void)
+*/
+
+void
+midi_mt32gm_print_all_maps(FILE *file);
+/* Prints all instrument mappings
+** Parameters: (FILE *) file: The file they should be print to
+** Returns   : (void)
+*/
+
 #endif /* _MIDI_DEVICE_H_ */
+
 
 
 

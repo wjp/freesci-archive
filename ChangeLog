@@ -1,5 +1,7 @@
 2001-04-22  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/engine/scriptdebug.c (c_sndmap): Added snd and sndmap commands
+
 	* src/gfx/resource/sci_pic_0.c (_gfxr_draw_line): Added 'half' line
 	mode
 

@@ -116,6 +116,29 @@ extern int soundserver_dead;
 /* return the mute status of the system */
 #define SOUND_COMMAND_GET_VOLUME 19
 /* retrn the global sound volume */
+#define SOUND_COMMAND_PRINT_SONGID 20
+/* Prints the current song ID to the debug stream */
+#define SOUND_COMMAND_PRINT_CHANNELS 21
+/* Prints the current channel status to the debug stream */
+#define SOUND_COMMAND_PRINT_MAPPING 22
+/* Prints all current MT-32 -> GM instrument mappings to the debug stream */
+#define SOUND_COMMAND_INSTRMAP_SET_INSTRUMENT 23
+/* Sets the 'gm_instr' part of an instrument mapping */
+#define SOUND_COMMAND_INSTRMAP_SET_KEYSHIFT 24
+/* Sets the 'keyshift' part of an instrument mapping */
+#define SOUND_COMMAND_INSTRMAP_SET_FINETUNE 25
+/* Sets the 'finetune' part of an instrument mapping */
+#define SOUND_COMMAND_INSTRMAP_SET_BENDER_RANGE 26
+/* Sets the 'bender range' part of an instrument mapping */
+#define SOUND_COMMAND_INSTRMAP_SET_PERCUSSION 27
+/* Sets the 'gm_rhythmkey' part of an instrument mapping */
+#define SOUND_COMMAND_INSTRMAP_SET_VOLUME 28
+/* Sets the 'volume' part of an instrument mapping */
+#define SOUND_COMMAND_MUTE_CHANNEL 29
+/* Mutes one of the output channels */
+#define SOUND_COMMAND_UNMUTE_CHANNEL 30
+/* Un-mutes one of the output channels */
+
 
 #define SOUND_SIGNAL_CUMULATIVE_CUE 0
 /* Request for the specified HANDLE's signal to be increased */
@@ -168,7 +191,12 @@ int
 init_midi_device(struct _state *s);
 /* sets up the midi device; loads the patch, etc. */
 
+#define MAP_NOT_FOUND -1
+#define NOMAP -2
+#define RHYTHM -3
+
 extern char *GM_Instrument_Names[];
+extern char *GM_Percussion_Names[];
 
 typedef struct {
 	gint8 gm_instr;
@@ -180,6 +208,8 @@ typedef struct {
 } MIDI_map_t;
 
 extern MIDI_map_t MIDI_mapping[128];
+extern int MIDI_mappings_nr; /* Number of MIDI mappings */
+
 
 extern int cmdlen[16];
 

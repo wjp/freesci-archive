@@ -41,11 +41,103 @@ sound_server_t *global_sound_server = NULL;
 
 int soundserver_dead = 0;
 
+
+static int
+sound_server_print_channels_any(FILE *ds, int *channel_instrument,
+				byte *mute_channel, int flag)
+{
+	int i;
+
+	for (i = 0; i < 16; i++)
+		if (channel_instrument[i] >= 0) {
+			fprintf(ds, "#%d%s:", i+1, mute_channel[i]? " [MUTE]":"");
+			if (flag)
+				midi_mt32gm_print_instrument(ds, channel_instrument[i]);
+			else 
+				fprintf(ds, " Instrument %d\n", channel_instrument[i]);
+		}
+}
+
+static int
+sound_server_print_channels(FILE *ds, int *channel_instrument,
+			    byte *mute_channel)
+{
+	sound_server_print_channels_any(ds, channel_instrument, mute_channel, 0);
+}
+
+static int
+sound_server_print_mapped_channels(FILE *ds, int *channel_instrument,
+				   byte *mute_channel)
+{
+	sound_server_print_channels_any(ds, channel_instrument, mute_channel, 1);
+}
+
+
+#define SOUNDSERVER_INSTRMAP_CHANGE(ELEMENT, VAL_MIN, VAL_MAX, ELEMENT_NAME) \
+		if (value >= (VAL_MIN) && value <= (VAL_MAX)) \
+			MIDI_mapping[instr].ELEMENT = value; \
+		else \
+			fprintf(output, "Invalid %s: %d\n", ELEMENT_NAME, value) \
+
+void
+sound_server_change_instrmap(FILE *output, int action, int instr, int value)
+{
+	if (instr < 0 || instr >= MIDI_mappings_nr) {
+		fprintf(output, "sound_server_change_instrmap(): Attempt to re-map"
+			" invalid instrument %d!\n", instr);
+		return;
+	}
+
+	switch (action) {
+	case SOUND_COMMAND_INSTRMAP_SET_INSTRUMENT:
+		if ((value >= (0) && value <= (MIDI_mappings_nr - 1))
+		    || value == NOMAP
+		    || value == RHYTHM)
+			MIDI_mapping[instr].gm_instr = value;
+		else
+			fprintf(output, "Invalid instrument ID: %d\n", value);
+		break;
+
+	case SOUND_COMMAND_INSTRMAP_SET_KEYSHIFT:
+		SOUNDSERVER_INSTRMAP_CHANGE(keyshift, -128, 127,
+					    "key shift");
+		break;
+
+	case SOUND_COMMAND_INSTRMAP_SET_FINETUNE:
+		SOUNDSERVER_INSTRMAP_CHANGE(gm_instr, -32768, 32767,
+					    "finetune value");
+		break;
+
+	case SOUND_COMMAND_INSTRMAP_SET_BENDER_RANGE:
+		SOUNDSERVER_INSTRMAP_CHANGE(gm_instr, -128, 127,
+					    "bender range");
+		break;
+
+	case SOUND_COMMAND_INSTRMAP_SET_PERCUSSION:
+		SOUNDSERVER_INSTRMAP_CHANGE(gm_instr, 0, 79,
+					    "percussion instrument");
+		break;
+
+	case SOUND_COMMAND_INSTRMAP_SET_VOLUME:
+		SOUNDSERVER_INSTRMAP_CHANGE(gm_instr, 0, 100,
+					    "instrument volume");
+		break;
+
+	default:
+		fprintf(output, "sound_server_change_instrmap(): Internal error: "
+			"Invalid action %d!\n", action);
+	}
+}
+
+
 void
 sci0_soundserver()
 {
   fd_set input_fds;
   GTimeVal last_played, wakeup_time, ctime;
+  byte mute_channel[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
+  int channel_instrument_orig[16] = {-1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1};
+  int channel_instrument[16];
   song_t *_songp = NULL;
   songlib_t songlib = &_songp;   /* Song library */
   song_t *newsong, *song = NULL; /* The song we're playing */
@@ -67,6 +159,7 @@ sci0_soundserver()
     int fadeticks = 0;		
     int old_songpos;
     song_t *oldsong = song;
+    byte last_command = 0; /* Used for 'running' mode */
 
     fflush(ds);
     if (fadeticks) {
@@ -187,6 +280,7 @@ sci0_soundserver()
 	    modsong->status = SOUND_STATUS_PLAYING;
 	    sound_queue_event(event.handle, SOUND_SIGNAL_PLAYING, 0);
 	    newsong = modsong; /* Play this song */
+	    memcpy(channel_instrument, channel_instrument_orig, sizeof(int)*16);
 
 	  } else
 	    fprintf(ds, "Attempt to play invalid handle %04x\n", event.handle);
@@ -403,6 +497,44 @@ sci0_soundserver()
 	}
 	break;
 
+	case SOUND_COMMAND_PRINT_SONGID: {
+		if (song)
+			fprintf(ds, "%04x", song->handle);
+		else
+			fprintf(ds, "No song is playing.");
+	}
+	break;
+
+	case SOUND_COMMAND_PRINT_CHANNELS:
+		sound_server_print_channels(ds, &(channel_instrument[0]),
+					    &(mute_channel[0]));
+		break;
+
+	case SOUND_COMMAND_PRINT_MAPPING:
+		sound_server_print_mapped_channels(ds, &(channel_instrument[0]),
+						   &(mute_channel[0]));
+		break;
+
+	case SOUND_COMMAND_INSTRMAP_SET_INSTRUMENT:
+	case SOUND_COMMAND_INSTRMAP_SET_KEYSHIFT:
+	case SOUND_COMMAND_INSTRMAP_SET_FINETUNE:
+	case SOUND_COMMAND_INSTRMAP_SET_BENDER_RANGE:
+	case SOUND_COMMAND_INSTRMAP_SET_PERCUSSION:
+	case SOUND_COMMAND_INSTRMAP_SET_VOLUME:
+		sound_server_change_instrmap(ds, event.signal,
+					     event.handle, event.value);
+		break;
+
+	case SOUND_COMMAND_MUTE_CHANNEL:
+		if (event.value >= 0 && event.value < 16)
+			mute_channel[event.value] = 1;
+		break;
+
+	case SOUND_COMMAND_UNMUTE_CHANNEL:
+		if (event.value >= 0 && event.value < 16)
+			mute_channel[event.value] = 0;
+		break;
+
 	case SOUND_COMMAND_SUSPEND_SOUND: {
 
 	  sci_get_current_time((GTimeVal *)&suspend_time);
@@ -516,9 +648,14 @@ sci0_soundserver()
 	  param2 = -1;
 	
 	song->pos += cmdlen[command >> 4];
-	
-	sci_midi_command(song, command, param, param2, 
-			 &ccc, ds);
+
+	if ((command & 0xf0) == 0xc0) /* Change instrument */
+		channel_instrument[command & 0xf] = param;
+
+	if (!((command & 0xf0) == 0x90 && mute_channel[command & 0xf]))
+		/* Unless the channel is muted */
+		sci_midi_command(song, command, param, param2, 
+				 &ccc, ds);
 	
       }
       

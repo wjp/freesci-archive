@@ -1,5 +1,5 @@
 /***************************************************************************
- midi.c (C) 1999 Christoph Reichenbach, TU Darmstadt
+ midi.c (C) 1999,2001 Christoph Reichenbach, TU Darmstadt
         (C) 1999-2000 Rickard Lind
 
  This program may be modified and copied freely according to the terms of
@@ -42,6 +42,7 @@ static struct {
 
 
 MIDI_map_t MIDI_mapping[128];
+int MIDI_mappings_nr = 128;
 
 char *GM_Instrument_Names[] = {
 
@@ -179,7 +180,7 @@ char *GM_Instrument_Names[] = {
 /* This is the MIDI channel used for percussion instruments */
 
 /* The GM Percussion map is downwards compatible to the MT32 map, which is used in SCI */
-static char *GM_Percussion_Names[] = {
+char *GM_Percussion_Names[] = {
   /*00*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
   /*10*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   /*20*/  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -238,9 +239,6 @@ static char *GM_Percussion_Names[] = {
  * Fancy instrument mappings begin here... *
  *******************************************/
 
-#define MAP_NOT_FOUND -1
-#define NOMAP -2
-#define RHYTHM -3
 
 static struct {
   char *name;

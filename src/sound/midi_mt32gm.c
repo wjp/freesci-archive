@@ -44,6 +44,50 @@ int midi_mt32gm_close()
 	return midiout_close();
 }
 
+void
+midi_mt32gm_print_all_instruments(FILE *file)
+{
+	int i;
+	for (i = 0; i < MIDI_mappings_nr; i++)
+		midi_mt32gm_print_instrument(file, i);
+}
+
+void
+midi_mt32gm_print_instrument(FILE *file, int index)
+{
+	MIDI_map_t *map = MIDI_mapping + index;
+
+	if (index < 0 || index >= MIDI_mappings_nr) {
+		fprintf(file, "Instr #%d: <invalid>\n");
+		return;
+	}
+
+	fprintf(file, "Instr #%d -> ", index);
+
+	if (map->gm_instr == NOMAP)
+		fprintf(file, "[mute]\n");
+
+	else if (map->gm_instr == RHYTHM) {
+		char *perc_name = GM_Percussion_Names[map->gm_rhythmkey];
+
+		fprintf(file, "GM percussion %d vol:%d\n",
+			map->gm_rhythmkey, map->volume);
+
+		if (map->gm_rhythmkey < 80 && map->gm_rhythmkey > 0 && perc_name)
+			fprintf(file, "    (%s)\n", perc_name);
+		else
+			fprintf(file, "    (<invalid>)\n");
+
+	} else {
+		char *instr_name = GM_Instrument_Names[map->gm_instr];
+
+		fprintf(file, "GM %d shift:%d ft:%d bend:%d vol:%d\n",
+			map->gm_instr, map->keyshift, map->finetune,
+			map->bender_range, map->volume);
+		fprintf(file, "    (%s)\n", instr_name);
+	}
+}
+
 static int _notes = 0;
 int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2)
 {
