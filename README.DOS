@@ -1,0 +1,23 @@
+The DOS version of FreeSCI is around the same level of functionality as
+the Linux version. The MIDI support is also done (yay!), but it probably
+has a lot of bugs.
+
+You'll need this in order to compile FreeSCI/DOS:
+
+ * DJGPP 2 (http://www.delorie.com)
+ * libpng (http://www.cdrom.com/pub/png/)
+ * zlib (http://www.cdrom.com/infozip/zlib/)
+
+The header files of libpng and zlib must be put in %DJGPP_ROOT%/include, and
+the library files in %DJGPP_ROOT%/lib. In order to compile, you'll need to
+invoke
+
+set lfn=y
+make -fmakefile.dos
+
+To tell make it should use makefile.dos instead of makefile. You *MUST* set
+the environment variable LFN to Y (and thus you must compile under Win9x/2000/NT). This is because of the long filenames that are used.
+
+Have fun!
+Rink Springer VII
+rink@springer.cx

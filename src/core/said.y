@@ -91,6 +91,8 @@ yyerror(char *s)
 %left YY_LT         /* 0xf8 */
 %token YY_GT        /* 0xf9 */
 
+%expect 5 /* 5 s/r conflicts */
+
 %%
 
 said_spec:	  ne_subexpression more_after
