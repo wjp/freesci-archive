@@ -928,14 +928,14 @@ main(int argc, char** argv)
 	char startdir[PATH_MAX+1] = "";
 	char resource_dir[PATH_MAX+1] = "";
 	char work_dir[PATH_MAX+1] = "";
-	char *gfx_driver_name			= NULL;
-	char *midiout_driver_name		= NULL;
-	char *midi_device_name			= NULL;
-	char *pcm_driver_name                   = NULL;
+	char *gfx_driver_name = NULL;
+	char *midiout_driver_name = NULL;
+	char *midi_device_name = NULL;
+	char *pcm_driver_name = NULL;
 	char *game_name	= NULL;
 	char *savegame_name = NULL;
-	sci_version_t version			= 0;
-	gfx_driver_t *gfx_driver		= NULL;
+	sci_version_t version = 0;
+	gfx_driver_t *gfx_driver = NULL;
 #if 0
 	sound_server_t *sound_server = NULL;
 #endif
@@ -953,6 +953,7 @@ main(int argc, char** argv)
 	printf(" Dmitry Jemerov, Christopher T. Lansdown, Sergey Lapin, Rickard Lind,\n"
 		   " Carl Muckenhoupt, Christoph Reichenbach, Magnus Reftel, Lars Skovlund,\n"
 		   " Rink Springer, Petr Vyhnak, Solomon Peachy, Matt Hargett, Alex Angas\n"
+		   " Walter van Niftrik, Rainer Canavan, Ruediger Hanke\n"
 	       "This program is free software. You can copy and/or modify it freely\n"
 	       "according to the terms of the GNU general public license, v2.0\n"
 	       "or any later version, at your option.\n"

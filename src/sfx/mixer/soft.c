@@ -303,14 +303,16 @@ mix_compute_output(sfx_pcm_mixer_t *self, int outplen)
 	sfx_pcm_config_t conf = self->dev->conf;
 	int use_16 = conf.format & SFX_PCM_FORMAT_16;
 	int bias = conf.format & ~SFX_PCM_FORMAT_LMASK;
-	byte *lchan, *rchan;
+	byte *lchan, *rchan = NULL;
+	/* Don't see how this could possibly wind up being
+	** used w/o initialisation, but you never know... */
 	gint32 *lsrc = P->compbuf_l;
 	gint32 *rsrc = P->compbuf_r;
 	int frame_size = SFX_PCM_FRAME_SIZE(conf);
 
 
 	if (!P->writebuf)
-		P->writebuf = sci_malloc(self->dev->buf_size * frame_size);
+		P->writebuf = sci_malloc(self->dev->buf_size * frame_size + 4);
 
 	if (conf.stereo) {
 		if (conf.stereo == SFX_PCM_STEREO_RL) {

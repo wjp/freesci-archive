@@ -98,7 +98,7 @@ typedef struct _state
 
 	sfx_state_t sound; /* sound subsystem */
 	unsigned int sound_volume; /* 0x0 -> 0xf Current volume of sound system */
- 	unsigned int sound_mute; /* 0 = not, else == saved value */
+	unsigned int sound_mute; /* 0 = not, else == saved value */
 
 	byte restarting_flags; /* Flags used for restarting */
 	byte have_mouse_flag;  /* Do we have a hardware pointing device? */
@@ -112,7 +112,7 @@ typedef struct _state
 
 	char *status_bar_text; /* Text on the status bar, or NULL if the title bar is blank */
 
-        int status_bar_foreground, status_bar_background;
+	int status_bar_foreground, status_bar_background;
 
 	long game_time; /* Counted at 60 ticks per second, reset during start time */
 
@@ -230,14 +230,17 @@ typedef struct _state
 	int classtable_size; /* Number of classes in the table- for debugging */
 	class_t *classtable; /* Table of all classes */
 	script_t scripttable[1000]; /* Table of all scripts */
-	
+
 	seg_manager_t seg_manager;
-	
+
 	int selector_names_nr; /* Number of selector names */
 	char **selector_names; /* Zero-terminated selector name list */
 	int kernel_names_nr; /* Number of kernel function names */
 	char **kernel_names; /* List of kernel names */
+
 	kfunct_sig_pair_t *kfunct_table; /* Table of kernel functions */
+	int kfunct_nr; /* Number of mapped kernel functions; may be more than
+		       ** kernel_names_nr  */
 
 	opcode *opcodes;
 

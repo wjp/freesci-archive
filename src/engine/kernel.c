@@ -172,6 +172,17 @@ reg_t kFsciEmu(struct _state *s, int funct_nr, int argc, reg_t *argv);
 #define SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR 0x75
 /* kfunct_mappers below doubles for unknown kfunctions */
 
+static int sci_max_allowed_unknown_kernel_functions[] = {
+	0,
+	0x72, /* SCI0 */
+	0x7b, /* SCI01/EGA */
+	0x7b, /* SCI01/VGA */
+	0x7b, /* SCI1/EARLY */
+	0x7b, /* SCI1/LATE */
+	0x7b, /* SCI1.1 */
+	0x0, /* SCI32 */
+};
+
 #define DEFUN(nm, cname, sig) {KF_NEW, nm, {cname, sig}}
 #define NOFUN(nm) {KF_NONE, nm}
 
@@ -323,27 +334,6 @@ sci_kernel_function_t kfunct_mappers[] = {
 	{KF_NEW, NULL, {k_Unknown, NULL}},
 
 	{KF_TERMINATOR, NULL} /* Terminator */
-};
-
-
-const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
-	"Stubs",
-	"Lists and nodes",
-	"Graphics",
-	"Character handling",
-	"Memory management",
-	"Function parameter checks",
-	"Bresenham algorithms",
-	"Audio subsystem",
-	"System graphics driver",
-	"Base setter results",
-	"Parser",
-	"Menu handling",
-	"Said specs",
-	"File I/O",
-	"Time",
-	"Room numbers",
-	"FreeSCI 0.3.3 kernel emulation"
 };
 
 
@@ -788,21 +778,45 @@ script_map_kernel(state_t *s)
 	int functnr;
 	int mapped = 0;
 	int ignored = 0;
+	int functions_nr = s->kernel_names_nr + 1;
+	int max_functions_nr
+		= sci_max_allowed_unknown_kernel_functions[s->resmgr
+							   ->sci_version];
 
-	s->kfunct_table = sci_malloc(sizeof(kfunct_sig_pair_t) * (s->kernel_names_nr + 1));
+	if (functions_nr < max_functions_nr) {
+		sciprintf("Warning: SCI version believed to have %d kernel"
+			  " functions, but only %d reported-- filling up"
+			  " remaining %d\n",
+			  max_functions_nr, functions_nr,
+			  max_functions_nr - functions_nr);
 
-	for (functnr = 0; functnr < s->kernel_names_nr; functnr++) {
+		functions_nr = max_functions_nr;
+	}
+
+	s->kfunct_table = sci_malloc(sizeof(kfunct_sig_pair_t) * functions_nr);
+
+
+	s->kfunct_nr = functions_nr;
+
+	for (functnr = 0; functnr < functions_nr; functnr++) {
 		int seeker, found = -1;
+		char *sought_name = NULL;
 
-		for (seeker = 0; (found == -1)
-			     && kfunct_mappers[seeker].type != KF_TERMINATOR; seeker++)
-			if (kfunct_mappers[seeker].name
-			    && strcmp(kfunct_mappers[seeker].name, s->kernel_names[functnr]) == 0)
-				found = seeker; /* Found a kernel function with the same name! */
+		if (functnr < s->kernel_names_nr)
+			sought_name = s->kernel_names[functnr];
+
+		if (sought_name)
+			for (seeker = 0; (found == -1)
+				     && kfunct_mappers[seeker].type != KF_TERMINATOR; seeker++)
+				if (kfunct_mappers[seeker].name
+				    && strcmp(kfunct_mappers[seeker].name, sought_name) == 0)
+					found = seeker; /* Found a kernel function with the same name! */
 
 		if (found == -1) {
-			sciprintf("Warning: Kernel function %s[%x] unmapped\n",
-				  s->kernel_names[functnr], functnr);
+			if (sought_name)
+				sciprintf("Warning: Kernel function %s[%x] unmapped\n",
+					  s->kernel_names[functnr], functnr);
+
 			s->kfunct_table[functnr].signature = NULL;
 			s->kfunct_table[functnr].fun = k_Unknown;
 		} else switch (kfunct_mappers[found].type) {
@@ -810,7 +824,7 @@ script_map_kernel(state_t *s)
 		case KF_OLD:
 			sciprintf("Emulated kernel function found.\nThis shouldn't happen anymore.");
 			return 1;
-			
+
 		case KF_NONE:
 			s->kfunct_table[functnr].signature = NULL;
 			++ignored;

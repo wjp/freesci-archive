@@ -240,19 +240,20 @@ _update_single_song(sfx_state_t *self)
 						     SOUND_STATUS_WAITING);
 		}
 
-#ifdef DEBUG_CUES
-		sciprintf("[SFX:CUE] Changing active song:");
-		if (!self->song)
-			sciprintf(" New song:");
-		else
-			sciprintf(" pausing %08lx, now playing",
-				  self->song->handle);
+		if (self->debug & SFX_DEBUG_SONGS) {
+			sciprintf("[SFX] Changing active song:");
+			if (!self->song)
+				sciprintf(" New song:");
+			else
+				sciprintf(" pausing %08lx, now playing",
+					  self->song->handle);
 
-		if (newsong)
-			sciprintf(" %08lx\n", newsong->handle);
-		else
-			sciprintf(" none\n");
-#endif
+			if (newsong)
+				sciprintf(" %08lx\n", newsong->handle);
+			else
+				sciprintf(" none\n");
+		}
+
 
 		self->song = newsong;
 		_thaw_time(self); /* Recover song delay time */
@@ -317,7 +318,10 @@ _update_multi_song(sfx_state_t *self)
 	     oldseeker = oldseeker->next_stopping)
 		if (oldseeker->next_playing == &not_playing_anymore) {
 			_sfx_set_song_status(self, oldseeker,
-					     SOUND_STATUS_STOPPED);
+					     SOUND_STATUS_SUSPENDED);
+			if (self->debug & SFX_DEBUG_SONGS) {
+				sciprintf("[SFX] Stopping song %lx\n", oldseeker->it->ID);
+			}
 			if (player)
 				player->iterator_message(
 							 songit_make_message(oldseeker->it->ID, SIMSG_STOP));
@@ -327,6 +331,9 @@ _update_multi_song(sfx_state_t *self)
 	for (newseeker = newsong; newseeker;
 	     newseeker = newseeker->next_playing) {
 		if (newseeker->status != SOUND_STATUS_PLAYING && player) {
+			if (self->debug & SFX_DEBUG_SONGS) {
+				sciprintf("[SFX] Adding song %lx\n", newseeker->it->ID);
+			}
 			player->add_iterator(songit_clone(newseeker->it,
 							  newseeker->delay),
 					     tv);
@@ -394,6 +401,8 @@ sfx_init(sfx_state_t *self, resource_mgr_t *resmgr, int flags)
 	pcm_device = sfx_pcm_find_device(NULL);
 	player = sfx_find_player(NULL);
 	self->flags = flags;
+
+	self->debug = 0; /* Disable all debugging by default */
 
 #ifdef DEBUG_SONG_API
 	fprintf(stderr, "[sfx-core] Initialising: flags=%x\n", flags);
@@ -563,9 +572,6 @@ sfx_poll_specific(sfx_state_t *self, song_handle_t handle, int *cue)
 	GTimeVal ctime;
 	song_t *song = self->song;
 
-#ifdef DEBUG_SONG_API
-	fprintf(stderr, "[sfx-core] Polling specific: %08lx\n", handle);
-#endif
 	sci_get_current_time(&ctime);
 
 	while (song && song->handle != handle)
@@ -573,6 +579,10 @@ sfx_poll_specific(sfx_state_t *self, song_handle_t handle, int *cue)
 
 	if (!song)
 		return 0; /* Song not playing */
+
+	if (self->debug & SFX_DEBUG_CUES) {
+		fprintf(stderr, "[SFX:CUE] Polled song %08lx ", handle);
+	}
 
 	while (1) {
 		unsigned char buf[8];
@@ -594,19 +604,20 @@ sfx_poll_specific(sfx_state_t *self, song_handle_t handle, int *cue)
 		case SI_LOOP:
 		case SI_RELATIVE_CUE:
 		case SI_ABSOLUTE_CUE:
-#ifdef DEBUG_CUES
-			sciprintf("[SFX:CUE] %lx: <= ", *handle);
-			if (result == SI_FINISHED)
-				sciprintf("Finished\n");
-			else {
-				if (result == SI_LOOP)
-					sciprintf("Loop: ");
-				else
-					sciprintf("Cue: ");
+			if (self->debug & SFX_DEBUG_CUES) {
+				sciprintf(" => ");
 
-				sciprintf("%d (0x%x)\n", *cue, *cue);
+				if (result == SI_FINISHED)
+					sciprintf("finished\n");
+				else {
+					if (result == SI_LOOP)
+						sciprintf("Loop: ");
+					else
+						sciprintf("Cue: ");
+
+					sciprintf("%d (0x%x)", *cue, *cue);
+				}
 			}
-#endif
 			return result;
 
 		default:
@@ -617,6 +628,9 @@ sfx_poll_specific(sfx_state_t *self, song_handle_t handle, int *cue)
 			/* Delay */
 			break;
 		}
+	}
+	if (self->debug & SFX_DEBUG_CUES) {
+		fprintf(stderr, "\n");
 	}
 }
 
@@ -645,6 +659,14 @@ sfx_add_song(sfx_state_t *self, song_iterator_t *it, int priority, song_handle_t
 	if (player)
 		player->iterator_message(songit_make_message(handle, SIMSG_STOP));
 	if (song) {
+		fprintf(stderr, "Overwriting old song (%d) ...\n", song->status);
+		if (song->status == SOUND_STATUS_PLAYING
+		    || song->status == SOUND_STATUS_SUSPENDED) {
+			fprintf(stderr, "WTF is going on here???\n");
+			songit_free(it);
+			return;
+		}
+
 		_sfx_set_song_status(self, song, SOUND_STATUS_STOPPED);
 		song_lib_remove(self->songlib, handle); /* No duplicates */
 	}

@@ -1217,8 +1217,9 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 			}
 
 			if (opcode == op_callk)
-				sciprintf(" %s[%x]", (param_value < s->kernel_names_nr)
-					  ? s->kernel_names[param_value] : "<invalid>", param_value);
+				sciprintf(" %s[%x]", (param_value < s->kfunct_nr) ?
+					  ((param_value < s->kernel_names_nr)  ? s->kernel_names[param_value] : "[Unknown(postulated)]")
+					  : "<invalid>", param_value);
 			else sciprintf(opsize? " %02x" : " %04x", param_value);
 
 			break;
@@ -2188,6 +2189,7 @@ c_sg(state_t *s)
 	return 0;
 }
 
+
 int
 c_snk(state_t *s)
 {
@@ -2271,7 +2273,7 @@ c_send(state_t *s)
 	object_t *o;
 	reg_t *vptr;
 	reg_t fptr;
-	
+
 	selector_id = vocabulary_lookup_sname(s->selector_names, selector_name);
 
 	if (selector_id < 0)
@@ -2286,7 +2288,7 @@ c_send(state_t *s)
 		sciprintf("Address \""PREG"\" is not an object\n", PRINT_REG(object));
 		return 1;
 	}
-	
+
 	selector_type = lookup_selector(s, object, selector_id, &vptr, &fptr);
 
 	if (selector_type == SELECTOR_NONE)
@@ -2294,7 +2296,7 @@ c_send(state_t *s)
 		sciprintf("Object does not support selector: \"%s\"\n", selector_name);
 		return 1;
 	}
-	
+
 	stackframe[0] = make_reg(0, selector_id);
 	stackframe[1] = make_reg(0, cmd_paramlength - 2);
 
@@ -2307,7 +2309,7 @@ c_send(state_t *s)
 	xstack->selector = selector_id; 
 	xstack->type = selector_type == SELECTOR_VARIABLE ? EXEC_STACK_TYPE_VARSELECTOR :
 							    EXEC_STACK_TYPE_CALL;
-	
+
 	/* Now commit the actual function: */
 	xstack = send_selector(s, object, object,
 			       stackframe, cmd_paramlength - 2, stackframe);
@@ -2316,10 +2318,6 @@ c_send(state_t *s)
 	xstack->fp += cmd_paramlength;
 
 	s->execution_stack_pos_changed = 1;
-	
-//	run_vm(s, 0); /* Start a new vm */
-
-//	--(s->execution_stack_pos); /* Get rid of the extra stack entry */
 
 	return 0;
 }
@@ -2352,75 +2350,158 @@ c_listclones(state_t *s)
 	return 0;
 }
 
-void
-set_debug_mode (struct _state *s, int mode, char *areas)
+
+typedef struct {
+	char *name;
+	char option;
+	unsigned int flag;
+} generic_config_flag_t;
+
+
+static void
+handle_config_update(const generic_config_flag_t *flags_list, int flags_nr,
+		     char *subsystem,
+		     int *active_options_p,
+		     char *changestring /* or NULL to display*/)
 {
-	char modechars[] = "ulgcmfbadspMSFtre"; /* Valid parameter chars */
-	char *parser;
-	int seeker;
-	char frob;
+	if (!changestring) {
+		int j;
 
-	parser = areas;
-	while ((frob = *parser)) {
-		seeker = 0;
+		sciprintf("Logging in %s:\n", subsystem);
+		if (!(*active_options_p))
+			sciprintf("  (nothing)\n");
 
-		if (frob == '*') { /* wildcard */
-			if (mode) /* set all */
-				s->debug_mode = 0xffffffff;
-			else /* unset all */
-				s->debug_mode = 0;
+		for (j = 0; j < flags_nr; j++)
+			if (*active_options_p
+			    & flags_list[j].flag) {
+				sciprintf("  - %s (%c)\n",
+					  flags_list[j].name,
+					  flags_list[j].option);
+			}
 
-			parser++;
-			continue;
-		}
+	} else {
+		int mode;
+		int j = 0;
+		int flags = 0;
 
-		while (modechars[seeker] && (modechars[seeker] != frob))
-			seeker++;
-
-		if (modechars[seeker] == '\0') {
-			sciprintf("Invalid log mode parameter: %c\n", frob);
+		if (changestring[0] == '-')
+			mode = 0;
+		else if (changestring[0] == '+')
+			mode = 1;
+		else {
+			sciprintf("Mode spec must start with '+' or '-' in '%s'\n", changestring);
 			return;
 		}
 
-		if (mode) /* Set */
-			s->debug_mode |= (1 << seeker);
-		else /* UnSet */
-			s->debug_mode &= ~(1 << seeker);
+		while (changestring[++j]) {
+			int k;
+			int flag = 0;
 
-		parser++;
+			if (changestring[j] == '*')
+				flags = ~0; /* Everything */
+			else
+				for (k = 0; !flag && k < flags_nr; k++)
+					if (flags_list[k].option
+					    == changestring[j])
+						flag = flags_list[k].flag;
+
+			if (!flag) {
+				sciprintf("Invalid/unknown mode flag '%c'\n",
+					  changestring);
+				return;
+			}
+			flags |= flag;
+		}
+
+		if (mode) /* + */
+			*active_options_p |= flags;
+		else /* - */
+			*active_options_p &= ~flags;
 	}
+
+}
+
+static int
+c_handle_config_update(const generic_config_flag_t *flags, int flags_nr,
+		       char *subsystem, int *active_options_p)
+{
+	int i;
+
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	if (cmd_paramlength == 0)
+		handle_config_update(flags, flags_nr,
+				     subsystem, active_options_p,
+				     0);
+
+	for (i = 0; i < cmd_paramlength; i++)
+		handle_config_update(flags, flags_nr,
+				     subsystem, active_options_p,
+				     cmd_params[i].str);
+	return 0;
+}
+
+const generic_config_flag_t SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
+	{"Stubs", 'u', (1 << SCIkSTUB_NR)},
+	{"Lists and nodes", 'l', (1 << 1)},
+	{"Graphics", 'g', (1 << 2)},
+	{"Character handling", 'c', (1 << 3)},
+	{"Memory management", 'm', (1 << 4)},
+	{"Function parameter checks", 'f', (1 << SCIkFUNCCHK_NR)},
+	{"Bresenham algorithms", 'b', (1 << 6)},
+	{"Audio subsystem", 'a', (1 << SCIkSOUNDCHK_NR)},
+	{"System graphics driver", 'd', (1 << SCIkGFXDRIVER_NR)},
+	{"Base setter results", 's', (1 << SCIkBASESETTER_NR)},
+	{"Parser", 'p', (1 << SCIkPARSER_NR)},
+	{"Menu handling", 'M', (1 << 11)},
+	{"Said specs", 'S', (1 << 12)},
+	{"File I/O", 'F', (1 << 13)},
+	{"Time", 't', (1 << 14)},
+	{"Room numbers", 'r', (1 << 15)},
+	{"FreeSCI 0.3.3 kernel emulation", 'e', (1 << 16)}
+} ;
+
+
+void
+set_debug_mode (struct _state *s, int mode, char *areas)
+{
+	char *param = sci_malloc(strlen(areas) + 2);
+
+	param[0] = (mode)? '+' : '-';
+	strcpy(param + 1, areas);
+
+	handle_config_update(SCIk_Debug_Names, SCIk_DEBUG_MODES,
+			     "VM and kernel",
+			     &(s->debug_mode),
+			     param);
+
+	sci_free(param);
 }
 
 int
 c_debuglog(state_t *s)
 {
-	unsigned int i;
+	return c_handle_config_update(SCIk_Debug_Names, SCIk_DEBUG_MODES,
+				      "VM and kernel",
+				      &(s->debug_mode));
+}
 
-	if (cmd_paramlength == 0) {
-		for (i = 0; i < SCIk_DEBUG_MODES; i++)
-			if (s->debug_mode & (1 << i))
-				sciprintf(" Logging %s\n", SCIk_Debug_Names[i]);
+#define SFX_DEBUG_MODES 2
 
-		return 0;
-	}
+static int
+c_sfx_debuglog(state_t *s)
+{
+	const generic_config_flag_t sfx_debug_modes[SFX_DEBUG_MODES] = {
+		{"Song activation/deactivation", 's', SFX_DEBUG_SONGS},
+		{"Song cue polling and delivery", 'c', SFX_DEBUG_CUES}
+	};
 
-	for (i = 0; i < cmd_paramlength; i++) {
-		int mode;
-
-		if (cmd_params[i].str[0] == '+')
-			mode = 1;
-		else
-			if (cmd_params[i].str[0] == '-')
-				mode = 0;
-			else {
-				sciprintf("Parameter '%s' should start with + or -\n", cmd_params[i].str);
-				return 1;
-			}
-
-		set_debug_mode(s, mode, cmd_params [i].str + 1);
-	}
-
-	return 0;
+	return c_handle_config_update(sfx_debug_modes, SFX_DEBUG_MODES,
+				      "sound subsystem",
+				      &(s->sound.debug));
 }
 
 #define GFX_DEBUG_MODES 4
@@ -2428,76 +2509,18 @@ c_debuglog(state_t *s)
 int
 c_gfx_debuglog(state_t *s)
 {
-	unsigned int i;
 	gfx_driver_t *drv = s->gfx_state->driver;
-	struct {
-		char *name;
-		char id;
-		int flag;
-	} gfx_debug_mode[GFX_DEBUG_MODES] = {
+	const generic_config_flag_t gfx_debug_modes[GFX_DEBUG_MODES] = {
 		{ "Mouse Pointer", 'p', GFX_DEBUG_POINTER},
 		{ "Updates", 'u', GFX_DEBUG_UPDATES},
 		{ "Pixmap operations", 'x', GFX_DEBUG_PIXMAPS},
 		{ "Basic operations", 'b', GFX_DEBUG_BASIC},
 	};
 
-	if (!_debugstate_valid) {
-		sciprintf("Not in debug state\n");
-		return 1;
-	}
+	return c_handle_config_update(gfx_debug_modes, GFX_DEBUG_MODES,
+				      "graphics subsystem",
+				      &(drv->debug_flags));
 
-	if (cmd_paramlength == 0) {
-		int j;
-
-		sciprintf("Logging in GFX driver:\n");
-		if (!drv->debug_flags)
-			sciprintf("  (nothing)\n");
-
-		for (j = 0; j < GFX_DEBUG_MODES; j++)
-			if (drv->debug_flags
-			    & gfx_debug_mode[j].flag) {
-				sciprintf("  - %s (%c)\n",
-					  gfx_debug_mode[j].name,
-					  gfx_debug_mode[j].id);
-			}
-
-	} else for (i = 0; i < cmd_paramlength; i++) {
-		int mode;
-		int j = 0;
-		int flags = 0;
-
-		if (cmd_params[i].str[0] == '-')
-			mode = 0;
-		else if (cmd_params[i].str[0] == '+')
-			mode = 1;
-		else {
-			sciprintf("Mode spec must start with '+' or '-'\n");
-			return 1;
-		}
-
-		while (cmd_params[i].str[++j]) {
-			int k;
-			int flag = 0;
-
-			for (k = 0; !flag && k < GFX_DEBUG_MODES; k++)
-				if (gfx_debug_mode[k].id == cmd_params[i].str[j])
-					flag = gfx_debug_mode[k].flag;
-
-			if (!flag) {
-				sciprintf("Invalid/unknown mode flag '%c'\n",
-					  cmd_params[i].str[j]);
-				return 1;
-			}
-			flags |= flag;
-		}
-
-		if (mode) /* + */
-			drv->debug_flags |= flags;
-		else /* - */
-			drv->debug_flags &= ~flags;
-	}
-
-	return 0;
 }
 
 int
@@ -3144,7 +3167,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "\n  *: Everything\n\n"
 					 "  If invoked withour parameters,\n  it will list all activated\n  debug options.\n\n"
 					 "SEE ALSO\n"
-					 "  gfx_debuglog\n");
+					 "  gfx_debuglog.1, sfx_debuglog.1\n");
 			con_hook_command(c_visible_map, "set_vismap", "i", "Sets the visible map.\n  Default is 0 (visual).\n"
 					 "  Other useful values are:\n  1: Priority\n  2: Control\n  3: Auxiliary\n");
 			con_hook_command(c_simkey, "simkey", "i", "Simulates a keypress with the\n  specified scancode.\n");
@@ -3183,6 +3206,22 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_gnf, "gnf", "", "Displays the Parse grammar\n  in strict GNF");
 			con_hook_command(c_set_parse_nodes, "set_parse_nodes", "s*", "Sets the contents of all parse nodes.\n"
 					 "  Input token must be separated by\n  blanks.");
+			con_hook_command(c_sfx_debuglog, "sfx_debuglog", "s*",
+					 "Sets or prints the sound subsystem debug\n"
+					 "settings\n\n"
+					 "USAGE\n\n"
+					 "  sfx_debuglog {[+|-][p|u|x|b]+}*\n\n"
+					 "  sfx_debuglog\n\n"
+					 "    Prints current settings\n\n"
+					 "  sfx_debuglog +X\n\n"
+					 "    Activates all debug features listed in X\n\n"
+					 "  sfx_debuglog -X\n\n"
+					 "    Deactivates the debug features listed in X\n\n"
+					 "  Debug features:\n"
+					 "    s: Active song changes\n"
+					 "    c: Song cues\n"
+					 "SEE ALSO\n"
+					 "  debuglog.1, gfx_debuglog.1\n");
 			con_hook_command(c_gfx_debuglog, "gfx_debuglog", "s*",
 					 "Sets or prints the gfx driver's debug\n"
 					 "settings\n\n"
@@ -3200,7 +3239,7 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "    x: Pixmaps\n"
 					 "    b: Basic features\n\n"
 					 "SEE ALSO\n"
-					 "  debuglog\n");
+					 "  debuglog.1, sfx_debuglog.1\n");
 
 #ifdef SCI_SIMPLE_SAID_CODE
 			con_hook_command(c_sim_parse, "simparse", "s*", "Simulates a parsed entity.\n\nUSAGE\n  Call this"

@@ -32,9 +32,6 @@
 struct _state;
 #define SCIk_DEBUG_MODES 17
 
-extern const char *SCIk_Debug_Names[SCIk_DEBUG_MODES];
-/* The various debug areas */
-
 #define SCIkERROR_NR -2
 #define SCIkWARNING_NR -1
 #define SCIkSTUB_NR 0

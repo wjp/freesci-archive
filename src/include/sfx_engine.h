@@ -40,12 +40,18 @@
 #define SFX_STATE_FLAG_MULTIPLAY (1 << 0) /* More than one song playable
 					  ** simultaneously ? */
 
+
+#define SFX_DEBUG_SONGS		(1 << 0) /* Debug song changes */
+#define SFX_DEBUG_CUES		(1 << 1) /* Debug cues, loops, and
+					 ** song completions */
+
 typedef struct {
 	song_iterator_t *it; /* The song iterator at the heart of things */
 	unsigned int flags; /* SFX_STATE_FLAG_* */
 	songlib_t songlib; /* Song library */
 	song_t *song; /* Active song, or start of active song chain */
 	int suspended; /* Whether we are suspended */
+	unsigned int debug; /* Debug flags */
 
 } sfx_state_t;
 

@@ -1062,7 +1062,7 @@ run_vm(state_t *s, int restoring)
 				s->r_amp_rest = 0; /* We just used up the restadjust, remember? */
 			}
 
-			if (opparams[0] >= s->kernel_names_nr) {
+			if (opparams[0] >= s->kfunct_nr) {
 
 				sciprintf("Invalid kernel function 0x%x requested\n", opparams[0]);
 				script_debug_flag = script_error_flag = 1;

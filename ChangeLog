@@ -1,7 +1,19 @@
+2004-04-05  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sfx/core.c: Added initial support for dynamically
+	configurable debug flags
+
+2004-04-04  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kernel.c: Added support for situations in which we
+	know that the SCI version under consideration has more kernel
+	calls than we detected, but don't know the precise mapping yet
+	(consider this a prelude to a better default mapping mechanism).
+
 2004-04-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
-	* src/sfx/core.c (sfx_init): Set pcm_device, player, mixer and timer
-	to NULL if no timer was found or timer init failed.
+	* src/sfx/core.c (sfx_init): Set pcm_device, player, mixer and
+	timer to NULL if no timer was found or timer init failed.
 
 2004-04-04  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
@@ -26,7 +38,7 @@
 	GFX_FONT_BUILTIN_6x10 to be used at all times.
 	* src/scicore/resource_map.c (sci0_read_resource_map): Add
 	detection code for SCI1 resmaps. Currently does not transfer
-	control to anything useful. 
+	control to anything useful.
 
 2004-04-02  Christoph Reichenbach  <reichenb@colorado.edu>
 

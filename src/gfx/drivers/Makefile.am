@@ -1,4 +1,4 @@
-EXTRA_DIST = dc_driver.c
+EXTRA_DIST = dc_driver.c dd_driver.cpp dd_driver.h dd_driver_line.cpp
 INCLUDES = -I$(top_srcdir)/src/include @ac_ggi_includes@ @ac_png_includes@ @X_CFLAGS@
 AM_CFLAGS = $(SDL_CFLAGS)
 LDADD =  $(LDADD_ALL)

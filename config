@@ -1,6 +1,6 @@
-# Example configuration file for FreeSCI 0.3.2
-#
-# This will slow down FreeSCI considerably, but give you much better graphics.
+## Example configuration file for FreeSCI
+##
+## This will slow down FreeSCI considerably, but give you much better graphics.
 
 pic_buffer_size = 4
 pic0_brush_mode = more-random
@@ -13,3 +13,21 @@ text_filter = trilinear
 cursor_filter = trilinear
 pic_filter = trilinear
 view_filter = trilinear
+
+
+## Example game: Uncomment this and update it for each of your games.
+## The below will allow you to run the game 'FooQuest', whose resources
+## are located in '/usr/share/fooquest', by running 'freesci FooQuest'.
+## You may want to duplicate this section for all of your games.
+
+# [FooQuest]
+#
+# resource_dir = /usr/share/fooquest
+# version = 0.000.685
+
+## The last line specifies the SCI version to use. If the game doesn't
+## behave completely as expected, FreeSCI's version detection may be
+## failing; by overriding the game version, you can fix this.
+##   To determine the game version, you will first have to find the
+## original DOS executable of the SCI game (typically SCIV.EXE), and then
+## run 'strings SCIV.EXE | grep 000'.
