@@ -749,7 +749,9 @@ dc_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	pvr_shutdown();
 
-	if (!S)	S = sci_malloc(sizeof(struct _dc_state));
+	if (!drv->state /* = S */)
+		drv->state = sci_malloc(sizeof(struct _dc_state));
+
 	if (!S) return GFX_FATAL;
 	
 	if ((flags & SCI_DC_RENDER_PVR) && ((xfact != 1 && xfact != 2)
@@ -1057,7 +1059,7 @@ dc_usec_sleep(struct _gfx_driver *drv, long usecs)
 gfx_driver_t
 gfx_driver_dc = {
 	"dc",
-	"0.2",
+	"0.2a",
 	SCI_GFX_DRIVER_MAGIC,
 	SCI_GFX_DRIVER_VERSION,
 	NULL,

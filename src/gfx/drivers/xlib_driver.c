@@ -308,8 +308,8 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	UPDATE_NLS_CAPABILITY;
 
-	if (!S)
-		S = sci_malloc(sizeof(struct _xlib_state));
+	if (!drv->state /* = S */)
+		drv->state = sci_malloc(sizeof(struct _xlib_state));
 
 	flags |= SCI_XLIB_INSERT_MODE;
 
@@ -1412,7 +1412,7 @@ xlib_usec_sleep(struct _gfx_driver *drv, long usecs)
 gfx_driver_t
 gfx_driver_xlib = {
 	"xlib",
-	"0.6",
+	"0.6a",
 	SCI_GFX_DRIVER_MAGIC,
 	SCI_GFX_DRIVER_VERSION,
 	NULL,

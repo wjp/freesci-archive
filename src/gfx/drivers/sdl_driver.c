@@ -170,9 +170,9 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	drv->capabilities &= ~GFX_CAPABILITY_MOUSE_POINTER;
 #endif
 
-	if (!S)
-		S = sci_malloc(sizeof(struct _sdl_state));
-	if (!S)
+	if (!drv->state /* = S */)
+		drv->state = sci_malloc(sizeof(struct _sdl_state));
+	if (!drv->state)
 		return GFX_FATAL;
 
 	if (xfact < 1 || yfact < 1 || bytespp < 1 || bytespp > 4) {
@@ -1160,7 +1160,7 @@ sdl_usec_sleep(struct _gfx_driver *drv, long usecs)
 gfx_driver_t
 gfx_driver_sdl = {
 	"sdl",
-	"0.3",
+	"0.3a",
 	SCI_GFX_DRIVER_MAGIC,
 	SCI_GFX_DRIVER_VERSION,
 	NULL,
