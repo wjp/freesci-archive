@@ -1,3 +1,10 @@
+2003-01-16  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* README.DC: Added recommendation that GCC 3.0.4 be used for
+	compiling for Dreamcast and corrected some spelling errors.
+
+	* src/gfx/drivers/dc_driver.c: Centered screen vertically.
+
 2003-01-15  Alexander Angas  <wgd@internode.on.net>
 
         * src/gfx/drivers/dx_driver.cpp: Fixed one memory leak

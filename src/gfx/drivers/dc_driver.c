@@ -541,7 +541,8 @@ dc_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		}
 	}	
 
-	S->visual[2] = (byte *) vram_s;
+	/* Center screen vertically */
+	S->visual[2] = (byte *) vram_s+320*xfact*20*yfact*bytespp;
 
 	memset(S->visual[0], 0, 320*xfact*200*yfact*bytespp);
 	memset(S->visual[1], 0, 320*xfact*200*yfact*bytespp);
