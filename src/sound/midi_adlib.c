@@ -17,6 +17,13 @@
 
 ***************************************************************************/
 
+/* TODO:  Get the insturments working. 
+          Move everything from a 'channel' mentality to a 'note' mentality.
+          Global volume.
+	  Pitch bend.
+	  allstop.
+*/
+
 #include <stdio.h>
 #ifdef HAVE_UNISTD_H
   #include <unistd.h>
@@ -50,7 +57,6 @@ typedef struct _sci_adlib_def {
   guint8 waveform;       /* 0-3 !*/
 } adlib_def;
 
-static adlib_def adlib_sounds[96][2];
 static sbi_instr_data adlib_sbi[96];
 static guint8 instr[MIDI_CHANNELS];
 static int seqfd, dev;
@@ -68,6 +74,12 @@ void seqbuf_dump()
 void make_sbi(adlib_def *one, adlib_def *two, guint8 *buffer)
 {
   memset(buffer, 0, sizeof(sbi_instr_data));
+
+  printf ("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x ", one->keyscale, one->freqmod, one->feedback, one->attackrate, one->sustainvol, one->envelope, one->decayrate, one->releaserate, one->volume, one->ampmod, one->vibrato, one->keybdscale, one->algorithm, one->waveform);
+
+  printf (" %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x ", two->keyscale, two->freqmod, two->feedback, two->attackrate, two->sustainvol, two->envelope, two->decayrate, two->releaserate, two->volume, two->ampmod, two->vibrato, two->keybdscale, two->algorithm, two->waveform);
+
+  printf("\n");
 
   buffer[0] |= ((one->ampmod & 0x1) << 7);
   buffer[0] |= ((one->vibrato & 0x1) << 6);
@@ -96,7 +108,7 @@ void make_sbi(adlib_def *one, adlib_def *two, guint8 *buffer)
 
   buffer[10] |= ((one->feedback & 0x7) << 1);
   buffer[10] |= (one->algorithm & 0x1);
-  
+
   /*
   buffer[10] |= ((two->feedback & 0x7) << 1);
   buffer[10] |= (two->algorithm & 0x1);
@@ -111,19 +123,17 @@ int midi_adlib_open(guint8 *data_ptr, unsigned int data_length)
   struct synth_info info;
   struct sbi_instrument sbi;
 
-  data_ptr += 2; 
-  data_length -=2;
-  memcpy(adlib_sounds, data_ptr, data_length);
-
-  for(i = 0; i < data_length ; i++) {
-    if ((i % 28) == 0)
-      printf("\n");
-    printf("%02x ", *data_ptr);
-    data_ptr ++;
+  if (data_length < 1344) {
+    printf ("invalid patch.003");
+    return -1;
   }
 
-  for (i = 0; i < 96; i++) 
-    make_sbi(&adlib_sounds[i][0], &adlib_sounds[i][1], adlib_sbi[i]);
+  for (i = 0; i < 48; i++) 
+    make_sbi(data_ptr+(28 * i), data_ptr+14+(28 * i), adlib_sbi[i]);
+
+  if (data_length > 1344)
+    for (i = 48; i < 96; i++) 
+      make_sbi(data_ptr+2+(28 * i), data_ptr+2+14+(28 * i), adlib_sbi[i]);
 
   memset(instr, 0, sizeof(instr));
  
@@ -221,6 +231,10 @@ int midi_adlib_event(guint8 command, guint8 note, guint8 velocity)
     break;
   case 0xb0:    /* CC changes.  let 'em through... */
     break;
+  case 0xd0:    /* aftertouch */
+    SEQ_CHN_PRESSURE(dev, channel, note);
+    SEQ_DUMPBUF();    
+    return 0;
   default:
     printf("ADLIB: Unknown event %02x\n", command);
     return 0;
