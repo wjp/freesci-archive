@@ -48,6 +48,7 @@ extern int _debug_seeking; /* scriptdebug.c */
 
 static calls_struct_t *send_calls = NULL;
 static int send_calls_allocated = 0;
+static int bp_flag = 0;
 
 
 int
@@ -148,6 +149,28 @@ execute_method(state_t *s, word script, word pubfunct, heap_ptr sp,
     return NULL;
   }
 
+  /* Check if a breakpoint is set on this method */
+  if (s->have_bp & BREAK_EXPORT)
+  {
+    breakpoint_t *bp;
+    void *bpdata;
+
+    bpdata = (void *) (script << 16 | pubfunct);
+
+    bp = s->bp_list;
+    while (bp)
+    {
+      if (bp->type == BREAK_EXPORT && bp->data == bpdata)
+      {
+        sciprintf ("Break on script %d, export %d\n", script, pubfunct);
+        script_debug_flag = 1;
+        bp_flag = 1;
+        break;
+      }
+      bp = bp->next;
+    }
+  }
+
   return 
     add_exec_stack_entry(s, scriptpos + GET_HEAP(tableaddress + (pubfunct * 2)), sp, 
 			 calling_obj, argc, argp, -1, calling_obj, s->execution_stack_pos);
@@ -190,6 +213,30 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
     if (argc > 0x500){ /* More arguments than the stack could possibly accomodate for */
       script_error(s, __LINE__, "More than 0x500 arguments to function call\n");
       return NULL;
+    }
+
+    /* Check if a breakpoint is set on this method */
+    if (s->have_bp & BREAK_SELECTOR)
+    {
+      breakpoint_t *bp;
+      char method_name [256];
+
+      sprintf (method_name, "%s::%s",
+        s->heap + getUInt16 (s->heap + send_obj + SCRIPT_NAME_OFFSET),
+        s->selector_names [selector]);
+
+      bp = s->bp_list;
+      while (bp)
+      {
+        if (bp->type == BREAK_SELECTOR && !strcmp ((char *) bp->data, method_name))
+        {
+          sciprintf ("Break on %s\n", method_name);
+          script_debug_flag = 1;
+          bp_flag = 1;
+          break;
+        }
+        bp = bp->next;
+      }
     }
 
 #ifdef VM_DEBUG_SEND
@@ -368,9 +415,7 @@ run_vm(state_t *s, int restoring)
   gint16 temp, temp2, temp3;
   gint16 opparams[4]; /* opcode parameters */
 
-  int bp_flag = 0;
-
-
+  
   int restadjust = s->amp_rest; /* &rest adjusts the parameter count by this value */
   /* Current execution data: */
   int exec_stack_pos_temp; /* Used inside send-like commands */
@@ -390,31 +435,6 @@ run_vm(state_t *s, int restoring)
   
   /* SCI code reads the zeroeth argument to determine argc */
   PUT_HEAP(xs->variables[VAR_PARAM], xs->argc);
-
-  /* Check if a breakpoint is set on this method */
-  if (s->have_bp & BREAK_EXECUTE && xs->selector != -1)
-  {
-    breakpoint_t *bp;
-    char method_name [256];
-
-    sprintf (method_name, "%s::%s",
-      s->heap + getUInt16 (s->heap + xs->sendp + SCRIPT_NAME_OFFSET),
-      s->selector_names [xs->selector]);
-    sciprintf ("Looking for breakpoint on %s\n", method_name);
-
-    bp = s->bp_list;
-    while (bp)
-    {
-      if (bp->type == BREAK_EXECUTE && !strcmp ((char *) bp->data, method_name))
-      {
-        sciprintf ("Break on %s\n", method_name);
-        script_debug_flag = 1;
-        bp_flag = 1;
-        break;
-      }
-      bp = bp->next;
-    }
-  }
 
   while (1) {
     heap_ptr old_pc = xs->pc;
@@ -465,8 +485,13 @@ run_vm(state_t *s, int restoring)
       case Script_Word: opparams[temp] = GET_OP_WORD(); break;
       case Script_SWord: opparams[temp] = GET_OP_SIGNED_WORD(); break;
 
-      case Script_Variable: opparams[temp] = GET_OP_FLEX(); break;
-      case Script_SVariable: opparams[temp] = GET_OP_SIGNED_FLEX(); break;
+      case Script_Variable: 
+      case Script_Property:
+        opparams[temp] = GET_OP_FLEX(); break;
+
+      case Script_SVariable: 
+      case Script_SRelative:
+        opparams[temp] = GET_OP_SIGNED_FLEX(); break;
 
       }
 
@@ -1766,7 +1791,7 @@ game_exit(state_t *s)
   while (bp)
   {
     bp_next = bp->next;
-    if (bp->type == BREAK_EXECUTE) g_free (bp->data);
+    if (bp->type == BREAK_SELECTOR) g_free (bp->data);
     g_free (bp);
     bp = bp_next;
   }

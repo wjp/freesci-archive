@@ -374,6 +374,7 @@ disassemble(state_t *s, heap_ptr pos)
 
     case Script_SVariable:
     case Script_Variable:
+    case Script_Property:
       if (opsize)
 	param_value = s->heap[retval++];
       else {
@@ -384,10 +385,18 @@ disassemble(state_t *s, heap_ptr pos)
       if (opcode == op_callk)
 	sciprintf(" %s[%x]", (param_value < s->kernel_names_nr)
 		  ? s->kernel_names[param_value] : "<invalid>", param_value);
-      else if (opcode == op_jmp)
-        sciprintf (opsize? " %02x  [%04x]" : " %04x  [%04x]", param_value, pos+(short) param_value);
       else sciprintf(opsize? " %02x" : " %04x", param_value);
 
+      break;
+
+    case Script_SRelative:
+      if (opsize)
+	param_value = s->heap[retval++];
+      else {
+	param_value = 0xffff & (s->heap[retval] | (s->heap[retval+1] << 8));
+	retval += 2;
+      }
+      sciprintf (opsize? " %02x  [%04x]" : " %04x  [%04x]", param_value, pos+(short) param_value);
       break;
 
     case Script_End: retval = 0;
@@ -1015,14 +1024,10 @@ c_accobj(state_t *s)
 
 /*** Breakpoint commands ***/
 
-int
-c_bpx(state_t *s)
+static breakpoint_t *
+bp_alloc(state_t *s)
 {
   breakpoint_t *bp;
-
-  /* Note: We can set a breakpoint on a method that has not been loaded yet.
-     Thus, we can't check whether the command argument is a valid method name.
-     A breakpoint set on an invalid method name will just never trigger. */
 
   if (s->bp_list)
   {
@@ -1037,11 +1042,40 @@ c_bpx(state_t *s)
     bp = s->bp_list;
   }
 
-  bp->type = BREAK_EXECUTE;
+  bp->next = NULL;
+
+  return bp;
+}
+
+int
+c_bpx(state_t *s)
+{
+  breakpoint_t *bp;
+
+  /* Note: We can set a breakpoint on a method that has not been loaded yet.
+     Thus, we can't check whether the command argument is a valid method name.
+     A breakpoint set on an invalid method name will just never trigger. */
+
+  bp=bp_alloc (s);
+
+  bp->type = BREAK_SELECTOR;
   bp->data = g_malloc (strlen (cmd_params [0].str)+1);
   strcpy ((char *) bp->data, cmd_params [0].str);
-  bp->next = NULL;
-  s->have_bp |= BREAK_EXECUTE;
+  s->have_bp |= BREAK_SELECTOR;
+
+  return 0;
+}
+
+int
+c_bpe(state_t *s)
+{
+  breakpoint_t *bp;
+
+  bp=bp_alloc (s);
+
+  bp->type = BREAK_EXPORT;
+  bp->data = (void *) (cmd_params [0].val << 16 | cmd_params [1].val);
+  s->have_bp |= BREAK_EXPORT;
 
   return 0;
 }
@@ -1051,6 +1085,7 @@ c_bplist(state_t *s)
 {
   breakpoint_t *bp;
   int i = 0;
+  long bpdata;
 
   bp = s->bp_list;
   while (bp)
@@ -1058,8 +1093,12 @@ c_bplist(state_t *s)
     sciprintf ("  #%i: ", i);
     switch (bp->type)
     {
-    case BREAK_EXECUTE:
+    case BREAK_SELECTOR:
       sciprintf ("Execute %s\n", bp->data);
+      break;
+    case BREAK_EXPORT:
+      bpdata=(long) bp->data;
+      sciprintf ("Execute script %d, export %d\n", bpdata >> 16, bpdata & 0xFFFF);
       break;
     }
     
@@ -1094,7 +1133,7 @@ int c_bpdel(state_t *s)
   /* Delete it */
   bp_next = bp->next;
   type = bp->type;
-  if (type == BREAK_EXECUTE) g_free (bp->data);
+  if (type == BREAK_SELECTOR) g_free (bp->data);
   g_free (bp);
   if (bp_prev)
     bp_prev->next = bp_next;
@@ -1228,6 +1267,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 	      "  Other useful values are:\n  1: Priority\n  2: Control\n  3: Auxiliary\n");
       cmdHook(c_simkey, "simkey", "i", "Simulates a keypress with the\n  specified scancode.\n");
       cmdHook(c_bpx, "bpx", "s", "Sets a breakpoint on the execution of specified method.\n");
+      cmdHook(c_bpe, "bpe", "ii", "Sets a breakpoint on the execution of specified exported function.\n");
       cmdHook(c_bplist, "bplist", "", "Lists all breakpoints.\n");
       cmdHook(c_bpdel, "bpdel", "i", "Deletes a breakpoint with specified index.");
       cmdHook(c_go, "go", "", "Executes the script.\n");

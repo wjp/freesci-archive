@@ -228,6 +228,17 @@ vocab_dump_parse_tree(parse_tree_node_t *nodes);
 
 
 struct _state;
+
+/* Gets any word from the specified group.
+** Parameters: (int) group: Group number.
+**             (word_t **) words: List of words
+**             (int) words_nr: Count of words in the list.
+** For debugging only.
+*/
+
+char *
+vocab_get_any_group_word(int group, word_t **words, int words_nr);
+
 /* Decyphers a said block and dumps its content via sciprintf.
 ** Parameters: (state_t *) s: The state to use
 **             (heap_ptr) addr: The heap address to decypher

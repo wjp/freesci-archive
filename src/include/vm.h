@@ -84,15 +84,6 @@ typedef void kfunct(struct _state *s, int funct_nr, int argc, heap_ptr argv);
 
 typedef struct
 {
-  int id;
-  object* class;
-  byte* heap;
-  int offset;
-} instance;
-
-
-typedef struct
-{
   int script; /* number of the script the class is in */
   heap_ptr *scriptposp; /* Pointer to the script position entry in the script list */
   int class_offset; /* script-relative position of the class */
@@ -205,10 +196,13 @@ typedef struct _breakpoint {
   struct _breakpoint *next;
 } breakpoint_t;
 
-#define BREAK_EXECUTE 1
+#define BREAK_SELECTOR 1
 /* Break when selector is executed. data contains (char *) selector name
    (in the format Object::Method) */
 
+#define BREAK_EXPORT 2
+/* Break when an exported function is called. data contains script_no << 16 |
+   export_no. */
 
 extern int script_debug_flag;
 /* Set this to 1 to activate script debugging */

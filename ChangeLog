@@ -1,3 +1,16 @@
+1999-12-13  Dmitry Jemerov  <yole@nnz.ru>
+
+	* src/core/script.c, src/include/script.h, src/include/vm.h: Moved
+	obsolete object handling code to old_objects.c and old_objects.h.
+
+	* src/tools/scidisasm.c: New standalone SCI script disassembler.
+
+	* src/core/vm.c: Fixed breakpoint system broken by the new
+	call/send stack implementation.
+
+	* src/core/vm.c, src/core/scriptdebug.c: New breakpoint type bpe -
+	break on exported function.
+
 1999-12-13  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/graphics/engine_graphics.c (graph_draw_selector_control):
@@ -19,6 +32,7 @@
 
 	* src/graphics/menubar.c (menubar_add_menu): Added tag value support
 
+>>>>>>> 1.53
 1999-12-12  Dmitry Jemerov  <yole@nnz.ru>
 
 	* src/core/kfile.c (kDeviceInfo_Win32): Correct Win32

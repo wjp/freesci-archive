@@ -1,6 +1,7 @@
 #include <console.h>
 #include <script.h>
 #include <vocabulary.h>
+#include <old_objects.h>
 #include <stdio.h>
 #include <stdlib.h>
 

@@ -542,6 +542,7 @@ long FAR PASCAL WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
   case WM_DESTROY:
     script_abort_flag = 1;
+    _s = NULL;
     PostQuitMessage (0);
     break;
 
@@ -813,6 +814,8 @@ void
 ddraw_redraw (struct _state *s, int command, int x, int y, int xl, int yl)
 {
   int mp_x, mp_y, mp_size_x, mp_size_y;
+
+  if (!s) return;
 
   if (s->mouse_pointer) {
     mp_x = s->pointer_x - s->mouse_pointer->hot_x;

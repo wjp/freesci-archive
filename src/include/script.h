@@ -19,43 +19,13 @@ enum {
   sci_obj_terminator,
   sci_obj_object,
   sci_obj_code,
-  sci_obj_strings = 5,
+  sci_obj_said = 4,
+  sci_obj_strings,
   sci_obj_class,
   sci_obj_exports,
   sci_obj_pointers,
   sci_obj_localvars = 10
 } script_object_types;
-
-typedef FLEXARRAY(script_opcode,int number;) script_method;
-
-typedef struct object_
-{
-	/*These are based on cached selector values, and set to the values
-	 *the selectors had at load time. If the selectors are changed in
-	 *instances, inconsistency will follow*/
-	struct object_* parent;
-	char* name;
-
-	FLEXARRAY_NOEXTRA(struct object_*) children;
-
-	/*No flexarray, size the size is known from the start*/
-	script_method** methods;
-	int method_count;
-
-	int selector_count;
-	int* selector_numbers;
-} object;
-
-object **object_map, *object_root;
-int max_object;
-
-#define SCRIPT_PRINT_METHODS	1
-#define SCRIPT_PRINT_CHILDREN	2
-#define SCRIPT_PRINT_SELECTORS  3
-void printObject(object* obj, int flags);
-
-int loadObjects();
-void freeObject(object*);
 
 void script_dissect(int res_no);
 
@@ -69,6 +39,8 @@ typedef enum {
   Script_SWord,
   Script_Variable,
   Script_SVariable,
+  Script_SRelative,
+  Script_Property,
   Script_End
 } opcode_format;
 
@@ -116,10 +88,11 @@ typedef enum { /* FIXME */
   op_super,
   op_rest,
   op_lea,
-  op_selfID
+  op_selfID,
+  op_lofsa = 0x39,
+  op_lofss
 } sci_opcodes;
  
-extern char* globals[];
 extern opcode_format formats[128][4];
 
 #endif
