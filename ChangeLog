@@ -1,3 +1,10 @@
+2001-05-09  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/sound.c (sci_midi_command): Muted the 0xd1 command
+
+	* src/engine/vm.c (send_selector): Now allows sends to varselectors
+	with more than one parameter, unless STRICT_SEND is defined
+
 2001-05-08  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* debian/Makefile.am: Added debian/ subdir

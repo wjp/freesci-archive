@@ -202,7 +202,7 @@ init_directories(char *work_dir, char *game_id)
 			fprintf(stderr,"Cannot get the working directory!\n");
 			return 1;
 		}
-#elif __unix__
+#elif defined(__unix__)
 		fprintf(stderr,"Error: Could not enter home directory %s.\n", homedir);
 		perror("Reason");
 		return 1; /* If we get here, something really bad is happening */

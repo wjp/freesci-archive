@@ -162,7 +162,7 @@ FUNCT_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per_src_lin
 		 ** ldq4priority result: $26
 		 */
 
-		 "lda $30, -56($30) \n\t"
+		 "lda $30, -88($30) \n\t"
 		 "stq $9, 0($30)    \n\t"
 		 "stq $10, 8($30)   \n\t"
 		 "stq $11, 16($30)  \n\t"
@@ -170,6 +170,10 @@ FUNCT_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per_src_lin
 		 "stq $13, 32($30)  \n\t"
 		 "stq $15, 40($30)  \n\t"
 		 "stq $26, 48($30)  \n\t"
+		 "stq %8, 56($30)   \n\t"
+		 "stq %9, 64($30)   \n\t"
+		 "stq $7, 72($30)   \n\t"
+		 "stq $6, 80($30)   \n\t"
 
 		 "mov %8, $9        \n\t"
 		 "mov %9, $10       \n\t"
@@ -332,7 +336,11 @@ FUNCT_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per_src_lin
 		 "ldq $13, 32($30)  \n\t"
 		 "ldq $15, 40($30)  \n\t"
 		 "ldq $26, 48($30)  \n\t"
-		 "lda $30, 56($30)  \n\t"
+		 "ldq %8, 56($30)   \n\t"
+		 "ldq %9, 64($30)   \n\t"
+		 "ldq $7, 72($30)   \n\t"
+		 "ldq $6, 80($30)   \n\t"
+		 "lda $30, 88($30)  \n\t"
 #endif
 		 :
 		 :
@@ -344,9 +352,6 @@ FUNCT_NAME(byte *dest, byte *src, int bytes_per_dest_line, int bytes_per_src_lin
 #endif
 		 : "%0", "%1", "%2", "%3", "%4", "%5", "%6",
 		 "%7", "$16", "$17", "$18", "$19", "$20", "$21", "$24", "$25",
-#ifdef PRIORITY
-		 "%8", "%9", "$7", "$6",
-#endif
 		 "$8", "memory"
 		 );
 #endif

@@ -536,6 +536,7 @@ void sci_midi_command(song_t *song, guint8 command,
     case 0x46: /* UNKNOWN NYI (happens in LSL3 binoculars) */
     case 0x61: /* UNKNOWN NYI (special for adlib? Iceman) */
     case 0x73: /* UNKNOWN NYI (happens in Hoyle) */
+    case 0xd1: /* UNKNOWN NYI (happens in KQ4 when riding the unicorn) */
       break;
     case 0x01: /* modulation */
     case 0x07: /* volume */

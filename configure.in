@@ -1,4 +1,4 @@
-
+\
 AC_PREREQ(2.13)
 AC_INIT(acinclude.m4)
 AM_CONFIG_HEADER(config.h)
@@ -54,10 +54,14 @@ AC_TRY_COMPILE([], [
 AC_SUBST(ev6_cpu)
 
 
-if test x"x_libraries" != x; then
-	LIBS="-L$x_libraries $LIBS"
-	AC_CHECK_LIB(Xi, XGrabDevice, [X_LIBS="$X_LIBS -lXi"])
-	AC_CHECK_LIB(X11, XOpenDisplay, [X_LIBS="$X_LIBS -lX11"])
+if test x"$have_x" = xyes; then
+	if test x"$x_libraries" != xNONE; then
+		if test x"$x_libraries" != x; then
+			LIBS="-L$x_libraries $LIBS"
+			AC_CHECK_LIB(Xi, XGrabDevice, [X_LIBS="$X_LIBS -lXi"])
+			AC_CHECK_LIB(X11, XOpenDisplay, [X_LIBS="$X_LIBS -lX11"])
+		fi
+	fi
 fi
 
 dnl if test "no_x" != yes; then

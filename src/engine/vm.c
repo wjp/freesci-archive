@@ -36,6 +36,7 @@
 #endif
 
 /*#define VM_DEBUG_SEND*/
+#undef STRICT_SEND /* Disallows variable sends with more than one parameter */
 
 
 int script_abort_flag = 0; /* Set to 1 to abort execution */
@@ -291,7 +292,11 @@ else
 					sciprintf("[read selector]\n");
 					print_send_action = 0;
 				}
-			case 1: { /* Argument is supplied -> Selector should be set */
+			case 1:
+#ifndef STRICT_SEND
+			default:
+#endif				
+				{ /* Argument is supplied -> Selector should be set */
 
 				if (print_send_action) {
 					int val = GET_HEAP(lookupresult);
@@ -310,6 +315,7 @@ else
 				send_calls[send_calls_nr].type = EXEC_STACK_TYPE_VARSELECTOR; /* Register as a varselector */
 
 			} break;
+#ifdef STRICT_SEND
 			default:
 				--send_calls_nr;
 				sciprintf("Send error: Variable selector %04x in %04x called with %04x params\n",
@@ -317,6 +323,7 @@ else
 				script_debug_flag = 1; /* Enter debug mode */
 				_debug_seeking = _debug_step_running = 0;
 
+#endif
 			}
 			break;
 
