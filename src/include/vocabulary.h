@@ -112,6 +112,22 @@ typedef struct {
 
 
 typedef struct {
+  int id; /* non-terminal ID */
+  int first_special; /* first terminal or non-terminal */
+  int specials_nr; /* number of terminals and non-terminals */
+  int length;
+  int data[0]; /* actual data */
+} parse_rule_t;
+
+
+typedef struct _parse_rule_list {
+  int terminal; /* Terminal character this rule matches against or 0 for a non-terminal rule */
+  parse_rule_t *rule;
+  struct _parse_rule_list *next;
+} parse_rule_list_t;
+
+
+typedef struct {
 
   int class_mask; /* the word class this suffix applies to */
   int result_class; /* the word class a word is morphed to if it doesn't fail this check */
@@ -280,17 +296,43 @@ vocab_tokenize_string(char *sentence, int *result_nr,
 ** The returned list may contain anywords.
 */
 
+
+parse_rule_list_t *
+vocab_build_gnf(parse_tree_branch_t *branches, int branches_nr);
+/* Constructs the Greibach Normal Form of the grammar supplied in 'branches'
+** Parameters: (parse_tree_branch_t *) branches: The parser's branches
+**             (int) branches_nr: Number of parser branches
+** Returns   : (parse_rule_list_t *): Pointer to a list of singly linked
+**                                    GNF rules describing the same language
+**                                    that was described by 'branches'
+** The original SCI rules are in almost-CNF (Chomsky Normal Form). Note that
+** branch[0] is used only for a few magical incantations, as it is treated
+** specially by the SCI parser.
+*/
+
+
+void
+vocab_free_rule_list(parse_rule_list_t *rule_list);
+/* Frees a parser rule list as returned by vocab_build_gnf()
+** Parameters: (parse_rule_list_t *) rule_list: The rule list to free
+** Returns   : (void)
+*/
+
+
 int
 vocab_build_parse_tree(parse_tree_node_t *nodes, result_word_t *words, int words_nr,
-		       parse_tree_branch_t *branches, int branches_nr);
+                       parse_tree_branch_t *branch0, parse_rule_list_t *rules);
 /* Builds a parse tree from a list of words
 ** Parameters: (parse_tree_node_t *) nodes: A node list to store the tree in (must have
 **                                          at least VOCAB_TREE_NODES entries)
 **             (result_word_t *) words: The words to build the tree from
 **             (int) words_nr: The number of words
-**             (parse_tree_branch_t *) branches: The branches which the tree should be built with
-**             (int) branches_nr: Number of branches
-** Returns   : 0 on success, 1 if the tree couldn't be built in VOCAB_TREE_NODES nodes.
+**             (parse_tree_branch_t *) branche0: The zeroeth original branch of the
+**                                     original CNF parser grammar
+**             (parse_rule_list *) rules: The GNF ruleset to parse with
+** Returns   : 0 on success, 1 if the tree couldn't be built in VOCAB_TREE_NODES nodes
+**             or if the sentence structure in 'words' is not part of the language
+**             described by the grammar passed in 'rules'.
 */
 
 void

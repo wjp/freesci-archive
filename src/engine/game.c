@@ -55,6 +55,9 @@ _init_vocabulary(state_t *s) /* initialize vocabulary and related resources */
     s->parser_suffices = vocab_get_suffices(&(s->parser_suffices_nr));
     s->parser_branches = vocab_get_branches(&(s->parser_branches_nr));
 
+    /* Now build a GNF grammar out of this */
+    s->parser_rules = vocab_build_gnf(s->parser_branches, s->parser_branches_nr);
+
   } else
     sciprintf("Assuming that this game does not use a parser.\n");
 
@@ -85,6 +88,7 @@ _free_vocabulary(state_t *s)
     vocab_free_words(s->parser_words, s->parser_words_nr);
     vocab_free_suffices(s->parser_suffices, s->parser_suffices_nr);
     vocab_free_branches(s->parser_branches);
+    vocab_free_rule_list(s->parser_rules);
   }
 
   vocabulary_free_snames(s->selector_names);

@@ -224,6 +224,7 @@ typedef struct _state
   suffix_t **parser_suffices;
   int parser_suffices_nr;
   parse_tree_branch_t *parser_branches;
+  parse_rule_list_t *parser_rules; /* GNF rules used in the parser algorithm */
   int parser_branches_nr;
   parse_tree_node_t parser_nodes[VOCAB_TREE_NODES]; /* The parse tree */
 

@@ -2895,6 +2895,7 @@ gamestate_restore(state_t *s, char *dirname)
   retval->file_handles = calloc(2, sizeof(FILE *));
 
   /* static parser information: */
+  retval->parser_rules = s->parser_rules;
   retval->parser_words_nr = s->parser_words_nr;
   retval->parser_words = s->parser_words;
   retval->parser_suffices_nr = s->parser_suffices_nr;

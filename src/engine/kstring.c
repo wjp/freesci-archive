@@ -253,7 +253,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
 
     if (vocab_build_parse_tree(&(s->parser_nodes[0]), words, words_nr, s->parser_branches,
-			       s->parser_branches_nr))
+			       s->parser_rules))
       syntax_fail = 1; /* Building a tree failed */
 
 #ifdef SCI_SIMPLE_SAID_CODE

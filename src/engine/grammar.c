@@ -38,29 +38,16 @@
 
 static int _allocd_rules = 0;
 
-typedef struct {
-  int id; /* non-terminal ID */
-  int first_special; /* first terminal or non-terminal */
-  int length;
-  int data[0]; /* actual data */
-} parse_rule_t;
-
-
-typedef struct _parse_rule_list {
-  int terminal; /* Terminal character this rule matches against or 0 for a non-terminal rule */
-  parse_rule_t *rule;
-  struct _parse_rule_list *next;
-} parse_rule_list_t;
-
-
 static void
 vocab_print_rule(parse_rule_t *rule)
 {
   int i;
   int wspace = 0;
 
-  if (!rule)
+  if (!rule) {
     sciprintf("NULL rule");
+    return;
+  }
 
   sciprintf("[%03x] -> ", rule->id);
 
@@ -104,6 +91,7 @@ vocab_print_rule(parse_rule_t *rule)
     if (i == rule->first_special)
       sciprintf("_");
   }
+  sciprintf(" [%d specials]", rule->specials_nr);
 }
 
 
@@ -120,20 +108,25 @@ _vbuild(int id, int argc, ...)
 {
   va_list args;
   int i;
-  parse_rule_t *rule = malloc(sizeof(int) * (argc + 3));
+  parse_rule_t *rule = malloc(sizeof(int) * (argc + 4));
 
   ++_allocd_rules;
   rule->id = id;
   rule->first_special = 0;
+  rule->specials_nr = 0;
   rule->length = argc;
   va_start(args, argc);
   for (i = 0; i < argc; i++) {
     int v;
     rule->data[i] = v = va_arg(args, int);
-    if ((!rule->first_special)
-	&& ((v & TOKEN_TERMINAL)
-	    || !(v & TOKEN_NON_NT)))
-      rule->first_special = i;
+    if ((v & TOKEN_TERMINAL)
+	|| !(v & TOKEN_NON_NT)) {
+
+      ++rule->specials_nr;
+
+      if (!rule->first_special)
+	rule->first_special = i;
+    }
   }
   va_end(args);
   return rule;
@@ -143,15 +136,33 @@ static parse_rule_t *
 _vcat(int id, parse_rule_t *a, parse_rule_t *b)
 {
   int i;
-  parse_rule_t *rule = malloc(sizeof(int) * (a->length + b->length + 3));
+  parse_rule_t *rule = malloc(sizeof(int) * (a->length + b->length + 4));
 
   rule->id = id;
   rule->length = a->length + b->length;
+  rule->specials_nr = a->specials_nr + b->specials_nr;
   rule->first_special = a->first_special;
   ++_allocd_rules;
 
   memcpy(rule->data, a->data, sizeof(int) * a->length);
   memcpy(&(rule->data[a->length]), b->data, sizeof(int) * b->length);
+
+  return rule;
+}
+
+static parse_rule_t *
+_vdup(parse_rule_t *a)
+{
+  int i;
+  parse_rule_t *rule = malloc(sizeof(int) * (a->length + 4));
+
+  rule->id = a->id;
+  rule->length = a->length;
+  rule->specials_nr = a->specials_nr;
+  rule->first_special = a->first_special;
+  ++_allocd_rules;
+
+  memcpy(rule->data, a->data, sizeof(int) * a->length);
 
   return rule;
 }
@@ -170,8 +181,9 @@ _vinsert(parse_rule_t *turkey, parse_rule_t *stuffing)
       || (turkey->data[firstnt] != stuffing->id))
     return NULL;
 
-  rule = malloc(sizeof(int) * (turkey->length - 1 + stuffing->length + 3));
+  rule = malloc(sizeof(int) * (turkey->length - 1 + stuffing->length + 4));
   rule->id = turkey->id;
+  rule->specials_nr = turkey->specials_nr + stuffing->specials_nr - 1;
   rule->first_special = firstnt + stuffing->first_special;
   rule->length = turkey->length - 1 + stuffing->length;
   ++_allocd_rules;
@@ -221,9 +233,10 @@ _vbuild_rule(parse_tree_branch_t *branch)
     else return NULL; /* invalid */
   }
 
-  rule = malloc(sizeof(int) * (3 + tokens));
+  rule = malloc(sizeof(int) * (4 + tokens));
   ++_allocd_rules;
   rule->id = branch->id;
+  rule->specials_nr = tokenpos >> 1;
   rule->length = tokens;
   rule->first_special = 0;
 
@@ -254,6 +267,48 @@ _vbuild_rule(parse_tree_branch_t *branch)
   return rule;
 }
 
+
+static parse_rule_t *
+_vsatisfy_rule(parse_rule_t *rule, result_word_t *input)
+{
+  int dep;
+
+  if (!rule->specials_nr)
+    return NULL;
+
+  dep = rule->data[rule->first_special];
+
+  if (((dep & TOKEN_TERMINAL_CLASS)
+       && ((dep & 0xffff) & input->class))
+      ||
+      ((dep & TOKEN_TERMINAL_GROUP)
+       && ((dep & 0xffff) & input->group))) {
+    parse_rule_t *retval = malloc(sizeof(int) * (4 + rule->length));
+    ++_allocd_rules;
+    retval->id = rule->id;
+    retval->specials_nr = rule->specials_nr - 1;
+    retval->length = rule->length;
+    memcpy(retval->data, rule->data, sizeof(int) * retval->length);
+    retval->data[rule->first_special] = TOKEN_STUFFING_WORD | input->group;
+    retval->first_special = 0;
+
+    if (retval->specials_nr) { /* find first special, if it exists */
+      int tmp, i = rule->first_special;
+
+      while ((i < rule->length)
+	     && ((tmp = retval->data[i]) & TOKEN_NON_NT)
+	     && !(tmp & TOKEN_TERMINAL))
+	++i;
+
+      if (i < rule->length)
+	retval->first_special = i;
+    }
+
+    return retval;
+  }
+  else return NULL;
+}
+
 /************** Rule lists **************/
 /* Slow recursive implementations ahead */
 /****************************************/
@@ -279,11 +334,17 @@ _rules_equal_p(parse_rule_t *r1, parse_rule_t *r2)
   return !(memcmp(r1->data, r2->data, sizeof(int) * r1->length));
 }
 
-parse_rule_list_t *
-vocab_add_rule(parse_rule_list_t *list, parse_rule_t *rule)
+static parse_rule_list_t *
+_vocab_add_rule(parse_rule_list_t *list, parse_rule_t *rule)
 {
-  parse_rule_list_t *new_elem = malloc(sizeof(parse_rule_list_t));
-  int term = rule->data[rule->first_special];
+  parse_rule_list_t *new_elem;
+  int term;
+
+  if (!rule)
+    return list;
+
+  new_elem = malloc(sizeof(parse_rule_list_t));
+  term = rule->data[rule->first_special];
 
   new_elem->rule = rule;
   new_elem->next = NULL;
@@ -348,7 +409,7 @@ _vocab_merge_rule_lists(parse_rule_list_t *l1, parse_rule_list_t *l2)
 {
   parse_rule_list_t *retval = l1, *seeker = l2;
   while (seeker) {
-    retval = vocab_add_rule(retval, seeker->rule);
+    retval = _vocab_add_rule(retval, seeker->rule);
     seeker = seeker->next;
   }
 
@@ -361,8 +422,26 @@ _vocab_rule_list_length(parse_rule_list_t *list)
   return ((list)? _vocab_rule_list_length(list->next) + 1 : 0);
 }
 
-void
-vocab_gnf_foo(parse_tree_branch_t *branches, int branches_nr)
+
+static parse_rule_list_t *
+_vocab_clone_rule_list_by_id(parse_rule_list_t *list, int id)
+{
+  parse_rule_list_t *result = NULL;
+  parse_rule_list_t *seeker = list;
+
+  while (seeker) {
+    if (seeker->rule->id == id) {
+      result = _vocab_add_rule(result, _vdup(seeker->rule));
+    }
+    seeker = seeker->next;
+  }
+  
+  return result;
+}
+
+
+parse_rule_list_t *
+_vocab_build_gnf(parse_tree_branch_t *branches, int branches_nr, int verbose)
 {
   int i;
   int iterations = 0;
@@ -375,12 +454,11 @@ vocab_gnf_foo(parse_tree_branch_t *branches, int branches_nr)
   for (i = 1; i < branches_nr; i++) { /* branch rule 0 is treated specially */
     parse_rule_t *rule = _vbuild_rule(branches + i);
     //    vocab_print_rule(rule);sciprintf("\n");
-    ntlist = vocab_add_rule(ntlist, rule);
+    ntlist = _vocab_add_rule(ntlist, rule);
   }
 
   tlist = _vocab_split_rule_list(ntlist);
   ntrules_nr = _vocab_rule_list_length(ntlist);
-  sciprintf("(%d non-GNF rules)\n", ntrules_nr);
 
   new_tlist = tlist;
   tlist = NULL;
@@ -397,7 +475,7 @@ vocab_gnf_foo(parse_tree_branch_t *branches, int branches_nr)
       while (tseeker) {
 	parse_rule_t *newrule = _vinsert(ntseeker->rule, tseeker->rule);
 	if (newrule)
-	  new_new_tlist = vocab_add_rule(new_new_tlist, newrule);
+	  new_new_tlist = _vocab_add_rule(new_new_tlist, newrule);
 	tseeker = tseeker->next;
       }
 
@@ -408,14 +486,225 @@ vocab_gnf_foo(parse_tree_branch_t *branches, int branches_nr)
     new_tlist = new_new_tlist;
 
     termrules = _vocab_rule_list_length(new_new_tlist);
-    sciprintf("After iteration #%d: %d new term rules\n", ++iterations, termrules);
+
+    if (verbose)
+      sciprintf("After iteration #%d: %d new term rules\n", ++iterations, termrules);
   } while (termrules && (iterations < 30));
 
   vocab_free_rule_list(ntlist);
 
-  sciprintf("\nGNF rules:\n");
-  vocab_print_rule_list(tlist);
+  if (verbose) {
+    sciprintf("\nGNF rules:\n");
+    vocab_print_rule_list(tlist);
+  }
+
+  return tlist;
+}
+
+parse_rule_list_t *
+vocab_build_gnf(parse_tree_branch_t *branches, int branches_nr)
+{
+  return _vocab_build_gnf(branches, branches_nr, 0);
+}
+
+
+void
+vocab_gnf_dump(parse_tree_branch_t *branches, int branches_nr)
+{
+  parse_rule_list_t *tlist = _vocab_build_gnf(branches, branches_nr, 1);
 
   sciprintf("%d allocd rules\n", _allocd_rules);
   vocab_free_rule_list(tlist);
+}
+
+
+int
+vocab_build_parse_tree(parse_tree_node_t *nodes, result_word_t *words, int words_nr,
+		       parse_tree_branch_t *branch0, parse_rule_list_t *rules)
+{
+  vocab_gnf_parse(nodes, words, words_nr, branch0, rules, 0);
+}
+
+
+static int
+_vbpt_pareno(parse_tree_node_t *nodes, int *pos, int base)
+/* Opens parentheses */
+{
+  nodes[base].content.branches[0] = (*pos)+1;
+  nodes[++(*pos)].type = PARSE_TREE_NODE_BRANCH;
+  nodes[*pos].content.branches[0] = 0;
+  nodes[*pos].content.branches[1] = 0;
+  //  sciprintf("(");
+  return *pos;
+}
+
+
+static int
+_vbpt_parenc(parse_tree_node_t *nodes, int *pos, int paren)
+/* Closes parentheses for appending */
+{
+  nodes[paren].content.branches[1] = ++(*pos);
+  nodes[*pos].type = PARSE_TREE_NODE_BRANCH;
+  nodes[*pos].content.branches[0] = 0;
+  nodes[*pos].content.branches[1] = 0;
+  //  sciprintf(")");
+  return *pos;
+}
+
+
+static int
+_vbpt_append(parse_tree_node_t *nodes, int *pos, int base, int value)
+/* writes one value to an existing base node and creates a successor node for writing */
+{
+  nodes[base].content.branches[0] = ++(*pos);
+  nodes[*pos].type = PARSE_TREE_NODE_LEAF;
+  nodes[*pos].content.value = value;
+  nodes[base].content.branches[1] = ++(*pos);
+  nodes[*pos].type = PARSE_TREE_NODE_BRANCH;
+  nodes[*pos].content.branches[0] = 0;
+  nodes[*pos].content.branches[1] = 0;
+  //  sciprintf("%03x ", value);
+  return *pos;
+}
+
+
+static int
+_vbpt_terminate(parse_tree_node_t *nodes, int *pos, int base, int value)
+     /* Terminates, overwriting a nextwrite forknode */
+{
+  nodes[base].type = PARSE_TREE_NODE_LEAF;
+  nodes[base].content.value = value;
+  //  sciprintf("%03x)", value);
+  return *pos;
+}
+
+static int
+_vbpt_write_subexpression(parse_tree_node_t *nodes, int *pos,
+			  parse_rule_t *rule, int rulepos, int writepos)
+{
+  int token;
+  while ((token = ((rulepos < rule->length)? rule->data[rulepos++] : TOKEN_CPAREN)) != TOKEN_CPAREN) {
+    int nexttoken = (rulepos < rule->length)? rule->data[rulepos] : TOKEN_CPAREN;
+    if (token == TOKEN_OPAREN) {
+      int wpold;
+      int writepos2 = _vbpt_pareno(nodes, pos, wpold = writepos);
+      rulepos = _vbpt_write_subexpression(nodes, pos, rule, rulepos, writepos2);
+      nexttoken = (rulepos < rule->length)? rule->data[rulepos] : TOKEN_CPAREN;
+      if (nexttoken != TOKEN_CPAREN)
+	writepos = _vbpt_parenc(nodes, pos, wpold);
+    } else if (token & TOKEN_STUFFING_WORD) {
+      if (nexttoken == TOKEN_CPAREN)
+	writepos = _vbpt_terminate(nodes, pos, writepos, token & 0xffff);
+      else
+	writepos = _vbpt_append(nodes, pos, writepos, token & 0xffff);
+    } else {
+      sciprintf("\nError in parser (grammar.c, _vbpt_write_subexpression()): Rule data broken in rule ");
+      vocab_print_rule(rule);
+      sciprintf(", at token position %d\n", *pos);
+      return rulepos;
+    }
+  }
+
+  return rulepos;
+}
+
+int
+vocab_gnf_parse(parse_tree_node_t *nodes, result_word_t *words, int words_nr,
+		parse_tree_branch_t *branch0, parse_rule_list_t *tlist, int verbose)
+{
+  /* Get the start rules: */
+  parse_rule_list_t *work = _vocab_clone_rule_list_by_id(tlist, branch0->data[1]);
+  parse_rule_list_t *results = NULL;
+  int word;
+
+  for (word = 0; word < words_nr; word++) {
+    parse_rule_list_t *new_work = NULL;
+    parse_rule_list_t *reduced_rules = NULL;
+    parse_rule_list_t *seeker, *subseeker;
+
+    if (verbose)
+      sciprintf("Adding word %d...\n", word);
+
+    seeker = work;
+    while (seeker) {
+
+      if (seeker->rule->specials_nr <= (words_nr - word))
+	reduced_rules = _vocab_add_rule(reduced_rules, _vsatisfy_rule(seeker->rule, words + word));
+
+      seeker = seeker->next;
+    }
+
+    if (reduced_rules == NULL) {
+      vocab_free_rule_list(work);
+      if (verbose)
+	sciprintf("No results.\n");
+      return 1;
+    }
+
+    vocab_free_rule_list(work);
+
+    if (word +1 < words_nr) {
+      seeker = reduced_rules;
+
+      while (seeker) {
+	if (seeker->rule->specials_nr) {
+	  int my_id = seeker->rule->data[seeker->rule->first_special];
+
+	  subseeker = tlist;
+	  while (subseeker) {
+	    if (subseeker->rule->id == my_id)
+	      new_work = _vocab_add_rule(new_work, _vinsert(seeker->rule, subseeker->rule));
+
+	    subseeker = subseeker->next;
+	  }
+	}
+
+	seeker = seeker->next;
+      } 
+      vocab_free_rule_list(reduced_rules);
+    } else /* last word */
+      new_work = reduced_rules;
+
+    work = new_work;
+    if (verbose)
+      sciprintf("Now at %d candidates\n", _vocab_rule_list_length(work));
+    if (work == NULL) {
+      if (verbose)
+	sciprintf("No results.\n");
+      return 1;
+    }
+  }
+
+  results = work;
+
+  if (verbose) {
+    sciprintf("All results (excluding the surrounding '(141 %03x' and ')'):\n",
+	      branch0->id);
+    vocab_print_rule_list(results);
+    sciprintf("\n");
+  }
+
+  /* now use the first result */
+  {
+    int temp, pos;
+
+    nodes[0].type = PARSE_TREE_NODE_BRANCH;
+    nodes[0].content.branches[0] = 1;
+    nodes[0].content.branches[1] = 2;
+
+    nodes[1].type = PARSE_TREE_NODE_LEAF;
+    nodes[1].content.value = 0x141;
+
+    nodes[2].type = PARSE_TREE_NODE_BRANCH;
+    nodes[2].content.branches[0] = 0;
+    nodes[2].content.branches[1] = 0;
+
+    pos = 2;
+
+    temp = _vbpt_append(nodes, &pos, 2, branch0->id);
+    _vbpt_write_subexpression(nodes, &pos, results->rule, 0, temp);
+  }
+
+  vocab_free_rule_list(results);
+  return 0;
 }

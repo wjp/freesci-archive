@@ -423,6 +423,12 @@ c_set_parse_nodes(state_t *s)
   return 0;
 }
 
+/* from grammar.c: */
+int
+vocab_gnf_parse(parse_tree_node_t *nodes, result_word_t *words, int words_nr,
+		parse_tree_branch_t *branch0, parse_rule_list_t *tlist, int verbose);
+/* parses with a GNF rule set */
+
 int
 c_parse(state_t *s)
 {
@@ -453,8 +459,8 @@ c_parse(state_t *s)
     for (i = 0; i < words_nr; i++)
       sciprintf("   Type[%04x] Group[%04x]\n", words[i].class, words[i].group);
 
-    if (vocab_build_parse_tree(&(s->parser_nodes[0]), words, words_nr, s->parser_branches,
-			       s->parser_branches_nr))
+    if (vocab_gnf_parse(&(s->parser_nodes[0]), words, words_nr, s->parser_branches,
+			s->parser_rules, 1))
       syntax_fail = 1; /* Building a tree failed */
 
     g_free(words);
@@ -1545,7 +1551,7 @@ c_gnf(state_t *s)
     return 1;
   }
 
-  vocab_gnf_foo(s->parser_branches, s->parser_branches_nr);
+  vocab_gnf_dump(s->parser_branches, s->parser_branches_nr);
   return 0;
 }
 

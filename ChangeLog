@@ -1,3 +1,7 @@
+2000-05-10  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/grammar.c: Implemented Parse() in a sensible way
+
 2000-05-07  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/kgraphics.c (kDoBresen): Monsters now chase the player

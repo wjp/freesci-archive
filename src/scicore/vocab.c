@@ -881,42 +881,6 @@ sciprintf("returned, seekpos=%d\n", seekpos);
   
 }
 
-int
-vocab_build_parse_tree(parse_tree_node_t *nodes, result_word_t *words, int words_nr,
-		       parse_tree_branch_t *branches, int branches_nr)
-{
-  int seeker = 1;
-  int finished_words = 0;
-
-  nodes[0].type = PARSE_TREE_NODE_BRANCH;
-  nodes[0].content.branches[0] = 1;
-  nodes[0].content.branches[1] = 2;
-
-  nodes[1].type = PARSE_TREE_NODE_LEAF;
-  nodes[1].content.value = 0x141;
-
-  nodes[2].type = PARSE_TREE_NODE_BRANCH;
-  nodes[2].content.branches[0] = 0;
-  nodes[2].content.branches[1] = 0;
-
-  while ((finished_words != words_nr) && (seeker < branches_nr)) {
-    int pos = 2;
-    int startpos = _vbpt_append(nodes, &pos, 2, branches[0].id);
-    int firstid = branches[0].data[1];
-    //    startpos = _vbpt_pareno(nodes, &pos, startpos);
-    finished_words = 0;
-
-    if (!_vbpt_try_branch(nodes, words, words_nr, branches, branches_nr,
-			  &finished_words,  firstid,
-			  &seeker, 0, startpos, pos))
-      finished_words = -1;
-sciprintf("returned MAIN %d/%d, seeker=%d\n", finished_words, words_nr, seeker);
-    ++seeker;
-  }
-
-  return !(finished_words == words_nr);
-}
-
 void
 _vocab_recursive_ptree_dump_treelike(parse_tree_node_t *nodes, int nr, int prevnr)
 {
