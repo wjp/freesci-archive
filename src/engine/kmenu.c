@@ -100,7 +100,7 @@ kDrawMenuBar(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
-#define ABOUT_FREESCI_PAGES_NR 6
+#define ABOUT_FREESCI_PAGES_NR 7
 
 struct {
 	char *title;
@@ -108,7 +108,7 @@ struct {
 	int fgcolor, bgcolor;
 } _about_freesci_pages[ABOUT_FREESCI_PAGES_NR] = {
 	{"FreeSCI hackers and contributors",
-	 "Alexander R. Angas\nWin32 fixes and generic memory handler functions\n\n"
+	 "Alexander R. Angas\nDirectX 8 driver, Event sound server, Generic memory functions\n\n"
 	 "Anders Baden Nielsen\nPPC testing\n\n"
 	 "Bas Zoetekouw\nMan pages, debian package management, CVS maintenance\n\n"
 	 "Carl Muckenhoupt\nSources to the SCI resource viewer tools that started it all\n\n"
@@ -135,13 +135,17 @@ struct {
 	 "Ravi I.\nSCI0 sound resource specification",
 	 0, 15},
 	{"Still more of them",
+	 "Ruediger Hanke\nPort to the MorphOS platform\n\n"
 	 "Rune Orsval\nConfiguration file editor\n\n"
 	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research\n\n"
 	 "Rink Springer\nPort to the DOS platform, several bug fixes\n\n"
 	 "Robey Pointer\nBug tracking system hosting\n\n"
 	 "Sergey Lapin\nPort of Carl's type 2 decompression code\n\n"
-	 "Solomon Peachy\nSDL ports and much of the sound subsystem\n\n"
-	 "Vyacheslav Dikonov\nConfig script improvements",
+	 "Solomon Peachy\nSDL ports and much of the sound subsystem",
+	 0, 15},
+	{"And even more",
+	 "Vyacheslav Dikonov\nConfig script improvements\n\n"
+	 "Walter van Niftrik\nPort to the Dreamcast platform",
 	 0, 15},
 	{"The CSCI5573 Team at CU Boulder",
 	 "Xiaojun Chen\nSean Terrell\nChristoph Reichenbach\n\n"
