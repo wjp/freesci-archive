@@ -111,8 +111,8 @@ typedef struct _state
 
 	sound_server_t *sound_server; /* Sound server */
 
-	int sound_volume; /* 0x0 -> 0xf Current volume of sound system */
- 	int sound_mute; /* 0 = not, else == saved value */
+	unsigned int sound_volume; /* 0x0 -> 0xf Current volume of sound system */
+ 	unsigned int sound_mute; /* 0 = not, else == saved value */
 
 	byte restarting_flags; /* Flags used for restarting */
 	byte have_mouse_flag;  /* Do we have a hardware pointing device? */

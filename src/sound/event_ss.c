@@ -230,120 +230,124 @@ sci0_event_ss(sound_server_state_t *ss_state)
 	/*** sound server loop ***/
 	for (;;)
 	{
-		/* get_data() is used to signal whether do_sound() should be called */
-		if (global_sound_server->get_data(NULL, NULL))
-			do_sound(ss_state);
+		/* process any waiting sound */
+		do_sound(ss_state);
 
-		/* processes messages sent by PostMessage() */
+		/* check for new commands */
+		/* this must include some sort of waiting instruction so scheduling
+		** under Win32 will work correctly. it is assumed that the call to
+		** get_command() takes about 16.6667 milliseconds (because do_sound()
+		** needs to be called every 16.6667 milliseconds).
+		*/
 		new_event = global_sound_server->get_command(NULL);
+		if (!new_event)
+			continue;	/* no new commands */
 
-		if (new_event)
-		{
-			if (new_event->signal == SOUND_COMMAND_INIT_HANDLE) {
-				init_handle((int)new_event->value, (word)new_event->handle, ss_state);
+		if (new_event->signal == SOUND_COMMAND_INIT_HANDLE) {
+			init_handle((int)new_event->value, (word)new_event->handle, ss_state);
 
-			} else if (new_event->signal == SOUND_COMMAND_PLAY_HANDLE) {
-				play_handle((int)new_event->value, (word)new_event->handle, ss_state);
+		} else if (new_event->signal == SOUND_COMMAND_PLAY_HANDLE) {
+			play_handle((int)new_event->value, (word)new_event->handle, ss_state);
 
-			} else if (new_event->signal == SOUND_COMMAND_STOP_HANDLE) {
-				stop_handle((word)new_event->handle, ss_state);
+		} else if (new_event->signal == SOUND_COMMAND_STOP_HANDLE) {
+			stop_handle((word)new_event->handle, ss_state);
 
-			} else if (new_event->signal == SOUND_COMMAND_SUSPEND_HANDLE) {
-				suspend_handle((word)new_event->handle, ss_state);
+		} else if (new_event->signal == SOUND_COMMAND_SUSPEND_HANDLE) {
+			suspend_handle((word)new_event->handle, ss_state);
 
-			} else if (new_event->signal == SOUND_COMMAND_RESUME_HANDLE) {
-				resume_handle((word)new_event->handle, ss_state);
+		} else if (new_event->signal == SOUND_COMMAND_RESUME_HANDLE) {
+			resume_handle((word)new_event->handle, ss_state);
 
-			} else if (new_event->signal == SOUND_COMMAND_RENICE_HANDLE) {
-				renice_handle((int)new_event->value, (word)new_event->handle, ss_state);
+		} else if (new_event->signal == SOUND_COMMAND_RENICE_HANDLE) {
+			renice_handle((int)new_event->value, (word)new_event->handle, ss_state);
 
-			} else if (new_event->signal == SOUND_COMMAND_FADE_HANDLE) {
-				fade_handle((int)new_event->value, (word)new_event->handle, ss_state);
+		} else if (new_event->signal == SOUND_COMMAND_FADE_HANDLE) {
+			fade_handle((int)new_event->value, (word)new_event->handle, ss_state);
 
-			} else if (new_event->signal == SOUND_COMMAND_LOOP_HANDLE) {
-				loop_handle((int)new_event->value, (word)new_event->handle, ss_state);
+		} else if (new_event->signal == SOUND_COMMAND_LOOP_HANDLE) {
+			loop_handle((int)new_event->value, (word)new_event->handle, ss_state);
 
-			} else if (new_event->signal == SOUND_COMMAND_DISPOSE_HANDLE) {
-				dispose_handle((word)new_event->handle, ss_state);
+		} else if (new_event->signal == SOUND_COMMAND_DISPOSE_HANDLE) {
+			dispose_handle((word)new_event->handle, ss_state);
 
-			} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_INSTRUMENT) {
-				imap_set(SOUND_COMMAND_IMAP_SET_INSTRUMENT,
-						 (int)new_event->value,	/* instrument */
-						 (word)new_event->handle);	/* handle */
+		} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_INSTRUMENT) {
+			imap_set(SOUND_COMMAND_IMAP_SET_INSTRUMENT,
+					 (int)new_event->value,	/* instrument */
+					 (word)new_event->handle);	/* handle */
 
-			} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_KEYSHIFT) {
-				imap_set(SOUND_COMMAND_IMAP_SET_KEYSHIFT,
-						 (int)new_event->value, (word)new_event->handle);
+		} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_KEYSHIFT) {
+			imap_set(SOUND_COMMAND_IMAP_SET_KEYSHIFT,
+					 (int)new_event->value, (word)new_event->handle);
 
-			} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_FINETUNE) {
-				imap_set(SOUND_COMMAND_IMAP_SET_FINETUNE,
-						 (int)new_event->value, (word)new_event->handle);
+		} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_FINETUNE) {
+			imap_set(SOUND_COMMAND_IMAP_SET_FINETUNE,
+					 (int)new_event->value, (word)new_event->handle);
 
-			} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_BENDER_RANGE) {
-				imap_set(SOUND_COMMAND_IMAP_SET_BENDER_RANGE,
-						 (int)new_event->value, (word)new_event->handle);
+		} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_BENDER_RANGE) {
+			imap_set(SOUND_COMMAND_IMAP_SET_BENDER_RANGE,
+					 (int)new_event->value, (word)new_event->handle);
 
-			} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_PERCUSSION) {
-				imap_set(SOUND_COMMAND_IMAP_SET_PERCUSSION,
-						 (int)new_event->value, (word)new_event->handle);
+		} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_PERCUSSION) {
+			imap_set(SOUND_COMMAND_IMAP_SET_PERCUSSION,
+					 (int)new_event->value, (word)new_event->handle);
 
-			} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_VOLUME) {
-				imap_set(SOUND_COMMAND_IMAP_SET_VOLUME,
-						 (int)new_event->value, (word)new_event->handle);
+		} else if (new_event->signal == SOUND_COMMAND_IMAP_SET_VOLUME) {
+			imap_set(SOUND_COMMAND_IMAP_SET_VOLUME,
+					 (int)new_event->value, (word)new_event->handle);
 
-			} else if (new_event->signal == SOUND_COMMAND_MUTE_CHANNEL) {
-				set_channel_mute((int)new_event->value, MUTE_ON, ss_state);
+		} else if (new_event->signal == SOUND_COMMAND_MUTE_CHANNEL) {
+			set_channel_mute((int)new_event->value, MUTE_ON, ss_state);
 
-			} else if (new_event->signal == SOUND_COMMAND_UNMUTE_CHANNEL) {
-				set_channel_mute((int)new_event->value, MUTE_OFF, ss_state);
+		} else if (new_event->signal == SOUND_COMMAND_UNMUTE_CHANNEL) {
+			set_channel_mute((int)new_event->value, MUTE_OFF, ss_state);
 
-			} else if (new_event->signal == SOUND_COMMAND_SET_VOLUME) {
-				set_master_volume((unsigned char)new_event->value, ss_state);
+		} else if (new_event->signal == SOUND_COMMAND_SET_VOLUME) {
+			set_master_volume((unsigned char)new_event->value, ss_state);
 
-			} else if (new_event->signal == SOUND_COMMAND_TEST) {
-				sound_check(midi_polyphony, ss_state);
+		} else if (new_event->signal == SOUND_COMMAND_TEST) {
+			sound_check(midi_polyphony, ss_state);
 
-			} else if (new_event->signal == SOUND_COMMAND_STOP_ALL) {
-				stop_all(ss_state);
+		} else if (new_event->signal == SOUND_COMMAND_STOP_ALL) {
+			stop_all(ss_state);
 
-			} else if (new_event->signal == SOUND_COMMAND_SUSPEND_ALL) {
-				suspend_all(ss_state);
+		} else if (new_event->signal == SOUND_COMMAND_SUSPEND_ALL) {
+			suspend_all(ss_state);
 
-			} else if (new_event->signal == SOUND_COMMAND_RESUME_ALL) {
-				resume_all(ss_state);
+		} else if (new_event->signal == SOUND_COMMAND_RESUME_ALL) {
+			resume_all(ss_state);
 
-			} else if (new_event->signal == SOUND_COMMAND_SAVE_STATE) {
-				fprintf(stderr, "Saving sound server state not implemented yet\n");
+		} else if (new_event->signal == SOUND_COMMAND_SAVE_STATE) {
+			fprintf(stderr, "Saving sound server state not implemented yet\n");
 
-			} else if (new_event->signal == SOUND_COMMAND_RESTORE_STATE) {
-				fprintf(stderr, "Restoring sound server state not implemented yet\n");
+		} else if (new_event->signal == SOUND_COMMAND_RESTORE_STATE) {
+			fprintf(stderr, "Restoring sound server state not implemented yet\n");
 
-			} else if (new_event->signal == SOUND_COMMAND_PRINT_SONG_INFO) {
+		} else if (new_event->signal == SOUND_COMMAND_PRINT_SONG_INFO) {
 #ifdef DEBUG_SOUND_SERVER
-				if ((int)new_event->value == 0)
-					print_song_info(ss_state->current_song->handle, ss_state);
-				else
-					print_song_info((word)new_event->handle, ss_state);
+			if ((int)new_event->value == 0)
+				print_song_info(ss_state->current_song->handle, ss_state);
+			else
+				print_song_info((word)new_event->handle, ss_state);
 #endif
 
-			} else if (new_event->signal == SOUND_COMMAND_PRINT_CHANNELS) {
+		} else if (new_event->signal == SOUND_COMMAND_PRINT_CHANNELS) {
 #ifdef DEBUG_SOUND_SERVER
-				print_channels_any(0, ss_state);
+			print_channels_any(0, ss_state);
 #endif
 
-			} else if (new_event->signal == SOUND_COMMAND_PRINT_MAPPING) {
+		} else if (new_event->signal == SOUND_COMMAND_PRINT_MAPPING) {
 #ifdef DEBUG_SOUND_SERVER
-				print_channels_any(1, ss_state);
+			print_channels_any(1, ss_state);
 #endif
 
-			} else if (new_event->signal == SOUND_COMMAND_SHUTDOWN) {
-				break;
-
-			} else {
-				/* do nothing */
-			}
+		} else if (new_event->signal == SOUND_COMMAND_SHUTDOWN) {
 			free(new_event);
+			break;
+
+		} else {
+			/* do nothing */
 		}
+		free(new_event);
 	}
 
 	/*** shut down server ***/

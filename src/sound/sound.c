@@ -117,12 +117,12 @@ sound_resume_default(state_t *s)
 }
 
 int
-sound_command_default(state_t *s, unsigned int command, unsigned int handle, long parameter)
+sound_command_default(state_t *s, unsigned int command, unsigned int handle, long value)
 {
 	sound_event_t event;
 	event.handle = handle;
 	event.signal = command;
-	event.value = parameter;
+	event.value = value;
 
 	if (command == 0) {
 		fprintf(stderr, "WARNING: A sound command has not been defined\n");
@@ -130,21 +130,20 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 
 	} else if (command == SOUND_COMMAND_INIT_HANDLE) {
 		resource_t *song = scir_find_resource(
-			s->resmgr, sci_sound, parameter, 0);
+			s->resmgr, sci_sound, event.value, 0);
 		int len;
 
 		if (!song) {
-			sciprintf("Attempt to play invalid sound.%03d\n", parameter);
+			sciprintf("Attempt to play invalid sound.%03d\n", event.value);
 			return 1;
 		}
-
-		global_sound_server->queue_command(event.handle, event.signal, event.value);
 
 		len = song->size;
 		if (global_sound_server->send_data(song->data, len) != len) {
 			fprintf(debug_stream, "sound_command(): sound_send_data"
 				" returned < count\n");
 		}
+		global_sound_server->queue_command(event.handle, event.signal, event.value);
 
 		return 0;
 
@@ -179,9 +178,9 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 
 	} else if (command == SOUND_COMMAND_SET_VOLUME) {
 		if (s->sound_mute) {  /* if we're muted, update the mute */
-			s->sound_mute = parameter;
+			s->sound_mute = event.value;
 		} else {
-			s->sound_volume = parameter;
+			s->sound_volume = event.value;
 			global_sound_server->queue_command(event.handle, event.signal, event.value);
 		}
 
@@ -197,11 +196,13 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 			return s->sound_volume;
 
 	} else if (command == SOUND_COMMAND_SET_MUTE) {
-		if (parameter == 0) {
+		if (event.value == MUTE_OFF) {
+			/* mute is off so turn it on */
 			s->sound_mute = s->sound_volume;
 			s->sound_volume = 0;
 		} else {
-			if (s->sound_mute > 0)
+			/* mute is on so turn it off */
+			if (s->sound_mute != MUTE_OFF)
 				s->sound_volume = s->sound_mute;
 			s->sound_mute = MUTE_OFF;
 		}
@@ -213,13 +214,13 @@ sound_command_default(state_t *s, unsigned int command, unsigned int handle, lon
 
 		/* return the mute status */
 		if (s->sound_mute)
-			return MUTE_ON;
+			return s->sound_mute;
 		else
 			return MUTE_OFF;
 
 	} else if (command == SOUND_COMMAND_GET_MUTE) {
 		if (s->sound_mute)
-			return MUTE_ON;
+			return s->sound_mute;
 		else
 			return MUTE_OFF;
 
@@ -667,55 +668,10 @@ song_lib_dump(songlib_t songlib, int line)
 
 }
 
-void print_message_map() {
-	/* used to debug what sound commands and signals are being issued */
-	printf("Command                                Value\n");
-	printf("SOUND_DATA                             %u\n", SOUND_DATA);
-	printf("SOUND_COMMAND_INIT_HANDLE              %u\n", SOUND_COMMAND_INIT_HANDLE);
-	printf("SOUND_COMMAND_PLAY_HANDLE              %u\n", SOUND_COMMAND_PLAY_HANDLE);
-	printf("SOUND_COMMAND_LOOP_HANDLE              %u\n", SOUND_COMMAND_LOOP_HANDLE);
-	printf("SOUND_COMMAND_DISPOSE_HANDLE           %u\n", SOUND_COMMAND_DISPOSE_HANDLE);
-	printf("SOUND_COMMAND_SET_MUTE                 %u\n", SOUND_COMMAND_SET_MUTE);
-	printf("SOUND_COMMAND_STOP_HANDLE              %u\n", SOUND_COMMAND_STOP_HANDLE);
-	printf("SOUND_COMMAND_SUSPEND_HANDLE           %u\n", SOUND_COMMAND_SUSPEND_HANDLE);
-	printf("SOUND_COMMAND_RESUME_HANDLE            %u\n", SOUND_COMMAND_RESUME_HANDLE);
-	printf("SOUND_COMMAND_SET_VOLUME               %u\n", SOUND_COMMAND_SET_VOLUME);
-	printf("SOUND_COMMAND_RENICE_HANDLE            %u\n", SOUND_COMMAND_RENICE_HANDLE);
-	printf("SOUND_COMMAND_FADE_HANDLE              %u\n", SOUND_COMMAND_FADE_HANDLE);
-	printf("SOUND_COMMAND_TEST                     %u\n", SOUND_COMMAND_TEST);
-	printf("SOUND_COMMAND_STOP_ALL                 %u\n", SOUND_COMMAND_STOP_ALL);
-	printf("SOUND_COMMAND_SAVE_STATE               %u\n", SOUND_COMMAND_SAVE_STATE);
-	printf("SOUND_COMMAND_RESTORE_STATE            %u\n", SOUND_COMMAND_RESTORE_STATE);
-	printf("SOUND_COMMAND_SUSPEND_ALL              %u\n", SOUND_COMMAND_SUSPEND_ALL);
-	printf("SOUND_COMMAND_RESUME_ALL               %u\n", SOUND_COMMAND_RESUME_ALL);
-	printf("SOUND_COMMAND_GET_MUTE                 %u\n", SOUND_COMMAND_GET_MUTE);
-	printf("SOUND_COMMAND_GET_VOLUME               %u\n", SOUND_COMMAND_GET_VOLUME);
-	printf("SOUND_COMMAND_PRINT_SONG_INFO          %u\n", SOUND_COMMAND_PRINT_SONG_INFO);
-	printf("SOUND_COMMAND_PRINT_CHANNELS           %u\n", SOUND_COMMAND_PRINT_CHANNELS);
-	printf("SOUND_COMMAND_PRINT_MAPPING            %u\n", SOUND_COMMAND_PRINT_MAPPING);
-	printf("SOUND_COMMAND_IMAP_SET_INSTRUMENT      %u\n", SOUND_COMMAND_IMAP_SET_INSTRUMENT);
-	printf("SOUND_COMMAND_IMAP_SET_KEYSHIFT        %u\n", SOUND_COMMAND_IMAP_SET_KEYSHIFT);
-	printf("SOUND_COMMAND_IMAP_SET_FINETUNE        %u\n", SOUND_COMMAND_IMAP_SET_FINETUNE);
-	printf("SOUND_COMMAND_IMAP_SET_BENDER_RANGE    %u\n", SOUND_COMMAND_IMAP_SET_BENDER_RANGE);
-	printf("SOUND_COMMAND_IMAP_SET_PERCUSSION      %u\n", SOUND_COMMAND_IMAP_SET_PERCUSSION);
-	printf("SOUND_COMMAND_IMAP_SET_VOLUME          %u\n", SOUND_COMMAND_IMAP_SET_VOLUME);
-	printf("SOUND_COMMAND_MUTE_CHANNEL             %u\n", SOUND_COMMAND_MUTE_CHANNEL);
-	printf("SOUND_COMMAND_UNMUTE_CHANNEL           %u\n", SOUND_COMMAND_UNMUTE_CHANNEL);
-	printf("SOUND_COMMAND_SHUTDOWN                 %u\n", SOUND_COMMAND_SHUTDOWN);
-	printf("SOUND_SIGNAL_CUMULATIVE_CUE            %u\n", SOUND_SIGNAL_CUMULATIVE_CUE);
-	printf("SOUND_SIGNAL_LOOP                      %u\n", SOUND_SIGNAL_LOOP);
-	printf("SOUND_SIGNAL_FINISHED                  %u\n", SOUND_SIGNAL_FINISHED);
-	printf("SOUND_SIGNAL_PLAYING                   %u\n", SOUND_SIGNAL_PLAYING);
-	printf("SOUND_SIGNAL_PAUSED                    %u\n", SOUND_SIGNAL_PAUSED);
-	printf("SOUND_SIGNAL_RESUMED                   %u\n", SOUND_SIGNAL_RESUMED);
-	printf("SOUND_SIGNAL_INITIALIZED               %u\n", SOUND_SIGNAL_INITIALIZED);
-	printf("SOUND_SIGNAL_ABSOLUTE_CUE              %u\n", SOUND_SIGNAL_ABSOLUTE_CUE);
-}
-
 void register_sound_messages() {
 	/* NOTE: should all be defined > 0 for error checking purposes */
 #ifndef _WIN32
-	SOUND_DATA                          = 1;
+/*	SOUND_COMMAND_DO_SOUND              = 1; */
 	SOUND_COMMAND_INIT_HANDLE           = 2;
 	SOUND_COMMAND_PLAY_HANDLE           = 3;
 	SOUND_COMMAND_LOOP_HANDLE           = 4;
@@ -757,10 +713,6 @@ void register_sound_messages() {
 	SOUND_SIGNAL_ABSOLUTE_CUE           = 1008;
 #else
 	DECLARE_MESSAGES();
-#endif
-
-#ifdef _DEBUG
-	/* print_message_map(); */
 #endif
 }
 

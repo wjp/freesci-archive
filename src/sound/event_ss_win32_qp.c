@@ -47,7 +47,7 @@ sound_server_t sound_server_win32e_qp;
 #define WINDOW_SUFFIX " (Window)"
 
 static HWND main_wnd, sound_wnd;
-static HANDLE child_thread;
+static HANDLE child_thread, worker_thread;
 static state_t *gs;
 
 static sci_queue_t data_queue;
@@ -76,10 +76,37 @@ SoundWndProc (HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc (hWnd, nMsg, wParam, lParam);
 }
 
+DWORD WINAPI
+_timing_thread(LPVOID lpP)
+{
+	LARGE_INTEGER tim, freq;
+	unsigned int old_val, new_val;
+
+if (SetThreadPriority(worker_thread, THREAD_PRIORITY_LOWEST) == 0)
+fprintf(stderr, "stp failed\n");
+
+	old_val = 0;
+
+	for (;;)
+	{
+		if (QueryPerformanceCounter(&tim) == 0)
+			fprintf(debug_stream, "_timing_thread(): QueryPerformanceCounter() failed, GetLastError() returned %u\n", GetLastError());
+		if (QueryPerformanceFrequency(&freq) == 0)
+			fprintf(debug_stream, "_timing_thread(): QueryPerformanceFrequency() failed, GetLastError() returned %u\n", GetLastError());
+
+		new_val = (tim.QuadPart*1000 / freq.QuadPart) % 16667;
+//fprintf(stderr, "checking if new_val %u < old_val %u\n", new_val, old_val);
+		if (new_val < old_val)
+//			global_sound_server->queue_command(0, SOUND_COMMAND_DO_SOUND, 0);
+		old_val = new_val;
+	}
+}
+
 /* function called when sound server child thread begins */
 DWORD WINAPI
 win32e_qp_soundserver_init(LPVOID lpP)
 {
+	DWORD dwWorkerId;
 	sound_server_state_t sss;
 	WNDCLASS wc;
 	HINSTANCE hi_sound;
@@ -93,11 +120,13 @@ win32e_qp_soundserver_init(LPVOID lpP)
 	memset(&wc, 0, sizeof(WNDCLASS));
 	wc.lpfnWndProc = SoundWndProc;
 	hi_sound = GetModuleHandle(NULL);
+	if (hi_sound == NULL)
+		fprintf(debug_stream, "win32e_qp_soundserver_init(): GetModuleHandle() failed, GetLastError() returned %u\n", GetLastError());
 	wc.hInstance = hi_sound;
 	wc.lpszClassName = SOUND_CLASS_NAME;
 
-	if (!RegisterClass(&wc))
-		fprintf(stderr, "Can't register window class for sound thread\n");
+	if (RegisterClass(&wc) == 0)
+		fprintf(debug_stream, "win32e_qp_soundserver_init(): RegisterClass() failed, GetLastError() returned %u\n", GetLastError());
 
 	/* create our 'window' (not visible of course) */
 	sound_wnd = CreateWindow (
@@ -115,13 +144,25 @@ win32e_qp_soundserver_init(LPVOID lpP)
 	);
 
 	if (sound_wnd == NULL)
-		fprintf(stderr, "Couldn't create sound window class\n");
+		fprintf(debug_stream, "win32e_qp_soundserver_init(): CreateWindow() for sound failed, GetLastError() returned %u\n", GetLastError());
 	else
 		fprintf(stderr, "Created sound window class\n");
 
 #if (SSWIN_DEBUG == 1)
 	fprintf(stderr, "win32e_qp_soundserver_init() sound_wnd %i, TID %i\n", sound_wnd, GetCurrentThreadId());
 #endif
+
+	/* start the worker thread that gives the timing */
+	worker_thread = CreateThread( NULL,		/* not inheritable */
+		                         0,			/* use default stack size */
+								 _timing_thread,	/* callback function */
+								 0,			/* cb function parameter - should be s but fails on Win9x */
+								 0,			/* thread runs immediately */
+								 &dwWorkerId);	/* pointer to id of new thread */
+	if (worker_thread == NULL)
+		fprintf(debug_stream, "win32e_qp_soundserver_init(): CreateThread() failed, GetLastError() returned %u\n", GetLastError());
+	else
+		fprintf(stderr, "Created worker thread for sound timing\n");
 
 	/* start the sound server */
 	sci0_event_ss(&sss);
@@ -141,6 +182,9 @@ sound_win32e_qp_init(struct _state *s, int flags)
 	gs = s;	/* keep copy of pointer */
 	sci_sched_yield();
 
+	fprintf(stderr, "Sorry, this sound server is currently broken.\n");
+	exit(-1);
+
 	if (init_midi_device(s) < 0)
 		return -1;
 /*
@@ -157,11 +201,13 @@ TODO: fix reverse stereo
 	memset(&wc, 0, sizeof(WNDCLASS));
 	wc.lpfnWndProc = MainWndProc;
 	hi_main = GetModuleHandle(NULL);
+	if (hi_main == NULL)
+		fprintf(debug_stream, "sound_win32e_qp_init(): GetModuleHandle() failed, GetLastError() returned %u\n", GetLastError());
 	wc.hInstance = hi_main;
 	wc.lpszClassName = MAIN_CLASS_NAME;
 
-	if (!RegisterClass(&wc))
-		fprintf(stderr, "Can't register window class for main thread\n");
+	if (RegisterClass(&wc) == 0)
+		fprintf(debug_stream, "sound_win32e_qp_init(): RegisterClass() failed, GetLastError() returned %u\n", GetLastError());
 
 	/*** create window for main thread to receive messages (not visible of course) ***/
 	main_wnd = CreateWindow (
@@ -179,7 +225,7 @@ TODO: fix reverse stereo
 	);
 
 	if (main_wnd == NULL)
-		fprintf(stderr, "Couldn't create main window class\n");
+		fprintf(debug_stream, "sound_win32e_qp_init(): CreateWindow() for main failed, GetLastError() returned %u\n", GetLastError());
 	else
 		fprintf(stderr, "Created main window class\n");
 
@@ -199,7 +245,7 @@ TODO: fix reverse stereo
 	else
 		fprintf(stderr, "Created sound thread\n");
 
-	fprintf(stderr, "Win32 event sound server initialised\n");
+	fprintf(stderr, "Sound server win32e_qp initialised\n");
 
 	return 0;
 }
@@ -244,23 +290,31 @@ sound_win32e_qp_get_command(GTimeVal *wait_tvp)
 	/* receives message from sound server queue */
 
 	MSG msg; /* incoming message */
+	BOOL bRet;
 
 	sound_event_t *event_temp = NULL;
 
-	if (PeekMessage(&msg, sound_wnd, 0, 0, PM_REMOVE))
+	/* wait for a message */
+	if ( (bRet = GetMessage( &msg, sound_wnd, 0, 0 )) != 0)
 	{
-#if (SSWIN_DEBUG == 1)
-	fprintf(stderr, "sound_win32e_qp_get_command() called with msg %i (time: %i) (TID: %i)\n", msg.message, msg.time, GetCurrentThreadId());
-#endif
-	event_temp = (sound_event_t*)malloc(sizeof(sound_event_t));
-		event_temp->signal = msg.message;
-		event_temp->handle = msg.wParam;
-		event_temp->value = msg.lParam;
+	    if (bRet == -1)
+	    {
+			fprintf(debug_stream, "sound_win32e_qp_get_command(): GetMessage() failed, GetLastError() returned %u\n", GetLastError());
 
-		/* pass on the message regardless */
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-		return event_temp;
+		} else {
+#if (SSWIN_DEBUG == 1)
+			fprintf(stderr, "sound_win32e_qp_get_command() called with msg %i (time: %i) (TID: %i)\n", msg.message, msg.time, GetCurrentThreadId());
+#endif
+			event_temp = (sound_event_t*)malloc(sizeof(sound_event_t));
+			event_temp->signal = msg.message;
+			event_temp->handle = msg.wParam;
+			event_temp->value = msg.lParam;
+
+			/* pass on the message regardless */
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+			return event_temp;
+		}
 	}
 
 	return NULL;
@@ -271,7 +325,7 @@ sound_win32e_qp_queue_event(unsigned int handle, unsigned int signal, long value
 {
 	/* posts message to main thread queue */
 	if (PostMessage(main_wnd, signal, handle, value) == 0)
-		fprintf(stderr, "Post of sound event to main thread failed\n");
+		fprintf(debug_stream, "sound_win32e_qp_queue_event(): PostMessage() failed, GetLastError() returned %u\n", GetLastError());
 }
 
 void
@@ -279,7 +333,7 @@ sound_win32e_qp_queue_command(unsigned int handle, unsigned int signal, long val
 {
 	/* posts message to sound server queue */
 	if (PostMessage(sound_wnd, signal, handle, value) == 0)
-		fprintf(stderr, "Post of sound command to sound thread failed\n");
+		fprintf(debug_stream, "sound_win32e_qp_queue_command(): PostMessage() failed, GetLastError() returned %u\n", GetLastError());
 }
 
 int
@@ -287,61 +341,58 @@ sound_win32e_qp_get_data(byte **data_ptr, int *size)
 {
 	/* returns 1 if do_sound() should be called */
 	/* data_ptr and size are ignored */
-	
-	LARGE_INTEGER tim, freq;
 
-	QueryPerformanceCounter(&tim);
-	QueryPerformanceFrequency(&freq);
+	void *data = NULL;
 
-	if (size == NULL)
+	__try
 	{
-		if (( (tim.QuadPart*1000 / freq.QuadPart) % 17 ) == 0)
-			return 1;
-		else
-			return 0;
-
-	} else {
-		void *data = NULL;
-
-		__try
+		EnterCriticalSection(&dq_cs);
+		while (!(data = sci_get_from_queue(&data_queue, size)))
 		{
-			EnterCriticalSection(&dq_cs);
-			while (!(data = sci_get_from_queue(&data_queue, size)))
-			{
-				/* no data */
-				LeaveCriticalSection(&dq_cs);
-
-				/* yield */
-				Sleep(1);
-
-				/* re-enter critical section */
-				EnterCriticalSection(&dq_cs);
-			}
-		}
-		__finally
-		{
+			/* no data */
 			LeaveCriticalSection(&dq_cs);
-		}
 
-		*data_ptr = (byte *)data;
-		return *size;
+			/* yield */
+			Sleep(1);
+
+			/* re-enter critical section */
+			EnterCriticalSection(&dq_cs);
+		}
 	}
+	__finally
+	{
+		LeaveCriticalSection(&dq_cs);
+	}
+
+	*data_ptr = (byte *)data;
+	return *size;
 }
 
 int
 sound_win32e_qp_send_data(byte *data_ptr, int maxsend)
 {
-	/* note: no need for race condition protection */
-	sci_add_to_queue(&data_queue, sci_memdup(data_ptr, maxsend), maxsend);
+	__try
+	{
+		EnterCriticalSection(&dq_cs);
+		sci_add_to_queue(&data_queue, sci_memdup(data_ptr, maxsend), maxsend);
+	}
+	__finally
+	{
+		LeaveCriticalSection(&dq_cs);
+	}
+
 	return maxsend;
 }
 
 void
 sound_win32e_qp_exit(struct _state *s)
 {
-	global_sound_server->queue_command(0, SOUND_COMMAND_SHUTDOWN, 0); /* Kill server */
+	/* kill server */
+	global_sound_server->queue_command(0, SOUND_COMMAND_SHUTDOWN, 0);
 
-	/* kill child thread */
+	/* kill threads */
+	WaitForSingleObject(worker_thread, INFINITE);
+	CloseHandle(worker_thread);
 	WaitForSingleObject(child_thread, INFINITE);
 	CloseHandle(child_thread);
 	DeleteCriticalSection(&dq_cs);

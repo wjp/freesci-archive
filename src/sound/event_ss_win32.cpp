@@ -53,8 +53,9 @@ extern "C" sound_server_t sound_server_win32e;
 #define WINDOW_SUFFIX " (Window)"
 
 static HWND main_wnd, sound_wnd;
+static HINSTANCE hi_main, hi_sound;
 static HANDLE child_thread;
-static HANDLE sound_sem;
+static HANDLE sound_sem, sound_data_event;
 static DWORD sound_timer;
 static IReferenceClock *pRefClock;
 static state_t *gs;
@@ -91,7 +92,6 @@ win32e_soundserver_init(LPVOID lpP)
 {
 	sound_server_state_t sss;
 	WNDCLASS wc;
-	HINSTANCE hi_sound;
 	memset(&sss, 0, sizeof(sound_server_state_t));
 
 #if (SSWIN_DEBUG == 1)
@@ -102,11 +102,19 @@ win32e_soundserver_init(LPVOID lpP)
 	memset(&wc, 0, sizeof(WNDCLASS));
 	wc.lpfnWndProc = SoundWndProc;
 	hi_sound = GetModuleHandle(NULL);
+	if (hi_sound == NULL)
+	{
+		fprintf(debug_stream, "win32e_soundserver_init(): GetModuleHandle() failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
 	wc.hInstance = hi_sound;
 	wc.lpszClassName = SOUND_CLASS_NAME;
 
-	if (!RegisterClass(&wc))
-		fprintf(stderr, "Can't register window class for sound thread\n");
+	if (RegisterClass(&wc) == 0)
+	{
+		fprintf(debug_stream, "win32e_soundserver_init(): RegisterClass() failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
 
 	/* create our 'window' (not visible of course) */
 	sound_wnd = CreateWindow (
@@ -124,7 +132,10 @@ win32e_soundserver_init(LPVOID lpP)
 	);
 
 	if (sound_wnd == NULL)
-		fprintf(stderr, "Couldn't create sound window class\n");
+	{
+		fprintf(debug_stream, "win32e_soundserver_init(): CreateWindow() for sound failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
 	else
 		fprintf(stderr, "Created sound window class\n");
 
@@ -132,7 +143,7 @@ win32e_soundserver_init(LPVOID lpP)
 	fprintf(stderr, "win32e_soundserver_init() sound_wnd %i, TID %i\n", sound_wnd, GetCurrentThreadId());
 #endif
 
-	/* start the sound server */
+	/*** start the sound server ***/
 	sci0_event_ss(&sss);
 
 	return 0;
@@ -142,7 +153,6 @@ int
 sound_win32e_init(struct _state *s, int flags)
 {
 	WNDCLASS wc;
-	HINSTANCE hi_main;
 	DWORD dwChildId;	/* child thread ID */
 	REFERENCE_TIME rtNow;
 
@@ -160,18 +170,27 @@ TODO: fix reverse stereo
 */
 	debug_stream = stderr;
 
+	/*** set up what we need for data transfer ***/
 	InitializeCriticalSection(&dq_cs);
 	sci_init_queue(&data_queue);
+
+	/* create event that will signal when data is waiting */
+	sound_data_event = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 	/*** register window class for messages to main thread ***/
 	memset(&wc, 0, sizeof(WNDCLASS));
 	wc.lpfnWndProc = MainWndProc;
 	hi_main = GetModuleHandle(NULL);
+	if (hi_main == NULL)
+	{
+		fprintf(debug_stream, "sound_win32e_init(): GetModuleHandle() failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
 	wc.hInstance = hi_main;
 	wc.lpszClassName = MAIN_CLASS_NAME;
 
-	if (!RegisterClass(&wc))
-		fprintf(stderr, "Can't register window class for main thread\n");
+	if (RegisterClass(&wc) == 0)
+		fprintf(debug_stream, "sound_win32e_init(): RegisterClass() failed, GetLastError() returned %u\n", GetLastError());
 
 	/*** create window for main thread to receive messages (not visible of course) ***/
 	main_wnd = CreateWindow (
@@ -189,7 +208,10 @@ TODO: fix reverse stereo
 	);
 
 	if (main_wnd == NULL)
-		fprintf(stderr, "Couldn't create main window class\n");
+	{
+		fprintf(debug_stream, "sound_win32e_init(): CreateWindow() for main failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
 	else
 		fprintf(stderr, "Created main window class\n");
 
@@ -205,7 +227,10 @@ TODO: fix reverse stereo
 								 0,			/* thread runs immediately */
 								 &dwChildId);	/* pointer to id of thread */
 	if (child_thread == NULL)
+	{
 		fprintf(debug_stream, "sound_win32e_init(): CreateThread() failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
 	else
 		fprintf(stderr, "Created sound thread\n");
 
@@ -213,34 +238,40 @@ TODO: fix reverse stereo
 	sound_sem = CreateSemaphore(NULL, 0, 0x7FFFFFFF, NULL);
 	if (sound_sem == NULL)
 	{
-		fprintf(stderr, "Error creating semaphore\n");
+		fprintf(debug_stream, "sound_win32e_init(): CreateSemaphore() failed, GetLastError() returned %u\n", GetLastError());
 		exit(-1);
-	} else
+	}
+	else
 		fprintf(stderr, "Created sound semaphore\n");
 
 	if (CoInitialize(NULL) != S_OK)
 	{
-		fprintf(stderr, "Error initialising COM\n");
+		fprintf(debug_stream, "sound_win32e_init(): CoInitialize() failed, GetLastError() returned %u\n", GetLastError());
 		exit(-1);
-	} else
+	}
+	else
 		fprintf(stderr, "Initialised COM\n");
 
 	if (CoCreateInstance(CLSID_SystemClock, NULL, CLSCTX_INPROC,
                          IID_IReferenceClock, (LPVOID*)&pRefClock) != S_OK)
 	{
-		fprintf(stderr, "Error initialising reference clock\n");
+		fprintf(debug_stream, "sound_win32e_init(): CoCreateInstance() failed, GetLastError() returned %u\n", GetLastError());
 		exit(-1);
-	} else
+	}
+	else
 		fprintf(stderr, "Initialised reference clock\n");
 
 	/* 10ms = 100000 100-nanoseconds */
 	pRefClock->GetTime(&rtNow);
 	if (pRefClock->AdvisePeriodic(rtNow + 166667, 166667, sound_sem, &sound_timer) != S_OK)
-		fprintf(stderr, "Error creating timer\n");
+	{
+		fprintf(debug_stream, "sound_win32e_init(): AdvisePeriodic() failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
 	else
 		fprintf(stderr, "Started timer\n");
 
-	fprintf(stderr, "Win32 event sound server initialised\n");
+	fprintf(stderr, "Sound server win32e initialised\n");
 
 	return 0;
 }
@@ -263,7 +294,7 @@ sound_win32e_get_event()
 	if (PeekMessage(&msg, main_wnd, 0, 0, PM_REMOVE))
 	{
 #if (SSWIN_DEBUG == 1)
-	fprintf(stderr, "sound_win32e_get_event() called with msg %i (time: %i) (TID: %i)\n", msg.message, msg.time, GetCurrentThreadId());
+	fprintf(stderr, "sound_win32e_get_event() got msg %i (time: %i) (TID: %i)\n", msg.message, msg.time, GetCurrentThreadId());
 #endif
 		event_temp = (sound_event_t*)malloc(sizeof(sound_event_t));
 		event_temp->signal = msg.message;
@@ -288,10 +319,17 @@ sound_win32e_get_command(GTimeVal *wait_tvp)
 
 	sound_event_t *event_temp = NULL;
 
-	if (PeekMessage(&msg, sound_wnd, 0, 0, PM_REMOVE))
+	/* wait for timing semaphore */
+	if (WaitForSingleObject(sound_sem, INFINITE) != WAIT_OBJECT_0)
+	{
+		fprintf(debug_stream, "sound_win32e_get_command(): WaitForSingleObject() failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
+
+	if (PeekMessage( &msg, sound_wnd, 0, 0, PM_REMOVE ))
 	{
 #if (SSWIN_DEBUG == 1)
-	fprintf(stderr, "sound_win32e_get_command() called with msg %i (time: %i) (TID: %i)\n", msg.message, msg.time, GetCurrentThreadId());
+		fprintf(stderr, "sound_win32e_get_command() got msg %i (time: %i) (TID: %i)\n", msg.message, msg.time, GetCurrentThreadId());
 #endif
 		event_temp = (sound_event_t*)malloc(sizeof(sound_event_t));
 		event_temp->signal = msg.message;
@@ -312,7 +350,10 @@ sound_win32e_queue_event(unsigned int handle, unsigned int signal, long value)
 {
 	/* posts message to main thread queue */
 	if (PostMessage(main_wnd, signal, handle, value) == 0)
-		fprintf(stderr, "Post of sound event to main thread failed\n");
+	{
+		fprintf(debug_stream, "sound_win32e_queue_event(): PostMessage() failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
 }
 
 void
@@ -320,81 +361,94 @@ sound_win32e_queue_command(unsigned int handle, unsigned int signal, long value)
 {
 	/* posts message to sound server queue */
 	if (PostMessage(sound_wnd, signal, handle, value) == 0)
-		fprintf(stderr, "Post of sound command to sound thread failed\n");
+	{
+		fprintf(debug_stream, "sound_win32e_queue_command(): PostMessage() failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
 }
 
 int
 sound_win32e_get_data(byte **data_ptr, int *size)
 {
-	/* returns 1 if do_sound() should be called */
-	/* data_ptr and size are ignored */
+	void *data = NULL;
 
-	HRESULT hr;
-
-	if (size == NULL)
+	__try
 	{
-		hr = WaitForSingleObject(sound_sem, 0);
-
-		if (hr == WAIT_OBJECT_0)
-			return 1;
-		else
-			return 0;
-
-	} else {
-		/* note: no need for race condition protection as only main thread calls this */
-		void *data = NULL;
-
-		__try
+		EnterCriticalSection(&dq_cs);
+		while (!(data = sci_get_from_queue(&data_queue, size)))
 		{
-			EnterCriticalSection(&dq_cs);
-			while (!(data = sci_get_from_queue(&data_queue, size)))
-			{
-				/* no data */
-				LeaveCriticalSection(&dq_cs);
-
-				/* yield */
-				Sleep(1);
-
-				/* re-enter critical section */
-				EnterCriticalSection(&dq_cs);
-			}
-		}
-		__finally
-		{
+			/* no data */
 			LeaveCriticalSection(&dq_cs);
-		}
 
-		*data_ptr = (byte *)data;
-		return *size;
+			/* yield */
+#if (SSWIN_DEBUG == 0)
+		fprintf(stderr, "sound_win32e_get_data(): waiting for data (TID %i)\n", GetCurrentThreadId());
+#endif
+			if (WaitForSingleObject(sound_data_event, INFINITE) != WAIT_OBJECT_0)
+			{
+				fprintf(debug_stream, "sound_win32e_get_data(): WaitForSingleObject() failed, GetLastError() returned %u\n", GetLastError());
+				exit(-1);
+			}
+
+			/* re-enter critical section */
+			EnterCriticalSection(&dq_cs);
+		}
 	}
+	__finally
+	{
+		LeaveCriticalSection(&dq_cs);
+	}
+
+	*data_ptr = (byte *)data;
+	return *size;
 }
 
 int
 sound_win32e_send_data(byte *data_ptr, int maxsend)
 {
-	/* note: no need for race condition protection */
-	sci_add_to_queue(&data_queue, sci_memdup(data_ptr, maxsend), maxsend);
+	__try
+	{
+		EnterCriticalSection(&dq_cs);
+		sci_add_to_queue(&data_queue, sci_memdup(data_ptr, maxsend), maxsend);
+	}
+	__finally
+	{
+		LeaveCriticalSection(&dq_cs);
+	}
+
+	/* signal event that data is waiting */
+	if (SetEvent(sound_data_event) == 0)
+	{
+		fprintf(debug_stream, "sound_win32e_send_data(): SetEvent() failed, GetLastError() returned %u\n", GetLastError());
+		exit(-1);
+	}
+
 	return maxsend;
 }
 
 void
 sound_win32e_exit(struct _state *s)
 {
-	global_sound_server->queue_command(0, SOUND_COMMAND_SHUTDOWN, 0); /* Kill server */
-
-	/* kill reference clock and COM */
-	pRefClock->Unadvise(sound_timer);
-	CoUninitialize();
-	CloseHandle(sound_sem);
+	/* kill server */
+	global_sound_server->queue_command(0, SOUND_COMMAND_SHUTDOWN, 0);
 
 	/* kill child thread */
 	WaitForSingleObject(child_thread, INFINITE);
 	CloseHandle(child_thread);
 	DeleteCriticalSection(&dq_cs);
 
-	/* close window class handles */
-	CloseHandle(main_wnd);
-	CloseHandle(sound_wnd);
+	/* kill reference clock and COM */
+	pRefClock->Unadvise(sound_timer);
+	pRefClock->Release();
+	CoUninitialize();
+
+	/* close handles */
+	CloseHandle(sound_data_event);
+	CloseHandle(sound_sem);
+	DestroyWindow(sound_wnd);
+	DestroyWindow(main_wnd);
+	UnregisterClass(SOUND_CLASS_NAME, hi_sound);
+	UnregisterClass(MAIN_CLASS_NAME, hi_main);
 }
 
 int

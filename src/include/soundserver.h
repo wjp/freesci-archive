@@ -79,8 +79,8 @@
 
 #define MIDI_CHANNELS 16
 
-#define MUTE_ON  1
 #define MUTE_OFF 0
+#define MUTE_ON  1
 
 #define POLYPHONY(song, channel) song->data[(channel << 1) + 1]
 
@@ -204,6 +204,9 @@ typedef struct _song {
 
 void
 dump_song(song_t *song);
+/* Dumps song to stderr.
+** Parameters: (song_t *) song: Song to dump
+*/
 
 typedef song_t **songlib_t;
 
@@ -229,24 +232,44 @@ extern sound_eq_t queue; /* The event queue */
 
 
 int
-sound_command_default(struct _state *s, unsigned int command, unsigned int handle, long parameter);
-/* Interface for other parts of FreeSCI to command the sound server (such as scriptdebug) */
+sound_command_default(struct _state *s, unsigned int command, unsigned int handle, long value);
+/* Interface for other parts of FreeSCI to command the sound server
+** Parameters: (struct _state *) s: Game state
+**             (unsigned int) command: Command to process and queue for sound server
+**             (unsigned int) handle: Song handle (usually)
+**             (long) value: Some parameter
+** Returns   : (int) A value dependent on what is relevant for the command
+*/
 
 int
 sound_save_default(struct _state *s, char *dir);
-/* Default implementation for saving the sound status */
+/* Default implementation for saving the sound status
+** Parameters: (struct _state *) s: Game state
+**             (char *) dir: Where to save
+** Returns   : (int) FIXME
+*/
 
 int
 sound_restore_default(struct _state *s, char *dir);
-/* Default implementation for restoring the sound state */
+/* Default implementation for restoring the sound state
+** Parameters: (struct _state *) s: Game state
+**             (char *) dir: Where to restore from
+** Returns   : (int) FIXME
+*/
 
 void
 sound_suspend_default(struct _state *s);
-/* Default implementation for suspending sound output */
+/* Default implementation for suspending sound output
+** Parameters: (struct _state *) s: Game state
+** Returns   : (void)
+*/
 
 void
 sound_resume_default(struct _state *s);
-/* Default implementation for resuming sound output after it was suspended */
+/* Default implementation for resuming sound output after it was suspended
+** Parameters: (struct _state *) s: Game state
+** Returns   : (void)
+*/
 
 
 /********************************/
@@ -275,7 +298,6 @@ songit_free(song_iterator_t *it);
 
 
 /* Song library commands: */
-
 
 song_t *
 song_new(word handle, byte *data, int size, int priority);
@@ -437,13 +459,13 @@ typedef struct {
 	*/
 
 	void (*exit)(struct _state *s);
-	/* Stops playing sound, uninitializes the sound driver, and frees all associated memory.
+	/* Stops playing sound, uninitializes the sound driver, and frees all associated memory
 	** Parameters: (state_t *) s: The state_t to operate on
 	** Returns   : (void)
 	*/
 
 	sound_event_t* (*get_event)();
-	/* Synchronizes the sound driver with the rest of the world.
+	/* Synchronizes the sound driver with the rest of the world
 	** Parameters: none
 	** Returns   : (sound_event_t *) Pointer to a dynamically allocated sound_event_t structure
 	**                               containing the next event, or NULL if none is available
@@ -452,21 +474,43 @@ typedef struct {
 	*/
 
 	void (*queue_event)(unsigned int handle, unsigned int signal, long value);
-	/* XXX write me */
+	/* Queue a signal for the main thread
+	** Parameters: (unsigned int) handle: Song handle for signal (usually)
+	**             (unsigned int) signal: The signal to pass to the main thread
+	**             (long) value: Parameter for signal
+	** Returns   : (void)
+	*/
 
 	sound_event_t* (*get_command)(GTimeVal *wait_tvp);
-	/* XXX write me */
+	/* Gets a sound command from the main thread
+	** Parameters: (GTimeVal *) wait_tvp: How long to wait before giving up
+	**                                    (not always used)
+	** Returns   : (sound_event_t *) The command received
+	*/
 
 	void (*queue_command)(unsigned int handle, unsigned int signal, long value);
-	/* Called by (*command) (see below) to queue the command. The sound server
-	** uses this function directly and does not go via (*command).
+	/* Called by (*command) (see below) to queue a command for the sound
+	** server. The server should be the only part of the program that uses this
+	** function directly.
+	** Parameters: (unsigned int) handle: Song handle for command (usually)
+	**             (unsigned int) signal: The command to pass to the main thread
+	**             (long) value: Parameter for command
+	** Returns   : (void)
 	*/
 
 	int (*get_data)(byte **data_ptr, int *size);
-	/* XXX write me */
+	/* Gets data from the main thread
+	** Parameters: (byte **) data_ptr: Pointer to where data will be received
+	**             (int *) size: Size of data received
+	** Returns   : (int) Size of data received
+	*/
 
 	int (*send_data)(byte *data_ptr, int maxsend);
-	/* XXX write me */
+	/* Sends data to the sound server
+	** Parameters: (byte *) data_ptr: Data to send
+	**             (int) maxsend: Size of the data to expect
+	** Returns   : (int) Size of data received
+	*/
 
 	int (*save)(struct _state *s, char *name);
 	/* Saves the sound system state to the directory /name/.
@@ -578,59 +622,150 @@ sound_server_find_driver(char *name);
 /*********************************/
 
 void sci0_polled_ss(int reverse_stereo, sound_server_state_t *ss_state);
-/* Starts the sci0 polled sound server. */
+/* Starts the sci0 polled sound server.
+** Parameters: (int) reverse_stereo: Reverse stereo setting
+**             (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 sci0_event_ss(sound_server_state_t *ss_state);
-/* Starts the sci0 event sound server. */
+/* Starts the sci0 event sound server.
+**             (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 init_handle(int priority, word song_handle, sound_server_state_t *ss_state);
+/* Commands server to initialise a song handle
+** Parameters: (int) priority: Priority for new handle
+**             (word) song_handle: New song handle
+**             (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 play_handle(int priority, word song_handle, sound_server_state_t *ss_state);
+/* Commands server to play a song handle
+** Parameters: (int) priority: Priority to play at
+**             (word) song_handle: Song handle to play
+**             (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 stop_handle(word song_handle, sound_server_state_t *ss_state);
+/* Commands server to stop a song
+** Parameters: (word) song_handle: Song handle of song to stop
+**             (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 suspend_handle(word song_handle, sound_server_state_t *ss_state);
+/* Commands server to suspend (pause) a song
+** Parameters: (word) song_handle: Song handle of song to suspend
+**             (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 resume_handle(word song_handle, sound_server_state_t *ss_state);
+/* Commands server to resume a suspended song
+** Parameters: (word) song_handle: Song handle of song to resume
+**             (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 renice_handle(int priority, word song_handle, sound_server_state_t *ss_state);
+/* Commands server to change the priority of a song
+** Parameters: (int) priority: New priority of song
+**             (word) song_handle: Song handle of song to renice
+**             (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 fade_handle(int ticks, word song_handle, sound_server_state_t *ss_state);
+/* Commands server to fade a song
+** Parameters: (int) ticks: Number of ticks to fade song within
+**             (word) song_handle: Song handle of song to fade
+**             (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 loop_handle(int loops, word song_handle, sound_server_state_t *ss_state);
+/* Commands server to loop a song
+** Parameters: (int) loops: FIXME
+**             (word) song_handle: Song handle of song to loop
+**             (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 dispose_handle(word song_handle, sound_server_state_t *ss_state);
+/* Commands server to dispose (destroy) a song handle
+** Parameters: (word) song_handle: Song handle of song to dispose
+**             (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 set_channel_mute(int channel, unsigned char mute_setting, sound_server_state_t *ss_state);
+/* Commands server to mute a MIDI channel
+** Parameters: (int) channel: MIDI channel to change the mute setting for
+**             (unsigned char) mute_setting: MUTE_ON or MUTE_OFF
+**             (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 set_master_volume(guint8 new_volume, sound_server_state_t *ss_state);
+/* Commands server to set the master (global) volume
+** Parameters: (guint8) new_volume: New master volume
+**             (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 sound_check(int mid_polyphony, sound_server_state_t *ss_state);
+/* Commands server to test driver (exchanges MIDI polyphony setting between
+** main thread and sound server.
+** Parameters: (int) mid_polyphony: MIDI polyphony value to transfer
+**             (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 stop_all(sound_server_state_t *ss_state);
+/* Commands server to stop all sound handles
+** Parameters: (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 suspend_all(sound_server_state_t *ss_state);
+/* Commands server to pause all sound handles
+** Parameters: (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 resume_all(sound_server_state_t *ss_state);
+/* Commands server to resume all suspended sound handles
+** Parameters: (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 set_reverse_stereo(int rs, sound_server_state_t *ss_state);
+/* Commands server to change the reverse stereo value
+** Parameters: (int) rs: New reverse stereo value
+**             (sound_server_state_t *) ss_state: Sound server state
+** Returns   : (void)
+*/
 
 void
 imap_set(unsigned int action, int instr, int value);

@@ -171,6 +171,7 @@ int midiout_win32mci_open(void)
 					}
 					break;
 
+#ifdef MOD_SWSYNTH
 				case MOD_SWSYNTH:
 					fprintf(stderr, "Software synth, ");
 					if (device_score < 2)
@@ -179,6 +180,7 @@ int midiout_win32mci_open(void)
 						device_score = 2;
 					}
 					break;
+#endif
 
 				case MOD_MIDIPORT:
 					fprintf(stderr, "MIDI hardware port, ");

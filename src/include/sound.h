@@ -70,11 +70,6 @@ extern int soundserver_dead;
 ** map to heap addresses.
 */
 
-
-unsigned int SOUND_DATA;
-/* Used for transferring data.
-*/
-
 unsigned int SOUND_COMMAND_INIT_HANDLE;
 /* Loads a song, priority specified as PARAMETER, under the specified HANDLE.
 ** Followed by PARAMETER bytes containing the song.
@@ -86,7 +81,7 @@ unsigned int SOUND_COMMAND_LOOP_HANDLE;
 unsigned int SOUND_COMMAND_DISPOSE_HANDLE;
 /* Disposes the song from the specified HANDLE. Stops playing if the song is active. */
 unsigned int SOUND_COMMAND_SET_MUTE;
-/* Mutes sound if PARAMETER is 0, unmutes if PARAMETER != 0. */
+/* Mutes sound if PARAMETER is MUTE_ON, unmutes if PARAMETER != MUTE_ON. */
 unsigned int SOUND_COMMAND_GET_MUTE;
 /* Return the mute status of the system */
 unsigned int SOUND_COMMAND_STOP_HANDLE;

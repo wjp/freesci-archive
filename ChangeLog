@@ -1,3 +1,29 @@
+2001-11-26  Alexander R Angas  <wgd@internode.on.net>
+
+	* src/include/engine.h: Made sound_volume and sound_mute unsigned.
+	
+	* src/include/sound.h: Removed SOUND_DATA 'command'.
+	
+	* src/include/soundserver.h: Added more commenting.
+	
+	* src/sound/event_ss.c (sci0_event_ss): Altered way to call
+	do_sound(). Fixed memory leak on shutdown.
+	
+	* src/sound/event_ss_win32.cpp: Added more checks for returned values
+	everywhere. Fixed crash on shutdown. Improved way of checking if data
+	is waiting by using event and fixed synchronisation for data_queue.
+	Adjusted to match new way to call do_sound() (above).
+	
+	* src/sound/event_ss_win32_qp.c: Currently broken.
+	
+	* src/sound/sound.c (sound_command_default): Reversed last change made
+	by Christoph (temporarily). Added MUTE_ON / MUTE_OFF constants where
+	appropriate.
+	Removed print_message_map().
+	
+	* src/sound/midiout_win32mci.c (midiout_win32mci_open): Fixed Cygwin
+	compilation.
+
 2001-11-24  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/sound.c (sound_command_default): Transfer command _before_ data
@@ -16,18 +42,18 @@
 
 	* src/sound/polled_ss.c: Improved commenting (slightly).
 
-	* src/sound/event_ss.c: Cleaned up code that checks for running
-	status. Fixed SOUND_COMMAND_TEST.
+	* src/sound/event_ss.c (do_sound): Cleaned up code that checks for
+	running	status. Fixed SOUND_COMMAND_TEST.
 
 	* src/win32/fsci_dll.dsp:
 	* src/sound/event_ss_win32_qp.c: Added fast event ss Win32 sound
 	driver (buggy).
 
-	* src/sound/event_ss_win32.c: Fixed memory leak.
+	* src/sound/event_ss_win32.c (sci0_event_ss): Fixed memory leak.
 
-	* src/sound/midiout_win32.c: Fixed MIDI device selection to no longer
-	be arbitrary when a device is not specified in the config file (see
-	source for details on device preferences).
+	* src/sound/midiout_win32.c (midiout_win32mci_open): Fixed MIDI device
+	selection to no longer be arbitrary when a device is not specified in
+	the config file (see source for details on device preferences).
 
 2001-11-21  Alexander R Angas  <wgd@internode.on.net>
 
