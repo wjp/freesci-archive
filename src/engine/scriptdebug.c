@@ -2024,7 +2024,9 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_visible_map, "set_vismap", "i", "Sets the visible map.\n  Default is 0 (visual).\n"
 					 "  Other useful values are:\n  1: Priority\n  2: Control\n  3: Auxiliary\n");
 			con_hook_command(c_simkey, "simkey", "i", "Simulates a keypress with the\n  specified scancode.\n");
-			con_hook_command(c_bpx, "bpx", "s", "Sets a breakpoint on the execution of specified method.\n");
+			con_hook_command(c_bpx, "bpx", "s", "Sets a breakpoint on the execution of\n  the specified method.\n\n  EXAMPLE:\n"
+					 "  bpx ego::doit\n\n  May also be used to set a breakpoint\n  that applies whenever an object\n"
+					 "  of a specific type is touched:\n  bpx foo::\n");
 			con_hook_command(c_bpe, "bpe", "ii", "Sets a breakpoint on the execution of specified"
 					 " exported function.\n");
 			con_hook_command(c_bplist, "bplist", "", "Lists all breakpoints.\n");

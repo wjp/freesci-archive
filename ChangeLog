@@ -1,3 +1,8 @@
+2001-02-11  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/vm.c (send_selector): Added support for matching
+	objects rather than object/selector pairs
+
 2001-02-10  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/scriptdebug.c (disassemble): Fixed reported jump

@@ -182,171 +182,190 @@ send_selector(state_t *s, heap_ptr send_obj, heap_ptr work_obj,
      /* send_obj and work_obj are equal for anything but 'super' */
      /* Returns a pointer to the TOS exec_stack element */
 {
-  heap_ptr lookupresult;
-  int selector;
-  int argc;
-  int origin = s->execution_stack_pos; /* Origin: Used for debugging */
-  exec_stack_t *retval = s->execution_stack + s->execution_stack_pos;
-  /* We return a pointer to the new active exec_stack_t */
+	heap_ptr lookupresult;
+	int selector;
+	int argc;
+	int origin = s->execution_stack_pos; /* Origin: Used for debugging */
+	exec_stack_t *retval = s->execution_stack + s->execution_stack_pos;
+	int print_send_action = 0;
+	/* We return a pointer to the new active exec_stack_t */
 
-  /* The selector calls we catch are stored below: */
-  int send_calls_nr = -1;
+	/* The selector calls we catch are stored below: */
+	int send_calls_nr = -1;
 
-  framesize += restmod * 2;
+	framesize += restmod * 2;
 
-  if (GET_HEAP(send_obj + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
-    sciprintf("Send: No object at %04x!\n", send_obj);
-    script_error_flag = script_debug_flag = 1;
-    return NULL;
-  }
+	if (GET_HEAP(send_obj + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
+		sciprintf("Send: No object at %04x!\n", send_obj);
+		script_error_flag = script_debug_flag = 1;
+		return NULL;
+	}
 
-  while (framesize > 0) {
+	while (framesize > 0) {
 
-    selector = GET_HEAP(argp);
+		selector = GET_HEAP(argp);
 
-    argp += 2;
-    argc = GET_HEAP(argp);
+		argp += 2;
+		argc = GET_HEAP(argp);
 
-    if (argc > 0x500){ /* More arguments than the stack could possibly accomodate for */
-      script_error(s, __FILE__, __LINE__, "More than 0x500 arguments to function call\n");
-      return NULL;
-    }
+		if (argc > 0x500){ /* More arguments than the stack could possibly accomodate for */
+			script_error(s, __FILE__, __LINE__, "More than 0x500 arguments to function call\n");
+			return NULL;
+		}
 
-    /* Check if a breakpoint is set on this method */
-    if (s->have_bp & BREAK_SELECTOR)
-    {
-      breakpoint_t *bp;
-      char method_name [256];
+		/* Check if a breakpoint is set on this method */
+		if (s->have_bp & BREAK_SELECTOR) {
+			breakpoint_t *bp;
+			char method_name [256];
 
-      sprintf (method_name, "%s::%s",
-        s->heap + getUInt16 (s->heap + send_obj + SCRIPT_NAME_OFFSET),
-        s->selector_names [selector]);
+			sprintf (method_name, "%s::%s",
+				 s->heap + getUInt16 (s->heap + send_obj + SCRIPT_NAME_OFFSET),
+				 s->selector_names [selector]);
 
-      bp = s->bp_list;
-      while (bp)
-      {
-        if (bp->type == BREAK_SELECTOR && !strcmp (bp->data.name, method_name))
-        {
-          sciprintf ("Break on %s\n", method_name);
-          script_debug_flag = 1;
-          bp_flag = 1;
-          break;
-        }
-        bp = bp->next;
-      }
-    }
+			bp = s->bp_list;
+			while (bp) {
+				int cmplen = strlen(bp->data.name);
+				if (bp->data.name[cmplen - 1] != ':')
+					cmplen = 256;
+
+				if (bp->type == BREAK_SELECTOR && !strncmp (bp->data.name, method_name, cmplen)) {
+					sciprintf ("Break on %s (in [%04x])\n", method_name, send_obj);
+					script_debug_flag = print_send_action = 1;
+					bp_flag = 1;
+					break;
+				}
+				bp = bp->next;
+			}
+		}
 
 #ifdef VM_DEBUG_SEND
-sciprintf("Send to selector %04x (%s):", selector, s->selector_names[selector]);
+		sciprintf("Send to selector %04x (%s):", selector, s->selector_names[selector]);
 #endif /* VM_DEBUG_SEND */
 
-    if (++send_calls_nr == (send_calls_allocated - 1))
-      send_calls = realloc(send_calls, sizeof(calls_struct_t) * (send_calls_allocated *= 2));
+		if (++send_calls_nr == (send_calls_allocated - 1))
+			send_calls = realloc(send_calls, sizeof(calls_struct_t) * (send_calls_allocated *= 2));
 
-    argc += restmod;
-    restmod = 0; /* Take care that the rest modifier is used only once */
+		argc += restmod;
+		restmod = 0; /* Take care that the rest modifier is used only once */
 
-    switch (lookup_selector(s, send_obj, selector, &lookupresult)) {
+		switch (lookup_selector(s, send_obj, selector, &lookupresult)) {
 
-    case SELECTOR_NONE:
-      sciprintf("Send to invalid selector 0x%x of object at 0x%x\n", 0xffff & selector, send_obj);
-      script_error_flag = script_debug_flag = 1;
-      --send_calls_nr;
-      break;
+		case SELECTOR_NONE:
+			sciprintf("Send to invalid selector 0x%x of object at 0x%x\n", 0xffff & selector, send_obj);
+			script_error_flag = script_debug_flag = 1;
+			--send_calls_nr;
+			break;
 
-    case SELECTOR_VARIABLE:
+		case SELECTOR_VARIABLE:
 
 #ifdef VM_DEBUG_SEND
-sciprintf("Varselector: ");
-if (argc)
-  sciprintf("Write %04x\n", UGET_HEAP(argp + 2));
+			sciprintf("Varselector: ");
+			if (argc)
+				sciprintf("Write %04x\n", UGET_HEAP(argp + 2));
 else
-  sciprintf("Read\n");
+	sciprintf("Read\n");
 #endif /* VM_DEBUG_SEND */
 
-      switch (argc) {
-      case 0:   /* Read selector */
-      case 1: { /* Argument is supplied -> Selector should be set */
+			switch (argc) {
+			case 0:   /* Read selector */
+				if (print_send_action) {
+					sciprintf("[read selector]\n");
+					print_send_action = 0;
+				}
+			case 1: { /* Argument is supplied -> Selector should be set */
 
-	send_calls[send_calls_nr].address = lookupresult; /* register the call */
-	send_calls[send_calls_nr].argp = argp;
-	send_calls[send_calls_nr].argc = argc;
-	send_calls[send_calls_nr].selector = selector;
-	send_calls[send_calls_nr].type = EXEC_STACK_TYPE_VARSELECTOR; /* Register as a varselector */
+				if (print_send_action) {
+					int val = GET_HEAP(lookupresult);
+					int uval = UGET_HEAP(lookupresult);
+					int new = GET_HEAP(argp + 2);
+					int unew = UGET_HEAP(argp + 2);
 
-      } break;
-      default:
-	--send_calls_nr;
-	sciprintf("Send error: Variable selector %04x in %04x called with %04x params\n",
-		  selector, send_obj, argc);
-	script_debug_flag = 1; /* Enter debug mode */
-	_debug_seeking = _debug_step_running = 0;
+					sciprintf("[write to selector: change %d(0x%04x) to %d(0x%04x)]\n",
+						  val, uval, new, unew);
+					print_send_action = 0;
+				}
+				send_calls[send_calls_nr].address = lookupresult; /* register the call */
+				send_calls[send_calls_nr].argp = argp;
+				send_calls[send_calls_nr].argc = argc;
+				send_calls[send_calls_nr].selector = selector;
+				send_calls[send_calls_nr].type = EXEC_STACK_TYPE_VARSELECTOR; /* Register as a varselector */
 
-    }
-      break;
+			} break;
+			default:
+				--send_calls_nr;
+				sciprintf("Send error: Variable selector %04x in %04x called with %04x params\n",
+					  selector, send_obj, argc);
+				script_debug_flag = 1; /* Enter debug mode */
+				_debug_seeking = _debug_step_running = 0;
 
-    case SELECTOR_METHOD:
+			}
+			break;
+
+		case SELECTOR_METHOD:
 
 #ifdef VM_DEBUG_SEND
-sciprintf("Funcselector(");
- for (i = 0; i < argc; i++) {
-   sciprintf("%04x", UGET_HEAP(argp + 2 + 2*i));
-   if (i + 1 < argc)
-     sciprintf(", ");
- }
-sciprintf(")\n");
+			sciprintf("Funcselector(");
+			for (i = 0; i < argc; i++) {
+				sciprintf("%04x", UGET_HEAP(argp + 2 + 2*i));
+				if (i + 1 < argc)
+					sciprintf(", ");
+			}
+			sciprintf(")\n");
 #endif /* VM_DEBUG_SEND */
+			if (print_send_action) {
+				sciprintf("[invoke selector]\n");
+				print_send_action = 0;
+			}
+ 
+			send_calls[send_calls_nr].address = lookupresult; /* register call */
+			send_calls[send_calls_nr].argp = argp;
+			send_calls[send_calls_nr].argc = argc;
+			send_calls[send_calls_nr].selector = selector;
+			send_calls[send_calls_nr].type = EXEC_STACK_TYPE_CALL;
+			send_calls[send_calls_nr].sp = sp;
+			sp = CALL_SP_CARRY; /* Destroy sp, as it will be carried over */
 
-      send_calls[send_calls_nr].address = lookupresult; /* register call */
-      send_calls[send_calls_nr].argp = argp;
-      send_calls[send_calls_nr].argc = argc;
-      send_calls[send_calls_nr].selector = selector;
-      send_calls[send_calls_nr].type = EXEC_STACK_TYPE_CALL;
-      send_calls[send_calls_nr].sp = sp;
-      sp = CALL_SP_CARRY; /* Destroy sp, as it will be carried over */
-
-      break;
-    } /* switch(lookup_selector()) */
-
-
-    framesize -= (4 + argc * 2);
-    argp += argc * 2 + 2;
-  }
-
-  /* Iterate over all registered calls in the reverse order. This way, the first call is
-  ** placed on the TOS; as soon as it returns, it will cause the second call to be executed.
-  */
-  for (; send_calls_nr >= 0; send_calls_nr--)
-    if (send_calls[send_calls_nr].type == EXEC_STACK_TYPE_VARSELECTOR) /* Write/read variable? */
-      retval = add_exec_stack_varselector(s, work_obj, send_calls[send_calls_nr].argc,
-					  send_calls[send_calls_nr].argp,
-					  send_calls[send_calls_nr].selector, 
-					  send_calls[send_calls_nr].address, origin);
-
-    else
-      retval =
-	add_exec_stack_entry(s, send_calls[send_calls_nr].address, send_calls[send_calls_nr].sp, work_obj,
-			     send_calls[send_calls_nr].argc, send_calls[send_calls_nr].argp,
-			     send_calls[send_calls_nr].selector, send_obj, origin, 0);
+			break;
+		} /* switch(lookup_selector()) */
 
 
-  /* Now check the TOS to execute all varselector entries */
-  while (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR) {
+		framesize -= (4 + argc * 2);
+		argp += argc * 2 + 2;
+	}
 
-    /* varselector access? */
-    if (s->execution_stack[s->execution_stack_pos].argc) { /* write? */
+	/* Iterate over all registered calls in the reverse order. This way, the first call is
+	** placed on the TOS; as soon as it returns, it will cause the second call to be executed.
+	*/
+	for (; send_calls_nr >= 0; send_calls_nr--)
+		if (send_calls[send_calls_nr].type == EXEC_STACK_TYPE_VARSELECTOR) /* Write/read variable? */
+			retval = add_exec_stack_varselector(s, work_obj, send_calls[send_calls_nr].argc,
+							    send_calls[send_calls_nr].argp,
+							    send_calls[send_calls_nr].selector, 
+							    send_calls[send_calls_nr].address, origin);
 
-      word temp = GET_HEAP(s->execution_stack[s->execution_stack_pos].variables[VAR_PARAM] + 2);
-      PUT_HEAP(s->execution_stack[s->execution_stack_pos].pc, temp);
+		else
+			retval =
+				add_exec_stack_entry(s, send_calls[send_calls_nr].address, send_calls[send_calls_nr].sp, work_obj,
+						     send_calls[send_calls_nr].argc, send_calls[send_calls_nr].argp,
+						     send_calls[send_calls_nr].selector, send_obj, origin, 0);
 
-    } else /* No, read */
-      s->acc = GET_HEAP(s->execution_stack[s->execution_stack_pos].pc);
+	/* Now check the TOS to execute all varselector entries */
+	while (s->execution_stack[s->execution_stack_pos].type == EXEC_STACK_TYPE_VARSELECTOR) {
+		
+		/* varselector access? */
+		if (s->execution_stack[s->execution_stack_pos].argc) { /* write? */
 
-    --(s->execution_stack_pos);
-  }
+			word temp = GET_HEAP(s->execution_stack[s->execution_stack_pos].variables[VAR_PARAM] + 2);
+			PUT_HEAP(s->execution_stack[s->execution_stack_pos].pc, temp);
 
-  retval = s->execution_stack + s->execution_stack_pos;
-  return retval;
+		} else /* No, read */
+			s->acc = GET_HEAP(s->execution_stack[s->execution_stack_pos].pc);
+
+		--(s->execution_stack_pos);
+	}
+
+	retval = s->execution_stack + s->execution_stack_pos;
+	return retval;
 }
 
 
