@@ -1,3 +1,31 @@
+2002-11-04  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/vm.h (VM_OBJECT_GET_VARSELECTOR)
+	(VM_OBJECT_READ_PROPERTY, VM_OBJECT_GET_FUNCSELECTOR) 
+	(VM_OBJECT_READ_FUNCTION): Added a couple of macros for easier
+	access to object properties
+
+	* src/engine/scriptdebug.c (c_vo): Initial 32 bit object viewer
+	command, "vo"
+
+	* src/scicore/console.c (parse_reg_t): Added support for reg_t
+	arguments, including class/object name lookup
+
+	* src/engine/scriptdebug.c (c_segtable, c_seginfo): Added "segtable"
+	and "seginfo" functions
+
+	* src/engine/vm.c (run_vm): Various bugfixes and changes to be able
+	to run off arbitrary scripts
+	(script_instantiate): Various bugfixes
+
+	* src/engine/seg_manager.c: Added script_obj_init, script_relocate,
+	script_initialize_locals (two variants), and script_free_unused_objects
+
+2002-11-03  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/scicore/console.c: Major cleanup with many simplifications,
+	added support for specifying signatures requiring non-NULL state_ts
+
 2002-11-02  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/vm.c (lookup_selector): Major cleanup, added a couple

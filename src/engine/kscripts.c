@@ -321,6 +321,8 @@ kDisposeClone(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+#warning "Re-implement kScriptID()"
+#if 0
   int script = PARAM(0);
   int index = PARAM_OR_ALT(1,0);
   int disp_size;
@@ -335,7 +337,7 @@ kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp)
     index = 0;
 
   if (s->scripttable[script].heappos == 0)
-    script_instantiate(s, script, 1); /* Instantiate script if neccessary */
+    script_instantiate(s, script); /* Instantiate script if neccessary */
 
   disp = s->scripttable[script].export_table_offset;
 
@@ -353,6 +355,7 @@ kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
   s->acc = UGET_HEAP(disp + 2 + index*2) + s->scripttable[script].heappos - magic_ofs;
+#endif
 }
 
 

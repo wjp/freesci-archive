@@ -198,9 +198,8 @@ script_error(state_t *s, char *file, int line, char *reason)
 }
 #define CORE_ERROR(area, msg) script_error(s, "[" area "] " __FILE__, __LINE__, msg)
 
-
 inline reg_t
-get_class_address(state_t *s, int classnr)
+get_class_address(state_t *s, int classnr, int lock)
 {
 	class_t *class = s->classtable + classnr;
 
@@ -210,14 +209,15 @@ get_class_address(state_t *s, int classnr)
 	}
 
 	if (classnr < 0
-	    || s->classtable_size >= classnr
+	    || s->classtable_size <= classnr
 	    || class->script < 0) {
-		sciprintf("Attempt to dereference class %x, which doesn't exist\n", classnr);
+		sciprintf("Attempt to dereference class %x, which doesn't exist (max %x)\n",
+			  classnr, s->classtable_size);
 		script_error_flag = script_debug_flag = 1;
 		return NULL_REG;
 	} else {
 		if (!class->reg.segment) {
-			script_instantiate(s, class->script, 1);
+			script_get_segment(s, class->script, lock);
 
 			if (!class->reg.segment) {
 				sciprintf("Trying to instantiate class %x by instantiating script 0x%x (%03d) failed;"
@@ -246,15 +246,15 @@ get_class_address(state_t *s, int classnr)
 #define GET_OP_SIGNED_WORD() ((getInt16(code_buf + ((pc_offset) += 2) - 2)))
 #define GET_OP_SIGNED_FLEX() ((opcode & 1)? GET_OP_SIGNED_BYTE() : GET_OP_SIGNED_WORD())
 
-#define OBJ_SPECIES(address) GET_HEAP((address) + SCRIPT_SPECIES_OFFSET)
-#define OBJ_SPECIES(s, reg, mem) GET_HEAP2(s, reg.segment, reg.offset + SCRIPT_SPECIES_OFFSET, mem)
+#define OBJ_SPECIES(address) SEG_GET_HEAP((address) + SCRIPT_SPECIES_OFFSET)
+#define OBJ_SPECIES(s, reg, mem) SEG_GET_HEAP2(s, reg.segment, reg.offset + SCRIPT_SPECIES_OFFSET, mem)
 /* Returns an object's species */
 
-#define OBJ_SUPERCLASS(address) GET_HEAP((address) + SCRIPT_SUPERCLASS_OFFSET)
-#define OBJ_SUPERCLASS(s, reg, mem) GET_HEAP2(s, reg.segment, reg.offset + SCRIPT_SUPERCLASS_OFFSET, mem)
+#define OBJ_SUPERCLASS(address) SEG_GET_HEAP((address) + SCRIPT_SUPERCLASS_OFFSET)
+#define OBJ_SUPERCLASS(s, reg, mem) SEG_GET_HEAP2(s, reg.segment, reg.offset + SCRIPT_SUPERCLASS_OFFSET, mem)
 /* Returns an object's superclass */
 
-#define OBJ_ISCLASS(address) (GET_HEAP((address) + SCRIPT_INFO_OFFSET) & SCRIPT_INFO_CLASS)
+#define OBJ_ISCLASS(address) (SEG_GET_HEAP((address) + SCRIPT_INFO_OFFSET) & SCRIPT_INFO_CLASS)
 /* Is true if the object at the address is a class */
 
 
@@ -270,7 +270,7 @@ execute_method(state_t *s, word script, word pubfunct, stack_ptr_t sp,
   int magic_ofs;
 
   if (s->seg_manager.isloaded (&s->seg_manager, script_nr)) /* Script not present yet? */
-      script_instantiate(s, script, 1);
+      script_instantiate(s, script);
 
   scriptpos = s->scripttable[script].heappos;
   tableaddress = s->scripttable[script].export_table_offset;
@@ -343,13 +343,15 @@ _exec_varselectors(state_t *s)
 		}
 }
 
-
 exec_stack_t *
 send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
 	      stack_ptr_t sp, int framesize, stack_ptr_t argp)
      /* send_obj and work_obj are equal for anything but 'super' */
      /* Returns a pointer to the TOS exec_stack element */
 {
+#ifdef VM_DEBUG_SEND
+	int i;
+#endif
 	reg_t *varp;
 	reg_t funcp;
 	int selector;
@@ -410,13 +412,15 @@ send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
 #endif /* VM_DEBUG_SEND */
 
 		if (++send_calls_nr == (send_calls_allocated - 1))
-			send_calls = sci_realloc(send_calls, sizeof(calls_struct_t) * (send_calls_allocated *= 2));
+			send_calls = sci_realloc(send_calls, sizeof(calls_struct_t)
+						 * (send_calls_allocated *= 2));
 
 
 		switch (lookup_selector(s, send_obj, selector, &varp, &funcp)) {
 
 		case SELECTOR_NONE:
-			sciprintf("Send to invalid selector 0x%x of object at 0x%x\n", 0xffff & selector, send_obj);
+			sciprintf("Send to invalid selector 0x%x of object at "PREG"\n",
+				  0xffff & selector, PRINT_REG(send_obj));
 			script_error_flag = script_debug_flag = 1;
 			--send_calls_nr;
 			break;
@@ -426,7 +430,7 @@ send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
 #ifdef VM_DEBUG_SEND
 			sciprintf("Varselector: ");
 			if (argc)
-				sciprintf("Write %04x\n", UGET_HEAP(argp + 2));
+				sciprintf("Write %04x\n", argp[1]);
 			else
 				sciprintf("Read\n");
 #endif /* VM_DEBUG_SEND */
@@ -567,7 +571,7 @@ add_exec_stack_entry(state_t *s, reg_t pc, stack_ptr_t sp, reg_t objp, int argc,
 	xstack->objp = objp;
 	xstack->sendp = sendp;
 	xstack->addr.pc = pc;
-	xstack->sp = sp;
+	xstack->fp = xstack->sp = sp;
 	xstack->argc = argc;
 
 	xstack->variables_argp = argp; /* Parameters */
@@ -596,12 +600,19 @@ vm_handle_fatal_error(state_t *s, int line, char *file)
 #ifdef HAVE_SETJMP_H
 	if (jump_initialized)
 		longjmp(vm_error_address, 0);
-	else
 #endif
-		{
-			fprintf(stderr, "Could not recover, exitting...\n");
-			exit(1);
-		}
+	fprintf(stderr, "Could not recover, exitting...\n");
+	exit(1);
+}
+
+static inline script_t *
+script_locate_by_segment(state_t *s, seg_id_t seg)
+{
+	mem_obj_t *memobj = GET_SEGMENT(s->seg_manager, seg, MEM_OBJ_SCRIPT);
+	if (memobj)
+		return &(memobj->data.script);
+
+	return NULL;
 }
 
 void
@@ -624,11 +635,12 @@ run_vm(state_t *s, int restoring)
 	/* Current execution data: */
 	exec_stack_t *xs = s->execution_stack + s->execution_stack_pos;
 	exec_stack_t *xs_new; /* Used during some operations */
-#warning "Hardwired to script.000"
 	object_t *obj = obj_get(s, xs->objp);
-	script_t *local_script = s->script_000;
+	script_t *local_script = script_locate_by_segment(s, obj->pos.segment);
 	int pc_offset;
-	int old_execution_stack_base = s->execution_stack_base; /* Used to detect the stack bottom, for "physical" returns */
+	int old_execution_stack_base = s->execution_stack_base; /* Used to detect the
+								** stack bottom, for "physical"
+								** returns  */
 	byte *code_buf;
 
 	if (!local_script) {
@@ -636,11 +648,6 @@ run_vm(state_t *s, int restoring)
 		return;
 	}
 	
-	pc_offset = xs->addr.pc.offset;
-	code_buf = local_script->buf;
-
-//  int old_execution_stack_base = s->execution_stack_base;
-
 	if (NULL == s) {
 		sciprintf("vm.c: run_vm(): NULL passed for \"s\"\n");
 		return;
@@ -676,13 +683,14 @@ run_vm(state_t *s, int restoring)
 	variables_base[VAR_GLOBAL] = variables[VAR_GLOBAL] = s->script_000->locals;
 
 
-#warning "Explicitly set argument count here again!"
-//	WRITE_VAR16(VAR_PARAM, 0, xs->argc);
+	WRITE_VAR16(VAR_PARAM, 0, xs->argc);
 
+
+	s->execution_stack_pos_changed = 1; /* Force initialization */
 
 	while (1) {
 		byte opcode;
-		int old_pc_offset = pc_offset;
+		int old_pc_offset;
 		stack_ptr_t old_sp = xs->sp;
 		byte opnumber;
 		int var_type; /* See description below */
@@ -691,12 +699,9 @@ run_vm(state_t *s, int restoring)
 		if (s->execution_stack_pos_changed) {
 			xs = s->execution_stack + s->execution_stack_pos;
 			s->execution_stack_pos_changed = 0;
-#warning "Fixme: Determine local script and local segment ID!"
-			/* local_script */
-#warning "Fixme: Set    variables_seg[VAR_LOCAL] = the local segment ID!"
-#ifndef THAT_EVIL_BUG_HAS_BEEN_FIXED
-			variables_seg[VAR_LOCAL] = 0x42;
-#endif
+			obj = obj_get(s, xs->objp);
+			local_script = script_locate_by_segment(s, obj->pos.segment);
+			variables_seg[VAR_LOCAL] = obj->pos.segment;
 
 			variables_base[VAR_LOCAL] = variables[VAR_LOCAL] = local_script->locals;
 #ifndef DISABLE_VALIDATIONS
@@ -705,7 +710,12 @@ run_vm(state_t *s, int restoring)
 			variables[VAR_TEMP] = xs->fp;
 			variables[VAR_PARAM] = xs->variables_argp;
 #endif
+
+			pc_offset = xs->addr.pc.offset;
+			code_buf = script_locate_by_segment(s, xs->addr.pc.segment)->buf;
 		}
+
+		old_pc_offset = pc_offset;
 
 		script_error_flag = 0; /* Set error condition to false */
 
@@ -767,6 +777,8 @@ run_vm(state_t *s, int restoring)
 				script_debug_flag = script_error_flag = 1;
 
 			}
+
+		sciprintf("opcode=%02x, opnum=%02x, pcoff=%04x\n", opcode, opnumber, old_pc_offset);
 
 		switch (opnumber) {
 
@@ -958,7 +970,9 @@ run_vm(state_t *s, int restoring)
 
       }
 #endif
-      fprintf(stderr, "Not implemented yet: callk\n");
+      sciprintf("\n--------------------------");
+      sciprintf("\nNot implemented yet: callk");
+      sciprintf("\n--------------------------\n");
 
       break;
 
@@ -1040,7 +1054,7 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x28: /* class */
-			s->r_acc = get_class_address(s, opparams[0]);
+			s->r_acc = get_class_address(s, opparams[0], SCRIPT_GET_LOAD);
 			break;
 
 		case 0x2a: /* self */
@@ -1058,7 +1072,7 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x2b: /* super */
-			r_temp = get_class_address(s, opparams[0]);
+			r_temp = get_class_address(s, opparams[0], 0);
 
 			if (!r_temp.segment)
 				CORE_ERROR("VM", "Invalid superclass in object");
@@ -1105,6 +1119,7 @@ run_vm(state_t *s, int restoring)
 
 
 		case 0x2e: /* selfID */
+			sciprintf("SelfID: objp = "PREG"\n", PRINT_REG(xs->objp));
 			s->r_acc = xs->objp;
 			break;
 
@@ -1422,7 +1437,7 @@ _class_locate_funcselector(object_t *obj, selector_t slc)
 	** returned even if one of the superclasses defines the funcselector. */
 	int funcnum = obj->methods_nr;
 	int i;
-	guint16 *buf = obj->base_method + funcnum + 1; /* +1 because the first entry is constant 0 and boring */
+	guint16 *buf = obj->base_method; /* +1 because the first entry is constant 0 and boring */
 
 	for (i = 0; i < funcnum; i++)
 		if (getUInt16((byte *) (buf + i)) == slc) /* Found it? */
@@ -1443,7 +1458,9 @@ _lookup_selector_function(state_t *s, int seg_id, object_t *obj, selector_t sele
 		index = _class_locate_funcselector(obj, selector_id);
 
 		if (index >= 0) {
-			*fptr = make_reg(seg_id, getUInt16((byte *) (obj->base_method + index)));
+			*fptr = make_reg(seg_id, getUInt16((byte *)
+							   (obj->base_method + index
+							    + obj->methods_nr + 1)));
 			return SELECTOR_METHOD;
 		} else {
 			seg_id = obj->variables[SCRIPT_SUPERCLASS_SELECTOR].segment;
@@ -1515,21 +1532,68 @@ void script_detect_early_versions(state_t *s)
 }
 
 
-int
-script_instantiate(state_t *s, int script_nr, int recursive)
+seg_id_t
+script_get_segment(state_t *s, int script_nr, int load)
 {
-#warning "Fix script instantiation"
-#if 1
+	seg_id_t segment;
+
+	if ((load & SCRIPT_GET_LOAD) == SCRIPT_GET_LOAD)
+		script_instantiate(s, script_nr);
+
+	segment = s->seg_manager.seg_get(&s->seg_manager, script_nr);
+
+	if (segment > 0) {
+		if ((load & SCRIPT_GET_LOCK) == SCRIPT_GET_LOCK)
+			s->seg_manager.increment_lockers(&s->seg_manager, segment, SEG_ID);
+
+		return segment;
+	} else
+		return 0;
+}
+
+reg_t
+script_lookup_export(state_t *s, int script_nr, int export)
+{
+	seg_id_t seg = script_get_segment(s, script_nr, SCRIPT_GET_DONT_LOAD);
+	mem_obj_t *memobj;
+	script_t *script = NULL;
+
+#ifndef DISABLE_VALIDATIONS
+	if (!seg) {
+		CORE_ERROR("EXPORTS", "Script invalid or not loaded");
+		sciprintf("Script was script.03d (0x%x)\n",
+			  script_nr, script_nr);
+		return NULL_REG;
+	}
+#endif
+
+	memobj = GET_SEGMENT(s->seg_manager, seg, MEM_OBJ_SCRIPT);
+
+	if (memobj)
+		script = &(memobj->data.script);
+
+#ifndef DISABLE_VALIDATIONS
+	if (script
+	    && export < script->exports_nr
+	    && export >= 0)
+#endif
+		return make_reg(seg, getUInt16((byte *)(script->export_table + export)));
+}
+
+#define INST_LOOKUP_CLASS(id) ((id == 0xffff)? NULL_REG : get_class_address(s, id, SCRIPT_GET_LOCK))
+
+
+int
+script_instantiate(state_t *s, int script_nr)
+{
 	resource_t *script = scir_find_resource(s->resmgr, sci_script, script_nr, 0);
 	heap_ptr pos;
 	int objtype;
 	unsigned int objlength;
-	heap_ptr script_basepos;
-	reg_t reg;
-	reg_t reg_tmp;
+	reg_t reg, reg_tmp;
 	int seg_id;
+	int relocation = -1;
 	int magic_pos_adder; /* Usually 0; 2 for older SCI versions */
-	int index;	/* for index of object,class in script.objects */
 
 
 	if (!script) {
@@ -1537,36 +1601,33 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 		/*    script_debug_flag = script_error_flag = 1; */
 		return 0;
 	}
-	
+
 	dbg_print( "--- script id", script_nr );
 	dbg_print( "script size", script->size );
 
-        if (NULL == s)
-	{
+        if (NULL == s) {
                 sciprintf("vm.c: script_instantiate(): NULL passed for \"s\"\n");
 		return 0;
 	}
 
 	if (s->seg_manager.isloaded (&s->seg_manager, script_nr, SCRIPT_ID)) { /* Is it already loaded? */
 		int seg = s->seg_manager.seg_get ( &s->seg_manager, script_nr );
-		s->seg_manager.increment_lockers( &s->seg_manager, seg, SEG_ID); /* Required by another script */
 		return seg;
 	}
 
 /* fprintf(stderr,"Allocing %d(0x%x)\n", script->size, script->size); */
-	if (!s->seg_manager.allocate( &s->seg_manager, s, script_nr, &seg_id )) { /* ALL YOUR SCRIPT BASE ARE BELONG TO US */
+	if (!s->seg_manager.allocate_script( &s->seg_manager, s, script_nr, &seg_id )) { /* ALL YOUR SCRIPT BASE ARE BELONG TO US */
 		sciprintf("Not enough heap space for script size 0x%x of script 0x%x, has 0x%x\n",
 			  script->size, script_nr, heap_largest(s->_heap));
 		script_debug_flag = script_error_flag = 1;
 		return 0;
 	}
+
 	reg.segment = seg_id;
+	reg.offset = 0;
 
-	script_basepos = s->seg_manager.get_heappos( &s->seg_manager, reg.segment, SEG_ID);	// this is zero
-
-	recursive = 1;
 	/* Set heap position (beyond the size word) */
-	s->seg_manager.set_lockers( &s->seg_manager, 1, reg.segment, SEG_ID );
+	s->seg_manager.set_lockers( &s->seg_manager, 0, reg.segment, SEG_ID );
 	s->seg_manager.set_export_table_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
 	s->seg_manager.set_synonyms_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
 	s->seg_manager.set_synonyms_nr( &s->seg_manager, 0, reg.segment, SEG_ID );
@@ -1576,11 +1637,6 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 		int locals_size = getUInt16(script->data)*2;
 		int locals = (locals_size)? script->size : 0;
 
-		s->seg_manager.set_localvar_offset( &s->seg_manager, locals, reg.segment, SEG_ID );
-
-		if (locals)
-			s->seg_manager.mset( &s->seg_manager, locals, 0, locals_size, reg.segment, SEG_ID);
-			//memset(s->heap+locals,0,locals_size);
 		/* Old script block */
 		/* There won't be a localvar block in this case */
 /* HEAP CORRUPTOR! */
@@ -1589,12 +1645,15 @@ script_instantiate(state_t *s, int script_nr, int recursive)
  fprintf(stderr,"   -- memcpying [%04x..%04x]\n", script_basepos + 2, script_basepos + script->size);
 */
 		s->seg_manager.mcpy_in_out( &s->seg_manager, 0, script->data + 2, script->size - 2, reg.segment, SEG_ID);
-		reg.offset = script_basepos;
 		magic_pos_adder = 2;
+
+		if (locals)
+			s->seg_manager.script_initialize_locals_zero( &s->seg_manager,
+								      reg.segment, locals);
+
 	} else {
 		s->seg_manager.mcpy_in_out( &s->seg_manager, 0, script->data, script->size, reg.segment, SEG_ID);
 		magic_pos_adder = 0;
-		reg.offset = script_basepos;
 	}
 
 	/* Now do a first pass through the script objects to find the
@@ -1604,12 +1663,16 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 	objlength = 0;
 	reg_tmp = reg;
 	do {
+		reg_t data_base;
 		reg.offset += objlength; /* Step over the last checked object */
 		dbg_print( "reg.offset", reg.offset );
-		objtype = GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
+		objtype = SEG_GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
 		if( !objtype ) break;
 		reg_tmp.offset = reg.offset + 2;
-		objlength = GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT);
+		objlength = SEG_GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT);
+
+		data_base = reg;
+		data_base.offset += 4;
 
 		switch( objtype ) {
 		case sci_obj_exports:
@@ -1619,12 +1682,19 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 		case sci_obj_synonyms:
 			s->seg_manager.set_synonyms_offset( &s->seg_manager, reg.offset + 4, reg.segment, SEG_ID ); /* +4 is to step over the header */
 			s->seg_manager.set_synonyms_nr( &s->seg_manager, (objlength) / 4, reg.segment, SEG_ID );
+#warning "What's all this then?"
+#if 0
 			reg_tmp.offset = s->seg_manager.get_synonyms_offset( &s->seg_manager, reg.segment, SEG_ID ) +
 				     ((s->seg_manager.get_synonyms_nr( &s->seg_manager, reg.segment, SEG_ID )) << 2);
 
-			if (GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT) < 0)
+			if (SEG_GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT) < 0)
 				/* Adjust for "terminal" synonym entries */
 				s->seg_manager.set_synonyms_nr( &s->seg_manager, (objlength) / 4 - 1, reg.segment, SEG_ID );
+#endif
+			break;
+
+		case sci_obj_localvars:
+			s->seg_manager.script_initialize_locals( &s->seg_manager, data_base);
 			break;
 
 		case sci_obj_class:
@@ -1660,94 +1730,53 @@ script_instantiate(state_t *s, int script_nr, int recursive)
 	reg.offset = s->seg_manager.get_heappos( &s->seg_manager, reg.segment, SEG_ID) + magic_pos_adder;
 
 	objlength = 0;
-	index = 0;
-	reg_tmp = reg;
+	reg.offset = 0;
 	do {
 		reg.offset += objlength; /* Step over the last checked object */
 		dbg_print( "reg.offset", reg.offset );
-		objtype = GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
+		objtype = SEG_GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
 		if( !objtype ) break;
-		objlength = GET_HEAP2(s, reg.segment, reg.offset + 2, MEM_OBJ_SCRIPT);
-
+		objlength = SEG_GET_HEAP2(s, reg.segment, reg.offset + 2, MEM_OBJ_SCRIPT);
 		reg.offset += 4; /* Step over header */
 
 		switch (objtype) {
 		case sci_obj_object:
 		case sci_obj_class:
 		{ /* object or class? */
-			int i;
-			heap_ptr functarea;
-			int functions_nr;
-			int superclass;
-			int species;
+			object_t *obj = s->seg_manager.script_obj_init(&s->seg_manager, reg);
 
-			reg.offset -= SCRIPT_OBJECT_MAGIC_OFFSET; /* Get into home position */
-			functarea = reg.offset + GET_HEAP2(s, reg.segment, reg.offset + SCRIPT_FUNCTAREAPTR_OFFSET, MEM_OBJ_SCRIPT)
-				+ SCRIPT_FUNCTAREAPTR_MAGIC;
-			functions_nr = GET_HEAP2(s, reg.segment, functarea - 2, MEM_OBJ_SCRIPT); /* Number of functions */
-			superclass = OBJ_SUPERCLASS(s, reg, MEM_OBJ_SCRIPT); /* Get superclass... */
-			species = OBJ_SPECIES(s, reg, MEM_OBJ_SCRIPT); /* ...and species */
-			/*      fprintf(stderr,"functs (%x) area @ %x\n", functions_nr, functarea); */
+			/* Instantiate the superclass, if neccessary */
+			obj->variables[SCRIPT_SPECIES_SELECTOR] =
+				INST_LOOKUP_CLASS(obj->variables[SCRIPT_SPECIES_SELECTOR].offset);
 
-			/* Now set the superclass address: */
-			if (superclass > -1) {
-				s->seg_manager.set_variables( &s->seg_manager, reg, index, get_class_address(s, superclass), SCRIPT_SUPERCLASS_SELECTOR ); 
-			}
-			/* Now set the species address: */
-			s->seg_manager.set_variables( &s->seg_manager, reg, index, get_class_address(s, species), SCRIPT_SPECIES_SELECTOR ); 
+			obj->base_obj
+				= obj_get(s, obj->variables[SCRIPT_SPECIES_SELECTOR])->base_obj;
+			/* Copy base from species class, as we need its selector IDs */ 
 
-			functarea += 2 + functions_nr * 2;
-			/* Move over the selector IDs to the actual addresses */
-
-			for (i = 0; i < functions_nr * 2; i += 2) {
-				heap_ptr functpos;
-				reg_tmp.offset = functarea + i;
-				functpos = GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT);
-				reg_tmp.offset = functarea + i;
-				PUT_HEAP(s, reg_tmp, functpos + script_basepos, MEM_OBJ_SCRIPT); /* Adjust function pointer addresses */
-			}
-
-			if ((superclass >= 0) && recursive)
-				script_instantiate(s, s->classtable[superclass].script, 1);
-			/* Recurse to assure that the superclass is available */
-
-			reg.offset += SCRIPT_OBJECT_MAGIC_OFFSET; /* Step back from home to base */
-			index ++;
+			obj->variables[SCRIPT_SUPERCLASS_SELECTOR] =
+				INST_LOOKUP_CLASS(obj->variables[SCRIPT_SUPERCLASS_SELECTOR].offset);
 
 		} /* if object or class */
 			break;
 		case sci_obj_pointers: /* A relocation table */
-		{
-			int pointerc = GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
-			int i;
-
-			for (i = 0; i < pointerc; i++) {
-				int new_address;
-				int old_indexed_pointer;
-				reg_tmp.offset = reg.offset + 2 + i*2;
-				new_address = ((guint16) GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT)) + script_basepos;
-				PUT_HEAP(s, reg_tmp, new_address, MEM_OBJ_SCRIPT); /* Adjust pointers. Not sure if this is needed. */
-				reg_tmp.offset = new_address;
-				old_indexed_pointer = ((guint16) GET_HEAP(s, reg_tmp, MEM_OBJ_SCRIPT));
-				reg_tmp.offset = new_address;
-				PUT_HEAP(s, reg_tmp, old_indexed_pointer + script_basepos, MEM_OBJ_SCRIPT);
-				/* Adjust indexed pointer. */
-
-			} /* For all indexed pointers pointers */
-		}
+			relocation = reg.offset;
 			break;
+
 		default:
 			break;
 		}
 
 		reg.offset -= 4; /* Step back on header */
 
-	} while ((objtype != 0) && (((unsigned)reg.offset - script_basepos) < script->size - 2));
+	} while ((objtype != 0) && (((unsigned)reg.offset) < script->size - 2));
+
+	if (relocation >= 0)
+		s->seg_manager.script_relocate(&s->seg_manager, make_reg(reg.segment, relocation));
+
+	s->seg_manager.script_free_unused_objects(&s->seg_manager, reg.segment);
 
 	/*    if (script_nr == 0)   sci_hexdump(s->heap + script_basepos +2, script->size-2, script_basepos);*/
 	return reg.segment;		// instantiate successfully
-#endif
-
 }
 
 
@@ -1777,9 +1806,9 @@ script_uninstantiate(state_t *s, int script_nr)
 	do {
 		reg.offset += objlength; /* Step over the last checked object */
 		
-		objtype = GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
+		objtype = SEG_GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
 		if( !objtype ) break;
-		objlength = GET_HEAP2(s, reg.segment, reg.offset + 2, MEM_OBJ_SCRIPT);  // use UGET_HEAP ??
+		objlength = SEG_GET_HEAP2(s, reg.segment, reg.offset + 2, MEM_OBJ_SCRIPT);  // use SEG_UGET_HEAP ??
 
 		reg.offset += 4; /* Step over header */
 
@@ -1899,22 +1928,6 @@ game_run(state_t **_s)
 {
 	state_t *s = *_s;
 
-#warning "Quick exec test hack-- kill me!"
-#if 1
-	int i;
-	for (i = 0; i < 100; i++)
-		s->stack_base[i] = make_reg(0xabcd, 0x1000 + i);
-	s->execution_stack_pos = 0;
-	s->execution_stack = calloc(sizeof(exec_stack_t), 1);
-	s->execution_stack[0].fp = s->stack_base;
-	s->execution_stack[0].sp = s->stack_base;
-	s->execution_stack[0].addr.pc = make_reg(0x42, 0x255);
-	fprintf(stderr, "Executing in quick hack mode\n");
-	run_vm(s, 0);
-	fprintf(stderr, "VM Quit-- quick abort\n");
-	exit(1);
-#endif	
-
 	sciprintf(" Calling %s::play()\n", s->game_name);
 	_init_stack_base_with_selector(s, s->selector_map.play); /* Call the play selector */
 	
@@ -2012,15 +2025,15 @@ obj_get(state_t *s, reg_t offset)
 
 	if (memobj != NULL) {
 		if (memobj->type == MEM_OBJ_CLONES
-		    && memobj->data.clones->clones_nr > offset.offset
-		    && memobj->data.clones->clones[offset.offset].origin.segment)
-			obj = &(memobj->data.clones->clones[offset.offset].props);
+		    && memobj->data.clones.clones_nr > offset.offset
+		    && memobj->data.clones.clones[offset.offset].next_free == CLONE_USED)
+			obj = &(memobj->data.clones.clones[offset.offset].obj);
 		else if (memobj->type == MEM_OBJ_SCRIPT)
 			if (offset.offset <= memobj->data.script.buf_size
 			    && offset.offset >= -SCRIPT_OBJECT_MAGIC_OFFSET
 			    && RAW_IS_OBJECT(memobj->data.script.buf + offset.offset)) {
 				int idx = RAW_GET_CLASS_INDEX(memobj->data.script.buf + offset.offset);
-				if (idx > 0 && idx < memobj->data.script.objects_nr)
+				if (idx >= 0 && idx < memobj->data.script.objects_nr)
 					obj = memobj->data.script.objects + idx;
 			}
 	}

@@ -148,7 +148,6 @@ _reset_graphics_input(state_t *s)
 		}
 	} else
 		if (gfxop_set_color(s->gfx_state, &(s->ega_colors[0]), 0, 0, 0, 0, -1, -1)) return 1; /* We usually need black */
-
 	transparent.mask = 0;
 
 	gfxop_fill_box(s->gfx_state, gfx_rect(0, 0, 320, 200), s->ega_colors[0]); /* Fill screen black */
@@ -159,7 +158,7 @@ _reset_graphics_input(state_t *s)
 
 	s->mouse_pointer_nr = -1;
 
-	s->pic_not_valid = 1; /* Picture is invalid */
+
 	s->pic_is_new = 0;
 	s->pic_visible_map = 0; /* Other values only make sense for debugging */
 	s->dyn_views = NULL; /* no DynViews */
@@ -268,20 +267,6 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->seg_manager.init = sm_init;
 	s->seg_manager.init (&s->seg_manager);
 
-#warning "Dirty script.000 initialization, fixme!"
-	s->script_000_segment = 42;
-	s->script_000 = calloc(sizeof(script_t), 1);
-	s->script_000->buf = scir_find_resource(s->resmgr, sci_script,
-						0, 1)->data; /* Lock script.000 */
-	s->script_000->buf_size = scir_find_resource(s->resmgr, sci_script,
-						     0, 0)->size;
-/* Remember to add check for script.000, although this should be implicit later on */
-#warning "Dirty stack initialization, fixme!"
-	s->stack_base = calloc(VM_STACK_SIZE, sizeof(reg_t));
-	s->stack_top = s->stack_base + VM_STACK_SIZE;
-
-/*-- end of warnings --*/
-
 
 	if (!version) {
 		s->version_lock_flag = 0;
@@ -369,6 +354,22 @@ script_init_engine(state_t *s, sci_version_t version)
 	}
 	scir_unlock_resource(s->resmgr, vocab996, sci_vocab, 996);
 	vocab996 = NULL;
+
+	s->script_000_segment = script_get_segment(s, 0, SCRIPT_GET_LOCK);
+
+	if (s->script_000_segment <= 0) {
+		sciprintf("Failed to instantiate script.000");
+		return 1;
+	}
+
+	s->script_000 = &(s->seg_manager.heap[s->script_000_segment]->data.script);
+
+
+#warning "Dirty stack initialization, fixme!"
+	s->stack_base = calloc(VM_STACK_SIZE, sizeof(reg_t));
+	s->stack_top = s->stack_base + VM_STACK_SIZE;
+
+/*-- end of warnings --*/
 
 	s->_heap = heap_new();
 	s->heap = s->_heap->start;
@@ -501,13 +502,12 @@ game_init(state_t *s)
 {
 #warning "Fixme: Use new VM instantiation code all over the place"
 	heap_ptr parser_handle;
-	heap_ptr script0;
-	heap_ptr game_obj; /* Address of the game object */
+	reg_t game_obj; /* Address of the game object */
 	int i;
 
 #warning "Allocate stack segment here"
 
-	if (!script_instantiate(s, 0, 0)) {
+	if (!script_instantiate(s, 0)) {
 		sciprintf("game_init(): Could not instantiate script 0\n");
 		return 1;
 	}
@@ -557,42 +557,30 @@ game_init(state_t *s)
 	memset(s->clone_list, sizeof(s->clone_list), 0); /* No clones */
 
 	/*	script_dissect(0, s->selector_names, s->selector_names_nr); */
-	game_obj = script0 + GET_HEAP(s->scripttable[0].export_table_offset + 2);
+	game_obj = script_lookup_export(s, 0, 0);
 	/* The first entry in the export table of script 0 points to the game object */
 
 	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
-		game_obj -= 2; /* Adjust for alternative header */
+		game_obj.offset -= 2; /* Adjust for alternative header */
 
-#warning "Re-enable game obj check"
-#if 0
-	if (GET_HEAP(game_obj + SCRIPT_OBJECT_MAGIC_OFFSET) != SCRIPT_OBJECT_MAGIC_NUMBER) {
-		sciprintf("game_init(): Game object is not at 0x%x\n", game_obj);
+	s->game_name = obj_get_name(s, game_obj);
+
+	if (!s->game_name) {
+		sciprintf("Error: script.000, export 0 ("PREG") does not\n"
+			  "  yield an object with a name -> sanity check failed\n",
+			  PRINT_REG(game_obj));
 		return 1;
 	}
 
-	s->game_name = s->heap + GET_HEAP(game_obj + SCRIPT_NAME_OFFSET);
-
-	sciprintf(" Game designation is \"%s\"\n", s->game_name);
+	sciprintf(" \"%s\" at "PREG"\n", s->game_name, PRINT_REG(game_obj));
 
 	if (strlen((char *) s->game_name) >= MAX_GAMEDIR_SIZE) {
 
 		s->game_name[MAX_GAMEDIR_SIZE - 1] = 0; /* Fix length with brute force */
 		sciprintf(" Designation too long; was truncated to \"%s\"\n", s->game_name);
 	}
-#endif
-#warning "Fix game name hack"
-	s->game_name = "GLUTTON";
 
-#warning "Fixme: Init game_obj correctly!"
-#if 0
 	s->game_obj = game_obj;
-#endif
-#warning "Evil startup hacks: Fix"
-#if 1
-	s->script_000->locals_nr = 100;
-	s->script_000->locals = calloc(sizeof(reg_t), s->script_000->locals_nr);;
-#endif
-	s->game_obj = make_reg(s->script_000_segment, getUInt16(s->script_000->buf + 4));
 
 	/* Mark parse tree as unused */
 	s->parser_nodes[0].type = PARSE_TREE_NODE_LEAF;

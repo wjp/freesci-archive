@@ -33,12 +33,13 @@
 #include <vm.h>
 
 #define DEFAULT_SCRIPTS 32
-#define DEFAULT_OBJECTS 16	// default object per script  
-#define DEFAULT_VARIABLES 4	// minimum is 4: species, superclass, info, and name
+#define DEFAULT_OBJECTS 8	    /* default # of objects per script */
+#define DEFAULT_OBJECTS_INCREMENT 4 /* Number of additional objects to
+				    ** instantiate if we're running out of them  */
 
-#define GET_HEAP( s, reg, mem_type ) s->seg_manager.get_heap( &s->seg_manager, reg, mem_type )
-#define GET_HEAP2( s, seg, offset, mem_type ) s->seg_manager.get_heap2( &s->seg_manager, seg, offset, mem_type )
-#define PUT_HEAP( s, reg, v, mem_type ) s->seg_manager.put_heap( &s->seg_manager, reg, v, mem_type )
+#define SEG_GET_HEAP( s, reg, mem_type ) s->seg_manager.get_heap( &s->seg_manager, reg, mem_type )
+#define SEG_GET_HEAP2( s, seg, offset, mem_type ) s->seg_manager.get_heap2( &s->seg_manager, seg, offset, mem_type )
+#define SEG_PUT_HEAP( s, reg, v, mem_type ) s->seg_manager.put_heap( &s->seg_manager, reg, v, mem_type )
 
 /* SCRIPT_ID must be 0 */
 typedef enum {
@@ -56,8 +57,8 @@ void dbg_print( char* msg, int i );		// for debug only
 **   none, terminate the program if fails
 */
 #define VERIFY( cond, msg ) if (! ( cond ) ) {\
-	sciprintf( "%s, line, %d, %s", __FILE__, __LINE__, msg ); \
-	exit ( -1 ); \
+	sciprintf( "%s, line, %d, %s\n", __FILE__, __LINE__, msg ); \
+	BREAKPOINT(); \
 	}
 
 #define MEM_OBJ_SCRIPT (1 << 0)
@@ -83,7 +84,7 @@ typedef struct _seg_manager_t {
 
 	int (*seg_get) (struct _seg_manager_t* self, int script_nr);
 
-	int (*allocate) (struct _seg_manager_t* self, struct _state *s, int script_nr, int* seg_id);
+	int (*allocate_script) (struct _seg_manager_t* self, struct _state *s, int script_nr, int* seg_id);
 	int (*deallocate) (struct _seg_manager_t* self, struct _state *s, int script_nr);
 	void (*update) (struct _seg_manager_t* self);
 
@@ -111,10 +112,11 @@ typedef struct _seg_manager_t {
 	int (*get_heappos) (struct _seg_manager_t* self, int id, int flag);
 
 	void (*set_export_table_offset) (struct _seg_manager_t* self, int offset, int id, int flag);
-	int (*get_export_table_offset) (struct _seg_manager_t* self, int id, int flag);
+	guint16 *(*get_export_table_offset) (struct _seg_manager_t* self, int id, int flag,
+					     int *max);
 
 	void (*set_synonyms_offset) (struct _seg_manager_t* self, int offset, int id, int flag);
-	int (*get_synonyms_offset) (struct _seg_manager_t* self, int id, int flag);
+	byte *(*get_synonyms) (struct _seg_manager_t* self, int id, int flag);
 
 	void (*set_synonyms_nr) (struct _seg_manager_t* self, int nr, int id, int flag);
 	int (*get_synonyms_nr) (struct _seg_manager_t* self, int id, int flag);
@@ -124,6 +126,41 @@ typedef struct _seg_manager_t {
 	
 	void (*set_variables) (struct _seg_manager_t* self, reg_t reg, int obj_index, reg_t variable_reg, int variable_index );
 
+	object_t* (*script_obj_init) (struct _seg_manager_t* self, reg_t obj_pos);
+	/* Initializes an object within the segment manager
+	** Parameters: (reg_t) obj_pos: Location (segment, offset) of the object
+	** Returns   : (object_t *) A newly created object_t describing the object
+	** obj_pos must point to the beginning of the script/class block (as opposed
+	** to what the VM considers to be the object location)
+	** The corresponding object_t is stored within the relevant script.
+	*/
+
+	void (*script_relocate) (struct _seg_manager_t* self, reg_t block);
+	/* Processes a relocation block witin a script
+	** Parameters: (reg_t) obj_pos: Location (segment, offset) of the block
+	** Returns   : (object_t *) Location of the relocation block
+	** This function is idempotent, but it must only be called after all
+	** objects have been instantiated, or a run-time error will occur.
+	*/
+
+	void (*script_initialize_locals_zero) (struct _seg_manager_t *self, seg_id_t seg, int nr);
+	/* Initializes a script's local variable block
+	** Parameters: (seg_id_t) seg: Segment containing the script to initialize
+	**             (int) nr: Number of local variables to allocate
+	** All variables are initialized to zero.
+	*/
+
+	void (*script_initialize_locals) (struct _seg_manager_t *self, reg_t location);
+	/* Initializes a script's local variable block according to a prototype
+	** Parameters: (reg_t) location: Location to initialize from
+	*/
+
+	void (*script_free_unused_objects) (struct _seg_manager_t *self, seg_id_t segid);
+	/* Deallocates all unused but allocated entries for objects
+	** Parameters: (seg_id_t) segid: segment of the script to prune in this way
+	** These entries are created during script instantiation; deallocating them
+	** frees up some additional memory.
+	*/
 
 } seg_manager_t;
 
@@ -136,7 +173,7 @@ void sm_destroy (seg_manager_t* self);
 
 int sm_seg_get (seg_manager_t* self, int script_nr);
 
-int sm_allocate (seg_manager_t* self, struct _state *s, int script_nr, int* seg_id);
+int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, int* seg_id);
 /* allocate a memory from heap
 ** Parameters: (state_t *) s: The state to operate on
 **             (int) script_nr: The script number to load
@@ -170,10 +207,9 @@ void sm_set_lockers (seg_manager_t* self, int lockers, int id, int flag);
 int sm_get_heappos (struct _seg_manager_t* self, int id, int flag);	// return 0
 
 void sm_set_export_table_offset (struct _seg_manager_t* self, int offset, int id, int flag);
-int sm_get_export_table_offset (struct _seg_manager_t* self, int id, int flag);
+guint16 *sm_get_export_table_offset (struct _seg_manager_t* self, int id, int flag, int *max);
 
 void sm_set_synonyms_offset (struct _seg_manager_t* self, int offset, int id, int flag);
-int sm_get_synonyms_offset (struct _seg_manager_t* self, int id, int flag);	
 	
 void sm_set_synonyms_nr (struct _seg_manager_t* self, int nr, int id, int flag);
 int sm_get_synonyms_nr (struct _seg_manager_t* self, int id, int flag);

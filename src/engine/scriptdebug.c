@@ -77,6 +77,124 @@ _debug_get_input_default(void)
 
 char *(*_debug_get_input)(void) = _debug_get_input_default;
 
+int
+c_segtable(state_t *s)
+{
+	int i;
+
+	sciprintf("  ---- segment table ----\n");
+	for (i = 0; i < s->seg_manager.heap_size; i++) {
+		mem_obj_t *mobj = s->seg_manager.heap[i];
+		if (mobj && mobj->type) {
+			sciprintf(" [%04x] ", i);
+
+			switch (mobj->type) {
+
+			case MEM_OBJ_SCRIPT:
+				sciprintf("S  script.%03d l:%d ",
+					  mobj->data.script.nr,
+					  mobj->data.script.lockers);
+				break;
+
+			case MEM_OBJ_CLONES:
+				sciprintf("C  clones (%d allocd)", mobj->data.clones.clones_nr);
+				break;
+
+			default:
+				sciprintf("I  Invalid (type = %x)\n", mobj->type);
+				break;
+			}
+
+			sciprintf("  %d bytes\n", mobj->size);
+		}
+	}
+	sciprintf("\n");
+	return 0;
+}
+
+
+static void
+print_obj_head(state_t *s, object_t *obj)
+{
+	sciprintf(PREG" : %3d vars, %3d methods: %s\n",
+		  PRINT_REG(obj->pos),
+		  obj->variables_nr,
+		  obj->methods_nr,
+		  obj_get_name(s, obj->pos));
+}
+
+static void
+_c_single_seg_info(state_t *s, mem_obj_t *mobj)
+{
+	switch (mobj->type) {
+
+	case MEM_OBJ_SCRIPT: {
+		int i;
+
+		script_t *scr = &(mobj->data.script);
+		sciprintf("script.%03d locked by %d, bufsize=%d (%x)\n",
+			  scr->nr, scr->lockers, scr->buf_size, scr->buf_size);
+		sciprintf("  Exports: %4d at %d\n",
+			  scr->exports_nr,
+			  ((byte *) scr->export_table) - ((byte *)scr->buf));
+		sciprintf("  Synynms: %4d\n", scr->synonyms_nr);
+		sciprintf("  Locals : %4d [%04x..%04x]\n",
+			  scr->locals_nr,
+			  scr->locals_offset,
+			  scr->locals_offset + (scr->locals_nr * 2));
+		sciprintf("  Objects: %4d\n",
+			  scr->objects_nr);
+		for (i = 0; i < scr->objects_nr; i++) {
+			sciprintf("    ");
+			print_obj_head(s, scr->objects + i);
+		}
+	}
+		break;
+
+	case MEM_OBJ_CLONES: {
+		int i = 0;
+		clone_table_t *ct =
+			&(mobj->data.clones);
+
+		sciprintf("clones\n");
+
+		for (i = 0; i < ct->clones_nr; i++)
+			if (ct->clones[i].next_free == CLONE_USED) {
+				sciprintf("  [%04x] ", i);
+				print_obj_head(s, &(ct->clones[i].obj));
+			}
+		     }
+		break;
+
+	default : sciprintf("Invalid type %d\n", mobj->type);
+		break;
+	}
+}
+
+int
+c_seginfo(state_t *s)
+{
+	int i = 0;
+
+	if (cmd_paramlength) {
+		while (i < cmd_paramlength) {
+			int nr = cmd_params[i++].val;
+			if (nr < 0
+			    || nr >= s->seg_manager.heap_size
+			    || !s->seg_manager.heap[nr]) {
+				sciprintf("Segment %04x does not exist\n", nr);
+				return 1;
+			}
+			sciprintf("[%04x] ", nr);
+			_c_single_seg_info(s, s->seg_manager.heap[nr]);
+		}
+	} else for (i = 0; i < s->seg_manager.heap_size; i++)
+		if (s->seg_manager.heap[i]) {
+			sciprintf("[%04x] ", i);
+			_c_single_seg_info(s, s->seg_manager.heap[i]);
+			sciprintf("\n");
+		}
+}
 
 int
 c_debuginfo(state_t *s)
@@ -734,13 +852,8 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 ** encountered.
 */
 {
-#warning "FIXME for segment manager use"
-#if 0
 	mem_obj_t *memobj = GET_SEGMENT(s->seg_manager, pos.segment, MEM_OBJ_SCRIPT);
 	script_t *script_entity = NULL;
-#else
-	script_t *script_entity = s->script_000;
-#endif
 	byte *scr;
 	int scr_size;
 	reg_t retval = make_reg(pos.segment, pos.offset + 1);
@@ -750,14 +863,11 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 	int bytecount = 1;
 	int i = 0;
 
-#warning "FIXME for segment manager use"
-#if 0
 	if (!memobj) {
 		sciprintf("Disassembly failed: Segment %04x non-existant or not a script\n",
 			  pos.segment);
 		return retval;
 	} else script_entity = &(memobj->data.script);
-#endif
 
 	scr = script_entity->buf;
 	scr_size = script_entity->buf_size;
@@ -2288,6 +2398,39 @@ viewobjinfo(state_t *s, heap_ptr pos)
 
 #undef GETRECT
 
+
+int
+c_vo(state_t *s)
+{
+	reg_t pos = cmd_params[0].reg;
+	object_t *obj = obj_get(s, pos);
+	int i;
+
+	sciprintf("["PREG"]: ", PRINT_REG(pos));
+	if (!obj) {
+		sciprintf("Not an object.");
+		return 1;
+	}
+
+	print_obj_head(s, obj);
+
+	sciprintf("  -- member variables:\n");
+	for (i = 0; i < obj->variables_nr; i++)
+
+		sciprintf("    [%03x] %s = "PREG"\n",
+			  VM_OBJECT_GET_VARSELECTOR(obj, i),
+			  selector_name(s, VM_OBJECT_GET_VARSELECTOR(obj, i)),
+			  PRINT_REG(obj->variables[i]));
+	sciprintf("  -- methods:\n");
+	for (i = 0; i < obj->methods_nr; i++) {
+		reg_t fptr = VM_OBJECT_READ_FUNCTION(obj, i);
+		sciprintf("    [%03x] %s = "PREG"\n",
+			  VM_OBJECT_GET_FUNCSELECTOR(obj, i),
+			  selector_name(s, VM_OBJECT_GET_FUNCSELECTOR(obj, i)),
+			  PRINT_REG(fptr));
+	}
+}
+
 int
 objinfo(state_t *s, reg_t pos)
 {
@@ -2942,6 +3085,23 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_command(c_gfx_priority, "gfx_priority", "i*", "Prints information about priority\n  bands\nUSAGE\n\n  gfx_priority\n\n"
 					 "  will print the min and max values\n  for the priority bands\n\n  gfx_priority <val>\n\n  Print start of the priority\n"
 					 "  band for the specified\n  priority\n");
+			con_hook_command(c_segtable, "segtable", "!",
+					 "Gives a short listing of all segments\n\n"
+					 "SEE ALSO\n\n"
+					 "  seginfo.1");
+			con_hook_command(c_seginfo, "seginfo", "!i*",
+					 "Explains the specified segment\n\n"
+					 "USAGE\n\n"
+					 "  seginfo\n"
+					 "  seginfo <nr>\n"
+					 "  Either explains all active segments\n"
+					 "  (no parameter) or the specified one.\n\n"
+					 "SEE ALSO\n\n"
+					 "  segtable.1");
+			con_hook_command(c_vo, "vo", "!a",
+					 "Examines an object\n\n"
+					 "SEE ALSO\n\n"
+					 "  addresses.3");
 
 
 			con_hook_int(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");
@@ -2951,26 +3111,6 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 			con_hook_int(&script_step_counter, "script_step_counter", "# of executed SCI operations\n");
 			con_hook_int(&sci_debug_flags, "debug_flags", "Debug flags:\n  0x0001: Log each command executed\n"
 				     "  0x0002: Break on warnings\n");
-			con_hook_page("addresses",
-				      "Passing address parameters\n\n"
-				      "  Address parameters may be passed in one of\n"
-				      "  three forms:\n"
-				      "  - ssss:oooo -- where 'ssss' denotes a\n"
-				      "    segment and 'oooo' an offset. Example:\n"
-				      "    \"a:c5\" would address something in seg-\n"
-				      "    ment 0xa at offset 0xc5.\n"
-				      "  - $REG -- where 'REG' is one of 'PC', 'ACC',\n"
-				      "    'PREV' or 'OBJ': References the address\n"
-				      "    indicated by the register of this name.\n"
-				      "  - $REG+n (or -n) -- Like $REG, but modifies\n"
-				      "    the offset part by a specific amount (which\n"
-				      "    is specified in hexadecimal).\n"
-				      "  - ?obj -- Looks up an object with the specified\n"
-				      "    name, uses its address. This will abort if\n"
-				      "    the object name is ambiguous; in that case,\n"
-				      "    a list of addresses and indices is provided.\n"
-				      "    ?obj.idx may be used to disambiguate 'obj'\n"
-				      "    by the index 'idx'.\n");
 
 		} /* If commands were not hooked up */
 

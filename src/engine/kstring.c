@@ -192,6 +192,8 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kSetSynonyms(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
+#warning "Re-implement kSetSynonyms()"
+#if 0
 	heap_ptr list = UPARAM(0);
 	int script;
 	int synpos = 0;
@@ -249,6 +251,7 @@ kSetSynonyms(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	if (!s->synonyms_nr)
 		s->synonyms = NULL;
+#endif
 }
 
 

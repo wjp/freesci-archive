@@ -30,6 +30,8 @@
 #include <versions.h>
 #include <engine.h>
 
+#undef DEBUG_SEG_MANAGER /* Define to turn on debugging */
+
 #define GET_SEGID() 	if (flag == SCRIPT_ID) \
 				id = sm_seg_get (self, id); \
 			VERIFY ( sm_check (self, id), "invalid seg id" );
@@ -41,11 +43,37 @@
 #define INVALID_SCRIPT_ID -1
 	
 void dbg_print( char* msg, int i ) {
+#ifdef DEBUG_SEG_MANAGER
 	char buf[1000];
 	sprintf( buf, "%s = [0x%x], dec:[%d]", msg, i, i);
 	perror( buf );
+#endif
 };
 
+/*--------------------------*/
+/*-- forward declarations --*/
+/*--------------------------*/
+static object_t *
+sm_script_obj_init(seg_manager_t *self, reg_t obj_pos);
+
+static void
+sm_script_relocate(seg_manager_t *self, reg_t block);
+
+static void
+sm_script_initialize_locals_zero(seg_manager_t *self, seg_id_t seg, int count);
+
+static void
+sm_script_initialize_locals(seg_manager_t *self, reg_t location);
+
+static byte *
+sm_get_synonyms(seg_manager_t *seg_manager, int id, int flag);
+
+static void
+sm_script_free_unused_objects(seg_manager_t *self, seg_id_t seg);
+
+/***--------------------------***/
+/** end of forward declarations */
+/***--------------------------***/
 
 
 void sm_init(seg_manager_t* self) {
@@ -57,7 +85,7 @@ void sm_init(seg_manager_t* self) {
 	self->reserved_id--;	// reserved_id runs in the reversed direction to make sure no one will use it.
 	
 	self->heap_size = DEFAULT_SCRIPTS;
-        self->heap = (mem_obj_t**) malloc (self->heap_size * sizeof(mem_obj_t *));
+        self->heap = (mem_obj_t**) sci_calloc (self->heap_size, sizeof(mem_obj_t *));
 
 	/*  initialize the heap pointers*/
 	for (i = 0; i < self->heap_size; i++) {
@@ -69,7 +97,7 @@ void sm_init(seg_manager_t* self) {
 
 	self->seg_get = sm_seg_get;
 
-	self->allocate = sm_allocate;
+	self->allocate_script = sm_allocate_script;
 	self->deallocate = sm_deallocate;
 	self->update = sm_update;
 	self->isloaded = sm_isloaded;
@@ -92,7 +120,7 @@ void sm_init(seg_manager_t* self) {
 	self->get_export_table_offset = sm_get_export_table_offset;
 
 	self->set_synonyms_offset = sm_set_synonyms_offset;
-	self->get_synonyms_offset = sm_get_synonyms_offset;
+	self->get_synonyms = sm_get_synonyms;
 
 	self->set_synonyms_nr = sm_set_synonyms_nr;
 	self->get_synonyms_nr = sm_get_synonyms_nr;
@@ -101,6 +129,12 @@ void sm_init(seg_manager_t* self) {
 	self->get_localvar_offset = sm_get_localvar_offset;
 
 	self->set_variables = sm_set_variables;
+	self->script_obj_init = sm_script_obj_init;
+	self->script_relocate = sm_script_relocate;
+	self->script_free_unused_objects = sm_script_free_unused_objects;
+
+	self->script_initialize_locals_zero = sm_script_initialize_locals_zero;
+	self->script_initialize_locals = sm_script_initialize_locals;
 };
 
 // destroy the object, free the memorys if allocated before
@@ -116,17 +150,17 @@ void sm_destroy (seg_manager_t* self) {
 				break;
 			case MEM_OBJ_CLONES:
 				sciprintf( "destroy for clones haven't been implemented\n" );
-				free (mem_obj);
+				sci_free (mem_obj);
 				break;
 			default:
 				sciprintf( "unknown mem obj type\n" );
-				free (mem_obj);
+				sci_free (mem_obj);
 				break;
 			}
 			self->heap[i] = NULL;
 		}
 	}
-	free (self->heap);
+	sci_free (self->heap);
 	self->heap = NULL;
 };
 
@@ -137,13 +171,14 @@ void sm_destroy (seg_manager_t* self) {
 **             1 - allocate successfully
 **             seg_id - allocated segment id
 */
-int sm_allocate (seg_manager_t* self, struct _state *s, int script_nr, int* seg_id) {
+int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, int* seg_id) {
 	int i;
 	int seg;
 	char was_added;
 	mem_obj_t* mem;
 	resource_t *script;
 	void* temp;
+	script_t *scr;
 
 	seg = int_hash_map_check_value (self->id_seg_map, script_nr, 1, &was_added);
 	if (!was_added) {
@@ -157,7 +192,7 @@ int sm_allocate (seg_manager_t* self, struct _state *s, int script_nr, int* seg_
 			return 0;
 		}
 		self->heap_size *= 2;
-		temp = realloc ((void*)self->heap, self->heap_size * sizeof( mem_obj_t* ) );
+		temp = sci_realloc ((void*)self->heap, self->heap_size * sizeof( mem_obj_t* ) );
 		if (!temp) {
 			sciprintf("seg_manager.c: Not enough memory space for script size" );
 			return 0;
@@ -180,7 +215,7 @@ int sm_allocate (seg_manager_t* self, struct _state *s, int script_nr, int* seg_
 	else {
 		mem->data.script.buf_size = script->size;
 	}
-	mem->data.script.buf = (char*) malloc (mem->data.script.buf_size);
+	mem->data.script.buf = (char*) sci_malloc (mem->data.script.buf_size);
 	dbg_print( "mem->data.script.buf ", mem->data.script.buf );
 	if (!mem->data.script.buf) {
 		sm_free( mem );
@@ -189,17 +224,16 @@ int sm_allocate (seg_manager_t* self, struct _state *s, int script_nr, int* seg_
 		return 0;
 	}
 	
-	// allocate the objects
-	mem->data.script.objects = (object_t*) malloc( sizeof(object_t) * DEFAULT_OBJECTS );
-	if( !mem->data.script.objects ) {
-		sm_free( mem );
-		sciprintf("seg_manager.c: Not enough memory space for script objects" );
-		return 0;
-	}
-	mem->data.script.objects_nr = DEFAULT_OBJECTS;
-	for( i = 0; i < mem->data.script.objects_nr; i++ ) {
-		sm_object_init( &(mem->data.script.objects[i]) );
-	}
+	/* Initialize objects */
+	scr = &(mem->data.script);
+	scr->objects = NULL;
+	scr->objects_allocated = 0;
+	scr->objects_nr = 0; /* No objects recorded yet */
+
+	scr->locals_offset = 0;
+	scr->locals_nr = 0;
+
+	scr->nr = script_nr;
 
 	// hook it to the heap
 	self->heap[seg] = mem;
@@ -347,8 +381,8 @@ gint16 sm_get_heap (seg_manager_t* self, reg_t reg, mem_obj_enum mem_type ) {
 	mem_obj = self->heap[reg.segment];
 	switch( mem_type ) {
 	case MEM_OBJ_SCRIPT:
-		VERIFY( reg.offset + 1 < mem_obj->data.script.buf_size, "invalid offset" );
-		return (unsigned char)mem_obj->data.script.buf[reg.offset] +
+		VERIFY( reg.offset + 1 < mem_obj->data.script.buf_size, "invalid offset\n" );
+		return (unsigned char)mem_obj->data.script.buf[reg.offset] |
 		     ( ((unsigned char)mem_obj->data.script.buf[reg.offset+1]) << 8 );
 	case MEM_OBJ_CLONES:
 		sciprintf( "memcpy for clones haven't been implemented\n" );
@@ -440,23 +474,38 @@ void sm_set_lockers (seg_manager_t* self, int lockers, int id, int flag) {
 	self->heap[id]->data.script.lockers = lockers;
 };
 
-void sm_set_export_table_offset (struct _seg_manager_t* self, int offset, int id, int flag) {
+void sm_set_export_table_offset (struct _seg_manager_t* self, int offset, int id, int flag)
+{
+	script_t *scr = &(self->heap[id]->data.script);
 	GET_SEGID();
-	self->heap[id]->data.script.export_table_offset = offset;
+	if (offset) {
+		scr->export_table = (guint16 *)(scr->buf + offset + 2);
+		scr->exports_nr = getUInt16((byte *)(scr->export_table - 1));
+	} else {
+		scr->export_table = NULL;
+		scr->exports_nr = 0;
+	}
 };
 
-int sm_get_export_table_offset (struct _seg_manager_t* self, int id, int flag) {
+guint16 *sm_get_export_table_offset (struct _seg_manager_t* self, int id, int flag, int *max)
+{
 	GET_SEGID();
-	return self->heap[id]->data.script.export_table_offset;
+	if (max)
+		*max = self->heap[id]->data.script.exports_nr;
+	return self->heap[id]->data.script.export_table;
 };
 
 void sm_set_synonyms_offset (struct _seg_manager_t* self, int offset, int id, int flag) {
 	GET_SEGID();
-	self->heap[id]->data.script.synonyms_offset = offset;
+	self->heap[id]->data.script.synonyms = 
+		self->heap[id]->data.script.buf + offset;
 };
-int sm_get_synonyms_offset (struct _seg_manager_t* self, int id, int flag) {
+
+static byte *
+sm_get_synonyms(seg_manager_t *self, int id, int flag)
+{
 	GET_SEGID();
-	return self->heap[id]->data.script.synonyms_offset;
+	return self->heap[id]->data.script.synonyms;
 };
 
 void sm_set_synonyms_nr (struct _seg_manager_t* self, int nr, int id, int flag) {
@@ -490,32 +539,249 @@ void sm_set_variables (struct _seg_manager_t* self, reg_t reg, int obj_index, re
 	VERIFY ( self->heap[reg.segment], "invalid mem" );
 	
 	script = &(self->heap[reg.segment]->data.script);
-	if( obj_index >= script->objects_nr ) {
-		// reallocate the memory for objects
-		void* temp = realloc( script->objects, (script->objects_nr * 2) * sizeof(object_t) );
-		VERIFY_MEM( temp, );
-		script->objects = temp;
-		script->objects_nr *= 2;
-	}
+
 	VERIFY( obj_index < script->objects_nr, "Invalid obj_index" );
-	
-	if( script->objects[obj_index].variables_nr == 0 ) {
-		// allocate the new memory
-		int size = DEFAULT_VARIABLES;	// = maximum ( variable_index + 1, DEFAULT_VARIABLES );
-		size = variable_index + 1 <= size ? size : variable_index + 1;
-		script->objects[obj_index].variables = (reg_t*) malloc( sizeof(reg_t) * size ); // allocate only one 
-		VERIFY_MEM( script->objects[obj_index].variables, );
-		script->objects[obj_index].variables_nr = size;
-	} else if( script->objects[obj_index].variables_nr <= variable_index ) {
-		// reallocate the memory
-		int size = script->objects[obj_index].variables_nr;
-		reg_t* temp;
-		while( size <= variable_index ) size *= 2;
-		temp = (reg_t*) realloc( script->objects[obj_index].variables, sizeof(reg_t) * size ); // allocate only one 
-		VERIFY_MEM( temp, );
-		script->objects[obj_index].variables_nr = size;
-		script->objects[obj_index].variables = temp;
-	}
+
+	VERIFY( variable_index >= 0
+		&& variable_index < script->objects[obj_index].variables_nr,
+		"Attempt to write to invalid variable number" );
 
 	script->objects[obj_index].variables[variable_index] = variable_reg;
 };
+
+
+static inline int
+_relocate_block(reg_t *block, int block_location, int block_items, seg_id_t segment, int location)
+{
+	int rel = location - block_location;
+	int index;
+
+	if (rel < 0)
+		return 0;
+
+	index = rel >> 1;
+
+	if (index >= block_items)
+		return 0;
+
+	if (rel & 1) {
+		sciprintf("Error: Attempt to relocate odd variable #%d.5e (relative to %04x)\n",
+			  index, block_location);
+		return 0;
+	}
+	block[index].segment = segment; /* Perform relocation */
+
+	return 1;
+}
+
+static inline int
+_relocate_local(script_t *scr, seg_id_t segment, int location)
+{
+	return _relocate_block(scr->locals, scr->locals_offset, scr->locals_nr,
+			       segment, location);
+}
+
+static inline int
+_relocate_object(object_t *obj, seg_id_t segment, int location)
+{
+	return _relocate_block(obj->variables, obj->pos.offset, obj->variables_nr,
+			       segment, location);
+}
+
+static void
+sm_script_relocate(seg_manager_t *self, reg_t block)
+{
+	mem_obj_t *mobj = self->heap[block.segment];
+	script_t *scr;
+	int count;
+	int i;
+
+	VERIFY( !(block.segment >= self->heap_size || mobj->type != MEM_OBJ_SCRIPT),
+		"Attempt relocate non-script\n" );
+
+	scr = &(mobj->data.script);
+
+	VERIFY( block.offset < scr->buf_size
+		&& getUInt16(scr->buf + block.offset)*2 + block.offset < scr->buf_size,
+		"Relocation block outside of script\n" );
+
+	count = getUInt16(scr->buf + block.offset);
+
+	for (i = 0; i < count; i++) {
+		int pos = getUInt16(scr->buf + block.offset + 2 + (i*2));
+
+		if (!_relocate_local(scr, block.segment, pos)) {
+			int k, done = 0;
+
+			for (k = 0; !done && k < scr->objects_nr; k++) {
+				if (_relocate_object(scr->objects + k, block.segment, pos))
+					done = 1;
+			}
+
+			if (!done) {
+				sciprintf("While processing relocation block "PREG":\n",
+					  PRINT_REG(block));
+				sciprintf("Relocation failed for index %04x\n", pos);
+				sciprintf("- locals: %d at %04x\n", scr->locals_nr,
+					  scr->locals_offset);
+				for (k = 0; k < scr->objects_nr; k++)
+					sciprintf("- obj#%d at %04x w/ %d vars\n",
+						  k,
+						  scr->objects[k].pos.offset,
+						  scr->objects[k].variables_nr);
+				sciprintf("Triggering breakpoint...\n");
+				BREAKPOINT();
+			}
+		}
+	}
+}
+
+static object_t *
+sm_script_obj_init(seg_manager_t *self, reg_t obj_pos)
+{
+	mem_obj_t *mobj = self->heap[obj_pos.segment];
+	script_t *scr;
+	object_t *obj;
+	int id;
+	int base = obj_pos.offset - SCRIPT_OBJECT_MAGIC_OFFSET;
+
+	VERIFY( !(obj_pos.segment >= self->heap_size || mobj->type != MEM_OBJ_SCRIPT),
+		"Attempt to initialize object in non-script\n" );
+
+	scr = &(mobj->data.script);
+
+	VERIFY( base < scr->buf_size,
+		"Attempt to initialize object beyond end of script\n" );
+
+	if (!scr->objects) {
+		scr->objects_allocated = DEFAULT_OBJECTS;
+		scr->objects = sci_malloc(sizeof(object_t) * scr->objects_allocated);
+	}
+	if (scr->objects_nr == scr->objects_allocated) {
+		scr->objects_allocated += DEFAULT_OBJECTS_INCREMENT;
+		scr->objects = sci_realloc(scr->objects,
+					   sizeof(object_t)
+					   * scr->objects_allocated);
+								
+	}
+	obj = scr->objects + (id = scr->objects_nr++);
+
+	VERIFY( base + SCRIPT_FUNCTAREAPTR_OFFSET  < scr->buf_size,
+		"Function area pointer stored beyond end of script\n" );
+		
+	{
+		byte *data = scr->buf + base;
+		int funct_area = getUInt16( data + SCRIPT_FUNCTAREAPTR_OFFSET );
+		int variables_nr;
+		int functions_nr;
+		int is_class;
+		int i;
+
+		obj->pos = make_reg(obj_pos.segment, base);
+
+		VERIFY ( base + funct_area < scr->buf_size,
+			 "Function area pointer references beyond end of script" );
+
+		variables_nr = getUInt16( data + SCRIPT_SELECTORCTR_OFFSET );
+		functions_nr = getUInt16( data + funct_area - 2 );
+		is_class = getUInt16( data + SCRIPT_INFO_OFFSET ) & SCRIPT_INFO_CLASS;
+
+		/* Store object ID within script */
+		data[SCRIPT_LOCALVARPTR_OFFSET] = id & 0xff;
+		data[SCRIPT_LOCALVARPTR_OFFSET + 1] = (id >> 8) & 0xff;
+
+		VERIFY ( base + funct_area + functions_nr * 2
+			 /* add again for classes, since those also store selectors */
+			 + (is_class? functions_nr * 2 : 0) < scr->buf_size,
+			 "Function area extends beyond end of script" );
+
+		obj->variables_nr = variables_nr;
+		obj->variables = sci_malloc(sizeof(reg_t) * variables_nr);
+
+		obj->methods_nr = functions_nr;
+		obj->base = scr->buf;
+		obj->base_obj = data;
+		obj->base_method = (guint16 *) (data + funct_area);
+
+		for (i = 0; i < variables_nr; i++)
+			obj->variables[i] = make_reg(0, getUInt16(data + (i*2)));
+	}
+
+	return obj;
+}
+
+static void
+sm_script_initialize_locals_zero(seg_manager_t *self, seg_id_t seg, int count)
+{
+	mem_obj_t *mobj = self->heap[seg];
+	script_t *scr;
+
+	VERIFY( !(seg >= self->heap_size || mobj->type != MEM_OBJ_SCRIPT),
+		"Attempt to initialize locals in non-script\n" );
+
+	scr = &(mobj->data.script);
+
+	scr->locals_nr = count;
+	scr->locals_offset = -count * 2; /* Make sure it's invalid */
+	if (count)
+		scr->locals = sci_calloc(sizeof(reg_t), count);
+}
+
+static void
+sm_script_initialize_locals(seg_manager_t *self, reg_t location)
+{
+	mem_obj_t *mobj = self->heap[location.segment];
+	int count;
+	script_t *scr;
+
+	VERIFY( !(location.segment >= self->heap_size || mobj->type != MEM_OBJ_SCRIPT),
+		"Attempt to initialize locals in non-script\n" );
+
+	scr = &(mobj->data.script);
+
+	VERIFY( location.offset + 1 < scr->buf_size,
+		"Locals beyond end of script\n" );
+
+	count = getUInt16(scr->buf + location.offset - 2) >> 1;
+	/* half block size */
+
+	scr->locals_nr = count;
+	scr->locals_offset = location.offset;
+
+	VERIFY( location.offset + count * 2 + 1 < scr->buf_size,
+		"Locals extend beyond end of script\n" );
+
+	if (count) {
+		int i;
+		byte *base = scr->buf + location.offset;
+
+		scr->locals = sci_calloc(sizeof(reg_t), count);
+
+		for (i = 0; i < count; i++)
+			scr->locals[i].offset = getUInt16(base + i*2);
+	}
+}
+
+static void
+sm_script_free_unused_objects(seg_manager_t *self, seg_id_t seg)
+{
+	mem_obj_t *mobj = self->heap[seg];
+	script_t *scr;
+
+	VERIFY( !(seg >= self->heap_size || mobj->type != MEM_OBJ_SCRIPT),
+		"Attempt to free unused objects in non-script\n" );
+
+
+	scr = &(mobj->data.script);
+	if (scr->objects_allocated > scr->objects_nr) {
+		if (scr->objects_nr)
+			scr->objects = sci_realloc(scr->objects, sizeof(object_t)
+						   * scr->objects_nr);
+		else {
+			if (scr->objects_allocated)
+				sci_free(scr->objects);
+			scr->objects = NULL;
+		}
+		scr->objects_allocated = scr->objects_nr;
+	}
+}

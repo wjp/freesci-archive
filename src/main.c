@@ -1163,6 +1163,7 @@ main(int argc, char** argv)
 		fprintf(stderr,"Game initialization failed: Error in GFX subsystem. Aborting...\n");
 		return 1;
 	}
+
 	if (!sound_server)
 		sound_server = sound_server_find_driver(NULL);
 

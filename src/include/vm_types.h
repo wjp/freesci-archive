@@ -40,12 +40,12 @@ struct _state; /* engine.h */
 /* Splint can't deal with packed notation */
 typedef struct {
 	seg_id_t segment;
-	int offset;
+	unsigned int offset;
 } reg_t;
 #else
 typedef struct {
 	seg_id_t segment	: SCI_SEG_SIZE;
-	int offset		: SCI_REG_SIZE;
+	unsigned int offset	: SCI_REG_SIZE;
 } reg_t;
 #endif
 

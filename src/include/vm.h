@@ -143,6 +143,7 @@ typedef struct {
 
 
 typedef struct {
+	reg_t pos; /* Object offset within its script; for clones, this is their base */
 	int variables_nr;
 	int methods_nr;
 	byte *base; /* Points to a buffer all relative references (code, strings) point to */
@@ -151,35 +152,54 @@ typedef struct {
 	reg_t *variables;
 } object_t;
 
+#define VM_OBJECT_GET_VARSELECTOR(obj, i)  getUInt16(obj->base_obj + obj->variables_nr * 2 + i*2)
+#define VM_OBJECT_READ_PROPERTY(obj, i) (obj->variables[i])
+#define VM_OBJECT_GET_FUNCSELECTOR(obj, i) getUInt16((byte *) (obj->base_method + i))
+#define VM_OBJECT_READ_FUNCTION(obj, i) make_reg(obj->pos.segment, \
+			 getUInt16((byte *) (obj->base_method \
+						 + obj->methods_nr + 1 \
+						 + i)))
+
+
+
 #define VM_OBJECT_SET_INDEX(ptr, index) { ((byte *) (ptr))[0] = (index) & 0xff; ((byte *) (ptr))[1] = ((index) >> 8) & 0xff; }
 #define VM_OBJECT_GET_INDEX(ptr) (getUInt16(((byte *)(ptr)) + SCRIPT_LOCALVARPTR_OFFSET))
 
 typedef struct {
+	int nr; /* Script number */
 	char* buf; /* Static data buffer, or NULL if not used */
 	size_t buf_size;
 
-	heap_ptr heappos; /* Script position on the heap or 0 if not yet loaded */
-	heap_ptr export_table_offset; /* Abs. offset of the export table or 0 if not present */
-	heap_ptr synonyms_offset; /* Abs. offset of the synonyms block  or 0 if not present*/
+	byte *synonyms; /* Synonyms block  or 0 if not present*/
+#warning "heappos is deprecated"
+	heap_ptr heappos;
+	guint16 *export_table; /* Abs. offset of the export table or 0 if not present */
+
+	int exports_nr; /* Number of entries in the exports table */
 	int synonyms_nr; /* Number of entries in the synonyms block */
 	int lockers; /* Number of classes and objects that require this script */
 
 	object_t *objects; /* Table for objects, contains property variables */
-			/* Indexed by the value stored at SCRIPT_LOCALVARPTR_OFFSET, see VM_OBJECT_[GS]ET_INDEX() */
+			   /* Indexed by the value stored at SCRIPT_LOCALVARPTR_OFFSET,
+			   ** see VM_OBJECT_[GS]ET_INDEX()  */
 	int objects_nr; /* Number of objects and classes */
+	int objects_allocated; /* Number of allocated objects */
 
+	int locals_offset; /* Offset of the local variables within the script */
 	reg_t *locals; /* Script-local variables */
 	int locals_nr; /* Number of these */
 } script_t;
 
+#define CLONE_USED -1
+
 typedef struct {
-	reg_t origin; /* Used for empty offset tracking */
-	object_t props;
+	int next_free; /* Used for empty offset tracking, CLONE_USED for used clones */
+	object_t obj;
 } clone_t;
 
 typedef struct {
 	int clones_nr; /* Number of allocated clones */
-	int first_free_clone; /* Kept in a linked list using clones[idx].origin.offset */
+	int first_free_clone; /* Kept in a linked list using clone_t.next_free */
 	clone_t *clones;
 } clone_table_t;
 
@@ -188,7 +208,7 @@ typedef struct _mem_obj {
         int size;
 	union {
 		script_t script;
-		clone_table_t *clones;
+		clone_table_t clones;
 	} data;
 } mem_obj_t;
 
@@ -510,12 +530,32 @@ lookup_selector(struct _state *s, reg_t obj, selector_t selectorid, reg_t **vptr
 */
 
 
+#define SCRIPT_GET_DONT_LOAD 0 /* Fail if not loaded */
+#define SCRIPT_GET_LOAD 1 /* Load, if neccessary */
+#define SCRIPT_GET_LOCK 3 /* Load, if neccessary, and lock */
+
+seg_id_t
+script_get_segment(struct _state *s, int script_id, int load);
+/* Determines the segment occupied by a certain script
+** Parameters: (state_t *) s: The state to operate on
+**             (int) script_id: The script in question
+**             (int) load: One of SCRIPT_GET_*
+** Returns   : The script's segment, or 0 on failure
+*/
+
+reg_t
+script_lookup_export(struct _state *s, int script_nr, int export);
+/* Looks up an entry of the exports table of a script
+** Parameters: (state_t *) s: The state to operate on
+**             (int) script_nr: The script to look up in
+** Returns   : (int) export: index of the export entry to look up
+*/
+
 int
-script_instantiate(struct _state *s, int script_nr, int recursive);
+script_instantiate(struct _state *s, int script_nr);
 /* Makes sure that a script and its superclasses get loaded to the heap
 ** Parameters: (state_t *) s: The state to operate on
 **             (int) script_nr: The script number to load
-**             (int) recursive: Whether to recurse
 ** Returns   : (heap_ptr) The script's segment ID or 0 if out of heap
 ** If the script already has been loaded, only the number of lockers is increased.
 ** All scripts containing superclasses of this script aret loaded recursively as well,
