@@ -47,6 +47,25 @@
 #define K_CONTROL_CONTROL 6
 #define K_CONTROL_SELECT_BOX 10
 
+inline void
+_k_clip_loop_cel(int *loop, int *cel, byte *data)
+/* clips loop (and cel if != NULL)
+** data must point to the view resource data block
+*/
+{
+  int maxloop = view0_loop_count(data) - 1;
+
+  if (*loop > maxloop)
+    *loop = maxloop;
+
+  if (cel) {
+    int maxcel = view0_cel_count(*loop, data) - 1;
+
+    if (*cel > maxcel)
+      *cel = maxcel;
+  }
+}
+
 void
 kSetCursor(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
@@ -570,7 +589,9 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
   }
 
-  s->acc = 1;
+  s->acc = graph_on_control(s, x, y + 10, xl, yl, 4);
+  if (!s->acc)
+    s->acc = 1; /* Should only happen near the picture border */
   /* CanBeHere */
 }
 
@@ -633,7 +654,8 @@ void
 kNumCels(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr obj = PARAM(0);
-  int loop = GET_SELECTOR(obj, loop);
+  int loop = UGET_SELECTOR(obj, loop);
+  int maxloop;
   int view;
   resource_t *viewres = findResource(sci_view, view = GET_SELECTOR(obj, view));
 
@@ -644,6 +666,7 @@ kNumCels(state_t *s, int funct_nr, int argc, heap_ptr argp)
     return;
   }
 
+  _k_clip_loop_cel(&loop, NULL, viewres->data);
   s->acc = view0_cel_count(loop, viewres->data);
   SCIkdebug(SCIkGRAPHICS, "NumCels(view.%d, %d) = %d\n", view, loop, s->acc);
 }
@@ -728,6 +751,10 @@ _k_base_setter(state_t *s, heap_ptr object)
   int xmod = 0, ymod = 0;
   resource_t *viewres;
 
+  if (lookup_selector(s, object, s->selector_map.brLeft, NULL)
+      != SELECTOR_VARIABLE) 
+    return; /* non-fatal */
+      
   x = GET_SELECTOR(object, x);
   original_y = y = GET_SELECTOR(object, y);
   z = GET_SELECTOR(object, z);
@@ -744,16 +771,19 @@ _k_base_setter(state_t *s, heap_ptr object)
   if (!viewres)
     xsize = ysize = 0;
   else {
+    _k_clip_loop_cel(&loop, &cell, viewres->data);
     xsize = view0_cel_width(loop, cell, viewres->data);
     ysize = view0_cel_height(loop, cell, viewres->data);
   }
 
-  
 
   if ((xsize < 0) || (ysize < 0))
     xsize = ysize = 0; /* Invalid view/loop */
   else
     view0_base_modify(loop, cell, viewres->data, &xmod, &ymod);
+
+
+  /*  fprintf(stderr,"(xm,ym)=(%d,%d)\n", xmod, ymod); */
   
   xbase = x - xmod - (xsize) / 2;
   xend = xbase + xsize;
@@ -1128,6 +1158,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
   case K_CONTROL_ICON:
 
     view_res = findResource(sci_view, view);
+
     if (!view_res) {
       SCIkwarn(SCIkERROR, "View.%03d not found!\n", font_nr);
       break;
@@ -1312,6 +1343,7 @@ _k_save_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
 
     SCIkdebug(SCIkGRAPHICS, "Saving BG for obj %04x with signal %04x\n",
 	      list[i].obj, UGET_HEAP(list[i].signalp));
+
     handle = view0_backup_background(s, list[i].x, list[i].y,
 				     list[i].loop, list[i].cel, list[i].view);
 
@@ -1357,8 +1389,16 @@ _k_invoke_view_list(state_t *s, heap_ptr list, int funct_nr, int argc, int argp)
   while (node) {
     heap_ptr obj = UGET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
 
-    if (!(GET_SELECTOR(obj, signal) & _K_VIEW_SIG_FLAG_FROZEN))
+    if (!(GET_SELECTOR(obj, signal) & _K_VIEW_SIG_FLAG_FROZEN)) {
+      word ubitsnew, ubitsold = GET_SELECTOR(obj, underBits);
       invoke_selector(INV_SEL(obj, doit, 1), 0); /* Call obj::doit() if neccessary */
+      ubitsnew = GET_SELECTOR(obj, underBits);
+
+      if (ubitsold == 0xffff)
+	fprintf(stderr,"Obj %04x: Old underBits were 0xffff\n", obj);
+      if (ubitsnew != ubitsold)
+	fprintf(stderr,"Obj %04x: underBits(old, new) = (%04x, %04x)\n", obj, ubitsold, ubitsnew);
+    }
 
     node = UGET_HEAP(node + LIST_PREVIOUS_NODE);
   }
@@ -1403,6 +1443,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
 
   i = 0;
   while (node) {
+    short oldloop, oldcel;
     heap_ptr obj = GET_HEAP(node + LIST_NODE_VALUE); /* The object we're using */
     int view_nr = GET_SELECTOR(obj, view);
     resource_t *viewres = findResource(sci_view, view_nr);
@@ -1425,8 +1466,8 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
     retval[i].nsTop = GET_SELECTOR(obj, nsTop);
     retval[i].nsBottom = GET_SELECTOR(obj, nsBottom);
 
-    retval[i].loop = GET_SELECTOR(obj, loop);
-    retval[i].cel = GET_SELECTOR(obj, cel);
+    retval[i].loop = oldloop = GET_SELECTOR(obj, loop);
+    retval[i].cel = oldcel = GET_SELECTOR(obj, cel);
 
     if (!viewres) {
       SCIkwarn(SCIkERROR, "Attempt to draw invalid view.%03d!\n", view_nr);
@@ -1436,15 +1477,17 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int funct_
       retval[i].view = viewres->data;
       retval[i].view_nr = view_nr;
 
-      if ((retval[i].loop > view0_loop_count(viewres->data))) {
-	  retval[i].loop = 0;
-	  PUT_SELECTOR(obj, loop, 0);
-      }
+      /* Clip loop and cel, write back if neccessary */
+      oldloop = retval[i].loop;
+      oldcel = retval[i].cel;
+      _k_clip_loop_cel(&(retval[i].loop), &(retval[i].cel), retval[i].view);
 
-      if ((retval[i].cel > view0_cel_count(retval[i].loop, viewres->data))) {
-	  retval[i].cel = 0;
-	  PUT_SELECTOR(obj, cel, 0);
-      }
+      if (oldloop != retval[i].loop)
+	PUT_SELECTOR(retval[i].obj, loop, retval[i].loop);
+
+      if (oldcel != retval[i].cel)
+	PUT_SELECTOR(retval[i].obj, cel, retval[i].cel);
+    
     }
 
     if (lookup_selector(s, obj, s->selector_map.underBits, &(retval[i].underBitsp))

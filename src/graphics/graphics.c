@@ -475,7 +475,7 @@ view0_base_modify(int loop, int cel, byte *data, int *xvar, int *yvar)
   addr = getInt16(data + lookup);
 
   xoffs = (gint8) data[addr + 4];
-  yoffs = (gint8) data[addr + 4];
+  yoffs = (gint8) data[addr + 5];
 
   if (reversed)
     *xvar += xoffs;

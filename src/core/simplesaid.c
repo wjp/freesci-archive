@@ -38,6 +38,7 @@ static int said_pos;
 static int refstart_pos, parse_pos;
 static parse_tree_node_t *words;
 static int dontclaim; /* Whether the Parse() event should be claimed */
+static int reached_end;
 
 static state_t *state;
 static heap_ptr addr;
@@ -62,6 +63,9 @@ word_p(int mode, int word)
     if (current_pword == word) {
       /*      ++matches; */
       SCIkdebug(SCIkSAID, "wordp(%d, %03x) from %d -> 1\n", mode, word, oldpp);
+
+      reached_end |= (words[(parse_pos + 1) << 1].type == -1);
+
       return 1;
     }
 
@@ -80,7 +84,7 @@ word_p(int mode, int word)
 static inline int /* End of input? */
 end_p()
 {
-  int val = (words[(parse_pos + 1) << 1 ].type == -1);
+  int val = (words[(parse_pos + 1) << 1 ].type == -1) || reached_end;
 
   SCIkdebug(SCIkSAID, "endp(pp=%d) = %d\n", parse_pos, val);
 
@@ -103,6 +107,7 @@ reference_p(int referenced_word_index, int word)
 	  || ((words[seeker + 1].content.branches[1] > -1)
 	      && (words[seeker + 1].content.branches[1] == referenced_word_index))) {
 	val = 1;
+	reached_end |= (words[seeker + 2].type == -1);
 	break;
       }
 
@@ -147,10 +152,9 @@ next_parse_token(int *token_is_op)
 #define STATE_REF 3
 
 static int
-simplesaid(int terminator)
+simplesaid(int minor_state, int terminator)
 {
   int major_state = STATE_INITIAL;
-  int minor_state = STATE_INITIAL;
   int refword = parse_pos; /* The word references apply to */
   int aspiring_refword = -1; /* in "a < b < c", c refers to b, and aspiring_refword will be b. */
   int truth = 1;
@@ -163,8 +167,10 @@ simplesaid(int terminator)
     SCIkdebug(SCIkSAID, "Got token %03x on truth %d\n", token, truth);
 
     if (token_is_op && (token == terminator)) {
-      //      SDEBUG("Terminator; returning %d\n", truth);
-      return truth && end_p();
+      if (terminator == SAID_TERM)
+	truth = truth && end_p();
+      SCIkdebug(SCIkSAID, "Terminator; returning %d\n", truth);
+      return truth;
     }
 
     if (token_is_op) /* operator? */
@@ -192,7 +198,19 @@ simplesaid(int terminator)
         return 0;
 
       case SAID_PARENO:
-	truth &= simplesaid(SAID_PARENC);
+	switch (minor_state) {
+
+	case STATE_OR:
+	  truth |= simplesaid(minor_state, SAID_PARENC);
+	  break;
+
+	case STATE_INITIAL:
+	  truth = truth && simplesaid(minor_state, SAID_PARENC);
+	  break;
+
+	default:
+	  SCIkwarn(SCIkERROR, "'(' in minor state %d\n", minor_state);
+	}
 	break;
 
       case SAID_BRACKC:
@@ -201,7 +219,7 @@ simplesaid(int terminator)
 
       case SAID_BRACKO: {
 	int parse_pos_old = parse_pos;
-	int recurse = simplesaid(SAID_BRACKC);
+	int recurse = simplesaid(minor_state, SAID_BRACKC);
 	if (!recurse)
 	  parse_pos = parse_pos_old;
 	break;
@@ -256,7 +274,7 @@ simplesaid(int terminator)
 	if (minor_state == STATE_OR)
 	  truth |= tempresult;
 	else
-	  truth &= tempresult;
+	  truth = truth && tempresult;
 
 	minor_state = STATE_INITIAL;
       }
@@ -269,16 +287,19 @@ int
 vocab_simple_said_test(state_t *s, heap_ptr address)
 {
   int matched;
-  current_pword = 0;
+  current_pword = reached_end = 0;
   dontclaim = 0;
   said_pos = 0;
-  SCIkdebug(SCIkSAID, "lastmatch_word=%d\n", s->parser_lastmatch_word);
+  if (s->parser_lastmatch_word == SAID_NO_MATCH)
+    SCIkdebug(SCIkSAID, "lastmatch_word: none\n");
+  else
+    SCIkdebug(SCIkSAID, "lastmatch_word=%d\n", s->parser_lastmatch_word);
   parse_pos = (s->parser_lastmatch_word == SAID_NO_MATCH)? -1 : s->parser_lastmatch_word;
   refstart_pos = parse_pos;
   state = s;
   addr = address;
   words = s->parser_nodes;
-  matched = simplesaid(SAID_TERM);
+  matched = simplesaid(STATE_INITIAL, SAID_TERM);
   SCIkdebug(SCIkSAID, "Result: (matched,dontclaim)=(%d,%d)\n", matched, dontclaim);
 
   if (!matched)

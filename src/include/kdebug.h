@@ -45,7 +45,7 @@ static const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
   "Base setter results",
   "Parser",
   "Menu handling",
-  "Said code"
+  "Said specs"
 };
 /* The various debug areas */
 

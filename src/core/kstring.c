@@ -89,6 +89,9 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   s->acc = 0;
 
+  if (s->parser_lastmatch_word == SAID_FULL_MATCH)
+    return; /* Matched before; we're not doing any more matching work today. */
+
   if ((new_lastmatch = vocab_match_simple(s, said_block)) != SAID_NO_MATCH) {
 
     if (s->debug_mode & (1 << SCIkPARSER_NR))
@@ -97,8 +100,9 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     if (new_lastmatch == SAID_FULL_MATCH) /* Finished matching? */
       PUT_SELECTOR(s->parser_event, claimed, 1); /* claim event */
-    else /* partial match: Set new lastmatch word */
-      s->parser_lastmatch_word = new_lastmatch;
+    /* otherwise, we have a partial match: Set new lastmatch word in all cases. */
+
+    s->parser_lastmatch_word = new_lastmatch;
   }
 
 #else /* !SCI_SIMPLE_SAID_CODE */

@@ -1,3 +1,32 @@
+2000-04-24  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kgraphics.c (kCanBeHere): CanBeHere now returns OnControl()
+	on success (or 1 if OnControl() returned 0).
+
+	* src/core/kstring.c (kSaid): Minor fixes to the simplified Said()
+	code
+
+	* src/core/scriptdebug.c (c_debuglog): Added debuglog option +/- S
+	for Said specs (the part not added by Dmitry)
+
+	* src/core/kgraphics.c (_k_save_view_list_backgrounds): Fixed bug
+	which set underBits to 0xffff by clipping loop and cel data before
+	saving the background.
+	(_k_make_view_list): Fixed clipping mechanism employed while building
+	the view list
+
+	* src/graphics/graphics.c (view0_base_modify): Base modify used
+	identical values for x and y offset (excessively wrong). Corrected.
+
+	* src/core/kgraphics.c (kNumCels): NumCels() now accepts illegal
+	loop values, like most other kernel functions (clipped to the maximum
+	loop)
+	(_k_base_setter): The same for BaseSetter()
+
+	* src/graphics/engine_graphics.c (graph_draw_selector_icon): Drawing
+	icon controls no longer uses the cel adjustments, fixing graphical
+	glitches in several miniature menus.
+
 2000-04-22  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kgraphics.c (kCanBeHere): Fixed several bugs in CanBeHere().

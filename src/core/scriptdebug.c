@@ -270,8 +270,19 @@ c_viewinfo(state_t *s)
 
     sciprintf("has %d loops:\n", loops);
 
-    for (i = 0; i < loops; i++)
-      sciprintf("Loop %d: %d cels.\n", i, view0_cel_count(i, view->data));
+    for (i = 0; i < loops; i++) {
+      int j, cels;
+
+      sciprintf("Loop %d: %d cels.\n", i, cels = view0_cel_count(i, view->data));
+      for (j = 0; j < cels; j++) {
+	int width = view0_cel_width(i, j, view->data);
+	int height = view0_cel_height(i, j, view->data);
+	int xmod = 0,ymod = 0;
+
+	view0_base_modify(i, j, view->data, &xmod, &ymod);
+	sciprintf("   cel %d: size %dx%d, adj+(%d,%d)\n",j, width, height, xmod, ymod);
+      }
+    }
   }
   
   return 0;
@@ -884,7 +895,7 @@ c_listclones(state_t *s)
 void
 set_debug_mode (struct _state *s, int mode, char *areas)
 {
-  char modechars[] = "ulgcmfbadspM"; /* Valid parameter chars */
+  char modechars[] = "ulgcmfbadspMS"; /* Valid parameter chars */
   char *parser;
   int seeker;
   char frob;
@@ -1405,7 +1416,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 		       " for x:\n  u: Unimpl'd/stubbed stuff\n  l: Lists and nodes\n  g: Graphics\n"
 		       "  c: Character handling\n  m: Memory management\n  f: Function call checks\n"
 		       "  b: Bresenham details\n  a: Audio\n  d: System gfx management\n  s: Base setter"
-		       "\n  p: Parser\n  M: The menu system\n  *: Everything\n\n"
+		       "\n  p: Parser\n  M: The menu system\n  \n  S: Said specs\n  *: Everything\n\n"
 		       "  If invoked withour parameters,\n  it will list all activated\n  debug options.");
       con_hook_command(c_visible_map, "set_vismap", "i", "Sets the visible map.\n  Default is 0 (visual).\n"
 		       "  Other useful values are:\n  1: Priority\n  2: Control\n  3: Auxiliary\n");
