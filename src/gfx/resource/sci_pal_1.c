@@ -50,7 +50,7 @@ gfxr_read_pal1(int id, int *colors_nr, byte *resource, int size)
 
 	pos = PALETTE_START;
 
-	while (pos < size && resource[pos] == COLOR_OK && counter < MAX_COLORS) {
+	while (pos < size/* && resource[pos] == COLOR_OK && counter < MAX_COLORS*/) {
 		int color = resource[pos]
 			| (resource[pos + 1] << 8)
 			| (resource[pos + 2] << 16)

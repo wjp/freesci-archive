@@ -36,6 +36,7 @@ typedef enum {
 	GFX_RESOURCE_TYPE_PIC,
 	GFX_RESOURCE_TYPE_FONT,
 	GFX_RESOURCE_TYPE_CURSOR,
+	GFX_RESOURCE_TYPE_PALETTE,
 	/* FIXME: Add PAL resource */
 
 	GFX_RESOURCE_TYPES_NR /* Number of resource types that are to be supported */
@@ -202,6 +203,14 @@ gfxr_get_cursor(gfx_resstate_t *state, int nr);
 ** Returns   : (gfx_font_t *) The approprate cursor as a pixmap, or NULL on error
 */
 
+gfx_pixmap_color_t *
+gfxr_get_palette(gfx_resstate_t *state, int nr);
+/* Retreives a palette
+** Parameters: (gfx_resstate_t *) state: The resource state
+**             (int) nr: The cursour number
+** Returns   : (gfx_font_t *) The approprate cursor as a pixmap, or NULL on error
+*/
+
 
 /* =========================== */
 /* Interpreter-dependant stuff */
@@ -307,7 +316,17 @@ gfxr_interpreter_get_cursor(gfx_resstate_t *state, int nr, void *internal);
 */
 
 gfx_pixmap_color_t *
-gfxr_interpreter_get_palette(int version, int *colors_nr, void *internal);
+gfxr_interpreter_get_static_palette(gfx_resstate_t *state, int version, int *colors_nr, void *internal);
+/* Retreives the static palette from the interpreter-specific code
+** Parameters: (int) version: Interpreter version to use
+**             (int *) colors_nr: Number of colors to use
+**             (void *) internal: Internal information provided by the interpreter
+** Returns   : (gfx_pixmap_color_t *) *colors_nr static color entries
+**             if a static palette must be used, NULL otherwise
+*/
+
+gfx_pixmap_color_t *
+gfxr_interpreter_get_palette(gfx_resstate_t *state, int version, int *colors_nr, void *internal, int nr);
 /* Retreives the static palette from the interpreter-specific code
 ** Parameters: (int) version: Interpreter version to use
 **             (int *) colors_nr: Number of colors to use

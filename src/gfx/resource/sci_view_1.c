@@ -38,7 +38,7 @@
 #define V1_RLE 0x80 /* run-length encode? */
 #define V1_RLE_BG 0x40 /* background fill */
 
-static gfx_pixmap_t *
+gfx_pixmap_t *
 gfxr_draw_cel1(int id, int loop, int cel, byte *resource, int size, gfxr_view_t *view)
 {
 	int xl = get_int_16(resource);
@@ -53,8 +53,12 @@ gfxr_draw_cel1(int id, int loop, int cel, byte *resource, int size, gfxr_view_t 
 
 	retval->xoffset = xhot;
 	retval->yoffset = yhot;
-	retval->colors = view->colors;
-	retval->colors_nr = view->colors_nr;
+
+	if (view) {
+		retval->colors = view->colors;
+		retval->colors_nr = view->colors_nr;
+	}
+		
 	retval->flags |= GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
 
 	if (xl <= 0 || yl <= 0) {

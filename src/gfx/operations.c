@@ -531,12 +531,6 @@ _gfxop_init_common(gfx_state_t *state, gfx_options_t *options, void *misc_payloa
 {
 	state->options = options;
 
-	if ((state->static_palette =
-	     gfxr_interpreter_get_palette(state->version,
-					  &(state->static_palette_entries),
-					  misc_payload)))
-		_gfxop_alloc_colors(state, state->static_palette, state->static_palette_entries);
-
 	if (!((state->resstate = gfxr_new_resource_manager(state->version,
 							   state->options,
 							   state->driver,
@@ -544,6 +538,13 @@ _gfxop_init_common(gfx_state_t *state, gfx_options_t *options, void *misc_payloa
 		GFXERROR("Failed to initialize resource manager!\n");
 		return GFX_FATAL;
 	}
+
+	if ((state->static_palette =
+	     gfxr_interpreter_get_static_palette(state->resstate,
+						 state->version,
+					         &(state->static_palette_entries),
+					         misc_payload)))
+		_gfxop_alloc_colors(state, state->static_palette, state->static_palette_entries);
 
 	state->visible_map = GFX_MASK_VISUAL;
 	gfxop_set_clip_zone(state, gfx_rect(0, 0, 320, 200));

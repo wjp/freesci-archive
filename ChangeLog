@@ -1,3 +1,10 @@
+2003-03-24  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/gfx/resource/sci_pic_1.c: Added SCI1 pic decoder.
+	* src/gfx/resource/sci_resmgr.c: Replaced SCI1 stubs with real code.
+	* src/gfx/resource/operations.c (gfxop_init_common): Now knows how to
+	load a default palette at startup. Not useful yet.
+
 2003-03-21  Matt Hargett  <matt@use.net>
 
 	* src/gfx/resource/sci_pic_0.c (gfxr_draw_pic0): Add support for 

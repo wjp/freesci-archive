@@ -45,7 +45,7 @@ gfxr_interpreter_options_hash(gfx_resource_types_t type, int version,
 		return palette;
 
 	case GFX_RESOURCE_TYPE_PIC:
-		if (version >= SCI_VERSION_1)
+		if (version >= SCI_VERSION_01_VGA)
 			return 0;
 		else
 			return (options->pic0_unscaled)? 0x10000 :
@@ -106,10 +106,15 @@ gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gf
 		return GFX_ERROR;
 
 	if (state->version >= SCI_VERSION_01_VGA) {
-		GFXERROR("Attempt to retreive pic in SCI1 or later\n");
-		return GFX_ERROR;
-	}
+		if (need_unscaled)
+			gfxr_draw_pic1(unscaled_pic, flags, default_palette, res->size, res->data, &basic_style, res->id);
 
+		if (scaled_pic && scaled_pic->undithered_buffer)
+			memcpy(scaled_pic->visual_map->index_data, scaled_pic->undithered_buffer, scaled_pic->undithered_buffer_size);
+
+		gfxr_draw_pic1(scaled_pic, flags, default_palette, res->size, res->data, &style, res->id);
+	} else
+	{
 	if (need_unscaled)
 		gfxr_draw_pic0(unscaled_pic, flags, default_palette, res->size, res->data, &basic_style, res->id);
 
@@ -126,6 +131,7 @@ gfxr_interpreter_calculate_pic(gfx_resstate_t *state, gfxr_pic_t *scaled_pic, gf
 	memcpy(scaled_pic->undithered_buffer, scaled_pic->visual_map->index_data, scaled_pic->undithered_buffer_size);
 
 	gfxr_dither_pic0(scaled_pic, state->options->pic0_dither_mode, state->options->pic0_dither_pattern);
+	}
 
 	return GFX_OK;
 }
@@ -141,14 +147,12 @@ gfxr_interpreter_get_view(gfx_resstate_t *state, int nr, void *internal, int pal
 	if (!res || !res->data)
 		return NULL;
 
-	if (state->version >= SCI_VERSION_01_VGA) {
-		GFXERROR("Attempt to retreive view in SCI1 or later\n");
-		return NULL;
-	}
-
 	if (state->version < SCI_VERSION_01) palette=-1;
 	
-	return gfxr_draw_view0(res->id, res->data, res->size, palette);
+	if (state->version < SCI_VERSION_01_VGA)
+		return gfxr_draw_view0(res->id, res->data, res->size, palette); else
+		return gfxr_draw_view1(res->id, res->data, res->size); 
+	
 }
 
 
@@ -232,17 +236,44 @@ gfxr_interpreter_get_resources(gfx_resstate_t *state, gfx_resource_types_t type,
 }
 
 gfx_pixmap_color_t *
-gfxr_interpreter_get_palette(int version, int *colors_nr, void *internal)
+gfxr_interpreter_get_static_palette(gfx_resstate_t *state, int version, int *colors_nr, void *internal)
 {
 	gfx_sci_options_t *sci_options = (gfx_sci_options_t *) internal;
 
-	if (version >= SCI_VERSION_1)
-		return NULL;
+	if (version >= SCI_VERSION_01_VGA)
+		return gfxr_interpreter_get_palette(state, version, colors_nr, internal, 999);
 
 	*colors_nr = GFX_SCI0_PIC_COLORS_NR;
 	return gfx_sci0_pic_colors;
 }
 
+gfx_pixmap_color_t *
+gfxr_interpreter_get_palette(gfx_resstate_t *state, int version, int *colors_nr, 
+			     void *internal, int nr)
+{
+	gfx_sci_options_t *sci_options = (gfx_sci_options_t *) internal;
+	resource_mgr_t *resmgr = (resource_mgr_t *) state->misc_payload;
+	resource_t *res;
+
+	if (version < SCI_VERSION_01_VGA)
+		return NULL;
+
+	res = scir_find_resource(resmgr, sci_palette, nr, 0);
+	if (!res || !res->data)
+		return NULL;
+
+	switch (version)
+	{
+	case SCI_VERSION_01_VGA :
+	case SCI_VERSION_1_EARLY :
+	case SCI_VERSION_1_LATE :
+		return gfxr_read_pal1(res->id, colors_nr, res->data, res->size);
+	case SCI_VERSION_1_1 :
+	case SCI_VERSION_32 :
+		GFX_DEBUG("Palettes are not yet supported in this SCI version\n");
+		return NULL;
+	}
+}
 
 int
 gfxr_interpreter_needs_multicolored_pointers(int version, void *internal)
