@@ -1,3 +1,14 @@
+2005-01-26  Christoph Reichenbach  <reichenb@colorado.edu>
+
+	* src/gfx/resource/sci_picfill_aux.c (AUXBUF_FILL_HELPER): Added a
+	hard filling bound to ensure that no place is filled more than
+	once
+
+	* src/scicore/resource_map.c (sci0_read_resource_map): Changed
+	SCI1 detection in SCI0 resource.map reader
+	(sci_res_read_entry): SCI1 detection now relocated to entry
+	reading
+
 2005-01-21  Christoph Reichenbach  <reichenb@colorado.edu>
 
 	* src/gfx/resource/sci_picfill.c (IS_BOUNDARY): Fixed correctness

@@ -49,9 +49,15 @@ sci_res_read_entry(byte *buf, resource_t *res, int use_sci_01v)
 	if (use_sci_01v) {
 		res->file = SCI01V_RESFILE_GET_FILE(buf + 2);
 		res->file_offset = SCI01V_RESFILE_GET_OFFSET(buf + 2);
+
+		if (res->type < 0 || res->type > sci1_last_resource)
+			return 1;
 	} else {
 		res->file = SCI0_RESFILE_GET_FILE(buf + 2);
 		res->file_offset = SCI0_RESFILE_GET_OFFSET(buf + 2);
+
+		if (res->type < 0 || res->type > sci0_last_resource)
+			return 1;
 	}
 
 #if 0
@@ -128,15 +134,16 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 		return SCI_ERROR_RESMAP_NOT_FOUND;
 
 	read(fd, &buf, 4);
-	if (buf[0] == 0x80 ||
-	    buf[1] % 3 == 0 ||
-	    buf[3] == 0x81)
+#if 0 /* Temporarily (?) disabled -- CR */
+	if (buf[0] >= 0x80)
 	{
 		close(fd);
 		return SCI_ERROR_INVALID_RESMAP_ENTRY;
 	}
+#endif
 
 	lseek(fd, 0, SEEK_SET);
+
 	if ((fsize = sci_fd_size(fd)) < 0) {
 		perror("Error occured while trying to get filesize of resource.map");
 		return SCI_ERROR_RESMAP_NOT_FOUND;
@@ -164,7 +171,11 @@ sci0_read_resource_map(char *path, resource_t **resource_p, int *resource_nr_p, 
 			int addto = resource_index;
 			int i;
 
-			sci_res_read_entry(buf, resources + resource_index, use_01_vga);
+			if (sci_res_read_entry(buf, resources + resource_index, use_01_vga)) {
+				sci_free(resources);
+				close(fd);
+				return SCI_ERROR_RESMAP_NOT_FOUND;
+			}
 
 			if (resources[resource_index].file > max_resfile_nr)
 				max_resfile_nr =
