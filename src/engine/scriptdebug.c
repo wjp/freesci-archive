@@ -1144,6 +1144,27 @@ c_gfx_print_port(state_t *s)
 	return 0;
 }
 
+c_gfx_priority(state_t *s)
+{
+	if (!_debugstate_valid) {
+		sciprintf("Not in debug state\n");
+		return 1;
+	}
+
+	if (cmd_paramlength) {
+		int zone = cmd_params[0].val;
+		if (zone < 0)
+			zone = 0;
+		if (zone > 15) zone = 15;
+
+		sciprintf("Zone %x starts at y=%d\n", zone, PRIORITY_BAND_FIRST(zone));
+	} else {
+		sciprintf("Priority bands start at y=%d\nThey end at y=%d\n", s->priority_first, s->priority_last);
+	}
+
+	return 0;
+}
+
 int
 c_gfx_print_visual(state_t *s)
 {
@@ -2109,6 +2130,9 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 			con_hook_command(c_gfx_fill_screen, "gfx_fill_screen", "i", "Fills the screen with one\n  of the EGA colors\n");
 			con_hook_command(c_gfx_draw_cel, "gfx_draw_cel", "iii", "Draws a single view\n  cel to the center of the\n  screen\n\n"
 					 "USAGE\n  gfx_draw_cel <view> <loop> <cel>\n");
+			con_hook_command(c_gfx_priority, "gfx_priority", "i*", "Prints information about priority\n  bands\nUSAGE\n\n  gfx_priority\n\n"
+					 "  will print the min and max values\n  for the priority bands\n\n  gfx_priority <val>\n\n  Print start of the priority\n"
+					 "  band for the specified\n  priority\n");
 
 
 			con_hook_int(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");

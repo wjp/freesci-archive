@@ -54,7 +54,7 @@
   if (s->port) \
        s->port->add(GFXWC(s->port), GFXW(widget)); \
   else \
-       s->wm_port->add(GFXWC(s->visual), GFXW(widget));
+       s->picture_port->add(GFXWC(s->visual), GFXW(widget));
 
 #define ADD_TO_CURRENT_PICTURE_PORT(widget) \
   if (s->port) \
@@ -144,6 +144,7 @@ void
 graph_restore_box(state_t *s, int handle)
 {
 	gfxw_snapshot_t **ptr;
+	int port_nr = s->port->ID;
 
 	if (!handle) {
 		SCIkwarn(SCIkWARNING, "Attempt to restore box with zero handle\n");
@@ -152,11 +153,27 @@ graph_restore_box(state_t *s, int handle)
 
 	ptr = (gfxw_snapshot_t **) kmem(s, handle);
 
-	if (s->dyn_views) {
+	if (!ptr) {
+		SCIkwarn(SCIkWARNING, "Attempt to restore invalid handle %04x\n", handle);
+		return;
+	}
+
+	while (port_nr > 2 && !(s->port->flags & GFXW_FLAG_IMMUNE_TO_SNAPSHOTS)
+	       &&(gfxw_widget_matches_snapshot(*ptr, GFXW(s->port)))) {
+		/* This shouldn't ever happen, actually, since windows (ports w/ ID > 2) should all be immune */
+		gfxw_port_t *newport = gfxw_find_port(s->visual, port_nr);
+		SCIkwarn(SCIkERROR, "Port %d is not immune against snapshots!\n", s->port->ID);
+		port_nr--;
+		if (newport)
+			s->port = newport;
+	}
+
+	if (s->dyn_views && gfxw_widget_matches_snapshot(*ptr, GFXW(s->dyn_views->parent))) {
 		gfxw_container_t *parent = s->dyn_views->parent;
 
-		while (parent && (gfxw_widget_matches_snapshot(*ptr, GFXW(parent))))
+		do {
 			parent->parent;
+		} while (parent && (gfxw_widget_matches_snapshot(*ptr, GFXW(parent))));
 
 		if (!parent) {
 			SCIkwarn(SCIkERROR, "Attempted widget mass destruction by a snapshot\n");
@@ -990,7 +1007,7 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));
 	s->visual->add(GFXWC(s->visual), GFXW(s->wm_port));
 
-	s->port = s->wm_port;
+	s->port = s->picture_port;
 
 	if (argc > 1)
 		s->pic_animate = PARAM(1); /* The animation used during kAnimate() later on */
@@ -1417,7 +1434,6 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
      /* disposes all list members flagged for disposal; funct_nr is the invoking kfunction */
 {
 	int i;
-        byte dropped_view = 0;
 	gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) list->contents;
 
 	while (widget) {
@@ -1447,7 +1463,6 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 				}
 				if (widget->flags & GFXW_FLAG_VISIBLE) {
 					ADD_TO_CURRENT_PICTURE_PORT(gfxw_set_id(GFXW(widget), GFXW_NO_ID));
-                                        dropped_view = 1;
 
 					widget->draw_bounds.y += s->dyn_views->bounds.y - widget->parent->bounds.y;
 					widget->draw_bounds.x += s->dyn_views->bounds.x - widget->parent->bounds.x;
@@ -1458,8 +1473,6 @@ _k_view_list_dispose_loop(state_t *s, heap_ptr list_addr, gfxw_list_t *list,
 
 		widget = next;
 	}
-	if (dropped_view)
-	        reparentize_primary_widget_lists(s, s->port); /* move dynviews behind dropped view */
 }
 
 
@@ -1719,7 +1732,7 @@ _k_draw_view_list(state_t *s, gfxw_list_t *list, int flags)
 
 	gfxw_dyn_view_t *widget = (gfxw_dyn_view_t *) list->contents;
 
-	if (s->port != s->dyn_views->parent)
+	if (GFXWC(s->port) != GFXWC(s->dyn_views->parent))
 		return; /* Return if the pictures are meant for a different port */
 
 	while (widget) {
@@ -1819,7 +1832,6 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		SCIkdebug(SCIkGRAPHICS, "Returning.\n");
 	}
 
-	reparentize_primary_widget_lists(s, s->port); /* move dynviews behind picviews */
 }
 
 
@@ -1908,6 +1920,12 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	if (goner == s->port) /* Did we kill the active port? */
 		s->port = pred;
+
+	s->port = gfxw_find_port(s->visual, goner_nr - 1);
+	if (!s->port) {
+		SCIkwarn(SCIkERROR, "Falling back to previous port %d failed! Using widget predecessor!\n", goner_nr - 1);
+		s->port = pred;
+	}
 
 	gfxop_update(s->gfx_state);
 }
@@ -2011,8 +2029,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	assert_primary_widget_lists(s);
 
-	if (GFXWC(s->dyn_views->parent) != GFXWC(s->port)) /* Port switch */
-		reparentize_primary_widget_lists(s, s->port);
+	reparentize_primary_widget_lists(s, s->port);
 
 	if (!cast_list)
 		s->dyn_views->tag(GFXW(s->dyn_views));

@@ -41,6 +41,7 @@
 #define GFXW_FLAG_DIRTY (1<<3)
 #define GFXW_FLAG_TAGGED (1<<4)
 #define GFXW_FLAG_MULTI_ID (1<<5) /* Means that the ID used herein may be used more than once, i.e. is not unique */
+#define GFXW_FLAG_IMMUNE_TO_SNAPSHOTS (1<<6) /* Snapshot restoring doesn't kill this widget, and +5 bonus to saving throws vs. Death Magic */
 
 typedef struct {
 	int serial; /* The first serial number to kill */
@@ -189,6 +190,7 @@ typedef struct _gfxw_container_widget {
 				   (widget)->type == GFXW_SORTED_LIST || (widget)->type == GFXW_LIST)
 
 #define GFXW_IS_LIST(widget) ((widget)->type == GFXW_LIST || (widget)->type == GFXW_SORTED_LIST)
+#define GFXW_IS_SORTED_LIST(widget) ((widget)->type == GFXW_SORTED_LIST)
 typedef gfxw_container_t gfxw_list_t;
 
 #define GFXW_IS_VISUAL(widget) ((widget)->type == GFXW_VISUAL)

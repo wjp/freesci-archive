@@ -34,9 +34,10 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <engine.h>
-#include <graphics.h>
 #include <sound.h>
 #include <console.h>
+
+/* #define DRAW_GRAPHICS */
 
 #ifdef _MSC_VER
 #include <direct.h>
@@ -47,9 +48,11 @@
 #include <getopt.h>
 #endif /* HAVE_GETOPT_H */
 
-#ifdef HAVE_LIBPNG
-#include <graphics_png.h>
-#endif /* HAVE_LIBPNG */
+#ifdef DRAW_GRAPHICS
+#  ifdef HAVE_LIBPNG
+#    include <graphics_png.h>
+#  endif /* HAVE_LIBPNG */
+#endif /* DRAW_GRAPHICS */
 
 #ifdef _MSC_VER
 /* [DJ] fchmod is not in Visual C++ RTL - and probably not needed,anyway */
@@ -104,9 +107,11 @@ static struct option options[] = {
   {"list", no_argument, &list, 1},
   {"with-header", no_argument, &with_header, 1},
   {"without-header", no_argument, &with_header, 0},
+#ifdef DRAW_GRAPHICS
   {"palette-dither", no_argument, &color_mode, SCI_COLOR_DITHER},
   {"palette-interpolate", no_argument, &color_mode, SCI_COLOR_INTERPOLATE},
   {"palette-dither256", no_argument, &color_mode, SCI_COLOR_DITHER256},
+#endif /* DRAW_GRAPHICS */
   {"dissect", no_argument, &dissect, 1},
   {"gamedir", required_argument, 0, 'd'},
   {0, 0, 0, 0}};
@@ -157,17 +162,19 @@ int main(int argc, char** argv)
                  " --gamedir     -d       Read game resources from dir\n"
 		 " --with-header          Forces the SCI header to be written (default)\n"
                  " --without-header       Prevents the two SCI header bytes from being written\n"
+#ifdef DRAW_GRAPHICS
 		 " --palette-dither       Forces colors in 16 color games to be dithered\n"
 		 " --palette-interpolate  Does color interpolation when drawing picture resources\n"
 		 " --palette-dither256    Does dithering in 256 colors\n"
+#endif /* DRAW_GRAPHICS */
 		 " --no-conversion        Does not convert special resources\n"
                  " --dissect              Dissects script resources, stores in <number>.script\n"
 		 "\nAs a default, 'resource.number' is the output filename, with the following\n"
 		 "exceptions:\n"
 		 "  sound resources:   Will be converted to MIDI, stored in <number>.midi\n"
-#ifdef HAVE_LIBPNG
+#ifdef DRAW_GRAPHICS
 		 "  picture resources: Will be converted to PNG, stored in <number>.png\n"
-#endif
+#endif /* DRAW_GRAPHICS */
 		 "\nThis behaviour can be overridden with the --no-conversion switch.\n");
 	  exit(0);
 	  
@@ -197,8 +204,6 @@ int main(int argc, char** argv)
 	  return -1;
 	}
     }
-
-  sci_color_mode = color_mode;
 
   if (!list) {
     char *resstring = argv[optind];
@@ -292,10 +297,10 @@ void unpack_resource(int stype, int snr, char *outfilename)
 	mapMIDIInstruments();
 	sprintf(outfilename,"%03d.midi", snr);
     }
-#ifdef HAVE_LIBPNG
+#ifdef DRAW_GRAPHICS
     else if ((stype == sci_pic) && conversion)
       sprintf(outfilename,"%03d.png", snr);
-#endif /* HAVE_LIBPNG */
+#endif /* DRAW_GRAPHICS */
     else
       sprint_resource_filename(outfilename, stype, snr);
   }
@@ -308,7 +313,7 @@ void unpack_resource(int stype, int snr, char *outfilename)
 
   if ((found = findResource(stype, snr))) {
 
-#ifdef HAVE_LIBPNG
+#ifdef DRAW_GRAPHICS
     if ((stype == sci_pic) && conversion) {
       int i;
       picture_t pic = alloc_empty_picture(SCI_RESOLUTION_320X200, SCI_COLORDEPTH_8BPP);
@@ -318,7 +323,7 @@ void unpack_resource(int stype, int snr, char *outfilename)
       } else if (verbose) printf("Done.\n");
       free_picture(pic);
     } else 
-#endif /* HAVE_LIBPNG */
+#endif /* DRAW_GRAPHICS */
     if ((stype == sci_script) && dissect) {
       FILE *f;
 

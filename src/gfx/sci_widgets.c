@@ -122,6 +122,8 @@ sciw_new_window(state_t *s, rect_t area, int font, gfx_color_t color, gfx_color_
 	win->title_text = title;
 	win->port_flags = flags;
 
+	win->flags |= GFXW_FLAG_IMMUNE_TO_SNAPSHOTS;
+
 	if (flags & WINDOW_FLAG_DONTDRAW)
 		flags = WINDOW_FLAG_TRANSPARENT | WINDOW_FLAG_NOFRAME;
 
@@ -453,8 +455,8 @@ sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char 
 						     font_nr, entries_list[i], ALIGN_LEFT, ALIGN_TOP,
 						     port->color, port->color, port->bgcolor, GFXR_FONT_FLAG_NO_NEWLINES)));
 		else {
-			list->add(GFXWC(list), gfxw_new_box(port->visual->gfx_state, gfx_rect(zone.x, zone.y, zone.xl - 1, font_height),
-							    port->color, port->color, GFX_BOX_SHADE_FLAT));
+			list->add(GFXWC(list), GFXW(gfxw_new_box(port->visual->gfx_state, gfx_rect(zone.x, zone.y, zone.xl - 1, font_height),
+								 port->color, port->color, GFX_BOX_SHADE_FLAT)));
 			list->add(GFXWC(list),
 				  GFXW(gfxw_new_text(port->visual->gfx_state, gfx_rect(zone.x, zone.y, zone.xl - 2, font_height),
 						     font_nr, entries_list[i], ALIGN_LEFT, ALIGN_TOP,
@@ -551,8 +553,8 @@ sciw_new_menu(state_t *s, gfxw_port_t *status_bar, menubar_t *menubar, int selec
 gfxw_widget_t *
 _make_menu_entry(menu_item_t *item, int offset, int width, gfxw_port_t *port, gfx_color_t color, gfx_color_t bgcolor, int ID, int gray)
 {
-	rect_t area = gfx_rect(0, 0, width, 10);
-	rect_t list_area = gfx_rect(area.x + port->zone.x, area.y + offset + port->zone.y, area.xl, area.yl);
+	rect_t area = gfx_rect(MENU_BOX_LEFT_PADDING, 0, width - MENU_BOX_LEFT_PADDING, 10);
+	rect_t list_area = gfx_rect(port->zone.x, area.y + offset + port->zone.y, width, area.yl);
 	gfxw_list_t *list = (gfxw_list_t *) gfxw_set_id(GFXW(gfxw_new_list(list_area, 0)), ID);
 	gfx_color_t xcolor = gray? color : bgcolor;
 
@@ -560,9 +562,11 @@ _make_menu_entry(menu_item_t *item, int offset, int width, gfxw_port_t *port, gf
 	list->add(GFXWC(list), GFXW(gfxw_new_text(port->visual->gfx_state, area, port->font_nr, item->text, ALIGN_LEFT, ALIGN_CENTER,
 						  color, xcolor, bgcolor, GFXR_FONT_FLAG_NO_NEWLINES)));
 
-	if (item->keytext)
+	if (item->keytext) {
+		area.xl -= MENU_BOX_RIGHT_PADDING;
 		list->add(GFXWC(list), GFXW(gfxw_new_text(port->visual->gfx_state, area, port->font_nr, item->keytext, ALIGN_RIGHT, ALIGN_CENTER,
 						     color, xcolor, bgcolor, GFXR_FONT_FLAG_NO_NEWLINES)));
+	}
 
 	return GFXW(list);
 }

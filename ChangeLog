@@ -1,3 +1,14 @@
+2001-01-09  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kAnimate): Auto-reparentized dynviews
+	in every Animate() step.
+
+2001-01-08  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/tools/Makefile.am: Enabled SCI tools again
+
+	* src/gfx/menubar.c: Beautified menubar
+
 2001-01-07  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/savegame.cfsml (read_any_widget): Missing prototype

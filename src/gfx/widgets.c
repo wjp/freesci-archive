@@ -94,7 +94,7 @@ static void
 _gfxw_print_widget(gfxw_widget_t *widget, int indentation)
 {
 	int i;
-	char flags_list[] = "VOCDTM";
+	char flags_list[] = "VOCDTMI";
 	gfxw_view_t *view = (gfxw_view_t *) widget;
 	gfxw_dyn_view_t *dyn_view = (gfxw_dyn_view_t *) widget;
 	gfxw_text_t *text = (gfxw_text_t *) widget;
@@ -1103,6 +1103,7 @@ _gfxwop_text_equals(gfxw_widget_t *widget, gfxw_widget_t *other)
 static int
 _gfxwop_text_compare_to(gfxw_widget_t *widget, gfxw_widget_t *other)
 {
+
 	return 1;
 }
 
@@ -1707,13 +1708,18 @@ _gfxwop_sorted_list_add(gfxw_container_t *container, gfxw_widget_t *widget)
 		return 0;
 
 	while (*seekerp && (widget->compare_to(widget, *seekerp) > 0)) {
+#if 0
 		if (widget->equals(GFXW(widget), GFXW(*seekerp))) {
 			widget->next = (*seekerp)->next;
 			(*seekerp)->free(GFXW(*seekerp));
 			*seekerp = widget;
 			return (_parentize_widget(container, widget));
-		}
-		seekerp = &((*seekerp)->next);
+#endif
+		if (widget->equals(GFXW(widget), GFXW(*seekerp)))
+			(*seekerp)->free(GFXW(*seekerp));
+
+		if (*seekerp)
+			seekerp = &((*seekerp)->next);
 	}
 
 	widget->next = *seekerp;
@@ -1734,7 +1740,7 @@ _gfxw_set_ops_LIST(gfxw_container_t *list, char sorted)
 				_gfxwop_container_tag,
 				sorted? _gfxwop_sorted_list_print : _gfxwop_list_print,
 				_gfxwop_basic_compare_to,
-				_gfxwop_list_equals,
+				sorted? _gfxwop_basic_equals : _gfxwop_list_equals,
 				_gfxwop_basic_superarea_of,
 				_gfxwop_container_set_visual,
 				_gfxwop_container_free_tagged,
@@ -2226,7 +2232,7 @@ _gfxw_free_contents_appropriately(gfxw_container_t *container, gfxw_snapshot_t *
 	while (widget) {
 		gfxw_widget_t *next = widget->next;
 
-		if (gfxw_widget_matches_snapshot(snapshot, widget))
+		if (gfxw_widget_matches_snapshot(snapshot, widget) && !(widget->flags & GFXW_FLAG_IMMUNE_TO_SNAPSHOTS))
 			widget->free(widget);
 		else {
 			if (GFXW_IS_CONTAINER(widget))

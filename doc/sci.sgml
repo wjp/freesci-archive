@@ -1218,7 +1218,6 @@ END LOOP
 
     </sect2>
 
-    </sect2>
     <sect2>
       <title>Decompression algorithm UNKNOWN</title>
       <para>
@@ -2232,7 +2231,7 @@ The OnControl() system call is explained in <XREF LINKEND="KONCONTROL">.
 	<listitem><para> Added note about control 50h (thanks to Rickard Lind)</para></listitem>
 	<listitem><para> Listed MT-32 play flag</para></listitem>
 	<listitem><para> Added notice about the special case of channel 9 to the header
-	  section</para></listitem>
+	  section</para></listitem></itemizedlist>
    <varlistentry><term/Revision 7 - Jan. 7, 2000/
 	<listitem><para><itemizedlist>
 	      	<listitem><para/Added information about F8h delta times (thanks to Rickard Lind for

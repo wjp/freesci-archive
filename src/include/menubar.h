@@ -54,6 +54,11 @@ struct _state;
 ** that use right centered content
 */
 
+#define MENU_BOX_LEFT_PADDING 0
+/* Number of pixels to pad to the left */
+#define MENU_BOX_RIGHT_PADDING 2
+/* Number of pixels to pad to the right */
+
 #define MENU_BAR_HEIGHT 10
 
 

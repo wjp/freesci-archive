@@ -148,7 +148,10 @@ _menubar_add_menu_item(gfx_state_t *state, menu_t *menu, int type, char *left, c
 	/* else assume MENU_TYPE_NORMAL */
 	item->text = left;
 	if (right) {
+		int end = strlen(right);
 		item->keytext = right;
+		while (end && isspace(right[end]))
+			right[end--] = 0; /* Remove trailing whitespace */
 		item->flags = MENU_ATTRIBUTE_FLAGS_KEY;
 		item->key = key;
 		item->modifiers = modifiers;
