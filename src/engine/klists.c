@@ -286,8 +286,6 @@ kAddAfter(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	if (!sane_listp(s, list))
 		SCIkwarn(SCIkERROR,"List at %04x is not sane anymore!\n", list);
 
-	SCIkdebug(SCIkWARNING, "Warning: AddAfter() was invoked with %d parameters\n", argc);
-
 	if (argc != 3) {
 		SCIkdebug(SCIkWARNING, "Aborting.\n");
 		return;

@@ -277,7 +277,7 @@ void
 kSetCursor(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
 
-	if (PARAM(1)) {
+	if (PARAM_OR_ALT(1,1)) {
 		s->mouse_pointer_nr = PARAM(0);
 	} else
 		s->mouse_pointer_nr = GFXOP_NO_POINTER;

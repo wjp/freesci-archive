@@ -1,3 +1,13 @@
+2002-07-13  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/said.y: Fixed compiler errors by adding semicolons at
+	the end of each rule
+	* src/engine/kgraphics.c (kSetCursor): Now handles calls with one
+	parameter correctly.
+	* src/engine/klists.c (kAddAfter): Removed a warning.
+	* src/gfx/font.c (gfxr_font_calculate_size): Changed fragments_nr
+	heuristic slightly.
+
 2002-07-02  Solomon Peachy <pizza@shaftnet.org>
 
 	* src/sound/fmopl.c, src/sound/fmopl.h:   Significant update

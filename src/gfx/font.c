@@ -168,7 +168,7 @@ gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
 	unsigned char foo;
 
 
-	if (max_width>1) fragments_nr = 2 + (strlen(text) * est_char_width)*3 / (max_width << 1); else fragments_nr = 1;
+	if (max_width>1) fragments_nr = 3 + (strlen(text) * est_char_width)*3 / (max_width << 1); else fragments_nr = 1;
 
 	fragments = sci_calloc(sizeof(text_fragment_t), fragments_nr);
 
@@ -264,6 +264,8 @@ gfxr_font_calculate_size(gfx_bitmap_font_t *font, int max_width, char *text,
 	*lines = current_fragment;
 
 	fragments[current_fragment-1].length = text - fragments[current_fragment-1].offset - 1;
+
+	printf("Used %d fragments\n", current_fragment);
 
 	return fragments;
 }

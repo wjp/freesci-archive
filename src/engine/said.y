@@ -117,6 +117,7 @@ yyerror(char *s)
 
 %}
 
+%debug
 %token WGROUP /* Word group */
 %token YY_COMMA     /* 0xf0 */
 %token YY_AMP       /* 0xf1 */
@@ -135,111 +136,111 @@ yyerror(char *s)
 
 %%
 
-saidspec :	  leftspec optcont
-			{ $$ = said_top_branch(said_attach_branch($1, $2)) }
+saidspec :	  leftspec optcont 
+			{ $$ = said_top_branch(said_attach_branch($1, $2)); } 
 		| leftspec midspec optcont
-			{ $$ = said_top_branch(said_attach_branch($1, said_attach_branch($2, $3))) }
+			{ $$ = said_top_branch(said_attach_branch($1, said_attach_branch($2, $3))); }
 		| leftspec midspec rightspec optcont
-			{ $$ = said_top_branch(said_attach_branch($1, said_attach_branch($2, said_attach_branch($3, $4)))) }
+			{ $$ = said_top_branch(said_attach_branch($1, said_attach_branch($2, said_attach_branch($3, $4)))); }
 		;
 
 
 optcont :	 /* empty */
-			{ $$ = SAID_BRANCH_NULL }
+			{ $$ = SAID_BRANCH_NULL; }
 		| YY_GT
-			{ $$ = said_paren(said_value(0x14b, said_value(0xf900, said_terminal(0xf900))), SAID_BRANCH_NULL) }
+			{ $$ = said_paren(said_value(0x14b, said_value(0xf900, said_terminal(0xf900))), SAID_BRANCH_NULL); }
 		;
 
 
 
 leftspec :	/* empty */
-			{ $$ = SAID_BRANCH_NULL }
+			{ $$ = SAID_BRANCH_NULL; }
 		| expr
-			{ $$ = said_paren(said_value(0x141, said_value(0x149, $1)), SAID_BRANCH_NULL) }
+			{ $$ = said_paren(said_value(0x141, said_value(0x149, $1)), SAID_BRANCH_NULL); }
 		;
 
 
 
 midspec :	 YY_SLASH expr
-			{ $$ = said_aug_branch(0x142, 0x14a, $2, SAID_BRANCH_NULL) }
+			{ $$ = said_aug_branch(0x142, 0x14a, $2, SAID_BRANCH_NULL); }
 		| YY_BRACKETSO_SLASH YY_SLASH expr YY_BRACKETSC
-			{ $$ = said_aug_branch(0x152, 0x142, said_aug_branch(0x142, 0x14a, $3, SAID_BRANCH_NULL), SAID_BRANCH_NULL) }
+			{ $$ = said_aug_branch(0x152, 0x142, said_aug_branch(0x142, 0x14a, $3, SAID_BRANCH_NULL), SAID_BRANCH_NULL); }
 		| YY_SLASH
-			{ $$ = SAID_BRANCH_NULL }
+			{ $$ = SAID_BRANCH_NULL; }
 		;
 
 
 
 rightspec :	 YY_SLASH expr
-			{ $$ = said_aug_branch(0x143, 0x14a, $2, SAID_BRANCH_NULL) }
+			{ $$ = said_aug_branch(0x143, 0x14a, $2, SAID_BRANCH_NULL); }
 		| YY_BRACKETSO_SLASH YY_SLASH expr YY_BRACKETSC
-			{ $$ = said_aug_branch(0x152, 0x143, said_aug_branch(0x143, 0x14a, $3, SAID_BRANCH_NULL), SAID_BRANCH_NULL) }
+			{ $$ = said_aug_branch(0x152, 0x143, said_aug_branch(0x143, 0x14a, $3, SAID_BRANCH_NULL), SAID_BRANCH_NULL); }
 		| YY_SLASH
-			{ $$ = SAID_BRANCH_NULL }
+			{ $$ = SAID_BRANCH_NULL; }
 		;
 
 
 
 word :		 WGROUP
-			{ $$ = said_paren(said_value(0x141, said_value(0x153, said_terminal($1))), SAID_BRANCH_NULL) }
+			{ printf("Quux\n"); $$ = said_paren(said_value(0x141, said_value(0x153, said_terminal($1))), SAID_BRANCH_NULL); }
 		;
 
 
 cwordset :	wordset
-			{ $$ = said_aug_branch(0x141, 0x14f, $1, SAID_BRANCH_NULL) }
+			{ $$ = said_aug_branch(0x141, 0x14f, $1, SAID_BRANCH_NULL); }
 		| YY_BRACKETSO wordset YY_BRACKETSC
-			{ $$ = said_aug_branch(0x141, 0x14f, said_aug_branch(0x152, 0x14c, said_aug_branch(0x141, 0x14f, $2, SAID_BRANCH_NULL), SAID_BRANCH_NULL), SAID_BRANCH_NULL) }
+			{ $$ = said_aug_branch(0x141, 0x14f, said_aug_branch(0x152, 0x14c, said_aug_branch(0x141, 0x14f, $2, SAID_BRANCH_NULL), SAID_BRANCH_NULL), SAID_BRANCH_NULL); }
 		;
 
 
 wordset :	 word
-			{ $$ = $1 }
+			{ $$ = $1; }
 		| YY_PARENO expr YY_PARENC
-			{ $$ = said_aug_branch(0x141, 0x14c, $2, SAID_BRANCH_NULL) }
+			{ $$ = said_aug_branch(0x141, 0x14c, $2, SAID_BRANCH_NULL); }
 		| wordset YY_COMMA wordset
-			{ $$ = said_attach_branch($1, $3) }
+			{ $$ = said_attach_branch($1, $3); }
 		| wordset YY_COMMA YY_BRACKETSO wordset YY_BRACKETSC
-			{ $$ = said_attach_branch($1, $3) }
+			{ $$ = said_attach_branch($1, $3); }
 		;
 
 
 
 expr :		 cwordset cwordrefset
-			{ $$ = said_attach_branch($1, $2) }
+			{ $$ = said_attach_branch($1, $2); }
 		| cwordset
-			{ $$ = $1 }
+			{ $$ = $1; }
 		| cwordrefset
-			{ $$ = $1 }
+			{ $$ = $1; }
 		;
 
 
 
 cwordrefset :	 wordrefset
-			{ $$ = $1 }
+			{ $$ = $1; }
 		| YY_BRACKETSO_LT wordrefset YY_BRACKETSC
-			{ $$ = said_aug_branch(0x152, 0x144, $2, SAID_BRANCH_NULL) }
+			{ $$ = said_aug_branch(0x152, 0x144, $2, SAID_BRANCH_NULL); }
 		| wordrefset YY_BRACKETSO_LT wordrefset YY_BRACKETSC
-			{ $$ = said_attach_branch($1, said_aug_branch(0x152, 0x144, $3, SAID_BRANCH_NULL)) }
+			{ $$ = said_attach_branch($1, said_aug_branch(0x152, 0x144, $3, SAID_BRANCH_NULL)); }
 		;
 
 
 
 wordrefset :	YY_LT word recref
-			{ $$ = said_aug_branch(0x144, 0x14f, $2, $3) }
+			{ $$ = said_aug_branch(0x144, 0x14f, $2, $3); }
 		| YY_LT_PARENO YY_PARENO wordset YY_PARENC
-			{ $$ = said_aug_branch(0x144, 0x14c, $3, SAID_BRANCH_NULL) }
+			{ $$ = said_aug_branch(0x144, 0x14c, $3, SAID_BRANCH_NULL); }
 		| YY_LT wordset
-			{ $$ = said_aug_branch(0x144, 0x14f, $2, SAID_BRANCH_NULL) }
+			{ $$ = said_aug_branch(0x144, 0x14f, $2, SAID_BRANCH_NULL); }
 		| YY_LT_BRACKETSO YY_BRACKETSO wordset YY_BRACKETSC
-			{ $$ = said_aug_branch(0x152, 0x144, said_aug_branch(0x144, 0x14f, $3, SAID_BRANCH_NULL), SAID_BRANCH_NULL) }
+			{ $$ = said_aug_branch(0x152, 0x144, said_aug_branch(0x144, 0x14f, $3, SAID_BRANCH_NULL), SAID_BRANCH_NULL); }
 		;
 
 
 
 recref :	YY_LT wordset recref
-			{ $$ = said_aug_branch(0x141, 0x144, said_aug_branch(0x144, 0x14f, $2, SAID_BRANCH_NULL), $3) }
+			{ $$ = said_aug_branch(0x141, 0x144, said_aug_branch(0x144, 0x14f, $2, SAID_BRANCH_NULL), $3); }
 		| YY_LT wordset
-			{ $$ = said_aug_branch(0x141, 0x144, said_aug_branch(0x144, 0x14f, $2, SAID_BRANCH_NULL), SAID_BRANCH_NULL) }
+			{ $$ = said_aug_branch(0x141, 0x144, said_aug_branch(0x144, 0x14f, $2, SAID_BRANCH_NULL), SAID_BRANCH_NULL); }
 		;
 
 
