@@ -1358,11 +1358,15 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
   SCIkdebug(SCIkSTUB, "kGetEvent: Stub\n");
 
   if (s->have_mouse_flag) {
-#if 0
-    s->pointer_x = /* whatever the new mouse pointer x coordinate is */
-      s->pointer_y = /* same for the y coordinate */
-#endif
-      s->gfx_driver->Redraw(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0);
+    if(s->pointer_x!=sci_pointer_x)
+    {
+      s->pointer_x = sci_pointer_x;
+      if(s->pointer_y != sci_pointer_y)
+      {
+        s->pointer_y = sci_pointer_y;
+        s->gfx_driver->Redraw(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0);
+      }
+    }
   } /* Don't move the pointer unless the game knows that a mouse is present */
       
   PUT_SELECTOR(obj, x, s->pointer_x);
@@ -1438,7 +1442,8 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	} break;
       case SCI_EV_CLOCK:
 	{
-	  s->acc = 0; /* Not supported yet */
+	  s->acc = 0; /* Null event */
+	  return;
 	} break;
       case SCI_EV_REDRAW:
 	{
@@ -1446,7 +1451,34 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	} break;
       case SCI_EV_MOUSE_CLICK:
 	{
-	  s->acc = 0; /* Not supported yet */
+	  if(mask&K_EV_MOUSE_P)
+	  {
+	    switch(e.key)
+	    {
+	      case 1:
+	      {
+	        PUT_SELECTOR(obj, type, K_EV_MOUSE_P); /*LMB press event*/
+	        PUT_SELECTOR(obj, message, 1);
+	        PUT_SELECTOR(obj, modifiers, 0);
+	        s->acc = 1;
+	      } break;
+	      case 2:
+	      {
+	        PUT_SELECTOR(obj, type, K_EV_MOUSE_P); /*RMB press event*/
+	        PUT_SELECTOR(obj, message, 1);
+	        PUT_SELECTOR(obj, modifiers, K_EV_LSHIFT|K_EV_RSHIFT);
+	        s->acc = 1;
+	      } break;
+	      case 3:
+	      {
+	        PUT_SELECTOR(obj, type, K_EV_MOUSE_P); /*MMB press event*/
+	        PUT_SELECTOR(obj, message, 1);
+	        PUT_SELECTOR(obj, modifiers, K_EV_CTRL);
+	        s->acc = 1;
+	      } break;
+	    }
+	  }
+	  return;
 	} break;
       default:
 	{
