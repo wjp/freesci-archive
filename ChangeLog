@@ -1,3 +1,8 @@
+2002-03-15  Solomon Peachy <pizza@shaftnet.org>
+        * src/sound/sound.c
+          src/main.c:  Set a default master volume as older games do not
+        explicitly set the volume on startup.
+
 2002-03-12  Alexander R Angas <wgd@internode.on.net>
 
         * src/scicore/tools.c: Fixed 100% CPU usage on Win32.

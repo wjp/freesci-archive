@@ -1143,7 +1143,12 @@ main(int argc, char** argv)
 
 		printf("Sound server reports polyphony %d\n", poly);
 
+		gamestate->sound_server->command(gamestate, get_msg_value("SOUND_COMMAND_SET_VOLUME"), 0, 0xc);
+
+
+
 		gamestate->sound_server->get_event(gamestate); /* Get init message */
+
 		/* FIXME: memory allocated that is not freed */
 	}
 
@@ -1175,7 +1180,6 @@ main(int argc, char** argv)
 
 	gamestate->have_mouse_flag = (cl_options.mouse == DONTCARE)?
 		active_conf->mouse : cl_options.mouse;
-
 
 	if (savegame_name)
 		game_restore(&gamestate, savegame_name);

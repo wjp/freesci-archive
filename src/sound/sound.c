@@ -706,12 +706,15 @@ int init_midi_device (state_t *s) {
 
 unsigned int get_msg_value(char *msg)
 {
-	if (!(strcasecmp(msg, "SOUND_COMMAND_TEST"))) {
+	if (!(strcasecmp(msg, "SOUND_COMMAND_TEST")))
 		return SOUND_COMMAND_TEST;
 
-	} else {
-		fprintf(debug_stream, "ERROR: %s does not have an entry in get_msg_value(). "
-			"Please add one!\n", msg);
-		return 0;
-	}
+	if (!(strcasecmp(msg, "SOUND_COMMAND_SET_VOLUME")))
+		return SOUND_COMMAND_SET_VOLUME;
+
+	
+	fprintf(debug_stream, "ERROR: %s does not have an entry in get_msg_value(). "
+		"Please add one!\n", msg);
+	return 0;
+
 }
