@@ -120,55 +120,81 @@ struct {
 	int fgcolor, bgcolor;
 } _about_freesci_pages[ABOUT_FREESCI_PAGES_NR] = {
 	{"FreeSCI hackers and contributors",
-	 "Alexander R. Angas\nDirectX 8 driver, Event sound server, Generic memory functions\n\n"
-	 "Anders Baden Nielsen\nPPC testing\n\n"
-	 "Bas Zoetekouw\nMan pages, debian package management, CVS maintenance\n\n"
-	 "Carl Muckenhoupt\nSources to the SCI resource viewer tools that started it all\n\n"
-	 "Chris Kehler\nMakefile enhancements\n\n"
-	 "Christoph Reichenbach\nUN*X code, VM/Graphics/Sound/other infrastructure\n\n"
-	 "Christopher T. Lansdown\nOriginal CVS maintainer, Alpha compatibility fixes",
-	 0, 15},
+	 "Alexander R. Angas\nDirectX 8 driver, Event sound server, Generic memory functions"
+	 "\n\n"
+	 "Anders Baden Nielsen\nPPC testing"
+	 "\n\n"
+	 "Bas Zoetekouw\nMan pages, debian package management, CVS maintenance"
+	 "\n\n"
+	 "Carl Muckenhoupt\nSources to the SCI resource viewer tools that started it all"
+	 "\n\n"
+	 "Chris Kehler\nMakefile enhancements"
+	 "\n\n"
+	 "Christoph Reichenbach\nUN*X code, VM/Graphics/Sound/other infrastructure"
+	 "\n\n"
+	 "Christopher T. Lansdown\nOriginal CVS maintainer, Alpha compatibility fixes"
+	 ,0, 15},
 	{"More FreeSCI hackers and contributors",
-	 "Claudio Matsuoka\nCVS snapshots, daily builds, BeOS and cygwin ports\n\n"
-	 "Dark Minister\nSCI research (bytecode and parser)\n\n"
-	 "Dmitry Jemerov\nPort to the Win32 platform, numerous bugfixes\n\n"
-	 "Emmanuel Jeandel\nBugfixes and bug reports\n\n"
-	 "Francois-R Boyer\nMT-32 information and mapping code\n\n"
-	 "George Reid\nFreeBSD package management\n\n"
-	 "Johannes Manhave\nDocument format translation\n\n",
-	 0, 15},
+	 "Claudio Matsuoka\nCVS snapshots, daily builds, BeOS and cygwin ports"
+	 "\n\n"
+	 "Dark Minister\nSCI research (bytecode and parser)"
+	 "\n\n"
+	 "Dmitry Jemerov\nPort to the Win32 platform, numerous bugfixes"
+	 "\n\n"
+	 "Emmanuel Jeandel\nBugfixes and bug reports"
+	 "\n\n"
+	 "Francois-R Boyer\nMT-32 information and mapping code"
+	 "\n\n"
+	 "George Reid\nFreeBSD package management"
+	 "\n\n"
+	 "Johannes Manhave\nDocument format translation"
+	 ,0, 15},
 	{"Even more FreeSCI hackers & contributors",
-	 "Lars Skovlund\nProject mainenance, most documentation, bugfixes, SCI1 support",
-	 "Magnus Reftel\nHeap implementation, Python class viewer, bugfixes\n\n"
-	 "Matt Hargett\nClean-ups, bugfixes, Hardcore QA, Win32\n\n"
-	 "Paul David Doherty\nGame version information\n\n"
-	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements\n\n"
-	 "Rainer Canavan\nIRIX MIDI driver and bug fixes\n\n"
-	 "Rainer De Temple\nSCI research\n\n",
-	 0, 15},
+	 "Lars Skovlund\nProject mainenance, most documentation, bugfixes, SCI1 support"
+	 "\n\n"
+	 "Magnus Reftel\nHeap implementation, Python class viewer, bugfixes"
+	 "\n\n"
+	 "Matt Hargett\nClean-ups, bugfixes, Hardcore QA, Win32"
+	 "\n\n"
+	 "Paul David Doherty\nGame version information"
+	 "\n\n"
+	 "Petr Vyhnak\nThe DCL-INFLATE algorithm, many Win32 improvements"
+	 "\n\n"
+	 "Rainer Canavan\nIRIX MIDI driver and bug fixes"
+	 "\n\n"
+	 "Rainer De Temple\nSCI research"
+	 ,0, 15},
 	{"Still more of them",
 	 "Ravi I.\nSCI0 sound resource specification"
-	 "Ruediger Hanke\nPort to the MorphOS platform\n\n"
-	 "Rune Orsval\nConfiguration file editor\n\n"
-	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research\n\n"
-	 "Rink Springer\nPort to the DOS platform, several bug fixes\n\n"
-	 "Robey Pointer\nBug tracking system hosting\n\n"
-	 "Sergey Lapin\nPort of Carl's type 2 decompression code\n\n",
-	 0, 15},
+	 "\n\n"
+	 "Ruediger Hanke\nPort to the MorphOS platform"
+	 "\n\n"
+	 "Rune Orsval\nConfiguration file editor"
+	 "\n\n"
+	 "Rickard Lind\nMT32->GM MIDI mapping magic, sound research"
+	 "\n\n"
+	 "Rink Springer\nPort to the DOS platform, several bug fixes"
+	 "\n\n"
+	 "Robey Pointer\nBug tracking system hosting"
+	 "\n\n"
+	 "Sergey Lapin\nPort of Carl's type 2 decompression code"
+	 ,0, 15},
 	{"And even more",
 	 "Solomon Peachy\nSDL ports and much of the sound subsystem"
-	 "Vyacheslav Dikonov\nConfig script improvements\n\n"
+	 "\n\n"
+	 "Vyacheslav Dikonov\nConfig script improvements"
+	 "\n\n"
 	 "Walter van Niftrik\nPort to the Dreamcast platform",
 	 0, 15},
 	{"The CSCI5573 Team at CU Boulder",
 	 "Xiaojun Chen\nSean Terrell\nChristoph Reichenbach\n\n"
-	 "Special thanks to Prof. Dr. Gary Nutt\n\nfor allowing the FreeSCI VM extension as a\ncourse project in his Advanced OS course",
-	 0, 15},
+	 "Special thanks to Prof. Dr. Gary Nutt\n\nfor allowing the FreeSCI VM extension as a\ncourse project in his Advanced OS course"
+	 ,0, 15},
 	{"Special Thanks",
-	 "\nSpecial Thanks as well\n\n\nto the linuxgames.com and telefragged.com crew\nfor hosting us\n\n"
+	 "Special Thanks as well\n\n\nto the linuxgames.com and telefragged.com crew\nfor hosting us\n\n"
 	 "To the savannah.gnu.org staff\nfor hosting our mailing list\n\n"
-	 "To Bob Heitman and Corey Cole for their support",
-	 0, 15}
+	 "To Bob Heitman and Corey Cole for their support"
+	 ,0, 15}
 };
 
 
@@ -208,12 +234,12 @@ about_freesci(state_t *s)
 
 		width += 4;
 		width2 += 4;
-		height += 4;
+		height += 12;
 
 		if (width2 > width)
 			width = width2;
 
-		port = sciw_new_window(s, gfx_rect(156 - (width >> 1), 105 - (height >> 1), width, height),
+		port = sciw_new_window(s, gfx_rect(156 - (width >> 1), 100 - (height >> 1), width, height),
 				       bodyfont, s->ega_colors[_about_freesci_pages[page].fgcolor],
 				       s->ega_colors[_about_freesci_pages[page].bgcolor],
 				       titlefont, s->ega_colors[15], s->ega_colors[0],
