@@ -37,7 +37,7 @@
 #define O_BINARY 0
 #endif  /* !O_BINARY */
 
-#define SOUND_SAVE_VERSION 1;
+#define SOUND_SAVEGAME_VERSION 1;
 
 typedef struct {
 
@@ -91,6 +91,8 @@ RECORD song_t "song_t" {
 
 RECORD sound_lib_file_t "sound_lib_file_t" {
 
+	int sound_version;
+
 	song_t songs[DYNAMIC songs_nr];
 
 	int active_song;
@@ -124,6 +126,8 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
     free(cwd);
     return 1;
   }
+
+  write_rec.sound_version = SOUND_SAVEGAME_VERSION;
 
   write_rec.soundcue = soundcue;
   write_rec.usecs_to_sleep = usecs_to_sleep;
@@ -195,7 +199,7 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
 }
 
 static void
-recover_version0(read_rec_t *rec)
+recover_version0(sound_lib_file_t *rec)
 {
 	int i;
 
@@ -205,7 +209,7 @@ recover_version0(read_rec_t *rec)
 
 		song->reverb = 0;
 		song->maxfade = 16;
-		song->resetflags = 0;
+		song->resetflag = 0;
 
 		for (j = 0; j < MIDI_CHANNELS; j++)
 			song->polyphony[j] = 1;
@@ -238,11 +242,11 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
   read_rec.songs = NULL;
 
   /* Backwards capability crap */
-  read_rec.version = 0;
-  reac_rec.master_value = *master_volume;
+  read_rec.sound_version = 0;
+  read_rec.master_volume = *master_volume;
   %CFSMLREAD-ATOMIC sound_lib_file_t &read_rec FROM fh ERRVAR error;
 
-  if (read_rec.version == 0)
+  if (read_rec.sound_version == 0)
 	  recover_version0(&read_rec);
 
   if (error) {

@@ -37,18 +37,22 @@
 #define O_BINARY 0
 #endif  /* !O_BINARY */
 
+#define SOUND_SAVEGAME_VERSION 1;
+
 typedef struct {
 
-  int songs_nr; /* Number of songs */
-  song_t *songs; /* All songs in order */
+	int sound_version;
 
-  int active_song;
+	int songs_nr; /* Number of songs */
+	song_t *songs; /* All songs in order */
 
-  int master_volume; /* duh.. */
-  int soundcue; /* Cumulative sound cue */
-  int usecs_to_sleep; /* Microseconds until the next tick is due */
-  int ticks_to_wait; /* Ticks until the next sound command has to be interpreted */
-  int ticks_to_fade; /* Ticks until a fade-out is complete */
+	int active_song;
+
+	int master_volume; /* duh.. */
+	int soundcue; /* Cumulative sound cue */
+	int usecs_to_sleep; /* Microseconds until the next tick is due */
+	int ticks_to_wait; /* Ticks until the next sound command has to be interpreted */
+	int ticks_to_fade; /* Ticks until a fade-out is complete */
 
 } sound_lib_file_t;
 
@@ -769,6 +773,9 @@ _cfsml_write_sound_lib_file_t(FILE *fh, sound_lib_file_t* foo)
 
 #line 381 "cfsml.pl"
   fprintf(fh, "{\n");
+  fprintf(fh, "sound_version = ");
+    _cfsml_write_int(fh, &(foo->sound_version));
+    fprintf(fh, "\n");
   fprintf(fh, "songs = ");
     min = max = foo->songs_nr;
     if (!foo->songs)
@@ -832,6 +839,11 @@ _cfsml_read_sound_lib_file_t(FILE *fh, sound_lib_file_t* foo, char *lastval, int
         value = _cfsml_get_value(fh, line, hiteof);
       if (!value)
          return CFSML_FAILURE;
+      if (!strcmp(bar, "sound_version")) {
+#line 643 "cfsml.pl"
+         if (_cfsml_read_int(fh, &(foo->sound_version), value, line, hiteof))
+            return CFSML_FAILURE;
+      } else
       if (!strcmp(bar, "songs")) {
 #line 567 "cfsml.pl"
          if ((value[0] != '[') || (value[strlen(value) - 1] != '[')) {
@@ -958,7 +970,7 @@ _cfsml_read_word(FILE *fh, word* foo, char *lastval, int *line, int *hiteof)
 
 /* Auto-generated CFSML declaration and function block ends here */
 /* Auto-generation performed by cfsml.pl 0.8.1 */
-#line 102 "CFSML input file"
+#line 108 "CFSML input file"
 
 /* Sound state saving reference implementation */
 int
@@ -979,6 +991,8 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
     free(cwd);
     return 1;
   }
+
+  write_rec.sound_version = SOUND_SAVEGAME_VERSION;
 
   write_rec.soundcue = soundcue;
   write_rec.usecs_to_sleep = usecs_to_sleep;
@@ -1043,7 +1057,7 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
   _cfsml_write_sound_lib_file_t(fh, &write_rec);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 183 "CFSML input file"
+#line 191 "CFSML input file"
 
   fclose(fh);
   fprintf(stderr,"Finished all writing.\n");
@@ -1052,6 +1066,24 @@ soundsrv_save_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *cur
 
   chdir ("..");
   return 0;
+}
+
+static void
+recover_version0(sound_lib_file_t *rec)
+{
+	int i;
+
+	for (i = 0; i < rec->songs_nr; i++) {
+		int j;
+		song_t *song = rec->songs + i;
+
+		song->reverb = 0;
+		song->maxfade = 16;
+		song->resetflag = 0;
+
+		for (j = 0; j < MIDI_CHANNELS; j++)
+			song->polyphony[j] = 1;
+	}
 }
 
 /* Sound state restore complement for the saving reference implementation */
@@ -1079,6 +1111,9 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
 
   read_rec.songs = NULL;
 
+  /* Backwards capability crap */
+  read_rec.sound_version = 0;
+  read_rec.master_volume = *master_volume;
 /* Auto-generated CFSML data reader code */
 #line 715 "cfsml.pl"
   {
@@ -1109,7 +1144,10 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 219 "CFSML input file"
+#line 248 "CFSML input file"
+
+  if (read_rec.sound_version == 0)
+	  recover_version0(&read_rec);
 
   if (error) {
     if(read_rec.songs)

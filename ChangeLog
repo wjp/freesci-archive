@@ -1,5 +1,8 @@
 2001-03-10  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/sound/sound.c (sound_get_event): Made event getting a bit
+	more solid
+
 	* src/sound/sfx_save.cfsml (recover_version0): Added older sound
 	savegame recovery
 
