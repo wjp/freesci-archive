@@ -168,8 +168,17 @@ static int load_options(char *infname, char *options)
 		fs_close(inf);
 		return -1;
 	}
-	for (j = 0; (j < NUM_DC_OPTIONS) && (j < pkg.data_len); j++)
-		options[j] = pkg.data[j];
+	if ((pkg.data_len != NUM_DC_OPTIONS+2) ||
+			(pkg.data[0] != DC_OPTIONS_TAG_MAJOR) ||
+			(pkg.data[1] != DC_OPTIONS_TAG_MINOR)) {
+		sciprintf("%s, L%d: Option file version doesn't match!\n",
+			__FILE__, __LINE__);
+		sci_free(data);
+		fs_close(inf);
+		return -1;
+	}
+	for (j = 0; j < NUM_DC_OPTIONS; j++)
+		options[j] = pkg.data[j+2];
 
 	fs_close(inf);
 	return 0;
@@ -186,15 +195,19 @@ static int save_options(char *outfile, char *options)
 	uint8 *pkg_out;
 	vmu_pkg_t pkg;
 	int pkg_size;
+	uint8 data[NUM_DC_OPTIONS+2];
 	
 	strcpy(pkg.desc_short, "FreeSCI");
 	strcpy(pkg.desc_long, "Configuration");
 	strcpy(pkg.app_id, "FreeSCI");
+	data[0] = DC_OPTIONS_TAG_MAJOR;
+	data[1] = DC_OPTIONS_TAG_MINOR;
+	memcpy(data+2, options_nr, NUM_DC_OPTIONS);
 	pkg.icon_cnt = 0;
 	pkg.icon_anim_speed = 0;
 	pkg.eyecatch_type = VMUPKG_EC_NONE;
-	pkg.data = options_nr;
-	pkg.data_len = NUM_DC_OPTIONS;
+	pkg.data = data;
+	pkg.data_len = NUM_DC_OPTIONS+2;
 	if (vmu_pkg_build(&pkg, &pkg_out, &pkg_size) < 0) {
 		sciprintf("%s, L%d: vmu_pkg_build() failed!\n", __FILE__, __LINE__);
 		return -1;
@@ -218,9 +231,9 @@ void load_option_list() {
                          
 	/* Load defaults */
 	for (i = 0; i < NUM_DC_OPTIONS; i++)
-		options_nr[i] = dc_options[i].def;
+		options_nr[i] = 0;
 
-	/* Overwrite with max. NUM_DC_OPTIONS from save file */
+	/* Overwrite with data from option file */
 	if ((vmu = dc_get_first_vmu())) {
 		char *fn = sci_malloc(strlen(vmu) + 9);
 		strcpy(fn, vmu);
@@ -236,15 +249,8 @@ void load_option_list() {
 	for (i = 0; i < NUM_DC_OPTIONS; i++) {
 		int j;
 		options_str[i] = dc_options[i].values;
-		for (j = 0; (j < options_nr[i]) && (*options_str[i] != '\0')
-		  ; j++)
+		for (j = 0; j < options_nr[i]; j++)
 			options_str[i] += strlen(options_str[i]) + 1;
-		if (*options_str[i] == '\0') {
-			options_nr[i] = dc_options[i].def;
-			options_str[i] = dc_options[i].values;
-			for (j = 0; j < options_nr[i]; j++)
-				options_str[i] += strlen(options_str[i]) + 1;
-		}
 	}
 
 	num_options = NUM_DC_OPTIONS;
@@ -669,13 +675,13 @@ int dc_write_config_file(char *fn) {
 		fprintf(cfile, "pic0_dither_mode = ");		
 		switch (options_nr[1]) {
 		case 0:
-			fprintf(cfile, "dither\n");
-			break;
-		case 1:
 			fprintf(cfile, "dither256\n");
 			break;
-		case 2:
+		case 1:
 			fprintf(cfile, "flat\n");
+			break;
+		case 2:
+			fprintf(cfile, "dither\n");
 		}
 					
 		if (options_nr[2])

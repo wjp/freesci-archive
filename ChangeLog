@@ -1,5 +1,17 @@
 2004-04-26  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
+	* src/dc/gamemenu.c, src/dc/options.h: Added version tag to option
+	file.
+
+	* src/dc/selectgame.c (choose_game): Updated website URL.
+
+	* src/dc/config.h: Removed from repository.
+	* src/dc/config.h.in: Added to repository.
+	* src/dc/.cvsignore: Updated.
+	* src/dc/Makefile: Include current date in VERSION.
+
+2004-04-26  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
 	* src/main.c (main), src/dc/Makefile: Minor build fixes for the
 	Dreamcast port.
 

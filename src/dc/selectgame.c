@@ -126,8 +126,8 @@ void choose_game() {
 			0.3f, 0.2f, 0.5f, 0.0f, 0.5f, 0.1f, 0.8f, 0.2f);
 		draw_poly_strf(308.0f - (8+sizeof(VERSION)-1)/2.0f*12.0f, 20.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 			"FreeSCI " VERSION);
-		draw_poly_strf(308.0f - 29.0f/2.0f*12.0f, 48.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-			"http://freesci.linuxgames.com");
+		draw_poly_strf(308.0f - 18.0f/2.0f*12.0f, 48.0f, 100.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+			"http://freesci.org");
 
 		/* Game menu */
 		fexit = game_menu_render();

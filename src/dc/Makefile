@@ -103,20 +103,27 @@ OBJS =	$(FSCI_BASE)/src/config.o \
 
 all: $(BIN_TARGET)
 
+%.o: %.c config.h
+	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LOCAL_CFLAGS) -D_arch_$(KOS_ARCH) $(KOS_ALL_INCS) -c $< -o $@
+
 include $(KOS_BASE)/Makefile.rules
 
-KOS_LOCAL_CFLAGS := -I$(FSCI_BASE)/src/dc -I. -I$(FSCI_BASE)/src/include \
+KOS_LOCAL_CFLAGS := -I$(FSCI_BASE)/src/include -I$(FSCI_BASE)/src/dc \
 	-I$(FSCI_BASE)/src/include/beos -D_DREAMCAST -DHAVE_CONFIG_H \
 	-DWANT_CONSOLE -DYY_NEVER_INTERACTIVE
 
 clean: rm-elf rm-bin
-	-rm -f $(OBJS)
+	-rm -f $(OBJS) config.h
 
 rm-elf:
 	-rm -f $(ELF_TARGET)
 
 rm-bin:
 	-rm -f $(BIN_TARGET)
+
+config.h: config.h.in
+	cp config.h.in config.h
+	echo -e '\n#define VERSION "0.6.2-'`date +%Y%m%d`'"' >> config.h
 
 $(ELF_TARGET): $(OBJS)
 	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(ELF_TARGET) $(KOS_START) \
