@@ -1,3 +1,7 @@
+2003-01-04  Lars Skovlund  <lskovlun@image.dk>
+
+	* Changed WM port boundaries for old SCI versions
+
 2002-12-31  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/scicore/resource_patch.c (sci0_read_resource_patches): Correctly

@@ -958,7 +958,9 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	s->wm_port->widfree(GFXW(s->wm_port));
 	s->picture_port->widfree(GFXW(s->picture_port));
 
-	s->wm_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
+	if (s->version < SCI_VERSION_FTU_NORMAL_PORTS)
+		s->wm_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 0, 320, 200), s->ega_colors[0], transparent); else
+		s->wm_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
 	s->picture_port = gfxw_new_port(s->visual, NULL, gfx_rect(0, 10, 320, 190), s->ega_colors[0], transparent);
 
 	s->visual->add(GFXWC(s->visual), GFXW(s->picture_port));
