@@ -1,3 +1,7 @@
+2003-01-19  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/config.h: Updated VERSION number for Dreamcast port.
+
 2003-01-18  Alexander Angas  <wgd@internode.on.net>
 
 	* ./README.Win32: Updated to reflect current status.
