@@ -179,7 +179,7 @@ _free_graphics_input(state_t *s)
 
   sciprintf("Freeing graphics\n");
 
-  gfxw_free(s->gfx_state, s->visual);
+  gfxw_free(s->gfx_state, (gfxw_widget_t *) s->visual);
 
   s->visual = NULL;
   s->dyn_views = NULL;
