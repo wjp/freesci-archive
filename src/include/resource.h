@@ -252,10 +252,13 @@ int decrypt2(guint8* dest, guint8* src, int length, int complength);
 /* Huffman token decryptor - defined in decompress0.c and used in decompress1.c
 */
 
+
+#define SCI_MEMTEST memtest(__FILE__ ": line %d", __LINE__)
+
 int
-memtest(char *location);
+memtest(char *location, ...);
 /* Allocates, manipulates, and frees some memory
-** Parameters: (char *) location: The location to print
+** Parameters: (char *) location,... : The location to print
 ** Returns   : (int) 0
 ** This function calls malloc(), free(), and memfrob() or memset()
 ** to provocate segmentation faults caused by dynamic allocation bugs

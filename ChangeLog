@@ -1,3 +1,9 @@
+1999-12-09  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/config.l (_parse_color_mode): Fixed braindead strcasecmp() bug.
+
+	* src/main.c (main): Fixed sciv -gfoo bug.
+
 1999-12-08  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/vocab_debug.c (vocabulary_get_knames0): Terminated knames

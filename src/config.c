@@ -822,13 +822,12 @@ YY_RULE_SETUP
 
   while (isspace(*yytext))
     yytext++;
-
   conf[cur_section].color_mode = _parse_color_mode(yytext);
 }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 112 "config.l"
+#line 111 "config.l"
 {
   yytext = strchr(yytext, '=') + 1;
 
@@ -840,7 +839,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 121 "config.l"
+#line 120 "config.l"
 {
   yytext = strchr (yytext, '=') + 1;
 
@@ -855,7 +854,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 133 "config.l"
+#line 132 "config.l"
 if (cur_section) {
   yytext = strchr(yytext, '=') + 1;
   while (isspace(*yytext))
@@ -868,7 +867,7 @@ if (cur_section) {
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 144 "config.l"
+#line 143 "config.l"
 {
   yytext = strchr(yytext, '=') + 1;
 
@@ -880,7 +879,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 153 "config.l"
+#line 152 "config.l"
 {
   yytext = strchr(yytext, '=') + 1;
 
@@ -892,7 +891,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 162 "config.l"
+#line 161 "config.l"
 {
   char *p=yytext;
   char *p2;
@@ -936,25 +935,25 @@ case 9:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 203 "config.l"
+#line 202 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 205 "config.l"
+#line 204 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 207 "config.l"
+#line 206 "config.l"
 printf("Unrecognized option: %s\n", yytext);
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 209 "config.l"
+#line 208 "config.l"
 ECHO;
 	YY_BREAK
-#line 958 "lex.yy.c"
+#line 957 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1840,7 +1839,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 209 "config.l"
+#line 208 "config.l"
 
 
 int
@@ -1983,8 +1982,9 @@ _parse_color_mode(char *mode) /* Parses the color mode string */
   int i = 0;
 
   while (valid_modes[i].name) {
-    if (g_strcasecmp(mode, valid_modes[i].name))
+    if (0 == g_strcasecmp(mode, valid_modes[i].name))
       return valid_modes[i].value;
+
     i++;
   }
 

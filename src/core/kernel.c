@@ -1116,7 +1116,6 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
   s->acc = 0; /* Never true */
 }
 
-
 void
 kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
@@ -1126,9 +1125,7 @@ kParse(state_t *s, int funct_nr, int argc, heap_ptr argp)
   char *error;
   result_word_t *words;
   heap_ptr event = UPARAM(1);
-
   CHECK_THIS_KERNEL_FUNCTION;
-
   words = vocab_tokenize_string(string, &words_nr,
 				s->parser_words, s->parser_words_nr,
 				s->parser_suffices, s->parser_suffices_nr,

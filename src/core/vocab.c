@@ -167,6 +167,7 @@ vocab_get_suffices(int *suffices_nr)
     strcpy(&(suffices[counter]->word_suffix[0]), word_suffix);
     strcat(&(suffices[counter]->word_suffix[0]), alt_suffix);
 
+    suffices[counter]->alt_suffix = &(suffices[counter]->word_suffix[word_len]);
     suffices[counter]->alt_suffix_length = alt_len;
     suffices[counter]->word_suffix_length = word_len;
     suffices[counter]->class_mask = getInt16(resource->data + seeker);
@@ -279,7 +280,7 @@ vocab_lookup_word(char *word, int word_len,
       /* Offset of the start of the suffix */
 
       if (g_strncasecmp(suffices[i]->alt_suffix, word + suff_index,
-		      suffices[i]->alt_suffix_length) == 0) { /* Suffix matched! */
+			suffices[i]->alt_suffix_length) == 0) { /* Suffix matched! */
 
 	strncpy(&(tempword->word[0]), word, word_len);
 	tempword->word[suff_index] = 0; /* Terminate word at suffix start position... */
@@ -434,7 +435,7 @@ _vocab_ptree_next_branch(parse_tree_branch_t *branches, int branches_nr, int cur
 inline int
 _vocab_ptree_add_final(parse_tree_node_t *nodes, int pos, int storage_code, int value)
 {
-/** sciprintf("adding FINAL leafbranch (%04x, %04x) at %03x\n", storage_code, value, pos);*/
+  sciprintf("adding FINAL leafbranch (%04x, %04x) at %03x\n", storage_code, value, pos);
   nodes[pos].type = PARSE_TREE_NODE_BRANCH;
   nodes[pos].content.branches[0] = pos+1;
   nodes[pos].content.branches[1] = pos+2;
@@ -458,7 +459,7 @@ _vocab_ptree_add_storage_list(parse_tree_node_t *nodes, int pos, int storage_cod
      **        list_nr    pos+4 (return value)
      */
 {
-/** sciprintf("Adding BRANCH (%04x, %04x) from %03x to %03x\n", storage_code, list_nr, pos, pos+4);*/
+  sciprintf("Adding BRANCH (%04x, %04x) from %03x to %03x\n", storage_code, list_nr, pos, pos+4);
   nodes[pos].type = PARSE_TREE_NODE_BRANCH;
   nodes[pos].content.branches[0] = pos + 1;
   nodes[pos].content.branches[1] = pos + 2;
@@ -502,9 +503,9 @@ _vocab_ptree_try_branches(parse_tree_node_t *nodes, result_word_t *words, int wo
     return OUT_OF_NODES;
   }
 
-  if (parent_node + 1>= 0) { /* Must be a branch node */
+  if (parent_node >= 0) { /* Must be a branch node */
     nodes[parent_node].content.branches[linkside] = ourfirstnode;
-/** sciprintf("Linking %03x to parent node %03x\n", ourfirstnode, parent_node); */
+    sciprintf("Linking %03x to parent node %03x\n", ourfirstnode, parent_node);
   }
 
   while (branch_nr >= 0) {
@@ -549,8 +550,10 @@ _vocab_ptree_try_branches(parse_tree_node_t *nodes, result_word_t *words, int wo
 	  *last_node = old_last_node; /* No success, so remove branch */
 /** sciprintf("returned without success\n");*/
 
-	  if (result == OUT_OF_NODES)
+	  if (result == OUT_OF_NODES) {
+	    fprintf(stderr,"Returning Out Of Nodes\n");
 	    return OUT_OF_NODES;
+	  }
 
 	} else if (command == VOCAB_TREE_NODE_COMPARE_TYPE) {
 
@@ -600,7 +603,6 @@ vocab_build_parse_tree(parse_tree_node_t *nodes, result_word_t *words, int words
 
   if (words_nr <= 0)
     return 1;
-
   while (curr_word < words_nr) {
 
     /* Add initial branch */

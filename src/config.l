@@ -105,7 +105,6 @@ color_mode[[:blank:]]*"="[[:blank:]]*{PARAMTOKEN} {
 
   while (isspace(*yytext))
     yytext++;
-
   conf[cur_section].color_mode = _parse_color_mode(yytext);
 }
 
@@ -348,8 +347,9 @@ _parse_color_mode(char *mode) /* Parses the color mode string */
   int i = 0;
 
   while (valid_modes[i].name) {
-    if (g_strcasecmp(mode, valid_modes[i].name))
+    if (0 == g_strcasecmp(mode, valid_modes[i].name))
       return valid_modes[i].value;
+
     i++;
   }
 

@@ -258,6 +258,14 @@ AC_CHECK_INCLUDE_PATH([png.h],[$_ac_png_includes],[], ac_png_includes)
 AC_CHECK_LINK_PATH([png_info_init((png_infop)0);],$_ac_png_libraries,["-lpng"],
 		 [$ac_png_includes],[#include <png.h>], ac_png_libraries)
 
+
+if test "$ac_png_libraries" = no; then
+# Try again with -lz
+	LIBS="$LIBS -lz"
+	AC_CHECK_LINK_PATH([png_info_init((png_infop)0);],$_ac_png_libraries,["-lpng"],
+			 [$ac_png_includes],[#include <png.h>], ac_png_libraries)
+fi
+
 if test "$ac_png_includes" = no || test "$ac_png_libraries" = no; then
 
 	AC_MSG_RESULT([failed])

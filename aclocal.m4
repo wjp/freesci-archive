@@ -1,4 +1,4 @@
-dnl aclocal.m4 generated automatically by aclocal 1.4a
+dnl aclocal.m4 generated automatically by aclocal 1.4
 
 dnl Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
@@ -226,6 +226,14 @@ AC_CHECK_INCLUDE_PATH([png.h],[$_ac_png_includes],[], ac_png_includes)
 AC_CHECK_LINK_PATH([png_info_init((png_infop)0);],$_ac_png_libraries,["-lpng"],
 		 [$ac_png_includes],[#include <png.h>], ac_png_libraries)
 
+
+if test "$ac_png_libraries" = no; then
+# Try again with -lz
+	LIBS="$LIBS -lz"
+	AC_CHECK_LINK_PATH([png_info_init((png_infop)0);],$_ac_png_libraries,["-lpng"],
+			 [$ac_png_includes],[#include <png.h>], ac_png_libraries)
+fi
+
 if test "$ac_png_includes" = no || test "$ac_png_libraries" = no; then
 
 	AC_MSG_RESULT([failed])
@@ -307,8 +315,6 @@ dnl AM_INIT_AUTOMAKE(package,version, [no-define])
 
 AC_DEFUN(AM_INIT_AUTOMAKE,
 [AC_REQUIRE([AC_PROG_INSTALL])
-dnl We require 2.13 because we rely on SHELL being computed by configure.
-AC_PREREQ([2.13])
 PACKAGE=[$1]
 AC_SUBST(PACKAGE)
 VERSION=[$2]

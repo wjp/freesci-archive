@@ -393,7 +393,7 @@ main(int argc, char** argv)
       i++;
     }
 
-    if (i == -1) {
+    if (j == -1) {
       fprintf(stderr,"Unsupported graphics subsystem: %s\n", requested_gfx_driver);
       return 1;
     } 
