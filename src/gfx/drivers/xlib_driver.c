@@ -273,12 +273,12 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	PropMotifWmHints motif_hints;
 	Atom prop, proptype;
 #endif
-	struct _xlib_state *S_alt = ((struct _xlib_state *)(drv->state)); /* same as S, workaround for HP-UX cc */
+	struct _xlib_state **S_alt = ((struct _xlib_state **)&(drv->state)); /* pointer to S, workaround for HP-UX cc */
 
 	int i;
 
 	if (!S)
-		S_alt = sci_malloc(sizeof(struct _xlib_state));
+	  *S_alt = sci_malloc(sizeof(struct _xlib_state));
 
 	flags = SCI_XLIB_INSERT_MODE;
 

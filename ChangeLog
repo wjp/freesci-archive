@@ -1,3 +1,8 @@
+2003-01-22  Rune Orsval  <u951663@daimi.au.dk>
+
+	* src/gfx/drivers/xlib_dirver.c (xlib_init_specific): Fixed
+	segfault.
+	
 2003-01-22  Alexander Angas  <wgd@internode.on.net>
 
 	* src/gfx/drivers/dx_driver.cpp: Added support for graphics scaling
