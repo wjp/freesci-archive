@@ -1,3 +1,11 @@
+2001-04-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/widgets.c (gfxw_new_dyn_view): z coordinate is subtracted
+	when drawing, leaving 'pos' unmodified
+
+	* src/engine/kfile.c (caseopen): Added case-insensitive file open
+	commands
+
 2001-04-05  Solomon Peachy <pizza@shaftnet.org>
 
 	AUTHORS

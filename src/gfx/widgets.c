@@ -854,6 +854,7 @@ _gfxwop_dyn_view_draw(gfxw_widget_t *widget, point_t pos)
 {
 	gfxw_dyn_view_t *view = (gfxw_dyn_view_t *) widget;
 	DRAW_ASSERT(widget, GFXW_DYN_VIEW);
+	pos.y -= view->z;
 
 	GFX_ASSERT(gfxop_draw_cel(view->visual->gfx_state, view->view, view->loop,
 				  view->cel, _move_point(view->draw_bounds, pos),
@@ -883,6 +884,7 @@ _gfxwop_pic_view_draw(gfxw_widget_t *widget, point_t pos)
 {
 	gfxw_dyn_view_t *view = (gfxw_dyn_view_t *) widget;
 	DRAW_ASSERT(widget, GFXW_PIC_VIEW);
+	pos.y -= view->z;
 
 	GFX_ASSERT(gfxop_draw_cel_static(view->visual->gfx_state, view->view, view->loop,
 					 view->cel, _move_point(view->draw_bounds, pos),
@@ -1051,7 +1053,6 @@ gfxw_new_dyn_view(gfx_state_t *state, point_t pos, int z, int view, int loop, in
 	else
 		yalignmod = 0;
 
-	widget->pos.y -= z;
 	widget->z = z;
 
 	widget->draw_bounds = gfx_rect(widget->pos.x - xalignmod,
@@ -2365,10 +2366,10 @@ gfxw_picviewize_dynview(gfxw_dyn_view_t *dynview)
 	dynview->type = GFXW_PIC_VIEW;
 	dynview->flags |= GFXW_FLAG_DIRTY;
 	
-	_gfxw_set_ops_PICVIEW(dynview);
+	_gfxw_set_ops_PICVIEW(GFXW(dynview));
 
 	if (dynview->parent)
-		_gfxw_dirtify_container(dynview->parent, dynview);
+		_gfxw_dirtify_container(dynview->parent, GFXW(dynview));
 
 	return dynview;
 }

@@ -50,6 +50,50 @@ static struct _savegame_index_struct {
 /* This assumes modern stream implementations. It may break on DOS. */
 
 
+/* Attempts to find a matching case-insensitive file. Not particularly
+** fast, but it should be fairly portable.
+*/
+static FILE *
+fcaseopen(char *fname, char *mode)
+{
+	char *name;
+	sci_dir_t dir;
+	FILE *retval = NULL;
+	sci_init_dir(&dir);
+	name = sci_find_first(&dir, "*");
+
+	while (name && !retval) {
+		if (!strcasecmp(fname, name))
+			retval = fopen(name, mode);
+		if (!retval)
+			name = sci_find_next(&dir);
+	}
+
+	sci_finish_find(&dir);
+	return retval;
+}
+
+static int
+caseopen(char *fname, int mode)
+{
+	char *name;
+	sci_dir_t dir;
+	int retval = 0;
+	sci_init_dir(&dir);
+	name = sci_find_first(&dir, "*");
+
+	while (name && !retval) {
+		if (!strcasecmp(fname, name))
+			retval = open(name, mode);
+		if (!retval)
+			name = sci_find_next(&dir);
+	}
+
+	sci_finish_find(&dir);
+	return retval;
+}
+
+
 /* Attempts to mirror a file by copying it from the resource firectory
 ** to the working directory. Returns NULL if the file didn't exist.
 ** Otherwise, the new file is then opened for reading or writing.
@@ -62,7 +106,7 @@ f_open_mirrored(state_t *s, char *fname)
 	struct stat fstate;
 
 	chdir(s->resource_dir);
-	fd = open(fname, O_RDONLY | O_BINARY);
+	fd = caseopen(fname, O_RDONLY | O_BINARY);
 	if (!fd) {
 		chdir(s->work_dir);
 		return NULL;
@@ -96,7 +140,7 @@ f_open_mirrored(state_t *s, char *fname)
 
 	close(fd);
 
-	return fopen(fname, "r+");
+	return fcaseopen(fname, "r+");
 }
 
 
@@ -104,46 +148,46 @@ f_open_mirrored(state_t *s, char *fname)
 #define _K_FILE_MODE_OPEN_OR_CREATE 1
 #define _K_FILE_MODE_CREATE 2
 
+
 void
 file_open(state_t *s, char *filename, int mode)
 {
-  int retval = 1; /* Ignore file_handles[0] */
-  FILE *file = NULL;
+	int retval = 1; /* Ignore file_handles[0] */
+	FILE *file = NULL;
 
-  SCIkdebug(SCIkFILE, "Opening file %s with mode %d\n", filename, mode);
-  if ((mode == _K_FILE_MODE_OPEN_OR_FAIL) || (mode == _K_FILE_MODE_OPEN_OR_CREATE))
-    {
-      file = fopen(filename, "r+"); /* Attempt to open existing file */
-      SCIkdebug(SCIkFILE, "Opening file %s with mode %d\n", filename, mode);
-      if (!file) {
-	SCIkdebug(SCIkFILE, "Failed. Attempting to copy from resource dir...\n");
-	file = f_open_mirrored(s, filename);
-	if (file)
-	  SCIkdebug(SCIkFILE, "Success!\n");
-	else
-	  SCIkdebug(SCIkFILE, "Not found.\n");
-      }
-    }
-  if ((!file) && ((mode == _K_FILE_MODE_OPEN_OR_CREATE) || (mode == _K_FILE_MODE_CREATE)))
-    {
-      file = fopen(filename, "w+"); /* Attempt to create file */
-      SCIkdebug(SCIkFILE, "Creating file %s with mode %d\n", filename, mode);
-    }
-  if (!file) { /* Failed */
-    SCIkdebug(SCIkFILE, "file_open() failed\n");
-    s->acc = 0;
-    return;
-  }
+	SCIkdebug(SCIkFILE, "Opening file %s with mode %d\n", filename, mode);
+	if ((mode == _K_FILE_MODE_OPEN_OR_FAIL) || (mode == _K_FILE_MODE_OPEN_OR_CREATE)) {
+		file = fcaseopen(filename, "r+"); /* Attempt to open existing file */
+		SCIkdebug(SCIkFILE, "Opening file %s with mode %d\n", filename, mode);
+		if (!file) {
+			SCIkdebug(SCIkFILE, "Failed. Attempting to copy from resource dir...\n");
+			file = f_open_mirrored(s, filename);
+			if (file)
+				SCIkdebug(SCIkFILE, "Success!\n");
+			else
+				SCIkdebug(SCIkFILE, "Not found.\n");
+		}
+	}
 
-  while (s->file_handles[retval] && (retval < s->file_handles_nr))
-    retval++;
+	if ((!file) && ((mode == _K_FILE_MODE_OPEN_OR_CREATE) || (mode == _K_FILE_MODE_CREATE))) {
+			file = fcaseopen(filename, "w+"); /* Attempt to create file */
+			SCIkdebug(SCIkFILE, "Creating file %s with mode %d\n", filename, mode);
+	}
+	if (!file) { /* Failed */
+		SCIkdebug(SCIkFILE, "file_open() failed\n");
+		s->acc = 0;
+		return;
+	}
 
-  if (retval == s->file_handles_nr) /* Hit size limit => Allocate more space */
-    s->file_handles = realloc(s->file_handles, sizeof(FILE *) * ++(s->file_handles_nr));
+	while (s->file_handles[retval] && (retval < s->file_handles_nr))
+		retval++;
 
-  s->file_handles[retval] = file;
+	if (retval == s->file_handles_nr) /* Hit size limit => Allocate more space */
+		s->file_handles = realloc(s->file_handles, sizeof(FILE *) * ++(s->file_handles_nr));
 
-  s->acc = retval;
+	s->file_handles[retval] = file;
+
+	s->acc = retval;
 }
 
 void
@@ -553,7 +597,7 @@ _k_find_savegame_by_name(char *game_id_file, char *name)
 	for (i = 0; i < MAX_SAVEGAME_NR; i++) {
 		if (!chdir((buf = _k_get_savedir_name(i)))) {
 			char namebuf[32]; /* Save game name buffer */
-			FILE *idfile = fopen(game_id_file, "r");
+			FILE *idfile = fcaseopen(game_id_file, "r");
 
 			if (idfile) {
 				fgets(namebuf, 31, idfile);
@@ -669,7 +713,7 @@ update_savegame_indices(char *gfname)
 		strcat(gidf_name, G_DIR_SEPARATOR_S);
 		strcat(gidf_name, gfname);
 
-		if ((fd = open(gidf_name, O_RDONLY)) > 0) {
+		if ((fd = caseopen(gidf_name, O_RDONLY)) > 0) {
 			_savegame_indices[_savegame_indices_nr].id = i;
 			_savegame_indices[_savegame_indices_nr++].timestamp = get_file_mtime(fd);
 			close(fd);
@@ -718,7 +762,7 @@ kGetSaveFiles(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		free(savedir_name);
 
-		if ((idfile = fopen(gidf_name, "r"))) { /* Valid game ID file: Assume valid game */
+		if ((idfile = fcaseopen(gidf_name, "r"))) { /* Valid game ID file: Assume valid game */
 			char namebuf[SCI_MAX_SAVENAME_LENGTH]; /* Save game name buffer */
 			fgets(namebuf, SCI_MAX_SAVENAME_LENGTH-1, idfile);
 			if (strlen(namebuf) > 0) {
@@ -793,7 +837,7 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		chdir(savegame_dir);
 
-		if ((idfile = fopen(game_id_file_name, "w"))) {
+		if ((idfile = fcaseopen(game_id_file_name, "w"))) {
 
 			fprintf(idfile, game_description);
 			fclose(idfile);

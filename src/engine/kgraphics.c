@@ -1935,7 +1935,8 @@ _k_prepare_view_list(state_t *s, gfxw_list_t *list, int options, int funct_nr, i
 		int oldsignal = view->signal;
 
 		_k_set_now_seen(s, view->ID);
-		_priority = VIEW_PRIORITY((view->pos.y));
+		_priority = /*GET_SELECTOR(obj, y); */((view->pos.y));/**/
+		_priority = VIEW_PRIORITY(_priority);
 
 		if (options & _K_MAKE_VIEW_LIST_DRAW_TO_CONTROL_MAP) { /* Picview */
 			priority = GET_SELECTOR(obj, priority);
@@ -2183,7 +2184,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		if (!widget) {
 			SCIkwarn(SCIkERROR, "Attempt to single-add invalid picview (%d/%d/%d)\n", view, loop, cel);
 		} else {
-			ADD_TO_CURRENT_PICTURE_PORT(gfxw_picviewize_dynview(widget));
+			ADD_TO_CURRENT_PICTURE_PORT(gfxw_picviewize_dynview((gfxw_dyn_view_t *) widget));
 		}
 			
 	} else {
@@ -2191,7 +2192,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		if (!list)
 			return;
 
-		pic_views = gfxw_new_list(s->picture_port->bounds, 0);
+		pic_views = gfxw_new_list(s->picture_port->bounds, 1);
 
 		SCIkdebug(SCIkGRAPHICS, "Preparing picview list...\n");
 		_k_make_view_list(s, &pic_views, list, 0, funct_nr, argc, argp);
