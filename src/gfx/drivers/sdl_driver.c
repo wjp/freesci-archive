@@ -396,7 +396,7 @@ static void lineColor(SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 
    }
     }
     break;
-   default: /* case 4*/
+   case 4: 
      for(; x < dx; x++, pixel += pixx) {
       *(Uint32*)pixel = color;
       y += dy; 
@@ -406,6 +406,8 @@ static void lineColor(SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 
       }
      }
      break;
+   default:
+     fprintf(stderr, "invalid depth\n");
   }
 
 }
@@ -847,10 +849,10 @@ sdl_map_key(gfx_driver_t *drv, SDL_keysym keysym)
   int rkey = keysym.unicode & 0x7f;
 
   if ((skey >= SDLK_a) && (skey <= SDLK_z))
-      return rkey;
+      return ('a' + (skey - SDLK_a));
 
   if ((skey >= SDLK_0) && (skey <= SDLK_9))
-    return rkey;
+    return ('0' + (skey - SDLK_0));
   
   if (S->flags & SCI_SDL_SWAP_CTRL_CAPS) {
     switch (skey) {
@@ -943,9 +945,7 @@ sdl_fetch_event(gfx_driver_t *drv, long wait_usec, sci_event_t *sci_event)
 {
   SDL_Event event;
   int x_button_xlate[] = {0, 1, 3, 2, 4, 5};
-  struct {
-    int tv_sec, tv_usec;
-  } ctime, timeout_time, sleep_time;
+  struct timeval ctime, timeout_time, sleep_time;
   int usecs_to_sleep;
   
   sci_gettime(&(timeout_time.tv_sec), &(timeout_time.tv_usec));
