@@ -262,6 +262,7 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 	int xsize = xfact * 320;
 	int ysize = yfact * 200;
 	XSizeHints *size_hints;
+	XClassHint *class_hint;
         XImage *foo_image = NULL;
 	int reverse_endian = 0;
 	int i;
@@ -346,6 +347,12 @@ xlib_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 		blue_shift = 32 - ffs((~xvisinfo.blue_mask >> 1) & (xvisinfo.blue_mask));
 	}
 
+	class_hint = XAllocClassHint();
+	class_hint->res_name = "FreeSCI";
+	class_hint->res_class = "FreeSCI";
+	XSetIconName(S->display, S->window, "FreeSCI");	
+	XSetClassHint(S->display, S->window, class_hint);
+	XFree(class_hint);
 	size_hints = XAllocSizeHints();
 	size_hints->base_width = size_hints->min_width = size_hints->max_width = xsize;
 	size_hints->base_height = size_hints->min_height = size_hints->max_height = ysize;
@@ -1198,6 +1205,7 @@ x_get_event(gfx_driver_t *drv, int eventmask, long wait_usec, sci_event_t *sci_e
 			case ReparentNotify:
 			case ConfigureNotify:
 			case MapNotify:
+			case UnmapNotify:
 				break;
 
 			case KeyPress: {

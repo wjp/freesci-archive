@@ -1,3 +1,7 @@
+2001-08-18  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/gfx/drivers/xlib_driver.c: Now sets the name of the window class.
+
 2001-08-18  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* configure.in: Added --with-alloc option to set SCI_ALLOC
