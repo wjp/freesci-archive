@@ -5374,9 +5374,9 @@ kfunct 0x30: GameIsRestarting
                        <member><type/(word)/ state: 1 if sound should be active, 0 if it should be turned off</member>
                    </simplelist></para>
 		<para>
-			Returns: <type>(void)</type>
+			Returns: <type>(word) 1 if currently active, 0 if currently muted.</type>
 		</para><para>
-			This function completely mutes or un-mutes the sound subsystem.
+			This function completely mutes or un-mutes the sound subsystem.  If called with no parameters, it returns the current status.
 		</para>
 	</sect3>
 
