@@ -988,7 +988,8 @@ main(int argc, char** argv)
 
 	if (active_conf != NULL)
 		resmgr = scir_new_resource_manager(resource_dir,
-						   active_conf->res_version,
+						   cl_options.res_version ? cl_options.res_version :
+						   			    active_conf->res_version,
 						   1, 256*1024); else
 		resmgr = scir_new_resource_manager(resource_dir,
 						   cl_options.res_version,
@@ -1326,6 +1327,8 @@ main(int argc, char** argv)
 
 	game_exit(gamestate);
 	script_free_engine(gamestate); /* Uninitialize game state */
+	script_free_breakpoints(gamestate);
+
 	scir_free_resource_manager(resmgr);
 
 	if (conf_entries >= 0)

@@ -1,3 +1,10 @@
+2003-03-17  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/engine/vm.c (get_class_address): Requests for classes in the
+	running script no longer result in another lock.
+	* src/engine/kgraphics.c (kGraph): Reverted my own number-of-colors
+	patch (2003-02-05)
+
 2003-03-14  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/engine/kmath.c (kAbs): Fix compiler error.
@@ -8,10 +15,15 @@
 
 2003-03-08  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/engine/kmath.c (kAbs): Remove warning.
+	* src/engine/klists.c (kNodeValue): Handle NULL pointers properly.
+
+2003-03-08  Lars Skovlund  <lskovlun@image.dk>
+
 	* src/engine/vm.c: Forward port of VM fixes from the main branch.
 	* src/engine/kmath.c (kAbs): Work around a hack in Hoyle1.
 	* src/engine/kgraphics.c (kTextSize): Really accept NULL pointers.
-
+	
 2003-03-08  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sfx/seq/sequencers.c: Define sfx_sequencer_oss_adlib and

@@ -460,6 +460,18 @@ c_vr(state_t *s)
 }
 
 int
+c_segkill(state_t *s)
+{
+  int i = 0;
+  while (i < cmd_paramlength) {
+    int nr = cmd_params[i++].val;
+
+    s->seg_manager.set_lockers(&(s->seg_manager), nr, 0, SEG_ID);
+//    _sm_deallocate(&(s->seg_manager), nr, 1);
+  }
+}
+
+int
 c_seginfo(state_t *s)
 {
 	int i = 0;
@@ -3139,6 +3151,10 @@ script_debug(state_t *s, reg_t *pc, stack_ptr_t *sp, stack_ptr_t *pp, reg_t *obj
 					 "Gives a short listing of all segments\n\n"
 					 "SEE ALSO\n\n"
 					 "  seginfo.1");
+			con_hook_command(c_segkill, "segkill", "!i*",
+					 "Deletes the specified segment\n\n"
+					 "USAGE\n\n"
+					 "  segkill <nr>\n");
 			con_hook_command(c_seginfo, "seginfo", "!i*",
 					 "Explains the specified segment\n\n"
 					 "USAGE\n\n"

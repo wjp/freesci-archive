@@ -184,7 +184,7 @@ script_error(state_t *s, char *file, int line, char *reason)
 #define CORE_ERROR(area, msg) script_error(s, "[" area "] " __FILE__, __LINE__, msg)
 
 inline reg_t
-get_class_address(state_t *s, int classnr, int lock)
+get_class_address(state_t *s, int classnr, int lock, reg_t caller)
 {
 	class_t *class = s->classtable + classnr;
 
@@ -211,7 +211,8 @@ get_class_address(state_t *s, int classnr, int lock)
 				return NULL_REG;
 			}
 		} else
-			s->seg_manager.increment_lockers(&s->seg_manager, class->reg.segment, SEG_ID);
+			if (caller.segment != class->reg.segment)
+				s->seg_manager.increment_lockers(&s->seg_manager, class->reg.segment, SEG_ID);
 
 		return class->reg;
 	}
@@ -1181,7 +1182,7 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x28: /* class */
-			s->r_acc = get_class_address(s, (unsigned) opparams[0], SCRIPT_GET_LOAD);
+			s->r_acc = get_class_address(s, (unsigned) opparams[0], SCRIPT_GET_LOAD, xs->addr.pc);
 			break;
 
 		case 0x2a: /* self */
@@ -1200,7 +1201,7 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x2b: /* super */
-			r_temp = get_class_address(s, opparams[0], 0);
+			r_temp = get_class_address(s, opparams[0], 0, xs->addr.pc);
 
 			if (!r_temp.segment)
 				CORE_ERROR("VM", "Invalid superclass in object");
@@ -1716,8 +1717,7 @@ script_lookup_export(state_t *s, int script_nr, int export)
 		return make_reg(seg, getUInt16((byte *)(script->export_table + export)));
 }
 
-#define INST_LOOKUP_CLASS(id) ((id == 0xffff)? NULL_REG : get_class_address(s, id, SCRIPT_GET_LOCK))
-
+#define INST_LOOKUP_CLASS(id) ((id == 0xffff)? NULL_REG : get_class_address(s, id, SCRIPT_GET_LOCK, reg))
 
 int
 script_instantiate(state_t *s, int script_nr)

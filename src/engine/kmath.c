@@ -42,7 +42,6 @@ kAbs(state_t *s, int funct_nr, int argc, reg_t *argv)
 	/* This is a hack, but so is the code in Hoyle1 that needs it. */
 	if (argv[0].segment)
 		return make_reg(0, 0x3e8); /* Yes people, this is an object */
-
 	return make_reg(0, abs(SKPV(0)));
 }
 
