@@ -17,11 +17,6 @@
 
 ***************************************************************************/
 
-/* Please note that this is currently a kludge hack to give win32 sound
-   support.  the soundserver code is all being refactored into something 
-   cleaner -- abstracting out the communications layer, basically.
-*/
-
 #include <engine.h>
 #include <soundserver.h>
 #include <sound.h>
@@ -40,6 +35,8 @@ SDL_Thread *child;
 SDL_mutex *out_mutex;
 SDL_mutex *in_mutex;
 SDL_cond *in_cond;
+
+Uint32 master;
 
 byte *sound_data = NULL;
 int sound_data_size = 0;
@@ -64,7 +61,9 @@ int
 sound_sdl_init(state_t *s)
 {
   soundserver = &sound_sdl;
-  
+
+  master = SDL_ThreadID();
+
   if (init_midi_device(s) < 0)
     return -1;
 
@@ -138,7 +137,7 @@ sound_sdl_get_command(GTimeVal *wait_tvp)
 	sound_event_t *event = NULL;
 
 	if (!sound_eq_peek_event(&inqueue)) {
-		/*    usleep(wait_tvp->tv_usec); */
+		usleep(wait_tvp->tv_usec);
 		return NULL;
 	}
 	SDL_LockMutex(in_mutex);
@@ -153,31 +152,42 @@ sound_sdl_get_command(GTimeVal *wait_tvp)
 int
 sound_sdl_get_data(byte **data_ptr, int *size, int maxlen)
 {
+  SDL_cond *cond;
+  cond = (SDL_ThreadID() == master) ? datain_cond : dataout_cond ;
   /* we ignore maxlen */
   while (sound_data == NULL) 
-    SDL_CondWait(datain_cond, data_mutex);
+    SDL_CondWait(cond, data_mutex);
 
   *data_ptr = sound_data;
   *size = sound_data_size;
   sound_data = NULL;
 
   SDL_UnlockMutex(data_mutex);
-  SDL_CondSignal(dataout_cond);
+
+  cond = (SDL_ThreadID() == master) ? dataout_cond : datain_cond ;
+
+  SDL_CondSignal(cond);
   return *size;
 }
 
 int
 sound_sdl_send_data(byte *data_ptr, int maxsend) 
 {
+  SDL_cond *cond;
+  cond = (SDL_ThreadID() == master) ? datain_cond : dataout_cond ;
+
   while(sound_data != NULL) 
-    SDL_CondWait(dataout_cond, data_mutex);
+    SDL_CondWait(cond, data_mutex);
 
   sound_data = xalloc(maxsend);
   memcpy(sound_data, data_ptr, maxsend);
   sound_data_size = maxsend;
   printf(" %d bytes ",maxsend);
   SDL_UnlockMutex(data_mutex);
-  SDL_CondSignal(datain_cond);
+
+  cond = (SDL_ThreadID() == master) ? dataout_cond : datain_cond ;
+
+  SDL_CondSignal(cond);
   return maxsend;
 }
 
