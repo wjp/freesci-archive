@@ -945,7 +945,7 @@ void draw_pic0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 	  case 7: /* Draw an _embedded_ view in the picture */
           	x = ((*ptr & 0xf0) << 4) | (0xff & ptr[1]);
 		y = ((*ptr & 0x0f) << 8) | (0xff & ptr[2]);
-		ptr=ptr+2+getInt16(ptr); /* Past the embedded view */
+		ptr=ptr+5+getInt16(ptr); /* Past the embedded view */
 		break;
 	  case 8: /* Sets priority values for the pic */
 	      ptr+=16;

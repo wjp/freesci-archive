@@ -788,6 +788,9 @@ void _k_set_now_seen(state_t *s, heap_ptr object)
   int xmod = 0, ymod = 0;
   resource_t *viewres;  
 
+    if (lookup_selector(s, object, s->selector_map.nsTop, NULL)
+	!= SELECTOR_VARIABLE) { return; } /* This isn't fatal */
+      
   x = GET_SELECTOR(object, x);
   y = GET_SELECTOR(object, y);
   z = GET_SELECTOR(object, z);

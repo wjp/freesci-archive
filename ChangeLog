@@ -1,5 +1,10 @@
 2000-04-16  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/core/kgraphics.c (k_set_now_seen): Fixed warning messages caused
+	  by my new code
+
+2000-04-16  Lars Skovlund  <lskovlun@image.dk>
+
 	* src/core/vocab_debug.c (vocabulary_get_knames1): Fixed kernel names
 	  loading for Christmas Card 1990 (Season's Greetings)
 	* src/core/kgraphics.c (kAnimate): Fixed problem with the main menu
