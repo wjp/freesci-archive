@@ -1,3 +1,8 @@
+2003-08-28  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/scicore/tools.c (sci_gettime): Fixed a bug in the win32
+	implementation of this function.
+
 2003-08-26  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* src/sound/midiout_fsynth.c: Added to repository.
