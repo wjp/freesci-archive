@@ -1,6 +1,6 @@
 FreeSCI - Dreamcast
 
-Last update: 2003-02-22
+Last update: 2003-07-30
 
 
 Index
@@ -35,7 +35,7 @@ You will need the following:
 - GCC version 3.0.4 and binutils for both SH4 and ARM. It is highly
   recommended that you use version 3.0.4 of GCC, earlier and later versions
   are known to cause problems.
-- KallistiOS (KOS) version 1.1.10 (or latest CVS if 1.1.10 hasn't been
+- KallistiOS (KOS) version 1.2.1 (or latest CVS if that version hasn't been
   released yet). Available from http://cadcdev.sourceforge.net. (Please refer
   to the KOS documentation for instructions on how to set it up.)
 

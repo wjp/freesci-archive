@@ -211,8 +211,7 @@ vram_init_gfx(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
 	if (flags & SCI_DC_REFRESH_50HZ) switch (xfact) {
 		case 1:
-			sciprintf("Warning: DM_320x240_PAL not yet implemented, using DM_320x240 instead.\n");
-			vidres = DM_320x240;
+			vidres = DM_320x240_PAL;
 			break;
 		case 2:
 			vidres = DM_640x480_PAL_IL;
