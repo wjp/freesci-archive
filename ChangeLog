@@ -1,3 +1,7 @@
+2000-01-30  Lars Skovlund  <lskovlun@image.dk>
+
+	* src/core/kgraphics.c: Implemented SetJump().
+
 2000-01-28  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/core/ksound.c (kDoSound): kDoSound now returns immediately if we

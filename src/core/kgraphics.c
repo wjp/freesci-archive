@@ -316,6 +316,48 @@ kDirLoop(state_t *s, int funct_nr, int argc, heap_ptr argp)
   PUT_SELECTOR(obj, loop, loop);
 }
 
+void
+kSetJump(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr object = UPARAM(0);
+  int dx = PARAM(1);
+  int dy = PARAM(2);
+  int gy = PARAM(3);
+  int t1 = 1;
+  int t2;
+  int x;
+  int y = 0;
+
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  if ((dx)&&(abs(dy)>dx)) t1=(2*abs(dy))/dx;
+  
+  SCIkdebug(SCIkBRESEN, "t1: %d\n", t1);
+
+  t1--;
+
+  do
+    {
+      t1++;
+      t2=t1*abs(dx)+dy;
+    }
+  while (abs(2*t2)<abs(dx));
+
+  SCIkdebug(SCIkBRESEN, "t1: %d, t2: %d\n", t1, t2);
+ 
+   if (t2) x=sqrt((gy*dx*dx)/(2*t2));
+  y=abs(t1*y);
+  if (dx>=0) y=-y;
+  if ((dy<0)&&(!y)) y=-sqrt(-2*gy*dy);
+
+  SCIkdebug(SCIkBRESEN, "SetJump for object at %x", object);
+  SCIkdebug(SCIkBRESEN, "xStep: %d, yStep: %d\n", x, y);
+
+  PUT_SELECTOR(object, xStep, x);
+  PUT_SELECTOR(object, yStep, y);
+
+}
+
 
 #define _K_BRESEN_AXIS_X 0
 #define _K_BRESEN_AXIS_Y 1

@@ -137,6 +137,7 @@ sci_kernel_function_t kfunct_mappers[] = {
   {"Said", kSaid },
   {"EditControl", kEditControl },
   {"Graph", kGraph },
+  {"SetJump", kSetJump },
   {SCRIPT_UNKNOWN_FUNCTION_STRING, k_Unknown },
   {0,0} /* Terminator */
 };
