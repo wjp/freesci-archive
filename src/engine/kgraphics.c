@@ -1379,13 +1379,13 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 		char **entries_list = NULL;
 		char *seeker;
 		int entries_nr;
-		int lsTop = GET_SELECTOR(obj, lsTop);
+		int lsTop = UGET_SELECTOR(obj, lsTop);
 		int list_top = 0;
 		int selection = 0;
 		int i;
 
 		SCIkdebug(SCIkGRAPHICS, "drawing list control %04x to %d,%d\n", obj, x, y);
-		cursor = GET_SELECTOR(obj, cursor);
+		cursor = UGET_SELECTOR(obj, cursor);
 
 		entries_nr = 0;
 		seeker = text;
@@ -2029,7 +2029,7 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 	assert_primary_widget_lists(s);
 
-	if (GFXWC(s->port) != GFXWC(s->dyn_views->parent) /* If dynviews are on other port... */
+	if ((GFXWC(s->port) != GFXWC(s->dyn_views->parent)) /* If dynviews are on other port... */
 	    || (s->dyn_views->next)) /* ... or not on top of the view list */
 		reparentize_primary_widget_lists(s, s->port);
 

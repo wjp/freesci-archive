@@ -1,3 +1,11 @@
+2001-01-12  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (_k_draw_control): Fixed list control
+	support for list addresses beyond 0x8000
+
+	* src/gfx/resmgr.c (gfxr_get_pic): Fixed support for unscaled
+	pic0
+
 2001-01-11  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/gfx/operations.c (_gfxop_set_pic): Fixed support for

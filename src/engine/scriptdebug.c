@@ -1266,8 +1266,8 @@ c_gfx_show_map(state_t *s)
 		break;
 
 	case 1:
-		gfx_xlate_pixmap(s->gfx_state->pic_unscaled->priority_map, s->gfx_state->driver->mode, 0);
-		gfxop_draw_pixmap(s->gfx_state, s->gfx_state->pic_unscaled->priority_map, gfx_rect(0, 0, 320, 200), gfx_point(0, 0));
+		gfx_xlate_pixmap(s->gfx_state->pic->priority_map, s->gfx_state->driver->mode, 0);
+		gfxop_draw_pixmap(s->gfx_state, s->gfx_state->pic->priority_map, gfx_rect(0, 0, 320, 200), gfx_point(0, 0));
 		break;
 
 	case 2:

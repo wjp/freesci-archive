@@ -260,8 +260,13 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 	res = (gfx_resource_t *) sbtree_get(tree, nr);
 
 	if (!res || res->mode != hash) {
-		gfxr_pic_t *pic = gfxr_interpreter_init_pic(state->version, state->driver->mode, (restype << 16) | nr);
+		gfxr_pic_t *pic;
 		gfxr_pic_t *unscaled_pic = NULL;
+
+		if (state->options->pic0_unscaled) {
+			need_unscaled = 0;
+			pic = gfxr_interpreter_init_pic(state->version, &mode_1x1_color_index, (restype << 16) | nr);
+		} else pic = gfxr_interpreter_init_pic(state->version, state->driver->mode, (restype << 16) | nr);
 
 		if (!pic) {
 			GFXERROR("Failed to allocate scaled pic!\n");
@@ -282,8 +287,12 @@ gfxr_get_pic(gfx_resstate_t *state, int nr, int maps, int flags, int default_pal
 			gfxr_free_pic(state->driver, pic);
 			if (unscaled_pic)
 				gfxr_free_pic(state->driver, unscaled_pic);
+
 			return NULL;
 		}
+
+		if (state->options->pic0_unscaled)
+			pic->priority_map = gfx_pixmap_scale_index_data(pic->priority_map, state->driver->mode);
 
 		if (!res) {
 			res = malloc(sizeof(gfx_resource_t));

@@ -193,6 +193,7 @@ gfx_pixmap_alloc_index_data(gfx_pixmap_t *pixmap)
 	return pixmap;
 }
 
+
 gfx_pixmap_t *
 gfx_pixmap_free_index_data(gfx_pixmap_t *pixmap)
 {
@@ -348,3 +349,72 @@ gfx_free_color(gfx_palette_t *pal, gfx_pixmap_color_t *color)
 	color->global_index = GFX_COLOR_INDEX_UNMAPPED;
 	return GFX_OK;
 }
+
+
+gfx_pixmap_t *
+gfx_pixmap_scale_index_data(gfx_pixmap_t *pixmap, gfx_mode_t *mode)
+{
+	byte *old, *new, *initial_new;
+	byte *linestart;
+	int linewidth;
+	int xl, yl;
+	int i, yc;
+	int xfact = mode->xfact;
+	int yfact = mode->yfact;
+
+	if (xfact == 1 && yfact == 1)
+		return pixmap;
+
+	if (!pixmap)
+		return NULL;
+
+	if (pixmap->flags & GFX_PIXMAP_FLAG_SCALED_INDEX)
+		return pixmap; /* Already done */
+
+	old = pixmap->index_data;
+
+	if (!old) {
+		GFXERROR("Attempt to scale index data without index data!\n");
+		return pixmap;
+	}
+
+	xl = pixmap->index_xl;
+	yl = pixmap->index_yl;
+	linewidth = xfact * xl;
+	initial_new = new = malloc(linewidth * yfact * yl);
+
+//	memset(new, 12, linewidth * yfact * yl);
+
+	for (yc = 0; yc < yl; yc++) {
+
+		linestart = new;
+
+		if (xfact == 1) {
+			memcpy(new, old, linewidth);
+			new += linewidth;
+			old += linewidth;
+		} else for (i = 0; i < xl; i++) {
+			byte fillc = *old++;
+			memset(new, fillc, xfact);
+			new += xfact;
+		}
+
+		for (i = 1; i < yfact; i++) {
+			memcpy(new, linestart, linewidth);
+			new += linewidth;
+		}
+	}
+
+	free(pixmap->index_data);
+	pixmap->index_data = initial_new;
+
+	pixmap->flags |= GFX_PIXMAP_FLAG_SCALED_INDEX;
+
+	pixmap->index_xl = linewidth;
+	pixmap->index_yl *= yfact;
+
+	fprintf(stderr,"Created %dx%d size %d\n", pixmap->index_xl, pixmap->index_yl, linewidth * yfact * yl);
+
+	return pixmap;
+}
+

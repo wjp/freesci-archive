@@ -222,6 +222,13 @@ gfx_free_color(gfx_palette_t *pal, gfx_pixmap_color_t *color);
 ** Returns   : (int) GFX_ERROR if any error occured, GFX_OK otherwise
 */
 
+gfx_pixmap_t *
+gfx_pixmap_scale_index_data(gfx_pixmap_t *pixmap, gfx_mode_t *mode);
+/* Scales the index data associated with a pixmap
+** Parameters: (gfx_pixmap_t *) pixmap: The pixmap whose index data should be scaled
+**             (gfx_mode_t *) mode: The mode to scale it to
+** Returns   : (gfx_pixmap_t *) pixmap
+*/
 
 
 #endif /* !_GFX_TOOLS_H_ */

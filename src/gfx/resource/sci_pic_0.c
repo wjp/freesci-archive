@@ -105,11 +105,13 @@ gfxr_init_pic(gfx_mode_t *mode, int ID)
 	pic->visual_map->colors = gfx_sci0_pic_colors;
 	pic->visual_map->colors_nr = GFX_SCI0_PIC_COLORS_NR;
 
-	pic->priority_map->flags = GFX_PIXMAP_FLAG_EXTERNAL_PALETTE | GFX_PIXMAP_FLAG_SCALED_INDEX;
-	pic->control_map->flags = GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
 	pic->visual_map->flags = GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
-	if (mode->xfact > 1 || mode->yfact > 1)
+	pic->priority_map->flags = GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
+	pic->control_map->flags = GFX_PIXMAP_FLAG_EXTERNAL_PALETTE;
+	if (mode->xfact > 1 || mode->yfact > 1) {
 		pic->visual_map->flags |= GFX_PIXMAP_FLAG_SCALED_INDEX;
+		pic->priority_map->flags |= GFX_PIXMAP_FLAG_SCALED_INDEX;
+	}
 
 	pic->priority_map->colors = gfx_sci0_image_colors;
 	pic->priority_map->colors_nr = GFX_SCI0_IMAGE_COLORS_NR;

@@ -437,12 +437,24 @@ sciw_new_list_control(gfxw_port_t *port, int ID, rect_t zone, int font_nr, char 
 	zone.x = 0;
 	zone.y = 0;
 
-        list->add(GFXWC(list),
-                  GFXW(gfxw_new_rect(zone, port->color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
+	if (list_top & 1) { /* Hack to work around aggressive caching */
 
-        list->add(GFXWC(list),
-                  GFXW(gfxw_new_rect(gfx_rect(zone.x, zone.y + 10, zone.xl, zone.yl - 20),
-				     port->color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
+		list->add(GFXWC(list),
+			  GFXW(gfxw_new_rect(zone, port->color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
+
+		list->add(GFXWC(list),
+			  GFXW(gfxw_new_rect(gfx_rect(zone.x, zone.y + 10, zone.xl, zone.yl - 20),
+					     port->color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
+	} else {
+
+		list->add(GFXWC(list),
+			  GFXW(gfxw_new_rect(gfx_rect(zone.x, zone.y, zone.xl, zone.yl - 10),
+					     port->color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
+
+		list->add(GFXWC(list),
+			  GFXW(gfxw_new_rect(gfx_rect(zone.x, zone.y + 10, zone.xl, zone.yl - 10),
+					     port->color, GFX_LINE_MODE_CORRECT, GFX_LINE_STYLE_NORMAL)));
+	}
 
 	zone.x = 1;
 	zone.y = 11;
