@@ -103,8 +103,8 @@ kAvoidPath(state_t *s, int funct_nr, int argc, reg_t *argv)
 		}
 
 		/* Generate a straight line. */
-		oref = s->seg_manager.alloc_dynmem(&s->seg_manager, POLY_POINT_SIZE*3,
-						   "AvoidPath polyline", &output);
+		oref = sm_alloc_dynmem(&s->seg_manager, POLY_POINT_SIZE*3,
+				       "AvoidPath polyline", &output);
 
 		POLY_SET_POINT(oref, 0, startx, starty);
 		POLY_SET_POINT(oref, 1, endx, endy);

@@ -223,7 +223,7 @@ get_class_address(state_t *s, int classnr, int lock, reg_t caller)
 			}
 		} else
 			if (caller.segment != class->reg.segment)
-				s->seg_manager.increment_lockers(&s->seg_manager, class->reg.segment, SEG_ID);
+				sm_increment_lockers(&s->seg_manager, class->reg.segment, SEG_ID);
 
 		return class->reg;
 	}
@@ -245,10 +245,11 @@ get_class_address(state_t *s, int classnr, int lock, reg_t caller)
 #define GET_OP_SIGNED_WORD() ((getInt16(code_buf + ((xs->addr.pc.offset) += 2) - 2)))
 #define GET_OP_SIGNED_FLEX() ((opcode & 1)? GET_OP_SIGNED_BYTE() : GET_OP_SIGNED_WORD())
 
-#define OBJ_SPECIES(s, reg, mem) SEG_GET_HEAP2(s, reg.segment, reg.offset + SCRIPT_SPECIES_OFFSET, mem)
+#define SEG_GET_HEAP( s, reg ) sm_get_heap( &s->seg_manager, reg )
+#define OBJ_SPECIES(s, reg) SEG_GET_HEAP(s, make_reg(reg.segment, reg.offset + SCRIPT_SPECIES_OFFSET))
 /* Returns an object's species */
 
-#define OBJ_SUPERCLASS(s, reg, mem) SEG_GET_HEAP2(s, reg.segment, reg.offset + SCRIPT_SUPERCLASS_OFFSET, mem)
+#define OBJ_SUPERCLASS(s, reg) SEG_GET_HEAP(s, make_reg(reg.segment, reg.offset + SCRIPT_SUPERCLASS_OFFSET))
 /* Returns an object's superclass */
 
 inline exec_stack_t *
@@ -258,11 +259,11 @@ execute_method(state_t *s, word script, word pubfunct, stack_ptr_t sp,
 	int seg;
 	guint16 temp;
 
-	if (!s->seg_manager.isloaded (&s->seg_manager, script, SCRIPT_ID)) /* Script not present yet? */
+	if (!sm_script_is_loaded (&s->seg_manager, script, SCRIPT_ID)) /* Script not present yet? */
 		script_instantiate(s, script);
-	seg = s->seg_manager.seg_get( &s->seg_manager, script );
+	seg = sm_seg_get( &s->seg_manager, script );
 
-	temp = s->seg_manager.validate_export_func( &s->seg_manager, pubfunct, seg );
+	temp = sm_validate_export_func( &s->seg_manager, pubfunct, seg );
 	VERIFY( temp, "Invalid pubfunct in export table" );
 	if( !temp ) {
 		sciprintf("Request for invalid exported function 0x%x of script 0x%x\n", pubfunct, script);
@@ -1695,11 +1696,11 @@ script_get_segment(state_t *s, int script_nr, int load)
 	if ((load & SCRIPT_GET_LOAD) == SCRIPT_GET_LOAD)
 		script_instantiate(s, script_nr);
 
-	segment = s->seg_manager.seg_get(&s->seg_manager, script_nr);
+	segment = sm_seg_get(&s->seg_manager, script_nr);
 
 	if (segment > 0) {
 		if ((load & SCRIPT_GET_LOCK) == SCRIPT_GET_LOCK)
-			s->seg_manager.increment_lockers(&s->seg_manager, segment, SEG_ID);
+			sm_increment_lockers(&s->seg_manager, segment, SEG_ID);
 
 		return segment;
 	} else
@@ -1771,14 +1772,14 @@ script_instantiate(state_t *s, int script_nr)
 		return 0;
 	}
 
-	if (s->seg_manager.isloaded (&s->seg_manager, script_nr, SCRIPT_ID)) { /* Is it already loaded? */
-		int seg = s->seg_manager.seg_get ( &s->seg_manager, script_nr );
-		s->seg_manager.increment_lockers( &s->seg_manager, seg, SEG_ID );
+	if (sm_script_is_loaded (&s->seg_manager, script_nr, SCRIPT_ID)) { /* Is it already loaded? */
+		int seg = sm_seg_get ( &s->seg_manager, script_nr );
+		sm_increment_lockers( &s->seg_manager, seg, SEG_ID );
 		return seg;
 	}
 
 /* fprintf(stderr,"Allocing %d(0x%x)\n", script->size, script->size); */
-	if (!s->seg_manager.allocate_script( &s->seg_manager, s, script_nr, &seg_id )) { /* ALL YOUR SCRIPT BASE ARE BELONG TO US */
+	if (!sm_allocate_script( &s->seg_manager, s, script_nr, &seg_id )) { /* ALL YOUR SCRIPT BASE ARE BELONG TO US */
 		sciprintf("Not enough heap space for script size 0x%x of script 0x%x,"
 			  " should this happen?`\n",
 			  script->size, script_nr);
@@ -1790,10 +1791,10 @@ script_instantiate(state_t *s, int script_nr)
 	reg.offset = 0;
 
 	/* Set heap position (beyond the size word) */
-	s->seg_manager.set_lockers( &s->seg_manager, 1, reg.segment, SEG_ID );
-	s->seg_manager.set_export_table_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
-	s->seg_manager.set_synonyms_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
-	s->seg_manager.set_synonyms_nr( &s->seg_manager, 0, reg.segment, SEG_ID );
+	sm_set_lockers( &s->seg_manager, 1, reg.segment, SEG_ID );
+	sm_set_export_table_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
+	sm_set_synonyms_offset( &s->seg_manager, 0, reg.segment, SEG_ID );
+	sm_set_synonyms_nr( &s->seg_manager, 0, reg.segment, SEG_ID );
 
 	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
 		/*
@@ -1807,15 +1808,15 @@ script_instantiate(state_t *s, int script_nr)
 		/* Instead, the script starts with a 16 bit int specifying the
 		** number of locals we need; these are then allocated and zeroed.  */
 
-		s->seg_manager.mcpy_in_out( &s->seg_manager, 0, script->data, script->size, reg.segment, SEG_ID);
+		sm_mcpy_in_out( &s->seg_manager, 0, script->data, script->size, reg.segment, SEG_ID);
 		magic_pos_adder = 2;  /* Step over the funny prefix */
 
 		if (locals_nr)
-			s->seg_manager.script_initialize_locals_zero( &s->seg_manager,
-								      reg.segment, locals_nr);
+			sm_script_initialise_locals_zero( &s->seg_manager,
+							  reg.segment, locals_nr);
 
 	} else {
-		s->seg_manager.mcpy_in_out( &s->seg_manager, 0, script->data, script->size, reg.segment, SEG_ID);
+		sm_mcpy_in_out( &s->seg_manager, 0, script->data, script->size, reg.segment, SEG_ID);
 		magic_pos_adder = 0;
 	}
 
@@ -1831,10 +1832,10 @@ script_instantiate(state_t *s, int script_nr)
 		reg_t data_base;
 		reg_t addr;
 		reg.offset += objlength; /* Step over the last checked object */
-		objtype = SEG_GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
+		objtype = SEG_GET_HEAP(s, reg);
 		if( !objtype ) break;
 
-		objlength = SEG_GET_HEAP(s, make_reg(reg.segment, reg.offset + 2), MEM_OBJ_SCRIPT);
+		objlength = SEG_GET_HEAP(s, make_reg(reg.segment, reg.offset + 2));
 
 		data_base = reg;
 		data_base.offset += 4;
@@ -1843,25 +1844,25 @@ script_instantiate(state_t *s, int script_nr)
 
 		switch( objtype ) {
 		case sci_obj_exports: {
-			s->seg_manager.set_export_table_offset( &s->seg_manager, data_base.offset,
+			sm_set_export_table_offset( &s->seg_manager, data_base.offset,
 								reg.segment, SEG_ID );
 		}
 			break;
 
 		case sci_obj_synonyms:
-			s->seg_manager.set_synonyms_offset( &s->seg_manager, addr.offset, reg.segment, SEG_ID ); /* +4 is to step over the header */
-			s->seg_manager.set_synonyms_nr( &s->seg_manager, (objlength) / 4, reg.segment, SEG_ID );
+			sm_set_synonyms_offset( &s->seg_manager, addr.offset, reg.segment, SEG_ID ); /* +4 is to step over the header */
+			sm_set_synonyms_nr( &s->seg_manager, (objlength) / 4, reg.segment, SEG_ID );
 			break;
 
 		case sci_obj_localvars:
-			s->seg_manager.script_initialize_locals( &s->seg_manager, data_base);
+			sm_script_initialise_locals( &s->seg_manager, data_base);
 			break;
 
 		case sci_obj_class: {
 			int classpos = addr.offset - SCRIPT_OBJECT_MAGIC_OFFSET;
 			int species;
 			reg_tmp.offset = addr.offset - SCRIPT_OBJECT_MAGIC_OFFSET;
-			species = OBJ_SPECIES(s, reg_tmp, MEM_OBJ_SCRIPT);
+			species = OBJ_SPECIES(s, reg_tmp);
 			if (species < 0 || species >= s->classtable_size) {
 				sciprintf("Invalid species %d(0x%x) not in interval "
 					  "[0,%d) while instantiating script %d\n",
@@ -1891,21 +1892,21 @@ script_instantiate(state_t *s, int script_nr)
 	do {
 		reg_t addr;
 		reg.offset += objlength; /* Step over the last checked object */
-		objtype = SEG_GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
+		objtype = SEG_GET_HEAP(s, reg);
 		if( !objtype ) break;
-		objlength = SEG_GET_HEAP2(s, reg.segment, reg.offset + 2, MEM_OBJ_SCRIPT);
+		objlength = SEG_GET_HEAP(s, make_reg(reg.segment, reg.offset + 2));
 		reg.offset += 4; /* Step over header */
 
 		addr = reg;
 
 		switch (objtype) {
 		case sci_obj_code:
-			s->seg_manager.script_add_code_block(&s->seg_manager, addr);
+			sm_script_add_code_block(&s->seg_manager, addr);
 			break;
 		case sci_obj_object:
 		case sci_obj_class:
 		{ /* object or class? */
-			object_t *obj = s->seg_manager.script_obj_init(&s->seg_manager, addr);
+			object_t *obj = sm_script_obj_init(&s->seg_manager, addr);
 			object_t *base_obj;
 
 reg_t oldpos = obj->variables[SCRIPT_SPECIES_SELECTOR];
@@ -1936,9 +1937,9 @@ reg_t oldpos = obj->variables[SCRIPT_SPECIES_SELECTOR];
 	} while ((objtype != 0) && (((unsigned)reg.offset) < script->size - 2));
 
 	if (relocation >= 0)
-		s->seg_manager.script_relocate(&s->seg_manager, make_reg(reg.segment, relocation));
+		sm_script_relocate(&s->seg_manager, make_reg(reg.segment, relocation));
 
-	s->seg_manager.script_free_unused_objects(&s->seg_manager, reg.segment);
+	sm_script_free_unused_objects(&s->seg_manager, reg.segment);
 
 	return reg.segment;		/* instantiation successful */
 }
@@ -1951,9 +1952,9 @@ script_uninstantiate(state_t *s, int script_nr)
 	int objtype, objlength;
 	int i;
 
-	reg.segment = s->seg_manager.seg_get( &s->seg_manager, script_nr);
-	
-	if (!s->seg_manager.isloaded (&s->seg_manager, script_nr, SCRIPT_ID) || reg.segment <= 0 ) { /* Is it already loaded? */
+	reg.segment = sm_seg_get( &s->seg_manager, script_nr);
+
+	if (!sm_script_is_loaded (&s->seg_manager, script_nr, SCRIPT_ID) || reg.segment <= 0 ) { /* Is it already loaded? */
 		/*    sciprintf("Warning: unloading script 0x%x requested although not loaded\n", script_nr); */
 		/* This is perfectly valid SCI behaviour */
 		return;
@@ -1962,9 +1963,9 @@ script_uninstantiate(state_t *s, int script_nr)
 	/* Make a pass over the object in order uninstantiate all superclasses */
 	objlength = 0;
 
-	s->seg_manager.decrement_lockers( &s->seg_manager, reg.segment, SEG_ID);  /* One less locker */
+	sm_decrement_lockers( &s->seg_manager, reg.segment, SEG_ID);  /* One less locker */
 
-	if( s->seg_manager.get_lockers( &s->seg_manager, reg.segment, SEG_ID) > 0 )
+	if( sm_get_lockers( &s->seg_manager, reg.segment, SEG_ID) > 0 )
 		return;
 
 	/* Free all classtable references to this script */
@@ -1975,9 +1976,9 @@ script_uninstantiate(state_t *s, int script_nr)
 	do {
 		reg.offset += objlength; /* Step over the last checked object */
 		
-		objtype = SEG_GET_HEAP(s, reg, MEM_OBJ_SCRIPT);
+		objtype = SEG_GET_HEAP(s, reg);
 		if( !objtype ) break;
-		objlength = SEG_GET_HEAP2(s, reg.segment, reg.offset + 2, MEM_OBJ_SCRIPT);  /* use SEG_UGET_HEAP ?? */
+		objlength = SEG_GET_HEAP(s, make_reg(reg.segment, reg.offset + 2));  /* use SEG_UGET_HEAP ?? */
 
 		reg.offset += 4; /* Step over header */
 
@@ -1986,14 +1987,14 @@ script_uninstantiate(state_t *s, int script_nr)
 
 			reg.offset -= SCRIPT_OBJECT_MAGIC_OFFSET;
 
-			superclass = OBJ_SUPERCLASS(s, reg, MEM_OBJ_SCRIPT); /* Get superclass... */
+			superclass = OBJ_SUPERCLASS(s, reg); /* Get superclass... */
 
 			if (superclass >= 0) {
 				int superclass_script = s->classtable[superclass].script;
 
 				if (superclass_script == script_nr) {
-					if( s->seg_manager.get_lockers( &s->seg_manager, reg.segment, SEG_ID) )
-						s->seg_manager.decrement_lockers( &s->seg_manager, reg.segment, SEG_ID); /* Decrease lockers if this is us ourselves */
+					if( sm_get_lockers( &s->seg_manager, reg.segment, SEG_ID) )
+						sm_decrement_lockers( &s->seg_manager, reg.segment, SEG_ID); /* Decrease lockers if this is us ourselves */
 				} else
 					script_uninstantiate(s, superclass_script);
 				/* Recurse to assure that the superclass lockers number gets decreased */
@@ -2006,12 +2007,12 @@ script_uninstantiate(state_t *s, int script_nr)
 
 	} while (objtype != 0);
 
-	if( s->seg_manager.get_lockers( &s->seg_manager, reg.segment, SEG_ID) )
+	if( sm_get_lockers( &s->seg_manager, reg.segment, SEG_ID) )
 		return; /* if xxx.lockers > 0 */
 
   /* Otherwise unload it completely */
   /* Explanation: I'm starting to believe that this work is done by SCI itself. */
-	s->seg_manager.deallocate_script( &s->seg_manager, s, script_nr );
+	sm_deallocate_script( &s->seg_manager, s, script_nr );
 
 	if (script_checkloads_flag)
 		sciprintf("Unloaded script 0x%x.\n", script_nr);

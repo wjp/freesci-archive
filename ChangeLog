@@ -1,5 +1,14 @@
 2005-02-19  Christoph Reichenbach  <reichenb@colorado.edu>
 
+	* src/include/seg_manager.h: Added a little additional
+	documentation
+
+	* src/engine/seg_manager.c: Removed dynamic dispatch from segment
+	manager
+
+	* src/engine/scriptconsole.c: Split console into VM-dependent and
+	VM independent parts
+
 	* src/scicore/versions.c: Forward-ported "versions.c" from the
 	stable branch
 

@@ -218,7 +218,7 @@ typedef struct _sfx_pcm_feed_t {
 } sfx_pcm_feed_t;
 
 int
-sfx_pcm_available();
+sfx_pcm_available(void);
 /* Determines whether a PCM device is available and has been initialised
 ** Returns   : (int) zero iff no PCM device is available
 */

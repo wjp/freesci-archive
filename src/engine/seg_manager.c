@@ -1,5 +1,5 @@
 /***************************************************************************
- seg_manager.c Copyright (C) 2002 Xiaojun Chen
+ seg_manager.c Copyright (C) 2002 Xiaojun Chen, Christoph Reichenbach 
 
 
  This program may be modified and copied freely according to the terms of
@@ -30,6 +30,9 @@
 #include <versions.h>
 #include <engine.h>
 
+mem_obj_t* mem_obj_allocate(seg_manager_t *self, seg_id_t segid, int hash_id, mem_obj_enum type);
+
+
 #undef DEBUG_SEG_MANAGER /* Define to turn on debugging */
 #define GET_SEGID() 	if (flag == SCRIPT_ID) \
 				id = sm_seg_get (self, id); \
@@ -54,34 +57,10 @@ void dbg_print( char* msg, int i ) {
 /*--------------------------*/
 
 static void
-sm_set_export_width(struct _seg_manager_t *self, int flag);
-
-static object_t *
-sm_script_obj_init(seg_manager_t *self, reg_t obj_pos);
-
-static void
-sm_script_relocate(seg_manager_t *self, reg_t block);
-
-static void
 sm_script_initialize_locals_zero(seg_manager_t *self, seg_id_t seg, int count);
 
 static void
 sm_script_initialize_locals(seg_manager_t *self, reg_t location);
-
-static void
-sm_script_add_code_block(seg_manager_t *self, reg_t location);
-
-static byte *
-sm_get_synonyms(seg_manager_t *seg_manager, int id, int flag);
-
-static void
-sm_script_free_unused_objects(struct _seg_manager_t *self, seg_id_t seg);
-
-static dstack_t *
-sm_allocate_stack(seg_manager_t *self, int size, seg_id_t *segid);
-
-static sys_strings_t *
-sm_allocate_sys_strings(seg_manager_t *self, seg_id_t *segid);
 
 static void
 sm_free_script ( mem_obj_t* mem );
@@ -89,22 +68,19 @@ sm_free_script ( mem_obj_t* mem );
 static int
 _sm_deallocate (seg_manager_t* self, int seg, int recursive);
 
-static byte*
-sm_dereference(seg_manager_t *self, reg_t ref, int *size);
+static hunk_t *
+sm_alloc_hunk(seg_manager_t *self, reg_t *);
 
-static clone_t *sm_alloc_clone(seg_manager_t *self, reg_t *addr);
-static list_t *sm_alloc_list(seg_manager_t *self, reg_t *addr);
-static node_t *sm_alloc_node(seg_manager_t *self, reg_t *addr);
-static hunk_t *sm_real_alloc_hunk(seg_manager_t *self, char *, int size, reg_t *addr);
-static hunk_t *sm_alloc_hunk(seg_manager_t *self, reg_t *addr);
-static unsigned char *sm_alloc_dynmem(seg_manager_t *self, int size, char *descr, reg_t *addr);
+static void
+sm_free_hunk(seg_manager_t *self, reg_t addr);
 
-static void sm_free_clone(seg_manager_t *self, reg_t addr);
-static void sm_free_list(seg_manager_t *self, reg_t addr);
-static void sm_free_node(seg_manager_t *self, reg_t addr);
-static void sm_free_hunk(seg_manager_t *self, reg_t addr);
-static int sm_free_dynmem(seg_manager_t *self, reg_t addr);
-
+static int
+sm_check (seg_manager_t* self, int seg);
+/* Check segment validity
+** Parameters: (int) seg: The segment to validate
+** Returns   : (int)	0 if 'seg' is an invalid segment
+**			1 if 'seg' is a valid segment
+*/
 
 /***--------------------------***/
 /** end of forward declarations */
@@ -161,67 +137,6 @@ void sm_init(seg_manager_t* self) {
 		self->heap[i] = NULL;
 	}
 
-	/* function assignments */
-	self->destroy = sm_destroy;
-
-	self->seg_get = sm_seg_get;
-
-	self->allocate_script = sm_allocate_script;
-	self->deallocate_script = sm_deallocate_script;
-	self->update = sm_update;
-	self->isloaded = sm_isloaded;
-	self->mset = sm_mset;
-	self->mcpy_in_in = sm_mcpy_in_in;
-	self->mcpy_in_out = sm_mcpy_in_out;
-	self->mcpy_out_in = sm_mcpy_out_in;
-	self->get_heap = sm_get_heap;
-	self->get_heap2 = sm_get_heap2;
-	self->put_heap = sm_put_heap;
-
-	self->increment_lockers = sm_increment_lockers;
-	self->decrement_lockers = sm_decrement_lockers;
-	self->get_lockers = sm_get_lockers;
-	self->set_lockers = sm_set_lockers;
-
-	self->allocate_stack = sm_allocate_stack;
-	self->allocate_sys_strings = sm_allocate_sys_strings;
-
-	self->get_heappos = sm_get_heappos;
-
-	self->set_export_table_offset = sm_set_export_table_offset;
-	self->get_export_table_offset = sm_get_export_table_offset;
-
-	self->set_synonyms_offset = sm_set_synonyms_offset;
-	self->get_synonyms = sm_get_synonyms;
-
-	self->set_synonyms_nr = sm_set_synonyms_nr;
-	self->get_synonyms_nr = sm_get_synonyms_nr;
-
-	self->validate_export_func = sm_validate_export_func;
-
-	self->set_variables = sm_set_variables;
-	self->script_obj_init = sm_script_obj_init;
-	self->script_relocate = sm_script_relocate;
-	self->script_free_unused_objects = sm_script_free_unused_objects;
-	self->set_export_width = sm_set_export_width;
-
-	self->script_initialize_locals_zero = sm_script_initialize_locals_zero;
-	self->script_initialize_locals = sm_script_initialize_locals;
-	self->script_add_code_block = sm_script_add_code_block;
-
-	self->dereference = sm_dereference;
-
-	self->alloc_clone = sm_alloc_clone;
-	self->alloc_list = sm_alloc_list;
-	self->alloc_node = sm_alloc_node;
-	self->alloc_hunk = sm_real_alloc_hunk;
-	self->alloc_dynmem = sm_alloc_dynmem;
-
-	self->free_clone = sm_free_clone;
-	self->free_list = sm_free_list;
-	self->free_node = sm_free_node;
-	self->free_hunk = sm_free_hunk;
-	self->free_dynmem = sm_free_dynmem;
 };
 
 /* destroy the object, free the memorys if allocated before */
@@ -379,9 +294,6 @@ int sm_deallocate_script (seg_manager_t* self, struct _state *s, int script_nr) 
 	return 1;
 };
 
-void sm_update (seg_manager_t* self) {
-};
-
 mem_obj_t*
 mem_obj_allocate(seg_manager_t *self, seg_id_t segid, int hash_id, mem_obj_enum type)
 {
@@ -419,13 +331,16 @@ mem_obj_allocate(seg_manager_t *self, seg_id_t segid, int hash_id, mem_obj_enum 
 	return mem;
 };
 
-void sm_object_init (object_t* object) {
-	if( !object )	return;
-	object->variables_nr = 0;
-	object->variables = NULL;
-};
+/* No longer in use? */
+/* void sm_object_init (object_t* object) { */
+/* 	if( !object )	return; */
+/* 	object->variables_nr = 0; */
+/* 	object->variables = NULL; */
+/* }; */
 
-static void sm_free_script ( mem_obj_t* mem ) {
+static void
+sm_free_script ( mem_obj_t* mem )
+{
 	if( !mem ) return;
 	if( mem->data.script.buf ) {
 		sci_free( mem->data.script.buf );
@@ -453,7 +368,8 @@ static void sm_free_script ( mem_obj_t* mem ) {
 };
 
 /* memory operations */
-void sm_mset (seg_manager_t* self, int offset, int c, size_t n, int id, int flag) {
+static void
+sm_mset (seg_manager_t* self, int offset, int c, size_t n, int id, int flag) {
 	mem_obj_t* mem_obj;
 	GET_SEGID();
 	mem_obj = self->heap[id];
@@ -472,7 +388,8 @@ void sm_mset (seg_manager_t* self, int offset, int c, size_t n, int id, int flag
 	}
 };
 
-void sm_mcpy_in_in (seg_manager_t* self, int dst, const int src, size_t n, int id, int flag) {
+static void
+sm_mcpy_in_in (seg_manager_t* self, int dst, const int src, size_t n, int id, int flag) {
 	mem_obj_t* mem_obj;
 	GET_SEGID();
 	mem_obj = self->heap[id];
@@ -491,7 +408,8 @@ void sm_mcpy_in_in (seg_manager_t* self, int dst, const int src, size_t n, int i
 	}
 };
 
-void sm_mcpy_in_out (seg_manager_t* self, int dst, const void* src, size_t n, int id, int flag) {
+void
+sm_mcpy_in_out (seg_manager_t* self, int dst, const void* src, size_t n, int id, int flag) {
 	mem_obj_t* mem_obj;
 	GET_SEGID();
 	mem_obj = self->heap[id];
@@ -502,14 +420,16 @@ void sm_mcpy_in_out (seg_manager_t* self, int dst, const void* src, size_t n, in
 		}
 		break;
 	case MEM_OBJ_CLONES:
-		sciprintf( "memcpy for clones haven't been implemented\n" );
+		sciprintf( "memcpy for clones hasn't been implemented yet\n" );
 		break;
 	default:
 		sciprintf( "unknown mem obj type\n" );
 		break;
 	}
-};
-void sm_mcpy_out_in (seg_manager_t* self, void* dst, const int src, size_t n, int id, int flag) {
+}
+
+static void
+sm_mcpy_out_in (seg_manager_t* self, void* dst, const int src, size_t n, int id, int flag) {
 	mem_obj_t* mem_obj;
 	GET_SEGID();
 	mem_obj = self->heap[id];
@@ -520,7 +440,7 @@ void sm_mcpy_out_in (seg_manager_t* self, void* dst, const int src, size_t n, in
 		}
 		break;
 	case MEM_OBJ_CLONES:
-		sciprintf( "memcpy for clones haven't been implemented\n" );
+		sciprintf( "memcpy for clones hasn't been implemented yet\n" );
 		break;
 	default:
 		sciprintf( "unknown mem obj type\n" );
@@ -528,17 +448,23 @@ void sm_mcpy_out_in (seg_manager_t* self, void* dst, const int src, size_t n, in
 	}
 };
 
-gint16 sm_get_heap (seg_manager_t* self, reg_t reg, mem_obj_enum mem_type ) {
+gint16
+sm_get_heap (seg_manager_t* self, reg_t reg)
+{
 	mem_obj_t* mem_obj;
+	mem_obj_enum mem_type;
+
 	VERIFY( sm_check (self, reg.segment), "Invalid seg id" );
 	mem_obj = self->heap[reg.segment];
+	mem_type = mem_obj->type;
+
 	switch( mem_type ) {
 	case MEM_OBJ_SCRIPT:
 		VERIFY( reg.offset + 1 < mem_obj->data.script.buf_size, "invalid offset\n" );
 		return (unsigned char)mem_obj->data.script.buf[reg.offset] |
 		     ( ((unsigned char)mem_obj->data.script.buf[reg.offset+1]) << 8 );
 	case MEM_OBJ_CLONES:
-		sciprintf( "memcpy for clones haven't been implemented\n" );
+		sciprintf( "memcpy for clones hasn't been implemented yet\n" );
 		break;
 	default:
 		sciprintf( "unknown mem obj type\n" );
@@ -547,17 +473,14 @@ gint16 sm_get_heap (seg_manager_t* self, reg_t reg, mem_obj_enum mem_type ) {
 	return 0;	/* never get here */
 }
 
-gint16 sm_get_heap2 (seg_manager_t* self, seg_id_t seg, int offset, mem_obj_enum mem_type ) {
-  reg_t reg;
-  reg.segment = seg;
-  reg.offset = offset;
-  return sm_get_heap( self, reg, mem_type );
-};
-
-void sm_put_heap (seg_manager_t* self, reg_t reg, gint16 value, mem_obj_enum mem_type ) {
+void sm_put_heap (seg_manager_t* self, reg_t reg, gint16 value ) {
 	mem_obj_t* mem_obj;
+	mem_obj_enum mem_type;
+
 	VERIFY( sm_check (self, reg.segment), "Invalid seg id" );
 	mem_obj = self->heap[reg.segment];
+	mem_type = mem_obj->type;
+
 	switch( mem_type ) {
 	case MEM_OBJ_SCRIPT:
 		VERIFY( reg.offset + 1 < mem_obj->data.script.buf_size, "invalid offset" );
@@ -574,7 +497,8 @@ void sm_put_heap (seg_manager_t* self, reg_t reg, gint16 value, mem_obj_enum mem
 };
 
 /* return the seg if script_id is valid and in the map, else -1 */
-int sm_seg_get (seg_manager_t* self, int script_id) {
+int sm_seg_get (seg_manager_t* self, int script_id)
+{
 	return int_hash_map_check_value (self->id_seg_map, script_id, 0, NULL);
 };
 
@@ -583,7 +507,8 @@ int sm_seg_get (seg_manager_t* self, int script_id) {
 **	0 - invalid seg
 **	1 - valid seg
 */
-int sm_check (seg_manager_t* self, int seg) {
+static int
+sm_check (seg_manager_t* self, int seg) {
 	if ( seg < 0 || seg >= self->heap_size ) {
 		return 0;
 	}
@@ -594,41 +519,42 @@ int sm_check (seg_manager_t* self, int seg) {
 	return 1;
 };
 
-int sm_isloaded (seg_manager_t* self, int id, int flag) {
+int sm_script_is_loaded (seg_manager_t* self, int id, id_flag flag) {
 	if (flag == SCRIPT_ID)
 		id = sm_seg_get (self, id);
 	return sm_check (self, id);
 };
 
-void sm_increment_lockers (seg_manager_t* self, int id, int flag) {
+void sm_increment_lockers (seg_manager_t* self, int id, id_flag flag) {
 	if (flag == SCRIPT_ID)
 		id = sm_seg_get (self, id);
 	VERIFY ( sm_check (self, id), "invalid seg id" );
 	self->heap[id]->data.script.lockers++;
 };
 
-void sm_decrement_lockers (seg_manager_t* self, int id, int flag) {
+void sm_decrement_lockers (seg_manager_t* self, int id, id_flag flag) {
 	if (flag == SCRIPT_ID)
 		id = sm_seg_get (self, id);
 	VERIFY ( sm_check (self, id), "invalid seg id" );
 	self->heap[id]->data.script.lockers--;
 };
 
-int sm_get_lockers (seg_manager_t* self, int id, int flag) {
+int sm_get_lockers (seg_manager_t* self, int id, id_flag flag) {
 	if (flag == SCRIPT_ID)
 		id = sm_seg_get (self, id);
 	VERIFY ( sm_check (self, id), "invalid seg id" );
 	return self->heap[id]->data.script.lockers;
 };
 
-void sm_set_lockers (seg_manager_t* self, int lockers, int id, int flag) {
+void sm_set_lockers (seg_manager_t* self, int lockers, int id, id_flag flag) {
 	if (flag == SCRIPT_ID)
 		id = sm_seg_get (self, id);
 	VERIFY ( sm_check (self, id), "invalid seg id" );
 	self->heap[id]->data.script.lockers = lockers;
 };
 
-void sm_set_export_table_offset (struct _seg_manager_t* self, int offset, int id, int flag)
+void
+sm_set_export_table_offset (struct _seg_manager_t* self, int offset, int id, id_flag flag)
 {
 	script_t *scr = &(self->heap[id]->data.script);
 	int i;
@@ -643,12 +569,14 @@ void sm_set_export_table_offset (struct _seg_manager_t* self, int offset, int id
 	}
 };
 
-void sm_set_export_width(struct _seg_manager_t* self, int flag)
+void
+sm_set_export_width(struct _seg_manager_t* self, int flag)
 {
 	self->exports_wide = flag;
 }
 
-guint16 *sm_get_export_table_offset (struct _seg_manager_t* self, int id, int flag, int *max)
+static guint16 *
+sm_get_export_table_offset (struct _seg_manager_t* self, int id, int flag, int *max)
 {
 	GET_SEGID();
 	if (max)
@@ -656,35 +584,42 @@ guint16 *sm_get_export_table_offset (struct _seg_manager_t* self, int id, int fl
 	return self->heap[id]->data.script.export_table;
 };
 
-void sm_set_synonyms_offset (struct _seg_manager_t* self, int offset, int id, int flag) {
+void
+sm_set_synonyms_offset (struct _seg_manager_t* self, int offset, int id, id_flag flag) {
 	GET_SEGID();
 	self->heap[id]->data.script.synonyms = 
 		self->heap[id]->data.script.buf + offset;
 };
 
 static byte *
-sm_get_synonyms(seg_manager_t *self, int id, int flag)
+sm_get_synonyms(seg_manager_t *self, int id, id_flag flag)
 {
 	GET_SEGID();
 	return self->heap[id]->data.script.synonyms;
 };
 
-void sm_set_synonyms_nr (struct _seg_manager_t* self, int nr, int id, int flag) {
+void
+sm_set_synonyms_nr (struct _seg_manager_t* self, int nr, int id, id_flag flag) {
 	GET_SEGID();
 	self->heap[id]->data.script.synonyms_nr = nr;
 };
 
-int sm_get_synonyms_nr (struct _seg_manager_t* self, int id, int flag) {
+int
+sm_get_synonyms_nr (struct _seg_manager_t* self, int id, id_flag flag)
+{
 	GET_SEGID();
 	return self->heap[id]->data.script.synonyms_nr;
-};
+}
 
-int sm_get_heappos (struct _seg_manager_t* self, int id, int flag) {
+static int
+sm_get_heappos (struct _seg_manager_t* self, int id, int flag)
+{
 	GET_SEGID();
 	return 0;
 }
 
-void sm_set_variables (struct _seg_manager_t* self, reg_t reg, int obj_index, reg_t variable_reg, int variable_index ) {
+static void
+sm_set_variables (struct _seg_manager_t* self, reg_t reg, int obj_index, reg_t variable_reg, int variable_index ) {
 	script_t* script;
 	VERIFY ( sm_check (self, reg.segment), "invalid seg id" );
 	VERIFY ( self->heap[reg.segment], "invalid mem" );
@@ -743,7 +678,7 @@ _relocate_object(object_t *obj, seg_id_t segment, int location)
 			       segment, location);
 }
 
-static void
+void
 sm_script_add_code_block(seg_manager_t *self, reg_t location)
 {
 	mem_obj_t *mobj = self->heap[location.segment];
@@ -767,7 +702,7 @@ sm_script_add_code_block(seg_manager_t *self, reg_t location)
 	scr->code[index].size = getUInt16(scr->buf + location.offset - 2);
 }
 
-static void
+void
 sm_script_relocate(seg_manager_t *self, reg_t block)
 {
 	mem_obj_t *mobj = self->heap[block.segment];
@@ -826,7 +761,7 @@ sm_script_relocate(seg_manager_t *self, reg_t block)
 	}
 }
 
-static object_t *
+object_t *
 sm_script_obj_init(seg_manager_t *self, reg_t obj_pos)
 {
 	mem_obj_t *mobj = self->heap[obj_pos.segment];
@@ -920,8 +855,8 @@ _sm_alloc_locals_segment(seg_manager_t *self, script_t *scr, int count)
 	}
 }
 
-static void
-sm_script_initialize_locals_zero(seg_manager_t *self, seg_id_t seg, int count)
+void
+sm_script_initialise_locals_zero(seg_manager_t *self, seg_id_t seg, int count)
 {
 	mem_obj_t *mobj = self->heap[seg];
 	script_t *scr;
@@ -936,8 +871,8 @@ sm_script_initialize_locals_zero(seg_manager_t *self, seg_id_t seg, int count)
 	_sm_alloc_locals_segment(self, scr, count);
 }
 
-static void
-sm_script_initialize_locals(seg_manager_t *self, reg_t location)
+void
+sm_script_initialise_locals(seg_manager_t *self, reg_t location)
 {
 	mem_obj_t *mobj = self->heap[location.segment];
 	int count;
@@ -973,7 +908,7 @@ sm_script_initialize_locals(seg_manager_t *self, reg_t location)
 	}
 }
 
-static void
+void
 sm_script_free_unused_objects(seg_manager_t *self, seg_id_t seg)
 {
 	mem_obj_t *mobj = self->heap[seg];
@@ -1010,7 +945,7 @@ static inline char *dynprintf(char *msg, ...)
 }
 
 
-static dstack_t *
+dstack_t *
 sm_allocate_stack(seg_manager_t *self, int size, seg_id_t *segid)
 {
 	mem_obj_t *memobj = alloc_nonscript_segment(self, MEM_OBJ_STACK, segid);
@@ -1022,7 +957,7 @@ sm_allocate_stack(seg_manager_t *self, int size, seg_id_t *segid)
 	return retval;
 }
 
-static sys_strings_t *
+sys_strings_t *
 sm_allocate_sys_strings(seg_manager_t *self, seg_id_t *segid)
 {
 	mem_obj_t *memobj = alloc_nonscript_segment(self, MEM_OBJ_SYS_STRINGS, segid);
@@ -1035,10 +970,13 @@ sm_allocate_sys_strings(seg_manager_t *self, seg_id_t *segid)
 	return retval;
 }
 
-guint16 sm_validate_export_func(struct _seg_manager_t* self, int pubfunct, int seg ) {
+guint16
+sm_validate_export_func(struct _seg_manager_t* self, int pubfunct, int seg ) {
 	script_t* script; 
 	guint16 offset;
 	VERIFY ( sm_check (self, seg), "invalid seg id" );
+	VERIFY (self->heap[seg]->type == MEM_OBJ_SCRIPT, "Can only validate exports on scripts");
+
 	script = &self->heap[seg]->data.script;
 	if( script->exports_nr <= pubfunct ) {
 		sciprintf( "pubfunct is invalid" );
@@ -1052,8 +990,16 @@ guint16 sm_validate_export_func(struct _seg_manager_t* self, int pubfunct, int s
 	return offset;
 };
 
-static hunk_t *
-sm_real_alloc_hunk(seg_manager_t *self, char *hunk_type, int size, reg_t *reg)
+
+void
+sm_free_hunk_entry(seg_manager_t *self, reg_t addr)
+{
+	sm_free_hunk(self, addr);
+}
+
+
+hunk_t *
+sm_alloc_hunk_entry(seg_manager_t *self, char *hunk_type, int size, reg_t *reg)
 {
 	hunk_t *h = sm_alloc_hunk(self, reg);
 
@@ -1086,8 +1032,8 @@ DEFINE_HEAPENTRY(node, 32, 16);
 DEFINE_HEAPENTRY_WITH_CLEANUP(clone, 16, 4, _clone_cleanup);
 DEFINE_HEAPENTRY_WITH_CLEANUP(hunk, 4, 4, _hunk_cleanup);
 
-#define DEFINE_ALLOC_DEALLOC(TYPE, SEGTYPE, PLURAL) \
-static TYPE##_t *										  \
+#define DEFINE_ALLOC_DEALLOC(STATIC, TYPE, SEGTYPE, PLURAL) \
+STATIC TYPE##_t *										  \
 sm_alloc_##TYPE(seg_manager_t *self, reg_t *addr)						  \
 {												  \
 	mem_obj_t *mobj;									  \
@@ -1107,7 +1053,7 @@ sm_alloc_##TYPE(seg_manager_t *self, reg_t *addr)						  \
 	return &(mobj->data.PLURAL.table[offset].entry);					  \
 }												  \
 												  \
-static void											  \
+STATIC void											  \
 sm_free_##TYPE(seg_manager_t *self, reg_t addr)							  \
 {												  \
 	mem_obj_t *mobj = GET_SEGMENT(*self, addr.segment, SEGTYPE);				  \
@@ -1122,14 +1068,14 @@ sm_free_##TYPE(seg_manager_t *self, reg_t addr)							  \
 	free_##TYPE##_entry(&(mobj->data.PLURAL), addr.offset);					  \
 }
 
-DEFINE_ALLOC_DEALLOC(clone, MEM_OBJ_CLONES, clones);
-DEFINE_ALLOC_DEALLOC(list, MEM_OBJ_LISTS, lists);
-DEFINE_ALLOC_DEALLOC(node, MEM_OBJ_NODES, nodes);
-DEFINE_ALLOC_DEALLOC(hunk, MEM_OBJ_HUNK, hunks);
+DEFINE_ALLOC_DEALLOC(, clone, MEM_OBJ_CLONES, clones);
+DEFINE_ALLOC_DEALLOC(, list, MEM_OBJ_LISTS, lists);
+DEFINE_ALLOC_DEALLOC(, node, MEM_OBJ_NODES, nodes);
+DEFINE_ALLOC_DEALLOC(static, hunk, MEM_OBJ_HUNK, hunks);
 
 
 
-static byte *
+byte *
 sm_dereference(seg_manager_t *self, reg_t pointer, int *size)
 {
 	mem_obj_t *mobj;
@@ -1203,7 +1149,7 @@ sm_dereference(seg_manager_t *self, reg_t pointer, int *size)
 }
 
 
-static unsigned char *
+unsigned char *
 sm_alloc_dynmem(seg_manager_t *self, int size, char *descr, reg_t *addr)
 {
 	seg_id_t seg;
@@ -1222,7 +1168,7 @@ sm_alloc_dynmem(seg_manager_t *self, int size, char *descr, reg_t *addr)
 	return mobj->data.dynmem.buf;
 }
 
-static int
+int
 sm_free_dynmem(seg_manager_t *self, reg_t addr)
 {
 	

@@ -159,7 +159,7 @@ _scir_find_resource_unsorted(resource_t *res, int res_nr, int type, int number)
 /** Resource manager constructors and operations **/
 /*------------------------------------------------*/
 
-void
+static void
 _scir_init_trivial(resource_mgr_t *mgr)
 {
 	mgr->resources_nr = 0;
@@ -335,7 +335,7 @@ _scir_free_resource_sources(resource_source_t *rss)
 	}
 }
 
-void
+static void
 _scir_free_altsources(resource_source_t *dynressrc)
 {
 	if (dynressrc) {
@@ -465,7 +465,7 @@ _scir_load_resource(resource_mgr_t *mgr, resource_t *res)
 	free(cwd);
 }
 
-void
+static void
 _scir_unalloc(resource_t *res)
 {
 	sci_free(res->data);
@@ -474,7 +474,7 @@ _scir_unalloc(resource_t *res)
 }
 
 
-void
+static void
 _scir_remove_from_lru(resource_mgr_t *mgr, resource_t *res)
 {
 	if (res->status != SCI_STATUS_ENQUEUED) {
@@ -497,7 +497,7 @@ _scir_remove_from_lru(resource_mgr_t *mgr, resource_t *res)
 	res->status = SCI_STATUS_ALLOCATED;
 }
 
-void
+static void
 _scir_add_to_lru(resource_mgr_t *mgr, resource_t *res)
 {
 	if (res->status != SCI_STATUS_ALLOCATED) {

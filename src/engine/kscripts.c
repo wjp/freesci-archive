@@ -199,7 +199,7 @@ kClone(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	SCIkdebug(SCIkMEM, "Attempting to clone from "PREG"\n", PRINT_REG(parent_addr));
 
-	clone_obj = s->seg_manager.alloc_clone(&s->seg_manager, &clone_addr);
+	clone_obj = sm_alloc_clone(&s->seg_manager, &clone_addr);
 
 	if (!clone_obj) {
 		SCIkwarn(SCIkERROR, "Cloning "PREG" failed-- internal error!\n", PRINT_REG(parent_addr));
@@ -214,8 +214,8 @@ kClone(state_t *s, int funct_nr, int argc, reg_t *argv)
 	/* Mark as clone */
 	clone_obj->variables[SCRIPT_INFO_SELECTOR].offset = SCRIPT_INFO_CLONE;
 	clone_obj->variables[SCRIPT_SPECIES_SELECTOR] = clone_obj->pos;
-	s->seg_manager.increment_lockers(&s->seg_manager, parent_obj->pos.segment, SEG_ID);
-	s->seg_manager.increment_lockers(&s->seg_manager, clone_obj->pos.segment, SEG_ID);
+	sm_increment_lockers(&s->seg_manager, parent_obj->pos.segment, SEG_ID);
+	sm_increment_lockers(&s->seg_manager, clone_obj->pos.segment, SEG_ID);
 
 	return clone_addr;
 }
@@ -258,8 +258,8 @@ kDisposeClone(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	sci_free(victim_obj->variables);
 	victim_obj->variables = NULL;
-	s->seg_manager.decrement_lockers(&s->seg_manager, victim_obj->pos.segment, SEG_ID);
-	s->seg_manager.free_clone(&s->seg_manager, victim_addr);
+	sm_decrement_lockers(&s->seg_manager, victim_obj->pos.segment, SEG_ID);
+	sm_free_clone(&s->seg_manager, victim_addr);
 
 	_k_view_list_mark_free(s, victim_addr); /* Free on view list, if neccessary */ 
 
@@ -295,7 +295,7 @@ kScriptID(state_t *s, int funct_nr, int argc, reg_t *argv)
 		return NULL_REG;
 	}
 
-	return make_reg(scriptid, s->seg_manager.validate_export_func(&s->seg_manager, index, scriptid));
+	return make_reg(scriptid, sm_validate_export_func(&s->seg_manager, index, scriptid));
 }
 
 
@@ -304,12 +304,12 @@ kDisposeScript(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
 	int script = argv[0].offset;
 	
-	if (s->seg_manager.isloaded(&(s->seg_manager), script, SCRIPT_ID))
+	if (sm_script_is_loaded(&(s->seg_manager), script, SCRIPT_ID))
         {
-	    int id = s->seg_manager.seg_get(&(s->seg_manager), script);
+	    int id = sm_seg_get(&(s->seg_manager), script);
 	    
 	    if (s->execution_stack[s->execution_stack_pos].addr.pc.segment != id)
-		    s->seg_manager.set_lockers(&(s->seg_manager), 1, script, SCRIPT_ID);
+		    sm_set_lockers(&(s->seg_manager), 1, script, SCRIPT_ID);
 	}
 
 	script_uninstantiate(s, script);

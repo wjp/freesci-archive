@@ -630,8 +630,8 @@ c_vr(state_t *s)
 			int evilchars = 0;
 			int i;
 			int size;
-			unsigned char *block = s->seg_manager.dereference(&s->seg_manager,
-									  reg, &size);
+			unsigned char *block = sm_dereference(&s->seg_manager,
+							      reg, &size);
 
 			sciprintf("raw data\n");
 			sciprintf("Block size less than or equal to %d\n", size);
@@ -666,7 +666,7 @@ c_segkill(state_t *s)
   while (i < cmd_paramlength) {
     int nr = cmd_params[i++].val;
 
-    s->seg_manager.set_lockers(&(s->seg_manager), nr, 0, SEG_ID);
+    sm_set_lockers(&(s->seg_manager), nr, 0, SEG_ID);
 //    _sm_deallocate(&(s->seg_manager), nr, 1);
   }
 }
@@ -2352,7 +2352,7 @@ c_disasm(state_t *s)
 	int i;
 	int invalid = 0;
 	int size;
-	s->seg_manager.dereference(&s->seg_manager, vpc, &size);
+	sm_dereference(&s->seg_manager, vpc, &size);
 	size += vpc.offset; /* total segment size */
 
 	for (i = 1; i < cmd_paramlength; i++) {

@@ -34,7 +34,8 @@
 /* #define _SCI_DECOMPRESS_DEBUG */
 
 /* 9-12 bit LZW encoding */
-int decrypt1(guint8 *dest, guint8 *src, int length, int complength)
+int
+decrypt1(guint8 *dest, guint8 *src, int length, int complength)
      /* Doesn't do length checking yet */
 {
 	/* Theory: Considering the input as a bit stream, we get a series of

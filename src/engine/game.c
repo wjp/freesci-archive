@@ -323,8 +323,7 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->version = SCI_VERSION_DEFAULT_SCI0;
 	s->kernel_opt_flags = 0;
 	
-	s->seg_manager.init = sm_init;
-	s->seg_manager.init (&s->seg_manager);
+	sm_init(&s->seg_manager);
 
 
 	if (!version) {
@@ -424,8 +423,8 @@ script_init_engine(state_t *s, sci_version_t version)
 	s->script_000 = &(s->seg_manager.heap[s->script_000_segment]->data.script);
 
 
-	s->sys_strings = s->seg_manager.allocate_sys_strings(&s->seg_manager,
-							     &s->sys_strings_segment);
+	s->sys_strings = sm_allocate_sys_strings(&s->seg_manager,
+						 &s->sys_strings_segment);
 	/* Allocate static buffer for savegame and CWD directories */
 	sys_string_acquire(s->sys_strings, SYS_STRING_SAVEDIR, "savedir", MAX_SAVE_DIR_SIZE);
 
@@ -462,8 +461,9 @@ script_init_engine(state_t *s, sci_version_t version)
 	/* Those two are used by FileIO for FIND_FIRST, FIND_NEXT */
 
 	if (s->version >= SCI_VERSION_FTU_LOFS_ABSOLUTE) 
-		s->seg_manager.set_export_width(&s->seg_manager, 1); else
-			s->seg_manager.set_export_width(&s->seg_manager, 0);
+		sm_set_export_width(&s->seg_manager, 1);
+	else
+		sm_set_export_width(&s->seg_manager, 0);
 
 	sciprintf("Engine initialized\n");
 
@@ -556,7 +556,7 @@ game_init(state_t *s)
 	reg_t game_obj; /* Address of the game object */
 	dstack_t *stack;
 
-	stack = s->seg_manager.allocate_stack(&s->seg_manager, VM_STACK_SIZE,
+	stack = sm_allocate_stack(&s->seg_manager, VM_STACK_SIZE,
 					      &s->stack_segment);
 	s->stack_base = stack->entries;
 	s->stack_top = s->stack_base + VM_STACK_SIZE;
@@ -636,7 +636,7 @@ game_exit(state_t *s)
 		sci_free(s->execution_stack);
 	}
 
-	s->seg_manager.destroy(&s->seg_manager);
+	sm_destroy(&s->seg_manager);
 	
 	if (s->synonyms_nr) {
 		sci_free(s->synonyms);

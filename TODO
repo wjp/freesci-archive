@@ -1,8 +1,10 @@
 TODO for 0.6.2:
 
 Primary goals:
- + Fix realtime song player detection of situations in which too much
+ * Fix realtime song player detection of situations in which too much
    time has passed
+ * Remove all remaining uses of 'scripttable', including the ones that
+   refer to synonyms
 
 Secondary goals:
 

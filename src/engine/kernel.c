@@ -357,7 +357,7 @@ kalloc(state_t *s, char *type, int space)
 {
 	reg_t reg;
 
-	s->seg_manager.alloc_hunk(&s->seg_manager, type, space, &reg);
+	sm_alloc_hunk_entry(&s->seg_manager, type, space, &reg);
 	SCIkdebug(SCIkMEM, "Allocated %d at hunk "PREG" (%s)\n", space, PRINT_REG(reg), type);
 
 	return reg;
@@ -383,7 +383,7 @@ kmem(state_t *s, reg_t handle)
 int
 kfree(state_t *s, reg_t handle)
 {
-	s->seg_manager.free_hunk(&s->seg_manager, handle);
+	sm_free_hunk_entry(&s->seg_manager, handle);
 
 	return 0;
 }
@@ -583,8 +583,8 @@ kMemory(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	case K_MEMORY_ALLOCATE_CRITICAL :
 
-		if (!s->seg_manager.alloc_dynmem(&s->seg_manager, UKPV(1), 
-						 "kMemory() critical", &s->r_acc)) {
+		if (!sm_alloc_dynmem(&s->seg_manager, UKPV(1), 
+				     "kMemory() critical", &s->r_acc)) {
 			SCIkwarn(SCIkERROR, "Critical heap allocation failed\n");
 			script_error_flag = script_debug_flag = 1;
 		}
@@ -594,13 +594,13 @@ kMemory(state_t *s, int funct_nr, int argc, reg_t *argv)
 
 	case K_MEMORY_ALLOCATE_NONCRITICAL :
 
-		s->seg_manager.alloc_dynmem(&s->seg_manager, UKPV(1),
-					    "kMemory() non-critical", &s->r_acc);
+		sm_alloc_dynmem(&s->seg_manager, UKPV(1),
+				"kMemory() non-critical", &s->r_acc);
 		break;
 
 	case K_MEMORY_FREE :
 
-		if (s->seg_manager.free_dynmem(&s->seg_manager, argv[1])) {
+		if (sm_free_dynmem(&s->seg_manager, argv[1])) {
 			SCIkwarn(SCIkERROR, "Attempt to kMemory::free() non-dynmem pointer "PREG"!\n",
 				 PRINT_REG(argv[1]));
 		}
@@ -1000,7 +1000,7 @@ static inline void *
 _kernel_dereference_pointer(struct _state *s, reg_t pointer, int entries, int align)
 {
 	int maxsize;
-	void *retval = s->seg_manager.dereference(&s->seg_manager, pointer, &maxsize); 
+	void *retval = sm_dereference(&s->seg_manager, pointer, &maxsize); 
 
 	if (pointer.offset & (align-1)) {
 		SCIkdebug(SCIkERROR, "Unaligned pointer read: "PREG" expected with %d alignment!\n",
