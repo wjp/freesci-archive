@@ -352,9 +352,12 @@ sound_command(state_t *s, int command, int handle, int parameter)
 	s->sound_volume = parameter;
 	write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
       }
-
+      return parameter;
     }
-    return parameter;
+    if (s->sound_mute)
+      return s->sound_mute;
+    else 
+      return s->sound_volume;
     
     /* set the mute status */
   case SOUND_COMMAND_SET_MUTE:
@@ -366,7 +369,6 @@ sound_command(state_t *s, int command, int handle, int parameter)
       s->sound_mute = 0;
     }
     /* let's send a volume change across the wire */
-    printf("mute set to %d\n", parameter);
     event.signal = SOUND_COMMAND_SET_VOLUME;
     event.value = s->sound_volume;
     write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
