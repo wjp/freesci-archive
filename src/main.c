@@ -350,7 +350,7 @@ main(int argc, char** argv)
 
   gamestate = malloc(sizeof(state_t));
 
-  if (script_init_state(gamestate, cmd_version)) { /* Initialize game state */
+  if (script_init_engine(gamestate, cmd_version)) { /* Initialize game state */
     fprintf(stderr,"Script initialization failed. Aborting...\n");
     return 1;
   }
@@ -448,7 +448,7 @@ main(int argc, char** argv)
 
   game_exit(gamestate);
 
-  script_free_state(gamestate); /* Uninitialize game state */
+  script_free_engine(gamestate); /* Uninitialize game state */
 
   freeResources();
 

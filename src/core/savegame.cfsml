@@ -363,6 +363,7 @@ RECORD state_t "state_t" {
   class_t classtable[DYNAMIC classtable_size];
 
   script_t scripttable[STATIC 1000];
+  script_t init_scripttable[STATIC 1000];
 
   heap_ptr clone_list[STATIC SCRIPT_MAX_CLONES];
 

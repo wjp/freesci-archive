@@ -226,7 +226,8 @@ typedef struct _state
 
   int classtable_size; /* Number of classes in the table- for debugging */
   class_t *classtable; /* Table of all classes */
-  script_t scripttable[1000]; /* Table of all scripts */
+  script_t scripttable[SCI_SCRIPTS_NR]; /* Table of all scripts */
+  script_t init_scripttable[SCI_SCRIPTS_NR]; /* Script table right after initialization */
 
   heap_ptr clone_list[SCRIPT_MAX_CLONES];
 

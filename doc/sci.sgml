@@ -3321,7 +3321,26 @@ View, loop, and cel number are retreived from the object passed as parameter.
     </para>
 </sect3>
 
-<sect3><Title/Kernel function 0x11: DrawCell(?)/<para></para></sect3>
+<sect3><Title/Kernel function 0x11: DrawCel(word, word, word, Point, word)/<para></para></sect3>
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x11: DrawCel
+		</funcdef><paramdef>word view, word loop, word cel, Point pos, word priority</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ view: Number of the view resource to display</member>
+                       <member><type/(word)/ loop: Number of the loop in the view resource to display</member>
+                       <member><type/(word)/ cel: Number of the cel inside the loop to display</member>
+                       <member><type/(Point)/ pos: Position the cel should be drawn to</member>
+                       <member><type/(word)/ priority: Priority to draw the cel with</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Explicitly draws a cel, specified by the complete tuple (view, loop, cel), to
+			a specified position.
+			Invalid loop/cel values are assumed to be 0.
+		</para>
+	</sect3>
 
 <sect3><Title/Kernel function 0x12: AddToPic(DblList)/<para></para>
     <funcsynopsis><funcprototype><funcdef>
@@ -3842,6 +3861,24 @@ See <XREF LINKEND="LarsDMParser"> and <XREF LINKEND="LarsEvents"> for details.
     </para>
 </sect3>
 
+<sect3><Title/Kernel function 0x26: SetSynonyms(DblList)/<para></para></sect3>
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x26: SetSynonyms 
+		</funcdef><paramdef>HeapPtr list</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(DblList)/ list: List of script objects to examine</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			This function sets the synonyms used by the parser. Synonyms are used to
+			replace specified word groups with other word groups. The list contains
+			a collection of script objects; all synonyms defined by the corresponding
+			script (which can be identified by evaluating the 'number' selector of the
+			script object) are added to the list of active synonyms.
+		</para>
+	</sect3>
 
 <sect3><Title/Kernel function 0x27: HaveMouse() /<para></para>
     <funcsynopsis><funcprototype><funcdef>
@@ -3889,7 +3926,83 @@ the position remains unchanged.
     </para>
 </sect3>
 
+<sect3><Title/Kernel function 0x29: FOpen(String, word)/<para></para></sect3>
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x29: FOpen 
+		</funcdef><paramdef>String fname, word mode</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(String)/ fname: The file name</member>
+                       <member><type/(word)/ mode: The mode to open the file with</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(word) a file handle on success, 0 on error</type>
+		</para><para>
+			Tries to open or create a file in the CWD with the specified file name.
+			The following modes are valid:
+			<simplelist>
+				<member/0: open or fail: Try to open file, abort if not possible/
+				<member/1: open or create: Try to open file, create it if it doesn't exist/
+				<member/2: create: Create the file, destroying any content it might have had/
+			</simplelist>
+		</para>
+	</sect3>
 
+<sect3><Title/Kernel function 0x2a: FPuts(word, String)/<para></para></sect3>
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x2a: FPuts
+		</funcdef><paramdef>word filehandle, String data</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ filehandle: Handle of the file to write to</member>
+                       <member><type/(String)/ data: The string to write to the file</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Writes a zero-terminated string to a file
+		</para>
+	</sect3>
+
+<sect3><Title/Kernel function 0x2b: FGets(String, word, word)/<para></para></sect3>
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x2b: FGets
+		</funcdef><paramdef>String dest, word maxsize, word handle</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(String)/ dest: Pointer to the destination buffer</member>
+                       <member><type/(word)/ maxsize: Maximum number of bytes to read</member>
+                       <member><type/(word)/ handle: Handle of the file to read from</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+		</para>
+	</sect3>
+
+<sect3><Title/Kernel function 0x2c: FClose(word)/<para></para></sect3>
+		<funcsynopsis><funcprototype><funcdef>
+			kfunct 0x2c: FClose
+		</funcdef><paramdef>word filehandle</paramdef></funcprototype></funcsynopsis>
+                <para>
+                   <simplelist>
+                       <member><type/(word)/ filehandle: Handle of the file to close</member>
+                   </simplelist></para>
+		<para>
+			Returns: <type>(void)</type>
+		</para><para>
+			Closes a previously opened file.
+		</para>
+	</sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x2d: SaveGame(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x2e: RestoreGame(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x2f: RestartGame(?)/<para></para></sect3>
 
 <sect3><Title/Kernel function 0x30: GameIsRestarting()/<para></para>
     <funcsynopsis><funcprototype><funcdef>
@@ -3906,6 +4019,9 @@ kfunct 0x30: GameIsRestarting
     </para>
 </sect3>
 
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x31: DoSound(?)/<para></para></sect3>
 
 
 <sect3><Title/Kernel function 0x32: NewList()/<para></para>
@@ -4013,6 +4129,8 @@ The last node of the list, or 0 if the list is empty
     </para>
 </sect3>
 
+<!-- fixme -->
+<sect3><Title/Kernel function 0x37: EmptyList(?)/<para></para></sect3>
 
 
 <sect3><Title/Kernel function 0x38: NextNode(Node)/<para></para>
@@ -4076,6 +4194,8 @@ The value associated with the specified node
     </para>
 </sect3>
 
+<!-- fixme -->
+<sect3><Title/Kernel function 0x3b: AddAfter(?)/<para></para></sect3>
 
 
 <sect3><Title/Kernel function 0x3c: AddToFront(DblList, Node)/<para></para>
@@ -4560,6 +4680,14 @@ Numbers beginning with a '$' are interpreted as hexadecimal numbers.
     </para>
 </sect3>
 
+<!-- fixme -->
+<sect3><Title/Kernel function 0x4f: BaseSetter(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x50: DirLoop(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x51: CanBeHere(?)/<para></para></sect3>
 
 
   <sect3 ID="KONCONTROL">
@@ -4585,6 +4713,17 @@ kfunct 0x52: OnControl
        </para>
      </sect3>
 
+<!-- fixme -->
+<sect3><Title/Kernel function 0x53: InitBresen(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x54: DoBresen(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x55: DoAvoider(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x56: SetJump(?)/<para></para></sect3>
 
   <sect3>
 <Title/Kernel function 0x57: SetDebug()/
@@ -4599,6 +4738,33 @@ This function forces the interpreter to enter debug mode. It is equivalent
 to pressing LShift-RShift-PadMinus.
     </para>
   </sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x58: InspectObj(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x59: ShowSends(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x5a: ShowObjs(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x5b: ShowFree(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x5c: MemoryInfo(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x5d: StackUsage(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x5e: Profiler(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x5f: GetMenu(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x60: SetMenu(?)/<para></para></sect3>
 
 	<sect3>
 	<Title/Kernel function 0x61: GetSaveFiles(String, String, HeapPtr*)/
@@ -4662,6 +4828,14 @@ to pressing LShift-RShift-PadMinus.
 		</para>
 	</sect3>
 
+<!-- fixme -->
+<sect3><Title/Kernel function 0x64: ValidPath(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x65: CoordPri(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x66: StrAt(?)/<para></para></sect3>
 
 	<sect3>
 	<Title/Kernel function 0x67: DeviceInfo(word, String[, String])/
@@ -4800,6 +4974,27 @@ to pressing LShift-RShift-PadMinus.
                       another game/interpreter/version).
 		</para>
 	</sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x6a: ShakeScreen(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x6b: FlushResources(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x6c: SinMult(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x6d: CosMult(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x6e: SinDiv(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x6f: CosDiv(?)/<para></para></sect3>
+
+<!-- fixme -->
+<sect3><Title/Kernel function 0x70: Graph(?)/<para></para></sect3>
 
 
 	<sect3>

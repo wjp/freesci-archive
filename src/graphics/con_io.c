@@ -85,7 +85,11 @@ con_input(sci_event_t *event)
     
     if ((event->buckybits & (SCI_EVM_NUMLOCK | SCI_EVM_CTRL | SCI_EVM_ALT)) == 0) {
       if (((event->data >= '0') && (event->data < '@'))
-	  || ((event->data >= 'a') && (event->data <= 'z'))) {
+	  || ((event->data >= 'a') && (event->data <= 'z'))
+	  || (event->data == ' ')
+	  || (event->data == '-')
+	  || (event->data == '+')
+	  ){
 	if (stl < SCI_CONSOLE_MAX_INPUT) {
 	  memmove(_inpbuf + con_cursor, _inpbuf + con_cursor-1,
 		  SCI_CONSOLE_MAX_INPUT - con_cursor+1);

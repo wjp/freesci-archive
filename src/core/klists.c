@@ -124,8 +124,12 @@ kFindKey(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   node = UGET_HEAP(UPARAM(0) + LIST_FIRST_NODE);
 
-  while (node && (UGET_HEAP(node + LIST_NODE_KEY) != key))
+  SCIkdebug(SCIkNODES, "Node at %04x\n", node);
+
+  while (node && (UGET_HEAP(node + LIST_NODE_KEY) != key)) {
     node = UGET_HEAP(node + LIST_NEXT_NODE);
+    SCIkdebug(SCIkNODES, "NextNode at %04x\n", node);
+  }
   /* Aborts if either the list ends (node == 0) or the key is found */
 
   SCIkdebug(SCIkNODES, "Looking for key: Result is %04x\n", node);

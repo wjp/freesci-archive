@@ -461,10 +461,6 @@ sound_dos_poll() {
         command = newcmd;
       } /* else we've got the 'running status' mode defined in the MIDI standard */
 
-      param = song->data[song->pos];
-      if (SCI_MIDI_CONTROLLER(command))
-	param2 = song->data[song->pos + 1];
-      song->pos += cmdlen[command >> 4];
 
       if (command == SCI_MIDI_EOT) {
         if (song->loops) {
@@ -476,7 +472,13 @@ sound_dos_poll() {
           song->pos = song->loopmark = 33; /* Reset position */
           sound_eq_queue_event(&sound_dos_queue, song->handle, SOUND_SIGNAL_FINISHED, 0);
         }
-      } else {
+      } else { /* not end of MIDI track */
+
+	param = song->data[song->pos];
+	if (SCI_MIDI_CONTROLLER(command))
+	  param2 = song->data[song->pos + 1];
+	song->pos += cmdlen[command >> 4];
+
 	if (SCI_MIDI_CONTROLLER(command) && (param == SCI_MIDI_CUMULATIVE_CUE))
 	  sound_eq_queue_event(&sound_dos_queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, ccc += param2);
         } else if (command == SCI_MIDI_SET_SIGNAL) {

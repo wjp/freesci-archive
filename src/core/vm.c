@@ -1155,7 +1155,7 @@ void script_detect_early_versions(state_t *s)
 
 
 int
-script_init_state(state_t *s, sci_version_t version)
+script_init_engine(state_t *s, sci_version_t version)
 {
   resource_t *vocab996 = findResource(sci_vocab, 996);
   int i;
@@ -1253,7 +1253,7 @@ script_init_state(state_t *s, sci_version_t version)
 
 
 void
-script_free_state(state_t *s)
+script_free_engine(state_t *s)
 {
   int i;
 
@@ -1577,6 +1577,8 @@ game_init(state_t *s)
     return 1;
   }
 
+  save_ff(s->_heap); /* Save heap state */
+
   s->successor = NULL; /* No successor */
   s->status_bar_text = NULL; /* Status bar is blank */
 
@@ -1740,7 +1742,6 @@ game_run(state_t **_s)
   /* and ENGAGE! */
 
   do {
-    save_ff(s->_heap); /* Save heap state */
     run_vm(s, (successor)? 1 : 0);
 
     if (s->restarting_flags & SCI_GAME_IS_RESTARTING_NOW) { /* Restart was requested? */
@@ -1752,8 +1753,8 @@ game_run(state_t **_s)
       restore_ff(s->_heap); /* Restore old heap state */
 
       game_exit(s);
-      script_free_state(s);
-      script_init_state(s, s->version);
+      script_free_engine(s);
+      script_init_engine(s, s->version);
       game_init(s);
 
       sciprintf(" Restarting game\n");

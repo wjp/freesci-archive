@@ -33,9 +33,7 @@
 #include <engine.h>
 #include <assert.h>
 #include <heap.h>
-#ifndef _DOS
 #include <glib.h>
-#endif
 #include <ctype.h>
 #include <graphics_png.h>
 #ifdef HAVE_DIRENT_H
@@ -691,6 +689,16 @@ _cfsml_write_state_t(FILE *fh, state_t* foo)
     }
     fprintf(fh, "]");
     fprintf(fh, "\n");
+  fprintf(fh, "init_scripttable = ");
+    min = max = 1000;
+#line 341 "cfsml.pl"
+    fprintf(fh, "[%d][\n", max);
+    for (i = 0; i < min; i++) {
+      _cfsml_write_script_t(fh, &(foo->init_scripttable[i]));
+      fprintf(fh, "\n");
+    }
+    fprintf(fh, "]");
+    fprintf(fh, "\n");
   fprintf(fh, "clone_list = ");
     min = max = SCRIPT_MAX_CLONES;
 #line 341 "cfsml.pl"
@@ -1166,6 +1174,31 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
                return CFSML_FAILURE;
              }
              if (_cfsml_read_script_t(fh, &(foo->scripttable[i++]), value, line, hiteof))
+                return CFSML_FAILURE;
+           } else done = 1;
+         } while (!done);
+      } else
+      if (!strcmp(bar, "init_scripttable")) {
+#line 487 "cfsml.pl"
+         if ((value[0] != '[') || (value[strlen(value) - 1] != '[')) {
+            _cfsml_error("Opening brackets expected at line %d\n", *line);
+            return CFSML_FAILURE;
+;         }
+         /* Prepare to restore static array */
+         max = 1000;
+#line 518 "cfsml.pl"
+         done = i = 0;
+         do {
+           g_free(value);
+           if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
+#line 527 "cfsml.pl"
+              return 1;
+           if (strcmp(value, "]")) {
+             if (i == max) {
+               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, bar, *line);
+               return CFSML_FAILURE;
+             }
+             if (_cfsml_read_script_t(fh, &(foo->init_scripttable[i++]), value, line, hiteof))
                 return CFSML_FAILURE;
            } else done = 1;
          } while (!done);
@@ -2394,7 +2427,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
 
 /* Auto-generated CFSML declaration and function block ends here */
 /* Auto-generation performed by cfsml.pl 0.6.6 */
-#line 378 "CFSML input file"
+#line 379 "CFSML input file"
 
 
 
@@ -2408,7 +2441,7 @@ write_menubar_tp(FILE *fh, menubar_t **foo)
   _cfsml_write_menubar_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 388 "CFSML input file"
+#line 389 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2435,7 +2468,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 405 "CFSML input file"
+#line 406 "CFSML input file"
 
   }
   return *hiteof;
@@ -2451,7 +2484,7 @@ write_port_tp(FILE *fh, port_t **foo)
   _cfsml_write_port_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 416 "CFSML input file"
+#line 417 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2479,7 +2512,7 @@ read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof)
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 434 "CFSML input file"
+#line 435 "CFSML input file"
 
     res =  findResource(sci_font, (*foo)->font_nr);
     if (res)
@@ -2550,7 +2583,7 @@ gamestate_save(state_t *s, char *dirname)
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 500 "CFSML input file"
+#line 501 "CFSML input file"
 
   fclose(fh);
 
@@ -2615,7 +2648,7 @@ gamestate_restore(state_t *s, char *dirname)
     read_eof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 552 "CFSML input file"
+#line 553 "CFSML input file"
 
   fclose(fh);
 

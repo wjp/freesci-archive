@@ -1,3 +1,10 @@
+2000-01-25  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sound/soundserver_null.c (sound_null_server): Fixed misc. seg-
+	faults in the sound server (same for soundserver_dos, I hope)
+
+	* src/graphics/con_io.c (con_input): Fixed ' ' not being treated
+
 2000-01-13  Rickard Lind  <rpl@dd.chalmers.se>
 
 	* src/sound/soundserver_null.c: Fixed a bug in the cumulative cue

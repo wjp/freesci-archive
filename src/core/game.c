@@ -226,8 +226,6 @@ game_run(state_t **_s)
       restore_ff(s->_heap); /* Restore old heap state */
 
       game_exit(s);
-      script_free_state(s);
-      script_init_state(s, s->version);
       game_init(s);
 
       sciprintf(" Restarting game\n");

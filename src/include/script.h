@@ -6,6 +6,7 @@
 
 /*#define SCRIPT_DEBUG /**/
 
+#define SCI_SCRIPTS_NR 1000
 
 typedef struct script_opcode_
 {

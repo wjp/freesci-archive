@@ -333,7 +333,7 @@ kRestartGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kGameIsRestarting(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  s->acc = (s->restarting_flags & SCI_GAME_WAS_RESTARTED);
+  s->acc = (s->restarting_flags & SCI_GAME_WAS_RESTARTED)? 1 : 0;
 }
 
 void

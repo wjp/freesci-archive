@@ -279,7 +279,7 @@ c_restore_game(state_t *s)
     } else
       newstate->onscreen_console = 0;
 
-    script_free_state(s); /* Clear old state */
+    game_exit(s); /* Clear old state */
     return 0;
 
   } else {
@@ -291,6 +291,24 @@ c_restore_game(state_t *s)
     return 1;
   }
 
+}
+
+
+int
+c_restart_game(state_t *s)
+{
+  state_t *newstate;
+
+  if (!s) {
+    sciprintf("Not in debug state\n");
+    return 1;
+  }
+
+  sciprintf("Restarting\n");
+
+  s->restarting_flags |= SCI_GAME_IS_RESTARTING_NOW;
+  script_abort_flag = 1;
+  _debugstate_valid = 0;
 }
 
 
@@ -1278,6 +1296,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 		       "  from the parse node tree");
       con_hook_command(c_save_game, "save_game", "s", "Saves the current game state to\n  the hard disk");
       con_hook_command(c_restore_game, "restore_game", "s", "Restores a saved game from the\n  hard disk");
+      con_hook_command(c_restart_game, "restart", "", "Restarts the game");
       con_hook_command(c_viewinfo, "viewinfo", "i", "Displays the number of loops\n  and cels of each loop"
 		       " for the\n  specified view resource.");
 

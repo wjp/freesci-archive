@@ -331,14 +331,14 @@ script_debug(struct _state *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_pt
 */
 
 int
-script_init_state(struct _state *s, sci_version_t version);
+script_init_engine(struct _state *s, sci_version_t version);
 /* Initializes a state_t block
 ** Parameters: (state_t *) s: The state to initialize
 ** Returns   : 0 on success, 1 if vocab.996 (the class table) is missing or corrupted
 */
 
 void
-script_free_state(struct _state *s);
+script_free_engine(struct _state *s);
 /* Frees all additional memory associated with a state_t block
 ** Parameters: (state_t *) s: The state_t whose elements should be cleared
 ** Returns   : (void)
