@@ -122,7 +122,7 @@ typedef struct {
 	int script; /* number of the script the class is in */
 	heap_ptr *scriptposp; /* Pointer to the script position entry in the script list */
 	int class_offset; /* script-relative position of the class */
-	reg_t reg;	// get rid of script, scriptposp later !!!!
+	reg_t reg;	// get rid of class_offset, scriptposp later !!!!
 } class_t;
 
 #define CLASS_GET_INDEX(scr, offset) (((offset) + SCRIPT_OBJECT_MAGIC_OFFSET < 0 || (offset) >= (scr).buf_size)?	\

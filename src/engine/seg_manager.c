@@ -33,7 +33,13 @@
 #define GET_SEGID() 	if (flag == SCRIPT_ID) \
 				id = sm_seg_get (self, id); \
 			VERIFY ( sm_check (self, id), "invalid seg id" );
-
+#define VERIFY_MEM( mem_ptr, ret ) if (! (mem_ptr) )  {\
+					sciprintf( "%s, *d, no enough memory", __FILE__, __LINE__ ); \
+					return ret; \
+				}
+					
+#define INVALID_SCRIPT_ID -1
+	
 void dbg_print( char* msg, int i ) {
 	char buf[1000];
 	sprintf( buf, "%s = [0x%x], dec:[%d]", msg, i, i);
@@ -46,6 +52,10 @@ void sm_init(seg_manager_t* self) {
 	int i;
 
 	self->id_seg_map = new_int_hash_map();
+	self->reserved_id = INVALID_SCRIPT_ID;
+	int_hash_map_check_value (self->id_seg_map, self->reserved_id, 1, NULL);	// reserver 0 for seg_id
+	self->reserved_id--;	// reserved_id runs in the reversed direction to make sure no one will use it.
+	
 	self->heap_size = DEFAULT_SCRIPTS;
         self->heap = (mem_obj_t**) malloc (self->heap_size * sizeof(mem_obj_t *));
 
@@ -90,6 +100,7 @@ void sm_init(seg_manager_t* self) {
 	self->set_localvar_offset = sm_set_localvar_offset;
 	self->get_localvar_offset = sm_get_localvar_offset;
 
+	self->set_variables = sm_set_variables;
 };
 
 // destroy the object, free the memorys if allocated before
@@ -101,19 +112,17 @@ void sm_destroy (seg_manager_t* self) {
 			mem_obj_t* mem_obj = self->heap[i];
 			switch (mem_obj->type) {
 			case MEM_OBJ_SCRIPT:
-				if (mem_obj->data.script.buf) {
-					free (mem_obj->data.script.buf);
-					mem_obj->data.script.buf = NULL;
-				}
+				sm_free( mem_obj );
 				break;
 			case MEM_OBJ_CLONES:
 				sciprintf( "destroy for clones haven't been implemented\n" );
+				free (mem_obj);
 				break;
 			default:
 				sciprintf( "unknown mem obj type\n" );
+				free (mem_obj);
 				break;
 			}
-			free (mem_obj);
 			self->heap[i] = NULL;
 		}
 	}
@@ -129,6 +138,7 @@ void sm_destroy (seg_manager_t* self) {
 **             seg_id - allocated segment id
 */
 int sm_allocate (seg_manager_t* self, struct _state *s, int script_nr, int* seg_id) {
+	int i;
 	int seg;
 	char was_added;
 	mem_obj_t* mem;
@@ -156,45 +166,103 @@ int sm_allocate (seg_manager_t* self, struct _state *s, int script_nr, int* seg_
 	}
 
 	// allocate the mem_obj_t
-	mem = (mem_obj_t*) malloc (sizeof (mem_obj_t));
+	mem = mem_obj_allocate();
 	if (!mem) {
 		sciprintf("%s, %d, Not enough memory, ", __FILE__, __LINE__ );
 		return 0;
 	}
 
-	mem->type = MEM_OBJ_SCRIPT;	// may need to handle non script buffer type at here
-	mem->data.script.buf = NULL;
+	// allocate the script.buf
 	script = scir_find_resource(s->resmgr, sci_script, script_nr, 0);
-
 	if (s->version < SCI_VERSION_FTU_NEW_SCRIPT_HEADER) {
 		mem->data.script.buf_size = script->size + getUInt16(script->data)*2; // locals_size = getUInt16(script->data)*2;
 	}
 	else {
 		mem->data.script.buf_size = script->size;
 	}
-        mem->data.script.buf = (char*) malloc (mem->data.script.buf_size);
+	mem->data.script.buf = (char*) malloc (mem->data.script.buf_size);
+	dbg_print( "mem->data.script.buf ", mem->data.script.buf );
 	if (!mem->data.script.buf) {
+		sm_free( mem );
 		sciprintf("seg_manager.c: Not enough memory space for script size" );
 		mem->data.script.buf_size = 0;
 		return 0;
 	}
+	
+	// allocate the objects
+	mem->data.script.objects = (object_t*) malloc( sizeof(object_t) * DEFAULT_OBJECTS );
+	if( !mem->data.script.objects ) {
+		sm_free( mem );
+		sciprintf("seg_manager.c: Not enough memory space for script objects" );
+		return 0;
+	}
+	mem->data.script.objects_nr = DEFAULT_OBJECTS;
+	for( i = 0; i < mem->data.script.objects_nr; i++ ) {
+		sm_object_init( &(mem->data.script.objects[i]) );
+	}
+
+	// hook it to the heap
 	self->heap[seg] = mem;
 	*seg_id = seg;
 	return 1;
 };
 
 int sm_deallocate (seg_manager_t* self, struct _state *s, int script_nr) {
-/*
-	seg = int_hash_map_check_value (id_seg_map, script_nr, 0, NULL);
-	if (seg == -1)
-		return;
-	delete heap[seg]
-        remove_hash_map_value( ,,,, seg, )
-	*/
+	int seg = sm_seg_get( self, script_nr );
+	
+	VERIFY ( sm_check (self, seg), "invalid seg id" );
+
+	sm_free ( self->heap[seg] );
+	self->heap[seg] = NULL;
+	int_hash_map_remove_value( self->id_seg_map, seg );
 	return 1;
 };
 
 void sm_update (seg_manager_t* self) {
+};
+
+mem_obj_t* mem_obj_allocate() {
+	mem_obj_t* mem = ( mem_obj_t* ) malloc( sizeof (mem_obj_t) );
+	if( !mem ) {
+		sciprintf( "seg_manager.c: invalid mem_obj " );
+		return 0;
+	}
+	mem->type = MEM_OBJ_SCRIPT;	// may need to handle non script buffer type at here
+	mem->data.script.buf = NULL;
+	mem->data.script.buf_size = 0;
+	mem->data.script.objects = NULL;
+	mem->data.script.objects_nr = 0;
+	return mem;
+};
+
+void sm_object_init (object_t* object) {
+	if( !object )	return;
+	object->variables_nr = 0;
+	object->variables = NULL;
+};
+
+void sm_free( mem_obj_t* mem ) {
+	if( !mem ) return;
+	if( mem->data.script.buf ) {
+		free( mem->data.script.buf );
+		mem->data.script.buf = NULL;
+		mem->data.script.buf_size = 0;
+	}
+	if( mem->data.script.objects ) {
+		int i;
+		for( i = 0; i < mem->data.script.objects_nr; i++ ) {
+			object_t* object = &mem->data.script.objects[i];
+			if( object->variables ) {
+				free( object->variables );
+				object->variables = NULL;
+				object->variables_nr = 0;
+			}
+		}
+		free( mem->data.script.objects );
+		mem->data.script.objects = NULL;
+		mem->data.script.objects_nr = 0;
+	}
+	free( mem );
 };
 
 // memory operations
@@ -415,3 +483,39 @@ int sm_get_heappos (struct _seg_manager_t* self, int id, int flag) {
 	GET_SEGID();
 	return 0;
 }
+
+void sm_set_variables (struct _seg_manager_t* self, reg_t reg, int obj_index, reg_t variable_reg, int variable_index ) {
+	script_t* script;
+	VERIFY ( sm_check (self, reg.segment), "invalid seg id" );
+	VERIFY ( self->heap[reg.segment], "invalid mem" );
+	
+	script = &(self->heap[reg.segment]->data.script);
+	if( obj_index >= script->objects_nr ) {
+		// reallocate the memory for objects
+		void* temp = realloc( script->objects, (script->objects_nr * 2) * sizeof(object_t) );
+		VERIFY_MEM( temp, );
+		script->objects = temp;
+		script->objects_nr *= 2;
+	}
+	VERIFY( obj_index < script->objects_nr, "Invalid obj_index" );
+	
+	if( script->objects[obj_index].variables_nr == 0 ) {
+		// allocate the new memory
+		int size = DEFAULT_VARIABLES;	// = maximum ( variable_index + 1, DEFAULT_VARIABLES );
+		size = variable_index + 1 <= size ? size : variable_index + 1;
+		script->objects[obj_index].variables = (reg_t*) malloc( sizeof(reg_t) * size ); // allocate only one 
+		VERIFY_MEM( script->objects[obj_index].variables, );
+		script->objects[obj_index].variables_nr = size;
+	} else if( script->objects[obj_index].variables_nr <= variable_index ) {
+		// reallocate the memory
+		int size = script->objects[obj_index].variables_nr;
+		reg_t* temp;
+		while( size <= variable_index ) size *= 2;
+		temp = (reg_t*) realloc( script->objects[obj_index].variables, sizeof(reg_t) * size ); // allocate only one 
+		VERIFY_MEM( temp, );
+		script->objects[obj_index].variables_nr = size;
+		script->objects[obj_index].variables = temp;
+	}
+
+	script->objects[obj_index].variables[variable_index] = variable_reg;
+};

@@ -26,13 +26,15 @@
 ***************************************************************************/
 
 
-#ifndef _SCI_SEG_MANAGER_H                                                                         mem_obj_enum
+#ifndef _SCI_SEG_MANAGER_H
 #define _SCI_SEG_MANAGER_H
 
 #include <int_hashmap.h>
 #include <vm.h>
 
 #define DEFAULT_SCRIPTS 32
+#define DEFAULT_OBJECTS 16	// default object per script  
+#define DEFAULT_VARIABLES 4	// minimum is 4: species, superclass, info, and name
 
 #define GET_HEAP( s, reg, mem_type ) s->seg_manager.get_heap( &s->seg_manager, reg, mem_type )
 #define GET_HEAP2( s, seg, offset, mem_type ) s->seg_manager.get_heap2( &s->seg_manager, seg, offset, mem_type )
@@ -73,6 +75,7 @@ typedef struct _seg_manager_t {
 	int_hash_map_t* id_seg_map; // id - script id; seg - index of heap
 	struct _mem_obj** heap;
 	int heap_size;		// size of the heap
+	int reserved_id;
 
 	/* member methods */
 	void (*init) (struct _seg_manager_t* self);
@@ -118,6 +121,9 @@ typedef struct _seg_manager_t {
 
 	void (*set_localvar_offset) (struct _seg_manager_t* self, int offset, int id, int flag);
 	int (*get_localvar_offset) (struct _seg_manager_t* self, int id, int flag);
+	
+	void (*set_variables) (struct _seg_manager_t* self, reg_t reg, int obj_index, reg_t variable_reg, int variable_index );
+
 
 } seg_manager_t;
 
@@ -141,6 +147,9 @@ int sm_allocate (seg_manager_t* self, struct _state *s, int script_nr, int* seg_
 int sm_deallocate (seg_manager_t* self, struct _state *s, int script_nr);
 void sm_update (seg_manager_t* self);
 // memory operations
+void sm_object_init (object_t* object); 
+mem_obj_t* mem_obj_allocate();
+void sm_free( mem_obj_t* mem );
 void sm_mset (seg_manager_t* self, int offset, int c, size_t n, int id, int flag);
 void sm_mcpy_in_in (seg_manager_t* self, int dst, const int src, size_t n, int id, int flag);
 void sm_mcpy_in_out (seg_manager_t* self, int dst, const void* src, size_t n, int id, int flag);
@@ -171,6 +180,8 @@ int sm_get_synonyms_nr (struct _seg_manager_t* self, int id, int flag);
 
 void sm_set_localvar_offset (struct _seg_manager_t* self, int offset, int id, int flag);
 int sm_get_localvar_offset (struct _seg_manager_t* self, int id, int flag);
+
+void sm_set_variables (struct _seg_manager_t* self, reg_t reg, int obj_index, reg_t variable_reg, int variable_index );
 
 // validate the seg
 // return:
