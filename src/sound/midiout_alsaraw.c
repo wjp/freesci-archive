@@ -36,6 +36,7 @@
 static snd_rawmidi_t *handle;
 static int card = 0;
 static int device = 0;
+static int closed = 1;
 
 
 static int
@@ -76,7 +77,7 @@ int midiout_alsaraw_open()
 		return -1;
 	}
 
-	return 0;
+	return closed = 0;
 }
 #else
 int midiout_alsaraw_open()
@@ -99,16 +100,25 @@ int midiout_alsaraw_close()
 
 	if (snd_rawmidi_close(handle) < 0)
 		return -1;
+	handle = 0;
+
+	closed = 1;
 	return 0;
 }
 
 int midiout_alsaraw_write(guint8 *buffer, unsigned int count)
 {
+	if (closed) {
+		fprintf(stderr,"midiout/ALSAraw: Attempt to write with sound device non-open\n");
+		return 1;
+	}
+
 	if (!handle)
 		return 0;
 
 	if (snd_rawmidi_write(handle, buffer, count) != count)
 		return -1;
+
 	return 0;
 }
 

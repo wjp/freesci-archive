@@ -53,13 +53,16 @@ src/tools/sciunpack - A tool for unpacking and converting SCI resource data
 		       tools)
 src/sciv - The main executable; this loads, links and runs SCI bytecode.
 
+For graphics, you will need at least one of the following:
+* An Xlib implementation for the X11 Windowing System,  as shipped with most
+  UNIX systems and VMS
+* libggi (http://www.ggi-project.org)
+* libsdl (http://www.libsdl.org)
 
-Required 'non-standard' libraries:
- * GGI (ftp://ftp.ggi-project.org)
+To install it on your system (globally), run 'make install'. You will need
+to have superuser privileges to do this, unless you specified a different
+installation prefix while running 'configure'.
 
-Earlier versions required libpng and libglib; those are no longer required.
-Note that the graphics driver part of the game has been designed to be
-modular, so the dependancy on GGI is likely to be temporary.
 
 0.1 Bulding from CVS
 --------------------
@@ -87,24 +90,38 @@ and everything else.
 1 Running it on UNIX-like OSses
 ===============================
 
-To run FreeSCI, execute 'sciv' while you are in a directory containing
-Sierra resource files (resource.000, resource.001, etc), or set up a
-~/.freesci/config file as described below and run 'sciv <gameID>'. This
-will try to run the SCI game; it will abort as soon as it encounters an
-error and enter debug mode. In debug mode, type "quit" to leave the
-interpreter. If you stumbled over a bug that isn't listed on the FreeSCI
-bug list (http://freesci.linuxgames.com/bugs.html) yet, please contact
-one of the maintainers and send him a short description of the problem you
-encountered.
+After FreeSCI has been built, you should have all of the tools listed in
+section 0, and the main program (src/sciv). Usually, you will want to
+run the main program; there are three ways to run a game with FreeSCI
+now:
 
-For further debug commands, refer to the documentation file, doc/sci.sgml,
-written for the docbook DTD. If you don't have sgml tools to convert the
-file, you can either have a look at the docbook sources, or examine the
-documentation section on the FreeSCI home page.
+a) You can enter the directory your game is contained in, and just start
+'sciv'. If no parameters are given, it will look for data files in the
+current working directory.
+
+b) Run 'sciv' with the -d parameter to specify the path to your resource
+file directory
+
+c) First build a configuration file, then run 'sciv' followed by one of
+the game names described in the config file. The process of creating a
+config file is outlined in section 2.
+
+
+1.1 The built-in debugger
+-------------------------
+
+If a script error is encountered or you explicitly activate it, the built-
+in debugger will activate and execution of the game scripts will cease
+until resumed.
+
+Here are two of the most simple commands:
+- 'quit'- Terminates execution of the interpretet
+- 'go'- resumes execution of the game scripts
 
 For a list of all commands supported by the debugger, type "list cmds" at
 the debugger command line. Use "man <command>" to learn about the specified
 command.
+
 
 
 2 Configuration
@@ -114,11 +131,21 @@ FreeSCI will create a directory called .freesci in your home directory (unless
 this directory already exists). If you run an SCI game, this game will
 create another directory inside the .freesci directory, to store
 its save games in (later on).
+(On UNIX systems, the home directory is whatever is contained in your HOME
+environment variable; on Win32 systems, it is the directory pointed to by
+the WINDIR environment variable.
 Also, if a file called "config" exists in this directory, it will be read
-and parsed by the interpreter after the game has been loaded. At this
-time, the configuration file may contain:
+and parsed by the interpreter after the game has been loaded; this file may be
+used to specify a variety of configuration options.
+
+Currently, the configuration file may contain:
 
 - Comments preceeded by a hash '#' sign
+
+- [GAME_ID]: Commands following this line will only have an effect for
+  the game with the specified game ID. (The game ID is printed during
+  sciv startup, and is also used to create the save game directory).
+  You can use this to provide game-specific configuration options.
 
 - version = x.yyy.zzz: emulate SCI version x.yyy.zzz. The version number
   is sometimes printed on game discs, or can be found out by
@@ -167,35 +194,32 @@ time, the configuration file may contain:
 - mouse = yes | no
   Whether the interpreter should report to the game that it has a mouse.
 
-- [GAME_ID]: Commands following this line will only have an effect for
-  the game with the specified game ID. (The game ID is printed during
-  sciv startup, and is also used to create the save game directory).
-
 - resource_dir: Read the game's resource data from the specified location.
   Must not be used in the generic part of the config file.
 
--- NEW OPTIONS since 0.3.1 --
+-- NEW OPTIONS since the 0.3.1 release --
 
 - view_filter = none | linear | trilinear
   Magnification filter for 'views', i.e. moving foreground (and, in some cases,
   non-moving background) images. 'none' means that they are translated into
-  what may look like a huge chunk of colored rectangles; 'bilinear' smoothes
-  those rectangles somewhat.
+  what may look like a huge chunk of colored rectangles; 'linear' smoothes
+  those rectangles somewhat. 'trilinear' does more sensible filtering by
+  applying an almost-standard trilinear filtering algorithm.
   This has no effect if graphics are not scaled.
 
-- pic_filter = none | bilinear | trilinear
+- pic_filter = none | linear | trilinear
   Selects the filter to use when scaling background pictures. This only applies
   if pic0_scale is set to 'no'.
   Please refer to the documentation of "view_filter" for details on the various
   settings.
 
-- cursor_filter = none | bilinear | trilinear
+- cursor_filter = none | linear | trilinear
   Filter for the mouse cursor. Note that this only applies for graphics drivers
   which don't implement their own mouse cursor.
   Please refer to the documentation of "view_filter" for details on the various
   settings.
 
-- text_filter = none | bilinear | trilinear
+- text_filter = none | linear | trilinear
   Filter for text.
   Please refer to the documentation of "view_filter" for details on the various
   settings.
@@ -207,7 +231,6 @@ time, the configuration file may contain:
     (1/16 1/8 1/16)
     (1/8  1/4  1/8)
     (1/16 1/8 1/16)
-
 
 - animation_delay: A speed factor for transition animations. Default is 500.
   Set to 0 to disable transition animations.
@@ -270,24 +293,20 @@ All driver-specific options are listed here:
 This subsystem uses the prefix 'gfx'.
 
 2.1.1.1 GGI driver:
------------------
-- swap_caps_ctrl = true | false
-Determines whether to swap the meanings of the CapsLock and the left Ctrl
-key (relative to a PC-style keyboard layout). The resulting layout resembles
-a Sun keyboard. Default is 'false'.
-
+-------------------
+At this time, the GGI driver does not have any specific configuration options.
 
 2.1.1.2 Xlib driver:
 --------------------
-- swap_caps_ctrl = true | false
-Same as for the GGI driver.
 - disable_shmem = true | false
 disables shmem x11 access (meaningless if XShm support wasn't compiled in).
 
 2.1.1.3 SDL driver:
---------------------
+-------------------
 - swap_caps_ctrl = true | false
-Same as for the GGI driver.
+Determines whether to swap the meanings of the CapsLock and the left Ctrl
+key (relative to a PC-style keyboard layout). The resulting layout resembles
+a Sun keyboard. Default is 'false'.
 - fullscreen = true | false
 kinda self-explanatory, eh?  :)
 
@@ -333,6 +352,8 @@ Options:
 
 version = 0.000.685
 pic0_dither_mode = flat
+pic_antialiasing = simple
+text_filter = trilinear
 midiout.alsaraw.card = 1
 midiout.alsaraw.device = 2
 
@@ -341,7 +362,9 @@ midiout.alsaraw.device = 2
 [Glory]
 
 pic0_dither_mode = dither256
-# Quest for glory looks better in that mode
+# Quest for Glory looks better in that mode
+pic0_brush_mode = morerandom
+
 resource_dir = /usr/local/share/freesci/qg1
 
 [SQ3]
@@ -396,7 +419,6 @@ platforms (in order of appearance):
 
 The following platforms used to be supported, but are no longer supported in this
 release for reasons given below:
-
 
 - ia32/DOS (no maintainer)
 	This port is not being maintained at the moment.

@@ -1,4 +1,4 @@
-.TH sciv 6 "Jan 25, 2001" 0.3.1 FreeSCI
+.TH sciv 6 "May 1st, 2001" 0.3.2 FreeSCI
 
 .SH NAME
 
@@ -28,7 +28,10 @@ You'll need to run sciv in order to play SCI games.
 [ --disable-mouse, -m ]
 [ --midiout \fIsfx\fR, -O\fsfx\fR ]
 [ --mididevice \fIdevice\fR, -M\fIdevice\fR ]
-\fIgame\fR
+[ --sound-server \fIserver\fR, -S\fIserver\fR ]
+[ --list-savegames, -l ]
+[\fIgame\fR]
+[\fIsavegame\fR]
 
 .SH OPTIONS
 .TP
@@ -79,19 +82,40 @@ present in the system. This option instructs the interpreter to
 tell the games that no mouse is present whenever they ask for one;
 the actual effect depends on the individual game.
 .TP
-.BR "--midiout, -O"
+.BR "--midiout \fIdriver\fR, -\fBO\fR\fIdriver\fR"
 This is the output driver or interface to use. Currently, 'unixraw',
-'alsaraw', and 'null' may be available on your system; the latter being the
-default.
+'alsaraw', 'null', and 'ossseq' (an OSS sequencer driver)  may be
+available on your system, 'ossseq' being the default.
 .TP
-.BR "--mididevice, -M"
+.BR "--mididevice \fIdriver\fR, -\fBM\fR\fIdriver\fR"
 SCI was designed to support a variety of physical output devices. FreeSCI
 currently only supports one of them, the Rolant MT-32 ('mt32', the default),
 but it also offers an MT-32 to General MIDI translation layer ('mt32gm').
 .TP
+.BR "--sound-server \fIserver\fR, -\fBS\fR\fIserver\fR"
+This option may be used to explicitly specify a sound server to use.
+The sound server is an asynchronous process or thread that issues sound
+output events and reports sound cues back to the interpreter; if you have
+both possibilities ('unix' and 'sdl') for your system, you may have to
+experiment to find out which works best for you. 
+.TP
+.BR "--list-savegames, -l"
+This option instructs the interpreter not to run the game, but rather to list
+all savegames stored for it, including their in-game descriptions where
+available.
+This is relevant to figure out savegame names for quickloads.
+The usual in-game savegames are labelled "save_0" through "save_j".
+.TP
 .BR \fIgame\fR
 An identifier describing the game to start. This identifier (GAME_ID) must be
-declared in the configuration file.
+declared in the configuration file. If omitted, the interpreter will attempt
+to read resource files from the current working directory.
+.TP
+.BR \fIsavegame\fR
+If this option is specified after the game name, the interpreter will attempt
+to quickload the savegame with the specified ID. This is technically different
+from restoring a savegame from within the game (as it does not re-start the game
+script state afterwards), but it should work just as well.
 
 .SH CONFIG FILE
 .P
@@ -131,10 +155,11 @@ Affects how semi-random brushes (used mostly for dirt and foilage) are drawn in 
 \fBrandom-ellipses\fR: As ellipses, but slightly shift ellipse offset and size
 \fBmore-random\fR: Add more random pixels to the whole area
 .IP \-
-\fBpic0_line_mode = correct \fR|\fB fine\fR: Specify how lines are drawn when background
+\fBpic0_line_mode = correct \fR|\fB fine\fR |\fB hald\fR: Specify how lines are drawn when background
 pictures are rendered in SCI0:
 \fBcorrect\fR: Draw lines appropriately scaled
 \fBfine\fR: Don't scale lines (thin lines, may cause problems) 
+\fBhalf\fR: Draw lines at half width (may cause problems) 
 .IP \-
 \fBdirty_strategy = 1 \fR|\fB clusters\fR:
 The "dirty strategy" is the strategy used to collect modifications to the
@@ -161,6 +186,13 @@ sciv startup, and is also used to create the save game directory).
 .IP \-
 \fBresource_dir\fR: Read the game's resource data from the specified 
 location. Must not be used in the generic part of the config file.
+.IP \-
+\fBview_filter = none \fR|\fB linear \fR|\fB trilinear \fR:
+Specifies the way views (non-background images) are scaled
+(this obviously does not affect unscaled images):
+\fnone\fR: No filtering is performed
+\flinear\fR: A simple linear filter is applied
+\ftrilinear\fR: Views are passed through a trilinear filter
 
 
 .SH SUPPORTED GAMES
@@ -208,17 +240,17 @@ some increased memory usage.
 
 .SH BUGS
 .P
---- update me ---
 
 This release has the following limitations (plus some bugs):
 .IP \-
 Only SCI0 games are supported
 .IP \-
-Sound is not supported yet
-.IP \-
 The SCI debug functions aren't fully supported (and probably never
 will be, since FreeSCI uses its own debug functions).
 .P
+
+Please refer to http://freesci.linuxgames.com's bug list section for a
+listing of all known and current bugs.
 
 .SH AUTHORS
 .P
@@ -230,6 +262,8 @@ Magnus Reftel <\fId96reftl@dtek.chalmers.se\fR>,
 Petr Vyhnak <\fIpvyhnak@attglobal.net\fR>,
 Sergey Lapin <\fIslapin@karelia.ru\fR>,
 Lars Skovlund <\fIlskovlun@image.dk\fR>,
+Matt Hargett <\fImatt@use.net\fR>,
+Solomon Peachy <\fIpizza@shaftnet.org\fR>,
 Rickard Lind <\fIrpl@dd.chalmers.se\fR> and
 Rink Springer <\fIrink@springer.cx\fR>.
 .P

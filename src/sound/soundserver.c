@@ -590,7 +590,7 @@ sci0_soundserver()
 	  fprintf(stderr,"Sound server: Received shutdown signal\n");
 	  midi_close();
 	  soundserver_dead = 1;
-	  break;
+	  return;
 
 	default:
 	  fprintf(ds, "Received invalid signal: %d\n", event.signal);
