@@ -1,28 +1,12 @@
-TODO for 0.3.4:
+TODO for 0.6.2:
 
 Primary goals:
-	* Fix refcount algorithm to:
-		(a) treat clones correctly
-		(b) treat implicit instantiations and script/clone dependancies
-			separately
-	* disasm: First argument: Documentation insufficient
-	* disasm: Dump bytecodes along with disassembly
-	* update calle, callk docs
-	* Auto-detect version number from Sierra's executable
-	* Add PCM output support and one driver to use it
-	* operations.c: Add full support for state->visible_map
-	* optimize pic drawing
-	* Add graphical game selection screen
+ + Fix realtime song player detection of situations in which too much
+   time has passed
 
 Secondary goals:
-	+ Add on-screen editor for sound mappings
-	* docs: Mention words with class set to zero (no word).
-	* grammar.c: Replace proto-Earley parser with backtracking Earley
-	* Don't crash when loading SCI1 resources
 
 Bonus goals:
-	+ Add glx graphics driver
-	* modify Cygwin setup for use as win32 installer
 
 
 *: Normal goal

@@ -1,3 +1,10 @@
+2004-03-25  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/sfx/mixer/soft.c (mix_compute_buf_len): Cap time
+	computations at the buffer size, thus assuming that no frames will
+	ever have to be skipped. Strangely enough, that seems to sound
+	better...
+
 2004-03-19  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/main.c (main): Actually obey a version setting when it

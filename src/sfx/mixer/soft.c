@@ -443,7 +443,11 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_frames)
 	frame_pos = FRAME_OFFSET(usecs);
 
 	played_frames = P->played_this_second - frame_pos
-		- ((secs - P->lsec) * self->dev->conf.rate);
+		+ ((secs - P->lsec) * self->dev->conf.rate);
+
+	if (played_frames > self->dev->buf_size)
+		played_frames = self->dev->buf_size;
+
 	/*
 	fprintf(stderr, "Between %d:? offset=%d and %d:%d offset=%d: Played %d at %d\n", P->lsec, P->played_this_second,
 		secs, usecs, frame_pos, played_frames, self->dev->conf.rate);
@@ -456,9 +460,9 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_frames)
 
 	if (free_frames > self->dev->buf_size) {
 		if (!diagnosed_too_slow) {
-			sciprintf("[sfx-mixer] Your timer is too slow for your PCM output device (%d/%d).\n"
+			sciprintf("[sfx-mixer] Your timer is too slow for your PCM output device (%d/%d), free=%d.\n"
 				  "[sfx-mixer] You might want to try changing the device, timer, or mixer, if possible.\n",
-				  played_frames, self->dev->buf_size);
+				  played_frames, self->dev->buf_size, free_frames);
 		}
 		diagnosed_too_slow = 1;
 
@@ -496,7 +500,7 @@ mix_compute_buf_len(sfx_pcm_mixer_t *self, int *skip_frames)
 		result_frames = 0;
 
 	P->played_this_second += result_frames;
-	while (P->played_this_second > self->dev->conf.rate) {
+	while (P->lsec < self->dev->conf.rate) {
 		/* Won't normally happen more than once */
 		P->played_this_second -= self->dev->conf.rate;
 		P->lsec++;
