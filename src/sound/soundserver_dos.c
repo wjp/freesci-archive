@@ -443,7 +443,7 @@ sound_dos_poll() {
 
   while (ticks==0) {
       int newcmd;
-      int param;
+      int param, param2;
       int tempticks;
 
       gettimeofday((struct timeval *)&last_played, NULL);
@@ -462,6 +462,8 @@ sound_dos_poll() {
       } /* else we've got the 'running status' mode defined in the MIDI standard */
 
       param = song->data[song->pos];
+      if (SCI_MIDI_CONTROLLER(command))
+	param2 = song->data[song->pos + 1];
       song->pos += cmdlen[command >> 4];
 
       if (command == SCI_MIDI_EOT) {
@@ -475,8 +477,8 @@ sound_dos_poll() {
           sound_eq_queue_event(&sound_dos_queue, song->handle, SOUND_SIGNAL_FINISHED, 0);
         }
       } else {
-        if (command == SCI_MIDI_CUMULATIVE_CUE) {
-          sound_eq_queue_event(&sound_dos_queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param + ++ccc);
+	if (SCI_MIDI_CONTROLLER(command) && (param == SCI_MIDI_CUMULATIVE_CUE))
+	  sound_eq_queue_event(&sound_dos_queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, ccc += param2);
         } else if (command == SCI_MIDI_SET_SIGNAL) {
           if (param == SCI_MIDI_SET_SIGNAL_LOOP) {
             song->loopmark = song->pos;

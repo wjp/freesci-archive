@@ -44,7 +44,8 @@
 
 #define SCI_MIDI_EOT 0xfc
 /* End of track command */
-#define SCI_MIDI_CUMULATIVE_CUE 0xcc
+#define SCI_MIDI_CONTROLLER(status) ((status & 0xf0) == 0xb0)
+#define SCI_MIDI_CUMULATIVE_CUE 0x60
 
 #define SCI_MIDI_SET_SIGNAL 0xcf
 

@@ -1,6 +1,6 @@
 /***************************************************************************
- midi.c (C) 1999 Christoph Reichenbach, TU Darmstadt
-
+ midi.c (C) 1999 Christoph Reichenbach
+        (C) 1999-2000 Rickard Lind
 
  This program may be modified and copied freely according to the terms of
  the GNU general public license (GPL), as long as the above copyright
@@ -530,7 +530,7 @@ gint8 gm_rhythm_key;
 {"RimShot MS", RHYTHM, 36},   /* R */
 {"SHOWER    ", 52, NOMAP},    /* ? (LSL3) */
 {"SQ Bass MS", 38, NOMAP},    /* + (SQ3) */
-{"ShakuVibMS", 77, NOMAP},    /* + (iceMan) */
+{"ShakuVibMS", 79, NOMAP},    /* + (iceMan) */
 {"SlapBassMS", 36, NOMAP},    /* +++ (iceMan) */
 {"Snare   MS", RHYTHM, 37},   /* R (HQ) */
 {"Some Birds", 123, NOMAP},   /* + (CB) */
@@ -552,9 +552,9 @@ gint8 gm_rhythm_key;
 {"Timpani1  ", 47, NOMAP},    /* +++ (CB) */
 {"Tom     MS", 117, 47},      /* +++ (iceMan) */
 {"Toms    MS", 117, 47},      /* +++ (CoC, HQ) */
-{"Tpt1prtl  ", 56, NOMAP},    /* ++ (KQ1) */
+{"Tpt1prtl  ", 56, NOMAP},    /* +++ (KQ1) */
 {"TriangleMS", 112, 80},      /* R (CoC) */
-{"Trumpet 1 ", 56, NOMAP},    /* ++ (CoC) */
+{"Trumpet 1 ", 56, NOMAP},    /* +++ (CoC) */
 {"Type    MS", 114, NOMAP},   /* ? (iceMan) */
 {"WaterBells", 98, NOMAP},    /* + (PQ2) */
 {"WaterFallK", NOMAP, NOMAP}, /* ? (KQ1) */
@@ -655,9 +655,10 @@ makeMIDI0(const guint8 *src, int *size)
   int chn;
   char muteflags[16]; /* Remembers unmapped instruments */
   guint32 pos; /* position in src */
+  guint32 eventpos = 0x21;
   guint32 pending_delay = 0;
   guint8 status, laststatus = 0;
-
+  guint16 cue = 127;
   int EOT = 0; /* end of track reached */
   guint8 *result; /* Herein will be the final results */
   int tracklength_index; /* (guint32) result[tracklength_index] (big endian)
@@ -679,7 +680,7 @@ makeMIDI0(const guint8 *src, int *size)
   for (chn=0; chn < 16; chn ++)
     if (chn == MIDI_PERCUSSIONS)
       muteflags[chn] = 0;
-    else if ((src[(chn << 1) + 2] & 001) == 0)
+    else if (((src[(chn << 1) + 2] & 001) == 0) || (chn == 15))
       muteflags[chn] = 2;
     else
       muteflags[chn] = 1;
@@ -688,23 +689,21 @@ makeMIDI0(const guint8 *src, int *size)
 
   while (!EOT) {
 
-    if ((src[pos] >= 0xf0) && (src[pos] != 0xf8)) {
-      SCIsdebug("[%04x] Unknown instead of delta-time: %02x\n", pos, src[pos]);
+    eventpos = pos;
+    
+    while (src[pos] >= 0xf0) {
+      if (src[pos] == 0xf8) {
+	pending_delay += 240;	
+      } else
+	SCIsdebug("[%04x] !!! Unknown instead of delta-time: 0x%02x\n", pos, src[pos]);
       pos++;
     };
-
-    if (src[pos] == 0xf8)
-      while (src[pos] == 0xf8) {
-	pending_delay += 0xf0;
-	pos++;
-      };
 
     pending_delay += src[pos];
     pos++;    
 
     if (src[pos] & 0x80) {
       status = src[pos];
-      /* SCIsdebug("[%04x]  Status %02x\n", pos, status); */
       pos++;
     };
     
@@ -714,7 +713,7 @@ makeMIDI0(const guint8 *src, int *size)
 	if ((status & 0x0f) == MIDI_PERCUSSIONS) {
 	  if (MIDI_mapping[src[pos]].gm_rhythmkey >= 0) {
 	    /* if ((status & 0xf0) == 0x90) {
-	      SCIsdebug("[%04x] Drum Channel, Note: %d", pos, src[pos]);
+	      SCIsdebug("[%04x] Rhythm Channel, SCI Note: %d", pos - 1, src[pos]);
 	      SCIsdebug(" => %s\n", GM_Percussion_Names[MIDI_mapping[src[pos]].gm_rhythmkey]);
 	      }; */
 	    MIDI_TIMESTAMP(pending_delay);
@@ -724,8 +723,8 @@ makeMIDI0(const guint8 *src, int *size)
 	    laststatus = status;
 	    obstack_1grow(stackp, MIDI_mapping[src[pos]].gm_rhythmkey);
 	    obstack_1grow(stackp, (MIDI_mapping[src[pos]].volume * src[pos + 1]) / 100);
-	    /*} else if ((status & 0xf0) == 0x90) {
-	      SCIsdebug("[%04x] (Drum Channel, Note: %d)\n", pos, src[pos]); */
+	    /* } else if ((status & 0xf0) == 0x90) {
+	       SCIsdebug("[%04x] Rhythm Channel, SCI Note: %d (mute)\n", pos - 1, src[pos]); */
 	  };
 	} else {
 	  MIDI_TIMESTAMP(pending_delay);
@@ -736,10 +735,17 @@ makeMIDI0(const guint8 *src, int *size)
 	  obstack_1grow(stackp, src[pos]);
 	  obstack_1grow(stackp, src[pos + 1]);
 	};
+      /* if ((status & 0xf0) == 0xa0)
+	 SCIsdebug("[%04x] !!! Aftertouch not supported by MT-32\n", pos - 1); */
       pos += 2;
     } else if (status < 0xc0) {
     /* Controller */
-      if (muteflags[status & 0x0f] == 0) {
+      if ((muteflags[status & 0x0f] == 0) &&
+	  (src[pos] != 0x4b) &&
+	  (src[pos] != 0x4c) &&
+	  (src[pos] != 0x4e) &&
+	  (src[pos] != 0x50) &&
+	  (src[pos] != 0x60)) {
 	MIDI_TIMESTAMP(pending_delay);
 	pending_delay = 0;
 	if (status != laststatus)
@@ -748,12 +754,38 @@ makeMIDI0(const guint8 *src, int *size)
 	obstack_1grow(stackp, src[pos]);
 	obstack_1grow(stackp, src[pos + 1]);
       };
+      if ((src[pos] != 1) &&
+	  (src[pos] != 7) &&
+	  (src[pos] != 10) &&
+	  (src[pos] != 11) &&
+	  (src[pos] != 64) &&
+	  (src[pos] != 121))
+	if (src[pos] == 0x4b) {
+	  /* SCIsdebug("[%04x] Channel: %d, * Channel mapping: %d *\n", pos - 1, status & 0xf, src[pos + 1]); */
+	} else if (src[pos] == 0x4c) {
+	  if (src[pos + 1] == 0)
+	    SCIsdebug("[%04x] * Global, Disable Reset on StopSound *\n", pos - 1, status & 0xf);
+	  else
+	    SCIsdebug("[%04x] * Global, Enable Reset on StopSound *\n", pos - 1, status & 0xf);
+	} else if ((src[pos] == 0x4e) && (src[pos + 1] <= 1)) {
+	  /* if (src[pos + 1] == 0)
+	     SCIsdebug("[%04x] Channel: %d, * Disable Velocities *\n", pos - 1, status & 0xf);
+	     else if (src[pos + 1] == 1)
+	     SCIsdebug("[%04x] Channel: %d, * Enable Velocities *\n", pos - 1, status & 0xf); */
+	} else if ((src[pos] == 0x50) && (src[pos + 1] <= 10)) {
+	  SCIsdebug("[%04x] * Global, Set Reverb: %d *\n", pos - 1, src[pos + 1]);
+	} else if (src[pos] == 0x60) {
+	  cue += src[pos +1];
+	  SCIsdebug("[%04x] * Global, Cumulative Cue: +%d => %d *\n", pos - 1, src[pos + 1], cue);
+	} else
+	  SCIsdebug("[%04x] !!! Channel: %d, Controller: 0x%02x parameter:0x%02x, not supported by MT-32\n",
+		    pos - 1, status & 0xf, src[pos], src[pos + 1]);
       pos +=2;
     } else if (status < 0xd0) {
     /* Program (patch) Change */
       if ((muteflags[status & 0xf] != 2) && ((status & 0xf) != MIDI_PERCUSSIONS)) {
 	if (MIDI_mapping[src[pos]].gm_instr >= 0) {
-          SCIsdebug("[%04x] Channel: %d, Patch: %d", pos, status & 0xf, src[pos]);
+          SCIsdebug("[%04x] Channel: %d, SCI Patch: %d", pos - 1, status & 0xf, src[pos]);
 	  SCIsdebug(" => %s\n", GM_Instrument_Names[MIDI_mapping[src[pos]].gm_instr]);
 	  MIDI_TIMESTAMP(pending_delay);
 	  pending_delay = 0;
@@ -763,10 +795,15 @@ makeMIDI0(const guint8 *src, int *size)
 	  laststatus = 0;
 	  muteflags[status & 0x0f] = 0;
         } else {
-	  SCIsdebug("[%04x] Channel: %d, Patch: %d *mute*\n", pos, status & 0xf, src[pos]);
+	  SCIsdebug("[%04x] Channel: %d, SCI Patch: %d (mute)\n", pos - 1, status & 0xf, src[pos]);
 	  muteflags[status & 0x0f] = 1;
 	};
       };
+      if (status == 0xcf)
+	if(src[pos] == 0x7f)
+	  SCIsdebug("[%04x] * Global, Set Loop Point [%04x] *\n", pos - 1, eventpos);
+	else
+	  SCIsdebug("[%04x] * Global, Set Signal to %d *\n", pos - 1, src[pos]);
       pos++;
     } else if (status < 0xe0) {
     /* Channel Pressure */
@@ -778,10 +815,11 @@ makeMIDI0(const guint8 *src, int *size)
 	laststatus = status;
 	obstack_1grow(stackp, src[pos]);
       };
+      /* SCIsdebug("[%04x] !!! Channel Pressure not supported by MT-32\n", pos - 1, src[pos]); */
       pos++;
     } else if (status < 0xf0) {
     /* Pitch Wheel */
-      if (!muteflags[status & 0xF] == 0) {
+      if (muteflags[status & 0xF] == 0) {
 	MIDI_TIMESTAMP(pending_delay);
 	pending_delay = 0;
 	if (status != laststatus)
@@ -791,25 +829,23 @@ makeMIDI0(const guint8 *src, int *size)
 	obstack_1grow(stackp, src[pos + 1]);
       };
       pos += 2;
-      /* } else if (status == 0xf8) {
-	 SCIsdebug("[%04x] (MIDI Clock - status F8)\n", pos); */
     } else if (status == 0xfc) {
-    /* End of Track (is this official?) */
+    /* End of Track */
       MIDI_TIMESTAMP(pending_delay);
       obstack_1grow(stackp, 0xff);
       obstack_1grow(stackp, 0x2f);
       obstack_1grow(stackp, 0x00);
       EOT = 1;
     } else {
-      SCIsdebug("[%04x] Illegal or unsupported MIDI extended instruction: %02x\n",pos, status);
+      SCIsdebug("[%04x] !!! Illegal or unsupported MIDI extended instruction: %02x\n", pos - 1, status);
       return NULL;
     };
   };
 
   *size = obstack_object_size(stackp);
 
-  SCIsdebug("MIDI: EOT reached at %i, resulting MIDI block size is %i\n",
-	    pos, *size);
+  SCIsdebug("[%04x] EOT reached at %i, resulting MIDI block size is %i\n",
+	    pos - 1, pos, *size);
 
 
   result = malloc(*size);
@@ -910,7 +946,8 @@ mapMIDIInstruments(void)
     patches = 48;
 
   SCIsdebug("MIDI mapping magic: %d MT-32 Patches detected\n", patches);
-  SCIsdebug("MIDI mapping magic: %d MT-32 Memory Timbres\n", memtimbres);
+  if (memtimbres > 0)
+    SCIsdebug("MIDI mapping magic: %d MT-32 Memory Timbres\n", memtimbres);
 
   for (i = 0; i < patches; i++) {
     if (i < 48) {
@@ -930,13 +967,13 @@ mapMIDIInstruments(void)
       patchpointer = patch1->data + 0x1EC + 8 * (i - 48) + memtimbres * 0xF6 + 2; 
     };
 
-    if ((patchpointer[0] == 0) && \
-        (patchpointer[1] == 0) && \
-	(patchpointer[2] == 0) && \
-	(patchpointer[3] == 0) && \
-	(patchpointer[4] == 0) && \
-	(patchpointer[5] == 0) && \
-	(patchpointer[6] == 0) && \
+    if ((patchpointer[0] == 0) &&
+        (patchpointer[1] == 0) &&
+	(patchpointer[2] == 0) &&
+	(patchpointer[3] == 0) &&
+	(patchpointer[4] == 0) &&
+	(patchpointer[5] == 0) &&
+	(patchpointer[6] == 0) &&
 	(patchpointer[7] == 0)) {
       MIDI_mapping[i].gm_instr = NOMAP;
       /* SCIsdebug("Patch %d will be unmapped!\n", i); */
@@ -959,7 +996,7 @@ mapMIDIInstruments(void)
 	  break;
       };
       MIDI_mapping[i].keyshift = 0x40 + ((int) (keyshift & 0x3F) - 24);
-      MIDI_mapping[i].finetune = 0x2000 + (((int) (finetune & 0x7F) - 50) * 0x2000) / 100;
+      MIDI_mapping[i].finetune = 0x2000 + (((gint32) (finetune & 0x7F) - 50) << 11) / 25;
       MIDI_mapping[i].bender_range = (int) (bender_range & 0x1F);
     };
   };

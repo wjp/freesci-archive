@@ -1,3 +1,9 @@
+2000-01-13  Rickard Lind  <rpl@dd.chalmers.se>
+
+	* src/sound/soundserver_null.c: Fixed a bug in the cumulative cue
+ 	system (also fixed soundserver_dos).
+	
+
 2000-01-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/sound/soundserver_dos.c (sound_dos_poll): Added support for the
