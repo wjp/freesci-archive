@@ -121,6 +121,10 @@ SOURCE=..\sound\sound.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\core\vocab.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\core\vocab_debug.c
 # End Source File
 # End Group

@@ -605,7 +605,7 @@ c_hexgrep(state_t *s)
 
 int c_selectornames(state_t *s)
 {
-  char **snames = vocabulary_get_snames();
+  char **snames = vocabulary_get_snames(NULL);
   int seeker = 0;
 
   if (!snames) {

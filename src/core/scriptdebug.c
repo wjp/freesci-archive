@@ -375,6 +375,7 @@ disassemble(state_t *s, heap_ptr pos)
     case Script_SVariable:
     case Script_Variable:
     case Script_Property:
+    case Script_Global:
       if (opsize)
 	param_value = s->heap[retval++];
       else {

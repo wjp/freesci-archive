@@ -115,7 +115,7 @@ int* vocabulary_get_classes();
 /**
  * Returns a null terminated array of selector names.
  */
-char** vocabulary_get_snames();
+char** vocabulary_get_snames(int *pcount);
 /**
  * Frees the aforementioned array
  */

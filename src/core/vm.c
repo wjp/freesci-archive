@@ -487,6 +487,7 @@ run_vm(state_t *s, int restoring)
 
       case Script_Variable: 
       case Script_Property:
+      case Script_Global:
         opparams[temp] = GET_OP_FLEX(); break;
 
       case Script_SVariable: 
@@ -1577,7 +1578,7 @@ game_init(state_t *s)
   s->kernel_names = vocabulary_get_knames(&s->kernel_names_nr);
   s->opcodes = vocabulary_get_opcodes();
 
-  if (!(s->selector_names = vocabulary_get_snames())) {
+  if (!(s->selector_names = vocabulary_get_snames(NULL))) {
     sciprintf("script_init(): Could not retreive selector names (vocab.997)!\n");
     return 1;
   }

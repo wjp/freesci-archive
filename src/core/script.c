@@ -43,25 +43,25 @@ opcode_format formats[128][4]={
   /*3C*/
   {Script_None}, {Script_None}, {Script_None}, {Script_Invalid},
   /*40-4F*/
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
   /*50-5F*/
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
   /*60-6F*/
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
   /*70-7F*/
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
-  {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0},
+  {Script_Global, 0}, {Script_Variable, 0}, {Script_Variable, 0}, {Script_Variable, 0}
 };
 
 int
@@ -272,7 +272,7 @@ script_dump_class(char *data, int seeker, int objsize, char **snames)
 void 
 script_dissect(int res_no)
 {
-  char **snames = vocabulary_get_snames();
+  char **snames = vocabulary_get_snames(NULL);
   int objectctr[11] = {0,0,0,0,0,0,0,0,0,0,0};
   int _seeker = 0;
   resource_t *script = findResource(sci_script, res_no);

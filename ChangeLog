@@ -1,3 +1,21 @@
+1999-12-15  Dmitry Jemerov  <yole@nnz.ru>
+
+	* src/core/vocab_debug.c, src/include/vocabulary.h
+	(vocabulary_get_snames): New parameter pcount.
+	* Updated references to this function accordingly.
+
+	* src/tools/scidisasm.c: Disassembly improvements. Printing of
+	selector names pushed by pushi, object names and said strings
+	referred to by lofsa/lofss. Global variable references are printed
+	as global_<number>. Changed format of opcode size display and made
+	it optional. Jump label generation. Display of some additional
+	information made optional. Support of older script header format.
+	And more...
+
+	* src/core/script.c, src/include/script.h: New opcode type
+	Script_Global.
+	* Updated references to opcode table accordingly.
+
 1999-12-13  Dmitry Jemerov  <yole@nnz.ru>
 
 	* src/core/script.c, src/include/script.h, src/include/vm.h: Moved
@@ -32,7 +50,6 @@
 
 	* src/graphics/menubar.c (menubar_add_menu): Added tag value support
 
->>>>>>> 1.53
 1999-12-12  Dmitry Jemerov  <yole@nnz.ru>
 
 	* src/core/kfile.c (kDeviceInfo_Win32): Correct Win32

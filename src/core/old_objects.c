@@ -147,6 +147,7 @@ static void printMethod(object* obj, int meth, int indent)
 						case Script_Variable:
                                                 case Script_SRelative:
                                                 case Script_Property:
+                                                case Script_Global:
 						{
 							printf("%04X ", args[j]);
 						} break;
@@ -330,6 +331,7 @@ static script_method* decode_method(byte* data)
             case Script_SVariable:
             case Script_SRelative:
             case Script_Property:
+            case Script_Global:
 	      {
 		if(size==1) *args[arg]=data[pos++];
 		else
@@ -650,7 +652,7 @@ static int objects_init()
 
 	opcodes=vocabulary_get_opcodes();
 	knames=vocabulary_get_knames(&knames_count);
-	snames=vocabulary_get_snames();
+	snames=vocabulary_get_snames(NULL);
 
 	return 0;
 }

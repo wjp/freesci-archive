@@ -152,7 +152,7 @@ int* vocabulary_get_classes(int* count)
   return c;
 }
 
-char** vocabulary_get_snames()
+char** vocabulary_get_snames(int* pcount)
 {
   char** t;
   int count;
@@ -176,6 +176,8 @@ char** vocabulary_get_snames()
     }
 
   t[i]=0;
+
+  if (pcount != NULL) *pcount=count;
   
   return t;
 }

@@ -41,15 +41,19 @@
 #include <getopt.h>
 #endif /* HAVE_GETOPT_H */
 
+static int hexdump = 0;
+static int opcode_size = 0;
+static int verbose = 0;
+
 #ifdef HAVE_GETOPT_H
 static struct option options[] = {
   {"version", no_argument, 0, 256},
   {"help", no_argument, 0, 'h'},
-  {"hexdump", no_argument, 0, 'x'},
+  {"hexdump", no_argument, &hexdump, 1},
+  {"opcode-size", no_argument, &opcode_size, 1},
+  {"verbose", no_argument, &verbose, 1},
   {0, 0, 0, 0}};
 #endif /* HAVE_GETOPT_H */
-
-static int hexdump=0;
 
 void
 graph_update_box(state_t *s, int x,int y,int z,int w)
@@ -65,21 +69,23 @@ typedef struct name_s {
 typedef struct area_s {
   int start_offset;
   int end_offset;
+  void *data;
   struct area_s *next;
 } area_t;
 
-enum area_type { area_said, area_string };
+enum area_type { area_said, area_string, area_object, area_last };
 
 typedef struct script_state_s {
   int script_no;
   name_t *names;
-  area_t *areas [2];
+  area_t *areas [area_last];
 
   struct script_state_s *next;
 } script_state_t;
 
 typedef struct disasm_state_s {
   char **snames;
+  int selector_count;
   opcode *opcodes;
   int kernel_names_nr;
   char **kernel_names;
@@ -89,6 +95,7 @@ typedef struct disasm_state_s {
   char **class_names;
   short **class_selectors;
   int class_count;
+  int old_header;
 
   script_state_t *scripts;
 } disasm_state_t;
@@ -109,13 +116,13 @@ char *
 script_find_name (script_state_t *s, int offset, int *class_no);
 
 void
-script_add_area (script_state_t *s, int start_offset, int end_offset, int type);
+script_add_area (script_state_t *s, int start_offset, int end_offset, int type, void *data);
 
 void
 script_free_areas (script_state_t *s);
 
 int
-script_get_area_type (script_state_t *s, int offset);
+script_get_area_type (script_state_t *s, int offset, void **pdata);
 
 void
 disasm_init (disasm_state_t *d);
@@ -146,16 +153,14 @@ int main(int argc, char** argv)
 		 "This is free software, released under the GNU General Public License.\n");
 	  exit(0);
 
-        case 'x':
-          hexdump=1;
-          break;
-	  
 	case 'h':
 	  printf("Usage: scidisasm\n"
 		 "\nAvailable options:\n"
 		 " --version              Prints the version number\n"
 		 " --help        -h       Displays this help message\n"
-                 " --hexdump     -x       Hex dump all script resources\n");
+                 " --hexdump     -x       Hex dump all script resources\n"
+                 " --verbose              Print additional disassembly information\n"
+                 " --opcode-size          Print opcode size postfixes\n");
 	  exit(0);
 	  
 	case 0: /* getopt_long already did this for us */
@@ -207,7 +212,7 @@ disasm_init (disasm_state_t *d)
 {
   int *classes;
   
-  d->snames = vocabulary_get_snames();
+  d->snames = vocabulary_get_snames (&d->selector_count);
   d->opcodes = vocabulary_get_opcodes();
   d->kernel_names = vocabulary_get_knames (&d->kernel_names_nr);
   d->words = vocab_get_words (&d->word_count);
@@ -308,7 +313,7 @@ script_find_name (script_state_t *s, int offset, int *aclass_no)
   for (p=s->names; p; p=p->next)
     if (p->offset == offset) 
     {
-      if (aclass_no) *aclass_no = p->class_no;
+      if (aclass_no && p->class_no != -2) *aclass_no = p->class_no;
       return p->name;
     }
   
@@ -318,15 +323,16 @@ script_find_name (script_state_t *s, int offset, int *aclass_no)
 /* -- Area table operations ----------------------------------------------  */
 
 void
-script_add_area (script_state_t *s, int start_offset, int end_offset, int type)
+script_add_area (script_state_t *s, int start_offset, int end_offset, int type, void *data)
 {
   area_t *area;
 
   area=(area_t *) malloc (sizeof (area_t));
   area->start_offset = start_offset;
   area->end_offset = end_offset;
+  area->data = data;
   area->next = s->areas [type];
-
+  
   s->areas [type] = area;
 }
 
@@ -335,7 +341,7 @@ script_free_areas (script_state_t *s)
 {
   int i;
 
-  for (i=0; i<2; i++)
+  for (i=0; i<area_last; i++)
   {
     area_t *area=s->areas [i], *next_area;
     while (area)
@@ -348,22 +354,55 @@ script_free_areas (script_state_t *s)
 }
 
 int
-script_get_area_type (script_state_t *s, int offset)
+script_get_area_type (script_state_t *s, int offset, void **pdata)
 {
   int i;
   
-  for (i=0; i<2; i++)
+  for (i=0; i<area_last; i++)
   {
     area_t *area=s->areas [i];
     while (area)
     {
       if (area->start_offset <= offset && area->end_offset >= offset)
+      {
+        if (pdata != NULL) *pdata=area->data;
         return i;
+      }
       area=area->next;
     }
   }
 
   return -1;
+}
+
+char *
+get_selector_name (disasm_state_t *d, int selector)
+{
+  static char selector_name [256];
+
+  if (d->snames && selector >= 0 && selector < d->selector_count)
+    return d->snames [selector];
+  else
+  {
+    sprintf (selector_name, "unknown_sel_%X", selector);
+    return selector_name;
+  }
+}
+
+char *
+get_class_name (disasm_state_t *d, int class_no)
+{
+  static char class_name [256];
+  
+  if (class_no == -1)
+    return "<none>";
+  else if (class_no >= 0 && class_no < d->class_count && d->class_names [class_no])
+    return d->class_names [class_no];
+  else
+  {
+    sprintf (class_name, "class_%d", class_no);
+    return class_name;
+  }
 }
 
 /* -- Code to dump individual script block types -------------------------  */
@@ -385,24 +424,15 @@ script_dump_object(disasm_state_t *d, script_state_t *s,
   selectors = (selectorsize = getInt16(data + seeker + 6));
   name=namepos? ((char *)data + namepos) : "<unknown>";
   
+  if (pass_no == 1)
+    script_add_area (s, seeker, seeker+objsize-1, area_object, name);
+  
   if (pass_no == 2)
   {
+    sciprintf(".object\n");
     sciprintf("Name: %s\n", name);
-    sciprintf("Superclass: ");
-    if (superclass == -1)
-      sciprintf ("<none>\n");
-    else
-      sciprintf ("%s  [%x]\n", 
-                 d->class_names [superclass] ? d->class_names [superclass] : "<unknown>",
-                 superclass);
-
-    sciprintf("Species: ");
-    if (species == -1)
-      sciprintf ("<none>\n");
-    else
-      sciprintf ("%s  [%x]\n", 
-                 d->class_names [species] ? d->class_names [species] : "<unknown>",
-                 species);
+    sciprintf("Superclass: %s  [%x]", get_class_name (d, superclass), superclass);
+    sciprintf("Species: %s  [%x]", get_class_name (d, species), species);
 
     sciprintf("-info-:%x\n", getInt16(data + 12 + seeker) & 0xffff);
 
@@ -438,16 +468,17 @@ script_dump_object(disasm_state_t *d, script_state_t *s,
   seeker += 2;
 
   while (overloads--) {
-    int selector = getInt16(data + (seeker));
-
+    word selector = getInt16(data + (seeker)) & 0xffff;
+    if (d->old_header) selector >>= 1;
+    
     if (pass_no == 1) 
     {
-      sprintf (buf, "%s::%s", name, (d->snames)? d->snames[selector] : "<?>");
-      script_add_name (s, getInt16(data + seeker + selectors*2 + 2) & 0xffff, buf, species);
+      sprintf (buf, "%s::%s", name, get_selector_name (d, selector));
+      script_add_name (s, getInt16(data + seeker + selectors*2 + 2), buf, species);
     } 
     else {
-      sciprintf("  [%03x] %s: @", selector & 0xffff, (d->snames)? d->snames[selector] : "<?>");
-      sciprintf("%04x\n", getInt16(data + seeker + selectors*2 + 2) & 0xffff);
+      sciprintf("  [%03x] %s: @", selector, get_selector_name (d, selector));
+      sciprintf("%04x\n", getInt16(data + seeker + selectors*2 + 2));
     }
 
     seeker += 2;
@@ -458,7 +489,7 @@ static void
 script_dump_class(disasm_state_t *d, script_state_t *s,
                   unsigned char *data, int seeker, int objsize, int pass_no)
 {
-  int selectors, overloads, selectorsize;
+  word selectors, overloads, selectorsize;
   int species = getInt16(data + 8 + seeker);
   int superclass = getInt16(data + 10 + seeker);
   int namepos = getInt16(data + 14 + seeker);
@@ -474,22 +505,23 @@ script_dump_class(disasm_state_t *d, script_state_t *s,
   {
     if (species >= 0 && species < d->class_count)
     {
-      d->class_names [species] = strdup (name);
+      if (!namepos)
+      {
+        sprintf (buf, "class_%d", species);
+        d->class_names [species] = strdup (buf);
+      }
+      else
+        d->class_names [species] = strdup (name);
+      
       d->class_selectors [species] = (short *) malloc (sizeof (short) * selectors);
     }
   }
   
   if (pass_no == 2) 
   {
-    sciprintf ("Class:\n");
+    sciprintf (".class\n");
     sciprintf("Name: %s\n", name);
-    sciprintf("Superclass: ");
-    if (superclass == -1)
-      sciprintf ("<none>\n");
-    else
-      sciprintf ("%s  [%x]\n", 
-                 d->class_names [superclass] ? d->class_names [superclass] : "<unknown>",
-                 superclass);
+    sciprintf("Superclass: %s  [%x]", get_class_name (d, superclass), superclass);
     sciprintf("Species: %x\n", species);
     sciprintf("-info-:%x\n", getInt16(data + 12 + seeker) & 0xffff);
 
@@ -501,12 +533,16 @@ script_dump_class(disasm_state_t *d, script_state_t *s,
   selectorsize <<= 1;
 
   for (i=0; i<selectors; i++) {
-    int selector = 0xffff & getInt16(data + (seeker) + selectorsize);
+    word selector = 0xffff & getInt16(data + (seeker) + selectorsize);
+    if (d->old_header) selector >>= 1;
 
     if (pass_no == 1)
-      (d->class_selectors [species]) [i] = selector;
+    {
+      if (species >= 0 && species < d->class_count)
+        d->class_selectors [species][i] = selector;
+    }
     else
-      sciprintf("  [%03x] %s = 0x%x\n", 0xffff & selector, (d->snames)? d->snames[selector] : "<?>",
+      sciprintf("  [%03x] %s = 0x%x\n", selector, get_selector_name (d, selector),
 	        getInt16(data + seeker) & 0xffff);
 
     seeker += 2;
@@ -514,22 +550,23 @@ script_dump_class(disasm_state_t *d, script_state_t *s,
 
   seeker += selectorsize;
 
-  selectors =  overloads = getInt16(data + seeker);
+  overloads = getInt16(data + seeker);
 
   sciprintf("Overloaded functions: %x\n", overloads);
 
   seeker += 2;
 
   while (overloads--) {
-    int selector = getInt16(data + (seeker));
+    word selector = getInt16(data + (seeker));
+    if (d->old_header) selector >>= 1;
 
     if (pass_no == 1)
     {
-      sprintf (buf, "%s::%s", name, (d->snames)? d->snames[selector] : "<?>");
+      sprintf (buf, "%s::%s", name, get_selector_name (d, selector));
       script_add_name (s, getInt16(data + seeker + selectors*2 + 2) & 0xffff, buf, species);
     }
     else {
-      sciprintf("  [%03x] %s: @", selector & 0xffff, (d->snames)? d->snames[selector] : "<?>");
+      sciprintf("  [%03x] %s: @", selector & 0xffff, get_selector_name (d, selector));
       sciprintf("%04x\n", getInt16(data + seeker + selectors*2 + 2) & 0xffff);
     }
 
@@ -537,25 +574,15 @@ script_dump_class(disasm_state_t *d, script_state_t *s,
   }
 }
 
-static void
-script_dump_said(disasm_state_t *d, script_state_t *s,
-                 unsigned char *data, int seeker, int objsize, int pass_no)
+static int
+script_dump_said_string(disasm_state_t *d, unsigned char *data, int seeker)
 {
-  int _seeker=seeker+objsize-4;
-  
-  if (pass_no == 1) 
-  {
-    script_add_area (s, seeker, seeker+objsize-1, area_said);
-    return;
-  }
-  
-  sciprintf ("%04x: ", seeker);
-  while (seeker < _seeker)
+  while (1)
   {
     unsigned short nextitem=(unsigned char) data [seeker++];
-    if (nextitem == 0xFF)
-      sciprintf ("\n%04x: ", seeker);
-    else if (nextitem >= 0xF0)
+    if (nextitem == 0xFF) return seeker;
+  
+    if (nextitem >= 0xF0)
     {
       switch (nextitem) 
       {
@@ -573,11 +600,35 @@ script_dump_said(disasm_state_t *d, script_state_t *s,
     }
     else {
       nextitem = nextitem << 8 | (unsigned char) data [seeker++];                    
-      sciprintf ("%s[%03x] ", vocab_get_any_group_word (nextitem, d->words, d->word_count), nextitem);
+      sciprintf ("%s ", vocab_get_any_group_word (nextitem, d->words, d->word_count));
+      if (verbose)
+        sciprintf ("[%03x] ", nextitem);
     }
   }
-  sciprintf ("\n");
 }
+
+static void
+script_dump_said(disasm_state_t *d, script_state_t *s,
+                 unsigned char *data, int seeker, int objsize, int pass_no)
+{
+  int _seeker=seeker+objsize-4;
+  
+  if (pass_no == 1) 
+  {
+    script_add_area (s, seeker, seeker+objsize-1, area_said, NULL);
+    return;
+  }
+  
+  sciprintf (".said\n");
+  
+  while (seeker < _seeker-1)
+  {
+    sciprintf ("%04x: ", seeker);
+    seeker=script_dump_said_string (d, data, seeker);
+    sciprintf ("\n");
+  }
+}
+
 static void
 script_dump_synonyms(disasm_state_t *d, script_state_t *s,
                  unsigned char *data, int seeker, int objsize, int pass_no)
@@ -601,14 +652,16 @@ static void
 script_dump_strings(disasm_state_t *d, script_state_t *s,
                     unsigned char *data, int seeker, int objsize, int pass_no)
 {
+  int endptr=seeker+objsize-4;
+  
   if (pass_no == 1) 
   {
-    script_add_area (s, seeker, seeker+objsize-1, area_string);
+    script_add_area (s, seeker, seeker+objsize-1, area_string, NULL);
     return;
   }
 
-  sciprintf("Strings\n");
-  while (data [seeker])
+  sciprintf(".strings\n");
+  while (data [seeker] && seeker < endptr)
   {                                                           
     sciprintf ("%04x: %s\n", seeker, data+seeker);
     seeker += strlen (data+seeker)+1;
@@ -624,8 +677,7 @@ script_dump_exports(disasm_state_t *d, script_state_t *s,
   int i;
   char buf [256];
 
-  if (pass_no == 2)
-    sciprintf ("Exports:\n");
+  if (pass_no == 2) sciprintf (".exports\n");
 
   for (i=0; i<export_count; i++)
   {
@@ -651,88 +703,59 @@ script_disassemble_code(disasm_state_t *d, script_state_t *s,
   int i=0;
   int cur_class=-1;
   word dest;
+  void *area_data;
+  char buf [256];
+  char *dest_name;
   
-  if (pass_no == 1) return;
+  if (pass_no == 2) sciprintf (".code\n");
   
-  while (seeker < endptr)
+  while (seeker < endptr-1)
   {
     unsigned char opsize = data [seeker];
     unsigned char opcode = opsize >> 1;
     word param_value;
     char *name;
-    i = 0;
 
     opsize &= 1; /* byte if true, word if false */
 
-    name=script_find_name (s, seeker, &cur_class);
-    if (name) sciprintf ("      %s:\n", name);
-    sciprintf("%04X: ", seeker);
-    sciprintf("[%c] %-9s", opsize? 'B' : 'W', d->opcodes[opcode].name);
+    if (pass_no == 2)
+    {
+      name=script_find_name (s, seeker, &cur_class);
+      if (name) sciprintf ("      %s:\n", name);
+      sciprintf("%04X: ", seeker);
+      sciprintf("%s", d->opcodes[opcode].name);
+      if (opcode_size && formats[opcode][0])
+        sciprintf (".%c", opsize? 'b' : 'w');
+      sciprintf ("\t");
+    }
 
     seeker++;
 
-    while (formats[opcode][i])
+    for (i=0; formats[opcode][i]; i++)
 
-      switch (formats[opcode][i++]) {
+      switch (formats[opcode][i]) {
 
-      case Script_Invalid: sciprintf("-Invalid operation-"); break;
+      case Script_Invalid: 
+        if (pass_no == 2) sciprintf("-Invalid operation-"); 
+        break;
 
       case Script_SByte:
-      case Script_Byte: sciprintf(" %02x", data[seeker++]); break;
+      case Script_Byte: 
+        if (pass_no == 2) sciprintf(" %02x", data[seeker]);
+        seeker++;
+        break;
 
       case Script_Word:
       case Script_SWord:
-        sciprintf(" %04x", 0xffff & (data[seeker] | (data[seeker+1] << 8)));
+        if (pass_no == 2)
+          sciprintf(" %04x", 0xffff & (data[seeker] | (data[seeker+1] << 8)));
         seeker += 2;
         break;
 
       case Script_SVariable:
       case Script_Variable:
-        if (opsize)
-	  param_value = data [seeker++];
-        else {
-	  param_value = 0xffff & (data[seeker] | (data[seeker+1] << 8));
-	  seeker += 2;
-        }
-
-        if (opcode == op_callk)
-	  sciprintf(" %s[%x]", (param_value < d->kernel_names_nr)
-		    ? d->kernel_names[param_value] : "<invalid>", param_value);
-        else if (opcode == op_class || (opcode == op_super && i==1))
-          sciprintf (" %s[%x]", (d->class_names && param_value < d->class_count) 
-                    ? d->class_names[param_value] : "<invalid>", param_value);
-        else sciprintf(opsize? " %02x" : " %04x", param_value);
-
-        break;
-
+      case Script_Global:
       case Script_SRelative:
-        if (opsize)
-	  param_value = data [seeker++];
-        else {
-	  param_value = 0xffff & (data[seeker] | (data[seeker+1] << 8));
-	  seeker += 2;
-        }
-
-        dest=seeker+(short) param_value;
-        sciprintf (opsize? " %02x  [%04x]" : " %04x  [%04x]", param_value, dest);
-        if (opcode == op_lofsa || opcode == op_lofss)
-        {
-          int atype=script_get_area_type (s, dest);
-          if (atype == area_string)
-          {
-            char buf [80];
-            strncpy (buf, &data [dest], sizeof (buf)-1);
-            buf [sizeof (buf)-1] = 0;
-            if (strlen (buf) > 40)
-            {
-              buf [40] = 0;
-              strcat (buf, "...");
-            }
-            sciprintf ("%8s; \"%s\"", "", buf);
-          }
-        }
-        break;
-
       case Script_Property:
         if (opsize)
 	  param_value = data [seeker++];
@@ -741,21 +764,98 @@ script_disassemble_code(disasm_state_t *d, script_state_t *s,
 	  seeker += 2;
         }
 
-        if (cur_class != -1)
-          sciprintf (" %s[%x]", 
-             d->snames [d->class_selectors [cur_class][param_value/2]],
-             param_value);
-        else
-          sciprintf(opsize? " %02x" : " %04x", param_value);
+        if (pass_no == 1)
+        {
+          if (opcode == op_jmp || opcode == op_bt || opcode == op_bnt)
+          {
+            dest=seeker+(short) param_value;
+            sprintf (buf, "lbl_%04X", dest);
+            script_add_name (s, dest, buf, -2);
+          }
+        }
+        else if (pass_no == 2)
+          switch (formats[opcode][i]) {
 
-        break;
+          case Script_SVariable:
+          case Script_Variable:
+            if (opcode == op_callk)
+            {
+	      sciprintf(" #%s", (param_value < d->kernel_names_nr)
+		        ? d->kernel_names[param_value] : "<invalid>");
+              if (verbose) sciprintf ("[%x]", param_value);
+            }
+            else if (opcode == op_class || (opcode == op_super && i==0))
+            {
+              sciprintf (" %s", (d->class_names && param_value < d->class_count) 
+                        ? d->class_names[param_value] : "<invalid>");
+              if (verbose) sciprintf ("[%x]", param_value);
+            }
+            else sciprintf(opsize? " %02x" : " %04x", param_value);
+
+            if (opcode == op_pushi && param_value > 0 && param_value < d->selector_count)
+              sciprintf ("\t\t; selector <%s>", d->snames [param_value]);
+         
+            break;
+  
+          case Script_Global:
+            sciprintf (" global_%d", param_value);
+            break;
+
+          case Script_SRelative:
+            dest=seeker+(short) param_value;
+            dest_name=script_find_name (s, dest, NULL);
+            if (dest_name)
+              sciprintf (" %s", dest_name);
+            else
+              sciprintf (" %04x", dest);
+
+            if (verbose)
+              sciprintf (opsize? "   [%02x] " : "   [%04x] ", param_value);
+
+            if (opcode == op_lofsa || opcode == op_lofss)
+            {
+              int atype=script_get_area_type (s, dest, &area_data);
+              if (atype == area_string)
+              {
+                strncpy (buf, &data [dest], sizeof (buf)-1);
+                buf [sizeof (buf)-1] = 0;
+                if (strlen (buf) > 40)
+                {
+                  buf [40] = 0;
+                  strcat (buf, "...");
+                }
+                sciprintf ("\t\t; \"%s\"", buf);
+              }
+              else if (atype == area_said)
+              {
+                sciprintf ("\t\t; said \"");
+                script_dump_said_string (d, data, dest);
+                sciprintf ("\"\n");
+              }
+              else if (atype == area_object)
+                sciprintf ("\t\t; object <%s>", area_data);
+            }
+            break;
+
+          case Script_Property:
+            if (cur_class != -1)
+            {
+              sciprintf (" %s", get_selector_name (d, d->class_selectors [cur_class][param_value/2]));
+              if (verbose) sciprintf ("[%x]", param_value);
+            }
+            else
+              sciprintf(opsize? " %02x" : " %04x", param_value);
+
+            break;
+          }
+          break;
       
       case Script_End: 
-        sciprintf ("\n");
+        if (pass_no == 2) sciprintf ("\n");
         //return;
 
     }
-    sciprintf ("\n");
+    if (pass_no == 2) sciprintf ("\n");
   }
  
 }
@@ -765,6 +865,16 @@ disassemble_script_pass (disasm_state_t *d, script_state_t *s,
                          resource_t *script, int pass_no)
 {
   int _seeker = 0;
+  word id=getInt16 (script->data);
+
+  if (id > 15)
+  {
+    if (pass_no == 2) sciprintf ("; Old script header detected\n");
+    d->old_header = 1;
+  }
+
+  if (d->old_header) _seeker = 2;
+
   while (_seeker < script->length) {
     int objtype = getInt16(script->data + _seeker);
     int objsize;
@@ -779,7 +889,7 @@ disassemble_script_pass (disasm_state_t *d, script_state_t *s,
 
     if (pass_no == 2)
     {
-      sciprintf("Obj type #%x, offset 0x%x, size 0x%x:\n", objtype, _seeker, objsize);
+      sciprintf("; Obj type #%x, offset 0x%x, size 0x%x:\n", objtype, _seeker, objsize);
       if (hexdump) sci_hexdump(script->data + seeker, objsize -4, seeker);
     }
 
@@ -835,7 +945,8 @@ disassemble_script_pass (disasm_state_t *d, script_state_t *s,
       sciprintf("Unsupported %d!\n", objtype);
       return;
     }
-    
+
+    fflush (con_file);
   }
 
   sciprintf("Script ends without terminator\n");
