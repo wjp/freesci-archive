@@ -304,7 +304,7 @@ sci_kernel_function_t kfunct_mappers[] = {
 /*74*/	{KF_OLD, "FileIO", {old:kFileIO}},
 /*(?)*/	{KF_NEW, "Memory", {new:{kMemory, "i.*"}}},
 /*(?)*/	{KF_NEW, "Sort", {new:{kSort, "ooo"}}},
-/*(?)*/	{KF_NEW, "AvoidPath", {new:{kAvoidPath, ".iiIO.*"}}},
+/*(?)*/	{KF_NEW, "AvoidPath", {new:{kAvoidPath, "ii.*"}}},
 /*(?)*/	{KF_OLD, "Lock", {old:kLock}},
 
   /* Non-experimental Functions without a fixed ID */

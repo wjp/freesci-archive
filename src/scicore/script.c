@@ -33,7 +33,7 @@ opcode_format formats[128][4]={
   /*24 (24=ret)*/
   {Script_End}, {Script_Byte, 0}, {Script_Invalid}, {Script_Invalid},
   /*28*/
-  {Script_SVariable, 0}, {Script_Invalid}, {Script_SByte, 0}, {Script_Variable, Script_Byte, 0},
+  {Script_Variable, 0}, {Script_Invalid}, {Script_Byte, 0}, {Script_Variable, Script_Byte, 0},
   /*2C*/
   {Script_SVariable, 0}, {Script_SVariable, Script_Variable, 0}, {Script_None}, {Script_Invalid},
   /*30*/

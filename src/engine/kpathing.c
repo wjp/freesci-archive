@@ -70,25 +70,26 @@ expected to be closed and not to self-intersect.
 reg_t
 kAvoidPath(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	int startx = SKPV(1);
-	int starty = SKPV(2);
+	int startx = SKPV(0);
+	int starty = SKPV(1);
 
 	switch (argc) {
 	case 3 :
 	{
-		reg_t polygon = argv[3];
+		reg_t polygon = argv[2];
 
+		SCIkwarn(SCIkWARNING, "Fix me: Inside-polygon test needed!\n");
 		return NULL_REG; /* Is (startx,starty) inside the polygon? */
 		break;
 	}		
 	case 6 :
 	case 7 :
 	{
-		int endx = SKPV(3);
-		int endy = SKPV(4);
-		reg_t poly_list = argv[5];
-		int poly_list_size = UKPV(6);
-		int unknown = UKPV_OR_ALT(7, 1);
+		int endx = SKPV(2);
+		int endy = SKPV(3);
+		reg_t poly_list = argv[4];
+		int poly_list_size = UKPV(5);
+		int unknown = UKPV_OR_ALT(6, 1);
 		reg_t output;
 		byte *oref;
 
