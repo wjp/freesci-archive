@@ -220,9 +220,24 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	command = newcmd;
       } /* else we've got the 'running status' mode defined in the MIDI standard */
 
-      param = song->data[song->pos];
+      if (song->pos + cmdlen[command >> 4] > song->size) {
 
-      song->pos += cmdlen[command >> 4];
+	fprintf(stderr, "Running out of song data. Emergency stop.\n");
+	fprintf(stderr, "Song position is 0x%x/0x%x, handle %04x\n", song->pos, song->size, song->handle);
+
+	song->loops = 0; /* Set final loop */
+	command = SCI_MIDI_EOT; /* Finish track by force */
+
+      } else {
+	int params_nr = cmdlen[command >> 4];
+
+	if (params_nr)
+	  param = song->data[song->pos];
+	else
+	  param = 0;
+
+	song->pos += params_nr;
+      }
 
       if (command == SCI_MIDI_EOT) {
 

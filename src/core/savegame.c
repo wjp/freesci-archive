@@ -1662,6 +1662,9 @@ _cfsml_write_port_t(FILE *fh, port_t* foo)
   fprintf(fh, "color = ");
     _cfsml_write_gint16(fh, &(foo->color));
     fprintf(fh, "\n");
+  fprintf(fh, "predecessor = ");
+    _cfsml_write_int(fh, &(foo->predecessor));
+    fprintf(fh, "\n");
   fprintf(fh, "gray_text = ");
     _cfsml_write_byte(fh, &(foo->gray_text));
     fprintf(fh, "\n");
@@ -1767,6 +1770,11 @@ _cfsml_read_port_t(FILE *fh, port_t* foo, char *lastval, int *line, int *hiteof)
       if (!strcmp(bar, "color")) {
 #line 553 "cfsml.pl"
          if (_cfsml_read_gint16(fh, &(foo->color), value, line, hiteof))
+            return CFSML_FAILURE;
+      } else
+      if (!strcmp(bar, "predecessor")) {
+#line 553 "cfsml.pl"
+         if (_cfsml_read_int(fh, &(foo->predecessor), value, line, hiteof))
             return CFSML_FAILURE;
       } else
       if (!strcmp(bar, "gray_text")) {
@@ -2392,7 +2400,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
 
 /* Auto-generated CFSML declaration and function block ends here */
 /* Auto-generation performed by cfsml.pl 0.6.6 */
-#line 378 "CFSML input file"
+#line 380 "CFSML input file"
 
 
 
@@ -2406,7 +2414,7 @@ write_menubar_tp(FILE *fh, menubar_t **foo)
   _cfsml_write_menubar_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 388 "CFSML input file"
+#line 390 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2433,7 +2441,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 405 "CFSML input file"
+#line 407 "CFSML input file"
 
   }
   return *hiteof;
@@ -2449,7 +2457,7 @@ write_port_tp(FILE *fh, port_t **foo)
   _cfsml_write_port_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 416 "CFSML input file"
+#line 418 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2477,7 +2485,7 @@ read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof)
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 434 "CFSML input file"
+#line 436 "CFSML input file"
 
     res =  findResource(sci_font, (*foo)->font_nr);
     if (res)
@@ -2548,7 +2556,7 @@ gamestate_save(state_t *s, char *dirname)
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 500 "CFSML input file"
+#line 502 "CFSML input file"
 
   fclose(fh);
 
@@ -2613,7 +2621,7 @@ gamestate_restore(state_t *s, char *dirname)
     read_eof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 552 "CFSML input file"
+#line 554 "CFSML input file"
 
   fclose(fh);
 

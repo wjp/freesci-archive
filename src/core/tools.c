@@ -26,7 +26,8 @@
 ***************************************************************************/
 
 
-#include <resource.h>
+#include <kernel.h>
+
 
 
 #ifdef WORDS_BIGENDIAN
@@ -36,7 +37,6 @@ getInt16(unsigned char* address)
   return (gint16)((((guint16)address[1]) << 8) | (address[0]));
 }
 #endif WORDS_BIGENDIAN
-
 
 
 int
@@ -95,7 +95,19 @@ memtest(char *where, ...)
   }
   for (i = 0; i < 31; i++)
     free(blocks[i]);
-fprintf(stderr,"Memtest succeeded!\n");
-return 0;
+
+  for (i = 0; i < 31; i++) {
+    blocks[i] = malloc(1 + i*i);
+#ifdef HAVE_MEMFROB
+    memfrob(blocks[i], 1 + i*i);
+#else
+    memset(blocks[i], 42, 1 + i*i);
+#endif
+  }
+  for (i = 0; i < 31; i++)
+    free(blocks[i]);
+
+  fprintf(stderr,"Memtest succeeded!\n");
+  return 0;
 }
 

@@ -1,3 +1,26 @@
+1999-12-18  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/graphics/engine_graphics.c (graph_draw_selector_icon): Fixed
+	some of the view offset bugs
+
+	* src/core/kgraphics.c (kDisposeWindow): After disposing the active
+	port, that port's predecessor is set. Fixes a bug that would appear
+	if several windows were overlaid.
+
+	* src/graphics/font.c (get_text_size): Fixed bug that would add an
+	extra line if the end of line was reached simultaneously with a
+	newline character
+
+	* src/core/kmenu.c (kMenuSelect): Prevented keyboard event "0"
+	(used for motion keys) from being claimed
+
+	* src/sound/soundserver_null.c (sound_null_server): Fixed bug where
+	the sound server would read over the end of a song, added additional
+	checks.
+
+	* src/core/kmenu.c: Implemented the credits. Now I'll have to decide
+	who gets mentioned where and how often. Great. Just great.
+
 1999-12-18  Dmitry Jemerov  <yole@nnz.ru>
 
 	* src/tools/scidisasm.c: New parameter --gamedir to specify directory

@@ -116,7 +116,6 @@ sound_get_event(state_t *s)
   fd_set inpfds;
   int inplen;
   GTimeVal waittime = {0, 0};
-  GTimeVal waittime2 = {0, 0};
   char debug_buf[65];
   sound_event_t *event = xalloc(sizeof(sound_event_t));
 
@@ -140,7 +139,6 @@ sound_get_event(state_t *s)
   FD_SET(s->sound_pipe_events[0], &inpfds);
 
   sound_command(s, SOUND_COMMAND_GET_NEXT_EVENT, 0, 0);
-  /*  select(s->sound_pipe_events[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime2); */
 
   if (read(s->sound_pipe_events[0], event, sizeof(sound_event_t)) == sizeof(sound_event_t)) {
 
@@ -496,6 +494,27 @@ song_lib_resort(songlib_t songlib, song_t *song)
   }
 
   song_lib_add(songlib, song);
+}
+
+
+void
+sound_eq_dump(sound_eq_t *queue)
+{
+  sound_eq_node_t *node;
+
+  fprintf(stderr,"-- Sound Event Queue Dump:\n");
+
+  if (!queue) {
+    fprintf(stderr,"Queue is (null)\n");
+    return;
+  }
+
+  fprintf(stderr,"First: %p, Last: %p\n", queue->first, queue->last);
+  node = queue->first;
+  while (node) {
+    fprintf(stderr,"  Node %p<- %p ->%p\n", node->prev, node, node->next);
+    node = node->next;
+  }
 }
 
 

@@ -1479,7 +1479,7 @@ kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
   if (goner == s->view_port) /* Are we killing the active port? */
-    s->view_port = 0; /* Set wm_port as active port if so */
+    s->view_port = s->ports[goner]->predecessor; /* Set wm_port as active port if so */
 
   _k_dyn_view_list_prepare_change(s);
   graph_restore_box(s, s->ports[goner]->bg_handle);
@@ -1525,6 +1525,7 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
   wnd->bgcolor = PARAM_OR_ALT(8, 15);
   wnd->font = s->titlebar_port.font; /* Default to 'system' font */
   wnd->font_nr = s->titlebar_port.font_nr;
+  wnd->predecessor = s->view_port; /* Set correct predecessor */
 
   wnd->alignment = ALIGN_TEXT_LEFT; /* FIXME?? */
 

@@ -52,6 +52,5 @@ AC_OUTPUT(Makefile    \
 	src/graphics/Makefile \
 	src/include/Makefile \
 	src/tools/Makefile \
-	src/console/Makefile \
 	src/win32/Makefile \
 	src/sound/Makefile)

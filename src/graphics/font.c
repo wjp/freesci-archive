@@ -113,6 +113,8 @@ get_text_size(char *text, byte *font, int max_allowed_width, int *width, int *he
 
       if (localmaxwidth > max_allowed_width) {
 
+	if (*text == '\n' || *text == 0x0d)
+	  text++; /* If we're breaking on CR or LF, make sure we don't break again */
 	maxheight += lineheight;
 	
 	if (last_breakpoint == 0) { /* Text block too long and without whitespace? */

@@ -143,7 +143,6 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
   int string_len = 0;
   int tag, c_width, max_width = 0;
   char *_heapbase = (char *) heapbase;
-
   if (menubar->menus_nr == 0) {
 #ifdef MENU_FREESCI_BLATANT_PLUG
     add_freesci = 1;
@@ -168,7 +167,7 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
 
 	left = malloc_ncpy(entries - string_len - 1, string_len);
 
-	if (strcmp(left, MENU_HBAR_STRING) == 0) {
+	if (strncmp(left, MENU_HBAR_STRING, 3) == 0) {
 	  entrytype = MENU_TYPE_HBAR; /* Horizontal bar */
 	}
 
@@ -263,7 +262,6 @@ menubar_add_menu(menubar_t *menubar, char *title, char *entries, byte *font, byt
     menu->items[menu->items_nr-1].flags = MENU_FREESCI_BLATANT_PLUG;
   }
 #endif /* MENU_FREESCI_BLATANT_PLUG */
-
   menu->width = max_width;
 }
 
@@ -561,3 +559,6 @@ menubar_map_pointer(state_t *s, int *menu_nr, int *item_nr, port_t *port)
   }
 
 }
+
+
+

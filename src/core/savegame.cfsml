@@ -295,6 +295,8 @@ RECORD port_t "port_t" {
   gint16 bgcolor;
   gint16 color;
 
+  int predecessor;
+
   byte gray_text;
   int bg_handle;
 }
