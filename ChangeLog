@@ -1,5 +1,11 @@
 2000-04-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
+	* src/core/savegame.cfsml: Made sure synonyms are stored in
+	savegames
+
+	* src/core/kfile.c (kRestoreGame): Fixed some inconsistencies in
+	savegame handling
+
 	* src/core/vm.c (run_vm): Fixed several severe sign extension bugs
 
 	* src/sound/soundserver_null.c (sound_null_server): Fixed a deadlock

@@ -377,6 +377,12 @@ _cfsml_get_value(FILE *fd, int *line, int *hiteof)
 }
 #line 284 "cfsml.pl"
 static void
+_cfsml_write_synonym_t(FILE *fh, synonym_t* foo);
+static int
+_cfsml_read_synonym_t(FILE *fh, synonym_t* foo, char *lastval, int *line, int *hiteof);
+
+#line 284 "cfsml.pl"
+static void
 _cfsml_write_long(FILE *fh, long* foo);
 static int
 _cfsml_read_long(FILE *fh, long* foo, char *lastval, int *line, int *hiteof);
@@ -458,6 +464,78 @@ static void
 _cfsml_write_menubar_t(FILE *fh, menubar_t* foo);
 static int
 _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *hiteof);
+
+#line 297 "cfsml.pl"
+static void
+_cfsml_write_synonym_t(FILE *fh, synonym_t* foo)
+{
+  char *bar;
+  int min, max, i;
+
+#line 315 "cfsml.pl"
+  fprintf(fh, "{\n");
+  fprintf(fh, "replaceant = ");
+    _cfsml_write_int(fh, &(foo->replaceant));
+    fprintf(fh, "\n");
+  fprintf(fh, "replacement = ");
+    _cfsml_write_int(fh, &(foo->replacement));
+    fprintf(fh, "\n");
+  fprintf(fh, "}");
+}
+
+#line 381 "cfsml.pl"
+static int
+_cfsml_read_synonym_t(FILE *fh, synonym_t* foo, char *lastval, int *line, int *hiteof)
+{
+  char *bar;
+  int min, max, i;
+#line 435 "cfsml.pl"
+  int assignment, closed, done;
+
+  if (strcmp(lastval, "{")) {
+     _cfsml_error("Reading record; expected opening braces in line %d\n",*line);
+     return CFSML_FAILURE;
+  };
+  closed = 0;
+  do {
+    char *value;
+    bar = _cfsml_get_identifier(fh, line, hiteof, &assignment);
+
+    if (!bar)
+       return CFSML_FAILURE;
+    if (!assignment) {
+      if (!strcmp(bar, "}")) 
+         closed = 1;
+      else {
+        _cfsml_error("Expected assignment or closing braces in line %d\n", *line);
+        return CFSML_FAILURE;
+      }
+    } else {
+      value = "";
+      while (!value || !strcmp(value, ""))
+        value = _cfsml_get_value(fh, line, hiteof);
+      if (!value)
+         return CFSML_FAILURE;
+      if (!strcmp(bar, "replaceant")) {
+#line 553 "cfsml.pl"
+         if (_cfsml_read_int(fh, &(foo->replaceant), value, line, hiteof))
+            return CFSML_FAILURE;
+      } else
+      if (!strcmp(bar, "replacement")) {
+#line 553 "cfsml.pl"
+         if (_cfsml_read_int(fh, &(foo->replacement), value, line, hiteof))
+            return CFSML_FAILURE;
+      } else
+#line 560 "cfsml.pl"
+       {
+          _cfsml_error("Assignment to invalid identifier '%s' in line %d\n", bar, *line);
+          return CFSML_FAILURE;       }
+     }
+
+    g_free (bar);
+  } while (!closed); /* Until closing braces are hit */
+  return CFSML_SUCCESS;
+}
 
 #line 297 "cfsml.pl"
 static void
@@ -660,6 +738,21 @@ _cfsml_write_state_t(FILE *fh, state_t* foo)
     fprintf(fh, "[%d][\n", max);
     for (i = 0; i < min; i++) {
       write_PTN(fh, &(foo->parser_nodes[i]));
+      fprintf(fh, "\n");
+    }
+    fprintf(fh, "]");
+    fprintf(fh, "\n");
+  fprintf(fh, "parser_valid = ");
+    _cfsml_write_int(fh, &(foo->parser_valid));
+    fprintf(fh, "\n");
+  fprintf(fh, "synonyms = ");
+    min = max = foo->synonyms_nr;
+    if (!foo->synonyms)
+       min = max = 0; /* Don't write if it points to NULL */
+#line 341 "cfsml.pl"
+    fprintf(fh, "[%d][\n", max);
+    for (i = 0; i < min; i++) {
+      _cfsml_write_synonym_t(fh, &(foo->synonyms[i]));
       fprintf(fh, "\n");
     }
     fprintf(fh, "]");
@@ -1101,6 +1194,47 @@ _cfsml_read_state_t(FILE *fh, state_t* foo, char *lastval, int *line, int *hiteo
                 return CFSML_FAILURE;
            } else done = 1;
          } while (!done);
+      } else
+      if (!strcmp(bar, "parser_valid")) {
+#line 553 "cfsml.pl"
+         if (_cfsml_read_int(fh, &(foo->parser_valid), value, line, hiteof))
+            return CFSML_FAILURE;
+      } else
+      if (!strcmp(bar, "synonyms")) {
+#line 487 "cfsml.pl"
+         if ((value[0] != '[') || (value[strlen(value) - 1] != '[')) {
+            _cfsml_error("Opening brackets expected at line %d\n", *line);
+            return CFSML_FAILURE;
+;         }
+#line 497 "cfsml.pl"
+         /* Prepare to restore dynamic array */
+         max = strtol(value + 1, NULL, 0);
+         if (max < 0) {
+            _cfsml_error("Invalid number of elements to allocate for dynamic array '%s' at line %d\n", bar, *line);
+            return CFSML_FAILURE;
+;         }
+
+         if (max)
+           foo->synonyms = (synonym_t *) g_malloc(max * sizeof(synonym_t));
+         else
+           foo->synonyms = NULL;
+#line 518 "cfsml.pl"
+         done = i = 0;
+         do {
+           g_free(value);
+           if (!(value = _cfsml_get_identifier(fh, line, hiteof, NULL)))
+#line 527 "cfsml.pl"
+              return 1;
+           if (strcmp(value, "]")) {
+             if (i == max) {
+               _cfsml_error("More elements than space available (%d) in '%s' at line %d\n", max, bar, *line);
+               return CFSML_FAILURE;
+             }
+             if (_cfsml_read_synonym_t(fh, &(foo->synonyms[i++]), value, line, hiteof))
+                return CFSML_FAILURE;
+           } else done = 1;
+         } while (!done);
+         foo->synonyms_nr = max ; /* Set array size accordingly */
       } else
       if (!strcmp(bar, "game_obj")) {
 #line 553 "cfsml.pl"
@@ -1668,6 +1802,9 @@ _cfsml_write_port_t(FILE *fh, port_t* foo)
   fprintf(fh, "bg_handle = ");
     _cfsml_write_int(fh, &(foo->bg_handle));
     fprintf(fh, "\n");
+  fprintf(fh, "predecessor = ");
+    _cfsml_write_int(fh, &(foo->predecessor));
+    fprintf(fh, "\n");
   fprintf(fh, "}");
 }
 
@@ -1777,6 +1914,11 @@ _cfsml_read_port_t(FILE *fh, port_t* foo, char *lastval, int *line, int *hiteof)
       if (!strcmp(bar, "bg_handle")) {
 #line 553 "cfsml.pl"
          if (_cfsml_read_int(fh, &(foo->bg_handle), value, line, hiteof))
+            return CFSML_FAILURE;
+      } else
+      if (!strcmp(bar, "predecessor")) {
+#line 553 "cfsml.pl"
+         if (_cfsml_read_int(fh, &(foo->predecessor), value, line, hiteof))
             return CFSML_FAILURE;
       } else
 #line 560 "cfsml.pl"
@@ -2392,7 +2534,7 @@ _cfsml_read_menubar_t(FILE *fh, menubar_t* foo, char *lastval, int *line, int *h
 
 /* Auto-generated CFSML declaration and function block ends here */
 /* Auto-generation performed by cfsml.pl 0.6.7 */
-#line 378 "CFSML input file"
+#line 389 "CFSML input file"
 
 
 
@@ -2406,7 +2548,7 @@ write_menubar_tp(FILE *fh, menubar_t **foo)
   _cfsml_write_menubar_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 388 "CFSML input file"
+#line 399 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2433,7 +2575,7 @@ read_menubar_tp(FILE *fh, menubar_t **foo, char *lastval, int *line, int *hiteof
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 405 "CFSML input file"
+#line 416 "CFSML input file"
 
   }
   return *hiteof;
@@ -2449,7 +2591,7 @@ write_port_tp(FILE *fh, port_t **foo)
   _cfsml_write_port_t(fh, (*foo));
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 416 "CFSML input file"
+#line 427 "CFSML input file"
 
   } else { /* Nothing to write */
     fputs("\\null\\", fh);
@@ -2477,7 +2619,7 @@ read_port_tp(FILE *fh, port_t **foo, char *lastval, int *line, int *hiteof)
     *hiteof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 434 "CFSML input file"
+#line 445 "CFSML input file"
 
     res =  findResource(sci_font, (*foo)->font_nr);
     if (res)
@@ -2548,7 +2690,7 @@ gamestate_save(state_t *s, char *dirname)
   _cfsml_write_state_t(fh, s);
   fprintf(fh, "\n");
 /* End of auto-generated CFSML data writer code */
-#line 500 "CFSML input file"
+#line 511 "CFSML input file"
 
   fclose(fh);
 
@@ -2613,7 +2755,7 @@ gamestate_restore(state_t *s, char *dirname)
     read_eof = _cfsml_error;
   }
 /* End of auto-generated CFSML data reader code */
-#line 552 "CFSML input file"
+#line 563 "CFSML input file"
 
   fclose(fh);
 

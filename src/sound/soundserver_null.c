@@ -34,9 +34,6 @@
 #include <sys/types.h>
 #include <dirent.h>
 
-static inline void __sq(sound_eq_t *q, int h, int s, int v, char *func, int line) {sound_eq_queue_event(q, h, s, v); if (s == 2) fprintf(stderr,"SIG2 at %s(L%d)\n", func, line);}
-#define sound_eq_queue_event(a, b, c, d) __sq(a, b, c, d, __FUNCTION__, __LINE__)
-
 
 void
 sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug);

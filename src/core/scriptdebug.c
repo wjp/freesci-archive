@@ -279,7 +279,7 @@ c_restore_game(state_t *s)
     } else
       newstate->onscreen_console = 0;
 
-    game_exit(s); /* Clear old state */
+    /*    game_exit(s); /* Clear old state */
     return 0;
 
   } else {

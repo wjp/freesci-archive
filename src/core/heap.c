@@ -163,6 +163,10 @@ void heap_free(heap_t* h, int m)
 		previous = next;
 		assert(previous<0xffff);
 		next=get_next(h, previous);
+		if (next <= previous) {
+		  sciprintf("Heap corrupt. Aborting heap_free()...\n");
+		  return;
+		}
 	}
 
 	if (h->first_free > m)

@@ -88,6 +88,8 @@ typedef struct {
 
   int bg_handle; /* Background picture handle for restoring */
 
+  int predecessor; /* Previous window */
+
 } port_t;
 
 

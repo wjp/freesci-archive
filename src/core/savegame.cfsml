@@ -297,6 +297,14 @@ RECORD port_t "port_t" {
 
   byte gray_text;
   int bg_handle;
+
+  int predecessor;
+}
+
+
+RECORD synonym_t "synonym_t" {
+  int replaceant;
+  int replacement;
 }
 
 
@@ -357,6 +365,9 @@ RECORD state_t "state_t" {
   heap_ptr global_vars;
 
   parse_tree_node_t parser_nodes[STATIC VOCAB_TREE_NODES];
+  int parser_valid;
+
+  synonym_t synonyms[DYNAMIC synonyms_nr];
 
   heap_ptr game_obj;
 

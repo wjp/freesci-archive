@@ -300,6 +300,13 @@ script_init_engine(state_t *s, sci_version_t version)
 
   save_ff(s->_heap); /* Save heap state */
 
+  s->bp_list = NULL; /* No breakpoints defined */
+  s->have_bp = 0;
+
+  s->file_handles_nr = 5;
+  s->file_handles = g_new0(FILE *, s->file_handles_nr);
+  /* Allocate memory for file handles */
+
   return 0;
 }
 
@@ -309,6 +316,7 @@ void
 script_free_engine(state_t *s)
 {
   int i;
+  breakpoint_t *bp, *bp_next;
 
   /* FIXME: file handles will NOT be closed under DOS. DJGPP generates an
      exception fault whenever you try to close a never-opened file */
@@ -337,6 +345,17 @@ script_free_engine(state_t *s)
   g_free(s->classtable);
 
   _free_vocabulary(s);
+
+  /* Free breakpoint list */
+  bp = s->bp_list;
+  while (bp)
+  {
+    bp_next = bp->next;
+    if (bp->type == BREAK_SELECTOR) g_free (bp->data.name);
+    g_free (bp);
+    bp = bp_next;
+  }
+  s->bp_list = NULL;
 
 }
 
@@ -400,10 +419,6 @@ game_init(state_t *s)
   s->global_vars = s->scripttable[0].localvar_offset;
   /* Global variables are script 0's local variables */
 
-  s->file_handles_nr = 5;
-  s->file_handles = g_new0(FILE *, s->file_handles_nr);
-  /* Allocate memory for file handles */
-
   g_get_current_time(&(s->game_start_time)); /* Get start time */
   memcpy(&(s->last_wait_time), &(s->game_start_time), sizeof(GTimeVal));
   /* Use start time as last_wait_time */
@@ -415,9 +430,6 @@ game_init(state_t *s)
 
   s->debug_mode = 0x0; /* Disable all debugging */
   s->onscreen_console = 0; /* No onscreen console unless explicitly requested */
-
-  s->bp_list = NULL; /* No breakpoints defined */
-  s->have_bp = 0;
 
   srand(time(NULL)); /* Initialize random number generator */
 
@@ -467,7 +479,6 @@ int
 game_exit(state_t *s)
 {
   int i;
-  breakpoint_t *bp, *bp_next;
 
   if (s->execution_stack)
     g_free(s->execution_stack);
@@ -491,17 +502,6 @@ game_exit(state_t *s)
   heap_free(s->_heap, s->save_dir);
   heap_free(s->_heap, s->parser_base - 2);
   restore_ff(s->_heap); /* Restore former heap state */
-
-  /* Free breakpoint list */
-  bp = s->bp_list;
-  while (bp)
-  {
-    bp_next = bp->next;
-    if (bp->type == BREAK_SELECTOR) g_free (bp->data.name);
-    g_free (bp);
-    bp = bp_next;
-  }
-  s->bp_list = NULL;
 
   if (send_calls_allocated) {
     g_free(send_calls);

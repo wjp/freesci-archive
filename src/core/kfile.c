@@ -525,7 +525,6 @@ kRestoreGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
       s->successor = newstate;
       script_abort_flag = 1; /* Abort current game */
-      game_exit(s);
 
     } else {
       sciprintf("Restoring failed.\n");

@@ -1462,8 +1462,12 @@ game_run(state_t **_s)
       
       if (successor = s->successor) {
 	script_abort_flag = 0;
+	game_exit(s);
 	free(s);
 	*_s = s = successor;
+	if (!send_calls_allocated)
+	  send_calls = g_new(calls_struct_t, send_calls_allocated = 16);
+	SCI_MEMTEST;
       } else
 
 	game_is_finished = 1;
