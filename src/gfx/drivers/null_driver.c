@@ -28,6 +28,8 @@
 #include <gfx_driver.h>
 #include <gfx_tools.h>
 
+static int debug_sleep = 0;
+static int debug_draw = 0;
 
 static int
 null_set_parameter(struct _gfx_driver *drv, char *attribute, char *value)
@@ -71,8 +73,9 @@ static int
 null_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
                gfx_line_mode_t line_mode, gfx_line_style_t line_style)
 {
-	printf("[GFX-NULL] Line (%d,%d)d(%d,%d)\n",
-	       GFX_PRINT_RECT(line));
+	if (debug_draw)
+		printf("[GFX-NULL] Line (%d,%d)d(%d,%d)\n",
+		       GFX_PRINT_RECT(line));
 	return GFX_OK;
 }
 
@@ -81,8 +84,9 @@ null_draw_filled_rect(struct _gfx_driver *drv, rect_t rect,
                       gfx_color_t color1, gfx_color_t color2,
                       gfx_rectangle_fill_t shade_mode)
 {
-	printf("[GFX-NULL] Box (%d,%d)d(%d,%d)\n",
-	       GFX_PRINT_RECT(rect));
+	if (debug_draw)
+	    printf("[GFX-NULL] Box (%d,%d)d(%d,%d)\n",
+		   GFX_PRINT_RECT(rect));
 	return GFX_OK;
 }
 
@@ -168,7 +172,8 @@ null_get_event(struct _gfx_driver *drv)
 static int
 null_usec_sleep(struct _gfx_driver *drv, long usecs)
 {
-	sciprintf("[GFX-NULL] Sleeping %ld usecs...\n", usecs);
+	if (debug_sleep)
+		sciprintf("[GFX-NULL] Sleeping %ld usecs...\n", usecs);
 	return GFX_OK;
 }
 

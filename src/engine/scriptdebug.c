@@ -754,7 +754,7 @@ c_list_sentence_fragments(state_t *s)
 	sciprintf(" C(%x)", dat);
 	break;
 
-      case VOCAB_TREE_NODE_COMPARE_GROUP:
+     case VOCAB_TREE_NODE_COMPARE_GROUP:
 	dat = s->parser_branches[i].data[j++];
 	sciprintf(" WG(%x)", dat);
 	break;
@@ -1310,7 +1310,8 @@ disassemble(state_t *s, reg_t pos, int print_bw_tag, int print_bytecode)
 	if (REG_EQ(pos, *p_pc)) { /* Extra information if debugging the current opcode */
 
 		if (opcode == op_callk) {
-			int stackframe = (scr[pos.offset + (opsize? 2 : 3)] >> 1) + (*p_restadjust);
+			int stackframe = (scr[pos.offset + 2] >> 1)
+				+ (*p_restadjust);
 			int argc = ((*p_sp)[- stackframe - 1]).offset;
 			int i;
 

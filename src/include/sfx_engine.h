@@ -28,7 +28,11 @@
 #ifndef _SFX_ENGINE_H_
 #define _SFX_ENGINE_H_
 
+#define SFX_OK 0
+#define SFX_ERROR -1
+
 #include <sfx_songlib.h>
+#include <sciresource.h>
 
 #define SOUND_TICK 1000000 / 60
 /* Approximately 16666 microseconds */
@@ -47,8 +51,9 @@ typedef struct {
 /***********/
 
 void
-sfx_init(sfx_state_t *self);
+sfx_init(sfx_state_t *self, resource_mgr_t *resmgr);
 /* Initializes the sound engine
+** Parameters: (resource_mgr_t *) resmgr: Resource manager for initialization
 */
 
 void

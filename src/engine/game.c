@@ -237,7 +237,7 @@ _free_graphics_input(state_t *s)
 int
 game_init_sound(state_t *s)
 {
-	sfx_init(&s->sound);
+	sfx_init(&s->sound, s->resmgr);
 	return 0;
 }
 

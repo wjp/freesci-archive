@@ -42,7 +42,7 @@ gfxr_interpreter_options_hash(gfx_resource_types_t type, int version,
 	switch (type) {
 
 	case GFX_RESOURCE_TYPE_VIEW:
-		return palette;
+		return 0;
 
 	case GFX_RESOURCE_TYPE_PIC:
 		if (version >= SCI_VERSION_1)

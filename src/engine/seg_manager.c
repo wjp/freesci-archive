@@ -881,8 +881,11 @@ sm_script_initialize_locals(seg_manager_t *self, reg_t location)
 
 	scr->locals_offset = location.offset;
 
-	VERIFY( location.offset + count * 2 + 1 < scr->buf_size,
-		"Locals extend beyond end of script\n" );
+	if (!(location.offset + count * 2 + 1 < scr->buf_size)) {
+		sciprintf("Locals extend beyond end of script: offset %04x, count %x vs size %x\n",
+			  location.offset, count, scr->buf_size);
+		count = (scr->buf_size  - location.offset) >> 1;
+	}
 
 	locals = _sm_alloc_locals_segment(self, scr, count);
 	if (locals) {

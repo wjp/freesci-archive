@@ -525,6 +525,7 @@ kTextSize(state_t *s, int funct_nr, int argc, reg_t *argv)
 	if (!*text || !text || !dest) { /* Empty text */
 		dest[2] = dest[3] = make_reg(0, 0);
 
+		SCIkdebug(SCIkSTRINGS, "GetTextSize: Empty string\n");
 		return s->r_acc;
 	}
 

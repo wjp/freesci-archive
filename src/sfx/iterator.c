@@ -39,6 +39,8 @@
 
 static const int MIDI_cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0};
 
+#define PLAYMASK_NONE 0xffff
+
 #ifndef HAVE_MEMCHR
 static void *
 memchr(void *_data, int c, int n)
@@ -173,6 +175,13 @@ _sci0_read_next_command(base_song_iterator_t *self, unsigned char *buf, int *res
 		self->offset += paramsleft;
 
 		self->last_cmd = cmd;
+
+		/* Are we supposed to play this channel? */
+		if (self->playmask != PLAYMASK_NONE
+		    && !(self->data[2 + (midi_channel << 1)] & self->playmask))
+			return /* Execute next command */
+				_sci0_read_next_command(self, buf,
+							result);
 
 		if (cmd == SCI_MIDI_EOT) {
 			/* End of track? */
@@ -343,10 +352,16 @@ _base_handle_message(base_song_iterator_t *self, song_iterator_message_t msg)
 
 		case _SIMSG_BASEMSG_CLONE: {
 			int tsize = sizeof(base_song_iterator_t) + self->size;
-			void *mem = sci_malloc(tsize);
+			base_song_iterator_t *mem = sci_malloc(tsize);
 			memcpy(mem, self, tsize);
+			mem->data = sci_malloc(mem->size);
+			memcpy(mem->data, self->data, self->size);
 			return mem; /* Assume caller has another copy of this */
 		}
+
+		case _SIMSG_BASEMSG_SET_PLAYMASK:
+			self->playmask = msg.args[0];
+			break;
 
 		default:
 			return NULL;
@@ -365,6 +380,7 @@ _sci0_init(base_song_iterator_t *self)
 	self->offset = self->loop_offset = SCI0_MIDI_OFFSET;
 	self->state = SI_STATE_DELTA_TIME;
 	self->ccc = 127; /* Reset cumulative cue counter */
+	self->playmask = PLAYMASK_NONE; /* All channels */
 }
 
 static void
@@ -471,3 +487,11 @@ songit_handle_message(song_iterator_t **it_reg_p, song_iterator_message_t msg)
 	*it_reg_p = newit; /* Might have self-morphed */
 	return 1;
 }
+
+song_iterator_t *
+songit_clone(song_iterator_t *it)
+{
+	SIMSG_SEND(it, SIMSG_CLONE);
+	return it;
+}
+

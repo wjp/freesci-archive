@@ -82,6 +82,10 @@ typedef unsigned TYPE_32 guint32;
 #undef TYPE_16
 #undef TYPE_32
 
+typedef gint8 sbyte;
+typedef guint8 byte;
+typedef guint16 word;
+
 typedef struct {
         long tv_sec;
         long tv_usec;

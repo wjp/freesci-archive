@@ -32,7 +32,6 @@
 #include <console.h>
 #ifdef SCI_CONSOLE
 #include <sciresource.h>
-#include <sound.h>
 #include <script.h>
 
 state_t *con_gamestate = NULL;

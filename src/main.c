@@ -51,11 +51,6 @@
 #include <win32/getopt.h>
 #endif
 
-#ifdef DISABLE_READLINE
-#  undef HAVE_READLINE_READLINE_H
-#  undef HAVE_READLINE_HISTORY_H
-#endif
-
 #ifdef HAVE_READLINE_READLINE_H
 #include <readline/readline.h>
 #ifdef HAVE_READLINE_HISTORY_H

@@ -66,9 +66,11 @@
 #define _SIMSG_BASE 0 /* Any base decoder */
 #define _SIMSG_BASEMSG_SET_LOOPS 0 /* Set loops */
 #define _SIMSG_BASEMSG_CLONE 1 /* Clone object and data */
+#define _SIMSG_BASEMSG_SET_PLAYMASK 2 /* Set the current playmask for filtering */
 
 /* Messages */
 #define SIMSG_SET_LOOPS(x) _SIMSG_BASE,_SIMSG_BASEMSG_SET_LOOPS,(x),0
+#define SIMSG_SET_PLAYMASK(x) _SIMSG_BASE,_SIMSG_BASEMSG_SET_PLAYMASK,(x),0
 #define SIMSG_CLONE _SIMSG_BASE,_SIMSG_BASEMSG_CLONE,0,0
 
 /* Message transmission macro: Takes song reference, message reference */
@@ -184,6 +186,7 @@ typedef struct _base_song_iterator {
 	int state; /* SI_STATE_* */
 	int ccc; /* Cumulative cue counter, for those who need it */
 	unsigned char resetflag; /* for 0x4C -- on DoSound StopSound, do we return to start? */
+	int playmask; /* Active playmask, default 0 */
 
 	unsigned char *data;
 
@@ -239,7 +242,6 @@ songit_clone(song_iterator_t *it);
 ** Parameters: (song_iterator_t *) it: The iterator to clone
 ** Returns   : (song_iterator_t *) A shallow clone of 'it'.
 ** This performs a clone on the bottom-most part (containing the actual song data) _only_. 
-** The actual song data will not be cloned.
 */
 
 #endif

@@ -912,7 +912,7 @@ said(state_t *s, byte *spec, int verbose)
 
 		if (said_parse_spec(s, spec)) {
 			sciprintf("Offending spec was: ");
-			vocab_decypher_said_block(s, spec - s->heap);
+			vocab_decypher_said_block(s, spec);
 			return SAID_NO_MATCH;
 		}
 

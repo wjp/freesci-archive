@@ -28,11 +28,14 @@
 
 #include <stdio.h>
 #include <sfx_engine.h>
+#include <sfx_player.h>
 
 #define DEBUG_CUES
 #ifdef DEBUG_CUES
 int sciprintf(char *msg, ...);
 #endif
+
+sfx_player_t *player = NULL;
 
 #define MILLION 1000000
 
@@ -99,6 +102,10 @@ _update(sfx_state_t *self)
 	song_t *newsong = song_lib_find_active(self->songlib, self->song);
 	if (newsong != self->song) {
 		_freeze_time(self); /* Store song delay time */
+
+		if (player)
+			player->stop();
+
 		if (newsong) {
 			/* Change song */
 			if (newsong->status == SOUND_STATUS_WAITING)
@@ -131,21 +138,35 @@ _update(sfx_state_t *self)
 
 		self->song = newsong;
 		_thaw_time(self); /* Recover song delay time */
+
+		if (newsong && player)
+			player->set_iterator(songit_clone(newsong->it),
+					     self->wakeup_time);
 	}
 }
 
 void
-sfx_init(sfx_state_t *self)
+sfx_init(sfx_state_t *self, resource_mgr_t *resmgr)
 {
 	song_lib_init(&self->songlib);
 	self->song = NULL;
 	sci_get_current_time(&self->wakeup_time); /* No need to delay */
+
+	player = sfx_find_player(NULL);
+	if (player->init(resmgr))
+		player = NULL;
+	if (!player)
+		printf("[SFX]: No song player found\n");
+	else
+		printf("[SFX]: Using song player '%s', v%s\n", player->name, player->version);
 }
 
 void
 sfx_exit(sfx_state_t *self)
 {
 	song_lib_free(self->songlib);
+	if (player)
+		player->exit();
 }
 
 static inline int
@@ -161,13 +182,16 @@ sfx_suspend(sfx_state_t *self, int suspend)
 		/* suspend */
 
 		_freeze_time(self);
-
+		if (player)
+			player->pause();
 		/* Suspend song player */
 
 	} else if (!suspend && (self->suspended)) {
 		/* unsuspend */
 
 		_thaw_time(self);
+		if (player)
+			player->resume();
 
 		/* Unsuspend song player */
 	}
@@ -323,8 +347,12 @@ void
 sfx_song_set_loops(sfx_state_t *self, song_handle_t handle, int loops)
 {
 	song_t *song = song_lib_find(self->songlib, handle);
+	song_iterator_message_t msg = songit_make_message(SIMSG_SET_LOOPS(loops));
 	ASSERT_SONG(song);
 
-	SIMSG_SEND(song->it, SIMSG_SET_LOOPS(loops));
-}
+	songit_handle_message(&(song->it), msg);
 
+	if (player/* && player->send_iterator_message*/)
+		/* FIXME: The above should be optional! */
+		player->iterator_message(msg);
+}

@@ -167,10 +167,6 @@
 /* The maximum allowed size for a compressed or decompressed resource */
 
 
-typedef gint8 sbyte;
-typedef guint8 byte;
-typedef guint16 word;
-
 
 #define MAX_HOMEDIR_SIZE 255
 
