@@ -847,12 +847,12 @@ _gfxr_plot_aux_pattern(gfxr_pic_t *pic, int x, int y, int size, int circle, int 
 	int yoffset = (y - size) * 320;
 	int i;
 	int random_index = 0;
-	gfx_pixmap_t *map;
+	gfx_pixmap_t *map = NULL;
 
 	switch (map_nr) {
 	case GFX_MASK_VISUAL: map = pic->visual_map; break;
 	case GFX_MASK_PRIORITY: map = pic->priority_map; break;
-	default: pic->control_map; break;
+	default: map = pic->control_map; break;
 	}
 
 	if (random >= 0)
