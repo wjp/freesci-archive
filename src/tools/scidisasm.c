@@ -578,6 +578,24 @@ script_dump_said(disasm_state_t *d, script_state_t *s,
   }
   sciprintf ("\n");
 }
+static void
+script_dump_synonyms(disasm_state_t *d, script_state_t *s,
+                 unsigned char *data, int seeker, int objsize, int pass_no)
+{
+  int _seeker=seeker+objsize-4;
+  
+  sciprintf ("Synonyms:\n");
+  while (seeker < _seeker)
+  {
+    int search=getInt16(data+seeker);
+    int replace=getInt16(data+seeker+2);
+    seeker+=4;
+    if (search<0) break;
+    sciprintf ("%s[%03x] ==> %s[%03x]\n", 
+    vocab_get_any_group_word (search, d->words, d->word_count), search, 
+    vocab_get_any_group_word (replace, d->words, d->word_count), replace);
+  }
+}
 
 static void
 script_dump_strings(disasm_state_t *d, script_state_t *s,
@@ -776,11 +794,9 @@ disassemble_script_pass (disasm_state_t *d, script_state_t *s,
       script_disassemble_code (d, s, script->data, seeker, objsize, pass_no);
       break;
 
-    case 3: if (pass_no == 2) {
-      sciprintf("<unknown>\n");
-      sci_hexdump(script->data + seeker, objsize -4, seeker);
-    };
-    break;
+    case sci_obj_synonyms: 
+      script_dump_synonyms  (d, s, script->data, seeker, objsize, pass_no);
+      break;
 
     case sci_obj_said:
       script_dump_said (d, s, script->data, seeker, objsize, pass_no);
@@ -804,9 +820,8 @@ disassemble_script_pass (disasm_state_t *d, script_state_t *s,
     };
     break;
 
-    case 9: if (pass_no == 2) {
-      sciprintf("<unknown>\n");
-      sci_hexdump(script->data + seeker, objsize -4, seeker);
+    case sci_obj_preload_text: if (pass_no == 2) {
+      sciprintf("The script has a preloaded text resource\n");
     };
     break;
 
@@ -817,7 +832,7 @@ disassemble_script_pass (disasm_state_t *d, script_state_t *s,
     break;
 
     default:
-      sciprintf("Unsupported!\n");
+      sciprintf("Unsupported %d!\n", objtype);
       return;
     }
     

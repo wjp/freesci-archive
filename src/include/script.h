@@ -19,12 +19,14 @@ enum {
   sci_obj_terminator,
   sci_obj_object,
   sci_obj_code,
-  sci_obj_said = 4,
+  sci_obj_synonyms,
+  sci_obj_said,
   sci_obj_strings,
   sci_obj_class,
   sci_obj_exports,
   sci_obj_pointers,
-  sci_obj_localvars = 10
+  sci_obj_preload_text, /* This is really just a flag. */
+  sci_obj_localvars
 } script_object_types;
 
 void script_dissect(int res_no);
