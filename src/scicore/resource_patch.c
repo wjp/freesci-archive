@@ -163,10 +163,13 @@ sci1_read_resource_patches(char *path, resource_t **resource_p, int *resource_nr
 		char *endptr;
 		char *dot = strchr(entry, '.');
 
-		for (i = sci_view; i < sci_invalid_resource; i++)
-			if (strncasecmp(sci_resource_type_suffixes[i], dot+1,
-				        3) == 0)
-				restype = i;
+		for (i = sci_view; i < sci_invalid_resource; i++) {
+			if (dot != NULL) {
+				if (strncasecmp(sci_resource_type_suffixes[i], dot+1, 3) == 0) {
+					restype = i;
+				}
+			}
+		}
 
 		if (restype != sci_invalid_resource) {
 

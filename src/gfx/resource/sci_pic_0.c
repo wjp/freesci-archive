@@ -113,6 +113,14 @@ int fillmagc = 30000000;
 /************************************/
 /************************************/
 
+/* Color mapping used while scaling embedded views. */
+gfx_pixmap_color_t embedded_view_colors[16] = {
+	{0x00, 0, 0, 0}, {0x11, 0, 0, 0}, {0x22, 0, 0, 0}, {0x33, 0, 0, 0},
+	 {0x44, 0, 0, 0}, {0x55, 0, 0, 0}, {0x66, 0, 0, 0}, {0x77, 0, 0, 0},
+	 {0x88, 0, 0, 0}, {0x99, 0, 0, 0}, {0xaa, 0, 0, 0}, {0xbb, 0, 0, 0},
+	 {0xcc, 0, 0, 0}, {0xdd, 0, 0, 0}, {0xee, 0, 0, 0}, {0xff, 0, 0, 0}
+};
+
 void
 gfxr_init_static_palette()
 {
@@ -2223,27 +2231,46 @@ gfxr_draw_pic0(gfxr_pic_t *pic, int fill_normally, int default_palette, int size
 				int linewidth = 320;
 
 				gfx_pixmap_t *view;
-				byte *data;
+
+				/* Set up mode structure for resizing the view */
+				gfx_mode_t *mode = gfx_new_mode(
+					pic->visual_map->index_xl/320,
+					pic->visual_map->index_yl/200, 
+					1, /* 1bpp, which handles masks and the rest for us */
+					0, 0, 0, 0, 0, 0, 0, 0, 16, 0);
 
 				GET_ABS_COORDS(posx, posy);
 				bytesize = (*(resource + pos))+(*(resource + pos + 1) << 8);
-				pos+=2;
+				pos += 2;
 				view = gfxr_draw_cel0(-1,-1,-1, resource + pos, bytesize, NULL, 0);
 				pos+=bytesize;
 
+				/* we can only safely replace the palette if it's static
+				 *if it's not for some reason, we should die
+				 */
+				if (!(view->flags & GFX_PIXMAP_FLAG_EXTERNAL_PALETTE)) {
+					sciprintf("gfx_draw_pic0(): can't set a non-static palette for an embedded view!\n");
+					return GFX_ERROR;
+				}
+
+				/* Use special color mapping to copy the low
+				** nibble of the color index to the high
+				** nibble.
+				*/
+				view->colors = embedded_view_colors;
+
+				gfx_xlate_pixmap(view, mode, GFX_XLATE_FILTER_NONE);
+
 				_gfx_crossblit_simple(pic->visual_map->index_data,
-						      view->index_data,
-						      320, view->index_xl,
-						      view->index_xl,
-						      view->index_yl,
+						      view->data,
+						      pic->visual_map->index_xl,
+						      view->xl,
+						      view->xl,
+						      view->yl,
 						      1);
 
+				gfx_free_mode(mode);
 				gfx_free_pixmap(NULL, view);
-/*
-				GFXWARN("Embedded view @%d\n", pos);
-				GFXWARN("-- not implemented- aborting --\n");
-				return;
-*/
 			}
 			break;
 

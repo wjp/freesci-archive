@@ -103,4 +103,4 @@ EXPORTS
   con_gfx_init
   con_gfx_read
   con_gfx_show
-  
+  script_free_breakpoints
