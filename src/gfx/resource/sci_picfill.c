@@ -275,8 +275,8 @@ FILL_FUNCTION(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, in
 		original_drawenable &= ~GFX_MASK_PRIORITY;
 	}
 
-	_gfxr_auxbuf_fill(pic, x_320, y_200, original_drawenable,
-			  (drawenable & GFX_MASK_CONTROL)? control : 0);
+	AUXBUF_FILL(pic, x_320, y_200, original_drawenable,
+		    (drawenable & GFX_MASK_CONTROL)? control : 0);
 
 #ifdef DRAW_SCALED
 	_gfxr_auxbuf_spread(pic, &min_x, &min_y, &max_x, &max_y);
@@ -299,19 +299,26 @@ FILL_FUNCTION(gfxr_pic_t *pic, int x_320, int y_200, int color, int priority, in
 
 	if (drawenable & GFX_MASK_VISUAL) {
 		bounds = pic->visual_map->index_data;
+#if 0
+		/* Code disabled, as removing it fixes qg1 pic.095 (unscaled). However,
+		** it MAY be of relevance to scaled pic drawing... */
+
 		if ((color & 0xf) == 0xf /* When dithering with white, do more
 					 ** conservative checks  */
 		    || (color & 0xf0) == 0xf0)
 			legalcolor = 0xff;
 		else
 			legalcolor = 0xf0; /* Only check the second color */
+#endif
 
+		legalcolor = 0xff;
 		legalmask = legalcolor;
 	} else if (drawenable & GFX_MASK_PRIORITY) {
 		bounds = pic->priority_map->index_data;
 		legalcolor = 0;
 		legalmask = 0xf;
 	} else {
+		bounds = NULL;
 		legalcolor = 0;
 		legalmask = 0xf;
 	}

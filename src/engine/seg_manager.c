@@ -242,8 +242,8 @@ void sm_destroy (seg_manager_t* self) {
 /* allocate a memory for script from heap
 ** Parameters: (state_t *) s: The state to operate on
 **             (int) script_nr: The script number to load
-** Returns   : 0 - allocate failure
-**             1 - allocate successfully
+** Returns   : 0 - allocation failure
+**             1 - allocated successfully
 **             seg_id - allocated segment id
 */
 int sm_allocate_script (seg_manager_t* self, struct _state *s, int script_nr, int* seg_id) {
