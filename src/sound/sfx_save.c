@@ -1482,7 +1482,7 @@ recover_version1(FILE *fh, sound_lib_file_ver1_t *rec,
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 302 "sfx_save.cfsml"
+#line 301 "sfx_save.cfsml"
 	fclose(fh);
 
 	if (error) {
@@ -1615,7 +1615,7 @@ recover_version2(FILE *fh, sound_lib_file_ver2_t *rec,
      }
   }
 /* End of auto-generated CFSML data reader code */
-#line 406 "sfx_save.cfsml"
+#line 404 "sfx_save.cfsml"
 	fclose(fh);
 
 	if (error) {

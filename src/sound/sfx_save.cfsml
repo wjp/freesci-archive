@@ -276,7 +276,6 @@ recover_version0(sound_lib_file_ver1_t *rec)
 		song->resetflag = 0;
 
 		song->shared = 0;
-		song->delete = 0;
 
 		for (j = 0; j < MIDI_CHANNELS; j++)
 			song->polyphony[j] = 1;
@@ -349,7 +348,6 @@ recover_version1(FILE *fh, sound_lib_file_ver1_t *rec,
 		memcpy(next, &(rec->songs[i]), sizeof(song_t));
 		next->next = NULL;
 		next->shared = 0;
-		next->delete = 0;
 		if (i > 0)
 			seeker->next = next;
 
@@ -425,7 +423,6 @@ recover_version2(FILE *fh, sound_lib_file_ver2_t *rec,
 
 		rec->songs[i].data = (byte *) sci_malloc(song_data_size);
 		rec->songs[i].shared = 0;
-		rec->songs[i].delete = 0;
 		if (fread(rec->songs[i].data, sizeof(byte), song_data_size, fh) < song_data_size) {
 			int j;
 			for (j = 0; j < i; j++)
