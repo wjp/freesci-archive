@@ -92,6 +92,12 @@ typedef struct {
 } mouse_pointer_t;
 
 
+/* The three maps */
+#define SCI_MAP_VISUAL 0x1
+#define SCI_MAP_PRIORITY 0x2
+#define SCI_MAP_CONTROL 0x4
+
+
 #define SCI_RESOLUTION_320X200 0
 #define SCI_RESOLUTION_640X400 1
 /* The two resolutions that should be supported */
@@ -569,6 +575,21 @@ graph_draw_selector_control(struct _state *s, port_t *port, int state,
 **             (int) x,y: The upper left corner of the selector
 **             (int) xl,yl: Height and width of the selector in question
 ** Returns   : (void)
+*/
+
+
+word
+graph_on_control(struct _state *s, int x, int y, int xl, int yl, int map);
+/* Checks the picture maps for certain pixels and returns them in a bitmask
+** Parameters: (state_t *) s: The state_t to operate on
+**             (int) x,y: The upper left coordinates of the box to check
+**             (int) xl, yl: Horizontal and vertical extension of the box
+**             (int) map: The maps to check
+** Returns   : (word): A bitmask where each bit is set if and only if the color value equivalent to
+**                     the bit's position was found in the specified rectangle on the specified maps.
+** This function performs clipping.
+** Example: using it on an area of a control map where only color values 15,2  and 0 are used would
+** result in 0x8005 being returned (i.e. bits 15, 2, and 0 would be set).
 */
 
 #endif

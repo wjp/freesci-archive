@@ -77,6 +77,25 @@ graph_save_box(struct _state *s, int x, int y, int xl, int yl, int layers)
   int i, map;
   int pos;
 
+  if (x < 0) {
+    xl += x;
+    x = 0;
+  }
+
+  if (y < 0) {
+    yl += y;
+    y = 0;
+  }
+
+  if (x + xl > 320)
+    xl = 320 - x;
+
+  if (y + yl > 200)
+    yl = 200 - y;
+
+  if ((xl < 0) || (yl < 0))
+    return 0;
+
   box->x = x;
   box->y = y;
   box->xl = xl;
@@ -310,4 +329,44 @@ graph_draw_selector_control(struct _state *s, port_t *port, int state,
 
   /* Draw inner frame: */
   draw_frame(s->pic, x, y + 10, xl, yl - 20, port->color, port->priority);
+}
+
+
+word
+graph_on_control(state_t *s, int x, int y, int xl, int yl, int _map)
+{
+  word retval = 0;
+  port_t *port = s->ports[s->view_port];
+  int map;
+
+  if (x < port->xmin) {
+    xl += x - port->xmin;
+    x = port->xmin;
+  }
+  if (y < port->ymin) {
+    yl += y - port->ymin;
+    y = port->ymin;
+  }
+  if (x + xl > port->xmax)
+    xl = port->xmin - x + 1;
+  if (y + yl > port->ymax)
+    yl = port->ymin - y + 1;
+
+  if ((xl <= 0) || (yl <= 0))
+    return 0;
+
+  for (map = 0; map < 3; map++)
+    if (_map & (1 << map)) {
+      int startindex = (s->pic->bytespl * y) + x * s->pic->bytespp;
+      int i;
+
+      while (yl--) {
+	for (i = 0; i < xl; i++)
+	  retval |= (1 << ((s->pic->maps[map][startindex + i]) & 0xf));
+
+	startindex += s->pic->bytespl;
+      }
+    }
+
+  return retval;
 }

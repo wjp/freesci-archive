@@ -242,7 +242,7 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
   gint16 opparams[4]; /* Opcode parameters */
   heap_ptr fp = sp;
   int restadjust = 0; /* &rest adjusts the parameter count by this value */
-  heap_ptr local_vars = getInt16(s->heap + objp + SCRIPT_LOCALVARPTR_OFFSET);
+  heap_ptr local_vars = getUInt16(s->heap + objp + SCRIPT_LOCALVARPTR_OFFSET);
 
   heap_ptr variables[4] =
   { s->global_vars, local_vars, fp, argp }; /* Offsets of global, local, temp, and param variables */
@@ -522,6 +522,8 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
     case 0x2c: /* &rest */
       temp = opparams[0]; /* First argument */
       restadjust = argc - temp + 1; /* +1 because temp counts the paramcount while argc doesn't */
+      if (restadjust < 0)
+	restadjust = 0;
       temp2 = argp + (temp << 1); /* Pointer to the first argument to &restore */
       for (; temp <= argc; temp++) {
 	PUSH(getInt16(s->heap + temp2));
@@ -674,9 +676,11 @@ execute(state_t *s, heap_ptr pc, heap_ptr sp, heap_ptr objp, int argc, heap_ptr 
     case 0x59: /* sali */
     case 0x5a: /* sati */
     case 0x5b: /* sapi */
+      temp2 = POP();
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
       temp = variables[var_number] + ((opparams[0] + s->acc) << 1);
-      PUT_HEAP(temp, s->acc);
+      PUT_HEAP(temp, temp2);
+      s->acc = temp2;
       break;
 
     case 0x5c: /* ssgi */
@@ -869,9 +873,10 @@ script_init_state(state_t *s)
   s->global_vars = 0; /* Set during launch time */
 
   if (!vocab996)
-    return 1;
+    s->classtable_size = 20;
+  else
+    s->classtable_size = vocab996->length >> 2;
 
-  s->classtable_size = vocab996->length >> 2;
   s->classtable = calloc(s->classtable_size, sizeof(class_t));
 
   for (scriptnr = 0; scriptnr < 1000; scriptnr++) {
@@ -919,6 +924,7 @@ script_init_state(state_t *s)
 
   }
 
+  return 0;
 }
 
 

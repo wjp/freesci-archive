@@ -321,8 +321,8 @@ int gm_instr;
 {"SnBrass", 0x3d}, /* PQ2 */
 {"SnBass4", 0x27},
 {"SndTrk ", INSTR_NOT_MAPPED},
-{"WarmBel", INSTR_NOT_MAPPED},
-{"EchoPan", INSTR_NOT_MAPPED},
+{"WarmBel", 0x63},
+{"EchoPan", 0x57}, /* ? */
 {"DrSolo ", INSTR_NOT_MAPPED},
 {"SQ Bass", 0x25}, /* ??? */
 {"EGuit 2", 0x1b}, /* ? */

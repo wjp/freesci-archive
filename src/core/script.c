@@ -751,6 +751,7 @@ script_find_selector(state_t *s, char *selectorname)
     if (strcmp(selectorname, s->selector_names[i]) == 0)
       return i;
 
+  sciprintf("Warning: Could not map '%s' to any selector!\n", selectorname);
   return -1;
 }
 
@@ -792,11 +793,13 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(dy, "dy");
   FIND_SELECTOR(xStep, "xStep");
   FIND_SELECTOR(yStep, "yStep");
-  FIND_SELECTOR(b_movCnt, "b-movCnt");
+  FIND_SELECTOR(b_movCnt, "b-moveCnt");
   FIND_SELECTOR(b_i1, "b-i1");
   FIND_SELECTOR(b_i2, "b-i2");
   FIND_SELECTOR(b_di, "b-di");
   FIND_SELECTOR(b_xAxis, "b-xAxis");
-  FIND_SELECTOR(b_incr, "b_incr");
+  FIND_SELECTOR(b_incr, "b-incr");
   FIND_SELECTOR(completed, "completed");
+  FIND_SELECTOR(illegalBits, "illegalBits");
+  FIND_SELECTOR(dispose, "dispose");
 }

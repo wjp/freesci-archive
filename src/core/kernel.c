@@ -149,6 +149,11 @@ write_selector(state_t *s, heap_ptr object, int selector_id, int value)
 {
   heap_ptr address;
 
+  if ((selector_id < 0) || (selector_id > s->selector_names_nr)) {
+    SCIkwarn("Attempt to write to invalid selector of object at %04x.\n", object);
+    return;
+  }
+
   if (lookup_selector(s, object, selector_id, &address) != SELECTOR_VARIABLE)
     SCIkwarn("Selector '%s' of object at %04x could not be written to\n",
 	     s->selector_names[selector_id], object);
@@ -158,23 +163,35 @@ write_selector(state_t *s, heap_ptr object, int selector_id, int value)
   /*  sciprintf("Selector '%s' is at %04x\n", s->selector_names[selector_id], address); */
 }
 
-void
-invoke_selector(state_t *s, heap_ptr object, int selector_id, heap_ptr stackframe, int argc, ...)
+int
+invoke_selector(state_t *s, heap_ptr object, int selector_id, int noinvalid,
+		heap_ptr stackframe, int argc, ...)
 {
   va_list argp;
   int i;
   int framesize = 4 + 2 * argc;
+  heap_ptr address;
 
   PUT_HEAP(stackframe, selector_id); /* The selector we want to call */
   PUT_HEAP(stackframe + 2, argc); /* The number of arguments */
 
+  if (lookup_selector(s, object, selector_id, &address) != SELECTOR_METHOD) {
+    SCIkwarn("Selector '%s' of object at %04x could not be invoked\n",
+	     s->selector_names[selector_id], object);
+    if (noinvalid == 0)
+      KERNEL_OOPS("Not recoverable: VM was halted\n");
+    return 1;
+  }
+  
+
   va_start(argp, argc);
   for (i = 0; i < argc; i++)
     PUT_HEAP(stackframe + 4 + (2 * i), va_arg(argp, int)); /* Write each argument */
+  va_end(argp);
 
   send_selector(s, object, object, stackframe + framesize, framesize, argc, stackframe); /* Commit */
 
-  va_end(argp);
+  return 0;
 }
 
 
@@ -186,8 +203,8 @@ invoke_selector(state_t *s, heap_ptr object, int selector_id, heap_ptr stackfram
 #error "ATM, This file requires a compiler that can handle varargs macros!"
 #endif /* !__GNUC__ */
 
-#define INVOKE_SELECTOR(_object_, _selector_, _args_...) \
- invoke_selector(s, _object_, s->selector_map._selector_, argp + (argc * 2), ## _args_);
+#define INVOKE_SELECTOR(_object_, _selector_, _noinvalid_, _args_...) \
+ invoke_selector(s, _object_, s->selector_map._selector_, _noinvalid_, argp + (argc * 2), ## _args_)
 
 
 
@@ -379,6 +396,9 @@ kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int disp_size;
   heap_ptr disp;
 
+  if ((script == 0) || (index == 0))
+    index++; /* Script 0 index 1 is reserved, so we skip it. Also, index==0 is used sometimes. */
+
   if (argc == 1)
     index = 1;
 
@@ -387,19 +407,21 @@ kScriptID(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
   disp = s->scripttable[script].export_table_offset;
 
+  fprintf(stderr,"exports at %04x\n", disp);
+
   if (!disp) {
     SCIkwarn("Script 0x%x does not have a dispatch table\n", script);
     return;
   }
 
-  disp_size = GET_HEAP(disp);
+  disp_size = UGET_HEAP(disp);
 
   if (index > disp_size) {
     SCIkwarn("Dispatch index too big: %d > %d\n", index, disp_size);
     return;
   }
 
-  s->acc = GET_HEAP(disp + index*2) + s->scripttable[script].heappos;
+  s->acc = UGET_HEAP(disp + index*2) + s->scripttable[script].heappos;
 }
 
 
@@ -1233,6 +1255,126 @@ kWait(state_t *s, int funct_nr, int argc, heap_ptr argp)
   memcpy(&(s->last_wait_time), &time, sizeof(struct timeval));
 }
 
+#define _K_BRESEN_AXIS_X 0
+#define _K_BRESEN_AXIS_Y 1
+
+void
+kInitBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr mover = PARAM(0);
+  heap_ptr client = GET_SELECTOR(mover, client);
+  int step_factor = PARAM_OR_ALT(1, 1);
+  int deltax = GET_SELECTOR(mover, x) - GET_SELECTOR(client, x);
+  int deltay = GET_SELECTOR(mover, y) - GET_SELECTOR(client, y);
+  int stepx = GET_SELECTOR(client, xStep) * step_factor;
+  int stepy = GET_SELECTOR(client, yStep) * step_factor;
+  int numsteps_x = (abs(deltax) + stepx-1) / stepx;
+  int numsteps_y = (abs(deltay) + stepy-1) / stepy;
+  int numsteps = MAX(numsteps_x, numsteps_y);
+  int deltax_step = deltax / numsteps;
+  int deltay_step = deltay / numsteps;
+  int bdi;
+
+  PUT_SELECTOR(mover, b_movCnt, 0);
+  PUT_SELECTOR(mover, completed, 0);
+
+  PUT_SELECTOR(mover, dx, deltax_step);
+  PUT_SELECTOR(mover, dy, deltay_step);
+
+  if (abs(deltax) > abs(deltay)) { /* Bresenham on y */
+
+    PUT_SELECTOR(mover, b_xAxis, _K_BRESEN_AXIS_Y);
+    PUT_SELECTOR(mover, b_incr, (deltay < 0)? -1 : 1);
+    PUT_SELECTOR(mover, b_i1, 2 * (abs(deltay) - abs(deltay_step * numsteps)) * numsteps);
+    bdi = -abs(deltax);
+
+  } else { /* Bresenham on x */
+
+    PUT_SELECTOR(mover, b_xAxis, _K_BRESEN_AXIS_X);
+    PUT_SELECTOR(mover, b_incr, (deltax < 0)? -1 : 1);
+    PUT_SELECTOR(mover, b_i1, 2 * (abs(deltax) - abs(deltax_step * numsteps)) * numsteps);
+    bdi = -abs(deltay);
+
+  }
+
+  PUT_SELECTOR(mover, b_di, bdi);
+  PUT_SELECTOR(mover, b_i2, bdi * 2);
+
+}
+
+
+void
+kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr mover = PARAM(0);
+  heap_ptr client = GET_SELECTOR(mover, client);
+  int x = GET_SELECTOR(client, x);
+  int y = GET_SELECTOR(client, y);
+  int oldx = x, oldy = y;
+  int destx = GET_SELECTOR(mover, x);
+  int desty = GET_SELECTOR(mover, y);
+  int dx = GET_SELECTOR(mover, dx);
+  int dy = GET_SELECTOR(mover, dy);
+  int bdi = GET_SELECTOR(mover, b_di);
+  int bi1 = GET_SELECTOR(mover, b_i1);
+  int bi2 = GET_SELECTOR(mover, b_i2);
+  int movcnt = GET_SELECTOR(mover, b_movCnt);
+  int bdelta = GET_SELECTOR(mover, b_incr);
+  int axis = GET_SELECTOR(mover, b_xAxis);
+
+  PUT_SELECTOR(mover, b_movCnt, movcnt + 1);
+
+  if ((bdi += bi1) > 0) {
+    bdi += bi2;
+
+    if (axis == _K_BRESEN_AXIS_X)
+      dx += bdelta;
+    else
+      dy += bdelta;
+  }
+
+  PUT_SELECTOR(mover, b_di, bdi);
+
+  x += dx;
+  y += dy;
+  if ((((x <= destx) && (oldx >= destx)) || ((x >= destx) && (oldx <= destx)))
+      && (((y <= desty) && (oldy >= desty)) || ((y >= desty) && (oldy <= desty))))
+    /* Whew... in short: If we have reached or passed our target position */
+    {
+      x = destx;
+      y = desty;
+      PUT_SELECTOR(mover, completed, 1);
+    }
+
+  PUT_SELECTOR(client, x, x);
+  PUT_SELECTOR(client, y, y);
+
+  INVOKE_SELECTOR(client, canBeHere, 0, 0);
+
+  if (s->acc) /* Contains the return value */
+    return;
+  else { /* Yep, this isn't really neccessary */
+    PUT_SELECTOR(client, x, oldx);
+    PUT_SELECTOR(client, y, oldy);
+    PUT_SELECTOR(mover, completed, 1);
+  }
+
+}
+
+
+void
+kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr obj = PARAM(0);
+  int x = GET_SELECTOR(obj, brLeft);
+  int y = GET_SELECTOR(obj, brTop);
+  int xl = GET_SELECTOR(obj, brRight) - x + 1;
+  int yl = GET_SELECTOR(obj, brBottom) - y + 1;
+
+  s->acc = !(((word)GET_SELECTOR(obj, illegalBits))
+	     & graph_on_control(s, x, y, xl, yl, SCI_MAP_CONTROL));
+}
+
 
 /********************* Graphics ********************/
 
@@ -1307,35 +1449,22 @@ kNumCels(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  int map;
+  int map = PARAM(0);
   int xstart = PARAM(2);
   int ystart = PARAM(1);
   int xlen = 1, ylen = 1;
-
-  int retval = 0;
 
   if (argc > 3) {
     xlen = PARAM(4) - xstart + 1;
     ylen = PARAM(3) - ystart + 1;
   }
 
-  for (map = 0; map < 3; map++)
-    if (PARAM(0) && (1 << map)) {
-      int startindex = (SCI_SCREEN_WIDTH * ystart) + xstart;
-      int i;
-
-      while (ylen--) {
-	for (i = 0; i < xlen; i++)
-	  retval |= (1 << ((s->pic->maps[map][startindex + i]) & 0xf));
-
-	startindex += SCI_SCREEN_WIDTH;
-      }
-    }
-
-  s->acc = (word) retval;
+  s->acc = graph_on_control(s, xstart, ystart, xlen, ylen, map);
 
 }
 
+void
+_k_view_list_free_backgrounds(state_t *s, view_object_t *list, int list_nr);
 
 void
 kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
@@ -1357,6 +1486,8 @@ kDrawPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     s->pic_not_valid = 1;
     s->pic_is_new = 1;
+
+    _k_view_list_free_backgrounds(s, s->dyn_views, s->dyn_views_nr);
 
   } else
     SCIkwarn("Request to draw non-existing pic.%03d\n", PARAM(0));
@@ -1544,14 +1675,12 @@ _k_restore_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
       continue; /* Don't restore this view */
     } else {
 
-      if (!(signal & _K_PIC_FLAG_DONT_RESTORE)) {
+      if (list[i].underBitsp && !(signal & _K_PIC_FLAG_DONT_RESTORE)) {
 	int under_bits = GET_HEAP(list[i].underBitsp);
 
 	if (under_bits) {
-	  if (signal & _K_PIC_FLAG_HIDDEN)
-	    kfree(s, under_bits);
-	  else
-	    graph_restore_box(s, under_bits); /* Only restore if pic_not_valid != 1 */
+
+	  graph_restore_box(s, under_bits);
 
 	  PUT_HEAP(list[i].underBitsp, 0); /* Restore and mark as restored */
 	}
@@ -1565,6 +1694,21 @@ _k_restore_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
   } /* For each list member */
 }
 
+void
+_k_view_list_free_backgrounds(state_t *s, view_object_t *list, int list_nr)
+     /* Frees all backgrounds from the list without restoring; called by DrawPic */
+{
+  int i;
+
+  for (i = 0; i < list_nr; i++) {
+    int handle = GET_HEAP(list[i].underBitsp);
+
+    if (handle)
+      kfree(s, handle);
+
+    PUT_HEAP(list[i].underBitsp, 0);
+  }
+}
 
 void
 _k_save_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
@@ -1574,6 +1718,9 @@ _k_save_view_list_backgrounds(state_t *s, view_object_t *list, int list_nr)
 
   for (i = 0; i < list_nr; i++) {
     int handle;
+
+    if (!(list[i].underBitsp))
+      continue; /* No underbits? */
 
     if (GET_HEAP(list[i].underBitsp))
       continue; /* Don't overwrite an existing backup */
@@ -1593,7 +1740,9 @@ _k_view_list_dispose_loop(state_t *s, view_object_t *list, int list_nr, int argc
 
   for (i = 0; i < list_nr; i++) {
     if (UGET_HEAP(list[i].signalp) & _K_PIC_FLAG_DISPOSE_ME)
-      INVOKE_SELECTOR(list[i].obj, delete, 0);
+      if (INVOKE_SELECTOR(list[i].obj, delete, 1, 0))
+	sciprintf("Object at %04x requested deletion, but does not have a delete funcselector\n",
+		  list[i].obj);
   }
 }
 
@@ -1635,7 +1784,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int cycle, int argc, 
 
     if (cycle)
       if (!(GET_SELECTOR(obj, signal) & _K_PIC_FLAG_FROZEN))
-	INVOKE_SELECTOR(obj, doit, 0); /* Call obj::doit() if neccessary */
+	INVOKE_SELECTOR(obj, doit, 1, 0); /* Call obj::doit() if neccessary */
 
     retval[i].obj = obj;
 
@@ -1716,8 +1865,7 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int use_signal)
     word signal = (use_signal)? GET_HEAP(list[i].signalp) : 0;
 
     /* Now, if we either don't use signal OR if signal allows us to draw, do so: */
-    if ((use_signal == 0) || (!(signal & _K_PIC_FLAG_NO_UPDATE) && !(signal & _K_PIC_FLAG_HIDDEN)
-			      && !(signal & _K_PIC_FLAG_DISPOSE_ME))) {
+    if ((use_signal == 0) || (!(signal & _K_PIC_FLAG_NO_UPDATE) && !(signal & _K_PIC_FLAG_HIDDEN))) {
       draw_view0(s->pic, s->ports[s->view_port],
 		 list[i].x - view0_cel_width(list[i].loop, list[i].cel, list[i].view) / 2,
 		 list[i].y - view0_cel_height(list[i].loop, list[i].cel, list[i].view),
@@ -1796,6 +1944,27 @@ kSetPort(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
 void
+kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  resource_t *view = findResource(sci_view, PARAM(0));
+  int loop = PARAM(1);
+  int cel = PARAM(2);
+  int x = PARAM(3);
+  int y = PARAM(4);
+  int priority = PARAM(5);
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  if (!view) {
+    SCIkwarn("Attempt to draw non-existing view.%03n\n", PARAM(0));
+    return;
+  }
+
+  draw_view0(s->pic, s->ports[s->view_port], x, y, priority, loop, cel, view->data);
+}
+
+
+
+void
 kDisposeWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   unsigned int goner = PARAM(0);
@@ -1857,9 +2026,14 @@ kNewWindow(state_t *s, int funct_nr, int argc, heap_ptr argp)
 void
 kDrawStatus(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
-  draw_titlebar(s->pic, 0xf);
-  draw_text0(s->pic, &(s->titlebar_port), 1, 1,
-	     ((char *)s->heap) + PARAM(0), s->titlebar_port.font, 0);
+  heap_ptr text = PARAM(0);
+
+  if (text) {
+    draw_titlebar(s->pic, 0xf);
+    draw_text0(s->pic, &(s->titlebar_port), 1, 1,
+	       ((char *)s->heap) + PARAM(0), s->titlebar_port.font, 0);
+  } else 
+    draw_titlebar(s->pic, 0);
 
   graph_update_port(s, &(s->titlebar_port));
 }
@@ -1918,8 +2092,20 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
     s->dyn_views_nr = 0; /* No more dynamic views */
   }
 
+  if (cast_list) {
+    s->dyn_views = _k_make_view_list(s, cast_list, &(s->dyn_views_nr), cycle, argc, argp);
+    /* Initialize pictures- Steps 3-9 in Lars' V 0.1 list */
+
+    if (s->pic_not_valid)
+      _k_draw_view_list(s, s->pic_views, s->pic_views_nr, 0); /* Step 10 */
+
+    _k_restore_view_list_backgrounds(s, s->dyn_views, s->dyn_views_nr);
+    _k_save_view_list_backgrounds(s, s->dyn_views, s->dyn_views_nr);
+    _k_draw_view_list(s, s->dyn_views, s->dyn_views_nr, 1); /* Step 11 */
+    _k_view_list_dispose_loop(s, s->dyn_views, s->dyn_views_nr, argc, argp); /* Step 15 */
+  } /* if (cast_list) */
+
   open_animation = (s->pic_is_new) && (s->pic_not_valid);
-  /*  open_animation = (!cycle) && (!s->pic_not_valid); */
 
   if (open_animation) {
 #ifdef SCI_KERNEL_DRAW_DEBUG
@@ -2144,30 +2330,15 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
 
     s->pic_is_new = 0;
-
-  } /* if ((cast_list == 0) && (!s->pic_not_valid)) */
-  else if (cast_list == 0) {
-
-    graph_update_box(s, 0, 10, 320, 190); /* Just update and return */
+    s->pic_not_valid = 0;
     return;
 
-  }
+  } /* if ((cast_list == 0) && (!s->pic_not_valid)) */
 
-  s->dyn_views = _k_make_view_list(s, cast_list, &(s->dyn_views_nr), cycle, argc, argp);
-  /* Initialize pictures- Steps 3-9 in Lars' V 0.1 list */
-
-  if (s->pic_not_valid)
-    _k_draw_view_list(s, s->pic_views, s->pic_views_nr, 0); /* Step 10 */
-
-  _k_restore_view_list_backgrounds(s, s->dyn_views, s->dyn_views_nr);
-  _k_save_view_list_backgrounds(s, s->dyn_views, s->dyn_views_nr);
-  _k_draw_view_list(s, s->dyn_views, s->dyn_views_nr, 1); /* Step 11 */
-
-  _k_view_list_dispose_loop(s, s->dyn_views, s->dyn_views_nr, argc, argp); /* Step 15 */
-
-  graph_update_box(s, 0, 10, 320, 190);
+  graph_update_box(s, 0, 10, 320, 190); /* Just update and return */
 
   s->pic_not_valid = 0;
+
 }
 
 
@@ -2281,9 +2452,18 @@ kDisplay(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
   }
 
-  if (save_under)     /* Backup */
-    s->acc = graph_save_box(s, port->xmin, port->ymin,
-			    port->xmax - port->xmin + 1, port->ymax - port->ymin + 1, 1);
+  if (save_under) {    /* Backup */
+    int _width, _height;
+
+    get_text_size(text, port->font, width, &_width, &_height);
+    _width = port->xmax - port->xmin; /* To avoid alignment calculations */
+
+    s->acc = graph_save_box(s, port->x + port->xmin, port->y + port->ymin, _width, _height, 1);
+
+    sciprintf("Saving (%d, %d) size (%d, %d)\n",
+	      port->x + port->xmin, port->y + port->ymin, _width, _height);
+
+  }
 
 
   SCIkdebug("Display: Commiting\n", 0);
@@ -2379,6 +2559,10 @@ struct {
   {"NumCels", kNumCels },
   {"NumLoops", kNumLoops },
   {"TextSize", kTextSize },
+  {"InitBresen", kInitBresen },
+  {"DoBresen", kDoBresen },
+  {"CanBeHere", kCanBeHere },
+  {"DrawCel", kDrawCel },
 
   /* Experimental functions */
   {"Wait", kWait },

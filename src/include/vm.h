@@ -117,11 +117,14 @@ typedef struct
   int underBits; /* Used by the graphics subroutines to store backupped BG pic data */
 
   /* The following selectors are used by the Bresenham syscalls: */
-  int canBeHere; /* Checks for movement validity */
+  int canBeHere; /* Funcselector: Checks for movement validity */
   int client; /* The object that wants to be moved */
   int dx, dy; /* Deltas */
   int b_movCnt, b_i1, b_i2, b_di, b_xAxis, b_incr; /* Various Bresenham vars */
   int completed;
+
+  int illegalBits; /* Used by CanBeHere */
+  int dispose;
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 typedef struct {

@@ -1,3 +1,15 @@
+1999-08-17  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/kernel.c (kDrawCel): Added DrawCel.
+
+	* src/main.c: Added support for a config file (the parser can be
+	generated from the flex file config.l).
+
+	* src/core/kernel.c: Fixed countless bugs, implemented numerous kernel
+	functions. It's been a while since I last updated this file, so I'm
+	unable to go into any more detail. The last functions I added were
+	InitBresen, DoBresen, CanBeHere.
+
 1999-08-09  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/core/kernel.c (kFormat): Fixed kFormat according to Lars'
