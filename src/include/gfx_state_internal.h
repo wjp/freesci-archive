@@ -58,6 +58,7 @@ typedef enum {
 	GFXW_VIEW,
 	GFXW_STATIC_VIEW,
 	GFXW_DYN_VIEW,
+	GFXW_PIC_VIEW,
 	GFXW_TEXT,
 
 	GFXW_CONTAINER,
@@ -66,6 +67,7 @@ typedef enum {
 	GFXW_SORTED_LIST,
 	GFXW_VISUAL,
 	GFXW_PORT
+
 } gfxw_widget_types_t;
 
 
@@ -134,12 +136,13 @@ typedef struct {
 	gfx_color_t color; \
 	int view, loop, cel \
 
-#define GFXW_IS_VIEW(widget) ((widget)->type == GFXW_VIEW || (widget)->type == GFXW_STATIC_VIEW || (widget)->type == GFXW_DYN_VIEW)
+#define GFXW_IS_VIEW(widget) ((widget)->type == GFXW_VIEW || (widget)->type == GFXW_STATIC_VIEW \
+			      || (widget)->type == GFXW_DYN_VIEW || (widget)->type == GFXW_PIC_VIEW)
 typedef struct {
 	VIEW_COMMON;
 } gfxw_view_t;
 
-#define GFXW_IS_DYN_VIEW(widget) ((widget)->type == GFXW_DYN_VIEW)
+#define GFXW_IS_DYN_VIEW(widget) ((widget)->type == GFXW_DYN_VIEW || (widget)->type == GFXW_PIC_VIEW)
 typedef struct {
 	VIEW_COMMON;
 	/* fixme: This code is specific to SCI */

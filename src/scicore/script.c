@@ -253,7 +253,7 @@ script_dump_class(char *data, int seeker, int objsize, char **snames)
   while (selectors--) {
     int selector = getInt16((unsigned char *) data + (seeker) + selectorsize);
 
-    sciprintf("  [%03x] %s = 0x%x\n", 0xffff & selector, (snames)? snames[selector] : "<?>",
+    sciprintf("  [%03x] %s = 0x%x\n", 0xffff & selector, (snames && selector > 0)? snames[selector] : "<?>",
 	      getInt16((unsigned char *) data + seeker) & 0xffff);
 
     seeker += 2;

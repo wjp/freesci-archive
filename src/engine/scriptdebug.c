@@ -622,7 +622,10 @@ c_scriptinfo(state_t *s)
 
 char *selector_name(state_t *s, int selector)
 {
-  return s->selector_names[selector];
+	if (selector >= 0 && selector < s->selector_names_nr)
+		return s->selector_names[selector];
+	else
+		return "--INVALID--";
 }
 
 int prop_ofs_to_id(state_t *s, int prop_ofs, int objp)

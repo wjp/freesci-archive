@@ -217,8 +217,20 @@ _free_graphics_input(state_t *s)
 }
 
 
-/* Architectural stuff: Init/Unintialize engine */
+/* Returns the script number suggested by vocab.996, or -1 if there's none */
+static int
+suggested_script(resource_t *res, int class)
+{
+	int offset;
+	if (class >= res->length >> 2)
+		return -1;
 
+	offset = 2 + class << 2;
+
+	return getInt16(res->data + offset);
+}
+
+/* Architectural stuff: Init/Unintialize engine */
 int
 script_init_engine(state_t *s, sci_version_t version)
 {
@@ -278,6 +290,7 @@ script_init_engine(state_t *s, sci_version_t version)
 				}
         
 				if (objtype == sci_obj_class) {
+					int sugg_script;
 					
 					seeker -= SCRIPT_OBJECT_MAGIC_OFFSET; /* Adjust position; script home is base +8 bytes */
 
@@ -296,9 +309,16 @@ script_init_engine(state_t *s, sci_version_t version)
 
 						s->classtable_size = classnr + 1; /* Adjust maximum number of entries */
 					}
-					s->classtable[classnr].class_offset = seeker + 4 - magic_offset;
-					s->classtable[classnr].script = scriptnr;
-					s->classtable[classnr].scriptposp = &(s->scripttable[scriptnr].heappos);
+
+					sugg_script = suggested_script(vocab996, classnr);
+
+					/* First, test whether the script hasn't been claimed, or if it's been claimed by the wrong script */
+					if (scriptnr == sugg_script || !s->classtable[classnr].scriptposp) {
+						/* Now set the home script of the class */
+						s->classtable[classnr].class_offset = seeker + 4 - magic_offset;
+						s->classtable[classnr].script = scriptnr;
+						s->classtable[classnr].scriptposp = &(s->scripttable[scriptnr].heappos);
+					}
 
 					seeker += SCRIPT_OBJECT_MAGIC_OFFSET; /* Re-adjust position */
 

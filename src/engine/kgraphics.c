@@ -2103,6 +2103,9 @@ _k_redraw_view_list(state_t *s, gfxw_list_t *list)
 #define _K_DRAW_VIEW_LIST_DISPOSEABLE 2
 /* Use this one to draw all views with "DISPOSE_ME" NOT set: */
 #define _K_DRAW_VIEW_LIST_NONDISPOSEABLE 4
+/* Draw as picviews */
+#define _K_DRAW_VIEW_LIST_PICVIEW 8
+
 
 void
 _k_draw_view_list(state_t *s, gfxw_list_t *list, int flags)
@@ -2114,6 +2117,10 @@ _k_draw_view_list(state_t *s, gfxw_list_t *list, int flags)
 		return; /* Return if the pictures are meant for a different port */
 
 	while (widget) {
+
+		if (flags & _K_DRAW_VIEW_LIST_PICVIEW)
+			widget = gfxw_picviewize_dynview(widget);
+
 		if (GFXW_IS_DYN_VIEW(widget) && widget->ID) {
 			word signal = (flags & _K_DRAW_VIEW_LIST_USE_SIGNAL)? UGET_HEAP(widget->signalp) : 0;
 
@@ -2176,7 +2183,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 		if (!widget) {
 			SCIkwarn(SCIkERROR, "Attempt to single-add invalid picview (%d/%d/%d)\n", view, loop, cel);
 		} else {
-			ADD_TO_CURRENT_PICTURE_PORT(widget);
+			ADD_TO_CURRENT_PICTURE_PORT(gfxw_picviewize_dynview(widget));
 		}
 			
 	} else {
@@ -2193,7 +2200,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 		SCIkdebug(SCIkGRAPHICS, "Drawing picview list...\n");
 		ADD_TO_CURRENT_PICTURE_PORT(pic_views);
-		_k_draw_view_list(s, pic_views, _K_DRAW_VIEW_LIST_NONDISPOSEABLE | _K_DRAW_VIEW_LIST_DISPOSEABLE);
+		_k_draw_view_list(s, pic_views, _K_DRAW_VIEW_LIST_NONDISPOSEABLE | _K_DRAW_VIEW_LIST_DISPOSEABLE | _K_DRAW_VIEW_LIST_PICVIEW);
 		/* Draw relative to the bottom center */
 		SCIkdebug(SCIkGRAPHICS, "Returning.\n");
 	}

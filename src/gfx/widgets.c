@@ -869,16 +869,43 @@ _gfxwop_dyn_view_draw(gfxw_widget_t *widget, point_t pos)
 
 
 	return 0;
+
 }
 
 static int
-_gfxwop_dyn_view_print(gfxw_widget_t *widget, int indentation)
+_gfxwop_draw_nop(gfxw_widget_t *widget, point_t pos)
+{
+	return 0;
+}
+
+static int
+_gfxwop_pic_view_draw(gfxw_widget_t *widget, point_t pos)
+{
+	gfxw_dyn_view_t *view = (gfxw_dyn_view_t *) widget;
+	DRAW_ASSERT(widget, GFXW_PIC_VIEW);
+
+	GFX_ASSERT(gfxop_draw_cel_static(view->visual->gfx_state, view->view, view->loop,
+					 view->cel, _move_point(view->draw_bounds, pos),
+					 view->color));
+
+	GFX_ASSERT(gfxop_draw_cel(view->visual->gfx_state, view->view, view->loop,
+				  view->cel, _move_point(view->draw_bounds, pos),
+				  view->color));
+
+	widget->draw = _gfxwop_draw_nop; /* No more drawing needs to be done */
+
+
+	return 0;
+}
+
+static int
+_gfxwop_some_view_print(gfxw_widget_t *widget, int indentation, char *type_string)
 {
 	gfxw_dyn_view_t *view = (gfxw_dyn_view_t *) widget;
 
 	_gfxw_print_widget(widget, indentation);
 
-	sciprintf("DYNVIEW");
+	sciprintf(type_string);
 	sciprintf(" SORT=%d z=%d seq=%d (%d/%d/%d)@(%d,%d)[p:%d,c:%d]; sig[%04x@%04x]", view->force_precedence, view->z, 
 		  view->sequence, view->view, view->loop, view->cel, view->pos.x, view->pos.y,
 		  (view->color.mask & GFX_MASK_PRIORITY)? view->color.priority : -1,
@@ -889,10 +916,23 @@ _gfxwop_dyn_view_print(gfxw_widget_t *widget, int indentation)
 }
 
 static int
+_gfxwop_dyn_view_print(gfxw_widget_t *widget, int indentation)
+{
+	return _gfxwop_some_view_print(widget, indentation, "DYNVIEW");
+}
+
+static int
+_gfxwop_pic_view_print(gfxw_widget_t *widget, int indentation)
+{
+	return _gfxwop_some_view_print(widget, indentation, "PICVIEW");
+}
+
+
+static int
 _gfxwop_dyn_view_equals(gfxw_widget_t *widget, gfxw_widget_t *other)
 {
 	gfxw_dyn_view_t *wview = (gfxw_dyn_view_t *) widget, *oview;
-	if (other->type != GFXW_DYN_VIEW)
+	if (!GFXW_IS_DYN_VIEW(other))
 		return 0;
 
 	oview = (gfxw_dyn_view_t *) other;
@@ -952,6 +992,14 @@ _gfxw_set_ops_DYNVIEW(gfxw_widget_t *widget)
 		      _gfxwop_dyn_view_compare_to,
 		      _gfxwop_dyn_view_equals,
 		      _gfxwop_basic_superarea_of);
+}
+
+void
+_gfxw_set_ops_PICVIEW(gfxw_widget_t *widget)
+{
+	_gfxw_set_ops_DYNVIEW(widget);
+	widget->draw = _gfxwop_pic_view_draw;
+	widget->print = _gfxwop_pic_view_print;
 }
 
 gfxw_dyn_view_t *
@@ -2309,3 +2357,18 @@ gfxw_annihilate(gfxw_widget_t *widget)
 		_gfxw_free_contents_appropriately(GFXWC(visual), &snapshot, widget_priority);
 }
 
+
+
+gfxw_dyn_view_t *
+gfxw_picviewize_dynview(gfxw_dyn_view_t *dynview)
+{
+	dynview->type = GFXW_PIC_VIEW;
+	dynview->flags |= GFXW_FLAG_DIRTY;
+	
+	_gfxw_set_ops_PICVIEW(dynview);
+
+	if (dynview->parent)
+		_gfxw_dirtify_container(dynview->parent, dynview);
+
+	return dynview;
+}

@@ -506,6 +506,7 @@ struct {
 	{GFXW_STATIC_VIEW, "VIEW"},
 	{GFXW_VIEW, "VIEW"},
 	{GFXW_DYN_VIEW, "DYNVIEW"},
+	{GFXW_PIC_VIEW, "PICVIEW"},
 	{GFXW_TEXT, "TEXT"},
 	{GFXW_SORTED_LIST, "LIST"},
 	{GFXW_LIST, "LIST"},
@@ -578,6 +579,7 @@ write_any_widget(FILE *fh, gfxw_widget_t **widget)
 		break;
 
 	case GFXW_DYN_VIEW:
+	case GFXW_PIC_VIEW:
 		%CFSMLWRITE gfxw_dyn_view_t ((gfxw_dyn_view_t*)*widget) INTO fh;
 		break;
 
@@ -626,6 +628,8 @@ _gfxw_set_ops_VIEW(gfxw_widget_t *view, char stat);
 void
 _gfxw_set_ops_DYNVIEW(gfxw_widget_t *widget);
 void
+_gfxw_set_ops_PICVIEW(gfxw_widget_t *widget);
+void
 _gfxw_set_ops_TEXT(gfxw_widget_t *widget);
 void
 _gfxw_set_ops_LIST(gfxw_container_t *widget, char sorted);
@@ -646,6 +650,10 @@ full_widget_tree_traversal(gfxw_widget_t *widget, gfxw_container_t *parent, gfxw
 	if (GFXW_IS_VISUAL(widget)) {
 		visual = (gfxw_visual_t *) widget;
 		visual->gfx_state = _global_save_state->gfx_state;
+
+		if (visual->port_refs_nr < 1)
+			sciprintf("visual->port_refs_nr is too small: %d!\n", visual->port_refs_nr);
+
 		visual->port_refs = calloc(sizeof(gfxw_port_t *), visual->port_refs_nr);
 	}
 
@@ -710,6 +718,10 @@ full_widget_tree_traversal(gfxw_widget_t *widget, gfxw_container_t *parent, gfxw
 
 	case GFXW_DYN_VIEW:
 		_gfxw_set_ops_DYNVIEW(widget);
+		break;
+
+	case GFXW_PIC_VIEW:
+		_gfxw_set_ops_PICVIEW(widget);
 		break;
 
 	case GFXW_TEXT:
@@ -782,6 +794,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
 	case GFXW_BOX:
 		*widget = _gfxw_new_widget(sizeof(gfxw_box_t), expected_type);
 		%CFSMLREAD gfxw_box_t ((gfxw_box_t*)*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
+		(*widget)->type = expected_type;
 		break;
 
 	case GFXW_RECT:
@@ -789,17 +802,21 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
 	case GFXW_INVERSE_LINE:
 		*widget = _gfxw_new_widget(sizeof(gfxw_primitive_t), expected_type);
 		%CFSMLREAD gfxw_primitive_t ((gfxw_primitive_t*)*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
+		(*widget)->type = expected_type;
 		break;
 
 	case GFXW_VIEW:
 	case GFXW_STATIC_VIEW:
 		*widget = _gfxw_new_widget(sizeof(gfxw_view_t), expected_type);
 		%CFSMLREAD gfxw_view_t ((gfxw_view_t*)*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
+		(*widget)->type = expected_type;
 		break;
 
 	case GFXW_DYN_VIEW:
+	case GFXW_PIC_VIEW:
 		*widget = _gfxw_new_widget(sizeof(gfxw_dyn_view_t), expected_type);
 		%CFSMLREAD gfxw_dyn_view_t ((gfxw_dyn_view_t*)*widget) FROM fh ERRVAR *hiteof LINECOUNTER *line;
+		(*widget)->type = expected_type;
 		if (FILE_VERSION == 1)
 			((gfxw_dyn_view_t *) widget)->force_precedence = 0;
 		break;
@@ -807,6 +824,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
 	case GFXW_TEXT:
 		*widget = _gfxw_new_widget(sizeof(gfxw_text_t), expected_type);
 		%CFSMLREAD gfxw_text_t ((gfxw_text_t*)*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
+		(*widget)->type = expected_type;
 		break;
 
 
@@ -816,6 +834,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
 		GFXWC(*widget)->contents = NULL;
 		GFXWC(*widget)->dirty = NULL;
 		%CFSMLREAD gfxw_list_t ((gfxw_list_t*)*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
+		(*widget)->type = expected_type;
 		break;
 
 	case GFXW_VISUAL:
@@ -823,6 +842,8 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
 		GFXWC(*widget)->contents = NULL;
 		GFXWC(*widget)->dirty = NULL;
 		%CFSMLREAD gfxw_visual_t ((gfxw_visual_t*)*widget) FROM fh ERRVAR *hiteof LINECOUNTER *line;
+		(*widget)->type = expected_type;
+
 		full_widget_tree_traversal(*widget, NULL, NULL);
 		break;
 
@@ -834,6 +855,7 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
 		((gfxw_port_t *) (*widget))->decorations = NULL;
 		((gfxw_port_t *) (*widget))->port_bg = NULL;
 		%CFSMLREAD gfxw_port_t ((gfxw_port_t*)*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
+		(*widget)->type = expected_type;
 		break;
 
 	case GFXW_CONTAINER:
@@ -842,12 +864,14 @@ read_any_widget(FILE *fh, gfxw_widget_t **widget, char *lastval, int *line, int 
 		GFXWC(*widget)->dirty = NULL;
 		sciprintf("Warning: Restoring untyped widget container\n");
 		%CFSMLREAD gfxw_container_t ((gfxw_container_t*)*widget) FROM fh ERRVAR *hiteof LINECOUNTER *line;
+		(*widget)->type = expected_type;
 		break;
 
 	case GFXW_:
 		*widget = _gfxw_new_widget(sizeof(gfxw_widget_t), expected_type);
 		sciprintf("Warning: Restoring untyped widget\n");
 		%CFSMLREAD gfxw_widget_t (*widget) FROM fh ERRVAR *hiteof  LINECOUNTER *line;
+		(*widget)->type = expected_type;
 		break;
 
 	}

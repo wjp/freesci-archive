@@ -903,6 +903,13 @@ x_unmap_key(gfx_driver_t *drv, int keycode)
 {
 	KeySym xkey = XKeycodeToKeysym(S->display, keycode, 0);
 
+	if (S->flags & SCI_XLIB_SWAP_CTRL_CAPS) {
+		switch (xkey) {
+		case XK_Control_L: xkey = XK_Caps_Lock; break;
+		case XK_Caps_Lock: xkey = XK_Control_L; break;
+		}
+	}
+
 	switch (xkey) {
 	case XK_Control_L:
 	case XK_Control_R: S->buckystate &= ~SCI_EVM_CTRL; return 0;

@@ -755,6 +755,12 @@ kSaveGame(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	char *game_id_file_name = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
 	char *game_description = (char *) (UPARAM(2) + s->heap);
 
+	if (soundserver_dead) {
+		sciprintf("Soundserver is dead- cannot save game state!");
+		s->acc = 0;
+		return;
+	}
+
 	if (_savegame_indices_nr < 0) {
 		char *game_id_file_name = malloc(strlen(game_id) + strlen(FREESCI_ID_SUFFIX) + 1);
 

@@ -482,4 +482,13 @@ gfxw_annihilate(gfxw_widget_t *widget);
 ** This operation calls widget->widfree(widget), but it also destroys
 ** all widgets with a higher or equal priority drawn after this widget.
 */
+
+gfxw_dyn_view_t *
+gfxw_picviewize_dynview(gfxw_dyn_view_t *dynview);
+/* Turns a dynview into a picview
+** Parameters: (gfxw_dyn_view_t *) dynview: The victim
+** Returns   : (gfxw_dyn_view_t *) The victim, after his transformation
+** The only changes are in function and type variables, actually.
+*/
+
 #endif /* !_GFX_WIDGETS_H_ */

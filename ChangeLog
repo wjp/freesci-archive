@@ -1,4 +1,12 @@
+2001-04-06  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/widgets.c (_gfxwop_pic_view_draw): Picviews are now drawn to
+	the static buffer for better performance
+
 2001-04-05  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/gfx/drivers/xlib_driver.c (x_unmap_key): Added Ctrl/Caps
+	remapping when releasing keys (Thanks, Pizza!)
 
 	* src/engine/kgraphics.c (collides_with): Call to nsrect_clip now
 	passes the priority value instead of the signal (/D'Oh/)

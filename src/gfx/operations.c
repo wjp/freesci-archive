@@ -1672,7 +1672,15 @@ int
 gfxop_draw_cel_static(gfx_state_t *state, int nr, int loop, int cel, point_t pos,
 		      gfx_color_t color)
 {
-	return _gfxop_draw_cel_buffer(state, nr, loop, cel, pos, color, 1);
+	int retval;
+	rect_t oldclip = state->clip_zone;
+
+	state->clip_zone = gfx_rect_fullscreen;
+	_gfxop_scale_rect(&(state->clip_zone), state->driver->mode);
+	retval = _gfxop_draw_cel_buffer(state, nr, loop, cel, pos, color, 1);
+	state->clip_zone = oldclip;
+
+	return retval;
 }
 
 
