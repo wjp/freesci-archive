@@ -152,7 +152,7 @@ int main(int argc, char** argv)
 
 
 
-  if (i = loadResources(SCI_VERSION_AUTODETECT, 1)) {
+  if (i = loadResources(SCI_VERSION_AUTODETECT, 0)) {
     fprintf(stderr,"SCI Error: %s!\n", SCI_Error_Types[i]);
     return 1;
   };
@@ -192,7 +192,7 @@ int main(int argc, char** argv)
     if ((stype == sci_sound) && conversion)
       sprintf(outfilename,"%03d.midi", snr);
 #ifdef HAVE_LIBPNG
-    else if ((stype == sci_picture) && conversion)
+    else if ((stype == sci_pic) && conversion)
       sprintf(outfilename,"%03d.png", snr);
 #endif /* HAVE_LIBPNG */
     else
@@ -204,10 +204,10 @@ int main(int argc, char** argv)
   if (found = findResource(stype, snr)) {
 
 #ifdef HAVE_LIBPNG
-    if ((stype == sci_picture) && conversion) {
+    if ((stype == sci_pic) && conversion) {
       int i;
       picture_t pic = allocEmptyPicture();
-      drawPicture0(pic, found->data);
+      drawPicture0(pic, 1, 0, found->data);
       if (i = write_pic_png(outfilename, pic[0])) {
 	fprintf(stderr,"Writing the png failed (%d)\n",i);
       } else if (verbose) printf("Done.\n");

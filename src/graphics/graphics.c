@@ -70,12 +70,12 @@ void copyPicture(picture_t dest, picture_t src)
 }
 
 
-void clearPicture(picture_t pic)
+void clearPicture(picture_t pic, int fgcol)
 {
   int i;
 
   memset(pic[0], 0, 320 * 10); /* Title bar */
-  memset(pic[0]+ (320 * 10), 15, 320 * 190);
+  memset(pic[0]+ (320 * 10), fgcol, 320 * 190);
 
   for (i=1; i<4; i++)
     memset(pic[i], 0, 64000);
@@ -371,20 +371,8 @@ int drawView0(picture_t dest, int xp, int yp, short _priority,
     if (cell > ncells) return -2;
     lookup+=2;
     dataptr = data+getInt16(lookup + (cell<<1));
-    printf("dataptr = %p = { %i %i %i %i } = { %i %i }.\n", 
-	   dataptr, dataptr[0], dataptr[1], dataptr[2], dataptr[3],
-	   (dataptr[0] | (dataptr[1] << 8)), *((gint16 *)&dataptr[2]));
-    fflush(NULL);
     maxx = getInt16(dataptr);
-    //    maxx = dataptr[0] | (dataptr[1] << 8);
-/*     test = (gint16 *)dataptr; */
-/*     printf("dataptr = %p, test = %p, test = { %i %i }\n", dataptr, test,  */
-/* 	   (((char*)test)[0]), (((char*)test)[1])); */
-/*     maxx = *test; */
-
-    printf("Maxx = %i, ", maxx);
     maxy = getInt16(dataptr+2);
-    printf("Maxy = %i\n", maxy);
 
     minx = x = (xp < 0) ? 0 : xp;
     y = yp;
@@ -418,8 +406,6 @@ int drawView0(picture_t dest, int xp, int yp, short _priority,
       blindleft = blindright;
       blindright = j;
     } 
-
-    printf("blindtop=%i, blindleft=%i, blindright=%i\n", blindtop, blindleft, blindright);
 
     {
       guint8 color, rep;
@@ -512,7 +498,7 @@ int drawView0(picture_t dest, int xp, int yp, short _priority,
   return 0;
 }
 
-void drawPicture0(picture_t dest, guint8 *data)
+void drawPicture0(picture_t dest, int flags, int defaultPalette, guint8 *data)
 {
   gint8 *ptr;
   static gint8 startcolors[40] =
@@ -524,6 +510,7 @@ void drawPicture0(picture_t dest, guint8 *data)
   gint8 colors[4][40], priorities[4][40];
   guint8 code;
   short x, y;
+
 
   buffers = dest;
   ptr = data;
@@ -541,7 +528,7 @@ void drawPicture0(picture_t dest, guint8 *data)
     switch (code) {
       case 0xf0: /* set color */
 	code = *(ptr++);
-	code = colors[code/40][code%40];
+	code = colors[code/40 + defaultPalette][code%40];
 	col1 = (code >> 4) & 0x0f;
 	col2 = code & 0x0f;
 	drawenable |= 1;
@@ -609,11 +596,26 @@ void drawPicture0(picture_t dest, guint8 *data)
 	}
 	break;
       case 0xf8: /* fill */
-	while (*((guint8 *)ptr) < 0xf0) {
-	  x = ((*ptr & 0xf0) << 4) | (0xff & ptr[1]);
-	  y = ((*ptr & 0x0f) << 8) | (0xff & ptr[2]);
-	  ditherfill(x, y);
-	  ptr += 3;
+	{
+	  int oldc1, oldc2;
+
+	  if (!(flags & 1)) { /* Fill in black only? */
+	    oldc1 = col1;
+	    oldc2 = col2;
+	    col1 = col2 = 0;
+	  }
+
+	  while (*((guint8 *)ptr) < 0xf0) {
+	    x = ((*ptr & 0xf0) << 4) | (0xff & ptr[1]);
+	    y = ((*ptr & 0x0f) << 8) | (0xff & ptr[2]);
+	    ditherfill(x, y);
+	    ptr += 3;
+	  }
+
+	  if (!(flags & 1)) { /* Reset old colors */
+	    col1 = oldc1;
+	    col2 = oldc2;
+	  }
 	}
 	break;
       case 0xf9: /* change pattern */

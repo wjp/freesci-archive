@@ -58,6 +58,13 @@ typedef guint8** picture_t;
 #define SCI_COLOR_DITHER256 2
 /* Dither with 256 colors */
 
+
+#define SCI_FILL_NORMAL 1
+/* Fill with the selected color */
+#define SCI_FILL_BLACK 0
+/* Fill with black */
+
+
 extern int sci_color_mode;
 /* sci_color_interpolate forces 16 color background pictures to be drawn
 ** with 256 interpolated colors instead of 16 dithered colors
@@ -86,18 +93,25 @@ void copyPicture(picture_t dest, picture_t src);
 ** Returns   : (void)
 */
 
-void drawPicture0(picture_t dest, guint8* data);
+void drawPicture0(picture_t dest, int flags, int defaultPalette, guint8* data);
 /* Draws a picture resource to a picture_t buffer.
 ** Parameters: (picture_t) dest: The initialized picture buffer to draw to.
+**             (int) flags: The picture flags. Currently, only bit 0 is used;
+**                          with bit0, pictures are filled normally, with !bit0,
+**                          fill commands are executed by filling in black.
+**             (int) defaultPalette: The default palette to use for drawing
+**                          (used to distinguish between day and night in some
+**                          games)
 **             (guint8*) data: The data to draw (usually resource_t.data).
 ** Remember that this function is much slower than copyPicture, so you should
 ** store a backup copy of the drawn picture if you want to use it to display
 ** some animation.
 */
 
-void clearPicture(picture_t pic);
+void clearPicture(picture_t pic, int fgcol);
 /* Clears a picture
 ** Parameters: (picture_t) pic: The picture to clear
+**             (int) fgcol: The foreground color to use for screen 0
 ** Returns   : (void)
 ** Clearing a picture means that buffers 1-3 are set to 0, while buffer 0
 ** is set to zero for the first ten pixel rows and to 15 for the remainder.

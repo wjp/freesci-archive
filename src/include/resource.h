@@ -106,14 +106,14 @@ static const char* SCI_Version_Types[] = {
 
 
 static const char* Resource_Types[] = {"view","pic","script","text","sound",
-				       "memory","vocabulary","font","cursor",
+				       "memory","vocab","font","cursor",
 				       "patch","bitmap","palette","cdaudio",
 				       "audio","sync","message","map","heap"};
 /* These are the 18 resource types supported by SCI1 */
 
 enum ResourceTypes {
-  sci_view=0, sci_picture, sci_script, sci_text,
-  sci_sound, sci_memory, sci_vocabulary, sci_font,
+  sci_view=0, sci_pic, sci_script, sci_text,
+  sci_sound, sci_memory, sci_vocab, sci_font,
   sci_cursor, sci_patch, sci_bitmap, sci_palette,
   sci_cdaudio, sci_audio, sci_sync, sci_message,
   sci_map, sci_heap, sci_invalid_resource

@@ -35,6 +35,8 @@ static int small = 0;
 
 int quit = 0;
 int redraw = 0;
+int drawflags = 1;
+int drawpalette = 0;
 
 picture_t pic, bgpic;
 
@@ -53,12 +55,12 @@ c_redraw()
 int
 c_drawadd()
 {
-  resource_t *rsc = findResource(sci_picture, cmd_params[0].val);
+  resource_t *rsc = findResource(sci_pic, cmd_params[0].val);
 
   if (!rsc)
     sciprintf("Resource not found!\n");
   else
-    drawPicture0(bgpic, rsc->data);
+    drawPicture0(bgpic, drawflags, drawpalette, rsc->data);
 }
 
 int main(int argc, char** argv)
@@ -127,9 +129,9 @@ int main(int argc, char** argv)
   pic = allocEmptyPicture();
   bgpic = allocEmptyPicture();
 
-  resource = findResource(sci_picture, 10);
+  resource = findResource(sci_pic, 10);
   if (resource == NULL) fprintf(stderr,"Picture not found!\n");
-  else drawPicture0(pic, resource->data);
+  else drawPicture0(pic, 1, 0, resource->data);
 
   copyPicture(bgpic, pic);
 
@@ -146,6 +148,8 @@ int main(int argc, char** argv)
   cmdHookInt(&view_nr, "view_nr", "demo: view resource number");
   cmdHookInt(&view_loop, "view_loop", "demo: view loop number");
   cmdHookInt(&view_cell, "view_cell", "demo: view loop frame number");
+  cmdHookInt(&drawflags, "bgpic_flags", "demo: Flags for pic drawing");
+  cmdHookInt(&drawpalette, "bgpic_palette", "demo: Default palette for pic");
   cmdHook(&c_quit, "quit", "", "demo: Quits");
   cmdHook(&c_redraw, "redraw", "", "demo: Redraw background picture");
   cmdHook(&c_drawadd, "drawadd", "i", "demo: Add to background picture");
@@ -184,10 +188,10 @@ int main(int argc, char** argv)
     case SCI_EV_REDRAW:
 
       if (redraw) {
-	clearPicture(bgpic);
-        resource = findResource(sci_picture, bgpicnr);
+	clearPicture(bgpic, drawpalette? 0 : 15); /* Palette 0 is night; clear black */
+        resource = findResource(sci_pic, bgpicnr);
         if (resource == NULL) sciprintf("Picture not found!\n");
-        else drawPicture0(bgpic, resource->data);
+        else drawPicture0(bgpic, drawflags, drawpalette, resource->data);
 	redraw = 0;
       }
 
