@@ -29,7 +29,8 @@
 #include <resource.h>
 #include <graphics.h>
 
-void drawBox(picture_t dest, short x, short y, short xl, short yl, char color, char priority)
+void
+draw_box(picture_t dest, short x, short y, short xl, short yl, char color, char priority)
 {
   int c; /* counter */
   int startpos, pos;
@@ -48,6 +49,47 @@ void drawBox(picture_t dest, short x, short y, short xl, short yl, char color, c
     memset(dest[0]+pos,color,xl);
     if (priority >= 0)
       memset(dest[1]+pos,priority,xl);
+    pos += 320;
+  }
+
+}
+
+void
+draw_frame(picture_t dest, short x, short y, short xl, short yl, char color, char priority)
+{
+  int c; /* counter */
+  int startpos, pos;
+
+  if (x<0) x = 0;
+  if (y<10) y = 10;
+  if (x+xl>319) xl = 319-x;
+  if (y+yl>199) yl = 199-yl;
+  if (xl<1) return;
+  if (yl<1) return;
+
+  startpos = pos = x + y*320;
+  startpos -= 321;
+
+  for (c=0; c<yl; c++) {
+
+    if ((c == 0) || (c == yl-1)) {
+
+      memset(dest[0]+pos,color,xl);
+
+      if (priority >= 0)
+	memset(dest[1]+pos,priority,xl);
+
+    } else {
+
+      *(dest[0]+pos) = color;
+      *(dest[0]+pos+xl) = color;
+
+      if (priority >= 0) {
+	*(dest[1]+pos) = priority;
+	*(dest[1]+pos+xl) = priority;
+      }
+
+    }
     pos += 320;
   }
 
@@ -152,7 +194,7 @@ void drawWindow(picture_t dest, port_t *port, char color, char priority,
   }
 
   if (!(flags & WINDOW_FLAG_TRANSPARENT))
-    drawBox(dest, x, y, xl, yl, color, priority); /* draw box last to overwrite header */
+    draw_box(dest, x, y, xl, yl, color, priority); /* draw box last to overwrite header */
 
 }
 

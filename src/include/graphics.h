@@ -134,6 +134,11 @@ typedef struct {
 #define WINDOW_FLAG_DONTDRAW 0x80
 /* Don't draw anything */
 
+#define SELECTOR_STATE_SELECTABLE 1
+#define SELECTOR_STATE_FRAMED 2
+#define SELECTOR_STATE_DISABLED 4
+#define SELECTOR_STATE_SELECTED 8
+
 
 #define SCI_SCREEN_WIDTH 320
 #define SCI_SCREEN_HEIGHT 200
@@ -231,7 +236,8 @@ view0_cel_height(int loop, int cel, byte *data);
 */
 
 
-void drawBox(picture_t dest, short x, short y, short xl, short yl, char color, char priority);
+void draw_box(picture_t dest, short x, short y, short xl, short yl, char color, char priority);
+void draw_frame(picture_t dest, short x, short y, short xl, short yl, char color, char priority);
 /* Draws a simple box.
 ** Parameters: (picture_t) dest: The picture_t to draw to.
 **             (short) x,y: The coordinates to draw to.
@@ -240,6 +246,7 @@ void drawBox(picture_t dest, short x, short y, short xl, short yl, char color, c
 **             (char) priority: The priority to fill the box with (it still overwrites anything)
 ** Returns   : (void)
 ** The box does not come with any fancy shading. Use drawWindow to do this.
+** draw_frame does the same as draw_box, except that it doesn't fill the box.
 */
 
 
@@ -399,6 +406,15 @@ graph_update_box(struct _state *s, int x, int y, int xl, int yl);
 ** No clipping is performed.
 */
 
+void
+graph_update_port(struct _state *s, port_t *port);
+/* Updates a port
+** Paramters: (state_t *) s: The state_t to operate on
+**            (port_t *) port: The port to update
+** Returns  : (void);
+** This function uses graph_update_box and then updates the mouse pointer.
+*/
+
 int
 graph_save_box(struct _state *s, int x, int y, int xl, int yl, int layers);
 /* Saves a box in graphics space (s->pic) into memory
@@ -425,6 +441,81 @@ graph_fill_port(struct _state *s, port_t *port, int color);
 ** Parameters: (state_t *) s: The state to operate on
 **             (port_t *) port: The port to use
 **             (int) color: The color to draw with
+** Returns   : (void)
+*/
+
+void
+graph_draw_selector_button(struct _state *s, port_t *port, int state,
+			   int x, int y, int xl, int yl,
+			   char *text, byte *font);
+/* Draws a selector button.
+** Parameters: (state_t *) s: The state to operate on
+**             (port_t *) port: The port to use
+**             (int) state: The selector state to use; a combination of the SELECTOR_STATE_* flags
+**             (int) x,y: The upper left corner of the selector
+**             (int) xl,yl: Height and width of the selector in question
+**             (char *) text: The text on the button
+**             (byte *) font: Pointer to the font to use
+** Returns   : (void)
+*/
+
+void
+graph_draw_selector_text(struct _state *s, port_t *port, int state,
+			 int x, int y, int xl, int yl,
+			 char *text, byte *font);
+/* Draws a text selector.
+** Parameters: (state_t *) s: The state to operate on
+**             (port_t *) port: The port to use
+**             (int) state: The selector state to use; a combination of the SELECTOR_STATE_* flags
+**             (int) x,y: The upper left corner of the selector
+**             (int) xl,yl: Height and width of the selector in question
+**             (char *) text: The text
+**             (byte *) font: Pointer to the font to use
+** Returns   : (void)
+*/
+
+
+void
+graph_draw_selector_edit(struct _state *s, port_t *port, int state,
+			 int x, int y, int xl, int yl,
+			 char *text, byte *font);
+/* Draws an edit frame selector.
+** Parameters: (state_t *) s: The state to operate on
+**             (port_t *) port: The port to use
+**             (int) state: The selector state to use; a combination of the SELECTOR_STATE_* flags
+**             (int) x,y: The upper left corner of the selector
+**             (int) xl,yl: Height and width of the selector in question
+**             (char *) text: The text inside the edit box
+**             (byte *) font: Pointer to the font to use
+** Returns   : (void)
+*/
+
+
+void
+graph_draw_selector_icon(struct _state *s, port_t *port, int state,
+			 int x, int y, int xl, int yl,
+			 byte *data, int loop, int cel);
+/* Draws an iconic (bitmapped) selector..
+** Parameters: (state_t *) s: The state to operate on
+**             (port_t *) port: The port to use
+**             (int) state: The selector state to use; a combination of the SELECTOR_STATE_* flags
+**             (int) x,y: The upper left corner of the selector
+**             (int) xl,yl: Height and width of the selector in question
+**             (byte *) data: The view resource from which the data should be taken
+**             (int) loop, cel: Loop and cell inside the view resource
+** Returns   : (void)
+*/
+
+
+void
+graph_draw_selector_control(struct _state *s, port_t *port, int state,
+			    int x, int y, int xl, int yl);
+/* Draws a control selector (a "scollbox").
+** Parameters: (state_t *) s: The state to operate on
+**             (port_t *) port: The port to use
+**             (int) state: The selector state to use; a combination of the SELECTOR_STATE_* flags
+**             (int) x,y: The upper left corner of the selector
+**             (int) xl,yl: Height and width of the selector in question
 ** Returns   : (void)
 */
 

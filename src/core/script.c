@@ -770,4 +770,12 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(brBottom, "brBottom");
   FIND_SELECTOR(xStep, "xStep");
   FIND_SELECTOR(yStep, "yStep");
+  FIND_SELECTOR(nsBottom, "nsBottom");
+  FIND_SELECTOR(nsTop, "nsTop");
+  FIND_SELECTOR(nsLeft, "nsLeft");
+  FIND_SELECTOR(nsRight, "nsRight");
+  FIND_SELECTOR(font, "font");
+  FIND_SELECTOR(text, "text");
+  FIND_SELECTOR(type, "type");
+  FIND_SELECTOR(state, "state");
 }

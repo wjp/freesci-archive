@@ -1122,6 +1122,12 @@ script_run(state_t *s)
   s->menubar = menubar_new(); /* Create menu bar */
 
   gettimeofday(&(s->game_start_time), NULL); /* Get start time */
+  memcpy(&(s->last_wait_time), &(s->game_start_time), sizeof(struct timeval));
+  /* Use start time as last_wait_time */
+
+  s->sci_version_major = (sci_version > SCI_VERSION_0);
+  s->sci_version_minor = 0; /* Was always zero, AFAIK */
+  s->sci_version_patchlevel = 0; /* Default interpreter patchlevel */
 
   s->mouse_pointer = NULL; /* No mouse pointer */
   s->pointer_x = (320 / 2); /* With centered x coordinate */

@@ -222,21 +222,60 @@ disassemble(state_t *s, heap_ptr pos)
 
   if (pos == *_pc) { /* Extra information if debugging the current opcode */
 
+    if (opcode == op_callk) {
+      int stackframe = s->heap[retval - 1] + (*_restadjust * 2);
+      int argc = getInt16(s->heap + *_sp - stackframe - 2);
+      int i;
+
+      sciprintf(" Kernel params: (");
+
+      for (i = 0; i < argc; i++) {
+	sciprintf("%04x", getUInt16(s->heap + *_sp - stackframe + i*2));
+	if (i+1 < argc)
+	  sciprintf(", ");
+      }
+      sciprintf(")\n");
+
+    } else
+
     if ((opcode == op_send) || (opcode == op_super) || (opcode == op_self)) {
       int stackframe = s->heap[retval - 1] + (*_restadjust * 2);
       word selector;
 
       while (stackframe > 0) {
 	int argc = getInt16(s->heap + *_sp - stackframe + 2);
+	heap_ptr nameaddress = 0;
+	heap_ptr name_meta_addr;
+	char *name;
+
+	if (opcode == op_send)
+	  name_meta_addr = s->acc;
+	else if (opcode == op_self)
+	  name_meta_addr = *_objp;
+	else { /* op_super */
+	  name_meta_addr = getUInt16(s->heap + *_objp + SCRIPT_SUPERCLASS_OFFSET);
+
+	  name_meta_addr = *(s->classtable[name_meta_addr].scriptposp)
+	    + s->classtable[name_meta_addr].class_offset;
+	}
 
 	selector = getInt16(s->heap + *_sp - stackframe);
       
-	sciprintf("  %s(", (selector > s->selector_names_nr)
+	if (getInt16(s->heap + name_meta_addr + SCRIPT_OBJECT_MAGIC_OFFSET)
+	    == SCRIPT_OBJECT_MAGIC_NUMBER)
+	  nameaddress = getUInt16(s->heap + name_meta_addr + SCRIPT_NAME_OFFSET);
+
+	if (nameaddress)
+	  name = s->heap + nameaddress;
+	else
+	  name = "<invalid>";
+
+	sciprintf("  %s::%s(", name, (selector > s->selector_names_nr)
 		  ? "<invalid>" : s->selector_names[selector]);
 
 	while (argc--) {
 
-	  sciprintf("%04x", 0xffff & getInt16(s->heap + *_sp - stackframe));
+	  sciprintf("%04x", 0xffff & getUInt16(s->heap + *_sp - stackframe));
 	  if (argc) sciprintf(", ");
 	  stackframe -= 2;
 
@@ -280,7 +319,7 @@ c_backtrace()
       totalparamc = 16;
 
     for (paramc = 1; paramc <= totalparamc; paramc++) {
-      sciprintf("%04x", getInt16(_s->heap + *(call->argpp) + paramc * 2));
+      sciprintf("%04x", getUInt16(_s->heap + *(call->argpp) + paramc * 2));
 
       if (paramc < *(call->argcp))
 	sciprintf(", ");

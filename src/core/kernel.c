@@ -79,7 +79,6 @@
 
 #define RESOURCE_TYPE(resid) ((resid) >> 11)
 
-
 /******************** Kernel Oops ********************/
 
 int
@@ -945,36 +944,121 @@ kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp)
   s->acc = 0; /* No event */
 }
 
+void
+kStrEnd(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr address = PARAM(0);
+  char *seeker = s->heap + address;
 
-/* Format(targ_address, textresnr, index_inside_res, ...)
-** Formats the text from text.textresnr (offset index_inside_res) according to
+  while (*seeker++)
+    ++address;
+
+  s->acc = address + 1; /* End of string */
+}
+
+void
+kStrCat(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  strcat(s->heap + PARAM(0), s->heap + PARAM(1));
+}
+
+void
+kStrCmp(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int length;
+
+  if (argc > 2)
+    s->acc = strncmp(s->heap + PARAM(0), s->heap + PARAM(1), PARAM(2));
+  else
+    s->acc = strcmp(s->heap + PARAM(0), s->heap + PARAM(1));
+}
+
+
+void
+kStrCpy(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int length;
+
+  if (argc > 2)
+    strncpy(s->heap + (s->acc = PARAM(0)), s->heap + PARAM(1), PARAM(2));
+  else
+    strcpy(s->heap + (s->acc = PARAM(0)), s->heap + PARAM(1));
+
+}
+
+
+void
+kStrAt(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr address = PARAM(0) + PARAM(1);
+
+  s->acc = UGET_HEAP(address);
+
+  if (argc > 2)
+    PUT_HEAP(address, PARAM(2)); /* Request to modify this char */
+}
+
+
+void
+kReadNumber(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  char *source = s->heap + PARAM(0);
+
+  while (isspace(*source))
+    source++; /* Skip whitespace */
+
+  if (*source = '$') /* SCI uses this for hex numbers */
+    s->acc = strtol(source + 1, NULL, 16); /* Hex */
+  else
+    s->acc = strtol(source, NULL, 10); /* Force decimal */
+}
+
+
+/*  Format(targ_address, textresnr, index_inside_res, ...)
+** or
+**  Format(targ_address, heap_text_addr, ...)
+** Formats the text from text.textresnr (offset index_inside_res) or heap_text_addr according to
 ** the supplied parameters and writes it to the targ_address.
 */
 void
 kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   int *arguments;
-  char *target = ((char *) s->heap) + PARAM(0);
-  int resource_nr = PARAM(1);
+  int dest = PARAM(0);
+  char *target = ((char *) s->heap) + dest;
+  int position = PARAM(1);
   int index = UPARAM(2);
-  resource_t *resource = findResource(sci_text, resource_nr);
+  resource_t *resource;
   char *source;
   int mode = 0;
   int paramindex = 0; /* Next parameter to evaluate */
   char xfer;
   int i;
+  int startarg;
 
 
-  if (!resource) {
-    SCIkwarn("Could not find text.%03d\n", resource_nr);
-    return;
+  if (position < 1000) { /* reading from a text resource */
+    resource = findResource(sci_text, position);
+
+    if (!resource) {
+      SCIkwarn("Could not find text.%03d\n", position);
+      return;
+    }
+
+    source = resource->data + index;
+    startarg = 3; /* First parameter to use for formatting */
+
+  } else  { /* position >= 1000 */
+    source = s->heap;
+    startarg = 2;
   }
 
   arguments = malloc(sizeof(int) * argc);
-  for (i = 3; i < argc; i++)
+  for (i = startarg; i < argc; i++)
     arguments[i-3] = UPARAM(i); /* Parameters are copied to prevent overwriting */ 
 
-  source = resource->data + index;
 
   while (xfer = *source++) {
     if (xfer == '%') {
@@ -1012,6 +1096,8 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
   free(arguments);
 
   *target = 0; /* Terminate string */
+
+  s->acc = dest; /* Return target addr */
 }
 
 void
@@ -1074,9 +1160,21 @@ kGetFarText(state_t *s, int funct_nr, int argc, heap_ptr argp)
   ** resource.
   */
 
-  strcpy(s->heap + UPARAM(2), seeker); /* Copy the string */
+  strcpy(s->heap + (s->acc = UPARAM(2)), seeker); /* Copy the string and get return value */
 }
 
+void
+kWait(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  struct timeval time;
+
+  gettimeofday(&time, NULL);
+
+  s-> acc = ((time.tv_usec - s->last_wait_time.tv_usec) * 60 / 1000000) +
+    (time.tv_sec - s->last_wait_time.tv_sec) * 60;
+
+  memcpy(&(s->last_wait_time), &time, sizeof(struct timeval));
+}
 
 
 /********************* Graphics ********************/
@@ -1295,6 +1393,93 @@ draw_object(state_t *s, heap_ptr object, int xmode, int ymode)
   drawView0(s->bgpic, s->ports[s->view_port], x, y,
 	    priority, loop, cel, viewres->data);
 }
+
+
+#define K_CONTROL_BUTTON 1
+#define K_CONTROL_TEXT 2
+#define K_CONTROL_EDIT 3
+#define K_CONTROL_ICON 4
+#define K_CONTROL_CONTROL 6
+
+
+
+
+void
+kDrawControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  heap_ptr obj = PARAM(0);
+  int x = GET_SELECTOR(obj, nsLeft);
+  int y = GET_SELECTOR(obj, nsTop);
+  int xl = GET_SELECTOR(obj, nsRight) - x + 1;
+  int yl = GET_SELECTOR(obj, nsBottom) - y + 1;
+
+  int font_nr = GET_SELECTOR(obj, font);
+  char *text = s->heap + GET_SELECTOR(obj, text);
+  int view = GET_SELECTOR(obj, view);
+  int cel = GET_SELECTOR(obj, cel);
+  int loop = GET_SELECTOR(obj, loop);
+
+  int type = GET_SELECTOR(obj, type);
+  int state = GET_SELECTOR(obj, state);
+
+  resource_t *font_res;
+  resource_t *view_res;
+
+  CHECK_THIS_KERNEL_FUNCTION;
+
+  switch (type) {
+
+  case K_CONTROL_BUTTON:
+
+    font_res  = findResource(sci_font, font_nr);
+    if (!font_res) {
+      SCIkwarn("Font.%03d not found!\n", font_nr);
+      return;
+    }
+    graph_draw_selector_button(s, s->ports[s->view_port], state, x, y, xl, yl, text, font_res->data);
+    break;
+
+  case K_CONTROL_TEXT:
+
+    font_res  = findResource(sci_font, font_nr);
+    if (!font_res) {
+      SCIkwarn("Font.%03d not found!\n", font_nr);
+      return;
+    }
+    graph_draw_selector_text(s, s->ports[s->view_port], state, x, y, xl, yl, text, font_res->data);
+    break;
+
+  case K_CONTROL_EDIT:
+
+    font_res  = findResource(sci_font, font_nr);
+    if (!font_res) {
+      SCIkwarn("Font.%03d not found!\n", font_nr);
+      return;
+    }
+    graph_draw_selector_edit(s, s->ports[s->view_port], state, x, y, xl, yl, text, font_res->data);
+    break;
+
+  case K_CONTROL_ICON:
+    
+    view_res = findResource(sci_view, view);
+    if (!view_res) {
+      SCIkwarn("View.%03d not found!\n", font_nr);
+      return;
+    }
+    graph_draw_selector_icon(s, s->ports[s->view_port], state, x, y, xl, yl,
+			     view_res->data, loop, cel);
+    break;
+
+  case K_CONTROL_CONTROL:
+
+    graph_draw_selector_control(s, s->ports[s->view_port], state, x, y, xl, yl);
+    break;
+
+  default:
+    SCIkwarn("Unknown control type: %d at %04x\n", type, obj);
+  }
+}
+
 
 
 void
@@ -1895,8 +2080,16 @@ struct {
   {"DeleteKey", kDeleteKey },
   {"StrLen", kStrLen },
   {"GetFarText", kGetFarText },
+  {"StrEnd", kStrEnd },
+  {"StrCat", kStrCat },
+  {"StrCmp", kStrCmp },
+  {"StrCpy", kStrCpy },
+  {"StrAt", kStrAt },
+  {"ReadNumber", kReadNumber },
+  {"DrawControl", kDrawControl },
 
   /* Experimental functions */
+  {"Wait", kWait },
   {"BaseSetter", kBaseSetter},
   {"DoSound", kDoSound },
   {"Graph", kGraph },

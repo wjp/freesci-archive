@@ -105,6 +105,9 @@ typedef struct
   int view, loop, cel; /* Description of a specific image */
   int brLeft, brRight, brTop, brBottom; /* Bounding Rectangle */
   int xStep, yStep; /* BR adjustments */
+  int nsLeft, nsRight, nsTop, nsBottom; /* Control boundaries */
+  int text, font; /* Used by controls */
+  int type, state; /* Used by contols as well */
 } selector_map_t; /* Contains selector IDs for a few selected selectors */
 
 

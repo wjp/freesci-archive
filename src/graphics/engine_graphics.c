@@ -140,6 +140,7 @@ graph_restore_box(struct _state *s, int handle)
 }
 
 
+
 void
 graph_fill_port(struct _state *s, port_t *port, int color)
 {
@@ -153,4 +154,84 @@ graph_fill_port(struct _state *s, port_t *port, int color)
     memset(s->bgpic[0] + pos, color, port->xmax - port->xmin + 1);
     pos += SCI_SCREEN_WIDTH;
   }
+}
+
+void
+graph_update_port(struct _state *s, port_t *port)
+{
+  graph_update_box(s, port->xmin, port->ymin,
+		   port->xmax - port->xmin + 1,
+		   port->ymax - port->ymin + 1);
+
+  s->graphics_callback(s, GRAPHICS_CALLBACK_REDRAW_POINTER, 0,0,0,0);
+}
+
+
+
+
+
+void
+graph_draw_selector_button(struct _state *s, port_t *port, int state,
+			   int x, int y, int xl, int yl,
+			   char *text, byte *font)
+{
+  graph_draw_selector_text(s, port, state, x, y, xl, yl, text, font);
+}
+
+
+
+void
+graph_draw_selector_text(struct _state *s, port_t *port, int state,
+			 int x, int y, int xl, int yl,
+			 char *text, byte *font)
+{
+  port_t oldport;
+
+  memcpy(&oldport, port, sizeof(oldport)); /* Backup old port data */
+
+  port->x = x;
+  port->y = y + 2; /* +2 to get the frame nicely */
+  port->font = font;
+  port->gray_text = state & SELECTOR_STATE_DISABLED;
+  port->alignment = ALIGN_TEXT_CENTER;
+
+  text_draw(s->bgpic, port, text, xl);
+
+  if (state & SELECTOR_STATE_FRAMED)
+    draw_frame(s->bgpic, x, y, xl, yl, port->color, port->priority);
+
+  if ((state & SELECTOR_STATE_SELECTABLE) && (state & SELECTOR_STATE_SELECTED))
+    draw_frame(s->bgpic, x + 1, y + 1, xl - 2, yl - 2, port->color, port->priority);
+
+  memcpy(port, &oldport, sizeof(oldport)); /* Restore old port data */
+}
+
+
+void
+graph_draw_selector_edit(struct _state *s, port_t *port, int state,
+			 int x, int y, int xl, int yl,
+			 char *text, byte *font)
+{
+  graph_draw_selector_text(s, port, state, x, y, xl, yl, text, font);
+}
+
+
+void
+graph_draw_selector_icon(struct _state *s, port_t *port, int state,
+			 int x, int y, int xl, int yl,
+			 byte *data, int loop, int cel)
+{
+  drawView0(s->bgpic, port, x, y, 16, loop, cel, data);
+}
+
+
+void
+graph_draw_selector_control(struct _state *s, port_t *port, int state,
+			 int x, int y, int xl, int yl)
+{
+  /* Draw outer frame: */
+  draw_frame(s->bgpic, x, y, xl, yl, port->color, port->priority);
+
+  /* Draw inner frame: */
+  draw_frame(s->bgpic, x, y + 10, xl, yl - 20, port->color, port->priority);
 }

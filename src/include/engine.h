@@ -114,6 +114,11 @@ typedef struct _state
   int priority_last; /* The line where the highest priority zone starts */
 
   struct timeval game_start_time; /* The time at which the interpreter was started */
+  struct timeval last_wait_time; /* The last time the game invoked Wait() */
+
+  int sci_version_major;
+  int sci_version_minor;
+  int sci_version_patchlevel; /* The approximated patchlevel of the version to emulate */
 
   /* VM Information */
 

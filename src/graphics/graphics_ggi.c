@@ -306,7 +306,7 @@ graphics_callback_ggi(struct _state *s, int command, int x, int y, int xl, int y
   switch (command) {
   case GRAPHICS_CALLBACK_REDRAW_ALL:
     graphics_draw_region_ggi(vis, s->pic[s->pic_layer],
-			     0, 0, 319, 199,
+			     0, 0, 320, 200,
 			     s->mouse_pointer, s->pointer_x, s->pointer_y);
     break;
   case GRAPHICS_CALLBACK_REDRAW_BOX:
