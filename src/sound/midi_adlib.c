@@ -233,7 +233,9 @@ int midi_adlib_open(guint8 *data_ptr, unsigned int data_length)
     SEQ_WRPATCH(&sbi, sizeof(sbi));
     SEQ_DUMPBUF();
   }
-
+  SEQ_START_TIMER();
+  SEQ_SET_TEMPO(60);
+  SEQ_DUMPBUF();
   return 0;
 }
 

@@ -34,271 +34,156 @@
 
 #include <gfx_operations.h>
 
-typedef struct {
-	char *functname;
-	kfunct_old *kernel_function;
-} sci_old_kernel_function_t;
-
-sci_kernel_function_t kfunct_mappers[] = {
-	{"GetSaveDir", "", kGetSaveDir},
-	{NULL, NULL, NULL} /* Terminator */
-};
-
-sci_old_kernel_function_t old_kfunct_mappers[] = {
-	{"Load", kLoad},
-	{"UnLoad", kUnLoad},
-	{"GetCWD", kGetCWD },
-	{"GameIsRestarting", kGameIsRestarting },
-	{"NewList", kNewList },
-	{"SetCursor", kSetCursor },
-	{"FindKey", kFindKey },
-	{"NewNode", kNewNode },
-	{"AddToFront", kAddToFront },
-	{"AddToEnd", kAddToEnd },
-	{"Show", kShow },
-	{"PicNotValid", kPicNotValid },
-	{"Random", kRandom },
-	{"Abs", kAbs },
-	{"Sqrt", kSqrt },
-	{"OnControl", kOnControl },
-	{"HaveMouse", kHaveMouse },
-	{"GetAngle", kGetAngle },
-	{"GetDistance", kGetDistance },
-	{"LastNode", kLastNode },
-	{"FirstNode", kFirstNode },
-	{"NextNode", kNextNode },
-	{"PrevNode", kPrevNode },
-	{"NodeValue", kNodeValue },
-	{"Clone", kClone },
-	{"DisposeClone", kDisposeClone },
-	{"ScriptID", kScriptID },
-	{"MemoryInfo", kMemoryInfo },
-	{"DrawPic", kDrawPic },
-	{"DisposeList", kDisposeList },
-	{"DisposeScript", kDisposeScript },
-	{"GetPort", kGetPort },
-	{"SetPort", kSetPort },
-	{"NewWindow", kNewWindow },
-	{"DisposeWindow", kDisposeWindow },
-	{"IsObject", kIsObject },
-	{"Format", kFormat },
-	{"DrawStatus", kDrawStatus },
-	{"DrawMenuBar", kDrawMenuBar },
-	{"AddMenu", kAddMenu },
-	{"SetMenu", kSetMenu },
-	{"AddToPic", kAddToPic },
-	{"CelWide", kCelWide },
-	{"CelHigh", kCelHigh },
-	{"Display", kDisplay },
-	{"Animate", kAnimate },
-	{"GetTime", kGetTime },
-	{"DeleteKey", kDeleteKey },
-	{"StrLen", kStrLen },
-	{"GetFarText", kGetFarText },
-	{"StrEnd", kStrEnd },
-	{"StrCat", kStrCat },
-	{"StrCmp", kStrCmp },
-	{"StrCpy", kStrCpy },
-	{"StrAt", kStrAt },
-	{"ReadNumber", kReadNumber },
-	{"DrawControl", kDrawControl },
-	{"NumCels", kNumCels },
-	{"NumLoops", kNumLoops },
-	{"TextSize", kTextSize },
-	{"InitBresen", kInitBresen },
-	{"DoBresen", kDoBresen },
-	{"CanBeHere", kCanBeHere },
-	{"DrawCel", kDrawCel },
-	{"DirLoop", kDirLoop },
-	{"CoordPri", kCoordPri },
-	{"PriCoord", kPriCoord },
-	{"ValidPath", kValidPath },
-	{"RespondsTo", kRespondsTo },
-	{"FOpen", kFOpen },
-	{"FPuts", kFPuts },
-	{"FGets", kFGets },
-	{"FClose", kFClose },
-	{"TimesSin", kTimesSin },
-	{"SinMult", kTimesSin },
-	{"TimesCos", kTimesCos },
-	{"CosMult", kTimesCos },
-	{"MapKeyToDir", kMapKeyToDir },
-	{"GlobalToLocal", kGlobalToLocal },
-	{"LocalToGlobal", kLocalToGlobal },
-	{"Wait", kWait },
-	{"CosDiv", kCosDiv },
-	{"SinDiv", kSinDiv },
-	{"BaseSetter", kBaseSetter },
-	{"Parse", kParse },
-	{"ShakeScreen", kShakeScreen },
-#ifdef _WIN32
-	{"DeviceInfo", kDeviceInfo_Win32},
-#else /* !_WIN32 */
-	{"DeviceInfo", kDeviceInfo_Unix},
-#endif
-	{"HiliteControl", kHiliteControl},
-	{"GetMenu", kGetMenu},
-	{"MenuSelect", kMenuSelect},
-	{"GetEvent", kGetEvent },
-	{"CheckFreeSpace", kCheckFreeSpace },
-	{"DoSound", kDoSound },
-	{"SetSynonyms", kSetSynonyms },
-	{"FlushResources", kFlushResources },
-	{"SetDebug", kSetDebug },
-	{"GetSaveFiles", kGetSaveFiles },
-	{"CheckSaveGame", kCheckSaveGame },
-	{"SaveGame", kSaveGame },
-	{"RestoreGame", kRestoreGame },
-	{"SetJump", kSetJump },
-	{"EditControl", kEditControl },
-	{"EmptyList", kEmptyList },
-	{"AddAfter", kAddAfter },
-	{"RestartGame", kRestartGame },
-	{"SetNowSeen", kSetNowSeen },
-	{"Graph", kGraph },
-	{"TimesTan", kTimesTan },
-	{"TimesCot", kTimesCot },
-	{"Said", kSaid },
-	{"DoAvoider", kDoAvoider },
-  /* Experimental functions */
-	{"FileIO", kFileIO },
-	{"Memory", kMemory },
-	{"Sort", kSort },
-	{"AvoidPath", kAvoidPath },
-	{"Lock", kLock },
-  /* Special and NOP stuff */
-	{SCRIPT_UNKNOWN_FUNCTION_STRING, k_Unknown },
-	{0,0} /* Terminator */
-};
-
 
 
 #define SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR 0x75
+/* kfunct_mappers below doubles for unknown kfunctions */
 
-static kfunct_old * unknown_function_map[SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR] = { /* Map for unknown kernel functions */
-/*0x00*/ kLoad,
-/*0x01*/ kUnLoad,
-/*0x02*/ kScriptID,
-/*0x03*/ kDisposeScript,
-/*0x04*/ kClone,
-/*0x05*/ kDisposeClone,
-/*0x06*/ kIsObject,
-/*0x07*/ kRespondsTo,
-/*0x08*/ kDrawPic,
-/*0x09*/ kShow,
-/*0x0a*/ kPicNotValid,
-/*0x0b*/ kAnimate,
-/*0x0c*/ kSetNowSeen,
-/*0x0d*/ kNumLoops,
-/*0x0e*/ kNumCels,
-/*0x0f*/ kCelWide,
-/*0x10*/ kCelHigh,
-/*0x11*/ kDrawCel,
-/*0x12*/ kAddToPic,
-/*0x13*/ kNewWindow,
-/*0x14*/ kGetPort,
-/*0x15*/ kSetPort,
-/*0x16*/ kDisposeWindow,
-/*0x17*/ kDrawControl,
-/*0x18*/ kHiliteControl,
-/*0x19*/ kEditControl,
-/*0x1a*/ kTextSize,
-/*0x1b*/ kDisplay,
-/*0x1c*/ kGetEvent,
-/*0x1d*/ kGlobalToLocal,
-/*0x1e*/ kLocalToGlobal,
-/*0x1f*/ kMapKeyToDir,
-/*0x20*/ kDrawMenuBar,
-/*0x21*/ kMenuSelect,
-/*0x22*/ kAddMenu,
-/*0x23*/ kDrawStatus,
-/*0x24*/ kParse,
-/*0x25*/ kSaid,
-/*0x26*/ kSetSynonyms,
-/*0x27*/ kHaveMouse,
-/*0x28*/ kSetCursor,
-/*0x29*/ kFOpen,
-/*0x2a*/ kFPuts,
-/*0x2b*/ kFGets,
-/*0x2c*/ kFClose,
-/*0x2d*/ kSaveGame,
-/*0x2e*/ kRestoreGame,
-/*0x2f*/ kRestartGame,
-/*0x30*/ kGameIsRestarting,
-/*0x31*/ kDoSound,
-/*0x32*/ kNewList,
-/*0x33*/ kDisposeList,
-/*0x34*/ kNewNode,
-/*0x35*/ kFirstNode,
-/*0x36*/ kLastNode,
-/*0x37*/ kEmptyList,
-/*0x38*/ kNextNode,
-/*0x39*/ kPrevNode,
-/*0x3a*/ kNodeValue,
-/*0x3b*/ kAddAfter, /* AddAfter */
-/*0x3c*/ kAddToFront,
-/*0x3d*/ kAddToEnd,
-/*0x3e*/ kFindKey,
-/*0x3f*/ kDeleteKey,
-/*0x40*/ kRandom,
-/*0x41*/ kAbs,
-/*0x42*/ kSqrt,
-/*0x43*/ kGetAngle,
-/*0x44*/ kGetDistance,
-/*0x45*/ kWait,
-/*0x46*/ kGetTime,
-/*0x47*/ kStrEnd,
-/*0x48*/ kStrCat,
-/*0x49*/ kStrCmp,
-/*0x4a*/ kStrLen,
-/*0x4b*/ kStrCpy,
-/*0x4c*/ kFormat,
-/*0x4d*/ kGetFarText,
-/*0x4e*/ kReadNumber,
-/*0x4f*/ kBaseSetter,
-/*0x50*/ kDirLoop,
-/*0x51*/ kCanBeHere,
-/*0x52*/ kOnControl,
-/*0x53*/ kInitBresen,
-/*0x54*/ kDoBresen,
-/*0x55*/ kDoAvoider,
-/*0x56*/ kSetJump,
-/*0x57*/ kSetDebug,
-/*0x58*/ NULL, /* kInspectObj */
-/*0x59*/ NULL, /* ShowSends */
-/*0x5a*/ NULL, /* ShowObjs */
-/*0x5b*/ NULL, /* ShowFree */
-/*0x5c*/ kMemoryInfo,
-/*0x5d*/ NULL, /* StackUsage */
-/*0x5e*/ NULL, /* Profiler */
-/*0x5f*/ kGetMenu,
-/*0x60*/ kSetMenu,
-/*0x61*/ kGetSaveFiles,
-/*0x62*/ kGetCWD,
-/*0x63*/ kCheckFreeSpace,
-/*0x64*/ kValidPath,
-/*0x65*/ kCoordPri,
-/*0x66*/ kStrAt,
+
+sci_kernel_function_t kfunct_mappers[] = {
+/*00*/	{KF_OLD, "Load", {old:kLoad}},
+/*01*/	{KF_OLD, "UnLoad", {old:kUnLoad}},
+/*02*/	{KF_OLD, "ScriptID", {old:kScriptID}},
+/*03*/	{KF_OLD, "DisposeScript", {old:kDisposeScript}},
+/*04*/	{KF_OLD, "Clone", {old:kClone}},
+/*05*/	{KF_OLD, "DisposeClone", {old:kDisposeClone}},
+/*06*/	{KF_OLD, "IsObject", {old:kIsObject}},
+/*07*/	{KF_OLD, "RespondsTo", {old:kRespondsTo}},
+/*08*/	{KF_OLD, "DrawPic", {old:kDrawPic}},
+/*09*/	{KF_OLD, "Show", {old:kShow}},
+/*0a*/	{KF_OLD, "PicNotValid", {old:kPicNotValid}},
+/*0b*/	{KF_OLD, "Animate", {old:kAnimate}},
+/*0c*/	{KF_OLD, "SetNowSeen", {old:kSetNowSeen}},
+/*0d*/	{KF_OLD, "NumLoops", {old:kNumLoops}},
+/*0e*/	{KF_OLD, "NumCels", {old:kNumCels}},
+/*0f*/	{KF_OLD, "CelWide", {old:kCelWide}},
+/*10*/	{KF_OLD, "CelHigh", {old:kCelHigh}},
+/*11*/	{KF_OLD, "DrawCel", {old:kDrawCel}},
+/*12*/	{KF_OLD, "AddToPic", {old:kAddToPic}},
+/*13*/	{KF_OLD, "NewWindow", {old:kNewWindow}},
+/*14*/	{KF_OLD, "GetPort", {old:kGetPort}},
+/*15*/	{KF_OLD, "SetPort", {old:kSetPort}},
+/*16*/	{KF_OLD, "DisposeWindow", {old:kDisposeWindow}},
+/*17*/	{KF_OLD, "DrawControl", {old:kDrawControl}},
+/*18*/	{KF_OLD, "HiliteControl", {old:kHiliteControl}},
+/*19*/	{KF_OLD, "EditControl", {old:kEditControl}},
+/*1a*/	{KF_OLD, "TextSize", {old:kTextSize}},
+/*1b*/	{KF_OLD, "Display", {old:kDisplay}},
+/*1c*/	{KF_OLD, "GetEvent", {old:kGetEvent}},
+/*1d*/	{KF_OLD, "GlobalToLocal", {old:kGlobalToLocal}},
+/*1e*/	{KF_OLD, "LocalToGlobal", {old:kLocalToGlobal}},
+/*1f*/	{KF_OLD, "MapKeyToDir", {old:kMapKeyToDir}},
+/*20*/	{KF_OLD, "DrawMenuBar", {old:kDrawMenuBar}},
+/*21*/	{KF_OLD, "MenuSelect", {old:kMenuSelect}},
+/*22*/	{KF_OLD, "AddMenu", {old:kAddMenu}},
+/*23*/	{KF_OLD, "DrawStatus", {old:kDrawStatus}},
+/*24*/	{KF_OLD, "Parse", {old:kParse}},
+/*25*/	{KF_OLD, "Said", {old:kSaid}},
+/*26*/	{KF_OLD, "SetSynonyms", {old:kSetSynonyms}},
+/*27*/	{KF_OLD, "HaveMouse", {old:kHaveMouse}},
+/*28*/	{KF_OLD, "SetCursor", {old:kSetCursor}},
+/*29*/	{KF_OLD, "FOpen", {old:kFOpen}},
+/*2a*/	{KF_OLD, "FPuts", {old:kFPuts}},
+/*2b*/	{KF_OLD, "FGets", {old:kFGets}},
+/*2c*/	{KF_OLD, "FClose", {old:kFClose}},
+/*2d*/	{KF_OLD, "SaveGame", {old:kSaveGame}},
+/*2e*/	{KF_OLD, "RestoreGame", {old:kRestoreGame}},
+/*2f*/	{KF_OLD, "RestartGame", {old:kRestartGame}},
+/*30*/	{KF_OLD, "GameIsRestarting", {old:kGameIsRestarting}},
+/*31*/	{KF_OLD, "DoSound", {old:kDoSound}},
+/*32*/	{KF_OLD, "NewList", {old:kNewList}},
+/*33*/	{KF_OLD, "DisposeList", {old:kDisposeList}},
+/*34*/	{KF_OLD, "NewNode", {old:kNewNode}},
+/*35*/	{KF_OLD, "FirstNode", {old:kFirstNode}},
+/*36*/	{KF_OLD, "LastNode", {old:kLastNode}},
+/*37*/	{KF_OLD, "EmptyList", {old:kEmptyList}},
+/*38*/	{KF_OLD, "NextNode", {old:kNextNode}},
+/*39*/	{KF_OLD, "PrevNode", {old:kPrevNode}},
+/*3a*/	{KF_OLD, "NodeValue", {old:kNodeValue}},
+/*3b*/	{KF_OLD, "AddAfter", {old:kAddAfter}},
+/*3c*/	{KF_OLD, "AddToFront", {old:kAddToFront}},
+/*3d*/	{KF_OLD, "AddToEnd", {old:kAddToEnd}},
+/*3e*/	{KF_OLD, "FindKey", {old:kFindKey}},
+/*3f*/	{KF_OLD, "DeleteKey", {old:kDeleteKey}},
+/*40*/	{KF_OLD, "Random", {old:kRandom}},
+/*41*/	{KF_OLD, "Abs", {old:kAbs}},
+/*42*/	{KF_OLD, "Sqrt", {old:kSqrt}},
+/*43*/	{KF_OLD, "GetAngle", {old:kGetAngle}},
+/*44*/	{KF_OLD, "GetDistance", {old:kGetDistance}},
+/*45*/	{KF_OLD, "Wait", {old:kWait}},
+/*46*/	{KF_OLD, "GetTime", {old:kGetTime}},
+/*47*/	{KF_OLD, "StrEnd", {old:kStrEnd}},
+/*48*/	{KF_OLD, "StrCat", {old:kStrCat}},
+/*49*/	{KF_OLD, "StrCmp", {old:kStrCmp}},
+/*4a*/	{KF_OLD, "StrLen", {old:kStrLen}},
+/*4b*/	{KF_OLD, "StrCpy", {old:kStrCpy}},
+/*4c*/	{KF_OLD, "Format", {old:kFormat}},
+/*4d*/	{KF_OLD, "GetFarText", {old:kGetFarText}},
+/*4e*/	{KF_OLD, "ReadNumber", {old:kReadNumber}},
+/*4f*/	{KF_OLD, "BaseSetter", {old:kBaseSetter}},
+/*50*/	{KF_OLD, "DirLoop", {old:kDirLoop}},
+/*51*/	{KF_OLD, "CanBeHere", {old:kCanBeHere}},
+/*52*/	{KF_OLD, "OnControl", {old:kOnControl}},
+/*53*/	{KF_OLD, "InitBresen", {old:kInitBresen}},
+/*54*/	{KF_OLD, "DoBresen", {old:kDoBresen}},
+/*55*/	{KF_OLD, "DoAvoider", {old:kDoAvoider}},
+/*56*/	{KF_OLD, "SetJump", {old:kSetJump}},
+/*57*/	{KF_OLD, "SetDebug", {old:kSetDebug}},
+/*58*/	{KF_NONE, "InspectObj"},
+/*59*/	{KF_NONE, "ShowSends"},
+/*5a*/	{KF_NONE, "ShowObjs"},
+/*5b*/	{KF_NONE, "ShowFree"},
+/*5c*/	{KF_OLD, "MemoryInfo", {old:kMemoryInfo}},
+/*5d*/	{KF_NONE, "StackUsage"},
+/*5e*/	{KF_NONE, "Profiler"},
+/*5f*/	{KF_OLD, "GetMenu", {old:kGetMenu}},
+/*60*/	{KF_OLD, "SetMenu", {old:kSetMenu}},
+/*61*/	{KF_OLD, "GetSaveFiles", {old:kGetSaveFiles}},
+/*62*/	{KF_OLD, "GetCWD", {old:kGetCWD}},
+/*63*/	{KF_OLD, "CheckFreeSpace", {old:kCheckFreeSpace}},
+/*64*/	{KF_OLD, "ValidPath", {old:kValidPath}},
+/*65*/	{KF_OLD, "CoordPri", {old:kCoordPri}},
+/*66*/	{KF_OLD, "StrAt", {old:kStrAt}},
 #ifdef _WIN32
-/*0x67*/ kDeviceInfo_Win32,
-#else
-/*0x67*/ kDeviceInfo_Unix,
+/*67*/	{KF_OLD, "DeviceInfo", {old:kDeviceInfo_Win32}},
+#else /* !_WIN32 */
+/*67*/	{KF_OLD, "DeviceInfo", {old:kDeviceInfo_Unix}},
 #endif
-/*0x68*/ NULL /*kGetSaveDir*/,
-/*0x69*/ kCheckSaveGame,
-/*0x6a*/ kShakeScreen,
-/*0x6b*/ kFlushResources,
-/*0x6c*/ kTimesSin,
-/*0x6d*/ kTimesCos,
-/*0x6e*/ NULL,
-/*0x6f*/ NULL,
-/*0x70*/ kGraph,
-/*0x71*/ kJoystick,
-/*0x72*/ NULL,
-/*0x73*/ NULL,
-/*0x74*/ kFileIO
-};
+/*68*/	{KF_NEW , "GetSaveDir", {new:{kGetSaveDir, ""}}},
+/*69*/	{KF_OLD, "CheckSaveGame", {old:kCheckSaveGame}},
+/*6a*/	{KF_OLD, "ShakeScreen", {old:kShakeScreen}},
+/*6b*/	{KF_OLD, "FlushResources", {old:kFlushResources}},
+/*6c*/	{KF_OLD, "TimesSin", {old:kTimesSin}},
+/*6d*/	{KF_OLD, "TimesCos", {old:kTimesCos}},
+/*6e*/	{KF_NONE, NULL},
+/*6f*/	{KF_NONE, NULL},
+/*70*/	{KF_OLD, "Graph", {old:kGraph}},
+/*71*/	{KF_OLD, "Joystick", {old:kJoystick}},
+/*72*/	{KF_NONE, NULL},
+/*73*/	{KF_NONE, NULL},
 
+  /* Experimental functions */
+/*74*/	{KF_OLD, "FileIO", {old:kFileIO}},
+/*(?)*/	{KF_OLD, "Memory", {old:kMemory}},
+/*(?)*/	{KF_OLD, "Sort", {old:kSort}},
+/*(?)*/	{KF_OLD, "AvoidPath", {old:kAvoidPath}},
+/*(?)*/	{KF_OLD, "Lock", {old:kLock}},
+
+  /* Non-experimental Functions without a fixed ID */
+
+	{KF_OLD, "CosMult", {old:kTimesCos}},
+	{KF_OLD, "SinMult", {old:kTimesSin}},
+/*(?)*/	{KF_OLD, "CosDiv", {old:kCosDiv}},
+/*(?)*/	{KF_OLD, "PriCoord", {old:kPriCoord}},
+/*(?)*/	{KF_OLD, "SinDiv", {old:kSinDiv}},
+/*(?)*/	{KF_OLD, "TimesCot", {old:kTimesCot}},
+/*(?)*/	{KF_OLD, "TimesTan", {old:kTimesTan}},
+
+  /* Special and NOP stuff */
+	{KF_OLD, NULL, {new:{k_Unknown, NULL}}},
+
+	{KF_TERMINATOR, NULL} /* Terminator */
+};
 
 
 const char *SCIk_Debug_Names[SCIk_DEBUG_MODES] = {
@@ -476,15 +361,25 @@ kMemoryInfo(state_t *s, int funct_nr, int argc, heap_ptr argp)
 }
 
 
-void
-k_Unknown(state_t *s, int funct_nr, int argc, heap_ptr argp)
+reg_t
+k_Unknown(state_t *s, int funct_nr, int argc, reg_t *argv)
 {
-	kfunct_old *funct = (funct_nr >= SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR)? NULL :
-		unknown_function_map[funct_nr];
-
-	if (!funct) {
+	if (funct_nr >= SCI_MAPPED_UNKNOWN_KFUNCTIONS_NR) {
 		SCIkwarn(SCIkSTUB, "Unhandled Unknown function %04x\n", funct_nr);
-	} else funct(s, funct_nr, argc, argp);
+		return NULL_REG;
+	} else switch(kfunct_mappers[funct_nr].type) {
+
+	case KF_OLD:
+		return kFsciEmu(s, funct_nr, argc, argv);
+
+	case KF_NEW:
+		return kfunct_mappers[funct_nr].data.new.fun(s, funct_nr, argc, argv);
+
+	case KF_NONE:
+	default:
+		SCIkwarn(SCIkSTUB, "Unhandled Unknown function %04x\n", funct_nr);
+		return NULL_REG;
+	}
 }
 
 
@@ -664,19 +559,13 @@ kNOP(state_t *s, int funct_nr, int argc, reg_t *argv)
 	return NULL_REG;
 }
 
-
-reg_t
-kFsciEmu(state_t *s, int funct_nr, int argc, reg_t *argv)
-{
-	SCIkwarn(SCIkWARNING, "Implement me: kFsciEmu()!\n");
-	return NULL_REG;
-}
-
 void
 script_map_kernel(state_t *s)
 {
 	int functnr;
 	int mapped = 0;
+	int emulated = 0;
+	int ignored = 0;
 
 	s->kfunct_table = sci_malloc(sizeof(kfunct_sig_pair_t) * (s->kernel_names_nr + 1));
 	s->kfunct_emu_table = sci_malloc(sizeof(kfunct_old *) * (s->kernel_names_nr + 1));
@@ -684,45 +573,48 @@ script_map_kernel(state_t *s)
 	for (functnr = 0; functnr < s->kernel_names_nr; functnr++) {
 		int seeker, found = -1;
 
-		for (seeker = 0; (found == -1) && kfunct_mappers[seeker].functname; seeker++)
-			if (strcmp(kfunct_mappers[seeker].functname, s->kernel_names[functnr]) == 0) {
+		for (seeker = 0; (found == -1)
+			     && kfunct_mappers[seeker].type != KF_TERMINATOR; seeker++)
+			if (kfunct_mappers[seeker].name
+			    && strcmp(kfunct_mappers[seeker].name, s->kernel_names[functnr]) == 0)
 				found = seeker; /* Found a kernel function with the same name! */
-				mapped++;
-			}
 
 		if (found == -1) {
+			sciprintf("Warning: Kernel function %s[%x] unmapped\n",
+				  s->kernel_names[functnr], functnr);
+			s->kfunct_table[functnr].signature = NULL;
+			s->kfunct_table[functnr].fun = kstub;
+		} else switch (kfunct_mappers[found].type) {
 
-			/* Try to emulation-map it */
+		case KF_OLD:
+			/* emulation-map it */
 
-			for (seeker = 0; (found == -1) && old_kfunct_mappers[seeker].functname;
-			     seeker++)
-				if (strcmp(old_kfunct_mappers[seeker].functname,
-					   s->kernel_names[functnr]) == 0) {
-					found = seeker;
-					mapped++;
-				}
+			sciprintf("Warning: Emulating kernel function %s[%x]!\n",
+				  s->kernel_names[functnr], functnr);
+			++emulated;
+			s->kfunct_table[functnr].signature = NULL;
+			s->kfunct_table[functnr].fun = kFsciEmu;
+			s->kfunct_emu_table[functnr] = kfunct_mappers[found].data.old;
+			break;
 
-			if (found == -1) {
-				sciprintf("Warning: Kernel function %s[%x] unmapped\n",
-					  s->kernel_names[functnr], functnr);
-				s->kfunct_table[functnr].signature = NULL;
-				s->kfunct_table[functnr].fun = kstub;
-			} else {
-				sciprintf("Warning: Emulating kernel function %s[%x]!\n",
-					  s->kernel_names[functnr], functnr);
-				s->kfunct_table[functnr].signature = NULL;
-				s->kfunct_table[functnr].fun = kFsciEmu;
-				s->kfunct_emu_table[functnr] =
-					old_kfunct_mappers[found].kernel_function;
-			}
+		case KF_NONE:
+			++ignored;
+			break;
 
-		} else {
-			s->kfunct_table[functnr].signature = kfunct_mappers[found].sig;
-			s->kfunct_table[functnr].fun = kfunct_mappers[found].kernel_function;
+		case KF_NEW:
+			s->kfunct_table[functnr] = kfunct_mappers[found].data.new;
+			++mapped;
+			break;
 		}
 
 	} /* for all functions requesting to be mapped */
 
-	sciprintf("Mapped %d of %d kernel functions.\n", mapped, s->kernel_names_nr);
+	sciprintf("Handled %d/%d kernel functions, mapping %d",
+		  mapped+ignored+emulated, s->kernel_names_nr, mapped);
+	if (ignored)
+		sciprintf(", ignoring %d", ignored);
+	if (emulated)
+		sciprintf(" and emulating %d", emulated);
+	sciprintf(".\n");
 
 }

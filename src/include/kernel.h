@@ -503,11 +503,11 @@ void kSort(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kAvoidPath(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kLock(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kMemory(struct _state *s, int funct_nr, int argc, heap_ptr argp);
-void k_Unknown(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 
 
 /* New kernel functions */
 reg_t kGetSaveDir(struct _state *s, int funct_nr, int argc, reg_t *argv);
+reg_t k_Unknown(struct _state *s, int funct_nr, int argc, reg_t *argv);
 
 /* The Unknown/Unnamed kernel function */
 reg_t kstub(struct _state *s, int funct_nr, int argc, reg_t *argv);
@@ -521,17 +521,24 @@ reg_t kFsciEmu(struct _state *s, int funct_nr, int argc, reg_t *argv);
 #define FREESCI_KFUNCT_GLUTTON 1
 
 typedef struct {
-	char *signature;
-	kfunct *fun;
+	kfunct *fun; /* The actual function */
+	char *signature;  /* kfunct signature */
 } kfunct_sig_pair_t;
 
+#define KF_OLD 0
+#define KF_NEW 1
+#define KF_NONE -1 /* No mapping, but name is known */
+#define KF_TERMINATOR -42 /* terminates kfunct_mappers */
+
 typedef struct {
-	char *functname; /* String representation of the kernel function as in script.999 */
-	char *sig; /* kfunct signature */
-	kfunct *kernel_function; /* The actual function */
+	int type; /* KF_* */
+	char *name;
+	union {
+		kfunct_sig_pair_t new;
+		kfunct_old *old;
+	} data;
 } sci_kernel_function_t;
 
 extern sci_kernel_function_t kfunct_mappers[];
-
 
 #endif /* _SCI_KERNEL_H_ */

@@ -155,13 +155,22 @@ _c_single_seg_info(state_t *s, mem_obj_t *mobj)
 		script_t *scr = &(mobj->data.script);
 		sciprintf("script.%03d locked by %d, bufsize=%d (%x)\n",
 			  scr->nr, scr->lockers, scr->buf_size, scr->buf_size);
-		sciprintf("  Exports: %4d at %d\n",
-			  scr->exports_nr,
-			  ((byte *) scr->export_table) - ((byte *)scr->buf));
+		if (scr->export_table)
+			sciprintf("  Exports: %4d at %d\n",
+				  scr->exports_nr,
+				  ((byte *) scr->export_table) - ((byte *)scr->buf));
+		else
+			sciprintf("  Exports: none\n");
+
 		sciprintf("  Synynms: %4d\n", scr->synonyms_nr);
-		sciprintf("  Locals : %4d in segment 0x%x\n",
-			  scr->locals_block->nr,
-			  scr->locals_segment);
+
+		if (scr->locals_block)
+			sciprintf("  Locals : %4d in segment 0x%x\n",
+				  scr->locals_block->nr,
+				  scr->locals_segment);
+		else
+			sciprintf("  Locals : none\n");
+
 		sciprintf("  Objects: %4d\n",
 			  scr->objects_nr);
 		for (i = 0; i < scr->objects_nr; i++) {
@@ -830,30 +839,31 @@ char *selector_name(state_t *s, int selector)
 		return "--INVALID--";
 }
 
-int prop_ofs_to_id(state_t *s, int prop_ofs, int objp)
+int prop_ofs_to_id(state_t *s, int prop_ofs, reg_t objp)
 {
-	return -1;
-#warning "Re-implement prop_ofs_to_id"
-#if 0
-	word species = getInt16(s->heap + objp + SCRIPT_SPECIES_OFFSET);
-	word type = getInt16(s->heap + objp + SCRIPT_INFO_OFFSET);
-	byte *selectorIDoffset;
+	object_t *obj = obj_get(s, objp);
+	byte *selectoroffset;
+	int selectors;
 
-	int selectors = getInt16(s->heap + objp + SCRIPT_SELECTORCTR_OFFSET);
+	if (!obj) {
+		sciprintf("Applied prop_ofs_to_id on non-object at "PREG"\n",
+			  PRINT_REG(objp));
+		return -1;
+	}
 
-	byte *selectoroffset = (byte *) s->heap + objp + SCRIPT_SELECTOR_OFFSET;
+	selectoroffset = obj->base_obj + SCRIPT_SELECTOR_OFFSET + selectors * 2;
+	selectors = obj->variables_nr;
 
-	if (type & SCRIPT_INFO_CLASS)
-		selectorIDoffset = selectoroffset + selectors * 2;
-	else
-		selectorIDoffset =
-			s->heap
-			+ LOOKUP_SPECIES(species)
-			+ SCRIPT_SELECTOR_OFFSET
-			+ selectors * 2;
+	if (prop_ofs < 0 || (prop_ofs >> 1) >= selectors) {
+		sciprintf("Applied prop_ofs_to_id to invalid property offset %x (property #%d not"
+			  " in [0..%d]) on object at "PREG"\n",
+			  prop_ofs, prop_ofs >> 1, selectors - 1,
+			  PRINT_REG(objp));
+		return -1;
+	}
 
-	return (getInt16(selectorIDoffset + prop_ofs));
-#endif
+
+	return getUInt16(selectoroffset + prop_ofs);
 }
 
 void
@@ -1189,10 +1199,14 @@ c_vmvarlist(state_t *s)
 {
       int i;
 
-      for (i=0;i<4;i++)
-	      sciprintf("%s vars at "PREG"\n",
+      for (i=0;i<4;i++) {
+	      sciprintf("%s vars at "PREG" ",
 			varnames[i],
-			make_reg(p_var_segs[i], p_vars[i] - p_var_base[i]));
+			PRINT_REG(make_reg(p_var_segs[i], p_vars[i] - p_var_base[i])));
+	      if (p_var_max)
+		      sciprintf("  total %d", p_var_max[i]);
+	      sciprintf("\n");
+      }
       return 0;
 }
 
@@ -1431,7 +1445,7 @@ c_backtrace(state_t *s)
 			totalparamc = 16;
 
 		for (paramc = 1; paramc <= totalparamc; paramc++) {
-			sciprintf(PREG, call->variables_argp[paramc]);
+			sciprintf(PREG, PRINT_REG(call->variables_argp[paramc]));
 
 			if (paramc < call->argc)
 				sciprintf(", ");
@@ -1456,6 +1470,8 @@ c_backtrace(state_t *s)
 
 		sciprintf(" fp="PSTK,
 			  PRINT_STK(call->fp));
+
+		sciprintf("\n");
 	}
 	return 0;
 }

@@ -1,3 +1,16 @@
+2002-11-09  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/vm.c (run_vm): Misc. bugfixes, particularly wrt calls
+
+	* src/engine/kernel.c (script_map_kernel): More sophisticated kernel
+	function handling
+
+	* src/engine/kemu_old.c (kFsciEmu): Initial implementation of emulator
+	(only value arguments ATM)
+
+	* src/engine/scriptdebug.c (c_vmvarlist): Slightly increased
+	verbosity
+
 2002-11-08  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/vm.c (run_vm): Added callk again

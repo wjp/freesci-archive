@@ -239,11 +239,11 @@ get_class_address(state_t *s, int classnr, int lock)
 #define POP32() (*(validate_stack_addr(s, --(xs->sp))))
 
 /* Getting instruction parameters */
-#define GET_OP_BYTE() ((guint8) code_buf[(pc_offset)++])
-#define GET_OP_WORD() (getUInt16(code_buf + ((pc_offset) += 2) - 2))
+#define GET_OP_BYTE() ((guint8) code_buf[(xs->addr.pc.offset)++])
+#define GET_OP_WORD() (getUInt16(code_buf + ((xs->addr.pc.offset) += 2) - 2))
 #define GET_OP_FLEX() ((opcode & 1)? GET_OP_BYTE() : GET_OP_WORD())
-#define GET_OP_SIGNED_BYTE() ((gint8)(code_buf[(pc_offset)++]))
-#define GET_OP_SIGNED_WORD() ((getInt16(code_buf + ((pc_offset) += 2) - 2)))
+#define GET_OP_SIGNED_BYTE() ((gint8)(code_buf[(xs->addr.pc.offset)++]))
+#define GET_OP_SIGNED_WORD() ((getInt16(code_buf + ((xs->addr.pc.offset) += 2) - 2)))
 #define GET_OP_SIGNED_FLEX() ((opcode & 1)? GET_OP_SIGNED_BYTE() : GET_OP_SIGNED_WORD())
 
 #define OBJ_SPECIES(address) SEG_GET_HEAP((address) + SCRIPT_SPECIES_OFFSET)
@@ -484,7 +484,7 @@ send_selector(state_t *s, reg_t send_obj, reg_t work_obj,
 				if (i + 1 < argc)
 					sciprintf(", ");
 			}
-			sciprintf(")\n");
+			sciprintf(") at "PREG"\n", PRINT_REG(funcp));
 #endif /* VM_DEBUG_SEND */
 			if (print_send_action) {
 				sciprintf("[invoke selector]\n");
@@ -650,7 +650,6 @@ run_vm(state_t *s, int restoring)
 	exec_stack_t *xs_new; /* Used during some operations */
 	object_t *obj = obj_get(s, xs->objp);
 	script_t *local_script = script_locate_by_segment(s, obj->pos.segment);
-	int pc_offset;
 	int old_execution_stack_base = s->execution_stack_base; /* Used to detect the
 								** stack bottom, for "physical"
 								** returns  */
@@ -686,7 +685,7 @@ run_vm(state_t *s, int restoring)
 	variables_max[VAR_GLOBAL] = s->script_000->locals_block->nr;
 #endif
 
-	variables_seg[VAR_GLOBAL] = s->script_000_segment;
+	variables_seg[VAR_GLOBAL] = s->script_000->locals_segment;
 	variables_seg[VAR_TEMP] = variables_seg[VAR_PARAM] = s->stack_segment;
 	variables_base[VAR_TEMP] = variables_base[VAR_PARAM] = s->stack_base;
 
@@ -694,8 +693,6 @@ run_vm(state_t *s, int restoring)
 	variables_base[VAR_GLOBAL] = variables[VAR_GLOBAL]
 		= s->script_000->locals_block->locals;
 
-
-	WRITE_VAR16(VAR_PARAM, 0, xs->argc);
 
 
 	s->execution_stack_pos_changed = 1; /* Force initialization */
@@ -707,6 +704,8 @@ run_vm(state_t *s, int restoring)
 		byte opnumber;
 		int var_type; /* See description below */
 		int var_number;
+
+		old_pc_offset = xs->addr.pc.offset;
 
 		if (s->execution_stack_pos_changed) {
 			xs = s->execution_stack + s->execution_stack_pos;
@@ -721,15 +720,13 @@ run_vm(state_t *s, int restoring)
 			variables_max[VAR_LOCAL] = local_script->locals_block->nr;
 			variables_max[VAR_TEMP] = xs->sp - xs->fp;
 			variables_max[VAR_PARAM] = xs->argc + 1;
+#endif
 			variables[VAR_TEMP] = xs->fp;
 			variables[VAR_PARAM] = xs->variables_argp;
-#endif
+			WRITE_VAR16(VAR_PARAM, 0, xs->argc);
 
-			pc_offset = xs->addr.pc.offset;
 			code_buf = script_locate_by_segment(s, xs->addr.pc.segment)->buf;
 		}
-
-		old_pc_offset = pc_offset;
 
 		script_error_flag = 0; /* Set error condition to false */
 
@@ -739,7 +736,6 @@ run_vm(state_t *s, int restoring)
 
 		/* Debug if this has been requested: */
 		if (script_debug_flag || sci_debug_flags) {
-			xs->addr.pc.offset = pc_offset;
 			script_debug(s, &(xs->addr.pc), &(xs->sp), &(xs->fp),
 				     &(xs->objp), &restadjust,
 				     variables_seg, variables, variables_base,
@@ -760,7 +756,7 @@ run_vm(state_t *s, int restoring)
 
 		variables_max[VAR_TEMP] = xs->sp - xs->fp;
 
-		if (pc_offset < 0 || pc_offset >= local_script->buf_size)
+		if (xs->addr.pc.offset >= local_script->buf_size)
 			script_error(s, "[VM] "__FILE__, __LINE__, "Program Counter gone astray");
 #endif
 
@@ -909,11 +905,13 @@ run_vm(state_t *s, int restoring)
 			break;
 
 		case 0x17: /* bt */
-			if (s->r_acc.offset || s->r_acc.segment) pc_offset += opparams[0];
+			if (s->r_acc.offset || s->r_acc.segment)
+				xs->addr.pc.offset += opparams[0];
 			break;
 
 		case 0x18: /* bnt */
-			if (!(s->r_acc.offset || s->r_acc.segment)) pc_offset += opparams[0];
+			if (!(s->r_acc.offset || s->r_acc.segment))
+				xs->addr.pc.offset += opparams[0];
 			break;
 
 		case 0x19: /* jmp */
@@ -959,7 +957,7 @@ run_vm(state_t *s, int restoring)
 						      s->execution_stack_pos);
 			restadjust = 0; /* Used up the &rest adjustment */
 
-			xs = xs_new;
+			s->execution_stack_pos_changed;
 			break;
 		}
 
@@ -997,7 +995,8 @@ run_vm(state_t *s, int restoring)
 				/* Calculate xs again: The kernel function might
 				** have spawned a new VM  */
 
-				xs = s->execution_stack + s->execution_stack_pos;
+				xs_new = s->execution_stack + s->execution_stack_pos;
+				s->execution_stack_pos_changed = 1;
 
 				if (s->version>=SCI_VERSION_FTU_NEW_SCRIPT_HEADER)
 					restadjust = s->r_amp_rest;
@@ -1013,7 +1012,8 @@ run_vm(state_t *s, int restoring)
 //			      xs->sp);
 //      restadjust = 0; /* Used up the &rest adjustment */
 //
-//      if (xs_new) xs = xs_new;   /* in case of error, keep old stack */
+//      if (xs_new)    /* in case of error, keep old stack */
+//					s->execution_stack_pos_changed = 1;
 //      break;
 //
 //    case 0x23: /* calle */
@@ -1024,8 +1024,8 @@ run_vm(state_t *s, int restoring)
 //			      GET_HEAP(xs->sp) + restadjust, xs->sp);
 //      restadjust = 0; /* Used up the &rest adjustment */
 //
-//      if (xs_new)
-//	xs = xs_new;   /* in case of error, keep old stack */
+//      if (xs_new)  /* in case of error, keep old stack */
+//					s->execution_stack_pos_changed = 1;
 //      break;
 //
 		case 0x24: /* ret */
@@ -1064,6 +1064,7 @@ run_vm(state_t *s, int restoring)
 
 			} while (xs->type == EXEC_STACK_TYPE_VARSELECTOR);
 			/* Iterate over all varselector accesses */
+			s->execution_stack_pos_changed = 1;
 
 			break;
 
@@ -1076,7 +1077,7 @@ run_vm(state_t *s, int restoring)
 					       xs->sp);
 
 			if (xs_new)
-				xs = xs_new;
+				s->execution_stack_pos_changed = 1;
 
 			restadjust = 0;
 
@@ -1095,7 +1096,7 @@ run_vm(state_t *s, int restoring)
 					       xs->sp);
 
 			if (xs_new)
-				xs = xs_new;
+				s->execution_stack_pos_changed = 1;
 
 			restadjust = 0;
 			break;
@@ -1114,7 +1115,7 @@ run_vm(state_t *s, int restoring)
 						       xs->sp);
 
 				if (xs_new)
-					xs = xs_new;
+					s->execution_stack_pos_changed = 1;
 
 				restadjust = 0;
 			}
@@ -1197,7 +1198,7 @@ run_vm(state_t *s, int restoring)
 
 		case 0x39: /* lofsa */
 			s->r_acc.segment = xs->addr.pc.segment;
-			s->r_acc.offset = pc_offset + opparams[0];
+			s->r_acc.offset = xs->addr.pc.offset + opparams[0];
 #ifndef DISABLE_VALIDATIONS
 			if (s->r_acc.offset >= local_script->buf_size) {
 				sciprintf("VM: lofsa operation overflowed: "PREG" beyond end"
@@ -1211,7 +1212,7 @@ run_vm(state_t *s, int restoring)
 
 		case 0x3a: /* lofss */
 			r_temp.segment = xs->addr.pc.segment;
-			r_temp.offset = pc_offset + opparams[0];
+			r_temp.offset = xs->addr.pc.offset + opparams[0];
 #ifndef DISABLE_VALIDATIONS
 			if (r_temp.offset >= local_script->buf_size) {
 				sciprintf("VM: lofsa operation overflowed: "PREG" beyond end"
@@ -1419,6 +1420,9 @@ run_vm(state_t *s, int restoring)
 
 		} /* switch(opcode >> 1) */
 
+
+		if (s->execution_stack_pos_changed) /* Force initialization */
+			xs = xs_new;
 
 #ifndef DISABLE_VALIDATIONS
 		if (xs != s->execution_stack + s->execution_stack_pos) {
