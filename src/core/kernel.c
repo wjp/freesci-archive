@@ -2244,7 +2244,6 @@ kInitBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   }
 
   PUT_SELECTOR(mover, b_movCnt, 0);
-  PUT_SELECTOR(mover, completed, 0);
 
   PUT_SELECTOR(mover, dx, deltax_step);
   PUT_SELECTOR(mover, dy, deltay_step);
@@ -2265,6 +2264,8 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   heap_ptr mover = PARAM(0);
   heap_ptr client = GET_SELECTOR(mover, client);
+  heap_ptr cycler = GET_SELECTOR(client, cycler);
+
   int x = GET_SELECTOR(client, x);
   int y = GET_SELECTOR(client, y);
   int oldx = x, oldy = y;
@@ -2300,7 +2301,10 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
     {
       x = destx;
       y = desty;
-      PUT_SELECTOR(mover, completed, 1);
+
+      PUT_SELECTOR(mover, x, GET_SELECTOR(client, x));
+      PUT_SELECTOR(mover, y, GET_SELECTOR(client, y));    
+    
       SCIkdebug(SCIkBRESEN, "Finished mover %04x\n", mover);
     }
 
@@ -2317,7 +2321,9 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
     PUT_SELECTOR(client, x, oldx);
     PUT_SELECTOR(client, y, oldy);
-    PUT_SELECTOR(mover, completed, 1);
+ 
+    PUT_SELECTOR(mover, x, GET_SELECTOR(client, x));
+    PUT_SELECTOR(mover, y, GET_SELECTOR(client, y));    
 
     PUT_SELECTOR(client, signal, (signal | _K_VIEW_SIG_FLAG_HIT_OBSTACLE));
 

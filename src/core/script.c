@@ -822,6 +822,7 @@ script_map_selectors(state_t *s, selector_map_t *map)
   FIND_SELECTOR(wordFail, "wordFail");
   FIND_SELECTOR(syntaxFail, "syntaxFail");
   FIND_SELECTOR(semanticFail, "semanticFail");
+  FIND_SELECTOR(cycler, "cycler");
 }
 
 int

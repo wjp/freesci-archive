@@ -582,6 +582,8 @@ c_visible_map(state_t *s)
   }
 
   s->pic_visible_map = cmd_params[0].val;
+  c_redraw_screen(s);
+  
   return 0;
 }
 
