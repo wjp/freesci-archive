@@ -242,6 +242,8 @@ extern DLLEXTERN gfx_driver_t *gfx_drivers[];
 #define SELECTOR_STATE_FRAMED 2
 #define SELECTOR_STATE_DISABLED 4
 #define SELECTOR_STATE_SELECTED 8
+/* Internal states */
+#define SELECTOR_STATE_DITHER_FRAMED 0x1000
 
 #define GRAPHICS_VIEW_USE_ADJUSTMENT 1
 /* Adjust view cel according to adjustment values stored in the cel */
@@ -368,13 +370,15 @@ view0_base_modify(int loop, int cel, byte *data, int *xvar, int *yvar);
 */
 
 void draw_box(picture_t dest, short x, short y, short xl, short yl, char color, char priority);
-void draw_frame(picture_t dest, short x, short y, short xl, short yl, char color, char priority);
+void draw_frame(picture_t dest, short x, short y, short xl, short yl, char color, char priority,
+		int stipple);
 /* Draws a simple box.
 ** Parameters: (picture_t) dest: The picture_t to draw to.
 **             (short) x,y: The coordinates to draw to.
 **             (short) xl,yl: The width and height of the box.
 **             (char) color: The color to draw with.
 **             (char) priority: The priority to fill the box with (it still overwrites anything)
+**             (int) stipple: Whether to draw it stippled
 ** Returns   : (void)
 ** The box does not come with any fancy shading. Use drawWindow to do this.
 ** draw_frame does the same as draw_box, except that it doesn't fill the box.
@@ -602,9 +606,9 @@ graph_fill_port(struct _state *s, port_t *port, int color);
 */
 
 void
-graph_draw_selector_button(struct _state *s, port_t *port, int state,
-			   int x, int y, int xl, int yl,
-			   char *text, byte *font);
+graph_draw_control_button(struct _state *s, port_t *port, int state,
+			  int x, int y, int xl, int yl,
+			  char *text, byte *font);
 /* Draws a selector button.
 ** Parameters: (state_t *) s: The state to operate on
 **             (port_t *) port: The port to use
@@ -617,9 +621,9 @@ graph_draw_selector_button(struct _state *s, port_t *port, int state,
 */
 
 void
-graph_draw_selector_text(struct _state *s, port_t *port, int state,
-			 int x, int y, int xl, int yl,
-			 char *text, byte *font, int alignment);
+graph_draw_control_text(struct _state *s, port_t *port, int state,
+			int x, int y, int xl, int yl,
+			char *text, byte *font, int alignment);
 /* Draws a text selector.
 ** Parameters: (state_t *) s: The state to operate on
 **             (port_t *) port: The port to use
@@ -634,9 +638,9 @@ graph_draw_selector_text(struct _state *s, port_t *port, int state,
 
 
 void
-graph_draw_selector_edit(struct _state *s, port_t *port, int state,
-			 int x, int y, int xl, int yl, int cursor,
-			 char *text, byte *font);
+graph_draw_control_edit(struct _state *s, port_t *port, int state,
+			int x, int y, int xl, int yl, int cursor,
+			char *text, byte *font);
 /* Draws an edit frame selector.
 ** Parameters: (state_t *) s: The state to operate on
 **             (port_t *) port: The port to use
@@ -651,9 +655,9 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
 
 
 void
-graph_draw_selector_icon(struct _state *s, port_t *port, int state,
-			 int x, int y, int xl, int yl,
-			 byte *data, int loop, int cel);
+graph_draw_control_icon(struct _state *s, port_t *port, int state,
+			int x, int y, int xl, int yl,
+			byte *data, int loop, int cel);
 /* Draws an iconic (bitmapped) selector..
 ** Parameters: (state_t *) s: The state to operate on
 **             (port_t *) port: The port to use
@@ -667,9 +671,9 @@ graph_draw_selector_icon(struct _state *s, port_t *port, int state,
 
 
 void
-graph_draw_selector_control(struct _state *s, port_t *port, int state,
-			    int x, int y, int xl, int yl,
-			    char **entries, int entries_nr, int top_entry, int selection, byte *font);
+graph_draw_control_control(struct _state *s, port_t *port, int state,
+			   int x, int y, int xl, int yl,
+			   char **entries, int entries_nr, int top_entry, int selection, byte *font);
 /* Draws a control selector (a "scollbox").
 ** Parameters: (state_t *) s: The state to operate on
 **             (port_t *) port: The port to use

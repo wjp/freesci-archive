@@ -16,7 +16,6 @@
  By using this source code, you agree to the licensing terms as stated
  above.
 
-
  Please contact the maintainer for bug reports or inquiries.
 
  Current Maintainer:
@@ -320,26 +319,26 @@ graph_update_port(struct _state *s, port_t *port)
 
 
 void
-graph_draw_selector_button(struct _state *s, port_t *port, int state,
+graph_draw_control_button(struct _state *s, port_t *port, int state,
 			   int x, int y, int xl, int yl,
 			   char *text, byte *font)
 {
   graph_fill_box_custom(s, x + port->xmin, y + port->ymin, xl, yl,
 			port->bgcolor, -1, -1, 1); /* Clear button background */
-  graph_draw_selector_text(s, port, state,
+  graph_draw_control_text(s, port, state,
 			   x, y, xl, yl, text, font, ALIGN_TEXT_CENTER);
 
   if ((state & SELECTOR_STATE_SELECTABLE) && (state & SELECTOR_STATE_SELECTED))
     draw_frame(s->pic, port->xmin + x, port->ymin + y ,
-	       xl - 1, yl - 1, port->color, port->priority);
+	       xl - 1, yl - 1, port->color, port->priority, 0);
   else
     draw_frame(s->pic, port->xmin + x, port->ymin + y ,
-	       xl - 1, yl - 1, port->bgcolor, port->priority);
+	       xl - 1, yl - 1, port->bgcolor, port->priority, 0);
 }
 
 
 void
-graph_draw_selector_text(struct _state *s, port_t *port, int state,
+graph_draw_control_text(struct _state *s, port_t *port, int state,
 			 int x, int y, int xl, int yl,
 			 char *text, byte *font, int alignment)
 {
@@ -353,18 +352,25 @@ graph_draw_selector_text(struct _state *s, port_t *port, int state,
   port->gray_text = state & SELECTOR_STATE_DISABLED;
   port->alignment = alignment;
 
+  /*  if (state & (SELECTOR_STATE_FRAMED | SELECTOR_STATE_DITHER_FRAMED)) */
+  if (port != &(s->picture_port))
+      draw_box(s->pic, port->xmin + x-1, port->ymin + y-1,
+	       xl + 1, yl + 1, port->bgcolor | (port->bgcolor << 4),
+	       port->priority);
+
   text_draw(s->pic, port, text, xl);
 
-  if (state & SELECTOR_STATE_FRAMED)
-    draw_frame(s->pic, port->xmin + x-1, port->ymin + y-1,
-	       xl + 1, yl + 1, port->color, port->priority);
+  if (state & (SELECTOR_STATE_FRAMED | SELECTOR_STATE_DITHER_FRAMED))
+      draw_frame(s->pic, port->xmin + x-1, port->ymin + y-1,
+		 xl + 1, yl + 1, port->color | (port->color << 4),
+		 port->priority, (state & SELECTOR_STATE_DITHER_FRAMED));
 
   memcpy(port, &oldport, sizeof(oldport)); /* Restore old port data */
 }
 
 
 void
-graph_draw_selector_edit(struct _state *s, port_t *port, int state,
+graph_draw_control_edit(struct _state *s, port_t *port, int state,
 			 int x, int y, int xl, int yl, int cursor,
 			 char *text, byte *font)
 {
@@ -376,7 +382,7 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
 			port->bgcolor, -1, -1, 1); /* Clear box background */
 
 
-  graph_draw_selector_text(s, port, state,
+  graph_draw_control_text(s, port, state,
 			   x, y, xl, yl, text, font, ALIGN_TEXT_LEFT);
 
   if (time(NULL) & 1) { /* Blink cursor in 1s intervals */
@@ -424,7 +430,7 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
 
 
 void
-graph_draw_selector_icon(struct _state *s, port_t *port, int state,
+graph_draw_control_icon(struct _state *s, port_t *port, int state,
 			 int x, int y, int xl, int yl,
 			 byte *data, int loop, int cel)
 {
@@ -432,13 +438,13 @@ graph_draw_selector_icon(struct _state *s, port_t *port, int state,
 
   if (state & SELECTOR_STATE_FRAMED)
     draw_frame(s->pic, port->xmin + x-1, port->ymin + y-2,
-	       xl + 1, yl + 1, port->color, port->priority);
+	       xl + 1, yl + 1, port->color, port->priority, 0);
 
 }
 
 
 void
-graph_draw_selector_control(struct _state *s, port_t *port, int state,
+graph_draw_control_control(struct _state *s, port_t *port, int state,
 			    int x, int y, int xl, int yl,
 			    char **entries, int entries_nr, int top_entry, int selection, byte *font)
 {
@@ -446,15 +452,17 @@ graph_draw_selector_control(struct _state *s, port_t *port, int state,
   int max_entries = (yl - 20) / fontheight;
   int entry;
   int max_entry_pos = ((entries_nr - top_entry > max_entries)? max_entries + top_entry : entries_nr);
+  int bgcol = port->bgcolor | (port->bgcolor << 4);
+  int col = port->color | (port->color << 4);
 
   /* Draw outer frame: */
-  draw_frame(s->pic, port->xmin+x, port->ymin+y, xl, yl, port->color, port->priority);
+  draw_frame(s->pic, port->xmin+x, port->ymin+y, xl, yl, col, port->priority, 0);
 
   /* Draw inner frame: */
-  draw_frame(s->pic, port->xmin+x, port->ymin+y + 10, xl, yl - 20, port->color, port->priority);
+  draw_frame(s->pic, port->xmin+x, port->ymin+y + 10, xl, yl - 20, col, port->priority, 0);
 
   /* Clear inner space */
-  graph_fill_box_custom(s, port->xmin+x+1, port->ymin+y + 11, xl-2, yl - 22, port->bgcolor, -1, -1, 1);
+  graph_fill_box_custom(s, port->xmin+x+1, port->ymin+y + 11, xl-2, yl - 22, bgcol, -1, -1, 1);
 
   if (fontheight == 1) {
 #ifdef __GNUC__
@@ -468,10 +476,10 @@ graph_draw_selector_control(struct _state *s, port_t *port, int state,
   y += 11;
   for (entry = top_entry; entry < max_entry_pos; entry++) {
     if (entry == selection) { /* the selected entry? */
-      graph_fill_box_custom(s, port->xmin+x+1, port->ymin+y, xl-2, fontheight, port->color, -1, -1, 1);
-      draw_text0_without_newline(s->pic, port, x + 1, y, entries[entry], font, port->bgcolor);
+      graph_fill_box_custom(s, port->xmin+x+1, port->ymin+y, xl-2, fontheight, col, -1, -1, 1);
+      draw_text0_without_newline(s->pic, port, x + 1, y, entries[entry], font, bgcol);
     } else /* not selected: */
-      draw_text0_without_newline(s->pic, port, x + 1, y, entries[entry], font, port->color);
+      draw_text0_without_newline(s->pic, port, x + 1, y, entries[entry], font, col);
 
     y += fontheight;
   }

@@ -469,7 +469,7 @@ menubar_draw_menu(struct _state *s, int menu_nr, port_t *menu_port)
   yl = menu->items_nr * 10; /* Rather trivial ATM */
 
   backup_handle = graph_save_box(s, x - 1, 10, xl + 5, yl + 1, SCI_MAP_VISUAL);
-  draw_frame(s->pic, x - 1, 10, xl + 5, yl + 1, 0x00, -1);
+  draw_frame(s->pic, x - 1, 10, xl + 5, yl + 1, 0x00, -1, 0);
   draw_box(s->pic, x, 10, xl + 3, yl, 0xff, -1);
 
   menu_port->ymin = 10;

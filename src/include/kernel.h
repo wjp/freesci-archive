@@ -421,6 +421,8 @@ void kTimesSin(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kTimesCos(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kCosMult(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kSinMult(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kTimesTan(struct _state *s, int funct_nr, int argc, heap_ptr argp);
+void kTimesCot(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kMapKeyToDir(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kGlobalToLocal(struct _state *s, int funct_nr, int argc, heap_ptr argp);
 void kLocalToGlobal(struct _state *s, int funct_nr, int argc, heap_ptr argp);

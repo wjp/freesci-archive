@@ -138,13 +138,14 @@ sci_kernel_function_t kfunct_mappers[] = {
   {"EditControl", kEditControl },
   {"EmptyList", kEmptyList },
   {"AddAfter", kAppendAfter },
-
-  /* Experimental functions */
   {"RestartGame", kRestartGame },
   {"SetNowSeen", kSetNowSeen },
-  {"Said", kSaid },
   {"Graph", kGraph },
+  {"TimesTan", kTimesTan },
+  {"TimesCot", kTimesCot },
 
+  /* Experimental functions */
+  {"Said", kSaid },
   /* Special and NOP stuff */
   {"DoAvoider", kNOP },
   {SCRIPT_UNKNOWN_FUNCTION_STRING, k_Unknown },

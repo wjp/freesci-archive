@@ -79,9 +79,11 @@ fill_box(picture_t dest, int x, int y, int xl, int yl, int value, int map)
 
 
 void
-draw_frame(picture_t dest, short x, short y, short xl, short yl, char color, char priority)
+draw_frame(picture_t dest, short x, short y, short xl, short yl, char color, char priority,
+	   int stipple)
 {
   int c; /* counter */
+  int i;
   int startpos, pos;
 
   color = SCI_MAP_EGA_COLOR(dest, color);
@@ -100,15 +102,21 @@ draw_frame(picture_t dest, short x, short y, short xl, short yl, char color, cha
 
     if ((c == 0) || (c == yl-1)) {
 
-      memset(dest->maps[0]+pos,color,xl);
+      if (!stipple)
+	memset(dest->maps[0]+pos,color,xl);
+      else
+	for (i = pos + 1; i < pos+xl; i += 2)
+	  *(dest->maps[0]+i) = color;
 
       if (priority >= 0)
 	memset(dest->maps[1]+pos,priority,xl);
 
     } else {
 
-      *(dest->maps[0]+pos) = color;
-      *(dest->maps[0]+pos+xl-1) = color;
+      if (!stipple || (c & 0x1))
+	*(dest->maps[0]+pos) = color;
+      if (!stipple || (c & 0x1))
+	*(dest->maps[0]+pos+xl-1) = color;
 
       if (priority >= 0) {
 	*(dest->maps[1]+pos) = priority;

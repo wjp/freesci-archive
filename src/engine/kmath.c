@@ -117,3 +117,30 @@ kSinDiv(state_t *s, int funct_nr, int argc, heap_ptr argp)
   } else
     s->acc = (gint16) (value/sinval);
 }
+
+void
+kTimesTan(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int param = PARAM(0);
+  int scale = PARAM_OR_ALT(1, 1);
+
+  param -= 90;
+  if ((param % 90) == 0) {
+    SCIkwarn(SCIkWARNING, "Attempted tan(pi/2)");
+    s->acc = 0x8000;
+  } else
+      s->acc = (gint16) -(tan(param * PI / 180.0) * scale);
+}
+
+void
+kTimesCot(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  int param = PARAM(0);
+  int scale = PARAM_OR_ALT(1, 1);
+
+  if ((param % 90) == 0) {
+    SCIkwarn(SCIkWARNING, "Attempted tan(pi/2)");
+    s->acc = 0x8000;
+  } else
+      s->acc = (gint16) (tan(param * PI / 180.0) * scale);
+}

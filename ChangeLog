@@ -1,3 +1,17 @@
+2000-05-11  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/graphics/engine_graphics.c (graph_draw_control_control): Fixed
+	some color value bugs
+	(graph_draw_control_text): Added dotted selectable text frames
+
+	* src/engine/kmath.c: Implemented functions similar to TimesTan()
+	and TimesCot().
+
+	* src/engine/kgraphics.c (initialize_bresen): Removed the chased_obj
+	code; chasing the player is explicitly handled by SCI bytecode.
+	Counting b_movCnt down instead of up made sure this was triggered
+	correctly.
+
 2000-05-10  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/grammar.c: Implemented Parse() in a sensible way

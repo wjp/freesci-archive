@@ -439,7 +439,7 @@ initialize_bresen(state_t *s, int funct_nr, int argc, heap_ptr argp, heap_ptr mo
 
   }
 
-  PUT_SELECTOR(mover, b_movCnt, 0);
+  PUT_SELECTOR(mover, b_movCnt, numsteps);
 
   PUT_SELECTOR(mover, dx, deltax_step);
   PUT_SELECTOR(mover, dy, deltay_step);
@@ -478,23 +478,6 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   int oldx, oldy, destx, desty, dx, dy, bdi, bi1, bi2, movcnt, bdelta, axis;
 
   int completed = 0;
-  heap_ptr chased_obj;
-  int distance, extended = 0;
-  if ((s->selector_map.who > -1)
-      && (lookup_selector(s, mover, s->selector_map.who, NULL) == SELECTOR_VARIABLE)) {
-    int deltax = 0, deltay = 0;
-    distance = GET_SELECTOR(mover, distance);
-    chased_obj = GET_SELECTOR(mover, who);
-    extended = 1;
-
-    if (chased_obj) {
-      deltax = (destx = GET_SELECTOR(chased_obj, x)) - x;
-      deltay = (desty = GET_SELECTOR(chased_obj, y)) - y;
-      PUT_SELECTOR(mover, x, destx);
-      PUT_SELECTOR(mover, y, desty);
-    }
-    initialize_bresen(s, funct_nr, argc, argp, mover, 1, deltax, deltay);
-  }
 
   oldx = x;
   oldy = y;
@@ -509,7 +492,7 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   bdelta = GET_SELECTOR(mover, b_incr);
   axis = GET_SELECTOR(mover, b_xAxis);
 
-  PUT_SELECTOR(mover, b_movCnt, movcnt + 1);
+  PUT_SELECTOR(mover, b_movCnt, movcnt - 1);
 
   if ((bdi += bi1) >= 0) {
     bdi += bi2;
@@ -525,35 +508,20 @@ kDoBresen(state_t *s, int funct_nr, int argc, heap_ptr argp)
   x += dx;
   y += dy;
 
-  if (extended) {
 
-    destx -= x;
-    desty -= y;
+  if ((((x <= destx) && (oldx >= destx)) || ((x >= destx) && (oldx <= destx)))
+      && (((y <= desty) && (oldy >= desty)) || ((y >= desty) && (oldy <= desty))))
+    /* Whew... in short: If we have reached or passed our target position */
+    {
+      x = destx;
+      y = desty;
+      
+      if (s->selector_map.completed > -1)
+	PUT_SELECTOR(mover, completed, completed = 1); /* Finish! */
 
-    if (((destx*destx)+(desty*desty)) <= (distance*distance)) {
-	x = destx;
-	y = desty;
-	
-	if (s->selector_map.completed > -1)
-	  PUT_SELECTOR(mover, completed, completed = 1); /* Finish! */
+      SCIkdebug(SCIkBRESEN, "Finished mover %04x\n", mover);
+    }
 
-	SCIkdebug(SCIkBRESEN, "Finished mover %04x by extended distance check\n", mover);    }
-
-  } else { /* !extended */
-
-    if ((((x <= destx) && (oldx >= destx)) || ((x >= destx) && (oldx <= destx)))
-	&& (((y <= desty) && (oldy >= desty)) || ((y >= desty) && (oldy <= desty))))
-      /* Whew... in short: If we have reached or passed our target position */
-      {
-	x = destx;
-	y = desty;
-	
-	if (s->selector_map.completed > -1)
-	  PUT_SELECTOR(mover, completed, completed = 1); /* Finish! */
-
-	SCIkdebug(SCIkBRESEN, "Finished mover %04x\n", mover);
-      }
-  }
 
   PUT_SELECTOR(client, x, x);
   PUT_SELECTOR(client, y, y);
@@ -1125,6 +1093,14 @@ kEditControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
           PUT_SELECTOR(obj, cursor, cursor); /* Write back cursor position */
       }
 
+    case K_CONTROL_TEXT: {
+      int state = GET_SELECTOR(obj, state);
+      PUT_SELECTOR(obj, state, state | SELECTOR_STATE_DITHER_FRAMED);
+      _k_draw_control(s, obj, 0);
+      PUT_SELECTOR(obj, state, state);
+    }
+    break;
+
     case K_CONTROL_BOX:
     case K_CONTROL_BUTTON:
       if (event) PUT_SELECTOR(event, claimed, 1);
@@ -1195,7 +1171,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
       SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
       break;
     }
-    graph_draw_selector_button(s, s->ports[s->view_port], state, x, y, xl, yl, text, font_res->data);
+    graph_draw_control_button(s, s->ports[s->view_port], state, x, y, xl, yl, text, font_res->data);
     break;
 
   case K_CONTROL_TEXT:
@@ -1206,9 +1182,10 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
       SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
       break;
     }
-    graph_draw_selector_text(s, s->ports[s->view_port], state, x, y, xl, yl, text, font_res->data,
-			     (s->version < SCI_VERSION_FTU_CENTERED_TEXT_AS_DEFAULT)
-			     ? ALIGN_TEXT_LEFT : ALIGN_TEXT_CENTER);
+    graph_draw_control_text(s, s->ports[s->view_port], state & ~ SELECTOR_STATE_FRAMED,
+			    x, y, xl, yl, text, font_res->data,
+			    (s->version < SCI_VERSION_FTU_CENTERED_TEXT_AS_DEFAULT)
+			    ? ALIGN_TEXT_LEFT : ALIGN_TEXT_CENTER);
     break;
 
   case K_CONTROL_EDIT:
@@ -1222,7 +1199,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
 
     cursor = GET_SELECTOR(obj, cursor);
 
-    graph_draw_selector_edit(s, s->ports[s->view_port], state | SELECTOR_STATE_FRAMED, x, y, xl, yl, cursor,
+    graph_draw_control_edit(s, s->ports[s->view_port], state | SELECTOR_STATE_FRAMED, x, y, xl, yl, cursor,
 			     text, font_res->data);
     break;
 
@@ -1235,7 +1212,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
       SCIkwarn(SCIkERROR, "View.%03d not found!\n", font_nr);
       break;
     }
-    graph_draw_selector_icon(s, s->ports[s->view_port], state, x, y, xl, yl,
+    graph_draw_control_icon(s, s->ports[s->view_port], state, x, y, xl, yl,
 			     view_res->data, loop, cel);
     break;
 
@@ -1276,7 +1253,7 @@ _k_draw_control(state_t *s, heap_ptr obj, int inverse)
       SCIkwarn(SCIkERROR, "Font.%03d not found!\n", font_nr);
       break;
     }
-    graph_draw_selector_control(s, s->ports[s->view_port], state, x, y, xl, yl,
+    graph_draw_control_control(s, s->ports[s->view_port], state, x, y, xl, yl,
 				entries_list, entries_nr, list_top, selection, font_res->data);
     if (entries_nr)
       free(entries_list);
