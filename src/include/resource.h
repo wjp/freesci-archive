@@ -121,6 +121,7 @@
 #  define creat(D,M) fs_open(D, O_WRONLY)
 #  define putchar(C) fputc(C, stdout)
 #  define getc(S) fgetc(S)
+#  define sleep(S) thd_sleep((S)*1000)
 #endif
 
 #ifdef __BEOS__

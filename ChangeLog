@@ -1,3 +1,8 @@
+2003-01-05  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/include/resource.h: Added macro definition of sleep() function
+	for Dreamcast port.
+
 2003-01-04  Lars Skovlund  <lskovlun@image.dk>
 
 	* Changed WM port boundaries for old SCI versions
