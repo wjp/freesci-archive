@@ -608,6 +608,7 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 		case 0x0b: /* expression */
 		case 0x40: /* hold */
 		case 0x79: /* reset all */
+		case 0x7b: /* all notes off */
 			midi_event(command, param, param2, delta);
 			break;
 		default:

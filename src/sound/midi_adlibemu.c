@@ -28,6 +28,8 @@
 
 #include "fmopl.h"
 
+/* #define DEBUG_ADLIB */
+
 /* shamelessly lifted from claudio's XMP */
 
 static int register_base[11] = {
@@ -38,7 +40,7 @@ static int register_base[11] = {
 
 static int register_offset[12] = {
   /* Channel           1     2     3     4     5     6     7     8     9  */
-  /* Operator 1 */   0x00, 0x01, 0x02, 0x08, 0x09, 0x0A, 0x10, 0x11, 0x12, 0x18, 0x19, 0x20
+  /* Operator 1 */   0x00, 0x01, 0x02, 0x08, 0x09, 0x0A, 0x10, 0x11, 0x12, 0x18, 0x19, 0x1A
 
 };
 
@@ -68,8 +70,8 @@ static guint8 pitch[MIDI_CHANNELS];
 static guint8 vol[MIDI_CHANNELS];
 static guint8 adlib_reg[256];
 static int free_voices = ADLIB_VOICES;
-static unsigned char oper_note[ADLIB_VOICES];
-static unsigned char oper_chn[ADLIB_VOICES];
+static guint8 oper_note[ADLIB_VOICES];
+static guint8 oper_chn[ADLIB_VOICES];
 
 static FM_OPL *ym3812 = NULL;
 
@@ -78,16 +80,14 @@ void adlibemu_init_lists()
 {
   int i;
 
-  for(i = 0 ; i < ADLIB_VOICES ; i++) {
-    oper_note[i] = 255;
-    oper_chn[i] = 255;
-  }
   free_voices = ADLIB_VOICES;
 
   memset(instr, 0, sizeof(instr));
   memset(pitch, 0, sizeof(instr));
   memset(vol, 0x7f, sizeof(instr));
   memset(adlib_reg, 0, sizeof(instr));
+  memset(oper_chn, 0xff, sizeof(oper_chn));
+  memset(oper_note, 0xff, sizeof(oper_note));
 }
 
 /* more shamelessly lifted from xmp and adplug.  And altered.  :) */
@@ -119,7 +119,7 @@ void synth_setpatch (int voice, guint8 *data)
   /* mute voice after patch change */
   opl_write (0xb0 + voice, adlib_reg[0xb0+voice] & 0xdf);
 
-#if 0
+#ifdef DEBUG_ADLIB
   for (i = 0; i < 10; i++)
     printf("%02x ", adlib_reg[register_base[i]+register_offset[voice]]);
     printf("%02x ", adlib_reg[register_base[10]+voice]);
@@ -158,7 +158,7 @@ void synth_setnote (int voice, int note, int bend)
     opl_write (0xb0 + voice,
         0x20 | ((oct << 2) & 0x1c) | ((fre >> 8) & 0x03));
 
-#if 0
+#ifdef DEBUG_ADLIB
     printf("-- %02x %02x\n", adlib_reg[0xa0+voice], adlib_reg[0xb0+voice]);
 #endif
 
@@ -178,7 +178,19 @@ int adlibemu_stop_note(int chn, int note, int velocity)
   }
 
   if (op==255) {
-    /* printf ("can't stop.. chn %d %d %d\n", chn, note, velocity); */
+    printf ("ADLIB: can't stop note: C%02x N%02x V%02x\n", chn, note, velocity);
+#ifdef DEBUG_ADLIB
+    printf ("C ");
+    for (i = 0; i < ADLIB_VOICES ; i++ ) {
+      printf ("%02x ", oper_chn[i]);
+    }
+    printf ("\n");
+    printf ("N ");
+    for (i = 0; i < ADLIB_VOICES ; i++ ) {
+      printf ("%02x ", oper_note[i]);
+    }
+    printf ("\n");
+#endif
     return -1; /* that note isn't playing.. */
   }
 
@@ -192,6 +204,10 @@ int adlibemu_stop_note(int chn, int note, int velocity)
 
   free_voices++;
 
+#ifdef DEBUG_ADLIB
+  printf("stop voice %d (%d rem):  C%02x N%02x V%02x\n", op, free_voices, chn, note, velocity);
+#endif
+
   return 0;
 }
 
@@ -204,12 +220,18 @@ int adlibemu_start_note(int chn, int note, int velocity)
   }
 
   if (free_voices <= 0) {
-    printf("ack, all voices full\n");  /* XXX implement overflow code */
+    printf("ADLIB: All voices full\n");  /* XXX implement overflow code */
     return -1;
-  } else
-    for (op = 0; op < ADLIB_VOICES ; op++)
-      if (oper_chn[op] == 255)
-	break;
+  }
+   
+  for (op = 0; op < ADLIB_VOICES ; op++)
+    if (oper_chn[op] == 255)
+      break;
+
+  if (op == ADLIB_VOICES) {
+    printf("ADLIB:  WTF?  We couldn't find a voice yet it we have %d left.\n", free_voices);
+    return -1;
+  }
 
   volume = velocity * vol[chn] / 128;     /* Scale channel volume */
   volume = my_midi_fm_vol_table[volume];  /* scale logarithmically */
@@ -224,7 +246,7 @@ int adlibemu_start_note(int chn, int note, int velocity)
   oper_note[op] = note;
   free_voices--;
 
-#if 0
+#ifdef DEBUG_ADLIB
   printf("play voice %d (%d rem):  C%02x N%02x V%02x/%02x P%02x (%02x/%02x)\n", op, free_voices, chn, note, velocity, volume, inst,
 	 adlib_reg[register_base[2]+register_offset[op]] & 0x3f,
 	 adlib_reg[register_base[3]+register_offset[op]] & 0x3f);
@@ -283,7 +305,7 @@ int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
 
   /* load up the patch.003 file, parse out the insturments */
   if (data_length < 1344) {
-    printf ("invalid patch.003");
+    printf ("ADLIB: invalid patch.003");
     return -1;
   }
 
@@ -297,7 +319,6 @@ int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
   ym3812 = OPLCreate (OPL_TYPE_YM3812, 3579545, 44100);
 
   // XXX register with pcm layer.
-
   return midi_adlibemu_reset();
 }
 
@@ -331,7 +352,7 @@ int midi_adlibemu_reset(void)
 
 int midi_adlibemu_reverb(short param)
 {
-  printf("reverb NYI %04x \n", param);
+  printf("ADLIB: reverb NYI %04x \n", param);
   return 0;
 }
 
@@ -346,7 +367,7 @@ int midi_adlibemu_event(guint8 command, guint8 note, guint8 velocity, guint32 de
   case 0x80:
     return adlibemu_stop_note(channel, note, velocity);
   case 0x90:  /* noteon and noteoff */
-    return adlibemu_start_note(channel,note,velocity);
+    return adlibemu_start_note(channel, note, velocity);
   case 0xe0:    /* XXXX Pitch bend NYI */
     break;
   case 0xb0:    /* CC changes. */
@@ -354,6 +375,13 @@ int midi_adlibemu_event(guint8 command, guint8 note, guint8 velocity, guint32 de
     case 0x07:
       vol[channel] = velocity;
       break;
+    case 0x7b:  { /* all notes off */
+      int i = 0;
+      for (i=0;i<ADLIB_VOICES;i++)
+	if (oper_chn[i] == channel)
+	  adlibemu_stop_note(channel, oper_note[i], 0);
+      break;
+    }
     default:
       ; /* XXXX ignore everything else for now */
     }

@@ -1,3 +1,8 @@
+2002-03-16  Solomon Peachy <pizza@shaftnet.org>
+       * src/sound/sound.c:  Pass along CC 0x7b (AllStop)
+       * src/sound/midi_adlibemu.c:  Handle the AllStop CC, and also fix
+a memory corruption/crash when ADLIB_VOICES was set to 12.
+  
 2002-03-15  Solomon Peachy <pizza@shaftnet.org>
         * src/sound/sound.c
           src/main.c:  Set a default master volume as older games do not
