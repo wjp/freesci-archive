@@ -571,7 +571,7 @@ kCanBeHere(state_t *s, int funct_nr, int argc, heap_ptr argp)
       x, y, xend, yend, obj, signal, cliplist);
 
   s->acc = !(((word)GET_SELECTOR(obj, illegalBits))
-	     & (edgehit = graph_on_control(s, x + port->xmin, y + port->ymin, xl, yl-1, SCI_MAP_CONTROL)));
+	     & (edgehit = graph_on_control(s, x + port->xmin, y + port->ymin, xl-1, yl-1, SCI_MAP_CONTROL)));
   SCIkdebug(SCIkBRESEN, "edgehit = %04x\n", edgehit);
   if (s->acc == 0)
     return; /* Can'tBeHere */
@@ -717,7 +717,12 @@ kOnControl(state_t *s, int funct_nr, int argc, heap_ptr argp)
   if (argc > 3) {
     ylen = PARAM(arg+3) - ystart;
     xlen = PARAM(arg+2) - xstart;
+    if (xlen > 1)
+      --xlen;
+    if (ylen > 1)
+    --ylen;
   }
+
   s->acc = graph_on_control(s, xstart, ystart + 10, xlen, ylen, map);
 }
 
@@ -1460,7 +1465,10 @@ _k_invoke_view_list(state_t *s, heap_ptr list, int funct_nr, int argc, int argp)
 
 static int _cmp_view_object(const void *obj1, const void *obj2) /* Used for qsort() later on */
 {
-  return (((view_object_t *)obj1)->y) - (((view_object_t *)obj2)->y);
+  int retval = (((view_object_t *)obj1)->y) - (((view_object_t *)obj2)->y);
+  if (retval == 0)
+    return (((view_object_t *)obj2)->index_nr) - (((view_object_t *)obj1)->index_nr);
+  return retval;
 }
 
 #define _K_MAKE_VIEW_LIST_CYCLE 1
@@ -1520,6 +1528,7 @@ _k_make_view_list(state_t *s, heap_ptr list, int *list_nr, int options, int func
     }
 
     retval[i].obj = obj;
+    retval[i].index_nr = i;
 
     retval[i].x = GET_SELECTOR(obj, x);
     retval[i].y = GET_SELECTOR(obj, y) - GET_SELECTOR(obj, z);
@@ -1665,6 +1674,8 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int flags)
 	_k_set_now_seen(s, list[i].obj);
 
 	SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", list[i].obj, signal);
+	SCIkdebug(SCIkGRAPHICS, "  to (%d,%d) v/l/c = (%d,%d,%d), pri=%d\n", list[i].x, list[i].y,
+		  list[i].view_nr, list[i].loop, list[i].cel, list[i].priority);
 
 	draw_view0(s->pic, s->ports[s->view_port],
 		   list[i].x, list[i].y, list[i].priority, list[i].loop, list[i].cel,

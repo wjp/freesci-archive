@@ -1,3 +1,15 @@
+2000-06-04  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/engine/kgraphics.c (kOnControl): Fixed OnControl() to test one
+	pixel less in each direction
+
+	* src/engine/vm.c (send_selector): Fixed send_selector() for variable
+	selector sends with &rest active
+
+	* src/engine/kgraphics.c (_cmp_view_object): Changed view object
+	sorting to take the original order into account when both y coordinates
+	are identical
+
 2000-06-03  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/engine/vm.c (run_vm): The 'call' operation now enforces the local

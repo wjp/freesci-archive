@@ -131,7 +131,7 @@ kSaid(state_t *s, int funct_nr, int argc, heap_ptr argp)
     vocab_decypher_said_block(s, said_block);
   }
 
-  if (GET_SELECTOR(s->parser_event, claimed)) {
+  if ((!s->parser_event) || (GET_SELECTOR(s->parser_event, claimed))) {
     s->acc = 0;
     return;
   }
@@ -478,10 +478,11 @@ kFormat(state_t *s, int funct_nr, int argc, heap_ptr argp)
 	case 'd': { /* Copy decimal */
 	  int templen;
 
-	  if (unsigned_var)
-	    templen = sprintf(target, "%u", arguments[paramindex++] & 0xffff);
-	  else
-	    templen = sprintf(target, "%d", arguments[paramindex++]);
+	  if (!unsigned_var)
+	    if (arguments[paramindex] & 0x8000)
+	      arguments[paramindex] = (~0xffff) | arguments[paramindex]; /* sign extend */
+
+	  templen = sprintf(target, "%d", arguments[paramindex++]);
 
 	  unsigned_var = 0;
 

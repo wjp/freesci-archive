@@ -47,8 +47,6 @@ _init_vocabulary(state_t *s) /* initialize vocabulary and related resources */
 {
   sciprintf("Initializing vocabulary\n");
 
-  s->parser_valid = 0; /* Invalidate parser */
-  s->parser_event = 0; /* Invalidate parser event */
   s->parser_lastmatch_word = SAID_NO_MATCH;
 
   if ((s->parser_words = vocab_get_words(&(s->parser_words_nr)))) {
@@ -404,6 +402,9 @@ game_init(state_t *s)
     sciprintf("game_init(): Could not instantiate script 0\n");
     return 1;
   }
+
+  s->parser_valid = 0; /* Invalidate parser */
+  s->parser_event = 0; /* Invalidate parser event */
 
   stack_handle = heap_allocate(s->_heap, VM_STACK_SIZE);
   parser_handle = heap_allocate(s->_heap, PARSE_HEAP_SIZE);

@@ -242,6 +242,9 @@ sciprintf("Send to selector %04x (%s):", selector, s->selector_names[selector]);
     if (++send_calls_nr == (send_calls_allocated - 1))
       send_calls = g_realloc(send_calls, sizeof(calls_struct_t) * (send_calls_allocated *= 2));
 
+    argc += restmod;
+    restmod = 0; /* Take care that the rest modifier is used only once */
+
     switch (lookup_selector(s, send_obj, selector, &lookupresult)) {
 
     case SELECTOR_NONE:
@@ -279,8 +282,6 @@ else
       break;
 
     case SELECTOR_METHOD:
-      argc += restmod;
-      restmod = 0; /* Take care that the rest modifier is used only once */
 
 #ifdef VM_DEBUG_SEND
 sciprintf("Funcselector(");
@@ -464,7 +465,6 @@ run_vm(state_t *s, int restoring)
     {
       script_debug(s, &(xs->pc), &(xs->sp), &(xs->variables[VAR_TEMP]),
 		   &(xs->objp), &restadjust, bp_flag);
-      sciprintf("-- locals @ %04x\n", xs->variables[VAR_LOCAL]);
       bp_flag = 0;
     }
     /* Debug if this has been requested */

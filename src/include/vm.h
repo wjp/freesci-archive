@@ -169,6 +169,7 @@ typedef struct {
   byte *view;
   int view_nr, loop, cel; /* view_nr is ised for save/restore */
   int nsTop, nsLeft, nsRight, nsBottom;
+  int index_nr; /* Used for sorting */
 } view_object_t;
 
 #define VAR_GLOBAL 0
