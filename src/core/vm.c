@@ -439,6 +439,7 @@ void
 run_vm(state_t *s, int restoring)
 {
   gint16 temp, temp2, temp3;
+  guint16 utemp, utemp2, utemp3;
   gint16 opparams[4]; /* opcode parameters */
 
   
@@ -808,25 +809,25 @@ run_vm(state_t *s, int restoring)
       break;
 
     case 0x2c: /* &rest */
-      temp = opparams[0]; /* First argument */
-      restadjust = xs->argc - temp + 1; /* +1 because temp counts the paramcount while argc doesn't */
+      utemp = opparams[0]; /* First argument */
+      restadjust = xs->argc - utemp + 1; /* +1 because utemp counts the paramcount while argc doesn't */
       if (restadjust < 0)
 	restadjust = 0;
-      temp2 = xs->variables[VAR_PARAM] + (temp << 1);/* Pointer to the first argument to &restore */
-      for (; temp <= xs->argc; temp++) {
-	PUSH(getInt16(s->heap + temp2));
-	temp2 += 2;
+      utemp2 = xs->variables[VAR_PARAM] + (utemp << 1);/* Pointer to the first argument to &restore */
+      for (; utemp <= xs->argc; utemp++) {
+	PUSH(getInt16(s->heap + utemp2));
+	utemp2 += 2;
       }
       break;
 
     case 0x2d: /* lea */
-      temp = opparams[0] >> 1;
-      var_number = temp & 0x03; /* Get variable type */
+      utemp = opparams[0] >> 1;
+      var_number = utemp & 0x03; /* Get variable type */
 
-      temp2 = xs->variables[var_number]; /* Get variable block offset */
-      if (temp & 0x08)
-	temp2 += s->acc; /* Add accumulator offset if requested */
-      s->acc = temp2 + (opparams[1] << 1); /* Add index */
+      utemp2 = xs->variables[var_number]; /* Get variable block offset */
+      if (utemp & 0x08)
+	utemp2 += s->acc; /* Add accumulator offset if requested */
+      s->acc = utemp2 + (opparams[1] << 1); /* Add index */
       break;
 
     case 0x2e: /* selfID */
@@ -910,8 +911,8 @@ run_vm(state_t *s, int restoring)
     case 0x42: /* lat */
     case 0x43: /* lap */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = xs->variables[var_number] + (opparams[0] << 1);
-      s->acc = GET_HEAP(temp);
+      utemp = xs->variables[var_number] + (opparams[0] << 1);
+      s->acc = GET_HEAP(utemp);
       break;
 
     case 0x44: /* lsg */
@@ -919,8 +920,8 @@ run_vm(state_t *s, int restoring)
     case 0x46: /* lst */
     case 0x47: /* lsp */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = xs->variables[var_number] + (opparams[0] << 1);
-      PUSH(GET_HEAP(temp));
+      utemp = xs->variables[var_number] + (opparams[0] << 1);
+      PUSH(GET_HEAP(utemp));
       break;
 
     case 0x48: /* lagi */
@@ -928,8 +929,8 @@ run_vm(state_t *s, int restoring)
     case 0x4a: /* lati */
     case 0x4b: /* lapi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-      s->acc = GET_HEAP(temp);
+      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
+      s->acc = GET_HEAP(utemp);
       break;
 
     case 0x4c: /* lsgi */
@@ -937,8 +938,8 @@ run_vm(state_t *s, int restoring)
     case 0x4e: /* lsti */
     case 0x4f: /* lspi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-      PUSH(GET_HEAP(temp));
+      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
+      PUSH(GET_HEAP(utemp));
       break;
 
     case 0x50: /* sag */
@@ -946,8 +947,8 @@ run_vm(state_t *s, int restoring)
     case 0x52: /* sat */
     case 0x53: /* sap */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = xs->variables[var_number] + (opparams[0] << 1);
-      PUT_HEAP(temp, s->acc);
+      utemp = xs->variables[var_number] + (opparams[0] << 1);
+      PUT_HEAP(utemp, s->acc);
       break;
 
     case 0x54: /* ssg */
@@ -955,20 +956,20 @@ run_vm(state_t *s, int restoring)
     case 0x56: /* sst */
     case 0x57: /* ssp */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = xs->variables[var_number] + (opparams[0] << 1);
-      temp2 = POP();
-      PUT_HEAP(temp, temp2);
+      utemp = xs->variables[var_number] + (opparams[0] << 1);
+      utemp2 = POP();
+      PUT_HEAP(utemp, utemp2);
       break;
 
     case 0x58: /* sagi */
     case 0x59: /* sali */
     case 0x5a: /* sati */
     case 0x5b: /* sapi */
-      temp2 = POP();
+      utemp2 = POP();
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-      PUT_HEAP(temp, temp2);
-      s->acc = temp2;
+      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
+      PUT_HEAP(utemp, utemp2);
+      s->acc = utemp2;
       break;
 
     case 0x5c: /* ssgi */
@@ -976,9 +977,9 @@ run_vm(state_t *s, int restoring)
     case 0x5e: /* ssti */
     case 0x5f: /* sspi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-      temp2 = POP();
-      PUT_HEAP(temp, temp2);
+      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
+      utemp2 = POP();
+      PUT_HEAP(utemp, utemp2);
       break;
 
     case 0x60: /* +ag */
@@ -986,10 +987,10 @@ run_vm(state_t *s, int restoring)
     case 0x62: /* +at */
     case 0x63: /* +ap */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = xs->variables[var_number] + (opparams[0] << 1);
-      s->acc = GET_HEAP(temp);
+      utemp = xs->variables[var_number] + (opparams[0] << 1);
+      s->acc = GET_HEAP(utemp);
       ++(s->acc);
-      PUT_HEAP(temp, s->acc);
+      PUT_HEAP(utemp, s->acc);
       break;
 
     case 0x64: /* +sg */
@@ -997,11 +998,11 @@ run_vm(state_t *s, int restoring)
     case 0x66: /* +st */
     case 0x67: /* +sp */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = xs->variables[var_number] + (opparams[0] << 1);
-      temp2 = GET_HEAP(temp);
-      temp2++;
-      PUT_HEAP(temp, temp2);
-      PUSH(temp2);
+      utemp = xs->variables[var_number] + (opparams[0] << 1);
+      utemp2 = GET_HEAP(utemp);
+      utemp2++;
+      PUT_HEAP(utemp, utemp2);
+      PUSH(utemp2);
       break;
 
     case 0x68: /* +agi */
@@ -1009,10 +1010,10 @@ run_vm(state_t *s, int restoring)
     case 0x6a: /* +ati */
     case 0x6b: /* +api */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-      s->acc = GET_HEAP(temp);
+      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
+      s->acc = GET_HEAP(utemp);
       ++(s->acc);
-      PUT_HEAP(temp, s->acc);
+      PUT_HEAP(utemp, s->acc);
       break;
 
     case 0x6c: /* +sgi */
@@ -1020,11 +1021,11 @@ run_vm(state_t *s, int restoring)
     case 0x6e: /* +sti */
     case 0x6f: /* +spi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-      temp2 = GET_HEAP(temp);
-      temp2++;
-      PUT_HEAP(temp, temp2);
-      PUSH(temp2);
+      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
+      utemp2 = GET_HEAP(utemp);
+      utemp2++;
+      PUT_HEAP(utemp, utemp2);
+      PUSH(utemp2);
       break;
 
     case 0x70: /* -ag */
@@ -1032,10 +1033,10 @@ run_vm(state_t *s, int restoring)
     case 0x72: /* -at */
     case 0x73: /* -ap */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = xs->variables[var_number] + (opparams[0] << 1);
-      s->acc = GET_HEAP(temp);
+      utemp = xs->variables[var_number] + (opparams[0] << 1);
+      s->acc = GET_HEAP(utemp);
       --(s->acc);
-      PUT_HEAP(temp, s->acc);
+      PUT_HEAP(utemp, s->acc);
       break;
 
     case 0x74: /* -sg */
@@ -1043,11 +1044,11 @@ run_vm(state_t *s, int restoring)
     case 0x76: /* -st */
     case 0x77: /* -sp */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = xs->variables[var_number] + (opparams[0] << 1);
-      temp2 = GET_HEAP(temp);
-      temp2--;
-      PUT_HEAP(temp, temp2);
-      PUSH(temp2);
+      utemp = xs->variables[var_number] + (opparams[0] << 1);
+      utemp2 = GET_HEAP(utemp);
+      utemp2--;
+      PUT_HEAP(utemp, utemp2);
+      PUSH(utemp2);
       break;
 
     case 0x78: /* -agi */
@@ -1055,10 +1056,10 @@ run_vm(state_t *s, int restoring)
     case 0x7a: /* -ati */
     case 0x7b: /* -api */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-      s->acc = GET_HEAP(temp);
+      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
+      s->acc = GET_HEAP(utemp);
       --(s->acc);
-      PUT_HEAP(temp, s->acc);
+      PUT_HEAP(utemp, s->acc);
       break;
 
     case 0x7c: /* -sgi */
@@ -1066,11 +1067,11 @@ run_vm(state_t *s, int restoring)
     case 0x7e: /* -sti */
     case 0x7f: /* -spi */
       var_number = (opcode >> 1) & 0x3; /* Gets the type of variable: g, l, t or p */
-      temp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
-      temp2 = GET_HEAP(temp);
-      temp2--;
-      PUT_HEAP(temp, temp2);
-      PUSH(temp2);
+      utemp = xs->variables[var_number] + ((opparams[0] + s->acc) << 1);
+      utemp2 = GET_HEAP(utemp);
+      utemp2--;
+      PUT_HEAP(utemp, utemp2);
+      PUSH(utemp2);
       break;
 
     default:
@@ -1439,7 +1440,6 @@ game_run(state_t **_s)
       s->execution_stack_pos_changed = 0;
 
       game_exit(s);
-      restore_ff(s->_heap); /* Restore old heap state */
       game_init(s);
 
       sciprintf(" Restarting flags=%02x\n", s->restarting_flags);

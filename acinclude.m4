@@ -327,8 +327,10 @@ AC_MSG_CHECKING([for glx])
 oldLDFLAGS=$LDFLAGS
 oldCFLAGS=$CFLAGS
 
-LDFLAGS="$LDFLAGS -L$x_libraries"
-CFLAGS="$CFLAGS -I$x_includes"
+if test "$x_libraries"; then
+	LDFLAGS="$LDFLAGS -L$x_libraries"
+	CFLAGS="$CFLAGS -I$x_includes"
+fi
 
 found_glx=no
 AC_TRY_CPP([#include <X11/Xlib.h>

@@ -34,6 +34,10 @@
 #include <sys/types.h>
 #include <dirent.h>
 
+static inline void __sq(sound_eq_t *q, int h, int s, int v, char *func, int line) {sound_eq_queue_event(q, h, s, v); if (s == 2) fprintf(stderr,"SIG2 at %s(L%d)\n", func, line);}
+#define sound_eq_queue_event(a, b, c, d) __sq(a, b, c, d, __FUNCTION__, __LINE__)
+
+
 void
 sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug);
 
@@ -260,6 +264,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	  song->status = SOUND_STATUS_STOPPED;
 	  song->pos = song->loopmark = 33; /* Reset position */
 	  sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_FINISHED, 0);
+	  ticks = 1; /* Wait one tick, then continue with next song */
 
 	}
 
@@ -367,7 +372,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    if (debugging)
 	      fprintf(ds, "%d bytes: ", size);
 
-	    datptr = data = malloc(totalsize = size);
+	    datptr = data = xalloc(totalsize = size);
 
 	    while (size > 0) {
 	      received = read(fd_in, datptr, MIN(size, SSIZE_MAX));
@@ -514,7 +519,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 
 	  case SOUND_COMMAND_SAVE_STATE: {
-	    char *dirname = (char *) malloc(event.value);
+	    char *dirname = (char *) xalloc(event.value);
 	    char *dirptr = dirname;
 	    int size = event.value;
 	    int success = 1;
@@ -549,7 +554,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	  break;
 
 	  case SOUND_COMMAND_RESTORE_STATE: {
-	    char *dirname = (char *) malloc(event.value);
+	    char *dirname = (char *) xalloc(event.value);
 	    char *dirptr = dirname;
 	    int size = event.value;
 	    int success = 1;

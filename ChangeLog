@@ -1,3 +1,26 @@
+2000-04-09  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/core/vm.c (run_vm): Fixed several severe sign extension bugs
+
+	* src/sound/soundserver_null.c (sound_null_server): Fixed a deadlock
+	situation that could happen when a song finished playing
+
+	* src/main.c (main): Added Rickard to the list of people mentioned in
+	the startup message
+
+	* src/core/vm.c (game_run): Fixed a bug that would cause several
+	scripts to be allocated twice during startup (all scripts required
+	by script 0, except for script 0 itself).
+
+	* src/core/kgraphics.c (kAnimate): Fixed drawing of disposed views to
+	occur before the 'normal' images retreive their background image. Took
+	care of many visual problems in the KQ4 introduction.
+
+2000-04-08  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* acinclude.m4 (AC_PATH_GLX): Fixed incorrect handling of the X11
+	header file -L instruction in cases where it's null
+
 2000-03-25  Lars Skovlund  <lskovlun@image.dk>
 
 	* src/core/kgraphics.c (kNewWindow): Bit 7 of the window flags wasn't

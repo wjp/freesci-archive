@@ -68,6 +68,8 @@ sfx_driver_t *sfx_drivers[] = {
   NULL
 };
 
+
+
 #ifdef HAVE_FORK
 
 void
@@ -354,7 +356,7 @@ song_next_wakeup_time(GTimeVal *lastslept, int ticks)
 song_t *
 song_new(word handle, byte *data, int size, int priority)
 {
-  song_t *retval = malloc(sizeof(song_t));
+  song_t *retval = xalloc(sizeof(song_t));
   int i;
 
   retval->data = data;
@@ -437,7 +439,7 @@ song_lib_find_active(songlib_t songlib, song_t *last_played_song)
 
   if (last_played_song)
     if (last_played_song->status == SOUND_STATUS_PLAYING) {
-      return last_played_song; /* This one was easy... */
+      return last_played_song; /* That one was easy... */
     }
 
   while (seeker && (seeker->status != SOUND_STATUS_WAITING)
@@ -515,8 +517,8 @@ sound_eq_queue_event(sound_eq_t *queue, int handle, int signal, int value)
   sound_eq_node_t *node;
   sound_event_t *evt;
 
-  evt = malloc(sizeof(sound_event_t));
-  node = malloc(sizeof(sound_eq_node_t));
+  evt = xalloc(sizeof(sound_event_t));
+  node = xalloc(sizeof(sound_eq_node_t));
 
   evt->handle = handle;
   evt->signal = signal;

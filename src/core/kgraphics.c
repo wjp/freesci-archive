@@ -1352,11 +1352,18 @@ _k_view_list_dispose(state_t *s, view_object_t **list_ptr, int *list_nr_ptr)
   *list_nr_ptr = 0;
 }
 
+
+/* Flags for _k_draw_view_list */
+/* Whether some magic with the base object's "signal" selector should be done: */
+#define _K_DRAW_VIEW_LIST_USE_SIGNAL 1
+/* This flag draws all views with the "DISPOSE_ME" flag set: */ 
+#define _K_DRAW_VIEW_LIST_DISPOSEABLE 2
+/* Use this one to draw all views with "DISPOSE_ME" NOT set: */
+#define _K_DRAW_VIEW_LIST_NONDISPOSEABLE 4
+
 void
-_k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int use_signal)
-     /* Draws list_nr members of list to s->pic. If use_signal is set, do some magic with the
-     ** "signal" selector of the base object
-     */
+_k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int flags)
+     /* Draws list_nr members of list to s->pic. */
 {
   int i;
 
@@ -1365,46 +1372,52 @@ _k_draw_view_list(state_t *s, view_object_t *list, int list_nr, int use_signal)
 
   for (i = 0; i < list_nr; i++) 
     if (list[i].obj) {
-    word signal = (use_signal)? GET_HEAP(list[i].signalp) : 0;
+    word signal = (flags & _K_DRAW_VIEW_LIST_USE_SIGNAL)? GET_HEAP(list[i].signalp) : 0;
 
-    /* Now, if we either don't use signal OR if signal allows us to draw, do so: */
-    if ((use_signal == 0) || (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE) &&
-			      !(signal & _K_VIEW_SIG_FLAG_HIDDEN))) {
+    if (!(flags & _K_DRAW_VIEW_LIST_USE_SIGNAL)
+	|| ((flags & _K_DRAW_VIEW_LIST_DISPOSEABLE) && (signal & _K_VIEW_SIG_FLAG_DISPOSE_ME))
+	|| ((flags & _K_DRAW_VIEW_LIST_NONDISPOSEABLE) && !(signal & _K_VIEW_SIG_FLAG_DISPOSE_ME))) {
 
-      _k_clip_view(list[i].view, &(list[i].loop), &(list[i].cel));
+      /* Now, if we either don't use signal OR if signal allows us to draw, do so: */
+      if (!(flags & _K_DRAW_VIEW_LIST_USE_SIGNAL) || (!(signal & _K_VIEW_SIG_FLAG_NO_UPDATE) &&
+						      !(signal & _K_VIEW_SIG_FLAG_HIDDEN))) {
 
-      SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", list[i].obj, signal);
-      draw_view0(s->pic, s->ports[s->view_port],
-		 list[i].x, list[i].y, list[i].priority, list[i].loop, list[i].cel,
-		 GRAPHICS_VIEW_CENTER_BASE | GRAPHICS_VIEW_USE_ADJUSTMENT, list[i].view);
-    }
+	_k_clip_view(list[i].view, &(list[i].loop), &(list[i].cel));
 
-    if (use_signal) {
-      signal &= ~(_K_VIEW_SIG_FLAG_UPDATE_ENDED | _K_VIEW_SIG_FLAG_UPDATING |
-		   _K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_UNKNOWN_6);
-      /* Clear all of those flags */
+	SCIkdebug(SCIkGRAPHICS, "Drawing obj %04x with signal %04x\n", list[i].obj, signal);
+	draw_view0(s->pic, s->ports[s->view_port],
+		   list[i].x, list[i].y, list[i].priority, list[i].loop, list[i].cel,
+		   GRAPHICS_VIEW_CENTER_BASE | GRAPHICS_VIEW_USE_ADJUSTMENT, list[i].view);
+      }
 
-      PUT_HEAP(list[i].signalp, signal); /* Write the changes back */
-    } else continue;
+      if (flags & _K_DRAW_VIEW_LIST_USE_SIGNAL) {
+	signal &= ~(_K_VIEW_SIG_FLAG_UPDATE_ENDED | _K_VIEW_SIG_FLAG_UPDATING |
+		    _K_VIEW_SIG_FLAG_NO_UPDATE | _K_VIEW_SIG_FLAG_UNKNOWN_6);
+	/* Clear all of those flags */
 
-    if (signal & _K_VIEW_SIG_FLAG_IGNORE_ACTOR)
-      continue; /* I assume that this is used for PicViews as well, so no use_signal check */
-    else { /* Yep, the continue doesn't really make sense. It's for clarification. */
-      int yl, y = list[i].nsTop;
-      int priority_band_start = PRIORITY_BAND_FIRST(list[i].priority);
-      /* Get start of priority band */
+	PUT_HEAP(list[i].signalp, signal); /* Write the changes back */
+      } else continue;
 
-      if (priority_band_start > y)
-	y = priority_band_start;
+      if (signal & _K_VIEW_SIG_FLAG_IGNORE_ACTOR)
+	continue; /* I assume that this is used for PicViews as well, so no use_signal check */
+      else { /* Yep, the continue doesn't really make sense. It's for clarification. */
+	int yl, y = list[i].nsTop;
+	int priority_band_start = PRIORITY_BAND_FIRST(list[i].priority);
+	/* Get start of priority band */
 
-      yl = abs(y - list[i].nsBottom);
+	if (priority_band_start > y)
+	  y = priority_band_start;
 
-      fill_box(s->pic, list[i].nsLeft, y,
-	       list[i].nsRight - list[i].nsLeft, yl, 0xf, 2);
-      /* Fill the control map with solidity */
+	yl = abs(y - list[i].nsBottom);
 
-    } /* NOT Ignoring the actor */
-  } /* for (i = 0; i < list_nr; i++) */
+	fill_box(s->pic, list[i].nsLeft, y,
+		 list[i].nsRight - list[i].nsLeft, yl, 0xf, 2);
+	/* Fill the control map with solidity */
+
+      } /* NOT Ignoring the actor */
+    } /* ...if we're drawing disposeables and this one is disposeable, or if we're drawing non-
+      ** disposeables and this one isn't disposeable */
+    } /* for (i = 0; i < list_nr; i++) */
 
 }
 
@@ -1462,7 +1475,7 @@ kAddToPic(state_t *s, int funct_nr, int argc, heap_ptr argp)
   /* Store pic views for later re-use */
 
   SCIkdebug(SCIkGRAPHICS, "Drawing list...\n");
-  _k_draw_view_list(s, s->pic_views, s->pic_views_nr, 0);
+  _k_draw_view_list(s, s->pic_views, s->pic_views_nr, _K_DRAW_VIEW_LIST_NONDISPOSEABLE | _K_DRAW_VIEW_LIST_DISPOSEABLE);
   /* Draw relative to the bottom center */
   SCIkdebug(SCIkGRAPHICS, "Returning.\n");
 }
@@ -1513,7 +1526,6 @@ kDrawCel(state_t *s, int funct_nr, int argc, heap_ptr argp)
     SCIkwarn(SCIkERROR, "Attempt to draw non-existing view.%03n\n", PARAM(0));
     return;
   }
-
   _k_clip_view(view->data, &loop, &cel);
 
   SCIkdebug(SCIkGRAPHICS, "DrawCel((%d,%d), (view.%d, %d, %d), p=%d)\n", x, y, PARAM(0), loop,
@@ -1680,8 +1692,9 @@ kAnimate(state_t *s, int funct_nr, int argc, heap_ptr argp)
     SCIkdebug(SCIkGRAPHICS, "Handling Dyn:\n");
 
     _k_restore_view_list_backgrounds(s, s->dyn_views, s->dyn_views_nr);
+    _k_draw_view_list(s, s->dyn_views, s->dyn_views_nr, _K_DRAW_VIEW_LIST_DISPOSEABLE | _K_DRAW_VIEW_LIST_USE_SIGNAL);
     _k_save_view_list_backgrounds(s, s->dyn_views, s->dyn_views_nr);
-    _k_draw_view_list(s, s->dyn_views, s->dyn_views_nr, 1); /* Step 11 */
+    _k_draw_view_list(s, s->dyn_views, s->dyn_views_nr, _K_DRAW_VIEW_LIST_NONDISPOSEABLE | _K_DRAW_VIEW_LIST_USE_SIGNAL); /* Step 11 */
     /* Step 15 */
     _k_view_list_dispose_loop(s, cast_list, s->dyn_views, s->dyn_views_nr, funct_nr, argc, argp);
   } /* if (cast_list) */

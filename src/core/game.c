@@ -291,7 +291,8 @@ script_init_engine(state_t *s, sci_version_t version)
 
   s->restarting_flags = SCI_GAME_IS_NOT_RESTARTING;
 
-  s->scripttable[0].heappos = 0; /* Mark script 0 as 'not installed' */
+  for (i = 0; i < 1000; i++)
+    s->scripttable[i].heappos = 0; /* Mark all scripts as 'not installed' */
   if (!script_instantiate(s, 0)) {
     sciprintf("%s(): Could not instantiate script 0\n", __FUNCTION__);
     return 1;
@@ -358,10 +359,6 @@ game_init(state_t *s)
   int i, font_nr;
 
   script0 = s->scripttable[0].heappos; /* Get script 0 position */
-
-  /* Initialize script table except for script 0 */
-  for (i = 1; i < 1000; i++)
-    s->scripttable[i].heappos = 0;
 
   if (!script0) {
     sciprintf("Game initialization requested, but script.000 not loaded\n");
@@ -483,9 +480,17 @@ game_exit(state_t *s)
 
   sciprintf("Freeing miscellaneous data...\n");
 
+  /* HACK WARNING: This frees all scripts that were allocated prior to the stack, i.e. those
+  ** that won't survive a stack restauration.
+  */
+  for (i = 1; i < 1000; i++)
+    if (s->scripttable[i].heappos > s->stack_handle)
+      s->scripttable[i].heappos = 0;
+
   heap_free(s->_heap, s->stack_handle);
   heap_free(s->_heap, s->save_dir);
   heap_free(s->_heap, s->parser_base - 2);
+  restore_ff(s->_heap); /* Restore former heap state */
 
   /* Free breakpoint list */
   bp = s->bp_list;
