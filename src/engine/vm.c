@@ -73,6 +73,14 @@ static jmp_buf vm_error_address;
 static inline reg_t *
 validate_property(object_t *obj, int index)
 {
+	if (!obj)
+	{
+		if (sci_debug_flags & 4)
+			sciprintf("[VM] Sending to disposed object!\n");
+		_dummy_register = NULL_REG;
+		return &_dummy_register;
+	}
+
 	if (index < 0 || index >= obj->variables_nr) {
 		if (sci_debug_flags & 4)
 			sciprintf("[VM] Invalid property #%d (out of [0..%d] requested!\n", index,

@@ -1,5 +1,8 @@
 2004-08-02  Lars Skovlund  <lskovlun@image.dk>
 
+	* src/engine/vm.c (validate_property): Prevent segfaults when
+	fetching property values from disposed objects.
+
 	* src/engine/klists.c: Make NextNode and NodeValue use the new
 	signature options.
 
