@@ -1661,6 +1661,7 @@ script_instantiate(state_t *s, int script_nr)
 
 	if (s->seg_manager.isloaded (&s->seg_manager, script_nr, SCRIPT_ID)) { /* Is it already loaded? */
 		int seg = s->seg_manager.seg_get ( &s->seg_manager, script_nr );
+		s->seg_manager.increment_lockers( &s->seg_manager, seg, SEG_ID );
 		return seg;
 	}
 
