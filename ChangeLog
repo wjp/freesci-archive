@@ -1,3 +1,10 @@
+2000-05-23  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/include/menubar.h: Fixed menus to work with Said specs of
+	up to 64 bytes
+
+	* src/graphics/graphics_glx.c : Implemented the glx target
+
 2000-05-22  Christoph Reichenbach  <jameson@linuxgames.com>
 
 	* src/include/kernel.h (VIEW_PRIORITY): Fixed priorities

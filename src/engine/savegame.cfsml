@@ -217,7 +217,7 @@ RECORD menu_item_t "menu_item_t" {
   int keytext_size;
 
   int flags;
-  byte said[STATIC 8];
+  byte said[STATIC MENU_SAID_SPEC_SIZE];
   heap_ptr said_pos;
   string text;
   heap_ptr text_pos;

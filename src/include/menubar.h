@@ -57,6 +57,8 @@ struct _state;
 #define MENU_TYPE_NORMAL 0
 #define MENU_TYPE_HBAR 1 /* Horizontal bar */
 
+/* Maximum number of bytes per SAID spec */
+#define MENU_SAID_SPEC_SIZE 64
 
 #define MENU_ATTRIBUTE_SAID 0x6d
 #define MENU_ATTRIBUTE_TEXT 0x6e
@@ -74,7 +76,7 @@ typedef struct {
   int keytext_size; /* Width of the right-centered text */
 
   int flags;
-  byte said[8]; /* Said spec for this item */
+  byte said[MENU_SAID_SPEC_SIZE]; /* Said spec for this item */
   heap_ptr said_pos;
   char *text;
   heap_ptr text_pos;

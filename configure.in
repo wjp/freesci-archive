@@ -2,7 +2,7 @@
 AC_PREREQ(2.13)
 AC_INIT(acinclude.m4)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(freesci, 0.2.6)
+AM_INIT_AUTOMAKE(freesci, 0.3.0)
 
 AC_PROG_CC
 AC_PROG_RANLIB

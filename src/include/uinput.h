@@ -68,7 +68,7 @@ typedef struct {
 #define SCI_K_DOWN (80 << 8)
 #define SCI_K_PGDOWN (81 << 8)
 #define SCI_K_LEFT (75 << 8)
-#define SCI_K_CENTER (53 << 8) /*Note: this is the same as '5'. Dunno what should be done here...*/
+#define SCI_K_CENTER (76 << 8)
 #define SCI_K_RIGHT (77 << 8)
 #define SCI_K_HOME (71 << 8)
 #define SCI_K_UP (72 << 8)

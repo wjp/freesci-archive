@@ -860,6 +860,7 @@ script_disassemble_code(disasm_state_t *d, script_state_t *s,
           }
 
       default:
+	break;
     }
     if (pass_no == 2) sciprintf ("\n");
 	    

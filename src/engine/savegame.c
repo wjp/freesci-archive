@@ -1592,7 +1592,7 @@ _cfsml_write_menu_item_t(FILE *fh, menu_item_t* foo)
     _cfsml_write_int(fh, &(foo->flags));
     fprintf(fh, "\n");
   fprintf(fh, "said = ");
-    min = max = 8;
+    min = max = MENU_SAID_SPEC_SIZE;
 #line 341 "cfsml.pl"
     fprintf(fh, "[%d][\n", max);
     for (i = 0; i < min; i++) {
@@ -1685,7 +1685,7 @@ _cfsml_read_menu_item_t(FILE *fh, menu_item_t* foo, char *lastval, int *line, in
             return CFSML_FAILURE;
 ;         }
          /* Prepare to restore static array */
-         max = 8;
+         max = MENU_SAID_SPEC_SIZE;
 #line 518 "cfsml.pl"
          done = i = 0;
          do {

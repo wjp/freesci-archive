@@ -440,8 +440,10 @@ main(int argc, char** argv)
     if (conf[conf_nr].version)
       gamestate->version = conf[conf_nr].version;
 
-  sci_color_mode = conf[conf_nr].color_mode;
-  gamestate->gfx_driver = conf[conf_nr].gfx_driver;
+  if (conf) {
+    sci_color_mode = conf[conf_nr].color_mode;
+    gamestate->gfx_driver = conf[conf_nr].gfx_driver;
+  } else sci_color_mode = 0; /* Assume default */
 
   if (requested_gfx_driver) {
     int i = 0, j = -1;
@@ -455,8 +457,16 @@ main(int argc, char** argv)
     if (j == -1) {
       fprintf(stderr,"Unsupported graphics subsystem: %s\n", requested_gfx_driver);
       return 1;
-    } 
+    }
     else gamestate->gfx_driver = gfx_drivers[j];
+  }
+
+  if (!gamestate->gfx_driver)
+    gamestate->gfx_driver = gfx_drivers[0];
+
+  if (!gamestate->gfx_driver) {
+    fprintf(stderr,"No graphics driver found.\n");
+    exit(1);
   }
 
   if (strlen (conf[conf_nr].debug_mode))

@@ -76,25 +76,112 @@ gfx_driver_t gfx_driver_glx =
 
 
 int
-x_map_key(int xkey)
+x_unmap_key(Display *display, int keycode)
 {
+  KeySym xkey = XKeycodeToKeysym(display, keycode, 0);
+
+  switch (xkey) {
+  case XK_Control_L:
+  case XK_Control_R: x_buckystate &= ~SCI_EVM_CTRL; return 0;
+  case XK_Alt_L:
+  case XK_Alt_R: x_buckystate &= ~SCI_EVM_ALT; return 0;
+  case XK_Shift_L: x_buckystate &= ~SCI_EVM_LSHIFT; return 0;
+  case XK_Shift_R: x_buckystate &= ~SCI_EVM_RSHIFT; return 0;
+  }
+
+  return 0;
+}
+
+
+int
+x_map_key(Display *display, int keycode)
+{
+  KeySym xkey = XKeycodeToKeysym(display, keycode, 0);
+
   if ((xkey >= 'A') && (xkey <= 'Z'))
     return xkey;
   if ((xkey >= 'a') && (xkey <= 'z'))
-    return xkey - 'a' + 'A';
+    return xkey;
   if ((xkey >= '0') && (xkey <= '9'))
     return xkey;
 
   switch (xkey) {
+  case XK_BackSpace: return SCI_K_BACKSPACE;
+  case XK_Tab: return 9;
+  case XK_Escape: return SCI_K_ESC;
+  case XK_Return:
+  case XK_KP_Enter: return SCI_K_ENTER;
+
+  case XK_KP_Decimal: return SCI_K_DELETE;
+  case XK_KP_0:
+  case XK_KP_Insert: return SCI_K_INSERT;
+  case XK_KP_End:
+  case XK_KP_1: return SCI_K_END;
+  case XK_Down:
+  case XK_KP_Down:
+  case XK_KP_2: return SCI_K_DOWN;
+  case XK_KP_Page_Down:
+  case XK_KP_3: return SCI_K_PGDOWN;
+  case XK_Left:
+  case XK_KP_Left:
+  case XK_KP_4: return SCI_K_LEFT;
+  case XK_KP_5: return SCI_K_CENTER;
+  case XK_Right:
+  case XK_KP_Right:
+  case XK_KP_6: return SCI_K_RIGHT;
+  case XK_KP_Home:
+  case XK_KP_7: return SCI_K_HOME;
+  case XK_Up:
+  case XK_KP_Up:
+  case XK_KP_8: return SCI_K_UP;
+  case XK_KP_Page_Up:
+  case XK_KP_9: return SCI_K_PGUP;
+
+  case XK_F1: return SCI_K_F1;
+  case XK_F2: return SCI_K_F2;
+  case XK_F3: return SCI_K_F3;
+  case XK_F4: return SCI_K_F4;
+  case XK_F5: return SCI_K_F5;
+  case XK_F6: return SCI_K_F6;
+  case XK_F7: return SCI_K_F7;
+  case XK_F8: return SCI_K_F8;
+  case XK_F9: return SCI_K_F9;
+  case XK_F10: return SCI_K_F10;
+
   case XK_Control_L:
-  case XK_Control_R: x_buckystate ^= SCI_EVM_CTRL;
+  case XK_Control_R: x_buckystate |= SCI_EVM_CTRL; return 0;
   case XK_Alt_L:
-  case XK_Alt_R: x_buckystate ^= SCI_EVM_ALT;
+  case XK_Alt_R: x_buckystate |= SCI_EVM_ALT; return 0;
   case XK_Caps_Lock:
-  case XK_Shift_Lock: x_buckystate ^= SCI_EVM_CAPSLOCK;
-  case XK_Scroll_Lock: x_buckystate ^= SCI_EVM_SCRLOCK;
-  case XK_Num_Lock: x_buckystate ^= SCI_EVM_NUMLOCK;
+  case XK_Shift_Lock: x_buckystate ^= SCI_EVM_CAPSLOCK; return 0;
+  case XK_Scroll_Lock: x_buckystate ^= SCI_EVM_SCRLOCK; return 0;
+  case XK_Num_Lock: x_buckystate ^= SCI_EVM_NUMLOCK; return 0;
+  case XK_Shift_L: x_buckystate |= SCI_EVM_LSHIFT; return 0;
+  case XK_Shift_R: x_buckystate |= SCI_EVM_RSHIFT; return 0;
+
+  case XK_KP_Add: return '+';
+  case XK_KP_Divide: return '/';
+  case XK_KP_Subtract: return '-';
+  case XK_KP_Multiply: return '*';
+
+  case ',':
+  case '.':
+  case '/':
+  case '\\':
+  case ';':
+  case '\'':
+  case '[':
+  case ']':
+  case '`':
+  case '-':
+  case '=':
+  case '<':
+  case ' ':
+    return xkey;
   }
+
+  sciprintf("Unknown X keysym: %04x\n", xkey);
+  return 0;
 }
 
 Cursor
@@ -183,13 +270,13 @@ glx_init(state_t *s, picture_t pic)
     return 1;
   }
 
-  x->width = 640;
-  x->height = 400;
+  x->width = 320;
+  x->height = 200;
 
   win_attr.colormap = XCreateColormap(x->glx_display, RootWindow(x->glx_display, default_screen),
 				      xvisinfo->visual, AllocNone);
   win_attr.event_mask = PointerMotionMask | StructureNotifyMask | ButtonPressMask
-    | ButtonReleaseMask | KeyPressMask;
+    | ButtonReleaseMask | KeyPressMask | KeyReleaseMask;
   win_attr.background_pixel = win_attr.border_pixel = 0;
 
   x->glx_window = XCreateWindow(x->glx_display, RootWindow(x->glx_display, default_screen),
@@ -226,16 +313,13 @@ glx_init(state_t *s, picture_t pic)
   glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
   glOrtho(0.0, 1.0, 1.0, 0.0, 16.0, 0.0);
-  glPixelZoom(2.0, -2.0);
+  glPixelZoom(1.0, 1.0);
 
   glx_init_colors();
 
   glClearStencil(0x0);
-  glEnable(GL_STENCIL_TEST);
 
-  glStencilFunc(GL_ALWAYS, 0, 0);
-
-  glPixelTransferi(GL_MAP_COLOR, TRUE);
+  glPixelTransferi(GL_MAP_COLOR, GL_TRUE);
   glPixelMapusv(GL_PIXEL_MAP_S_TO_S, 256, glx_palette_s);
   glPixelMapusv(GL_PIXEL_MAP_I_TO_R, 256, glx_palette_r);
   glPixelMapusv(GL_PIXEL_MAP_I_TO_G, 256, glx_palette_g);
@@ -258,14 +342,15 @@ glx_shutdown(state_t *s)
 }
 
 
-void
+static void
 graphics_draw_region_glx(Window target, Display *display,
-			 byte *source,
+			 byte *source,  int vis_width, int vis_height,
 			 int x, int y, int xl, int yl,
 			 mouse_pointer_t *pointer, int pointer_x, int pointer_y)
 {
-  int buf[320 * 200];
   int i;
+
+  glPixelZoom(vis_width / 320.0, vis_height / -200.0);
 
   glDrawBuffer(GL_BACK);
 
@@ -277,6 +362,9 @@ graphics_draw_region_glx(Window target, Display *display,
   glDrawPixels(xl, yl, GL_COLOR_INDEX, GL_UNSIGNED_BYTE, source);
 
   if (pointer) {
+
+    glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_ALWAYS, 0, 0);
 
     glPixelStorei(GL_UNPACK_ROW_LENGTH, pointer->size_x);
     glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
@@ -302,42 +390,28 @@ graphics_draw_region_glx(Window target, Display *display,
     glDrawPixels(pointer->size_x, pointer->size_y, GL_COLOR_INDEX, GL_UNSIGNED_BYTE, pointer->bitmap);
 
     glStencilFunc(GL_ALWAYS, 0, 0);
+    glDisable(GL_STENCIL_TEST);
   }
 
   glFlush();
-  /*  glXSwapBuffers(display, target);*/
   glReadBuffer(GL_BACK);
   glDrawBuffer(GL_FRONT);
 
-  /*  glRasterPos2f(-0.5,-0.5);
-      glCopyPixels(0,0,320,200,GL_COLOR);*/
+  glPixelTransferi(GL_MAP_COLOR, GL_FALSE);
 
-  /*  glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);  
-  glStencilFunc(GL_ALWAYS, 0, 0);
-  glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-  glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-  glDepthMask(GL_FALSE);
+  glPixelZoom(1.0, 1.0);
 
-  glReadPixels(x, y, xl, yl, GL_RGB, GL_UNSIGNED_BYTE, buf);
-  glRasterPos2f(x / 320.0, y / 200.0);
-  glDrawPixels(xl, yl, GL_RGB, GL_UNSIGNED_BYTE, buf);*/
+  glRasterPos2f(x / 320.0, ((y+yl) * (1 / (200.0))));
 
-  /*  glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, x, y, xl, yl, 0);
+  x = (x * vis_width) / 320;
+  y = (y * vis_height) / 200;
+  xl = (xl * vis_width) / 320;
+  yl = (yl * vis_height) / 200;
 
-  glGenTextures(1, &i);
-  glBindTexture(GL_TEXTURE_2D, i);
+  glCopyPixels(x, (vis_height-(y+yl)), xl, yl, GL_COLOR);
 
-  glBegin(GL_QUADS);
-  glTexCoord2f(0.0, 0.0); glVertex2f(x / 320.0, y / 200.0);
-  glTexCoord2f(1.0, 0.0); glVertex2f((x+xl) / 320.0, y / 200.0);
-  glTexCoord2f(1.0, 1.0); glVertex2f((x+xl) / 320.0, (y+yl) / 200.0);
-  glTexCoord2f(0.0, 1.0); glVertex2f(x / 320.0, (y+yl) / 200.0);
-  glEnd();
-  glFlush();
+  glPixelTransferi(GL_MAP_COLOR, GL_TRUE);
 
-  glDeleteTextures(1, &i);*/
-
-  glCopyPixels(x, y, xl, yl, GL_COLOR);
   glFlush();
 }
 
@@ -348,6 +422,8 @@ glx_redraw(struct _state *s, int command, int x, int y, int xl, int yl)
   Window target = s->graphics.glx_state->glx_window;
   Display *display = s->graphics.glx_state->glx_display;
   int mp_x, mp_y, mp_size_x, mp_size_y;
+  int wsize_x = s->graphics.glx_state->width;
+  int wsize_y = s->graphics.glx_state->height;
 
   if (!target) {
     fprintf(stderr,"FSCI-GLX: No GLX target available- internal error!\n");
@@ -372,20 +448,20 @@ glx_redraw(struct _state *s, int command, int x, int y, int xl, int yl)
     if (y) fprintf(stderr,"Starting to shake %d\n", y);
     glOrtho(0.0, 1.0, 1.0 - (y / 200.0), -(y/200.0), 16.0, 0.0);
     if (y) fprintf(stderr,"Stopping shake\n", y);
-    graphics_draw_region_glx(target, display, s->pic->view,
+    graphics_draw_region_glx(target, display, s->pic->view, wsize_x, wsize_y,
 			     0, 0, 320, 200,
 			     s->mouse_pointer, s->pointer_x, s->pointer_y);
     break;
   case GRAPHICS_CALLBACK_REDRAW_BOX:
-    graphics_draw_region_glx(target, display, s->pic->view, /* Draw box */
+    graphics_draw_region_glx(target, display, s->pic->view, wsize_x, wsize_y, /* Draw box */
 			     x, y, xl, yl,
 			     s->mouse_pointer, s->pointer_x, s->pointer_y);
     break;
   case GRAPHICS_CALLBACK_REDRAW_POINTER:
-    graphics_draw_region_glx(target, display, s->pic->view, /* Draw new pointer */
+    graphics_draw_region_glx(target, display, s->pic->view, wsize_x, wsize_y, /* Draw new pointer */
     			     mp_x, mp_y, mp_size_x, mp_size_y,
     			     s->mouse_pointer, s->pointer_x, s->pointer_y);
-    graphics_draw_region_glx(target, display, s->pic->view, /* Remove old pointer */
+    graphics_draw_region_glx(target, display, s->pic->view, wsize_x, wsize_y, /* Remove old pointer */
 			     s->last_pointer_x,s->last_pointer_y,
 			     s->last_pointer_size_x, s->last_pointer_size_y,
 			     s->mouse_pointer, s->pointer_x, s->pointer_y);
@@ -428,13 +504,17 @@ _glx_get_event(state_t *s, int eventmask, long wait_usec, sci_event_t *sci_event
       case KeyPress: {
 	sci_event->type = SCI_EVT_KEYBOARD;
 	sci_event->buckybits = x_buckystate;
-	sci_event->data = x_map_key(event.xkey.keycode);
+	sci_event->data = x_map_key(display, event.xkey.keycode);
 
 	if (sci_event->data)
 	  return;
 
 	break;
       }
+
+      case KeyRelease:
+	x_unmap_key(display, event.xkey.keycode);
+	break;
 
       case ButtonPress: {
 	sci_event->type = SCI_EVT_MOUSE_PRESS;
@@ -464,10 +544,15 @@ _glx_get_event(state_t *s, int eventmask, long wait_usec, sci_event_t *sci_event
       break;
 
       case ConfigureNotify: {
-	glLoadIdentity();
+	glMatrixMode(GL_PROJECTION);
 
 	*width = event.xconfigure.width;
 	*height = event.xconfigure.height;
+
+	glViewport(0,0,*width, *height);
+
+	glLoadIdentity();
+	/*	glOrtho(0.0, 1.0, 1.0, 0.0, 16.0, 0.0);*/
 
 	glPixelZoom(*width / 320.0, *height / -200.0);
 	s->gfx_driver->Redraw(s, GRAPHICS_CALLBACK_REDRAW_ALL, 0, 0, 0, 0);
@@ -521,7 +606,7 @@ glx_input_handler(state_t *s)
 
   _glx_get_event(s,
 		 PointerMotionMask | StructureNotifyMask | ButtonPressMask
-		 | ButtonReleaseMask | KeyPressMask,
+		 | ButtonReleaseMask | KeyPressMask | KeyReleaseMask,
 		 0, &input);
 
   return input;
