@@ -381,7 +381,7 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
 
 
   graph_draw_selector_text(s, port, state,
-			   x, y, xl, yl, text, font, ALIGN_TEXT_LEFT);
+			   x, y - 1, xl, yl, text, font, ALIGN_TEXT_LEFT);
 
   if (time(NULL) & 1) { /* Blink cursor in 1s intervals */
     strncpy(temp, text, cursor);
@@ -391,11 +391,12 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
 
     if (cursor == strlen(text)) /* At end of text block? */
       graph_fill_box_custom(s, x + port->xmin + textwidth, y+port->ymin,
-			  1, textheight, port->color, -1, -1, 1);
+			    1, textheight, port->color, -1, -1, 1);
     /* Draw thin line */
     else { /* Single character */
       int charwidth;
       int oldcol = port->color;
+      int oldbgcol = port->bgcolor;
       byte *oldfont = port->font;
 
       temp[0] = text[cursor];
@@ -407,13 +408,15 @@ graph_draw_selector_edit(struct _state *s, port_t *port, int state,
 
 
       port->font = font;
-      port->color = port->bgcolor;
+      port->color = oldbgcol;
+      port->bgcolor = -1;
       port->x += x + textwidth;
       port->y += y;
       text_draw(s->pic, port, temp, xl);
       port->x -= x + textwidth;
       port->y -= y;
       port->color = oldcol;
+      port->bgcolor = oldbgcol;
       port->font = oldfont;
     }
 

@@ -100,6 +100,23 @@ typedef struct _song {
 
 typedef song_t **songlib_t;
 
+typedef struct _sound_event_queue_node {
+
+  sound_event_t *event;
+  struct _sound_event_queue_node *prev, *next;
+
+} sound_eq_node_t;
+
+
+typedef struct {
+
+  sound_eq_node_t *first, *last;
+
+} sound_eq_t;
+
+
+extern sound_event_t sound_eq_eoq_event; /* An "end of queue" event */
+
 
 int
 sound_init_pipes(struct _state *s);
@@ -260,5 +277,35 @@ soundsrv_restore_state(FILE *debugstream, char *dir, songlib_t songlib, song_t *
 ** variables pointed to in the parameter list will be left untouched.
 */
 
+
+
+/**********************/
+/* SOUND EVENT QUEUES */
+/**********************/
+
+void
+sound_eq_init(sound_eq_t *queue);
+/* Initializes an event queue.
+** Parameters: (sound_eq_t *) queue: Pointer to the queue to initialize
+** Returns   : (void)
+** This function must be called to the other event queue functions to operate
+** normally, unless the queue was allocated with calloc().
+*/
+
+void
+sound_eq_queue_event(sound_eq_t *queue, int handle, int signal, int value);
+/* Queues an event into an event queue.
+** Parameters: (sound_eq_t *) queue: The queue to add the event to
+**             (int x int x int) (handle, signal, value): The event data to queue
+** Returns   : (void)
+*/
+
+sound_event_t *
+sound_eq_retreive_event(sound_eq_t *queue);
+/* Retreives the oldest event on the event queue and removes it from the queue.
+** Parameters: (sound_eq_t *) queue: The queue to retreive the event from
+** Returns   : (sound_event_t *): A pointer to the oldest event on the queue, or NULL of there is none
+** The return value must be free()d manually, if appropriate.
+*/
 
 #endif /* !_SCI_SOUND_SERVER_H_ */

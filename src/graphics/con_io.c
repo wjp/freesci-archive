@@ -1,5 +1,5 @@
 /***************************************************************************
- console.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+ con_io.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
 
 
  This program may be modified and copied freely according to the terms of
@@ -32,25 +32,20 @@
 #include <string.h>
 #include <assert.h>
 
-int con_display_row = 0;
 int con_row_counter = 0;
 int con_visible_rows = 0;
+int con_display_row = 0;
 int con_cursor = 1;
-int con_passthrough = 0;
-FILE *con_file;
 
-char _commandbuf[SCI_CONSOLE_INPUT_BUFFER][SCI_CONSOLE_MAX_INPUT];
-char _outputbuf[SCI_CONSOLE_OUTPUT_BUFFER][SCI_CONSOLE_LINE_WIDTH];
-int _outputbufpos = 0; /* buffer line */
-int _outputbufcolumn = 0;
-int _outputbuflen = 0;
-int _outputlookback = 0;
-int _commandbuflen = 0;
-int _commandbufpos = 0;
-int _commandlookback = 0;
+
+/* Command buffer */
+static char _commandbuf[SCI_CONSOLE_INPUT_BUFFER][SCI_CONSOLE_MAX_INPUT];
+static int _commandbuflen = 0;
+static int _commandbufpos = 0;
+static int _commandlookback = 0;
 
 char _inpbuf[SCI_CONSOLE_MAX_INPUT + 1] = "$\0";
-char *con_input = _inpbuf + 1;
+char *con_input_line = _inpbuf + 1;
 
 
 void *_xmalloc(size_t size)
@@ -63,82 +58,25 @@ void *_xmalloc(size_t size)
   return retval;
 }
 
+static byte _con_gfx_initialized = 0;
 
-void sciprintf(char *fmt, ...)
+void
+con_init_gfx()
 {
-  va_list argp;
-  size_t bufsize = 256;
-  int i;
-  char *buf = (char *) _xmalloc(bufsize);
-  char *mbuf;
-
-  va_start(argp, fmt);
-  while ((i = g_vsnprintf(buf, bufsize-1, fmt, argp)) == -1 || (i > bufsize - 1)) {
-    /* while we're out of space... */
-    va_end(argp);
-    va_start(argp, fmt); /* reset argp */
-
-    free(buf);
-    buf = (char *) _xmalloc(bufsize <<= 1);
+  if (!_con_gfx_initialized) {
+    _con_gfx_initialized = 1;
+    con_hook_int(&sci_color_mode, "color_mode", "SCI0 picture resource draw mode (0..2)");
+    con_hook_int(&con_display_row, "con_display_row", "Number of rows to display for the"
+		 "\n  onscreen console");
   }
-  va_end(argp);
-
-  if (con_passthrough)
-    printf("%s",buf);
-  if (con_file)
-    fprintf(con_file, "%s", buf);
-
-  mbuf = buf;
-
-  i = strlen(mbuf);
-
-  while (i > 0) {
-    char *seekerpt = strchr(mbuf, '\n');
-    int seeker = seekerpt? seekerpt - mbuf : SCI_CONSOLE_LINE_WIDTH - _outputbufcolumn;
-    if (seeker >= SCI_CONSOLE_LINE_WIDTH - _outputbufcolumn)
-      seeker = (i > SCI_CONSOLE_LINE_WIDTH - _outputbufcolumn)?
-	SCI_CONSOLE_LINE_WIDTH - _outputbufcolumn : i;
-
-    memcpy(_outputbuf[_outputbufpos] + _outputbufcolumn, mbuf, seeker);
-    if (seeker + _outputbufcolumn < SCI_CONSOLE_LINE_WIDTH)
-      _outputbuf[_outputbufpos][seeker + _outputbufcolumn] = 0;
-
-    _outputbufcolumn += seeker;
-
-    if (_outputbufcolumn == SCI_CONSOLE_LINE_WIDTH) {
-      _outputbufpos++;
-      _outputbufcolumn = 0;
-    }
-
-    if (seekerpt && (seeker == seekerpt - mbuf)) {
-      _outputbufcolumn = 0;
-      _outputbufpos++;
-      mbuf++;
-      i--;
-    }
-
-    mbuf += seeker;
-    i -= seeker;
-
-    if (_outputbufpos >= SCI_CONSOLE_OUTPUT_BUFFER) {
-      _outputbufpos -= SCI_CONSOLE_OUTPUT_BUFFER;
-      _outputbuflen = SCI_CONSOLE_OUTPUT_BUFFER;
-    }
-  }
-  if (_outputbuflen < _outputbufpos)
-    _outputbuflen = _outputbufpos;
-
-  _outputlookback = _outputbufpos;
-  free(buf);
 }
 
 
-
 char *
-consoleInput(sci_event_t *event)
+con_input(sci_event_t *event)
 /* This function is hell. Feel free to clean it up. */
 {
-  int stl = strlen(con_input);
+  int stl = strlen(con_input_line);
   int z,i; /* temp vars */
 
   if (con_visible_rows <= 0) return NULL;
@@ -146,7 +84,8 @@ consoleInput(sci_event_t *event)
   if (event->type == SCI_EVT_KEYBOARD) {
     
     if ((event->buckybits & (SCI_EVM_NUMLOCK | SCI_EVM_CTRL | SCI_EVM_ALT)) == 0) {
-      if (event->data >= 32) {
+      if (((event->data >= '0') && (event->data < '@'))
+	  || ((event->data >= 'a') && (event->data <= 'z'))) {
 	if (stl < SCI_CONSOLE_MAX_INPUT) {
 	  memmove(_inpbuf + con_cursor, _inpbuf + con_cursor-1,
 		  SCI_CONSOLE_MAX_INPUT - con_cursor+1);
@@ -154,7 +93,18 @@ consoleInput(sci_event_t *event)
 	  if (event->buckybits & (SCI_EVM_RSHIFT | SCI_EVM_LSHIFT | SCI_EVM_CAPSLOCK)) /* Shift? */
 	    switch (event->data) {
 
+	    case '1': _inpbuf[con_cursor] = '!'; break;
+	    case '2': _inpbuf[con_cursor] = '@'; break;
+	    case '3': _inpbuf[con_cursor] = '#'; break;
+	    case '4': _inpbuf[con_cursor] = '$'; break;
+	    case '5': _inpbuf[con_cursor] = '%'; break;
+	    case '6': _inpbuf[con_cursor] = '^'; break;
+	    case '7': _inpbuf[con_cursor] = '&'; break;
+	    case '8': _inpbuf[con_cursor] = '*'; break;
+	    case '9': _inpbuf[con_cursor] = '('; break;
+	    case '0': _inpbuf[con_cursor] = ')'; break;
 	    case '-': _inpbuf[con_cursor] = '_'; break;
+	    case '=': _inpbuf[con_cursor] = '+'; break;
 
 	    default:
 	      _inpbuf[con_cursor] = toupper(event->data);
@@ -163,13 +113,61 @@ consoleInput(sci_event_t *event)
 
 	  con_cursor++;
 	}
-	_outputlookback = _outputbufpos;
+	con_outputlookback = con_outputbufpos;
       } else switch (event->data) {
 
 	case SCI_K_ENTER: goto sci_evil_label_enter;
 
 	case SCI_K_BACKSPACE: goto sci_evil_label_backspace;
 
+	case SCI_K_LEFT:
+	  if (con_cursor > 1) con_cursor--;
+	  z = 1;
+	  con_outputlookback = con_outputbufpos;
+	  break;
+
+	case SCI_K_UP:
+	  goto sci_evil_label_prevcommand;
+
+	case SCI_K_DOWN:
+	  goto sci_evil_label_nextcommand;
+
+	case SCI_K_RIGHT:
+	  if (con_cursor <= stl) con_cursor++;
+	  z = 1;
+	  con_outputlookback = con_outputbufpos;
+	  break;
+
+	case SCI_K_PGUP:
+	  for (i = 0; i < 3; i++) {
+	    if ((z = con_outputlookback - 1) <= 0)
+	      z += con_outputbuflen;
+	    if (z == con_outputbufpos)
+	      break;
+	    con_outputlookback = z;
+	  }
+	  z = 1;
+	  break;
+
+	case SCI_K_PGDOWN:
+	  for (i = 0; i < 3; i++) {
+	    if ((z = con_outputlookback + 1) > con_outputbuflen)
+	      z = 1;
+	    if (con_outputlookback == con_outputbufpos)
+	      break;
+	    con_outputlookback = z;
+	  }
+	  z = 1;
+	  break;
+
+	case SCI_K_DELETE:
+	  if (con_cursor <= stl) {
+	    memmove(_inpbuf + con_cursor, _inpbuf + con_cursor +1,
+		    SCI_CONSOLE_MAX_INPUT - con_cursor- 1);
+	  }
+	  con_outputlookback = con_outputbufpos;
+	  z = 1;
+	  break;
       }
     } else
 
@@ -195,7 +193,7 @@ consoleInput(sci_event_t *event)
 	case 'p':
 	sci_evil_label_prevcommand:
 	if (_commandlookback == _commandbufpos)
-	  memcpy(&(_commandbuf[_commandbufpos]), con_input, SCI_CONSOLE_MAX_INPUT);
+	  memcpy(&(_commandbuf[_commandbufpos]), con_input_line, SCI_CONSOLE_MAX_INPUT);
 
 	if ((z = _commandlookback - 1) == -1)
 	  z = _commandbuflen;
@@ -203,8 +201,8 @@ consoleInput(sci_event_t *event)
 	if (z != _commandbufpos) {
 	  _commandlookback = z;
 
-	  memcpy(con_input, &(_commandbuf[_commandlookback]), SCI_CONSOLE_MAX_INPUT);
-	  con_cursor = strlen(con_input)+1;
+	  memcpy(con_input_line, &(_commandbuf[_commandlookback]), SCI_CONSOLE_MAX_INPUT);
+	  con_cursor = strlen(con_input_line)+1;
 	}
 	break;
 
@@ -216,8 +214,8 @@ consoleInput(sci_event_t *event)
 	if (_commandlookback != _commandbufpos) {
 	  _commandlookback = z;
 
-	  memcpy(con_input, &(_commandbuf[_commandlookback]), SCI_CONSOLE_MAX_INPUT);
-	  con_cursor = strlen(con_input)+1;
+	  memcpy(con_input_line, &(_commandbuf[_commandlookback]), SCI_CONSOLE_MAX_INPUT);
+	  con_cursor = strlen(con_input_line)+1;
 	}
 	break;
 
@@ -243,73 +241,21 @@ consoleInput(sci_event_t *event)
 
 	case 'm': /* Enter */
 	sci_evil_label_enter:
-	memcpy(&(_commandbuf[z = _commandbufpos]), con_input, SCI_CONSOLE_MAX_INPUT);
+	memcpy(&(_commandbuf[z = _commandbufpos]), con_input_line, SCI_CONSOLE_MAX_INPUT);
 	++_commandbufpos;
 	_commandlookback = _commandbufpos %= SCI_CONSOLE_INPUT_BUFFER;
 	if (_commandbuflen < _commandbufpos)
 	  _commandbuflen = _commandbufpos;
 
-	con_input[0] = '\0';
+	con_input_line[0] = '\0';
 	con_cursor = 1;
-	_outputlookback = _outputbufpos;
+	con_outputlookback = con_outputbufpos;
 	return _commandbuf[z];
 
 	}
-	_outputlookback = _outputbufpos;
+	con_outputlookback = con_outputbufpos;
 
-      } else if (event->buckybits & SCI_EVM_NUMLOCK)
-	switch (event->data) {
-
-	case SCI_K_LEFT:
-	  if (con_cursor > 1) con_cursor--;
-	  z = 1;
-	  _outputlookback = _outputbufpos;
-	  break;
-
-	case SCI_K_UP:
-	  goto sci_evil_label_prevcommand;
-
-	case SCI_K_DOWN:
-      goto sci_evil_label_nextcommand;
-
-	case SCI_K_RIGHT:
-	  if (con_cursor <= stl) con_cursor++;
-	  z = 1;
-	  _outputlookback = _outputbufpos;
-	  break;
-
-	case SCI_K_PGUP:
-	  for (i = 0; i < 3; i++) {
-	    if ((z = _outputlookback - 1) <= 0)
-	      z += _outputbuflen;
-	    if (z == _outputbufpos)
-	      break;
-	    _outputlookback = z;
-	  }
-	  z = 1;
-	  break;
-
-	case SCI_K_PGDOWN:
-	  for (i = 0; i < 3; i++) {
-	    if ((z = _outputlookback + 1) > _outputbuflen)
-	      z = 1;
-	    if (_outputlookback == _outputbufpos)
-	      break;
-	    _outputlookback = z;
-	  }
-	  z = 1;
-	  break;
-
-	case SCI_K_DELETE:
-	  if (con_cursor <= stl) {
-	    memmove(_inpbuf + con_cursor, _inpbuf + con_cursor +1,
-		    SCI_CONSOLE_MAX_INPUT - con_cursor- 1);
-	  }
-	  _outputlookback = _outputbufpos;
-	  z = 1;
-	  break;
-
-	}
+      }
   }
   return NULL;
 }
@@ -359,7 +305,7 @@ con_draw(state_t *s, byte *backup)
 
   if (outplines < 0)
     outplines = 0;
-  nextline = _outputlookback;
+  nextline = con_outputlookback;
 
   if (pos >= 0) /* Draw the cursor */
     for (i=0; i < 7; i++)
@@ -370,9 +316,9 @@ con_draw(state_t *s, byte *backup)
     nextline = (nextline - 1);
     if (nextline < 0)
       nextline += SCI_CONSOLE_OUTPUT_BUFFER;
-    if (nextline == _outputbufpos) break;
-    drawString(s->pic, s->pic_visible_map, pos, SCI_CONSOLE_LINE_WIDTH,
-	       _outputbuf[nextline], SCI_MAP_EGA_COLOR(s->pic, SCI_CONSOLE_FGCOLOR));
+    if (nextline == con_outputbufpos) break;
+    con_draw_string(s->pic, s->pic_visible_map, pos, SCI_CONSOLE_LINE_WIDTH,
+	       con_outputbuf[nextline], SCI_MAP_EGA_COLOR(s->pic, SCI_CONSOLE_FGCOLOR));
   }
 
   pos = outplines;
@@ -384,8 +330,8 @@ con_draw(state_t *s, byte *backup)
     inplines = con_visible_rows;
   }
   while (inplines--) {
-    drawString(s->pic, s->pic_visible_map, pos++, SCI_CONSOLE_LINE_WIDTH,
-	       _inpbuf + i, SCI_MAP_EGA_COLOR(s->pic, SCI_CONSOLE_INPUTCOLOR));
+    con_draw_string(s->pic, s->pic_visible_map, pos++, SCI_CONSOLE_LINE_WIDTH,
+		    _inpbuf + i, SCI_MAP_EGA_COLOR(s->pic, SCI_CONSOLE_INPUTCOLOR));
     i += SCI_CONSOLE_LINE_WIDTH;
   }
 

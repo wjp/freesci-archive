@@ -327,9 +327,11 @@ main(int argc, char** argv)
   printf("Mapping instruments to General Midi\n");
   mapMIDIInstruments();
 
+  con_init();
+  con_init_gfx();
 
-  cmdHook(&c_quit, "quit", "", "console: Quits gracefully");
-  cmdHook(&c_die, "die", "", "console: Quits ungracefully");
+  con_hook_command(&c_quit, "quit", "", "console: Quits gracefully");
+  con_hook_command(&c_die, "die", "", "console: Quits ungracefully");
 
   con_passthrough = 1; /* enables all sciprintf data to be sent to stdout */
   con_visible_rows = 1; /* Fool the functions into believing that we *have* a display */
@@ -444,10 +446,7 @@ main(int argc, char** argv)
 
   game_exit(gamestate);
 
-  gamestate->gfx_driver->Shutdown(gamestate); /* Close graphics */
-
   script_free_state(gamestate); /* Uninitialize game state */
-  free(gamestate);
 
   freeResources();
 
@@ -463,6 +462,10 @@ main(int argc, char** argv)
   wait(NULL); /* Wait for sound server process to die, if neccessary */
   printf(" OK.\n");
 #endif
+
+  gamestate->gfx_driver->Shutdown(gamestate); /* Shutdown graphics */
+
+  free(gamestate);
 
   return 0;
 }

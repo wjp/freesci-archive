@@ -54,7 +54,7 @@ typedef struct {
 #define SCI_EVT_MOUSE_RELEASE   (1<<1)
 #define SCI_EVT_KEYBOARD        (1<<2)
 #define SCI_EVT_JOYSTICK        (1<<6)
-#define SCI_EVT_MENU            (1<<7)
+#define SCI_EVT_SAID            (1<<7)
 /*Fake values for other events*/
 #define SCI_EVT_ERROR           (1<<10)
 

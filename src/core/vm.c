@@ -32,6 +32,7 @@
 #include <engine.h>
 #include <versions.h>
 #include <kdebug.h>
+#include <sys/resource.h>
 
 /* #define VM_DEBUG_SEND */
 
@@ -1155,18 +1156,6 @@ script_init_state(state_t *s, sci_version_t version)
   resource_t *script;
   int magic_offset; /* For strange scripts in older SCI versions */
 
-
-  /* Initialize script table */
-  for (i = 0; i < 1000; i++)
-    s->scripttable[i].heappos = 0;
-  /* Initialize hunk data */
-  for (i = 0; i < MAX_HUNK_BLOCKS; i++)
-    s->hunk[i].size = 0;
-  /* Initialize ports */
-  memset(s->ports, 0, sizeof(port_t *) * MAX_PORTS);
-  /* Initialize clone list */
-  memset(&(s->clone_list), 0, sizeof(heap_ptr) * SCRIPT_MAX_CLONES);
-
   s->max_version = SCI_VERSION(9,999,999); /* :-) */
   s->min_version = 0; /* Set no real limits */
   s->version = SCI_VERSION_DEFAULT_SCI0;
@@ -1533,12 +1522,23 @@ game_init(state_t *s)
   resource_t *resource;
   int i, font_nr;
 
+  /* Initialize script table */
+  for (i = 0; i < 1000; i++)
+    s->scripttable[i].heappos = 0;
+  /* Initialize hunk data */
+  for (i = 0; i < MAX_HUNK_BLOCKS; i++)
+    s->hunk[i].size = 0;
+  /* Initialize ports */
+  memset(s->ports, 0, sizeof(port_t *) * MAX_PORTS);
+  /* Initialize clone list */
+  memset(&(s->clone_list), 0, sizeof(heap_ptr) * SCRIPT_MAX_CLONES);
   /* Initialize send_calls buffer */
+
   if (!send_calls_allocated)
     send_calls = g_new(calls_struct_t, send_calls_allocated = 16);
 
   if (!stack_handle) {
-    sciprintf("script_init(): Insufficient heap space for stack\n");
+    sciprintf("game_init(): Insufficient heap space for stack\n");
     return 1;
   }
 
@@ -1726,8 +1726,13 @@ game_run(state_t **_s)
       s->execution_stack_pos_changed = 0;
       restore_ff(s->_heap); /* Restore old heap state */
 
+      game_exit(s);
+      script_free_state(s);
+      script_init_state(s, s->version);
+      game_init(s);
+
       sciprintf(" Restarting game\n");
-      putInt16(s->heap + s->stack_base, s->selector_map.replay); /* Call the replay selector */
+      /*      putInt16(s->heap + s->stack_base, s->selector_map.replay); /* Call the replay selector */
       putInt16(s->heap + s->stack_base + 2, 0);
       send_selector(s, s->game_obj, s->game_obj, s->stack_base + 2, 4, 0, s->stack_base);
 

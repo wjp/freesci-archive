@@ -1,5 +1,5 @@
 /***************************************************************************
- console_font.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+ con_font.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
 
 
  This program may be modified and copied freely according to the terms of
@@ -23,10 +23,6 @@
 
     Christoph Reichenbach (CJR) [creichen@rbg.informatik.tu-darmstadt.de]
 
- History:
-
-   000000 - created (CJR)
-
 ***************************************************************************/
 /* provides a simple 8x8 font and functions for drawing it */
 
@@ -37,7 +33,7 @@
 extern guint8 _font[];
 
 inline void
-drawChar(picture_t pic, int map, int cpos, int col, guint8 character)
+con_draw_char(picture_t pic, int map, int cpos, int col, guint8 character)
 {
   int offset = character << 3;
   unsigned char *homepos = pic->maps[map] + cpos;
@@ -57,11 +53,11 @@ drawChar(picture_t pic, int map, int cpos, int col, guint8 character)
 }
 
 void
-drawString(picture_t pic, int map, int row, int maxlen, char *string, int color)
+con_draw_string(picture_t pic, int map, int row, int maxlen, char *string, int color)
 {
   int pos = (row << 3) * 320;
   while ((*string) && (maxlen--)) {
-    drawChar(pic, map, pos, color, *string);
+    con_draw_char(pic, map, pos, color, *string);
     pos += 8;
     string++;
   }

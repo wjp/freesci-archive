@@ -1,5 +1,5 @@
 /***************************************************************************
- commands.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+ console.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
 
 
  This program may be modified and copied freely according to the terms of
@@ -61,7 +61,18 @@ int _cmd_var_count = 0;
 cmd_var_t *_cmd_vars = 0;
 
 
-int _lists_need_sorting = 0;
+int con_passthrough = 0;
+FILE *con_file;
+
+static int _lists_need_sorting = 0;
+
+
+/* Output buffer */
+char con_outputbuf[SCI_CONSOLE_OUTPUT_BUFFER][SCI_CONSOLE_LINE_WIDTH];
+int con_outputbufpos = 0; /* buffer line */
+int con_outputbufcolumn = 0;
+int con_outputbuflen = 0;
+int con_outputlookback = 0;
 
 
 int cmd_paramlength;
@@ -84,20 +95,20 @@ void *_xrealloc(void *oldp, size_t size)
   return retval;
 }
 
-int
+static int
 _comp_command(const void *a, const void *b)
 {
   return strcmp(((cmd_command_t *) a)->name, ((cmd_command_t *) b)->name);
 }
 
-int
+static int
 _comp_var(const void *a, const void *b)
 {
   return strcmp(((cmd_var_t *) a)->name, ((cmd_var_t *) b)->name);
 }
 
 void
-cmdSortAll(void)
+con_sort_all(void)
 {
   if (_cmd_command_count)
     qsort(_cmd_commands, _cmd_command_count, sizeof(cmd_command_t),
@@ -109,40 +120,37 @@ cmdSortAll(void)
 }
 
 void
-cmdInit(void)
+con_init(void)
 {
   if (!_cmd_command_mem) {
     _cmd_commands = _xrealloc(NULL, sizeof(cmd_command_t) * (_cmd_command_mem = 32));
     atexit(_cmd_exit);
 
     /* Hook up some commands */
-    cmdHook(&c_version, "version", "", "Displays the version number");
-    cmdHook(&c_list, "list", "s*", "Lists various things (try 'list')");
-    cmdHook(&c_man, "man", "s", "Gives a short description of something");
-    cmdHook(&c_print, "print", "s", "Prints an int variable");
-    cmdHook(&c_set, "set", "si", "Sets an int variable");
-    cmdHook(&c_size, "size", "si", "Displays the size of a resource");
-    cmdHook(&c_dump, "dump", "si", "HexDumps a resource");
-    cmdHook(&c_hexgrep, "hexgrep", "shh*", "Searches some resources for a\n"
-	    "  particular sequence of bytes, re-\n  presented"
-	    " as hexadecimal numbers.\n\n"
-	    "EXAMPLES:\n  hexgrep script e8 03 c8 00\n"
-	    "  hexgrep pic.042 fe");
-    cmdHook(&c_selectornames, "selectornames", "", "Displays all selector names and numbers.");
-    cmdHook(&c_kernelnames, "kernelnames", "", "Displays all syscall names and numbers.");
-    cmdHook(&c_dissectscript, "dissectscript", "i", "Examines a script.");
+    con_hook_command(&c_version, "version", "", "Displays the version number");
+    con_hook_command(&c_list, "list", "s*", "Lists various things (try 'list')");
+    con_hook_command(&c_man, "man", "s", "Gives a short description of something");
+    con_hook_command(&c_print, "print", "s", "Prints an int variable");
+    con_hook_command(&c_set, "set", "si", "Sets an int variable");
+    con_hook_command(&c_size, "size", "si", "Displays the size of a resource");
+    con_hook_command(&c_dump, "dump", "si", "HexDumps a resource");
+    con_hook_command(&c_hexgrep, "hexgrep", "shh*", "Searches some resources for a\n"
+		     "  particular sequence of bytes, re-\n  presented"
+		     " as hexadecimal numbers.\n\n"
+		     "EXAMPLES:\n  hexgrep script e8 03 c8 00\n"
+		     "  hexgrep pic.042 fe");
+    con_hook_command(&c_selectornames, "selectornames", "", "Displays all selector names and numbers.");
+    con_hook_command(&c_kernelnames, "kernelnames", "", "Displays all syscall names and numbers.");
+    con_hook_command(&c_dissectscript, "dissectscript", "i", "Examines a script.");
 
-    cmdHookInt(&con_passthrough, "con_passthrough", "scicon->stdout passthrough");
-    cmdHookInt(&sci_color_mode, "color_mode", "SCI0 picture resource draw mode (0..2)");
-    cmdHookInt(&sci_version, "sci_version", "Interpreter version (see resource.h)");
-    cmdHookInt(&con_display_row, "con_display_row", "Number of rows to display for the"
-	       "\n  onscreen console");
+    con_hook_int(&con_passthrough, "con_passthrough", "scicon->stdout passthrough");
+    con_hook_int(&sci_version, "sci_version", "Interpreter version (see resource.h)");
   }
 }
 
 
 void
-cmdParse(state_t *s, char *command)
+con_parse(state_t *s, char *command)
 {
   int escape = 0; /* escape next char? */
   int quote = 0; /* quoting? */
@@ -153,7 +161,7 @@ cmdParse(state_t *s, char *command)
   char *_cmd = cmd;
   int pos = 0;
 
-  if (!_cmd_command_mem) cmdInit();
+  if (!_cmd_command_mem) con_init();
 
   while (!done) {
     int cmdnum = -1; /* command number */
@@ -289,11 +297,11 @@ cmdParse(state_t *s, char *command)
 
 
 int
-cmdHook(int command(state_t *), char *name, char *param, char *description)
+con_hook_command(int command(state_t *), char *name, char *param, char *description)
 {
   int i;
 
-  if (!_cmd_command_mem) cmdInit();
+  if (!_cmd_command_mem) con_init();
   if (_cmd_command_mem == _cmd_command_count)
     _cmd_commands = _xrealloc(_cmd_commands,
 			     sizeof(cmd_command_t) * (_cmd_command_mem <<= 1));
@@ -338,7 +346,7 @@ cmdHook(int command(state_t *), char *name, char *param, char *description)
 
 
 int
-cmdHookInt(int *pointer, char *name, char *description)
+con_hook_int(int *pointer, char *name, char *description)
 {
   int i;
 
@@ -366,14 +374,86 @@ cmdHookInt(int *pointer, char *name, char *description)
 
 
 
+/****************************************/
+/* sciprintf                            */
+/****************************************/
 
+
+void
+sciprintf(char *fmt, ...)
+{
+  va_list argp;
+  size_t bufsize = 256;
+  int i;
+  char *buf = (char *) g_malloc(bufsize);
+  char *mbuf;
+
+  va_start(argp, fmt);
+  while ((i = g_vsnprintf(buf, bufsize-1, fmt, argp)) == -1 || (i > bufsize - 1)) {
+    /* while we're out of space... */
+    va_end(argp);
+    va_start(argp, fmt); /* reset argp */
+
+    free(buf);
+    buf = (char *) g_malloc(bufsize <<= 1);
+  }
+  va_end(argp);
+
+  if (con_passthrough)
+    printf("%s",buf);
+  if (con_file)
+    fprintf(con_file, "%s", buf);
+
+  mbuf = buf;
+
+  i = strlen(mbuf);
+
+  while (i > 0) {
+    char *seekerpt = strchr(mbuf, '\n');
+    int seeker = seekerpt? seekerpt - mbuf : SCI_CONSOLE_LINE_WIDTH - con_outputbufcolumn;
+    if (seeker >= SCI_CONSOLE_LINE_WIDTH - con_outputbufcolumn)
+      seeker = (i > SCI_CONSOLE_LINE_WIDTH - con_outputbufcolumn)?
+	SCI_CONSOLE_LINE_WIDTH - con_outputbufcolumn : i;
+
+    memcpy(con_outputbuf[con_outputbufpos] + con_outputbufcolumn, mbuf, seeker);
+    if (seeker + con_outputbufcolumn < SCI_CONSOLE_LINE_WIDTH)
+      con_outputbuf[con_outputbufpos][seeker + con_outputbufcolumn] = 0;
+
+    con_outputbufcolumn += seeker;
+
+    if (con_outputbufcolumn == SCI_CONSOLE_LINE_WIDTH) {
+      con_outputbufpos++;
+      con_outputbufcolumn = 0;
+    }
+
+    if (seekerpt && (seeker == seekerpt - mbuf)) {
+      con_outputbufcolumn = 0;
+      con_outputbufpos++;
+      mbuf++;
+      i--;
+    }
+
+    mbuf += seeker;
+    i -= seeker;
+
+    if (con_outputbufpos >= SCI_CONSOLE_OUTPUT_BUFFER) {
+      con_outputbufpos -= SCI_CONSOLE_OUTPUT_BUFFER;
+      con_outputbuflen = SCI_CONSOLE_OUTPUT_BUFFER;
+    }
+  }
+  if (con_outputbuflen < con_outputbufpos)
+    con_outputbuflen = con_outputbufpos;
+
+  con_outputlookback = con_outputbufpos;
+  free(buf);
+}
 
 
 
 
 
 /***************************************************************************
- * Console commands and supplemental functions
+ * Console commands and support functions
  ***************************************************************************/
 
 
@@ -400,7 +480,7 @@ int
 c_list(state_t *s)
 {
   if (_lists_need_sorting)
-    cmdSortAll();
+    con_sort_all();
 
   if (cmd_paramlength == 0) {
     sciprintf("usage: list [type]\nwhere type is one of the following:\n"
@@ -605,7 +685,8 @@ c_hexgrep(state_t *s)
 
 int c_selectornames(state_t *s)
 {
-  char **snames = vocabulary_get_snames(NULL);
+  int namectr;
+  char **snames = vocabulary_get_snames(&namectr);
   int seeker = 0;
 
   if (!snames) {

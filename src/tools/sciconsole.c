@@ -1,5 +1,5 @@
 /***************************************************************************
- console.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
+ sciconsole.c Copyright (C) 1999 Christoph Reichenbach, TU Darmstadt
 
 
  This program may be modified and copied freely according to the terms of
@@ -78,10 +78,9 @@ main(int argc, char** argv)
     sciprintf("Could not load objects\n");
     }*/
 
-  cmdHook(&c_quit, "quit", "", "console: Quits");
+  con_hook_command(&c_quit, "quit", "", "console: Quits");
 
   con_passthrough = 1; /* enables all sciprintf data to be sent to stdout */
-  con_visible_rows = 1; /* Fool the functions into believing that we *have* a display */
   sciprintf("FreeSCI, version "VERSION"\n");
 
 #ifdef HAVE_READLINE_HISTORY_H
@@ -104,7 +103,7 @@ main(int argc, char** argv)
       add_history(command);
 #endif /* HAVE_READLINE_HISTORY_H */
 
-    cmdParse(NULL, command);
+    con_parse(NULL, command);
 
     free(command);
   }

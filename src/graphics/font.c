@@ -57,7 +57,7 @@ get_text_width(char *text, byte *font)
   int localmaxwidth = 0;
 
   while (foo = *text++) {
-    if (foo == '\n') {
+    if ((foo == '\n') || (foo == 0x0d)) {
       if (localmaxwidth > maxwidth)
 	maxwidth = localmaxwidth;
       localmaxwidth = 0;
@@ -91,9 +91,10 @@ get_text_size(char *text, byte *font, int max_allowed_width, int *width, int *he
     max_allowed_width = 32768;
 
   while (foo = *text++) {
-    if (foo == '\n') {
+    if ((foo == '\n') || (foo == 0x0d)) {
 
-      maxheight += lineheight;
+      if (foo == '\n')
+	maxheight += lineheight;
 
       if (localmaxwidth > maxwidth)
 	maxwidth = localmaxwidth;
@@ -154,19 +155,20 @@ void getTextParams(char *text, char *font)
   maxchar = getInt16(font+2);
 
   while ((foo = *(text++))) {
-    if (foo == '\n') {
-      if (localmaxwidth > lastwidth) lastwidth = localmaxwidth;
-      rowheights[rowcounter] = localmaxheight;
-      rowwidths[rowcounter++] = localmaxwidth;
-      localmaxwidth = 0;
-      lastheight += localmaxheight + 1;
-      localmaxheight = 0;
-    } else if (foo < maxchar) {
-      guint16 quux = getInt16((guint8 *) font+6+(foo<<1));
-      guint8 *foopos = font + quux;
-      localmaxwidth += *foopos;
-      if (localmaxheight < *(foopos+1)) localmaxheight = *(foopos+1);
-    }
+    if (foo != 0x0d)
+      if (foo == '\n') {
+	if (localmaxwidth > lastwidth) lastwidth = localmaxwidth;
+	rowheights[rowcounter] = localmaxheight;
+	rowwidths[rowcounter++] = localmaxwidth;
+	localmaxwidth = 0;
+	lastheight += localmaxheight + 1;
+	localmaxheight = 0;
+      } else if (foo < maxchar) {
+	guint16 quux = getInt16((guint8 *) font+6+(foo<<1));
+	guint8 *foopos = font + quux;
+	localmaxwidth += *foopos;
+	if (localmaxheight < *(foopos+1)) localmaxheight = *(foopos+1);
+      }
   }
   if (localmaxwidth > lastwidth) lastwidth = localmaxwidth;
   rowheights[rowcounter] = localmaxheight;
@@ -190,54 +192,55 @@ void draw_text0(picture_t dest, port_t *port, int x, int y, char *text, char *fo
   getTextParams(text, font);
 
   while ((foo= *(text++))) {
-    if (foo == '\n') {
-      y += rowheights[rowcounter++] + 1;
-      x = xhome + ((lastwidth - rowwidths[rowcounter]) >> 1);
-    } else if (foo < maxchar) {
-      short xc;
-      short yc;
-      unsigned char xl, yl;
-      guint16 quux = getInt16((guint8 *) font+6+(foo<<1));
+    if (foo != 0x0d)
+      if (foo == '\n') {
+	y += rowheights[rowcounter++] + 1;
+	x = xhome + ((lastwidth - rowwidths[rowcounter]) >> 1);
+      } else if (foo < maxchar) {
+	short xc;
+	short yc;
+	unsigned char xl, yl;
+	guint16 quux = getInt16((guint8 *) font+6+(foo<<1));
 
-      guint8 *foopos = font + quux;
-      int pos = x+ (y*SCI_SCREEN_WIDTH);
+	guint8 *foopos = font + quux;
+	int pos = x+ (y*SCI_SCREEN_WIDTH);
 
-      xl = *foopos;
-      yl = *(foopos+1);
-      foopos += 2;
-      if (xl < 9) /* 8 bit */
-	for (yc = 0; yc < yl; yc++) {
-	  int poshome = pos;
-	  guint8 bitmask = *(foopos++);
-	  for (xc = 0; xc < xl; xc++) {
-	    if (bitmask & 0x80) {
-	      dest->maps[0][pos] = color;
-	      dest->maps[1][pos] = priority;
+	xl = *foopos;
+	yl = *(foopos+1);
+	foopos += 2;
+	if (xl < 9) /* 8 bit */
+	  for (yc = 0; yc < yl; yc++) {
+	    int poshome = pos;
+	    guint8 bitmask = *(foopos++);
+	    for (xc = 0; xc < xl; xc++) {
+	      if (bitmask & 0x80) {
+		dest->maps[0][pos] = color;
+		dest->maps[1][pos] = priority;
+	      }
+	      pos++;
+	      bitmask <<= 1;
 	    }
-	    pos++;
-	    bitmask <<= 1;
+	    pos = poshome + SCI_SCREEN_WIDTH;
 	  }
-	  pos = poshome + SCI_SCREEN_WIDTH;
-	}
-      else { /* 16 bit */
-	for (yc = 0; yc < yl; yc++) {
-	  int poshome = pos;
-	  guint16 bitmask = *(foopos+1) | *foopos << 8;
-	  /* interestingly, this bitmask is big-endian */
-	  foopos += 2;
-	  for (xc = 0; xc < xl; xc++) {
-	    if (bitmask & 0x8000) {
-	      dest->maps[0][pos] = color;
-	      dest->maps[1][pos] = priority;
+	else { /* 16 bit */
+	  for (yc = 0; yc < yl; yc++) {
+	    int poshome = pos;
+	    guint16 bitmask = *(foopos+1) | *foopos << 8;
+	    /* interestingly, this bitmask is big-endian */
+	    foopos += 2;
+	    for (xc = 0; xc < xl; xc++) {
+	      if (bitmask & 0x8000) {
+		dest->maps[0][pos] = color;
+		dest->maps[1][pos] = priority;
+	      }
+	      bitmask <<= 1;
+	      pos++;
 	    }
-	    bitmask <<= 1;
-	    pos++;
+	    pos = poshome + SCI_SCREEN_WIDTH;
 	  }
-	  pos = poshome + SCI_SCREEN_WIDTH;
 	}
+	x += xl;
       }
-      x += xl;
-    }
   }
 }
 
@@ -352,12 +355,15 @@ text_draw(picture_t dest, port_t *port, char *text, int maxwidth)
 
       int xl = *foopos; /* Get width */
 
-      if ((width > maxwidth) || (foo == '\n') || (foo == 0)) {
+      if ((width > maxwidth) || (foo == '\n') || (foo == 0x0d) || (foo == 0)) {
 
-	if ((foo == '\n') || (foo == 0)) { /* newline or end of text */
+	if ((foo == '\n') || (foo == 0) || (foo == 0x0d)) { /* newline or end of text */
 
 	  last_breakpoint = last_text_count;
 	  last_breakpoint_width = width;
+
+	  if ((foo == 0x0d) && (text[1]))
+	    ++last_text_count;
 
 	} else {
 	  if (!last_breakpoint) /* No blank to break at? */
@@ -393,7 +399,7 @@ text_draw(picture_t dest, port_t *port, char *text, int maxwidth)
 
 	y += line_height;
 
-	text = last_text_base += last_breakpoint + 1;
+	text = last_text_base += last_breakpoint + 1 + ((foo == 0x0d) && text[1]); /* Step over 0x0d */
 
 	last_breakpoint = width = last_text_count = 0;
 	x = xhome;

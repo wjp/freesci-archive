@@ -55,9 +55,7 @@ static struct option options[] = {
   {0, 0, 0, 0}};
 #endif /* HAVE_GETOPT_H */
 
-void
-graph_update_box(state_t *s, int x,int y,int z,int w)
-{}; /* Dummy because of braindead library design */
+
 
 typedef struct name_s {
   int offset;

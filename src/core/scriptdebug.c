@@ -1226,66 +1226,67 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 
       _debug_commands_not_hooked = 0;
 
-      cmdHook(c_debuginfo, "registers", "", "Displays all current register values");
-      cmdHook(c_step, "s", "i*", "Executes one or several operations\n\nEXAMPLES\n\n"
-	      "    s 4\n\n  Execute 4 commands\n\n    s\n\n  Execute next command");
-      cmdHook(c_stepover, "so", "", "Executes one operation skipping over sends");
-      cmdHook(c_heapdump, "heapdump", "ii", "Dumps data from the heap\n"
-	      "\nEXAMPLE\n\n    heapdump 0x1200 42\n\n  Dumps 42 bytes starting at heap address\n"
-	      "  0x1200");
-      cmdHook(c_disasm, "disasm", "ii*", "Disassembles one or more commands\n\n"
-	      "USAGE\n\n  disasm [startaddr] <number of commands to disassemble>");
-      cmdHook(c_scriptinfo, "scripttable", "", "Displays information about all\n  loaded scripts");
-      cmdHook(c_heapobj, "heapobj", "i", "Displays information about an\n  object or class on the\n"
-	      "specified heap address.\n\nSEE ALSO\n\n  obj, accobj");
-      cmdHook(c_obj, "obj", "", "Displays information about the\n  currently active object/class.\n"
-	      "\n\nSEE ALSO\n\n  heapobj, accobj");
-      cmdHook(c_accobj, "accobj", "", "Displays information about an\n  object or class at the\n"
-	      "address indexed by acc.\n\nSEE ALSO\n\n  obj, heapobj");
-      cmdHook(c_classtable, "classtable", "", "Lists all available classes");
-      cmdHook(c_stack, "stack", "i", "Dumps the specified number of stack elements");
-      cmdHook(c_backtrace, "bt", "", "Dumps the send/self/super/call/calle/callb stack");
-      cmdHook(c_snk, "snk", "s*", "Steps forward until it hits the next\n  callk operation.\n"
-	      "  If invoked with a parameter, it will\n  look for that specific callk.\n");
-      cmdHook(c_listclones, "clonetable", "", "Lists all registered clones");
-      cmdHook(c_set_acc, "set_acc", "i", "Sets the accumulator");
-      cmdHook(c_heap_free, "heapfree", "", "Shows the free heap");
-      cmdHook(c_sret, "sret", "", "Steps forward until ret is called\n  on the current execution stack"
-	      "\n  level.");
-      cmdHook(c_resource_id, "resource_id", "i", "Identifies a resource number by\n"
-	      "  splitting it up in resource type\n  and resource number.");
-      cmdHook(c_refresh_screen, "refresh_screen", "", "Redraws the screen");
-      cmdHook(c_redraw_screen, "redraw_screen", "", "Reloads and redraws the screen");
-      cmdHook(c_show_list, "listinfo", "i", "Examines the list at the specified\n  heap address");
-      cmdHook(c_debuglog, "debuglog", "s*", "Sets the debug log modes.\n  Possible parameters:\n"
-	      "  +x (sets debugging for x)\n  -x (unsets debugging for x)\n\nPossible values for x:\n"
-	      "  u: Unimpl'd/stubbed stuff\n  l: Lists and nodes\n  g: Graphics\n  c: Character"
-	      " handling\n  m: Memory management\n  f: Function call checks\n  b: Bresenham details\n"
-	      "  a: Audio\n  d: System gfx management\n  s: Base setter\n  p: Parser\n"
-	      "  *: Everything\n  M: The menu system\n\n"
-	      "  If invoked withour parameters,\n  it will list all activated\n  debug options.");
-      cmdHook(c_visible_map, "set_vismap", "i", "Sets the visible map.\n  Default is 0 (visual).\n"
-	      "  Other useful values are:\n  1: Priority\n  2: Control\n  3: Auxiliary\n");
-      cmdHook(c_simkey, "simkey", "i", "Simulates a keypress with the\n  specified scancode.\n");
-      cmdHook(c_bpx, "bpx", "s", "Sets a breakpoint on the execution of specified method.\n");
-      cmdHook(c_bpe, "bpe", "ii", "Sets a breakpoint on the execution of specified exported function.\n");
-      cmdHook(c_bplist, "bplist", "", "Lists all breakpoints.\n");
-      cmdHook(c_bpdel, "bpdel", "i", "Deletes a breakpoint with specified index.");
-      cmdHook(c_go, "go", "", "Executes the script.\n");
-      cmdHook(c_dumpnodes, "dumpnodes", "i", "shows the specified number of nodes\n"
-	      "  from the parse node tree");
-      cmdHook(c_save_game, "save_game", "s", "Saves the current game state to\n  the hard disk");
-      cmdHook(c_restore_game, "restore_game", "s", "Restores a saved game from the\n  hard disk");
-      cmdHook(c_viewinfo, "viewinfo", "i", "Displays the number of loops\n  and cels of each loop"
-	      " for the\n  specified view resource.");
+      con_hook_command(c_debuginfo, "registers", "", "Displays all current register values");
+      con_hook_command(c_step, "s", "i*", "Executes one or several operations\n\nEXAMPLES\n\n"
+		       "    s 4\n\n  Execute 4 commands\n\n    s\n\n  Execute next command");
+      con_hook_command(c_stepover, "so", "", "Executes one operation skipping over sends");
+      con_hook_command(c_heapdump, "heapdump", "ii", "Dumps data from the heap\n"
+		       "\nEXAMPLE\n\n    heapdump 0x1200 42\n\n  Dumps 42 bytes starting at heap address\n"
+		       "  0x1200");
+      con_hook_command(c_disasm, "disasm", "ii*", "Disassembles one or more commands\n\n"
+		       "USAGE\n\n  disasm [startaddr] <number of commands to disassemble>");
+      con_hook_command(c_scriptinfo, "scripttable", "", "Displays information about all\n  loaded scripts");
+      con_hook_command(c_heapobj, "heapobj", "i", "Displays information about an\n  object or class on the\n"
+		       "specified heap address.\n\nSEE ALSO\n\n  obj, accobj");
+      con_hook_command(c_obj, "obj", "", "Displays information about the\n  currently active object/class.\n"
+		       "\n\nSEE ALSO\n\n  heapobj, accobj");
+      con_hook_command(c_accobj, "accobj", "", "Displays information about an\n  object or class at the\n"
+		       "address indexed by acc.\n\nSEE ALSO\n\n  obj, heapobj");
+      con_hook_command(c_classtable, "classtable", "", "Lists all available classes");
+      con_hook_command(c_stack, "stack", "i", "Dumps the specified number of stack elements");
+      con_hook_command(c_backtrace, "bt", "", "Dumps the send/self/super/call/calle/callb stack");
+      con_hook_command(c_snk, "snk", "s*", "Steps forward until it hits the next\n  callk operation.\n"
+		       "  If invoked with a parameter, it will\n  look for that specific callk.\n");
+      con_hook_command(c_listclones, "clonetable", "", "Lists all registered clones");
+      con_hook_command(c_set_acc, "set_acc", "i", "Sets the accumulator");
+      con_hook_command(c_heap_free, "heapfree", "", "Shows the free heap");
+      con_hook_command(c_sret, "sret", "", "Steps forward until ret is called\n  on the current execution"
+		       " stack\n  level.");
+      con_hook_command(c_resource_id, "resource_id", "i", "Identifies a resource number by\n"
+		       "  splitting it up in resource type\n  and resource number.");
+      con_hook_command(c_refresh_screen, "refresh_screen", "", "Redraws the screen");
+      con_hook_command(c_redraw_screen, "redraw_screen", "", "Reloads and redraws the screen");
+      con_hook_command(c_show_list, "listinfo", "i", "Examines the list at the specified\n  heap address");
+      con_hook_command(c_debuglog, "debuglog", "s*", "Sets the debug log modes.\n  Possible parameters:\n"
+		       "  +x (sets debugging for x)\n  -x (unsets debugging for x)\n\nPossible values"
+		       " for x:\n  u: Unimpl'd/stubbed stuff\n  l: Lists and nodes\n  g: Graphics\n"
+		       "  c: Character handling\n  m: Memory management\n  f: Function call checks\n"
+		       "  b: Bresenham details\n  a: Audio\n  d: System gfx management\n  s: Base setter"
+		       "\n  p: Parser\n  *: Everything\n  M: The menu system\n\n"
+		       "  If invoked withour parameters,\n  it will list all activated\n  debug options.");
+      con_hook_command(c_visible_map, "set_vismap", "i", "Sets the visible map.\n  Default is 0 (visual).\n"
+		       "  Other useful values are:\n  1: Priority\n  2: Control\n  3: Auxiliary\n");
+      con_hook_command(c_simkey, "simkey", "i", "Simulates a keypress with the\n  specified scancode.\n");
+      con_hook_command(c_bpx, "bpx", "s", "Sets a breakpoint on the execution of specified method.\n");
+      con_hook_command(c_bpe, "bpe", "ii", "Sets a breakpoint on the execution of specified"
+		       " exported function.\n");
+      con_hook_command(c_bplist, "bplist", "", "Lists all breakpoints.\n");
+      con_hook_command(c_bpdel, "bpdel", "i", "Deletes a breakpoint with specified index.");
+      con_hook_command(c_go, "go", "", "Executes the script.\n");
+      con_hook_command(c_dumpnodes, "dumpnodes", "i", "shows the specified number of nodes\n"
+		       "  from the parse node tree");
+      con_hook_command(c_save_game, "save_game", "s", "Saves the current game state to\n  the hard disk");
+      con_hook_command(c_restore_game, "restore_game", "s", "Restores a saved game from the\n  hard disk");
+      con_hook_command(c_viewinfo, "viewinfo", "i", "Displays the number of loops\n  and cels of each loop"
+		       " for the\n  specified view resource.");
 
-      cmdHookInt(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");
-      cmdHookInt(&script_checkloads_flag, "script_checkloads_flag", "Set != 0 to display information\n"
-		 "  when scripts are loaded or unloaded");
-      cmdHookInt(&script_abort_flag, "script_abort_flag", "Set != 0 to abort execution\n");
-      cmdHookInt(&script_step_counter, "script_step_counter", "# of executed SCI operations\n");
-      cmdHookInt(&sci_debug_flags, "debug_flags", "Debug flags:\n  0x0001: Log each command executed\n"
-                                   "  0x0002: Break on warnings\n");
+      con_hook_int(&script_debug_flag, "script_debug_flag", "Set != 0 to enable debugger\n");
+      con_hook_int(&script_checkloads_flag, "script_checkloads_flag", "Set != 0 to display information\n"
+		   "  when scripts are loaded or unloaded");
+      con_hook_int(&script_abort_flag, "script_abort_flag", "Set != 0 to abort execution\n");
+      con_hook_int(&script_step_counter, "script_step_counter", "# of executed SCI operations\n");
+      con_hook_int(&sci_debug_flags, "debug_flags", "Debug flags:\n  0x0001: Log each command executed\n"
+		   "  0x0002: Break on warnings\n");
 
     } /* If commands were not hooked up */
 
@@ -1318,7 +1319,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
       if ((event.buckybits & SCI_EVM_CTRL) && (event.data == '`')) /* UnConsole command? */
 	_debugstate_valid = 0;
       else
-	if (commandbuf = consoleInput(&event)) {
+	if (commandbuf = con_input(&event)) {
 
 	  sciprintf(" >%s\n", commandbuf);
 
@@ -1327,7 +1328,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
 	  else /* No, a new valid command */
 	    strcpy(oldcommand, commandbuf);
 
-	  cmdParse(s, commandbuf);
+	  con_parse(s, commandbuf);
 
 	  redraw_console = 1;
 	}
@@ -1341,7 +1342,7 @@ script_debug(state_t *s, heap_ptr *pc, heap_ptr *sp, heap_ptr *pp, heap_ptr *obj
   } else {
 
     while (_debugstate_valid) {
-      cmdParse(s, _debug_get_input());
+      con_parse(s, _debug_get_input());
       sciprintf("\n");
     }
 

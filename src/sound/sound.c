@@ -51,6 +51,8 @@ extern sfx_driver_t sound_null;
 #endif
 
 
+sound_event_t sound_eq_eoq_event = {0, SOUND_SIGNAL_END_OF_QUEUE, 0};
+
 sfx_driver_t *sfx_drivers[] = {
 #ifdef HAVE_FORK
   /* Assume that sound_null works on any box that has fork() */
@@ -118,13 +120,14 @@ sound_get_event(state_t *s)
   char debug_buf[65];
   sound_event_t *event = xalloc(sizeof(sound_event_t));
 
+
   FD_ZERO(&inpfds);
   FD_SET(s->sound_pipe_debug[0], &inpfds);
   while ((select(s->sound_pipe_debug[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime)
 	  && (inplen = read(s->sound_pipe_debug[0], debug_buf, 64)) > 0)) {
 
     debug_buf[inplen] = 0; /* Terminate string */
-    fprintf(stderr, debug_buf); /* Transfer debug output */
+    sciprintf(debug_buf); /* Transfer debug output */
     waittime.tv_sec = 0;
     waittime.tv_usec = 0;
 
@@ -136,15 +139,26 @@ sound_get_event(state_t *s)
   FD_ZERO(&inpfds);
   FD_SET(s->sound_pipe_events[0], &inpfds);
 
-  if (select(s->sound_pipe_events[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime2)) {
+  sound_command(s, SOUND_COMMAND_GET_NEXT_EVENT, 0, 0);
+  /*  select(s->sound_pipe_events[0] + 1, &inpfds, NULL, NULL, (struct timeval *)&waittime2); */
 
-      if (read(s->sound_pipe_events[0], event, sizeof(sound_event_t)) == sizeof(sound_event_t))
-	return event;
+  if (read(s->sound_pipe_events[0], event, sizeof(sound_event_t)) == sizeof(sound_event_t)) {
 
-      else free(event);
+    if (event->signal == SOUND_SIGNAL_END_OF_QUEUE) {
+      free(event);
+      return NULL;
     }
+      
+    return event;
 
-  return NULL;
+  } else {
+
+    sciprintf("sound_get_event: Warning: sound event was crippled!\n");
+    free(event);
+    return NULL;
+
+  }
+
 }
 
 void
@@ -223,7 +237,6 @@ sound_command(state_t *s, int command, int handle, int parameter)
 {
   sound_event_t event = {handle, command, parameter};
 
-  if (!handle) return 0;
   switch (command) {
   case SOUND_COMMAND_INIT_SONG: {
     resource_t *song = findResource(sci_sound, parameter);
@@ -258,6 +271,7 @@ sound_command(state_t *s, int command, int handle, int parameter)
   case SOUND_COMMAND_SUSPEND_SOUND:
   case SOUND_COMMAND_RESUME_SOUND:
   case SOUND_COMMAND_STOP_ALL:
+  case SOUND_COMMAND_GET_NEXT_EVENT:
     write(s->sound_pipe_in[1], &event, sizeof(sound_event_t));
     return 0;
 
@@ -482,4 +496,56 @@ song_lib_resort(songlib_t songlib, song_t *song)
   }
 
   song_lib_add(songlib, song);
+}
+
+
+void
+sound_eq_init(sound_eq_t *queue)
+{
+  queue->first = queue->last = NULL;
+}
+
+void
+sound_eq_queue_event(sound_eq_t *queue, int handle, int signal, int value)
+{
+  sound_eq_node_t *node;
+  sound_event_t *evt;
+
+  evt = malloc(sizeof(sound_event_t));
+  node = malloc(sizeof(sound_eq_node_t));
+
+  evt->handle = handle;
+  evt->signal = signal;
+  evt->value = value;
+
+  node->event = evt;
+
+  if (queue->first)
+    queue->first->prev = node;
+  else
+    queue->last = node; /* !(queue->first) implies !(queue->last) */
+
+  node->next = queue->first;
+  node->prev = NULL;
+  queue->first = node;
+}
+
+sound_event_t *
+sound_eq_retreive_event(sound_eq_t *queue)
+{
+  if (queue->last) {
+    sound_event_t *retval = queue->last->event;
+    sound_eq_node_t *ntf = queue->last;
+
+    if (ntf->prev)
+      ntf->prev->next = NULL;
+
+    queue->last = ntf->prev;
+    free(ntf);
+
+    if (!queue->last)
+      queue->first = NULL;
+    return retval;
+  }
+  else return NULL;
 }

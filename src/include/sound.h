@@ -182,6 +182,8 @@ extern sfx_driver_t *sfx_drivers[]; /* All available sound fx drivers, NULL-term
 /* Halt all sound execution (issued when the interpreter is stopped for debugging) */
 #define SOUND_COMMAND_RESUME_SOUND 16
 /* Resume all sound execution (issued when the interpreter is re-enabled after debugging) */
+#define SOUND_COMMAND_GET_NEXT_EVENT 17
+/* Request that the next event on the sound server should be transmitted */
 
 
 #define SOUND_SIGNAL_CUMULATIVE_CUE 0
@@ -200,6 +202,8 @@ extern sfx_driver_t *sfx_drivers[]; /* All available sound fx drivers, NULL-term
 /* HANDLE has been successfully initialized */
 #define SOUND_SIGNAL_ABSOLUTE_CUE 7
 /* Set the HANDLE's signal to a fixed VALUE */
+#define SOUND_SIGNAL_END_OF_QUEUE 0xff
+/* All sound signals have been transmitted. */
 
 
 #ifdef HAVE_OBSTACK_H

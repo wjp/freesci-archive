@@ -136,9 +136,6 @@ kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp)
     }
   }
 
-  if (type == SCI_EVT_MENU)
-    menu_mode = 1;
-
   if ((type == SCI_EVT_MOUSE_PRESS) && (s->pointer_y < 10)) {
     menu_mode = 1;
     mouse_down = 1;

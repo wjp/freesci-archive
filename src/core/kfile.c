@@ -355,6 +355,24 @@ kGetSaveDir(state_t *s, int funct_nr, int argc, heap_ptr argp)
 
 
 void
+kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp)
+{
+  char *path = (char *) s->heap + UPARAM(0);
+  char *testpath = malloc(strlen(path) + 5);
+  char buf[1024];
+  int i;
+
+  strcpy(testpath, path);
+  strcat(testpath, ".foo");
+
+  /* FIXME */
+  s->acc = 1; /* Is there *any* way to test this? */
+
+  free(testpath);
+}
+
+
+void
 kValidPath(state_t *s, int funct_nr, int argc, heap_ptr argp)
 {
   char *pathname = s->heap + UPARAM(0);

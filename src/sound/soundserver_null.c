@@ -119,11 +119,18 @@ sfx_driver_t sound_null = {
 /***** SOUND SERVER *****/
 /************************/
 
-inline
-_send_event(int fd, int handle, int signal, int value)
+
+
+static void
+_transmit_event(int fd, sound_eq_t *queue)
 {
-  sound_event_t event = {handle, signal, value};
-  write(fd, &event, sizeof(sound_event_t));
+  sound_event_t *event = sound_eq_retreive_event(queue);
+
+  if (event) {
+    write(fd, event, sizeof(sound_event_t));
+    free(event);
+  } else
+    write(fd, &sound_eq_eoq_event, sizeof(sound_event_t));
 }
 
 
@@ -167,6 +174,9 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
   int ccc = 127; /* cumulative cue counter */
   int suspended = 0; /* Used to suspend the sound server */
   GTimeVal suspend_time; /* Time at which the sound server was suspended */
+  sound_eq_t queue; /* The event queue */
+
+  sound_eq_init(&queue);
 
   gettimeofday((struct timeval *)&last_played, NULL);
 
@@ -187,7 +197,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
       song->status = SOUND_STATUS_STOPPED;
       song->pos = song->loopmark = 33; /* Reset position */
-      _send_event(fd_events, song->handle, SOUND_SIGNAL_FINISHED, 0);
+      sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_FINISHED, 0);
 
     }
     song = song_lib_find_active(songlib, song);
@@ -220,24 +230,24 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 	  --(song->loops);
 	  song->pos = song->loopmark;
-	  _send_event(fd_events, song->handle, SOUND_SIGNAL_LOOP, song->loops);
+	  sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_LOOP, song->loops);
 
 	} else { /* Finished */
 
 	  song->status = SOUND_STATUS_STOPPED;
 	  song->pos = song->loopmark = 33; /* Reset position */
-	  _send_event(fd_events, song->handle, SOUND_SIGNAL_FINISHED, 0);
+	  sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_FINISHED, 0);
 
 	}
 
       } else if (command == SCI_MIDI_CUMULATIVE_CUE)
-	_send_event(fd_events, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param + ++ccc);
+	sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param + ++ccc);
       else if (command == SCI_MIDI_SET_SIGNAL) {
 
 	if (param == SCI_MIDI_SET_SIGNAL_LOOP)
 	  song->loopmark = song->pos;
 	else
-	  _send_event(fd_events, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
+	  sound_eq_queue_event(&queue, song->handle, SOUND_SIGNAL_ABSOLUTE_CUE, param);
 	  
       }
 
@@ -300,7 +310,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 		int lastmode = song_lib_remove(songlib, event.handle);
 		if (lastmode == SOUND_STATUS_PLAYING) {
 		  song = songlib[0]; /* Force song detection to start with the highest priority song */
-		  _send_event(fd_events, event.handle, SOUND_SIGNAL_FINISHED, 0);
+		  sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_FINISHED, 0);
 		}
 
 	      }
@@ -310,7 +320,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 	      if (lastmode == SOUND_STATUS_PLAYING) {
 		song = songlib[0]; /* Force song detection to start with the highest priority song */
-		_send_event(fd_events, event.handle, SOUND_SIGNAL_FINISHED, 0);
+		sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_FINISHED, 0);
 	      }
 
 	    }
@@ -345,7 +355,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 	    ccc = 127; /* Reset ccc */
 
-	    _send_event(fd_events, event.handle, SOUND_SIGNAL_INITIALIZED, 0);
+	    sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_INITIALIZED, 0);
 
 	  }
 	  break;
@@ -357,7 +367,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    if (modsong) {
 
 	      modsong->status = SOUND_STATUS_PLAYING;
-	      _send_event(fd_events, event.handle, SOUND_SIGNAL_PLAYING, 0);
+	      sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_PLAYING, 0);
 	      song = modsong; /* Play this song */
 
 	    } else
@@ -382,7 +392,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	      int lastmode = song_lib_remove(songlib, event.handle);
 	      if (lastmode == SOUND_STATUS_PLAYING) {
 		song = songlib[0]; /* Force song detection to start with the highest priority song */
-		_send_event(fd_events, event.handle, SOUND_SIGNAL_FINISHED, 0);
+		sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_FINISHED, 0);
 	      }
 
 	    } else
@@ -397,7 +407,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 
 	      modsong->status = SOUND_STATUS_STOPPED;
 	      modsong->pos = modsong->loopmark = 33; /* Reset position */
-	      _send_event(fd_events, event.handle, SOUND_SIGNAL_FINISHED, 0);
+	      sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_FINISHED, 0);
 
 	    } else
 	      fprintf(ds, "Attempt to stop invalid handle %04x\n", event.handle);
@@ -410,7 +420,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	    if (modsong) {
 
 	      modsong->status = SOUND_STATUS_SUSPENDED;
-	      _send_event(fd_events, event.handle, SOUND_SIGNAL_PAUSED, 0);
+	      sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_PAUSED, 0);
 
 	    } else
 	      fprintf(ds, "Attempt to suspend invalid handle %04x\n", event.handle);
@@ -425,7 +435,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	      if (modsong->status == SOUND_STATUS_SUSPENDED) {
 
 		modsong->status = SOUND_STATUS_WAITING;
-		_send_event(fd_events, event.handle, SOUND_SIGNAL_RESUMED, 0);
+		sound_eq_queue_event(&queue, event.handle, SOUND_SIGNAL_RESUMED, 0);
 
 	      } else
 		fprintf(ds, "Attempt to resume handle %04x although not suspended\n", event.handle);
@@ -565,6 +575,10 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 	  }
 	  break;
 
+	  case SOUND_COMMAND_GET_NEXT_EVENT:
+	    _transmit_event(fd_events, &queue);
+	    break;
+
 	  case SOUND_COMMAND_STOP_ALL: {
 
 	    song_t *seeker = *songlib;
@@ -575,7 +589,7 @@ sound_null_server(int fd_in, int fd_out, int fd_events, int fd_debug)
 		  || (seeker->status == SOUND_STATUS_PLAYING)) {
 
 		seeker->status = SOUND_STATUS_STOPPED;
-		_send_event(fd_events, seeker->handle, SOUND_SIGNAL_FINISHED, 0);
+		sound_eq_queue_event(&queue, seeker->handle, SOUND_SIGNAL_FINISHED, 0);
 
 	      }
 

@@ -122,7 +122,6 @@ sci_event_t _sci_ggi_input_handler(state_t *s)
 	  case GIIK_CapsLock: buckybits |= SCI_EVM_CAPSLOCK; break;
 	  case GIIK_NumLock: buckybits^=SCI_EVM_NUMLOCK; break;
 	  case GIIK_ScrollLock: buckybits^=SCI_EVM_SCRLOCK; break;
-	  case GIIUC_0:
 	  case GIIK_Insert: buckybits^=SCI_EVM_INSERT; break;
 	  case GIIK_PEnter:
 	  case GIIK_Enter: retval.data='\r'; break;

@@ -1,3 +1,25 @@
+1999-12-15  Christoph Reichenbach  <jameson@linuxgames.com>
+
+	* src/graphics/con_io.c (con_input): Fixed cursor key handling.
+	It's possible again to scroll back using Shift-PgUp.
+
+	* src/graphics/engine_graphics.c (graph_draw_selector_edit): Fixed
+	the cursor being overdrawn by the character it was supposed to
+	highlight.
+
+	* src/graphics/font.c: Fixed CR being drawn. Not me, the special
+	character.
+
+	* src/sound/sound.c: Implemented sound event queues (doubly-linked
+	dynamic lists) and a "query next event mechanism" to prevent SIGPIPEs.
+
+	* src/graphics/input_ggi.c (_sci_ggi_input_handler): Fixed ggi input
+	handler bug that would interpret '0' as INS.
+
+	* src/console: Killed the console subdirectory and distributed the
+	sources in src/core and src/graphics. The console design is a bit
+	cleaner now.
+
 1999-12-15  Dmitry Jemerov  <yole@nnz.ru>
 
 	* src/core/vocab_debug.c, src/include/vocabulary.h

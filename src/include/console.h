@@ -70,7 +70,7 @@ extern int con_row_counter;
 /* Number of rows, >= con_display_row */
 extern int con_visible_rows;
 /* number of visible console rows */
-extern char *con_input;
+extern char *con_input_line;
 /* input line */
 extern int con_cursor;
 /* cursor position on the input line */
@@ -78,6 +78,13 @@ extern int con_passthrough;
 /* Echo all sciprintf() stuff to the text console */
 extern FILE *con_file;
 /* Echo all sciprintf() output to a text file */
+
+/* Output buffer */
+extern char con_outputbuf[SCI_CONSOLE_OUTPUT_BUFFER][SCI_CONSOLE_LINE_WIDTH];
+extern int con_outputbufpos; /* buffer line */
+extern int con_outputbufcolumn;
+extern int con_outputbuflen;
+extern int con_outputlookback;
 
 
 
@@ -110,7 +117,7 @@ sciprintf(char *fmt, ...);
 */
 
 char *
-consoleInput(sci_event_t *event);
+con_input(sci_event_t *event);
 /* Handles an input event
 ** Parameters: event: The event to handle
 ** Returns   : (char *) Either NULL, or a pointer to the content of the
@@ -124,7 +131,7 @@ consoleInput(sci_event_t *event);
 
 
 void
-drawString(picture_t pic, int map, int row, int maxlen, char *string, int color);
+con_draw_string(picture_t pic, int map, int row, int maxlen, char *string, int color);
 /* Draws a string to a specified row
 ** Parameters: pic: The picture_t to draw to
 **             map: The map inside the picture_t to draw to
@@ -137,7 +144,7 @@ drawString(picture_t pic, int map, int row, int maxlen, char *string, int color)
 
 
 void
-cmdInit(void);
+con_init(void);
 /* Initializes the command parser
 ** Parameters: (void)
 ** Returns   : (void)
@@ -145,9 +152,17 @@ cmdInit(void);
 ** It must be called before cmdParse() is used.
 */
 
+void
+con_init_gfx(void);
+/* initializes the graphical part of the command parser
+** Parameters: (void)
+** Returns   : (void)
+** This function should be called in all console-using programs that use libscigraphics.
+*/
+
 
 void
-cmdParse(struct _state *s, char *command);
+con_parse(struct _state *s, char *command);
 /* Parses a command and summons appropriate facilities to handle it
 ** Parameters: (state_t *) s: The state_t to use
 **             command: The command to execute
@@ -156,7 +171,7 @@ cmdParse(struct _state *s, char *command);
 
 
 int
-cmdHook(int command(struct _state *s), char *name, char *param, char *description);
+con_hook_command(int command(struct _state *s), char *name, char *param, char *description);
 /* Adds a command to the parser's command list
 ** Parameters: command: The command to add
 **             name: The command's name
@@ -187,7 +202,7 @@ cmdHook(int command(struct _state *s), char *name, char *param, char *descriptio
 
 
 int
-cmdHookInt(int *pointer, char *name, char *description);
+con_hook_int(int *pointer, char *name, char *description);
 /* Adds an int to the list of modifyable ints.
 ** Parameters: pointer: Pointer to the int to add to the list
 **             name: Name for this value

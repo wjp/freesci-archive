@@ -124,14 +124,15 @@ sci_kernel_function_t kfunct_mappers[] = {
   {"HiliteControl", kHiliteControl},
   {"GetMenu", kGetMenu},
   {"MenuSelect", kMenuSelect},
+  {"GetEvent", kGetEvent },
+  {"CheckFreeSpace", kCheckFreeSpace },
+  {"DoSound", kDoSound },
 
   /* Experimental functions */
   {"RestartGame", kRestartGame },
   {"Said", kSaid },
   {"EditControl", kEditControl },
-  {"DoSound", kDoSound },
   {"Graph", kGraph },
-  {"GetEvent", kGetEvent },
   {SCRIPT_UNKNOWN_FUNCTION_STRING, k_Unknown },
   {0,0} /* Terminator */
 };

@@ -420,6 +420,7 @@ void kGraph(state_t *s, int funct_nr, int argc, heap_ptr argp);
 void kGetEvent(state_t *s, int funct_nr, int argc, heap_ptr argp);
 void kGetMenu(state_t *s, int funct_nr, int argc, heap_ptr argp);
 void kMenuSelect(state_t *s, int funct_nr, int argc, heap_ptr argp);
+void kCheckFreeSpace(state_t *s, int funct_nr, int argc, heap_ptr argp);
 void k_Unknown(state_t *s, int funct_nr, int argc, heap_ptr argp);
 /* The Unknown/Unnamed kernel function */
 void kstub(state_t *s, int funct_nr, int argc, heap_ptr argp);
