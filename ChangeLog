@@ -1,3 +1,14 @@
+2003-02-25  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
+
+	* src/dc/3dutils.c, src/dc/aica_cmd_iface.h, src/dc/bkg.c,
+	src/dc/bsearch.c, src/dc/gamemenu.c, src/dc/gp.h, src/dc/mouse1.h,
+	src/dc/selectgame.c, src/dc/sintab.h, src/dc/snd_stream.c,
+	src/dc/snprintf.c, src/dc/texture.c: Updated license information.
+	* src/dc/README.KOS, src/dc/LICENSE.txt: Removed from repository.
+	* src/dc/dc_save.c (dc_package): Now prints an error message when the
+	written VMU file cannot be found after writing it.
+	* src/gfx/drivers/dc_driver.c (flags): Default to VRAM rendering.
+
 2003-02-24  Walter van Niftrik  <w.f.b.w.v.niftrik@stud.tue.nl>
 
 	* README, src/config.l, src/main.c, src/dc/selectgame.c: On

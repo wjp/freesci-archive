@@ -46,7 +46,7 @@ struct dc_event_t {
 
 #define SCI_DC_RENDER_PVR	(1 << 0)
 
-static int flags;
+static int flags = 0;
 
 struct _dc_state {
 	/* 0 = static buffer, 1 = back buffer, 2 = front buffer */

@@ -266,6 +266,7 @@ static int dc_package(char *infname, char *outdir, char *outname, char* desc) {
 	fs_chdir(outdir);
 	sci_init_dir(&dirent);
 	if (!sci_find_first(&dirent, outname)) {
+		sciprintf("%s, L%d: Write to VMU failed!\n", __FILE__, __LINE__);
 		sci_finish_find(&dirent);
 		fs_chdir(olddir);
 		sci_free(olddir);
