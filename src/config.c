@@ -9,7 +9,8 @@
 #define YY_FLEX_MINOR_VERSION 5
 
 #include <stdio.h>
-#include <errno.h>
+#include <unistd.h>
+
 
 /* cfront 1.2 defines "c_plusplus" instead of "__cplusplus" */
 #ifdef c_plusplus
@@ -22,7 +23,6 @@
 #ifdef __cplusplus
 
 #include <stdlib.h>
-#include <unistd.h>
 
 /* Use prototypes in function declarations. */
 #define YY_USE_PROTOS
@@ -721,6 +721,7 @@ standard_option standard_options[] = {
 	OPT_STATICREF("midi_device", midi_device, parse_midi_device),
 	OPT_STATICREF("sound_server", sound_server, parse_sound_server),
         OPT_STATICREF("pcmout_driver", pcmout_driver, parse_pcmout_driver),
+        OPT_INT("pcmout_rate", pcmout_rate, 11025, 48000),
 	OPT_STRING("console_log", console_log),
 	OPT_STRING("module_path", module_path),
 	OPT_STRING("gfx_driver", gfx_driver_name),
@@ -735,7 +736,7 @@ standard_option standard_options[] = {
 static void
 parse_option(char *option, int optlen, char *value);
 
-#line 739 "lex.yy.c"
+#line 740 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -835,17 +836,9 @@ YY_MALLOC_DECL
 			YY_FATAL_ERROR( "input in flex scanner failed" ); \
 		result = n; \
 		} \
-	errno=0; \
-	while ( (result = fread(buf, 1, max_size, yyin))==0 && ferror(yyin)) \
-	{ \
-		if( errno != EINTR) \
-		{ \
-			YY_FATAL_ERROR( "input in flex scanner failed" ); \
-			break; \
-		} \
-		errno=0; \
-		clearerr(yyin); \
-	}
+	else if ( ((result = fread( buf, 1, max_size, yyin )) == 0) \
+		  && ferror( yyin ) ) \
+		YY_FATAL_ERROR( "input in flex scanner failed" );
 #endif
 
 /* No semi-colon after return; correct usage is to write "yyterminate();" -
@@ -891,13 +884,13 @@ YY_MALLOC_DECL
 YY_DECL
 	{
 	register yy_state_type yy_current_state;
-	register char *yy_cp, *yy_bp;
+	register char *yy_cp = NULL, *yy_bp = NULL;
 	register int yy_act;
 
-#line 264 "config.l"
+#line 265 "config.l"
 
 
-#line 901 "lex.yy.c"
+#line 894 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -982,7 +975,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 266 "config.l"
+#line 267 "config.l"
 {
 	char *cleanup;
 	++yytext; /* Get over opening bracket */
@@ -1029,7 +1022,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 311 "config.l"
+#line 312 "config.l"
 { /***** End of graphics *****/
 
 	yytext = strchr(yytext, '=') + 1;
@@ -1042,7 +1035,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 321 "config.l"
+#line 322 "config.l"
 if (cur_section) {
 	yytext = strchr(yytext, '=') + 1;
 	while (isspace(*yytext))
@@ -1055,7 +1048,7 @@ if (cur_section) {
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 331 "config.l"
+#line 332 "config.l"
 {
         yytext = strchr(yytext, '=') + 1;
 
@@ -1067,7 +1060,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 341 "config.l"
+#line 342 "config.l"
 {
 /* driver parameters */
         char *subsys_name = yytext;
@@ -1105,7 +1098,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 377 "config.l"
+#line 378 "config.l"
 { /* Normal config option */
 	char *option_str = yytext;
 	char *value_str = yytext;
@@ -1133,16 +1126,16 @@ case 7:
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 401 "config.l"
+#line 402 "config.l"
 /* Ignore comments */
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 403 "config.l"
+#line 404 "config.l"
 /* Eat whitespace */
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 405 "config.l"
+#line 406 "config.l"
 {
         yy_delete_buffer( YY_CURRENT_BUFFER );
         yyterminate();
@@ -1150,15 +1143,15 @@ case YY_STATE_EOF(INITIAL):
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 410 "config.l"
+#line 411 "config.l"
 printf("Unrecognized option: '%s'\n", yytext);
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 412 "config.l"
+#line 413 "config.l"
 ECHO;
 	YY_BREAK
-#line 1162 "lex.yy.c"
+#line 1155 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -1720,7 +1713,7 @@ YY_BUFFER_STATE b;
 	}
 
 
-#include <unistd.h>
+
 #ifdef YY_USE_PROTOS
 void yy_init_buffer( YY_BUFFER_STATE b, FILE *file )
 #else
@@ -2037,7 +2030,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 412 "config.l"
+#line 413 "config.l"
 
 
 int
@@ -2077,6 +2070,7 @@ config_init(config_entry_t **_conf, char *conffile)
 
 	conf->gfx_driver_name = NULL;
         conf->pcmout_driver = pcmout_find_driver(NULL);
+        conf->pcmout_rate = 22050;
         conf->midiout_driver = midiout_find_driver(NULL);
         conf->midi_device = midi_find_device(NULL);
 	conf->sound_server = sound_server_find_driver(NULL);

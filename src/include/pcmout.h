@@ -31,7 +31,7 @@ typedef struct _pcmout_driver {
 	char *name;
 	char *version;
 	int (*set_parameter)(struct _pcmout_driver *drv, char *attribute, char *value);
-	int (*pcmout_open)(guint16 *b);
+	int (*pcmout_open)(guint16 *b, guint16 rate);
 	int (*pcmout_close)(void);
 } pcmout_driver_t;
 
@@ -41,6 +41,8 @@ typedef struct _pcmout_driver {
 extern DLLEXTERN pcmout_driver_t *pcmout_driver;
 
 extern DLLEXTERN pcmout_driver_t pcmout_driver_null;
+
+extern DLLEXTERN guint16 pcmout_sample_rate;
 
 #ifdef HAVE_SDL
 extern pcmout_driver_t pcmout_driver_sdl;

@@ -49,7 +49,7 @@ static void fill_audio (void *udata, guint8 *stream, int len)
   n -= s;
 }
 
-static int pcmout_sdl_open(guint16 *b) {
+static int pcmout_sdl_open(guint16 *b, guint16 rate) {
   SDL_AudioSpec a;
   
   buffer = b;
@@ -59,7 +59,7 @@ static int pcmout_sdl_open(guint16 *b) {
     return -1;
   }
   
-  a.freq = 44100;
+  a.freq = rate;
   a.format = (AUDIO_S16);
   a.channels = 1;
   a.samples = 2048;
@@ -70,7 +70,8 @@ static int pcmout_sdl_open(guint16 *b) {
     fprintf (stderr, "SDL: %s\n", SDL_GetError());
     return -1;
   }
-        
+  
+  printf("Opened SDL PCM device @ %d Hz\n", rate);
   SDL_PauseAudio (0);
   return 0;
 }

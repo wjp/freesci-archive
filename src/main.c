@@ -1091,7 +1091,11 @@ main(int argc, char** argv)
 		}
 	}
 
-	/* Configure the pcmout driver XXXX */
+	/* Configure the pcmout driver */
+	{
+	        pcmout_sample_rate = active_conf->pcmout_rate;
+	}
+
 	/* Configure the midiout driver */
 	{
 		driver_option_t *option = get_driver_options(active_conf, FREESCI_DRIVER_SUBSYSTEM_MIDIOUT, midiout_driver->name);
