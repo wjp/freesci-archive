@@ -570,7 +570,7 @@ const int MIDI_cmdlen[16] = {0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0};
 /* Taken from playmidi */
 
 void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 param,
-		guint8 param2, guint32 other_data, int *ccc)
+		guint8 param2, guint32 delta, int *ccc, int master_volume)
 {
 	if (SCI_MIDI_CONTROLLER(command)) {
 		switch (param) {
@@ -606,7 +606,7 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 		case 0x0b: /* expression */
 		case 0x40: /* hold */
 		case 0x79: /* reset all */
-			midi_event(command, param, param2, other_data);
+			midi_event(command, param, param2, delta);
 			break;
 		default:
 			fprintf(debug_stream, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);
@@ -627,14 +627,16 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 
 			case MIDI_INSTRUMENT_CHANGE:  /* program change */
 				song->instruments[command & 0xf] = param;
-				midi_event2(command, param, other_data);
+				midi_event2(command, param, delta);
 				break;
 
 			case MIDI_NOTE_OFF:
 			case MIDI_NOTE_ON:
 				if (song->velocity[command & 0x0f])  /* do we ignore velocities? */
 					param2 = (unsigned char)song->velocity[command & 0x0f];
-
+				/* scale according to master volume */
+				if (! midi_device->volume)
+				  param2 = (guint8) ((param2 * master_volume) / 100);
 				if (song->fading != -1) {           /* is the song fading? */
 					if (song->maxfade == 0)
 						song->maxfade = 1;
@@ -648,7 +650,7 @@ void sci_midi_command(FILE *debugstream, song_t *song, guint8 command, guint8 pa
 			case MIDI_CONTROL_CHANGE:
 			case MIDI_CHANNEL_PRESSURE:
 			case MIDI_PITCH_BEND:
-				midi_event(command, param, param2, other_data);
+				midi_event(command, param, param2, delta);
 				break;
 			default:
 				fprintf(debug_stream, "Unrecognised MIDI event %02x %02x %02x for handle %04x\n", command, param, param2, song->handle);

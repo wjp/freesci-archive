@@ -50,20 +50,20 @@ int midi_noteoff(guint8 channel, guint8 note, guint8 velocity);
 int midi_noteon(guint8 channel, guint8 note, guint8 velocity);
 */
 
-int midi_event(guint8 command, guint8 note, guint8 velocity, guint32 other_data);
+int midi_event(guint8 command, guint8 note, guint8 velocity, guint32 delta);
 /* Sends MIDI event with two parameters to MIDI device
 ** Parameters: (guint8) command: MIDI status / command
 **             (guint8) note: Note / parameter 1
 **             (guint8) velocity: Velocity / parameter 2
-**             (guint32) other_data: Driver-specific data
+**             (guint32) delta:  time since last event.
 ** Returns   : (int) Success code
 */
 
-int midi_event2(guint8 command, guint8 param, guint32 other_data);
+int midi_event2(guint8 command, guint8 param, guint32 delta);
 /* Sends MIDI event with one parameter to MIDI device
 ** Parameters: (guint8) command: MIDI status / command
 **             (guint8) param: Parameter 1
-**             (guint32) other_data: Driver-specific data
+**             (guint32) delta:  time since last event.
 ** Returns   : (int) Success code
 */
 
@@ -85,7 +85,7 @@ typedef struct _midi_device {
 	int (*event2)(guint8 command, guint8 param, guint32 other_data);
 	int (*allstop)();
 
-	int (*volume)(guint8 volume);
+        int (*volume)(guint8 volume);   /* OPTIONAL -- can be NULL */
 	int (*reverb)(short param);
 
 	unsigned short patchfile;

@@ -264,7 +264,8 @@ int do_sound(sound_server_state_t *sss)
 					(unsigned char)this_cmd.param1,
 					(unsigned char)this_cmd.param2,
 					this_cmd.delta_time,
-					&(sss->sound_cue));
+					&(sss->sound_cue),
+					sss->master_volume);
 #if (DEBUG_SOUND_SERVER == 2)
 					fprintf(stdout, " (playing %02x %02x %02x)", this_cmd.midi_cmd, this_cmd.param1, this_cmd.param2);
 #endif
@@ -413,7 +414,7 @@ _restore_midi_state(sound_server_state_t *ss_state)
 	if (ss_state->current_song) {
 		guint8 i;
 		midi_allstop();
-		midi_volume((guint8)ss_state->master_volume);
+		set_master_volume((guint8)ss_state->master_volume, ss_state);
 		for (i = 0; i < MIDI_CHANNELS; i++) {
 			if (ss_state->current_song->instruments[i])
 				midi_event2((guint8)(0xc0 | i), (guint8)ss_state->current_song->instruments[i], 0);
@@ -866,7 +867,9 @@ set_master_volume(guint8 new_volume, sound_server_state_t *ss_state)
 #endif
 
 	ss_state->master_volume = (guint8)((float)new_volume * 100.0 / 15.0);	/* scale to % */
-	midi_volume((guint8)ss_state->master_volume);
+
+	if (midi_device->volume)
+	  midi_volume((guint8)ss_state->master_volume);
 
 #ifdef DEBUG_SOUND_SERVER
 	fprintf(debug_stream, " (%u%%)\n", ss_state->master_volume);

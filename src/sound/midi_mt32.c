@@ -39,7 +39,7 @@ int midi_mt32_patch001_type1_length(guint8 *data, unsigned int length);
 int midi_mt32_sysex_delay();
 int midi_mt32_volume(guint8 volume);
 int midi_mt32_reverb(short param);
-int midi_mt32_event(guint8 command, guint8 note, guint8 velocity, guint32 other_data);
+int midi_mt32_event(guint8 command, guint8 note, guint8 velocity, guint32 delta);
 int midi_mt32_allstop(void);
 
 static guint8 *data;
@@ -346,7 +346,7 @@ int midi_mt32_noteon(guint8 channel, guint8 note, guint8 velocity)
 }
 */
 
-int midi_mt32_event(guint8 command, guint8 note, guint8 velocity, guint32 other_data)
+int midi_mt32_event(guint8 command, guint8 note, guint8 velocity, guint32 delta)
 {
   guint8 buffer[3] = {0,0,0};
 
@@ -354,18 +354,18 @@ int midi_mt32_event(guint8 command, guint8 note, guint8 velocity, guint32 other_
   buffer[1] = note;
   buffer[2] = velocity;
 
-  return midiout_write_event(buffer, 3, other_data);
+  return midiout_write_event(buffer, 3, delta);
 
 }
 
-int midi_mt32_event2(guint8 command, guint8 param, guint32 other_data)
+int midi_mt32_event2(guint8 command, guint8 param, guint32 delta)
 {
   guint8 buffer[2] = {0,0};
 
   buffer[0] = command;
   buffer[1] = param;
 
-  return midiout_write_event(buffer, 2, other_data);
+  return midiout_write_event(buffer, 2, delta);
 }
 
 int midi_mt32_poke(guint32 address, guint8 *data, unsigned int count)

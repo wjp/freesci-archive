@@ -72,7 +72,6 @@ static unsigned char oper_note[ADLIB_VOICES];
 static unsigned char oper_chn[ADLIB_VOICES];
 
 static FM_OPL *ym3812 = NULL;
-static int master_volume;
 
 /* initialise note/operator lists, etc. */
 void adlibemu_init_lists()
@@ -84,7 +83,6 @@ void adlibemu_init_lists()
     oper_chn[i] = 255;
   }
   free_voices = ADLIB_VOICES;
-  master_volume = 100;
 
   memset(instr, 0, sizeof(instr));
   memset(pitch, 0, sizeof(instr));
@@ -214,7 +212,6 @@ int adlibemu_start_note(int chn, int note, int velocity)
 	break;
 
   volume = velocity * vol[chn] / 128;     /* Scale channel volume */
-  volume = volume * master_volume / 100;  /* apply master volume */
   volume = my_midi_fm_vol_table[volume];  /* scale logarithmically */
 
   inst = instr[chn];
@@ -316,14 +313,6 @@ int midi_adlibemu_close()
   return 0;
 }
 
-int midi_adlibemu_volume(guint8 volume)
-{
-  volume &= 0x7f; /* (make sure it's not over 127) */
-
-  return 0;
-
-}
-
 int midi_adlibemu_reset(void)
 {
   //  printf("AdlibEmu:  Reset\n");
@@ -346,7 +335,7 @@ int midi_adlibemu_reverb(short param)
   return 0;
 }
 
-int midi_adlibemu_event(guint8 command, guint8 note, guint8 velocity, guint32 other_data)
+int midi_adlibemu_event(guint8 command, guint8 note, guint8 velocity, guint32 delta)
 {
   guint8 channel, oper;
 
@@ -380,7 +369,7 @@ int midi_adlibemu_event(guint8 command, guint8 note, guint8 velocity, guint32 ot
   return 0;
 }
 
-int midi_adlibemu_event2(guint8 command, guint8 param, guint32 other_data)
+int midi_adlibemu_event2(guint8 command, guint8 param, guint32 delta)
 {
   guint8 channel;
   guint8 oper;
@@ -408,7 +397,7 @@ midi_device_t midi_device_adlibemu = {
   &midi_adlibemu_event,
   &midi_adlibemu_event2,
   &midi_adlibemu_reset,
-  &midi_adlibemu_volume,
+  NULL,
   &midi_adlibemu_reverb,
   003,		/* patch.003 */
   0x04,		/* playflag */

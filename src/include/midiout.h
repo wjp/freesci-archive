@@ -33,7 +33,7 @@ typedef struct _midiout_driver {
 	int (*set_parameter)(struct _midiout_driver *drv, char *attribute, char *value);
 	int (*midiout_open)();
 	int (*midiout_close)();
-	int (*midiout_write)(guint8 *data, unsigned int, guint32);
+	int (*midiout_write)(guint8 *data, unsigned int count, guint32 delta);
 	int (*midiout_flush)(guint8);
 } midiout_driver_t;
 
@@ -62,8 +62,8 @@ extern DLLEXTERN midiout_driver_t *midiout_drivers[];
 
 int midiout_open();
 int midiout_close();
-int midiout_write_event(guint8 *buffer, unsigned int count, guint32 other_data);
-int midiout_write_block(guint8 *buffer, unsigned int count, guint32 other_data);
+int midiout_write_event(guint8 *buffer, unsigned int count, guint32 delta);
+int midiout_write_block(guint8 *buffer, unsigned int count, guint32 delta);
 int midiout_flush(guint8);
 
 struct _midiout_driver *midiout_find_driver(char *name);

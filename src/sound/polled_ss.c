@@ -554,7 +554,8 @@ ss_state->current_song->pos);
 						param,
 						param2,
 						ticks_to_wait,
-						&ss_state->sound_cue);
+						&ss_state->sound_cue,
+						ss_state->master_volume);
 				}
 			}
 

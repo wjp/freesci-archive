@@ -54,7 +54,6 @@ static int free_voices = ADLIB_VOICES;
 static long note_time[ADLIB_VOICES];
 static unsigned char oper_note[ADLIB_VOICES];
 static unsigned char oper_chn[ADLIB_VOICES];
-static int master_volume;
 
 #if 0
 void seqbuf_dump()
@@ -175,8 +174,6 @@ void adlib_start_note(int chn, int note, int velocity)
   note_time[free] = now.tv_sec * 1000000 + now.tv_usec;
   free_voices--;
 
-  velocity = velocity * master_volume / 100; /* scale for master volume */
-
   SEQ_SET_PATCH(dev, free, instr[chn]);
   SEQ_START_NOTE(dev, free, note, velocity);
   SEQ_DUMPBUF();
@@ -248,12 +245,6 @@ int midi_adlib_close()
   return close(seqfd);
 }
 
-int midi_adlib_volume(guint8 volume)
-{
-  master_volume = volume & 0x7f;
-  return 0;
-}
-
 int midi_adlib_allstop(void) {
   int i;
   for (i = 0; i < ADLIB_VOICES ; i++) {
@@ -272,7 +263,7 @@ int midi_adlib_reverb(short param)
   return 0;
 }
 
-int midi_adlib_event(guint8 command, guint8 note, guint8 velocity)
+int midi_adlib_event(guint8 command, guint8 note, guint8 velocity, guint32 delta)
 {
   guint8 channel, oper;
 
@@ -306,7 +297,7 @@ int midi_adlib_event(guint8 command, guint8 note, guint8 velocity)
   return 0;
 }
 
-int midi_adlib_event2(guint8 command, guint8 param)
+int midi_adlib_event2(guint8 command, guint8 param, guint32 delta)
 {
   guint8 channel;
   guint8 oper;
@@ -340,7 +331,7 @@ midi_device_t midi_device_adlib = {
   &midi_adlib_event,
   &midi_adlib_event2,
   &midi_adlib_allstop,
-  &midi_adlib_volume,
+  NULL,
   &midi_adlib_reverb,
   003,		/* patch.003 */
   0x04,		/* playflag */

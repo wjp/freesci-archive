@@ -22,8 +22,8 @@
 #include <sound.h>
 /* we reuse the mt32 open/close/etc */
 
-int midi_mt32_event(guint8 command, guint8 param, guint8 param2);
-int midi_mt32_event2(guint8 command, guint8 param);
+int midi_mt32_event(guint8 command, guint8 param, guint8 param2, guint32 delta);
+int midi_mt32_event2(guint8 command, guint8 param, guint32 delta);
 int midi_mt32_allstop(void);
 int midi_mt32_write_block(guint8 *data, unsigned int count);
 
@@ -98,7 +98,7 @@ midi_mt32gm_print_instrument(FILE *file, int index)
 }
 
 static int _notes = 0;
-int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2, guint32 other_data)
+int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2, guint32 delta)
 {
 	guint8 channel;
 	guint8 oper;
@@ -142,10 +142,10 @@ int midi_mt32gm_event(guint8 command, guint8 param, guint8 param2, guint32 other
 	if (xparam < 0)
 		return 0;
 
-	return midi_mt32_event(oper | channel, xparam, param2);
+	return midi_mt32_event(oper | channel, xparam, param2, delta);
 }
 
-int midi_mt32gm_event2(guint8 command, guint8 param, guint32 other_data)
+int midi_mt32gm_event2(guint8 command, guint8 param, guint32 delta)
 {
 	guint8 channel;
 	guint8 oper;
@@ -166,26 +166,26 @@ int midi_mt32gm_event2(guint8 command, guint8 param, guint32 other_data)
 
 			if (channel != RHYTHM_CHANNEL && xparam >= 0) {
 				if (midi_mt32_event(0xb0 | channel,
-						    0x65, 0x00) < 0) return -1;
+						    0x65, 0x00, delta) < 0) return -1;
 				if (midi_mt32_event(0xb0 | channel,
-						    0x64, 0x02) < 0) return -1;
+						    0x64, 0x02, delta) < 0) return -1;
 				if (midi_mt32_event(0xb0 | channel,
-						    0x06, MIDI_mapping[instr].keyshift) < 0) return -1;
+						    0x06, MIDI_mapping[instr].keyshift, delta) < 0) return -1;
 				if (midi_mt32_event(0xb0 | channel,
-						    0x65, 0x00) < 0) return -1;
+						    0x65, 0x00, delta) < 0) return -1;
 				if (midi_mt32_event(0xb0 | channel,
-						    0x64, 0x00) < 0) return -1;
+						    0x64, 0x00, delta) < 0) return -1;
 				if (midi_mt32_event(0xb0 | channel,
-						    0x06, MIDI_mapping[instr].bender_range) < 0) return -1;
+						    0x06, MIDI_mapping[instr].bender_range, delta) < 0) return -1;
 				if (midi_mt32_event(0xb0 | channel,
-						    0x26, 0x00) < 0) return -1;
+						    0x26, 0x00, delta) < 0) return -1;
 			}
 		}
 
 		if (xparam < 0)
 			return 0;
 
-		return midi_mt32_event2(command, xparam);
+		return midi_mt32_event2(command, xparam, delta);
 	}
 
 	default:
@@ -193,18 +193,6 @@ int midi_mt32gm_event2(guint8 command, guint8 param, guint32 other_data)
 	}
 
 	return 0;
-}
-
-int midi_mt32gm_volume(guint8 volume)
-{
-  /* Universal SysEx */
-  guint8 buffer[8] = {0xf0, 0x7f, 0x7f, 0x04, 0x02, 0x00, 0x00, 0xf7};
-
-  int value = volume * 0x4000 / 100;
-  buffer[5] = volume & 0x7f;  /* bits 0-6 */
-  buffer[6] = (volume >> 7) & 0x7f; /* bits 7-13 */
-
-  return midi_mt32_write_block(buffer, 8);
 }
 
 int midi_mt32gm_reverb(short param)
@@ -223,7 +211,7 @@ midi_device_t midi_device_mt32gm = {
   &midi_mt32gm_event,
   &midi_mt32gm_event2,
   &midi_mt32_allstop,
-  &midi_mt32gm_volume,
+  NULL,
   &midi_mt32gm_reverb,
   001,		/* patch.001 */
   0x01,		/* playflag */

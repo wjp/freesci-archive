@@ -68,6 +68,8 @@ int midi_event2(guint8 command, guint8 param, guint32 other_data) {
 }
 
 int midi_volume(guint8 volume) {
+        if (! midi_device->volume)
+                return -1;
 	if (mididebug)
 		printf("MIDI: Set volume to: %d\n", volume);
 	return midi_device->volume(volume);
