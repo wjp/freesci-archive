@@ -110,7 +110,7 @@
 #define SCI_VERSION_LAST SCI_VERSION_01
 /* The last supported SCI version */
 
-extern const char* SCI_Error_Types[];
+extern DLLEXTERN const char* SCI_Error_Types[];
 extern const char* SCI_Version_Types[];
 extern const char* Resource_Types[];
 

@@ -33,7 +33,9 @@
 #include <sci_conf.h>
 #include <kdebug.h>
 #include <sys/types.h>
+#ifdef HAVE_FORK
 #include <sys/wait.h>
+#endif
 #ifdef HAVE_SCHED_YIELD
 #include <sched.h>
 #endif /* HAVE_SCHED_YIELD */

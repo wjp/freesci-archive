@@ -773,7 +773,7 @@ graphics_draw_region_ddraw(state_t *s,
       ddsd.lPitch);
     
     cvt_color_key=0;
-    memcpy (&cvt_color_key, ddsd.lpSurface, ddsd.ddpfPixelFormat.dwRGBBitCount);
+    memcpy (&cvt_color_key, ddsd.lpSurface, ddsd.ddpfPixelFormat.dwRGBBitCount / 8);
   }
   
   if (!Hermes_ConverterCopy (hhConverter,

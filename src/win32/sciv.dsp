@@ -128,10 +128,6 @@ InputName=config
 
 SOURCE=..\main.c
 # End Source File
-# Begin Source File
-
-SOURCE=..\yywrap.c
-# End Source File
 # End Group
 # Begin Group "Header Files"
 

@@ -918,12 +918,12 @@ mapMIDIInstruments(void)
     MIDI_mapping[i].keyshift = 0x40;
     MIDI_mapping[i].finetune = 0x2000;
     MIDI_mapping[i].bender_range = 0x0c;
-  };
+  }
 
-  for (i = 0; i < 128; i++) {
+  for (i = 0; i < 80; i++) {
     MIDI_mapping[i].gm_rhythmkey = MT32_PresetRhythmKeymap[i];
     MIDI_mapping[i].volume = 100;
-  };
+  }
 
   /*
   if (sci_version > SCI_VERSION_1)
