@@ -120,7 +120,8 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
 
   S->primary = NULL;
   S->primary = SDL_SetVideoMode(xsize, ysize, bytespp << 3, 
-				SDL_HWSURFACE | SDL_SWSURFACE);
+				SDL_HWSURFACE | SDL_SWSURFACE | 
+				SDL_HWPALETTE | SDL_DOUBLEBUF );
 
   if (!S->primary) {
     ERROR("Could not set up a primary SDL surface!\n");
@@ -164,18 +165,29 @@ sdl_init_specific(struct _gfx_driver *drv, int xfact, int yfact, int bytespp)
   if (bytespp == 1)
     red_shift = green_shift = blue_shift = alpha_shift = 0;
   else {
-    red_shift = S->primary->format->Rshift;
-    green_shift = S->primary->format->Gshift;
-    blue_shift = S->primary->format->Bshift;
-    alpha_shift = S->primary->format->Ashift;
+    red_shift = 24 + S->primary->format->Rshift - S->primary->format->Rloss;
+    green_shift = 24 + S->primary->format->Gshift - S->primary->format->Gloss;
+    blue_shift = 24 + S->primary->format->Bshift - S->primary->format->Bloss;
+    alpha_shift = 24 + S->primary->format->Ashift - S->primary->format->Aloss;
   }
 
-  printf("%08x %08x %08x %08x %d %d %d %d\n",
+  printf("%08x %08x %08x %08x %d/%d=%d %d/%d=%d %d/%d=%d %d/%d=%d\n",
 	 S->primary->format->Rmask, 
 	 S->primary->format->Gmask,
 	 S->primary->format->Bmask, 
 	 S->primary->format->Amask,
-	 red_shift, green_shift, blue_shift, alpha_shift);
+	 S->primary->format->Rshift,
+	 S->primary->format->Rloss,
+	 red_shift,
+	 S->primary->format->Gshift,
+	 S->primary->format->Gloss,
+	 green_shift,
+	 S->primary->format->Bshift,
+	 S->primary->format->Bloss,
+	 blue_shift,
+	 S->primary->format->Ashift,
+	 S->primary->format->Aloss,
+	 alpha_shift);
 
   for (i = 0; i < 2; i++) {
     S->priority[i] = gfx_pixmap_alloc_index_data(gfx_new_pixmap(xsize, ysize, GFX_RESID_NONE, -i, -777));
@@ -381,7 +393,7 @@ sdl_draw_line(struct _gfx_driver *drv, rect_t line, gfx_color_t color,
 {
   Uint32 scolor;
   int linewidth = (line_mode == GFX_LINE_MODE_FINE)? 1:
-    (drv->mode->xfact + drv->mode->yfact) >> 1;
+    (XFACT + YFACT) >> 1;
   
   if (color.mask & GFX_MASK_VISUAL) {
     int xc, yc;
@@ -683,7 +695,8 @@ sdl_update(struct _gfx_driver *drv, rect_t src, point_t dest, gfx_buffer_t buffe
       ERROR("primary surface update failed!\n");
   }
 
-  SDL_UpdateRect(S->primary, 0,0,0,0);
+  SDL_Flip(S->primary);
+  /*  SDL_UpdateRect(S->primary, 0,0,0,0); */
   return GFX_OK;
 }
 
