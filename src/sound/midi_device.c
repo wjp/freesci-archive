@@ -99,6 +99,8 @@ struct _midi_device *midi_find_device(char *name)
 
 /* Common stuff for the adlib code. */
 
+adlib_instr adlib_sbi[96];
+
 void make_sbi(adlib_def *one, guint8 *buffer)
 {
   memset(buffer, 0, sizeof(adlib_instr));

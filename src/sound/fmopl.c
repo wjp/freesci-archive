@@ -14,6 +14,16 @@
 	note:
 */
 
+/* ho hum. */
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif /* HAVE_CONFIG_H */
+#define HAS_YM3812 1
+#ifndef INLINE
+#define INLINE inline
+#endif
+#define logerror printf
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,11 +34,6 @@
 #ifndef PI
 #define PI 3.14159265358979323846
 #endif
-
-/* ho hum. */
-#define HAS_YM3812 1
-#define INLINE inline
-#define logerror printf
 
 /* -------------------- for debug --------------------- */
 /* #define OPL_OUTPUT_LOG */

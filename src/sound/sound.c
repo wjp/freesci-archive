@@ -305,7 +305,7 @@ song_next_wakeup_time(GTimeVal *lastslept, long ticks)
 song_t *
 song_new(word handle, byte *data, int size, int priority)
 {
-	unsigned int i;
+        unsigned int i, j;
 	song_t *retval;
 	retval = (song_t*)sci_malloc(sizeof(song_t));
 
@@ -335,7 +335,21 @@ song_new(word handle, byte *data, int size, int priority)
 	memset(retval->pitch, 0, sizeof(int) * MIDI_CHANNELS);
 	memset(retval->channel_map, 1, sizeof(int) * MIDI_CHANNELS);
 
-	for (i = 0; i < data[0]; i++) {
+	switch (data[0]) {
+	case 2:
+	  j = MIDI_CHANNELS -1;
+	  retval->polyphony[MIDI_CHANNELS] = 0;
+	  retval->flags[MIDI_CHANNELS] = 0;
+	  break;
+	case 0:
+	  j = MIDI_CHANNELS;
+	  break;
+	default:
+	  j = MIDI_CHANNELS;
+	  printf("Unrecognized number of channels in song resource!\n");
+	}
+
+	for (i = 0; i < MIDI_CHANNELS; i++) {
 		retval->polyphony[i] = data[1 + (i << 1)];
 		retval->flags[i] = data[2 + (i << 1)];
 	}

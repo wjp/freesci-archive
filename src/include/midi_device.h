@@ -144,7 +144,7 @@ typedef struct _sci_adlib_def {
 
 typedef unsigned char adlib_instr[12];
 
-static adlib_instr adlib_sbi[96];
+extern adlib_instr adlib_sbi[96];
 
 void make_sbi(adlib_def *one, guint8 *buffer);
 /* Converts a raw SCI adlib instrument into the adlib register format. */

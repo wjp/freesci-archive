@@ -66,7 +66,6 @@ static guint8 instr[MIDI_CHANNELS];
 static guint8 pitch[MIDI_CHANNELS];
 static guint8 vol[MIDI_CHANNELS];
 static guint8 adlib_reg[256];
-static int dev;
 static int free_voices = ADLIB_VOICES;
 static unsigned char oper_note[ADLIB_VOICES];
 static unsigned char oper_chn[ADLIB_VOICES];
@@ -119,9 +118,11 @@ void synth_setpatch (int voice, guint8 *data)
   /* mute voice after patch change */
   opl_write (0xb0 + voice, adlib_reg[0xb0+voice] & 0xdf);
 
+#if 0
   for (i = 0; i < 10; i++)
     printf("%02x ", adlib_reg[register_base[i]+register_offset[voice]]);
     printf("%02x ", adlib_reg[register_base[10]+voice]);
+#endif
 
 }
 
@@ -156,9 +157,10 @@ void synth_setnote (int voice, int note, int bend)
     opl_write (0xb0 + voice,
         0x20 | ((oct << 2) & 0x1c) | ((fre >> 8) & 0x03));
 
-    printf("-- %02x %02x\n", 
-	   adlib_reg[0xa0+voice],
-	   adlib_reg[0xb0+voice]);
+#if 0
+    printf("-- %02x %02x\n", adlib_reg[0xa0+voice], adlib_reg[0xb0+voice]);
+#endif
+
 }
 
 
@@ -212,10 +214,14 @@ int adlibemu_start_note(int chn, int note, int velocity)
   volume = velocity * vol[chn] / 128; /* Scale channel volume */
   volume = my_midi_fm_vol_table[volume];
   
+  inst = instr[chn];
+
+#if 0
   if (chn == RHYTHM_CHANNEL)
     inst = note;
   else 
     inst = instr[chn];
+#endif
 
   synth_setpatch(op, adlib_sbi[inst]);
   synth_setvolume(op, volume);
@@ -278,7 +284,7 @@ int test_adlib () {
 
 int midi_adlibemu_open(guint8 *data_ptr, unsigned int data_length)
 {
-  int nrdevs, i, n;
+  int i, n;
 
   /* load up the patch.003 file, parse out the insturments */
   if (data_length < 1344) {

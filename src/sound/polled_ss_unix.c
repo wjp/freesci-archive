@@ -192,12 +192,6 @@ sound_unix_init(state_t *s, int flags)
 
 	ppid = getpid(); /* Get process ID */
 
-        if (pcmout_open() < 0)
-          return -1;
-
-	if (init_midi_device(s) < 0)
-	  return -1;
-
 	server_pid = fork();
 
 	if (server_pid < 0) {
@@ -227,6 +221,14 @@ sound_unix_init(state_t *s, int flags)
 
 		sound_server_state_t sss;
 		memset(&sss, 0, sizeof(sound_server_state_t));
+
+
+	  if (pcmout_open() < 0)
+	    return -1;
+
+	  if (init_midi_device(s) < 0)
+	    return -1;
+
 
 		x_fd_in = fd_in[0];
 		x_fd_out = fd_out[1];
